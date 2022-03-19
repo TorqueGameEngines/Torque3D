@@ -52,7 +52,7 @@ public:
       DragConnection
    };
 
-   struct Socket
+   struct Slot
    {
       GuiNodeCtrl* ownerNode;
       RectI bounds;
@@ -63,27 +63,32 @@ public:
       S32 connId = -1;
    };
 
-   struct Connection
+   struct Link
    {
-      Socket startSocket;
-      Socket endSocket;
+      Slot* startSocket;
+      Slot* endSocket;
    };
 
+   typedef Vector< Slot* > SlotVec;
+
+   struct GraphNode
+   {
+      GuiNodeCtrl* mNode;
+      SlotVec mInSlots;
+      SlotVec mOutSlots;
+   };
 
 protected:
-
-   typedef Vector< Socket > SocketVec;
-   typedef Vector< Connection > ConnVec;
+   typedef Vector< GraphNode* > GraphNodeVector;
+   typedef Vector< Link > LinkVec;
    typedef Vector< GuiNodeCtrl* > GuiNodeVector;
    typedef SimObjectPtr< GuiNodeCtrl > GuiNodePtr;
-
    
-   SocketVec            mSockets;
-   Socket               mDragStartSocket;
-   ConnVec              mConnections;
+   Slot*                mDragStartSlot;
+   LinkVec              mLinks;
    bool                 mFullBoxSelection;
-   GuiNodeVector        mAllNodes;
-   GuiNodeVector        mSelectedNodes;
+   GraphNodeVector      mGraphNodes;
+   GraphNodeVector      mSelectedNodes;
    Point2I              mLastMousePos;
    Point2I              mLastDragPos;
    Point2I              mSelectionAnchor;
@@ -103,7 +108,6 @@ protected:
    // grid drawing
    GFXVertexBufferHandle<GFXVertexPCT> mDots;
    GFXStateBlockRef mDotSB;
-   U32                  getStartConnectionSocket(const Point2I& pt);
    void                 startDragMove(const Point2I& startPoint);
    void                 startDragRectangle(const Point2I& startPoint);
    void                 startDragClone(const Point2I& startPoint);
@@ -133,12 +137,12 @@ public:
    SimGroup*         getTrash() { return mTrash; }
 
    // selection functions
-   void              addSelection(GuiNodeCtrl* node);
+   void              addSelection(GraphNode* node);
    void              removeSelection(S32 id);
-   void              removeSelection(GuiNodeCtrl* node);
+   void              removeSelection(GraphNode* node);
    void              clearSelection(void);
-   void              Select(GuiNodeCtrl* node);
-   bool              selectionContains(GuiNodeCtrl* node);
+   void              Select(GraphNode* node);
+   bool              selectionContains(GraphNode* node);
    void              moveSelection(const Point2I& delta, bool callback);
    void              cloneSelection();
    RectI             getSelectionBounds();
@@ -151,8 +155,10 @@ public:
 
    // handle input.
    bool              onKeyDown(const GuiEvent& event);
-   GuiNodeCtrl*      findHitNode(const Point2I& pt);
-   void              findHitNodes(const RectI& rect, Vector<GuiNodeCtrl*>& outResult);
+   GraphNode*        findHitNode(const Point2I& pt);
+   Slot*             findHitSlotNode(const Point2I& pt, GraphNode* node);
+   Slot*             findHitSlot(const Point2I& pt);
+   void              findHitNodes(const RectI& rect, Vector<GraphNode*>& outResult);
    void              onMouseDown(const GuiEvent& event);
    void              onMouseUp(const GuiEvent& event);
    void              onMouseDragged(const GuiEvent& event);
@@ -161,8 +167,9 @@ public:
 
    // handle adding nodes.
    void              addNewNode(GuiNodeCtrl* node);
-   void              addNodeSockets(GuiNodeCtrl* node);
-   Point2I           getSocketCenter(Socket sock);
+   void              addNodeSlots(GraphNode* node);
+   void              updateSlotPosition(const Point2I& delta, GraphNode* node);
+   Point2I           getSlotCenter(Slot* sock);
    void              deleteSelection();
 
 };

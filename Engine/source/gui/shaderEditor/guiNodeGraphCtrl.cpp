@@ -53,9 +53,8 @@ void GuiNodeGraphCtrl::startDragMove(const Point2I& startPoint)
    mDragBeginPoints.reserve(mSelectedNodes.size());
 
    // For snapping to origin
-   Vector<GuiNodeCtrl*>::iterator i;
-   for (i = mSelectedNodes.begin(); i != mSelectedNodes.end(); i++)
-      mDragBeginPoints.push_back((*i)->getPosition());
+   for (U32 i = 0; i < mSelectedNodes.size(); i++)
+      mDragBeginPoints.push_back(mSelectedNodes[i]->mNode->getPosition());
 
    // Set Mouse Mode
    setMouseMode(MovingSelection);
@@ -96,10 +95,7 @@ GuiNodeGraphCtrl::GuiNodeGraphCtrl()
       mDragAddSelection(false),
       mDragMoveUndo(false)
 {
-   VECTOR_SET_ASSOCIATION(mSockets);
-   VECTOR_SET_ASSOCIATION(mConnections);
-
-   VECTOR_SET_ASSOCIATION(mAllNodes);
+   VECTOR_SET_ASSOCIATION(mLinks);
    VECTOR_SET_ASSOCIATION(mSelectedNodes);
    VECTOR_SET_ASSOCIATION(mDragBeginPoints);
 
@@ -158,6 +154,21 @@ void GuiNodeGraphCtrl::onRender(Point2I offset, const RectI& updateRect)
 
    GFXDrawUtil* drawer = GFX->getDrawUtil();
 
+   if (mActive)
+   {
+      bool multisel = mSelectedNodes.size() > 1;
+      for (U32 i = 0; i < mSelectedNodes.size(); i++)
+      {
+         GuiNodeCtrl* ctrl = mSelectedNodes[i]->mNode;
+         cext = ctrl->getExtent();
+         ctOffset = ctrl->localToGlobalCoord(Point2I(0, 0));
+         RectI box(ctOffset.x, ctOffset.y, cext.x, cext.y);
+         ColorI outlineColor = multisel ? ColorI(0, 0, 0, 100) : ColorI(255, 255, 255, 100);
+         drawer->drawRect(box, outlineColor);
+
+      }
+   }
+
    renderChildControls(offset, updateRect);
 
    // Draw selection rectangle.
@@ -176,28 +187,40 @@ void GuiNodeGraphCtrl::onRender(Point2I offset, const RectI& updateRect)
    }
 
    // draw connections.
-   for (U32 i = 0; i < mConnections.size(); i++)
+   for (U32 i = 0; i < mLinks.size(); i++)
    {
-      Point2I start = getSocketCenter(mConnections[i].startSocket);
-      Point2I end = getSocketCenter(mConnections[i].endSocket);
-      drawer->drawLine(start, end, ColorI(255, 0, 0));
+      Point2I start = getSlotCenter(mLinks[i].startSocket);
+      Point2I end = getSlotCenter(mLinks[i].endSocket);
+      drawer->drawLine(start += offset, end += offset, ColorI(255, 255, 255));
    }
 
    // draw our sockets.
-   for (U32 i = 0; i < mSockets.size(); i++)
+   for (U32 i = 0; i < mGraphNodes.size(); i++)
    {
-      RectI s = mSockets[i].bounds;
-      s.point += offset;
-      drawer->drawRect(s, mSockets[i].col);
-      if (mSockets[i].conn)
-         drawer->drawRectFill(s, mSockets[i].col);
+      for (U32 j = 0; j < mGraphNodes[i]->mInSlots.size(); j++)
+      {
+         RectI s = mGraphNodes[i]->mInSlots[j]->bounds;
+         s.point += offset;
+         drawer->drawRect(s, mGraphNodes[i]->mInSlots[j]->col);
+         if (mGraphNodes[i]->mInSlots[j]->conn)
+            drawer->drawRectFill(s, mGraphNodes[i]->mInSlots[j]->col);
+      }
+
+      for (U32 j = 0; j < mGraphNodes[i]->mOutSlots.size(); j++)
+      {
+         RectI s = mGraphNodes[i]->mOutSlots[j]->bounds;
+         s.point += offset;
+         drawer->drawRect(s, mGraphNodes[i]->mOutSlots[j]->col);
+         if (mGraphNodes[i]->mOutSlots[j]->conn)
+            drawer->drawRectFill(s, mGraphNodes[i]->mOutSlots[j]->col);
+      }
    }
 
    // draw new connections on top of sockets.
    if (mMouseDownMode == DragConnection)
    {
-      Point2I start = getSocketCenter(mDragStartSocket);
-      drawer->drawLine(start, mLastMousePos, ColorI(255, 0, 0));
+      Point2I start = getSlotCenter(mDragStartSlot);
+      drawer->drawLine(start += offset, mLastMousePos, ColorI(255, 255, 255));
    }
 
    // draw snapping dots.
@@ -274,7 +297,7 @@ void GuiNodeGraphCtrl::onSleep()
 // Selection handling
 //-----------------------------------------------------------------------------
 
-void GuiNodeGraphCtrl::addSelection(GuiNodeCtrl* node)
+void GuiNodeGraphCtrl::addSelection(GraphNode* node)
 {
    if (!selectionContains(node))
       mSelectedNodes.push_back(node);
@@ -282,32 +305,23 @@ void GuiNodeGraphCtrl::addSelection(GuiNodeCtrl* node)
 
 void GuiNodeGraphCtrl::deleteSelection()
 {
-   Vector< GuiNodeCtrl* >::iterator i;
-   for (i = mSelectedNodes.begin(); i != mSelectedNodes.end(); i++)
+   for (U32 i = 0; i < mSelectedNodes.size(); i++)
    {
-      Vector< GuiNodeCtrl* >::iterator j;
-      for (j = mAllNodes.begin(); j != mAllNodes.end(); j++)
-         if (*j == *i)
-            mAllNodes.remove(*j);
+      for (U32 j = 0; j < mGraphNodes.size(); j++)
+         if (mGraphNodes[j] == mSelectedNodes[i])
+            mGraphNodes.remove(mGraphNodes[j]);
 
-      mTrash->addObject(*i);
+      mTrash->addObject(mGraphNodes[i]->mNode);
    }
 
    clearSelection();
 }
 
-void GuiNodeGraphCtrl::removeSelection(S32 id)
-{
-   GuiNodeCtrl* ctrl;
-   if (Sim::findObject(id, ctrl))
-      removeSelection(ctrl);
-}
-
-void GuiNodeGraphCtrl::removeSelection(GuiNodeCtrl* node)
+void GuiNodeGraphCtrl::removeSelection(GraphNode* node)
 {
    if (selectionContains(node))
    {
-      Vector< GuiNodeCtrl* >::iterator i = T3D::find(mSelectedNodes.begin(), mSelectedNodes.end(), node);
+      Vector< GraphNode* >::iterator i = T3D::find(mSelectedNodes.begin(), mSelectedNodes.end(), node);
       if (i != mSelectedNodes.end())
          mSelectedNodes.erase(i);
 
@@ -319,15 +333,15 @@ void GuiNodeGraphCtrl::clearSelection(void)
    mSelectedNodes.clear();
 }
 
-void GuiNodeGraphCtrl::Select(GuiNodeCtrl* node)
+void GuiNodeGraphCtrl::Select(GraphNode* node)
 {
    clearSelection();
    addSelection(node);
 }
 
-bool GuiNodeGraphCtrl::selectionContains(GuiNodeCtrl* node)
+bool GuiNodeGraphCtrl::selectionContains(GraphNode* node)
 {
-   Vector<GuiNodeCtrl*>::iterator i;
+   Vector<GraphNode*>::iterator i;
    for (i = mSelectedNodes.begin(); i != mSelectedNodes.end(); i++)
       if (node == *i) return true;
    return false;
@@ -335,12 +349,15 @@ bool GuiNodeGraphCtrl::selectionContains(GuiNodeCtrl* node)
 
 void GuiNodeGraphCtrl::moveSelection(const Point2I& delta, bool callback)
 {
-   Vector<GuiNodeCtrl*>::iterator i;
+   Vector<GraphNode*>::iterator i;
    for (i = mSelectedNodes.begin(); i != mSelectedNodes.end(); i++)
    {
-      GuiNodeCtrl* node = *i;
-      if (!node->isLocked())
-         node->setPosition(node->getPosition() + delta);
+      GraphNode* node = *i;
+      if (!node->mNode->isLocked())
+      {
+         node->mNode->setPosition(node->mNode->getPosition() + delta);
+         updateSlotPosition(delta, node);
+      }
    }
 }
 
@@ -353,10 +370,10 @@ void GuiNodeGraphCtrl::cloneSelection()
    const U32 numOldControls = mSelectedNodes.size();
    for (U32 i = 0; i < numOldControls; ++i)
    {
-      GuiNodeCtrl* ctrl = mSelectedNodes[i];
+      GraphNode* ctrl = mSelectedNodes[i];
       // Clone and add to set.
 
-      GuiNodeCtrl* clone = dynamic_cast<GuiNodeCtrl*>(ctrl->deepClone());
+      GuiNodeCtrl* clone = dynamic_cast<GuiNodeCtrl*>(ctrl->mNode->deepClone());
       if (clone)
          newSelection.push_back(clone);
    }
@@ -366,25 +383,25 @@ void GuiNodeGraphCtrl::cloneSelection()
    clearSelection();
    const U32 numNewControls = newSelection.size();
    for (U32 i = 0; i < numNewControls; ++i)
-      addSelection(newSelection[i]);
+   {
+      addNewNode(newSelection[i]);
+   }
 
 }
 
 RectI GuiNodeGraphCtrl::getSelectionBounds()
 {
-   Vector<GuiNodeCtrl*>::const_iterator i = mSelectedNodes.begin();
-
    Point2I minPos = this->localToGlobalCoord(Point2I(0, 0));
    Point2I maxPos = minPos;
 
-   for (; i != mSelectedNodes.end(); i++)
+   for (U32 i = 0; i < mSelectedNodes.size(); i++)
    {
-      Point2I iPos = (**i).localToGlobalCoord(Point2I(0, 0));
+      Point2I iPos = mSelectedNodes[i]->mNode->localToGlobalCoord(Point2I(0, 0));
 
       minPos.x = getMin(iPos.x, minPos.x);
       minPos.y = getMin(iPos.y, minPos.y);
 
-      Point2I iExt = (**i).getExtent();
+      Point2I iExt = mSelectedNodes[i]->mNode->getExtent();
 
       iPos.x += iExt.x;
       iPos.y += iExt.y;
@@ -403,7 +420,7 @@ void GuiNodeGraphCtrl::addSelectNodesInRegion(const RectI& rect, U32 flags)
 {
    // Do a hit test on the content control.
 
-   Vector< GuiNodeCtrl* > hits;
+   Vector< GraphNode* > hits;
 
    findHitNodes(rect, hits);
    // Add all controls that got hit.
@@ -414,7 +431,7 @@ void GuiNodeGraphCtrl::addSelectNodesInRegion(const RectI& rect, U32 flags)
 
 void GuiNodeGraphCtrl::addSelectNodeAt(const Point2I& pos)
 {
-   GuiNodeCtrl* hit = findHitNode(pos);
+   GraphNode* hit = findHitNode(pos);
 
    if (hit)
       addSelection(hit);
@@ -449,43 +466,75 @@ void GuiNodeGraphCtrl::doGridSnap(const GuiEvent& event, const RectI& selectionB
 // Input handling
 //-----------------------------------------------------------------------------
 
-GuiNodeCtrl* GuiNodeGraphCtrl::findHitNode(const Point2I& pt)
+GuiNodeGraphCtrl::GraphNode* GuiNodeGraphCtrl::findHitNode(const Point2I& pt)
 {
-   if (mAllNodes.size() == 0)
-      return NULL;
-   U32 i = mAllNodes.size() - 1;
-   while (i != 0)
+   for (U32 i = 0; i < mGraphNodes.size(); i++)
    {
-      GuiNodeCtrl* node = mAllNodes[i];
-
-      if (node->isVisible() && node->pointInControl(pt))
+      if (mGraphNodes[i]->mNode->pointInControl(pt))
       {
-         return node;
+         return mGraphNodes[i];
       }
-
-      i--;
    }
 
    return NULL;
 }
 
-void GuiNodeGraphCtrl::findHitNodes(const RectI& rect, Vector< GuiNodeCtrl* >& outResult)
+GuiNodeGraphCtrl::Slot* GuiNodeGraphCtrl::findHitSlotNode(const Point2I& pt, GraphNode* node)
 {
-   if (mAllNodes.size() == 0)
-      return;
-
-   U32 i = mAllNodes.size() - 1;
-   while (i != 0)
+   for (U32 i = 0; i < node->mInSlots.size(); i++)
    {
-      GuiNodeCtrl* node = mAllNodes[i];
+      Slot* slot = node->mInSlots[i];
+      if (slot->bounds.pointInRect(pt))
+         return slot;
+   }
 
-      if (node->isVisible())
+   for (U32 i = 0; i < node->mOutSlots.size(); i++)
+   {
+      Slot* slot = node->mOutSlots[i];
+      if (slot->bounds.pointInRect(pt))
+         return slot;
+   }
+
+   return NULL;
+}
+
+GuiNodeGraphCtrl::Slot* GuiNodeGraphCtrl::findHitSlot(const Point2I& pt)
+{
+   for (U32 i = 0; i < mGraphNodes.size(); i++)
+   {
+      for (U32 j = 0; j < mGraphNodes[i]->mInSlots.size(); j++)
+      {
+         Slot* slot = mGraphNodes[i]->mInSlots[j];
+         if (slot->bounds.pointInRect(pt))
+            return slot;
+      }
+
+      for (U32 j = 0; j < mGraphNodes[i]->mOutSlots.size(); j++)
+      {
+         Slot* slot = mGraphNodes[i]->mOutSlots[j];
+         if (slot->bounds.pointInRect(pt))
+            return slot;
+      }
+
+   }
+
+   return NULL;
+}
+
+void GuiNodeGraphCtrl::findHitNodes(const RectI& rect, Vector< GraphNode* >& outResult)
+{
+
+   for(U32 i = 0; i < mGraphNodes.size(); i++)
+   {
+      GraphNode* node = mGraphNodes[i];
+
+      if (node->mNode->isVisible())
       {
          RectI rectInParentSpace = rect;
          // not sure if this is needed but do it anyway.
          rectInParentSpace.point += getPosition();
 
-         if (rectInParentSpace.contains(node->getBounds()))
+         if (rectInParentSpace.contains(node->mNode->getBounds()))
          {
             outResult.push_back(node);
          }
@@ -530,12 +579,28 @@ void GuiNodeGraphCtrl::onMouseDown(const GuiEvent& event)
 
    mLastMousePos = globalToLocalCoord(event.mousePoint);
 
-   GuiNodeCtrl* node = findHitNode(mLastMousePos);
+   GraphNode* node = findHitNode(mLastMousePos);
 
-   if (U32 sock = getStartConnectionSocket(mLastMousePos) > -1)
+   // could maybe use the node in this search too?
+   Slot* sock = new Slot();
+   if (node != NULL)
    {
-      mDragStartSocket = mSockets[sock];
+      sock = findHitSlotNode(mLastMousePos, node);
+   }
+   else
+   {
+      sock = findHitSlot(mLastMousePos);
+   }
+
+   if (sock != NULL)
+   {
+      mDragStartSlot = sock;
       mMouseDownMode = DragConnection;
+   }
+
+   if (sock == NULL)
+   {
+      delete sock;
    }
 
    if (event.modifier & SI_SHIFT)
@@ -547,9 +612,11 @@ void GuiNodeGraphCtrl::onMouseDown(const GuiEvent& event)
    }
    if (node == NULL)
    {
-      return;
+      clearSelection();
+      startDragRectangle(event.mousePoint);
+      mDragAddSelection = true;
    }
-   else if (selectionContains(node))
+   else if (mSelectedNodes.size() > 1 && selectionContains(node))
    {
       if (event.modifier & SI_MULTISELECT)
       {
@@ -589,10 +656,10 @@ void GuiNodeGraphCtrl::onMouseDown(const GuiEvent& event)
          addSelection(node);
 
          // only one node selected, so make sure we are in header.
-         if (node->inTitleBar(event))
+         if (node->mNode->inTitleBar(event))
             startDragMove(event.mousePoint);
          else
-            node->onMouseDownGraph(event);
+            node->mNode->onMouseDownGraph(event);
       }
    }
 }
@@ -615,32 +682,44 @@ void GuiNodeGraphCtrl::onMouseUp(const GuiEvent& event)
 
    if (mMouseDownMode == DragConnection)
    {
-      if (U32 sock = getStartConnectionSocket(mLastMousePos) > -1)
+      Slot* slot = findHitSlot(mLastMousePos);
+
+      if (slot != NULL)
       {
 
          // are we connecting to the same type?
-         if (mDragStartSocket.in && mSockets[sock].in || mDragStartSocket.out && mSockets[sock].out)
+         if (mDragStartSlot->in && slot->in || mDragStartSlot->out && slot->out)
+         {
+            //reset the mouse mode
+            setFirstResponder();
+            setMouseMode(Selecting);
             return;
+         }
 
          // are we connecting to the same node......
-         if (mDragStartSocket.ownerNode == mSockets[sock].ownerNode)
+         if (mDragStartSlot->ownerNode == slot->ownerNode)
+         {
+            //reset the mouse mode
+            setFirstResponder();
+            setMouseMode(Selecting);
             return;
+         }
 
          // we have hit an opposite socket.
-         Connection conn;
-         if (mDragStartSocket.in)
+         Link conn;
+         if (mDragStartSlot->in)
          {
-            conn.startSocket = mDragStartSocket;
-            conn.endSocket = mSockets[sock];
+            conn.startSocket = mDragStartSlot;
+            conn.endSocket = slot;
          }
          else
          {
-            conn.startSocket = mSockets[sock];
-            conn.endSocket = mDragStartSocket;
+            conn.startSocket = slot;
+            conn.endSocket = mDragStartSlot;
          }
          // if we have reached here both have a connection.
-         mDragStartSocket.conn = true;
-         mSockets[sock].conn = true;
+         mDragStartSlot->conn = true;
+         slot->conn = true;
       }
    }
 
@@ -690,7 +769,7 @@ void GuiNodeGraphCtrl::onMouseDragged(const GuiEvent& event)
 
    Point2I mousePoint = globalToLocalCoord(event.mousePoint);
 
-   GuiNodeCtrl* node = findHitNode(mousePoint);
+   GraphNode* node = findHitNode(mousePoint);
 
    if (mMouseDownMode == DragConnection)
    {
@@ -731,11 +810,11 @@ void GuiNodeGraphCtrl::onMouseDragged(const GuiEvent& event)
          {
             for (S32 i = 0; i < mSelectedNodes.size(); i++)
             {
-               Point2I selCtrlPos = mSelectedNodes[i]->getPosition();
+               Point2I selCtrlPos = mSelectedNodes[i]->mNode->getPosition();
                Point2I snapBackPoint(selCtrlPos.x, mDragBeginPoints[i].y);
                // This is kind of nasty but we need to snap back if we're not at origin point with selection - JDD
                if (selCtrlPos.y != mDragBeginPoints[i].y)
-                  mSelectedNodes[i]->setPosition(snapBackPoint);
+                  mSelectedNodes[i]->mNode->setPosition(snapBackPoint);
             }
             delta.y = 0;
          }
@@ -743,11 +822,11 @@ void GuiNodeGraphCtrl::onMouseDragged(const GuiEvent& event)
          {
             for (S32 i = 0; i < mSelectedNodes.size(); i++)
             {
-               Point2I selCtrlPos = mSelectedNodes[i]->getPosition();
+               Point2I selCtrlPos = mSelectedNodes[i]->mNode->getPosition();
                Point2I snapBackPoint(mDragBeginPoints[i].x, selCtrlPos.y);
                // This is kind of nasty but we need to snap back if we're not at origin point with selection - JDD
                if (selCtrlPos.x != mDragBeginPoints[i].x)
-                  mSelectedNodes[i]->setPosition(snapBackPoint);
+                  mSelectedNodes[i]->mNode->setPosition(snapBackPoint);
             }
             delta.x = 0;
          }
@@ -770,66 +849,65 @@ void GuiNodeGraphCtrl::onMouseDragged(const GuiEvent& event)
 void GuiNodeGraphCtrl::addNewNode(GuiNodeCtrl* node)
 {
    this->addObject(node);
-   mAllNodes.push_back(node);
-   addNodeSockets(node);
+   GraphNode* gNode = new GraphNode();
+   gNode->mNode = node;
+   addNodeSlots(gNode);
+
+   mGraphNodes.push_back(gNode);
 }
 
-void GuiNodeGraphCtrl::addNodeSockets(GuiNodeCtrl* node)
+void GuiNodeGraphCtrl::addNodeSlots(GraphNode* node)
 {
+   GuiNodeCtrl* guiNode = node->mNode;
    // loop through inputs.
-   Point2I ext(15, 15);
-   for (U32 i = 0; i < node->mInputs.size(); i++)
+   Point2I ext(16, 16);
+   for (U32 i = 0; i < node->mNode->mInputs.size(); i++)
    {
       // put our rect on the left edge.
-      Point2I pos = globalToLocalCoord(node->localToGlobalCoord(Point2I(node->getPosition().x, node->mInputs[i].pos.y)));
-      Socket inSock;
-      inSock.ownerNode = node;
+      Point2I pos = globalToLocalCoord(guiNode->localToGlobalCoord(Point2I(guiNode->getPosition().x, guiNode->mInputs[i].pos.y)));
+      Slot* inSlot = new Slot();
+      inSlot->ownerNode = guiNode;
       // convert coords to global.
-      inSock.bounds = RectI(pos, ext);
-      inSock.col = node->mInputs[i].color;
-      inSock.in = true;
-      mSockets.push_back(inSock);
+      inSlot->bounds = RectI(pos, ext);
+      inSlot->col = guiNode->mInputs[i].color;
+      inSlot->in = true;
+      node->mInSlots.push_back(inSlot);
    }
 
    // loop through outputs.
-   for (U32 j = 0; j < node->mOutputs.size(); j++)
+   for (U32 j = 0; j < guiNode->mOutputs.size(); j++)
    {
       // put our rect on the right edge.
-      Point2I pos = globalToLocalCoord(node->localToGlobalCoord(Point2I(node->getExtent().x - 20, node->mOutputs[j].pos.y)));
-      Socket outSock;
-      outSock.ownerNode = node;
+      Point2I pos = globalToLocalCoord(guiNode->localToGlobalCoord(Point2I(guiNode->getExtent().x - 20, guiNode->mOutputs[j].pos.y)));
+      Slot* outSlot = new Slot();
+      outSlot->ownerNode = guiNode;
       // convert coords to global.
-      outSock.bounds = RectI(pos, ext);
-      outSock.col = node->mOutputs[j].color;
-      outSock.out = true;
-      mSockets.push_back(outSock);
+      outSlot->bounds = RectI(pos, ext);
+      outSlot->col = guiNode->mOutputs[j].color;
+      outSlot->out = true;
+      node->mOutSlots.push_back(outSlot);
    }
 }
 
-U32 GuiNodeGraphCtrl::getStartConnectionSocket(const Point2I& pt)
+void GuiNodeGraphCtrl::updateSlotPosition(const Point2I& delta, GraphNode* node)
 {
-   if (mSockets.size() == 0)
-      return -1;
-
-   U32 i = mSockets.size() - 1;
-   while (i != 0)
+   for (U32 i = 0; i < node->mInSlots.size(); i++)
    {
-      Socket sock = mSockets[i];
-      if(sock.bounds.pointInRect(pt))
-         return i;
-
-      i--;
+      node->mInSlots[i]->bounds.point += delta;
    }
 
-   return -1;
+   for (U32 i = 0; i < node->mOutSlots.size(); i++)
+   {
+      node->mOutSlots[i]->bounds.point += delta;
+   }
 }
 
-Point2I GuiNodeGraphCtrl::getSocketCenter(Socket sock)
+Point2I GuiNodeGraphCtrl::getSlotCenter(Slot* slot)
 {
-   RectI bounds = sock.bounds;
+   RectI bounds = slot->bounds;
 
-   return Point2I(bounds.point.x + bounds.extent.x / 2,
-                  bounds.point.y + bounds.extent.y / 2);
+   return Point2I(bounds.point.x + (bounds.extent.x / 2),
+                  bounds.point.y + (bounds.extent.y / 2));
 
 }
 

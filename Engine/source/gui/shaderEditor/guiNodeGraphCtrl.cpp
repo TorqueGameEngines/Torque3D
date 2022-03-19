@@ -233,23 +233,6 @@ void GuiNodeGraphCtrl::onRender(Point2I offset, const RectI& updateRect)
 
    GFXDrawUtil* drawer = GFX->getDrawUtil();
 
-   if (mActive)
-   {
-      bool multisel = mSelectedNodes.size() > 1;
-      for (U32 i = 0; i < mSelectedNodes.size(); i++)
-      {
-         GuiNodeCtrl* ctrl = mSelectedNodes[i]->mNode;
-         cext = ctrl->getExtent();
-         ctOffset = ctrl->localToGlobalCoord(Point2I(0, 0));
-         RectI box(ctOffset.x, ctOffset.y, cext.x, cext.y);
-         ColorI outlineColor = multisel ? ColorI(0, 0, 0, 100) : ColorI(255, 255, 255, 100);
-         drawer->drawRect(box, outlineColor);
-
-      }
-   }
-
-   //renderChildControls(offset, updateRect);
-
    // Draw selection rectangle.
    if (mActive && mMouseDownMode == DragSelecting)
    {
@@ -304,6 +287,21 @@ void GuiNodeGraphCtrl::onRender(Point2I offset, const RectI& updateRect)
    {
       Point2I start = getSlotCenter(mDragStartSlot);
       drawThickLine(start += offset, mLastMousePos, 2, mDragStartSlot->col);
+   }
+
+   if (mActive)
+   {
+      bool multisel = mSelectedNodes.size() > 1;
+      for (U32 i = 0; i < mSelectedNodes.size(); i++)
+      {
+         GuiNodeCtrl* ctrl = mSelectedNodes[i]->mNode;
+         cext = ctrl->getExtent();
+         ctOffset = ctrl->localToGlobalCoord(Point2I(0, 0));
+         RectI box(ctOffset.x, ctOffset.y, cext.x, cext.y);
+         ColorI outlineColor = multisel ? ColorI(100, 100, 100, 100) : ColorI(255, 255, 255, 100);
+         drawer->drawRect(box, outlineColor);
+
+      }
    }
 
    // draw snapping dots.
@@ -960,7 +958,6 @@ void GuiNodeGraphCtrl::addNodeSlots(GraphNode* node)
       Point2I pos = globalToLocalCoord(guiNode->localToGlobalCoord(Point2I(0, guiNode->mInputs[i].pos.y)));
       Slot* inSlot = new Slot();
       inSlot->ownerNode = guiNode;
-      // convert coords to global.
       inSlot->bounds = RectI(pos, ext);
       inSlot->col = guiNode->mInputs[i].color;
       inSlot->in = true;
@@ -971,10 +968,9 @@ void GuiNodeGraphCtrl::addNodeSlots(GraphNode* node)
    for (U32 j = 0; j < guiNode->mOutputs.size(); j++)
    {
       // put our rect on the right edge.
-      Point2I pos = globalToLocalCoord(guiNode->localToGlobalCoord(Point2I(guiNode->getExtent().x - 20, guiNode->mOutputs[j].pos.y)));
+      Point2I pos = globalToLocalCoord(guiNode->localToGlobalCoord(Point2I(guiNode->getExtent().x - 16, guiNode->mOutputs[j].pos.y)));
       Slot* outSlot = new Slot();
       outSlot->ownerNode = guiNode;
-      // convert coords to global.
       outSlot->bounds = RectI(pos, ext);
       outSlot->col = guiNode->mOutputs[j].color;
       outSlot->out = true;

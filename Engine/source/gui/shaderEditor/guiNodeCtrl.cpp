@@ -57,12 +57,6 @@ GuiNodeCtrl::GuiNodeCtrl()
    // minimum width and height due to header
    setMinExtent(Point2I(200, mTitleHeight));
 
-   addInput("IN");
-   addOutput("X");
-   addOutput("Y");
-   addOutput("Z");
-   addOutput("W");
-
 }
 
 void GuiNodeCtrl::drawBlendHeader(RectI& bounds, ColorI leftCol, ColorI rightCol)

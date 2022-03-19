@@ -63,8 +63,7 @@ protected:
    bool mCanCollapse;
    bool mCollapsed;
    GFXStateBlockRef mStateBlock;
-   //DECLARE_CALLBACK(void, onCollapse, ());
-   //DECLARE_CALLBACK(void, onRestore, ());
+
 public:
 
    // needs to be public for nodeGraphAccess.

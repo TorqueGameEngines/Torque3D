@@ -82,7 +82,6 @@ protected:
    typedef Vector< GraphNode* > GraphNodeVector;
    typedef Vector< Link > LinkVec;
    typedef Vector< GuiNodeCtrl* > GuiNodeVector;
-   typedef SimObjectPtr< GuiNodeCtrl > GuiNodePtr;
    
    Slot*                mDragStartSlot;
    LinkVec              mLinks;
@@ -107,7 +106,7 @@ protected:
 
    // grid drawing
    GFXVertexBufferHandle<GFXVertexPCT> mDots;
-   GFXStateBlockRef mDotSB;
+   GFXStateBlockRef     mDotSB;
    void                 startDragMove(const Point2I& startPoint);
    void                 startDragRectangle(const Point2I& startPoint);
    void                 startDragClone(const Point2I& startPoint);

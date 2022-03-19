@@ -32,31 +32,17 @@ function PlayGui::onWake(%this)
 
    $enableDirectInput = "1";
    activateDirectInput();
-
-   // Message hud dialog
-   if ( isObject( MainChatHud ) )
-   {
-      Canvas.pushDialog( MainChatHud );
-      chatHud.attach(HudMessageVector);
-   }      
    
    // just update the action map here
    if(isObject(moveMap))
       moveMap.push();
-
-   // hack city - these controls are floating around and need to be clamped
-   if ( isFunction( "refreshCenterTextCtrl" ) )
-      schedule(0, 0, "refreshCenterTextCtrl");
-   if ( isFunction( "refreshBottomTextCtrl" ) )
-      schedule(0, 0, "refreshBottomTextCtrl");
       
    callOnModules("Playgui_onWake");
 }
 
 function PlayGui::onSleep(%this)
 {
-   if ( isObject( MainChatHud ) )
-      Canvas.popDialog( MainChatHud );
+   callOnModules("Playgui_onSleep");
    
    // pop the keymaps
    if(isObject(moveMap))
@@ -65,60 +51,9 @@ function PlayGui::onSleep(%this)
 
 function PlayGui::clearHud( %this )
 {
+   callOnModules("Playgui_clearHud");
    Canvas.popDialog( MainChatHud );
 
    while ( %this.getCount() > 0 )
       %this.getObject( 0 ).delete();
 }
-
-//-----------------------------------------------------------------------------
-
-function refreshBottomTextCtrl()
-{
-   BottomPrintText.position = "0 0";
-}
-
-function refreshCenterTextCtrl()
-{
-   CenterPrintText.position = "0 0";
-}
-
-/*function PlayGui::onRightMouseDown(%this)
-{
-   %this.nocursor = true;
-   Canvas.checkCursor();
-}
-
-function PlayGui::onRightMouseUp(%this)
-{
-   %this.nocursor = false;
-   Canvas.checkCursor();
-}*/
-
-/*function PlayGui::onInputEvent(%this, %device, %action, %state)
-{
-   if(%device $= "mouse0" && %action $= "button1")
-   {
-      if(%state == 1)
-      {
-         %this.nocursor = true;
-         Canvas.checkCursor();
-      }
-      else 
-      {
-         %this.nocursor = false;
-         Canvas.checkCursor();
-      }
-   }
-   else if(%device $= "keyboard")
-   {
-      if(%action $= "w")
-         moveforward(%state);
-      else if(%action $= "a")
-         moveleft(%state);
-      else if(%action $= "s")
-         movebackward(%state);
-      else if(%action $= "d")
-         moveright(%state);
-   }
-}*/

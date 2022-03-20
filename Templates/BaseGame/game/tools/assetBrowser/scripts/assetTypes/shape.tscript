@@ -131,9 +131,14 @@ function AssetBrowser::importShapeAsset(%this, %assetItem)
       assetName = %assetName;
       versionId = 1;
       fileName = fileName(%filePath);
-      originalFilePath = %filePath;
       isNewShape = true;
    };
+   
+   //No point in indicating the original path data if it was imported in-place
+   if(!startsWith(makeFullPath(%filePath), getMainDotCsDir()))
+   {
+      %newAsset.originalFilePath = %filePath;
+   }
    
    //check dependencies
    %dependencySlotId = 0;

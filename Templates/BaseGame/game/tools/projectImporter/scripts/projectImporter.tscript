@@ -1029,6 +1029,8 @@ function testFilenameExtensions(%filename)
       return %filename @ ".dae";
    else if(isFile(%filename @ ".dds"))
       return %filename @ ".dds";
+   else if(isFile(%filename @ ".dsq"))
+      return %filename @ ".dsq";
    else if(isFile(%filename @ ".ogg"))
       return %filename @ ".ogg";
    else if(isFile(%filename @ ".wav"))
@@ -2155,6 +2157,7 @@ function scanForDuplicateFiles(%toTestFile)
       //We only really care about content files for this
       if(!endsWith(%file, "dts") &&
          !endsWith(%file, "dae") && 
+         !endsWith(%file, "dsq") && 
          !endsWith(%file, "fbx") &&
          !endsWith(%file, "ter") &&
          !endsWith(%file, "png") &&

@@ -59,6 +59,8 @@ protected:
 
    StringTableEntry mDXPixelShaderName;
 
+   StringTableEntry mDXComputeShaderName;
+
    StringTableEntry mOGLVertexShaderName;
 
    StringTableEntry mOGLPixelShaderName;

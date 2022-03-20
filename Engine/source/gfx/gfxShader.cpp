@@ -44,6 +44,7 @@ GFXShader::~GFXShader()
 {
    Torque::FS::RemoveChangeNotification( mVertexFile, this, &GFXShader::_onFileChanged );
    Torque::FS::RemoveChangeNotification( mPixelFile, this, &GFXShader::_onFileChanged );
+   Torque::FS::RemoveChangeNotification( mComputeFile, this, &GFXShader::_onFileChanged );
 
    SAFE_DELETE(mInstancingFormat);
 }
@@ -51,6 +52,7 @@ GFXShader::~GFXShader()
 #ifndef TORQUE_OPENGL
 bool GFXShader::init(   const Torque::Path &vertFile, 
                         const Torque::Path &pixFile, 
+                        const Torque::Path &compFile, 
                         F32 pixVersion, 
                         const Vector<GFXShaderMacro> &macros )
 {
@@ -61,6 +63,7 @@ bool GFXShader::init(   const Torque::Path &vertFile,
 
 bool GFXShader::init(   const Torque::Path &vertFile, 
                         const Torque::Path &pixFile, 
+                        const Torque::Path &compFile, 
                         F32 pixVersion, 
                         const Vector<GFXShaderMacro> &macros,
                         const Vector<String> &samplerNames,
@@ -76,6 +79,7 @@ bool GFXShader::init(   const Torque::Path &vertFile,
    // Store the inputs for use in reloading.
    mVertexFile = vertFile;
    mPixelFile = pixFile;
+   mComputeFile = compFile;
    mPixVersion = pixVersion;
    mMacros = macros;
    mSamplerNamesOrdered = samplerNames;
@@ -93,6 +97,7 @@ bool GFXShader::init(   const Torque::Path &vertFile,
    // Add file change notifications for reloads.
    Torque::FS::AddChangeNotification( mVertexFile, this, &GFXShader::_onFileChanged );
    Torque::FS::AddChangeNotification( mPixelFile, this, &GFXShader::_onFileChanged );
+   Torque::FS::AddChangeNotification( mComputeFile, this, &GFXShader::_onFileChanged );
 
    return true;
 }
@@ -119,8 +124,8 @@ bool GFXShader::reload()
 
 void GFXShader::_updateDesc()
 {
-   mDescription = String::ToString( "Files: %s, %s Pix Version: %0.2f\nMacros: ", 
-      mVertexFile.getFullPath().c_str(), mPixelFile.getFullPath().c_str(), mPixVersion );
+   mDescription = String::ToString( "Files: %s, %s %s, Pix Version: %0.2f\nMacros: ", 
+      mVertexFile.getFullPath().c_str(), mPixelFile.getFullPath().c_str(), mComputeFile.getFullPath().c_str(), mPixVersion );
 
    GFXShaderMacro::stringize( smGlobalMacros, &mDescription );
    GFXShaderMacro::stringize( mMacros, &mDescription );   

@@ -65,6 +65,11 @@ ShaderData::ShaderData()
    mUseDevicePixVersion = false;
    mPixVersion = 1.0;
 
+   // initializiers because compute shaders can be their own, or normal shaders can be without compute.
+   mDXVertexShaderName = StringTable->EmptyString();
+   mDXPixelShaderName = StringTable->EmptyString();
+   mDXComputeShaderName = StringTable->EmptyString();
+
    for( int i = 0; i < NumTextures; ++i)
       mRTParams[i] = false;
 }
@@ -82,6 +87,12 @@ void ShaderData::initPersistFields()
 	   "It must contain only one program and no vertex shader, just the pixel "
 	   "shader. It can be either an HLSL or assembly level shader. HLSL's "
 	   "must have a filename extension of .hlsl, otherwise its assumed to be an assembly file.");
+
+   addField("DXComputeShaderFile", TypeStringFilename, Offset(mDXComputeShaderName, ShaderData),
+      "@brief %Path to the DirectX compute shader file to use for this ShaderData.\n\n"
+      "It must contain only one program and no vertex shader, just the pixel "
+      "shader. It can be either an HLSL or assembly level shader. HLSL's "
+      "must have a filename extension of .hlsl, otherwise its assumed to be an assembly file.");
 
    addField("OGLVertexShaderFile",  TypeStringFilename,  Offset(mOGLVertexShaderName,   ShaderData),
 	   "@brief %Path to an OpenGL vertex shader file to use for this ShaderData.\n\n"
@@ -237,7 +248,8 @@ GFXShader* ShaderData::_createShader( const Vector<GFXShaderMacro> &macros )
       case Direct3D11:
       {
          success = shader->init( mDXVertexShaderName, 
-                                 mDXPixelShaderName, 
+                                 mDXPixelShaderName,
+                                 mDXComputeShaderName,
                                  pixver,
                                  macros,
                                  samplers);
@@ -248,6 +260,7 @@ GFXShader* ShaderData::_createShader( const Vector<GFXShaderMacro> &macros )
       {
          success = shader->init( mOGLVertexShaderName,
                                  mOGLPixelShaderName,
+                                 NULL,
                                  pixver,
                                  macros,
                                  samplers);

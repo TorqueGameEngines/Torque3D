@@ -304,7 +304,8 @@ public:
 
    GFXD3D11ShaderConstBuffer(GFXD3D11Shader* shader,
       GFXD3D11ConstBufferLayout* vertexLayout,
-      GFXD3D11ConstBufferLayout* pixelLayout);
+      GFXD3D11ConstBufferLayout* pixelLayout,
+      GFXD3D11ConstBufferLayout* comuteLayout);
 
    virtual ~GFXD3D11ShaderConstBuffer();
 
@@ -360,6 +361,7 @@ protected:
    // Constant buffers, VSSetConstantBuffers1 has issues on win 7. So unfortunately for now we have multiple constant buffers
    ID3D11Buffer* mConstantBuffersV[CBUFFER_MAX];
    ID3D11Buffer* mConstantBuffersP[CBUFFER_MAX];
+   ID3D11Buffer* mConstantBuffersC[CBUFFER_MAX];
 
    /// We keep a weak reference to the shader 
    /// because it will often be deleted.
@@ -371,6 +373,9 @@ protected:
    //pixel
    GFXD3D11ConstBufferLayout* mPixelConstBufferLayout;
    GenericConstBuffer* mPixelConstBuffer;
+   //compute
+   GFXD3D11ConstBufferLayout* mComputeConstBufferLayout;
+   GenericConstBuffer* mComputeConstBuffer;
 };
 
 class gfxD3D11Include;
@@ -411,9 +416,11 @@ protected:
 
    ID3D11VertexShader *mVertShader;
    ID3D11PixelShader *mPixShader;
+   ID3D11ComputeShader *mComputeShader;
 
    GFXD3D11ConstBufferLayout* mVertexConstBufferLayout;
    GFXD3D11ConstBufferLayout* mPixelConstBufferLayout;   
+   GFXD3D11ConstBufferLayout* mComputeConstBufferLayout;   
 
    static gfxD3DIncludeRef smD3DInclude;
 

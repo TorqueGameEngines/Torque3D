@@ -232,7 +232,10 @@ protected:
    Torque::Path mVertexFile;  
 
    /// The pixel shader file.
-   Torque::Path mPixelFile;  
+   Torque::Path mPixelFile;
+
+   /// The compute shader file.
+   Torque::Path mComputeFile;
 
    /// The macros to be passed to the shader.      
    Vector<GFXShaderMacro> mMacros;
@@ -302,13 +305,15 @@ public:
 #ifndef TORQUE_OPENGL
    bool init(  const Torque::Path &vertFile, 
                const Torque::Path &pixFile, 
+               const Torque::Path &compFile, 
                F32 pixVersion, 
                const Vector<GFXShaderMacro> &macros );
 #endif
 
    ///
    bool init(  const Torque::Path &vertFile, 
-               const Torque::Path &pixFile, 
+               const Torque::Path &pixFile,
+               const Torque::Path& compFile,
                F32 pixVersion, 
                const Vector<GFXShaderMacro> &macros,
                const Vector<String> &samplerNames,
@@ -354,6 +359,9 @@ public:
 
    /// Returns the pixel shader file path.
    const String& getPixelShaderFile() const { return mPixelFile.getFullPath(); }
+
+   /// Returns the compute shader file path.
+   const String& getComputeShaderFile() const { return mComputeFile.getFullPath(); }
 
    // GFXResource
    const String describeSelf() const { return mDescription; }

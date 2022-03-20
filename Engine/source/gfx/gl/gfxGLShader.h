@@ -75,6 +75,7 @@ protected:
 
    bool initShader(  const Torque::Path &file, 
                      bool isVertex, 
+                     bool isCompute, 
                      const Vector<GFXShaderMacro> &macros );
 
    void clearShaders();
@@ -93,8 +94,10 @@ protected:
    /// @{
    GLuint mVertexShader;
    GLuint mPixelShader;
+   GLuint mComputeShader;
    GLuint mProgram;
    /// @}
+   bool mIsCompute;
     
    Vector<GFXShaderConstDesc> mConstants;
    U32 mConstBufferSize;

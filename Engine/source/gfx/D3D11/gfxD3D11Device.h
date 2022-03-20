@@ -121,6 +121,7 @@ protected:
 
    ID3D11VertexShader *mLastVertShader;
    ID3D11PixelShader *mLastPixShader;
+   ID3D11ComputeShader *mLastComputeShader;
 
    S32 mCreateFenceType;
 
@@ -140,6 +141,7 @@ protected:
    // Shader Model targers
    String mVertexShaderTarget;
    String mPixelShaderTarget;
+   String mComputeShaderTarget;
    // String for use with shader macros in the form of shader model version * 10
    String mShaderModel;
    bool mDebugLayers;
@@ -317,6 +319,7 @@ public:
    // Shader Model targers
    const String &getVertexShaderTarget() const { return mVertexShaderTarget; }
    const String &getPixelShaderTarget() const { return mPixelShaderTarget; }
+   const String &getComputeShaderTarget() const { return mComputeShaderTarget; }
    const String &getShaderModel() const { return mShaderModel; }
 
    // grab the sampler map

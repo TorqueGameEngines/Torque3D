@@ -385,11 +385,13 @@ void GFXGLShaderConstBuffer::onShaderReload( GFXGLShader *shader )
 GFXGLShader::GFXGLShader(GFXGLDevice* device) :
    mVertexShader(0),
    mPixelShader(0),
+   mComputeShader(0),
    mProgram(0),
    mDevice(device),
    mConstBufferSize(0),
    mConstBuffer(NULL)
 {
+   mIsCompute = false;
 }
 
 GFXGLShader::~GFXGLShader()
@@ -406,10 +408,12 @@ void GFXGLShader::clearShaders()
    glDeleteProgram(mProgram);
    glDeleteShader(mVertexShader);
    glDeleteShader(mPixelShader);
+   glDeleteShader(mComputeShader);
    
    mProgram = 0;
    mVertexShader = 0;
    mPixelShader = 0;
+   mComputeShader = 0;
 }
 
 bool GFXGLShader::_init()
@@ -438,17 +442,24 @@ bool GFXGLShader::_init()
    // Default to true so we're "successful" if a vertex/pixel shader wasn't specified.
    bool compiledVertexShader = true;
    bool compiledPixelShader = true;
+   bool compiledComputeShader = true;
    
    // Compile the vertex and pixel shaders if specified.
    if(!mVertexFile.isEmpty())
-      compiledVertexShader = initShader(mVertexFile, true, macros);
+      compiledVertexShader = initShader(mVertexFile, true, false,macros);
 
    macros.last().name = "TORQUE_PIXEL_SHADER";
    if(!mPixelFile.isEmpty())
-      compiledPixelShader = initShader(mPixelFile, false, macros);
+      compiledPixelShader = initShader(mPixelFile, false,false, macros);
+
+   if (!mComputeFile.isEmpty())
+   {
+      compiledComputeShader = initShader(mComputeFile, false, true, macros);
+      mIsCompute = true;
+   }
       
    // If either shader was present and failed to compile, bail.
-   if(!compiledVertexShader || !compiledPixelShader)
+   if(!compiledVertexShader || !compiledPixelShader || !compiledComputeShader)
       return false;
   
    // Link it!
@@ -895,6 +906,11 @@ GFXShaderConstBufferRef GFXGLShader::allocConstBuffer()
 void GFXGLShader::useProgram()
 {
    glUseProgram(mProgram);
+   if (mIsCompute)
+   {
+      // need a way to set this.
+      glDispatchCompute((GLuint)32, 32, 1);
+   }
 }
 
 void GFXGLShader::zombify()
@@ -1084,13 +1100,16 @@ bool GFXGLShader::_loadShaderFromStream(  GLuint shader,
 }
 
 bool GFXGLShader::initShader( const Torque::Path &file, 
-                              bool isVertex, 
+                              bool isVertex,
+                              bool isCompute,
                               const Vector<GFXShaderMacro> &macros )
 {
    PROFILE_SCOPE(GFXGLShader_CompileShader);
    GLuint activeShader = glCreateShader(isVertex ? GL_VERTEX_SHADER : GL_FRAGMENT_SHADER);
-   if(isVertex)
+   if (isVertex)
       mVertexShader = activeShader;
+   else if (isCompute)
+      mComputeShader = activeShader;
    else
       mPixelShader = activeShader;
    glAttachShader(mProgram, activeShader);

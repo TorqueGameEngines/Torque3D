@@ -2534,7 +2534,10 @@ StringTableEntry AssetImporter::autoImportFile(Torque::Path filePath, String typ
 
    dumpActivityLog();
 
-   if (hasIssues)
+   if (hasIssues ||
+      assetItem->importStatus == AssetImportObject::Skipped ||
+      assetItem->importStatus == AssetImportObject::UseForDependencies ||
+      assetItem->importStatus == AssetImportObject::Error)
    {
       return StringTable->EmptyString();
    }

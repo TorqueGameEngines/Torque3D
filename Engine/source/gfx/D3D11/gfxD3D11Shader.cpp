@@ -1124,8 +1124,7 @@ bool GFXD3D11Shader::_compileShader( const Torque::Path &filePath,
             res = D3D11DEVICE->CreateVertexShader(code->GetBufferPointer(), code->GetBufferSize(), NULL, &mVertShader);
          else if (target.compare("cs_", 3) == 0)
          {
-            if(mComputeShader != NULL)
-               res = D3D11DEVICE->CreateComputeShader(code->GetBufferPointer(), code->GetBufferSize(), NULL, &mComputeShader);
+            res = D3D11DEVICE->CreateComputeShader(code->GetBufferPointer(), code->GetBufferSize(), NULL, &mComputeShader);
          }
          
          if (FAILED(res))
@@ -1489,7 +1488,7 @@ bool GFXD3D11Shader::_loadCompiledOutput( const Torque::Path &filePath,
       res = D3D11DEVICE->CreatePixelShader(buffer, bufferSize, NULL, &mPixShader);
    else if (target.compare("vs_", 3) == 0)
       res = D3D11DEVICE->CreateVertexShader(buffer, bufferSize, NULL, &mVertShader);
-   else
+   else //(target.compare("cs_", 3) == 0)
       res = D3D11DEVICE->CreateComputeShader(buffer, bufferSize, NULL, &mComputeShader);
    AssertFatal(SUCCEEDED(res), "Unable to load shader!");
 

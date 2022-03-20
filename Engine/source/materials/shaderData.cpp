@@ -70,6 +70,10 @@ ShaderData::ShaderData()
    mDXPixelShaderName = StringTable->EmptyString();
    mDXComputeShaderName = StringTable->EmptyString();
 
+   mOGLVertexShaderName = StringTable->EmptyString();
+   mOGLPixelShaderName = StringTable->EmptyString();
+   mOGLComputeShaderName = StringTable->EmptyString();
+
    for( int i = 0; i < NumTextures; ++i)
       mRTParams[i] = false;
 }
@@ -102,6 +106,11 @@ void ShaderData::initPersistFields()
 	   "@brief %Path to an OpenGL pixel shader file to use for this ShaderData.\n\n"
 	   "It must contain only one program and no vertex shader, just the pixel "
 	   "shader.");
+
+   addField("OGLComputeShaderFile", TypeStringFilename, Offset(mOGLComputeShaderName, ShaderData),
+      "@brief %Path to an OpenGL compute shader file to use for this ShaderData.\n\n"
+      "It must contain only one program and no vertex shader, just the pixel "
+      "shader.");
 
    addField("useDevicePixVersion",  TypeBool,            Offset(mUseDevicePixVersion,   ShaderData),
 	   "@brief If true, the maximum pixel shader version offered by the graphics card will be used.\n\n"

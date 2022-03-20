@@ -65,6 +65,8 @@ protected:
 
    StringTableEntry mOGLPixelShaderName;
 
+   StringTableEntry mOGLComputeShaderName;
+
    /// A semicolon, tab, or newline delimited string of case
    /// sensitive defines that are passed to the shader compiler.
    ///

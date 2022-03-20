@@ -102,14 +102,18 @@ const String& GFXD3D11ShaderConstHandle::getName() const
 {
    if ( mVertexConstant )
       return mVertexHandle.name;
+   else if (mComputeConstant)
+      return mComputeHandle.name;
    else
       return mPixelHandle.name;
 }
 
 GFXShaderConstType GFXD3D11ShaderConstHandle::getType() const
 {
-   if ( mVertexConstant )
+   if (mVertexConstant)
       return mVertexHandle.constType;
+   else if (mComputeConstant)
+      return mComputeHandle.constType;
    else
       return mPixelHandle.constType;
 }
@@ -118,6 +122,8 @@ U32 GFXD3D11ShaderConstHandle::getArraySize() const
 {
    if ( mVertexConstant )
       return mVertexHandle.arraySize;
+   else if (mComputeConstant)
+      return mComputeHandle.arraySize;
    else
       return mPixelHandle.arraySize;
 }
@@ -356,6 +362,30 @@ void GFXD3D11ShaderConstBuffer::_createBuffers()
          }
       }
    }
+
+   // Create a compute constant buffer
+   if (mComputeConstBufferLayout->getBufferSize())
+   {
+      const Vector<ConstSubBufferDesc>& subBuffers = mPixelConstBufferLayout->getSubBufferDesc();
+      for (U32 i = 0; i < subBuffers.size(); ++i)
+      {
+         // Create a pixel float constant buffer
+         D3D11_BUFFER_DESC cbDesc;
+         cbDesc.ByteWidth = subBuffers[i].size;
+         cbDesc.Usage = D3D11_USAGE_DEFAULT;
+         cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+         cbDesc.CPUAccessFlags = 0;
+         cbDesc.MiscFlags = 0;
+         cbDesc.StructureByteStride = 0;
+
+         hr = D3D11DEVICE->CreateBuffer(&cbDesc, NULL, &mConstantBuffersP[i]);
+
+         if (FAILED(hr))
+         {
+            AssertFatal(false, "can't create constant mConstantBuffersP!");
+         }
+      }
+   }
 }
 
 GFXShader* GFXD3D11ShaderConstBuffer::getShader()
@@ -387,6 +417,8 @@ inline void GFXD3D11ShaderConstBuffer::SET_CONSTANT(  GFXShaderConstHandle* hand
       vBuffer->set(h->mVertexHandle, fv);
    if (h->mPixelConstant)
       pBuffer->set(h->mPixelHandle, fv);
+   if (h->mComputeConstant)
+      pBuffer->set(h->mComputeHandle, fv);
 }
 
 void GFXD3D11ShaderConstBuffer::set(GFXShaderConstHandle* handle, const F32 fv) 
@@ -522,6 +554,8 @@ void GFXD3D11ShaderConstBuffer::set(GFXShaderConstHandle* handle, const MatrixF&
       mVertexConstBuffer->set(h->mVertexHandle, transposed, matrixType); 
    if (h->mPixelConstant) 
       mPixelConstBuffer->set(h->mPixelHandle, transposed, matrixType);
+   if (h->mComputeConstant)
+      mComputeConstBuffer->set(h->mComputeHandle, transposed, matrixType);
 }
 
 void GFXD3D11ShaderConstBuffer::set(GFXShaderConstHandle* handle, const MatrixF* mat, const U32 arraySize, const GFXShaderConstType matrixType)
@@ -556,6 +590,8 @@ void GFXD3D11ShaderConstBuffer::set(GFXShaderConstHandle* handle, const MatrixF*
       mVertexConstBuffer->set(h->mVertexHandle, transposed.begin(), arraySize, matrixType);
    if (h->mPixelConstant) 
       mPixelConstBuffer->set(h->mPixelHandle, transposed.begin(), arraySize, matrixType);
+   if (h->mComputeConstant)
+      mComputeConstBuffer->set(h->mComputeHandle, transposed.begin(), arraySize, matrixType);
 }
 
 const String GFXD3D11ShaderConstBuffer::describeSelf() const
@@ -691,7 +727,7 @@ void GFXD3D11ShaderConstBuffer::activate( GFXD3D11ShaderConstBuffer *prevShaderB
          nbBuffers++;
       }
 
-      mDeviceContext->CSSetConstantBuffers(0, nbBuffers, mConstantBuffersP);
+      mDeviceContext->CSSetConstantBuffers(0, nbBuffers, mConstantBuffersC);
    }
 
    #ifdef TORQUE_DEBUG
@@ -814,18 +850,18 @@ bool GFXD3D11Shader::_init()
    else
       mPixelConstBufferLayout->clear();
 
+   // still needed.
    if (!mComputeConstBufferLayout)
       mComputeConstBufferLayout = new GFXD3D11ConstBufferLayout();
    else
       mComputeConstBufferLayout->clear();
-
    
    mSamplerDescriptions.clear();
    mShaderConsts.clear();
 
    String vertTarget = D3D11->getVertexShaderTarget();
    String pixTarget = D3D11->getPixelShaderTarget();
-   String computeTarget = D3D11->getComputeShaderTarget();
+   
 
    if ( !Con::getBoolVariable( "$shaders::forceLoadCSF", false ) )
    {
@@ -833,9 +869,6 @@ bool GFXD3D11Shader::_init()
          return false;
 
       if (!mPixelFile.isEmpty() && !_compileShader( mPixelFile, pixTarget, d3dMacros, mPixelConstBufferLayout, mSamplerDescriptions ) )
-         return false;
-
-      if (!mComputeFile.isEmpty() && !_compileShader(mPixelFile, computeTarget, d3dMacros, mComputeConstBufferLayout, mSamplerDescriptions))
          return false;
 
    } 
@@ -857,14 +890,6 @@ bool GFXD3D11Shader::_init()
          return false;
       }
 
-      if (!_loadCompiledOutput(mComputeFile, computeTarget, mComputeConstBufferLayout, mSamplerDescriptions))
-      {
-         if (smLogErrors)
-            Con::errorf("GFXD3D11Shader::init - Unable to load precompiled pixel shader for '%s'.", mComputeFile.getFullPath().c_str());
-
-         return false;
-      }
-
    }
 
    // Existing handles are resored to an uninitialized state.
@@ -874,9 +899,8 @@ bool GFXD3D11Shader::_init()
    for ( ; iter != mHandles.end(); iter++ )        
       (iter->value)->clear();      
 
-   _buildShaderConstantHandles(mVertexConstBufferLayout, true);
-   _buildShaderConstantHandles(mPixelConstBufferLayout, false);
-   _buildShaderConstantHandles(mComputeConstBufferLayout, false);
+   _buildShaderConstantHandles(mVertexConstBufferLayout, true, false);
+   _buildShaderConstantHandles(mPixelConstBufferLayout, false, false);
 
    _buildSamplerShaderConstantHandles( mSamplerDescriptions );
    _buildInstancingShaderConstantHandles();
@@ -886,6 +910,71 @@ bool GFXD3D11Shader::_init()
    Vector<GFXShaderConstBuffer*>::iterator biter = mActiveBuffers.begin();
    for ( ; biter != mActiveBuffers.end(); biter++ )
       ((GFXD3D11ShaderConstBuffer*)(*biter))->onShaderReload( this );
+
+   return true;
+}
+
+bool GFXD3D11Shader::_initCompute()
+{
+   SAFE_RELEASE(mComputeShader);
+
+   // Create the macro array including the system wide macros.
+   const U32 macroCount = smGlobalMacros.size() + mMacros.size() + 2;
+   FrameTemp<D3D_SHADER_MACRO> d3dMacros(macroCount);
+
+   for (U32 i = 0; i < smGlobalMacros.size(); i++)
+   {
+      d3dMacros[i].Name = smGlobalMacros[i].name.c_str();
+      d3dMacros[i].Definition = smGlobalMacros[i].value.c_str();
+   }
+
+   for (U32 i = 0; i < mMacros.size(); i++)
+   {
+      d3dMacros[i + smGlobalMacros.size()].Name = mMacros[i].name.c_str();
+      d3dMacros[i + smGlobalMacros.size()].Definition = mMacros[i].value.c_str();
+   }
+
+   d3dMacros[macroCount - 2].Name = "TORQUE_SM";
+   d3dMacros[macroCount - 2].Definition = D3D11->getShaderModel().c_str();
+
+   memset(&d3dMacros[macroCount - 1], 0, sizeof(D3D_SHADER_MACRO));
+
+   if (!mComputeConstBufferLayout)
+      mComputeConstBufferLayout = new GFXD3D11ConstBufferLayout();
+   else
+      mComputeConstBufferLayout->clear();
+
+
+   mSamplerDescriptions.clear();
+   mShaderConsts.clear();
+
+   String computeTarget = D3D11->getComputeShaderTarget();
+
+   if (!Con::getBoolVariable("$shaders::forceLoadCSF", false))
+   {
+      if (!mComputeFile.isEmpty() && !_compileShader(mComputeFile, computeTarget, d3dMacros, mComputeConstBufferLayout, mSamplerDescriptions))
+         return false;
+   }
+   else
+   {
+      if (!_loadCompiledOutput(mComputeFile, computeTarget, mComputeConstBufferLayout, mSamplerDescriptions))
+      {
+         if (smLogErrors)
+            Con::errorf("GFXD3D11Shader::init - Unable to load precompiled pixel shader for '%s'.", mComputeFile.getFullPath().c_str());
+
+         return false;
+      }
+   }
+   _buildShaderConstantHandles(mComputeConstBufferLayout, false, true);
+
+   _buildSamplerShaderConstantHandles(mSamplerDescriptions);
+   _buildInstancingShaderConstantHandles();
+
+   // Notify any existing buffers that the buffer 
+   // layouts have changed and they need to update.
+   Vector<GFXShaderConstBuffer*>::iterator biter = mActiveBuffers.begin();
+   for (; biter != mActiveBuffers.end(); biter++)
+      ((GFXD3D11ShaderConstBuffer*)(*biter))->onShaderReload(this);
 
    return true;
 }
@@ -1034,7 +1123,10 @@ bool GFXD3D11Shader::_compileShader( const Torque::Path &filePath,
          else if (target.compare("vs_", 3) == 0)
             res = D3D11DEVICE->CreateVertexShader(code->GetBufferPointer(), code->GetBufferSize(), NULL, &mVertShader);
          else if (target.compare("cs_", 3) == 0)
-            res = D3D11DEVICE->CreateComputeShader(code->GetBufferPointer(), code->GetBufferSize(), NULL, &mComputeShader);
+         {
+            if(mComputeShader != NULL)
+               res = D3D11DEVICE->CreateComputeShader(code->GetBufferPointer(), code->GetBufferSize(), NULL, &mComputeShader);
+         }
          
          if (FAILED(res))
          {
@@ -1078,8 +1170,11 @@ bool GFXD3D11Shader::_compileShader( const Torque::Path &filePath,
    }
    else if (target.compare("cs_", 3) == 0)
    {
-      String computeShader = mPixelFile.getFileName();
-      mComputeShader->SetPrivateData(WKPDID_D3DDebugObjectName, computeShader.size(), computeShader.c_str());
+      if (!mComputeShader != NULL)
+      {
+         String computeShader = mComputeFile.getFileName();
+         mComputeShader->SetPrivateData(WKPDID_D3DDebugObjectName, computeShader.size(), computeShader.c_str());
+      }
    }
 #endif
   
@@ -1402,7 +1497,7 @@ bool GFXD3D11Shader::_loadCompiledOutput( const Torque::Path &filePath,
    return SUCCEEDED(res);
 }
 
-void GFXD3D11Shader::_buildShaderConstantHandles(GenericConstBufferLayout* layout, bool vertexConst)
+void GFXD3D11Shader::_buildShaderConstantHandles(GenericConstBufferLayout* layout, bool vertexConst, bool computeConst = false)
 {                     
    for (U32 i = 0; i < layout->getParameterCount(); i++)
    {
@@ -1430,6 +1525,11 @@ void GFXD3D11Shader::_buildShaderConstantHandles(GenericConstBufferLayout* layou
       {
          handle->mVertexConstant = true;
          handle->mVertexHandle = pd;
+      }
+      else if (computeConst)
+      {
+         handle->mComputeConstant = true;
+         handle->mComputeHandle = pd;
       }
       else
       {
@@ -1533,7 +1633,7 @@ void GFXD3D11Shader::_buildInstancingShaderConstantHandles()
 
 GFXShaderConstBufferRef GFXD3D11Shader::allocConstBuffer()
 {
-   if (mVertexConstBufferLayout && mPixelConstBufferLayout && mComputeConstBufferLayout)
+   if (mVertexConstBufferLayout && mPixelConstBufferLayout)
    {
       GFXD3D11ShaderConstBuffer* buffer = new GFXD3D11ShaderConstBuffer(this, mVertexConstBufferLayout, mPixelConstBufferLayout, mComputeConstBufferLayout);
       mActiveBuffers.push_back( buffer );

@@ -563,6 +563,11 @@ bool GFXGLShader::_init()
    return true;
 }
 
+bool GFXGLShader::_initCompute()
+{
+   return _init();
+}
+
 void GFXGLShader::initConstantDescs()
 {
    mConstants.clear();

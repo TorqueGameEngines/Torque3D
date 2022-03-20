@@ -313,11 +313,16 @@ public:
    ///
    bool init(  const Torque::Path &vertFile, 
                const Torque::Path &pixFile,
-               const Torque::Path& compFile,
                F32 pixVersion, 
                const Vector<GFXShaderMacro> &macros,
                const Vector<String> &samplerNames,
                GFXVertexFormat *instanceFormat = NULL );
+
+   bool initCompute( const Torque::Path& compFile,
+                     F32 pixVersion,
+                     const Vector<GFXShaderMacro>& macros,
+                     const Vector<String>& samplerNames,
+                     GFXVertexFormat* instanceFormat = NULL);
 
    /// Reloads the shader from disk.
    bool reload();

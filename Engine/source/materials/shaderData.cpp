@@ -256,23 +256,41 @@ GFXShader* ShaderData::_createShader( const Vector<GFXShaderMacro> &macros )
    {
       case Direct3D11:
       {
-         success = shader->init( mDXVertexShaderName, 
-                                 mDXPixelShaderName,
-                                 mDXComputeShaderName,
-                                 pixver,
-                                 macros,
-                                 samplers);
+         if (mDXComputeShaderName == StringTable->EmptyString())
+         {
+            success = shader->init( mDXVertexShaderName,
+                                    mDXPixelShaderName,
+                                    pixver,
+                                    macros,
+                                    samplers);
+         }
+         else
+         {
+            success = shader->initCompute( mDXComputeShaderName,
+                                           pixver,
+                                           macros,
+                                           samplers);
+         }
          break;
       }
 
       case OpenGL:
       {
-         success = shader->init( mOGLVertexShaderName,
-                                 mOGLPixelShaderName,
-                                 NULL,
-                                 pixver,
-                                 macros,
-                                 samplers);
+         if (mOGLComputeShaderName == StringTable->EmptyString())
+         {
+            success = shader->init( mOGLVertexShaderName,
+                                    mOGLPixelShaderName,
+                                    pixver,
+                                    macros,
+                                    samplers);
+         }
+         else
+         {
+            success = shader->initCompute(mOGLComputeShaderName,
+                                          pixver,
+                                          macros,
+                                          samplers);
+         }
          break;
       }
          

@@ -262,6 +262,8 @@ public:
    GenericConstBufferLayout::ParamDesc mVertexHandle;
    bool mPixelConstant;
    GenericConstBufferLayout::ParamDesc mPixelHandle;
+   bool mComputeConstant = false;
+   GenericConstBufferLayout::ParamDesc mComputeHandle;
    
    /// Is true if this constant is for hardware mesh instancing.
    ///
@@ -408,7 +410,9 @@ public:
 
 protected:
 
-   virtual bool _init();   
+   virtual bool _init();
+
+   virtual bool _initCompute();
 
    static const U32 smCompiledShaderTag;
 
@@ -462,7 +466,7 @@ protected:
                              Vector<GFXShaderConstDesc> &samplerDescriptions );
   
    // This is used in both cases
-   virtual void _buildShaderConstantHandles(GenericConstBufferLayout *layout, bool vertexConst);
+   virtual void _buildShaderConstantHandles(GenericConstBufferLayout *layout, bool vertexConst, bool computeConst);
    
    virtual void _buildSamplerShaderConstantHandles( Vector<GFXShaderConstDesc> &samplerDescriptions );
 

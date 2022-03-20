@@ -71,7 +71,9 @@ protected:
    friend class GFXGLShaderConstBuffer;
    friend class GFXGLShaderConstHandle;
    
-   virtual bool _init();   
+   virtual bool _init();
+
+   virtual bool _initCompute();
 
    bool initShader(  const Torque::Path &file, 
                      bool isVertex, 

@@ -483,8 +483,6 @@ GFXShader* ShaderGen::getShader( const MaterialFeatureData &featureData, const G
    // if not, then create it
    char vertFile[256];
    char pixFile[256];
-   // need an empty compFile to send.
-   char compFile[256];
    F32  pixVersion;
 
    Vector<GFXShaderMacro> shaderMacros;
@@ -494,7 +492,7 @@ GFXShader* ShaderGen::getShader( const MaterialFeatureData &featureData, const G
    generateShader( featureData, vertFile, pixFile, &pixVersion, vertexFormat, cacheKey, shaderMacros );
 
    GFXShader *shader = GFX->createShader();
-   if (!shader->init(vertFile, pixFile, compFile, pixVersion, shaderMacros, samplers, &mInstancingFormat))
+   if (!shader->init(vertFile, pixFile, pixVersion, shaderMacros, samplers, &mInstancingFormat))
    {
       delete shader;
       return NULL;

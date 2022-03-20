@@ -63,7 +63,6 @@ bool GFXShader::init(   const Torque::Path &vertFile,
 
 bool GFXShader::init(   const Torque::Path &vertFile, 
                         const Torque::Path &pixFile, 
-                        const Torque::Path &compFile, 
                         F32 pixVersion, 
                         const Vector<GFXShaderMacro> &macros,
                         const Vector<String> &samplerNames,
@@ -79,7 +78,6 @@ bool GFXShader::init(   const Torque::Path &vertFile,
    // Store the inputs for use in reloading.
    mVertexFile = vertFile;
    mPixelFile = pixFile;
-   mComputeFile = compFile;
    mPixVersion = pixVersion;
    mMacros = macros;
    mSamplerNamesOrdered = samplerNames;
@@ -97,7 +95,42 @@ bool GFXShader::init(   const Torque::Path &vertFile,
    // Add file change notifications for reloads.
    Torque::FS::AddChangeNotification( mVertexFile, this, &GFXShader::_onFileChanged );
    Torque::FS::AddChangeNotification( mPixelFile, this, &GFXShader::_onFileChanged );
-   Torque::FS::AddChangeNotification( mComputeFile, this, &GFXShader::_onFileChanged );
+
+   return true;
+}
+
+bool GFXShader::initCompute(
+   const Torque::Path& compFile,
+   F32 pixVersion,
+   const Vector<GFXShaderMacro>& macros,
+   const Vector<String>& samplerNames,
+   GFXVertexFormat* instanceFormat)
+{
+   // Take care of instancing
+   if (instanceFormat)
+   {
+      mInstancingFormat = new GFXVertexFormat;
+      mInstancingFormat->copy(*instanceFormat);
+   }
+
+   // Store the inputs for use in reloading.
+   mComputeFile = compFile;
+   mPixVersion = pixVersion;
+   mMacros = macros;
+   mSamplerNamesOrdered = samplerNames;
+
+   // Before we compile the shader make sure the
+   // conditioner features have been updated.
+   ConditionerFeature::updateConditioners();
+
+   // Now do the real initialization.
+   if (!_init())
+      return false;
+
+   _updateDesc();
+
+   // Add file change notifications for reloads.
+   Torque::FS::AddChangeNotification(mComputeFile, this, &GFXShader::_onFileChanged);
 
    return true;
 }

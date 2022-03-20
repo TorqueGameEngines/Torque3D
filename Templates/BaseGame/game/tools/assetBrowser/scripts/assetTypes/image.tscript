@@ -148,9 +148,14 @@ function AssetBrowser::importImageAsset(%this, %assetItem)
       assetName = %assetName;
       versionId = 1;
       imageFile = fileName(%filePath);
-      originalFilePath = %filePath;
       imageType = %assetItem.imageType;
    };
+   
+   //No point in indicating the original path data if it was imported in-place
+   if(!startsWith(makeFullPath(%filePath), getMainDotCsDir()))
+   {
+      %newAsset.originalFilePath = %filePath;
+   }
    
    %assetImportSuccessful = TAMLWrite(%newAsset, %assetPath @ "/" @ %assetName @ ".asset.taml"); 
    

@@ -290,6 +290,15 @@ function SubMaterialSelector::onSelect( %this )
       if( MaterialEditorGui.currentObject.isMethod("postApply") )
          MaterialEditorGui.currentObject.postApply();*/
    }
+   else
+   {
+      %materialAssetId = MaterialAsset::getAssetIdByMaterialName(%material);
+      if(%materialAssetId !$= "" && %materialAssetId !$= $Core::NoMaterialAssetFallback)
+      {
+         MaterialEditorGui.currentMaterialAsset = %materialAssetId;
+         %assetDef = AssetDatabase.acquireAsset(%material);
+      }
+   }
 
    MaterialEditorGui.prepareActiveMaterial( %material.getId() );
 }
@@ -1950,6 +1959,7 @@ function MaterialEditorGui::save( %this )
      
    if(MaterialEditorGui.currentMaterialAsset !$= "")
    {
+      echo("Attempting to save material: " @ MaterialEditorGui.currentMaterialAsset);
       MaterialEditorGui.copyMaterials( materialEd_previewMaterial, notDirtyMaterial );
       
       %assetDef = AssetDatabase.acquireAsset(MaterialEditorGui.currentMaterialAsset);

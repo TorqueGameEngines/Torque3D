@@ -321,9 +321,15 @@ function AssetBrowser::importMaterialAsset(%this, %assetItem)
       versionId = 1;
       shaderGraph = %sgfPath;
       scriptFile = %assetName @ "." @ $TorqueScriptFileExtension;
-      originalFilePath = %filePath;
       materialDefinitionName = %assetName;
    };
+   
+   //No point in indicating the original path data if it was imported in-place
+   %mainPath = getMainDotCsDir();
+   if(!startsWith(makeFullPath(%filePath), getMainDotCsDir()))
+   {
+      %newAsset.originalFilePath = %filePath;
+   }
    
    //check dependencies
    %dependencySlotId = 0;

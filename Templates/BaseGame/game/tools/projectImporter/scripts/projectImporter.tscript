@@ -1661,7 +1661,7 @@ function beginTerrainImport()
                      if(%terrMatAssetId !$= "")
                      {
                         //Ok, success, lets run the rename
-                        if(%terrBlock.renameTerrainMaterial(%terrMatName, %terrMatName @ "_terrainMat"))
+                        if(%terrBlock.renameTerrainMaterial(%terrMatName, %terrMatAssetId))
                            %matNamesChanged = true;
                      }
                   }

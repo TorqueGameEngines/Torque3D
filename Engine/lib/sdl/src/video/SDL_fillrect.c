@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -28,7 +28,7 @@
 #ifdef __SSE__
 /* *INDENT-OFF* */
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(__clang__)
 #define SSE_BEGIN \
     __m128 c128; \
     c128.m128_u32[0] = color; \
@@ -145,13 +145,13 @@ SDL_FillRect1(Uint8 * pixels, int pitch, Uint32 color, int w, int h)
             switch ((uintptr_t) p & 3) {
             case 1:
                 *p++ = (Uint8) color;
-                --n;                    /* fallthrough */
+                --n;                    SDL_FALLTHROUGH;
             case 2:
                 *p++ = (Uint8) color;
-                --n;                    /* fallthrough */
+                --n;                    SDL_FALLTHROUGH;
             case 3:
                 *p++ = (Uint8) color;
-                --n;                    /* fallthrough */
+                --n;
             }
             SDL_memset4(p, color, (n >> 2));
         }
@@ -159,11 +159,11 @@ SDL_FillRect1(Uint8 * pixels, int pitch, Uint32 color, int w, int h)
             p += (n & ~3);
             switch (n & 3) {
             case 3:
-                *p++ = (Uint8) color;   /* fallthrough */
+                *p++ = (Uint8) color;   SDL_FALLTHROUGH;
             case 2:
-                *p++ = (Uint8) color;   /* fallthrough */
+                *p++ = (Uint8) color;   SDL_FALLTHROUGH;
             case 1:
-                *p++ = (Uint8) color;   /* fallthrough */
+                *p++ = (Uint8) color;
             }
         }
         pixels += pitch;
@@ -238,7 +238,7 @@ int
 SDL_FillRect(SDL_Surface * dst, const SDL_Rect * rect, Uint32 color)
 {
     if (!dst) {
-        return SDL_SetError("Passed NULL destination surface");
+        return SDL_InvalidParamError("SDL_FillRect(): dst");
     }
 
     /* If 'rect' == NULL, then fill the whole surface */
@@ -306,12 +306,7 @@ SDL_FillRects(SDL_Surface * dst, const SDL_Rect * rects, int count,
     int i;
 
     if (!dst) {
-        return SDL_SetError("Passed NULL destination surface");
-    }
-
-    /* This function doesn't work on surfaces < 8 bpp */
-    if (dst->format->BitsPerPixel < 8) {
-        return SDL_SetError("SDL_FillRect(): Unsupported surface format");
+        return SDL_InvalidParamError("SDL_FillRects(): dst");
     }
 
     /* Nothing to do */
@@ -321,11 +316,28 @@ SDL_FillRects(SDL_Surface * dst, const SDL_Rect * rects, int count,
 
     /* Perform software fill */
     if (!dst->pixels) {
-        return SDL_SetError("SDL_FillRect(): You must lock the surface");
+        return SDL_SetError("SDL_FillRects(): You must lock the surface");
     }
 
     if (!rects) {
-        return SDL_SetError("SDL_FillRects() passed NULL rects");
+        return SDL_InvalidParamError("SDL_FillRects(): rects");
+    }
+
+    /* This function doesn't usually work on surfaces < 8 bpp
+     * Except: support for 4bits, when filling full size.
+     */
+    if (dst->format->BitsPerPixel < 8) {
+        if (count == 1) {
+            const SDL_Rect *r = &rects[0];
+            if (r->x == 0 && r->y == 0 && r->w == dst->w && r->w == dst->h) {
+                if (dst->format->BitsPerPixel == 4) {
+                    Uint8 b = (((Uint8) color << 4) | (Uint8) color);
+                    SDL_memset(dst->pixels, b, dst->h * dst->pitch);
+                    return 1;
+                }
+            }
+        }
+        return SDL_SetError("SDL_FillRects(): Unsupported surface format");
     }
 
 #if SDL_ARM_NEON_BLITTERS

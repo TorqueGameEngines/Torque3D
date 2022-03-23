@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -35,7 +35,7 @@
 #define DEFAULT_FONT "NoDefaultFont.ttf"
 #endif
 #else
-#define DEFAULT_FONT "unifont-9.0.02.hex"
+#define DEFAULT_FONT "unifont-13.0.06.hex"
 #endif
 #define MAX_TEXT_LENGTH 256
 
@@ -648,12 +648,12 @@ int main(int argc, char *argv[])
     }
     for (argc--, argv++; argc > 0; argc--, argv++)
     {
-        if (strcmp(argv[0], "--help") == 0) {
+        if (SDL_strcmp(argv[0], "--help") == 0) {
             usage();
             return 0;
         }
 
-        else if (strcmp(argv[0], "--font") == 0)
+        else if (SDL_strcmp(argv[0], "--font") == 0)
         {
             argc--;
             argv++;

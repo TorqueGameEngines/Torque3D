@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -61,15 +61,16 @@ static const struct { int x; int y; double angle; } axis_positions[] = {
     {375, -20,   0.0},  /* TRIGGERRIGHT */
 };
 
-SDL_Window *window = NULL;
-SDL_Renderer *screen = NULL;
-SDL_bool retval = SDL_FALSE;
-SDL_bool done = SDL_FALSE;
-SDL_bool set_LED = SDL_FALSE;
-SDL_Texture *background_front, *background_back, *button, *axis;
-SDL_GameController *gamecontroller;
-SDL_GameController **gamecontrollers;
-int num_controllers = 0;
+static SDL_Window *window = NULL;
+static SDL_Renderer *screen = NULL;
+static SDL_bool retval = SDL_FALSE;
+static SDL_bool done = SDL_FALSE;
+static SDL_bool set_LED = SDL_FALSE;
+static int trigger_effect = 0;
+static SDL_Texture *background_front, *background_back, *button, *axis;
+static SDL_GameController *gamecontroller;
+static SDL_GameController **gamecontrollers;
+static int num_controllers = 0;
 
 static void UpdateWindowTitle()
 {
@@ -146,6 +147,7 @@ static void AddController(int device_index, SDL_bool verbose)
     controllers[num_controllers++] = controller;
     gamecontrollers = controllers;
     gamecontroller = controller;
+    trigger_effect = 0;
 
     if (verbose) {
         const char *name = SDL_GameControllerName(gamecontroller);
@@ -154,16 +156,24 @@ static void AddController(int device_index, SDL_bool verbose)
 
     if (SDL_GameControllerHasSensor(gamecontroller, SDL_SENSOR_ACCEL)) {
         if (verbose) {
-            SDL_Log("Enabling accelerometer\n");
+            SDL_Log("Enabling accelerometer at %.2f Hz\n", SDL_GameControllerGetSensorDataRate(gamecontroller, SDL_SENSOR_ACCEL));
         }
         SDL_GameControllerSetSensorEnabled(gamecontroller, SDL_SENSOR_ACCEL, SDL_TRUE);
     }
 
     if (SDL_GameControllerHasSensor(gamecontroller, SDL_SENSOR_GYRO)) {
         if (verbose) {
-            SDL_Log("Enabling gyro\n");
+            SDL_Log("Enabling gyro at %.2f Hz\n", SDL_GameControllerGetSensorDataRate(gamecontroller, SDL_SENSOR_GYRO));
         }
         SDL_GameControllerSetSensorEnabled(gamecontroller, SDL_SENSOR_GYRO, SDL_TRUE);
+    }
+
+    if (SDL_GameControllerHasRumble(gamecontroller)) {
+        SDL_Log("Rumble supported");
+    }
+
+    if (SDL_GameControllerHasRumbleTriggers(gamecontroller)) {
+        SDL_Log("Trigger rumble supported");
     }
 
     UpdateWindowTitle();
@@ -234,15 +244,66 @@ LoadTexture(SDL_Renderer *renderer, const char *file, SDL_bool transparent)
     return texture;
 }
 
-static Uint16 ConvertAxisToRumble(Sint16 axis)
+static Uint16 ConvertAxisToRumble(Sint16 axisval)
 {
     /* Only start rumbling if the axis is past the halfway point */
     const Sint16 half_axis = (Sint16)SDL_ceil(SDL_JOYSTICK_AXIS_MAX / 2.0f);
-    if (axis > half_axis) {
-        return (Uint16)(axis - half_axis) * 4;
+    if (axisval > half_axis) {
+        return (Uint16)(axisval - half_axis) * 4;
     } else {
         return 0;
     }
+}
+
+/* PS5 trigger effect documentation:
+   https://controllers.fandom.com/wiki/Sony_DualSense#FFB_Trigger_Modes
+*/
+typedef struct
+{
+    Uint8 ucEnableBits1;                /* 0 */
+    Uint8 ucEnableBits2;                /* 1 */
+    Uint8 ucRumbleRight;                /* 2 */
+    Uint8 ucRumbleLeft;                 /* 3 */
+    Uint8 ucHeadphoneVolume;            /* 4 */
+    Uint8 ucSpeakerVolume;              /* 5 */
+    Uint8 ucMicrophoneVolume;           /* 6 */
+    Uint8 ucAudioEnableBits;            /* 7 */
+    Uint8 ucMicLightMode;               /* 8 */
+    Uint8 ucAudioMuteBits;              /* 9 */
+    Uint8 rgucRightTriggerEffect[11];   /* 10 */
+    Uint8 rgucLeftTriggerEffect[11];    /* 21 */
+    Uint8 rgucUnknown1[6];              /* 32 */
+    Uint8 ucLedFlags;                   /* 38 */
+    Uint8 rgucUnknown2[2];              /* 39 */
+    Uint8 ucLedAnim;                    /* 41 */
+    Uint8 ucLedBrightness;              /* 42 */
+    Uint8 ucPadLights;                  /* 43 */
+    Uint8 ucLedRed;                     /* 44 */
+    Uint8 ucLedGreen;                   /* 45 */
+    Uint8 ucLedBlue;                    /* 46 */
+} DS5EffectsState_t;
+
+static void CyclePS5TriggerEffect()
+{
+    DS5EffectsState_t state;
+
+    Uint8 effects[3][11] =
+    {
+        /* Clear trigger effect */
+        { 0x05, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        /* Constant resistance across entire trigger pull */
+        { 0x01, 0, 110, 0, 0, 0, 0, 0, 0, 0, 0 },
+        /* Resistance and vibration when trigger is pulled */
+        { 0x06, 15, 63, 128, 0, 0, 0, 0, 0, 0, 0 },
+    };
+
+    trigger_effect = (trigger_effect + 1) % SDL_arraysize(effects);
+
+    SDL_zero(state);
+    state.ucEnableBits1 |= (0x04 | 0x08); /* Modify right and left trigger effect respectively */
+    SDL_memcpy(state.rgucRightTriggerEffect, effects[trigger_effect], sizeof(effects[trigger_effect]));
+    SDL_memcpy(state.rgucLeftTriggerEffect, effects[trigger_effect], sizeof(effects[trigger_effect]));
+    SDL_GameControllerSendEffect(gamecontroller, &state, sizeof(state));
 }
 
 void
@@ -252,7 +313,11 @@ loop(void *arg)
     int i;
     SDL_bool showing_front = SDL_TRUE;
 
-    while (SDL_PollEvent(&event)) {
+    /* Update to get the current event state */
+    SDL_PumpEvents();
+
+    /* Process all currently pending events */
+    while (SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_FIRSTEVENT, SDL_LASTEVENT) == 1) {
         switch (event.type) {
         case SDL_CONTROLLERDEVICEADDED:
             SDL_Log("Game controller device %d added.\n", (int) SDL_JoystickGetDeviceInstanceID(event.cdevice.which));
@@ -267,7 +332,8 @@ loop(void *arg)
         case SDL_CONTROLLERTOUCHPADDOWN:
         case SDL_CONTROLLERTOUCHPADMOTION:
         case SDL_CONTROLLERTOUCHPADUP:
-            SDL_Log("Controller touchpad %d finger %d %s %.2f, %.2f, %.2f\n",
+            SDL_Log("Controller %d touchpad %d finger %d %s %.2f, %.2f, %.2f\n",
+                event.ctouchpad.which,
                 event.ctouchpad.touchpad,
                 event.ctouchpad.finger,
                 (event.type == SDL_CONTROLLERTOUCHPADDOWN ? "pressed at" :
@@ -278,35 +344,57 @@ loop(void *arg)
                 event.ctouchpad.pressure);
             break;
 
+#define VERBOSE_SENSORS
+#ifdef VERBOSE_SENSORS
         case SDL_CONTROLLERSENSORUPDATE:
-            SDL_Log("Controller sensor %s: %.2f, %.2f, %.2f\n",
+            SDL_Log("Controller %d sensor %s: %.2f, %.2f, %.2f\n",
+                event.csensor.which,
                 event.csensor.sensor == SDL_SENSOR_ACCEL ? "accelerometer" :
                 event.csensor.sensor == SDL_SENSOR_GYRO ? "gyro" : "unknown",
                 event.csensor.data[0],
                 event.csensor.data[1],
                 event.csensor.data[2]);
             break;
+#endif /* VERBOSE_SENSORS */
 
+#define VERBOSE_AXES
+#ifdef VERBOSE_AXES
         case SDL_CONTROLLERAXISMOTION:
             if (event.caxis.value <= (-SDL_JOYSTICK_AXIS_MAX / 2) || event.caxis.value >= (SDL_JOYSTICK_AXIS_MAX / 2)) {
                 SetController(event.caxis.which);
             }
-            SDL_Log("Controller axis %s changed to %d\n", SDL_GameControllerGetStringForAxis((SDL_GameControllerAxis)event.caxis.axis), event.caxis.value);
+            SDL_Log("Controller %d axis %s changed to %d\n", event.caxis.which, SDL_GameControllerGetStringForAxis((SDL_GameControllerAxis)event.caxis.axis), event.caxis.value);
             break;
+#endif /* VERBOSE_AXES */
 
         case SDL_CONTROLLERBUTTONDOWN:
         case SDL_CONTROLLERBUTTONUP:
             if (event.type == SDL_CONTROLLERBUTTONDOWN) {
                 SetController(event.cbutton.which);
             }
-            SDL_Log("Controller button %s %s\n", SDL_GameControllerGetStringForButton((SDL_GameControllerButton)event.cbutton.button), event.cbutton.state ? "pressed" : "released");
+            SDL_Log("Controller %d button %s %s\n", event.cbutton.which, SDL_GameControllerGetStringForButton((SDL_GameControllerButton)event.cbutton.button), event.cbutton.state ? "pressed" : "released");
+
+            /* Cycle PS5 trigger effects when the microphone button is pressed */
+            if (event.type == SDL_CONTROLLERBUTTONDOWN &&
+                event.cbutton.button == SDL_CONTROLLER_BUTTON_MISC1 &&
+                SDL_GameControllerGetType(gamecontroller) == SDL_CONTROLLER_TYPE_PS5) {
+                CyclePS5TriggerEffect();
+            }
             break;
 
         case SDL_KEYDOWN:
+            if (event.key.keysym.sym >= SDLK_0 && event.key.keysym.sym <= SDLK_9) {
+                if (gamecontroller) {
+                    int player_index = (event.key.keysym.sym - SDLK_0);
+
+                    SDL_GameControllerSetPlayerIndex(gamecontroller, player_index);
+                }
+                break;
+            }
             if (event.key.keysym.sym != SDLK_ESCAPE) {
                 break;
             }
-            /* Fall through to signal quit */
+            SDL_FALLTHROUGH;
         case SDL_QUIT:
             done = SDL_TRUE;
             break;
@@ -336,7 +424,11 @@ loop(void *arg)
             if (SDL_GameControllerGetButton(gamecontroller, (SDL_GameControllerButton)i) == SDL_PRESSED) {
                 SDL_bool on_front = (i < SDL_CONTROLLER_BUTTON_PADDLE1 || i > SDL_CONTROLLER_BUTTON_PADDLE4);
                 if (on_front == showing_front) {
-                    const SDL_Rect dst = { button_positions[i].x, button_positions[i].y, 50, 50 };
+                    SDL_Rect dst;
+                    dst.x = button_positions[i].x;
+                    dst.y = button_positions[i].y;
+                    dst.w = 50;
+                    dst.h = 50;
                     SDL_RenderCopyEx(screen, button, NULL, &dst, 0, NULL, SDL_FLIP_NONE);
                 }
             }
@@ -347,12 +439,20 @@ loop(void *arg)
                 const Sint16 deadzone = 8000;  /* !!! FIXME: real deadzone */
                 const Sint16 value = SDL_GameControllerGetAxis(gamecontroller, (SDL_GameControllerAxis)(i));
                 if (value < -deadzone) {
-                    const SDL_Rect dst = { axis_positions[i].x, axis_positions[i].y, 50, 50 };
                     const double angle = axis_positions[i].angle;
+                    SDL_Rect dst;
+                    dst.x = axis_positions[i].x;
+                    dst.y = axis_positions[i].y;
+                    dst.w = 50;
+                    dst.h = 50;
                     SDL_RenderCopyEx(screen, axis, NULL, &dst, angle, NULL, SDL_FLIP_NONE);
                 } else if (value > deadzone) {
-                    const SDL_Rect dst = { axis_positions[i].x, axis_positions[i].y, 50, 50 };
                     const double angle = axis_positions[i].angle + 180.0;
+                    SDL_Rect dst;
+                    dst.x = axis_positions[i].x;
+                    dst.y = axis_positions[i].y;
+                    dst.w = 50;
+                    dst.h = 50;
                     SDL_RenderCopyEx(screen, axis, NULL, &dst, angle, NULL, SDL_FLIP_NONE);
                 }
             }
@@ -386,23 +486,25 @@ loop(void *arg)
             }
         }
 
-        /* Update rumble based on trigger state */
-        {
-            Sint16 left = SDL_GameControllerGetAxis(gamecontroller, SDL_CONTROLLER_AXIS_TRIGGERLEFT);
-            Sint16 right = SDL_GameControllerGetAxis(gamecontroller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT);
-            Uint16 low_frequency_rumble = ConvertAxisToRumble(left);
-            Uint16 high_frequency_rumble = ConvertAxisToRumble(right);
-            SDL_GameControllerRumble(gamecontroller, low_frequency_rumble, high_frequency_rumble, 250);
-        }
+        if (trigger_effect == 0) {
+            /* Update rumble based on trigger state */
+            {
+                Sint16 left = SDL_GameControllerGetAxis(gamecontroller, SDL_CONTROLLER_AXIS_TRIGGERLEFT);
+                Sint16 right = SDL_GameControllerGetAxis(gamecontroller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT);
+                Uint16 low_frequency_rumble = ConvertAxisToRumble(left);
+                Uint16 high_frequency_rumble = ConvertAxisToRumble(right);
+                SDL_GameControllerRumble(gamecontroller, low_frequency_rumble, high_frequency_rumble, 250);
+            }
 
-        /* Update trigger rumble based on thumbstick state */
-        {
-            Sint16 left = SDL_GameControllerGetAxis(gamecontroller, SDL_CONTROLLER_AXIS_LEFTY);
-            Sint16 right = SDL_GameControllerGetAxis(gamecontroller, SDL_CONTROLLER_AXIS_RIGHTY);
-            Uint16 left_rumble = ConvertAxisToRumble(~left);
-            Uint16 right_rumble = ConvertAxisToRumble(~right);
+            /* Update trigger rumble based on thumbstick state */
+            {
+                Sint16 left = SDL_GameControllerGetAxis(gamecontroller, SDL_CONTROLLER_AXIS_LEFTY);
+                Sint16 right = SDL_GameControllerGetAxis(gamecontroller, SDL_CONTROLLER_AXIS_RIGHTY);
+                Uint16 left_rumble = ConvertAxisToRumble(~left);
+                Uint16 right_rumble = ConvertAxisToRumble(~right);
 
-            SDL_GameControllerRumbleTriggers(gamecontroller, left_rumble, right_rumble, 250);
+                SDL_GameControllerRumbleTriggers(gamecontroller, left_rumble, right_rumble, 250);
+            }
         }
     }
 
@@ -424,8 +526,12 @@ main(int argc, char *argv[])
     char guid[64];
 
     SDL_SetHint(SDL_HINT_ACCELEROMETER_AS_JOYSTICK, "0");
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_JOY_CONS, "1");
     SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS4_RUMBLE, "1");
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS5_RUMBLE, "1");
+    SDL_SetHint(SDL_HINT_JOYSTICK_ROG_CHAKRAM, "1");
     SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
+    SDL_SetHint(SDL_HINT_LINUX_JOYSTICK_DEADZONES, "1");
 
     /* Enable standard application logging */
     SDL_LogSetPriority(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO);
@@ -435,7 +541,7 @@ main(int argc, char *argv[])
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't initialize SDL: %s\n", SDL_GetError());
         return 1;
     }
-    
+
     SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt");
 
     /* Print information about the mappings */
@@ -463,11 +569,14 @@ main(int argc, char *argv[])
             controller_count++;
             name = SDL_GameControllerNameForIndex(i);
             switch (SDL_GameControllerTypeForIndex(i)) {
-            case SDL_CONTROLLER_TYPE_XBOX360:
-                description = "XBox 360 Controller";
+            case SDL_CONTROLLER_TYPE_AMAZON_LUNA:
+                description = "Amazon Luna Controller";
                 break;
-            case SDL_CONTROLLER_TYPE_XBOXONE:
-                description = "XBox One Controller";
+            case SDL_CONTROLLER_TYPE_GOOGLE_STADIA:
+                description = "Google Stadia Controller";
+                break;
+            case SDL_CONTROLLER_TYPE_NINTENDO_SWITCH_PRO:
+                description = "Nintendo Switch Pro Controller";
                 break;
             case SDL_CONTROLLER_TYPE_PS3:
                 description = "PS3 Controller";
@@ -475,8 +584,14 @@ main(int argc, char *argv[])
             case SDL_CONTROLLER_TYPE_PS4:
                 description = "PS4 Controller";
                 break;
-            case SDL_CONTROLLER_TYPE_NINTENDO_SWITCH_PRO:
-                description = "Nintendo Switch Pro Controller";
+            case SDL_CONTROLLER_TYPE_PS5:
+                description = "PS5 Controller";
+                break;
+            case SDL_CONTROLLER_TYPE_XBOX360:
+                description = "XBox 360 Controller";
+                break;
+            case SDL_CONTROLLER_TYPE_XBOXONE:
+                description = "XBox One Controller";
                 break;
             case SDL_CONTROLLER_TYPE_VIRTUAL:
                 description = "Virtual Game Controller";
@@ -553,6 +668,12 @@ main(int argc, char *argv[])
         loop(NULL);
     }
 #endif
+
+    /* Reset trigger state */
+    if (trigger_effect != 0) {
+        trigger_effect = -1;
+        CyclePS5TriggerEffect();
+    }
 
     SDL_DestroyRenderer(screen);
     SDL_DestroyWindow(window);

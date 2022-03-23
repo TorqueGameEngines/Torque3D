@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -65,8 +65,11 @@ extern SDL_GameControllerType SDL_GetJoystickGameControllerType(const char *name
 /* Function to return whether a joystick is an Xbox One Elite controller */
 extern SDL_bool SDL_IsJoystickXboxOneElite(Uint16 vendor_id, Uint16 product_id);
 
-/* Function to return whether a joystick is an Xbox One Series X controller */
-extern SDL_bool SDL_IsJoystickXboxOneSeriesX(Uint16 vendor_id, Uint16 product_id);
+/* Function to return whether a joystick is an Xbox Series X controller */
+extern SDL_bool SDL_IsJoystickXboxSeriesX(Uint16 vendor_id, Uint16 product_id);
+
+/* Function to return whether a joystick is an Xbox One controller connected via Bluetooth */
+extern SDL_bool SDL_IsJoystickBluetoothXboxOne(Uint16 vendor_id, Uint16 product_id);
 
 /* Function to return whether a joystick is a PS4 controller */
 extern SDL_bool SDL_IsJoystickPS4(Uint16 vendor_id, Uint16 product_id);
@@ -77,6 +80,9 @@ extern SDL_bool SDL_IsJoystickPS5(Uint16 vendor_id, Uint16 product_id);
 /* Function to return whether a joystick is a Nintendo Switch Pro controller */
 extern SDL_bool SDL_IsJoystickNintendoSwitchPro(Uint16 vendor_id, Uint16 product_id);
 extern SDL_bool SDL_IsJoystickNintendoSwitchProInputOnly(Uint16 vendor_id, Uint16 product_id);
+extern SDL_bool SDL_IsJoystickNintendoSwitchJoyCon(Uint16 vendor_id, Uint16 product_id);
+extern SDL_bool SDL_IsJoystickNintendoSwitchJoyConLeft(Uint16 vendor_id, Uint16 product_id);
+extern SDL_bool SDL_IsJoystickNintendoSwitchJoyConRight(Uint16 vendor_id, Uint16 product_id);
 
 /* Function to return whether a joystick is a Steam Controller */
 extern SDL_bool SDL_IsJoystickSteamController(Uint16 vendor_id, Uint16 product_id);
@@ -110,7 +116,7 @@ extern void SDL_GameControllerHandleDelayedGuideButton(SDL_Joystick *joystick);
 
 /* Internal event queueing functions */
 extern void SDL_PrivateJoystickAddTouchpad(SDL_Joystick *joystick, int nfingers);
-extern void SDL_PrivateJoystickAddSensor(SDL_Joystick *joystick, SDL_SensorType type);
+extern void SDL_PrivateJoystickAddSensor(SDL_Joystick *joystick, SDL_SensorType type, float rate);
 extern void SDL_PrivateJoystickAdded(SDL_JoystickID device_instance);
 extern void SDL_PrivateJoystickRemoved(SDL_JoystickID device_instance);
 extern int SDL_PrivateJoystickAxis(SDL_Joystick *joystick,

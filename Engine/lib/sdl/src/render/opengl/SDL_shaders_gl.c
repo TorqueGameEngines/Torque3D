@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -149,7 +149,7 @@ struct GL_ShaderContext
 "uniform sampler2D tex1; // U/V \n"                             \
 "\n"                                                            \
 
-#define NV12_SHADER_BODY                                        \
+#define NV12_RA_SHADER_BODY                                     \
 "\n"                                                            \
 "void main()\n"                                                 \
 "{\n"                                                           \
@@ -163,6 +163,31 @@ struct GL_ShaderContext
 "    // Get the U and V values \n"                              \
 "    tcoord *= UVCoordScale;\n"                                 \
 "    yuv.yz = texture2D(tex1, tcoord).ra;\n"                    \
+"\n"                                                            \
+"    // Do the color transform \n"                              \
+"    yuv += offset;\n"                                          \
+"    rgb.r = dot(yuv, Rcoeff);\n"                               \
+"    rgb.g = dot(yuv, Gcoeff);\n"                               \
+"    rgb.b = dot(yuv, Bcoeff);\n"                               \
+"\n"                                                            \
+"    // That was easy. :) \n"                                   \
+"    gl_FragColor = vec4(rgb, 1.0) * v_color;\n"                \
+"}"                                                             \
+
+#define NV12_RG_SHADER_BODY                                     \
+"\n"                                                            \
+"void main()\n"                                                 \
+"{\n"                                                           \
+"    vec2 tcoord;\n"                                            \
+"    vec3 yuv, rgb;\n"                                          \
+"\n"                                                            \
+"    // Get the Y value \n"                                     \
+"    tcoord = v_texCoord;\n"                                    \
+"    yuv.x = texture2D(tex0, tcoord).r;\n"                      \
+"\n"                                                            \
+"    // Get the U and V values \n"                              \
+"    tcoord *= UVCoordScale;\n"                                 \
+"    yuv.yz = texture2D(tex1, tcoord).rg;\n"                    \
 "\n"                                                            \
 "    // Do the color transform \n"                              \
 "    yuv += offset;\n"                                          \
@@ -259,7 +284,7 @@ static const char *shader_source[NUM_SHADERS][2] =
 "    gl_FragColor = texture2D(tex0, v_texCoord) * v_color;\n"
 "}"
     },
-
+#if SDL_HAVE_YUV
     /* SHADER_YUV_JPEG */
     {
         /* vertex shader */
@@ -294,25 +319,43 @@ static const char *shader_source[NUM_SHADERS][2] =
         /* fragment shader */
         NV12_SHADER_PROLOGUE
         JPEG_SHADER_CONSTANTS
-        NV12_SHADER_BODY
+        NV12_RA_SHADER_BODY
     },
-    /* SHADER_NV12_BT601 */
+    /* SHADER_NV12_RA_BT601 */
     {
         /* vertex shader */
         TEXTURE_VERTEX_SHADER,
         /* fragment shader */
         NV12_SHADER_PROLOGUE
         BT601_SHADER_CONSTANTS
-        NV12_SHADER_BODY
+        NV12_RA_SHADER_BODY
     },
-    /* SHADER_NV12_BT709 */
+    /* SHADER_NV12_RG_BT601 */
+    {
+        /* vertex shader */
+        TEXTURE_VERTEX_SHADER,
+        /* fragment shader */
+        NV12_SHADER_PROLOGUE
+        BT601_SHADER_CONSTANTS
+        NV12_RG_SHADER_BODY
+    },
+    /* SHADER_NV12_RA_BT709 */
     {
         /* vertex shader */
         TEXTURE_VERTEX_SHADER,
         /* fragment shader */
         NV12_SHADER_PROLOGUE
         BT709_SHADER_CONSTANTS
-        NV12_SHADER_BODY
+        NV12_RA_SHADER_BODY
+    },
+    /* SHADER_NV12_RG_BT709 */
+    {
+        /* vertex shader */
+        TEXTURE_VERTEX_SHADER,
+        /* fragment shader */
+        NV12_SHADER_PROLOGUE
+        BT709_SHADER_CONSTANTS
+        NV12_RG_SHADER_BODY
     },
     /* SHADER_NV21_JPEG */
     {
@@ -341,6 +384,7 @@ static const char *shader_source[NUM_SHADERS][2] =
         BT709_SHADER_CONSTANTS
         NV21_SHADER_BODY
     },
+#endif /* SDL_HAVE_YUV */
 };
 
 static SDL_bool

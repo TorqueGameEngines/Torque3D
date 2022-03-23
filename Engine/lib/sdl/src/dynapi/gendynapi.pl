@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 #  Simple DirectMedia Layer
-#  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+#  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 #
 #  This software is provided 'as-is', without any express or implied
 #  warranty.  In no event will the authors be held liable for any damages
@@ -21,7 +21,7 @@
 
 # WHAT IS THIS?
 #  When you add a public API to SDL, please run this script, make sure the
-#  output looks sane (hg diff, it adds to existing files), and commit it.
+#  output looks sane (git diff, it adds to existing files), and commit it.
 #  It keeps the dynamic API jump table operating correctly.
 
 # If you wanted this to be readable, you shouldn't have used perl.
@@ -55,7 +55,7 @@ while (my $d = readdir(HEADERS)) {
     open(HEADER, '<', $header) or die("Can't open $header: $!\n");
     while (<HEADER>) {
         chomp;
-        next if not /\A\s*extern\s+DECLSPEC/;
+        next if not /\A\s*extern\s+(SDL_DEPRECATED\s+|)DECLSPEC/;
         my $decl = "$_ ";
         if (not $decl =~ /\)\s*;/) {
             while (<HEADER>) {
@@ -70,13 +70,13 @@ while (my $d = readdir(HEADERS)) {
         $decl =~ s/\s+\Z//;
         #print("DECL: [$decl]\n");
 
-        if ($decl =~ /\A\s*extern\s+DECLSPEC\s+(const\s+|)(unsigned\s+|)(.*?)\s*(\*?)\s*SDLCALL\s+(.*?)\s*\((.*?)\);/) {
-            my $rc = "$1$2$3$4";
-            my $fn = $5;
+        if ($decl =~ /\A\s*extern\s+(SDL_DEPRECATED\s+|)DECLSPEC\s+(const\s+|)(unsigned\s+|)(.*?)\s*(\*?)\s*SDLCALL\s+(.*?)\s*\((.*?)\);/) {
+            my $rc = "$2$3$4$5";
+            my $fn = $6;
 
             next if $existing{$fn};   # already slotted into the jump table.
 
-            my @params = split(',', $6);
+            my @params = split(',', $7);
 
             #print("rc == '$rc', fn == '$fn', params == '$params'\n");
 
@@ -107,13 +107,19 @@ while (my $d = readdir(HEADERS)) {
                     $type =~ s/\s*\*\Z/*/g;
                     $type =~ s/\s*(\*+)\Z/ $1/;
                     #print("SPLIT: ($type, $var)\n");
+                    my $var_array_suffix = "";
+                    # parse array suffix
+                    if ($var =~ /\A.*(\[.*\])\Z/) {
+                        #print("PARSED ARRAY SUFFIX: [$1] of '$var'\n");
+                        $var_array_suffix = $1;
+                    }
                     my $name = chr(ord('a') + $i);
                     if ($i > 0) {
                         $paramstr .= ', ';
                         $argstr .= ',';
                     }
                     my $spc = ($type =~ /\*\Z/) ? '' : ' ';
-                    $paramstr .= "$type$spc$name";
+                    $paramstr .= "$type$spc$name$var_array_suffix";
                     $argstr .= "$name";
                 }
                 $i++;

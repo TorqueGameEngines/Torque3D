@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -20,22 +20,17 @@
 */
 
 #include "../../SDL_internal.h"
+#include "SDL_stdinc.h"
 
 #ifndef SDL_waylandvideo_h_
 #define SDL_waylandvideo_h_
 
-
-/*
-!!! FIXME: xdg_wm_base is the stable replacement for zxdg_shell_v6. While it's
-!!! FIXME:  harmless to leave it here, consider deleting the obsolete codepath
-!!! FIXME:  soon, since Wayland (with xdg_wm_base) will probably be mainline
-!!! FIXME:  by the time people are relying on this SDL target. It's available
-!!! FIXME:  in Ubuntu 18.04 (and other distros).
-*/
-
-#define MESA_EGL_NO_X11_HEADERS
 #include <EGL/egl.h>
 #include "wayland-util.h"
+
+#include "../SDL_sysvideo.h"
+#include "../../core/linux/SDL_dbus.h"
+#include "../../core/linux/SDL_ime.h"
 
 struct xkb_context;
 struct SDL_WaylandInput;
@@ -47,23 +42,34 @@ struct qt_windowmanager;
 #endif /* SDL_VIDEO_DRIVER_WAYLAND_QT_TOUCH */
 
 typedef struct {
+    struct wl_cursor_theme *theme;
+    int size;
+} SDL_WaylandCursorTheme;
+
+typedef struct {
+    SDL_bool initializing;
     struct wl_display *display;
     int display_disconnected;
     struct wl_registry *registry;
     struct wl_compositor *compositor;
     struct wl_shm *shm;
-    struct wl_cursor_theme *cursor_theme;
+    SDL_WaylandCursorTheme *cursor_themes;
+    int num_cursor_themes;
     struct wl_pointer *pointer;
     struct {
         struct xdg_wm_base *xdg;
-        struct zxdg_shell_v6 *zxdg;
-        struct wl_shell *wl;
+#ifdef HAVE_LIBDECOR_H
+        struct libdecor *libdecor;
+#endif
     } shell;
     struct zwp_relative_pointer_manager_v1 *relative_pointer_manager;
     struct zwp_pointer_constraints_v1 *pointer_constraints;
     struct wl_data_device_manager *data_device_manager;
     struct zxdg_decoration_manager_v1 *decoration_manager;
-    struct org_kde_kwin_server_decoration_manager *kwin_server_decoration_manager;
+    struct zwp_keyboard_shortcuts_inhibit_manager_v1 *key_inhibitor_manager;
+    struct zwp_idle_inhibit_manager_v1 *idle_inhibit_manager;
+    struct xdg_activation_v1 *activation_manager;
+    struct zwp_text_input_manager_v3 *text_input_manager;
 
     EGLDisplay edpy;
     EGLContext context;
@@ -84,9 +90,26 @@ typedef struct {
 } SDL_VideoData;
 
 typedef struct {
+    SDL_VideoData *videodata;
     struct wl_output *output;
+    uint32_t registry_id;
     float scale_factor;
+    int x, y, width, height, refresh, transform;
+    SDL_DisplayOrientation orientation;
+    int physical_width, physical_height;
+    float ddpi, hdpi, vdpi;
+    int index;
+    SDL_VideoDisplay placeholder;
+    SDL_bool done;
 } SDL_WaylandOutputData;
+
+/* Needed here to get wl_surface declaration, fixes GitHub#4594 */
+#include "SDL_waylanddyn.h"
+
+extern void SDL_WAYLAND_register_surface(struct wl_surface *surface);
+extern void SDL_WAYLAND_register_output(struct wl_output *output);
+extern SDL_bool SDL_WAYLAND_own_surface(struct wl_surface *surface);
+extern SDL_bool SDL_WAYLAND_own_output(struct wl_output *output);
 
 #endif /* SDL_waylandvideo_h_ */
 

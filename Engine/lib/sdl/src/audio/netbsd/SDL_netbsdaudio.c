@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -202,10 +202,12 @@ NETBSDAUDIO_CloseDevice(_THIS)
 }
 
 static int
-NETBSDAUDIO_OpenDevice(_THIS, void *handle, const char *devname, int iscapture)
+NETBSDAUDIO_OpenDevice(_THIS, const char *devname)
 {
-    SDL_AudioFormat format = 0;
-    audio_info_t info;
+    SDL_bool iscapture = this->iscapture;
+    SDL_AudioFormat test_format;
+    int encoding = AUDIO_ENCODING_NONE;
+    audio_info_t info, hwinfo;
     struct audio_prinfo *prinfo = iscapture ? &info.record : &info.play;
 
     /* We don't care what the devname is...we'll try to open anything. */
@@ -226,76 +228,81 @@ NETBSDAUDIO_OpenDevice(_THIS, void *handle, const char *devname, int iscapture)
     SDL_zerop(this->hidden);
 
     /* Open the audio device */
-    this->hidden->audio_fd = open(devname, iscapture ? O_RDONLY : O_WRONLY);
+    this->hidden->audio_fd = open(devname, (iscapture ? O_RDONLY : O_WRONLY) | O_CLOEXEC);
     if (this->hidden->audio_fd < 0) {
         return SDL_SetError("Couldn't open %s: %s", devname, strerror(errno));
     }
 
     AUDIO_INITINFO(&info);
 
-    prinfo->encoding = AUDIO_ENCODING_NONE;
-
-    for (format = SDL_FirstAudioFormat(this->spec.format); format;) {
-        switch (format) {
-        case AUDIO_U8:
-            prinfo->encoding = AUDIO_ENCODING_ULINEAR;
-            prinfo->precision = 8;
-            break;
-        case AUDIO_S8:
-            prinfo->encoding = AUDIO_ENCODING_SLINEAR;
-            prinfo->precision = 8;
-            break;
-        case AUDIO_S16LSB:
-            prinfo->encoding = AUDIO_ENCODING_SLINEAR_LE;
-            prinfo->precision = 16;
-            break;
-        case AUDIO_S16MSB:
-            prinfo->encoding = AUDIO_ENCODING_SLINEAR_BE;
-            prinfo->precision = 16;
-            break;
-        case AUDIO_U16LSB:
-            prinfo->encoding = AUDIO_ENCODING_ULINEAR_LE;
-            prinfo->precision = 16;
-            break;
-        case AUDIO_U16MSB:
-            prinfo->encoding = AUDIO_ENCODING_ULINEAR_BE;
-            prinfo->precision = 16;
-            break;
-        case AUDIO_S32LSB:
-            prinfo->encoding = AUDIO_ENCODING_SLINEAR_LE;
-            prinfo->precision = 32;
-            break;
-        case AUDIO_S32MSB:
-            prinfo->encoding = AUDIO_ENCODING_SLINEAR_BE;
-            prinfo->precision = 32;
-            break;
-        }
-        if (prinfo->encoding != AUDIO_ENCODING_NONE) {
-            break;
-        }
-        format = SDL_NextAudioFormat();
+#ifdef AUDIO_GETFORMAT /* Introduced in NetBSD 9.0 */
+    if (ioctl(this->hidden->audio_fd, AUDIO_GETFORMAT, &hwinfo) != -1) {
+        /*
+         * Use the device's native sample rate so the kernel doesn't have to
+         * resample.
+         */
+        this->spec.freq = iscapture ?
+            hwinfo.record.sample_rate : hwinfo.play.sample_rate;
     }
+#endif
 
-    if (prinfo->encoding == AUDIO_ENCODING_NONE) {
-        return SDL_SetError("No supported encoding for 0x%x", this->spec.format);
-    }
-
-    this->spec.format = format;
-
-    /* Calculate spec parameters based on our chosen format */
-    SDL_CalculateAudioSpec(&this->spec);
-
-    info.mode = iscapture ? AUMODE_RECORD : AUMODE_PLAY;
-    info.blocksize = this->spec.size;
-    info.hiwat = 5;
-    info.lowat = 3;
     prinfo->sample_rate = this->spec.freq;
     prinfo->channels = this->spec.channels;
-    (void) ioctl(this->hidden->audio_fd, AUDIO_SETINFO, &info);
 
-    (void) ioctl(this->hidden->audio_fd, AUDIO_GETINFO, &info);
+    for (test_format = SDL_FirstAudioFormat(this->spec.format); test_format; test_format = SDL_NextAudioFormat()) {
+        switch (test_format) {
+        case AUDIO_U8:
+            encoding = AUDIO_ENCODING_ULINEAR;
+            break;
+        case AUDIO_S8:
+            encoding = AUDIO_ENCODING_SLINEAR;
+            break;
+        case AUDIO_S16LSB:
+            encoding = AUDIO_ENCODING_SLINEAR_LE;
+            break;
+        case AUDIO_S16MSB:
+            encoding = AUDIO_ENCODING_SLINEAR_BE;
+            break;
+        case AUDIO_U16LSB:
+            encoding = AUDIO_ENCODING_ULINEAR_LE;
+            break;
+        case AUDIO_U16MSB:
+            encoding = AUDIO_ENCODING_ULINEAR_BE;
+            break;
+        case AUDIO_S32LSB:
+            encoding = AUDIO_ENCODING_SLINEAR_LE;
+            break;
+        case AUDIO_S32MSB:
+            encoding = AUDIO_ENCODING_SLINEAR_BE;
+            break;
+        default:
+            continue;
+        }
+        break;
+    }
+
+    if (!test_format) {
+        return SDL_SetError("%s: Unsupported audio format", "netbsd");
+    }
+    prinfo->encoding = encoding;
+    prinfo->precision = SDL_AUDIO_BITSIZE(test_format);
+
+    info.hiwat = 5;
+    info.lowat = 3;
+    if (ioctl(this->hidden->audio_fd, AUDIO_SETINFO, &info) < 0) {
+        return SDL_SetError("AUDIO_SETINFO failed for %s: %s", devname, strerror(errno));
+    }
+
+    if (ioctl(this->hidden->audio_fd, AUDIO_GETINFO, &info) < 0) {
+        return SDL_SetError("AUDIO_GETINFO failed for %s: %s", devname, strerror(errno));
+    }
+
+    /* Final spec used for the device. */
+    this->spec.format = test_format;
     this->spec.freq = prinfo->sample_rate;
     this->spec.channels = prinfo->channels;
+
+    SDL_CalculateAudioSpec(&this->spec);
 
     if (!iscapture) {
         /* Allocate mixing buffer */
@@ -313,7 +320,7 @@ NETBSDAUDIO_OpenDevice(_THIS, void *handle, const char *devname, int iscapture)
     return 0;
 }
 
-static int
+static SDL_bool
 NETBSDAUDIO_Init(SDL_AudioDriverImpl * impl)
 {
     /* Set the function pointers */
@@ -326,14 +333,14 @@ NETBSDAUDIO_Init(SDL_AudioDriverImpl * impl)
     impl->FlushCapture = NETBSDAUDIO_FlushCapture;
 
     impl->HasCaptureSupport = SDL_TRUE;
-    impl->AllowsArbitraryDeviceNames = 1;
+    impl->AllowsArbitraryDeviceNames = SDL_TRUE;
 
-    return 1;   /* this audio target is available. */
+    return SDL_TRUE;   /* this audio target is available. */
 }
 
 
 AudioBootStrap NETBSDAUDIO_bootstrap = {
-    "netbsd", "NetBSD audio", NETBSDAUDIO_Init, 0
+    "netbsd", "NetBSD audio", NETBSDAUDIO_Init, SDL_FALSE
 };
 
 #endif /* SDL_AUDIO_DRIVER_NETBSD */

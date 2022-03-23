@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -109,6 +109,7 @@ int Emscripten_UpdateWindowFramebuffer(_THIS, SDL_Window * window, const SDL_Rec
             if (SDL2.data32Data !== data) {
                 SDL2.data32 = new Int32Array(data.buffer);
                 SDL2.data8 = new Uint8Array(data.buffer);
+                SDL2.data32Data = data;
             }
             var data32 = SDL2.data32;
             num = data32.length;
@@ -118,7 +119,7 @@ int Emscripten_UpdateWindowFramebuffer(_THIS, SDL_Window * window, const SDL_Rec
             //      }
             // the following code is faster though, because
             // .set() is almost free - easily 10x faster due to
-            // native memcpy efficiencies, and the remaining loop
+            // native SDL_memcpy efficiencies, and the remaining loop
             // just stores, not load + store, so it is faster
             data32.set(HEAP32.subarray(src, src + num));
             var data8 = SDL2.data8;
@@ -155,14 +156,6 @@ int Emscripten_UpdateWindowFramebuffer(_THIS, SDL_Window * window, const SDL_Rec
         SDL2.ctx.putImageData(SDL2.image, 0, 0);
         return 0;
     }, surface->w, surface->h, surface->pixels);
-
-    /*if (SDL_getenv("SDL_VIDEO_Emscripten_SAVE_FRAMES")) {
-        static int frame_number = 0;
-        char file[128];
-        SDL_snprintf(file, sizeof(file), "SDL_window%d-%8.8d.bmp",
-                     SDL_GetWindowID(window), ++frame_number);
-        SDL_SaveBMP(surface, file);
-    }*/
 
     if (emscripten_has_asyncify() && SDL_GetHintBoolean(SDL_HINT_EMSCRIPTEN_ASYNCIFY, SDL_TRUE)) {
         /* give back control to browser for screen refresh */

@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -52,22 +52,22 @@ SDL_atanf(float x)
 }
 
 double
-SDL_atan2(double x, double y)
+SDL_atan2(double y, double x)
 {
 #if defined(HAVE_ATAN2)
-    return atan2(x, y);
+    return atan2(y, x);
 #else
-    return SDL_uclibc_atan2(x, y);
+    return SDL_uclibc_atan2(y, x);
 #endif
 }
 
 float
-SDL_atan2f(float x, float y)
+SDL_atan2f(float y, float x)
 {
 #if defined(HAVE_ATAN2F)
-    return atan2f(x, y);
+    return atan2f(y, x);
 #else
-    return (float)SDL_atan2((double)x, (double)y);
+    return (float)SDL_atan2((double)y, (double)x);
 #endif
 }
 
@@ -148,7 +148,7 @@ SDL_ceilf(float x)
 #if defined(HAVE_CEILF)
     return ceilf(x);
 #else
-    return (float)SDL_ceil((float)x);
+    return (float)SDL_ceil((double)x);
 #endif
 }
 
@@ -365,6 +365,50 @@ SDL_powf(float x, float y)
 }
 
 double
+SDL_round(double arg)
+{
+#if defined HAVE_ROUND
+    return round(arg);
+#else
+    if (arg >= 0.0) {
+        return SDL_floor(arg + 0.5);
+    } else {
+        return SDL_ceil(arg - 0.5);
+    }
+#endif
+}
+
+float
+SDL_roundf(float arg)
+{
+#if defined HAVE_ROUNDF
+    return roundf(arg);
+#else
+    return (float)SDL_round((double)arg);
+#endif
+}
+
+long
+SDL_lround(double arg)
+{
+#if defined HAVE_LROUND
+    return lround(arg);
+#else
+    return (long)SDL_round(arg);
+#endif
+}
+
+long
+SDL_lroundf(float arg)
+{
+#if defined HAVE_LROUNDF
+    return lroundf(arg);
+#else
+    return (long)SDL_round((double)arg);
+#endif
+}
+
+double
 SDL_scalbn(double x, int n)
 {
 #if defined(HAVE_SCALBN)
@@ -400,7 +444,7 @@ SDL_sin(double x)
 #endif
 }
 
-float 
+float
 SDL_sinf(float x)
 {
 #if defined(HAVE_SINF)
@@ -455,26 +499,45 @@ int SDL_abs(int x)
 #if defined(HAVE_ABS)
     return abs(x);
 #else
-    return ((x) < 0 ? -(x) : (x));
+    return (x < 0) ? -x : x;
 #endif
 }
 
 #if defined(HAVE_CTYPE_H)
+int SDL_isalpha(int x) { return isalpha(x); }
+int SDL_isalnum(int x) { return isalnum(x); }
 int SDL_isdigit(int x) { return isdigit(x); }
+int SDL_isxdigit(int x) { return isxdigit(x); }
+int SDL_ispunct(int x) { return ispunct(x); }
 int SDL_isspace(int x) { return isspace(x); }
 int SDL_isupper(int x) { return isupper(x); }
 int SDL_islower(int x) { return islower(x); }
+int SDL_isprint(int x) { return isprint(x); }
+int SDL_isgraph(int x) { return isgraph(x); }
+int SDL_iscntrl(int x) { return iscntrl(x); }
 int SDL_toupper(int x) { return toupper(x); }
 int SDL_tolower(int x) { return tolower(x); }
 #else
+int SDL_isalpha(int x) { return (SDL_isupper(x)) || (SDL_islower(x)); }
+int SDL_isalnum(int x) { return (SDL_isalpha(x)) || (SDL_isdigit(x)); }
 int SDL_isdigit(int x) { return ((x) >= '0') && ((x) <= '9'); }
+int SDL_isxdigit(int x) { return (((x) >= 'A') && ((x) <= 'F')) || (((x) >= 'a') && ((x) <= 'f')) || (SDL_isdigit(x)); }
+int SDL_ispunct(int x) { return (SDL_isgraph(x)) && (!SDL_isalnum(x)); }
 int SDL_isspace(int x) { return ((x) == ' ') || ((x) == '\t') || ((x) == '\r') || ((x) == '\n') || ((x) == '\f') || ((x) == '\v'); }
 int SDL_isupper(int x) { return ((x) >= 'A') && ((x) <= 'Z'); }
 int SDL_islower(int x) { return ((x) >= 'a') && ((x) <= 'z'); }
+int SDL_isprint(int x) { return ((x) >= ' ') && ((x) < '\x7f'); }
+int SDL_isgraph(int x) { return (SDL_isprint(x)) && ((x) != ' '); }
+int SDL_iscntrl(int x) { return (((x) >= '\0') && ((x) <= '\x1f')) || ((x) == '\x7f'); }
 int SDL_toupper(int x) { return ((x) >= 'a') && ((x) <= 'z') ? ('A'+((x)-'a')) : (x); }
 int SDL_tolower(int x) { return ((x) >= 'A') && ((x) <= 'Z') ? ('a'+((x)-'A')) : (x); }
 #endif
 
+#if defined(HAVE_CTYPE_H) && defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+int SDL_isblank(int x) { return isblank(x); }
+#else
+int SDL_isblank(int x) { return ((x) == ' ') || ((x) == '\t'); }
+#endif
 
 #ifndef HAVE_LIBC
 /* These are some C runtime intrinsics that need to be defined */

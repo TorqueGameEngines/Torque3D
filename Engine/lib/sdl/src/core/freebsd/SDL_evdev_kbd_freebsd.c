@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -87,15 +87,18 @@ static int fatal_signals[] =
 
 static void kbd_cleanup(void)
 {
+    struct mouse_info mData;
     SDL_EVDEV_keyboard_state* kbd = kbd_cleanup_state;
     if (kbd == NULL) {
         return;
     }
     kbd_cleanup_state = NULL;
-    
+    SDL_zero(mData);
+    mData.operation = MOUSE_SHOW;
     ioctl(kbd->keyboard_fd, KDSKBMODE, kbd->old_kbd_mode);
     if (kbd->keyboard_fd != kbd->console_fd) close(kbd->keyboard_fd);
     ioctl(kbd->console_fd, CONS_SETKBD, (unsigned long)(kbd->kbInfo->kb_index));
+    ioctl(kbd->console_fd, CONS_MOUSECTL, &mData);
 }
 
 void
@@ -221,9 +224,12 @@ SDL_EVDEV_keyboard_state *
 SDL_EVDEV_kbd_init(void)
 {
     SDL_EVDEV_keyboard_state *kbd;
+    struct mouse_info mData;
     char flag_state;
     char* devicePath;
 
+    SDL_zero(mData);
+    mData.operation = MOUSE_HIDE;
     kbd = (SDL_EVDEV_keyboard_state *)SDL_calloc(1, sizeof(SDL_EVDEV_keyboard_state));
     if (!kbd) {
         return NULL;
@@ -232,7 +238,7 @@ SDL_EVDEV_kbd_init(void)
     kbd->npadch = -1;
 
     /* This might fail if we're not connected to a tty (e.g. on the Steam Link) */
-    kbd->keyboard_fd = kbd->console_fd = open("/dev/tty", O_RDONLY);
+    kbd->keyboard_fd = kbd->console_fd = open("/dev/tty", O_RDONLY | O_CLOEXEC);
 
     kbd->shift_state = 0;
 
@@ -241,7 +247,8 @@ SDL_EVDEV_kbd_init(void)
     kbd->kbInfo = SDL_calloc(sizeof(keyboard_info_t), 1);    
 
     ioctl(kbd->console_fd, KDGKBINFO, kbd->kbInfo);
-
+    ioctl(kbd->console_fd, CONS_MOUSECTL, &mData);
+    
     if (ioctl(kbd->console_fd, KDGKBSTATE, &flag_state) == 0) {
         kbd->ledflagstate = flag_state;
     }
@@ -261,13 +268,13 @@ SDL_EVDEV_kbd_init(void)
             kbd->key_map = &keymap_default_us_acc;
         }
         /* Allow inhibiting keyboard mute with env. variable for debugging etc. */
-        if (getenv("SDL_INPUT_FREEBSD_KEEP_KBD") == NULL) {
+        if (SDL_getenv("SDL_INPUT_FREEBSD_KEEP_KBD") == NULL) {
             /* Take keyboard from console and open the actual keyboard device.
              * Ensures that the keystrokes do not leak through to the console.
              */
             ioctl(kbd->console_fd, CONS_RELKBD, 1ul);
-            asprintf(&devicePath, "/dev/kbd%d", kbd->kbInfo->kb_index);         
-            kbd->keyboard_fd = open(devicePath, O_WRONLY);
+            SDL_asprintf(&devicePath, "/dev/kbd%d", kbd->kbInfo->kb_index);
+            kbd->keyboard_fd = open(devicePath, O_WRONLY | O_CLOEXEC);
             if (kbd->keyboard_fd == -1)
             {
                 // Give keyboard back.
@@ -281,7 +288,7 @@ SDL_EVDEV_kbd_init(void)
             if (!SDL_GetHintBoolean(SDL_HINT_NO_SIGNAL_HANDLERS, SDL_FALSE)) {
                 kbd_register_emerg_cleanup(kbd);
             }
-            free(devicePath);
+            SDL_free(devicePath);
         }
         else kbd->keyboard_fd = kbd->console_fd;
     }
@@ -292,9 +299,14 @@ SDL_EVDEV_kbd_init(void)
 void
 SDL_EVDEV_kbd_quit(SDL_EVDEV_keyboard_state *kbd)
 {
+    struct mouse_info mData;
+
     if (!kbd) {
         return;
     }
+    SDL_zero(mData);
+    mData.operation = MOUSE_SHOW;
+    ioctl(kbd->console_fd, CONS_MOUSECTL, &mData);
 
     kbd_unregister_emerg_cleanup();
 

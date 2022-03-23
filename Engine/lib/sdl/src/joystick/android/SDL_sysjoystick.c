@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -103,6 +103,7 @@ keycode_to_SDL(int keycode)
         case AKEYCODE_BUTTON_THUMBR:
             button = SDL_CONTROLLER_BUTTON_RIGHTSTICK;
             break;
+        case AKEYCODE_MENU:
         case AKEYCODE_BUTTON_START:
             button = SDL_CONTROLLER_BUTTON_START;
             break;
@@ -581,7 +582,7 @@ ANDROID_JoystickGetDeviceInstanceID(int device_index)
 }
 
 static int
-ANDROID_JoystickOpen(SDL_Joystick * joystick, int device_index)
+ANDROID_JoystickOpen(SDL_Joystick *joystick, int device_index)
 {
     SDL_joylist_item *item = JoystickByDevIndex(device_index);
 
@@ -605,25 +606,31 @@ ANDROID_JoystickOpen(SDL_Joystick * joystick, int device_index)
 }
 
 static int
-ANDROID_JoystickRumble(SDL_Joystick * joystick, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble)
+ANDROID_JoystickRumble(SDL_Joystick *joystick, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble)
 {
     return SDL_Unsupported();
 }
 
 static int
-ANDROID_JoystickRumbleTriggers(SDL_Joystick * joystick, Uint16 left_rumble, Uint16 right_rumble)
+ANDROID_JoystickRumbleTriggers(SDL_Joystick *joystick, Uint16 left_rumble, Uint16 right_rumble)
 {
     return SDL_Unsupported();
 }
 
-static SDL_bool
-ANDROID_JoystickHasLED(SDL_Joystick * joystick)
+static Uint32
+ANDROID_JoystickGetCapabilities(SDL_Joystick *joystick)
 {
-    return SDL_FALSE;
+    return 0;
 }
 
 static int
-ANDROID_JoystickSetLED(SDL_Joystick * joystick, Uint8 red, Uint8 green, Uint8 blue)
+ANDROID_JoystickSetLED(SDL_Joystick *joystick, Uint8 red, Uint8 green, Uint8 blue)
+{
+    return SDL_Unsupported();
+}
+
+static int
+ANDROID_JoystickSendEffect(SDL_Joystick *joystick, const void *data, int size)
 {
     return SDL_Unsupported();
 }
@@ -635,7 +642,7 @@ ANDROID_JoystickSetSensorsEnabled(SDL_Joystick *joystick, SDL_bool enabled)
 }
 
 static void
-ANDROID_JoystickUpdate(SDL_Joystick * joystick)
+ANDROID_JoystickUpdate(SDL_Joystick *joystick)
 {
     SDL_joylist_item *item = (SDL_joylist_item *) joystick->hwdata;
 
@@ -664,7 +671,7 @@ ANDROID_JoystickUpdate(SDL_Joystick * joystick)
 }
 
 static void
-ANDROID_JoystickClose(SDL_Joystick * joystick)
+ANDROID_JoystickClose(SDL_Joystick *joystick)
 {
     SDL_joylist_item *item = (SDL_joylist_item *) joystick->hwdata;
     if (item) {
@@ -713,8 +720,9 @@ SDL_JoystickDriver SDL_ANDROID_JoystickDriver =
     ANDROID_JoystickOpen,
     ANDROID_JoystickRumble,
     ANDROID_JoystickRumbleTriggers,
-    ANDROID_JoystickHasLED,
+    ANDROID_JoystickGetCapabilities,
     ANDROID_JoystickSetLED,
+    ANDROID_JoystickSendEffect,
     ANDROID_JoystickSetSensorsEnabled,
     ANDROID_JoystickUpdate,
     ANDROID_JoystickClose,

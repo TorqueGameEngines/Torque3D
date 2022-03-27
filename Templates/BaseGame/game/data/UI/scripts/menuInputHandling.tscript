@@ -412,6 +412,13 @@ function MenuInputHandler::onInputEvent(%this, %device, %action, %state)
 // Menu List processing
 // These functions manage the navigation and activation of the Menu Lists
 //==============================================================================
+function MenuList::isActiveMenuList(%this)
+{
+   if($activeMenuList == %this)
+      return true;
+   
+   return false;
+}
 
 function MenuList::setAsActiveMenuList(%this, %startPosition, %menuMode)
 {
@@ -485,8 +492,6 @@ function MenuList::navigateDown(%this)
 
 function MenuList::navigateLeft()
 {
-   echo("Menu list navigated left!"); 
-   
    //Atm, we're only handling specific control types, namely options entries, but
    //this could readily be expanded upon to handle grids like for inventory screens
    //or the like
@@ -494,17 +499,54 @@ function MenuList::navigateLeft()
    %btn = $activeMenuList.getObject($activeMenuListPosition.y);
    if(%btn.getClassName() $= "GuiGameSettingsCtrl" && %btn.isEnabled())
    {
-      warnf("MenuList::navigateLeft() - actioned the option" @ %btn @ " to the left");
+      %mode = %btn.getMode();
+      if(%mode == 0) //options list
+      {
+         %optionId = %btn.getCurrentOptionIndex() - 1;
+         %btn.selectOptionByIndex(%optionId);
+         %btn.onChange();
+      }
+      else if(%mode == 1) //slider
+      {
+         %value = %btn.getValue();
+         %adjustedValue = %value - %btn.getIncrement();
+         %minValue = %btn.getRange().x;
+         if(%adjustedValue < %minValue)
+            %adjustedValue = %minValue;
+            
+         %btn.setValue(%adjustedValue);
+         %btn.onChange();
+      }
    }
 }
 
 function MenuList::navigateRight()
 {
-   echo("Menu list navigated right!");  
-   
    %btn = $activeMenuList.getObject($activeMenuListPosition.y);
    if(%btn.getClassName() $= "GuiGameSettingsCtrl" && %btn.isEnabled())
    {
-      warnf("MenuList::navigateLeft() - actioned the option" @ %btn @ " to the left");
+      %mode = %btn.getMode();
+      if(%mode == 0) //options list
+      {
+         %optionId = %btn.getCurrentOptionIndex() + 1;
+         %btn.selectOptionByIndex(%optionId);
+         %btn.onChange();
+      }
+      else if(%mode == 1) //slider
+      {
+         %value = %btn.getValue();
+         %adjustedValue = %value + %btn.getIncrement();
+         %maxValue = %btn.getRange().y;
+         if(%adjustedValue > %maxValue)
+            %adjustedValue = %maxValue;
+            
+         %btn.setValue(%adjustedValue);
+         %btn.onChange();
+      }
    }
+}
+
+function MenuList::getActiveRow(%this)
+{
+   return $activeMenuListPosition.y;
 }

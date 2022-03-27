@@ -56,10 +56,10 @@ function Core_Rendering::initClient(%this)
    %prefPath = getPrefpath();
    if ( isFile( %prefPath @ "/clientPrefs." @ $TorqueScriptFileExtension ) )
       exec( %prefPath @ "/clientPrefs." @ $TorqueScriptFileExtension );
+      
+   postFXInit();
    
    configureCanvas();
-   
-   postFXInit();
    
    //Autodetect settings if it's our first time
    if($pref::Video::autoDetect)

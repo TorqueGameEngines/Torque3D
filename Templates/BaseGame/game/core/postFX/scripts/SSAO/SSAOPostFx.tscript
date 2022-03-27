@@ -165,7 +165,7 @@ function SSAOPostFx::populatePostFXSettings(%this)
 
 function PostEffectEditorInspector::toggleSSAOPostFx(%this)
 {
-   if($PostFX::SSAOPostFx::Enabled)
+   if($PostFX::SSAOPostFx::Enabled && $pref::PostFX::EnableSSAO)
       SSAOPostFx.enable();
    else
       SSAOPostFx.disable();
@@ -173,7 +173,7 @@ function PostEffectEditorInspector::toggleSSAOPostFx(%this)
 
 function SSAOPostFx::applyFromPreset(%this)
 {
-   if($PostFXManager::PostFX::Enable)
+   if($PostFXManager::PostFX::Enable && $pref::PostFX::EnableSSAO)
       %this.enable();
    else
       %this.disable();

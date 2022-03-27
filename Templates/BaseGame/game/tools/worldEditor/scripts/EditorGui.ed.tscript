@@ -1821,6 +1821,12 @@ function EditorTree::update( %this )
 }
 
 //------------------------------------------------------------------------------
+function EWTreeWindow::onResize(%this, %posX, %posY, %width, %height )
+{
+    EditorTree.extent.x = %this.extent.x;
+}
+
+//------------------------------------------------------------------------------
 
 // Tooltip for TSStatic
 function EditorTree::GetTooltipTSStatic( %this, %obj )

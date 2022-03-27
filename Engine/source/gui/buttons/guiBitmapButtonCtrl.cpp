@@ -138,10 +138,15 @@ void GuiBitmapButtonCtrl::initPersistFields()
 {
    addGroup( "Bitmap" );
 
-      INITPERSISTFIELD_IMAGEASSET(Bitmap, GuiBitmapButtonCtrl, "Texture file to display on this button.\n"
+      addProtectedField("Bitmap", TypeImageFilename, Offset(mBitmapName, GuiBitmapButtonCtrl), _setBitmapFieldData, &defaultProtectedGetFn, "Texture file to display on this button.\n"
+         "If useStates is false, this will be the file that renders on the control.  Otherwise, this will "
+         "specify the default texture name to which the various state and modifier suffixes are appended "
+         "to find the per-state and per-modifier (if enabled) textures.", AbstractClassRep::FIELD_HideInInspectors); \
+      addProtectedField("BitmapAsset", TypeImageAssetId, Offset(mBitmapAssetId, GuiBitmapButtonCtrl), _setBitmapFieldData, &defaultProtectedGetFn, "Texture file to display on this button.\n"
          "If useStates is false, this will be the file that renders on the control.  Otherwise, this will "
          "specify the default texture name to which the various state and modifier suffixes are appended "
          "to find the per-state and per-modifier (if enabled) textures.");
+
       addField("color", TypeColorI, Offset(mColor, GuiBitmapButtonCtrl), "color mul");
 
       addField( "bitmapMode", TYPEID< BitmapMode >(), Offset( mBitmapMode, GuiBitmapButtonCtrl ),

@@ -4,15 +4,7 @@ $guiContent = new GuiControl(OptionsMenu) {
    profile = "GuiDefaultProfile";
    tooltipProfile = "GuiToolTipProfile";
    isContainer = "1";
-   canSaveDynamicFields = "1";
-      currentCategory = "Display";
-      optionsCategories = "17177";
-      pageTabIndex = "0";
-      returnGui = "MainMenuGui";
-      tamlReader = "20088";
-      tile = "0";
-      unappliedChanges = "17178";
-      useVariable = "0";
+   canSaveDynamicFields = "0";
 
    new GuiControl() {
       position = "48 56";

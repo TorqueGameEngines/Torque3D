@@ -24,12 +24,7 @@ function AssetBrowser::createMaterialAsset(%this)
    %moduleDef = ModuleDatabase.findModule(%moduleName, 1);
 	AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
 
-	AssetBrowser.loadFilters();
-	
-	%treeItemId = AssetBrowserFilterTree.findItemByName(%moduleName);
-	%smItem = AssetBrowserFilterTree.findChildItemByName(%treeItemId, "Materials");
-	
-	AssetBrowserFilterTree.onSelect(%smItem);
+	AssetBrowser.refresh();
    
 	return %tamlpath;
 }
@@ -428,7 +423,7 @@ function AssetBrowser::importMaterialAsset(%this, %assetItem)
 
 function AssetBrowser::buildMaterialAssetPreview(%this, %assetDef, %previewData)
 {
-   %module = %this.dirHandler.getModuleFromAddress(makeRelativePath(filePath(%assetDef.getScriptPath())));
+   %module = %this.dirHandler.getModuleFromAddress(makeRelativePath(filePath(AssetDatabase.getAssetFilePath(%assetDef.getAssetId()))));
    %previewPath = "tools/resources/previewCache/" @ %module.moduleId @ "/";
 
    if(!IsDirectory(%previewPath))
@@ -460,8 +455,8 @@ function AssetBrowser::buildMaterialAssetPreview(%this, %assetDef, %previewData)
    {
       displayEditorLoadingGui("Generating Material Asset Preview...");
    
-   if(isObject(%assetDef.materialDefinitionName))
-   {
+      if(isObject(%assetDef.materialDefinitionName))
+      {
          %previewShapeDef = AssetDatabase.acquireAsset("ToolsModule:previewSphereShape");
          %generatedFilePath = %previewShapeDef.generateCachedPreviewImage(256, %assetDef.materialDefinitionName);
       
@@ -488,12 +483,16 @@ function AssetBrowser::buildMaterialAssetPreview(%this, %assetDef, %previewData)
    
    //Revalidate. If it didn't work, just use the default placeholder one
    if(!isFile(%previewFilePath))
-      %previewAssetName = "ToolsModule:materialIcon_image";
+   {
+      %previewData.previewImage = "ToolsModule:materialIcon_image";
+   }
+   else
+   {
+      %previewData.previewImage = "ToolsModule:" @ %previewAssetName;
+   }
       
    %previewData.assetName = %assetDef.assetName;
    %previewData.assetPath = %assetDef.scriptFile;
-   
-   %previewData.previewImage = "ToolsModule:" @ %previewAssetName;//%assetDef.fileName;
    
    %previewData.assetFriendlyName = %assetDef.assetName;
    %previewData.assetDesc = %assetDef.description;

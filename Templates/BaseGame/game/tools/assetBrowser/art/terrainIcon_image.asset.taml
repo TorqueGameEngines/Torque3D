@@ -1,8 +1,8 @@
 <ImageAsset
     canSave="true"
     canSaveDynamicFields="true"
-    AssetName="terrainMaterialIcon_image"
-    imageFile="@assetFile=terrainMaterialIcon.png"
+    AssetName="terrainIcon_image"
+    imageFile="@assetFile=terrainIcon.png"
     UseMips="true"
     isHDRImage="false"
     imageType="Albedo" />

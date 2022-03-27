@@ -233,12 +233,16 @@ function AssetBrowser::buildImageAssetPreview(%this, %assetDef, %previewData)
    
    //Revalidate. If it didn't work, just use the default placeholder one
    if(!isFile(%previewFilePath))
-      %previewAssetName = "ToolsModule:genericAssetIcon_image";
+   {
+      %previewData.previewImage = "ToolsModule:genericAssetIcon_image";
+   }
+   else
+   {
+      %previewData.previewImage = %previewAssetName;
+   }
    
    %previewData.assetName = %assetDef.assetName;
    %previewData.assetPath = %assetDef.scriptFile;
-   
-   %previewData.previewImage = %previewAssetName;
    
    %previewData.assetFriendlyName = %assetDef.assetName;
    %previewData.assetDesc = %assetDef.description;
@@ -324,7 +328,14 @@ function GuiInspectorTypeImageAssetPtr::onControlDropped( %this, %payload, %posi
    
    if(%assetType $= "ImageAsset")
    {
-      echo("DROPPED A IMAGE ON AN IMAGE ASSET COMPONENT FIELD!");  
+      %module = %payload.moduleName;
+      %asset = %payload.assetName;
+      
+      %oldValue = %this.targetObject.bitmapAsset;
+      %arrayIndex = "";
+      
+      %targetObject = %this.targetObject;
+      %targetObject.bitmapAsset = %module @ ":" @ %asset; 
    }
    
    EWorldEditor.isDirty = true;

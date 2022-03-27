@@ -1373,6 +1373,11 @@ DefineEngineFunction(saveScaledImage, bool, (const char* bitmapSource, const cha
       return false;
    }
 
+   if (!Platform::isFile(bitmapSource))
+   {
+      return false;
+   }
+
    //First, gotta check the extension, as we have some extra work to do if it's
    //a DDS file
    const char* ret = dStrrchr(bitmapSource, '.');

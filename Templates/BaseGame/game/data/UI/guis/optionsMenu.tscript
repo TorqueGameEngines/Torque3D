@@ -63,6 +63,8 @@ function OptionsMenu::onAdd(%this)
    addOptionsMenuCategory("Audio", "populateAudioSettingsList();");
    addOptionsMenuCategory("Keyboard & Mouse", "populateKeyboardMouseSettingsList();");
    addOptionsMenuCategory("Gamepad", "populateGamepadSettingsList();");
+   
+   callOnModules("populateOptionsMenuCategories", "Game");
 }
 
 function OptionsMenuSettingsList::onAdd(%this)
@@ -900,7 +902,10 @@ function OptionsMenu::onKeybindChanged(%this, %actionMap, %keybind)
 //
 function addOptionsMenuCategory(%categoryName, %selectCallback)
 {
-   OptionsMenu.optionsCategories.add(%categoryName, %selectCallback);
+   //Don't add duplicates!
+   %index = OptionsMenu.optionsCategories.getIndexFromKey(%categoryName);
+   if(%index == -1)
+      OptionsMenu.optionsCategories.add(%categoryName, %selectCallback);
 }
 
 function removeOptionsMenuCategory(%categoryName)

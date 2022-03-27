@@ -179,7 +179,7 @@ function ConvexEditorMaterialBtn::gotMaterialName(%this, %name)
 
    ConvexEditorOptionsWindow-->matPreviewBtn.setBitmap(getAssetPreviewImage(%diffusemap));
 
-   ConvexEditorOptionsWindow.activeMaterial = %materialAsset.materialDefinitionName;
+   ConvexEditorOptionsWindow.activeMaterial = %materialAsset.getAssetId();
 }
 
 function ConvexEditorMaterialApplyBtn::onClick(%this)

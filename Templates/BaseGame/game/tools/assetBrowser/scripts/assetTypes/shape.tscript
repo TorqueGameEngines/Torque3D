@@ -26,12 +26,7 @@ function AssetBrowser::createShapeAsset(%this)
 	%moduleDef = ModuleDatabase.findModule(%moduleName, 1);
 	AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
 
-	AssetBrowser.loadFilters();
-	
-	%treeItemId = AssetBrowserFilterTree.findItemByName(%moduleName);
-	%smItem = AssetBrowserFilterTree.findChildItemByName(%treeItemId, "ShapeAsset");
-	
-	AssetBrowserFilterTree.onSelect(%smItem);
+	AssetBrowser.refresh();
 	
 	return %tamlpath;
 }
@@ -302,12 +297,16 @@ function AssetBrowser::buildShapeAssetPreview(%this, %assetDef, %previewData)
    
    //Revalidate. If it didn't work, just use the default placeholder one
    if(!isFile(%previewFilePath))
-      %previewAssetName = "ToolsModule:genericAssetIcon_image";
+   {
+      %previewData.previewImage = "ToolsModule:genericAssetIcon_image";
+   }
+   else
+   {
+      %previewData.previewImage = "ToolsModule:" @ %previewAssetName;
+   }
    
    %previewData.assetName = %assetDef.assetName;
    %previewData.assetPath = %assetDef.fileName;
-
-   %previewData.previewImage = "ToolsModule:" @ %previewAssetName;//%assetDef.fileName;
    
    %previewData.assetFriendlyName = %assetDef.assetName;
    %previewData.assetDesc = %assetDef.description;

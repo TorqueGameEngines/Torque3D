@@ -47,12 +47,7 @@ function AssetBrowser::createStateMachineAsset(%this)
    %moduleDef = ModuleDatabase.findModule(%moduleName, 1);
 	AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
 
-	AssetBrowser.loadFilters();
-	
-	%treeItemId = AssetBrowserFilterTree.findItemByName(%moduleName);
-	%smItem = AssetBrowserFilterTree.findChildItemByName(%treeItemId, "StateMachines");
-	
-	AssetBrowserFilterTree.onSelect(%smItem);
+	AssetBrowser.refresh();
    
 	return %tamlpath;
 }
@@ -123,21 +118,10 @@ function AssetBrowser::duplicateStateMachineAsset(%this, %assetDef)
 	AssetDatabase.addDeclaredAsset(%moduleDef, %tamlPath);
 
    //Refresh the browser
-	AssetBrowser.loadFilters();
-	
-	//Ensure our context is set
-	%treeItemId = AssetBrowserFilterTree.findItemByName(%targetModule);
-	%smItem = AssetBrowserFilterTree.findChildItemByName(%treeItemId, "StateMachineAsset");
-	
-	AssetBrowserFilterTree.selectItem(%smItem);
+	AssetBrowser.refresh();
 	
 	//Rename it for convenience
 	AssetBrowser.performRenameAsset(%assetName, "New" @ %assetName);
-	
-	//Expand and refresh the target module
-   AssetBrowserFilterTree.expandItem(%treeItemId,true);
-	
-	AssetBrowserFilterTree.buildVisibleTree();
 }
 
 function AssetBrowser::renameGameObjectAsset(%this, %assetDef, %newAssetId, %originalName, %newName)

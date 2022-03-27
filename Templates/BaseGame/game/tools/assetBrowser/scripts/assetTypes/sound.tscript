@@ -75,7 +75,7 @@ function AssetBrowser::onSoundAssetEditorDropped(%this, %assetDef, %position)
    
 }
 
-function GuiInspectorTypeShapeAssetPtr::onControlDropped( %this, %payload, %position )
+function GuiInspectorTypeSoundAssetPtr::onControlDropped( %this, %payload, %position )
 {
    Canvas.popDialog(EditorDragAndDropLayer);
    

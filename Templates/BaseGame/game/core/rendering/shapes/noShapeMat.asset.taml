@@ -7,7 +7,7 @@
     <Material
         Name="NoShapeMat"
         mapTo="NoShape"
-        translucent="1";
+        translucent="1"
         translucentBlendOp="LerpAlpha";
         castShadows="0">
         <Material.Stages>

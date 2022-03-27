@@ -507,6 +507,11 @@ function AssetBrowser::buildMaterialAssetPreview(%this, %assetDef, %previewData)
                            "\nAsset Type: Material Asset" @  
                            "\nAsset Definition ID: " @  %assetDef @
                            "\nDefinition Path: " @ %assetDef.getScriptPath();
+                           
+   if(!%this.selectMode)
+   {
+      %previewData.doubleClickCommand = "AssetBrowser.editAsset( "@%assetDef@" );";
+   }
 }
 
 function AssetBrowser::onMaterialAssetEditorDropped(%this, %assetDef, %position)

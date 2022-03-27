@@ -2,7 +2,7 @@
     canSave="true"
     canSaveDynamicFields="true"
     AssetName="group_border_image"
-    imageFile="@assetFile=group-border.png"
+    imageFile="@assetFile=group_border.png"
     UseMips="true"
     isHDRImage="false"
     imageType="Albedo" />

@@ -115,7 +115,7 @@ function configureCanvas()
       "--Screen Mode    : " @ %fsLabel NL
       "--Bits Per Pixel : " @ %bpp NL
       "--Refresh Rate   : " @ %rate NL
-      "--FSAA Level     : " @ %aa NL
+      "--FXAA Level     : " @ %aa NL
       "--------------");
 
    // Actually set the new video mode

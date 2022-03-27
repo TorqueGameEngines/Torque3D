@@ -127,6 +127,8 @@ function AssetBrowserModuleList::refresh(%this)
       %moduleName = %moduleDef.ModuleId;
       %this.add(%moduleName, %i);  
    }
+   
+   %this.sort();
 }
 
 function AssetBrowserSelModuleAddBtn::onClick(%this)

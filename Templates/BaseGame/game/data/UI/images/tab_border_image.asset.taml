@@ -2,7 +2,7 @@
     canSave="true"
     canSaveDynamicFields="true"
     AssetName="tab_border_image"
-    imageFile="@assetFile=tab-border.png"
+    imageFile="@assetFile=tab_border.png"
     UseMips="true"
     isHDRImage="false"
     imageType="Albedo" />

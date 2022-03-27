@@ -1174,8 +1174,8 @@ function MaterialEditorGui::updateTextureMap( %this, %type, %action )
 function MaterialEditorGui::doUpdateTextureMap( %this, %assetId )
 {
    if(%assetId !$= "")
-{
-   %layer = MaterialEditorGui.currentLayer;
+   {
+      %layer = MaterialEditorGui.currentLayer;
    
       %type = %this.updatingTextureType;
       
@@ -2419,4 +2419,82 @@ function MaterialEditorGui::swapMaterial(%this)
 function MaterialEditorGui::doSwapMaterial(%this, %materialAsset)
 {
    MaterialEditorGui.showMaterialChangeSaveDialog(%materialAsset);
+}
+
+//
+//
+function matEdDragNDropMapAssignment(%type, %payload)
+{
+   %assetType = %payload.assetType;
+   if(%assetType !$= "ImageAsset")
+      return;
+      
+   %module = %payload.moduleName;
+   %assetName = %payload.assetName;
+   %assetId = %module @ ":" @ %assetName;
+   
+   MaterialEditorGui.updatingTextureType = %type;
+   MaterialEditorGui.guiSync( materialEd_previewMaterial );
+   
+   MaterialEditorGui.doUpdateTextureMap( %assetId );
+}
+
+function materialEditorDiffuseMapContainer::onControlDropped( %this, %payload, %position )
+{
+   matEdDragNDropMapAssignment("Diffuse", %payload);
+}
+
+function materialEditorNormalMapContainer::onControlDropped( %this, %payload, %position )
+{
+   matEdDragNDropMapAssignment("Normal", %payload);
+}
+
+function materialEditorORMConfigMapContainer::onControlDropped( %this, %payload, %position )
+{
+   matEdDragNDropMapAssignment("ORMConfig", %payload);
+}
+
+function materialEditorRoughnessMapContainer::onControlDropped( %this, %payload, %position )
+{
+   matEdDragNDropMapAssignment("Roughness", %payload);
+}
+
+function materialEditorAOMapContainer::onControlDropped( %this, %payload, %position )
+{
+   matEdDragNDropMapAssignment("AO", %payload);
+}
+
+function materialEditorMetalMapContainer::onControlDropped( %this, %payload, %position )
+{
+   matEdDragNDropMapAssignment("Metal", %payload);
+}
+
+function materialEditorGlowMapContainer::onControlDropped( %this, %payload, %position )
+{
+   matEdDragNDropMapAssignment("Glow", %payload);
+}
+
+function materialEditorDetailMapContainer::onControlDropped( %this, %payload, %position )
+{
+   matEdDragNDropMapAssignment("Detail", %payload);
+}
+
+function materialEditorDetailNormalMapContainer::onControlDropped( %this, %payload, %position )
+{
+   matEdDragNDropMapAssignment("DetailNormal", %payload);
+}
+
+function materialEditorOverlayMapContainer::onControlDropped( %this, %payload, %position )
+{
+   matEdDragNDropMapAssignment("Overlay", %payload);
+}
+
+function materialEditorLightMapContainer::onControlDropped( %this, %payload, %position )
+{
+   matEdDragNDropMapAssignment("Light", %payload);
+}
+
+function materialEditorToneMapContainer::onControlDropped( %this, %payload, %position )
+{
+   matEdDragNDropMapAssignment("Tone", %payload);
 }

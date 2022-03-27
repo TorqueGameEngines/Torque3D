@@ -182,11 +182,14 @@ function CreateNewAsset()
 	Canvas.popDialog(AssetBrowser_newAsset);
 	
 	//Load it
-	%moduleDef = ModuleDatabase.findModule(%moduleName,1);
-	AssetDatabase.addDeclaredAsset(%moduleDef, %assetFilePath);
-	//For utilities' sake, we'll acquire it immediately so it can be utilized 
-	//without delay if it's got any script/dependencies stuff
-	AssetDatabase.acquireAsset("\"" @ %moduleName @ ":" @ %assetName @ "\"");
+	if(!AssetDatabase.isDeclaredAsset(%moduleName @ ":" @ %assetName))
+	{
+      %moduleDef = ModuleDatabase.findModule(%moduleName,1);
+      AssetDatabase.addDeclaredAsset(%moduleDef, %assetFilePath);
+      //For utilities' sake, we'll acquire it immediately so it can be utilized 
+      //without delay if it's got any script/dependencies stuff
+      AssetDatabase.acquireAsset("\"" @ %moduleName @ ":" @ %assetName @ "\"");
+	}
 	
 	if(AssetBrowser_newAsset.callbackFunc !$= "")
 	{

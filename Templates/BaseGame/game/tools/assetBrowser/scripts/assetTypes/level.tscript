@@ -61,11 +61,6 @@ function AssetBrowser::createLevelAsset(%this)
 
 	AssetBrowser.refresh();
 	
-	%treeItemId = AssetBrowserFilterTree.findItemByName(%moduleName);
-	%smItem = AssetBrowserFilterTree.findChildItemByName(%treeItemId, "Levels");
-	
-	AssetBrowserFilterTree.onSelect(%smItem);
-	
 	return %tamlpath;  
 }
 

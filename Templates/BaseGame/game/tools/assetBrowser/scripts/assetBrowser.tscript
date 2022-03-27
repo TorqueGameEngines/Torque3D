@@ -931,13 +931,7 @@ function AssetBrowser::deleteMaterial( %this, %materialName, %secondFilter, %sec
       AssetBrowserPerMan.saveDirty();
    }
       
-   AssetBrowser.preloadFilter();
-}
-
-function AssetBrowser::thumbnailCountUpdate(%this)
-{
-   $Pref::AssetBrowser::ThumbnailCountIndex = AssetBrowser-->materialPreviewCountPopup.getSelected();
-   AssetBrowser.LoadFilter( AssetBrowser.currentFilter, AssetBrowser.currentStaticFilter );
+   AssetBrowser.refresh();
 }
 
 function AssetBrowser::toggleTagFilterPopup(%this)

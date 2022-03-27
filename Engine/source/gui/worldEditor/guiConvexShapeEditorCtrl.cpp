@@ -204,7 +204,7 @@ void GuiConvexEditorCtrl::setVisible( bool val )
 			mConvexHL = NULL;			
 			mFaceHL = -1;
 
-         setSelection( NULL, -1 );
+            setSelection( NULL, -1 );
 
 			WorldEditor *wedit;
 			if ( Sim::findObject( "EWorldEditor", wedit ) )

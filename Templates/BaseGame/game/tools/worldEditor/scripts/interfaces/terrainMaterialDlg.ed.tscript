@@ -269,27 +269,27 @@ function TerrainMaterialDlg::changeTerrainMatMapAsset(%this)
 
    %imgAsset = AssetBrowser.selectedAsset;
    if(%imgAsset !$= "")
-{   
+   {   
       %targetMap.asset = %imgAsset;
       %image = %imgAsset;
 
       if(%this.updateTargetMap $= "DetailMap")
-   {
+      {
          //show the supplemental maps
          NormalMapContainer.callOnChildren("setActive", true);  
          ORMMapContainer.callOnChildren("setActive", true);
          MacroMapContainer.callOnChildren("setActive", true);
+      }
    }
-}
-      else
+   else
    {
       %image = $TerrainMaterialEditor::emptyMaterialImage;
    }
 
    %targetMap.setBitmap( getAssetPreviewImage(%image) );  
 
-   %targetMapName = %targetMap @ "AssetId";
-   %targetMapName.setText(%imgAsset);
+   %targetMapNameText = %this.findObjectByInternalName(%this.updateTargetMap @ "AssetId", true);
+   %targetMapNameText.setText(%imgAsset);
 
    TerrainMaterialDlg.matDirty = true;
 }
@@ -412,7 +412,7 @@ function TerrainMaterialDlg::setActiveMaterial( %this, %mat )
       %imgPath = %mat.getDiffuseMap();
       %imgPathText = %imgPath !$= "" && %imgPath !$= $TerrainMaterialEditor::emptyMaterialImage ? %mat.getDiffuseMapAsset() : "None";
       %this-->diffuseMapAssetId.setText( %imgPathText );
-      %this-->texBaseMap.setBitmap( getAssetPreviewImage(%imgPath) );
+      %this-->texDiffuseMap.setBitmap( getAssetPreviewImage(%imgPath) );
 
       //
       %imgPath = %mat.getNormalMap();
@@ -487,7 +487,7 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %mat )
    
    
    //---
-   %newDiffuse = %this-->texBaseMap.getBitmap();
+   %newDiffuse = %this-->texDiffuseMap.getBitmap();
    if(%newDiffuse $= $TerrainMaterialEditor::emptyMaterialImage || %newDiffuse $= %blankBitmap)
       %newDiffuse = "";
    
@@ -740,4 +740,46 @@ function TerrainMaterialDlgBlendHeightContrastTextEdit::onValidate(%this)
    TerrainMaterialDlgBlendHeightContrastSlider.setValue(%this.getText());
    TerrainMaterialDlg.activeMat.blendHeightContrast = %this.getText();
    TerrainMaterialDlg.matDirty = true;
+}
+
+//
+//
+function terrMatEdDragNDropMapAssignment(%mapName, %payload)
+{
+   %assetType = %payload.assetType;
+   if(%assetType !$= "ImageAsset")
+      return;
+      
+   %module = %payload.moduleName;
+   %assetName = %payload.assetName;
+   %assetId = %module @ ":" @ %assetName;
+   
+   TerrainMaterialDlg.updateTargetMap = %mapName;
+   AssetBrowser.selectedAsset = %assetId;
+   TerrainMaterialDlg.changeTerrainMatMapAsset();
+}
+
+function DiffuseMapContainer::onControlDropped( %this, %payload, %position )
+{
+   terrMatEdDragNDropMapAssignment("DiffuseMap", %payload);
+}
+
+function DetailMapContainer::onControlDropped( %this, %payload, %position )
+{
+   terrMatEdDragNDropMapAssignment("DetailMap", %payload);
+}
+
+function NormalMapContainer::onControlDropped( %this, %payload, %position )
+{
+   terrMatEdDragNDropMapAssignment("NormalMap", %payload);
+}
+
+function ORMMapContainer::onControlDropped( %this, %payload, %position )
+{
+   terrMatEdDragNDropMapAssignment("ORMMap", %payload);
+}
+
+function MacroMapContainer::onControlDropped( %this, %payload, %position )
+{
+   terrMatEdDragNDropMapAssignment("MacroMap", %payload);
 }

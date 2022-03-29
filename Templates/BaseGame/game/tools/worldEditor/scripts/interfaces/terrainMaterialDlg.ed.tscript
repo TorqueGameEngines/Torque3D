@@ -474,10 +474,35 @@ function TerrainMaterialDlg::setActiveMaterial( %this, %mat )
 
 function TerrainMaterialDlg::saveDirtyMaterial( %this, %mat )
 {
+   //If we happen to have been handed an assetId, process it
+   if(AssetDatabase.isDeclaredAsset(%mat))
+   {
+      %assetDef = AssetDatabase.acquireAsset(%mat);
+      %mat = %assetDef.getMaterialDefinition();
+   }
+   
    // Skip over obviously bad cases.
    if (  !isObject( %mat ) || 
          !%mat.isMemberOfClass( TerrainMaterial ) )
       return;
+            
+   //Lets validate it wasn't a generated stub. if so, we need to add an intermediate
+   //step to create the asset
+   %assetDef = AssetDatabase.acquireAsset(%mat.internalName);
+   if(%assetDef $= "")
+   {
+      %moduleSplit = strpos(%mat.internalName, ":");
+      %moduleName = getSubStr(%mat.internalName, 0, %moduleSplit);
+      %assetName = getSubStr(%mat.internalName, %moduleSplit+1, -1);
+      if(ModuleDatabase.findModule(%moduleName) !$= "")
+      {
+         AssetBrowser.selectedModule = %moduleName;
+      }
+         
+      //we need to create an actual asset here
+      AssetBrowser.setupCreateNewAsset("TerrainMaterialAsset", AssetBrowser.selectedModule, "TerrainMaterialDlg.saveDirtyMaterial", %assetName); 
+      return;
+   }
             
    // Read out properties from the dialog.
    
@@ -487,28 +512,28 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %mat )
    
    
    //---
-   %newDiffuse = %this-->texDiffuseMap.getBitmap();
-   if(%newDiffuse $= $TerrainMaterialEditor::emptyMaterialImage || %newDiffuse $= %blankBitmap)
+   %newDiffuse = %this-->diffuseMapAssetId.text;
+   if(%newDiffuse $= "None")
       %newDiffuse = "";
    
    //---
-   %newNormal = %this-->texNormalMap.getBitmap();
-   if(%newNormal $= $TerrainMaterialEditor::emptyMaterialImage || %newNormal $= %blankBitmap)
+   %newNormal = %this-->normalMapAssetId.text;
+   if(%newNormal $= "None")
       %newNormal = "";
    
    //---
-   %newormConfig = %this-->texORMConfigMap.getBitmap();
-   if(%newormConfig $= $TerrainMaterialEditor::emptyMaterialImage || %newormConfig $= %blankBitmap)
+   %newormConfig = %this-->ORMMapAssetId.text;
+   if(%newormConfig $= "None")
       %newormConfig = "";
    
    //---
-   %newDetail = %this-->texDetailMap.getBitmap();
-   if(%newDetail $= $TerrainMaterialEditor::emptyMaterialImage || %newDetail $= %blankBitmap)
+   %newDetail = %this-->detailMapAssetId.text;
+   if(%newDetail $= "None")
       %newDetail = "";
    
    //---
-   %newMacro = %this-->texMacroMap.getBitmap();
-   if(%newMacro $= $TerrainMaterialEditor::emptyMaterialImage || %newMacro $= %blankBitmap)
+   %newMacro = %this-->macroMapAssetId.text;
+   if(%newMacro $= "None")
       %newMacro = "";
    
    %detailSize = %this-->detSizeCtrl.getText();      

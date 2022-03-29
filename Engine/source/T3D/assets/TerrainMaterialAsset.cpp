@@ -177,11 +177,6 @@ void TerrainMaterialAsset::initializeAsset()
       return;
    }
 
-   if (mMatDefinitionName == StringTable->insert("DetailBlue"))
-   {
-      bool asdfsd = true;
-   }
-
    if (size() != 0 && mScriptPath == StringTable->EmptyString())
    {
       mLoadedState = EmbeddedDefinition;
@@ -267,18 +262,20 @@ void TerrainMaterialAsset::loadMaterial()
       {
          for (U32 i = 0; i < size(); i++)
          {
-            mMaterialDefinition = dynamic_cast<TerrainMaterial*>(getObject(i));
-            if (mMaterialDefinition)
+            TerrainMaterial* terrMat =  dynamic_cast<TerrainMaterial*>(getObject(i));
+            if (terrMat)
             {
+               mMaterialDefinition = terrMat;
                mLoadedState = Ok;
                mMaterialDefinition->setInternalName(getAssetId());
                continue;
             }
 
             //Otherwise, check if it's our FX material
-            mFXMaterialDefinition = dynamic_cast<Material*>(getObject(i));
-            if (mFXMaterialDefinition)
+            Material* fxMat = dynamic_cast<Material*>(getObject(i));
+            if (fxMat)
             {
+               mFXMaterialDefinition = fxMat;
                //mMaterialDefinition->setInternalName(getAssetId());
                mFXMaterialDefinition->reload();
                continue;
@@ -286,6 +283,9 @@ void TerrainMaterialAsset::loadMaterial()
 
          }
       }
+
+      if(mLoadedState == Ok)
+         return;
    }
    else if ((mLoadedState == ScriptLoaded || mLoadedState == DefinitionAlreadyExists) && mMatDefinitionName != StringTable->EmptyString())
    {
@@ -460,6 +460,28 @@ DefineEngineMethod(TerrainMaterialAsset, getScriptPath, const char*, (), ,
 {
    return object->getScriptPath();
 }
+
+DefineEngineMethod(TerrainMaterialAsset, getMaterialDefinition, S32, (), ,
+   "Queries the Asset Database to see if any asset exists that is associated with the provided material name.\n"
+   "@return The AssetId of the associated asset, if any.")
+{
+   SimObjectPtr<TerrainMaterial> mat = object->getMaterialDefinition();
+   if (mat.isValid())
+      return mat->getId();
+   else
+      return 0;
+}
+
+DefineEngineMethod(TerrainMaterialAsset, getFXMaterialDefinition, S32, (), ,
+   "Queries the Asset Database to see if any asset exists that is associated with the provided material name.\n"
+   "@return The AssetId of the associated asset, if any.")
+{
+   SimObjectPtr<Material> mat = object->getFXMaterialDefinition();
+   if (mat.isValid())
+      return mat->getId();
+   else
+      return 0;
+}
 #endif
 //-----------------------------------------------------------------------------
 // GuiInspectorTypeAssetId
@@ -483,68 +505,36 @@ void GuiInspectorTypeTerrainMaterialAssetPtr::consoleInit()
 GuiControl* GuiInspectorTypeTerrainMaterialAssetPtr::constructEditControl()
 {
    // Create base filename edit controls
-   mUseHeightOverride = true;
-   mHeightOverride = 100;
-
-   mMatEdContainer = new GuiControl();
-   mMatEdContainer->registerObject();
-
-   addObject(mMatEdContainer);
-
-   // Create "Open in ShapeEditor" button
-   mMatPreviewButton = new GuiBitmapButtonCtrl();
-
-   const char* matAssetId = getData();
-
-   TerrainMaterialAsset* matAsset = AssetDatabase.acquireAsset< TerrainMaterialAsset>(matAssetId);
-
-   TerrainMaterial* materialDef = nullptr;
-
-   char bitmapName[512] = "ToolsModule:material_editor_n_image";
-
-   /*if (!Sim::findObject(matAsset->getMaterialDefinitionName(), materialDef))
-   {
-      Con::errorf("GuiInspectorTypeTerrainMaterialAssetPtr::constructEditControl() - unable to find material in asset");
-   }
-   else
-   {
-      mMatPreviewButton->setBitmap(materialDef->mDiffuseMapFilename[0]);
-   }*/
-
-   mMatPreviewButton->setPosition(0, 0);
-   mMatPreviewButton->setExtent(100,100);
+   GuiControl* retCtrl = Parent::constructEditControl();
+   if (retCtrl == NULL)
+      return retCtrl;
 
    // Change filespec
    char szBuffer[512];
-   dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"TerrainMaterialAsset\", \"AssetBrowser.changeAsset\", %d, %s);",
+   dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"TerrainMaterialAsset\", \"AssetBrowser.changeAsset\", %s, %s);",
       mInspector->getIdString(), mCaption);
-   mMatPreviewButton->setField("Command", szBuffer);
+   mBrowseButton->setField("Command", szBuffer);
 
-   mMatPreviewButton->setDataField(StringTable->insert("Profile"), NULL, "GuiButtonProfile");
-   mMatPreviewButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
-   mMatPreviewButton->setDataField(StringTable->insert("hovertime"), NULL, "1000");
+   setDataField(StringTable->insert("targetObject"), NULL, mInspector->getInspectObject()->getIdString());
 
-   StringBuilder strbld;
-   strbld.append(matAsset->getMaterialDefinitionName());
-   strbld.append("\n");
-   strbld.append("Open this asset in the Material Editor");
+   // Create "Open in Editor" button
+   mEditButton = new GuiBitmapButtonCtrl();
 
-   mMatPreviewButton->setDataField(StringTable->insert("tooltip"), NULL, strbld.data());
+   dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.editAsset(%d.getText());", retCtrl->getId());
+   mEditButton->setField("Command", szBuffer);
 
-   _registerEditControl(mMatPreviewButton);
-   //mMatPreviewButton->registerObject();
-   mMatEdContainer->addObject(mMatPreviewButton);
+   char bitmapName[512] = "ToolsModule:material_editor_n_image";
+   mEditButton->setBitmap(StringTable->insert(bitmapName));
 
-   mMatAssetIdTxt = new GuiTextEditCtrl();
-   mMatAssetIdTxt->registerObject();
-   mMatAssetIdTxt->setActive(false);
+   mEditButton->setDataField(StringTable->insert("Profile"), NULL, "GuiButtonProfile");
+   mEditButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
+   mEditButton->setDataField(StringTable->insert("hovertime"), NULL, "1000");
+   mEditButton->setDataField(StringTable->insert("tooltip"), NULL, "Open this asset in the Terrain Material Editor");
 
-   mMatAssetIdTxt->setText(matAssetId);
+   mEditButton->registerObject();
+   addObject(mEditButton);
 
-   mMatAssetIdTxt->setBounds(100, 0, 150, 18);
-   mMatEdContainer->addObject(mMatAssetIdTxt);
-
-   return mMatEdContainer;
+   return retCtrl;
 }
 
 bool GuiInspectorTypeTerrainMaterialAssetPtr::updateRects()
@@ -558,43 +548,19 @@ bool GuiInspectorTypeTerrainMaterialAssetPtr::updateRects()
    mEditCtrlRect.set(fieldExtent.x - dividerPos + dividerMargin, 1, dividerPos - dividerMargin - 34, fieldExtent.y);
 
    bool resized = mEdit->resize(mEditCtrlRect.point, mEditCtrlRect.extent);
-
-   if (mMatEdContainer != nullptr)
+   if (mBrowseButton != NULL)
    {
-      mMatPreviewButton->resize(mEditCtrlRect.point, mEditCtrlRect.extent);
+      mBrowseRect.set(fieldExtent.x - 32, 2, 14, fieldExtent.y - 4);
+      resized |= mBrowseButton->resize(mBrowseRect.point, mBrowseRect.extent);
    }
 
-   if (mMatPreviewButton != nullptr)
+   if (mEditButton != NULL)
    {
-      mMatPreviewButton->resize(Point2I::Zero, Point2I(100, 100));
-   }
-
-   if (mMatAssetIdTxt != nullptr)
-   {
-      mMatAssetIdTxt->resize(Point2I(100, 0), Point2I(mEditCtrlRect.extent.x - 100, 18));
+      RectI shapeEdRect(fieldExtent.x - 16, 2, 14, fieldExtent.y - 4);
+      resized |= mEditButton->resize(shapeEdRect.point, shapeEdRect.extent);
    }
 
    return resized;
-}
-
-void GuiInspectorTypeTerrainMaterialAssetPtr::setMaterialAsset(String assetId)
-{
-   mTargetObject->setDataField(mCaption, "", assetId);
-
-   //force a refresh
-   SimObject* obj = mInspector->getInspectObject();
-   mInspector->inspectObject(obj);
-}
-
-DefineEngineMethod(GuiInspectorTypeTerrainMaterialAssetPtr, setMaterialAsset, void, (String assetId), (""),
-   "Gets a particular shape animation asset for this shape.\n"
-   "@param animation asset index.\n"
-   "@return Shape Animation Asset.\n")
-{
-   if (assetId == String::EmptyString)
-      return;
-
-   return object->setMaterialAsset(assetId);
 }
 
 IMPLEMENT_CONOBJECT(GuiInspectorTypeTerrainMaterialAssetId);

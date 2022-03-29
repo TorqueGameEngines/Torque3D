@@ -137,13 +137,19 @@ bool TerrainMaterial::onAdd()
    SimSet *set = Sim::getTerrainMaterialSet();
 
    // Make sure we have an internal name set.
-   if ( !mInternalName || !mInternalName[0] )
-      Con::warnf( "TerrainMaterial::onAdd() - No internal name set!" );
+   if (!mInternalName || !mInternalName[0])
+   {
+      Con::warnf("TerrainMaterial::onAdd() - No internal name set!");
+      return false;
+   }
    else
    {
       SimObject *object = set->findObjectByInternalName( mInternalName );
-      if ( object )
-         Con::warnf( "TerrainMaterial::onAdd() - Internal name collision; '%s' already exists!", mInternalName );
+      if (object)
+      {
+         Con::warnf("TerrainMaterial::onAdd() - Internal name collision; '%s' already exists!", mInternalName);
+         return false;
+      }
    }  
 
    set->addObject( this );

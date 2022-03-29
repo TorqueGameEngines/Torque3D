@@ -1244,6 +1244,15 @@ function T3Dpre4ProjectImporter::processTerrainMaterialObject(%this, %fileObject
          %fileObject.FXMaterial.processed = true;
          %fileObject.FXMaterial.skip = true;
       }  
+      else
+      {
+         //if after all that we still have no FXMaterial, just create a new one
+         %fxMat = new Material("TerrainFX_" @ %objectName)
+         {
+            mapTo = %objectName;  
+         };
+         %asset.add(%fxMat);
+      }
       
       %success = false;
       if(TamlWrite(%asset, %tamlpath))

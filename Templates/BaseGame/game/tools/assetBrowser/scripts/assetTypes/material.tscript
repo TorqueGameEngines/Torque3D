@@ -21,6 +21,9 @@ function AssetBrowser::createMaterialAsset(%this)
    
    TamlWrite(%asset, %tamlpath);
    
+   //cleanup before proper init'ing
+   %assetName.delete();
+   
    %moduleDef = ModuleDatabase.findModule(%moduleName, 1);
 	AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
 

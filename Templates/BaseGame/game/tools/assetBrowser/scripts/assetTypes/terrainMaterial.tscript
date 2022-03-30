@@ -48,6 +48,10 @@ function AssetBrowser::createTerrainMaterialAsset(%this)
    
    TamlWrite(%asset, %tamlpath);
    
+   //cleanup before proper init'ing
+   %matDef.delete();
+   %fxMatDef.delete();
+   
    %moduleDef = ModuleDatabase.findModule(%moduleName, 1);
 	AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
 	

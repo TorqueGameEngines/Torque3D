@@ -778,7 +778,26 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %materialAssetId )
    %fxMat.customImpactSound = getField(%impactSound, 1);
    
    //Save the material asset
-   %assetDef.saveAsset();
+   %didEmbed = false;
+   %matScriptFile = %assetDef.getScriptPath();
+   if(%matScriptFile !$= "")
+   {
+      //lets up-convert to embedded
+      %assetDef.add(%mat);
+      %assetDef.add(%fxMat);
+      %assetDef.scriptFile = "";
+      %didEmbed = true;
+   }
+   
+   //write it out
+   if(%assetDef.saveAsset())
+   {
+      if(%didEmbed)
+      {
+         fileDelete(%matScriptFile); //cleanup the old definition file  
+      }
+   }
+
    %this.schedule(32, "cleanupDirtyMaterial");
 }
 

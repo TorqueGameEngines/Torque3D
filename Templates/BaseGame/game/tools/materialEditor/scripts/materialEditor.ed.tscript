@@ -1963,7 +1963,24 @@ function MaterialEditorGui::save( %this )
       MaterialEditorGui.copyMaterials( materialEd_previewMaterial, notDirtyMaterial );
       
       %assetDef = AssetDatabase.acquireAsset(MaterialEditorGui.currentMaterialAsset);
-      %assetDef.saveAsset(); //write it out
+      %didEmbed = false;
+      %matScriptFile = %assetDef.getScriptPath();
+      if(%matScriptFile !$= "")
+      {
+         //lets up-convert to embedded
+         %assetDef.add(%assetDef.materialDefinitionName);
+         %assetDef.scriptFile = "";
+         %didEmbed = true;
+      }
+      
+      //write it out
+      if(%assetDef.saveAsset())
+      {
+         if(%didEmbed)
+         {
+            fileDelete(%matScriptFile); //cleanup the old definition file  
+         }
+      }
    }
    else
    {

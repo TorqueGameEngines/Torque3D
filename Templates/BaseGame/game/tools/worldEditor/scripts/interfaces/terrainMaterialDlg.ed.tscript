@@ -603,7 +603,7 @@ function TerrainMaterialDlg::prepSaveDirtyMaterial(%this, %material)
       if(!isObject(%fxMat))
       {
          %fxMat = new Material("TerrainFX_" @ %assetDef.assetName){
-            mapTo = %assetDef.assetName;
+            mapTo = %material.internalName;
          };
          
          %assetDef.add(%fxMat);

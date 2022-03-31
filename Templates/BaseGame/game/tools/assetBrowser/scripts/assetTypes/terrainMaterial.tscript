@@ -32,7 +32,7 @@ function AssetBrowser::createTerrainMaterialAsset(%this)
    
    %fxMatDef = new Material("TerrainFX_" @ %assetName)
    {
-      mapTo = %assetName;
+      mapTo = %moduleName @ ":" @ %assetName;
       footstepSoundId = 0;
       terrainMaterials = "1";
       ShowDust = "1";

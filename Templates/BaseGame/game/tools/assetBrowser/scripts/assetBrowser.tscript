@@ -639,8 +639,17 @@ function AssetBrowser::loadDirectories( %this )
    %dataItem = AssetBrowser-->filterTree.insertItem(AssetBrowser-->filterTree.modulesIdx, "data");
    AssetBrowser-->filterTree.tagsIdx = AssetBrowser-->filterTree.insertItem(1, "Tags");
    
-   if(!%this.selectMode)
       AssetBrowser-->filterTree.creatorIdx = AssetBrowser-->filterTree.insertItem(1, "Creator");
+   
+   AssetBrowser-->filterTree.clearSelection();
+      
+   if(%this.selectMode)
+   {
+      AssetBrowser-->filterTree.addSelection(AssetBrowser-->filterTree.collectionsIdx);
+      AssetBrowser-->filterTree.addSelection(AssetBrowser-->filterTree.creatorIdx);
+      
+      AssetBrowser-->filterTree.hideSelection();
+   }
    
    %this.dirHandler.loadFolders("data", %dataItem);
    
@@ -750,20 +759,6 @@ function AssetBrowser::loadDirectories( %this )
 
 function AssetBrowser::updateSelection( %this, %asset, %moduleName )
 {
-   /*%isAssetBorder = 0;
-   eval("%isAssetBorder = isObject(AssetBrowser-->"@%asset@"Border);");
-   if( %isAssetBorder )
-   {
-      eval( "AssetBrowser-->"@%asset@"Border.setStateOn(1);");
-   }
-      
-   %isAssetBorderPrevious = 0;
-   eval("%isAssetBorderPrevious = isObject(AssetBrowser-->"@%this.prevSelectedMaterialHL@"Border);");
-   if( %isAssetBorderPrevious )
-   {
-      eval( "AssetBrowser-->"@%this.prevSelectedMaterialHL@"Border.setStateOn(0);");
-   }*/
-   
    //If we had an existing selected assetDef, clear the reference
    if(isObject(AssetBrowser.selectedAssetDef))
       AssetDatabase.releaseAsset(AssetBrowser.selectedAssetDef.getAssetId());
@@ -775,11 +770,13 @@ function AssetBrowser::updateSelection( %this, %asset, %moduleName )
    if(strstr(%moduleName, "/") != -1)
       return;
       
-   //Otherwise, it's an asset so we'll select the definition while we're at it
+   //Check if this is an actual assetId, or if it's just a programmatic reference
+   //like what we use for the creator entries
+   if(AssetDatabase.isDeclaredAsset(AssetBrowser.selectedAsset))
+   {
+      //Looks good, it's an asset so we'll select the definition while we're at it
    AssetBrowser.selectedAssetDef = AssetDatabase.acquireAsset(AssetBrowser.selectedAsset);
-   //AssetBrowser.selectedPreviewImagePath = %previewImagePath;
-   
-   //%this.prevSelectedMaterialHL = %asset;
+   }
 }
 
 function AssetBrowser::loadCollectionSets(%this)

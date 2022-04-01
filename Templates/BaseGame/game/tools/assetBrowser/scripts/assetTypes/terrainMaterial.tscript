@@ -32,7 +32,7 @@ function AssetBrowser::createTerrainMaterialAsset(%this)
    
    %fxMatDef = new Material("TerrainFX_" @ %assetName)
    {
-      mapTo = %assetName;
+      mapTo = %moduleName @ ":" @ %assetName;
       footstepSoundId = 0;
       terrainMaterials = "1";
       ShowDust = "1";
@@ -47,6 +47,10 @@ function AssetBrowser::createTerrainMaterialAsset(%this)
    %asset.add(%fxMatDef);
    
    TamlWrite(%asset, %tamlpath);
+   
+   //cleanup before proper init'ing
+   %matDef.delete();
+   %fxMatDef.delete();
    
    %moduleDef = ModuleDatabase.findModule(%moduleName, 1);
 	AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);

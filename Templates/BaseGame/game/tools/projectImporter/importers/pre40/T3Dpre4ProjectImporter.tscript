@@ -1203,7 +1203,7 @@ function T3Dpre4ProjectImporter::processTerrainMaterialObject(%this, %fileObject
             {
                %fxMatObj = getField(%fxMatList, %i);
                %fxMatObjMapTo = findObjectField(%fxMatObj, "mapTo");
-               if(%fxMatObjMapTo $= %objectName)
+               if(%fxMatObjMapTo $= %objectName || %fxMatObjMapTo $= %assetName)
                {
                   %fileObject.FXMaterial = %fxMatObj;
                   break;
@@ -1215,7 +1215,7 @@ function T3Dpre4ProjectImporter::processTerrainMaterialObject(%this, %fileObject
       if(%fileObject.FXMaterial !$= "")
       {
          //Ensure our mapto is up to date for any name sanitize/tweaks
-         setObjectField(%fileObject.FXMaterial, "mapTo", %objectName);
+         setObjectField(%fileObject.FXMaterial, "mapTo", %moduleName @ ":" @ %assetName);
          
          //we associated to an FX material, so process that now
          %objectDefinition = "";
@@ -1244,6 +1244,15 @@ function T3Dpre4ProjectImporter::processTerrainMaterialObject(%this, %fileObject
          %fileObject.FXMaterial.processed = true;
          %fileObject.FXMaterial.skip = true;
       }  
+      else
+      {
+         //if after all that we still have no FXMaterial, just create a new one
+         %fxMat = new Material("TerrainFX_" @ %objectName)
+         {
+            mapTo = %moduleName @ ":" @ %assetName;  
+         };
+         %asset.add(%fxMat);
+      }
       
       %success = false;
       if(TamlWrite(%asset, %tamlpath))

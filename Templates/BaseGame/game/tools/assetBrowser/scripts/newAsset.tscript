@@ -85,7 +85,7 @@ function NewAssetModuleBtn::onClick(%this)
    AssetBrowser_addModuleWindow.selectWindow();
 }
 
-function AssetBrowser::setupCreateNewAsset(%this, %assetType, %moduleName, %callback)
+function AssetBrowser::setupCreateNewAsset(%this, %assetType, %moduleName, %callback, %nameOverride)
 {
    Canvas.pushDialog(AssetBrowser_newAsset);
    
@@ -106,8 +106,12 @@ function AssetBrowser::setupCreateNewAsset(%this, %assetType, %moduleName, %call
    %this.newAssetSettings.assetType = %assetType;
    %this.newAssetSettings.moduleName = %moduleName;
    
+   %newAssetName = "New" @ %shortAssetTypeName;
+   if(%nameOverride !$= "")
+      %newAssetName = %nameOverride;
+   
    NewAssetPropertiesInspector.startGroup("General");
-   NewAssetPropertiesInspector.addField("assetName", "New Asset Name", "String",  "Name of the new asset", "New" @ %shortAssetTypeName, "", %this.newAssetSettings);
+   NewAssetPropertiesInspector.addField("assetName", "New Asset Name", "String",  "Name of the new asset", %newAssetName, "", %this.newAssetSettings);
    //NewAssetPropertiesInspector.addField("AssetType", "New Asset Type", "List",  "Type of the new asset", %assetType, "Component,Image,Material,Shape,Sound,State Machine", %newAssetSettings);
    
    //NewAssetPropertiesInspector.addField("friendlyName", "Friendly Name", "String",  "Human-readable name of new asset", "", "", %this.newAssetSettings);

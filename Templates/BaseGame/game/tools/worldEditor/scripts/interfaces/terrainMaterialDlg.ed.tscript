@@ -262,8 +262,8 @@ function TerrainMaterialDlg::clearTextureMap(%this, %mapName)
       NormalMapContainer.callOnChildren("setActive", false);  
       %this.clearTextureMap("NormalMap");
       
-      ORMMapContainer.callOnChildren("setActive", false);
-      %this.clearTextureMap("ORMMap");
+      ORMConfigMapContainer.callOnChildren("setActive", false);
+      %this.clearTextureMap("ORMConfigMap");
       
       MacroMapContainer.callOnChildren("setActive", false);
       %this.clearTextureMap("MacroMap");
@@ -292,7 +292,7 @@ function TerrainMaterialDlg::changeTerrainMatMapAsset(%this)
       {
          //show the supplemental maps
          NormalMapContainer.callOnChildren("setActive", true);  
-         ORMMapContainer.callOnChildren("setActive", true);
+         ORMConfigMapContainer.callOnChildren("setActive", true);
          MacroMapContainer.callOnChildren("setActive", true);
       }
    }
@@ -377,13 +377,13 @@ function TerrainMaterialDlg::activateMaterialCtrls( %this, %active )
    if(%this-->texDetailMap.getBitmap() $= "" || %this-->texDetailMap.getBitmap() $= $TerrainMaterialEditor::emptyMaterialImage)
    {
       NormalMapContainer.callOnChildren("setActive", false);  
-      ORMMapContainer.callOnChildren("setActive", false);
+      ORMConfigMapContainer.callOnChildren("setActive", false);
       MacroMapContainer.callOnChildren("setActive", false);
    }
    else
    {
       NormalMapContainer.callOnChildren("setActive", true);  
-      ORMMapContainer.callOnChildren("setActive", true);
+      ORMConfigMapContainer.callOnChildren("setActive", true);
       MacroMapContainer.callOnChildren("setActive", true); 
    }
 }
@@ -438,7 +438,7 @@ function TerrainMaterialDlg::setActiveMaterial( %this, %mat )
       //
       %imgPath = %mat.getORMConfigMap();
       %imgPathText = %imgPath !$= "" && %imgPath !$= $TerrainMaterialEditor::emptyMaterialImage ? %mat.getORMConfigMapAsset() : "None";
-      %this-->ORMMapAssetId.setText( %imgPathText );
+      %this-->ORMConfigMapAssetId.setText( %imgPathText );
       %this-->texORMConfigMap.setBitmap( getAssetPreviewImage(%imgPath) );
        
       //
@@ -656,7 +656,7 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %materialAssetId )
       %newNormal = "";
    
    //---
-   %newormConfig = %this-->ORMMapAssetId.text;
+   %newormConfig = %this-->ORMConfigMapAssetId.text;
    if(%newormConfig $= "None")
       %newormConfig = "";
    
@@ -995,9 +995,9 @@ function NormalMapContainer::onControlDropped( %this, %payload, %position )
    terrMatEdDragNDropMapAssignment("NormalMap", %payload);
 }
 
-function ORMMapContainer::onControlDropped( %this, %payload, %position )
+function ORMConfigMapContainer::onControlDropped( %this, %payload, %position )
 {
-   terrMatEdDragNDropMapAssignment("ORMMap", %payload);
+   terrMatEdDragNDropMapAssignment("ORMConfigMap", %payload);
 }
 
 function MacroMapContainer::onControlDropped( %this, %payload, %position )

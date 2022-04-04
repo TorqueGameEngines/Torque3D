@@ -9,7 +9,7 @@
         mapTo="ReflectProbePreviewMat">
         <Material.Stages>
             <Stages_beginarray
-                DiffuseMapAsset="ToolsModule:occluderProxyImage_image"
+                DiffuseMapAsset="Core_Rendering:NoMaterial"
                 diffuseColor="1 1 1 1"
                 roughness="0"
                 metalness="1"/>

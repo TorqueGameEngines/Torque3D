@@ -1088,7 +1088,7 @@ function AssetBrowserPreviewButton::onRightClick(%this)
    
    //Do some enabling/disabling of options depending on asset type
    EditAssetPopup.enableItem(0, true);
-   EditAssetPopup.enableItem(7, true);
+   EditAssetPopup.enableItem(9, true);
    
    //Is it an editable type?
    if(%assetType $= "ImageAsset" /*|| %assetType $= "GameObjectAsset"*/ || %assetType $= "CppAsset")
@@ -1101,8 +1101,17 @@ function AssetBrowserPreviewButton::onRightClick(%this)
        || %assetType $= "MaterialAsset" || %assetType $= "ParticleAsset"  || %assetType $= "PostEffectAsset" || %assetType $= "ScriptAsset"
        || %assetType $= "StateMachineAsset")
    {
-      EditAssetPopup.enableItem(7, false);
+      EditAssetPopup.enableItem(9, false);
    }
+   
+   %assetDef = AssetDatabase.acquireAsset(EditAssetPopup.assetId);
+   if(%assetDef.originalFilePath $= "" || !isFile(%assetDef.originalFilePath))
+   {
+      //if we have no noted original import file path or it's invalid
+      //we can't reimport either
+      EditAssetPopup.enableItem(9, false);
+   }
+   AssetDatabase.releaseAsset(EditAssetPopup.assetId);
    
    if(%assetType $= "LevelAsset")
    {
@@ -2403,11 +2412,7 @@ function AssetBrowserFilterTree::onControlDropped( %this, %payload, %position )
    %assetName = %payload.assetName;
    %moduleName = %payload.moduleName;
    
-   echo("DROPPED A " @ %assetType @ " ON THE ASSET BROWSER NAVIGATION TREE!");
-   
    %item = %this.getItemAtPosition(%position);
-   
-   echo("DROPPED IT ON ITEM " @ %item);
    
    %parent = %this.getParentItem(%item);
    
@@ -2415,7 +2420,6 @@ function AssetBrowserFilterTree::onControlDropped( %this, %payload, %position )
    {
       //we're a folder entry, cool
       %path = %this.getItemValue(%item) @ "/" @ %this.getItemText(%item);
-      echo("DROPPED IT ON PATH " @ %path);  
       
       if(%path !$= AssetBrowser.dirHandler.CurrentAddress)
       {
@@ -2430,7 +2434,11 @@ function AssetBrowserFilterTree::onControlDropped( %this, %payload, %position )
             
             //Do any cleanup required given the type
             if(AssetBrowser.isMethod("moveFolder"))
+            {
                eval(AssetBrowser @ ".moveFolder(\""@%originFolder@"\",\""@%path@"\");");
+               
+               AssetBrowser.refresh();
+            }
          }
          else
          {
@@ -2443,6 +2451,8 @@ function AssetBrowserFilterTree::onControlDropped( %this, %payload, %position )
             {
                %command = AssetBrowser @ ".move" @ %assetType @ "(" @ %assetDef @ ",\"" @ %path @ "\");";
                eval(AssetBrowser @ ".move" @ %assetType @ "(" @ %assetDef @ ",\"" @ %path @ "\");");
+               
+               AssetBrowser.refresh();
             }
          }
       }

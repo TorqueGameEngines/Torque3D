@@ -300,7 +300,7 @@ function ESettingsWindow::getGeneralSettings(%this)
    SettingsInspector.endGroup();
    
    SettingsInspector.startGroup("Paths");
-   SettingsInspector.addSettingsField("WorldEditor/torsionPath", "Torsion Path", "filename", "");
+   //SettingsInspector.addSettingsField("WorldEditor/torsionPath", "Torsion Path", "filename", "");
    SettingsInspector.endGroup();
    
    SettingsInspector.startGroup("Theme");

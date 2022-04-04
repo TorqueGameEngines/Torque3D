@@ -254,9 +254,13 @@ function GuiEditCanvas::onWindowClose(%this)
 
 function GuiEditCanvas::create( %this )
 {
-   GuiEditorNewGuiDialog.init( "NewGui", "GuiControl" );
+   AssetBrowser.setupCreateNewAsset("GUIAsset", AssetBrowser.selectedModule, "GuiEditCanvas.finishCreateNewGUI");
+}
       
-   Canvas.pushDialog( GuiEditorNewGuiDialog );
+function GuiEditCanvas::finishCreateNewGUI(%this, %newGUIAssetId)
+{
+   %assetDef = AssetDatabase.acquireAsset(%newGUIAssetId);
+   AssetBrowser.editAsset(%assetDef);
 }
 
 //---------------------------------------------------------------------------------------------

@@ -140,16 +140,16 @@ function AssetBrowser::deletePostEffectAsset(%this, %assetDef)
 function AssetBrowser::movePostEffectAsset(%this, %assetDef, %destination)
 {
    %currentModule = AssetDatabase.getAssetModule(%assetDef.getAssetId());
-   %targetModule = AssetBrowser.getModuleFromAddress(%destination);
+   %targetModule = AssetBrowser.dirHandler.getModuleFromAddress(%destination);
    
    %newAssetPath = moveAssetFile(%assetDef, %destination);
    
    if(%newAssetPath $= "")
       return false;
 
-   moveAssetLooseFile(%assetDef.scriptPath, %destination);
-   moveAssetLooseFile(%assetDef.hlslShader, %destination);
-   moveAssetLooseFile(%assetDef.glslShader, %destination);
+   moveAssetLooseFile(%assetDef.getScriptPath(), %destination);
+   moveAssetLooseFile(%assetDef.getHLSLShaderPath(), %destination);
+   moveAssetLooseFile(%assetDef.getGLSLShaderPath(), %destination);
    
    AssetDatabase.removeDeclaredAsset(%assetDef.getAssetId());
    AssetDatabase.addDeclaredAsset(%targetModule, %newAssetPath);

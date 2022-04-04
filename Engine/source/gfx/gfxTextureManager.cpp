@@ -46,8 +46,6 @@ S32 GFXTextureManager::smTextureReductionLevel = 0;
 String GFXTextureManager::smMissingTexturePath(Con::getVariable("$Core::MissingTexturePath"));
 String GFXTextureManager::smUnavailableTexturePath(Con::getVariable("$Core::UnAvailableTexturePath"));
 String GFXTextureManager::smWarningTexturePath(Con::getVariable("$Core::WarningTexturePath"));
-String GFXTextureManager::smDefaultIrradianceCubemapPath(Con::getVariable("$Core::DefaultIrradianceCubemap"));
-String GFXTextureManager::smDefaultPrefilterCubemapPath(Con::getVariable("$Core::DefaultPrefilterCubemap"));
 String GFXTextureManager::smBRDFTexturePath(Con::getVariable("$Core::BRDFTexture"));
 
 GFXTextureManager::EventSignal GFXTextureManager::smEventSignal;
@@ -74,14 +72,6 @@ void GFXTextureManager::init()
    Con::addVariable( "$pref::Video::warningTexturePath", TypeRealString, &smWarningTexturePath,
       "The file path of the texture used to warn the developer.\n"
       "@ingroup GFX\n" );
-
-   Con::addVariable("$Core::DefaultIrradianceCubemap", TypeRealString, &smDefaultIrradianceCubemapPath,
-      "The file path of the texture used as the default irradiance cubemap for PBR.\n"
-      "@ingroup GFX\n");
-
-   Con::addVariable("$Core::DefaultPrefilterCubemap", TypeRealString, &smDefaultPrefilterCubemapPath,
-      "The file path of the texture used as the default specular cubemap for PBR.\n"
-      "@ingroup GFX\n");
 
    Con::addVariable("$Core::BRDFTexture", TypeRealString, &smBRDFTexturePath,
       "The file path of the texture used as the default irradiance cubemap for PBR.\n"

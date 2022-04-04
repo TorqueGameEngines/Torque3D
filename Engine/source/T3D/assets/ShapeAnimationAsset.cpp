@@ -204,3 +204,9 @@ DefineEngineMethod(ShapeAnimationAsset, getAnimationCount, S32, (), ,
 {
    return object->getAnimationCount();
 }
+
+DefineEngineMethod(ShapeAnimationAsset, getAnimationPath, const char*, (), ,
+   "Gets the Animation file path associated to this asset.")
+{
+   return object->getAnimationPath();
+}

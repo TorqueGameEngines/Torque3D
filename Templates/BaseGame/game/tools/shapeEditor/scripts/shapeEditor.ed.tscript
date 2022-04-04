@@ -1784,7 +1784,7 @@ function ShapeEdSeqFromMenu::onBrowseSelect( %this, %assetId )
    %this.setText( %assetId );
    
    %assetDef = AssetDatabase.acquireAsset(%assetId);
-   %shapePath = %assetDef.getShapeFile();
+   %shapePath = %assetDef.getShapePath();
    AssetDatabase.releaseAsset(%assetId);
    
    ShapeEdSequences.onEditSequenceSource( %shapePath );
@@ -3010,7 +3010,7 @@ function ShapeEditor::autoAddDetails( %this, %dest )
    // Determine the base name of the input file (MyShape_LOD in the example above)
    // and use that to find any other shapes in the set.
    %assetDef = AssetDatabase.acquireAsset(%dest.baseShapeAsset);
-   %shapeFile = %assetDef.getShapeFile();
+   %shapeFile = %assetDef.getShapePath();
    AssetDatabase.releaseAsset(%dest.baseShapeAsset);
    
    %base = fileBase( %shapeFile );
@@ -3058,7 +3058,7 @@ function ShapeEditor::addLODFromFile( %this, %dest, %assetId, %size, %allowUnmat
 {
    %assetDef = AssetDatabase.acquireAsset(%assetId);
    %csPath = %assetDef.getShapeConstructorFilePath();
-   %filename = %assetDef.getShapeFile();
+   %filename = %assetDef.getShapePath();
    AssetDatabase.releaseAsset(%assetId);
    
    // Get (or create) a TSShapeConstructor object for the source shape. Need to

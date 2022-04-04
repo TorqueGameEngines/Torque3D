@@ -110,7 +110,7 @@ $guiContent = new GuiControl(ForestEditToolbar,EditorGuiGroup) {
             MinExtent = "8 16";
             canSave = "1";
             Visible = "1";
-            AltCommand = "ForestTools->BrushTool.size = $ThisControl.getValue();";
+            AltCommand = "ForestTools->BrushTool.size = mClamp($ThisControl.getValue(), 1, getWord(ETerrainEditor.maxBrushSize, 0));";
             validate = "ForestEditorGui.validateBrushSize();";
             tooltipprofile = "ToolsGuiToolTipProfile";
             hovertime = "1000";

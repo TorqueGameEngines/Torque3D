@@ -139,6 +139,19 @@ function newAssetUpdatePath(%newPath)
    NewAssetTargetModule.text = AssetBrowser.dirHandler.getModuleFromAddress(AssetBrowser.dirHandler.currentAddress).ModuleId;
 }
 
+//
+function NewAssetTargetModule::onSelect(%this, %idx, %idy)
+{
+   %newModuleName = %this.getText();
+   
+   %currentTargetPath = NewAssetTargetAddress.getText();
+   if(!startsWith(%currentTargetPath, "data/" @ %newModuleName @ "/"))
+   {
+      NewAssetTargetAddress.setText("data/" @ %newModuleName @ "/");
+   }
+}
+
+//
 //We do a quick validation that mandatory fields are filled in before passing along to the asset-type specific function
 function CreateNewAsset()
 {
@@ -172,9 +185,41 @@ function CreateNewAsset()
 		return;
 	}
 	
+	//First, we need to make sure we're not creating a conflicting asset
+	if(AssetDatabase.isDeclaredAsset(%moduleName @ ":" @ %assetName))
+	{
+	   toolsMessageBoxOK( "Error", "An asset with the ID: " @ %moduleName @ ":" @ %assetName 
+	                        @ " already exists! Please review and rename.");
+		return;
+	}
+	
+	%assetType = AssetBrowser.newAssetSettings.assetType;
+	
+	if(%assetType $= "MaterialAsset" || %assetType $= "TerrainMaterialAsset" || 
+	   %assetType $= "GUIAsset")
+	{
+	   if(isObject(%assetName))
+	   {
+         toolsMessageBoxOK( "Error", "Attempted to create a new asset that requires " @
+                                    "a unique name, as the object definition must be unique. " @
+                                    "Please use a new name.");
+         return;
+	   }
+	}
+	
+	%currentTargetPath = NewAssetTargetAddress.getText();
+	%modulePath = makeRelativePath(ModuleDatabase.findModule(%moduleName).ModulePath);
+	
+	if(!startsWith(%currentTargetPath, %modulePath))
+   {
+      toolsMessageBoxOK( "Error", "Attempting to create a new asset in an invalid path. " @ 
+                                    "Please set the target path to be within the target module folder.");
+      return;
+   }
+      
+	
 	AssetBrowser.newAssetSettings.moduleName = %moduleName;
 	
-   %assetType = AssetBrowser.newAssetSettings.assetType;
 	if(%assetType $= "")
 	{
 	   toolsMessageBoxOK( "Error", "Attempted to make a new asset with no type!");

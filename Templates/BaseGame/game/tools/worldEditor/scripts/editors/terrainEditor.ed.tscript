@@ -29,6 +29,8 @@ function TerrainEditor::init( %this )
    %this.setBrushSize( 9, 9 );
 
    new PersistenceManager( ETerrainPersistMan );
+   
+   ESettingsWindow.addEditorSettingsPage("TerrainEditor", "Terrain Editor");
 }
 
 ///
@@ -354,6 +356,18 @@ function TerrainEditor::onMaterialUndo( %this )
 {
    // Update the gui to reflect the current materials.
    EPainter.updateLayers();
+}
+
+function ESettingsWindow::getTerrainEditorSettings(%this)
+{
+   SettingsInspector.startGroup("Tool Values");
+   SettingsInspector.addSettingsField("TerrainEditor/ActionValues/adjustHeightVal", "Raise/Lower Height", "string", 
+                           "The amount of height adjustment for raising/lowering terrain");
+   SettingsInspector.addSettingsField("TerrainEditor/ActionValues/smoothFactor", "Smooth Factor", "string", 
+                           "The amount of smoothing when raising/lowering terrain");
+   SettingsInspector.addSettingsField("TerrainEditor/ActionValues/noiseFactor", "Noise Factor", "string", 
+                           "The amount of noise when raising/lowering terrain");
+   SettingsInspector.endGroup();
 }
 
 //------------------------------------------------------------------------------

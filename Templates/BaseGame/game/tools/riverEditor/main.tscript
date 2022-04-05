@@ -82,6 +82,8 @@ function RiverEditorPlugin::onWorldEditorStartup( %this )
    // Add ourselves to the Editor Settings window
    exec( "./RiverEditorSettingsTab.gui" );
    //ESettingsWindow.addTabPage( ERiverEditorSettingsPage );
+   
+   ESettingsWindow.addEditorSettingsPage("RiverEditor", "River Editor");
 }
 
 function RiverEditorPlugin::onActivated( %this )

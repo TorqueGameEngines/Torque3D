@@ -156,8 +156,8 @@ function EditorGui::init(%this)
    // Editor Settings Window
    if( !isObject( %this-->EditorSettingsWindow ) )
    {
-      exec("tools/gui/EditorSettingsWindow.ed.gui");
       exec("tools/gui/editorSettingsWindow.ed." @ $TorqueScriptFileExtension);
+      exec("tools/gui/EditorSettingsWindow.ed.gui");
       
       // Start the standard settings tabs pages
       /*exec( "~/worldEditor/gui/GeneralSettingsTab.ed.gui" );

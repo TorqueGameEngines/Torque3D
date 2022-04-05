@@ -248,3 +248,11 @@ function ConvexEditorDefaultMaterialBtn::gotMaterialName(%this, %name)
 
    ConvexEditorGui.updateShape();
 }
+
+function ESettingsWindow::getConvexEditorSettings(%this)
+{
+   SettingsInspector.startGroup("Defaults");
+   SettingsInspector.addSettingsField("ConvexEditor/MaterialName", "Default Material", "string", 
+                           "The default material when creating a convexShape");
+   SettingsInspector.endGroup();
+}

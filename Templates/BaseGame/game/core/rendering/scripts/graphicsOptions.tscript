@@ -453,7 +453,7 @@ new SimGroup( LightingQualityList )
       class = "GraphicsQualityLevel";
       caseSensitive = true;
       
-      displayName = "High";
+      displayName = "Highest";
       
       key["$pref::maximumNumOfLights"] = -1;
       key["$pref::useLightFade"] = false;
@@ -820,6 +820,11 @@ function _makePrettyResString( %resString, %giveAspectRation )
 {
    %width = getWord( %resString, $WORD::RES_X );
    %height = getWord( %resString, $WORD::RES_Y );
+   
+   //If it's an x, it means we've got the human-readable 'x' in the middle
+   //so skip it
+   if(%height $= "x")
+      %height = getWord( %resString, 2 ); 
    
    %aspect = %width / %height;
    %aspect = mRound( %aspect * 100 ) * 0.01;            

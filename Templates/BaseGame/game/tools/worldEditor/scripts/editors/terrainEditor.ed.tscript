@@ -136,7 +136,7 @@ function EPainter::updateLayers( %this, %matIndex )
             VertSizing = "bottom";
             position = ( %listwidth - 20 ) SPC "26";
             Extent = "17 17";
-            command = "EPainter.showMaterialDeleteDlg( " @ %matInternalName @ " );";
+            command = "EPainter.showMaterialDeleteDlg( \"" @ %matInternalName @ "\" );";
          };
       };
 
@@ -193,7 +193,7 @@ function EPainter::showMaterialDeleteDlg( %this, %matInternalName )
 {
    toolsMessageBoxYesNo( "Confirmation",
       "Really remove material '" @ %matInternalName @ "' from the terrain?",
-      %this @ ".removeMaterial( " @ %matInternalName @ " );", "" );
+      %this @ ".removeMaterial( \"" @ %matInternalName @ "\" );", "" );
 }
 
 function EPainter::removeMaterial( %this, %matInternalName )

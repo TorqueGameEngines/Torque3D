@@ -220,7 +220,7 @@ function selectNewForestMesh(%selectedShapeAssetId)
    //%str = "datablock TSForestItemData( " @ %name @ " ) { shapeFile = \"" @ %fullPath @ "\"; };";            
    //eval( %str );
    
-   //%fullPath = AssetDatabase.acquireAsset(%selectedShapeAssetId).getShapeFile();
+   //%fullPath = AssetDatabase.acquireAsset(%selectedShapeAssetId).getShapePath();
    
    new TSForestItemData(%name) {
       shapeAsset = %selectedShapeAssetId;

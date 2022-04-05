@@ -226,6 +226,13 @@ DefineEngineMethod(GUIAsset, getScriptPath, const char*, (), ,
 {
    return object->getScriptPath();
 }
+
+DefineEngineMethod(GUIAsset, getGUIPath, const char*, (), ,
+   "Gets the GUI file path associated to this asset.\n"
+   "@return The full script file path.")
+{
+   return object->getGUIPath();
+}
 #endif
 
 //-----------------------------------------------------------------------------

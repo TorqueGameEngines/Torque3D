@@ -536,7 +536,7 @@ $guiContent = new GuiControl(TerrainMaterialDlg,EditorGuiGroup) {
             profile = "ToolsGuiDefaultProfile";
                tooltipProfile = "ToolsGuiToolTipProfile";
             };
-         new GuiContainer(ORMMapContainer) {
+         new GuiContainer(ORMConfigMapContainer) {
             position = "6 314";
                   extent = "261 64";
                horizSizing = "width";
@@ -576,7 +576,7 @@ $guiContent = new GuiControl(TerrainMaterialDlg,EditorGuiGroup) {
                   profile = "ToolsGuiTextProfile";
                   tooltipProfile = "ToolsGuiToolTipProfile";
                   isContainer = "0";
-               internalName = "ORMMapAssetId";
+               internalName = "ORMConfigMapAssetId";
                };
                new GuiButtonCtrl() {
                   text = "Edit";
@@ -584,7 +584,7 @@ $guiContent = new GuiControl(TerrainMaterialDlg,EditorGuiGroup) {
                   extent = "40 16";
                   horizSizing = "left";
                   profile = "ToolsGuiButtonProfile";
-               command = "TerrainMaterialDlg.updateTextureMap(\"OrmConfigMap\");";
+               command = "TerrainMaterialDlg.updateTextureMap(\"ORMConfigMap\");";
                   tooltipProfile = "ToolsGuiToolTipProfile";
                };
                new GuiBitmapButtonCtrl() {

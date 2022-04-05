@@ -38,25 +38,34 @@ function MaterialEditorGui::establishMaterials(%this)
    };
    
    //Material used to preview other materials in the editor.
-   singleton Material(materialEd_previewMaterial)
+   if(!isObject(materialEd_previewMaterial))
    {
-      mapTo = "matEd_mappedMat";
-      diffuseMapAsset[0] = "ToolsModule:matEd_mappedMat_image";
-   };
+      singleton Material(materialEd_previewMaterial)
+      {
+         mapTo = "matEd_mappedMat";
+         diffuseMapAsset[0] = "ToolsModule:matEd_mappedMat_image";
+      };
+   }
 
-   singleton CustomMaterial( materialEd_justAlphaMaterial )
+   if(!isObject(materialEd_previewMaterial))
    {
-      mapTo = "matEd_mappedMatB";
-      texture[0] = materialEd_previewMaterial.getdiffuseMap(0);
-   };
+      singleton CustomMaterial( materialEd_justAlphaMaterial )
+      {
+         mapTo = "matEd_mappedMatB";
+         texture[0] = materialEd_previewMaterial.getdiffuseMap(0);
+      };
+   }
 
-   //Custom shader to allow the display of just the alpha channel. 
-   singleton ShaderData( materialEd_justAlphaShader )
+   if(!isObject(materialEd_previewMaterial))
    {
-      DXVertexShaderFile 	= "shaders/alphaOnlyV.hlsl";
-      DXPixelShaderFile 	= "shaders/alphaOnlyP.hlsl";
-      pixVersion = 1.0;
-   };
+      //Custom shader to allow the display of just the alpha channel. 
+      singleton ShaderData( materialEd_justAlphaShader )
+      {
+         DXVertexShaderFile 	= "shaders/alphaOnlyV.hlsl";
+         DXPixelShaderFile 	= "shaders/alphaOnlyP.hlsl";
+         pixVersion = 1.0;
+      };
+   }
 }
 
 function MaterialEditorGui::open(%this)
@@ -842,6 +851,11 @@ function MaterialEditorGui::guiSync( %this, %material )
    {
       MaterialEditorPropertiesWindow-->isSRGBCheckbox.setValue((%material).isSRGB[%layer]);
       MaterialEditorPropertiesWindow-->invertRoughnessCheckbox.setValue((%material).invertRoughness[%layer]);
+   }
+   else
+   {
+      MaterialEditorPropertiesWindow-->RoughnessSlider.setValue((%material).roughness, true);
+      MaterialEditorPropertiesWindow-->MetalnessSlider.setValue((%material).metalness, true);
    }
       
    MaterialEditorPropertiesWindow-->isSRGBCheckbox.setVisible(%hasOrmMap);

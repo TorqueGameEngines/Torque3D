@@ -4445,6 +4445,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                         VertSizing = "bottom";
                         Position = "0 95";
                         Extent = "212 25";
+                        visible = "0";
                         
                         new GuiBitmapCtrl(){
                            position="2 2";

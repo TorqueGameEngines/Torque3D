@@ -206,3 +206,21 @@ void PostEffectAsset::setGLSLShaderFile(const char* pShaderFile)
    // Refresh the asset.
    refreshAsset();
 }
+
+DefineEngineMethod(PostEffectAsset, getScriptPath, const char*, (), ,
+   "Gets the script file path for the asset.")
+{
+   return object->getScriptPath();
+}
+
+DefineEngineMethod(PostEffectAsset, getHLSLShaderPath, const char*, (), ,
+   "Gets the HLSL Shader file path for the asset.")
+{
+   return object->getHLSLShaderPath();
+}
+
+DefineEngineMethod(PostEffectAsset, getGLSLShaderPath, const char*, (), ,
+   "Gets the GLSL Shader file path for the asset.")
+{
+   return object->getGLSLShaderPath();
+}

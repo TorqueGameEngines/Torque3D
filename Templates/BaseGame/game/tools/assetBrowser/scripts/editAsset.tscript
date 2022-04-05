@@ -111,7 +111,19 @@ function AssetBrowser::refreshAsset(%this, %assetId)
 }
 
 //------------------------------------------------------------
+function AssetBrowser::regeneratePreviewImage(%this)
+{
+   %assetDef = AssetDatabase.acquireAsset(EditAssetPopup.assetId);
+   %dummyObj = new ScriptObject();
+   %regenCommand = "AssetBrowser.build" @ EditAssetPopup.assetType @ 
+                     "Preview(" @%assetDef @ "," @ %dummyObj @ ", true);";
+   eval(%regenCommand);
 
+   %dummyObj.delete();
+   AssetDatabase.releaseAsset(EditAssetPopup.assetId);
+}
+
+//------------------------------------------------------------
 function AssetBrowser::renameAsset(%this)
 {
    //Find out what type it is

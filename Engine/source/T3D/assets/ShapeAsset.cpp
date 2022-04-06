@@ -576,9 +576,12 @@ const char* ShapeAsset::generateCachedPreviewImage(S32 resolution, String overri
    // We need to create our own instance to render with.
    TSShapeInstance* shape = new TSShapeInstance(mShape, true);
 
-   if(overrideMaterial.isNotEmpty())
-      shape->reSkin(overrideMaterial, mShape->materialList->getMaterialName(0));
-
+   if (overrideMaterial.isNotEmpty())
+   {
+      Material *tMat = dynamic_cast<Material*>(Sim::findObject(overrideMaterial));
+      if (tMat)
+         shape->reSkin(tMat->mMapTo, mShape->materialList->getMaterialName(0));
+   }
    // Animate the shape once.
    shape->animate(0);
 
@@ -676,7 +679,7 @@ DefineEngineMethod(ShapeAsset, getAnimation, ShapeAnimationAsset*, (S32 index), 
    return object->getAnimation(index);
 }
 
-DefineEngineMethod(ShapeAsset, getShapeFile, const char*, (), ,
+DefineEngineMethod(ShapeAsset, getShapePath, const char*, (), ,
    "Gets the shape's file path\n"
    "@return The filename of the shape file")
 {

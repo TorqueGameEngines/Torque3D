@@ -94,6 +94,8 @@ public:
    StringTableEntry getMaterialDefinitionName() { return mMatDefinitionName; }
    SimObjectPtr<TerrainMaterial> getMaterialDefinition() { return mMaterialDefinition; }
 
+   SimObjectPtr<Material> getFXMaterialDefinition() { return mFXMaterialDefinition; }
+
    void                    setScriptFile(const char* pScriptFile);
    inline StringTableEntry getScriptFile(void) const { return mScriptFile; };
 
@@ -127,26 +129,23 @@ protected:
 };
 
 DefineConsoleType(TypeTerrainMaterialAssetPtr, TerrainMaterialAsset)
-DefineConsoleType(TypeMaterialAssetId, String)
+DefineConsoleType(TypeTerrainMaterialAssetId, String)
 
 //-----------------------------------------------------------------------------
 // TypeAssetId GuiInspectorField Class
 //-----------------------------------------------------------------------------
-class GuiInspectorTypeTerrainMaterialAssetPtr : public GuiInspectorField
+class GuiInspectorTypeTerrainMaterialAssetPtr : public GuiInspectorTypeFileName
 {
-   typedef GuiInspectorField Parent;
+   typedef GuiInspectorTypeFileName Parent;
 public:
 
-   GuiControl*       mMatEdContainer;
-   GuiBitmapButtonCtrl  *mMatPreviewButton;
-   GuiTextEditCtrl *mMatAssetIdTxt;
+   GuiBitmapButtonCtrl* mEditButton;
 
    DECLARE_CONOBJECT(GuiInspectorTypeTerrainMaterialAssetPtr);
    static void consoleInit();
 
    virtual GuiControl* constructEditControl();
    virtual bool updateRects();
-   void setMaterialAsset(String assetId);
 };
 class GuiInspectorTypeTerrainMaterialAssetId : public GuiInspectorTypeTerrainMaterialAssetPtr
 {

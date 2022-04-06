@@ -185,6 +185,14 @@ class GuiBitmapButtonCtrl : public GuiButtonCtrl
       DECLARE_CONOBJECT(GuiBitmapButtonCtrl);
       DECLARE_DESCRIPTION( "A button control rendered entirely from bitmaps.\n"
                            "The individual button states are represented with separate bitmaps." );
+
+      //Basically a wrapper function to do our special state handling setup when the fields change
+      static bool _setBitmapFieldData(void* obj, const char* index, const char* data)
+      {
+         GuiBitmapButtonCtrl* object = static_cast<GuiBitmapButtonCtrl*>(obj); 
+         object->setBitmap(StringTable->insert(data)); 
+         return false; 
+      }
 };
 
 typedef GuiBitmapButtonCtrl::BitmapMode GuiBitmapMode;

@@ -360,6 +360,13 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
    {
       %this.previewData = new ScriptObject();      
    }
+   else
+   {
+      %this.previewData.tooltip = "";
+      %this.previewData.assetName = "";
+      %this.previewData.previewImage = "";
+      %this.previewData.doubleClickCommand = "";
+   }
    
    AssetPreviewArray.empty();
    
@@ -493,8 +500,6 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
    
    %tooltip = %assetName;
    
-   %doubleClickCommand = "AssetBrowser.editAsset( "@%assetDesc@" );";
-   
    %textBottomPad = 20;
    
    %previewButton = new GuiIconButtonCtrl()
@@ -535,6 +540,15 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
    %previewButton.moduleName = %moduleName;
    %previewButton.assetType = %assetType;
    
+   if(%this.selectMode)
+   {
+      %doubleClickCommand = "AssetBrowser.selectAsset( AssetBrowser.selectedAsset );";
+   }
+   else
+   {
+      %doubleClickCommand = "AssetBrowser.editAsset( "@%assetDesc@" );";
+   }
+   
    //Build out the preview
    %buildCommand = %this @ ".build" @ %assetType @ "Preview(\"" @ %assetDesc @ "\"," @ %this.previewData @ ");";
    eval(%buildCommand);
@@ -543,7 +557,9 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
    %tooltip = %this.previewData.tooltip;
    %assetName = %this.previewData.assetName;
    %previewImage = %this.previewData.previewImage;
-   %doubleClickCommand = %this.previewData.doubleClickCommand;
+   
+   if(%this.previewData.doubleClickCommand !$= "")
+      %doubleClickCommand = %this.previewData.doubleClickCommand;
    
    %previewButton.assetName = %assetName;
    %previewButton.moduleName = %moduleName;
@@ -623,8 +639,17 @@ function AssetBrowser::loadDirectories( %this )
    %dataItem = AssetBrowser-->filterTree.insertItem(AssetBrowser-->filterTree.modulesIdx, "data");
    AssetBrowser-->filterTree.tagsIdx = AssetBrowser-->filterTree.insertItem(1, "Tags");
    
-   if(!%this.selectMode)
       AssetBrowser-->filterTree.creatorIdx = AssetBrowser-->filterTree.insertItem(1, "Creator");
+   
+   AssetBrowser-->filterTree.clearSelection();
+      
+   if(%this.selectMode)
+   {
+      AssetBrowser-->filterTree.addSelection(AssetBrowser-->filterTree.collectionsIdx);
+      AssetBrowser-->filterTree.addSelection(AssetBrowser-->filterTree.creatorIdx);
+      
+      AssetBrowser-->filterTree.hideSelection();
+   }
    
    %this.dirHandler.loadFolders("data", %dataItem);
    
@@ -734,20 +759,6 @@ function AssetBrowser::loadDirectories( %this )
 
 function AssetBrowser::updateSelection( %this, %asset, %moduleName )
 {
-   /*%isAssetBorder = 0;
-   eval("%isAssetBorder = isObject(AssetBrowser-->"@%asset@"Border);");
-   if( %isAssetBorder )
-   {
-      eval( "AssetBrowser-->"@%asset@"Border.setStateOn(1);");
-   }
-      
-   %isAssetBorderPrevious = 0;
-   eval("%isAssetBorderPrevious = isObject(AssetBrowser-->"@%this.prevSelectedMaterialHL@"Border);");
-   if( %isAssetBorderPrevious )
-   {
-      eval( "AssetBrowser-->"@%this.prevSelectedMaterialHL@"Border.setStateOn(0);");
-   }*/
-   
    //If we had an existing selected assetDef, clear the reference
    if(isObject(AssetBrowser.selectedAssetDef))
       AssetDatabase.releaseAsset(AssetBrowser.selectedAssetDef.getAssetId());
@@ -759,11 +770,13 @@ function AssetBrowser::updateSelection( %this, %asset, %moduleName )
    if(strstr(%moduleName, "/") != -1)
       return;
       
-   //Otherwise, it's an asset so we'll select the definition while we're at it
+   //Check if this is an actual assetId, or if it's just a programmatic reference
+   //like what we use for the creator entries
+   if(AssetDatabase.isDeclaredAsset(AssetBrowser.selectedAsset))
+   {
+      //Looks good, it's an asset so we'll select the definition while we're at it
    AssetBrowser.selectedAssetDef = AssetDatabase.acquireAsset(AssetBrowser.selectedAsset);
-   //AssetBrowser.selectedPreviewImagePath = %previewImagePath;
-   
-   //%this.prevSelectedMaterialHL = %asset;
+   }
 }
 
 function AssetBrowser::loadCollectionSets(%this)
@@ -915,13 +928,7 @@ function AssetBrowser::deleteMaterial( %this, %materialName, %secondFilter, %sec
       AssetBrowserPerMan.saveDirty();
    }
       
-   AssetBrowser.preloadFilter();
-}
-
-function AssetBrowser::thumbnailCountUpdate(%this)
-{
-   $Pref::AssetBrowser::ThumbnailCountIndex = AssetBrowser-->materialPreviewCountPopup.getSelected();
-   AssetBrowser.LoadFilter( AssetBrowser.currentFilter, AssetBrowser.currentStaticFilter );
+   AssetBrowser.refresh();
 }
 
 function AssetBrowser::toggleTagFilterPopup(%this)
@@ -1081,7 +1088,7 @@ function AssetBrowserPreviewButton::onRightClick(%this)
    
    //Do some enabling/disabling of options depending on asset type
    EditAssetPopup.enableItem(0, true);
-   EditAssetPopup.enableItem(7, true);
+   EditAssetPopup.enableItem(9, true);
    
    //Is it an editable type?
    if(%assetType $= "ImageAsset" /*|| %assetType $= "GameObjectAsset"*/ || %assetType $= "CppAsset")
@@ -1094,8 +1101,17 @@ function AssetBrowserPreviewButton::onRightClick(%this)
        || %assetType $= "MaterialAsset" || %assetType $= "ParticleAsset"  || %assetType $= "PostEffectAsset" || %assetType $= "ScriptAsset"
        || %assetType $= "StateMachineAsset")
    {
-      EditAssetPopup.enableItem(7, false);
+      EditAssetPopup.enableItem(9, false);
    }
+   
+   %assetDef = AssetDatabase.acquireAsset(EditAssetPopup.assetId);
+   if(%assetDef.originalFilePath $= "" || !isFile(%assetDef.originalFilePath))
+   {
+      //if we have no noted original import file path or it's invalid
+      //we can't reimport either
+      EditAssetPopup.enableItem(9, false);
+   }
+   AssetDatabase.releaseAsset(EditAssetPopup.assetId);
    
    if(%assetType $= "LevelAsset")
    {
@@ -2396,11 +2412,7 @@ function AssetBrowserFilterTree::onControlDropped( %this, %payload, %position )
    %assetName = %payload.assetName;
    %moduleName = %payload.moduleName;
    
-   echo("DROPPED A " @ %assetType @ " ON THE ASSET BROWSER NAVIGATION TREE!");
-   
    %item = %this.getItemAtPosition(%position);
-   
-   echo("DROPPED IT ON ITEM " @ %item);
    
    %parent = %this.getParentItem(%item);
    
@@ -2408,7 +2420,6 @@ function AssetBrowserFilterTree::onControlDropped( %this, %payload, %position )
    {
       //we're a folder entry, cool
       %path = %this.getItemValue(%item) @ "/" @ %this.getItemText(%item);
-      echo("DROPPED IT ON PATH " @ %path);  
       
       if(%path !$= AssetBrowser.dirHandler.CurrentAddress)
       {
@@ -2423,7 +2434,11 @@ function AssetBrowserFilterTree::onControlDropped( %this, %payload, %position )
             
             //Do any cleanup required given the type
             if(AssetBrowser.isMethod("moveFolder"))
+            {
                eval(AssetBrowser @ ".moveFolder(\""@%originFolder@"\",\""@%path@"\");");
+               
+               AssetBrowser.refresh();
+            }
          }
          else
          {
@@ -2436,6 +2451,8 @@ function AssetBrowserFilterTree::onControlDropped( %this, %payload, %position )
             {
                %command = AssetBrowser @ ".move" @ %assetType @ "(" @ %assetDef @ ",\"" @ %path @ "\");";
                eval(AssetBrowser @ ".move" @ %assetType @ "(" @ %assetDef @ ",\"" @ %path @ "\");");
+               
+               AssetBrowser.refresh();
             }
          }
       }

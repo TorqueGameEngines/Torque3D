@@ -740,7 +740,7 @@ void GuiGameSettingsCtrl::changeOption(S32 delta)
    if (mScriptCallback != NULL && (mSelectedOption != NO_OPTION && mMode != GuiGameSettingsCtrl::Slider))
    {
       setThisControl();
-      StringTableEntry direction = NULL;
+      StringTableEntry direction = StringTable->EmptyString();
       if (delta < 0)
       {
          direction = LEFT;
@@ -749,7 +749,7 @@ void GuiGameSettingsCtrl::changeOption(S32 delta)
       {
          direction = RIGHT;
       }
-      if ((direction != NULL) && (Con::isFunction(mScriptCallback)))
+      if ((direction != StringTable->EmptyString()) && (Con::isFunction(mScriptCallback)))
       {
          Con::executef(mScriptCallback, direction);
       }
@@ -847,6 +847,16 @@ F32 GuiGameSettingsCtrl::getValue()
 void GuiGameSettingsCtrl::setValue(F32 value)
 {
    mValue = value;
+}
+
+F32 GuiGameSettingsCtrl::getIncrement()
+{
+   return mStepSize;
+}
+
+Point2F GuiGameSettingsCtrl::getRange()
+{
+   return mRange;
 }
 
 const char* GuiGameSettingsCtrl::getTooltip()
@@ -1100,22 +1110,31 @@ DefineEngineMethod(GuiGameSettingsCtrl, addOption, void, (const char* displayTex
 }
 
 DefineEngineMethod(GuiGameSettingsCtrl, getValue, F32, (), ,
-   "Sets the list of options on the given control.\n\n"
-   "@param optionsList A tab separated list of options for the control.")
+   "Gets the value of the slider on the given control.")
 {
    return object->getValue();
 }
 
 DefineEngineMethod(GuiGameSettingsCtrl, setValue, void, (F32 value), ,
-   "Sets the list of options on the given control.\n\n"
-   "@param optionsList A tab separated list of options for the control.")
+   "Sets the value of the slider on the given control.")
 {
    object->setValue(value);
 }
 
+DefineEngineMethod(GuiGameSettingsCtrl, getIncrement, F32, (), ,
+   "Gets the increment amount of the slider on a given control.")
+{
+   return object->getIncrement();
+}
+
+DefineEngineMethod(GuiGameSettingsCtrl, getRange, Point2F, (), ,
+   "Gets the min and max values for the range of the slider on a given control.")
+{
+   return object->getRange();
+}
+
 DefineEngineMethod(GuiGameSettingsCtrl, getTooltip, const char*, (), ,
-   "Sets the list of options on the given control.\n\n"
-   "@param optionsList A tab separated list of options for the control.")
+   "Gets the tooltip on the given control.")
 {
    return object->getTooltip();
 }

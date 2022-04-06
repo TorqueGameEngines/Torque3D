@@ -156,8 +156,8 @@ function EditorGui::init(%this)
    // Editor Settings Window
    if( !isObject( %this-->EditorSettingsWindow ) )
    {
-      exec("tools/gui/EditorSettingsWindow.ed.gui");
       exec("tools/gui/editorSettingsWindow.ed." @ $TorqueScriptFileExtension);
+      exec("tools/gui/EditorSettingsWindow.ed.gui");
       
       // Start the standard settings tabs pages
       /*exec( "~/worldEditor/gui/GeneralSettingsTab.ed.gui" );
@@ -1821,6 +1821,12 @@ function EditorTree::update( %this )
 }
 
 //------------------------------------------------------------------------------
+function EWTreeWindow::onResize(%this, %posX, %posY, %width, %height )
+{
+    EditorTree.extent.x = %this.extent.x;
+}
+
+//------------------------------------------------------------------------------
 
 // Tooltip for TSStatic
 function EditorTree::GetTooltipTSStatic( %this, %obj )
@@ -2313,11 +2319,13 @@ function EWorldEditor::SetActiveScene(%this, %sceneObj)
    {
       $ActiveEditingScene.isEditing = false;
       %itemId = EditorTree.findItemByObjectId($ActiveScene);
-      EditorTree.markItem(%itemId);
+      if(%itemId != -1)
+         EditorTree.markItem(%itemId);
    }
       
    %itemId = EditorTree.findItemByObjectId(%sceneObj);
-   EditorTree.markItem(%itemId);
+   if(%itemId != -1)
+      EditorTree.markItem(%itemId);
    
    $ActiveEditingScene = %sceneObj;
    $ActiveEditingScene.isEditing = true;

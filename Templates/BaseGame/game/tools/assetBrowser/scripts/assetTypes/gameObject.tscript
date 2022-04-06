@@ -73,21 +73,10 @@ function AssetBrowser::duplicateGameObjectAsset(%this, %assetDef, %targetModule)
 	AssetDatabase.addDeclaredAsset(%moduleDef, %tamlPath);
 
    //Refresh the browser
-	AssetBrowser.loadFilters();
-	
-	//Ensure our context is set
-	%treeItemId = AssetBrowserFilterTree.findItemByName(%targetModule);
-	%smItem = AssetBrowserFilterTree.findChildItemByName(%treeItemId, "GameObjectAsset");
-	
-	AssetBrowserFilterTree.selectItem(%smItem);
+	AssetBrowser.refresh();
 	
 	//Rename it for convenience
 	AssetBrowser.performRenameAsset(%assetName, "New" @ %assetName);
-	
-	//Expand and refresh the target module
-   AssetBrowserFilterTree.expandItem(%treeItemId,true);
-	
-	AssetBrowserFilterTree.buildVisibleTree();
 }
 
 //not used
@@ -244,7 +233,7 @@ function AssetBrowser::deleteGameObjectAsset(%this, %assetDef)
 function AssetBrowser::moveGameObjectAsset(%this, %assetDef, %destination)
 {
    %currentModule = AssetDatabase.getAssetModule(%assetDef.getAssetId());
-   %targetModule = AssetBrowser.getModuleFromAddress(%destination);
+   %targetModule = AssetBrowser.dirHandler.getModuleFromAddress(%destination);
    
    %newAssetPath = moveAssetFile(%assetDef, %destination);
    

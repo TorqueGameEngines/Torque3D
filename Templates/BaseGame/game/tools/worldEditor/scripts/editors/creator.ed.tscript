@@ -82,6 +82,7 @@ function ObjectCreator::setNewObjectGroup( %this, %group )
    %group = %group.getID();
    %this.objectGroup = %group;
    %itemId = EditorTree.findItemByObjectId( %group );
+   if(%itemId != -1)
    EditorTree.markItem( %itemId );
 }
 

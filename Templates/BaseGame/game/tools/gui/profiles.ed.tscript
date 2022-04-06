@@ -39,7 +39,7 @@ new GuiControlProfile (ToolsGuiDefaultProfile)
    // fill color
    opaque = false;
    fillColor = EditorSettings.value("Theme/tabsColor");
-   fillColorHL = EditorSettings.value("Theme/tabsGLColor");
+   fillColorHL = EditorSettings.value("Theme/tabsHLColor");
    fillColorSEL = EditorSettings.value("Theme/tabsSELColor");
    fillColorNA = EditorSettings.value("Theme/tabsSELColor");
 
@@ -355,7 +355,7 @@ new GuiControlProfile( ToolsGuiButtonProfile )
    opaque = true;
    border = true;
    fillColor = EditorSettings.value("Theme/tabsColor");
-   fillColorHL = EditorSettings.value("Theme/tabsGLColor");
+   fillColorHL = EditorSettings.value("Theme/tabsHLColor");
    fillColorSEL = EditorSettings.value("Theme/tabsSELColor");
    fillColorNA = EditorSettings.value("Theme/tabsSELColor");
    
@@ -1236,5 +1236,22 @@ singleton GuiControlProfile (GuiSimpleBorderProfile)
 {
    opaque = false;   
    border = 1;   
+   category = "Editor";
+};
+
+singleton GuiControlProfile (GuiDisabledTextEditProfile)
+{
+   opaque = false;   
+   border = 0;
+   bitmapAsset = "ToolsModule:textEdit_image";
+   borderColor = "255 255 255 200";
+   fontColor = "0 0 0";
+   fontColorHL = "255 255 255";
+   fontColorNA = "128 128 128";
+   textOffset = "4 2";
+   autoSizeWidth = false;
+   autoSizeHeight = false;
+   tab = false;
+   canKeyFocus = false;   
    category = "Editor";
 };

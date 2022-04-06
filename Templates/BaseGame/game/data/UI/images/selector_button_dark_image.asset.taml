@@ -2,7 +2,7 @@
     canSave="true"
     canSaveDynamicFields="true"
     AssetName="selector_button_dark_image"
-    imageFile="@assetFile=selector-button-dark.png"
+    imageFile="@assetFile=selector_button_dark.png"
     UseMips="true"
     isHDRImage="false"
     imageType="Albedo" />

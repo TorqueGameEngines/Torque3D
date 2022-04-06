@@ -1029,6 +1029,8 @@ function testFilenameExtensions(%filename)
       return %filename @ ".dae";
    else if(isFile(%filename @ ".dds"))
       return %filename @ ".dds";
+   else if(isFile(%filename @ ".dsq"))
+      return %filename @ ".dsq";
    else if(isFile(%filename @ ".ogg"))
       return %filename @ ".ogg";
    else if(isFile(%filename @ ".wav"))
@@ -1613,6 +1615,21 @@ function beginTerrainImport()
             //test import config here for forcing type suffixes
             %assetName = fileBase(%destinationPath);
             
+            if(AssetDatabase.isDeclaredAsset(%moduleName @ ":" @ %assetName))
+            {
+               //Attempt to rename it to avoid collisions
+               if(!endsWith(%assetName, "Terrain") && !AssetDatabase.isDeclaredAsset(%moduleName @ ":" @ %assetName @ "Terrain"))
+               {
+                  %assetName = %assetName @ "Terrain";
+               }
+               else
+               {
+                  //Nope, there's already a matching one for that too, so just bail
+                  projectImporterLog("Legacy Project Importer - Error - trying to process a Terrain into an asset that already exists");
+                  return false;  
+               }
+            }
+            
             %assetPath = filePath(%destinationPath) @ "/";
             
             %tamlpath = %assetPath @ %assetName @ ".asset.taml";
@@ -1627,6 +1644,36 @@ function beginTerrainImport()
             if(TamlWrite(%asset, %tamlpath))
             {
                AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
+               
+               //we probably need to update the terrainMaterial references if any of them got renamed, so lets do that now
+               %terrBlock = new TerrainBlock(tmp) {
+                  terrainAsset = %moduleName @ ":" @ %assetName;
+               };
+               
+               %matNamesChanged = false;
+               %terrMatCount = %terrBlock.getTerrainMaterialCount();
+               for(%tm = 0; %tm < %terrMatCount; %tm++)
+               {
+                  %terrMatName = %terrBlock.getTerrainMaterialName(%tm);
+                  %terrMatAssetId = TerrainMaterialAsset::getAssetIdByMaterialName(%terrMatName);
+                  if(%terrMatAssetId $= "")
+                  {
+                     //k, one didn't map right, lets try and fix it
+                     %terrMatAssetId = TerrainMaterialAsset::getAssetIdByMaterialName(%terrMatName @ "_terrainMat");
+                     if(%terrMatAssetId !$= "")
+                     {
+                        //Ok, success, lets run the rename
+                        if(%terrBlock.renameTerrainMaterial(%terrMatName, %terrMatAssetId))
+                           %matNamesChanged = true;
+                     }
+                  }
+               }
+               
+               if(%matNamesChanged)
+               {
+                  %terrBlock.saveAsset();
+                  %terrBlock.delete();
+               }
                
                projectImporterLog("Finished importing Terrain file, resulting in asset with an id of: " @ %moduleName @ ":" @ %assetName);
                projectImporterLog("");
@@ -1918,8 +1965,17 @@ function beginLevelImport()
             
             if(AssetDatabase.isDeclaredAsset(%moduleName @ ":" @ %assetName))
             {
-               projectImporterLog("Legacy Project Importer - trying to process a level into an asset that already exists");
+               //Attempt to rename it to avoid collisions
+               if(!endsWith(%assetName, "Level") && !AssetDatabase.isDeclaredAsset(%moduleName @ ":" @ %assetName @ "Level"))
+               {
+                  %assetName = %assetName @ "Level";
+               }
+               else
+               {
+                  //Nope, there's already a matching one for that too, so just bail
+                  projectImporterLog("Legacy Project Importer - Error - trying to process a level into an asset that already exists");
                return false;  
+            }
             }
             
             %assetPath = %filePath @ "/";
@@ -2101,6 +2157,7 @@ function scanForDuplicateFiles(%toTestFile)
       //We only really care about content files for this
       if(!endsWith(%file, "dts") &&
          !endsWith(%file, "dae") && 
+         !endsWith(%file, "dsq") && 
          !endsWith(%file, "fbx") &&
          !endsWith(%file, "ter") &&
          !endsWith(%file, "png") &&

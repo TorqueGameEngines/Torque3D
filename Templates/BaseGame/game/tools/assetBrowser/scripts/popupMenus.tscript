@@ -28,11 +28,13 @@ function AssetBrowser::buildPopupMenus(%this)
          item[ 2 ] = "Reload Asset" TAB "" TAB "AssetBrowser.refreshAsset();";
          item[ 3 ] = "Asset Properties" TAB "" TAB "AssetBrowser.editAssetInfo();";
          item[ 4 ] = "-";
-         Item[ 5 ] = "Duplicate Asset" TAB "" TAB "AssetBrowser.duplicateAsset();";
+         item[ 5 ] = "Duplicate Asset" TAB "" TAB "AssetBrowser.duplicateAsset();";
          item[ 6 ] = "-";
-         item[ 7 ] = "Re-Import Asset" TAB "" TAB "AssetBrowser.reImportAsset();";
+         item[ 7 ] = "Regenerate Preview Image" TAB "" TAB "AssetBrowser.regeneratePreviewImage();";
          item[ 8 ] = "-";
-         item[ 9 ] = "Delete Asset" TAB "" TAB "AssetBrowser.deleteAsset();";
+         item[ 9 ] = "Re-Import Asset" TAB "" TAB "AssetBrowser.reImportAsset();";
+         item[ 10 ] = "-";
+         item[ 11 ] = "Delete Asset" TAB "" TAB "AssetBrowser.deleteAsset();";
 
          jumpFileName = "";
          jumpLineNumber = "";
@@ -182,7 +184,7 @@ function AssetBrowser::buildPopupMenus(%this)
          item[9] = "-";
          item[10] = "Create New Module" TAB "" TAB "AssetBrowser.CreateNewModule();";
          item[11] = "-";
-         item[12] = "Import Loose Files" TAB "" TAB "AssetBrowser.importLooseFiles();";
+         item[12] = "View Loose Files" TAB "" TAB "AssetBrowser.importLooseFiles();";
       
       };
    }

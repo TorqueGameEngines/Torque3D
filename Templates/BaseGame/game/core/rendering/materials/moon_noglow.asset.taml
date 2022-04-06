@@ -12,7 +12,7 @@
         <Material.Stages>
             <Stages_beginarray
                 DiffuseMapAsset="Core_Rendering:moon_noglow_image"
-                vertColor="1";/>
+                vertColor="1"/>
         </Material.Stages>
     </Material>
 </MaterialAsset>

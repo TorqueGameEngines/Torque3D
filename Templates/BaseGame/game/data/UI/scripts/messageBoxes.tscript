@@ -116,7 +116,7 @@ function MessageBoxOKDlg::onSleep( %this )
    MessageBoxCtrl.originalMenuInputContainer.setActive();
 }
 
-function MessageBoxOKCancel(%title, %message, %callback, %cancelCallback)
+function MessageBoxOKCancel(%title, %message, %callback, %cancelCallback, %okLabelOverride, %cancelLabelOverride)
 {
    Canvas.pushDialog(MessageBoxDlg);
    MessageBoxTitleText.text = %title;
@@ -125,8 +125,18 @@ function MessageBoxOKCancel(%title, %message, %callback, %cancelCallback)
    MessageBoxYNCButtonHolder.hidden = true;
    MessageBoxOKButtonHolder.hidden = true;
    
-   MessageBoxOCButtonHolder-->OKButton.set("btn_a", "Return", "OK", "MessageCallback(MessageBoxDlg,MessageBoxDlg.callback);");
-   MessageBoxOCButtonHolder-->CancelButton.set("btn_b", "Escape", "Cancel", "MessageCallback(MessageBoxDlg,MessageBoxDlg.cancelCallback);");
+   if(%okLabelOverride $= "")
+      %okLabel = "OK";
+   else
+      %okLabel = %okLabelOverride;
+      
+   if(%cancelLabelOverride $= "")
+      %cancelLabel = "Cancel";
+   else
+      %cancelLabel = %cancelLabelOverride;
+   
+   MessageBoxOCButtonHolder-->OKButton.set("btn_a", "Return", %okLabel, "MessageCallback(MessageBoxDlg,MessageBoxDlg.callback);");
+   MessageBoxOCButtonHolder-->CancelButton.set("btn_b", "Escape", %cancelLabel, "MessageCallback(MessageBoxDlg,MessageBoxDlg.cancelCallback);");
 
    MessageBoxCtrl.originalMenuInputContainer = $activeMenuButtonContainer;
    MessageBoxOCButtonHolder.setActive();

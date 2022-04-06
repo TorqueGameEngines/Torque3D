@@ -148,9 +148,14 @@ function AssetBrowser::importImageAsset(%this, %assetItem)
       assetName = %assetName;
       versionId = 1;
       imageFile = fileName(%filePath);
-      originalFilePath = %filePath;
       imageType = %assetItem.imageType;
    };
+   
+   //No point in indicating the original path data if it was imported in-place
+   if(!startsWith(makeFullPath(%filePath), getMainDotCsDir()))
+   {
+      %newAsset.originalFilePath = %filePath;
+   }
    
    %assetImportSuccessful = TAMLWrite(%newAsset, %assetPath @ "/" @ %assetName @ ".asset.taml"); 
    
@@ -170,8 +175,11 @@ function AssetBrowser::importImageAsset(%this, %assetItem)
       AssetDatabase.refreshAsset(%assetId);
 }
 
-function AssetBrowser::buildImageAssetPreview(%this, %assetDef, %previewData)
+function AssetBrowser::buildImageAssetPreview(%this, %assetDef, %previewData, %forcePreviewRegenerate)
 {
+   if(%forcePreviewRegenerate $= "")
+      %forcePreviewRegenerate = false;
+      
    %module = %this.dirHandler.getModuleFromAddress(makeRelativePath(filePath(%assetDef.getImagePath())));
    %previewPath = "tools/resources/previewCache/" @ %module.moduleId @ "/";
    
@@ -190,7 +198,7 @@ function AssetBrowser::buildImageAssetPreview(%this, %assetDef, %previewData)
    
    %previewAssetName = %module.moduleId @ "_" @ %assetDef.assetName @ "_PreviewImage";
    
-   if(%generatePreview)
+   if(%generatePreview || %forcePreviewRegenerate)
    {
       displayEditorLoadingGui("Generating Image Asset Preview...");
       
@@ -198,20 +206,23 @@ function AssetBrowser::buildImageAssetPreview(%this, %assetDef, %previewData)
       
       if(%success)
       {
-         %previewAsset = new ImageAsset()
+         if(!AssetDatabase.isDeclaredAsset("ToolsModule:" @ %previewAssetName))
          {
-            assetName = %previewAssetName;
-            versionId = 1;
-            imageFile = fileName(%previewFilePath);
-         };
-      
-         %previewAssetName = "ToolsModule:" @ %previewAssetName;
-         %previewImgAssetPath = %previewPath @ %previewAsset.assetName @ ".asset.taml";
-         %assetImportSuccessful = TAMLWrite(%previewAsset, %previewImgAssetPath); 
-      
-         %toolsModuleDef = ModuleDatabase.findModule("ToolsModule",1);
+            %previewAsset = new ImageAsset()
+            {
+               assetName = %previewAssetName;
+               versionId = 1;
+               imageFile = fileName(%previewFilePath);
+            };
          
-         %success = AssetDatabase.addDeclaredAsset(%toolsModuleDef, %previewImgAssetPath);
+            %previewAssetName = "ToolsModule:" @ %previewAssetName;
+            %previewImgAssetPath = %previewPath @ %previewAsset.assetName @ ".asset.taml";
+            %assetImportSuccessful = TAMLWrite(%previewAsset, %previewImgAssetPath); 
+         
+            %toolsModuleDef = ModuleDatabase.findModule("ToolsModule",1);
+            
+            %success = AssetDatabase.addDeclaredAsset(%toolsModuleDef, %previewImgAssetPath);
+         }
       }
       else
       {
@@ -228,12 +239,16 @@ function AssetBrowser::buildImageAssetPreview(%this, %assetDef, %previewData)
    
    //Revalidate. If it didn't work, just use the default placeholder one
    if(!isFile(%previewFilePath))
-      %previewAssetName = "ToolsModule:genericAssetIcon_image";
+   {
+      %previewData.previewImage = "ToolsModule:genericAssetIcon_image";
+   }
+   else
+   {
+      %previewData.previewImage = %previewAssetName;
+   }
    
    %previewData.assetName = %assetDef.assetName;
    %previewData.assetPath = %assetDef.scriptFile;
-   
-   %previewData.previewImage = %previewAssetName;
    
    %previewData.assetFriendlyName = %assetDef.assetName;
    %previewData.assetDesc = %assetDef.description;
@@ -294,14 +309,14 @@ function AssetBrowser::deleteImageAsset(%this, %assetDef)
 function AssetBrowser::moveImageAsset(%this, %assetDef, %destination)
 {
    %currentModule = AssetDatabase.getAssetModule(%assetDef.getAssetId());
-   %targetModule = AssetBrowser.getModuleFromAddress(%destination);
+   %targetModule = AssetBrowser.dirHandler.getModuleFromAddress(%destination);
    
    %newAssetPath = moveAssetFile(%assetDef, %destination);
    
    if(%newAssetPath $= "")
       return false;
 
-   moveAssetLooseFile(%assetDef.imageFile, %destination);
+   moveAssetLooseFile(%assetDef.getImagePath(), %destination);
    
    AssetDatabase.removeDeclaredAsset(%assetDef.getAssetId());
    AssetDatabase.addDeclaredAsset(%targetModule, %newAssetPath);
@@ -319,7 +334,14 @@ function GuiInspectorTypeImageAssetPtr::onControlDropped( %this, %payload, %posi
    
    if(%assetType $= "ImageAsset")
    {
-      echo("DROPPED A IMAGE ON AN IMAGE ASSET COMPONENT FIELD!");  
+      %module = %payload.moduleName;
+      %asset = %payload.assetName;
+      
+      %oldValue = %this.targetObject.bitmapAsset;
+      %arrayIndex = "";
+      
+      %targetObject = %this.targetObject;
+      %targetObject.bitmapAsset = %module @ ":" @ %asset; 
    }
    
    EWorldEditor.isDirty = true;

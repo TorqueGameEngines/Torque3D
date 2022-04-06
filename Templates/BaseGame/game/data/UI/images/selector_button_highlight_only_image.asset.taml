@@ -2,7 +2,7 @@
     canSave="true"
     canSaveDynamicFields="true"
     AssetName="selector_button_highlight_only_image"
-    imageFile="@assetFile=selector-button-highlight-only.png"
+    imageFile="@assetFile=selector_button_highlight_only.png"
     UseMips="true"
     isHDRImage="false"
     imageType="Albedo" />

@@ -125,11 +125,6 @@ $pref::SFX::channelVolume6 = 1;
 $pref::SFX::channelVolume7 = 1;
 $pref::SFX::channelVolume8 = 1;
 
-$pref::SFX::channelVolume[1] = 1;
-$pref::SFX::channelVolume[2] = 1;
-$pref::SFX::channelVolume[3] = 1;
-$pref::SFX::channelVolume[4] = 1;
-
 $pref::PostEffect::PreferedHDRFormat = "GFXFormatR8G8B8A8";
 
 /// This is an scalar which can be used to reduce the 

@@ -79,6 +79,8 @@ AssetImportConfig::AssetImportConfig() :
    SeparateAnimationPrefix(""),
    animTiming("FrameCount"),
    animFPS(false),
+   AlwaysAddShapeAnimationSuffix(true),
+   AddedShapeAnimationSuffix("_anim"),
    GenerateCollisions(false),
    GenCollisionType(""),
    CollisionMeshPrefix(""),
@@ -190,6 +192,8 @@ void AssetImportConfig::initPersistFields()
       addField("SeparateAnimationPrefix", TypeRealString, Offset(SeparateAnimationPrefix, AssetImportConfig), "If separating animations out from a source file, what prefix should be added to the names for grouping association");
       addField("animTiming", TypeRealString, Offset(animTiming, AssetImportConfig), "Defines the animation timing for the given animation sequence. Options are FrameTime, Seconds, Milliseconds");
       addField("animFPS", TypeBool, Offset(animFPS, AssetImportConfig), "The FPS of the animation sequence");
+      addField("AlwaysAddShapeAnimationSuffix", TypeBool, Offset(AlwaysAddShapeAnimationSuffix, AssetImportConfig), "When importing a shape animation, this indicates if it should automatically add a standard suffix onto the name");
+      addField("AddedShapeAnimationSuffix", TypeString, Offset(AddedShapeAnimationSuffix, AssetImportConfig), " If AlwaysAddShapeAnimationSuffix is on, this is the suffix to be added");
    endGroup("Animation");
 
    addGroup("Collision");
@@ -287,6 +291,8 @@ void AssetImportConfig::loadImportConfig(Settings* configSettings, String config
    SeparateAnimationPrefix = configSettings->value(String(configName + "/Animations/SeparateAnimationPrefix").c_str());
    animTiming = configSettings->value(String(configName + "/Animations/animTiming").c_str());
    animFPS = dAtof(configSettings->value(String(configName + "/Animations/animFPS").c_str()));
+   AlwaysAddShapeAnimationSuffix = dAtob(configSettings->value(String(configName + "/Animations/AlwaysAddShapeAnimationSuffix").c_str()));
+   AddedShapeAnimationSuffix = configSettings->value(String(configName + "/Animations/AddedShapeAnimationSuffix").c_str());
 
    //Collisions
    GenerateCollisions = dAtob(configSettings->value(String(configName + "/Collision/GenerateCollisions").c_str()));
@@ -379,6 +385,8 @@ void AssetImportConfig::CopyTo(AssetImportConfig* target) const
    target->SeparateAnimationPrefix = SeparateAnimationPrefix;
    target->animTiming = animTiming;
    target->animFPS = animFPS;
+   target->AlwaysAddShapeAnimationSuffix = AlwaysAddShapeAnimationSuffix;
+   target->AddedShapeAnimationSuffix = AddedShapeAnimationSuffix;
 
    //Collisions
    target->GenerateCollisions = GenerateCollisions;
@@ -1531,13 +1539,15 @@ void AssetImporter::processImportAssets(AssetImportObject* assetItem)
 		{
 		   processMaterialAsset(item);
 		}
-		/*else if (item->assetType == String("ShapeAnimationAsset"))
-		   ShapeAnimationAsset::prepareAssetForImport(this, item);*/
+      else if (item->assetType == String("ShapeAnimationAsset"))
+      {
+         processShapeAnimationAsset(item);
+      }
 		else
 		{
 		   String processCommand = "process";
 		   processCommand += item->assetType;
-		   if(isMethod(processCommand.c_str()))
+         if (isMethod(processCommand.c_str()))
 		      Con::executef(this, processCommand.c_str(), item);
 		}
 
@@ -2048,6 +2058,73 @@ void AssetImporter::processShapeAsset(AssetImportObject* assetItem)
    assetItem->importStatus = AssetImportObject::Processed;
 }
 
+void AssetImporter::processShapeAnimationAsset(AssetImportObject* assetItem)
+{
+   dSprintf(importLogBuffer, sizeof(importLogBuffer), "Preparing Shape Animation for Import: %s", assetItem->assetName.c_str());
+   activityLog.push_back(importLogBuffer);
+
+   String filePath = assetItem->filePath.getFullPath();
+   String fileName = assetItem->filePath.getFileName();
+   String fileExt = assetItem->filePath.getExtension();
+
+   if (assetItem->shapeInfo == nullptr)
+   {
+      GuiTreeViewCtrl* shapeInfo = new GuiTreeViewCtrl();
+      shapeInfo->registerObject();
+
+      if (fileExt.compare("dae") == 0)
+      {
+         enumColladaForImport(filePath, shapeInfo, false);
+      }
+      else if (fileExt.compare("dts") == 0 || fileExt.compare("dsq") == 0)
+      {
+         enumDTSForImport(filePath, shapeInfo);
+      }
+      else
+      {
+         // Check if a cached DTS is available => no need to import the source file
+         // if we can load the DTS instead
+
+         AssimpShapeLoader loader;
+         loader.fillGuiTreeView(filePath.c_str(), shapeInfo);
+      }
+
+      assetItem->shapeInfo = shapeInfo;
+   }
+
+   if (activeImportConfig->AlwaysAddShapeAnimationSuffix)
+   {
+      assetItem->assetName += activeImportConfig->AddedShapeAnimationSuffix;
+      assetItem->cleanAssetName = assetItem->assetName;
+   }
+
+   S32 animCount = dAtoi(assetItem->shapeInfo->getDataField(StringTable->insert("_animCount"), nullptr));
+
+   dSprintf(importLogBuffer, sizeof(importLogBuffer), "   Shape Animation Info: Anim Count: %i", animCount);
+   activityLog.push_back(importLogBuffer);
+
+   AssetImportConfig* cachedConfig = new AssetImportConfig();;
+   cachedConfig->registerObject();
+   activeImportConfig->CopyTo(cachedConfig);
+
+   if (!activeImportConfig->UseManualShapeConfigRules)
+   {
+      //Try and load a sis file if it exists for this format
+      activeImportConfig->loadSISFile(assetItem->filePath);
+   }
+
+   if (activeImportConfig->ImportAnimations && animCount > 0)
+   {
+      
+   }
+
+   //restore the cached version just in case we loaded a sis file
+   cachedConfig->CopyTo(activeImportConfig);
+   cachedConfig->deleteObject();
+
+   assetItem->importStatus = AssetImportObject::Processed;
+}
+
 void AssetImporter::processShapeMaterialInfo(AssetImportObject* assetItem, S32 materialItemId)
 {
    String matName = assetItem->shapeInfo->getItemText(materialItemId);
@@ -2188,9 +2265,20 @@ bool AssetImporter::validateAssets()
 
 void AssetImporter::validateAsset(AssetImportObject* assetItem)
 {
-   if (assetItem->importStatus == AssetImportObject::Skipped || assetItem->importStatus == AssetImportObject::NotProcessed)
+   if (assetItem->importStatus == AssetImportObject::Skipped || assetItem->importStatus == AssetImportObject::NotProcessed
+      || assetItem->importStatus == AssetImportObject::UseForDependencies)
       return;
 
+   //If this item's already been marked as being in error, don't bother with it. It knows what it did.
+   //This avoids running collision checks on an item already known to have a collision, which could erroneously
+   //mark the original, not-colliding item as colliding with this item, invaliding both
+   if (assetItem->status == String("Error") || assetItem->statusType.isNotEmpty())
+   {
+      importIssues = true;
+      return;
+   }
+
+   //Runm this item against our other importing assets and check for any collisions
    if (checkAssetForCollision(assetItem))
    {
       importIssues = true;
@@ -2294,7 +2382,7 @@ bool AssetImporter::checkAssetForCollision(AssetImportObject* assetItemToCheck, 
    {
       AssetImportObject* importingAsset = itemList[i];
 
-      if (importingAsset->importStatus == AssetImportObject::Skipped)
+      if (importingAsset->importStatus == AssetImportObject::Skipped || importingAsset->importStatus == AssetImportObject::UseForDependencies)
          continue;
 
       if ((assetItemToCheck->assetName.compare(importingAsset->assetName) == 0) && (assetItemToCheck->getId() != importingAsset->getId()))
@@ -2534,7 +2622,10 @@ StringTableEntry AssetImporter::autoImportFile(Torque::Path filePath, String typ
 
    dumpActivityLog();
 
-   if (hasIssues)
+   if (hasIssues ||
+      assetItem->importStatus == AssetImportObject::Skipped ||
+      assetItem->importStatus == AssetImportObject::UseForDependencies ||
+      assetItem->importStatus == AssetImportObject::Error)
    {
       return StringTable->EmptyString();
    }
@@ -2584,6 +2675,10 @@ void AssetImporter::importAssets(AssetImportObject* assetItem)
       {
          assetPath = importMaterialAsset(item);
       }
+      else if (item->assetType == String("ShapeAnimationAsset"))
+      {
+         assetPath = importShapeAnimationAsset(item);
+      }
       else
       {
          finalImportedAssetPath = String::EmptyString;
@@ -2625,7 +2720,7 @@ void AssetImporter::importAssets(AssetImportObject* assetItem)
             else
             {
                //Any special-case post-reg stuff here
-               if (item->assetType == String("ShapeAsset"))
+               if (item->assetType == String("ShapeAsset") || item->assetType == String("ShapeAnimationAsset"))
                {
                   //forcefully update it's shape constructor
                   TSShapeConstructor* tss = TSShapeConstructor::findShapeConstructorByAssetId(assetId);
@@ -2692,7 +2787,7 @@ Torque::Path AssetImporter::importImageAsset(AssetImportObject* assetItem)
 
    //If it's not a re-import, check that the file isn't being in-place imported. If it isn't, store off the original
    //file path for reimporting support later
-   if (!isReimport && String::compare(qualifiedFromFile, qualifiedToFile))
+   if (!isReimport && String::compare(qualifiedFromFile, qualifiedToFile) && Platform::isFile(qualifiedFromFile))
    {
       newAsset->setDataField(StringTable->insert("originalFilePath"), nullptr, qualifiedFromFile);
    }
@@ -2750,7 +2845,12 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
    Platform::makeFullPathName(originalPath.c_str(), qualifiedFromFile, sizeof(qualifiedFromFile));
 
    newAsset->setAssetName(assetName);
+
+   if (!isReimport && Platform::isFile(qualifiedFromFile))
+   {
    newAsset->setDataField(StringTable->insert("originalFilePath"), nullptr, qualifiedFromFile);
+   }
+
    newAsset->setDataField(StringTable->insert("materialDefinitionName"), nullptr, assetName);
 
    //iterate through and write out the material maps dependencies
@@ -2930,7 +3030,7 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
 
    //If it's not a re-import, check that the file isn't being in-place imported. If it isn't, store off the original
    //file path for reimporting support later
-   if (!isReimport && String::compare(qualifiedFromFile, qualifiedToFile))
+   if (!isReimport && String::compare(qualifiedFromFile, qualifiedToFile) && Platform::isFile(qualifiedFromFile))
    {
       newAsset->setDataField(StringTable->insert("originalFilePath"), nullptr, qualifiedFromFile);
    }
@@ -3205,7 +3305,7 @@ Torque::Path AssetImporter::importSoundAsset(AssetImportObject* assetItem)
 
    //If it's not a re-import, check that the file isn't being in-place imported. If it isn't, store off the original
    //file path for reimporting support later
-   if (!isReimport && String::compare(qualifiedFromFile, qualifiedToFile))
+   if (!isReimport && String::compare(qualifiedFromFile, qualifiedToFile) && Platform::isFile(qualifiedFromFile))
    {
       newAsset->setDataField(StringTable->insert("originalFilePath"), nullptr, qualifiedFromFile);
    }
@@ -3261,7 +3361,7 @@ Torque::Path AssetImporter::importShapeAnimationAsset(AssetImportObject* assetIt
 
    //If it's not a re-import, check that the file isn't being in-place imported. If it isn't, store off the original
    //file path for reimporting support later
-   if (!isReimport && String::compare(qualifiedFromFile, qualifiedToFile))
+   if (!isReimport && String::compare(qualifiedFromFile, qualifiedToFile) && Platform::isFile(qualifiedFromFile))
    {
       newAsset->setDataField(StringTable->insert("originalFilePath"), nullptr, qualifiedFromFile);
    }

@@ -110,7 +110,7 @@
             <Setting
                 name="AdjustFloor">0</Setting>
             <Setting
-                name="AlwaysAddShapeSuffix">0</Setting>
+                name="AlwaysAddShapeSuffix">1</Setting>
             <Setting
                 name="calcTangentSpace">0</Setting>
             <Setting
@@ -195,7 +195,7 @@
             <Setting
                 name="AutomaticallyPromptMissingFiles">0</Setting>
             <Setting
-                name="DuplicateAutoResolution">FolderPrefix</Setting>
+                name="DuplicateAutoResolution">AutoPrune</Setting>
             <Setting
                 name="PreventImportWithErrors">1</Setting>
             <Setting

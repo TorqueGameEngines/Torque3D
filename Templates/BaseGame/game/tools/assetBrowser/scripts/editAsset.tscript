@@ -111,7 +111,19 @@ function AssetBrowser::refreshAsset(%this, %assetId)
 }
 
 //------------------------------------------------------------
+function AssetBrowser::regeneratePreviewImage(%this)
+{
+   %assetDef = AssetDatabase.acquireAsset(EditAssetPopup.assetId);
+   %dummyObj = new ScriptObject();
+   %regenCommand = "AssetBrowser.build" @ EditAssetPopup.assetType @ 
+                     "Preview(" @%assetDef @ "," @ %dummyObj @ ", true);";
+   eval(%regenCommand);
 
+   %dummyObj.delete();
+   AssetDatabase.releaseAsset(EditAssetPopup.assetId);
+}
+
+//------------------------------------------------------------
 function AssetBrowser::renameAsset(%this)
 {
    //Find out what type it is
@@ -163,7 +175,7 @@ function AssetBrowser::performRenameAsset(%this, %originalAssetName, %newName)
    %ModuleItem = AssetBrowser-->filterTree.findItemByName(%moduleName);
 
    // TODO is this correct?
-   %assetType = %ModuleItem.getClassName();
+   /*%assetType = %ModuleItem.getClassName();
 
    %assetTypeId = AssetBrowser-->filterTree.findChildItemByName(%ModuleItem, %assetType);
    
@@ -172,7 +184,7 @@ function AssetBrowser::performRenameAsset(%this, %originalAssetName, %newName)
    %selectedItem = AssetBrowser-->filterTree.getSelectedItem();
    AssetBrowser-->filterTree.scrollVisibleByObjectId(%selectedItem);
    
-   AssetBrowser-->filterTree.buildVisibleTree(); 
+   AssetBrowser-->filterTree.buildVisibleTree();*/ 
 }
 
 function renameAssetFile(%assetDef, %newName)

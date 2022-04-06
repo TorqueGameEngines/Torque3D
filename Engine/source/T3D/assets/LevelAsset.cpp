@@ -391,6 +391,20 @@ DefineEngineMethod(LevelAsset, getDecalsPath, const char*, (), ,
    return object->getDecalsPath();
 }
 
+DefineEngineMethod(LevelAsset, getForestPath, const char*, (), ,
+   "Gets the full path of the asset's defined forest file.\n"
+   "@return The string result of the forest path")
+{
+   return object->getForestPath();
+}
+
+DefineEngineMethod(LevelAsset, getNavmeshPath, const char*, (), ,
+   "Gets the full path of the asset's defined navmesh file.\n"
+   "@return The string result of the navmesh path")
+{
+   return object->getNavmeshPath();
+}
+
 DefineEngineMethod(LevelAsset, loadDependencies, void, (), ,
    "Initiates the loading of asset dependencies for this level.")
 {

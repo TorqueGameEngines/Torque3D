@@ -1,7 +1,0 @@
-<MaterialAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    AssetName="BL_ProjectedShadowRPM"
-    scriptFile="@assetFile=basicLighting_Init.tscript"
-    materialDefinitionName="BL_ProjectedShadowRPM"
-    VersionId="1" />

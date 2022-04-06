@@ -750,10 +750,6 @@ S32 MountSystem::findByPattern( const Path &inBasePath, const String &inFilePatt
 
    while ( dir->read( &attrs ) )
    {
-      // skip hidden files
-      if ( attrs.name.c_str()[0] == '.' )
-         continue;
-
       String   name( attrs.name );
 
       if ( (attrs.flags & FileNode::Directory) && inRecursive )

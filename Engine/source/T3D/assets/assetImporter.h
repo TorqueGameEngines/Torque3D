@@ -261,6 +261,16 @@ public:
    /// </summary>
    F32 animFPS;
 
+   /// <summary>
+   /// When importing a shape animation, this indicates if it should automatically add a standard suffix onto the name
+   /// </summary>
+   bool AlwaysAddShapeAnimationSuffix;
+
+   /// <summary>
+   /// If AlwaysAddShapeAnimationSuffix is on, this is the suffix to be added
+   /// </summary>
+   String AddedShapeAnimationSuffix;
+
    //
    //Collision
    /// <summary>
@@ -800,10 +810,16 @@ public:
    void processMaterialAsset(AssetImportObject* assetItem);
 
    /// <summary>
-   /// Process a specific AssetImportObject that is an ShapeAsset type to prepare it for importing
+   /// Process a specific AssetImportObject that is an ShapeAnimationAsset type to prepare it for importing
    /// <para>@param assetItem, The AssetImportObject to process</para>
    /// </summary>
    void processShapeAsset(AssetImportObject* assetItem);
+
+   /// <summary>
+   /// Process a specific AssetImportObject that is an ShapeAsset type to prepare it for importing
+   /// <para>@param assetItem, The AssetImportObject to process</para>
+   /// </summary>
+   void processShapeAnimationAsset(AssetImportObject* assetItem);
 
    /// <summary>
    /// Process a specific ShapeAsset AssetImportObject with a material id in order to parse and handle the materials listed in the shape file

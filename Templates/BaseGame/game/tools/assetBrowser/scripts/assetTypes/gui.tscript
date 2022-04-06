@@ -79,12 +79,7 @@ function AssetBrowser::createGUIAsset(%this)
 	%moduleDef = ModuleDatabase.findModule(%moduleName, 1);
 	AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
 
-	AssetBrowser.loadFilters();
-	
-	%treeItemId = AssetBrowserFilterTree.findItemByName(%moduleName);
-	%smItem = AssetBrowserFilterTree.findChildItemByName(%treeItemId, "GUIs");
-	
-	AssetBrowserFilterTree.onSelect(%smItem);
+	AssetBrowser.refresh();
 	
 	return %tamlpath;  
 }
@@ -150,15 +145,15 @@ function AssetBrowser::deleteGUIAsset(%this, %assetDef)
 function AssetBrowser::moveGUIAsset(%this, %assetDef, %destination)
 {
    %currentModule = AssetDatabase.getAssetModule(%assetDef.getAssetId());
-   %targetModule = AssetBrowser.getModuleFromAddress(%destination);
+   %targetModule = AssetBrowser.dirHandler.getModuleFromAddress(%destination);
    
    %newAssetPath = moveAssetFile(%assetDef, %destination);
    
    if(%newAssetPath $= "")
       return false;
 
-   moveAssetLooseFile(%assetDef.guifile, %destination);
-   moveAssetLooseFile(%assetDef.scriptFile, %destination);
+   moveAssetLooseFile(%assetDef.getGUIPath(), %destination);
+   moveAssetLooseFile(%assetDef.getScriptPath(), %destination);
    
    AssetDatabase.removeDeclaredAsset(%assetDef.getAssetId());
    AssetDatabase.addDeclaredAsset(%targetModule, %newAssetPath);

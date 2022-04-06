@@ -735,7 +735,7 @@ DefineEngineMethod( GuiControlProfile, getStringWidth, S32, (const char* string)
    "@param string String to get the width of."
    "@return width of the string in pixels." )
 {
-   return object->mFont->getStrNWidth( string, dStrlen( string ) );
+   return (object->mFont) ? object->mFont->getStrNWidth( string, dStrlen( string ) ) : -1;
 }
 
 DefineEngineMethod(GuiControlProfile, getBitmap, const char*, (), , "get name")

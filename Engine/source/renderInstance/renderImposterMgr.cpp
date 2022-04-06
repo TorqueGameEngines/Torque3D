@@ -133,6 +133,7 @@ void RenderImposterMgr::_renderDeferred( const SceneRenderState *state, RenderDe
 
 void RenderImposterMgr::_innerRender( const SceneRenderState *state, RenderDeferredMgr *deferredBin )
 {
+   if (deferredBin == NULL) return;
    PROFILE_SCOPE( RenderImposterMgr_InnerRender );
 
    // Capture the GFX stats for this render.

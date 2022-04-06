@@ -1089,7 +1089,7 @@ $guiContent = new GuiControl(AssetBrowser) {
          position = "5 588";
          extent = "20 20";
          minExtent = "8 2";
-         horizSizing = "left";
+         horizSizing = "right";
          vertSizing = "top";
          profile = "ToolsGuiDefaultProfile";
          visible = "1";
@@ -1124,13 +1124,14 @@ $guiContent = new GuiControl(AssetBrowser) {
          class = "assetBrowserPreviewSlider";
          canSave = "1";
          canSaveDynamicFields = "0";
+         command = "AssetBrowser-->previewSlider.onMouseDragged();";
       };
       new GuiBitmapCtrl() {
          bitmapAsset = "ToolsModule:larger_image";
          position = "103 588";
          extent = "20 20";
          minExtent = "8 2";
-         horizSizing = "left";
+         horizSizing = "right";
          vertSizing = "top";
          profile = "ToolsGuiDefaultProfile";
          visible = "1";

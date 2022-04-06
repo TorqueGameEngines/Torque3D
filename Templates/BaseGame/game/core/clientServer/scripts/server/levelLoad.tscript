@@ -86,6 +86,13 @@ function loadMissionStage2()
    // Create the mission group off the ServerGroup
    $instantGroup = ServerGroup;
 
+   // Mission cleanup group.  This is where run time components will reside.  The MissionCleanup
+   // group will be added to the ServerGroup.
+   new SimGroup( MissionCleanup );
+
+   // Make the MissionCleanup group the place where all new objects will automatically be added.
+   $instantGroup = MissionCleanup;
+   
    // Make sure the mission exists
    %file = $Server::MissionFile;
    
@@ -120,12 +127,6 @@ function loadMissionStage2()
    if( isObject( theLevelInfo ) )
       $Server::MissionName = theLevelInfo.levelName;
 
-   // Mission cleanup group.  This is where run time components will reside.  The MissionCleanup
-   // group will be added to the ServerGroup.
-   new SimGroup( MissionCleanup );
-
-   // Make the MissionCleanup group the place where all new objects will automatically be added.
-   $instantGroup = MissionCleanup;
    
    %hasGameMode = callGamemodeFunction("onCreateGame");
    

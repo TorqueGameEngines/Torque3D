@@ -31,6 +31,22 @@ function AssetBrowser::editShapeAnimationAsset(%this, %assetDef)
    ShapeEditorPlugin.openShapeAsset(%assetDef);   
 }
 
+function AssetBrowser::moveShapeAnimationAsset(%this, %assetDef, %destination)
+{
+   %currentModule = AssetDatabase.getAssetModule(%assetDef.getAssetId());
+   %targetModule = AssetBrowser.dirHandler.getModuleFromAddress(%destination);
+   
+   %newAssetPath = moveAssetFile(%assetDef, %destination);
+   
+   if(%newAssetPath $= "")
+      return false;
+
+   moveAssetLooseFile(%assetDef.getAnimationPath(), %destination);
+   
+   AssetDatabase.removeDeclaredAsset(%assetDef.getAssetId());
+   AssetDatabase.addDeclaredAsset(%targetModule, %newAssetPath);
+}
+
 function AssetBrowser::buildShapeAnimationAssetPreview(%this, %assetDef, %previewData)
 {
    %previewData.assetName = %assetDef.animationName;
@@ -51,5 +67,5 @@ function AssetBrowser::buildShapeAnimationAssetPreview(%this, %assetDef, %previe
    
    %previewData.assetFriendlyName = %assetDef.assetName;
    %previewData.assetDesc = %assetDef.description;
-   %previewData.tooltip = %assetDef.friendlyName @ "\n" @ %assetDef @ "\nShape File path: " @ %assetDef.getShapeFile();
+   %previewData.tooltip = %assetDef.friendlyName @ "\n" @ %assetDef @ "\nShape File path: " @ %assetDef.getShapePath();
 }

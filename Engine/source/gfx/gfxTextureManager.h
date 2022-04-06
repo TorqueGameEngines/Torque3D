@@ -75,9 +75,6 @@ public:
    /// Provide the path to the texture used to warn the developer
    static const String& getWarningTexturePath() { return smWarningTexturePath; }
 
-   static const String& getDefaultIrradianceCubemapPath() { return smDefaultIrradianceCubemapPath; }
-   static const String& getDefaultPrefilterCubemapPath() { return smDefaultPrefilterCubemapPath; }
-
    static const String& getBRDFTexturePath() { return smBRDFTexturePath; }
 
    /// Update width and height based on available resources.
@@ -217,8 +214,6 @@ protected:
    /// File path to the warning texture
    static String smWarningTexturePath;
 
-   static String smDefaultIrradianceCubemapPath;
-   static String smDefaultPrefilterCubemapPath;
    static String smBRDFTexturePath;
 
    GFXTextureObject *mListHead;

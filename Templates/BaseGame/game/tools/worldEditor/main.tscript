@@ -68,10 +68,7 @@ function initializeWorldEditor()
    exec("./scripts/cameraCommands.ed." @ $TorqueScriptFileExtension);
    exec("./scripts/probeBake.ed." @ $TorqueScriptFileExtension);
    exec("./scripts/visibility/visibilityLayer.ed." @ $TorqueScriptFileExtension);
-   exec("./scripts/visibility/lightViz." @ $TorqueScriptFileExtension);
-   exec("./scripts/visibility/shadowViz." @ $TorqueScriptFileExtension);
    exec("./scripts/visibility/probeViz." @ $TorqueScriptFileExtension);
-   exec("./scripts/visibility/miscViz." @ $TorqueScriptFileExtension);
    
    exec("tools/gui/postFxEditor." @ $TorqueScriptFileExtension );
    exec("tools/gui/renderTargetVisualizer.ed." @ $TorqueScriptFileExtension);

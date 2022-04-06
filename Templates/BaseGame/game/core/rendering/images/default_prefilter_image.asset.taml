@@ -1,8 +1,0 @@
-<ImageAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    AssetName="default_prefilter_image"
-    imageFile="@assetFile=default_prefilter.dds"
-    UseMips="true"
-    isHDRImage="false"
-    imageType="Albedo" />

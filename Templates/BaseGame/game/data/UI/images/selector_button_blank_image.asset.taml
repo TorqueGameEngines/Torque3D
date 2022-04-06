@@ -2,7 +2,7 @@
     canSave="true"
     canSaveDynamicFields="true"
     AssetName="selector_button_blank_image"
-    imageFile="@assetFile=selector-button-blank.png"
+    imageFile="@assetFile=selector_button_blank.png"
     UseMips="true"
     isHDRImage="false"
     imageType="Albedo" />

@@ -2,6 +2,13 @@
     canSave="true"
     canSaveDynamicFields="true"
     AssetName="DefaultRoadMaterialTop"
-    scriptFile="@assetFile=materials.tscript"
     materialDefinitionName="DefaultRoadMaterialTop"
-    VersionId="1" />
+    VersionId="1">
+    <Material
+        Name="DefaultRoadMaterialTop">
+        <Material.Stages>
+            <Stages_beginarray
+                DiffuseMapAsset="Core_GameObjects:defaultRoadTextureTop_image"/>
+        </Material.Stages>
+    </Material>
+</MaterialAsset>

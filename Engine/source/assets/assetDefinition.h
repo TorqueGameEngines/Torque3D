@@ -36,7 +36,7 @@
 #endif
 
 #ifndef _SIMSET_H_
-#include "console/simset.h"
+#include "console/simSet.h"
 #endif
 
 #ifndef _CONSOLEOBJECT_H_

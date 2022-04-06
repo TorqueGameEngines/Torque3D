@@ -2,6 +2,19 @@
     canSave="true"
     canSaveDynamicFields="true"
     AssetName="CameraMat"
-    scriptFile="@assetFile=materials.tscript"
     materialDefinitionName="CameraMat"
-    VersionId="1" />
+    VersionId="1">
+    <Material
+        Name="CameraMat"
+        doubleSided="1"
+        translucent="1"
+        translucentBlendOp="LerpAlpha"
+        castShadows="0">
+        <Material.Stages>
+            <Stages_beginarray
+                DiffuseMapAsset="Core_GameObjects:camera_image"
+                diffuseColor="0 0.627451 1 1"
+                emissive="1"/>
+        </Material.Stages>
+    </Material>
+</MaterialAsset>

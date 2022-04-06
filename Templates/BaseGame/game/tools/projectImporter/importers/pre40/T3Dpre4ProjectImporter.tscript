@@ -353,6 +353,7 @@ function T3Dpre4ProjectImporter::beginMaterialFilesImport(%this)
       %file = $ProjectImporter::FileList.getKey(%i);
       %rootFileSectionObject = $ProjectImporter::FileList.getValue(%i);
       
+      $ProjectImporter::currentFile = %rootFileSectionObject.fileDestination;
       $ProjectImporter::currentFilePath = filePath(%rootFileSectionObject.fileDestination) @ "/"; //give context to the file we're processing
       
       if(%rootFileSectionObject.binaryFile == true || %rootFileSectionObject.imported == true)
@@ -458,6 +459,7 @@ function T3Dpre4ProjectImporter::beginSoundProfilesImport(%this)
       %file = $ProjectImporter::FileList.getKey(%i);
       %rootFileSectionObject = $ProjectImporter::FileList.getValue(%i);
       
+      $ProjectImporter::currentFile = %rootFileSectionObject.fileDestination;
       $ProjectImporter::currentFilePath = filePath(%rootFileSectionObject.fileDestination) @ "/"; //give context to the file we're processing
       
       if(%rootFileSectionObject.binaryFile == true || %rootFileSectionObject.imported == true)
@@ -523,21 +525,50 @@ function T3Dpre4ProjectImporter::processScripts(%this, %arrayObj)
                   T3Dpre4ProjectImporter.call(%processFunction, %lineObj, %sanitizedName);
                }
                
-               //Now, we process the fields to be asset-ified on our object
-               for(%l=0; %l < %lineObj.count(); %l++)
+               //we're gunna handle the mission group definition lines specially because we need to process against an object's NAME
+               //rather than just the className
+               if(%lineObj.objectName $= "MissionGroup")
                {
-                  %objectCodeLine = %lineObj.getKey(%l);
-                  if(!isObject(%objectCodeLine))
+                  $ProjectImporter::assetQuery.clear();
+                  %assetsFound = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, $ProjectImporter::currentFile);
+                  if(%assetsFound != 0)
                   {
-                     %processLineFunction = "process" @ %subclass @ "Line";
-                     if(T3Dpre4ProjectImporter.isMethod(%processLineFunction))
+                     //ok, valid level asset  
+                     %levelAssetId = $ProjectImporter::assetQuery.getAsset(0);
+                     %levelName = AssetDatabase.getAssetName(%levelAssetId);
+                     
+                     //Now, we process the fields to be asset-ified on our object
+                     for(%l=0; %l < %lineObj.count(); %l++)
                      {
-                        %resultLine = T3Dpre4ProjectImporter.call(%processLineFunction, %objectCodeLine);
-
+                        %objectCodeLine = %lineObj.getKey(%l);
+                        %resultLine = T3Dpre4ProjectImporter.processMissionGroupLine(%objectCodeLine, %levelName);
+                        
                         if(%resultLine !$= %objectCodeLine)
                         {
                            projectImporterLog("   processed line: " @ %resultLine @ " from: " @ %objectCodeLine);
                            %lineObj.setKey(%resultLine, %l);
+                        }
+                     }
+                  }
+               }
+               else //regular convertwork
+               {
+                  //Now, we process the fields to be asset-ified on our object
+                  for(%l=0; %l < %lineObj.count(); %l++)
+                  {
+                     %objectCodeLine = %lineObj.getKey(%l);
+                     if(!isObject(%objectCodeLine))
+                     {
+                        %processLineFunction = "process" @ %subclass @ "Line";
+                        if(T3Dpre4ProjectImporter.isMethod(%processLineFunction))
+                        {
+                           %resultLine = T3Dpre4ProjectImporter.call(%processLineFunction, %objectCodeLine);
+
+                           if(%resultLine !$= %objectCodeLine)
+                           {
+                              projectImporterLog("   processed line: " @ %resultLine @ " from: " @ %objectCodeLine);
+                              %lineObj.setKey(%resultLine, %l);
+                           }
                         }
                      }
                   }
@@ -624,6 +655,7 @@ function T3Dpre4ProjectImporter::beginScriptFilesImport(%this)
          continue;
       }
       
+      $ProjectImporter::currentFile = %rootFileSectionObject.fileDestination;
       $ProjectImporter::currentFilePath = filePath(%rootFileSectionObject.fileDestination) @ "/";
       
       projectImporterLog("T3Dpre4ProjectImporter::beginScriptFilesImport() - Processing script file: " @ %file);
@@ -693,6 +725,7 @@ function T3Dpre4ProjectImporter::beginAssetAndModuleImport(%this)
             continue;
             
          projectImporterLog("T3Dpre4ProjectImporter::beginAssetAndModuleImport() - processing file: " @ %file);
+         $ProjectImporter::currentFile = %rootFileSectionObject.fileDestination;
          $ProjectImporter::currentFilePath = filePath(%rootFileSectionObject.fileDestination) @ "/";
          %this.processModuleFile(%rootFileSectionObject);
          %rootFileSectionObject.processed = true;
@@ -1170,7 +1203,7 @@ function T3Dpre4ProjectImporter::processTerrainMaterialObject(%this, %fileObject
             {
                %fxMatObj = getField(%fxMatList, %i);
                %fxMatObjMapTo = findObjectField(%fxMatObj, "mapTo");
-               if(%fxMatObjMapTo $= %objectName)
+               if(%fxMatObjMapTo $= %objectName || %fxMatObjMapTo $= %assetName)
                {
                   %fileObject.FXMaterial = %fxMatObj;
                   break;
@@ -1182,7 +1215,7 @@ function T3Dpre4ProjectImporter::processTerrainMaterialObject(%this, %fileObject
       if(%fileObject.FXMaterial !$= "")
       {
          //Ensure our mapto is up to date for any name sanitize/tweaks
-         setObjectField(%fileObject.FXMaterial, "mapTo", %objectName);
+         setObjectField(%fileObject.FXMaterial, "mapTo", %moduleName @ ":" @ %assetName);
          
          //we associated to an FX material, so process that now
          %objectDefinition = "";
@@ -1211,6 +1244,15 @@ function T3Dpre4ProjectImporter::processTerrainMaterialObject(%this, %fileObject
          %fileObject.FXMaterial.processed = true;
          %fileObject.FXMaterial.skip = true;
       }  
+      else
+      {
+         //if after all that we still have no FXMaterial, just create a new one
+         %fxMat = new Material("TerrainFX_" @ %objectName)
+         {
+            mapTo = %moduleName @ ":" @ %assetName;  
+         };
+         %asset.add(%fxMat);
+      }
       
       %success = false;
       if(TamlWrite(%asset, %tamlpath))

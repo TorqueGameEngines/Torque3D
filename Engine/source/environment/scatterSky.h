@@ -104,6 +104,27 @@ public:
    ///
    F32 getElevation() const { return mSunElevation; }
 
+   struct SphereVertex
+   {
+      Point3F pos;
+   };
+
+   Vector<SphereVertex> tmpVertices;
+   Vector<F32> vertsVec;
+
+   struct FinalVertexData
+   {
+      Point3F pos;
+   };
+
+   Vector<FinalVertexData> finalVertData;
+
+   void addVertex(Point3F vert);
+
+   void BuildFinalVert();
+
+   void clearVectors();
+
 protected:
 
    void _render( ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *overrideMat );

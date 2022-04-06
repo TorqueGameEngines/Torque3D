@@ -522,6 +522,19 @@ public:
       return true;
    }
  
+   bool renameTerrainMaterial(StringTableEntry oldMatName, StringTableEntry newMatName);
+   S32 getTerrainMaterialCount() {
+      if (mFile)
+         return mFile->mMaterials.size();
+      return 0;
+   }
+
+   StringTableEntry getTerrainMaterialName(S32 index) {
+      if (mFile)
+         return mFile->mMaterials[index]->getInternalName();
+
+      return StringTable->EmptyString();
+   }
 protected:
    bool mUpdateBasetex;
    bool mIgnoreZodiacs;

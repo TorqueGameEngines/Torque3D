@@ -229,6 +229,9 @@ Material::Material()
 
    dMemset(mEffectColor, 0, sizeof(mEffectColor));
 
+   mEffectColor[0] = LinearColorF::WHITE;
+   mEffectColor[1] = LinearColorF::WHITE;
+
    mFootstepSoundId = -1;     mImpactSoundId = -1;
    mImpactFXIndex = -1;
    INIT_ASSET(CustomFootstepSound);

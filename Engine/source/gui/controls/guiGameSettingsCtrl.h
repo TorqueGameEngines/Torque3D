@@ -214,6 +214,16 @@ public:
 
    Mode getMode() { return mMode; }
 
+   /// <summary>
+   /// Gets the incremenet amount
+   /// </summary>
+   F32 getIncrement();
+
+   /// <summary>
+   /// Gets range of values allowed
+   /// </summary>
+   Point2F getRange();
+
    /// Gets the tooltip
    const char* getTooltip();
 

@@ -2,6 +2,17 @@
     canSave="true"
     canSaveDynamicFields="true"
     AssetName="moon_wglow"
-    scriptFile="@assetFile=moon_wglow.tscript"
     materialDefinitionName="moon_wglow"
-    imageMap0="@Asset=Core_Rendering:moon_wglow_image"/>
+    VersionId="1">
+    <Material
+        Name="moon_wglow"
+        mapTo="moon_wglow"
+        emissive="1"
+        translucent="1">
+        <Material.Stages>
+            <Stages_beginarray
+                DiffuseMapAsset="Core_Rendering:moon_wglow_image"
+                vertColor="1";/>
+        </Material.Stages>
+    </Material>
+</MaterialAsset>

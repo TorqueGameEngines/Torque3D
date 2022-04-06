@@ -164,6 +164,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow, EditorGuiGroup) {
                   hovertime = "500";
                   isContainer = true;
                   internalName = "levelsInactive";
+                  color = "128 128 128 255";
                };
                new GuiTextCtrl() {
                   text = "0";
@@ -691,6 +692,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow, EditorGuiGroup) {
                };
                new GuiBitmapCtrl(){
                   bitmapAsset = "ToolsModule:inactive_overlay_image";
+                  color = "128 128 128 255";
                   position = "4 18";
                   Extent = "193 64";
                   tooltip = "Imposters must be enabled, and an imposter detail level selected to edit these properties";

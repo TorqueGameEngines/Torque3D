@@ -81,7 +81,6 @@ function ExampleModule::initClient(%this)
       exec(%prefPath @ "/keybinds." @ $TorqueScriptFileExtension);
       
    %this.queueExec("./scripts/inputCommands");
-   addOptionsMenuCategory("Example Options", "testExampleOptions();");
 }
 
 //This is called when a game session client successfuly connects to a game server. 
@@ -108,7 +107,17 @@ function ExampleModule::onDestroyClientConnection(%this)
    ExampleMoveMap.pop();
 }
 
+function ExampleModule::populateOptionsMenuCategories(%this)
+{
+   addOptionsMenuCategory("Example Options", "testExampleOptions();");
+}
+
 function testExampleOptions()
 {
+   OptionsMenuSettingsList.clear();
+   
+   OptionName.setText("");
+   OptionDescription.setText("");
+   
    addListOption("Test Option", "This is a test option", $testOptionValue, "OptionA\tOptionB");  
 }

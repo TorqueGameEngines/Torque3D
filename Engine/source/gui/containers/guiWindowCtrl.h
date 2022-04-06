@@ -201,6 +201,7 @@ class GuiWindowCtrl : public GuiContainer
       DECLARE_CALLBACK( void, onMaximize, () );
       DECLARE_CALLBACK( void, onCollapse, () );
       DECLARE_CALLBACK( void, onRestore, () );
+      DECLARE_CALLBACK(void, onResize, (S32 posX, S32 posY, S32 width, S32 height));
       
       /// @}
 

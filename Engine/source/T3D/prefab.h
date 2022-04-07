@@ -102,6 +102,13 @@ public:
 
    virtual void getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList);
 
+   S32 getChildGroup() {
+      if (mChildGroup.isValid())
+         return mChildGroup->getId();
+
+      return 0;
+   }
+
 protected:
 
    void _closeFile( bool removeFileNotify );

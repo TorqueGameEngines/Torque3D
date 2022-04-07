@@ -1581,7 +1581,18 @@ function ShapeEdSequences::onEditSequenceSource( %this, %from )
          %from = rtrim( getFields( %oldSource, 0, 0 ) );
 
       if ( getFields( %oldSource, 0, 3 ) !$= ( %from TAB "" TAB %start TAB %end ) )
+      {
+         %aq = new AssetQuery();
+         %foundAssets = AssetDatabase.findAssetLooseFile(%aq, %from);
+         if(%foundAssets != 0)
+         {
+            //if we have an assetId associated to the file, we're gunna just pass that
+            //through for the edit actions
+            %from = %aq.getAsset(0);
+         }
+         %aq.delete();
          ShapeEditor.doEditSeqSource( %seqName, %from, %start, %end );
+   }
    }
 }
 
@@ -3339,8 +3350,9 @@ function ShapeEdMountShapeMenu::onSelect( %this, %id, %text )
 {
    if ( %text $= "Browse..." )
    {
-      // Allow the user to browse for an external model file
-      getLoadFormatFilename( %this @ ".onBrowseSelect", %this.lastPath );
+      if(%this.lastPath !$= "")
+         AssetBrowser.dirHandler.currentAddress = %this.lastPath;
+      AssetBrowser.showDialog("ShapeAsset", %this @ ".onBrowseSelect");
    }
    else
    {
@@ -3349,15 +3361,14 @@ function ShapeEdMountShapeMenu::onSelect( %this, %id, %text )
    }
 }
 
-function ShapeEdMountShapeMenu::onBrowseSelect( %this, %path )
+function ShapeEdMountShapeMenu::onBrowseSelect( %this, %shapeAssetId )
 {
-   %path = makeRelativePath( %path, getMainDotCSDir() );
-   %this.lastPath = %path;
-   %this.setText( %path );
+   %this.lastPath = AssetBrowser.dirHandler.currentAddress;
+   %this.setText( %shapeAssetId );
 
    // Add entry if unique
-   if ( %this.findText( %path ) == -1 )
-      %this.add( %path );
+   if ( %this.findText( %shapeAssetId ) == -1 )
+      %this.add( %shapeAssetId );
 
    ShapeEdMountWindow.updateSelectedMount();
 }
@@ -3369,11 +3380,11 @@ function ShapeEdMountWindow::mountShape( %this, %slot )
    %type = %this-->mountType.getText();
 
    if ( %model $= "Browse..." )
-      %model = "core/gameObjects/shapes/octahedron.dts";
+      %model = "Core_GameObjects:octahedron.dts";
 
    if ( ShapeEdShapeView.mountShape( %model, %node, %type, %slot ) )
    {
-      %rowText = %model TAB fileName( %model ) TAB %node TAB %type;
+      %rowText = %model TAB %node TAB %type;
       if ( %slot == -1 )
       {
          %id = %this.mounts++;

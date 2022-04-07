@@ -477,3 +477,53 @@ function AssetBrowser::updateAssetReference(%this, %targetPath, %oldAssetId, %ne
    lineCache.delete();
    %fileObj.delete();
 }
+
+function AssetBrowser::openFileLocation(%this)
+{
+   %filePath = "";
+   if(EditAssetPopup.assetId !$= "")
+   {
+      %filePath = AssetDatabase.getAssetPath(EditAssetPopup.assetId);
+   }
+   else if(EditLevelAssetPopup.assetId !$= "")
+   {
+      %filePath = AssetDatabase.getAssetPath(EditAssetPopup.assetId);
+   }
+   else if(EditTerrainAssetPopup.assetId !$= "")
+   {
+      %filePath = AssetDatabase.getAssetPath(EditAssetPopup.assetId);
+   }
+   
+   if(%filePath !$= "")
+   {
+      if($platform $= "windows")
+      {
+         %cmd = "cd \"" @ makeFullPath(%filePath) @ "\" && start .";
+         systemCommand(%cmd);
+      }
+      else
+      {
+         %cmd = "open \"" @ makeFullPath(%filePath) @ "\"";
+         systemCommand(%cmd);
+      }
+   }
+}
+
+function AssetBrowser::openFolderLocation(%this)
+{
+   %filePath = AssetBrowser.dirHandler.currentAddress;
+   
+   if(%filePath !$= "")
+   {
+      if($platform $= "windows")
+      {
+         %cmd = "cd \"" @ makeFullPath(%filePath) @ "\" && start .";
+         systemCommand(%cmd);
+      }
+      else
+      {
+         %cmd = "open \"" @ makeFullPath(%filePath) @ "\"";
+         systemCommand(%cmd);
+      }
+   }
+}

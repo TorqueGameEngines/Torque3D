@@ -59,6 +59,7 @@ RenderShapeExample::RenderShapeExample()
    mTypeMask |= StaticObjectType | StaticShapeObjectType;
 
    // Make sure to initialize our TSShapeInstance to NULL
+   INIT_ASSET(Shape);
    mShapeInstance = NULL;
 }
 

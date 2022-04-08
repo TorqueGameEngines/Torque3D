@@ -14,6 +14,7 @@ MIT Licensed Open Source version of [Torque3D](https://torque3d.org) from [Garag
 * [Homepage](https://torque3d.org)
 * [Torque 3D wiki](http://wiki.torque3d.org)
 * [Community forum](https://torque3d.org/forums)
+* [Roadmap](https://github.com/orgs/TorqueGameEngines/projects/1)
 * [Binaries](https://github.com/TorqueGameEngines/Torque3D-Binaries)
 * [Guide Docs](https://torque3d.org/docs/t3d/)
 * [Reference Docs](https://reference.torque3d.org/)

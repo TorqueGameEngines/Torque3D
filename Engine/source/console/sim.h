@@ -107,6 +107,8 @@ namespace Sim
    DeclareNamedSet(SFXAmbienceSet);
    DeclareNamedSet(TerrainMaterialSet);
    DeclareNamedSet(DataBlockSet);
+   DeclareNamedSet(ForestBrushSet);
+   DeclareNamedSet(ForestItemDataSet);
    DeclareNamedGroup(ActionMapGroup)
    DeclareNamedGroup(ClientGroup)
    DeclareNamedGroup(GuiGroup)

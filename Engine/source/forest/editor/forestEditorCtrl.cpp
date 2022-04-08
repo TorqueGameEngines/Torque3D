@@ -328,10 +328,16 @@ void ForestEditorCtrl::deleteMeshSafe( ForestItemData *mesh )
    }
 
    // Find ForestBrushElement(s) referencing this datablock.
-   SimGroup *brushGroup = ForestBrush::getGroup();
+   SimSet* brushSet;
+   if (!Sim::findObject("ForestBrushSet", brushSet))
+   {
+      Con::errorf("ForestBrushTool::_collectElements() - could not find ForestBrushSet!");
+      return;
+   }
+
    sKey = mesh;
    Vector<SimObject*> foundElements;   
-   brushGroup->findObjectByCallback( &findMeshReferences, foundElements );   
+   brushSet->findObjectByCallback( &findMeshReferences, foundElements );
 
    // Add UndoAction to delete the ForestBrushElement(s) and the ForestItemData.
    MEDeleteUndoAction *elementAction = new MEDeleteUndoAction();

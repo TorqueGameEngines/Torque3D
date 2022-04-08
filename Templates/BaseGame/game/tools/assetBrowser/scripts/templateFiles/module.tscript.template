@@ -21,6 +21,8 @@ function @@::onCreateGameServer(%this)
         %this.registerDatablock("./scripts/managedData/managedDatablocks");
     if(isFile("./scripts/managedData/managedForestItemData." @ $TorqueScriptFileExtension))
         %this.registerDatablock("./scripts/managedData/managedForestItemData");
+    if(isFile("./scripts/managedData/managedForestBrushData." @ $TorqueScriptFileExtension))
+        %this.registerDatablock("./scripts/managedData/managedForestBrushData");
     if(isFile("./scripts/managedData/managedParticleEmitterData." @ $TorqueScriptFileExtension))
         %this.registerDatablock("./scripts/managedData/managedParticleEmitterData");
     if(isFile("./scripts/managedData/managedParticleData." @ $TorqueScriptFileExtension))

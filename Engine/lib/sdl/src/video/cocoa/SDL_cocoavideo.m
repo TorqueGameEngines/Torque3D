@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -38,6 +38,9 @@ static void Cocoa_VideoQuit(_THIS);
 static void
 Cocoa_DeleteDevice(SDL_VideoDevice * device)
 {
+    if (device->wakeup_lock) {
+        SDL_DestroyMutex(device->wakeup_lock);
+    }
     SDL_free(device->driverdata);
     SDL_free(device);
 }
@@ -63,6 +66,7 @@ Cocoa_CreateDevice(int devindex)
         return NULL;
     }
     device->driverdata = data;
+    device->wakeup_lock = SDL_CreateMutex();
 
     /* Set the function pointers */
     device->VideoInit = Cocoa_VideoInit;
@@ -73,6 +77,8 @@ Cocoa_CreateDevice(int devindex)
     device->GetDisplayModes = Cocoa_GetDisplayModes;
     device->SetDisplayMode = Cocoa_SetDisplayMode;
     device->PumpEvents = Cocoa_PumpEvents;
+    device->WaitEventTimeout = Cocoa_WaitEventTimeout;
+    device->SendWakeupEvent = Cocoa_SendWakeupEvent;
     device->SuspendScreenSaver = Cocoa_SuspendScreenSaver;
 
     device->CreateSDLWindow = Cocoa_CreateWindow;
@@ -92,14 +98,19 @@ Cocoa_CreateDevice(int devindex)
     device->RestoreWindow = Cocoa_RestoreWindow;
     device->SetWindowBordered = Cocoa_SetWindowBordered;
     device->SetWindowResizable = Cocoa_SetWindowResizable;
+    device->SetWindowAlwaysOnTop = Cocoa_SetWindowAlwaysOnTop;
     device->SetWindowFullscreen = Cocoa_SetWindowFullscreen;
     device->SetWindowGammaRamp = Cocoa_SetWindowGammaRamp;
     device->GetWindowGammaRamp = Cocoa_GetWindowGammaRamp;
-    device->SetWindowGrab = Cocoa_SetWindowGrab;
+    device->GetWindowICCProfile = Cocoa_GetWindowICCProfile;
+    device->SetWindowMouseRect = Cocoa_SetWindowMouseRect;
+    device->SetWindowMouseGrab = Cocoa_SetWindowMouseGrab;
+    device->SetWindowKeyboardGrab = Cocoa_SetWindowKeyboardGrab;
     device->DestroyWindow = Cocoa_DestroyWindow;
     device->GetWindowWMInfo = Cocoa_GetWindowWMInfo;
     device->SetWindowHitTest = Cocoa_SetWindowHitTest;
     device->AcceptDragAndDrop = Cocoa_AcceptDragAndDrop;
+    device->FlashWindow = Cocoa_FlashWindow;
 
     device->shape_driver.CreateShaper = Cocoa_CreateShaper;
     device->shape_driver.SetWindowShape = Cocoa_SetWindowShape;
@@ -260,7 +271,10 @@ Cocoa_CreateImage(SDL_Surface * surface)
 
 void SDL_NSLog(const char *text)
 {
-    NSLog(@"%s", text);
+    @autoreleasepool {
+        NSString *str = [NSString stringWithUTF8String:text];
+        NSLog(@"%@", str);
+    }
 }
 
 #endif /* SDL_VIDEO_DRIVER_COCOA */

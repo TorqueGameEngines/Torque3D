@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -20,6 +20,7 @@
 */
 #include "../../SDL_internal.h"
 
+#include "SDL.h"
 #include "SDL_error.h"
 #include "SDL_haptic.h"
 #include "../SDL_syshaptic.h"
@@ -61,7 +62,7 @@ static BOOL CALLBACK
 EnumHapticsCallback(const DIDEVICEINSTANCE * pdidInstance, VOID * pContext)
 {
     (void) pContext;
-    SDL_DINPUT_MaybeAddDevice(pdidInstance);
+    SDL_DINPUT_HapticMaybeAddDevice(pdidInstance);
     return DIENUM_CONTINUE;  /* continue enumerating */
 }
 
@@ -70,6 +71,7 @@ SDL_DINPUT_HapticInit(void)
 {
     HRESULT ret;
     HINSTANCE instance;
+    DWORD devClass;
 
     if (dinput != NULL) {       /* Already open. */
         return SDL_SetError("Haptic: SubSystem already open.");
@@ -103,21 +105,29 @@ SDL_DINPUT_HapticInit(void)
     }
 
     /* Look for haptic devices. */
-    ret = IDirectInput8_EnumDevices(dinput,
-        0,
-        EnumHapticsCallback,
-        NULL,
-        DIEDFL_FORCEFEEDBACK |
-        DIEDFL_ATTACHEDONLY);
-    if (FAILED(ret)) {
-        SDL_SYS_HapticQuit();
-        return DI_SetError("Enumerating DirectInput devices", ret);
+    for (devClass = DI8DEVCLASS_DEVICE; devClass <= DI8DEVCLASS_GAMECTRL; devClass++) {
+        if (devClass == DI8DEVCLASS_GAMECTRL && SDL_WasInit(SDL_INIT_JOYSTICK)) {
+            /* The joystick subsystem will manage adding DInput joystick haptic devices */
+            continue;
+        }
+
+        ret = IDirectInput8_EnumDevices(dinput,
+                                        devClass,
+                                        EnumHapticsCallback,
+                                        NULL,
+                                        DIEDFL_FORCEFEEDBACK |
+                                        DIEDFL_ATTACHEDONLY);
+        if (FAILED(ret)) {
+            SDL_SYS_HapticQuit();
+            return DI_SetError("Enumerating DirectInput devices", ret);
+        }
     }
+
     return 0;
 }
 
 int
-SDL_DINPUT_MaybeAddDevice(const DIDEVICEINSTANCE * pdidInstance)
+SDL_DINPUT_HapticMaybeAddDevice(const DIDEVICEINSTANCE * pdidInstance)
 {
     HRESULT ret;
     LPDIRECTINPUTDEVICE8 device;
@@ -176,7 +186,7 @@ SDL_DINPUT_MaybeAddDevice(const DIDEVICEINSTANCE * pdidInstance)
 }
 
 int
-SDL_DINPUT_MaybeRemoveDevice(const DIDEVICEINSTANCE * pdidInstance)
+SDL_DINPUT_HapticMaybeRemoveDevice(const DIDEVICEINSTANCE * pdidInstance)
 {
     SDL_hapticlist_item *item;
     SDL_hapticlist_item *prev = NULL;
@@ -419,7 +429,6 @@ SDL_DINPUT_HapticOpen(SDL_Haptic * haptic, SDL_hapticlist_item *item)
 {
     HRESULT ret;
     LPDIRECTINPUTDEVICE8 device;
-    LPDIRECTINPUTDEVICE8 device8;
 
     /* Open the device */
     ret = IDirectInput8_CreateDevice(dinput, &item->instance.guidInstance,
@@ -429,19 +438,8 @@ SDL_DINPUT_HapticOpen(SDL_Haptic * haptic, SDL_hapticlist_item *item)
         return -1;
     }
 
-    /* Now get the IDirectInputDevice8 interface, instead. */
-    ret = IDirectInputDevice8_QueryInterface(device,
-        &IID_IDirectInputDevice8,
-        (LPVOID *)&device8);
-    /* Done with the temporary one now. */
-    IDirectInputDevice8_Release(device);
-    if (FAILED(ret)) {
-        DI_SetError("Querying DirectInput interface", ret);
-        return -1;
-    }
-
-    if (SDL_DINPUT_HapticOpenFromDevice(haptic, device8, SDL_FALSE) < 0) {
-        IDirectInputDevice8_Release(device8);
+    if (SDL_DINPUT_HapticOpenFromDevice(haptic, device, SDL_FALSE) < 0) {
+        IDirectInputDevice8_Release(device);
         return -1;
     }
     return 0;
@@ -494,8 +492,7 @@ SDL_DINPUT_HapticOpenFromJoystick(SDL_Haptic * haptic, SDL_Joystick * joystick)
         ++index;
     }
 
-    SDL_SetError("Couldn't find joystick in haptic device list");
-    return -1;
+    return SDL_SetError("Couldn't find joystick in haptic device list");
 }
 
 void
@@ -713,7 +710,7 @@ SDL_SYS_ToDIEFFECT(SDL_Haptic * haptic, DIEFFECT * dest,
         /* Specifics */
         periodic->dwMagnitude = CONVERT(SDL_abs(hap_periodic->magnitude));
         periodic->lOffset = CONVERT(hap_periodic->offset);
-        periodic->dwPhase = 
+        periodic->dwPhase =
                 (hap_periodic->phase + (hap_periodic->magnitude < 0 ? 18000 : 0)) % 36000;
         periodic->dwPeriod = hap_periodic->period * 1000;
         dest->cbTypeSpecificParams = sizeof(DIPERIODIC);
@@ -961,8 +958,7 @@ SDL_DINPUT_HapticNewEffect(SDL_Haptic * haptic, struct haptic_effect *effect, SD
     REFGUID type = SDL_SYS_HapticEffectType(base);
 
     if (type == NULL) {
-        SDL_SetError("Haptic: Unknown effect type.");
-        return -1;
+        return SDL_SetError("Haptic: Unknown effect type.");
     }
 
     /* Get the effect. */
@@ -1200,13 +1196,13 @@ SDL_DINPUT_HapticInit(void)
 }
 
 int
-SDL_DINPUT_MaybeAddDevice(const DIDEVICEINSTANCE * pdidInstance)
+SDL_DINPUT_HapticMaybeAddDevice(const DIDEVICEINSTANCE * pdidInstance)
 {
     return SDL_Unsupported();
 }
 
 int
-SDL_DINPUT_MaybeRemoveDevice(const DIDEVICEINSTANCE * pdidInstance)
+SDL_DINPUT_HapticMaybeRemoveDevice(const DIDEVICEINSTANCE * pdidInstance)
 {
     return SDL_Unsupported();
 }

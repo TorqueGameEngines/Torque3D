@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -40,11 +40,11 @@
 /* Functions to blit from N-bit surfaces to other surfaces */
 
 enum blit_features {
-	BLIT_FEATURE_NONE = 0,
-	BLIT_FEATURE_HAS_MMX = 1,
-	BLIT_FEATURE_HAS_ALTIVEC = 2,
-	BLIT_FEATURE_ALTIVEC_DONT_USE_PREFETCH = 4,
-	BLIT_FEATURE_HAS_ARM_SIMD = 8
+    BLIT_FEATURE_NONE = 0,
+    BLIT_FEATURE_HAS_MMX = 1,
+    BLIT_FEATURE_HAS_ALTIVEC = 2,
+    BLIT_FEATURE_ALTIVEC_DONT_USE_PREFETCH = 4,
+    BLIT_FEATURE_HAS_ARM_SIMD = 8
 };
 
 #if SDL_ALTIVEC_BLITTERS
@@ -128,7 +128,7 @@ calc_swizzle32(const SDL_PixelFormat * srcfmt, const SDL_PixelFormat * dstfmt)
      *  leave alpha with a zero mask, but we should still swizzle the bits.
      */
     /* ARGB */
-    const static const struct SDL_PixelFormat default_pixel_format = {
+    static const struct SDL_PixelFormat default_pixel_format = {
         0, NULL, 0, 0,
         {0, 0},
         0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000,
@@ -943,14 +943,14 @@ void Blit_BGR888_RGB888ARMSIMDAsm(int32_t w, int32_t h, uint32_t *dst, int32_t d
 static void
 Blit_BGR888_RGB888ARMSIMD(SDL_BlitInfo * info)
 {
-	int32_t width = info->dst_w;
-	int32_t height = info->dst_h;
-	uint32_t *dstp = (uint32_t *)info->dst;
-	int32_t dststride = width + (info->dst_skip >> 2);
-	uint32_t *srcp = (uint32_t *)info->src;
-	int32_t srcstride = width + (info->src_skip >> 2);
+    int32_t width = info->dst_w;
+    int32_t height = info->dst_h;
+    uint32_t *dstp = (uint32_t *)info->dst;
+    int32_t dststride = width + (info->dst_skip >> 2);
+    uint32_t *srcp = (uint32_t *)info->src;
+    int32_t srcstride = width + (info->src_skip >> 2);
 
-	Blit_BGR888_RGB888ARMSIMDAsm(width, height, dstp, dststride, srcp, srcstride);
+    Blit_BGR888_RGB888ARMSIMDAsm(width, height, dstp, dststride, srcp, srcstride);
 }
 
 void Blit_RGB444_RGB888ARMSIMDAsm(int32_t w, int32_t h, uint32_t *dst, int32_t dst_stride, uint16_t *src, int32_t src_stride);
@@ -958,14 +958,14 @@ void Blit_RGB444_RGB888ARMSIMDAsm(int32_t w, int32_t h, uint32_t *dst, int32_t d
 static void
 Blit_RGB444_RGB888ARMSIMD(SDL_BlitInfo * info)
 {
-	int32_t width = info->dst_w;
-	int32_t height = info->dst_h;
-	uint32_t *dstp = (uint32_t *)info->dst;
-	int32_t dststride = width + (info->dst_skip >> 2);
-	uint16_t *srcp = (uint16_t *)info->src;
-	int32_t srcstride = width + (info->src_skip >> 1);
+    int32_t width = info->dst_w;
+    int32_t height = info->dst_h;
+    uint32_t *dstp = (uint32_t *)info->dst;
+    int32_t dststride = width + (info->dst_skip >> 2);
+    uint16_t *srcp = (uint16_t *)info->src;
+    int32_t srcstride = width + (info->src_skip >> 1);
 
-	Blit_RGB444_RGB888ARMSIMDAsm(width, height, dstp, dststride, srcp, srcstride);
+    Blit_RGB444_RGB888ARMSIMDAsm(width, height, dstp, dststride, srcp, srcstride);
 }
 #endif
 
@@ -2072,6 +2072,35 @@ Blit_RGB565_BGRA8888(SDL_BlitInfo * info)
 }
 
 #endif /* SDL_HAVE_BLIT_N_RGB565 */
+
+/* RGB555->ARGB1555, and BGR555->ABGR1555, SET_ALPHA */
+static void
+Blit_RGB555_ARGB1555(SDL_BlitInfo * info)
+{
+    int width = info->dst_w;
+    int height = info->dst_h;
+    Uint16 *src = (Uint16 *) info->src;
+    int srcskip = info->src_skip;
+    Uint16 *dst = (Uint16 *) info->dst;
+    int dstskip = info->dst_skip;
+    SDL_PixelFormat *dstfmt = info->dst_fmt;
+
+    Uint16 mask = ((Uint32)info->a >> dstfmt->Aloss) << dstfmt->Ashift;
+
+    while (height--) {
+        /* *INDENT-OFF* */
+        DUFFS_LOOP(
+        {
+            *dst = *src | mask;
+            ++dst;
+            ++src;
+        },
+        width);
+        /* *INDENT-ON* */
+        src = (Uint16 *) ((Uint8 *) src + srcskip);
+        dst = (Uint16 *) ((Uint8 *) dst + dstskip);
+    }
+}
 
 static void
 BlitNto1(SDL_BlitInfo * info)
@@ -3259,6 +3288,10 @@ static const struct blit_table normal_blit_2[] = {
     {0x0000F800, 0x000007E0, 0x0000001F, 4, 0x0000FF00, 0x00FF0000, 0xFF000000,
      0, Blit_RGB565_BGRA8888, NO_ALPHA | COPY_ALPHA | SET_ALPHA},
 #endif
+    {0x00007C00, 0x000003E0, 0x0000001F, 2, 0x00007C00, 0x000003E0, 0x0000001F,
+     0, Blit_RGB555_ARGB1555, SET_ALPHA},
+    {0x0000001F, 0x000003E0, 0x00007C00, 2, 0x0000001F, 0x000003E0, 0x00007C00,
+     0, Blit_RGB555_ARGB1555, SET_ALPHA},
 
     /* Default for 16-bit RGB source, used if no other blitter matches */
     {0, 0, 0, 0, 0, 0, 0, 0, BlitNtoN, 0}

@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -50,6 +50,11 @@
 #endif
 
 #include "SDL_config.h"
+
+/* If you run into a warning that O_CLOEXEC is redefined, update the SDL configuration header for your platform to add HAVE_O_CLOEXEC */
+#ifndef HAVE_O_CLOEXEC
+#define O_CLOEXEC                       0
+#endif
 
 /* A few #defines to reduce SDL2 footprint.
    Only effective when library is statically linked.

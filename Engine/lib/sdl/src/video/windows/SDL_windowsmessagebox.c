@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -117,7 +117,7 @@ static SDL_bool GetButtonIndex(const SDL_MessageBoxData *messageboxdata, Uint32 
     return SDL_FALSE;
 }
 
-static INT_PTR MessageBoxDialogProc(HWND hDlg, UINT iMessage, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK MessageBoxDialogProc(HWND hDlg, UINT iMessage, WPARAM wParam, LPARAM lParam)
 {
     const SDL_MessageBoxData *messageboxdata;
     size_t buttonindex;
@@ -260,7 +260,7 @@ static SDL_bool AddDialogString(WIN_DialogData *dialog, const char *string)
         string = "";
     }
 
-    wstring = WIN_UTF8ToString(string);
+    wstring = WIN_UTF8ToStringW(string);
     if (!wstring) {
         return SDL_FALSE;
     }
@@ -645,9 +645,9 @@ WIN_ShowOldMessageBox(const SDL_MessageBoxData *messageboxdata, int *buttonid)
     }
 
     /* Measure the *pixel* size of the string. */
-    wmessage = WIN_UTF8ToString(messageboxdata->message);
+    wmessage = WIN_UTF8ToStringW(messageboxdata->message);
     SDL_zero(TextSize);
-    DrawText(FontDC, wmessage, -1, &TextSize, DT_CALCRECT | DT_LEFT | DT_NOPREFIX | DT_EDITCONTROL);
+    DrawTextW(FontDC, wmessage, -1, &TextSize, DT_CALCRECT | DT_LEFT | DT_NOPREFIX | DT_EDITCONTROL);
 
     /* Add margins and some padding for hangs, etc. */
     TextSize.left += TextMargin;
@@ -742,7 +742,7 @@ WIN_ShowOldMessageBox(const SDL_MessageBoxData *messageboxdata, int *buttonid)
         ParentWindow = ((SDL_WindowData*)messageboxdata->window->driverdata)->hwnd;
     }
 
-    result = DialogBoxIndirectParam(NULL, (DLGTEMPLATE*)dialog->lpDialog, ParentWindow, (DLGPROC)MessageBoxDialogProc, (LPARAM)messageboxdata);
+    result = DialogBoxIndirectParam(NULL, (DLGTEMPLATE*)dialog->lpDialog, ParentWindow, MessageBoxDialogProc, (LPARAM)messageboxdata);
     if (result >= IDBUTTONINDEX0 && result - IDBUTTONINDEX0 < messageboxdata->numbuttons) {
         *buttonid = messageboxdata->buttons[result - IDBUTTONINDEX0].buttonid;
         retval = 0;
@@ -798,7 +798,7 @@ WIN_ShowMessageBox(const SDL_MessageBoxData *messageboxdata, int *buttonid)
     }
 
     /* If we cannot load comctl32.dll use the old messagebox! */
-    hComctl32 = LoadLibrary(TEXT("Comctl32.dll"));
+    hComctl32 = LoadLibrary(TEXT("comctl32.dll"));
     if (hComctl32 == NULL) {
         return WIN_ShowOldMessageBox(messageboxdata, buttonid);
     }
@@ -822,8 +822,8 @@ WIN_ShowMessageBox(const SDL_MessageBoxData *messageboxdata, int *buttonid)
         ParentWindow = ((SDL_WindowData *) messageboxdata->window->driverdata)->hwnd;
     }
 
-    wmessage = WIN_UTF8ToString(messageboxdata->message);
-    wtitle = WIN_UTF8ToString(messageboxdata->title);
+    wmessage = WIN_UTF8ToStringW(messageboxdata->message);
+    wtitle = WIN_UTF8ToStringW(messageboxdata->title);
 
     SDL_zero(TaskConfig);
     TaskConfig.cbSize = sizeof (TASKDIALOGCONFIG);
@@ -872,7 +872,7 @@ WIN_ShowMessageBox(const SDL_MessageBoxData *messageboxdata, int *buttonid)
             SDL_free(pButtons);
             return -1;
         }
-        pButton->pszButtonText = WIN_UTF8ToString(buttontext);
+        pButton->pszButtonText = WIN_UTF8ToStringW(buttontext);
         if (messageboxdata->buttons[i].flags & SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT) {
             TaskConfig.nDefaultButton = pButton->nButtonID;
         }

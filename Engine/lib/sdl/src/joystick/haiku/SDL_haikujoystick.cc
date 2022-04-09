@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -271,12 +271,18 @@ extern "C"
         return SDL_FALSE;
     }
 
-    static SDL_bool HAIKU_JoystickHasLED(SDL_Joystick *joystick)
+    static Uint32 HAIKU_JoystickGetCapabilities(SDL_Joystick *joystick)
     {
-        return SDL_FALSE;
+        return 0;
     }
 
     static int HAIKU_JoystickSetLED(SDL_Joystick *joystick, Uint8 red, Uint8 green, Uint8 blue)
+    {
+        return SDL_Unsupported();
+    }
+
+
+    static int HAIKU_JoystickSendEffect(SDL_Joystick *joystick, const void *data, int size)
     {
         return SDL_Unsupported();
     }
@@ -299,8 +305,9 @@ extern "C"
         HAIKU_JoystickOpen,
         HAIKU_JoystickRumble,
         HAIKU_JoystickRumbleTriggers,
-        HAIKU_JoystickHasLED,
+        HAIKU_JoystickGetCapabilities,
         HAIKU_JoystickSetLED,
+        HAIKU_JoystickSendEffect,
         HAIKU_JoystickSetSensorsEnabled,
         HAIKU_JoystickUpdate,
         HAIKU_JoystickClose,

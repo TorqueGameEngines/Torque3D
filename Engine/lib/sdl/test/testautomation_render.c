@@ -83,7 +83,7 @@ void CleanupDestroyRenderer(void *arg)
  * @brief Tests call to SDL_GetNumRenderDrivers
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_GetNumRenderDrivers
+ * http://wiki.libsdl.org/SDL_GetNumRenderDrivers
  */
 int
 render_testGetNumRenderDrivers(void *arg)
@@ -99,9 +99,9 @@ render_testGetNumRenderDrivers(void *arg)
  * @brief Tests the SDL primitives for rendering.
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_SetRenderDrawColor
- * http://wiki.libsdl.org/moin.cgi/SDL_RenderFillRect
- * http://wiki.libsdl.org/moin.cgi/SDL_RenderDrawLine
+ * http://wiki.libsdl.org/SDL_SetRenderDrawColor
+ * http://wiki.libsdl.org/SDL_RenderFillRect
+ * http://wiki.libsdl.org/SDL_RenderDrawLine
  *
  */
 int render_testPrimitives (void *arg)
@@ -187,13 +187,13 @@ int render_testPrimitives (void *arg)
 
    ret = SDL_RenderDrawLine(renderer, 79, 59, 50, 30 );
    SDLTest_AssertCheck(ret == 0, "Validate result from SDL_RenderDrawLine, expected: 0, got: %i", ret);
-   
-   /* Make current */
-   SDL_RenderPresent(renderer);
-   
+
    /* See if it's the same. */
    referenceSurface = SDLTest_ImagePrimitives();
    _compare(referenceSurface, ALLOWABLE_ERROR_OPAQUE );
+
+   /* Make current */
+   SDL_RenderPresent(renderer);
 
    /* Clean up. */
    SDL_FreeSurface(referenceSurface);
@@ -206,9 +206,9 @@ int render_testPrimitives (void *arg)
  * @brief Tests the SDL primitives with alpha for rendering.
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_SetRenderDrawColor
- * http://wiki.libsdl.org/moin.cgi/SDL_SetRenderDrawBlendMode
- * http://wiki.libsdl.org/moin.cgi/SDL_RenderFillRect
+ * http://wiki.libsdl.org/SDL_SetRenderDrawColor
+ * http://wiki.libsdl.org/SDL_SetRenderDrawBlendMode
+ * http://wiki.libsdl.org/SDL_RenderFillRect
  */
 int render_testPrimitivesBlend (void *arg)
 {
@@ -335,12 +335,12 @@ int render_testPrimitivesBlend (void *arg)
    SDLTest_AssertCheck(checkFailCount2 == 0, "Validate results from calls to SDL_SetRenderDrawBlendMode, expected: 0, got: %i", checkFailCount2);
    SDLTest_AssertCheck(checkFailCount3 == 0, "Validate results from calls to SDL_RenderDrawPoint, expected: 0, got: %i", checkFailCount3);
 
-   /* Make current */
-   SDL_RenderPresent(renderer);
-
    /* See if it's the same. */
    referenceSurface = SDLTest_ImagePrimitivesBlend();
    _compare(referenceSurface, ALLOWABLE_ERROR_BLENDED );
+
+   /* Make current */
+   SDL_RenderPresent(renderer);
 
    /* Clean up. */
    SDL_FreeSurface(referenceSurface);
@@ -355,8 +355,8 @@ int render_testPrimitivesBlend (void *arg)
  * @brief Tests some blitting routines.
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_RenderCopy
- * http://wiki.libsdl.org/moin.cgi/SDL_DestroyTexture
+ * http://wiki.libsdl.org/SDL_RenderCopy
+ * http://wiki.libsdl.org/SDL_DestroyTexture
  */
 int
 render_testBlit(void *arg)
@@ -404,12 +404,12 @@ render_testBlit(void *arg)
    }
    SDLTest_AssertCheck(checkFailCount1 == 0, "Validate results from calls to SDL_RenderCopy, expected: 0, got: %i", checkFailCount1);
 
-   /* Make current */
-   SDL_RenderPresent(renderer);
-
    /* See if it's the same */
    referenceSurface = SDLTest_ImageBlit();
    _compare(referenceSurface, ALLOWABLE_ERROR_OPAQUE );
+
+   /* Make current */
+   SDL_RenderPresent(renderer);
 
    /* Clean up. */
    SDL_DestroyTexture( tface );
@@ -424,9 +424,9 @@ render_testBlit(void *arg)
  * @brief Blits doing color tests.
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_SetTextureColorMod
- * http://wiki.libsdl.org/moin.cgi/SDL_RenderCopy
- * http://wiki.libsdl.org/moin.cgi/SDL_DestroyTexture
+ * http://wiki.libsdl.org/SDL_SetTextureColorMod
+ * http://wiki.libsdl.org/SDL_RenderCopy
+ * http://wiki.libsdl.org/SDL_DestroyTexture
  */
 int
 render_testBlitColor (void *arg)
@@ -478,12 +478,12 @@ render_testBlitColor (void *arg)
    SDLTest_AssertCheck(checkFailCount1 == 0, "Validate results from calls to SDL_SetTextureColorMod, expected: 0, got: %i", checkFailCount1);
    SDLTest_AssertCheck(checkFailCount2 == 0, "Validate results from calls to SDL_RenderCopy, expected: 0, got: %i", checkFailCount2);
 
-   /* Make current */
-   SDL_RenderPresent(renderer);
-
    /* See if it's the same. */
    referenceSurface = SDLTest_ImageBlitColor();
    _compare(referenceSurface, ALLOWABLE_ERROR_OPAQUE );
+
+   /* Make current */
+   SDL_RenderPresent(renderer);
 
    /* Clean up. */
    SDL_DestroyTexture( tface );
@@ -498,9 +498,9 @@ render_testBlitColor (void *arg)
  * @brief Tests blitting with alpha.
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_SetTextureAlphaMod
- * http://wiki.libsdl.org/moin.cgi/SDL_RenderCopy
- * http://wiki.libsdl.org/moin.cgi/SDL_DestroyTexture
+ * http://wiki.libsdl.org/SDL_SetTextureAlphaMod
+ * http://wiki.libsdl.org/SDL_RenderCopy
+ * http://wiki.libsdl.org/SDL_DestroyTexture
  */
 int
 render_testBlitAlpha (void *arg)
@@ -555,12 +555,12 @@ render_testBlitAlpha (void *arg)
    SDLTest_AssertCheck(checkFailCount1 == 0, "Validate results from calls to SDL_SetTextureAlphaMod, expected: 0, got: %i", checkFailCount1);
    SDLTest_AssertCheck(checkFailCount2 == 0, "Validate results from calls to SDL_RenderCopy, expected: 0, got: %i", checkFailCount2);
 
-   /* Make current */
-   SDL_RenderPresent(renderer);
-
    /* See if it's the same. */
    referenceSurface = SDLTest_ImageBlitAlpha();
    _compare(referenceSurface, ALLOWABLE_ERROR_BLENDED );
+
+   /* Make current */
+   SDL_RenderPresent(renderer);
 
    /* Clean up. */
    SDL_DestroyTexture( tface );
@@ -576,8 +576,8 @@ render_testBlitAlpha (void *arg)
  * @brief Tests a blend mode.
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_SetTextureBlendMode
- * http://wiki.libsdl.org/moin.cgi/SDL_RenderCopy
+ * http://wiki.libsdl.org/SDL_SetTextureBlendMode
+ * http://wiki.libsdl.org/SDL_RenderCopy
  */
 static void
 _testBlitBlendMode( SDL_Texture * tface, int mode )
@@ -626,10 +626,10 @@ _testBlitBlendMode( SDL_Texture * tface, int mode )
  * @brief Tests some more blitting routines.
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_SetTextureColorMod
- * http://wiki.libsdl.org/moin.cgi/SDL_SetTextureAlphaMod
- * http://wiki.libsdl.org/moin.cgi/SDL_SetTextureBlendMode
- * http://wiki.libsdl.org/moin.cgi/SDL_DestroyTexture
+ * http://wiki.libsdl.org/SDL_SetTextureColorMod
+ * http://wiki.libsdl.org/SDL_SetTextureAlphaMod
+ * http://wiki.libsdl.org/SDL_SetTextureBlendMode
+ * http://wiki.libsdl.org/SDL_DestroyTexture
  */
 int
 render_testBlitBlend (void *arg)
@@ -674,9 +674,10 @@ render_testBlitBlend (void *arg)
    _testBlitBlendMode( tface, SDL_BLENDMODE_NONE );
    referenceSurface = SDLTest_ImageBlitBlendNone();
 
-   /* Make current and compare */
-   SDL_RenderPresent(renderer);
+   /* Compare, then Present */
    _compare(referenceSurface, ALLOWABLE_ERROR_OPAQUE );
+   SDL_RenderPresent(renderer);
+
    SDL_FreeSurface(referenceSurface);
    referenceSurface = NULL;
 
@@ -684,9 +685,10 @@ render_testBlitBlend (void *arg)
    _testBlitBlendMode( tface, SDL_BLENDMODE_BLEND );
    referenceSurface = SDLTest_ImageBlitBlend();
 
-   /* Make current and compare */
-   SDL_RenderPresent(renderer);
+   /* Compare, then Present */
    _compare(referenceSurface, ALLOWABLE_ERROR_BLENDED );
+   SDL_RenderPresent(renderer);
+
    SDL_FreeSurface(referenceSurface);
    referenceSurface = NULL;
 
@@ -694,9 +696,10 @@ render_testBlitBlend (void *arg)
    _testBlitBlendMode( tface, SDL_BLENDMODE_ADD );
    referenceSurface = SDLTest_ImageBlitBlendAdd();
 
-   /* Make current and compare */
-   SDL_RenderPresent(renderer);
+   /* Compare, then Present */
    _compare(referenceSurface, ALLOWABLE_ERROR_BLENDED );
+   SDL_RenderPresent(renderer);
+
    SDL_FreeSurface(referenceSurface);
    referenceSurface = NULL;
 
@@ -704,9 +707,10 @@ render_testBlitBlend (void *arg)
    _testBlitBlendMode( tface, SDL_BLENDMODE_MOD);
    referenceSurface = SDLTest_ImageBlitBlendMod();
 
-   /* Make current and compare */
-   SDL_RenderPresent(renderer);
+   /* Compare, then Present */
    _compare(referenceSurface, ALLOWABLE_ERROR_BLENDED );
+   SDL_RenderPresent(renderer);
+
    SDL_FreeSurface(referenceSurface);
    referenceSurface = NULL;
 
@@ -753,12 +757,13 @@ render_testBlitBlend (void *arg)
    /* Clean up. */
    SDL_DestroyTexture( tface );
 
-   /* Make current */
-   SDL_RenderPresent(renderer);
-
    /* Check to see if final image matches. */
    referenceSurface = SDLTest_ImageBlitBlendAll();
    _compare(referenceSurface, ALLOWABLE_ERROR_BLENDED);
+
+   /* Make current */
+   SDL_RenderPresent(renderer);
+
    SDL_FreeSurface(referenceSurface);
    referenceSurface = NULL;
 
@@ -779,8 +784,8 @@ _isSupported( int code )
  * @brief Test to see if we can vary the draw color. Helper function.
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_SetRenderDrawColor
- * http://wiki.libsdl.org/moin.cgi/SDL_GetRenderDrawColor
+ * http://wiki.libsdl.org/SDL_SetRenderDrawColor
+ * http://wiki.libsdl.org/SDL_GetRenderDrawColor
  */
 static int
 _hasDrawColor (void)
@@ -817,8 +822,8 @@ _hasDrawColor (void)
  * @brief Test to see if we can vary the blend mode. Helper function.
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_SetRenderDrawBlendMode
- * http://wiki.libsdl.org/moin.cgi/SDL_GetRenderDrawBlendMode
+ * http://wiki.libsdl.org/SDL_SetRenderDrawBlendMode
+ * http://wiki.libsdl.org/SDL_GetRenderDrawBlendMode
  */
 static int
 _hasBlendModes (void)
@@ -874,7 +879,7 @@ _hasBlendModes (void)
  * @brief Loads the test image 'Face' as texture. Helper function.
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_CreateTextureFromSurface
+ * http://wiki.libsdl.org/SDL_CreateTextureFromSurface
  */
 static SDL_Texture *
 _loadTestFace(void)
@@ -902,9 +907,9 @@ _loadTestFace(void)
  * @brief Test to see if can set texture color mode. Helper function.
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_SetTextureColorMod
- * http://wiki.libsdl.org/moin.cgi/SDL_GetTextureColorMod
- * http://wiki.libsdl.org/moin.cgi/SDL_DestroyTexture
+ * http://wiki.libsdl.org/SDL_SetTextureColorMod
+ * http://wiki.libsdl.org/SDL_GetTextureColorMod
+ * http://wiki.libsdl.org/SDL_DestroyTexture
  */
 static int
 _hasTexColor (void)
@@ -942,9 +947,9 @@ _hasTexColor (void)
  * @brief Test to see if we can vary the alpha of the texture. Helper function.
  *
  * \sa
- *  http://wiki.libsdl.org/moin.cgi/SDL_SetTextureAlphaMod
- *  http://wiki.libsdl.org/moin.cgi/SDL_GetTextureAlphaMod
- *  http://wiki.libsdl.org/moin.cgi/SDL_DestroyTexture
+ *  http://wiki.libsdl.org/SDL_SetTextureAlphaMod
+ *  http://wiki.libsdl.org/SDL_GetTextureAlphaMod
+ *  http://wiki.libsdl.org/SDL_DestroyTexture
  */
 static int
 _hasTexAlpha(void)
@@ -984,9 +989,9 @@ _hasTexAlpha(void)
  * @param s Image to compare against.
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_RenderReadPixels
- * http://wiki.libsdl.org/moin.cgi/SDL_CreateRGBSurfaceFrom
- * http://wiki.libsdl.org/moin.cgi/SDL_FreeSurface
+ * http://wiki.libsdl.org/SDL_RenderReadPixels
+ * http://wiki.libsdl.org/SDL_CreateRGBSurfaceFrom
+ * http://wiki.libsdl.org/SDL_FreeSurface
  */
 static void
 _compare(SDL_Surface *referenceSurface, int allowable_error)
@@ -1027,10 +1032,10 @@ _compare(SDL_Surface *referenceSurface, int allowable_error)
  * @brief Clears the screen. Helper function.
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_SetRenderDrawColor
- * http://wiki.libsdl.org/moin.cgi/SDL_RenderClear
- * http://wiki.libsdl.org/moin.cgi/SDL_RenderPresent
- * http://wiki.libsdl.org/moin.cgi/SDL_SetRenderDrawBlendMode
+ * http://wiki.libsdl.org/SDL_SetRenderDrawColor
+ * http://wiki.libsdl.org/SDL_RenderClear
+ * http://wiki.libsdl.org/SDL_RenderPresent
+ * http://wiki.libsdl.org/SDL_SetRenderDrawBlendMode
  */
 static int
 _clearScreen(void)

@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -69,7 +69,7 @@
 #include <sys/joystick.h>
 #endif
 
-#if SDL_JOYSTICK_USBHID_MACHINE_JOYSTICK_H
+#if SDL_HAVE_MACHINE_JOYSTICK_H
 #include <machine/joystick.h>
 #endif
 
@@ -240,7 +240,7 @@ BSD_JoystickInit(void)
     }
     for (i = 0; i < MAX_JOY_JOYS; i++) {
         SDL_snprintf(s, SDL_arraysize(s), "/dev/joy%d", i);
-        fd = open(s, O_RDONLY);
+        fd = open(s, O_RDONLY | O_CLOEXEC);
         if (fd != -1) {
             joynames[numjoysticks++] = SDL_strdup(s);
             close(fd);
@@ -357,7 +357,7 @@ BSD_JoystickOpen(SDL_Joystick *joy, int device_index)
     int fd;
     int i;
 
-    fd = open(path, O_RDONLY);
+    fd = open(path, O_RDONLY | O_CLOEXEC);
     if (fd == -1) {
         return SDL_SetError("%s: %s", path, strerror(errno));
     }
@@ -426,7 +426,7 @@ BSD_JoystickOpen(SDL_Joystick *joy, int device_index)
             str[i] = UGETW(usd.usd_desc.bString[i]);
         }
         str[i] = '\0';
-        asprintf(&new_name, "%s @ %s", str, path);
+        SDL_asprintf(&new_name, "%s @ %s", str, path);
         if (new_name != NULL) {
             SDL_free(joydevnames[numjoysticks]);
             joydevnames[numjoysticks] = new_name;
@@ -546,13 +546,13 @@ BSD_JoystickUpdate(SDL_Joystick *joy)
     Sint32 dpad[4] = {0, 0, 0, 0};
 #endif
 
-#if defined(__FREEBSD__) || SDL_JOYSTICK_USBHID_MACHINE_JOYSTICK_H || defined(__FreeBSD_kernel__) || defined(__DragonFly_)
+#if defined(__FREEBSD__) || SDL_HAVE_MACHINE_JOYSTICK_H || defined(__FreeBSD_kernel__) || defined(__DragonFly_)
     struct joystick gameport;
     static int x, y, xmin = 0xffff, ymin = 0xffff, xmax = 0, ymax = 0;
 
     if (joy->hwdata->type == BSDJOY_JOY) {
         while (read(joy->hwdata->fd, &gameport, sizeof gameport) == sizeof gameport) {
-            if (abs(x - gameport.x) > 8) {
+            if (SDL_abs(x - gameport.x) > 8) {
                 x = gameport.x;
                 if (x < xmin) {
                     xmin = x;
@@ -569,7 +569,7 @@ BSD_JoystickUpdate(SDL_Joystick *joy)
                 v *= 32768 / ((xmax - xmin + 1) / 2);
                 SDL_PrivateJoystickAxis(joy, 0, v);
             }
-            if (abs(y - gameport.y) > 8) {
+            if (SDL_abs(y - gameport.y) > 8) {
                 y = gameport.y;
                 if (y < ymin) {
                     ymin = y;
@@ -591,7 +591,7 @@ BSD_JoystickUpdate(SDL_Joystick *joy)
         }
         return;
     }
-#endif /* defined(__FREEBSD__) || SDL_JOYSTICK_USBHID_MACHINE_JOYSTICK_H */
+#endif /* defined(__FREEBSD__) || SDL_HAVE_MACHINE_JOYSTICK_H */
 
     rep = &joy->hwdata->inreport;
 
@@ -777,14 +777,20 @@ BSD_JoystickGetGamepadMapping(int device_index, SDL_GamepadMapping *out)
     return SDL_FALSE;
 }
 
-static SDL_bool
-BSD_JoystickHasLED(SDL_Joystick *joystick)
+static Uint32
+BSD_JoystickGetCapabilities(SDL_Joystick *joystick)
 {
-    return SDL_FALSE;
+    return 0;
 }
 
 static int
 BSD_JoystickSetLED(SDL_Joystick *joystick, Uint8 red, Uint8 green, Uint8 blue)
+{
+    return SDL_Unsupported();
+}
+
+static int
+BSD_JoystickSendEffect(SDL_Joystick *joystick, const void *data, int size)
 {
     return SDL_Unsupported();
 }
@@ -808,8 +814,9 @@ SDL_JoystickDriver SDL_BSD_JoystickDriver =
     BSD_JoystickOpen,
     BSD_JoystickRumble,
     BSD_JoystickRumbleTriggers,
-    BSD_JoystickHasLED,
+    BSD_JoystickGetCapabilities,
     BSD_JoystickSetLED,
+    BSD_JoystickSendEffect,
     BSD_JoystickSetSensorsEnabled,
     BSD_JoystickUpdate,
     BSD_JoystickClose,

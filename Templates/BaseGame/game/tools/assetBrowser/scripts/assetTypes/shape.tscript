@@ -290,12 +290,21 @@ function AssetBrowser::buildShapeAssetPreview(%this, %assetDef, %previewData, %f
    {
       displayEditorLoadingGui("Generating Shape Asset Preview...");
       
+      //real fast, we'll be 100% sure that the image resource we need is loaded
+      
+      %matSlot0AssetId = %assetDef.materialSlot0;
+      if(AssetDatabase.isDeclaredAsset(%matSlot0AssetId))
+      {
+         %matAsset = AssetDatabase.acquireAsset(%matSlot0AssetId);
+         AssetDatabase.releaseAsset(%matSlot0AssetId);
+      }
+      
       //This is slightly hacky, but we're going to utilize the imposter/last detail system
       //to generate our previews for us and then clean up the unneeded bits
       
       %filePath = %assetDef.generateCachedPreviewImage();
       
-      pathCopy(%filePath, %previewFilePath);
+      pathCopy(%filePath, %previewFilePath, false);
       fileDelete(%filePath); //cleanup
       
       if(!AssetDatabase.isDeclaredAsset("ToolsModule:" @ %previewAssetName))

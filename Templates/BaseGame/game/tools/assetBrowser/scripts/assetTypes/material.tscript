@@ -462,10 +462,17 @@ function AssetBrowser::buildMaterialAssetPreview(%this, %assetDef, %previewData,
    
       if(isObject(%assetDef.materialDefinitionName))
       {
+         //real fast, we'll be 100% sure that the image resource we need is loaded
+         %diffuseMapAssetId = %assetDef.materialDefinitionName.getDiffuseMapAsset(0);
+         if(AssetDatabase.isDeclaredAsset(%diffuseMapAssetId))
+         {
+            %diffuseMapAsset = AssetDatabase.acquireAsset(%diffuseMapAssetId);
+            AssetDatabase.releaseAsset(%diffuseMapAssetId);
+         }
          %previewShapeDef = AssetDatabase.acquireAsset("ToolsModule:previewSphereShape");
          %generatedFilePath = %previewShapeDef.generateCachedPreviewImage(256, %assetDef.materialDefinitionName);
       
-         pathCopy(%generatedFilePath, %previewFilePath);
+         pathCopy(%generatedFilePath, %previewFilePath, false);
          fileDelete(%generatedFilePath);
 
          if(!AssetDatabase.isDeclaredAsset("ToolsModule:" @ %previewAssetName))

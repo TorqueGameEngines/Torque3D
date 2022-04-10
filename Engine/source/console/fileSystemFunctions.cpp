@@ -892,4 +892,20 @@ DefineEngineFunction( createPath, bool, ( const char* path ),,
    return Platform::createPath( pathName );
 }
 
+DefineEngineFunction(deleteDirectory, bool, (const char* path), ,
+   "@brief Delete a directory from the hard drive\n\n"
+
+   "@param path Name and path of the folder to delete\n"
+   "@note THERE IS NO RECOVERY FROM THIS. Deleted files are gone for good.\n"
+   "@return True if file was successfully deleted\n"
+   "@ingroup FileSystem")
+{
+   static char fileName[1024];
+   static char sandboxFileName[1024];
+
+   Con::expandScriptFilename(fileName, sizeof(fileName), path);
+   Platform::makeFullPathName(fileName, sandboxFileName, sizeof(sandboxFileName));
+
+   return Platform::deleteDirectory(sandboxFileName);
+}
 #endif // TORQUE_TOOLS

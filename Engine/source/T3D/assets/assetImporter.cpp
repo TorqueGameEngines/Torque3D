@@ -1633,7 +1633,7 @@ void AssetImporter::processImageAsset(AssetImportObject* assetItem)
          {
             String diffuseToken = StringUnit::getUnit(activeImportConfig->DiffuseTypeSuffixes, 0, ",;\t");
             assetItem->assetName = assetItem->assetName + diffuseToken;
-            assetItem->cleanAssetName = assetItem->assetName;
+            //assetItem->cleanAssetName = assetItem->assetName;
          }
          else
          {
@@ -1642,7 +1642,7 @@ void AssetImporter::processImageAsset(AssetImportObject* assetItem)
             if ((materialAsset && materialAsset->assetName.compare(assetItem->assetName) == 0) || activeImportConfig->AlwaysAddImageSuffix)
             {
                assetItem->assetName = assetItem->assetName + activeImportConfig->AddedImageSuffix;
-               assetItem->cleanAssetName = assetItem->assetName;
+               //assetItem->cleanAssetName = assetItem->assetName;
             }
          }
 
@@ -1673,8 +1673,8 @@ void AssetImporter::processImageAsset(AssetImportObject* assetItem)
 
    if(assetItem->assetName == assetItem->cleanAssetName && activeImportConfig->AlwaysAddImageSuffix)
    {
-      assetItem->assetName = assetItem->assetName + activeImportConfig->AddedImageSuffix;
-      assetItem->cleanAssetName = assetItem->assetName;
+      if (!assetItem->assetName.endsWith(activeImportConfig->AddedImageSuffix.c_str()))
+         assetItem->assetName = assetItem->assetName + activeImportConfig->AddedImageSuffix;
    }
 
    assetItem->importStatus = AssetImportObject::Processed;
@@ -1752,8 +1752,8 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
    {
       if (activeImportConfig->AlwaysAddMaterialSuffix) //we only opt to force on the suffix if we're not obligating using the original material defs
       {
-         assetItem->assetName += activeImportConfig->AddedMaterialSuffix;
-         assetItem->cleanAssetName = assetItem->assetName;
+         if(!assetItem->assetName.endsWith(activeImportConfig->AddedMaterialSuffix.c_str()))
+            assetItem->assetName += activeImportConfig->AddedMaterialSuffix;
       }
 
       if (activeImportConfig->PopulateMaterialMaps)
@@ -1936,7 +1936,7 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
                      if (newImageAssetObj->assetName == assetItem->assetName)
                      {
                         newImageAssetObj->assetName += StringUnit::getUnit(suffixList.c_str(), 0, ",;\t");
-                        newImageAssetObj->cleanAssetName = newImageAssetObj->assetName;
+                        //newImageAssetObj->cleanAssetName = newImageAssetObj->assetName;
                      }
 
                      newImageAssetObj->imageSuffixType = ImageAsset::getImageTypeNameFromType(ImageAsset::ImageTypes::Albedo);
@@ -1954,7 +1954,7 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
                if (matchedImageTypes[t]->assetName == assetItem->assetName)
                {
                   matchedImageTypes[t]->assetName += StringUnit::getUnit(suffixList.c_str(), 0, ",;\t");
-                  matchedImageTypes[t]->cleanAssetName = matchedImageTypes[t]->assetName;
+                  //matchedImageTypes[t]->cleanAssetName = matchedImageTypes[t]->assetName;
                }
             }
          }
@@ -2000,8 +2000,8 @@ void AssetImporter::processShapeAsset(AssetImportObject* assetItem)
 
    if (activeImportConfig->AlwaysAddShapeSuffix)
    {
-      assetItem->assetName += activeImportConfig->AddedShapeSuffix;
-      assetItem->cleanAssetName = assetItem->assetName;
+      if(!assetItem->assetName.endsWith(activeImportConfig->AddedShapeSuffix.c_str()))
+         assetItem->assetName += activeImportConfig->AddedShapeSuffix;
    }
 
    S32 meshCount = dAtoi(assetItem->shapeInfo->getDataField(StringTable->insert("_meshCount"), nullptr));
@@ -2094,8 +2094,8 @@ void AssetImporter::processShapeAnimationAsset(AssetImportObject* assetItem)
 
    if (activeImportConfig->AlwaysAddShapeAnimationSuffix)
    {
-      assetItem->assetName += activeImportConfig->AddedShapeAnimationSuffix;
-      assetItem->cleanAssetName = assetItem->assetName;
+      if (!assetItem->assetName.endsWith(activeImportConfig->AddedShapeAnimationSuffix.c_str()))
+         assetItem->assetName += activeImportConfig->AddedShapeAnimationSuffix;
    }
 
    S32 animCount = dAtoi(assetItem->shapeInfo->getDataField(StringTable->insert("_animCount"), nullptr));
@@ -2237,8 +2237,8 @@ void AssetImporter::processSoundAsset(AssetImportObject* assetItem)
 
    if (activeImportConfig->AlwaysAddSoundSuffix)
    {
-      assetItem->assetName += activeImportConfig->AddedSoundSuffix;
-      assetItem->cleanAssetName = assetItem->assetName;
+      if (!assetItem->assetName.endsWith(activeImportConfig->AddedSoundSuffix.c_str()))
+         assetItem->assetName += activeImportConfig->AddedSoundSuffix;
    }
 
    assetItem->importStatus = AssetImportObject::Processed;
@@ -2916,7 +2916,7 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
    {
       Material* newMat = new Material();
       newMat->registerObject(assetName);
-      newMat->mMapTo = assetName;
+      newMat->mMapTo = assetItem->cleanAssetName;
 
       bool hasRoughness = false;
       for (U32 i = 0; i < assetItem->childAssetItems.size(); i++)

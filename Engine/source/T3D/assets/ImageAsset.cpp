@@ -219,6 +219,11 @@ StringTableEntry ImageAsset::getAssetIdByFilename(StringTableEntry fileName)
       //acquire and bind the asset, and return it out
       imageAssetId = query.mAssetList[0];
    }
+   else
+   {
+      AssetPtr<ImageAsset> imageAsset = imageAssetId;
+      imageAsset->mLoadedState = AssetErrCode::BadFileReference;
+   }
 
    return imageAssetId;
 }

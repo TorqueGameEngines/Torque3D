@@ -1727,7 +1727,8 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
 
       //If there was no existing assetId, then lets see if it already exists in a legacy file, like a materials.cs or materials.tscript
       //If it does, we'll just make our asset point to that instead of a new file
-      Material* mat = MATMGR->getMaterialDefinitionByName(assetName);
+      Material* mat;
+      Sim::findObject(assetName, mat);
 
       if (!mat)
          mat = MATMGR->getMaterialDefinitionByMapTo(assetName);
@@ -2618,6 +2619,8 @@ StringTableEntry AssetImporter::autoImportFile(Torque::Path filePath, String typ
    else
    {
       importAssets();
+
+      acquireAssets();
    }
 
    dumpActivityLog();
@@ -2729,10 +2732,6 @@ void AssetImporter::importAssets(AssetImportObject* assetItem)
                      tss->setShapeAssetId(assetId);
                }
             }
-
-            //Go ahead and force the asset to load now just to kick it for immediate use
-            AssetBase* assetDef = AssetDatabase.acquireAsset<AssetBase>(assetId);
-            AssetDatabase.releaseAsset(assetId);
          }
          else
          {
@@ -2755,6 +2754,34 @@ void AssetImporter::importAssets(AssetImportObject* assetItem)
    }
 
    dumpActivityLog();
+}
+
+void AssetImporter::acquireAssets(AssetImportObject* assetItem)
+{
+   Vector<AssetImportObject*> itemList = importingAssets;
+   if (assetItem != nullptr)
+      itemList = assetItem->childAssetItems;
+
+   for (U32 i = 0; i < itemList.size(); i++)
+   {
+      AssetImportObject* item = itemList[i];
+      if (item->importStatus == AssetImportObject::Skipped ||
+         item->importStatus == AssetImportObject::NotProcessed ||
+         item->importStatus == AssetImportObject::Error)
+         continue;
+
+      //recurse if needed, we want to process child items first for dependency reasons
+      acquireAssets(item);
+
+      //Go ahead and force the asset to load now just to kick it for immediate use
+      String assetId = item->moduleName + ":" + item->assetName;
+
+      if (AssetDatabase.isDeclaredAsset(assetId))
+      {
+         AssetBase* assetDef = AssetDatabase.acquireAsset<AssetBase>(assetId);
+         AssetDatabase.releaseAsset(assetId);
+      }
+   }
 }
 
 //

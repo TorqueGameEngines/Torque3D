@@ -200,7 +200,7 @@ function OptionsMenu::apply(%this)
             //for updates
             if ( %targetVar $= "$pref::Video::displayDevice" )
             {
-               MessageBoxOK( "Change requires restart", "Please restart the game for a display device change to take effect." );
+               schedule(32, 0, "MessageBoxOK", "Change requires restart", "Please restart the game for a display device change to take effect.");
             }
             else if(startsWith(%targetVar, "$pref::PostFX::"))
             {
@@ -349,11 +349,6 @@ function populateDisplaySettingsList()
    OptionName.setText("");
    OptionDescription.setText("");
    
-   //First, lets double-check the active device is accurate. Sometimes the default value in our prefs doesn't match the active one
-   %displayDevice = getDisplayDeviceType();
-   if($changingDisplayDevice !$= "")
-      %displayDevice = $changingDisplayDevice;
-      
    %apiList = "";
    %apiCount = GFXInit::getAdapterCount();
    %apiIdx = 0;
@@ -374,7 +369,11 @@ function populateDisplaySettingsList()
    
    trim(%apiList);
    
-   OptionsMenuSettingsList.addOptionRow("Display API", "$pref::Video::DisplayAPI", %apiList, false, "",  true, "The display API used for rendering.", %displayDevice);
+   %displayDevice = OptionsMenu.getOptionVariableValue("$pref::Video::displayDevice");
+   if(%displayDevice $= "")
+      %displayDevice = getDisplayDeviceType();
+   
+   OptionsMenuSettingsList.addOptionRow("Display API", "$pref::Video::displayDevice", %apiList, false, "",  true, "The display API used for rendering.", %displayDevice);
    
    %numDevices = Canvas.getMonitorCount();
    %devicesList = "";
@@ -977,6 +976,8 @@ function MenuOptionsButton::onChange(%this)
    OptionName.setText(%optionName);
    OptionDescription.setText(%tooltipText);
    
+   if(%optionMode == 0)
+   {
    %currentValue = %this.getCurrentOption();
    if(%currentValue !$= "")
    {
@@ -995,6 +996,20 @@ function MenuOptionsButton::onChange(%this)
       }
       else
          OptionsMenu.unappliedChanges.setValue("\"" @ %saveReadyValue @ "\"", %prefIndex);
+      }
+   }
+   else if(%optionMode == 1)
+   {
+      %currentValue = %this.getValue();
+      
+      %prefIndex = OptionsMenu.unappliedChanges.getIndexFromKey(%targetVar);
+      if(%prefIndex == -1)
+      {
+         echo("Setting UnappliedChanges via add: key:" @ %targetVar @", value: " @ %currentValue);
+         OptionsMenu.unappliedChanges.add(%targetVar, "\"" @ %currentValue @ "\"" );
+      }
+      else
+         OptionsMenu.unappliedChanges.setValue("\"" @ %currentValue @ "\"", %prefIndex);
    }
    
    //Update the UI in case there's responsive logic

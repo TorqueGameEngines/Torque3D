@@ -914,6 +914,12 @@ public:
    /// </summary>
    Torque::Path importShapeAnimationAsset(AssetImportObject* assetItem);
 
+   /// <summary>
+   /// Iterates over all the items in the current session and acquires them, which jumpstarts the loading/init'ng process on them, making the available for use immediately
+   /// <para>@param assetItem, if null, will loop over and recurse the main import asset items, if a specific AssetImportObject is passed in, it will recurse it's children</para>
+   /// </summary>
+   void acquireAssets(AssetImportObject* assetItem = nullptr);
+
    //
    /// <summary>
    /// Gets the currently active import configuration

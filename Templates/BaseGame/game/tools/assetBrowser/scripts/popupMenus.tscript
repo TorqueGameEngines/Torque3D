@@ -237,6 +237,7 @@ function AssetBrowser::buildPopupMenus(%this)
    AddNewArtAssetPopup.enableItem(7, false); //shape animation
    AddNewArtAssetPopup.enableItem(13, false); //sound asset
    AddNewArtAssetPopup.enableItem(15, false); //particle effect
+   AddNewArtAssetPopup.enableItem(17, false); //cubemap
    
    if( !isObject( EditFolderPopup ) )
    {

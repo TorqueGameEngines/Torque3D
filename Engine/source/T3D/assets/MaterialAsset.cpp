@@ -174,11 +174,6 @@ void MaterialAsset::initializeAsset()
       return;
    }
 
-   if (mMatDefinitionName == StringTable->insert("DetailBlue"))
-   {
-      bool asdfsd = true;
-   }
-
    if (size() != 0 && mScriptPath == StringTable->EmptyString())
    {
       mLoadedState = EmbeddedDefinition;

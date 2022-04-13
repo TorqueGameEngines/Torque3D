@@ -1362,7 +1362,7 @@ DefineEngineFunction( getBitmapInfo, String, ( const char *filename ),,
                                           image->getFormat());
 }
 
-DefineEngineFunction(saveScaledImage, bool, (const char* bitmapSource, const char* bitmapDest, S32 resolutionSize), ("", "", 512),
+DefineEngineFunction(saveScaledImage, bool, (const char* bitmapSource, const char* bitmapDest, S32 resolutionSize), ("", "", 256),
    "Loads an image from the source path, and scales it down to the target resolution before"
    "Saving it out to the destination path.\n")
 {
@@ -1419,7 +1419,7 @@ DefineEngineFunction(saveScaledImage, bool, (const char* bitmapSource, const cha
       image->extrudeMipLevels();
 
    U32 mipCount = image->getNumMipLevels();
-   U32 targetMips = mFloor(mLog2((F32)resolutionSize)) + 1;
+   U32 targetMips = mFloor(mLog2((F32)(resolutionSize ? resolutionSize : 256))) + 1;
 
    if (mipCount > targetMips)
    {

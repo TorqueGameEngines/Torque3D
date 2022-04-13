@@ -202,7 +202,7 @@ function AssetBrowser::buildImageAssetPreview(%this, %assetDef, %previewData, %f
    {
       displayEditorLoadingGui("Generating Image Asset Preview...");
       
-      %success = saveScaledImage(%assetDef.getImagePath(), %previewFilePath);
+      %success = saveScaledImage(%assetDef.getImagePath(), %previewFilePath, EditorSettings.value("Assets/Browser/PreviewImageSize"));
       
       if(%success)
       {

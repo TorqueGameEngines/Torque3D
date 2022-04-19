@@ -1055,6 +1055,115 @@ ImplementEnumType(_TamlFormatMode,
 
    //-----------------------------------------------------------------------------
 
+   tinyxml2::XMLElement* g__write_schema_attribute_element(const AbstractClassRep::Field& field, AbstractClassRep* pType,
+                                                          tinyxml2::XMLDocument& schemaDocument)
+   {
+      // Skip if not a data field.
+      if (field.type == AbstractClassRep::DeprecatedFieldType ||
+         field.type == AbstractClassRep::StartGroupFieldType ||
+         field.type == AbstractClassRep::EndGroupFieldType)
+         return NULL;
+
+      // Skip if the field root is not this type.
+      if (pType->findFieldRoot(field.pFieldname) != pType)
+         return NULL;
+
+      // Add attribute element.
+      tinyxml2::XMLElement* pAttributeElement = schemaDocument.NewElement("xs:attribute");
+      pAttributeElement->SetAttribute("name", field.pFieldname);
+
+      // Handle the console type appropriately.
+      const S32 fieldType = (S32)field.type;
+
+      /*
+      // Is the field an enumeration?
+      if ( fieldType == TypeEnum )
+      {
+      // Yes, so add attribute type.
+      tinyxml2::XMLElement* pAttributeSimpleTypeElement = schemaDocument.NewElement( "xs:simpleType" );
+      pAttributeElement->LinkEndChild( pAttributeSimpleTypeElement );
+
+      // Add restriction element.
+      tinyxml2::XMLElement* pAttributeRestrictionElement = schemaDocument.NewElement( "xs:restriction" );
+      pAttributeRestrictionElement->SetAttribute( "base", "xs:string" );
+      pAttributeSimpleTypeElement->LinkEndChild( pAttributeRestrictionElement );
+
+      // Yes, so fetch enumeration count.
+      const S32 enumCount = field.table->size;
+
+      // Iterate enumeration.
+      for( S32 index = 0; index < enumCount; ++index )
+      {
+      // Add enumeration element.
+      tinyxml2::XMLElement* pAttributeEnumerationElement = schemaDocument.NewElement( "xs:enumeration" );
+      pAttributeEnumerationElement->SetAttribute( "value", field.table->table[index].label );
+      pAttributeRestrictionElement->LinkEndChild( pAttributeEnumerationElement );
+      }
+      }
+      else
+      {*/
+      // No, so assume it's a string type initially.
+      const char* pFieldTypeDescription = "xs:string";
+
+      // Handle known types.
+      if (fieldType == TypeF32)
+      {
+         pFieldTypeDescription = "xs:float";
+      }
+      else if (fieldType == TypeS8 || fieldType == TypeS32)
+      {
+         pFieldTypeDescription = "xs:int";
+      }
+      else if (fieldType == TypeBool || fieldType == TypeFlag)
+      {
+         pFieldTypeDescription = "xs:boolean";
+      }
+      else if (fieldType == TypePoint2F)
+      {
+         pFieldTypeDescription = "Point2F_ConsoleType";
+      }
+      else if (fieldType == TypePoint2I)
+      {
+         pFieldTypeDescription = "Point2I_ConsoleType";
+      }
+      else if (fieldType == TypeRectI)
+      {
+         pFieldTypeDescription = "RectI_ConsoleType";
+      }
+      else if (fieldType == TypeRectF)
+      {
+         pFieldTypeDescription = "RectF_ConsoleType";
+      }
+      else if (fieldType == TypeColorF)
+      {
+         pFieldTypeDescription = "ColorF_ConsoleType";
+      }
+      else if (fieldType == TypeColorI)
+      {
+         pFieldTypeDescription = "ColorI_ConsoleType";
+      }
+      else if (fieldType == TypeAssetId/* ||
+                                       fieldType == TypeImageAssetPtr ||
+                                       fieldType == TypeAnimationAssetPtr ||
+                                       fieldType == TypeAudioAssetPtr*/)
+      {
+         pFieldTypeDescription = "AssetId_ConsoleType";
+      }
+
+      // Set attribute type.
+      pAttributeElement->SetAttribute("type", pFieldTypeDescription);
+      //}
+
+      pAttributeElement->SetAttribute("use", "optional");
+      return pAttributeElement;
+   }
+
+   String g_sanitize_schema_element_name(String buffer)
+   {
+      return buffer.replace("(", "")
+         .replace(")", "");
+   }
+
    bool Taml::generateTamlSchema()
    {
       // Fetch any TAML Schema file reference.
@@ -1298,8 +1407,8 @@ ImplementEnumType(_TamlFormatMode,
          pSchemaElement->LinkEndChild(pComplexTypeElement);
 
          // Add sequence.
-         tinyxml2::XMLElement* pSequenceElement = schemaDocument.NewElement("xs:sequence");
-         pComplexTypeElement->LinkEndChild(pSequenceElement);
+         tinyxml2::XMLElement* pAllElement = schemaDocument.NewElement("xs:all");
+         pComplexTypeElement->LinkEndChild(pAllElement);
 
          // Fetch container child class.
          AbstractClassRep* pContainerChildClass = pType->getContainerChildClass(true);
@@ -1311,7 +1420,7 @@ ImplementEnumType(_TamlFormatMode,
             tinyxml2::XMLElement* pChoiceElement = schemaDocument.NewElement("xs:choice");
             pChoiceElement->SetAttribute("minOccurs", 0);
             pChoiceElement->SetAttribute("maxOccurs", "unbounded");
-            pSequenceElement->LinkEndChild(pChoiceElement);
+            pAllElement->LinkEndChild(pChoiceElement);
 
             // Find child group.
             HashTable<AbstractClassRep*, StringTableEntry>::Iterator childGroupItr = childGroups.find(pContainerChildClass);
@@ -1369,7 +1478,74 @@ ImplementEnumType(_TamlFormatMode,
                continue;
 
             // Call schema generation function.
-            customSchemaFn(pType, pSequenceElement);
+            customSchemaFn(pType, pAllElement);
+         }
+
+         // Fetch field list.
+         const AbstractClassRep::FieldList& fields = pType->mFieldList;
+
+         // Fetch field count.
+         const S32 fieldCount = fields.size();
+
+         // Generate array attribute groups
+         for (S32 index = 0; index < fieldCount; ++index)
+         {
+            // Fetch field.
+            const AbstractClassRep::Field& field = fields[index];
+
+            if (field.type == AbstractClassRep::StartArrayFieldType)
+            {
+               // Add the top-level array identifier
+               tinyxml2::XMLElement* pArrayElement = schemaDocument.NewElement("xs:element");
+               dSprintf(buffer, sizeof(buffer), "%s.%s", pType->getClassName(), g_sanitize_schema_element_name(field.pGroupname).c_str());
+               pArrayElement->SetAttribute("name", buffer);
+               pArrayElement->SetAttribute("minOccurs", 0);
+               pAllElement->LinkEndChild(pArrayElement);
+
+               // Inline type specification
+               tinyxml2::XMLElement* pArrayComplexTypeElement = schemaDocument.NewElement("xs:complexType");
+               pArrayElement->LinkEndChild(pArrayComplexTypeElement);
+
+               // Add the actual (repeating) array elements
+               tinyxml2::XMLElement* pInnerArrayElement = schemaDocument.NewElement("xs:element");
+               pInnerArrayElement->SetAttribute("name", g_sanitize_schema_element_name(field.pFieldname).c_str());
+               pInnerArrayElement->SetAttribute("minOccurs", 0);
+               pInnerArrayElement->SetAttribute("maxOccurs", field.elementCount);
+               pArrayComplexTypeElement->LinkEndChild(pInnerArrayElement);
+
+               // Inline type specification
+               tinyxml2::XMLElement* pInnerComplexTypeElement = schemaDocument.NewElement("xs:complexType");
+               pInnerArrayElement->LinkEndChild(pInnerComplexTypeElement);
+
+               // Add a reference to the attribute group for the array
+               tinyxml2::XMLElement* pInnerAttributeGroupElement = schemaDocument.NewElement("xs:attributeGroup");
+               dSprintf(buffer, sizeof(buffer), "%s_%s_Array_Fields", pType->getClassName(), g_sanitize_schema_element_name(field.pFieldname).c_str());
+               pInnerAttributeGroupElement->SetAttribute("ref", buffer);
+               pInnerComplexTypeElement->LinkEndChild(pInnerAttributeGroupElement);
+
+               // Add the attribute group itself
+               tinyxml2::XMLElement* pFieldAttributeGroupElement = schemaDocument.NewElement("xs:attributeGroup");
+               pFieldAttributeGroupElement->SetAttribute("name", buffer);
+               pSchemaElement->LinkEndChild(pFieldAttributeGroupElement);
+
+               // Keep adding fields to attribute group until we hit the end of the array
+               for (; index < fieldCount; ++index)
+               {
+                  const AbstractClassRep::Field& array_field = fields[index];
+                  if (array_field.type == AbstractClassRep::EndArrayFieldType)
+                  {
+                     break;
+                  }
+                  
+                  tinyxml2::XMLElement* pAttributeElement = g__write_schema_attribute_element(array_field, pType, schemaDocument);
+                  if (pAttributeElement == NULL)
+                  {
+                     continue;
+                  }
+
+                  pFieldAttributeGroupElement->LinkEndChild(pAttributeElement);
+               }
+            }
          }
 
          // Generate field attribute group.
@@ -1378,115 +1554,31 @@ ImplementEnumType(_TamlFormatMode,
          pFieldAttributeGroupElement->SetAttribute("name", buffer);
          pSchemaElement->LinkEndChild(pFieldAttributeGroupElement);
 
-         // Fetch field list.
-         const AbstractClassRep::FieldList& fields = pType->mFieldList;
-
-         // Fetcj field count.
-         const S32 fieldCount = fields.size();
-
          // Iterate static fields (in reverse as most types are organized from the root-fields up).
          for (S32 index = fieldCount - 1; index > 0; --index)
          {
             // Fetch field.
             const AbstractClassRep::Field& field = fields[index];
 
-            // Skip if not a data field.
-            if (field.type == AbstractClassRep::DeprecatedFieldType ||
-               field.type == AbstractClassRep::StartGroupFieldType ||
-               field.type == AbstractClassRep::EndGroupFieldType)
+            // Skip fields inside arrays
+            if (field.type == AbstractClassRep::EndArrayFieldType)
+            {
+               for (; index > 0; --index)
+               {
+                  if (field.type == AbstractClassRep::StartArrayFieldType)
+                  {
+                     break;
+                  }
+               }
                continue;
+            }
 
-            // Skip if the field root is not this type.
-            if (pType->findFieldRoot(field.pFieldname) != pType)
+            tinyxml2::XMLElement* pAttributeElement = g__write_schema_attribute_element(field, pType, schemaDocument);
+            if (pAttributeElement == NULL)
+            {
                continue;
-
-            // Add attribute element.
-            tinyxml2::XMLElement* pAttributeElement = schemaDocument.NewElement("xs:attribute");
-            pAttributeElement->SetAttribute("name", field.pFieldname);
-
-            // Handle the console type appropriately.
-            const S32 fieldType = (S32)field.type;
-
-            /*
-            // Is the field an enumeration?
-            if ( fieldType == TypeEnum )
-            {
-            // Yes, so add attribute type.
-            tinyxml2::XMLElement* pAttributeSimpleTypeElement = schemaDocument.NewElement( "xs:simpleType" );
-            pAttributeElement->LinkEndChild( pAttributeSimpleTypeElement );
-
-            // Add restriction element.
-            tinyxml2::XMLElement* pAttributeRestrictionElement = schemaDocument.NewElement( "xs:restriction" );
-            pAttributeRestrictionElement->SetAttribute( "base", "xs:string" );
-            pAttributeSimpleTypeElement->LinkEndChild( pAttributeRestrictionElement );
-
-            // Yes, so fetch enumeration count.
-            const S32 enumCount = field.table->size;
-
-            // Iterate enumeration.
-            for( S32 index = 0; index < enumCount; ++index )
-            {
-            // Add enumeration element.
-            tinyxml2::XMLElement* pAttributeEnumerationElement = schemaDocument.NewElement( "xs:enumeration" );
-            pAttributeEnumerationElement->SetAttribute( "value", field.table->table[index].label );
-            pAttributeRestrictionElement->LinkEndChild( pAttributeEnumerationElement );
-            }
-            }
-            else
-            {*/
-            // No, so assume it's a string type initially.
-            const char* pFieldTypeDescription = "xs:string";
-
-            // Handle known types.
-            if (fieldType == TypeF32)
-            {
-               pFieldTypeDescription = "xs:float";
-            }
-            else if (fieldType == TypeS8 || fieldType == TypeS32)
-            {
-               pFieldTypeDescription = "xs:int";
-            }
-            else if (fieldType == TypeBool || fieldType == TypeFlag)
-            {
-               pFieldTypeDescription = "xs:boolean";
-            }
-            else if (fieldType == TypePoint2F)
-            {
-               pFieldTypeDescription = "Point2F_ConsoleType";
-            }
-            else if (fieldType == TypePoint2I)
-            {
-               pFieldTypeDescription = "Point2I_ConsoleType";
-            }
-            else if (fieldType == TypeRectI)
-            {
-               pFieldTypeDescription = "RectI_ConsoleType";
-            }
-            else if (fieldType == TypeRectF)
-            {
-               pFieldTypeDescription = "RectF_ConsoleType";
-            }
-            else if (fieldType == TypeColorF)
-            {
-               pFieldTypeDescription = "ColorF_ConsoleType";
-            }
-            else if (fieldType == TypeColorI)
-            {
-               pFieldTypeDescription = "ColorI_ConsoleType";
-            }
-            else if (fieldType == TypeAssetId/* ||
-                                             fieldType == TypeImageAssetPtr ||
-                                             fieldType == TypeAnimationAssetPtr ||
-                                             fieldType == TypeAudioAssetPtr*/)
-            {
-               pFieldTypeDescription = "AssetId_ConsoleType";
             }
 
-            // Set attribute type.
-            pAttributeElement->SetAttribute("type", pFieldTypeDescription);
-            //}
-
-            pAttributeElement->SetAttribute("use", "optional");
             pFieldAttributeGroupElement->LinkEndChild(pAttributeElement);
          }
 

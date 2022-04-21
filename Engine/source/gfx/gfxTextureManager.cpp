@@ -1238,7 +1238,7 @@ GFXTextureObject *GFXTextureManager::createCompositeTexture(GBitmap*bmp[4], U32 
          if (bmp[2])
             bChan = bmp[2]->getChanelValueAt(x, y, inputKey[2]);
          else
-            bChan = 255;
+            bChan = 0;
 
          if (bmp[3])
             aChan = bmp[3]->getChanelValueAt(x, y, inputKey[3]);

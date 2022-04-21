@@ -491,7 +491,7 @@ void ProcessedMaterial::_setStageData()
       }
       else
       {
-         if ((mMaterial->getRoughMap(i) != StringTable->EmptyString()) && (mMaterial->getMetalMap(i) != StringTable->EmptyString()))
+         if ((mMaterial->getAOMap(i) != StringTable->EmptyString()) || (mMaterial->getRoughMap(i) != StringTable->EmptyString()) || (mMaterial->getMetalMap(i) != StringTable->EmptyString()))
          {
             U32 inputKey[4];
             inputKey[0] = mMaterial->mAOChan[i];

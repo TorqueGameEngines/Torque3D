@@ -265,8 +265,44 @@ function AssetBrowser::importShapeAsset(%this, %assetItem)
 
 function AssetBrowser::buildShapeAssetPreview(%this, %assetDef, %previewData, %forcePreviewRegenerate)
 {
-   if(%forcePreviewRegenerate $= "")
-      %forcePreviewRegenerate = false;
+   %previewData.previewImage = "ToolsModule:genericAssetIcon_image";
+   %previewData.previewLoaded = false; //this marks it for loading progressively later
+   
+   %previewData.assetName = %assetDef.assetName;
+   %previewData.assetPath = %assetDef.fileName;
+   
+   %previewData.assetFriendlyName = %assetDef.assetName;
+   %previewData.assetDesc = %assetDef.description;
+   %previewData.tooltip = "Asset Name: " @ %assetDef.assetName @ "\n" @ 
+                           "Asset Type: Shape Asset\n" @ 
+                           "Asset Definition ID: " @  %assetDef @ "\n" @ 
+                           "Shape File path: " @ %assetDef.getShapePath();
+                           
+   if(%this.selectMode)
+   {
+      %previewData.doubleClickCommand = "AssetBrowser.selectAsset( AssetBrowser.selectedAsset );";
+   }
+   else
+   {
+      if(EditorSettings.value("Assets/Browser/doubleClickAction", "Edit Asset") $= "Edit Asset")
+      {
+         %previewData.doubleClickCommand = "AssetBrowser.editAsset( "@%assetDef@" );";
+      }
+      else
+      {
+         %previewData.doubleClickCommand = "AssetBrowser.onShapeAssetEditorDropped( "@%assetDef@" );";
+      }
+   }
+}
+
+function AssetBrowser::generateShapeAssetPreviewImage(%this, %previewButton, %forceRegenerate)
+{
+   if(%forceRegenerate $= "")
+      %forceRegenerate = false;
+      
+   %assetId = %previewButton.moduleName @ ":" @ %previewButton.assetName;
+      
+   %assetDef = AssetDatabase.acquireAsset(%assetId);
       
    %module = %this.dirHandler.getModuleFromAddress(makeRelativePath(filePath(%assetDef.getShapePath())));
    %previewPath = "tools/resources/previewCache/" @ %module.moduleId @ "/";
@@ -286,10 +322,8 @@ function AssetBrowser::buildShapeAssetPreview(%this, %assetDef, %previewData, %f
    
    %previewAssetName = %module.moduleId @ "_" @ %assetDef.assetName @ "_PreviewImage";
    
-   if(%generatePreview || %forcePreviewRegenerate)
+   if(%generatePreview || %forceRegenerate)
    {
-      displayEditorLoadingGui("Generating Shape Asset Preview...");
-      
       //real fast, we'll be 100% sure that the image resource we need is loaded
       
       %matSlot0AssetId = %assetDef.materialSlot0;
@@ -322,46 +356,31 @@ function AssetBrowser::buildShapeAssetPreview(%this, %assetDef, %previewData, %f
          %toolsModuleDef = ModuleDatabase.findModule("ToolsModule",1);
             
          %success = AssetDatabase.addDeclaredAsset(%toolsModuleDef, %previewImgAssetPath);
-      }
       
-      hideEditorLoadingGui();
+         if(!%success)
+         {
+            return false; //failed to register the preview image for some reason?
    }
-   
-   //Revalidate. If it didn't work, just use the default placeholder one
-   if(!isFile(%previewFilePath))
-   {
-      %previewData.previewImage = "ToolsModule:genericAssetIcon_image";
    }
    else
    {
-      %previewData.previewImage = "ToolsModule:" @ %previewAssetName;
+         %previewAssetName = "ToolsModule:" @ %previewAssetName;
    }
    
-   %previewData.assetName = %assetDef.assetName;
-   %previewData.assetPath = %assetDef.fileName;
-   
-   %previewData.assetFriendlyName = %assetDef.assetName;
-   %previewData.assetDesc = %assetDef.description;
-   %previewData.tooltip = "Asset Name: " @ %assetDef.assetName @ "\n" @ 
-                           "Asset Type: Shape Asset\n" @ 
-                           "Asset Definition ID: " @  %assetDef @ "\n" @ 
-                           "Shape File path: " @ %assetDef.getShapePath();
-                           
-   if(%this.selectMode)
-   {
-      %previewData.doubleClickCommand = "AssetBrowser.selectAsset( AssetBrowser.selectedAsset );";
+      %previewButton.bitmapAsset = %previewAssetName;
+      return true;
    }
    else
    {
-      if(EditorSettings.value("Assets/Browser/doubleClickAction", "Edit Asset") $= "Edit Asset")
+      //just map the existing one then
+      if(AssetDatabase.isDeclaredAsset("ToolsModule:" @ %previewAssetName))
       {
-         %previewData.doubleClickCommand = "AssetBrowser.editAsset( "@%assetDef@" );";
-      }
-      else
-      {
-         %previewData.doubleClickCommand = "AssetBrowser.onShapeAssetEditorDropped( "@%assetDef@" );";
+         %previewButton.bitmapAsset = "ToolsModule:" @ %previewAssetName;
+         return true;
       }
    }
+   
+   return false;
 }
 
 function AssetBrowser::onShapeAssetEditorDropped(%this, %assetDef, %position)

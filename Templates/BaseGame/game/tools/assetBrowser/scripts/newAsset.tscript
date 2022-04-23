@@ -140,6 +140,33 @@ function newAssetUpdatePath(%newPath)
 }
 
 //
+function AssetBrowser::importNewFile(%this)
+{
+   %importingPath = "";
+   
+   %dlg = new OpenFileDialog()
+   {
+      Filters = "(All Files (*.*)|*.*|";
+      DefaultFile = "";
+      ChangePath = false;
+      MustExist = true;
+      MultipleFiles = false;
+      forceRelativePath = false;
+   };
+      
+   if ( %dlg.Execute() )
+   {
+      %importingPath = makeFullPath(%dlg.FileName);
+   }
+   
+   %dlg.delete();
+   
+   AssetBrowser.onBeginDropFiles();
+   AssetBrowser.onDropFile(%importingPath);
+   AssetBrowser.onEndDropFiles();
+}
+
+//
 function NewAssetTargetModule::onSelect(%this, %idx, %idy)
 {
    %newModuleName = %this.getText();

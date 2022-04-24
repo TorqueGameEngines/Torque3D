@@ -3224,9 +3224,14 @@ function showShapeEditorPreview()
 //
 function ShapeEditorTabbook::onTabSelected( %this )
 {
-   if( EditorTreeTabBook.getSelectedPage() == 1)
+   if( ShapeEditorTabbook.getSelectedPage() == 1)
    {
-      AssetBrowser.toggleDialog();
-      AssetBrowser.toggleAssetTypeFilter(12); //show only shapeAssets
+      AssetBrowser.showDialog("ShapeAsset", "openShapeInShapeEditor");
    }
+}
+
+function openShapeInShapeEditor(%shapeAssetId)
+{
+   %assetDef = AssetDatabase.acquireAsset(%shapeAssetId);
+   AssetBrowser.editShapeAsset(%assetDef);  
 }

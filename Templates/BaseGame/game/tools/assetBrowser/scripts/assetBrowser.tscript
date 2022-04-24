@@ -527,6 +527,7 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
       %previewButton.iconLocation = "Left";
       %previewButton.textLocation = "Right";
       %previewButton.setextent(120,20);
+      %previewButton.buttonMargin = "0 0";
       
       AssetBrowser.previewListMode = true;
    }
@@ -1519,13 +1520,18 @@ function AssetBrowser::doRebuildAssetArray(%this)
          {
             if(AssetBrowser.assetTypeFilter !$= "")
             {
-               if(AssetBrowser.assetTypeFilter $= %assetType)
+               %filtersCount = getWordCount(AssetBrowser.assetTypeFilter);
+               for(%fltrIdx = 0; %fltrIdx < %filtersCount; %fltrIdx++)
+               {
+                  %fltr = getWord(AssetBrowser.assetTypeFilter, %fltrIdx);
+                  if(%fltr $= %assetType)
                {
                   $AssetBrowser::AssetArray.add( %moduleName, %assetId );
                   
                   if(%assetType !$= "Folder")
                      %finalAssetCount++;
                }
+            }
             }
             else
             {
@@ -1574,7 +1580,22 @@ function AssetBrowser::doRebuildAssetArray(%this)
    }
 
    //Add Non-Asset Scripted Objects. Datablock, etc based
-   if(AssetBrowser.assetTypeFilter $= "" && %breadcrumbPath !$= "" && isDirectory(%breadcrumbPath))
+   %hasDBFilter = true;
+   if(AssetBrowser.assetTypeFilter !$= "")
+   {
+      %hasDBFilter = false;
+      %filterCount = getWordCount(AssetBrowser.assetTypeFilter);
+      for(%fltrIdx = 0; %fltrIdx < %filterCount; %fltrIdx++)
+      {
+         %fltr = getWord(AssetBrowser.assetTypeFilter, %fltrIdx);
+         if(%fltr $= "Datablock" || %fltr $= "Datablocks")
+         {
+            %hasDBFilter = true;
+            break;  
+         }
+      }
+   }
+   if(%hasDBFilter && %breadcrumbPath !$= "" && isDirectory(%breadcrumbPath))
    {
       %category = getWord( %breadcrumbPath, 1 );                  
       %dataGroup = "DataBlockGroup";
@@ -1792,6 +1813,10 @@ function AssetBrowser::doRebuildAssetArray(%this)
             %name = %creatorObj.val[1];
             %func = %creatorObj.val[2];
             
+               %searchActive = AssetSearchTerms.count() != 0;
+               if(%searchActive && !matchesSearch(%name, "Creator"))
+                  continue;
+                     
             $AssetBrowser::AssetArray.add( %name, "Creator" TAB %creatorObj );
          }               
       }   

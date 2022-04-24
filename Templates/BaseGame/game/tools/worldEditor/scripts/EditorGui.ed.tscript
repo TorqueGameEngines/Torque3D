@@ -1932,6 +1932,8 @@ function EditorTreeTabBook::onTabSelected( %this )
    }
    else
    {
+      AssetBrowser.toggleDialog();
+      EditorTreeTabBook.selectPage(0);
       EWTreeWindow-->DeleteSelection.visible = false;
       EWTreeWindow-->LockSelection.visible = false;
       EWTreeWindow-->AddSimGroup.visible = false;

@@ -45,7 +45,7 @@ $guiContent = new GuiControl() {
       EdgeSnap = "1";
       text = "Shapes";
 
-      new GuiTabBookCtrl() {
+      new GuiTabBookCtrl(ShapeEditorTabbook) {
          internalName = "tabBook";
          canSaveDynamicFields = "0";
          isContainer = "1";
@@ -175,126 +175,8 @@ $guiContent = new GuiControl() {
             AnchorBottom = "0";
             AnchorLeft = "1";
             AnchorRight = "0";
-            text = "Library";
+            text = "Assets";
             maxLength = "1024";
-
-            new GuiContainer() {
-               isContainer = "1";
-               HorizSizing = "width";
-               VertSizing = "height";
-               position = "0 0";
-               Extent = "202 146";
-               MinExtent = "0 -500";
-               Profile = "GuiInspectorProfile";
-            };
-            new GuiBitmapBorderCtrl() {
-               isContainer = "1";
-               HorizSizing = "width";
-               VertSizing = "height";
-               position = "0 0";
-               Extent = "202 146";
-               MinExtent = "0 -500";
-               Profile = "ToolsGuiTabBorderProfile";
-            };
-            new GuiBitmapButtonCtrl() {
-               canSaveDynamicFields = "0";
-               isContainer = "0";
-               Profile = "ToolsGuiButtonProfile";
-               HorizSizing = "right";
-               VertSizing = "bottom";
-               position = "3 4";
-               Extent = "20 19";
-               MinExtent = "8 2";
-               canSave = "1";
-               Visible = "1";
-               Command = "ShapeEdSelectWindow.navigateUp();";
-               tooltipprofile = "ToolsGuiToolTipProfile";
-               hovertime = "1000";
-               groupNum = "0";
-               buttonType = "PushButton";
-               useMouseEvents = "0";
-               bitmapAsset = "ToolsModule:folderUp_image";
-            };
-            new GuiPopUpMenuCtrl(ShapeEdSelectMenu) {
-               canSaveDynamicFields = "0";
-               isContainer = "0";
-               Profile = "ToolsGuiPopUpMenuProfile";
-               HorizSizing = "width";
-               VertSizing = "bottom";
-               position = "26 4";
-               Extent = "172 18";
-               MinExtent = "8 2";
-               canSave = "1";
-               Visible = "1";
-               tooltipprofile = "ToolsGuiToolTipProfile";
-               hovertime = "1000";
-               Margin = "0 0 0 0";
-               Padding = "0 0 0 0";
-               AnchorTop = "1";
-               AnchorBottom = "0";
-               AnchorLeft = "1";
-               AnchorRight = "0";
-               text = "art";
-               maxLength = "1024";
-               maxPopupHeight = "200";
-               sbUsesNAColor = "0";
-               reverseTextList = "0";
-               bitmapBounds = "16 16";
-            };
-            new GuiScrollCtrl() {
-               canSaveDynamicFields = "0";
-               isContainer = "1";
-               Profile = "ToolsGuiScrollProfile";
-               HorizSizing = "width";
-               VertSizing = "height";
-               position = "0 24";
-               Extent = "202 122";
-               MinExtent = "8 -500";
-               canSave = "1";
-               Visible = "1";
-               tooltipprofile = "ToolsGuiToolTipProfile";
-               hovertime = "1000";
-               Margin = "0 0 0 0";
-               Padding = "0 0 0 0";
-               AnchorTop = "1";
-               AnchorBottom = "0";
-               AnchorLeft = "1";
-               AnchorRight = "0";
-               willFirstRespond = "1";
-               hScrollBar = "dynamic";
-               vScrollBar = "dynamic";
-               lockHorizScroll = false;
-               lockVertScroll = "false";
-               constantThumbHeight = "0";
-               childMargin = "0 0";
-               mouseWheelScrollSpeed = "-1";
-
-               new GuiDynamicCtrlArrayControl() {
-                  internalName = "shapeLibrary";
-                  canSaveDynamicFields = "0";
-                  isContainer = "1";
-                  Profile = "ToolsGuiTransparentProfile";
-                  HorizSizing = "right";
-                  VertSizing = "bottom";
-                  position = "1 1";
-                  Extent = "189 42";
-                  MinExtent = "8 11";
-                  canSave = "1";
-                  Visible = "1";
-                  tooltipprofile = "ToolsGuiToolTipProfile";
-                  hovertime = "1000";
-                  colCount = "1";
-                  colSize = "64";
-                  rowCount = "0";
-                  RowSize = "64";
-                  rowSpacing = "4";
-                  colSpacing = "4";
-                  frozen = "0";
-                  autoCellSize = "1";
-                  fillRowFirst = "1";
-                  dynamicSize = "1";
-               };
-            };
          };
 
          //---------------------------------------------------------------

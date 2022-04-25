@@ -42,7 +42,7 @@ void TamlCustomField::set( const char* pFieldName, const char* pFieldValue )
     // Set field name.
     mFieldName = StringTable->insert( pFieldName );
 
-#if TORQUE_DEBUG
+#ifdef TORQUE_DEBUG
     // Is the field value too big?
     if ( dStrlen(pFieldValue) >= sizeof(mFieldValue) )
     {

@@ -46,7 +46,7 @@ void GFXCardProfiler::loadProfileScript(const char* aScriptName)
 
    if(data == NULL)
    {
-#if TORQUE_DEBUG
+#ifdef TORQUE_DEBUG
       Con::warnf("      - No card profile %s exists", scriptName.c_str());
 #endif
       return;
@@ -54,7 +54,7 @@ void GFXCardProfiler::loadProfileScript(const char* aScriptName)
 
    const char  *script = static_cast<const char *>(data);
 
-#if TORQUE_DEBUG
+#ifdef TORQUE_DEBUG
    Con::printf("      - Loaded card profile %s", scriptName.c_str());
 #endif
 

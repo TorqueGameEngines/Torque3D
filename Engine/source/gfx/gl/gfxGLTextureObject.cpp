@@ -45,7 +45,7 @@ GFXGLTextureObject::GFXGLTextureObject(GFXDevice * aDevice, GFXTextureProfile *p
    mFrameAllocatorPtr(NULL)
 {
 
-#if TORQUE_DEBUG
+#ifdef TORQUE_DEBUG
    mFrameAllocatorMarkGuard = FrameAllocator::getWaterMark();
 #endif
 
@@ -90,7 +90,7 @@ GFXLockedRect* GFXGLTextureObject::lock(U32 mipLevel, RectI *inRect)
    mFrameAllocatorMark = FrameAllocator::getWaterMark();
    mFrameAllocatorPtr = (U8*)FrameAllocator::alloc( size );
    mLockedRect.bits = mFrameAllocatorPtr;
-#if TORQUE_DEBUG
+#ifdef TORQUE_DEBUG
    mFrameAllocatorMarkGuard = FrameAllocator::getWaterMark();
 #endif
    

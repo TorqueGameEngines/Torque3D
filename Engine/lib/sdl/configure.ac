@@ -22,9 +22,9 @@ dnl Set various version strings - taken gratefully from the GTk sources
 #
 SDL_MAJOR_VERSION=2
 SDL_MINOR_VERSION=0
-SDL_MICRO_VERSION=21
-SDL_INTERFACE_AGE=3
-SDL_BINARY_AGE=21
+SDL_MICRO_VERSION=22
+SDL_INTERFACE_AGE=0
+SDL_BINARY_AGE=22
 SDL_VERSION=$SDL_MAJOR_VERSION.$SDL_MINOR_VERSION.$SDL_MICRO_VERSION
 
 AC_SUBST(SDL_MAJOR_VERSION)
@@ -1555,7 +1555,7 @@ CheckWayland()
         video_wayland=no
         if  test x$video_opengl_egl = xyes && \
             test x$video_opengles_v2 = xyes; then
-            if $PKG_CONFIG --exists wayland-client wayland-scanner wayland-egl wayland-cursor egl 'xkbcommon >= 0.5.0'; then
+            if $PKG_CONFIG --exists 'wayland-client >= 1.18' wayland-scanner wayland-egl wayland-cursor egl 'xkbcommon >= 0.5.0'; then
                 WAYLAND_CFLAGS=`$PKG_CONFIG --cflags wayland-client wayland-egl wayland-cursor xkbcommon`
                 WAYLAND_LIBS=`$PKG_CONFIG --libs wayland-client wayland-egl wayland-cursor xkbcommon`
                 WAYLAND_SCANNER=`$PKG_CONFIG --variable=wayland_scanner wayland-scanner`
@@ -1626,39 +1626,31 @@ dnl FIXME: Do BSD and OS X need special cases?
 
 dnl See if libdecor is available
             AC_ARG_ENABLE(libdecor,
-[AS_HELP_STRING([--enable-libdecor], [use libdecor for Wayland client-side decorations [default=yes]])],
-                          , enable_libdecor=yes)
+[AS_HELP_STRING([--enable-libdecor], [use libdecor for Wayland client-side decorations [default=yes]])],, enable_libdecor=yes)
             if test x$enable_libdecor = xyes; then
-                AC_MSG_CHECKING(for libdecor support)
-                AS_IF([$PKG_CONFIG --exists libdecor-0],
-                      [video_libdecor=yes],
-                      [video_libdecor=no])
-                AC_MSG_RESULT($video_libdecor)
+                PKG_CHECK_MODULES([DECOR], [libdecor-0], video_libdecor=yes, video_libdecor=no)
                 if test x$video_libdecor = xyes; then
-                    EXTRA_CFLAGS="$EXTRA_CFLAGS `$PKG_CONFIG --cflags libdecor-0`"
+                    EXTRA_CFLAGS="$EXTRA_CFLAGS $DECOR_CFLAGS"
                     AC_DEFINE(HAVE_LIBDECOR_H, 1, [ ])
 
                     AC_ARG_ENABLE(libdecor-shared,
-[AS_HELP_STRING([--enable-libdecor-shared], [dynamically load libdecor [default=yes]])],
-                         , enable_libdecor_shared=yes)
+[AS_HELP_STRING([--enable-libdecor-shared], [dynamically load libdecor [default=yes]])],, enable_libdecor_shared=yes)
+
+                    decor_lib=[`find_lib "libdecor-0.so.*" "$DECOR_LIBS" | sed 's/.*\/\(.*\)/\1/; q'`]
 
                     if test x$enable_wayland_shared != xyes; then
                        enable_libdecor_shared=no
                     fi
-
-                    decor_lib=[`find_lib "libdecor-0.so.*" "" | sed 's/.*\/\(.*\)/\1/; q'`]
-
                     if test x$have_loadso != xyes && \
                        test x$enable_libdecor_shared = xyes; then
                         AC_MSG_WARN([You must have SDL_LoadObject() support for dynamic libdecor loading])
                     fi
-
                     if test x$have_loadso = xyes && \
                        test x$enable_libdecor_shared = xyes && test x$decor_lib != x; then
                         echo "-- dynamic libdecor -> $decor_lib"
                         AC_DEFINE_UNQUOTED(SDL_VIDEO_DRIVER_WAYLAND_DYNAMIC_LIBDECOR, "$decor_lib", [ ])
                     else
-                        EXTRA_LDFLAGS="$EXTRA_LDFLAGS `$PKG_CONFIG --libs libdecor-0`"
+                        EXTRA_LDFLAGS="$EXTRA_LDFLAGS $DECOR_LIBS"
                     fi
                 fi
             fi
@@ -3206,6 +3198,16 @@ CheckWINDOWS()
 
     # This fixes Windows stack alignment with newer GCC
     CheckStackBoundary
+
+    # headers needed elsewhere
+    AC_CHECK_HEADER(tpcshrd.h,have_tpcshrd_h=yes)
+    if test x$have_tpcshrd_h = xyes; then
+        AC_DEFINE(HAVE_TPCSHRD_H, 1, [ ])
+    fi
+    AC_CHECK_HEADER(roapi.h,have_roapi_h=yes)
+    if test x$have_roapi_h = xyes; then
+        AC_DEFINE(HAVE_ROAPI_H, 1, [ ])
+    fi
 }
 
 dnl Determine whether the compiler can produce OS/2 executables
@@ -4006,10 +4008,6 @@ case "$host" in
                 SOURCES="$SOURCES $srcdir/src/haptic/windows/*.c"
                 have_haptic=yes
             fi
-        fi
-        AC_CHECK_HEADER(tpcshrd.h,have_tpcshrd_h=yes)
-        if test x$have_tpcshrd_h = xyes; then
-            AC_DEFINE(HAVE_TPCSHRD_H, 1, [ ])
         fi
         # Set up files for the sensor library
         AC_CHECK_HEADER(sensorsapi.h,have_winsensors=yes,have_winsensors=no)

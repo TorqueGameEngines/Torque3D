@@ -1355,6 +1355,18 @@ extern "C" {
 #define SDL_HINT_TOUCH_MOUSE_EVENTS    "SDL_TOUCH_MOUSE_EVENTS"
 
 /**
+ *  \brief  A variable controlling which touchpad should generate synthetic mouse events
+ *
+ *  This variable can be set to the following values:
+ *    "0"       - Only front touchpad should generate mouse events. Default
+ *    "1"       - Only back touchpad should generate mouse events.
+ *    "2"       - Both touchpads should generate mouse events.
+ *
+ *  By default SDL will generate mouse events for all touch devices
+ */
+#define SDL_HINT_VITA_TOUCH_MOUSE_DEVICE    "SDL_HINT_VITA_TOUCH_MOUSE_DEVICE"
+
+/**
  *  \brief  A variable controlling whether the Android / tvOS remotes
  *  should be listed as joystick devices, instead of sending keyboard events.
  *
@@ -1462,6 +1474,20 @@ extern "C" {
  *  libdecor is used over xdg-shell when xdg-decoration protocol is unavailable.
  */
 #define SDL_HINT_VIDEO_WAYLAND_ALLOW_LIBDECOR "SDL_VIDEO_WAYLAND_ALLOW_LIBDECOR"
+
+/**
+ *  \brief  A variable controlling whether the libdecor Wayland backend is preferred over native decrations.
+ *
+ *  When this hint is set, libdecor will be used to provide window decorations, even if xdg-decoration is
+ *  available. (Note that, by default, libdecor will use xdg-decoration itself if available).
+ *
+ *  This variable can be set to the following values:
+ *    "0"       - libdecor is enabled only if server-side decorations are unavailable.
+ *    "1"       - libdecor is always enabled if available.
+ *
+ *  libdecor is used over xdg-shell when xdg-decoration protocol is unavailable.
+ */
+#define SDL_HINT_VIDEO_WAYLAND_PREFER_LIBDECOR "SDL_VIDEO_WAYLAND_PREFER_LIBDECOR"
 
 /**
 *  \brief  A variable that is the address of another SDL_Window* (as a hex string formatted with "%p").
@@ -1938,8 +1964,7 @@ extern "C" {
  *  If not set or set to "", this hint is ignored. This hint must be set
  *  before the SDL_CreateWindow() call that it is intended to affect.
  *
- *  This hint is available since SDL 2.0.22. Before then, virtual devices are
- *  always ignored.
+ *  This hint is available since SDL 2.0.22.
  */
 #define SDL_HINT_X11_WINDOW_TYPE "SDL_X11_WINDOW_TYPE"
 
@@ -1966,6 +1991,53 @@ extern "C" {
  *  an SDL_QUIT event when closing the final window.
  */
 #define SDL_HINT_QUIT_ON_LAST_WINDOW_CLOSE "SDL_QUIT_ON_LAST_WINDOW_CLOSE"
+
+
+/**
+ *  \brief  A variable that decides what video backend to use.
+ *
+ *  By default, SDL will try all available video backends in a reasonable
+ *  order until it finds one that can work, but this hint allows the app
+ *  or user to force a specific target, such as "x11" if, say, you are
+ *  on Wayland but want to try talking to the X server instead.
+ *
+ *  This functionality has existed since SDL 2.0.0 (indeed, before that)
+ *  but before 2.0.22 this was an environment variable only. In 2.0.22,
+ *  it was upgraded to a full SDL hint, so you can set the environment
+ *  variable as usual or programatically set the hint with SDL_SetHint,
+ *  which won't propagate to child processes.
+ *
+ *  The default value is unset, in which case SDL will try to figure out
+ *  the best video backend on your behalf. This hint needs to be set
+ *  before SDL_Init() is called to be useful.
+ *
+ *  This hint is available since SDL 2.0.22. Before then, you could set
+ *  the environment variable to get the same effect.
+ */
+#define SDL_HINT_VIDEODRIVER "SDL_VIDEODRIVER"
+
+/**
+ *  \brief  A variable that decides what audio backend to use.
+ *
+ *  By default, SDL will try all available audio backends in a reasonable
+ *  order until it finds one that can work, but this hint allows the app
+ *  or user to force a specific target, such as "alsa" if, say, you are
+ *  on PulseAudio but want to try talking to the lower level instead.
+ *
+ *  This functionality has existed since SDL 2.0.0 (indeed, before that)
+ *  but before 2.0.22 this was an environment variable only. In 2.0.22,
+ *  it was upgraded to a full SDL hint, so you can set the environment
+ *  variable as usual or programatically set the hint with SDL_SetHint,
+ *  which won't propagate to child processes.
+ *
+ *  The default value is unset, in which case SDL will try to figure out
+ *  the best audio backend on your behalf. This hint needs to be set
+ *  before SDL_Init() is called to be useful.
+ *
+ *  This hint is available since SDL 2.0.22. Before then, you could set
+ *  the environment variable to get the same effect.
+ */
+#define SDL_HINT_AUDIODRIVER "SDL_AUDIODRIVER"
 
 
 /**

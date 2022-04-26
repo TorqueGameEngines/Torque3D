@@ -1932,9 +1932,8 @@ function EditorTreeTabBook::onTabSelected( %this )
    }
    else
    {
-      EWTreeWindow-->DeleteSelection.visible = false;
-      EWTreeWindow-->LockSelection.visible = false;
-      EWTreeWindow-->AddSimGroup.visible = false;
+      AssetBrowser.showDialog("ShapeAsset Datablock");
+      EditorTreeTabBook.selectPage(0);
    }
 }
 

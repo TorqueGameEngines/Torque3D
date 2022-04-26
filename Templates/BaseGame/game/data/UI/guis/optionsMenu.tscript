@@ -836,11 +836,11 @@ function OptionsMenuSettingsList::addOptionBoolRow(%this, %label, %targetPrefVar
       
    if(%qualityLevelList $= $yesNoList && isInt(%defaultValue))
    {
-      %defaultValue = convertBoolToYesNo(!%defaultValue);
+      %defaultValue = convertBoolToYesNo(%defaultValue);
    }
    else if(%qualityLevelList $= $onOffList && isInt(%defaultValue))
    {
-      %defaultValue = convertBoolToOnOff(!%defaultValue);
+      %defaultValue = convertBoolToOnOff(%defaultValue);
    }
 
    return %this.addOptionRow(%label, %targetPrefVar, %qualityLevelList, 
@@ -995,8 +995,10 @@ function MenuOptionsButton::onChange(%this)
          OptionsMenu.unappliedChanges.add(%targetVar, "\"" @ %saveReadyValue @ "\"" );
       }
       else
+         {
          OptionsMenu.unappliedChanges.setValue("\"" @ %saveReadyValue @ "\"", %prefIndex);
       }
+   }
    }
    else if(%optionMode == 1)
    {
@@ -1009,7 +1011,9 @@ function MenuOptionsButton::onChange(%this)
          OptionsMenu.unappliedChanges.add(%targetVar, "\"" @ %currentValue @ "\"" );
       }
       else
+      {
          OptionsMenu.unappliedChanges.setValue("\"" @ %currentValue @ "\"", %prefIndex);
+      }
    }
    
    //Update the UI in case there's responsive logic

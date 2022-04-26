@@ -368,8 +368,6 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
       %this.previewData.doubleClickCommand = "";
    }
    
-   AssetPreviewArray.empty();
-   
    %previewImage = "core/art/warnmat";
    
    if(/*%moduleName !$= "" && */ModuleDatabase.findModule(%moduleName, 1) !$= "")
@@ -512,6 +510,7 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
       textLocation = "Bottom";
       extent = %previewSize.x SPC %previewSize.y + %textBottomPad;
       buttonType = "RadioButton";
+      buttonMargin = "0 -10";
       profile = ToolsGuiDefaultProfile;
    };
    
@@ -528,11 +527,16 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
       %previewButton.iconLocation = "Left";
       %previewButton.textLocation = "Right";
       %previewButton.setextent(120,20);
+      %previewButton.buttonMargin = "0 0";
+      
+      AssetBrowser.previewListMode = true;
    }
    else
    {
       %size = %previewSize.x * %previewScaleSize;
       %previewButton.setextent(%size,%size + %textBottomPad);
+      
+      AssetBrowser.previewListMode = false;
    }
    
    //%previewButton.extent = %previewSize.x + %previewBounds SPC %previewSize.y + %previewBounds + 24;
@@ -548,6 +552,8 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
    {
       %doubleClickCommand = "AssetBrowser.editAsset( "@%assetDesc@" );";
    }
+   
+   %this.previewData.previewLoaded = true;
    
    //Build out the preview
    %buildCommand = %this @ ".build" @ %assetType @ "Preview(\"" @ %assetDesc @ "\"," @ %this.previewData @ ");";
@@ -579,7 +585,8 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
    AssetBrowser-->assetList.add(%previewButton);
    
    // add to the array object for reference later
-   AssetPreviewArray.add( %previewButton, %this.previewData.previewImage );
+   if(%this.previewData.previewLoaded == false)
+      AssetPreviewArray.add( %previewButton );
 }
 
 function AssetBrowser::refresh(%this)
@@ -605,6 +612,25 @@ function AssetBrowser::doRefresh(%this)
       AssetBrowser-->filterTree.expandItem(%dataItem);
       
       %this.dirty = false;
+   }
+}
+
+function AssetBrowser::populatePreviewImages(%this)
+{
+   echo("AssetBrowser::populatePreviewImages() - Previews to generate: " @ AssetPreviewArray.count());
+   for(%i=0; %i < AssetPreviewArray.count(); %i++)
+   {
+      %previewButton = AssetPreviewArray.getKey(%i);
+      %type = %previewButton.assetType;
+      
+      echo("   - Generating preview for asset: " @ %previewButton.moduleName @ ":" @ %previewButton.assetName);
+      
+      AssetBrowser.call("generate" @ %previewButton.assetType @ "PreviewImage", %previewButton);
+      AssetPreviewArray.erase(%i);
+      
+      echo("   - done, scheduling another pass");
+      AssetBrowser.schedule(32, "populatePreviewImages");
+      return;
    }
 }
 //
@@ -716,7 +742,6 @@ function AssetBrowser::loadDirectories( %this )
       //}
   // }
    
-   AssetPreviewArray.empty();
    
    AssetBrowser-->filterTree.buildVisibleTree(true);
    
@@ -1495,13 +1520,18 @@ function AssetBrowser::doRebuildAssetArray(%this)
          {
             if(AssetBrowser.assetTypeFilter !$= "")
             {
-               if(AssetBrowser.assetTypeFilter $= %assetType)
+               %filtersCount = getWordCount(AssetBrowser.assetTypeFilter);
+               for(%fltrIdx = 0; %fltrIdx < %filtersCount; %fltrIdx++)
+               {
+                  %fltr = getWord(AssetBrowser.assetTypeFilter, %fltrIdx);
+                  if(%fltr $= %assetType)
                {
                   $AssetBrowser::AssetArray.add( %moduleName, %assetId );
                   
                   if(%assetType !$= "Folder")
                      %finalAssetCount++;
                }
+            }
             }
             else
             {
@@ -1550,7 +1580,22 @@ function AssetBrowser::doRebuildAssetArray(%this)
    }
 
    //Add Non-Asset Scripted Objects. Datablock, etc based
-   if(AssetBrowser.assetTypeFilter $= "" && %breadcrumbPath !$= "" && isDirectory(%breadcrumbPath))
+   %hasDBFilter = true;
+   if(AssetBrowser.assetTypeFilter !$= "")
+   {
+      %hasDBFilter = false;
+      %filterCount = getWordCount(AssetBrowser.assetTypeFilter);
+      for(%fltrIdx = 0; %fltrIdx < %filterCount; %fltrIdx++)
+      {
+         %fltr = getWord(AssetBrowser.assetTypeFilter, %fltrIdx);
+         if(%fltr $= "Datablock" || %fltr $= "Datablocks")
+         {
+            %hasDBFilter = true;
+            break;  
+         }
+      }
+   }
+   if(%hasDBFilter && %breadcrumbPath !$= "" && isDirectory(%breadcrumbPath))
    {
       %category = getWord( %breadcrumbPath, 1 );                  
       %dataGroup = "DataBlockGroup";
@@ -1768,6 +1813,10 @@ function AssetBrowser::doRebuildAssetArray(%this)
             %name = %creatorObj.val[1];
             %func = %creatorObj.val[2];
             
+               %searchActive = AssetSearchTerms.count() != 0;
+               if(%searchActive && !matchesSearch(%name, "Creator"))
+                  continue;
+                     
             $AssetBrowser::AssetArray.add( %name, "Creator" TAB %creatorObj );
          }               
       }   
@@ -1776,6 +1825,8 @@ function AssetBrowser::doRebuildAssetArray(%this)
 	
    for(%i=0; %i < $AssetBrowser::AssetArray.count(); %i++)
 		AssetBrowser.buildAssetPreview( $AssetBrowser::AssetArray.getValue(%i), $AssetBrowser::AssetArray.getKey(%i) );  
+   //Queue population of any non-Type Card preview images
+   AssetBrowser.schedule(32, "populatePreviewImages");
 		
    AssetBrowser_FooterText.text = %finalAssetCount @ " Assets";
    

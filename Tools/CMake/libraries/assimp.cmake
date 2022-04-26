@@ -122,6 +122,23 @@ addDef(ASSIMP_BUILD_NO_GLTF_EXPORTER)
 #addDef(ASSIMP_BUILD_NO_X_EXPORTER)
 #addDef(ASSIMP_BUILD_NO_X3D_EXPORTER)
 
+addDef(ASSIMP_IGNORE_GIT_HASH)
+SET(GIT_COMMIT_HASH 0)
+SET(GIT_BRANCH 0)
+SET(ASSIMP_VERSION_MAJOR 5)
+SET(ASSIMP_VERSION_MINOR 2)
+SET(ASSIMP_VERSION_PATCH 3)
+SET(ASSIMP_PACKAGE_VERSION "5_2_3")
+CONFIGURE_FILE(
+  ${libDir}/assimp/revision.h.in
+  ${libDir}/assimp/revision.h
+)
+
+CONFIGURE_FILE(
+  ${libDir}/assimp/include/assimp/config.h.in
+  ${libDir}/assimp/include/assimp/config.h
+)
+
 addInclude(${libDir}/assimp)
 addInclude(${libDir}/assimp/include/)
 addInclude(${libDir}/assimp/include/assimp)
@@ -131,6 +148,8 @@ addInclude(${libDir}/assimp/contrib/irrXML)
 addInclude(${libDir}/assimp/contrib/Open3DGC)
 addInclude(${libDir}/assimp/contrib/openddlparser)
 addInclude(${libDir}/assimp/contrib/poly2tri)
+addInclude(${libDir}/assimp/contrib/pugixml/src)
+addInclude(${libDir}/assimp/contrib/pugixml/contrib)
 addInclude(${libDir}/assimp/contrib/rapidjson)
 addInclude(${libDir}/assimp/contrib/rapidjson/include)
 addInclude(${libDir}/assimp/contrib/unzip)

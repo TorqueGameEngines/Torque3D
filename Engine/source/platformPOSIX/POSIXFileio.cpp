@@ -46,6 +46,9 @@
 #if defined(__FreeBSD__)
 #include <sys/types.h>
 #endif
+#if defined(__APPLE__)
+#include <sys/syslimits.h>
+#endif
 #include <utime.h>
 
 /* these are for reading directors, getting stats, etc. */

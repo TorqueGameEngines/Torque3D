@@ -1079,6 +1079,22 @@ TEST(Script, MiscRegressions)
    )");
 
    ASSERT_EQ(regression6.getBool(), true);
+
+   ConsoleValue regression7 = RunScript(R"(
+      function Tween::vectorAdd(%v1, %v2)
+      {
+         %temp = "";
+         for (%i = 0; %i < getWordCount(%v1); %i++) {
+            %e = getWord(%v1, %i) + getWord(%v2, %i);
+            %temp = %i == 0 ? %e : %temp SPC %e;
+         }
+
+         return %temp;
+      }
+      return Tween::vectorAdd("1 2 3", "4 5 6");
+   )");
+
+   ASSERT_STREQ(regression7.getString(), "5 7 9");
 }
 
 #endif

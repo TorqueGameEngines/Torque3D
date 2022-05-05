@@ -127,7 +127,6 @@ function ShapeEditorPlugin::onWorldEditorStartup(%this)
    ShapeEdSeqNodeTabBook.selectPage(0);
    ShapeEdAdvancedWindow-->tabBook.selectPage(0);
    ShapeEdSelectWindow-->tabBook.selectPage(0);
-   ShapeEdSelectWindow.navigate("");
 
    SetToggleButtonValue( ShapeEditorToolbar-->orbitNodeBtn, 0 );
    SetToggleButtonValue( ShapeEditorToolbar-->ghostMode, 0 );

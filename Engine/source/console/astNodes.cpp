@@ -399,7 +399,12 @@ U32 ConditionalExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
 
 TypeReq ConditionalExprNode::getPreferredType()
 {
-   return trueExpr->getPreferredType();
+   // We can't make it calculate a type based on subsequent expressions as the expression
+   // could be a string, or just numbers. To play it safe, stringify anything that deals with
+   // a conditional, and let the interpreter cast as needed to other types safely.
+   //
+   // See: Regression Test 7 in ScriptTest. It has a string result in the else portion of the ?: ternary.
+   return TypeReqString;
 }
 
 //------------------------------------------------------------

@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2019, assimp team
+Copyright (c) 2006-2022, assimp team
 
 
 
@@ -137,7 +137,7 @@ void FindInstancesProcess::Execute( aiScene* pScene)
             aiMesh* inst = pScene->mMeshes[i];
             hashes[i] = GetMeshHash(inst);
 
-            // Find an appropriate epsilon 
+            // Find an appropriate epsilon
             // to compare position differences against
             float epsilon = ComputePositionEpsilon(inst);
             epsilon *= epsilon;
@@ -243,7 +243,7 @@ void FindInstancesProcess::Execute( aiScene* pScene)
 
                     // Delete the instanced mesh, we don't need it anymore
                     delete inst;
-                    pScene->mMeshes[i] = NULL;
+                    pScene->mMeshes[i] = nullptr;
                     break;
                 }
             }
@@ -256,7 +256,7 @@ void FindInstancesProcess::Execute( aiScene* pScene)
         ai_assert(0 != numMeshesOut);
         if (numMeshesOut != pScene->mNumMeshes) {
 
-            // Collapse the meshes array by removing all NULL entries
+            // Collapse the meshes array by removing all nullptr entries
             for (unsigned int real = 0, i = 0; real < numMeshesOut; ++i) {
                 if (pScene->mMeshes[i])
                     pScene->mMeshes[real++] = pScene->mMeshes[i];
@@ -267,7 +267,7 @@ void FindInstancesProcess::Execute( aiScene* pScene)
 
             // write to log
             if (!DefaultLogger::isNullLogger()) {
-                ASSIMP_LOG_INFO_F( "FindInstancesProcess finished. Found ", (pScene->mNumMeshes - numMeshesOut), " instances" );
+                ASSIMP_LOG_INFO( "FindInstancesProcess finished. Found ", (pScene->mNumMeshes - numMeshesOut), " instances" );
             }
             pScene->mNumMeshes = numMeshesOut;
         } else {

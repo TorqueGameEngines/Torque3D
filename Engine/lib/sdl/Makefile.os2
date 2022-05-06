@@ -11,7 +11,7 @@
 # wmake -f Makefile.os2 HIDAPI=1
 
 LIBNAME = SDL2
-VERSION = 2.0.21
+VERSION = 2.0.22
 DESCRIPTION = Simple DirectMedia Layer 2
 
 LIBICONV=0
@@ -60,7 +60,7 @@ CFLAGS_DLL+= -DHAVE_LIBUSB_H=1
 # building SDL itself (for DECLSPEC):
 CFLAGS_DLL+= -DBUILD_SDL
 
-SRCS = SDL.c SDL_assert.c SDL_error.c SDL_log.c SDL_dataqueue.c SDL_hints.c
+SRCS = SDL.c SDL_assert.c SDL_error.c SDL_log.c SDL_dataqueue.c SDL_hints.c SDL_list.c
 SRCS+= SDL_getenv.c SDL_iconv.c SDL_malloc.c SDL_qsort.c SDL_stdlib.c SDL_string.c SDL_strtokr.c SDL_crc32.c
 SRCS+= SDL_cpuinfo.c SDL_atomic.c SDL_spinlock.c SDL_thread.c SDL_timer.c
 SRCS+= SDL_rwops.c SDL_power.c
@@ -140,9 +140,11 @@ SDL_blendpoint.obj: SDL_blendpoint.c
     wcc386 $(CFLAGS_DLL) -wcd=200 -fo=$^@ $<
 SDL_RLEaccel.obj: SDL_RLEaccel.c
     wcc386 $(CFLAGS_DLL) -wcd=201 -fo=$^@ $<
+!ifeq HIDAPI 1
 # c99 mode needed because of structs with flexible array members in libusb.h
 SDL_hidapi.obj: SDL_hidapi.c
     wcc386 $(CFLAGS_DLL) -za99 -fo=$^@ $<
+!endif
 
 $(LIBICONV_LIB):  "src/core/os2/iconv2.lbc"
     @echo * Creating: $@

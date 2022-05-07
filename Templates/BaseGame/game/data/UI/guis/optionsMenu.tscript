@@ -72,16 +72,7 @@ function OptionsMenu::onAdd(%this)
    callOnModules("populateOptionsMenuCategories", "Game");
 }
 
-function OptionsMenuSettingsList::onAdd(%this)
-{
-}
-
-function OptionsMenuSettingsList::getOptionsList(%this, %index)
-{
-     
-}
-
-function OptionsMenu::onWake(%this)
+function OptionsMenu::onOpen(%this)
 {
    OptionsMenuCategoryList.clear(); 
    
@@ -116,22 +107,48 @@ function OptionsMenu::onWake(%this)
    
    %this.unappliedChanges.empty();
    
-   MainMenuButtonList.hidden = true;
-   
    OptionsMenuCategoryList.setAsActiveMenuList();
    
-   OptionsButtonHolder.setActive();
+   $activeMenuButtonContainer-->button1.set("btn_back", "R", "Reset", "OptionsMenu.resetToDefaults();");
+   $activeMenuButtonContainer-->button1.disable();
+   $activeMenuButtonContainer-->button3.set("", "Space", "Apply", "OptionsMenu.apply();");
+   $activeMenuButtonContainer-->button4.set("btn_a", "", "Select", "OptionsMenu.select();");
+   $activeMenuButtonContainer-->button5.set("btn_b", "Escape", "Back", %this @ ".navigation.popPage();");
+}
    
-   OptionsMenuInputHandler.setFirstResponder();
+function OptionsMenu::canClose(%this)
+{
+   if(OptionsMenuSettingsList.isActiveMenuList())
+   {
+   OptionsMenuCategoryList.setAsActiveMenuList();
+      %this.updateSelectButton();
+      return false;
+   }
+   else
+   {
+      if(%this.unappliedChanges.count() != 0)
+      {
+         MessageBoxOKCancel("Discard Changes?", "You have unapplied changes to your settings, do you wish to apply or discard them?", 
+                        "OptionsMenu.apply(); MainMenuGUI.popPage();", "%this.unappliedChanges.empty(); " @ %this @ ".navigation.popPage();", 
+                        "Apply", "Discard");
+         return false;
+      }
+   }
+   
+   return true;
 }
 
-function OptionsButtonHolder::onWake(%this)
+function OptionsMenu::onClose(%this)
 {
-   %this-->resetButton.set("btn_back", "R", "Reset", "OptionsMenu.resetToDefaults();");
-   %this-->selectButton.set("btn_a", "Return", "Select", "OptionsMenu.select();", true);
-   %this-->backButton.set("btn_b", "Escape", "Back", "OptionsMenu.backOut();");
    
-   //OptionsMenuCategoryList.getObject(0).performClick();
+}
+
+function OptionsMenuSettingsList::onAdd(%this)
+{
+}
+   
+function OptionsMenuSettingsList::getOptionsList(%this, %index)
+{
 }
 
 function OptionsMenu::select(%this)
@@ -281,9 +298,6 @@ function OptionsMenu::apply(%this)
    export("$pref::*", %prefPath @ "/clientPrefs." @ $TorqueScriptFileExtension, false);
    
    OptionsMenu.unappliedChanges.empty();
-   
-   //Now we can back out of the options menu
-   OptionsMenu.doOptionsMenuBackOut();
 }
 
 function OptionsMenu::resetToDefaults(%this)
@@ -346,7 +360,9 @@ function populateDisplaySettingsList()
    
    OptionsMenu.currentCategory = "Display";
    
+   if(isObject(OptionName))
    OptionName.setText("");
+   if(isObject(OptionDescription))
    OptionDescription.setText("");
    
    %apiList = "";
@@ -433,7 +449,9 @@ function populateGraphicsSettingsList()
    
    OptionsMenu.currentCategory = "Graphics";
    
+   if(isObject(OptionName))
    OptionName.setText("");
+   if(isObject(OptionDescription))
    OptionDescription.setText("");
    
    %yesNoList = "No\tYes";
@@ -598,7 +616,9 @@ function populateAudioSettingsList()
    
    OptionsMenu.currentCategory = "Audio";
    
+   if(isObject(OptionName))
    OptionName.setText("");
+   if(isObject(OptionDescription))
    OptionDescription.setText("");
    
    %buffer = sfxGetAvailableDevices();
@@ -691,7 +711,9 @@ function populateKeyboardMouseSettingsList()
    
    OptionsMenu.currentCategory = "Keyboard & Mouse";
    
+   if(isObject(OptionName))
    OptionName.setText("");
+   if(isObject(OptionDescription))
    OptionDescription.setText("");
    
    $remapListDevice = "keyboard";
@@ -706,7 +728,9 @@ function populateGamepadSettingsList()
    
    OptionsMenu.currentCategory = "Gamepad";
    
+   if(isObject(OptionName))
    OptionName.setText("");
+   if(isObject(OptionDescription))
    OptionDescription.setText("");
    
    $remapListDevice = "gamepad";
@@ -721,48 +745,6 @@ function populateGamepadSettingsList()
 function OptionsMenuList::activateRow(%this)
 {
    OptionsMenuSettingsList.setFirstResponder();
-}
-
-function OptionsMenu::backOut(%this)
-{
-   if(OptionsMenuSettingsList.isActiveMenuList())
-   {
-      OptionsMenuCategoryList.setAsActiveMenuList();
-      %this.updateSelectButton();
-   }
-   else
-   {
-      if(%this.unappliedChanges.count() != 0)
-      {
-         MessageBoxOKCancel("Discard Changes?", "You have unapplied changes to your settings, do you wish to apply or discard them?", "OptionsMenu.apply();", "OptionsMenu.doOptionsMenuBackOut();", "Apply", "Discard");
-      }
-      else
-      {
-         %this.doOptionsMenuBackOut();
-      }
-   }
-}
-
-function OptionsMenu::doOptionsMenuBackOut(%this)
-{
-   //save the settings and then back out
-   if(OptionsMain.hidden == false)
-   {
-      //we're not in a specific menu, so we're actually exiting
-      Canvas.popDialog(OptionsMenu);
-
-      if(isObject(OptionsMenu.returnGui) && OptionsMenu.returnGui.isMethod("onReturnTo"))
-         OptionsMenu.returnGui.onReturnTo();
-   }
-   else
-   {
-      OptionsMain.hidden = false;
-      ControlsMenu.hidden = true;
-      GraphicsMenu.hidden = true;
-      CameraMenu.hidden = true;
-      AudioMenu.hidden = true;
-      ScreenBrightnessMenu.hidden = true;
-   }
 }
 
 function OptionsMenuSettingsList::setRowEnabled(%this, %row, %status)
@@ -955,14 +937,23 @@ function getDisplayDeviceName()
 //
 function MenuOptionsButton::onMouseEnter(%this)
 {
+   if(isObject(OptionName))
    OptionName.setText(%this.getLabel());
+   if(isObject(OptionDescription))
    OptionDescription.setText(%this.getToolTip());
 }
 
 function MenuOptionsButton::onMouseLeave(%this)
 {
+   if(isObject(OptionName))
    OptionName.setText("");
+   if(isObject(OptionDescription))
    OptionDescription.setText("");
+}
+
+function MenuOptionsButton::onHighlighted(%this, %state)
+{
+   MenuListButton::onHighlighted(%this, %state);
 }
 
 function MenuOptionsButton::onChange(%this)

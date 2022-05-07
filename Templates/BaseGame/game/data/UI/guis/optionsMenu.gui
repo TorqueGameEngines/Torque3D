@@ -1,12 +1,14 @@
 //--- OBJECT WRITE BEGIN ---
 $guiContent = new GuiControl(OptionsMenu) {
    extent = "1024 768";
-   profile = "GuiDefaultProfile";
+   profile = "GuiNonModalDefaultProfile";
    tooltipProfile = "GuiToolTipProfile";
    isContainer = "1";
+   horizSizing = "width";
+   vertSizing = "height";
    canSaveDynamicFields = "0";
 
-   new GuiControl() {
+   new GuiControl(OptionsMenuContainer) {
       position = "48 56";
       extent = "928 655";
       horizSizing = "aspectCenter";
@@ -33,7 +35,7 @@ $guiContent = new GuiControl(OptionsMenu) {
       new GuiTextCtrl() {
          text = "OPTIONS";
          position = "22 7";
-         extent = "120 28";
+         extent = "220 28";
          profile = "MenuHeaderText";
          tooltipProfile = "GuiToolTipProfile";
       };
@@ -77,7 +79,7 @@ $guiContent = new GuiControl(OptionsMenu) {
                vertSizing = "height";
                profile = "GuiDefaultProfile";
                tooltipProfile = "GuiToolTipProfile";
-               class = "MenuList";
+               superClass = "MenuList";
 
                new GuiButtonCtrl() {
                   text = "Display";
@@ -118,6 +120,14 @@ $guiContent = new GuiControl(OptionsMenu) {
                   command = "populateGamepadSettingsList();";
                   tooltipProfile = "GuiToolTipProfile";
                };
+               new GuiButtonCtrl() {
+                  text = "Example Options";
+                  position = "0 225";
+                  extent = "248 35";
+                  profile = "GuiMenuButtonProfile";
+                  command = "testExampleOptions();";
+                  tooltipProfile = "GuiToolTipProfile";
+               };
             };
          };
          new GuiPanel() {
@@ -141,81 +151,76 @@ $guiContent = new GuiControl(OptionsMenu) {
                   padding = "5";
                   changeChildSizeToFit = "0";
                   position = "1 1";
-                  extent = "661 30";
+                  extent = "661 170";
                   horizSizing = "width";
                   vertSizing = "height";
                   profile = "GuiDefaultProfile";
                   tooltipProfile = "GuiToolTipProfile";
-                  class = "MenuList";
+                  superClass = "MenuList";
+                  new GuiGameSettingsCtrl() {
+                     PreviousBitmapAsset = "UI:previousOption_n_image";
+                     NextBitmapAsset = "UI:nextOption_n_image";
+                     columnSplit = "198";
+                     useMouseEvents = "1";
+                     extent = "661 30";
+                     horizSizing = "width";
+                     profile = "GuiMenuButtonProfile";
+                     tooltipProfile = "GuiToolTipProfile";
+                     class = "MenuOptionsButton";
+                  };
+                  new GuiGameSettingsCtrl() {
+                     PreviousBitmapAsset = "UI:previousOption_n_image";
+                     NextBitmapAsset = "UI:nextOption_n_image";
+                     columnSplit = "198";
+                     useMouseEvents = "1";
+                     position = "0 35";
+                     extent = "661 30";
+                     horizSizing = "width";
+                     profile = "GuiMenuButtonProfile";
+                     tooltipProfile = "GuiToolTipProfile";
+                     class = "MenuOptionsButton";
+                  };
+                  new GuiGameSettingsCtrl() {
+                     PreviousBitmapAsset = "UI:previousOption_n_image";
+                     NextBitmapAsset = "UI:nextOption_n_image";
+                     columnSplit = "198";
+                     useMouseEvents = "1";
+                     position = "0 70";
+                     extent = "661 30";
+                     horizSizing = "width";
+                     profile = "GuiMenuButtonProfile";
+                     tooltipProfile = "GuiToolTipProfile";
+                     class = "MenuOptionsButton";
+                  };
+                  new GuiGameSettingsCtrl() {
+                     PreviousBitmapAsset = "UI:previousOption_n_image";
+                     NextBitmapAsset = "UI:nextOption_n_image";
+                     columnSplit = "198";
+                     useMouseEvents = "1";
+                     position = "0 105";
+                     extent = "661 30";
+                     horizSizing = "width";
+                     profile = "GuiMenuButtonProfile";
+                     tooltipProfile = "GuiToolTipProfile";
+                     class = "MenuOptionsButton";
+                  };
+                  new GuiGameSettingsCtrl() {
+                     PreviousBitmapAsset = "UI:previousOption_n_image";
+                     NextBitmapAsset = "UI:nextOption_n_image";
+                     columnSplit = "198";
+                     useMouseEvents = "1";
+                     position = "0 140";
+                     extent = "661 30";
+                     horizSizing = "width";
+                     profile = "GuiMenuButtonProfile";
+                     tooltipProfile = "GuiToolTipProfile";
+                     class = "MenuOptionsButton";
                };
             };
          };
       };
    };
-   new GuiControl(OptionsButtonHolder) {
-      position = "116 711";
-      extent = "791 40";
-      horizSizing = "center";
-      vertSizing = "top";
-      profile = "GuiDefaultProfile";
-      tooltipProfile = "GuiToolTipProfile";
-      isContainer = "1";
-      class = "MenuInputButtonContainer";
 
-      new GuiIconButtonCtrl() {
-         BitmapAsset = "UI:Keyboard_Black_R_image";
-         sizeIconToButton = "1";
-         makeIconSquare = "1";
-         textLocation = "Right";
-         text = "Reset";
-         position = "173 0";
-         extent = "140 40";
-         profile = "GuiMenuButtonProfile";
-         command = "OptionsMenu.resetToDefaults();";
-         tooltipProfile = "GuiToolTipProfile";
-         internalName = "resetButton";
-         class = "MenuInputButton";
-      };
-      new GuiIconButtonCtrl(OptionsMenuSelectButton) {
-         BitmapAsset = "UI:Keyboard_Black_Return_image";
-         sizeIconToButton = "1";
-         makeIconSquare = "1";
-         textLocation = "Right";
-         text = "Select";
-         position = "507 0";
-         extent = "140 40";
-         profile = "GuiMenuButtonProfile";
-         command = "";
-         tooltipProfile = "GuiToolTipProfile";
-         internalName = "SelectButton";
-         class = "MenuInputButton";
-      };
-      new GuiIconButtonCtrl() {
-         BitmapAsset = "UI:Keyboard_Black_Escape_image";
-         sizeIconToButton = "1";
-         makeIconSquare = "1";
-         textLocation = "Right";
-         text = "Back";
-         position = "651 0";
-         extent = "140 40";
-         profile = "GuiMenuButtonProfile";
-         command = "OptionsMenu.backOut();";
-         tooltipProfile = "GuiToolTipProfile";
-         internalName = "backButton";
-         class = "MenuInputButton";
-      };
-   };
-   new GuiInputCtrl(OptionsMenuInputHandler) {
-      sendAxisEvents = "1";
-      sendBreakEvents = "1";
-      ignoreMouseEvents = "1";
-      position = "-50 0";
-      extent = "10 10";
-      horizSizing = "left";
-      vertSizing = "top";
-      profile = "GuiInputCtrlProfile";
-      tooltipProfile = "GuiToolTipProfile";
-      class = "MenuInputHandler";
    };
 };
 //--- OBJECT WRITE END ---

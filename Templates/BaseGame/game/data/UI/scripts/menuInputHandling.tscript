@@ -54,23 +54,41 @@ function UIMenuButtonList::onAxisEvent(%this, %device, %action, %axisVal)
 /// \param %keyboardButton (string) The button to set for when using keyboard/mouse input.
 /// \param %text (string) The text to display next to the A button graphic.
 /// \param %command (string) The command executed when the A button is pressed.
-/// \param %gamepadOnly (bool) If true, will only show the button when working in the gamepad input mode
-function MenuInputButton::set(%this, %gamepadButton, %keyboardButton, %text, %command, %gamepadOnly)
+function MenuInputButton::set(%this, %gamepadButton, %keyboardButton, %text, %command)
 {
+   %this.setHidden(false);
+   
    %set = (! ((%text $= "") && (%command $= "")));
-   %this.setText(%text);
-   %this.setActive(%set);
-   %this.setVisible(%set);
    
    %this.gamepadButton = %gamepadButton;
    %this.keyboardButton = %keyboardButton;
    
-   if(%gamepadOnly $= "")
-      %gamepadOnly = false;
+   if(%gamepadButton $= "")
+      %this.gamepadValid = false;
+   else
+      %this.gamepadValid = true;
       
-   %this.gamepadOnly = %gamepadOnly;
+   if(%keyboardButton $= "")
+      %this.kbmValid = false;
+   else
+      %this.kbmValid = true;
 
+   if((!%this.kbmValid && $activeControllerType !$= "gamepad") ||
+      (!%this.gamepadValid && $activeControllerType $= "gamepad"))
+      %set = false;
+      
+   %this.setText(%text);
    %this.Command = %command;
+   
+   %this.refresh();
+}
+
+function MenuInputButton::disable(%this)
+{
+   %this.setText("");
+   %this.Command = "";
+   %this.setActive(false);
+   %this.setVisible(false);
 }
 
 /// Refreshes the specific button, updating it's visbility status and the displayed input image
@@ -78,8 +96,10 @@ function MenuInputButton::refresh(%this)
 {
    %set = (! ((%this.text $= "") && (%this.command $= "")));
    
-   //Special-case of where we're in keyboard+mouse mode, but the menubutton is gamepad only mode, so we early out
-   if(%this.gamepadOnly && $activeControllerType !$= "gamepad")
+   //Do a check so if a MenuInput is selectively bound and we're not using the
+   //matched input type, then we skip
+   if((!%this.kbmValid && $activeControllerType !$= "gamepad") ||
+      (!%this.gamepadValid && $activeControllerType $= "gamepad"))
       %set = false;
       
    %this.setActive(%set);
@@ -430,7 +450,7 @@ function MenuList::setAsActiveMenuList(%this, %startPosition, %menuMode)
          
    $activeMenuList = %this;
    $activeMenuList.hidden = false; 
-   $activeMenuListPosition = %startPosition;
+   $activeMenuList.ListPosition = %startPosition;
    $activeMenuListMode = %menuMode;
    
    %this.refresh();
@@ -440,21 +460,21 @@ function MenuList::setAsActiveMenuList(%this, %startPosition, %menuMode)
 function MenuList::activate(%this)
 {
    //check for a highlighted element
-   if($activeMenuListPosition.y > -1 && $activeMenuListPosition < $activeMenuList.getCount())
+   if($activeMenuList.ListPosition.y > -1 && $activeMenuList.ListPosition < $activeMenuList.getCount())
    {
-      %btn = $activeMenuList.getObject($activeMenuListPosition.y);
+      %btn = $activeMenuList.getObject($activeMenuList.ListPosition.y);
       %btn.performClick();
    }
 }
 
 function MenuList::refresh(%this)
 {
-   %selectedObject = 0;
+   %selectedObject = -1;
    for(%i=0; %i < $activeMenuList.getCount(); %i++)
    {
       %btn = $activeMenuList.getObject(%i);
       
-      %isSelected = %i == $activeMenuListPosition.y;
+      %isSelected = %i == $activeMenuList.ListPosition.y;
       
       %btn.setHighlighted(%isSelected);
       
@@ -462,8 +482,32 @@ function MenuList::refresh(%this)
          %selectedObject = %i;
    }
    
+   if(isObject(%this.buttonPointerCtrl))
+   {
+      if(%selectedObject != -1)
+      {
+         %this.buttonPointerCtrl.setHidden(false);
+         
+         %buttonCenter = $activeMenuList.getObject(%selectedObject).getGlobalCenter();
+         
+         if(%this.centerButtonPointerCtrl)
+         {
+            %this.buttonPointerCtrl.setCenter(%buttonCenter.x, %buttonCenter.y);
+         }
+         else
+         {
+            //if we're not centering, then left-justify
+            %this.buttonPointerCtrl.setCenter(%buttonCenter.x - $activeMenuList.getObject(%selectedObject).extent.x / 2, %buttonCenter.y);  
+         }
+      }
+      else
+      {
+         %this.buttonPointerCtrl.setHidden(true);
+      }
+   }
+   
    if($activeMenuList.isMethod("onNavigate"))
-      $activeMenuList.onNavigate($activeMenuListPosition.y);
+      $activeMenuList.onNavigate($activeMenuList.ListPosition.y);
    
    %parent = $activeMenuList.getParent();
    if(%parent.getClassName() $= "GuiScrollCtrl")
@@ -474,18 +518,18 @@ function MenuList::refresh(%this)
 
 function MenuList::navigateUp(%this)
 {
-   $activeMenuListPosition.y -= 1;
-   if($activeMenuListPosition.y < 0)
-      $activeMenuListPosition.y = 0;
+   $activeMenuList.ListPosition.y -= 1;
+   if($activeMenuList.ListPosition.y < 0)
+      $activeMenuList.ListPosition.y = 0;
       
    %this.refresh();
 }
 
 function MenuList::navigateDown(%this)
 {
-   $activeMenuListPosition.y += 1;
-   if($activeMenuListPosition.y >= $activeMenuList.getCount())
-      $activeMenuListPosition.y = $activeMenuList.getCount()-1;
+   $activeMenuList.ListPosition.y += 1;
+   if($activeMenuList.ListPosition.y >= $activeMenuList.getCount())
+      $activeMenuList.ListPosition.y = $activeMenuList.getCount()-1;
       
    %this.refresh();
 }
@@ -496,7 +540,7 @@ function MenuList::navigateLeft()
    //this could readily be expanded upon to handle grids like for inventory screens
    //or the like
     
-   %btn = $activeMenuList.getObject($activeMenuListPosition.y);
+   %btn = $activeMenuList.getObject($activeMenuList.ListPosition.y);
    if(%btn.getClassName() $= "GuiGameSettingsCtrl" && %btn.isEnabled())
    {
       %mode = %btn.getMode();
@@ -522,7 +566,7 @@ function MenuList::navigateLeft()
 
 function MenuList::navigateRight()
 {
-   %btn = $activeMenuList.getObject($activeMenuListPosition.y);
+   %btn = $activeMenuList.getObject($activeMenuList.ListPosition.y);
    if(%btn.getClassName() $= "GuiGameSettingsCtrl" && %btn.isEnabled())
    {
       %mode = %btn.getMode();
@@ -548,5 +592,32 @@ function MenuList::navigateRight()
 
 function MenuList::getActiveRow(%this)
 {
-   return $activeMenuListPosition.y;
+   return $activeMenuList.ListPosition.y;
+}
+
+function MenuListButton::onHighlighted(%this, %state)
+{
+   %parentContainer = %this.getParent();
+   if(%parentContainer.class $= "MenuList" || %parentContainer.superClass $= "MenuList")
+   {
+      if(isObject(%parentContainer.buttonPointerCtrl))
+      {
+         if(%state)
+         {
+	         %parentContainer.buttonPointerCtrl.setHidden(false);
+	         
+	         %buttonCenter = %this.getGlobalCenter();
+	         
+	         if(%parentContainer.centerButtonPointerCtrl)
+	         {
+	               %parentContainer.buttonPointerCtrl.setGlobalCenter(%buttonCenter.x, %buttonCenter.y);
+	         }
+	         else
+	         {
+	            //if we're not centering, then left-justify
+	            %parentContainer.buttonPointerCtrl.setGlobalCenter(%buttonCenter.x - %this.extent.x / 2, %buttonCenter.y);  
+	         }
+	      }
+      }
+   }
 }

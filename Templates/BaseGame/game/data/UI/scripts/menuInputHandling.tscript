@@ -26,18 +26,30 @@ btn_start = Start
 btn_back = Back/Select
 */
 
+//==============================================================================
+/// Summary:
 /// This is used with the main UI menu lists, when a non-axis input event is called
 /// such as pressing a button
 /// It is called from the engine
+/// 
+/// \param %device (string) The name of the device the input event is coming fromt
+/// \param %action (string) The specific key/input action
+/// \param %state (bool) The down/up state of the event sent
 function UIMenuButtonList::onInputEvent(%this, %device, %action, %state)
 {
    if(%state)
       $activeMenuButtonContainer.processInputs(%device, %action);
 }
 
+//==============================================================================
+/// Summary:
 /// This is used with the main UI menu lists, when an axis input event is called
 /// such as moving a joystick
 /// It is called from the engine
+/// 
+/// \param %device (string) The name of the device the input event is coming fromt
+/// \param %action (string) The specific key/input action
+/// \param %axisVal (float) The float value of the axis event
 function UIMenuButtonList::onAxisEvent(%this, %device, %action, %axisVal)
 {
    //Skip out of the value is too low as it could just be noise or miscalibrated defaults
@@ -47,6 +59,8 @@ function UIMenuButtonList::onAxisEvent(%this, %device, %action, %axisVal)
    $activeMenuButtonContainer.processAxisEvent(%device, %action);
 }
 
+//==============================================================================
+/// Summary:
 /// Sets the command and text for the specified button. If %text and %command
 /// are left empty, the button will be disabled and hidden.
 ///
@@ -83,6 +97,9 @@ function MenuInputButton::set(%this, %gamepadButton, %keyboardButton, %text, %co
    %this.refresh();
 }
 
+//==============================================================================
+/// Summary:
+/// Disables the MenuInputButton, marking it as not to consume inputs or display
 function MenuInputButton::disable(%this)
 {
    %this.setText("");
@@ -91,6 +108,8 @@ function MenuInputButton::disable(%this)
    %this.setVisible(false);
 }
 
+//==============================================================================
+/// Summary:
 /// Refreshes the specific button, updating it's visbility status and the displayed input image
 function MenuInputButton::refresh(%this)
 {
@@ -203,6 +222,8 @@ function MenuInputButton::refresh(%this)
    return true;
 }
 
+//==============================================================================
+/// Summary:
 /// Refreshes a menu input container, updating the buttons inside it
 function MenuInputButtonContainer::refresh(%this)
 {
@@ -215,6 +236,8 @@ function MenuInputButtonContainer::refresh(%this)
    }
 }
 
+//==============================================================================
+/// Summary:
 /// Sets the given MenuInputButtonContainer as the active one. This directs input events
 /// to it's buttons, ensures it's visible, and auto-hides the old active container if it was set
 function MenuInputButtonContainer::setActive(%this)
@@ -227,6 +250,8 @@ function MenuInputButtonContainer::setActive(%this)
    $activeMenuButtonContainer.refresh();
 }
 
+//==============================================================================
+/// Summary:
 /// Checks the input manager for if we have a gamepad active and gets it's name
 /// If we have one, also sets the active input type to gamepad
 function MenuInputButtonContainer::checkGamepad(%this)
@@ -241,12 +266,17 @@ function MenuInputButtonContainer::checkGamepad(%this)
       $activeControllerType = "gamepad";     
 }
    
+   //==============================================================================
+/// Summary:
 /// This is called by the earlier inputs callback that comes from the menu list
 /// this allows us to first check what the input type is, and if the device is different
 /// (such as going from keyboard and mouse to gamepad) we can refresh the buttons to update
 /// the display
 /// Then we process the input to see if it matches to any of the button maps for our 
 /// MenuInputButtons. If we have a match, we execute it's command.
+///
+/// \param %device (string) The device that is causing the input event
+/// \param %action (string) The name of the input action
 function MenuInputButtonContainer::processInputs(%this, %device, %action)
 {
    //check to see if our status has changed
@@ -305,10 +335,16 @@ function MenuInputButtonContainer::processInputs(%this, %device, %action)
    }
 }
 
+//==============================================================================
+/// Summary:
 /// This is called by the earlier inputs callback that comes from the menu list
 /// this allows us to first check what the input type is, and if the device is different
 /// (such as going from keyboard and mouse to gamepad) we can refresh the buttons to update
 /// the display
+/// 
+/// \param %device (string) The name of the device the input event is coming fromt
+/// \param %action (string) The specific key/input action
+/// \param %axisVal (float) The float value of the axis event
 function MenuInputButtonContainer::processAxisEvent(%this, %device, %action, %axisVal)
 {
    //check to see if our status has changed
@@ -367,6 +403,15 @@ function onSDLDeviceDisconnected(%sdlIndex)
 // This'll let the active menu list be navigated, as well as buttons be processed
 // and ultimately handled by the Input Buttons above
 //==============================================================================
+//==============================================================================
+/// Summary:
+/// This is used with the main UI menu lists, when an axis input event is called
+/// such as moving a joystick
+/// It is called from the engine
+/// 
+/// \param %device (string) The name of the device the input event is coming fromt
+/// \param %action (string) The specific key/input action
+/// \param %axisVal (float) The float value of the axis event
 function MenuInputHandler::onAxisEvent(%this, %device, %action, %value)
 {
    //this is to force a refresh of the menu
@@ -416,6 +461,15 @@ function MenuInputHandler::onAxisEvent(%this, %device, %action, %value)
    } 
 }
 
+//==============================================================================
+/// Summary:
+/// This is used with the main UI menu lists, when a non-axis input event is called
+/// such as pressing a button
+/// It is called from the engine
+/// 
+/// \param %device (string) The name of the device the input event is coming fromt
+/// \param %action (string) The specific key/input action
+/// \param %state (bool) The down/up state of the event sent
 function MenuInputHandler::onInputEvent(%this, %device, %action, %state)
 {
    if(%action $= "upov" || %action $= "dpov" || %action $= "lpov" || %action $= "rpov")
@@ -432,6 +486,10 @@ function MenuInputHandler::onInputEvent(%this, %device, %action, %state)
 // Menu List processing
 // These functions manage the navigation and activation of the Menu Lists
 //==============================================================================
+//==============================================================================
+/// Summary:
+/// Is the GUIContainer with this MenuList namespace the 'active' menulist as far
+/// as UI interfaces is concerned?
 function MenuList::isActiveMenuList(%this)
 {
    if($activeMenuList == %this)
@@ -440,6 +498,14 @@ function MenuList::isActiveMenuList(%this)
    return false;
 }
 
+//==============================================================================
+/// Summary:
+/// Sets the GUIContainer with this MenuList namespace as the active menulist.
+/// This means that any input events caught in MenuInputHandlers is directed at
+/// this menu list to navigate it
+///
+/// \param %startPosition (Point2F) The X and Y starting positions of the selection for this menuList
+/// \param %menuMode (string) Indicates the mode/type of menuList, allowing for special behaviors depending on type
 function MenuList::setAsActiveMenuList(%this, %startPosition, %menuMode)
 {
    if(%startPosition $= "")
@@ -456,7 +522,9 @@ function MenuList::setAsActiveMenuList(%this, %startPosition, %menuMode)
    %this.refresh();
 }
 
-
+//==============================================================================
+/// Summary:
+/// Activates the currently highlighted child object
 function MenuList::activate(%this)
 {
    //check for a highlighted element
@@ -467,6 +535,11 @@ function MenuList::activate(%this)
    }
 }
 
+//==============================================================================
+/// Summary:
+/// refreshes the menuList, updating children highlight status and if there is
+/// a button pointer control defined on our list, we update it's position as 
+/// needed
 function MenuList::refresh(%this)
 {
    %selectedObject = -1;
@@ -516,6 +589,10 @@ function MenuList::refresh(%this)
    }
 }
 
+//==============================================================================
+/// Summary:
+/// Selects the next 'up' child item in the menuList. If the current is the topmost
+/// then nothing happens
 function MenuList::navigateUp(%this)
 {
    $activeMenuList.ListPosition.y -= 1;
@@ -525,6 +602,10 @@ function MenuList::navigateUp(%this)
    %this.refresh();
 }
 
+//==============================================================================
+/// Summary:
+/// Selects the next 'down' child item in the menuList. If the current is the bottommost
+/// then nothing happens
 function MenuList::navigateDown(%this)
 {
    $activeMenuList.ListPosition.y += 1;
@@ -534,6 +615,10 @@ function MenuList::navigateDown(%this)
    %this.refresh();
 }
 
+//==============================================================================
+/// Summary:
+/// Selects the next 'left' child item in the menuList. If the current item is the leftmost
+/// then nothing happens
 function MenuList::navigateLeft()
 {
    //Atm, we're only handling specific control types, namely options entries, but
@@ -564,6 +649,10 @@ function MenuList::navigateLeft()
    }
 }
 
+//==============================================================================
+/// Summary:
+/// Selects the next 'right' child item in the menuList. If the current item is the rightmost
+/// then nothing happens
 function MenuList::navigateRight()
 {
    %btn = $activeMenuList.getObject($activeMenuList.ListPosition.y);
@@ -590,13 +679,24 @@ function MenuList::navigateRight()
    }
 }
 
+//==============================================================================
+/// Summary:
+/// Gets the current vertical positionally selected child object
 function MenuList::getActiveRow(%this)
 {
    return $activeMenuList.ListPosition.y;
 }
 
+//==============================================================================
+/// Summary:
+/// Called from the engine when a GUIButtonBase-derived class with MenuListButton namespace class
+/// has its highlighting status changed. Allows us to react to this change of state and trigger refreshse
+/// or other events to keep the navigation tracking up to date
+///
+/// \param %state (bool) The on/off state of the button being highlighted
 function MenuListButton::onHighlighted(%this, %state)
 {
+   echo("MenuListButton::onHighlighted() - " @ %this.internalName @ " was " @ %state @ " highlighted");
    %parentContainer = %this.getParent();
    if(%parentContainer.class $= "MenuList" || %parentContainer.superClass $= "MenuList")
    {
@@ -607,6 +707,7 @@ function MenuListButton::onHighlighted(%this, %state)
 	         %parentContainer.buttonPointerCtrl.setHidden(false);
 	         
 	         %buttonCenter = %this.getGlobalCenter();
+            echo("   - button center:" @ %buttonCenter);
 	         
 	         if(%parentContainer.centerButtonPointerCtrl)
 	         {
@@ -617,7 +718,12 @@ function MenuListButton::onHighlighted(%this, %state)
 	            //if we're not centering, then left-justify
 	            %parentContainer.buttonPointerCtrl.setGlobalCenter(%buttonCenter.x - %this.extent.x / 2, %buttonCenter.y);  
 	         }
+            echo("   - pointer position:" @ %parentContainer.buttonPointerCtrl.getPosition());
 	      }
+         /*else
+      {
+         %parentContainer.buttonPointerCtrl.setHidden(true);
+         }*/
       }
    }
 }

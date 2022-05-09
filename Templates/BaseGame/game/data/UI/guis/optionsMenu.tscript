@@ -116,8 +116,17 @@ function OptionsMenu::onOpen(%this)
    $activeMenuButtonContainer-->button5.set("btn_b", "Escape", "Back", %this @ ".navigation.popPage();");
 }
    
+//We capitalize on the canClose test here, because we want to prompt for unapplied options changes before
+//backing out. So when the UINavigation test canClose, we can see if we have unapplied settings and prompt
+//that via the message box and return false.
+//This gives the user a chance to choose how they wish to proceed before we allow the 
+//UINavigation to move away from the options menu
 function OptionsMenu::canClose(%this)
 {
+   //Another special case is us catching the 'back/pop' action by just shifting from one
+   //menu list to another. In this case, we check if we were on the settings list as our active MenuList
+   //if so, then the back/pop just moves us to the Category list as our active and we inform the 
+   //UINavigation to not close the page
    if(OptionsMenuSettingsList.isActiveMenuList())
    {
    OptionsMenuCategoryList.setAsActiveMenuList();
@@ -126,6 +135,9 @@ function OptionsMenu::canClose(%this)
    }
    else
    {
+      //Here, we're on the category list as our active, so we're actually trying to leae the page
+      //If we have unapplied changes, we want to prompt about them before closing the page and navigating away
+      //If we don't, then we can process the popPage as normal and let the OptionsMenu close
       if(%this.unappliedChanges.count() != 0)
       {
          MessageBoxOKCancel("Discard Changes?", "You have unapplied changes to your settings, do you wish to apply or discard them?", 

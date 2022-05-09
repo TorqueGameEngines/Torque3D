@@ -102,8 +102,6 @@ function ChooseLevelDlg::onOpen(%this)
    else
       LevelSelectTitle.setText("CREATE SERVER");
    
-   ChooseLevelButtonHolder.setActive();
-
    $activeMenuButtonContainer-->button1.disable();
    $activeMenuButtonContainer-->button2.disable();
    $activeMenuButtonContainer-->button3.disable();

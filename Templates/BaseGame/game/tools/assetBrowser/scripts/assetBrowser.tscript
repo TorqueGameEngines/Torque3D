@@ -2517,7 +2517,14 @@ function GuiEditor::onControlDropped(%this, %payload, %position)
    else
    {
       %className = %payload.assetName;
+      if(%payload.altCommand !$= "")
+      {
+         %cmd = %payload.altCommand;
+      }
+      else
+      {
       %cmd = "return new " @ %className @ "();";
+      }
       %ctrl = eval( %cmd );
    }
 

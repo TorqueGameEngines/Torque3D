@@ -85,6 +85,9 @@ function UI::initClient(%this)
    %this.queueExec("./scripts/help");
    %this.queueExec("./scripts/cursors");
    %this.queueExec("./scripts/utility");
+   
+   if(isToolBuild())
+      %this.queueExec("./tools/creator.tscript");
 }
 
 function UI::onCreateClientConnection(%this){}

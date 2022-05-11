@@ -308,6 +308,13 @@ function OptionsMenu::refresh(%this)
       %command = %this.optionsCategories.getValue(%this.currentCategory);
       eval(%command);
    }
+   
+   //now, because we reconstruct the displayed set, we'll force the mouse(if we're using it as our input)
+   //to be poked so we can re-track to whatever control, if any, we're over
+   if($activeControllerType !$= "gamepad")
+   {
+      Canvas.setCursorPos(Canvas.getCursorPos());  
+   }
 }
 
 function OptionsMenu::getOptionVariableValue(%this, %variableName)

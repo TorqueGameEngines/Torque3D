@@ -130,6 +130,8 @@ function AssetBrowser::loadCreatorClasses(%this)
    %this.creatorClassArray.sort(true);
    
    %guiClasses.delete();
+   
+   callOnModules("loadModuleCreatorClasses");
 }
 
 function AssetBrowser::beginCreatorGroup(%this, %group, %editor)
@@ -185,7 +187,14 @@ function AssetBrowser::addCreatorClass(%this, %class, %name, %buildfunc)
       %cmd = "ObjectBuilderGui.build" @ %buildfunc @ "();";
    }
 
-   %buildfunc = "ObjectBuilderGui.newObjectCallback = \"AssetBrowser.onFinishCreateObject\"; ObjectCreator.createObject( \"" @ %cmd @ "\" );";
+   if(GuiEditorIsActive())
+   {
+      %buildfunc = "return " @ %cmd;
+   }
+   else
+   {
+      %buildfunc = "ObjectBuilderGui.newObjectCallback = \"AssetBrowser.onFinishCreateObject\"; ObjectCreator.createObject( \"" @ %cmd @ "\" );";
+   }
    
    %args = new ScriptObject();
    %args.val[0] = %class;

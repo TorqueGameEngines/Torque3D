@@ -81,6 +81,8 @@ static SFXAmbience sDefaultAmbience;
 LevelInfo::LevelInfo()
    :  mWorldSize( 10000.0f ),
       mNearClip( 0.1f ),
+      mCameraSize(16.0f, 9.0f),
+      mTorque2DScene(false),
       mVisibleDistance( 1000.0f ),
       mVisibleGhostDistance ( 0 ),
       mDecalBias( 0.0015f ),
@@ -131,6 +133,11 @@ void LevelInfo::initPersistFields()
          "NearPlane bias used when rendering Decal and DecalRoad. This should be tuned to the visibleDistance in your level." );
 
    endGroup( "Visibility" );
+
+   addGroup("Torque 2D Specific");
+      addField("torque2dScene", TypeBool, Offset(mTorque2DScene, LevelInfo), "Set this level to a torque2d level");
+      addField("cameraSize", TypePoint2F, Offset(mCameraSize, LevelInfo), "Sets the camera size for a 2d scene");
+   endGroup("Torque 2D Specific");
 
    addGroup( "Fog" );
 
@@ -197,6 +204,10 @@ U32 LevelInfo::packUpdate(NetConnection *conn, U32 mask, BitStream *stream)
    U32 retMask = Parent::packUpdate(conn, mask, stream);
 
    stream->write( mNearClip );
+
+   mathWrite(*stream, mCameraSize);
+   stream->writeFlag( mTorque2DScene );
+
    stream->write( mVisibleDistance );
    stream->write( mDecalBias );
 
@@ -227,6 +238,10 @@ void LevelInfo::unpackUpdate(NetConnection *conn, BitStream *stream)
    Parent::unpackUpdate(conn, stream);
 
    stream->read( &mNearClip );
+
+   mathRead(*stream, &mCameraSize);
+   mTorque2DScene = stream->readFlag();
+
    stream->read( &mVisibleDistance );
    stream->read( &mDecalBias );
 
@@ -317,7 +332,10 @@ void LevelInfo::_updateSceneGraph()
       mNearClip = 0.001f;
 
    SceneManager* scene = isClientObject() ? gClientSceneGraph : gServerSceneGraph;
-   
+
+   scene->setCameraSize(mCameraSize);
+   scene->setTorque2DScene(mTorque2DScene);
+
    scene->setNearClip( mNearClip );
    scene->setVisibleDistance( mVisibleDistance );
    scene->setVisibleGhostDistance( mVisibleGhostDistance );

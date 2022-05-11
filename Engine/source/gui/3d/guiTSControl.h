@@ -42,6 +42,11 @@
 class IDisplayDevice;
 class GuiOffscreenCanvas;
 
+// Torque2D defines.
+#define MASK_ALL                        (U32_MAX)
+#define MASK_BITCOUNT                   (32)
+#define MAX_LAYERS_SUPPORTED            (32)
+
 struct CameraQuery
 {
    SimObject*  object;
@@ -61,6 +66,13 @@ struct CameraQuery
    GFXTextureTarget* stereoTargets[2];
    GuiCanvas* drawCanvas; // Canvas we are drawing to. Needed for VR
 
+   // Torque2D Specifics
+   RectF mCamArea;
+   Point2F mSceneMin;
+   Point2F mSceneMax;
+   Point2F mCameraScale;
+   Point2F mCameraSize;
+
    IDisplayDevice* displayDevice;
 };
 
@@ -74,6 +86,7 @@ public:
       RenderStyleStandard           = 0,
       RenderStyleStereoSideBySide   = (1<<0),
       RenderStyleStereoSeparate     = (1<<1),
+      RenderStyleTorque2D           = (1<<2),
    };
 
 protected:
@@ -157,7 +170,13 @@ public:
    const Point2F& getWorldToScreenScale() const { return mSaveWorldToScreenScale; }
 
    /// Returns the last camera query set in onRender.
-   const CameraQuery& getLastCameraQuery() const { return mLastCameraQuery; }   
+   const CameraQuery& getLastCameraQuery() const { return mLastCameraQuery; }
+
+   /// Torque2D functions for converting windowPoint to scene point based on camera.
+   void windowToScene(const Point2F& srcPt, Point2F& dstPt);
+
+   /// Torque2D functions for converting scene Point to window Point based on camera.
+   void sceneToWindow(const Point2F& srcPt, Point2F& dstPt);
    
    /// Returns the screen space X,Y and Z for world space point.
    /// The input z coord is depth, from 0 to 1.

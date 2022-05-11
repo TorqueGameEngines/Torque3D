@@ -116,6 +116,8 @@ SceneManager::SceneManager( bool isClient )
      mVisibleDistance( 500.f ),
      mVisibleGhostDistance( 0 ),
      mNearClip( 0.1f ),
+     mTorque2DScene(false),
+     mCameraSize(16.0f, 9.0f),
      mLightManager( NULL ),
      mAmbientLightColor( LinearColorF( 0.1f, 0.1f, 0.1f, 1.0f ) ),
      mDefaultRenderPass( NULL )

@@ -249,7 +249,8 @@ public:
    {
       RS_Standard          = 0,
       RS_StereoSideBySide  = (1<<0),     // Render into current Render Target side-by-side
-      RS_StereoSeparate    = (1<<1)      // Render in two separate passes (then combined by vr compositor)
+      RS_StereoSeparate    = (1<<1),     // Render in two separate passes (then combined by vr compositor)
+      RS_Torque2D          = (1<<2)      // Render in layers for torque2d.
    };
 
    enum GFXDeviceLimits

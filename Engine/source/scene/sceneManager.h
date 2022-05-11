@@ -148,6 +148,10 @@ class SceneManager
       F32 mVisibleGhostDistance;
       F32 mNearClip;
 
+      // torque2d
+      Point2F mCameraSize;
+      bool mTorque2DScene;
+
       FogData mFogData;
 
       WaterFogData mWaterFogData;
@@ -331,6 +335,13 @@ class SceneManager
       /// @see GameProcessCameraQuery
       /// @see LevelInfo
       void setNearClip( F32 nearClip ) { mNearClip = nearClip; }
+
+      // torque2d specific value
+      void setCameraSize(Point2F cameraSize) { mCameraSize = cameraSize; }
+      Point2F getCameraSize() { return mCameraSize; }
+
+      void setTorque2DScene(bool is2DScene) { mTorque2DScene = is2DScene; }
+      bool isTorque2DScene() { return mTorque2DScene; }
 
       /// Returns the default near clip distance for the scene.
       F32 getNearClip() { return mNearClip; }

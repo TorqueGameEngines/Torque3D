@@ -53,6 +53,10 @@ endif()
 ###############################################################################
 # modules
 ###############################################################################
+option(TORQUE_2D "Torque 2D" OFF)
+if(TORQUE_2D)
+	option(TORQUE_BOX2D "Box2D Physics" ON)
+endif()
 option(TORQUE_SFX_VORBIS "Vorbis Sound" ON)
 mark_as_advanced(TORQUE_SFX_VORBIS)
 option(TORQUE_THEORA "Theora Video Support" ON)
@@ -368,6 +372,11 @@ addPath("${srcDir}/T3D/lighting")
 addPath("${srcDir}/T3D/gameObjects")
 addPathRec("${srcDir}/T3D/components/")
 addPathRec("${srcDir}/T3D/systems")
+
+if(TORQUE_2D)
+	addPath("${srcDir}/T2D")
+	addPath("${srcDir}/T2D/assets")
+endif()
 
 addPath("${srcDir}/main/")
 addPath("${srcDir}/assets")
@@ -708,6 +717,10 @@ endif()
 ###############################################################################
 # Common Libraries
 ###############################################################################
+if(TORQUE_BOX2D)
+	add_subdirectory( ${libDir}/Box2D ${CMAKE_CURRENT_BINARY_DIR}/box2d)
+endif()
+
 addLib(lpng)
 addLib(ljpeg)
 addLib(zlib)
@@ -802,6 +815,11 @@ addDef(DOM_INCLUDE_TINYXML)
 addDef(PCRE_STATIC)
 addDef(_CRT_SECURE_NO_WARNINGS)
 addDef(_CRT_SECURE_NO_DEPRECATE)
+
+#if torque2d add def for internal torque2d specific classes
+if(TORQUE_2D)
+	addDef(TORQUE_2D)
+endif()
 
 if(UNIX AND NOT APPLE)
 	addDef(LINUX)
@@ -989,6 +1007,13 @@ if(TORQUE_SFX_OPENAL AND WIN32)
      #why is openal adding these two?
     set_target_properties(common PROPERTIES FOLDER ${TORQUE_LIBS_FOLDER_NAME})
     set_target_properties(ex-common PROPERTIES FOLDER ${TORQUE_LIBS_FOLDER_NAME})
+endif()
+
+if(TORQUE_2D AND TORQUE_BOX2D)
+	# Box2D does not require different setups for platform (as far as i know) the cmake in box2d sorts itself out.
+	find_package(box2d REQUIRED)
+	target_link_libraries(${PROJECT_NAME} "box2d")
+	set_target_properties(box2d PROPERTIES FOLDER ${TORQUE_LIBS_FOLDER_NAME})
 endif()
 
 if(TORQUE_SDL)

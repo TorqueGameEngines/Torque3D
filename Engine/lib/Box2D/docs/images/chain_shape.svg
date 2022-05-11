@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:osb="http://www.openswatchbook.org/uri/2009/osb"
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   sodipodi:docname="chain_shape.svg"
+   inkscape:version="1.0 (4035a4fb49, 2020-05-01)"
+   version="1.1"
+   id="svg9044"
+   height="225.19205"
+   width="402.73563">
+  <defs
+     id="defs9046">
+    <linearGradient
+       osb:paint="solid"
+       id="linearGradient9562">
+      <stop
+         id="stop9564"
+         offset="0"
+         style="stop-color:#000000;stop-opacity:1;" />
+    </linearGradient>
+  </defs>
+  <sodipodi:namedview
+     inkscape:document-rotation="0"
+     fit-margin-bottom="0"
+     fit-margin-right="0"
+     fit-margin-left="0"
+     fit-margin-top="0"
+     inkscape:window-maximized="0"
+     inkscape:window-y="60"
+     inkscape:window-x="150"
+     inkscape:window-height="1041"
+     inkscape:window-width="1359"
+     showgrid="false"
+     inkscape:current-layer="layer1"
+     inkscape:document-units="px"
+     inkscape:cy="186.37568"
+     inkscape:cx="193.56931"
+     inkscape:zoom="2.8"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     borderopacity="1.0"
+     bordercolor="#666666"
+     pagecolor="#ffffff"
+     id="base" />
+  <metadata
+     id="metadata9049">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     transform="translate(-183.55811,-264.25629)"
+     id="layer1"
+     inkscape:groupmode="layer"
+     inkscape:label="Layer 1">
+    <path
+       sodipodi:nodetypes="csccc"
+       inkscape:export-ydpi="179.94545"
+       inkscape:export-xdpi="179.94545"
+       inkscape:export-filename="D:\Development\Box2D\Box2D\Documentation\images\Chain1.png"
+       inkscape:connector-curvature="0"
+       id="path9052"
+       d="m 323.77573,448.72257 c 17.00369,9.32859 68.03674,37.35768 70.04901,38.08934 4.02453,1.46331 83.91263,-37.80722 83.91263,-37.80722 l 105.40088,-34.7384 -76.62636,-97.92976"
+       style="fill:none;stroke:#767676;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <path
+       id="path845"
+       d="m 506.51189,316.33653 58.7583,-35.85104"
+       style="fill:none;stroke:#767676;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:4, 4;stroke-dashoffset:0;stroke-opacity:1" />
+    <path
+       id="path847"
+       d="M 253.47669,467.02956 187.05916,434.70468"
+       style="fill:none;stroke:#767676;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:4, 4;stroke-dashoffset:0;stroke-opacity:1" />
+    <path
+       id="path849"
+       d="m 253.47669,467.02956 70.29904,-18.30699"
+       style="fill:none;stroke:#767676;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+    <circle
+       r="2.5253813"
+       cy="611.93567"
+       cx="241.93153"
+       inkscape:export-ydpi="179.94545"
+       inkscape:export-xdpi="179.94545"
+       inkscape:export-filename="D:\Development\Box2D\Box2D\Documentation\images\Chain1.png"
+       transform="translate(-54.372373,-177.18205)"
+       id="path6867"
+       style="fill:#b0ddb3;fill-opacity:1;stroke:#7d7d7d;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+    <circle
+       r="2.5253813"
+       cy="611.93567"
+       cx="241.93153"
+       style="fill:#b0ddb3;fill-opacity:1;stroke:#7d7d7d;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="path9620"
+       transform="translate(11.817253,-145.14071)"
+       inkscape:export-filename="D:\Development\Box2D\Box2D\Documentation\images\Chain1.png"
+       inkscape:export-xdpi="179.94545"
+       inkscape:export-ydpi="179.94545" />
+    <circle
+       r="2.5253813"
+       cy="611.93567"
+       cx="241.93153"
+       inkscape:export-ydpi="179.94545"
+       inkscape:export-xdpi="179.94545"
+       inkscape:export-filename="D:\Development\Box2D\Box2D\Documentation\images\Chain1.png"
+       transform="translate(81.49165,-163.51344)"
+       id="path9622"
+       style="fill:#b0ddb3;fill-opacity:1;stroke:#7d7d7d;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+    <circle
+       r="2.5253813"
+       cy="611.93567"
+       cx="241.93153"
+       style="fill:#b0ddb3;fill-opacity:1;stroke:#7d7d7d;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="path9624"
+       transform="translate(235.87634,-162.86043)"
+       inkscape:export-filename="D:\Development\Box2D\Box2D\Documentation\images\Chain1.png"
+       inkscape:export-xdpi="179.94545"
+       inkscape:export-ydpi="179.94545" />
+    <circle
+       r="2.5253813"
+       cy="611.93567"
+       cx="241.93153"
+       inkscape:export-ydpi="179.94545"
+       inkscape:export-xdpi="179.94545"
+       inkscape:export-filename="D:\Development\Box2D\Box2D\Documentation\images\Chain1.png"
+       transform="translate(152.3854,-125.51272)"
+       id="path9626"
+       style="fill:#b0ddb3;fill-opacity:1;stroke:#7d7d7d;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+    <circle
+       r="2.5253813"
+       cy="611.93567"
+       cx="241.93153"
+       inkscape:export-ydpi="179.94545"
+       inkscape:export-xdpi="179.94545"
+       inkscape:export-filename="D:\Development\Box2D\Box2D\Documentation\images\Chain1.png"
+       transform="translate(341.33682,-197.58559)"
+       id="path9628"
+       style="fill:#b0ddb3;fill-opacity:1;stroke:#7d7d7d;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+    <circle
+       r="2.5253813"
+       cy="611.93567"
+       cx="241.93153"
+       style="fill:#b0ddb3;fill-opacity:1;stroke:#7d7d7d;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="path9630"
+       transform="translate(265.17257,-295.86296)"
+       inkscape:export-filename="D:\Development\Box2D\Box2D\Documentation\images\Chain1.png"
+       inkscape:export-xdpi="179.94545"
+       inkscape:export-ydpi="179.94545" />
+    <circle
+       r="2.5253813"
+       cy="611.93567"
+       cx="241.93153"
+       inkscape:export-ydpi="179.94545"
+       inkscape:export-xdpi="179.94545"
+       inkscape:export-filename="D:\Development\Box2D\Box2D\Documentation\images\Chain1.png"
+       transform="translate(323.65299,-332.43511)"
+       id="path9632"
+       style="fill:#b0ddb3;fill-opacity:1;stroke:#7d7d7d;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+    <text
+       inkscape:export-ydpi="179.94545"
+       inkscape:export-xdpi="179.94545"
+       inkscape:export-filename="D:\Development\Box2D\Box2D\Documentation\images\Chain1.png"
+       id="text9634"
+       y="426.1131"
+       x="183.1958"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0%;font-family:Calibri;-inkscape-font-specification:Calibri;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none"
+       xml:space="preserve"><tspan
+         style="font-size:14px;line-height:1.25"
+         y="426.1131"
+         x="183.1958"
+         id="tspan9636"
+         sodipodi:role="line">ghost</tspan></text>
+    <text
+       inkscape:export-ydpi="179.94545"
+       inkscape:export-xdpi="179.94545"
+       inkscape:export-filename="D:\Development\Box2D\Box2D\Documentation\images\Chain1.png"
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0%;font-family:Calibri;-inkscape-font-specification:Calibri;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none"
+       x="549.41998"
+       y="273.77875"
+       id="text9638"><tspan
+         style="font-size:14px;line-height:1.25"
+         sodipodi:role="line"
+         id="tspan9640"
+         x="549.41998"
+         y="273.77875">ghost</tspan></text>
+  </g>
+</svg>

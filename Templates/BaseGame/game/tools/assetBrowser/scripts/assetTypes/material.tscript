@@ -530,7 +530,7 @@ function AssetBrowser::generateMaterialAssetPreviewImage(%this, %previewButton, 
          }
       }
       
-         %previewButton.bitmapAsset = %previewAssetName;
+         %previewButton.bitmapAsset = "ToolsModule:" @ %previewAssetName;
          return true;
    }
    }

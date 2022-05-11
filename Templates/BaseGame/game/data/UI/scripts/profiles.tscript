@@ -348,7 +348,7 @@ new GuiControlProfile( GuiPopupMenuItemBorder : GuiButtonProfile )
    fixedExtent = false;
    justify = "center";
    canKeyFocus = false;
-   bitmap = "data/ui/images/button";
+   bitmapAsset = "UI:menubutton_image";
    category = "Core";
 };
 

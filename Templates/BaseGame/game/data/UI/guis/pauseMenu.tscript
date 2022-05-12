@@ -23,6 +23,8 @@ function PauseMenu::onWake(%this)
    PauseMenuList.setAsActiveMenuList();
    PauseButtonHolder.setActive();
    PauseMenuInputHandler.setFirstResponder();
+   
+   %this.resizePages = true;
 }
 
 
@@ -35,37 +37,28 @@ function PauseMenu::onSleep(%this)
    }
 }
 
-function PauseMenu::onReturnTo(%this)
-{
-   PauseMenuList.hidden = false;
-   PauseMenuList.setAsActiveMenuList();
-   PauseButtonHolder.setActive();
-   PauseMenuInputHandler.setFirstResponder();
-}
-
 function openPauseMenuOptions()
 {
-   Canvas.pushDialog(OptionsMenu);
-   OptionsMenu.returnGui = PauseMenu; 
-   PauseMenuList.hidden = true;
+   PauseMenu.pushPage(OptionsMenu);
 }
 
 function pauseMenuExitToMenu()
 {
-   PauseMenuList.hidden = true;
-   MessageBoxOKCancel("Exit?", "Do you wish to exit to the Main Menu?", "escapeFromGame();", "PauseMenu.onReturnTo();");
+   MessageBoxOKCancel("Exit?", "Do you wish to exit to the Main Menu?", "escapeFromGame();", "");
 }
 
 function pauseMenuExitToDesktop()
 {
-   PauseMenuList.hidden = true;
-   MessageBoxOKCancel("Exit?", "Do you wish to exit to the desktop?", "quit();", "PauseMenu.onReturnTo();");
+   MessageBoxOKCancel("Exit?", "Do you wish to exit to the desktop?", "quit();", "");
 }
 
 function PauseButtonHolder::onWake(%this)
 {
-   %this-->goButton.set("btn_a", "Return", "OK", "PauseMenuList.activate();", true);
-   %this-->backButton.set("btn_b", "Escape", "Back", "Canvas.popDialog();");
+   %this-->button1.disable();
+   %this-->button2.disable();
+   %this-->button3.disable();
+   %this-->button4.set("btn_a", "", "OK", "PauseMenuList.activate();");
+   %this-->button4.set("btn_b", "Escape", "Back", "Canvas.popDialog();");
 }
 
 function PauseMenu::addPauseMenuButton(%this, %buttonText, %buttonCallback)

@@ -362,12 +362,8 @@ function AssetBrowser::generateShapeAssetPreviewImage(%this, %previewButton, %fo
             return false; //failed to register the preview image for some reason?
    }
    }
-   else
-   {
-         %previewAssetName = "ToolsModule:" @ %previewAssetName;
-   }
    
-      %previewButton.bitmapAsset = %previewAssetName;
+      %previewButton.bitmapAsset = "ToolsModule:" @ %previewAssetName;
       return true;
    }
    else

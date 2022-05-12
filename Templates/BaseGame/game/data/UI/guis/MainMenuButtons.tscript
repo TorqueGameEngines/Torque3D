@@ -1,0 +1,116 @@
+function MainMenuButtons::onWake(%this)
+{
+}
+
+function MainMenuButtons::onSleep(%this)
+{
+}
+
+//==============================================================================
+// This gets called by the MainMenuGUI beacuse it, being a UINavigation classed control
+// set MainMenuButtonList as it's root page. 
+// This is an optional function, but is called as part of the validation that the page
+// CAN be opened, so it's shown here as an example
+function MainMenuButtonList::canOpen(%this)
+{
+   return true;
+}
+
+//==============================================================================
+// This gets called by the MainMenuGUI beacuse it, being a UINavigation classed control
+// set MainMenuButtonList as it's root page. 
+// Once the page is added to the MainMenuGUI's UINavigation page stack, onOpen here is called
+// Which allows us to actually do the work we need to do for display
+function MainMenuButtonList::onOpen(%this)
+{
+   //Here, we set the MainMenuButtonList - a GuiStackControl with the MenuList class
+   // to be the active menu list.
+   // This means that when the MainMenuGUI's MainMenuInputHandler receives an input
+   // or we have one of the buttons in the MainMenuButtonHolder be actioned, we know
+   // we're working/navigating this list of buttons specifically
+   // In practice, it sets the $activeMenuList global variable so the various menu class code
+   // can reference it consistently
+   MainMenuButtonList.setAsActiveMenuList();
+   
+   //Because MainMenuGUI set it's MainMenuButtonHolder as the active button container, we can reference it
+   //by $activeMenuButtonContainer and set the menu button/accelerator prompts we need for the MainMenuButtonList
+   //specifically.
+   //In particular, being a simple list of buttons, the only one we NEED is a simple activate, so we'll
+   //disable all the other ones to keep them clear in case they were set by other pages at some point
+   $activeMenuButtonContainer-->button1.disable();
+   $activeMenuButtonContainer-->button2.disable();
+   $activeMenuButtonContainer-->button3.disable();
+   
+   //Here we set the 4th button in the container
+   //All the buttons have the MenuInputButton class, which, like the other classes
+   //help keep things accessible and consistent. Here we use that class's set function to
+   //configure the accelerator behavior
+   //The first parameter sets the gamepad button to the 'A' button
+   //The second sets the keyboard button to Enter or Return
+   //Third is what the displayed text will be
+   //And finally we set the command when the button is clicked, or either key inputs are caught by
+   //our MenuInputHandler
+   //The menu buttons automatically detect which input device you're using and swap the display between
+   //gamepad or keyboard for consistent behavior
+   $activeMenuButtonContainer-->button4.set("btn_a", "Return", "Go", "MainMenuButtonList.activate();");
+   $activeMenuButtonContainer-->button5.disable();
+}
+
+//Optional, as the check defaults to true, but here as an example case
+function MainMenuButtonList::canClose(%this)
+{
+   return true;
+}
+
+
+function MainMenuButtonList::onClose(%this)
+{
+}
+
+//Our actual commands when we activate the buttons
+function openSinglePlayerMenu()
+{
+   $pref::HostMultiPlayer=false;
+   MainMenuGui.pushPage(ChooseLevelDlg);
+}
+
+function openMultiPlayerMenu()
+{
+   $pref::HostMultiPlayer=true;
+   
+   //Here, like the other commands, we add a new page onto the stack
+   //In this case, we'll push the ChooseLevelDlg control onto the stack. This will
+   //invoke the canClose() and then onClose() functions for MainMenuButtonList
+   //before calling the onOpen() for ChooseLevelDlg then displaying.
+   MainMenuGui.pushPage(ChooseLevelDlg);
+}
+
+function openJoinServerMenu()
+{
+   //Here, like the other commands, we add a new page onto the stack
+   //In this case, we'll push the JoinServerMenu control onto the stack. This will
+   //invoke the canClose() and then onClose() functions for MainMenuButtonList
+   //before calling the onOpen() for JoinServerMenu then displaying.
+   MainMenuGui.pushPage(JoinServerMenu);
+}
+
+function openOptionsMenu()
+{
+   //Here, like the other commands, we add a new page onto the stack
+   //In this case, we'll push the OptionsMenu control onto the stack. This will
+   //invoke the canClose() and then onClose() functions for MainMenuButtonList
+   //before calling the onOpen() for OptionsMenu then displaying.
+   //The options menu additionally has an example of why we may want to capitalize on the
+   //canClose() call.
+   MainMenuGui.pushPage(OptionsMenu);
+}
+
+function openWorldEditorBtn()
+{
+   fastLoadWorldEdit(1);
+}
+
+function openGUIEditorBtn()
+{
+   fastLoadGUIEdit(1);
+}

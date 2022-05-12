@@ -1,26 +1,17 @@
 
 function JoinServerMenu::onWake(%this)
 {
-   JoinServerButtonHolder.setActive();
-   
-   JoinServerList.setAsActiveMenuList();
-   
-   JoinServerMenuInputHandler.setFirstResponder();
 }   
 
-function JoinServerButtonHolder::onWake(%this)
+function JoinServerMenu::onOpen(%this)
 {
-   %this-->joinButton.set("btn_start", "Return", "Join", "JoinServerMenu.join();");
-   %this-->backButton.set("btn_b", "Escape", "Back", "JoinServerMenu.backOut();");
-   %this-->refreshButton.set("btn_y", "R", "Refresh", "JoinServerMenu.refresh();");
-   %this-->queryLANButton.set("btn_a", "Q", "Query LAN", "JoinServerMenu.queryLan();");
-   %this-->queryInternetButton.set("btn_x", "E", "Query Online", "JoinServerMenu.query();");
-}
+   JoinServerList.setAsActiveMenuList();
 
-function JoinServerMenuInputHandler::onInputEvent(%this, %device, %action, %state)
-{
-   if(%state)
-      $activeMenuButtonContainer.processInputs(%device, %action);
+   $activeMenuButtonContainer-->button1.set("btn_y", "R", "Refresh", "JoinServerMenu.refresh();");
+   $activeMenuButtonContainer-->button2.set("btn_a", "Q", "Query LAN", "JoinServerMenu.queryLan();");
+   $activeMenuButtonContainer-->button3.set("btn_x", "E", "Query Online", "JoinServerMenu.query();");
+   $activeMenuButtonContainer-->button4.set("btn_start", "Return", "Join", "JoinServerMenu.join();");
+   $activeMenuButtonContainer-->button5.set("btn_b", "Escape", "Back", "cancelServerQuery(); " @ %this @ ".navigation.popPage();");
 }
 
 //----------------------------------------
@@ -79,7 +70,7 @@ function JoinServerMenu::join(%this)
 function JoinServerMenu::refresh(%this)
 {
    cancelServerQuery();
-   %index= JS_serverList.getSelectedId();
+   %index= JoinServerList.getActiveRow();
 
    // The server info index is stored in the row along with the
    // rest of displayed info.
@@ -91,16 +82,6 @@ function JoinServerMenu::refresh(%this)
 function JoinServerMenu::refreshSelectedServer( %this )
 {
    querySingleServer( $JoinGameAddress, 0 );
-}
-
-//----------------------------------------
-function JoinServerMenu::backOut(%this)
-{
-   cancelServerQuery();
-   
-   Canvas.popDialog(JoinServerMenu);
-   if(isObject(JoinServerMenu.returnGui) && JoinServerMenu.returnGui.isMethod("onReturnTo"))    
-      JoinServerMenu.returnGui.onReturnTo();  
 }
 
 //----------------------------------------
@@ -124,7 +105,7 @@ function JoinServerMenu::update(%this)
       JoinServerList.add(%serverBtn);
    }
 
-   JoinServerButtonHolder-->joinButton.setActive(JoinServerList.getCount() > 0);
+   $activeMenuButtonContainer-->button4.setActive(JoinServerList.getCount() > 0);
 } 
 
 //----------------------------------------

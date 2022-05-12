@@ -671,10 +671,17 @@ function AssetBrowser::loadDirectories( %this )
       
    if(%this.selectMode)
    {
+      //Due to a fluke in how this tracks, it overrides the current addres, so we'll
+      //store it real fast
+      %curAdd = AssetBrowser.dirHandler.currentAddress;
+      
+      //Disable these for this go
       AssetBrowser-->filterTree.addSelection(AssetBrowser-->filterTree.collectionsIdx);
       AssetBrowser-->filterTree.addSelection(AssetBrowser-->filterTree.creatorIdx);
-      
       AssetBrowser-->filterTree.hideSelection();
+      AssetBrowser-->filterTree.clearSelection();
+      
+      AssetBrowser.dirHandler.currentAddress = %curAdd;
    }
    
    %this.dirHandler.loadFolders("data", %dataItem);
@@ -699,49 +706,6 @@ function AssetBrowser::loadDirectories( %this )
       %toolsItem = AssetBrowser-->filterTree.insertItem(AssetBrowser-->filterTree.modulesIdx, "tools");
       %this.dirHandler.loadFolders("tools", %toolsItem);
    }
-   
-   //Add Non-Asset Scripted Objects. Datablock, etc based
-   /*%category = getWord( %breadcrumbPath, 1 );                  
-   %dataGroup = "DataBlockGroup";
-   
-   if(%dataGroup.getCount() != 0)
-   {
-      %scriptedItem = AssetBrowser-->filterTree.insertItem(1, "Scripted");
-      
-      for ( %i = 0; %i < %dataGroup.getCount(); %i++ )
-      {
-         %obj = %dataGroup.getObject(%i);
-         // echo ("Obj: " @ %obj.getName() @ " - " @ %obj.category );
-         
-         //if ( %obj.category $= "" && %obj.category == 0 )
-         //   continue;
-         
-         %dbFilename = %obj.getFileName();
-         %dbFilePath = filePath(%dbFilename);
-         
-         if(%breadcrumbPath $= %dbFilePath)
-         {
-         
-         //if ( %breadcrumbPath $= "" )
-         //{         
-            %catItem = AssetBrowser-->filterTree.findItemByName(%obj.category);
-            
-            if(%catItem == 0)
-               AssetBrowser-->filterTree.insertItem(%scriptedItem, %obj.category, "scripted");
-            /*%ctrl = %this.findIconCtrl( %obj.category );
-            if ( %ctrl == -1 )
-            {
-               %this.addFolderIcon( %obj.category );
-            }*/
-         //}
-         /*else if ( %breadcrumbPath $= %obj.category )
-         {            
-            AssetBrowser-->filterTree.insertItem(%scriptedItem, %obj.getName());
-         }*/
-         //}
-      //}
-  // }
-   
    
    AssetBrowser-->filterTree.buildVisibleTree(true);
    
@@ -768,9 +732,6 @@ function AssetBrowser::loadDirectories( %this )
       AssetBrowser-->filterTree.selectItem(%newModuleItem);
       AssetBrowser.newModuleId = ""; 
    }
-   
-   //%dataItem = AssetBrowser-->filterTree.findItemByName("data");
-   //AssetBrowser-->filterTree.expandItem(%dataItem);
    
    AssetBrowser.dirHandler.expandTreeToAddress(AssetBrowser.dirHandler.currentAddress);
    
@@ -1476,6 +1437,40 @@ function AssetBrowser::doRebuildAssetArray(%this)
 
    %finalAssetCount = 0;
    
+   //Add folders
+   if(EditorSettings.value("Assets/Browser/showFolders", true) == true)
+   {
+      %folders = getDirectoryList(%breadcrumbPath);
+      for(%f=0; %f < getFieldCount(%folders); %f++)
+      {
+         %folderName = getField(%folders, %f);
+         
+         %searchActive = AssetSearchTerms.count() != 0;
+         if(%searchActive)
+         {
+            if(matchesSearch(%folderName, "Folder", ""))
+            {
+               $AssetBrowser::AssetArray.add( %breadcrumbPath, "Folder" TAB %folderName );
+               continue;
+            }
+         }
+         else
+         {
+            //got it.	
+            if(%folderName $= "shaderCache" || %folderName $= "cache" || %folderName $= ".git")
+               continue;
+               
+            if(!%this.coreModulesFilter && %folderName $= "core" && %breadcrumbPath $= "")
+               continue;
+               
+            if(!%this.toolsModulesFilter && %folderName $= "tools" && %breadcrumbPath $= "")
+               continue;
+               
+            $AssetBrowser::AssetArray.add( %breadcrumbPath, "Folder" TAB %folderName );
+         }
+      }
+   }
+   
     //now, we'll iterate through, and find the assets that are in this module, and this category
     for( %i=0; %i < %numAssetsFound; %i++)
     {
@@ -1541,40 +1536,6 @@ function AssetBrowser::doRebuildAssetArray(%this)
                if(%assetType !$= "Folder")
                   %finalAssetCount++;
             }
-         }
-      }
-   }
-   
-   //Add folders
-   if(EditorSettings.value("Assets/Browser/showFolders", true) == true)
-   {
-      %folders = getDirectoryList(%breadcrumbPath);
-      for(%f=0; %f < getFieldCount(%folders); %f++)
-      {
-         %folderName = getField(%folders, %f);
-         
-         %searchActive = AssetSearchTerms.count() != 0;
-         if(%searchActive)
-         {
-            if(matchesSearch(%folderName, "Folder", ""))
-            {
-               $AssetBrowser::AssetArray.add( %breadcrumbPath, "Folder" TAB %folderName );
-               continue;
-            }
-         }
-         else
-         {
-            //got it.	
-            if(%folderName $= "shaderCache" || %folderName $= "cache" || %folderName $= ".git")
-               continue;
-               
-            if(!%this.coreModulesFilter && %folderName $= "core" && %breadcrumbPath $= "")
-               continue;
-               
-            if(!%this.toolsModulesFilter && %folderName $= "tools" && %breadcrumbPath $= "")
-               continue;
-               
-            $AssetBrowser::AssetArray.add( %breadcrumbPath, "Folder" TAB %folderName );
          }
       }
    }
@@ -2517,7 +2478,14 @@ function GuiEditor::onControlDropped(%this, %payload, %position)
    else
    {
       %className = %payload.assetName;
+      if(%payload.altCommand !$= "")
+      {
+         %cmd = %payload.altCommand;
+      }
+      else
+      {
       %cmd = "return new " @ %className @ "();";
+      }
       %ctrl = eval( %cmd );
    }
 

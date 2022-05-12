@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -54,9 +54,9 @@ main(int argc, char *argv[])
         int success;
         Uint64 seed = 0;
         if (argv[1][0] == '0' && argv[1][1] == 'x')
-            success = SDL_sscanf(argv[1] + 2, "%llx", &seed);
+            success = SDL_sscanf(argv[1] + 2, "%"SDL_PRIx64, &seed);
         else
-            success = SDL_sscanf(argv[1], "%llu", &seed);
+            success = SDL_sscanf(argv[1], "%"SDL_PRIu64, &seed);
         if (!success) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Invalid seed. Use a decimal or hexadecimal number.\n");
             return 1;

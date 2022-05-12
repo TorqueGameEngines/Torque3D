@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -31,7 +31,7 @@
 #include "SDL_os2output.h"
 #include "SDL_os2video.h"
 
-#include "my_gradd.h"
+#include "SDL_gradd.h"
 
 typedef struct _VODATA {
   PVOID    pBuffer;
@@ -78,7 +78,7 @@ static HMODULE  hmodVMan = NULLHANDLE;
 static FNVMIENTRY *pfnVMIEntry = NULL;
 static ULONG        ulVRAMAddress = 0;
 
-VOID APIENTRY ExitVMan(VOID)
+static VOID APIENTRY ExitVMan(VOID)
 {
     if (ulVRAMAddress != 0 && hmodVMan != NULLHANDLE) {
         pfnVMIEntry(0, VMI_CMD_TERMPROC, NULL, NULL);
@@ -91,10 +91,10 @@ VOID APIENTRY ExitVMan(VOID)
 static BOOL _vmanInit(void)
 {
     ULONG       ulRC;
-    CHAR        acBuf[255];
+    CHAR        acBuf[256];
     INITPROCOUT stInitProcOut;
 
-    if (hmodVMan != NULLHANDLE) /* Already was initialized */
+    if (hmodVMan != NULLHANDLE) /* already initialized */
         return TRUE;
 
     /* Load vman.dll */
@@ -108,8 +108,7 @@ static BOOL _vmanInit(void)
     /* Get VMIEntry */
     ulRC = DosQueryProcAddr(hmodVMan, 0L, "VMIEntry", (PFN *)&pfnVMIEntry);
     if (ulRC != NO_ERROR) {
-        debug_os2("Could not query address of pfnVMIEntry func. of VMAN.DLL, "
-                  "rc = %u", ulRC);
+        debug_os2("Could not query address of VMIEntry from VMAN.DLL (Err: %lu)", ulRC);
         DosFreeModule(hmodVMan);
         hmodVMan = NULLHANDLE;
         return FALSE;
@@ -327,9 +326,8 @@ static BOOL voUpdate(PVODATA pVOData, HWND hwnd, SDL_Rect *pSDLRects,
     PPOINTL     pptlSrcOrg;
     PBLTRECT    pbrDst;
     HWREQIN     sHWReqIn;
-    BITBLTINFO  sBitbltInfo = { 0 };
+    BITBLTINFO  sBitbltInfo;
     ULONG       ulIdx;
-/*  RECTL       rectlScreenUpdate;*/
 
     if (pVOData->pBuffer == NULL)
         return FALSE;
@@ -454,6 +452,7 @@ static BOOL voUpdate(PVODATA pVOData, HWND hwnd, SDL_Rect *pSDLRects,
         rclSrcBounds.xRight = bmiSrc.ulWidth;
         rclSrcBounds.yTop = bmiSrc.ulHeight;
 
+        SDL_zero(sBitbltInfo);
         sBitbltInfo.ulLength = sizeof(BITBLTINFO);
         sBitbltInfo.ulBltFlags = BF_DEFAULT_STATE | BF_ROP_INCL_SRC | BF_PAT_HOLLOW;
         sBitbltInfo.cBlits = cSDLRects;

@@ -1,0 +1,78 @@
+//--- OBJECT WRITE BEGIN ---
+$guiContent = new GuiControl(MainMenuButtons) {
+   extent = "1024 768";
+   profile = "GuiNonModalDefaultProfile";
+   tooltipProfile = "GuiToolTipProfile";
+   isContainer = "1";
+   canSaveDynamicFields = "1";
+      originalAssetName = "MainMenuButtons";
+
+   new GuiStackControl(MainMenuButtonList) {
+      padding = "15";
+      dynamicSize = "0";
+      position = "312 145";
+      extent = "400 477";
+      horizSizing = "center";
+      vertSizing = "center";
+      profile = "GuiDefaultProfile";
+      tooltipProfile = "GuiToolTipProfile";
+      superClass = "MenuList";
+
+      new GuiButtonCtrl(MainMenuSinglePlayerBtn) {
+         text = "Single Player";
+         extent = "400 55";
+         profile = "GuiMenuButtonProfile";
+         command = "openSinglePlayerMenu();";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+      new GuiButtonCtrl(MainMenuCreateSrvrBtn) {
+         text = "Create Server";
+         position = "0 70";
+         extent = "400 55";
+         profile = "GuiMenuButtonProfile";
+         command = "openMultiPlayerMenu();";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+      new GuiButtonCtrl(MainMenuJoinSrvrBtn) {
+         text = "Join Server";
+         position = "0 140";
+         extent = "400 55";
+         profile = "GuiMenuButtonProfile";
+         command = "openJoinServerMenu();";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+      new GuiButtonCtrl(MainMenuOptionBtn) {
+         text = "Options";
+         position = "0 210";
+         extent = "400 55";
+         profile = "GuiMenuButtonProfile";
+         command = "openOptionsMenu();";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+      new GuiButtonCtrl(MainMenuWorldEditBtn) {
+         text = "Open World Editor";
+         position = "0 280";
+         extent = "400 55";
+         profile = "GuiMenuButtonProfile";
+         command = "openWorldEditorBtn();";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+      new GuiButtonCtrl(MainMenuGuiEditBtn) {
+         text = "Open GUI Editor";
+         position = "0 350";
+         extent = "400 55";
+         profile = "GuiMenuButtonProfile";
+         command = "openGUIEditorBtn();";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+      new GuiButtonCtrl(MainMenuExitBtn) {
+         text = "Exit";
+         position = "0 420";
+         extent = "400 55";
+         profile = "GuiMenuButtonProfile";
+         command = "quit();";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+   };
+};
+//--- OBJECT WRITE END ---

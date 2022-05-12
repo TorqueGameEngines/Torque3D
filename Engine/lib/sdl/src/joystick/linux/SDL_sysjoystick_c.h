@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -56,6 +56,11 @@ struct joystick_hwdata
     SDL_bool has_key[KEY_MAX];
     SDL_bool has_abs[ABS_MAX];
 
+    /* Support for the classic joystick interface */
+    SDL_bool classic;
+    Uint16 *key_pam;
+    Uint8 *abs_pam;
+
     struct axis_correct
     {
         SDL_bool use_deadzones;
@@ -74,6 +79,7 @@ struct joystick_hwdata
 
     /* Steam Controller support */
     SDL_bool m_bSteamController;
+
     /* 4 = (ABS_HAT3X-ABS_HAT0X)/2 (see input-event-codes.h in kernel) */
     int hats_indices[4];
     SDL_bool has_hat[4];

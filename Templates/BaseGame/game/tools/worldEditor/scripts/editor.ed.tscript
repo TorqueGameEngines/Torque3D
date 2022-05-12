@@ -191,6 +191,7 @@ package EditorDisconnectOverride
    {
       if ( isObject( Editor ) && Editor.isEditorEnabled() )
       {
+         EditorGui.saveAs = false; //whatever edits we were doing are irrelevent now
          %mainMenuGUI = ProjectSettings.value("UI/mainMenuName");
          if (isObject( %mainMenuGUI ))
             Editor.close( %mainMenuGUI );

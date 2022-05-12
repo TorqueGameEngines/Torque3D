@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -63,7 +63,7 @@ SDL_DYNAPI_PROC(SDL_RWops*,SDL_RWFromFP,(void *a, SDL_bool b),(a,b),return)
 #endif
 
 #ifdef __WIN32__
-SDL_DYNAPI_PROC(int,SDL_RegisterApp,(char *a, Uint32 b, void *c),(a,b,c),return)
+SDL_DYNAPI_PROC(int,SDL_RegisterApp,(const char *a, Uint32 b, void *c),(a,b,c),return)
 SDL_DYNAPI_PROC(void,SDL_UnregisterApp,(void),(),)
 SDL_DYNAPI_PROC(int,SDL_Direct3D9GetAdapterIndex,(int a),(a),return)
 SDL_DYNAPI_PROC(IDirect3DDevice9*,SDL_RenderGetD3D9Device,(SDL_Renderer *a),(a),return)
@@ -849,3 +849,90 @@ SDL_DYNAPI_PROC(SDL_bool,SDL_GameControllerIsSensorEnabled,(SDL_GameController *
 SDL_DYNAPI_PROC(int,SDL_GameControllerGetSensorData,(SDL_GameController *a, SDL_SensorType b, float *c, int d),(a,b,c,d),return)
 SDL_DYNAPI_PROC(int,SDL_wcscasecmp,(const wchar_t *a, const wchar_t *b),(a,b),return)
 SDL_DYNAPI_PROC(int,SDL_wcsncasecmp,(const wchar_t *a, const wchar_t *b, size_t c),(a,b,c),return)
+SDL_DYNAPI_PROC(double,SDL_round,(double a),(a),return)
+SDL_DYNAPI_PROC(float,SDL_roundf,(float a),(a),return)
+SDL_DYNAPI_PROC(long,SDL_lround,(double a),(a),return)
+SDL_DYNAPI_PROC(long,SDL_lroundf,(float a),(a),return)
+SDL_DYNAPI_PROC(int,SDL_SoftStretchLinear,(SDL_Surface *a, const SDL_Rect *b, SDL_Surface *c, const SDL_Rect *d),(a,b,c,d),return)
+#ifdef __WIN32__
+SDL_DYNAPI_PROC(ID3D11Device*,SDL_RenderGetD3D11Device,(SDL_Renderer *a),(a),return)
+#endif
+SDL_DYNAPI_PROC(int,SDL_UpdateNVTexture,(SDL_Texture *a, const SDL_Rect *b, const Uint8 *c, int d, const Uint8 *e, int f),(a,b,c,d,e,f),return)
+SDL_DYNAPI_PROC(void,SDL_SetWindowKeyboardGrab,(SDL_Window *a, SDL_bool b),(a,b),)
+SDL_DYNAPI_PROC(void,SDL_SetWindowMouseGrab,(SDL_Window *a, SDL_bool b),(a,b),)
+SDL_DYNAPI_PROC(SDL_bool,SDL_GetWindowKeyboardGrab,(SDL_Window *a),(a),return)
+SDL_DYNAPI_PROC(SDL_bool,SDL_GetWindowMouseGrab,(SDL_Window *a),(a),return)
+SDL_DYNAPI_PROC(int,SDL_isalpha,(int a),(a),return)
+SDL_DYNAPI_PROC(int,SDL_isalnum,(int a),(a),return)
+SDL_DYNAPI_PROC(int,SDL_isblank,(int a),(a),return)
+SDL_DYNAPI_PROC(int,SDL_iscntrl,(int a),(a),return)
+SDL_DYNAPI_PROC(int,SDL_isxdigit,(int a),(a),return)
+SDL_DYNAPI_PROC(int,SDL_ispunct,(int a),(a),return)
+SDL_DYNAPI_PROC(int,SDL_isprint,(int a),(a),return)
+SDL_DYNAPI_PROC(int,SDL_isgraph,(int a),(a),return)
+#ifdef __ANDROID__
+SDL_DYNAPI_PROC(int,SDL_AndroidShowToast,(const char *a, int b, int c, int d, int e),(a,b,c,d,e),return)
+#endif
+SDL_DYNAPI_PROC(int,SDL_GetAudioDeviceSpec,(int a, int b, SDL_AudioSpec *c),(a,b,c),return)
+SDL_DYNAPI_PROC(void,SDL_TLSCleanup,(void),(),)
+SDL_DYNAPI_PROC(void,SDL_SetWindowAlwaysOnTop,(SDL_Window *a, SDL_bool b),(a,b),)
+SDL_DYNAPI_PROC(int,SDL_FlashWindow,(SDL_Window *a, SDL_FlashOperation b),(a,b),return)
+SDL_DYNAPI_PROC(int,SDL_GameControllerSendEffect,(SDL_GameController *a, const void *b, int c),(a,b,c),return)
+SDL_DYNAPI_PROC(int,SDL_JoystickSendEffect,(SDL_Joystick *a, const void *b, int c),(a,b,c),return)
+SDL_DYNAPI_PROC(float,SDL_GameControllerGetSensorDataRate,(SDL_GameController *a, SDL_SensorType b),(a,b),return)
+SDL_DYNAPI_PROC(int,SDL_SetTextureUserData,(SDL_Texture *a, void *b),(a,b),return)
+SDL_DYNAPI_PROC(void*,SDL_GetTextureUserData,(SDL_Texture *a),(a),return)
+SDL_DYNAPI_PROC(int,SDL_RenderGeometry,(SDL_Renderer *a, SDL_Texture *b, const SDL_Vertex *c, int d, const int *e, int f),(a,b,c,d,e,f),return)
+SDL_DYNAPI_PROC(int,SDL_RenderGeometryRaw,(SDL_Renderer *a, SDL_Texture *b, const float *c, int d, const SDL_Color *e, int f, const float *g, int h, int i, const void *j, int k, int l),(a,b,c,d,e,f,g,h,i,j,k,l),return)
+SDL_DYNAPI_PROC(int,SDL_RenderSetVSync,(SDL_Renderer *a, int b),(a,b),return)
+#if !SDL_DYNAPI_PROC_NO_VARARGS
+SDL_DYNAPI_PROC(int,SDL_asprintf,(char **a, SDL_PRINTF_FORMAT_STRING const char *b, ...),(a,b),return)
+#endif
+SDL_DYNAPI_PROC(int,SDL_vasprintf,(char **a, const char *b, va_list c),(a,b,c),return)
+SDL_DYNAPI_PROC(void*,SDL_GetWindowICCProfile,(SDL_Window *a, size_t *b),(a,b),return)
+SDL_DYNAPI_PROC(Uint64,SDL_GetTicks64,(void),(),return)
+#ifdef __LINUX__
+SDL_DYNAPI_PROC(int,SDL_LinuxSetThreadPriorityAndPolicy,(Sint64 a, int b, int c),(a,b,c),return)
+#endif
+SDL_DYNAPI_PROC(const char*,SDL_GameControllerGetAppleSFSymbolsNameForButton,(SDL_GameController *a, SDL_GameControllerButton b),(a,b),return)
+SDL_DYNAPI_PROC(const char*,SDL_GameControllerGetAppleSFSymbolsNameForAxis,(SDL_GameController *a, SDL_GameControllerAxis b),(a,b),return)
+SDL_DYNAPI_PROC(int,SDL_hid_init,(void),(),return)
+SDL_DYNAPI_PROC(int,SDL_hid_exit,(void),(),return)
+SDL_DYNAPI_PROC(Uint32,SDL_hid_device_change_count,(void),(),return)
+SDL_DYNAPI_PROC(SDL_hid_device_info*,SDL_hid_enumerate,(unsigned short a, unsigned short b),(a,b),return)
+SDL_DYNAPI_PROC(void,SDL_hid_free_enumeration,(SDL_hid_device_info *a),(a),)
+SDL_DYNAPI_PROC(SDL_hid_device*,SDL_hid_open,(unsigned short a, unsigned short b, const wchar_t *c),(a,b,c),return)
+SDL_DYNAPI_PROC(SDL_hid_device*,SDL_hid_open_path,(const char *a, int b),(a,b),return)
+SDL_DYNAPI_PROC(int,SDL_hid_write,(SDL_hid_device *a, const unsigned char *b, size_t c),(a,b,c),return)
+SDL_DYNAPI_PROC(int,SDL_hid_read_timeout,(SDL_hid_device *a, unsigned char *b, size_t c, int d),(a,b,c,d),return)
+SDL_DYNAPI_PROC(int,SDL_hid_read,(SDL_hid_device *a, unsigned char *b, size_t c),(a,b,c),return)
+SDL_DYNAPI_PROC(int,SDL_hid_set_nonblocking,(SDL_hid_device *a, int b),(a,b),return)
+SDL_DYNAPI_PROC(int,SDL_hid_send_feature_report,(SDL_hid_device *a, const unsigned char *b, size_t c),(a,b,c),return)
+SDL_DYNAPI_PROC(int,SDL_hid_get_feature_report,(SDL_hid_device *a, unsigned char *b, size_t c),(a,b,c),return)
+SDL_DYNAPI_PROC(void,SDL_hid_close,(SDL_hid_device *a),(a),)
+SDL_DYNAPI_PROC(int,SDL_hid_get_manufacturer_string,(SDL_hid_device *a, wchar_t *b, size_t c),(a,b,c),return)
+SDL_DYNAPI_PROC(int,SDL_hid_get_product_string,(SDL_hid_device *a, wchar_t *b, size_t c),(a,b,c),return)
+SDL_DYNAPI_PROC(int,SDL_hid_get_serial_number_string,(SDL_hid_device *a, wchar_t *b, size_t c),(a,b,c),return)
+SDL_DYNAPI_PROC(int,SDL_hid_get_indexed_string,(SDL_hid_device *a, int b, wchar_t *c, size_t d),(a,b,c,d),return)
+SDL_DYNAPI_PROC(int,SDL_SetWindowMouseRect,(SDL_Window *a, const SDL_Rect *b),(a,b),return)
+SDL_DYNAPI_PROC(const SDL_Rect*,SDL_GetWindowMouseRect,(SDL_Window *a),(a),return)
+SDL_DYNAPI_PROC(void,SDL_RenderWindowToLogical,(SDL_Renderer *a, int b, int c, float *d, float *e),(a,b,c,d,e),)
+SDL_DYNAPI_PROC(void,SDL_RenderLogicalToWindow,(SDL_Renderer *a, float b, float c, int *d, int *e),(a,b,c,d,e),)
+SDL_DYNAPI_PROC(SDL_bool,SDL_JoystickHasRumble,(SDL_Joystick *a),(a),return)
+SDL_DYNAPI_PROC(SDL_bool,SDL_JoystickHasRumbleTriggers,(SDL_Joystick *a),(a),return)
+SDL_DYNAPI_PROC(SDL_bool,SDL_GameControllerHasRumble,(SDL_GameController *a),(a),return)
+SDL_DYNAPI_PROC(SDL_bool,SDL_GameControllerHasRumbleTriggers,(SDL_GameController *a),(a),return)
+SDL_DYNAPI_PROC(void,SDL_hid_ble_scan,(SDL_bool a),(a),)
+SDL_DYNAPI_PROC(int,SDL_PremultiplyAlpha,(int a, int b, Uint32 c, const void *d, int e, Uint32 f, void *g, int h),(a,b,c,d,e,f,g,h),return)
+#ifdef __ANDROID__
+SDL_DYNAPI_PROC(int,SDL_AndroidSendMessage,(Uint32 a, int b),(a,b),return)
+#endif
+SDL_DYNAPI_PROC(const char*,SDL_GetTouchName,(int a),(a),return)
+SDL_DYNAPI_PROC(void,SDL_ClearComposition,(void),(),)
+SDL_DYNAPI_PROC(SDL_bool,SDL_IsTextInputShown,(void),(),return)
+SDL_DYNAPI_PROC(SDL_bool,SDL_HasIntersectionF,(const SDL_FRect *a, const SDL_FRect *b),(a,b),return)
+SDL_DYNAPI_PROC(SDL_bool,SDL_IntersectFRect,(const SDL_FRect *a, const SDL_FRect *b, SDL_FRect *c),(a,b,c),return)
+SDL_DYNAPI_PROC(void,SDL_UnionFRect,(const SDL_FRect *a, const SDL_FRect *b, SDL_FRect *c),(a,b,c),)
+SDL_DYNAPI_PROC(SDL_bool,SDL_EncloseFPoints,(const SDL_FPoint *a, int b, const SDL_FRect *c, SDL_FRect *d),(a,b,c,d),return)
+SDL_DYNAPI_PROC(SDL_bool,SDL_IntersectFRectAndLine,(const SDL_FRect *a, float *b, float *c, float *d, float *e),(a,b,c,d,e),return)
+SDL_DYNAPI_PROC(SDL_Window*,SDL_RenderGetWindow,(SDL_Renderer *a),(a),return)

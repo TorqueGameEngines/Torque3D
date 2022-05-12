@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -25,7 +25,6 @@
 #include "SDL_atomic.h"
 #include "SDL_endian.h"
 #include "SDL_hints.h"
-#include "SDL_thread.h"
 #include "SDL_timer.h"
 #include "SDL_joystick.h"
 #include "../SDL_sysjoystick.h"
@@ -34,24 +33,9 @@
 #include "../../SDL_hints_c.h"
 
 #if defined(__WIN32__)
-#include "../../core/windows/SDL_windows.h"
 #include "../windows/SDL_rawinputjoystick_c.h"
 #endif
 
-#if defined(__MACOSX__)
-#include <CoreFoundation/CoreFoundation.h>
-#include <mach/mach.h>
-#include <IOKit/IOKitLib.h>
-#include <IOKit/hid/IOHIDDevice.h>
-#include <IOKit/usb/USBSpec.h>
-#endif
-
-#if defined(__LINUX__)
-#include "../../core/linux/SDL_udev.h"
-#ifdef SDL_USE_LIBUDEV
-#include <poll.h>
-#endif
-#endif
 
 struct joystick_hwdata
 {
@@ -59,11 +43,20 @@ struct joystick_hwdata
 };
 
 static SDL_HIDAPI_DeviceDriver *SDL_HIDAPI_drivers[] = {
+#ifdef SDL_JOYSTICK_HIDAPI_GAMECUBE
+    &SDL_HIDAPI_DriverGameCube,
+#endif
+#ifdef SDL_JOYSTICK_HIDAPI_LUNA
+    &SDL_HIDAPI_DriverLuna,
+#endif
 #ifdef SDL_JOYSTICK_HIDAPI_PS4
     &SDL_HIDAPI_DriverPS4,
 #endif
 #ifdef SDL_JOYSTICK_HIDAPI_PS5
     &SDL_HIDAPI_DriverPS5,
+#endif
+#ifdef SDL_JOYSTICK_HIDAPI_STADIA
+    &SDL_HIDAPI_DriverStadia,
 #endif
 #ifdef SDL_JOYSTICK_HIDAPI_STEAM
     &SDL_HIDAPI_DriverSteam,
@@ -78,316 +71,14 @@ static SDL_HIDAPI_DeviceDriver *SDL_HIDAPI_drivers[] = {
 #ifdef SDL_JOYSTICK_HIDAPI_XBOXONE
     &SDL_HIDAPI_DriverXboxOne,
 #endif
-#ifdef SDL_JOYSTICK_HIDAPI_GAMECUBE
-    &SDL_HIDAPI_DriverGameCube,
-#endif
 };
 static int SDL_HIDAPI_numdrivers = 0;
 static SDL_SpinLock SDL_HIDAPI_spinlock;
+static Uint32 SDL_HIDAPI_change_count = 0;
 static SDL_HIDAPI_Device *SDL_HIDAPI_devices;
 static int SDL_HIDAPI_numjoysticks = 0;
 static SDL_bool initialized = SDL_FALSE;
 static SDL_bool shutting_down = SDL_FALSE;
-
-#if defined(SDL_USE_LIBUDEV)
-static const SDL_UDEV_Symbols * usyms = NULL;
-#endif
-
-static struct
-{
-    SDL_bool m_bHaveDevicesChanged;
-    SDL_bool m_bCanGetNotifications;
-    Uint32 m_unLastDetect;
-
-#if defined(__WIN32__)
-    SDL_threadID m_nThreadID;
-    WNDCLASSEXA m_wndClass;
-    HWND m_hwndMsg;
-    HDEVNOTIFY m_hNotify;
-    double m_flLastWin32MessageCheck;
-#endif
-
-#if defined(__MACOSX__)
-    IONotificationPortRef m_notificationPort;
-    mach_port_t m_notificationMach;
-#endif
-
-#if defined(SDL_USE_LIBUDEV)
-    struct udev *m_pUdev;
-    struct udev_monitor *m_pUdevMonitor;
-    int m_nUdevFd;
-#endif
-} SDL_HIDAPI_discovery;
-
-
-#ifdef __WIN32__
-struct _DEV_BROADCAST_HDR
-{
-    DWORD       dbch_size;
-    DWORD       dbch_devicetype;
-    DWORD       dbch_reserved;
-};
-
-typedef struct _DEV_BROADCAST_DEVICEINTERFACE_A
-{
-    DWORD       dbcc_size;
-    DWORD       dbcc_devicetype;
-    DWORD       dbcc_reserved;
-    GUID        dbcc_classguid;
-    char        dbcc_name[ 1 ];
-} DEV_BROADCAST_DEVICEINTERFACE_A, *PDEV_BROADCAST_DEVICEINTERFACE_A;
-
-typedef struct  _DEV_BROADCAST_HDR      DEV_BROADCAST_HDR;
-#define DBT_DEVICEARRIVAL               0x8000  /* system detected a new device */
-#define DBT_DEVICEREMOVECOMPLETE        0x8004  /* device was removed from the system */
-#define DBT_DEVTYP_DEVICEINTERFACE      0x00000005  /* device interface class */
-#define DBT_DEVNODES_CHANGED            0x0007
-#define DBT_CONFIGCHANGED               0x0018
-#define DBT_DEVICETYPESPECIFIC          0x8005  /* type specific event */
-#define DBT_DEVINSTSTARTED              0x8008  /* device installed and started */
-
-#include <initguid.h>
-DEFINE_GUID(GUID_DEVINTERFACE_USB_DEVICE, 0xA5DCBF10L, 0x6530, 0x11D2, 0x90, 0x1F, 0x00, 0xC0, 0x4F, 0xB9, 0x51, 0xED);
-
-static LRESULT CALLBACK ControllerWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    switch (message) {
-    case WM_DEVICECHANGE:
-        switch (wParam) {
-        case DBT_DEVICEARRIVAL:
-        case DBT_DEVICEREMOVECOMPLETE:
-            if (((DEV_BROADCAST_HDR*)lParam)->dbch_devicetype == DBT_DEVTYP_DEVICEINTERFACE) {
-                SDL_HIDAPI_discovery.m_bHaveDevicesChanged = SDL_TRUE;
-            }
-            break;
-        }
-        return TRUE;
-    }
-
-    return DefWindowProc(hwnd, message, wParam, lParam);
-}
-#endif /* __WIN32__ */
-
-
-#if defined(__MACOSX__)
-static void CallbackIOServiceFunc(void *context, io_iterator_t portIterator)
-{
-    /* Must drain the iterator, or we won't receive new notifications */
-    io_object_t entry;
-    while ((entry = IOIteratorNext(portIterator)) != 0) {
-        IOObjectRelease(entry);
-        *(SDL_bool*)context = SDL_TRUE;
-    }
-}
-#endif /* __MACOSX__ */
-
-static void
-HIDAPI_InitializeDiscovery()
-{
-    SDL_HIDAPI_discovery.m_bHaveDevicesChanged = SDL_TRUE;
-    SDL_HIDAPI_discovery.m_bCanGetNotifications = SDL_FALSE;
-    SDL_HIDAPI_discovery.m_unLastDetect = 0;
-
-#if defined(__WIN32__)
-    SDL_HIDAPI_discovery.m_nThreadID = SDL_ThreadID();
-
-    SDL_zero(SDL_HIDAPI_discovery.m_wndClass);
-    SDL_HIDAPI_discovery.m_wndClass.hInstance = GetModuleHandle(NULL);
-    SDL_HIDAPI_discovery.m_wndClass.lpszClassName = "SDL_HIDAPI_DEVICE_DETECTION";
-    SDL_HIDAPI_discovery.m_wndClass.lpfnWndProc = ControllerWndProc;      /* This function is called by windows */
-    SDL_HIDAPI_discovery.m_wndClass.cbSize = sizeof(WNDCLASSEX);
-
-    RegisterClassExA(&SDL_HIDAPI_discovery.m_wndClass);
-    SDL_HIDAPI_discovery.m_hwndMsg = CreateWindowExA(0, "SDL_HIDAPI_DEVICE_DETECTION", NULL, 0, 0, 0, 0, 0, HWND_MESSAGE, NULL, NULL, NULL);
-
-    {
-        DEV_BROADCAST_DEVICEINTERFACE_A devBroadcast;
-
-        SDL_zero(devBroadcast);
-        devBroadcast.dbcc_size = sizeof( devBroadcast );
-        devBroadcast.dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE;
-        devBroadcast.dbcc_classguid = GUID_DEVINTERFACE_USB_DEVICE;
-
-        /* DEVICE_NOTIFY_ALL_INTERFACE_CLASSES is important, makes GUID_DEVINTERFACE_USB_DEVICE ignored,
-         * but that seems to be necessary to get a notice after each individual usb input device actually
-         * installs, rather than just as the composite device is seen.
-         */
-        SDL_HIDAPI_discovery.m_hNotify = RegisterDeviceNotification( SDL_HIDAPI_discovery.m_hwndMsg, &devBroadcast, DEVICE_NOTIFY_WINDOW_HANDLE | DEVICE_NOTIFY_ALL_INTERFACE_CLASSES );
-        SDL_HIDAPI_discovery.m_bCanGetNotifications = ( SDL_HIDAPI_discovery.m_hNotify != 0 );
-    }
-#endif /* __WIN32__ */
-
-#if defined(__MACOSX__)
-    SDL_HIDAPI_discovery.m_notificationPort = IONotificationPortCreate(kIOMasterPortDefault);
-    if (SDL_HIDAPI_discovery.m_notificationPort) {
-        {
-            io_iterator_t portIterator = 0;
-            io_object_t entry;
-            IOReturn result = IOServiceAddMatchingNotification(
-                SDL_HIDAPI_discovery.m_notificationPort,
-                kIOFirstMatchNotification,
-                IOServiceMatching(kIOHIDDeviceKey),
-                CallbackIOServiceFunc, &SDL_HIDAPI_discovery.m_bHaveDevicesChanged, &portIterator);
-
-            if (result == 0) {
-                /* Must drain the existing iterator, or we won't receive new notifications */
-                while ((entry = IOIteratorNext(portIterator)) != 0) {
-                    IOObjectRelease(entry);
-                }
-            } else {
-                IONotificationPortDestroy(SDL_HIDAPI_discovery.m_notificationPort);
-                SDL_HIDAPI_discovery.m_notificationPort = nil;
-            }
-        }
-        {
-            io_iterator_t portIterator = 0;
-            io_object_t entry;
-            IOReturn result = IOServiceAddMatchingNotification(
-                SDL_HIDAPI_discovery.m_notificationPort,
-                kIOTerminatedNotification,
-                IOServiceMatching(kIOHIDDeviceKey),
-                CallbackIOServiceFunc, &SDL_HIDAPI_discovery.m_bHaveDevicesChanged, &portIterator);
-
-            if (result == 0) {
-                /* Must drain the existing iterator, or we won't receive new notifications */
-                while ((entry = IOIteratorNext(portIterator)) != 0) {
-                    IOObjectRelease(entry);
-                }
-            } else {
-                IONotificationPortDestroy(SDL_HIDAPI_discovery.m_notificationPort);
-                SDL_HIDAPI_discovery.m_notificationPort = nil;
-            }
-        }
-    }
-
-    SDL_HIDAPI_discovery.m_notificationMach = MACH_PORT_NULL;
-    if (SDL_HIDAPI_discovery.m_notificationPort) {
-        SDL_HIDAPI_discovery.m_notificationMach = IONotificationPortGetMachPort(SDL_HIDAPI_discovery.m_notificationPort);
-    }
-
-    SDL_HIDAPI_discovery.m_bCanGetNotifications = (SDL_HIDAPI_discovery.m_notificationMach != MACH_PORT_NULL);
-
-#endif // __MACOSX__
-
-#if defined(SDL_USE_LIBUDEV)
-    SDL_HIDAPI_discovery.m_pUdev = NULL;
-    SDL_HIDAPI_discovery.m_pUdevMonitor = NULL;
-    SDL_HIDAPI_discovery.m_nUdevFd = -1;
-
-    usyms = SDL_UDEV_GetUdevSyms();
-    if (usyms) {
-        SDL_HIDAPI_discovery.m_pUdev = usyms->udev_new();
-    }
-    if (SDL_HIDAPI_discovery.m_pUdev) {
-        SDL_HIDAPI_discovery.m_pUdevMonitor = usyms->udev_monitor_new_from_netlink(SDL_HIDAPI_discovery.m_pUdev, "udev");
-        if (SDL_HIDAPI_discovery.m_pUdevMonitor) {
-            usyms->udev_monitor_enable_receiving(SDL_HIDAPI_discovery.m_pUdevMonitor);
-            SDL_HIDAPI_discovery.m_nUdevFd = usyms->udev_monitor_get_fd(SDL_HIDAPI_discovery.m_pUdevMonitor);
-            SDL_HIDAPI_discovery.m_bCanGetNotifications = SDL_TRUE;
-        }
-    }
-
-#endif /* SDL_USE_LIBUDEV */
-}
-
-static void
-HIDAPI_UpdateDiscovery()
-{
-    if (!SDL_HIDAPI_discovery.m_bCanGetNotifications) {
-        const Uint32 SDL_HIDAPI_DETECT_INTERVAL_MS = 3000;  /* Update every 3 seconds */
-        Uint32 now = SDL_GetTicks();
-        if (!SDL_HIDAPI_discovery.m_unLastDetect || SDL_TICKS_PASSED(now, SDL_HIDAPI_discovery.m_unLastDetect + SDL_HIDAPI_DETECT_INTERVAL_MS)) {
-            SDL_HIDAPI_discovery.m_bHaveDevicesChanged = SDL_TRUE;
-            SDL_HIDAPI_discovery.m_unLastDetect = now;
-        }
-        return;
-    }
-
-#if defined(__WIN32__)
-#if 0 /* just let the usual SDL_PumpEvents loop dispatch these, fixing bug 4286. --ryan. */
-    /* We'll only get messages on the same thread that created the window */
-    if (SDL_ThreadID() == SDL_HIDAPI_discovery.m_nThreadID) {
-        MSG msg;
-        while (PeekMessage(&msg, SDL_HIDAPI_discovery.m_hwndMsg, 0, 0, PM_NOREMOVE)) {
-            if (GetMessageA(&msg, SDL_HIDAPI_discovery.m_hwndMsg, 0, 0) != 0) {
-                TranslateMessage(&msg);
-                DispatchMessage(&msg);
-            }
-        }
-    }
-#endif
-#endif /* __WIN32__ */
-
-#if defined(__MACOSX__)
-    if (SDL_HIDAPI_discovery.m_notificationPort) {
-        struct { mach_msg_header_t hdr; char payload[ 4096 ]; } msg;
-        while (mach_msg(&msg.hdr, MACH_RCV_MSG | MACH_RCV_TIMEOUT, 0, sizeof(msg), SDL_HIDAPI_discovery.m_notificationMach, 0, MACH_PORT_NULL) == KERN_SUCCESS) {
-            IODispatchCalloutFromMessage(NULL, &msg.hdr, SDL_HIDAPI_discovery.m_notificationPort);
-        }
-    }
-#endif
-
-#if defined(SDL_USE_LIBUDEV)
-    if (SDL_HIDAPI_discovery.m_nUdevFd >= 0) {
-        /* Drain all notification events.
-         * We don't expect a lot of device notifications so just
-         * do a new discovery on any kind or number of notifications.
-         * This could be made more restrictive if necessary.
-         */
-        for (;;) {
-            struct pollfd PollUdev;
-            struct udev_device *pUdevDevice;
-
-            PollUdev.fd = SDL_HIDAPI_discovery.m_nUdevFd;
-            PollUdev.events = POLLIN;
-            if (poll(&PollUdev, 1, 0) != 1) {
-                break;
-            }
-
-            SDL_HIDAPI_discovery.m_bHaveDevicesChanged = SDL_TRUE;
-
-            pUdevDevice = usyms->udev_monitor_receive_device(SDL_HIDAPI_discovery.m_pUdevMonitor);
-            if (pUdevDevice) {
-                usyms->udev_device_unref(pUdevDevice);
-            }
-        }
-    }
-#endif
-}
-
-static void
-HIDAPI_ShutdownDiscovery()
-{
-#if defined(__WIN32__)
-    if (SDL_HIDAPI_discovery.m_hNotify)
-        UnregisterDeviceNotification(SDL_HIDAPI_discovery.m_hNotify);
-
-    if (SDL_HIDAPI_discovery.m_hwndMsg) {
-        DestroyWindow(SDL_HIDAPI_discovery.m_hwndMsg);
-    }
-
-    UnregisterClassA(SDL_HIDAPI_discovery.m_wndClass.lpszClassName, SDL_HIDAPI_discovery.m_wndClass.hInstance);
-#endif
-
-#if defined(__MACOSX__)
-    if (SDL_HIDAPI_discovery.m_notificationPort) {
-        IONotificationPortDestroy(SDL_HIDAPI_discovery.m_notificationPort);
-    }
-#endif
-
-#if defined(SDL_USE_LIBUDEV)
-    if (usyms) {
-        if (SDL_HIDAPI_discovery.m_pUdevMonitor) {
-            usyms->udev_monitor_unref(SDL_HIDAPI_discovery.m_pUdevMonitor);
-        }
-        if (SDL_HIDAPI_discovery.m_pUdev) {
-            usyms->udev_unref(SDL_HIDAPI_discovery.m_pUdev);
-        }
-        SDL_UDEV_ReleaseUdevSyms();
-        usyms = NULL;
-    }
-#endif
-}
 
 void
 HIDAPI_DumpPacket(const char *prefix, Uint8 *data, int size)
@@ -410,8 +101,14 @@ HIDAPI_DumpPacket(const char *prefix, Uint8 *data, int size)
     SDL_free(buffer);
 }
 
+float
+HIDAPI_RemapVal(float val, float val_min, float val_max, float output_min, float output_max)
+{
+    return output_min + (output_max - output_min) * (val - val_min) / (val_max - val_min);
+}
+
 static void HIDAPI_JoystickDetect(void);
-static void HIDAPI_JoystickClose(SDL_Joystick * joystick);
+static void HIDAPI_JoystickClose(SDL_Joystick *joystick);
 
 static SDL_bool
 HIDAPI_IsDeviceSupported(Uint16 vendor_id, Uint16 product_id, Uint16 version, const char *name)
@@ -437,8 +134,14 @@ HIDAPI_GetDeviceDriver(SDL_HIDAPI_Device *device)
     const Uint16 USAGE_MULTIAXISCONTROLLER = 0x0008;
     int i;
     SDL_GameControllerType type;
+    SDL_JoystickGUID check_guid;
 
-    if (SDL_ShouldIgnoreJoystick(device->name, device->guid)) {
+    /* Make sure we have a generic GUID here, otherwise if we pass a HIDAPI
+       guid, this call will create a game controller mapping for the device.
+     */
+    check_guid = device->guid;
+    check_guid.data[14] = 0;
+    if (SDL_ShouldIgnoreJoystick(device->name, check_guid)) {
         return NULL;
     }
 
@@ -498,8 +201,7 @@ static void
 HIDAPI_SetupDeviceDriver(SDL_HIDAPI_Device *device)
 {
     if (device->driver) {
-        /* Already setup */
-        return;
+        return; /* Already setup */
     }
 
     device->driver = HIDAPI_GetDeviceDriver(device);
@@ -521,12 +223,11 @@ static void
 HIDAPI_CleanupDeviceDriver(SDL_HIDAPI_Device *device)
 {
     if (!device->driver) {
-        /* Already cleaned up */
-        return;
+        return; /* Already cleaned up */
     }
 
     /* Disconnect any joysticks */
-    while (device->num_joysticks) {
+    while (device->num_joysticks && device->joysticks) {
         HIDAPI_JoystickDisconnected(device, device->joysticks[0]);
     }
 
@@ -585,19 +286,30 @@ HIDAPI_JoystickInit(void)
         return 0;
     }
 
-#if defined(__MACOSX__) || defined(__IPHONEOS__) || defined(__TVOS__)
-    /* The hidapi framwork is weak-linked on Apple platforms */
-    int HID_API_EXPORT HID_API_CALL hid_init(void) __attribute__((weak_import));
-
-    if (hid_init == NULL) {
-        SDL_SetError("Couldn't initialize hidapi, framework not available");
-        return -1;
+#if defined(SDL_USE_LIBUDEV)
+    if (linux_enumeration_method == ENUMERATION_UNSET) {
+        if (SDL_getenv("SDL_HIDAPI_JOYSTICK_DISABLE_UDEV") != NULL) {
+            SDL_LogDebug(SDL_LOG_CATEGORY_INPUT,
+                         "udev disabled by SDL_HIDAPI_JOYSTICK_DISABLE_UDEV");
+            linux_enumeration_method = ENUMERATION_FALLBACK;
+        } else if (access("/.flatpak-info", F_OK) == 0
+                   || access("/run/host/container-manager", F_OK) == 0) {
+            /* Explicitly check `/.flatpak-info` because, for old versions of
+             * Flatpak, this was the only available way to tell if we were in
+             * a Flatpak container. */
+            SDL_LogDebug(SDL_LOG_CATEGORY_INPUT,
+                         "Container detected, disabling HIDAPI udev integration");
+            linux_enumeration_method = ENUMERATION_FALLBACK;
+        } else {
+            SDL_LogDebug(SDL_LOG_CATEGORY_INPUT,
+                         "Using udev for HIDAPI joystick device discovery");
+            linux_enumeration_method = ENUMERATION_LIBUDEV;
+        }
     }
-#endif /* __MACOSX__ || __IPHONEOS__ || __TVOS__ */
+#endif
 
-    if (hid_init() < 0) {
-        SDL_SetError("Couldn't initialize hidapi");
-        return -1;
+    if (SDL_hid_init() < 0) {
+        return SDL_SetError("Couldn't initialize hidapi");
     }
 
     for (i = 0; i < SDL_arraysize(SDL_HIDAPI_drivers); ++i) {
@@ -606,7 +318,6 @@ HIDAPI_JoystickInit(void)
     }
     SDL_AddHintCallback(SDL_HINT_JOYSTICK_HIDAPI,
                         SDL_HIDAPIDriverHintChanged, NULL);
-    HIDAPI_InitializeDiscovery();
     HIDAPI_JoystickDetect();
     HIDAPI_UpdateDevices();
 
@@ -681,10 +392,13 @@ HIDAPI_ConvertString(const wchar_t *wide_string)
     if (wide_string) {
         string = SDL_iconv_string("UTF-8", "WCHAR_T", (char*)wide_string, (SDL_wcslen(wide_string)+1)*sizeof(wchar_t));
         if (!string) {
-            if (sizeof(wchar_t) == sizeof(Uint16)) {
+            switch (sizeof(wchar_t)) {
+            case 2:
                 string = SDL_iconv_string("UTF-8", "UCS-2-INTERNAL", (char*)wide_string, (SDL_wcslen(wide_string)+1)*sizeof(wchar_t));
-            } else if (sizeof(wchar_t) == sizeof(Uint32)) {
+                break;
+            case 4:
                 string = SDL_iconv_string("UTF-8", "UCS-4-INTERNAL", (char*)wide_string, (SDL_wcslen(wide_string)+1)*sizeof(wchar_t));
+                break;
             }
         }
     }
@@ -692,7 +406,7 @@ HIDAPI_ConvertString(const wchar_t *wide_string)
 }
 
 static void
-HIDAPI_AddDevice(struct hid_device_info *info)
+HIDAPI_AddDevice(struct SDL_hid_device_info *info)
 {
     SDL_HIDAPI_Device *device;
     SDL_HIDAPI_Device *curr, *last = NULL;
@@ -856,7 +570,7 @@ static void
 HIDAPI_UpdateDeviceList(void)
 {
     SDL_HIDAPI_Device *device;
-    struct hid_device_info *devs, *info;
+    struct SDL_hid_device_info *devs, *info;
 
     SDL_LockJoysticks();
 
@@ -869,7 +583,7 @@ HIDAPI_UpdateDeviceList(void)
 
     /* Enumerate the devices */
     if (SDL_HIDAPI_numdrivers > 0) {
-        devs = hid_enumerate(0, 0);
+        devs = SDL_hid_enumerate(0, 0);
         if (devs) {
             for (info = devs; info; info = info->next) {
                 device = HIDAPI_GetJoystickByInfo(info->path, info->vendor_id, info->product_id);
@@ -879,16 +593,17 @@ HIDAPI_UpdateDeviceList(void)
                     HIDAPI_AddDevice(info);
                 }
             }
-            hid_free_enumeration(devs);
+            SDL_hid_free_enumeration(devs);
         }
     }
 
-    /* Remove any devices that weren't seen */
+    /* Remove any devices that weren't seen or have been disconnected due to read errors */
     device = SDL_HIDAPI_devices;
     while (device) {
         SDL_HIDAPI_Device *next = device->next;
 
-        if (!device->seen) {
+        if (!device->seen ||
+            (device->driver && device->num_joysticks == 0 && !device->dev)) {
             HIDAPI_DelDevice(device);
         }
         device = next;
@@ -906,12 +621,12 @@ HIDAPI_IsEquivalentToDevice(Uint16 vendor_id, Uint16 product_id, SDL_HIDAPI_Devi
 
     if (vendor_id == USB_VENDOR_MICROSOFT) {
         /* If we're looking for the wireless XBox 360 controller, also look for the dongle */
-        if (product_id == 0x02a1 && device->product_id == 0x0719) {
+        if (product_id == USB_PRODUCT_XBOX360_XUSB_CONTROLLER && device->product_id == USB_PRODUCT_XBOX360_WIRELESS_RECEIVER) {
             return SDL_TRUE;
         }
 
         /* If we're looking for the raw input Xbox One controller, match it against any other Xbox One controller */
-        if (product_id == USB_PRODUCT_XBOX_ONE_RAW_INPUT_CONTROLLER &&
+        if (product_id == USB_PRODUCT_XBOX_ONE_XBOXGIP_CONTROLLER &&
             SDL_GetJoystickGameControllerType(device->name, device->vendor_id, device->product_id, device->interface_number, device->interface_class, device->interface_subclass, device->interface_protocol) == SDL_CONTROLLER_TYPE_XBOXONE) {
             return SDL_TRUE;
         }
@@ -925,6 +640,40 @@ HIDAPI_IsEquivalentToDevice(Uint16 vendor_id, Uint16 product_id, SDL_HIDAPI_Devi
         }
     }
     return SDL_FALSE;
+}
+
+SDL_bool
+HIDAPI_IsDeviceTypePresent(SDL_GameControllerType type)
+{
+    SDL_HIDAPI_Device *device;
+    SDL_bool result = SDL_FALSE;
+
+    /* Make sure we're initialized, as this could be called from other drivers during startup */
+    if (HIDAPI_JoystickInit() < 0) {
+        return SDL_FALSE;
+    }
+
+    if (SDL_AtomicTryLock(&SDL_HIDAPI_spinlock)) {
+        HIDAPI_UpdateDeviceList();
+        SDL_AtomicUnlock(&SDL_HIDAPI_spinlock);
+    }
+
+    SDL_LockJoysticks();
+    device = SDL_HIDAPI_devices;
+    while (device) {
+        if (device->driver &&
+            SDL_GetJoystickGameControllerType(device->name, device->vendor_id, device->product_id, device->interface_number, device->interface_class, device->interface_subclass, device->interface_protocol) == type) {
+            result = SDL_TRUE;
+            break;
+        }
+        device = device->next;
+    }
+    SDL_UnlockJoysticks();
+
+#ifdef DEBUG_HIDAPI
+    SDL_Log("HIDAPI_IsDeviceTypePresent() returning %s for %d\n", result ? "true" : "false", type);
+#endif
+    return result;
 }
 
 SDL_bool
@@ -969,6 +718,7 @@ HIDAPI_IsDevicePresent(Uint16 vendor_id, Uint16 product_id, Uint16 version, cons
         if (device->driver &&
             HIDAPI_IsEquivalentToDevice(vendor_id, product_id, device)) {
             result = SDL_TRUE;
+            break;
         }
         device = device->next;
     }
@@ -984,11 +734,10 @@ static void
 HIDAPI_JoystickDetect(void)
 {
     if (SDL_AtomicTryLock(&SDL_HIDAPI_spinlock)) {
-        HIDAPI_UpdateDiscovery();
-        if (SDL_HIDAPI_discovery.m_bHaveDevicesChanged) {
-            /* FIXME: We probably need to schedule an update in a few seconds as well */
+        Uint32 count = SDL_hid_device_change_count();
+        if (SDL_HIDAPI_change_count != count) {
             HIDAPI_UpdateDeviceList();
-            SDL_HIDAPI_discovery.m_bHaveDevicesChanged = SDL_FALSE;
+            SDL_HIDAPI_change_count = count;
         }
         SDL_AtomicUnlock(&SDL_HIDAPI_spinlock);
     }
@@ -1086,7 +835,7 @@ HIDAPI_JoystickGetDeviceInstanceID(int device_index)
 }
 
 static int
-HIDAPI_JoystickOpen(SDL_Joystick * joystick, int device_index)
+HIDAPI_JoystickOpen(SDL_Joystick *joystick, int device_index)
 {
     SDL_JoystickID joystickID;
     SDL_HIDAPI_Device *device = HIDAPI_GetDeviceByIndex(device_index, &joystickID);
@@ -1112,7 +861,7 @@ HIDAPI_JoystickOpen(SDL_Joystick * joystick, int device_index)
 }
 
 static int
-HIDAPI_JoystickRumble(SDL_Joystick * joystick, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble)
+HIDAPI_JoystickRumble(SDL_Joystick *joystick, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble)
 {
     int result;
 
@@ -1121,15 +870,14 @@ HIDAPI_JoystickRumble(SDL_Joystick * joystick, Uint16 low_frequency_rumble, Uint
 
         result = device->driver->RumbleJoystick(device, joystick, low_frequency_rumble, high_frequency_rumble);
     } else {
-        SDL_SetError("Rumble failed, device disconnected");
-        result = -1;
+        result = SDL_SetError("Rumble failed, device disconnected");
     }
 
     return result;
 }
 
 static int
-HIDAPI_JoystickRumbleTriggers(SDL_Joystick * joystick, Uint16 left_rumble, Uint16 right_rumble)
+HIDAPI_JoystickRumbleTriggers(SDL_Joystick *joystick, Uint16 left_rumble, Uint16 right_rumble)
 {
     int result;
 
@@ -1138,29 +886,28 @@ HIDAPI_JoystickRumbleTriggers(SDL_Joystick * joystick, Uint16 left_rumble, Uint1
 
         result = device->driver->RumbleJoystickTriggers(device, joystick, left_rumble, right_rumble);
     } else {
-        SDL_SetError("Rumble failed, device disconnected");
-        result = -1;
+        result = SDL_SetError("Rumble failed, device disconnected");
     }
 
     return result;
 }
 
-static SDL_bool
-HIDAPI_JoystickHasLED(SDL_Joystick * joystick)
+static Uint32
+HIDAPI_JoystickGetCapabilities(SDL_Joystick *joystick)
 {
-    SDL_bool result = SDL_FALSE;
+    Uint32 result = 0;
 
     if (joystick->hwdata) {
         SDL_HIDAPI_Device *device = joystick->hwdata->device;
 
-        result = device->driver->HasJoystickLED(device, joystick);
+        result = device->driver->GetJoystickCapabilities(device, joystick);
     }
 
     return result;
 }
 
 static int
-HIDAPI_JoystickSetLED(SDL_Joystick * joystick, Uint8 red, Uint8 green, Uint8 blue)
+HIDAPI_JoystickSetLED(SDL_Joystick *joystick, Uint8 red, Uint8 green, Uint8 blue)
 {
     int result;
 
@@ -1169,15 +916,30 @@ HIDAPI_JoystickSetLED(SDL_Joystick * joystick, Uint8 red, Uint8 green, Uint8 blu
 
         result = device->driver->SetJoystickLED(device, joystick, red, green, blue);
     } else {
-        SDL_SetError("SetLED failed, device disconnected");
-        result = -1;
+        result = SDL_SetError("SetLED failed, device disconnected");
     }
 
     return result;
 }
 
 static int
-HIDAPI_JoystickSetSensorsEnabled(SDL_Joystick * joystick, SDL_bool enabled)
+HIDAPI_JoystickSendEffect(SDL_Joystick *joystick, const void *data, int size)
+{
+    int result;
+
+    if (joystick->hwdata) {
+        SDL_HIDAPI_Device *device = joystick->hwdata->device;
+
+        result = device->driver->SendJoystickEffect(device, joystick, data, size);
+    } else {
+        result = SDL_SetError("SendEffect failed, device disconnected");
+    }
+
+    return result;
+}
+
+static int
+HIDAPI_JoystickSetSensorsEnabled(SDL_Joystick *joystick, SDL_bool enabled)
 {
     int result;
 
@@ -1186,21 +948,20 @@ HIDAPI_JoystickSetSensorsEnabled(SDL_Joystick * joystick, SDL_bool enabled)
 
         result = device->driver->SetJoystickSensorsEnabled(device, joystick, enabled);
     } else {
-        SDL_SetError("SetSensorsEnabled failed, device disconnected");
-        result = -1;
+        result = SDL_SetError("SetSensorsEnabled failed, device disconnected");
     }
 
     return result;
 }
 
 static void
-HIDAPI_JoystickUpdate(SDL_Joystick * joystick)
+HIDAPI_JoystickUpdate(SDL_Joystick *joystick)
 {
     /* This is handled in SDL_HIDAPI_UpdateDevices() */
 }
 
 static void
-HIDAPI_JoystickClose(SDL_Joystick * joystick)
+HIDAPI_JoystickClose(SDL_Joystick *joystick)
 {
     if (joystick->hwdata) {
         SDL_HIDAPI_Device *device = joystick->hwdata->device;
@@ -1235,8 +996,6 @@ HIDAPI_JoystickQuit(void)
 
     shutting_down = SDL_TRUE;
 
-    HIDAPI_ShutdownDiscovery();
-
     SDL_HIDAPI_QuitRumble();
 
     while (SDL_HIDAPI_devices) {
@@ -1253,7 +1012,7 @@ HIDAPI_JoystickQuit(void)
     SDL_DelHintCallback(SDL_HINT_JOYSTICK_HIDAPI,
                         SDL_HIDAPIDriverHintChanged, NULL);
 
-    hid_exit();
+    SDL_hid_exit();
 
     shutting_down = SDL_FALSE;
     initialized = SDL_FALSE;
@@ -1278,8 +1037,9 @@ SDL_JoystickDriver SDL_HIDAPI_JoystickDriver =
     HIDAPI_JoystickOpen,
     HIDAPI_JoystickRumble,
     HIDAPI_JoystickRumbleTriggers,
-    HIDAPI_JoystickHasLED,
+    HIDAPI_JoystickGetCapabilities,
     HIDAPI_JoystickSetLED,
+    HIDAPI_JoystickSendEffect,
     HIDAPI_JoystickSetSensorsEnabled,
     HIDAPI_JoystickUpdate,
     HIDAPI_JoystickClose,

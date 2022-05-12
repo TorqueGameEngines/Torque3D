@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -1227,7 +1227,7 @@ RLEAlphaSurface(SDL_Surface * surface)
         surface->flags &= ~SDL_SIMD_ALIGNED;
     }
 
-    /* realloc the buffer to release unused memory */
+    /* reallocate the buffer to release unused memory */
     {
         Uint8 *p = SDL_realloc(rlebuf, dst - rlebuf);
         if (!p)
@@ -1391,9 +1391,9 @@ RLEColorkeySurface(SDL_Surface * surface)
         surface->flags &= ~SDL_SIMD_ALIGNED;
     }
 
-    /* realloc the buffer to release unused memory */
+    /* reallocate the buffer to release unused memory */
     {
-        /* If realloc returns NULL, the original block is left intact */
+        /* If SDL_realloc returns NULL, the original block is left intact */
         Uint8 *p = SDL_realloc(rlebuf, dst - rlebuf);
         if (!p)
             p = rlebuf;
@@ -1423,9 +1423,13 @@ SDL_RLESurface(SDL_Surface * surface)
         return -1;
     }
 
-    /* If we don't have colorkey or blending, nothing to do... */
     flags = surface->map->info.flags;
-    if (!(flags & (SDL_COPY_COLORKEY | SDL_COPY_BLEND))) {
+    if (flags & SDL_COPY_COLORKEY) {
+        /* ok */
+    } else if ((flags & SDL_COPY_BLEND) && surface->format->Amask) {
+        /* ok */
+    } else {
+        /* If we don't have colorkey or blending, nothing to do... */
         return -1;
     }
 

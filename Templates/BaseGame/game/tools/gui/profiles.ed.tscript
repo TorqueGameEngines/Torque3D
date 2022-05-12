@@ -285,6 +285,12 @@ new GuiControlProfile( ToolsGuiTextArrayProfile : ToolsGuiTextProfile )
 if( !isObject( ToolsGuiTextListProfile ) )
 new GuiControlProfile( ToolsGuiTextListProfile : ToolsGuiTextProfile ) 
 {
+   fontColor = EditorSettings.value("Theme/fieldTextColor");
+   fontColorHL = EditorSettings.value("Theme/fieldTextHLColor");
+   fontColorSEL = EditorSettings.value("Theme/fieldTextSELColor");
+   fillColor = EditorSettings.value("Theme/fieldBGColor");
+   fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
+   fillColorSEL = EditorSettings.value("Theme/fieldBGSELColor");
    tab = true;
    canKeyFocus = true;
    category = "Tools";

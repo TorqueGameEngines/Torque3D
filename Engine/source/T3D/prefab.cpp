@@ -616,3 +616,9 @@ void ExplodePrefabUndoAction::redo()
    name = Sim::getUniqueName( name );
    mGroup->assignName( name );   
 }
+
+DefineEngineMethod(Prefab, getChildGroup, S32, (),,
+   "")
+{
+   return object->getChildGroup();
+}

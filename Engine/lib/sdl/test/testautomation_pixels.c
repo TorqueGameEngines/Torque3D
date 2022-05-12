@@ -45,7 +45,7 @@ Uint32 _RGBPixelFormats[] =
     SDL_PIXELFORMAT_BGRA8888,
     SDL_PIXELFORMAT_ARGB2101010
   };
-char* _RGBPixelFormatsVerbose[] =
+const char* _RGBPixelFormatsVerbose[] =
   {
     "SDL_PIXELFORMAT_INDEX1LSB",
     "SDL_PIXELFORMAT_INDEX1MSB",
@@ -92,7 +92,7 @@ Uint32 _nonRGBPixelFormats[] =
     SDL_PIXELFORMAT_NV12,
     SDL_PIXELFORMAT_NV21
   };
-char* _nonRGBPixelFormatsVerbose[] =
+const char* _nonRGBPixelFormatsVerbose[] =
   {
     "SDL_PIXELFORMAT_YV12",
     "SDL_PIXELFORMAT_IYUV",
@@ -110,7 +110,7 @@ Uint32 _invalidPixelFormats[] =
     0xfffffffe,
     0xffffffff
   };
-char* _invalidPixelFormatsVerbose[] =
+const char* _invalidPixelFormatsVerbose[] =
   {
     "SDL_PIXELFORMAT_UNKNOWN",
     "SDL_PIXELFORMAT_UNKNOWN"
@@ -121,8 +121,8 @@ char* _invalidPixelFormatsVerbose[] =
 /**
  * @brief Call to SDL_AllocFormat and SDL_FreeFormat
  *
- * @sa http://wiki.libsdl.org/moin.fcg/SDL_AllocFormat
- * @sa http://wiki.libsdl.org/moin.fcg/SDL_FreeFormat
+ * @sa http://wiki.libsdl.org/SDL_AllocFormat
+ * @sa http://wiki.libsdl.org/SDL_FreeFormat
  */
 int
 pixels_allocFreeFormat(void *arg)
@@ -228,7 +228,7 @@ pixels_allocFreeFormat(void *arg)
 /**
  * @brief Call to SDL_GetPixelFormatName
  *
- * @sa http://wiki.libsdl.org/moin.fcg/SDL_GetPixelFormatName
+ * @sa http://wiki.libsdl.org/SDL_GetPixelFormatName
  */
 int
 pixels_getPixelFormatName(void *arg)
@@ -237,14 +237,14 @@ pixels_getPixelFormatName(void *arg)
   const char *error;
   int i;
   Uint32 format;
-  char* result;
+  const char *result;
 
   /* Blank/undefined format */
   format = 0;
   SDLTest_Log("RGB Format: %s (%u)", unknownFormat, format);
 
   /* Get name of format */
-  result = (char *)SDL_GetPixelFormatName(format);
+  result = SDL_GetPixelFormatName(format);
   SDLTest_AssertPass("Call to SDL_GetPixelFormatName()");
   SDLTest_AssertCheck(result != NULL, "Verify result is not NULL");
   if (result != NULL) {
@@ -259,7 +259,7 @@ pixels_getPixelFormatName(void *arg)
     SDLTest_Log("RGB Format: %s (%u)", _RGBPixelFormatsVerbose[i], format);
 
     /* Get name of format */
-    result = (char *)SDL_GetPixelFormatName(format);
+    result = SDL_GetPixelFormatName(format);
     SDLTest_AssertPass("Call to SDL_GetPixelFormatName()");
     SDLTest_AssertCheck(result != NULL, "Verify result is not NULL");
     if (result != NULL) {
@@ -275,7 +275,7 @@ pixels_getPixelFormatName(void *arg)
     SDLTest_Log("non-RGB Format: %s (%u)", _nonRGBPixelFormatsVerbose[i], format);
 
     /* Get name of format */
-    result = (char *)SDL_GetPixelFormatName(format);
+    result = SDL_GetPixelFormatName(format);
     SDLTest_AssertPass("Call to SDL_GetPixelFormatName()");
     SDLTest_AssertCheck(result != NULL, "Verify result is not NULL");
     if (result != NULL) {
@@ -292,7 +292,7 @@ pixels_getPixelFormatName(void *arg)
   SDLTest_AssertPass("Call to SDL_ClearError()");
   for (i = 0; i < _numInvalidPixelFormats; i++) {
     format = _invalidPixelFormats[i];
-    result = (char *)SDL_GetPixelFormatName(format);
+    result = SDL_GetPixelFormatName(format);
     SDLTest_AssertPass("Call to SDL_GetPixelFormatName(%u)", format);
     SDLTest_AssertCheck(result != NULL, "Verify result is not NULL");
     if (result != NULL) {
@@ -312,8 +312,8 @@ pixels_getPixelFormatName(void *arg)
 /**
  * @brief Call to SDL_AllocPalette and SDL_FreePalette
  *
- * @sa http://wiki.libsdl.org/moin.fcg/SDL_AllocPalette
- * @sa http://wiki.libsdl.org/moin.fcg/SDL_FreePalette
+ * @sa http://wiki.libsdl.org/SDL_AllocPalette
+ * @sa http://wiki.libsdl.org/SDL_FreePalette
  */
 int
 pixels_allocFreePalette(void *arg)
@@ -402,7 +402,7 @@ pixels_allocFreePalette(void *arg)
 /**
  * @brief Call to SDL_CalculateGammaRamp
  *
- * @sa http://wiki.libsdl.org/moin.fcg/SDL_CalculateGammaRamp
+ * @sa http://wiki.libsdl.org/SDL_CalculateGammaRamp
  */
 int
 pixels_calcGammaRamp(void *arg)

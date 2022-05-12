@@ -473,6 +473,11 @@ StringTableEntry ShapeAsset::getAssetIdByFilename(StringTableEntry fileName)
       //acquire and bind the asset, and return it out
       shapeAssetId = query.mAssetList[0];
    }
+   else
+   {
+      AssetPtr<ShapeAsset> shapeAsset = shapeAssetId;
+      shapeAsset->mLoadedState = AssetErrCode::BadFileReference;
+   }
 
    return shapeAssetId;
 }

@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2019, assimp team
+Copyright (c) 2006-2022, assimp team
 
 
 
@@ -50,6 +50,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <assimp/ParsingUtils.h>
 #include "ProcessHelper.h"
 #include "Material/MaterialSystem.h"
+#include <assimp/Exceptional.h>
 #include <stdio.h>
 
 using namespace Assimp;
@@ -122,7 +123,7 @@ void RemoveRedundantMatsProcess::Execute( aiScene* pScene)
 
                         // Keep this material even if no mesh references it
                         abReferenced[i] = true;
-                        ASSIMP_LOG_DEBUG_F( "Found positive match in exclusion list: \'", name.data, "\'");
+                        ASSIMP_LOG_VERBOSE_DEBUG( "Found positive match in exclusion list: \'", name.data, "\'");
                     }
                 }
             }
@@ -171,6 +172,8 @@ void RemoveRedundantMatsProcess::Execute( aiScene* pScene)
         }
         // If the new material count differs from the original,
         // we need to rebuild the material list and remap mesh material indexes.
+        if(iNewNum < 1)
+          throw DeadlyImportError("No materials remaining");
         if (iNewNum != pScene->mNumMaterials) {
             ai_assert(iNewNum > 0);
             aiMaterial** ppcMaterials = new aiMaterial*[iNewNum];
@@ -197,7 +200,7 @@ void RemoveRedundantMatsProcess::Execute( aiScene* pScene)
             // update all material indices
             for (unsigned int p = 0; p < pScene->mNumMeshes;++p) {
                 aiMesh* mesh = pScene->mMeshes[p];
-                ai_assert( NULL!=mesh );
+                ai_assert(nullptr != mesh);
                 mesh->mMaterialIndex = aiMappingTable[mesh->mMaterialIndex];
             }
             // delete the old material list
@@ -215,7 +218,7 @@ void RemoveRedundantMatsProcess::Execute( aiScene* pScene)
     }
     else
     {
-        ASSIMP_LOG_INFO_F("RemoveRedundantMatsProcess finished. Removed ", redundantRemoved, " redundant and ", 
+        ASSIMP_LOG_INFO("RemoveRedundantMatsProcess finished. Removed ", redundantRemoved, " redundant and ",
             unreferencedRemoved, " unused materials.");
     }
 }

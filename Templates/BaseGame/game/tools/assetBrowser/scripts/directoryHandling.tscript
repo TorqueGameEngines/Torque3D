@@ -91,38 +91,6 @@ function directoryHandler::navigateTo(%this, %address, %historyNav, %selectionNa
    
    //break down the address
    %folderCount = getTokenCount(%address, "/");
-      
-   /*%rebuiltPath = "";
-   for(%f=0; %f < %folderCount; %f++)
-   {
-      %folderName = getToken(%address, "/", %f);
-      
-      %rebuiltPath = %f == 0 ? %folderName : %rebuiltPath @ "/" @ %folderName;
-      
-      %folderNavButton = new GuiButtonCtrl()
-      {
-         profile = ToolsGuiButtonProfile;
-         text = %folderName;
-         command = "AssetBrowser.navigateTo(\"" @ %rebuiltPath @ "\");";
-         extent = "100" SPC AssetBrowser_BreadcrumbBar.extent.y;
-      };
-      
-      AssetBrowser_BreadcrumbBar.add(%folderNavButton);
-      
-      if(%f != %folderCount-1)
-      {
-         %folderSpacerButton = new GuiBitmapButtonCtrl()
-         {
-            profile = ToolsGuiButtonProfile;
-            bitmapAsset = "ToolsModule:rightArrowWhite_image";
-            bitmapMode = "Centered";
-            extent = "25" SPC AssetBrowser_BreadcrumbBar.extent.y;
-            //command = "AssetBrowser.navigateTo(\"" @ %rebuiltPath @ "\");";
-         };
-         
-         AssetBrowser_BreadcrumbBar.add(%folderSpacerButton);
-      }
-   }*/
 
    //find our folder tree and action on it tree
    %folderId = %this.getFolderTreeItemFromAddress(%address);

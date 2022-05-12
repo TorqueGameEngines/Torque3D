@@ -586,7 +586,7 @@ function TerrainImportGuiAddOpacityMap( %name )
    // once per channel in the file
    // currently it works with just grayscale.   
    %channelsTxt = "R" TAB "G" TAB "B" TAB "A";
-   %bitmapInfo = getBitmapinfo( %name );
+   %bitmapInfo = getBitmapinfo( makeFullPath(%name) );
    
    %channelCount = getWord( %bitmapInfo, 2 );   
    

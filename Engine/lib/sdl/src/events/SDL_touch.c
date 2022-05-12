@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -61,6 +61,16 @@ SDL_GetTouchDevice(int index)
         return 0;
     }
     return SDL_touchDevices[index]->id;
+}
+
+const char*
+SDL_GetTouchName(int index)
+{
+    if (index < 0 || index >= SDL_num_touch) {
+        SDL_SetError("Unknown touch device");
+        return NULL;
+    }
+    return SDL_touchDevices[index]->name;
 }
 
 static int
@@ -185,6 +195,7 @@ SDL_AddTouch(SDL_TouchID touchID, SDL_TouchDeviceType type, const char *name)
     SDL_touchDevices[index]->num_fingers = 0;
     SDL_touchDevices[index]->max_fingers = 0;
     SDL_touchDevices[index]->fingers = NULL;
+    SDL_touchDevices[index]->name = SDL_strdup(name ? name : "");
 
     /* Record this touch device for gestures */
     /* We could do this on the fly in the gesture code if we wanted */
@@ -254,8 +265,13 @@ SDL_SendTouch(SDL_TouchID id, SDL_FingerID fingerid, SDL_Window * window,
 
 #if SYNTHESIZE_TOUCH_TO_MOUSE
     /* SDL_HINT_TOUCH_MOUSE_EVENTS: controlling whether touch events should generate synthetic mouse events */
+    /* SDL_HINT_VITA_TOUCH_MOUSE_DEVICE: controlling which touchpad should generate synthetic mouse events, PSVita-only */
     {
+#if defined(__vita__)
+        if (mouse->touch_mouse_events && ((mouse->vita_touch_mouse_device == id) || (mouse->vita_touch_mouse_device == 2)) ) {
+#else
         if (mouse->touch_mouse_events) {
+#endif
             /* FIXME: maybe we should only restrict to a few SDL_TouchDeviceType */
             if (id != SDL_MOUSE_TOUCHID) {
                 if (window) {
@@ -302,8 +318,9 @@ SDL_SendTouch(SDL_TouchID id, SDL_FingerID fingerid, SDL_Window * window,
     finger = SDL_GetFinger(touch, fingerid);
     if (down) {
         if (finger) {
-            /* This finger is already down */
-            return 0;
+            /* This finger is already down.
+               Assume the finger-up for the previous touch was lost, and send it. */
+            SDL_SendTouch(id, fingerid, window, SDL_FALSE, x, y, pressure);
         }
 
         if (SDL_AddFinger(touch, fingerid, x, y, pressure) < 0) {
@@ -451,6 +468,7 @@ SDL_DelTouch(SDL_TouchID id)
         SDL_free(touch->fingers[i]);
     }
     SDL_free(touch->fingers);
+    SDL_free(touch->name);
     SDL_free(touch);
 
     SDL_num_touch--;

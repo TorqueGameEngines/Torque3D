@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -21,7 +21,6 @@
 #include "../../SDL_internal.h"
 
 #if SDL_VIDEO_RENDER_OGL && !SDL_RENDER_DISABLED
-
 #include "SDL_hints.h"
 #include "SDL_opengl.h"
 #include "../SDL_sysrender.h"
@@ -29,6 +28,11 @@
 
 #ifdef __MACOSX__
 #include <OpenGL/OpenGL.h>
+#endif
+
+#ifdef SDL_VIDEO_VITA_PVR_OGL
+#include <GL/gl.h>
+#include <GL/glext.h>
 #endif
 
 /* To prevent unnecessary window recreation, 
@@ -73,6 +77,9 @@ typedef struct
     SDL_bool cliprect_dirty;
     SDL_Rect cliprect;
     SDL_bool texturing;
+    SDL_bool vertex_array;
+    SDL_bool color_array;
+    SDL_bool texture_array;
     Uint32 color;
     Uint32 clear_color;
 } GL_DrawStateCache;
@@ -124,15 +131,18 @@ typedef struct
     GLfloat texh;
     GLenum format;
     GLenum formattype;
+    GL_Shader shader;
     void *pixels;
     int pitch;
     SDL_Rect locked_rect;
 
+#if SDL_HAVE_YUV
     /* YUV texture support */
     SDL_bool yuv;
     SDL_bool nv12;
     GLuint utexture;
     GLuint vtexture;
+#endif
 
     GL_FBOList *fbo;
 } GL_TextureData;
@@ -312,6 +322,20 @@ GL_GetFBO(GL_RenderData *data, Uint32 w, Uint32 h)
         }
     }
     return result;
+}
+
+static void
+GL_WindowEvent(SDL_Renderer * renderer, const SDL_WindowEvent *event)
+{
+    /* If the window x/y/w/h changed at all, assume the viewport has been
+     * changed behind our backs. x/y changes might seem weird but viewport
+     * resets have been observed on macOS at minimum!
+     */
+    if (event->event == SDL_WINDOWEVENT_SIZE_CHANGED ||
+        event->event == SDL_WINDOWEVENT_MOVED) {
+        GL_RenderData *data = (GL_RenderData *) renderer->driverdata;
+        data->drawstate.viewport_dirty = SDL_TRUE;
+    }
 }
 
 static int
@@ -577,6 +601,7 @@ GL_CreateTexture(SDL_Renderer * renderer, SDL_Texture * texture)
         return -1;
     }
 
+#if SDL_HAVE_YUV
     if (texture->format == SDL_PIXELFORMAT_YV12 ||
         texture->format == SDL_PIXELFORMAT_IYUV) {
         data->yuv = SDL_TRUE;
@@ -626,6 +651,58 @@ GL_CreateTexture(SDL_Renderer * renderer, SDL_Texture * texture)
         renderdata->glTexImage2D(textype, 0, GL_LUMINANCE_ALPHA, (texture_w+1)/2,
                                  (texture_h+1)/2, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, NULL);
     }
+#endif
+
+    if (texture->format == SDL_PIXELFORMAT_ABGR8888 || texture->format == SDL_PIXELFORMAT_ARGB8888) {
+        data->shader = SHADER_RGBA;
+    } else {
+        data->shader = SHADER_RGB;
+    }
+
+#if SDL_HAVE_YUV
+    if (data->yuv || data->nv12) {
+        switch (SDL_GetYUVConversionModeForResolution(texture->w, texture->h)) {
+            case SDL_YUV_CONVERSION_JPEG:
+                if (data->yuv) {
+                    data->shader = SHADER_YUV_JPEG;
+                } else if (texture->format == SDL_PIXELFORMAT_NV12) {
+                    data->shader = SHADER_NV12_JPEG;
+                } else {
+                    data->shader = SHADER_NV21_JPEG;
+                }
+                break;
+            case SDL_YUV_CONVERSION_BT601:
+                if (data->yuv) {
+                    data->shader = SHADER_YUV_BT601;
+                } else if (texture->format == SDL_PIXELFORMAT_NV12) {
+                    if (SDL_GetHintBoolean("SDL_RENDER_OPENGL_NV12_RG_SHADER", SDL_FALSE)) {
+                        data->shader = SHADER_NV12_RG_BT601;
+                    } else {
+                        data->shader = SHADER_NV12_RA_BT601;
+                    }
+                } else {
+                    data->shader = SHADER_NV21_BT601;
+                }
+                break;
+            case SDL_YUV_CONVERSION_BT709:
+                if (data->yuv) {
+                    data->shader = SHADER_YUV_BT709;
+                } else if (texture->format == SDL_PIXELFORMAT_NV12) {
+                    if (SDL_GetHintBoolean("SDL_RENDER_OPENGL_NV12_RG_SHADER", SDL_FALSE)) {
+                        data->shader = SHADER_NV12_RG_BT709;
+                    } else {
+                        data->shader = SHADER_NV12_RA_BT709;
+                    }
+                } else {
+                    data->shader = SHADER_NV21_BT709;
+                }
+                break;
+            default:
+                SDL_assert(!"unsupported YUV conversion mode");
+                break;
+        }
+    }
+#endif /* SDL_HAVE_YUV */
 
     return GL_CheckError("", renderer);
 }
@@ -651,6 +728,7 @@ GL_UpdateTexture(SDL_Renderer * renderer, SDL_Texture * texture,
     renderdata->glTexSubImage2D(textype, 0, rect->x, rect->y, rect->w,
                                 rect->h, data->format, data->formattype,
                                 pixels);
+#if SDL_HAVE_YUV
     if (data->yuv) {
         renderdata->glPixelStorei(GL_UNPACK_ROW_LENGTH, ((pitch + 1) / 2));
 
@@ -687,10 +765,11 @@ GL_UpdateTexture(SDL_Renderer * renderer, SDL_Texture * texture,
                                     (rect->w + 1)/2, (rect->h + 1)/2,
                                     GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, pixels);
     }
-
+#endif
     return GL_CheckError("glTexSubImage2D()", renderer);
 }
 
+#if SDL_HAVE_YUV
 static int
 GL_UpdateTextureYUV(SDL_Renderer * renderer, SDL_Texture * texture,
                     const SDL_Rect * rect,
@@ -727,6 +806,38 @@ GL_UpdateTextureYUV(SDL_Renderer * renderer, SDL_Texture * texture,
 
     return GL_CheckError("glTexSubImage2D()", renderer);
 }
+
+static int
+GL_UpdateTextureNV(SDL_Renderer * renderer, SDL_Texture * texture,
+                    const SDL_Rect * rect,
+                    const Uint8 *Yplane, int Ypitch,
+                    const Uint8 *UVplane, int UVpitch)
+{
+    GL_RenderData *renderdata = (GL_RenderData *) renderer->driverdata;
+    const GLenum textype = renderdata->textype;
+    GL_TextureData *data = (GL_TextureData *) texture->driverdata;
+
+    GL_ActivateRenderer(renderer);
+
+    renderdata->drawstate.texture = NULL;  /* we trash this state. */
+
+    renderdata->glBindTexture(textype, data->texture);
+    renderdata->glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    renderdata->glPixelStorei(GL_UNPACK_ROW_LENGTH, Ypitch);
+    renderdata->glTexSubImage2D(textype, 0, rect->x, rect->y, rect->w,
+                                rect->h, data->format, data->formattype,
+                                Yplane);
+
+
+    renderdata->glPixelStorei(GL_UNPACK_ROW_LENGTH, UVpitch / 2);
+    renderdata->glBindTexture(textype, data->utexture);
+    renderdata->glTexSubImage2D(textype, 0, rect->x/2, rect->y/2,
+                                (rect->w + 1)/2, (rect->h + 1)/2,
+                                GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, UVplane);
+
+    return GL_CheckError("glTexSubImage2D()", renderer);
+}
+#endif
 
 static int
 GL_LockTexture(SDL_Renderer * renderer, SDL_Texture * texture,
@@ -768,6 +879,7 @@ GL_SetTextureScaleMode(SDL_Renderer * renderer, SDL_Texture * texture, SDL_Scale
     renderdata->glTexParameteri(textype, GL_TEXTURE_MIN_FILTER, glScaleMode);
     renderdata->glTexParameteri(textype, GL_TEXTURE_MAG_FILTER, glScaleMode);
 
+#if SDL_HAVE_YUV
     if (texture->format == SDL_PIXELFORMAT_YV12 ||
         texture->format == SDL_PIXELFORMAT_IYUV) {
         renderdata->glBindTexture(textype, data->utexture);
@@ -785,6 +897,7 @@ GL_SetTextureScaleMode(SDL_Renderer * renderer, SDL_Texture * texture, SDL_Scale
         renderdata->glTexParameteri(textype, GL_TEXTURE_MIN_FILTER, glScaleMode);
         renderdata->glTexParameteri(textype, GL_TEXTURE_MAG_FILTER, glScaleMode);
     }
+#endif
 }
 
 static int
@@ -851,171 +964,106 @@ static int
 GL_QueueDrawLines(SDL_Renderer * renderer, SDL_RenderCommand *cmd, const SDL_FPoint * points, int count)
 {
     int i;
+    GLfloat prevx, prevy;
     const size_t vertlen = (sizeof (GLfloat) * 2) * count;
     GLfloat *verts = (GLfloat *) SDL_AllocateRenderVertices(renderer, vertlen, 0, &cmd->data.draw.first);
+
     if (!verts) {
         return -1;
     }
     cmd->data.draw.count = count;
 
-    /* Offset to hit the center of the pixel. */
-    for (i = 0; i < count; i++) {
-        *(verts++) = 0.5f + points[i].x;
-        *(verts++) = 0.5f + points[i].y;
+    /* 0.5f offset to hit the center of the pixel. */
+    prevx = 0.5f + points->x;
+    prevy = 0.5f + points->y;
+    *(verts++) = prevx;
+    *(verts++) = prevy;
+
+    /* bump the end of each line segment out a quarter of a pixel, to provoke
+       the diamond-exit rule. Without this, you won't just drop the last
+       pixel of the last line segment, but you might also drop pixels at the
+       edge of any given line segment along the way too. */
+    for (i = 1; i < count; i++) {
+        const GLfloat xstart = prevx;
+        const GLfloat ystart = prevy;
+        const GLfloat xend = points[i].x + 0.5f;  /* 0.5f to hit pixel center. */
+        const GLfloat yend = points[i].y + 0.5f;
+        /* bump a little in the direction we are moving in. */
+        const GLfloat deltax = xend - xstart;
+        const GLfloat deltay = yend - ystart;
+        const GLfloat angle = SDL_atan2f(deltay, deltax);
+        prevx = xend + (SDL_cosf(angle) * 0.25f);
+        prevy = yend + (SDL_sinf(angle) * 0.25f);
+        *(verts++) = prevx;
+        *(verts++) = prevy;
     }
 
-    /* Make the last line segment one pixel longer, to satisfy the
-       diamond-exit rule. */
-    verts -= 4;
-    {
-        const GLfloat xstart = verts[0];
-        const GLfloat ystart = verts[1];
-        const GLfloat xend = verts[2];
-        const GLfloat yend = verts[3];
+    return 0;
+}
 
-        if (ystart == yend) {  /* horizontal line */
-            verts[2] += (xend > xstart) ? 1.0f : -1.0f;
-        } else if (xstart == xend) {  /* vertical line */
-            verts[3] += (yend > ystart) ? 1.0f : -1.0f;
-        } else {  /* bump a pixel in the direction we are moving in. */
-            const GLfloat deltax = xend - xstart;
-            const GLfloat deltay = yend - ystart;
-            const GLfloat angle = SDL_atan2f(deltay, deltax);
-            verts[2] += SDL_cosf(angle);
-            verts[3] += SDL_sinf(angle);
+static int
+GL_QueueGeometry(SDL_Renderer *renderer, SDL_RenderCommand *cmd, SDL_Texture *texture,
+        const float *xy, int xy_stride, const SDL_Color *color, int color_stride, const float *uv, int uv_stride,
+        int num_vertices, const void *indices, int num_indices, int size_indices,
+        float scale_x, float scale_y)
+{
+    GL_TextureData *texturedata = NULL;
+    int i;
+    int count = indices ? num_indices : num_vertices;
+    GLfloat *verts;
+    size_t sz = 2 * sizeof(GLfloat) + 4 * sizeof(Uint8) + (texture ? 2 : 0) * sizeof(GLfloat);
+
+    verts = (GLfloat *) SDL_AllocateRenderVertices(renderer, count * sz, 0, &cmd->data.draw.first);
+    if (!verts) {
+        return -1;
+    }
+
+    if (texture) {
+        texturedata = (GL_TextureData *) texture->driverdata;
+    }
+
+    cmd->data.draw.count = count;
+    size_indices = indices ? size_indices : 0;
+
+    for (i = 0; i < count; i++) {
+        int j;
+        float *xy_;
+        if (size_indices == 4) {
+            j = ((const Uint32 *)indices)[i];
+        } else if (size_indices == 2) {
+            j = ((const Uint16 *)indices)[i];
+        } else if (size_indices == 1) {
+            j = ((const Uint8 *)indices)[i];
+        } else {
+            j = i;
+        }
+
+        xy_ = (float *)((char*)xy + j * xy_stride);
+
+        *(verts++) = xy_[0] * scale_x;
+        *(verts++) = xy_[1] * scale_y;
+
+        /* Not really a float, but it is still 4 bytes and will be cast to the
+           right type in the graphics driver. */
+        SDL_memcpy(verts, ((char*)color + j * color_stride), sizeof(*color));
+        ++verts;
+
+        if (texture) {
+            float *uv_ = (float *)((char*)uv + j * uv_stride);
+            *(verts++) = uv_[0] * texturedata->texw;
+            *(verts++) = uv_[1] * texturedata->texh;
         }
     }
-
     return 0;
 }
 
 static int
-GL_QueueFillRects(SDL_Renderer * renderer, SDL_RenderCommand *cmd, const SDL_FRect * rects, int count)
-{
-    GLfloat *verts = (GLfloat *) SDL_AllocateRenderVertices(renderer, count * 4 * sizeof (GLfloat), 0, &cmd->data.draw.first);
-    int i;
-
-    if (!verts) {
-        return -1;
-    }
-
-    cmd->data.draw.count = count;
-    for (i = 0; i < count; i++) {
-        const SDL_FRect *rect = &rects[i];
-        *(verts++) = rect->x;
-        *(verts++) = rect->y;
-        *(verts++) = rect->x + rect->w;
-        *(verts++) = rect->y + rect->h;
-    }
-
-    return 0;
-}
-
-static int
-GL_QueueCopy(SDL_Renderer * renderer, SDL_RenderCommand *cmd, SDL_Texture * texture,
-             const SDL_Rect * srcrect, const SDL_FRect * dstrect)
-{
-    GL_TextureData *texturedata = (GL_TextureData *) texture->driverdata;
-    GLfloat minx, miny, maxx, maxy;
-    GLfloat minu, maxu, minv, maxv;
-    GLfloat *verts = (GLfloat *) SDL_AllocateRenderVertices(renderer, 8 * sizeof (GLfloat), 0, &cmd->data.draw.first);
-
-    if (!verts) {
-        return -1;
-    }
-
-    cmd->data.draw.count = 1;
-
-    minx = dstrect->x;
-    miny = dstrect->y;
-    maxx = dstrect->x + dstrect->w;
-    maxy = dstrect->y + dstrect->h;
-
-    minu = (GLfloat) srcrect->x / texture->w;
-    minu *= texturedata->texw;
-    maxu = (GLfloat) (srcrect->x + srcrect->w) / texture->w;
-    maxu *= texturedata->texw;
-    minv = (GLfloat) srcrect->y / texture->h;
-    minv *= texturedata->texh;
-    maxv = (GLfloat) (srcrect->y + srcrect->h) / texture->h;
-    maxv *= texturedata->texh;
-
-    cmd->data.draw.count = 1;
-    *(verts++) = minx;
-    *(verts++) = miny;
-    *(verts++) = maxx;
-    *(verts++) = maxy;
-    *(verts++) = minu;
-    *(verts++) = maxu;
-    *(verts++) = minv;
-    *(verts++) = maxv;
-    return 0;
-}
-
-static int
-GL_QueueCopyEx(SDL_Renderer * renderer, SDL_RenderCommand *cmd, SDL_Texture * texture,
-               const SDL_Rect * srcrect, const SDL_FRect * dstrect,
-               const double angle, const SDL_FPoint *center, const SDL_RendererFlip flip)
-{
-    GL_TextureData *texturedata = (GL_TextureData *) texture->driverdata;
-    GLfloat minx, miny, maxx, maxy;
-    GLfloat centerx, centery;
-    GLfloat minu, maxu, minv, maxv;
-    GLfloat *verts = (GLfloat *) SDL_AllocateRenderVertices(renderer, 11 * sizeof (GLfloat), 0, &cmd->data.draw.first);
-
-    if (!verts) {
-        return -1;
-    }
-
-    centerx = center->x;
-    centery = center->y;
-
-    if (flip & SDL_FLIP_HORIZONTAL) {
-        minx =  dstrect->w - centerx;
-        maxx = -centerx;
-    }
-    else {
-        minx = -centerx;
-        maxx =  dstrect->w - centerx;
-    }
-
-    if (flip & SDL_FLIP_VERTICAL) {
-        miny =  dstrect->h - centery;
-        maxy = -centery;
-    }
-    else {
-        miny = -centery;
-        maxy =  dstrect->h - centery;
-    }
-
-    minu = (GLfloat) srcrect->x / texture->w;
-    minu *= texturedata->texw;
-    maxu = (GLfloat) (srcrect->x + srcrect->w) / texture->w;
-    maxu *= texturedata->texw;
-    minv = (GLfloat) srcrect->y / texture->h;
-    minv *= texturedata->texh;
-    maxv = (GLfloat) (srcrect->y + srcrect->h) / texture->h;
-    maxv *= texturedata->texh;
-
-    cmd->data.draw.count = 1;
-    *(verts++) = minx;
-    *(verts++) = miny;
-    *(verts++) = maxx;
-    *(verts++) = maxy;
-    *(verts++) = minu;
-    *(verts++) = maxu;
-    *(verts++) = minv;
-    *(verts++) = maxv;
-    *(verts++) = (GLfloat) dstrect->x + centerx;
-    *(verts++) = (GLfloat) dstrect->y + centery;
-    *(verts++) = (GLfloat) angle;
-    return 0;
-}
-
-static void
 SetDrawState(GL_RenderData *data, const SDL_RenderCommand *cmd, const GL_Shader shader)
 {
     const SDL_BlendMode blend = cmd->data.draw.blend;
+    SDL_bool vertex_array;
+    SDL_bool color_array;
+    SDL_bool texture_array;
 
     if (data->drawstate.viewport_dirty) {
         const SDL_bool istarget = data->drawstate.target != NULL;
@@ -1081,78 +1129,83 @@ SetDrawState(GL_RenderData *data, const SDL_RenderCommand *cmd, const GL_Shader 
             data->drawstate.texturing = SDL_TRUE;
         }
     }
+
+    vertex_array = cmd->command == SDL_RENDERCMD_DRAW_POINTS
+        || cmd->command == SDL_RENDERCMD_DRAW_LINES
+        || cmd->command == SDL_RENDERCMD_GEOMETRY;
+    color_array = cmd->command == SDL_RENDERCMD_GEOMETRY;
+    texture_array = cmd->data.draw.texture != NULL;
+
+    if (vertex_array != data->drawstate.vertex_array) {
+        if (vertex_array) {
+            data->glEnableClientState(GL_VERTEX_ARRAY);
+        } else {
+            data->glDisableClientState(GL_VERTEX_ARRAY);
+        }
+        data->drawstate.vertex_array = vertex_array;
+    }
+
+    if (color_array != data->drawstate.color_array) {
+        if (color_array) {
+            data->glEnableClientState(GL_COLOR_ARRAY);
+        } else {
+            data->glDisableClientState(GL_COLOR_ARRAY);
+        }
+        data->drawstate.color_array = color_array;
+    }
+
+    /* This is a little awkward but should avoid texcoord arrays getting into
+       a bad state if SDL_GL_BindTexture/UnbindTexture are called. */
+    if (texture_array != data->drawstate.texture_array) {
+        if (texture_array) {
+            data->glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        } else {
+            data->glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        }
+        data->drawstate.texture_array = texture_array;
+    }
+
+    return 0;
 }
 
-static void
+static int
 SetCopyState(GL_RenderData *data, const SDL_RenderCommand *cmd)
 {
     SDL_Texture *texture = cmd->data.draw.texture;
     const GL_TextureData *texturedata = (GL_TextureData *) texture->driverdata;
-    GL_Shader shader;
 
-    if (texture->format == SDL_PIXELFORMAT_ABGR8888 || texture->format == SDL_PIXELFORMAT_ARGB8888) {
-        shader = SHADER_RGBA;
-    } else {
-        shader = SHADER_RGB;
-    }
-
-    if (data->shaders) {
-        if (texturedata->yuv || texturedata->nv12) {
-            switch (SDL_GetYUVConversionModeForResolution(texture->w, texture->h)) {
-                case SDL_YUV_CONVERSION_JPEG:
-                    if (texturedata->yuv) {
-                        shader = SHADER_YUV_JPEG;
-                    } else if (texture->format == SDL_PIXELFORMAT_NV12) {
-                        shader = SHADER_NV12_JPEG;
-                    } else {
-                        shader = SHADER_NV21_JPEG;
-                    }
-                    break;
-                case SDL_YUV_CONVERSION_BT601:
-                    if (texturedata->yuv) {
-                        shader = SHADER_YUV_BT601;
-                    } else if (texture->format == SDL_PIXELFORMAT_NV12) {
-                        shader = SHADER_NV12_BT601;
-                    } else {
-                        shader = SHADER_NV21_BT601;
-                    }
-                    break;
-                case SDL_YUV_CONVERSION_BT709:
-                    if (texturedata->yuv) {
-                        shader = SHADER_YUV_BT709;
-                    } else if (texture->format == SDL_PIXELFORMAT_NV12) {
-                        shader = SHADER_NV12_BT709;
-                    } else {
-                        shader = SHADER_NV21_BT709;
-                    }
-                    break;
-                default:
-                    SDL_assert(!"unsupported YUV conversion mode");
-                    break;
-            }
-        }
-    }
-
-    SetDrawState(data, cmd, shader);
+    SetDrawState(data, cmd, texturedata->shader);
 
     if (texture != data->drawstate.texture) {
         const GLenum textype = data->textype;
+#if SDL_HAVE_YUV
         if (texturedata->yuv) {
-            data->glActiveTextureARB(GL_TEXTURE2_ARB);
+            if (data->GL_ARB_multitexture_supported) {
+                data->glActiveTextureARB(GL_TEXTURE2_ARB);
+            }
             data->glBindTexture(textype, texturedata->vtexture);
 
-            data->glActiveTextureARB(GL_TEXTURE1_ARB);
+            if (data->GL_ARB_multitexture_supported) {
+                data->glActiveTextureARB(GL_TEXTURE1_ARB);
+            }
             data->glBindTexture(textype, texturedata->utexture);
         }
         if (texturedata->nv12) {
-            data->glActiveTextureARB(GL_TEXTURE1_ARB);
+            if (data->GL_ARB_multitexture_supported) {
+                data->glActiveTextureARB(GL_TEXTURE1_ARB);
+            }
             data->glBindTexture(textype, texturedata->utexture);
         }
-        data->glActiveTextureARB(GL_TEXTURE0_ARB);
+#endif
+        if (data->GL_ARB_multitexture_supported) {
+            data->glActiveTextureARB(GL_TEXTURE0_ARB);
+        }
         data->glBindTexture(textype, texturedata->texture);
 
         data->drawstate.texture = texture;
     }
+
+    return 0;
 }
 
 static int
@@ -1160,7 +1213,6 @@ GL_RunCommandQueue(SDL_Renderer * renderer, SDL_RenderCommand *cmd, void *vertic
 {
     /* !!! FIXME: it'd be nice to use a vertex buffer instead of immediate mode... */
     GL_RenderData *data = (GL_RenderData *) renderer->driverdata;
-    size_t i;
 
     if (GL_ActivateRenderer(renderer) < 0) {
         return -1;
@@ -1168,9 +1220,22 @@ GL_RunCommandQueue(SDL_Renderer * renderer, SDL_RenderCommand *cmd, void *vertic
 
     data->drawstate.target = renderer->target;
     if (!data->drawstate.target) {
-        SDL_GL_GetDrawableSize(renderer->window, &data->drawstate.drawablew, &data->drawstate.drawableh);
+        int w, h;
+        SDL_GL_GetDrawableSize(renderer->window, &w, &h);
+        if ((w != data->drawstate.drawablew) || (h != data->drawstate.drawableh)) {
+            data->drawstate.viewport_dirty = SDL_TRUE;  // if the window dimensions changed, invalidate the current viewport, etc.
+            data->drawstate.cliprect_dirty = SDL_TRUE;
+            data->drawstate.drawablew = w;
+            data->drawstate.drawableh = h;
+        }
     }
 
+#ifdef __MACOSX__
+    // On macOS on older systems, the OpenGL view change and resize events aren't
+    // necessarily synchronized, so just always reset it.
+    // Workaround for: https://discourse.libsdl.org/t/sdl-2-0-22-prerelease/35306/6
+    data->drawstate.viewport_dirty = SDL_TRUE;
+#endif
 
     while (cmd) {
         switch (cmd->command) {
@@ -1179,12 +1244,9 @@ GL_RunCommandQueue(SDL_Renderer * renderer, SDL_RenderCommand *cmd, void *vertic
                 const Uint8 g = cmd->data.color.g;
                 const Uint8 b = cmd->data.color.b;
                 const Uint8 a = cmd->data.color.a;
-                const Uint32 color = ((a << 24) | (r << 16) | (g << 8) | b);
+                const Uint32 color = (((Uint32)a << 24) | (r << 16) | (g << 8) | b);
                 if (color != data->drawstate.color) {
-                    data->glColor4f((GLfloat) r * inv255f,
-                                    (GLfloat) g * inv255f,
-                                    (GLfloat) b * inv255f,
-                                    (GLfloat) a * inv255f);
+                    data->glColor4ub((GLubyte) r, (GLubyte) g, (GLubyte) b, (GLubyte) a);
                     data->drawstate.color = color;
                 }
                 break;
@@ -1205,6 +1267,7 @@ GL_RunCommandQueue(SDL_Renderer * renderer, SDL_RenderCommand *cmd, void *vertic
                     data->drawstate.cliprect_enabled = cmd->data.cliprect.enabled;
                     data->drawstate.cliprect_enabled_dirty = SDL_TRUE;
                 }
+
                 if (SDL_memcmp(&data->drawstate.cliprect, rect, sizeof (SDL_Rect)) != 0) {
                     SDL_memcpy(&data->drawstate.cliprect, rect, sizeof (SDL_Rect));
                     data->drawstate.cliprect_dirty = SDL_TRUE;
@@ -1217,7 +1280,7 @@ GL_RunCommandQueue(SDL_Renderer * renderer, SDL_RenderCommand *cmd, void *vertic
                 const Uint8 g = cmd->data.color.g;
                 const Uint8 b = cmd->data.color.b;
                 const Uint8 a = cmd->data.color.a;
-                const Uint32 color = ((a << 24) | (r << 16) | (g << 8) | b);
+                const Uint32 color = (((Uint32)a << 24) | (r << 16) | (g << 8) | b);
                 if (color != data->drawstate.clear_color) {
                     const GLfloat fr = ((GLfloat) r) * inv255f;
                     const GLfloat fg = ((GLfloat) g) * inv255f;
@@ -1233,99 +1296,123 @@ GL_RunCommandQueue(SDL_Renderer * renderer, SDL_RenderCommand *cmd, void *vertic
                 }
 
                 data->glClear(GL_COLOR_BUFFER_BIT);
-
                 break;
             }
 
-            case SDL_RENDERCMD_DRAW_POINTS: {
-                const size_t count = cmd->data.draw.count;
-                const GLfloat *verts = (GLfloat *) (((Uint8 *) vertices) + cmd->data.draw.first);
-                SetDrawState(data, cmd, SHADER_SOLID);
-                data->glBegin(GL_POINTS);
-                for (i = 0; i < count; i++, verts += 2) {
-                    data->glVertex2f(verts[0], verts[1]);
-                }
-                data->glEnd();
+            case SDL_RENDERCMD_FILL_RECTS: /* unused */
                 break;
-            }
+
+            case SDL_RENDERCMD_COPY: /* unused */
+                break;
+
+            case SDL_RENDERCMD_COPY_EX: /* unused */
+                break;
 
             case SDL_RENDERCMD_DRAW_LINES: {
-                const GLfloat *verts = (GLfloat *) (((Uint8 *) vertices) + cmd->data.draw.first);
-                const size_t count = cmd->data.draw.count;
-                SDL_assert(count >= 2);
-                SetDrawState(data, cmd, SHADER_SOLID);
-                data->glBegin(GL_LINE_STRIP);
-                for (i = 0; i < count; ++i, verts += 2) {
-                    data->glVertex2f(verts[0], verts[1]);
+                if (SetDrawState(data, cmd, SHADER_SOLID) == 0) {
+                    size_t count = cmd->data.draw.count;
+                    const GLfloat *verts = (GLfloat *) (((Uint8 *) vertices) + cmd->data.draw.first);
+
+                    /* SetDrawState handles glEnableClientState. */
+                    data->glVertexPointer(2, GL_FLOAT, sizeof(float) * 2, verts);
+
+                    if (count > 2) {
+                        /* joined lines cannot be grouped */
+                        data->glDrawArrays(GL_LINE_STRIP, 0, (GLsizei)count);
+                    } else {
+                        /* let's group non joined lines */
+                        SDL_RenderCommand *finalcmd = cmd;
+                        SDL_RenderCommand *nextcmd = cmd->next;
+                        SDL_BlendMode thisblend = cmd->data.draw.blend;
+
+                        while (nextcmd != NULL) {
+                            const SDL_RenderCommandType nextcmdtype = nextcmd->command;
+                            if (nextcmdtype != SDL_RENDERCMD_DRAW_LINES) {
+                                break;  /* can't go any further on this draw call, different render command up next. */
+                            } else if (nextcmd->data.draw.count != 2) {
+                                break;  /* can't go any further on this draw call, those are joined lines */
+                            } else if (nextcmd->data.draw.blend != thisblend) {
+                                break;  /* can't go any further on this draw call, different blendmode copy up next. */
+                            } else {
+                                finalcmd = nextcmd;  /* we can combine copy operations here. Mark this one as the furthest okay command. */
+                                count += nextcmd->data.draw.count;
+                            }
+                            nextcmd = nextcmd->next;
+                        }
+
+                        data->glDrawArrays(GL_LINES, 0, (GLsizei)count);
+                        cmd = finalcmd;  /* skip any copy commands we just combined in here. */
+                    }
                 }
-                data->glEnd();
                 break;
             }
 
-            case SDL_RENDERCMD_FILL_RECTS: {
-                const size_t count = cmd->data.draw.count;
-                const GLfloat *verts = (GLfloat *) (((Uint8 *) vertices) + cmd->data.draw.first);
-                SetDrawState(data, cmd, SHADER_SOLID);
-                for (i = 0; i < count; ++i, verts += 4) {
-                    data->glRectf(verts[0], verts[1], verts[2], verts[3]);
+            case SDL_RENDERCMD_DRAW_POINTS:
+            case SDL_RENDERCMD_GEOMETRY: {
+                /* as long as we have the same copy command in a row, with the
+                   same texture, we can combine them all into a single draw call. */
+                SDL_Texture *thistexture = cmd->data.draw.texture;
+                SDL_BlendMode thisblend = cmd->data.draw.blend;
+                const SDL_RenderCommandType thiscmdtype = cmd->command;
+                SDL_RenderCommand *finalcmd = cmd;
+                SDL_RenderCommand *nextcmd = cmd->next;
+                size_t count = cmd->data.draw.count;
+                int ret;
+                while (nextcmd != NULL) {
+                    const SDL_RenderCommandType nextcmdtype = nextcmd->command;
+                    if (nextcmdtype != thiscmdtype) {
+                        break;  /* can't go any further on this draw call, different render command up next. */
+                    } else if (nextcmd->data.draw.texture != thistexture || nextcmd->data.draw.blend != thisblend) {
+                        break;  /* can't go any further on this draw call, different texture/blendmode copy up next. */
+                    } else {
+                        finalcmd = nextcmd;  /* we can combine copy operations here. Mark this one as the furthest okay command. */
+                        count += nextcmd->data.draw.count;
+                    }
+                    nextcmd = nextcmd->next;
                 }
-                break;
-            }
 
-            case SDL_RENDERCMD_COPY: {
-                const GLfloat *verts = (GLfloat *) (((Uint8 *) vertices) + cmd->data.draw.first);
-                const GLfloat minx = verts[0];
-                const GLfloat miny = verts[1];
-                const GLfloat maxx = verts[2];
-                const GLfloat maxy = verts[3];
-                const GLfloat minu = verts[4];
-                const GLfloat maxu = verts[5];
-                const GLfloat minv = verts[6];
-                const GLfloat maxv = verts[7];
-                SetCopyState(data, cmd);
-                data->glBegin(GL_TRIANGLE_STRIP);
-                data->glTexCoord2f(minu, minv);
-                data->glVertex2f(minx, miny);
-                data->glTexCoord2f(maxu, minv);
-                data->glVertex2f(maxx, miny);
-                data->glTexCoord2f(minu, maxv);
-                data->glVertex2f(minx, maxy);
-                data->glTexCoord2f(maxu, maxv);
-                data->glVertex2f(maxx, maxy);
-                data->glEnd();
-                break;
-            }
+                if (thistexture) {
+                    ret = SetCopyState(data, cmd);
+                } else {
+                    ret = SetDrawState(data, cmd, SHADER_SOLID);
+                }
 
-            case SDL_RENDERCMD_COPY_EX: {
-                const GLfloat *verts = (GLfloat *) (((Uint8 *) vertices) + cmd->data.draw.first);
-                const GLfloat minx = verts[0];
-                const GLfloat miny = verts[1];
-                const GLfloat maxx = verts[2];
-                const GLfloat maxy = verts[3];
-                const GLfloat minu = verts[4];
-                const GLfloat maxu = verts[5];
-                const GLfloat minv = verts[6];
-                const GLfloat maxv = verts[7];
-                const GLfloat translatex = verts[8];
-                const GLfloat translatey = verts[9];
-                const GLdouble angle = verts[10];
-                SetCopyState(data, cmd);
+                if (ret == 0) {
+                    const GLfloat *verts = (GLfloat *) (((Uint8 *) vertices) + cmd->data.draw.first);
+                    int op = GL_TRIANGLES; /* SDL_RENDERCMD_GEOMETRY */
+                    if (thiscmdtype == SDL_RENDERCMD_DRAW_POINTS) {
+                        op = GL_POINTS;
+                    }
 
-                /* Translate to flip, rotate, translate to position */
-                data->glPushMatrix();
-                data->glTranslatef(translatex, translatey, 0.0f);
-                data->glRotated(angle, 0.0, 0.0, 1.0);
-                data->glBegin(GL_TRIANGLE_STRIP);
-                data->glTexCoord2f(minu, minv);
-                data->glVertex2f(minx, miny);
-                data->glTexCoord2f(maxu, minv);
-                data->glVertex2f(maxx, miny);
-                data->glTexCoord2f(minu, maxv);
-                data->glVertex2f(minx, maxy);
-                data->glTexCoord2f(maxu, maxv);
-                data->glVertex2f(maxx, maxy);
-                data->glEnd();
-                data->glPopMatrix();
+                    if (thiscmdtype == SDL_RENDERCMD_DRAW_POINTS) {
+                        /* SetDrawState handles glEnableClientState. */
+                        data->glVertexPointer(2, GL_FLOAT, sizeof(float) * 2, verts);
+                    } else {
+                        /* SetDrawState handles glEnableClientState. */
+                        if (thistexture) {
+                            data->glVertexPointer(2, GL_FLOAT, sizeof(float) * 5, verts + 0);
+                            data->glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(float) * 5, verts + 2);
+                            data->glTexCoordPointer(2, GL_FLOAT, sizeof(float) * 5, verts + 3);
+                        } else {
+                            data->glVertexPointer(2, GL_FLOAT, sizeof(float) * 3, verts + 0);
+                            data->glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(float) * 3, verts + 2);
+                        }
+                    }
+
+                    data->glDrawArrays(op, 0, (GLsizei) count);
+
+                    /* Restore previously set color when we're done. */
+                    if (thiscmdtype != SDL_RENDERCMD_DRAW_POINTS) {
+                        Uint32 color = data->drawstate.color;
+                        GLubyte a = (GLubyte)((color >> 24) & 0xFF);
+                        GLubyte r = (GLubyte)((color >> 16) & 0xFF);
+                        GLubyte g = (GLubyte)((color >> 8) & 0xFF);
+                        GLubyte b = (GLubyte)((color >> 0) & 0xFF);
+                        data->glColor4ub(r, g, b, a);
+                    }
+                }
+
+                cmd = finalcmd;  /* skip any copy commands we just combined in here. */
                 break;
             }
 
@@ -1334,6 +1421,21 @@ GL_RunCommandQueue(SDL_Renderer * renderer, SDL_RenderCommand *cmd, void *vertic
         }
 
         cmd = cmd->next;
+    }
+
+    /* Turn off vertex array state when we're done, in case external code
+       relies on it being off. */
+    if (data->drawstate.vertex_array) {
+        data->glDisableClientState(GL_VERTEX_ARRAY);
+        data->drawstate.vertex_array = SDL_FALSE;
+    }
+    if (data->drawstate.color_array) {
+        data->glDisableClientState(GL_COLOR_ARRAY);
+        data->drawstate.color_array = SDL_FALSE;
+    }
+    if (data->drawstate.texture_array) {
+        data->glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        data->drawstate.texture_array = SDL_FALSE;
     }
 
     return GL_CheckError("", renderer);
@@ -1439,10 +1541,12 @@ GL_DestroyTexture(SDL_Renderer * renderer, SDL_Texture * texture)
     if (data->texture) {
         renderdata->glDeleteTextures(1, &data->texture);
     }
+#if SDL_HAVE_YUV
     if (data->yuv) {
         renderdata->glDeleteTextures(1, &data->utexture);
         renderdata->glDeleteTextures(1, &data->vtexture);
     }
+#endif
     SDL_free(data->pixels);
     SDL_free(data);
     texture->driverdata = NULL;
@@ -1496,23 +1600,44 @@ GL_BindTexture (SDL_Renderer * renderer, SDL_Texture *texture, float *texw, floa
     GL_ActivateRenderer(renderer);
 
     data->glEnable(textype);
+#if SDL_HAVE_YUV
     if (texturedata->yuv) {
-        data->glActiveTextureARB(GL_TEXTURE2_ARB);
+        if (data->GL_ARB_multitexture_supported) {
+            data->glActiveTextureARB(GL_TEXTURE2_ARB);
+        }
         data->glBindTexture(textype, texturedata->vtexture);
 
-        data->glActiveTextureARB(GL_TEXTURE1_ARB);
+        if (data->GL_ARB_multitexture_supported) {
+            data->glActiveTextureARB(GL_TEXTURE1_ARB);
+        }
         data->glBindTexture(textype, texturedata->utexture);
 
-        data->glActiveTextureARB(GL_TEXTURE0_ARB);
+        if (data->GL_ARB_multitexture_supported) {
+            data->glActiveTextureARB(GL_TEXTURE0_ARB);
+        }
     }
+    if (texturedata->nv12) {
+        if (data->GL_ARB_multitexture_supported) {
+            data->glActiveTextureARB(GL_TEXTURE1_ARB);
+        }
+        data->glBindTexture(textype, texturedata->utexture);
+
+        if (data->GL_ARB_multitexture_supported) {
+            data->glActiveTextureARB(GL_TEXTURE0_ARB);
+        }
+    }
+#endif
     data->glBindTexture(textype, texturedata->texture);
 
     data->drawstate.texturing = SDL_TRUE;
     data->drawstate.texture = texture;
 
-    if(texw) *texw = (float)texturedata->texw;
-    if(texh) *texh = (float)texturedata->texh;
-
+    if (texw) {
+        *texw = (float)texturedata->texw;
+    }
+    if (texh) {
+        *texh = (float)texturedata->texh;
+    }
     return 0;
 }
 
@@ -1525,16 +1650,37 @@ GL_UnbindTexture (SDL_Renderer * renderer, SDL_Texture *texture)
 
     GL_ActivateRenderer(renderer);
 
+#if SDL_HAVE_YUV
     if (texturedata->yuv) {
-        data->glActiveTextureARB(GL_TEXTURE2_ARB);
+        if (data->GL_ARB_multitexture_supported) {
+            data->glActiveTextureARB(GL_TEXTURE2_ARB);
+        }
+        data->glBindTexture(textype, 0);
         data->glDisable(textype);
 
-        data->glActiveTextureARB(GL_TEXTURE1_ARB);
+        if (data->GL_ARB_multitexture_supported) {
+            data->glActiveTextureARB(GL_TEXTURE1_ARB);
+        }
+        data->glBindTexture(textype, 0);
         data->glDisable(textype);
 
-        data->glActiveTextureARB(GL_TEXTURE0_ARB);
+        if (data->GL_ARB_multitexture_supported) {
+            data->glActiveTextureARB(GL_TEXTURE0_ARB);
+        }
     }
+    if (texturedata->nv12) {
+        if (data->GL_ARB_multitexture_supported) {
+            data->glActiveTextureARB(GL_TEXTURE1_ARB);
+        }
+        data->glBindTexture(textype, 0);
+        data->glDisable(textype);
 
+        if (data->GL_ARB_multitexture_supported) {
+            data->glActiveTextureARB(GL_TEXTURE0_ARB);
+        }
+    }
+#endif
+    data->glBindTexture(textype, 0);
     data->glDisable(textype);
 
     data->drawstate.texturing = SDL_FALSE;
@@ -1543,6 +1689,52 @@ GL_UnbindTexture (SDL_Renderer * renderer, SDL_Texture *texture)
     return 0;
 }
 
+static int
+GL_SetVSync(SDL_Renderer * renderer, const int vsync)
+{
+    int retval;
+    if (vsync) {
+        retval = SDL_GL_SetSwapInterval(1);
+    } else {
+        retval = SDL_GL_SetSwapInterval(0);
+    }
+    if (retval != 0) {
+        return retval;
+    }
+    if (SDL_GL_GetSwapInterval() > 0) {
+        renderer->info.flags |= SDL_RENDERER_PRESENTVSYNC;
+    } else {
+        renderer->info.flags &= ~SDL_RENDERER_PRESENTVSYNC;
+    }
+    return retval;
+}
+
+static SDL_bool
+GL_IsProbablyAccelerated(const GL_RenderData *data)
+{
+    /*const char *vendor = (const char *) data->glGetString(GL_VENDOR);*/
+    const char *renderer = (const char *) data->glGetString(GL_RENDERER);
+
+#ifdef __WINDOWS__
+    if (SDL_strcmp(renderer, "GDI Generic") == 0) {
+        return SDL_FALSE;  /* Microsoft's fallback software renderer. Fix your system! */
+    }
+#endif
+
+#ifdef __APPLE__
+    if (SDL_strcmp(renderer, "Apple Software Renderer") == 0) {
+        return SDL_FALSE;  /* (a probably very old) Apple software-based OpenGL. */
+    }
+#endif
+
+	if (SDL_strcmp(renderer, "Software Rasterizer") == 0) {
+        return SDL_FALSE;  /* (a probably very old) Software Mesa, or some other generic thing. */
+    }
+
+    /* !!! FIXME: swrast? llvmpipe? softpipe? */
+
+    return SDL_TRUE;
+}
 
 static SDL_Renderer *
 GL_CreateRenderer(SDL_Window * window, Uint32 flags)
@@ -1553,11 +1745,14 @@ GL_CreateRenderer(SDL_Window * window, Uint32 flags)
     Uint32 window_flags;
     int profile_mask = 0, major = 0, minor = 0;
     SDL_bool changed_window = SDL_FALSE;
+    const char *hint;
+    SDL_bool non_power_of_two_supported = SDL_FALSE;
 
     SDL_GL_GetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, &profile_mask);
     SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &major);
     SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &minor);
 
+#ifndef SDL_VIDEO_VITA_PVR_OGL
     window_flags = SDL_GetWindowFlags(window);
     if (!(window_flags & SDL_WINDOW_OPENGL) ||
         profile_mask == SDL_GL_CONTEXT_PROFILE_ES || major != RENDERER_CONTEXT_MAJOR || minor != RENDERER_CONTEXT_MINOR) {
@@ -1571,6 +1766,7 @@ GL_CreateRenderer(SDL_Window * window, Uint32 flags)
             goto error;
         }
     }
+#endif
 
     renderer = (SDL_Renderer *) SDL_calloc(1, sizeof(*renderer));
     if (!renderer) {
@@ -1585,11 +1781,15 @@ GL_CreateRenderer(SDL_Window * window, Uint32 flags)
         goto error;
     }
 
+    renderer->WindowEvent = GL_WindowEvent;
     renderer->GetOutputSize = GL_GetOutputSize;
     renderer->SupportsBlendMode = GL_SupportsBlendMode;
     renderer->CreateTexture = GL_CreateTexture;
     renderer->UpdateTexture = GL_UpdateTexture;
+#if SDL_HAVE_YUV
     renderer->UpdateTextureYUV = GL_UpdateTextureYUV;
+    renderer->UpdateTextureNV = GL_UpdateTextureNV;
+#endif
     renderer->LockTexture = GL_LockTexture;
     renderer->UnlockTexture = GL_UnlockTexture;
     renderer->SetTextureScaleMode = GL_SetTextureScaleMode;
@@ -1598,18 +1798,17 @@ GL_CreateRenderer(SDL_Window * window, Uint32 flags)
     renderer->QueueSetDrawColor = GL_QueueSetViewport;  /* SetViewport and SetDrawColor are (currently) no-ops. */
     renderer->QueueDrawPoints = GL_QueueDrawPoints;
     renderer->QueueDrawLines = GL_QueueDrawLines;
-    renderer->QueueFillRects = GL_QueueFillRects;
-    renderer->QueueCopy = GL_QueueCopy;
-    renderer->QueueCopyEx = GL_QueueCopyEx;
+    renderer->QueueGeometry = GL_QueueGeometry;
     renderer->RunCommandQueue = GL_RunCommandQueue;
     renderer->RenderReadPixels = GL_RenderReadPixels;
     renderer->RenderPresent = GL_RenderPresent;
     renderer->DestroyTexture = GL_DestroyTexture;
     renderer->DestroyRenderer = GL_DestroyRenderer;
+    renderer->SetVSync = GL_SetVSync;
     renderer->GL_BindTexture = GL_BindTexture;
     renderer->GL_UnbindTexture = GL_UnbindTexture;
     renderer->info = GL_RenderDriver.info;
-    renderer->info.flags = SDL_RENDERER_ACCELERATED;
+    renderer->info.flags = 0;  /* will set some flags below. */
     renderer->driverdata = data;
     renderer->window = window;
 
@@ -1631,6 +1830,10 @@ GL_CreateRenderer(SDL_Window * window, Uint32 flags)
         SDL_free(renderer);
         SDL_free(data);
         goto error;
+    }
+
+    if (GL_IsProbablyAccelerated(data)) {
+        renderer->info.flags |= SDL_RENDERER_ACCELERATED;
     }
 
 #ifdef __MACOSX__
@@ -1666,15 +1869,37 @@ GL_CreateRenderer(SDL_Window * window, Uint32 flags)
         data->glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
     }
 
+    hint = SDL_getenv("GL_ARB_texture_non_power_of_two");
+    if (!hint || *hint != '0') {
+        SDL_bool isGL2 = SDL_FALSE;
+        const char *verstr = (const char *)data->glGetString(GL_VERSION);
+        if (verstr) {
+            char verbuf[16];
+            char *ptr;
+            SDL_strlcpy(verbuf, verstr, sizeof (verbuf));
+            ptr = SDL_strchr(verbuf, '.');
+            if (ptr) {
+                *ptr = '\0';
+                if (SDL_atoi(verbuf) >= 2) {
+                    isGL2 = SDL_TRUE;
+                }
+            }
+        }
+        if (isGL2 || SDL_GL_ExtensionSupported("GL_ARB_texture_non_power_of_two")) {
+            non_power_of_two_supported = SDL_TRUE;
+        }
+    }
+
     data->textype = GL_TEXTURE_2D;
-    if (SDL_GL_ExtensionSupported("GL_ARB_texture_non_power_of_two")) {
+    if (non_power_of_two_supported) {
         data->GL_ARB_texture_non_power_of_two_supported = SDL_TRUE;
+        data->glGetIntegerv(GL_MAX_TEXTURE_SIZE, &value);
+        renderer->info.max_texture_width = value;
+        renderer->info.max_texture_height = value;
     } else if (SDL_GL_ExtensionSupported("GL_ARB_texture_rectangle") ||
                SDL_GL_ExtensionSupported("GL_EXT_texture_rectangle")) {
         data->GL_ARB_texture_rectangle_supported = SDL_TRUE;
         data->textype = GL_TEXTURE_RECTANGLE_ARB;
-    }
-    if (data->GL_ARB_texture_rectangle_supported) {
         data->glGetIntegerv(GL_MAX_RECTANGLE_TEXTURE_SIZE_ARB, &value);
         renderer->info.max_texture_width = value;
         renderer->info.max_texture_height = value;
@@ -1699,7 +1924,7 @@ GL_CreateRenderer(SDL_Window * window, Uint32 flags)
     }
     SDL_LogInfo(SDL_LOG_CATEGORY_RENDER, "OpenGL shaders: %s",
                 data->shaders ? "ENABLED" : "DISABLED");
-
+#if SDL_HAVE_YUV
     /* We support YV12 textures using 3 textures and a shader */
     if (data->shaders && data->num_texture_units >= 3) {
         renderer->info.texture_formats[renderer->info.num_texture_formats++] = SDL_PIXELFORMAT_YV12;
@@ -1707,7 +1932,7 @@ GL_CreateRenderer(SDL_Window * window, Uint32 flags)
         renderer->info.texture_formats[renderer->info.num_texture_formats++] = SDL_PIXELFORMAT_NV12;
         renderer->info.texture_formats[renderer->info.num_texture_formats++] = SDL_PIXELFORMAT_NV21;
     }
-
+#endif
 #ifdef __MACOSX__
     renderer->info.texture_formats[renderer->info.num_texture_formats++] = SDL_PIXELFORMAT_UYVY;
 #endif
@@ -1736,7 +1961,7 @@ GL_CreateRenderer(SDL_Window * window, Uint32 flags)
     data->glDisable(GL_SCISSOR_TEST);
     data->glDisable(data->textype);
     data->glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    data->glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    data->glColor4ub(255, 255, 255, 255);
     /* This ended up causing video discrepancies between OpenGL and Direct3D */
     /* data->glEnable(GL_LINE_SMOOTH); */
 

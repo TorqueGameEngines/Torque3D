@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -35,6 +35,24 @@
 #ifndef NSAppKitVersionNumber10_8
 #define NSAppKitVersionNumber10_8 1187
 #endif
+#ifndef MAC_OS_X_VERSION_10_12
+#define NSEventTypeApplicationDefined NSApplicationDefined
+#endif
+
+static SDL_Window *FindSDLWindowForNSWindow(NSWindow *win)
+{
+    SDL_Window *sdlwindow = NULL;
+    SDL_VideoDevice *device = SDL_GetVideoDevice();
+    if (device && device->windows) {
+        for (sdlwindow = device->windows; sdlwindow; sdlwindow = sdlwindow->next) {
+            NSWindow *nswindow = ((SDL_WindowData *) sdlwindow->driverdata)->nswindow;
+            if (win == nswindow)
+                return sdlwindow;
+        }
+    }
+
+    return sdlwindow;
+}
 
 @interface SDLApplication : NSApplication
 
@@ -158,6 +176,13 @@ static void Cocoa_DispatchEvent(NSEvent *theEvent)
     [center removeObserver:self name:NSApplicationDidBecomeActiveNotification object:nil];
     [center removeObserver:self name:NSCurrentLocaleDidChangeNotification object:nil];
 
+    /* Remove our URL event handler only if we set it */
+    if ([NSApp delegate] == self) {
+        [[NSAppleEventManager sharedAppleEventManager]
+            removeEventHandlerForEventClass:kInternetEventClass
+                                 andEventID:kAEGetURL];
+    }
+
     [super dealloc];
 }
 
@@ -168,6 +193,10 @@ static void Cocoa_DispatchEvent(NSEvent *theEvent)
     if (![win isKeyWindow]) {
         return;
     }
+
+    /* Don't do anything if this was not an SDL window that was closed */
+    if (FindSDLWindowForNSWindow(win) == NULL)
+        return;
 
     /* HACK: Make the next window in the z-order key when the key window is
      * closed. The custom event loop and/or windowing code we have seems to
@@ -210,6 +239,13 @@ static void Cocoa_DispatchEvent(NSEvent *theEvent)
      */
     if (!seenFirstActivate) {
         seenFirstActivate = YES;
+        return;
+    }
+
+    /* Don't do anything if the application already has a key window
+     * that is not an SDL window.
+     */
+    if ([NSApp keyWindow] && FindSDLWindowForNSWindow([NSApp keyWindow]) == NULL) {
         return;
     }
 
@@ -261,12 +297,6 @@ static void Cocoa_DispatchEvent(NSEvent *theEvent)
         SDL_Delay(300);  /* !!! FIXME: this isn't right. */
         [NSApp activateIgnoringOtherApps:YES];
     }
-
-    [[NSAppleEventManager sharedAppleEventManager]
-    setEventHandler:self
-        andSelector:@selector(handleURLEvent:withReplyEvent:)
-      forEventClass:kInternetEventClass
-         andEventID:kAEGetURL];
 
     /* If we call this before NSApp activation, macOS might print a complaint
      * about ApplePersistenceIgnoreState. */
@@ -469,6 +499,15 @@ Cocoa_RegisterApp(void)
          * termination into SDL_Quit, and we can't handle application:openFile:
          */
         if (![NSApp delegate]) {
+            /* Only register the URL event handler if we are being set as the
+             * app delegate to avoid replacing any existing event handler.
+             */
+            [[NSAppleEventManager sharedAppleEventManager]
+                setEventHandler:appDelegate
+                    andSelector:@selector(handleURLEvent:withReplyEvent:)
+                  forEventClass:kInternetEventClass
+                     andEventID:kAEGetURL];
+
             [(NSApplication *)NSApp setDelegate:appDelegate];
         } else {
             appDelegate->seenFirstActivate = YES;
@@ -476,9 +515,8 @@ Cocoa_RegisterApp(void)
     }
 }}
 
-void
-Cocoa_PumpEvents(_THIS)
-{ @autoreleasepool
+int
+Cocoa_PumpEventsUntilDate(_THIS, NSDate *expiration, bool accumulate)
 {
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1070
     /* Update activity every 30 seconds to prevent screensaver */
@@ -494,9 +532,9 @@ Cocoa_PumpEvents(_THIS)
 #endif
 
     for ( ; ; ) {
-        NSEvent *event = [NSApp nextEventMatchingMask:NSEventMaskAny untilDate:[NSDate distantPast] inMode:NSDefaultRunLoopMode dequeue:YES ];
+        NSEvent *event = [NSApp nextEventMatchingMask:NSEventMaskAny untilDate:expiration inMode:NSDefaultRunLoopMode dequeue:YES ];
         if ( event == nil ) {
-            break;
+            return 0;
         }
 
         if (!s_bShouldHandleEventsInSDLApplication) {
@@ -505,7 +543,52 @@ Cocoa_PumpEvents(_THIS)
 
         // Pass events down to SDLApplication to be handled in sendEvent:
         [NSApp sendEvent:event];
+        if ( !accumulate) {
+            break;
+        }
     }
+    return 1;
+}
+
+int
+Cocoa_WaitEventTimeout(_THIS, int timeout)
+{ @autoreleasepool
+{
+    if (timeout > 0) {
+        NSDate *limitDate = [NSDate dateWithTimeIntervalSinceNow: (double) timeout / 1000.0];
+        return Cocoa_PumpEventsUntilDate(_this, limitDate, false);
+    } else if (timeout == 0) {
+        return Cocoa_PumpEventsUntilDate(_this, [NSDate distantPast], false);
+    } else {
+        while (Cocoa_PumpEventsUntilDate(_this, [NSDate distantFuture], false) == 0) {
+        }
+    }
+    return 1;
+}}
+
+void
+Cocoa_PumpEvents(_THIS)
+{ @autoreleasepool
+{
+    Cocoa_PumpEventsUntilDate(_this, [NSDate distantPast], true);
+}}
+
+void Cocoa_SendWakeupEvent(_THIS, SDL_Window *window)
+{ @autoreleasepool
+{
+    NSWindow *nswindow = ((SDL_WindowData *) window->driverdata)->nswindow;
+
+    NSEvent* event = [NSEvent otherEventWithType: NSEventTypeApplicationDefined
+                                    location: NSMakePoint(0,0)
+                               modifierFlags: 0
+                                   timestamp: 0.0
+                                windowNumber: nswindow.windowNumber
+                                     context: nil
+                                     subtype: 0
+                                       data1: 0
+                                       data2: 0];
+
+    [NSApp postEvent: event atStart: YES];
 }}
 
 void

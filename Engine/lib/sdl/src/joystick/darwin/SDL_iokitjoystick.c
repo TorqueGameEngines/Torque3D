@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -152,14 +152,17 @@ FreeDevice(recDevice *removeDevice)
         /* save next device prior to disposing of this device */
         pDeviceNext = removeDevice->pNext;
 
-        if ( gpDeviceList == removeDevice ) {
+        if (gpDeviceList == removeDevice) {
             gpDeviceList = pDeviceNext;
         } else if (gpDeviceList) {
-            recDevice *device = gpDeviceList;
-            while (device->pNext != removeDevice) {
-                device = device->pNext;
+            recDevice *device;
+
+            for (device = gpDeviceList; device; device = device->pNext) {
+                if (device->pNext == removeDevice) {
+                    device->pNext = pDeviceNext;
+                    break;
+                }
             }
-            device->pNext = pDeviceNext;
         }
         removeDevice->pNext = NULL;
 
@@ -781,7 +784,7 @@ DARWIN_JoystickGetDeviceInstanceID(int device_index)
 }
 
 static int
-DARWIN_JoystickOpen(SDL_Joystick * joystick, int device_index)
+DARWIN_JoystickOpen(SDL_Joystick *joystick, int device_index)
 {
     recDevice *device = GetDeviceForIndex(device_index);
 
@@ -891,7 +894,7 @@ DARWIN_JoystickInitRumble(recDevice *device, Sint16 magnitude)
 }
 
 static int
-DARWIN_JoystickRumble(SDL_Joystick * joystick, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble)
+DARWIN_JoystickRumble(SDL_Joystick *joystick, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble)
 {
     HRESULT result;
     recDevice *device = joystick->hwdata;
@@ -931,19 +934,36 @@ DARWIN_JoystickRumble(SDL_Joystick * joystick, Uint16 low_frequency_rumble, Uint
 }
 
 static int
-DARWIN_JoystickRumbleTriggers(SDL_Joystick * joystick, Uint16 left_rumble, Uint16 right_rumble)
+DARWIN_JoystickRumbleTriggers(SDL_Joystick *joystick, Uint16 left_rumble, Uint16 right_rumble)
 {
     return SDL_Unsupported();
 }
 
-static SDL_bool
-DARWIN_JoystickHasLED(SDL_Joystick * joystick)
+static Uint32
+DARWIN_JoystickGetCapabilities(SDL_Joystick *joystick)
 {
-    return SDL_FALSE;
+    recDevice *device = joystick->hwdata;
+    Uint32 result = 0;
+
+    if (!device) {
+        return 0;
+    }
+
+    if (device->ffservice) {
+        result |= SDL_JOYCAP_RUMBLE;
+    }
+
+    return result;
 }
 
 static int
-DARWIN_JoystickSetLED(SDL_Joystick * joystick, Uint8 red, Uint8 green, Uint8 blue)
+DARWIN_JoystickSetLED(SDL_Joystick *joystick, Uint8 red, Uint8 green, Uint8 blue)
+{
+    return SDL_Unsupported();
+}
+
+static int
+DARWIN_JoystickSendEffect(SDL_Joystick *joystick, const void *data, int size)
 {
     return SDL_Unsupported();
 }
@@ -955,7 +975,7 @@ DARWIN_JoystickSetSensorsEnabled(SDL_Joystick *joystick, SDL_bool enabled)
 }
 
 static void
-DARWIN_JoystickUpdate(SDL_Joystick * joystick)
+DARWIN_JoystickUpdate(SDL_Joystick *joystick)
 {
     recDevice *device = joystick->hwdata;
     recElement *element;
@@ -1060,7 +1080,7 @@ DARWIN_JoystickUpdate(SDL_Joystick * joystick)
 }
 
 static void
-DARWIN_JoystickClose(SDL_Joystick * joystick)
+DARWIN_JoystickClose(SDL_Joystick *joystick)
 {
     recDevice *device = joystick->hwdata;
     if (device) {
@@ -1102,8 +1122,9 @@ SDL_JoystickDriver SDL_DARWIN_JoystickDriver =
     DARWIN_JoystickOpen,
     DARWIN_JoystickRumble,
     DARWIN_JoystickRumbleTriggers,
-    DARWIN_JoystickHasLED,
+    DARWIN_JoystickGetCapabilities,
     DARWIN_JoystickSetLED,
+    DARWIN_JoystickSendEffect,
     DARWIN_JoystickSetSensorsEnabled,
     DARWIN_JoystickUpdate,
     DARWIN_JoystickClose,

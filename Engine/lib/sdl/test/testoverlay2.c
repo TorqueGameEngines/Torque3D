@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -144,7 +144,6 @@ SDL_Texture *MooseTexture;
 SDL_Rect displayrect;
 int window_w;
 int window_h;
-SDL_Window *window;
 SDL_Renderer *renderer;
 int paused = 0;
 int i;

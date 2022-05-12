@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -28,6 +28,7 @@
 #include "SDL_blit.h"
 #include "SDL_pixels_c.h"
 #include "SDL_RLEaccel_c.h"
+#include "../SDL_list.h"
 
 
 /* Lookup tables to expand partial bytes to the full 0..255 range */
@@ -333,7 +334,7 @@ SDL_MasksToPixelFormatEnum(int bpp, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask,
         if (Rmask == 0) {
             return SDL_PIXELFORMAT_RGB555;
         }
-    /* fallthrough */
+        SDL_FALLTHROUGH;
     case 16:
         if (Rmask == 0) {
             return SDL_PIXELFORMAT_RGB565;
@@ -677,7 +678,7 @@ int
 SDL_SetPixelFormatPalette(SDL_PixelFormat * format, SDL_Palette *palette)
 {
     if (!format) {
-        return SDL_SetError("SDL_SetPixelFormatPalette() passed NULL format");
+        return SDL_InvalidParamError("SDL_SetPixelFormatPalette(): format");
     }
 
     if (palette && palette->ncolors > (1 << format->BitsPerPixel)) {
@@ -871,7 +872,7 @@ SDL_MapRGBA(const SDL_PixelFormat * format, Uint8 r, Uint8 g, Uint8 b,
         return (r >> format->Rloss) << format->Rshift
             | (g >> format->Gloss) << format->Gshift
             | (b >> format->Bloss) << format->Bshift
-            | ((a >> format->Aloss) << format->Ashift & format->Amask);
+            | ((Uint32)(a >> format->Aloss) << format->Ashift & format->Amask);
     } else {
         return SDL_FindColor(format->palette, r, g, b, a);
     }
@@ -947,7 +948,7 @@ Map1to1(SDL_Palette * src, SDL_Palette * dst, int *identical)
         }
         *identical = 0;
     }
-    map = (Uint8 *) SDL_malloc(src->ncolors);
+    map = (Uint8 *) SDL_calloc(256, sizeof(Uint8));
     if (map == NULL) {
         SDL_OutOfMemory();
         return (NULL);
@@ -971,7 +972,7 @@ Map1toN(SDL_PixelFormat * src, Uint8 Rmod, Uint8 Gmod, Uint8 Bmod, Uint8 Amod,
     SDL_Palette *pal = src->palette;
 
     bpp = ((dst->BytesPerPixel == 3) ? 4 : dst->BytesPerPixel);
-    map = (Uint8 *) SDL_malloc(pal->ncolors * bpp);
+    map = (Uint8 *) SDL_calloc(256, bpp);
     if (map == NULL) {
         SDL_OutOfMemory();
         return (NULL);
@@ -983,7 +984,7 @@ Map1toN(SDL_PixelFormat * src, Uint8 Rmod, Uint8 Gmod, Uint8 Bmod, Uint8 Amod,
         Uint8 G = (Uint8) ((pal->colors[i].g * Gmod) / 255);
         Uint8 B = (Uint8) ((pal->colors[i].b * Bmod) / 255);
         Uint8 A = (Uint8) ((pal->colors[i].a * Amod) / 255);
-        ASSEMBLE_RGBA(&map[i * bpp], dst->BytesPerPixel, dst, R, G, B, A);
+        ASSEMBLE_RGBA(&map[i * bpp], dst->BytesPerPixel, dst, (Uint32)R, (Uint32)G, (Uint32)B, (Uint32)A);
     }
     return (map);
 }
@@ -1024,12 +1025,6 @@ SDL_AllocBlitMap(void)
 }
 
 
-typedef struct SDL_ListNode
-{
-    void *entry;
-    struct SDL_ListNode *next;
-} SDL_ListNode;
-
 void
 SDL_InvalidateAllBlitMap(SDL_Surface *surface)
 {
@@ -1042,40 +1037,6 @@ SDL_InvalidateAllBlitMap(SDL_Surface *surface)
         SDL_InvalidateMap((SDL_BlitMap *)l->entry);
         l = l->next;
         SDL_free(tmp);
-    }
-}
-
-static void SDL_ListAdd(SDL_ListNode **head, void *ent);
-static void SDL_ListRemove(SDL_ListNode **head, void *ent);
-
-void
-SDL_ListAdd(SDL_ListNode **head, void *ent)
-{
-    SDL_ListNode *node = SDL_malloc(sizeof (*node));
-
-    if (node == NULL) {
-        SDL_OutOfMemory();
-        return;
-    }
-
-    node->entry = ent;
-    node->next = *head;
-    *head = node;
-}
-
-void
-SDL_ListRemove(SDL_ListNode **head, void *ent)
-{
-    SDL_ListNode **ptr = head;
-
-    while (*ptr) {
-        if ((*ptr)->entry == ent) {
-            SDL_ListNode *tmp = *ptr;
-            *ptr = (*ptr)->next;
-            SDL_free(tmp);
-            return;
-        }
-        ptr = &(*ptr)->next;
     }
 }
 

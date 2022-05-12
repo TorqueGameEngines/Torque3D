@@ -50,9 +50,9 @@ function AssetBrowser::loadCreatorClasses(%this)
       %this.addCreatorClass("MissionArea",  "Mission Area" );
       %this.addCreatorClass("NotesObject",         "Note" );
       %this.addCreatorClass("Path" );
-      %this.addCreatorClass("SpawnSphere",  "General Spawn Sphere" );
-      %this.addCreatorClass("SpawnSphere",  "Player Spawn Sphere"/*, "PlayerDropPoint"*/ );
-      %this.addCreatorClass("SpawnSphere",  "Observer Spawn Sphere"/*, "ObserverDropPoint"*/ );
+      %this.addCreatorClass("SpawnSphere",  "General Spawn Sphere", "GeneralDropPoint"  );
+      %this.addCreatorClass("SpawnSphere",  "Player Spawn Sphere", "PlayerDropPoint" );
+      %this.addCreatorClass("SpawnSphere",  "Observer Spawn Sphere", "ObserverDropPoint" );
       %this.addCreatorClass("VPath",        "Verve Path" );
    %this.endCreatorGroup();
    
@@ -130,6 +130,8 @@ function AssetBrowser::loadCreatorClasses(%this)
    %this.creatorClassArray.sort(true);
    
    %guiClasses.delete();
+   
+   callOnModules("loadModuleCreatorClasses");
 }
 
 function AssetBrowser::beginCreatorGroup(%this, %group, %editor)
@@ -168,6 +170,7 @@ function AssetBrowser::addCreatorClass(%this, %class, %name, %buildfunc)
       return;  
    }
    
+   %cmd = "";
    if(%buildfunc $= "")
    {
       %method = "build" @ %buildfunc;
@@ -178,7 +181,18 @@ function AssetBrowser::addCreatorClass(%this, %class, %name, %buildfunc)
          %cmd = "new " @ %class @ "();";
       else
          %cmd = "ObjectBuilderGui." @ %method @ "();";
+   }
+   else
+   {
+      %cmd = "ObjectBuilderGui.build" @ %buildfunc @ "();";
+   }
 
+   if(GuiEditorIsActive())
+   {
+      %buildfunc = "return " @ %cmd;
+   }
+   else
+   {
       %buildfunc = "ObjectBuilderGui.newObjectCallback = \"AssetBrowser.onFinishCreateObject\"; ObjectCreator.createObject( \"" @ %cmd @ "\" );";
    }
    

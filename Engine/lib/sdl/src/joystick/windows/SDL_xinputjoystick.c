@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -201,9 +201,20 @@ GuessXInputDevice(Uint8 userid, Uint16 *pVID, Uint16 *pPID, Uint16 *pVersion)
                  * userid, but we'll record it so we'll at least be consistent
                  * when the raw device list changes.
                  */
-                *pVID = (Uint16)rdi.hid.dwVendorId;
-                *pPID = (Uint16)rdi.hid.dwProductId;
-                *pVersion = (Uint16)rdi.hid.dwVersionNumber;
+                if (rdi.hid.dwVendorId == USB_VENDOR_VALVE &&
+                    rdi.hid.dwProductId == USB_PRODUCT_STEAM_VIRTUAL_GAMEPAD) {
+                    /* Steam encodes the real device in the path */
+                    int realVID = rdi.hid.dwVendorId;
+                    int realPID = rdi.hid.dwProductId;
+                    SDL_sscanf(devName, "\\\\.\\pipe\\HID#VID_045E&PID_028E&IG_00#%x&%x&", &realVID, &realPID);
+                    *pVID = (Uint16)realVID;
+                    *pPID = (Uint16)realPID;
+                    *pVersion = 0;
+                } else {
+                    *pVID = (Uint16)rdi.hid.dwVendorId;
+                    *pPID = (Uint16)rdi.hid.dwProductId;
+                    *pVersion = (Uint16)rdi.hid.dwVersionNumber;
+                }
                 if (s_arrXInputDevicePath[userid]) {
                     SDL_free(s_arrXInputDevicePath[userid]);
                 }
@@ -503,6 +514,12 @@ SDL_XINPUT_JoystickRumble(SDL_Joystick * joystick, Uint16 low_frequency_rumble, 
     return 0;
 }
 
+Uint32
+SDL_XINPUT_JoystickGetCapabilities(SDL_Joystick * joystick)
+{
+    return SDL_JOYCAP_RUMBLE;
+}
+
 void
 SDL_XINPUT_JoystickUpdate(SDL_Joystick * joystick)
 {
@@ -577,6 +594,12 @@ int
 SDL_XINPUT_JoystickRumble(SDL_Joystick * joystick, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble)
 {
     return SDL_Unsupported();
+}
+
+Uint32
+SDL_XINPUT_JoystickGetCapabilities(SDL_Joystick * joystick)
+{
+    return 0;
 }
 
 void

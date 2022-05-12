@@ -81,7 +81,7 @@ function GuiEditCanvas::onCreateMenu(%this)
          internalName = "FileMenu";
          
          item[0] = "New Gui..." TAB %cmdCtrl SPC "N" TAB %this @ ".create();";
-         item[1] = "Open..." TAB %cmdCtrl SPC "O" TAB %this @ ".open();";
+         item[1] = "Open GUI File..." TAB %cmdCtrl SPC "O" TAB %this @ ".open();";
          item[2] = "Save" TAB %cmdCtrl SPC "S" TAB %this @ ".save( false, true );";
          item[3] = "Save As..." TAB %cmdCtrl @ "-Shift S" TAB %this @ ".save( false );";
          item[4] = "Save Selected As..." TAB %cmdCtrl @ "-Alt S" TAB %this @ ".save( true );";

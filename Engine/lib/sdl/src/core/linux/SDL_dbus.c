@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -19,7 +19,9 @@
   3. This notice may not be removed or altered from any source distribution.
 */
 #include "../../SDL_internal.h"
+#include "SDL_hints.h"
 #include "SDL_dbus.h"
+#include "SDL_atomic.h"
 
 #if SDL_USE_LIBDBUS
 /* we never link directly to libdbus. */
@@ -113,8 +115,12 @@ LoadDBUSLibrary(void)
     return retval;
 }
 
-void
-SDL_DBus_Init(void)
+
+static SDL_SpinLock spinlock_dbus_init = 0;
+
+/* you must hold spinlock_dbus_init before calling this! */
+static void
+SDL_DBus_Init_Spinlocked(void)
 {
     static SDL_bool is_dbus_available = SDL_TRUE;
     if (!is_dbus_available) {
@@ -154,6 +160,14 @@ SDL_DBus_Init(void)
 
         dbus.error_free(&err);
     }
+}
+
+void
+SDL_DBus_Init(void)
+{
+    SDL_AtomicLock(&spinlock_dbus_init);  /* make sure two threads can't init at same time, since this can happen before SDL_Init. */
+    SDL_DBus_Init_Spinlocked();
+    SDL_AtomicUnlock(&spinlock_dbus_init);
 }
 
 void
@@ -352,8 +366,15 @@ SDL_DBus_ScreensaverInhibit(SDL_bool inhibit)
         const char *interface = "org.freedesktop.ScreenSaver";
 
         if (inhibit) {
-            const char *app = "My SDL application";
-            const char *reason = "Playing a game";
+            const char *app = SDL_GetHint(SDL_HINT_APP_NAME);
+            const char *reason = SDL_GetHint(SDL_HINT_SCREENSAVER_INHIBIT_ACTIVITY_NAME);
+            if (!app || !app[0]) {
+               app  = "My SDL application";
+            }
+            if (!reason || !reason[0]) {
+                reason = "Playing a game";
+            }
+
             if (!SDL_DBus_CallMethod(node, path, interface, "Inhibit",
                     DBUS_TYPE_STRING, &app, DBUS_TYPE_STRING, &reason, DBUS_TYPE_INVALID,
                     DBUS_TYPE_UINT32, &screensaver_cookie, DBUS_TYPE_INVALID)) {

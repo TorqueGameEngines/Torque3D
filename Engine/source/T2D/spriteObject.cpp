@@ -46,6 +46,7 @@ SpriteObject::SpriteObject()
 
    // Set it as a "torque2d" object
    mTypeMask = Torque2DObjectType;
+   mFrameDirty = true;
 }
 
 SpriteObject::~SpriteObject()
@@ -96,6 +97,15 @@ void SpriteObject::onRemove()
    Parent::onRemove();
 }
 
+void SpriteObject::inspectPostApply()
+{
+
+   Parent::inspectPostApply();
+
+   setMaskBits(FrameUpdateMask);
+}
+
+
 //-----------------------------------------------------------------------------
 
 void SpriteObject::setTransform(const MatrixF& mat)
@@ -116,7 +126,10 @@ U32 SpriteObject::packUpdate(NetConnection* conn, U32 mask, BitStream* stream)
    U32 retMask = Parent::packUpdate(conn, mask, stream);
 
    PACK_ASSET(conn, Sprite);
-   stream->write(mFrame);
+   if (stream->writeFlag(mask & FrameUpdateMask))
+   {
+      stream->write(mFrame);
+   }
 
    // Write our transform information
    if (stream->writeFlag(mask & TransformMask))
@@ -134,7 +147,11 @@ void SpriteObject::unpackUpdate(NetConnection* conn, BitStream* stream)
    Parent::unpackUpdate(conn, stream);
 
    UNPACK_ASSET(conn, Sprite);
-   stream->read(&mFrame);
+   if (stream->readFlag()) // update frame flag
+   {
+      stream->read(&mFrame);
+      mFrameDirty = true;
+   }
 
    if (stream->readFlag())  // TransformMask
    {
@@ -165,7 +182,7 @@ void SpriteObject::prepRenderImage(SceneRenderState* state)
    const F32 texUpperX = texelArea.mTexelUpper.x;
    const F32 texUpperY = texelArea.mTexelUpper.y;
 
-   if (mVertexBuffer.isNull()) {
+   if (mVertexBuffer.isNull() || mFrameDirty) {
       // Fill the vertex buffer
       VertexType *pVert = NULL;
 
@@ -190,6 +207,7 @@ void SpriteObject::prepRenderImage(SceneRenderState* state)
       GFXStateBlockDesc desc;
 
       mNormalSB = GFX->createStateBlock(desc);
+      mFrameDirty = false;
 
    }
 

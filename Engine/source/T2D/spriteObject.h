@@ -59,6 +59,7 @@ class SpriteObject : public SceneObject
    typedef GFXVertexPCT VertexType;
 
    S32 mFrame;
+   bool mFrameDirty;
    // The handles for our StateBlocks
    GFXStateBlockRef mNormalSB;
    // The GFX vertex and primitive buffers
@@ -73,6 +74,7 @@ public:
    DECLARE_CONOBJECT(SpriteObject);
 
    static void initPersistFields();
+   virtual void inspectPostApply();
 
    bool onAdd();
    void onRemove();

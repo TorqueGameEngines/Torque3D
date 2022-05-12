@@ -39,6 +39,10 @@
 #include "gfx/gfxPrimitiveBuffer.h"
 #endif
 
+#ifndef _SPRITE_ASSET_H_
+#include "T2D/assets/SpriteAsset.h"
+#endif
+
 class BaseMatInstance;
 
 class SpriteObject : public SceneObject
@@ -47,18 +51,22 @@ class SpriteObject : public SceneObject
 
    enum MaskBits
    {
-      TransformMask = Parent::NextFreeMask << 0,
-      NextFreeMask = Parent::NextFreeMask << 1
+      TransformMask =      Parent::NextFreeMask << 0,
+      FrameUpdateMask =    Parent::NextFreeMask << 1,
+      NextFreeMask =       Parent::NextFreeMask << 2
    };
 
    typedef GFXVertexPCT VertexType;
 
+   S32 mFrame;
    // The handles for our StateBlocks
    GFXStateBlockRef mNormalSB;
    // The GFX vertex and primitive buffers
    GFXVertexBufferHandle< VertexType > mVertexBuffer;
 
 public:
+   DECLARE_SPRITEASSET(SpriteObject, Sprite, onChangeSprite, GFXStaticTextureSRGBProfile);
+   DECLARE_ASSET_SETGET(SpriteObject, Sprite);
    SpriteObject();
    virtual ~SpriteObject();
 
@@ -76,6 +84,8 @@ public:
 
    void prepRenderImage(SceneRenderState* state);
    void render(ObjectRenderInst* ri, SceneRenderState* state, BaseMatInstance* overrideMat);
+
+   void onChangeSprite() {}
 
 };
 

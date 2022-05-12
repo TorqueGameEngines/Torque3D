@@ -115,6 +115,8 @@ SpriteAsset::SpriteAsset() :
    // Set Vector Associations.
    VECTOR_SET_ASSOCIATION(mFrames);
    VECTOR_SET_ASSOCIATION(mCustomFrames);
+   mSpriteFileName = StringTable->EmptyString();
+   mSpritePath = StringTable->EmptyString();
 }
 
 SpriteAsset::~SpriteAsset()
@@ -126,7 +128,7 @@ void SpriteAsset::initPersistFields()
    // Parent
    Parent::initPersistFields();
 
-   addProtectedField("spriteFile", TypeAssetLooseFilePath, Offset(mSpriteFileName, SpriteAsset), &setSpriteFileName, &getSpriteFileName, &defaultProtectedWriteFn,
+   addProtectedField("spriteFile", TypeAssetLooseFilePath, Offset(mSpriteFileName, SpriteAsset), &setSpriteFileName, &getSpriteFileName,
       "Path to the sprite.");
 
    addField("cellRowOrder",   TypeBool, Offset(mCellRowOrder, SpriteAsset), "");
@@ -141,24 +143,6 @@ void SpriteAsset::initPersistFields()
 
 }
 
-bool SpriteAsset::getAssetByFilename(StringTableEntry fileName, AssetPtr<SpriteAsset>* spriteAsset)
-{
-   AssetQuery query;
-   S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, fileName);
-   if (foundAssetcount == 0)
-   {
-      Con::warnf("Could not find asset %s", fileName);
-      //That didn't work, so fail out
-      return false;
-   }
-   else
-   {
-      //acquire and bind the asset, and return it out
-      spriteAsset->setAssetId(query.mAssetList[0]);
-      return true;
-   }
-}
-
 void SpriteAsset::copyTo(SimObject* object)
 {
    Parent::copyTo(object);
@@ -166,42 +150,119 @@ void SpriteAsset::copyTo(SimObject* object)
 
 void SpriteAsset::loadSprite()
 {
-   SAFE_DELETE(mSprite);
-
-   if (mSpriteFileName)
+   if (mSpritePath)
    {
-      if (!Platform::isFile(mSpriteFileName))
+      if (!Torque::FS::IsFile(mSpritePath))
       {
          Con::errorf("SpriteAsset::initializeAsset: Attempted to load file %s but it was not valid!", mSpriteFileName);
+         mLoadedState = BadFileReference;
          return;
       }
 
-      mSprite.set(mSpriteFileName, &GFXDefaultGUIProfile, avar("%s() - mSprite (line %d)", __FUNCTION__, __LINE__));
-      if (mSprite)
-      {
-         mIsValidSprite = true;
-         return;
-      }
+      mLoadedState = Ok;
+      mIsValidSprite = true;
+      mChangeSignal.trigger();
+      return;
    }
+   mLoadedState = BadFileReference;
 
    mIsValidSprite = false;
 
 }
 
-bool SpriteAsset::getAssetById(StringTableEntry assetId, AssetPtr<SpriteAsset>* spriteAsset)
+U32 SpriteAsset::getAssetByFilename(StringTableEntry fileName, AssetPtr<SpriteAsset>* spriteAsset)
+{
+   AssetQuery query;
+   S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, fileName);
+   if (foundAssetcount == 0)
+   {
+
+      if (spriteAsset->isNull())
+      {
+         //Well that's bad, loading the fallback failed.
+         Con::warnf("ImageAsset::getAssetByFilename - Finding of asset associated with file %s failed with no fallback asset", fileName);
+         return AssetErrCode::Failed;
+      }
+
+      //handle noshape not being loaded itself
+      if ((*spriteAsset)->mLoadedState == BadFileReference)
+      {
+         Con::warnf("ImageAsset::getAssetByFilename - Finding of associated with file %s failed, and fallback asset reported error of Bad File Reference.", fileName);
+         return AssetErrCode::BadFileReference;
+      }
+
+      Con::warnf("ImageAsset::getAssetByFilename - Finding of associated with file %s failed, utilizing fallback asset", fileName);
+
+      (*spriteAsset)->mLoadedState = AssetErrCode::UsingFallback;
+      return AssetErrCode::UsingFallback;
+   }
+   else
+   {
+      //acquire and bind the asset, and return it out
+      spriteAsset->setAssetId(query.mAssetList[0]);
+      return (*spriteAsset)->mLoadedState;
+   }
+}
+
+StringTableEntry SpriteAsset::getAssetIdByFilename(StringTableEntry fileName)
+{
+   if (fileName == StringTable->EmptyString())
+      return StringTable->EmptyString();
+
+   StringTableEntry spriteAssetId = StringTable->EmptyString();
+
+   AssetQuery query;
+   S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, fileName);
+   if (foundAssetcount != 0)
+   {
+      //acquire and bind the asset, and return it out
+      spriteAssetId = query.mAssetList[0];
+   }
+   else
+   {
+      AssetPtr<SpriteAsset> spriteAsset = spriteAssetId;
+      spriteAsset->mLoadedState = AssetErrCode::BadFileReference;
+   }
+
+   return spriteAssetId;
+}
+
+U32 SpriteAsset::getAssetById(StringTableEntry assetId, AssetPtr<SpriteAsset>* spriteAsset)
 {
    (*spriteAsset) = assetId;
 
-   if (!spriteAsset->isNull())
-      return true;
+   if (spriteAsset->notNull())
+   {
+      return (*spriteAsset)->mLoadedState;
+   }
+   else
+   {
+      if (spriteAsset->isNull())
+      {
+         //Well that's bad, loading the fallback failed.
+         Con::warnf("SpriteAsset::getAssetById - Finding of asset with id %s failed with no fallback asset", assetId);
+         return AssetErrCode::Failed;
+      }
 
+      //handle noshape not being loaded itself
+      if ((*spriteAsset)->mLoadedState == BadFileReference)
+      {
+         Con::warnf("SpriteAsset::getAssetById - Finding of asset with id %s failed, and fallback asset reported error of Bad File Reference.", assetId);
+         return AssetErrCode::BadFileReference;
+      }
 
-   return false;
+      Con::warnf("SpriteAsset::getAssetById - Finding of asset with id %s failed, utilizing fallback asset", assetId);
+
+      (*spriteAsset)->mLoadedState = AssetErrCode::UsingFallback;
+      return AssetErrCode::UsingFallback;
+   }
 }
 
 void SpriteAsset::initializeAsset()
 {
-   mSpriteFileName = expandAssetFilePath(mSpriteFileName);
+   ResourceManager::get().getChangedSignal().notify(this, &SpriteAsset::_onResourceChanged);
+
+   mSpritePath = getOwned() ? expandAssetFilePath(mSpriteFileName) : mSpritePath;
 
    loadSprite();
 
@@ -209,10 +270,18 @@ void SpriteAsset::initializeAsset()
 
 }
 
+void SpriteAsset::_onResourceChanged(const Torque::Path& path)
+{
+   if (path != Torque::Path(mSpritePath))
+      return;
+
+   refreshAsset();
+}
+
 void SpriteAsset::onAssetRefresh()
 {
-   setSpriteFileName(mSpriteFileName);
-
+   mSpritePath = getOwned() ? expandAssetFilePath(mSpriteFileName) : mSpritePath;
+   loadSprite();
    calculateSprite();
 
 }
@@ -222,6 +291,8 @@ void SpriteAsset::setSpriteFileName(const char* pScriptFile)
    AssertFatal(pScriptFile != NULL, "Cannot use a null sprite file.");
 
    mSpriteFileName = StringTable->insert(pScriptFile);
+
+   refreshAsset();
 
 }
 
@@ -471,8 +542,7 @@ void SpriteAsset::calculateSprite()
    /// Debug profile
    mFrames.clear();
 
-   /// lets just make sure we are set.
-   mSprite.set(mSpriteFileName, &GFXDefaultGUIProfile, avar("%s() - mSprite (line %d)", __FUNCTION__, __LINE__));
+   mSprite = TEXMGR->createTexture(mSpritePath, &GFXStaticTextureSRGBProfile);
 
    calculateImplicit();
 

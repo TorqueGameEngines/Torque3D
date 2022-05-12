@@ -39,6 +39,10 @@ class SpriteAsset : public AssetBase
 protected:
 
    StringTableEntry mSpriteFileName;
+   StringTableEntry mSpritePath;
+
+   typedef Signal<void()> SpriteAssetChanged;
+   SpriteAssetChanged mChangeSignal;
    
    bool mIsValidSprite;
 
@@ -234,24 +238,28 @@ public:
    bool isValid() { return mIsValidSprite; }
 
    /// Public asset accessor
-   static bool getAssetById(StringTableEntry assetId, AssetPtr<SpriteAsset>* shapeAsset);
+   static U32 getAssetByFilename(StringTableEntry fileName, AssetPtr<SpriteAsset>* shapeAsset);
+   static StringTableEntry getAssetIdByFilename(StringTableEntry fileName);
+   static U32 getAssetById(StringTableEntry assetId, AssetPtr<SpriteAsset>* shapeAsset);
+   static U32 getAssetById(String assetId, AssetPtr<SpriteAsset>* spriteAsset) { return getAssetById(assetId.c_str(), spriteAsset); };
+   SpriteAssetChanged& getChangedSignal() { return mChangeSignal; }
+   inline StringTableEntry getSpritePath(void) const { return mSpritePath; };
 
 protected:
    virtual void initializeAsset(void);
+   void _onResourceChanged(const Torque::Path& path);
    virtual void onAssetRefresh(void);
 
    static bool setSpriteFileName(void *obj, const char *index, const char *data) { static_cast<SpriteAsset*>(obj)->setSpriteFileName(data); return false; }
-   static const char* getSpriteFileName(void* obj, const char* data) { return static_cast<SpriteAsset*>(obj)->getSpriteFileName(); }
+   static StringTableEntry getSpriteFileName(void* obj, StringTableEntry data) { return static_cast<SpriteAsset*>(obj)->getSpriteFileName(); }
 
    void loadSprite();
 
    virtual void onTamlCustomWrite(TamlCustomNodes& customNodes);
    virtual void onTamlCustomRead(TamlCustomNodes& customNodes);
-
-   bool getAssetByFilename(StringTableEntry fileName, AssetPtr<SpriteAsset>* spriteAsset);
 };
 
-DefineConsoleType(TypeSpriteAssetPtr, S32)
+DefineConsoleType(TypeSpriteAssetPtr, SpriteAsset)
 DefineConsoleType(TypeSpriteAssetId, String)
 
 class GuiInspectorTypeSpriteAssetPtr : public GuiInspectorTypeFileName
@@ -276,6 +284,143 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeSpriteAssetId);
    static void consoleInit();
 };
+
+#pragma region Singular Asset Macros
+
+#define DECLARE_SPRITEASSET(className, name, changeFunc, profile) public: \
+   GFXTexHandle m##name = NULL;\
+   StringTableEntry m##name##Name; \
+   StringTableEntry m##name##AssetId;\
+   AssetPtr<SpriteAsset>  m##name##Asset;\
+   GFXTextureProfile* m##name##Profile = &profile;\
+public: \
+   const StringTableEntry get##name##File() const { return m##name##Name; }\
+   void set##name##File(const FileName &_in) { m##name##Name = StringTable->insert(_in.c_str());}\
+   const AssetPtr<SpriteAsset> & get##name##Asset() const { return m##name##Asset; }\
+   void set##name##Asset(const AssetPtr<SpriteAsset> &_in) { m##name##Asset = _in;}\
+   \
+   bool _set##name(StringTableEntry _in)\
+   {\
+      if(m##name##AssetId != _in || m##name##Name != _in)\
+      {\
+         if (m##name##Asset.notNull())\
+         {\
+            m##name##Asset->getChangedSignal().remove(this, &className::changeFunc);\
+         }\
+         if (_in == NULL || _in == StringTable->EmptyString())\
+         {\
+            m##name##Name = StringTable->EmptyString();\
+            m##name##AssetId = StringTable->EmptyString();\
+            m##name##Asset = NULL;\
+            m##name.free();\
+            m##name = NULL;\
+            return true;\
+         }\
+         else if(_in[0] == '$' || _in[0] == '#')\
+         {\
+            m##name##Name = _in;\
+            m##name##AssetId = StringTable->EmptyString();\
+            m##name##Asset = NULL;\
+            m##name.free();\
+            m##name = NULL;\
+            return true;\
+         }\
+         \
+         if (AssetDatabase.isDeclaredAsset(_in))\
+         {\
+            m##name##AssetId = _in;\
+            \
+            U32 assetState = SpriteAsset::getAssetById(m##name##AssetId, &m##name##Asset);\
+            \
+            if (SpriteAsset::Ok == assetState)\
+            {\
+               m##name##Name = StringTable->EmptyString();\
+            }\
+         }\
+         else\
+         {\
+            StringTableEntry assetId = SpriteAsset::getAssetIdByFilename(_in);\
+            if (assetId != StringTable->EmptyString())\
+            {\
+               m##name##AssetId = assetId;\
+               if (SpriteAsset::getAssetById(m##name##AssetId, &m##name##Asset) == SpriteAsset::Ok)\
+               {\
+                  m##name##Name = StringTable->EmptyString();\
+               }\
+            }\
+            else\
+            {\
+               m##name##Name = _in;\
+               m##name##AssetId = StringTable->EmptyString();\
+               m##name##Asset = NULL;\
+            }\
+         }\
+      }\
+      if (get##name() != StringTable->EmptyString() && m##name##Name != StringTable->insert("texhandle"))\
+      {\
+         if (m##name##Asset.notNull())\
+         {\
+            m##name##Asset->getChangedSignal().notify(this, &className::changeFunc);\
+         }\
+         \
+         m##name.set(get##name(), m##name##Profile, avar("%s() - mTextureObject (line %d)", __FUNCTION__, __LINE__));\
+      }\
+      else\
+      {\
+         m##name.free();\
+         m##name = NULL;\
+      }\
+      \
+      if(get##name() == StringTable->EmptyString())\
+         return true;\
+      \
+      if (m##name##Asset.notNull() && m##name##Asset->getStatus() != SpriteAsset::Ok)\
+      {\
+         Con::errorf("%s(%s)::_set%s() - sprite asset failure\"%s\" due to [%s]", macroText(className), getName(), macroText(name), _in, SpriteAsset::getAssetErrstrn(m##name##Asset->getStatus()).c_str());\
+         return false; \
+      }\
+      else if (!m##name)\
+      {\
+         Con::errorf("%s(%s)::_set%s() - Couldn't load image \"%s\"", macroText(className), getName(), macroText(name), _in);\
+         return false;\
+      }\
+      return true;\
+   }\
+   \
+   const StringTableEntry get##name() const\
+   {\
+      if (m##name##Asset && (m##name##Asset->getSpriteFileName() != StringTable->EmptyString()))\
+         return  Platform::makeRelativePathName(m##name##Asset->getSpritePath(), Platform::getMainDotCsDir());\
+      else if (m##name##AssetId != StringTable->EmptyString())\
+         return m##name##AssetId;\
+      else if (m##name##Name != StringTable->EmptyString())\
+         return StringTable->insert(Platform::makeRelativePathName(m##name##Name, Platform::getMainDotCsDir()));\
+      else\
+         return StringTable->EmptyString();\
+   }\
+   GFXTexHandle get##name##Resource() \
+   {\
+      return m##name;\
+   }\
+   bool name##Valid() {return (get##name() != StringTable->EmptyString() && m##name##Asset->getStatus() == AssetBase::Ok); }
+
+#define INITPERSISTFIELD_SPRITEASSET(name, consoleClass, docs) \
+   addProtectedField(#name, TypeImageFilename, Offset(m##name##Name, consoleClass), _set##name##Data, &defaultProtectedGetFn, assetDoc(name, docs), AbstractClassRep::FIELD_HideInInspectors); \
+   addProtectedField(assetText(name, Asset), TypeSpriteAssetId, Offset(m##name##AssetId, consoleClass), _set##name##Data, &defaultProtectedGetFn, assetDoc(name, asset docs.));
+
+#define LOAD_SPRITEASSET(name)\
+if (m##name##AssetId != StringTable->EmptyString())\
+{\
+   S32 assetState = SpriteAsset::getAssetById(m##name##AssetId, &m##name##Asset);\
+   if (assetState == SpriteAsset::Ok )\
+   {\
+      m##name##Name = StringTable->EmptyString();\
+   }\
+   else Con::warnf("Warning: %s::LOAD_SPRITEASSET(%s)-%s", mClassName, m##name##AssetId, SpriteAsset::getAssetErrstrn(assetState).c_str());\
+}
+
+
+#pragma endregion
 
 #endif // !_SPRITE_ASSET_H_
 

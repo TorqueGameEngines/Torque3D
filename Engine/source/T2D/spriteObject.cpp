@@ -38,6 +38,8 @@ ConsoleDocClass(SpriteObject,
 
 SpriteObject::SpriteObject()
 {
+   mFrame = 0;
+   INIT_ASSET(Sprite);
    // Flag this object so that it will always
    // be sent across the network to clients
    mNetFlags.set(Ghostable | ScopeAlways);
@@ -54,6 +56,10 @@ SpriteObject::~SpriteObject()
 
 void SpriteObject::initPersistFields()
 {
+   INITPERSISTFIELD_SPRITEASSET(Sprite, SpriteObject, "A sprite asset to use for this sprite object.");
+
+   addField("SpriteFrame", TypeS32, Offset(mFrame, SpriteObject),"Set frame for this sprite to render.");
+
    // SceneObject already handles exposing the transform
    Parent::initPersistFields();
 }
@@ -73,6 +79,11 @@ bool SpriteObject::onAdd()
 
    // Add this object to the scene
    addToScene();
+
+   if (isClientObject())
+   {
+      _setSprite(getSprite());
+   }
 
    return true;
 }
@@ -104,6 +115,9 @@ U32 SpriteObject::packUpdate(NetConnection* conn, U32 mask, BitStream* stream)
    // Allow the Parent to get a crack at writing its info
    U32 retMask = Parent::packUpdate(conn, mask, stream);
 
+   PACK_ASSET(conn, Sprite);
+   stream->write(mFrame);
+
    // Write our transform information
    if (stream->writeFlag(mask & TransformMask))
    {
@@ -119,12 +133,20 @@ void SpriteObject::unpackUpdate(NetConnection* conn, BitStream* stream)
    // Let the Parent read any info it sent
    Parent::unpackUpdate(conn, stream);
 
+   UNPACK_ASSET(conn, Sprite);
+   stream->read(&mFrame);
+
    if (stream->readFlag())  // TransformMask
    {
       mathRead(*stream, &mObjToWorld);
       mathRead(*stream, &mObjScale);
 
       setTransform(mObjToWorld);
+   }
+
+   if (isProperlyAdded())
+   {
+      _setSprite(getSprite());
    }
 }
 
@@ -133,6 +155,16 @@ void SpriteObject::unpackUpdate(NetConnection* conn, BitStream* stream)
 
 void SpriteObject::prepRenderImage(SceneRenderState* state)
 {
+
+   SpriteAsset::FrameArea::TexelArea texelArea;
+   if(mSpriteAsset.notNull())
+      texelArea = mSpriteAsset->getSpriteFrameArea(mFrame).mTexelArea;
+
+   const F32 texLowerX = texelArea.mTexelLower.x;
+   const F32 texLowerY = texelArea.mTexelLower.y;
+   const F32 texUpperX = texelArea.mTexelUpper.x;
+   const F32 texUpperY = texelArea.mTexelUpper.y;
+
    if (mVertexBuffer.isNull()) {
       // Fill the vertex buffer
       VertexType *pVert = NULL;
@@ -144,16 +176,14 @@ void SpriteObject::prepRenderImage(SceneRenderState* state)
       F32 height = getObjBox().len_y() * 0.5f;
 
       pVert[0].point.set(-width, height, 0.0f);
-      pVert[0].color.set(255, 0, 0, 255);
-
       pVert[1].point.set(width, height, 0.0f);
-      pVert[1].color.set(0, 255, 0, 255);
-
       pVert[2].point.set(-width,  -height, 0.0f);
-      pVert[2].color.set(0, 0, 255, 255);
-
       pVert[3].point.set(width,   -height, 0.0f);
-      pVert[3].color.set(255, 255, 255, 255);
+
+      pVert[0].texCoord.set(texLowerX, texLowerY);
+      pVert[1].texCoord.set(texUpperX, texLowerY);
+      pVert[2].texCoord.set(texLowerX, texUpperY);
+      pVert[3].texCoord.set(texUpperX, texUpperY);
       
       mVertexBuffer.unlock();
 
@@ -207,10 +237,12 @@ void SpriteObject::render(ObjectRenderInst* ri, SceneRenderState* state, BaseMat
 
    GFX->setStateBlock(mNormalSB);
 
+
+   GFX->setTexture(0, mSprite);
    // Set up the "generic" shaders
    // These handle rendering on GFX layers that don't support
    // fixed function. Otherwise they disable shaders.
-   GFX->setupGenericShaders(GFXDevice::GSModColorTexture);
+   GFX->setupGenericShaders(GFXDevice::GSTexture);
 
    // Set the vertex buffer
    GFX->setVertexBuffer(mVertexBuffer);

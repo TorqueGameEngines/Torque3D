@@ -462,7 +462,7 @@ void EditTSCtrl::onRightMouseDown(const GuiEvent & event)
       pWindow->setMouseLocked(true);
       pCanvas->setCursorON( false );
 
-      if(mDisplayType != DisplayTypePerspective)
+      if(mDisplayType != DisplayTypePerspective || gClientSceneGraph->isTorque2DScene() )
       {
          mouseLock();
          mLastMousePos = event.mousePoint;

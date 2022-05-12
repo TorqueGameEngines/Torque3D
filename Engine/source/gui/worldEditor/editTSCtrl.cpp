@@ -702,6 +702,13 @@ void EditTSCtrl::calcOrthoCamOffset(F32 mousex, F32 mousey, U8 modifier)
 {
    F32 camScale = 0.01f;
 
+   if (gClientSceneGraph->isTorque2DScene())
+   {
+      mOrthoCamTrans.x -= mousex * mOrthoFOV * camScale;
+      mOrthoCamTrans.y += mousey * mOrthoFOV * camScale;
+      return;
+   }
+
    switch(mDisplayType)
    {
       case DisplayTypeTop:
@@ -1074,9 +1081,55 @@ void EditTSCtrl::computeSceneBounds(Box3F& bounds)
    gClientContainer.findObjects(~(smSceneBoundsMask), sceneBoundsCalcCallback, &bounds);
 }
 
-bool EditTSCtrl::processCameraQuery(CameraQuery * query)
+bool EditTSCtrl::processCameraQuery(CameraQuery* query)
 {
-   if(mDisplayType == DisplayTypePerspective)
+   if (gClientSceneGraph->isTorque2DScene())
+   {
+      if (getCameraTransform(&query->cameraMatrix))
+      {
+
+         MatrixF camRot(true);
+         query->farPlane = gClientSceneGraph->getVisibleDistance() * smVisibleDistanceScale;
+         query->nearPlane = gClientSceneGraph->getNearClip();
+         query->fov = mDegToRad(smCamFOV);
+
+         /// get camera position before we make it look down and store it.
+         Point3F camPos = query->cameraMatrix.getPosition();
+
+         camRot.setColumn(0, Point3F(1.0, 0.0, 0.0));
+         camRot.setColumn(1, Point3F(0.0, 0.0, -1.0));
+         camRot.setColumn(2, Point3F(0.0, 1.0, 0.0));
+
+         query->ortho = true;
+         mRawCamPos = camPos;
+
+         // apply the movement transformation.
+         camPos += mOrthoCamTrans;
+
+         /// pass camera size off to query.
+         query->mCameraSize = gClientSceneGraph->getCameraSize();
+
+         /// set camera area 
+         query->mCamArea = RectF(camPos.x - (query->mCameraSize.x * 0.5f),
+                                 camPos.y - (query->mCameraSize.y * 0.5f),
+                                 query->mCameraSize.x, query->mCameraSize.y);
+
+         query->cameraMatrix = camRot;
+         MatrixF rotMat(EulerF(0, 0, mDegToRad(0.0f)));
+         query->cameraMatrix.mul(rotMat);
+         query->cameraMatrix.setPosition(camPos);
+         query->fov = mOrthoFOV;
+
+         smCamMatrix = query->cameraMatrix;
+         smCamMatrix.getColumn(3, &smCamPos);
+         smCamOrtho = query->ortho;
+         smCamNearPlane = query->nearPlane;
+         return true;
+      }
+
+   }
+
+   if (mDisplayType == DisplayTypePerspective)
    {
       query->ortho = false;
    }
@@ -1091,14 +1144,14 @@ bool EditTSCtrl::processCameraQuery(CameraQuery * query)
       query->nearPlane = gClientSceneGraph->getNearClip();
       query->fov = mDegToRad(smCamFOV);
 
-      if(query->ortho)
+      if (query->ortho)
       {
          MatrixF camRot(true);
          const F32 camBuffer = 1.0f;
          Point3F camPos = query->cameraMatrix.getPosition();
 
          F32 isocamplanedist = 0.0f;
-         if(mDisplayType == DisplayTypeIsometric)
+         if (mDisplayType == DisplayTypeIsometric)
          {
             const RectI& vp = GFX->getViewport();
             isocamplanedist = 0.25 * vp.extent.y * mSin(mIsoCamAngle);
@@ -1108,7 +1161,7 @@ bool EditTSCtrl::processCameraQuery(CameraQuery * query)
          Box3F sceneBounds;
          computeSceneBounds(sceneBounds);
 
-         if(!sceneBounds.isValidBox())
+         if (!sceneBounds.isValidBox())
          {
             sceneBounds.maxExtents = camPos + smMinSceneBounds;
             sceneBounds.minExtents = camPos - smMinSceneBounds;
@@ -1121,56 +1174,56 @@ bool EditTSCtrl::processCameraQuery(CameraQuery * query)
          mRawCamPos = camPos;
          camPos += mOrthoCamTrans;
 
-         switch(mDisplayType)
+         switch (mDisplayType)
          {
-            case DisplayTypeTop:
-               camRot.setColumn(0, Point3F(1.0, 0.0,  0.0));
-               camRot.setColumn(1, Point3F(0.0, 0.0, -1.0));
-               camRot.setColumn(2, Point3F(0.0, 1.0,  0.0));
-               camPos.z = getMax(camPos.z + smMinSceneBounds.z, sceneBounds.maxExtents.z + camBuffer);
-               break;
+         case DisplayTypeTop:
+            camRot.setColumn(0, Point3F(1.0, 0.0, 0.0));
+            camRot.setColumn(1, Point3F(0.0, 0.0, -1.0));
+            camRot.setColumn(2, Point3F(0.0, 1.0, 0.0));
+            camPos.z = getMax(camPos.z + smMinSceneBounds.z, sceneBounds.maxExtents.z + camBuffer);
+            break;
 
-            case DisplayTypeBottom:
-               camRot.setColumn(0, Point3F(1.0,  0.0,  0.0));
-               camRot.setColumn(1, Point3F(0.0,  0.0,  1.0));
-               camRot.setColumn(2, Point3F(0.0, -1.0,  0.0));
-               camPos.z = getMin(camPos.z - smMinSceneBounds.z, sceneBounds.minExtents.z - camBuffer);
-               break;
+         case DisplayTypeBottom:
+            camRot.setColumn(0, Point3F(1.0, 0.0, 0.0));
+            camRot.setColumn(1, Point3F(0.0, 0.0, 1.0));
+            camRot.setColumn(2, Point3F(0.0, -1.0, 0.0));
+            camPos.z = getMin(camPos.z - smMinSceneBounds.z, sceneBounds.minExtents.z - camBuffer);
+            break;
 
-            case DisplayTypeFront:
-               camRot.setColumn(0, Point3F(1.0, 0.0, 0.0));
-               camRot.setColumn(1, Point3F(0.0, 1.0, 0.0));
-               camRot.setColumn(2, Point3F(0.0, 0.0, 1.0));
-               camPos.y = getMin(camPos.y - smMinSceneBounds.y, sceneBounds.minExtents.y - camBuffer);
-               break;
+         case DisplayTypeFront:
+            camRot.setColumn(0, Point3F(1.0, 0.0, 0.0));
+            camRot.setColumn(1, Point3F(0.0, 1.0, 0.0));
+            camRot.setColumn(2, Point3F(0.0, 0.0, 1.0));
+            camPos.y = getMin(camPos.y - smMinSceneBounds.y, sceneBounds.minExtents.y - camBuffer);
+            break;
 
-            case DisplayTypeBack:
-               camRot.setColumn(0, Point3F(-1.0, 0.0, 0.0));
-               camRot.setColumn(1, Point3F(0.0, -1.0, 0.0));
-               camRot.setColumn(2, Point3F(0.0, 0.0, 1.0));
-               camPos.y = getMax(camPos.y + smMinSceneBounds.y, sceneBounds.maxExtents.y + camBuffer);
-               break;
+         case DisplayTypeBack:
+            camRot.setColumn(0, Point3F(-1.0, 0.0, 0.0));
+            camRot.setColumn(1, Point3F(0.0, -1.0, 0.0));
+            camRot.setColumn(2, Point3F(0.0, 0.0, 1.0));
+            camPos.y = getMax(camPos.y + smMinSceneBounds.y, sceneBounds.maxExtents.y + camBuffer);
+            break;
 
-            case DisplayTypeLeft:
-               camRot.setColumn(0, Point3F( 0.0, -1.0,  0.0));
-               camRot.setColumn(1, Point3F( 1.0,  0.0,  0.0));
-               camRot.setColumn(2, Point3F( 0.0,  0.0,  1.0));
-               camPos.x = getMin(camPos.x - smMinSceneBounds.x, sceneBounds.minExtents.x - camBuffer);
-               break;
+         case DisplayTypeLeft:
+            camRot.setColumn(0, Point3F(0.0, -1.0, 0.0));
+            camRot.setColumn(1, Point3F(1.0, 0.0, 0.0));
+            camRot.setColumn(2, Point3F(0.0, 0.0, 1.0));
+            camPos.x = getMin(camPos.x - smMinSceneBounds.x, sceneBounds.minExtents.x - camBuffer);
+            break;
 
-            case DisplayTypeRight:
-               camRot.setColumn(0, Point3F( 0.0,  1.0,  0.0));
-               camRot.setColumn(1, Point3F(-1.0,  0.0,  0.0));
-               camRot.setColumn(2, Point3F( 0.0,  0.0,  1.0));
-               camPos.x = getMax(camPos.x + smMinSceneBounds.x, sceneBounds.maxExtents.x + camBuffer);
-               break;
+         case DisplayTypeRight:
+            camRot.setColumn(0, Point3F(0.0, 1.0, 0.0));
+            camRot.setColumn(1, Point3F(-1.0, 0.0, 0.0));
+            camRot.setColumn(2, Point3F(0.0, 0.0, 1.0));
+            camPos.x = getMax(camPos.x + smMinSceneBounds.x, sceneBounds.maxExtents.x + camBuffer);
+            break;
 
-            case DisplayTypeIsometric:
-               camPos.z = sceneBounds.maxExtents.z + camBuffer + isocamplanedist;
-               MatrixF angle(EulerF(mIsoCamAngle, 0, 0));
-               MatrixF rot(mIsoCamRot);
-               camRot.mul(rot, angle);
-               break;
+         case DisplayTypeIsometric:
+            camPos.z = sceneBounds.maxExtents.z + camBuffer + isocamplanedist;
+            MatrixF angle(EulerF(mIsoCamAngle, 0, 0));
+            MatrixF rot(mIsoCamRot);
+            camRot.mul(rot, angle);
+            break;
          }
 
          query->cameraMatrix = camRot;
@@ -1180,7 +1233,7 @@ bool EditTSCtrl::processCameraQuery(CameraQuery * query)
       }
 
       smCamMatrix = query->cameraMatrix;
-      smCamMatrix.getColumn(3,&smCamPos);
+      smCamMatrix.getColumn(3, &smCamPos);
       smCamOrtho = query->ortho;
       smCamNearPlane = query->nearPlane;
 

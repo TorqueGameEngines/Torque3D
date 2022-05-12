@@ -67,7 +67,6 @@ ImplementEnumType( GuiTSRenderStyles,
    { GuiTSCtrl::RenderStyleStandard,         "standard"              },
    { GuiTSCtrl::RenderStyleStereoSideBySide, "stereo side by side"   },
    { GuiTSCtrl::RenderStyleStereoSeparate,   "stereo separate" },
-   { GuiTSCtrl::RenderStyleTorque2D,         "Torque2D render" },
 EndImplementEnumType;
 
 //-----------------------------------------------------------------------------
@@ -391,9 +390,10 @@ void GuiTSCtrl::_internalRender(RectI guiViewport, RectI renderViewport, Frustum
    GFXTarget *origTarget = GFX->getActiveRenderTarget();
    S32 origStereoTarget = GFX->getCurrentStereoTarget();
 
-   if (mRenderStyle == RenderStyleTorque2D)
+   if (gClientSceneGraph->isTorque2DScene())
    {
       // look down the z buddy.
+      mCameraZRot = 0;
       mLastCameraQuery.cameraMatrix.setColumn(0, Point3F(1.0, 0.0, 0.0));
       mLastCameraQuery.cameraMatrix.setColumn(1, Point3F(0.0, 0.0, -1.0));
       mLastCameraQuery.cameraMatrix.setColumn(2, Point3F(0.0, 1.0, 0.0));
@@ -705,7 +705,7 @@ void GuiTSCtrl::onRender(Point2I offset, const RectI &updateRect)
    else
    {
 
-      if(mRenderStyle == RenderStyleTorque2D)
+      if(gClientSceneGraph->isTorque2DScene())
       {
          // render in glorious TORQUE2D MUTHA FUCKA!!!!!
          // set up the camera and viewport stuff:

@@ -86,7 +86,6 @@ public:
       RenderStyleStandard           = 0,
       RenderStyleStereoSideBySide   = (1<<0),
       RenderStyleStereoSeparate     = (1<<1),
-      RenderStyleTorque2D           = (1<<2),
    };
 
 protected:

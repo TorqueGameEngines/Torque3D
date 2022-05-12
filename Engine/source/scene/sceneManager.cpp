@@ -38,6 +38,10 @@
 #include "T3D/gameBase/gameConnection.h"
 #include "math/mathUtils.h"
 
+#ifdef TORQUE_2D
+#include "T2D/spriteObject.h"
+#endif
+
 // For player object bounds workaround.
 #include "T3D/player.h"
 
@@ -359,6 +363,9 @@ void SceneManager::_renderScene( SceneRenderState* state, U32 objectMask, SceneZ
 
    if( gEditingMission && state->isDiffusePass() )
       objectMask = EDITOR_RENDER_TYPEMASK;
+
+   if (isTorque2DScene())
+      objectMask = TORQUE2D_RENDER_TYPEMASK;
 
    // Update the zoning state and traverse zones.
 

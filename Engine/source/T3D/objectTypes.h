@@ -171,6 +171,9 @@ enum SceneObjectTypes
    /// @see TurretShape
    TurretObjectType = BIT(29),
 
+   // torque2d specificObjects
+   Torque2DObjectType = BIT(30),
+
    /// @}
 };
 
@@ -229,7 +232,10 @@ enum SceneObjectTypeMasks : U32
                                  EnvironmentObjectType ),
 
    SKYLIGHT_CAPTURE_TYPEMASK = (EnvironmentObjectType),
-   REFLECTION_PROBE_CAPTURE_TYPEMASK = (StaticObjectType | StaticShapeObjectType | LightObjectType)
+   REFLECTION_PROBE_CAPTURE_TYPEMASK = (StaticObjectType | StaticShapeObjectType | LightObjectType),
+
+   TORQUE2D_RENDER_TYPEMASK = (Torque2DObjectType)
+
 };
 
 #endif

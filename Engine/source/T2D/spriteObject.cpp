@@ -39,6 +39,7 @@ ConsoleDocClass(SpriteObject,
 SpriteObject::SpriteObject()
 {
    mFrame = 0;
+   mLayerMask = 0;
    INIT_ASSET(Sprite);
    // Flag this object so that it will always
    // be sent across the network to clients
@@ -60,6 +61,7 @@ void SpriteObject::initPersistFields()
    INITPERSISTFIELD_SPRITEASSET(Sprite, SpriteObject, "A sprite asset to use for this sprite object.");
 
    addField("SpriteFrame", TypeS32, Offset(mFrame, SpriteObject),"Set frame for this sprite to render.");
+   addField("SpriteLayer", TypeS32, Offset(mLayerMask, SpriteObject),"Set layer for this sprite to render on.");
 
    // SceneObject already handles exposing the transform
    Parent::initPersistFields();
@@ -102,7 +104,7 @@ void SpriteObject::inspectPostApply()
 
    Parent::inspectPostApply();
 
-   setMaskBits(FrameUpdateMask);
+   setMaskBits(LayerUpdateMask | FrameUpdateMask);
 }
 
 
@@ -131,6 +133,11 @@ U32 SpriteObject::packUpdate(NetConnection* conn, U32 mask, BitStream* stream)
       stream->write(mFrame);
    }
 
+   if (stream->writeFlag(mask & LayerUpdateMask))
+   {
+      stream->write(mLayerMask);
+   }
+
    // Write our transform information
    if (stream->writeFlag(mask & TransformMask))
    {
@@ -151,6 +158,11 @@ void SpriteObject::unpackUpdate(NetConnection* conn, BitStream* stream)
    {
       stream->read(&mFrame);
       mFrameDirty = true;
+   }
+
+   if (stream->readFlag()) // layer update mask
+   {
+      stream->read(&mLayerMask);
    }
 
    if (stream->readFlag())  // TransformMask
@@ -221,7 +233,7 @@ void SpriteObject::prepRenderImage(SceneRenderState* state)
    ri->type = RenderPassManager::RIT_Object;
 
    // Set our sorting keys to a default value
-   ri->defaultKey = 0;
+   ri->defaultKey = getLayerMask();
    ri->defaultKey2 = 0;
 
    // Submit our RenderInst to the RenderPassManager

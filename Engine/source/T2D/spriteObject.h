@@ -53,12 +53,14 @@ class SpriteObject : public SceneObject
    {
       TransformMask =      Parent::NextFreeMask << 0,
       FrameUpdateMask =    Parent::NextFreeMask << 1,
-      NextFreeMask =       Parent::NextFreeMask << 2
+      LayerUpdateMask =    Parent::NextFreeMask << 2,
+      NextFreeMask =       Parent::NextFreeMask << 3
    };
 
    typedef GFXVertexPCT VertexType;
 
    S32 mFrame;
+   S32 mLayerMask;
    bool mFrameDirty;
    // The handles for our StateBlocks
    GFXStateBlockRef mNormalSB;
@@ -86,6 +88,8 @@ public:
 
    void prepRenderImage(SceneRenderState* state);
    void render(ObjectRenderInst* ri, SceneRenderState* state, BaseMatInstance* overrideMat);
+
+   S32 getLayerMask() { return mLayerMask; }
 
    void onChangeSprite() {}
 

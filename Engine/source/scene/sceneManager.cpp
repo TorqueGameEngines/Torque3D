@@ -38,10 +38,6 @@
 #include "T3D/gameBase/gameConnection.h"
 #include "math/mathUtils.h"
 
-#ifdef TORQUE_2D
-   #include "T2D/spriteObject.h"
-#endif
-
 // For player object bounds workaround.
 #include "T3D/player.h"
 

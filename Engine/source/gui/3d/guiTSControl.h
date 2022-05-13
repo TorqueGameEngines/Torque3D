@@ -42,11 +42,6 @@
 class IDisplayDevice;
 class GuiOffscreenCanvas;
 
-// Torque2D defines.
-#define MASK_ALL                        (U32_MAX)
-#define MASK_BITCOUNT                   (32)
-#define MAX_LAYERS_SUPPORTED            (32)
-
 struct CameraQuery
 {
    SimObject*  object;

@@ -50,6 +50,11 @@
 #include <new>
 #include <typeinfo>
 
+// Torque2D defines.
+#define MASK_ALL                        (U32_MAX)
+#define MASK_BITCOUNT                   (32)
+#define MAX_LAYERS_SUPPORTED            (32)
+
 /// Global processor identifiers.
 ///
 /// @note These enums must be globally scoped so that they work with the inline assembly

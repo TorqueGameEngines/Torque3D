@@ -47,19 +47,13 @@ public:
 	#ifdef QUATERNION_DERIVATIVE
 		btQuaternion predictedOrn = curTrans.getRotation();
 		predictedOrn += (angvel * predictedOrn) * (timeStep * btScalar(0.5));
-		predictedOrn.safeNormalize();
+		predictedOrn.normalize();
 	#else
 		//Exponential map
 		//google for "Practical Parameterization of Rotations Using the Exponential Map", F. Sebastian Grassia
 
 		btVector3 axis;
-		btScalar	fAngle2 = angvel.length2();
-        	btScalar    fAngle = 0;
-        	if (fAngle2>SIMD_EPSILON)
-        	{
-            		fAngle = btSqrt(fAngle2);
-        	}
-
+		btScalar	fAngle = angvel.length(); 
 		//limit the angular motion
 		if (fAngle*timeStep > ANGULAR_MOTION_THRESHOLD)
 		{
@@ -80,16 +74,9 @@ public:
 		btQuaternion orn0 = curTrans.getRotation();
 
 		btQuaternion predictedOrn = dorn * orn0;
-		predictedOrn.safeNormalize();
+		predictedOrn.normalize();
 	#endif
-		if (predictedOrn.length2()>SIMD_EPSILON)
-		{
-			predictedTransform.setRotation(predictedOrn);
-		}
-		else
-		{
-			predictedTransform.setBasis(curTrans.getBasis());
-		}
+		predictedTransform.setRotation(predictedOrn);
 	}
 
 	static void	calculateVelocityQuaternion(const btVector3& pos0,const btVector3& pos1,const btQuaternion& orn0,const btQuaternion& orn1,btScalar timeStep,btVector3& linVel,btVector3& angVel)

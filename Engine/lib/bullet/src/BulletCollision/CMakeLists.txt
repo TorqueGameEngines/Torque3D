@@ -7,6 +7,7 @@ SET(BulletCollision_SRCS
 	BroadphaseCollision/btDbvt.cpp
 	BroadphaseCollision/btDbvtBroadphase.cpp
 	BroadphaseCollision/btDispatcher.cpp
+	BroadphaseCollision/btMultiSapBroadphase.cpp
 	BroadphaseCollision/btOverlappingPairCache.cpp
 	BroadphaseCollision/btQuantizedBvh.cpp
 	BroadphaseCollision/btSimpleBroadphase.cpp
@@ -15,7 +16,6 @@ SET(BulletCollision_SRCS
 	CollisionDispatch/btBox2dBox2dCollisionAlgorithm.cpp
 	CollisionDispatch/btBoxBoxDetector.cpp
 	CollisionDispatch/btCollisionDispatcher.cpp
-	CollisionDispatch/btCollisionDispatcherMt.cpp
 	CollisionDispatch/btCollisionObject.cpp
 	CollisionDispatch/btCollisionWorld.cpp
 	CollisionDispatch/btCollisionWorldImporter.cpp
@@ -103,7 +103,6 @@ SET(Root_HDRS
 	../btBulletCollisionCommon.h
 )
 SET(BroadphaseCollision_HDRS
-    BroadphaseCollision/btAxisSweep3Internal.h
 	BroadphaseCollision/btAxisSweep3.h
 	BroadphaseCollision/btBroadphaseInterface.h
 	BroadphaseCollision/btBroadphaseProxy.h
@@ -111,6 +110,7 @@ SET(BroadphaseCollision_HDRS
 	BroadphaseCollision/btDbvt.h
 	BroadphaseCollision/btDbvtBroadphase.h
 	BroadphaseCollision/btDispatcher.h
+	BroadphaseCollision/btMultiSapBroadphase.h
 	BroadphaseCollision/btOverlappingPairCache.h
 	BroadphaseCollision/btOverlappingPairCallback.h
 	BroadphaseCollision/btQuantizedBvh.h
@@ -124,7 +124,6 @@ SET(CollisionDispatch_HDRS
 	CollisionDispatch/btCollisionConfiguration.h
 	CollisionDispatch/btCollisionCreateFunc.h
 	CollisionDispatch/btCollisionDispatcher.h
-	CollisionDispatch/btCollisionDispatcherMt.h
 	CollisionDispatch/btCollisionObject.h
 	CollisionDispatch/btCollisionObjectWrapper.h
 	CollisionDispatch/btCollisionWorld.h
@@ -192,15 +191,12 @@ SET(CollisionShapes_HDRS
 SET(Gimpact_HDRS
 	Gimpact/btBoxCollision.h
 	Gimpact/btClipPolygon.h
-	Gimpact/btContactProcessingStructs.h
 	Gimpact/btContactProcessing.h
 	Gimpact/btGenericPoolAllocator.h
 	Gimpact/btGeometryOperations.h
-	Gimpact/btGImpactBvhStructs.h
 	Gimpact/btGImpactBvh.h
 	Gimpact/btGImpactCollisionAlgorithm.h
 	Gimpact/btGImpactMassUtil.h
-	Gimpact/btGImpactQuantizedBvhStructs.h
 	Gimpact/btGImpactQuantizedBvh.h
 	Gimpact/btGImpactShape.h
 	Gimpact/btQuantization.h

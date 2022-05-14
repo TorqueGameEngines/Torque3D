@@ -24,13 +24,12 @@ class btActivatingCollisionAlgorithm : public btCollisionAlgorithm
 //	btCollisionObject* m_colObj0;
 //	btCollisionObject* m_colObj1;
 
-protected:
+public:
 
 	btActivatingCollisionAlgorithm (const btCollisionAlgorithmConstructionInfo& ci);
 
 	btActivatingCollisionAlgorithm (const btCollisionAlgorithmConstructionInfo& ci, const btCollisionObjectWrapper* body0Wrap,const btCollisionObjectWrapper* body1Wrap);
 
-public:
 	virtual ~btActivatingCollisionAlgorithm();
 
 };

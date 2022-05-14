@@ -556,8 +556,12 @@ void btHingeConstraint::getInfo2Internal(btConstraintInfo2* info, const btTransf
 
 	}
 	// if the hinge has joint limits or motor, add in the extra row
-	bool powered = getEnableAngularMotor();
-	if(limit || powered)
+	int powered = 0;
+	if(getEnableAngularMotor())
+	{
+		powered = 1;
+	}
+	if(limit || powered) 
 	{
 		nrow++;
 		srow = nrow * info->rowskip;
@@ -573,7 +577,7 @@ void btHingeConstraint::getInfo2Internal(btConstraintInfo2* info, const btTransf
 		btScalar histop = getUpperLimit();
 		if(limit && (lostop == histop))
 		{  // the joint motor is ineffective
-			powered = false;
+			powered = 0;
 		}
 		info->m_constraintError[srow] = btScalar(0.0f);
 		btScalar currERP = (m_flags & BT_HINGE_FLAGS_ERP_STOP) ? m_stopERP : normalErp;
@@ -947,8 +951,12 @@ void btHingeConstraint::getInfo2InternalUsingFrameOffset(btConstraintInfo2* info
 
 	}
 	// if the hinge has joint limits or motor, add in the extra row
-	bool powered = getEnableAngularMotor();
-	if(limit || powered)
+	int powered = 0;
+	if(getEnableAngularMotor())
+	{
+		powered = 1;
+	}
+	if(limit || powered) 
 	{
 		nrow++;
 		srow = nrow * info->rowskip;
@@ -964,7 +972,7 @@ void btHingeConstraint::getInfo2InternalUsingFrameOffset(btConstraintInfo2* info
 		btScalar histop = getUpperLimit();
 		if(limit && (lostop == histop))
 		{  // the joint motor is ineffective
-			powered = false;
+			powered = 0;
 		}
 		info->m_constraintError[srow] = btScalar(0.0f);
 		btScalar currERP = (m_flags & BT_HINGE_FLAGS_ERP_STOP) ? m_stopERP : normalErp;

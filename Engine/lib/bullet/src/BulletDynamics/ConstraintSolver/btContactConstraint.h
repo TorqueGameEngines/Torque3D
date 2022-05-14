@@ -28,12 +28,10 @@ protected:
 
 	btPersistentManifold m_contactManifold;
 
-protected:
+public:
 
 
 	btContactConstraint(btPersistentManifold* contactManifold,btRigidBody& rbA,btRigidBody& rbB);
-
-public:
 
 	void	setContactManifold(btPersistentManifold* contactManifold);
 

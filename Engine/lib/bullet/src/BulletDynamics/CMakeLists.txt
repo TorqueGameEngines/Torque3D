@@ -21,8 +21,6 @@ SET(BulletDynamics_SRCS
 	ConstraintSolver/btTypedConstraint.cpp
 	ConstraintSolver/btUniversalConstraint.cpp
 	Dynamics/btDiscreteDynamicsWorld.cpp
-	Dynamics/btDiscreteDynamicsWorldMt.cpp
-	Dynamics/btSimulationIslandManagerMt.cpp
 	Dynamics/btRigidBody.cpp
 	Dynamics/btSimpleDynamicsWorld.cpp
 #	Dynamics/Bullet-C-API.cpp
@@ -37,7 +35,6 @@ SET(BulletDynamics_SRCS
 	Featherstone/btMultiBodyFixedConstraint.cpp
 	Featherstone/btMultiBodySliderConstraint.cpp
 	Featherstone/btMultiBodyJointMotor.cpp
-	Featherstone/btMultiBodyGearConstraint.cpp
 	MLCPSolvers/btDantzigLCP.cpp
 	MLCPSolvers/btMLCPSolver.cpp
 	MLCPSolvers/btLemkeAlgorithm.cpp
@@ -73,8 +70,6 @@ SET(ConstraintSolver_HDRS
 SET(Dynamics_HDRS
 	Dynamics/btActionInterface.h
 	Dynamics/btDiscreteDynamicsWorld.h
-	Dynamics/btDiscreteDynamicsWorldMt.h
-	Dynamics/btSimulationIslandManagerMt.h
 	Dynamics/btDynamicsWorld.h
 	Dynamics/btSimpleDynamicsWorld.h
 	Dynamics/btRigidBody.h
@@ -99,7 +94,6 @@ SET(Featherstone_HDRS
 	Featherstone/btMultiBodyFixedConstraint.h
 	Featherstone/btMultiBodySliderConstraint.h
 	Featherstone/btMultiBodyJointMotor.h
-	Featherstone/btMultiBodyGearConstraint.h	
 )
 
 SET(MLCPSolvers_HDRS

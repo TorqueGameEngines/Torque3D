@@ -23,18 +23,7 @@ subject to the following restrictions:
 ///This solver is mainly for debug/learning purposes: it is functionally equivalent to the btSequentialImpulseConstraintSolver solver, but much slower (it builds the full LCP matrix)
 class btSolveProjectedGaussSeidel : public btMLCPSolverInterface
 {
-
 public:
-
-	btScalar m_leastSquaresResidualThreshold;
-	btScalar m_leastSquaresResidual;
-
-	btSolveProjectedGaussSeidel()
-		:m_leastSquaresResidualThreshold(0),
-		m_leastSquaresResidual(0)
-	{
-	}
-
 	virtual bool solveMLCP(const btMatrixXu & A, const btVectorXu & b, btVectorXu& x, const btVectorXu & lo,const btVectorXu & hi,const btAlignedObjectArray<int>& limitDependency, int numIterations, bool useSparsity = true)
 	{
 		if (!A.rows())
@@ -47,11 +36,10 @@ public:
 
 		int i, j, numRows = A.rows();
 	
-		btScalar delta;
+		float delta;
 
 		for (int k = 0; k <numIterations; k++)
 		{
-			m_leastSquaresResidual = 0.f;
 			for (i = 0; i <numRows; i++)
 			{
 				delta = 0.0f;
@@ -73,10 +61,9 @@ public:
 						delta += A(i,j) * x[j];
 				}
 
-				btScalar aDiag = A(i,i);
-				btScalar xOld = x[i];
+				float aDiag = A(i,i);
 				x [i] = (b [i] - delta) / aDiag;
-				btScalar s = 1.f;
+				float s = 1.f;
 
 				if (limitDependency[i]>=0)
 				{
@@ -89,17 +76,6 @@ public:
 					x[i]=lo[i]*s;
 				if (x[i]>hi[i]*s)
 					x[i]=hi[i]*s;
-				btScalar diff = x[i] - xOld;
-				m_leastSquaresResidual += diff*diff;
-			}
-
-			btScalar eps  = m_leastSquaresResidualThreshold;
-			if ((m_leastSquaresResidual < eps) || (k >=(numIterations-1)))
-			{
-#ifdef VERBOSE_PRINTF_RESIDUAL
-				printf("totalLenSqr = %f at iteration #%d\n", m_leastSquaresResidual,k);
-#endif
-				break;
 			}
 		}
 		return true;

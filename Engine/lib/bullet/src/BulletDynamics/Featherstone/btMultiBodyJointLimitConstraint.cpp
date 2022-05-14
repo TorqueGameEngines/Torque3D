@@ -110,13 +110,7 @@ void btMultiBodyJointLimitConstraint::createConstraintRows(btMultiBodyConstraint
 	
 	for (int row=0;row<getNumRows();row++)
 	{
-		btScalar penetration = getPosition(row);
-
-		//todo: consider adding some safety threshold here
-		if (penetration>0)
-		{
-			continue;
-		}
+		
 		btScalar direction = row? -1 : 1;
 
 		btMultiBodySolverConstraint& constraintRow = constraintRows.expandNonInitializing();
@@ -164,7 +158,7 @@ void btMultiBodyJointLimitConstraint::createConstraintRows(btMultiBodyConstraint
 		}
 
 		{
-			
+			btScalar penetration = getPosition(row);
 			btScalar positionalError = 0.f;
 			btScalar	velocityError =  - rel_vel;// * damping;
 			btScalar erp = infoGlobal.m_erp2;

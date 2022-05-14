@@ -5,22 +5,6 @@
 #include "btGImpactShape.h"
 #include "BulletCollision/NarrowPhaseCollision/btRaycastCallback.h"
 
-ATTRIBUTE_ALIGNED16(class) btCompoundFromGimpactShape	: public btCompoundShape
-{
-public:
-	BT_DECLARE_ALIGNED_ALLOCATOR();
-
-	virtual ~btCompoundFromGimpactShape()
-	{
-		/*delete all the btBU_Simplex1to4 ChildShapes*/
-		for (int i = 0; i < m_children.size(); i++)
-		{
-			delete m_children[i].m_childShape;
-		}
-	}
-
-};
-
 struct MyCallback : public btTriangleRaycastCallback
 		{
 			int	m_ignorePart;
@@ -93,7 +77,7 @@ struct MyCallback : public btTriangleRaycastCallback
 		
 btCompoundShape*	btCreateCompoundFromGimpactShape(const btGImpactMeshShape* gimpactMesh, btScalar depth)
 {
-	btCompoundShape* colShape = new btCompoundFromGimpactShape();
+	btCompoundShape* colShape = new btCompoundShape();
 		
 		btTransform tr;
 		tr.setIdentity();

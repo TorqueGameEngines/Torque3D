@@ -1,4 +1,4 @@
-file(GLOB PCRE_SOURCES "*.c")
+file(GLOB PCRE_SOURCES "*.c" "*.cc")
 
 add_library(pcre STATIC ${PCRE_SOURCES})
 target_compile_definitions(pcre PUBLIC PCRE_STATIC HAVE_CONFIG_H)

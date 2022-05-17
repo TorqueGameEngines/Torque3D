@@ -1,2 +1,2 @@
 file(GLOB LJPEG_SOURCES "*.c")
-add_library(ljpeg ${LJPEG_SOURCES})
+add_library(ljpeg STATIC ${LJPEG_SOURCES})

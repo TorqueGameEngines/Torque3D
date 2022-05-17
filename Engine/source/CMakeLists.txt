@@ -1,83 +1,3 @@
-option(TORQUE_MULTITHREAD "Multi Threading" ON)
-mark_as_advanced(TORQUE_MULTITHREAD)
-
-option(TORQUE_POSIX_PATH_CASE_INSENSITIVE "POSIX Pathing Case Insensitivity" ON)
-mark_as_advanced(TORQUE_POSIX_PATH_CASE_INSENSITIVE)
-
-option(TORQUE_ZIP_PATH_CASE_INSENSITIVE "ZIP Pathing Case Insensitivity" ON)
-mark_as_advanced(TORQUE_ZIP_PATH_CASE_INSENSITIVE)
-
-option(TORQUE_DISABLE_MEMORY_MANAGER "Disable memory manager" ON)
-mark_as_advanced(TORQUE_DISABLE_MEMORY_MANAGER)
-
-option(TORQUE_DISABLE_VIRTUAL_MOUNT_SYSTEM "Disable virtual mount system" OFF)
-mark_as_advanced(TORQUE_DISABLE_VIRTUAL_MOUNT_SYSTEM)
-
-option(TORQUE_DISABLE_FIND_ROOT_WITHIN_ZIP "Disable reading root path from zip. Zips will be mounted in-place with file name as directory name." ON)
-mark_as_advanced(TORQUE_DISABLE_FIND_ROOT_WITHIN_ZIP)
-
-option(TORQUE_ZIP_DISK_LAYOUT "All zips must be placed in the executable directory and contain full paths to the files." OFF)
-mark_as_advanced(TORQUE_ZIP_DISK_LAYOUT)
-
-option(TORQUE_PLAYER "Playback only?" OFF)
-mark_as_advanced(TORQUE_PLAYER)
-
-option(TORQUE_TOOLS "Enable or disable the tools" ON)
-mark_as_advanced(TORQUE_TOOLS)
-
-option(TORQUE_ENABLE_PROFILER "Enable or disable the profiler" OFF)
-mark_as_advanced(TORQUE_ENABLE_PROFILER)
-
-option(TORQUE_DEBUG "T3D Debug mode" OFF)
-mark_as_advanced(TORQUE_DEBUG)
-
-option(TORQUE_SHIPPING "T3D Shipping build?" OFF)
-mark_as_advanced(TORQUE_SHIPPING)
-
-option(TORQUE_DEBUG_NET "debug network" OFF)
-mark_as_advanced(TORQUE_DEBUG_NET)
-
-option(TORQUE_DEBUG_NET_MOVES "debug network moves" OFF)
-mark_as_advanced(TORQUE_DEBUG_NET_MOVES)
-
-option(TORQUE_ENABLE_ASSERTS "enables or disable asserts" OFF)
-mark_as_advanced(TORQUE_ENABLE_ASSERTS)
-
-option(TORQUE_DEBUG_GFX_MODE "triggers graphics debug mode" OFF)
-mark_as_advanced(TORQUE_DEBUG_GFX_MODE)
-
-#option(DEBUG_SPEW "more debug" OFF)
-set(TORQUE_NO_DSO_GENERATION ON)
-
-if(NOT TORQUE_SCRIPT_EXTENSION)
-    set(TORQUE_SCRIPT_EXTENSION "tscript" CACHE STRING "The default script extension to use for TorqueScript files")
-endif()
-
-mark_as_advanced(TORQUE_SCRIPT_EXTENSION)
-
-option(TORQUE_USE_ZENITY "use the Zenity backend for NFD" OFF)
-mark_as_advanced(TORQUE_USE_ZENITY)
-
-option(TORQUE_SHOW_LEGACY_FILE_FIELDS "If on, shows legacy direct file path fields in the inspector." OFF)
-mark_as_advanced(TORQUE_SHOW_LEGACY_FILE_FIELDS)
-
-macro(setupVersionNumbers)
-    set(TORQUE_APP_VERSION_MAJOR 1 CACHE STRING "")
-    set(TORQUE_APP_VERSION_MINOR 0 CACHE STRING "")
-    set(TORQUE_APP_VERSION_PATCH 0 CACHE STRING "")
-    set(TORQUE_APP_VERSION_TWEAK 0 CACHE STRING "")
-    mark_as_advanced(TORQUE_APP_VERSION_TWEAK)
-    MATH(EXPR TORQUE_APP_VERSION "${TORQUE_APP_VERSION_MAJOR} * 1000 + ${TORQUE_APP_VERSION_MINOR} * 100 + ${TORQUE_APP_VERSION_PATCH} * 10 + ${TORQUE_APP_VERSION_TWEAK}")
-    set(TORQUE_APP_VERSION_STRING "${TORQUE_APP_VERSION_MAJOR}.${TORQUE_APP_VERSION_MINOR}.${TORQUE_APP_VERSION_PATCH}.${TORQUE_APP_VERSION_TWEAK}")
-    #message(STATUS "version numbers: ${TORQUE_APP_VERSION} / ${TORQUE_APP_VERSION_STRING}")
-endmacro()
-setupVersionNumbers()
-
-# Generate torqueConfig.h in our temp directory
-CONFIGURE_FILE("${CMAKE_SOURCE_DIR}/Tools/CMake/torqueConfig.h.in" "${CMAKE_BINARY_DIR}/temp/torqueConfig.h")
-
-# Perform engine build. We do this initially as a lib for easier unit testing.
-file(GLOB TORQUE_MAIN_SOURCES "main/*.cpp")
 file(GLOB TORQUE_APP_SOURCES "app/*.cpp" "app/net/*.cpp")
 
 # Handle Platform
@@ -94,7 +14,7 @@ file(GLOB TORQUE_T3D_SOURCES "T3D/fps/*.cpp" "T3D/fx/*.cpp" "T3D/vehicles/*.cpp"
 file(GLOB TORQUE_TS_SOURCES "ts/*.cpp" "ts/collada/*.cpp" "ts/assimp/*.cpp" "ts/loader/*.cpp" "ts/arch/*.cpp")
 
 # Handle SFX
-file(GLOB TORQUE_SFX_SOURCES "sfx/*.cpp" "sfx/media/*.cpp" "sfx/null/*.cpp")
+file(GLOB TORQUE_SFX_SOURCES "sfx/*.cpp" "sfx/media/*.cpp" "sfx/null/*.cpp" "sfx/openal/*.cpp" "sfx/openal/mac/*.cpp")
 
 # Handle GFX
 file(GLOB TORQUE_GFX_SOURCES "gfx/*.cpp" "gfx/Null/*.cpp" "gfx/test/*.cpp" "gfx/bitmap/*.cpp" "gfx/bitmap/loaders/*.cpp"
@@ -199,27 +119,42 @@ set(TORQUE_COMPILE_DEFINITIONS ICE_NO_DLL PCRE_STATIC TORQUE_ADVANCED_LIGHTING T
 
 # Set common linkages
 set(TORQUE_LINK_LIBRARIES tinyxml collada ljpeg squish png_static opcode assimp
-                          SDL2 glad pcre convexDecomp "-framework Cocoa" "-framework AppKit"
-                          "-framework CoreData" "-framework Foundation")
+                          SDL2 glad pcre convexDecomp OpenAL)
 
+# Only link Apple frameworks when on an Apple platform
+if (APPLE)
+  set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} "-framework Cocoa" "-framework AppKit" "-framework CoreData" "-framework Foundation")
+endif (APPLE)
 
-set(CPACK_BUNDLE_NAME "Game")
-set(CPACK_BUNDLE_ICON "${CMAKE_SOURCE_DIR}/Tools/CMake/torque.icns")
-set(CPACK_BUNDLE_PLIS "${CMAKE_SOURCE_DIR}/Tools/CMake/Info.plist.in")
-set(CPACK_PACKAGE_EXECUTABLES "Game" "Game")
+# Begin assembling source code payload
+set (TORQUE_SOURCE_FILES "main/main.cpp"
+                          ${TORQUE_APP_SOURCES} ${TORQUE_RENDERINSTANCE_SOURCES}
+                          ${TORQUE_CINTERFACE_SOURCES} ${TORQUE_MATH_SOURCES}
+                          ${TORQUE_PLATFORM_SOURCES} ${TORQUE_ASSETS_SOURCES} ${TORQUE_UTIL_SOURCES}
+                          ${TORQUE_CORE_SOURCES} ${TORQUE_PERSISTENCE_SOURCES} ${TORQUE_MODULE_SOURCES}
+                          ${TORQUE_PLATFORM_SDL_SOURCES} ${TORQUE_PLATFORM_MAC_SOURCES} ${TORQUE_PLATFORM_POSIX_SOURCES}
+                          ${TORQUE_WINDOW_MANAGER_SOURCES} ${TORQUE_SCENE_SOURCES} ${TORQUE_COLLISION_SOURCES}
+                          ${TORQUE_T3D_SOURCES} ${TORQUE_TS_SOURCES} ${TORQUE_SIM_SOURCES} ${TORQUE_MATERIALS_SOURCES}
+                          ${TORQUE_SHADERGEN_SOURCES} ${TORQUE_LIGHTING_SOURCES} ${TORQUE_GUI_SOURCES}
+                          ${TORQUE_ENVIRONMENT_SOURCES} ${TORQUE_TERRAIN_SOURCES} ${TORQUE_POSTFX_SOURCES}
+                          ${TORQUE_I18N_SOURCES} ${TORQUE_CONSOLE_SOURCES} ${TORQUE_SFX_SOURCES} ${TORQUE_GFX_SOURCES})
+
+# Search module directories
+set(TORQUE_MODULE_PATHS "${CMAKE_SOURCE_DIR}/Tools/CMake/modules")
+foreach (TORQUE_MODULE_PATH ${TORQUE_MODULE_PATHS})
+  # First find simple cmake scripts
+  file(GLOB MODULE_SCRIPTS "${TORQUE_MODULE_PATH}/*.cmake")
+
+  message("Found Module Scripts" ${MODULE_SCRIPTS})
+  foreach (TORQUE_MODULE_SCRIPT ${MODULE_SCRIPTS})
+    message("Including Module Script: ${TORQUE_MODULE_SCRIPT}")
+    include(${TORQUE_MODULE_SCRIPT})
+  endforeach()
+endforeach()
 
 # Final executable
-add_executable(Game MACOSX_BUNDLE "main/main.cpp"
-                                  ${TORQUE_APP_SOURCES} ${TORQUE_RENDERINSTANCE_SOURCES}
-                                  ${TORQUE_CINTERFACE_SOURCES} ${TORQUE_MATH_SOURCES}
-                                  ${TORQUE_PLATFORM_SOURCES} ${TORQUE_ASSETS_SOURCES} ${TORQUE_UTIL_SOURCES}
-                                  ${TORQUE_CORE_SOURCES} ${TORQUE_PERSISTENCE_SOURCES} ${TORQUE_MODULE_SOURCES}
-                                  ${TORQUE_PLATFORM_SDL_SOURCES} ${TORQUE_PLATFORM_MAC_SOURCES} ${TORQUE_PLATFORM_POSIX_SOURCES}
-                                  ${TORQUE_WINDOW_MANAGER_SOURCES} ${TORQUE_SFX_SOURCES} ${TORQUE_SCENE_SOURCES} ${TORQUE_COLLISION_SOURCES}
-                                  ${TORQUE_T3D_SOURCES} ${TORQUE_TS_SOURCES} ${TORQUE_SIM_SOURCES} ${TORQUE_MATERIALS_SOURCES}
-                                  ${TORQUE_SHADERGEN_SOURCES} ${TORQUE_LIGHTING_SOURCES} ${TORQUE_GUI_SOURCES}
-                                  ${TORQUE_ENVIRONMENT_SOURCES} ${TORQUE_TERRAIN_SOURCES} ${TORQUE_POSTFX_SOURCES}
-                                  ${TORQUE_I18N_SOURCES} ${TORQUE_CONSOLE_SOURCES} ${TORQUE_GFX_SOURCES})
+add_executable(Game MACOSX_BUNDLE ${TORQUE_SOURCE_FILES})
+
 target_compile_definitions(Game PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
 target_link_libraries(Game ${TORQUE_LINK_LIBRARIES})
 target_include_directories(Game PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
@@ -229,16 +164,16 @@ CONFIGURE_FILE("${CMAKE_SOURCE_DIR}/Tools/CMake/Info.plist.in" "${CMAKE_BINARY_D
 set_target_properties(Game PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_BINARY_DIR}/temp/Info.plist")
 
 install(TARGETS Game
-    BUNDLE DESTINATION . COMPONENT Runtime
+    BUNDLE DESTINATION game COMPONENT Runtime
     RUNTIME DESTINATION bin COMPONENT Runtime
 )
 
 # Note Mac specific extension .app
-set(APPS "\${CMAKE_INSTALL_PREFIX}/Game.app")
+set(APPS "\${CMAKE_INSTALL_PREFIX}/game/Game.app")
 
 # Directories to look for dependencies
 # FIXME: Auto detect?
-set(DIRS ${CMAKE_BINARY_DIR}/temp/sdl2 ${CMAKE_BINARY_DIR}/temp/assimp/bin)
+set(DIRS ${CMAKE_BINARY_DIR}/temp/sdl2 ${CMAKE_BINARY_DIR}/temp/openal-soft ${CMAKE_BINARY_DIR}/temp/assimp/bin)
 
 install(CODE "include(BundleUtilities)
     fixup_bundle(\"${APPS}\" \"\" \"${DIRS}\")")

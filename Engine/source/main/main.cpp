@@ -283,12 +283,12 @@ int main(int argc, const char **argv)
 #include "app/mainLoop.h"
 #include "T3D/gameFunctions.h"
 
-#if defined(WIN32) || defined(_WIN32) 
+#if defined(WIN32) || defined(_WIN32)
 //tell switchable graphics supported systems that they need to use the beefier GPU
 #include <windows.h>
 extern "C" { __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001; }
 extern "C" { __declspec(dllexport) DWORD AmdPowerXpressRequestHighPerformance = 0x00000001; }
-#else 
+#else
 extern "C" { int NvOptimusEnablement = 1; }
 extern "C" { int AmdPowerXpressRequestHighPerformance = 1; }
 #endif

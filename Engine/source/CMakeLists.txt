@@ -98,7 +98,8 @@ file(GLOB TORQUE_SFX_SOURCES "sfx/*.cpp" "sfx/media/*.cpp" "sfx/null/*.cpp")
 
 # Handle GFX
 file(GLOB TORQUE_GFX_SOURCES "gfx/*.cpp" "gfx/Null/*.cpp" "gfx/test/*.cpp" "gfx/bitmap/*.cpp" "gfx/bitmap/loaders/*.cpp"
-                             "gfx/util/*.cpp" "gfx/video/*.cpp" "gfx/sim/*.cpp")
+                             "gfx/util/*.cpp" "gfx/video/*.cpp" "gfx/sim/*.cpp" "gfx/gl/*.cpp" "gfx/gl/sdl/*.cpp"
+                             "gfx/gl/tGL/*.cpp")
 
 # Handle core
 file(GLOB TORQUE_CORE_SOURCES "core/*.cpp" "core/stream/*.cpp" "core/strings/*.cpp" "core/util/*.cpp"
@@ -197,196 +198,47 @@ set(TORQUE_COMPILE_DEFINITIONS ICE_NO_DLL PCRE_STATIC TORQUE_ADVANCED_LIGHTING T
 ################# Start building libs ###################
 
 # Set common linkages
-set(TORQUE_LINK_LIBRARIES tinyxml collada ljpeg squish png opcode assimp
-                          SDL2 glad pcre "-framework Cocoa" "-framework AppKit"
+set(TORQUE_LINK_LIBRARIES tinyxml collada ljpeg squish png_static opcode assimp
+                          SDL2 glad pcre convexDecomp "-framework Cocoa" "-framework AppKit"
                           "-framework CoreData" "-framework Foundation")
 
-# [[ SFX ]]
-add_library(SFX STATIC ${TORQUE_SFX_SOURCES})
-target_compile_definitions(SFX PUBLIC ICE_NO_DLL ${TORQUE_COMPILE_DEFINITIONS})
-target_link_libraries(SFX PUBLIC ${TORQUE_LINK_LIBRARIES})
-target_include_directories(SFX PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
 
-# [[ GFX ]]
-add_library(GFX STATIC ${TORQUE_GFX_SOURCES})
-target_compile_definitions(GFX PUBLIC ICE_NO_DLL ${TORQUE_COMPILE_DEFINITIONS})
-target_link_libraries(GFX PUBLIC ${TORQUE_LINK_LIBRARIES})
-target_include_directories(GFX PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
-
-# [[ Console ]]
-add_library(Console STATIC ${TORQUE_CONSOLE_SOURCES})
-target_compile_definitions(Console PUBLIC ICE_NO_DLL ${TORQUE_COMPILE_DEFINITIONS})
-target_link_libraries(Console PUBLIC ${TORQUE_LINK_LIBRARIES})
-target_include_directories(Console PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
-
-# [[ Core ]]
-add_library(Core STATIC ${TORQUE_CORE_SOURCES})
-target_compile_definitions(Core PUBLIC ICE_NO_DLL ${TORQUE_COMPILE_DEFINITIONS})
-target_link_libraries(Core PUBLIC ${TORQUE_LINK_LIBRARIES} Console)
-target_include_directories(Core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
-
-# [[ Util ]]
-add_library(Util STATIC ${TORQUE_UTIL_SOURCES})
-target_compile_definitions(Util PUBLIC ICE_NO_DLL ${TORQUE_COMPILE_DEFINITIONS})
-target_link_libraries(Util PUBLIC ${TORQUE_LINK_LIBRARIES})
-target_include_directories(Util PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
-
-# [[ Math ]]
-add_library(Math STATIC ${TORQUE_MATH_SOURCES})
-target_compile_definitions(Math PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
-target_link_libraries(Math PUBLIC ${TORQUE_LINK_LIBRARIES})
-target_include_directories(Math PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
-
-# [[ Generic Platform ]]
-add_library(Platform STATIC ${TORQUE_PLATFORM_SOURCES})
-target_compile_definitions(Platform PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
-target_link_libraries(Platform PUBLIC ${TORQUE_LINK_LIBRARIES})
-target_include_directories(Platform PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
-
-# [[ SDL Platform ]]
-add_library(PlatformSDL STATIC ${TORQUE_PLATFORM_SDL_SOURCES})
-target_compile_definitions(PlatformSDL PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
-target_link_libraries(PlatformSDL PUBLIC ${TORQUE_LINK_LIBRARIES})
-target_include_directories(PlatformSDL PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
-
-# [[ App ]]
-add_library(App STATIC ${TORQUE_APP_SOURCES})
-target_compile_definitions(App PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
-target_link_libraries(App PUBLIC ${TORQUE_LINK_LIBRARIES})
-target_include_directories(App PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
-
-# [[ CInterface ]]
-add_library(CInterface STATIC ${TORQUE_CINTERFACE_SOURCES})
-target_compile_definitions(CInterface PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
-target_link_libraries(CInterface PUBLIC ${TORQUE_LINK_LIBRARIES})
-target_include_directories(CInterface PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
-
-# [[ Assets ]]
-add_library(Assets STATIC ${TORQUE_ASSETS_SOURCES})
-target_compile_definitions(Assets PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
-target_link_libraries(Assets PUBLIC ${TORQUE_LINK_LIBRARIES})
-target_include_directories(Assets PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
-
-# [[ Persistence ]]
-add_library(Persistence STATIC ${TORQUE_PERSISTENCE_SOURCES})
-target_compile_definitions(Persistence PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
-target_link_libraries(Persistence PUBLIC ${TORQUE_LINK_LIBRARIES})
-target_include_directories(Persistence PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
-
-# [[ TS ]]
-add_library(TS STATIC ${TORQUE_TS_SOURCES})
-target_compile_definitions(TS PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
-target_link_libraries(TS PUBLIC ${TORQUE_LINK_LIBRARIES})
-target_include_directories(TS PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
-
-# [[ Module ]]
-add_library(Module STATIC ${TORQUE_MODULE_SOURCES})
-target_compile_definitions(Module PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
-target_link_libraries(Module PUBLIC ${TORQUE_LINK_LIBRARIES})
-target_include_directories(Module PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
-
-# [[ T3D ]]
-add_library(T3D STATIC ${TORQUE_T3D_SOURCES})
-target_compile_definitions(T3D PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
-target_link_libraries(T3D PUBLIC ${TORQUE_LINK_LIBRARIES})
-target_include_directories(T3D PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
-
-# [[ Scene ]]
-add_library(Scene STATIC ${TORQUE_SCENE_SOURCES})
-target_compile_definitions(Scene PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
-target_link_libraries(Scene PUBLIC ${TORQUE_LINK_LIBRARIES})
-target_include_directories(Scene PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
-
-# [[ Collision ]]
-add_library(Collision STATIC ${TORQUE_COLLISION_SOURCES})
-target_compile_definitions(Collision PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
-target_link_libraries(Collision PUBLIC ${TORQUE_LINK_LIBRARIES})
-target_include_directories(Collision PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
-
-# [[ Window Manager ]]
-add_library(WindowManager STATIC ${TORQUE_WINDOW_MANAGER_SOURCES})
-target_compile_definitions(WindowManager PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
-target_link_libraries(WindowManager PUBLIC ${TORQUE_LINK_LIBRARIES})
-target_include_directories(WindowManager PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
-
-# [[ POSIX Platform ]]
-add_library(PlatformPOSIX STATIC ${TORQUE_PLATFORM_POSIX_SOURCES})
-target_compile_definitions(PlatformPOSIX PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
-target_link_libraries(PlatformPOSIX PUBLIC ${TORQUE_LINK_LIBRARIES})
-target_include_directories(PlatformPOSIX PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
-
-# [[ Sim ]]
-add_library(Sim STATIC ${TORQUE_SIM_SOURCES})
-target_compile_definitions(Sim PUBLIC ICE_NO_DLL ${TORQUE_COMPILE_DEFINITIONS})
-target_link_libraries(Sim PUBLIC ${TORQUE_LINK_LIBRARIES})
-target_include_directories(Sim PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
-
-# [[ GUI ]]
-add_library(GUI STATIC ${TORQUE_GUI_SOURCES})
-target_compile_definitions(GUI PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
-target_link_libraries(GUI PUBLIC ${TORQUE_LINK_LIBRARIES})
-target_include_directories(GUI PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
-
-# [[ Terrain ]]
-add_library(Terrain STATIC ${TORQUE_TERRAIN_SOURCES})
-target_compile_definitions(Terrain PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
-target_link_libraries(Terrain PUBLIC ${TORQUE_LINK_LIBRARIES})
-target_include_directories(Terrain PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
-
-# [[ Lighting ]]
-add_library(Lighting STATIC ${TORQUE_LIGHTING_SOURCES})
-target_compile_definitions(Lighting PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
-target_link_libraries(Lighting PUBLIC ${TORQUE_LINK_LIBRARIES})
-target_include_directories(Lighting PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
-
-# [[ Shadergen ]]
-add_library(Shadergen STATIC ${TORQUE_SHADERGEN_SOURCES})
-target_compile_definitions(Shadergen PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
-target_link_libraries(Shadergen PUBLIC ${TORQUE_LINK_LIBRARIES})
-target_include_directories(Shadergen PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
-
-# [[ Materials ]]
-add_library(Materials STATIC ${TORQUE_MATERIALS_SOURCES})
-target_compile_definitions(Materials PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
-target_link_libraries(Materials PUBLIC ${TORQUE_LINK_LIBRARIES})
-target_include_directories(Materials PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
-
-# [[ MacOS Platform ]]
-add_library(PlatformMac STATIC ${TORQUE_PLATFORM_MAC_SOURCES})
-target_compile_definitions(PlatformMac PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
-target_link_libraries(PlatformMac PUBLIC ${TORQUE_LINK_LIBRARIES})
-target_include_directories(PlatformMac PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
-
-# [[ RenderInstance ]]
-add_library(RenderInstance STATIC ${TORQUE_RENDERINSTANCE_SOURCES})
-target_compile_definitions(RenderInstance PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
-target_link_libraries(RenderInstance PUBLIC ${TORQUE_LINK_LIBRARIES})
-target_include_directories(RenderInstance PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
-
-# [[ PostFX ]]
-add_library(PostFX STATIC ${TORQUE_POSTFX_SOURCES})
-target_compile_definitions(PostFX PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
-target_link_libraries(PostFX PUBLIC ${TORQUE_LINK_LIBRARIES})
-target_include_directories(PostFX PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
-
-# [[ i18n ]]
-add_library(I18N STATIC ${TORQUE_I18N_SOURCES})
-target_compile_definitions(I18N PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
-target_link_libraries(I18N PUBLIC ${TORQUE_LINK_LIBRARIES})
-target_include_directories(I18N PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
-
-# [[ Environment ]]
-add_library(Environment STATIC ${TORQUE_ENVIRONMENT_SOURCES})
-target_compile_definitions(Environment PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
-target_link_libraries(Environment PUBLIC ${TORQUE_LINK_LIBRARIES})
-target_include_directories(Environment PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
+set(CPACK_BUNDLE_NAME "Game")
+set(CPACK_BUNDLE_ICON "${CMAKE_SOURCE_DIR}/Tools/CMake/torque.icns")
+set(CPACK_BUNDLE_PLIS "${CMAKE_SOURCE_DIR}/Tools/CMake/Info.plist.in")
+set(CPACK_PACKAGE_EXECUTABLES "Game" "Game")
 
 # Final executable
-add_executable(Game "main/main.cpp")
+add_executable(Game MACOSX_BUNDLE "main/main.cpp"
+                                  ${TORQUE_APP_SOURCES} ${TORQUE_RENDERINSTANCE_SOURCES}
+                                  ${TORQUE_CINTERFACE_SOURCES} ${TORQUE_MATH_SOURCES}
+                                  ${TORQUE_PLATFORM_SOURCES} ${TORQUE_ASSETS_SOURCES} ${TORQUE_UTIL_SOURCES}
+                                  ${TORQUE_CORE_SOURCES} ${TORQUE_PERSISTENCE_SOURCES} ${TORQUE_MODULE_SOURCES}
+                                  ${TORQUE_PLATFORM_SDL_SOURCES} ${TORQUE_PLATFORM_MAC_SOURCES} ${TORQUE_PLATFORM_POSIX_SOURCES}
+                                  ${TORQUE_WINDOW_MANAGER_SOURCES} ${TORQUE_SFX_SOURCES} ${TORQUE_SCENE_SOURCES} ${TORQUE_COLLISION_SOURCES}
+                                  ${TORQUE_T3D_SOURCES} ${TORQUE_TS_SOURCES} ${TORQUE_SIM_SOURCES} ${TORQUE_MATERIALS_SOURCES}
+                                  ${TORQUE_SHADERGEN_SOURCES} ${TORQUE_LIGHTING_SOURCES} ${TORQUE_GUI_SOURCES}
+                                  ${TORQUE_ENVIRONMENT_SOURCES} ${TORQUE_TERRAIN_SOURCES} ${TORQUE_POSTFX_SOURCES}
+                                  ${TORQUE_I18N_SOURCES} ${TORQUE_CONSOLE_SOURCES} ${TORQUE_GFX_SOURCES})
 target_compile_definitions(Game PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
-target_link_libraries(Game ${TORQUE_LINK_LIBRARIES} App Assets Platform Math Console Util Core
-                                                    CInterface Persistence Module PlatformSDL PlatformMac
-                                                    PlatformPOSIX WindowManager GFX SFX Scene Collision T3D TS
-                                                    Sim Materials Shadergen Lighting GUI Environment Terrain
-                                                    RenderInstance PostFX I18N)
+target_link_libraries(Game ${TORQUE_LINK_LIBRARIES})
 target_include_directories(Game PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
+
+set(EXECUTABLE_NAME "Game")
+CONFIGURE_FILE("${CMAKE_SOURCE_DIR}/Tools/CMake/Info.plist.in" "${CMAKE_BINARY_DIR}/temp/Info.plist" COPYONLY)
+set_target_properties(Game PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_BINARY_DIR}/temp/Info.plist")
+
+install(TARGETS Game
+    BUNDLE DESTINATION . COMPONENT Runtime
+    RUNTIME DESTINATION bin COMPONENT Runtime
+)
+
+# Note Mac specific extension .app
+set(APPS "\${CMAKE_INSTALL_PREFIX}/Game.app")
+
+# Directories to look for dependencies
+# FIXME: Auto detect?
+set(DIRS ${CMAKE_BINARY_DIR}/temp/sdl2 ${CMAKE_BINARY_DIR}/temp/assimp/bin)
+
+install(CODE "include(BundleUtilities)
+    fixup_bundle(\"${APPS}\" \"\" \"${DIRS}\")")

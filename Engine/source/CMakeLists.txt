@@ -14,7 +14,7 @@ file(GLOB TORQUE_T3D_SOURCES "T3D/fps/*.cpp" "T3D/fx/*.cpp" "T3D/vehicles/*.cpp"
 file(GLOB TORQUE_TS_SOURCES "ts/*.cpp" "ts/collada/*.cpp" "ts/assimp/*.cpp" "ts/loader/*.cpp" "ts/arch/*.cpp")
 
 # Handle SFX
-file(GLOB TORQUE_SFX_SOURCES "sfx/*.cpp" "sfx/media/*.cpp" "sfx/null/*.cpp" "sfx/openal/*.cpp" "sfx/openal/mac/*.cpp")
+file(GLOB TORQUE_SFX_SOURCES "sfx/*.cpp" "sfx/media/*.cpp" "sfx/null/*.cpp")
 
 # Handle GFX
 file(GLOB TORQUE_GFX_SOURCES "gfx/*.cpp" "gfx/Null/*.cpp" "gfx/test/*.cpp" "gfx/bitmap/*.cpp" "gfx/bitmap/loaders/*.cpp"
@@ -27,8 +27,7 @@ file(GLOB TORQUE_CORE_SOURCES "core/*.cpp" "core/stream/*.cpp" "core/strings/*.c
 
 # Handle GUI
 file(GLOB TORQUE_GUI_SOURCES "gui/*.cpp" "gui/buttons/*.cpp" "gui/containers/*.cpp" "gui/controls/*.cpp" "gui/core/*.cpp"
-                              "gui/game/*.cpp" "gui/shiny/*.cpp" "gui/utility/*.cpp" "gui/3d/*.cpp" "gui/editor/*.cpp"
-                              "gui/worldEditor/*.cpp" "gui/worldEditor/tools/*.cpp" "gui/editor/inspector/*.cpp")
+                              "gui/game/*.cpp" "gui/shiny/*.cpp" "gui/utility/*.cpp" "gui/3d/*.cpp")
 
 # Handle postFX
 file(GLOB TORQUE_POSTFX_SOURCES "postFx/*.cpp")
@@ -113,13 +112,13 @@ file(GLOB TORQUE_PLATFORM_SDL_SOURCES "platformSDL/*.cpp" "platformSDL/threads/*
 
 # Link generic libs
 set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} png "-framework Cocoa" "-framework AppKit" "-framework CoreData" "-framework Foundation")
-set(TORQUE_COMPILE_DEFINITIONS ICE_NO_DLL PCRE_STATIC TORQUE_ADVANCED_LIGHTING TORQUE_TOOLS TORQUE_SHADERGEN TORQUE_OPENGL TORQUE_OPCODE TORQUE_ASSIMP TORQUE_SDL TORQUE_COLLADA TORQUE_UNICODE)
+set(TORQUE_COMPILE_DEFINITIONS ICE_NO_DLL PCRE_STATIC TORQUE_ADVANCED_LIGHTING TORQUE_SHADERGEN TORQUE_OPENGL TORQUE_OPCODE TORQUE_ASSIMP TORQUE_SDL TORQUE_COLLADA TORQUE_UNICODE)
 
 ################# Start building libs ###################
 
 # Set common linkages
 set(TORQUE_LINK_LIBRARIES tinyxml collada ljpeg squish png_static opcode assimp
-                          SDL2 glad pcre convexDecomp OpenAL)
+                          SDL2 glad pcre convexDecomp)
 
 # Only link Apple frameworks when on an Apple platform
 if (APPLE)
@@ -153,27 +152,38 @@ foreach (TORQUE_MODULE_PATH ${TORQUE_MODULE_PATHS})
 endforeach()
 
 # Final executable
-add_executable(Game MACOSX_BUNDLE ${TORQUE_SOURCE_FILES})
+if (APPLE)
+  add_executable(Game MACOSX_BUNDLE ${TORQUE_SOURCE_FILES})
+elseif (WIN32)
+  add_executable(Game WIN32 ${TORQUE_SOURCE_FILES})
+else()
+  add_executable(Game ${TORQUE_SOURCE_FILES})
+endif()
 
 target_compile_definitions(Game PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
 target_link_libraries(Game ${TORQUE_LINK_LIBRARIES})
 target_include_directories(Game PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
 
-set(EXECUTABLE_NAME "Game")
-CONFIGURE_FILE("${CMAKE_SOURCE_DIR}/Tools/CMake/Info.plist.in" "${CMAKE_BINARY_DIR}/temp/Info.plist" COPYONLY)
-set_target_properties(Game PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_BINARY_DIR}/temp/Info.plist")
+if (APPLE)
+  set(EXECUTABLE_NAME "Game")
 
-install(TARGETS Game
-    BUNDLE DESTINATION game COMPONENT Runtime
-    RUNTIME DESTINATION bin COMPONENT Runtime
-)
+  CONFIGURE_FILE("${CMAKE_SOURCE_DIR}/Tools/CMake/Info.plist.in" "${CMAKE_BINARY_DIR}/temp/Info.plist" COPYONLY)
+  set_target_properties(Game PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_BINARY_DIR}/temp/Info.plist")
 
-# Note Mac specific extension .app
-set(APPS "\${CMAKE_INSTALL_PREFIX}/game/Game.app")
+  install(TARGETS Game
+      BUNDLE DESTINATION game COMPONENT Runtime
+      RUNTIME DESTINATION bin COMPONENT Runtime
+  )
 
-# Directories to look for dependencies
-# FIXME: Auto detect?
-set(DIRS ${CMAKE_BINARY_DIR}/temp/sdl2 ${CMAKE_BINARY_DIR}/temp/openal-soft ${CMAKE_BINARY_DIR}/temp/assimp/bin)
+  # Note Mac specific extension .app
+  set(APPS "\${CMAKE_INSTALL_PREFIX}/game/Game.app")
 
-install(CODE "include(BundleUtilities)
-    fixup_bundle(\"${APPS}\" \"\" \"${DIRS}\")")
+  # Directories to look for dependencies
+  # FIXME: Auto detect?
+  set(DIRS ${CMAKE_BINARY_DIR}/temp/sdl2 ${CMAKE_BINARY_DIR}/temp/openal-soft ${CMAKE_BINARY_DIR}/temp/assimp/bin)
+
+  install(CODE "include(BundleUtilities)
+      fixup_bundle(\"${APPS}\" \"\" \"${DIRS}\")")
+else()
+  install(TARGETS Game DESTINATION game)
+endif (APPLE)

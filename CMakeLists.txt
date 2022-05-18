@@ -90,10 +90,10 @@ mark_as_advanced(TORQUE_USE_ZENITY)
 option(TORQUE_SHOW_LEGACY_FILE_FIELDS "If on, shows legacy direct file path fields in the inspector." OFF)
 mark_as_advanced(TORQUE_SHOW_LEGACY_FILE_FIELDS)
 
-
 include("${CMAKE_SOURCE_DIR}/Tools/CMake/basics.cmake")
 setupVersionNumbers()
 
+# Install Torque template
 if(NOT TORQUE_TEMPLATE)
     set(TORQUE_TEMPLATE "BaseGame" CACHE STRING "the template to use")
 endif()

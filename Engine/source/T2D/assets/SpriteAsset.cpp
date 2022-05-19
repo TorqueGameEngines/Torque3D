@@ -117,6 +117,9 @@ SpriteAsset::SpriteAsset() :
    VECTOR_SET_ASSOCIATION(mCustomFrames);
    mSpriteFileName = StringTable->EmptyString();
    mSpritePath = StringTable->EmptyString();
+
+   mSpriteNormalFile = StringTable->EmptyString();
+   mSpriteNormalPath = mSpritePath = StringTable->EmptyString();
 }
 
 SpriteAsset::~SpriteAsset()
@@ -129,6 +132,9 @@ void SpriteAsset::initPersistFields()
    Parent::initPersistFields();
 
    addProtectedField("spriteFile", TypeAssetLooseFilePath, Offset(mSpriteFileName, SpriteAsset), &setSpriteFileName, &getSpriteFileName,
+      "Path to the sprite.");
+
+   addProtectedField("normalFile", TypeAssetLooseFilePath, Offset(mSpriteNormalFile, SpriteAsset), &setSpriteNormalFileName, &getSpriteNormalFileName,
       "Path to the sprite.");
 
    addField("cellRowOrder",   TypeBool, Offset(mCellRowOrder, SpriteAsset), "");
@@ -159,11 +165,21 @@ void SpriteAsset::loadSprite()
          return;
       }
 
+      // normal file is optional
+      if (mSpriteNormalPath)
+      {
+         if (!Torque::FS::IsFile(mSpriteNormalPath))
+         {
+            Con::errorf("SpriteAsset::initializeAsset: Attempted to load normal file %s but it was not valid!", mSpriteNormalFile);
+         }
+      }
+
       mLoadedState = Ok;
       mIsValidSprite = true;
       mChangeSignal.trigger();
       return;
    }
+
    mLoadedState = BadFileReference;
 
    mIsValidSprite = false;
@@ -264,6 +280,9 @@ void SpriteAsset::initializeAsset()
 
    mSpritePath = getOwned() ? expandAssetFilePath(mSpriteFileName) : mSpritePath;
 
+   if (mSpriteNormalFile)
+      mSpriteNormalPath = getOwned() ? expandAssetFilePath(mSpriteNormalFile) : mSpriteNormalPath;
+
    loadSprite();
 
    calculateSprite();
@@ -281,6 +300,10 @@ void SpriteAsset::_onResourceChanged(const Torque::Path& path)
 void SpriteAsset::onAssetRefresh()
 {
    mSpritePath = getOwned() ? expandAssetFilePath(mSpriteFileName) : mSpritePath;
+
+   if (mSpriteNormalFile)
+      mSpriteNormalPath = getOwned() ? expandAssetFilePath(mSpriteNormalFile) : mSpriteNormalPath;
+
    loadSprite();
    calculateSprite();
 
@@ -294,6 +317,15 @@ void SpriteAsset::setSpriteFileName(const char* pScriptFile)
 
    refreshAsset();
 
+}
+
+void SpriteAsset::setSpriteNormalFileName(const char* pScriptFile)
+{
+   AssertFatal(pScriptFile != NULL, "Cannot use a null sprite file.");
+
+   mSpriteNormalFile = StringTable->insert(pScriptFile);
+
+   refreshAsset();
 }
 
 void SpriteAsset::addCustomFrame(const S32 cellOffX, const S32 cellOffY, const S32 cellWidth, const S32 cellHeight, const char* regionName)
@@ -543,6 +575,7 @@ void SpriteAsset::calculateSprite()
    mFrames.clear();
 
    mSprite = TEXMGR->createTexture(mSpritePath, &GFXStaticTextureSRGBProfile);
+   mSpriteNormal = TEXMGR->createTexture(mSpriteNormalPath, &GFXStaticTextureSRGBProfile);
 
    calculateImplicit();
 

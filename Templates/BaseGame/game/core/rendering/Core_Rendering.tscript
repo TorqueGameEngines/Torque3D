@@ -42,6 +42,7 @@ function Core_Rendering::initClient(%this)
    initLightingSystems("Advanced Lighting"); 
    
    exec("./scripts/gfxData/clouds." @ $TorqueScriptFileExtension);
+   exec("./scripts/gfxData/spriteObject." @ $TorqueScriptFileExtension);
    exec("./scripts/gfxData/commonMaterialData." @ $TorqueScriptFileExtension);
    exec("./scripts/gfxData/scatterSky." @ $TorqueScriptFileExtension);
    exec("./scripts/gfxData/shaders." @ $TorqueScriptFileExtension);

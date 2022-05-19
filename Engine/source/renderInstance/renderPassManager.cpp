@@ -33,6 +33,7 @@
 #include "platform/profiler.h"
 #include "renderInstance/renderBinManager.h"
 #include "renderInstance/renderObjectMgr.h"
+#include "renderInstance/RenderT2DObjectMgr.h"
 #include "renderInstance/renderMeshMgr.h"
 #include "renderInstance/renderTranslucentMgr.h"
 #include "renderInstance/renderGlowMgr.h"
@@ -62,6 +63,8 @@ const RenderInstType RenderPassManager::RIT_Particle("Particle");
 const RenderInstType RenderPassManager::RIT_Occluder("Occluder");
 const RenderInstType RenderPassManager::RIT_Editor("Editor");
 const RenderInstType RenderPassManager::RIT_Probes("Probes");
+
+const RenderInstType RenderPassManager::RIT_T2DObject("T2DObject");
 
 
 //*****************************************************************************
@@ -95,6 +98,15 @@ void ObjectRenderInst::clear()
    //
    // This fixes it... but we probably need to have a
    // real constructor for RenderInsts.
+   renderDelegate.clear();
+}
+
+void T2DObjectRenderInst::clear()
+{
+   userData = NULL;
+
+   dMemset(this, 0, sizeof(T2DObjectRenderInst));
+
    renderDelegate.clear();
 }
 
@@ -363,4 +375,3 @@ DefineEngineMethod( RenderPassManager, removeManager, void, ( RenderBinManager *
    if ( renderBin )
       object->removeManager( renderBin );
 }
-

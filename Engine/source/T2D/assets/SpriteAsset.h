@@ -41,6 +41,9 @@ protected:
    StringTableEntry mSpriteFileName;
    StringTableEntry mSpritePath;
 
+   StringTableEntry mSpriteNormalFile;
+   StringTableEntry mSpriteNormalPath;
+
    typedef Signal<void()> SpriteAssetChanged;
    SpriteAssetChanged mChangeSignal;
    
@@ -166,6 +169,7 @@ private:
    S32            mCellCountX;
    S32            mCellCountY;
    GFXTexHandle   mSprite;
+   GFXTexHandle   mSpriteNormal;
 
    typeFrameAreaVector         mFrames;
    typeFrameAreaVector         mCustomFrames;
@@ -195,9 +199,15 @@ public:
 
    /// getters and setters
    GFXTexHandle            getSprite() { return mSprite; }
+   GFXTexHandle            getSpriteNormal() { return mSpriteNormal; }
+
    void                    setSpriteFileName(const char* pScriptFile);
+
+   void                    setSpriteNormalFileName(const char* pScriptFile);
+
    const char*             getSpriteInfo();
    inline StringTableEntry getSpriteFileName(void) const { return mSpriteFileName; };
+   inline StringTableEntry getSpriteNormalFileName(void) const { return mSpriteNormalFile; };
    inline S32              getSpriteWidth(void) const { return mSprite.getWidth(); }
    inline S32              getSpriteHeight(void) const { return mSprite.getHeight(); }
    inline U32              getFrameCount(void) const { return (U32)mFrames.size(); };
@@ -243,7 +253,10 @@ public:
    static U32 getAssetById(StringTableEntry assetId, AssetPtr<SpriteAsset>* shapeAsset);
    static U32 getAssetById(String assetId, AssetPtr<SpriteAsset>* spriteAsset) { return getAssetById(assetId.c_str(), spriteAsset); };
    SpriteAssetChanged& getChangedSignal() { return mChangeSignal; }
+
    inline StringTableEntry getSpritePath(void) const { return mSpritePath; };
+
+   inline StringTableEntry getSpriteNormalPath(void) const { return mSpriteNormalPath; };
 
 protected:
    virtual void initializeAsset(void);
@@ -252,6 +265,9 @@ protected:
 
    static bool setSpriteFileName(void *obj, const char *index, const char *data) { static_cast<SpriteAsset*>(obj)->setSpriteFileName(data); return false; }
    static StringTableEntry getSpriteFileName(void* obj, StringTableEntry data) { return static_cast<SpriteAsset*>(obj)->getSpriteFileName(); }
+
+   static bool setSpriteNormalFileName(void* obj, const char* index, const char* data) { static_cast<SpriteAsset*>(obj)->setSpriteNormalFileName(data); return false; }
+   static StringTableEntry getSpriteNormalFileName(void* obj, StringTableEntry data) { return static_cast<SpriteAsset*>(obj)->getSpriteNormalFileName(); }
 
    void loadSprite();
 
@@ -289,6 +305,7 @@ public:
 
 #define DECLARE_SPRITEASSET(className, name, changeFunc, profile) public: \
    GFXTexHandle m##name = NULL;\
+   GFXTexHandle m##name##Normal = NULL;\
    StringTableEntry m##name##Name; \
    StringTableEntry m##name##AssetId;\
    AssetPtr<SpriteAsset>  m##name##Asset;\
@@ -314,6 +331,8 @@ public: \
             m##name##Asset = NULL;\
             m##name.free();\
             m##name = NULL;\
+            m##name##Normal.free();\
+            m##name##Normal = NULL;\
             return true;\
          }\
          else if(_in[0] == '$' || _in[0] == '#')\
@@ -323,6 +342,8 @@ public: \
             m##name##Asset = NULL;\
             m##name.free();\
             m##name = NULL;\
+            m##name##Normal.free();\
+            m##name##Normal = NULL;\
             return true;\
          }\
          \
@@ -374,6 +395,24 @@ public: \
       if(get##name() == StringTable->EmptyString())\
          return true;\
       \
+      if (get##name##Normal() != StringTable->EmptyString() && m##name##Name != StringTable->insert("texhandle"))\
+      {\
+         if (m##name##Asset.notNull())\
+         {\
+            m##name##Asset->getChangedSignal().notify(this, &className::changeFunc);\
+         }\
+         \
+         m##name##Normal.set(get##name##Normal(), m##name##Profile, avar("%s() - mTextureObject (line %d)", __FUNCTION__, __LINE__));\
+      }\
+      else\
+      {\
+         m##name##Normal.free();\
+         m##name##Normal = NULL;\
+      }\
+      \
+      if(get##name##Normal() == StringTable->EmptyString())\
+         return true;\
+      \
       if (m##name##Asset.notNull() && m##name##Asset->getStatus() != SpriteAsset::Ok)\
       {\
          Con::errorf("%s(%s)::_set%s() - sprite asset failure\"%s\" due to [%s]", macroText(className), getName(), macroText(name), _in, SpriteAsset::getAssetErrstrn(m##name##Asset->getStatus()).c_str());\
@@ -401,6 +440,21 @@ public: \
    GFXTexHandle get##name##Resource() \
    {\
       return m##name;\
+   }\
+   const StringTableEntry get##name##Normal() const\
+   {\
+   if (m##name##Asset && (m##name##Asset->getSpriteNormalFileName() != StringTable->EmptyString()))\
+      return  Platform::makeRelativePathName(m##name##Asset->getSpritePath(), Platform::getMainDotCsDir()); \
+   else if (m##name##AssetId != StringTable->EmptyString())\
+      return m##name##AssetId; \
+   else if (m##name##Name != StringTable->EmptyString())\
+      return StringTable->insert(Platform::makeRelativePathName(m##name##Name, Platform::getMainDotCsDir())); \
+   else\
+      return StringTable->EmptyString(); \
+   }\
+   GFXTexHandle get##name##NormalResource() \
+   {\
+   return m##name##Normal; \
    }\
    bool name##Valid() {return (get##name() != StringTable->EmptyString() && m##name##Asset->getStatus() == AssetBase::Ok); }
 

@@ -44,6 +44,7 @@
 #endif
 
 class BaseMatInstance;
+struct T2DObjectRenderInst;
 
 class SpriteObject : public SceneObject
 {
@@ -54,7 +55,8 @@ class SpriteObject : public SceneObject
       TransformMask =      Parent::NextFreeMask << 0,
       FrameUpdateMask =    Parent::NextFreeMask << 1,
       LayerUpdateMask =    Parent::NextFreeMask << 2,
-      NextFreeMask =       Parent::NextFreeMask << 3
+      ColorUpdateMask =    Parent::NextFreeMask << 3,
+      NextFreeMask =       Parent::NextFreeMask << 4
    };
 
    typedef GFXVertexPCT VertexType;
@@ -62,10 +64,27 @@ class SpriteObject : public SceneObject
    S32 mFrame;
    S32 mLayerMask;
    bool mFrameDirty;
+   ColorI mColorOverlay;
    // The handles for our StateBlocks
    GFXStateBlockRef mNormalSB;
    // The GFX vertex and primitive buffers
    GFXVertexBufferHandle< VertexType > mVertexBuffer;
+
+   // shader stuffs
+   GFXShaderRef mShader;
+   GFXShaderConstBufferRef mShaderConsts;
+   GFXShaderConstHandle* mTimeSC;
+   GFXShaderConstHandle* mModelViewProjSC;
+   GFXShaderConstHandle* mTexScaleSC;
+   GFXShaderConstHandle* mTexDirectionSC;
+   GFXShaderConstHandle* mTexOffsetSC;
+   GFXShaderConstHandle* mDiffuseMapSC;
+   GFXShaderConstHandle* mNormalMapSC;
+
+   // lighting shader data
+   GFXShaderConstHandle* mLightPositionSC;
+   GFXShaderConstHandle* mLightColorSC;
+   GFXShaderConstHandle* mLightConfigDataSC;
 
 public:
    DECLARE_SPRITEASSET(SpriteObject, Sprite, onChangeSprite, GFXStaticTextureSRGBProfile);
@@ -87,7 +106,7 @@ public:
    void unpackUpdate(NetConnection* conn, BitStream* stream);
 
    void prepRenderImage(SceneRenderState* state);
-   void render(ObjectRenderInst* ri, SceneRenderState* state, BaseMatInstance* overrideMat);
+   void render(T2DObjectRenderInst* ri, SceneRenderState* state, BaseMatInstance* overrideMat);
 
    S32 getLayerMask() { return mLayerMask; }
 

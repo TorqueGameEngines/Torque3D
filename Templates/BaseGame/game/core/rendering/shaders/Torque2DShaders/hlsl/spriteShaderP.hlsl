@@ -37,7 +37,6 @@ struct Fragout
 TORQUE_UNIFORM_SAMPLER2D(diffuseMap, 0);
 TORQUE_UNIFORM_SAMPLER2D(normalMap, 1);
 
-uniform float3 eyePos;
 uniform float3 worldPos;
 uniform float4 ambientColor;
 uniform float4 inLightPos[4];
@@ -56,7 +55,7 @@ Fragout main( Conn IN )
 	for(i = 0; i < 4; i++)
 	{
 		float4 lightPosNorm = inLightPos[i];
-		float3 LightDir = lightPosNorm.xyz - worldPos.xyz;
+		float3 LightDir = float3(lightPosNorm.xy - worldPos.xy, 0.5);
 		float D = length(LightDir);
 		float3 N = normalize(nor * 2.0 - 1.0);
 		float3 L = normalize(LightDir);

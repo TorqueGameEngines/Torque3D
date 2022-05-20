@@ -73,17 +73,12 @@ class SpriteObject : public SceneObject
    // shader stuffs
    GFXShaderRef mShader;
    GFXShaderConstBufferRef mShaderConsts;
-   GFXShaderConstHandle* mTimeSC;
    GFXShaderConstHandle* mModelViewProjSC;
-   GFXShaderConstHandle* mTexScaleSC;
-   GFXShaderConstHandle* mTexDirectionSC;
-   GFXShaderConstHandle* mTexOffsetSC;
    GFXShaderConstHandle* mDiffuseMapSC;
    GFXShaderConstHandle* mNormalMapSC;
 
    // lighting shader data
    GFXShaderConstHandle* mWorldPosSC;
-   GFXShaderConstHandle* mEyePosSC;
    GFXShaderConstHandle* mAmbientColorSC;
    GFXShaderConstHandle* mLightPositionSC;
    GFXShaderConstHandle* mLightColorSC;

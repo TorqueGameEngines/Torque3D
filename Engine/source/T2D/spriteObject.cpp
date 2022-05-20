@@ -52,15 +52,11 @@ SpriteObject::SpriteObject()
    mFrameDirty = true;
 
    // shader consts
-   mTimeSC = NULL;
    mModelViewProjSC = NULL;
-   mTexScaleSC = NULL;
-   mTexDirectionSC = NULL;
-   mTexOffsetSC = NULL;
+
    mDiffuseMapSC = NULL;
    mNormalMapSC = NULL;
 
-   mEyePosSC = NULL;
    mWorldPosSC = NULL;
    mAmbientColorSC = NULL;
    mLightColorSC = NULL;
@@ -119,15 +115,10 @@ bool SpriteObject::onAdd()
       // Create ShaderConstBuffer and Handles
       mShaderConsts = mShader->allocConstBuffer();
       mModelViewProjSC = mShader->getShaderConstHandle("$modelView");
-      mTimeSC = mShader->getShaderConstHandle("$accumTime");
-      mTexScaleSC = mShader->getShaderConstHandle("$texScale");
-      mTexDirectionSC = mShader->getShaderConstHandle("$texDirection");
-      mTexOffsetSC = mShader->getShaderConstHandle("$texOffset");
       mDiffuseMapSC = mShader->getShaderConstHandle("$diffuseMap");
       mNormalMapSC = mShader->getShaderConstHandle("$normalMap");
 
       mWorldPosSC = mShader->getShaderConstHandle("$worldPos");
-      mEyePosSC = mShader->getShaderConstHandle("$eyePos");
       mAmbientColorSC = mShader->getShaderConstHandle("$ambientColor");
       mLightPositionSC = mShader->getShaderConstHandle("$inLightPos");
       mLightColorSC = mShader->getShaderConstHandle("$inLightColor");
@@ -279,6 +270,18 @@ void SpriteObject::prepRenderImage(SceneRenderState* state)
       mVertexBuffer.unlock();
 
       GFXStateBlockDesc desc;
+      desc.samplersDefined = true;
+      desc.samplers[0].addressModeU = GFXAddressWrap;
+      desc.samplers[0].addressModeV = GFXAddressWrap;
+      desc.samplers[0].addressModeW = GFXAddressWrap;
+      desc.samplers[0].minFilter = GFXTextureFilterPoint;
+      desc.samplers[0].magFilter = GFXTextureFilterPoint;
+
+      desc.samplers[1].addressModeU = GFXAddressWrap;
+      desc.samplers[1].addressModeV = GFXAddressWrap;
+      desc.samplers[1].addressModeW = GFXAddressWrap;
+      desc.samplers[1].minFilter = GFXTextureFilterPoint;
+      desc.samplers[1].magFilter = GFXTextureFilterPoint;
 
       mNormalSB = GFX->createStateBlock(desc);
       mFrameDirty = false;
@@ -384,21 +387,9 @@ void SpriteObject::render(T2DObjectRenderInst* ri, SceneRenderState* state, Base
       mShaderConsts->set(mAmbientColorSC, ambientColor);
    }
 
-   const Point3F& eyePosWorld = state->getCameraPosition();
-
-   if (mEyePosSC->isValid())
-   {
-      MatrixF tempMat(getRenderTransform());
-      tempMat.inverse();
-      Point3F eyepos;
-      tempMat.mulP(eyePosWorld, &eyepos);
-      mShaderConsts->set(mEyePosSC, eyepos);
-   }
-
    mShaderConsts->setSafe(mWorldPosSC, getRenderTransform().getPosition());
 
    mShaderConsts->setSafe(mModelViewProjSC, xform);
-   mShaderConsts->setSafe(mTimeSC, (F32)Sim::getCurrentTime() / 1000.0f);
 
    mShaderConsts->setSafe(mLightPositionSC, lightPositions);
    mShaderConsts->setSafe(mLightColorSC, lightColors);

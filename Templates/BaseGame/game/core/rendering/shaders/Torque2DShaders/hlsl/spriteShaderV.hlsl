@@ -37,9 +37,6 @@ struct Conn
 };
 
 uniform float4x4  modelview;
-uniform float2    texDirection;
-uniform float2    texOffset;
-uniform float     accumTime;
 
 Conn main( Appdata In )
 {

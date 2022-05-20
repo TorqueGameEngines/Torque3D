@@ -24,7 +24,7 @@
 
 struct Conn
 {
-   float4 HPOS             : TORQUE_POSITION;
+   float4 HPOS             : TORQUE_VPOS;
    float4 color            : COLOR;
    float2 texCoord         : TEXCOORD0;
 };
@@ -37,6 +37,9 @@ struct Fragout
 TORQUE_UNIFORM_SAMPLER2D(diffuseMap, 0);
 TORQUE_UNIFORM_SAMPLER2D(normalMap, 1);
 
+uniform float3 eyePos;
+uniform float3 worldPos;
+uniform float4 ambientColor;
 uniform float4 inLightPos[4];
 uniform float4 inLightConfigData[4];
 uniform float4 inLightColor[4];
@@ -47,22 +50,27 @@ Fragout main( Conn IN )
 	
 	float4 col = TORQUE_TEX2D(diffuseMap, IN.texCoord);
 	float3 nor = TORQUE_TEX2D(normalMap, IN.texCoord).rgb;
-	float4 AmbientColor = float4(1.0,1.0,1.0,0.2);
 	
 	float3 Sum = 0.0.xxx;
 	int i;
 	for(i = 0; i < 4; i++)
 	{
-		float3 LightDir = float3(inLightPos[i].xy - IN.HPOS.xy, inLightPos[i].z);
+		float4 lightPosNorm = inLightPos[i];
+		float3 LightDir = lightPosNorm.xyz - worldPos.xyz;
 		float D = length(LightDir);
-		
 		float3 N = normalize(nor * 2.0 - 1.0);
 		float3 L = normalize(LightDir);
+		float sqrDist = dot(LightDir, LightDir);
 		
-		float3 Diffuse = (inLightColor[i].rgb * inLightColor[i].a) * max(dot(N, L), 0.0);
-		float3 Ambient = AmbientColor.rgb * AmbientColor.a;
-		float Attenuation =  1.0 / (0.3 + (4.0*D) + (20*D*D) );
-		float3 Intensity = Ambient + Diffuse * (1-Attenuation);
+		float NDotL = max(dot(N, L), 0.0);
+		float3 Diffuse = (inLightColor[i].rgb * inLightColor[i].a) * NDotL;
+		
+		float factor = sqrDist * inLightConfigData[i].a;
+		float smoothFactor = saturate(1.0f - factor * factor);
+		float Attenuation = 1.0 / (max(sqrDist, 0.01 * 0.01));
+		Attenuation *= sqrt(smoothFactor);
+		
+		float3 Intensity = (ambientColor.rgb * ambientColor.a) + Diffuse * Attenuation;
 		float3 FinalColor = col.rgb * Intensity;
 		Sum += FinalColor;
 	}

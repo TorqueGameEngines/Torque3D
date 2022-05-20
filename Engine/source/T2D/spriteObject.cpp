@@ -60,6 +60,9 @@ SpriteObject::SpriteObject()
    mDiffuseMapSC = NULL;
    mNormalMapSC = NULL;
 
+   mEyePosSC = NULL;
+   mWorldPosSC = NULL;
+   mAmbientColorSC = NULL;
    mLightColorSC = NULL;
    mLightPositionSC = NULL;
    mLightConfigDataSC = NULL;
@@ -123,6 +126,9 @@ bool SpriteObject::onAdd()
       mDiffuseMapSC = mShader->getShaderConstHandle("$diffuseMap");
       mNormalMapSC = mShader->getShaderConstHandle("$normalMap");
 
+      mWorldPosSC = mShader->getShaderConstHandle("$worldPos");
+      mEyePosSC = mShader->getShaderConstHandle("$eyePos");
+      mAmbientColorSC = mShader->getShaderConstHandle("$ambientColor");
       mLightPositionSC = mShader->getShaderConstHandle("$inLightPos");
       mLightColorSC = mShader->getShaderConstHandle("$inLightColor");
       mLightConfigDataSC = mShader->getShaderConstHandle("$inLightConfigData");
@@ -369,6 +375,27 @@ void SpriteObject::render(T2DObjectRenderInst* ri, SceneRenderState* state, Base
    MatrixF xform(GFX->getProjectionMatrix());
    xform *= GFX->getViewMatrix();
    xform *= GFX->getWorldMatrix();
+
+   if (mAmbientColorSC->isValid() && state)
+   {
+      const LinearColorF& sunlight = state->getAmbientLightColor();
+      Point4F ambientColor(sunlight.red, sunlight.green, sunlight.blue, sunlight.alpha);
+
+      mShaderConsts->set(mAmbientColorSC, ambientColor);
+   }
+
+   const Point3F& eyePosWorld = state->getCameraPosition();
+
+   if (mEyePosSC->isValid())
+   {
+      MatrixF tempMat(getRenderTransform());
+      tempMat.inverse();
+      Point3F eyepos;
+      tempMat.mulP(eyePosWorld, &eyepos);
+      mShaderConsts->set(mEyePosSC, eyepos);
+   }
+
+   mShaderConsts->setSafe(mWorldPosSC, getRenderTransform().getPosition());
 
    mShaderConsts->setSafe(mModelViewProjSC, xform);
    mShaderConsts->setSafe(mTimeSC, (F32)Sim::getCurrentTime() / 1000.0f);

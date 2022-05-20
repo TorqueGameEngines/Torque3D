@@ -82,6 +82,9 @@ class SpriteObject : public SceneObject
    GFXShaderConstHandle* mNormalMapSC;
 
    // lighting shader data
+   GFXShaderConstHandle* mWorldPosSC;
+   GFXShaderConstHandle* mEyePosSC;
+   GFXShaderConstHandle* mAmbientColorSC;
    GFXShaderConstHandle* mLightPositionSC;
    GFXShaderConstHandle* mLightColorSC;
    GFXShaderConstHandle* mLightConfigDataSC;

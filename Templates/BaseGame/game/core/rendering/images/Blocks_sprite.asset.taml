@@ -4,6 +4,7 @@
     AssetName="Blocks_sprite"
     AssetDescription="Test Asset"
     spriteFile="@assetFile=Blocks.png"
+	normalFile="@assetFile=Blocks_n.png"
     cellRowOrder="true"
     cellOffsetX="0"
     cellOffsetY="0"

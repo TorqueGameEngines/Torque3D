@@ -18,4 +18,5 @@ foreach(ITEM ${SCRIPT_FILES})
 endforeach()
 
 # Once the full tree is installed, perform configurations on several files
-CONFIGURE_FILE("game/main.tscript.in" "${CMAKE_INSTALL_PREFIX}/game/main.${TORQUE_SCRIPT_EXTENSION}")
+CONFIGURE_FILE("game/main.tscript.in" "${CMAKE_BINARY_DIR}/main.${TORQUE_SCRIPT_EXTENSION}")
+install(FILES "${CMAKE_BINARY_DIR}/main.${TORQUE_SCRIPT_EXTENSION}" DESTINATION "${CMAKE_INSTALL_PREFIX}/game")

@@ -24,9 +24,6 @@ else()
     endif()
 endif()
 
-enable_language(OBJC)
-
-
 option(TORQUE_MULTITHREAD "Multi Threading" ON)
 mark_as_advanced(TORQUE_MULTITHREAD)
 

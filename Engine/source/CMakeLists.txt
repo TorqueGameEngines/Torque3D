@@ -107,23 +107,23 @@ if (APPLE)
   file(GLOB TORQUE_PLATFORM_MAC_SOURCES "platformMac/*.mm")
 endif (APPLE)
 
+# Handle platformWin32
+if (WIN32)
+  file(GLOB TORQUE_PLATFORM_WIN_SOURCES "platformWin32/*.cpp")
+endif (WIN32)
+
 # Handle platformSDL
 file(GLOB TORQUE_PLATFORM_SDL_SOURCES "platformSDL/*.cpp" "platformSDL/threads/*.cpp")
 
-# Link generic libs
-set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} png "-framework Cocoa" "-framework AppKit" "-framework CoreData" "-framework Foundation")
-set(TORQUE_COMPILE_DEFINITIONS ICE_NO_DLL PCRE_STATIC TORQUE_ADVANCED_LIGHTING TORQUE_SHADERGEN TORQUE_OPENGL TORQUE_OPCODE TORQUE_ASSIMP TORQUE_SDL TORQUE_COLLADA TORQUE_UNICODE)
+set(TORQUE_COMPILE_DEFINITIONS ICE_NO_DLL PCRE_STATIC TORQUE_ADVANCED_LIGHTING TORQUE_SHADERGEN 
+							   TORQUE_OPENGL TORQUE_OPCODE TORQUE_ASSIMP TORQUE_SDL TORQUE_COLLADA 
+							   TORQUE_UNICODE UNICODE _UNICODE)
 
 ################# Start building libs ###################
 
 # Set common linkages
 set(TORQUE_LINK_LIBRARIES tinyxml collada ljpeg squish png_static opcode assimp
-                          SDL2 glad pcre convexDecomp)
-
-# Only link Apple frameworks when on an Apple platform
-if (APPLE)
-  set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} "-framework Cocoa" "-framework AppKit" "-framework CoreData" "-framework Foundation")
-endif (APPLE)
+                          SDL2 glad pcre convexDecomp zlib)
 
 # Begin assembling source code payload
 set (TORQUE_SOURCE_FILES "main/main.cpp"
@@ -137,6 +137,19 @@ set (TORQUE_SOURCE_FILES "main/main.cpp"
                           ${TORQUE_SHADERGEN_SOURCES} ${TORQUE_LIGHTING_SOURCES} ${TORQUE_GUI_SOURCES}
                           ${TORQUE_ENVIRONMENT_SOURCES} ${TORQUE_TERRAIN_SOURCES} ${TORQUE_POSTFX_SOURCES}
                           ${TORQUE_I18N_SOURCES} ${TORQUE_CONSOLE_SOURCES} ${TORQUE_SFX_SOURCES} ${TORQUE_GFX_SOURCES})
+
+
+# When on Windows, we need to link against winsock
+if (WIN32)
+  set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} WS2_32.LIB)
+  set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_PLATFORM_WIN_SOURCES})
+endif (WIN32)
+
+# Only link Apple frameworks when on an Apple platform
+if (APPLE)
+  enable_language(OBJC)
+  set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} "-framework Cocoa" "-framework AppKit" "-framework CoreData" "-framework Foundation")
+endif (APPLE)
 
 # Search module directories
 set(TORQUE_MODULE_PATHS "${CMAKE_SOURCE_DIR}/Tools/CMake/modules")
@@ -163,6 +176,11 @@ endif()
 target_compile_definitions(Game PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
 target_link_libraries(Game ${TORQUE_LINK_LIBRARIES})
 target_include_directories(Game PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
+
+if (WIN32)
+  # FIXME: Torque is angry about these warnings
+  set_target_properties(Game PROPERTIES COMPILE_FLAGS "/wd4018 /wd4100 /wd4121 /wd4127 /wd4130 /wd4244 /wd4245 /wd4389 /wd4511 /wd4512 /wd4800 /wd4995")
+endif (WIN32)
 
 if (APPLE)
   set(EXECUTABLE_NAME "Game")

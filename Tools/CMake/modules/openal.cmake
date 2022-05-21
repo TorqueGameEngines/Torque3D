@@ -27,4 +27,4 @@ if(TORQUE_SFX_OPENAL)
   set(ALSOFT_UPDATE_BUILD_VERSION OFF CACHE BOOL "Update build Version" UPDATE)
 
   add_subdirectory("${CMAKE_SOURCE_DIR}/Engine/lib/openal-soft" ${CMAKE_BINARY_DIR}/temp/openal-soft EXCLUDE_FROM_ALL)
-endif(TORQUE_PHYSICS_BULLET)
+endif(TORQUE_SFX_OPENAL)

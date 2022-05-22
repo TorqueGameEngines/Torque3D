@@ -56,23 +56,11 @@ set(CMAKE_MODULE_PATH "${SDL2_SOURCE_DIR}/cmake")
 include(${SDL2_SOURCE_DIR}/cmake/macros.cmake)
 include(${SDL2_SOURCE_DIR}/cmake/sdlchecks.cmake)
 
-# General settings
-# Edit include/SDL_version.h and change the version, then:
-#   SDL_MICRO_VERSION += 1;
-#   SDL_INTERFACE_AGE += 1;
-#   SDL_BINARY_AGE += 1;
-# if any functions have been added, set SDL_INTERFACE_AGE to 0.
-# if backwards compatibility has been broken,
-# set SDL_BINARY_AGE and SDL_INTERFACE_AGE to 0.
+# See docs/release_checklist.md
 set(SDL_MAJOR_VERSION 2)
-set(SDL_MINOR_VERSION 0)
-set(SDL_MICRO_VERSION 22)
-set(SDL_INTERFACE_AGE 0)
-set(SDL_BINARY_AGE 22)
+set(SDL_MINOR_VERSION 23)
+set(SDL_MICRO_VERSION 0)
 set(SDL_VERSION "${SDL_MAJOR_VERSION}.${SDL_MINOR_VERSION}.${SDL_MICRO_VERSION}")
-# the following should match the versions in Xcode project file:
-set(DYLIB_CURRENT_VERSION 23.0.0)
-set(DYLIB_COMPATIBILITY_VERSION 1.0.0)
 
 # Set defaults preventing destination file conflicts
 set(SDL_CMAKE_DEBUG_POSTFIX "d"
@@ -81,12 +69,39 @@ set(SDL_CMAKE_DEBUG_POSTFIX "d"
 mark_as_advanced(CMAKE_IMPORT_LIBRARY_SUFFIX SDL_CMAKE_DEBUG_POSTFIX)
 
 # Calculate a libtool-like version number
-math(EXPR LT_CURRENT "${SDL_MICRO_VERSION} - ${SDL_INTERFACE_AGE}")
+math(EXPR SDL_BINARY_AGE "${SDL_MINOR_VERSION} * 100 + ${SDL_MICRO_VERSION}")
+if(SDL_MINOR_VERSION MATCHES "[02468]$")
+    # Stable branch, 2.24.1 -> libSDL2-2.0.so.0.2400.1
+    set(SDL_INTERFACE_AGE ${SDL_MICRO_VERSION})
+else()
+    # Development branch, 2.23.1 -> libSDL2-2.0.so.0.2301.0
+    set(SDL_INTERFACE_AGE 0)
+endif()
+
+# Increment this if there is an incompatible change - but if that happens,
+# we should rename the library from SDL2 to SDL3, at which point this would
+# reset to 0 anyway.
+set(LT_MAJOR "0")
+
 math(EXPR LT_AGE "${SDL_BINARY_AGE} - ${SDL_INTERFACE_AGE}")
-math(EXPR LT_MAJOR "${LT_CURRENT}- ${LT_AGE}")
+math(EXPR LT_CURRENT "${LT_MAJOR} + ${LT_AGE}")
 set(LT_REVISION "${SDL_INTERFACE_AGE}")
-set(LT_RELEASE "${SDL_MAJOR_VERSION}.${SDL_MINOR_VERSION}")
+# For historical reasons, the library name redundantly includes the major
+# version twice: libSDL2-2.0.so.0.
+# TODO: in SDL 3, set the OUTPUT_NAME to plain SDL3, which will simplify
+# it to libSDL3.so.0
+set(LT_RELEASE "2.0")
 set(LT_VERSION "${LT_MAJOR}.${LT_AGE}.${LT_REVISION}")
+
+# The following should match the versions in the Xcode project file.
+# Each version is 1 higher than you might expect, for compatibility
+# with libtool: macOS ABI versioning is 1-based, unlike other platforms
+# which are normally 0-based.
+math(EXPR DYLIB_CURRENT_VERSION_MAJOR "${LT_MAJOR} + ${LT_AGE} + 1")
+math(EXPR DYLIB_CURRENT_VERSION_MINOR "${LT_REVISION}")
+math(EXPR DYLIB_COMPAT_VERSION_MAJOR "${LT_MAJOR} + 1")
+set(DYLIB_CURRENT_VERSION "${DYLIB_CURRENT_VERSION_MAJOR}.${DYLIB_CURRENT_VERSION_MINOR}.0")
+set(DYLIB_COMPATIBILITY_VERSION "${DYLIB_COMPAT_VERSION_MAJOR}.0.0")
 
 #message(STATUS "${LT_VERSION} :: ${LT_AGE} :: ${LT_REVISION} :: ${LT_CURRENT} :: ${LT_RELEASE}")
 
@@ -423,7 +438,7 @@ set_option(SDL_RPATH               "Use an rpath when linking SDL" ${UNIX_SYS})
 set_option(SDL_CLOCK_GETTIME       "Use clock_gettime() instead of gettimeofday()" ${UNIX_SYS})
 set_option(SDL_X11                 "Use X11 video driver" ${UNIX_SYS})
 dep_option(SDL_X11_SHARED          "Dynamically load X11 support" ON "SDL_X11" OFF)
-set(SDL_X11_OPTIONS Xcursor Xdbe Xinerama XInput Xfixes Xrandr Xscrnsaver XShape Xvm)
+set(SDL_X11_OPTIONS Xcursor Xdbe XInput Xfixes Xrandr Xscrnsaver XShape)
 foreach(_SUB ${SDL_X11_OPTIONS})
   string(TOUPPER "SDL_X11_${_SUB}" _OPT)
   dep_option(${_OPT}               "Enable ${_SUB} support" ON "SDL_X11" OFF)
@@ -457,6 +472,7 @@ set(SDL_STATIC ${SDL_STATIC_ENABLED_BY_DEFAULT} CACHE BOOL "Build a static versi
 
 dep_option(SDL_STATIC_PIC      "Static version of the library should be built with Position Independent Code" OFF "SDL_STATIC" OFF)
 set_option(SDL_TEST            "Build the test directory" OFF)
+set_option(SDL_INSTALL_TESTS   "Install test-cases" OFF)
 
 if(VITA)
   set_option(VIDEO_VITA_PIB  "Build with PSVita piglet gles2 support" OFF)
@@ -611,10 +627,14 @@ if(USE_GCC OR USE_CLANG)
     endif()
   endif()
 endif()
+if(MSVC)
+  target_compile_definitions(sdl-build-options INTERFACE "-D_CRT_SECURE_NO_DEPRECATE")
+  target_compile_definitions(sdl-build-options INTERFACE "-D_CRT_NONSTDC_NO_DEPRECATE")
+  target_compile_definitions(sdl-build-options INTERFACE "-D_CRT_SECURE_NO_WARNINGS")
+endif()
 
 if(SDL_ASSEMBLY)
   if(USE_GCC OR USE_CLANG)
-    set(SDL_ASSEMBLY_ROUTINES 1)
     # TODO: Those all seem to be quite GCC specific - needs to be
     # reworked for better compiler support
     set(HAVE_ASSEMBLY TRUE)
@@ -832,7 +852,6 @@ if(SDL_ASSEMBLY)
     set(HAVE_SSE2 TRUE)
     set(HAVE_SSE3 TRUE)
     check_include_file("immintrin.h" HAVE_IMMINTRIN_H)
-    set(SDL_ASSEMBLY_ROUTINES 1)
   endif()
 endif()
 
@@ -848,7 +867,7 @@ if(SDL_LIBC)
     endforeach()
     set(HAVE_SIGNAL_H 1)
     foreach(_FN
-            malloc calloc realloc free qsort abs memset memcpy memmove memcmp
+            malloc calloc realloc free bsearch qsort abs memset memcpy memmove memcmp
             wcslen _wcsdup wcsdup wcsstr wcscmp wcsncmp _wcsicmp _wcsnicmp
             strlen _strrev _strupr _strlwr strchr strrchr strstr itoa _ltoa
             _ultoa strtol strtoul strtoll strtod atoi atof strcmp strncmp
@@ -885,7 +904,7 @@ if(SDL_LIBC)
                              int main(void) { return 0; }" HAVE_MPROTECT)
     foreach(_FN
             strtod malloc calloc realloc free getenv setenv putenv unsetenv
-            qsort abs bcopy memset memcpy memmove memcmp strlen strlcpy strlcat
+            bsearch qsort abs bcopy memset memcpy memmove memcmp strlen strlcpy strlcat
             _strrev _strupr _strlwr index rindex strchr strrchr strstr strtok_r
             itoa _ltoa _uitoa _ultoa strtol strtoul _i64toa _ui64toa strtoll strtoull
             atoi atof strcmp strncmp _stricmp strcasecmp _strnicmp strncasecmp
@@ -1529,7 +1548,7 @@ elseif(WINDOWS)
   if(MSVC AND NOT SDL_LIBC)
     # Prevent codegen that would use the VC runtime libraries.
     set_property(DIRECTORY . APPEND PROPERTY COMPILE_OPTIONS "/GS-")
-    if(NOT ARCH_64)
+    if(NOT ARCH_64 AND NOT CMAKE_GENERATOR_PLATFORM STREQUAL "ARM")
       set_property(DIRECTORY . APPEND PROPERTY COMPILE_OPTIONS "/arch:SSE")
     endif()
   endif()
@@ -1561,7 +1580,7 @@ elseif(WINDOWS)
     check_include_file(ddraw.h HAVE_DDRAW_H)
     check_include_file(dsound.h HAVE_DSOUND_H)
     check_include_file(dinput.h HAVE_DINPUT_H)
-    if(WINDOWS_STORE OR VCPKG_TARGET_TRIPLET MATCHES "arm-windows")
+    if(WINDOWS_STORE OR CMAKE_GENERATOR_PLATFORM STREQUAL "ARM")
       set(HAVE_DINPUT_H 0)
     endif()
     check_include_file(dxgi.h HAVE_DXGI_H)
@@ -2869,6 +2888,9 @@ if(NOT WINDOWS_STORE AND NOT SDL2_DISABLE_SDL2MAIN)
   add_library(SDL2::SDL2main ALIAS SDL2main)
   target_include_directories(SDL2main BEFORE PRIVATE "${SDL2_BINARY_DIR}/include")
   target_include_directories(SDL2main PUBLIC "$<BUILD_INTERFACE:${SDL2_SOURCE_DIR}/include>" $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/SDL2>)
+  if (WIN32)
+    target_link_libraries(SDL2main PRIVATE shell32)
+  endif()
   if (NOT ANDROID)
     set_target_properties(SDL2main PROPERTIES DEBUG_POSTFIX "${SDL_CMAKE_DEBUG_POSTFIX}")
   endif()
@@ -2878,7 +2900,7 @@ if(ANDROID)
   target_include_directories(sdl-build-options INTERFACE "${ANDROID_NDK}/sources/android/cpufeatures")
 endif()
 
-if(IOS OR TVOS)
+if(APPLE)
   target_compile_options(sdl-build-options INTERFACE "-fobjc-arc")
 endif()
 
@@ -2909,7 +2931,7 @@ if(SDL_SHARED)
       OUTPUT_NAME "SDL2")
   endif()
   # Note: The clang toolset for Visual Studio does not support /NODEFAULTLIB.
-  if(MSVC AND NOT SDL_LIBC AND NOT MSVC_CLANG)
+  if(MSVC AND NOT SDL_LIBC AND NOT MSVC_CLANG AND NOT CMAKE_GENERATOR_PLATFORM STREQUAL "ARM")
     # Don't try to link with the default set of libraries.
     if(NOT WINDOWS_STORE)
       set_target_properties(SDL2 PROPERTIES LINK_FLAGS_RELEASE "/NODEFAULTLIB")
@@ -2941,7 +2963,7 @@ if(SDL_STATIC)
   endif()
   set_target_properties(SDL2-static PROPERTIES POSITION_INDEPENDENT_CODE ${SDL_STATIC_PIC})
   # Note: The clang toolset for Visual Studio does not support /NODEFAULTLIB.
-  if(MSVC AND NOT SDL_LIBC AND NOT MSVC_CLANG)
+  if(MSVC AND NOT SDL_LIBC AND NOT MSVC_CLANG AND NOT CMAKE_GENERATOR_PLATFORM STREQUAL "ARM")
     set_target_properties(SDL2-static PROPERTIES LINK_FLAGS_RELEASE "/NODEFAULTLIB")
     set_target_properties(SDL2-static PROPERTIES LINK_FLAGS_DEBUG "/NODEFAULTLIB")
     set_target_properties(SDL2-static PROPERTIES STATIC_LIBRARY_FLAGS "/NODEFAULTLIB")
@@ -2958,14 +2980,18 @@ if(SDL_STATIC)
   endif()
 endif()
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DSDL_BUILD_MAJOR_VERSION=${SDL_MAJOR_VERSION}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DSDL_BUILD_MINOR_VERSION=${SDL_MINOR_VERSION}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DSDL_BUILD_MICRO_VERSION=${SDL_MICRO_VERSION}")
+
 ##### Tests #####
 
 if(SDL_TEST)
+  include(CTest)
   include_directories(BEFORE "${SDL2_BINARY_DIR}/include")
   include_directories(AFTER "${SDL2_SOURCE_DIR}/include")
   file(GLOB TEST_SOURCES ${SDL2_SOURCE_DIR}/src/test/*.c)
   add_library(SDL2_test STATIC ${TEST_SOURCES})
-  add_subdirectory(test)
 endif()
 
 ##### Installation targets #####
@@ -3091,3 +3117,11 @@ if(NOT SDL2_DISABLE_UNINSTALL)
   endif()
 endif()
 
+##### Tests subproject (must appear after the install/uninstall targets) #####
+
+if(SDL_TEST)
+  add_subdirectory(test)
+endif()
+
+##### Fix Objective C builds #####
+set(CMAKE_OBJC_FLAGS "${CMAKE_OBJC_FLAGS} ${CMAKE_C_FLAGS}")

@@ -146,17 +146,7 @@ class ConsoleValue
 
    S32 type;
 
-   enum Constants
-   {
-      ConversionBufferStride = 32
-   };
-
-   struct ConversionBuffer
-   {
-      char buffer[ConversionBufferStride];
-   };
-   
-   static Vector<ConversionBuffer> sConversionBuffer;
+   static DataChunker sConversionAllocator;
 
    char* convertToBuffer() const;
 

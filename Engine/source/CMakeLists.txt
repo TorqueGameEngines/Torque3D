@@ -115,8 +115,8 @@ endif (WIN32)
 # Handle platformSDL
 file(GLOB TORQUE_PLATFORM_SDL_SOURCES "platformSDL/*.cpp" "platformSDL/threads/*.cpp")
 
-set(TORQUE_COMPILE_DEFINITIONS ICE_NO_DLL PCRE_STATIC TORQUE_ADVANCED_LIGHTING TORQUE_SHADERGEN 
-							   TORQUE_OPENGL TORQUE_OPCODE TORQUE_ASSIMP TORQUE_SDL TORQUE_COLLADA 
+set(TORQUE_COMPILE_DEFINITIONS ICE_NO_DLL PCRE_STATIC TORQUE_ADVANCED_LIGHTING TORQUE_SHADERGEN
+							   TORQUE_OPENGL TORQUE_OPCODE TORQUE_ASSIMP TORQUE_SDL TORQUE_COLLADA
 							   TORQUE_UNICODE UNICODE _UNICODE)
 
 ################# Start building libs ###################
@@ -153,6 +153,12 @@ endif (APPLE)
 
 # Search module directories
 set(TORQUE_MODULE_PATHS "${CMAKE_SOURCE_DIR}/Tools/CMake/modules")
+
+message("PATH: ${TORQUE_MODULE_USER_PATH}")
+if (NOT "${TORQUE_MODULE_USER_PATH}" STREQUAL "")
+  list(APPEND TORQUE_MODULE_PATHS "${TORQUE_MODULE_USER_PATH}")
+endif()
+
 foreach (TORQUE_MODULE_PATH ${TORQUE_MODULE_PATHS})
   # First find simple cmake scripts
   file(GLOB MODULE_SCRIPTS "${TORQUE_MODULE_PATH}/*.cmake")
@@ -161,6 +167,19 @@ foreach (TORQUE_MODULE_PATH ${TORQUE_MODULE_PATHS})
   foreach (TORQUE_MODULE_SCRIPT ${MODULE_SCRIPTS})
     message("Including Module Script: ${TORQUE_MODULE_SCRIPT}")
     include(${TORQUE_MODULE_SCRIPT})
+  endforeach()
+
+  # Next find sub projects
+  SUBDIRLIST(POSSIBLE_PROJECTS "${TORQUE_MODULE_PATH}")
+  foreach (POSSIBLE_PROJECT ${POSSIBLE_PROJECTS})
+    # Retrieve the absolute path of this possible project
+    get_filename_component(POSSIBLE_PROJECT_ABSOLUTEPATH "${POSSIBLE_PROJECT}"
+                       REALPATH BASE_DIR "${TORQUE_MODULE_PATH}")
+
+    message("SCANNING: ${POSSIBLE_PROJECT_ABSOLUTEPATH}")
+    if (EXISTS "${POSSIBLE_PROJECT_ABSOLUTEPATH}/CMakeLists.txt")
+      add_subdirectory("${POSSIBLE_PROJECT_ABSOLUTEPATH}" ${CMAKE_BINARY_DIR}/temp/${POSSIBLE_PROJECT} EXCLUDE_FROM_ALL)
+    endif()
   endforeach()
 endforeach()
 

@@ -261,6 +261,16 @@ public:
    /// </summary>
    F32 animFPS;
 
+   /// <summary>
+   /// When importing a shape animation, this indicates if it should automatically add a standard suffix onto the name
+   /// </summary>
+   bool AlwaysAddShapeAnimationSuffix;
+
+   /// <summary>
+   /// If AlwaysAddShapeAnimationSuffix is on, this is the suffix to be added
+   /// </summary>
+   String AddedShapeAnimationSuffix;
+
    //
    //Collision
    /// <summary>
@@ -408,6 +418,15 @@ public:
    /// Indicates if sounds imported with this configuration are compressed
    /// </summary>
    bool SoundsCompressed;
+
+   /// When importing an image, this indicates if it should automatically add a standard suffix onto the name
+   /// </summary>
+   bool AlwaysAddSoundSuffix;
+
+   /// <summary>
+   /// If AlwaysAddSoundSuffix is on, this is the suffix to be added
+   /// </summary>
+   String AddedSoundSuffix;
 
 public:
    AssetImportConfig();
@@ -638,6 +657,8 @@ class AssetImporter : public SimObject
    /// </summary>
    String finalImportedAssetPath;
 
+   bool mDumpLogs;
+
 public:
    AssetImporter();
    virtual ~AssetImporter();
@@ -789,10 +810,16 @@ public:
    void processMaterialAsset(AssetImportObject* assetItem);
 
    /// <summary>
-   /// Process a specific AssetImportObject that is an ShapeAsset type to prepare it for importing
+   /// Process a specific AssetImportObject that is an ShapeAnimationAsset type to prepare it for importing
    /// <para>@param assetItem, The AssetImportObject to process</para>
    /// </summary>
    void processShapeAsset(AssetImportObject* assetItem);
+
+   /// <summary>
+   /// Process a specific AssetImportObject that is an ShapeAsset type to prepare it for importing
+   /// <para>@param assetItem, The AssetImportObject to process</para>
+   /// </summary>
+   void processShapeAnimationAsset(AssetImportObject* assetItem);
 
    /// <summary>
    /// Process a specific ShapeAsset AssetImportObject with a material id in order to parse and handle the materials listed in the shape file
@@ -887,6 +914,12 @@ public:
    /// </summary>
    Torque::Path importShapeAnimationAsset(AssetImportObject* assetItem);
 
+   /// <summary>
+   /// Iterates over all the items in the current session and acquires them, which jumpstarts the loading/init'ng process on them, making the available for use immediately
+   /// <para>@param assetItem, if null, will loop over and recurse the main import asset items, if a specific AssetImportObject is passed in, it will recurse it's children</para>
+   /// </summary>
+   void acquireAssets(AssetImportObject* assetItem = nullptr);
+
    //
    /// <summary>
    /// Gets the currently active import configuration
@@ -894,9 +927,15 @@ public:
    /// </summary>
    AssetImportConfig* getImportConfig() { return activeImportConfig; }
 
-   void setImportConfig(AssetImportConfig* importConfig) {
-      if(importConfig != nullptr)
+   void setImportConfig(AssetImportConfig* importConfig)
+   {
+      if (importConfig != nullptr)
+      {
+         dSprintf(importLogBuffer, sizeof(importLogBuffer), "Loading import config: %s!", importConfig->getName());
+         activityLog.push_back(importLogBuffer);
+
          activeImportConfig = importConfig;
+      }
    }
 
    /// <summary>
@@ -931,16 +970,30 @@ public:
       return imagePath;
    }
 
-   static inline const char* makeFullPath(const String& path)
-   {
-      char qualifiedFilePath[2048];
-
-      Platform::makeFullPathName(path.c_str(), qualifiedFilePath, sizeof(qualifiedFilePath));
-
-      return qualifiedFilePath;
-   }
-
    //
    void setTargetModuleId(const String& moduleId) { targetModuleId = moduleId; }
    const String& getTargetModuleId() { return targetModuleId; }
+
+   String getFolderPrefixedName(AssetImportObject* assetItem)
+   {
+      String renamedAssetName = assetItem->assetName;
+      S32 dirIndex = assetItem->filePath.getDirectoryCount() - 1;
+      while (dirIndex > -1)
+      {
+         renamedAssetName = assetItem->assetName;
+         String owningFolder = assetItem->filePath.getDirectory(dirIndex);
+
+         renamedAssetName = owningFolder + "_" + renamedAssetName;
+
+         if (AssetDatabase.isDeclaredAsset(renamedAssetName))
+         {
+            dirIndex--;
+            continue;
+         }
+
+         break;
+      }
+
+      return renamedAssetName;
+   }
 };

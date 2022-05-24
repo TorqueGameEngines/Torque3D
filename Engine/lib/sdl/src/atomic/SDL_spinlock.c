@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -42,7 +42,7 @@
 
 #if defined(__WATCOMC__) && defined(__386__)
 SDL_COMPILE_TIME_ASSERT(locksize, 4==sizeof(SDL_SpinLock));
-extern _inline int _SDL_xchg_watcom(volatile int *a, int v);
+extern __inline int _SDL_xchg_watcom(volatile int *a, int v);
 #pragma aux _SDL_xchg_watcom = \
   "lock xchg [ecx], eax" \
   parm [ecx] [eax] \
@@ -72,15 +72,18 @@ SDL_AtomicTryLock(SDL_SpinLock *lock)
         return SDL_FALSE;
     }
 
+#elif HAVE_GCC_ATOMICS || HAVE_GCC_SYNC_LOCK_TEST_AND_SET
+    return (__sync_lock_test_and_set(lock, 1) == 0);
+
+#elif defined(_MSC_VER) && (defined(_M_ARM) || defined(_M_ARM64))
+    return (_InterlockedExchange_acq(lock, 1) == 0);
+
 #elif defined(_MSC_VER)
     SDL_COMPILE_TIME_ASSERT(locksize, sizeof(*lock) == sizeof(long));
     return (InterlockedExchange((long*)lock, 1) == 0);
 
 #elif defined(__WATCOMC__) && defined(__386__)
     return _SDL_xchg_watcom(lock, 1) == 0;
-
-#elif HAVE_GCC_ATOMICS || HAVE_GCC_SYNC_LOCK_TEST_AND_SET
-    return (__sync_lock_test_and_set(lock, 1) == 0);
 
 #elif defined(__GNUC__) && defined(__arm__) && \
         (defined(__ARM_ARCH_3__) || defined(__ARM_ARCH_3M__) || \
@@ -140,11 +143,15 @@ SDL_AtomicTryLock(SDL_SpinLock *lock)
     #define PAUSE_INSTRUCTION() __asm__ __volatile__("pause\n")  /* Some assemblers can't do REP NOP, so go with PAUSE. */
 #elif (defined(__arm__) && __ARM_ARCH__ >= 7) || defined(__aarch64__)
     #define PAUSE_INSTRUCTION() __asm__ __volatile__("yield" ::: "memory")
+#elif (defined(__powerpc__) || defined(__powerpc64__))
+    #define PAUSE_INSTRUCTION() __asm__ __volatile__("or 27,27,27");
 #elif defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_X64))
     #define PAUSE_INSTRUCTION() _mm_pause()  /* this is actually "rep nop" and not a SIMD instruction. No inline asm in MSVC x86-64! */
+#elif defined(_MSC_VER) && (defined(_M_ARM) || defined(_M_ARM64))
+    #define PAUSE_INSTRUCTION() __yield()
 #elif defined(__WATCOMC__) && defined(__386__)
     /* watcom assembler rejects PAUSE if CPU < i686, and it refuses REP NOP as an invalid combination. Hardcode the bytes.  */
-    extern _inline void PAUSE_INSTRUCTION(void);
+    extern __inline void PAUSE_INSTRUCTION(void);
     #pragma aux PAUSE_INSTRUCTION = "db 0f3h,90h"
 #else
     #define PAUSE_INSTRUCTION()
@@ -169,16 +176,19 @@ SDL_AtomicLock(SDL_SpinLock *lock)
 void
 SDL_AtomicUnlock(SDL_SpinLock *lock)
 {
-#if defined(_MSC_VER)
+#if HAVE_GCC_ATOMICS || HAVE_GCC_SYNC_LOCK_TEST_AND_SET
+    __sync_lock_release(lock);
+
+#elif defined(_MSC_VER) && (defined(_M_ARM) || defined(_M_ARM64))
+    _InterlockedExchange_rel(lock, 0);
+
+#elif defined(_MSC_VER)
     _ReadWriteBarrier();
     *lock = 0;
 
 #elif defined(__WATCOMC__) && defined(__386__)
     SDL_CompilerBarrier ();
     *lock = 0;
-
-#elif HAVE_GCC_ATOMICS || HAVE_GCC_SYNC_LOCK_TEST_AND_SET
-    __sync_lock_release(lock);
 
 #elif defined(__SOLARIS__)
     /* Used for Solaris when not using gcc. */

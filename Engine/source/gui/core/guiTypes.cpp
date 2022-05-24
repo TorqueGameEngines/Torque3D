@@ -68,7 +68,7 @@ GFX_ImplementTextureProfile(GFXGuiCursorProfile,
 GFX_ImplementTextureProfile(GFXDefaultGUIProfile,
                             GFXTextureProfile::DiffuseMap, 
                             GFXTextureProfile::PreserveSize |
-                            GFXTextureProfile::Static | GFXTextureProfile::SRGB |
+                            GFXTextureProfile::Static | GFXTextureProfile::KeepBitmap | GFXTextureProfile::SRGB |
                             GFXTextureProfile::NoPadding, 
                             GFXTextureProfile::NONE);
 
@@ -79,7 +79,7 @@ GuiCursor::GuiCursor()
    mRenderOffset.set(0.0f,0.0f);
    mExtent.set(1,1);
 
-   INIT_IMAGEASSET(Bitmap);
+   INIT_ASSET(Bitmap);
 }
 
 GuiCursor::~GuiCursor()
@@ -324,7 +324,7 @@ GuiControlProfile::GuiControlProfile(void) :
    mMouseOverSelected = false;
    
    // bitmap members
-   INIT_IMAGEASSET(Bitmap);
+   INIT_ASSET(Bitmap);
    mUseBitmapArray = false;
 
    mChildrenProfileName = NULL;
@@ -735,7 +735,7 @@ DefineEngineMethod( GuiControlProfile, getStringWidth, S32, (const char* string)
    "@param string String to get the width of."
    "@return width of the string in pixels." )
 {
-   return object->mFont->getStrNWidth( string, dStrlen( string ) );
+   return (object->mFont) ? object->mFont->getStrNWidth( string, dStrlen( string ) ) : -1;
 }
 
 DefineEngineMethod(GuiControlProfile, getBitmap, const char*, (), , "get name")

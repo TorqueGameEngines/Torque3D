@@ -63,7 +63,7 @@ protected:
 public:
    
    DECLARE_SHAPEASSET(ForestItemData, Shape, onShapeChanged);
-   DECLARE_SHAPEASSET_SETGET(ForestItemData, Shape);
+   DECLARE_ASSET_SETGET(ForestItemData, Shape);
 
    /// This is the radius used during placement to ensure
    /// the element isn't crowded up against other trees.

@@ -8,30 +8,26 @@ function AssetBrowser::createMaterialAsset(%this)
    %assetPath = AssetBrowser.dirHandler.currentAddress @ "/";   
    
    %tamlpath = %assetPath @ %assetName @ ".asset.taml";
-   %scriptPath = %assetPath @ %assetName @ "." @ $TorqueScriptFileExtension;
    
    %asset = new MaterialAsset()
    {
       AssetName = %assetName;
       versionId = 1;
       materialDefinitionName = %assetName;
-      scriptFile = %assetName @ "." @ $TorqueScriptFileExtension;
+      
+      new Material(%assetName) {
+      };
    };
    
    TamlWrite(%asset, %tamlpath);
    
-   %mat = new Material(%assetName);
-   %mat.save(%scriptPath);
+   //cleanup before proper init'ing
+   %assetName.delete();
    
    %moduleDef = ModuleDatabase.findModule(%moduleName, 1);
 	AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
 
-	AssetBrowser.loadFilters();
-	
-	%treeItemId = AssetBrowserFilterTree.findItemByName(%moduleName);
-	%smItem = AssetBrowserFilterTree.findChildItemByName(%treeItemId, "Materials");
-	
-	AssetBrowserFilterTree.onSelect(%smItem);
+	AssetBrowser.refresh();
    
 	return %tamlpath;
 }
@@ -42,6 +38,7 @@ function AssetBrowser::editMaterialAsset(%this, %assetDef)
    
    EditorGui.setEditor(MaterialEditorPlugin);
    
+   MaterialEditorGui.currentMaterialAsset = %assetDef.getAssetId();
    MaterialEditorGui.currentMaterial = %assetDef.materialDefinitionName;
    MaterialEditorGui.setActiveMaterial( %assetDef.materialDefinitionName );
    
@@ -72,14 +69,14 @@ function AssetBrowser::deleteMaterialAsset(%this, %assetDef)
 function AssetBrowser::moveMaterialAsset(%this, %assetDef, %destination)
 {
    %currentModule = AssetDatabase.getAssetModule(%assetDef.getAssetId());
-   %targetModule = AssetBrowser.getModuleFromAddress(%destination);
+   %targetModule = AssetBrowser.dirHandler.getModuleFromAddress(%destination);
    
    %newAssetPath = moveAssetFile(%assetDef, %destination);
    
    if(%newAssetPath $= "")
       return false;
 
-   moveAssetLooseFile(%assetDef.scriptPath, %destination);
+   moveAssetLooseFile(%assetDef.getScriptPath(), %destination);
    
    AssetDatabase.removeDeclaredAsset(%assetDef.getAssetId());
    AssetDatabase.addDeclaredAsset(%targetModule, %newAssetPath);
@@ -322,9 +319,15 @@ function AssetBrowser::importMaterialAsset(%this, %assetItem)
       versionId = 1;
       shaderGraph = %sgfPath;
       scriptFile = %assetName @ "." @ $TorqueScriptFileExtension;
-      originalFilePath = %filePath;
       materialDefinitionName = %assetName;
    };
+   
+   //No point in indicating the original path data if it was imported in-place
+   %mainPath = getMainDotCsDir();
+   if(!startsWith(makeFullPath(%filePath), getMainDotCsDir()))
+   {
+      %newAsset.originalFilePath = %filePath;
+   }
    
    //check dependencies
    %dependencySlotId = 0;
@@ -421,9 +424,47 @@ function AssetBrowser::importMaterialAsset(%this, %assetItem)
       AssetDatabase.refreshAsset(%assetId);
 }
 
-function AssetBrowser::buildMaterialAssetPreview(%this, %assetDef, %previewData)
+function AssetBrowser::buildMaterialAssetPreview(%this, %assetDef, %previewData, %forcePreviewRegenerate)
+{   
+   %previewData.previewImage = "ToolsModule:genericAssetIcon_image";
+   %previewData.previewLoaded = false; //this marks it for loading progressively later
+      
+   %previewData.assetName = %assetDef.assetName;
+   %previewData.assetPath = %assetDef.scriptFile;
+   
+   %previewData.assetFriendlyName = %assetDef.assetName;
+   %previewData.assetDesc = %assetDef.description;
+
+   if(%this.selectMode)
+      %previewData.doubleClickCommand = "AssetBrowser.selectAsset( AssetBrowser.selectedAsset );";
+   else
+      %previewData.doubleClickCommand = "AssetBrowser.editAsset( "@%assetDef@" );";
+      
+   %definitionPath = %assetDef.getScriptPath();
+   if(%definitionPath $= "")
+      %definitionPath = %assetDef.getFilename();
+   
+   %previewData.tooltip = "Asset Name: " @ %assetDef.assetName @ 
+                           "\nAsset Type: Material Asset" @  
+                           "\nAsset Definition ID: " @  %assetDef @
+                           "\nDefinition Path: " @ %definitionPath;
+                           
+   if(!%this.selectMode)
+   {
+      %previewData.doubleClickCommand = "AssetBrowser.editAsset( "@%assetDef@" );";
+   }
+}
+
+function AssetBrowser::generateMaterialAssetPreviewImage(%this, %previewButton, %forceRegenerate)
 {
-   %module = %this.dirHandler.getModuleFromAddress(makeRelativePath(filePath(%assetDef.getScriptPath())));
+   if(%forceRegenerate $= "")
+      %forceRegenerate = false;
+      
+   %assetId = %previewButton.moduleName @ ":" @ %previewButton.assetName;
+      
+   %assetDef = AssetDatabase.acquireAsset(%assetId);
+      
+   %module = %this.dirHandler.getModuleFromAddress(makeRelativePath(filePath(AssetDatabase.getAssetFilePath(%assetDef.getAssetId()))));
    %previewPath = "tools/resources/previewCache/" @ %module.moduleId @ "/";
 
    if(!IsDirectory(%previewPath))
@@ -433,7 +474,7 @@ function AssetBrowser::buildMaterialAssetPreview(%this, %assetDef, %previewData)
 
    %generatePreview = false;
 
-   %previewFilePath = %previewPath @ %assetDef.assetName @ "_Preview.png";
+   %previewFilePath = %previewPath @ %assetDef.assetName @ "_Preview.dds";
    if(!isFile(%previewFilePath))
    {
       %generatePreview = true;
@@ -444,70 +485,66 @@ function AssetBrowser::buildMaterialAssetPreview(%this, %assetDef, %previewData)
       {
          if(compareFileTimes(%assetDef.materialDefinitionName.getDiffuseMap(0), %previewFilePath) == 1 ||
             compareFileTimes(%assetDef.materialDefinitionName.getFilename(), %previewFilePath) == 1)
-      %generatePreview = true;
-         
+            %generatePreview = true;
       }
    }
 
    %previewAssetName = %module.moduleId @ "_" @ %assetDef.assetName @ "_PreviewImage";
                                    
-   if(%generatePreview)
+   if(%generatePreview || %forceRegenerate)
    {
-      displayEditorLoadingGui("Generating Material Asset Preview...");
-   
-   if(isObject(%assetDef.materialDefinitionName))
-   {
-      	if(isFile(%assetDef.materialDefinitionName.getDiffuseMap(0)))
+      if(isObject(%assetDef.materialDefinitionName))
+      {
+         //real fast, we'll be 100% sure that the image resource we need is loaded
+         %diffuseMapAssetId = %assetDef.materialDefinitionName.getDiffuseMapAsset(0);
+         if(AssetDatabase.isDeclaredAsset(%diffuseMapAssetId))
          {
-            %difMap = %assetDef.materialDefinitionName.getDiffuseMap(0);
+            %diffuseMapAsset = AssetDatabase.acquireAsset(%diffuseMapAssetId);
+            AssetDatabase.releaseAsset(%diffuseMapAssetId);
          }
-      	else if(%assetDef.materialDefinitionName.getDiffuseMapAsset(0) !$= "")
-      	{
-         %imgAsset = AssetDatabase.acquireAsset(%assetDef.materialDefinitionName.getDiffuseMapAsset(0));
-            %difMap = %imgAsset.getImagePath();
-   		}
+         %previewShapeDef = AssetDatabase.acquireAsset("ToolsModule:previewSphereShape");
+         %generatedFilePath = %previewShapeDef.generateCachedPreviewImage(256, %assetDef.materialDefinitionName);
       
-         %success = saveScaledImage(%difMap, %previewFilePath);
+         pathCopy(%generatedFilePath, %previewFilePath, false);
+         fileDelete(%generatedFilePath);
 
-         %previewAsset = new ImageAsset()
+         if(!AssetDatabase.isDeclaredAsset("ToolsModule:" @ %previewAssetName))
          {
-            assetName = %previewAssetName;
-            versionId = 1;
-            imageFile = fileName(%previewFilePath);
-         };
-         
-         %previewImgAssetPath = %previewPath @ %previewAsset.assetName @ ".asset.taml";
-         %assetImportSuccessful = TAMLWrite(%previewAsset, %previewImgAssetPath); 
-         
-         %toolsModuleDef = ModuleDatabase.findModule("ToolsModule",1);
+            %previewAsset = new ImageAsset()
+            {
+               assetName = %previewAssetName;
+               versionId = 1;
+               imageFile = fileName(%previewFilePath);
+            };
             
-         %success = AssetDatabase.addDeclaredAsset(%toolsModuleDef, %previewImgAssetPath);
+            %previewImgAssetPath = %previewPath @ %previewAsset.assetName @ ".asset.taml";
+            %assetImportSuccessful = TAMLWrite(%previewAsset, %previewImgAssetPath); 
+            
+            %toolsModuleDef = ModuleDatabase.findModule("ToolsModule",1);
+               
+            %success = AssetDatabase.addDeclaredAsset(%toolsModuleDef, %previewImgAssetPath);
+            
+            if(!%success)
+            {
+               return false; //failed to register the preview image for some reason?
+         }
       }
       
-      hideEditorLoadingGui();
+         %previewButton.bitmapAsset = "ToolsModule:" @ %previewAssetName;
+         return true;
    }
-   
-   //Revalidate. If it didn't work, just use the default placeholder one
-   if(!isFile(%previewFilePath))
-      %previewAssetName = "ToolsModule:materialIcon_image";
-      
-   %previewData.assetName = %assetDef.assetName;
-   %previewData.assetPath = %assetDef.scriptFile;
-   
-   %previewData.previewImage = "ToolsModule:" @ %previewAssetName;//%assetDef.fileName;
-   
-   %previewData.assetFriendlyName = %assetDef.assetName;
-   %previewData.assetDesc = %assetDef.description;
-
-   if(%this.selectMode)
-      %previewData.doubleClickCommand = "AssetBrowser.selectAsset( AssetBrowser.selectedAsset );";
+   }
    else
-      %previewData.doubleClickCommand = "AssetBrowser.editAsset( "@%assetDef@" );";
-   
-   %previewData.tooltip = "Asset Name: " @ %assetDef.assetName @ 
-                           "\nAsset Type: Material Asset" @  
-                           "\nAsset Definition ID: " @  %assetDef @
-                           "\nDefinition Path: " @ %assetDef.getScriptPath();
+   {
+      //just map the existing one then
+      if(AssetDatabase.isDeclaredAsset("ToolsModule:" @ %previewAssetName))
+      {
+         %previewButton.bitmapAsset = "ToolsModule:" @ %previewAssetName;
+         return true;
+      }
+   }
+      
+   return false;
 }
 
 function AssetBrowser::onMaterialAssetEditorDropped(%this, %assetDef, %position)

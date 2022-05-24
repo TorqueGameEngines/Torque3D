@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -39,7 +39,6 @@
 
 #include <X11/Xproto.h>
 #include <X11/extensions/Xext.h>
-#include <X11/extensions/extutil.h>
 
 #ifndef NO_SHARED_MEMORY
 #include <sys/ipc.h>
@@ -53,11 +52,11 @@
 #if SDL_VIDEO_DRIVER_X11_XDBE
 #include <X11/extensions/Xdbe.h>
 #endif
-#if SDL_VIDEO_DRIVER_X11_XINERAMA
-#include <X11/extensions/Xinerama.h>
-#endif
 #if SDL_VIDEO_DRIVER_X11_XINPUT2
 #include <X11/extensions/XInput2.h>
+#endif
+#if SDL_VIDEO_DRIVER_X11_XFIXES
+#include <X11/extensions/Xfixes.h>
 #endif
 #if SDL_VIDEO_DRIVER_X11_XRANDR
 #include <X11/extensions/Xrandr.h>
@@ -67,9 +66,6 @@
 #endif
 #if SDL_VIDEO_DRIVER_X11_XSHAPE
 #include <X11/extensions/shape.h>
-#endif
-#if SDL_VIDEO_DRIVER_X11_XVIDMODE
-#include <X11/extensions/xf86vmode.h>
 #endif
 
 #ifdef __cplusplus

@@ -50,6 +50,7 @@
 #include "renderInstance/renderDeferredMgr.h"
 #include "console/engineAPI.h"
 #include "T3D/assets/MaterialAsset.h"
+#include "T3D/assets/TerrainMaterialAsset.h"
 
 /// This is used for rendering ground cover billboards.
 GFXImplementVertexFormat( GCVertex )
@@ -459,7 +460,7 @@ GroundCover::GroundCover()
 
    mRandomSeed = 1;
 
-   INIT_MATERIALASSET(Material);
+   INIT_ASSET(Material);
    mMaterialInst = NULL;
 
    mMatParams = NULL;
@@ -520,7 +521,7 @@ GroundCover::GroundCover()
       mBillboardRects[i].point.set( 0.0f, 0.0f );
       mBillboardRects[i].extent.set( 1.0f, 1.0f );
 
-      INIT_SHAPEASSET_ARRAY(Shape, i);
+      INIT_ASSET_ARRAY(Shape, i);
 
       mShapeInstances[i] = NULL;
 
@@ -564,7 +565,7 @@ void GroundCover::initPersistFields()
          addField("shapeFilename", TypeFilename, Offset(mShapeName, GroundCover), MAX_COVERTYPES, "The cover shape filename. [Optional]", AbstractClassRep::FIELD_HideInInspectors);
          INITPERSISTFIELD_SHAPEASSET_ARRAY(Shape, MAX_COVERTYPES, GroundCover, "The cover shape. [Optional]");
 
-         addField( "layer",         TypeTerrainMaterialName, Offset( mLayer, GroundCover ), MAX_COVERTYPES, "Terrain material name to limit coverage to, or blank to not limit." );
+         addField( "layer",         TypeTerrainMaterialAssetId, Offset( mLayer, GroundCover ), MAX_COVERTYPES,      "Terrain material assetId to limit coverage to, or blank to not limit." );
 
          addField( "invertLayer",   TypeBool,      Offset( mInvertLayer, GroundCover ), MAX_COVERTYPES,     "Indicates that the terrain material index given in 'layer' is an exclusion mask." );
 
@@ -713,7 +714,7 @@ U32 GroundCover::packUpdate( NetConnection *connection, U32 mask, BitStream *str
       // TODO: We could probably optimize a few of these
       // based on reasonable units at some point.
 
-      PACK_MATERIALASSET(connection, Material);
+      PACK_ASSET(connection, Material);
 
       stream->write( mRadius );
       stream->write( mZOffset );
@@ -766,7 +767,7 @@ U32 GroundCover::packUpdate( NetConnection *connection, U32 mask, BitStream *str
          stream->write( mBillboardRects[i].extent.x );
          stream->write( mBillboardRects[i].extent.y );
 
-         PACK_SHAPEASSET_ARRAY(connection, Shape, i);
+         PACK_ASSET_ARRAY(connection, Shape, i);
       }
 
       stream->writeFlag( mDebugRenderCells );
@@ -784,7 +785,7 @@ void GroundCover::unpackUpdate( NetConnection *connection, BitStream *stream )
 
    if (stream->readFlag())
    {
-      UNPACK_MATERIALASSET(connection, Material);
+      UNPACK_ASSET(connection, Material);
 
       stream->read( &mRadius );
       stream->read( &mZOffset );
@@ -837,7 +838,7 @@ void GroundCover::unpackUpdate( NetConnection *connection, BitStream *stream )
          stream->read( &mBillboardRects[i].extent.x );
          stream->read( &mBillboardRects[i].extent.y );
 
-         UNPACK_SHAPEASSET_ARRAY(connection, Shape, i);
+         UNPACK_ASSET_ARRAY(connection, Shape, i);
       }
 
       mDebugRenderCells    = stream->readFlag();
@@ -1178,6 +1179,7 @@ GroundCoverCell* GroundCover::_generateCell( const Point2I& index,
       const bool typeIsShape = mShapeInstances[ type ] != NULL;
       const Box3F typeShapeBounds = typeIsShape ? mShapeInstances[ type ]->getShape()->mBounds : Box3F();
       const F32 typeWindScale = mWindScale[type];
+
       StringTableEntry typeLayer = mLayer[type];
       const bool typeInvertLayer = mInvertLayer[type];
 

@@ -158,7 +158,7 @@ function EditorGui::buildMenus(%this)
    //%fileMenu.appendItem("Create Blank Terrain" TAB "" TAB "Canvas.pushDialog( CreateNewTerrainGui );");
    %fileMenu.appendItem("Create Blank Terrain" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"TerrainAsset\", AssetBrowser.selectedModule, createTerrainBlock);");         
      
-   %fileMenu.appendItem("Import Terrain Heightmap" TAB "" TAB "Canvas.pushDialog( TerrainImportGui );");
+   %fileMenu.appendItem("Import Terrain Heightmap" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"TerrainAsset\", AssetBrowser.selectedModule, createTerrainBlock); Canvas.pushDialog( TerrainImportGui );");
    
    %fileMenu.appendItem("Export Terrain Heightmap" TAB "" TAB "Canvas.pushDialog( TerrainExportGui );");
    %fileMenu.appendItem("-");
@@ -354,7 +354,7 @@ function EditorGui::buildMenus(%this)
 
       barTitle = "Tools";
          
-      item[0] = "Network Graph" TAB "n" TAB "toggleNetGraph();";
+      item[0] = "Network Graph" TAB "ctrl n" TAB "toggleNetGraph();";
       item[1] = "Profiler" TAB "ctrl F2" TAB "showMetrics(true);";
 	  item[2] = "Torque SimView" TAB "" TAB "tree();";
       item[3] = "Make Selected a Mesh" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"ShapeAsset\", AssetBrowser.selectedModule, \"makeSelectedAMesh\");";

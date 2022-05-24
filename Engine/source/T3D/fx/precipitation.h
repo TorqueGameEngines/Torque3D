@@ -46,17 +46,16 @@ class PrecipitationData : public GameBaseData
    typedef GameBaseData Parent;
 
   public:
-   //SFXTrack*     soundProfile;
      DECLARE_SOUNDASSET(PrecipitationData, Sound);
-     DECLARE_SOUNDASSET_SETGET(PrecipitationData, Sound);
+     DECLARE_ASSET_SETGET(PrecipitationData, Sound);
 
       DECLARE_IMAGEASSET(PrecipitationData, Drop, onDropChanged, GFXStaticTextureSRGBProfile); ///< Texture for drop particles
-      DECLARE_IMAGEASSET_SETGET(PrecipitationData, Drop);
+      DECLARE_ASSET_SETGET(PrecipitationData, Drop);
 
       StringTableEntry mDropShaderName;   ///< The name of the shader used for raindrops
 
       DECLARE_IMAGEASSET(PrecipitationData, Splash, onSplashChanged, GFXStaticTextureSRGBProfile); ///< Texture for splash particles
-      DECLARE_IMAGEASSET_SETGET(PrecipitationData, Splash);
+      DECLARE_ASSET_SETGET(PrecipitationData, Splash);
 
       StringTableEntry mSplashShaderName; ///< The name of the shader used for raindrops
 
@@ -72,13 +71,6 @@ class PrecipitationData : public GameBaseData
 
       void onDropChanged() {}
       void onSplashChanged() {}
-
-      SFXProfile* getSFXProfile() {
-         if (mSoundAsset.notNull())
-            return mSoundAsset->getSfxProfile();
-         else
-            return NULL;
-      }
 };
 
 struct Raindrop

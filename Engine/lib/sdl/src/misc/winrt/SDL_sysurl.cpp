@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -19,15 +19,13 @@
   3. This notice may not be removed or altered from any source distribution.
 */
 
-#include <Windows.h>
-
-#include "../../core/windows/SDL_windows.h"
 #include "../SDL_sysurl.h"
+#include "../../core/windows/SDL_windows.h"
 
 int
 SDL_SYS_OpenURL(const char *url)
 {
-    WCHAR *wurl = WIN_UTF8ToString(url);
+    WCHAR *wurl = WIN_UTF8ToStringW(url);
     if (!wurl) {
         return SDL_OutOfMemory();
     }

@@ -91,25 +91,7 @@ function ForestEditorPlugin::onWorldEditorStartup( %this )
 {       
    new PersistenceManager( ForestDataManager );
    
-   %brushPath = "tools/forestEditor/brushes." @ $TorqueScriptFileExtension;
-   
-   if ( !isFile( %brushPath ) )   
-      %successfulFile = createPath( %brushPath );       
-      
-   // This creates the ForestBrushGroup, all brushes, and elements.
-   exec( %brushpath );         
-   
-   if ( !isObject( ForestBrushGroup ) )
-   {
-      new SimGroup( ForestBrushGroup );
-      %this.showError = true;      
-   }
-      
-   ForestEditBrushTree.open( ForestBrushGroup );   
-            
-   if ( !isObject( ForestItemDataSet ) )
-      new SimSet( ForestItemDataSet );
-      
+   ForestEditBrushTree.open( ForestBrushSet );   
    ForestEditMeshTree.open( ForestItemDataSet );
 
    // Add ourselves to the window menu.
@@ -126,8 +108,8 @@ function ForestEditorPlugin::onWorldEditorStartup( %this )
 
 function ForestEditorPlugin::onWorldEditorShutdown( %this )
 {
-   if ( isObject( ForestBrushGroup ) )   
-      ForestBrushGroup.delete();
+   if ( isObject( ForestBrushSet ) )   
+      ForestBrushSet.delete();
    if ( isObject( ForestDataManager ) )
       ForestDataManager.delete();
 }
@@ -153,7 +135,7 @@ function ForestEditorPlugin::onActivated( %this )
    %this.map.push();
    Parent::onActivated(%this);   
    
-   ForestEditBrushTree.open( ForestBrushGroup );   
+   ForestEditBrushTree.open( ForestBrushSet );   
    ForestEditMeshTree.open( ForestItemDataSet );
    
    // Open the Brush tab.
@@ -224,10 +206,24 @@ function ForestEditorPlugin::onDeactivated( %this )
    
    // Also take this opportunity to save.
    ForestDataManager.saveDirty();
+   %this.saveBrushSet();
    
    %this.map.pop();
    
    Parent::onDeactivated(%this);
+}
+
+function ForestEditorPlugin::saveBrushSet(%this)
+{
+   for(%i=0; %i < ForestBrushSet.getCount(); %i++)
+   {
+      %group = ForestBrushSet.getObject(%i);
+      if(%group.isMemberOfClass("ForestBrushGroup"))
+      {
+         %fileName = %group.getFileName();
+         %group.save(%group.getFileName());  
+      }
+   }
 }
 
 function ForestEditorPlugin::isDirty( %this )
@@ -266,7 +262,8 @@ function ForestEditorPlugin::onSaveMission( %this, %missionFile )
       }
    }
       
-   ForestBrushGroup.save( "tools/forestEditor/brushes." @ $TorqueScriptFileExtension );
+   //Make sure our data is up to date too
+   %this.saveBrushSet();
 }
 
 function ForestEditorPlugin::onEditorSleep( %this )

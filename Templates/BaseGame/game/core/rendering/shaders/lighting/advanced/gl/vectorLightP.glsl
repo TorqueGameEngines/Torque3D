@@ -216,7 +216,7 @@ void main()
 	     lightingColor = shadowed_colors.rgb;
       #endif
       
-      shadow = lerp( shadow, 1.0, saturate( fadeOutAmt ) );
+      shadow = mix( shadow, 1.0, saturate( fadeOutAmt ) );
       
       #ifdef PSSM_DEBUG_RENDER
          if ( fadeOutAmt > 1.0 )
@@ -224,6 +224,37 @@ void main()
       #endif
 
    #endif //NO_SHADOW
+
+   #ifdef DIFFUSE_LIGHT_VIZ
+      vec3 factor = lightingColor.rgb * max(surfaceToLight.NdotL, 0) * shadow * lightBrightness;
+      vec3 diffuse = BRDF_GetDebugDiffuse(surface,surfaceToLight) * factor;
+
+      vec3 final = max(0.0f, diffuse);
+      
+      OUT_col = vec4(final, 0);
+      return;
+   #endif
+
+   #ifdef SPECULAR_LIGHT_VIZ
+      vec3 factor = lightingColor.rgb * max(surfaceToLight.NdotL, 0) * shadow * lightBrightness;
+      vec3 spec = BRDF_GetDebugSpecular(surface, surfaceToLight) * factor;
+
+      vec3 final = max(0.0f, factor);
+      
+      OUT_col = vec4(final, 0);
+      return;
+   #endif
+
+   #ifdef DETAIL_LIGHTING_VIZ
+      vec3 factor = lightingColor.rgb * max(surfaceToLight.NdotL, 0) * shadow * lightBrightness;
+      vec3 diffuse = BRDF_GetDebugDiffuse(surface,surfaceToLight) * factor;
+      vec3 spec = BRDF_GetDebugSpecular(surface,surfaceToLight) * factor;
+
+      vec3 final = max(0.0f, diffuse + spec);
+      
+      OUT_col = vec4(final, 0);
+      return;
+   #endif
 
    //get directional light contribution   
    vec3 lighting = getDirectionalLight(surface, surfaceToLight, lightingColor.rgb, lightBrightness, shadow);

@@ -49,6 +49,10 @@
 #ifdef TORQUE_TOOLS
 #include "ts/tsLastDetail.h"
 #endif
+#include "util/imposterCapture.h"
+
+#include "ts/tsShapeInstance.h"
+#include "gfx/bitmap/imageUtils.h"
 
 StringTableEntry ShapeAsset::smNoShapeAssetFallback = NULL;
 
@@ -128,6 +132,13 @@ ShapeAsset::ShapeAsset()
    mConstructorFileName = StringTable->EmptyString();
    mFilePath = StringTable->EmptyString();
    mConstructorFilePath = StringTable->EmptyString();
+
+   mDiffuseImposterFileName = StringTable->EmptyString();
+   mDiffuseImposterPath = StringTable->EmptyString();
+   mNormalImposterFileName = StringTable->EmptyString();
+   mNormalImposterPath = StringTable->EmptyString();
+
+
    mLoadedState = AssetErrCode::NotLoaded;
 }
 
@@ -161,6 +172,12 @@ void ShapeAsset::initPersistFields()
       &setShapeFile, &getShapeFile, "Path to the shape file we want to render");
    addProtectedField("constuctorFileName", TypeAssetLooseFilePath, Offset(mConstructorFileName, ShapeAsset),
       &setShapeConstructorFile, &getShapeConstructorFile, "Path to the shape file we want to render");
+
+   addProtectedField("diffuseImposterFileName", TypeAssetLooseFilePath, Offset(mDiffuseImposterFileName, ShapeAsset),
+      &setDiffuseImposterFile, &getDiffuseImposterFile, "Path to the diffuse imposter file we want to render");
+   addProtectedField("normalImposterFileName", TypeAssetLooseFilePath, Offset(mNormalImposterFileName, ShapeAsset),
+      &setNormalImposterFile, &getNormalImposterFile, "Path to the normal imposter file we want to render");
+
 }
 
 void ShapeAsset::setDataField(StringTableEntry slotName, StringTableEntry array, StringTableEntry value)
@@ -191,6 +208,20 @@ void ShapeAsset::initializeAsset()
    mFilePath = getOwned() ? expandAssetFilePath(mFileName) : mFilePath;
 
    mConstructorFilePath = getOwned() ? expandAssetFilePath(mConstructorFilePath) : mConstructorFilePath;
+
+   mDiffuseImposterPath = getOwned() ? expandAssetFilePath(mDiffuseImposterFileName) : mDiffuseImposterFileName;
+   if (mDiffuseImposterPath == StringTable->EmptyString())
+   {
+      String diffusePath = String(mFilePath) + "_imposter.dds";
+      mDiffuseImposterPath = StringTable->insert(diffusePath.c_str());
+   }
+
+   mNormalImposterPath = getOwned() ? expandAssetFilePath(mNormalImposterFileName) : mNormalImposterFileName;
+   if (mNormalImposterPath == StringTable->EmptyString())
+   {
+      String normalPath = String(mFilePath) + "_imposter_normals.dds";
+      mNormalImposterPath = StringTable->insert(normalPath.c_str());
+   }
 
    loadShape();
 }
@@ -226,6 +257,42 @@ void ShapeAsset::setShapeConstructorFile(const char* pShapeConstructorFile)
       return;
 
    mConstructorFileName = getOwned() ? expandAssetFilePath(pShapeConstructorFile) : pShapeConstructorFile;
+
+   // Refresh the asset.
+   refreshAsset();
+}
+
+void ShapeAsset::setDiffuseImposterFile(const char* pImageFile)
+{
+   // Sanity!
+   AssertFatal(pImageFile != NULL, "Cannot use a NULL image file.");
+
+   // Fetch image file.
+   pImageFile = StringTable->insert(pImageFile, true);
+
+   // Ignore no change,
+   if (pImageFile == mDiffuseImposterFileName)
+      return;
+
+   mDiffuseImposterFileName = getOwned() ? expandAssetFilePath(pImageFile) : pImageFile;
+
+   // Refresh the asset.
+   refreshAsset();
+}
+
+void ShapeAsset::setNormalImposterFile(const char* pImageFile)
+{
+   // Sanity!
+   AssertFatal(pImageFile != NULL, "Cannot use a NULL image file.");
+
+   // Fetch image file.
+   pImageFile = StringTable->insert(pImageFile, true);
+
+   // Ignore no change,
+   if (pImageFile == mNormalImposterFileName)
+      return;
+
+   mNormalImposterFileName = getOwned() ? expandAssetFilePath(pImageFile) : pImageFile;
 
    // Refresh the asset.
    refreshAsset();
@@ -290,6 +357,10 @@ bool ShapeAsset::loadShape()
       mLoadedState = BadFileReference;
       return false; //if it failed to load, bail out
    }
+
+   mShape->setupBillboardDetails(mFilePath, mDiffuseImposterPath, mNormalImposterPath);
+
+   //If they exist, grab our imposters here and bind them to our shapeAsset
 
    bool hasBlends = false;
 
@@ -402,6 +473,11 @@ StringTableEntry ShapeAsset::getAssetIdByFilename(StringTableEntry fileName)
       //acquire and bind the asset, and return it out
       shapeAssetId = query.mAssetList[0];
    }
+   else
+   {
+      AssetPtr<ShapeAsset> shapeAsset = shapeAssetId;
+      shapeAsset->mLoadedState = AssetErrCode::BadFileReference;
+   }
 
    return shapeAssetId;
 }
@@ -492,25 +568,97 @@ ShapeAnimationAsset* ShapeAsset::getAnimation(S32 index)
 }
 
 #ifdef TORQUE_TOOLS
-const char* ShapeAsset::generateCachedPreviewImage(S32 resolution)
+const char* ShapeAsset::generateCachedPreviewImage(S32 resolution, String overrideMaterial)
 {
    if (!mShape)
       return "";
 
-   TSLastDetail* dt = new TSLastDetail(mShape,
-      mFilePath,
-      1,
-      0,
-      0,
-      false,
-      0,
-      resolution);
+   // We're gonna render... make sure we can.
+   bool sceneBegun = GFX->canCurrentlyRender();
+   if (!sceneBegun)
+      GFX->beginScene();
 
-   dt->update();
+   // We need to create our own instance to render with.
+   TSShapeInstance* shape = new TSShapeInstance(mShape, true);
 
-   delete dt;
+   if (overrideMaterial.isNotEmpty())
+   {
+      Material *tMat = dynamic_cast<Material*>(Sim::findObject(overrideMaterial));
+      if (tMat)
+         shape->reSkin(tMat->mMapTo, mShape->materialList->getMaterialName(0));
+   }
+   // Animate the shape once.
+   shape->animate(0);
 
-   return mFilePath;
+   // So we don't have to change it everywhere.
+   const GFXFormat format = GFXFormatR8G8B8A8;
+
+   GBitmap* imposter = NULL;
+   GBitmap* imposterNrml = NULL;
+
+   ImposterCapture* imposterCap = new ImposterCapture();
+
+   static const MatrixF topXfm(EulerF(-M_PI_F / 2.0f, 0, 0));
+   static const MatrixF bottomXfm(EulerF(M_PI_F / 2.0f, 0, 0));
+
+   MatrixF angMat;
+
+   S32 mip = 0;
+
+   PROFILE_START(ShapeAsset_generateCachedPreviewImage);
+
+   //dMemset(destBmp.getWritableBits(mip), 0, destBmp.getWidth(mip) * destBmp.getHeight(mip) * GFXFormat_getByteSize(format));
+
+   F32 rotX = -(mDegToRad(60.0) - 0.5f * M_PI_F);
+   F32 rotZ = -(mDegToRad(45.0) - 0.5f * M_PI_F);
+
+   // We capture the images in a particular order which must
+   // match the order expected by the imposter renderer.
+
+   imposterCap->begin(shape, 0, resolution, mShape->mRadius, mShape->center);
+
+   angMat.mul(MatrixF(EulerF(rotX, 0, 0)),
+      MatrixF(EulerF(0, 0, rotZ)));
+
+   imposterCap->capture(angMat, &imposter, &imposterNrml);
+
+   imposterCap->end();
+
+   PROFILE_END(); // ShapeAsset_generateCachedPreviewImage
+
+   delete imposterCap;
+   delete shape;
+
+   String dumpPath = String(mFilePath) + "_Preview.dds";
+
+   char* returnBuffer = Con::getReturnBuffer(128);
+   dSprintf(returnBuffer, 128, "%s", dumpPath.c_str());
+
+   /*FileStream stream;
+   if (stream.open(dumpPath, Torque::FS::File::Write))
+      destBmp.writeBitmap("png", stream);
+   stream.close();*/
+   
+   DDSFile* ddsDest = DDSFile::createDDSFileFromGBitmap(imposter);
+   ImageUtil::ddsCompress(ddsDest, GFXFormatBC2);
+
+   // Finally save the imposters to disk.
+   FileStream fs;
+   if (fs.open(returnBuffer, Torque::FS::File::Write))
+   {
+      ddsDest->write(fs);
+      fs.close();
+   }
+
+   delete ddsDest;
+   delete imposter;
+   delete imposterNrml;
+
+   // If we did a begin then end it now.
+   if (!sceneBegun)
+      GFX->endScene();
+
+   return returnBuffer;
 }
 #endif
 
@@ -536,7 +684,7 @@ DefineEngineMethod(ShapeAsset, getAnimation, ShapeAnimationAsset*, (S32 index), 
    return object->getAnimation(index);
 }
 
-DefineEngineMethod(ShapeAsset, getShapeFile, const char*, (), ,
+DefineEngineMethod(ShapeAsset, getShapePath, const char*, (), ,
    "Gets the shape's file path\n"
    "@return The filename of the shape file")
 {
@@ -557,9 +705,12 @@ DefineEngineMethod(ShapeAsset, getStatusString, String, (), , "get status string
 
 
 #ifdef TORQUE_TOOLS
-DefineEngineMethod(ShapeAsset, generateCachedPreviewImage, const char*, (S32 resolution), (256), "")
+DefineEngineMethod(ShapeAsset, generateCachedPreviewImage, const char*, (S32 resolution, const char* overrideMaterialName), (256, ""),
+   "Generates a baked preview image of the given shapeAsset. Only really used for generating Asset Browser icons.\n"
+   "@param resolution Optional field for what resolution to bake the preview image at. Must be pow2\n"
+   "@param overrideMaterialName Optional field for overriding the material used when rendering the shape for the bake.")
 {
-   return object->generateCachedPreviewImage(resolution);
+   return object->generateCachedPreviewImage(resolution, overrideMaterialName);
 }
 
 DefineEngineStaticMethod(ShapeAsset, getAssetIdByFilename, const char*, (const char* filePath), (""),
@@ -599,11 +750,9 @@ GuiControl* GuiInspectorTypeShapeAssetPtr::constructEditControl()
 
    // Change filespec
    char szBuffer[512];
-   dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"ShapeAsset\", \"AssetBrowser.changeAsset\", %s, %s);", 
-      mInspector->getInspectObject()->getIdString(), mCaption);
+   dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"ShapeAsset\", \"AssetBrowser.changeAsset\", %s, %s);",
+      mInspector->getIdString(), mCaption);
    mBrowseButton->setField("Command", szBuffer);
-
-   const char* id = mInspector->getInspectObject()->getIdString();
 
    setDataField(StringTable->insert("targetObject"), NULL, mInspector->getInspectObject()->getIdString());
 

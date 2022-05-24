@@ -121,5 +121,28 @@ protected:
    static SimObjectPtr<SimGroup> smGroup;
 };
 
+//-------------------------------------------------------------------------
+// ForestBrushGroup
+//-------------------------------------------------------------------------
+
+class ForestBrushGroup : public SimGroup
+{
+   typedef SimGroup Parent;
+
+public:
+
+   ForestBrushGroup();
+
+   DECLARE_CONOBJECT(ForestBrushGroup);
+
+   virtual bool onAdd();
+
+   virtual void addObject(SimObject*);
+
+   bool containsBrushData(const ForestBrush* inData);
+protected:
+
+   static SimObjectPtr<SimGroup> smGroup;
+};
 
 #endif // _FOREST_EDITOR_BRUSHELEMENT_H_

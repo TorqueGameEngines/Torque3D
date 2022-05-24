@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -27,11 +27,13 @@
 #include "../SDL_pixels_c.h"
 #include "../../events/SDL_keyboard_c.h"
 #include "../../events/SDL_mouse_c.h"
+#include "../../events/SDL_events_c.h"
 
 #include "SDL_x11video.h"
 #include "SDL_x11mouse.h"
 #include "SDL_x11shape.h"
 #include "SDL_x11xinput2.h"
+#include "SDL_x11xfixes.h"
 
 #if SDL_VIDEO_OPENGL_EGL
 #include "SDL_x11opengles.h"
@@ -70,13 +72,6 @@ X11_XIfEventTimeout(Display *display, XEvent *event_return, Bool (*predicate)(),
     return True;
 }
 */
-
-static SDL_bool
-X11_IsWindowLegacyFullscreen(_THIS, SDL_Window * window)
-{
-    SDL_WindowData *data = (SDL_WindowData *) window->driverdata;
-    return (data->fswindow != 0);
-}
 
 static SDL_bool
 X11_IsWindowMapped(_THIS, SDL_Window * window)
@@ -261,6 +256,7 @@ SetupWindowData(_THIS, SDL_Window * window, Window w, BOOL created)
     }
     data->window = window;
     data->xwindow = w;
+
 #ifdef X_HAVE_UTF8_STRING
     if (SDL_X11_HAVE_UTF8 && videodata->im) {
         data->ic =
@@ -325,7 +321,7 @@ SetupWindowData(_THIS, SDL_Window * window, Window w, BOOL created)
             SDL_SetKeyboardFocus(data->window);
         }
 
-        if (window->flags & SDL_WINDOW_INPUT_GRABBED) {
+        if (window->flags & SDL_WINDOW_MOUSE_GRABBED) {
             /* Tell x11 to clip mouse */
         }
     }
@@ -372,6 +368,7 @@ X11_CreateWindow(_THIS, SDL_Window * window)
     SDL_VideoData *data = (SDL_VideoData *) _this->driverdata;
     SDL_DisplayData *displaydata =
         (SDL_DisplayData *) SDL_GetDisplayForWindow(window)->driverdata;
+    const SDL_bool force_override_redirect = SDL_GetHintBoolean(SDL_HINT_X11_FORCE_OVERRIDE_REDIRECT, SDL_FALSE);
     SDL_WindowData *windowdata;
     Display *display = data->display;
     int screen = displaydata->screen;
@@ -389,6 +386,7 @@ X11_CreateWindow(_THIS, SDL_Window * window)
     long compositor = 1;
     Atom _NET_WM_PID;
     long fevent = 0;
+    const char *hint = NULL;
 
 #if SDL_VIDEO_OPENGL_GLX || SDL_VIDEO_OPENGL_EGL
     const char *forced_visual_id = SDL_GetHint(SDL_HINT_VIDEO_X11_WINDOW_VISUALID);
@@ -444,7 +442,8 @@ X11_CreateWindow(_THIS, SDL_Window * window)
         depth = displaydata->depth;
     }
 
-    xattr.override_redirect = ((window->flags & SDL_WINDOW_TOOLTIP) || (window->flags & SDL_WINDOW_POPUP_MENU)) ? True : False;
+    xattr.override_redirect = ((window->flags & SDL_WINDOW_TOOLTIP) || (window->flags & SDL_WINDOW_POPUP_MENU) || force_override_redirect) ? True : False;
+    xattr.backing_store = NotUseful;
     xattr.background_pixmap = None;
     xattr.border_pixel = 0;
 
@@ -531,7 +530,7 @@ X11_CreateWindow(_THIS, SDL_Window * window)
                       window->x, window->y, window->w, window->h,
                       0, depth, InputOutput, visual,
                       (CWOverrideRedirect | CWBackPixmap | CWBorderPixel |
-                       CWColormap), &xattr);
+                       CWBackingStore | CWColormap), &xattr);
     if (!w) {
         return SDL_SetError("Couldn't create window");
     }
@@ -587,6 +586,8 @@ X11_CreateWindow(_THIS, SDL_Window * window)
         wintype_name = "_NET_WM_WINDOW_TYPE_TOOLTIP";
     } else if (window->flags & SDL_WINDOW_POPUP_MENU) {
         wintype_name = "_NET_WM_WINDOW_TYPE_POPUP_MENU";
+    } else if ( ((hint = SDL_GetHint(SDL_HINT_X11_WINDOW_TYPE)) != NULL) && *hint ) {
+        wintype_name = hint;
     } else {
         wintype_name = "_NET_WM_WINDOW_TYPE_NORMAL";
         compositor = 1;  /* disable compositing for "normal" windows */
@@ -668,6 +669,9 @@ X11_CreateWindow(_THIS, SDL_Window * window)
                  PropertyChangeMask | StructureNotifyMask |
                  KeymapStateMask | fevent));
 
+    /* For _ICC_PROFILE. */
+    X11_XSelectInput(display, RootWindow(display, screen), PropertyChangeMask);
+
     X11_XFlush(display);
 
     return 0;
@@ -709,8 +713,10 @@ X11_GetWindowTitle(_THIS, Window xwindow)
                     &items_read, &items_left, &propdata);
         if (status == Success && propdata) {
             title = SDL_iconv_string("UTF-8", "", SDL_static_cast(char*, propdata), items_read+1);
+            SDL_LogDebug(SDL_LOG_CATEGORY_VIDEO, "Failed to convert WM_NAME title expecting UTF8! Title: %s", title);
             X11_XFree(propdata);
         } else {
+            SDL_LogDebug(SDL_LOG_CATEGORY_VIDEO, "Could not get any window title response from Xorg, returning empty string!");
             title = SDL_strdup("");
         }
     }
@@ -721,41 +727,11 @@ void
 X11_SetWindowTitle(_THIS, SDL_Window * window)
 {
     SDL_WindowData *data = (SDL_WindowData *) window->driverdata;
+    Window xwindow = data->xwindow;
     Display *display = data->videodata->display;
-    XTextProperty titleprop;
-    Status status;
-    const char *title = window->title ? window->title : "";
-    char *title_locale = NULL;
+    char *title = window->title ? window->title : "";
 
-#ifdef X_HAVE_UTF8_STRING
-    Atom _NET_WM_NAME = data->videodata->_NET_WM_NAME;
-#endif
-
-    title_locale = SDL_iconv_utf8_locale(title);
-    if (!title_locale) {
-        SDL_OutOfMemory();
-        return;
-    }
-
-    status = X11_XStringListToTextProperty(&title_locale, 1, &titleprop);
-    SDL_free(title_locale);
-    if (status) {
-        X11_XSetTextProperty(display, data->xwindow, &titleprop, XA_WM_NAME);
-        X11_XFree(titleprop.value);
-    }
-#ifdef X_HAVE_UTF8_STRING
-    if (SDL_X11_HAVE_UTF8) {
-        status = X11_Xutf8TextListToTextProperty(display, (char **) &title, 1,
-                                            XUTF8StringStyle, &titleprop);
-        if (status == Success) {
-            X11_XSetTextProperty(display, data->xwindow, &titleprop,
-                                 _NET_WM_NAME);
-            X11_XFree(titleprop.value);
-        }
-    }
-#endif
-
-    X11_XFlush(display);
+    SDL_X11_SetWindowTitle(display, xwindow, title);
 }
 
 void
@@ -798,11 +774,22 @@ X11_SetWindowIcon(_THIS, SDL_Window * window, SDL_Surface * icon)
     X11_XFlush(display);
 }
 
+static SDL_bool caught_x11_error = SDL_FALSE;
+static int
+X11_CatchAnyError(Display * d, XErrorEvent * e)
+{
+    /* this may happen during tumultuous times when we are polling anyhow,
+        so just note we had an error and return control. */
+    caught_x11_error = SDL_TRUE;
+    return 0;
+}
+
 void
 X11_SetWindowPosition(_THIS, SDL_Window * window)
 {
     SDL_WindowData *data = (SDL_WindowData *) window->driverdata;
     Display *display = data->videodata->display;
+    int (*prev_handler) (Display *, XErrorEvent *) = NULL;
     unsigned int childCount;
     Window childReturn, root, parent;
     Window* children;
@@ -821,20 +808,27 @@ X11_SetWindowPosition(_THIS, SDL_Window * window)
 
     /* Wait a brief time to see if the window manager decided to let this move happen.
        If the window changes at all, even to an unexpected value, we break out. */
+    X11_XSync(display, False);
+    prev_handler = X11_XSetErrorHandler(X11_CatchAnyError);
+
     timeout = SDL_GetTicks() + 100;
     while (SDL_TRUE) {
         int x, y;
+
+        caught_x11_error = SDL_FALSE;
         X11_XSync(display, False);
         X11_XGetWindowAttributes(display, data->xwindow, &attrs);
         X11_XTranslateCoordinates(display, parent, DefaultRootWindow(display),
                                   attrs.x, attrs.y, &x, &y, &childReturn);
 
-        if ((x != orig_x) || (y != orig_y)) {
-            window->x = x;
-            window->y = y;
-            break;  /* window moved, time to go. */
-        } else if ((x == window->x) && (y == window->y)) {
-            break;  /* we're at the place we wanted to be anyhow, drop out. */
+        if (!caught_x11_error) {
+            if ((x != orig_x) || (y != orig_y)) {
+                window->x = x;
+                window->y = y;
+                break;  /* window moved, time to go. */
+            } else if ((x == window->x) && (y == window->y)) {
+                break;  /* we're at the place we wanted to be anyhow, drop out. */
+            }
         }
 
         if (SDL_TICKS_PASSED(SDL_GetTicks(), timeout)) {
@@ -843,6 +837,9 @@ X11_SetWindowPosition(_THIS, SDL_Window * window)
 
         SDL_Delay(10);
     }
+
+    X11_XSetErrorHandler(prev_handler);
+    caught_x11_error = SDL_FALSE;
 }
 
 void
@@ -908,6 +905,7 @@ X11_SetWindowSize(_THIS, SDL_Window * window)
 {
     SDL_WindowData *data = (SDL_WindowData *) window->driverdata;
     Display *display = data->videodata->display;
+    int (*prev_handler) (Display *, XErrorEvent *) = NULL;
     XWindowAttributes attrs;
     int orig_w, orig_h;
     Uint32 timeout;
@@ -959,19 +957,25 @@ X11_SetWindowSize(_THIS, SDL_Window * window)
         X11_XResizeWindow(display, data->xwindow, window->w, window->h);
     }
 
+    X11_XSync(display, False);
+    prev_handler = X11_XSetErrorHandler(X11_CatchAnyError);
+
     /* Wait a brief time to see if the window manager decided to let this resize happen.
        If the window changes at all, even to an unexpected value, we break out. */
     timeout = SDL_GetTicks() + 100;
     while (SDL_TRUE) {
+        caught_x11_error = SDL_FALSE;
         X11_XSync(display, False);
         X11_XGetWindowAttributes(display, data->xwindow, &attrs);
 
-        if ((attrs.width != orig_w) || (attrs.height != orig_h)) {
-            window->w = attrs.width;
-            window->h = attrs.height;
-            break;  /* window changed, time to go. */
-        } else if ((attrs.width == window->w) && (attrs.height == window->h)) {
-            break;  /* we're at the place we wanted to be anyhow, drop out. */
+        if (!caught_x11_error) {
+            if ((attrs.width != orig_w) || (attrs.height != orig_h)) {
+                window->w = attrs.width;
+                window->h = attrs.height;
+                break;  /* window changed, time to go. */
+            } else if ((attrs.width == window->w) && (attrs.height == window->h)) {
+                break;  /* we're at the place we wanted to be anyhow, drop out. */
+            }
         }
 
         if (SDL_TICKS_PASSED(SDL_GetTicks(), timeout)) {
@@ -980,6 +984,9 @@ X11_SetWindowSize(_THIS, SDL_Window * window)
 
         SDL_Delay(10);
     }
+
+    X11_XSetErrorHandler(prev_handler);
+    caught_x11_error = SDL_FALSE;
 }
 
 int
@@ -1108,6 +1115,36 @@ X11_SetWindowResizable(_THIS, SDL_Window * window, SDL_bool resizable)
 }
 
 void
+X11_SetWindowAlwaysOnTop(_THIS, SDL_Window * window, SDL_bool on_top)
+{
+    SDL_WindowData *data = (SDL_WindowData *) window->driverdata;
+    SDL_DisplayData *displaydata = (SDL_DisplayData *) SDL_GetDisplayForWindow(window)->driverdata;
+    Display *display = data->videodata->display;
+    Atom _NET_WM_STATE = data->videodata->_NET_WM_STATE;
+    Atom _NET_WM_STATE_ABOVE = data->videodata->_NET_WM_STATE_ABOVE;
+
+    if (X11_IsWindowMapped(_this, window)) {
+        XEvent e;
+
+        SDL_zero(e);
+        e.xany.type = ClientMessage;
+        e.xclient.message_type = _NET_WM_STATE;
+        e.xclient.format = 32;
+        e.xclient.window = data->xwindow;
+        e.xclient.data.l[0] =
+            on_top ? _NET_WM_STATE_ADD : _NET_WM_STATE_REMOVE;
+        e.xclient.data.l[1] = _NET_WM_STATE_ABOVE;
+        e.xclient.data.l[3] = 0l;
+
+        X11_XSendEvent(display, RootWindow(display, displaydata->screen), 0,
+                   SubstructureNotifyMask | SubstructureRedirectMask, &e);
+    } else {
+        X11_SetNetWMState(_this, data->xwindow, window->flags);
+    }
+    X11_XFlush(display);
+}
+
+void
 X11_ShowWindow(_THIS, SDL_Window * window)
 {
     SDL_WindowData *data = (SDL_WindowData *) window->driverdata;
@@ -1126,6 +1163,7 @@ X11_ShowWindow(_THIS, SDL_Window * window)
 
     if (!data->videodata->net_wm) {
         /* no WM means no FocusIn event, which confuses us. Force it. */
+        X11_XSync(display, False);
         X11_XSetInputFocus(display, data->xwindow, RevertToNone, CurrentTime);
         X11_XFlush(display);
     }
@@ -1266,6 +1304,22 @@ X11_SetWindowFullscreenViaWM(_THIS, SDL_Window * window, SDL_VideoDisplay * _dis
 
     if (X11_IsWindowMapped(_this, window)) {
         XEvent e;
+        /* !!! FIXME: most of this waiting code is copy/pasted from elsewhere. */
+        int (*prev_handler) (Display *, XErrorEvent *) = NULL;
+        unsigned int childCount;
+        Window childReturn, root, parent;
+        Window* children;
+        XWindowAttributes attrs;
+        int orig_w, orig_h, orig_x, orig_y;
+        Uint64 timeout;
+
+        X11_XSync(display, False);
+        X11_XQueryTree(display, data->xwindow, &root, &parent, &children, &childCount);
+        X11_XGetWindowAttributes(display, data->xwindow, &attrs);
+        X11_XTranslateCoordinates(display, parent, DefaultRootWindow(display),
+                                  attrs.x, attrs.y, &orig_x, &orig_y, &childReturn);
+        orig_w = attrs.width;
+        orig_h = attrs.height;
 
         if (!(window->flags & SDL_WINDOW_RESIZABLE)) {
             /* Compiz refuses fullscreen toggle if we're not resizable, so update the hints so we
@@ -1315,6 +1369,48 @@ X11_SetWindowFullscreenViaWM(_THIS, SDL_Window * window, SDL_VideoDisplay * _dis
             X11_XSendEvent(display, RootWindow(display, displaydata->screen), 0,
                    SubstructureNotifyMask | SubstructureRedirectMask, &e);
         }
+
+        /* Wait a brief time to see if the window manager decided to let this happen.
+           If the window changes at all, even to an unexpected value, we break out. */
+        X11_XSync(display, False);
+        prev_handler = X11_XSetErrorHandler(X11_CatchAnyError);
+
+        timeout = SDL_GetTicks64() + 100;
+        while (SDL_TRUE) {
+            int x, y;
+
+            caught_x11_error = SDL_FALSE;
+            X11_XSync(display, False);
+            X11_XGetWindowAttributes(display, data->xwindow, &attrs);
+            X11_XTranslateCoordinates(display, parent, DefaultRootWindow(display),
+                                      attrs.x, attrs.y, &x, &y, &childReturn);
+
+            if (!caught_x11_error) {
+                SDL_bool window_changed = SDL_FALSE;
+                if ((x != orig_x) || (y != orig_y)) {
+                    SDL_SendWindowEvent(data->window, SDL_WINDOWEVENT_MOVED, x, y);
+                    window_changed = SDL_TRUE;
+                }
+
+                if ((attrs.width != orig_w) || (attrs.height != orig_h)) {
+                    SDL_SendWindowEvent(data->window, SDL_WINDOWEVENT_RESIZED, attrs.width, attrs.height);
+                    window_changed = SDL_TRUE;
+                }
+
+                if (window_changed) {
+                    break;  /* window changed, time to go. */
+                }
+            }
+
+            if (SDL_GetTicks64() >= timeout) {
+                break;
+            }
+
+            SDL_Delay(10);
+        }
+
+        X11_XSetErrorHandler(prev_handler);
+        caught_x11_error = SDL_FALSE;
     } else {
         Uint32 flags;
 
@@ -1338,160 +1434,11 @@ X11_SetWindowFullscreenViaWM(_THIS, SDL_Window * window, SDL_VideoDisplay * _dis
     X11_XFlush(display);
 }
 
-/* This handles fullscreen itself, outside the Window Manager. */
-static void
-X11_BeginWindowFullscreenLegacy(_THIS, SDL_Window * window, SDL_VideoDisplay * _display)
-{
-    SDL_WindowData *data = (SDL_WindowData *) window->driverdata;
-    SDL_DisplayData *displaydata = (SDL_DisplayData *) _display->driverdata;
-    Visual *visual = data->visual;
-    Display *display = data->videodata->display;
-    const int screen = displaydata->screen;
-    Window root = RootWindow(display, screen);
-    const int def_vis = (visual == DefaultVisual(display, screen));
-    unsigned long xattrmask = 0;
-    XSetWindowAttributes xattr;
-    XEvent ev;
-    SDL_Rect rect;
-
-    if ( data->fswindow ) {
-        return;  /* already fullscreen, I hope. */
-    }
-
-    X11_GetDisplayBounds(_this, _display, &rect);
-
-    SDL_zero(xattr);
-    xattr.override_redirect = True;
-    xattrmask |= CWOverrideRedirect;
-    xattr.background_pixel = def_vis ? BlackPixel(display, screen) : 0;
-    xattrmask |= CWBackPixel;
-    xattr.border_pixel = 0;
-    xattrmask |= CWBorderPixel;
-    xattr.colormap = data->colormap;
-    xattrmask |= CWColormap;
-
-    data->fswindow = X11_XCreateWindow(display, root,
-                                   rect.x, rect.y, rect.w, rect.h, 0,
-                                   displaydata->depth, InputOutput,
-                                   visual, xattrmask, &xattr);
-
-    X11_XSelectInput(display, data->fswindow, StructureNotifyMask);
-    X11_XSetWindowBackground(display, data->fswindow, 0);
-    X11_XInstallColormap(display, data->colormap);
-    X11_XClearWindow(display, data->fswindow);
-    X11_XMapRaised(display, data->fswindow);
-
-    /* Make sure the fswindow is in view by warping mouse to the corner */
-    X11_XUngrabPointer(display, CurrentTime);
-    X11_XWarpPointer(display, None, root, 0, 0, 0, 0, rect.x, rect.y);
-
-    /* Wait to be mapped, filter Unmap event out if it arrives. */
-    X11_XIfEvent(display, &ev, &isMapNotify, (XPointer)&data->fswindow);
-    X11_XCheckIfEvent(display, &ev, &isUnmapNotify, (XPointer)&data->fswindow);
-
-#if SDL_VIDEO_DRIVER_X11_XVIDMODE
-    if ( displaydata->use_vidmode ) {
-        X11_XF86VidModeLockModeSwitch(display, screen, True);
-    }
-#endif
-
-    SetWindowBordered(display, displaydata->screen, data->xwindow, SDL_FALSE);
-
-    /* Center actual window within our cover-the-screen window. */
-    X11_XReparentWindow(display, data->xwindow, data->fswindow,
-                    (rect.w - window->w) / 2, (rect.h - window->h) / 2);
-
-    /* Move the mouse to the upper left to make sure it's on-screen */
-    X11_XWarpPointer(display, None, root, 0, 0, 0, 0, rect.x, rect.y);
-
-    /* Center mouse in the fullscreen window. */
-    rect.x += (rect.w / 2);
-    rect.y += (rect.h / 2);
-    X11_XWarpPointer(display, None, root, 0, 0, 0, 0, rect.x, rect.y);
-
-    /* Wait to be mapped, filter Unmap event out if it arrives. */
-    X11_XIfEvent(display, &ev, &isMapNotify, (XPointer)&data->xwindow);
-    X11_XCheckIfEvent(display, &ev, &isUnmapNotify, (XPointer)&data->xwindow);
-
-    SDL_UpdateWindowGrab(window);
-}
-
-static void
-X11_EndWindowFullscreenLegacy(_THIS, SDL_Window * window, SDL_VideoDisplay * _display)
-{
-    SDL_WindowData *data = (SDL_WindowData *) window->driverdata;
-    SDL_DisplayData *displaydata = (SDL_DisplayData *) _display->driverdata;
-    Display *display = data->videodata->display;
-    const int screen = displaydata->screen;
-    Window root = RootWindow(display, screen);
-    Window fswindow = data->fswindow;
-    XEvent ev;
-
-    if (!data->fswindow) {
-        return;  /* already not fullscreen, I hope. */
-    }
-
-    data->fswindow = None;
-
-#if SDL_VIDEO_DRIVER_X11_VIDMODE
-    if ( displaydata->use_vidmode ) {
-        X11_XF86VidModeLockModeSwitch(display, screen, False);
-    }
-#endif
-
-    SDL_UpdateWindowGrab(window);
-
-    X11_XReparentWindow(display, data->xwindow, root, window->x, window->y);
-
-    /* flush these events so they don't confuse normal event handling */
-    X11_XSync(display, False);
-    X11_XCheckIfEvent(display, &ev, &isMapNotify, (XPointer)&data->xwindow);
-    X11_XCheckIfEvent(display, &ev, &isUnmapNotify, (XPointer)&data->xwindow);
-
-    SetWindowBordered(display, screen, data->xwindow,
-                      (window->flags & SDL_WINDOW_BORDERLESS) == 0);
-
-    X11_XWithdrawWindow(display, fswindow, screen);
-
-    /* Wait to be unmapped. */
-    X11_XIfEvent(display, &ev, &isUnmapNotify, (XPointer)&fswindow);
-    X11_XDestroyWindow(display, fswindow);
-}
-
-
 void
 X11_SetWindowFullscreen(_THIS, SDL_Window * window, SDL_VideoDisplay * _display, SDL_bool fullscreen)
 {
-    /* !!! FIXME: SDL_Hint? */
-    SDL_bool legacy = SDL_FALSE;
-    const char *env = SDL_getenv("SDL_VIDEO_X11_LEGACY_FULLSCREEN");
-    if (env) {
-        legacy = SDL_atoi(env);
-    } else {
-        SDL_VideoData *videodata = (SDL_VideoData *) _this->driverdata;
-        SDL_DisplayData *displaydata = (SDL_DisplayData *) _display->driverdata;
-        if ( displaydata->use_vidmode ) {
-            legacy = SDL_TRUE;  /* the new stuff only works with XRandR. */
-        } else if ( !videodata->net_wm ) {
-            legacy = SDL_TRUE;  /* The window manager doesn't support it */
-        } else {
-            /* !!! FIXME: look at the window manager name, and blacklist certain ones? */
-            /* http://stackoverflow.com/questions/758648/find-the-name-of-the-x-window-manager */
-            legacy = SDL_FALSE;  /* try the new way. */
-        }
-    }
-
-    if (legacy) {
-        if (fullscreen) {
-            X11_BeginWindowFullscreenLegacy(_this, window, _display);
-        } else {
-            X11_EndWindowFullscreenLegacy(_this, window, _display);
-        }
-    } else {
-        X11_SetWindowFullscreenViaWM(_this, window, _display, fullscreen);
-    }
+    X11_SetWindowFullscreenViaWM(_this, window, _display, fullscreen);
 }
-
 
 int
 X11_SetWindowGammaRamp(_THIS, SDL_Window * window, const Uint16 * ramp)
@@ -1560,21 +1507,99 @@ X11_SetWindowGammaRamp(_THIS, SDL_Window * window, const Uint16 * ramp)
     return 0;
 }
 
-void
-X11_SetWindowGrab(_THIS, SDL_Window * window, SDL_bool grabbed)
+typedef struct {
+    unsigned char *data;
+    int format, count;
+    Atom type;
+} SDL_x11Prop;
+
+/* Reads property
+   Must call X11_XFree on results
+ */
+static void X11_ReadProperty(SDL_x11Prop *p, Display *disp, Window w, Atom prop)
+{
+    unsigned char *ret=NULL;
+    Atom type;
+    int fmt;
+    unsigned long count;
+    unsigned long bytes_left;
+    int bytes_fetch = 0;
+
+    do {
+        if (ret != 0) X11_XFree(ret);
+        X11_XGetWindowProperty(disp, w, prop, 0, bytes_fetch, False, AnyPropertyType, &type, &fmt, &count, &bytes_left, &ret);
+        bytes_fetch += bytes_left;
+    } while (bytes_left != 0);
+
+    p->data=ret;
+    p->format=fmt;
+    p->count=count;
+    p->type=type;
+}
+
+void*
+X11_GetWindowICCProfile(_THIS, SDL_Window * window, size_t * size)
 {
     SDL_WindowData *data = (SDL_WindowData *) window->driverdata;
     Display *display = data->videodata->display;
-    SDL_bool oldstyle_fullscreen;
-    SDL_bool grab_keyboard;
+    XWindowAttributes attributes;
+    Atom icc_profile_atom;
+    char icc_atom_string[sizeof("_ICC_PROFILE_") + 12];
+    void* ret_icc_profile_data = NULL;
+    CARD8* icc_profile_data;
+    int real_format;
+    unsigned long real_nitems;
+    SDL_x11Prop atomProp;
 
-    /* ICCCM2.0-compliant window managers can handle fullscreen windows
-       If we're using XVidMode to change resolution we need to confine
-       the cursor so we don't pan around the virtual desktop.
-     */
-    oldstyle_fullscreen = X11_IsWindowLegacyFullscreen(_this, window);
+    X11_XGetWindowAttributes(display, data->xwindow, &attributes);
+    if (X11_XScreenNumberOfScreen(attributes.screen) > 0) {
+        SDL_snprintf(icc_atom_string, sizeof("_ICC_PROFILE_") + 12, "%s%d", "_ICC_PROFILE_", X11_XScreenNumberOfScreen(attributes.screen));
+    } else {
+        SDL_strlcpy(icc_atom_string, "_ICC_PROFILE", sizeof("_ICC_PROFILE"));
+    }
+    X11_XGetWindowAttributes(display, RootWindowOfScreen(attributes.screen), &attributes);
 
-    if (oldstyle_fullscreen || grabbed) {
+    icc_profile_atom = X11_XInternAtom(display, icc_atom_string, True);
+    if (icc_profile_atom == None) {
+        SDL_SetError("Screen is not calibrated.\n");
+        return NULL;
+    }
+
+    X11_ReadProperty(&atomProp, display, RootWindowOfScreen(attributes.screen), icc_profile_atom);
+    real_format = atomProp.format;
+    real_nitems = atomProp.count;
+    icc_profile_data = atomProp.data;
+    if (real_format == None) {
+        SDL_SetError("Screen is not calibrated.\n");
+        return NULL;
+    }
+
+    ret_icc_profile_data = SDL_malloc(real_nitems);
+    if (!ret_icc_profile_data) {
+        SDL_OutOfMemory();
+        return NULL;
+    }
+
+    SDL_memcpy(ret_icc_profile_data, icc_profile_data, real_nitems);
+    *size = real_nitems;
+    X11_XFree(icc_profile_data);
+    
+    return ret_icc_profile_data;
+}
+
+void
+X11_SetWindowMouseGrab(_THIS, SDL_Window * window, SDL_bool grabbed)
+{
+    SDL_WindowData *data = (SDL_WindowData *) window->driverdata;
+    Display *display;
+
+    if (data == NULL) {
+        return;
+    }
+
+    display = data->videodata->display;
+
+    if (grabbed) {
         /* If the window is unmapped, XGrab calls return GrabNotViewable,
            so when we get a MapNotify later, we'll try to update the grab as
            appropriate. */
@@ -1586,7 +1611,7 @@ X11_SetWindowGrab(_THIS, SDL_Window * window, SDL_bool grabbed)
         if (!data->videodata->broken_pointer_grab) {
             const unsigned int mask = ButtonPressMask | ButtonReleaseMask | PointerMotionMask | FocusChangeMask;
             int attempts;
-            int result;
+            int result = 0;
 
             /* Try for up to 5000ms (5s) to grab. If it still fails, stop trying. */
             for (attempts = 0; attempts < 100; attempts++) {
@@ -1604,24 +1629,41 @@ X11_SetWindowGrab(_THIS, SDL_Window * window, SDL_bool grabbed)
             }
         }
 
+        X11_Xinput2GrabTouch(_this, window);
+
         /* Raise the window if we grab the mouse */
         X11_XRaiseWindow(display, data->xwindow);
-
-        /* Now grab the keyboard */
-        if (SDL_GetHintBoolean(SDL_HINT_GRAB_KEYBOARD, SDL_FALSE)) {
-            grab_keyboard = SDL_TRUE;
-        } else {
-            /* We need to do this with the old style override_redirect
-               fullscreen window otherwise we won't get keyboard focus.
-            */
-            grab_keyboard = oldstyle_fullscreen;
-        }
-        if (grab_keyboard) {
-            X11_XGrabKeyboard(display, data->xwindow, True, GrabModeAsync,
-                          GrabModeAsync, CurrentTime);
-        }
     } else {
         X11_XUngrabPointer(display, CurrentTime);
+
+        X11_Xinput2UngrabTouch(_this, window);
+    }
+    X11_XSync(display, False);
+}
+
+void
+X11_SetWindowKeyboardGrab(_THIS, SDL_Window * window, SDL_bool grabbed)
+{
+    SDL_WindowData *data = (SDL_WindowData *) window->driverdata;
+    Display *display;
+
+    if (data == NULL) {
+        return;
+    }
+
+    display = data->videodata->display;
+
+    if (grabbed) {
+        /* If the window is unmapped, XGrab calls return GrabNotViewable,
+           so when we get a MapNotify later, we'll try to update the grab as
+           appropriate. */
+        if (window->flags & SDL_WINDOW_HIDDEN) {
+            return;
+        }
+
+        X11_XGrabKeyboard(display, data->xwindow, True, GrabModeAsync,
+                          GrabModeAsync, CurrentTime);
+    } else {
         X11_XUngrabKeyboard(display, CurrentTime);
     }
     X11_XSync(display, False);
@@ -1659,6 +1701,13 @@ X11_DestroyWindow(_THIS, SDL_Window * window)
             X11_XFlush(display);
         }
         SDL_free(data);
+
+#if SDL_VIDEO_DRIVER_X11_XFIXES
+        /* If the pointer barriers are active for this, deactivate it.*/
+        if (videodata->active_cursor_confined_window == window) {
+            X11_DestroyPointerBarrier(_this, window);
+        }
+#endif /* SDL_VIDEO_DRIVER_X11_XFIXES */
     }
     window->driverdata = NULL;
 }
@@ -1710,6 +1759,87 @@ X11_AcceptDragAndDrop(SDL_Window * window, SDL_bool accept)
     } else {
         X11_XDeleteProperty(display, data->xwindow, XdndAware);
     }
+}
+
+int
+X11_FlashWindow(_THIS, SDL_Window * window, SDL_FlashOperation operation)
+{
+    SDL_WindowData *data = (SDL_WindowData *) window->driverdata;
+    Display *display = data->videodata->display;
+    XWMHints *wmhints;
+
+    wmhints = X11_XGetWMHints(display, data->xwindow);
+    if (!wmhints) {
+        return SDL_SetError("Couldn't get WM hints");
+    }
+
+    wmhints->flags &= ~XUrgencyHint;
+    data->flashing_window = SDL_FALSE;
+    data->flash_cancel_time = 0;
+
+    switch (operation) {
+    case SDL_FLASH_CANCEL:
+        /* Taken care of above */
+        break;
+    case SDL_FLASH_BRIEFLY:
+        if (!(window->flags & SDL_WINDOW_INPUT_FOCUS)) {
+            wmhints->flags |= XUrgencyHint;
+            data->flashing_window = SDL_TRUE;
+            /* On Ubuntu 21.04 this causes a dialog to pop up, so leave it up for a full second so users can see it */
+            data->flash_cancel_time = SDL_GetTicks() + 1000;
+            if (!data->flash_cancel_time) {
+                data->flash_cancel_time = 1;
+            }
+        }
+        break;
+    case SDL_FLASH_UNTIL_FOCUSED:
+        if (!(window->flags & SDL_WINDOW_INPUT_FOCUS)) {
+            wmhints->flags |= XUrgencyHint;
+            data->flashing_window = SDL_TRUE;
+        }
+        break;
+    default:
+        break;
+    }
+
+    X11_XSetWMHints(display, data->xwindow, wmhints);
+    X11_XFree(wmhints);
+    return 0;
+}
+
+int SDL_X11_SetWindowTitle(Display* display, Window xwindow, char* title) {
+    Atom _NET_WM_NAME = X11_XInternAtom(display, "_NET_WM_NAME", False);
+    XTextProperty titleprop;
+    int conv = X11_XmbTextListToTextProperty(display, (char**) &title, 1, XTextStyle, &titleprop);
+    Status status;
+
+    if (X11_XSupportsLocale() != True) {
+        return SDL_SetError("Current locale not supported by X server, cannot continue.");
+    }
+
+    if (conv == 0) {
+        X11_XSetTextProperty(display, xwindow, &titleprop, XA_WM_NAME);
+        X11_XFree(titleprop.value);
+    /* we know this can't be a locale error as we checked X locale validity */
+    } else if (conv < 0) {
+        return SDL_OutOfMemory();
+    } else { /* conv > 0 */
+        SDL_LogDebug(SDL_LOG_CATEGORY_VIDEO, "%d characters were not convertable to the current locale!", conv);
+        return 0;
+    }
+
+#ifdef X_HAVE_UTF8_STRING
+    status = X11_Xutf8TextListToTextProperty(display, (char **) &title, 1, XUTF8StringStyle, &titleprop);
+    if (status == Success) {
+        X11_XSetTextProperty(display, xwindow, &titleprop, _NET_WM_NAME);
+        X11_XFree(titleprop.value);
+    } else {
+        return SDL_SetError("Failed to convert title to UTF8! Bad encoding, or bad Xorg encoding? Window title: «%s»", title);
+    }
+#endif
+
+    X11_XFlush(display);
+    return 0;
 }
 
 #endif /* SDL_VIDEO_DRIVER_X11 */

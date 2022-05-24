@@ -36,7 +36,7 @@ function AssetBrowser::editScriptAsset(%this, %assetDef)
 {
    %scriptFile = %assetDef.scriptFile;
    
-   EditorOpenFileInTorsion(makeFullPath(%scriptFile), 0);
+   //EditorOpenFileInTorsion(makeFullPath(%scriptFile), 0);
 }
 
 function AssetBrowser::duplicateScriptAsset(%this, %assetDef, %targetModule)
@@ -76,14 +76,14 @@ function AssetBrowser::deleteScriptAsset(%this, %assetDef)
 function AssetBrowser::moveScriptAsset(%this, %assetDef, %destination)
 {
    %currentModule = AssetDatabase.getAssetModule(%assetDef.getAssetId());
-   %targetModule = AssetBrowser.getModuleFromAddress(%destination);
+   %targetModule = AssetBrowser.dirHandler.getModuleFromAddress(%destination);
    
    %newAssetPath = moveAssetFile(%assetDef, %destination);
    
    if(%newAssetPath $= "")
       return false;
 
-   moveAssetLooseFile(%assetDef.scriptFile, %destination);
+   moveAssetLooseFile(%assetDef.getScriptPath(), %destination);
    
    AssetDatabase.removeDeclaredAsset(%assetDef.getAssetId());
    AssetDatabase.addDeclaredAsset(%targetModule, %newAssetPath);
@@ -93,7 +93,7 @@ function AssetBrowser::buildScriptAssetPreview(%this, %assetDef, %previewData)
 {
    %previewData.assetName = %assetDef.assetName;
    %previewData.assetPath = %assetDef.scriptFile;
-   %previewData.doubleClickCommand = "EditorOpenFileInTorsion( \""@%previewData.assetPath@"\", 0 );";
+   //%previewData.doubleClickCommand = "EditorOpenFileInTorsion( \""@%previewData.assetPath@"\", 0 );";
    
    if(%assetDef.isServerSide)
       %previewData.previewImage = "ToolsModule:serverScriptIcon_image";
@@ -109,7 +109,7 @@ function AssetBrowser::buildTScriptPreview(%this, %assetDef, %previewData)
 {
    %previewData.assetName = %assetDef.assetName;
    %previewData.assetPath = %assetDef.scriptFile;
-   %previewData.doubleClickCommand = "EditorOpenFileInTorsion( \""@%previewData.assetPath@"\", 0 );";
+   //%previewData.doubleClickCommand = "EditorOpenFileInTorsion( \""@%previewData.assetPath@"\", 0 );";
    
    if(%assetDef.isServerSide)
       %previewData.previewImage = "ToolsModule:serverScriptIcon_image";

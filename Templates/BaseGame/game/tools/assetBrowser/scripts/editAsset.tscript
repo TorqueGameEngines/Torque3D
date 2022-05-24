@@ -111,7 +111,19 @@ function AssetBrowser::refreshAsset(%this, %assetId)
 }
 
 //------------------------------------------------------------
+function AssetBrowser::regeneratePreviewImage(%this)
+{
+   %assetDef = AssetDatabase.acquireAsset(EditAssetPopup.assetId);
+   %dummyObj = new ScriptObject();
+   %regenCommand = "AssetBrowser.build" @ EditAssetPopup.assetType @ 
+                     "Preview(" @%assetDef @ "," @ %dummyObj @ ", true);";
+   eval(%regenCommand);
 
+   %dummyObj.delete();
+   AssetDatabase.releaseAsset(EditAssetPopup.assetId);
+}
+
+//------------------------------------------------------------
 function AssetBrowser::renameAsset(%this)
 {
    //Find out what type it is
@@ -163,7 +175,7 @@ function AssetBrowser::performRenameAsset(%this, %originalAssetName, %newName)
    %ModuleItem = AssetBrowser-->filterTree.findItemByName(%moduleName);
 
    // TODO is this correct?
-   %assetType = %ModuleItem.getClassName();
+   /*%assetType = %ModuleItem.getClassName();
 
    %assetTypeId = AssetBrowser-->filterTree.findChildItemByName(%ModuleItem, %assetType);
    
@@ -172,7 +184,7 @@ function AssetBrowser::performRenameAsset(%this, %originalAssetName, %newName)
    %selectedItem = AssetBrowser-->filterTree.getSelectedItem();
    AssetBrowser-->filterTree.scrollVisibleByObjectId(%selectedItem);
    
-   AssetBrowser-->filterTree.buildVisibleTree(); 
+   AssetBrowser-->filterTree.buildVisibleTree();*/ 
 }
 
 function renameAssetFile(%assetDef, %newName)
@@ -464,4 +476,54 @@ function AssetBrowser::updateAssetReference(%this, %targetPath, %oldAssetId, %ne
    
    lineCache.delete();
    %fileObj.delete();
+}
+
+function AssetBrowser::openFileLocation(%this)
+{
+   %filePath = "";
+   if(EditAssetPopup.assetId !$= "")
+   {
+      %filePath = AssetDatabase.getAssetPath(EditAssetPopup.assetId);
+   }
+   else if(EditLevelAssetPopup.assetId !$= "")
+   {
+      %filePath = AssetDatabase.getAssetPath(EditAssetPopup.assetId);
+   }
+   else if(EditTerrainAssetPopup.assetId !$= "")
+   {
+      %filePath = AssetDatabase.getAssetPath(EditAssetPopup.assetId);
+   }
+   
+   if(%filePath !$= "")
+   {
+      if($platform $= "windows")
+      {
+         %cmd = "cd \"" @ makeFullPath(%filePath) @ "\" && start .";
+         systemCommand(%cmd);
+      }
+      else
+      {
+         %cmd = "open \"" @ makeFullPath(%filePath) @ "\"";
+         systemCommand(%cmd);
+      }
+   }
+}
+
+function AssetBrowser::openFolderLocation(%this)
+{
+   %filePath = AssetBrowser.dirHandler.currentAddress;
+   
+   if(%filePath !$= "")
+   {
+      if($platform $= "windows")
+      {
+         %cmd = "cd \"" @ makeFullPath(%filePath) @ "\" && start .";
+         systemCommand(%cmd);
+      }
+      else
+      {
+         %cmd = "open \"" @ makeFullPath(%filePath) @ "\"";
+         systemCommand(%cmd);
+      }
+   }
 }

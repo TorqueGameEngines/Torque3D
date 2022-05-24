@@ -827,7 +827,6 @@ void SimXMLDocument::setObjectAttributes(const char* objectID)
 
    char textbuf[1024];
    tinyxml2::XMLElement* field = m_qDocument->NewElement("Field");
-   tinyxml2::XMLElement* group = m_qDocument->NewElement("FieldGroup");
    pElement->SetAttribute( "Name", pObject->getName() );
 
 

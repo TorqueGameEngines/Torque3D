@@ -85,9 +85,9 @@ function ImportAssetWindow::onWake(%this)
    %this.importer.targetPath = AssetImportTargetAddress.getText();
    %this.importer.targetModuleId = AssetImportTargetModule.getText();
    
-   ImportActivityLog.empty();
-   
    %this.refresh();
+   
+   toggleImportWindowVizBtn.setStateOn(EditorSettings.value("Assets/AutoImport"));
 }
 
 //
@@ -108,7 +108,8 @@ function isShapeFormat(%fileExt)
    (%fileExt $= ".gltf") || 
    (%fileExt $= ".glb") || 
    (%fileExt $= ".obj") || 
-   (%fileExt $= ".blend"))
+   (%fileExt $= ".blend") || 
+   (%fileExt $= ".dsq"))
       return true;
       
    return false;
@@ -181,6 +182,20 @@ function AssetBrowser::onBeginDropFiles( %this )
 
 function AssetBrowser::onDropFile( %this, %filePath )
 {
+   if(fileExt(%filePath) $= "")
+   {
+      //we're dealing with a folder, so we gotta parse through it  
+      
+      %file = findFirstFile( %filePath @ "/*" );
+      while( %file !$= "" )
+      {      
+         %this.onDropFile(%file);
+         %file = findNextFile( %filePath @ "/*" );
+      }
+      
+      return;
+   }
+   
    if(!AssetBrowser.isAwake() || !AssetBrowser.isVisible())
    {
       if(GuiEditorIsActive())
@@ -471,9 +486,7 @@ function ImportAssetWindow::doRefresh(%this)
    ImportAssetWindow.importer.processImportingAssets();
    //%this.processImportAssets();
    
-   //ImportAssetWindow.hasImportIssues = %this.validateAssets();
-   
-   ImportAssetWindow.importer.validateImportingAssets();
+   ImportAssetWindow.hasImportIssues = ImportAssetWindow.importer.hasImportIssues();
    
    AssetImportCtrl-->NewAssetsTree.clear();
    AssetImportCtrl-->NewAssetsTree.insertItem(0, "Importing Assets");
@@ -503,7 +516,7 @@ function ImportAssetWindow::doRefresh(%this)
    }
    if(%this.autoRenamedAssets != 0)
    {
-      %ImportActionSummary = %ImportActionSummary SPC %this.autoRenamedAssets @ " Auto Renamed|";
+      %ImportActionSummary = %ImportActionSummary SPC %this.autoRenamedAssets @ " Automatically Renamed|";
    }
    
    if(%ImportActionSummary !$= "")
@@ -519,7 +532,8 @@ function ImportAssetWindow::doRefresh(%this)
    if(ImportAssetWindow.importConfigsList.count() != 0 
       && EditorSettings.value("Assets/AssetImporDefaultConfig") !$= "" 
       && EditorSettings.value("Assets/AutoImport", false) == true
-      && ImportAssetWindow.hasImportIssues == false
+      && ImportAssetWindow.hasImportIssues() == false
+      && AssetBrowser.isAssetReImport == false
       && ImportAssetWindow.allowAutoImport)
    {
       AssetImportCtrl.setHidden(true);
@@ -722,11 +736,7 @@ function NewAssetsPanelInputs::onRightMouseDown(%this)
 //
 function ImportAssetWindow::removeImportingAsset(%this)
 {
-   ImportActivityLog.add("Removing Asset from Import");
-   
    %this.importer.deleteImportingAsset(ImportAssetActions.assetItem);
-   
-   //ImportAssetWindow.refresh();
 }
 
 function ImportAssetWindow::addNewImportingAsset(%this, %filterType)
@@ -924,9 +934,9 @@ function ImportAssetWindow::toggleLogWindow()
    }
       
    ImportLogTextList.clear();
-   for(%i=0; %i < ImportActivityLog.count(); %i++)
+   for(%i=0; %i < ImportAssetWindow.importer.getActivityLogLineCount(); %i++)
    {
-      ImportLogTextList.addRow(%i, ImportActivityLog.getKey(%i));
+      ImportLogTextList.addRow(%i,ImportAssetWindow.importer.getActivityLogLine(%i));
    }
 }
 //
@@ -950,5 +960,14 @@ function ImportAssetModuleList::refresh(%this)
       %moduleName = getWord(%moduleList, %i);
       %this.add(%moduleName.ModuleId, %i);  
    }
+}
+//
+
+//
+function toggleImportWindowViz()
+{
+   %value = EditorSettings.value("Assets/AutoImport");
+   EditorSettings.setValue("Assets/AutoImport", !%value);
+  
 }
 //

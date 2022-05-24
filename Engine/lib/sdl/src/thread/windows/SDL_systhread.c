@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -163,14 +163,14 @@ SDL_SYS_SetupThread(const char *name)
         static HMODULE kernel32 = 0;
 
         if (!kernel32) {
-            kernel32 = LoadLibraryW(L"kernel32.dll");
+            kernel32 = GetModuleHandle(TEXT("kernel32.dll"));
             if (kernel32) {
                 pSetThreadDescription = (pfnSetThreadDescription) GetProcAddress(kernel32, "SetThreadDescription");
             }
         }
 
         if (pSetThreadDescription != NULL) {
-            WCHAR *strw = WIN_UTF8ToString(name);
+            WCHAR *strw = WIN_UTF8ToStringW(name);
             if (strw) {
                 pSetThreadDescription(GetCurrentThread(), strw);
                 SDL_free(strw);

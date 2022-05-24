@@ -1,0 +1,94 @@
+//==============================================================================
+// We first copy over binary files(images, shapes, sounds, etc) to the destination
+// module, then run the processing/import on them to generate the assets
+//==============================================================================
+function Pre40ImporterPage0::openPage(%this)
+{
+   ProjectImportWindow-->nextButton.setActive(false);
+   %this-->processingText.setText("Processing...");
+   Canvas.repaint();
+   
+   //copy binary files over
+   for(%i=0; %i < $ProjectImporter::FileList.count(); %i++)
+   {
+      %file = $ProjectImporter::FileList.getKey(%i);
+      %rootFileSectionObject = $ProjectImporter::FileList.getValue(%i);
+      if(%rootFileSectionObject.binaryFile == true)
+      {
+         %filePath = filePath(%file);
+         %fileName = %rootFileSectionObject.fileName;
+         %fileBase = %rootFileSectionObject.fileBase;
+         %fileExt = %rootFileSectionObject.fileExt;
+         
+         //filter out some unneeded folders
+         %slashCount = getTokenCount(%filePath, "/");
+         %topFolder = getToken(%filePath, "/", %slashCount-1);
+         if(%topFolder $= "")
+            %topFolder = getToken(%filePath, "/", %slashCount-2);
+            
+         if(%topFolder $= "creator" || %topFolder $= "tools" || %topFolder $= "web")
+         {
+            %file = findNextFileMultiExpr( $ProjectImporter::sourceContentFolder @ "/*.*" );
+            continue;
+         }
+         
+         %targetFilePath = strReplace(%file, $ProjectImporter::sourceContentFolder, $ProjectImporter::modulePath);
+         
+         %sanitizedFilename = sanitizeString(%fileBase);
+         if(startsWith(%sanitizedFilename, "_"))
+         {
+            %sanitizedFilename = getSubstr(%sanitizedFilename, 1, -1);
+         }
+         if(%sanitizedFilename !$= %fileBase)
+         {
+            %targetFilePath = filePath(%targetFilePath) @ "/" @ %sanitizedFilename @ %fileExt;
+         }
+         
+         %targetFolder = filePath(%targetFilePath);
+         
+         if(!copyFileToDestination(%file, %targetFilePath))
+         {
+            $ProjectImporter::log.add("Legacy Project Importer, failed to copy file: " @ %file @ " to destination: " @ %targetFilePath);
+            continue;
+         }
+         
+         %rootFileSectionObject.localPath = %targetFilePath;
+         
+         //If it was an asset definition file, go ahead and register it
+         if(%rootFileSectionObject.isAssetFile)
+         {
+            %moduleName = AssetBrowser.dirHandler.getModuleFromAddress(%targetFilePath).ModuleId;
+            %moduleDef = ModuleDatabase.findModule(%moduleName, 1);
+            
+            AssetDatabase.addDeclaredAsset(%moduleDef, %targetFilePath);
+         }
+      }
+   } 
+   
+   //Now, we need to do some initial importing processing
+   T3Dpre4ProjectImporter.doContentImport(); 
+   
+   //Once that's done, update the text of the UI
+   %this-->processingText.setText("Done!");
+   ProjectImportWindow-->nextButton.setActive(true);
+   Canvas.repaint();
+}
+
+//==============================================================================
+// This page actually invokes the processing of the script-based files and objects
+//==============================================================================
+function Pre40ImporterPage1::openPage(%this)
+{
+   ProjectImportWindow-->nextButton.setActive(false);
+   %this-->processingText.setText("Processing...");
+   Canvas.repaint();
+   
+   //Now, we need to do some initial importing processing
+   T3Dpre4ProjectImporter.doScriptImport();
+   
+   //Once that's done, update the text of the UI
+   %this-->processingText.setText("Done!");
+   ProjectImportWindow-->nextButton.setActive(true);
+   Canvas.repaint();
+}
+

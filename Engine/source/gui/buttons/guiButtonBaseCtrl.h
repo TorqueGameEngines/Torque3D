@@ -49,7 +49,7 @@ class GuiButtonBaseCtrl : public GuiControl
       StringTableEntry mButtonText;
       StringTableEntry mButtonTextID;
       bool mDepressed;
-      bool mMouseOver;
+      bool mHighlighted;
       bool mStateOn;
       S32 mButtonType;
       S32 mRadioGroup;
@@ -95,7 +95,10 @@ class GuiButtonBaseCtrl : public GuiControl
       bool getStateOn() const { return mStateOn; }
 
       void setDepressed( bool depressed ) { mDepressed = depressed; }
-      void resetState() {mDepressed = false; mMouseOver = false;}
+      void resetState() {mDepressed = false; mHighlighted = false;}
+
+      void setHighlighted(bool highlighted) { mHighlighted = highlighted; }
+      bool isHighlighted() { return mHighlighted; }
 
       void acceleratorKeyPress(U32 index);
       void acceleratorKeyRelease(U32 index);

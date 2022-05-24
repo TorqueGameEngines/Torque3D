@@ -110,17 +110,45 @@ function ForestEditorGui::createForest( %this )
 
 function ForestEditorGui::newBrush( %this )
 {   
-   %internalName = getUniqueInternalName( "Brush", ForestBrushGroup, true );
+   AssetBrowser_SelectModule.showDialog("ForestEditorGui.pickedNewBrushTargetModule");
+   AssetBrowser_SelectModuleWindow.selectWindow();
+}
+
+function ForestEditorGui::pickedNewBrushTargetModule(%this, %module)
+{   
+   %moduleDef = ModuleDatabase.findModule(%module);
+   
+   ForestEditorGui.forestBrushPath = %moduleDef.ModulePath @ "/scripts/managedData/managedForestBrushData." @ $TorqueScriptFileExtension;
+   
+   if(!isDirectory(filePath(ForestEditorGui.forestItemDataPath)))
+   {
+      AssetBrowser.dirHandler.createFolder(filePath(ForestEditorGui.forestItemDataPath));
+   }
+   
+   %group = ForestBrushSet.findObjectByInternalName(%module @ "ForestBrushGroup");
+   if(!isObject(%group))
+   {
+      %group = new ForestBrushGroup() {
+         internalName = %module @ "ForestBrushGroup";
+      };
+      
+      %group.setFilename(ForestEditorGui.forestBrushPath);
+   }
+   
+   %internalName = getUniqueInternalName( "Brush", ForestBrushSet, true );
          
    %brush = new ForestBrush()
    {
+      class = "ForestBrushGroup";
       internalName = %internalName;
-      parentGroup = ForestBrushGroup; 
+      parentGroup = ForestBrushSet; 
    };   
+   
+   %group.add(%brush);
    
    MECreateUndoAction::submit( %brush );
    
-   ForestEditBrushTree.open( ForestBrushGroup );
+   ForestEditBrushTree.open( ForestBrushSet );
    ForestEditBrushTree.buildVisibleTree(true);
    %item = ForestEditBrushTree.findItemByObjectId( %brush );
    ForestEditBrushTree.clearSelection();
@@ -135,7 +163,7 @@ function ForestEditorGui::newElement( %this )
    %sel = ForestEditBrushTree.getSelectedObject();
    
    if ( !isObject( %sel ) )
-      %parentGroup = ForestBrushGroup;
+      %parentGroup = ForestBrushSet;
    else
    {
       if ( %sel.getClassName() $= "ForestBrushElement" )  
@@ -144,7 +172,7 @@ function ForestEditorGui::newElement( %this )
          %parentGroup = %sel;
    }
       
-   %internalName = getUniqueInternalName( "Element", ForestBrushGroup, true );   
+   %internalName = getUniqueInternalName( "Element", ForestBrushSet, true );   
    
    %element = new ForestBrushElement()
    {
@@ -191,37 +219,11 @@ function ForestEditorGui::pickedNewMeshTargetModule(%this, %module)
 
 function selectNewForestMesh(%selectedShapeAssetId)
 {
-   /*%spec = "All Mesh Files|*.dts;*.dae|DTS|*.dts|DAE|*.dae";
-   
-   %dlg = new OpenFileDialog()
-   {
-      Filters        = %spec;
-      DefaultPath    = $Pref::WorldEditor::LastPath;
-      DefaultFile    = "";
-      ChangePath     = true;
-   };
-         
-   %ret = %dlg.Execute();
-   
-   if ( %ret )
-   {
-      $Pref::WorldEditor::LastPath = filePath( %dlg.FileName );
-      %fullPath = makeRelativePath( %dlg.FileName, getMainDotCSDir() );
-      %file = fileBase( %fullPath );
-   }   
-   
-   %dlg.delete();*/
-   
    if ( %selectedShapeAssetId $= "")
       return;
          
    %name = getUniqueName( AssetDatabase.getAssetName(%selectedShapeAssetId) );
       
-   //%str = "datablock TSForestItemData( " @ %name @ " ) { shapeFile = \"" @ %fullPath @ "\"; };";            
-   //eval( %str );
-   
-   //%fullPath = AssetDatabase.acquireAsset(%selectedShapeAssetId).getShapeFile();
-   
    new TSForestItemData(%name) {
       shapeAsset = %selectedShapeAssetId;
    };
@@ -418,7 +420,7 @@ function ForestEditBrushTree::handleRenameObject( %this, %name, %obj )
 {   
    if ( %name !$= "" )
    {       
-      %found = ForestBrushGroup.findObjectByInternalName( %name );
+      %found = ForestBrushSet.findObjectByInternalName( %name );
       if ( isObject( %found ) && %found.getId() != %obj.getId() )
       {
          toolsMessageBoxOK( "Error", "Brush or Element with that name already exists.", "" );   

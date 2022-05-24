@@ -29,7 +29,6 @@ function initializeConvexEditor()
    exec( "./convexEditorToolbar.ed.gui" );
    exec( "./convexEditorGui." @ $TorqueScriptFileExtension );
    exec( "./convexEditorSidebarGui.gui" );
-   exec( "./materials." @ $TorqueScriptFileExtension );
 
    ConvexEditorGui.setVisible( false );  
    ConvexEditorOptionsWindow.setVisible( false );  

@@ -173,6 +173,13 @@ Trigger::Trigger()
    mTripOnce = false;
    mTrippedBy = 0xFFFFFFFF;
    mTripCondition = "";
+
+   //Default up a basic square
+   Point3F vecs[3] = { Point3F(1.0, 0.0, 0.0),
+      Point3F(0.0, -1.0, 0.0),
+      Point3F(0.0, 0.0, 1.0) };
+
+   mTriggerPolyhedron = Polyhedron(Point3F(-0.5, 0.5, 0.0), vecs);
 }
 
 Trigger::~Trigger()
@@ -731,7 +738,8 @@ void Trigger::potentialEnterObject(GameBase* enter)
 
       if(evalCmD(&mEnterCommand))
       {
-         String command = String("%obj = ") + enter->getIdString() + ";" + mEnterCommand;
+         String command = String("%obj = ") + enter->getIdString() + ";";
+         command = command + String("%this = ") + getIdString() + ";" + mEnterCommand;
          Con::evaluate(command.c_str());
       }
 
@@ -779,7 +787,8 @@ void Trigger::processTick(const Move* move)
             
             if (evalCmD(&mLeaveCommand))
             {
-               String command = String("%obj = ") + remove->getIdString() + ";" + mLeaveCommand;
+               String command = String("%obj = ") + remove->getIdString() + ";";
+               command = command + String("%this = ") + getIdString() + ";" + mLeaveCommand;
                Con::evaluate(command.c_str());
             }
             if (testTrippable() && testCondition())

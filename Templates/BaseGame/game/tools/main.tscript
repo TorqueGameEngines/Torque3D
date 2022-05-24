@@ -82,7 +82,6 @@ function onStart()
    // Common GUI stuff.
    exec( "./gui/cursors.ed." @ $TorqueScriptFileExtension );
    exec( "./gui/messageBoxes/messageBox.ed." @ $TorqueScriptFileExtension );
-   exec( "./editorClasses/gui/panels/navPanelProfiles.ed." @ $TorqueScriptFileExtension );
    
    // Make sure we get editor profiles before any GUI's
    // BUG: these dialogs are needed earlier in the init sequence, and should be moved to

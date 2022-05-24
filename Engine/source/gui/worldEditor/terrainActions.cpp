@@ -773,7 +773,7 @@ ConsoleDocClass( TerrainSmoothAction,
 );
 
 TerrainSmoothAction::TerrainSmoothAction()
-   : UndoAction("Terrain Smoothing"), mFactor(1.0), mSteps(1), mTerrainId(NULL)
+   : UndoAction("Terrain Smoothing"), mFactor(1.0), mSteps(1), mTerrainId(0)
 {
 }
 

@@ -160,13 +160,13 @@ class GuiMeshRoadEditorCtrl : public EditTSCtrl
 	public:
 
       DECLARE_MATERIALASSET(GuiMeshRoadEditorCtrl, TopMaterial);
-      DECLARE_MATERIALASSET_SETGET(GuiMeshRoadEditorCtrl, TopMaterial);
+      DECLARE_ASSET_SETGET(GuiMeshRoadEditorCtrl, TopMaterial);
 
       DECLARE_MATERIALASSET(GuiMeshRoadEditorCtrl, BottomMaterial);
-      DECLARE_MATERIALASSET_SETGET(GuiMeshRoadEditorCtrl, BottomMaterial);
+      DECLARE_ASSET_SETGET(GuiMeshRoadEditorCtrl, BottomMaterial);
 
       DECLARE_MATERIALASSET(GuiMeshRoadEditorCtrl, SideMaterial);
-      DECLARE_MATERIALASSET_SETGET(GuiMeshRoadEditorCtrl, SideMaterial);
+      DECLARE_ASSET_SETGET(GuiMeshRoadEditorCtrl, SideMaterial);
 };
 
 class GuiMeshRoadEditorUndoAction : public UndoAction

@@ -106,3 +106,18 @@ function ExampleModule::onDestroyClientConnection(%this)
    //This will pop the keybind, cleaning it up from the input stack, as it no longer applies
    ExampleMoveMap.pop();
 }
+
+function ExampleModule::populateOptionsMenuCategories(%this)
+{
+   addOptionsMenuCategory("Example Options", "testExampleOptions();");
+}
+
+function testExampleOptions()
+{
+   OptionsMenuSettingsList.clear();
+   
+   OptionName.setText("");
+   OptionDescription.setText("");
+   
+   addListOption("Test Option", "This is a test option", $testOptionValue, "OptionA\tOptionB");  
+}

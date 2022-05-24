@@ -260,9 +260,9 @@ WaterObject::WaterObject()
    mMatrixSet = reinterpret_cast<MatrixSet *>(dMalloc_aligned(sizeof(MatrixSet), 16));
    constructInPlace(mMatrixSet);
 
-   INIT_IMAGEASSET(RippleTex);
-   INIT_IMAGEASSET(FoamTex);
-   INIT_IMAGEASSET(DepthGradientTex);
+   INIT_ASSET(RippleTex);
+   INIT_ASSET(FoamTex);
+   INIT_ASSET(DepthGradientTex);
 
    mCubemapName = StringTable->EmptyString();
 }
@@ -546,9 +546,9 @@ U32 WaterObject::packUpdate( NetConnection * conn, U32 mask, BitStream *stream )
 
    if ( stream->writeFlag( mask & TextureMask ) )
    {
-      PACK_IMAGEASSET(conn, RippleTex);
-      PACK_IMAGEASSET(conn, DepthGradientTex);
-      PACK_IMAGEASSET(conn, FoamTex);
+      PACK_ASSET(conn, RippleTex);
+      PACK_ASSET(conn, DepthGradientTex);
+      PACK_ASSET(conn, FoamTex);
 
       stream->writeString( mCubemapName );      
    }
@@ -668,9 +668,9 @@ void WaterObject::unpackUpdate( NetConnection * conn, BitStream *stream )
    // TextureMask
    if ( stream->readFlag() )
    {
-      UNPACK_IMAGEASSET(conn, RippleTex);
-      UNPACK_IMAGEASSET(conn, DepthGradientTex);
-      UNPACK_IMAGEASSET(conn, FoamTex);
+      UNPACK_ASSET(conn, RippleTex);
+      UNPACK_ASSET(conn, DepthGradientTex);
+      UNPACK_ASSET(conn, FoamTex);
 
       mCubemapName = stream->readSTString();
 

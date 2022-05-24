@@ -91,7 +91,7 @@ function VignettePostFX::populatePostFXSettings(%this)
 //Allow us to easily toggle the postFX and have it respond immediately
 function PostEffectEditorInspector::toggleVignettePostFX(%this)
 {
-   if($PostFX::VignettePostFX::Enabled)
+   if($PostFX::VignettePostFX::Enabled && $pref::PostFX::EnableVignette)
       VignettePostFX.enable();
    else
       VignettePostFX.disable();
@@ -102,7 +102,7 @@ function PostEffectEditorInspector::toggleVignettePostFX(%this)
 //when rendering. This allows us to modify things but still leave room for reverting or temporarily applying them
 function VignettePostFX::applyFromPreset(%this)
 {
-   if($PostFX::VignettePostFX::Enabled)
+   if($PostFX::VignettePostFX::Enabled && $pref::PostFX::EnableVignette)
       %this.enable();
    else
       %this.disable();

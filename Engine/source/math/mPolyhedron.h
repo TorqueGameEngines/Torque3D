@@ -307,6 +307,53 @@ struct PolyhedronImpl : public Base
          this->mEdgeList = edges;
       }
 
+      PolyhedronImpl(Point3F origin, Point3F vecs[3])
+      {
+         // This setup goes against conventions for Polyhedrons in that it a) sets up
+         // edges with CCW instead of CW order for face[0] and that it b) lets plane
+         // normals face outwards rather than inwards.
+
+         this->mPointList.setSize(8);
+         this->mPointList[0] = origin;
+         this->mPointList[1] = origin + vecs[0];
+         this->mPointList[2] = origin + vecs[1];
+         this->mPointList[3] = origin + vecs[2];
+         this->mPointList[4] = origin + vecs[0] + vecs[1];
+         this->mPointList[5] = origin + vecs[0] + vecs[2];
+         this->mPointList[6] = origin + vecs[1] + vecs[2];
+         this->mPointList[7] = origin + vecs[0] + vecs[1] + vecs[2];
+
+         Point3F normal;
+         this->mPlaneList.setSize(6);
+
+         mCross(vecs[2], vecs[0], &normal);
+         this->mPlaneList[0].set(origin, normal);
+         mCross(vecs[0], vecs[1], &normal);
+         this->mPlaneList[1].set(origin, normal);
+         mCross(vecs[1], vecs[2], &normal);
+         this->mPlaneList[2].set(origin, normal);
+         mCross(vecs[1], vecs[0], &normal);
+         this->mPlaneList[3].set(this->mPointList[7], normal);
+         mCross(vecs[2], vecs[1], &normal);
+         this->mPlaneList[4].set(this->mPointList[7], normal);
+         mCross(vecs[0], vecs[2], &normal);
+         this->mPlaneList[5].set(this->mPointList[7], normal);
+
+         this->mEdgeList.setSize(12);
+         this->mEdgeList[0].vertex[0] = 0;  this->mEdgeList[0].vertex[1] = 1;  this->mEdgeList[0].face[0] = 0;  this->mEdgeList[0].face[1] = 1;
+         this->mEdgeList[1].vertex[0] = 1;  this->mEdgeList[1].vertex[1] = 5;  this->mEdgeList[1].face[0] = 0;  this->mEdgeList[1].face[1] = 4;
+         this->mEdgeList[2].vertex[0] = 5;  this->mEdgeList[2].vertex[1] = 3;  this->mEdgeList[2].face[0] = 0;  this->mEdgeList[2].face[1] = 3;
+         this->mEdgeList[3].vertex[0] = 3;  this->mEdgeList[3].vertex[1] = 0;  this->mEdgeList[3].face[0] = 0;  this->mEdgeList[3].face[1] = 2;
+         this->mEdgeList[4].vertex[0] = 3;  this->mEdgeList[4].vertex[1] = 6;  this->mEdgeList[4].face[0] = 3;  this->mEdgeList[4].face[1] = 2;
+         this->mEdgeList[5].vertex[0] = 6;  this->mEdgeList[5].vertex[1] = 2;  this->mEdgeList[5].face[0] = 2;  this->mEdgeList[5].face[1] = 5;
+         this->mEdgeList[6].vertex[0] = 2;  this->mEdgeList[6].vertex[1] = 0;  this->mEdgeList[6].face[0] = 2;  this->mEdgeList[6].face[1] = 1;
+         this->mEdgeList[7].vertex[0] = 1;  this->mEdgeList[7].vertex[1] = 4;  this->mEdgeList[7].face[0] = 4;  this->mEdgeList[7].face[1] = 1;
+         this->mEdgeList[8].vertex[0] = 4;  this->mEdgeList[8].vertex[1] = 2;  this->mEdgeList[8].face[0] = 1;  this->mEdgeList[8].face[1] = 5;
+         this->mEdgeList[9].vertex[0] = 4;  this->mEdgeList[9].vertex[1] = 7;  this->mEdgeList[9].face[0] = 4;  this->mEdgeList[9].face[1] = 5;
+         this->mEdgeList[10].vertex[0] = 5; this->mEdgeList[10].vertex[1] = 7; this->mEdgeList[10].face[0] = 3; this->mEdgeList[10].face[1] = 4;
+         this->mEdgeList[11].vertex[0] = 7; this->mEdgeList[11].vertex[1] = 6; this->mEdgeList[11].face[0] = 3; this->mEdgeList[11].face[1] = 5;
+      }
+
       /// Return the AABB around the polyhedron.
       Box3F getBounds() const
       {

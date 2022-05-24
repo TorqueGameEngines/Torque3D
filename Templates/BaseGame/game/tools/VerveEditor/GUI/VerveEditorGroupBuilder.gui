@@ -1,7 +1,7 @@
 //--- OBJECT WRITE BEGIN ---
 $guiContent = new GuiControl(VerveEditorGroupBuilderGUI) {
    isContainer = "1";
-   Profile = "GuiDefaultProfile";
+   Profile = "ToolsGuiDefaultProfile";
    HorizSizing = "right";
    VertSizing = "bottom";
    position = "0 0";
@@ -9,7 +9,7 @@ $guiContent = new GuiControl(VerveEditorGroupBuilderGUI) {
    MinExtent = "8 8";
    canSave = "1";
    Visible = "1";
-   tooltipprofile = "GuiToolTipProfile";
+   tooltipprofile = "ToolsGuiToolTipProfile";
    hovertime = "1000";
    canSaveDynamicFields = "0";
 
@@ -30,7 +30,7 @@ $guiContent = new GuiControl(VerveEditorGroupBuilderGUI) {
       AnchorLeft = "1";
       AnchorRight = "0";
       isContainer = "1";
-      Profile = "GuiWindowProfile";
+      Profile = "ToolsGuiWindowProfile";
       HorizSizing = "center";
       VertSizing = "center";
       position = "268 181";
@@ -38,7 +38,7 @@ $guiContent = new GuiControl(VerveEditorGroupBuilderGUI) {
       MinExtent = "256 8";
       canSave = "1";
       Visible = "1";
-      tooltipprofile = "GuiToolTipProfile";
+      tooltipprofile = "ToolsGuiToolTipProfile";
       hovertime = "1000";
       canSaveDynamicFields = "0";
 
@@ -52,7 +52,7 @@ $guiContent = new GuiControl(VerveEditorGroupBuilderGUI) {
          AnchorLeft = "1";
          AnchorRight = "0";
          isContainer = "0";
-         Profile = "GuiTextProfile";
+         Profile = "ToolsGuiTextProfile";
          HorizSizing = "right";
          VertSizing = "bottom";
          position = "14 30";
@@ -60,7 +60,7 @@ $guiContent = new GuiControl(VerveEditorGroupBuilderGUI) {
          MinExtent = "8 8";
          canSave = "1";
          Visible = "1";
-         tooltipprofile = "GuiToolTipProfile";
+         tooltipprofile = "ToolsGuiToolTipProfile";
          hovertime = "1000";
          canSaveDynamicFields = "0";
       };
@@ -78,7 +78,7 @@ $guiContent = new GuiControl(VerveEditorGroupBuilderGUI) {
          AnchorLeft = "1";
          AnchorRight = "0";
          isContainer = "0";
-         Profile = "GuiTextEditProfile";
+         Profile = "ToolsGuiTextEditProfile";
          HorizSizing = "width";
          VertSizing = "bottom";
          position = "79 29";
@@ -86,13 +86,13 @@ $guiContent = new GuiControl(VerveEditorGroupBuilderGUI) {
          MinExtent = "8 8";
          canSave = "1";
          Visible = "1";
-         tooltipprofile = "GuiToolTipProfile";
+         tooltipprofile = "ToolsGuiToolTipProfile";
          hovertime = "1000";
          canSaveDynamicFields = "0";
       };
       new GuiBitmapBorderCtrl() {
          isContainer = "0";
-         Profile = "GuiGroupBorderProfile";
+         Profile = "ToolsGuiGroupBorderProfile";
          HorizSizing = "width";
          VertSizing = "bottom";
          position = "7 55";
@@ -100,7 +100,7 @@ $guiContent = new GuiControl(VerveEditorGroupBuilderGUI) {
          MinExtent = "1 1";
          canSave = "1";
          Visible = "1";
-         tooltipprofile = "GuiToolTipProfile";
+         tooltipprofile = "ToolsGuiToolTipProfile";
          hovertime = "1000";
          canSaveDynamicFields = "0";
 
@@ -112,7 +112,7 @@ $guiContent = new GuiControl(VerveEditorGroupBuilderGUI) {
             ChangeChildSizeToFit = "1";
             ChangeChildPosition = "1";
             isContainer = "1";
-            Profile = "GuiTransparentProfile";
+            Profile = "ToolsGuiTransparentProfile";
             HorizSizing = "width";
             VertSizing = "height";
             position = "3 3";
@@ -120,13 +120,13 @@ $guiContent = new GuiControl(VerveEditorGroupBuilderGUI) {
             MinExtent = "8 8";
             canSave = "1";
             Visible = "1";
-            tooltipprofile = "GuiToolTipProfile";
+            tooltipprofile = "ToolsGuiToolTipProfile";
             hovertime = "1000";
             canSaveDynamicFields = "0";
 
             new GuiControl() {
                isContainer = "1";
-               Profile = "GuiTransparentProfile";
+               Profile = "ToolsGuiTransparentProfile";
                HorizSizing = "right";
                VertSizing = "bottom";
                position = "0 0";
@@ -134,7 +134,7 @@ $guiContent = new GuiControl(VerveEditorGroupBuilderGUI) {
                MinExtent = "8 2";
                canSave = "1";
                Visible = "1";
-               tooltipprofile = "GuiToolTipProfile";
+               tooltipprofile = "ToolsGuiToolTipProfile";
                hovertime = "1000";
                canSaveDynamicFields = "0";
 
@@ -148,7 +148,7 @@ $guiContent = new GuiControl(VerveEditorGroupBuilderGUI) {
                   AnchorLeft = "1";
                   AnchorRight = "0";
                   isContainer = "0";
-                  Profile = "GuiTextProfile";
+                  Profile = "ToolsGuiTextProfile";
                   HorizSizing = "right";
                   VertSizing = "center";
                   position = "4 1";
@@ -156,7 +156,7 @@ $guiContent = new GuiControl(VerveEditorGroupBuilderGUI) {
                   MinExtent = "8 2";
                   canSave = "1";
                   Visible = "1";
-                  tooltipprofile = "GuiToolTipProfile";
+                  tooltipprofile = "ToolsGuiToolTipProfile";
                   hovertime = "1000";
                   canSaveDynamicFields = "0";
                };
@@ -181,7 +181,7 @@ $guiContent = new GuiControl(VerveEditorGroupBuilderGUI) {
                   MinExtent = "8 2";
                   canSave = "1";
                   Visible = "1";
-                  tooltipprofile = "GuiToolTipProfile";
+                  tooltipprofile = "ToolsGuiToolTipProfile";
                   hovertime = "1000";
                   internalName = "SceneObjectList";
                   canSaveDynamicFields = "0";
@@ -195,7 +195,7 @@ $guiContent = new GuiControl(VerveEditorGroupBuilderGUI) {
          buttonType = "PushButton";
          useMouseEvents = "0";
          isContainer = "0";
-         Profile = "GuiButtonProfile";
+         Profile = "ToolsGuiButtonProfile";
          HorizSizing = "left";
          VertSizing = "top";
          position = "66 139";
@@ -204,7 +204,7 @@ $guiContent = new GuiControl(VerveEditorGroupBuilderGUI) {
          canSave = "1";
          Visible = "1";
          Command = "VerveEditorGroupBuilderGUI._Build( VerveEditorGroupBuilderNameField.getText() );";
-         tooltipprofile = "GuiToolTipProfile";
+         tooltipprofile = "ToolsGuiToolTipProfile";
          hovertime = "1000";
          canSaveDynamicFields = "0";
       };
@@ -214,7 +214,7 @@ $guiContent = new GuiControl(VerveEditorGroupBuilderGUI) {
          buttonType = "PushButton";
          useMouseEvents = "0";
          isContainer = "0";
-         Profile = "GuiButtonProfile";
+         Profile = "ToolsGuiButtonProfile";
          HorizSizing = "left";
          VertSizing = "top";
          position = "174 139";
@@ -223,7 +223,7 @@ $guiContent = new GuiControl(VerveEditorGroupBuilderGUI) {
          canSave = "1";
          Visible = "1";
          Command = "VerveEditorGroupBuilderGUI.Close();";
-         tooltipprofile = "GuiToolTipProfile";
+         tooltipprofile = "ToolsGuiToolTipProfile";
          hovertime = "1000";
          canSaveDynamicFields = "0";
       };
@@ -283,7 +283,7 @@ function VerveEditorGroupBuilderGUI::_Build( %this, %groupLabel )
 {
     if ( %groupLabel $= "" )
     {
-        toolsMessageBox( "Warning", "You must provide a Valid Group Label.", "Ok" );
+        MessageBox( "Warning", "You must provide a Valid Group Label.", "Ok" );
         return;
     }
     
@@ -316,7 +316,7 @@ function VerveEditorGroupBuilderFieldStack::CreateObjectList( %this, %objectType
 {
     %container = new GuiControl()
     {
-        Profile      = "GuiTransparentProfile";
+        Profile      = "ToolsGuiTransparentProfile";
         
         HorizSizing  = "right";
         VertSizing   = "bottom";
@@ -326,7 +326,7 @@ function VerveEditorGroupBuilderFieldStack::CreateObjectList( %this, %objectType
     
     %label = new GuiTextCtrl()
     {
-        Profile      = "GuiTextProfile";
+        Profile      = "ToolsGuiTextProfile";
         
         HorizSizing  = "right";
         VertSizing   = "center";
@@ -392,7 +392,7 @@ function VerveEditorGroupBuilderFieldStack::CreateCheckbox( %this, %internalName
 {
     %container = new GuiControl()
     {
-        Profile      = "GuiTransparentProfile";
+        Profile      = "ToolsGuiTransparentProfile";
         
         HorizSizing  = "right";
         VertSizing   = "bottom";
@@ -402,7 +402,7 @@ function VerveEditorGroupBuilderFieldStack::CreateCheckbox( %this, %internalName
     
     %label = new GuiTextCtrl()
     {
-        Profile      = "GuiTextProfile";
+        Profile      = "ToolsGuiTextProfile";
         
         HorizSizing  = "right";
         VertSizing   = "center";
@@ -415,7 +415,7 @@ function VerveEditorGroupBuilderFieldStack::CreateCheckbox( %this, %internalName
     
     %checkBox = new GuiCheckBoxCtrl()
     {
-        Profile      = "GuiCheckboxProfile";
+        Profile      = "ToolsGuiCheckboxProfile";
         
         HorizSizing  = "left";
         VertSizing   = "center";

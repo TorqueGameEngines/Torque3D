@@ -48,12 +48,15 @@
 #include "sim/netConnection.h"
 #endif
 
+#ifndef _GUI_INSPECTOR_TYPES_H_
 #include "gui/editor/guiInspectorTypes.h"
+#endif
 
 #include "materials/matTextureTarget.h"
 #include "materials/materialDefinition.h"
 #include "materials/customMaterialDefinition.h"
 #include "materials/materialManager.h"
+#include "assetMacroHelpers.h"
 
 //-----------------------------------------------------------------------------
 class MaterialAsset : public AssetBase
@@ -73,6 +76,8 @@ public:
    enum MaterialAssetErrCode
    {
       ScriptLoaded = AssetErrCode::Extended,
+      DefinitionAlreadyExists,
+      EmbeddedDefinition,
       Extended
    };
 
@@ -106,6 +111,7 @@ public:
    /// <returns>AssetId of matching asset.</returns>
    static StringTableEntry getAssetIdByMaterialName(StringTableEntry matName);
    static U32 getAssetById(StringTableEntry assetId, AssetPtr<MaterialAsset>* materialAsset);
+   static SimObjectPtr<Material> findMaterialDefinitionByAssetId(StringTableEntry assetId);
    static U32 getAssetByMaterialName(StringTableEntry matName, AssetPtr<MaterialAsset>* matAsset);
 
    /// Declare Console Object.
@@ -259,47 +265,8 @@ public: \
    SimObjectPtr<Material> get##name##Resource() \
    {\
       return m##name;\
-   }
-
-#define DECLARE_MATERIALASSET_SETGET(className, name)\
-   static bool _set##name##Data(void* obj, const char* index, const char* data)\
-   {\
-      bool ret = false;\
-      className* object = static_cast<className*>(obj);\
-      ret = object->_set##name(StringTable->insert(data));\
-      return ret;\
-   }
-
-#define DECLARE_MATERIALASSET_NET_SETGET(className, name, bitmask)\
-   static bool _set##name##Data(void* obj, const char* index, const char* data)\
-   {\
-      bool ret = false;\
-      className* object = static_cast<className*>(obj);\
-      ret = object->_set##name(StringTable->insert(data));\
-      if(ret)\
-         object->setMaskBits(bitmask);\
-      return ret;\
-   }
-
-#define DEF_MATERIALASSET_BINDS(className,name)\
-DefineEngineMethod(className, get##name, const char*, (), , "get name")\
-{\
-   return object->get##name(); \
-}\
-DefineEngineMethod(className, get##name##Asset, const char*, (), , assetText(name, asset reference))\
-{\
-   return object->m##name##AssetId; \
-}\
-DefineEngineMethod(className, set##name, bool, (const char* mat), , assetText(name,assignment. first tries asset then material name.))\
-{\
-    return object->_set##name(StringTable->insert(mat));\
-}
-
-#define INIT_MATERIALASSET(name) \
-   m##name##Name = StringTable->EmptyString(); \
-   m##name##AssetId = StringTable->EmptyString(); \
-   m##name##Asset = NULL;\
-   m##name = NULL;
+   }\
+   bool is##name##Valid() {return (get##name() != StringTable->EmptyString() && m##name##Asset->getStatus() == AssetBase::Ok); }
 
 #ifdef TORQUE_SHOW_LEGACY_FILE_FIELDS
 
@@ -315,11 +282,6 @@ DefineEngineMethod(className, set##name, bool, (const char* mat), , assetText(na
 
 #endif // SHOW_LEGACY_FILE_FIELDS
 
-#define CLONE_MATERIALASSET(name) \
-   m##name##Name = other.m##name##Name;\
-   m##name##AssetId = other.m##name##AssetId;\
-   m##name##Asset = other.m##name##Asset;
-
 #define LOAD_MATERIALASSET(name)\
 if (m##name##AssetId != StringTable->EmptyString())\
 {\
@@ -330,42 +292,6 @@ if (m##name##AssetId != StringTable->EmptyString())\
    }\
    else Con::warnf("Warning: %s::LOAD_MATERIALASSET(%s)-%s", mClassName, m##name##AssetId, MaterialAsset::getAssetErrstrn(assetState).c_str());\
 }
-
-#define PACKDATA_MATERIALASSET(name)\
-   if (stream->writeFlag(m##name##Asset.notNull()))\
-   {\
-      stream->writeString(m##name##Asset.getAssetId());\
-   }\
-   else\
-      stream->writeString(m##name##Name);
-
-#define UNPACKDATA_MATERIALASSET(name)\
-   if (stream->readFlag())\
-   {\
-      m##name##AssetId = stream->readSTString();\
-      _set##name(m##name##AssetId);\
-   }\
-   else\
-      m##name##Name = stream->readSTString();
-
-#define PACK_MATERIALASSET(netconn, name)\
-   if (stream->writeFlag(m##name##Asset.notNull()))\
-   {\
-      NetStringHandle assetIdStr = m##name##Asset.getAssetId();\
-      netconn->packNetStringHandleU(stream, assetIdStr);\
-   }\
-   else\
-      stream->writeString(m##name##Name);
-
-#define UNPACK_MATERIALASSET(netconn, name)\
-   if (stream->readFlag())\
-   {\
-      m##name##AssetId = StringTable->insert(netconn->unpackNetStringHandleU(stream).getString());\
-      _set##name(m##name##AssetId);\
-   }\
-   else\
-      m##name##Name = stream->readSTString();
-
 #pragma endregion
 
 #endif // _ASSET_BASE_H_

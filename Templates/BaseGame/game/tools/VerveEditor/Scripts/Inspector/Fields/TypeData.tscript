@@ -56,7 +56,7 @@ function VerveEditor::CreateDataField( %fieldContainer, %fieldName )
         Position     = %fieldWidth - 24 SPC 0;
         Extent       = "18 18";
         
-        Bitmap       = "tools/VerveEditor/GUI/Images/btn_DeleteSml";
+        bitmapAsset       = "ToolsModule:btn_DeleteSml_image";
         
         Command      = %fieldInput @ ".Remove();";
     };
@@ -274,7 +274,7 @@ function VerveEditor::CreateAddDataField( %targetStack )
         Position     = %fieldWidth - 24 SPC 0;
         Extent       = "18 18";
         
-        Bitmap       = "tools/VerveEditor/GUI/Images/btn_AddSml";
+        bitmapAsset       = "ToolsModule:btn_AddSml_image";
         
         Command      = "VEditorDataPropertyField::Insert(" @ %fieldType @ ".getText(), " @ %fieldName @ ".getText(), " @ %fieldValue @ ".getText() );";
     };

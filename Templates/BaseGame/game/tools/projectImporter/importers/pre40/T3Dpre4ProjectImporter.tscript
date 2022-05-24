@@ -1,0 +1,1549 @@
+//==============================================================================
+// Initialization function that registers this importer to the main Project Importer
+// allowing it to be selected/invoked in the main Project Importer wizard
+//==============================================================================
+function T3Dpre4ProjectImporter::init()
+{
+   //register this importer option to the project importer listing
+   if(isObject(T3Dpre4ProjectImporter))
+      T3Dpre4ProjectImporter.delete();
+      
+   new ScriptObject(T3Dpre4ProjectImporter);
+   
+   //Now we register the importer so it shows in the listing
+   $ProjectImporter::importerList.add("Pre-4.0 T3D Project", T3Dpre4ProjectImporter); 
+   
+   %result = AssetDatabase.acquireAsset("ToolsModule:pre40ImporterGuis");
+}
+
+T3Dpre4ProjectImporter::init(); //kick off the setup
+
+//==============================================================================
+// Sets up and registers the pages for this particular version importer
+// to the Project Importer for navigating through with the import process
+//==============================================================================
+function T3Dpre4ProjectImporter::setupPages(%this)
+{
+   ProjectImportWindow.addImporterPage(Pre40ImporterPage0);
+   ProjectImportWindow.addImporterPage(Pre40ImporterPage1);
+   
+   ProjectImportWindow.refreshPage();
+}
+
+//==============================================================================
+// Sets up the target module
+//==============================================================================
+function T3Dpre4ProjectImporter::setupModule(%this)
+{
+   %newModuleName = $ProjectImporter::moduleName;
+      
+   projectImporterLog("Setup up Module named: " @ %newModuleName);
+   
+   %moduleFilePath = "data/" @ %newModuleName;
+   %moduleDefinitionFilePath = %moduleFilePath @ "/" @ %newModuleName @ ".module";
+   %moduleScriptFilePath = %moduleFilePath @ "/" @ %newModuleName @ "." @ $TorqueScriptFileExtension;
+   
+   if(!isImportingFile($ProjectImporter::sourceContentFolder @ "/" @ %newModuleName @ ".module"))
+   {
+      %newModule = new ModuleDefinition()
+      {
+         ModuleId = %newModuleName;
+         versionId = 1;
+         ScriptFile = %newModuleName @ "." @ $TorqueScriptFileExtension;
+         CreateFunction="onCreate";
+         DestroyFunction="onDestroy";
+         Group = "Game";
+         
+         new DeclaredAssets()
+         {
+            Extension = "asset.taml";
+            Recurse = true;
+         };
+      };
+      
+      TAMLWrite(%newModule, %moduleDefinitionFilePath); 
+   }
+   
+   //if we don't already have a incoming file that matches this, then we'll want to make a new one
+   if(!isImportingFile($ProjectImporter::sourceContentFolder @ "/" @ %newModuleName @ ".cs") && 
+      !isImportingFile($ProjectImporter::sourceContentFolder @ "/" @ %newModuleName @ "." @ $TorqueScriptFileExtension))
+   {
+      //Now generate the script file for it
+      %file = new FileObject();
+      %templateFile = new FileObject();
+      
+      %moduleTemplateCodeFilePath = AssetBrowser.templateFilesPath @ "module.tscript.template";
+      
+      if(%file.openForWrite(%moduleScriptFilePath) && %templateFile.openForRead(%moduleTemplateCodeFilePath))
+      {
+         while( !%templateFile.isEOF() )
+         {
+            %line = %templateFile.readline();
+            %line = strreplace( %line, "@@", %newModuleName );
+            
+            %file.writeline(%line);
+            //projectImporterLog(%line);
+         }
+         
+         %file.close();
+         %templateFile.close();
+      }
+      else
+      {
+         %file.close();
+         %templateFile.close();
+         
+         projectImporterLog("CreateNewModule - Something went wrong and we couldn't write the script file!");
+      }
+   }
+   
+   //force a refresh of our modules list
+   ModuleDatabase.ignoreLoadedGroups(true);
+   ModuleDatabase.scanModules( "data", false );
+   %success = ModuleDatabase.loadExplicit(%newModuleName, 1);
+   ModuleDatabase.ignoreLoadedGroups(false);
+   
+   //force a reload of the Module lists
+   AssetBrowser.refresh();
+}
+
+//==============================================================================
+// Import content file types such as images, sounds, materials, etc
+//==============================================================================
+function T3Dpre4ProjectImporter::doContentImport(%this)
+{
+   //Store off the current default import config
+   %this.defaultConfig = EditorSettings.value("Assets/AssetImporDefaultConfig", "");
+   EditorSettings.setValue("Assets/AssetImporDefaultConfig", "LegacyProjectImport");
+
+   //Update asset content
+   beginImageImport();
+   
+   %this.beginMaterialFilesImport();
+   
+   beginShapeImport();
+   beginTerrainImport();
+   
+   %this.beginSoundProfilesImport();
+}
+
+//==============================================================================
+// Import script-based files like guis, levels and scripts
+//==============================================================================
+function T3Dpre4ProjectImporter::doScriptImport(%this)
+{
+   beginLevelImport();
+   beginGUIImport();
+   
+   %this.beginScriptFilesImport();
+   
+   %this.beginAssetAndModuleImport();
+   
+   %this.writeImportingFiles();
+   
+   EditorSettings.setValue("Assets/AssetImporDefaultConfig", %this.defaultConfig);
+}
+
+//==============================================================================
+// Writes out the importing file to the new destination
+//==============================================================================
+function T3Dpre4ProjectImporter::writeImportingObject(%this, %arrayObj)
+{
+   if(!isObject(%arrayObj) || %arrayObj.skip)
+      return;
+      
+   for(%i=0; %i < %arrayObj.count(); %i++)
+   {
+      %objectLine = %arrayObj.getKey(%i);
+      if(isObject(%objectLine))
+      {
+         if(%objectLine.skip == false)
+         {
+            %this.writeImportingObject(%objectLine);
+         }
+      }
+      else
+      {
+         $ProjectImporter::fileObject.writeLine(%objectLine);
+      }
+   }
+}  
+
+function T3Dpre4ProjectImporter::writeImportingFiles(%this)
+{
+   //First, we need to go through and process all loose image files. This will
+   //get us shape assets, and if the import config deigns, material assets.
+   %currentAddress = $ProjectImporter::modulePath;
+   
+   for(%i=0; %i < $ProjectImporter::FileList.count(); %i++)
+   {
+      %file = $ProjectImporter::FileList.getKey(%i);
+      %rootFileSectionObject = $ProjectImporter::FileList.getValue(%i);
+      
+      if(!%rootFileSectionObject.skip && !%rootFileSectionObject.binaryFile)
+      {
+         %path = filePath(%rootFileSectionObject.fileDestination);
+            
+         if(!IsDirectory(%path))
+         {
+            DirectoryHandler::createFolder(0, %path);  
+         }
+         
+         if ( $ProjectImporter::fileObject.openForWrite( %rootFileSectionObject.fileDestination ) ) 
+         {
+            %this.writeImportingObject(%rootFileSectionObject);
+            
+            $ProjectImporter::fileObject.close();
+         }
+      }
+      
+      if($ProjectImporter::useExistingModule)
+      {
+         //clean up legact files if they've been renamed or whatnot
+         if(makeRelativePath(%file) !$= %rootFileSectionObject.fileDestination)
+         {
+            fileDelete(%file);  
+         }
+      }
+   }
+}
+
+//==============================================================================
+// Processes through the importing files for material definitions and generates
+// the new assets into the destination module
+//==============================================================================
+function T3Dpre4ProjectImporter::processMaterialObjects(%this, %arrayObj)
+{
+   if(!isObject(%arrayObj))
+      return;
+      
+   //We only really care about materials for this
+   if(%arrayObj.elementType $= "function" ||
+      (%arrayObj.elementType $= "Object" && %arrayObj.classType !$= "Material" && %arrayObj.classType !$= "CustomMaterial"))
+   {
+      return;  
+   }
+   
+   for(%e=0; %e < %arrayObj.count(); %e++)
+   {
+      %lineObj = %arrayObj.getKey(%e);
+      if(isObject(%lineObj))
+      {
+         if( %lineObj.elementType $= "Object")
+         {
+            if(%lineObj.classType $= "Material" || %lineObj.classType $= "CustomMaterial")
+            {
+               %materialName = %lineObj.objectName;
+               if(%materialName $= "")
+               {
+                  %mapToName = findObjectField(%lineObj, "mapTo");
+                  %lineObj.objectName = %mapToName @ "_mat";
+               }
+               
+               %sanitizedName = sanitizeString(%materialName);
+               if(startsWith(%sanitizedName, "_"))
+               {
+                  %sanitizedName = getSubStr(%sanitizedName, 1, -1);
+               }
+               
+               projectImporterLog("processMaterialObjects() - beginning processing of material: " @ %sanitizedName);
+               
+               if(%lineObj.objectName !$= %sanitizedName)
+                  renameObjectName(%lineObj, %sanitizedName);
+                  
+               //Now, we process the fields to be asset-ified on our object
+               for(%l=0; %l < %lineObj.count(); %l++)
+               {
+                  %objectCodeLine = %lineObj.getKey(%l);
+                  if(!isObject(%objectCodeLine))
+                  {
+                     %resultLine = T3Dpre4ProjectImporter.processMaterialLine(%objectCodeLine);
+                     if(%resultLine !$= %objectCodeLine)
+                     {
+                        projectImporterLog("   processed line: " @ %resultLine @ " from: " @ %objectCodeLine);
+                        %lineObj.setKey(%resultLine, %l);
+                     }
+                  }
+               }
+               
+               //This walks through the class heirarchy so in the event we get a
+               //class that has a shared common root class like with water or materials
+               //we can process with that class to cover the probability space
+               
+               %inheritanceList = getClassHierarchy(%lineObj.classType);
+               for (%classDepth = 0; %classDepth < getWordCount(%inheritanceList); %classDepth++)
+               {
+                  %subclass = getWord(%inheritanceList, %classDepth);
+                  %processFunction = "process" @ %subclass @ "Object";
+                  if(T3Dpre4ProjectImporter.isMethod(%processFunction))
+                  {
+                     T3Dpre4ProjectImporter.call(%processFunction, %lineObj, %sanitizedName);
+                  }
+               }
+            }
+            else if(%lineObj.classType $= "TerrainMaterial")
+            {
+               %intName = findObjectField(%lineObj, "internalName");
+               %materialName = %intName @ "_terrainMat";
+               
+               %sanitizedName = sanitizeString(%materialName);
+               if(startsWith(%sanitizedName, "_"))
+               {
+                  %sanitizedName = getSubStr(%sanitizedName, 1, -1);
+               }
+               
+               if(%intName !$= %sanitizedName)
+                  setObjectField(%lineObj, "internalName", %sanitizedName);
+                  
+               //Now, we process the fields to be asset-ified on our object
+               for(%l=0; %l < %lineObj.count(); %l++)
+               {
+                  %objectCodeLine = %lineObj.getKey(%l);
+                  if(!isObject(%objectCodeLine))
+                  {
+                     %resultLine = T3Dpre4ProjectImporter.processTerrainMaterialLine(%objectCodeLine);
+                     if(%resultLine !$= %objectCodeLine)
+                     {
+                        projectImporterLog("   processed line: " @ %resultLine @ " from: " @ %objectCodeLine);
+                        %lineObj.setKey(%resultLine, %l);
+                     }
+                  }
+               }
+               
+               //This walks through the class heirarchy so in the event we get a
+               //class that has a shared common root class like with water or materials
+               //we can process with that class to cover the probability space
+               
+               %inheritanceList = getClassHierarchy(%lineObj.classType);
+               for (%classDepth = 0; %classDepth < getWordCount(%inheritanceList); %classDepth++)
+               {
+                  %subclass = getWord(%inheritanceList, %classDepth);
+                  %processFunction = "process" @ %subclass @ "Object";
+                  if(T3Dpre4ProjectImporter.isMethod(%processFunction))
+                  {
+                     T3Dpre4ProjectImporter.call(%processFunction, %lineObj, %sanitizedName);
+                  }
+               }
+            }
+            else
+            {
+               continue;  
+            }
+            /**/
+            %oN = %lineObj.objectName;
+            
+            %lineObj.processed = true;
+            %lineObj.skip = true;
+         }
+         
+         //Recurse down as needed
+         %this.processMaterialObjects(%lineObj);
+      }
+   }
+}
+
+function T3Dpre4ProjectImporter::beginMaterialFilesImport(%this)
+{
+   projectImporterLog("===========================================");
+   projectImporterLog("Importing Material definitions");
+   projectImporterLog("===========================================");
+   
+   for(%i=0; %i < $ProjectImporter::FileList.count(); %i++)
+   {
+      %file = $ProjectImporter::FileList.getKey(%i);
+      %rootFileSectionObject = $ProjectImporter::FileList.getValue(%i);
+      
+      $ProjectImporter::currentFile = %rootFileSectionObject.fileDestination;
+      $ProjectImporter::currentFilePath = filePath(%rootFileSectionObject.fileDestination) @ "/"; //give context to the file we're processing
+      
+      if(%rootFileSectionObject.binaryFile == true || %rootFileSectionObject.imported == true)
+         continue;
+         
+      %this.processMaterialObjects(%rootFileSectionObject);
+   }
+   
+   projectImporterLog("===========================================");
+   projectImporterLog("Importing Material definitions finished");
+   projectImporterLog("===========================================");
+}
+
+//==============================================================================
+// Processes through the importing files for SFXProfile definitions and
+// generates the new assest into the destination module
+//==============================================================================
+function T3Dpre4ProjectImporter::processSoundProfileObjects(%this, %arrayObj)
+{
+   if(!isObject(%arrayObj))
+      return;
+      
+   //We only really care about materials for this
+   if((%arrayObj.elementType $= "Object" && %arrayObj.classType !$= "SFXProfile"))
+   {
+      return;  
+   }
+   
+   for(%e=0; %e < %arrayObj.count(); %e++)
+   {
+      %lineObj = %arrayObj.getKey(%e);
+      if(isObject(%lineObj))
+      {
+         if( %lineObj.elementType $= "Object")
+         {
+            if(%lineObj.classType $= "SFXProfile")
+            {
+               %profileName = %lineObj.objectName;
+               
+               %sanitizedName = sanitizeString(%profileName);
+               if(startsWith(%sanitizedName, "_"))
+               {
+                  %sanitizedName = getSubStr(%sanitizedName, 1, -1);
+               }
+               
+               projectImporterLog("processSoundProfileObjects() - beginning processing of SFXProfile: " @ %sanitizedName);
+               
+               if(%lineObj.objectName !$= %sanitizedName)
+                  renameObjectName(%lineObj, %sanitizedName);
+               
+               //This walks through the class heirarchy so in the event we get a
+               //class that has a shared common root class like with water or materials
+               //we can process with that class to cover the probability space
+               %inheritanceList = getClassHierarchy(%lineObj.classType);
+               for (%classDepth = 0; %classDepth < getWordCount(%inheritanceList); %classDepth++)
+               {
+                  %subclass = getWord(%inheritanceList, %classDepth);
+                  %processFunction = "process" @ %subclass @ "Object";
+                  if(T3Dpre4ProjectImporter.isMethod(%processFunction))
+                  {
+                     T3Dpre4ProjectImporter.call(%processFunction, %lineObj, %sanitizedName);
+                  }
+               }
+               
+               //Now, we process the fields to be asset-ified on our object
+               for(%l=0; %l < %lineObj.count(); %l++)
+               {
+                  %objectCodeLine = %lineObj.getKey(%l);
+                  if(!isObject(%objectCodeLine))
+                  {
+                     %resultLine = T3Dpre4ProjectImporter.processSFXProfileLine(%objectCodeLine);
+                     if(%resultLine !$= %objectCodeLine)
+                     {
+                        projectImporterLog("   processed line: " @ %resultLine @ " from: " @ %objectCodeLine);
+                        %lineObj.setKey(%resultLine, %l);
+                     }
+                  }
+               }
+            }
+            else
+            {
+               continue;  
+            }
+            
+            %lineObj.processed = true;
+            %lineObj.skip = true;
+         }
+         
+         //Recurse down as needed
+         %this.processSoundProfileObjects(%lineObj);
+      }
+   }
+}
+
+function T3Dpre4ProjectImporter::beginSoundProfilesImport(%this)
+{
+   projectImporterLog("===========================================");
+   projectImporterLog("Importing Sound Profiles");
+   projectImporterLog("===========================================");
+   
+   for(%i=0; %i < $ProjectImporter::FileList.count(); %i++)
+   {
+      %file = $ProjectImporter::FileList.getKey(%i);
+      %rootFileSectionObject = $ProjectImporter::FileList.getValue(%i);
+      
+      $ProjectImporter::currentFile = %rootFileSectionObject.fileDestination;
+      $ProjectImporter::currentFilePath = filePath(%rootFileSectionObject.fileDestination) @ "/"; //give context to the file we're processing
+      
+      if(%rootFileSectionObject.binaryFile == true || %rootFileSectionObject.imported == true)
+         continue;
+         
+      %this.processSoundProfileObjects(%rootFileSectionObject);
+   }
+   
+   projectImporterLog("===========================================");
+   projectImporterLog("Importing Sound Profiles finished");
+   projectImporterLog("===========================================");
+}
+
+//==============================================================================
+// Processes through the importing files for scripted object definitions and
+// updates their names and fields to be asset-compliant, converting filepaths
+// to assetIds where valid
+//==============================================================================
+function T3Dpre4ProjectImporter::processScripts(%this, %arrayObj)
+{
+   if(!isObject(%arrayObj))
+      return;
+      
+   //We only really care about materials for this
+   if((%arrayObj.elementType $= "Object" && (%arrayObj.classType $= "Material" || %arrayObj.classType $= "CustomMaterial" || %arrayObj.classType $= "TerrainMaterial")))
+   {
+      return;  
+   }
+   
+   for(%e=0; %e < %arrayObj.count(); %e++)
+   {
+      %lineObj = %arrayObj.getKey(%e);
+      if(isObject(%lineObj) && !%lineObj.skip)
+      {
+         if( %lineObj.elementType $= "Object")
+         {
+            %sanitizedName = sanitizeString(%lineObj.objectName);
+            if(startsWith(%sanitizedName, "_"))
+            {
+               %sanitizedName = getSubStr(%sanitizedName, 1, -1);
+            }
+            
+            if(%sanitizedName !$= "")
+               projectImporterLog("processScriptObjects() - beginning processing of object: " @ %lineObj.classType @ "(" @ %sanitizedName @ ")");
+            else
+               projectImporterLog("processScriptObjects() - beginning processing of object: " @ %lineObj.classType @ "()");
+            
+            if(%lineObj.objectName !$= %sanitizedName && %lineObj.objectName !$= "")
+               renameObjectName(%lineObj, %sanitizedName);
+            
+            //This walks through the class heirarchy so in the event we get a
+            //class that has a shared common root class like with water or materials
+            //we can process with that class to cover the probability space
+            
+            %inheritanceList = getClassHierarchy(%lineObj.classType);
+            for (%classDepth = 0; %classDepth < getWordCount(%inheritanceList); %classDepth++)
+            {
+               %subclass = getWord(%inheritanceList, %classDepth);
+               %processFunction = "process" @ %subclass @ "Object";
+               
+               if(T3Dpre4ProjectImporter.isMethod(%processFunction))
+               {
+                  T3Dpre4ProjectImporter.call(%processFunction, %lineObj, %sanitizedName);
+               }
+               
+               //we're gunna handle the mission group definition lines specially because we need to process against an object's NAME
+               //rather than just the className
+               if(%lineObj.objectName $= "MissionGroup")
+               {
+                  $ProjectImporter::assetQuery.clear();
+                  %assetsFound = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, $ProjectImporter::currentFile);
+                  if(%assetsFound != 0)
+                  {
+                     //ok, valid level asset  
+                     %levelAssetId = $ProjectImporter::assetQuery.getAsset(0);
+                     %levelName = AssetDatabase.getAssetName(%levelAssetId);
+                     
+                     //Now, we process the fields to be asset-ified on our object
+                     for(%l=0; %l < %lineObj.count(); %l++)
+                     {
+                        %objectCodeLine = %lineObj.getKey(%l);
+                        %resultLine = T3Dpre4ProjectImporter.processMissionGroupLine(%objectCodeLine, %levelName);
+                        
+                        if(%resultLine !$= %objectCodeLine)
+                        {
+                           projectImporterLog("   processed line: " @ %resultLine @ " from: " @ %objectCodeLine);
+                           %lineObj.setKey(%resultLine, %l);
+                        }
+                     }
+                  }
+               }
+               else //regular convertwork
+               {
+                  //Now, we process the fields to be asset-ified on our object
+                  for(%l=0; %l < %lineObj.count(); %l++)
+                  {
+                     %objectCodeLine = %lineObj.getKey(%l);
+                     if(!isObject(%objectCodeLine))
+                     {
+                        %processLineFunction = "process" @ %subclass @ "Line";
+                        if(T3Dpre4ProjectImporter.isMethod(%processLineFunction))
+                        {
+                           %resultLine = T3Dpre4ProjectImporter.call(%processLineFunction, %objectCodeLine);
+
+                           if(%resultLine !$= %objectCodeLine)
+                           {
+                              projectImporterLog("   processed line: " @ %resultLine @ " from: " @ %objectCodeLine);
+                              %lineObj.setKey(%resultLine, %l);
+                           }
+                        }
+                     }
+                  }
+               }
+            }
+            
+            %lineObj.processed = true;
+         }
+         else if(%lineObj.elementType $= "function")
+         {
+            //Now, we process the fields to be asset-ified on our object
+            for(%l=0; %l < %lineObj.count(); %l++)
+            {
+               %functionCodeLine = %lineObj.getKey(%l);
+               if(!isObject(%functionCodeLine))
+               {
+                  %resultLine = %functionCodeLine;
+                  
+                  if(strIsMatchExpr("*exec(*.cs*)*", %functionCodeLine) || strIsMatchExpr("*exec(*.tscript*)*", %functionCodeLine))
+                  {
+                     %scriptExtRemovedLine = strReplace(%functionCodeLine, ".cs", "");
+                     %scriptExtRemovedLine = strReplace(%scriptExtRemovedLine, ".tscript", "");
+                     %resultLine = %scriptExtRemovedLine;
+                  }
+                  else if(strIsMatchExpr("*queueexec(*.cs*)*", %functionCodeLine) || strIsMatchExpr("*queueexec(*.tscript*)*", %functionCodeLine))
+                  {
+                     %scriptExtRemovedLine = strReplace(%functionCodeLine, ".cs", "");
+                     %scriptExtRemovedLine = strReplace(%scriptExtRemovedLine, ".tscript", "");
+                     %resultLine = %scriptExtRemovedLine;
+                  }
+                  else if(strIsMatchExpr("*registerDatablock(*.cs*)*", %functionCodeLine) || strIsMatchExpr("*registerDatablock(*.tscript*)*", %functionCodeLine))
+                  {
+                     %scriptExtRemovedLine = strReplace(%functionCodeLine, ".cs", "");
+                     %scriptExtRemovedLine = strReplace(%scriptExtRemovedLine, ".tscript", "");
+                     %resultLine = %scriptExtRemovedLine;
+                  }
+                  else if(strIsMatchExpr("*%this.addSequence(\"*);", %functionCodeLine))
+                  {
+                     %resultLine = processLegacyShapeConstructorField(%functionCodeLine);
+                  }
+                  
+                  if(%resultLine !$= %functionCodeLine)
+                  {
+                     %lineObj.setKey(%resultLine, %l);
+                  }
+               }
+            } 
+            
+            %lineObj.processed = true; 
+         }
+         
+         //Recurse down as needed
+         %this.processScripts(%lineObj);
+      }
+   }
+}
+
+function T3Dpre4ProjectImporter::beginScriptFilesImport(%this)
+{
+   //First, we need to go through and process all loose image files. This will
+   //get us shape assets, and if the import config deigns, material assets.
+   %currentAddress = $ProjectImporter::modulePath;
+   
+   for(%i=0; %i < $ProjectImporter::FileList.count(); %i++)
+   {
+      %file = $ProjectImporter::FileList.getKey(%i);
+      %rootFileSectionObject = $ProjectImporter::FileList.getValue(%i);
+      //%file = %rootFileSectionObject.fileDestination;
+      
+      //if(%rootFileSectionObject.imported == true)
+      //   continue;
+      
+      %filename = %rootFileSectionObject.fileName;
+      %fileExt = %rootFileSectionObject.fileExt;
+      %fileBase = %rootFileSectionObject.fileBase;
+      %filePath = filePath(%file);
+      
+      if(%fileExt !$= ".cs" && 
+         %fileExt !$= ".tscript" && 
+         %fileExt !$= ".mis" && 
+         %fileExt !$= ".gui" && 
+         %fileExt !$= ".prefab")
+      {
+         continue;
+      }
+      
+      $ProjectImporter::currentFile = %rootFileSectionObject.fileDestination;
+      $ProjectImporter::currentFilePath = filePath(%rootFileSectionObject.fileDestination) @ "/";
+      
+      projectImporterLog("T3Dpre4ProjectImporter::beginScriptFilesImport() - Processing script file: " @ %file);
+      %this.processScripts(%rootFileSectionObject);
+   }
+   
+   projectImporterLog("Legacy Project Importer - Processing of imported code files done!");
+}
+
+//==============================================================================
+// Processes through the importing files for module and asset definitions and
+// updates them to be compliant
+//==============================================================================
+function T3Dpre4ProjectImporter::processModuleFile(%this, %moduleObj)
+{
+   if(!isObject(%moduleObj))
+      return;
+      
+   //really, we only care here about ensuring the file extensions are cleaned up
+   for(%l=0; %l < %moduleObj.count(); %l++)
+   {
+      %line = %moduleObj.getKey(%l);
+      if(strIsMatchExpr("*.cs\"", %line))
+      {
+         %resultLine = strReplace(%line, ".cs\"", "\"");
+         %moduleObj.setKey(%resultLine, %l);
+      }
+   }
+}
+
+function T3Dpre4ProjectImporter::processAssetFile(%this, %assetObj)
+{
+   if(!isObject(%assetObj))
+      return;
+      
+   //really, we only care here about ensuring the file extensions are cleaned up
+   for(%l=0; %l < %assetObj.count(); %l++)
+   {
+      %line = %assetObj.getKey(%l);
+      if(strIsMatchExpr("*.cs\"", %line))
+      {
+         %resultLine = strReplace(%line, ".cs\"", "\"");
+         %assetObj.setKey(%resultLine, %l);
+      }
+   }
+}
+
+function T3Dpre4ProjectImporter::beginAssetAndModuleImport(%this)
+{
+   //First, we need to go through and process all loose image files. This will
+   //get us shape assets, and if the import config deigns, material assets.
+   %currentAddress = $ProjectImporter::modulePath;
+   
+   for(%i=0; %i < $ProjectImporter::FileList.count(); %i++)
+   {
+      %file = $ProjectImporter::FileList.getKey(%i);
+      %rootFileSectionObject = $ProjectImporter::FileList.getValue(%i);
+      
+      %filename = %rootFileSectionObject.fileName;
+      %fileExt = %rootFileSectionObject.fileExt;
+      %fileBase = %rootFileSectionObject.fileBase;
+      %filePath = filePath(%file);
+      
+      if(%fileExt $= ".module")
+      {
+         if(%rootFileSectionObject.skip)
+            continue;
+            
+         projectImporterLog("T3Dpre4ProjectImporter::beginAssetAndModuleImport() - processing file: " @ %file);
+         $ProjectImporter::currentFile = %rootFileSectionObject.fileDestination;
+         $ProjectImporter::currentFilePath = filePath(%rootFileSectionObject.fileDestination) @ "/";
+         %this.processModuleFile(%rootFileSectionObject);
+         %rootFileSectionObject.processed = true;
+      }
+      else if(%fileExt $= ".asset.taml")
+      {
+         if(%rootFileSectionObject.skip)
+            continue;
+            
+         projectImporterLog("T3Dpre4ProjectImporter::beginAssetAndModuleImport() - processing file: " @ %file);
+         $ProjectImporter::currentFilePath = filePath(%rootFileSectionObject.fileDestination) @ "/";
+         %this.processAssetFile(%rootFileSectionObject);
+         %rootFileSectionObject.processed = true;
+      }
+   }
+   
+   projectImporterLog("Legacy Project Importer - Processing of imported asset and module files done!");
+}
+
+//To implement a custom class to have it's fields processed, just utilize this template function
+//and replace the class/field spaces as appropriate
+/*
+function T3Dpre4ProjectImporter::process<ClassName>Line(%this, %line)
+{
+   %outLine = processLegacyField(%line, "<originalFilenameField>", "<newAssetField>");
+  
+   if(%outLine !$= %line)
+      return %outLine;
+   else
+      return %line;
+}
+*/
+//==============================================================================
+// Misc Object Classes
+//==============================================================================
+function T3Dpre4ProjectImporter::genProcessor(%classType, %conversionMap)
+{
+    %stryng = "function T3Dpre4ProjectImporter::process" @%classType@ "Line(%this, %line){\n";
+    %count = getWordCount(%conversionMap);
+    for (%i = 0; %i<%count; %i+=2)
+    {
+        %stryng = %stryng @ " %outLine = processLegacyField(%line,\""@ getWord(%conversionMap,%i)@ "\",\""@ getWord(%conversionMap,%i+1)@"\");\n";
+        %stryng = %stryng @ "  if(%outLine !$= %line) return %outLine;\n";
+    }
+    %stryng = %stryng @ " return %line;\n}";
+    eval(%stryng);
+}
+
+T3Dpre4ProjectImporter::genProcessor("TSShapeConstructor", "baseShape baseShapeAsset shapeName shapeAsset");
+T3Dpre4ProjectImporter::genProcessor("BasicClouds", "texture textureAsset");
+T3Dpre4ProjectImporter::genProcessor("CloudLayer", "texture textureAsset");
+T3Dpre4ProjectImporter::genProcessor("DecalRoad", "material materialAsset");
+T3Dpre4ProjectImporter::genProcessor("MeshRoad", "topMaterial topMaterialAsset bottomMaterial bottomMaterialAsset sideMaterial sideMaterialAsset");
+T3Dpre4ProjectImporter::genProcessor("ScatterSky", "moonMat moonMatAsset");
+T3Dpre4ProjectImporter::genProcessor("Sun", "coronaMaterial coronaMaterialAsset");
+T3Dpre4ProjectImporter::genProcessor("VolumetricFog", "shape ShapeAsset texture textureAsset");
+T3Dpre4ProjectImporter::genProcessor("WaterObject", "rippleTex rippleTexAsset foamTex foamTexAsset depthGradientTex depthGradientTexAsset");
+T3Dpre4ProjectImporter::genProcessor("ConvexShape", "material materialAsset");
+T3Dpre4ProjectImporter::genProcessor("RenderMesh", "material materialAsset");
+T3Dpre4ProjectImporter::genProcessor("RenderShape", "shape shapeAsset");
+T3Dpre4ProjectImporter::genProcessor("GroundCover", "material materialAsset shape shapeAsset shapeFilename shapeAsset");
+T3Dpre4ProjectImporter::genProcessor("GroundPlane", "material materialAsset");
+T3Dpre4ProjectImporter::genProcessor("LevelInfo", "accuTexture accuTextureAsset");
+T3Dpre4ProjectImporter::genProcessor("TSStatic", "shape shapeAsset shapeName shapeAsset");
+T3Dpre4ProjectImporter::genProcessor("TSForestItemData", "shape shapeAsset shapeName shapeAsset shapeFile shapeAsset");
+T3Dpre4ProjectImporter::genProcessor("TerrainBlock", "terrainFile terrainAsset");
+T3Dpre4ProjectImporter::genProcessor("afxMagicMissileData", "projectileShape projectileShapeAsset projectileShapeName projectileShapeAsset sound projectileSoundAsset");
+T3Dpre4ProjectImporter::genProcessor("afxBillboardData", "texture textureAsset");
+T3Dpre4ProjectImporter::genProcessor("afxModelData", "shapeName shapeAsset shapeFile shapeAsset");
+T3Dpre4ProjectImporter::genProcessor("afxZodiacData", "texture textureAsset");
+T3Dpre4ProjectImporter::genProcessor("afxZodiacPlaneData", "texture textureAsset");
+T3Dpre4ProjectImporter::genProcessor("sfxEmitter", "track soundAsset filename soundAsset");
+T3Dpre4ProjectImporter::genProcessor("LightningData", "thunderSounds ThunderSoundAsset strikeSound StrikeSoundAsset");
+//==============================================================================
+// Levels
+//==============================================================================
+function T3Dpre4ProjectImporter::processMissionGroupLine(%this, %line, %missionName)
+{
+   %outline = strreplace(%line, "SimGroup(MissionGroup)", "Scene(" @ %missionName @ ")");
+   
+   if(%outLine !$= %line)
+      return %outLine;
+   else
+      return %line;
+}
+
+function T3Dpre4ProjectImporter::processLevelInfoLine(%this, %line)
+{
+   %outline = strreplace(%line, "ScriptObject(MissionInfo)", "LevelInfo(theLevelInfo)");
+   
+   if(%outLine !$= %line)
+      return %outLine;
+   else
+      return %line;
+}
+
+function T3Dpre4ProjectImporter::processSkyLine(%this, %line)
+{
+   %outline = strreplace(%line, "Sky", "Skybox");
+   
+   if(%outLine !$= %line)
+      return %outLine;
+   else
+      return %line;
+}
+
+function T3Dpre4ProjectImporter::processWaterLine(%this, %line)
+{
+   %outline = strreplace(%line, "Water", "WaterPlane");
+   
+   if(%outLine !$= %line)
+      return %outLine;
+   else
+      return %line;
+}
+
+//==============================================================================
+// GUIs
+//==============================================================================
+T3Dpre4ProjectImporter::genProcessor("GuiIconButtonCtrl", "bitmap bitmapAsset iconBitmap bitmapAsset");
+T3Dpre4ProjectImporter::genProcessor("GuiToolboxButtonCtrl", "normalBitmap normalBitmapAsset loweredBitmap loweredBitmapAsset hoverBitmap hoverBitmapAsset");
+T3Dpre4ProjectImporter::genProcessor("GuiBitmapCtrl", "bitmap bitmapAsset");
+T3Dpre4ProjectImporter::genProcessor("GuiMaterialCtrl", "material materialAsset");
+T3Dpre4ProjectImporter::genProcessor("GuiCursor", "bitmap bitmapAsset");
+T3Dpre4ProjectImporter::genProcessor("GuiChunkedBitmapCtrl", "bitmap bitmapAsset");
+T3Dpre4ProjectImporter::genProcessor("GuiProgressBitmap", "bitmap bitmapAsset");
+T3Dpre4ProjectImporter::genProcessor("GuiMissionArea", "handleBitmap handleBitmapAsset");
+T3Dpre4ProjectImporter::genProcessor("WorldEditor", "selectHandle selectHandleAsset defaultHandle defaultHandleAsset lockedHandle lockedHandleAsset");
+T3Dpre4ProjectImporter::genProcessor("GuiControlProfile", "bitmap bitmapAsset");
+T3Dpre4ProjectImporter::genProcessor("GuiMLTextCtrl", "deniedSound deniedSoundAsset");
+
+function T3Dpre4ProjectImporter::processGuiBitmapButtonCtrlLine(%this, %line)
+{
+   %outLine = processGuiBitmapButtonCtrlField(%line, "bitmap", "bitmapAsset");
+   if(%outLine !$= %line) return %outLine;
+   
+   return %line;
+}
+
+//==============================================================================
+// Datablocks
+//==============================================================================
+T3Dpre4ProjectImporter::genProcessor("ForestItemData", "shape shapeAsset");
+T3Dpre4ProjectImporter::genProcessor("CubeMapData", "cubemapFace cubeMapFaceAsset cubemap cubemapAsset cubeFace cubeMapFaceAsset");
+T3Dpre4ProjectImporter::genProcessor("DebrisData", "shape shapeAsset shapeFile shapeAsset");
+T3Dpre4ProjectImporter::genProcessor("DecalData", "material materialAsset");
+T3Dpre4ProjectImporter::genProcessor("ExplosionData", "explosionShape explosionShapeAsset");
+T3Dpre4ProjectImporter::genProcessor("ParticleData", "texture textureAsset textureName textureAsset textureExt textureExtAsset textureExtName textureExtAsset");
+T3Dpre4ProjectImporter::genProcessor("PrecipitationData", "drop dropAsset dropTexture dropAsset splash splashAsset splashTexture splashAsset soundProfile soundAsset");
+T3Dpre4ProjectImporter::genProcessor("SplashData", "texture textureAsset soundProfile SoundAsset");
+T3Dpre4ProjectImporter::genProcessor("LightFlareData", "flareTexture flareTextureAsset");
+T3Dpre4ProjectImporter::genProcessor("PhysicsDebrisData", "shape shapeAsset shapeFile shapeAsset");
+T3Dpre4ProjectImporter::genProcessor("PhysicsShapeData", "shape shapeAsset shapeName shapeAsset");
+T3Dpre4ProjectImporter::genProcessor("ProjectileData", "projectileShape projectileShapeAsset projectileShapeName projectileShapeAsset sound projectileSoundAsset");
+T3Dpre4ProjectImporter::genProcessor("ShapeBaseData", "shapeFile shapeAsset shape shapeAsset debrisShape debrisShapeAsset debrisShapeName debrisShapeAsset");
+T3Dpre4ProjectImporter::genProcessor("ShapeBaseImageData", "shape shapeAsset[0] shapeFP shapeAsset[1] shapeFile shapeAsset[0] shapeFileFP shapeAsset[1] stateSound stateSoundAsset");
+T3Dpre4ProjectImporter::genProcessor("ProximityMineData","armingSound ArmSoundAsset TriggerSound TriggerSoundAsset");
+T3Dpre4ProjectImporter::genProcessor("WheeledVehicleTire", "shape shapeAsset shapeFile shapeAsset");
+T3Dpre4ProjectImporter::genProcessor("WheeledVehicleData", "engineSound engineSoundAsset squealSound squealSoundAsset");
+T3Dpre4ProjectImporter::genProcessor("FlyingVehicleData", "engineSound engineSoundAsset jetSound jetSoundAsset");
+T3Dpre4ProjectImporter::genProcessor("HoverVehicleData", "engineSound engineSoundAsset jetSound jetSoundAsset floatSound floatSoundAsset");
+
+//==============================================================================
+// Datablocks - Long Lists
+//==============================================================================
+// - RigidShapeData
+$rigidEntriesList = "softImpactSound softImpactSoundAsset hardImpactSound hardImpactSoundAsset";
+$rigidEntriesList = $rigidEntriesList SPC "exitingWater exitingWaterAsset impactWaterEasy impactWaterEasyAsset";
+$rigidEntriesList = $rigidEntriesList SPC "impactWaterMedium impactWaterMediumAsset impactWaterHard impactWaterHardAsset";
+$rigidEntriesList = $rigidEntriesList SPC "waterWakeSound waterWakeSoundAsset";
+T3Dpre4ProjectImporter::genProcessor("RigidShapeData",$rigidEntriesList);
+// - PlayerData
+$PlayerEntriesList = "shapeFP shapeFPAsset shapeNameFP shapeFPAsset";
+$PlayerEntriesList = $PlayerEntriesList SPC "FootSoftSound FootSoftAsset FootHardSound FootHardAsset FootMetalSound FootMetalAsset";
+$PlayerEntriesList = $PlayerEntriesList SPC "FootSnowSound FootSnowAsset FootShallowSound FootShallowSplashAsset";
+$PlayerEntriesList = $PlayerEntriesList SPC "FootWadingSound FootWadingAsset FootUnderwaterSound FootUnderWaterAsset";
+$PlayerEntriesList = $PlayerEntriesList SPC "FootBubblesSound FootBubblesAsset movingBubblesSound MoveBubblesAsset";
+$PlayerEntriesList = $PlayerEntriesList SPC "waterBreathSound WaterBreathAsset";
+$PlayerEntriesList = $PlayerEntriesList SPC "impactSoftSound ImpactSoftAsset impactHardSound impactHardAsset";
+$PlayerEntriesList = $PlayerEntriesList SPC "impactMetalSound ImpactMetalAsset impactSnowSound impactSnowAsset";
+$PlayerEntriesList = $PlayerEntriesList SPC "impactWaterEasy impactWaterEasyAsset impactWaterMedium impactWaterMediumAsset impactWaterHard impactWaterHardAsset";
+$PlayerEntriesList = $PlayerEntriesList SPC "exitingWater ExitWaterAsset";
+T3Dpre4ProjectImporter::genProcessor("PlayerData", $PlayerEntriesList);
+// - Material
+$MaterialEntriesList = "baseTex diffuseMapAsset diffuseMap diffuseMapAsset";
+$MaterialEntriesList = $MaterialEntriesList SPC "lightMap lightMapAsset toneMap toneMapAsset";
+$MaterialEntriesList = $MaterialEntriesList SPC "detailTex detailMapAsset detailMap detailMapAsset detailNormalMap detailNormalMapAsset";
+$MaterialEntriesList = $MaterialEntriesList SPC "overlayTex overlayMapAsset overlayMap overlayMapAsset";
+$MaterialEntriesList = $MaterialEntriesList SPC "bumpTex normalMapAsset normalMap normalMapAsset";
+$MaterialEntriesList = $MaterialEntriesList SPC "ormConfigMap ormConfigMapAsset roughMap roughMapAsset";
+$MaterialEntriesList = $MaterialEntriesList SPC "aoMap aoMapAsset metalMap metalMapAsset";
+$MaterialEntriesList = $MaterialEntriesList SPC "glowMap glowMapAsset";
+$MaterialEntriesList = $MaterialEntriesList SPC "customFootstepSound customFootstepSoundAsset customImpactSound customImpactSoundAsset";
+T3Dpre4ProjectImporter::genProcessor("Material", $MaterialEntriesList);
+//==============================================================================
+// Materials
+//==============================================================================
+function T3Dpre4ProjectImporter::processMaterialObject(%this, %fileObject, %objectName)
+{
+   //first, lets do a bit of use-case checking. Materials are sometimes companion to 
+   //a terrain material for effects and game physics behavior and may not be immediately
+   //obviously assocated. Lets check for that first before processing this as a regular material
+   %mapTo = findObjectField(%fileObject, "mapTo");
+   if(%mapTo !$= "")
+   {
+      %terrainMatAsset = "";
+      %terrainMat = "";
+      if(isObject(%mapTo) && %mapTo.getClassName() $= "TerrainMaterial")
+      {
+         //If the terrain material already exists as a full object, look up it's
+         //asset to associate this FX material to it
+         %terrainMatAsset = TerrainMaterialAsset::getAssetIdByMaterialName(%mapTo.getName());
+         
+         //Now we make our scripted definition "real", and append it to our asset
+         //so it is serialized.
+         %objectDefinition = "";
+         for(%l=0; %l < %fileObject.count(); %l++)
+         {
+            %objectLine = %fileObject.getKey(%l);  
+            if(!isObject(%objectLine))
+            {
+               %objectDefinition = %objectDefinition @ %objectLine;
+            }
+         }
+         
+         eval(%objectDefinition);
+         
+         if(isObject(%objectName))
+         {
+            %terrainMatAsset.add(%objectName);
+            
+            %terrainMatAsset.saveAsset();
+            %fileObject.processed = true;
+            %fileObject.skip = true; //don't write the def back out to script, it's not needed now
+         }
+         
+         return false;
+      }
+      else
+      {
+         //No existing object, so probably incoming with the import, so lets go
+         //look for it
+         %terrMatList = getObjectsInFilesByClass("TerrainMaterial");
+         for(%i=0; %i < getFieldCount(%terrMatList); %i++)
+         {
+            %terrainMatObj = getField(%terrMatList, %i);
+            if(%terrainMatObj.objectName $= %mapTo)
+            {
+               %terrainMat = %terrainMatObj;
+            }
+            else
+            {
+               %terrainObjIntName = findObjectField(%terrainMatObj, "internalName");
+               if(%terrainObjIntName $= %mapTo)
+               {
+                  %terrainMat = %terrainMatObj;
+               }
+            }
+            
+            if(%terrainMat !$= "")
+            {
+               //found it, not imported yet, so mark it for later
+               %terrainMat.FXMaterial = %fileObject;
+               
+               return false;
+            }
+         }
+      }
+   }
+   
+   %matAsset = MaterialAsset::getAssetIdByMaterialName(%objectName);
+   
+   if(%matAsset $= "" || %matAsset $= "Core_Rendering:NoMaterial")
+   {
+      %assetName = %objectName;
+   
+      %moduleName = AssetBrowser.dirHandler.getModuleFromAddress($ProjectImporter::modulePath).ModuleId;
+      
+      %assetPath = $ProjectImporter::currentFilePath @ "/";   
+      
+      %tamlpath = %assetPath @ %assetName @ ".asset.taml";
+      %scriptPath = %assetPath @ %assetName @ "." @ $TorqueScriptFileExtension;//%fileObject.fileDestination;
+      
+      if(isFile(%tamlpath))
+      {
+         projectImporterLog("T3Dpre4ProjectImporter::processMaterialObject() - Failed to create as taml file already exists: " @ %fileObject.fileName);
+         return false;
+      }
+      
+      %asset = new MaterialAsset()
+      {
+         AssetName = %assetName;
+         versionId = 1;
+         shaderData = "";
+         materialDefinitionName = %assetName;
+      };
+      
+      //Now we make our scripted definition "real", and append it to our asset
+      //so it is serialized.
+      %objectDefinition = "";
+      for(%l=0; %l < %fileObject.count(); %l++)
+      {
+         %objectLine = %fileObject.getKey(%l);  
+         if(!isObject(%objectLine))
+         {
+            %objectDefinition = %objectDefinition @ %objectLine;
+         }
+      }
+      
+      eval(%objectDefinition);
+      
+      if(isObject(%objectName))
+      {
+         //if we created it successfully, set up inheritance for serialization if needed
+         if(%fileObject.parentName !$= "")
+         {
+            %objectName.setFieldValue("inheritFrom",%fileObject.parentName);
+         }
+               
+         %asset.add(%objectName);
+      }
+      
+      if(!isDirectory(%assetPath))
+      {
+         DirectoryHandler::createFolder(0, %assetPath);
+      }
+      
+      %success = false;
+      if(TamlWrite(%asset, %tamlpath))
+      {
+         %moduleDef = ModuleDatabase.findModule(%moduleName, 1);
+                  
+         %success = AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
+      }
+         
+      if(!%success)
+         return false;
+   }
+   else
+   {
+      //process an existing material asset, if needbe
+      %assetDef = AssetDatabase.acquireAsset(%matAsset);
+      
+      %assetScriptPath = %assetDef.getScriptPath();
+      
+      if(fileExt(%assetScriptPath) $= "")
+      {
+         //try the default extension
+         %assetScriptPath = %assetScriptPath @ "." @ $TorqueScriptFileExtension;  
+      }
+      
+      if(isFile(%assetScriptPath) && isObject(%objectName))
+      {
+         //Regular material in a companion file, so we'll want to write it to the
+         //asset def file instead of the loose file
+         %assetDef.scriptFile = ""; //clear the old script path reference
+         %assetDef.add(%objectName); //child the definition to the asset def
+
+         if(%fileObject.parentName !$= "")
+         {
+            %objectName.setFieldValue("inheritFrom",%fileObject.parentName);
+         }
+         
+         if(%assetDef.saveAsset())
+         {
+            %fileObject.processed = true;
+            %fileObject.skip = true; //don't write the def back out to script, it's not needed now
+            
+            %assetFileObj = findFileInImporting(makeFullPath(AssetDatabase.getAssetFilePath(%matAsset)));
+            
+            echo(%assetFileObj.fileDestination);
+            %assetFileObj.processed = true;
+            %assetFileObj.skip = true; //this asset definition has been processed
+                                       //so nothing else need be done
+         }
+         else
+         {
+            projectImporterLog("T3Dpre4ProjectImporter::processMaterialObject() - failed to save out modified material asset for: " @ %matAsset);  
+         }
+      }
+   }
+   
+   return false;
+}
+
+function T3Dpre4ProjectImporter::processTerrainMaterialLine(%this, %line)
+{
+   %outLine = processLegacyField(%line, "diffuseMap", "diffuseMapAsset");
+   if(%outLine !$= %line) return %outLine;
+   %outLine = processLegacyField(%line, "normalMap", "normalMapAsset");
+   if(%outLine !$= %line) return %outLine;
+   %outLine = processLegacyField(%line, "detailMap", "detailMapAsset");
+   if(%outLine !$= %line) return %outLine;
+   %outLine = processLegacyField(%line, "ORMConfigMap", "ORMConfigMapAsset");
+   if(%outLine !$= %line) return %outLine;
+   %outLine = processLegacyField(%line, "macroMap", "macroMapAsset");
+   if(%outLine !$= %line) return %outLine;
+   return %line;
+}
+
+function T3Dpre4ProjectImporter::processTerrainMaterialObject(%this, %fileObject, %objectName)
+{
+   %matAsset = TerrainMaterialAsset::getAssetIdByMaterialName(%objectName);
+   
+   if(%matAsset $= "" || %matAsset $= "Core_Rendering:noMaterial")
+   {
+      %assetName = %objectName;
+   
+      %moduleName = AssetBrowser.dirHandler.getModuleFromAddress($ProjectImporter::modulePath).ModuleId;
+      
+      %assetPath = $ProjectImporter::currentFilePath @ "/"; 
+      
+      %tamlpath = %assetPath @ %assetName @ ".asset.taml";
+      %scriptPath = %assetPath @ %assetName @ "." @ $TorqueScriptFileExtension;//%fileObject.fileDestination;
+      
+      if(isFile(%tamlpath))
+      {
+         projectImporterLog("T3Dpre4ProjectImporter::processTerrainMaterialObject() - Failed to create as taml file already exists: " @ %fileObject.fileName);
+         return false;
+      }
+      
+      %asset = new TerrainMaterialAsset()
+      {
+         AssetName = %assetName;
+         versionId = 1;
+         shaderData = "";
+         materialDefinitionName = %objectName;
+      };
+      
+      renameObjectName(%fileObject, %objectName);
+      
+      //Now we make our scripted definition "real", and append it to our asset
+      //so it is serialized.
+      %objectDefinition = "";
+      for(%l=0; %l < %fileObject.count(); %l++)
+      {
+         %objectLine = %fileObject.getKey(%l);  
+         if(!isObject(%objectLine))
+         {
+            %objectDefinition = %objectDefinition @ %objectLine;
+         }
+      }
+      
+      eval(%objectDefinition);
+      
+      if(isObject(%objectName))
+      {
+         //if we created it successfully, set up inheritance for serialization if needed
+         if(%fileObject.parentName !$= "")
+         {
+            %objectName.setFieldValue("inheritFrom",%fileObject.parentName);
+         }
+               
+         %asset.add(%objectName);
+      }
+      else
+      {
+         error("T3Dpre4ProjectImporter::processTerrainMaterialObject() - failed to parse terrainmat object: ");
+         echo(%objectDefinition);
+      }
+      
+      if(%fileObject.FXMaterial $= "")
+      {
+         //on the off-chance it exists, try scanning for FX materials associated
+         //to this terrain material
+         %fxMat = findObjectInFiles("TerrainFX_" @ %objectName);
+         if(%fxMat !$= "" && %objectName.classType $= "Material")
+         {
+            %fileObject.FXMaterial = %fxMat;
+         }
+         else
+         {
+            %fxMatList = getObjectsInFilesByClass("Material");
+            for(%i=0; %i < getFieldCount(%fxMatList); %i++)
+            {
+               %fxMatObj = getField(%fxMatList, %i);
+               %fxMatObjMapTo = findObjectField(%fxMatObj, "mapTo");
+               if(%fxMatObjMapTo $= %objectName || %fxMatObjMapTo $= %assetName)
+               {
+                  %fileObject.FXMaterial = %fxMatObj;
+                  break;
+               }
+            }
+         }
+      }
+      
+      if(%fileObject.FXMaterial !$= "")
+      {
+         //Ensure our mapto is up to date for any name sanitize/tweaks
+         setObjectField(%fileObject.FXMaterial, "mapTo", %moduleName @ ":" @ %assetName);
+         
+         //we associated to an FX material, so process that now
+         %objectDefinition = "";
+         for(%l=0; %l < %fileObject.FXMaterial.count(); %l++)
+         {
+            %objectLine = %fileObject.FXMaterial.getKey(%l);  
+            if(!isObject(%objectLine))
+            {
+               %objectDefinition = %objectDefinition @ %objectLine;
+            }
+         }
+         
+         eval(%objectDefinition);
+         
+         if(isObject(%fileObject.FXMaterial.objectName))
+         {
+            //if we created it successfully, set up inheritance for serialization if needed
+            if(%fileObject.FXMaterial.parentName !$= "")
+            {
+               %fileObject.FXMaterial.setFieldValue("inheritFrom",%fileObject.FXMaterial.parentName);
+            }
+                  
+            %asset.add(%fileObject.FXMaterial.objectName);
+         }
+         
+         %fileObject.FXMaterial.processed = true;
+         %fileObject.FXMaterial.skip = true;
+      }  
+      else
+      {
+         //if after all that we still have no FXMaterial, just create a new one
+         %fxMat = new Material("TerrainFX_" @ %objectName)
+         {
+            mapTo = %moduleName @ ":" @ %assetName;  
+         };
+         %asset.add(%fxMat);
+      }
+      
+      %success = false;
+      if(TamlWrite(%asset, %tamlpath))
+      {
+         %moduleDef = ModuleDatabase.findModule(%moduleName, 1);
+         
+         %success = AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
+      }
+      
+      if(!%success)
+         return false;
+   }
+   else
+   {
+      //process an existing material asset, if needbe
+      %assetDef = AssetDatabase.acquireAsset(%matAsset);
+      
+      %assetScriptPath = %assetDef.getScriptPath();
+      
+      if(isFile(%assetScriptPath) && isObject(%objectName))
+      {
+         //Regular material in a companion file, so we'll want to write it to the
+         //asset def file instead of the loose file
+         %assetDef.scriptFile = ""; //clear the old script path reference
+         %assetDef.add(%objectName); //child the definition to the asset def
+
+         if(%fileObject.parentName !$= "")
+         {
+            %objectName.setFieldValue("inheritFrom",%fileObject.parentName);
+         }
+         
+         if(%assetDef.saveAsset())
+         {
+            %fileObject.processed = true;
+            %fileObject.skip = true; //don't write the def back out to script, it's not needed now
+            
+            %assetFileObj = findFileInImporting(makeFullPath(AssetDatabase.getAssetFilePath(%matAsset)));
+            
+            echo(%assetFileObj.fileDestination);
+            %assetFileObj.processed = true;
+            %assetFileObj.skip = true; //this asset definition has been processed
+                                       //so nothing else need be done
+         }
+         else
+         {
+            projectImporterLog("T3Dpre4ProjectImporter::processTerrainMaterialObject() - failed to save out modified material asset for: " @ %matAsset);  
+         }
+      }
+   }
+   
+   return false;
+}
+//==============================================================================
+// PostEffects
+//==============================================================================
+T3Dpre4ProjectImporter::genProcessor("PostEffect", "texture textureAsset");
+
+//==============================================================================
+// Sounds
+// Sounds are a little weird because there's so much data tied up in a given sound
+// source. So our approach is find old SFXProfiles and process those into sound assets
+// by cross-referencing the filename for existing asset definitions.
+// Using existing SFXProfiles allows us to also injest the descriptions, giving us
+// our meta-properties on the sound asset itself.
+//==============================================================================
+T3Dpre4ProjectImporter::genProcessor("SFXAmbience", "soundTrack soundTrackAsset");
+T3Dpre4ProjectImporter::genProcessor("SFXPlayList", "track trackAsset");
+
+function T3Dpre4ProjectImporter::processSFXProfileLine(%this, %line)
+{
+   return %line;
+}
+
+function T3Dpre4ProjectImporter::processSFXProfileObject(%this, %file, %objectName)
+{
+   %soundFilename = findObjectField(%file, "filename");
+   
+   %soundFilename = sanitizeFilename(%soundFilename);
+   
+   if(fileExt(%soundFilename) $= "")
+   {
+      %soundFilename = testFilenameExtensions(%soundFilename);  
+   }
+
+   %soundAsset = SoundAsset::getAssetIdByFilename(%soundFilename);
+   
+   //Throw a warn that this file's already been claimed and move on
+   if(%soundAsset !$= "")
+   {
+      projectImporterLog("T3Dpre4ProjectImporter::processSFXProfileObject() - attempting to process SFXProfile " @ %objectName 
+               @ " but its filename is already associated to another sound asset. Continuing, but be aware.");
+   }  
+
+   %assetName = %objectName;
+
+   %moduleName = AssetBrowser.dirHandler.getModuleFromAddress(%soundFilename).ModuleId;
+   
+   %assetPath = filePath(%soundFilename) @ "/";   
+   
+   %tamlpath = %assetPath @ %assetName @ ".asset.taml";
+   
+   if(isFile(%tamlpath))
+   {
+      projectImporterLog("T3Dpre4ProjectImporter::processSFXProfileObject() - Failed to create as taml file already exists: " @ %soundFilename);
+      return false;
+   }
+   
+   %asset = new SoundAsset()
+   {
+      AssetName = %assetName;
+      versionId = 1;
+      shaderData = "";
+      soundFile = fileBase(%soundFilename) @ fileExt(%soundFilename);
+   };
+   
+   %descriptionName = findObjectField(%file, "description");
+   
+   if(%descriptionName !$= "")
+   {
+      //Optimization, see if we already have this description by happenstance
+      if(isObject(%descriptionName))
+      {
+         %asset.sourceGroup = %descriptionName.sourceGroup;
+         %asset.volume = %descriptionName.volume;
+         %asset.pitch = %descriptionName.pitch;
+         %asset.isLooping = %descriptionName.isLooping;
+         %asset.priority = %descriptionName.priority;
+         %asset.useHardware = %descriptionName.useHardware;
+         %asset.is3D = %descriptionName.is3D;
+         %asset.minDistance = %descriptionName.minDistance;
+         %asset.maxDistance = %descriptionName.maxDistance;
+         %asset.scatterDistance = %descriptionName.scatterDistance;
+         %asset.coneInsideAngle = %descriptionName.coneInsideAngle;            
+         %asset.coneOutsideAngle = %descriptionName.coneOutsideAngle;         
+         %asset.coneOutsideVolume = %descriptionName.coneOutsideVolume;
+         %asset.rolloffFactor = %descriptionName.rolloffFactor;
+         %asset.isStreaming = %descriptionName.isStreaming;
+      }
+      else
+      {
+         %fileObj = findObjectInFiles(%descriptionName);
+         
+         if(%fileObj !$= "")
+         {
+            %valueArray = new ArrayObject();
+               
+            %valueArray.add("sourceGroup" SPC findObjectField(%fileObj, "sourceGroup"));
+            %valueArray.add("volume" SPC findObjectField(%fileObj, "volume"));
+            %valueArray.add("pitch" SPC findObjectField(%fileObj, "pitch"));
+            %valueArray.add("isLooping" SPC findObjectField(%fileObj, "isLooping"));
+            %valueArray.add("priority" SPC findObjectField(%fileObj, "priority"));
+            %valueArray.add("useHardware" SPC findObjectField(%fileObj, "useHardware"));
+            %valueArray.add("is3D" SPC findObjectField(%fileObj, "is3D"));
+            %valueArray.add("minDistance" SPC findObjectField(%fileObj, "minDistance"));
+            %valueArray.add("maxDistance" SPC findObjectField(%fileObj, "maxDistance"));
+            %valueArray.add("scatterDistance" SPC findObjectField(%fileObj, "scatterDistance"));
+            %valueArray.add("coneInsideAngle" SPC findObjectField(%fileObj, "coneInsideAngle"));
+            %valueArray.add("coneOutsideAngle" SPC findObjectField(%fileObj, "coneOutsideAngle"));
+            %valueArray.add("coneOutsideVolume" SPC findObjectField(%fileObj, "coneOutsideVolume"));
+            %valueArray.add("rolloffFactor" SPC findObjectField(%fileObj, "rolloffFactor"));
+            %valueArray.add("isStreaming" SPC findObjectField(%fileObj, "isStreaming"));
+            
+            %fileObj.skip = true;
+            
+            for(%v=0; %v < %valueArray.Count(); %v++)
+            {
+               %varSet = %valueArray.getKey(%v);
+               %var = getWord(%varSet, 0);
+               %varVal = getWord(%varSet, 1);
+
+               if(%varVal !$= "")
+                  %asset.setFieldValue(%var, %varVal);
+            }
+         
+            %valueArray.delete();
+         }
+      }
+   }
+  
+   %success = false; 
+   if(TamlWrite(%asset, %tamlpath))
+   {
+      %moduleDef = ModuleDatabase.findModule(%moduleName, 1);
+      
+      %success = AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
+   }
+   
+   if(!%success)
+      return false;
+   
+   %file.skip = true;
+   
+   return true;
+}
+
+function T3Dpre4ProjectImporter::processAudioProfileObject(%this, %file, %objectName)
+{
+   return %this.processSFXProfileObject(%file, %objectName);
+}
+      
+function T3Dpre4ProjectImporter::processSFXDescriptionObject(%this, %file, %objectName)
+{
+   //$ProjectImporter::ToRemoveObjectList.add(%objectName, %file TAB 0);
+   
+   return true;
+}
+
+function T3Dpre4ProjectImporter::processAudioDescriptionObject(%this, %file, %objectName)
+{
+   $ProjectImporter::ToRemoveObjectList.add(%objectName, %file TAB 0);
+   
+   return true;
+}
+
+//==============================================================================
+// Misc Utility functions
+//==============================================================================
+//This is functionally identical to processLegacyField, but we have to special-snowflake our asset lookups
+//due to it using suffix-based indirections
+function processGuiBitmapButtonCtrlField(%line, %originalFieldName, %newFieldName)
+{
+   if(!strIsMatchExpr("*"@%originalFieldName@"=*\"*\";*", %line) && 
+      !strIsMatchExpr("*"@%originalFieldName@"[*=*\"*\";*", %line) &&
+      !strIsMatchExpr("*"@%originalFieldName@" *=*\"*\";*", %line))
+      return %line;
+      
+   %outLine = strreplace(%line, %originalFieldName, %newFieldName);
+   
+   //get the value
+   %value = "";
+   %pos = strpos(%outLine, "= \"");
+   if(%pos != -1)
+   {
+     %endPos = strpos(%outLine, "\";", %pos); 
+     
+     %value = getSubStr(%outLine, %pos+3, %endPos-%pos-3);
+   }
+   else
+   {
+      %pos = strpos(%outLine, "=\"");
+      if(%pos != -1)
+      {
+        %endPos = strpos(%outLine, "\";", %pos); 
+        
+        %value = getSubStr(%outLine, %pos+2, %endPos-%pos-2);
+      }
+   }
+   
+   if(%outLine !$= %line && %pos != -1 && %endPos != -1 && %value !$= "")
+   {
+      projectImporterLog("Legacy Project Importer - processing legacy field line: " @ %line);
+      
+      if(startsWith(%value, "$") || startsWith(%value, "#"))
+      {
+         //These are going to be texture/render targets, and we can leave them alone
+         return %line;
+      }
+      
+      %targetFilename = sanitizeFilename(%value);
+      
+      //If we still have nothing, then we fail it out
+      if(!isFile(%targetFilename))
+      {
+         projectImporterLog("Legacy Project Importer - file described in line could not be found/is not valid");
+         return %line;
+      }
+      
+      $ProjectImporter::assetQuery.clear();
+      %foundAssets = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %targetFilename);
+      if(%foundAssets != 0)
+      {
+         %assetId = $ProjectImporter::assetQuery.getAsset(0);
+         projectImporterLog("Legacy Project Importer - processing of legacy field line's value: " @ %value @ " has found a matching AssetId: " @ %assetId);
+      }
+     
+      if(%assetId !$= "" && AssetDatabase.isDeclaredAsset(%assetId))
+      {
+         //if (%assetId.getStatusString() $= "Ok")
+         %outLine = strReplace(%outLine, %value, %assetId);
+         //else
+         //   error("Asset assignment failure:", %assetId, getStatusString());
+      }
+   }
+   
+   if(%outLine !$= %line)
+   {
+      projectImporterLog("Legacy Project Importer - processing of legacy line: " @ %line @ " has been updated to: " @ %outLine);
+      return %outLine;  
+   }
+   else
+   {
+      return %line;  
+   }
+}

@@ -51,7 +51,7 @@ ConsoleDocClass( afxBillboardData,
 afxBillboardData::afxBillboardData()
 {
   color.set(1.0f, 1.0f, 1.0f, 1.0f);
-  INIT_IMAGEASSET(Texture);
+  INIT_ASSET(Texture);
   dimensions.set(1.0f, 1.0f);
   texCoords[0].set(0.0f, 0.0f);
   texCoords[1].set(0.0f, 1.0f);
@@ -66,7 +66,7 @@ afxBillboardData::afxBillboardData(const afxBillboardData& other, bool temp_clon
   : GameBaseData(other, temp_clone)
 {
   color = other.color;
-  CLONE_IMAGEASSET(Texture);
+  CLONE_ASSET(Texture);
   dimensions = other.dimensions;
   texCoords[0] = other.texCoords[0];
   texCoords[1] = other.texCoords[1];
@@ -123,7 +123,7 @@ void afxBillboardData::packData(BitStream* stream)
 	Parent::packData(stream);
 
   stream->write(color);
-  PACKDATA_IMAGEASSET(Texture);
+  PACKDATA_ASSET(Texture);
 
   mathWrite(*stream, dimensions);
   mathWrite(*stream, texCoords[0]);
@@ -140,7 +140,7 @@ void afxBillboardData::unpackData(BitStream* stream)
   Parent::unpackData(stream);
 
   stream->read(&color);
-  UNPACKDATA_IMAGEASSET(Texture);
+  UNPACKDATA_ASSET(Texture);
   mathRead(*stream, &dimensions);
   mathRead(*stream, &texCoords[0]);
   mathRead(*stream, &texCoords[1]);

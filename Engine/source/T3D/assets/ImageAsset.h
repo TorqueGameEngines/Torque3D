@@ -47,7 +47,7 @@
 #include "sim/netConnection.h"
 
 #include <string>
-
+#include "assetMacroHelpers.h"
 //-----------------------------------------------------------------------------
 class ImageAsset : public AssetBase
 {
@@ -270,46 +270,8 @@ public: \
    GFXTexHandle get##name##Resource() \
    {\
       return m##name;\
-   }
-
-#define DECLARE_IMAGEASSET_SETGET(className, name)\
-   static bool _set##name##Data(void* obj, const char* index, const char* data)\
-   {\
-      bool ret = false;\
-      className* object = static_cast<className*>(obj);\
-      ret = object->_set##name(StringTable->insert(data));\
-      return ret;\
-   }
-
-#define DECLARE_IMAGEASSET_NET_SETGET(className, name, bitmask)\
-   static bool _set##name##Data(void* obj, const char* index, const char* data)\
-   {\
-      bool ret = false;\
-      className* object = static_cast<className*>(obj);\
-      ret = object->_set##name(StringTable->insert(data));\
-      if(ret)\
-         object->setMaskBits(bitmask);\
-      return ret;\
-   }
-
-#define DEF_IMAGEASSET_BINDS(className,name)\
-DefineEngineMethod(className, get##name, const char*, (), , "get name")\
-{\
-   return object->get##name(); \
-}\
-DefineEngineMethod(className, get##name##Asset, const char*, (), , assetText(name, asset reference))\
-{\
-   return object->m##name##AssetId; \
-}\
-DefineEngineMethod(className, set##name, bool, (const char* map), , assetText(name,assignment. first tries asset then flat file.))\
-{\
-    return object->_set##name(StringTable->insert(map));\
-}
-
-#define INIT_IMAGEASSET(name) \
-   m##name##Name = StringTable->EmptyString(); \
-   m##name##AssetId = StringTable->EmptyString(); \
-   m##name##Asset = NULL;
+   }\
+   bool name##Valid() {return (get##name() != StringTable->EmptyString() && m##name##Asset->getStatus() == AssetBase::Ok); }
 
 #ifdef TORQUE_SHOW_LEGACY_FILE_FIELDS
 
@@ -325,11 +287,6 @@ DefineEngineMethod(className, set##name, bool, (const char* map), , assetText(na
 
 #endif // SHOW_LEGACY_FILE_FIELDS
 
-#define CLONE_IMAGEASSET(name) \
-   m##name##Name = other.m##name##Name;\
-   m##name##AssetId = other.m##name##AssetId;\
-   m##name##Asset = other.m##name##Asset;
-
 #define LOAD_IMAGEASSET(name)\
 if (m##name##AssetId != StringTable->EmptyString())\
 {\
@@ -341,53 +298,19 @@ if (m##name##AssetId != StringTable->EmptyString())\
    else Con::warnf("Warning: %s::LOAD_IMAGEASSET(%s)-%s", mClassName, m##name##AssetId, ImageAsset::getAssetErrstrn(assetState).c_str());\
 }
 
-#define PACKDATA_IMAGEASSET(name)\
-   if (stream->writeFlag(m##name##Asset.notNull()))\
-   {\
-      stream->writeString(m##name##Asset.getAssetId());\
-      _set##name(m##name##AssetId);\
-   }\
-   else\
-      stream->writeString(m##name##Name);
-
-#define UNPACKDATA_IMAGEASSET(name)\
-   if (stream->readFlag())\
-   {\
-      m##name##AssetId = stream->readSTString();\
-   }\
-   else\
-      m##name##Name = stream->readSTString();
-
-#define PACK_IMAGEASSET(netconn, name)\
-   if (stream->writeFlag(m##name##Asset.notNull()))\
-   {\
-      NetStringHandle assetIdStr = m##name##Asset.getAssetId();\
-      netconn->packNetStringHandleU(stream, assetIdStr);\
-   }\
-   else\
-      stream->writeString(m##name##Name);
-
-#define UNPACK_IMAGEASSET(netconn, name)\
-   if (stream->readFlag())\
-   {\
-      m##name##AssetId = StringTable->insert(netconn->unpackNetStringHandleU(stream).getString());\
-      _set##name(m##name##AssetId);\
-   }\
-   else\
-      m##name##Name = stream->readSTString();
 
 #pragma endregion
 
 #pragma region Arrayed Asset Macros
 
 //Arrayed Assets
-#define DECLARE_IMAGEASSET_ARRAY(className, name, profile, max) public: \
+#define DECLARE_IMAGEASSET_ARRAY(className, name, max) public: \
    static const U32 sm##name##Count = max;\
    GFXTexHandle m##name[max];\
    StringTableEntry m##name##Name[max]; \
    StringTableEntry m##name##AssetId[max];\
    AssetPtr<ImageAsset>  m##name##Asset[max];\
-   GFXTextureProfile * m##name##Profile = &profile;\
+   GFXTextureProfile * m##name##Profile[max];\
 public: \
    const StringTableEntry get##name##File(const U32& index) const { return m##name##Name[index]; }\
    void set##name##File(const FileName &_in, const U32& index) { m##name##Name[index] = StringTable->insert(_in.c_str());}\
@@ -451,7 +374,7 @@ public: \
       }\
       if (get##name(index) != StringTable->EmptyString() && m##name##Name[index] != StringTable->insert("texhandle"))\
       {\
-         m##name[index].set(get##name(index), m##name##Profile, avar("%s() - mTextureObject (line %d)", __FUNCTION__, __LINE__));\
+         m##name[index].set(get##name(index), m##name##Profile[index], avar("%s() - mTextureObject (line %d)", __FUNCTION__, __LINE__));\
       }\
       else\
       {\
@@ -482,7 +405,12 @@ public: \
       else if (m##name##AssetId[index] != StringTable->EmptyString())\
          return m##name##AssetId[index];\
       else if (m##name##Name[index] != StringTable->EmptyString())\
-         return StringTable->insert(Platform::makeRelativePathName(m##name##Name[index], Platform::getMainDotCsDir()));\
+      {\
+         if (String(m##name##Name[index]).startsWith("#") || String(m##name##Name[index]).startsWith("$"))\
+            return StringTable->insert(m##name##Name[index]);\
+         else\
+            return StringTable->insert(Platform::makeRelativePathName(m##name##Name[index], Platform::getMainDotCsDir()));\
+      }\
       else\
          return StringTable->EmptyString();\
    }\
@@ -491,7 +419,8 @@ public: \
       if(index >= sm##name##Count || index < 0)\
          return nullptr;\
       return m##name[index];\
-   }
+   }\
+   bool name##Valid(const U32& id) {return (get##name(id) != StringTable->EmptyString() && m##name##Asset[id]->getStatus() == AssetBase::Ok); }
 
 #define DECLARE_IMAGEASSET_ARRAY_SETGET(className, name)\
    static bool _set##name##Data(void* obj, const char* index, const char* data)\
@@ -521,6 +450,15 @@ public: \
       return ret;\
    }
 
+#define INIT_IMAGEASSET_ARRAY(name, profile, index) \
+{\
+   m##name##Name[index] = StringTable->EmptyString(); \
+   m##name##AssetId[index] = StringTable->EmptyString(); \
+   m##name##Asset[index] = NULL;\
+   m##name[index] = NULL;\
+   m##name##Profile[index] = &profile;\
+}
+
 #define DEF_IMAGEASSET_ARRAY_BINDS(className,name)\
 DefineEngineMethod(className, get##name, const char*, (S32 index), , "get name")\
 {\
@@ -537,13 +475,6 @@ DefineEngineMethod(className, set##name, bool, (const char* map, S32 index), , a
     return object->_set##name(StringTable->insert(map), index);\
 }
 
-#define INIT_IMAGEASSET_ARRAY(name, index) \
-{\
-   m##name##Name[index] = StringTable->EmptyString(); \
-   m##name##AssetId[index] = StringTable->EmptyString(); \
-   m##name##Asset[index] = NULL;\
-}
-
 #ifdef TORQUE_SHOW_LEGACY_FILE_FIELDS
 
 #define INITPERSISTFIELD_IMAGEASSET_ARRAY(name, arraySize, consoleClass, docs) \
@@ -558,13 +489,6 @@ DefineEngineMethod(className, set##name, bool, (const char* map, S32 index), , a
 
 #endif
 
-#define CLONE_IMAGEASSET_ARRAY(name, index) \
-{\
-   m##name##Name[index] = other.m##name##Name[index];\
-   m##name##AssetId[index] = other.m##name##AssetId[index];\
-   m##name##Asset[index] = other.m##name##Asset[index];\
-}
-
 #define LOAD_IMAGEASSET_ARRAY(name, index)\
 if (m##name##AssetId[index] != StringTable->EmptyString())\
 {\
@@ -575,41 +499,6 @@ if (m##name##AssetId[index] != StringTable->EmptyString())\
    }\
    else Con::warnf("Warning: %s::LOAD_IMAGEASSET(%s)-%s", mClassName, m##name##AssetId[index], ImageAsset::getAssetErrstrn(assetState).c_str());\
 }
-
-#define PACKDATA_IMAGEASSET_ARRAY(name, index)\
-   if (stream->writeFlag(m##name##Asset[index].notNull()))\
-   {\
-      stream->writeString(m##name##Asset[index].getAssetId());\
-   }\
-   else\
-      stream->writeString(m##name##Name[index]);
-
-#define UNPACKDATA_IMAGEASSET_ARRAY(name, index)\
-   if (stream->readFlag())\
-   {\
-      m##name##AssetId[index] = stream->readSTString();\
-      _set##name(m##name##AssetId[index], index);\
-   }\
-   else\
-      m##name##Name[index] = stream->readSTString();
-
-#define PACK_IMAGEASSET_ARRAY(netconn, name, index)\
-   if (stream->writeFlag(m##name##Asset[index].notNull()))\
-   {\
-      NetStringHandle assetIdStr = m##name##Asset[index].getAssetId();\
-      netconn->packNetStringHandleU(stream, assetIdStr);\
-   }\
-   else\
-      stream->writeString(m##name##Name[index]);
-
-#define UNPACK_IMAGEASSET_ARRAY(netconn, name, index)\
-   if (stream->readFlag())\
-   {\
-      m##name##AssetId[index] = StringTable->insert(netconn->unpackNetStringHandleU(stream).getString());\
-      _set##name(m##name##AssetId[index], index);\
-   }\
-   else\
-      m##name##Name[index] = stream->readSTString();
 
 #pragma endregion
 

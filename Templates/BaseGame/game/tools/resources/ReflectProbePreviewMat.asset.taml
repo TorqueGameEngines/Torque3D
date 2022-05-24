@@ -1,0 +1,18 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="ReflectProbePreviewMat"
+    materialDefinitionName="ReflectProbePreviewMat"
+    VersionId="1">
+    <Material
+        Name="ReflectProbePreviewMat"
+        mapTo="ReflectProbePreviewMat">
+        <Material.Stages>
+            <Stages_beginarray
+                DiffuseMapAsset="Core_Rendering:NoMaterial"
+                diffuseColor="1 1 1 1"
+                roughness="0"
+                metalness="1"/>
+        </Material.Stages>
+    </Material>
+</MaterialAsset>

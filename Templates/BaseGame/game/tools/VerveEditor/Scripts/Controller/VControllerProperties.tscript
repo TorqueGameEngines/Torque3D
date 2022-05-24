@@ -103,13 +103,13 @@ function VController::DisplayContextMenu( %this, %x, %y )
             
             Item[1] = "" TAB "";
              
-            Item[2] = "Cu&t"     TAB "" TAB "";
-            Item[3] = "&Copy"    TAB "" TAB "";
-            Item[4] = "&Paste"   TAB "" TAB "VerveEditor::Paste();";
+            Item[2] = "Cut"     TAB "" TAB "";
+            Item[3] = "Copy"    TAB "" TAB "";
+            Item[4] = "Paste"   TAB "" TAB "VerveEditor::Paste();";
             
             Item[5] = "" TAB "";
             
-            Item[6] = "&Delete"  TAB "" TAB "";
+            Item[6] = "Delete"  TAB "" TAB "";
             
             PasteIndex = 4;
         };

@@ -2,6 +2,13 @@
     canSave="true"
     canSaveDynamicFields="true"
     AssetName="White"
-    scriptFile="@assetFile=materials.tscript"
     materialDefinitionName="White"
-    VersionId="1" />
+    VersionId="1">
+    <Material
+        Name="White">
+        <Material.Stages>
+            <Stages_beginarray
+                DiffuseMapAsset="ToolsModule:white_image"/>
+        </Material.Stages>
+    </Material>
+</MaterialAsset>

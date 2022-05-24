@@ -85,7 +85,7 @@ function NewAssetModuleBtn::onClick(%this)
    AssetBrowser_addModuleWindow.selectWindow();
 }
 
-function AssetBrowser::setupCreateNewAsset(%this, %assetType, %moduleName, %callback)
+function AssetBrowser::setupCreateNewAsset(%this, %assetType, %moduleName, %callback, %nameOverride)
 {
    Canvas.pushDialog(AssetBrowser_newAsset);
    
@@ -106,8 +106,12 @@ function AssetBrowser::setupCreateNewAsset(%this, %assetType, %moduleName, %call
    %this.newAssetSettings.assetType = %assetType;
    %this.newAssetSettings.moduleName = %moduleName;
    
+   %newAssetName = "New" @ %shortAssetTypeName;
+   if(%nameOverride !$= "")
+      %newAssetName = %nameOverride;
+   
    NewAssetPropertiesInspector.startGroup("General");
-   NewAssetPropertiesInspector.addField("assetName", "New Asset Name", "String",  "Name of the new asset", "New" @ %shortAssetTypeName, "", %this.newAssetSettings);
+   NewAssetPropertiesInspector.addField("assetName", "New Asset Name", "String",  "Name of the new asset", %newAssetName, "", %this.newAssetSettings);
    //NewAssetPropertiesInspector.addField("AssetType", "New Asset Type", "List",  "Type of the new asset", %assetType, "Component,Image,Material,Shape,Sound,State Machine", %newAssetSettings);
    
    //NewAssetPropertiesInspector.addField("friendlyName", "Friendly Name", "String",  "Human-readable name of new asset", "", "", %this.newAssetSettings);
@@ -135,6 +139,46 @@ function newAssetUpdatePath(%newPath)
    NewAssetTargetModule.text = AssetBrowser.dirHandler.getModuleFromAddress(AssetBrowser.dirHandler.currentAddress).ModuleId;
 }
 
+//
+function AssetBrowser::importNewFile(%this)
+{
+   %importingPath = "";
+   
+   %dlg = new OpenFileDialog()
+   {
+      Filters = "(All Files (*.*)|*.*|";
+      DefaultFile = "";
+      ChangePath = false;
+      MustExist = true;
+      MultipleFiles = false;
+      forceRelativePath = false;
+   };
+      
+   if ( %dlg.Execute() )
+   {
+      %importingPath = makeFullPath(%dlg.FileName);
+   }
+   
+   %dlg.delete();
+   
+   AssetBrowser.onBeginDropFiles();
+   AssetBrowser.onDropFile(%importingPath);
+   AssetBrowser.onEndDropFiles();
+}
+
+//
+function NewAssetTargetModule::onSelect(%this, %idx, %idy)
+{
+   %newModuleName = %this.getText();
+   
+   %currentTargetPath = NewAssetTargetAddress.getText();
+   if(!startsWith(%currentTargetPath, "data/" @ %newModuleName @ "/"))
+   {
+      NewAssetTargetAddress.setText("data/" @ %newModuleName @ "/");
+   }
+}
+
+//
 //We do a quick validation that mandatory fields are filled in before passing along to the asset-type specific function
 function CreateNewAsset()
 {
@@ -168,9 +212,41 @@ function CreateNewAsset()
 		return;
 	}
 	
+	//First, we need to make sure we're not creating a conflicting asset
+	if(AssetDatabase.isDeclaredAsset(%moduleName @ ":" @ %assetName))
+	{
+	   toolsMessageBoxOK( "Error", "An asset with the ID: " @ %moduleName @ ":" @ %assetName 
+	                        @ " already exists! Please review and rename.");
+		return;
+	}
+	
+	%assetType = AssetBrowser.newAssetSettings.assetType;
+	
+	if(%assetType $= "MaterialAsset" || %assetType $= "TerrainMaterialAsset" || 
+	   %assetType $= "GUIAsset")
+	{
+	   if(isObject(%assetName))
+	   {
+         toolsMessageBoxOK( "Error", "Attempted to create a new asset that requires " @
+                                    "a unique name, as the object definition must be unique. " @
+                                    "Please use a new name.");
+         return;
+	   }
+	}
+	
+	%currentTargetPath = NewAssetTargetAddress.getText();
+	%modulePath = makeRelativePath(ModuleDatabase.findModule(%moduleName).ModulePath);
+	
+	if(!startsWith(%currentTargetPath, %modulePath))
+   {
+      toolsMessageBoxOK( "Error", "Attempting to create a new asset in an invalid path. " @ 
+                                    "Please set the target path to be within the target module folder.");
+      return;
+   }
+      
+	
 	AssetBrowser.newAssetSettings.moduleName = %moduleName;
 	
-   %assetType = AssetBrowser.newAssetSettings.assetType;
 	if(%assetType $= "")
 	{
 	   toolsMessageBoxOK( "Error", "Attempted to make a new asset with no type!");
@@ -182,11 +258,14 @@ function CreateNewAsset()
 	Canvas.popDialog(AssetBrowser_newAsset);
 	
 	//Load it
-	%moduleDef = ModuleDatabase.findModule(%moduleName,1);
-	AssetDatabase.addDeclaredAsset(%moduleDef, %assetFilePath);
-	//For utilities' sake, we'll acquire it immediately so it can be utilized 
-	//without delay if it's got any script/dependencies stuff
-	AssetDatabase.acquireAsset("\"" @ %moduleName @ ":" @ %assetName @ "\"");
+	if(!AssetDatabase.isDeclaredAsset(%moduleName @ ":" @ %assetName))
+	{
+      %moduleDef = ModuleDatabase.findModule(%moduleName,1);
+      AssetDatabase.addDeclaredAsset(%moduleDef, %assetFilePath);
+      //For utilities' sake, we'll acquire it immediately so it can be utilized 
+      //without delay if it's got any script/dependencies stuff
+      AssetDatabase.acquireAsset("\"" @ %moduleName @ ":" @ %assetName @ "\"");
+	}
 	
 	if(AssetBrowser_newAsset.callbackFunc !$= "")
 	{

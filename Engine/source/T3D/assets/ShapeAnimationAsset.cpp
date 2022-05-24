@@ -151,7 +151,7 @@ void ShapeAnimationAsset::initializeAsset(void)
 
       mSourceShape = ResourceManager::get().load(mFilePath);
 
-      if (!mSourceShape->addSequence("ambient", "", mAnimationName, mStartFrame, mEndFrame, mPadRotation, mPadTransforms))
+      if (!mSourceShape || !mSourceShape->addSequence("ambient", "", mAnimationName, mStartFrame, mEndFrame, mPadRotation, mPadTransforms))
       {
          Con::errorf("ShapeAnimationAsset::initializeAsset - Unable to do initial setup of the animation clip named %s for asset %s", mAnimationName, getAssetName());
          return;
@@ -203,4 +203,10 @@ DefineEngineMethod(ShapeAnimationAsset, getAnimationCount, S32, (), ,
    "@return Animation count.\n")
 {
    return object->getAnimationCount();
+}
+
+DefineEngineMethod(ShapeAnimationAsset, getAnimationPath, const char*, (), ,
+   "Gets the Animation file path associated to this asset.")
+{
+   return object->getAnimationPath();
 }

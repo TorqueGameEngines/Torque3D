@@ -40,11 +40,12 @@ class GuiBitmapCtrl : public GuiControl
       /// Name of the bitmap file.  If this is 'texhandle' the bitmap is not loaded
       /// from a file but rather set explicitly on the control.
       DECLARE_IMAGEASSET(GuiBitmapCtrl, Bitmap, onImageChanged, GFXDefaultGUIProfile);
-      DECLARE_IMAGEASSET_SETGET(GuiBitmapCtrl, Bitmap);
+      DECLARE_ASSET_SETGET(GuiBitmapCtrl, Bitmap);
             
       Point2I mStartPoint;
       ColorI   mColor;
-      
+      F32     mAngle;
+
       /// If true, bitmap tiles inside control.  Otherwise stretches.
       bool mWrap;
 

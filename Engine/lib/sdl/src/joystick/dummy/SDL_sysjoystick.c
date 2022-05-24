@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -52,6 +52,12 @@ DUMMY_JoystickGetDeviceName(int device_index)
     return NULL;
 }
 
+static const char *
+DUMMY_JoystickGetDevicePath(int device_index)
+{
+    return NULL;
+}
+
 static int
 DUMMY_JoystickGetDevicePlayerIndex(int device_index)
 {
@@ -95,14 +101,20 @@ DUMMY_JoystickRumbleTriggers(SDL_Joystick *joystick, Uint16 left_rumble, Uint16 
     return SDL_Unsupported();
 }
 
-static SDL_bool
-DUMMY_JoystickHasLED(SDL_Joystick *joystick)
+static Uint32
+DUMMY_JoystickGetCapabilities(SDL_Joystick *joystick)
 {
-    return SDL_FALSE;
+    return 0;
 }
 
 static int
 DUMMY_JoystickSetLED(SDL_Joystick *joystick, Uint8 red, Uint8 green, Uint8 blue)
+{
+    return SDL_Unsupported();
+}
+
+static int
+DUMMY_JoystickSendEffect(SDL_Joystick *joystick, const void *data, int size)
 {
     return SDL_Unsupported();
 }
@@ -140,6 +152,7 @@ SDL_JoystickDriver SDL_DUMMY_JoystickDriver =
     DUMMY_JoystickGetCount,
     DUMMY_JoystickDetect,
     DUMMY_JoystickGetDeviceName,
+    DUMMY_JoystickGetDevicePath,
     DUMMY_JoystickGetDevicePlayerIndex,
     DUMMY_JoystickSetDevicePlayerIndex,
     DUMMY_JoystickGetDeviceGUID,
@@ -147,8 +160,9 @@ SDL_JoystickDriver SDL_DUMMY_JoystickDriver =
     DUMMY_JoystickOpen,
     DUMMY_JoystickRumble,
     DUMMY_JoystickRumbleTriggers,
-    DUMMY_JoystickHasLED,
+    DUMMY_JoystickGetCapabilities,
     DUMMY_JoystickSetLED,
+    DUMMY_JoystickSendEffect,
     DUMMY_JoystickSetSensorsEnabled,
     DUMMY_JoystickUpdate,
     DUMMY_JoystickClose,

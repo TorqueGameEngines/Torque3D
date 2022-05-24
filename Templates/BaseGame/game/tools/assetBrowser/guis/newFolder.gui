@@ -47,7 +47,7 @@ $guiContent = new GuiControl(AssetBrowser_newFolder) {
       canSaveDynamicFields = "0";
 
       new GuiButtonCtrl() {
-         text = "Select";
+         text = "OK";
          groupNum = "-1";
          buttonType = "PushButton";
          useMouseEvents = "0";
@@ -65,6 +65,7 @@ $guiContent = new GuiControl(AssetBrowser_newFolder) {
          isContainer = "0";
          canSave = "1";
          canSaveDynamicFields = "0";
+         accelerator = "return";
       };
       new GuiButtonCtrl() {
          text = "Cancel";
@@ -85,6 +86,7 @@ $guiContent = new GuiControl(AssetBrowser_newFolder) {
          isContainer = "0";
          canSave = "1";
          canSaveDynamicFields = "0";
+         accelerator = "escape";
       };
       new GuiTextEditCtrl(AssetBrowser_newFolderNameTxt) {
          historySize = "0";

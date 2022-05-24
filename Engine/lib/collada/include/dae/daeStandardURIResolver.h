@@ -12,7 +12,7 @@
  */
 
 #ifndef __DAE_STANDARD_URI_RESOLVER__
-#define __DAE_STANDARD_URI_RESOVLER__
+#define __DAE_STANDARD_URI_RESOLVER__
 
 #include <string>
 #include "dae/daeURI.h"

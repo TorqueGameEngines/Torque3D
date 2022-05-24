@@ -19,12 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
-
-function ESettingsWindow::startup( %this )
+function ESettingsWindow::onAdd(%this)
 {
    new ArrayObject(EditorSettingsPageList);
    new ArrayObject(GameSettingsPageList);
+}
    
+function ESettingsWindow::startup( %this )
+{
    %this.addEditorSettingsPage("Axis", "Axis Gizmo");
    %this.addEditorSettingsPage("General", "General Settings");
    %this.addEditorSettingsPage("Camera", "Camera Settings");
@@ -53,25 +55,26 @@ function ESettingsWindow::onWake( %this )
 
 function ESettingsWindow::hideDialog( %this )
 {
-   %this.setVisible(false);
+   Canvas.popDialog(EditorSettingsWindow);
 }
 
 function ESettingsWindow::ToggleVisibility()
 {
-   if ( ESettingsWindow.visible )
+   if(ESettingsWindow.isAwake())
    {
-      ESettingsWindow.setVisible(false);
+      Canvas.popDialog(EditorSettingsWindow);
    }
    else
    {
-      ESettingsWindow.setVisible(true);
+      Canvas.pushDialog(EditorSettingsWindow); 
+      
       ESettingsWindow.selectWindow();
       ESettingsWindow.setCollapseGroup(false);
       
       ESettingsWindowList.clear();
-   }
    
    ESettingsWindowList.setSelectedById( 1 );
+}
 }
 
 function ESettingsWindow::toggleProjectSettings(%this)
@@ -299,14 +302,7 @@ function ESettingsWindow::getGeneralSettings(%this)
    SettingsInspector.endGroup();
    
    SettingsInspector.startGroup("Paths");
-   SettingsInspector.addSettingsField("WorldEditor/torsionPath", "Torsion Path", "filename", "");
-   SettingsInspector.endGroup();
-   
-   SettingsInspector.startGroup("Theme");
-   SettingsInspector.addSettingsField("WorldEditor/Theme/backgroundColor", "Background Color", "colorI", "");
-   SettingsInspector.addSettingsField("WorldEditor/Theme/windowTitleBGColor", "Window Title Color", "colorI", "");
-   SettingsInspector.addSettingsField("WorldEditor/Theme/windowTitleFontColor", "Window Title Text Color", "colorI", "");
-   SettingsInspector.addSettingsField("WorldEditor/Theme/mainTextColor", "Main Text Color", "colorI", "");
+   //SettingsInspector.addSettingsField("WorldEditor/torsionPath", "Torsion Path", "filename", "");
    SettingsInspector.endGroup();
    
    SettingsInspector.startGroup("Layout");
@@ -326,7 +322,7 @@ function ESettingsWindow::getCameraSettings(%this)
    //Based on currently loaded level(rootScene)
    SettingsInspector.startGroup(EditorSettings.value("WorldEditor/newLevelFile") @ " Camera");
    SettingsInspector.addSettingsField("Camera/cameraMinSpeed", "Camera Speed Min", "float", "");
-   SettingsInspector.addSettingsField("Camera/cameraMaxSpeed", "Camera Speed Max", "200", "");
+   SettingsInspector.addSettingsField("Camera/cameraMaxSpeed", "Camera Speed Max", "float", "");
    SettingsInspector.endGroup();
 }  
 
@@ -364,7 +360,8 @@ function ESettingsWindow::getSceneEditorSettings(%this)
    
    SettingsInspector.startGroup("Misc");
    //SettingsInspector.addSettingsField("WorldEditor/forceLoadDAE", "Force Load DAE", "bool", "");
-   SettingsInspector.addSettingsField("WorldEditor/forceLoadDAE", "Force Load DAE", "bool", "");
+   SettingsInspector.addSettingsField("WorldEditor/Tools/dropAtScreenCenterScalar", "Screen Center Scalar", "string", "");
+   SettingsInspector.addSettingsField("WorldEditor/Tools/dropAtScreenCenterMax", "Screen Center Max", "string", "");
    SettingsInspector.endGroup();
    
    SettingsInspector.startGroup("Layout");
@@ -443,6 +440,9 @@ function ESettingsWindow::getPostFXSettings(%this)
    SettingsInspector.endGroup();
 }
 
+function ESettingsWindow::getObjectEditorSettings(%this)
+{
+}
 //
 // COMMON GAME SETTINGS
 //
@@ -472,83 +472,6 @@ function ESettingsWindow::getUISettings(%this)
    SettingsInspector.addSettingsField("UI/mainMenuName", "Main Menu GUI Name", "string", "");
    SettingsInspector.endGroup();
 } 
-
-function ESettingsWindow::getAssetManagementSettings(%this)
-{
-   SettingsInspector.startGroup("Modules");
-   SettingsInspector.addSettingsField("AssetManagement/Modules/coreModulePath", "Core Module Path", "string", "");
-   SettingsInspector.addSettingsField("AssetManagement/Modules/gameDataModulePath", "Game Data Module Path", "string", "");
-   SettingsInspector.addSettingsField("AssetManagement/Modules/moduleExtension", "Module Extension", "string", "");
-   
-   %moduleList = ModuleDatabase.findModules(true);
-   %moduleList = strreplace(%moduleList, " ", ",");
-   
-   SettingsInspector.addSettingsField("AssetManagement/Modules/DefaultModule", "Default Module", "list", %moduleList);
-   SettingsInspector.endGroup();
-   
-   SettingsInspector.startGroup("Assets");
-   SettingsInspector.addSettingsField("AssetManagement/Assets/assetExtension", "Asset Extension", "string", "");
-   SettingsInspector.addSettingsField("AssetManagement/Assets/datablockCaching", "Cache Datablocks", "bool", "");
-   //SettingsInspector.addSettingsField("AssetManagement/Assets/moduleExtension", "Module Extension", "string", "");
-   
-   SettingsInspector.endGroup();
-} 
-
-function ESettingsWindow::getAssetEditingSettings(%this)
-{
-   ImportAssetWindow::reloadImportOptionConfigs();
-   
-   //First, get our list of modules
-   %moduleList = ModuleDatabase.findModules();
-   %formattedModuleList = "";
-   
-   %count = getWordCount(%moduleList);
-   for(%i=0; %i < %count; %i++)
-   {
-      %module = getWord(%moduleList, %i);
-      if(%module.group !$= "Tools" && %module.group !$= "Core")
-      {
-         if(%formattedModuleList $= "")
-            %formattedModuleList = %module.moduleId;
-         else
-            %formattedModuleList = %formattedModuleList @ "," @ %module.moduleId;  
-      }
-   }
-   
-   SettingsInspector.startGroup("Asset Creation");
-   SettingsInspector.addSettingsField("Assets/New/defaultModule", "Default Module", "list", "Default Module for new assets to be created into", %formattedModuleList); 
-   SettingsInspector.addSettingsField("Assets/New/alwaysPromptModuleTarget", "Always Prompt Target Module", "bool", "If off, use the default module"); 
-   SettingsInspector.endGroup();
-   
-   %formattedConfigList = "";
-   for(%i=0; %i < ImportAssetWindow.importConfigsList.Count(); %i++)
-   {
-      %configName = ImportAssetWindow.importConfigsList.getKey(%i);
-      %formattedConfigList = %i == 0 ? %configName : %formattedConfigList @ "," @ %configName;
-   }
-   
-   SettingsInspector.startGroup("Assets Importing");
-   SettingsInspector.addField("Edit Asset Configs", "Edit Asset Import Configs", "button", "Open Asset Import Config Editor", "", "Canvas.pushDialog(AssetImportConfigEditor);");
-   SettingsInspector.addSettingsField("Assets/AssetImporDefaultConfig", "Default Asset Import Config", "list", "", %formattedConfigList); 
-   SettingsInspector.addSettingsField("Assets/AutoImport", "Automatically Import using default config", "bool", "If on, the asset importing process" @
-                                                                                                                        "will attempt to automatically import any inbound assets"@
-                                                                                                                        "using the default config, without prompting the import window."@
-                                                                                                                        "The window will still display if any issues are detected", ""); 
-   SettingsInspector.addSettingsField("Assets/AutoImportLooseFiles", "Automatically Import Loose Files", "bool", "If on, will automatically import unassociated loose files in assets when navigating the Asset Browser.", ""); 
-   SettingsInspector.endGroup();
-   
-   SettingsInspector.startGroup("Asset Browser");
-   SettingsInspector.addSettingsField("Assets/Browser/showCoreModule", "Show Core Module in Asset Browser", "bool", ""); 
-   SettingsInspector.addSettingsField("Assets/Browser/showToolsModule", "Show Tools Module in Asset Browser", "bool", ""); 
-   SettingsInspector.addSettingsField("Assets/Browser/showOnlyPopulatedModule", "Show Only Modules with Assets in Asset Browser", "bool", "");
-   SettingsInspector.addSettingsField("Assets/Browser/showFolders", "Show Folders in Tiles view in Asset Browser", "bool", "");
-   SettingsInspector.addSettingsField("Assets/Browser/showEmptyFolders", "Show Empty Folders in Tiles view in Asset Browser", "bool", "");
-   SettingsInspector.addSettingsField("Assets/Browser/showLooseFiles", "Show Loose Files when viewing in Asset Browser", "bool", "");
-   SettingsInspector.addSettingsField("AssetManagement/Assets/promptOnRename", "Prompt on Rename", "bool", "");
-   SettingsInspector.addSettingsField("Assets/Browser/doubleClickAction", "Double Click Action", "list", "Dictates what sort of action double clicking on an asset in the Browser will invoke", "Edit Asset,Spawn Asset");
-   SettingsInspector.addSettingsField("AssetManagement/Assets/closeBrowserOnDragAction", "Close Browser on Drag Action", "bool", "If on, the Asset Browser will automatically close after dragging an asset from it to the editor interface.");
-   SettingsInspector.endGroup();
-}
 
 function ESettingsWindow::getGameplaySettings(%this)
 {

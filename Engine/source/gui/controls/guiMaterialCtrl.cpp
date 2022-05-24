@@ -45,7 +45,7 @@ ConsoleDocClass( GuiMaterialCtrl,
 GuiMaterialCtrl::GuiMaterialCtrl()
    : mMaterialInst( NULL )
 {
-   INIT_MATERIALASSET(Material);
+   INIT_ASSET(Material);
 }
 
 void GuiMaterialCtrl::initPersistFields()

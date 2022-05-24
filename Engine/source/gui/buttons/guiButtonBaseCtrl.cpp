@@ -98,7 +98,7 @@ EndImplementEnumType;
 GuiButtonBaseCtrl::GuiButtonBaseCtrl()
 {
    mDepressed = false;
-   mMouseOver = false;
+   mHighlighted = false;
    mActive = true;
    static StringTableEntry sButton = StringTable->insert( "Button" );
    mButtonText = sButton;
@@ -288,14 +288,14 @@ void GuiButtonBaseCtrl::onMouseEnter(const GuiEvent &event)
    if(isMouseLocked())
    {
       mDepressed = true;
-      mMouseOver = true;
+      mHighlighted = true;
    }
    else
    {
       if ( mActive && mProfile->mSoundButtonOver )
          SFX->playOnce(mProfile->mSoundButtonOver);
 
-      mMouseOver = true;
+      mHighlighted = true;
    }
 }
 
@@ -309,7 +309,7 @@ void GuiButtonBaseCtrl::onMouseLeave(const GuiEvent &)
       onMouseLeave_callback();
    if( isMouseLocked() )
       mDepressed = false;
-   mMouseOver = false;
+   mHighlighted = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -541,4 +541,18 @@ DefineEngineMethod( GuiButtonBaseCtrl, resetState, void, (),,
    "This method should not generally be called." )
 {
    object->resetState();
+}
+
+DefineEngineMethod(GuiButtonBaseCtrl, setHighlighted, void, (bool highlighted), (false),
+   "Reset the mousing state of the button.\n\n"
+   "This method should not generally be called.")
+{
+   object->setHighlighted(highlighted);
+}
+
+DefineEngineMethod(GuiButtonBaseCtrl, isHighlighted, bool, (),,
+   "Reset the mousing state of the button.\n\n"
+   "This method should not generally be called.")
+{
+   return object->isHighlighted();
 }

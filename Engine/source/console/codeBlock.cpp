@@ -38,6 +38,7 @@ CodeBlock *    CodeBlock::smCurrentCodeBlock = NULL;
 ConsoleParser *CodeBlock::smCurrentParser = NULL;
 
 extern FuncVars gEvalFuncVars;
+extern FuncVars gGlobalScopeFuncVars;
 extern FuncVars* gFuncVars;
 
 //-------------------------------------------------------------------------
@@ -637,8 +638,7 @@ ConsoleValue CodeBlock::compileExec(StringTableEntry fileName, const char *inStr
    
    // we are an eval compile if we don't have a file name associated (no exec)
    gIsEvalCompile = fileName == NULL;
-   // In eval mode, global func vars are allowed.
-   gFuncVars = gIsEvalCompile ? &gEvalFuncVars : NULL;
+   gFuncVars = gIsEvalCompile ? &gEvalFuncVars : &gGlobalScopeFuncVars;
 
    // Set up the parser.
    smCurrentParser = getParserForFile(fileName);
@@ -678,7 +678,7 @@ ConsoleValue CodeBlock::compileExec(StringTableEntry fileName, const char *inStr
    codeStream.emit(OP_RETURN_VOID);
    codeStream.emitCodeStream(&codeSize, &code, &lineBreakPairs);
    
-   S32 localRegisterCount = gIsEvalCompile ? gEvalFuncVars.count() : 0;
+   S32 localRegisterCount = gIsEvalCompile ? gEvalFuncVars.count() : gGlobalScopeFuncVars.count();
 
    consoleAllocReset();
 

@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -57,6 +57,12 @@ main(int argc, char *argv[])
 
     /* Set the error value for the main thread */
     SDL_SetError("No worries");
+
+    if (SDL_getenv("SDL_TESTS_QUICK") != NULL) {
+        SDL_Log("Not running slower tests");
+        SDL_Quit();
+        return 0;
+    }
 
     alive = 1;
     thread = SDL_CreateThread(ThreadFunc, NULL, "#1");

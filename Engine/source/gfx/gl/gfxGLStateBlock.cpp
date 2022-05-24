@@ -101,8 +101,8 @@ void GFXGLStateBlock::activate(const GFXGLStateBlock* oldState)
    // the state value even if that value is identical to the current value.
 
 #define STATE_CHANGE(state) (!oldState || oldState->mDesc.state != mDesc.state)
-#define TOGGLE_STATE(state, enum) if(mDesc.state) glEnable(enum); else glDisable(enum)
-#define CHECK_TOGGLE_STATE(state, enum) if(!oldState || oldState->mDesc.state != mDesc.state) if(mDesc.state) glEnable(enum); else glDisable(enum)
+#define TOGGLE_STATE(state, enum) if(mDesc.state) { glEnable(enum); } else { glDisable(enum); }
+#define CHECK_TOGGLE_STATE(state, enum) if(!oldState || oldState->mDesc.state != mDesc.state) { if(mDesc.state) { glEnable(enum); } else { glDisable(enum); }}
 
    // Blending
    CHECK_TOGGLE_STATE(blendEnable, GL_BLEND);

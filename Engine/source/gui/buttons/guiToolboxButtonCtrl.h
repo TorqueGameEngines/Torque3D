@@ -39,12 +39,12 @@ private:
 
 protected:
 
-   DECLARE_IMAGEASSET(GuiToolboxButtonCtrl, NormalBitmap, onNormalImageChanged, GFXTexturePersistentSRGBProfile);
-   DECLARE_IMAGEASSET_SETGET(GuiToolboxButtonCtrl, NormalBitmap);
-   DECLARE_IMAGEASSET(GuiToolboxButtonCtrl, LoweredBitmap, onLoweredImageChanged, GFXTexturePersistentSRGBProfile);
-   DECLARE_IMAGEASSET_SETGET(GuiToolboxButtonCtrl, LoweredBitmap);
-   DECLARE_IMAGEASSET(GuiToolboxButtonCtrl, HoverBitmap, onHoverImageChanged, GFXTexturePersistentSRGBProfile);
-   DECLARE_IMAGEASSET_SETGET(GuiToolboxButtonCtrl, HoverBitmap);
+   DECLARE_IMAGEASSET(GuiToolboxButtonCtrl, NormalBitmap, onNormalImageChanged, GFXDefaultGUIProfile);
+   DECLARE_ASSET_SETGET(GuiToolboxButtonCtrl, NormalBitmap);
+   DECLARE_IMAGEASSET(GuiToolboxButtonCtrl, LoweredBitmap, onLoweredImageChanged, GFXDefaultGUIProfile);
+   DECLARE_ASSET_SETGET(GuiToolboxButtonCtrl, LoweredBitmap);
+   DECLARE_IMAGEASSET(GuiToolboxButtonCtrl, HoverBitmap, onHoverImageChanged, GFXDefaultGUIProfile);
+   DECLARE_ASSET_SETGET(GuiToolboxButtonCtrl, HoverBitmap);
 
    void renderButton(GFXTexHandle &texture, Point2I &offset, const RectI& updateRect);
    void renderStateRect( GFXTexHandle &texture, const RectI& rect );

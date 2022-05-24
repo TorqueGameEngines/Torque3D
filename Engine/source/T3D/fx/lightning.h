@@ -41,7 +41,8 @@
 
 #include "gfx/gfxTextureHandle.h"
 
-
+#include "T3D/assets/ImageAsset.h"
+#include "T3D/assets/SoundAsset.h"
 
 class ShapeBase;
 class LightningStrikeEvent;
@@ -62,8 +63,13 @@ class LightningData : public GameBaseData
 
    //-------------------------------------- Console set variables
   public:
-   SFXTrack*          thunderSounds[MaxThunders];
-   SFXTrack*         strikeSound;
+
+   DECLARE_SOUNDASSET_ARRAY(LightningData, ThunderSound, MaxThunders);
+   DECLARE_ASSET_ARRAY_SETGET(LightningData, ThunderSound);
+
+   DECLARE_SOUNDASSET(LightningData, StrikeSound);
+   DECLARE_ASSET_SETGET(LightningData, StrikeSound);
+
    StringTableEntry  strikeTextureNames[MaxTextures];
 
    //-------------------------------------- load set variables

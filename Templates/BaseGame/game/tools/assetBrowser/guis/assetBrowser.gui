@@ -157,8 +157,8 @@ $guiContent = new GuiControl(AssetBrowser) {
       position = "204 80";
       extent = "615 608";
       minExtent = "383 274";
-      horizSizing = "center";
-      vertSizing = "center";
+      horizSizing = "windowRelative";
+      vertSizing = "windowRelative";
       profile = "ToolsGuiWindowProfile";
       visible = "1";
       active = "1";
@@ -276,6 +276,7 @@ $guiContent = new GuiControl(AssetBrowser) {
             hovertime = "1000";
             isContainer = "0";
             internalName = "ImportAssetButton";
+            command="AssetBrowser.importNewFile();";
             canSave = "1";
             canSaveDynamicFields = "0";
          };
@@ -518,9 +519,9 @@ $guiContent = new GuiControl(AssetBrowser) {
 
                new GuiScrollCtrl() {
                   willFirstRespond = "1";
-                  hScrollBar = "alwaysOff";
+                  hScrollBar = "dynamic";
                   vScrollBar = "dynamic";
-                  lockHorizScroll = "1";
+                  lockHorizScroll = "0";
                   lockVertScroll = "0";
                   constantThumbHeight = "0";
                   childMargin = "0 0";
@@ -770,7 +771,7 @@ $guiContent = new GuiControl(AssetBrowser) {
                   position = "0 0";
                   extent = "23 23";
                   minExtent = "8 2";
-                  horizSizing = "left";
+                  horizSizing = "right";
                   vertSizing = "bottom";
                   profile = "ToolsGuiSolidDefaultProfile";
                   visible = "1";
@@ -1084,6 +1085,22 @@ $guiContent = new GuiControl(AssetBrowser) {
          canSave = "1";
          canSaveDynamicFields = "0";
       };
+      new GuiBitmapCtrl() {
+         bitmapAsset = "ToolsModule:smaller_image";
+         position = "5 588";
+         extent = "20 20";
+         minExtent = "8 2";
+         horizSizing = "right";
+         vertSizing = "top";
+         profile = "ToolsGuiDefaultProfile";
+         visible = "1";
+         active = "1";
+         tooltipProfile = "GuiToolTipProfile";
+         hovertime = "1000";
+         isContainer = "0";
+         canSave = "1";
+         canSaveDynamicFields = "0";
+      };
       new GuiSliderCtrl() {
          range = "0 2";
          ticks = "5";
@@ -1092,7 +1109,7 @@ $guiContent = new GuiControl(AssetBrowser) {
          useFillBar = "0";
          fillBarColor = "255 255 255 255";
          renderTicks = "0";
-         position = "8 588";
+         position = "28 590";
          extent = "75 20";
          minExtent = "8 2";
          horizSizing = "right";
@@ -1106,6 +1123,23 @@ $guiContent = new GuiControl(AssetBrowser) {
          isContainer = "0";
          internalName = "previewSlider";
          class = "assetBrowserPreviewSlider";
+         canSave = "1";
+         canSaveDynamicFields = "0";
+         command = "AssetBrowser-->previewSlider.onMouseDragged();";
+      };
+      new GuiBitmapCtrl() {
+         bitmapAsset = "ToolsModule:larger_image";
+         position = "103 588";
+         extent = "20 20";
+         minExtent = "8 2";
+         horizSizing = "right";
+         vertSizing = "top";
+         profile = "ToolsGuiDefaultProfile";
+         visible = "1";
+         active = "1";
+         tooltipProfile = "GuiToolTipProfile";
+         hovertime = "1000";
+         isContainer = "0";
          canSave = "1";
          canSaveDynamicFields = "0";
       };

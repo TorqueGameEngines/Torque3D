@@ -198,8 +198,8 @@ bool GFXD3D11TextureObject::copyToBmp(GBitmap* bmp)
 
    PROFILE_START(GFXD3D11TextureObject_copyToBmp);
 
-   AssertFatal(bmp->getWidth() == getWidth(), "GFXD3D11TextureObject::copyToBmp - source/dest width does not match");
-   AssertFatal(bmp->getHeight() == getHeight(), "GFXD3D11TextureObject::copyToBmp - source/dest height does not match");
+   AssertFatal(bmp->getWidth() == getWidth(), avar("GFXGLTextureObject::copyToBmp - Width mismatch: %i vs %i", bmp->getWidth(), getWidth()));
+   AssertFatal(bmp->getHeight() == getHeight(), avar("GFXGLTextureObject::copyToBmp - Height mismatch: %i vs %i", bmp->getHeight(), getHeight()));
    const U32 mipLevels = getMipLevels();
 
    bmp->setHasTransparency(mHasTransparency);

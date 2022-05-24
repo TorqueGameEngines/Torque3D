@@ -395,6 +395,15 @@ DefineEngineFunction(isFile, bool, ( const char* fileName ),,
    Con::expandScriptFilename(sgScriptFilenameBuffer, sizeof(sgScriptFilenameBuffer), cleanfilename.c_str());
 
    Torque::Path givenPath(Torque::Path::CompressPath(sgScriptFilenameBuffer));
+
+   if (givenPath.getFileName().isEmpty() && givenPath.getExtension().isNotEmpty())
+   {
+      //specially named or hidden files, like .gitignore parse incorrectly due to having
+      //"no" filename, so we adjust that
+      givenPath.setFileName(String(".") + givenPath.getExtension());
+      givenPath.setExtension("");
+   }
+
    return Torque::FS::IsFile(givenPath);
 }
 
@@ -883,4 +892,20 @@ DefineEngineFunction( createPath, bool, ( const char* path ),,
    return Platform::createPath( pathName );
 }
 
+DefineEngineFunction(deleteDirectory, bool, (const char* path), ,
+   "@brief Delete a directory from the hard drive\n\n"
+
+   "@param path Name and path of the folder to delete\n"
+   "@note THERE IS NO RECOVERY FROM THIS. Deleted files are gone for good.\n"
+   "@return True if file was successfully deleted\n"
+   "@ingroup FileSystem")
+{
+   static char fileName[1024];
+   static char sandboxFileName[1024];
+
+   Con::expandScriptFilename(fileName, sizeof(fileName), path);
+   Platform::makeFullPathName(fileName, sandboxFileName, sizeof(sandboxFileName));
+
+   return Platform::deleteDirectory(sandboxFileName);
+}
 #endif // TORQUE_TOOLS

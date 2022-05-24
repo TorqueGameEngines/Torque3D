@@ -288,7 +288,8 @@ bool PopupMenu::canHandleID(U32 id)
 
 bool PopupMenu::handleSelect(U32 command, const char *text /* = NULL */)
 {
-   return dAtob(Con::executef(this, "onSelectItem", Con::getIntArg(command), text ? text : ""));
+   ConsoleValue cValue = Con::executef(this, "onSelectItem", Con::getIntArg(command), text ? text : "");
+   return cValue.getBool();
 }
 
 //////////////////////////////////////////////////////////////////////////

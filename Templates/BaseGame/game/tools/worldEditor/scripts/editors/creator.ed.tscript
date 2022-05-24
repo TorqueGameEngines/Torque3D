@@ -20,116 +20,21 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-
-function EWCreatorWindow::init( %this )
+function ObjectCreator::onWake( %this )
 {
-   // Just so we can recall this method for testing changes
-   // without restarting.
-   if ( isObject( %this.array ) )
-      %this.array.delete();
-      
-   %this.array = new ArrayObject();
-   %this.array.caseSensitive = true; 
-   %this.setListView( true );
-   
-   %this.beginGroup( "Environment" );
-   
-      // Removed Prefab as there doesn't really seem to be a point in creating a blank one
-      //%this.registerMissionObject( "Prefab",              "Prefab" );
-      %this.registerMissionObject( "SkyBox",              "Sky Box" );
-      %this.registerMissionObject( "CloudLayer",          "Cloud Layer" );
-      %this.registerMissionObject( "BasicClouds",         "Basic Clouds" );
-      %this.registerMissionObject( "ScatterSky",          "Scatter Sky" );
-      %this.registerMissionObject( "Sun",                 "Basic Sun" );
-      %this.registerMissionObject( "Lightning" );
-      %this.registerMissionObject( "WaterBlock",          "Water Block" );
-      %this.registerMissionObject( "SFXEmitter",          "Sound Emitter" );
-      %this.registerMissionObject( "Precipitation" );
-      %this.registerMissionObject( "ParticleEmitterNode", "Particle Emitter" );
-      %this.registerMissionObject( "VolumetricFog", "Volumetric Fog" );
-      %this.registerMissionObject( "RibbonNode", "Ribbon" );
-      
-      // Legacy features. Users should use Ground Cover and the Forest Editor.   
-      //%this.registerMissionObject( "fxShapeReplicator",   "Shape Replicator" );
-      //%this.registerMissionObject( "fxFoliageReplicator", "Foliage Replicator" );
-      
-      %this.registerMissionObject( "PointLight",          "Point Light" );
-      %this.registerMissionObject( "SpotLight",           "Spot Light" );
-      
-      %this.registerMissionObject( "BoxEnvironmentProbe",       "Box Environment Probe" );
-      %this.registerMissionObject( "SphereEnvironmentProbe",    "Sphere Environment Probe" );
-      %this.registerMissionObject( "Skylight",       "Skylight" );
-      
-      %this.registerMissionObject( "GroundCover",         "Ground Cover" );
-      %this.registerMissionObject( "TerrainBlock",        "Terrain Block" );
-      %this.registerMissionObject( "GroundPlane",         "Ground Plane" );
-      %this.registerMissionObject( "WaterPlane",          "Water Plane" );
-      %this.registerMissionObject( "PxCloth",             "Cloth" );
-      %this.registerMissionObject( "ForestWindEmitter",   "Wind Emitter" );
-               
-      %this.registerMissionObject( "DustEmitter", "Dust Emitter" );
-      %this.registerMissionObject( "DustSimulation", "Dust Simulation" );
-      %this.registerMissionObject( "DustEffecter", "Dust Effecter" );
-      
-   %this.endGroup();
-
-   %this.beginGroup( "Level" );
-   
-      %this.registerMissionObject( "MissionArea",  "Mission Area" );
-      %this.registerMissionObject( "Path" );
-      %this.registerMissionObject( "Marker",       "Path Node" );
-      %this.registerMissionObject( "Trigger" );
-      %this.registerMissionObject( "PhysicalZone", "Physical Zone" );
-      %this.registerMissionObject( "Camera" );
-      %this.registerMissionObject( "LevelInfo",    "Level Info" );
-      %this.registerMissionObject( "TimeOfDay",    "Time of Day" );
-      %this.registerMissionObject( "Zone",         "Zone" );
-      %this.registerMissionObject( "Portal",       "Zone Portal" );
-      %this.registerMissionObject( "SpawnSphere",  "Player Spawn Sphere", "PlayerDropPoint" );
-      %this.registerMissionObject( "SpawnSphere",  "Observer Spawn Sphere", "ObserverDropPoint" );
-      %this.registerMissionObject( "SpawnSphere",  "General Spawn Sphere", "GeneralDropPoint" );
-      %this.registerMissionObject( "SFXSpace",      "Sound Space" );
-      %this.registerMissionObject( "OcclusionVolume", "Occlusion Volume" );
-      %this.registerMissionObject( "AccumulationVolume", "Accumulation Volume" );
-      %this.registerMissionObject("NavMesh", "Navigation mesh");
-      %this.registerMissionObject("NavPath", "Path");
-      %this.registerMissionObject( "Entity",       "Entity" );
-      %this.registerMissionObject( "NotesObject",       "Note" );
-      
-   %this.endGroup();
-   
-   %this.beginGroup( "System" );
-   
-      %this.registerMissionObject( "SimGroup" );
-      
-   %this.endGroup();  
-
-   %this.beginGroup( "ExampleObjects" );
-   
-      %this.registerMissionObject( "RenderObjectExample" );
-      %this.registerMissionObject( "RenderMeshExample" );
-      %this.registerMissionObject( "RenderShapeExample" );
-      
-   %this.endGroup(); 
 }
 
-function EWCreatorWindow::onWake( %this )
-{
-   CreatorTabBook.selectPage( 0 );
-   CreatorTabBook.onTabSelected( "Scripted" );
-}
-
-function EWCreatorWindow::beginGroup( %this, %group )
+function ObjectCreator::beginGroup( %this, %group )
 {
    %this.currentGroup = %group;   
 }
 
-function EWCreatorWindow::endGroup( %this, %group )
+function ObjectCreator::endGroup( %this, %group )
 {
    %this.currentGroup = "";
 }
 
-function EWCreatorWindow::getCreateObjectPosition()
+function ObjectCreator::getCreateObjectPosition()
 {
    %focusPoint = LocalClientConnection.getControlObject().getLookAtPoint();
    if( %focusPoint $= "" )
@@ -138,7 +43,7 @@ function EWCreatorWindow::getCreateObjectPosition()
       return getWord( %focusPoint, 1 ) SPC getWord( %focusPoint, 2 ) SPC getWord( %focusPoint, 3 );
 }
 
-function EWCreatorWindow::registerMissionObject( %this, %class, %name, %buildfunc, %group )
+function ObjectCreator::registerMissionObject( %this, %class, %name, %buildfunc, %group )
 {
    if( !isClass(%class) )
       return;
@@ -150,7 +55,7 @@ function EWCreatorWindow::registerMissionObject( %this, %class, %name, %buildfun
    
    if ( %class $= "" || %group $= "" )
    {
-      warn( "EWCreatorWindow::registerMissionObject, invalid parameters!" );
+      warn( "ObjectCreator::registerMissionObject, invalid parameters!" );
       return;  
    }
 
@@ -158,16 +63,14 @@ function EWCreatorWindow::registerMissionObject( %this, %class, %name, %buildfun
    %args.val[0] = %class;
    %args.val[1] = %name;
    %args.val[2] = %buildfunc;
-   
-   %this.array.push_back( %group, %args );
 }
 
-function EWCreatorWindow::getNewObjectGroup( %this )
+function ObjectCreator::getNewObjectGroup( %this )
 {
    return %this.objectGroup;
 }
 
-function EWCreatorWindow::setNewObjectGroup( %this, %group )
+function ObjectCreator::setNewObjectGroup( %this, %group )
 {
    if( %this.objectGroup )
    {
@@ -179,10 +82,11 @@ function EWCreatorWindow::setNewObjectGroup( %this, %group )
    %group = %group.getID();
    %this.objectGroup = %group;
    %itemId = EditorTree.findItemByObjectId( %group );
+   if(%itemId != -1)
    EditorTree.markItem( %itemId );
 }
 
-function EWCreatorWindow::createStatic( %this, %file )
+function ObjectCreator::createStatic( %this, %file )
 {
    if ( !$missionRunning )
       return;
@@ -200,7 +104,7 @@ function EWCreatorWindow::createStatic( %this, %file )
    %this.onObjectCreated( %objId );
 }
 
-function EWCreatorWindow::createPrefab( %this, %file )
+function ObjectCreator::createPrefab( %this, %file )
 {
    if ( !$missionRunning )
       return;
@@ -218,7 +122,7 @@ function EWCreatorWindow::createPrefab( %this, %file )
    %this.onObjectCreated( %objId );
 }
 
-function EWCreatorWindow::createObject( %this, %cmd )
+function ObjectCreator::createObject( %this, %cmd )
 {
    if ( !$missionRunning )
       return;
@@ -227,6 +131,10 @@ function EWCreatorWindow::createObject( %this, %cmd )
       %this.setNewObjectGroup( getScene(0) );
 
    pushInstantGroup();
+   
+   if(startsWith(%cmd, "return "))
+      %objId = eval(%cmd);
+   else
    %objId = eval("return " @ %cmd);
    popInstantGroup();
    
@@ -236,7 +144,7 @@ function EWCreatorWindow::createObject( %this, %cmd )
    return %objId;
 }
 
-function EWCreatorWindow::onFinishCreateObject( %this, %objId )
+function ObjectCreator::onFinishCreateObject( %this, %objId )
 {
    %this.objectGroup.add( %objId );
 
@@ -251,7 +159,7 @@ function EWCreatorWindow::onFinishCreateObject( %this, %objId )
    %this.onObjectCreated( %objId );
 }
 
-function EWCreatorWindow::onObjectCreated( %this, %objId )
+function ObjectCreator::onObjectCreated( %this, %objId )
 {
    // Can we submit an undo action?
    if ( isObject( %objId ) )
@@ -266,331 +174,7 @@ function EWCreatorWindow::onObjectCreated( %this, %objId )
    EWorldEditor.dropSelection( true );
 }
 
-function CreatorTabBook::onTabSelected( %this, %text, %idx )
-{
-   if ( %this.isAwake() )
-   {
-      EWCreatorWindow.tab = %text;      
-      EWCreatorWindow.navigate( "" );
-   }
-}
-
-function EWCreatorWindow::navigate( %this, %address )
-{
-   CreatorIconArray.frozen = true;
-   CreatorIconArray.clear();  
-   CreatorPopupMenu.clear();       
-        
-   if ( %this.tab $= "Scripted" )
-   {
-      %category = getWord( %address, 1 );                  
-      %dataGroup = "DataBlockGroup";
-      
-      for ( %i = 0; %i < %dataGroup.getCount(); %i++ )
-      {
-         %obj = %dataGroup.getObject(%i);
-         // echo ("Obj: " @ %obj.getName() @ " - " @ %obj.category );
-         
-         if ( %obj.category $= "" && %obj.category == 0 )
-            continue;
-            
-         // Add category to popup menu if not there already
-         if ( CreatorPopupMenu.findText( %obj.category ) == -1 )
-            CreatorPopupMenu.add( %obj.category );
-         
-         if ( %address $= "" )
-         {         
-            %ctrl = %this.findIconCtrl( %obj.category );
-            if ( %ctrl == -1 )
-            {
-               %this.addFolderIcon( %obj.category );
-            }    
-         }
-         else if ( %address $= %obj.category )
-         {            
-            %ctrl = %this.findIconCtrl( %obj.getName() );
-            if ( %ctrl == -1 )
-               %this.addShapeIcon( %obj );
-         }
-      }
-   }
-   
-   if ( %this.tab $= "Meshes" )
-   {      
-      %fullPath = findFirstFileMultiExpr( getFormatExtensions() );
-      
-      while ( %fullPath !$= "" )
-      {
-         if (strstr(%fullPath, "cached.dts") != -1)
-         {
-            %fullPath = findNextFileMultiExpr( getFormatExtensions() );
-            continue;
-         }
-
-         %fullPath = makeRelativePath( %fullPath, getMainDotCSDir() );                                  
-         %splitPath = strreplace( %fullPath, " ", "_" );
-         %splitPath = strreplace( %splitPath, "/", " " );
-         if( getWord(%splitPath, 0) $= "tools" )
-         {
-            %fullPath = findNextFileMultiExpr( getFormatExtensions() );
-            continue;
-         }
-                      
-         %dirCount = getWordCount( %splitPath ) - 1;
-         
-         %pathFolders = getWords( %splitPath, 0, %dirCount - 1 );         
-         
-         // Add this file's path (parent folders) to the
-         // popup menu if it isn't there yet.
-         %temp = strreplace( %pathFolders, " ", "/" );         
-         %temp = strreplace( %temp, "_", " " );
-         %r = CreatorPopupMenu.findText( %temp );
-         if ( %r == -1 )
-         {
-            CreatorPopupMenu.add( %temp );
-         }
-         
-         // Is this file in the current folder?        
-         if ( stricmp( %pathFolders, %address ) == 0 )
-         {
-            %this.addStaticIcon( %fullPath );
-         }
-         // Then is this file in a subfolder we need to add
-         // a folder icon for?
-         else
-         {
-            %wordIdx = 0;
-            %add = false;
-            
-            if ( %address $= "" )
-            {
-               %add = true;
-               %wordIdx = 0;
-            }
-            else
-            {
-               for ( ; %wordIdx < %dirCount; %wordIdx++ )
-               {
-                  %temp = getWords( %splitPath, 0, %wordIdx );
-                  if ( stricmp( %temp, %address ) == 0 )
-                  {                  
-                     %add = true;
-                     %wordIdx++;
-                     break;  
-                  }
-               }
-            }
-            
-            if ( %add == true )
-            {               
-               %folder = getWord( %splitPath, %wordIdx );
-               
-               %ctrl = %this.findIconCtrl( %folder );
-               if ( %ctrl == -1 )
-                  %this.addFolderIcon( %folder );
-            }
-         }         
-
-         %fullPath = findNextFileMultiExpr( getFormatExtensions() );
-      }
-   }
-   
-   if ( %this.tab $= "Level" )
-   {         
-      // Add groups to popup menu
-      %array = %this.array;
-      %array.sortk();
-      
-      %count = %array.count();
-      
-      if ( %count > 0 )
-      {
-         %lastGroup = "";
-         
-         for ( %i = 0; %i < %count; %i++ )
-         {
-            %group = %array.getKey( %i );
-
-            if ( %group !$= %lastGroup )
-            {
-               CreatorPopupMenu.add( %group );
-               
-               if ( %address $= "" )
-                  %this.addFolderIcon( %group );                                             
-            }               
-            
-            if ( %address $= %group )
-            {
-               %args = %array.getValue( %i );
-               %class = %args.val[0];
-               %name = %args.val[1];
-               %func = %args.val[2];
-
-               %this.addMissionObjectIcon( %class, %name, %func );
-            }
-            
-            %lastGroup = %group;
-         }
-      }
-   }   
-   
-   if ( %this.tab $= "Prefabs" )
-   {      
-      %expr = "*.prefab";
-      %fullPath = findFirstFile( %expr );
-      
-      while ( %fullPath !$= "" )
-      {         
-         %fullPath = makeRelativePath( %fullPath, getMainDotCSDir() );                                  
-         %splitPath = strreplace( %fullPath, " ", "_" );
-         %splitPath = strreplace( %splitPath, "/", " " );
-         if( getWord(%splitPath, 0) $= "tools" )
-         {
-            %fullPath = findNextFile( %expr );
-            continue;
-         }
-                      
-         %dirCount = getWordCount( %splitPath ) - 1;
-         
-         %pathFolders = getWords( %splitPath, 0, %dirCount - 1 );         
-         
-         // Add this file's path (parent folders) to the
-         // popup menu if it isn't there yet.
-         %temp = strreplace( %pathFolders, " ", "/" );         
-         %temp = strreplace( %temp, "_", " " );
-         %r = CreatorPopupMenu.findText( %temp );
-         if ( %r == -1 )
-         {
-            CreatorPopupMenu.add( %temp );
-         }
-         
-         // Is this file in the current folder?        
-         if ( (%dirCount == 0 && %address $= "") || stricmp( %pathFolders, %address ) == 0 )
-         {
-            %this.addPrefabIcon( %fullPath );            
-         }
-         // Then is this file in a subfolder we need to add
-         // a folder icon for?
-         else
-         {
-            %wordIdx = 0;
-            %add = false;
-            
-            if ( %address $= "" )
-            {
-               %add = true;
-               %wordIdx = 0;
-            }
-            else
-            {
-               for ( ; %wordIdx < %dirCount; %wordIdx++ )
-               {
-                  %temp = getWords( %splitPath, 0, %wordIdx );
-                  if ( stricmp( %temp, %address ) == 0 )
-                  {                  
-                     %add = true;
-                     %wordIdx++;
-                     break;  
-                  }
-               }
-            }
-            
-            if ( %add == true )
-            {               
-               %folder = getWord( %splitPath, %wordIdx );
-               
-               %ctrl = %this.findIconCtrl( %folder );
-               if ( %ctrl == -1 )
-                  %this.addFolderIcon( %folder );
-            }
-         }         
-
-         %fullPath = findNextFile( %expr );
-      }
-   } 
-   
-   CreatorIconArray.sort( "alphaIconCompare" );
-   
-   for ( %i = 0; %i < CreatorIconArray.getCount(); %i++ )
-   {
-      CreatorIconArray.getObject(%i).autoSize = false;         
-   }
-   
-   CreatorIconArray.frozen = false;
-   CreatorIconArray.refresh();
-   
-   // Recalculate the array for the parent guiScrollCtrl
-   CreatorIconArray.getParent().computeSizes();  
-   
-   %this.address = %address;
-
-   CreatorPopupMenu.sort();
-
-   %str = strreplace( %address, " ", "/" );
-   %r = CreatorPopupMenu.findText( %str );
-   if ( %r != -1 )
-      CreatorPopupMenu.setSelected( %r, false );
-   else
-      CreatorPopupMenu.setText( %str );
-   CreatorPopupMenu.tooltip = %str;
-}
-
-function EWCreatorWindow::navigateDown( %this, %folder )
-{
-   if ( %this.address $= "" )
-      %address = %folder;
-   else   
-      %address = %this.address SPC %folder;
-
-   // Because this is called from an IconButton::onClick command
-   // we have to wait a tick before actually calling navigate, else
-   // we would delete the button out from under itself.
-   %this.schedule( 1, "navigate", %address );
-}
-
-function EWCreatorWindow::navigateUp( %this )
-{
-   %count = getWordCount( %this.address );
-   
-   if ( %count == 0 )
-      return;
-      
-   if ( %count == 1 )
-      %address = "";
-   else      
-      %address = getWords( %this.address, 0, %count - 2 );
-      
-   %this.navigate( %address );
-}
-
-function EWCreatorWindow::setListView( %this, %noupdate )
-{
-   //CreatorIconArray.clear();
-   //CreatorIconArray.setVisible( false );
-   
-   CreatorIconArray.setVisible( true );
-   %this.contentCtrl = CreatorIconArray;   
-   %this.isList = true;
-   
-   if ( %noupdate == true )
-      %this.navigate( %this.address );
-}
-
-//function EWCreatorWindow::setIconView( %this )
-//{
-   //echo( "setIconView" );
-   //
-   //CreatorIconStack.clear();
-   //CreatorIconStack.setVisible( false );
-   //
-   //CreatorIconArray.setVisible( true );
-   //%this.contentCtrl = CreatorIconArray;
-   //%this.isList = false;
-   //
-   //%this.navigate( %this.address );
-//}
-
-function EWCreatorWindow::findIconCtrl( %this, %name )
+function ObjectCreator::findIconCtrl( %this, %name )
 {
    for ( %i = 0; %i < %this.contentCtrl.getCount(); %i++ )
    {
@@ -602,7 +186,7 @@ function EWCreatorWindow::findIconCtrl( %this, %name )
    return -1;
 }
 
-function EWCreatorWindow::createIcon( %this )
+function ObjectCreator::createIcon( %this )
 {
    %ctrl = new GuiIconButtonCtrl()
    {            
@@ -630,11 +214,11 @@ function EWCreatorWindow::createIcon( %this )
    return %ctrl;
 }
 
-function EWCreatorWindow::addFolderIcon( %this, %text )
+function ObjectCreator::addFolderIcon( %this, %text )
 {
    %ctrl = %this.createIcon();
       
-   %ctrl.altCommand = "EWCreatorWindow.navigateDown(\"" @ %text @ "\");";
+   %ctrl.altCommand = "ObjectCreator.navigateDown(\"" @ %text @ "\");";
    %ctrl.iconBitmap = "tools/gui/images/folder.png";   
    %ctrl.text = %text;
    %ctrl.tooltip = %text;     
@@ -646,7 +230,7 @@ function EWCreatorWindow::addFolderIcon( %this, %text )
    %this.contentCtrl.addGuiControl( %ctrl );   
 }
 
-function EWCreatorWindow::addMissionObjectIcon( %this, %class, %name, %buildfunc )
+function ObjectCreator::addMissionObjectIcon( %this, %class, %name, %buildfunc )
 {
    %ctrl = %this.createIcon();      
 
@@ -661,7 +245,7 @@ function EWCreatorWindow::addMissionObjectIcon( %this, %class, %name, %buildfunc
    else
       %cmd = "ObjectBuilderGui." @ %method @ "();";
 
-   %ctrl.altCommand = "ObjectBuilderGui.newObjectCallback = \"EWCreatorWindow.onFinishCreateObject\"; EWCreatorWindow.createObject( \"" @ %cmd @ "\" );";
+   %ctrl.altCommand = "ObjectBuilderGui.newObjectCallback = \"ObjectCreator.onFinishCreateObject\"; ObjectCreator.createObject( \"" @ %cmd @ "\" );";
    %ctrl.iconBitmap = EditorIconRegistry::findIconByClassName( %class );
    %ctrl.text = %name;
    %ctrl.class = "CreatorMissionObjectIconBtn";   
@@ -673,7 +257,7 @@ function EWCreatorWindow::addMissionObjectIcon( %this, %class, %name, %buildfunc
    %this.contentCtrl.addGuiControl( %ctrl );
 }
 
-function EWCreatorWindow::addShapeIcon( %this, %datablock )
+function ObjectCreator::addShapeIcon( %this, %datablock )
 {
    %ctrl = %this.createIcon();
    
@@ -683,7 +267,7 @@ function EWCreatorWindow::addShapeIcon( %this, %datablock )
       
    %shapePath = ( %datablock.shapeFile !$= "" ) ? %datablock.shapeFile : %datablock.shapeName;
    
-   %createCmd = "EWCreatorWindow.createObject( \\\"" @ %cmd @ "\\\" );";
+   %createCmd = "ObjectCreator.createObject( \\\"" @ %cmd @ "\\\" );";
    %ctrl.altCommand = "showImportDialog( \"" @ %shapePath @ "\", \"" @ %createCmd @ "\" );";
 
    %ctrl.iconBitmap = EditorIconRegistry::findIconByClassName( %class );
@@ -697,7 +281,7 @@ function EWCreatorWindow::addShapeIcon( %this, %datablock )
    %this.contentCtrl.addGuiControl( %ctrl );   
 }
 
-function EWCreatorWindow::addStaticIcon( %this, %fullPath )
+function ObjectCreator::addStaticIcon( %this, %fullPath )
 {
    %ctrl = %this.createIcon();
    
@@ -709,7 +293,7 @@ function EWCreatorWindow::addStaticIcon( %this, %fullPath )
           "Date Created: " @ fileCreatedTime( %fullPath ) NL
           "Last Modified: " @ fileModifiedTime( %fullPath );
 
-   %createCmd = "EWCreatorWindow.createStatic( \\\"" @ %fullPath @ "\\\" );";
+   %createCmd = "ObjectCreator.createStatic( \\\"" @ %fullPath @ "\\\" );";
    %ctrl.altCommand = "showImportDialog( \"" @ %fullPath @ "\", \"" @ %createCmd @ "\" );";
 
    %ctrl.iconBitmap = ( ( %ext $= ".dts" ) ? EditorIconRegistry::findIconByClassName( "TSStatic" ) : "tools/gui/images/iconCollada" );
@@ -723,7 +307,7 @@ function EWCreatorWindow::addStaticIcon( %this, %fullPath )
    %this.contentCtrl.addGuiControl( %ctrl );   
 }
 
-function EWCreatorWindow::addPrefabIcon( %this, %fullPath )
+function ObjectCreator::addPrefabIcon( %this, %fullPath )
 {
    %ctrl = %this.createIcon();
    
@@ -735,7 +319,7 @@ function EWCreatorWindow::addPrefabIcon( %this, %fullPath )
           "Date Created: " @ fileCreatedTime( %fullPath ) NL
           "Last Modified: " @ fileModifiedTime( %fullPath );
 
-   %ctrl.altCommand = "EWCreatorWindow.createPrefab( \"" @ %fullPath @ "\" );";
+   %ctrl.altCommand = "ObjectCreator.createPrefab( \"" @ %fullPath @ "\" );";
    %ctrl.iconBitmap = EditorIconRegistry::findIconByClassName( "Prefab" );
    %ctrl.text = %file;
    %ctrl.class = "CreatorPrefabIconBtn";
@@ -750,7 +334,7 @@ function EWCreatorWindow::addPrefabIcon( %this, %fullPath )
 function CreatorPopupMenu::onSelect( %this, %id, %text )
 {   
    %split = strreplace( %text, "/", " " );
-   EWCreatorWindow.navigate( %split );  
+   ObjectCreator.navigate( %split );  
 }
 
 function alphaIconCompare( %a, %b )
@@ -779,7 +363,7 @@ function genericCreateObject( %class )
    
    %cmd = "return new " @ %class @ "();";
    
-   %obj = EWCreatorWindow.createObject( %cmd );   
+   %obj = ObjectCreator.createObject( %cmd );   
    
    // In case the caller wants it.
    return %obj;   

@@ -104,7 +104,7 @@ class GuiRoadEditorCtrl : public EditTSCtrl
 	public:
 
       DECLARE_MATERIALASSET(GuiRoadEditorCtrl, Material);
-      DECLARE_MATERIALASSET_SETGET(GuiRoadEditorCtrl, Material);
+      DECLARE_ASSET_SETGET(GuiRoadEditorCtrl, Material);
 
    protected:
 

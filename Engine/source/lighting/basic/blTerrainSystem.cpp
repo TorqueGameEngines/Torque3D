@@ -682,9 +682,9 @@ bool blTerrainSystem::createPersistChunkFromProxy(SceneLighting::ObjectProxy* ob
    {
       *ret = new blTerrainChunk();
       return true;
-   } else {
-      return NULL;
    }
+
+   return false;
 }
 
 // Given a ray, this will return the color from the lightmap of this object, return true if handled

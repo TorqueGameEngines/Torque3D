@@ -128,8 +128,8 @@ GuiBitmapButtonCtrl::GuiBitmapButtonCtrl()
    mUseStates = true;
    setExtent( 140, 30 );
    mMasked = false;
-
-   INIT_IMAGEASSET(Bitmap);
+   mColor = ColorI::WHITE;
+   INIT_ASSET(Bitmap);
 }
 
 //-----------------------------------------------------------------------------
@@ -138,10 +138,16 @@ void GuiBitmapButtonCtrl::initPersistFields()
 {
    addGroup( "Bitmap" );
 
-      INITPERSISTFIELD_IMAGEASSET(Bitmap, GuiBitmapButtonCtrl, "Texture file to display on this button.\n"
+      addProtectedField("Bitmap", TypeImageFilename, Offset(mBitmapName, GuiBitmapButtonCtrl), _setBitmapFieldData, &defaultProtectedGetFn, "Texture file to display on this button.\n"
+         "If useStates is false, this will be the file that renders on the control.  Otherwise, this will "
+         "specify the default texture name to which the various state and modifier suffixes are appended "
+         "to find the per-state and per-modifier (if enabled) textures.", AbstractClassRep::FIELD_HideInInspectors); \
+      addProtectedField("BitmapAsset", TypeImageAssetId, Offset(mBitmapAssetId, GuiBitmapButtonCtrl), _setBitmapFieldData, &defaultProtectedGetFn, "Texture file to display on this button.\n"
          "If useStates is false, this will be the file that renders on the control.  Otherwise, this will "
          "specify the default texture name to which the various state and modifier suffixes are appended "
          "to find the per-state and per-modifier (if enabled) textures.");
+
+      addField("color", TypeColorI, Offset(mColor, GuiBitmapButtonCtrl), "color mul");
 
       addField( "bitmapMode", TYPEID< BitmapMode >(), Offset( mBitmapMode, GuiBitmapButtonCtrl ),
          "Behavior for fitting the bitmap to the control extents.\n"
@@ -232,32 +238,7 @@ void GuiBitmapButtonCtrl::inspectPostApply()
 {
    Parent::inspectPostApply();
 
-   Torque::Path path( mBitmapName );
-   const String& fileName = path.getFileName();
-   
-   if( mUseStates )
-   {
-      // If the filename points to a single state, automatically
-      // cut off the state part.  Makes it easy to select files in
-      // the editor without having to go in and manually cut off the
-      // state parts all the time.
-      
-      static String s_n = "_n";
-      static String s_d = "_d";
-      static String s_h = "_h";
-      static String s_i = "_i";
-      
-      if(    fileName.endsWith( s_n )
-          || fileName.endsWith( s_d )
-          || fileName.endsWith( s_h )
-          || fileName.endsWith( s_i ) )
-      {
-         path.setFileName( fileName.substr( 0, fileName.length() - 2 ) );
-         path.setExtension( String::EmptyString );
-      }
-   }
-   
-   setBitmap( StringTable->insert(path.getFullPath().c_str()) );
+   setBitmap(getBitmap());
 
    // if the extent is set to (0,0) in the gui editor and appy hit, this control will
    // set it's extent to be exactly the size of the normal bitmap (if present)
@@ -570,7 +551,8 @@ void GuiBitmapButtonCtrl::onRender(Point2I offset, const RectI& updateRect)
 void GuiBitmapButtonCtrl::renderButton( GFXTexHandle &texture, const Point2I &offset, const RectI& updateRect )
 {
    GFX->getDrawUtil()->clearBitmapModulation();
-   
+   GFX->getDrawUtil()->setBitmapModulation(mColor);
+
    switch( mBitmapMode )
    {
       case BitmapStretched:
@@ -668,4 +650,4 @@ bool GuiBitmapButtonCtrl::pointInControl(const Point2I& parentCoordPoint)
       return Parent::pointInControl(parentCoordPoint);
 }
 
-DEF_IMAGEASSET_BINDS(GuiBitmapButtonCtrl, Bitmap);
+DEF_ASSET_BINDS(GuiBitmapButtonCtrl, Bitmap);

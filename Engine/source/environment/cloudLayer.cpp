@@ -113,7 +113,7 @@ CloudLayer::CloudLayer()
 
    mHeight = 4.0f;
 
-   INIT_IMAGEASSET(Texture);
+   INIT_ASSET(Texture);
 }
 
 IMPLEMENT_CO_NETOBJECT_V1( CloudLayer );
@@ -242,7 +242,7 @@ U32 CloudLayer::packUpdate( NetConnection *conn, U32 mask, BitStream *stream )
 {
    U32 retMask = Parent::packUpdate( conn, mask, stream );
 
-   PACK_IMAGEASSET(conn, Texture);
+   PACK_ASSET(conn, Texture);
    
    for ( U32 i = 0; i < TEX_COUNT; i++ )
    {
@@ -264,7 +264,7 @@ void CloudLayer::unpackUpdate( NetConnection *conn, BitStream *stream )
 {
    Parent::unpackUpdate( conn, stream );
 
-   UNPACK_IMAGEASSET(conn, Texture);
+   UNPACK_ASSET(conn, Texture);
 
    if(mTextureAssetId != StringTable->EmptyString())
       mTextureAsset = mTextureAssetId;
@@ -278,7 +278,6 @@ void CloudLayer::unpackUpdate( NetConnection *conn, BitStream *stream )
 
    stream->read( &mBaseColor );
 
-   F32 oldCoverage = mCoverage;
    stream->read( &mCoverage );
    stream->read( &mExposure );
 

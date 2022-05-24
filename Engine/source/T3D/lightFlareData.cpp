@@ -133,7 +133,7 @@ LightFlareData::LightFlareData()
    for ( U32 i = 0; i < MAX_ELEMENTS; i++ )   
       mElementDist[i] = -1.0f;
 
-   INIT_IMAGEASSET(FlareTexture);
+   INIT_ASSET(FlareTexture);
 }
 
 LightFlareData::~LightFlareData()
@@ -219,7 +219,7 @@ void LightFlareData::packData( BitStream *stream )
 
    stream->writeFlag( mFlareEnabled );
 
-   PACKDATA_IMAGEASSET(FlareTexture);
+   PACKDATA_ASSET(FlareTexture);
 
    stream->write( mScale );
    stream->write( mOcclusionRadius );
@@ -244,7 +244,7 @@ void LightFlareData::unpackData( BitStream *stream )
 
    mFlareEnabled = stream->readFlag();
 
-   UNPACKDATA_IMAGEASSET(FlareTexture);
+   UNPACKDATA_ASSET(FlareTexture);
 
    stream->read( &mScale );
    stream->read( &mOcclusionRadius );

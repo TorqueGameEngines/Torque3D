@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -47,7 +47,7 @@ BlitNto1SurfaceAlpha(SDL_BlitInfo * info)
     const unsigned A = info->a;
 
     while (height--) {
-        /* *INDENT-OFF* */
+        /* *INDENT-OFF* */ /* clang-format off */
         DUFFS_LOOP4(
         {
         DISEMBLE_RGB(src, srcbpp, srcfmt, Pixel, sR, sG, sB);
@@ -68,7 +68,7 @@ BlitNto1SurfaceAlpha(SDL_BlitInfo * info)
         src += srcbpp;
         },
         width);
-        /* *INDENT-ON* */
+        /* *INDENT-ON* */ /* clang-format on */
         src += srcskip;
         dst += dstskip;
     }
@@ -93,7 +93,7 @@ BlitNto1PixelAlpha(SDL_BlitInfo * info)
     unsigned dR, dG, dB;
 
     while (height--) {
-        /* *INDENT-OFF* */
+        /* *INDENT-OFF* */ /* clang-format off */
         DUFFS_LOOP4(
         {
         DISEMBLE_RGBA(src,srcbpp,srcfmt,Pixel,sR,sG,sB,sA);
@@ -114,7 +114,7 @@ BlitNto1PixelAlpha(SDL_BlitInfo * info)
         src += srcbpp;
         },
         width);
-        /* *INDENT-ON* */
+        /* *INDENT-ON* */ /* clang-format on */
         src += srcskip;
         dst += dstskip;
     }
@@ -141,7 +141,7 @@ BlitNto1SurfaceAlphaKey(SDL_BlitInfo * info)
     const unsigned A = info->a;
 
     while (height--) {
-        /* *INDENT-OFF* */
+        /* *INDENT-OFF* */ /* clang-format off */
         DUFFS_LOOP(
         {
         DISEMBLE_RGB(src, srcbpp, srcfmt, Pixel, sR, sG, sB);
@@ -164,7 +164,7 @@ BlitNto1SurfaceAlphaKey(SDL_BlitInfo * info)
         src += srcbpp;
         },
         width);
-        /* *INDENT-ON* */
+        /* *INDENT-ON* */ /* clang-format on */
         src += srcskip;
         dst += dstskip;
     }
@@ -348,7 +348,7 @@ BlitRGBtoRGBPixelAlphaMMX(SDL_BlitInfo * info)
     multmask2 = 0x00FF00FF00FF00FFULL;
 
     while (height--) {
-        /* *INDENT-OFF* */
+        /* *INDENT-OFF* */ /* clang-format off */
         DUFFS_LOOP4({
         Uint32 alpha = *srcp & amask;
         if (alpha == 0) {
@@ -382,7 +382,7 @@ BlitRGBtoRGBPixelAlphaMMX(SDL_BlitInfo * info)
         ++srcp;
         ++dstp;
         }, width);
-        /* *INDENT-ON* */
+        /* *INDENT-ON* */ /* clang-format on */
         srcp += srcskip;
         dstp += dstskip;
     }
@@ -397,14 +397,14 @@ void BlitARGBto565PixelAlphaARMSIMDAsm(int32_t w, int32_t h, uint16_t *dst, int3
 static void
 BlitARGBto565PixelAlphaARMSIMD(SDL_BlitInfo * info)
 {
-	int32_t width = info->dst_w;
-	int32_t height = info->dst_h;
-	uint16_t *dstp = (uint16_t *)info->dst;
-	int32_t dststride = width + (info->dst_skip >> 1);
-	uint32_t *srcp = (uint32_t *)info->src;
-	int32_t srcstride = width + (info->src_skip >> 2);
+    int32_t width = info->dst_w;
+    int32_t height = info->dst_h;
+    uint16_t *dstp = (uint16_t *)info->dst;
+    int32_t dststride = width + (info->dst_skip >> 1);
+    uint32_t *srcp = (uint32_t *)info->src;
+    int32_t srcstride = width + (info->src_skip >> 2);
 
-	BlitARGBto565PixelAlphaARMSIMDAsm(width, height, dstp, dststride, srcp, srcstride);
+    BlitARGBto565PixelAlphaARMSIMDAsm(width, height, dstp, dststride, srcp, srcstride);
 }
 
 void BlitRGBtoRGBPixelAlphaARMSIMDAsm(int32_t w, int32_t h, uint32_t *dst, int32_t dst_stride, uint32_t *src, int32_t src_stride);
@@ -444,14 +444,14 @@ void BlitRGBtoRGBPixelAlphaARMNEONAsm(int32_t w, int32_t h, uint32_t *dst, int32
 static void
 BlitRGBtoRGBPixelAlphaARMNEON(SDL_BlitInfo * info)
 {
-	int32_t width = info->dst_w;
-	int32_t height = info->dst_h;
-	uint32_t *dstp = (uint32_t *)info->dst;
-	int32_t dststride = width + (info->dst_skip >> 2);
-	uint32_t *srcp = (uint32_t *)info->src;
-	int32_t srcstride = width + (info->src_skip >> 2);
+    int32_t width = info->dst_w;
+    int32_t height = info->dst_h;
+    uint32_t *dstp = (uint32_t *)info->dst;
+    int32_t dststride = width + (info->dst_skip >> 2);
+    uint32_t *srcp = (uint32_t *)info->src;
+    int32_t srcstride = width + (info->src_skip >> 2);
 
-	BlitRGBtoRGBPixelAlphaARMNEONAsm(width, height, dstp, dststride, srcp, srcstride);
+    BlitRGBtoRGBPixelAlphaARMNEONAsm(width, height, dstp, dststride, srcp, srcstride);
 }
 #endif
 
@@ -467,14 +467,14 @@ BlitRGBtoRGBSurfaceAlpha128(SDL_BlitInfo * info)
     int dstskip = info->dst_skip >> 2;
 
     while (height--) {
-        /* *INDENT-OFF* */
+        /* *INDENT-OFF* */ /* clang-format off */
         DUFFS_LOOP4({
             Uint32 s = *srcp++;
             Uint32 d = *dstp;
             *dstp++ = ((((s & 0x00fefefe) + (d & 0x00fefefe)) >> 1)
                    + (s & d & 0x00010101)) | 0xff000000;
         }, width);
-        /* *INDENT-ON* */
+        /* *INDENT-ON* */ /* clang-format on */
         srcp += srcskip;
         dstp += dstskip;
     }
@@ -500,7 +500,7 @@ BlitRGBtoRGBSurfaceAlpha(SDL_BlitInfo * info)
         Uint32 d1;
 
         while (height--) {
-            /* *INDENT-OFF* */
+            /* *INDENT-OFF* */ /* clang-format off */
             DUFFS_LOOP4({
                 s = *srcp;
                 d = *dstp;
@@ -515,7 +515,7 @@ BlitRGBtoRGBSurfaceAlpha(SDL_BlitInfo * info)
                 ++srcp;
                 ++dstp;
             }, width);
-            /* *INDENT-ON* */
+            /* *INDENT-ON* */ /* clang-format on */
             srcp += srcskip;
             dstp += dstskip;
         }
@@ -534,7 +534,7 @@ BlitRGBtoRGBPixelAlpha(SDL_BlitInfo * info)
     int dstskip = info->dst_skip >> 2;
 
     while (height--) {
-        /* *INDENT-OFF* */
+        /* *INDENT-OFF* */ /* clang-format off */
         DUFFS_LOOP4({
         Uint32 dalpha;
         Uint32 d;
@@ -569,7 +569,62 @@ BlitRGBtoRGBPixelAlpha(SDL_BlitInfo * info)
         ++srcp;
         ++dstp;
         }, width);
-        /* *INDENT-ON* */
+        /* *INDENT-ON* */ /* clang-format on */
+        srcp += srcskip;
+        dstp += dstskip;
+    }
+}
+
+/* fast ARGB888->(A)BGR888 blending with pixel alpha */
+static void
+BlitRGBtoBGRPixelAlpha(SDL_BlitInfo * info)
+{
+    int width = info->dst_w;
+    int height = info->dst_h;
+    Uint32 *srcp = (Uint32 *) info->src;
+    int srcskip = info->src_skip >> 2;
+    Uint32 *dstp = (Uint32 *) info->dst;
+    int dstskip = info->dst_skip >> 2;
+
+    while (height--) {
+        /* *INDENT-OFF* */ /* clang-format off */
+        DUFFS_LOOP4({
+        Uint32 dalpha;
+        Uint32 d;
+        Uint32 s1;
+        Uint32 d1;
+        Uint32 s = *srcp;
+        Uint32 alpha = s >> 24;
+        /* FIXME: Here we special-case opaque alpha since the
+           compositioning used (>>8 instead of /255) doesn't handle
+           it correctly. Also special-case alpha=0 for speed?
+           Benchmark this! */
+        if (alpha) {
+          /*
+           * take out the middle component (green), and process
+           * the other two in parallel. One multiply less.
+           */
+          s1 = s & 0xff00ff;
+          s1 = (s1 >> 16) | (s1 << 16);
+          s &= 0xff00;
+
+          if (alpha == SDL_ALPHA_OPAQUE) {
+              *dstp = 0xff000000 | s | s1;
+          } else {
+            d = *dstp;
+            dalpha = d >> 24;
+            d1 = d & 0xff00ff;
+            d1 = (d1 + ((s1 - d1) * alpha >> 8)) & 0xff00ff;
+            d &= 0xff00;
+            d = (d + ((s - d) * alpha >> 8)) & 0xff00;
+            dalpha = alpha + (dalpha * (alpha ^ 0xFF) >> 8);
+            *dstp = d1 | d | (dalpha << 24);
+          }
+        }
+        ++srcp;
+        ++dstp;
+        }, width);
+        /* *INDENT-ON* */ /* clang-format on */
         srcp += srcskip;
         dstp += dstskip;
     }
@@ -599,7 +654,7 @@ BlitRGBtoRGBPixelAlphaMMX3DNOW(SDL_BlitInfo * info)
     multmask2 = 0x00FF00FF00FF00FFULL;
 
     while (height--) {
-        /* *INDENT-OFF* */
+        /* *INDENT-OFF* */ /* clang-format off */
         DUFFS_LOOP4({
         Uint32 alpha;
 
@@ -639,7 +694,7 @@ BlitRGBtoRGBPixelAlphaMMX3DNOW(SDL_BlitInfo * info)
         ++srcp;
         ++dstp;
         }, width);
-        /* *INDENT-ON* */
+        /* *INDENT-ON* */ /* clang-format on */
         srcp += srcskip;
         dstp += dstskip;
     }
@@ -793,7 +848,7 @@ Blit565to565SurfaceAlphaMMX(SDL_BlitInfo * info)
         bmask = _mm_set_pi32(0x001F001F, 0x001F001F);   /* MASKBLUE -> bmask */
 
         while (height--) {
-            /* *INDENT-OFF* */
+            /* *INDENT-OFF* */ /* clang-format off */
             DUFFS_LOOP_124(
             {
                 s = *srcp++;
@@ -889,7 +944,7 @@ Blit565to565SurfaceAlphaMMX(SDL_BlitInfo * info)
                 srcp += 4;
                 dstp += 4;
             }, width);
-            /* *INDENT-ON* */
+            /* *INDENT-ON* */ /* clang-format on */
             srcp += srcskip;
             dstp += dstskip;
         }
@@ -931,7 +986,7 @@ Blit555to555SurfaceAlphaMMX(SDL_BlitInfo * info)
         bmask = _mm_set_pi32(0x001F001F, 0x001F001F);   /* MASKBLUE -> bmask */
 
         while (height--) {
-            /* *INDENT-OFF* */
+            /* *INDENT-OFF* */ /* clang-format off */
             DUFFS_LOOP_124(
             {
                 s = *srcp++;
@@ -1027,7 +1082,7 @@ Blit555to555SurfaceAlphaMMX(SDL_BlitInfo * info)
                 srcp += 4;
                 dstp += 4;
             }, width);
-            /* *INDENT-ON* */
+            /* *INDENT-ON* */ /* clang-format on */
             srcp += srcskip;
             dstp += dstskip;
         }
@@ -1054,7 +1109,7 @@ Blit565to565SurfaceAlpha(SDL_BlitInfo * info)
         alpha >>= 3;            /* downscale alpha to 5 bits */
 
         while (height--) {
-            /* *INDENT-OFF* */
+            /* *INDENT-OFF* */ /* clang-format off */
             DUFFS_LOOP4({
                 Uint32 s = *srcp++;
                 Uint32 d = *dstp;
@@ -1069,7 +1124,7 @@ Blit565to565SurfaceAlpha(SDL_BlitInfo * info)
                 d &= 0x07e0f81f;
                 *dstp++ = (Uint16)(d | d >> 16);
             }, width);
-            /* *INDENT-ON* */
+            /* *INDENT-ON* */ /* clang-format on */
             srcp += srcskip;
             dstp += dstskip;
         }
@@ -1093,7 +1148,7 @@ Blit555to555SurfaceAlpha(SDL_BlitInfo * info)
         alpha >>= 3;            /* downscale alpha to 5 bits */
 
         while (height--) {
-            /* *INDENT-OFF* */
+            /* *INDENT-OFF* */ /* clang-format off */
             DUFFS_LOOP4({
                 Uint32 s = *srcp++;
                 Uint32 d = *dstp;
@@ -1108,7 +1163,7 @@ Blit555to555SurfaceAlpha(SDL_BlitInfo * info)
                 d &= 0x03e07c1f;
                 *dstp++ = (Uint16)(d | d >> 16);
             }, width);
-            /* *INDENT-ON* */
+            /* *INDENT-ON* */ /* clang-format on */
             srcp += srcskip;
             dstp += dstskip;
         }
@@ -1127,7 +1182,7 @@ BlitARGBto565PixelAlpha(SDL_BlitInfo * info)
     int dstskip = info->dst_skip >> 1;
 
     while (height--) {
-        /* *INDENT-OFF* */
+        /* *INDENT-OFF* */ /* clang-format off */
         DUFFS_LOOP4({
         Uint32 s = *srcp;
         unsigned alpha = s >> 27; /* downscale alpha to 5 bits */
@@ -1155,7 +1210,7 @@ BlitARGBto565PixelAlpha(SDL_BlitInfo * info)
         srcp++;
         dstp++;
         }, width);
-        /* *INDENT-ON* */
+        /* *INDENT-ON* */ /* clang-format on */
         srcp += srcskip;
         dstp += dstskip;
     }
@@ -1173,7 +1228,7 @@ BlitARGBto555PixelAlpha(SDL_BlitInfo * info)
     int dstskip = info->dst_skip >> 1;
 
     while (height--) {
-        /* *INDENT-OFF* */
+        /* *INDENT-OFF* */ /* clang-format off */
         DUFFS_LOOP4({
         unsigned alpha;
         Uint32 s = *srcp;
@@ -1202,7 +1257,7 @@ BlitARGBto555PixelAlpha(SDL_BlitInfo * info)
         srcp++;
         dstp++;
         }, width);
-        /* *INDENT-ON* */
+        /* *INDENT-ON* */ /* clang-format on */
         srcp += srcskip;
         dstp += dstskip;
     }
@@ -1229,7 +1284,7 @@ BlitNtoNSurfaceAlpha(SDL_BlitInfo * info)
 
     if (sA) {
         while (height--) {
-        /* *INDENT-OFF* */
+        /* *INDENT-OFF* */ /* clang-format off */
         DUFFS_LOOP4(
         {
         DISEMBLE_RGB(src, srcbpp, srcfmt, Pixel, sR, sG, sB);
@@ -1240,7 +1295,7 @@ BlitNtoNSurfaceAlpha(SDL_BlitInfo * info)
         dst += dstbpp;
         },
         width);
-        /* *INDENT-ON* */
+        /* *INDENT-ON* */ /* clang-format on */
             src += srcskip;
             dst += dstskip;
         }
@@ -1268,7 +1323,7 @@ BlitNtoNSurfaceAlphaKey(SDL_BlitInfo * info)
     const unsigned sA = info->a;
 
     while (height--) {
-        /* *INDENT-OFF* */
+        /* *INDENT-OFF* */ /* clang-format off */
         DUFFS_LOOP4(
         {
         RETRIEVE_RGB_PIXEL(src, srcbpp, Pixel);
@@ -1282,7 +1337,7 @@ BlitNtoNSurfaceAlphaKey(SDL_BlitInfo * info)
         dst += dstbpp;
         },
         width);
-        /* *INDENT-ON* */
+        /* *INDENT-ON* */ /* clang-format on */
         src += srcskip;
         dst += dstskip;
     }
@@ -1311,7 +1366,7 @@ BlitNtoNPixelAlpha(SDL_BlitInfo * info)
     dstbpp = dstfmt->BytesPerPixel;
 
     while (height--) {
-        /* *INDENT-OFF* */
+        /* *INDENT-OFF* */ /* clang-format off */
         DUFFS_LOOP4(
         {
         DISEMBLE_RGBA(src, srcbpp, srcfmt, Pixel, sR, sG, sB, sA);
@@ -1324,7 +1379,7 @@ BlitNtoNPixelAlpha(SDL_BlitInfo * info)
         dst += dstbpp;
         },
         width);
-        /* *INDENT-ON* */
+        /* *INDENT-ON* */ /* clang-format on */
         src += srcskip;
         dst += dstskip;
     }
@@ -1406,6 +1461,12 @@ SDL_CalculateBlitA(SDL_Surface * surface)
                         return BlitRGBtoRGBPixelAlphaARMSIMD;
 #endif
                     return BlitRGBtoRGBPixelAlpha;
+                }
+            } else if (sf->Rmask == df->Bmask
+                && sf->Gmask == df->Gmask
+                && sf->Bmask == df->Rmask && sf->BytesPerPixel == 4) {
+                if (sf->Amask == 0xff000000) {
+                    return BlitRGBtoBGRPixelAlpha;
                 }
             }
             return BlitNtoNPixelAlpha;

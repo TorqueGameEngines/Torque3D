@@ -24,6 +24,9 @@
 #include "./brdf.hlsl"
 #include "./shaderModelAutoGen.hlsl"
 
+//globals
+uniform float3 eyePosWorld;
+uniform float maxProbeDrawDistance;
 #ifndef TORQUE_SHADERGEN
 
 // These are the uniforms used by most lighting shaders.
@@ -105,10 +108,9 @@ struct Surface
 
 	inline void Update()
 	{
-		NdotV = abs(dot(N, V)) + 1e-5f; // avoid artifact
-   
-      linearRoughness = roughness * roughness;
-      linearRoughnessSq = linearRoughness * linearRoughness;
+		NdotV = clamp( dot(N, V), 0.0009765625f,0.9990234375f); // avoid artifact
+        linearRoughness = roughness * roughness;
+        linearRoughnessSq = linearRoughness * linearRoughness;
 
 		albedo = baseColor.rgb * (1.0f - metalness);
 		f0 = lerp(0.04f, baseColor.rgb, metalness);
@@ -334,7 +336,7 @@ float defineSphereSpaceInfluence(float3 wsPosition, float3 wsProbePosition, floa
 {
    float3 L = wsProbePosition.xyz - wsPosition;
    float contribution = 1.0 - length(L) / radius;
-   return contribution;
+   return saturate(contribution);
 }
 
 float getDistBoxToPoint(float3 pt, float3 extents)
@@ -346,10 +348,9 @@ float getDistBoxToPoint(float3 pt, float3 extents)
 float defineBoxSpaceInfluence(float3 wsPosition, float4x4 worldToObj, float attenuation)
 {
    float3 surfPosLS = mul(worldToObj, float4(wsPosition, 1.0)).xyz;
-   float atten = 1.0 - attenuation;
    float baseVal = 0.25;
    float dist = getDistBoxToPoint(surfPosLS, float3(baseVal, baseVal, baseVal));
-   return saturate(smoothstep(baseVal + 0.0001, atten*baseVal, dist));
+   return saturate(smoothstep(baseVal, (baseVal-attenuation/2), dist));
 }
 
 // Box Projected IBL Lighting
@@ -371,9 +372,9 @@ float3 boxProject(float3 wsPosition, float3 wsReflectVec, float4x4 worldToObj, f
 }
 
 float4 computeForwardProbes(Surface surface,
-    float cubeMips, int numProbes, float4x4 worldToObjArray[MAX_FORWARD_PROBES], float4 probeConfigData[MAX_FORWARD_PROBES], 
-    float4 inProbePosArray[MAX_FORWARD_PROBES], float4 refScaleArray[MAX_FORWARD_PROBES], float4 inRefPosArray[MAX_FORWARD_PROBES],
-    float skylightCubemapIdx, TORQUE_SAMPLER2D(BRDFTexture), 
+    float cubeMips, int numProbes, float4x4 inWorldToObjArray[MAX_FORWARD_PROBES], float4 inProbeConfigData[MAX_FORWARD_PROBES], 
+    float4 inProbePosArray[MAX_FORWARD_PROBES], float4 inRefScaleArray[MAX_FORWARD_PROBES], float4 inRefPosArray[MAX_FORWARD_PROBES],
+    float3 wsEyePos, float skylightCubemapIdx, TORQUE_SAMPLER2D(BRDFTexture), 
 	 TORQUE_SAMPLERCUBEARRAY(irradianceCubemapAR), TORQUE_SAMPLERCUBEARRAY(specularCubemapAR))
 {
    int i = 0;
@@ -385,50 +386,41 @@ float4 computeForwardProbes(Surface surface,
    float probehits = 0;
    //Set up our struct data
    float contribution[MAX_FORWARD_PROBES];
+   //Process prooooobes
   for (i = 0; i < numProbes; ++i)
   {
-      contribution[i] = 0;
-
-      if (probeConfigData[i].r == 0) //box
+      contribution[i] = 0.0;
+      float atten = 1.0-(length(wsEyePos-inProbePosArray[i].xyz)/maxProbeDrawDistance);
+      if (inProbeConfigData[i].r == 0) //box
       {
-         contribution[i] = defineBoxSpaceInfluence(surface.P, worldToObjArray[i], probeConfigData[i].b);
-         if (contribution[i] > 0.0)
-            probehits++;
+         contribution[i] = defineBoxSpaceInfluence(surface.P, inWorldToObjArray[i], inProbeConfigData[i].b)*atten;
       }
-      else if (probeConfigData[i].r == 1) //sphere
+      else if (inProbeConfigData[i].r == 1) //sphere
       {
-         contribution[i] = defineSphereSpaceInfluence(surface.P, inProbePosArray[i].xyz, probeConfigData[i].g);
-         if (contribution[i] > 0.0)
-            probehits++;
+         contribution[i] = defineSphereSpaceInfluence(surface.P, inProbePosArray[i].xyz, inProbeConfigData[i].g)*atten;
       }
 
-      contribution[i] = max(contribution[i], 0);
+      if (contribution[i]>0.0)
+         probehits++;
+      else
+         contribution[i] = 0.0;
 
       blendSum += contribution[i];
-      invBlendSum += (1.0f - contribution[i]);
    }
 
-   if (probehits > 1.0)
+   if (probehits > 1.0)//if we overlap
    {
+      invBlendSum = (probehits - blendSum)/(probehits-1); //grab the remainder 
       for (i = 0; i < numProbes; i++)
       {
-         blendFactor[i] = ((contribution[i] / blendSum)) / probehits;
-         blendFactor[i] *= ((contribution[i]) / invBlendSum);
-         blendFactor[i] = saturate(blendFactor[i]);
-         blendFacSum += blendFactor[i];
+         blendFactor[i] = contribution[i]/blendSum; //what % total is this instance
+         blendFactor[i] *= blendFactor[i] / invBlendSum;  //what should we add to sum to 1
+         blendFacSum += blendFactor[i]; //running tally of results
       }
 
-      // Normalize blendVal
-      if (blendFacSum == 0.0f) // Possible with custom weight
-      {
-         blendFacSum = 1.0f;
-      }
-
-      float invBlendSumWeighted = 1.0f / blendFacSum;
       for (i = 0; i < numProbes; ++i)
       {
-         blendFactor[i] *= invBlendSumWeighted;
-         contribution[i] *= blendFactor[i];
+         contribution[i] *= blendFactor[i]/blendFacSum; //normalize
       }
    }
 
@@ -475,8 +467,8 @@ float4 computeForwardProbes(Surface surface,
       float contrib = contribution[i];
       if (contrib > 0.0f)
       {
-         int cubemapIdx = probeConfigData[i].a;
-         float3 dir = boxProject(surface.P, surface.R, worldToObjArray[i], refScaleArray[i].xyz, inRefPosArray[i].xyz);
+         int cubemapIdx = inProbeConfigData[i].a;
+         float3 dir = boxProject(surface.P, surface.R, inWorldToObjArray[i], inRefScaleArray[i].xyz, inRefPosArray[i].xyz);
 
          irradiance += TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, dir, cubemapIdx, 0).xyz * contrib;
          specular += TORQUE_TEXCUBEARRAYLOD(specularCubemapAR, dir, cubemapIdx, lod).xyz * contrib;
@@ -495,8 +487,8 @@ float4 computeForwardProbes(Surface surface,
    float3 kD = 1.0f - F;
    kD *= 1.0f - surface.metalness;
 
-   float dfgNdotV = max( surface.NdotV , 0.0009765625f ); //0.5f/512.0f (512 is size of dfg/brdf lookup tex)
-   float2 envBRDF = TORQUE_TEX2DLOD(BRDFTexture, float4(dfgNdotV, surface.roughness,0,0)).rg;
+   //float dfgNdotV = max( surface.NdotV , 0.0009765625f ); //0.5f/512.0f (512 is size of dfg/brdf lookup tex)
+   float2 envBRDF = TORQUE_TEX2DLOD(BRDFTexture, float4(surface.NdotV, surface.roughness,0,0)).rg;
    specular *= F * envBRDF.x + surface.f90 * envBRDF.y;
    irradiance *= kD * surface.baseColor.rgb;
 
@@ -508,13 +500,16 @@ float4 computeForwardProbes(Surface surface,
    float horizonOcclusion = 1.3;
    float horizon = saturate( 1 + horizonOcclusion * dot(surface.R, surface.N));
    horizon *= horizon;
-
-   return float4((irradiance + specular) * horizon, 0);//alpha writes disabled
+#if CAPTURING == 1
+    return float4(lerp(surface.baseColor.rgb,(irradiance + specular* horizon) ,surface.metalness/2),0);
+#else
+   return float4((irradiance + specular* horizon) , 0);//alpha writes disabled
+#endif
 }
 
 float4 debugVizForwardProbes(Surface surface,
-    float cubeMips, int numProbes, float4x4 worldToObjArray[MAX_FORWARD_PROBES], float4 probeConfigData[MAX_FORWARD_PROBES], 
-    float4 inProbePosArray[MAX_FORWARD_PROBES], float4 refScaleArray[MAX_FORWARD_PROBES], float4 inRefPosArray[MAX_FORWARD_PROBES],
+    float cubeMips, int numProbes, float4x4 inWorldToObjArray[MAX_FORWARD_PROBES], float4 inProbeConfigData[MAX_FORWARD_PROBES], 
+    float4 inProbePosArray[MAX_FORWARD_PROBES], float4 inRefScaleArray[MAX_FORWARD_PROBES], float4 inRefPosArray[MAX_FORWARD_PROBES],
     float skylightCubemapIdx, TORQUE_SAMPLER2D(BRDFTexture), 
 	 TORQUE_SAMPLERCUBEARRAY(irradianceCubemapAR), TORQUE_SAMPLERCUBEARRAY(specularCubemapAR), int showAtten, int showContrib, int showSpec, int showDiff)
 {
@@ -531,15 +526,15 @@ float4 debugVizForwardProbes(Surface surface,
   {
       contribution[i] = 0;
 
-      if (probeConfigData[i].r == 0) //box
+      if (inProbeConfigData[i].r == 0) //box
       {
-         contribution[i] = defineBoxSpaceInfluence(surface.P, worldToObjArray[i], probeConfigData[i].b);
+         contribution[i] = defineBoxSpaceInfluence(surface.P, inWorldToObjArray[i], inProbeConfigData[i].b);
          if (contribution[i] > 0.0)
             probehits++;
       }
-      else if (probeConfigData[i].r == 1) //sphere
+      else if (inProbeConfigData[i].r == 1) //sphere
       {
-         contribution[i] = defineSphereSpaceInfluence(surface.P, inProbePosArray[i].xyz, probeConfigData[i].g);
+         contribution[i] = defineSphereSpaceInfluence(surface.P, inProbePosArray[i].xyz, inProbeConfigData[i].g);
          if (contribution[i] > 0.0)
             probehits++;
       }
@@ -624,8 +619,8 @@ float4 debugVizForwardProbes(Surface surface,
       float contrib = contribution[i];
       if (contrib > 0.0f)
       {
-         int cubemapIdx = probeConfigData[i].a;
-         float3 dir = boxProject(surface.P, surface.R, worldToObjArray[i], refScaleArray[i].xyz, inRefPosArray[i].xyz);
+         int cubemapIdx = inProbeConfigData[i].a;
+         float3 dir = boxProject(surface.P, surface.R, inWorldToObjArray[i], inRefScaleArray[i].xyz, inRefPosArray[i].xyz);
 
          irradiance += TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, dir, cubemapIdx, 0).xyz * contrib;
          specular += TORQUE_TEXCUBEARRAYLOD(specularCubemapAR, dir, cubemapIdx, lod).xyz * contrib;
@@ -654,8 +649,7 @@ float4 debugVizForwardProbes(Surface surface,
    float3 kD = 1.0f - F;
    kD *= 1.0f - surface.metalness;
 
-   float dfgNdotV = max( surface.NdotV , 0.0009765625f ); //0.5f/512.0f (512 is size of dfg/brdf lookup tex)
-   float2 envBRDF = TORQUE_TEX2DLOD(BRDFTexture, float4(dfgNdotV, surface.roughness,0,0)).rg;
+   float2 envBRDF = TORQUE_TEX2DLOD(BRDFTexture, float4(surface.NdotV, surface.roughness,0,0)).rg;
    specular *= F * envBRDF.x + surface.f90 * envBRDF.y;
    irradiance *= kD * surface.baseColor.rgb;
 
@@ -668,5 +662,5 @@ float4 debugVizForwardProbes(Surface surface,
    float horizon = saturate( 1 + horizonOcclusion * dot(surface.R, surface.N));
    horizon *= horizon;
 
-   return float4((irradiance + specular) * horizon, 0);//alpha writes disabled
+   return float4((irradiance + specular* horizon) , 0);//alpha writes disabled
 }

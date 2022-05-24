@@ -371,7 +371,7 @@ void StringBuffer::getCopy(UTF16 *buff, const U32 buffSize) const
    AssertFatal(mBuffer.last() == 0, "StringBuffer::get UTF8 - not a null terminated string!");
    dMemcpy(buff, mBuffer.address(), sizeof(UTF16) * getMin(buffSize, (U32)mBuffer.size()));
    // ensure null termination.
-   buff[buffSize-1] = NULL;
+   buff[buffSize-1] = 0;
 }
 
 UTF8* StringBuffer::createCopy8() const

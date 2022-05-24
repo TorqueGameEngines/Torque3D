@@ -1,0 +1,61 @@
+function UI::loadModuleCreatorClasses(%this)
+{
+   AssetBrowser.beginCreatorGroup( "BaseUI", "GuiEditor" );
+      AssetBrowser.addCreatorClass("GuiContainer",  "UINavigation Container", "UINavContainer" );
+      AssetBrowser.addCreatorClass("GuiContainer",  "Menu List", "GUIMenuList" );
+      AssetBrowser.addCreatorClass("GuiStackControl",  "Stack Menu List", "GuiStackMenuList" );
+      AssetBrowser.addCreatorClass("GuiContainer",  "Menu Input Button Handler", "MenuInputBtnHandler" );
+      AssetBrowser.addCreatorClass("GuiIconButtonCtrl",  "Menu Input Button", "MenuInputBtn" );
+   AssetBrowser.endCreatorGroup();
+}
+
+
+function ObjectBuilderGui::buildUINavContainer(%this)
+{
+   %ctrl = new GuiContainer()
+   {
+      superClass = "UINavigation";
+   };
+   
+   return %ctrl;
+}
+
+function ObjectBuilderGui::buildGUIMenuList(%this)
+{
+   %ctrl = new GuiContainer()
+   {
+      superClass = "MenuList";
+   };
+   
+   return %ctrl;
+}
+
+function ObjectBuilderGui::builduiStackMenuList(%this)
+{
+   %ctrl = new GuiStackControl()
+   {
+      superClass = "MenuList";
+   };
+   
+   return %ctrl;
+}
+
+function ObjectBuilderGui::buildMenuInputBtnHandler(%this)
+{
+   %ctrl = new GuiContainer()
+   {
+      class = "MenuInputButtonContainer";
+   };
+   
+   return %ctrl;
+}
+
+function ObjectBuilderGui::buildMenuInputBtn(%this)
+{
+   %ctrl = new GuiIconButtonCtrl()
+   {
+      class = "MenuInputButton";
+   };
+   
+   return %ctrl;
+}

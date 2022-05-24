@@ -61,11 +61,6 @@ function AssetBrowser::createLevelAsset(%this)
 
 	AssetBrowser.refresh();
 	
-	%treeItemId = AssetBrowserFilterTree.findItemByName(%moduleName);
-	%smItem = AssetBrowserFilterTree.findChildItemByName(%treeItemId, "Levels");
-	
-	AssetBrowserFilterTree.onSelect(%smItem);
-	
 	return %tamlpath;  
 }
 
@@ -118,14 +113,19 @@ function AssetBrowser::deleteLevelAsset(%this, %assetDef)
 function AssetBrowser::moveLevelAsset(%this, %assetDef, %destination)
 {
    %currentModule = AssetDatabase.getAssetModule(%assetDef.getAssetId());
-   %targetModule = AssetBrowser.getModuleFromAddress(%destination);
+   %targetModule = AssetBrowser.dirHandler.getModuleFromAddress(%destination);
    
    %newAssetPath = moveAssetFile(%assetDef, %destination);
    
    if(%newAssetPath $= "")
       return false;
 
-   moveAssetLooseFile(%assetDef.LevelFile, %destination);
+   moveAssetLooseFile(%assetDef.getLevelPath(), %destination);
+   moveAssetLooseFile(%assetDef.getPreviewImagePath(), %destination);
+   moveAssetLooseFile(%assetDef.getPostFXPresetPath(), %destination);
+   moveAssetLooseFile(%assetDef.getDecalsPath(), %destination);
+   moveAssetLooseFile(%assetDef.getForestPath(), %destination);
+   moveAssetLooseFile(%assetDef.getNavmeshPath(), %destination);
    
    AssetDatabase.removeDeclaredAsset(%assetDef.getAssetId());
    AssetDatabase.addDeclaredAsset(%targetModule, %newAssetPath);

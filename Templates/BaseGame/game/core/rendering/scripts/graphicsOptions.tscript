@@ -453,7 +453,7 @@ new SimGroup( LightingQualityList )
       class = "GraphicsQualityLevel";
       caseSensitive = true;
       
-      displayName = "High";
+      displayName = "Highest";
       
       key["$pref::maximumNumOfLights"] = -1;
       key["$pref::useLightFade"] = false;
@@ -687,7 +687,7 @@ function AutodetectGraphics_Apply(%shaderVer, %intel, %videoMem )
          $pref::PostFX::EnableVignette = false;
          
          $pref::Video::AA = 0;
-         $pref::Video::disableVerticalSync = 0;
+         $pref::Video::defaultAnisotropy = 0;
       }
       else
       {
@@ -713,7 +713,7 @@ function AutodetectGraphics_Apply(%shaderVer, %intel, %videoMem )
          $pref::PostFX::EnableVignette = false;
          
          $pref::Video::AA = 0;
-         $pref::Video::disableVerticalSync = 0;
+         $pref::Video::defaultAnisotropy = 0;
       }
    }   
    else
@@ -743,7 +743,7 @@ function AutodetectGraphics_Apply(%shaderVer, %intel, %videoMem )
          $pref::PostFX::EnableVignette = true;
          
          $pref::Video::AA = 4;
-         $pref::Video::disableVerticalSync = 16;
+         $pref::Video::defaultAnisotropy = 16;
       }
       else if ( %videoMem > 400 || %videoMem == 0 )
       {
@@ -769,7 +769,7 @@ function AutodetectGraphics_Apply(%shaderVer, %intel, %videoMem )
          $pref::PostFX::EnableVignette = true;
          
          $pref::Video::AA = 4;
-         $pref::Video::disableVerticalSync = 4;
+         $pref::Video::defaultAnisotropy = 4;
          
          if ( %videoMem == 0 )
             echo("Torque was unable to detect available video memory. Applying 'Medium' quality.");
@@ -798,7 +798,7 @@ function AutodetectGraphics_Apply(%shaderVer, %intel, %videoMem )
          $pref::PostFX::EnableVignette = false;
          
          $pref::Video::AA = 0;
-         $pref::Video::disableVerticalSync = 0;
+         $pref::Video::defaultAnisotropy = 0;
       }
    }
    
@@ -811,7 +811,7 @@ function AutodetectGraphics_Apply(%shaderVer, %intel, %videoMem )
    PostFXManager.settingsEffectSetEnabled(HDRPostFX, $pref::PostFX::EnableHDR);
    PostFXManager.settingsEffectSetEnabled(DepthOfFieldPostFX, $pref::PostFX::EnableDOF);
    PostFXManager.settingsEffectSetEnabled(LightRayPostFX, $pref::PostFX::EnableLightRays);
-   PostFXManager.settingsEffectSetEnabled(VignettePostEffect, $pref::PostFX::EnableVignette);
+   PostFXManager.settingsEffectSetEnabled(VignettePostFX, $pref::PostFX::EnableVignette);
    
    echo("Graphics quality settings have been auto detected.");
 }
@@ -820,6 +820,11 @@ function _makePrettyResString( %resString, %giveAspectRation )
 {
    %width = getWord( %resString, $WORD::RES_X );
    %height = getWord( %resString, $WORD::RES_Y );
+   
+   //If it's an x, it means we've got the human-readable 'x' in the middle
+   //so skip it
+   if(%height $= "x")
+      %height = getWord( %resString, 2 ); 
    
    %aspect = %width / %height;
    %aspect = mRound( %aspect * 100 ) * 0.01;            

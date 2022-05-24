@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -19,6 +19,9 @@
   3. This notice may not be removed or altered from any source distribution.
 */
 #include "../../SDL_internal.h"
+
+#include "SDL_render.h"
+#include "SDL_system.h"
 
 #if SDL_VIDEO_RENDER_D3D11 && !SDL_RENDER_DISABLED
 
@@ -51,13 +54,17 @@ extern ISwapChainBackgroundPanelNative * WINRT_GlobalSwapChainBackgroundPanelNat
 #endif  /* __WINRT__ */
 
 
+#if defined(_MSC_VER) && !defined(__clang__)
+#define SDL_COMPOSE_ERROR(str) __FUNCTION__ ", " str
+#else
 #define SDL_COMPOSE_ERROR(str) SDL_STRINGIFY_ARG(__FUNCTION__) ", " str
+#endif
 
 #define SAFE_RELEASE(X) if ((X)) { IUnknown_Release(SDL_static_cast(IUnknown*, X)); X = NULL; }
 
 
-/* !!! FIXME: vertex buffer bandwidth could be significantly lower; move color to a uniform, only use UV coords
-   !!! FIXME:  when textures are needed, and don't ever pass Z, since it's always zero. */
+/* !!! FIXME: vertex buffer bandwidth could be lower; only use UV coords when
+   !!! FIXME:  textures are needed. */
 
 /* Vertex shader, common values */
 typedef struct
@@ -69,9 +76,9 @@ typedef struct
 /* Per-vertex data */
 typedef struct
 {
-    Float3 pos;
+    Float2 pos;
     Float2 tex;
-    Float4 color;
+    SDL_Color color;
 } VertexPositionColor;
 
 /* Per-texture data */
@@ -84,7 +91,7 @@ typedef struct
     int lockedTexturePositionX;
     int lockedTexturePositionY;
     D3D11_FILTER scaleMode;
-
+#if SDL_HAVE_YUV
     /* YV12 texture support */
     SDL_bool yuv;
     ID3D11Texture2D *mainTextureU;
@@ -100,6 +107,7 @@ typedef struct
     Uint8 *pixels;
     int pitch;
     SDL_Rect locked_rect;
+#endif
 } D3D11_TextureData;
 
 /* Blend mode data */
@@ -176,11 +184,13 @@ typedef struct
 
 static const GUID SDL_IID_IDXGIFactory2 = { 0x50c83a1c, 0xe072, 0x4c48, { 0x87, 0xb0, 0x36, 0x30, 0xfa, 0x36, 0xa6, 0xd0 } };
 static const GUID SDL_IID_IDXGIDevice1 = { 0x77db970f, 0x6276, 0x48ba, { 0xba, 0x28, 0x07, 0x01, 0x43, 0xb4, 0x39, 0x2c } };
+#if defined(__WINRT__) && NTDDI_VERSION > NTDDI_WIN8
 static const GUID SDL_IID_IDXGIDevice3 = { 0x6007896c, 0x3244, 0x4afd, { 0xbf, 0x18, 0xa6, 0xd3, 0xbe, 0xda, 0x50, 0x23 } };
+#endif
 static const GUID SDL_IID_ID3D11Texture2D = { 0x6f15aaf2, 0xd208, 0x4e89, { 0x9a, 0xb4, 0x48, 0x95, 0x35, 0xd3, 0x4f, 0x9c } };
 static const GUID SDL_IID_ID3D11Device1 = { 0xa04bfb29, 0x08ef, 0x43d6, { 0xa4, 0x9c, 0xa9, 0xbd, 0xbd, 0xcb, 0xe6, 0x86 } };
 static const GUID SDL_IID_ID3D11DeviceContext1 = { 0xbb2c6faa, 0xb5fb, 0x4082, { 0x8e, 0x6b, 0x38, 0x8b, 0x8c, 0xfa, 0x90, 0xe1 } };
-static const GUID SDL_IID_ID3D11Debug = { 0x79cf2233, 0x7536, 0x4948, { 0x9d, 0x36, 0x1e, 0x46, 0x92, 0xdc, 0x57, 0x60 } };
+/*static const GUID SDL_IID_ID3D11Debug = { 0x79cf2233, 0x7536, 0x4948, { 0x9d, 0x36, 0x1e, 0x46, 0x92, 0xdc, 0x57, 0x60 } };*/
 
 #ifdef __GNUC__
 #pragma GCC diagnostic pop
@@ -478,6 +488,11 @@ D3D11_CreateDeviceResources(SDL_Renderer * renderer)
         creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
     }
 
+    /* Create a single-threaded device unless the app requests otherwise. */
+    if (!SDL_GetHintBoolean(SDL_HINT_RENDER_DIRECT3D_THREADSAFE, SDL_FALSE)) {
+        creationFlags |= D3D11_CREATE_DEVICE_SINGLETHREADED;
+    }
+
     /* Create the Direct3D 11 API device object and a corresponding context. */
     result = D3D11CreateDeviceFunc(
         data->dxgiAdapter,
@@ -691,7 +706,10 @@ D3D11_GetRotationForCurrentRenderTarget(SDL_Renderer * renderer)
 static int
 D3D11_GetViewportAlignedD3DRect(SDL_Renderer * renderer, const SDL_Rect * sdlRect, D3D11_RECT * outRect, BOOL includeViewportOffset)
 {
+    D3D11_RenderData *data = (D3D11_RenderData *) renderer->driverdata;
     const int rotation = D3D11_GetRotationForCurrentRenderTarget(renderer);
+    const SDL_Rect *viewport = &data->currentViewport;
+
     switch (rotation) {
         case DXGI_MODE_ROTATION_IDENTITY:
             outRect->left = sdlRect->x;
@@ -699,27 +717,27 @@ D3D11_GetViewportAlignedD3DRect(SDL_Renderer * renderer, const SDL_Rect * sdlRec
             outRect->top = sdlRect->y;
             outRect->bottom = sdlRect->y + sdlRect->h;
             if (includeViewportOffset) {
-                outRect->left += renderer->viewport.x;
-                outRect->right += renderer->viewport.x;
-                outRect->top += renderer->viewport.y;
-                outRect->bottom += renderer->viewport.y;
+                outRect->left += viewport->x;
+                outRect->right += viewport->x;
+                outRect->top += viewport->y;
+                outRect->bottom += viewport->y;
             }
             break;
         case DXGI_MODE_ROTATION_ROTATE270:
             outRect->left = sdlRect->y;
             outRect->right = sdlRect->y + sdlRect->h;
-            outRect->top = renderer->viewport.w - sdlRect->x - sdlRect->w;
-            outRect->bottom = renderer->viewport.w - sdlRect->x;
+            outRect->top = viewport->w - sdlRect->x - sdlRect->w;
+            outRect->bottom = viewport->w - sdlRect->x;
             break;
         case DXGI_MODE_ROTATION_ROTATE180:
-            outRect->left = renderer->viewport.w - sdlRect->x - sdlRect->w;
-            outRect->right = renderer->viewport.w - sdlRect->x;
-            outRect->top = renderer->viewport.h - sdlRect->y - sdlRect->h;
-            outRect->bottom = renderer->viewport.h - sdlRect->y;
+            outRect->left = viewport->w - sdlRect->x - sdlRect->w;
+            outRect->right = viewport->w - sdlRect->x;
+            outRect->top = viewport->h - sdlRect->y - sdlRect->h;
+            outRect->bottom = viewport->h - sdlRect->y;
             break;
         case DXGI_MODE_ROTATION_ROTATE90:
-            outRect->left = renderer->viewport.h - sdlRect->y - sdlRect->h;
-            outRect->right = renderer->viewport.h - sdlRect->y;
+            outRect->left = viewport->h - sdlRect->y - sdlRect->h;
+            outRect->right = viewport->h - sdlRect->y;
             outRect->top = sdlRect->x;
             outRect->bottom = sdlRect->x + sdlRect->h;
             break;
@@ -761,7 +779,11 @@ D3D11_CreateSwapChain(SDL_Renderer * renderer, int w, int h)
     if (usingXAML) {
         swapChainDesc.Scaling = DXGI_SCALING_STRETCH;
     } else {
-        swapChainDesc.Scaling = DXGI_SCALING_NONE;
+        if (WIN_IsWindows8OrGreater()) {
+            swapChainDesc.Scaling = DXGI_SCALING_NONE;
+        } else {
+            swapChainDesc.Scaling = DXGI_SCALING_STRETCH;
+        }
     }
     swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL; /* All Windows Store apps must use this SwapEffect. */
 #endif
@@ -944,11 +966,13 @@ D3D11_CreateWindowSizeDependentResources(SDL_Renderer * renderer)
      *
      * TODO, WinRT: reexamine the docs for IDXGISwapChain1::SetRotation, see if might be available, usable, and prudent-to-call on WinPhone 8.1
      */
-    if (data->swapEffect == DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL) {
-        result = IDXGISwapChain1_SetRotation(data->swapChain, data->rotation);
-        if (FAILED(result)) {
-            WIN_SetErrorFromHRESULT(SDL_COMPOSE_ERROR("IDXGISwapChain1::SetRotation"), result);
-            goto done;
+    if (WIN_IsWindows8OrGreater()) {
+        if (data->swapEffect == DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL) {
+            result = IDXGISwapChain1_SetRotation(data->swapChain, data->rotation);
+            if (FAILED(result)) {
+                WIN_SetErrorFromHRESULT(SDL_COMPOSE_ERROR("IDXGISwapChain1::SetRotation"), result);
+                goto done;
+            }
         }
     }
 #endif
@@ -973,6 +997,16 @@ D3D11_CreateWindowSizeDependentResources(SDL_Renderer * renderer)
         WIN_SetErrorFromHRESULT(SDL_COMPOSE_ERROR("ID3D11Device::CreateRenderTargetView"), result);
         goto done;
     }
+
+    /* Set the swap chain target immediately, so that a target is always set
+     * even before we get to SetDrawState. Without this it's possible to hit
+     * null references in places like ReadPixels!
+     */
+    ID3D11DeviceContext_OMSetRenderTargets(data->d3dContext,
+        1,
+        &data->mainRenderTargetView,
+        NULL
+        );
 
     data->viewportDirty = SDL_TRUE;
 
@@ -1091,10 +1125,9 @@ D3D11_CreateTexture(SDL_Renderer * renderer, SDL_Texture * texture)
         );
     if (FAILED(result)) {
         D3D11_DestroyTexture(renderer, texture);
-        WIN_SetErrorFromHRESULT(SDL_COMPOSE_ERROR("ID3D11Device1::CreateTexture2D"), result);
-        return -1;
+        return WIN_SetErrorFromHRESULT(SDL_COMPOSE_ERROR("ID3D11Device1::CreateTexture2D"), result);
     }
-
+#if SDL_HAVE_YUV
     if (texture->format == SDL_PIXELFORMAT_YV12 ||
         texture->format == SDL_PIXELFORMAT_IYUV) {
         textureData->yuv = SDL_TRUE;
@@ -1109,8 +1142,7 @@ D3D11_CreateTexture(SDL_Renderer * renderer, SDL_Texture * texture)
             );
         if (FAILED(result)) {
             D3D11_DestroyTexture(renderer, texture);
-            WIN_SetErrorFromHRESULT(SDL_COMPOSE_ERROR("ID3D11Device1::CreateTexture2D"), result);
-            return -1;
+            return WIN_SetErrorFromHRESULT(SDL_COMPOSE_ERROR("ID3D11Device1::CreateTexture2D"), result);
         }
 
         result = ID3D11Device_CreateTexture2D(rendererData->d3dDevice,
@@ -1120,8 +1152,7 @@ D3D11_CreateTexture(SDL_Renderer * renderer, SDL_Texture * texture)
             );
         if (FAILED(result)) {
             D3D11_DestroyTexture(renderer, texture);
-            WIN_SetErrorFromHRESULT(SDL_COMPOSE_ERROR("ID3D11Device1::CreateTexture2D"), result);
-            return -1;
+            return WIN_SetErrorFromHRESULT(SDL_COMPOSE_ERROR("ID3D11Device1::CreateTexture2D"), result);
         }
     }
 
@@ -1142,11 +1173,10 @@ D3D11_CreateTexture(SDL_Renderer * renderer, SDL_Texture * texture)
             );
         if (FAILED(result)) {
             D3D11_DestroyTexture(renderer, texture);
-            WIN_SetErrorFromHRESULT(SDL_COMPOSE_ERROR("ID3D11Device1::CreateTexture2D"), result);
-            return -1;
+            return WIN_SetErrorFromHRESULT(SDL_COMPOSE_ERROR("ID3D11Device1::CreateTexture2D"), result);
         }
     }
-
+#endif /* SDL_HAVE_YUV */
     resourceViewDesc.Format = textureDesc.Format;
     resourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
     resourceViewDesc.Texture2D.MostDetailedMip = 0;
@@ -1158,10 +1188,9 @@ D3D11_CreateTexture(SDL_Renderer * renderer, SDL_Texture * texture)
         );
     if (FAILED(result)) {
         D3D11_DestroyTexture(renderer, texture);
-        WIN_SetErrorFromHRESULT(SDL_COMPOSE_ERROR("ID3D11Device1::CreateShaderResourceView"), result);
-        return -1;
+        return WIN_SetErrorFromHRESULT(SDL_COMPOSE_ERROR("ID3D11Device1::CreateShaderResourceView"), result);
     }
-
+#if SDL_HAVE_YUV
     if (textureData->yuv) {
         result = ID3D11Device_CreateShaderResourceView(rendererData->d3dDevice,
             (ID3D11Resource *)textureData->mainTextureU,
@@ -1170,8 +1199,7 @@ D3D11_CreateTexture(SDL_Renderer * renderer, SDL_Texture * texture)
             );
         if (FAILED(result)) {
             D3D11_DestroyTexture(renderer, texture);
-            WIN_SetErrorFromHRESULT(SDL_COMPOSE_ERROR("ID3D11Device1::CreateShaderResourceView"), result);
-            return -1;
+            return WIN_SetErrorFromHRESULT(SDL_COMPOSE_ERROR("ID3D11Device1::CreateShaderResourceView"), result);
         }
         result = ID3D11Device_CreateShaderResourceView(rendererData->d3dDevice,
             (ID3D11Resource *)textureData->mainTextureV,
@@ -1180,8 +1208,7 @@ D3D11_CreateTexture(SDL_Renderer * renderer, SDL_Texture * texture)
             );
         if (FAILED(result)) {
             D3D11_DestroyTexture(renderer, texture);
-            WIN_SetErrorFromHRESULT(SDL_COMPOSE_ERROR("ID3D11Device1::CreateShaderResourceView"), result);
-            return -1;
+            return WIN_SetErrorFromHRESULT(SDL_COMPOSE_ERROR("ID3D11Device1::CreateShaderResourceView"), result);
         }
     }
 
@@ -1197,8 +1224,7 @@ D3D11_CreateTexture(SDL_Renderer * renderer, SDL_Texture * texture)
             );
         if (FAILED(result)) {
             D3D11_DestroyTexture(renderer, texture);
-            WIN_SetErrorFromHRESULT(SDL_COMPOSE_ERROR("ID3D11Device1::CreateShaderResourceView"), result);
-            return -1;
+            return WIN_SetErrorFromHRESULT(SDL_COMPOSE_ERROR("ID3D11Device1::CreateShaderResourceView"), result);
         }
     }
 
@@ -1214,11 +1240,10 @@ D3D11_CreateTexture(SDL_Renderer * renderer, SDL_Texture * texture)
             &textureData->mainTextureRenderTargetView);
         if (FAILED(result)) {
             D3D11_DestroyTexture(renderer, texture);
-            WIN_SetErrorFromHRESULT(SDL_COMPOSE_ERROR("ID3D11Device1::CreateRenderTargetView"), result);
-            return -1;
+            return WIN_SetErrorFromHRESULT(SDL_COMPOSE_ERROR("ID3D11Device1::CreateRenderTargetView"), result);
         }
     }
-
+#endif /* SDL_HAVE_YUV */
     return 0;
 }
 
@@ -1236,11 +1261,15 @@ D3D11_DestroyTexture(SDL_Renderer * renderer,
     SAFE_RELEASE(data->mainTextureResourceView);
     SAFE_RELEASE(data->mainTextureRenderTargetView);
     SAFE_RELEASE(data->stagingTexture);
+#if SDL_HAVE_YUV
     SAFE_RELEASE(data->mainTextureU);
     SAFE_RELEASE(data->mainTextureResourceViewU);
     SAFE_RELEASE(data->mainTextureV);
     SAFE_RELEASE(data->mainTextureResourceViewV);
+    SAFE_RELEASE(data->mainTextureNV);
+    SAFE_RELEASE(data->mainTextureResourceViewNV);
     SDL_free(data->pixels);
+#endif
     SDL_free(data);
     texture->driverdata = NULL;
 }
@@ -1270,8 +1299,7 @@ D3D11_UpdateTextureInternal(D3D11_RenderData *rendererData, ID3D11Texture2D *tex
         NULL,
         &stagingTexture);
     if (FAILED(result)) {
-        WIN_SetErrorFromHRESULT(SDL_COMPOSE_ERROR("ID3D11Device1::CreateTexture2D [create staging texture]"), result);
-        return -1;
+        return WIN_SetErrorFromHRESULT(SDL_COMPOSE_ERROR("ID3D11Device1::CreateTexture2D [create staging texture]"), result);
     }
 
     /* Get a write-only pointer to data in the staging texture: */
@@ -1283,9 +1311,8 @@ D3D11_UpdateTextureInternal(D3D11_RenderData *rendererData, ID3D11Texture2D *tex
         &textureMemory
         );
     if (FAILED(result)) {
-        WIN_SetErrorFromHRESULT(SDL_COMPOSE_ERROR("ID3D11DeviceContext1::Map [map staging texture]"), result);
         SAFE_RELEASE(stagingTexture);
-        return -1;
+        return WIN_SetErrorFromHRESULT(SDL_COMPOSE_ERROR("ID3D11DeviceContext1::Map [map staging texture]"), result);
     }
 
     src = (const Uint8 *)pixels;
@@ -1337,14 +1364,13 @@ D3D11_UpdateTexture(SDL_Renderer * renderer, SDL_Texture * texture,
     D3D11_TextureData *textureData = (D3D11_TextureData *)texture->driverdata;
 
     if (!textureData) {
-        SDL_SetError("Texture is not currently available");
-        return -1;
+        return SDL_SetError("Texture is not currently available");
     }
 
     if (D3D11_UpdateTextureInternal(rendererData, textureData->mainTexture, SDL_BYTESPERPIXEL(texture->format), rect->x, rect->y, rect->w, rect->h, srcPixels, srcPitch) < 0) {
         return -1;
     }
-
+#if SDL_HAVE_YUV
     if (textureData->yuv) {
         /* Skip to the correct offset into the next texture */
         srcPixels = (const void*)((const Uint8*)srcPixels + rect->h * srcPitch);
@@ -1368,9 +1394,11 @@ D3D11_UpdateTexture(SDL_Renderer * renderer, SDL_Texture * texture,
             return -1;
         }
     }
+#endif /* SDL_HAVE_YUV */
     return 0;
 }
 
+#if SDL_HAVE_YUV
 static int
 D3D11_UpdateTextureYUV(SDL_Renderer * renderer, SDL_Texture * texture,
                        const SDL_Rect * rect,
@@ -1382,8 +1410,7 @@ D3D11_UpdateTextureYUV(SDL_Renderer * renderer, SDL_Texture * texture,
     D3D11_TextureData *textureData = (D3D11_TextureData *)texture->driverdata;
 
     if (!textureData) {
-        SDL_SetError("Texture is not currently available");
-        return -1;
+        return SDL_SetError("Texture is not currently available");
     }
 
     if (D3D11_UpdateTextureInternal(rendererData, textureData->mainTexture, SDL_BYTESPERPIXEL(texture->format), rect->x, rect->y, rect->w, rect->h, Yplane, Ypitch) < 0) {
@@ -1399,6 +1426,30 @@ D3D11_UpdateTextureYUV(SDL_Renderer * renderer, SDL_Texture * texture,
 }
 
 static int
+D3D11_UpdateTextureNV(SDL_Renderer * renderer, SDL_Texture * texture,
+                       const SDL_Rect * rect,
+                       const Uint8 *Yplane, int Ypitch,
+                       const Uint8 *UVplane, int UVpitch)
+{
+    D3D11_RenderData *rendererData = (D3D11_RenderData *)renderer->driverdata;
+    D3D11_TextureData *textureData = (D3D11_TextureData *)texture->driverdata;
+
+    if (!textureData) {
+        return SDL_SetError("Texture is not currently available");
+    }
+
+    if (D3D11_UpdateTextureInternal(rendererData, textureData->mainTexture, SDL_BYTESPERPIXEL(texture->format), rect->x, rect->y, rect->w, rect->h, Yplane, Ypitch) < 0) {
+        return -1;
+    }
+
+    if (D3D11_UpdateTextureInternal(rendererData, textureData->mainTextureNV, 2, rect->x / 2, rect->y / 2, ((rect->w + 1) / 2), (rect->h + 1) / 2, UVplane, UVpitch) < 0) {
+        return -1;
+    }
+    return 0;
+}
+#endif
+
+static int
 D3D11_LockTexture(SDL_Renderer * renderer, SDL_Texture * texture,
                   const SDL_Rect * rect, void **pixels, int *pitch)
 {
@@ -1409,10 +1460,9 @@ D3D11_LockTexture(SDL_Renderer * renderer, SDL_Texture * texture,
     D3D11_MAPPED_SUBRESOURCE textureMemory;
 
     if (!textureData) {
-        SDL_SetError("Texture is not currently available");
-        return -1;
+        return SDL_SetError("Texture is not currently available");
     }
-
+#if SDL_HAVE_YUV
     if (textureData->yuv || textureData->nv12) {
         /* It's more efficient to upload directly... */
         if (!textureData->pixels) {
@@ -1429,7 +1479,7 @@ D3D11_LockTexture(SDL_Renderer * renderer, SDL_Texture * texture,
         *pitch = textureData->pitch;
         return 0;
     }
-
+#endif
     if (textureData->stagingTexture) {
         return SDL_SetError("texture is already locked");
     }
@@ -1454,8 +1504,7 @@ D3D11_LockTexture(SDL_Renderer * renderer, SDL_Texture * texture,
         NULL,
         &textureData->stagingTexture);
     if (FAILED(result)) {
-        WIN_SetErrorFromHRESULT(SDL_COMPOSE_ERROR("ID3D11Device1::CreateTexture2D [create staging texture]"), result);
-        return -1;
+        return WIN_SetErrorFromHRESULT(SDL_COMPOSE_ERROR("ID3D11Device1::CreateTexture2D [create staging texture]"), result);
     }
 
     /* Get a write-only pointer to data in the staging texture: */
@@ -1467,9 +1516,8 @@ D3D11_LockTexture(SDL_Renderer * renderer, SDL_Texture * texture,
         &textureMemory
         );
     if (FAILED(result)) {
-        WIN_SetErrorFromHRESULT(SDL_COMPOSE_ERROR("ID3D11DeviceContext1::Map [map staging texture]"), result);
         SAFE_RELEASE(textureData->stagingTexture);
-        return -1;
+        return WIN_SetErrorFromHRESULT(SDL_COMPOSE_ERROR("ID3D11DeviceContext1::Map [map staging texture]"), result);
     }
 
     /* Make note of where the staging texture will be written to 
@@ -1495,7 +1543,7 @@ D3D11_UnlockTexture(SDL_Renderer * renderer, SDL_Texture * texture)
     if (!textureData) {
         return;
     }
-
+#if SDL_HAVE_YUV
     if (textureData->yuv || textureData->nv12) {
         const SDL_Rect *rect = &textureData->locked_rect;
         void *pixels =
@@ -1504,7 +1552,7 @@ D3D11_UnlockTexture(SDL_Renderer * renderer, SDL_Texture * texture)
         D3D11_UpdateTexture(renderer, texture, rect, pixels, textureData->pitch);
         return;
     }
-
+#endif
     /* Commit the pixel buffer's changes back to the staging texture: */
     ID3D11DeviceContext_Unmap(rendererData->d3dContext,
         (ID3D11Resource *)textureData->stagingTexture,
@@ -1568,11 +1616,12 @@ static int
 D3D11_QueueDrawPoints(SDL_Renderer * renderer, SDL_RenderCommand *cmd, const SDL_FPoint * points, int count)
 {
     VertexPositionColor *verts = (VertexPositionColor *) SDL_AllocateRenderVertices(renderer, count * sizeof (VertexPositionColor), 0, &cmd->data.draw.first);
-    const float r = (float)(cmd->data.draw.r / 255.0f);
-    const float g = (float)(cmd->data.draw.g / 255.0f);
-    const float b = (float)(cmd->data.draw.b / 255.0f);
-    const float a = (float)(cmd->data.draw.a / 255.0f);
     int i;
+    SDL_Color color;
+    color.r = cmd->data.draw.r;
+    color.g = cmd->data.draw.g;
+    color.b = cmd->data.draw.b;
+    color.a = cmd->data.draw.a;
 
     if (!verts) {
         return -1;
@@ -1583,13 +1632,9 @@ D3D11_QueueDrawPoints(SDL_Renderer * renderer, SDL_RenderCommand *cmd, const SDL
     for (i = 0; i < count; i++) {
         verts->pos.x = points[i].x + 0.5f;
         verts->pos.y = points[i].y + 0.5f;
-        verts->pos.z = 0.0f;
         verts->tex.x = 0.0f;
         verts->tex.y = 0.0f;
-        verts->color.x = r;
-        verts->color.y = g;
-        verts->color.z = b;
-        verts->color.w = a;
+        verts->color = color;
         verts++;
     }
 
@@ -1597,237 +1642,54 @@ D3D11_QueueDrawPoints(SDL_Renderer * renderer, SDL_RenderCommand *cmd, const SDL
 }
 
 static int
-D3D11_QueueFillRects(SDL_Renderer * renderer, SDL_RenderCommand *cmd, const SDL_FRect * rects, int count)
+D3D11_QueueGeometry(SDL_Renderer *renderer, SDL_RenderCommand *cmd, SDL_Texture *texture,
+                    const float *xy, int xy_stride, const SDL_Color *color, int color_stride, const float *uv, int uv_stride,
+                    int num_vertices, const void *indices, int num_indices, int size_indices,
+                    float scale_x, float scale_y)
 {
-    VertexPositionColor *verts = (VertexPositionColor *) SDL_AllocateRenderVertices(renderer, count * 4 * sizeof (VertexPositionColor), 0, &cmd->data.draw.first);
-    const float r = (float)(cmd->data.draw.r / 255.0f);
-    const float g = (float)(cmd->data.draw.g / 255.0f);
-    const float b = (float)(cmd->data.draw.b / 255.0f);
-    const float a = (float)(cmd->data.draw.a / 255.0f);
     int i;
+    int count = indices ? num_indices : num_vertices;
+    VertexPositionColor *verts = (VertexPositionColor *) SDL_AllocateRenderVertices(renderer, count * sizeof (VertexPositionColor), 0, &cmd->data.draw.first);
 
     if (!verts) {
         return -1;
     }
 
     cmd->data.draw.count = count;
+    size_indices = indices ? size_indices : 0;
 
     for (i = 0; i < count; i++) {
-        verts->pos.x = rects[i].x;
-        verts->pos.y = rects[i].y;
-        verts->pos.z = 0.0f;
-        verts->tex.x = 0.0f;
-        verts->tex.y = 0.0f;
-        verts->color.x = r;
-        verts->color.y = g;
-        verts->color.z = b;
-        verts->color.w = a;
-        verts++;
+        int j;
+        float *xy_;
+        if (size_indices == 4) {
+            j = ((const Uint32 *)indices)[i];
+        } else if (size_indices == 2) {
+            j = ((const Uint16 *)indices)[i];
+        } else if (size_indices == 1) {
+            j = ((const Uint8 *)indices)[i];
+        } else {
+            j = i;
+        }
 
-        verts->pos.x = rects[i].x;
-        verts->pos.y = rects[i].y + rects[i].h;
-        verts->pos.z = 0.0f;
-        verts->tex.x = 0.0f;
-        verts->tex.y = 0.0f;
-        verts->color.x = r;
-        verts->color.y = g;
-        verts->color.z = b;
-        verts->color.w = a;
-        verts++;
+        xy_ = (float *)((char*)xy + j * xy_stride);
 
-        verts->pos.x = rects[i].x + rects[i].w;
-        verts->pos.y = rects[i].y;
-        verts->pos.z = 0.0f;
-        verts->tex.x = 0.0f;
-        verts->tex.y = 0.0f;
-        verts->color.x = r;
-        verts->color.y = g;
-        verts->color.z = b;
-        verts->color.w = a;
-        verts++;
+        verts->pos.x = xy_[0] * scale_x;
+        verts->pos.y = xy_[1] * scale_y;
+        verts->color = *(SDL_Color*)((char*)color + j * color_stride);
 
-        verts->pos.x = rects[i].x + rects[i].w;
-        verts->pos.y = rects[i].y + rects[i].h;
-        verts->pos.z = 0.0f;
-        verts->tex.x = 0.0f;
-        verts->tex.y = 0.0f;
-        verts->color.x = r;
-        verts->color.y = g;
-        verts->color.z = b;
-        verts->color.w = a;
-        verts++;
+        if (texture) {
+            float *uv_ = (float *)((char*)uv + j * uv_stride);
+            verts->tex.x = uv_[0];
+            verts->tex.y = uv_[1];
+        } else {
+            verts->tex.x = 0.0f;
+            verts->tex.y = 0.0f;
+        }
+
+        verts += 1;
     }
-
     return 0;
 }
-
-static int
-D3D11_QueueCopy(SDL_Renderer * renderer, SDL_RenderCommand *cmd, SDL_Texture * texture,
-             const SDL_Rect * srcrect, const SDL_FRect * dstrect)
-{
-    VertexPositionColor *verts = (VertexPositionColor *) SDL_AllocateRenderVertices(renderer, 4 * sizeof (VertexPositionColor), 0, &cmd->data.draw.first);
-    const float r = (float)(cmd->data.draw.r / 255.0f);
-    const float g = (float)(cmd->data.draw.g / 255.0f);
-    const float b = (float)(cmd->data.draw.b / 255.0f);
-    const float a = (float)(cmd->data.draw.a / 255.0f);
-    const float minu = (float) srcrect->x / texture->w;
-    const float maxu = (float) (srcrect->x + srcrect->w) / texture->w;
-    const float minv = (float) srcrect->y / texture->h;
-    const float maxv = (float) (srcrect->y + srcrect->h) / texture->h;
-
-    if (!verts) {
-        return -1;
-    }
-
-    cmd->data.draw.count = 1;
-
-    verts->pos.x = dstrect->x;
-    verts->pos.y = dstrect->y;
-    verts->pos.z = 0.0f;
-    verts->tex.x = minu;
-    verts->tex.y = minv;
-    verts->color.x = r;
-    verts->color.y = g;
-    verts->color.z = b;
-    verts->color.w = a;
-    verts++;
-
-    verts->pos.x = dstrect->x;
-    verts->pos.y = dstrect->y + dstrect->h;
-    verts->pos.z = 0.0f;
-    verts->tex.x = minu;
-    verts->tex.y = maxv;
-    verts->color.x = r;
-    verts->color.y = g;
-    verts->color.z = b;
-    verts->color.w = a;
-    verts++;
-
-    verts->pos.x = dstrect->x + dstrect->w;
-    verts->pos.y = dstrect->y;
-    verts->pos.z = 0.0f;
-    verts->tex.x = maxu;
-    verts->tex.y = minv;
-    verts->color.x = r;
-    verts->color.y = g;
-    verts->color.z = b;
-    verts->color.w = a;
-    verts++;
-
-    verts->pos.x = dstrect->x + dstrect->w;
-    verts->pos.y = dstrect->y + dstrect->h;
-    verts->pos.z = 0.0f;
-    verts->tex.x = maxu;
-    verts->tex.y = maxv;
-    verts->color.x = r;
-    verts->color.y = g;
-    verts->color.z = b;
-    verts->color.w = a;
-    verts++;
-
-    return 0;
-}
-
-static int
-D3D11_QueueCopyEx(SDL_Renderer * renderer, SDL_RenderCommand *cmd, SDL_Texture * texture,
-               const SDL_Rect * srcrect, const SDL_FRect * dstrect,
-               const double angle, const SDL_FPoint *center, const SDL_RendererFlip flip)
-{
-    VertexPositionColor *verts = (VertexPositionColor *) SDL_AllocateRenderVertices(renderer, 5 * sizeof (VertexPositionColor), 0, &cmd->data.draw.first);
-    const float r = (float)(cmd->data.draw.r / 255.0f);
-    const float g = (float)(cmd->data.draw.g / 255.0f);
-    const float b = (float)(cmd->data.draw.b / 255.0f);
-    const float a = (float)(cmd->data.draw.a / 255.0f);
-    float minx, miny, maxx, maxy;
-    float minu, maxu, minv, maxv;
-
-    if (!verts) {
-        return -1;
-    }
-
-    cmd->data.draw.count = 1;
-
-    minx = -center->x;
-    maxx = dstrect->w - center->x;
-    miny = -center->y;
-    maxy = dstrect->h - center->y;
-
-    if (flip & SDL_FLIP_HORIZONTAL) {
-        minu = (float) (srcrect->x + srcrect->w) / texture->w;
-        maxu = (float) srcrect->x / texture->w;
-    } else {
-        minu = (float) srcrect->x / texture->w;
-        maxu = (float) (srcrect->x + srcrect->w) / texture->w;
-    }
-
-    if (flip & SDL_FLIP_VERTICAL) {
-        minv = (float) (srcrect->y + srcrect->h) / texture->h;
-        maxv = (float) srcrect->y / texture->h;
-    } else {
-        minv = (float) srcrect->y / texture->h;
-        maxv = (float) (srcrect->y + srcrect->h) / texture->h;
-    }
-
-
-
-    verts->pos.x = minx;
-    verts->pos.y = miny;
-    verts->pos.z = 0.0f;
-    verts->color.x = r;
-    verts->color.y = g;
-    verts->color.z = b;
-    verts->color.w = a;
-    verts->tex.x = minu;
-    verts->tex.y = minv;
-    verts++;
-
-    verts->pos.x = minx;
-    verts->pos.y = maxy;
-    verts->pos.z = 0.0f;
-    verts->color.x = r;
-    verts->color.y = g;
-    verts->color.z = b;
-    verts->color.w = a;
-    verts->tex.x = minu;
-    verts->tex.y = maxv;
-    verts++;
-
-    verts->pos.x = maxx;
-    verts->pos.y = miny;
-    verts->pos.z = 0.0f;
-    verts->color.x = r;
-    verts->color.y = g;
-    verts->color.z = b;
-    verts->color.w = a;
-    verts->tex.x = maxu;
-    verts->tex.y = minv;
-    verts++;
-
-    verts->pos.x = maxx;
-    verts->pos.y = maxy;
-    verts->pos.z = 0.0f;
-    verts->color.x = r;
-    verts->color.y = g;
-    verts->color.z = b;
-    verts->color.w = a;
-    verts->tex.x = maxu;
-    verts->tex.y = maxv;
-    verts++;
-
-    verts->pos.x = dstrect->x + center->x;  /* X translation */
-    verts->pos.y = dstrect->y + center->y;  /* Y translation */
-    verts->pos.z = (float)(M_PI * (float) angle / 180.0f);  /* rotation */
-    verts->color.x = 0;
-    verts->color.y = 0;
-    verts->color.z = 0;
-    verts->color.w = 0;
-    verts->tex.x = 0.0f;
-    verts->tex.y = 0.0f;
-    verts++;
-
-    return 0;
-}
-
 
 static int
 D3D11_UpdateVertexBuffer(SDL_Renderer *renderer,
@@ -1853,8 +1715,7 @@ D3D11_UpdateVertexBuffer(SDL_Renderer *renderer,
             &mappedResource
             );
         if (FAILED(result)) {
-            WIN_SetErrorFromHRESULT(SDL_COMPOSE_ERROR("ID3D11DeviceContext1::Map [vertex buffer]"), result);
-            return -1;
+            return WIN_SetErrorFromHRESULT(SDL_COMPOSE_ERROR("ID3D11DeviceContext1::Map [vertex buffer]"), result);
         }
         SDL_memcpy(mappedResource.pData, vertexData, dataSizeInBytes);
         ID3D11DeviceContext_Unmap(rendererData->d3dContext, (ID3D11Resource *)rendererData->vertexBuffers[vbidx], 0);
@@ -1881,8 +1742,7 @@ D3D11_UpdateVertexBuffer(SDL_Renderer *renderer,
             &rendererData->vertexBuffers[vbidx]
             );
         if (FAILED(result)) {
-            WIN_SetErrorFromHRESULT(SDL_COMPOSE_ERROR("ID3D11Device1::CreateBuffer [vertex buffer]"), result);
-            return -1;
+            return WIN_SetErrorFromHRESULT(SDL_COMPOSE_ERROR("ID3D11Device1::CreateBuffer [vertex buffer]"), result);
         }
 
         rendererData->vertexBufferSizes[vbidx] = dataSizeInBytes;
@@ -2135,7 +1995,7 @@ D3D11_SetCopyState(SDL_Renderer * renderer, const SDL_RenderCommand *cmd, const 
     default:
         return SDL_SetError("Unknown scale mode: %d\n", textureData->scaleMode);
     }
-
+#if SDL_HAVE_YUV
     if (textureData->yuv) {
         ID3D11ShaderResourceView *shaderResources[] = {
             textureData->mainTextureResourceView,
@@ -2186,7 +2046,7 @@ D3D11_SetCopyState(SDL_Renderer * renderer, const SDL_RenderCommand *cmd, const 
                                   SDL_arraysize(shaderResources), shaderResources, textureSampler, matrix);
 
     }
-
+#endif /* SDL_HAVE_YUV */
     return D3D11_SetDrawState(renderer, cmd, rendererData->pixelShaders[SHADER_RGB],
                               1, &textureData->mainTextureResourceView, textureSampler, matrix);
 }
@@ -2204,7 +2064,6 @@ D3D11_RunCommandQueue(SDL_Renderer * renderer, SDL_RenderCommand *cmd, void *ver
 {
     D3D11_RenderData *rendererData = (D3D11_RenderData *) renderer->driverdata;
     const int viewportRotation = D3D11_GetRotationForCurrentRenderTarget(renderer);
-    size_t i;
 
     if (rendererData->currentViewportRotation != viewportRotation) {
         rendererData->currentViewportRotation = viewportRotation;
@@ -2276,37 +2135,28 @@ D3D11_RunCommandQueue(SDL_Renderer * renderer, SDL_RenderCommand *cmd, void *ver
                 break;
             }
 
-            case SDL_RENDERCMD_FILL_RECTS: {
+            case SDL_RENDERCMD_FILL_RECTS: /* unused */
+                break;
+
+            case SDL_RENDERCMD_COPY: /* unused */
+                break;
+
+            case SDL_RENDERCMD_COPY_EX: /* unused */
+                break;
+
+            case SDL_RENDERCMD_GEOMETRY: {
+                SDL_Texture *texture = cmd->data.draw.texture;
                 const size_t count = cmd->data.draw.count;
                 const size_t first = cmd->data.draw.first;
                 const size_t start = first / sizeof (VertexPositionColor);
-                size_t offset = 0;
-                D3D11_SetDrawState(renderer, cmd, rendererData->pixelShaders[SHADER_SOLID], 0, NULL, NULL, NULL);
-                for (i = 0; i < count; i++, offset += 4) {
-                    D3D11_DrawPrimitives(renderer, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP, start + offset, 4);
+
+                if (texture) {
+                    D3D11_SetCopyState(renderer, cmd, NULL);
+                } else {
+                    D3D11_SetDrawState(renderer, cmd, rendererData->pixelShaders[SHADER_SOLID], 0, NULL, NULL, NULL);
                 }
-                break;
-            }
 
-            case SDL_RENDERCMD_COPY: {
-                const size_t first = cmd->data.draw.first;
-                const size_t start = first / sizeof (VertexPositionColor);
-                D3D11_SetCopyState(renderer, cmd, NULL);
-                D3D11_DrawPrimitives(renderer, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP, start, 4);
-                break;
-            }
-
-            case SDL_RENDERCMD_COPY_EX: {
-                const size_t first = cmd->data.draw.first;
-                const size_t start = first / sizeof (VertexPositionColor);
-                const VertexPositionColor *verts = (VertexPositionColor *) (((Uint8 *) vertices) + first);
-                const VertexPositionColor *transvert = verts + 4;
-                const float translatex = transvert->pos.x;
-                const float translatey = transvert->pos.y;
-                const float rotation = transvert->pos.z;
-                const Float4X4 matrix = MatrixMultiply(MatrixRotationZ(rotation), MatrixTranslation(translatex, translatey, 0));
-                D3D11_SetCopyState(renderer, cmd, &matrix);
-                D3D11_DrawPrimitives(renderer, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP, start, 4);
+                D3D11_DrawPrimitives(renderer, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, start, count);
                 break;
             }
 
@@ -2399,29 +2249,19 @@ D3D11_RenderReadPixels(SDL_Renderer * renderer, const SDL_Rect * rect,
     /* Copy the data into the desired buffer, converting pixels to the
      * desired format at the same time:
      */
-    if (SDL_ConvertPixels(
+    status = SDL_ConvertPixels(
         rect->w, rect->h,
         D3D11_DXGIFormatToSDLPixelFormat(stagingTextureDesc.Format),
         textureMemory.pData,
         textureMemory.RowPitch,
         format,
         pixels,
-        pitch) != 0) {
-        /* When SDL_ConvertPixels fails, it'll have already set the format.
-         * Get the error message, and attach some extra data to it.
-         */
-        char errorMessage[1024];
-        SDL_snprintf(errorMessage, sizeof(errorMessage), "%s, Convert Pixels failed: %s", __FUNCTION__, SDL_GetError());
-        SDL_SetError("%s", errorMessage);
-        goto done;
-    }
+        pitch);
 
     /* Unmap the texture: */
     ID3D11DeviceContext_Unmap(data->d3dContext,
         (ID3D11Resource *)stagingTexture,
         0);
-
-    status = 0;
 
 done:
     SAFE_RELEASE(backBuffer);
@@ -2486,6 +2326,21 @@ D3D11_RenderPresent(SDL_Renderer * renderer)
     }
 }
 
+#if WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP
+    /* no-op. */
+#else
+static int
+D3D11_SetVSync(SDL_Renderer * renderer, const int vsync)
+{
+    if (vsync) {
+        renderer->info.flags |= SDL_RENDERER_PRESENTVSYNC;
+    } else {
+        renderer->info.flags &= ~SDL_RENDERER_PRESENTVSYNC;
+    }
+    return 0;
+}
+#endif
+
 SDL_Renderer *
 D3D11_CreateRenderer(SDL_Window * window, Uint32 flags)
 {
@@ -2500,6 +2355,7 @@ D3D11_CreateRenderer(SDL_Window * window, Uint32 flags)
 
     data = (D3D11_RenderData *) SDL_calloc(1, sizeof(*data));
     if (!data) {
+        SDL_free(renderer);
         SDL_OutOfMemory();
         return NULL;
     }
@@ -2510,7 +2366,10 @@ D3D11_CreateRenderer(SDL_Window * window, Uint32 flags)
     renderer->SupportsBlendMode = D3D11_SupportsBlendMode;
     renderer->CreateTexture = D3D11_CreateTexture;
     renderer->UpdateTexture = D3D11_UpdateTexture;
+#if SDL_HAVE_YUV
     renderer->UpdateTextureYUV = D3D11_UpdateTextureYUV;
+    renderer->UpdateTextureNV = D3D11_UpdateTextureNV;
+#endif
     renderer->LockTexture = D3D11_LockTexture;
     renderer->UnlockTexture = D3D11_UnlockTexture;
     renderer->SetTextureScaleMode = D3D11_SetTextureScaleMode;
@@ -2519,9 +2378,7 @@ D3D11_CreateRenderer(SDL_Window * window, Uint32 flags)
     renderer->QueueSetDrawColor = D3D11_QueueSetViewport;  /* SetViewport and SetDrawColor are (currently) no-ops. */
     renderer->QueueDrawPoints = D3D11_QueueDrawPoints;
     renderer->QueueDrawLines = D3D11_QueueDrawPoints;  /* lines and points queue vertices the same way. */
-    renderer->QueueFillRects = D3D11_QueueFillRects;
-    renderer->QueueCopy = D3D11_QueueCopy;
-    renderer->QueueCopyEx = D3D11_QueueCopyEx;
+    renderer->QueueGeometry = D3D11_QueueGeometry;
     renderer->RunCommandQueue = D3D11_RunCommandQueue;
     renderer->RenderReadPixels = D3D11_RenderReadPixels;
     renderer->RenderPresent = D3D11_RenderPresent;
@@ -2548,6 +2405,7 @@ D3D11_CreateRenderer(SDL_Window * window, Uint32 flags)
     if ((flags & SDL_RENDERER_PRESENTVSYNC)) {
         renderer->info.flags |= SDL_RENDERER_PRESENTVSYNC;
     }
+    renderer->SetVSync = D3D11_SetVSync;
 #endif
 
     /* HACK: make sure the SDL_Renderer references the SDL_Window data now, in
@@ -2592,5 +2450,31 @@ SDL_RenderDriver D3D11_RenderDriver = {
 };
 
 #endif /* SDL_VIDEO_RENDER_D3D11 && !SDL_RENDER_DISABLED */
+
+#ifdef __WIN32__
+/* This function needs to always exist on Windows, for the Dynamic API. */
+ID3D11Device *
+SDL_RenderGetD3D11Device(SDL_Renderer * renderer)
+{
+    ID3D11Device *device = NULL;
+
+#if SDL_VIDEO_RENDER_D3D11 && !SDL_RENDER_DISABLED
+    D3D11_RenderData *data = (D3D11_RenderData *) renderer->driverdata;
+
+    /* Make sure that this is a D3D renderer */
+    if (renderer->DestroyRenderer != D3D11_DestroyRenderer) {
+        SDL_SetError("Renderer is not a D3D11 renderer");
+        return NULL;
+    }
+
+    device = (ID3D11Device *)data->d3dDevice;
+    if (device) {
+        ID3D11Device_AddRef(device);
+    }
+#endif /* SDL_VIDEO_RENDER_D3D11 && !SDL_RENDER_DISABLED */
+
+    return device;
+}
+#endif /* __WIN32__ */
 
 /* vi: set ts=4 sw=4 expandtab: */

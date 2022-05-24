@@ -26,6 +26,12 @@
 #include "gfx/gfxTextureManager.h"
 #include "gfx/bitmap/gBitmap.h"
 
+#ifdef TORQUE_TOOLS
+#include "console/persistenceManager.h"
+#endif
+
+#include "T3D/assets/TerrainMaterialAsset.h"
+
 #include <string>
 
 
@@ -73,11 +79,11 @@ TerrainMaterial::TerrainMaterial()
       mIsSRGB(false),
       mInvertRoughness(false)
 {
-   INIT_IMAGEASSET(DiffuseMap);
-   INIT_IMAGEASSET(NormalMap);
-   INIT_IMAGEASSET(DetailMap);
-   INIT_IMAGEASSET(ORMConfigMap);
-   INIT_IMAGEASSET(MacroMap);
+   INIT_ASSET(DiffuseMap);
+   INIT_ASSET(NormalMap);
+   INIT_ASSET(DetailMap);
+   INIT_ASSET(ORMConfigMap);
+   INIT_ASSET(MacroMap);
 }
 
 TerrainMaterial::~TerrainMaterial()
@@ -131,13 +137,19 @@ bool TerrainMaterial::onAdd()
    SimSet *set = Sim::getTerrainMaterialSet();
 
    // Make sure we have an internal name set.
-   if ( !mInternalName || !mInternalName[0] )
-      Con::warnf( "TerrainMaterial::onAdd() - No internal name set!" );
+   if (!mInternalName || !mInternalName[0])
+   {
+      Con::warnf("TerrainMaterial::onAdd() - No internal name set!");
+      return false;
+   }
    else
    {
       SimObject *object = set->findObjectByInternalName( mInternalName );
-      if ( object )
-         Con::warnf( "TerrainMaterial::onAdd() - Internal name collision; '%s' already exists!", mInternalName );
+      if (object)
+      {
+         Con::warnf("TerrainMaterial::onAdd() - Internal name collision; '%s' already exists!", mInternalName);
+         return false;
+      }
    }  
 
    set->addObject( this );
@@ -162,6 +174,18 @@ TerrainMaterial* TerrainMaterial::findOrCreate( const char *nameOrPath )
    if ( mat )
       return mat;
 
+   StringTableEntry assetId = TerrainMaterialAsset::getAssetIdByMaterialName(nameOrPath);
+   if (assetId != StringTable->EmptyString())
+   {
+      TerrainMaterialAsset* terrMatAsset = AssetDatabase.acquireAsset<TerrainMaterialAsset>(assetId);
+      if (terrMatAsset)
+      {
+         mat = terrMatAsset->getMaterialDefinition();
+         if (mat)
+            return mat;
+      }
+   }
+
    // We didn't find it... so see if its a path to a
    // file.  If it is lets assume its the texture.
    if ( GBitmap::sFindFiles( nameOrPath, NULL ) )
@@ -174,15 +198,9 @@ TerrainMaterial* TerrainMaterial::findOrCreate( const char *nameOrPath )
       return mat;
    }
 
-   // Ok... return a debug material then.
-   mat = dynamic_cast<TerrainMaterial*>( set->findObjectByInternalName( StringTable->insert( "warning_material" ) ) );
-   if ( !mat )
-   {
-      // This shouldn't happen.... the warning_texture should
-      // have already been defined in script, but we put this
-      // fallback here just in case it gets "lost".
+   // Ok... return a placeholder material then.
       mat = new TerrainMaterial();
-      mat->setInternalName( "warning_material" );
+   mat->setInternalName(nameOrPath);
       mat->_setDiffuseMap(GFXTextureManager::getWarningTexturePath());
       mat->mDiffuseSize = 500;
       mat->_setDetailMap(StringTable->EmptyString());
@@ -191,8 +209,7 @@ TerrainMaterial* TerrainMaterial::findOrCreate( const char *nameOrPath )
 	   mat->mMacroSize = 200;
       mat->registerObject();
       
-      Sim::getRootGroup()->addObject( mat );
-   }
+   Sim::getRootGroup()->addObject(mat);
 
    return mat;
 }
@@ -203,8 +220,8 @@ TerrainMaterial* TerrainMaterial::findOrCreate( const char *nameOrPath )
 //material.getDiffuseMap(); //returns the raw file referenced
 //material.getDiffuseMapAsset(); //returns the asset id
 //material.setDiffuseMap(%texture); //tries to set the asset and failing that attempts a flat file reference
-DEF_IMAGEASSET_BINDS(TerrainMaterial, DiffuseMap);
-DEF_IMAGEASSET_BINDS(TerrainMaterial, NormalMap);
-DEF_IMAGEASSET_BINDS(TerrainMaterial, DetailMap);
-DEF_IMAGEASSET_BINDS(TerrainMaterial, ORMConfigMap);
-DEF_IMAGEASSET_BINDS(TerrainMaterial, MacroMap);
+DEF_ASSET_BINDS(TerrainMaterial, DiffuseMap);
+DEF_ASSET_BINDS(TerrainMaterial, NormalMap);
+DEF_ASSET_BINDS(TerrainMaterial, DetailMap);
+DEF_ASSET_BINDS(TerrainMaterial, ORMConfigMap);
+DEF_ASSET_BINDS(TerrainMaterial, MacroMap);

@@ -38,7 +38,7 @@ function AssetBrowser::onPrefabEditorDropped(%this, %assetDef, %position)
    %camPos = LocalClientConnection.camera.getPosition();
    %rayResult = containerRayCast(%camPos, %targetPosition, -1);
    
-   %pos = EWCreatorWindow.getCreateObjectPosition();
+   %pos = ObjectCreator.getCreateObjectPosition();
 
    if(%rayResult != 0)
    {

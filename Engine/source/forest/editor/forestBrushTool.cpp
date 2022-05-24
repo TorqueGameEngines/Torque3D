@@ -588,7 +588,8 @@ void ForestBrushTool::_collectElements()
    if ( !Sim::findObject( "ForestEditBrushTree", brushTree ) )
       return;
       
-   const char* objectIdList = Con::executef( brushTree, "getSelectedObjectList" );
+   ConsoleValue cValue = Con::executef( brushTree, "getSelectedObjectList" );
+   const char* objectIdList = cValue.getString();
 
    // Collect those objects in a vector and mark them as selected.
 
@@ -609,9 +610,14 @@ void ForestBrushTool::_collectElements()
    }
 
    // Find all ForestBrushElements that are directly or indirectly selected.
+   SimSet* brushSet;
+   if (!Sim::findObject("ForestBrushSet", brushSet))
+   {
+      Con::errorf("ForestBrushTool::_collectElements() - could not find ForestBrushSet!");
+      return;
+   }
 
-   SimGroup *brushGroup = ForestBrush::getGroup();
-   brushGroup->findObjectByCallback( findSelectedElements, mElements );
+   brushSet->findObjectByCallback( findSelectedElements, mElements );
 
    // We just needed to flag these objects as selected for the benefit of our
    // findSelectedElements callback, we can now mark them un-selected again.

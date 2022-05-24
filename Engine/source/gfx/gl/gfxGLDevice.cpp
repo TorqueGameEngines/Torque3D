@@ -51,6 +51,12 @@
 #include "shaderGen/shaderGen.h"
 #include "gfxGLUtils.h"
 
+#if defined(TORQUE_OS_WIN)
+#include "gfx/gl/tGL/tWGL.h"
+#elif defined(TORQUE_OS_LINUX)
+#include "gfx/gl/tGL/tXGL.h"
+#endif
+
 GFXAdapter::CreateDeviceInstanceDelegate GFXGLDevice::mCreateDeviceInstance(GFXGLDevice::createInstance); 
 
 GFXDevice *GFXGLDevice::createInstance( U32 adapterIndex )
@@ -187,6 +193,9 @@ void GFXGLDevice::initGLState()
 
    //enable sRGB
    glEnable(GL_FRAMEBUFFER_SRGB);
+
+   //enable seamless cubemapping
+   glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 }
 
 void GFXGLDevice::vsyncCallback()
@@ -238,7 +247,6 @@ GFXGLDevice::GFXGLDevice(U32 adapterIndex) :
       mActiveTextureType[i] = GL_ZERO;
 
    mNumVertexStream = 2;
-   mSupportsAnisotropic = false;
 
    for(int i = 0; i < GS_COUNT; ++i)
       mModelViewProjSC[i] = NULL;
@@ -1073,8 +1081,36 @@ U32 GFXGLDevice::getTotalVideoMemory_GL_EXT()
       return mem / 1024;
    }
 
-   // TODO OPENGL, add supprt for INTEL cards.
-   
+
+#if defined(TORQUE_OS_WIN)
+   else if( (gglHasWExtension(AMD_gpu_association)) )
+   {
+      // Just assume 1 AMD gpu. Who uses crossfire anyways now? And, crossfire doesn't double
+      // vram anyways, so does it really matter?
+      UINT id;
+      if (wglGetGPUIDsAMD(1, &id) != 0)
+      {
+         S32 memorySize;
+         if (wglGetGPUInfoAMD(id, WGL_GPU_RAM_AMD, GL_INT, 1, &memorySize) != -1)
+         {
+            // memory size is returned in MB
+            return memorySize;
+         }
+      }
+   }
+#endif
+
+#if defined(TORQUE_OS_LINUX)
+   else if ( (gglHasXExtension(NULL, NULL, MESA_query_renderer)) )
+   {
+      // memory size is in mb
+      U32 memorySize;
+      glXQueryCurrentRendererIntegerMESA(GLX_RENDERER_VIDEO_MEMORY_MESA, &memorySize);
+      return memorySize;
+   }
+#endif
+
+   // No other way, sad. Probably windows Intel.
    return 0;
 }
 

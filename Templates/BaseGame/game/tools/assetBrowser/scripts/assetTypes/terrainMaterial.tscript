@@ -15,11 +15,42 @@ function AssetBrowser::createTerrainMaterialAsset(%this)
    {
       AssetName = %assetName;
       versionId = 1;
-      scriptFile = %assetName @ "." @ $TorqueScriptFileExtension;
       materialDefinitionName = %assetName;
    };
    
+   %matDef = new TerrainMaterial(%assetName)
+   {
+      internalName = %moduleName @ ":" @ %assetName;
+      diffuseMap = "";
+      detailMap = "";
+      detailSize = "10";
+      isManaged = "1";
+      detailBrightness = "1";
+      Enabled = "1";
+      diffuseSize = "200";
+   };
+   
+   %fxMatDef = new Material("TerrainFX_" @ %assetName)
+   {
+      mapTo = %moduleName @ ":" @ %assetName;
+      footstepSoundId = 0;
+      terrainMaterials = "1";
+      ShowDust = "1";
+      showFootprints = "1";
+      materialTag0 = "Terrain";
+      effectColor[0] = "0.42 0.42 0 1";
+      effectColor[1] = "0.42 0.42 0 1";
+      impactSoundId = "0";
+   };
+   
+   %asset.add(%matDef);
+   %asset.add(%fxMatDef);
+   
    TamlWrite(%asset, %tamlpath);
+   
+   //cleanup before proper init'ing
+   %matDef.delete();
+   %fxMatDef.delete();
    
    %moduleDef = ModuleDatabase.findModule(%moduleName, 1);
 	AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
@@ -28,35 +59,6 @@ function AssetBrowser::createTerrainMaterialAsset(%this)
 
 	AssetBrowser.refresh();
 	
-	//AssetBrowserFilterTree.onSelect(%smItem);
-	
-	%file = new FileObject();
-	%templateFile = new FileObject();
-	
-	%templateFilePath = %this.templateFilesPath @ "terrainMaterial." @ $TorqueScriptFileExtension @ ".template";
-   
-   if(%file.openForWrite(%scriptPath) && %templateFile.openForRead(%templateFilePath))
-   {
-      while( !%templateFile.isEOF() )
-      {
-         %line = %templateFile.readline();
-         %line = strreplace( %line, "@", %assetName );
-         
-         %file.writeline(%line);
-         //echo(%line);
-      }
-      
-      %file.close();
-      %templateFile.close();
-   }
-   else
-   {
-      %file.close();
-      %templateFile.close();
-      
-      warnf("CreateNewTerrainMaterialAsset - Something went wrong and we couldn't write thescript file!");
-   }
-   
    //If we've got the terrain mat editor open, go ahead and update it all
    TerrainMaterialDlg.onWake();
    
@@ -91,17 +93,129 @@ function AssetBrowser::deleteTerrainMaterialAsset(%this, %assetDef)
 {
 }
 
-function AssetBrowser::buildTerrainMaterialAssetPreview(%this, %assetDef, %previewData)
+function AssetBrowser::moveTerrainMaterialAsset(%this, %assetDef, %destination)
 {
+   %currentModule = AssetDatabase.getAssetModule(%assetDef.getAssetId());
+   %targetModule = AssetBrowser.dirHandler.getModuleFromAddress(%destination);
+   
+   %newAssetPath = moveAssetFile(%assetDef, %destination);
+   
+   if(%newAssetPath $= "")
+      return false;
+
+   moveAssetLooseFile(%assetDef.getScriptPath(), %destination);
+   
+   AssetDatabase.removeDeclaredAsset(%assetDef.getAssetId());
+   AssetDatabase.addDeclaredAsset(%targetModule, %newAssetPath);
+}
+
+function AssetBrowser::buildTerrainMaterialAssetPreview(%this, %assetDef, %previewData, %forcePreviewRegenerate)
+{
+   %previewData.previewImage = "ToolsModule:genericAssetIcon_image";
+   %previewData.previewLoaded = false; //this marks it for loading progressively later
+      
    %previewData.assetName = %assetDef.assetName;
    %previewData.assetPath = "";
    %previewData.doubleClickCommand = "";
    
-   %previewData.previewImage = "ToolsModule:terrainMaterialIcon_image";
-   
    %previewData.assetFriendlyName = %assetDef.gameObjectName;
    %previewData.assetDesc = %assetDef.description;
    %previewData.tooltip = %assetDef.gameObjectName;
+   
+   %definitionPath = %assetDef.getScriptPath();
+   if(%definitionPath $= "")
+      %definitionPath = %assetDef.getFilename();
+   
+   %previewData.tooltip = "Asset Name: " @ %assetDef.assetName @ 
+                           "\nAsset Type: Terrain Material Asset" @  
+                           "\nAsset Definition ID: " @  %assetDef @
+                           "\nDefinition Path: " @ %definitionPath;
+}
+
+function AssetBrowser::generateTerrainMaterialAssetPreviewImage(%this, %previewButton, %forceRegenerate)
+{
+   if(%forceRegenerate $= "")
+      %forceRegenerate = false;
+      
+   %assetId = %previewButton.moduleName @ ":" @ %previewButton.assetName;
+      
+   %assetDef = AssetDatabase.acquireAsset(%assetId);
+      
+   %module = %this.dirHandler.getModuleFromAddress(makeRelativePath(filePath(AssetDatabase.getAssetFilePath(%assetDef.getAssetId()))));
+   %previewPath = "tools/resources/previewCache/" @ %module.moduleId @ "/";
+
+   if(!IsDirectory(%previewPath))
+   {
+      %this.dirHandler.createFolder(%previewPath);
+   }
+
+   %generatePreview = false;
+
+   %previewFilePath = %previewPath @ %assetDef.assetName @ "_Preview.dds";
+   if(!isFile(%previewFilePath))
+   {
+      %generatePreview = true;
+   }
+   else
+   {
+      if(isObject(%assetDef.materialDefinitionName))
+      {
+         if(compareFileTimes(%assetDef.materialDefinitionName.getDiffuseMap(), %previewFilePath) == 1 ||
+            compareFileTimes(%assetDef.materialDefinitionName.getFilename(), %previewFilePath) == 1)
+         %generatePreview = true;
+      }
+   }
+
+   %previewAssetName = %module.moduleId @ "_" @ %assetDef.assetName @ "_PreviewImage";
+                                   
+   if(%generatePreview || %forceRegenerate)
+   {
+      if(isObject(%assetDef.materialDefinitionName))
+      {
+         %previewShapeDef = AssetDatabase.acquireAsset("ToolsModule:previewSphereShape");
+         %generatedFilePath = %previewShapeDef.generateCachedPreviewImage(256, DummyTerrMatPreview);
+      
+         pathCopy(%generatedFilePath, %previewFilePath);
+         fileDelete(%generatedFilePath);
+
+
+         if(!AssetDatabase.isDeclaredAsset("ToolsModule:" @ %previewAssetName))
+         {
+            %previewAsset = new ImageAsset()
+            {
+               assetName = %previewAssetName;
+               versionId = 1;
+               imageFile = fileName(%previewFilePath);
+            };
+            
+            %previewImgAssetPath = %previewPath @ %previewAsset.assetName @ ".asset.taml";
+            %assetImportSuccessful = TAMLWrite(%previewAsset, %previewImgAssetPath); 
+            
+            %toolsModuleDef = ModuleDatabase.findModule("ToolsModule",1);
+               
+            %success = AssetDatabase.addDeclaredAsset(%toolsModuleDef, %previewImgAssetPath);
+            
+            if(!%success)
+            {
+               return false; //failed to register the preview image for some reason?
+         }
+      }
+      
+         %previewButton.bitmapAsset = "ToolsModule:" @ %previewAssetName;
+         return true;
+   }
+   }
+   else
+   {
+      //just map the existing one then
+      if(AssetDatabase.isDeclaredAsset("ToolsModule:" @ %previewAssetName))
+      {
+         %previewButton.bitmapAsset = "ToolsModule:" @ %previewAssetName;
+         return true;
+      }
+   }
+      
+   return false;
 }
 
 function GuiInspectorTypeTerrainMaterialAssetPtr::onClick( %this, %fieldName )

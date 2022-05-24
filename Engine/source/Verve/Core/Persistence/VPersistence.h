@@ -250,8 +250,9 @@ namespace VPersistence
             if ( object->isMethod( "onAdd" ) )
             {
                 // Callback.
-                const char *retValue = Con::executef( object, "onAdd" );
-                if ( !dAtob( retValue ) )
+                ConsoleValue cValue = Con::executef( object, "onAdd" );
+
+                if ( !cValue.getBool() )
                 {
                     // Delete.
                     object->deleteObject();

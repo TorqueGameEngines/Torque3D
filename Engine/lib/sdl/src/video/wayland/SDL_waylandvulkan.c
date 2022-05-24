@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -139,11 +139,11 @@ void Wayland_Vulkan_GetDrawableSize(_THIS, SDL_Window *window, int *w, int *h)
         data = (SDL_WindowData *) window->driverdata;
 
         if (w) {
-            *w = window->w * data->scale_factor;
+            *w = data->drawable_width;
         }
 
         if (h) {
-            *h = window->h * data->scale_factor;
+            *h = data->drawable_height;
         }
     }
 }

@@ -212,6 +212,24 @@ function MeshRoadEditorGui::prepSelectionMode( %this )
 }
 
 //------------------------------------------------------------------------------
+function ESettingsWindow::getMeshRoadEditorSettings(%this)
+{
+   SettingsInspector.startGroup("Defaults");
+   SettingsInspector.addSettingsField("MeshRoadEditor/DefaultWidth", "Width", "string", "");
+   SettingsInspector.addSettingsField("MeshRoadEditor/DefaultDepth", "Depth", "string", "");
+   SettingsInspector.addSettingsField("MeshRoadEditor/DefaultNormal", "Normal", "string", "");
+   
+   SettingsInspector.addSettingsField("MeshRoadEditor/TopMaterialName", "Top Material", "string", "");
+   SettingsInspector.addSettingsField("MeshRoadEditor/BottomMaterialName", "Bottom Material", "string", "");
+   SettingsInspector.addSettingsField("MeshRoadEditor/SideMaterialName", "Side Material", "string", "");
+   SettingsInspector.endGroup();
+   
+   SettingsInspector.startGroup("Colors");
+   SettingsInspector.addSettingsField("MeshRoadEditor/HoverSplineColor", "Hover Spline", "colorI", "");
+   SettingsInspector.addSettingsField("MeshRoadEditor/SelectedSplineColor", "Selected Spline", "colorI", "");
+   SettingsInspector.endGroup();
+}
+//------------------------------------------------------------------------------
 function EMeshRoadEditorSelectModeBtn::onClick(%this)
 {
    EditorGuiStatusBar.setInfo(%this.ToolTip);

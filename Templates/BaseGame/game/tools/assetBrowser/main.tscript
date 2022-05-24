@@ -169,6 +169,15 @@ function AssetBrowserPlugin::onWorldEditorStartup( %this )
 { 
 }
 
+function AssetBrowserPlugin::onWorldEditorShutdown( %this )
+{
+   //force close us real fast to save off current settings/configs
+   if(AssetBrowser.isAwake())
+   {
+      AssetBrowser.hideDialog();
+   }
+}
+
 function AssetBrowserPlugin::initSettings( %this )
 {
    EditorSettings.beginGroup( "Assets", true );

@@ -38,3 +38,10 @@ function ServerPlay3D(%profile,%transform)
       ClientGroup.getObject(%idx).play3D(%profile,%transform);
 }
 
+function ServerPlaySound(%profile,%pos)
+{
+   // Play the given sound profile at the given position on every client
+   // The sound will be transmitted as an event, not attached to any object.
+   for(%idx = 0; %idx < ClientGroup.getCount(); %idx++)
+      commandToClient(ClientGroup.getObject(%idx), 'PlaySound',%profile, %pos);
+}

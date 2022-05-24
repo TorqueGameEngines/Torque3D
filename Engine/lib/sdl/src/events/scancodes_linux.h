@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -24,7 +24,7 @@
    Sources:
    - Linux kernel source input.h
 */
-/* *INDENT-OFF* */
+/* *INDENT-OFF* */ /* clang-format off */
 static SDL_Scancode const linux_scancode_table[] = {
     /*  0 */    SDL_SCANCODE_UNKNOWN,
     /*  1 */    SDL_SCANCODE_ESCAPE,
@@ -260,4 +260,4 @@ static SDL_Scancode const linux_scancode_table[] = {
     /*  235 */    SDL_SCANCODE_UNKNOWN, /* KEY_DOCUMENTS */
     /*  236 */    SDL_SCANCODE_UNKNOWN, /* KEY_BATTERY */
 };
-/* *INDENT-ON* */
+/* *INDENT-ON* */ /* clang-format on */

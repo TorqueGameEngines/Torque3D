@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8" standalone ="yes"?>
 <AssetImportSettings>
     <Group
         name="DefaultImportConfig">
@@ -31,15 +31,17 @@
         <Group
             name="General">
             <Setting
+                name="AddDirectoryPrefixToAssetName">0</Setting>
+            <Setting
                 name="AutomaticallyPromptMissingFiles">0</Setting>
             <Setting
                 name="DuplicatAutoResolution">AutoPrune</Setting>
             <Setting
+                name="DuplicateAutoResolution">FolderPrefix</Setting>
+            <Setting
                 name="PreventImportWithErrors">1</Setting>
             <Setting
                 name="WarningsAsErrors">0</Setting>
-            <Setting
-                name="AddDirectoryPrefixToAssetName">0</Setting>
         </Group>
         <Group
             name="Images">
@@ -50,7 +52,7 @@
             <Setting
                 name="AOTypeSuffixes">_AO,_AMBIENT,_AMBIENTOCCLUSION</Setting>
             <Setting
-                name="CompositeTypeSuffixes">_COMP,_COMPOSITE,_PBR,-COMP,-COMPOSITE,-PBR,_ORM,-ORM</Setting>
+                name="CompositeTypeSuffixes">_COMP,_COMPOSITE,_PBR,-COMP,-COMPOSITE,-PBR,_ORM,-ORM,_C</Setting>
             <Setting
                 name="Compressed">1</Setting>
             <Setting
@@ -64,15 +66,15 @@
             <Setting
                 name="IsHDR">0</Setting>
             <Setting
-                name="MetalnessTypeSuffixes">_METAL,_MET,_METALNESS,_METALLIC</Setting>
+                name="MetalnessTypeSuffixes">_METAL,_MET,_METALNESS,_METALLIC,_M</Setting>
             <Setting
-                name="NormalTypeSuffixes">_NORMAL,_NORM</Setting>
+                name="NormalTypeSuffixes">_NORMAL,_NORM,_N</Setting>
             <Setting
-                name="RoughnessTypeSuffixes">_ROUGH,_ROUGHNESS</Setting>
+                name="RoughnessTypeSuffixes">_ROUGH,_ROUGHNESS,_R</Setting>
             <Setting
                 name="Scaling">1.0</Setting>
             <Setting
-                name="SmoothnessTypeSuffixes">_SMOOTH,_SMOOTHNESS</Setting>
+                name="SmoothnessTypeSuffixes">_SMOOTH,_SMOOTHNESS,_S</Setting>
             <Setting
                 name="TextureFilteringMode">Bilinear</Setting>
             <Setting
@@ -83,9 +85,13 @@
             <Setting
                 name="AddedMaterialSuffix">_mat</Setting>
             <Setting
-                name="AlwaysAddMaterialSuffix">0</Setting>
+                name="AlwaysAddMaterialSuffix">1</Setting>
             <Setting
                 name="CreateComposites">1</Setting>
+            <Setting
+                name="CreateORMConfig">1</Setting>
+            <Setting
+                name="IgnoreMaterials">DefaultMaterial,ColorEffect*</Setting>
             <Setting
                 name="ImportMaterials">1</Setting>
             <Setting
@@ -104,7 +110,7 @@
             <Setting
                 name="AdjustFloor">0</Setting>
             <Setting
-                name="AlwaysAddShapeSuffix">0</Setting>
+                name="AlwaysAddShapeSuffix">1</Setting>
             <Setting
                 name="calcTangentSpace">0</Setting>
             <Setting
@@ -185,15 +191,15 @@
         <Group
             name="General">
             <Setting
+                name="AddDirectoryPrefixToAssetName">0</Setting>
+            <Setting
                 name="AutomaticallyPromptMissingFiles">0</Setting>
             <Setting
-                name="DuplicateAutoResolution">FolderPrefix</Setting>
+                name="DuplicateAutoResolution">AutoPrune</Setting>
             <Setting
                 name="PreventImportWithErrors">1</Setting>
             <Setting
                 name="WarningsAsErrors">0</Setting>
-            <Setting
-                name="AddDirectoryPrefixToAssetName">1</Setting>
         </Group>
         <Group
             name="Images">
@@ -240,6 +246,8 @@
                 name="AlwaysAddMaterialSuffix">1</Setting>
             <Setting
                 name="CreateComposites">1</Setting>
+            <Setting
+                name="IgnoreMaterials">DefaultMaterial,ColorEffect*</Setting>
             <Setting
                 name="ImportMaterials">1</Setting>
             <Setting
@@ -339,6 +347,8 @@
         <Group
             name="General">
             <Setting
+                name="AddDirectoryPrefixToAssetName">0</Setting>
+            <Setting
                 name="AutomaticallyPromptMissingFiles">0</Setting>
             <Setting
                 name="DuplicatAutoResolution">AutoPrune</Setting>
@@ -346,8 +356,6 @@
                 name="PreventImportWithErrors">1</Setting>
             <Setting
                 name="WarningsAsErrors">0</Setting>
-            <Setting
-                name="AddDirectoryPrefixToAssetName">0</Setting>
         </Group>
         <Group
             name="Images">

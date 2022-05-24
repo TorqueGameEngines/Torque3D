@@ -93,15 +93,15 @@ public:
    //-----------------------------------------------------------------------------
    // Draw Bitmaps
    //-----------------------------------------------------------------------------  
-   void drawBitmap( GFXTextureObject*texture, const Point2F &in_rAt, const GFXBitmapFlip in_flip = GFXBitmapFlip_None, const GFXTextureFilterType filter = GFXTextureFilterPoint , bool in_wrap = true );
-   void drawBitmapSR( GFXTextureObject*texture, const Point2F &in_rAt, const RectF &srcRect, const GFXBitmapFlip in_flip = GFXBitmapFlip_None, const GFXTextureFilterType filter = GFXTextureFilterPoint , bool in_wrap = true );
-   void drawBitmapStretch( GFXTextureObject*texture, const RectF &dstRect, const GFXBitmapFlip in_flip = GFXBitmapFlip_None, const GFXTextureFilterType filter = GFXTextureFilterPoint , bool in_wrap = true );
-   void drawBitmapStretchSR( GFXTextureObject*texture, const RectF &dstRect, const RectF &srcRect, const GFXBitmapFlip in_flip = GFXBitmapFlip_None, const GFXTextureFilterType filter = GFXTextureFilterPoint , bool in_wrap = true );
+   void drawBitmap( GFXTextureObject*texture, const Point2F &in_rAt, const GFXBitmapFlip in_flip = GFXBitmapFlip_None, const GFXTextureFilterType filter = GFXTextureFilterPoint , bool in_wrap = true, F32 angle = 0.0f);
+   void drawBitmapSR( GFXTextureObject*texture, const Point2F &in_rAt, const RectF &srcRect, const GFXBitmapFlip in_flip = GFXBitmapFlip_None, const GFXTextureFilterType filter = GFXTextureFilterPoint , bool in_wrap = true, F32 angle = 0.0f);
+   void drawBitmapStretch( GFXTextureObject*texture, const RectF &dstRect, const GFXBitmapFlip in_flip = GFXBitmapFlip_None, const GFXTextureFilterType filter = GFXTextureFilterPoint , bool in_wrap = true, F32 angle = 0.0f);
+   void drawBitmapStretchSR( GFXTextureObject*texture, const RectF &dstRect, const RectF &srcRect, const GFXBitmapFlip in_flip = GFXBitmapFlip_None, const GFXTextureFilterType filter = GFXTextureFilterPoint , bool in_wrap = true, F32 angle = 0.0f);
 
-   void drawBitmap( GFXTextureObject*texture, const Point2I &in_rAt, const GFXBitmapFlip in_flip = GFXBitmapFlip_None, const GFXTextureFilterType filter = GFXTextureFilterPoint , bool in_wrap = true );
-   void drawBitmapSR( GFXTextureObject*texture, const Point2I &in_rAt, const RectI &srcRect, const GFXBitmapFlip in_flip = GFXBitmapFlip_None, const GFXTextureFilterType filter = GFXTextureFilterPoint , bool in_wrap = true );
-   void drawBitmapStretch( GFXTextureObject*texture, const RectI &dstRect, const GFXBitmapFlip in_flip = GFXBitmapFlip_None, const GFXTextureFilterType filter = GFXTextureFilterPoint , bool in_wrap = true );
-   void drawBitmapStretchSR( GFXTextureObject*texture, const RectI &dstRect, const RectI &srcRect, const GFXBitmapFlip in_flip = GFXBitmapFlip_None, const GFXTextureFilterType filter = GFXTextureFilterPoint , bool in_wrap = true );
+   void drawBitmap( GFXTextureObject*texture, const Point2I &in_rAt, const GFXBitmapFlip in_flip = GFXBitmapFlip_None, const GFXTextureFilterType filter = GFXTextureFilterPoint , bool in_wrap = true, F32 angle = 0.0f);
+   void drawBitmapSR( GFXTextureObject*texture, const Point2I &in_rAt, const RectI &srcRect, const GFXBitmapFlip in_flip = GFXBitmapFlip_None, const GFXTextureFilterType filter = GFXTextureFilterPoint , bool in_wrap = true, F32 angle = 0.0f);
+   void drawBitmapStretch( GFXTextureObject*texture, const RectI &dstRect, const GFXBitmapFlip in_flip = GFXBitmapFlip_None, const GFXTextureFilterType filter = GFXTextureFilterPoint , bool in_wrap = true, F32 angle = 0.0f);
+   void drawBitmapStretchSR( GFXTextureObject*texture, const RectI &dstRect, const RectI &srcRect, const GFXBitmapFlip in_flip = GFXBitmapFlip_None, const GFXTextureFilterType filter = GFXTextureFilterPoint , bool in_wrap = true, F32 angle = 0.0f);
 
    //-----------------------------------------------------------------------------
    // Draw 3D Shapes

@@ -66,6 +66,9 @@ IMPLEMENT_CALLBACK( GuiWindowCtrl, onCollapse, void, (), (),
    "Called when the window is collapsed by clicking its title bar." );
 IMPLEMENT_CALLBACK( GuiWindowCtrl, onRestore, void, (), (),
    "Called when the window is restored from minimized, maximized, or collapsed state." );
+IMPLEMENT_CALLBACK(GuiWindowCtrl, onResize, void, (S32 posX, S32 posY, S32 width, S32 height), (0, 0, 0, 0),
+   "Called when the window is resized in a regular manner by mouse manipulation.");
+
 
 //-----------------------------------------------------------------------------
 
@@ -1556,6 +1559,8 @@ bool GuiWindowCtrl::resize(const Point2I &newPosition, const Point2I &newExtent)
 
    // Set the button coords
    positionButtons();
+
+   onResize_callback(newPosition.x, newPosition.y, newExtent.x, newExtent.y);
 
    return true;
 }

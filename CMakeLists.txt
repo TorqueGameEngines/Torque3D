@@ -1,5 +1,7 @@
-cmake_minimum_required (VERSION 2.8.12)
+cmake_minimum_required (VERSION 3.10.2)
 
+set_property(GLOBAL PROPERTY USE_FOLDERS TRUE)
+set(TORQUE_LIBS_FOLDER_NAME "Libs" CACHE STRING "The solution folder name to place all libs under")
 set(TORQUE_APP_NAME "" CACHE STRING "the app name")
 
 set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/temp" CACHE PATH "default install path" FORCE )

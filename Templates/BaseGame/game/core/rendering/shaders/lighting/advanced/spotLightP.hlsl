@@ -43,7 +43,7 @@ TORQUE_UNIFORM_SAMPLER2D(shadowMap, 1);
 #ifdef USE_COOKIE_TEX
 
 /// The texture for cookie rendering.
-TORQUE_UNIFORM_SAMPLER2D(cookieMap, 3);
+TORQUE_UNIFORM_SAMPLER2D(cookieMap, 2);
 
 #endif
 TORQUE_UNIFORM_SAMPLER2D(colorBuffer, 5);
@@ -67,7 +67,6 @@ uniform float4x4 worldToLightProj;
 uniform float4 lightParams;
 
 uniform float shadowSoftness;
-uniform float3 eyePosWorld;
 
 uniform float4x4 cameraToWorld;
 uniform float4x4 worldToCamera;
@@ -102,6 +101,8 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
 	if(dist < lightRange)
 	{     
       SurfaceToLight surfaceToLight = createSurfaceToLight(surface, L);
+      float3 lightCol = lightColor.rgb;
+      
       #ifdef NO_SHADOW   
          float shadowed = 1.0;      	
       #else
@@ -109,23 +110,20 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
          float4 pxlPosLightProj = mul( worldToLightProj, float4( surface.P, 1 ) );
          float2 shadowCoord = ( ( pxlPosLightProj.xy / pxlPosLightProj.w ) * 0.5 ) + float2( 0.5, 0.5 );
          shadowCoord.y = 1.0f - shadowCoord.y;
-
-          //distance to light in shadow map space
+         //distance to light in shadow map space
          float distToLight = pxlPosLightProj.z / lightRange;
          float shadowed = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(shadowMap), ssPos.xy, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
-      #endif      
-
-      float3 lightCol = lightColor.rgb;
-   #ifdef USE_COOKIE_TEX
-      // Lookup the cookie sample.
-      float4 cookie = TORQUE_TEXCUBE(cookieMap, mul(worldToLightProj, -surfaceToLight.L));
-      // Multiply the light with the cookie tex.
-      lightCol *= cookie.rgb;
-      // Use a maximum channel luminance to attenuate 
-      // the lighting else we get specular in the dark
-      // regions of the cookie texture.
-      lightCol *= max(cookie.r, max(cookie.g, cookie.b));
-   #endif
+         #ifdef USE_COOKIE_TEX
+            // Lookup the cookie sample.
+            float4 cookie = TORQUE_TEX2D(cookieMap, shadowCoord);
+            // Multiply the light with the cookie tex.
+            lightCol *= cookie.rgb;
+            // Use a maximum channel luminance to attenuate 
+            // the lighting else we get specular in the dark
+            // regions of the cookie texture.
+            lightCol *= max(cookie.r, max(cookie.g, cookie.b));
+         #endif
+      #endif
 
    #ifdef DIFFUSE_LIGHT_VIZ
       float attenuation = getDistanceAtt(surfaceToLight.Lu, radius);
@@ -147,12 +145,12 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
 
    #ifdef DETAIL_LIGHTING_VIZ
       float attenuation = getDistanceAtt(surfaceToLight.Lu, radius);
-      vec3 factor = lightColor * max(surfaceToLight.NdotL, 0) * shadow * lightIntensity * attenuation;
+      float3 factor = lightColor * max(surfaceToLight.NdotL, 0) * shadow * lightIntensity * attenuation;
 
-      vec3 diffuse = BRDF_GetDiffuse(surface,surfaceToLight) * factor;
-      vec3 spec = BRDF_GetSpecular(surface,surfaceToLight) * factor;
+      float3 diffuse = BRDF_GetDiffuse(surface,surfaceToLight) * factor;
+      float3 spec = BRDF_GetSpecular(surface,surfaceToLight) * factor;
 
-      vec3 final = max(vec3(0.0f), diffuse + spec * surface.F) * getSpotAngleAtt(-surfaceToLight.L, lightDirection, lightSpotParams );
+      vec3 final = max(float3(0.0f), diffuse + spec * surface.F) * getSpotAngleAtt(-surfaceToLight.L, lightDirection, lightSpotParams );
       return final;
    #endif
 

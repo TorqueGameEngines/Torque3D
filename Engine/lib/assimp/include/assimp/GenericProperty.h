@@ -2,7 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2022, assimp team
 
 All rights reserved.
 
@@ -87,7 +87,7 @@ inline const T &GetGenericProperty(const std::map<unsigned int, T> &list,
 
 // ------------------------------------------------------------------------------------------------
 // Special version for pointer types - they will be deleted when replaced with another value
-// passing NULL removes the whole property
+// passing nullptr removes the whole property
 template <class T>
 inline void SetGenericPropertyPtr(std::map<unsigned int, T *> &list,
         const char *szName, T *value, bool *bWasExisting = nullptr) {

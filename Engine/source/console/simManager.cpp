@@ -565,6 +565,8 @@ void init()
    InstantiateNamedSet(SFXAmbienceSet);
    InstantiateNamedSet(TerrainMaterialSet);
    InstantiateNamedSet(DataBlockSet);
+   InstantiateNamedSet(ForestBrushSet); 
+   InstantiateNamedSet(ForestItemDataSet);
    InstantiateNamedGroup(ActionMapGroup);
    InstantiateNamedGroup(ClientGroup);
    InstantiateNamedGroup(GuiGroup);

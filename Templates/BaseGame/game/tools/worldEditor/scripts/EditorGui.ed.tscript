@@ -156,10 +156,8 @@ function EditorGui::init(%this)
    // Editor Settings Window
    if( !isObject( %this-->EditorSettingsWindow ) )
    {
-      exec("tools/gui/EditorSettingsWindow.ed.gui");
       exec("tools/gui/editorSettingsWindow.ed." @ $TorqueScriptFileExtension);
-      %this.add( ESettingsWindow );
-      ESettingsWindow.setVisible(false);
+      exec("tools/gui/EditorSettingsWindow.ed.gui");
       
       // Start the standard settings tabs pages
       /*exec( "~/worldEditor/gui/GeneralSettingsTab.ed.gui" );
@@ -218,7 +216,7 @@ function EditorGui::init(%this)
    ETerrainEditor.init();
 
    //Creator.init();
-   EWCreatorWindow.init();
+   //ObjectCreator.init();
    ObjectBuilderGui.init();
 
    %this.setMenuDefaultState();
@@ -359,8 +357,9 @@ function EditorGui::addToEditorsMenu( %this, %displayName, %accel, %newPlugin )
          
    if(!%alreadyExists)
    {
-      EditorsMenuList.add(%displayName TAB %accel TAB %newPlugin);
-      %windowMenu.addItem( %count, %displayName TAB %accel TAB %newPlugin );
+      %pluginCommand = "EditorGui.setEditor(" @ %newPlugin @ ");";
+      EditorsMenuList.add(%displayName TAB %accel TAB %pluginCommand);
+      %windowMenu.addItem( %count, %displayName TAB %accel TAB %pluginCommand);
    }
       
    return %accel;
@@ -874,7 +873,7 @@ function WorldEditorPlugin::onActivated( %this )
    EditorGui.menuBar.insert( EditorGui.worldMenu, EditorGui.menuBar.dynamicItemInsertPos );
    EWorldEditor.makeFirstResponder(true);
    EditorTree.open($scenesRootGroup,true);
-   EWCreatorWindow.setNewObjectGroup(getScene(0));
+   ObjectCreator.setNewObjectGroup(getScene(0));
    
    EditorTree.expandItem(1);
    EditorTree.buildVisibleTree(true);
@@ -1522,8 +1521,8 @@ function EditorTree::onDeleteObject( %this, %object )
    if( %object.locked )
       return true;
    
-   if( %object == EWCreatorWindow.objectGroup )
-      EWCreatorWindow.setNewObjectGroup( getScene(0) );
+   if( %object == ObjectCreator.objectGroup )
+      ObjectCreator.setNewObjectGroup( getScene(0) );
 
    // Append it to our list.
    %this.undoDeleteList = %this.undoDeleteList TAB %object;
@@ -1621,7 +1620,7 @@ function EditorTree::onDragDropped(%this)
 
 function EditorTree::onAddGroupSelected(%this, %group)
 {
-   EWCreatorWindow.setNewObjectGroup(%group);
+   ObjectCreator.setNewObjectGroup(%group);
 }
 
 function EditorTree::onRightMouseUp( %this, %itemId, %mouse, %obj )
@@ -1677,7 +1676,7 @@ function EditorTree::onRightMouseUp( %this, %itemId, %mouse, %obj )
          %popup.item[ 1 ] = "Delete" TAB "" TAB "EWorldEditor.deleteMissionObject(" @ %popup.object @ ");";
          %popup.item[ 2 ] = "Inspect" TAB "" TAB "inspectObject(" @ %popup.object @ ");";
          %popup.item[ 3 ] = "-";
-         %popup.item[ 4 ] = "Locked" TAB "" TAB "%this.object.setLocked( !" @ %popup.object @ ".locked ); EWorldEditor.syncGui();";
+         %popup.item[ 4 ] = "Locked" TAB "" TAB %popup.object @ ".setLocked( !" @ %popup.object @ ".locked ); EWorldEditor.syncGui();";
          %popup.item[ 5 ] = "Hidden" TAB "" TAB "EWorldEditor.hideObject( " @ %popup.object @ ", !" @ %popup.object @ ".hidden ); EWorldEditor.syncGui();";
          %popup.item[ 6 ] = "-";
          %popup.item[ 7 ] = "Group" TAB "" TAB "EWorldEditor.addSimGroup( true );";
@@ -1707,7 +1706,7 @@ function EditorTree::onRightMouseUp( %this, %itemId, %mouse, %obj )
             %popup.item[ 5 ] = "Toggle Hide Children" TAB "" TAB "EWorldEditor.toggleHideChildren( " @ %popup.object @ " );";
             
             %popup.item[ 8 ] = "-";
-            %popup.item[ 9 ] = "Add New Objects Here" TAB "" TAB "EWCreatorWindow.setNewObjectGroup( " @ %popup.object @ " );";
+            %popup.item[ 9 ] = "Add New Objects Here" TAB "" TAB "ObjectCreator.setNewObjectGroup( " @ %popup.object @ " );";
             %popup.item[ 10 ] = "Add Children to Selection" TAB "" TAB "EWorldEditor.selectAllObjectsInSet( " @ %popup.object @ ", false );";
             %popup.item[ 11 ] = "Remove Children from Selection" TAB "" TAB "EWorldEditor.selectAllObjectsInSet( " @ %popup.object @ ", true );";
             
@@ -1822,6 +1821,12 @@ function EditorTree::update( %this )
 }
 
 //------------------------------------------------------------------------------
+function EWTreeWindow::onResize(%this, %posX, %posY, %width, %height )
+{
+    EditorTree.extent.x = %this.extent.x;
+}
+
+//------------------------------------------------------------------------------
 
 // Tooltip for TSStatic
 function EditorTree::GetTooltipTSStatic( %this, %obj )
@@ -1882,10 +1887,16 @@ function EditorTree::GetTooltipGroundCover( %this, %obj )
 // Tooltip for SFXEmitter
 function EditorTree::GetTooltipSFXEmitter( %this, %obj )
 {
+   %soundName = %obj.soundAsset;
+   if(%soundName $= "")
+   {
    if(%obj.fileName $= "")
-      return "Track: " @ %obj.track;
+         %soundName = "Track: " @ %obj.track;
    else
-      return "File: " @ %obj.fileName;
+         %soundName = "File: " @ %obj.fileName;
+   }
+
+   return "Sound: " @ %soundName;
 }
 
 // Tooltip for ParticleEmitterNode
@@ -1921,9 +1932,8 @@ function EditorTreeTabBook::onTabSelected( %this )
    }
    else
    {
-      EWTreeWindow-->DeleteSelection.visible = false;
-      EWTreeWindow-->LockSelection.visible = false;
-      EWTreeWindow-->AddSimGroup.visible = false;
+      AssetBrowser.showDialog("ShapeAsset Datablock");
+      EditorTreeTabBook.selectPage(0);
    }
 }
 
@@ -2271,7 +2281,7 @@ function EWorldEditor::convertSelectionToConvexShape( %this )
 
 function EWorldEditor::getNewObjectGroup( %this )
 {
-   return EWCreatorWindow.getNewObjectGroup();
+   return ObjectCreator.getNewObjectGroup();
 }
 
 function EWorldEditor::deleteMissionObject( %this, %object )
@@ -2308,11 +2318,13 @@ function EWorldEditor::SetActiveScene(%this, %sceneObj)
    {
       $ActiveEditingScene.isEditing = false;
       %itemId = EditorTree.findItemByObjectId($ActiveScene);
-      EditorTree.markItem(%itemId);
+      if(%itemId != -1)
+         EditorTree.markItem(%itemId);
    }
       
    %itemId = EditorTree.findItemByObjectId(%sceneObj);
-   EditorTree.markItem(%itemId);
+   if(%itemId != -1)
+      EditorTree.markItem(%itemId);
    
    $ActiveEditingScene = %sceneObj;
    $ActiveEditingScene.isEditing = true;

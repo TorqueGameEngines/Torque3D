@@ -542,7 +542,7 @@ TEST(Script, TorqueScript_Array_Testing)
    ASSERT_EQ(value2.getInt(), 2);
 }
 
-TEST(Script, Basic_SimObject)
+TEST(Script, SimObject_Tests)
 {
    ConsoleValue object = RunScript(R"(
          return new SimObject(FudgeCollector)
@@ -657,6 +657,44 @@ TEST(Script, Basic_SimObject)
    )");
 
    ASSERT_EQ(fieldOpTest.getInt(), 3);
+
+   ConsoleValue inheritedObjectTest = RunScript(R"(
+      function SimObject::testClass(%this)
+      {
+         return 4;
+      }
+
+      function SuperFooBar::doSuperTest(%this)
+      {
+         return 5;
+      }
+
+      function FooBar::test(%this)
+      {
+         return 2;
+      }
+
+      new SimObject(GrandFooBar)
+      {
+         superClass = "SuperFooBar";
+      };
+
+      new SimObject(Foo : GrandFooBar)
+      {
+         class = "FooBar";
+      };
+
+      new SimObject(Bar : Foo);
+
+      function Bar::doTheAddition(%this)
+      {
+         return %this.testClass() + %this.test() + %this.doSuperTest(); 
+      }
+
+      return Bar.doTheAddition();
+   )");
+
+   ASSERT_EQ(inheritedObjectTest.getInt(), 11);
 }
 
 TEST(Script, Internal_Name)
@@ -889,6 +927,40 @@ TEST(Script, InnerObjectTests)
    ASSERT_EQ(nestedFuncCall.getInt(), 123);
 }
 
+TEST(Script, MiscTesting)
+{
+   ConsoleValue test1 = RunScript(R"(
+      function testNotPassedInParameters(%a, %b, %c, %d)
+      {
+         if (%d $= "")
+            return true;
+         return false;
+      }
+
+      return testNotPassedInParameters(1, 2); // skip passing in %c and %d
+   )");
+
+   ASSERT_EQ(test1.getBool(), true);
+
+   ConsoleValue test2 = RunScript(R"(
+      function SimObject::concatNameTest(%this)
+      {
+         return true;
+      }
+
+      new SimObject(WeirdTestObject1);
+
+      function testObjectNameConcatination(%i)
+      {
+         return (WeirdTestObject @ %i).concatNameTest();
+      }
+
+      return testObjectNameConcatination(1);
+   )");
+
+   ASSERT_EQ(test2.getBool(), true);
+}
+
 TEST(Script, MiscRegressions)
 {
    ConsoleValue regression1 = RunScript(R"(
@@ -1007,6 +1079,22 @@ TEST(Script, MiscRegressions)
    )");
 
    ASSERT_EQ(regression6.getBool(), true);
+
+   ConsoleValue regression7 = RunScript(R"(
+      function Tween::vectorAdd(%v1, %v2)
+      {
+         %temp = "";
+         for (%i = 0; %i < getWordCount(%v1); %i++) {
+            %e = getWord(%v1, %i) + getWord(%v2, %i);
+            %temp = %i == 0 ? %e : %temp SPC %e;
+         }
+
+         return %temp;
+      }
+      return Tween::vectorAdd("1 2 3", "4 5 6");
+   )");
+
+   ASSERT_STREQ(regression7.getString(), "5 7 9");
 }
 
 #endif

@@ -668,30 +668,6 @@ function GuiEditor::onControlDragged( %this, %payload, %position )
 
 //---------------------------------------------------------------------------------------------
 
-function GuiEditor::onControlDropped(%this, %payload, %position)
-{  
-   // Make sure we have the right kind of D&D.
-   
-   if( !%payload.parentGroup.isInNamespaceHierarchy( "GuiDragAndDropControlType_GuiControl" ) &&
-         !%payload.parentGroup.isInNamespaceHierarchy( "AssetPreviewControlType_AssetDrop" ))
-      return;
-
-   %pos = %payload.getGlobalPosition();
-   %x = getWord(%pos, 0);
-   %y = getWord(%pos, 1);
-
-   %asset = %payload.assetName;
-   %cmd = "return new " @ %asset @ "();";
-   %ctrl = eval( %cmd );
-
-   %this.addNewCtrl(%ctrl);
-   
-   %ctrl.setPositionGlobal(%x, %y);
-   %this.setFirstResponder();
-}
-
-//---------------------------------------------------------------------------------------------
-
 function GuiEditor::onGainFirstResponder(%this)
 {
    %this.enableMenuItems(true);
@@ -1047,11 +1023,6 @@ function GuiEditorGui::onWake( %this )
 
    %this.initSettings();
    %this.readSettings();
-   
-   // Initialize toolbox.
-
-   if( !GuiEditorToolbox.isInitialized )
-      GuiEditorToolbox.initialize();
 
    // Set up initial menu toggle states.
    

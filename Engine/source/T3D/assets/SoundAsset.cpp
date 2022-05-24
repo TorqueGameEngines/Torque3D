@@ -107,6 +107,7 @@ ConsoleSetType(TypeSoundAssetId)
 //-----------------------------------------------------------------------------
 
 SoundAsset::SoundAsset()
+   : AssetBase()
 {
    mSoundFile = StringTable->EmptyString();
    mSoundPath = StringTable->EmptyString();
@@ -217,6 +218,9 @@ bool SoundAsset::loadSound()
       {
          Con::errorf("SoundAsset::initializeAsset: Attempted to load file %s but it was not valid!", mSoundFile);
          mLoadedState = BadFileReference;
+         mSFXProfile.setDescription(NULL);
+         mSFXProfile.setSoundFileName(StringTable->insert(StringTable->EmptyString()));
+         mSFXProfile.setPreload(false);
          return false;
       }
       else
@@ -256,7 +260,7 @@ StringTableEntry SoundAsset::getAssetIdByFileName(StringTableEntry fileName)
    if (fileName == StringTable->EmptyString())
       return StringTable->EmptyString();
 
-   StringTableEntry materialAssetId = "";
+   StringTableEntry soundAssetId = StringTable->EmptyString();
 
    AssetQuery query;
    U32 foundCount = AssetDatabase.findAssetType(&query, "SoundAsset");
@@ -267,7 +271,7 @@ StringTableEntry SoundAsset::getAssetIdByFileName(StringTableEntry fileName)
          SoundAsset* soundAsset = AssetDatabase.acquireAsset<SoundAsset>(query.mAssetList[i]);
          if (soundAsset && soundAsset->getSoundPath() == fileName)
          {
-            materialAssetId = soundAsset->getAssetId();
+            soundAssetId = soundAsset->getAssetId();
             AssetDatabase.releaseAsset(query.mAssetList[i]);
             break;
          }
@@ -275,21 +279,21 @@ StringTableEntry SoundAsset::getAssetIdByFileName(StringTableEntry fileName)
       }
    }
 
-   return materialAssetId;
+   return soundAssetId;
 }
 
-U32 SoundAsset::getAssetById(StringTableEntry assetId, AssetPtr<SoundAsset>* materialAsset)
+U32 SoundAsset::getAssetById(StringTableEntry assetId, AssetPtr<SoundAsset>* soundAsset)
 {
-   (*materialAsset) = assetId;
+   (*soundAsset) = assetId;
 
-   if (materialAsset->notNull())
+   if (soundAsset->notNull())
    {
-      return (*materialAsset)->mLoadedState;
+      return (*soundAsset)->mLoadedState;
    }
    else
    {
       //Well that's bad, loading the fallback failed.
-      Con::warnf("MaterialAsset::getAssetById - Finding of asset with id %s failed with no fallback asset", assetId);
+      Con::warnf("SoundAsset::getAssetById - Finding of asset with id %s failed with no fallback asset", assetId);
       return AssetErrCode::Failed;
    }
 }
@@ -329,8 +333,8 @@ DefineEngineMethod(SoundAsset, getSoundPath, const char*, (), , "")
 }
 
 DefineEngineMethod(SoundAsset, playSound, S32, (Point3F position), (Point3F::Zero),
-   "Gets the number of materials for this shape asset.\n"
-   "@return Material count.\n")
+   "Plays the sound for this asset.\n"
+   "@return (sound plays).\n")
 {
    if (object->getSfxProfile())
    {

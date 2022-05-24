@@ -1,7 +1,0 @@
-<MaterialAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    AssetName="noshapetext_noshape_mat"
-    scriptFile="@assetFile=materials.tscript"
-    materialDefinitionName="noshapetext_noshape_mat"
-    VersionId="1" />

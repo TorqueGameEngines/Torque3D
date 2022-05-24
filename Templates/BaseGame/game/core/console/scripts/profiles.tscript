@@ -50,11 +50,13 @@ new GuiControlProfile(GuiConsoleTextProfile)
    category = "Core";
 };
 
+$ConsoleDefaultFillColor = "0 0 0 175";
+
 if(!isObject(ConsoleScrollProfile))
 new GuiControlProfile(ConsoleScrollProfile : GuiScrollProfile)
 {
 	opaque = true;
-	fillColor = "0 0 0 175";
+	fillColor = $ConsoleDefaultFillColor;
 	border = 1;
 	//borderThickness = 0;
 	borderColor = "0 0 0";

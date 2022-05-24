@@ -56,7 +56,7 @@ namespace CubemapSaver
       for (U32 face = 0; face < CubeFaces; face++)
       {
          pTextures[face].set(faceSize, faceSize, targetFmt,
-            &GFXStaticTextureProfile, avar("%s() - (line %d)", __FUNCTION__, __LINE__),
+            &GFXTexturePersistentProfile, avar("%s() - (line %d)", __FUNCTION__, __LINE__),
             mipLevels, GFXTextureManager::AA_MATCH_BACKBUFFER);
 
          // yep t3d has funky z up, need to change the face order

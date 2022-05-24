@@ -470,7 +470,6 @@ void LightingShaderConstants::init(GFXShader* shader)
    }
 
    mLightParamsSC = shader->getShaderConstHandle("$lightParams");
-   mLightSpotParamsSC = shader->getShaderConstHandle("$lightSpotParams");
 
    // NOTE: These are the shader constants used for doing lighting 
    // during the forward pass.  Do not confuse these for the deferred
@@ -480,6 +479,7 @@ void LightingShaderConstants::init(GFXShader* shader)
    mLightAmbientSC = shader->getShaderConstHandle( ShaderGenVars::lightAmbient );
    mLightConfigDataSC = shader->getShaderConstHandle( ShaderGenVars::lightConfigData);
    mLightSpotDirSC = shader->getShaderConstHandle( ShaderGenVars::lightSpotDir );
+   mLightSpotParamsSC = shader->getShaderConstHandle(ShaderGenVars::lightSpotParams);
 
    mHasVectorLightSC = shader->getShaderConstHandle(ShaderGenVars::hasVectorLight);
    mVectorLightDirectionSC = shader->getShaderConstHandle(ShaderGenVars::vectorLightDirection);

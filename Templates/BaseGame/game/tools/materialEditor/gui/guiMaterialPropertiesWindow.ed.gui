@@ -113,7 +113,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                   HorizSizing = "left";
                   tooltip = "Swap material on the object with existing";
                   bitmapAsset = "ToolsModule:change_material_btn_n_image";
-                  command = "materialSelector.showDialog(\"MaterialEditorGui.showMaterialChangeSaveDialog\");"; 
+                  command = "MaterialEditorGui.swapMaterial();"; 
                };
                
                new GuiTextEditCtrl(){ 
@@ -260,6 +260,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                         position = "6 21";
                         Extent = "185 52";
                         HorizSizing = "width";
+                        className = "materialEditorDiffuseMapContainer";
 
                         new GuiBitmapCtrl() {
                            canSaveDynamicFields = "0";
@@ -412,6 +413,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                         position = "6 79";
                         Extent = "185 52";
                         HorizSizing = "width";
+                        className = "materialEditorNormalMapContainer";
                         
                         new GuiBitmapCtrl() {
                            canSaveDynamicFields = "0";
@@ -764,6 +766,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                         position = "6 364";
                         Extent = "185 52";
                         HorizSizing = "width";
+                        className = "materialEditorORMConfigMapContainer";
                         
                         new GuiBitmapCtrl() {
                            canSaveDynamicFields = "0";
@@ -985,6 +988,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
 					  isContainer = "1";
 					  canSave = "1";
 					  canSaveDynamicFields = "0";
+					  className = "materialEditorRoughnessMapContainer";
 
 					  new GuiBitmapCtrl() {
 						 bitmapAsset = "ToolsModule:unknownImage_image";
@@ -1221,6 +1225,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
 					  isContainer = "1";
 					  canSave = "1";
 					  canSaveDynamicFields = "0";
+					  className = "materialEditorAOMapContainer";
 
 					  new GuiBitmapCtrl() {
 						 bitmapAsset = "ToolsModule:unknownImage_image";
@@ -1457,6 +1462,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
 					  isContainer = "1";
 					  canSave = "1";
 					  canSaveDynamicFields = "0";
+					  className = "materialEditorMetalMapContainer";
 
 					  new GuiBitmapCtrl() {
 						 bitmapAsset = "ToolsModule:unknownImage_image";
@@ -1710,6 +1716,8 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
 					  isContainer = "1";
 					  canSave = "1";
 					  canSaveDynamicFields = "0";
+					  className = "materialEditorGlowMapContainer";
+					  
 					  new GuiBitmapCtrl() {
 						 bitmapAsset = "ToolsModule:unknownImage_image";
 						 wrap = "0";
@@ -1945,6 +1953,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                         position = "6 193";
                         Extent = "185 52";
                         HorizSizing = "width";
+                        className = "materialEditorDetailMapContainer";
                         
                         new GuiBitmapCtrl() {
                            canSaveDynamicFields = "0";
@@ -2090,6 +2099,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                         position = "6 136";
                         Extent = "185 52";
                         HorizSizing = "width";
+                        className = "materialEditorDetailNormalMapContainer";
                         
                         new GuiBitmapCtrl() {
                            canSaveDynamicFields = "0";
@@ -2235,6 +2245,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                         position = "6 136";
                         Extent = "185 52";
                         HorizSizing = "width";
+                        className = "materialEditorOverlayMapContainer";
                         
                         new GuiBitmapCtrl() {
                            canSaveDynamicFields = "0";
@@ -2361,6 +2372,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                         position = "6 250";
                         Extent = "185 52";
                         HorizSizing = "width";
+                        className = "materialEditorLightMapContainer";
                         
                         new GuiBitmapCtrl() {
                            canSaveDynamicFields = "0";
@@ -2487,6 +2499,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                         position = "6 307";
                         Extent = "185 52";
                         HorizSizing = "width";
+                        className = "materialEditorToneMapContainer";
                         
                         new GuiBitmapCtrl() {
                            canSaveDynamicFields = "0";
@@ -4432,6 +4445,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                         VertSizing = "bottom";
                         Position = "0 95";
                         Extent = "212 25";
+                        visible = "0";
                         
                         new GuiBitmapCtrl(){
                            position="2 2";

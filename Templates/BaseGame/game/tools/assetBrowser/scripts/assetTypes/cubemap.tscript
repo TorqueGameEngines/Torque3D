@@ -28,12 +28,7 @@ function AssetBrowser::createCubemapAsset(%this)
 	%moduleDef = ModuleDatabase.findModule(%moduleName, 1);
 	AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
 
-	AssetBrowser.loadFilters();
-	
-	%treeItemId = AssetBrowserFilterTree.findItemByName(%moduleName);
-	%smItem = AssetBrowserFilterTree.findChildItemByName(%treeItemId, "CubemapAsset");
-	
-	AssetBrowserFilterTree.onSelect(%smItem);
+	AssetBrowser.refresh();
 	
 	return %tamlpath;
 }
@@ -74,7 +69,7 @@ function AssetBrowser::deleteCubemapAsset(%this, %assetDef)
 function AssetBrowser::moveCubemapAsset(%this, %assetDef, %destination)
 {
    /*%currentModule = AssetDatabase.getAssetModule(%assetDef.getAssetId());
-   %targetModule = AssetBrowser.getModuleFromAddress(%destination);
+   %targetModule = AssetBrowser.dirHandler.getModuleFromAddress(%destination);
    
    %newAssetPath = moveAssetFile(%assetDef, %destination);
    

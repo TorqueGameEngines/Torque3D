@@ -65,8 +65,6 @@ ConsoleSetType(TypeGUIAssetPtr)
    if (argc == 1)
    {
       // Yes, so fetch field value.
-      const char* pFieldValue = argv[0];
-
       *((const char**)dptr) = StringTable->insert(argv[0]);
 
       return;
@@ -104,7 +102,7 @@ void GUIAsset::initPersistFields()
       &setScriptFile, &getScriptFile, "Path to the script file for the gui");
 
    addProtectedField("GUIFile", TypeAssetLooseFilePath, Offset(mGUIFile, GUIAsset),
-      &setScriptFile, &getScriptFile, "Path to the gui file");
+      &setGUIFile, &getGUIFile, "Path to the gui file");
 }
 
 //------------------------------------------------------------------------------
@@ -117,28 +115,28 @@ void GUIAsset::copyTo(SimObject* object)
 
 void GUIAsset::initializeAsset()
 {
-   mGUIPath = getOwned() ? expandAssetFilePath(mGUIFile) : mGUIPath;
-
-   if (Torque::FS::IsScriptFile(mGUIPath))
-      Con::executeFile(mGUIPath, false, false);
-
    mScriptPath = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptPath;
 
    if (Torque::FS::IsScriptFile(mScriptPath))
       Con::executeFile(mScriptPath, false, false);
+
+   mGUIPath = getOwned() ? expandAssetFilePath(mGUIFile) : mGUIPath;
+
+   if (Torque::FS::IsScriptFile(mGUIPath))
+      Con::executeFile(mGUIPath, false, false);
 }
 
 void GUIAsset::onAssetRefresh()
 {
-   mGUIPath = getOwned() ? expandAssetFilePath(mGUIFile) : mGUIPath;
-
-   if (Torque::FS::IsScriptFile(mGUIPath))
-      Con::executeFile(mGUIPath, false, false);
-
    mScriptPath = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptPath;
 
    if (Torque::FS::IsScriptFile(mScriptPath))
       Con::executeFile(mScriptPath, false, false);
+
+   mGUIPath = getOwned() ? expandAssetFilePath(mGUIFile) : mGUIPath;
+
+   if (Torque::FS::IsScriptFile(mGUIPath))
+      Con::executeFile(mGUIPath, false, false);
 }
 
 void GUIAsset::setGUIFile(const char* pScriptFile)
@@ -228,6 +226,13 @@ DefineEngineMethod(GUIAsset, getScriptPath, const char*, (), ,
 {
    return object->getScriptPath();
 }
+
+DefineEngineMethod(GUIAsset, getGUIPath, const char*, (), ,
+   "Gets the GUI file path associated to this asset.\n"
+   "@return The full script file path.")
+{
+   return object->getGUIPath();
+}
 #endif
 
 //-----------------------------------------------------------------------------
@@ -259,7 +264,7 @@ GuiControl* GuiInspectorTypeGUIAssetPtr::constructEditControl()
    // Change filespec
    char szBuffer[512];
    dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"GUIAsset\", \"AssetBrowser.changeAsset\", %d, %s);",
-      mInspector->getComponentGroupTargetId(), mCaption);
+      mInspector->getIdString(), mCaption);
    mBrowseButton->setField("Command", szBuffer);
 
    // Create "Open in ShapeEditor" button

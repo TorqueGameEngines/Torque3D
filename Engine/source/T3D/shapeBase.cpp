@@ -197,8 +197,8 @@ ShapeBaseData::ShapeBaseData()
    renderWhenDestroyed( true ),
    inheritEnergyFromMount( false )
 {
-   INIT_SHAPEASSET(Shape);
-   INIT_SHAPEASSET(DebrisShape);
+   INIT_ASSET(Shape);
+   INIT_ASSET(DebrisShape);
 
    dMemset( mountPointNode, -1, sizeof( S32 ) * SceneObject::NumMountPoints );
    remap_txr_tags = NULL;
@@ -214,13 +214,13 @@ ShapeBaseData::ShapeBaseData(const ShapeBaseData& other, bool temp_clone) : Game
    shadowProjectionDistance = other.shadowProjectionDistance;
    shadowSphereAdjust = other.shadowSphereAdjust;
    cloakTexName = other.cloakTexName;
-   CLONE_SHAPEASSET(Shape);
+   CLONE_ASSET(Shape);
    cubeDescName = other.cubeDescName;
    cubeDescId = other.cubeDescId;
    reflectorDesc = other.reflectorDesc;
    debris = other.debris;
    debrisID = other.debrisID; // -- for pack/unpack of debris ptr
-   CLONE_SHAPEASSET(DebrisShape);
+   CLONE_ASSET(DebrisShape);
    explosion = other.explosion;
    explosionID = other.explosionID; // -- for pack/unpack of explosion ptr
    underwaterExplosion = other.underwaterExplosion;
@@ -757,8 +757,8 @@ void ShapeBaseData::packData(BitStream* stream)
    stream->write(shadowProjectionDistance);
    stream->write(shadowSphereAdjust);
 
-   PACKDATA_SHAPEASSET(Shape);
-   PACKDATA_SHAPEASSET(DebrisShape);
+   PACKDATA_ASSET(Shape);
+   PACKDATA_ASSET(DebrisShape);
 
    stream->writeString(cloakTexName);
    if(stream->writeFlag(mass != gShapeBaseDataProto.mass))
@@ -835,8 +835,8 @@ void ShapeBaseData::unpackData(BitStream* stream)
    stream->read(&shadowProjectionDistance);
    stream->read(&shadowSphereAdjust);
 
-   UNPACKDATA_SHAPEASSET(Shape);
-   UNPACKDATA_SHAPEASSET(DebrisShape);
+   UNPACKDATA_ASSET(Shape);
+   UNPACKDATA_ASSET(DebrisShape);
 
    cloakTexName = stream->readSTString();
    if(stream->readFlag())
@@ -1009,7 +1009,7 @@ ShapeBase::ShapeBase()
 
    for (i = 0; i < MaxSoundThreads; i++) {
       mSoundThread[i].play = false;
-      mSoundThread[i].profile = 0;
+      mSoundThread[i].asset = 0;
       mSoundThread[i].sound = 0;
    }
 
@@ -2233,16 +2233,22 @@ void ShapeBase::applyImpulse(const Point3F&,const VectorF&)
 
 //----------------------------------------------------------------------------
 
-void ShapeBase::playAudio(U32 slot,SFXTrack* profile)
+void ShapeBase::playAudio(U32 slot, StringTableEntry assetId)
 {
    AssertFatal( slot < MaxSoundThreads, "ShapeBase::playAudio() bad slot index" );
-   Sound& st = mSoundThread[slot];
-   if( profile && ( !st.play || st.profile != profile ) ) 
+   if (AssetDatabase.isDeclaredAsset(assetId))
+   {
+      AssetPtr<SoundAsset> tempSoundAsset;
+      tempSoundAsset = assetId;
+
+      SoundThread& st = mSoundThread[slot];
+      if (tempSoundAsset && (!st.play || st.asset != tempSoundAsset))
    {
       setMaskBits(SoundMaskN << slot);
       st.play = true;
-      st.profile = profile;
+         st.asset = tempSoundAsset;
       updateAudioState(st);
+   }
    }
 }
 
@@ -2250,7 +2256,7 @@ void ShapeBase::stopAudio(U32 slot)
 {
    AssertFatal( slot < MaxSoundThreads, "ShapeBase::stopAudio() bad slot index" );
 
-   Sound& st = mSoundThread[slot];
+   SoundThread& st = mSoundThread[slot];
    if ( st.play ) 
    {
       st.play = false;
@@ -2263,7 +2269,7 @@ void ShapeBase::updateServerAudio()
 {
    // Timeout non-looping sounds
    for (S32 i = 0; i < MaxSoundThreads; i++) {
-      Sound& st = mSoundThread[i];
+      SoundThread& st = mSoundThread[i];
       if (st.play && st.timeout && st.timeout < Sim::getCurrentTime()) {
          clearMaskBits(SoundMaskN << i);
          st.play = false;
@@ -2271,17 +2277,18 @@ void ShapeBase::updateServerAudio()
    }
 }
 
-void ShapeBase::updateAudioState(Sound& st)
+void ShapeBase::updateAudioState(SoundThread& st)
 {
    SFX_DELETE( st.sound );
 
-   if ( st.play && st.profile ) 
+   if ( st.play && st.asset ) 
    {
       if ( isGhost() ) 
       {
-         if ( Sim::findObject( SimObjectId((uintptr_t)st.profile), st.profile ) )
+         // if asset is valid, play
+         if (st.asset->isAssetValid() )
          {
-            st.sound = SFX->createSource( st.profile, &getTransform() );
+            st.sound = SFX->createSource( st.asset->getSfxProfile() , &getTransform() );
             if ( st.sound )
                st.sound->play();
          }
@@ -2292,12 +2299,17 @@ void ShapeBase::updateAudioState(Sound& st)
       {
          // Non-looping sounds timeout on the server
          st.timeout = 0;
-         if ( !st.profile->getDescription()->mIsLooping )
+         if ( !st.asset->getSfxDescription()->mIsLooping )
             st.timeout = Sim::getCurrentTime() + sAudioTimeout;
       }
    }
    else
+   {
+      // st.sound was not stopped before. If this causes issues remove.
       st.play = false;
+      if (st.sound)
+         st.sound->stop();
+   }
 }
 
 void ShapeBase::updateAudioPos()
@@ -3122,12 +3134,14 @@ U32 ShapeBase::packUpdate(NetConnection *con, U32 mask, BitStream *stream)
 
    if (stream->writeFlag(mask & SoundMask)) {
       for (S32 i = 0; i < MaxSoundThreads; i++) {
-         Sound& st = mSoundThread[i];
+         SoundThread& st = mSoundThread[i];
          if (stream->writeFlag(mask & (SoundMaskN << i)))
             if (stream->writeFlag(st.play))
-               stream->writeRangedU32(st.profile->getId(),DataBlockObjectIdFirst,
-                                      DataBlockObjectIdLast);
+            {
+               NetStringHandle assetIdStr = st.asset->getAssetId();
+               con->packNetStringHandleU(stream, assetIdStr);
       }
+   }
    }
 
    if (stream->writeFlag(mask & ImageMask)) {
@@ -3242,12 +3256,18 @@ void ShapeBase::unpackUpdate(NetConnection *con, BitStream *stream)
       {
          if ( stream->readFlag() ) 
          {
-            Sound& st = mSoundThread[i];
+            SoundThread& st = mSoundThread[i];
             st.play = stream->readFlag();
             if ( st.play ) 
             {
-               st.profile = (SFXTrack*)(uintptr_t)stream->readRangedU32(  DataBlockObjectIdFirst,
-                                                                DataBlockObjectIdLast );
+               StringTableEntry temp = StringTable->insert(con->unpackNetStringHandleU(stream).getString());
+               if (AssetDatabase.isDeclaredAsset(temp))
+               {
+                  AssetPtr<SoundAsset> tempSoundAsset;
+                  tempSoundAsset = temp;
+
+                  st.asset = temp;
+               }
             }
 
             if ( isProperlyAdded() )
@@ -3777,7 +3797,7 @@ DefineEngineMethod( ShapeBase, isHidden, bool, (),,
 }
 
 //----------------------------------------------------------------------------
-DefineEngineMethod( ShapeBase, playAudio, bool, ( S32 slot, SFXTrack* track ),,
+DefineEngineMethod( ShapeBase, playAudio, bool, ( S32 slot, StringTableEntry assetId),,
    "@brief Attach a sound to this shape and start playing it.\n\n"
 
    "@param slot Audio slot index for the sound (valid range is 0 - 3)\n" // 3 = ShapeBase::MaxSoundThreads-1
@@ -3786,8 +3806,8 @@ DefineEngineMethod( ShapeBase, playAudio, bool, ( S32 slot, SFXTrack* track ),,
    
    "@see stopAudio()\n")
 {
-   if (track && slot >= 0 && slot < ShapeBase::MaxSoundThreads) {
-      object->playAudio(slot,track);
+   if (assetId && slot >= 0 && slot < ShapeBase::MaxSoundThreads) {
+      object->playAudio(slot, assetId);
       return true;
    }
    return false;

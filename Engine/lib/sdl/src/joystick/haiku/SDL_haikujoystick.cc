@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -64,15 +64,15 @@ extern "C"
         char name[B_OS_NAME_LENGTH];
 
         /* Search for attached joysticks */
-          nports = joystick.CountDevices();
-          numjoysticks = 0;
-          SDL_memset(SDL_joyport, 0, (sizeof SDL_joyport));
-          SDL_memset(SDL_joyname, 0, (sizeof SDL_joyname));
+        nports = joystick.CountDevices();
+        numjoysticks = 0;
+        SDL_memset(SDL_joyport, 0, (sizeof SDL_joyport));
+        SDL_memset(SDL_joyname, 0, (sizeof SDL_joyname));
         for (i = 0; (numjoysticks < MAX_JOYSTICKS) && (i < nports); ++i)
         {
             if (joystick.GetDeviceName(i, name) == B_OK) {
                 if (joystick.Open(name) != B_ERROR) {
-                    BString stick_name;
+                      BString stick_name;
                       joystick.GetControllerName(&stick_name);
                       SDL_joyport[numjoysticks] = SDL_strdup(name);
                       SDL_joyname[numjoysticks] = SDL_CreateJoystickName(0, 0, NULL, stick_name.String());
@@ -93,10 +93,14 @@ extern "C"
     {
     }
 
-/* Function to get the device-dependent name of a joystick */
     static const char *HAIKU_JoystickGetDeviceName(int device_index)
     {
         return SDL_joyname[device_index];
+    }
+
+    static const char *HAIKU_JoystickGetDevicePath(int device_index)
+    {
+        return SDL_joyport[device_index];
     }
 
     static int HAIKU_JoystickGetDevicePlayerIndex(int device_index)
@@ -271,12 +275,18 @@ extern "C"
         return SDL_FALSE;
     }
 
-    static SDL_bool HAIKU_JoystickHasLED(SDL_Joystick *joystick)
+    static Uint32 HAIKU_JoystickGetCapabilities(SDL_Joystick *joystick)
     {
-        return SDL_FALSE;
+        return 0;
     }
 
     static int HAIKU_JoystickSetLED(SDL_Joystick *joystick, Uint8 red, Uint8 green, Uint8 blue)
+    {
+        return SDL_Unsupported();
+    }
+
+
+    static int HAIKU_JoystickSendEffect(SDL_Joystick *joystick, const void *data, int size)
     {
         return SDL_Unsupported();
     }
@@ -292,6 +302,7 @@ extern "C"
         HAIKU_JoystickGetCount,
         HAIKU_JoystickDetect,
         HAIKU_JoystickGetDeviceName,
+        HAIKU_JoystickGetDevicePath,
         HAIKU_JoystickGetDevicePlayerIndex,
         HAIKU_JoystickSetDevicePlayerIndex,
         HAIKU_JoystickGetDeviceGUID,
@@ -299,8 +310,9 @@ extern "C"
         HAIKU_JoystickOpen,
         HAIKU_JoystickRumble,
         HAIKU_JoystickRumbleTriggers,
-        HAIKU_JoystickHasLED,
+        HAIKU_JoystickGetCapabilities,
         HAIKU_JoystickSetLED,
+        HAIKU_JoystickSendEffect,
         HAIKU_JoystickSetSensorsEnabled,
         HAIKU_JoystickUpdate,
         HAIKU_JoystickClose,

@@ -1,6 +1,0 @@
-<GUIAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    scriptFile="@assetFile=guiObjectInspector.ed.gui"
-    GUIFile="@assetFile=guiObjectInspector.ed.gui"
-    VersionId="1" />

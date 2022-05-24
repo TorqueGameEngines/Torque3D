@@ -33,7 +33,7 @@ function VerveEditorPropertyStack::CreatePropertyRollout( %this, %groupLabel )
     %propertyStack = new GuiStackControl()
     {
         Class       = "VEditorPropertyStack";
-        Profile     = "GuiTransparentProfile";
+        Profile     = "ToolsGuiTransparentProfile";
         
         HorizSizing = "width";
         VertSizing  = "bottom";
@@ -123,7 +123,7 @@ function VerveEditor::CreateField( %targetStack, %fieldName, %fieldType )
     if ( isMethod( "VerveEditor", "Create" @ %fieldType @ "Field" ) )
     {
         // Create the Input Control.
-        %fieldInput = eval( "return VerveEditor::Create" @ %fieldType @ "Field( %fieldContainer, %fieldName );" );
+        %fieldInput = eval( "return VerveEditor::Create" @ %fieldType @ "Field(" @ %fieldContainer @ "," @ %fieldName @ ");" );
     }
     else
     {

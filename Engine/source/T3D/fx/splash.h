@@ -34,6 +34,7 @@
 #include "gfx/gfxTextureHandle.h"
 
 #include "T3D/assets/ImageAsset.h"
+#include "T3D/assets/SoundAsset.h"
 
 class ParticleEmitter;
 class ParticleEmitterData;
@@ -91,8 +92,11 @@ class SplashData : public GameBaseData
    };
 
 public:
-   AudioProfile*           soundProfile;
-   S32                     soundProfileId;
+   //AudioProfile*           soundProfile;
+   //S32                     soundProfileId;
+
+   DECLARE_SOUNDASSET(SplashData, Sound);
+   DECLARE_ASSET_SETGET(SplashData, Sound);
 
    ParticleEmitterData*    emitterList[NUM_EMITTERS];
    S32                     emitterIDList[NUM_EMITTERS];
@@ -118,7 +122,7 @@ public:
    F32               times[ NUM_TIME_KEYS ];
    LinearColorF            colors[ NUM_TIME_KEYS ];
 
-   DECLARE_IMAGEASSET_ARRAY(SplashData, Texture, GFXStaticTextureSRGBProfile, NUM_TEX);
+   DECLARE_IMAGEASSET_ARRAY(SplashData, Texture, NUM_TEX);
    DECLARE_IMAGEASSET_ARRAY_SETGET(SplashData, Texture)
 
    ExplosionData*    explosion;

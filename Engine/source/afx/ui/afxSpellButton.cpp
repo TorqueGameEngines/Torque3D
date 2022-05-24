@@ -221,7 +221,7 @@ void afxSpellButton::onRender(Point2I offset, const RectI& updateRect)
 
   if (mActive)
   {
-    if (mMouseOver) state = HILIGHT;
+    if (mHighlighted) state = HILIGHT;
     if (mDepressed || mStateOn) state = DEPRESSED;
   }
   else

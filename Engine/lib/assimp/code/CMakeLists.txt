@@ -1,7 +1,7 @@
 # Open Asset Import Library (assimp)
 # ----------------------------------------------------------------------
 #
-# Copyright (c) 2006-2020, assimp team
+# Copyright (c) 2006-2022, assimp team
 #
 # All rights reserved.
 #
@@ -43,7 +43,7 @@
 # 3) Add libassimp using the file lists (eliminates duplication of file names between
 #    source groups and library command)
 #
-cmake_minimum_required( VERSION 3.0 )
+cmake_minimum_required( VERSION 3.10 )
 SET( HEADER_PATH ../include/assimp )
 
 if(NOT ANDROID AND ASSIMP_ANDROID_JNIIOSYSTEM)
@@ -66,9 +66,9 @@ SET( PUBLIC_HEADERS
   ${HEADER_PATH}/color4.h
   ${HEADER_PATH}/color4.inl
   ${CMAKE_CURRENT_BINARY_DIR}/../include/assimp/config.h
+  ${HEADER_PATH}/ColladaMetaData.h
   ${HEADER_PATH}/commonMetaData.h
   ${HEADER_PATH}/defs.h
-  ${HEADER_PATH}/Defines.h
   ${HEADER_PATH}/cfileio.h
   ${HEADER_PATH}/light.h
   ${HEADER_PATH}/material.h
@@ -78,7 +78,9 @@ SET( PUBLIC_HEADERS
   ${HEADER_PATH}/matrix4x4.h
   ${HEADER_PATH}/matrix4x4.inl
   ${HEADER_PATH}/mesh.h
+  ${HEADER_PATH}/ObjMaterial.h
   ${HEADER_PATH}/pbrmaterial.h
+  ${HEADER_PATH}/GltfMaterial.h
   ${HEADER_PATH}/postprocess.h
   ${HEADER_PATH}/quaternion.h
   ${HEADER_PATH}/quaternion.inl
@@ -121,6 +123,7 @@ SET( PUBLIC_HEADERS
   ${HEADER_PATH}/GenericProperty.h
   ${HEADER_PATH}/SpatialSort.h
   ${HEADER_PATH}/SkeletonMeshBuilder.h
+  ${HEADER_PATH}/SmallVector.h
   ${HEADER_PATH}/SmoothingGroups.h
   ${HEADER_PATH}/SmoothingGroups.inl
   ${HEADER_PATH}/StandardShapes.h
@@ -135,11 +138,12 @@ SET( PUBLIC_HEADERS
   ${HEADER_PATH}/XMLTools.h
   ${HEADER_PATH}/IOStreamBuffer.h
   ${HEADER_PATH}/CreateAnimMesh.h
-  ${HEADER_PATH}/irrXMLWrapper.h
+  ${HEADER_PATH}/XmlParser.h
   ${HEADER_PATH}/BlobIOSystem.h
   ${HEADER_PATH}/MathFunctions.h
   ${HEADER_PATH}/Exceptional.h
   ${HEADER_PATH}/ByteSwapper.h
+  ${HEADER_PATH}/Base64.hpp
 )
 
 SET( Core_SRCS
@@ -163,6 +167,8 @@ SET( Logging_SRCS
 SOURCE_GROUP(Logging FILES ${Logging_SRCS})
 
 SET( Common_SRCS
+  Common/Compression.cpp
+  Common/Compression.h
   Common/BaseImporter.cpp
   Common/BaseProcess.cpp
   Common/BaseProcess.h
@@ -172,6 +178,7 @@ SET( Common_SRCS
   Common/ImporterRegistry.cpp
   Common/DefaultProgressHandler.h
   Common/DefaultIOStream.cpp
+  Common/IOSystem.cpp
   Common/DefaultIOSystem.cpp
   Common/ZipArchiveIOSystem.cpp
   Common/PolyTools.h
@@ -197,6 +204,9 @@ SET( Common_SRCS
   Common/simd.h
   Common/simd.cpp
   Common/material.cpp
+  Common/AssertHandler.cpp
+  Common/Exceptional.cpp
+  Common/Base64.cpp
 )
 SOURCE_GROUP(Common FILES ${Common_SRCS})
 
@@ -207,17 +217,17 @@ SET( CApi_SRCS
 SOURCE_GROUP(CApi FILES ${CApi_SRCS})
 
 SET( STEPParser_SRCS
-  Importer/STEPParser/STEPFileReader.h
-  Importer/STEPParser/STEPFileReader.cpp
-  Importer/STEPParser/STEPFileEncoding.cpp
-  Importer/STEPParser/STEPFileEncoding.h
+  AssetLib/STEPParser/STEPFileReader.h
+  AssetLib/STEPParser/STEPFileReader.cpp
+  AssetLib/STEPParser/STEPFileEncoding.cpp
+  AssetLib/STEPParser/STEPFileEncoding.h
 )
 SOURCE_GROUP(STEPParser FILES ${STEPParser_SRCS})
 
 IF ( ASSIMP_BUILD_NONFREE_C4D_IMPORTER )
   SET( C4D_SRCS
-    C4D/C4DImporter.cpp
-    C4D/C4DImporter.h
+    AssetLib/C4D/C4DImporter.cpp
+    AssetLib/C4D/C4DImporter.h
   )
   SOURCE_GROUP( C4D FILES ${C4D_SRCS})
 ENDIF ()
@@ -242,7 +252,7 @@ MACRO(ADD_ASSIMP_IMPORTER name)
   IF (ASSIMP_IMPORTER_ENABLED)
     LIST(APPEND ASSIMP_LOADER_SRCS ${ARGN})
     SET(ASSIMP_IMPORTERS_ENABLED "${ASSIMP_IMPORTERS_ENABLED} ${name}")
-    SOURCE_GROUP(${name} FILES ${ARGN})
+    SOURCE_GROUP(AssetLib\\${name} FILES ${ARGN})
   ELSE()
     SET(${name}_SRC "")
     SET(ASSIMP_IMPORTERS_DISABLED "${ASSIMP_IMPORTERS_DISABLED} ${name}")
@@ -275,7 +285,7 @@ if (NOT ASSIMP_NO_EXPORT)
     IF (ASSIMP_EXPORTER_ENABLED)
       SET(ASSIMP_EXPORTERS_ENABLED "${ASSIMP_EXPORTERS_ENABLED} ${name}")
       LIST(APPEND ASSIMP_EXPORTER_SRCS ${ARGN})
-      SOURCE_GROUP(${name}_EXPORTER FILES ${ARGN})
+      SOURCE_GROUP(AssetLib\\${name} FILES ${ARGN})
     ELSE()
       SET(ASSIMP_EXPORTERS_DISABLED "${ASSIMP_EXPORTERS_DISABLED} ${name}")
       add_definitions(-DASSIMP_BUILD_NO_${name}_EXPORTER)
@@ -293,157 +303,162 @@ SET(ASSIMP_EXPORTERS_ENABLED "") # list of enabled exporters
 SET(ASSIMP_EXPORTERS_DISABLED "") # disabled exporters list (used to print)
 
 ADD_ASSIMP_IMPORTER( AMF
-  AMF/AMFImporter.hpp
-  AMF/AMFImporter_Macro.hpp
-  AMF/AMFImporter_Node.hpp
-  AMF/AMFImporter.cpp
-  AMF/AMFImporter_Geometry.cpp
-  AMF/AMFImporter_Material.cpp
-  AMF/AMFImporter_Postprocess.cpp
+  AssetLib/AMF/AMFImporter.hpp
+  AssetLib/AMF/AMFImporter_Node.hpp
+  AssetLib/AMF/AMFImporter.cpp
+  AssetLib/AMF/AMFImporter_Geometry.cpp
+  AssetLib/AMF/AMFImporter_Material.cpp
+  AssetLib/AMF/AMFImporter_Postprocess.cpp
 )
 
 ADD_ASSIMP_IMPORTER( 3DS
-  3DS/3DSConverter.cpp
-  3DS/3DSHelper.h
-  3DS/3DSLoader.cpp
-  3DS/3DSLoader.h
+  AssetLib/3DS/3DSConverter.cpp
+  AssetLib/3DS/3DSHelper.h
+  AssetLib/3DS/3DSLoader.cpp
+  AssetLib/3DS/3DSLoader.h
 )
 
 ADD_ASSIMP_IMPORTER( AC
-  AC/ACLoader.cpp
-  AC/ACLoader.h
+  AssetLib/AC/ACLoader.cpp
+  AssetLib/AC/ACLoader.h
 )
 
 ADD_ASSIMP_IMPORTER( ASE
-  ASE/ASELoader.cpp
-  ASE/ASELoader.h
-  ASE/ASEParser.cpp
-  ASE/ASEParser.h
+  AssetLib/ASE/ASELoader.cpp
+  AssetLib/ASE/ASELoader.h
+  AssetLib/ASE/ASEParser.cpp
+  AssetLib/ASE/ASEParser.h
 )
 
 ADD_ASSIMP_IMPORTER( ASSBIN
-  Assbin/AssbinLoader.h
-  Assbin/AssbinLoader.cpp
+  AssetLib/Assbin/AssbinLoader.h
+  AssetLib/Assbin/AssbinLoader.cpp
 )
 
 ADD_ASSIMP_IMPORTER( B3D
-  B3D/B3DImporter.cpp
-  B3D/B3DImporter.h
+  AssetLib/B3D/B3DImporter.cpp
+  AssetLib/B3D/B3DImporter.h
 )
 
 ADD_ASSIMP_IMPORTER( BVH
-  BVH/BVHLoader.cpp
-  BVH/BVHLoader.h
+  AssetLib/BVH/BVHLoader.cpp
+  AssetLib/BVH/BVHLoader.h
 )
 
 ADD_ASSIMP_IMPORTER( COLLADA
-  Collada/ColladaHelper.cpp
-  Collada/ColladaHelper.h
-  Collada/ColladaLoader.cpp
-  Collada/ColladaLoader.h
-  Collada/ColladaParser.cpp
-  Collada/ColladaParser.h
+  AssetLib/Collada/ColladaHelper.cpp
+  AssetLib/Collada/ColladaHelper.h
+  AssetLib/Collada/ColladaLoader.cpp
+  AssetLib/Collada/ColladaLoader.h
+  AssetLib/Collada/ColladaParser.cpp
+  AssetLib/Collada/ColladaParser.h
 )
 
 ADD_ASSIMP_IMPORTER( DXF
-  DXF/DXFLoader.cpp
-  DXF/DXFLoader.h
-  DXF/DXFHelper.h
+  AssetLib/DXF/DXFLoader.cpp
+  AssetLib/DXF/DXFLoader.h
+  AssetLib/DXF/DXFHelper.h
 )
 
 ADD_ASSIMP_IMPORTER( CSM
-  CSM/CSMLoader.cpp
-  CSM/CSMLoader.h
+  AssetLib/CSM/CSMLoader.cpp
+  AssetLib/CSM/CSMLoader.h
 )
 
 ADD_ASSIMP_IMPORTER( HMP
-  HMP/HMPFileData.h
-  HMP/HMPLoader.cpp
-  HMP/HMPLoader.h
-  HMP/HalfLifeFileData.h
+  AssetLib/HMP/HMPFileData.h
+  AssetLib/HMP/HMPLoader.cpp
+  AssetLib/HMP/HMPLoader.h
+  AssetLib/HMP/HalfLifeFileData.h
 )
 
 ADD_ASSIMP_IMPORTER( IRRMESH
-  Irr/IRRMeshLoader.cpp
-  Irr/IRRMeshLoader.h
-  Irr/IRRShared.cpp
-  Irr/IRRShared.h
+  AssetLib/Irr/IRRMeshLoader.cpp
+  AssetLib/Irr/IRRMeshLoader.h
+  AssetLib/Irr/IRRShared.cpp
+  AssetLib/Irr/IRRShared.h
+)
+
+ADD_ASSIMP_IMPORTER( IQM
+  AssetLib/IQM/IQMImporter.cpp
+  AssetLib/IQM/iqm.h
+  AssetLib/IQM/IQMImporter.h
 )
 
 ADD_ASSIMP_IMPORTER( IRR
-  Irr/IRRLoader.cpp
-  Irr/IRRLoader.h
-  Irr/IRRShared.cpp
-  Irr/IRRShared.h
+  AssetLib/Irr/IRRLoader.cpp
+  AssetLib/Irr/IRRLoader.h
+  AssetLib/Irr/IRRShared.cpp
+  AssetLib/Irr/IRRShared.h
 )
 
 ADD_ASSIMP_IMPORTER( LWO
-  LWO/LWOAnimation.cpp
-  LWO/LWOAnimation.h
-  LWO/LWOBLoader.cpp
-  LWO/LWOFileData.h
-  LWO/LWOLoader.cpp
-  LWO/LWOLoader.h
-  LWO/LWOMaterial.cpp
+  AssetLib/LWO/LWOAnimation.cpp
+  AssetLib/LWO/LWOAnimation.h
+  AssetLib/LWO/LWOBLoader.cpp
+  AssetLib/LWO/LWOFileData.h
+  AssetLib/LWO/LWOLoader.cpp
+  AssetLib/LWO/LWOLoader.h
+  AssetLib/LWO/LWOMaterial.cpp
 )
 
 ADD_ASSIMP_IMPORTER( LWS
-  LWS/LWSLoader.cpp
-  LWS/LWSLoader.h
+  AssetLib/LWS/LWSLoader.cpp
+  AssetLib/LWS/LWSLoader.h
 )
 
 ADD_ASSIMP_IMPORTER( M3D
-  M3D/M3DMaterials.h
-  M3D/M3DImporter.h
-  M3D/M3DImporter.cpp
-  M3D/M3DWrapper.h
-  M3D/M3DWrapper.cpp
-  M3D/m3d.h
+  AssetLib/M3D/M3DMaterials.h
+  AssetLib/M3D/M3DImporter.h
+  AssetLib/M3D/M3DImporter.cpp
+  AssetLib/M3D/M3DWrapper.h
+  AssetLib/M3D/M3DWrapper.cpp
+  AssetLib/M3D/m3d.h
 )
 
 ADD_ASSIMP_IMPORTER( MD2
-  MD2/MD2FileData.h
-  MD2/MD2Loader.cpp
-  MD2/MD2Loader.h
-  MD2/MD2NormalTable.h
+  AssetLib/MD2/MD2FileData.h
+  AssetLib/MD2/MD2Loader.cpp
+  AssetLib/MD2/MD2Loader.h
+  AssetLib/MD2/MD2NormalTable.h
 )
 
 ADD_ASSIMP_IMPORTER( MD3
-  MD3/MD3FileData.h
-  MD3/MD3Loader.cpp
-  MD3/MD3Loader.h
+  AssetLib/MD3/MD3FileData.h
+  AssetLib/MD3/MD3Loader.cpp
+  AssetLib/MD3/MD3Loader.h
 )
 
 ADD_ASSIMP_IMPORTER( MD5
-  MD5/MD5Loader.cpp
-  MD5/MD5Loader.h
-  MD5/MD5Parser.cpp
-  MD5/MD5Parser.h
+  AssetLib/MD5/MD5Loader.cpp
+  AssetLib/MD5/MD5Loader.h
+  AssetLib/MD5/MD5Parser.cpp
+  AssetLib/MD5/MD5Parser.h
 )
 
 ADD_ASSIMP_IMPORTER( MDC
-  MDC/MDCFileData.h
-  MDC/MDCLoader.cpp
-  MDC/MDCLoader.h
-  MDC/MDCNormalTable.h
+  AssetLib/MDC/MDCFileData.h
+  AssetLib/MDC/MDCLoader.cpp
+  AssetLib/MDC/MDCLoader.h
+  AssetLib/MDC/MDCNormalTable.h
 )
 
 ADD_ASSIMP_IMPORTER( MDL
-  MDL/MDLDefaultColorMap.h
-  MDL/MDLFileData.h
-  MDL/MDLLoader.cpp
-  MDL/MDLLoader.h
-  MDL/MDLMaterialLoader.cpp
-  MDL/HalfLife/HalfLifeMDLBaseHeader.h
-  MDL/HalfLife/HL1FileData.h
-  MDL/HalfLife/HL1MDLLoader.cpp
-  MDL/HalfLife/HL1MDLLoader.h
-  MDL/HalfLife/HL1ImportDefinitions.h
-  MDL/HalfLife/HL1ImportSettings.h
-  MDL/HalfLife/HL1MeshTrivert.h
-  MDL/HalfLife/LogFunctions.h
-  MDL/HalfLife/UniqueNameGenerator.cpp
-  MDL/HalfLife/UniqueNameGenerator.h
+  AssetLib/MDL/MDLDefaultColorMap.h
+  AssetLib/MDL/MDLFileData.h
+  AssetLib/MDL/MDLLoader.cpp
+  AssetLib/MDL/MDLLoader.h
+  AssetLib/MDL/MDLMaterialLoader.cpp
+  AssetLib/MDL/HalfLife/HalfLifeMDLBaseHeader.h
+  AssetLib/MDL/HalfLife/HL1FileData.h
+  AssetLib/MDL/HalfLife/HL1MDLLoader.cpp
+  AssetLib/MDL/HalfLife/HL1MDLLoader.h
+  AssetLib/MDL/HalfLife/HL1ImportDefinitions.h
+  AssetLib/MDL/HalfLife/HL1ImportSettings.h
+  AssetLib/MDL/HalfLife/HL1MeshTrivert.h
+  AssetLib/MDL/HalfLife/LogFunctions.h
+  AssetLib/MDL/HalfLife/UniqueNameGenerator.cpp
+  AssetLib/MDL/HalfLife/UniqueNameGenerator.h
 )
 
 SET( MaterialSystem_SRCS
@@ -453,224 +468,228 @@ SET( MaterialSystem_SRCS
 SOURCE_GROUP( MaterialSystem FILES ${MaterialSystem_SRCS})
 
 ADD_ASSIMP_IMPORTER( NFF
-  NFF/NFFLoader.cpp
-  NFF/NFFLoader.h
+  AssetLib/NFF/NFFLoader.cpp
+  AssetLib/NFF/NFFLoader.h
 )
 
 ADD_ASSIMP_IMPORTER( NDO
-  NDO/NDOLoader.cpp
-  NDO/NDOLoader.h
+  AssetLib/NDO/NDOLoader.cpp
+  AssetLib/NDO/NDOLoader.h
 )
 
 ADD_ASSIMP_IMPORTER( OFF
-  OFF/OFFLoader.cpp
-  OFF/OFFLoader.h
+  AssetLib/OFF/OFFLoader.cpp
+  AssetLib/OFF/OFFLoader.h
 )
 
 ADD_ASSIMP_IMPORTER( OBJ
-  Obj/ObjFileData.h
-  Obj/ObjFileImporter.cpp
-  Obj/ObjFileImporter.h
-  Obj/ObjFileMtlImporter.cpp
-  Obj/ObjFileMtlImporter.h
-  Obj/ObjFileParser.cpp
-  Obj/ObjFileParser.h
-  Obj/ObjTools.h
+  AssetLib/Obj/ObjFileData.h
+  AssetLib/Obj/ObjFileImporter.cpp
+  AssetLib/Obj/ObjFileImporter.h
+  AssetLib/Obj/ObjFileMtlImporter.cpp
+  AssetLib/Obj/ObjFileMtlImporter.h
+  AssetLib/Obj/ObjFileParser.cpp
+  AssetLib/Obj/ObjFileParser.h
+  AssetLib/Obj/ObjTools.h
 )
 
 ADD_ASSIMP_IMPORTER( OGRE
-  Ogre/OgreImporter.h
-  Ogre/OgreStructs.h
-  Ogre/OgreParsingUtils.h
-  Ogre/OgreBinarySerializer.h
-  Ogre/OgreXmlSerializer.h
-  Ogre/OgreImporter.cpp
-  Ogre/OgreStructs.cpp
-  Ogre/OgreBinarySerializer.cpp
-  Ogre/OgreXmlSerializer.cpp
-  Ogre/OgreMaterial.cpp
+  AssetLib/Ogre/OgreImporter.h
+  AssetLib/Ogre/OgreStructs.h
+  AssetLib/Ogre/OgreParsingUtils.h
+  AssetLib/Ogre/OgreBinarySerializer.h
+  AssetLib/Ogre/OgreXmlSerializer.h
+  AssetLib/Ogre/OgreImporter.cpp
+  AssetLib/Ogre/OgreStructs.cpp
+  AssetLib/Ogre/OgreBinarySerializer.cpp
+  AssetLib/Ogre/OgreXmlSerializer.cpp
+  AssetLib/Ogre/OgreMaterial.cpp
 )
 
 ADD_ASSIMP_IMPORTER( OPENGEX
-  OpenGEX/OpenGEXImporter.cpp
-  OpenGEX/OpenGEXImporter.h
-  OpenGEX/OpenGEXStructs.h
+  AssetLib/OpenGEX/OpenGEXImporter.cpp
+  AssetLib/OpenGEX/OpenGEXImporter.h
+  AssetLib/OpenGEX/OpenGEXStructs.h
 )
 
 ADD_ASSIMP_IMPORTER( PLY
-  Ply/PlyLoader.cpp
-  Ply/PlyLoader.h
-  Ply/PlyParser.cpp
-  Ply/PlyParser.h
+  AssetLib/Ply/PlyLoader.cpp
+  AssetLib/Ply/PlyLoader.h
+  AssetLib/Ply/PlyParser.cpp
+  AssetLib/Ply/PlyParser.h
 )
 
 ADD_ASSIMP_IMPORTER( MS3D
-  MS3D/MS3DLoader.cpp
-  MS3D/MS3DLoader.h
+  AssetLib/MS3D/MS3DLoader.cpp
+  AssetLib/MS3D/MS3DLoader.h
 )
 
 ADD_ASSIMP_IMPORTER( COB
-  COB/COBLoader.cpp
-  COB/COBLoader.h
-  COB/COBScene.h
+  AssetLib/COB/COBLoader.cpp
+  AssetLib/COB/COBLoader.h
+  AssetLib/COB/COBScene.h
 )
 
 ADD_ASSIMP_IMPORTER( BLEND
-  Blender/BlenderLoader.cpp
-  Blender/BlenderLoader.h
-  Blender/BlenderDNA.cpp
-  Blender/BlenderDNA.h
-  Blender/BlenderDNA.inl
-  Blender/BlenderScene.cpp
-  Blender/BlenderScene.h
-  Blender/BlenderSceneGen.h
-  Blender/BlenderIntermediate.h
-  Blender/BlenderModifier.h
-  Blender/BlenderModifier.cpp
-  Blender/BlenderBMesh.h
-  Blender/BlenderBMesh.cpp
-  Blender/BlenderTessellator.h
-  Blender/BlenderTessellator.cpp
-  Blender/BlenderCustomData.h
-  Blender/BlenderCustomData.cpp
+  AssetLib/Blender/BlenderLoader.cpp
+  AssetLib/Blender/BlenderLoader.h
+  AssetLib/Blender/BlenderDNA.cpp
+  AssetLib/Blender/BlenderDNA.h
+  AssetLib/Blender/BlenderDNA.inl
+  AssetLib/Blender/BlenderScene.cpp
+  AssetLib/Blender/BlenderScene.h
+  AssetLib/Blender/BlenderSceneGen.h
+  AssetLib/Blender/BlenderIntermediate.h
+  AssetLib/Blender/BlenderModifier.h
+  AssetLib/Blender/BlenderModifier.cpp
+  AssetLib/Blender/BlenderBMesh.h
+  AssetLib/Blender/BlenderBMesh.cpp
+  AssetLib/Blender/BlenderTessellator.h
+  AssetLib/Blender/BlenderTessellator.cpp
+  AssetLib/Blender/BlenderCustomData.h
+  AssetLib/Blender/BlenderCustomData.cpp
 )
 
 ADD_ASSIMP_IMPORTER( IFC
-  Importer/IFC/IFCLoader.cpp
-  Importer/IFC/IFCLoader.h
-  Importer/IFC/IFCReaderGen1_2x3.cpp
-  Importer/IFC/IFCReaderGen2_2x3.cpp
-  Importer/IFC/IFCReaderGen_2x3.h
-  Importer/IFC/IFCUtil.h
-  Importer/IFC/IFCUtil.cpp
-  Importer/IFC/IFCGeometry.cpp
-  Importer/IFC/IFCMaterial.cpp
-  Importer/IFC/IFCProfile.cpp
-  Importer/IFC/IFCCurve.cpp
-  Importer/IFC/IFCBoolean.cpp
-  Importer/IFC/IFCOpenings.cpp
+  AssetLib/IFC/IFCLoader.cpp
+  AssetLib/IFC/IFCLoader.h
+  AssetLib/IFC/IFCReaderGen1_2x3.cpp
+  AssetLib/IFC/IFCReaderGen2_2x3.cpp
+  AssetLib/IFC/IFCReaderGen_2x3.h
+  AssetLib/IFC/IFCUtil.h
+  AssetLib/IFC/IFCUtil.cpp
+  AssetLib/IFC/IFCGeometry.cpp
+  AssetLib/IFC/IFCMaterial.cpp
+  AssetLib/IFC/IFCProfile.cpp
+  AssetLib/IFC/IFCCurve.cpp
+  AssetLib/IFC/IFCBoolean.cpp
+  AssetLib/IFC/IFCOpenings.cpp
 )
 
 if (ASSIMP_BUILD_IFC_IMPORTER)
   if (MSVC)
     set_source_files_properties(Importer/IFC/IFCReaderGen1_2x3.cpp Importer/IFC/IFCReaderGen2_2x3.cpp PROPERTIES COMPILE_FLAGS "/bigobj")
-  elseif(CMAKE_COMPILER_IS_MINGW)
+  elseif(MINGW)
     set_source_files_properties(Importer/IFC/IFCReaderGen1_2x3.cpp Importer/IFC/IFCReaderGen2_2x3.cpp PROPERTIES COMPILE_FLAGS "-O2 -Wa,-mbig-obj")
   endif()
 endif ()
 
 ADD_ASSIMP_IMPORTER( XGL
-  XGL/XGLLoader.cpp
-  XGL/XGLLoader.h
+  AssetLib/XGL/XGLLoader.cpp
+  AssetLib/XGL/XGLLoader.h
 )
 
 ADD_ASSIMP_IMPORTER( FBX
-  FBX/FBXImporter.cpp
-  FBX/FBXCompileConfig.h
-  FBX/FBXImporter.h
-  FBX/FBXParser.cpp
-  FBX/FBXParser.h
-  FBX/FBXTokenizer.cpp
-  FBX/FBXTokenizer.h
-  FBX/FBXImportSettings.h
-  FBX/FBXConverter.h
-  FBX/FBXConverter.cpp
-  FBX/FBXUtil.h
-  FBX/FBXUtil.cpp
-  FBX/FBXDocument.h
-  FBX/FBXDocument.cpp
-  FBX/FBXProperties.h
-  FBX/FBXProperties.cpp
-  FBX/FBXMeshGeometry.h
-  FBX/FBXMeshGeometry.cpp
-  FBX/FBXMaterial.cpp
-  FBX/FBXModel.cpp
-  FBX/FBXAnimation.cpp
-  FBX/FBXNodeAttribute.cpp
-  FBX/FBXDeformer.cpp
-  FBX/FBXBinaryTokenizer.cpp
-  FBX/FBXDocumentUtil.cpp
-  FBX/FBXCommon.h
+  AssetLib/FBX/FBXImporter.cpp
+  AssetLib/FBX/FBXCompileConfig.h
+  AssetLib/FBX/FBXImporter.h
+  AssetLib/FBX/FBXParser.cpp
+  AssetLib/FBX/FBXParser.h
+  AssetLib/FBX/FBXTokenizer.cpp
+  AssetLib/FBX/FBXTokenizer.h
+  AssetLib/FBX/FBXImportSettings.h
+  AssetLib/FBX/FBXConverter.h
+  AssetLib/FBX/FBXConverter.cpp
+  AssetLib/FBX/FBXUtil.h
+  AssetLib/FBX/FBXUtil.cpp
+  AssetLib/FBX/FBXDocument.h
+  AssetLib/FBX/FBXDocument.cpp
+  AssetLib/FBX/FBXProperties.h
+  AssetLib/FBX/FBXProperties.cpp
+  AssetLib/FBX/FBXMeshGeometry.h
+  AssetLib/FBX/FBXMeshGeometry.cpp
+  AssetLib/FBX/FBXMaterial.cpp
+  AssetLib/FBX/FBXModel.cpp
+  AssetLib/FBX/FBXAnimation.cpp
+  AssetLib/FBX/FBXNodeAttribute.cpp
+  AssetLib/FBX/FBXDeformer.cpp
+  AssetLib/FBX/FBXBinaryTokenizer.cpp
+  AssetLib/FBX/FBXDocumentUtil.cpp
+  AssetLib/FBX/FBXCommon.h
 )
 
 if (NOT ASSIMP_NO_EXPORT)
 
   ADD_ASSIMP_EXPORTER( OBJ
-    Obj/ObjExporter.h
-    Obj/ObjExporter.cpp)
+    AssetLib/Obj/ObjExporter.h
+    AssetLib/Obj/ObjExporter.cpp)
 
   ADD_ASSIMP_EXPORTER( OPENGEX
-    OpenGEX/OpenGEXExporter.cpp
-    OpenGEX/OpenGEXExporter.h)
+    AssetLib/OpenGEX/OpenGEXExporter.cpp
+    AssetLib/OpenGEX/OpenGEXExporter.h)
 
   ADD_ASSIMP_EXPORTER( PLY
-    Ply/PlyExporter.cpp
-    Ply/PlyExporter.h)
+    AssetLib/Ply/PlyExporter.cpp
+    AssetLib/Ply/PlyExporter.h)
 
   ADD_ASSIMP_EXPORTER( 3DS
-    3DS/3DSExporter.h
-    3DS/3DSExporter.cpp)
+    AssetLib/3DS/3DSExporter.h
+    AssetLib/3DS/3DSExporter.cpp)
 
   ADD_ASSIMP_EXPORTER( ASSBIN
-    Assbin/AssbinExporter.h
-    Assbin/AssbinExporter.cpp
-    Assbin/AssbinFileWriter.h
-    Assbin/AssbinFileWriter.cpp)
+    AssetLib/Assbin/AssbinExporter.h
+    AssetLib/Assbin/AssbinExporter.cpp
+    AssetLib/Assbin/AssbinFileWriter.h
+    AssetLib/Assbin/AssbinFileWriter.cpp)
 
   ADD_ASSIMP_EXPORTER( ASSXML
-    Assxml/AssxmlExporter.h
-    Assxml/AssxmlExporter.cpp
-    Assxml/AssxmlFileWriter.h
-    Assxml/AssxmlFileWriter.cpp)
+    AssetLib/Assxml/AssxmlExporter.h
+    AssetLib/Assxml/AssxmlExporter.cpp
+    AssetLib/Assxml/AssxmlFileWriter.h
+    AssetLib/Assxml/AssxmlFileWriter.cpp)
 
   ADD_ASSIMP_EXPORTER(M3D
-    M3D/M3DExporter.h
-    M3D/M3DExporter.cpp)
+    AssetLib/M3D/M3DExporter.h
+    AssetLib/M3D/M3DExporter.cpp)
 
   ADD_ASSIMP_EXPORTER(COLLADA
-    Collada/ColladaExporter.h
-    Collada/ColladaExporter.cpp)
+    AssetLib/Collada/ColladaExporter.h
+    AssetLib/Collada/ColladaExporter.cpp)
 
   ADD_ASSIMP_EXPORTER( FBX
-    FBX/FBXExporter.h
-    FBX/FBXExporter.cpp
-    FBX/FBXExportNode.h
-    FBX/FBXExportNode.cpp
-    FBX/FBXExportProperty.h
-    FBX/FBXExportProperty.cpp)
+    AssetLib/FBX/FBXExporter.h
+    AssetLib/FBX/FBXExporter.cpp
+    AssetLib/FBX/FBXExportNode.h
+    AssetLib/FBX/FBXExportNode.cpp
+    AssetLib/FBX/FBXExportProperty.h
+    AssetLib/FBX/FBXExportProperty.cpp)
 
   ADD_ASSIMP_EXPORTER( STL
-    STL/STLExporter.h
-    STL/STLExporter.cpp)
+    AssetLib/STL/STLExporter.h
+    AssetLib/STL/STLExporter.cpp)
 
   ADD_ASSIMP_EXPORTER( X
-    X/XFileExporter.h
-    X/XFileExporter.cpp)
+    AssetLib/X/XFileExporter.h
+    AssetLib/X/XFileExporter.cpp)
 
   ADD_ASSIMP_EXPORTER( X3D
-    X3D/X3DExporter.cpp
-    X3D/X3DExporter.hpp)
+    AssetLib/X3D/X3DExporter.cpp
+    AssetLib/X3D/X3DExporter.hpp)
 
   ADD_ASSIMP_EXPORTER( GLTF
-    glTF/glTFExporter.h
-    glTF/glTFExporter.cpp
-    glTF2/glTF2Exporter.h
-    glTF2/glTF2Exporter.cpp)
+    AssetLib/glTF/glTFExporter.h
+    AssetLib/glTF/glTFExporter.cpp
+    AssetLib/glTF2/glTF2Exporter.h
+    AssetLib/glTF2/glTF2Exporter.cpp)
 
   ADD_ASSIMP_EXPORTER( 3MF
-    3MF/D3MFExporter.h
-    3MF/D3MFExporter.cpp)
+    AssetLib/3MF/D3MFExporter.h
+    AssetLib/3MF/D3MFExporter.cpp)
+
+  ADD_ASSIMP_EXPORTER( PBRT
+    Pbrt/PbrtExporter.h
+    Pbrt/PbrtExporter.cpp)
 
   ADD_ASSIMP_EXPORTER( ASSJSON
-    Assjson/cencode.c
-    Assjson/cencode.h
-    Assjson/json_exporter.cpp
-    Assjson/mesh_splitter.cpp
-    Assjson/mesh_splitter.h)
+    AssetLib/Assjson/cencode.c
+    AssetLib/Assjson/cencode.h
+    AssetLib/Assjson/json_exporter.cpp
+    AssetLib/Assjson/mesh_splitter.cpp
+    AssetLib/Assjson/mesh_splitter.h)
 
   ADD_ASSIMP_EXPORTER( STEP
-    Step/StepExporter.h
-    Step/StepExporter.cpp)
+    AssetLib/Step/StepExporter.h
+    AssetLib/Step/StepExporter.cpp)
 
 endif()
 
@@ -740,113 +759,114 @@ SET( PostProcessing_SRCS
 )
 SOURCE_GROUP( PostProcessing FILES ${PostProcessing_SRCS})
 
-SET( IrrXML_SRCS ${HEADER_PATH}/irrXMLWrapper.h )
-SOURCE_GROUP( IrrXML FILES ${IrrXML_SRCS})
-
 ADD_ASSIMP_IMPORTER( Q3D
-  Q3D/Q3DLoader.cpp
-  Q3D/Q3DLoader.h
+  AssetLib/Q3D/Q3DLoader.cpp
+  AssetLib/Q3D/Q3DLoader.h
 )
 
 ADD_ASSIMP_IMPORTER( Q3BSP
-  Q3BSP/Q3BSPFileData.h
-  Q3BSP/Q3BSPFileParser.h
-  Q3BSP/Q3BSPFileParser.cpp
-  Q3BSP/Q3BSPFileImporter.h
-  Q3BSP/Q3BSPFileImporter.cpp
+  AssetLib/Q3BSP/Q3BSPFileData.h
+  AssetLib/Q3BSP/Q3BSPFileParser.h
+  AssetLib/Q3BSP/Q3BSPFileParser.cpp
+  AssetLib/Q3BSP/Q3BSPFileImporter.h
+  AssetLib/Q3BSP/Q3BSPFileImporter.cpp
 )
 
 ADD_ASSIMP_IMPORTER( RAW
-  Raw/RawLoader.cpp
-  Raw/RawLoader.h
+  AssetLib/Raw/RawLoader.cpp
+  AssetLib/Raw/RawLoader.h
 )
 
 ADD_ASSIMP_IMPORTER( SIB
-  SIB/SIBImporter.cpp
-  SIB/SIBImporter.h
+  AssetLib/SIB/SIBImporter.cpp
+  AssetLib/SIB/SIBImporter.h
 )
 
 ADD_ASSIMP_IMPORTER( SMD
-  SMD/SMDLoader.cpp
-  SMD/SMDLoader.h
+  AssetLib/SMD/SMDLoader.cpp
+  AssetLib/SMD/SMDLoader.h
 )
 
 ADD_ASSIMP_IMPORTER( STL
-  STL/STLLoader.cpp
-  STL/STLLoader.h
+  AssetLib/STL/STLLoader.cpp
+  AssetLib/STL/STLLoader.h
 )
 
 ADD_ASSIMP_IMPORTER( TERRAGEN
-  Terragen/TerragenLoader.cpp
-  Terragen/TerragenLoader.h
+  AssetLib/Terragen/TerragenLoader.cpp
+  AssetLib/Terragen/TerragenLoader.h
 )
 
 ADD_ASSIMP_IMPORTER( 3D
-  Unreal/UnrealLoader.cpp
-  Unreal/UnrealLoader.h
+  AssetLib/Unreal/UnrealLoader.cpp
+  AssetLib/Unreal/UnrealLoader.h
 )
 
 ADD_ASSIMP_IMPORTER( X
-  X/XFileHelper.h
-  X/XFileImporter.cpp
-  X/XFileImporter.h
-  X/XFileParser.cpp
-  X/XFileParser.h
+  AssetLib/X/XFileHelper.h
+  AssetLib/X/XFileImporter.cpp
+  AssetLib/X/XFileImporter.h
+  AssetLib/X/XFileParser.cpp
+  AssetLib/X/XFileParser.h
 )
 
 ADD_ASSIMP_IMPORTER( X3D
-  X3D/X3DImporter.cpp
-  X3D/X3DImporter.hpp
-  X3D/X3DImporter_Geometry2D.cpp
-  X3D/X3DImporter_Geometry3D.cpp
-  X3D/X3DImporter_Group.cpp
-  X3D/X3DImporter_Light.cpp
-  X3D/X3DImporter_Macro.hpp
-  X3D/X3DImporter_Metadata.cpp
-  X3D/X3DImporter_Networking.cpp
-  X3D/X3DImporter_Node.hpp
-  X3D/X3DImporter_Postprocess.cpp
-  X3D/X3DImporter_Rendering.cpp
-  X3D/X3DImporter_Shape.cpp
-  X3D/X3DImporter_Texturing.cpp
-  X3D/FIReader.hpp
-  X3D/FIReader.cpp
-  X3D/X3DVocabulary.cpp
+  AssetLib/X3D/X3DImporter.cpp
+  AssetLib/X3D/X3DImporter_Geometry2D.cpp
+  AssetLib/X3D/X3DImporter_Geometry3D.cpp
+  AssetLib/X3D/X3DImporter_Group.cpp
+  AssetLib/X3D/X3DImporter_Light.cpp
+  AssetLib/X3D/X3DImporter_Metadata.cpp
+  AssetLib/X3D/X3DImporter_Networking.cpp
+  AssetLib/X3D/X3DImporter_Postprocess.cpp
+  AssetLib/X3D/X3DImporter_Rendering.cpp
+  AssetLib/X3D/X3DImporter_Shape.cpp
+  AssetLib/X3D/X3DImporter_Texturing.cpp
+  AssetLib/X3D/X3DImporter.hpp
+  AssetLib/X3D/X3DImporter_Macro.hpp
+  AssetLib/X3D/X3DImporter_Node.hpp
+  AssetLib/X3D/X3DGeoHelper.cpp
+  AssetLib/X3D/X3DGeoHelper.h
+  AssetLib/X3D/X3DXmlHelper.cpp
+  AssetLib/X3D/X3DXmlHelper.h
 )
 
 ADD_ASSIMP_IMPORTER( GLTF
-  glTF/glTFCommon.h
-  glTF/glTFCommon.cpp
-  glTF/glTFAsset.h
-  glTF/glTFAsset.inl
-  glTF/glTFAssetWriter.h
-  glTF/glTFAssetWriter.inl
-  glTF/glTFImporter.cpp
-  glTF/glTFImporter.h
-  glTF2/glTF2Asset.h
-  glTF2/glTF2Asset.inl
-  glTF2/glTF2AssetWriter.h
-  glTF2/glTF2AssetWriter.inl
-  glTF2/glTF2Importer.cpp
-  glTF2/glTF2Importer.h
+  AssetLib/glTF/glTFCommon.h
+  AssetLib/glTF/glTFCommon.cpp
+  AssetLib/glTF/glTFAsset.h
+  AssetLib/glTF/glTFAsset.inl
+  AssetLib/glTF/glTFAssetWriter.h
+  AssetLib/glTF/glTFAssetWriter.inl
+  AssetLib/glTF/glTFImporter.cpp
+  AssetLib/glTF/glTFImporter.h
+  AssetLib/glTF2/glTF2Asset.h
+  AssetLib/glTF2/glTF2Asset.inl
+  AssetLib/glTF2/glTF2AssetWriter.h
+  AssetLib/glTF2/glTF2AssetWriter.inl
+  AssetLib/glTF2/glTF2Importer.cpp
+  AssetLib/glTF2/glTF2Importer.h
 )
 
-ADD_ASSIMP_IMPORTER( 3MF
-  3MF/D3MFImporter.h
-  3MF/D3MFImporter.cpp
-  3MF/D3MFOpcPackage.h
-  3MF/D3MFOpcPackage.cpp
-  3MF/3MFXmlTags.h
+ADD_ASSIMP_IMPORTER(3MF
+  AssetLib/3MF/3MFTypes.h
+  AssetLib/3MF/XmlSerializer.h
+  AssetLib/3MF/XmlSerializer.cpp
+  AssetLib/3MF/D3MFImporter.h
+  AssetLib/3MF/D3MFImporter.cpp
+  AssetLib/3MF/D3MFOpcPackage.h
+  AssetLib/3MF/D3MFOpcPackage.cpp
+  AssetLib/3MF/3MFXmlTags.h
 )
 
 ADD_ASSIMP_IMPORTER( MMD
-  MMD/MMDCpp14.h
-  MMD/MMDImporter.cpp
-  MMD/MMDImporter.h
-  MMD/MMDPmdParser.h
-  MMD/MMDPmxParser.h
-  MMD/MMDPmxParser.cpp
-  MMD/MMDVmdParser.h
+  AssetLib/MMD/MMDCpp14.h
+  AssetLib/MMD/MMDImporter.cpp
+  AssetLib/MMD/MMDImporter.h
+  AssetLib/MMD/MMDPmdParser.h
+  AssetLib/MMD/MMDPmxParser.h
+  AssetLib/MMD/MMDPmxParser.cpp
+  AssetLib/MMD/MMDVmdParser.h
 )
 
 # Workaround for issue #2406 - force problematic large file to be optimized to prevent string table overflow error
@@ -854,22 +874,12 @@ ADD_ASSIMP_IMPORTER( MMD
 # optimizations that take up extra space. Given that the issue is a string table overflowing, -Os seemed appropriate
 # Also, I'm not positive if both link & compile flags are needed, but this hopefully ensures that the issue should not
 # recur for edge cases such as static builds.
-if ((CMAKE_COMPILER_IS_MINGW) AND (CMAKE_BUILD_TYPE MATCHES Debug))
+if ((MINGW) AND (CMAKE_BUILD_TYPE MATCHES Debug))
   message("-- Applying MinGW StepFileGen1.cpp Debug Workaround")
   SET_SOURCE_FILES_PROPERTIES(Importer/StepFile/StepFileGen1.cpp PROPERTIES COMPILE_FLAGS -Os )
   SET_SOURCE_FILES_PROPERTIES(Importer/StepFile/StepFileGen1.cpp PROPERTIES LINK_FLAGS -Os )
   SET_SOURCE_FILES_PROPERTIES(Importer/StepFile/StepFileGen1.cpp PROPERTIES STATIC_LIBRARY_FLAGS -Os )
 endif()
-
-ADD_ASSIMP_IMPORTER( STEP
-    Step/STEPFile.h
-    Importer/StepFile/StepFileImporter.h
-    Importer/StepFile/StepFileImporter.cpp
-    Importer/StepFile/StepFileGen1.cpp
-    Importer/StepFile/StepFileGen2.cpp
-    Importer/StepFile/StepFileGen3.cpp
-    Importer/StepFile/StepReaderGen.h
-)
 
 if ((NOT ASSIMP_NO_EXPORT) OR (NOT ASSIMP_EXPORTERS_ENABLED STREQUAL ""))
 	SET( Exporter_SRCS
@@ -885,24 +895,29 @@ SET( Extra_SRCS
 )
 SOURCE_GROUP( Extra FILES ${Extra_SRCS})
 
-# irrXML
-IF(HUNTER_ENABLED)
-  hunter_add_package(irrXML)
-  find_package(irrXML CONFIG REQUIRED)
+# pugixml
+IF(ASSIMP_HUNTER_ENABLED)
+  hunter_add_package(pugixml)
+  find_package(pugixml CONFIG REQUIRED)
 ELSE()
-  # irrXML already included in contrib directory by parent CMakeLists.txt.
+  SET( Pugixml_SRCS
+    ../contrib/pugixml/src/pugiconfig.hpp
+    ../contrib/pugixml/src/pugixml.hpp
+  )
+  INCLUDE_DIRECTORIES("../contrib/pugixml/src")
+  SOURCE_GROUP( Contrib\\Pugixml FILES ${Pugixml_SRCS})
 ENDIF()
 
 # utf8
-IF(HUNTER_ENABLED)
+IF(ASSIMP_HUNTER_ENABLED)
   hunter_add_package(utf8)
-  find_package(utf8 CONFIG REQUIRED)
+  find_package(utf8cpp CONFIG REQUIRED)
 ELSE()
   # utf8 is header-only, so Assimp doesn't need to do anything.
 ENDIF()
 
 # polyclipping
-IF(HUNTER_ENABLED)
+IF(ASSIMP_HUNTER_ENABLED)
   hunter_add_package(polyclipping)
   find_package(polyclipping CONFIG REQUIRED)
 ELSE()
@@ -914,7 +929,7 @@ ELSE()
 ENDIF()
 
 # poly2tri
-IF(HUNTER_ENABLED)
+IF(ASSIMP_HUNTER_ENABLED)
   hunter_add_package(poly2tri)
   find_package(poly2tri CONFIG REQUIRED)
 ELSE()
@@ -935,11 +950,12 @@ ELSE()
 ENDIF()
 
 # minizip/unzip
-IF(HUNTER_ENABLED)
+IF(ASSIMP_HUNTER_ENABLED)
   hunter_add_package(minizip)
   find_package(minizip CONFIG REQUIRED)
 ELSE()
   SET( unzip_SRCS
+    ../contrib/unzip/crypt.c
     ../contrib/unzip/crypt.h
     ../contrib/unzip/ioapi.c
     ../contrib/unzip/ioapi.h
@@ -950,28 +966,31 @@ ELSE()
 ENDIF()
 
 # zip (https://github.com/kuba--/zip)
-IF(HUNTER_ENABLED)
-  hunter_add_package(zip)
-  find_package(zip CONFIG REQUIRED)
-ELSE()
-  SET( ziplib_SRCS
-    ../contrib/zip/src/miniz.h
-    ../contrib/zip/src/zip.c
-    ../contrib/zip/src/zip.h
-  )
+separate_arguments(ASSIMP_EXPORTERS_LIST UNIX_COMMAND ${ASSIMP_EXPORTERS_ENABLED})
+IF(3MF IN_LIST ASSIMP_EXPORTERS_LIST)
+  IF(ASSIMP_HUNTER_ENABLED)
+    hunter_add_package(zip)
+    find_package(zip CONFIG REQUIRED)
+  ELSE()
+    SET( ziplib_SRCS
+      ../contrib/zip/src/miniz.h
+      ../contrib/zip/src/zip.c
+      ../contrib/zip/src/zip.h
+    )
 
-  # TODO if cmake required version has been updated to >3.12.0, collapse this to the second case only
-  if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
-  	add_definitions(-DMINIZ_USE_UNALIGNED_LOADS_AND_STORES=0)
-  else()
-  	add_compile_definitions(MINIZ_USE_UNALIGNED_LOADS_AND_STORES=0)
-  endif()
+    # TODO if cmake required version has been updated to >3.12.0, collapse this to the second case only
+    if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
+      add_definitions(-DMINIZ_USE_UNALIGNED_LOADS_AND_STORES=0)
+    else()
+      add_compile_definitions(MINIZ_USE_UNALIGNED_LOADS_AND_STORES=0)
+    endif()
 
-  SOURCE_GROUP( ziplib FILES ${ziplib_SRCS} )
+    SOURCE_GROUP( ziplib FILES ${ziplib_SRCS} )
+  ENDIF()
 ENDIF()
 
 # openddlparser
-IF(HUNTER_ENABLED)
+IF(ASSIMP_HUNTER_ENABLED)
   hunter_add_package(openddlparser)
   find_package(openddlparser CONFIG REQUIRED)
 ELSE()
@@ -994,7 +1013,7 @@ ELSE()
 ENDIF()
 
 # Open3DGC
-IF(HUNTER_ENABLED)
+IF(ASSIMP_HUNTER_ENABLED)
   # Nothing to do, not available in Hunter yet.
 ELSE()
   SET ( open3dgc_SRCS
@@ -1035,7 +1054,7 @@ ENDIF()
 # RT-extensions is used in "contrib/Open3DGC/o3dgcTimer.h" for collecting statistics. Pointed file
 # has implementation for different platforms: WIN32, __MACH__ and other ("else" block).
 FIND_PACKAGE(RT QUIET)
-IF (NOT HUNTER_ENABLED AND (RT_FOUND OR MSVC))
+IF (NOT ASSIMP_HUNTER_ENABLED AND (RT_FOUND OR WIN32))
   SET( ASSIMP_IMPORTER_GLTF_USE_OPEN3DGC 1 )
   ADD_DEFINITIONS( -DASSIMP_IMPORTER_GLTF_USE_OPEN3DGC=1 )
 ELSE ()
@@ -1045,12 +1064,28 @@ ELSE ()
 ENDIF ()
 
 # RapidJSON
-IF(HUNTER_ENABLED)
+IF(ASSIMP_HUNTER_ENABLED)
   hunter_add_package(RapidJSON)
   find_package(RapidJSON CONFIG REQUIRED)
 ELSE()
-  INCLUDE_DIRECTORIES( "../contrib/rapidjson/include" )
-  INCLUDE_DIRECTORIES( "../contrib" )
+  INCLUDE_DIRECTORIES("../contrib/rapidjson/include")
+  ADD_DEFINITIONS( -DRAPIDJSON_HAS_STDSTRING=1)
+  option( ASSIMP_RAPIDJSON_NO_MEMBER_ITERATOR "Suppress rapidjson warning on MSVC (NOTE: breaks android build)" ON )
+  if(ASSIMP_RAPIDJSON_NO_MEMBER_ITERATOR)
+    ADD_DEFINITIONS( -DRAPIDJSON_NOMEMBERITERATORCLASS )
+  endif()
+ENDIF()
+
+# stb
+IF(ASSIMP_HUNTER_ENABLED)
+  hunter_add_package(stb)
+  find_package(stb CONFIG REQUIRED)
+ELSE()
+  SET( stb_SRCS
+    ../contrib/stb/stb_image.h
+  )
+  INCLUDE_DIRECTORIES("../contrib")
+  SOURCE_GROUP( Contrib\\stb FILES ${stb_SRCS})
 ENDIF()
 
 # VC2010 fixes
@@ -1063,12 +1098,12 @@ endif()
 
 ADD_DEFINITIONS( -DASSIMP_BUILD_DLL_EXPORT )
 
-if ( MSVC )
+IF( MSVC OR "${CMAKE_CXX_SIMULATE_ID}" MATCHES "MSVC") # clang with MSVC ABI
   ADD_DEFINITIONS( -D_SCL_SECURE_NO_WARNINGS )
   ADD_DEFINITIONS( -D_CRT_SECURE_NO_WARNINGS )
 endif ()
 
-IF(NOT HUNTER_ENABLED)
+IF(NOT ASSIMP_HUNTER_ENABLED)
   if (UNZIP_FOUND)
     SET (unzip_compile_SRCS "")
   else ()
@@ -1104,13 +1139,14 @@ SET( assimp_src
   ${ASSIMP_EXPORTER_SRCS}
 
   # Third-party libraries
-  ${IrrXML_SRCS}
   ${unzip_compile_SRCS}
   ${Poly2Tri_SRCS}
   ${Clipper_SRCS}
   ${openddl_parser_SRCS}
   ${open3dgc_SRCS}
   ${ziplib_SRCS}
+  ${Pugixml_SRCS}
+  ${stb_SRCS}
   # Necessary to show the headers in the project when using the VC++ generator:
 
   ${PUBLIC_HEADERS}
@@ -1118,7 +1154,7 @@ SET( assimp_src
 )
 ADD_DEFINITIONS( -DOPENDDLPARSER_BUILD )
 
-IF(NOT HUNTER_ENABLED)
+IF(NOT ASSIMP_HUNTER_ENABLED)
   INCLUDE_DIRECTORIES(
       ${IRRXML_INCLUDE_DIR}
       ../contrib/openddlparser/include
@@ -1130,30 +1166,57 @@ IF (ASSIMP_BUILD_NONFREE_C4D_IMPORTER)
   INCLUDE_DIRECTORIES(${C4D_INCLUDES})
 ENDIF ()
 
+IF (ASSIMP_BUILD_DRACO)
+  INCLUDE_DIRECTORIES(${draco_INCLUDE_DIRS})
+  ADD_DEFINITIONS( -DASSIMP_ENABLE_DRACO )
+ENDIF()
+
 ADD_LIBRARY( assimp ${assimp_src} )
 ADD_LIBRARY(assimp::assimp ALIAS assimp)
+
+TARGET_USE_COMMON_OUTPUT_DIRECTORY(assimp)
+
+# enable warnings as errors ########################################
+IF (MSVC)
+  TARGET_COMPILE_OPTIONS(assimp PRIVATE /WX)
+ELSE()
+  TARGET_COMPILE_OPTIONS(assimp PRIVATE -Werror)
+ENDIF()
+
+# adds C_FLAGS required to compile zip.c on old GCC 4.x compiler
+TARGET_COMPILE_FEATURES(assimp PRIVATE c_std_99)
 
 TARGET_INCLUDE_DIRECTORIES ( assimp PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/../include>
-  $<INSTALL_INTERFACE:include>
+  $<INSTALL_INTERFACE:${ASSIMP_INCLUDE_INSTALL_DIR}>
 )
 
-IF(HUNTER_ENABLED)
+IF(ASSIMP_HUNTER_ENABLED)
   TARGET_LINK_LIBRARIES(assimp
       PUBLIC
       polyclipping::polyclipping
-      irrXML::irrXML
       openddlparser::openddl_parser
       poly2tri::poly2tri
       minizip::minizip
       ZLIB::zlib
       RapidJSON::rapidjson
-      utf8::utf8
-      zip::zip
+      utf8cpp
+      pugixml
+      stb::stb
   )
+  if(TARGET zip::zip)
+    target_link_libraries(assimp PUBLIC zip::zip)
+  endif()
+
+  if (ASSIMP_BUILD_DRACO)
+    target_link_libraries(assimp PUBLIC ${draco_LIBRARIES})
+  endif()
 ELSE()
-  TARGET_LINK_LIBRARIES(assimp ${ZLIB_LIBRARIES} ${OPENDDL_PARSER_LIBRARIES} ${IRRXML_LIBRARY} )
+  TARGET_LINK_LIBRARIES(assimp ${ZLIB_LIBRARIES} ${OPENDDL_PARSER_LIBRARIES})
+  if (ASSIMP_BUILD_DRACO)
+    target_link_libraries(assimp ${draco_LIBRARIES})
+  endif()
 ENDIF()
 
 if(ASSIMP_ANDROID_JNIIOSYSTEM)
@@ -1203,16 +1266,22 @@ endif()
 if (${CMAKE_SYSTEM_NAME} MATCHES "WindowsStore")
     target_compile_definitions(assimp PUBLIC WindowsStore)
     TARGET_LINK_LIBRARIES(assimp advapi32)
-    #set(WindowsStore TRUE)
 endif()
+
 SET_TARGET_PROPERTIES( assimp PROPERTIES
   VERSION ${ASSIMP_VERSION}
   SOVERSION ${ASSIMP_SOVERSION} # use full version
   OUTPUT_NAME assimp${LIBRARY_SUFFIX}
 )
 
+if (WIN32 AND CMAKE_COMPILER_IS_GNUCXX AND BUILD_SHARED_LIBS)
+  set_target_properties(assimp PROPERTIES
+    SUFFIX "-${ASSIMP_SOVERSION}${CMAKE_SHARED_LIBRARY_SUFFIX}"
+  )
+endif()
+
 if (APPLE)
-  if (BUILD_FRAMEWORK)
+  if (ASSIMP_BUILD_FRAMEWORK)
     SET_TARGET_PROPERTIES( assimp PROPERTIES
       FRAMEWORK TRUE
       FRAMEWORK_VERSION C
@@ -1224,7 +1293,7 @@ if (APPLE)
     # add ./Compiler/*.h to assimp.framework via copy command
     ADD_CUSTOM_COMMAND(TARGET assimp POST_BUILD
       COMMAND "${CMAKE_COMMAND}" -E copy_directory
-         "../${HEADER_PATH}/Compiler"
+         "${HEADER_PATH}/Compiler"
          assimp.framework/Headers/Compiler
       COMMENT "Copying public ./Compiler/ header files to framework bundle's Headers/Compiler/")
   ENDIF()
@@ -1232,7 +1301,7 @@ ENDIF()
 
 # Build against external unzip, or add ../contrib/unzip so
 # assimp can #include "unzip.h"
-IF(NOT HUNTER_ENABLED)
+IF(NOT ASSIMP_HUNTER_ENABLED)
   if (UNZIP_FOUND)
     INCLUDE_DIRECTORIES(${UNZIP_INCLUDE_DIRS})
     TARGET_LINK_LIBRARIES(assimp ${UNZIP_LIBRARIES})
@@ -1246,23 +1315,15 @@ IF (RT_FOUND AND ASSIMP_IMPORTER_GLTF_USE_OPEN3DGC)
   TARGET_LINK_LIBRARIES(assimp ${RT_LIBRARY})
 ENDIF ()
 
-IF(HUNTER_ENABLED)
-  INSTALL( TARGETS assimp
-    EXPORT "${TARGETS_EXPORT_NAME}"
-    LIBRARY DESTINATION ${ASSIMP_LIB_INSTALL_DIR}
-    ARCHIVE DESTINATION ${ASSIMP_LIB_INSTALL_DIR}
-    RUNTIME DESTINATION ${ASSIMP_BIN_INSTALL_DIR}
-    FRAMEWORK DESTINATION ${ASSIMP_LIB_INSTALL_DIR}
-    COMPONENT ${LIBASSIMP_COMPONENT}
-    INCLUDES DESTINATION "include")
-ELSE()
+
 INSTALL( TARGETS assimp
-    LIBRARY DESTINATION ${ASSIMP_LIB_INSTALL_DIR}
-    ARCHIVE DESTINATION ${ASSIMP_LIB_INSTALL_DIR}
-    RUNTIME DESTINATION ${ASSIMP_BIN_INSTALL_DIR}
-    FRAMEWORK DESTINATION ${ASSIMP_LIB_INSTALL_DIR}
-    COMPONENT ${LIBASSIMP_COMPONENT})
-ENDIF()
+  EXPORT "${TARGETS_EXPORT_NAME}"
+  LIBRARY DESTINATION ${ASSIMP_LIB_INSTALL_DIR} COMPONENT ${LIBASSIMP_COMPONENT}
+  ARCHIVE DESTINATION ${ASSIMP_LIB_INSTALL_DIR} COMPONENT ${LIBASSIMP-DEV_COMPONENT}
+  RUNTIME DESTINATION ${ASSIMP_BIN_INSTALL_DIR} COMPONENT ${LIBASSIMP_COMPONENT}
+  FRAMEWORK DESTINATION ${ASSIMP_LIB_INSTALL_DIR} COMPONENT ${LIBASSIMP_COMPONENT}
+  INCLUDES DESTINATION ${ASSIMP_INCLUDE_INSTALL_DIR}
+)
 INSTALL( FILES ${PUBLIC_HEADERS} DESTINATION ${ASSIMP_INCLUDE_INSTALL_DIR}/assimp COMPONENT assimp-dev)
 INSTALL( FILES ${COMPILER_HEADERS} DESTINATION ${ASSIMP_INCLUDE_INSTALL_DIR}/assimp/Compiler COMPONENT assimp-dev)
 

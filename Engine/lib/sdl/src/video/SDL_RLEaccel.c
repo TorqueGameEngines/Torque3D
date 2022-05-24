@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -91,10 +91,6 @@
 #include "SDL_sysvideo.h"
 #include "SDL_blit.h"
 #include "SDL_RLEaccel_c.h"
-
-#ifndef MIN
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
-#endif
 
 #define PIXEL_COPY(to, from, len, bpp)          \
     SDL_memcpy(to, from, (size_t)(len) * (bpp))
@@ -1161,13 +1157,13 @@ RLEAlphaSurface(SDL_Surface * surface)
                     ADD_OPAQUE_COUNTS(max_opaque_run, 0);
                     skip -= max_opaque_run;
                 }
-                len = MIN(run, max_opaque_run);
+                len = SDL_min(run, max_opaque_run);
                 ADD_OPAQUE_COUNTS(skip, len);
                 dst += copy_opaque(dst, src + runstart, len, sf, df);
                 runstart += len;
                 run -= len;
                 while (run) {
-                    len = MIN(run, max_opaque_run);
+                    len = SDL_min(run, max_opaque_run);
                     ADD_OPAQUE_COUNTS(0, len);
                     dst += copy_opaque(dst, src + runstart, len, sf, df);
                     runstart += len;
@@ -1195,13 +1191,13 @@ RLEAlphaSurface(SDL_Surface * surface)
                     ADD_TRANSL_COUNTS(max_transl_run, 0);
                     skip -= max_transl_run;
                 }
-                len = MIN(run, max_transl_run);
+                len = SDL_min(run, max_transl_run);
                 ADD_TRANSL_COUNTS(skip, len);
                 dst += copy_transl(dst, src + runstart, len, sf, df);
                 runstart += len;
                 run -= len;
                 while (run) {
-                    len = MIN(run, max_transl_run);
+                    len = SDL_min(run, max_transl_run);
                     ADD_TRANSL_COUNTS(0, len);
                     dst += copy_transl(dst, src + runstart, len, sf, df);
                     runstart += len;
@@ -1222,12 +1218,16 @@ RLEAlphaSurface(SDL_Surface * surface)
 
     /* Now that we have it encoded, release the original pixels */
     if (!(surface->flags & SDL_PREALLOC)) {
-        SDL_SIMDFree(surface->pixels);
+        if (surface->flags & SDL_SIMD_ALIGNED) {
+            SDL_SIMDFree(surface->pixels);
+            surface->flags &= ~SDL_SIMD_ALIGNED;
+        } else {
+            SDL_free(surface->pixels);
+        }
         surface->pixels = NULL;
-        surface->flags &= ~SDL_SIMD_ALIGNED;
     }
 
-    /* realloc the buffer to release unused memory */
+    /* reallocate the buffer to release unused memory */
     {
         Uint8 *p = SDL_realloc(rlebuf, dst - rlebuf);
         if (!p)
@@ -1359,14 +1359,14 @@ RLEColorkeySurface(SDL_Surface * surface)
                 ADD_COUNTS(maxn, 0);
                 skip -= maxn;
             }
-            len = MIN(run, maxn);
+            len = SDL_min(run, maxn);
             ADD_COUNTS(skip, len);
             SDL_memcpy(dst, srcbuf + runstart * bpp, len * bpp);
             dst += len * bpp;
             run -= len;
             runstart += len;
             while (run) {
-                len = MIN(run, maxn);
+                len = SDL_min(run, maxn);
                 ADD_COUNTS(0, len);
                 SDL_memcpy(dst, srcbuf + runstart * bpp, len * bpp);
                 dst += len * bpp;
@@ -1386,14 +1386,18 @@ RLEColorkeySurface(SDL_Surface * surface)
 
     /* Now that we have it encoded, release the original pixels */
     if (!(surface->flags & SDL_PREALLOC)) {
-        SDL_SIMDFree(surface->pixels);
+        if (surface->flags & SDL_SIMD_ALIGNED) {
+            SDL_SIMDFree(surface->pixels);
+            surface->flags &= ~SDL_SIMD_ALIGNED;
+        } else {
+            SDL_free(surface->pixels);
+        }
         surface->pixels = NULL;
-        surface->flags &= ~SDL_SIMD_ALIGNED;
     }
 
-    /* realloc the buffer to release unused memory */
+    /* reallocate the buffer to release unused memory */
     {
-        /* If realloc returns NULL, the original block is left intact */
+        /* If SDL_realloc returns NULL, the original block is left intact */
         Uint8 *p = SDL_realloc(rlebuf, dst - rlebuf);
         if (!p)
             p = rlebuf;
@@ -1423,9 +1427,13 @@ SDL_RLESurface(SDL_Surface * surface)
         return -1;
     }
 
-    /* If we don't have colorkey or blending, nothing to do... */
     flags = surface->map->info.flags;
-    if (!(flags & (SDL_COPY_COLORKEY | SDL_COPY_BLEND))) {
+    if (flags & SDL_COPY_COLORKEY) {
+        /* ok */
+    } else if ((flags & SDL_COPY_BLEND) && surface->format->Amask) {
+        /* ok */
+    } else {
+        /* If we don't have colorkey or blending, nothing to do... */
         return -1;
     }
 

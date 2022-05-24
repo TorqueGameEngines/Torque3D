@@ -91,38 +91,6 @@ function directoryHandler::navigateTo(%this, %address, %historyNav, %selectionNa
    
    //break down the address
    %folderCount = getTokenCount(%address, "/");
-      
-   /*%rebuiltPath = "";
-   for(%f=0; %f < %folderCount; %f++)
-   {
-      %folderName = getToken(%address, "/", %f);
-      
-      %rebuiltPath = %f == 0 ? %folderName : %rebuiltPath @ "/" @ %folderName;
-      
-      %folderNavButton = new GuiButtonCtrl()
-      {
-         profile = ToolsGuiButtonProfile;
-         text = %folderName;
-         command = "AssetBrowser.navigateTo(\"" @ %rebuiltPath @ "\");";
-         extent = "100" SPC AssetBrowser_BreadcrumbBar.extent.y;
-      };
-      
-      AssetBrowser_BreadcrumbBar.add(%folderNavButton);
-      
-      if(%f != %folderCount-1)
-      {
-         %folderSpacerButton = new GuiBitmapButtonCtrl()
-         {
-            profile = ToolsGuiButtonProfile;
-            bitmapAsset = "ToolsModule:rightArrowWhite_image";
-            bitmapMode = "Centered";
-            extent = "25" SPC AssetBrowser_BreadcrumbBar.extent.y;
-            //command = "AssetBrowser.navigateTo(\"" @ %rebuiltPath @ "\");";
-         };
-         
-         AssetBrowser_BreadcrumbBar.add(%folderSpacerButton);
-      }
-   }*/
 
    //find our folder tree and action on it tree
    %folderId = %this.getFolderTreeItemFromAddress(%address);
@@ -216,7 +184,7 @@ function directoryHandler::getFolderTreeItemFromAddress(%this, %address)
    //break down the address
    %folderCount = getTokenCount(%address, "/");
 
-   if(startsWith(%address, "Data/") || startsWith(%address, "Tools/") || startsWith(%address, "Core/"))
+   if(startsWith(%address, "data/") || startsWith(%address, "tools/") || startsWith(%address, "core/"))
    {
       %curItem = %this.treeCtrl.findChildItemByName(1, "Modules");
    }
@@ -242,7 +210,7 @@ function directoryHandler::expandTreeToAddress(%this, %address)
    %rootId = AssetBrowser-->filterTree.findItemByName("Content");
    %this.treeCtrl.expandItem(%rootId);
 
-   if(startsWith(%address, "Data/") || startsWith(%address, "Tools/") || startsWith(%address, "Core/"))
+   if(startsWith(%address, "data/") || startsWith(%address, "tools/") || startsWith(%address, "core/"))
    {
       %curItem = %this.treeCtrl.findChildItemByName(1, "Modules");
    }
@@ -277,27 +245,46 @@ function directoryHandler::deleteFolder(%this, %folderPath)
    %fullPath = makeFullPath(%folderPath);
    
    //First, wipe out any files inside the folder first
-   %file = findFirstFileMultiExpr( %fullPath @ "/*.*", true);
+   %file = findFirstFileMultiExpr( %fullPath @ "/*", true);
 
    while( %file !$= "" )
    {      
-      %success = fileDelete( %file );
-      
-      if(!%success)
+      if (isFile(%file))
       {
-         error("doDeleteFolder - unable to delete file " @ %file);
-         return;         
-      }
+         %success = fileDelete( %file );
       
-      %file = findNextFileMultiExpr( %fullPath @ "/*.*" );
+         if(!%success)
+         {
+            error("doDeleteFolder - unable to delete file " @ %file);
+            return;         
+         }
+      }
+      %file = findNextFileMultiExpr( %fullPath @ "/*" );
    }
    
    //next, walk through and delete any subfolders that may be remaining
+   %finalDeleteAttempt = false;
    while(IsDirectory(%fullPath) && fileDelete(%fullPath) == 0)
    {
       //We couldn't delete the folder, so get a directory list and recurse through it, deleteing them as we go
       %paths = getDirectoryList(%fullPath);
-      for(%i=0; %i < getFieldCount(%paths); %i++)
+
+      // If nothing is in this directory, let the loop run once more and if that fails we're not going
+      // to delete the folder. This prevents an infinite loop if for some reason the directory cannot
+      // be deleted.
+      %pathCount = getFieldCount(%paths);
+      if (%pathCount == 0)
+      {
+         if (%finalDeleteattempt)
+         {
+            error("doDeleteFolder - unable to delete directory " @ %fullPath);
+            return;
+         }
+         %finalDeleteAttempt = true;
+         continue;
+      }
+
+      for(%i=0; %i < %pathCount; %i++)
       {
          %childPath = getField(%paths, %i);
          %this.deleteFolder(%fullPath @ "/" @ %childPath);

@@ -24,11 +24,6 @@ function initializeProjectImporter()
    echo(" % - Initializing Project Importer");  
    
    exec("./scripts/projectImporter." @ $TorqueScriptFileExtension);
-   
-   //Versioned actions
-   exec("./scripts/pre40/T3Dpre4ProjectImporter." @ $TorqueScriptFileExtension);
-   
-   
    exec("./guis/projectImporter.gui");
    
    new ScriptObject( ProjectImporterPlugin )
@@ -41,6 +36,7 @@ function initializeProjectImporter()
    //Input::GetEventManager().subscribe( ProjectImportCtrl, "EndDropFiles" );
    
    $ProjectImporter::importer = new AssetImporter();
+   $ProjectImporter::importer.dumpLogs = false; //we'll handle the log files ourselves
    
    %importConfig = new AssetImportConfig();
    %importConfig.loadImportConfig(AssetImportSettings, "LegacyProjectImport");

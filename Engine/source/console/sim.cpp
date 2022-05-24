@@ -68,6 +68,8 @@ namespace Sim
    ImplementNamedSet(SFXAmbienceSet)
    ImplementNamedSet(TerrainMaterialSet)
    ImplementNamedSet(DataBlockSet);
+   ImplementNamedSet(ForestBrushSet);
+   ImplementNamedSet(ForestItemDataSet);
    ImplementNamedGroup(ActionMapGroup)
    ImplementNamedGroup(ClientGroup)
    ImplementNamedGroup(GuiGroup)

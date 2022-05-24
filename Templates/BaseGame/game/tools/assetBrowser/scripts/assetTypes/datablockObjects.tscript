@@ -88,7 +88,7 @@ function spawnDatablockObject(%datablock)
    %cmd = %class @ "::create(" @ %name @ ");";
    
    %shapePath = ( %datablock.shapeAsset !$= "" ) ? %datablock.shapeFile : %datablock.shapeName;
-   %createCmd = "EWCreatorWindow.createObject( \"" @ %cmd @ "\" );";
+   %createCmd = "ObjectCreator.createObject( \"" @ %cmd @ "\" );";
    return eval(%createCmd);//eval("showImportDialog( \"" @ %shapePath @ "\", \"" @ %createCmd @ "\" );");
 }
 
@@ -171,7 +171,7 @@ function AssetBrowser::onDatablockEditorDropped(%this, %assetDef, %position)
    %camPos = LocalClientConnection.camera.getPosition();
    %rayResult = containerRayCast(%camPos, %targetPosition, -1);
    
-   %pos = EWCreatorWindow.getCreateObjectPosition();
+   %pos = ObjectCreator.getCreateObjectPosition();
 
    if(%rayResult != 0)
    {

@@ -226,7 +226,7 @@ public:
          return setStatus(false);
       }
 
-      ogg_stream_init(&to, Platform::getRandom() * S32_MAX);
+      ogg_stream_init(&to, Platform::getRandom() * double(S32_MAX));
 
       ogg_packet op;
 

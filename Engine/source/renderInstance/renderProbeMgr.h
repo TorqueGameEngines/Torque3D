@@ -39,7 +39,7 @@
 #include "gfx/gfxVertexBuffer.h"
 #endif
 
-#include "core/util/systemInterfaceList.h"
+//#include "core/util/systemInterfaceList.h"
 
 #ifndef _MATERIALS_PROCESSEDSHADERMATERIAL_H_
 #include "materials/processedShaderMaterial.h"
@@ -52,51 +52,22 @@
 #include "scene/reflector.h"
 #endif
 
-static U32 MAXPROBECOUNT = 50;
+#ifndef REFLECTIONPROBE_H
+#include "T3D/lighting/reflectionProbe.h"
+#endif
 
 class PostEffect;
 class ReflectionProbe;
 
+/// <summary>
+/// A simple container for a ReflectionProbe's ProbeInfo and index for it's associated
+/// cubemaps in the cubemap array pair
+/// </summary>
 struct ProbeRenderInst
 {
-   bool mIsEnabled;
-
-   MatrixF mTransform;
-
-   F32 mRadius;
-
-   bool mDirty;
-
-   Box3F mBounds;
-   Point3F mExtents;
-   Point3F mPosition;
-   Point3F mProbeRefOffset;
-   Point3F mProbeRefScale;
-   F32 mAtten;
-
-   GFXCubemapHandle mPrefilterCubemap;
-   GFXCubemapHandle mIrradianceCubemap;
-
-   /// The priority of this light used for
-   /// light and shadow scoring.
-   F32 mPriority;
-
-   /// A temporary which holds the score used
-   /// when prioritizing lights for rendering.
-   F32 mScore;
-
-   enum ProbeShapeType
-   {
-      Box = 0,            ///< Sphere shaped
-      Sphere = 1,               ///< Box-based shape
-      Skylight = 2
-   };
-
-   ProbeShapeType mProbeShapeType;
+   ReflectionProbe::ProbeInfo* mProbeInfo;
 
    U32 mCubemapIndex;
-
-   U32 mProbeIdx;
 
 public:
 
@@ -105,28 +76,11 @@ public:
 
    // Copies data passed in from light
    void set(const ProbeRenderInst *probeInfo);
-
-   // Accessors
-   const MatrixF& getTransform() const { return mTransform; }
-   void setTransform(const MatrixF &xfm) { mTransform = xfm; }
-
-   Point3F getPosition() const { return mPosition; }
-   void setPosition(const Point3F &pos) { mPosition = pos; }
-
-   void setPriority(F32 priority) { mPriority = priority; }
-   F32 getPriority() const { return mPriority; }
-
-   void setScore(F32 score) { mScore = score; }
-   F32 getScore() const { return mScore; }
-
-   void clear();
-
-   inline bool operator ==(const ProbeRenderInst& b) const
-   {
-      return mProbeIdx == b.mProbeIdx;
-   }
 };
 
+/// <summary>
+/// A container for all the shader consts needed for rendering probes in forward mode
+/// </summary>
 struct ProbeShaderConstants
 {
    bool mInit;
@@ -134,18 +88,20 @@ struct ProbeShaderConstants
    GFXShaderRef mShader;
    
    //Reflection Probes
-   GFXShaderConstHandle *mProbePositionSC;
-   GFXShaderConstHandle *mProbeRefPosSC;
-   GFXShaderConstHandle *mRefScaleSC;
+   GFXShaderConstHandle *mProbePositionArraySC;
+   GFXShaderConstHandle *mProbeRefPosArraySC;
+   GFXShaderConstHandle *mRefScaleArraySC;
    GFXShaderConstHandle *mWorldToObjArraySC;
-   GFXShaderConstHandle *mProbeConfigDataSC;
-   GFXShaderConstHandle *mProbeSpecularCubemapSC;
-   GFXShaderConstHandle *mProbeIrradianceCubemapSC;
+   GFXShaderConstHandle *mProbeConfigDataArraySC;
+   GFXShaderConstHandle *mProbeSpecularCubemapArraySC;
+   GFXShaderConstHandle *mProbeIrradianceCubemapArraySC;
    GFXShaderConstHandle *mProbeCountSC;
 
    GFXShaderConstHandle *mBRDFTextureMap;
 
    GFXShaderConstHandle *mSkylightCubemapIdxSC;
+
+   GFXShaderConstHandle* mMaxProbeDrawDistanceSC;
 
    ProbeShaderConstants();
    ~ProbeShaderConstants();
@@ -159,6 +115,10 @@ struct ProbeShaderConstants
 
 typedef Map<GFXShader*, ProbeShaderConstants*> ProbeConstantMap;
 
+/// <summary>
+/// A container for processed and packed probe data. This is made when we get the frame's
+/// best probes, and is passed to the shader for actual rendering.
+/// </summary>
 struct ProbeDataSet
 {
    Vector<Point4F> probePositionArray;
@@ -198,16 +158,8 @@ struct ProbeDataSet
 
       probeWorldToObjArray.setSize(maxProbeCount);
 
-      skyLightIdx = -1;
       effectiveProbeCount = 0;
    }
-};
-
-struct ProbeTextureArrayData
-{
-   GFXTexHandle BRDFTexture;
-   GFXCubemapArrayHandle prefilterArray;
-   GFXCubemapArrayHandle irradianceArray;
 };
 
 //**************************************************************************
@@ -217,11 +169,6 @@ class RenderProbeMgr : public RenderBinManager
 {
    typedef RenderBinManager Parent;
 
-   Vector<ProbeRenderInst*> mRegisteredProbes;
-
-   bool mProbesDirty;
-   
-   Vector<ProbeRenderInst>  mActiveProbes;
 public:
    //maximum number of allowed probes
    static const U32 PROBE_MAX_COUNT = 250;
@@ -230,51 +177,161 @@ public:
    //number of slots to allocate at once in the cubemap array
    static const U32 PROBE_ARRAY_SLOT_BUFFER_SIZE = 10;
 
-   static const U32 PROBE_IRRAD_SIZE = 64;
-   static const U32 PROBE_PREFILTER_SIZE = 64;
+   //These dictate the default resolution size for the probe arrays
    static const GFXFormat PROBE_FORMAT = GFXFormatR16G16B16A16F;// GFXFormatR8G8B8A8;// when hdr fixed GFXFormatR16G16B16A16F; look into bc6h compression
    static const U32 INVALID_CUBE_SLOT = U32_MAX;
 
    static F32 smMaxProbeDrawDistance;
    static S32 smMaxProbesPerFrame;
-
+   static S32 smProbeBakeResolution;
+   SceneRenderState *mState;
 private:
-   //Array rendering
-   U32 mEffectiveProbeCount;
-   S32 mMipCount;
+   /// <summary>
+   /// List of registered probes. These are not necessarily rendered in a given frame
+   /// but the Probe Manager is aware of them and they have cubemap array slots allocated
+   /// </summary>
+   Vector<ProbeRenderInst>    mRegisteredProbes;
 
+   /// <summary>
+   /// List of active probes. These are ones that are not only registered, but submitted by the probe itself as
+   /// ready to be rendered. Likely to be rendered in the current frame, settings-dependent.
+   /// </summary>
+   Vector<ProbeRenderInst>    mActiveProbes;
+
+   /// <summary>
+   /// The PostEffect used to actually rendered the probes into the frame when in deferred mode
+   /// </summary>
+   SimObjectPtr<PostEffect>   mProbeArrayEffect;
+
+   /// <summary>
+   /// Do we have a active skylight probe
+   /// </summary>
    bool            mHasSkylight;
+
+   /// <summary>
+   /// If we have a skylight, what's the array pair index for it?
+   /// </summary>
    S32             mSkylightCubemapIdx;
 
-   //number of cubemaps
+   /// <summary>
+   /// The 'effective' probe count. This tracks the number of probes that are actually going to be rendered
+   /// </summary>
+   U32                        mEffectiveProbeCount;
+   //
+   //Array rendering
+
+   /// <summary>
+   /// The number of mips the cubemap array has. Mips are used in the PBR calcs for handling roughness
+   /// </summary>
+   S32                        mMipCount;
+
+   /// <summary>
+   /// The number of cubemaps registered in our array pair
+   /// </summary>
    U32 mCubeMapCount;
-   //number of cubemap slots allocated
+
+   /// <summary>
+   /// The number of allocated slots for the array pair. Rather than adding slots one at a time to the arrays
+   /// We allocate in chunks so we don't have to resize/rebuild the arrays as often
+   /// </summary>
    U32 mCubeSlotCount;
-   //array of cubemap slots, due to the editor these may be mixed around as probes are added and deleted
+
+   /// <summary>
+   /// List indicating if a given allocated slot is actually in use.
+   /// Due to the editor these may be mixed around as probes are added and deleted
+   /// </summary>
+   /// <returns></returns>
    bool mCubeMapSlots[PROBE_MAX_COUNT];
 
+   /// <summary>
+   /// The prefilter cubemap array
+   /// </summary>
    GFXCubemapArrayHandle mPrefilterArray;
+
+   /// <summary>
+   /// The irradiance cubemap array
+   /// </summary>
    GFXCubemapArrayHandle mIrradianceArray;
 
    //Utilized in forward rendering
+
+   /// <summary>
+   /// This is used to look up already-made ProbeShaderConsts for a given shader
+   /// This allows us to avoid having to rebuild the consts each frame if it's a shader
+   /// we've already handled before.
+   /// </summary>
    ProbeConstantMap mConstantLookup;
+
+   /// <summary>
+   /// The last shader we rendered(in forward mode). With this, we can shortcut the constant
+   /// lookup if the shader being processed and the last one are the same.
+   /// </summary>
    GFXShaderRef mLastShader;
+
+   /// <summary>
+   /// THe previous shader constants. When used in conjunction with the mLastShader, we can skip
+   /// having to do a lookup to find an existing ProbeShaderConstants, saving overhead on batched
+   /// rendering
+   /// </summary>
    ProbeShaderConstants* mLastConstants;
 
-   //
-   SimObjectPtr<PostEffect> mProbeArrayEffect;
-
-   //Default skylight, used for shape editors, etc
-   ProbeRenderInst* mDefaultSkyLight;
-
+   /// <summary>
+   /// The BRDF texture used in PBR math calculations
+   /// </summary>
    GFXTexHandle mBRDFTexture;
 
+   /// <summary>
+   /// Processed best probe selection list of the current frame when rendering in deferred mode.
+   /// </summary>
    ProbeDataSet mProbeData;
-   ///Prevents us from saving out the cubemaps(for now) but allows us the full HDR range on the in-memory cubemap captures
+
+   /// <summary>
+   /// Allows us the full HDR range on the in-memory cubemap captures
+   /// </summary>
    bool mUseHDRCaptures;
 
-   U32 mPrefilterMipLevels;
-   U32 mPrefilterSize;
+protected:
+   /// The current active light manager.
+   static RenderProbeMgr* smProbeManager;
+
+   //=============================================================================
+   // Internal Management/Utility Functions
+   //=============================================================================
+
+   /// <summary>
+   /// Simple utility function that finds the next free cubemap slot for the cubemap array
+   /// </summary>
+   /// <returns>U32 index of next available slot</returns>
+   U32 _findNextEmptyCubeSlot()
+   {
+      for (U32 i = 0; i < PROBE_MAX_COUNT; i++)
+      {
+         if (!mCubeMapSlots[i])
+            return i;
+      }
+      return INVALID_CUBE_SLOT;
+   }
+
+   /// <summary>
+   /// Utility function to quickly find a ProbeRenderInst in association to a
+   /// ReflectionProbe's ProbeInfo
+   /// </summary>
+   /// <param name="probeInfo"></param>
+   /// <returns>Associated ProbeRederInst to param's probeInfo. Null if no matches found</returns>
+   ProbeRenderInst* findProbeInst(ReflectionProbe::ProbeInfo* probeInfo)
+   {
+      for (U32 i = 0; i < mRegisteredProbes.size(); i++)
+      {
+         auto asd = mRegisteredProbes[i];
+         if (mRegisteredProbes[i].mProbeInfo == probeInfo)
+         {
+            return &mRegisteredProbes[i];
+         }
+      }
+
+      return nullptr;
+   }
+
 public:
    RenderProbeMgr();
    RenderProbeMgr(RenderInstType riType, F32 renderOrder, F32 processAddOrder);
@@ -286,75 +343,139 @@ public:
    static void initPersistFields();
    static void consoleInit();
 
+   virtual void addElement(RenderInst* inst) {};
    DECLARE_CONOBJECT(RenderProbeMgr);
 
-protected:
-   /// The current active light manager.
-   static RenderProbeMgr *smProbeManager;
-
-   /// This helper function sets the shader constansts
-   /// for the stock 4 light forward lighting code.
-   void _update4ProbeConsts(const SceneData &sgData,
-      MatrixSet &matSet,
-      ProbeShaderConstants *probeShaderConsts,
-      GFXShaderConstBuffer *shaderConsts);
-
-   void _setupStaticParameters();
-   void _setupPerFrameParameters(const SceneRenderState *state);
-   virtual void addElement(RenderInst* inst) {};
-   virtual void render(SceneRenderState * state);
-
-   ProbeShaderConstants* getProbeShaderConstants(GFXShaderConstBuffer* buffer);
-
-   PostEffect* getProbeArrayEffect();
-
-
-   U32 _findNextEmptyCubeSlot()
-   {
-      for (U32 i = 0; i < PROBE_MAX_COUNT; i++)
-      {
-         if (!mCubeMapSlots[i])
-            return i;
-      }
-      return INVALID_CUBE_SLOT;
-   }
-
-public:
-   // RenderBinMgr
-   void updateProbes();
-
-   /// Returns the active LM.
-   static inline RenderProbeMgr* getProbeManager();
-
-   void registerProbe(ProbeRenderInst* newProbe);
-   void unregisterProbe(U32 probeIdx);
-   void submitProbe(const ProbeRenderInst& newProbe);
-
-   static S32 QSORT_CALLBACK _probeScoreCmp(const ProbeRenderInst* a, const  ProbeRenderInst* b);
-
-   virtual void setProbeInfo(ProcessedMaterial *pmat,
-	   const Material *mat,
-	   const SceneData &sgData,
-	   const SceneRenderState *state,
-	   U32 pass,
-	   GFXShaderConstBuffer *shaderConsts);
-
-   void setupSGData(SceneData& data, const SceneRenderState* state, LightInfo* light);
-   
-   void updateProbeTexture(ProbeRenderInst* probeInfo);
-
-   void reloadTextures();
-
-   /// Debug rendering
+   /// <summary>
+   /// Static flag used to indicate if probes should be rendered at all. Used for debugging
+   /// </summary>
    static bool smRenderReflectionProbes;
 
-   void bakeProbe(ReflectionProbe *probeInfo);
+   //=============================================================================
+   // Utility functions for processing and setting up the probes for rendering
+   //=============================================================================
+
+   /// <summary>
+   /// Sorts probes based on their score values. These scores are calculated by the probes themselves based on size, distance from camera, etc
+   /// </summary>
+   static S32 QSORT_CALLBACK _probeScoreCmp(const ProbeRenderInst* a, const  ProbeRenderInst* b);
+
+   /// <summary>
+   /// Builds a dataset of the best probes to be rendered this frame.
+   /// </summary>
+   /// <param name="objPosition"></param>
+   /// <param name="probeDataSet"></param>
+
+   void getBestProbes(const Point3F& objPosition, ProbeDataSet* probeDataSet);
+
+   /// <summary>
+   /// This function adds a ReflectionProbe to the registered list and also allocates
+   /// a slot in the cubemap array pair for its use
+   /// </summary>
+   /// <param name="probeInfo">The probe info to be registered to the bin</param>
+   void registerProbe(ReflectionProbe::ProbeInfo* probeInfo);
+
+   /// <summary>
+   /// This function removes the ReflectionProbe from the registered list, and marks it's cubemap
+   /// array slots as unused, allowing them to be freed.
+   /// </summary>
+   /// <param name="probeInfo">The probe info to be un-registered to the bin</param>
+   void unregisterProbe(ReflectionProbe::ProbeInfo* probeInfo);
+
+   /// <summary>
+   /// This function is for registering a ReflectionProbe's probe info
+   /// as being rendered in the current frame. This is distinct from
+   /// registered probes in that registered probes are any 'real' probe
+   /// in the scene, but they may not necessarily render
+   /// Active(submmitted) probes are intended to actual be rendered this frame
+   /// </summary>
+   /// <param name="probe">The ProbeInfo being submitted to be rendered</param>
+   void submitProbe(ReflectionProbe::ProbeInfo* probe);
+
+   /// <summary>
+   /// Gets the PostEffect used by the bin for rendering the probe array in deferred
+   /// </summary>
+   /// <returns>the PostEffect object</returns>
+   PostEffect* getProbeArrayEffect();
+
+   /// <summary>
+   /// Finds the associated cubemap array slot for the incoming ProbeInfo and updates the array's texture(s) from it
+   /// </summary>
+   /// <param name="probeInfo"></param>
+   void updateProbeTexture(ReflectionProbe::ProbeInfo* probeInfo);
+
+   /// <summary>
+   /// Forces an update for all registered probes' cubemaps
+   /// </summary>
+   void reloadTextures();
+
+   /// <summary>
+   /// Takes a reflection probe and runs the cubemap bake process on it, outputting the resulting files to disk
+   /// </summary>
+   void bakeProbe(ReflectionProbe* probe);
+
+   /// <summary>
+   /// Runs the cubemap bake on all probes in the current scene
+   /// </summary>
    void bakeProbes();
 
-   void getProbeTextureData(ProbeTextureArrayData* probeTextureSet);
-   S32 getSkylightIndex() { return mSkylightCubemapIdx; }
-   //accumulates the best fit of probes given the object position
-   void getBestProbes(const Point3F& objPosition, ProbeDataSet* probeDataSet);
+   /// <summary>
+   /// Returns the active Probe Manager.
+   /// </summary>
+   static inline RenderProbeMgr* getProbeManager();
+
+   //=============================================================================
+   // Forward Rendering functions
+   //=============================================================================
+
+   /// <summary>
+   /// This function returns or builds a ProbeShaderConsts containing needed data for
+   /// rendering probes in forward mode
+   /// </summary>
+   /// <param name="buffer">The GFXShaderConstBuffer used to build or fetch the Probe Consts</param>
+   ProbeShaderConstants* getProbeShaderConstants(GFXShaderConstBuffer* buffer);
+
+   /// <summary>
+   /// Sets up the probe data required for doing a render in forward mode.
+   /// </summary>
+   virtual void setProbeInfo(ProcessedMaterial* pmat,
+      const Material* mat,
+      const SceneData& sgData,
+      const SceneRenderState* state,
+	   U32 pass,
+      GFXShaderConstBuffer* shaderConsts);
+
+   /// <summary>
+   /// Invoked as part of the setup in preperation to render an object in forward mode. Used to ensure the probes are
+   /// sorted ahead of render.
+   /// </summary>
+   /// <param name="state"></param>
+   void setupSGData(SceneData& data, const SceneRenderState* state, LightInfo* light);
+   
+   /// <summary>
+   /// Sets up and binds all the shader const data required for rendering probes/IBL for a forward-rendered material.
+   /// </summary>
+   /// <returns></returns>
+   void _update4ProbeConsts(const SceneData& sgData,
+      MatrixSet& matSet,
+      ProbeShaderConstants* probeShaderConsts,
+      GFXShaderConstBuffer* shaderConsts);
+
+   //=============================================================================
+   // Deferred Rendering Functions
+   //=============================================================================
+
+   /// <summary>
+   /// Ensures the probes are properly sorted before we render them in deferred mode
+   /// </summary>
+   void _setupPerFrameParameters(const SceneRenderState *state);
+
+   /// <summary>
+   /// Renders the sorted probes list via a PostEffect to draw them into the buffer data in deferred mode.
+   /// </summary>
+   virtual void render(SceneRenderState * state);
+
+   virtual void clear() { mActiveProbes.clear(); Parent::clear(); }
 };
 
 RenderProbeMgr* RenderProbeMgr::getProbeManager()

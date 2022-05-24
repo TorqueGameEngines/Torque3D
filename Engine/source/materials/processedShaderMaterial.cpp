@@ -1290,16 +1290,9 @@ void ProcessedShaderMaterial::setCustomShaderData(Vector<CustomShaderBindingData
 
 	for (U32 i = 0; i < shaderData.size(); i++)
 	{
-		for (U32 h = 0; h < handles->mCustomHandles.size(); ++h)
-		{
-			StringTableEntry handleName = shaderData[i].getHandleName();
-			bool tmp = true;
-		}
 		//roll through and try setting our data!
 		for (U32 h = 0; h < handles->mCustomHandles.size(); ++h)
 		{
-			StringTableEntry handleName = shaderData[i].getHandleName();
-			StringTableEntry rpdHandleName = handles->mCustomHandles[h].handleName;
 			if (handles->mCustomHandles[h].handleName == shaderData[i].getHandleName())
 			{
 				if (handles->mCustomHandles[h].handle->isValid())

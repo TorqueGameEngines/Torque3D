@@ -73,8 +73,8 @@ ConsoleDocClass(ReflectionProbe,
 ImplementEnumType(ReflectProbeType,
    "Type of mesh data available in a shape.\n"
    "@ingroup gameObjects")
-{ ProbeRenderInst::Sphere, "Sphere", "Sphere shaped" },
-{ ProbeRenderInst::Box, "Box", "Box shape" }
+{ ReflectionProbe::ProbeInfo::Sphere, "Sphere", "Sphere shaped" },
+{ ReflectionProbe::ProbeInfo::Box, "Box", "Box shape" }
 EndImplementEnumType;
 
 ImplementEnumType(ReflectionModeEnum,
@@ -97,7 +97,7 @@ ReflectionProbe::ReflectionProbe()
 
    mTypeMask = LightObjectType | MarkerObjectType;
 
-   mProbeShapeType = ProbeRenderInst::Box;
+   mProbeShapeType = ProbeInfo::Box;
 
    mReflectionModeType = BakedCubemap;
 
@@ -120,8 +120,6 @@ ReflectionProbe::ReflectionProbe()
 
    mRefreshRateMS = 200;
    mDynamicLastBakeMS = 0;
-
-   mMaxDrawDistance = 75;
 
    mResourcesCreated = false;
    mPrefilterSize = 64;
@@ -239,7 +237,7 @@ bool ReflectionProbe::_setRadius(void *object, const char *index, const char *da
 {
    ReflectionProbe* probe = reinterpret_cast<ReflectionProbe*>(object);
 
-   if (probe->mProbeShapeType != ProbeRenderInst::Sphere)
+   if (probe->mProbeShapeType != ProbeInfo::Sphere)
       return false;
 
    probe->mObjScale = Point3F(probe->mRadius, probe->mRadius, probe->mRadius);
@@ -291,7 +289,7 @@ bool ReflectionProbe::onAdd()
       if (!mPersistentId)
          mPersistentId = getOrCreatePersistentId();
 
-      mProbeUniqueID = String::ToString(mPersistentId->getUUID().getHash());
+      mProbeUniqueID = mPersistentId->getUUID().toString();
    }
 
    // Refresh this object's material (if any)
@@ -312,7 +310,7 @@ void ReflectionProbe::onRemove()
 {
    if (isClientObject())
    {
-      PROBEMGR->unregisterProbe(mProbeInfo.mProbeIdx);
+      PROBEMGR->unregisterProbe(&mProbeInfo);
    }
 
    // Remove this object from the scene
@@ -461,10 +459,10 @@ void ReflectionProbe::unpackUpdate(NetConnection *conn, BitStream *stream)
 
    if (stream->readFlag())  // StaticDataMask
    {
-      U32 shapeType = ProbeRenderInst::Sphere;
+      U32 shapeType = ProbeInfo::Sphere;
       stream->read(&shapeType);
 
-      mProbeShapeType = (ProbeRenderInst::ProbeShapeType)shapeType;
+      mProbeShapeType = (ProbeInfo::ProbeShapeType)shapeType;
 
       stream->read(&mRadius);
 
@@ -497,6 +495,8 @@ void ReflectionProbe::unpackUpdate(NetConnection *conn, BitStream *stream)
 //-----------------------------------------------------------------------------
 void ReflectionProbe::updateProbeParams()
 {
+   mProbeInfo.mObject = this;
+
    if (!mResourcesCreated)
    {
       if (!createClientResources())
@@ -507,12 +507,12 @@ void ReflectionProbe::updateProbeParams()
 
    mProbeInfo.mProbeShapeType = mProbeShapeType;
 
-   if (mProbeShapeType == ProbeRenderInst::Sphere)
+   if (mProbeShapeType == ProbeInfo::Sphere)
       mObjScale.set(mRadius, mRadius, mRadius);
 
    Box3F bounds;
 
-   if (mProbeShapeType == ProbeRenderInst::Skylight)
+   if (mProbeShapeType == ProbeInfo::Skylight)
    {
       mProbeInfo.mPosition = Point3F::Zero;
       mProbeInfo.mTransform = MatrixF::Identity;
@@ -564,8 +564,6 @@ void ReflectionProbe::updateProbeParams()
       else
          processDynamicCubemap();
    }
-
-   PROBEMGR->updateProbes();
 }
 
 void ReflectionProbe::processDynamicCubemap()
@@ -575,7 +573,7 @@ void ReflectionProbe::processDynamicCubemap()
 
 void ReflectionProbe::processBakedCubemap()
 {
-   mProbeInfo.mIsEnabled = false;
+   //mProbeInfo.mIsEnabled = false;
 
    if ((mReflectionModeType != BakedCubemap) || mProbeUniqueID.isEmpty())
       return;
@@ -611,7 +609,7 @@ void ReflectionProbe::processBakedCubemap()
 
    if (mEnabled && mProbeInfo.mPrefilterCubemap->isInitialized() && mProbeInfo.mIrradianceCubemap->isInitialized())
    {
-      mProbeInfo.mIsEnabled = true;
+      //mProbeInfo.mIsEnabled = true;
 
       mCubemapDirty = false;
 
@@ -621,6 +619,11 @@ void ReflectionProbe::processBakedCubemap()
       //now, cleanup
       mProbeInfo.mPrefilterCubemap.free();
       mProbeInfo.mIrradianceCubemap.free();
+   }
+   else
+   {
+      //if we failed, disable
+      mProbeInfo.mIsEnabled = false;
    }
 }
 
@@ -798,7 +801,7 @@ void ReflectionProbe::createEditorResources()
 
    mEditorShape = NULL;
 
-   String shapeFile = "tools/resources/ReflectProbeSphere.dae";
+   String shapeFile = "tools/resources/previewSphereShape.dae";
 
    // Attempt to get the resource from the ResourceManager
    mEditorShape = ResourceManager::get().load(shapeFile);
@@ -811,16 +814,16 @@ void ReflectionProbe::createEditorResources()
 
 void ReflectionProbe::prepRenderImage(SceneRenderState *state)
 {
-   if (!mEnabled || !RenderProbeMgr::smRenderReflectionProbes)
+   if (!mEnabled || (!RenderProbeMgr::smRenderReflectionProbes && Con::getVariable("$Probes::Capturing", "0") == "0"))
       return;
 
    Point3F distVec = getRenderPosition() - state->getCameraPosition();
    F32 dist = distVec.len();
 
    //Culling distance. Can be adjusted for performance options considerations via the scalar
-   if (dist > mMaxDrawDistance * Con::getFloatVariable("$pref::GI::ProbeDrawDistScale", 1.0))
+   if (dist > RenderProbeMgr::smMaxProbeDrawDistance * Con::getFloatVariable("$pref::GI::ProbeDrawDistScale", 1.0))
    {
-      mProbeInfo.mScore = mMaxDrawDistance;
+      mProbeInfo.mScore = RenderProbeMgr::smMaxProbeDrawDistance;
       return;
    }
 
@@ -842,7 +845,7 @@ void ReflectionProbe::prepRenderImage(SceneRenderState *state)
 
    //mProbeInfo.mScore *= mMax(mAbs(mDot(vect, state->getCameraTransform().getForwardVector())),0.001f);
 
-   PROBEMGR->submitProbe(mProbeInfo);
+   PROBEMGR->submitProbe(&mProbeInfo);
 
 #ifdef TORQUE_TOOLS
    if (ReflectionProbe::smRenderPreviewProbes && gEditingMission && mPrefilterMap != nullptr)
@@ -938,7 +941,7 @@ void ReflectionProbe::_onRenderViz(ObjectRenderInst *ri,
    ColorI color = ColorI(255, 0, 255, 63);
 
    const MatrixF worldToObjectXfm = mObjToWorld;
-   if (mProbeShapeType == ProbeRenderInst::Sphere)
+   if (mProbeShapeType == ProbeInfo::Sphere)
    {
       draw->drawSphere(desc, mRadius, getPosition(), color);
    }

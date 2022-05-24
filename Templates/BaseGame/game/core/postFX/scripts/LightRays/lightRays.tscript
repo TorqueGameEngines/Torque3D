@@ -126,7 +126,7 @@ function LightRayPostFX::populatePostFXSettings(%this)
 
 function PostEffectEditorInspector::toggleLightRayPostFX(%this)
 {
-   if($PostFX::LightRayPostFX::Enabled)
+   if($PostFX::LightRayPostFX::Enabled && $pref::PostFX::EnableLightRays)
       LightRayPostFX.enable();
    else
       LightRayPostFX.disable();
@@ -134,7 +134,7 @@ function PostEffectEditorInspector::toggleLightRayPostFX(%this)
 
 function LightRayPostFX::applyFromPreset(%this)
 {
-   if($PostFX::LightRayPostFX::Enabled)
+   if($PostFX::LightRayPostFX::Enabled && $pref::PostFX::EnableLightRays)
       %this.enable();
    else
       %this.disable();

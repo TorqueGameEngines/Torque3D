@@ -137,7 +137,7 @@ void Processor::init()
    dMemset(brand, 0, sizeof(brand));
    getBrand(brand);
 
-   SetProcessoInfo(Platform::SystemInfo.processor, vendor, brand);
+   SetProcessorInfo(Platform::SystemInfo.processor, vendor, brand);
    detectCpuFeatures(Platform::SystemInfo.processor);
 
    U32 mhz = 1000; // default if it can't be found

@@ -190,7 +190,7 @@ void Processor::init()
    detectCpuFeatures(procflags);
    
    Platform::SystemInfo.processor.properties = procflags;
-   SetProcessoInfo(Platform::SystemInfo.processor, vendor, brandString);
+   SetProcessorInfo(Platform::SystemInfo.processor, vendor, brandString);
    
    
    Con::printf("System & Processor Information:");

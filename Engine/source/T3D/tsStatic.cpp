@@ -419,6 +419,8 @@ bool TSStatic::_createShape()
       // Reapply the current skin
       mAppliedSkinName = "";
       reSkin();
+
+      updateMaterials();
    }
 
    prepCollision();
@@ -1618,8 +1620,6 @@ void TSStatic::updateMaterials()
          }
       }
    }
-
-   mChangingMaterials.clear();
 
    // Initialize the material instances
    mShapeInstance->initMaterialList();

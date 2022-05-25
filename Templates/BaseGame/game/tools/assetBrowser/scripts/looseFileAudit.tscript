@@ -128,8 +128,8 @@ function LooseFileAuditWindow::refresh(%this)
 
    while( %file !$= "" )
    {      
-      //%filename = fileName(%file);
-      //%filePath = filePath(%file);
+      if(!endsWith(%file, ".cached.dts"))
+      {
       if(!strIsMatchExpr("*.asset.taml", %file) && !strIsMatchExpr("*.taml", %file))
       {
          %assetsFound = AssetDatabase.findAssetLooseFile(%aq, %file);
@@ -137,6 +137,7 @@ function LooseFileAuditWindow::refresh(%this)
          if(%assetsFound == 0)
          {
             LooseFileList.insertItem(1, %file); 
+            }
          }
       }
       

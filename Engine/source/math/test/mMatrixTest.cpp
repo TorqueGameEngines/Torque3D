@@ -60,19 +60,6 @@ TEST(MatrixF, MultiplyImplmentations)
    U32 cpuProperties = Platform::SystemInfo.processor.properties;
    bool same;
 
-   // Test 3D NOW! if it is available
-   F32 mrAMD[16];
-   if (cpuProperties & CPU_PROP_3DNOW)
-   {
-      Athlon_MatrixF_x_MatrixF(m1, m2, mrAMD);
-
-      same = true;
-      for (S32 i = 0; i < 16; i++)
-         same &= mIsEqual(mrC[i], mrAMD[i]);
-
-      EXPECT_TRUE(same) << "Matrix multiplication verification failed. (C vs. 3D NOW!)";
-   }
-
    // Test SSE if it is available
    F32 mrSSE[16];
    if (cpuProperties & CPU_PROP_SSE)

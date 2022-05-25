@@ -82,9 +82,6 @@ static void detectCpuFeatures(Platform::SystemInfo_struct::Processor &processor)
    U32 edx = cpuInfo[3];  // edx
    U32 ecx = cpuInfo[2]; // ecx
 
-   if (processor.type == ProcessorType::CPU_AMD)
-      processor.properties |= (edx & BIT_3DNOW) ? CPU_PROP_3DNOW : 0;
-
    processor.properties |= (edx & BIT_MMX) ? CPU_PROP_MMX : 0;
    processor.properties |= (edx & BIT_SSE) ? CPU_PROP_SSE : 0;
    processor.properties |= (edx & BIT_SSE2) ? CPU_PROP_SSE2 : 0;
@@ -137,7 +134,7 @@ void Processor::init()
    dMemset(brand, 0, sizeof(brand));
    getBrand(brand);
 
-   SetProcessoInfo(Platform::SystemInfo.processor, vendor, brand);
+   SetProcessorInfo(Platform::SystemInfo.processor, vendor, brand);
    detectCpuFeatures(Platform::SystemInfo.processor);
 
    U32 mhz = 1000; // default if it can't be found
@@ -165,8 +162,6 @@ void Processor::init()
    Con::printf("   Processor: %s", Platform::SystemInfo.processor.name);
    if (Platform::SystemInfo.processor.properties & CPU_PROP_MMX)
       Con::printf("      MMX detected" );
-   if (Platform::SystemInfo.processor.properties & CPU_PROP_3DNOW)
-      Con::printf("      3DNow detected" );
    if (Platform::SystemInfo.processor.properties & CPU_PROP_SSE)
       Con::printf("      SSE detected" );
    if (Platform::SystemInfo.processor.properties & CPU_PROP_SSE2)

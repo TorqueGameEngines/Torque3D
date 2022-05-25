@@ -64,7 +64,7 @@ namespace CPUInfo
    EConfig CPUCount( U32& totalAvailableLogical, U32& totalAvailableCores );
 } // namespace CPUInfo
 
-void SetProcessoInfo(Platform::SystemInfo_struct::Processor& pInfo, char* vendor, char* brand);
+void SetProcessorInfo(Platform::SystemInfo_struct::Processor& pInfo, const char* vendor, const char* brand);
 
 #endif // _TORQUE_PLATFORM_PLATFORMCOUNT_H_
 

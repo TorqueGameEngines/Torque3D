@@ -28,7 +28,6 @@
 
 extern void mInstallLibrary_C();
 extern void mInstallLibrary_Vec();
-extern void mInstall_Library_SSE();
 
 static MRandomLCG sgPlatRandom;
 
@@ -115,7 +114,6 @@ void Math::init(U32 properties)
    if( properties & CPU_PROP_SSE )
    {
       Con::printf( "   Installing SSE extensions" );
-      mInstall_Library_SSE();
    }
    #endif
    

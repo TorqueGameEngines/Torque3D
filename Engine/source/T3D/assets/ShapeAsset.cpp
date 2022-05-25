@@ -475,8 +475,7 @@ StringTableEntry ShapeAsset::getAssetIdByFilename(StringTableEntry fileName)
    }
    else
    {
-      AssetPtr<ShapeAsset> shapeAsset = shapeAssetId;
-      shapeAsset->mLoadedState = AssetErrCode::BadFileReference;
+      AssetPtr<ShapeAsset> shapeAsset = shapeAssetId; //ensures the fallback is loaded
    }
 
    return shapeAssetId;

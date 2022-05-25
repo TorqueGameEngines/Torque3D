@@ -221,8 +221,7 @@ StringTableEntry ImageAsset::getAssetIdByFilename(StringTableEntry fileName)
    }
    else
    {
-      AssetPtr<ImageAsset> imageAsset = imageAssetId;
-      imageAsset->mLoadedState = AssetErrCode::BadFileReference;
+      AssetPtr<ImageAsset> imageAsset = imageAssetId; //ensures the fallback is loaded
    }
 
    return imageAssetId;

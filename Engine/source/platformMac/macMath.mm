@@ -27,7 +27,6 @@
 #include "console/engineAPI.h"
 
 extern void mInstallLibrary_C();
-extern void mInstallLibrary_Vec();
 
 static MRandomLCG sgPlatRandom;
 

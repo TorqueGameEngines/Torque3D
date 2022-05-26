@@ -40,6 +40,9 @@
 #endif
 
 #include "gui/editor/guiInspectorTypes.h"
+#ifndef _ASSET_PTR_H_
+#include "assets/assetPtr.h"
+#endif 
 
 #ifndef _BITSTREAM_H_
 #include "core/stream/bitStream.h"
@@ -56,6 +59,10 @@
 #ifndef _SFXPROFILE_H_
 #include "sfx/sfxProfile.h"
 #endif // !_SFXPROFILE_H_
+
+#ifndef _RESOURCEMANAGER_H_
+#include "core/resourceManager.h"
+#endif
 
 #include "assetMacroHelpers.h"
 class SFXResource;
@@ -178,6 +185,7 @@ public:
    StringTableEntry m##name##AssetId;\
    AssetPtr<SoundAsset> m##name##Asset = NULL;\
    SFXProfile* m##name##Profile = NULL;\
+   SFXDescription* m##name##Desc = NULL;\
 public: \
    const StringTableEntry get##name##File() const { return m##name##Name; }\
    void set##name##File(const FileName &_in) { m##name##Name = StringTable->insert(_in.c_str());}\
@@ -271,7 +279,15 @@ public: \
    SFXProfile* get##name##Profile()\
    {\
       if (get##name() != StringTable->EmptyString() && m##name##Asset.notNull())\
-         return m##name##Asset->getSfxProfile();\
+         m##name##Profile = m##name##Asset->getSfxProfile();\
+         return m##name##Profile;\
+      return NULL;\
+   }\
+   SFXDescription* get##name##Description()\
+   {\
+      if (get##name() != StringTable->EmptyString() && m##name##Asset.notNull())\
+         m##name##Desc = m##name##Asset->getSfxDescription();\
+         return m##name##Desc;\
       return NULL;\
    }\
    bool is##name##Valid() { return (get##name() != StringTable->EmptyString() && m##name##Asset->getStatus() == AssetBase::Ok); }
@@ -289,6 +305,31 @@ public: \
    addProtectedField(assetText(name, Asset), TypeSoundAssetId, Offset(m##name##AssetId, consoleClass), _set##name##Data, & defaultProtectedGetFn, assetText(name, asset reference.));
 
 #endif // TORQUE_SHOW_LEGACY_FILE_FIELDS
+
+//network send - datablock
+#define PACKDATA_SOUNDASSET(name)\
+   if (stream->writeFlag(m##name##Asset.notNull()))\
+   {\
+      if (m##name##Profile)\
+         m##name##Profile->packData(stream);\
+      sfxWrite(stream, m##name##Desc);\
+   }\
+   else\
+      stream->writeString(m##name##Name);
+
+//network recieve - datablock
+#define UNPACKDATA_SOUNDASSET(name)\
+   if (stream->readFlag())\
+   {\
+      if (m##name##Profile)\
+         m##name##Profile->unpackData(stream);\
+      sfxRead(stream, &m##name##Desc);\
+   }\
+   else\
+   {\
+      m##name##Name = stream->readSTString();\
+      _set##name(m##name##Name);\
+   }
 
 #pragma endregion
 

@@ -86,6 +86,19 @@ namespace
          ret |= SI_ALT;
       }
 
+      // NOTE: For MacOS, this will treat command as Left or Right CTRL
+      if (mod & KMOD_LGUI)
+      {
+         ret |= SI_LCTRL;
+         ret |= SI_CTRL;
+      }
+
+      if (mod & KMOD_RGUI)
+      {
+         ret |= SI_RCTRL;
+         ret |= SI_CTRL;
+      }
+
       return ret;
    }
 }

@@ -115,11 +115,12 @@ endif (WIN32)
 # Handle platformSDL
 file(GLOB TORQUE_PLATFORM_SDL_SOURCES "platformSDL/*.cpp" "platformSDL/threads/*.cpp")
 
+
+################# Start building libs ###################
+
 set(TORQUE_COMPILE_DEFINITIONS ICE_NO_DLL PCRE_STATIC TORQUE_ADVANCED_LIGHTING TORQUE_SHADERGEN
 							   TORQUE_OPENGL TORQUE_OPCODE TORQUE_ASSIMP TORQUE_SDL TORQUE_COLLADA
 							   TORQUE_UNICODE UNICODE _UNICODE)
-
-################# Start building libs ###################
 
 # Set common linkages
 set(TORQUE_LINK_LIBRARIES tinyxml collada ljpeg squish png_static opcode assimp
@@ -154,7 +155,6 @@ endif (APPLE)
 # Search module directories
 set(TORQUE_MODULE_PATHS "${CMAKE_SOURCE_DIR}/Tools/CMake/modules")
 
-message("PATH: ${TORQUE_MODULE_USER_PATH}")
 if (NOT "${TORQUE_MODULE_USER_PATH}" STREQUAL "")
   list(APPEND TORQUE_MODULE_PATHS "${TORQUE_MODULE_USER_PATH}")
 endif()
@@ -176,7 +176,6 @@ foreach (TORQUE_MODULE_PATH ${TORQUE_MODULE_PATHS})
     get_filename_component(POSSIBLE_PROJECT_ABSOLUTEPATH "${POSSIBLE_PROJECT}"
                        REALPATH BASE_DIR "${TORQUE_MODULE_PATH}")
 
-    message("SCANNING: ${POSSIBLE_PROJECT_ABSOLUTEPATH}")
     if (EXISTS "${POSSIBLE_PROJECT_ABSOLUTEPATH}/CMakeLists.txt")
       add_subdirectory("${POSSIBLE_PROJECT_ABSOLUTEPATH}" ${CMAKE_BINARY_DIR}/temp/${POSSIBLE_PROJECT} EXCLUDE_FROM_ALL)
     endif()
@@ -202,25 +201,33 @@ if (WIN32)
 endif (WIN32)
 
 if (APPLE)
+  # Parameters used for the plist configuration
   set(EXECUTABLE_NAME "Game")
 
   CONFIGURE_FILE("${CMAKE_SOURCE_DIR}/Tools/CMake/Info.plist.in" "${CMAKE_BINARY_DIR}/temp/Info.plist" COPYONLY)
   set_target_properties(Game PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_BINARY_DIR}/temp/Info.plist")
-
-  install(TARGETS Game
-      BUNDLE DESTINATION game COMPONENT Runtime
-      RUNTIME DESTINATION bin COMPONENT Runtime
-  )
-
-  # Note Mac specific extension .app
-  set(APPS "\${CMAKE_INSTALL_PREFIX}/game/Game.app")
-
-  # Directories to look for dependencies
-  # FIXME: Auto detect?
-  set(DIRS ${CMAKE_BINARY_DIR}/temp/sdl2 ${CMAKE_BINARY_DIR}/temp/openal-soft ${CMAKE_BINARY_DIR}/temp/assimp/bin)
-
-  install(CODE "include(BundleUtilities)
-      fixup_bundle(\"${APPS}\" \"\" \"${DIRS}\")")
-else()
-  install(TARGETS Game DESTINATION game)
+  set_target_properties(Game PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/My Projects/${TORQUE_APP_NAME}/game")
 endif (APPLE)
+
+if (UNIX AND NOT APPLE)
+  target_link_options(Game PUBLIC "-Wl,-rpath,./")
+endif (UNIX AND NOT APPLE)
+
+# Process link libraries for dynamic links
+get_target_property(GAME_LINK_LIBRARIES Game LINK_LIBRARIES)
+foreach (GAME_LINK_LIBRARY ${GAME_LINK_LIBRARIES})
+  # For eg. OSX some links are not valid targets - for example frameworks provided by OS
+  if (TARGET ${GAME_LINK_LIBRARY})
+    get_target_property(LINK_LIBRARY_TYPE ${GAME_LINK_LIBRARY} TYPE)
+
+    # Only pay attention to shared libraries
+    if ("${LINK_LIBRARY_TYPE}" STREQUAL "SHARED_LIBRARY")
+      # On eg. OSX we are creating a bundle directory, so shared libs need to be handled differently here
+      IF (APPLE)
+        install(FILES $<TARGET_FILE:${GAME_LINK_LIBRARY}> DESTINATION "game/Game.app/Resources")
+      else()
+        install(FILES $<TARGET_FILE:${GAME_LINK_LIBRARY}> DESTINATION "game")
+      endif (APPLE)
+    endif()
+  endif()
+endforeach()

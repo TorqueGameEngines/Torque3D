@@ -9,6 +9,9 @@ if("${TORQUE_APP_NAME}" STREQUAL "")
 	message(FATAL_ERROR "Please set TORQUE_APP_NAME first")
 endif()
 
+# Set the CMake install prefix. For now we override what the user or some other system may specify.
+set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/My Projects/${TORQUE_APP_NAME}")
+
 # Detect CPU Information
 if (CMAKE_SYSTEM_PROCESSOR MATCHES "arm")
     if( CMAKE_CXX_SIZEOF_DATA_PTR EQUAL 8 )

@@ -77,9 +77,6 @@ GFXDeclareVertexFormat( ConvexVert )
 
 class PhysicsBody;
 
-// Define our vertex format here so we don't have to
-// change it in multiple spots later
-typedef ConvexVert VertexType;
 
 class ConvexShape : public SceneObject
 {
@@ -99,6 +96,10 @@ public:
    // Declaring these structs directly within ConvexShape to prevent
    // the otherwise excessively deep scoping we had.
    // eg. ConvexShape::Face::Triangle ...
+
+   // Define our vertex format here so we don't have to
+   // change it in multiple spots later
+   typedef GFXVertexPNTTB VertexType;
 
    struct Edge
    {

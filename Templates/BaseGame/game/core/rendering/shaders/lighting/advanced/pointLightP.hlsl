@@ -36,14 +36,6 @@ struct ConvexConnectP
    float4 vsEyeDir : TEXCOORD2;
 };
 
-#ifdef USE_COOKIE_TEX
-
-/// The texture for cookie rendering.
-TORQUE_UNIFORM_SAMPLERCUBE(cookieMap, 3);
-
-#endif
-
-
 #ifdef SHADOW_CUBE
 
    float3 decodeShadowCoord( float3 shadowCoord )
@@ -110,8 +102,15 @@ TORQUE_UNIFORM_SAMPLER2D(deferredBuffer, 0);
 
 #ifdef SHADOW_CUBE
 TORQUE_UNIFORM_SAMPLERCUBE(shadowMap, 1);
+TORQUE_UNIFORM_SAMPLERCUBE(dynamicShadowMap, 2);
 #else
 TORQUE_UNIFORM_SAMPLER2D(shadowMap, 1);
+TORQUE_UNIFORM_SAMPLER2D(dynamicShadowMap, 2);
+#endif
+
+#ifdef USE_COOKIE_TEX
+/// The texture for cookie rendering.
+TORQUE_UNIFORM_SAMPLERCUBE(cookieMap, 3);
 #endif
 
 TORQUE_UNIFORM_SAMPLER2D(lightBuffer, 5);
@@ -175,12 +174,16 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
    #ifdef SHADOW_CUBE
 
       // TODO: We need to fix shadow cube to handle soft shadows!
-      float occ = TORQUE_TEXCUBE( shadowMap, mul( worldToLightProj, -surfaceToLight.L ) ).r;
-      float shadowed = saturate( exp( lightParams.y * ( occ - distToLight ) ) );
+      float staticShadow = TORQUE_TEXCUBE( shadowMap, mul( worldToLightProj, -surfaceToLight.L ) ).r;
+      float dynamicShadow = TORQUE_TEXCUBE( dynamicShadowMap, mul( worldToLightProj, -surfaceToLight.L ) ).r;
+      float shadowed = min(staticShadow, dynamicShadow);
+      shadowed = saturate( exp( lightParams.y * ( shadowed - distToLight ) ) );
 
    #else
       float2 shadowCoord = decodeShadowCoord( mul( worldToLightProj, -surfaceToLight.L ) ).xy;
-      float shadowed = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(shadowMap), ssPos.xy, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
+      float staticShadow = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(shadowMap), ssPos.xy, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
+      float dynamicShadow = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(dynamicShadowMap), ssPos.xy, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
+      float shadowed = min(staticShadow, dynamicShadow);
    #endif
    
    #endif // !NO_SHADOW

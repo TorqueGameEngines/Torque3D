@@ -31,6 +31,7 @@
 
 TORQUE_UNIFORM_SAMPLER2D(deferredBuffer, 0);
 TORQUE_UNIFORM_SAMPLER2D(shadowMap, 1);
+TORQUE_UNIFORM_SAMPLER2D(dynamicShadowMap, 2);
 
 TORQUE_UNIFORM_SAMPLER2D(colorBuffer, 5);
 TORQUE_UNIFORM_SAMPLER2D(matInfoBuffer, 6);
@@ -196,9 +197,12 @@ float4 main(FarFrustumQuadConnectP IN) : SV_TARGET
       float4 zDist = (zNearFarInvNearFar.x + zNearFarInvNearFar.y * surface.depth);
       float fadeOutAmt = ( zDist.x - fadeStartLength.x ) * fadeStartLength.y;
 
-      float4 shadowed_colors = AL_VectorLightShadowCast( TORQUE_SAMPLER2D_MAKEARG(shadowMap), IN.uv0.xy, worldToLightProj, surface.P, scaleX, scaleY, offsetX, offsetY,
+      float4 staticShadow = AL_VectorLightShadowCast( TORQUE_SAMPLER2D_MAKEARG(shadowMap), IN.uv0.xy, worldToLightProj, surface.P, scaleX, scaleY, offsetX, offsetY,
                                                              farPlaneScalePSSM, surfaceToLight.NdotL);
-
+      float4 dynamicShadow = AL_VectorLightShadowCast( TORQUE_SAMPLER2D_MAKEARG(dynamicShadowMap), IN.uv0.xy, worldToLightProj, surface.P, scaleX, scaleY, offsetX, offsetY,
+                                                             farPlaneScalePSSM, surfaceToLight.NdotL);
+      float4 shadowed_colors = min(staticShadow, dynamicShadow);
+      
       float shadow = shadowed_colors.a;
 	  
       #ifdef PSSM_DEBUG_RENDER

@@ -35,6 +35,7 @@ in vec3 vsEyeRay;
 
 uniform sampler2D deferredBuffer;
 uniform sampler2D shadowMap;
+uniform sampler2D dynamicShadowMap;
 
 uniform sampler2D colorBuffer;
 uniform sampler2D matInfoBuffer;             
@@ -207,9 +208,11 @@ void main()
       vec4 zDist = vec4(zNearFarInvNearFar.x + zNearFarInvNearFar.y * surface.depth);
       float fadeOutAmt = ( zDist.x - fadeStartLength.x ) * fadeStartLength.y;
 
-      vec4 shadowed_colors = AL_VectorLightShadowCast( shadowMap, uv0.xy, worldToLightProj, surface.P, scaleX, scaleY, offsetX, offsetY,
+      vec4 staticShadow = AL_VectorLightShadowCast( shadowMap, uv0.xy, worldToLightProj, surface.P, scaleX, scaleY, offsetX, offsetY,
                                                              farPlaneScalePSSM, surfaceToLight.NdotL);
-
+      vec4 dynamicShadow = AL_VectorLightShadowCast( dynamicShadowMap, uv0.xy, worldToLightProj, surface.P, scaleX, scaleY, offsetX, offsetY,
+                                                             farPlaneScalePSSM, surfaceToLight.NdotL);
+      float4 shadowed_colors = min(staticShadow, dynamicShadow);
       float shadow = shadowed_colors.a;
 	  
       #ifdef PSSM_DEBUG_RENDER

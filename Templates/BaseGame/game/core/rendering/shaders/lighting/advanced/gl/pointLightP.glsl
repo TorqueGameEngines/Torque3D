@@ -35,14 +35,6 @@ in vec4 ssPos;
 in vec4 vsEyeDir;
 in vec4 color;
 
-#ifdef USE_COOKIE_TEX
-
-/// The texture for cookie rendering.
-uniform samplerCube cookieMap;
-
-#endif
-
-
 #ifdef SHADOW_CUBE
 
    vec3 decodeShadowCoord( vec3 shadowCoord )
@@ -109,8 +101,15 @@ uniform sampler2D deferredBuffer;
 
 #ifdef SHADOW_CUBE
 	uniform samplerCube shadowMap;
+	uniform samplerCube dynamicShadowMap;
 #else
 	uniform sampler2D shadowMap;
+	uniform sampler2D dynamicShadowMap;
+#endif
+
+#ifdef USE_COOKIE_TEX
+/// The texture for cookie rendering.
+uniform samplerCube cookieMap;
 #endif
 
 uniform sampler2D lightBuffer;
@@ -170,15 +169,17 @@ void main()
       float shadowed = 1.0;
    #else
 
-      #ifdef SHADOW_CUBE
-              
+      #ifdef SHADOW_CUBE              
          // TODO: We need to fix shadow cube to handle soft shadows!
-         float occ = texture( shadowMap, tMul( worldToLightProj, -surfaceToLight.L ) ).r;
-         float shadowed = saturate( exp( lightParams.y * ( occ - distToLight ) ) );
-         
+         float staticShadow = texture( shadowMap, tMul( worldToLightProj, -surfaceToLight.L ) ).r;
+         float dynamicShadow = texture( dynamicShadowMap, tMul( worldToLightProj, -surfaceToLight.L ) ).r;
+         float shadowed = min(staticShadow, dynamicShadow);
+         shadowed = saturate( exp( lightParams.y * ( shadowed - distToLight ) ) );         
       #else
-      vec2 shadowCoord = decodeShadowCoord( tMul( worldToLightProj, -surfaceToLight.L ) ).xy;
-      float shadowed = softShadow_filter(shadowMap, ssPos.xy/ssPos.w, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
+         vec2 staticShadow = decodeShadowCoord( tMul( worldToLightProj, -surfaceToLight.L ) ).xy;
+         float shadowed = softShadow_filter(shadowMap, ssPos.xy/ssPos.w, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
+         float dynamicShadow = softShadow_filter(dynamicShadowMap, ssPos.xy/ssPos.w, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
+         float shadowed = min(staticShadow, dynamicShadow);
       #endif
 
    #endif // !NO_SHADOW

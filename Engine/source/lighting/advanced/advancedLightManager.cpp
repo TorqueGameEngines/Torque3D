@@ -362,10 +362,13 @@ void AdvancedLightManager::setLightInfo(  ProcessedMaterial *pmat,
    LightingShaderConstants *lsc = getLightingShaderConstants(shaderConsts);
 
    LightShadowMap *lsm = SHADOWMGR->getCurrentShadowMap();
+   LightShadowMap *dynamicShadowMap = SHADOWMGR->getCurrentDynamicShadowMap();
 
    LightInfo *light;
    if (lsm)
       light = lsm->getLightInfo();
+   else if (dynamicShadowMap)
+      light = dynamicShadowMap->getLightInfo();
    else
    {
       light = sgData.lights[0];
@@ -435,6 +438,15 @@ void AdvancedLightManager::setLightInfo(  ProcessedMaterial *pmat,
                               lsc->mViewToLightProjSC->getType() );
       }
    }
+   // Dynamic
+   if (dynamicShadowMap)
+   {
+
+      shaderConsts->setSafe(lsc->mShadowMapSizeSC, 1.0f / (F32)dynamicShadowMap->getTexSize());
+
+      // Do this last so that overrides can properly override parameters previously set
+      dynamicShadowMap->setShaderParameters(shaderConsts, lsc);
+   }
 }
 
 void AdvancedLightManager::registerGlobalLight(LightInfo *light, SimObject *obj)
@@ -463,6 +475,7 @@ bool AdvancedLightManager::setTextureStage(  const SceneData &sgData,
                                              ShaderConstHandles *handles )
 {
    LightShadowMap* lsm = SHADOWMGR->getCurrentShadowMap();
+   LightShadowMap *dynamicShadowMap = SHADOWMGR->getCurrentDynamicShadowMap();
 
    // Assign Shadowmap, if it exists
    LightingShaderConstants* lsc = getLightingShaderConstants(shaderConsts);
@@ -480,7 +493,19 @@ bool AdvancedLightManager::setTextureStage(  const SceneData &sgData,
       	GFX->setTexture( reg, GFXTexHandle::ONE );
 
       return true;
-   } 
+   }
+   else if (currTexFlag == Material::DynamicShadowMap)
+   {
+      // Dynamic
+      if (dynamicShadowMap)
+         return dynamicShadowMap->setTextureStage(currTexFlag, lsc);
+
+      S32 reg = lsc->mDynamicShadowMapSC->getSamplerRegister();
+      if (reg != -1)
+         GFX->setTexture(reg, GFXTexHandle::ONE);
+
+      return true;
+   }
    else if ( currTexFlag == Material::DynamicLightMask )
    {
       S32 reg = lsc->mCookieMapSC->getSamplerRegister();

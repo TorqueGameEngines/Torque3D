@@ -85,8 +85,14 @@ void ProcessedCustomMaterial::_setStageData()
          mMaxTex = i+1;
          continue;
       }
-
-       if(filename.equal(String("$dynamiclightmask"), String::NoCase))
+      if (filename.equal(String("$dynamicShadowMap"), String::NoCase))
+      {
+         rpd->mTexType[i] = Material::DynamicShadowMap;
+         rpd->mSamplerNames[i] = mCustomMaterial->mSamplerNames[i];
+         mMaxTex = i + 1;
+         continue;
+      }
+      if(filename.equal(String("$dynamiclightmask"), String::NoCase))
       {
          rpd->mTexType[i] = Material::DynamicLightMask;
          rpd->mSamplerNames[i] = mCustomMaterial->mSamplerNames[i];

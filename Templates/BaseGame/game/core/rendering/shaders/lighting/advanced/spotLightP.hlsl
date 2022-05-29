@@ -39,11 +39,12 @@ struct ConvexConnectP
 
 TORQUE_UNIFORM_SAMPLER2D(deferredBuffer, 0);
 TORQUE_UNIFORM_SAMPLER2D(shadowMap, 1);
+TORQUE_UNIFORM_SAMPLER2D(dynamicShadowMap, 2);
 
 #ifdef USE_COOKIE_TEX
 
 /// The texture for cookie rendering.
-TORQUE_UNIFORM_SAMPLER2D(cookieMap, 2);
+TORQUE_UNIFORM_SAMPLER2D(cookieMap, 3);
 
 #endif
 TORQUE_UNIFORM_SAMPLER2D(colorBuffer, 5);
@@ -112,7 +113,9 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
          shadowCoord.y = 1.0f - shadowCoord.y;
          //distance to light in shadow map space
          float distToLight = pxlPosLightProj.z / lightRange;
-         float shadowed = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(shadowMap), ssPos.xy, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
+         float staticShadow = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(shadowMap), ssPos.xy, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
+         float dynamicShadow = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(dynamicShadowMap), ssPos.xy, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
+         float shadowed = min(staticShadow, dynamicShadow);
          #ifdef USE_COOKIE_TEX
             // Lookup the cookie sample.
             float4 cookie = TORQUE_TEX2D(cookieMap, shadowCoord);

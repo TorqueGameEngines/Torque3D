@@ -42,6 +42,7 @@ uniform sampler2D cookieMap;
 
 uniform sampler2D deferredBuffer;
 uniform sampler2D shadowMap;
+uniform sampler2D dynamicShadowMap;
 uniform sampler2D colorBuffer;
 uniform sampler2D matInfoBuffer;
 
@@ -108,7 +109,9 @@ void main()
 
          //distance to light in shadow map space
          float distToLight = pxlPosLightProj.z / lightRange;
-         float shadowed = softShadow_filter(shadowMap, ssPos.xy/ssPos.w, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
+         float staticShadow = softShadow_filter(shadowMap, ssPos.xy/ssPos.w, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
+         float dynamicShadow = softShadow_filter(dynamicShadowMap, ssPos.xy/ssPos.w, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
+         float shadowed = min(staticShadow, dynamicShadow);
          #ifdef USE_COOKIE_TEX
             // Lookup the cookie sample.
             vec4 cookie = texture(cookieMap, shadowCoord);

@@ -251,6 +251,7 @@ endif()
 target_compile_definitions(${TORQUE_APP_NAME} PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
 target_link_libraries(${TORQUE_APP_NAME} ${TORQUE_LINK_LIBRARIES})
 target_include_directories(${TORQUE_APP_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
+set_property(TARGET ${TORQUE_APP_NAME} PROPERTY CXX_STANDARD 17)
 
 if (WIN32)
   set_target_properties(${TORQUE_APP_NAME} PROPERTIES COMPILE_FLAGS "-D_CRT_SECURE_NO_WARNINGS /MP /Zc:wchar_t-")

@@ -37,6 +37,7 @@
 #include <mutex>
 #include <new>
 #include <numeric>
+#include <stdexcept>
 #include <thread>
 #include <utility>
 
@@ -46,32 +47,34 @@
 #include "AL/efx.h"
 
 #include "albit.h"
-#include "alcmain.h"
-#include "alcontext.h"
+#include "alc/alu.h"
+#include "alc/backends/base.h"
+#include "alc/context.h"
+#include "alc/device.h"
+#include "alc/inprogext.h"
 #include "almalloc.h"
 #include "alnumeric.h"
 #include "aloptional.h"
 #include "alspan.h"
-#include "alu.h"
 #include "atomic.h"
 #include "auxeffectslot.h"
-#include "backends/base.h"
-#include "bformatdec.h"
 #include "buffer.h"
 #include "core/ambidefs.h"
+#include "core/bformatdec.h"
 #include "core/except.h"
 #include "core/filters/nfc.h"
 #include "core/filters/splitter.h"
 #include "core/logging.h"
+#include "core/voice_change.h"
 #include "event.h"
 #include "filter.h"
-#include "inprogext.h"
-#include "math_defs.h"
 #include "opthelpers.h"
 #include "ringbuffer.h"
 #include "threads.h"
-#include "voice_change.h"
 
+#ifdef ALSOFT_EAX
+#include "eax_exception.h"
+#endif // ALSOFT_EAX
 
 namespace {
 
@@ -99,15 +102,15 @@ void UpdateSourceProps(const ALsource *source, Voice *voice, ALCcontext *context
     /* Get an unused property container, or allocate a new one as needed. */
     VoicePropsItem *props{context->mFreeVoiceProps.load(std::memory_order_acquire)};
     if(!props)
-        props = new VoicePropsItem{};
-    else
     {
-        VoicePropsItem *next;
-        do {
-            next = props->next.load(std::memory_order_relaxed);
-        } while(context->mFreeVoiceProps.compare_exchange_weak(props, next,
-                std::memory_order_acq_rel, std::memory_order_acquire) == 0);
+        context->allocVoiceProps();
+        props = context->mFreeVoiceProps.load(std::memory_order_acquire);
     }
+    VoicePropsItem *next;
+    do {
+        next = props->next.load(std::memory_order_relaxed);
+    } while(unlikely(context->mFreeVoiceProps.compare_exchange_weak(props, next,
+        std::memory_order_acq_rel, std::memory_order_acquire) == false));
 
     props->Pitch = source->Pitch;
     props->Gain = source->Gain;
@@ -118,7 +121,11 @@ void UpdateSourceProps(const ALsource *source, Voice *voice, ALCcontext *context
     props->OuterAngle = source->OuterAngle;
     props->RefDistance = source->RefDistance;
     props->MaxDistance = source->MaxDistance;
-    props->RolloffFactor = source->RolloffFactor;
+    props->RolloffFactor = source->RolloffFactor
+#ifdef ALSOFT_EAX
+        + source->RolloffFactor2
+#endif
+    ;
     props->Position = source->Position;
     props->Velocity = source->Velocity;
     props->Direction = source->Direction;
@@ -142,6 +149,7 @@ void UpdateSourceProps(const ALsource *source, Voice *voice, ALCcontext *context
     props->StereoPan = source->StereoPan;
 
     props->Radius = source->Radius;
+    props->EnhWidth = source->EnhWidth;
 
     props->Direct.Gain = source->Direct.Gain;
     props->Direct.GainHF = source->Direct.GainHF;
@@ -183,7 +191,7 @@ void UpdateSourceProps(const ALsource *source, Voice *voice, ALCcontext *context
  */
 int64_t GetSourceSampleOffset(ALsource *Source, ALCcontext *context, nanoseconds *clocktime)
 {
-    ALCdevice *device{context->mDevice.get()};
+    ALCdevice *device{context->mALDevice.get()};
     const VoiceBufferItem *Current{};
     uint64_t readPos{};
     ALuint refcount;
@@ -222,7 +230,7 @@ int64_t GetSourceSampleOffset(ALsource *Source, ALCcontext *context, nanoseconds
  */
 double GetSourceSecOffset(ALsource *Source, ALCcontext *context, nanoseconds *clocktime)
 {
-    ALCdevice *device{context->mDevice.get()};
+    ALCdevice *device{context->mALDevice.get()};
     const VoiceBufferItem *Current{};
     uint64_t readPos{};
     ALuint refcount;
@@ -258,7 +266,7 @@ double GetSourceSecOffset(ALsource *Source, ALCcontext *context, nanoseconds *cl
         BufferFmt = BufferList->mBuffer;
         ++BufferList;
     }
-    assert(BufferFmt != nullptr);
+    ASSUME(BufferFmt != nullptr);
 
     return static_cast<double>(readPos) / double{MixerFracOne} / BufferFmt->mSampleRate;
 }
@@ -271,7 +279,7 @@ double GetSourceSecOffset(ALsource *Source, ALCcontext *context, nanoseconds *cl
  */
 double GetSourceOffset(ALsource *Source, ALenum name, ALCcontext *context)
 {
-    ALCdevice *device{context->mDevice.get()};
+    ALCdevice *device{context->mALDevice.get()};
     const VoiceBufferItem *Current{};
     ALuint readPos{};
     ALuint readPosFrac{};
@@ -307,7 +315,7 @@ double GetSourceOffset(ALsource *Source, ALenum name, ALCcontext *context)
         BufferFmt = BufferList->mBuffer;
         ++BufferList;
     }
-    assert(BufferFmt != nullptr);
+    ASSUME(BufferFmt != nullptr);
 
     double offset{};
     switch(name)
@@ -349,10 +357,61 @@ double GetSourceOffset(ALsource *Source, ALenum name, ALCcontext *context)
     return offset;
 }
 
+/* GetSourceLength
+ *
+ * Gets the length of the given Source's buffer queue, in the appropriate
+ * format (Bytes, Samples or Seconds).
+ */
+double GetSourceLength(const ALsource *source, ALenum name)
+{
+    uint64_t length{0};
+    const ALbuffer *BufferFmt{nullptr};
+    for(auto &listitem : source->mQueue)
+    {
+        if(!BufferFmt)
+            BufferFmt = listitem.mBuffer;
+        length += listitem.mSampleLen;
+    }
+    if(length == 0)
+        return 0.0;
+
+    ASSUME(BufferFmt != nullptr);
+    switch(name)
+    {
+    case AL_SEC_LENGTH_SOFT:
+        return static_cast<double>(length) / BufferFmt->mSampleRate;
+
+    case AL_SAMPLE_LENGTH_SOFT:
+        return static_cast<double>(length);
+
+    case AL_BYTE_LENGTH_SOFT:
+        if(BufferFmt->OriginalType == UserFmtIMA4)
+        {
+            ALuint FrameBlockSize{BufferFmt->OriginalAlign};
+            ALuint align{(BufferFmt->OriginalAlign-1)/2 + 4};
+            ALuint BlockSize{align * BufferFmt->channelsFromFmt()};
+
+            /* Round down to nearest ADPCM block */
+            return static_cast<double>(length / FrameBlockSize) * BlockSize;
+        }
+        else if(BufferFmt->OriginalType == UserFmtMSADPCM)
+        {
+            ALuint FrameBlockSize{BufferFmt->OriginalAlign};
+            ALuint align{(FrameBlockSize-2)/2 + 7};
+            ALuint BlockSize{align * BufferFmt->channelsFromFmt()};
+
+            /* Round down to nearest ADPCM block */
+            return static_cast<double>(length / FrameBlockSize) * BlockSize;
+        }
+        return static_cast<double>(length) * BufferFmt->frameSizeFromFmt();
+    }
+    return 0.0;
+}
+
 
 struct VoicePos {
     ALuint pos, frac;
-    VoiceBufferItem *bufferitem;
+    ALbufferQueueItem *bufferitem;
 };
 
 /**
@@ -372,7 +431,7 @@ al::optional<VoicePos> GetSampleOffset(al::deque<ALbufferQueueItem> &BufferList,
         BufferFmt = item.mBuffer;
         if(BufferFmt) break;
     }
-    if(!BufferFmt)
+    if(!BufferFmt || BufferFmt->mCallback)
         return al::nullopt;
 
     /* Get sample frame offset */
@@ -422,7 +481,7 @@ al::optional<VoicePos> GetSampleOffset(al::deque<ALbufferQueueItem> &BufferList,
         if(item.mSampleLen > offset-totalBufferLen)
         {
             /* Offset is in this buffer */
-            return al::make_optional(VoicePos{offset-totalBufferLen, frac, &item});
+            return VoicePos{offset-totalBufferLen, frac, &item};
         }
         totalBufferLen += item.mSampleLen;
     }
@@ -439,72 +498,24 @@ void InitVoice(Voice *voice, ALsource *source, ALbufferQueueItem *BufferList, AL
         std::memory_order_relaxed);
 
     ALbuffer *buffer{BufferList->mBuffer};
-    ALuint num_channels{buffer->channelsFromFmt()};
     voice->mFrequency = buffer->mSampleRate;
-    voice->mFmtChannels = buffer->mChannels;
+    voice->mFmtChannels =
+        (buffer->mChannels == FmtStereo && source->mStereoMode == SourceStereo::Enhanced) ?
+        FmtSuperStereo : buffer->mChannels;
     voice->mFmtType = buffer->mType;
-    voice->mSampleSize  = buffer->bytesFromFmt();
-    voice->mAmbiLayout = buffer->mAmbiLayout;
-    voice->mAmbiScaling = buffer->mAmbiScaling;
-    voice->mAmbiOrder = buffer->mAmbiOrder;
+    voice->mFrameStep = buffer->channelsFromFmt();
+    voice->mFrameSize = buffer->frameSizeFromFmt();
+    voice->mAmbiLayout = IsUHJ(voice->mFmtChannels) ? AmbiLayout::FuMa : buffer->mAmbiLayout;
+    voice->mAmbiScaling = IsUHJ(voice->mFmtChannels) ? AmbiScaling::UHJ : buffer->mAmbiScaling;
+    voice->mAmbiOrder = (voice->mFmtChannels == FmtSuperStereo) ? 1 : buffer->mAmbiOrder;
 
-    if(buffer->mCallback) voice->mFlags |= VoiceIsCallback;
-    else if(source->SourceType == AL_STATIC) voice->mFlags |= VoiceIsStatic;
+    if(buffer->mCallback) voice->mFlags.set(VoiceIsCallback);
+    else if(source->SourceType == AL_STATIC) voice->mFlags.set(VoiceIsStatic);
     voice->mNumCallbackSamples = 0;
 
-    /* Clear the stepping value explicitly so the mixer knows not to mix this
-     * until the update gets applied.
-     */
-    voice->mStep = 0;
+    voice->prepare(device);
 
-    if(voice->mChans.capacity() > 2 && num_channels < voice->mChans.capacity())
-        al::vector<Voice::ChannelData>{}.swap(voice->mChans);
-    voice->mChans.reserve(maxu(2, num_channels));
-    voice->mChans.resize(num_channels);
-
-    /* Don't need to set the VOICE_IS_AMBISONIC flag if the device is not
-     * higher order than the voice. No HF scaling is necessary to mix it.
-     */
-    if(voice->mAmbiOrder && device->mAmbiOrder > voice->mAmbiOrder)
-    {
-        const uint8_t *OrderFromChan{(voice->mFmtChannels == FmtBFormat2D) ?
-            AmbiIndex::OrderFrom2DChannel().data() :
-            AmbiIndex::OrderFromChannel().data()};
-        const auto scales = BFormatDec::GetHFOrderScales(voice->mAmbiOrder, device->mAmbiOrder);
-
-        const BandSplitter splitter{device->mXOverFreq / static_cast<float>(device->Frequency)};
-
-        for(auto &chandata : voice->mChans)
-        {
-            chandata.mPrevSamples.fill(0.0f);
-            chandata.mAmbiScale = scales[*(OrderFromChan++)];
-            chandata.mAmbiSplitter = splitter;
-            chandata.mDryParams = DirectParams{};
-            std::fill_n(chandata.mWetParams.begin(), device->NumAuxSends, SendParams{});
-        }
-
-        voice->mFlags |= VoiceIsAmbisonic;
-    }
-    else
-    {
-        /* Clear previous samples. */
-        for(auto &chandata : voice->mChans)
-        {
-            chandata.mPrevSamples.fill(0.0f);
-            chandata.mDryParams = DirectParams{};
-            std::fill_n(chandata.mWetParams.begin(), device->NumAuxSends, SendParams{});
-        }
-    }
-
-    if(device->AvgSpeakerDist > 0.0f)
-    {
-        const float w1{SpeedOfSoundMetersPerSec /
-            (device->AvgSpeakerDist * static_cast<float>(device->Frequency))};
-        for(auto &chandata : voice->mChans)
-            chandata.mDryParams.NFCtrlFilter.init(w1);
-    }
-
-    source->PropsClean.test_and_set(std::memory_order_acq_rel);
+    source->mPropsDirty = false;
     UpdateSourceProps(source, voice, context);
 
     voice->mSourceID.store(source->id, std::memory_order_release);
@@ -516,7 +527,7 @@ VoiceChange *GetVoiceChanger(ALCcontext *ctx)
     VoiceChange *vchg{ctx->mVoiceChangeTail};
     if UNLIKELY(vchg == ctx->mCurrentVoiceChange.load(std::memory_order_acquire))
     {
-        ctx->allocVoiceChanges(1);
+        ctx->allocVoiceChanges();
         vchg = ctx->mVoiceChangeTail;
     }
 
@@ -527,7 +538,7 @@ VoiceChange *GetVoiceChanger(ALCcontext *ctx)
 
 void SendVoiceChanges(ALCcontext *ctx, VoiceChange *tail)
 {
-    ALCdevice *device{ctx->mDevice.get()};
+    ALCdevice *device{ctx->mALDevice.get()};
 
     VoiceChange *oldhead{ctx->mCurrentVoiceChange.load(std::memory_order_acquire)};
     while(VoiceChange *next{oldhead->mNext.load(std::memory_order_relaxed)})
@@ -538,15 +549,20 @@ void SendVoiceChanges(ALCcontext *ctx, VoiceChange *tail)
     device->waitForMix();
     if UNLIKELY(!connected)
     {
-        /* If the device is disconnected, just ignore all pending changes. */
-        VoiceChange *cur{ctx->mCurrentVoiceChange.load(std::memory_order_acquire)};
-        while(VoiceChange *next{cur->mNext.load(std::memory_order_acquire)})
+        if(ctx->mStopVoicesOnDisconnect.load(std::memory_order_acquire))
         {
-            cur = next;
-            if(Voice *voice{cur->mVoice})
-                voice->mSourceID.store(0, std::memory_order_relaxed);
+            /* If the device is disconnected and voices are stopped, just
+             * ignore all pending changes.
+             */
+            VoiceChange *cur{ctx->mCurrentVoiceChange.load(std::memory_order_acquire)};
+            while(VoiceChange *next{cur->mNext.load(std::memory_order_acquire)})
+            {
+                cur = next;
+                if(Voice *voice{cur->mVoice})
+                    voice->mSourceID.store(0, std::memory_order_relaxed);
+            }
+            ctx->mCurrentVoiceChange.store(cur, std::memory_order_release);
         }
-        ctx->mCurrentVoiceChange.store(cur, std::memory_order_release);
     }
 }
 
@@ -569,7 +585,7 @@ bool SetVoiceOffset(Voice *oldvoice, const VoicePos &vpos, ALsource *source, ALC
         }
         ++vidx;
     }
-    if UNLIKELY(!newvoice)
+    if(unlikely(!newvoice))
     {
         auto &allvoices = *context->mVoices.load(std::memory_order_relaxed);
         if(allvoices.size() == voicelist.size())
@@ -589,6 +605,7 @@ bool SetVoiceOffset(Voice *oldvoice, const VoicePos &vpos, ALsource *source, ALC
             }
             ++vidx;
         }
+        ASSUME(newvoice != nullptr);
     }
 
     /* Initialize the new voice and set its starting offset.
@@ -602,10 +619,10 @@ bool SetVoiceOffset(Voice *oldvoice, const VoicePos &vpos, ALsource *source, ALC
     newvoice->mPosition.store(vpos.pos, std::memory_order_relaxed);
     newvoice->mPositionFrac.store(vpos.frac, std::memory_order_relaxed);
     newvoice->mCurrentBuffer.store(vpos.bufferitem, std::memory_order_relaxed);
-    newvoice->mFlags = 0u;
+    newvoice->mFlags.reset();
     if(vpos.pos > 0 || vpos.frac > 0 || vpos.bufferitem != &source->mQueue.front())
-        newvoice->mFlags |= VoiceIsFading;
-    InitVoice(newvoice, source, &source->mQueue.front(), context, device);
+        newvoice->mFlags.set(VoiceIsFading);
+    InitVoice(newvoice, source, vpos.bufferitem, context, device);
     source->VoiceIdx = vidx;
 
     /* Set the old voice as having a pending change, and send it off with the
@@ -666,16 +683,6 @@ inline ALenum GetSourceState(ALsource *source, Voice *voice)
     return source->state;
 }
 
-/**
- * Returns if the source should specify an update, given the context's
- * deferring state and the source's last known state.
- */
-inline bool SourceShouldUpdate(ALsource *source, ALCcontext *context)
-{
-    return !context->mDeferUpdates.load(std::memory_order_acquire) &&
-           IsPlayingOrPaused(source);
-}
-
 
 bool EnsureSources(ALCcontext *context, size_t needed)
 {
@@ -707,12 +714,12 @@ ALsource *AllocSource(ALCcontext *context)
 {
     auto sublist = std::find_if(context->mSourceList.begin(), context->mSourceList.end(),
         [](const SourceSubList &entry) noexcept -> bool
-        { return entry.FreeMask != 0; }
-    );
+        { return entry.FreeMask != 0; });
     auto lidx = static_cast<ALuint>(std::distance(context->mSourceList.begin(), sublist));
     auto slidx = static_cast<ALuint>(al::countr_zero(sublist->FreeMask));
+    ASSUME(slidx < 64);
 
-    ALsource *source{::new(sublist->Sources + slidx) ALsource{}};
+    ALsource *source{al::construct_at(sublist->Sources + slidx)};
 
     /* Add 1 to avoid source ID 0. */
     source->id = ((lidx<<6) | slidx) + 1;
@@ -729,19 +736,16 @@ void FreeSource(ALCcontext *context, ALsource *source)
     const size_t lidx{id >> 6};
     const ALuint slidx{id & 0x3f};
 
-    if(IsPlayingOrPaused(source))
+    if(Voice *voice{GetSourceVoice(source, context)})
     {
-        if(Voice *voice{GetSourceVoice(source, context)})
-        {
-            VoiceChange *vchg{GetVoiceChanger(context)};
+        VoiceChange *vchg{GetVoiceChanger(context)};
 
-            voice->mPendingChange.store(true, std::memory_order_relaxed);
-            vchg->mVoice = voice;
-            vchg->mSourceID = source->id;
-            vchg->mState = VChangeState::Stop;
+        voice->mPendingChange.store(true, std::memory_order_relaxed);
+        vchg->mVoice = voice;
+        vchg->mSourceID = source->id;
+        vchg->mState = VChangeState::Stop;
 
-            SendVoiceChanges(context, vchg);
-        }
+        SendVoiceChanges(context, vchg);
     }
 
     al::destroy_at(source);
@@ -803,6 +807,26 @@ inline ALeffectslot *LookupEffectSlot(ALCcontext *context, ALuint id) noexcept
     return sublist.EffectSlots + slidx;
 }
 
+
+al::optional<SourceStereo> StereoModeFromEnum(ALenum mode)
+{
+    switch(mode)
+    {
+    case AL_NORMAL_SOFT: return al::make_optional(SourceStereo::Normal);
+    case AL_SUPER_STEREO_SOFT: return al::make_optional(SourceStereo::Enhanced);
+    }
+    WARN("Unsupported stereo mode: 0x%04x\n", mode);
+    return al::nullopt;
+}
+ALenum EnumFromStereoMode(SourceStereo mode)
+{
+    switch(mode)
+    {
+    case SourceStereo::Normal: return AL_NORMAL_SOFT;
+    case SourceStereo::Enhanced: return AL_SUPER_STEREO_SOFT;
+    }
+    throw std::runtime_error{"Invalid SourceStereo: "+std::to_string(int(mode))};
+}
 
 al::optional<SpatializeMode> SpatializeModeFromEnum(ALenum mode)
 {
@@ -934,6 +958,11 @@ enum SourceProp : ALenum {
     /* AL_EXT_BFORMAT */
     srcOrientation = AL_ORIENTATION,
 
+    /* AL_SOFT_source_length */
+    srcByteLength = AL_BYTE_LENGTH_SOFT,
+    srcSampleLength = AL_SAMPLE_LENGTH_SOFT,
+    srcSecLength = AL_SEC_LENGTH_SOFT,
+
     /* AL_SOFT_source_resampler */
     srcResampler = AL_SOURCE_RESAMPLER_SOFT,
 
@@ -943,6 +972,10 @@ enum SourceProp : ALenum {
     /* ALC_SOFT_device_clock */
     srcSampleOffsetClockSOFT = AL_SAMPLE_OFFSET_CLOCK_SOFT,
     srcSecOffsetClockSOFT = AL_SEC_OFFSET_CLOCK_SOFT,
+
+    /* AL_SOFT_UHJ */
+    srcStereoMode = AL_STEREO_MODE_SOFT,
+    srcSuperStereoWidth = AL_SUPER_STEREO_WIDTH_SOFT,
 };
 
 
@@ -983,6 +1016,11 @@ ALuint FloatValsByProp(ALenum prop)
     case AL_SOURCE_RADIUS:
     case AL_SOURCE_RESAMPLER_SOFT:
     case AL_SOURCE_SPATIALIZE_SOFT:
+    case AL_BYTE_LENGTH_SOFT:
+    case AL_SAMPLE_LENGTH_SOFT:
+    case AL_SEC_LENGTH_SOFT:
+    case AL_STEREO_MODE_SOFT:
+    case AL_SUPER_STEREO_WIDTH_SOFT:
         return 1;
 
     case AL_STEREO_ANGLES:
@@ -1045,6 +1083,11 @@ ALuint DoubleValsByProp(ALenum prop)
     case AL_SOURCE_RADIUS:
     case AL_SOURCE_RESAMPLER_SOFT:
     case AL_SOURCE_SPATIALIZE_SOFT:
+    case AL_BYTE_LENGTH_SOFT:
+    case AL_SAMPLE_LENGTH_SOFT:
+    case AL_SEC_LENGTH_SOFT:
+    case AL_STEREO_MODE_SOFT:
+    case AL_SUPER_STEREO_WIDTH_SOFT:
         return 1;
 
     case AL_SEC_OFFSET_LATENCY_SOFT:
@@ -1072,43 +1115,70 @@ ALuint DoubleValsByProp(ALenum prop)
 }
 
 
-bool SetSourcefv(ALsource *Source, ALCcontext *Context, SourceProp prop, const al::span<const float> values);
-bool SetSourceiv(ALsource *Source, ALCcontext *Context, SourceProp prop, const al::span<const int> values);
-bool SetSourcei64v(ALsource *Source, ALCcontext *Context, SourceProp prop, const al::span<const int64_t> values);
+void SetSourcefv(ALsource *Source, ALCcontext *Context, SourceProp prop, const al::span<const float> values);
+void SetSourceiv(ALsource *Source, ALCcontext *Context, SourceProp prop, const al::span<const int> values);
+void SetSourcei64v(ALsource *Source, ALCcontext *Context, SourceProp prop, const al::span<const int64_t> values);
 
 #define CHECKSIZE(v, s) do { \
     if LIKELY((v).size() == (s) || (v).size() == MaxValues) break;            \
     Context->setError(AL_INVALID_ENUM,                                        \
         "Property 0x%04x expects %d value(s), got %zu", prop, (s),            \
         (v).size());                                                          \
-    return false;                                                             \
+    return;                                                                   \
 } while(0)
 #define CHECKVAL(x) do {                                                      \
     if LIKELY(x) break;                                                       \
     Context->setError(AL_INVALID_VALUE, "Value out of range");                \
-    return false;                                                             \
+    return;                                                                   \
 } while(0)
 
-bool UpdateSourceProps(ALsource *source, ALCcontext *context)
+void UpdateSourceProps(ALsource *source, ALCcontext *context)
 {
-    Voice *voice;
-    if(SourceShouldUpdate(source, context) && (voice=GetSourceVoice(source, context)) != nullptr)
-        UpdateSourceProps(source, voice, context);
-    else
-        source->PropsClean.clear(std::memory_order_release);
-    return true;
+    if(!context->mDeferUpdates)
+    {
+        if(Voice *voice{GetSourceVoice(source, context)})
+        {
+            UpdateSourceProps(source, voice, context);
+            return;
+        }
+    }
+    source->mPropsDirty = true;
+}
+#ifdef ALSOFT_EAX
+void CommitAndUpdateSourceProps(ALsource *source, ALCcontext *context)
+{
+    if(!context->mDeferUpdates)
+    {
+        if(source->eax_is_initialized())
+            source->eax_commit();
+        if(Voice *voice{GetSourceVoice(source, context)})
+        {
+            UpdateSourceProps(source, voice, context);
+            return;
+        }
+    }
+    source->mPropsDirty = true;
 }
 
-bool SetSourcefv(ALsource *Source, ALCcontext *Context, SourceProp prop, const al::span<const float> values)
+#else
+
+inline void CommitAndUpdateSourceProps(ALsource *source, ALCcontext *context)
+{ UpdateSourceProps(source, context); }
+#endif
+
+
+void SetSourcefv(ALsource *Source, ALCcontext *Context, SourceProp prop,
+    const al::span<const float> values)
 {
     int ival;
 
     switch(prop)
     {
+    case AL_SEC_LENGTH_SOFT:
     case AL_SEC_OFFSET_LATENCY_SOFT:
     case AL_SEC_OFFSET_CLOCK_SOFT:
         /* Query only */
-        SETERR_RETURN(Context, AL_INVALID_OPERATION, false,
+        SETERR_RETURN(Context, AL_INVALID_OPERATION,,
             "Setting read-only source property 0x%04x", prop);
 
     case AL_PITCH:
@@ -1123,14 +1193,14 @@ bool SetSourcefv(ALsource *Source, ALCcontext *Context, SourceProp prop, const a
         CHECKVAL(values[0] >= 0.0f && values[0] <= 360.0f);
 
         Source->InnerAngle = values[0];
-        return UpdateSourceProps(Source, Context);
+        return CommitAndUpdateSourceProps(Source, Context);
 
     case AL_CONE_OUTER_ANGLE:
         CHECKSIZE(values, 1);
         CHECKVAL(values[0] >= 0.0f && values[0] <= 360.0f);
 
         Source->OuterAngle = values[0];
-        return UpdateSourceProps(Source, Context);
+        return CommitAndUpdateSourceProps(Source, Context);
 
     case AL_GAIN:
         CHECKSIZE(values, 1);
@@ -1144,21 +1214,21 @@ bool SetSourcefv(ALsource *Source, ALCcontext *Context, SourceProp prop, const a
         CHECKVAL(values[0] >= 0.0f);
 
         Source->MaxDistance = values[0];
-        return UpdateSourceProps(Source, Context);
+        return CommitAndUpdateSourceProps(Source, Context);
 
     case AL_ROLLOFF_FACTOR:
         CHECKSIZE(values, 1);
         CHECKVAL(values[0] >= 0.0f);
 
         Source->RolloffFactor = values[0];
-        return UpdateSourceProps(Source, Context);
+        return CommitAndUpdateSourceProps(Source, Context);
 
     case AL_REFERENCE_DISTANCE:
         CHECKSIZE(values, 1);
         CHECKVAL(values[0] >= 0.0f);
 
         Source->RefDistance = values[0];
-        return UpdateSourceProps(Source, Context);
+        return CommitAndUpdateSourceProps(Source, Context);
 
     case AL_MIN_GAIN:
         CHECKSIZE(values, 1);
@@ -1217,24 +1287,28 @@ bool SetSourcefv(ALsource *Source, ALCcontext *Context, SourceProp prop, const a
 
         if(Voice *voice{GetSourceVoice(Source, Context)})
         {
-            if((voice->mFlags&VoiceIsCallback))
-                SETERR_RETURN(Context, AL_INVALID_VALUE, false,
-                    "Source offset for callback is invalid");
             auto vpos = GetSampleOffset(Source->mQueue, prop, values[0]);
-            if(!vpos) SETERR_RETURN(Context, AL_INVALID_VALUE, false, "Invalid offset");
+            if(!vpos) SETERR_RETURN(Context, AL_INVALID_VALUE,, "Invalid offset");
 
-            if(SetVoiceOffset(voice, *vpos, Source, Context, Context->mDevice.get()))
-                return true;
+            if(SetVoiceOffset(voice, *vpos, Source, Context, Context->mALDevice.get()))
+                return;
         }
         Source->OffsetType = prop;
         Source->Offset = values[0];
-        return true;
+        return;
 
     case AL_SOURCE_RADIUS:
         CHECKSIZE(values, 1);
         CHECKVAL(values[0] >= 0.0f && std::isfinite(values[0]));
 
         Source->Radius = values[0];
+        return UpdateSourceProps(Source, Context);
+
+    case AL_SUPER_STEREO_WIDTH_SOFT:
+        CHECKSIZE(values, 1);
+        CHECKVAL(values[0] >= 0.0f && values[0] <= 1.0f);
+
+        Source->EnhWidth = values[0];
         return UpdateSourceProps(Source, Context);
 
     case AL_STEREO_ANGLES:
@@ -1253,7 +1327,7 @@ bool SetSourcefv(ALsource *Source, ALCcontext *Context, SourceProp prop, const a
         Source->Position[0] = values[0];
         Source->Position[1] = values[1];
         Source->Position[2] = values[2];
-        return UpdateSourceProps(Source, Context);
+        return CommitAndUpdateSourceProps(Source, Context);
 
     case AL_VELOCITY:
         CHECKSIZE(values, 3);
@@ -1262,7 +1336,7 @@ bool SetSourcefv(ALsource *Source, ALCcontext *Context, SourceProp prop, const a
         Source->Velocity[0] = values[0];
         Source->Velocity[1] = values[1];
         Source->Velocity[2] = values[2];
-        return UpdateSourceProps(Source, Context);
+        return CommitAndUpdateSourceProps(Source, Context);
 
     case AL_DIRECTION:
         CHECKSIZE(values, 3);
@@ -1271,7 +1345,7 @@ bool SetSourcefv(ALsource *Source, ALCcontext *Context, SourceProp prop, const a
         Source->Direction[0] = values[0];
         Source->Direction[1] = values[1];
         Source->Direction[2] = values[2];
-        return UpdateSourceProps(Source, Context);
+        return CommitAndUpdateSourceProps(Source, Context);
 
     case AL_ORIENTATION:
         CHECKSIZE(values, 6);
@@ -1298,6 +1372,9 @@ bool SetSourcefv(ALsource *Source, ALCcontext *Context, SourceProp prop, const a
     case AL_DIRECT_CHANNELS_SOFT:
     case AL_SOURCE_RESAMPLER_SOFT:
     case AL_SOURCE_SPATIALIZE_SOFT:
+    case AL_BYTE_LENGTH_SOFT:
+    case AL_SAMPLE_LENGTH_SOFT:
+    case AL_STEREO_MODE_SOFT:
         CHECKSIZE(values, 1);
         ival = static_cast<int>(values[0]);
         return SetSourceiv(Source, Context, prop, {&ival, 1u});
@@ -1318,12 +1395,13 @@ bool SetSourcefv(ALsource *Source, ALCcontext *Context, SourceProp prop, const a
 
     ERR("Unexpected property: 0x%04x\n", prop);
     Context->setError(AL_INVALID_ENUM, "Invalid source float property 0x%04x", prop);
-    return false;
+    return;
 }
 
-bool SetSourceiv(ALsource *Source, ALCcontext *Context, SourceProp prop, const al::span<const int> values)
+void SetSourceiv(ALsource *Source, ALCcontext *Context, SourceProp prop,
+    const al::span<const int> values)
 {
-    ALCdevice *device{Context->mDevice.get()};
+    ALCdevice *device{Context->mALDevice.get()};
     ALeffectslot *slot{nullptr};
     al::deque<ALbufferQueueItem> oldlist;
     std::unique_lock<std::mutex> slotlock;
@@ -1335,8 +1413,10 @@ bool SetSourceiv(ALsource *Source, ALCcontext *Context, SourceProp prop, const a
     case AL_SOURCE_TYPE:
     case AL_BUFFERS_QUEUED:
     case AL_BUFFERS_PROCESSED:
+    case AL_BYTE_LENGTH_SOFT:
+    case AL_SAMPLE_LENGTH_SOFT:
         /* Query only */
-        SETERR_RETURN(Context, AL_INVALID_OPERATION, false,
+        SETERR_RETURN(Context, AL_INVALID_OPERATION,,
             "Setting read-only source property 0x%04x", prop);
 
     case AL_SOURCE_RELATIVE:
@@ -1344,37 +1424,33 @@ bool SetSourceiv(ALsource *Source, ALCcontext *Context, SourceProp prop, const a
         CHECKVAL(values[0] == AL_FALSE || values[0] == AL_TRUE);
 
         Source->HeadRelative = values[0] != AL_FALSE;
-        return UpdateSourceProps(Source, Context);
+        return CommitAndUpdateSourceProps(Source, Context);
 
     case AL_LOOPING:
         CHECKSIZE(values, 1);
         CHECKVAL(values[0] == AL_FALSE || values[0] == AL_TRUE);
 
         Source->Looping = values[0] != AL_FALSE;
-        if(IsPlayingOrPaused(Source))
+        if(Voice *voice{GetSourceVoice(Source, Context)})
         {
-            if(Voice *voice{GetSourceVoice(Source, Context)})
-            {
-                if(Source->Looping)
-                    voice->mLoopBuffer.store(&Source->mQueue.front(), std::memory_order_release);
-                else
-                    voice->mLoopBuffer.store(nullptr, std::memory_order_release);
+            if(Source->Looping)
+                voice->mLoopBuffer.store(&Source->mQueue.front(), std::memory_order_release);
+            else
+                voice->mLoopBuffer.store(nullptr, std::memory_order_release);
 
-                /* If the source is playing, wait for the current mix to finish
-                 * to ensure it isn't currently looping back or reaching the
-                 * end.
-                 */
-                device->waitForMix();
-            }
+            /* If the source is playing, wait for the current mix to finish to
+             * ensure it isn't currently looping back or reaching the end.
+             */
+            device->waitForMix();
         }
-        return true;
+        return;
 
     case AL_BUFFER:
         CHECKSIZE(values, 1);
         {
             const ALenum state{GetSourceState(Source, GetSourceVoice(Source, Context))};
             if(state == AL_PLAYING || state == AL_PAUSED)
-                SETERR_RETURN(Context, AL_INVALID_OPERATION, false,
+                SETERR_RETURN(Context, AL_INVALID_OPERATION,,
                     "Setting buffer on playing or paused source %u", Source->id);
         }
         if(values[0])
@@ -1382,13 +1458,13 @@ bool SetSourceiv(ALsource *Source, ALCcontext *Context, SourceProp prop, const a
             std::lock_guard<std::mutex> _{device->BufferLock};
             ALbuffer *buffer{LookupBuffer(device, static_cast<ALuint>(values[0]))};
             if(!buffer)
-                SETERR_RETURN(Context, AL_INVALID_VALUE, false, "Invalid buffer ID %u",
+                SETERR_RETURN(Context, AL_INVALID_VALUE,, "Invalid buffer ID %u",
                     static_cast<ALuint>(values[0]));
             if(buffer->MappedAccess && !(buffer->MappedAccess&AL_MAP_PERSISTENT_BIT_SOFT))
-                SETERR_RETURN(Context, AL_INVALID_OPERATION, false,
+                SETERR_RETURN(Context, AL_INVALID_OPERATION,,
                     "Setting non-persistently mapped buffer %u", buffer->id);
             if(buffer->mCallback && ReadRef(buffer->ref) != 0)
-                SETERR_RETURN(Context, AL_INVALID_OPERATION, false,
+                SETERR_RETURN(Context, AL_INVALID_OPERATION,,
                     "Setting already-set callback buffer %u", buffer->id);
 
             /* Add the selected buffer to a one-item queue */
@@ -1421,7 +1497,7 @@ bool SetSourceiv(ALsource *Source, ALCcontext *Context, SourceProp prop, const a
             if(ALbuffer *buffer{item.mBuffer})
                 DecrementRef(buffer->ref);
         }
-        return true;
+        return;
 
     case AL_SEC_OFFSET:
     case AL_SAMPLE_OFFSET:
@@ -1431,18 +1507,15 @@ bool SetSourceiv(ALsource *Source, ALCcontext *Context, SourceProp prop, const a
 
         if(Voice *voice{GetSourceVoice(Source, Context)})
         {
-            if((voice->mFlags&VoiceIsCallback))
-                SETERR_RETURN(Context, AL_INVALID_VALUE, false,
-                    "Source offset for callback is invalid");
             auto vpos = GetSampleOffset(Source->mQueue, prop, values[0]);
-            if(!vpos) SETERR_RETURN(Context, AL_INVALID_VALUE, false, "Invalid source offset");
+            if(!vpos) SETERR_RETURN(Context, AL_INVALID_VALUE,, "Invalid source offset");
 
             if(SetVoiceOffset(voice, *vpos, Source, Context, device))
-                return true;
+                return;
         }
         Source->OffsetType = prop;
         Source->Offset = values[0];
-        return true;
+        return;
 
     case AL_DIRECT_FILTER:
         CHECKSIZE(values, 1);
@@ -1451,7 +1524,7 @@ bool SetSourceiv(ALsource *Source, ALCcontext *Context, SourceProp prop, const a
             std::lock_guard<std::mutex> _{device->FilterLock};
             ALfilter *filter{LookupFilter(device, static_cast<ALuint>(values[0]))};
             if(!filter)
-                SETERR_RETURN(Context, AL_INVALID_VALUE, false, "Invalid filter ID %u",
+                SETERR_RETURN(Context, AL_INVALID_VALUE,, "Invalid filter ID %u",
                     static_cast<ALuint>(values[0]));
             Source->Direct.Gain = filter->Gain;
             Source->Direct.GainHF = filter->GainHF;
@@ -1499,7 +1572,7 @@ bool SetSourceiv(ALsource *Source, ALCcontext *Context, SourceProp prop, const a
         }
         Context->setError(AL_INVALID_VALUE, "Unsupported AL_DIRECT_CHANNELS_SOFT: 0x%04x\n",
             values[0]);
-        return false;
+        return;
 
     case AL_DISTANCE_MODEL:
         CHECKSIZE(values, 1);
@@ -1507,11 +1580,11 @@ bool SetSourceiv(ALsource *Source, ALCcontext *Context, SourceProp prop, const a
         {
             Source->mDistanceModel = *model;
             if(Context->mSourceDistanceModel)
-                return UpdateSourceProps(Source, Context);
-            return true;
+                UpdateSourceProps(Source, Context);
+            return;
         }
         Context->setError(AL_INVALID_VALUE, "Distance model out of range: 0x%04x", values[0]);
-        return false;
+        return;
 
     case AL_SOURCE_RESAMPLER_SOFT:
         CHECKSIZE(values, 1);
@@ -1529,22 +1602,39 @@ bool SetSourceiv(ALsource *Source, ALCcontext *Context, SourceProp prop, const a
         }
         Context->setError(AL_INVALID_VALUE, "Unsupported AL_SOURCE_SPATIALIZE_SOFT: 0x%04x\n",
             values[0]);
-        return false;
+        return;
+
+    case AL_STEREO_MODE_SOFT:
+        CHECKSIZE(values, 1);
+        {
+            const ALenum state{GetSourceState(Source, GetSourceVoice(Source, Context))};
+            if(state == AL_PLAYING || state == AL_PAUSED)
+                SETERR_RETURN(Context, AL_INVALID_OPERATION,,
+                    "Modifying stereo mode on playing or paused source %u", Source->id);
+        }
+        if(auto mode = StereoModeFromEnum(values[0]))
+        {
+            Source->mStereoMode = *mode;
+            return;
+        }
+        Context->setError(AL_INVALID_VALUE, "Unsupported AL_STEREO_MODE_SOFT: 0x%04x\n",
+            values[0]);
+        return;
 
     case AL_AUXILIARY_SEND_FILTER:
         CHECKSIZE(values, 3);
         slotlock = std::unique_lock<std::mutex>{Context->mEffectSlotLock};
         if(values[0] && (slot=LookupEffectSlot(Context, static_cast<ALuint>(values[0]))) == nullptr)
-            SETERR_RETURN(Context, AL_INVALID_VALUE, false, "Invalid effect ID %u", values[0]);
+            SETERR_RETURN(Context, AL_INVALID_VALUE,, "Invalid effect ID %u", values[0]);
         if(static_cast<ALuint>(values[1]) >= device->NumAuxSends)
-            SETERR_RETURN(Context, AL_INVALID_VALUE, false, "Invalid send %u", values[1]);
+            SETERR_RETURN(Context, AL_INVALID_VALUE,, "Invalid send %u", values[1]);
 
         if(values[2])
         {
             std::lock_guard<std::mutex> _{device->FilterLock};
             ALfilter *filter{LookupFilter(device, static_cast<ALuint>(values[2]))};
             if(!filter)
-                SETERR_RETURN(Context, AL_INVALID_VALUE, false, "Invalid filter ID %u", values[2]);
+                SETERR_RETURN(Context, AL_INVALID_VALUE,, "Invalid filter ID %u", values[2]);
 
             auto &send = Source->Send[static_cast<ALuint>(values[1])];
             send.Gain = filter->Gain;
@@ -1577,7 +1667,7 @@ bool SetSourceiv(ALsource *Source, ALCcontext *Context, SourceProp prop, const a
              */
             Voice *voice{GetSourceVoice(Source, Context)};
             if(voice) UpdateSourceProps(Source, voice, Context);
-            else Source->PropsClean.clear(std::memory_order_release);
+            else Source->mPropsDirty = true;
         }
         else
         {
@@ -1587,7 +1677,7 @@ bool SetSourceiv(ALsource *Source, ALCcontext *Context, SourceProp prop, const a
             Source->Send[static_cast<ALuint>(values[1])].Slot = slot;
             UpdateSourceProps(Source, Context);
         }
-        return true;
+        return;
 
 
     /* 1x float */
@@ -1606,6 +1696,8 @@ bool SetSourceiv(ALsource *Source, ALCcontext *Context, SourceProp prop, const a
     case AL_AIR_ABSORPTION_FACTOR:
     case AL_ROOM_ROLLOFF_FACTOR:
     case AL_SOURCE_RADIUS:
+    case AL_SEC_LENGTH_SOFT:
+    case AL_SUPER_STEREO_WIDTH_SOFT:
         CHECKSIZE(values, 1);
         fvals[0] = static_cast<float>(values[0]);
         return SetSourcefv(Source, Context, prop, {fvals, 1u});
@@ -1641,10 +1733,11 @@ bool SetSourceiv(ALsource *Source, ALCcontext *Context, SourceProp prop, const a
 
     ERR("Unexpected property: 0x%04x\n", prop);
     Context->setError(AL_INVALID_ENUM, "Invalid source integer property 0x%04x", prop);
-    return false;
+    return;
 }
 
-bool SetSourcei64v(ALsource *Source, ALCcontext *Context, SourceProp prop, const al::span<const int64_t> values)
+void SetSourcei64v(ALsource *Source, ALCcontext *Context, SourceProp prop,
+    const al::span<const int64_t> values)
 {
     float fvals[MaxValues];
     int   ivals[MaxValues];
@@ -1655,10 +1748,12 @@ bool SetSourcei64v(ALsource *Source, ALCcontext *Context, SourceProp prop, const
     case AL_BUFFERS_QUEUED:
     case AL_BUFFERS_PROCESSED:
     case AL_SOURCE_STATE:
+    case AL_BYTE_LENGTH_SOFT:
+    case AL_SAMPLE_LENGTH_SOFT:
     case AL_SAMPLE_OFFSET_LATENCY_SOFT:
     case AL_SAMPLE_OFFSET_CLOCK_SOFT:
         /* Query only */
-        SETERR_RETURN(Context, AL_INVALID_OPERATION, false,
+        SETERR_RETURN(Context, AL_INVALID_OPERATION,,
             "Setting read-only source property 0x%04x", prop);
 
     /* 1x int */
@@ -1674,6 +1769,7 @@ bool SetSourcei64v(ALsource *Source, ALCcontext *Context, SourceProp prop, const
     case AL_DISTANCE_MODEL:
     case AL_SOURCE_RESAMPLER_SOFT:
     case AL_SOURCE_SPATIALIZE_SOFT:
+    case AL_STEREO_MODE_SOFT:
         CHECKSIZE(values, 1);
         CHECKVAL(values[0] <= INT_MAX && values[0] >= INT_MIN);
 
@@ -1716,6 +1812,8 @@ bool SetSourcei64v(ALsource *Source, ALCcontext *Context, SourceProp prop, const
     case AL_AIR_ABSORPTION_FACTOR:
     case AL_ROOM_ROLLOFF_FACTOR:
     case AL_SOURCE_RADIUS:
+    case AL_SEC_LENGTH_SOFT:
+    case AL_SUPER_STEREO_WIDTH_SOFT:
         CHECKSIZE(values, 1);
         fvals[0] = static_cast<float>(values[0]);
         return SetSourcefv(Source, Context, prop, {fvals, 1u});
@@ -1749,11 +1847,19 @@ bool SetSourcei64v(ALsource *Source, ALCcontext *Context, SourceProp prop, const
 
     ERR("Unexpected property: 0x%04x\n", prop);
     Context->setError(AL_INVALID_ENUM, "Invalid source integer64 property 0x%04x", prop);
-    return false;
+    return;
 }
 
 #undef CHECKVAL
+#undef CHECKSIZE
 
+#define CHECKSIZE(v, s) do { \
+    if LIKELY((v).size() == (s) || (v).size() == MaxValues) break;            \
+    Context->setError(AL_INVALID_ENUM,                                        \
+        "Property 0x%04x expects %d value(s), got %zu", prop, (s),            \
+        (v).size());                                                          \
+    return false;                                                             \
+} while(0)
 
 bool GetSourcedv(ALsource *Source, ALCcontext *Context, SourceProp prop, const al::span<double> values);
 bool GetSourceiv(ALsource *Source, ALCcontext *Context, SourceProp prop, const al::span<int> values);
@@ -1761,7 +1867,7 @@ bool GetSourcei64v(ALsource *Source, ALCcontext *Context, SourceProp prop, const
 
 bool GetSourcedv(ALsource *Source, ALCcontext *Context, SourceProp prop, const al::span<double> values)
 {
-    ALCdevice *device{Context->mDevice.get()};
+    ALCdevice *device{Context->mALDevice.get()};
     ClockLatency clocktime;
     nanoseconds srcclock;
     int ivals[MaxValues];
@@ -1851,6 +1957,18 @@ bool GetSourcedv(ALsource *Source, ALCcontext *Context, SourceProp prop, const a
         values[0] = Source->Radius;
         return true;
 
+    case AL_SUPER_STEREO_WIDTH_SOFT:
+        CHECKSIZE(values, 1);
+        values[0] = Source->EnhWidth;
+        return true;
+
+    case AL_BYTE_LENGTH_SOFT:
+    case AL_SAMPLE_LENGTH_SOFT:
+    case AL_SEC_LENGTH_SOFT:
+        CHECKSIZE(values, 1);
+        values[0] = GetSourceLength(Source, prop);
+        return true;
+
     case AL_STEREO_ANGLES:
         CHECKSIZE(values, 2);
         values[0] = Source->StereoPan[0];
@@ -1865,7 +1983,7 @@ bool GetSourcedv(ALsource *Source, ALCcontext *Context, SourceProp prop, const a
         values[0] = GetSourceSecOffset(Source, Context, &srcclock);
         {
             std::lock_guard<std::mutex> _{device->StateLock};
-            clocktime = GetClockLatency(device);
+            clocktime = GetClockLatency(device, device->Backend.get());
         }
         if(srcclock == clocktime.ClockTime)
             values[1] = static_cast<double>(clocktime.Latency.count()) / 1000000000.0;
@@ -1931,6 +2049,7 @@ bool GetSourcedv(ALsource *Source, ALCcontext *Context, SourceProp prop, const a
     case AL_DISTANCE_MODEL:
     case AL_SOURCE_RESAMPLER_SOFT:
     case AL_SOURCE_SPATIALIZE_SOFT:
+    case AL_STEREO_MODE_SOFT:
         CHECKSIZE(values, 1);
         if((err=GetSourceiv(Source, Context, prop, {ivals, 1u})) != false)
             values[0] = static_cast<double>(ivals[0]);
@@ -2044,6 +2163,14 @@ bool GetSourceiv(ALsource *Source, ALCcontext *Context, SourceProp prop, const a
         values[0] = ALenumFromDistanceModel(Source->mDistanceModel);
         return true;
 
+    case AL_BYTE_LENGTH_SOFT:
+    case AL_SAMPLE_LENGTH_SOFT:
+    case AL_SEC_LENGTH_SOFT:
+        CHECKSIZE(values, 1);
+        values[0] = static_cast<int>(mind(GetSourceLength(Source, prop),
+            std::numeric_limits<int>::max()));
+        return true;
+
     case AL_SOURCE_RESAMPLER_SOFT:
         CHECKSIZE(values, 1);
         values[0] = static_cast<int>(Source->mResampler);
@@ -2052,6 +2179,11 @@ bool GetSourceiv(ALsource *Source, ALCcontext *Context, SourceProp prop, const a
     case AL_SOURCE_SPATIALIZE_SOFT:
         CHECKSIZE(values, 1);
         values[0] = EnumFromSpatializeMode(Source->mSpatialize);
+        return true;
+
+    case AL_STEREO_MODE_SOFT:
+        CHECKSIZE(values, 1);
+        values[0] = EnumFromStereoMode(Source->mStereoMode);
         return true;
 
     /* 1x float/double */
@@ -2073,6 +2205,7 @@ bool GetSourceiv(ALsource *Source, ALCcontext *Context, SourceProp prop, const a
     case AL_ROOM_ROLLOFF_FACTOR:
     case AL_CONE_OUTER_GAINHF:
     case AL_SOURCE_RADIUS:
+    case AL_SUPER_STEREO_WIDTH_SOFT:
         CHECKSIZE(values, 1);
         if((err=GetSourcedv(Source, Context, prop, {dvals, 1u})) != false)
             values[0] = static_cast<int>(dvals[0]);
@@ -2126,7 +2259,7 @@ bool GetSourceiv(ALsource *Source, ALCcontext *Context, SourceProp prop, const a
 
 bool GetSourcei64v(ALsource *Source, ALCcontext *Context, SourceProp prop, const al::span<int64_t> values)
 {
-    ALCdevice *device = Context->mDevice.get();
+    ALCdevice *device{Context->mALDevice.get()};
     ClockLatency clocktime;
     nanoseconds srcclock;
     double dvals[MaxValues];
@@ -2135,6 +2268,13 @@ bool GetSourcei64v(ALsource *Source, ALCcontext *Context, SourceProp prop, const
 
     switch(prop)
     {
+    case AL_BYTE_LENGTH_SOFT:
+    case AL_SAMPLE_LENGTH_SOFT:
+    case AL_SEC_LENGTH_SOFT:
+        CHECKSIZE(values, 1);
+        values[0] = static_cast<int64_t>(GetSourceLength(Source, prop));
+        return true;
+
     case AL_SAMPLE_OFFSET_LATENCY_SOFT:
         CHECKSIZE(values, 2);
         /* Get the source offset with the clock time first. Then get the clock
@@ -2143,7 +2283,7 @@ bool GetSourcei64v(ALsource *Source, ALCcontext *Context, SourceProp prop, const
         values[0] = GetSourceSampleOffset(Source, Context, &srcclock);
         {
             std::lock_guard<std::mutex> _{device->StateLock};
-            clocktime = GetClockLatency(device);
+            clocktime = GetClockLatency(device, device->Backend.get());
         }
         if(srcclock == clocktime.ClockTime)
             values[1] = clocktime.Latency.count();
@@ -2182,6 +2322,7 @@ bool GetSourcei64v(ALsource *Source, ALCcontext *Context, SourceProp prop, const
     case AL_ROOM_ROLLOFF_FACTOR:
     case AL_CONE_OUTER_GAINHF:
     case AL_SOURCE_RADIUS:
+    case AL_SUPER_STEREO_WIDTH_SOFT:
         CHECKSIZE(values, 1);
         if((err=GetSourcedv(Source, Context, prop, {dvals, 1u})) != false)
             values[0] = static_cast<int64_t>(dvals[0]);
@@ -2228,6 +2369,7 @@ bool GetSourcei64v(ALsource *Source, ALCcontext *Context, SourceProp prop, const
     case AL_DISTANCE_MODEL:
     case AL_SOURCE_RESAMPLER_SOFT:
     case AL_SOURCE_SPATIALIZE_SOFT:
+    case AL_STEREO_MODE_SOFT:
         CHECKSIZE(values, 1);
         if((err=GetSourceiv(Source, Context, prop, {ivals, 1u})) != false)
             values[0] = ivals[0];
@@ -2276,8 +2418,14 @@ START_API_FUNC
         context->setError(AL_INVALID_VALUE, "Generating %d sources", n);
     if UNLIKELY(n <= 0) return;
 
+#ifdef ALSOFT_EAX
+    const bool has_eax{context->has_eax()};
+    std::unique_lock<std::mutex> proplock{};
+    if(has_eax)
+        proplock = std::unique_lock<std::mutex>{context->mPropLock};
+#endif
     std::unique_lock<std::mutex> srclock{context->mSourceLock};
-    ALCdevice *device{context->mDevice.get()};
+    ALCdevice *device{context->mALDevice.get()};
     if(static_cast<ALuint>(n) > device->SourcesMax-context->mNumSources)
     {
         context->setError(AL_OUT_OF_MEMORY, "Exceeding %u source limit (%u + %d)",
@@ -2294,16 +2442,37 @@ START_API_FUNC
     {
         ALsource *source{AllocSource(context.get())};
         sources[0] = source->id;
+
+#ifdef ALSOFT_EAX
+        if(has_eax)
+            source->eax_initialize(context.get());
+#endif // ALSOFT_EAX
     }
     else
     {
+#ifdef ALSOFT_EAX
+        auto eax_sources = al::vector<ALsource*>{};
+        if(has_eax)
+            eax_sources.reserve(static_cast<ALuint>(n));
+#endif // ALSOFT_EAX
+
         al::vector<ALuint> ids;
         ids.reserve(static_cast<ALuint>(n));
         do {
             ALsource *source{AllocSource(context.get())};
             ids.emplace_back(source->id);
+
+#ifdef ALSOFT_EAX
+            if(has_eax)
+                eax_sources.emplace_back(source);
+#endif // ALSOFT_EAX
         } while(--n);
         std::copy(ids.cbegin(), ids.cend(), sources);
+
+#ifdef ALSOFT_EAX
+        for(auto& eax_source : eax_sources)
+            eax_source->eax_initialize(context.get());
+#endif // ALSOFT_EAX
     }
 }
 END_API_FUNC
@@ -2869,18 +3038,23 @@ START_API_FUNC
         ++sources;
     }
 
-    ALCdevice *device{context->mDevice.get()};
-    /* If the device is disconnected, go right to stopped. */
+    ALCdevice *device{context->mALDevice.get()};
+    /* If the device is disconnected, and voices stop on disconnect, go right
+     * to stopped.
+     */
     if UNLIKELY(!device->Connected.load(std::memory_order_acquire))
     {
-        /* TODO: Send state change event? */
-        for(ALsource *source : srchandles)
+        if(context->mStopVoicesOnDisconnect.load(std::memory_order_acquire))
         {
-            source->Offset = 0.0;
-            source->OffsetType = AL_NONE;
-            source->state = AL_STOPPED;
+            for(ALsource *source : srchandles)
+            {
+                /* TODO: Send state change event? */
+                source->Offset = 0.0;
+                source->OffsetType = AL_NONE;
+                source->state = AL_STOPPED;
+            }
+            return;
         }
-        return;
     }
 
     /* Count the number of reusable voices. */
@@ -2942,6 +3116,7 @@ START_API_FUNC
             cur->mNext.store(GetVoiceChanger(context.get()), std::memory_order_relaxed);
             cur = cur->mNext.load(std::memory_order_relaxed);
         }
+
         Voice *voice{GetSourceVoice(source, context.get())};
         switch(GetSourceState(source, voice))
         {
@@ -2955,6 +3130,10 @@ START_API_FUNC
             cur->mSourceID = source->id;
             cur->mState = VChangeState::Play;
             source->state = AL_PLAYING;
+#ifdef ALSOFT_EAX
+            if(source->eax_is_initialized())
+                source->eax_commit();
+#endif // ALSOFT_EAX
             continue;
 
         case AL_PLAYING:
@@ -2971,6 +3150,10 @@ START_API_FUNC
         default:
             assert(voice == nullptr);
             cur->mOldVoice = nullptr;
+#ifdef ALSOFT_EAX
+            if(source->eax_is_initialized())
+                source->eax_commit();
+#endif // ALSOFT_EAX
             break;
         }
 
@@ -2986,11 +3169,12 @@ START_API_FUNC
                 break;
             }
         }
+        ASSUME(voice != nullptr);
 
         voice->mPosition.store(0u, std::memory_order_relaxed);
         voice->mPositionFrac.store(0, std::memory_order_relaxed);
         voice->mCurrentBuffer.store(&source->mQueue.front(), std::memory_order_relaxed);
-        voice->mFlags = 0;
+        voice->mFlags.reset();
         /* A source that's not playing or paused has any offset applied when it
          * starts playing.
          */
@@ -3005,7 +3189,7 @@ START_API_FUNC
                 voice->mPositionFrac.store(vpos->frac, std::memory_order_relaxed);
                 voice->mCurrentBuffer.store(vpos->bufferitem, std::memory_order_relaxed);
                 if(vpos->pos!=0 || vpos->frac!=0 || vpos->bufferitem!=&source->mQueue.front())
-                    voice->mFlags |= VoiceIsFading;
+                    voice->mFlags.set(VoiceIsFading);
             }
         }
         InitVoice(voice, source, std::addressof(*BufferList), context.get(), device);
@@ -3247,7 +3431,7 @@ START_API_FUNC
         SETERR_RETURN(context, AL_INVALID_OPERATION,, "Queueing onto static source %u", src);
 
     /* Check for a valid Buffer, for its frequency and format */
-    ALCdevice *device{context->mDevice.get()};
+    ALCdevice *device{context->mALDevice.get()};
     ALbuffer *BufferFmt{nullptr};
     for(auto &item : source->mQueue)
     {
@@ -3396,6 +3580,17 @@ START_API_FUNC
 END_API_FUNC
 
 
+AL_API void AL_APIENTRY alSourceQueueBufferLayersSOFT(ALuint, ALsizei, const ALuint*)
+START_API_FUNC
+{
+    ContextRef context{GetContextRef()};
+    if UNLIKELY(!context) return;
+
+    context->setError(AL_INVALID_OPERATION, "alSourceQueueBufferLayersSOFT not supported");
+}
+END_API_FUNC
+
+
 ALsource::ALsource()
 {
     Direct.Gain = 1.0f;
@@ -3412,8 +3607,6 @@ ALsource::ALsource()
         send.GainLF = 1.0f;
         send.LFReference = HIGHPASSFREQREF;
     }
-
-    PropsClean.test_and_set(std::memory_order_relaxed);
 }
 
 ALsource::~ALsource()
@@ -3432,18 +3625,47 @@ ALsource::~ALsource()
 void UpdateAllSourceProps(ALCcontext *context)
 {
     std::lock_guard<std::mutex> _{context->mSourceLock};
-    auto voicelist = context->getVoicesSpan();
-    ALuint vidx{0u};
-    for(Voice *voice : voicelist)
+#ifdef ALSOFT_EAX
+    if(context->has_eax())
     {
-        ALuint sid{voice->mSourceID.load(std::memory_order_acquire)};
-        ALsource *source = sid ? LookupSource(context, sid) : nullptr;
-        if(source && source->VoiceIdx == vidx)
+        /* If EAX is enabled, we need to go through and commit all sources' EAX
+         * changes, along with updating its voice, if any.
+         */
+        for(auto &sublist : context->mSourceList)
         {
-            if(!source->PropsClean.test_and_set(std::memory_order_acq_rel))
-                UpdateSourceProps(source, voice, context);
+            uint64_t usemask{~sublist.FreeMask};
+            while(usemask)
+            {
+                const int idx{al::countr_zero(usemask)};
+                usemask &= ~(1_u64 << idx);
+
+                ALsource *source{sublist.Sources + idx};
+                source->eax_commit();
+
+                if(Voice *voice{GetSourceVoice(source, context)})
+                {
+                    if(std::exchange(source->mPropsDirty, false))
+                        UpdateSourceProps(source, voice, context);
+                }
+            }
         }
-        ++vidx;
+    }
+    else
+#endif
+    {
+        auto voicelist = context->getVoicesSpan();
+        ALuint vidx{0u};
+        for(Voice *voice : voicelist)
+        {
+            ALuint sid{voice->mSourceID.load(std::memory_order_acquire)};
+            ALsource *source = sid ? LookupSource(context, sid) : nullptr;
+            if(source && source->VoiceIdx == vidx)
+            {
+                if(std::exchange(source->mPropsDirty, false))
+                    UpdateSourceProps(source, voice, context);
+            }
+            ++vidx;
+        }
     }
 }
 
@@ -3453,10 +3675,2394 @@ SourceSubList::~SourceSubList()
     while(usemask)
     {
         const int idx{al::countr_zero(usemask)};
-        al::destroy_at(Sources+idx);
         usemask &= ~(1_u64 << idx);
+        al::destroy_at(Sources+idx);
     }
     FreeMask = ~usemask;
     al_free(Sources);
     Sources = nullptr;
 }
+
+
+#ifdef ALSOFT_EAX
+class EaxSourceException :
+    public EaxException
+{
+public:
+    explicit EaxSourceException(
+        const char* message)
+        :
+        EaxException{"EAX_SOURCE", message}
+    {
+    }
+}; // EaxSourceException
+
+
+class EaxSourceActiveFxSlotsException :
+    public EaxException
+{
+public:
+    explicit EaxSourceActiveFxSlotsException(
+        const char* message)
+        :
+        EaxException{"EAX_SOURCE_ACTIVE_FX_SLOTS", message}
+    {
+    }
+}; // EaxSourceActiveFxSlotsException
+
+
+class EaxSourceSendException :
+    public EaxException
+{
+public:
+    explicit EaxSourceSendException(
+        const char* message)
+        :
+        EaxException{"EAX_SOURCE_SEND", message}
+    {
+    }
+}; // EaxSourceSendException
+
+
+void EaxUpdateSourceVoice(ALsource *source, ALCcontext *context)
+{
+    if(Voice *voice{GetSourceVoice(source, context)})
+    {
+        if(std::exchange(source->mPropsDirty, false))
+            UpdateSourceProps(source, voice, context);
+    }
+}
+
+
+void ALsource::eax_initialize(ALCcontext *context) noexcept
+{
+    assert(context);
+    eax_al_context_ = context;
+    eax_set_defaults();
+    eax_initialize_fx_slots();
+
+    eax_d_ = eax_;
+}
+
+void ALsource::eax_update_filters()
+{
+    eax_update_filters_internal();
+}
+
+void ALsource::eax_update(EaxContextSharedDirtyFlags)
+{
+    /* NOTE: EaxContextSharedDirtyFlags only has one flag (primary_fx_slot_id),
+     * which must be true for this to be called.
+     */
+    if(eax_uses_primary_id_)
+        eax_update_primary_fx_slot_id();
+}
+
+void ALsource::eax_commit_and_update()
+{
+    eax_apply_deferred();
+    EaxUpdateSourceVoice(this, eax_al_context_);
+}
+
+ALsource* ALsource::eax_lookup_source(
+    ALCcontext& al_context,
+    ALuint source_id) noexcept
+{
+    return LookupSource(&al_context, source_id);
+}
+
+[[noreturn]]
+void ALsource::eax_fail(
+    const char* message)
+{
+    throw EaxSourceException{message};
+}
+
+void ALsource::eax_set_source_defaults() noexcept
+{
+    eax1_.fMix = EAX_REVERBMIX_USEDISTANCE;
+
+    eax_.source.lDirect = EAXSOURCE_DEFAULTDIRECT;
+    eax_.source.lDirectHF = EAXSOURCE_DEFAULTDIRECTHF;
+    eax_.source.lRoom = EAXSOURCE_DEFAULTROOM;
+    eax_.source.lRoomHF = EAXSOURCE_DEFAULTROOMHF;
+    eax_.source.lObstruction = EAXSOURCE_DEFAULTOBSTRUCTION;
+    eax_.source.flObstructionLFRatio = EAXSOURCE_DEFAULTOBSTRUCTIONLFRATIO;
+    eax_.source.lOcclusion = EAXSOURCE_DEFAULTOCCLUSION;
+    eax_.source.flOcclusionLFRatio = EAXSOURCE_DEFAULTOCCLUSIONLFRATIO;
+    eax_.source.flOcclusionRoomRatio = EAXSOURCE_DEFAULTOCCLUSIONROOMRATIO;
+    eax_.source.flOcclusionDirectRatio = EAXSOURCE_DEFAULTOCCLUSIONDIRECTRATIO;
+    eax_.source.lExclusion = EAXSOURCE_DEFAULTEXCLUSION;
+    eax_.source.flExclusionLFRatio = EAXSOURCE_DEFAULTEXCLUSIONLFRATIO;
+    eax_.source.lOutsideVolumeHF = EAXSOURCE_DEFAULTOUTSIDEVOLUMEHF;
+    eax_.source.flDopplerFactor = EAXSOURCE_DEFAULTDOPPLERFACTOR;
+    eax_.source.flRolloffFactor = EAXSOURCE_DEFAULTROLLOFFFACTOR;
+    eax_.source.flRoomRolloffFactor = EAXSOURCE_DEFAULTROOMROLLOFFFACTOR;
+    eax_.source.flAirAbsorptionFactor = EAXSOURCE_DEFAULTAIRABSORPTIONFACTOR;
+    eax_.source.ulFlags = EAXSOURCE_DEFAULTFLAGS;
+    eax_.source.flMacroFXFactor = EAXSOURCE_DEFAULTMACROFXFACTOR;
+}
+
+void ALsource::eax_set_active_fx_slots_defaults() noexcept
+{
+    eax_.active_fx_slots = EAX50SOURCE_3DDEFAULTACTIVEFXSLOTID;
+}
+
+void ALsource::eax_set_send_defaults(EAXSOURCEALLSENDPROPERTIES& eax_send) noexcept
+{
+    eax_send.guidReceivingFXSlotID = EAX_NULL_GUID;
+    eax_send.lSend = EAXSOURCE_DEFAULTSEND;
+    eax_send.lSendHF = EAXSOURCE_DEFAULTSENDHF;
+    eax_send.lOcclusion = EAXSOURCE_DEFAULTOCCLUSION;
+    eax_send.flOcclusionLFRatio = EAXSOURCE_DEFAULTOCCLUSIONLFRATIO;
+    eax_send.flOcclusionRoomRatio = EAXSOURCE_DEFAULTOCCLUSIONROOMRATIO;
+    eax_send.flOcclusionDirectRatio = EAXSOURCE_DEFAULTOCCLUSIONDIRECTRATIO;
+    eax_send.lExclusion = EAXSOURCE_DEFAULTEXCLUSION;
+    eax_send.flExclusionLFRatio = EAXSOURCE_DEFAULTEXCLUSIONLFRATIO;
+}
+
+void ALsource::eax_set_sends_defaults() noexcept
+{
+    for (auto& eax_send : eax_.sends)
+    {
+        eax_set_send_defaults(eax_send);
+    }
+}
+
+void ALsource::eax_set_speaker_levels_defaults() noexcept
+{
+    std::fill(eax_.speaker_levels.begin(), eax_.speaker_levels.end(), EAXSOURCE_DEFAULTSPEAKERLEVEL);
+}
+
+void ALsource::eax_set_defaults() noexcept
+{
+    eax_set_source_defaults();
+    eax_set_active_fx_slots_defaults();
+    eax_set_sends_defaults();
+    eax_set_speaker_levels_defaults();
+}
+
+float ALsource::eax_calculate_dst_occlusion_mb(
+    long src_occlusion_mb,
+    float path_ratio,
+    float lf_ratio) noexcept
+{
+    const auto ratio_1 = path_ratio + lf_ratio - 1.0F;
+    const auto ratio_2 = path_ratio * lf_ratio;
+    const auto ratio = (ratio_2 > ratio_1) ? ratio_2 : ratio_1;
+    const auto dst_occlustion_mb = static_cast<float>(src_occlusion_mb) * ratio;
+
+    return dst_occlustion_mb;
+}
+
+EaxAlLowPassParam ALsource::eax_create_direct_filter_param() const noexcept
+{
+    auto gain_mb =
+        static_cast<float>(eax_.source.lDirect) +
+
+        (static_cast<float>(eax_.source.lObstruction) * eax_.source.flObstructionLFRatio) +
+
+        eax_calculate_dst_occlusion_mb(
+            eax_.source.lOcclusion,
+            eax_.source.flOcclusionDirectRatio,
+            eax_.source.flOcclusionLFRatio);
+
+    auto gain_hf_mb =
+        static_cast<float>(eax_.source.lDirectHF) +
+
+        static_cast<float>(eax_.source.lObstruction) +
+
+        (static_cast<float>(eax_.source.lOcclusion) * eax_.source.flOcclusionDirectRatio);
+
+    for (auto i = std::size_t{}; i < EAX_MAX_FXSLOTS; ++i)
+    {
+        if (eax_active_fx_slots_[i])
+        {
+            const auto& send = eax_.sends[i];
+
+            gain_mb += eax_calculate_dst_occlusion_mb(
+                send.lOcclusion,
+                send.flOcclusionDirectRatio,
+                send.flOcclusionLFRatio);
+
+            gain_hf_mb += static_cast<float>(send.lOcclusion) * send.flOcclusionDirectRatio;
+        }
+    }
+
+    const auto al_low_pass_param = EaxAlLowPassParam
+    {
+        level_mb_to_gain(gain_mb),
+        minf(level_mb_to_gain(gain_hf_mb), 1.0f)
+    };
+
+    return al_low_pass_param;
+}
+
+EaxAlLowPassParam ALsource::eax_create_room_filter_param(
+    const ALeffectslot& fx_slot,
+    const EAXSOURCEALLSENDPROPERTIES& send) const noexcept
+{
+    const auto& fx_slot_eax = fx_slot.eax_get_eax_fx_slot();
+
+    const auto gain_mb =
+        static_cast<float>(
+            eax_.source.lRoom +
+            send.lSend) +
+
+        eax_calculate_dst_occlusion_mb(
+            eax_.source.lOcclusion,
+            eax_.source.flOcclusionRoomRatio,
+            eax_.source.flOcclusionLFRatio
+        ) +
+
+        eax_calculate_dst_occlusion_mb(
+            send.lOcclusion,
+            send.flOcclusionRoomRatio,
+            send.flOcclusionLFRatio
+        ) +
+
+        (static_cast<float>(eax_.source.lExclusion) * eax_.source.flExclusionLFRatio) +
+        (static_cast<float>(send.lExclusion) * send.flExclusionLFRatio) +
+
+        0.0F;
+
+    const auto gain_hf_mb =
+        static_cast<float>(
+            eax_.source.lRoomHF +
+            send.lSendHF) +
+
+        (static_cast<float>(fx_slot_eax.lOcclusion + eax_.source.lOcclusion) * eax_.source.flOcclusionRoomRatio) +
+        (static_cast<float>(send.lOcclusion) * send.flOcclusionRoomRatio) +
+
+        static_cast<float>(
+            eax_.source.lExclusion +
+            send.lExclusion) +
+
+        0.0F;
+
+    const auto al_low_pass_param = EaxAlLowPassParam
+    {
+        level_mb_to_gain(gain_mb),
+        minf(level_mb_to_gain(gain_hf_mb), 1.0f)
+    };
+
+    return al_low_pass_param;
+}
+
+void ALsource::eax_set_fx_slots()
+{
+    eax_uses_primary_id_ = false;
+    eax_has_active_fx_slots_ = false;
+    eax_active_fx_slots_.fill(false);
+
+    for(const auto& eax_active_fx_slot_id : eax_.active_fx_slots.guidActiveFXSlots)
+    {
+        auto fx_slot_index = EaxFxSlotIndex{};
+
+        if(eax_active_fx_slot_id == EAX_PrimaryFXSlotID)
+        {
+            eax_uses_primary_id_ = true;
+            fx_slot_index = eax_al_context_->eax_get_primary_fx_slot_index();
+        }
+        else
+        {
+            fx_slot_index = eax_active_fx_slot_id;
+        }
+
+        if(fx_slot_index.has_value())
+        {
+            eax_has_active_fx_slots_ = true;
+            eax_active_fx_slots_[*fx_slot_index] = true;
+        }
+    }
+
+    for(auto i = 0u;i < eax_active_fx_slots_.size();++i)
+    {
+        if(!eax_active_fx_slots_[i])
+            eax_set_al_source_send(nullptr, i, EaxAlLowPassParam{1.0f, 1.0f});
+    }
+}
+
+void ALsource::eax_initialize_fx_slots()
+{
+    eax_set_fx_slots();
+    eax_update_filters_internal();
+}
+
+void ALsource::eax_update_direct_filter_internal()
+{
+    const auto& direct_param = eax_create_direct_filter_param();
+
+    Direct.Gain = direct_param.gain;
+    Direct.GainHF = direct_param.gain_hf;
+    Direct.HFReference = LOWPASSFREQREF;
+    Direct.GainLF = 1.0f;
+    Direct.LFReference = HIGHPASSFREQREF;
+    mPropsDirty = true;
+}
+
+void ALsource::eax_update_room_filters_internal()
+{
+    if (!eax_has_active_fx_slots_)
+    {
+        return;
+    }
+
+    for (auto i = 0u; i < EAX_MAX_FXSLOTS; ++i)
+    {
+        if (eax_active_fx_slots_[i])
+        {
+            auto& fx_slot = eax_al_context_->eax_get_fx_slot(static_cast<std::size_t>(i));
+            const auto& send = eax_.sends[i];
+            const auto& room_param = eax_create_room_filter_param(fx_slot, send);
+
+            eax_set_al_source_send(&fx_slot, i, room_param);
+        }
+    }
+}
+
+void ALsource::eax_update_filters_internal()
+{
+    eax_update_direct_filter_internal();
+    eax_update_room_filters_internal();
+}
+
+void ALsource::eax_update_primary_fx_slot_id()
+{
+    const auto& previous_primary_fx_slot_index = eax_al_context_->eax_get_previous_primary_fx_slot_index();
+    const auto& primary_fx_slot_index = eax_al_context_->eax_get_primary_fx_slot_index();
+
+    if (previous_primary_fx_slot_index == primary_fx_slot_index)
+    {
+        return;
+    }
+
+    if (previous_primary_fx_slot_index.has_value())
+    {
+        const auto fx_slot_index = previous_primary_fx_slot_index.value();
+        eax_active_fx_slots_[fx_slot_index] = false;
+
+        eax_set_al_source_send(nullptr, fx_slot_index, EaxAlLowPassParam{1.0f, 1.0f});
+    }
+
+    if (primary_fx_slot_index.has_value())
+    {
+        const auto fx_slot_index = primary_fx_slot_index.value();
+        eax_active_fx_slots_[fx_slot_index] = true;
+
+        auto& fx_slot = eax_al_context_->eax_get_fx_slot(fx_slot_index);
+        const auto& send = eax_.sends[fx_slot_index];
+        const auto& room_param = eax_create_room_filter_param(fx_slot, send);
+
+        eax_set_al_source_send(&fx_slot, fx_slot_index, room_param);
+    }
+
+    eax_has_active_fx_slots_ = std::any_of(
+        eax_active_fx_slots_.cbegin(),
+        eax_active_fx_slots_.cend(),
+        [](const auto& item)
+        {
+            return item;
+        }
+    );
+}
+
+void ALsource::eax_defer_active_fx_slots(
+    const EaxEaxCall& eax_call)
+{
+    const auto active_fx_slots_span =
+        eax_call.get_values<EaxSourceActiveFxSlotsException, const GUID>();
+
+    const auto fx_slot_count = active_fx_slots_span.size();
+
+    if (fx_slot_count <= 0 || fx_slot_count > EAX_MAX_FXSLOTS)
+    {
+        throw EaxSourceActiveFxSlotsException{"Count out of range."};
+    }
+
+    for (auto i = std::size_t{}; i < fx_slot_count; ++i)
+    {
+        const auto& fx_slot_guid = active_fx_slots_span[i];
+
+        if (fx_slot_guid != EAX_NULL_GUID &&
+            fx_slot_guid != EAX_PrimaryFXSlotID &&
+            fx_slot_guid != EAXPROPERTYID_EAX40_FXSlot0 &&
+            fx_slot_guid != EAXPROPERTYID_EAX50_FXSlot0 &&
+            fx_slot_guid != EAXPROPERTYID_EAX40_FXSlot1 &&
+            fx_slot_guid != EAXPROPERTYID_EAX50_FXSlot1 &&
+            fx_slot_guid != EAXPROPERTYID_EAX40_FXSlot2 &&
+            fx_slot_guid != EAXPROPERTYID_EAX50_FXSlot2 &&
+            fx_slot_guid != EAXPROPERTYID_EAX40_FXSlot3 &&
+            fx_slot_guid != EAXPROPERTYID_EAX50_FXSlot3)
+        {
+            throw EaxSourceActiveFxSlotsException{"Unsupported GUID."};
+        }
+    }
+
+    for (auto i = std::size_t{}; i < fx_slot_count; ++i)
+    {
+        eax_d_.active_fx_slots.guidActiveFXSlots[i] = active_fx_slots_span[i];
+    }
+
+    for (auto i = fx_slot_count; i < EAX_MAX_FXSLOTS; ++i)
+    {
+        eax_d_.active_fx_slots.guidActiveFXSlots[i] = EAX_NULL_GUID;
+    }
+
+    eax_are_active_fx_slots_dirty_ = (eax_d_.active_fx_slots != eax_.active_fx_slots);
+}
+
+
+const char* ALsource::eax_get_exclusion_name() noexcept
+{
+    return "Exclusion";
+}
+
+const char* ALsource::eax_get_exclusion_lf_ratio_name() noexcept
+{
+    return "Exclusion LF Ratio";
+}
+
+const char* ALsource::eax_get_occlusion_name() noexcept
+{
+    return "Occlusion";
+}
+
+const char* ALsource::eax_get_occlusion_lf_ratio_name() noexcept
+{
+    return "Occlusion LF Ratio";
+}
+
+const char* ALsource::eax_get_occlusion_direct_ratio_name() noexcept
+{
+    return "Occlusion Direct Ratio";
+}
+
+const char* ALsource::eax_get_occlusion_room_ratio_name() noexcept
+{
+    return "Occlusion Room Ratio";
+}
+
+void ALsource::eax1_validate_reverb_mix(float reverb_mix)
+{
+    if (reverb_mix == EAX_REVERBMIX_USEDISTANCE)
+        return;
+
+    eax_validate_range<EaxSourceSendException>("Reverb Mix", reverb_mix, EAX_BUFFER_MINREVERBMIX, EAX_BUFFER_MAXREVERBMIX);
+}
+
+void ALsource::eax_validate_send_receiving_fx_slot_guid(
+    const GUID& guidReceivingFXSlotID)
+{
+    if (guidReceivingFXSlotID != EAXPROPERTYID_EAX40_FXSlot0 &&
+        guidReceivingFXSlotID != EAXPROPERTYID_EAX50_FXSlot0 &&
+        guidReceivingFXSlotID != EAXPROPERTYID_EAX40_FXSlot1 &&
+        guidReceivingFXSlotID != EAXPROPERTYID_EAX50_FXSlot1 &&
+        guidReceivingFXSlotID != EAXPROPERTYID_EAX40_FXSlot2 &&
+        guidReceivingFXSlotID != EAXPROPERTYID_EAX50_FXSlot2 &&
+        guidReceivingFXSlotID != EAXPROPERTYID_EAX40_FXSlot3 &&
+        guidReceivingFXSlotID != EAXPROPERTYID_EAX50_FXSlot3)
+    {
+        throw EaxSourceSendException{"Unsupported receiving FX slot GUID."};
+    }
+}
+
+void ALsource::eax_validate_send_send(
+    long lSend)
+{
+    eax_validate_range<EaxSourceSendException>(
+        "Send",
+        lSend,
+        EAXSOURCE_MINSEND,
+        EAXSOURCE_MAXSEND);
+}
+
+void ALsource::eax_validate_send_send_hf(
+    long lSendHF)
+{
+    eax_validate_range<EaxSourceSendException>(
+        "Send HF",
+        lSendHF,
+        EAXSOURCE_MINSENDHF,
+        EAXSOURCE_MAXSENDHF);
+}
+
+void ALsource::eax_validate_send_occlusion(
+    long lOcclusion)
+{
+    eax_validate_range<EaxSourceSendException>(
+        eax_get_occlusion_name(),
+        lOcclusion,
+        EAXSOURCE_MINOCCLUSION,
+        EAXSOURCE_MAXOCCLUSION);
+}
+
+void ALsource::eax_validate_send_occlusion_lf_ratio(
+    float flOcclusionLFRatio)
+{
+    eax_validate_range<EaxSourceSendException>(
+        eax_get_occlusion_lf_ratio_name(),
+        flOcclusionLFRatio,
+        EAXSOURCE_MINOCCLUSIONLFRATIO,
+        EAXSOURCE_MAXOCCLUSIONLFRATIO);
+}
+
+void ALsource::eax_validate_send_occlusion_room_ratio(
+    float flOcclusionRoomRatio)
+{
+    eax_validate_range<EaxSourceSendException>(
+        eax_get_occlusion_room_ratio_name(),
+        flOcclusionRoomRatio,
+        EAXSOURCE_MINOCCLUSIONROOMRATIO,
+        EAXSOURCE_MAXOCCLUSIONROOMRATIO);
+}
+
+void ALsource::eax_validate_send_occlusion_direct_ratio(
+    float flOcclusionDirectRatio)
+{
+    eax_validate_range<EaxSourceSendException>(
+        eax_get_occlusion_direct_ratio_name(),
+        flOcclusionDirectRatio,
+        EAXSOURCE_MINOCCLUSIONDIRECTRATIO,
+        EAXSOURCE_MAXOCCLUSIONDIRECTRATIO);
+}
+
+void ALsource::eax_validate_send_exclusion(
+    long lExclusion)
+{
+    eax_validate_range<EaxSourceSendException>(
+        eax_get_exclusion_name(),
+        lExclusion,
+        EAXSOURCE_MINEXCLUSION,
+        EAXSOURCE_MAXEXCLUSION);
+}
+
+void ALsource::eax_validate_send_exclusion_lf_ratio(
+    float flExclusionLFRatio)
+{
+    eax_validate_range<EaxSourceSendException>(
+        eax_get_exclusion_lf_ratio_name(),
+        flExclusionLFRatio,
+        EAXSOURCE_MINEXCLUSIONLFRATIO,
+        EAXSOURCE_MAXEXCLUSIONLFRATIO);
+}
+
+void ALsource::eax_validate_send(
+    const EAXSOURCESENDPROPERTIES& all)
+{
+    eax_validate_send_receiving_fx_slot_guid(all.guidReceivingFXSlotID);
+    eax_validate_send_send(all.lSend);
+    eax_validate_send_send_hf(all.lSendHF);
+}
+
+void ALsource::eax_validate_send_exclusion_all(
+    const EAXSOURCEEXCLUSIONSENDPROPERTIES& all)
+{
+    eax_validate_send_receiving_fx_slot_guid(all.guidReceivingFXSlotID);
+    eax_validate_send_exclusion(all.lExclusion);
+    eax_validate_send_exclusion_lf_ratio(all.flExclusionLFRatio);
+}
+
+void ALsource::eax_validate_send_occlusion_all(
+    const EAXSOURCEOCCLUSIONSENDPROPERTIES& all)
+{
+    eax_validate_send_receiving_fx_slot_guid(all.guidReceivingFXSlotID);
+    eax_validate_send_occlusion(all.lOcclusion);
+    eax_validate_send_occlusion_lf_ratio(all.flOcclusionLFRatio);
+    eax_validate_send_occlusion_room_ratio(all.flOcclusionRoomRatio);
+    eax_validate_send_occlusion_direct_ratio(all.flOcclusionDirectRatio);
+}
+
+void ALsource::eax_validate_send_all(
+    const EAXSOURCEALLSENDPROPERTIES& all)
+{
+    eax_validate_send_receiving_fx_slot_guid(all.guidReceivingFXSlotID);
+    eax_validate_send_send(all.lSend);
+    eax_validate_send_send_hf(all.lSendHF);
+    eax_validate_send_occlusion(all.lOcclusion);
+    eax_validate_send_occlusion_lf_ratio(all.flOcclusionLFRatio);
+    eax_validate_send_occlusion_room_ratio(all.flOcclusionRoomRatio);
+    eax_validate_send_occlusion_direct_ratio(all.flOcclusionDirectRatio);
+    eax_validate_send_exclusion(all.lExclusion);
+    eax_validate_send_exclusion_lf_ratio(all.flExclusionLFRatio);
+}
+
+EaxFxSlotIndexValue ALsource::eax_get_send_index(
+    const GUID& send_guid)
+{
+    if (false)
+    {
+    }
+    else if (send_guid == EAXPROPERTYID_EAX40_FXSlot0 || send_guid == EAXPROPERTYID_EAX50_FXSlot0)
+    {
+        return 0;
+    }
+    else if (send_guid == EAXPROPERTYID_EAX40_FXSlot1 || send_guid == EAXPROPERTYID_EAX50_FXSlot1)
+    {
+        return 1;
+    }
+    else if (send_guid == EAXPROPERTYID_EAX40_FXSlot2 || send_guid == EAXPROPERTYID_EAX50_FXSlot2)
+    {
+        return 2;
+    }
+    else if (send_guid == EAXPROPERTYID_EAX40_FXSlot3 || send_guid == EAXPROPERTYID_EAX50_FXSlot3)
+    {
+        return 3;
+    }
+    else
+    {
+        throw EaxSourceSendException{"Unsupported receiving FX slot GUID."};
+    }
+}
+
+void ALsource::eax_defer_send_send(
+    long lSend,
+    EaxFxSlotIndexValue index)
+{
+    eax_d_.sends[index].lSend = lSend;
+
+    eax_sends_dirty_flags_.sends[index].lSend =
+        (eax_.sends[index].lSend != eax_d_.sends[index].lSend);
+}
+
+void ALsource::eax_defer_send_send_hf(
+    long lSendHF,
+    EaxFxSlotIndexValue index)
+{
+    eax_d_.sends[index].lSendHF = lSendHF;
+
+    eax_sends_dirty_flags_.sends[index].lSendHF =
+        (eax_.sends[index].lSendHF != eax_d_.sends[index].lSendHF);
+}
+
+void ALsource::eax_defer_send_occlusion(
+    long lOcclusion,
+    EaxFxSlotIndexValue index)
+{
+    eax_d_.sends[index].lOcclusion = lOcclusion;
+
+    eax_sends_dirty_flags_.sends[index].lOcclusion =
+        (eax_.sends[index].lOcclusion != eax_d_.sends[index].lOcclusion);
+}
+
+void ALsource::eax_defer_send_occlusion_lf_ratio(
+    float flOcclusionLFRatio,
+    EaxFxSlotIndexValue index)
+{
+    eax_d_.sends[index].flOcclusionLFRatio = flOcclusionLFRatio;
+
+    eax_sends_dirty_flags_.sends[index].flOcclusionLFRatio =
+        (eax_.sends[index].flOcclusionLFRatio != eax_d_.sends[index].flOcclusionLFRatio);
+}
+
+void ALsource::eax_defer_send_occlusion_room_ratio(
+    float flOcclusionRoomRatio,
+    EaxFxSlotIndexValue index)
+{
+    eax_d_.sends[index].flOcclusionRoomRatio = flOcclusionRoomRatio;
+
+    eax_sends_dirty_flags_.sends[index].flOcclusionRoomRatio =
+        (eax_.sends[index].flOcclusionRoomRatio != eax_d_.sends[index].flOcclusionRoomRatio);
+}
+
+void ALsource::eax_defer_send_occlusion_direct_ratio(
+    float flOcclusionDirectRatio,
+    EaxFxSlotIndexValue index)
+{
+    eax_d_.sends[index].flOcclusionDirectRatio = flOcclusionDirectRatio;
+
+    eax_sends_dirty_flags_.sends[index].flOcclusionDirectRatio =
+        (eax_.sends[index].flOcclusionDirectRatio != eax_d_.sends[index].flOcclusionDirectRatio);
+}
+
+void ALsource::eax_defer_send_exclusion(
+    long lExclusion,
+    EaxFxSlotIndexValue index)
+{
+    eax_d_.sends[index].lExclusion = lExclusion;
+
+    eax_sends_dirty_flags_.sends[index].lExclusion =
+        (eax_.sends[index].lExclusion != eax_d_.sends[index].lExclusion);
+}
+
+void ALsource::eax_defer_send_exclusion_lf_ratio(
+    float flExclusionLFRatio,
+    EaxFxSlotIndexValue index)
+{
+    eax_d_.sends[index].flExclusionLFRatio = flExclusionLFRatio;
+
+    eax_sends_dirty_flags_.sends[index].flExclusionLFRatio =
+        (eax_.sends[index].flExclusionLFRatio != eax_d_.sends[index].flExclusionLFRatio);
+}
+
+void ALsource::eax_defer_send(
+    const EAXSOURCESENDPROPERTIES& all,
+    EaxFxSlotIndexValue index)
+{
+    eax_defer_send_send(all.lSend, index);
+    eax_defer_send_send_hf(all.lSendHF, index);
+}
+
+void ALsource::eax_defer_send_exclusion_all(
+    const EAXSOURCEEXCLUSIONSENDPROPERTIES& all,
+    EaxFxSlotIndexValue index)
+{
+    eax_defer_send_exclusion(all.lExclusion, index);
+    eax_defer_send_exclusion_lf_ratio(all.flExclusionLFRatio, index);
+}
+
+void ALsource::eax_defer_send_occlusion_all(
+    const EAXSOURCEOCCLUSIONSENDPROPERTIES& all,
+    EaxFxSlotIndexValue index)
+{
+    eax_defer_send_occlusion(all.lOcclusion, index);
+    eax_defer_send_occlusion_lf_ratio(all.flOcclusionLFRatio, index);
+    eax_defer_send_occlusion_room_ratio(all.flOcclusionRoomRatio, index);
+    eax_defer_send_occlusion_direct_ratio(all.flOcclusionDirectRatio, index);
+}
+
+void ALsource::eax_defer_send_all(
+    const EAXSOURCEALLSENDPROPERTIES& all,
+    EaxFxSlotIndexValue index)
+{
+    eax_defer_send_send(all.lSend, index);
+    eax_defer_send_send_hf(all.lSendHF, index);
+    eax_defer_send_occlusion(all.lOcclusion, index);
+    eax_defer_send_occlusion_lf_ratio(all.flOcclusionLFRatio, index);
+    eax_defer_send_occlusion_room_ratio(all.flOcclusionRoomRatio, index);
+    eax_defer_send_occlusion_direct_ratio(all.flOcclusionDirectRatio, index);
+    eax_defer_send_exclusion(all.lExclusion, index);
+    eax_defer_send_exclusion_lf_ratio(all.flExclusionLFRatio, index);
+}
+
+void ALsource::eax_defer_send(
+    const EaxEaxCall& eax_call)
+{
+    const auto eax_all_span =
+        eax_call.get_values<EaxSourceException, const EAXSOURCESENDPROPERTIES>();
+
+    const auto count = eax_all_span.size();
+
+    if (count <= 0 || count > EAX_MAX_FXSLOTS)
+    {
+        throw EaxSourceSendException{"Send count out of range."};
+    }
+
+    for (auto i = std::size_t{}; i < count; ++i)
+    {
+        const auto& all = eax_all_span[i];
+        eax_validate_send(all);
+    }
+
+    for (auto i = std::size_t{}; i < count; ++i)
+    {
+        const auto& all = eax_all_span[i];
+        const auto send_index = eax_get_send_index(all.guidReceivingFXSlotID);
+        eax_defer_send(all, send_index);
+    }
+}
+
+void ALsource::eax_defer_send_exclusion_all(
+    const EaxEaxCall& eax_call)
+{
+    const auto eax_all_span =
+        eax_call.get_values<EaxSourceException, const EAXSOURCEEXCLUSIONSENDPROPERTIES>();
+
+    const auto count = eax_all_span.size();
+
+    if (count <= 0 || count > EAX_MAX_FXSLOTS)
+    {
+        throw EaxSourceSendException{"Send exclusion all count out of range."};
+    }
+
+    for (auto i = std::size_t{}; i < count; ++i)
+    {
+        const auto& all = eax_all_span[i];
+        eax_validate_send_exclusion_all(all);
+    }
+
+    for (auto i = std::size_t{}; i < count; ++i)
+    {
+        const auto& all = eax_all_span[i];
+        const auto send_index = eax_get_send_index(all.guidReceivingFXSlotID);
+        eax_defer_send_exclusion_all(all, send_index);
+    }
+}
+
+void ALsource::eax_defer_send_occlusion_all(
+    const EaxEaxCall& eax_call)
+{
+    const auto eax_all_span =
+        eax_call.get_values<EaxSourceException, const EAXSOURCEOCCLUSIONSENDPROPERTIES>();
+
+    const auto count = eax_all_span.size();
+
+    if (count <= 0 || count > EAX_MAX_FXSLOTS)
+    {
+        throw EaxSourceSendException{"Send occlusion all count out of range."};
+    }
+
+    for (auto i = std::size_t{}; i < count; ++i)
+    {
+        const auto& all = eax_all_span[i];
+        eax_validate_send_occlusion_all(all);
+    }
+
+    for (auto i = std::size_t{}; i < count; ++i)
+    {
+        const auto& all = eax_all_span[i];
+        const auto send_index = eax_get_send_index(all.guidReceivingFXSlotID);
+        eax_defer_send_occlusion_all(all, send_index);
+    }
+}
+
+void ALsource::eax_defer_send_all(
+    const EaxEaxCall& eax_call)
+{
+    const auto eax_all_span =
+        eax_call.get_values<EaxSourceException, const EAXSOURCEALLSENDPROPERTIES>();
+
+    const auto count = eax_all_span.size();
+
+    if (count <= 0 || count > EAX_MAX_FXSLOTS)
+    {
+        throw EaxSourceSendException{"Send all count out of range."};
+    }
+
+    for (auto i = std::size_t{}; i < count; ++i)
+    {
+        const auto& all = eax_all_span[i];
+        eax_validate_send_all(all);
+    }
+
+    for (auto i = std::size_t{}; i < count; ++i)
+    {
+        const auto& all = eax_all_span[i];
+        const auto send_index = eax_get_send_index(all.guidReceivingFXSlotID);
+        eax_defer_send_all(all, send_index);
+    }
+}
+
+
+void ALsource::eax_validate_source_direct(
+    long direct)
+{
+    eax_validate_range<EaxSourceException>(
+        "Direct",
+        direct,
+        EAXSOURCE_MINDIRECT,
+        EAXSOURCE_MAXDIRECT);
+}
+
+void ALsource::eax_validate_source_direct_hf(
+    long direct_hf)
+{
+    eax_validate_range<EaxSourceException>(
+        "Direct HF",
+        direct_hf,
+        EAXSOURCE_MINDIRECTHF,
+        EAXSOURCE_MAXDIRECTHF);
+}
+
+void ALsource::eax_validate_source_room(
+    long room)
+{
+    eax_validate_range<EaxSourceException>(
+        "Room",
+        room,
+        EAXSOURCE_MINROOM,
+        EAXSOURCE_MAXROOM);
+}
+
+void ALsource::eax_validate_source_room_hf(
+    long room_hf)
+{
+    eax_validate_range<EaxSourceException>(
+        "Room HF",
+        room_hf,
+        EAXSOURCE_MINROOMHF,
+        EAXSOURCE_MAXROOMHF);
+}
+
+void ALsource::eax_validate_source_obstruction(
+    long obstruction)
+{
+    eax_validate_range<EaxSourceException>(
+        "Obstruction",
+        obstruction,
+        EAXSOURCE_MINOBSTRUCTION,
+        EAXSOURCE_MAXOBSTRUCTION);
+}
+
+void ALsource::eax_validate_source_obstruction_lf_ratio(
+    float obstruction_lf_ratio)
+{
+    eax_validate_range<EaxSourceException>(
+        "Obstruction LF Ratio",
+        obstruction_lf_ratio,
+        EAXSOURCE_MINOBSTRUCTIONLFRATIO,
+        EAXSOURCE_MAXOBSTRUCTIONLFRATIO);
+}
+
+void ALsource::eax_validate_source_occlusion(
+    long occlusion)
+{
+    eax_validate_range<EaxSourceException>(
+        eax_get_occlusion_name(),
+        occlusion,
+        EAXSOURCE_MINOCCLUSION,
+        EAXSOURCE_MAXOCCLUSION);
+}
+
+void ALsource::eax_validate_source_occlusion_lf_ratio(
+    float occlusion_lf_ratio)
+{
+    eax_validate_range<EaxSourceException>(
+        eax_get_occlusion_lf_ratio_name(),
+        occlusion_lf_ratio,
+        EAXSOURCE_MINOCCLUSIONLFRATIO,
+        EAXSOURCE_MAXOCCLUSIONLFRATIO);
+}
+
+void ALsource::eax_validate_source_occlusion_room_ratio(
+    float occlusion_room_ratio)
+{
+    eax_validate_range<EaxSourceException>(
+        eax_get_occlusion_room_ratio_name(),
+        occlusion_room_ratio,
+        EAXSOURCE_MINOCCLUSIONROOMRATIO,
+        EAXSOURCE_MAXOCCLUSIONROOMRATIO);
+}
+
+void ALsource::eax_validate_source_occlusion_direct_ratio(
+    float occlusion_direct_ratio)
+{
+    eax_validate_range<EaxSourceException>(
+        eax_get_occlusion_direct_ratio_name(),
+        occlusion_direct_ratio,
+        EAXSOURCE_MINOCCLUSIONDIRECTRATIO,
+        EAXSOURCE_MAXOCCLUSIONDIRECTRATIO);
+}
+
+void ALsource::eax_validate_source_exclusion(
+    long exclusion)
+{
+    eax_validate_range<EaxSourceException>(
+        eax_get_exclusion_name(),
+        exclusion,
+        EAXSOURCE_MINEXCLUSION,
+        EAXSOURCE_MAXEXCLUSION);
+}
+
+void ALsource::eax_validate_source_exclusion_lf_ratio(
+    float exclusion_lf_ratio)
+{
+    eax_validate_range<EaxSourceException>(
+        eax_get_exclusion_lf_ratio_name(),
+        exclusion_lf_ratio,
+        EAXSOURCE_MINEXCLUSIONLFRATIO,
+        EAXSOURCE_MAXEXCLUSIONLFRATIO);
+}
+
+void ALsource::eax_validate_source_outside_volume_hf(
+    long outside_volume_hf)
+{
+    eax_validate_range<EaxSourceException>(
+        "Outside Volume HF",
+        outside_volume_hf,
+        EAXSOURCE_MINOUTSIDEVOLUMEHF,
+        EAXSOURCE_MAXOUTSIDEVOLUMEHF);
+}
+
+void ALsource::eax_validate_source_doppler_factor(
+    float doppler_factor)
+{
+    eax_validate_range<EaxSourceException>(
+        "Doppler Factor",
+        doppler_factor,
+        EAXSOURCE_MINDOPPLERFACTOR,
+        EAXSOURCE_MAXDOPPLERFACTOR);
+}
+
+void ALsource::eax_validate_source_rolloff_factor(
+    float rolloff_factor)
+{
+    eax_validate_range<EaxSourceException>(
+        "Rolloff Factor",
+        rolloff_factor,
+        EAXSOURCE_MINROLLOFFFACTOR,
+        EAXSOURCE_MAXROLLOFFFACTOR);
+}
+
+void ALsource::eax_validate_source_room_rolloff_factor(
+    float room_rolloff_factor)
+{
+    eax_validate_range<EaxSourceException>(
+        "Room Rolloff Factor",
+        room_rolloff_factor,
+        EAXSOURCE_MINROOMROLLOFFFACTOR,
+        EAXSOURCE_MAXROOMROLLOFFFACTOR);
+}
+
+void ALsource::eax_validate_source_air_absorption_factor(
+    float air_absorption_factor)
+{
+    eax_validate_range<EaxSourceException>(
+        "Air Absorption Factor",
+        air_absorption_factor,
+        EAXSOURCE_MINAIRABSORPTIONFACTOR,
+        EAXSOURCE_MAXAIRABSORPTIONFACTOR);
+}
+
+void ALsource::eax_validate_source_flags(
+    unsigned long flags,
+    int eax_version)
+{
+    eax_validate_range<EaxSourceException>(
+        "Flags",
+        flags,
+        0UL,
+        ~((eax_version == 5) ? EAX50SOURCEFLAGS_RESERVED : EAX20SOURCEFLAGS_RESERVED));
+}
+
+void ALsource::eax_validate_source_macro_fx_factor(
+    float macro_fx_factor)
+{
+    eax_validate_range<EaxSourceException>(
+        "Macro FX Factor",
+        macro_fx_factor,
+        EAXSOURCE_MINMACROFXFACTOR,
+        EAXSOURCE_MAXMACROFXFACTOR);
+}
+
+void ALsource::eax_validate_source_2d_all(
+    const EAXSOURCE2DPROPERTIES& all,
+    int eax_version)
+{
+    eax_validate_source_direct(all.lDirect);
+    eax_validate_source_direct_hf(all.lDirectHF);
+    eax_validate_source_room(all.lRoom);
+    eax_validate_source_room_hf(all.lRoomHF);
+    eax_validate_source_flags(all.ulFlags, eax_version);
+}
+
+void ALsource::eax_validate_source_obstruction_all(
+    const EAXOBSTRUCTIONPROPERTIES& all)
+{
+    eax_validate_source_obstruction(all.lObstruction);
+    eax_validate_source_obstruction_lf_ratio(all.flObstructionLFRatio);
+}
+
+void ALsource::eax_validate_source_exclusion_all(
+    const EAXEXCLUSIONPROPERTIES& all)
+{
+    eax_validate_source_exclusion(all.lExclusion);
+    eax_validate_source_exclusion_lf_ratio(all.flExclusionLFRatio);
+}
+
+void ALsource::eax_validate_source_occlusion_all(
+    const EAXOCCLUSIONPROPERTIES& all)
+{
+    eax_validate_source_occlusion(all.lOcclusion);
+    eax_validate_source_occlusion_lf_ratio(all.flOcclusionLFRatio);
+    eax_validate_source_occlusion_room_ratio(all.flOcclusionRoomRatio);
+    eax_validate_source_occlusion_direct_ratio(all.flOcclusionDirectRatio);
+}
+
+void ALsource::eax_validate_source_all(
+    const EAX20BUFFERPROPERTIES& all,
+    int eax_version)
+{
+    eax_validate_source_direct(all.lDirect);
+    eax_validate_source_direct_hf(all.lDirectHF);
+    eax_validate_source_room(all.lRoom);
+    eax_validate_source_room_hf(all.lRoomHF);
+    eax_validate_source_obstruction(all.lObstruction);
+    eax_validate_source_obstruction_lf_ratio(all.flObstructionLFRatio);
+    eax_validate_source_occlusion(all.lOcclusion);
+    eax_validate_source_occlusion_lf_ratio(all.flOcclusionLFRatio);
+    eax_validate_source_occlusion_room_ratio(all.flOcclusionRoomRatio);
+    eax_validate_source_outside_volume_hf(all.lOutsideVolumeHF);
+    eax_validate_source_room_rolloff_factor(all.flRoomRolloffFactor);
+    eax_validate_source_air_absorption_factor(all.flAirAbsorptionFactor);
+    eax_validate_source_flags(all.dwFlags, eax_version);
+}
+
+void ALsource::eax_validate_source_all(
+    const EAX30SOURCEPROPERTIES& all,
+    int eax_version)
+{
+    eax_validate_source_direct(all.lDirect);
+    eax_validate_source_direct_hf(all.lDirectHF);
+    eax_validate_source_room(all.lRoom);
+    eax_validate_source_room_hf(all.lRoomHF);
+    eax_validate_source_obstruction(all.lObstruction);
+    eax_validate_source_obstruction_lf_ratio(all.flObstructionLFRatio);
+    eax_validate_source_occlusion(all.lOcclusion);
+    eax_validate_source_occlusion_lf_ratio(all.flOcclusionLFRatio);
+    eax_validate_source_occlusion_room_ratio(all.flOcclusionRoomRatio);
+    eax_validate_source_occlusion_direct_ratio(all.flOcclusionDirectRatio);
+    eax_validate_source_exclusion(all.lExclusion);
+    eax_validate_source_exclusion_lf_ratio(all.flExclusionLFRatio);
+    eax_validate_source_outside_volume_hf(all.lOutsideVolumeHF);
+    eax_validate_source_doppler_factor(all.flDopplerFactor);
+    eax_validate_source_rolloff_factor(all.flRolloffFactor);
+    eax_validate_source_room_rolloff_factor(all.flRoomRolloffFactor);
+    eax_validate_source_air_absorption_factor(all.flAirAbsorptionFactor);
+    eax_validate_source_flags(all.ulFlags, eax_version);
+}
+
+void ALsource::eax_validate_source_all(
+    const EAX50SOURCEPROPERTIES& all,
+    int eax_version)
+{
+    eax_validate_source_all(static_cast<EAX30SOURCEPROPERTIES>(all), eax_version);
+    eax_validate_source_macro_fx_factor(all.flMacroFXFactor);
+}
+
+void ALsource::eax_validate_source_speaker_id(
+    long speaker_id)
+{
+    eax_validate_range<EaxSourceException>(
+        "Speaker Id",
+        speaker_id,
+        static_cast<long>(EAXSPEAKER_FRONT_LEFT),
+        static_cast<long>(EAXSPEAKER_LOW_FREQUENCY));
+}
+
+void ALsource::eax_validate_source_speaker_level(
+    long speaker_level)
+{
+    eax_validate_range<EaxSourceException>(
+        "Speaker Level",
+        speaker_level,
+        EAXSOURCE_MINSPEAKERLEVEL,
+        EAXSOURCE_MAXSPEAKERLEVEL);
+}
+
+void ALsource::eax_validate_source_speaker_level_all(
+    const EAXSPEAKERLEVELPROPERTIES& all)
+{
+    eax_validate_source_speaker_id(all.lSpeakerID);
+    eax_validate_source_speaker_level(all.lLevel);
+}
+
+void ALsource::eax_defer_source_direct(
+    long lDirect)
+{
+    eax_d_.source.lDirect = lDirect;
+    eax_source_dirty_filter_flags_.lDirect = (eax_.source.lDirect != eax_d_.source.lDirect);
+}
+
+void ALsource::eax_defer_source_direct_hf(
+    long lDirectHF)
+{
+    eax_d_.source.lDirectHF = lDirectHF;
+    eax_source_dirty_filter_flags_.lDirectHF = (eax_.source.lDirectHF != eax_d_.source.lDirectHF);
+}
+
+void ALsource::eax_defer_source_room(
+    long lRoom)
+{
+    eax_d_.source.lRoom = lRoom;
+    eax_source_dirty_filter_flags_.lRoom = (eax_.source.lRoom != eax_d_.source.lRoom);
+}
+
+void ALsource::eax_defer_source_room_hf(
+    long lRoomHF)
+{
+    eax_d_.source.lRoomHF = lRoomHF;
+    eax_source_dirty_filter_flags_.lRoomHF = (eax_.source.lRoomHF != eax_d_.source.lRoomHF);
+}
+
+void ALsource::eax_defer_source_obstruction(
+    long lObstruction)
+{
+    eax_d_.source.lObstruction = lObstruction;
+    eax_source_dirty_filter_flags_.lObstruction = (eax_.source.lObstruction != eax_d_.source.lObstruction);
+}
+
+void ALsource::eax_defer_source_obstruction_lf_ratio(
+    float flObstructionLFRatio)
+{
+    eax_d_.source.flObstructionLFRatio = flObstructionLFRatio;
+    eax_source_dirty_filter_flags_.flObstructionLFRatio = (eax_.source.flObstructionLFRatio != eax_d_.source.flObstructionLFRatio);
+}
+
+void ALsource::eax_defer_source_occlusion(
+    long lOcclusion)
+{
+    eax_d_.source.lOcclusion = lOcclusion;
+    eax_source_dirty_filter_flags_.lOcclusion = (eax_.source.lOcclusion != eax_d_.source.lOcclusion);
+}
+
+void ALsource::eax_defer_source_occlusion_lf_ratio(
+    float flOcclusionLFRatio)
+{
+    eax_d_.source.flOcclusionLFRatio = flOcclusionLFRatio;
+    eax_source_dirty_filter_flags_.flOcclusionLFRatio = (eax_.source.flOcclusionLFRatio != eax_d_.source.flOcclusionLFRatio);
+}
+
+void ALsource::eax_defer_source_occlusion_room_ratio(
+    float flOcclusionRoomRatio)
+{
+    eax_d_.source.flOcclusionRoomRatio = flOcclusionRoomRatio;
+    eax_source_dirty_filter_flags_.flOcclusionRoomRatio = (eax_.source.flOcclusionRoomRatio != eax_d_.source.flOcclusionRoomRatio);
+}
+
+void ALsource::eax_defer_source_occlusion_direct_ratio(
+    float flOcclusionDirectRatio)
+{
+    eax_d_.source.flOcclusionDirectRatio = flOcclusionDirectRatio;
+    eax_source_dirty_filter_flags_.flOcclusionDirectRatio = (eax_.source.flOcclusionDirectRatio != eax_d_.source.flOcclusionDirectRatio);
+}
+
+void ALsource::eax_defer_source_exclusion(
+    long lExclusion)
+{
+    eax_d_.source.lExclusion = lExclusion;
+    eax_source_dirty_filter_flags_.lExclusion = (eax_.source.lExclusion != eax_d_.source.lExclusion);
+}
+
+void ALsource::eax_defer_source_exclusion_lf_ratio(
+    float flExclusionLFRatio)
+{
+    eax_d_.source.flExclusionLFRatio = flExclusionLFRatio;
+    eax_source_dirty_filter_flags_.flExclusionLFRatio = (eax_.source.flExclusionLFRatio != eax_d_.source.flExclusionLFRatio);
+}
+
+void ALsource::eax_defer_source_outside_volume_hf(
+    long lOutsideVolumeHF)
+{
+    eax_d_.source.lOutsideVolumeHF = lOutsideVolumeHF;
+    eax_source_dirty_misc_flags_.lOutsideVolumeHF = (eax_.source.lOutsideVolumeHF != eax_d_.source.lOutsideVolumeHF);
+}
+
+void ALsource::eax_defer_source_doppler_factor(
+    float flDopplerFactor)
+{
+    eax_d_.source.flDopplerFactor = flDopplerFactor;
+    eax_source_dirty_misc_flags_.flDopplerFactor = (eax_.source.flDopplerFactor != eax_d_.source.flDopplerFactor);
+}
+
+void ALsource::eax_defer_source_rolloff_factor(
+    float flRolloffFactor)
+{
+    eax_d_.source.flRolloffFactor = flRolloffFactor;
+    eax_source_dirty_misc_flags_.flRolloffFactor = (eax_.source.flRolloffFactor != eax_d_.source.flRolloffFactor);
+}
+
+void ALsource::eax_defer_source_room_rolloff_factor(
+    float flRoomRolloffFactor)
+{
+    eax_d_.source.flRoomRolloffFactor = flRoomRolloffFactor;
+    eax_source_dirty_misc_flags_.flRoomRolloffFactor = (eax_.source.flRoomRolloffFactor != eax_d_.source.flRoomRolloffFactor);
+}
+
+void ALsource::eax_defer_source_air_absorption_factor(
+    float flAirAbsorptionFactor)
+{
+    eax_d_.source.flAirAbsorptionFactor = flAirAbsorptionFactor;
+    eax_source_dirty_misc_flags_.flAirAbsorptionFactor = (eax_.source.flAirAbsorptionFactor != eax_d_.source.flAirAbsorptionFactor);
+}
+
+void ALsource::eax_defer_source_flags(
+    unsigned long ulFlags)
+{
+    eax_d_.source.ulFlags = ulFlags;
+    eax_source_dirty_misc_flags_.ulFlags = (eax_.source.ulFlags != eax_d_.source.ulFlags);
+}
+
+void ALsource::eax_defer_source_macro_fx_factor(
+    float flMacroFXFactor)
+{
+    eax_d_.source.flMacroFXFactor = flMacroFXFactor;
+    eax_source_dirty_misc_flags_.flMacroFXFactor = (eax_.source.flMacroFXFactor != eax_d_.source.flMacroFXFactor);
+}
+
+void ALsource::eax_defer_source_2d_all(
+    const EAXSOURCE2DPROPERTIES& all)
+{
+    eax_defer_source_direct(all.lDirect);
+    eax_defer_source_direct_hf(all.lDirectHF);
+    eax_defer_source_room(all.lRoom);
+    eax_defer_source_room_hf(all.lRoomHF);
+    eax_defer_source_flags(all.ulFlags);
+}
+
+void ALsource::eax_defer_source_obstruction_all(
+    const EAXOBSTRUCTIONPROPERTIES& all)
+{
+    eax_defer_source_obstruction(all.lObstruction);
+    eax_defer_source_obstruction_lf_ratio(all.flObstructionLFRatio);
+}
+
+void ALsource::eax_defer_source_exclusion_all(
+    const EAXEXCLUSIONPROPERTIES& all)
+{
+    eax_defer_source_exclusion(all.lExclusion);
+    eax_defer_source_exclusion_lf_ratio(all.flExclusionLFRatio);
+}
+
+void ALsource::eax_defer_source_occlusion_all(
+    const EAXOCCLUSIONPROPERTIES& all)
+{
+    eax_defer_source_occlusion(all.lOcclusion);
+    eax_defer_source_occlusion_lf_ratio(all.flOcclusionLFRatio);
+    eax_defer_source_occlusion_room_ratio(all.flOcclusionRoomRatio);
+    eax_defer_source_occlusion_direct_ratio(all.flOcclusionDirectRatio);
+}
+
+void ALsource::eax_defer_source_all(
+    const EAX20BUFFERPROPERTIES& all)
+{
+    eax_defer_source_direct(all.lDirect);
+    eax_defer_source_direct_hf(all.lDirectHF);
+    eax_defer_source_room(all.lRoom);
+    eax_defer_source_room_hf(all.lRoomHF);
+    eax_defer_source_obstruction(all.lObstruction);
+    eax_defer_source_obstruction_lf_ratio(all.flObstructionLFRatio);
+    eax_defer_source_occlusion(all.lOcclusion);
+    eax_defer_source_occlusion_lf_ratio(all.flOcclusionLFRatio);
+    eax_defer_source_occlusion_room_ratio(all.flOcclusionRoomRatio);
+    eax_defer_source_outside_volume_hf(all.lOutsideVolumeHF);
+    eax_defer_source_room_rolloff_factor(all.flRoomRolloffFactor);
+    eax_defer_source_air_absorption_factor(all.flAirAbsorptionFactor);
+    eax_defer_source_flags(all.dwFlags);
+}
+
+void ALsource::eax_defer_source_all(
+    const EAX30SOURCEPROPERTIES& all)
+{
+    eax_defer_source_direct(all.lDirect);
+    eax_defer_source_direct_hf(all.lDirectHF);
+    eax_defer_source_room(all.lRoom);
+    eax_defer_source_room_hf(all.lRoomHF);
+    eax_defer_source_obstruction(all.lObstruction);
+    eax_defer_source_obstruction_lf_ratio(all.flObstructionLFRatio);
+    eax_defer_source_occlusion(all.lOcclusion);
+    eax_defer_source_occlusion_lf_ratio(all.flOcclusionLFRatio);
+    eax_defer_source_occlusion_room_ratio(all.flOcclusionRoomRatio);
+    eax_defer_source_occlusion_direct_ratio(all.flOcclusionDirectRatio);
+    eax_defer_source_exclusion(all.lExclusion);
+    eax_defer_source_exclusion_lf_ratio(all.flExclusionLFRatio);
+    eax_defer_source_outside_volume_hf(all.lOutsideVolumeHF);
+    eax_defer_source_doppler_factor(all.flDopplerFactor);
+    eax_defer_source_rolloff_factor(all.flRolloffFactor);
+    eax_defer_source_room_rolloff_factor(all.flRoomRolloffFactor);
+    eax_defer_source_air_absorption_factor(all.flAirAbsorptionFactor);
+    eax_defer_source_flags(all.ulFlags);
+}
+
+void ALsource::eax_defer_source_all(
+    const EAX50SOURCEPROPERTIES& all)
+{
+    eax_defer_source_all(static_cast<const EAX30SOURCEPROPERTIES&>(all));
+    eax_defer_source_macro_fx_factor(all.flMacroFXFactor);
+}
+
+void ALsource::eax_defer_source_speaker_level_all(
+    const EAXSPEAKERLEVELPROPERTIES& all)
+{
+    const auto speaker_index = static_cast<std::size_t>(all.lSpeakerID - 1);
+    auto& speaker_level_d = eax_d_.speaker_levels[speaker_index];
+    const auto& speaker_level = eax_.speaker_levels[speaker_index];
+
+    if (speaker_level != speaker_level_d)
+    {
+        eax_source_dirty_misc_flags_.speaker_levels = true;
+    }
+}
+
+void ALsource::eax1_set_efx()
+{
+    const auto primary_fx_slot_index = eax_al_context_->eax_get_primary_fx_slot_index();
+
+    if (!primary_fx_slot_index.has_value())
+        return;
+
+    WetGainAuto = (eax1_.fMix == EAX_REVERBMIX_USEDISTANCE);
+    const auto filter_gain = (WetGainAuto ? 1.0F : eax1_.fMix);
+    auto& fx_slot = eax_al_context_->eax_get_fx_slot(*primary_fx_slot_index);
+    eax_set_al_source_send(&fx_slot, *primary_fx_slot_index, EaxAlLowPassParam{filter_gain, 1.0F});
+    mPropsDirty = true;
+}
+
+void ALsource::eax1_set_reverb_mix(const EaxEaxCall& eax_call)
+{
+    const auto reverb_mix = eax_call.get_value<EaxSourceException, const decltype(EAXBUFFER_REVERBPROPERTIES::fMix)>();
+    eax1_validate_reverb_mix(reverb_mix);
+
+    if (eax1_.fMix == reverb_mix)
+        return;
+
+    eax1_.fMix = reverb_mix;
+    eax1_set_efx();
+}
+
+void ALsource::eax_defer_source_direct(
+    const EaxEaxCall& eax_call)
+{
+    const auto direct =
+        eax_call.get_value<EaxSourceException, const decltype(EAX30SOURCEPROPERTIES::lDirect)>();
+
+    eax_validate_source_direct(direct);
+    eax_defer_source_direct(direct);
+}
+
+void ALsource::eax_defer_source_direct_hf(
+    const EaxEaxCall& eax_call)
+{
+    const auto direct_hf =
+        eax_call.get_value<EaxSourceException, const decltype(EAX30SOURCEPROPERTIES::lDirectHF)>();
+
+    eax_validate_source_direct_hf(direct_hf);
+    eax_defer_source_direct_hf(direct_hf);
+}
+
+void ALsource::eax_defer_source_room(
+    const EaxEaxCall& eax_call)
+{
+    const auto room =
+        eax_call.get_value<EaxSourceException, const decltype(EAX30SOURCEPROPERTIES::lRoom)>();
+
+    eax_validate_source_room(room);
+    eax_defer_source_room(room);
+}
+
+void ALsource::eax_defer_source_room_hf(
+    const EaxEaxCall& eax_call)
+{
+    const auto room_hf =
+        eax_call.get_value<EaxSourceException, const decltype(EAX30SOURCEPROPERTIES::lRoomHF)>();
+
+    eax_validate_source_room_hf(room_hf);
+    eax_defer_source_room_hf(room_hf);
+}
+
+void ALsource::eax_defer_source_obstruction(
+    const EaxEaxCall& eax_call)
+{
+    const auto obstruction =
+        eax_call.get_value<EaxSourceException, const decltype(EAX30SOURCEPROPERTIES::lObstruction)>();
+
+    eax_validate_source_obstruction(obstruction);
+    eax_defer_source_obstruction(obstruction);
+}
+
+void ALsource::eax_defer_source_obstruction_lf_ratio(
+    const EaxEaxCall& eax_call)
+{
+    const auto obstruction_lf_ratio =
+        eax_call.get_value<EaxSourceException, const decltype(EAX30SOURCEPROPERTIES::flObstructionLFRatio)>();
+
+    eax_validate_source_obstruction_lf_ratio(obstruction_lf_ratio);
+    eax_defer_source_obstruction_lf_ratio(obstruction_lf_ratio);
+}
+
+void ALsource::eax_defer_source_occlusion(
+    const EaxEaxCall& eax_call)
+{
+    const auto occlusion =
+        eax_call.get_value<EaxSourceException, const decltype(EAX30SOURCEPROPERTIES::lOcclusion)>();
+
+    eax_validate_source_occlusion(occlusion);
+    eax_defer_source_occlusion(occlusion);
+}
+
+void ALsource::eax_defer_source_occlusion_lf_ratio(
+    const EaxEaxCall& eax_call)
+{
+    const auto occlusion_lf_ratio =
+        eax_call.get_value<EaxSourceException, const decltype(EAX30SOURCEPROPERTIES::flOcclusionLFRatio)>();
+
+    eax_validate_source_occlusion_lf_ratio(occlusion_lf_ratio);
+    eax_defer_source_occlusion_lf_ratio(occlusion_lf_ratio);
+}
+
+void ALsource::eax_defer_source_occlusion_room_ratio(
+    const EaxEaxCall& eax_call)
+{
+    const auto occlusion_room_ratio =
+        eax_call.get_value<EaxSourceException, const decltype(EAX30SOURCEPROPERTIES::flOcclusionRoomRatio)>();
+
+    eax_validate_source_occlusion_room_ratio(occlusion_room_ratio);
+    eax_defer_source_occlusion_room_ratio(occlusion_room_ratio);
+}
+
+void ALsource::eax_defer_source_occlusion_direct_ratio(
+    const EaxEaxCall& eax_call)
+{
+    const auto occlusion_direct_ratio =
+        eax_call.get_value<EaxSourceException, const decltype(EAX30SOURCEPROPERTIES::flOcclusionDirectRatio)>();
+
+    eax_validate_source_occlusion_direct_ratio(occlusion_direct_ratio);
+    eax_defer_source_occlusion_direct_ratio(occlusion_direct_ratio);
+}
+
+void ALsource::eax_defer_source_exclusion(
+    const EaxEaxCall& eax_call)
+{
+    const auto exclusion =
+        eax_call.get_value<EaxSourceException, const decltype(EAX30SOURCEPROPERTIES::lExclusion)>();
+
+    eax_validate_source_exclusion(exclusion);
+    eax_defer_source_exclusion(exclusion);
+}
+
+void ALsource::eax_defer_source_exclusion_lf_ratio(
+    const EaxEaxCall& eax_call)
+{
+    const auto exclusion_lf_ratio =
+        eax_call.get_value<EaxSourceException, const decltype(EAX30SOURCEPROPERTIES::flExclusionLFRatio)>();
+
+    eax_validate_source_exclusion_lf_ratio(exclusion_lf_ratio);
+    eax_defer_source_exclusion_lf_ratio(exclusion_lf_ratio);
+}
+
+void ALsource::eax_defer_source_outside_volume_hf(
+    const EaxEaxCall& eax_call)
+{
+    const auto outside_volume_hf =
+        eax_call.get_value<EaxSourceException, const decltype(EAX30SOURCEPROPERTIES::lOutsideVolumeHF)>();
+
+    eax_validate_source_outside_volume_hf(outside_volume_hf);
+    eax_defer_source_outside_volume_hf(outside_volume_hf);
+}
+
+void ALsource::eax_defer_source_doppler_factor(
+    const EaxEaxCall& eax_call)
+{
+    const auto doppler_factor =
+        eax_call.get_value<EaxSourceException, const decltype(EAX30SOURCEPROPERTIES::flDopplerFactor)>();
+
+    eax_validate_source_doppler_factor(doppler_factor);
+    eax_defer_source_doppler_factor(doppler_factor);
+}
+
+void ALsource::eax_defer_source_rolloff_factor(
+    const EaxEaxCall& eax_call)
+{
+    const auto rolloff_factor =
+        eax_call.get_value<EaxSourceException, const decltype(EAX30SOURCEPROPERTIES::flRolloffFactor)>();
+
+    eax_validate_source_rolloff_factor(rolloff_factor);
+    eax_defer_source_rolloff_factor(rolloff_factor);
+}
+
+void ALsource::eax_defer_source_room_rolloff_factor(
+    const EaxEaxCall& eax_call)
+{
+    const auto room_rolloff_factor =
+        eax_call.get_value<EaxSourceException, const decltype(EAX30SOURCEPROPERTIES::flRoomRolloffFactor)>();
+
+    eax_validate_source_room_rolloff_factor(room_rolloff_factor);
+    eax_defer_source_room_rolloff_factor(room_rolloff_factor);
+}
+
+void ALsource::eax_defer_source_air_absorption_factor(
+    const EaxEaxCall& eax_call)
+{
+    const auto air_absorption_factor =
+        eax_call.get_value<EaxSourceException, const decltype(EAX30SOURCEPROPERTIES::flAirAbsorptionFactor)>();
+
+    eax_validate_source_air_absorption_factor(air_absorption_factor);
+    eax_defer_source_air_absorption_factor(air_absorption_factor);
+}
+
+void ALsource::eax_defer_source_flags(
+    const EaxEaxCall& eax_call)
+{
+    const auto flags =
+        eax_call.get_value<EaxSourceException, const decltype(EAX30SOURCEPROPERTIES::ulFlags)>();
+
+    eax_validate_source_flags(flags, eax_call.get_version());
+    eax_defer_source_flags(flags);
+}
+
+void ALsource::eax_defer_source_macro_fx_factor(
+    const EaxEaxCall& eax_call)
+{
+    const auto macro_fx_factor =
+        eax_call.get_value<EaxSourceException, const decltype(EAX50SOURCEPROPERTIES::flMacroFXFactor)>();
+
+    eax_validate_source_macro_fx_factor(macro_fx_factor);
+    eax_defer_source_macro_fx_factor(macro_fx_factor);
+}
+
+void ALsource::eax_defer_source_2d_all(
+    const EaxEaxCall& eax_call)
+{
+    const auto all = eax_call.get_value<EaxSourceException, const EAXSOURCE2DPROPERTIES>();
+
+    eax_validate_source_2d_all(all, eax_call.get_version());
+    eax_defer_source_2d_all(all);
+}
+
+void ALsource::eax_defer_source_obstruction_all(
+    const EaxEaxCall& eax_call)
+{
+    const auto all = eax_call.get_value<EaxSourceException, const EAXOBSTRUCTIONPROPERTIES>();
+
+    eax_validate_source_obstruction_all(all);
+    eax_defer_source_obstruction_all(all);
+}
+
+void ALsource::eax_defer_source_exclusion_all(
+    const EaxEaxCall& eax_call)
+{
+    const auto all = eax_call.get_value<EaxSourceException, const EAXEXCLUSIONPROPERTIES>();
+
+    eax_validate_source_exclusion_all(all);
+    eax_defer_source_exclusion_all(all);
+}
+
+void ALsource::eax_defer_source_occlusion_all(
+    const EaxEaxCall& eax_call)
+{
+    const auto all = eax_call.get_value<EaxSourceException, const EAXOCCLUSIONPROPERTIES>();
+
+    eax_validate_source_occlusion_all(all);
+    eax_defer_source_occlusion_all(all);
+}
+
+void ALsource::eax_defer_source_all(
+    const EaxEaxCall& eax_call)
+{
+    const auto eax_version = eax_call.get_version();
+
+    if (eax_version == 2)
+    {
+        const auto all = eax_call.get_value<EaxSourceException, const EAX20BUFFERPROPERTIES>();
+
+        eax_validate_source_all(all, eax_version);
+        eax_defer_source_all(all);
+    }
+    else if (eax_version < 5)
+    {
+        const auto all = eax_call.get_value<EaxSourceException, const EAX30SOURCEPROPERTIES>();
+
+        eax_validate_source_all(all, eax_version);
+        eax_defer_source_all(all);
+    }
+    else
+    {
+        const auto all = eax_call.get_value<EaxSourceException, const EAX50SOURCEPROPERTIES>();
+
+        eax_validate_source_all(all, eax_version);
+        eax_defer_source_all(all);
+    }
+}
+
+void ALsource::eax_defer_source_speaker_level_all(
+    const EaxEaxCall& eax_call)
+{
+    const auto speaker_level_properties = eax_call.get_value<EaxSourceException, const EAXSPEAKERLEVELPROPERTIES>();
+
+    eax_validate_source_speaker_level_all(speaker_level_properties);
+    eax_defer_source_speaker_level_all(speaker_level_properties);
+}
+
+void ALsource::eax_set_outside_volume_hf()
+{
+    const auto efx_gain_hf = clamp(
+        level_mb_to_gain(static_cast<float>(eax_.source.lOutsideVolumeHF)),
+        AL_MIN_CONE_OUTER_GAINHF,
+        AL_MAX_CONE_OUTER_GAINHF
+    );
+
+    OuterGainHF = efx_gain_hf;
+}
+
+void ALsource::eax_set_doppler_factor()
+{
+    DopplerFactor = eax_.source.flDopplerFactor;
+}
+
+void ALsource::eax_set_rolloff_factor()
+{
+    RolloffFactor2 = eax_.source.flRolloffFactor;
+}
+
+void ALsource::eax_set_room_rolloff_factor()
+{
+    RoomRolloffFactor = eax_.source.flRoomRolloffFactor;
+}
+
+void ALsource::eax_set_air_absorption_factor()
+{
+    AirAbsorptionFactor = eax_.source.flAirAbsorptionFactor;
+}
+
+void ALsource::eax_set_direct_hf_auto_flag()
+{
+    const auto is_enable = (eax_.source.ulFlags & EAXSOURCEFLAGS_DIRECTHFAUTO) != 0;
+
+    DryGainHFAuto = is_enable;
+}
+
+void ALsource::eax_set_room_auto_flag()
+{
+    const auto is_enable = (eax_.source.ulFlags & EAXSOURCEFLAGS_ROOMAUTO) != 0;
+
+    WetGainAuto = is_enable;
+}
+
+void ALsource::eax_set_room_hf_auto_flag()
+{
+    const auto is_enable = (eax_.source.ulFlags & EAXSOURCEFLAGS_ROOMHFAUTO) != 0;
+
+    WetGainHFAuto = is_enable;
+}
+
+void ALsource::eax_set_flags()
+{
+    eax_set_direct_hf_auto_flag();
+    eax_set_room_auto_flag();
+    eax_set_room_hf_auto_flag();
+    eax_set_speaker_levels();
+}
+
+void ALsource::eax_set_macro_fx_factor()
+{
+    // TODO
+}
+
+void ALsource::eax_set_speaker_levels()
+{
+    // TODO
+}
+
+void ALsource::eax1_set(const EaxEaxCall& eax_call)
+{
+    switch (eax_call.get_property_id())
+    {
+        case DSPROPERTY_EAXBUFFER_ALL:
+        case DSPROPERTY_EAXBUFFER_REVERBMIX:
+            eax1_set_reverb_mix(eax_call);
+            break;
+
+        default:
+            eax_fail("Unsupported property id.");
+    }
+}
+
+void ALsource::eax_apply_deferred()
+{
+    if (!eax_are_active_fx_slots_dirty_ &&
+        eax_sends_dirty_flags_ == EaxSourceSendsDirtyFlags{} &&
+        eax_source_dirty_filter_flags_ == EaxSourceSourceFilterDirtyFlags{} &&
+        eax_source_dirty_misc_flags_ == EaxSourceSourceMiscDirtyFlags{})
+    {
+        return;
+    }
+
+    eax_ = eax_d_;
+
+    if (eax_are_active_fx_slots_dirty_)
+    {
+        eax_are_active_fx_slots_dirty_ = false;
+        eax_set_fx_slots();
+        eax_update_filters_internal();
+    }
+    else if (eax_has_active_fx_slots_)
+    {
+        if (eax_source_dirty_filter_flags_ != EaxSourceSourceFilterDirtyFlags{})
+        {
+            eax_update_filters_internal();
+        }
+        else if (eax_sends_dirty_flags_ != EaxSourceSendsDirtyFlags{})
+        {
+            for (auto i = std::size_t{}; i < EAX_MAX_FXSLOTS; ++i)
+            {
+                if (eax_active_fx_slots_[i])
+                {
+                    if (eax_sends_dirty_flags_.sends[i] != EaxSourceSendDirtyFlags{})
+                    {
+                        eax_update_filters_internal();
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    if (eax_source_dirty_misc_flags_ != EaxSourceSourceMiscDirtyFlags{})
+    {
+        if (eax_source_dirty_misc_flags_.lOutsideVolumeHF)
+        {
+            eax_set_outside_volume_hf();
+        }
+
+        if (eax_source_dirty_misc_flags_.flDopplerFactor)
+        {
+            eax_set_doppler_factor();
+        }
+
+        if (eax_source_dirty_misc_flags_.flRolloffFactor)
+        {
+            eax_set_rolloff_factor();
+        }
+
+        if (eax_source_dirty_misc_flags_.flRoomRolloffFactor)
+        {
+            eax_set_room_rolloff_factor();
+        }
+
+        if (eax_source_dirty_misc_flags_.flAirAbsorptionFactor)
+        {
+            eax_set_air_absorption_factor();
+        }
+
+        if (eax_source_dirty_misc_flags_.ulFlags)
+        {
+            eax_set_flags();
+        }
+
+        if (eax_source_dirty_misc_flags_.flMacroFXFactor)
+        {
+            eax_set_macro_fx_factor();
+        }
+
+        mPropsDirty = true;
+
+        eax_source_dirty_misc_flags_ = EaxSourceSourceMiscDirtyFlags{};
+    }
+
+    eax_sends_dirty_flags_ = EaxSourceSendsDirtyFlags{};
+    eax_source_dirty_filter_flags_ = EaxSourceSourceFilterDirtyFlags{};
+}
+
+void ALsource::eax_set(
+    const EaxEaxCall& eax_call)
+{
+    if (eax_call.get_version() == 1)
+    {
+        eax1_set(eax_call);
+        return;
+    }
+
+    switch (eax_call.get_property_id())
+    {
+        case EAXSOURCE_NONE:
+            break;
+
+        case EAXSOURCE_ALLPARAMETERS:
+            eax_defer_source_all(eax_call);
+            break;
+
+        case EAXSOURCE_OBSTRUCTIONPARAMETERS:
+            eax_defer_source_obstruction_all(eax_call);
+            break;
+
+        case EAXSOURCE_OCCLUSIONPARAMETERS:
+            eax_defer_source_occlusion_all(eax_call);
+            break;
+
+        case EAXSOURCE_EXCLUSIONPARAMETERS:
+            eax_defer_source_exclusion_all(eax_call);
+            break;
+
+        case EAXSOURCE_DIRECT:
+            eax_defer_source_direct(eax_call);
+            break;
+
+        case EAXSOURCE_DIRECTHF:
+            eax_defer_source_direct_hf(eax_call);
+            break;
+
+        case EAXSOURCE_ROOM:
+            eax_defer_source_room(eax_call);
+            break;
+
+        case EAXSOURCE_ROOMHF:
+            eax_defer_source_room_hf(eax_call);
+            break;
+
+        case EAXSOURCE_OBSTRUCTION:
+            eax_defer_source_obstruction(eax_call);
+            break;
+
+        case EAXSOURCE_OBSTRUCTIONLFRATIO:
+            eax_defer_source_obstruction_lf_ratio(eax_call);
+            break;
+
+        case EAXSOURCE_OCCLUSION:
+            eax_defer_source_occlusion(eax_call);
+            break;
+
+        case EAXSOURCE_OCCLUSIONLFRATIO:
+            eax_defer_source_occlusion_lf_ratio(eax_call);
+            break;
+
+        case EAXSOURCE_OCCLUSIONROOMRATIO:
+            eax_defer_source_occlusion_room_ratio(eax_call);
+            break;
+
+        case EAXSOURCE_OCCLUSIONDIRECTRATIO:
+            eax_defer_source_occlusion_direct_ratio(eax_call);
+            break;
+
+        case EAXSOURCE_EXCLUSION:
+            eax_defer_source_exclusion(eax_call);
+            break;
+
+        case EAXSOURCE_EXCLUSIONLFRATIO:
+            eax_defer_source_exclusion_lf_ratio(eax_call);
+            break;
+
+        case EAXSOURCE_OUTSIDEVOLUMEHF:
+            eax_defer_source_outside_volume_hf(eax_call);
+            break;
+
+        case EAXSOURCE_DOPPLERFACTOR:
+            eax_defer_source_doppler_factor(eax_call);
+            break;
+
+        case EAXSOURCE_ROLLOFFFACTOR:
+            eax_defer_source_rolloff_factor(eax_call);
+            break;
+
+        case EAXSOURCE_ROOMROLLOFFFACTOR:
+            eax_defer_source_room_rolloff_factor(eax_call);
+            break;
+
+        case EAXSOURCE_AIRABSORPTIONFACTOR:
+            eax_defer_source_air_absorption_factor(eax_call);
+            break;
+
+        case EAXSOURCE_FLAGS:
+            eax_defer_source_flags(eax_call);
+            break;
+
+        case EAXSOURCE_SENDPARAMETERS:
+            eax_defer_send(eax_call);
+            break;
+
+        case EAXSOURCE_ALLSENDPARAMETERS:
+            eax_defer_send_all(eax_call);
+            break;
+
+        case EAXSOURCE_OCCLUSIONSENDPARAMETERS:
+            eax_defer_send_occlusion_all(eax_call);
+            break;
+
+        case EAXSOURCE_EXCLUSIONSENDPARAMETERS:
+            eax_defer_send_exclusion_all(eax_call);
+            break;
+
+        case EAXSOURCE_ACTIVEFXSLOTID:
+            eax_defer_active_fx_slots(eax_call);
+            break;
+
+        case EAXSOURCE_MACROFXFACTOR:
+            eax_defer_source_macro_fx_factor(eax_call);
+            break;
+
+        case EAXSOURCE_SPEAKERLEVELS:
+            eax_defer_source_speaker_level_all(eax_call);
+            break;
+
+        case EAXSOURCE_ALL2DPARAMETERS:
+            eax_defer_source_2d_all(eax_call);
+            break;
+
+        default:
+            eax_fail("Unsupported property id.");
+    }
+}
+
+const GUID& ALsource::eax_get_send_fx_slot_guid(
+    int eax_version,
+    EaxFxSlotIndexValue fx_slot_index)
+{
+    switch (eax_version)
+    {
+        case 4:
+            switch (fx_slot_index)
+            {
+                case 0:
+                    return EAXPROPERTYID_EAX40_FXSlot0;
+
+                case 1:
+                    return EAXPROPERTYID_EAX40_FXSlot1;
+
+                case 2:
+                    return EAXPROPERTYID_EAX40_FXSlot2;
+
+                case 3:
+                    return EAXPROPERTYID_EAX40_FXSlot3;
+
+                default:
+                    eax_fail("FX slot index out of range.");
+            }
+
+        case 5:
+            switch (fx_slot_index)
+            {
+                case 0:
+                    return EAXPROPERTYID_EAX50_FXSlot0;
+
+                case 1:
+                    return EAXPROPERTYID_EAX50_FXSlot1;
+
+                case 2:
+                    return EAXPROPERTYID_EAX50_FXSlot2;
+
+                case 3:
+                    return EAXPROPERTYID_EAX50_FXSlot3;
+
+                default:
+                    eax_fail("FX slot index out of range.");
+            }
+
+        default:
+            eax_fail("Unsupported EAX version.");
+    }
+}
+
+void ALsource::eax_copy_send(
+    const EAXSOURCEALLSENDPROPERTIES& src_send,
+    EAXSOURCESENDPROPERTIES& dst_send)
+{
+    dst_send.lSend = src_send.lSend;
+    dst_send.lSendHF = src_send.lSendHF;
+}
+
+void ALsource::eax_copy_send(
+    const EAXSOURCEALLSENDPROPERTIES& src_send,
+    EAXSOURCEALLSENDPROPERTIES& dst_send)
+{
+    dst_send = src_send;
+}
+
+void ALsource::eax_copy_send(
+    const EAXSOURCEALLSENDPROPERTIES& src_send,
+    EAXSOURCEOCCLUSIONSENDPROPERTIES& dst_send)
+{
+    dst_send.lOcclusion = src_send.lOcclusion;
+    dst_send.flOcclusionLFRatio = src_send.flOcclusionLFRatio;
+    dst_send.flOcclusionRoomRatio = src_send.flOcclusionRoomRatio;
+    dst_send.flOcclusionDirectRatio = src_send.flOcclusionDirectRatio;
+}
+
+void ALsource::eax_copy_send(
+    const EAXSOURCEALLSENDPROPERTIES& src_send,
+    EAXSOURCEEXCLUSIONSENDPROPERTIES& dst_send)
+{
+    dst_send.lExclusion = src_send.lExclusion;
+    dst_send.flExclusionLFRatio = src_send.flExclusionLFRatio;
+}
+
+void ALsource::eax1_get(const EaxEaxCall& eax_call)
+{
+    switch (eax_call.get_property_id())
+    {
+        case DSPROPERTY_EAXBUFFER_ALL:
+        case DSPROPERTY_EAXBUFFER_REVERBMIX:
+            eax_call.set_value<EaxSourceException>(eax1_);
+            break;
+
+        default:
+            eax_fail("Unsupported property id.");
+    }
+}
+
+void ALsource::eax_api_get_source_all_v2(
+    const EaxEaxCall& eax_call)
+{
+    auto eax_2_all = EAX20BUFFERPROPERTIES{};
+    eax_2_all.lDirect = eax_.source.lDirect;
+    eax_2_all.lDirectHF = eax_.source.lDirectHF;
+    eax_2_all.lRoom = eax_.source.lRoom;
+    eax_2_all.lRoomHF = eax_.source.lRoomHF;
+    eax_2_all.flRoomRolloffFactor = eax_.source.flRoomRolloffFactor;
+    eax_2_all.lObstruction = eax_.source.lObstruction;
+    eax_2_all.flObstructionLFRatio = eax_.source.flObstructionLFRatio;
+    eax_2_all.lOcclusion = eax_.source.lOcclusion;
+    eax_2_all.flOcclusionLFRatio = eax_.source.flOcclusionLFRatio;
+    eax_2_all.flOcclusionRoomRatio = eax_.source.flOcclusionRoomRatio;
+    eax_2_all.lOutsideVolumeHF = eax_.source.lOutsideVolumeHF;
+    eax_2_all.flAirAbsorptionFactor = eax_.source.flAirAbsorptionFactor;
+    eax_2_all.dwFlags = eax_.source.ulFlags;
+
+    eax_call.set_value<EaxSourceException>(eax_2_all);
+}
+
+void ALsource::eax_api_get_source_all_v3(
+    const EaxEaxCall& eax_call)
+{
+    eax_call.set_value<EaxSourceException>(static_cast<const EAX30SOURCEPROPERTIES&>(eax_.source));
+}
+
+void ALsource::eax_api_get_source_all_v5(
+    const EaxEaxCall& eax_call)
+{
+    eax_call.set_value<EaxSourceException>(eax_.source);
+}
+
+void ALsource::eax_api_get_source_all(
+    const EaxEaxCall& eax_call)
+{
+    switch (eax_call.get_version())
+    {
+        case 2:
+            eax_api_get_source_all_v2(eax_call);
+            break;
+
+        case 3:
+        case 4:
+            eax_api_get_source_all_v3(eax_call);
+            break;
+
+        case 5:
+            eax_api_get_source_all_v5(eax_call);
+            break;
+
+        default:
+            eax_fail("Unsupported EAX version.");
+    }
+}
+
+void ALsource::eax_api_get_source_all_obstruction(
+    const EaxEaxCall& eax_call)
+{
+    auto eax_obstruction_all = EAXOBSTRUCTIONPROPERTIES{};
+    eax_obstruction_all.lObstruction = eax_.source.lObstruction;
+    eax_obstruction_all.flObstructionLFRatio = eax_.source.flObstructionLFRatio;
+
+    eax_call.set_value<EaxSourceException>(eax_obstruction_all);
+}
+
+void ALsource::eax_api_get_source_all_occlusion(
+    const EaxEaxCall& eax_call)
+{
+    auto eax_occlusion_all = EAXOCCLUSIONPROPERTIES{};
+    eax_occlusion_all.lOcclusion = eax_.source.lOcclusion;
+    eax_occlusion_all.flOcclusionLFRatio = eax_.source.flOcclusionLFRatio;
+    eax_occlusion_all.flOcclusionRoomRatio = eax_.source.flOcclusionRoomRatio;
+    eax_occlusion_all.flOcclusionDirectRatio = eax_.source.flOcclusionDirectRatio;
+
+    eax_call.set_value<EaxSourceException>(eax_occlusion_all);
+}
+
+void ALsource::eax_api_get_source_all_exclusion(
+    const EaxEaxCall& eax_call)
+{
+    auto eax_exclusion_all = EAXEXCLUSIONPROPERTIES{};
+    eax_exclusion_all.lExclusion = eax_.source.lExclusion;
+    eax_exclusion_all.flExclusionLFRatio = eax_.source.flExclusionLFRatio;
+
+    eax_call.set_value<EaxSourceException>(eax_exclusion_all);
+}
+
+void ALsource::eax_api_get_source_active_fx_slot_id(
+    const EaxEaxCall& eax_call)
+{
+    switch (eax_call.get_version())
+    {
+        case 4:
+            {
+                const auto& active_fx_slots = reinterpret_cast<const EAX40ACTIVEFXSLOTS&>(eax_.active_fx_slots);
+                eax_call.set_value<EaxSourceException>(active_fx_slots);
+            }
+            break;
+
+        case 5:
+            {
+                const auto& active_fx_slots = reinterpret_cast<const EAX50ACTIVEFXSLOTS&>(eax_.active_fx_slots);
+                eax_call.set_value<EaxSourceException>(active_fx_slots);
+            }
+            break;
+
+        default:
+            eax_fail("Unsupported EAX version.");
+    }
+}
+
+void ALsource::eax_api_get_source_all_2d(
+    const EaxEaxCall& eax_call)
+{
+    auto eax_2d_all = EAXSOURCE2DPROPERTIES{};
+    eax_2d_all.lDirect = eax_.source.lDirect;
+    eax_2d_all.lDirectHF = eax_.source.lDirectHF;
+    eax_2d_all.lRoom = eax_.source.lRoom;
+    eax_2d_all.lRoomHF = eax_.source.lRoomHF;
+    eax_2d_all.ulFlags = eax_.source.ulFlags;
+
+    eax_call.set_value<EaxSourceException>(eax_2d_all);
+}
+
+void ALsource::eax_api_get_source_speaker_level_all(
+    const EaxEaxCall& eax_call)
+{
+    auto& all = eax_call.get_value<EaxSourceException, EAXSPEAKERLEVELPROPERTIES>();
+
+    eax_validate_source_speaker_id(all.lSpeakerID);
+    const auto speaker_index = static_cast<std::size_t>(all.lSpeakerID - 1);
+    all.lLevel = eax_.speaker_levels[speaker_index];
+}
+
+void ALsource::eax_get(
+    const EaxEaxCall& eax_call)
+{
+    if (eax_call.get_version() == 1)
+    {
+        eax1_get(eax_call);
+        return;
+    }
+
+    switch (eax_call.get_property_id())
+    {
+        case EAXSOURCE_NONE:
+            break;
+
+        case EAXSOURCE_ALLPARAMETERS:
+            eax_api_get_source_all(eax_call);
+            break;
+
+        case EAXSOURCE_OBSTRUCTIONPARAMETERS:
+            eax_api_get_source_all_obstruction(eax_call);
+            break;
+
+        case EAXSOURCE_OCCLUSIONPARAMETERS:
+            eax_api_get_source_all_occlusion(eax_call);
+            break;
+
+        case EAXSOURCE_EXCLUSIONPARAMETERS:
+            eax_api_get_source_all_exclusion(eax_call);
+            break;
+
+        case EAXSOURCE_DIRECT:
+            eax_call.set_value<EaxSourceException>(eax_.source.lDirect);
+            break;
+
+        case EAXSOURCE_DIRECTHF:
+            eax_call.set_value<EaxSourceException>(eax_.source.lDirectHF);
+            break;
+
+        case EAXSOURCE_ROOM:
+            eax_call.set_value<EaxSourceException>(eax_.source.lRoom);
+            break;
+
+        case EAXSOURCE_ROOMHF:
+            eax_call.set_value<EaxSourceException>(eax_.source.lRoomHF);
+            break;
+
+        case EAXSOURCE_OBSTRUCTION:
+            eax_call.set_value<EaxSourceException>(eax_.source.lObstruction);
+            break;
+
+        case EAXSOURCE_OBSTRUCTIONLFRATIO:
+            eax_call.set_value<EaxSourceException>(eax_.source.flObstructionLFRatio);
+            break;
+
+        case EAXSOURCE_OCCLUSION:
+            eax_call.set_value<EaxSourceException>(eax_.source.lOcclusion);
+            break;
+
+        case EAXSOURCE_OCCLUSIONLFRATIO:
+            eax_call.set_value<EaxSourceException>(eax_.source.flOcclusionLFRatio);
+            break;
+
+        case EAXSOURCE_OCCLUSIONROOMRATIO:
+            eax_call.set_value<EaxSourceException>(eax_.source.flOcclusionRoomRatio);
+            break;
+
+        case EAXSOURCE_OCCLUSIONDIRECTRATIO:
+            eax_call.set_value<EaxSourceException>(eax_.source.flOcclusionDirectRatio);
+            break;
+
+        case EAXSOURCE_EXCLUSION:
+            eax_call.set_value<EaxSourceException>(eax_.source.lExclusion);
+            break;
+
+        case EAXSOURCE_EXCLUSIONLFRATIO:
+            eax_call.set_value<EaxSourceException>(eax_.source.flExclusionLFRatio);
+            break;
+
+        case EAXSOURCE_OUTSIDEVOLUMEHF:
+            eax_call.set_value<EaxSourceException>(eax_.source.lOutsideVolumeHF);
+            break;
+
+        case EAXSOURCE_DOPPLERFACTOR:
+            eax_call.set_value<EaxSourceException>(eax_.source.flDopplerFactor);
+            break;
+
+        case EAXSOURCE_ROLLOFFFACTOR:
+            eax_call.set_value<EaxSourceException>(eax_.source.flRolloffFactor);
+            break;
+
+        case EAXSOURCE_ROOMROLLOFFFACTOR:
+            eax_call.set_value<EaxSourceException>(eax_.source.flRoomRolloffFactor);
+            break;
+
+        case EAXSOURCE_AIRABSORPTIONFACTOR:
+            eax_call.set_value<EaxSourceException>(eax_.source.flAirAbsorptionFactor);
+            break;
+
+        case EAXSOURCE_FLAGS:
+            eax_call.set_value<EaxSourceException>(eax_.source.ulFlags);
+            break;
+
+        case EAXSOURCE_SENDPARAMETERS:
+            eax_api_get_send_properties<EaxSourceException, EAXSOURCESENDPROPERTIES>(eax_call);
+            break;
+
+        case EAXSOURCE_ALLSENDPARAMETERS:
+            eax_api_get_send_properties<EaxSourceException, EAXSOURCEALLSENDPROPERTIES>(eax_call);
+            break;
+
+        case EAXSOURCE_OCCLUSIONSENDPARAMETERS:
+            eax_api_get_send_properties<EaxSourceException, EAXSOURCEOCCLUSIONSENDPROPERTIES>(eax_call);
+            break;
+
+        case EAXSOURCE_EXCLUSIONSENDPARAMETERS:
+            eax_api_get_send_properties<EaxSourceException, EAXSOURCEEXCLUSIONSENDPROPERTIES>(eax_call);
+            break;
+
+        case EAXSOURCE_ACTIVEFXSLOTID:
+            eax_api_get_source_active_fx_slot_id(eax_call);
+            break;
+
+        case EAXSOURCE_MACROFXFACTOR:
+            eax_call.set_value<EaxSourceException>(eax_.source.flMacroFXFactor);
+            break;
+
+        case EAXSOURCE_SPEAKERLEVELS:
+            eax_api_get_source_speaker_level_all(eax_call);
+            break;
+
+        case EAXSOURCE_ALL2DPARAMETERS:
+            eax_api_get_source_all_2d(eax_call);
+            break;
+
+        default:
+            eax_fail("Unsupported property id.");
+    }
+}
+
+void ALsource::eax_set_al_source_send(
+    ALeffectslot *slot,
+    size_t sendidx,
+    const EaxAlLowPassParam &filter)
+{
+    if(sendidx >= EAX_MAX_FXSLOTS)
+        return;
+
+    auto &send = Send[sendidx];
+    send.Gain = filter.gain;
+    send.GainHF = filter.gain_hf;
+    send.HFReference = LOWPASSFREQREF;
+    send.GainLF = 1.0f;
+    send.LFReference = HIGHPASSFREQREF;
+
+    if(slot) IncrementRef(slot->ref);
+    if(auto *oldslot = send.Slot)
+        DecrementRef(oldslot->ref);
+    send.Slot = slot;
+
+    mPropsDirty = true;
+}
+
+#endif // ALSOFT_EAX

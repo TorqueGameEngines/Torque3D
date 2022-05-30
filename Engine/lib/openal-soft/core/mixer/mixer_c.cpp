@@ -26,21 +26,22 @@ constexpr uint FracPhaseDiffOne{1 << FracPhaseBitDiff};
 inline float do_point(const InterpState&, const float *RESTRICT vals, const uint)
 { return vals[0]; }
 inline float do_lerp(const InterpState&, const float *RESTRICT vals, const uint frac)
-{ return lerp(vals[0], vals[1], static_cast<float>(frac)*(1.0f/MixerFracOne)); }
+{ return lerpf(vals[0], vals[1], static_cast<float>(frac)*(1.0f/MixerFracOne)); }
 inline float do_cubic(const InterpState&, const float *RESTRICT vals, const uint frac)
 { return cubic(vals[0], vals[1], vals[2], vals[3], static_cast<float>(frac)*(1.0f/MixerFracOne)); }
 inline float do_bsinc(const InterpState &istate, const float *RESTRICT vals, const uint frac)
 {
     const size_t m{istate.bsinc.m};
+    ASSUME(m > 0);
 
     // Calculate the phase index and factor.
     const uint pi{frac >> FracPhaseBitDiff};
     const float pf{static_cast<float>(frac & (FracPhaseDiffOne-1)) * (1.0f/FracPhaseDiffOne)};
 
-    const float *fil{istate.bsinc.filter + m*pi*4};
-    const float *phd{fil + m};
-    const float *scd{phd + m};
-    const float *spd{scd + m};
+    const float *RESTRICT fil{istate.bsinc.filter + m*pi*2};
+    const float *RESTRICT phd{fil + m};
+    const float *RESTRICT scd{fil + BSincPhaseCount*2*m};
+    const float *RESTRICT spd{scd + m};
 
     // Apply the scale and phase interpolated filter.
     float r{0.0f};
@@ -51,13 +52,14 @@ inline float do_bsinc(const InterpState &istate, const float *RESTRICT vals, con
 inline float do_fastbsinc(const InterpState &istate, const float *RESTRICT vals, const uint frac)
 {
     const size_t m{istate.bsinc.m};
+    ASSUME(m > 0);
 
     // Calculate the phase index and factor.
     const uint pi{frac >> FracPhaseBitDiff};
     const float pf{static_cast<float>(frac & (FracPhaseDiffOne-1)) * (1.0f/FracPhaseDiffOne)};
 
-    const float *fil{istate.bsinc.filter + m*pi*4};
-    const float *phd{fil + m};
+    const float *RESTRICT fil{istate.bsinc.filter + m*pi*2};
+    const float *RESTRICT phd{fil + m};
 
     // Apply the phase interpolated filter.
     float r{0.0f};
@@ -83,7 +85,7 @@ float *DoResample(const InterpState *state, float *RESTRICT src, uint frac, uint
     return dst.data();
 }
 
-inline void ApplyCoeffs(float2 *RESTRICT Values, const size_t IrSize, const HrirArray &Coeffs,
+inline void ApplyCoeffs(float2 *RESTRICT Values, const size_t IrSize, const ConstHrirSpan Coeffs,
     const float left, const float right)
 {
     ASSUME(IrSize >= MinIrLength);
@@ -149,7 +151,7 @@ void MixHrtfBlend_<CTag>(const float *InSamples, float2 *AccumSamples, const uin
 }
 
 template<>
-void MixDirectHrtf_<CTag>(FloatBufferLine &LeftOut, FloatBufferLine &RightOut,
+void MixDirectHrtf_<CTag>(const FloatBufferSpan LeftOut, const FloatBufferSpan RightOut,
     const al::span<const FloatBufferLine> InSamples, float2 *AccumSamples,
     float *TempBuf, HrtfChannelState *ChanState, const size_t IrSize, const size_t BufferSize)
 {

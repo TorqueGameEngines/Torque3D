@@ -126,9 +126,14 @@ file(GLOB TORQUE_I18N_SOURCES "i18n/*.cpp")
 
 # Begin handling platform specific stuff
 # Handle Platform POSIX
-if (UNIX)
+if (UNIX AND NOT APPLE)
   file(GLOB TORQUE_PLATFORM_POSIX_SOURCES "platformPOSIX/*.cpp")
-endif (UNIX)
+
+  if (TORQUE_CPU_X32 OR TORQUE_CPU_X64)
+    file(GLOB TORQUE_PLATFORM_X86_UNIX_SOURCES "platformX86UNIX/*.cpp")
+    set(TORQUE_PLATFORM_POSIX_SOURCES ${TORQUE_PLATFORM_POSIX_SOURCES} ${TORQUE_PLATFORM_X86_UNIX_SOURCES})
+  endif (TORQUE_CPU_X32 OR TORQUE_CPU_X64)
+endif (UNIX AND NOT APPLE)
 
 # Handle platformMac
 if (APPLE)
@@ -142,6 +147,11 @@ endif (WIN32)
 
 # Handle platformSDL
 file(GLOB TORQUE_PLATFORM_SDL_SOURCES "platformSDL/*.cpp" "platformSDL/threads/*.cpp")
+
+# Handle platformX11
+if (UNIX AND NOT APPLE)
+  file(GLOB TORQUE_PLATFORM_X11_SOURCES "platformX11/*.cpp")
+endif (UNIX AND NOT APPLE)
 
 ################# Start building libs ###################
 
@@ -192,6 +202,12 @@ endif (APPLE)
 if (TORQUE_OPENGL)
   set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} TORQUE_OPENGL)
 endif (TORQUE_OPENGL)
+
+# Linux requires X11
+if (UNIX AND NOT APPLE)
+  set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} "X11")
+  set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_PLATFORM_X11_SOURCES})
+endif (UNIX AND NOT APPLE)
 
 # Search module directories
 set(TORQUE_MODULE_PATHS "${CMAKE_SOURCE_DIR}/Tools/CMake/modules")

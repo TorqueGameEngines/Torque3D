@@ -56,8 +56,6 @@ file(GLOB TORQUE_CONSOLE_SOURCES "console/*.cpp")
 file(GLOB TORQUE_MATH_SOURCES "math/*.cpp" "math/util/*.cpp")
 
 # Handle persistence
-#addPathRec("${srcDir}/persistence")
-
 file(GLOB TORQUE_PERSISTENCE_SOURCES "persistence/taml/*.cpp" "persistence/taml/binary/*.cpp" "persistence/taml/xml/*.cpp")
 
 # Handle Cinterface
@@ -164,15 +162,10 @@ set (TORQUE_SOURCE_FILES "main/main.cpp"
 if (WIN32)
   set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} WS2_32.LIB windowscodecs.lib)
   set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_PLATFORM_WIN_SOURCES})
-  
-  # If D3D11 is enabled, we need to link to DirectX
-  if (TORQUE_D3D11)
-	set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} dxguid.lib)
-  endif (TORQUE_D3D11)
 endif (WIN32)
 
 if (WIN32 AND TORQUE_D3D11)
-	set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} WS2_32.LIB)
+	set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} dxguid.lib)
 	set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} TORQUE_D3D11)
 endif (WIN32 AND TORQUE_D3D11)
 
@@ -226,8 +219,7 @@ target_link_libraries(${TORQUE_APP_NAME} ${TORQUE_LINK_LIBRARIES})
 target_include_directories(${TORQUE_APP_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
 
 if (WIN32)
-  # FIXME: Torque is angry about these warnings
-  set_target_properties(${TORQUE_APP_NAME} PROPERTIES COMPILE_FLAGS "-DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS /MP /Zc:wchar_t-")
+  set_target_properties(${TORQUE_APP_NAME} PROPERTIES COMPILE_FLAGS "-D_CRT_SECURE_NO_WARNINGS /MP /Zc:wchar_t-")
 endif (WIN32)
 
 if (APPLE)

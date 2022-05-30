@@ -1,4 +1,4 @@
-# Bullet module
+# Torque Tools module
 option(TORQUE_TOOLS "Enable Torque Tools" ON)
 
 if(TORQUE_TOOLS)

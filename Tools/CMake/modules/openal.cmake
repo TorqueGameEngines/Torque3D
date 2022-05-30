@@ -1,4 +1,4 @@
-# Bullet module
+# OpenAL module
 option(TORQUE_SFX_OPENAL "Use OpenAL SFX" ON)
 
 if(TORQUE_SFX_OPENAL)

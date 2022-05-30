@@ -1,3 +1,5 @@
+project(${TORQUE_APP_NAME})
+
 file(GLOB TORQUE_APP_SOURCES "app/*.cpp" "app/net/*.cpp")
 
 # Handle Platform
@@ -18,8 +20,17 @@ file(GLOB TORQUE_SFX_SOURCES "sfx/*.cpp" "sfx/media/*.cpp" "sfx/null/*.cpp")
 
 # Handle GFX
 file(GLOB TORQUE_GFX_SOURCES "gfx/*.cpp" "gfx/Null/*.cpp" "gfx/test/*.cpp" "gfx/bitmap/*.cpp" "gfx/bitmap/loaders/*.cpp"
-                             "gfx/util/*.cpp" "gfx/video/*.cpp" "gfx/sim/*.cpp" "gfx/gl/*.cpp" "gfx/gl/sdl/*.cpp"
-                             "gfx/gl/tGL/*.cpp")
+                             "gfx/util/*.cpp" "gfx/video/*.cpp" "gfx/sim/*.cpp" )
+
+if (TORQUE_OPENGL)
+	file(GLOB TORQUE_GFX_SOURCES_OPENGL "gfx/gl/*.cpp" "gfx/gl/sdl/*.cpp" "gfx/gl/tGL/*.cpp")
+	set(TORQUE_GFX_SOURCES ${TORQUE_GFX_SOURCES} ${TORQUE_GFX_SOURCES_OPENGL})
+endif (TORQUE_OPENGL)
+
+if (WIN32 AND TORQUE_D3D11)
+	file(GLOB TORQUE_GFX_SOURCES_D3D11 "gfx/D3D11/*.cpp")
+	set(TORQUE_GFX_SOURCES ${TORQUE_GFX_SOURCES} ${TORQUE_GFX_SOURCES_D3D11})
+endif (WIN32 AND TORQUE_D3D11)
 
 # Handle core
 file(GLOB TORQUE_CORE_SOURCES "core/*.cpp" "core/stream/*.cpp" "core/strings/*.cpp" "core/util/*.cpp"
@@ -71,7 +82,11 @@ file(GLOB TORQUE_MODULE_SOURCES "module/*.cpp")
 file(GLOB TORQUE_FOREST_SOURCES "forest/*.cpp" "forest/ts/*.cpp")
 
 # Handle shadergen
-file(GLOB TORQUE_SHADERGEN_SOURCES "shaderGen/*.cpp" "shadergen/GLSL/*.cpp")
+file(GLOB TORQUE_SHADERGEN_SOURCES "shaderGen/*.cpp" "shaderGen/GLSL/*.cpp")
+if (WIN32 AND TORQUE_D3D11)
+	file(GLOB TORQUE_SHADERGEN_SOURCES_HLSL "shaderGen/HLSL/*.cpp")
+	set(TORQUE_SHADERGEN_SOURCES ${TORQUE_SHADERGEN_SOURCES} ${TORQUE_SHADERGEN_SOURCES_HLSL})
+endif (WIN32)
 
 # Handle terrain
 file(GLOB TORQUE_TERRAIN_SOURCES "terrain/*.cpp")
@@ -86,6 +101,11 @@ file(GLOB TORQUE_COLLISION_SOURCES "collision/*.cpp")
 file(GLOB TORQUE_LIGHTING_SOURCES "lighting/*.cpp" "lighting/common/*.cpp"
                                   "lighting/advanced/*.cpp" "lighting/shadowMap/*.cpp"
                                   "lighting/advanced/glsl/*.cpp")
+
+if (WIN32 AND TORQUE_D3D11)
+	file(GLOB TORQUE_LIGHTING_SOURCES_HLSL "lighting/advanced/hlsl/*.cpp")
+	set(TORQUE_LIGHTING_SOURCES ${TORQUE_LIGHTING_SOURCES} ${TORQUE_LIGHTING_SOURCES_HLSL})
+endif (WIN32 AND TORQUE_D3D11)
 
 # Handle environment
 file(GLOB TORQUE_ENVIRONMENT_SOURCES "environment/*.cpp")
@@ -109,7 +129,7 @@ endif (APPLE)
 
 # Handle platformWin32
 if (WIN32)
-  file(GLOB TORQUE_PLATFORM_WIN_SOURCES "platformWin32/*.cpp")
+  file(GLOB TORQUE_PLATFORM_WIN_SOURCES "platformWin32/*.cpp" "platformWin32/videoInfo/*.cpp")
 endif (WIN32)
 
 # Handle platformSDL
@@ -140,11 +160,21 @@ set (TORQUE_SOURCE_FILES "main/main.cpp"
                           ${TORQUE_I18N_SOURCES} ${TORQUE_CONSOLE_SOURCES} ${TORQUE_SFX_SOURCES} ${TORQUE_GFX_SOURCES})
 
 
-# When on Windows, we need to link against winsock
+# When on Windows, we need to link against winsock and windows codecs
 if (WIN32)
-  set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} WS2_32.LIB)
+  set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} WS2_32.LIB windowscodecs.lib)
   set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_PLATFORM_WIN_SOURCES})
+  
+  # If D3D11 is enabled, we need to link to DirectX
+  if (TORQUE_D3D11)
+	set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} dxguid.lib)
+  endif (TORQUE_D3D11)
 endif (WIN32)
+
+if (WIN32 AND TORQUE_D3D11)
+	set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} WS2_32.LIB)
+	set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} TORQUE_D3D11)
+endif (WIN32 AND TORQUE_D3D11)
 
 # Only link Apple frameworks when on an Apple platform
 if (APPLE)
@@ -184,50 +214,46 @@ endforeach()
 
 # Final executable
 if (APPLE)
-  add_executable(Game MACOSX_BUNDLE ${TORQUE_SOURCE_FILES})
+  add_executable(${TORQUE_APP_NAME} MACOSX_BUNDLE ${TORQUE_SOURCE_FILES})
 elseif (WIN32)
-  add_executable(Game WIN32 ${TORQUE_SOURCE_FILES})
+  add_executable(${TORQUE_APP_NAME} WIN32 ${TORQUE_SOURCE_FILES})
 else()
-  add_executable(Game ${TORQUE_SOURCE_FILES})
+  add_executable(${TORQUE_APP_NAME} ${TORQUE_SOURCE_FILES})
 endif()
 
-target_compile_definitions(Game PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
-target_link_libraries(Game ${TORQUE_LINK_LIBRARIES})
-target_include_directories(Game PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
+target_compile_definitions(${TORQUE_APP_NAME} PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
+target_link_libraries(${TORQUE_APP_NAME} ${TORQUE_LINK_LIBRARIES})
+target_include_directories(${TORQUE_APP_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
 
 if (WIN32)
   # FIXME: Torque is angry about these warnings
-  set_target_properties(Game PROPERTIES COMPILE_FLAGS "/wd4018 /wd4100 /wd4121 /wd4127 /wd4130 /wd4244 /wd4245 /wd4389 /wd4511 /wd4512 /wd4800 /wd4995")
+  set_target_properties(${TORQUE_APP_NAME} PROPERTIES COMPILE_FLAGS "-DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS /MP /Zc:wchar_t-")
 endif (WIN32)
 
 if (APPLE)
   # Parameters used for the plist configuration
-  set(EXECUTABLE_NAME "Game")
+  set(EXECUTABLE_NAME "${TORQUE_APP_NAME}")
 
   CONFIGURE_FILE("${CMAKE_SOURCE_DIR}/Tools/CMake/Info.plist.in" "${CMAKE_BINARY_DIR}/temp/Info.plist" COPYONLY)
-  set_target_properties(Game PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_BINARY_DIR}/temp/Info.plist")
-  set_target_properties(Game PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/My Projects/${TORQUE_APP_NAME}/game")
+  set_target_properties(${TORQUE_APP_NAME} PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_BINARY_DIR}/temp/Info.plist")
 endif (APPLE)
 
 if (UNIX AND NOT APPLE)
-  target_link_options(Game PUBLIC "-Wl,-rpath,./")
+  target_link_options(${TORQUE_APP_NAME} PUBLIC "-Wl,-rpath,./")
 endif (UNIX AND NOT APPLE)
 
-# Process link libraries for dynamic links
-get_target_property(GAME_LINK_LIBRARIES Game LINK_LIBRARIES)
-foreach (GAME_LINK_LIBRARY ${GAME_LINK_LIBRARIES})
-  # For eg. OSX some links are not valid targets - for example frameworks provided by OS
-  if (TARGET ${GAME_LINK_LIBRARY})
-    get_target_property(LINK_LIBRARY_TYPE ${GAME_LINK_LIBRARY} TYPE)
+# Process link libraries for dynamic links - we do this on OSX to ensure the binaries end up in the correct App directory
+if (APPLE)
+	get_target_property(GAME_LINK_LIBRARIES ${TORQUE_APP_NAME} LINK_LIBRARIES)
+	foreach (GAME_LINK_LIBRARY ${GAME_LINK_LIBRARIES})
+	  # For eg. OSX some links are not valid targets - for example frameworks provided by OS
+	  if (TARGET ${GAME_LINK_LIBRARY})
+		get_target_property(LINK_LIBRARY_TYPE ${GAME_LINK_LIBRARY} TYPE)
 
-    # Only pay attention to shared libraries
-    if ("${LINK_LIBRARY_TYPE}" STREQUAL "SHARED_LIBRARY")
-      # On eg. OSX we are creating a bundle directory, so shared libs need to be handled differently here
-      IF (APPLE)
-        install(FILES $<TARGET_FILE:${GAME_LINK_LIBRARY}> DESTINATION "game/Game.app/Resources")
-      else()
-        install(FILES $<TARGET_FILE:${GAME_LINK_LIBRARY}> DESTINATION "game")
-      endif (APPLE)
-    endif()
-  endif()
-endforeach()
+		# Only pay attention to shared libraries
+		if ("${LINK_LIBRARY_TYPE}" STREQUAL "SHARED_LIBRARY")
+		  set_target_properties( ${GAME_LINK_LIBRARY} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "game/${TORQUE_APP_NAME}.app/Resources")
+		endif()
+	  endif()
+	endforeach()
+endif (APPLE)

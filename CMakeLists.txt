@@ -1,6 +1,9 @@
 cmake_minimum_required (VERSION 3.10.2)
 set (CMAKE_CXX_STANDARD 17)
 
+# Ensure multi-core compilation is enabled for everything
+add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/MP>)
+
 project(Torque3D)
 
 # An application name must be set first
@@ -9,8 +12,17 @@ if("${TORQUE_APP_NAME}" STREQUAL "")
 	message(FATAL_ERROR "Please set TORQUE_APP_NAME first")
 endif()
 
-# Set the CMake install prefix. For now we override what the user or some other system may specify.
-set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/My Projects/${TORQUE_APP_NAME}")
+# Once an app name is determined, we know what our project pathing structure should look like
+set(TORQUE_APP_ROOT_DIRECTORY "${CMAKE_SOURCE_DIR}/My Projects/${TORQUE_APP_NAME}")
+set(TORQUE_APP_GAME_DIRECTORY "${TORQUE_APP_ROOT_DIRECTORY}/game")
+
+# Ensure all possible configurations end up in the project directory
+set(CMAKE_INSTALL_PREFIX "${TORQUE_APP_ROOT_DIRECTORY}")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${TORQUE_APP_GAME_DIRECTORY}")
+foreach( OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES} )
+    string( TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG )
+    set( CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${TORQUE_APP_GAME_DIRECTORY}" )
+endforeach( OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES )
 
 # Detect CPU Information
 if (CMAKE_SYSTEM_PROCESSOR MATCHES "arm")
@@ -91,6 +103,16 @@ mark_as_advanced(TORQUE_USE_ZENITY)
 
 option(TORQUE_SHOW_LEGACY_FILE_FIELDS "If on, shows legacy direct file path fields in the inspector." OFF)
 mark_as_advanced(TORQUE_SHOW_LEGACY_FILE_FIELDS)
+
+if(WIN32)
+	option(TORQUE_OPENGL "Allow OpenGL render" ON)
+else()
+	set(TORQUE_OPENGL ON) # we need OpenGL to render on Linux/Mac
+endif()
+
+if(WIN32)
+	option(TORQUE_D3D11 "Allow Direct3D 11 render" ON)
+endif()
 
 include("${CMAKE_SOURCE_DIR}/Tools/CMake/basics.cmake")
 setupVersionNumbers()

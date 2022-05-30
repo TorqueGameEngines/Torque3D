@@ -303,7 +303,7 @@ function ForestEditorGui::okDeleteMesh( %this, %mesh )
 
 function ForestEditorGui::validateBrushSize( %this )
 {
-   %minBrushSize = 1;
+   %minBrushSize = 0.1;
    %maxBrushSize = getWord(ETerrainEditor.maxBrushSize, 0);
 
    %val = $ThisControl.getText();
@@ -531,6 +531,6 @@ function ForestEditorInspector::onFieldSelected( %this, %fieldName, %fieldTypeSt
 
 function ForestBrushSizeSliderCtrlContainer::onWake(%this)
 {
-   %this-->slider.range = "1" SPC getWord(ETerrainEditor.maxBrushSize, 0);
+   %this-->slider.range = "0.1" SPC getWord(ETerrainEditor.maxBrushSize, 0);
    %this-->slider.setValue(ForestBrushSizeTextEditContainer-->textEdit.getValue());
 }

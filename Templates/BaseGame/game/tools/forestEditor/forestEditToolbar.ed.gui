@@ -110,7 +110,7 @@ $guiContent = new GuiControl(ForestEditToolbar,EditorGuiGroup) {
             MinExtent = "8 16";
             canSave = "1";
             Visible = "1";
-            AltCommand = "ForestTools->BrushTool.size = mClamp($ThisControl.getValue(), 1, getWord(ETerrainEditor.maxBrushSize, 0));";
+            AltCommand = "ForestTools->BrushTool.size = mClamp($ThisControl.getValue(), 0.1, getWord(ETerrainEditor.maxBrushSize, 0));";
             validate = "ForestEditorGui.validateBrushSize();";
             tooltipprofile = "ToolsGuiToolTipProfile";
             hovertime = "1000";
@@ -369,7 +369,7 @@ new GuiMouseEventCtrl(ForestBrushSizeSliderCtrlContainer,EditorGuiGroup) {
       canSave = "1";
       Visible = "1";
       AltCommand = "ForestTools->BrushTool.size = $ThisControl.value;";
-      range = "1" SPC getWord(ETerrainEditor.maxBrushSize, 0);
+      range = "0.1" SPC getWord(ETerrainEditor.maxBrushSize, 0);
       ticks = "0";
       value = "0";
    };

@@ -121,7 +121,11 @@ setupVersionNumbers()
 if(NOT TORQUE_TEMPLATE)
     set(TORQUE_TEMPLATE "BaseGame" CACHE STRING "the template to use")
 endif()
-installTemplate(${TORQUE_TEMPLATE})
+
+if (NOT TORQUE_INSTALLED_TEMPLATE)
+    installTemplate(${TORQUE_TEMPLATE})
+    set(TORQUE_INSTALLED_TEMPLATE TRUE CACHE BOOL "Whether or not the game template is installed. This may be reset to false (or removed) to force a reinstall.")
+endif(NOT TORQUE_INSTALLED_TEMPLATE)
 
 # Generate torqueConfig.h in our temp directory
 CONFIGURE_FILE("${CMAKE_SOURCE_DIR}/Tools/CMake/torqueConfig.h.in" "${CMAKE_BINARY_DIR}/temp/torqueConfig.h")

@@ -56,8 +56,6 @@ file(GLOB TORQUE_CONSOLE_SOURCES "console/*.cpp")
 file(GLOB TORQUE_MATH_SOURCES "math/*.cpp" "math/util/*.cpp")
 
 # Handle persistence
-#addPathRec("${srcDir}/persistence")
-
 file(GLOB TORQUE_PERSISTENCE_SOURCES "persistence/taml/*.cpp" "persistence/taml/binary/*.cpp" "persistence/taml/xml/*.cpp")
 
 # Handle Cinterface
@@ -90,6 +88,16 @@ endif (WIN32)
 
 # Handle terrain
 file(GLOB TORQUE_TERRAIN_SOURCES "terrain/*.cpp")
+
+if (WIN32 AND TORQUE_D3D11)
+  file(GLOB TORQUE_TERRAIN_SOURCES_HLSL "terrain/hlsl/*.cpp")
+  set(TORQUE_TERRAIN_SOURCES ${TORQUE_TERRAIN_SOURCES} ${TORQUE_TERRAIN_SOURCES_HLSL})
+endif (WIN32 AND TORQUE_D3D11)
+
+if (TORQUE_OPENGL)
+  file(GLOB TORQUE_TERRAIN_SOURCES_GLSL "terrain/glsl/*.cpp")
+  set(TORQUE_TERRAIN_SOURCES ${TORQUE_TERRAIN_SOURCES} ${TORQUE_TERRAIN_SOURCES_GLSL})
+endif (TORQUE_OPENGL)
 
 # Handle Materials
 file(GLOB TORQUE_MATERIALS_SOURCES "materials/*.cpp")
@@ -135,11 +143,10 @@ endif (WIN32)
 # Handle platformSDL
 file(GLOB TORQUE_PLATFORM_SDL_SOURCES "platformSDL/*.cpp" "platformSDL/threads/*.cpp")
 
-
 ################# Start building libs ###################
 
 set(TORQUE_COMPILE_DEFINITIONS ICE_NO_DLL PCRE_STATIC TORQUE_ADVANCED_LIGHTING TORQUE_SHADERGEN
-							   TORQUE_OPENGL TORQUE_OPCODE TORQUE_ASSIMP TORQUE_SDL TORQUE_COLLADA
+							   TORQUE_OPCODE TORQUE_ASSIMP TORQUE_SDL TORQUE_COLLADA
 							   TORQUE_UNICODE UNICODE _UNICODE)
 
 # Set common linkages
@@ -152,13 +159,12 @@ set (TORQUE_SOURCE_FILES "main/main.cpp"
                           ${TORQUE_CINTERFACE_SOURCES} ${TORQUE_MATH_SOURCES}
                           ${TORQUE_PLATFORM_SOURCES} ${TORQUE_ASSETS_SOURCES} ${TORQUE_UTIL_SOURCES}
                           ${TORQUE_CORE_SOURCES} ${TORQUE_PERSISTENCE_SOURCES} ${TORQUE_MODULE_SOURCES}
-                          ${TORQUE_PLATFORM_SDL_SOURCES} ${TORQUE_PLATFORM_MAC_SOURCES} ${TORQUE_PLATFORM_POSIX_SOURCES}
+                          ${TORQUE_PLATFORM_SDL_SOURCES} ${TORQUE_PLATFORM_POSIX_SOURCES}
                           ${TORQUE_WINDOW_MANAGER_SOURCES} ${TORQUE_SCENE_SOURCES} ${TORQUE_COLLISION_SOURCES}
                           ${TORQUE_T3D_SOURCES} ${TORQUE_TS_SOURCES} ${TORQUE_SIM_SOURCES} ${TORQUE_MATERIALS_SOURCES}
                           ${TORQUE_SHADERGEN_SOURCES} ${TORQUE_LIGHTING_SOURCES} ${TORQUE_GUI_SOURCES}
                           ${TORQUE_ENVIRONMENT_SOURCES} ${TORQUE_TERRAIN_SOURCES} ${TORQUE_POSTFX_SOURCES}
                           ${TORQUE_I18N_SOURCES} ${TORQUE_CONSOLE_SOURCES} ${TORQUE_SFX_SOURCES} ${TORQUE_GFX_SOURCES})
-
 
 # When on Windows, we need to link against winsock and windows codecs
 if (WIN32)
@@ -167,7 +173,7 @@ if (WIN32)
   
   # If D3D11 is enabled, we need to link to DirectX
   if (TORQUE_D3D11)
-	set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} dxguid.lib)
+	  set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} dxguid.lib)
   endif (TORQUE_D3D11)
 endif (WIN32)
 
@@ -179,8 +185,13 @@ endif (WIN32 AND TORQUE_D3D11)
 # Only link Apple frameworks when on an Apple platform
 if (APPLE)
   enable_language(OBJC)
+  set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_PLATFORM_MAC_SOURCES})
   set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} "-framework Cocoa" "-framework AppKit" "-framework CoreData" "-framework Foundation")
 endif (APPLE)
+
+if (TORQUE_OPENGL)
+  set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} TORQUE_OPENGL)
+endif (TORQUE_OPENGL)
 
 # Search module directories
 set(TORQUE_MODULE_PATHS "${CMAKE_SOURCE_DIR}/Tools/CMake/modules")
@@ -226,8 +237,7 @@ target_link_libraries(${TORQUE_APP_NAME} ${TORQUE_LINK_LIBRARIES})
 target_include_directories(${TORQUE_APP_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp")
 
 if (WIN32)
-  # FIXME: Torque is angry about these warnings
-  set_target_properties(${TORQUE_APP_NAME} PROPERTIES COMPILE_FLAGS "-DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS /MP /Zc:wchar_t-")
+  set_target_properties(${TORQUE_APP_NAME} PROPERTIES COMPILE_FLAGS "-D_CRT_SECURE_NO_WARNINGS /MP /Zc:wchar_t-")
 endif (WIN32)
 
 if (APPLE)
@@ -243,17 +253,18 @@ if (UNIX AND NOT APPLE)
 endif (UNIX AND NOT APPLE)
 
 # Process link libraries for dynamic links - we do this on OSX to ensure the binaries end up in the correct App directory
+# as in the root CMake we force everything to be in game
 if (APPLE)
 	get_target_property(GAME_LINK_LIBRARIES ${TORQUE_APP_NAME} LINK_LIBRARIES)
 	foreach (GAME_LINK_LIBRARY ${GAME_LINK_LIBRARIES})
 	  # For eg. OSX some links are not valid targets - for example frameworks provided by OS
 	  if (TARGET ${GAME_LINK_LIBRARY})
-		get_target_property(LINK_LIBRARY_TYPE ${GAME_LINK_LIBRARY} TYPE)
+      get_target_property(LINK_LIBRARY_TYPE ${GAME_LINK_LIBRARY} TYPE)
 
-		# Only pay attention to shared libraries
-		if ("${LINK_LIBRARY_TYPE}" STREQUAL "SHARED_LIBRARY")
-		  set_target_properties( ${GAME_LINK_LIBRARY} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "game/${TORQUE_APP_NAME}.app/Resources")
-		endif()
+      # Only pay attention to shared libraries and make them output to the app resources
+      if ("${LINK_LIBRARY_TYPE}" STREQUAL "SHARED_LIBRARY")
+        set_target_properties( ${GAME_LINK_LIBRARY} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${TORQUE_APP_GAME_DIRECTORY}/${TORQUE_APP_NAME}.app/Resources")
+      endif()
 	  endif()
 	endforeach()
 endif (APPLE)

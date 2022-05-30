@@ -126,14 +126,14 @@ file(GLOB TORQUE_I18N_SOURCES "i18n/*.cpp")
 
 # Begin handling platform specific stuff
 # Handle Platform POSIX
-if (UNIX AND NOT APPLE)
+if (UNIX)
   file(GLOB TORQUE_PLATFORM_POSIX_SOURCES "platformPOSIX/*.cpp")
 
   if (TORQUE_CPU_X32 OR TORQUE_CPU_X64)
     file(GLOB TORQUE_PLATFORM_X86_UNIX_SOURCES "platformX86UNIX/*.cpp")
     set(TORQUE_PLATFORM_POSIX_SOURCES ${TORQUE_PLATFORM_POSIX_SOURCES} ${TORQUE_PLATFORM_X86_UNIX_SOURCES})
   endif (TORQUE_CPU_X32 OR TORQUE_CPU_X64)
-endif (UNIX AND NOT APPLE)
+endif (UNIX)
 
 # Handle platformMac
 if (APPLE)

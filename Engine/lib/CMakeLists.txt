@@ -1,8 +1,5 @@
 # Ask CMake to perform builds in a temporary directory for all of these.
 # We also use EXCLUDE_FROM_ALL to ensure we only build and install what we want
-set(BUILD_SHARED_LIBS off CACHE STRING "")
-add_subdirectory(assimp ${CMAKE_BINARY_DIR}/temp/assimp EXCLUDE_FROM_ALL)
-
 set(SDL_SHARED on CACHE BOOL "" FORCE)
 add_subdirectory(sdl ${CMAKE_BINARY_DIR}/temp/sdl2 EXCLUDE_FROM_ALL)
 
@@ -15,6 +12,14 @@ set(PNG_STATIC on CACHE BOOL "" FORCE)
 set(PNG_BUILD_ZLIB on CACHE BOOL "" FORCE)
 get_filename_component(ZLIB_ROOT "zlib" REALPATH BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 set(ZLIB_ROOT "${ZLIB_ROOT}" CACHE STRING "ZLib root location" FORCE)
+
+# Assimp depends on zlib
+set(BUILD_SHARED_LIBS off CACHE STRING "")
+set(ASSIMP_BUILD_ZLIB on CACHE STRING "")
+set(ASSIMP_HUNTER_ENABLED off CACHE STRING "")
+add_subdirectory(assimp ${CMAKE_BINARY_DIR}/temp/assimp EXCLUDE_FROM_ALL)
+
+
 
 add_subdirectory(lpng ${CMAKE_BINARY_DIR}/temp/lpng EXCLUDE_FROM_ALL)
 

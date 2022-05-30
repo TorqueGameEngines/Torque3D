@@ -18,24 +18,24 @@
 #include "AL/alc.h"
 
 #include "albyte.h"
-#include "alcontext.h"
+#include "alc/context.h"
+#include "alc/effects/base.h"
+#include "alc/inprogext.h"
 #include "almalloc.h"
-#include "async_event.h"
+#include "core/async_event.h"
 #include "core/except.h"
 #include "core/logging.h"
-#include "effects/base.h"
-#include "inprogext.h"
+#include "core/voice_change.h"
 #include "opthelpers.h"
 #include "ringbuffer.h"
 #include "threads.h"
-#include "voice_change.h"
 
 
 static int EventThread(ALCcontext *context)
 {
     RingBuffer *ring{context->mAsyncEvents.get()};
     bool quitnow{false};
-    while LIKELY(!quitnow)
+    while(likely(!quitnow))
     {
         auto evt_data = ring->getReadVector().first;
         if(evt_data.len == 0)
@@ -54,10 +54,10 @@ static int EventThread(ALCcontext *context)
             al::destroy_at(evt_ptr);
             ring->readAdvance(1);
 
-            quitnow = evt.EnumType == EventType_KillThread;
-            if UNLIKELY(quitnow) break;
+            quitnow = evt.EnumType == AsyncEvent::KillThread;
+            if(unlikely(quitnow)) break;
 
-            if(evt.EnumType == EventType_ReleaseEffectState)
+            if(evt.EnumType == AsyncEvent::ReleaseEffectState)
             {
                 evt.u.mEffectState->release();
                 continue;
@@ -66,41 +66,38 @@ static int EventThread(ALCcontext *context)
             uint enabledevts{context->mEnabledEvts.load(std::memory_order_acquire)};
             if(!context->mEventCb) continue;
 
-            if(evt.EnumType == EventType_SourceStateChange)
+            if(evt.EnumType == AsyncEvent::SourceStateChange)
             {
-                if(!(enabledevts&EventType_SourceStateChange))
+                if(!(enabledevts&AsyncEvent::SourceStateChange))
                     continue;
                 ALuint state{};
                 std::string msg{"Source ID " + std::to_string(evt.u.srcstate.id)};
                 msg += " state has changed to ";
                 switch(evt.u.srcstate.state)
                 {
-                case VChangeState::Reset:
+                case AsyncEvent::SrcState::Reset:
                     msg += "AL_INITIAL";
                     state = AL_INITIAL;
                     break;
-                case VChangeState::Stop:
+                case AsyncEvent::SrcState::Stop:
                     msg += "AL_STOPPED";
                     state = AL_STOPPED;
                     break;
-                case VChangeState::Play:
+                case AsyncEvent::SrcState::Play:
                     msg += "AL_PLAYING";
                     state = AL_PLAYING;
                     break;
-                case VChangeState::Pause:
+                case AsyncEvent::SrcState::Pause:
                     msg += "AL_PAUSED";
                     state = AL_PAUSED;
-                    break;
-                /* Shouldn't happen */
-                case VChangeState::Restart:
                     break;
                 }
                 context->mEventCb(AL_EVENT_TYPE_SOURCE_STATE_CHANGED_SOFT, evt.u.srcstate.id,
                     state, static_cast<ALsizei>(msg.length()), msg.c_str(), context->mEventParam);
             }
-            else if(evt.EnumType == EventType_BufferCompleted)
+            else if(evt.EnumType == AsyncEvent::BufferCompleted)
             {
-                if(!(enabledevts&EventType_BufferCompleted))
+                if(!(enabledevts&AsyncEvent::BufferCompleted))
                     continue;
                 std::string msg{std::to_string(evt.u.bufcomp.count)};
                 if(evt.u.bufcomp.count == 1) msg += " buffer completed";
@@ -109,9 +106,9 @@ static int EventThread(ALCcontext *context)
                     evt.u.bufcomp.count, static_cast<ALsizei>(msg.length()), msg.c_str(),
                     context->mEventParam);
             }
-            else if(evt.EnumType == EventType_Disconnected)
+            else if(evt.EnumType == AsyncEvent::Disconnected)
             {
-                if(!(enabledevts&EventType_Disconnected))
+                if(!(enabledevts&AsyncEvent::Disconnected))
                     continue;
                 context->mEventCb(AL_EVENT_TYPE_DISCONNECTED_SOFT, 0, 0,
                     static_cast<ALsizei>(strlen(evt.u.disconnect.msg)), evt.u.disconnect.msg,
@@ -146,7 +143,7 @@ void StopEventThrd(ALCcontext *ctx)
             evt_data = ring->getWriteVector().first;
         } while(evt_data.len == 0);
     }
-    ::new(evt_data.buf) AsyncEvent{EventType_KillThread};
+    al::construct_at(reinterpret_cast<AsyncEvent*>(evt_data.buf), AsyncEvent::KillThread);
     ring->writeAdvance(1);
 
     ctx->mEventSem.post();
@@ -158,7 +155,7 @@ AL_API void AL_APIENTRY alEventControlSOFT(ALsizei count, const ALenum *types, A
 START_API_FUNC
 {
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(unlikely(!context)) return;
 
     if(count < 0) context->setError(AL_INVALID_VALUE, "Controlling %d events", count);
     if(count <= 0) return;
@@ -170,11 +167,11 @@ START_API_FUNC
         [&flags](ALenum type) noexcept -> bool
         {
             if(type == AL_EVENT_TYPE_BUFFER_COMPLETED_SOFT)
-                flags |= EventType_BufferCompleted;
+                flags |= AsyncEvent::BufferCompleted;
             else if(type == AL_EVENT_TYPE_SOURCE_STATE_CHANGED_SOFT)
-                flags |= EventType_SourceStateChange;
+                flags |= AsyncEvent::SourceStateChange;
             else if(type == AL_EVENT_TYPE_DISCONNECTED_SOFT)
-                flags |= EventType_Disconnected;
+                flags |= AsyncEvent::Disconnected;
             else
                 return false;
             return true;
@@ -204,7 +201,7 @@ START_API_FUNC
         /* Wait to ensure the event handler sees the changed flags before
          * returning.
          */
-        std::lock_guard<std::mutex>{context->mEventCbLock};
+        std::lock_guard<std::mutex> _{context->mEventCbLock};
     }
 }
 END_API_FUNC
@@ -213,7 +210,7 @@ AL_API void AL_APIENTRY alEventCallbackSOFT(ALEVENTPROCSOFT callback, void *user
 START_API_FUNC
 {
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(unlikely(!context)) return;
 
     std::lock_guard<std::mutex> _{context->mPropLock};
     std::lock_guard<std::mutex> __{context->mEventCbLock};

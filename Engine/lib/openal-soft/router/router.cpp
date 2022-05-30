@@ -24,6 +24,11 @@ thread_local DriverIface *ThreadCtxDriver;
 enum LogLevel LogLevel = LogLevel_Error;
 FILE *LogFile;
 
+#ifdef __MINGW32__
+DriverIface *GetThreadDriver() noexcept { return ThreadCtxDriver; }
+void SetThreadDriver(DriverIface *driver) noexcept { ThreadCtxDriver = driver; }
+#endif
+
 static void LoadDriverList(void);
 
 
@@ -209,7 +214,10 @@ static void AddModule(HMODULE module, const WCHAR *name)
         if(newdrv.alcGetError(nullptr) == ALC_NO_ERROR)
             newdrv.ALCVer = MAKE_ALC_VER(alc_ver[0], alc_ver[1]);
         else
+        {
+            WARN("Failed to query ALC version for %ls, assuming 1.0\n", name);
             newdrv.ALCVer = MAKE_ALC_VER(1, 0);
+        }
 
 #undef LOAD_PROC
 #define LOAD_PROC(x) do {                                                     \

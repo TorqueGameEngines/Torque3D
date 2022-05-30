@@ -7,10 +7,11 @@
 
 #include <stdio.h>
 
-#include <vector>
-#include <string>
 #include <atomic>
 #include <mutex>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "AL/alc.h"
 #include "AL/al.h"
@@ -122,8 +123,9 @@ struct DriverIface {
     LPALSPEEDOFSOUND alSpeedOfSound{nullptr};
     LPALDISTANCEMODEL alDistanceModel{nullptr};
 
-    DriverIface(std::wstring name, HMODULE mod)
-      : Name(std::move(name)), Module(mod)
+    template<typename T>
+    DriverIface(T&& name, HMODULE mod)
+      : Name(std::forward<T>(name)), Module(mod)
     { }
     ~DriverIface()
     {
@@ -137,6 +139,17 @@ extern std::vector<DriverIface> DriverList;
 
 extern thread_local DriverIface *ThreadCtxDriver;
 extern std::atomic<DriverIface*> CurrentCtxDriver;
+
+/* HACK: MinGW generates bad code when accessing an extern thread_local object.
+ * Add a wrapper function for it that only accesses it where it's defined.
+ */
+#ifdef __MINGW32__
+DriverIface *GetThreadDriver() noexcept;
+void SetThreadDriver(DriverIface *driver) noexcept;
+#else
+inline DriverIface *GetThreadDriver() noexcept { return ThreadCtxDriver; }
+inline void SetThreadDriver(DriverIface *driver) noexcept { ThreadCtxDriver = driver; }
+#endif
 
 
 class PtrIntMap {

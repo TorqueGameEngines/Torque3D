@@ -549,8 +549,7 @@ void GuiCanvas::setCursorPos(const Point2I &pt)
    }
    else
    {
-      Point2I screenPt( mPlatformWindow->clientToScreen( pt ) );
-      mPlatformWindow->setCursorPosition( screenPt.x, screenPt.y ); 
+      mPlatformWindow->setCursorPosition(pt.x, pt.y);
    }
 }
 

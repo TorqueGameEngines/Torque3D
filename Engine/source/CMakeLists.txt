@@ -201,7 +201,7 @@ endif (TORQUE_OPENGL)
 
 # Linux requires X11 & freetype
 if (UNIX AND NOT APPLE)
-  set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} "X11" "Xft")
+  set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} "X11" "Xft" "dl" "pthread")
   set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_PLATFORM_X11_SOURCES})
   
   find_package(Freetype REQUIRED)
@@ -266,7 +266,7 @@ if (APPLE)
 endif (APPLE)
 
 if (UNIX AND NOT APPLE)
-  target_link_options(${TORQUE_APP_NAME} PUBLIC "-Wl,-rpath,./")
+  set_target_properties(${TORQUE_APP_NAME} PROPERTIES LINK_FLAGS "-Wl,-rpath,./")
 endif (UNIX AND NOT APPLE)
 
 # Process link libraries for dynamic links - we do this on OSX/Linux to ensure the binaries end up in the correct App directory

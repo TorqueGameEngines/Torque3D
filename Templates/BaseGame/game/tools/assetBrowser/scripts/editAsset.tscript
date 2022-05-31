@@ -115,8 +115,11 @@ function AssetBrowser::regeneratePreviewImage(%this)
 {
    %assetDef = AssetDatabase.acquireAsset(EditAssetPopup.assetId);
    %dummyObj = new ScriptObject();
-   %regenCommand = "AssetBrowser.build" @ EditAssetPopup.assetType @ 
-                     "Preview(" @%assetDef @ "," @ %dummyObj @ ", true);";
+   %dummyObj.moduleName = AssetDatabase.getAssetModule(EditAssetPopup.assetId).moduleId;
+   %dummyObj.assetName = AssetDatabase.getAssetName(EditAssetPopup.assetId);
+
+   %regenCommand = "AssetBrowser.generate" @ EditAssetPopup.assetType @ 
+                     "PreviewImage(" @ %dummyObj @ ", true);";
    eval(%regenCommand);
 
    %dummyObj.delete();

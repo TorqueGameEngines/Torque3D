@@ -1,4 +1,0 @@
-new ScriptObject(DummyObjectTestThing)
-{
-   
-};

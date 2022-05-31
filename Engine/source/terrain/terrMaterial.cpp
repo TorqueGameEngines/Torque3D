@@ -199,15 +199,15 @@ TerrainMaterial* TerrainMaterial::findOrCreate( const char *nameOrPath )
    }
 
    // Ok... return a placeholder material then.
-      mat = new TerrainMaterial();
+   mat = new TerrainMaterial();
    mat->setInternalName(nameOrPath);
-      mat->_setDiffuseMap(GFXTextureManager::getWarningTexturePath());
-      mat->mDiffuseSize = 500;
-      mat->_setDetailMap(StringTable->EmptyString());
-      mat->mDetailSize = 5;
-      mat->_setMacroMap(StringTable->EmptyString());
-	   mat->mMacroSize = 200;
-      mat->registerObject();
+   mat->_setDiffuseMap(GFXTextureManager::getWarningTexturePath());
+   mat->mDiffuseSize = 500;
+   mat->_setDetailMap(StringTable->EmptyString());
+   mat->mDetailSize = 5;
+   mat->_setMacroMap(StringTable->EmptyString());
+   mat->mMacroSize = 200;
+   mat->registerObject();
       
    Sim::getRootGroup()->addObject(mat);
 

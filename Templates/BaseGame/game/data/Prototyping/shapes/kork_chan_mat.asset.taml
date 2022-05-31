@@ -1,0 +1,13 @@
+<MaterialAsset
+    AssetName="kork_chan_mat"
+    materialDefinitionName="kork_chan_mat"
+    imageMap0="@asset=Prototyping:kork_chan_image">
+    <Material
+        Name="kork_chan_mat"
+        mapTo="kork_chan">
+        <Material.Stages>
+            <Stages_beginarray
+                DiffuseMapAsset="Prototyping:kork_chan_image"/>
+        </Material.Stages>
+    </Material>
+</MaterialAsset>

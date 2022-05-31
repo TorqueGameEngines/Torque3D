@@ -16,6 +16,7 @@ function AssetBrowser::createMaterialAsset(%this)
       materialDefinitionName = %assetName;
       
       new Material(%assetName) {
+         mapTo = %assetName;
       };
    };
    

@@ -1,6 +1,0 @@
-<PostEffectAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    AssetName="ExamplePostEffect"
-    scriptFile="@assetFile=ExamplePostEffect.cs"
-    VersionId="1" />

@@ -1,0 +1,6 @@
+<ShapeAsset
+    AssetName="TubePrimitive_shape"
+    fileName="@assetFile=TubePrimitive.fbx"
+    constuctorFileName="@assetFile=TubePrimitive.tscript"
+    materialSlot0="@asset=Prototyping:DetailBlue"
+    originalFilePath="C:/dev/T3D/PRs/MiscFixes20220525/Templates/BaseGame/game/data/Prototyping/shapes/Primitives/TubePrimitive.fbx"/>

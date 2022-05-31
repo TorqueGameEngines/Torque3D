@@ -1,0 +1,6 @@
+<ShapeAsset
+    AssetName="flier_shape"
+    fileName="@assetFile=flier.dae"
+    constuctorFileName="@assetFile=flier.tscript"
+    materialSlot0="@asset=Prototyping:InteractiveRed"
+    originalFilePath="C:/dev/T3D/PRs/MiscFixes20220525/Templates/BaseGame/game/data/Prototyping/shapes/Vehicles/flier.dae"/>

@@ -1,9 +1,10 @@
 <LevelAsset
-    canSave="true"
-    canSaveDynamicFields="true"
     AssetName="ExampleLevel"
+    AssetDescription="A simple example level players can fly around in."
     LevelFile="@assetFile=ExampleLevel.mis"
     LevelName="Example Level"
-    isSubScene="false"
-    Description="An example level asset"
-    VersionId="1" />
+    PostFXPresetFile="@assetFile=ExampleLevel.postfxpreset.tscript"
+    DecalsFile="@assetFile=ExampleLevel.mis.decals"
+    ForestFile="@assetFile=ExampleLevel.forest"
+    NavmeshFile="@assetFile=ExampleLevel.nav"
+    VersionId="1"/>

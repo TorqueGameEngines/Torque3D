@@ -204,7 +204,7 @@ if (UNIX AND NOT APPLE)
   set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} "X11")
   set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_PLATFORM_X11_SOURCES})
   
-  find_package(Freetype)
+  find_package(Freetype REQUIRED)
   set(TORQUE_INCLUDE_DIRECTORIES ${TORQUE_INCLUDE_DIRECTORIES} ${FREETYPE_INCLUDE_DIRS})
   set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} ${FREETYPE_LIBRARIES})
 endif (UNIX AND NOT APPLE)
@@ -269,19 +269,25 @@ if (UNIX AND NOT APPLE)
   target_link_options(${TORQUE_APP_NAME} PUBLIC "-Wl,-rpath,./")
 endif (UNIX AND NOT APPLE)
 
-# Process link libraries for dynamic links - we do this on OSX to ensure the binaries end up in the correct App directory
-# as in the root CMake we force everything to be in game
-if (APPLE)
+# Process link libraries for dynamic links - we do this on OSX/Linux to ensure the binaries end up in the correct App directory
+# as in the root CMake we force everything to be in game. This is necessary because on these platforms these are considered "libraries"
+# and not runtime binaries like we configure in the root CMake. We don't globally set library outputs to avoid outputting eg. a files to
+# our game directory.
+if (UNIX)
 	get_target_property(GAME_LINK_LIBRARIES ${TORQUE_APP_NAME} LINK_LIBRARIES)
 	foreach (GAME_LINK_LIBRARY ${GAME_LINK_LIBRARIES})
 	  # For eg. OSX some links are not valid targets - for example frameworks provided by OS
 	  if (TARGET ${GAME_LINK_LIBRARY})
-      get_target_property(LINK_LIBRARY_TYPE ${GAME_LINK_LIBRARY} TYPE)
-
-      # Only pay attention to shared libraries and make them output to the app resources
-      if ("${LINK_LIBRARY_TYPE}" STREQUAL "SHARED_LIBRARY")
-        set_target_properties( ${GAME_LINK_LIBRARY} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${TORQUE_APP_GAME_DIRECTORY}/${TORQUE_APP_NAME}.app/Resources")
-      endif()
+		  get_target_property(LINK_LIBRARY_TYPE ${GAME_LINK_LIBRARY} TYPE)
+			
+		  # Only pay attention to shared libraries and make them output to the app resources
+		  if ("${LINK_LIBRARY_TYPE}" STREQUAL "SHARED_LIBRARY")	 
+			if (APPLE)
+				set_target_properties( ${GAME_LINK_LIBRARY} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${TORQUE_APP_GAME_DIRECTORY}/${TORQUE_APP_NAME}.app/Resources")
+			else()
+				set_target_properties( ${GAME_LINK_LIBRARY} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${TORQUE_APP_GAME_DIRECTORY}")
+			endif(APPLE)
+		  endif()
 	  endif()
 	endforeach()
 endif (APPLE)

@@ -6,8 +6,10 @@ add_subdirectory(sdl ${CMAKE_BINARY_DIR}/temp/sdl2 EXCLUDE_FROM_ALL)
 # Png depends on zlib
 add_subdirectory(zlib ${CMAKE_BINARY_DIR}/temp/zlib EXCLUDE_FROM_ALL)
 
-# FIXME: For now we force-on Neon
-set(PNG_ARM_NEON on CACHE BOOL "" FORCE)
+if (TORQUE_CPU_ARM32 OR TORQUE_CPU_ARM64)
+	set(PNG_ARM_NEON on CACHE BOOL "" FORCE)
+endif (TORQUE_CPU_ARM32 OR TORQUE_CPU_ARM64)
+
 set(PNG_STATIC on CACHE BOOL "" FORCE)
 set(PNG_BUILD_ZLIB on CACHE BOOL "" FORCE)
 get_filename_component(ZLIB_ROOT "zlib" REALPATH BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -19,16 +21,10 @@ set(ASSIMP_BUILD_ZLIB on CACHE STRING "")
 set(ASSIMP_HUNTER_ENABLED off CACHE STRING "")
 add_subdirectory(assimp ${CMAKE_BINARY_DIR}/temp/assimp EXCLUDE_FROM_ALL)
 
-
-
 add_subdirectory(lpng ${CMAKE_BINARY_DIR}/temp/lpng EXCLUDE_FROM_ALL)
-
 add_subdirectory(ljpeg ${CMAKE_BINARY_DIR}/temp/ljpeg EXCLUDE_FROM_ALL)
 add_subdirectory(tinyxml ${CMAKE_BINARY_DIR}/temp/tinyxml EXCLUDE_FROM_ALL)
-
 add_subdirectory(opcode ${CMAKE_BINARY_DIR}/temp/opcode EXCLUDE_FROM_ALL)
-
-
 add_subdirectory(pcre ${CMAKE_BINARY_DIR}/temp/pcre EXCLUDE_FROM_ALL)
 add_subdirectory(convexDecomp ${CMAKE_BINARY_DIR}/temp/convexDecomp EXCLUDE_FROM_ALL)
 add_subdirectory(squish ${CMAKE_BINARY_DIR}/temp/squish EXCLUDE_FROM_ALL)

@@ -47,6 +47,11 @@
             <Setting
                 name="showToolsModule">1</Setting>
         </Group>
+        <Group
+            name="New">
+            <Setting
+                name="defaultModule">ExampleModule</Setting>
+        </Group>
     </Group>
     <Group
         name="AxisGizmo">

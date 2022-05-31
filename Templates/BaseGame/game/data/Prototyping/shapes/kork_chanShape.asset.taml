@@ -1,7 +1,6 @@
 <ShapeAsset
-    canSave="true"
-    canSaveDynamicFields="true"
     AssetName="kork_chanShape"
     fileName="@assetFile=kork_chanShape.fbx"
-    materialSlot0="@Asset=Prototyping:kork_chan"
-    originalFilePath="D:/Gamedev/T3DMIT/Resources/Prototyping/Shapes/kork_chanShape.fbx" />
+    constuctorFileName="@assetFile=kork_chanShape.tscript"
+    materialSlot0="@asset=Prototyping:kork_chan_mat"
+    originalFilePath="C:/dev/T3D/PRs/MiscFixes20220525/Templates/BaseGame/game/data/Prototyping/shapes/kork_chanShape.fbx"/>

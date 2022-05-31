@@ -1,9 +1,0 @@
-<ImageAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    AssetName="kork_chan_ALBEDO"
-    imageFile="@assetFile=kork_chan.png"
-    UseMips="true"
-    isHDRImage="false"
-    imageType="Albedo"
-    originalFilePath="D:/Gamedev/T3DMIT/Resources/Prototyping/Shapes/kork_chan.png" />

@@ -1,0 +1,6 @@
+<ShapeAsset
+    AssetName="CylinderPrimitive_shape"
+    fileName="@assetFile=CylinderPrimitive.fbx"
+    constuctorFileName="@assetFile=CylinderPrimitive.tscript"
+    materialSlot0="@asset=Prototyping:DetailBlue"
+    originalFilePath="C:/dev/T3D/PRs/MiscFixes20220525/Templates/BaseGame/game/data/Prototyping/shapes/Primitives/CylinderPrimitive.fbx"/>

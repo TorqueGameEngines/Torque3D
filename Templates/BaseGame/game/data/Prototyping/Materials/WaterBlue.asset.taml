@@ -1,8 +1,14 @@
 <MaterialAsset
-    canSave="true"
-    canSaveDynamicFields="true"
     AssetName="WaterBlue"
-    scriptFile="@assetFile=WaterBlue.tscript"
     materialDefinitionName="WaterBlue"
-    imageMap0="@Asset=Prototyping:WaterBlue_ALBEDO"
-    originalFilePath="D:/Gamedev/art/Blockout/WaterBlue.png" />
+    imageMap0="@asset=Prototyping:WaterBlue_ALBEDO"
+    originalFilePath="C:/dev/T3D/PRs/MiscFixes20220525/Templates/BaseGame/game/data/Prototyping/Materials/WaterBlue.png">
+    <Material
+        Name="WaterBlue"
+        mapTo="WaterBlue">
+        <Material.Stages>
+            <Stages_beginarray
+                DiffuseMapAsset="Prototyping:WaterBlue_ALBEDO"/>
+        </Material.Stages>
+    </Material>
+</MaterialAsset>

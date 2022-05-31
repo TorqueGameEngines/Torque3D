@@ -329,6 +329,9 @@ endforeach()
 if (APPLE)
 	add_executable(${TORQUE_APP_NAME} MACOSX_BUNDLE ${TORQUE_SOURCE_FILES})
 	set_target_properties(${TORQUE_APP_NAME} PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_BINARY_DIR}/temp/Info.plist")
+
+  # Ensure the shared libraries are actually referenced at the correct path
+  add_custom_command(TARGET ${TORQUE_APP_NAME} POST_BUILD COMMAND install_name_tool -add_rpath "@executable_path/../Frameworks" ${TORQUE_APP_GAME_DIRECTORY}/${TORQUE_APP_NAME}.app/Contents/MacOS/${TORQUE_APP_NAME})
 elseif (WIN32)
 	add_executable(${TORQUE_APP_NAME} WIN32 ${TORQUE_SOURCE_FILES})
 	
@@ -360,7 +363,7 @@ if (UNIX)
 		  # Only pay attention to shared libraries and make them output to the app resources
 		  if ("${LINK_LIBRARY_TYPE}" STREQUAL "SHARED_LIBRARY")	 
 			if (APPLE)
-				set_target_properties(${GAME_LINK_LIBRARY} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${TORQUE_APP_GAME_DIRECTORY}/${TORQUE_APP_NAME}.app/Contents/Resources")
+				set_target_properties(${GAME_LINK_LIBRARY} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${TORQUE_APP_GAME_DIRECTORY}/${TORQUE_APP_NAME}.app/Contents/Frameworks")
 			else()
 				set_target_properties(${GAME_LINK_LIBRARY} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${TORQUE_APP_GAME_DIRECTORY}")
 			endif(APPLE)

@@ -249,12 +249,6 @@ foreach (TORQUE_MODULE_PATH ${TORQUE_MODULE_PATHS})
 endforeach()
 
 if (APPLE)
-  # Parameters used for the plist configuration
-  set(EXECUTABLE_NAME "${TORQUE_APP_NAME}")
-
-  CONFIGURE_FILE("${CMAKE_SOURCE_DIR}/Tools/CMake/Info.plist.in" "${CMAKE_BINARY_DIR}/temp/Info.plist" COPYONLY)
-  set_target_properties(${TORQUE_APP_NAME} PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_BINARY_DIR}/temp/Info.plist")
-  
   # Next setup the icon for OSX
   set_source_files_properties("${CMAKE_SOURCE_DIR}/Tools/CMake/torque.icns" PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
 endif (APPLE)
@@ -267,6 +261,14 @@ elseif (WIN32)
 else()
   add_executable(${TORQUE_APP_NAME} ${TORQUE_SOURCE_FILES})
 endif()
+
+if (APPLE)
+  # Parameters used for the plist configuration
+  set(EXECUTABLE_NAME "${TORQUE_APP_NAME}")
+
+  CONFIGURE_FILE("${CMAKE_SOURCE_DIR}/Tools/CMake/Info.plist.in" "${CMAKE_BINARY_DIR}/temp/Info.plist" COPYONLY)
+  set_target_properties(${TORQUE_APP_NAME} PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_BINARY_DIR}/temp/Info.plist")
+endif (APPLE)
 
 target_compile_definitions(${TORQUE_APP_NAME} PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
 target_link_libraries(${TORQUE_APP_NAME} ${TORQUE_LINK_LIBRARIES})

@@ -104,6 +104,20 @@ mark_as_advanced(TORQUE_USE_ZENITY)
 option(TORQUE_SHOW_LEGACY_FILE_FIELDS "If on, shows legacy direct file path fields in the inspector." OFF)
 mark_as_advanced(TORQUE_SHOW_LEGACY_FILE_FIELDS)
 
+option(TORQUE_SFX_VORBIS "Vorbis Sound" ON)
+mark_as_advanced(TORQUE_SFX_VORBIS)
+
+option(TORQUE_THEORA "Theora Video Support" ON)
+mark_as_advanced(TORQUE_THEORA)
+
+option(TORQUE_ADVANCED_LIGHTING "Advanced Lighting" ON)
+mark_as_advanced(TORQUE_ADVANCED_LIGHTING)
+
+option(TORQUE_BASIC_LIGHTING "Basic Lighting" ON)
+mark_as_advanced(TORQUE_APP_PASSWORD)
+
+set(TORQUE_APP_PASSWORD "changeme" CACHE STRING "zip file password")
+
 if(WIN32)
 	option(TORQUE_OPENGL "Allow OpenGL render" ON)
 else()
@@ -128,6 +142,6 @@ if (NOT TORQUE_INSTALLED_TEMPLATE)
 endif(NOT TORQUE_INSTALLED_TEMPLATE)
 
 # Generate torqueConfig.h in our temp directory
-CONFIGURE_FILE("${CMAKE_SOURCE_DIR}/Tools/CMake/torqueConfig.h.in" "${CMAKE_BINARY_DIR}/temp/torqueConfig.h")
+configure_file("${CMAKE_SOURCE_DIR}/Tools/CMake/torqueConfig.h.in" "${CMAKE_BINARY_DIR}/temp/torqueConfig.h")
 
 add_subdirectory(Engine)

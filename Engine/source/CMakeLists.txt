@@ -209,6 +209,15 @@ if (UNIX AND NOT APPLE)
   set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} ${FREETYPE_LIBRARIES})
 endif (UNIX AND NOT APPLE)
 
+# Prepare Windows RC file
+if (WIN32)
+	set(APPLICATION_ICON_PATH "${CMAKE_SOURCE_DIR}/Tools/CMake/torque.ico")
+	CONFIGURE_FILE("${CMAKE_SOURCE_DIR}/Tools/CMake/torque-win.rc.in" "${CMAKE_BINARY_DIR}/temp/torque.rc")
+	set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} "${CMAKE_BINARY_DIR}/temp/torque.rc")
+endif (WIN32)
+
+
+
 # Search module directories
 set(TORQUE_MODULE_PATHS "${CMAKE_SOURCE_DIR}/Tools/CMake/modules")
 
@@ -239,9 +248,20 @@ foreach (TORQUE_MODULE_PATH ${TORQUE_MODULE_PATHS})
   endforeach()
 endforeach()
 
+if (APPLE)
+  # Parameters used for the plist configuration
+  set(EXECUTABLE_NAME "${TORQUE_APP_NAME}")
+
+  CONFIGURE_FILE("${CMAKE_SOURCE_DIR}/Tools/CMake/Info.plist.in" "${CMAKE_BINARY_DIR}/temp/Info.plist" COPYONLY)
+  set_target_properties(${TORQUE_APP_NAME} PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_BINARY_DIR}/temp/Info.plist")
+  
+  # Next setup the icon for OSX
+  set_source_files_properties("${CMAKE_SOURCE_DIR}/Tools/CMake/torque.icns" PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
+endif (APPLE)
+
 # Final executable
 if (APPLE)
-  add_executable(${TORQUE_APP_NAME} MACOSX_BUNDLE ${TORQUE_SOURCE_FILES})
+  add_executable(${TORQUE_APP_NAME} MACOSX_BUNDLE "${CMAKE_SOURCE_DIR}/Tools/CMake/torque.icns" ${TORQUE_SOURCE_FILES})
 elseif (WIN32)
   add_executable(${TORQUE_APP_NAME} WIN32 ${TORQUE_SOURCE_FILES})
 else()
@@ -256,14 +276,6 @@ target_compile_features(${TORQUE_APP_NAME} PRIVATE cxx_std_17)
 if (WIN32)
   set_target_properties(${TORQUE_APP_NAME} PROPERTIES COMPILE_FLAGS "-D_CRT_SECURE_NO_WARNINGS /MP /Zc:wchar_t-")
 endif (WIN32)
-
-if (APPLE)
-  # Parameters used for the plist configuration
-  set(EXECUTABLE_NAME "${TORQUE_APP_NAME}")
-
-  CONFIGURE_FILE("${CMAKE_SOURCE_DIR}/Tools/CMake/Info.plist.in" "${CMAKE_BINARY_DIR}/temp/Info.plist" COPYONLY)
-  set_target_properties(${TORQUE_APP_NAME} PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_BINARY_DIR}/temp/Info.plist")
-endif (APPLE)
 
 if (UNIX AND NOT APPLE)
   set_target_properties(${TORQUE_APP_NAME} PROPERTIES LINK_FLAGS "-Wl,-rpath,./")

@@ -313,11 +313,20 @@ if (NOT "${TORQUE_MODULE_USER_PATH}" STREQUAL "")
 	list(APPEND TORQUE_MODULE_PATHS "${TORQUE_MODULE_USER_PATH}")
 endif()
 
+# Before doing module scanning, store away the engine sources - we do this so that modules
+# can be placed into the proper filters
+set(TORQUE_SOURCE_FILES_TEMPORARY ${TORQUE_SOURCE_FILES})
+set(TORQUE_SOURCE_FILES "")
+
 foreach (TORQUE_MODULE_PATH ${TORQUE_MODULE_PATHS})
 	# First find simple cmake scripts
 	file(GLOB MODULE_SCRIPTS "${TORQUE_MODULE_PATH}/*.cmake")
 	foreach (TORQUE_MODULE_SCRIPT ${MODULE_SCRIPTS})
 		include(${TORQUE_MODULE_SCRIPT})
+    source_group("Modules/${TORQUE_MODULE_SCRIPT}" FILES ${TORQUE_SOURCE_FILES})
+
+    set(TORQUE_SOURCE_FILES_TEMPORARY ${TORQUE_SOURCE_FILES_TEMPORARY} ${TORQUE_SOURCE_FILES})
+    set(TORQUE_SOURCE_FILES "")
 	endforeach()
 
 	# Next find sub projects
@@ -329,9 +338,15 @@ foreach (TORQUE_MODULE_PATH ${TORQUE_MODULE_PATHS})
 
 		if (EXISTS "${POSSIBLE_PROJECT_ABSOLUTEPATH}/CMakeLists.txt")
 			add_subdirectory("${POSSIBLE_PROJECT_ABSOLUTEPATH}" ${CMAKE_BINARY_DIR}/temp/${POSSIBLE_PROJECT} EXCLUDE_FROM_ALL)
+      source_group("Modules/${POSSIBLE_PROJECT}" FILES ${TORQUE_SOURCE_FILES})
+
+      set(TORQUE_SOURCE_FILES_TEMPORARY ${TORQUE_SOURCE_FILES_TEMPORARY} ${TORQUE_SOURCE_FILES})
+      set(TORQUE_SOURCE_FILES "")
 		endif()
 	endforeach()
 endforeach()
+
+set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES_TEMPORARY})
 
 ################# Executable Generation ###################
 
@@ -360,6 +375,9 @@ target_compile_definitions(${TORQUE_APP_NAME} PUBLIC ${TORQUE_COMPILE_DEFINITION
 target_link_libraries(${TORQUE_APP_NAME} ${TORQUE_LINK_LIBRARIES})
 target_include_directories(${TORQUE_APP_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp" ${TORQUE_INCLUDE_DIRECTORIES})
 target_compile_features(${TORQUE_APP_NAME} PRIVATE cxx_std_17)
+
+# Generate the filters for the main Torque project
+source_group(TREE "${CMAKE_SOURCE_DIR}/Engine/source")
 
 # Process library binaries - these are coming from modules that are providing links to external, precompiled code that should be included
 # with the executable. This is done because on Windows, the .lib is separate from the .dll so we can't automatically scan for shared

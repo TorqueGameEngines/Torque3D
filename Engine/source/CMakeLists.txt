@@ -24,6 +24,25 @@ set(TORQUE_COMPILE_DEFINITIONS ICE_NO_DLL PCRE_STATIC TORQUE_ADVANCED_LIGHTING T
 set(TORQUE_LINK_LIBRARIES tinyxml collada ljpeg squish png_static opcode assimp
                           SDL2 glad pcre convexDecomp zlib)
 
+################# Helper Functions ###################
+
+# Helper function to add a directory to the TORQUE_SOURCE_FILES variable. It automatically searches for .cpp and .h files in the
+# specified directory then adds them to the TORQUE_SOURCE_FILES variable.
+macro (torqueAddSourceDirectories)
+  foreach(ARGUMENT ${ARGV})
+    file(GLOB SCANNED_SOURCE_FILES "${ARGUMENT}/*.cpp")
+    file(GLOB SCANNED_INCLUDE_FILES "${ARGUMENT}/*.h")
+
+    if (APPLE)
+    file(GLOB SCANNED_INCLUDE_FILES "${ARGUMENT}/*.mm")
+    endif (APPLE)
+
+    # Set in both current and parent scope so this macro can be used from loaded modules
+    set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${SCANNED_SOURCE_FILES} ${SCANNED_INCLUDE_FILES})
+    set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} PARENT_SCOPE)
+  endforeach()
+endmacro (torqueAddSourceDirectories)
+
 ################# Set Conditional Engine Defines ###################
 
 if (TORQUE_OPENGL)
@@ -76,219 +95,213 @@ endif (UNIX AND NOT APPLE)
 
 ################# Collect Source Files ###################
 
-set(TORQUE_SOURCE_FILES "main/main.cpp")
+torqueAddSourceDirectories("main")
 
 # Handle app
-file(GLOB TORQUE_APP_SOURCES "app/*.cpp" "app/net/*.cpp")
-set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_APP_SOURCES})
+torqueAddSourceDirectories("app" "app/net")
 
 # Handle console
-file(GLOB TORQUE_CONSOLE_SOURCES "console/*.cpp")
-set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_CONSOLE_SOURCES})
+torqueAddSourceDirectories("console")
 
 # Handle Platform
-file(GLOB TORQUE_PLATFORM_SOURCES "platform/*.cpp" "platform/threads/*.cpp" "platform/async/*.cpp"
-                                  "platform/input/*.cpp" "platform/output/*.cpp")
-set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_PLATFORM_SOURCES})
+torqueAddSourceDirectories("platform" "platform/threads" "platform/async"
+                                  "platform/input" "platform/output")
 
 # Handle T3D
-file(GLOB TORQUE_T3D_SOURCES "T3D/fps/*.cpp" "T3D/fx/*.cpp" "T3D/vehicles/*.cpp" "T3D/physics/*.cpp"
-                              "T3D/decal/*.cpp" "T3D/sfx/*.cpp" "T3D/gameBase/*.cpp" "T3D/turret/*.cpp"
-                              "T3D/lighting/*.cpp" "T3D/gameOBjects/*.cpp" "T3D/components/*.cpp"
-                              "T3D/systems/*.cpp" "T3D/assets/*.cpp" "T3D/*.cpp" "T3D/gameBase/std/*.cpp")
-set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_T3D_SOURCES})
+torqueAddSourceDirectories("T3D/fps" "T3D/fx" "T3D/vehicles" "T3D/physics"
+                              "T3D/decal" "T3D/sfx" "T3D/gameBase" "T3D/turret"
+                              "T3D/lighting" "T3D/gameOBjects" "T3D/components"
+                              "T3D/systems" "T3D/assets" "T3D" "T3D/gameBase/std")
 
 # Handle TS
-file(GLOB TORQUE_TS_SOURCES "ts/*.cpp" "ts/collada/*.cpp" "ts/assimp/*.cpp" "ts/loader/*.cpp" "ts/arch/*.cpp")
-set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_TS_SOURCES})
+torqueAddSourceDirectories("ts" "ts/collada" "ts/assimp" "ts/loader" "ts/arch")
 
 # Handle SFX - OpenAL is handled as a module later on
-file(GLOB TORQUE_SFX_SOURCES "sfx/*.cpp" "sfx/media/*.cpp" "sfx/null/*.cpp")
-set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_SFX_SOURCES})
+torqueAddSourceDirectories("sfx" "sfx/media" "sfx/null")
 
 # Handle GFX
-file(GLOB TORQUE_GFX_SOURCES "gfx/*.cpp" "gfx/Null/*.cpp" "gfx/test/*.cpp" "gfx/bitmap/*.cpp" "gfx/bitmap/loaders/*.cpp"
-                             "gfx/util/*.cpp" "gfx/video/*.cpp" "gfx/sim/*.cpp" )
+torqueAddSourceDirectories("gfx" "gfx/Null" "gfx/test" "gfx/bitmap" "gfx/bitmap/loaders"
+                             "gfx/util" "gfx/video" "gfx/sim" )
 
 if (TORQUE_OPENGL)
-	file(GLOB TORQUE_GFX_SOURCES_OPENGL "gfx/gl/*.cpp" "gfx/gl/sdl/*.cpp" "gfx/gl/tGL/*.cpp")
-	set(TORQUE_GFX_SOURCES ${TORQUE_GFX_SOURCES} ${TORQUE_GFX_SOURCES_OPENGL})
+  torqueAddSourceDirectories("gfx/gl" "gfx/gl/sdl" "gfx/gl/tGL")
 endif (TORQUE_OPENGL)
 
 if (WIN32 AND TORQUE_D3D11)
-	file(GLOB TORQUE_GFX_SOURCES_D3D11 "gfx/D3D11/*.cpp")
-	set(TORQUE_GFX_SOURCES ${TORQUE_GFX_SOURCES} ${TORQUE_GFX_SOURCES_D3D11})
+  torqueAddSourceDirectories("gfx/D3D11")
 endif (WIN32 AND TORQUE_D3D11)
 
-set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_GFX_SOURCES})
-
 # Handle core
-file(GLOB TORQUE_CORE_SOURCES "core/*.cpp" "core/stream/*.cpp" "core/strings/*.cpp" "core/util/*.cpp"
-                              "core/util/journal/*.cpp" "core/util/zip/*.cpp" "core/util/compressors/*.cpp")
-set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_CORE_SOURCES})
-
+torqueAddSourceDirectories("core" "core/stream" "core/strings" "core/util"
+                              "core/util/journal" "core/util/zip" "core/util/compressors")
 # Handle GUI
-file(GLOB TORQUE_GUI_SOURCES "gui/*.cpp" "gui/buttons/*.cpp" "gui/containers/*.cpp" "gui/controls/*.cpp" "gui/core/*.cpp"
-                              "gui/game/*.cpp" "gui/shiny/*.cpp" "gui/utility/*.cpp" "gui/3d/*.cpp")
-set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_GUI_SOURCES})
+torqueAddSourceDirectories("gui" "gui/buttons" "gui/containers" "gui/controls" "gui/core"
+                              "gui/game" "gui/shiny" "gui/utility" "gui/3d")
 
 # Handle postFX
-file(GLOB TORQUE_POSTFX_SOURCES "postFx/*.cpp")
-set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_POSTFX_SOURCES})
+torqueAddSourceDirectories("postFx")
 
 # Handle Windowmanager
-file(GLOB TORQUE_WINDOW_MANAGER_SOURCES "windowManager/*.cpp" "windowManager/torque/*.cpp" "windowManager/sdl/*.cpp")
-set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_WINDOW_MANAGER_SOURCES})
+torqueAddSourceDirectories("windowManager" "windowManager/torque" "windowManager/sdl")
 
 # Handle scene
-file(GLOB TORQUE_SCENE_SOURCES "scene/*.cpp" "scene/culling/*.cpp" "scene/zones/*.cpp" "scene/mixin/*.cpp")
-set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_SCENE_SOURCES})
+torqueAddSourceDirectories("scene" "scene/culling" "scene/zones" "scene/mixin")
 
 # Handle math
-file(GLOB TORQUE_MATH_SOURCES "math/*.cpp" "math/util/*.cpp")
-set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_MATH_SOURCES})
+torqueAddSourceDirectories("math" "math/util")
 
 # Handle persistence
-file(GLOB TORQUE_PERSISTENCE_SOURCES "persistence/taml/*.cpp" "persistence/taml/binary/*.cpp" "persistence/taml/xml/*.cpp")
-set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_PERSISTENCE_SOURCES})
+torqueAddSourceDirectories("persistence/taml" "persistence/taml/binary" "persistence/taml/xml")
 
 # Handle Cinterface
-file(GLOB TORQUE_CINTERFACE_SOURCES "cinterface/*.cpp")
-set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_CINTERFACE_SOURCES})
+torqueAddSourceDirectories("cinterface")
 
 # Handle util
-file(GLOB TORQUE_UTIL_SOURCES "util/*.cpp" "util/messaging/*.cpp")
-set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_UTIL_SOURCES})
+torqueAddSourceDirectories("util" "util/messaging")
 
 # Handle assets
-file(GLOB TORQUE_ASSETS_SOURCES "assets/*.cpp")
-set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_ASSETS_SOURCES})
+torqueAddSourceDirectories("assets")
 
 # Handle Sim
-file(GLOB TORQUE_SIM_SOURCES "sim/*.cpp")
-set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_SIM_SOURCES})
+torqueAddSourceDirectories("sim")
 
 # Handle module
-file(GLOB TORQUE_MODULE_SOURCES "module/*.cpp")
-set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_MODULE_SOURCES})
+torqueAddSourceDirectories("module")
 
 # Handle forest
-file(GLOB TORQUE_FOREST_SOURCES "forest/*.cpp" "forest/ts/*.cpp")
-set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_FOREST_SOURCES})
+torqueAddSourceDirectories("forest" "forest/ts")
 
 # Handle shadergen
-file(GLOB TORQUE_SHADERGEN_SOURCES "shaderGen/*.cpp")
+torqueAddSourceDirectories("shaderGen")
 
 if (WIN32 AND TORQUE_D3D11)
-	file(GLOB TORQUE_SHADERGEN_SOURCES_HLSL "shaderGen/HLSL/*.cpp")
-	set(TORQUE_SHADERGEN_SOURCES ${TORQUE_SHADERGEN_SOURCES} ${TORQUE_SHADERGEN_SOURCES_HLSL})
+  torqueAddSourceDirectories("shaderGen/HLSL")
 endif (WIN32)
 
 if (TORQUE_OPENGL)
-	file(GLOB TORQUE_SHADERGEN_SOURCES_GLSL "shaderGen/GLSL/*.cpp")
-	set(TORQUE_SHADERGEN_SOURCES ${TORQUE_SHADERGEN_SOURCES} ${TORQUE_SHADERGEN_SOURCES_GLSL})
+  torqueAddSourceDirectories("shaderGen/GLSL")
 endif (TORQUE_OPENGL)
 
-set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_SHADERGEN_SOURCES})
-
 # Handle terrain
-file(GLOB TORQUE_TERRAIN_SOURCES "terrain/*.cpp")
+torqueAddSourceDirectories("terrain")
 
 if (WIN32 AND TORQUE_D3D11)
-	file(GLOB TORQUE_TERRAIN_SOURCES_HLSL "terrain/hlsl/*.cpp")
-	set(TORQUE_TERRAIN_SOURCES ${TORQUE_TERRAIN_SOURCES} ${TORQUE_TERRAIN_SOURCES_HLSL})
+  torqueAddSourceDirectories("terrain/hlsl")
 endif (WIN32 AND TORQUE_D3D11)
 
 if (TORQUE_OPENGL)
-	file(GLOB TORQUE_TERRAIN_SOURCES_GLSL "terrain/glsl/*.cpp")
-	set(TORQUE_TERRAIN_SOURCES ${TORQUE_TERRAIN_SOURCES} ${TORQUE_TERRAIN_SOURCES_GLSL})
+  torqueAddSourceDirectories("terrain/glsl")
 endif (TORQUE_OPENGL)
 
-set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_TERRAIN_SOURCES})
-
 # Handle Materials
-file(GLOB TORQUE_MATERIALS_SOURCES "materials/*.cpp")
-set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_MATERIALS_SOURCES})
+torqueAddSourceDirectories("materials")
 
 # Handle collision
-file(GLOB TORQUE_COLLISION_SOURCES "collision/*.cpp")
-set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_COLLISION_SOURCES})
+torqueAddSourceDirectories("collision")
 
 # Handle lighting
-file(GLOB TORQUE_LIGHTING_SOURCES "lighting/*.cpp" "lighting/common/*.cpp"
-                                   "lighting/shadowMap/*.cpp")
+torqueAddSourceDirectories("lighting" "lighting/common"
+                                   "lighting/shadowMap")
 
 if (TORQUE_ADVANCED_LIGHTING)
-	file(GLOB TORQUE_LIGHTING_SOURCES_ADVANCED "lighting/advanced/*.cpp")
-	set(TORQUE_LIGHTING_SOURCES ${TORQUE_LIGHTING_SOURCES} ${TORQUE_LIGHTING_SOURCES_ADVANCED})
-	
+  torqueAddSourceDirectories("lighting/advanced")
+
 	if (WIN32 AND TORQUE_D3D11)
-		file(GLOB TORQUE_LIGHTING_SOURCES_HLSL "lighting/advanced/hlsl/*.cpp")
-		set(TORQUE_LIGHTING_SOURCES ${TORQUE_LIGHTING_SOURCES} ${TORQUE_LIGHTING_SOURCES_HLSL})
+    torqueAddSourceDirectories("lighting/advanced/hlsl")
 	endif (WIN32 AND TORQUE_D3D11)
 
 	if (TORQUE_OPENGL)
-		file(GLOB TORQUE_LIGHTING_SOURCES_GLSL "lighting/advanced/glsl/*.cpp")
-		set(TORQUE_LIGHTING_SOURCES ${TORQUE_LIGHTING_SOURCES} ${TORQUE_LIGHTING_SOURCES_GLSL})
+    torqueAddSourceDirectories("lighting/advanced/glsl")
 	endif (TORQUE_OPENGL)
 endif (TORQUE_ADVANCED_LIGHTING)
 
 if (TORQUE_BASIC_LIGHTING)
-	file(GLOB TORQUE_LIGHTING_SOURCES_BASIC "lighting/basic/*.cpp" "lighting/basic/shadowMap/*.cpp")
-	set(TORQUE_LIGHTING_SOURCES ${TORQUE_LIGHTING_SOURCES} ${TORQUE_LIGHTING_SOURCES_BASIC})
+  torqueAddSourceDirectories("lighting/basic" "lighting/basic/shadowMap")
 endif (TORQUE_BASIC_LIGHTING)
 
-set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_LIGHTING_SOURCES})
-
 # Handle environment
-file(GLOB TORQUE_ENVIRONMENT_SOURCES "environment/*.cpp")
-set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_ENVIRONMENT_SOURCES})
+torqueAddSourceDirectories("environment")
 
 # Handle renderInstance
-file(GLOB TORQUE_RENDERINSTANCE_SOURCES "renderInstance/*.cpp")
-set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_RENDERINSTANCE_SOURCES})
+torqueAddSourceDirectories("renderInstance")
 
 # Handle i18n
-file(GLOB TORQUE_I18N_SOURCES "i18n/*.cpp")
-set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_I18N_SOURCES})
+torqueAddSourceDirectories("i18n")
 
 # Begin handling platform specific stuff
 # Handle Platform POSIX
 if (UNIX)
-	file(GLOB TORQUE_PLATFORM_POSIX_SOURCES "platformPOSIX/*.cpp")
+	torqueAddSourceDirectories("platformPOSIX")
 
 	if (TORQUE_CPU_X32 OR TORQUE_CPU_X64)
-		file(GLOB TORQUE_PLATFORM_X86_UNIX_SOURCES "platformX86UNIX/*.cpp")
-		set(TORQUE_PLATFORM_POSIX_SOURCES ${TORQUE_PLATFORM_POSIX_SOURCES} ${TORQUE_PLATFORM_X86_UNIX_SOURCES})
+    torqueAddSourceDirectories("platformX86UNIX")
 	endif (TORQUE_CPU_X32 OR TORQUE_CPU_X64)
-	
-	set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_PLATFORM_POSIX_SOURCES})
 endif (UNIX)
 
 # Handle platformMac
 if (APPLE)
-	file(GLOB TORQUE_PLATFORM_MAC_SOURCES "platformMac/*.mm")
-	set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_PLATFORM_MAC_SOURCES})
+  torqueAddSourceDirectories("platformMac")
 endif (APPLE)
 
 # Handle platformWin32
 if (WIN32)
-	file(GLOB TORQUE_PLATFORM_WIN_SOURCES "platformWin32/*.cpp" "platformWin32/videoInfo/*.cpp")
-	set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_PLATFORM_WIN_SOURCES})
+	torqueAddSourceDirectories("platformWin32" "platformWin32/videoInfo")
 endif (WIN32)
 
 # Handle platformSDL
-file(GLOB TORQUE_PLATFORM_SDL_SOURCES "platformSDL/*.cpp" "platformSDL/threads/*.cpp")
-set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_PLATFORM_SDL_SOURCES})
+torqueAddSourceDirectories("platformSDL" "platformSDL/threads")
 
 # Handle platformX11
 if (UNIX AND NOT APPLE)
-	file(GLOB TORQUE_PLATFORM_X11_SOURCES "platformX11/*.cpp")
-	set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_PLATFORM_X11_SOURCES})
+  torqueAddSourceDirectories("platformX11")
 endif (UNIX AND NOT APPLE)
 
-# Generate the filters for the main Torque project before we add RC files and such
+# Add the collected files to our engine group
 source_group(TREE "${CMAKE_SOURCE_DIR}/Engine/source" PREFIX "Engine" FILES ${TORQUE_SOURCE_FILES})
+
+################# Engine Module Handling ###################
+
+set(TORQUE_MODULE_PATHS "${CMAKE_SOURCE_DIR}/Tools/CMake/modules" "${TORQUE_APP_GAME_DIRECTORY}/data")
+if (NOT "${TORQUE_MODULE_USER_PATH}" STREQUAL "")
+	list(APPEND TORQUE_MODULE_PATHS "${TORQUE_MODULE_USER_PATH}")
+endif()
+
+# Before doing module scanning, store away the engine sources - we do this so that modules
+# can be placed into the proper filters
+set(TORQUE_SOURCE_FILES_TEMPORARY ${TORQUE_SOURCE_FILES})
+set(TORQUE_SOURCE_FILES "")
+
+foreach (TORQUE_MODULE_PATH ${TORQUE_MODULE_PATHS})
+	# First find simple cmake scripts, mostly used for in-engine modules
+	file(GLOB MODULE_SCRIPTS "${TORQUE_MODULE_PATH}/*.cmake")
+	foreach (TORQUE_MODULE_SCRIPT ${MODULE_SCRIPTS})
+		include(${TORQUE_MODULE_SCRIPT})
+
+    # Add this script's collected files to our Engine group
+    source_group(TREE "${CMAKE_SOURCE_DIR}/Engine/source" PREFIX "Engine" FILES ${TORQUE_SOURCE_FILES})
+
+    set(TORQUE_SOURCE_FILES_TEMPORARY ${TORQUE_SOURCE_FILES_TEMPORARY} ${TORQUE_SOURCE_FILES})
+    set(TORQUE_SOURCE_FILES "")
+	endforeach()
+
+	# Next find sub projects, these can introduce new source files
+	SUBDIRLIST(POSSIBLE_PROJECTS "${TORQUE_MODULE_PATH}")
+	foreach (POSSIBLE_PROJECT ${POSSIBLE_PROJECTS})
+		# Retrieve the absolute path of this possible project
+		get_filename_component(POSSIBLE_PROJECT_ABSOLUTEPATH "${POSSIBLE_PROJECT}"
+							   REALPATH BASE_DIR "${TORQUE_MODULE_PATH}")
+
+		if (EXISTS "${POSSIBLE_PROJECT_ABSOLUTEPATH}/CMakeLists.txt")
+			add_subdirectory("${POSSIBLE_PROJECT_ABSOLUTEPATH}" ${CMAKE_BINARY_DIR}/temp/${POSSIBLE_PROJECT} EXCLUDE_FROM_ALL)
+      source_group(TREE "${POSSIBLE_PROJECT_ABSOLUTEPATH}" PREFIX "Modules/${POSSIBLE_PROJECT}" FILES ${TORQUE_SOURCE_FILES})
+
+      set(TORQUE_SOURCE_FILES_TEMPORARY ${TORQUE_SOURCE_FILES_TEMPORARY} ${TORQUE_SOURCE_FILES})
+      set(TORQUE_SOURCE_FILES "")
+		endif()
+	endforeach()
+endforeach()
+
+set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES_TEMPORARY})
 
 ################# Dynamic File Configuration ###################
 
@@ -308,49 +321,6 @@ if (APPLE)
 	set(EXECUTABLE_NAME "${TORQUE_APP_NAME}")
 	configure_file("${CMAKE_SOURCE_DIR}/Tools/CMake/Info.plist.in" "${CMAKE_BINARY_DIR}/temp/Info.plist" COPYONLY)
 endif (APPLE)
-
-################# Engine Module Handling ###################
-
-set(TORQUE_MODULE_PATHS "${CMAKE_SOURCE_DIR}/Tools/CMake/modules" "${TORQUE_APP_GAME_DIRECTORY}/data")
-if (NOT "${TORQUE_MODULE_USER_PATH}" STREQUAL "")
-	list(APPEND TORQUE_MODULE_PATHS "${TORQUE_MODULE_USER_PATH}")
-endif()
-
-# Before doing module scanning, store away the engine sources - we do this so that modules
-# can be placed into the proper filters
-set(TORQUE_SOURCE_FILES_TEMPORARY ${TORQUE_SOURCE_FILES})
-set(TORQUE_SOURCE_FILES "")
-
-foreach (TORQUE_MODULE_PATH ${TORQUE_MODULE_PATHS})
-	# First find simple cmake scripts
-	file(GLOB MODULE_SCRIPTS "${TORQUE_MODULE_PATH}/*.cmake")
-	foreach (TORQUE_MODULE_SCRIPT ${MODULE_SCRIPTS})
-		include(${TORQUE_MODULE_SCRIPT})
-    get_filename_component(TORQUE_MODULE_NAME "${TORQUE_MODULE_SCRIPT}" NAME)
-    source_group("Modules/${TORQUE_MODULE_NAME}" FILES ${TORQUE_SOURCE_FILES})
-
-    set(TORQUE_SOURCE_FILES_TEMPORARY ${TORQUE_SOURCE_FILES_TEMPORARY} ${TORQUE_SOURCE_FILES})
-    set(TORQUE_SOURCE_FILES "")
-	endforeach()
-
-	# Next find sub projects
-	SUBDIRLIST(POSSIBLE_PROJECTS "${TORQUE_MODULE_PATH}")
-	foreach (POSSIBLE_PROJECT ${POSSIBLE_PROJECTS})
-		# Retrieve the absolute path of this possible project
-		get_filename_component(POSSIBLE_PROJECT_ABSOLUTEPATH "${POSSIBLE_PROJECT}"
-							   REALPATH BASE_DIR "${TORQUE_MODULE_PATH}")
-
-		if (EXISTS "${POSSIBLE_PROJECT_ABSOLUTEPATH}/CMakeLists.txt")
-			add_subdirectory("${POSSIBLE_PROJECT_ABSOLUTEPATH}" ${CMAKE_BINARY_DIR}/temp/${POSSIBLE_PROJECT} EXCLUDE_FROM_ALL)
-      source_group("Modules/${POSSIBLE_PROJECT}" FILES ${TORQUE_SOURCE_FILES})
-
-      set(TORQUE_SOURCE_FILES_TEMPORARY ${TORQUE_SOURCE_FILES_TEMPORARY} ${TORQUE_SOURCE_FILES})
-      set(TORQUE_SOURCE_FILES "")
-		endif()
-	endforeach()
-endforeach()
-
-set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES_TEMPORARY})
 
 ################# Executable Generation ###################
 

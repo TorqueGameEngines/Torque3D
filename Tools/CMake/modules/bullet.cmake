@@ -4,8 +4,7 @@ option(TORQUE_PHYSICS_BULLET "Use Bullet physics" OFF)
 if(TORQUE_PHYSICS_BULLET)
   message("Enabling Bullet Module")
 
-  file(GLOB TORQUE_BULLET_SOURCES "${CMAKE_SOURCE_DIR}/Engine/source/T3D/physics/bullet/*.cpp")
-  set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_NAVIGATION_SOURCES})
+  torqueAddSourceDirectories("${CMAKE_SOURCE_DIR}/Engine/source/T3D/physics/bullet")
   set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} BulletSoftBody Bullet3Dynamics BulletInverseDynamics BulletCollision
                                                      Bullet2FileLoader BulletDynamics Bullet3OpenCL_clew Bullet3Common
                                                      LinearMath Bullet3Geometry Bullet3Collision)

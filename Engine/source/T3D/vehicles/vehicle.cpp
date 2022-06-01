@@ -189,7 +189,7 @@ VehicleData::VehicleData()
 
    for (S32 i = 0; i < Body::MaxSounds; i++)
    {
-      INIT_ASSET_ARRAY(VehicleBodySounds, i);
+      INIT_SOUNDASSET_ARRAY(VehicleBodySounds, i);
    }
 
    dustEmitter = NULL;
@@ -214,7 +214,7 @@ VehicleData::VehicleData()
    hardSplashSoundVel = 3.0;
 
    for (S32 i = 0; i < Sounds::MaxSounds; i++)
-      INIT_ASSET_ARRAY(VehicleWaterSounds, i);
+      INIT_SOUNDASSET_ARRAY(VehicleWaterSounds, i);
 
    collDamageThresholdVel = 20;
    collDamageMultiplier = 0.05f;

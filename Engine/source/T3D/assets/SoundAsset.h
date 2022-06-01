@@ -503,6 +503,16 @@ if (m##name##AssetId[index] != StringTable->EmptyString())\
    }
 #pragma endregion
 
+#define INIT_SOUNDASSET_ARRAY(name, index) \
+{\
+   m##name##Name[index] = StringTable->EmptyString(); \
+   m##name##AssetId[index] = StringTable->EmptyString(); \
+   m##name##Asset[index] = NULL;\
+   m##name[index] = NULL;\
+   m##name##Profile[index] = NULL;\
+  m##name##Desc[index] = NULL;\
+}
+
 //network send - datablock
 #define PACKDATA_SOUNDASSET_ARRAY(name, index)\
    if (stream->writeFlag(m##name##Asset[index].notNull()))\

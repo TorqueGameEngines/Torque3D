@@ -238,7 +238,7 @@ RigidShapeData::RigidShapeData()
    density = 4;
 
    for (S32 i = 0; i < Body::MaxSounds; i++)
-      INIT_ASSET_ARRAY(BodySounds, i);
+      INIT_SOUNDASSET_ARRAY(BodySounds, i);
 
    dustEmitter = NULL;
    dustID = 0;
@@ -257,7 +257,7 @@ RigidShapeData::RigidShapeData()
    enablePhysicsRep = true;
 
    for (S32 i = 0; i < Sounds::MaxSounds; i++)
-      INIT_ASSET_ARRAY(WaterSounds, i);
+      INIT_SOUNDASSET_ARRAY(WaterSounds, i);
 
    dragForce            = 0;
    vertFactor           = 0.25;

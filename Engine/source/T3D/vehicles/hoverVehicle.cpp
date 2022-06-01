@@ -162,7 +162,7 @@ HoverVehicleData::HoverVehicleData()
       jetEmitter[j] = 0;
 
    for (S32 i = 0; i < MaxSounds; i++)
-      INIT_ASSET_ARRAY(HoverSounds, i);
+      INIT_SOUNDASSET_ARRAY(HoverSounds, i);
 }
 
 HoverVehicleData::~HoverVehicleData()

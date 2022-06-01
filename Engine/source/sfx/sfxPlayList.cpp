@@ -221,7 +221,7 @@ SFXPlayList::SFXPlayList()
      mNumSlotsToPlay( NUM_SLOTS )
 {
    for (U32 i=0;i<NUM_SLOTS;i++)
-      INIT_ASSET_ARRAY(Track, i);
+      INIT_SOUNDASSET_ARRAY(Track, i);
 }
 
 //-----------------------------------------------------------------------------

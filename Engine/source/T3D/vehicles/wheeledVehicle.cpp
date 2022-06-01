@@ -312,7 +312,7 @@ WheeledVehicleData::WheeledVehicleData()
    wheelCount = 0;
    dMemset(&wheel, 0, sizeof(wheel));
    for (S32 i = 0; i < MaxSounds; i++)
-      INIT_ASSET_ARRAY(WheeledVehicleSounds, i);
+      INIT_SOUNDASSET_ARRAY(WheeledVehicleSounds, i);
 }
 
 

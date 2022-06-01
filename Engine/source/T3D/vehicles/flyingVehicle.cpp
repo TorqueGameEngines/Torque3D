@@ -116,7 +116,7 @@ FlyingVehicleData::FlyingVehicleData()
       jetEmitter[j] = 0;
 
    for (S32 i = 0; i < MaxSounds; i++)
-      INIT_ASSET_ARRAY(FlyingSounds, i);
+      INIT_SOUNDASSET_ARRAY(FlyingSounds, i);
 
    vertThrustMultiple = 1.0;
 }

@@ -5,7 +5,7 @@ endforeach()
 
 # Perform installation minus scripts
 file(COPY "game" "source" DESTINATION "${TORQUE_APP_ROOT_DIRECTORY}" PATTERN "*.tscript" EXCLUDE PATTERN
-                                                                     PATTERN "*.in" EXCLUDE PATTERN)
+                                                                     PATTERN "*.in" EXCLUDE PATTERN)	
 # Enumerate scripts and install with extension
 file(GLOB_RECURSE SCRIPT_FILES "game/*.tscript")
 foreach(ITEM ${SCRIPT_FILES})
@@ -15,9 +15,8 @@ foreach(ITEM ${SCRIPT_FILES})
     STRING(REGEX REPLACE "${CMAKE_SOURCE_DIR}/Templates/${TORQUE_TEMPLATE}/" "${TORQUE_APP_ROOT_DIRECTORY}/" INSTALL_DIR ${dir})
     STRING(REGEX REPLACE ".tscript" ".${TORQUE_SCRIPT_EXTENSION}" newScriptName ${scriptName})
 
-    # We can't use the file(COPY command to copy to a new file name so we copy as-is first then rename
-    file(COPY ${ITEM} DESTINATION ${INSTALL_DIR})
-    file(RENAME ${INSTALL_DIR}/${scriptName} ${INSTALL_DIR}/${newScriptName})
+    # Copy the file and perform a rename at the same time
+    file(COPY_FILE ${ITEM} ${INSTALL_DIR}/${newScriptName})
 endforeach()
 
 # Once the full tree is installed, perform configurations

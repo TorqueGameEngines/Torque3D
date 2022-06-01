@@ -116,6 +116,9 @@ mark_as_advanced(TORQUE_ADVANCED_LIGHTING)
 option(TORQUE_BASIC_LIGHTING "Basic Lighting" ON)
 mark_as_advanced(TORQUE_APP_PASSWORD)
 
+option(TORQUE_DYNAMIC_LIBRARY "Whether or not to build Torque as a dynamic library." OFF)
+mark_as_advanced(TORQUE_DYNAMIC_LIBRARY)
+
 set(TORQUE_APP_PASSWORD "changeme" CACHE STRING "zip file password")
 
 if(WIN32)

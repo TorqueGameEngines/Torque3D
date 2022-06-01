@@ -63,8 +63,14 @@ endif (TORQUE_BASIC_LIGHTING)
 
 # On Windows we disable CRT Security warnings - this comes from recommendations to use non-portable functions.
 if (WIN32)
-	set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} _CRT_SECURE_NO_WARNINGS)
+	set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} _CRT_SECURE_NO_WARNINGS WIN32)
 endif (WIN32)
+
+if (APPLE)
+  set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} __MACOSX__)
+elseif (UNIX)
+  set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} __linux__)
+endif (APPLE)
 
 ################# Set Engine Linkages ###################
 
@@ -94,8 +100,6 @@ if (UNIX AND NOT APPLE)
 endif (UNIX AND NOT APPLE)
 
 ################# Collect Source Files ###################
-
-torqueAddSourceDirectories("main")
 
 # Handle app
 torqueAddSourceDirectories("app" "app/net")
@@ -323,6 +327,22 @@ if (APPLE)
 endif (APPLE)
 
 ################# Executable Generation ###################
+
+if (TORQUE_DYNAMIC_LIBRARY)
+  set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} TORQUE_SHARED)
+
+  # Build the main engine library
+  add_library(TorqueEngine SHARED ${TORQUE_SOURCE_FILES})
+  target_compile_definitions(TorqueEngine PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
+  target_link_libraries(TorqueEngine ${TORQUE_LINK_LIBRARIES})
+  target_include_directories(TorqueEngine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp" ${TORQUE_INCLUDE_DIRECTORIES})
+  target_compile_features(TorqueEngine PRIVATE cxx_std_17)
+
+  set(TORQUE_SOURCE_FILES "main/main.cpp")
+  set(TORQUE_LINK_LIBRARIES TorqueEngine)
+else()
+  set(TORQUE_SOURCE_FILES "main/main.cpp" ${TORQUE_SOURCE_FILES})
+endif (TORQUE_DYNAMIC_LIBRARY)
 
 if (APPLE)
 	add_executable(${TORQUE_APP_NAME} MACOSX_BUNDLE ${TORQUE_SOURCE_FILES})

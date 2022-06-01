@@ -42,7 +42,15 @@ ALboolean LoadOAL10Library(char *szOALFullPathName, LPOPENALFNTABLE lpOALFnTable
     if (szOALFullPathName)
 		openal_library = dlopen(szOALFullPathName, RTLD_NOW);
 	else
+	{
 		openal_library = dlopen("libopenal.so.1", RTLD_NOW);
+		
+		// If the .1 library is not found, try the normal filename
+		if (openal_library == NULL)
+		{
+			openal_library = dlopen("libopenal.so", RTLD_NOW);
+		}
+	}
 
     if (openal_library == NULL) {
         Con::errorf("Failed to load OpenAL shared library. Sound will not be available");

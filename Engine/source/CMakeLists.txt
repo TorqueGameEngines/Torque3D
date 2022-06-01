@@ -7,15 +7,22 @@ endif (APPLE)
 
 ################# Initialize Common Variables ###################
 
+# All include directories to search. Modules should append to this when they want includes to point
+# into themselves.
 set(TORQUE_INCLUDE_DIRECTORIES "")
+
+# All library binaries to install. Modules should append to this the path of any library binaries (.so, .dylib, .dll)
+# that should be installed next to the executable.
+set(TORQUE_ADDITIONAL_LIBRARY_BINARIES "")
+
+# All compile definitions. Modules should append to this if there is any special defines needed.
 set(TORQUE_COMPILE_DEFINITIONS ICE_NO_DLL PCRE_STATIC TORQUE_ADVANCED_LIGHTING TORQUE_SHADERGEN
 							   TORQUE_OPCODE TORQUE_ASSIMP TORQUE_SDL TORQUE_COLLADA
 							   TORQUE_UNICODE UNICODE _UNICODE)
 
+# All link libraries. Modules should append to this the path to specify additional link libraries (.a, .lib, .dylib, .so)
 set(TORQUE_LINK_LIBRARIES tinyxml collada ljpeg squish png_static opcode assimp
                           SDL2 glad pcre convexDecomp zlib)
-
-set(TORQUE_SOURCE_FILES "main/main.cpp")
 
 ################# Set Conditional Engine Defines ###################
 
@@ -68,6 +75,8 @@ if (UNIX AND NOT APPLE)
 endif (UNIX AND NOT APPLE)
 
 ################# Collect Source Files ###################
+
+set(TORQUE_SOURCE_FILES "main/main.cpp")
 
 # Handle app
 file(GLOB TORQUE_APP_SOURCES "app/*.cpp" "app/net/*.cpp")
@@ -352,6 +361,19 @@ target_link_libraries(${TORQUE_APP_NAME} ${TORQUE_LINK_LIBRARIES})
 target_include_directories(${TORQUE_APP_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp" ${TORQUE_INCLUDE_DIRECTORIES})
 target_compile_features(${TORQUE_APP_NAME} PRIVATE cxx_std_17)
 
+# Process library binaries - these are coming from modules that are providing links to external, precompiled code that should be included
+# with the executable. This is done because on Windows, the .lib is separate from the .dll so we can't automatically scan for shared
+# objects in our link libraries in that case.
+foreach (LIBRARY_BINARY ${TORQUE_ADDITIONAL_LIBRARY_BINARIES})
+  if (APPLE)
+    # For OSX, we want these binaries to be copied to the Frameworks directory
+    add_custom_command(TARGET ${TORQUE_APP_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${LIBRARY_BINARY} "${TORQUE_APP_GAME_DIRECTORY}/${TORQUE_APP_NAME}.app/Contents/Frameworks")
+  else()
+    # All other platforms expect the file next to the executable
+    add_custom_command(TARGET ${TORQUE_APP_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${LIBRARY_BINARY} "${TORQUE_APP_GAME_DIRECTORY}")
+  endif (APPLE)
+endforeach()
+
 # Process link libraries for dynamic links - we do this on OSX/Linux to ensure the binaries end up in the correct App directory
 # as in the root CMake we force everything to be in game. This is necessary because on these platforms these are considered "libraries"
 # and not runtime binaries like we configure in the root CMake. We don't globally set library outputs to avoid outputting eg. a files to
@@ -365,11 +387,11 @@ if (UNIX)
 			
 		  # Only pay attention to shared libraries and make them output to the app resources
 		  if ("${LINK_LIBRARY_TYPE}" STREQUAL "SHARED_LIBRARY")	 
-			if (APPLE)
-				set_target_properties(${GAME_LINK_LIBRARY} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${TORQUE_APP_GAME_DIRECTORY}/${TORQUE_APP_NAME}.app/Contents/Frameworks")
-			else()
-				set_target_properties(${GAME_LINK_LIBRARY} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${TORQUE_APP_GAME_DIRECTORY}")
-			endif(APPLE)
+        if (APPLE)
+          set_target_properties(${GAME_LINK_LIBRARY} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${TORQUE_APP_GAME_DIRECTORY}/${TORQUE_APP_NAME}.app/Contents/Frameworks")
+        else()
+          set_target_properties(${GAME_LINK_LIBRARY} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${TORQUE_APP_GAME_DIRECTORY}")
+        endif(APPLE)
 		  endif()
 	  endif()
 	endforeach()

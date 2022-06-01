@@ -6368,7 +6368,7 @@ U32 Player::packUpdate(NetConnection *con, U32 mask, BitStream *stream)
       }
 
       // constrain the range of mRot.z
-      mWrapF(mRot.z, 0.0f, M_2PI_F);
+      mRot.z = mWrapF(mRot.z, 0.0f, M_2PI_F);
 
       stream->writeFloat(mRot.z / M_2PI_F, 7);
       stream->writeSignedFloat(mHead.x / (mDataBlock->maxLookAngle - mDataBlock->minLookAngle), 6);

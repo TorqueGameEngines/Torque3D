@@ -43,12 +43,35 @@ CubeLightShadowMap::CubeLightShadowMap( LightInfo *light )
 
 bool CubeLightShadowMap::setTextureStage( U32 currTexFlag, LightingShaderConstants* lsc )
 {
-   if ( currTexFlag == Material::DynamicLight )
+   if ( currTexFlag == Material::DynamicLight && !isDynamic())
    {
       S32 reg = lsc->mShadowMapSC->getSamplerRegister();
    	if ( reg != -1 )
       	GFX->setCubeTexture( reg, mCubemap );
 
+      return true;
+   }
+   else if (currTexFlag == Material::DynamicShadowMap && isDynamic())
+   {
+      S32 reg = lsc->mDynamicShadowMapSC->getSamplerRegister();
+
+      if (reg != -1)
+         GFX->setCubeTexture(reg, mCubemap);
+
+      return true;
+   }
+   else if (currTexFlag == Material::DynamicLightMask)
+   {
+      S32 reg = lsc->mCookieMapSC->getSamplerRegister();
+      if (reg != -1)
+      {
+         ShadowMapParams *p = mLight->getExtended<ShadowMapParams>();
+
+         if (lsc->mCookieMapSC->getType() == GFXSCT_SamplerCube)
+            GFX->setCubeTexture(reg, p->getCookieCubeTex());
+         else
+            GFX->setCubeTexture(reg, mCubemap);
+      }
       return true;
    }
 

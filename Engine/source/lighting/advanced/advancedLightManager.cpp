@@ -438,15 +438,6 @@ void AdvancedLightManager::setLightInfo(  ProcessedMaterial *pmat,
                               lsc->mViewToLightProjSC->getType() );
       }
    }
-   // Dynamic
-   if (dynamicShadowMap)
-   {
-
-      shaderConsts->setSafe(lsc->mShadowMapSizeSC, 1.0f / (F32)dynamicShadowMap->getTexSize());
-
-      // Do this last so that overrides can properly override parameters previously set
-      dynamicShadowMap->setShaderParameters(shaderConsts, lsc);
-   }
 }
 
 void AdvancedLightManager::registerGlobalLight(LightInfo *light, SimObject *obj)

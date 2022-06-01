@@ -174,7 +174,7 @@ void SFXAmbience::packData( BitStream* stream )
    Parent::packData( stream );
       
    sfxWrite( stream, mEnvironment );
-   PACKDATA_ASSET(SoundTrack);
+   PACKDATA_SOUNDASSET(SoundTrack);
    
    stream->write( mRolloffFactor );
    stream->write( mDopplerFactor );
@@ -190,7 +190,7 @@ void SFXAmbience::unpackData( BitStream* stream )
    Parent::unpackData( stream );
       
    sfxRead( stream, &mEnvironment );
-   UNPACKDATA_ASSET(SoundTrack);
+   UNPACKDATA_SOUNDASSET(SoundTrack);
    
    stream->read( &mRolloffFactor );
    stream->read( &mDopplerFactor );

@@ -370,7 +370,7 @@ void HoverVehicleData::packData(BitStream* stream)
 
    for (S32 i = 0; i < MaxSounds; i++)
    {
-      PACKDATA_ASSET_ARRAY(HoverSounds, i);
+      PACKDATA_SOUNDASSET_ARRAY(HoverSounds, i);
    }
 
    for (S32 j = 0; j < MaxJetEmitters; j++)
@@ -419,7 +419,7 @@ void HoverVehicleData::unpackData(BitStream* stream)
 
    for (S32 i = 0; i < MaxSounds; i++)
    {
-      UNPACKDATA_ASSET_ARRAY(HoverSounds, i);
+      UNPACKDATA_SOUNDASSET_ARRAY(HoverSounds, i);
    }
 
    for (S32 j = 0; j < MaxJetEmitters; j++) {

@@ -1271,7 +1271,7 @@ void PlayerData::packData(BitStream* stream)
    stream->write(minLateralImpactSpeed);
 
    for (U32 i = 0; i < MaxSounds; i++)
-      PACKDATA_ASSET_ARRAY(PlayerSound, i);
+      PACKDATA_SOUNDASSET_ARRAY(PlayerSound, i);
 
    mathWrite(*stream, boxSize);
    mathWrite(*stream, crouchBoxSize);
@@ -1452,7 +1452,7 @@ void PlayerData::unpackData(BitStream* stream)
    stream->read(&minLateralImpactSpeed);
 
    for (U32 i = 0; i < MaxSounds; i++)
-      UNPACKDATA_ASSET_ARRAY(PlayerSound, i);
+      UNPACKDATA_SOUNDASSET_ARRAY(PlayerSound, i);
 
    mathRead(*stream, &boxSize);
    mathRead(*stream, &crouchBoxSize);
@@ -6368,7 +6368,7 @@ U32 Player::packUpdate(NetConnection *con, U32 mask, BitStream *stream)
       }
 
       // constrain the range of mRot.z
-      mWrapF(mRot.z, 0.0f, M_2PI_F);
+      mRot.z = mWrapF(mRot.z, 0.0f, M_2PI_F);
 
       stream->writeFloat(mRot.z / M_2PI_F, 7);
       stream->writeSignedFloat(mHead.x / (mDataBlock->maxLookAngle - mDataBlock->minLookAngle), 6);

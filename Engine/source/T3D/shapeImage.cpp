@@ -1160,7 +1160,7 @@ void ShapeBaseImageData::packData(BitStream* stream)
             }
          }
 
-         PACKDATA_ASSET_ARRAY(stateSound, i);
+         PACKDATA_SOUNDASSET_ARRAY(stateSound, i);
       }
    stream->write(maxConcurrentSounds);
    stream->writeFlag(useRemainderDT);
@@ -1365,7 +1365,7 @@ void ShapeBaseImageData::unpackData(BitStream* stream)
          else
             s.emitter = 0;
             
-         UNPACKDATA_ASSET_ARRAY(stateSound, i);
+         UNPACKDATA_SOUNDASSET_ARRAY(stateSound, i);
       }
    }
    

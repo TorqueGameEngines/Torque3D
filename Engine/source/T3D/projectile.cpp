@@ -438,7 +438,7 @@ void ProjectileData::packData(BitStream* stream)
    if (stream->writeFlag(decal != NULL))
       stream->writeRangedU32(decal->getId(), DataBlockObjectIdFirst,
                                               DataBlockObjectIdLast);
-   PACKDATA_ASSET(ProjectileSound);
+   PACKDATA_SOUNDASSET(ProjectileSound);
 
    if ( stream->writeFlag(lightDesc != NULL))
       stream->writeRangedU32(lightDesc->getId(), DataBlockObjectIdFirst,
@@ -499,7 +499,7 @@ void ProjectileData::unpackData(BitStream* stream)
    if (stream->readFlag())
       decalId = stream->readRangedU32(DataBlockObjectIdFirst, DataBlockObjectIdLast);
 
-   UNPACKDATA_ASSET(ProjectileSound);
+   UNPACKDATA_SOUNDASSET(ProjectileSound);
 
    if (stream->readFlag())
       lightDescId = stream->readRangedU32(DataBlockObjectIdFirst, DataBlockObjectIdLast);

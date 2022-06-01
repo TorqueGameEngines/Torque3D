@@ -241,7 +241,7 @@ void FlyingVehicleData::packData(BitStream* stream)
 
    for (S32 i = 0; i < MaxSounds; i++)
    {
-      PACKDATA_ASSET_ARRAY(FlyingSounds, i);
+      PACKDATA_SOUNDASSET_ARRAY(FlyingSounds, i);
    }
 
    for (S32 j = 0; j < MaxJetEmitters; j++)
@@ -276,7 +276,7 @@ void FlyingVehicleData::unpackData(BitStream* stream)
 
    for (S32 i = 0; i < MaxSounds; i++)
    {
-      UNPACKDATA_ASSET_ARRAY(FlyingSounds, i);
+      UNPACKDATA_SOUNDASSET_ARRAY(FlyingSounds, i);
    }
 
    for (S32 j = 0; j < MaxJetEmitters; j++) {

@@ -206,7 +206,7 @@ void PrecipitationData::packData(BitStream* stream)
 {
    Parent::packData(stream);
 
-   PACKDATA_ASSET(Sound);
+   PACKDATA_SOUNDASSET(Sound);
 
    PACKDATA_ASSET(Drop);
 
@@ -223,7 +223,7 @@ void PrecipitationData::unpackData(BitStream* stream)
 {
    Parent::unpackData(stream);
 
-   UNPACKDATA_ASSET(Sound);
+   UNPACKDATA_SOUNDASSET(Sound);
 
    UNPACKDATA_ASSET(Drop);
 

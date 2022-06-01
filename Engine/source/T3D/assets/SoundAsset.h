@@ -60,6 +60,10 @@
 #include "sfx/sfxProfile.h"
 #endif // !_SFXPROFILE_H_
 
+#ifndef _SFXTYPES_H_
+#include "sfx/sfxTypes.h"
+#endif // !_SFXTYPES_H_
+
 #ifndef _RESOURCEMANAGER_H_
 #include "core/resourceManager.h"
 #endif
@@ -342,6 +346,7 @@ public: \
    StringTableEntry m##name##AssetId[max];\
    AssetPtr<SoundAsset> m##name##Asset[max];\
    SFXProfile* m##name##Profile[max];\
+   SFXDescription* m##name##Desc[max];\
 public: \
    const StringTableEntry get##name##File(const U32& index) const { return m##name##Name[index]; }\
    void set##name##File(const FileName &_in, const U32& index) { m##name##Name[index] = StringTable->insert(_in.c_str());}\
@@ -448,6 +453,13 @@ public: \
          return m##name##Asset[id]->getSfxProfile();\
       return NULL;\
    }\
+   SFXDescription* get##name##Description(const U32& id)\
+   {\
+      if (get##name(id) != StringTable->EmptyString() && m##name##Asset[id].notNull())\
+         m##name##Desc[id] = m##name##Asset[id]->getSfxDescription();\
+         return m##name##Desc[id];\
+      return NULL;\
+   }\
    bool is##name##Valid(const U32& id) {return (get##name(id) != StringTable->EmptyString() && m##name##Asset[id]->getStatus() == AssetBase::Ok); }
 
 
@@ -491,5 +503,29 @@ if (m##name##AssetId[index] != StringTable->EmptyString())\
    }
 #pragma endregion
 
+//network send - datablock
+#define PACKDATA_SOUNDASSET_ARRAY(name, index)\
+   if (stream->writeFlag(m##name##Asset[index].notNull()))\
+   {\
+      if (m##name##Profile[index])\
+         m##name##Profile[index]->packData(stream);\
+      sfxWrite(stream, m##name##Desc[index]);\
+   }\
+   else\
+      stream->writeString(m##name##Name[index]);
+
+//network recieve - datablock
+#define UNPACKDATA_SOUNDASSET_ARRAY(name, index)\
+   if (stream->readFlag())\
+   {\
+      if (m##name##Profile[index])\
+         m##name##Profile[index]->unpackData(stream);\
+      sfxRead(stream, &m##name##Desc[index]);\
+   }\
+   else\
+   {\
+      m##name##Name[index] = stream->readSTString();\
+      _set##name(m##name##Name[index],index);\
+   }
 #endif // _ASSET_BASE_H_
 

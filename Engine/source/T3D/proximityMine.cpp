@@ -156,14 +156,14 @@ void ProximityMineData::packData( BitStream* stream )
    Parent::packData( stream );
 
    stream->write( armingDelay );
-   PACKDATA_ASSET(ArmSound);
+   PACKDATA_SOUNDASSET(ArmSound);
 
    stream->write( autoTriggerDelay );
    stream->writeFlag( triggerOnOwner );
    stream->write( triggerRadius );
    stream->write( triggerSpeed );
    stream->write( triggerDelay );
-   PACKDATA_ASSET(TriggerSound);
+   PACKDATA_SOUNDASSET(TriggerSound);
 }
 
 void ProximityMineData::unpackData( BitStream* stream )
@@ -171,14 +171,14 @@ void ProximityMineData::unpackData( BitStream* stream )
    Parent::unpackData(stream);
 
    stream->read( &armingDelay );
-   UNPACKDATA_ASSET(ArmSound);
+   UNPACKDATA_SOUNDASSET(ArmSound);
 
    stream->read( &autoTriggerDelay );
    triggerOnOwner = stream->readFlag();
    stream->read( &triggerRadius );
    stream->read( &triggerSpeed );
    stream->read( &triggerDelay );
-   UNPACKDATA_ASSET(TriggerSound);
+   UNPACKDATA_SOUNDASSET(TriggerSound);
 }
 
 //----------------------------------------------------------------------------

@@ -239,26 +239,23 @@ void ShadowMapPass::render(   SceneManager *sceneManager,
    {
 	   LightShadowMap *lsm = shadowMaps[i];
       LightShadowMap *dlsm = shadowMaps[i + 1];
-      {
-         GFXDEBUGEVENT_SCOPE( ShadowMapPass_Render_Shadow, ColorI::RED );
-
-         mShadowManager->setLightShadowMap(lsm);
-         mShadowManager->setLightDynamicShadowMap(dlsm);
-
-         lsm->render(mShadowRPM, diffuseState, false, forceUpdate);
-         dlsm->render(mDynamicShadowRPM, diffuseState, true, forceUpdate);
-
-         ++smUpdatedShadowMaps;
-      }
-
       // View dependent shadows or ones that are covering the entire
       // screen are updated every frame no matter the time left in
       // our shadow rendering budget.
-      if (dlsm->isViewDependent() || dlsm->getLastScreenSize() >= 1.0f)
+      if (lsm->isViewDependent() || lsm->getLastScreenSize() >= 1.0f)
       {
          ++smNearShadowMaps;
-         continue;
+         forceUpdate = true;
       }
+      GFXDEBUGEVENT_SCOPE(ShadowMapPass_Render_Shadow, ColorI::RED);
+
+      mShadowManager->setLightShadowMap(lsm);
+      mShadowManager->setLightDynamicShadowMap(dlsm);
+
+      lsm->render(mShadowRPM, diffuseState, false, forceUpdate);
+      dlsm->render(mDynamicShadowRPM, diffuseState, true, forceUpdate);
+
+      ++smUpdatedShadowMaps;
 
       // See if we're over our frame budget for shadow 
       // updates... give up completely in that case.

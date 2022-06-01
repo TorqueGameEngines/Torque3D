@@ -309,18 +309,23 @@ void LightShadowMap::render(RenderPassManager *renderPass,
    const SceneRenderState *diffuseState,
    bool _dynamic, bool _forceUpdate)
 {
+   bool update = _forceUpdate;
    if (!_forceUpdate)
    {
       //  control how often shadow maps are refreshed
-      if (!_dynamic && (mStaticRefreshTimer->getElapsedMs() < getLightInfo()->getStaticRefreshFreq()))
-         return;
+      if (_dynamic && (mDynamicRefreshTimer->getElapsedMs() > getLightInfo()->getDynamicRefreshFreq()))
+      {
+         update = true;
+         mDynamicRefreshTimer->reset();
+      }
+      if (!_dynamic && (mStaticRefreshTimer->getElapsedMs() > getLightInfo()->getStaticRefreshFreq()))
+      {
+         update = true;
+         mStaticRefreshTimer->reset();
+      }
    }
-   mStaticRefreshTimer->reset();
+   if (!update) return;
 
-
-   if (_dynamic && (mDynamicRefreshTimer->getElapsedMs() < getLightInfo()->getDynamicRefreshFreq()))
-      return;
-   mDynamicRefreshTimer->reset();
    mDebugTarget.setTexture( NULL );
    _render( renderPass, diffuseState );
    mDebugTarget.setTexture( mShadowMapTex );

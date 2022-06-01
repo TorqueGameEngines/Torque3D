@@ -17,7 +17,7 @@ set(ZLIB_ROOT "${ZLIB_ROOT}" CACHE STRING "ZLib root location" FORCE)
 
 # Assimp depends on zlib
 set(BUILD_SHARED_LIBS off CACHE STRING "")
-set(ASSIMP_BUILD_ZLIB on CACHE STRING "")
+set(ASSIMP_BUILD_ZLIB off CACHE STRING "")
 set(ASSIMP_HUNTER_ENABLED off CACHE STRING "")
 add_subdirectory(assimp ${CMAKE_BINARY_DIR}/temp/assimp EXCLUDE_FROM_ALL)
 

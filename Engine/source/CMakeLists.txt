@@ -287,6 +287,9 @@ if (UNIX AND NOT APPLE)
 	set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_PLATFORM_X11_SOURCES})
 endif (UNIX AND NOT APPLE)
 
+# Generate the filters for the main Torque project before we add RC files and such
+source_group(TREE "${CMAKE_SOURCE_DIR}/Engine/source" PREFIX "Engine" FILES ${TORQUE_SOURCE_FILES})
+
 ################# Dynamic File Configuration ###################
 
 # Prepare Windows RC file
@@ -323,7 +326,8 @@ foreach (TORQUE_MODULE_PATH ${TORQUE_MODULE_PATHS})
 	file(GLOB MODULE_SCRIPTS "${TORQUE_MODULE_PATH}/*.cmake")
 	foreach (TORQUE_MODULE_SCRIPT ${MODULE_SCRIPTS})
 		include(${TORQUE_MODULE_SCRIPT})
-    source_group("Modules/${TORQUE_MODULE_SCRIPT}" FILES ${TORQUE_SOURCE_FILES})
+    get_filename_component(TORQUE_MODULE_NAME "${TORQUE_MODULE_SCRIPT}" NAME)
+    source_group("Modules/${TORQUE_MODULE_NAME}" FILES ${TORQUE_SOURCE_FILES})
 
     set(TORQUE_SOURCE_FILES_TEMPORARY ${TORQUE_SOURCE_FILES_TEMPORARY} ${TORQUE_SOURCE_FILES})
     set(TORQUE_SOURCE_FILES "")
@@ -375,9 +379,6 @@ target_compile_definitions(${TORQUE_APP_NAME} PUBLIC ${TORQUE_COMPILE_DEFINITION
 target_link_libraries(${TORQUE_APP_NAME} ${TORQUE_LINK_LIBRARIES})
 target_include_directories(${TORQUE_APP_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp" ${TORQUE_INCLUDE_DIRECTORIES})
 target_compile_features(${TORQUE_APP_NAME} PRIVATE cxx_std_17)
-
-# Generate the filters for the main Torque project
-source_group(TREE "${CMAKE_SOURCE_DIR}/Engine/source")
 
 # Process library binaries - these are coming from modules that are providing links to external, precompiled code that should be included
 # with the executable. This is done because on Windows, the .lib is separate from the .dll so we can't automatically scan for shared

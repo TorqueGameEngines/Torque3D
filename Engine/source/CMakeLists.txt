@@ -34,11 +34,11 @@ macro (torqueAddSourceDirectories)
     file(GLOB SCANNED_INCLUDE_FILES "${ARGUMENT}/*.h")
 
     if (APPLE)
-    file(GLOB SCANNED_INCLUDE_FILES "${ARGUMENT}/*.mm")
+      file(GLOB SCANNED_MAC_FILES "${ARGUMENT}/*.mm")
     endif (APPLE)
 
     # Set in both current and parent scope so this macro can be used from loaded modules
-    set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${SCANNED_SOURCE_FILES} ${SCANNED_INCLUDE_FILES})
+    set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${SCANNED_SOURCE_FILES} ${SCANNED_INCLUDE_FILES} ${SCANNED_MAC_FILES})
     set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} PARENT_SCOPE)
   endforeach()
 endmacro (torqueAddSourceDirectories)

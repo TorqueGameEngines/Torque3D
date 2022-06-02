@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -28,11 +28,8 @@
 
 char *SDL_strtokr(char *s1, const char *s2, char **ptr)
 {
-#if defined(HAVE_STRTOK_R)
+#ifdef HAVE_STRTOK_R
     return strtok_r(s1, s2, ptr);
-
-#elif defined(_MSC_VER) && defined(HAVE_STRTOK_S)
-    return strtok_s(s1, s2, ptr);
 
 #else /* SDL implementation */
 /*

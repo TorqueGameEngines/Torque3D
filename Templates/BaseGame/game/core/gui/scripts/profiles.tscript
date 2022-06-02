@@ -81,6 +81,12 @@ new GuiControlProfile (GuiDefaultProfile)
    cursorColor = "0 0 0 255";
 };
 
+if(!isObject(GuiNonModalDefaultProfile))
+new GuiControlProfile (GuiNonModalDefaultProfile : GuiDefaultProfile)
+{
+   modal = false;
+};
+
 if(!isObject(GuiToolTipProfile))
 new GuiControlProfile (GuiToolTipProfile)
 {

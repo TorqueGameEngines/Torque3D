@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -18,6 +18,7 @@
 #include <string.h>
 
 #include "SDL.h"
+#include "testutils.h"
 
 #ifndef SDL_JOYSTICK_DISABLED
 
@@ -53,7 +54,7 @@ static struct
     double angle;
     int marker;
 
-} s_arrBindingDisplay[BINDING_COUNT] = {
+} s_arrBindingDisplay[] = {
     { 387, 167, 0.0, MARKER_BUTTON }, /* SDL_CONTROLLER_BUTTON_A */
     { 431, 132, 0.0, MARKER_BUTTON }, /* SDL_CONTROLLER_BUTTON_B */
     { 342, 132, 0.0, MARKER_BUTTON }, /* SDL_CONTROLLER_BUTTON_X */
@@ -86,8 +87,9 @@ static struct
     {  91, -20, 180.0, MARKER_AXIS }, /* SDL_CONTROLLER_BINDING_AXIS_TRIGGERLEFT */
     { 375, -20, 180.0, MARKER_AXIS }, /* SDL_CONTROLLER_BINDING_AXIS_TRIGGERRIGHT */
 };
+SDL_COMPILE_TIME_ASSERT(s_arrBindingDisplay, SDL_arraysize(s_arrBindingDisplay) == BINDING_COUNT);
 
-static int s_arrBindingOrder[BINDING_COUNT] = {
+static int s_arrBindingOrder[] = {
     SDL_CONTROLLER_BUTTON_A,
     SDL_CONTROLLER_BUTTON_B,
     SDL_CONTROLLER_BUTTON_Y,
@@ -118,7 +120,9 @@ static int s_arrBindingOrder[BINDING_COUNT] = {
     SDL_CONTROLLER_BUTTON_PADDLE2,
     SDL_CONTROLLER_BUTTON_PADDLE3,
     SDL_CONTROLLER_BUTTON_PADDLE4,
+    SDL_CONTROLLER_BUTTON_TOUCHPAD,
 };
+SDL_COMPILE_TIME_ASSERT(s_arrBindingOrder, SDL_arraysize(s_arrBindingOrder) == BINDING_COUNT);
 
 typedef struct
 {
@@ -162,40 +166,9 @@ static Uint32 s_unPendingAdvanceTime;
 static SDL_bool s_bBindingComplete;
 
 static SDL_Window *window;
+static SDL_Renderer *screen;
 static SDL_bool done = SDL_FALSE;
-
-SDL_Texture *
-LoadTexture(SDL_Renderer *renderer, const char *file, SDL_bool transparent)
-{
-    SDL_Surface *temp;
-    SDL_Texture *texture;
-
-    /* Load the sprite image */
-    temp = SDL_LoadBMP(file);
-    if (temp == NULL) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't load %s: %s", file, SDL_GetError());
-        return NULL;
-    }
-
-    /* Set transparent pixel as the pixel at (0,0) */
-    if (transparent) {
-        if (temp->format->palette) {
-            SDL_SetColorKey(temp, SDL_TRUE, *(Uint8 *) temp->pixels);
-        }
-    }
-
-    /* Create textures from the image */
-    texture = SDL_CreateTextureFromSurface(renderer, temp);
-    if (!texture) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create texture: %s\n", SDL_GetError());
-        SDL_FreeSurface(temp);
-        return NULL;
-    }
-    SDL_FreeSurface(temp);
-
-    /* We're ready to roll. :) */
-    return texture;
-}
+static SDL_bool bind_touchpad = SDL_FALSE;
 
 static int
 StandardizeAxisValue(int nValue)
@@ -221,6 +194,19 @@ SetCurrentBinding(int iBinding)
 
     if (iBinding == BINDING_COUNT) {
         s_bBindingComplete = SDL_TRUE;
+        return;
+    }
+
+    if (s_arrBindingOrder[iBinding] == -1)
+    {
+        SetCurrentBinding(iBinding + 1);
+        return;
+    }
+
+    if (s_arrBindingOrder[iBinding] == SDL_CONTROLLER_BUTTON_TOUCHPAD &&
+        !bind_touchpad)
+    {
+        SetCurrentBinding(iBinding + 1);
         return;
     }
 
@@ -366,7 +352,6 @@ BMergeAxisBindings(int iIndex)
 static void
 WatchJoystick(SDL_Joystick * joystick)
 {
-    SDL_Renderer *screen = NULL;
     SDL_Texture *background_front, *background_back, *button, *axis, *marker;
     const char *name = NULL;
     SDL_Event event;
@@ -375,16 +360,10 @@ WatchJoystick(SDL_Joystick * joystick)
     Uint32 alpha_ticks = 0;
     SDL_JoystickID nJoystickID;
 
-    screen = SDL_CreateRenderer(window, -1, 0);
-    if (screen == NULL) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create renderer: %s\n", SDL_GetError());
-        return;
-    }
-    
-    background_front = LoadTexture(screen, "controllermap.bmp", SDL_FALSE);
-    background_back = LoadTexture(screen, "controllermap_back.bmp", SDL_FALSE);
-    button = LoadTexture(screen, "button.bmp", SDL_TRUE);
-    axis = LoadTexture(screen, "axis.bmp", SDL_TRUE);
+    background_front = LoadTexture(screen, "controllermap.bmp", SDL_FALSE, NULL, NULL);
+    background_back = LoadTexture(screen, "controllermap_back.bmp", SDL_FALSE, NULL, NULL);
+    button = LoadTexture(screen, "button.bmp", SDL_TRUE, NULL, NULL);
+    axis = LoadTexture(screen, "axis.bmp", SDL_TRUE, NULL, NULL);
     SDL_RaiseWindow(window);
 
     /* scale for platforms that don't give you the window size you asked for. */
@@ -412,10 +391,10 @@ WatchJoystick(SDL_Joystick * joystick)
     s_nNumAxes = SDL_JoystickNumAxes(joystick);
     s_arrAxisState = (AxisState *)SDL_calloc(s_nNumAxes, sizeof(*s_arrAxisState));
 
-	/* Skip any spurious events at start */
-	while (SDL_PollEvent(&event) > 0) {
-		continue;
-	}
+    /* Skip any spurious events at start */
+    while (SDL_PollEvent(&event) > 0) {
+        continue;
+    }
 
     /* Loop, getting joystick events! */
     while (!done && !s_bBindingComplete) {
@@ -559,7 +538,7 @@ WatchJoystick(SDL_Joystick * joystick)
                 if ((event.key.keysym.sym != SDLK_ESCAPE)) {
                     break;
                 }
-                /* Fall through to signal quit */
+                SDL_FALLTHROUGH;
             case SDL_QUIT:
                 done = SDL_TRUE;
                 break;
@@ -728,6 +707,10 @@ main(int argc, char *argv[])
         exit(1);
     }
 
+    if (argv[1] && SDL_strcmp(argv[1], "--bind-touchpad") == 0) {
+        bind_touchpad = SDL_TRUE;
+    }
+
     /* Create a window to display joystick axis position */
     window = SDL_CreateWindow("Game Controller Map", SDL_WINDOWPOS_CENTERED,
                               SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH,
@@ -737,7 +720,13 @@ main(int argc, char *argv[])
         return 2;
     }
 
-    while (SDL_NumJoysticks() == 0) {
+    screen = SDL_CreateRenderer(window, -1, 0);
+    if (screen == NULL) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create renderer: %s\n", SDL_GetError());
+        return 2;
+    }
+
+    while (!done && SDL_NumJoysticks() == 0) {
         SDL_Event event;
 
         while (SDL_PollEvent(&event) > 0) {
@@ -746,7 +735,7 @@ main(int argc, char *argv[])
                 if ((event.key.keysym.sym != SDLK_ESCAPE)) {
                     break;
                 }
-                /* Fall through to signal quit */
+                SDL_FALLTHROUGH;
             case SDL_QUIT:
                 done = SDL_TRUE;
                 break;
@@ -754,6 +743,7 @@ main(int argc, char *argv[])
                 break;
             }
         }
+        SDL_RenderPresent(screen);
     }
 
     /* Print information about the joysticks */

@@ -72,16 +72,7 @@ function OptionsMenu::onAdd(%this)
    callOnModules("populateOptionsMenuCategories", "Game");
 }
 
-function OptionsMenuSettingsList::onAdd(%this)
-{
-}
-
-function OptionsMenuSettingsList::getOptionsList(%this, %index)
-{
-     
-}
-
-function OptionsMenu::onWake(%this)
+function OptionsMenu::onOpen(%this)
 {
    OptionsMenuCategoryList.clear(); 
    
@@ -116,22 +107,60 @@ function OptionsMenu::onWake(%this)
    
    %this.unappliedChanges.empty();
    
-   MainMenuButtonList.hidden = true;
-   
    OptionsMenuCategoryList.setAsActiveMenuList();
    
-   OptionsButtonHolder.setActive();
+   $activeMenuButtonContainer-->button1.set("btn_back", "R", "Reset", "OptionsMenu.resetToDefaults();");
+   $activeMenuButtonContainer-->button1.disable();
+   $activeMenuButtonContainer-->button3.set("", "Space", "Apply", "OptionsMenu.apply();");
+   $activeMenuButtonContainer-->button4.set("btn_a", "", "Select", "OptionsMenu.select();");
+   $activeMenuButtonContainer-->button5.set("btn_b", "Escape", "Back", %this @ ".navigation.popPage();");
+}
    
-   OptionsMenuInputHandler.setFirstResponder();
+//We capitalize on the canClose test here, because we want to prompt for unapplied options changes before
+//backing out. So when the UINavigation test canClose, we can see if we have unapplied settings and prompt
+//that via the message box and return false.
+//This gives the user a chance to choose how they wish to proceed before we allow the 
+//UINavigation to move away from the options menu
+function OptionsMenu::canClose(%this)
+{
+   //Another special case is us catching the 'back/pop' action by just shifting from one
+   //menu list to another. In this case, we check if we were on the settings list as our active MenuList
+   //if so, then the back/pop just moves us to the Category list as our active and we inform the 
+   //UINavigation to not close the page
+   if(OptionsMenuSettingsList.isActiveMenuList())
+   {
+   OptionsMenuCategoryList.setAsActiveMenuList();
+      %this.updateSelectButton();
+      return false;
+   }
+   else
+   {
+      //Here, we're on the category list as our active, so we're actually trying to leae the page
+      //If we have unapplied changes, we want to prompt about them before closing the page and navigating away
+      //If we don't, then we can process the popPage as normal and let the OptionsMenu close
+      if(%this.unappliedChanges.count() != 0)
+      {
+         MessageBoxOKCancel("Discard Changes?", "You have unapplied changes to your settings, do you wish to apply or discard them?", 
+                        "OptionsMenu.apply(); MainMenuGUI.popPage();", "" @ %this @ ".unappliedChanges.empty(); " @ %this @ ".navigation.popPage();", 
+                        "Apply", "Discard");
+         return false;
+      }
+   }
+   
+   return true;
 }
 
-function OptionsButtonHolder::onWake(%this)
+function OptionsMenu::onClose(%this)
 {
-   %this-->resetButton.set("btn_back", "R", "Reset", "OptionsMenu.resetToDefaults();");
-   %this-->selectButton.set("btn_a", "Return", "Select", "OptionsMenu.select();", true);
-   %this-->backButton.set("btn_b", "Escape", "Back", "OptionsMenu.backOut();");
    
-   //OptionsMenuCategoryList.getObject(0).performClick();
+}
+
+function OptionsMenuSettingsList::onAdd(%this)
+{
+}
+   
+function OptionsMenuSettingsList::getOptionsList(%this, %index)
+{
 }
 
 function OptionsMenu::select(%this)
@@ -200,7 +229,7 @@ function OptionsMenu::apply(%this)
             //for updates
             if ( %targetVar $= "$pref::Video::displayDevice" )
             {
-               MessageBoxOK( "Change requires restart", "Please restart the game for a display device change to take effect." );
+               schedule(32, 0, "MessageBoxOK", "Change requires restart", "Please restart the game for a display device change to take effect.");
             }
             else if(startsWith(%targetVar, "$pref::PostFX::"))
             {
@@ -281,9 +310,6 @@ function OptionsMenu::apply(%this)
    export("$pref::*", %prefPath @ "/clientPrefs." @ $TorqueScriptFileExtension, false);
    
    OptionsMenu.unappliedChanges.empty();
-   
-   //Now we can back out of the options menu
-   OptionsMenu.doOptionsMenuBackOut();
 }
 
 function OptionsMenu::resetToDefaults(%this)
@@ -307,6 +333,13 @@ function OptionsMenu::refresh(%this)
       %category = %this.optionsCategories.getKey(%this.currentCategory);
       %command = %this.optionsCategories.getValue(%this.currentCategory);
       eval(%command);
+   }
+   
+   //now, because we reconstruct the displayed set, we'll force the mouse(if we're using it as our input)
+   //to be poked so we can re-track to whatever control, if any, we're over
+   if($activeControllerType !$= "gamepad")
+   {
+      Canvas.setCursorPos(Canvas.getCursorPos());  
    }
 }
 
@@ -346,14 +379,11 @@ function populateDisplaySettingsList()
    
    OptionsMenu.currentCategory = "Display";
    
+   if(isObject(OptionName))
    OptionName.setText("");
+   if(isObject(OptionDescription))
    OptionDescription.setText("");
    
-   //First, lets double-check the active device is accurate. Sometimes the default value in our prefs doesn't match the active one
-   %displayDevice = getDisplayDeviceType();
-   if($changingDisplayDevice !$= "")
-      %displayDevice = $changingDisplayDevice;
-      
    %apiList = "";
    %apiCount = GFXInit::getAdapterCount();
    %apiIdx = 0;
@@ -374,7 +404,11 @@ function populateDisplaySettingsList()
    
    trim(%apiList);
    
-   OptionsMenuSettingsList.addOptionRow("Display API", "$pref::Video::DisplayAPI", %apiList, false, "",  true, "The display API used for rendering.", %displayDevice);
+   %displayDevice = OptionsMenu.getOptionVariableValue("$pref::Video::displayDevice");
+   if(%displayDevice $= "")
+      %displayDevice = getDisplayDeviceType();
+   
+   OptionsMenuSettingsList.addOptionRow("Display API", "$pref::Video::displayDevice", %apiList, false, "",  true, "The display API used for rendering.", %displayDevice);
    
    %numDevices = Canvas.getMonitorCount();
    %devicesList = "";
@@ -434,7 +468,9 @@ function populateGraphicsSettingsList()
    
    OptionsMenu.currentCategory = "Graphics";
    
+   if(isObject(OptionName))
    OptionName.setText("");
+   if(isObject(OptionDescription))
    OptionDescription.setText("");
    
    %yesNoList = "No\tYes";
@@ -599,7 +635,9 @@ function populateAudioSettingsList()
    
    OptionsMenu.currentCategory = "Audio";
    
+   if(isObject(OptionName))
    OptionName.setText("");
+   if(isObject(OptionDescription))
    OptionDescription.setText("");
    
    %buffer = sfxGetAvailableDevices();
@@ -692,7 +730,9 @@ function populateKeyboardMouseSettingsList()
    
    OptionsMenu.currentCategory = "Keyboard & Mouse";
    
+   if(isObject(OptionName))
    OptionName.setText("");
+   if(isObject(OptionDescription))
    OptionDescription.setText("");
    
    $remapListDevice = "keyboard";
@@ -707,7 +747,9 @@ function populateGamepadSettingsList()
    
    OptionsMenu.currentCategory = "Gamepad";
    
+   if(isObject(OptionName))
    OptionName.setText("");
+   if(isObject(OptionDescription))
    OptionDescription.setText("");
    
    $remapListDevice = "gamepad";
@@ -722,48 +764,6 @@ function populateGamepadSettingsList()
 function OptionsMenuList::activateRow(%this)
 {
    OptionsMenuSettingsList.setFirstResponder();
-}
-
-function OptionsMenu::backOut(%this)
-{
-   if(OptionsMenuSettingsList.isActiveMenuList())
-   {
-      OptionsMenuCategoryList.setAsActiveMenuList();
-      %this.updateSelectButton();
-   }
-   else
-   {
-      if(%this.unappliedChanges.count() != 0)
-      {
-         MessageBoxOKCancel("Discard Changes?", "You have unapplied changes to your settings, do you wish to apply or discard them?", "OptionsMenu.apply();", "OptionsMenu.doOptionsMenuBackOut();", "Apply", "Discard");
-      }
-      else
-      {
-         %this.doOptionsMenuBackOut();
-      }
-   }
-}
-
-function OptionsMenu::doOptionsMenuBackOut(%this)
-{
-   //save the settings and then back out
-   if(OptionsMain.hidden == false)
-   {
-      //we're not in a specific menu, so we're actually exiting
-      Canvas.popDialog(OptionsMenu);
-
-      if(isObject(OptionsMenu.returnGui) && OptionsMenu.returnGui.isMethod("onReturnTo"))
-         OptionsMenu.returnGui.onReturnTo();
-   }
-   else
-   {
-      OptionsMain.hidden = false;
-      ControlsMenu.hidden = true;
-      GraphicsMenu.hidden = true;
-      CameraMenu.hidden = true;
-      AudioMenu.hidden = true;
-      ScreenBrightnessMenu.hidden = true;
-   }
 }
 
 function OptionsMenuSettingsList::setRowEnabled(%this, %row, %status)
@@ -837,11 +837,11 @@ function OptionsMenuSettingsList::addOptionBoolRow(%this, %label, %targetPrefVar
       
    if(%qualityLevelList $= $yesNoList && isInt(%defaultValue))
    {
-      %defaultValue = convertBoolToYesNo(!%defaultValue);
+      %defaultValue = convertBoolToYesNo(%defaultValue);
    }
    else if(%qualityLevelList $= $onOffList && isInt(%defaultValue))
    {
-      %defaultValue = convertBoolToOnOff(!%defaultValue);
+      %defaultValue = convertBoolToOnOff(%defaultValue);
    }
 
    return %this.addOptionRow(%label, %targetPrefVar, %qualityLevelList, 
@@ -956,14 +956,23 @@ function getDisplayDeviceName()
 //
 function MenuOptionsButton::onMouseEnter(%this)
 {
+   if(isObject(OptionName))
    OptionName.setText(%this.getLabel());
+   if(isObject(OptionDescription))
    OptionDescription.setText(%this.getToolTip());
 }
 
 function MenuOptionsButton::onMouseLeave(%this)
 {
+   if(isObject(OptionName))
    OptionName.setText("");
+   if(isObject(OptionDescription))
    OptionDescription.setText("");
+}
+
+function MenuOptionsButton::onHighlighted(%this, %state)
+{
+   MenuListButton::onHighlighted(%this, %state);
 }
 
 function MenuOptionsButton::onChange(%this)
@@ -977,6 +986,8 @@ function MenuOptionsButton::onChange(%this)
    OptionName.setText(%optionName);
    OptionDescription.setText(%tooltipText);
    
+   if(%optionMode == 0)
+   {
    %currentValue = %this.getCurrentOption();
    if(%currentValue !$= "")
    {
@@ -994,7 +1005,25 @@ function MenuOptionsButton::onChange(%this)
          OptionsMenu.unappliedChanges.add(%targetVar, "\"" @ %saveReadyValue @ "\"" );
       }
       else
+         {
          OptionsMenu.unappliedChanges.setValue("\"" @ %saveReadyValue @ "\"", %prefIndex);
+      }
+   }
+   }
+   else if(%optionMode == 1)
+   {
+      %currentValue = %this.getValue();
+      
+      %prefIndex = OptionsMenu.unappliedChanges.getIndexFromKey(%targetVar);
+      if(%prefIndex == -1)
+      {
+         echo("Setting UnappliedChanges via add: key:" @ %targetVar @", value: " @ %currentValue);
+         OptionsMenu.unappliedChanges.add(%targetVar, "\"" @ %currentValue @ "\"" );
+      }
+      else
+      {
+         OptionsMenu.unappliedChanges.setValue("\"" @ %currentValue @ "\"", %prefIndex);
+      }
    }
    
    //Update the UI in case there's responsive logic

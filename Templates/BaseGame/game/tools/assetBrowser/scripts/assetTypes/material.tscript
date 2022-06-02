@@ -16,6 +16,7 @@ function AssetBrowser::createMaterialAsset(%this)
       materialDefinitionName = %assetName;
       
       new Material(%assetName) {
+         mapTo = %assetName;
       };
    };
    
@@ -426,8 +427,43 @@ function AssetBrowser::importMaterialAsset(%this, %assetItem)
 
 function AssetBrowser::buildMaterialAssetPreview(%this, %assetDef, %previewData, %forcePreviewRegenerate)
 {   
-   if(%forcePreviewRegenerate $= "")
-      %forcePreviewRegenerate = false;
+   %previewData.previewImage = "ToolsModule:genericAssetIcon_image";
+   %previewData.previewLoaded = false; //this marks it for loading progressively later
+      
+   %previewData.assetName = %assetDef.assetName;
+   %previewData.assetPath = %assetDef.scriptFile;
+   
+   %previewData.assetFriendlyName = %assetDef.assetName;
+   %previewData.assetDesc = %assetDef.description;
+
+   if(%this.selectMode)
+      %previewData.doubleClickCommand = "AssetBrowser.selectAsset( AssetBrowser.selectedAsset );";
+   else
+      %previewData.doubleClickCommand = "AssetBrowser.editAsset( "@%assetDef@" );";
+      
+   %definitionPath = %assetDef.getScriptPath();
+   if(%definitionPath $= "")
+      %definitionPath = %assetDef.getFilename();
+   
+   %previewData.tooltip = "Asset Name: " @ %assetDef.assetName @ 
+                           "\nAsset Type: Material Asset" @  
+                           "\nAsset Definition ID: " @  %assetDef @
+                           "\nDefinition Path: " @ %definitionPath;
+                           
+   if(!%this.selectMode)
+   {
+      %previewData.doubleClickCommand = "AssetBrowser.editAsset( "@%assetDef@" );";
+   }
+}
+
+function AssetBrowser::generateMaterialAssetPreviewImage(%this, %previewButton, %forceRegenerate)
+{
+   if(%forceRegenerate $= "")
+      %forceRegenerate = false;
+      
+   %assetId = %previewButton.moduleName @ ":" @ %previewButton.assetName;
+      
+   %assetDef = AssetDatabase.acquireAsset(%assetId);
       
    %module = %this.dirHandler.getModuleFromAddress(makeRelativePath(filePath(AssetDatabase.getAssetFilePath(%assetDef.getAssetId()))));
    %previewPath = "tools/resources/previewCache/" @ %module.moduleId @ "/";
@@ -456,16 +492,21 @@ function AssetBrowser::buildMaterialAssetPreview(%this, %assetDef, %previewData,
 
    %previewAssetName = %module.moduleId @ "_" @ %assetDef.assetName @ "_PreviewImage";
                                    
-   if(%generatePreview || %forcePreviewRegenerate)
+   if(%generatePreview || %forceRegenerate)
    {
-      displayEditorLoadingGui("Generating Material Asset Preview...");
-   
       if(isObject(%assetDef.materialDefinitionName))
       {
+         //real fast, we'll be 100% sure that the image resource we need is loaded
+         %diffuseMapAssetId = %assetDef.materialDefinitionName.getDiffuseMapAsset(0);
+         if(AssetDatabase.isDeclaredAsset(%diffuseMapAssetId))
+         {
+            %diffuseMapAsset = AssetDatabase.acquireAsset(%diffuseMapAssetId);
+            AssetDatabase.releaseAsset(%diffuseMapAssetId);
+         }
          %previewShapeDef = AssetDatabase.acquireAsset("ToolsModule:previewSphereShape");
          %generatedFilePath = %previewShapeDef.generateCachedPreviewImage(256, %assetDef.materialDefinitionName);
       
-         pathCopy(%generatedFilePath, %previewFilePath);
+         pathCopy(%generatedFilePath, %previewFilePath, false);
          fileDelete(%generatedFilePath);
 
          if(!AssetDatabase.isDeclaredAsset("ToolsModule:" @ %previewAssetName))
@@ -483,50 +524,28 @@ function AssetBrowser::buildMaterialAssetPreview(%this, %assetDef, %previewData,
             %toolsModuleDef = ModuleDatabase.findModule("ToolsModule",1);
                
             %success = AssetDatabase.addDeclaredAsset(%toolsModuleDef, %previewImgAssetPath);
+            
+            if(!%success)
+            {
+               return false; //failed to register the preview image for some reason?
          }
       }
-      else
+      
+         %previewButton.bitmapAsset = "ToolsModule:" @ %previewAssetName;
+         return true;
+   }
+   }
+   else
+   {
+      //just map the existing one then
+      if(AssetDatabase.isDeclaredAsset("ToolsModule:" @ %previewAssetName))
       {
-         error("Failed to generate preview for material: " @ %assetDef.materialDefinitionName);
+         %previewButton.bitmapAsset = "ToolsModule:" @ %previewAssetName;
+         return true;
       }
-      
-      hideEditorLoadingGui();
-   }
-   
-   //Revalidate. If it didn't work, just use the default placeholder one
-   if(!isFile(%previewFilePath))
-   {
-      %previewData.previewImage = "ToolsModule:materialIcon_image";
-   }
-   else
-   {
-      %previewData.previewImage = "ToolsModule:" @ %previewAssetName;
    }
       
-   %previewData.assetName = %assetDef.assetName;
-   %previewData.assetPath = %assetDef.scriptFile;
-   
-   %previewData.assetFriendlyName = %assetDef.assetName;
-   %previewData.assetDesc = %assetDef.description;
-
-   if(%this.selectMode)
-      %previewData.doubleClickCommand = "AssetBrowser.selectAsset( AssetBrowser.selectedAsset );";
-   else
-      %previewData.doubleClickCommand = "AssetBrowser.editAsset( "@%assetDef@" );";
-      
-   %definitionPath = %assetDef.getScriptPath();
-   if(%definitionPath $= "")
-      %definitionPath = %assetDef.getFilename();
-   
-   %previewData.tooltip = "Asset Name: " @ %assetDef.assetName @ 
-                           "\nAsset Type: Material Asset" @  
-                           "\nAsset Definition ID: " @  %assetDef @
-                           "\nDefinition Path: " @ %definitionPath;
-                           
-   if(!%this.selectMode)
-   {
-      %previewData.doubleClickCommand = "AssetBrowser.editAsset( "@%assetDef@" );";
-   }
+   return false;
 }
 
 function AssetBrowser::onMaterialAssetEditorDropped(%this, %assetDef, %position)

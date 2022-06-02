@@ -111,8 +111,35 @@ function AssetBrowser::moveTerrainMaterialAsset(%this, %assetDef, %destination)
 
 function AssetBrowser::buildTerrainMaterialAssetPreview(%this, %assetDef, %previewData, %forcePreviewRegenerate)
 {
-   if(%forcePreviewRegenerate $= "")
-      %forcePreviewRegenerate = false;
+   %previewData.previewImage = "ToolsModule:genericAssetIcon_image";
+   %previewData.previewLoaded = false; //this marks it for loading progressively later
+      
+   %previewData.assetName = %assetDef.assetName;
+   %previewData.assetPath = "";
+   %previewData.doubleClickCommand = "";
+   
+   %previewData.assetFriendlyName = %assetDef.gameObjectName;
+   %previewData.assetDesc = %assetDef.description;
+   %previewData.tooltip = %assetDef.gameObjectName;
+   
+   %definitionPath = %assetDef.getScriptPath();
+   if(%definitionPath $= "")
+      %definitionPath = %assetDef.getFilename();
+   
+   %previewData.tooltip = "Asset Name: " @ %assetDef.assetName @ 
+                           "\nAsset Type: Terrain Material Asset" @  
+                           "\nAsset Definition ID: " @  %assetDef @
+                           "\nDefinition Path: " @ %definitionPath;
+}
+
+function AssetBrowser::generateTerrainMaterialAssetPreviewImage(%this, %previewButton, %forceRegenerate)
+{
+   if(%forceRegenerate $= "")
+      %forceRegenerate = false;
+      
+   %assetId = %previewButton.moduleName @ ":" @ %previewButton.assetName;
+      
+   %assetDef = AssetDatabase.acquireAsset(%assetId);
       
    %module = %this.dirHandler.getModuleFromAddress(makeRelativePath(filePath(AssetDatabase.getAssetFilePath(%assetDef.getAssetId()))));
    %previewPath = "tools/resources/previewCache/" @ %module.moduleId @ "/";
@@ -141,10 +168,8 @@ function AssetBrowser::buildTerrainMaterialAssetPreview(%this, %assetDef, %previ
 
    %previewAssetName = %module.moduleId @ "_" @ %assetDef.assetName @ "_PreviewImage";
                                    
-   if(%generatePreview || %forcePreviewRegenerate)
+   if(%generatePreview || %forceRegenerate)
    {
-      displayEditorLoadingGui("Generating Material Asset Preview...");
-   
       if(isObject(%assetDef.materialDefinitionName))
       {
          %previewShapeDef = AssetDatabase.acquireAsset("ToolsModule:previewSphereShape");
@@ -169,38 +194,28 @@ function AssetBrowser::buildTerrainMaterialAssetPreview(%this, %assetDef, %previ
             %toolsModuleDef = ModuleDatabase.findModule("ToolsModule",1);
                
             %success = AssetDatabase.addDeclaredAsset(%toolsModuleDef, %previewImgAssetPath);
+            
+            if(!%success)
+            {
+               return false; //failed to register the preview image for some reason?
          }
       }
       
-      hideEditorLoadingGui();
+         %previewButton.bitmapAsset = "ToolsModule:" @ %previewAssetName;
+         return true;
    }
-   
-   //Revalidate. If it didn't work, just use the default placeholder one
-   if(!isFile(%previewFilePath))
-   {
-      %previewData.previewImage = "ToolsModule:terrainMaterialIcon_image";
    }
    else
    {
-      %previewData.previewImage = "ToolsModule:" @ %previewAssetName;
+      //just map the existing one then
+      if(AssetDatabase.isDeclaredAsset("ToolsModule:" @ %previewAssetName))
+      {
+         %previewButton.bitmapAsset = "ToolsModule:" @ %previewAssetName;
+         return true;
+      }
    }
       
-   %previewData.assetName = %assetDef.assetName;
-   %previewData.assetPath = "";
-   %previewData.doubleClickCommand = "";
-   
-   %previewData.assetFriendlyName = %assetDef.gameObjectName;
-   %previewData.assetDesc = %assetDef.description;
-   %previewData.tooltip = %assetDef.gameObjectName;
-   
-   %definitionPath = %assetDef.getScriptPath();
-   if(%definitionPath $= "")
-      %definitionPath = %assetDef.getFilename();
-   
-   %previewData.tooltip = "Asset Name: " @ %assetDef.assetName @ 
-                           "\nAsset Type: Terrain Material Asset" @  
-                           "\nAsset Definition ID: " @  %assetDef @
-                           "\nDefinition Path: " @ %definitionPath;
+   return false;
 }
 
 function GuiInspectorTypeTerrainMaterialAssetPtr::onClick( %this, %fieldName )

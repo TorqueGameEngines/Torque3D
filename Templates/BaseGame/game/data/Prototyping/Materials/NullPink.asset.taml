@@ -1,8 +1,14 @@
 <MaterialAsset
-    canSave="true"
-    canSaveDynamicFields="true"
     AssetName="NullPink"
-    scriptFile="@assetFile=NullPink.tscript"
     materialDefinitionName="NullPink"
-    imageMap0="@Asset=Prototyping:NullPink_ALBEDO"
-    originalFilePath="D:/Gamedev/art/Blockout/NullPink.png" />
+    imageMap0="@asset=Prototyping:NullPink_ALBEDO"
+    originalFilePath="C:/dev/T3D/PRs/MiscFixes20220525/Templates/BaseGame/game/data/Prototyping/Materials/NullPink.png">
+    <Material
+        Name="NullPink"
+        mapTo="NullPink">
+        <Material.Stages>
+            <Stages_beginarray
+                DiffuseMapAsset="Prototyping:NullPink_ALBEDO"/>
+        </Material.Stages>
+    </Material>
+</MaterialAsset>

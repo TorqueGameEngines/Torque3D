@@ -86,6 +86,21 @@ namespace
          ret |= SI_ALT;
       }
 
+      // NOTE: For MacOS, this will treat command as Left or Right CTRL
+#ifdef TORQUE_OS_MAC
+      if (mod & KMOD_LGUI)
+      {
+         ret |= SI_LCTRL;
+         ret |= SI_CTRL;
+      }
+
+      if (mod & KMOD_RGUI)
+      {
+         ret |= SI_RCTRL;
+         ret |= SI_CTRL;
+      }
+#endif
+
       return ret;
    }
 }

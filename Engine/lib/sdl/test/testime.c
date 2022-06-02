@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -23,6 +23,7 @@
 #endif
 
 #include "SDL_test_common.h"
+#include "testutils.h"
 
 #define DEFAULT_PTSIZE 30
 #ifdef HAVE_SDL_TTF
@@ -35,7 +36,7 @@
 #define DEFAULT_FONT "NoDefaultFont.ttf"
 #endif
 #else
-#define DEFAULT_FONT "unifont-9.0.02.hex"
+#define DEFAULT_FONT "unifont-13.0.06.hex"
 #endif
 #define MAX_TEXT_LENGTH 256
 
@@ -108,6 +109,7 @@ static int unifont_init(const char *fontname)
     SDL_RWops *hexFile;
     const size_t unifontGlyphSize = UNIFONT_NUM_GLYPHS * sizeof(struct UnifontGlyph);
     const size_t unifontTextureSize = UNIFONT_NUM_TEXTURES * state->num_windows * sizeof(void *);
+    char *filename;
 
     /* Allocate memory for the glyph data so the file can be closed after initialization. */
     unifontGlyph = (struct UnifontGlyph *)SDL_malloc(unifontGlyphSize);
@@ -127,7 +129,13 @@ static int unifont_init(const char *fontname)
     }
     SDL_memset(unifontTexture, 0, unifontTextureSize);
 
-    hexFile = SDL_RWFromFile(fontname, "rb");
+    filename = GetResourceFilename(NULL, fontname);
+    if (filename == NULL) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Out of memory\n");
+        return -1;
+    }
+    hexFile = SDL_RWFromFile(filename, "rb");
+    SDL_free(filename);
     if (hexFile == NULL)
     {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "unifont: Failed to open font file: %s\n", fontname);
@@ -648,12 +656,12 @@ int main(int argc, char *argv[])
     }
     for (argc--, argv++; argc > 0; argc--, argv++)
     {
-        if (strcmp(argv[0], "--help") == 0) {
+        if (SDL_strcmp(argv[0], "--help") == 0) {
             usage();
             return 0;
         }
 
-        else if (strcmp(argv[0], "--font") == 0)
+        else if (SDL_strcmp(argv[0], "--font") == 0)
         {
             argc--;
             argv++;

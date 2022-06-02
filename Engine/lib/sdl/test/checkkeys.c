@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -86,6 +86,8 @@ print_modifiers(char **text, size_t *maxlen)
         print_string(text, maxlen, " CAPS");
     if (mod & KMOD_MODE)
         print_string(text, maxlen, " MODE");
+    if (mod & KMOD_SCROLL)
+        print_string(text, maxlen, " SCROLL");
 }
 
 static void
@@ -135,9 +137,10 @@ PrintKey(SDL_Keysym * sym, SDL_bool pressed, SDL_bool repeat)
 }
 
 static void
-PrintText(char *eventtype, char *text)
+PrintText(const char *eventtype, const char *text)
 {
-    char *spot, expanded[1024];
+    const char *spot;
+    char expanded[1024];
 
     expanded[0] = '\0';
     for ( spot = text; *spot; ++spot )
@@ -162,7 +165,11 @@ loop()
             PrintKey(&event.key.keysym, (event.key.state == SDL_PRESSED) ? SDL_TRUE : SDL_FALSE, (event.key.repeat) ? SDL_TRUE : SDL_FALSE);
             break;
         case SDL_TEXTEDITING:
-            PrintText("EDIT", event.text.text);
+            PrintText("EDIT", event.edit.text);
+            break;
+        case SDL_TEXTEDITING_EXT:
+            PrintText("EDIT_EXT", event.editExt.text);
+            SDL_free(event.editExt.text);
             break;
         case SDL_TEXTINPUT:
             PrintText("INPUT", event.text.text);
@@ -199,9 +206,13 @@ int
 main(int argc, char *argv[])
 {
     SDL_Window *window;
+    SDL_Renderer *renderer;
 
     /* Enable standard application logging */
     SDL_LogSetPriority(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO);
+
+    /* Enable extended text editing events */
+    SDL_SetHint(SDL_HINT_IME_SUPPORT_EXTENDED_TEXT, "1");
 
     /* Initialize SDL */
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -218,6 +229,12 @@ main(int argc, char *argv[])
                 SDL_GetError());
         quit(2);
     }
+
+    /* On wayland, no window will actually show until something has
+       actually been displayed.
+    */
+    renderer = SDL_CreateRenderer(window, -1, 0);
+    SDL_RenderPresent(renderer);
 
 #if __IPHONEOS__
     /* Creating the context creates the view, which we need to show keyboard */

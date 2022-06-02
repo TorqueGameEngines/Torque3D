@@ -46,29 +46,28 @@
 extern StringStack STR;
 extern ConsoleValueStack<4096> gCallStack;
 
-Vector<ConsoleValue::ConversionBuffer> ConsoleValue::sConversionBuffer;
+DataChunker ConsoleValue::sConversionAllocator;
 
 void ConsoleValue::init()
 {
-   sConversionBuffer.reserve(8192);
+   sConversionAllocator.setChunkSize(8092);
 }
 
 void ConsoleValue::resetConversionBuffer()
 {
-   sConversionBuffer.resetAndTreatAsScratchBuffer();
+   sConversionAllocator.freeBlocks();
 }
 
 char* ConsoleValue::convertToBuffer() const
 {
-   ConversionBuffer conversion;
+   char* buffer = static_cast<char*>(sConversionAllocator.alloc(32));
    
    if (type == ConsoleValueType::cvFloat)
-      dSprintf(conversion.buffer, ConversionBufferStride, "%.9g", f);
+      dSprintf(buffer, 32, "%.9g", f);
    else
-      dSprintf(conversion.buffer, ConversionBufferStride, "%lld", i);
+      dSprintf(buffer, 32, "%lld", i);
 
-   sConversionBuffer.push_back(std::move(conversion));
-   return sConversionBuffer.last().buffer;
+   return buffer;
 }
 
 const char* ConsoleValue::getConsoleData() const

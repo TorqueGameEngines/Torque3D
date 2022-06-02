@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -33,8 +33,11 @@ SDL_SYS_OpenURL(const char *url)
 {
     const pid_t pid1 = fork();
     if (pid1 == 0) {  /* child process */
+        pid_t pid2;
+        /* Clear LD_PRELOAD so Chrome opens correctly when this application is launched by Steam */
+        unsetenv("LD_PRELOAD");
         /* Notice this is vfork and not fork! */
-        const pid_t pid2 = vfork();
+        pid2 = vfork();
         if (pid2 == 0) {  /* Grandchild process will try to launch the url */
             execlp("xdg-open", "xdg-open", url, NULL);
             _exit(EXIT_FAILURE);
@@ -62,8 +65,6 @@ SDL_SYS_OpenURL(const char *url)
             return SDL_SetError("Waiting on xdg-open failed: %s", strerror(errno));
         }
     }
-
-    return 0;
 }
 
 /* vi: set ts=4 sw=4 expandtab: */

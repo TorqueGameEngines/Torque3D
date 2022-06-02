@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -42,22 +42,6 @@ typedef struct {
     Uint8 last_state[USB_PACKET_LENGTH];
 } SDL_DriverXbox360_Context;
 
-#if defined(__MACOSX__)
-static SDL_bool
-IsBluetoothXboxOneController(Uint16 vendor_id, Uint16 product_id)
-{
-    /* Check to see if it's the Xbox One S or Xbox One Elite Series 2 in Bluetooth mode */
-    if (vendor_id == USB_VENDOR_MICROSOFT) {
-        if (product_id == USB_PRODUCT_XBOX_ONE_S_REV1_BLUETOOTH ||
-            product_id == USB_PRODUCT_XBOX_ONE_S_REV2_BLUETOOTH ||
-            product_id == USB_PRODUCT_XBOX_ONE_ELITE_SERIES_2_BLUETOOTH) {
-            return SDL_TRUE;
-        }
-    }
-    return SDL_FALSE;
-}
-#endif
-
 static SDL_bool
 HIDAPI_DriverXbox360_IsSupportedDevice(const char *name, SDL_GameControllerType type, Uint16 vendor_id, Uint16 product_id, Uint16 version, int interface_number, int interface_class, int interface_subclass, int interface_protocol)
 {
@@ -89,7 +73,7 @@ HIDAPI_DriverXbox360_IsSupportedDevice(const char *name, SDL_GameControllerType 
 
        Bluetooth Xbox One controllers are handled by the SDL Xbox One driver
     */
-    if (IsBluetoothXboxOneController(vendor_id, product_id)) {
+    if (SDL_IsJoystickBluetoothXboxOne(vendor_id, product_id)) {
         return SDL_FALSE;
     }
     return (type == SDL_CONTROLLER_TYPE_XBOX360 || type == SDL_CONTROLLER_TYPE_XBOXONE) ? SDL_TRUE : SDL_FALSE;
@@ -104,12 +88,14 @@ HIDAPI_DriverXbox360_GetDeviceName(Uint16 vendor_id, Uint16 product_id)
     return NULL;
 }
 
-static SDL_bool SetSlotLED(hid_device *dev, Uint8 slot)
+static SDL_bool SetSlotLED(SDL_hid_device *dev, Uint8 slot)
 {
-    Uint8 mode = 0x02 + slot;
-    const Uint8 led_packet[] = { 0x01, 0x03, mode };
+    const SDL_bool blink = SDL_FALSE;
+    Uint8 mode = (blink ? 0x02 : 0x06) + slot;
+    Uint8 led_packet[] = { 0x01, 0x03, 0x00 };
 
-    if (hid_write(dev, led_packet, sizeof(led_packet)) != sizeof(led_packet)) {
+    led_packet[2] = mode;
+    if (SDL_hid_write(dev, led_packet, sizeof(led_packet)) != sizeof(led_packet)) {
         return SDL_FALSE;
     }
     return SDL_TRUE;
@@ -133,7 +119,9 @@ HIDAPI_DriverXbox360_SetDevicePlayerIndex(SDL_HIDAPI_Device *device, SDL_Joystic
     if (!device->dev) {
         return;
     }
-    SetSlotLED(device->dev, (player_index % 4));
+    if (player_index >= 0) {
+        SetSlotLED(device->dev, (player_index % 4));
+    }
 }
 
 static SDL_bool
@@ -148,7 +136,7 @@ HIDAPI_DriverXbox360_OpenJoystick(SDL_HIDAPI_Device *device, SDL_Joystick *joyst
         return SDL_FALSE;
     }
 
-    device->dev = hid_open_path(device->path, 0);
+    device->dev = SDL_hid_open_path(device->path, 0);
     if (!device->dev) {
         SDL_SetError("Couldn't open %s", device->path);
         SDL_free(ctx);
@@ -174,7 +162,7 @@ static int
 HIDAPI_DriverXbox360_RumbleJoystick(SDL_HIDAPI_Device *device, SDL_Joystick *joystick, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble)
 {
 #ifdef __MACOSX__
-    if (IsBluetoothXboxOneController(device->vendor_id, device->product_id)) {
+    if (SDL_IsJoystickBluetoothXboxOne(device->vendor_id, device->product_id)) {
         Uint8 rumble_packet[] = { 0x03, 0x0F, 0x00, 0x00, 0x00, 0x00, 0xff, 0x00, 0x00 };
 
         rumble_packet[4] = (low_frequency_rumble >> 8);
@@ -215,15 +203,21 @@ HIDAPI_DriverXbox360_RumbleJoystickTriggers(SDL_HIDAPI_Device *device, SDL_Joyst
     return SDL_Unsupported();
 }
 
-static SDL_bool
-HIDAPI_DriverXbox360_HasJoystickLED(SDL_HIDAPI_Device *device, SDL_Joystick *joystick)
+static Uint32
+HIDAPI_DriverXbox360_GetJoystickCapabilities(SDL_HIDAPI_Device *device, SDL_Joystick *joystick)
 {
-    /* Doesn't have an RGB LED, so don't return true here */
-    return SDL_FALSE;
+    /* Doesn't have an RGB LED, so don't return SDL_JOYCAP_LED here */
+    return SDL_JOYCAP_RUMBLE;
 }
 
 static int
 HIDAPI_DriverXbox360_SetJoystickLED(SDL_HIDAPI_Device *device, SDL_Joystick *joystick, Uint8 red, Uint8 green, Uint8 blue)
+{
+    return SDL_Unsupported();
+}
+
+static int
+HIDAPI_DriverXbox360_SendJoystickEffect(SDL_HIDAPI_Device *device, SDL_Joystick *joystick, const void *data, int size)
 {
     return SDL_Unsupported();
 }
@@ -302,7 +296,7 @@ HIDAPI_DriverXbox360_UpdateDevice(SDL_HIDAPI_Device *device)
         return SDL_FALSE;
     }
 
-    while ((size = hid_read_timeout(device->dev, data, sizeof(data), 0)) > 0) {
+    while ((size = SDL_hid_read_timeout(device->dev, data, sizeof(data), 0)) > 0) {
 #ifdef DEBUG_XBOX_PROTOCOL
         HIDAPI_DumpPacket("Xbox 360 packet: size = %d", data, size);
 #endif
@@ -321,13 +315,17 @@ HIDAPI_DriverXbox360_UpdateDevice(SDL_HIDAPI_Device *device)
 static void
 HIDAPI_DriverXbox360_CloseJoystick(SDL_HIDAPI_Device *device, SDL_Joystick *joystick)
 {
-    if (device->dev) {
-        hid_close(device->dev);
-        device->dev = NULL;
-    }
+    SDL_LockMutex(device->dev_lock);
+    {
+        if (device->dev) {
+            SDL_hid_close(device->dev);
+            device->dev = NULL;
+        }
 
-    SDL_free(device->context);
-    device->context = NULL;
+        SDL_free(device->context);
+        device->context = NULL;
+    }
+    SDL_UnlockMutex(device->dev_lock);
 }
 
 static void
@@ -339,6 +337,7 @@ SDL_HIDAPI_DeviceDriver SDL_HIDAPI_DriverXbox360 =
 {
     SDL_HINT_JOYSTICK_HIDAPI_XBOX,
     SDL_TRUE,
+    SDL_TRUE,
     HIDAPI_DriverXbox360_IsSupportedDevice,
     HIDAPI_DriverXbox360_GetDeviceName,
     HIDAPI_DriverXbox360_InitDevice,
@@ -348,8 +347,9 @@ SDL_HIDAPI_DeviceDriver SDL_HIDAPI_DriverXbox360 =
     HIDAPI_DriverXbox360_OpenJoystick,
     HIDAPI_DriverXbox360_RumbleJoystick,
     HIDAPI_DriverXbox360_RumbleJoystickTriggers,
-    HIDAPI_DriverXbox360_HasJoystickLED,
+    HIDAPI_DriverXbox360_GetJoystickCapabilities,
     HIDAPI_DriverXbox360_SetJoystickLED,
+    HIDAPI_DriverXbox360_SendJoystickEffect,
     HIDAPI_DriverXbox360_SetJoystickSensorsEnabled,
     HIDAPI_DriverXbox360_CloseJoystick,
     HIDAPI_DriverXbox360_FreeDevice,

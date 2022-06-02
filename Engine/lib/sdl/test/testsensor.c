@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -95,7 +95,11 @@ main(int argc, char **argv)
 
         SDL_CreateWindow("Sensor Test", 0, 0, 0, 0, SDL_WINDOW_FULLSCREEN_DESKTOP);
         while (!done) {
-            while (SDL_PollEvent(&event) > 0) {
+            /* Update to get the current event state */
+            SDL_PumpEvents();
+
+            /* Process all currently pending events */
+            while (SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_FIRSTEVENT, SDL_LASTEVENT) == 1) {
                 switch (event.type) {
                 case SDL_SENSORUPDATE:
                     HandleSensorEvent(&event.sensor);

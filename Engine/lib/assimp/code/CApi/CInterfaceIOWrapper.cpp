@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2019, assimp team
+Copyright (c) 2006-2022, assimp team
 
 
 
@@ -45,44 +45,39 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "CInterfaceIOWrapper.h"
 
-namespace Assimp    {
+namespace Assimp {
 
-CIOStreamWrapper::~CIOStreamWrapper(void)
-{
+CIOStreamWrapper::~CIOStreamWrapper() {
     /* Various places depend on this destructor to close the file */
     if (mFile) {
         mIO->mFileSystem->CloseProc(mIO->mFileSystem, mFile);
-        mFile = nullptr;
     }
 }
 
 // ...................................................................
-size_t CIOStreamWrapper::Read(void* pvBuffer,
-    size_t pSize,
-    size_t pCount
-){
+size_t CIOStreamWrapper::Read(void *pvBuffer,
+        size_t pSize,
+        size_t pCount) {
     // need to typecast here as C has no void*
-    return mFile->ReadProc(mFile,(char*)pvBuffer,pSize,pCount);
+    return mFile->ReadProc(mFile, (char *)pvBuffer, pSize, pCount);
 }
 
 // ...................................................................
-size_t CIOStreamWrapper::Write(const void* pvBuffer,
-    size_t pSize,
-    size_t pCount
-){
+size_t CIOStreamWrapper::Write(const void *pvBuffer,
+        size_t pSize,
+        size_t pCount) {
     // need to typecast here as C has no void*
-    return mFile->WriteProc(mFile,(const char*)pvBuffer,pSize,pCount);
+    return mFile->WriteProc(mFile, (const char *)pvBuffer, pSize, pCount);
 }
 
 // ...................................................................
 aiReturn CIOStreamWrapper::Seek(size_t pOffset,
-    aiOrigin pOrigin
-){
-    return mFile->SeekProc(mFile,pOffset,pOrigin);
+        aiOrigin pOrigin) {
+    return mFile->SeekProc(mFile, pOffset, pOrigin);
 }
 
 // ...................................................................
-size_t CIOStreamWrapper::Tell(void) const {
+size_t CIOStreamWrapper::Tell() const {
     return mFile->TellProc(mFile);
 }
 
@@ -92,16 +87,16 @@ size_t CIOStreamWrapper::FileSize() const {
 }
 
 // ...................................................................
-void CIOStreamWrapper::Flush () {
+void CIOStreamWrapper::Flush() {
     return mFile->FlushProc(mFile);
 }
 
 // ------------------------------------------------------------------------------------------------
 // Custom IOStream implementation for the C-API
-bool CIOSystemWrapper::Exists( const char* pFile) const {
-    aiFile* p = mFileSystem->OpenProc(mFileSystem,pFile,"rb");
-    if (p){
-        mFileSystem->CloseProc(mFileSystem,p);
+bool CIOSystemWrapper::Exists(const char *pFile) const {
+    aiFile *p = mFileSystem->OpenProc(mFileSystem, pFile, "rb");
+    if (p) {
+        mFileSystem->CloseProc(mFileSystem, p);
         return true;
     }
     return false;
@@ -117,20 +112,20 @@ char CIOSystemWrapper::getOsSeparator() const {
 }
 
 // ...................................................................
-IOStream* CIOSystemWrapper::Open(const char* pFile,const char* pMode) {
-    aiFile* p = mFileSystem->OpenProc(mFileSystem,pFile,pMode);
+IOStream *CIOSystemWrapper::Open(const char *pFile, const char *pMode) {
+    aiFile *p = mFileSystem->OpenProc(mFileSystem, pFile, pMode);
     if (!p) {
-        return NULL;
+        return nullptr;
     }
     return new CIOStreamWrapper(p, this);
 }
 
 // ...................................................................
-void CIOSystemWrapper::Close( IOStream* pFile) {
+void CIOSystemWrapper::Close(IOStream *pFile) {
     if (!pFile) {
         return;
     }
     delete pFile;
 }
 
-}
+} // namespace Assimp

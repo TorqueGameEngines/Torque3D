@@ -2,13 +2,7 @@
 new Scene(EditorTemplateLevel) {
    canSave = "1";
    canSaveDynamicFields = "1";
-   isSubScene = "0";
-   isEditing = "0";
-   isDirty = "0";
-      cdTrack = "2";
-      CTF_scoreLimit = "5";
       Enabled = "1";
-      musicTrack = "lush";
 
    new LevelInfo(theLevelInfo) {
       nearClip = "0.1";
@@ -26,10 +20,7 @@ new Scene(EditorTemplateLevel) {
       soundDistanceModel = "Linear";
       canSave = "1";
       canSaveDynamicFields = "1";
-         advancedLightmapSupport = "0";
-         desc0 = "A blank room template that acts as a starting point.";
          Enabled = "1";
-         LevelName = "Blank Room Template";
    };
    new SkyBox(theSky) {
       Material = "BlankSkyMat";

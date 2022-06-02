@@ -54,11 +54,17 @@ int platform_testTypes(void *arg)
 int platform_testEndianessAndSwap(void *arg)
 {
     int real_byteorder;
+    int real_floatwordorder = 0;
     Uint16 value = 0x1234;
     Uint16 value16 = 0xCDAB;
     Uint16 swapped16 = 0xABCD;
     Uint32 value32 = 0xEFBEADDE;
     Uint32 swapped32 = 0xDEADBEEF;
+
+    union {
+       double d;
+       Uint32 ui32[2];
+    } value_double;
 
     Uint64 value64, swapped64;
     value64 = 0xEFBEADDE;
@@ -67,6 +73,7 @@ int platform_testEndianessAndSwap(void *arg)
     swapped64 = 0x1234ABCD;
     swapped64 <<= 32;
     swapped64 |= 0xDEADBEEF;
+    value_double.d = 3.141593;
 
     if ((*((char *) &value) >> 4) == 0x1) {
         real_byteorder = SDL_BIG_ENDIAN;
@@ -79,6 +86,18 @@ int platform_testEndianessAndSwap(void *arg)
              "Machine detected as %s endian, appears to be %s endian.",
              (SDL_BYTEORDER == SDL_LIL_ENDIAN) ? "little" : "big",
              (real_byteorder == SDL_LIL_ENDIAN) ? "little" : "big" );
+
+    if (value_double.ui32[0] == 0x82c2bd7f && value_double.ui32[1] == 0x400921fb) {
+        real_floatwordorder = SDL_LIL_ENDIAN;
+    } else if (value_double.ui32[0] == 0x400921fb && value_double.ui32[1] == 0x82c2bd7f) {
+        real_floatwordorder = SDL_BIG_ENDIAN;
+    }
+
+    /* Test endianness. */
+    SDLTest_AssertCheck( real_floatwordorder == SDL_FLOATWORDORDER,
+             "Machine detected as having %s endian float word order, appears to be %s endian.",
+             (SDL_FLOATWORDORDER == SDL_LIL_ENDIAN) ? "little" : "big",
+             (real_floatwordorder == SDL_LIL_ENDIAN) ? "little" : (real_floatwordorder == SDL_BIG_ENDIAN) ? "big" : "unknown" );
 
     /* Test 16 swap. */
     SDLTest_AssertCheck( SDL_Swap16(value16) == swapped16,
@@ -101,11 +120,11 @@ int platform_testEndianessAndSwap(void *arg)
 /* !
  * \brief Tests SDL_GetXYZ() functions
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_GetPlatform
- * http://wiki.libsdl.org/moin.cgi/SDL_GetCPUCount
- * http://wiki.libsdl.org/moin.cgi/SDL_GetCPUCacheLineSize
- * http://wiki.libsdl.org/moin.cgi/SDL_GetRevision
- * http://wiki.libsdl.org/moin.cgi/SDL_GetRevisionNumber
+ * http://wiki.libsdl.org/SDL_GetPlatform
+ * http://wiki.libsdl.org/SDL_GetCPUCount
+ * http://wiki.libsdl.org/SDL_GetCPUCacheLineSize
+ * http://wiki.libsdl.org/SDL_GetRevision
+ * http://wiki.libsdl.org/SDL_GetRevisionNumber
  */
 int platform_testGetFunctions (void *arg)
 {
@@ -141,60 +160,55 @@ int platform_testGetFunctions (void *arg)
    SDLTest_AssertPass("SDL_GetRevision()");
    SDLTest_AssertCheck(revision != NULL, "SDL_GetRevision() != NULL");
 
-   ret = SDL_GetRevisionNumber();
-   SDLTest_AssertPass("SDL_GetRevisionNumber()");
-
    return TEST_COMPLETED;
 }
 
 /* !
  * \brief Tests SDL_HasXYZ() functions
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_Has3DNow
- * http://wiki.libsdl.org/moin.cgi/SDL_HasAltiVec
- * http://wiki.libsdl.org/moin.cgi/SDL_HasMMX
- * http://wiki.libsdl.org/moin.cgi/SDL_HasRDTSC
- * http://wiki.libsdl.org/moin.cgi/SDL_HasSSE
- * http://wiki.libsdl.org/moin.cgi/SDL_HasSSE2
- * http://wiki.libsdl.org/moin.cgi/SDL_HasSSE3
- * http://wiki.libsdl.org/moin.cgi/SDL_HasSSE41
- * http://wiki.libsdl.org/moin.cgi/SDL_HasSSE42
- * http://wiki.libsdl.org/moin.cgi/SDL_HasAVX
+ * http://wiki.libsdl.org/SDL_Has3DNow
+ * http://wiki.libsdl.org/SDL_HasAltiVec
+ * http://wiki.libsdl.org/SDL_HasMMX
+ * http://wiki.libsdl.org/SDL_HasRDTSC
+ * http://wiki.libsdl.org/SDL_HasSSE
+ * http://wiki.libsdl.org/SDL_HasSSE2
+ * http://wiki.libsdl.org/SDL_HasSSE3
+ * http://wiki.libsdl.org/SDL_HasSSE41
+ * http://wiki.libsdl.org/SDL_HasSSE42
+ * http://wiki.libsdl.org/SDL_HasAVX
  */
 int platform_testHasFunctions (void *arg)
 {
-   int ret;
-
    /* TODO: independently determine and compare values as well */
 
-   ret = SDL_HasRDTSC();
+   SDL_HasRDTSC();
    SDLTest_AssertPass("SDL_HasRDTSC()");
 
-   ret = SDL_HasAltiVec();
+   SDL_HasAltiVec();
    SDLTest_AssertPass("SDL_HasAltiVec()");
 
-   ret = SDL_HasMMX();
+   SDL_HasMMX();
    SDLTest_AssertPass("SDL_HasMMX()");
 
-   ret = SDL_Has3DNow();
+   SDL_Has3DNow();
    SDLTest_AssertPass("SDL_Has3DNow()");
 
-   ret = SDL_HasSSE();
+   SDL_HasSSE();
    SDLTest_AssertPass("SDL_HasSSE()");
 
-   ret = SDL_HasSSE2();
+   SDL_HasSSE2();
    SDLTest_AssertPass("SDL_HasSSE2()");
 
-   ret = SDL_HasSSE3();
+   SDL_HasSSE3();
    SDLTest_AssertPass("SDL_HasSSE3()");
 
-   ret = SDL_HasSSE41();
+   SDL_HasSSE41();
    SDLTest_AssertPass("SDL_HasSSE41()");
 
-   ret = SDL_HasSSE42();
+   SDL_HasSSE42();
    SDLTest_AssertPass("SDL_HasSSE42()");
 
-   ret = SDL_HasAVX();
+   SDL_HasAVX();
    SDLTest_AssertPass("SDL_HasAVX()");
 
    return TEST_COMPLETED;
@@ -203,7 +217,7 @@ int platform_testHasFunctions (void *arg)
 /* !
  * \brief Tests SDL_GetVersion
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_GetVersion
+ * http://wiki.libsdl.org/SDL_GetVersion
  */
 int platform_testGetVersion(void *arg)
 {
@@ -273,9 +287,9 @@ int platform_testDefaultInit(void *arg)
 /* !
  * \brief Tests SDL_Get/Set/ClearError
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_GetError
- * http://wiki.libsdl.org/moin.cgi/SDL_SetError
- * http://wiki.libsdl.org/moin.cgi/SDL_ClearError
+ * http://wiki.libsdl.org/SDL_GetError
+ * http://wiki.libsdl.org/SDL_SetError
+ * http://wiki.libsdl.org/SDL_ClearError
  */
 int platform_testGetSetClearError(void *arg)
 {
@@ -327,7 +341,7 @@ int platform_testGetSetClearError(void *arg)
 /* !
  * \brief Tests SDL_SetError with empty input
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_SetError
+ * http://wiki.libsdl.org/SDL_SetError
  */
 int platform_testSetErrorEmptyInput(void *arg)
 {
@@ -365,7 +379,7 @@ int platform_testSetErrorEmptyInput(void *arg)
 /* !
  * \brief Tests SDL_SetError with invalid input
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_SetError
+ * http://wiki.libsdl.org/SDL_SetError
  */
 int platform_testSetErrorInvalidInput(void *arg)
 {
@@ -389,7 +403,7 @@ int platform_testSetErrorInvalidInput(void *arg)
    if (lastError != NULL)
    {
      len = SDL_strlen(lastError);
-     SDLTest_AssertCheck(len == 0,
+     SDLTest_AssertCheck(len == 0 || SDL_strcmp(lastError, "(null)") == 0,
              "SDL_GetError(): expected message len 0, was len: %i",
              (int) len);
    }
@@ -409,7 +423,7 @@ int platform_testSetErrorInvalidInput(void *arg)
    if (lastError != NULL)
    {
      len = SDL_strlen(lastError);
-     SDLTest_AssertCheck(len == 0,
+     SDLTest_AssertCheck(len == 0 || SDL_strcmp( lastError, "(null)" ) == 0,
              "SDL_GetError(): expected message len 0, was len: %i",
              (int) len);
    }
@@ -448,7 +462,7 @@ int platform_testSetErrorInvalidInput(void *arg)
 /* !
  * \brief Tests SDL_GetPowerInfo
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_GetPowerInfo
+ * http://wiki.libsdl.org/SDL_GetPowerInfo
  */
 int platform_testGetPowerInfo(void *arg)
 {

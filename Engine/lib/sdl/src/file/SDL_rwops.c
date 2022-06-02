@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -203,9 +203,9 @@ windows_file_read(SDL_RWops * context, void *ptr, size_t size, size_t maxnum)
 
     total_need = size * maxnum;
 
-    if (!context || context->hidden.windowsio.h == INVALID_HANDLE_VALUE
-        || !total_need)
+    if (!context || context->hidden.windowsio.h == INVALID_HANDLE_VALUE || !total_need) {
         return 0;
+    }
 
     if (context->hidden.windowsio.buffer.left > 0) {
         void *data = (char *) context->hidden.windowsio.buffer.data +
@@ -258,9 +258,9 @@ windows_file_write(SDL_RWops * context, const void *ptr, size_t size,
 
     total_bytes = size * num;
 
-    if (!context || context->hidden.windowsio.h == INVALID_HANDLE_VALUE
-        || total_bytes <= 0 || !size)
+    if (!context || context->hidden.windowsio.h == INVALID_HANDLE_VALUE || !size || !total_bytes) {
         return 0;
+    }
 
     if (context->hidden.windowsio.buffer.left) {
         SetFilePointer(context->hidden.windowsio.h,
@@ -479,8 +479,7 @@ mem_read(SDL_RWops * context, void *ptr, size_t size, size_t maxnum)
     size_t mem_available;
 
     total_bytes = (maxnum * size);
-    if ((maxnum <= 0) || (size <= 0)
-        || ((total_bytes / maxnum) != size)) {
+    if (!maxnum || !size || ((total_bytes / maxnum) != size)) {
         return 0;
     }
 
@@ -589,10 +588,9 @@ SDL_RWFromFile(const char *file, const char *mode)
     rwops->write = windows_file_write;
     rwops->close = windows_file_close;
     rwops->type = SDL_RWOPS_WINFILE;
-
 #elif HAVE_STDIO_H
     {
-        #ifdef __APPLE__
+        #if __APPLE__ && !SDL_FILE_DISABLED // TODO: add dummy?
         FILE *fp = SDL_OpenFPFromBundleOrFallback(file, mode);
         #elif __WINRT__
         FILE *fp = NULL;

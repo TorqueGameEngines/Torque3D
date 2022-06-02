@@ -108,7 +108,7 @@ publish
 
 # Others
 [Bb]in
-[Oo]bj
+# [Oo]bj
 sql
 TestResults
 *.Cache
@@ -183,3 +183,4 @@ My Projects/
 Project Manager.exe
 projects.xml
 Qt*.dll
+.vs

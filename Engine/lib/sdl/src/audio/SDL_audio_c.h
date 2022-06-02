@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -69,11 +69,6 @@ extern SDL_AudioFilter SDL_Convert_F32_to_U8;
 extern SDL_AudioFilter SDL_Convert_F32_to_S16;
 extern SDL_AudioFilter SDL_Convert_F32_to_U16;
 extern SDL_AudioFilter SDL_Convert_F32_to_S32;
-
-/* You need to call SDL_PrepareResampleFilter() before using the internal resampler.
-   SDL_AudioQuit() calls SDL_FreeResamplerFilter(), you should never call it yourself. */
-extern int SDL_PrepareResampleFilter(void);
-extern void SDL_FreeResampleFilter(void);
 
 #endif /* SDL_audio_c_h_ */
 

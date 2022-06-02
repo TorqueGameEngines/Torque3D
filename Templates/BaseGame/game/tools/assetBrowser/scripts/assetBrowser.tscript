@@ -368,8 +368,6 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
       %this.previewData.doubleClickCommand = "";
    }
    
-   AssetPreviewArray.empty();
-   
    %previewImage = "core/art/warnmat";
    
    if(/*%moduleName !$= "" && */ModuleDatabase.findModule(%moduleName, 1) !$= "")
@@ -512,6 +510,7 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
       textLocation = "Bottom";
       extent = %previewSize.x SPC %previewSize.y + %textBottomPad;
       buttonType = "RadioButton";
+      buttonMargin = "0 -10";
       profile = ToolsGuiDefaultProfile;
    };
    
@@ -528,11 +527,16 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
       %previewButton.iconLocation = "Left";
       %previewButton.textLocation = "Right";
       %previewButton.setextent(120,20);
+      %previewButton.buttonMargin = "0 0";
+      
+      AssetBrowser.previewListMode = true;
    }
    else
    {
       %size = %previewSize.x * %previewScaleSize;
       %previewButton.setextent(%size,%size + %textBottomPad);
+      
+      AssetBrowser.previewListMode = false;
    }
    
    //%previewButton.extent = %previewSize.x + %previewBounds SPC %previewSize.y + %previewBounds + 24;
@@ -548,6 +552,8 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
    {
       %doubleClickCommand = "AssetBrowser.editAsset( "@%assetDesc@" );";
    }
+   
+   %this.previewData.previewLoaded = true;
    
    //Build out the preview
    %buildCommand = %this @ ".build" @ %assetType @ "Preview(\"" @ %assetDesc @ "\"," @ %this.previewData @ ");";
@@ -579,7 +585,8 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
    AssetBrowser-->assetList.add(%previewButton);
    
    // add to the array object for reference later
-   AssetPreviewArray.add( %previewButton, %this.previewData.previewImage );
+   if(%this.previewData.previewLoaded == false)
+      AssetPreviewArray.add( %previewButton );
 }
 
 function AssetBrowser::refresh(%this)
@@ -605,6 +612,25 @@ function AssetBrowser::doRefresh(%this)
       AssetBrowser-->filterTree.expandItem(%dataItem);
       
       %this.dirty = false;
+   }
+}
+
+function AssetBrowser::populatePreviewImages(%this)
+{
+   echo("AssetBrowser::populatePreviewImages() - Previews to generate: " @ AssetPreviewArray.count());
+   for(%i=0; %i < AssetPreviewArray.count(); %i++)
+   {
+      %previewButton = AssetPreviewArray.getKey(%i);
+      %type = %previewButton.assetType;
+      
+      echo("   - Generating preview for asset: " @ %previewButton.moduleName @ ":" @ %previewButton.assetName);
+      
+      AssetBrowser.call("generate" @ %previewButton.assetType @ "PreviewImage", %previewButton);
+      AssetPreviewArray.erase(%i);
+      
+      echo("   - done, scheduling another pass");
+      AssetBrowser.schedule(32, "populatePreviewImages");
+      return;
    }
 }
 //
@@ -645,10 +671,17 @@ function AssetBrowser::loadDirectories( %this )
       
    if(%this.selectMode)
    {
+      //Due to a fluke in how this tracks, it overrides the current addres, so we'll
+      //store it real fast
+      %curAdd = AssetBrowser.dirHandler.currentAddress;
+      
+      //Disable these for this go
       AssetBrowser-->filterTree.addSelection(AssetBrowser-->filterTree.collectionsIdx);
       AssetBrowser-->filterTree.addSelection(AssetBrowser-->filterTree.creatorIdx);
-      
       AssetBrowser-->filterTree.hideSelection();
+      AssetBrowser-->filterTree.clearSelection();
+      
+      AssetBrowser.dirHandler.currentAddress = %curAdd;
    }
    
    %this.dirHandler.loadFolders("data", %dataItem);
@@ -673,50 +706,6 @@ function AssetBrowser::loadDirectories( %this )
       %toolsItem = AssetBrowser-->filterTree.insertItem(AssetBrowser-->filterTree.modulesIdx, "tools");
       %this.dirHandler.loadFolders("tools", %toolsItem);
    }
-   
-   //Add Non-Asset Scripted Objects. Datablock, etc based
-   /*%category = getWord( %breadcrumbPath, 1 );                  
-   %dataGroup = "DataBlockGroup";
-   
-   if(%dataGroup.getCount() != 0)
-   {
-      %scriptedItem = AssetBrowser-->filterTree.insertItem(1, "Scripted");
-      
-      for ( %i = 0; %i < %dataGroup.getCount(); %i++ )
-      {
-         %obj = %dataGroup.getObject(%i);
-         // echo ("Obj: " @ %obj.getName() @ " - " @ %obj.category );
-         
-         //if ( %obj.category $= "" && %obj.category == 0 )
-         //   continue;
-         
-         %dbFilename = %obj.getFileName();
-         %dbFilePath = filePath(%dbFilename);
-         
-         if(%breadcrumbPath $= %dbFilePath)
-         {
-         
-         //if ( %breadcrumbPath $= "" )
-         //{         
-            %catItem = AssetBrowser-->filterTree.findItemByName(%obj.category);
-            
-            if(%catItem == 0)
-               AssetBrowser-->filterTree.insertItem(%scriptedItem, %obj.category, "scripted");
-            /*%ctrl = %this.findIconCtrl( %obj.category );
-            if ( %ctrl == -1 )
-            {
-               %this.addFolderIcon( %obj.category );
-            }*/
-         //}
-         /*else if ( %breadcrumbPath $= %obj.category )
-         {            
-            AssetBrowser-->filterTree.insertItem(%scriptedItem, %obj.getName());
-         }*/
-         //}
-      //}
-  // }
-   
-   AssetPreviewArray.empty();
    
    AssetBrowser-->filterTree.buildVisibleTree(true);
    
@@ -743,9 +732,6 @@ function AssetBrowser::loadDirectories( %this )
       AssetBrowser-->filterTree.selectItem(%newModuleItem);
       AssetBrowser.newModuleId = ""; 
    }
-   
-   //%dataItem = AssetBrowser-->filterTree.findItemByName("data");
-   //AssetBrowser-->filterTree.expandItem(%dataItem);
    
    AssetBrowser.dirHandler.expandTreeToAddress(AssetBrowser.dirHandler.currentAddress);
    
@@ -1212,6 +1198,86 @@ function AssetBrowser::openAssetSettings(%this)
    ESettingsWindowList.setSelectedRow( %assetEditIndex );
 }
 
+function ESettingsWindow::getAssetManagementSettings(%this)
+{
+   SettingsInspector.startGroup("Modules");
+   SettingsInspector.addSettingsField("AssetManagement/Modules/coreModulePath", "Core Module Path", "string", "");
+   SettingsInspector.addSettingsField("AssetManagement/Modules/gameDataModulePath", "Game Data Module Path", "string", "");
+   SettingsInspector.addSettingsField("AssetManagement/Modules/moduleExtension", "Module Extension", "string", "");
+   
+   %moduleList = ModuleDatabase.findModules(true);
+   %moduleList = strreplace(%moduleList, " ", ",");
+   
+   SettingsInspector.addSettingsField("AssetManagement/Modules/DefaultModule", "Default Module", "list", %moduleList);
+   SettingsInspector.endGroup();
+   
+   SettingsInspector.startGroup("Assets");
+   SettingsInspector.addSettingsField("AssetManagement/Assets/assetExtension", "Asset Extension", "string", "");
+   SettingsInspector.addSettingsField("AssetManagement/Assets/datablockCaching", "Cache Datablocks", "bool", "");
+   //SettingsInspector.addSettingsField("AssetManagement/Assets/moduleExtension", "Module Extension", "string", "");
+   
+   SettingsInspector.endGroup();
+} 
+
+function ESettingsWindow::getAssetEditingSettings(%this)
+{
+   ImportAssetWindow::reloadImportOptionConfigs();
+   
+   //First, get our list of modules
+   %moduleList = ModuleDatabase.findModules();
+   %formattedModuleList = "";
+   
+   %count = getWordCount(%moduleList);
+   for(%i=0; %i < %count; %i++)
+   {
+      %module = getWord(%moduleList, %i);
+      if(%module.group !$= "Tools" && %module.group !$= "Core")
+      {
+         if(%formattedModuleList $= "")
+            %formattedModuleList = %module.moduleId;
+         else
+            %formattedModuleList = %formattedModuleList @ "," @ %module.moduleId;  
+      }
+   }
+   
+   SettingsInspector.startGroup("Asset Creation");
+   SettingsInspector.addSettingsField("Assets/New/defaultModule", "Default Module", "list", "Default Module for new assets to be created into", %formattedModuleList); 
+   SettingsInspector.addSettingsField("Assets/New/alwaysPromptModuleTarget", "Always Prompt Target Module", "bool", "If off, use the default module"); 
+   SettingsInspector.endGroup();
+   
+   %formattedConfigList = "";
+   for(%i=0; %i < ImportAssetWindow.importConfigsList.Count(); %i++)
+   {
+      %configName = ImportAssetWindow.importConfigsList.getKey(%i);
+      %formattedConfigList = %i == 0 ? %configName : %formattedConfigList @ "," @ %configName;
+   }
+   
+   SettingsInspector.startGroup("Assets Importing");
+   SettingsInspector.addField("Edit Import Configs", "Edit Asset Import Configs", "button", "Open Asset Import Config Editor", "", "Canvas.pushDialog(AssetImportConfigEditor);");
+   SettingsInspector.addSettingsField("Assets/AssetImporDefaultConfig", "Default Asset Import Config", "list", "", %formattedConfigList); 
+   SettingsInspector.addSettingsField("Assets/AutoImport", "Automatically Import using default config", "bool", "If on, the asset importing process" @
+                                                                                                                        "will attempt to automatically import any inbound assets"@
+                                                                                                                        "using the default config, without prompting the import window."@
+                                                                                                                        "The window will still display if any issues are detected", ""); 
+   SettingsInspector.addSettingsField("Assets/AutoImportLooseFiles", "Automatically Import Loose Files", "bool", "If on, will automatically import unassociated loose files in assets when navigating the Asset Browser.", ""); 
+   SettingsInspector.endGroup();
+   
+   SettingsInspector.startGroup("Asset Browser");
+   SettingsInspector.addSettingsField("Assets/Browser/showCoreModule", "Show Core Module in Asset Browser", "bool", ""); 
+   SettingsInspector.addSettingsField("Assets/Browser/showToolsModule", "Show Tools Module in Asset Browser", "bool", ""); 
+   SettingsInspector.addSettingsField("Assets/Browser/showOnlyPopulatedModule", "Show Only Modules with Assets in Asset Browser", "bool", "");
+   SettingsInspector.addSettingsField("Assets/Browser/showFolders", "Show Folders in Tiles view in Asset Browser", "bool", "");
+   SettingsInspector.addSettingsField("Assets/Browser/showEmptyFolders", "Show Empty Folders in Tiles view in Asset Browser", "bool", "");
+   SettingsInspector.addSettingsField("Assets/Browser/showLooseFiles", "Show Loose Files when viewing in Asset Browser", "bool", "");
+   SettingsInspector.addSettingsField("AssetManagement/Assets/promptOnRename", "Prompt on Rename", "bool", "");
+   SettingsInspector.addSettingsField("Assets/Browser/doubleClickAction", "Double Click Action", "list", "Dictates what sort of action double clicking on an asset in the Browser will invoke", "Edit Asset,Spawn Asset");
+   SettingsInspector.addSettingsField("AssetManagement/Assets/closeBrowserOnDragAction", "Close Browser on Drag Action", "bool", "If on, the Asset Browser will automatically close after dragging an asset from it to the editor interface.");
+   SettingsInspector.endGroup();
+}
+//
+//
+//
+
 function AssetBrowser::showVisibiltyOptions(%this)
 {
    BrowserVisibilityPopup.showPopup(Canvas);
@@ -1371,6 +1437,40 @@ function AssetBrowser::doRebuildAssetArray(%this)
 
    %finalAssetCount = 0;
    
+   //Add folders
+   if(EditorSettings.value("Assets/Browser/showFolders", true) == true)
+   {
+      %folders = getDirectoryList(%breadcrumbPath);
+      for(%f=0; %f < getFieldCount(%folders); %f++)
+      {
+         %folderName = getField(%folders, %f);
+         
+         %searchActive = AssetSearchTerms.count() != 0;
+         if(%searchActive)
+         {
+            if(matchesSearch(%folderName, "Folder", ""))
+            {
+               $AssetBrowser::AssetArray.add( %breadcrumbPath, "Folder" TAB %folderName );
+               continue;
+            }
+         }
+         else
+         {
+            //got it.	
+            if(%folderName $= "shaderCache" || %folderName $= "cache" || %folderName $= ".git")
+               continue;
+               
+            if(!%this.coreModulesFilter && %folderName $= "core" && %breadcrumbPath $= "")
+               continue;
+               
+            if(!%this.toolsModulesFilter && %folderName $= "tools" && %breadcrumbPath $= "")
+               continue;
+               
+            $AssetBrowser::AssetArray.add( %breadcrumbPath, "Folder" TAB %folderName );
+         }
+      }
+   }
+   
     //now, we'll iterate through, and find the assets that are in this module, and this category
     for( %i=0; %i < %numAssetsFound; %i++)
     {
@@ -1415,13 +1515,18 @@ function AssetBrowser::doRebuildAssetArray(%this)
          {
             if(AssetBrowser.assetTypeFilter !$= "")
             {
-               if(AssetBrowser.assetTypeFilter $= %assetType)
+               %filtersCount = getWordCount(AssetBrowser.assetTypeFilter);
+               for(%fltrIdx = 0; %fltrIdx < %filtersCount; %fltrIdx++)
+               {
+                  %fltr = getWord(AssetBrowser.assetTypeFilter, %fltrIdx);
+                  if(%fltr $= %assetType)
                {
                   $AssetBrowser::AssetArray.add( %moduleName, %assetId );
                   
                   if(%assetType !$= "Folder")
                      %finalAssetCount++;
                }
+            }
             }
             else
             {
@@ -1434,43 +1539,24 @@ function AssetBrowser::doRebuildAssetArray(%this)
          }
       }
    }
-   
-   //Add folders
-   if(EditorSettings.value("Assets/Browser/showFolders", true) == true)
+
+   //Add Non-Asset Scripted Objects. Datablock, etc based
+   %hasDBFilter = true;
+   if(AssetBrowser.assetTypeFilter !$= "")
    {
-      %folders = getDirectoryList(%breadcrumbPath);
-      for(%f=0; %f < getFieldCount(%folders); %f++)
+      %hasDBFilter = false;
+      %filterCount = getWordCount(AssetBrowser.assetTypeFilter);
+      for(%fltrIdx = 0; %fltrIdx < %filterCount; %fltrIdx++)
       {
-         %folderName = getField(%folders, %f);
-         
-         %searchActive = AssetSearchTerms.count() != 0;
-         if(%searchActive)
+         %fltr = getWord(AssetBrowser.assetTypeFilter, %fltrIdx);
+         if(%fltr $= "Datablock" || %fltr $= "Datablocks")
          {
-            if(matchesSearch(%folderName, "Folder", ""))
-            {
-               $AssetBrowser::AssetArray.add( %breadcrumbPath, "Folder" TAB %folderName );
-               continue;
-            }
-         }
-         else
-         {
-            //got it.	
-            if(%folderName $= "shaderCache" || %folderName $= "cache" || %folderName $= ".git")
-               continue;
-               
-            if(!%this.coreModulesFilter && %folderName $= "core" && %breadcrumbPath $= "")
-               continue;
-               
-            if(!%this.toolsModulesFilter && %folderName $= "tools" && %breadcrumbPath $= "")
-               continue;
-               
-            $AssetBrowser::AssetArray.add( %breadcrumbPath, "Folder" TAB %folderName );
+            %hasDBFilter = true;
+            break;  
          }
       }
    }
-
-   //Add Non-Asset Scripted Objects. Datablock, etc based
-   if(AssetBrowser.assetTypeFilter $= "" && %breadcrumbPath !$= "" && isDirectory(%breadcrumbPath))
+   if(%hasDBFilter && %breadcrumbPath !$= "" && isDirectory(%breadcrumbPath))
    {
       %category = getWord( %breadcrumbPath, 1 );                  
       %dataGroup = "DataBlockGroup";
@@ -1688,6 +1774,10 @@ function AssetBrowser::doRebuildAssetArray(%this)
             %name = %creatorObj.val[1];
             %func = %creatorObj.val[2];
             
+               %searchActive = AssetSearchTerms.count() != 0;
+               if(%searchActive && !matchesSearch(%name, "Creator"))
+                  continue;
+                     
             $AssetBrowser::AssetArray.add( %name, "Creator" TAB %creatorObj );
          }               
       }   
@@ -1696,6 +1786,8 @@ function AssetBrowser::doRebuildAssetArray(%this)
 	
    for(%i=0; %i < $AssetBrowser::AssetArray.count(); %i++)
 		AssetBrowser.buildAssetPreview( $AssetBrowser::AssetArray.getValue(%i), $AssetBrowser::AssetArray.getKey(%i) );  
+   //Queue population of any non-Type Card preview images
+   AssetBrowser.schedule(32, "populatePreviewImages");
 		
    AssetBrowser_FooterText.text = %finalAssetCount @ " Assets";
    
@@ -2386,7 +2478,14 @@ function GuiEditor::onControlDropped(%this, %payload, %position)
    else
    {
       %className = %payload.assetName;
+      if(%payload.altCommand !$= "")
+      {
+         %cmd = %payload.altCommand;
+      }
+      else
+      {
       %cmd = "return new " @ %className @ "();";
+      }
       %ctrl = eval( %cmd );
    }
 

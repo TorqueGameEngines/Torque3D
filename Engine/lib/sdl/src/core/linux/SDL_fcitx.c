@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -84,7 +84,8 @@ GetAppName()
     return SDL_strdup("SDL_App");
 }
 
-size_t Fcitx_GetPreeditString(SDL_DBusContext *dbus, DBusMessage *msg, char **ret) {
+static size_t
+Fcitx_GetPreeditString(SDL_DBusContext *dbus, DBusMessage *msg, char **ret) {
     char *text = NULL, *subtext;
     size_t text_bytes = 0;
     DBusMessageIter iter, array, sub;
@@ -204,7 +205,7 @@ Fcitx_SetCapabilities(void *data,
         const char *internal_editing)
 {
     FcitxClient *client = (FcitxClient *)data;
-    Uint32 caps = 0;
+    Uint64 caps = 0;
     if (!client->ic_path) {
         return;
     }
@@ -338,11 +339,11 @@ SDL_Fcitx_Reset(void)
 }
 
 SDL_bool
-SDL_Fcitx_ProcessKeyEvent(Uint32 keysym, Uint32 keycode)
+SDL_Fcitx_ProcessKeyEvent(Uint32 keysym, Uint32 keycode, Uint8 state)
 {
-    Uint32 state = Fcitx_ModState();
+    Uint32 mod_state = Fcitx_ModState();
     Uint32 handled = SDL_FALSE;
-    Uint32 is_release = SDL_FALSE;
+    Uint32 is_release = (state == SDL_RELEASED);
     Uint32 event_time = 0;
 
     if (!fcitx_client.ic_path) {
@@ -350,7 +351,7 @@ SDL_Fcitx_ProcessKeyEvent(Uint32 keysym, Uint32 keycode)
     }
 
     if (SDL_DBus_CallMethod(FCITX_DBUS_SERVICE, fcitx_client.ic_path, FCITX_IC_DBUS_INTERFACE, "ProcessKeyEvent",
-            DBUS_TYPE_UINT32, &keysym, DBUS_TYPE_UINT32, &keycode, DBUS_TYPE_UINT32, &state, DBUS_TYPE_BOOLEAN, &is_release, DBUS_TYPE_UINT32, &event_time, DBUS_TYPE_INVALID,
+            DBUS_TYPE_UINT32, &keysym, DBUS_TYPE_UINT32, &keycode, DBUS_TYPE_UINT32, &mod_state, DBUS_TYPE_BOOLEAN, &is_release, DBUS_TYPE_UINT32, &event_time, DBUS_TYPE_INVALID,
             DBUS_TYPE_BOOLEAN, &handled, DBUS_TYPE_INVALID)) {
         if (handled) {
             SDL_Fcitx_UpdateTextRect(NULL);

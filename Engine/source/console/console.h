@@ -146,17 +146,7 @@ class ConsoleValue
 
    S32 type;
 
-   enum Constants
-   {
-      ConversionBufferStride = 32
-   };
-
-   struct ConversionBuffer
-   {
-      char buffer[ConversionBufferStride];
-   };
-   
-   static Vector<ConversionBuffer> sConversionBuffer;
+   static DataChunker sConversionAllocator;
 
    char* convertToBuffer() const;
 
@@ -239,8 +229,10 @@ public:
          return f;
       if (type == ConsoleValueType::cvInteger)
          return i;
-      if (isStringType())
-         return dAtof(s);
+      if (type == ConsoleValueType::cvSTEntry)
+         return s == StringTable->EmptyString() ? 0.0f : dAtof(s);
+      if (type == ConsoleValueType::cvString)
+         return dStrcmp(s, "") == 0 ? 0.0f : dAtof(s);
       return dAtof(getConsoleData());
    }
 
@@ -250,8 +242,10 @@ public:
          return i;
       if (type == ConsoleValueType::cvFloat)
          return f;
-      if (isStringType())
-         return dAtoi(s);
+      if (type == ConsoleValueType::cvSTEntry)
+         return s == StringTable->EmptyString() ? 0 : dAtoi(s);
+      if (type == ConsoleValueType::cvString)
+         return dStrcmp(s, "") == 0 ? 0 : dAtoi(s);
       return dAtoi(getConsoleData());
    }
 
@@ -275,8 +269,10 @@ public:
          return (bool)i;
       if (type == ConsoleValueType::cvFloat)
          return (bool)f;
-      if (isStringType())
-         return dAtob(s);
+      if (type == ConsoleValueType::cvSTEntry)
+         return s == StringTable->EmptyString() ? false : dAtob(s);
+      if (type == ConsoleValueType::cvString)
+         return dStrcmp(s, "") == 0 ? false : dAtob(s);
       return dAtob(getConsoleData());
    }
 

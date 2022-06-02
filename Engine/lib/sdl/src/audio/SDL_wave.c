@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -313,7 +313,7 @@ WaveDebugDumpFormat(WaveFile *file, Uint32 rifflen, Uint32 fmtlen, Uint32 datale
 
     SDL_LogDebug(SDL_LOG_CATEGORY_AUDIO, "%s", dumpstr);
 
-    free(dumpstr);
+    SDL_free(dumpstr);
 }
 #endif
 
@@ -685,7 +685,7 @@ MS_ADPCM_Decode(WaveFile *file, Uint8 **audio_buf, Uint32 *audio_len)
 
     state.output.pos = 0;
     state.output.size = outputsize / sizeof(Sint16);
-    state.output.data = (Sint16 *)SDL_malloc(outputsize);
+    state.output.data = (Sint16 *)SDL_calloc(1, outputsize);
     if (state.output.data == NULL) {
         return SDL_OutOfMemory();
     }
@@ -1715,7 +1715,7 @@ WaveCheckFormat(WaveFile *file, size_t datalength)
         if (file->facthint == FactStrict && file->fact.status <= 0) {
             return SDL_SetError("Missing fact chunk in WAVE file");
         }
-        /* fallthrough */
+        SDL_FALLTHROUGH;
     case PCM_CODE:
         /* All supported formats require a non-zero bit depth. */
         if (file->chunk.size < 16) {
@@ -1854,7 +1854,7 @@ WaveLoad(SDL_RWops *src, WaveFile *file, SDL_AudioSpec *spec, Uint8 **audio_buf,
             RIFFend = RIFFchunk.position + SDL_MAX_UINT32;
             break;
         }
-        /* fallthrough */
+        SDL_FALLTHROUGH;
     case RiffSizeForce:
         RIFFend = RIFFchunk.position + RIFFchunk.length;
         RIFFlengthknown = SDL_TRUE;
@@ -1871,7 +1871,7 @@ WaveLoad(SDL_RWops *src, WaveFile *file, SDL_AudioSpec *spec, Uint8 **audio_buf,
     while ((Uint64)RIFFend > (Uint64)chunk->position + chunk->length + (chunk->length & 1)) {
         /* Abort after too many chunks or else corrupt files may waste time. */
         if (chunkcount++ >= chunkcountlimit) {
-            return SDL_SetError("Chunk count in WAVE file exceeds limit of %u", chunkcountlimit);
+            return SDL_SetError("Chunk count in WAVE file exceeds limit of %" SDL_PRIu32, chunkcountlimit);
         }
 
         result = WaveNextChunk(src, chunk);

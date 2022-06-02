@@ -43,7 +43,7 @@ void _validateIntersectRectAndLineResults(
  * \brief Tests SDL_IntersectRectAndLine() clipping cases
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_IntersectRectAndLine
+ * http://wiki.libsdl.org/SDL_IntersectRectAndLine
  */
 int
 rect_testIntersectRectAndLine (void *arg)
@@ -114,7 +114,7 @@ rect_testIntersectRectAndLine (void *arg)
  * \brief Tests SDL_IntersectRectAndLine() non-clipping case line inside
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_IntersectRectAndLine
+ * http://wiki.libsdl.org/SDL_IntersectRectAndLine
  */
 int
 rect_testIntersectRectAndLineInside (void *arg)
@@ -181,7 +181,7 @@ rect_testIntersectRectAndLineInside (void *arg)
  * \brief Tests SDL_IntersectRectAndLine() non-clipping cases outside
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_IntersectRectAndLine
+ * http://wiki.libsdl.org/SDL_IntersectRectAndLine
  */
 int
 rect_testIntersectRectAndLineOutside (void *arg)
@@ -236,7 +236,7 @@ rect_testIntersectRectAndLineOutside (void *arg)
  * \brief Tests SDL_IntersectRectAndLine() with empty rectangle
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_IntersectRectAndLine
+ * http://wiki.libsdl.org/SDL_IntersectRectAndLine
  */
 int
 rect_testIntersectRectAndLineEmpty (void *arg)
@@ -271,7 +271,7 @@ rect_testIntersectRectAndLineEmpty (void *arg)
  * \brief Negative tests against SDL_IntersectRectAndLine() with invalid parameters
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_IntersectRectAndLine
+ * http://wiki.libsdl.org/SDL_IntersectRectAndLine
  */
 int
 rect_testIntersectRectAndLineParam (void *arg)
@@ -409,10 +409,36 @@ void _validateRectEqualsResults(
 }
 
 /* !
+ * \brief Private helper to check SDL_FRectEquals results
+ */
+void _validateFRectEqualsResults(
+    SDL_bool equals, SDL_bool expectedEquals,
+    SDL_FRect *rectA, SDL_FRect *rectB, SDL_FRect *refRectA, SDL_FRect *refRectB)
+{
+    int cmpRes;
+    SDLTest_AssertCheck(equals == expectedEquals,
+        "Check for correct equals result: expected %s, got %s testing (%f,%f,%f,%f) and (%f,%f,%f,%f)",
+        (expectedEquals == SDL_TRUE) ? "SDL_TRUE" : "SDL_FALSE",
+        (equals == SDL_TRUE) ? "SDL_TRUE" : "SDL_FALSE",
+        rectA->x, rectA->y, rectA->w, rectA->h,
+        rectB->x, rectB->y, rectB->w, rectB->h);
+    cmpRes = SDL_memcmp(rectA, refRectA, sizeof(*rectA));
+    SDLTest_AssertCheck(cmpRes == 0,
+        "Check that source rectangle A was not modified: got (%f,%f,%f,%f) expected (%f,%f,%f,%f)",
+        rectA->x, rectA->y, rectA->w, rectA->h,
+        refRectA->x, refRectA->y, refRectA->w, refRectA->h);
+    cmpRes = SDL_memcmp(rectB, refRectB, sizeof(*rectB));
+    SDLTest_AssertCheck(cmpRes == 0,
+        "Check that source rectangle B was not modified: got (%f,%f,%f,%f) expected (%f,%f,%f,%f)",
+        rectB->x, rectB->y, rectB->w, rectB->h,
+        refRectB->x, refRectB->y, refRectB->w, refRectB->h);
+}
+
+/* !
  * \brief Tests SDL_IntersectRect() with B fully inside A
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_IntersectRect
+ * http://wiki.libsdl.org/SDL_IntersectRect
  */
 int rect_testIntersectRectInside (void *arg)
 {
@@ -440,7 +466,7 @@ int rect_testIntersectRectInside (void *arg)
  * \brief Tests SDL_IntersectRect() with B fully outside A
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_IntersectRect
+ * http://wiki.libsdl.org/SDL_IntersectRect
  */
 int rect_testIntersectRectOutside (void *arg)
 {
@@ -468,7 +494,7 @@ int rect_testIntersectRectOutside (void *arg)
  * \brief Tests SDL_IntersectRect() with B partially intersecting A
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_IntersectRect
+ * http://wiki.libsdl.org/SDL_IntersectRect
  */
 int rect_testIntersectRectPartial (void *arg)
 {
@@ -557,7 +583,7 @@ int rect_testIntersectRectPartial (void *arg)
  * \brief Tests SDL_IntersectRect() with 1x1 pixel sized rectangles
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_IntersectRect
+ * http://wiki.libsdl.org/SDL_IntersectRect
  */
 int rect_testIntersectRectPoint (void *arg)
 {
@@ -604,7 +630,7 @@ int rect_testIntersectRectPoint (void *arg)
  * \brief Tests SDL_IntersectRect() with empty rectangles
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_IntersectRect
+ * http://wiki.libsdl.org/SDL_IntersectRect
  */
 int rect_testIntersectRectEmpty (void *arg)
 {
@@ -676,7 +702,7 @@ int rect_testIntersectRectEmpty (void *arg)
  * \brief Negative tests against SDL_IntersectRect() with invalid parameters
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_IntersectRect
+ * http://wiki.libsdl.org/SDL_IntersectRect
  */
 int rect_testIntersectRectParam(void *arg)
 {
@@ -706,7 +732,7 @@ int rect_testIntersectRectParam(void *arg)
  * \brief Tests SDL_HasIntersection() with B fully inside A
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_HasIntersection
+ * http://wiki.libsdl.org/SDL_HasIntersection
  */
 int rect_testHasIntersectionInside (void *arg)
 {
@@ -733,7 +759,7 @@ int rect_testHasIntersectionInside (void *arg)
  * \brief Tests SDL_HasIntersection() with B fully outside A
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_HasIntersection
+ * http://wiki.libsdl.org/SDL_HasIntersection
  */
 int rect_testHasIntersectionOutside (void *arg)
 {
@@ -760,7 +786,7 @@ int rect_testHasIntersectionOutside (void *arg)
  * \brief Tests SDL_HasIntersection() with B partially intersecting A
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_HasIntersection
+ * http://wiki.libsdl.org/SDL_HasIntersection
  */
 int rect_testHasIntersectionPartial (void *arg)
 {
@@ -827,7 +853,7 @@ int rect_testHasIntersectionPartial (void *arg)
  * \brief Tests SDL_HasIntersection() with 1x1 pixel sized rectangles
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_HasIntersection
+ * http://wiki.libsdl.org/SDL_HasIntersection
  */
 int rect_testHasIntersectionPoint (void *arg)
 {
@@ -873,7 +899,7 @@ int rect_testHasIntersectionPoint (void *arg)
  * \brief Tests SDL_HasIntersection() with empty rectangles
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_HasIntersection
+ * http://wiki.libsdl.org/SDL_HasIntersection
  */
 int rect_testHasIntersectionEmpty (void *arg)
 {
@@ -931,7 +957,7 @@ int rect_testHasIntersectionEmpty (void *arg)
  * \brief Negative tests against SDL_HasIntersection() with invalid parameters
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_HasIntersection
+ * http://wiki.libsdl.org/SDL_HasIntersection
  */
 int rect_testHasIntersectionParam(void *arg)
 {
@@ -954,7 +980,7 @@ int rect_testHasIntersectionParam(void *arg)
  * \brief Test SDL_EnclosePoints() without clipping
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_EnclosePoints
+ * http://wiki.libsdl.org/SDL_EnclosePoints
  */
 int rect_testEnclosePoints(void *arg)
 {
@@ -1024,7 +1050,7 @@ int rect_testEnclosePoints(void *arg)
  * \brief Test SDL_EnclosePoints() with repeated input points
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_EnclosePoints
+ * http://wiki.libsdl.org/SDL_EnclosePoints
  */
 int rect_testEnclosePointsRepeatedInput(void *arg)
 {
@@ -1100,7 +1126,7 @@ int rect_testEnclosePointsRepeatedInput(void *arg)
  * \brief Test SDL_EnclosePoints() with clipping
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_EnclosePoints
+ * http://wiki.libsdl.org/SDL_EnclosePoints
  */
 int rect_testEnclosePointsWithClipping(void *arg)
 {
@@ -1199,7 +1225,7 @@ int rect_testEnclosePointsWithClipping(void *arg)
  * \brief Negative tests against SDL_EnclosePoints() with invalid parameters
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_EnclosePoints
+ * http://wiki.libsdl.org/SDL_EnclosePoints
  */
 int rect_testEnclosePointsParam(void *arg)
 {
@@ -1227,7 +1253,7 @@ int rect_testEnclosePointsParam(void *arg)
  * \brief Tests SDL_UnionRect() where rect B is outside rect A
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_UnionRect
+ * http://wiki.libsdl.org/SDL_UnionRect
  */
 int rect_testUnionRectOutside(void *arg)
 {
@@ -1298,7 +1324,7 @@ int rect_testUnionRectOutside(void *arg)
  * \brief Tests SDL_UnionRect() where rect A or rect B are empty
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_UnionRect
+ * http://wiki.libsdl.org/SDL_UnionRect
  */
 int rect_testUnionRectEmpty(void *arg)
 {
@@ -1363,7 +1389,7 @@ int rect_testUnionRectEmpty(void *arg)
  * \brief Tests SDL_UnionRect() where rect B is inside rect A
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_UnionRect
+ * http://wiki.libsdl.org/SDL_UnionRect
  */
 int rect_testUnionRectInside(void *arg)
 {
@@ -1427,7 +1453,7 @@ int rect_testUnionRectInside(void *arg)
  * \brief Negative tests against SDL_UnionRect() with invalid parameters
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_UnionRect
+ * http://wiki.libsdl.org/SDL_UnionRect
  */
 int rect_testUnionRectParam(void *arg)
 {
@@ -1455,7 +1481,7 @@ int rect_testUnionRectParam(void *arg)
  * \brief Tests SDL_RectEmpty() with various inputs
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_RectEmpty
+ * http://wiki.libsdl.org/SDL_RectEmpty
  */
 int rect_testRectEmpty(void *arg)
 {
@@ -1498,7 +1524,7 @@ int rect_testRectEmpty(void *arg)
  * \brief Negative tests against SDL_RectEmpty() with invalid parameters
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_RectEmpty
+ * http://wiki.libsdl.org/SDL_RectEmpty
  */
 int rect_testRectEmptyParam(void *arg)
 {
@@ -1515,7 +1541,7 @@ int rect_testRectEmptyParam(void *arg)
  * \brief Tests SDL_RectEquals() with various inputs
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_RectEquals
+ * http://wiki.libsdl.org/SDL_RectEquals
  */
 int rect_testRectEquals(void *arg)
 {
@@ -1545,7 +1571,7 @@ int rect_testRectEquals(void *arg)
  * \brief Negative tests against SDL_RectEquals() with invalid parameters
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/SDL_RectEquals
+ * http://wiki.libsdl.org/SDL_RectEquals
  */
 int rect_testRectEqualsParam(void *arg)
 {
@@ -1569,6 +1595,69 @@ int rect_testRectEqualsParam(void *arg)
     result = (SDL_bool)SDL_RectEquals((const SDL_Rect *)&rectA, (const SDL_Rect *)NULL);
     SDLTest_AssertCheck(result == SDL_FALSE, "Check that function returns SDL_FALSE when 2nd parameter is NULL");
     result = (SDL_bool)SDL_RectEquals((const SDL_Rect *)NULL, (const SDL_Rect *)NULL);
+    SDLTest_AssertCheck(result == SDL_FALSE, "Check that function returns SDL_FALSE when 1st and 2nd parameter are NULL");
+
+    return TEST_COMPLETED;
+}
+
+/* !
+ * \brief Tests SDL_FRectEquals() with various inputs
+ *
+ * \sa
+ * http://wiki.libsdl.org/SDL_FRectEquals
+ */
+int rect_testFRectEquals(void *arg)
+{
+    SDL_FRect refRectA;
+    SDL_FRect refRectB;
+    SDL_FRect rectA;
+    SDL_FRect rectB;
+    SDL_bool expectedResult;
+    SDL_bool result;
+
+    /* Equals */
+    refRectA.x=(float)SDLTest_RandomIntegerInRange(-1024, 1024);
+    refRectA.y=(float)SDLTest_RandomIntegerInRange(-1024, 1024);
+    refRectA.w=(float)SDLTest_RandomIntegerInRange(1, 1024);
+    refRectA.h=(float)SDLTest_RandomIntegerInRange(1, 1024);
+    refRectB = refRectA;
+    expectedResult = SDL_TRUE;
+    rectA = refRectA;
+    rectB = refRectB;
+    result = (SDL_bool)SDL_FRectEquals((const SDL_FRect *)&rectA, (const SDL_FRect *)&rectB);
+    _validateFRectEqualsResults(result, expectedResult, &rectA, &rectB, &refRectA, &refRectB);
+
+    return TEST_COMPLETED;
+}
+
+/* !
+ * \brief Negative tests against SDL_FRectEquals() with invalid parameters
+ *
+ * \sa
+ * http://wiki.libsdl.org/SDL_FRectEquals
+ */
+int rect_testFRectEqualsParam(void *arg)
+{
+    SDL_FRect rectA;
+    SDL_FRect rectB;
+    SDL_bool result;
+
+    /* data setup -- For the purpose of this test, the values don't matter. */
+    rectA.x=SDLTest_RandomFloat();
+    rectA.y=SDLTest_RandomFloat();
+    rectA.w=SDLTest_RandomFloat();
+    rectA.h=SDLTest_RandomFloat();
+    rectB.x=SDLTest_RandomFloat();
+    rectB.y=SDLTest_RandomFloat();
+    rectB.w=SDLTest_RandomFloat();
+    rectB.h=SDLTest_RandomFloat();
+
+    /* invalid parameter combinations */
+    result = (SDL_bool)SDL_FRectEquals((const SDL_FRect *)NULL, (const SDL_FRect *)&rectB);
+    SDLTest_AssertCheck(result == SDL_FALSE, "Check that function returns SDL_FALSE when 1st parameter is NULL");
+    result = (SDL_bool)SDL_FRectEquals((const SDL_FRect *)&rectA, (const SDL_FRect *)NULL);
+    SDLTest_AssertCheck(result == SDL_FALSE, "Check that function returns SDL_FALSE when 2nd parameter is NULL");
+    result = (SDL_bool)SDL_FRectEquals((const SDL_FRect *)NULL, (const SDL_FRect *)NULL);
     SDLTest_AssertCheck(result == SDL_FALSE, "Check that function returns SDL_FALSE when 1st and 2nd parameter are NULL");
 
     return TEST_COMPLETED;
@@ -1673,17 +1762,24 @@ static const SDLTest_TestCaseReference rectTest28 =
 static const SDLTest_TestCaseReference rectTest29 =
         { (SDLTest_TestCaseFp)rect_testRectEqualsParam, "rect_testRectEqualsParam", "Negative tests against SDL_RectEquals with invalid parameters", TEST_ENABLED };
 
+/* SDL_FRectEquals */
+
+static const SDLTest_TestCaseReference rectTest30 =
+        { (SDLTest_TestCaseFp)rect_testFRectEquals, "rect_testFRectEquals", "Tests SDL_FRectEquals with various inputs", TEST_ENABLED };
+
+static const SDLTest_TestCaseReference rectTest31 =
+        { (SDLTest_TestCaseFp)rect_testFRectEqualsParam, "rect_testFRectEqualsParam", "Negative tests against SDL_FRectEquals with invalid parameters", TEST_ENABLED };
 
 /* !
  * \brief Sequence of Rect test cases; functions that handle simple rectangles including overlaps and merges.
  *
  * \sa
- * http://wiki.libsdl.org/moin.cgi/CategoryRect
+ * http://wiki.libsdl.org/CategoryRect
  */
 static const SDLTest_TestCaseReference *rectTests[] =  {
     &rectTest1, &rectTest2, &rectTest3, &rectTest4, &rectTest5, &rectTest6, &rectTest7, &rectTest8, &rectTest9, &rectTest10, &rectTest11, &rectTest12, &rectTest13, &rectTest14,
     &rectTest15, &rectTest16, &rectTest17, &rectTest18, &rectTest19, &rectTest20, &rectTest21, &rectTest22, &rectTest23, &rectTest24, &rectTest25, &rectTest26, &rectTest27,
-    &rectTest28, &rectTest29, NULL
+    &rectTest28, &rectTest29, &rectTest30, &rectTest31, NULL
 };
 
 

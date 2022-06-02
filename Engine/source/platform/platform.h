@@ -55,50 +55,11 @@
 /// @note These enums must be globally scoped so that they work with the inline assembly
 enum ProcessorType
 {
-   // x86
    CPU_X86Compatible,
-   CPU_Intel_Unknown,
-   CPU_Intel_486,
-   CPU_Intel_Pentium,
-   CPU_Intel_PentiumMMX,
-   CPU_Intel_PentiumPro,
-   CPU_Intel_PentiumII,
-   CPU_Intel_PentiumCeleron,
-   CPU_Intel_PentiumIII,
-   CPU_Intel_Pentium4,
-   CPU_Intel_PentiumM,
-   CPU_Intel_Core,
-   CPU_Intel_Core2,
-   CPU_Intel_Corei7Xeon, // Core i7 or Xeon
-   CPU_AMD_K6,
-   CPU_AMD_K6_2,
-   CPU_AMD_K6_3,
-   CPU_AMD_Athlon,
-   CPU_AMD_Phenom,
-   CPU_AMD_PhenomII,
-   CPU_AMD_Bulldozer,
-   CPU_AMD_Unknown,
-   CPU_Cyrix_6x86,
-   CPU_Cyrix_MediaGX,
-   CPU_Cyrix_6x86MX,
-   CPU_Cyrix_GXm,          ///< Media GX w/ MMX
-   CPU_Cyrix_Unknown,
-
-   // PowerPC
-   CPU_PowerPC_Unknown,
-   CPU_PowerPC_601,
-   CPU_PowerPC_603,
-   CPU_PowerPC_603e,
-   CPU_PowerPC_603ev,
-   CPU_PowerPC_604,
-   CPU_PowerPC_604e,
-   CPU_PowerPC_604ev,
-   CPU_PowerPC_G3,
-   CPU_PowerPC_G4,
-   CPU_PowerPC_G4_7450,
-   CPU_PowerPC_G4_7455,
-   CPU_PowerPC_G4_7447, 
-   CPU_PowerPC_G5,
+   CPU_ArmCompatible,
+   CPU_Intel,
+   CPU_AMD,
+   CPU_Apple
 };
 
 /// Properties for CPU.
@@ -107,17 +68,17 @@ enum ProcessorProperties
    CPU_PROP_C         = (1<<0),  ///< We should use C fallback math functions.
    CPU_PROP_FPU       = (1<<1),  ///< Has an FPU. (It better!)
    CPU_PROP_MMX       = (1<<2),  ///< Supports MMX instruction set extension.
-   CPU_PROP_3DNOW     = (1<<3),  ///< Supports AMD 3dNow! instruction set extension.
-   CPU_PROP_SSE       = (1<<4),  ///< Supports SSE instruction set extension.
-   CPU_PROP_RDTSC     = (1<<5),  ///< Supports Read Time Stamp Counter op.
-   CPU_PROP_SSE2      = (1<<6),  ///< Supports SSE2 instruction set extension.
-   CPU_PROP_SSE3      = (1<<7),  ///< Supports SSE3 instruction set extension.  
-   CPU_PROP_SSE3xt    = (1<<8),  ///< Supports extended SSE3 instruction set  
-   CPU_PROP_SSE4_1    = (1<<9),  ///< Supports SSE4_1 instruction set extension.  
-   CPU_PROP_SSE4_2    = (1<<10), ///< Supports SSE4_2 instruction set extension.  
-   CPU_PROP_MP        = (1<<11), ///< This is a multi-processor system.
-   CPU_PROP_LE        = (1<<12), ///< This processor is LITTLE ENDIAN.  
-   CPU_PROP_64bit     = (1<<13), ///< This processor is 64-bit capable
+   CPU_PROP_SSE       = (1<<3),  ///< Supports SSE instruction set extension.
+   CPU_PROP_SSE2      = (1<<4),  ///< Supports SSE2 instruction set extension.
+   CPU_PROP_SSE3      = (1<<5),  ///< Supports SSE3 instruction set extension.  
+   CPU_PROP_SSE3ex    = (1<<6),  ///< Supports Supplemental SSE3 instruction set  
+   CPU_PROP_SSE4_1    = (1<<7),  ///< Supports SSE4_1 instruction set extension.  
+   CPU_PROP_SSE4_2    = (1<<8),  ///< Supports SSE4_2 instruction set extension.
+   CPU_PROP_AVX       = (1<<9), ///< Supports AVX256 instruction set extension.
+   CPU_PROP_MP        = (1<<10), ///< This is a multi-processor system.
+   CPU_PROP_LE        = (1<<11), ///< This processor is LITTLE ENDIAN.
+   CPU_PROP_64bit     = (1<<12), ///< This processor is 64-bit capable
+   CPU_PROP_NEON      = (1<<13), ///< Supports the Arm Neon instruction set extension.
 };
 
 /// Processor info manager. 
@@ -336,7 +297,6 @@ namespace Platform
             bool           isHyperThreaded;
             U32            numLogicalProcessors;
             U32            numPhysicalProcessors;
-            U32            numAvailableCores;
             U32            properties;      // CPU type specific enum
          } processor;
    };

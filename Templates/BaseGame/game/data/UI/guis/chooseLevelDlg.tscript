@@ -26,6 +26,12 @@ function ChooseLevelDlg::onWake( %this )
    if(!isObject(LevelListEntries))
       new ArrayObject(LevelListEntries){};
       
+   if(!isObject(ChooseLevelAssetQuery))
+      new AssetQuery(ChooseLevelAssetQuery);
+}
+
+function ChooseLevelDlg::onOpen(%this)
+{
    LevelList.clearRows();
    LevelListEntries.empty();
    
@@ -33,10 +39,10 @@ function ChooseLevelDlg::onWake( %this )
    ChooseLevelWindow->LevelDescriptionLabel.visible = false;
    ChooseLevelWindow->LevelDescription.visible = false;
    
-   %assetQuery = new AssetQuery();
-   AssetDatabase.findAssetType(%assetQuery, "LevelAsset");
+   ChooseLevelAssetQuery.clear();
+   AssetDatabase.findAssetType(ChooseLevelAssetQuery, "LevelAsset");
       
-   %count = %assetQuery.getCount();
+   %count = ChooseLevelAssetQuery.getCount();
    
    if(%count == 0 && !IsDirectory("tools"))
    {
@@ -44,13 +50,13 @@ function ChooseLevelDlg::onWake( %this )
       MessageBoxOK("Error", "No levels were found in any modules. Please ensure you have modules loaded that contain gameplay code and level files.", 
          "Canvas.popDialog(ChooseLevelDlg); if(isObject(ChooseLevelDlg.returnGui) && ChooseLevelDlg.returnGui.isMethod(\"onReturnTo\")) ChooseLevelDlg.returnGui.onReturnTo();");
          
-      %assetQuery.delete();
+      ChooseLevelAssetQuery.delete();
       return;
    }
    
    for(%i=0; %i < %count; %i++)
 	{
-	   %assetId = %assetQuery.getAsset(%i);
+	   %assetId = ChooseLevelAssetQuery.getAsset(%i);
 	   
 	   if(AssetDatabase.getAssetModule(%assetId).ModuleId $= "ToolsModule")
 	      continue;
@@ -96,13 +102,11 @@ function ChooseLevelDlg::onWake( %this )
    else
       LevelSelectTitle.setText("CREATE SERVER");
    
-   ChooseLevelButtonHolder.setActive();
-}
-
-function ChooseLevelButtonHolder::onWake(%this)
-{
-   %this-->goButton.set("btn_a", "Return", "Start Level", "ChooseLevelDlg.beginLevel();");
-   %this-->backButton.set("btn_b", "Escape", "Back", "ChooseLevelDlg.backOut();");
+   $activeMenuButtonContainer-->button1.disable();
+   $activeMenuButtonContainer-->button2.disable();
+   $activeMenuButtonContainer-->button3.disable();
+   $activeMenuButtonContainer-->button4.set("btn_a", "Return", "Start Level", "ChooseLevelDlg.beginLevel();");
+   $activeMenuButtonContainer-->button5.set("btn_b", "Escape", "Back", %this @ ".navigation.popPage();");
 }
 
 function ChooseLevelDlg::onSleep( %this )
@@ -201,11 +205,4 @@ function ChooseLevelDlg::beginLevel(%this)
    {
       StartGame(); 
    }
-}
-
-function ChooseLevelDlg::backOut(%this)
-{
-   Canvas.popDialog(ChooseLevelDlg);
-   if(isObject(ChooseLevelDlg.returnGui) && ChooseLevelDlg.returnGui.isMethod("onReturnTo"))    
-      ChooseLevelDlg.returnGui.onReturnTo();  
 }

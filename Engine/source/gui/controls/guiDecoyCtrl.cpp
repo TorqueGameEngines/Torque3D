@@ -146,12 +146,14 @@ void GuiDecoyCtrl::onMouseMove(const GuiEvent &event)
 		GuiControl *tempControl = parent->findHitControl(localPoint);
 
 		//the decoy control has the responsibility of keeping track of the decoyed controls status
-		if(mMouseOverDecoy == false && mDecoyReference != NULL)
+		if(mMouseOverDecoy == false && mDecoyReference != NULL &&
+               !mDecoyReference->isDeleted() && !mDecoyReference->isRemoved())
 		{
 			tempControl->onMouseEnter(event);
 			mMouseOverDecoy = true;
 		}
-		else if(tempControl != mDecoyReference && mDecoyReference != NULL)
+		else if(tempControl != mDecoyReference && mDecoyReference != NULL &&
+               !mDecoyReference->isDeleted() && !mDecoyReference->isRemoved())
 		{
 			mDecoyReference->onMouseLeave(event);
 			mMouseOverDecoy = false;

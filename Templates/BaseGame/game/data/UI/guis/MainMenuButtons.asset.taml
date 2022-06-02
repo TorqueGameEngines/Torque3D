@@ -1,0 +1,5 @@
+<GUIAsset
+    AssetName="MainMenuButtons"
+    scriptFile="@assetFile=MainMenuButtons.tscript"
+    GUIFile="@assetFile=MainMenuButtons.gui"
+    VersionId="1"/>

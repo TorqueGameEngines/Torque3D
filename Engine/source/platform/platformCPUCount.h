@@ -29,13 +29,10 @@ namespace CPUInfo
 {
    enum EConfig
    {
-      CONFIG_UserConfigIssue,
       CONFIG_SingleCoreHTEnabled,
-      CONFIG_SingleCoreHTDisabled,
       CONFIG_SingleCoreAndHTNotCapable,
       CONFIG_MultiCoreAndHTNotCapable,
       CONFIG_MultiCoreAndHTEnabled,
-      CONFIG_MultiCoreAndHTDisabled,
    };
 
    inline bool isMultiCore( EConfig config )
@@ -44,7 +41,6 @@ namespace CPUInfo
       {
       case CONFIG_MultiCoreAndHTNotCapable:
       case CONFIG_MultiCoreAndHTEnabled:
-      case CONFIG_MultiCoreAndHTDisabled:
          return true;
 
       default:
@@ -65,11 +61,10 @@ namespace CPUInfo
       }
    }
 
-   EConfig CPUCount( U32& totalAvailableLogical,
-      U32& totalAvailableCores,
-      U32& numPhysical );
-
+   EConfig CPUCount( U32& totalAvailableLogical, U32& totalAvailableCores );
 } // namespace CPUInfo
+
+void SetProcessorInfo(Platform::SystemInfo_struct::Processor& pInfo, const char* vendor, const char* brand);
 
 #endif // _TORQUE_PLATFORM_PLATFORMCOUNT_H_
 

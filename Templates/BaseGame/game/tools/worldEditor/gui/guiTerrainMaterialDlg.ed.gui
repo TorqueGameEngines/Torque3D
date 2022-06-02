@@ -145,11 +145,11 @@ $guiContent = new GuiControl(TerrainMaterialDlg,EditorGuiGroup) {
             tooltipProfile = "ToolsGuiDefaultProfile";
             isContainer = "0";
          };
-         new GuiTextEditCtrl() {
+         new GuiTextCtrl() {
             position = "39 21";
                   extent = "227 18";
             profile = "ToolsGuiTextEditProfile";
-            altCommand = "TerrainMaterialDlg.setMaterialName( $ThisControl.getText() );";
+            //altCommand = "TerrainMaterialDlg.setMaterialName( $ThisControl.getText() );";
             tooltipProfile = "ToolsGuiToolTipProfile";
             isContainer = "0";
             internalName = "matNameCtrl";

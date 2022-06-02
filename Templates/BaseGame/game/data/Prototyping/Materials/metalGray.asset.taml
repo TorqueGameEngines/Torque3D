@@ -1,0 +1,15 @@
+<MaterialAsset
+    AssetName="metalGray"
+    materialDefinitionName="metalGray"
+    VersionId="1">
+    <Material
+        Name="metalGray"
+        mapTo="metalGray">
+        <Material.Stages>
+            <Stages_beginarray
+                DiffuseColor="0.545725 0.53948 0.53948 1"
+                Roughness="0.745098"
+                Metalness="1"/>
+        </Material.Stages>
+    </Material>
+</MaterialAsset>

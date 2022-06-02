@@ -64,17 +64,12 @@ S32 PlatformCursorControllerSDL::getDoubleClickHeight()
 
 void PlatformCursorControllerSDL::setCursorPosition( S32 x, S32 y )
 {
-   if( PlatformWindowManager::get() && PlatformWindowManager::get()->getFirstWindow() )
-   {
-      AssertFatal( dynamic_cast<PlatformWindowSDL*>( PlatformWindowManager::get()->getFirstWindow() ), "");
-      PlatformWindowSDL *window = static_cast<PlatformWindowSDL*>( PlatformWindowManager::get()->getFirstWindow() );
-      SDL_WarpMouseInWindow(window->getSDLWindow(), x, y);
-   }
+   SDL_WarpMouseGlobal(x, y);
 }
 
 void PlatformCursorControllerSDL::getCursorPosition( Point2I &point )
 {
-   SDL_GetMouseState( &point.x, &point.y );
+   SDL_GetGlobalMouseState( &point.x, &point.y );
 }
 
 void PlatformCursorControllerSDL::setCursorVisible( bool visible )

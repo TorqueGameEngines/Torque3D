@@ -1,8 +1,14 @@
 <MaterialAsset
-    canSave="true"
-    canSaveDynamicFields="true"
     AssetName="DetailBlue"
-    scriptFile="@assetFile=DetailBlue.tscript"
     materialDefinitionName="DetailBlue"
-    imageMap0="@Asset=Prototyping:DetailBlue_ALBEDO"
-    originalFilePath="D:/Gamedev/art/Blockout/DetailBlue.png" />
+    imageMap0="@asset=Prototyping:DetailBlue_ALBEDO"
+    originalFilePath="C:/dev/T3D/PRs/MiscFixes20220525/Templates/BaseGame/game/data/Prototyping/Materials/DetailBlue.png">
+    <Material
+        Name="DetailBlue"
+        mapTo="DetailBlue">
+        <Material.Stages>
+            <Stages_beginarray
+                DiffuseMapAsset="Prototyping:DetailBlue_ALBEDO"/>
+        </Material.Stages>
+    </Material>
+</MaterialAsset>

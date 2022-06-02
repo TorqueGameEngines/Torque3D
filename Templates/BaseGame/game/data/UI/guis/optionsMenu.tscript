@@ -141,7 +141,7 @@ function OptionsMenu::canClose(%this)
       if(%this.unappliedChanges.count() != 0)
       {
          MessageBoxOKCancel("Discard Changes?", "You have unapplied changes to your settings, do you wish to apply or discard them?", 
-                        "OptionsMenu.apply(); MainMenuGUI.popPage();", "%this.unappliedChanges.empty(); " @ %this @ ".navigation.popPage();", 
+                        "OptionsMenu.apply(); MainMenuGUI.popPage();", "" @ %this @ ".unappliedChanges.empty(); " @ %this @ ".navigation.popPage();", 
                         "Apply", "Discard");
          return false;
       }

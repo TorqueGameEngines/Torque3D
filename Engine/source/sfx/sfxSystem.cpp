@@ -69,6 +69,8 @@ MODULE_END;
 
 SFXSystem* SFXSystem::smSingleton = NULL;
 
+/// Default SFXAmbience used to reset the global soundscape.
+SFXAmbience *sDefaultAmbience;
 
 // Excludes Null and Blocked as these are not passed out to the control layer.
 ImplementEnumType( SFXStatus,
@@ -364,7 +366,8 @@ void SFXSystem::init()
    // register them in the provider initialization.
 
    // Create the system.
-   smSingleton = new SFXSystem();   
+   smSingleton = new SFXSystem();
+   sDefaultAmbience = new SFXAmbience();
 }
 
 //-----------------------------------------------------------------------------
@@ -384,6 +387,7 @@ void SFXSystem::destroy()
    // Destroy the stream thread pool
 
    SFXInternal::SFXThreadPool::deleteSingleton();
+   delete(sDefaultAmbience);
 }
 
 //-----------------------------------------------------------------------------
@@ -1617,10 +1621,10 @@ DefineEngineFunction( sfxPlayOnce, S32, (StringTableEntry assetId, const char* a
 {
    SFXDescription* description = NULL;
    if (assetId == StringTable->EmptyString())
-      {
-         Con::errorf( "sfxPlayOnce - Must Define a sound asset");
-         return 0;
-      }
+   {
+      Con::errorf( "sfxPlayOnce - Must Define a sound asset");
+      return 0;
+   }
 
    SFXSource* source = NULL;
 
@@ -1639,10 +1643,10 @@ DefineEngineFunction( sfxPlayOnce, S32, (StringTableEntry assetId, const char* a
          MatrixF transform;
          transform.set(EulerF(0, 0, 0), Point3F(dAtof(arg0), dAtof(arg1), dAtof(arg2)));
          source = SFX->playOnce(tempSoundAsset->getSfxProfile(), &transform, NULL, dAtof(arg3));
-   }
       }
-      else
-      {
+   }
+   else
+   {
       Con::errorf("sfxPlayOnce - Could not locate assetId '%s'", assetId);
       return 0;
    }

@@ -1,8 +1,14 @@
 <MaterialAsset
-    canSave="true"
-    canSaveDynamicFields="true"
     AssetName="WallOrange"
-    scriptFile="@assetFile=WallOrange.tscript"
     materialDefinitionName="WallOrange"
-    imageMap0="@Asset=Prototyping:WallOrange_ALBEDO"
-    originalFilePath="D:/Gamedev/art/Blockout/WallOrange.png" />
+    imageMap0="@asset=Prototyping:WallOrange_ALBEDO"
+    originalFilePath="C:/dev/T3D/PRs/MiscFixes20220525/Templates/BaseGame/game/data/Prototyping/Materials/WallOrange.png">
+    <Material
+        Name="WallOrange"
+        mapTo="WallOrange">
+        <Material.Stages>
+            <Stages_beginarray
+                DiffuseMapAsset="Prototyping:WallOrange_ALBEDO"/>
+        </Material.Stages>
+    </Material>
+</MaterialAsset>

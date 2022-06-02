@@ -1,8 +1,14 @@
 <MaterialAsset
-    canSave="true"
-    canSaveDynamicFields="true"
     AssetName="TrimYellow"
-    scriptFile="@assetFile=TrimYellow.tscript"
     materialDefinitionName="TrimYellow"
-    imageMap0="@Asset=Prototyping:TrimYellow_ALBEDO"
-    originalFilePath="D:/Gamedev/art/Blockout/TrimYellow.png" />
+    imageMap0="@asset=Prototyping:TrimYellow_ALBEDO"
+    originalFilePath="C:/dev/T3D/PRs/MiscFixes20220525/Templates/BaseGame/game/data/Prototyping/Materials/TrimYellow.png">
+    <Material
+        Name="TrimYellow"
+        mapTo="TrimYellow">
+        <Material.Stages>
+            <Stages_beginarray
+                DiffuseMapAsset="Prototyping:TrimYellow_ALBEDO"/>
+        </Material.Stages>
+    </Material>
+</MaterialAsset>

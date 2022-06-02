@@ -1101,10 +1101,10 @@ singleton GuiControlProfile( GuiEditorScrollProfile )
 singleton GuiControlProfile( GuiCreatorIconButtonProfile )
 {
    opaque = true;       
-   fillColor = "225 243 252 255";
-   fillColorHL = "225 243 252 0";
-   fillColorNA = "225 243 252 0";
-   fillColorSEL = "225 243 252 0";
+   fillColor = EditorSettings.value("Theme/tabsColor");
+   fillColorHL = EditorSettings.value("Theme/tabsHLColor");
+   fillColorSEL = EditorSettings.value("Theme/tabsSELColor");
+   fillColorNA = EditorSettings.value("Theme/tabsSELColor");
       
    //tab = true;
    //canKeyFocus = true;
@@ -1112,15 +1112,15 @@ singleton GuiControlProfile( GuiCreatorIconButtonProfile )
    fontType = "Noto Sans";
    fontSize = 14;
 
-   fontColor = "215 215 215";
-   fontColorSEL = "43 107 206";
-   fontColorHL = "244 244 244";
-   fontColorNA = "100 100 100";
+   fontColor = EditorSettings.value("Theme/fieldTextColor");
+   fontColorHL = EditorSettings.value("Theme/fieldTextHLColor");
+   fontColorNA = EditorSettings.value("Theme/fieldTextSELColor");
+   fontColorSEL = EditorSettings.value("Theme/fieldTextSELColor");
    
    border = 1;
-   borderColor   = "153 222 253 255";
-   borderColorHL = "156 156 156";
-   borderColorNA = "153 222 253 0";
+   borderColor   = EditorSettings.value("Theme/dividerMidColor");
+   borderColorHL = EditorSettings.value("Theme/dividerLightColor");
+   borderColorNA = EditorSettings.value("Theme/dividerDarkColor");
    
    //bevelColorHL = "255 255 255";
    //bevelColorLL = "0 0 0";

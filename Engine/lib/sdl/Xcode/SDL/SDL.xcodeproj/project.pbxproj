@@ -3469,13 +3469,13 @@
 		F395C1A22569C68F00942BFF /* SDL_iokitjoystick.c in Sources */ = {isa = PBXBuildFile; fileRef = F395C1922569C68E00942BFF /* SDL_iokitjoystick.c */; };
 		F395C1A32569C68F00942BFF /* SDL_iokitjoystick.c in Sources */ = {isa = PBXBuildFile; fileRef = F395C1922569C68E00942BFF /* SDL_iokitjoystick.c */; };
 		F395C1A42569C68F00942BFF /* SDL_iokitjoystick.c in Sources */ = {isa = PBXBuildFile; fileRef = F395C1922569C68E00942BFF /* SDL_iokitjoystick.c */; };
-		F395C1B12569C6A000942BFF /* SDL_mfijoystick.m in Sources */ = {isa = PBXBuildFile; fileRef = F395C1AF2569C6A000942BFF /* SDL_mfijoystick.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
+		F395C1B12569C6A000942BFF /* SDL_mfijoystick.m in Sources */ = {isa = PBXBuildFile; fileRef = F395C1AF2569C6A000942BFF /* SDL_mfijoystick.m */; };
 		F395C1B22569C6A000942BFF /* SDL_mfijoystick.m in Sources */ = {isa = PBXBuildFile; fileRef = F395C1AF2569C6A000942BFF /* SDL_mfijoystick.m */; };
 		F395C1B32569C6A000942BFF /* SDL_mfijoystick.m in Sources */ = {isa = PBXBuildFile; fileRef = F395C1AF2569C6A000942BFF /* SDL_mfijoystick.m */; };
-		F395C1B42569C6A000942BFF /* SDL_mfijoystick.m in Sources */ = {isa = PBXBuildFile; fileRef = F395C1AF2569C6A000942BFF /* SDL_mfijoystick.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
+		F395C1B42569C6A000942BFF /* SDL_mfijoystick.m in Sources */ = {isa = PBXBuildFile; fileRef = F395C1AF2569C6A000942BFF /* SDL_mfijoystick.m */; };
 		F395C1B52569C6A000942BFF /* SDL_mfijoystick.m in Sources */ = {isa = PBXBuildFile; fileRef = F395C1AF2569C6A000942BFF /* SDL_mfijoystick.m */; };
 		F395C1B62569C6A000942BFF /* SDL_mfijoystick.m in Sources */ = {isa = PBXBuildFile; fileRef = F395C1AF2569C6A000942BFF /* SDL_mfijoystick.m */; };
-		F395C1B72569C6A000942BFF /* SDL_mfijoystick.m in Sources */ = {isa = PBXBuildFile; fileRef = F395C1AF2569C6A000942BFF /* SDL_mfijoystick.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
+		F395C1B72569C6A000942BFF /* SDL_mfijoystick.m in Sources */ = {isa = PBXBuildFile; fileRef = F395C1AF2569C6A000942BFF /* SDL_mfijoystick.m */; };
 		F395C1B82569C6A000942BFF /* SDL_mfijoystick.m in Sources */ = {isa = PBXBuildFile; fileRef = F395C1AF2569C6A000942BFF /* SDL_mfijoystick.m */; };
 		F395C1B92569C6A000942BFF /* SDL_mfijoystick.m in Sources */ = {isa = PBXBuildFile; fileRef = F395C1AF2569C6A000942BFF /* SDL_mfijoystick.m */; };
 		F395C1BA2569C6A000942BFF /* SDL_mfijoystick_c.h in Headers */ = {isa = PBXBuildFile; fileRef = F395C1B02569C6A000942BFF /* SDL_mfijoystick_c.h */; };
@@ -7172,6 +7172,7 @@
 				A7D88ABF23E2437C00DCD162 /* Sources */,
 				A7D88B4623E2437C00DCD162 /* Frameworks */,
 				A75FDB9F23E4CAFA00529352 /* Embed Frameworks */,
+				F3ED8107281DB8E600C33C5B /* Convert SDL includes to SDL Framework includes */,
 			);
 			buildRules = (
 			);
@@ -7193,6 +7194,7 @@
 				A7D88C7823E24BED00DCD162 /* Sources */,
 				A7D88D0423E24BED00DCD162 /* Frameworks */,
 				A75FDBA223E4CAFF00529352 /* Embed Frameworks */,
+				F3ED8108281DB8F200C33C5B /* Convert SDL includes to SDL Framework includes */,
 			);
 			buildRules = (
 			);
@@ -7234,6 +7236,7 @@
 				BECDF62C0761BA81005FE872 /* Sources */,
 				BECDF6680761BA81005FE872 /* Frameworks */,
 				A75FDB9C23E4CAEF00529352 /* Embed Frameworks */,
+				F3ED8106281DB8A500C33C5B /* Convert SDL includes to SDL Framework includes */,
 			);
 			buildRules = (
 			);
@@ -7423,6 +7426,60 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "# Sign framework\nif [ \"$SDL_CODESIGN_IDENTITY\" != \"\" ]; then\n    codesign --force --deep --sign \"$SDL_CODESIGN_IDENTITY\" $TARGET_BUILD_DIR/SDL2.framework/Versions/A || exit $?\nfi\n\n# clean up the framework, remove headers, extra files\nmkdir -p build/dmg-tmp\ncp -a $TARGET_BUILD_DIR/SDL2.framework build/dmg-tmp/\n\ncp pkg-support/resources/License.txt build/dmg-tmp\ncp pkg-support/resources/ReadMe.txt build/dmg-tmp\n\n# remove the .DS_Store files if any (we may want to provide one in the future for fancy .dmgs)\nfind build/dmg-tmp -name .DS_Store -exec rm -f \"{}\" \\;\n\n# for fancy .dmg\nmkdir -p build/dmg-tmp/.logo\ncp pkg-support/resources/SDL_DS_Store build/dmg-tmp/.DS_Store\ncp pkg-support/sdl_logo.pdf build/dmg-tmp/.logo\n\n# create the dmg\nhdiutil create -ov -fs HFS+ -volname SDL2 -srcfolder build/dmg-tmp build/SDL2.dmg\n\n# clean up\nrm -rf build/dmg-tmp\n";
+		};
+		F3ED8106281DB8A500C33C5B /* Convert SDL includes to SDL Framework includes */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Convert SDL includes to SDL Framework includes";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "cd \"$BUILT_PRODUCTS_DIR/$PUBLIC_HEADERS_FOLDER_PATH\"\nsed -i '' -e 's,#include \"\\(.*\\)\",#include <SDL2/\\1>,' *.h\n";
+		};
+		F3ED8107281DB8E600C33C5B /* Convert SDL includes to SDL Framework includes */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Convert SDL includes to SDL Framework includes";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "cd \"$BUILT_PRODUCTS_DIR/$PUBLIC_HEADERS_FOLDER_PATH\"\nsed -i '' -e 's,#include \"\\(.*\\)\",#include <SDL2/\\1>,' *.h\n";
+		};
+		F3ED8108281DB8F200C33C5B /* Convert SDL includes to SDL Framework includes */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Convert SDL includes to SDL Framework includes";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "cd \"$BUILT_PRODUCTS_DIR/$PUBLIC_HEADERS_FOLDER_PATH\"\nsed -i '' -e 's,#include \"\\(.*\\)\",#include <SDL2/\\1>,' *.h\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -9131,6 +9188,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
@@ -9151,7 +9209,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEPLOYMENT_POSTPROCESSING = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1.0.0;
-				DYLIB_CURRENT_VERSION = 23.0.0;
+				DYLIB_CURRENT_VERSION = 2301.0.0;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_ALTIVEC_EXTENSIONS = YES;
@@ -9180,7 +9238,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_BUNDLE_IDENTIFIER = org.libsdl.SDL2;
 				PRODUCT_NAME = SDL2;
 				STRIP_STYLE = "non-global";
@@ -9216,6 +9274,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
@@ -9235,7 +9294,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DYLIB_COMPATIBILITY_VERSION = 1.0.0;
-				DYLIB_CURRENT_VERSION = 23.0.0;
+				DYLIB_CURRENT_VERSION = 2301.0.0;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -9264,7 +9323,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = org.libsdl.SDL2;
 				PRODUCT_NAME = SDL2;

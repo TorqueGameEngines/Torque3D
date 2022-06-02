@@ -1,0 +1,6 @@
+<ShapeAsset
+    AssetName="carwheel_shape"
+    fileName="@assetFile=carwheel.dae"
+    constuctorFileName="@assetFile=carwheel.tscript"
+    materialSlot0="@asset=Prototyping:InteractiveRed"
+    originalFilePath="C:/dev/T3D/PRs/MiscFixes20220525/Templates/BaseGame/game/data/Prototyping/shapes/Vehicles/carwheel.dae"/>

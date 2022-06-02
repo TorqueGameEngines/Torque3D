@@ -1,7 +1,0 @@
-<GUIAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    AssetName="ExampleGUI"
-    scriptFile="@assetFile=ExampleGUI.gui"
-    GUIFile="@assetFile=ExampleGUI.gui"
-    VersionId="1" />

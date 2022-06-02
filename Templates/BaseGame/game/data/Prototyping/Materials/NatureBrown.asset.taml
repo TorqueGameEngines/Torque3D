@@ -1,8 +1,14 @@
 <MaterialAsset
-    canSave="true"
-    canSaveDynamicFields="true"
     AssetName="NatureBrown"
-    scriptFile="@assetFile=NatureBrown.tscript"
     materialDefinitionName="NatureBrown"
-    imageMap0="@Asset=Prototyping:NatureBrown_ALBEDO"
-    originalFilePath="D:/Gamedev/art/Blockout/NatureBrown.png" />
+    imageMap0="@asset=Prototyping:NatureBrown_ALBEDO"
+    originalFilePath="C:/dev/T3D/PRs/MiscFixes20220525/Templates/BaseGame/game/data/Prototyping/Materials/NatureBrown.png">
+    <Material
+        Name="NatureBrown"
+        mapTo="NatureBrown">
+        <Material.Stages>
+            <Stages_beginarray
+                DiffuseMapAsset="Prototyping:NatureBrown_ALBEDO"/>
+        </Material.Stages>
+    </Material>
+</MaterialAsset>

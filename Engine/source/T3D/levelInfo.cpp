@@ -73,7 +73,7 @@ extern F32 gDecalBias;
 extern GFXTexHandle gLevelAccuMap;
 
 /// Default SFXAmbience used to reset the global soundscape.
-static SFXAmbience sDefaultAmbience;
+extern SFXAmbience* sDefaultAmbience;
 
 
 //-----------------------------------------------------------------------------
@@ -271,7 +271,7 @@ void LevelInfo::unpackUpdate(NetConnection *conn, BitStream *stream)
          if( mSoundAmbience )
             mSoundscape->setAmbience( mSoundAmbience );
          else
-            mSoundscape->setAmbience( &sDefaultAmbience );
+            mSoundscape->setAmbience( sDefaultAmbience );
       }
 
       SFX->setDistanceModel( mSoundDistanceModel );
@@ -317,7 +317,7 @@ bool LevelInfo::onAdd()
 void LevelInfo::onRemove()
 {
    if( mSoundscape )
-      mSoundscape->setAmbience( &sDefaultAmbience );
+      mSoundscape->setAmbience( sDefaultAmbience );
 
    Parent::onRemove();
 }

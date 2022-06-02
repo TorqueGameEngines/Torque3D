@@ -1205,10 +1205,14 @@ void ConvexShape::_updateMaterial()
    //update our custom surface materials
    for (U32 i = 0; i<mSurfaceTextures.size(); i++)
    {
+      mSurfaceTextures[i]._setMaterial(mSurfaceTextures[i].getMaterial());
       //If we already have the material inst and it hasn't changed, skip
       if (mSurfaceTextures[i].materialInst &&
-         mSurfaceTextures[i].getMaterialAsset()->getMaterialDefinitionName() == mSurfaceTextures[i].materialInst->getMaterial()->getName())
+         mSurfaceTextures[i].getMaterialAsset()->getMaterialDefinitionName() == mSurfaceTextures[i].materialInst->getMaterial()->getName() &&
+         mSurfaceTextures[i].materialInst->getVertexFormat() == getGFXVertexFormat<VertexType>())
          continue;
+
+      SAFE_DELETE(mSurfaceTextures[i].materialInst);
 
       Material* material = mSurfaceTextures[i].getMaterialResource();
 
@@ -1227,8 +1231,10 @@ void ConvexShape::_updateMaterial()
       }
    }
 
+   _setMaterial(getMaterial());
    // If the material name matches then don't bother updating it.
-   if (mMaterialInst && getMaterialAsset()->getMaterialDefinitionName() == mMaterialInst->getMaterial()->getName())
+   if (mMaterialInst && getMaterialAsset()->getMaterialDefinitionName() == mMaterialInst->getMaterial()->getName() &&
+      mMaterialInst->getVertexFormat() == getGFXVertexFormat<VertexType>())
       return;
 
    SAFE_DELETE( mMaterialInst );
@@ -1239,12 +1245,6 @@ void ConvexShape::_updateMaterial()
       return;
 
    mMaterialInst = material->createMatInstance();
-
-   //GFXStateBlockDesc desc;
-   //desc.setCullMode( GFXCullNone );
-   //desc.setBlend( false );
-
-   //mMaterialInst->addStateBlockDesc( desc );
 
    FeatureSet features = MATMGR->getDefaultFeatures();
    //features.addFeature( MFT_DiffuseVertColor );
@@ -1436,10 +1436,12 @@ void ConvexShape::_updateGeometry( bool updateCollision )
                   for (S32 k = 0; k < 3; k++)
                   {
                      pVert->normal = face.normal;
-                     pVert->tangent = face.tangent;
-                     pVert->color = faceColor;
+                     pVert->T = face.tangent;
+                     pVert->B = mCross(face.normal,face.tangent);
+                     //pVert->color = faceColor;
                      pVert->point = pointList[facePntMap[triangles[j][k]]];
                      pVert->texCoord = face.texcoords[triangles[j][k]];
+                     pVert->texCoord2 = pVert->texCoord;
 
                      pVert++;
                      vc++;

@@ -1,0 +1,6 @@
+<ShapeAsset
+    AssetName="TorusPrimitive_shape"
+    fileName="@assetFile=TorusPrimitive.fbx"
+    constuctorFileName="@assetFile=TorusPrimitive.tscript"
+    materialSlot0="@asset=Prototyping:DetailBlue"
+    originalFilePath="C:/dev/T3D/PRs/MiscFixes20220525/Templates/BaseGame/game/data/Prototyping/shapes/Primitives/TorusPrimitive.fbx"/>

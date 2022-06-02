@@ -1,8 +1,14 @@
 <MaterialAsset
-    canSave="true"
-    canSaveDynamicFields="true"
     AssetName="FloorGray"
-    scriptFile="@assetFile=FloorGray.tscript"
     materialDefinitionName="FloorGray"
-    imageMap0="@Asset=Prototyping:FloorGray_ALBEDO"
-    originalFilePath="D:/Gamedev/art/Blockout/FloorGray.png" />
+    imageMap0="@asset=Prototyping:FloorGray_ALBEDO"
+    originalFilePath="C:/dev/T3D/PRs/MiscFixes20220525/Templates/BaseGame/game/data/Prototyping/Materials/FloorGray.png">
+    <Material
+        Name="FloorGray"
+        mapTo="FloorGray">
+        <Material.Stages>
+            <Stages_beginarray
+                DiffuseMapAsset="Prototyping:FloorGray_ALBEDO"/>
+        </Material.Stages>
+    </Material>
+</MaterialAsset>

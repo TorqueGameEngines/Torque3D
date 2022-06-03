@@ -14,6 +14,9 @@ function UINavigation::setRootPage(%this, %rootPage)
       %this.pageStack = new ArrayObject();  
    }
    
+   if(%this.rootPage $= %rootPage)
+      return;
+   
    if(isObject(%this.rootPage))
    {
       %canClose = true;
@@ -70,6 +73,10 @@ function UINavigation::pushPage(%this, %newPage, %callback)
    {
       %this.pageStack = new ArrayObject();
    }
+   
+   //don't re-add pages
+   if(%this.pageStack.getIndexFromKey(%newPage) != -1)
+      return;
    
    %canChange = true;
    if(%newPage.isMethod("canOpen"))

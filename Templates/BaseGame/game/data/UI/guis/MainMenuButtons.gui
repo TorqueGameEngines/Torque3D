@@ -1,6 +1,8 @@
 //--- OBJECT WRITE BEGIN ---
 $guiContent = new GuiControl(MainMenuButtons) {
    extent = "1024 768";
+   horizSizing = "width";
+   vertSizing = "height";
    profile = "GuiNonModalDefaultProfile";
    tooltipProfile = "GuiToolTipProfile";
    isContainer = "1";

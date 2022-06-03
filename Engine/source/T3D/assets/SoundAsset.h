@@ -253,7 +253,7 @@ public: \
          Con::errorf("%s(%s)::_set%s() - sound asset failure\"%s\" due to [%s]", macroText(className), getName(), macroText(name), _in, SoundAsset::getAssetErrstrn(m##name##Asset->getStatus()).c_str());\
          return false; \
       }\
-      else if (!m##name)\
+      else if (!m##name && (m##name##Name != StringTable->EmptyString() && !Sim::findObject(m##name##Name)))\
       {\
          Con::errorf("%s(%s)::_set%s() - Couldn't load sound \"%s\"", macroText(className), getName(), macroText(name), _in);\
          return false;\
@@ -417,7 +417,7 @@ public: \
          Con::errorf("%s(%s)::_set%s(%i) - sound asset failure\"%s\" due to [%s]", macroText(className), getName(), macroText(name),index, _in, SoundAsset::getAssetErrstrn(m##name##Asset[index]->getStatus()).c_str());\
          return false; \
       }\
-      else if (!m##name[index])\
+      else if (!m##name[index] && (m##name##Name[index] != StringTable->EmptyString() && !Sim::findObject(m##name##Name[index])))\
       {\
          Con::errorf("%s(%s)::_set%s(%i) - Couldn't load sound \"%s\"", macroText(className), getName(), macroText(name),index, _in);\
          return false;\

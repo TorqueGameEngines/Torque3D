@@ -372,20 +372,8 @@ bool ShapeBaseImageData::onAdd()
          s.shapeSequenceScale = stateScaleShapeSequence[i];
 
          //_setstateSound(getstateSound(i),i);
-         s.sound = getstateSoundAsset(i);
-         if (s.sound == NULL && mstateSoundName[i] != StringTable->EmptyString())
-         {
-            //ok, so we've got some sort of special-case here like a fallback or SFXPlaylist. So do the hook-up now
-            SFXTrack* sndTrack;
-            if (!Sim::findObject(mstateSoundName[i], sndTrack))
-            {
-               Con::errorf("ShapeBaseImageData::onAdd() - attempted to find sound %s but failed!", mstateSoundName[i]);
-            }
-            else
-            {
-               s.soundTrack = sndTrack;
-            }
-         }
+         handleStateSoundTrack(i);
+
          s.script = stateScript[i];
          s.emitter = stateEmitter[i];
          s.emitterTime = stateEmitterTime[i];
@@ -589,6 +577,30 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
       }
    }
    return true;
+}
+
+void ShapeBaseImageData::handleStateSoundTrack(const U32& stateId)
+{
+   if (stateId > MaxStates)
+      return;
+
+   StateData& s = state[stateId];
+
+   s.sound = getstateSoundAsset(stateId);
+
+   if (s.sound == NULL && mstateSoundName[stateId] != StringTable->EmptyString())
+   {
+      //ok, so we've got some sort of special-case here like a fallback or SFXPlaylist. So do the hook-up now
+      SFXTrack* sndTrack;
+      if (!Sim::findObject(mstateSoundName[stateId], sndTrack))
+      {
+         Con::errorf("ShapeBaseImageData::onAdd() - attempted to find sound %s but failed!", mstateSoundName[stateId]);
+      }
+      else
+      {
+         s.soundTrack = sndTrack;
+      }
+   }
 }
 
 S32 ShapeBaseImageData::lookupState(const char* name)
@@ -1366,6 +1378,7 @@ void ShapeBaseImageData::unpackData(BitStream* stream)
             s.emitter = 0;
             
          UNPACKDATA_ASSET_ARRAY(stateSound, i);
+         handleStateSoundTrack(i);
       }
    }
    

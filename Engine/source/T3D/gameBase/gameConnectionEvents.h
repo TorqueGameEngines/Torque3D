@@ -114,7 +114,7 @@ private:
 public:
    typedef NetEvent Parent;
    
-   SimSoundAssetEvent(AssetPtr<SoundAsset> asset = NULL, const MatrixF* mat = NULL);
+   SimSoundAssetEvent(StringTableEntry assetId = StringTable->EmptyString(), const MatrixF& mat = MatrixF::Identity);
    void pack(NetConnection*, BitStream* bstream);
    void write(NetConnection*, BitStream* bstream);
    void unpack(NetConnection*, BitStream* bstream);

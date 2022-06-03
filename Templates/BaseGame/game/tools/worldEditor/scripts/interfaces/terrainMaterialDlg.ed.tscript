@@ -640,7 +640,7 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %materialAssetId )
             
    // Read out properties from the dialog.
    
-   %newName = %this-->matNameCtrl.getText(); 
+   %newName = %this-->matNameCtrl.text;
    
    %blankBitmap = AssetDatabase.acquireAsset($TerrainMaterialEditor::emptyMaterialImage).getImagePath();
    

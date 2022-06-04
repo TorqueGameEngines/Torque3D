@@ -186,6 +186,7 @@ public:
    AssetPtr<SoundAsset> m##name##Asset = NULL;\
    SFXProfile* m##name##Profile = NULL;\
    SFXDescription* m##name##Desc = NULL;\
+   SimObjectId m##name##SFXId = NULL;\
 public: \
    const StringTableEntry get##name##File() const { return m##name##Name; }\
    void set##name##File(const FileName &_in) { m##name##Name = StringTable->insert(_in.c_str());}\
@@ -310,30 +311,56 @@ public: \
 #define PACKDATA_SOUNDASSET(name)\
    if (stream->writeFlag(m##name##Asset.notNull()))\
    {\
-      if (m##name##Profile)\
-         m##name##Profile->packData(stream);\
-      sfxWrite(stream, m##name##Desc);\
+      stream->writeString(m##name##Asset.getAssetId());\
    }\
    else\
-      stream->writeString(m##name##Name);
+   {\
+      if(stream->writeFlag(Sim::findObject(m##name##Name)))\
+      {\
+         SFXTrack* sndTrack;\
+         Sim::findObject(m##name##Name, sndTrack);\
+         stream->writeRangedU32(SimObjectId(sndTrack->getId()), DataBlockObjectIdFirst, DataBlockObjectIdLast);\
+      }\
+      else\
+      {\
+         stream->writeString(m##name##Name);\
+      }\
+   }
+
 
 //network recieve - datablock
 #define UNPACKDATA_SOUNDASSET(name)\
    if (stream->readFlag())\
    {\
-      if (m##name##Profile)\
-         m##name##Profile->unpackData(stream);\
-      sfxRead(stream, &m##name##Desc);\
+      m##name##AssetId = stream->readSTString();\
+      _set##name(m##name##AssetId);\
    }\
    else\
    {\
-      m##name##Name = stream->readSTString();\
-      _set##name(m##name##Name);\
+      if(stream->readFlag())\
+      {\
+         m##name##SFXId = stream->readRangedU32( DataBlockObjectIdFirst, DataBlockObjectIdLast );\
+      }\
+      else\
+      {\
+         m##name##Name = stream->readSTString(); \
+         _set##name(m##name##Name); \
+      }\
    }
 
 #pragma endregion
 
 #pragma region Arrayed Asset Macros
+
+#define INIT_SOUNDASSET_ARRAY(name, index) \
+{\
+   m##name##Name[index] = StringTable->EmptyString(); \
+   m##name##AssetId[index] = StringTable->EmptyString(); \
+   m##name##Asset[index] = NULL;\
+   m##name[index] = NULL;\
+   m##name##Profile[index] = NULL;\
+   m##name##SFXId[index] = 0;\
+}
 
 #define DECLARE_SOUNDASSET_ARRAY(className,name,max) public: \
    static const U32 sm##name##Count = max;\
@@ -342,6 +369,7 @@ public: \
    StringTableEntry m##name##AssetId[max];\
    AssetPtr<SoundAsset> m##name##Asset[max];\
    SFXProfile* m##name##Profile[max];\
+   SimObjectId m##name##SFXId[max];\
 public: \
    const StringTableEntry get##name##File(const U32& index) const { return m##name##Name[index]; }\
    void set##name##File(const FileName &_in, const U32& index) { m##name##Name[index] = StringTable->insert(_in.c_str());}\
@@ -487,6 +515,46 @@ if (m##name##AssetId[index] != StringTable->EmptyString())\
       {\
          addField(assetEnumNameConcat(enumString, File), TypeSoundFilename, Offset(m##name##Name[0], consoleClass) + sizeof(m##name##Name[0])*i, assetText(name, docs), AbstractClassRep::FIELD_HideInInspectors); \
          addField(assetEnumNameConcat(enumString, Asset), TypeSoundAssetId, Offset(m##name##AssetId[0], consoleClass) + sizeof(m##name##AssetId[0])*i, assetText(name, asset reference.));\
+      }\
+   }
+
+#define PACKDATA_SOUNDASSET_ARRAY(name, index)\
+   if (stream->writeFlag(m##name##Asset[index].notNull()))\
+   {\
+      stream->writeString(m##name##Asset[index].getAssetId());\
+   }\
+   else\
+   {\
+      if(stream->writeFlag(Sim::findObject(m##name##Name[index])))\
+      {\
+         SFXTrack* sndTrack;\
+         Sim::findObject(m##name##Name[index], sndTrack);\
+         stream->writeRangedU32(SimObjectId(sndTrack->getId()), DataBlockObjectIdFirst, DataBlockObjectIdLast);\
+      }\
+      else\
+      {\
+         stream->writeString(m##name##Name[index]);\
+      }\
+   }
+      
+
+//network recieve - datablock
+#define UNPACKDATA_SOUNDASSET_ARRAY(name, index)\
+   if (stream->readFlag())\
+   {\
+      m##name##AssetId[index] = stream->readSTString();\
+      _set##name(m##name##AssetId[index], index);\
+   }\
+   else\
+   {\
+      if(stream->readFlag())\
+      {\
+         m##name##SFXId[index] = stream->readRangedU32( DataBlockObjectIdFirst, DataBlockObjectIdLast );\
+      }\
+      else\
+      {\
+         m##name##Name[index] = stream->readSTString(); \
+         _set##name(m##name##Name[index], index); \
       }\
    }
 #pragma endregion

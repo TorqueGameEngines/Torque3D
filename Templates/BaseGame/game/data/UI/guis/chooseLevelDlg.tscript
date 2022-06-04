@@ -35,7 +35,7 @@ function ChooseLevelDlg::onOpen(%this)
    LevelList.clearRows();
    LevelListEntries.empty();
    
-   ChooseLevelWindow->CurrentPreview.setBitmap("data/ui/images/no-preview");
+   ChooseLevelWindow->CurrentPreview.setBitmap("UI:no_preview_image");
    ChooseLevelWindow->LevelDescriptionLabel.visible = false;
    ChooseLevelWindow->LevelDescription.visible = false;
    
@@ -167,7 +167,7 @@ function LevelList::onChange(%this)
    if (isFile(%levelPreview))
       ChooseLevelWindow->CurrentPreview.setBitmap(%levelPreview);
    else
-      ChooseLevelWindow->CurrentPreview.setBitmap("data/ui/images/no-preview");
+      ChooseLevelWindow->CurrentPreview.setBitmap("UI:no_preview_image");
 
    // Get the description
    %levelDesc = %levelAsset.description;
@@ -193,6 +193,8 @@ function ChooseLevelDlg::beginLevel(%this)
    // So we can't fire the button when loading is in progress.
    if ( isObject( ServerGroup ) )
       return;
+      
+   %this.navigation.popPage();
 
    // Launch the chosen level with the editor open?
    if ( ChooseLevelDlg.launchInEditor )

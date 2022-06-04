@@ -652,7 +652,8 @@ void ExplosionData::packData(BitStream* stream)
 
    PACKDATA_ASSET(ExplosionShape);
 
-   PACKDATA_SOUNDASSET(Sound);
+   //PACKDATA_SOUNDASSET(Sound);
+   PACKDATA_ASSET(Sound);
 
    if (stream->writeFlag(particleEmitter))
       stream->writeRangedU32(particleEmitter->getId(),DataBlockObjectIdFirst,DataBlockObjectIdLast);
@@ -756,7 +757,7 @@ void ExplosionData::unpackData(BitStream* stream)
 
    UNPACKDATA_ASSET(ExplosionShape);
 
-   UNPACKDATA_SOUNDASSET(Sound);
+   UNPACKDATA_ASSET(Sound);
 
    if (stream->readFlag())
       particleEmitterId = stream->readRangedU32(DataBlockObjectIdFirst, DataBlockObjectIdLast);

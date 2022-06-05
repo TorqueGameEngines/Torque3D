@@ -288,3 +288,17 @@ function UINavigation::getPageCount(%this)
       
    return %count;
 }
+
+//==============================================================================
+/// Summary:
+/// Force the page to reprocess to ensure it's status is up to date
+function UINavigation::refreshPage(%this)
+{
+   %page = %this.getCurrentPage();
+   if(!isObject(%page))
+      return;
+      
+   if(%page.isMethod("onOpen"))
+      %page.call("onOpen");
+}
+

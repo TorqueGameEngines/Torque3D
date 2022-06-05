@@ -35,6 +35,8 @@ function MainMenuGui::onWake(%this)
    //This will ultimately call MainMenuButtons::onOpen(), so to see where the navigation
    //chain continues, see that function.
    %this.setRootPage(MainMenuButtons);
+   
+   %this.refreshPage();
 }
 
 function MainMenuButtonHolder::onWake(%this)

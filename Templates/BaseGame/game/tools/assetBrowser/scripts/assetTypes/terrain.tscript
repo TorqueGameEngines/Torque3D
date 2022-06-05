@@ -5,9 +5,9 @@ function AssetBrowser::setupCreateNewTerrainAsset(%this)
    NewAssetPropertiesInspector.addField("genWithNoise", "Generate Terrain With Noise", "bool",  "Is this script used on the server?", "0", "2", %this.newAssetSettings);
    NewAssetPropertiesInspector.endGroup();
    
-   NewAssetPropertiesInspector.startGroup("Terrain - Import");
+   /*NewAssetPropertiesInspector.startGroup("Terrain - Import");
    NewAssetPropertiesInspector.addField("importDetails", "Import Heightmap", "button",  "Import an existing heightmap", "", "Canvas.pushDialog( TerrainImportGui );", %this.newAssetSettings);
-   NewAssetPropertiesInspector.endGroup();
+   NewAssetPropertiesInspector.endGroup();*/
 }
 
 function AssetBrowser::createTerrainAsset(%this)

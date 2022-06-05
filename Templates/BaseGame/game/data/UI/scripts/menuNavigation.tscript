@@ -75,7 +75,8 @@ function UINavigation::pushPage(%this, %newPage, %callback)
    }
    
    //don't re-add pages
-   if(%this.pageStack.getIndexFromKey(%newPage) != -1)
+   if(%this.pageStack.getPageCount() != 0 && 
+      %this.pageStack.getIndexFromKey(%newPage) != -1)
       return;
    
    %canChange = true;

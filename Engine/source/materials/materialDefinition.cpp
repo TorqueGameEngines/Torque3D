@@ -536,7 +536,7 @@ bool Material::onAdd()
    if (mTranslucentBlendOp >= NumBlendTypes || mTranslucentBlendOp < 0)
    {
       Con::errorf("Invalid blend op in material: %s", getName());
-      mTranslucentBlendOp = LerpAlpha;
+      mTranslucentBlendOp = PreMul;
    }
 
    SimSet* matSet = MATMGR->getMaterialSet();

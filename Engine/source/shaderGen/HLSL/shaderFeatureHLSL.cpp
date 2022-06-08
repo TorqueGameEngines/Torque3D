@@ -3153,7 +3153,7 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    Var *ambient = (Var *)LangElement::find("ambient");
    if (!ambient)
    {
-      ambient = new Var("ambient","float4");
+      ambient = new Var("ambient","float3");
       eyePos->uniform = true;
       eyePos->constSortPos = cspPass;
    }

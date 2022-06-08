@@ -3064,7 +3064,7 @@ void ReflectionProbeFeatGLSL::processPix(Vector<ShaderComponent*>& componentList
    Var *ambient = (Var *)LangElement::find("ambient");
    if (!ambient)
    {
-      ambient = new Var("ambient", "vec4");
+      ambient = new Var("ambient", "vec3");
       eyePos->uniform = true;
       eyePos->constSortPos = cspPass;
    }

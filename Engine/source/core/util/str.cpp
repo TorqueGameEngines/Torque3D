@@ -647,7 +647,7 @@ String String::intern() const
       
    // Create new.
    
-   StringData* data = StringData::Create(c_str(), length(), sInternTable->mChunker);
+   StringData* data = StringData::Create(c_str(), length(), sInternTable->mChunker, true);
    
    //StringData* data = new ( length(), sInternTable->mChunker ) StringData( c_str(), true );
    iter = sInternTable->insertUnique( data, data );

@@ -245,6 +245,8 @@ public:
    /// Callback when the control wakes up.
    bool onWake();
 
+   void onSleep();
+
    void clear();
 
    virtual void onMouseMove(const GuiEvent& event);

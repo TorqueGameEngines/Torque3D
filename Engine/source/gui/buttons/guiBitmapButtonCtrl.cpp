@@ -201,6 +201,9 @@ void GuiBitmapButtonCtrl::onSleep()
          mTextures[ i ].mTextureInactive = NULL;
       }
 
+   if (mBitmapAsset.notNull())
+      mBitmap = NULL;
+
    Parent::onSleep();
 }
 

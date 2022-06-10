@@ -287,7 +287,7 @@ class String::StringData : protected StringDataImpl
       
       static StringData* Create(const StringChar* data, U32 len, bool interned = false)
       {
-         void* memory = dMalloc(sizeof(StringData) + sizeof(StringChar) * len)
+         void* memory = dMalloc(sizeof(StringData) + sizeof(StringChar) * len);
          StringData* result = new(memory) StringData(data, len, interned);
          return result;
       }

@@ -278,8 +278,8 @@ GuiPopUpMenuCtrl::GuiPopUpMenuCtrl(void)
    mBackgroundCancel = false; //  Added
    mReverseTextList = false; //  Added - Don't reverse text list if displaying up
 
-   INIT_IMAGEASSET_ARRAY(Bitmap, 0);
-   INIT_IMAGEASSET_ARRAY(Bitmap, 1);
+   INIT_IMAGEASSET_ARRAY(Bitmap, GFXDefaultGUIProfile, 0);
+   INIT_IMAGEASSET_ARRAY(Bitmap, GFXDefaultGUIProfile, 1);
 
    mBitmapBounds.set(16, 16); //  Added
    mIdMax = -1;
@@ -311,7 +311,6 @@ void GuiPopUpMenuCtrl::initPersistFields(void)
 
 bool GuiPopUpMenuCtrl::_setBitmaps(void* obj, const char* index, const char* data)
 {
-   bool ret = false; 
    GuiPopUpMenuCtrl* object = static_cast<GuiPopUpMenuCtrl*>(obj);
 
    object->setBitmap(data);

@@ -81,6 +81,8 @@ function RoadEditorPlugin::onWorldEditorStartup( %this )
    // Add ourselves to the Editor Settings window
    exec( "./RoadEditorSettingsTab.gui" );
    //ESettingsWindow.addTabPage( ERoadEditorSettingsPage );
+   
+   ESettingsWindow.addEditorSettingsPage("RoadEditor", "Road Editor");
 }
 
 function RoadEditorPlugin::onActivated( %this )

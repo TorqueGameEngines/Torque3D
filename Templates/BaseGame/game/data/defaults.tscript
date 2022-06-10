@@ -27,7 +27,7 @@ $sceneLighting::cacheSize = 20000;
 $sceneLighting::purgeMethod = "lastCreated";
 $sceneLighting::cacheLighting = 1;
 
-$pref::Video::displayDevice = "D3D11";
+$pref::Video::displayDevice = ($platform $= "windows") ? "D3D11" : "OpenGL";
 $pref::Video::disableVerticalSync = 1;
 $pref::Video::defaultFenceCount = 0;
 $pref::Video::screenShotSession = 0;
@@ -124,11 +124,6 @@ $pref::SFX::channelVolume5 = 1;
 $pref::SFX::channelVolume6 = 1;
 $pref::SFX::channelVolume7 = 1;
 $pref::SFX::channelVolume8 = 1;
-
-$pref::SFX::channelVolume[1] = 1;
-$pref::SFX::channelVolume[2] = 1;
-$pref::SFX::channelVolume[3] = 1;
-$pref::SFX::channelVolume[4] = 1;
 
 $pref::PostEffect::PreferedHDRFormat = "GFXFormatR8G8B8A8";
 

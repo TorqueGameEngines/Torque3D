@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(ManageSFXParametersContainer,EditorGuiGroup) {
+$guiContent = new GuiControl(ManageSFXParametersContainer,EditorGuiGroup) {
    isContainer = "1";
    Profile = "ToolsGuiModelessDialogProfile";
    HorizSizing = "right";

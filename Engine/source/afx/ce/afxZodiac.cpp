@@ -78,7 +78,7 @@ bool afxZodiacData::sPreferDestinationGradients = false;
 
 afxZodiacData::afxZodiacData()
 {
-   INIT_IMAGEASSET(Texture);
+   INIT_ASSET(Texture);
 
   radius_xy = 1;
   vert_range.set(0.0f, 0.0f);
@@ -120,7 +120,7 @@ afxZodiacData::afxZodiacData()
 
 afxZodiacData::afxZodiacData(const afxZodiacData& other, bool temp_clone) : GameBaseData(other, temp_clone)
 {
-   CLONE_IMAGEASSET(Texture);
+   CLONE_ASSET(Texture);
 
   radius_xy = other.radius_xy;
   vert_range = other.vert_range;
@@ -269,7 +269,7 @@ void afxZodiacData::packData(BitStream* stream)
 
   merge_zflags();
 
-  PACKDATA_IMAGEASSET(Texture);
+  PACKDATA_ASSET(Texture);
   stream->write(radius_xy);
   stream->write(vert_range.x);
   stream->write(vert_range.y);
@@ -294,7 +294,7 @@ void afxZodiacData::unpackData(BitStream* stream)
 {
   Parent::unpackData(stream);
 
-  UNPACKDATA_IMAGEASSET(Texture);
+  UNPACKDATA_ASSET(Texture);
   stream->read(&radius_xy);
   stream->read(&vert_range.x);
   stream->read(&vert_range.y);

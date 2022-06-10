@@ -61,7 +61,8 @@ ConsoleDocClass( GuiInputCtrl,
 GuiInputCtrl::GuiInputCtrl()
    : mSendAxisEvents(false),
    mSendBreakEvents(false),
-   mSendModifierEvents(false)
+   mSendModifierEvents(false),
+   mIgnoreMouseEvents(false)
 {
 }
 
@@ -76,6 +77,8 @@ void GuiInputCtrl::initPersistFields()
       "If true, break events for all devices will generate callbacks (Default false).");
    addField("sendModifierEvents", TypeBool, Offset(mSendModifierEvents, GuiInputCtrl),
       "If true, Make events will be sent for modifier keys (Default false).");
+   addField("ignoreMouseEvents", TypeBool, Offset(mIgnoreMouseEvents, GuiInputCtrl),
+      "If true, any events from mouse devices will be passed through.");
    endGroup("GuiInputCtrl");
 
    Parent::initPersistFields();
@@ -97,7 +100,7 @@ bool GuiInputCtrl::onWake()
    if ( !Parent::onWake() )
       return( false );
 
-   if( !smDesignTime )
+   if( !smDesignTime && !mIgnoreMouseEvents)
       mouseLock();
       
    setFirstResponder();
@@ -151,6 +154,9 @@ IMPLEMENT_CALLBACK(GuiInputCtrl, onAxisEvent, void, (const char* device, const c
 //------------------------------------------------------------------------------
 bool GuiInputCtrl::onInputEvent( const InputEventInfo &event )
 {
+   if (mIgnoreMouseEvents && event.deviceType == MouseDeviceType)
+      return false;
+
    char deviceString[32];
    if ( event.action == SI_MAKE )
    {

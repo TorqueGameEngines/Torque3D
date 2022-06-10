@@ -1,6 +1,0 @@
-<GUIAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    scriptFile="@assetFile=shapeEdSelectWindow.ed.gui"
-    GUIFile="@assetFile=shapeEdSelectWindow.ed.gui"
-    VersionId="1" />

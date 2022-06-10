@@ -62,7 +62,7 @@ class RenderShapeExample : public SceneObject
    // Rendering variables
    //--------------------------------------------------------------------------
    DECLARE_SHAPEASSET(RenderShapeExample, Shape, onShapeChanged);
-   DECLARE_SHAPEASSET_SETGET(RenderShapeExample, Shape);
+   DECLARE_ASSET_SETGET(RenderShapeExample, Shape);
 
    // The actual shape instance
    TSShapeInstance*  mShapeInstance;

@@ -1,0 +1,205 @@
+function AssetBrowser::loadCreatorClasses(%this)
+{
+   // Just so we can recall this method for testing changes
+   // without restarting.
+   if ( isObject( %this.creatorClassArray ) )
+      %this.creatorClassArray.delete();
+      
+   AssetBrowserCreatorGroupsList.empty();
+      
+   %this.creatorClassArray = new ArrayObject();
+   %this.creatorClassArray.caseSensitive = true; 
+   //%this.setListView( true );
+   
+   //World Editor Creator Groups
+   %this.beginCreatorGroup( "Environment" );
+      %this.addCreatorClass( "BasicClouds",        "Basic Clouds" );
+      %this.addCreatorClass( "PxCloth",            "Cloth" );
+      %this.addCreatorClass( "CloudLayer",         "Cloud Layer" );
+      %this.addCreatorClass( "GroundCover",        "Ground Cover" );
+      %this.addCreatorClass( "Lightning" );
+      %this.addCreatorClass( "ParticleEmitterNode","Particle Emitter" );
+      %this.addCreatorClass( "Precipitation" );
+      // Legacy features. Users should use Ground Cover and the Forest Editor.   
+      //%this.addCreatorClass( "fxShapeReplicator",   "Shape Replicator" );
+      //%this.addCreatorClass( "fxFoliageReplicator", "Foliage Replicator" );
+      %this.addCreatorClass( "RibbonNode",         "Ribbon Emitter" );
+      %this.addCreatorClass( "ScatterSky",         "Scatter Sky" );
+      %this.addCreatorClass( "SkyBox",             "Sky Box" );
+      %this.addCreatorClass( "SkySphere",          "Sky Sphere" );
+      %this.addCreatorClass( "SFXEmitter",         "Sound Emitter" );
+      %this.addCreatorClass( "TerrainBlock",       "Terrain Block" );
+      %this.addCreatorClass( "VolumetricFog",      "Volumetric Fog" );
+      %this.addCreatorClass( "TimeOfDay",          "Time of Day" );
+      %this.addCreatorClass( "WaterBlock",         "Water Block" );
+      %this.addCreatorClass( "WaterPlane",         "Water Plane" );
+       %this.addCreatorClass( "ForestWindEmitter",  "Wind Emitter" );
+   %this.endCreatorGroup();
+   
+   %this.beginCreatorGroup( "ExampleObjects" );
+      %this.addCreatorClass( "RenderMeshExample" );
+      %this.addCreatorClass( "RenderObjectExample" );
+      %this.addCreatorClass( "RenderShapeExample" );
+   %this.endCreatorGroup(); 
+   
+   %this.beginCreatorGroup( "Level" );
+      %this.addCreatorClass("Camera" );
+      %this.addCreatorClass("GroundPlane",  "Ground Plane" );
+      %this.addCreatorClass("LevelInfo",    "Level Info" );
+      %this.addCreatorClass("Marker",       "Path Node" );
+      %this.addCreatorClass("MissionArea",  "Mission Area" );
+      %this.addCreatorClass("NotesObject",         "Note" );
+      %this.addCreatorClass("Path" );
+      %this.addCreatorClass("SpawnSphere",  "General Spawn Sphere", "GeneralDropPoint"  );
+      %this.addCreatorClass("SpawnSphere",  "Player Spawn Sphere", "PlayerDropPoint" );
+      %this.addCreatorClass("SpawnSphere",  "Observer Spawn Sphere", "ObserverDropPoint" );
+      %this.addCreatorClass("VPath",        "Verve Path" );
+   %this.endCreatorGroup();
+   
+   %this.beginCreatorGroup( "Lighting" );
+      %this.addCreatorClass( "BoxEnvironmentProbe",      "Box Env. Probe" );
+      %this.addCreatorClass( "PointLight",               "Point Light" );
+      %this.addCreatorClass( "Skylight",                 "Skylight" );
+      %this.addCreatorClass( "SphereEnvironmentProbe",   "Sphere Env. Probe" );
+      %this.addCreatorClass( "SpotLight",                "Spot Light" );
+      %this.addCreatorClass( "Sun",                      "Basic Sun" );
+   %this.endCreatorGroup(); 
+
+   %this.beginCreatorGroup( "Navigation" );
+      %this.addCreatorClass( "AIPathGroup" );
+      %this.addCreatorClass( "CoverPoint",      "Cover Point" );
+      %this.addCreatorClass( "NavMesh",         "Navigation Mesh" );
+      %this.addCreatorClass( "NavPath",         "Navigation Path" );
+   %this.endCreatorGroup();  
+   
+   %this.beginCreatorGroup( "System" );
+      %this.addCreatorClass( "SimGroup" );
+   %this.endCreatorGroup();  
+   
+   %this.beginCreatorGroup( "Volumes" );
+      %this.addCreatorClass("AccumulationVolume",  "Accumulation Volume" );
+      %this.addCreatorClass("OcclusionVolume",     "Occlusion Volume" );
+      %this.addCreatorClass("PhysicalZone",        "Physical Zone" );
+      %this.addCreatorClass("Portal",              "Zone Portal" );
+      %this.addCreatorClass("SFXSpace",            "Sound Space" );
+      %this.addCreatorClass("Trigger" );
+      %this.addCreatorClass("Zone",                "Zone" );
+   %this.endCreatorGroup();  
+   
+   
+   
+   //Gui Editor Creator Groups
+   %controls = enumerateConsoleClassesByCategory( "Gui" );
+   %guiClasses = new ArrayObject();
+
+   foreach$( %className in %controls )
+   {
+      if( GuiEditor.isFilteredClass( %className )
+          || !isMemberOfClass( %className, "GuiControl" ) )
+         continue;
+         
+      %category = getWord( getCategoryOfClass( %className ), 1 );
+      if( %category $= "" )
+         continue;
+         
+      %guiClasses.add(%category, %className);
+   }
+   
+   %guiClasses.sortk(true);
+   
+   %currentCat = "";
+   for(%i=0; %i < %guiClasses.count(); %i++)
+   {
+      %guiCat = %guiClasses.getKey(%i);
+      if(%currentCat !$= %guiCat)
+      {
+         if(%currentCat !$= "")
+            %this.endCreatorGroup(); 
+
+         %this.beginCreatorGroup( %guiCat, "GuiEditor" );
+         %currentCat = %guiCat;
+      }
+      
+      %guiClass = %guiClasses.getValue(%i);
+      %this.addCreatorClass( %guiClass );
+   }
+   
+   %this.endCreatorGroup(); 
+   
+   %this.creatorClassArray.sortk(true);
+   %this.creatorClassArray.sort(true);
+   
+   %guiClasses.delete();
+   
+   callOnModules("loadModuleCreatorClasses");
+}
+
+function AssetBrowser::beginCreatorGroup(%this, %group, %editor)
+{
+   if(%editor $= "")
+      %editor = "WorldEditor";
+         
+   if((GuiEditorIsActive() && %editor $= "GuiEditor") || (EditorIsActive() && %editor $= "WorldEditor"))
+   {
+      AssetBrowser-->filterTree.insertItem(AssetBrowser-->filterTree.creatorIdx, %group);
+   }
+   
+   %this.currentCreatorGroup = %group;
+         
+   AssetBrowserCreatorGroupsList.add(%editor, %group);
+}
+
+function AssetBrowser::endCreatorGroup(%this, %group)
+{
+   %this.currentCreatorGroup = "";
+}
+
+function AssetBrowser::addCreatorClass(%this, %class, %name, %buildfunc)
+{
+   if( !isClass(%class) )
+      return;
+      
+   if ( %name $= "" )
+      %name = %class;
+      
+   %group = %this.currentCreatorGroup;
+   
+   if ( %class $= "" || %group $= "" )
+   {
+      warn( "AssetBrowser::addCreatorClass, invalid parameters!" );
+      return;  
+   }
+   
+   %cmd = "";
+   if(%buildfunc $= "")
+   {
+      %method = "build" @ %buildfunc;
+      if( !ObjectBuilderGui.isMethod( %method ) )
+         %method = "build" @ %class;
+
+      if( !ObjectBuilderGui.isMethod( %method ) )
+         %cmd = "new " @ %class @ "();";
+      else
+         %cmd = "ObjectBuilderGui." @ %method @ "();";
+   }
+   else
+   {
+      %cmd = "ObjectBuilderGui.build" @ %buildfunc @ "();";
+   }
+
+   if(GuiEditorIsActive())
+   {
+      %buildfunc = "return " @ %cmd;
+   }
+   else
+   {
+      %buildfunc = "ObjectBuilderGui.newObjectCallback = \"AssetBrowser.onFinishCreateObject\"; ObjectCreator.createObject( \"" @ %cmd @ "\" );";
+   }
+   
+   %args = new ScriptObject();
+   %args.val[0] = %class;
+   %args.val[1] = %name;
+   %args.val[2] = %buildfunc;
+   
+   %this.creatorClassArray.push_back( %group, %args );
+}

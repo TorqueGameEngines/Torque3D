@@ -41,9 +41,39 @@
 #include "platform/threads/mutex.h"
 #include "core/util/journal/journal.h"
 #include "cinterface/cinterface.h"
+#include "console/consoleValueStack.h"
 
 extern StringStack STR;
-extern ConsoleValueStack CSTK;
+extern ConsoleValueStack<4096> gCallStack;
+
+DataChunker ConsoleValue::sConversionAllocator;
+
+void ConsoleValue::init()
+{
+   sConversionAllocator.setChunkSize(8092);
+}
+
+void ConsoleValue::resetConversionBuffer()
+{
+   sConversionAllocator.freeBlocks();
+}
+
+char* ConsoleValue::convertToBuffer() const
+{
+   char* buffer = static_cast<char*>(sConversionAllocator.alloc(32));
+   
+   if (type == ConsoleValueType::cvFloat)
+      dSprintf(buffer, 32, "%.9g", f);
+   else
+      dSprintf(buffer, 32, "%lld", i);
+
+   return buffer;
+}
+
+const char* ConsoleValue::getConsoleData() const
+{
+   return Con::getData(type, ct->dataPtr, 0, ct->enumTable);
+}
 
 ConsoleDocFragment* ConsoleDocFragment::smFirst;
 ExprEvalState gEvalState;
@@ -243,6 +273,7 @@ static Vector< String > sInstantGroupStack( __FILE__, __LINE__ );
 static DataChunker consoleLogChunker;
 static Vector<ConsoleLogEntry> consoleLog(__FILE__, __LINE__);
 static bool consoleLogLocked;
+bool scriptWarningsAsAsserts = true;
 static bool logBufferEnabled=true;
 static S32 printLevel = 10;
 static FileStream consoleLogFile;
@@ -269,9 +300,8 @@ Con::ConsoleInputEvent smConsoleInput;
 ///
 StringTableEntry gCurrentFile;
 StringTableEntry gCurrentRoot;
-/// @}
-
 S32 gObjectCopyFailures = -1;
+/// @}
 
 bool alwaysUseDebugOutput = true;
 bool useTimestamp = false;
@@ -323,10 +353,11 @@ void init()
    ConsoleConstructor::setup();
 
    // Set up the parser(s)
-   CON_ADD_PARSER(CMD, TORQUE_SCRIPT_EXTENSION,   true);   // TorqueScript
+   CON_ADD_PARSER(CMD, (char*)TORQUE_SCRIPT_EXTENSION, true);   // TorqueScript
 
    // Setup the console types.
    ConsoleBaseType::initialize();
+   ConsoleValue::init();
 
    // And finally, the ACR...
    AbstractClassRep::initialize();
@@ -343,10 +374,10 @@ void init()
       "@ingroup Console\n");
    addVariable( "instantGroup", TypeRealString, &gInstantGroup, "The group that objects will be added to when they are created.\n"
       "@ingroup Console\n");
-
    addVariable("Con::objectCopyFailures", TypeS32, &gObjectCopyFailures, "If greater than zero then it counts the number of object creation "
       "failures based on a missing copy object and does not report an error..\n"
-      "@ingroup Console\n");   
+      "@ingroup Console\n");
+   addVariable("Con::scriptWarningsAsAsserts", TypeBool, &scriptWarningsAsAsserts, "If true, script warnings (outside of syntax errors) will be treated as fatal asserts.");
 
    // Current script file name and root
    addVariable( "Con::File", TypeString, &gCurrentFile, "The currently executing script file.\n"
@@ -455,6 +486,13 @@ U32 tabComplete(char* inputBuffer, U32 cursorPos, U32 maxResultLength, bool forw
       }
       completionBaseStart = p;
       completionBaseLen = cursorPos - p;
+
+      // Bail if we end up at start of string
+      if (p == 0)
+      {
+          return cursorPos;
+      }
+
       // Is this function being invoked on an object?
       if (inputBuffer[p - 1] == '.') 
       {
@@ -829,12 +867,6 @@ void setVariable(const char *name, const char *value)
       name = prependDollar(name);
       gEvalState.globalVars.setVariable(StringTable->insert(name), value);
    }
-}
-
-void setLocalVariable(const char *name, const char *value)
-{
-   name = prependPercent(name);
-   gEvalState.getCurrentFrame().setVariable(StringTable->insert(name), value);
 }
 
 void setBoolVariable(const char *varName, bool value)
@@ -1474,7 +1506,7 @@ bool executeFile(const char* fileName, bool noCalls, bool journalScript)
    return ret;
 }
 
-ConsoleValueRef evaluate(const char* string, bool echo, const char *fileName)
+ConsoleValue evaluate(const char* string, bool echo, const char *fileName)
 {
    ConsoleStackFrameSaver stackSaver;
    stackSaver.save();
@@ -1491,11 +1523,11 @@ ConsoleValueRef evaluate(const char* string, bool echo, const char *fileName)
       fileName = StringTable->insert(fileName);
 
    CodeBlock *newCodeBlock = new CodeBlock();
-   return newCodeBlock->compileExec(fileName, string, false, fileName ? -1 : 0);
+   return std::move(newCodeBlock->compileExec(fileName, string, false, fileName ? -1 : 0));
 }
 
 //------------------------------------------------------------------------------
-ConsoleValueRef evaluatef(const char* string, ...)
+ConsoleValue evaluatef(const char* string, ...)
 {
    ConsoleStackFrameSaver stackSaver;
    stackSaver.save();
@@ -1512,36 +1544,41 @@ ConsoleValueRef evaluatef(const char* string, ...)
 //------------------------------------------------------------------------------
 
 // Internal execute for global function which does not save the stack
-ConsoleValueRef _internalExecute(S32 argc, ConsoleValueRef argv[])
+ConsoleValue _internalExecute(S32 argc, ConsoleValue argv[])
 {
+   StringTableEntry funcName = StringTable->insert(argv[0].getString());
+
    const char** argv_str = static_cast<const char**>(malloc((argc - 1) * sizeof(char *)));
    for (int i = 0; i < argc - 1; i++)
    {
-      argv_str[i] = argv[i + 1];
+      argv_str[i] = argv[i + 1].getString();
    }
    bool result;
-   const char* methodRes = CInterface::CallFunction(NULL, argv[0], argv_str, argc - 1, &result);
+   const char* methodRes = CInterface::CallFunction(NULL, funcName, argv_str, argc - 1, &result);
    free(argv_str);
    if (result)
    {
-      return ConsoleValueRef::fromValue(CSTK.pushString(methodRes));
+      ConsoleValue ret;
+      ret.setString(methodRes);
+      return std::move(ret);
    }
    
    Namespace::Entry *ent;
-   StringTableEntry funcName = StringTable->insert(argv[0]);
+   
    ent = Namespace::global()->lookup(funcName);
 
    if(!ent)
    {
-      warnf(ConsoleLogEntry::Script, "%s: Unknown command.", (const char*)argv[0]);
+      warnf(ConsoleLogEntry::Script, "%s: Unknown command.", funcName);
 
       STR.clearFunctionOffset();
-      return ConsoleValueRef();
+      return std::move(ConsoleValue());
    }
-   return ent->execute(argc, argv, &gEvalState);
+
+   return std::move(ent->execute(argc, argv, &gEvalState));
 }
 
-ConsoleValueRef execute(S32 argc, ConsoleValueRef argv[])
+ConsoleValue execute(S32 argc, ConsoleValue argv[])
 {
 #ifdef TORQUE_MULTITHREAD
    if(isMainThread())
@@ -1563,23 +1600,23 @@ ConsoleValueRef execute(S32 argc, ConsoleValueRef argv[])
 #endif
 }
 
-ConsoleValueRef execute(S32 argc, const char *argv[])
+ConsoleValue execute(S32 argc, const char *argv[])
 {
    ConsoleStackFrameSaver stackSaver;
    stackSaver.save();
-   StringStackConsoleWrapper args(argc, argv);
-   return execute(args.count(), args);
+   StringArrayToConsoleValueWrapper args(argc, argv);
+   return std::move(execute(args.count(), args));
 }
 
 //------------------------------------------------------------------------------
 
 // Internal execute for object method which does not save the stack
-ConsoleValueRef _internalExecute(SimObject *object, S32 argc, ConsoleValueRef argv[], bool thisCallOnly)
+static ConsoleValue _internalExecute(SimObject *object, S32 argc, ConsoleValue argv[], bool thisCallOnly)
 {
    if(argc < 2)
    {
       STR.clearFunctionOffset();
-      return ConsoleValueRef();
+      return std::move(ConsoleValue());
    }
 
    // [neo, 10/05/2007 - #3010]
@@ -1590,35 +1627,36 @@ ConsoleValueRef _internalExecute(SimObject *object, S32 argc, ConsoleValueRef ar
       ICallMethod *com = dynamic_cast<ICallMethod *>(object);
       if(com)
       {
-         STR.pushFrame();
-         CSTK.pushFrame();
+         ConsoleStackFrameSaver saver;
+         saver.save();
          com->callMethodArgList(argc, argv, false);
-         STR.popFrame();
-         CSTK.popFrame();
       }
    }
+
+   StringTableEntry funcName = StringTable->insert(argv[0].getString());
 
    const char** argv_str = static_cast<const char**>(malloc((argc - 2) * sizeof(char *)));
    for (int i = 0; i < argc - 2; i++)
    {
-      argv_str[i] = argv[i + 2];
+      argv_str[i] = argv[i + 2].getString();
    }
    bool result;
-   const char* methodRes = CInterface::CallMethod(object, argv[0], argv_str, argc - 2, &result);
+   const char* methodRes = CInterface::CallMethod(object, funcName, argv_str, argc - 2, &result);
 
    free(argv_str);
 
    if (result)
    {
-      return ConsoleValueRef::fromValue(CSTK.pushString(methodRes));
+      ConsoleValue val;
+      val.setString(methodRes);
+      return val;
    }
 
    if(object->getNamespace())
    {
       U32 ident = object->getId();
-      ConsoleValueRef oldIdent(argv[1]);
-
-      StringTableEntry funcName = StringTable->insert(argv[0]);
+      const char* oldIdent = dStrdup(argv[1].getString());
+      
       Namespace::Entry *ent = object->getNamespace()->lookup(funcName);
 
       if(ent == NULL)
@@ -1626,37 +1664,35 @@ ConsoleValueRef _internalExecute(SimObject *object, S32 argc, ConsoleValueRef ar
          //warnf(ConsoleLogEntry::Script, "%s: undefined for object '%s' - id %d", funcName, object->getName(), object->getId());
 
          STR.clearFunctionOffset();
-         return ConsoleValueRef();
+         return std::move(ConsoleValue());
       }
 
       // Twiddle %this argument
-      ConsoleValue func_ident;
-      func_ident.setIntValue((S32)ident);
-      argv[1] = ConsoleValueRef::fromValue(&func_ident);
+      argv[1].setInt(ident);
 
       SimObject *save = gEvalState.thisObject;
       gEvalState.thisObject = object;
-      ConsoleValueRef ret = ent->execute(argc, argv, &gEvalState);
+      ConsoleValue ret = std::move(ent->execute(argc, argv, &gEvalState));
       gEvalState.thisObject = save;
 
       // Twiddle it back
-      argv[1] = oldIdent;
+      argv[1].setString(oldIdent);
+      dFree(oldIdent);
 
       return ret;
    }
 
-   warnf(ConsoleLogEntry::Script, "Con::execute - %d has no namespace: %s", object->getId(), (const char*)argv[0]);
+   warnf(ConsoleLogEntry::Script, "Con::execute - %d has no namespace: %s", object->getId(), funcName);
    STR.clearFunctionOffset();
-   return ConsoleValueRef();
+   return std::move(ConsoleValue());
 }
 
-
-ConsoleValueRef execute(SimObject *object, S32 argc, ConsoleValueRef argv[], bool thisCallOnly)
+ConsoleValue execute(SimObject *object, S32 argc, ConsoleValue argv[], bool thisCallOnly)
 {
    if(argc < 2)
    {
       STR.clearFunctionOffset();
-      return ConsoleValueRef();
+      return std::move(ConsoleValue());
    }
 
    ConsoleStackFrameSaver stackSaver;
@@ -1666,7 +1702,7 @@ ConsoleValueRef execute(SimObject *object, S32 argc, ConsoleValueRef argv[], boo
    {
       if (isMainThread())
       {
-         return _internalExecute(object, argc, argv, thisCallOnly);
+         return std::move(_internalExecute(object, argc, argv, thisCallOnly));
       }
       else
       {
@@ -1676,34 +1712,34 @@ ConsoleValueRef execute(SimObject *object, S32 argc, ConsoleValueRef argv[], boo
       }
    }
 
-   warnf(ConsoleLogEntry::Script, "Con::execute - %d has no namespace: %s", object->getId(), (const char*)argv[0]);
+   warnf(ConsoleLogEntry::Script, "Con::execute - %d has no namespace: %s", object->getId(), argv[0].getString());
    STR.clearFunctionOffset();
-   return ConsoleValueRef();
+   return std::move(ConsoleValue());
 }
 
-ConsoleValueRef execute(SimObject *object, S32 argc, const char *argv[], bool thisCallOnly)
+ConsoleValue execute(SimObject *object, S32 argc, const char *argv[], bool thisCallOnly)
 {
    ConsoleStackFrameSaver stackSaver;
    stackSaver.save();
-   StringStackConsoleWrapper args(argc, argv);
-   return execute(object, args.count(), args, thisCallOnly);
+   StringArrayToConsoleValueWrapper args(argc, argv);
+   return std::move(execute(object, args.count(), args, thisCallOnly));
 }
 
-inline ConsoleValueRef _executef(SimObject *obj, S32 checkArgc, S32 argc, ConsoleValueRef *argv)
+inline ConsoleValue _executef(SimObject *obj, S32 checkArgc, S32 argc, ConsoleValue *argv)
 {
    const U32 maxArg = 12;
-   AssertWarn(checkArgc == argc, "Incorrect arg count passed to Con::executef(SimObject*)");
+   AssertFatal(checkArgc == argc, "Incorrect arg count passed to Con::executef(SimObject*)");
    AssertFatal(argc <= maxArg - 1, "Too many args passed to Con::_executef(SimObject*). Please update the function to handle more.");
-   return execute(obj, argc, argv);
+   return std::move(execute(obj, argc, argv));
 }
 
 //------------------------------------------------------------------------------
-inline ConsoleValueRef _executef(S32 checkArgc, S32 argc, ConsoleValueRef *argv)
+inline ConsoleValue _executef(S32 checkArgc, S32 argc, ConsoleValue *argv)
 {
    const U32 maxArg = 10;
    AssertFatal(checkArgc == argc, "Incorrect arg count passed to Con::executef()");
    AssertFatal(argc <= maxArg, "Too many args passed to Con::_executef(). Please update the function to handle more.");
-   return execute(argc, argv);
+   return std::move(execute(argc, argv));
 }
 
 //------------------------------------------------------------------------------
@@ -1901,15 +1937,9 @@ StringTableEntry getModNameFromPath(const char *path)
 void postConsoleInput( RawData data )
 {
    // Schedule this to happen at the next time event.
-   ConsoleValue values[2];
-   ConsoleValueRef argv[2];
-
-   values[0].init();
-   values[0].setStringValue("eval");
-   values[1].init();
-   values[1].setStringValue((const char*)data.data);
-   argv[0].value = &values[0];
-   argv[1].value = &values[1];
+   ConsoleValue argv[2];
+   argv[0].setString("eval");
+   argv[1].setString(reinterpret_cast<const char*>(data.data));
 
    Sim::postCurrentEvent(Sim::getRootGroup(), new SimConsoleEvent(2, argv, false));
 }
@@ -2524,70 +2554,20 @@ DefineEngineFunction( logWarning, void, ( const char* message ),,
 
 //------------------------------------------------------------------------------
 
-extern ConsoleValueStack CSTK;
-
-ConsoleValueRef::ConsoleValueRef(const ConsoleValueRef &ref)
-{
-   value = ref.value;
-}
-
-ConsoleValueRef& ConsoleValueRef::operator=(const ConsoleValueRef &newValue)
-{
-   value = newValue.value;
-   return *this;
-}
-
-ConsoleValueRef& ConsoleValueRef::operator=(const char *newValue)
-{
-   AssertFatal(value, "value should not be NULL");
-   value->setStringValue(newValue);
-   return *this;
-}
-
-ConsoleValueRef& ConsoleValueRef::operator=(S32 newValue)
-{
-   AssertFatal(value, "value should not be NULL");
-   value->setIntValue(newValue);
-   return *this;
-}
-
-ConsoleValueRef& ConsoleValueRef::operator=(U32 newValue)
-{
-   AssertFatal(value, "value should not be NULL");
-   value->setIntValue(newValue);
-   return *this;
-}
-
-ConsoleValueRef& ConsoleValueRef::operator=(F32 newValue)
-{
-   AssertFatal(value, "value should not be NULL");
-   value->setFloatValue(newValue);
-   return *this;
-}
-
-ConsoleValueRef& ConsoleValueRef::operator=(F64 newValue)
-{
-   AssertFatal(value, "value should not be NULL");
-   value->setFloatValue(newValue);
-   return *this;
-}
-
-//------------------------------------------------------------------------------
-
-StringStackWrapper::StringStackWrapper(int targc, ConsoleValueRef targv[])
+ConsoleValueToStringArrayWrapper::ConsoleValueToStringArrayWrapper(int targc, ConsoleValue *targv)
 {
    argv = new const char*[targc];
    argc = targc;
 
-   for (int i=0; i<targc; i++)
+   for (S32 i = 0; i < targc; i++)
    {
-      argv[i] = dStrdup(targv[i]);
+      argv[i] = dStrdup(targv[i].getString());
    }
 }
 
-StringStackWrapper::~StringStackWrapper()
+ConsoleValueToStringArrayWrapper::~ConsoleValueToStringArrayWrapper()
 {
-   for (int i=0; i<argc; i++)
+   for (S32 i = 0; i< argc; i++)
    {
       dFree(argv[i]);
    }
@@ -2595,201 +2575,58 @@ StringStackWrapper::~StringStackWrapper()
 }
 
 
-StringStackConsoleWrapper::StringStackConsoleWrapper(int targc, const char** targ)
+StringArrayToConsoleValueWrapper::StringArrayToConsoleValueWrapper(int targc, const char** targv)
 {
-   argv = new ConsoleValueRef[targc];
-   argvValue = new ConsoleValue[targc];
+   argv = new ConsoleValue[targc]();
    argc = targc;
 
-   for (int i=0; i<targc; i++) {
-      argvValue[i].init();
-      argv[i].value = &argvValue[i];
-      argvValue[i].setStackStringValue(targ[i]);
+   for (int i=0; i<targc; i++)
+   {
+      argv[i].setString(targv[i]);
    }
 }
 
-StringStackConsoleWrapper::~StringStackConsoleWrapper()
+StringArrayToConsoleValueWrapper::~StringArrayToConsoleValueWrapper()
 {
-   for (int i=0; i<argc; i++)
-   {
-      argv[i] = 0;
-   }
    delete[] argv;
-   delete[] argvValue;
 }
 
 //------------------------------------------------------------------------------
 
-S32 ConsoleValue::getSignedIntValue()
+ConsoleValue _BaseEngineConsoleCallbackHelper::_exec()
 {
-   if(type <= TypeInternalString)
-      return (S32)fval;
-   else
-      return dAtoi(Con::getData(type, dataPtr, 0, enumTable));
-}
-
-U32 ConsoleValue::getIntValue()
-{
-   if(type <= TypeInternalString)
-      return ival;
-   else
-      return dAtoi(Con::getData(type, dataPtr, 0, enumTable));
-}
-
-F32 ConsoleValue::getFloatValue()
-{
-   if(type <= TypeInternalString)
-      return fval;
-   else
-      return dAtof(Con::getData(type, dataPtr, 0, enumTable));
-}
-
-const char *ConsoleValue::getStringValue()
-{
-   if(type == TypeInternalString || type == TypeInternalStackString)
-      return sval;
-   else if (type == TypeInternalStringStackPtr)
-      return STR.mBuffer + (uintptr_t)sval;
-   else
-   {
-      // We need a string representation, so lets create one
-      const char *internalValue = NULL;
-
-      if(type == TypeInternalFloat)
-         internalValue = Con::getData(TypeF32, &fval, 0);
-      else if(type == TypeInternalInt)
-         internalValue = Con::getData(TypeS32, &ival, 0);
-      else
-         return Con::getData(type, dataPtr, 0, enumTable); // We can't save sval here since it is the same as dataPtr
-
-      if (!internalValue)
-         return "";
-
-      U32 stringLen = dStrlen(internalValue);
-      U32 newLen = ((stringLen + 1) + 15) & ~15; // pad upto next cache line
-      
-      if (bufferLen == 0)
-         sval = (char *) dMalloc(newLen);
-      else if(newLen > bufferLen)
-         sval = (char *) dRealloc(sval, newLen);
-
-      dStrcpy(sval, internalValue, newLen);
-      bufferLen = newLen;
-
-      return sval;
-   }
-}
-
-StringStackPtr ConsoleValue::getStringStackPtr()
-{
-   if (type == TypeInternalStringStackPtr)
-      return (uintptr_t)sval;
-   else
-      return (uintptr_t)-1;
-}
-
-bool ConsoleValue::getBoolValue()
-{
-   if(type == TypeInternalString || type == TypeInternalStackString || type == TypeInternalStringStackPtr)
-      return dAtob(getStringValue());
-   if(type == TypeInternalFloat)
-      return fval > 0;
-   else if(type == TypeInternalInt)
-      return ival > 0;
-   else {
-      const char *value = Con::getData(type, dataPtr, 0, enumTable);
-      return dAtob(value);
-   }
-}
-
-void ConsoleValue::setIntValue(S32 val)
-{
-   setFloatValue(val);
-}
-
-void ConsoleValue::setIntValue(U32 val)
-{
-   if(type <= TypeInternalString)
-   {
-      fval = (F32)val;
-      ival = val;
-      if(bufferLen > 0)
-      {
-         dFree(sval);
-         bufferLen = 0;
-      }
-
-      sval = typeValueEmpty;
-      type = TypeInternalInt;
-   }
-   else
-   {
-      const char *dptr = Con::getData(TypeS32, &val, 0);
-      Con::setData(type, dataPtr, 0, 1, &dptr, enumTable);
-   }
-}
-
-void ConsoleValue::setBoolValue(bool val)
-{
-   return setIntValue(val ? 1 : 0);
-}
-
-void ConsoleValue::setFloatValue(F32 val)
-{
-   if(type <= TypeInternalString)
-   {
-      fval = val;
-      ival = static_cast<U32>(val);
-      if(bufferLen > 0)
-      {
-         dFree(sval);
-         bufferLen = 0;
-      }
-      sval = typeValueEmpty;
-      type = TypeInternalFloat;
-   }
-   else
-   {
-      const char *dptr = Con::getData(TypeF32, &val, 0);
-      Con::setData(type, dataPtr, 0, 1, &dptr, enumTable);
-   }
-}
-
-//------------------------------------------------------------------------------
-
-ConsoleValueRef _BaseEngineConsoleCallbackHelper::_exec()
-{
-   ConsoleValueRef returnValue;
    if( mThis )
    {
       // Cannot invoke callback until object has been registered
-      if (mThis->isProperlyAdded()) {
-         returnValue = Con::_internalExecute( mThis, mArgc, mArgv, false );
-      } else {
-         STR.clearFunctionOffset();
-         returnValue = ConsoleValueRef();
+      if (mThis->isProperlyAdded())
+      {
+         ConsoleValue returnValue = Con::_internalExecute( mThis, mArgc, mArgv, false );
+         mArgc = mInitialArgc; // reset
+         return std::move(returnValue);
       }
-   }
-   else
-      returnValue = Con::_internalExecute( mArgc, mArgv );
 
+      STR.clearFunctionOffset();
+      mArgc = mInitialArgc; // reset
+      return std::move(ConsoleValue());
+   }
+
+   ConsoleValue returnValue = std::move(Con::_internalExecute( mArgc, mArgv ));
    mArgc = mInitialArgc; // reset args
-   return returnValue;
+   return std::move(returnValue);
 }
 
-ConsoleValueRef _BaseEngineConsoleCallbackHelper::_execLater(SimConsoleThreadExecEvent *evt)
+ConsoleValue _BaseEngineConsoleCallbackHelper::_execLater(SimConsoleThreadExecEvent *evt)
 {
    mArgc = mInitialArgc; // reset args
    Sim::postEvent((SimObject*)Sim::getRootGroup(), evt, Sim::getCurrentTime());
-   return evt->getCB().waitForResult();
+   return std::move(evt->getCB().waitForResult());
 }
 
 //------------------------------------------------------------------------------
 
 void ConsoleStackFrameSaver::save()
 {
-   CSTK.pushFrame();
-   STR.pushFrame();
+   gCallStack.pushFrame(0);
    mSaved = true;
 }
 
@@ -2797,7 +2634,6 @@ void ConsoleStackFrameSaver::restore()
 {
    if (mSaved)
    {
-      CSTK.popFrame();
-      STR.popFrame();
+      gCallStack.popFrame();
    }
 }

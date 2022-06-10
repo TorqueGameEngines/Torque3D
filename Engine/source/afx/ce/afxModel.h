@@ -44,7 +44,7 @@ struct afxModelData : public GameBaseData
   typedef GameBaseData Parent;
 
   DECLARE_SHAPEASSET(afxModelData, Shape, onShapeChanged);
-  DECLARE_SHAPEASSET_SETGET(afxModelData, Shape);
+  DECLARE_ASSET_SETGET(afxModelData, Shape);
 
   StringTableEntry      sequence;
 

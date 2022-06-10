@@ -331,7 +331,7 @@ DefineEngineStringlyVariadicMethod(GameConnection, setConnectArgs, void, 3, 17,
    
    "@see GameConnection::onConnect()\n\n")
 {
-   StringStackWrapper args(argc - 2, argv + 2);
+   ConsoleValueToStringArrayWrapper args(argc - 2, argv + 2);
    object->setConnectArgs(args.count(), args);
 }
 
@@ -373,7 +373,7 @@ void GameConnection::onConnectionEstablished(bool isInitiator)
       mMoveList->init();
       const char *argv[MaxConnectArgs + 2];
       argv[0] = "onConnect";
-      argv[1] = NULL; // Filled in later
+      argv[1] = getIdString();
       for(U32 i = 0; i < mConnectArgc; i++)
          argv[i + 2] = mConnectArgv[i];
       // NOTE: Need to fallback to Con::execute() as IMPLEMENT_CALLBACK does not 
@@ -493,33 +493,32 @@ bool GameConnection::readConnectRequest(BitStream *stream, const char **errorStr
       *errorString = "CR_INVALID_ARGS";
       return false;
    }
-   ConsoleValueRef connectArgv[MaxConnectArgs + 3];
-   ConsoleValue connectArgvValue[MaxConnectArgs + 3];
 
-   for(U32 i = 0; i < mConnectArgc+3; i++)
-   {
-      connectArgv[i].value = &connectArgvValue[i];
-      connectArgvValue[i].init();
-   }
+   char buffer[256];
+   Net::addressToString(getNetAddress(), buffer);
+
+   ConsoleValue connectArgv[MaxConnectArgs + 3];
 
    for(U32 i = 0; i < mConnectArgc; i++)
    {
       char argString[256];
       stream->readString(argString);
       mConnectArgv[i] = dStrdup(argString);
-      connectArgv[i + 3] = mConnectArgv[i];
+      connectArgv[i + 3].setString(argString);
    }
-   connectArgvValue[0].setStackStringValue("onConnectRequest");
-   connectArgvValue[1].setIntValue(0);
-   char buffer[256];
-   Net::addressToString(getNetAddress(), buffer);
-   connectArgvValue[2].setStackStringValue(buffer);
+
+   connectArgv[0].setStringTableEntry("onConnectRequest");
+   connectArgv[1].setInt(0);
+   connectArgv[2].setString(buffer);
 
    // NOTE: Cannot convert over to IMPLEMENT_CALLBACK as it has variable args.
-   const char *ret = Con::execute(this, mConnectArgc + 3, connectArgv);
-   if(ret[0])
+   ConsoleValue returnValue = Con::execute(this, mConnectArgc + 3, connectArgv);
+
+   StringTableEntry returnStr = StringTable->insert(returnValue.getString());
+
+   if(returnStr[0])
    {
-      *errorString = ret;
+      *errorString = returnStr;
       return false;
    }
    return true;
@@ -808,7 +807,7 @@ bool GameConnection::isValidControlCameraFov(F32 fov)
       return cObj->isValidCameraFov(fov);
    }
 
-   return NULL;
+   return false;
 }
 
 bool GameConnection::setControlCameraFov(F32 fov)
@@ -1088,7 +1087,7 @@ bool GameConnection::readDemoStartBlock(BitStream *stream)
 void GameConnection::demoPlaybackComplete()
 {
    static const char* demoPlaybackArgv[1] = { "demoPlaybackComplete" };
-   static StringStackConsoleWrapper demoPlaybackCmd(1, demoPlaybackArgv);
+   static StringArrayToConsoleValueWrapper demoPlaybackCmd(1, demoPlaybackArgv);
 
    Sim::postCurrentEvent(Sim::getRootGroup(), new SimConsoleEvent(demoPlaybackCmd.argc, demoPlaybackCmd.argv, false));
    Parent::demoPlaybackComplete();
@@ -1563,33 +1562,50 @@ void GameConnection::packetDropped(PacketNotify *note)
 
 //----------------------------------------------------------------------------
 
-void GameConnection::play2D(SFXProfile* profile)
+void GameConnection::play2D(StringTableEntry assetId)
 {
-   postNetEvent(new Sim2DAudioEvent(profile));
+   if (AssetDatabase.isDeclaredAsset(assetId))
+   {
+
+      AssetPtr<SoundAsset> tempSoundAsset;
+      tempSoundAsset = assetId;
+
+      postNetEvent(new SimSoundAssetEvent(tempSoundAsset));
+
+   }
 }
 
-void GameConnection::play3D(SFXProfile* profile, const MatrixF *transform)
+void GameConnection::play3D(StringTableEntry assetId, const MatrixF *transform)
 {
    if ( !transform )
-      play2D(profile);
+      play2D(assetId);
 
-   else if ( !mControlObject )
-      postNetEvent(new Sim3DAudioEvent(profile,transform));
-
-   else
+   if (AssetDatabase.isDeclaredAsset(assetId))
    {
-      // TODO: Maybe improve this to account for the duration
-      // of the sound effect and if the control object can get
-      // into hearing range within time?
 
-      // Only post the event if it's within audible range
-      // of the control object.
-      Point3F ear,pos;
-      transform->getColumn(3,&pos);
-      mControlObject->getTransform().getColumn(3,&ear);
-      if ((ear - pos).len() < profile->getDescription()->mMaxDistance)
-         postNetEvent(new Sim3DAudioEvent(profile,transform));
-   } 
+      AssetPtr<SoundAsset> tempSoundAsset;
+      tempSoundAsset = assetId;
+
+      if (!mControlObject)
+         postNetEvent(new SimSoundAssetEvent(tempSoundAsset, transform));
+      else
+      {
+         // TODO: Maybe improve this to account for the duration
+         // of the sound effect and if the control object can get
+         // into hearing range within time?
+
+         // Only post the event if it's within audible range
+         // of the control object.
+         tempSoundAsset->getSfxDescription();
+         Point3F ear, pos;
+         transform->getColumn(3, &pos);
+         mControlObject->getTransform().getColumn(3, &ear);
+         if ((ear - pos).len() < tempSoundAsset->getSfxDescription()->mMaxDistance)
+            postNetEvent(new SimSoundAssetEvent(tempSoundAsset, transform));
+      }
+
+   }
+
 }
 
 void GameConnection::doneScopingScene()
@@ -2011,49 +2027,49 @@ DefineEngineMethod( GameConnection, isControlObjectRotDampedCamera, bool, (),,
    return object->isControlObjectRotDampedCamera();
 }
 
-DefineEngineMethod( GameConnection, play2D, bool, (SFXProfile* profile),,
+DefineEngineMethod( GameConnection, play2D, bool, (StringTableEntry assetId),,
    "@brief Used on the server to play a 2D sound that is not attached to any object.\n\n"
 
-   "@param profile The SFXProfile that defines the sound to play.\n\n"
+   "@param assetID The SoundAsset ID that defines the sound to play.\n"
 
    "@tsexample\n"
-   "function ServerPlay2D(%profile)\n"
+   "function ServerPlay2D(%assetId)\n"
    "{\n"
-   "   // Play the given sound profile on every client.\n"
+   "   // Play the given sound asset on every client.\n"
    "   // The sounds will be transmitted as an event, not attached to any object.\n"
    "   for(%idx = 0; %idx < ClientGroup.getCount(); %idx++)\n"
-   "      ClientGroup.getObject(%idx).play2D(%profile);\n"
+   "      ClientGroup.getObject(%idx).play2D(%assetId);\n"
    "}\n"
    "@endtsexample\n\n")
 {
-   if(!profile)
+   if(assetId == StringTable->EmptyString())
       return false;
 
-   object->play2D(profile);
+   object->play2D(assetId);
    return true;
 }
 
-DefineEngineMethod( GameConnection, play3D, bool, (SFXProfile* profile, TransformF location),,
+DefineEngineMethod( GameConnection, play3D, bool, (StringTableEntry assetId, TransformF location),,
    "@brief Used on the server to play a 3D sound that is not attached to any object.\n\n"
    
-   "@param profile The SFXProfile that defines the sound to play.\n"
+   "@param assetID The SoundAsset ID that defines the sound to play.\n"
    "@param location The position and orientation of the 3D sound given in the form of \"x y z ax ay az aa\".\n\n"
 
    "@tsexample\n"
-   "function ServerPlay3D(%profile,%transform)\n"
+   "function ServerPlay3D(%assetId,%transform)\n"
    "{\n"
-   "   // Play the given sound profile at the given position on every client\n"
+   "   // Play the given sound asset at the given position on every client\n"
    "   // The sound will be transmitted as an event, not attached to any object.\n"
    "   for(%idx = 0; %idx < ClientGroup.getCount(); %idx++)\n"
-   "      ClientGroup.getObject(%idx).play3D(%profile,%transform);\n"
+   "      ClientGroup.getObject(%idx).play3D(%assetID,%transform);\n"
    "}\n"
    "@endtsexample\n\n")
 {
-   if(!profile)
+   if(assetId == StringTable->EmptyString())
       return false;
 
    MatrixF mat = location.getMatrix();
-   object->play3D(profile,&mat);
+   object->play3D(assetId,&mat);
    return true;
 }
 

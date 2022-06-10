@@ -778,6 +778,8 @@ function MaterialSelector::buildStaticFilters( %this )
    // if you want to add any more containers to staticFilterObjects, here's
    // where to do it
    
+   %filterArray = MaterialSelector-->filterArray;
+
    %staticFilterContainer = new GuiControl (){
       new GuiContainer(){
          profile = "ToolsGuiDefaultProfile";
@@ -1366,7 +1368,7 @@ function MaterialSelector::loadMaterialFilters( %this )
 // create category and update current material if there is one
 function MaterialSelector::createFilter( %this, %filter )
 {
-   if( %filter $= %existingFilters )
+   if( %filter $= "" )
    {
       toolsMessageBoxOK( "Error", "Can not create blank filter.");
       return;
@@ -1418,15 +1420,13 @@ function MaterialSelector::updateSelection( %this, %material, %previewImagePath 
    // after we move away from the material. eg: if we remove a field from the material,
    // the empty checkbox will still be there until you move fro and to the material again
    
-   %isMaterialBorder = 0;
-   eval("%isMaterialBorder = isObject(MaterialSelector-->"@%material@"Border);");
+   %isMaterialBorder = eval("return isObject(MaterialSelector-->"@%material@"Border);");
    if( %isMaterialBorder )
    {
       eval( "MaterialSelector-->"@%material@"Border.setStateOn(1);");
    }
       
-   %isMaterialBorderPrevious = 0;
-   eval("%isMaterialBorderPrevious = isObject(MaterialSelector-->"@$prevSelectedMaterialHL@"Border);");
+   %isMaterialBorderPrevious = eval("return isObject(MaterialSelector-->"@$prevSelectedMaterialHL@"Border);");
    if( %isMaterialBorderPrevious )
    {
       eval( "MaterialSelector-->"@$prevSelectedMaterialHL@"Border.setStateOn(0);");

@@ -59,7 +59,8 @@ RenderMeshExample::RenderMeshExample()
    // Set it as a "static" object that casts shadows
    mTypeMask |= StaticObjectType | StaticShapeObjectType;
 
-   INIT_MATERIALASSET(Material);
+   INIT_ASSET(Material);
+   mMaterialInst = NULL;
 }
 
 RenderMeshExample::~RenderMeshExample()
@@ -143,7 +144,7 @@ U32 RenderMeshExample::packUpdate( NetConnection *conn, U32 mask, BitStream *str
    // Write out any of the updated editable properties
    if (stream->writeFlag(mask & UpdateMask))
    {
-      PACK_MATERIALASSET(conn, Material);
+      PACK_ASSET(conn, Material);
    }
 
    return retMask;
@@ -164,7 +165,7 @@ void RenderMeshExample::unpackUpdate(NetConnection *conn, BitStream *stream)
 
    if ( stream->readFlag() )  // UpdateMask
    {
-      UNPACK_MATERIALASSET(conn, Material);
+      UNPACK_ASSET(conn, Material);
 
       if ( isProperlyAdded() )
          updateMaterial();

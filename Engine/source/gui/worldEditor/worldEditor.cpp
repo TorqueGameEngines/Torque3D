@@ -461,7 +461,9 @@ bool WorldEditor::pasteSelection( bool dropSel )
    SimGroup *targetGroup = NULL;   
    if( isMethod( "getNewObjectGroup" ) )
    {
-      const char* targetGroupName = Con::executef( this, "getNewObjectGroup" );
+      ConsoleValue cValue = Con::executef( this, "getNewObjectGroup" );
+      const char* targetGroupName = cValue.getString();
+
       if( targetGroupName && targetGroupName[ 0 ] && !Sim::findObject( targetGroupName, targetGroup) )
          Con::errorf( "WorldEditor::pasteSelection() - no SimGroup called '%s'", targetGroupName );
    }
@@ -1993,12 +1995,12 @@ void WorldEditor::on3DMouseMove(const Gui3DMouseEvent & event)
    if ( !mHitObject )
    {
       SceneObject *hitObj = NULL;
-      if ( collide(event, &hitObj) && hitObj->isSelectionEnabled() && !objClassIgnored(hitObj) )
+      if ( collide(event, &hitObj) && !hitObj->isDeleted() && hitObj->isSelectionEnabled() && !objClassIgnored(hitObj) )
       {
          mHitObject = hitObj;
       }
    }
-   
+
    mLastMouseEvent = event;
 }
 
@@ -2861,17 +2863,17 @@ void WorldEditor::initPersistFields()
 //------------------------------------------------------------------------------
 // These methods are needed for the console interfaces.
 
-void WorldEditor::ignoreObjClass( U32 argc, ConsoleValueRef *argv )
+void WorldEditor::ignoreObjClass( U32 argc, ConsoleValue *argv )
 {
    for(S32 i = 2; i < argc; i++)
    {
-      ClassInfo::Entry * entry = getClassEntry(argv[i]);
+      ClassInfo::Entry * entry = getClassEntry(argv[i].getString());
       if(entry)
          entry->mIgnoreCollision = true;
       else
       {
          entry = new ClassInfo::Entry;
-         entry->mName = StringTable->insert(argv[i]);
+         entry->mName = StringTable->insert(argv[i].getString());
          entry->mIgnoreCollision = true;
          if(!addClassEntry(entry))
             delete entry;

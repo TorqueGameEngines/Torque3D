@@ -5,8 +5,6 @@ function Core_Rendering::onCreate(%this)
    $Core::UnAvailableTexturePath = "core/rendering/images/unavailable";
    $Core::WarningTexturePath = "core/rendering/images/warnMat";
    $Core::CommonShaderPath = "core/rendering/shaders";
-   $Core::DefaultIrradianceCubemap = "core/rendering/images/default_irradiance.dds";
-   $Core::DefaultPrefilterCubemap = "core/rendering/images/default_prefilter.dds";
    $Core::BRDFTexture = "core/rendering/images/brdfTexture.dds";
    
    $Core::NoImageAssetFallback = "Core_Rendering:missingTexture_image";
@@ -56,14 +54,14 @@ function Core_Rendering::initClient(%this)
    %prefPath = getPrefpath();
    if ( isFile( %prefPath @ "/clientPrefs." @ $TorqueScriptFileExtension ) )
       exec( %prefPath @ "/clientPrefs." @ $TorqueScriptFileExtension );
+      
+   postFXInit();
    
    configureCanvas();
    
    //Autodetect settings if it's our first time
    if($pref::Video::autoDetect)
       AutodetectGraphics();
-
-   postFXInit();
    
    closeSplashWindow();
    

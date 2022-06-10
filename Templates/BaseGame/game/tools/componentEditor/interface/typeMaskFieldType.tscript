@@ -13,7 +13,7 @@ function GuiInspectorComponentGroup::buildTypeMaskField(%this, %component, %fiel
       canSave = "0";
       Visible = "1";
       hovertime = "100";
-      tooltip = %tooltip;
+      tooltip = "";//%tooltip;
       tooltipProfile = "EditorToolTipProfile";
    };
 
@@ -28,7 +28,7 @@ function GuiInspectorComponentGroup::buildTypeMaskField(%this, %component, %fiel
       canSave = "0";
       Visible = "1";
       hovertime = "100";
-      tooltip = %tooltip;
+      tooltip = "";//%tooltip;
       tooltipProfile = "EditorToolTipProfile";
       text = %fieldName;
       maxLength = "1024";

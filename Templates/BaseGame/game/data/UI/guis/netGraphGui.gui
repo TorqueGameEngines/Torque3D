@@ -73,7 +73,7 @@ new GuiControlProfile (NetGraphPacketLossProfile)
 };
 
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(NetGraphGui) {
+$guiContent = new GuiControl(NetGraphGui) {
    position = "0 0";
    extent = "1024 768";
    minExtent = "8 2";

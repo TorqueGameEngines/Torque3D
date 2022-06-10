@@ -29,6 +29,8 @@ function TerrainEditor::init( %this )
    %this.setBrushSize( 9, 9 );
 
    new PersistenceManager( ETerrainPersistMan );
+   
+   ESettingsWindow.addEditorSettingsPage("TerrainEditor", "Terrain Editor");
 }
 
 ///
@@ -62,7 +64,7 @@ function TerrainEditor::setPaintMaterial( %this, %matIndex, %terrainMat )
    ETerrainMaterialSelected.selectedMatIndex = %matIndex;
    ETerrainMaterialSelected.selectedMat = %terrainMat;
    
-   ETerrainMaterialSelected.setBitmap(%terrainMat.getDiffuseMap());
+   ETerrainMaterialSelected.setBitmap(getAssetPreviewImage(%terrainMat.getDiffuseMap()));
 
    ETerrainMaterialSelectedEdit.Visible = isObject(%terrainMat);
    TerrainTextureText.text = %terrainMat.getInternalName();
@@ -136,12 +138,12 @@ function EPainter::updateLayers( %this, %matIndex )
             VertSizing = "bottom";
             position = ( %listwidth - 20 ) SPC "26";
             Extent = "17 17";
-            command = "EPainter.showMaterialDeleteDlg( " @ %matInternalName @ " );";
+            command = "EPainter.showMaterialDeleteDlg( \"" @ %matInternalName @ "\" );";
          };
       };
 
       %ctrl.setText( %matInternalName );
-      %ctrl.setBitmap( %mat.getDiffuseMap() );
+      %ctrl.setBitmap( getAssetPreviewImage(%mat.getDiffuseMap()) );
 
       %tooltip = %matInternalName;
       if(%i < 9)
@@ -193,7 +195,7 @@ function EPainter::showMaterialDeleteDlg( %this, %matInternalName )
 {
    toolsMessageBoxYesNo( "Confirmation",
       "Really remove material '" @ %matInternalName @ "' from the terrain?",
-      %this @ ".removeMaterial( " @ %matInternalName @ " );", "" );
+      %this @ ".removeMaterial( \"" @ %matInternalName @ "\" );", "" );
 }
 
 function EPainter::removeMaterial( %this, %matInternalName )
@@ -354,6 +356,18 @@ function TerrainEditor::onMaterialUndo( %this )
 {
    // Update the gui to reflect the current materials.
    EPainter.updateLayers();
+}
+
+function ESettingsWindow::getTerrainEditorSettings(%this)
+{
+   SettingsInspector.startGroup("Tool Values");
+   SettingsInspector.addSettingsField("TerrainEditor/ActionValues/adjustHeightVal", "Raise/Lower Height", "string", 
+                           "The amount of height adjustment for raising/lowering terrain");
+   SettingsInspector.addSettingsField("TerrainEditor/ActionValues/smoothFactor", "Smooth Factor", "string", 
+                           "The amount of smoothing when raising/lowering terrain");
+   SettingsInspector.addSettingsField("TerrainEditor/ActionValues/noiseFactor", "Noise Factor", "string", 
+                           "The amount of noise when raising/lowering terrain");
+   SettingsInspector.endGroup();
 }
 
 //------------------------------------------------------------------------------

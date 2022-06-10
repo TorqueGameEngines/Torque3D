@@ -269,7 +269,7 @@ protected:
    BaseMatInstance* mMaterialInst;
 
    DECLARE_MATERIALASSET(GroundCover, Material);
-   DECLARE_MATERIALASSET_NET_SETGET(GroundCover, Material, InitialUpdateMask);
+   DECLARE_ASSET_NET_SETGET(GroundCover, Material, InitialUpdateMask);
 
    GroundCoverShaderConstData mShaderConstData;
 
@@ -312,7 +312,7 @@ protected:
    /// The maximum world space elevation for placement.
    F32 mMaxElevation[MAX_COVERTYPES];
 
-   /// Terrain material name to limit coverage to, or
+   /// Terrain material assetId to limit coverage to, or
    /// left empty to cover entire terrain.
    StringTableEntry mLayer[MAX_COVERTYPES];
 
@@ -341,7 +341,7 @@ protected:
 
    /// The cover shape filenames.
    DECLARE_SHAPEASSET_ARRAY(GroundCover, Shape, MAX_COVERTYPES);
-   DECLARE_SHAPEASSET_ARRAY_NET_SETGET(GroundCover, Shape, -1);
+   DECLARE_ASSET_ARRAY_NET_SETGET(GroundCover, Shape, -1);
 
    /// The cover shape instances.
    TSShapeInstance* mShapeInstances[MAX_COVERTYPES];

@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -86,7 +86,7 @@ UIKit_ShowMessageBoxAlertController(const SDL_MessageBoxData *messageboxdata, in
 
         action = [UIAlertAction actionWithTitle:@(sdlButton->text)
                                 style:style
-                                handler:^(UIAlertAction *action) {
+                                handler:^(UIAlertAction *alertAction) {
                                     clickedindex = (int)(sdlButton - messageboxdata->buttons);
                                 }];
         [alert addAction:action];
@@ -186,8 +186,8 @@ UIKit_ShowMessageBoxAlertView(const SDL_MessageBoxData *messageboxdata, int *but
 #endif /* __IPHONE_OS_VERSION_MIN_REQUIRED < 80000 */
 }
 
-int
-UIKit_ShowMessageBox(const SDL_MessageBoxData *messageboxdata, int *buttonid)
+static void
+UIKit_ShowMessageBoxImpl(const SDL_MessageBoxData *messageboxdata, int *buttonid, int *returnValue)
 {
     BOOL success = NO;
 
@@ -199,11 +199,25 @@ UIKit_ShowMessageBox(const SDL_MessageBoxData *messageboxdata, int *buttonid)
     }
 
     if (!success) {
-        return SDL_SetError("Could not show message box.");
+        *returnValue = SDL_SetError("Could not show message box.");
+    } else {
+        *returnValue = 0;
     }
-
-    return 0;
 }
+
+int
+UIKit_ShowMessageBox(const SDL_MessageBoxData *messageboxdata, int *buttonid)
+{ @autoreleasepool
+{
+    __block int returnValue = 0;
+
+    if ([NSThread isMainThread]) {
+        UIKit_ShowMessageBoxImpl(messageboxdata, buttonid, &returnValue);
+    } else {
+        dispatch_sync(dispatch_get_main_queue(), ^{ UIKit_ShowMessageBoxImpl(messageboxdata, buttonid, &returnValue); });
+    }
+    return returnValue;
+}}
 
 #endif /* SDL_VIDEO_DRIVER_UIKIT */
 

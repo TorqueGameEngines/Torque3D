@@ -74,7 +74,7 @@ TSShape::TSShape()
    mRadius = 0;
    mFlags = 0;
    tubeRadius = 0;
-   data = NULL;
+   data = 0;
    materialList = NULL;
    mReadVersion = -1; // -1 means constructed from scratch (e.g., in exporter or no read yet)
    mSequencesConstructed = false;
@@ -225,11 +225,7 @@ const String& TSShape::getTargetName( S32 mapToNameIndex ) const
 
 S32 TSShape::getTargetCount() const
 {
-	if(!this)
-		return -1;
-
 	return materialList->getMaterialNameList().size();
-
 }
 
 S32 TSShape::findNode(S32 nameIndex) const
@@ -968,6 +964,39 @@ void TSShape::setupBillboardDetails( const String &cachePath )
                                                 det.bbIncludePoles,
                                                 det.bbDetailLevel,
                                                 det.bbDimension );
+
+      billboardDetails[i]->update();
+   }
+}
+
+void TSShape::setupBillboardDetails(const String& cachePath, const String& diffsePath, const String& normalPath)
+{
+   // set up billboard details -- only do this once, meaning that
+   // if we add a sequence to the shape we don't redo the billboard
+   // details...
+   if (!billboardDetails.empty())
+      return;
+
+   for (U32 i = 0; i < details.size(); i++)
+   {
+      const Detail& det = details[i];
+
+      if (det.subShapeNum >= 0)
+         continue; // not a billboard detail
+
+      while (billboardDetails.size() <= i)
+         billboardDetails.push_back(NULL);
+
+      billboardDetails[i] = new TSLastDetail(this,
+         cachePath,
+         diffsePath,
+         normalPath,
+         det.bbEquatorSteps,
+         det.bbPolarSteps,
+         det.bbPolarAngle,
+         det.bbIncludePoles,
+         det.bbDetailLevel,
+         det.bbDimension);
 
       billboardDetails[i]->update();
    }

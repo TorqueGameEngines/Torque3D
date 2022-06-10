@@ -200,6 +200,11 @@ inline F64 dAtod(const char *str)
    return strtod(str, NULL);
 }
 
+inline S64 dAtol(const char* str)
+{
+   return strtol(str, NULL, 10);
+}
+
 inline char dToupper(const char c)
 {
    return toupper( c );

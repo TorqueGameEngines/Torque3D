@@ -407,8 +407,15 @@ FileNodeRef ZipFileSystem::resolve(const Path& path)
    if(mZipNameIsDir)
    {
       // Remove the fake root from the name so things can be found
+#ifdef TORQUE_ZIP_PATH_CASE_INSENSITIVE
+      String lowerFakeRoot = String::ToLower(mFakeRoot);
+      String lowerName = String::ToLower(name);
+      if(lowerName.find(lowerFakeRoot) == 0)
+          name = name.substr(mFakeRoot.length());
+#else
       if(name.find(mFakeRoot) == 0)
-         name = name.substr(mFakeRoot.length());
+          name = name.substr(mFakeRoot.length());
+#endif
 
 #ifdef TORQUE_DISABLE_FIND_ROOT_WITHIN_ZIP
       else
@@ -480,8 +487,15 @@ FileNodeRef ZipFileSystem::resolveLoose(const Path& path)
    if(mZipNameIsDir)
    {
       // Remove the fake root from the name so things can be found
+#ifdef TORQUE_ZIP_PATH_CASE_INSENSITIVE
+      String lowerFakeRoot = String::ToLower(mFakeRoot);
+      String lowerName = String::ToLower(name);
+      if(lowerName.find(lowerFakeRoot) == 0)
+          name = name.substr(mFakeRoot.length());
+#else
       if(name.find(mFakeRoot) == 0)
-         name = name.substr(mFakeRoot.length());
+          name = name.substr(mFakeRoot.length());
+#endif
 
 #ifdef TORQUE_DISABLE_FIND_ROOT_WITHIN_ZIP
       else

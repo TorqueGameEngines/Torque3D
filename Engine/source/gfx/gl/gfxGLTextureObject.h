@@ -102,7 +102,7 @@ private:
 
    //FrameAllocator
    U32 mFrameAllocatorMark;
-#if TORQUE_DEBUG
+#ifdef TORQUE_DEBUG
    U32 mFrameAllocatorMarkGuard;
 #endif
    U8 *mFrameAllocatorPtr;

@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(TerrainTextureSettingsDlg, EditorGuiGroup) {
+$guiContent = new GuiControl(TerrainTextureSettingsDlg, EditorGuiGroup) {
    position = "0 0";
    extent = "1024 768";
    minExtent = "8 2";

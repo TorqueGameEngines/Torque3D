@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiDecalEditorCtrl(DecalEditorGui) {
+$guiContent = new GuiDecalEditorCtrl(DecalEditorGui) {
    canSaveDynamicFields = "0";
    Enabled = "1";
    isContainer = "1";
@@ -472,8 +472,6 @@
                Margin = "0 0 0 -3";
                DragSizable = false;
                container = true;
-               parentRollout = %this.rollout;
-               object = %behavior;  
                
                new GuiStackControl() {
                   StackingType = "Vertical";
@@ -552,8 +550,6 @@
                Margin = "0 0 0 0";
                DragSizable = false;
                container = true;
-               parentRollout = %this.rollout;
-               object = %behavior;
                
                new GuiStackControl() {
                   StackingType = "Vertical";
@@ -716,8 +712,6 @@
                Margin = "0 0 0 -3";
                DragSizable = false;
                container = true;
-               parentRollout = %this.rollout;
-               object = %behavior;  
                
                new GuiStackControl() {
                   StackingType = "Vertical";
@@ -796,8 +790,6 @@
                Margin = "0 0 0 0";
                DragSizable = false;
                container = true;
-               parentRollout = %this.rollout;
-               object = %behavior; 
                
                new GuiInspector(DecalInspector) {
                   StackingType = "Vertical";

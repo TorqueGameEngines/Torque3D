@@ -213,6 +213,7 @@ HEXDIGIT [a-fA-F0-9]
 "true"      { CMDlval.i = MakeToken< int >( 1, lineIndex ); return INTCONST; }
 "false"     { CMDlval.i = MakeToken< int >( 0, lineIndex ); return INTCONST; }
 {VAR}       { return(Sc_ScanVar()); }
+
 {ID}        { return Sc_ScanIdent(); }
 0[xX]{HEXDIGIT}+ return(Sc_ScanHex());
 {INTEGER}   { CMDtext[CMDleng] = 0; CMDlval.i = MakeToken< int >( dAtoi(CMDtext), lineIndex ); return INTCONST; }

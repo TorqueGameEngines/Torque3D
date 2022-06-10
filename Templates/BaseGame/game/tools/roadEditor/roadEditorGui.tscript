@@ -138,7 +138,7 @@ function RoadEditorGui::editNodeDetails( %this )
 
 function RoadEditorGui::onBrowseClicked( %this )
 {
-   //%filename = RETextureFileCtrl.getText();
+   %filename = RETextureFileCtrl.getText();
          
    %dlg = new OpenFileDialog()
    {
@@ -211,6 +211,20 @@ function RoadEditorGui::prepSelectionMode( %this )
    
    %this.setMode( "RoadEditorSelectMode" );
    ToolsPaletteArray-->RoadEditorSelectMode.setStateOn(1);
+}
+
+//------------------------------------------------------------------------------
+function ESettingsWindow::getRoadEditorSettings(%this)
+{
+   SettingsInspector.startGroup("Defaults");
+   SettingsInspector.addSettingsField("RoadEditor/DefaultWidth", "Width", "string", "");
+   SettingsInspector.addSettingsField("RoadEditor/MaterialName", "Material", "string", "");
+   SettingsInspector.endGroup();
+   
+   SettingsInspector.startGroup("Colors");
+   SettingsInspector.addSettingsField("RoadEditor/HoverSplineColor", "Hover Spline", "colorI", "");
+   SettingsInspector.addSettingsField("RoadEditor/SelectedSplineColor", "Selected Spline", "colorI", "");
+   SettingsInspector.endGroup();
 }
 //------------------------------------------------------------------------------
 function ERoadEditorSelectModeBtn::onClick(%this)

@@ -79,7 +79,7 @@ function ActionCreateDatablock::redo( %this )
    %this.editor.selectDatablock( %db );
    %this.editor.flagInspectorAsDirty( true );
    
-   UnlistedDatablocks.remove( %id );
+   UnlistedDatablocks.remove( %db );
 }
 
 //---------------------------------------------------------------------------------------------
@@ -99,7 +99,7 @@ function ActionCreateDatablock::undo( %this )
    %this.dbName = %db.name;
    %db.name = "";
    
-   UnlistedDatablocks.add( %this.db );
+   UnlistedDatablocks.add( %db );
 }
 
 //=============================================================================================
@@ -155,5 +155,5 @@ function ActionDeleteDatablock::undo( %this )
    
    // Remove from unlisted.
    
-   UnlistedDatablocks.remove( %id );
+   UnlistedDatablocks.remove( %db );
 }

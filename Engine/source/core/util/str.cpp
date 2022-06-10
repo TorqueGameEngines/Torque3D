@@ -287,9 +287,9 @@ class String::StringData : protected StringDataImpl
       
       static StringData* Create(const StringChar* data, U32 len, bool interned = false)
       {
-      	 void* memory = dMalloc(sizeof(StringData) + sizeof(StringChar) * len);
-      	 StringData* result = new(memory) StringData(data, len, interned);
-      	 return result;
+         void* memory = dMalloc(sizeof(StringData) + sizeof(StringChar) * len)
+         StringData* result = new(memory) StringData(data, len, interned);
+         return result;
       }
       
       static StringData* Create(const StringChar* data, U32 len, DataChunker& chunker, bool interned = false)
@@ -298,7 +298,7 @@ class String::StringData : protected StringDataImpl
          StringData* result = new(memory) StringData(data, len, interned);
          return result;
       }
-
+ 
       bool isShared() const
       {
          return ( mRefCount > 1 );

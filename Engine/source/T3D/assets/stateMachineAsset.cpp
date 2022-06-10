@@ -185,7 +185,7 @@ GuiControl* GuiInspectorTypeStateMachineAssetPtr::constructEditControl()
    // Change filespec
    char szBuffer[512];
    dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"StateMachineAsset\", \"AssetBrowser.changeAsset\", %d, %s);",
-      mInspector->getComponentGroupTargetId(), mCaption);
+      mInspector->getIdString(), mCaption);
    mBrowseButton->setField("Command", szBuffer);
 
    // Create "Open in ShapeEditor" button

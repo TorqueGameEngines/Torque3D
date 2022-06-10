@@ -35,6 +35,7 @@
 #include "collision/boxConvex.h"
 #endif
 
+#include "T3D/assets/SoundAsset.h"
 #include "T3D/gameBase/gameProcess.h"
 
 class Material;
@@ -76,7 +77,7 @@ struct PlayerData: public ShapeBaseData {
                                                                   ///  need to.
 
    DECLARE_SHAPEASSET_ARRAY(PlayerData, ShapeFP, ShapeBase::MaxMountedImages); ///< Used to render with mounted images in first person [optional]
-   DECLARE_SHAPEASSET_ARRAY_SETGET(PlayerData, ShapeFP);
+   DECLARE_ASSET_ARRAY_SETGET(PlayerData, ShapeFP);
 
    StringTableEntry  imageAnimPrefixFP;                           ///< Passed along to mounted images to modify
                                                                   ///  animation sequences played in first person. [optional]
@@ -200,7 +201,7 @@ struct PlayerData: public ShapeBaseData {
       FootHard,
       FootMetal,
       FootSnow,
-      MaxSoundOffsets,
+      WaterStart,
       FootShallowSplash,
       FootWading,
       FootUnderWater,
@@ -208,7 +209,7 @@ struct PlayerData: public ShapeBaseData {
       MoveBubbles,
       WaterBreath,
       ImpactStart,
-      ImpactSoft = ImpactStart,
+      ImpactSoft,
       ImpactHard,
       ImpactMetal,
       ImpactSnow,
@@ -218,7 +219,8 @@ struct PlayerData: public ShapeBaseData {
       ExitWater,
       MaxSounds
    };
-   SFXTrack* sound[MaxSounds];
+
+   DECLARE_SOUNDASSET_ARRAY(PlayerData, PlayerSound, Sounds::MaxSounds);
 
    Point3F boxSize;           ///< Width, depth, height
    Point3F crouchBoxSize;
@@ -877,5 +879,4 @@ public:
 typedef Player::Pose PlayerPose;
 
 DefineEnumType( PlayerPose );
-
 #endif

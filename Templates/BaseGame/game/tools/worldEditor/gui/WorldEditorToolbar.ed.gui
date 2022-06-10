@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(EWorldEditorToolbar, EditorGuiGroup) {
+$guiContent = new GuiControl(EWorldEditorToolbar, EditorGuiGroup) {
    canSaveDynamicFields = "0";
    internalName = "WorldEditorToolbar";
    Enabled = "1";

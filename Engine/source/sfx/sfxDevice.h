@@ -63,7 +63,6 @@ class SFXDevice
          CAPS_Occlusion       = BIT( 2 ),    ///< Device has its own sound occlusion handling (SFXOcclusionManager).
          CAPS_DSPEffects      = BIT( 3 ),    ///< Device implements DSP effects (SFXDSPManager).
          CAPS_MultiListener   = BIT( 4 ),    ///< Device supports multiple listeners.
-         CAPS_FMODDesigner    = BIT( 5 ),    ///< FMOD Designer support.
       };
       
    protected:

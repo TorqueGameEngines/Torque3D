@@ -168,7 +168,7 @@ ScatterSky::ScatterSky()
    mNightCubemapName = StringTable->EmptyString();
    mSunSize = 1.0f;
 
-   INIT_MATERIALASSET(MoonMat);
+   INIT_ASSET(MoonMat);
 
    mMoonMatInst = NULL;
 
@@ -503,7 +503,7 @@ U32 ScatterSky::packUpdate(NetConnection *con, U32 mask, BitStream *stream)
 
       stream->writeFlag( mMoonEnabled );
 
-      PACK_MATERIALASSET(con, MoonMat);
+      PACK_ASSET(con, MoonMat);
       
       stream->write( mMoonScale );
       stream->write( mMoonTint );
@@ -617,7 +617,7 @@ void ScatterSky::unpackUpdate(NetConnection *con, BitStream *stream)
 
       mMoonEnabled = stream->readFlag();
 
-      UNPACK_MATERIALASSET(con, MoonMat);
+      UNPACK_ASSET(con, MoonMat);
 
       stream->read( &mMoonScale );
       stream->read( &mMoonTint );
@@ -651,7 +651,7 @@ void ScatterSky::prepRenderImage( SceneRenderState *state )
    ObjectRenderInst *ri = renderPass->allocInst<ObjectRenderInst>();
    ri->renderDelegate.bind( this, &ScatterSky::_render );
    ri->type = RenderPassManager::RIT_Sky;
-   ri->defaultKey = 10;
+   ri->defaultKey = 15;
    ri->defaultKey2 = 0;
    renderPass->addInst(ri);
 
@@ -700,7 +700,7 @@ void ScatterSky::prepRenderImage( SceneRenderState *state )
 	  moonRI->renderDelegate.bind( this, &ScatterSky::_renderMoon );
 	  moonRI->type = RenderPassManager::RIT_Sky;
       // Render after sky objects and before CloudLayer!
-	  moonRI->defaultKey = 5;
+	  moonRI->defaultKey = 10;
 	  moonRI->defaultKey2 = 0;
       renderPass->addInst(moonRI);
    }
@@ -758,73 +758,146 @@ bool ScatterSky::_initShader()
    return true;
 }
 
+void ScatterSky::clearVectors()
+{
+   tmpVertices.clear();
+   vertsVec.clear();
+}
+
+void ScatterSky::addVertex(Point3F vert)
+{
+   vertsVec.push_back(vert.x);
+   vertsVec.push_back(vert.y);
+   vertsVec.push_back(vert.z);
+}
+
+void ScatterSky::BuildFinalVert()
+{
+   U32 count = vertsVec.size();
+   U32 i, j;
+   for (i = 0, j = 0; i < count; i += 3, j += 2)
+   {
+      FinalVertexData temp;
+      temp.pos.set(Point3F(vertsVec[i], vertsVec[i + 1], vertsVec[i + 2]));
+
+      finalVertData.push_back(temp);
+   }
+}
+
 void ScatterSky::_initVBIB()
 {
+   U32 rings = 18;
+   U32 height = 9;
+   U32 radius = 10;
+
+   F32 x, y, z, xy;                     // vertex position
+
+   F32 ringStep = M_2PI / rings;
+   F32 heightStep = M_HALFPI / height; // M_PI for full sphere.
+   F32 ringAng, heightAng;
+
+   //clear vecs
+   clearVectors();
+
+   for (U32 i = 0; i <= height; ++i)
+   {
+      heightAng = M_PI / 2 - (F32)i * heightStep;
+      xy = radius * mCos(heightAng);
+      z = radius * mSin(heightAng);
+
+      for (U32 j = 0; j <= rings; ++j)
+      {
+         SphereVertex vert;
+         ringAng = j * ringStep;
+         x = xy * mCos(ringAng);
+         y = xy * mSin(ringAng);
+         vert.pos.set(Point3F(x, y, z));
+
+         tmpVertices.push_back(vert);
+      }
+   }
+
+   SphereVertex v1, v2, v3, v4;
+   U32 vi1, vi2 = 0;
+
+   for (U32 i = 0; i < height; ++i)
+   {
+      vi1 = i * (rings + 1);
+      vi2 = (i + 1) * (rings + 1);
+
+      for (U32 j = 0; j < rings; ++j, ++vi1, ++vi2)
+      {
+         v1 = tmpVertices[vi1];
+         v2 = tmpVertices[vi2];
+         v3 = tmpVertices[vi1 + 1];
+         v4 = tmpVertices[vi2 + 1];
+
+         // 1st = triangle.
+         if (i == 0)
+         {
+            // verts for tri.
+            addVertex(v1.pos);
+            addVertex(v2.pos);
+            addVertex(v4.pos);
+         }
+         /* UNCOMMENT WHEN FULL SPHERE
+         else if (i == (height - 1))
+         {
+            // verts for tri.
+            addVertex(v1.pos);
+            addVertex(v2.pos);
+            addVertex(v3.pos);
+         }*/
+         else
+         {
+            // verts for quad.
+            addVertex(v1.pos);
+            addVertex(v2.pos);
+            addVertex(v3.pos);
+
+            addVertex(v3.pos);
+            addVertex(v4.pos);
+            addVertex(v2.pos);
+         }
+      }
+   }
+
+   BuildFinalVert();
+
    // Vertex Buffer...
-   U32 vertStride = 50;
-   U32 strideMinusOne = vertStride - 1;
-   mVertCount = vertStride * vertStride;
-   mPrimCount = strideMinusOne * strideMinusOne * 2;
-
-   Point3F vertScale( 16.0f, 16.0f, 4.0f );
-
-   F32 zOffset = -( mCos( mSqrt( 1.0f ) ) + 0.01f );
+   mVertCount = finalVertData.size();
+   mPrimCount = mVertCount / 3;
 
    mVB.set( GFX, mVertCount, GFXBufferTypeStatic );
    GFXVertexP *pVert = mVB.lock();
    if(!pVert) return;
 
-   for ( U32 y = 0; y < vertStride; y++ )
+   for ( U32 i = 0; i < mVertCount; i++ )
    {
-      F32 v = ( (F32)y / (F32)strideMinusOne - 0.5f ) * 2.0f;
-
-      for ( U32 x = 0; x < vertStride; x++ )
-      {
-         F32 u = ( (F32)x / (F32)strideMinusOne - 0.5f ) * 2.0f;
-
-         F32 sx = u;
-         F32 sy = v;
-         F32 sz = (mCos( mSqrt( sx*sx + sy*sy ) ) * 1.0f) + zOffset;
-         //F32 sz = 1.0f;
-         pVert->point.set( sx, sy, sz );
-         pVert->point *= vertScale;
+         pVert->point.set(finalVertData[i].pos);
 
          pVert->point.normalize();
          pVert->point *= 200000.0f;
-
          pVert++;
-      }
    }
 
    mVB.unlock();
 
    // Primitive Buffer...
-   mPrimBuffer.set( GFX, mPrimCount * 3, mPrimCount, GFXBufferTypeStatic );
+   mPrimBuffer.set( GFX, mVertCount, mPrimCount, GFXBufferTypeStatic );
 
    U16 *pIdx = NULL;
    mPrimBuffer.lock(&pIdx);
    U32 curIdx = 0;
 
-   for ( U32 y = 0; y < strideMinusOne; y++ )
+   for ( U32 i = 0, k = 0; i < mPrimCount; i++, k+=3 )
    {
-      for ( U32 x = 0; x < strideMinusOne; x++ )
-      {
-         U32 offset = x + y * vertStride;
-
-         pIdx[curIdx] = offset;
+         pIdx[curIdx] = k;
          curIdx++;
-         pIdx[curIdx] = offset + 1;
+         pIdx[curIdx] = k + 1;
          curIdx++;
-         pIdx[curIdx] = offset + vertStride + 1;
+         pIdx[curIdx] = k + 2;
          curIdx++;
-
-         pIdx[curIdx] = offset;
-         curIdx++;
-         pIdx[curIdx] = offset + vertStride + 1;
-         curIdx++;
-         pIdx[curIdx] = offset + vertStride;
-         curIdx++;
-      }
    }
 
    mPrimBuffer.unlock();
@@ -963,20 +1036,16 @@ void ScatterSky::_render( ObjectRenderInst *ri, SceneRenderState *state, BaseMat
 
    Point3F camPos2 = state->getCameraPosition();
    MatrixF xfm(true);
-   xfm.setPosition(camPos2 - Point3F(0, 0, mZOffset));
+   xfm.setPosition(Point3F(
+      camPos2.x,
+      camPos2.y,
+      mZOffset) );
+
    GFX->multWorld(xfm);
 
    MatrixF xform(proj);//GFX->getProjectionMatrix());
    xform *= GFX->getViewMatrix();
    xform *=  GFX->getWorldMatrix();
-
-   if(state->isReflectPass())
-   {
-      static MatrixF rotMat(EulerF(0.0, 0.0, M_PI_F));
-      xform.mul(rotMat);
-      rotMat.set(EulerF(M_PI_F, 0.0, 0.0));
-      xform.mul(rotMat);
-   }
 
    mShaderConsts->setSafe( mModelViewProjSC, xform );
    mShaderConsts->setSafe( mMiscSC, miscParams );

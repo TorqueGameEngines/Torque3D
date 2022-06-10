@@ -132,7 +132,8 @@ ShapeBaseImageData::StateData::StateData()
    loaded = IgnoreLoaded;
    spin = IgnoreSpin;
    recoil = NoRecoil;
-   sound = 0;
+   sound = NULL;
+   soundTrack = NULL;
    emitter = NULL;
    shapeSequence = NULL;
    shapeSequenceScale = true;
@@ -156,6 +157,7 @@ ShapeBaseImageData::StateData::StateData()
       flashSequence[i] = false;
       emitterNode[i] = -1;
    }
+
 }
 
 static ShapeBaseImageData::StateData gDefaultStateData;
@@ -256,7 +258,7 @@ ShapeBaseImageData::ShapeBaseImageData()
       stateShapeSequence[i] = 0;
       stateScaleShapeSequence[i] = false;
 
-      stateSound[i] = 0;
+      INIT_ASSET_ARRAY(stateSound, i);
       stateScript[i] = 0;
       stateEmitter[i] = 0;
       stateEmitterTime[i] = 0;
@@ -294,7 +296,7 @@ ShapeBaseImageData::ShapeBaseImageData()
       hasFlash[i] = false;
       shapeIsValid[i] = false;
 
-      INIT_SHAPEASSET_ARRAY(Shape, i);
+      INIT_ASSET_ARRAY(Shape, i);
    }
 
    shakeCamera = false;
@@ -303,6 +305,7 @@ ShapeBaseImageData::ShapeBaseImageData()
    camShakeDuration = 1.5f;
    camShakeRadius = 3.0f;
    camShakeFalloff = 10.0f;
+   
 }
 
 ShapeBaseImageData::~ShapeBaseImageData()
@@ -368,7 +371,21 @@ bool ShapeBaseImageData::onAdd()
          s.shapeSequence = stateShapeSequence[i];
          s.shapeSequenceScale = stateScaleShapeSequence[i];
 
-         s.sound = stateSound[i];
+         //_setstateSound(getstateSound(i),i);
+         s.sound = getstateSoundAsset(i);
+         if (s.sound == NULL && mstateSoundName[i] != StringTable->EmptyString())
+         {
+            //ok, so we've got some sort of special-case here like a fallback or SFXPlaylist. So do the hook-up now
+            SFXTrack* sndTrack;
+            if (!Sim::findObject(mstateSoundName[i], sndTrack))
+            {
+               Con::errorf("ShapeBaseImageData::onAdd() - attempted to find sound %s but failed!", mstateSoundName[i]);
+            }
+            else
+            {
+               s.soundTrack = sndTrack;
+            }
+         }
          s.script = stateScript[i];
          s.emitter = stateEmitter[i];
          s.emitterTime = stateEmitterTime[i];
@@ -407,7 +424,6 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
 {
    if (!Parent::preload(server, errorStr))
       return false;
-   bool shapeError = false;
 
    // Resolve objects transmitted from server
    if (!server) {
@@ -419,10 +435,14 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
          if (state[i].emitter)
             if (!Sim::findObject(SimObjectId((uintptr_t)state[i].emitter), state[i].emitter))
                Con::errorf(ConsoleLogEntry::General, "Error, unable to load emitter for image datablock");
-               
-         String str;
-         if( !sfxResolve( &state[ i ].sound, str ) )
-            Con::errorf( ConsoleLogEntry::General, str.c_str() );
+
+         if (getstateSound(i) != StringTable->EmptyString())
+         {
+            _setstateSound(getstateSound(i), i);
+            if (!getstateSoundProfile(i))
+               Con::errorf("ShapeBaseImageData::preload() - Could not find profile for asset %s on state %d", getstateSound(i), i);
+         }
+
       }
    }
 
@@ -922,8 +942,8 @@ void ShapeBaseImageData::initPersistFields()
       addField( "stateScaleShapeSequence", TypeBool, Offset(stateScaleShapeSequence, ShapeBaseImageData), MaxStates,
          "Indicates if the sequence to be played on the mounting shape should be scaled to the length of the state." );
 
-      addField( "stateSound", TypeSFXTrackName, Offset(stateSound, ShapeBaseImageData), MaxStates,
-         "Sound to play on entry to this state." );
+      INITPERSISTFIELD_SOUNDASSET_ARRAY(stateSound, MaxStates, ShapeBaseImageData, "State sound.");
+
       addField( "stateScript", TypeCaseString, Offset(stateScript, ShapeBaseImageData), MaxStates,
          "@brief Method to execute on entering this state.\n\n"
          "Scoped to this image class name, then ShapeBaseImageData. The script "
@@ -976,7 +996,7 @@ void ShapeBaseImageData::packData(BitStream* stream)
 
    for (U32 j = 0; j < MaxShapes; ++j)
    {
-      PACKDATA_SHAPEASSET_ARRAY(Shape, j);        // shape 0 for normal use, shape 1 for first person use (optional)
+      PACKDATA_ASSET_ARRAY(Shape, j);        // shape 0 for normal use, shape 1 for first person use (optional)
    }
 
    stream->writeString(imageAnimPrefix);
@@ -1140,7 +1160,7 @@ void ShapeBaseImageData::packData(BitStream* stream)
             }
          }
 
-         sfxWrite( stream, s.sound );
+         PACKDATA_ASSET_ARRAY(stateSound, i);
       }
    stream->write(maxConcurrentSounds);
    stream->writeFlag(useRemainderDT);
@@ -1160,7 +1180,7 @@ void ShapeBaseImageData::unpackData(BitStream* stream)
 
    for (U32 j = 0; j < MaxShapes; ++j)
    {
-      UNPACKDATA_SHAPEASSET_ARRAY(Shape, j);        // shape 0 for normal use, shape 1 for first person use (optional)
+      UNPACKDATA_ASSET_ARRAY(Shape, j);        // shape 0 for normal use, shape 1 for first person use (optional)
    }
 
    imageAnimPrefix = stream->readSTString();
@@ -1345,7 +1365,7 @@ void ShapeBaseImageData::unpackData(BitStream* stream)
          else
             s.emitter = 0;
             
-         sfxRead( stream, &s.sound );
+         UNPACKDATA_ASSET_ARRAY(stateSound, i);
       }
    }
    
@@ -2574,7 +2594,7 @@ bool ShapeBase::hasImageState(U32 imageSlot, const char* state)
    return false;
 }
 
-void ShapeBase::setImageState(U32 imageSlot, U32 newState,bool force)
+void ShapeBase::setImageState(U32 imageSlot, U32 newState, bool force)
 {
    if (!mMountedImageList[imageSlot].dataBlock)
       return;
@@ -2605,12 +2625,12 @@ void ShapeBase::setImageState(U32 imageSlot, U32 newState,bool force)
    // Eject shell casing on every state change (client side only)
    ShapeBaseImageData::StateData& nextStateData = image.dataBlock->state[newState];
    if (isGhost() && nextStateData.ejectShell) {
-      ejectShellCasing( imageSlot );
+      ejectShellCasing(imageSlot);
    }
 
    // Shake camera on client.
    if (isGhost() && nextStateData.fire && image.dataBlock->shakeCamera) {
-      shakeCamera( imageSlot );
+      shakeCamera(imageSlot);
    }
 
    // Server must animate the shape if it is a firestate...
@@ -2626,12 +2646,12 @@ void ShapeBase::setImageState(U32 imageSlot, U32 newState,bool force)
    if (!force && image.state == &image.dataBlock->state[newState]) {
       image.delayTime = image.state->timeoutValue;
       if (image.state->script && !isGhost())
-         scriptCallback(imageSlot,image.state->script);
+         scriptCallback(imageSlot, image.state->script);
 
       // If this is a flash sequence, we need to select a new position for the
       //  animation if we're returning to that state...
       F32 randomPos = Platform::getRandom();
-      for (U32 i=0; i<ShapeBaseImageData::MaxShapes; ++i)
+      for (U32 i = 0; i < ShapeBaseImageData::MaxShapes; ++i)
       {
          if (!image.dataBlock->shapeIsValid[i] || (i != imageShapeIndex && !image.doAnimateAllShapes))
             continue;
@@ -2659,7 +2679,7 @@ void ShapeBase::setImageState(U32 imageSlot, U32 newState,bool force)
 
    // Mount pending images
    if (image.nextImage != InvalidImagePtr && stateData.allowImageChange) {
-      setImage(imageSlot,image.nextImage,image.nextSkinNameHandle,image.nextLoaded);
+      setImage(imageSlot, image.nextImage, image.nextSkinNameHandle, image.nextLoaded);
       return;
    }
 
@@ -2667,16 +2687,16 @@ void ShapeBase::setImageState(U32 imageSlot, U32 newState,bool force)
    // (the first key frame should be it's off state).
    // We need to do this across all image shapes to make sure we have no hold overs when switching
    // rendering shapes while in the middle of a state change.
-   for (U32 i=0; i<ShapeBaseImageData::MaxShapes; ++i)
+   for (U32 i = 0; i < ShapeBaseImageData::MaxShapes; ++i)
    {
       // If we are to do a sequence transition then we need to keep the previous animThread active
       if (image.animThread[i] && image.animThread[i]->getSequence()->isCyclic() && (stateData.sequenceNeverTransition || !(stateData.sequenceTransitionIn || lastState->sequenceTransitionOut))) {
-         image.shapeInstance[i]->setPos(image.animThread[i],0);
-         image.shapeInstance[i]->setTimeScale(image.animThread[i],0);
+         image.shapeInstance[i]->setPos(image.animThread[i], 0);
+         image.shapeInstance[i]->setTimeScale(image.animThread[i], 0);
       }
       if (image.flashThread[i]) {
-         image.shapeInstance[i]->setPos(image.flashThread[i],0);
-         image.shapeInstance[i]->setTimeScale(image.flashThread[i],0);
+         image.shapeInstance[i]->setPos(image.flashThread[i], 0);
+         image.shapeInstance[i]->setTimeScale(image.flashThread[i], 0);
       }
    }
 
@@ -2689,10 +2709,10 @@ void ShapeBase::setImageState(U32 imageSlot, U32 newState,bool force)
    if (image.delayTime <= 0 || !stateData.waitForTimeout) 
    {
       if ((ns = stateData.transition.loaded[image.loaded]) != -1) {
-         setImageState(imageSlot,ns);
+         setImageState(imageSlot, ns);
          return;
       }
-      for (U32 i=0; i<ShapeBaseImageData::MaxGenericTriggers; ++i)
+      for (U32 i = 0; i < ShapeBaseImageData::MaxGenericTriggers; ++i)
       {
          if ((ns = stateData.transition.genericTrigger[i][image.genericTrigger[i]]) != -1) {
             setImageState(imageSlot, ns);
@@ -2701,7 +2721,7 @@ void ShapeBase::setImageState(U32 imageSlot, U32 newState,bool force)
       }
       //if (!imageData.usesEnergy)
          if ((ns = stateData.transition.ammo[image.ammo]) != -1) {
-            setImageState(imageSlot,ns);
+         setImageState(imageSlot, ns);
             return;
          }
       if ((ns = stateData.transition.target[image.target]) != -1) {
@@ -2717,11 +2737,11 @@ void ShapeBase::setImageState(U32 imageSlot, U32 newState,bool force)
          return;
       }
       if ((ns = stateData.transition.trigger[image.triggerDown]) != -1) {
-         setImageState(imageSlot,ns);
+         setImageState(imageSlot, ns);
          return;
       }
       if ((ns = stateData.transition.altTrigger[image.altTriggerDown]) != -1) {
-         setImageState(imageSlot,ns);
+         setImageState(imageSlot, ns);
          return;
       }
    }
@@ -2746,28 +2766,37 @@ void ShapeBase::setImageState(U32 imageSlot, U32 newState,bool force)
 
    // Apply recoil
    if (stateData.recoil != ShapeBaseImageData::StateData::NoRecoil)
-      onImageRecoil(imageSlot,stateData.recoil);
+      onImageRecoil(imageSlot, stateData.recoil);
 
    // Apply image state animation on mounting shape
    if (stateData.shapeSequence && stateData.shapeSequence[0])
    {
       onImageStateAnimation(imageSlot, stateData.shapeSequence, stateData.direction, stateData.shapeSequenceScale, stateData.timeoutValue);
    }
-
    // Delete any loooping sounds that were in the previous state.
-   if (lastState->sound && lastState->sound->getDescription()->mIsLooping)  
+   // this is the crazy bit =/ needs to know prev state in order to stop sounds.
+   // lastState does not return an id for the prev state so we keep track of it.
+   if (lastState->sound && lastState->sound->getSfxProfile()->getDescription()->mIsLooping)
    {  
-      for(Vector<SFXSource*>::iterator i = image.mSoundSources.begin(); i != image.mSoundSources.end(); i++)      
+      for (Vector<SFXSource*>::iterator i = image.mSoundSources.begin(); i != image.mSoundSources.end(); i++)
          SFX_DELETE((*i));    
 
       image.mSoundSources.clear();  
    }  
 
    // Play sound
-   if( stateData.sound && isGhost() )
+   if (isGhost())
+   {
+      if (stateData.sound)
    {
       const Point3F& velocity         = getVelocity();
-      image.addSoundSource(SFX->createSource( stateData.sound, &getRenderTransform(), &velocity )); 
+         image.addSoundSource(SFX->createSource(stateData.sound->getSfxProfile(), &getRenderTransform(), &velocity));
+      }
+      if (stateData.soundTrack)
+      {
+         const Point3F& velocity = getVelocity();
+         image.addSoundSource(SFX->createSource(stateData.soundTrack, &getRenderTransform(), &velocity));
+      }
    }
 
    // Play animation

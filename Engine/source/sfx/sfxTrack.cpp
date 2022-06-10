@@ -39,7 +39,7 @@ ConsoleDocClass( SFXTrack,
    
    "The term \"track\" is used in the sound system to refer to any entity that can be played "
    "back as a sound source.  These can be individual files (SFXProfile), patterns of other tracks "
-   "(SFXPlayList), or special sound data defined by a device layer (SFXFMODEvent).\n\n"
+   "(SFXPlayList).\n\n"
    
    "Any track must be paired with a SFXDescription that tells the sound system how to set up "
    "playback for the track.\n\n"
@@ -95,7 +95,7 @@ void SFXTrack::initPersistFields()
 
 //-----------------------------------------------------------------------------
 
-bool SFXTrack::processArguments( S32 argc, ConsoleValueRef *argv )
+bool SFXTrack::processArguments( S32 argc, ConsoleValue *argv )
 {
    if( typeid( *this ) == typeid( SFXTrack ) )
    {

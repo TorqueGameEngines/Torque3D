@@ -75,7 +75,7 @@ singleton shaderData( AL_VectorLightShader )
    pixVersion = 3.0;
 };
 
-new CustomMaterial( AL_VectorLightMaterial )
+singleton CustomMaterial( AL_VectorLightMaterial )
 {
    shader = AL_VectorLightShader;
    stateBlock = AL_VectorLightState;
@@ -149,7 +149,7 @@ singleton shaderData( AL_PointLightShader )
    pixVersion = 3.0;
 };
 
-new CustomMaterial( AL_PointLightMaterial )
+singleton CustomMaterial( AL_PointLightMaterial )
 {
    shader = AL_PointLightShader;
    stateBlock = AL_ConvexLightState;
@@ -186,7 +186,7 @@ singleton shaderData( AL_SpotLightShader )
    pixVersion = 3.0;
 };
 
-new CustomMaterial( AL_SpotLightMaterial )
+singleton CustomMaterial( AL_SpotLightMaterial )
 {
    shader = AL_SpotLightShader;
    stateBlock = AL_ConvexLightState;
@@ -205,7 +205,7 @@ new CustomMaterial( AL_SpotLightMaterial )
 
 /// This material is used for generating deferred 
 /// materials for objects that do not have materials.
-new Material( AL_DefaultDeferredMaterial )
+singleton Material( AL_DefaultDeferredMaterial )
 {
    // We need something in the first pass else it 
    // won't create a proper material instance.  
@@ -219,7 +219,7 @@ new Material( AL_DefaultDeferredMaterial )
 
 /// This material is used for generating shadow 
 /// materials for objects that do not have materials.
-new Material( AL_DefaultShadowMaterial )
+singleton Material( AL_DefaultShadowMaterial )
 {
    // We need something in the first pass else it 
    // won't create a proper material instance.  
@@ -255,7 +255,7 @@ singleton shaderData( AL_ParticlePointLightShader )
    pixVersion = 3.0;
 };
 
-new CustomMaterial( AL_ParticlePointLightMaterial )
+singleton CustomMaterial( AL_ParticlePointLightMaterial )
 {
    shader = AL_ParticlePointLightShader;
    stateBlock = AL_ConvexLightState;

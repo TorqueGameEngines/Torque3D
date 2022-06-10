@@ -2,7 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2022, assimp team
 
 
 All rights reserved.
@@ -88,6 +88,17 @@ public:
         underlying << sin;
     }
 
+    // Same problem as the copy constructor below, but with root cause is that stream move
+    // is not permitted on older GCC versions. Small performance impact on those platforms.
+#if defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ <= 9)
+    basic_formatter(basic_formatter&& other) {
+        underlying << (string)other;
+    }
+#else
+    basic_formatter(basic_formatter&& other)
+        : underlying(std::move(other.underlying)) {
+    }
+#endif
 
     // The problem described here:
     // https://sourceforge.net/tracker/?func=detail&atid=1067632&aid=3358562&group_id=226462
@@ -108,15 +119,27 @@ public:
      * work for const references, so many function prototypes will
      * include const basic_formatter<T>& s but might still want to
      * modify the formatted string without the need for a full copy.*/
-    template <typename TToken>
-    const basic_formatter& operator << (const TToken& s) const {
+    template <typename TToken, typename std::enable_if<!std::is_base_of<std::exception, TToken>::value>::type * = nullptr>
+    const basic_formatter &operator<<(const TToken &s) const {
         underlying << s;
         return *this;
     }
 
-    template <typename TToken>
-    basic_formatter& operator << (const TToken& s) {
+    template <typename TToken, typename std::enable_if<std::is_base_of<std::exception, TToken>::value>::type * = nullptr>
+    const basic_formatter &operator<<(const TToken &s) const {
+        underlying << s.what();
+        return *this;
+    }
+
+    template <typename TToken, typename std::enable_if<!std::is_base_of<std::exception, TToken>::value>::type * = nullptr>
+    basic_formatter &operator<<(const TToken &s) {
         underlying << s;
+        return *this;
+    }
+
+    template <typename TToken, typename std::enable_if<std::is_base_of<std::exception, TToken>::value>::type * = nullptr>
+    basic_formatter &operator<<(const TToken &s) {
+        underlying << s.what();
         return *this;
     }
 
@@ -124,13 +147,13 @@ public:
     // comma operator overloaded as well, choose your preferred way.
     template <typename TToken>
     const basic_formatter& operator, (const TToken& s) const {
-        underlying << s;
+        *this << s;
         return *this;
     }
 
     template <typename TToken>
     basic_formatter& operator, (const TToken& s) {
-        underlying << s;
+        *this << s;
         return *this;
     }
 
@@ -138,7 +161,7 @@ public:
     // See https://sourceforge.net/projects/assimp/forums/forum/817654/topic/4372824
     template <typename TToken>
     basic_formatter& operator, (TToken& s) {
-        underlying << s;
+        *this << s;
         return *this;
     }
 

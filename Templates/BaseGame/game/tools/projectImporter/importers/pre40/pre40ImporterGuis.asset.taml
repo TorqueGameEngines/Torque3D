@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="pre40ImporterGuis"
+    GUIFile="@assetFile=pre40ImporterGuis.gui"
+    ScriptFile="@assetFile=pre40ImporterGuis.tscript"
+    VersionId="1" />

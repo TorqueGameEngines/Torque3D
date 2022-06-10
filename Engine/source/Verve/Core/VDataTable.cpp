@@ -228,7 +228,7 @@ bool VDataTable::getValue( SimObject *pObject, const String &pFieldName, String 
         case VDataTable::k_TypeExpression :
             {
                 // Evaluate.
-                pValue = Con::evaluate( fieldValue, false ).getStringValue();
+                pValue = Con::evaluate( fieldValue, false ).getString();
 
             } break;
 

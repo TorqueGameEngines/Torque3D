@@ -620,8 +620,16 @@ ConsoleGetType(TypeRotationF)
    static const U32 bufSize = 256;
    char* returnBuffer = Con::getReturnBuffer(bufSize);
 
-   EulerF out = pt->asEulerF(RotationF::Degrees);
-   dSprintf(returnBuffer, bufSize, "%g %g %g", out.x, out.y, out.z);
+   if (pt->mRotationType == RotationF::Euler)
+   {
+      EulerF out = pt->asEulerF(RotationF::Degrees);
+      dSprintf(returnBuffer, bufSize, "%g %g %g", out.x, out.y, out.z);
+   }
+   else if (pt->mRotationType == RotationF::AxisAngle)
+   {
+      AngAxisF out = pt->asAxisAngle(RotationF::Degrees);
+      dSprintf(returnBuffer, bufSize, "%g %g %g %g", out.axis.x, out.axis.y, out.axis.z, out.angle);
+   }
 
    return returnBuffer;
 }
@@ -1239,4 +1247,38 @@ DefineEngineFunction(getRandom, F32, (S32 a, S32 b), (S32_MAX, S32_MAX),
    return gRandGen.randF();
 }
 
+DefineEngineFunction(mAddS32, const char *, (S32 v1, S32 v2), , "Add 2 large numbers")
+{
+   S32 res = v1 + v2;
+   char *ret = Con::getReturnBuffer(64);
+   dSprintf(ret, 64, "%i", res);
+
+   return ret;
+}
+DefineEngineFunction(mSubS32, const char *, (S32 v1, S32 v2), , "Subtract 2 large numbers")
+{
+   S32 res = v1 - v2;
+   char *ret = Con::getReturnBuffer(64);
+   dSprintf(ret, 64, "%i", res);
+
+   return ret;
+}
+
+DefineEngineFunction(mMulS32, const char *, (S32 v1, S32 v2), , "Multiply 2 large numbers")
+{
+   S32 res = v1 * v2;
+   char *ret = Con::getReturnBuffer(64);
+   dSprintf(ret, 64, "%i", res);
+
+   return ret;
+}
+
+DefineEngineFunction(mDivS32, const char *, (S32 v1, S32 v2), , "Divide 2 large numbers")
+{
+   S32 res = v1 / v2;
+   char *ret = Con::getReturnBuffer(64);
+   dSprintf(ret, 64, "%i", res);
+
+   return ret;
+}
 //------------------------------------------------------------------------------

@@ -524,7 +524,9 @@ function loadDir(%dir)
 
 function loadDirs(%dirPath)
 {
-   %dirPath = nextToken(%dirPath, token, ";");
+   %dirPath = nextToken(%dirPath, "$token", ";");
+   %token = $token;
+
    if (%dirPath !$= "")
       loadDirs(%dirPath);
 
@@ -640,4 +642,24 @@ function populateAllFonts(%font)
    populateFontCacheRange(%font,24,0,65535);
    populateFontCacheRange(%font,32,0,65535);
    populateFontCacheRange(%font,36,0,65535);
+}
+
+//------------------------------------------------------------------------------
+function clientCMDPlaySound(%soundAssetId,%pos)
+{
+    playSoundAsset(%soundAssetId,%pos);
+}
+
+function playSoundAsset(%soundAssetId,%pos)
+{
+   %assetDef = AssetDatabase.acquireAsset(%soundAssetId);
+   %handle = 0;
+   if(isObject(%assetDef))
+   {
+      %handle = %assetDef.playSound(%pos);
+      if( isObject( ClientMissionCleanup ) )
+         ClientMissionCleanup.add(%handle);
+  }
+  AssetDatabase.releaseAsset(%soundAssetId);
+  return %handle;
 }

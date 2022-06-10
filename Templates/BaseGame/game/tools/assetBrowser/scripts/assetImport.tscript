@@ -85,9 +85,9 @@ function ImportAssetWindow::onWake(%this)
    %this.importer.targetPath = AssetImportTargetAddress.getText();
    %this.importer.targetModuleId = AssetImportTargetModule.getText();
    
-   ImportActivityLog.empty();
-   
    %this.refresh();
+   
+   toggleImportWindowVizBtn.setStateOn(EditorSettings.value("Assets/AutoImport"));
 }
 
 //
@@ -108,7 +108,8 @@ function isShapeFormat(%fileExt)
    (%fileExt $= ".gltf") || 
    (%fileExt $= ".glb") || 
    (%fileExt $= ".obj") || 
-   (%fileExt $= ".blend"))
+   (%fileExt $= ".blend") || 
+   (%fileExt $= ".dsq"))
       return true;
       
    return false;
@@ -165,8 +166,14 @@ function getAssetTypeByFilename(%filePath)
 
 function AssetBrowser::onBeginDropFiles( %this )
 {   
-   if(!AssetBrowser.isAwake())
+   if(!AssetBrowser.isAwake() || !AssetBrowser.isVisible())
+   {
+      if(GuiEditorIsActive())
+         GuiEditor.onBeginDropFiles();
+      else if(EditorIsActive())
+         EWorldEditor.onBeginDropFiles();
       return;
+   }
       
    error("% DragDrop - Beginning files dropping.");
    if(!ImportAssetWindow.isAwake())
@@ -175,45 +182,42 @@ function AssetBrowser::onBeginDropFiles( %this )
 
 function AssetBrowser::onDropFile( %this, %filePath )
 {
-   if(!%this.isVisible())
+   if(fileExt(%filePath) $= "")
+   {
+      //we're dealing with a folder, so we gotta parse through it  
+      
+      %file = findFirstFile( %filePath @ "/*" );
+      while( %file !$= "" )
+      {      
+         %this.onDropFile(%file);
+         %file = findNextFile( %filePath @ "/*" );
+      }
+      
       return;
+   }
+   
+   if(!AssetBrowser.isAwake() || !AssetBrowser.isVisible())
+   {
+      if(GuiEditorIsActive())
+         GuiEditor.onDropFile(%filePath);
+      else if(EditorIsActive())
+         EWorldEditor.onDropFile(%filePath);
+      return;
+   }
       
    ImportAssetWindow.importer.addImportingFile(%filePath);
-      
-   /*%fileExt = fileExt( %filePath );
-   //add it to our array!
-   if(isImageFormat(%fileExt))
-      %assetItem = %this.addImportingAsset("ImageAsset", %filePath);
-   else if( isShapeFormat(%fileExt))
-      %assetItem = %this.addImportingAsset("ShapeAsset", %filePath);
-   else if( isSoundFormat(%fileExt))
-      %assetItem = %this.addImportingAsset("SoundAsset", %filePath);
-   else if( %fileExt $= "." @ $TorqueScriptFileExtension || %fileExt $= "." @ $TorqueScriptFileExtension @ ".dso" )
-      %assetItem = %this.addImportingAsset("ScriptAsset", %filePath);
-   else if( %fileExt $= ".gui" || %fileExt $= ".gui.dso" )
-      %assetItem = %this.addImportingAsset("GUIAsset", %filePath);
-   else if (%fileExt $= ".zip")
-      %this.onDropZipFile(%filePath);
-   else if( %fileExt $= "")
-      %this.onDropFolder(%filePath);
-      
-   if(%assetItem !$= "")
-   {
-      SessionImportAssetItems.add(%assetItem);
-      ImportAssetItems.add(%assetItem);
-   }*/
-      
-   //Used to keep tabs on what files we were trying to import, used mainly in the event of
-   //adjusting configs and needing to completely reprocess the import
-   //ensure we're not doubling-up on files by accident
-   //if(ImportAssetWindow.importingFilesArray.getIndexFromKey(%filePath) == -1)
-   //   ImportAssetWindow.importingFilesArray.add(%filePath);
 }
 
 function AssetBrowser::onDropZipFile(%this, %filePath)
 {
-   if(!%this.isVisible())
+   if(!AssetBrowser.isAwake() || !AssetBrowser.isVisible())
+   {
+      if(GuiEditorIsActive())
+         GuiEditor.onDropZipFile(%filePath);
+      else if(EditorIsActive())
+         EWorldEditor.onDropZipFile(%filePath);
       return;
+   }
       
    %zip = new ZipObject();
    %zip.openArchive(%filePath);
@@ -225,27 +229,6 @@ function AssetBrowser::onDropZipFile(%this, %filePath)
    {
       %fileEntry = %zip.getFileEntry(%i);
       %fileFrom = getField(%fileEntry, 0);
-      
-      //First, we wanna scan to see if we have modules to contend with. If we do, we'll just plunk them in wholesale
-      //and not process their contents.
-      
-      //If not modules, it's likely an art pack or other mixed files, so we'll import them as normal
-      /*if( (%fileExt $= ".png") || (%fileExt $= ".jpg") || (%fileExt $= ".bmp") || (%fileExt $= ".dds") )
-         %this.importAssetListArray.add("ImageAsset", %filePath);
-      else if( (%fileExt $= ".dae") || (%fileExt $= ".dts"))
-         %this.importAssetListArray.add("ShapeAsset", %filePath);
-      else if( (%fileExt $= ".ogg") || (%fileExt $= ".wav") || (%fileExt $= ".mp3"))
-         %this.importAssetListArray.add("SoundAsset", %filePath);
-      else if( (%fileExt $= ".gui") || (%fileExt $= ".gui.dso"))
-         %this.importAssetListArray.add("GUIAsset", %filePath);
-      //else if( (%fileExt $= "." @ $TorqueScriptFileExtension) || (%fileExt $= ".dso"))
-      //   %this.importAssetListArray.add("Script", %filePath);
-      else if( (%fileExt $= ".mis"))
-         %this.importAssetListArray.add("LevelAsset", %filePath);*/
-         
-      // For now, if it's a .tscript file, we'll assume it's a behavior.
-      //if (fileExt(%fileFrom) !$= "." @ $TorqueScriptFileExtension)
-      //   continue;
       
       %fileTo = expandFilename("^tools/assetBrowser/importTemp/") @ %fileFrom;
       %zip.extractFile(%fileFrom, %fileTo);
@@ -259,8 +242,14 @@ function AssetBrowser::onDropZipFile(%this, %filePath)
 
 function AssetBrowser::onDropFolder(%this, %filePath)
 {
-   if(!%this.isVisible())
+   if(!AssetBrowser.isAwake() || !AssetBrowser.isVisible())
+   {
+      if(GuiEditorIsActive())
+         GuiEditor.onDropFolder(%filePath);
+      else if(EditorIsActive())
+         EWorldEditor.onDropFolder(%filePath);
       return;
+   }
       
    %zip = new ZipObject();
    %zip.openArchive(%filePath);
@@ -277,6 +266,9 @@ function AssetBrowser::onDropFolder(%this, %filePath)
       //First, we wanna scan to see if we have modules to contend with. If we do, we'll just plunk them in wholesale
       //and not process their contents.
       
+      // TODO
+      %fileExt = "";
+
       //If not modules, it's likely an art pack or other mixed files, so we'll import them as normal
       if( (%fileExt $= ".png") || (%fileExt $= ".jpg") || (%fileExt $= ".bmp") || (%fileExt $= ".dds") )
          %this.importAssetListArray.add("ImageAsset", %filePath);
@@ -303,8 +295,14 @@ function AssetBrowser::onDropFolder(%this, %filePath)
 
 function AssetBrowser::onEndDropFiles( %this )
 {
-   if(!%this.isVisible())
+   if(!AssetBrowser.isAwake() || !AssetBrowser.isVisible())
+   {
+      if(GuiEditorIsActive())
+         GuiEditor.onEndDropFiles();
+      else if(EditorIsActive())
+         EWorldEditor.onEndDropFiles();
       return;
+   }
       
    ImportAssetWindow.refresh();
 }
@@ -411,154 +409,12 @@ function ImportAssetWindow::reloadImportOptionConfigs(%this)
 }
 
 //
-/*function importLooseFile(%filePath, %forceAutoImport)
-{
-   %assetType = getAssetTypeByFilename(%filePath);
-   
-   if(%forceAutoImport)
-   {
-      //If we're attempting to fast-track the import, check that that's even an option
-      if(ImportAssetWindow.importConfigsList.count() == 0 || 
-      EditorSettings.value("Assets/AssetImporDefaultConfig") $= "" || 
-      EditorSettings.value("Assets/AutoImport", false) == false)
-      {
-         toolsMessageBoxOK("Unable to AutoImport", "Attempted to import a loose file " @ %filePath @ " with AutoImport but was unable to either due to lacking a valid import config, or the editor settings are not set to auto import.");
-         return false;      
-      }
-      
-      if(%assetType $= "folder" || %assetType $= "zip")
-      {
-         toolsMessageBoxOK("Unable to AutoImport", "Unable to auto import folders or zips at this time");
-         return false; 
-      }
-      
-      if(%assetType $= "")
-      {
-         toolsMessageBoxOK("Unable to AutoImport", "Unable to auto import unknown file type for file " @ %filePath);
-         return false; 
-      }
-   }
-   
-   %assetItem = AssetBrowser.addImportingAsset(%assetType, %filePath, "", "");
-   ImportAssetItems.add(%assetItem);
-   
-   if(%forceAutoImport)
-   {
-      %targetModule = AssetBrowser.dirHandler.getModuleFromAddress(filePath(%filePath)).ModuleId;
-      AssetImportTargetModule.text = %targetModule;
-      
-      %assetItem.moduleName = %targetModule;
-      
-      %assetName = %assetItem.assetName;
-      
-      AssetBrowser.dirHandler.currentAddress = filePath(%filePath);
-      
-      //skip the refresh delay, we'll force it here
-      ImportAssetWindow.doRefresh();
-      
-      ImportAssetItems.empty();
-      
-      if(ImportAssetWindow.hasImportIssues)
-         return false;
-   }
-   
-   $importedLooseFileAsset = %assetItem.moduleName @ ":" @ %assetItem.assetName;
-   
-   return true;
-}*/
-
-//
 function assetImportUpdatePath(%newPath)
 {
    AssetBrowser.navigateTo(%newPath);
    AssetImportTargetAddress.text = %newPath;
    AssetImportTargetModule.text = AssetBrowser.dirHandler.getModuleFromAddress(AssetBrowser.dirHandler.currentAddress).ModuleId;
 }
-
-//
-/*function ImportAssetWindow::processImportAssets(%this, %assetItem)
-{
-   if(!isObject(%assetItem))
-   {
-      //Zero this out
-      ImportAssetWindow.assetHeirarchyChanged = false;
-      
-      for(%i=0; %i < ImportAssetItems.count(); %i++)
-      {
-         %assetItem = ImportAssetItems.getKey(%i);
-         
-         if(!isObject(%assetItem) || %assetItem.skip )
-            return;
-            
-         if(%assetItem.processed == false)
-         {
-            //sanetize before modifying our asset name(suffix additions, etc)      
-            if(%assetItem.assetName !$= %assetItem.cleanAssetName)
-               %assetItem.assetName = %assetItem.cleanAssetName;
-            
-            if(%assetItem.assetType $= "AnimationAsset")
-            {
-               //if we don't have our own file, that means we're gunna be using our parent shape's file so reference that
-               if(!isFile(%assetItem.filePath))
-               {
-                  %assetItem.filePath = %assetItem.parentAssetItem.filePath;
-               }
-            }
-            
-            if(AssetBrowser.isMethod("prepareImport" @ %assetItem.assetType))
-            {
-               %command = AssetBrowser @ ".prepareImport" @ %assetItem.assetType @ "(" @ %assetItem @ ");";
-               eval(%command);
-            }
-            
-            %assetItem.processed = true;
-         }
-         
-         %this.processImportAssets(%assetItem);
-      }
-   }
-   else
-   {
-      for(%i=0; %i < %assetItem.childAssetItems.count(); %i++)
-      {
-         %childAssetItem = %assetItem.childAssetItems.getKey(%i);
-         
-         if(!isObject(%childAssetItem) || %childAssetItem.skip)
-            return;
-            
-         if(%childAssetItem.processed == false)
-         {
-            //sanetize before modifying our asset name(suffix additions, etc)      
-            if(%childAssetItem.assetName !$= %childAssetItem.cleanAssetName)
-               %childAssetItem.assetName = %childAssetItem.cleanAssetName;
-            
-            if(%childAssetItem.assetType $= "AnimationAsset")
-            {
-               //if we don't have our own file, that means we're gunna be using our parent shape's file so reference that
-               if(!isFile(%childAssetItem.filePath))
-               {
-                  %childAssetItem.filePath = %childAssetItem.parentAssetItem.filePath;
-               }
-            }
-            
-            if(AssetBrowser.isMethod("prepareImport" @ %childAssetItem.assetType))
-            {
-               %command = AssetBrowser @ ".prepareImport" @ %childAssetItem.assetType @ "(" @ %childAssetItem @ ");";
-               eval(%command);
-            }
-            
-            %childAssetItem.processed = true;
-         }
-         
-         %this.processImportAssets(%childAssetItem);
-      }
-   }
-   
-   //If our hierarchy changed, it's because we did so during processing
-   //so we'll loop back through again until everything has been processed
-   if(ImportAssetWindow.assetHeirarchyChanged)
-      %this.processImportAssets();
-}*/
 
 function ImportAssetWindow::findImportingAssetByName(%this, %assetName, %assetItem)
 {
@@ -630,9 +486,7 @@ function ImportAssetWindow::doRefresh(%this)
    ImportAssetWindow.importer.processImportingAssets();
    //%this.processImportAssets();
    
-   //ImportAssetWindow.hasImportIssues = %this.validateAssets();
-   
-   ImportAssetWindow.importer.validateImportingAssets();
+   ImportAssetWindow.hasImportIssues = ImportAssetWindow.importer.hasImportIssues();
    
    AssetImportCtrl-->NewAssetsTree.clear();
    AssetImportCtrl-->NewAssetsTree.insertItem(0, "Importing Assets");
@@ -662,7 +516,7 @@ function ImportAssetWindow::doRefresh(%this)
    }
    if(%this.autoRenamedAssets != 0)
    {
-      %ImportActionSummary = %ImportActionSummary SPC %this.autoRenamedAssets @ " Auto Renamed|";
+      %ImportActionSummary = %ImportActionSummary SPC %this.autoRenamedAssets @ " Automatically Renamed|";
    }
    
    if(%ImportActionSummary !$= "")
@@ -678,7 +532,8 @@ function ImportAssetWindow::doRefresh(%this)
    if(ImportAssetWindow.importConfigsList.count() != 0 
       && EditorSettings.value("Assets/AssetImporDefaultConfig") !$= "" 
       && EditorSettings.value("Assets/AutoImport", false) == true
-      && ImportAssetWindow.hasImportIssues == false
+      && ImportAssetWindow.hasImportIssues() == false
+      && AssetBrowser.isAssetReImport == false
       && ImportAssetWindow.allowAutoImport)
    {
       AssetImportCtrl.setHidden(true);
@@ -881,11 +736,7 @@ function NewAssetsPanelInputs::onRightMouseDown(%this)
 //
 function ImportAssetWindow::removeImportingAsset(%this)
 {
-   ImportActivityLog.add("Removing Asset from Import");
-   
    %this.importer.deleteImportingAsset(ImportAssetActions.assetItem);
-   
-   //ImportAssetWindow.refresh();
 }
 
 function ImportAssetWindow::addNewImportingAsset(%this, %filterType)
@@ -1083,9 +934,9 @@ function ImportAssetWindow::toggleLogWindow()
    }
       
    ImportLogTextList.clear();
-   for(%i=0; %i < ImportActivityLog.count(); %i++)
+   for(%i=0; %i < ImportAssetWindow.importer.getActivityLogLineCount(); %i++)
    {
-      ImportLogTextList.addRow(%i, ImportActivityLog.getKey(%i));
+      ImportLogTextList.addRow(%i,ImportAssetWindow.importer.getActivityLogLine(%i));
    }
 }
 //
@@ -1109,5 +960,14 @@ function ImportAssetModuleList::refresh(%this)
       %moduleName = getWord(%moduleList, %i);
       %this.add(%moduleName.ModuleId, %i);  
    }
+}
+//
+
+//
+function toggleImportWindowViz()
+{
+   %value = EditorSettings.value("Assets/AutoImport");
+   EditorSettings.setValue("Assets/AutoImport", !%value);
+  
 }
 //

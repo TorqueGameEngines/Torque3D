@@ -114,6 +114,13 @@ PhysicalZone::PhysicalZone()
    force_mag = 0.0f;
    orient_force = false;
    fade_amt = 1.0f;
+
+   //Default up a basic square
+   Point3F vecs[3] = { Point3F(1.0, 0.0, 0.0),
+      Point3F(0.0, -1.0, 0.0),
+      Point3F(0.0, 0.0, 1.0) };
+
+   mPolyhedron = Polyhedron(Point3F(-0.5, 0.5, 0.0), vecs);
 }
 
 PhysicalZone::~PhysicalZone()

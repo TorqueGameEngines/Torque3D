@@ -222,7 +222,6 @@ bool ConvexShape::protectedSetSurface( void *object, const char *index, const ch
 	*/
 
    String t = data;
-   S32 len = t.length();
 
 	dSscanf( data, "%g %g %g %g %g %g %g %i %g %g %g %g %f", &quat.x, &quat.y, &quat.z, &quat.w, &pos.x, &pos.y, &pos.z,
       &matID, &offset.x, &offset.y, &scale.x, &scale.y, &rot);
@@ -290,7 +289,7 @@ ConvexShape::ConvexShape()
    mSurfaceUVs.clear();
    mSurfaceTextures.clear();
 
-   INIT_MATERIALASSET(Material);
+   INIT_ASSET(Material);
 }
 
 ConvexShape::~ConvexShape()
@@ -318,10 +317,10 @@ void ConvexShape::initPersistFields()
 
    addGroup( "Internal" );
 
-      addProtectedField( "surface", TypeRealString, NULL, &protectedSetSurface, &defaultProtectedGetFn, 
+      addProtectedField( "surface", TypeRealString, 0, &protectedSetSurface, &defaultProtectedGetFn,
          "Do not modify, for internal use.", AbstractClassRep::FIELD_HideInInspectors );
 
-	  addProtectedField( "surfaceTexture", TypeRealString, NULL, &protectedSetSurfaceTexture, &defaultProtectedGetFn, 
+	  addProtectedField( "surfaceTexture", TypeRealString, 0, &protectedSetSurfaceTexture, &defaultProtectedGetFn,
          "Do not modify, for internal use.", AbstractClassRep::FIELD_HideInInspectors );
 
    endGroup( "Internal" );
@@ -528,7 +527,7 @@ U32 ConvexShape::packUpdate( NetConnection *conn, U32 mask, BitStream *stream )
 
    if ( stream->writeFlag( mask & UpdateMask ) )
    {
-      PACK_MATERIALASSET(conn, Material);
+      PACK_ASSET(conn, Material);
       
       U32 surfCount = mSurfaces.size();
       stream->writeInt( surfCount, 32 );
@@ -584,7 +583,7 @@ void ConvexShape::unpackUpdate( NetConnection *conn, BitStream *stream )
 
    if ( stream->readFlag() ) // UpdateMask
    {
-      UNPACK_MATERIALASSET(conn, Material);
+      UNPACK_ASSET(conn, Material);
 
       mSurfaces.clear();
       mSurfaceUVs.clear();
@@ -960,17 +959,6 @@ bool ConvexShape::castRay( const Point3F &start, const Point3F &end, RayInfo *in
    Point3F hitPnt, pnt;
    VectorF rayDir( end - start );
    rayDir.normalizeSafe();
-
-   if ( false )
-   {
-      PlaneF plane( Point3F(0,0,0), Point3F(0,0,1) );
-      Point3F sp( 0,0,-1 );
-      Point3F ep( 0,0,1 );
-
-      F32 t = plane.intersect( sp, ep );
-      Point3F hitPnt;
-      hitPnt.interpolate( sp, ep, t );
-   }
 
    for ( S32 i = 0; i < planeCount; i++ )
    {
@@ -1376,8 +1364,6 @@ void ConvexShape::_updateGeometry( bool updateCollision )
 	{
       U32 count = faceList[i].triangles.size();
 
-      S32 matID = mSurfaceUVs[i].matID;
-
       mSurfaceBuffers[mSurfaceUVs[i].matID].mPrimCount += count;
       mSurfaceBuffers[mSurfaceUVs[i].matID].mVertCount += count * 3;
 	}
@@ -1429,9 +1415,6 @@ void ConvexShape::_updateGeometry( bool updateCollision )
    {
       if (mSurfaceBuffers[i].mVertCount > 0)
       {
-         U32 primCount = mSurfaceBuffers[i].mPrimCount;
-         U32 vertCount = mSurfaceBuffers[i].mVertCount;
-
          mSurfaceBuffers[i].mVertexBuffer.set(GFX, mSurfaceBuffers[i].mVertCount, GFXBufferTypeStatic);
          VertexType *pVert = mSurfaceBuffers[i].mVertexBuffer.lock();
 
@@ -2171,4 +2154,4 @@ void ConvexShape::Geometry::generate(const Vector< PlaneF > &planes, const Vecto
    }
 }
 
-DEF_MATERIALASSET_BINDS(ConvexShape, Material);
+DEF_ASSET_BINDS(ConvexShape, Material);

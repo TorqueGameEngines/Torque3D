@@ -864,6 +864,49 @@ void TelnetDebugger::evaluateExpression(const char *tag, S32 frame, const char *
    if ( frame < 0 )
       frame = 0;
 
+   // Local variables use their own memory management and can't be queried by just executing
+   // TorqueScript, we have to go digging into the interpreter.
+   S32 evalBufferLen = dStrlen(evalBuffer);
+   bool isEvaluatingLocalVariable = evalBufferLen > 0 && evalBuffer[0] == '%';
+   if (isEvaluatingLocalVariable)
+   {
+      // See calculation of current frame in pushing a reference frame for console exec, we need access
+      // to the proper scope.
+      //frame = gEvalState.getTopOfStack() - frame - 1;
+      S32 stackIndex = gEvalState.getTopOfStack() - frame - 1;
+
+      const char* format = "EVALOUT %s %s\r\n";
+
+      gEvalState.pushDebugFrame(stackIndex);
+
+      Dictionary& stackFrame = gEvalState.getCurrentFrame();
+      StringTableEntry functionName = stackFrame.scopeName;
+      StringTableEntry namespaceName = stackFrame.scopeNamespace->mName;
+      StringTableEntry varToLookup = StringTable->insert(evalBuffer);
+
+      S32 registerId = stackFrame.code->variableRegisterTable.lookup(namespaceName, functionName, varToLookup);
+
+      if (registerId == -1)
+      {
+         // ERROR, can't read the variable!
+         send("EVALOUT \"\" \"\"");
+         return;
+      }
+
+      const char* varResult = gEvalState.getLocalStringVariable(registerId);
+
+      gEvalState.popFrame();
+
+      S32 len = dStrlen(format) + dStrlen(tag) + dStrlen(varResult);
+      char* buffer = new char[len];
+      dSprintf(buffer, len, format, tag, varResult[0] ? varResult : "\"\"");
+
+      send(buffer);
+      delete[] buffer;
+
+      return;
+   }
+
    // Build a buffer just big enough for this eval.
    const char* format = "return %s;";
    dsize_t len = dStrlen( format ) + dStrlen( evalBuffer );
@@ -872,14 +915,14 @@ void TelnetDebugger::evaluateExpression(const char *tag, S32 frame, const char *
 
    // Execute the eval.
    CodeBlock *newCodeBlock = new CodeBlock();
-   const char* result = newCodeBlock->compileExec( NULL, buffer, false, frame );
+   ConsoleValue result = newCodeBlock->compileExec( NULL, buffer, false, frame );
    delete [] buffer;
    
    // Create a new buffer that fits the result.
    format = "EVALOUT %s %s\r\n";
-   len = dStrlen( format ) + dStrlen( tag ) + dStrlen( result );
+   len = dStrlen( format ) + dStrlen( tag ) + dStrlen( result.getString() );
    buffer = new char[ len ];
-   dSprintf( buffer, len, format, tag, result[0] ? result : "\"\"" );
+   dSprintf( buffer, len, format, tag, result.getString()[0] ? result.getString() : "\"\"" );
 
    send( buffer );
    delete [] buffer;

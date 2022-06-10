@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -22,12 +22,20 @@
 
 #if SDL_VIDEO_DRIVER_COCOA
 
+#if !__has_feature(objc_arc)
+#error SDL must be built with Objective-C ARC (automatic reference counting) enabled
+#endif
+
 #include "SDL.h"
 #include "SDL_endian.h"
 #include "SDL_cocoavideo.h"
 #include "SDL_cocoashape.h"
 #include "SDL_cocoavulkan.h"
 #include "SDL_cocoametalview.h"
+
+@implementation SDL_VideoData
+
+@end
 
 /* Initialization/Query functions */
 static int Cocoa_VideoInit(_THIS);
@@ -37,13 +45,18 @@ static void Cocoa_VideoQuit(_THIS);
 
 static void
 Cocoa_DeleteDevice(SDL_VideoDevice * device)
+{ @autoreleasepool
 {
-    SDL_free(device->driverdata);
+    if (device->wakeup_lock) {
+        SDL_DestroyMutex(device->wakeup_lock);
+    }
+    CFBridgingRelease(device->driverdata);
     SDL_free(device);
-}
+}}
 
 static SDL_VideoDevice *
 Cocoa_CreateDevice(int devindex)
+{ @autoreleasepool
 {
     SDL_VideoDevice *device;
     SDL_VideoData *data;
@@ -53,16 +66,17 @@ Cocoa_CreateDevice(int devindex)
     /* Initialize all variables that we clean on shutdown */
     device = (SDL_VideoDevice *) SDL_calloc(1, sizeof(SDL_VideoDevice));
     if (device) {
-        data = (struct SDL_VideoData *) SDL_calloc(1, sizeof(SDL_VideoData));
+        data = [[SDL_VideoData alloc] init];
     } else {
-        data = NULL;
+        data = nil;
     }
     if (!data) {
         SDL_OutOfMemory();
         SDL_free(device);
         return NULL;
     }
-    device->driverdata = data;
+    device->driverdata = (void *)CFBridgingRetain(data);
+    device->wakeup_lock = SDL_CreateMutex();
 
     /* Set the function pointers */
     device->VideoInit = Cocoa_VideoInit;
@@ -73,6 +87,8 @@ Cocoa_CreateDevice(int devindex)
     device->GetDisplayModes = Cocoa_GetDisplayModes;
     device->SetDisplayMode = Cocoa_SetDisplayMode;
     device->PumpEvents = Cocoa_PumpEvents;
+    device->WaitEventTimeout = Cocoa_WaitEventTimeout;
+    device->SendWakeupEvent = Cocoa_SendWakeupEvent;
     device->SuspendScreenSaver = Cocoa_SuspendScreenSaver;
 
     device->CreateSDLWindow = Cocoa_CreateWindow;
@@ -92,14 +108,20 @@ Cocoa_CreateDevice(int devindex)
     device->RestoreWindow = Cocoa_RestoreWindow;
     device->SetWindowBordered = Cocoa_SetWindowBordered;
     device->SetWindowResizable = Cocoa_SetWindowResizable;
+    device->SetWindowAlwaysOnTop = Cocoa_SetWindowAlwaysOnTop;
     device->SetWindowFullscreen = Cocoa_SetWindowFullscreen;
     device->SetWindowGammaRamp = Cocoa_SetWindowGammaRamp;
     device->GetWindowGammaRamp = Cocoa_GetWindowGammaRamp;
-    device->SetWindowGrab = Cocoa_SetWindowGrab;
+    device->GetWindowICCProfile = Cocoa_GetWindowICCProfile;
+    device->GetWindowDisplayIndex = Cocoa_GetWindowDisplayIndex;
+    device->SetWindowMouseRect = Cocoa_SetWindowMouseRect;
+    device->SetWindowMouseGrab = Cocoa_SetWindowMouseGrab;
+    device->SetWindowKeyboardGrab = Cocoa_SetWindowKeyboardGrab;
     device->DestroyWindow = Cocoa_DestroyWindow;
     device->GetWindowWMInfo = Cocoa_GetWindowWMInfo;
     device->SetWindowHitTest = Cocoa_SetWindowHitTest;
     device->AcceptDragAndDrop = Cocoa_AcceptDragAndDrop;
+    device->FlashWindow = Cocoa_FlashWindow;
 
     device->shape_driver.CreateShaper = Cocoa_CreateShaper;
     device->shape_driver.SetWindowShape = Cocoa_SetWindowShape;
@@ -154,7 +176,7 @@ Cocoa_CreateDevice(int devindex)
     device->free = Cocoa_DeleteDevice;
 
     return device;
-}
+}}
 
 VideoBootStrap COCOA_bootstrap = {
     "cocoa", "SDL Cocoa video driver",
@@ -164,8 +186,9 @@ VideoBootStrap COCOA_bootstrap = {
 
 int
 Cocoa_VideoInit(_THIS)
+{ @autoreleasepool
 {
-    SDL_VideoData *data = (SDL_VideoData *) _this->driverdata;
+    SDL_VideoData *data = (__bridge SDL_VideoData *) _this->driverdata;
 
     Cocoa_InitModes(_this);
     Cocoa_InitKeyboard(_this);
@@ -173,29 +196,27 @@ Cocoa_VideoInit(_THIS)
         return -1;
     }
 
-    data->allow_spaces = ((floor(NSAppKitVersionNumber) > NSAppKitVersionNumber10_6) && SDL_GetHintBoolean(SDL_HINT_VIDEO_MAC_FULLSCREEN_SPACES, SDL_TRUE));
+    data.allow_spaces = SDL_GetHintBoolean(SDL_HINT_VIDEO_MAC_FULLSCREEN_SPACES, SDL_TRUE);
 
-    /* The IOPM assertion API can disable the screensaver as of 10.7. */
-    data->screensaver_use_iopm = floor(NSAppKitVersionNumber) > NSAppKitVersionNumber10_6;
-
-    data->swaplock = SDL_CreateMutex();
-    if (!data->swaplock) {
+    data.swaplock = SDL_CreateMutex();
+    if (!data.swaplock) {
         return -1;
     }
 
     return 0;
-}
+}}
 
 void
 Cocoa_VideoQuit(_THIS)
+{ @autoreleasepool
 {
-    SDL_VideoData *data = (SDL_VideoData *) _this->driverdata;
+    SDL_VideoData *data = (__bridge SDL_VideoData *) _this->driverdata;
     Cocoa_QuitModes(_this);
     Cocoa_QuitKeyboard(_this);
     Cocoa_QuitMouse(_this);
-    SDL_DestroyMutex(data->swaplock);
-    data->swaplock = NULL;
-}
+    SDL_DestroyMutex(data.swaplock);
+    data.swaplock = NULL;
+}}
 
 /* This function assumes that it's called from within an autorelease pool */
 NSImage *
@@ -212,7 +233,7 @@ Cocoa_CreateImage(SDL_Surface * surface)
         return nil;
     }
 
-    imgrep = [[[NSBitmapImageRep alloc] initWithBitmapDataPlanes: NULL
+    imgrep = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes: NULL
                     pixelsWide: converted->w
                     pixelsHigh: converted->h
                     bitsPerSample: 8
@@ -221,7 +242,7 @@ Cocoa_CreateImage(SDL_Surface * surface)
                     isPlanar: NO
                     colorSpaceName: NSDeviceRGBColorSpace
                     bytesPerRow: converted->pitch
-                    bitsPerPixel: converted->format->BitsPerPixel] autorelease];
+                    bitsPerPixel: converted->format->BitsPerPixel];
     if (imgrep == nil) {
         SDL_FreeSurface(converted);
         return nil;
@@ -241,7 +262,7 @@ Cocoa_CreateImage(SDL_Surface * surface)
         pixels += 4;
     }
 
-    img = [[[NSImage alloc] initWithSize: NSMakeSize(surface->w, surface->h)] autorelease];
+    img = [[NSImage alloc] initWithSize: NSMakeSize(surface->w, surface->h)];
     if (img != nil) {
         [img addRepresentation: imgrep];
     }
@@ -258,9 +279,17 @@ Cocoa_CreateImage(SDL_Surface * surface)
  *  versions remain identical!
  */
 
-void SDL_NSLog(const char *text)
+void SDL_NSLog(const char *prefix, const char *text)
 {
-    NSLog(@"%s", text);
+    @autoreleasepool {
+        NSString *nsText = [NSString stringWithUTF8String:text];
+        if (prefix) {
+            NSString *nsPrefix = [NSString stringWithUTF8String:prefix];
+            NSLog(@"%@: %@", nsPrefix, nsText);
+        } else {
+            NSLog(@"%@", nsText);
+        }
+    }
 }
 
 #endif /* SDL_VIDEO_DRIVER_COCOA */

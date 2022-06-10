@@ -30,13 +30,13 @@ function EWToolsPaletteWindow::loadToolsPalettes()
       exec( %file );
       %paletteGroup = 0;      
       
-      %i = %paletteId.getCount();
+      %i = $paletteId.getCount();
       for( ; %i != 0; %i--)
       {
-         %paletteId.getObject(0).visible = 0;
-         %paletteId.getObject(0).groupNum = %paletteGroup;
-         %paletteId.getObject(0).paletteName = %paletteId.getName();
-         ToolsPaletteArray.addGuiControl(%paletteId.getObject(0));
+         $paletteId.getObject(0).visible = 0;
+         $paletteId.getObject(0).groupNum = %paletteGroup;
+         $paletteId.getObject(0).paletteName = $paletteId.getName();
+         ToolsPaletteArray.addGuiControl($paletteId.getObject(0));
       }
       %paletteGroup++;
    }
@@ -49,13 +49,13 @@ function EWToolsPaletteWindow::loadToolsPalettes()
       exec( %file );
       %paletteGroup = 0;      
       
-      %i = %paletteId.getCount();
+      %i = $paletteId.getCount();
       for( ; %i != 0; %i--)
       {
-         %paletteId.getObject(0).visible = 0;
-         %paletteId.getObject(0).groupNum = %paletteGroup;
-         %paletteId.getObject(0).paletteName = %paletteId.getName();
-         ToolsPaletteArray.addGuiControl(%paletteId.getObject(0));
+         $paletteId.getObject(0).visible = 0;
+         $paletteId.getObject(0).groupNum = %paletteGroup;
+         $paletteId.getObject(0).paletteName = $paletteId.getName();
+         ToolsPaletteArray.addGuiControl($paletteId.getObject(0));
       }
       %paletteGroup++;
    }

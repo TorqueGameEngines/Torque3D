@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(WorldEditorMissionInspector,EditorGuiGroup) {
+$guiContent = new GuiControl(WorldEditorMissionInspector,EditorGuiGroup) {
    canSaveDynamicFields = "0";
    isContainer = "1";
    Profile = "ToolsGuiDefaultProfile";

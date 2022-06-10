@@ -201,7 +201,7 @@ function stateMachineFieldList::onSelect(%this)
    %index = %this.getParent().fieldID;
    
    %oldValue = %this.behavior.stateMachine.getValue(%index);
-   %this.behavior.stateMachine.setValue(%fieldType SPC %oldValue.y);
+   %this.behavior.stateMachine.setValue(%this.fieldType SPC %oldValue.y);
    
    %this.getParent().add(%fieldCtrl);
 }

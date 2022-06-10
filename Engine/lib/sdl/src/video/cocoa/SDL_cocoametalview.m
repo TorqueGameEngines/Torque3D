@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -31,6 +31,8 @@
 #if SDL_VIDEO_DRIVER_COCOA && (SDL_VIDEO_VULKAN || SDL_VIDEO_METAL)
 
 #include "SDL_events.h"
+#include "SDL_syswm.h"
+
 
 static int SDLCALL
 SDL_MetalViewEventWatch(void *userdata, SDL_Event *event)
@@ -87,7 +89,7 @@ SDL_MetalViewEventWatch(void *userdata, SDL_Event *event)
         /* Allow resize. */
         self.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
 
-        SDL_AddEventWatch(SDL_MetalViewEventWatch, self);
+        SDL_AddEventWatch(SDL_MetalViewEventWatch, (__bridge void *)(self));
 
         [self updateDrawableSize];
     }
@@ -97,13 +99,12 @@ SDL_MetalViewEventWatch(void *userdata, SDL_Event *event)
 
 - (void)dealloc
 {
-    SDL_DelEventWatch(SDL_MetalViewEventWatch, self);
-    [super dealloc];
+    SDL_DelEventWatch(SDL_MetalViewEventWatch, (__bridge void *)(self));
 }
 
 - (NSInteger)tag
 {
-    return METALVIEW_TAG;
+    return SDL_METALVIEW_TAG;
 }
 
 - (void)updateDrawableSize
@@ -133,7 +134,7 @@ SDL_MetalView
 Cocoa_Metal_CreateView(_THIS, SDL_Window * window)
 { @autoreleasepool {
     SDL_WindowData* data = (__bridge SDL_WindowData *)window->driverdata;
-    NSView *view = data->nswindow.contentView;
+    NSView *view = data.nswindow.contentView;
     BOOL highDPI = (window->flags & SDL_WINDOW_ALLOW_HIGHDPI) != 0;
     Uint32 windowID = SDL_GetWindowID(window);
     SDL_cocoametalview *newview;
@@ -149,7 +150,6 @@ Cocoa_Metal_CreateView(_THIS, SDL_Window * window)
     [view addSubview:newview];
 
     metalview = (SDL_MetalView)CFBridgingRetain(newview);
-    [newview release];
 
     return metalview;
 }}
@@ -172,8 +172,8 @@ void
 Cocoa_Metal_GetDrawableSize(_THIS, SDL_Window * window, int * w, int * h)
 { @autoreleasepool {
     SDL_WindowData *data = (__bridge SDL_WindowData *)window->driverdata;
-    NSView *view = data->nswindow.contentView;
-    SDL_cocoametalview* metalview = [view viewWithTag:METALVIEW_TAG];
+    NSView *contentView = data.sdlContentView;
+    SDL_cocoametalview* metalview = [contentView viewWithTag:SDL_METALVIEW_TAG];
     if (metalview) {
         CAMetalLayer *layer = (CAMetalLayer*)metalview.layer;
         SDL_assert(layer != NULL);
@@ -184,7 +184,18 @@ Cocoa_Metal_GetDrawableSize(_THIS, SDL_Window * window, int * w, int * h)
             *h = layer.drawableSize.height;
         }
     } else {
-        SDL_GetWindowSize(window, w, h);
+        /* Fall back to the viewport size. */
+        NSRect viewport = [contentView bounds];
+        if (window->flags & SDL_WINDOW_ALLOW_HIGHDPI) {
+            /* This gives us the correct viewport for a Retina-enabled view. */
+            viewport = [contentView convertRectToBacking:viewport];
+        }
+        if (w) {
+            *w = viewport.size.width;
+        }
+        if (h) {
+            *h = viewport.size.height;
+        }
     }
 }}
 

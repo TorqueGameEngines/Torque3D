@@ -1,0 +1,14 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="TriggerProxyMaterial"
+    materialDefinitionName="TriggerProxyMaterial"
+    VersionId="1">
+    <Material
+        Name="TriggerProxyMaterial">
+        <Material.Stages>
+            <Stages_beginarray
+                DiffuseMapAsset="ToolsModule:triggerProxyImage_image"/>
+        </Material.Stages>
+    </Material>
+</MaterialAsset>

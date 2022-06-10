@@ -69,6 +69,7 @@ function initializeAssetBrowser()
    exec("./guis/looseFileAudit.gui");
    exec("./guis/assetNameEdit.gui");
    exec("./guis/createNewCollectionSet.gui");
+   exec("./guis/setAssetTarget.gui");
 
    exec("./scripts/assetBrowser." @ $TorqueScriptFileExtension);
    exec("./scripts/popupMenus." @ $TorqueScriptFileExtension);
@@ -84,6 +85,8 @@ function initializeAssetBrowser()
    exec("./scripts/directoryHandling." @ $TorqueScriptFileExtension);
    exec("./scripts/selectPath." @ $TorqueScriptFileExtension);
    exec("./scripts/looseFileAudit." @ $TorqueScriptFileExtension);
+   exec("./scripts/creator." @ $TorqueScriptFileExtension);
+   exec("./scripts/setAssetTarget." @ $TorqueScriptFileExtension);
    
    //Processing for the different asset types
    exec("./scripts/assetTypes/component." @ $TorqueScriptFileExtension); 
@@ -152,6 +155,9 @@ function initializeAssetBrowser()
    ImportAssetWindow.importingFilesArray = new ArrayObject();
       
    ImportAssetWindow.importer = new AssetImporter();
+   
+   if(!isObject(AssetBrowserCreatorGroupsList))
+      new ArrayObject(AssetBrowserCreatorGroupsList);
       
    AssetBrowser.buildPopupMenus();
    
@@ -161,6 +167,15 @@ function initializeAssetBrowser()
 
 function AssetBrowserPlugin::onWorldEditorStartup( %this )
 { 
+}
+
+function AssetBrowserPlugin::onWorldEditorShutdown( %this )
+{
+   //force close us real fast to save off current settings/configs
+   if(AssetBrowser.isAwake())
+   {
+      AssetBrowser.hideDialog();
+   }
 }
 
 function AssetBrowserPlugin::initSettings( %this )

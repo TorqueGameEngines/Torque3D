@@ -5,75 +5,47 @@ function MainMenuGui::onAdd(%this)
 
 function MainMenuGui::onWake(%this)
 {
-   MainMenuButtonList.hidden = false; 
+   //In the BaseUI example case, the MainMenuGUI acts as our background
+   //So it's a logical control to set as our UINavigation as well. So we 
+   //set the MainMenuGUI's superClass to UINavigation to integrate it into
+   //that namespace to open up page navigation
+   
+   //At the same time, the MainMenuGUI control has the button holder, set to
+   //the MenuInputButtonContainer class, allowing us to set it as the active button
+   //holder here, prepping it for catching any button inputs to active commands
+   //Specifically, it sets the $activeMenuButtonContainer to be this, which allows
+   //other controls to manage what the behavior of the buttons is consistently
+   //without needing to worry about hardcoded names
    MainMenuButtonHolder.setActive();
-}
-
-function MainMenuGui::onSleep(%this)
-{
-   MainMenuButtonHolder.hidden = true;
+   
+   //We also have the MainMenuInputHandler, a GuiInputCtrl with the MenuInputHandler class
+   //This allows us to catch any input/axis event and pass it along to the active menuList
+   //or button containers to navigate the menus
+   //We set up this catch by making said control our first responder, here
+   MainMenuInputHandler.setFirstResponder();
+   
+   //Lastly, we go ahead and display some actual navigable content up on our main menu here
+   //In this case, we set the MainMenuButtonList as our root page, so we always come back
+   //to having the main menu buttons on screen if every other page is closed.
+   //This will ultimately call MainMenuButtonList::onOpen(), so to see where the navigation
+   //chain continues, see that function.
+   %this.setRootPage(MainMenuButtonList);
+   
+   //We also go ahead and mark for any future pages being added to the UINavigation's page stack
+   //to be prompted to resize when added. This isn't required, but helps keep pages formated to 
+   //the current size of the UINavigation, which is useful when dealing with aspect ratio or resolution
+   //changes.
+   %this.resizePages = true;
 }
 
 function MainMenuButtonHolder::onWake(%this)
 {
-   %this-->goButton.set("btn_a", "Return", "Go", "MainMenuButtonList.activateRow();");
-}
-
-function MainMenuButtonList::onAdd(%this)
-{
-   MainMenuButtonList.addRow("Single Player", "openSinglePlayerMenu", 0);
-   MainMenuButtonList.addRow("Create Server", "openMultiPlayerMenu", 4, -15);
-   MainMenuButtonList.addRow("Join Server", "openJoinServerMenu", 4, -15);
-   MainMenuButtonList.addRow("Options", "openOptionsMenu", 6, -15);
-   MainMenuButtonList.addRow("Open World Editor", "openWorldEditorBtn", 6, -15);
-   MainMenuButtonList.addRow("Open GUI Editor", "openGUIEditorBtn", 6, -15);
-   MainMenuButtonList.addRow("Exit Game", "quit", 8, -15);
-}
-
-function openSinglePlayerMenu()
-{
-   $pref::HostMultiPlayer=false;
-   Canvas.pushDialog(ChooseLevelDlg);
-   ChooseLevelDlg.returnGui = MainMenuGui; 
-   MainMenuButtonList.hidden = true; 
-   MainMenuButtonHolder.hidden = true;
-}
-
-function openMultiPlayerMenu()
-{
-   $pref::HostMultiPlayer=true;
-   Canvas.pushDialog(ChooseLevelDlg);
-   ChooseLevelDlg.returnGui = MainMenuGui; 
-   MainMenuButtonList.hidden = true; 
-}
-
-function openJoinServerMenu()
-{
-   Canvas.pushDialog(JoinServerMenu);
-   JoinServerMenu.returnGui = MainMenuGui; 
-   MainMenuButtonList.hidden = true; 
-}
-
-function openOptionsMenu()
-{
-   Canvas.pushDialog(OptionsMenu);
-   OptionsMenu.returnGui = MainMenuGui; 
-   MainMenuButtonList.hidden = true; 
-}
-
-function openWorldEditorBtn()
-{
-   fastLoadWorldEdit(1);
-}
-
-function openGUIEditorBtn()
-{
-   fastLoadGUIEdit(1);
-}
-
-function MainMenuGui::onReturnTo(%this)
-{
-   MainMenuButtonList.hidden = false;
-   MainMenuButtonList.setFirstResponder();
-   MainMenuButtonHolder.setActive();
+   //Because the blan slate MainMenuGUI doesn't have anything we need to bother with inputs on
+   //we just go ahead and disable all the buttons in our MainMenuButtonHolder to have
+   // a clean slate
+   %this-->button1.disable();
+   %this-->button2.disable();
+   %this-->button3.disable();
+   %this-->button4.disable();
+   %this-->button5.disable();
 }

@@ -357,7 +357,7 @@ void TSShapeConstructor::initPersistFields()
    endGroup("Collada");
 
    addGroup("Sequences");
-   addProtectedField("sequence", TypeStringFilename, NULL, &addSequenceFromField, &emptyStringProtectedGetFn,
+   addProtectedField("sequence", TypeStringFilename, 0, &addSequenceFromField, &emptyStringProtectedGetFn,
       "Legacy method of adding sequences to a DTS or DAE shape after loading.\n\n"
       "@tsexample\n"
       "singleton TSShapeConstructor(MyShapeDae)\n"
@@ -556,6 +556,24 @@ void TSShapeConstructor::_onUnload()
    mShape = NULL;
 }
 
+//-----------------------------------------------------------------------------
+void TSShapeConstructor::setShapeAssetId(StringTableEntry assetId)
+{
+   mShapeAssetId = assetId;
+   mShapeAsset = mShapeAssetId;
+   if (mShapeAsset.notNull())
+   {
+      Resource<TSShape> shape = mShapeAsset->getShapeResource();
+
+      if (shape)
+         _onLoad(shape);
+   }
+
+   if (mShape && mShape->needsReinit())
+   {
+      mShape->init();
+   }
+}
 //-----------------------------------------------------------------------------
 // Storage
 

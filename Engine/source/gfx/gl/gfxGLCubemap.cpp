@@ -308,7 +308,7 @@ U8* GFXGLCubemap::getTextureData(U32 face, U32 mip)
 
 GFXGLCubemapArray::GFXGLCubemapArray()
 {
-   mCubemap = NULL;
+   mCubemap = 0;
 }
 
 GFXGLCubemapArray::~GFXGLCubemapArray()

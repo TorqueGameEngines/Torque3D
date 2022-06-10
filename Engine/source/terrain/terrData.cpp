@@ -480,16 +480,21 @@ bool TerrainBlock::saveAsset()
 
       AssetDatabase.findAssetType(pAssetQuery, "TerrainMaterialAsset");
 
-      TerrainBlock* clientTerr = static_cast<TerrainBlock*>(getClientObject());
+      TerrainBlock* terr = static_cast<TerrainBlock*>(getClientObject());
+      if (!terr)
+      {
+         Con::warnf("No active client terrain while trying to save asset. Could be a server action, but should check to be sure!");
+         terr = this;
+      }
 
       for (U32 i = 0; i < pAssetQuery->mAssetList.size(); i++)
       {
          //Acquire it so we can check it for matches
          AssetPtr<TerrainMaterialAsset> terrMatAsset = pAssetQuery->mAssetList[i];
 
-         for (U32 m = 0; m < clientTerr->mFile->mMaterials.size(); m++)
+         for (U32 m = 0; m < terr->mFile->mMaterials.size(); m++)
          {
-            StringTableEntry intMatName = clientTerr->mFile->mMaterials[m]->getInternalName();
+            StringTableEntry intMatName = terr->mFile->mMaterials[m]->getInternalName();
 
             StringTableEntry assetMatDefName = terrMatAsset->getMaterialDefinitionName();
             if (assetMatDefName == intMatName)
@@ -992,8 +997,6 @@ void TerrainBlock::addMaterial( const String &name, U32 insertAt )
       mFile->mMaterials.push_back( mat );
       mFile->_initMaterialInstMapping();
 
-      bool isSrv = isServerObject();
-
       //now we update our asset
       if (mTerrainAsset)
       {
@@ -1418,7 +1421,7 @@ void TerrainBlock::unpackUpdate(NetConnection* con, BitStream *stream)
 
       char buffer[256];
       stream->readString(buffer);
-      bool validAsset = setTerrainAsset(StringTable->insert(buffer));
+      setTerrainAsset(StringTable->insert(buffer));
    }
    if (baseTexSizeChanged && isProperlyAdded())
       _updateBaseTexture(NONE);
@@ -1457,6 +1460,25 @@ void TerrainBlock::getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList)
 //-----------------------------------------------------------------------------
 // Console Methods
 //-----------------------------------------------------------------------------
+
+bool TerrainBlock::renameTerrainMaterial(StringTableEntry oldMatName, StringTableEntry newMatName)
+{
+   TerrainMaterial* newMat = TerrainMaterial::findOrCreate(newMatName);
+   if (!newMat)
+      return false;
+
+   U32 terrainMaterialCount = mFile->mMaterials.size();
+   for (U32 i = 0; i < terrainMaterialCount; i++)
+   {
+      if (mFile->mMaterials[i]->getInternalName() == oldMatName)
+      {
+         TerrainMaterial* oldMat = mFile->mMaterials[i];
+         mFile->mMaterials[i] = newMat;
+      }
+   }
+
+   return true;
+}
 
 DefineEngineMethod( TerrainBlock, save, bool, ( const char* fileName),,
 				   "@brief Saves the terrain block's terrain file to the specified file name.\n\n"
@@ -1613,3 +1635,33 @@ void TerrainBlock::deleteZodiacPrimitiveBuffer()
    }
 }
 
+DefineEngineMethod(TerrainBlock, getTerrain, String, (), , "Returns the terrain file used for this terrain block, either via the asset or the filename assigned, which ever is valid")
+{
+   return object->getTerrain(); 
+}
+DefineEngineMethod(TerrainBlock, getTerrainAsset, String, (), , "Returns the assetId used for this terrain block")
+{
+   return object->getTerrainAssetId();
+}
+DefineEngineMethod(TerrainBlock, setTerrain, bool, (const char* terrain), , "Terrain assignment.first tries asset then flat file.")
+{
+   return object->_setTerrain(StringTable->insert(terrain));
+}
+
+DefineEngineMethod(TerrainBlock, getTerrainMaterialCount, S32, (), , "Gets the number of terrain materials for this block")
+{
+   return object->getTerrainMaterialCount();
+}
+
+DefineEngineMethod(TerrainBlock, getTerrainMaterialName, const char*, (S32 index), , "Gets the number of terrain materials for this block")
+{
+   if (index < 0 || index >= object->getTerrainMaterialCount())
+      return StringTable->EmptyString();
+
+   return object->getTerrainMaterialName(index);
+}
+
+DefineEngineMethod(TerrainBlock, renameTerrainMaterial, bool, (const char* oldMaterialName, const char* newMaterialName), , "Updates the terrain material from the original to the new name in the file. Mostly used for import/conversions.")
+{
+   return object->renameTerrainMaterial(StringTable->insert(oldMaterialName), StringTable->insert(newMaterialName));
+}

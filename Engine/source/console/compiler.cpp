@@ -34,6 +34,15 @@
 
 #include "console/simBase.h"
 
+extern FuncVars gEvalFuncVars;
+extern FuncVars gGlobalScopeFuncVars;
+extern FuncVars *gFuncVars;
+
+namespace Con
+{
+extern bool scriptWarningsAsAsserts;
+};
+
 namespace Compiler
 {
 
@@ -60,6 +69,7 @@ namespace Compiler
    CompilerFloatTable  *gCurrentFloatTable, gGlobalFloatTable, gFunctionFloatTable;
    DataChunker          gConsoleAllocator;
    CompilerIdentTable   gIdentTable;
+   CompilerLocalVariableToRegisterMappingTable gFunctionVariableMappingTable;
 
    //------------------------------------------------------------
 
@@ -85,12 +95,15 @@ namespace Compiler
    //------------------------------------------------------------
 
    bool gSyntaxError = false;
+   bool gIsEvalCompile = false;
 
    //------------------------------------------------------------
 
    CompilerStringTable *getCurrentStringTable() { return gCurrentStringTable; }
    CompilerStringTable &getGlobalStringTable() { return gGlobalStringTable; }
    CompilerStringTable &getFunctionStringTable() { return gFunctionStringTable; }
+
+   CompilerLocalVariableToRegisterMappingTable& getFunctionVariableMappingTable() { return gFunctionVariableMappingTable; }
 
    void setCurrentStringTable(CompilerStringTable* cst) { gCurrentStringTable = cst; }
 
@@ -117,16 +130,88 @@ namespace Compiler
       getFunctionFloatTable().reset();
       getFunctionStringTable().reset();
       getIdentTable().reset();
+      getFunctionVariableMappingTable().reset();
+      gGlobalScopeFuncVars.clear();
+      gFuncVars = gIsEvalCompile ? &gEvalFuncVars : &gGlobalScopeFuncVars;
    }
 
    void *consoleAlloc(U32 size) { return gConsoleAllocator.alloc(size); }
    void consoleAllocReset() { gConsoleAllocator.freeBlocks(); }
 
+   void scriptErrorHandler(const char* str)
+   {
+      if (Con::scriptWarningsAsAsserts)
+      {
+         AssertISV(false, str);
+      }
+      else
+      {
+         Con::warnf(ConsoleLogEntry::Type::Script, "%s", str);
+      }
+   }
 }
 
 //-------------------------------------------------------------------------
 
 using namespace Compiler;
+
+S32 FuncVars::assign(StringTableEntry var, TypeReq currentType, S32 lineNumber, bool isConstant)
+{
+   std::unordered_map<StringTableEntry, Var>::iterator found = vars.find(var);
+   if (found != vars.end())
+   {
+      if (found->second.isConstant)
+      {
+         const char* str = avar("Script Warning: Reassigning variable %s when it is a constant. File: %s Line : %d", var, CodeBlock::smCurrentParser->getCurrentFile(), lineNumber);
+         scriptErrorHandler(str);
+      }
+      return found->second.reg;
+   }
+
+   S32 id = counter++;
+   vars[var] = { id, currentType, var, isConstant };
+   variableNameMap[id] = var;
+
+   return id;
+}
+
+S32 FuncVars::lookup(StringTableEntry var, S32 lineNumber)
+{
+   std::unordered_map<StringTableEntry, Var>::iterator found = vars.find(var);
+   
+   if (found == vars.end())
+   {
+      const char* str = avar("Script Warning: Variable %s referenced before used when compiling script. File: %s Line: %d", var, CodeBlock::smCurrentParser->getCurrentFile(), lineNumber);
+      scriptErrorHandler(str);
+      
+      return assign(var, TypeReqString, lineNumber, false);
+   }
+   
+   return found->second.reg;
+}
+
+TypeReq FuncVars::lookupType(StringTableEntry var, S32 lineNumber)
+{
+   std::unordered_map<StringTableEntry, Var>::iterator found = vars.find(var);
+
+   if (found == vars.end())
+   {
+      const char* str = avar("Script Warning: Variable %s referenced before used when compiling script. File: %s Line: %d", var, CodeBlock::smCurrentParser->getCurrentFile(), lineNumber);
+      scriptErrorHandler(str);
+      
+      assign(var, TypeReqString, lineNumber, false);
+      return vars.find(var)->second.currentType;
+   }
+   
+   return found->second.currentType;
+}
+
+void FuncVars::clear()
+{
+   vars.clear();
+   variableNameMap.clear();
+   counter = 0;
+}
 
 //-------------------------------------------------------------------------
 
@@ -204,6 +289,66 @@ void CompilerStringTable::write(Stream &st)
    st.write(totalLen);
    for (Entry *walk = list; walk; walk = walk->next)
       st.write(walk->len, walk->string);
+}
+
+//------------------------------------------------------------
+
+void CompilerLocalVariableToRegisterMappingTable::add(StringTableEntry functionName, StringTableEntry namespaceName, StringTableEntry varName)
+{
+   StringTableEntry funcLookupTableName = StringTable->insert(avar("%s::%s", namespaceName, functionName));
+
+   localVarToRegister[funcLookupTableName].varList.push_back(varName);;
+}
+
+S32 CompilerLocalVariableToRegisterMappingTable::lookup(StringTableEntry namespaceName, StringTableEntry functionName, StringTableEntry varName)
+{
+   StringTableEntry funcLookupTableName = StringTable->insert(avar("%s::%s", namespaceName, functionName));
+
+   auto functionPosition = localVarToRegister.find(funcLookupTableName);
+   if (functionPosition != localVarToRegister.end())
+   {
+      const auto& table = localVarToRegister[funcLookupTableName].varList;
+      auto varPosition = std::find(table.begin(), table.end(), varName);
+      if (varPosition != table.end())
+      {
+         return std::distance(table.begin(), varPosition);
+      }
+   }
+
+   Con::errorf("Unable to find local variable %s in function name %s", varName, funcLookupTableName);
+   return -1;
+}
+
+CompilerLocalVariableToRegisterMappingTable CompilerLocalVariableToRegisterMappingTable::copy()
+{
+   // Trivilly copyable as its all plain old data and using STL containers... (We want a deep copy though!)
+   CompilerLocalVariableToRegisterMappingTable table;
+   table.localVarToRegister = localVarToRegister;
+   return table;
+}
+
+void CompilerLocalVariableToRegisterMappingTable::reset()
+{
+   localVarToRegister.clear();
+}
+
+void CompilerLocalVariableToRegisterMappingTable::write(Stream& stream)
+{
+   stream.write((U32)localVarToRegister.size());
+
+   for (const auto& pair : localVarToRegister)
+   {
+      StringTableEntry functionName = pair.first;
+      stream.writeString(functionName);
+
+      const auto& localVariableTableForFunction = localVarToRegister[functionName].varList;
+      stream.write((U32)localVariableTableForFunction.size());
+
+      for (const StringTableEntry& varName : localVariableTableForFunction)
+      {
+         stream.writeString(varName);
+      }
+   }
 }
 
 //------------------------------------------------------------

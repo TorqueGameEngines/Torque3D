@@ -28,30 +28,23 @@
 // Stupid globals not declared in a header
 extern ExprEvalState gEvalState;
 
-SimConsoleEvent::SimConsoleEvent(S32 argc, ConsoleValueRef *argv, bool onObject)
+SimConsoleEvent::SimConsoleEvent(S32 argc, ConsoleValue *argv, bool onObject)
 {
    mOnObject = onObject;
    mArgc = argc;
 
-   mArgv = new ConsoleValueRef[argc];
+   mArgv = new ConsoleValue[argc]();
    for (int i=0; i<argc; i++)
    {
-      mArgv[i].value = new ConsoleValue();
-      mArgv[i].value->type = ConsoleValue::TypeInternalString;
-      mArgv[i].value->init();
-     if (argv)
-     {
-      mArgv[i].value->setStringValue((const char*)argv[i]);
-     }
+      if (argv)
+      {
+         mArgv[i].setString(argv[i].getString());
+      }
    }
 }
 
 SimConsoleEvent::~SimConsoleEvent()
 {
-   for (int i=0; i<mArgc; i++)
-   {
-      delete mArgv[i].value;
-   }
    delete[] mArgv;
 }
 
@@ -67,7 +60,7 @@ void SimConsoleEvent::process(SimObject* object)
       // Grab the function name. If '::' doesn't exist, then the schedule is
       // on a global function.
       char funcName[256];
-      dStrncpy(funcName, (const char*)mArgv[0], 256);
+      dStrncpy(funcName, mArgv[0].getString(), 256);
       char* func = dStrstr( funcName, (char*)"::" );
       if( func )
       {
@@ -95,11 +88,11 @@ void SimConsoleEvent::process(SimObject* object)
    }
 }
 
-void SimConsoleEvent::populateArgs(ConsoleValueRef *argv)
+void SimConsoleEvent::populateArgs(ConsoleValue *argv)
 {
    for (U32 i=0; i<mArgc; i++)
    {
-      argv[i].value = mArgv[i].value;
+      argv[i].setString(mArgv[i].getString());
    }
 }
 
@@ -107,7 +100,6 @@ void SimConsoleEvent::populateArgs(ConsoleValueRef *argv)
 
 SimConsoleThreadExecCallback::SimConsoleThreadExecCallback()
 {
-   retVal.value = NULL;
    sem = new Semaphore(0);
 }
 
@@ -116,37 +108,44 @@ SimConsoleThreadExecCallback::~SimConsoleThreadExecCallback()
    delete sem;
 }
 
-void SimConsoleThreadExecCallback::handleCallback(ConsoleValueRef ret)
+void SimConsoleThreadExecCallback::handleCallback(ConsoleValue ret)
 {
-   retVal = ret;
+   // can we move this pls?
+   retVal.setString(ret.getString());
    sem->release();
 }
 
-ConsoleValueRef SimConsoleThreadExecCallback::waitForResult()
+ConsoleValue SimConsoleThreadExecCallback::waitForResult()
 {
    if(sem->acquire(true))
    {
-      return retVal;
+      return std::move(retVal);
    }
 
-   return ConsoleValueRef();
+   return ConsoleValue();
 }
 
 //-----------------------------------------------------------------------------
 
-SimConsoleThreadExecEvent::SimConsoleThreadExecEvent(S32 argc, ConsoleValueRef *argv, bool onObject, SimConsoleThreadExecCallback *callback) :
+SimConsoleThreadExecEvent::SimConsoleThreadExecEvent(S32 argc, ConsoleValue *argv, bool onObject, SimConsoleThreadExecCallback *callback) :
    SimConsoleEvent(argc, argv, onObject), cb(callback)
 {
 }
 
 void SimConsoleThreadExecEvent::process(SimObject* object)
 {
-   ConsoleValueRef retVal;
-   if(mOnObject)
-      retVal = Con::execute(object, mArgc, mArgv);
+   if (cb)
+   {
+      if (mOnObject)
+         cb->handleCallback(std::move(Con::execute(object, mArgc, mArgv)));
+      else
+         cb->handleCallback(std::move(Con::execute(mArgc, mArgv)));
+   }
    else
-      retVal = Con::execute(mArgc, mArgv);
-
-   if(cb)
-      cb->handleCallback(retVal);
+   {
+      if (mOnObject)
+         Con::execute(object, mArgc, mArgv);
+      else
+         Con::execute(mArgc, mArgv);
+   }
 }

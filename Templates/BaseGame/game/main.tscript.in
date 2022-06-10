@@ -1,10 +1,6 @@
 $Core::windowIcon = "data/icon.png";
 $Core::splashWindowImage = "data/splash.png";
 
-// Display a splash window immediately to improve app responsiveness before
-// engine is initialized and main window created.
-displaySplashWindow($Core::splashWindowImage);
-
 // Console does something.
 setLogMode(6);
 
@@ -20,6 +16,18 @@ ModuleDatabase.setModuleExtension("module");
 ModuleDatabase.scanModules( "core", false );
 ModuleDatabase.LoadExplicit( "CoreModule" );
 
+// Display a splash window immediately to improve app responsiveness before
+// engine is initialized and main window created.
+if ($Server::Dedicated == false)
+{
+    if ($platform $= "windows")
+       displaySplashWindow($Core::splashWindowImage);
+}
+else
+{
+    $Video::forceDisplayAdapter = -1;
+}
+    
 //-----------------------------------------------------------------------------
 // Load any gameplay modules
 ModuleDatabase.scanModules( "data", false );
@@ -37,12 +45,12 @@ else
    //If nothing else set a main menu, try to do so now
    if(!isObject(Canvas.getContent()))
    {
-      %mainMenuGUI = ProjectSettings.value("UI/mainMenuName");
-      if (isObject( %mainMenuGUI ))
-         Canvas.setContent( %mainMenuGUI );
+      if (isObject( ProjectSettings.value("UI/mainMenuName") ))
+         Canvas.setContent( ProjectSettings.value("UI/mainMenuName") );
    }
 }
 
-closeSplashWindow();
+if ( ($Server::Dedicated == false) && ($platform $= "windows") )
+    closeSplashWindow();
 
 echo("Engine initialized...");

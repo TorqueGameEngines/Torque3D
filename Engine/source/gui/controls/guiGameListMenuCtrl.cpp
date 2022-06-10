@@ -237,7 +237,7 @@ void GuiGameListMenuCtrl::onRenderListOption(Row* row, Point2I currentOffset)
 
       // calculate text to be at the center between the arrows
       GFont* font = profile->mFont;
-      StringTableEntry text = row->mOptions[row->mSelectedOption];
+      StringTableEntry text = row->mOptions[row->mSelectedOption].mDisplayText;
       S32 textWidth = font->getStrWidth(text);
       S32 columnWidth = profile->mHitAreaLowerRight.x * xScale - profile->mRightPad - columnSplit;
       S32 columnCenter = columnSplit + (columnWidth >> 1);
@@ -274,8 +274,6 @@ void GuiGameListMenuCtrl::onRenderSliderOption(Row* row, Point2I currentOffset)
 
    Point2I arrowOffset;
    S32 columnSplit = profile->mColumnSplit * xScale;
-
-   S32 iconIndex;
 
    bool isRowSelected = (getSelected() != NO_ROW) && (row == mRows[getSelected()]);
    bool isRowHighlighted = (getHighlighted() != NO_ROW) ? ((row == mRows[getHighlighted()]) && (row->mEnabled)) : false;
@@ -361,10 +359,8 @@ void GuiGameListMenuCtrl::onRenderSliderOption(Row* row, Point2I currentOffset)
    // calculate text to be at the center between the arrows
    GFont* font = profile->mFont;
 
-   ConsoleValue val;
-   val.setFloatValue(row->mValue);
-
-   const char* stringVal = val.getStringValue();
+   char stringVal[32];
+   dSprintf(stringVal, 32, "%f", row->mValue);
 
    S32 textWidth = font->getStrWidth(stringVal);
    S32 columnWidth = profile->mHitAreaLowerRight.x * xScale - profile->mRightPad - columnSplit;
@@ -385,8 +381,6 @@ void GuiGameListMenuCtrl::onRenderKeybindOption(Row* row, Point2I currentOffset)
    S32 columnSplit = profile->mColumnSplit * xScale;
 
    S32 rowHeight = profile->getRowHeight();
-
-   S32 optionWidth = xScale - columnSplit;
 
    GFXDrawUtil* drawer = GFX->getDrawUtil();
    //drawer->drawBitmap(row->mBitmap, )
@@ -491,15 +485,18 @@ void GuiGameListMenuCtrl::addRow(const char* label, const char* optionsList, boo
 {
    static StringTableEntry DELIM = StringTable->insert("\t", true);
    Row* row = new Row();
-   Vector<StringTableEntry> options(__FILE__, __LINE__);
+   Vector<OptionEntry> options(__FILE__, __LINE__);
 
    S32 defaultOption = 0;
 
    S32 count = StringUnit::getUnitCount(optionsList, DELIM);
    for (S32 i = 0; i < count; ++i)
    {
+      OptionEntry e;
       const char* option = StringUnit::getUnit(optionsList, i, DELIM);
-      options.push_back(StringTable->insert(option, true));
+      e.mDisplayText = StringTable->insert(option, true);
+      e.mKeyString = e.mDisplayText;
+      options.push_back(e);
 
       if (String::compare(option, defaultValue) == 0)
          defaultOption = options.size() - 1;
@@ -546,7 +543,8 @@ Point2I  GuiGameListMenuCtrl::getMinExtent() const
 {
    Point2I parentMin = Parent::getMinExtent();
 
-   GuiGameListMenuProfile * profile = (GuiGameListMenuProfile *) mProfile;
+   GuiGameListMenuProfile * profile = dynamic_cast<GuiGameListMenuProfile*>(mProfile);
+   AssertFatal(profile, "Invalid profile for GuiGameListMenuCtrl!");
 
    S32 minHeight = 0;
    S32 rowHeight = profile->getRowHeight();
@@ -635,10 +633,13 @@ void GuiGameListMenuCtrl::enforceConstraints()
 
 void GuiGameListMenuCtrl::updateHeight()
 {
-   S32 minHeight = getMinExtent().y;
-   if (getHeight() < minHeight)
+   if (hasValidProfile())
    {
-      setHeight(minHeight);
+       S32 minHeight = getMinExtent().y;
+       if (getHeight() < minHeight)
+       {
+           setHeight(minHeight);
+       }
    }
 }
 
@@ -1047,7 +1048,6 @@ RectI GuiGameListMenuCtrl::getRowBounds(S32 rowIndex)
 {
    GuiGameListMenuProfile* profile = (GuiGameListMenuProfile*)mProfile;
 
-   F32 xScale = (float)getWidth() / profile->getRowWidth();
    S32 rowHeight = profile->getRowHeight();
 
    Point2I currentOffset = Point2I::Zero;
@@ -1077,10 +1077,36 @@ StringTableEntry GuiGameListMenuCtrl::getCurrentOption(S32 rowIndex) const
       Row* row = (Row*)mRows[rowIndex];
       if (row->mSelectedOption != NO_OPTION)
       {
-         return row->mOptions[row->mSelectedOption];
+         return row->mOptions[row->mSelectedOption].mDisplayText;
       }
    }
    return StringTable->insert("", false);
+}
+
+StringTableEntry GuiGameListMenuCtrl::getCurrentOptionKey(S32 rowIndex) const
+{
+   if (isValidRowIndex(rowIndex))
+   {
+      Row* row = (Row*)mRows[rowIndex];
+      if (row->mSelectedOption != NO_OPTION)
+      {
+         return row->mOptions[row->mSelectedOption].mKeyString;
+      }
+   }
+   return StringTable->insert("", false);
+}
+
+S32 GuiGameListMenuCtrl::getCurrentOptionIndex(S32 rowIndex) const
+{
+   if (isValidRowIndex(rowIndex))
+   {
+      Row* row = (Row*)mRows[rowIndex];
+      if (row->mSelectedOption != NO_OPTION)
+      {
+         return row->mSelectedOption;
+      }
+   }
+   return S32(-1);
 }
 
 bool GuiGameListMenuCtrl::selectOption(S32 rowIndex, const char* theOption)
@@ -1092,14 +1118,53 @@ bool GuiGameListMenuCtrl::selectOption(S32 rowIndex, const char* theOption)
 
    Row* row = (Row*)mRows[rowIndex];
 
-   for (Vector<StringTableEntry>::iterator anOption = row->mOptions.begin(); anOption < row->mOptions.end(); ++anOption)
+   for (Vector<OptionEntry>::iterator anOption = row->mOptions.begin(); anOption < row->mOptions.end(); ++anOption)
    {
-      if (String::compare(*anOption, theOption) == 0)
+      if (String::compare((*anOption).mDisplayText, theOption) == 0)
       {
          S32 newIndex = anOption - row->mOptions.begin();
          row->mSelectedOption = newIndex;
          return true;
       }
+   }
+
+   return false;
+}
+
+bool GuiGameListMenuCtrl::selectOptionByKey(S32 rowIndex, const char* optionKey)
+{
+   if (!isValidRowIndex(rowIndex))
+   {
+      return false;
+   }
+
+   Row* row = (Row*)mRows[rowIndex];
+
+   for (Vector<OptionEntry>::iterator anOption = row->mOptions.begin(); anOption < row->mOptions.end(); ++anOption)
+   {
+      if (String::compare((*anOption).mKeyString, optionKey) == 0)
+      {
+         S32 newIndex = anOption - row->mOptions.begin();
+         row->mSelectedOption = newIndex;
+         return true;
+      }
+   }
+
+   return false;
+}
+
+bool GuiGameListMenuCtrl::selectOptionByIndex(S32 rowIndex, S32 optionIndex)
+{
+   if (!isValidRowIndex(rowIndex) || (optionIndex < 0))
+   {
+      return false;
+   }
+
+   Row* row = (Row*)mRows[rowIndex];
+   if (optionIndex < row->mOptions.size())
+   {
+      row->mSelectedOption = optionIndex;
+      return true;
    }
 
    return false;
@@ -1121,13 +1186,31 @@ void GuiGameListMenuCtrl::setOptions(S32 rowIndex, const char* optionsList)
    for (S32 i = 0; i < count; ++i)
    {
       const char* option = StringUnit::getUnit(optionsList, i, DELIM);
-      row->mOptions[i] = StringTable->insert(option, true);
+      OptionEntry e;
+      e.mDisplayText = StringTable->insert(option, true);
+      e.mKeyString = e.mDisplayText;
+      row->mOptions[i] = e;
    }
 
    if (row->mSelectedOption >= row->mOptions.size())
    {
       row->mSelectedOption = row->mOptions.size() - 1;
    }
+}
+
+void GuiGameListMenuCtrl::addOption(S32 rowIndex, const char* displayText, const char* keyText)
+{
+   if (!isValidRowIndex(rowIndex))
+   {
+      return;
+   }
+
+   OptionEntry e;
+   e.mDisplayText = StringTable->insert(displayText, true);
+   e.mKeyString = (keyText[0] == '\0') ? e.mDisplayText : StringTable->insert(keyText, true);
+
+   Row* row = (Row*)mRows[rowIndex];
+   row->mOptions.push_back(e);
 }
 
 void GuiGameListMenuCtrl::clickOption(Row* row, S32 xPos)
@@ -1291,9 +1374,6 @@ void GuiGameListMenuCtrl::clickKeybind(Row* row, S32 xPos)
 
    S32 rowHeight = profile->getRowHeight();
 
-   S32 optionWidth = xScale - columnSplit;
-
-   GFXDrawUtil* drawer = GFX->getDrawUtil();
    //drawer->drawBitmap(row->mBitmap, )
 
    Point2I button;
@@ -1304,7 +1384,6 @@ void GuiGameListMenuCtrl::clickKeybind(Row* row, S32 xPos)
    buttonSize.x = rowHeight / 2;
    buttonSize.y = rowHeight / 2;
 
-   GFXTextureObject* texture = row->mBitmapTex;
    RectI rect(button, buttonSize);
 
    if (rect.pointInRect(Point2I(xPos, rowHeight / 2)))
@@ -1568,6 +1647,22 @@ DefineEngineMethod(GuiGameListMenuCtrl, getCurrentOption, const char*, (S32 row)
    return object->getCurrentOption(row);
 }
 
+DefineEngineMethod(GuiGameListMenuCtrl, getCurrentOptionKey, const char*, (S32 row), ,
+   "Gets the key string for the currently selected option of the given row.\n\n"
+   "@param row Index of the row to get the option from.\n"
+   "@return The key (or id) that was assigned to the selected option on the given row. If there is no selected option then the empty string is returned.")
+{
+   return object->getCurrentOptionKey(row);
+}
+
+DefineEngineMethod(GuiGameListMenuCtrl, getCurrentOptionIndex, S32, (S32 row), ,
+   "Gets the index into the option list for the currently selected option of the given row.\n\n"
+   "@param row Index of the row to get the option from.\n"
+   "@return The index of the selected option on the given row. If there is no selected option then -1 is returned.")
+{
+   return object->getCurrentOptionIndex(row);
+}
+
 DefineEngineMethod(GuiGameListMenuCtrl, selectOption, bool, (S32 row, const char* option), ,
    "Set the row's current option to the one specified\n\n"
    "@param row Index of the row to set an option on.\n"
@@ -1577,12 +1672,40 @@ DefineEngineMethod(GuiGameListMenuCtrl, selectOption, bool, (S32 row, const char
    return object->selectOption(row, option);
 }
 
+DefineEngineMethod(GuiGameListMenuCtrl, selectOptionByKey, bool, (S32 row, const char* optionKey), ,
+   "Set the row's current option to the one with the specified key.\n\n"
+   "@param row Index of the row to set an option on.\n"
+   "@param optionKey The key string that was assigned to the option to be made active.\n"
+   "@return True if the row contained the key and the option and was set, false otherwise.")
+{
+   return object->selectOptionByKey(row, optionKey);
+}
+
+DefineEngineMethod(GuiGameListMenuCtrl, selectOptionByIndex, bool, (S32 row, S32 optionIndex), ,
+   "Set the row's current option to the one at the specified index.\n\n"
+   "@param row Index of the row to set an option on.\n"
+   "@param optionIndex The index of the option to be made active.\n"
+   "@return True if the index was valid and the option and was set, false otherwise.")
+{
+   return object->selectOptionByIndex(row, optionIndex);
+}
+
 DefineEngineMethod(GuiGameListMenuCtrl, setOptions, void, (S32 row, const char* optionsList), ,
    "Sets the list of options on the given row.\n\n"
    "@param row Index of the row to set options on."
    "@param optionsList A tab separated list of options for the control.")
 {
    object->setOptions(row, optionsList);
+}
+
+DefineEngineMethod(GuiGameListMenuCtrl, addOption, void, (S32 row, const char* displayText, const char* keyText), (""),
+   "Adds an option to the list of options on the given row.\n\n"
+   "@param row Index of the row to add the option on.\n"
+   "@param displayText The text to display for this option.\n"
+   "@param keyText [Optional] The id string to associate with this value. "
+   "If unset, the id will be the same as the display text.\n")
+{
+   object->addOption(row, displayText, keyText);
 }
 
 DefineEngineMethod(GuiGameListMenuCtrl, getValue, F32, (S32 row), ,

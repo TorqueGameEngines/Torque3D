@@ -1,0 +1,20 @@
+function Car::onAdd(%this, %obj)
+{
+   Parent::onAdd(%this, %obj);
+
+   %obj.setWheelTire(0,CarTire);
+   %obj.setWheelTire(1,CarTire);
+   %obj.setWheelTire(2,CarTire);
+   %obj.setWheelTire(3,CarTire);
+
+   // Setup the car with some tires & springs
+   for (%i = %obj.getWheelCount() - 1; %i >= 0; %i--)
+   {
+      %obj.setWheelPowered(%i, true);
+      %obj.setWheelSpring(%i, CarSpring);
+   }
+
+   // Steer with the front tires
+   %obj.setWheelSteering(0, 1);
+   %obj.setWheelSteering(1, 1);
+}

@@ -11,7 +11,7 @@ singleton Material(TerrainFX_@)
    impactSoundId = "0";
 };
 
-new TerrainMaterial(@)
+singleton TerrainMaterial(@)
 {
    internalName = "@";
    diffuseMap = "";

@@ -189,7 +189,7 @@ bool CustomShaderFeatureData::hasFeature(String name)
    return false;
 }
 
-void CustomShaderFeatureData::writeLine(String format, S32 argc, ConsoleValueRef* argv)
+void CustomShaderFeatureData::writeLine(String format, S32 argc, ConsoleValue* argv)
 {
 #ifdef TORQUE_D3D11
    if (GFX->getAdapterType() == GFXAdapterType::Direct3D11)
@@ -236,7 +236,7 @@ DefineEngineStringlyVariadicMethod(CustomShaderFeatureData, writeLine, void, 3, 
    "@param args Zero or more arguments for the method.\n"
    "@return The result of the method call.")
 {
-   object->writeLine(argv[2], argc - 3, argv + 3);
+   object->writeLine(argv[2].getString(), argc - 3, argv + 3);
 }
 
 DefineEngineMethod(CustomShaderFeatureData, hasFeature, bool, (String name), (""), "")

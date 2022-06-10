@@ -85,7 +85,7 @@ AccumulationVolume::AccumulationVolume()
    mWorldToObj.identity();
 
    // Accumulation Texture.
-   INIT_IMAGEASSET(Texture);
+   INIT_ASSET(Texture);
 
    resetWorldBox();
 }
@@ -236,7 +236,7 @@ U32 AccumulationVolume::packUpdate( NetConnection *connection, U32 mask, BitStre
 
    if (stream->writeFlag(mask & InitialUpdateMask))
    {
-      PACK_IMAGEASSET(connection, Texture);
+      PACK_ASSET(connection, Texture);
    }
 
    return retMask;  
@@ -248,7 +248,7 @@ void AccumulationVolume::unpackUpdate( NetConnection *connection, BitStream *str
 
    if (stream->readFlag())
    {
-      UNPACK_IMAGEASSET(connection, Texture);
+      UNPACK_ASSET(connection, Texture);
       //setTexture(mTextureName);
    }
 }

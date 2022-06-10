@@ -1,11 +1,10 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(DatablockEditorCreatePrompt,EditorGuiGroup) {
+$guiContent = new GuiControl(DatablockEditorCreatePrompt,EditorGuiGroup) {
    position = "0 0";
    extent = "1024 768";
    minExtent = "8 2";
    horizSizing = "right";
    vertSizing = "bottom";
-   fixedAspectRatio = "0";
    profile = "ToolsGuiDefaultProfile";
    visible = "1";
    active = "1";
@@ -14,6 +13,7 @@
    isContainer = "1";
    canSave = "1";
    canSaveDynamicFields = "1";
+      fixedAspectRatio = "0";
 
    new GuiWindowCtrl() {
       text = "Create New Datablock";
@@ -32,18 +32,18 @@
       anchorBottom = "0";
       anchorLeft = "1";
       anchorRight = "0";
-      position = "389 252";
-      extent = "207 167";
+      position = "374 252";
+      extent = "309 167";
       minExtent = "8 2";
       horizSizing = "right";
       vertSizing = "bottom";
-      fixedAspectRatio = "0";
       profile = "ToolsGuiWindowProfile";
       visible = "1";
       active = "1";
       tooltipProfile = "ToolsGuiToolTipProfile";
       hovertime = "1000";
       isContainer = "1";
+      internalName = "promptWindow";
       canSave = "1";
       canSaveDynamicFields = "0";
 
@@ -61,7 +61,6 @@
          minExtent = "8 2";
          horizSizing = "right";
          vertSizing = "bottom";
-         fixedAspectRatio = "0";
          profile = "ToolsGuiTextProfile";
          visible = "1";
          active = "1";
@@ -86,11 +85,10 @@
          anchorLeft = "1";
          anchorRight = "0";
          position = "7 45";
-         extent = "191 17";
+         extent = "294 18";
          minExtent = "8 2";
          horizSizing = "right";
          vertSizing = "bottom";
-         fixedAspectRatio = "0";
          profile = "ToolsGuiTextEditProfile";
          visible = "1";
          active = "1";
@@ -106,12 +104,11 @@
          groupNum = "-1";
          buttonType = "PushButton";
          useMouseEvents = "0";
-         position = "7 137";
+         position = "111 137";
          extent = "122 22";
          minExtent = "8 2";
          horizSizing = "right";
          vertSizing = "bottom";
-         fixedAspectRatio = "0";
          profile = "ToolsGuiButtonProfile";
          visible = "1";
          active = "1";
@@ -128,12 +125,11 @@
          groupNum = "-1";
          buttonType = "PushButton";
          useMouseEvents = "0";
-         position = "135 137";
+         position = "239 137";
          extent = "63 22";
          minExtent = "8 2";
          horizSizing = "right";
          vertSizing = "bottom";
-         fixedAspectRatio = "0";
          profile = "ToolsGuiButtonProfile";
          visible = "1";
          active = "1";
@@ -159,7 +155,6 @@
          minExtent = "8 2";
          horizSizing = "right";
          vertSizing = "bottom";
-         fixedAspectRatio = "0";
          profile = "ToolsGuiTextProfile";
          visible = "1";
          active = "1";
@@ -182,11 +177,10 @@
          anchorLeft = "1";
          anchorRight = "0";
          position = "7 87";
-         extent = "191 19";
+         extent = "294 19";
          minExtent = "8 2";
          horizSizing = "right";
          vertSizing = "bottom";
-         fixedAspectRatio = "0";
          profile = "ToolsGuiPopUpMenuProfile";
          visible = "1";
          active = "1";
@@ -198,7 +192,6 @@
          canSaveDynamicFields = "0";
       };
       new GuiCheckBoxCtrl() {
-         useInactiveState = "0";
          text = "Client-Side Datablock";
          groupNum = "-1";
          buttonType = "ToggleButton";
@@ -208,10 +201,9 @@
          minExtent = "8 2";
          horizSizing = "right";
          vertSizing = "bottom";
-         fixedAspectRatio = "0";
          profile = "ToolsGuiCheckBoxProfile";
          visible = "1";
-         active = "1";
+         active = "0";
          tooltipProfile = "ToolsGuiToolTipProfile";
          hovertime = "1000";
          isContainer = "0";

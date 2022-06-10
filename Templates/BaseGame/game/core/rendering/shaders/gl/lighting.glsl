@@ -23,6 +23,8 @@
 #include "./torque.glsl"
 #include "./brdf.glsl"
 
+uniform float maxProbeDrawDistance;
+
 #ifndef TORQUE_SHADERGEN
 #line 27
 // These are the uniforms used by most lighting shaders.
@@ -106,7 +108,7 @@ struct Surface
 
 void updateSurface(inout Surface surface)
 {
-	surface.NdotV = abs(dot(surface.N, surface.V)) + 1e-5f; // avoid artifact
+	surface.NdotV = clamp( dot(surface.N, surface.V), 0.0009765625f,0.9990234375f);  //0.5f/512.0f (512 is size of dfg/brdf lookup tex)
 
     surface.linearRoughness = surface.roughness * surface.roughness;
     surface.linearRoughnessSq = surface.linearRoughness * surface.linearRoughness;
@@ -330,7 +332,7 @@ float defineSphereSpaceInfluence(vec3 wsPosition, vec3 wsProbePosition, float ra
 {
    vec3 L = wsProbePosition.xyz - wsPosition;
    float contribution = 1.0 - length(L) / radius;
-   return contribution;
+   return saturate(contribution);
 }
 
 float getDistBoxToPoint(vec3 pt, vec3 extents)
@@ -342,10 +344,9 @@ float getDistBoxToPoint(vec3 pt, vec3 extents)
 float defineBoxSpaceInfluence(vec3 wsPosition, mat4 worldToObj, float attenuation)
 {
    vec3 surfPosLS = tMul(worldToObj, vec4(wsPosition, 1.0)).xyz;
-   float atten = 1.0 - attenuation;
    float baseVal = 0.25;
    float dist = getDistBoxToPoint(surfPosLS, vec3(baseVal, baseVal, baseVal));
-   return saturate(smoothstep(baseVal + 0.0001, atten*baseVal, dist));
+   return saturate(smoothstep(baseVal, (baseVal-attenuation/2), dist));
 }
 
 // Box Projected IBL Lighting
@@ -367,9 +368,9 @@ vec3 boxProject(vec3 wsPosition, vec3 wsReflectVec, mat4 worldToObj, vec3 refSca
 }
 
 vec4 computeForwardProbes(Surface surface,
-    float cubeMips, int numProbes, mat4x4 worldToObjArray[MAX_FORWARD_PROBES], vec4 probeConfigData[MAX_FORWARD_PROBES], 
-    vec4 inProbePosArray[MAX_FORWARD_PROBES], vec4 refScaleArray[MAX_FORWARD_PROBES], vec4 inRefPosArray[MAX_FORWARD_PROBES],
-    float skylightCubemapIdx, sampler2D BRDFTexture, 
+    float cubeMips, int numProbes, mat4x4 inWorldToObjArray[MAX_FORWARD_PROBES], vec4 inProbeConfigData[MAX_FORWARD_PROBES], 
+    vec4 inProbePosArray[MAX_FORWARD_PROBES], vec4 inRefScaleArray[MAX_FORWARD_PROBES], vec4 inRefPosArray[MAX_FORWARD_PROBES],
+    vec3 wsEyePos, float skylightCubemapIdx, sampler2D BRDFTexture, 
 	samplerCubeArray irradianceCubemapAR, samplerCubeArray specularCubemapAR)
 {
    int i = 0;
@@ -384,47 +385,37 @@ vec4 computeForwardProbes(Surface surface,
   for (i = 0; i < numProbes; ++i)
   {
       contribution[i] = 0;
-
-      if (probeConfigData[i].r == 0) //box
+      float atten = 1.0-(length(wsEyePos-inProbePosArray[i].xyz)/maxProbeDrawDistance);
+      if (inProbeConfigData[i].r == 0) //box
       {
-         contribution[i] = defineBoxSpaceInfluence(surface.P, worldToObjArray[i], probeConfigData[i].b);
-         if (contribution[i] > 0.0)
-            probehits++;
+         contribution[i] = defineBoxSpaceInfluence(surface.P, inWorldToObjArray[i], inProbeConfigData[i].b)*atten;
       }
-      else if (probeConfigData[i].r == 1) //sphere
+      else if (inProbeConfigData[i].r == 1) //sphere
       {
-         contribution[i] = defineSphereSpaceInfluence(surface.P, inProbePosArray[i].xyz, probeConfigData[i].g);
-         if (contribution[i] > 0.0)
-            probehits++;
+         contribution[i] = defineSphereSpaceInfluence(surface.P, inProbePosArray[i].xyz, inProbeConfigData[i].g)*atten;
       }
 
-      contribution[i] = max(contribution[i], 0);
+      if (contribution[i]>0.0)
+         probehits++;
+      else
+         contribution[i] = 0.0;
 
       blendSum += contribution[i];
-      invBlendSum += (1.0f - contribution[i]);
    }
 
-   if (probehits > 1.0)
+   if (probehits > 1.0)//if we overlap
    {
+      invBlendSum = (probehits - blendSum)/(probehits-1); //grab the remainder 
       for (i = 0; i < numProbes; i++)
       {
-         blendFactor[i] = ((contribution[i] / blendSum)) / probehits;
-         blendFactor[i] *= ((contribution[i]) / invBlendSum);
-         blendFactor[i] = saturate(blendFactor[i]);
-         blendFacSum += blendFactor[i];
+         blendFactor[i] = contribution[i]/blendSum; //what % total is this instance
+         blendFactor[i] *= blendFactor[i] / invBlendSum;  //what should we add to sum to 1
+         blendFacSum += blendFactor[i]; //running tally of results
       }
 
-      // Normalize blendVal
-      if (blendFacSum == 0.0f) // Possible with custom weight
-      {
-         blendFacSum = 1.0f;
-      }
-
-      float invBlendSumWeighted = 1.0f / blendFacSum;
       for (i = 0; i < numProbes; ++i)
       {
-         blendFactor[i] *= invBlendSumWeighted;
-         contribution[i] *= blendFactor[i];
+         contribution[i] *= blendFactor[i]/blendFacSum; //normalize
       }
    }
 
@@ -471,8 +462,8 @@ vec4 computeForwardProbes(Surface surface,
       float contrib = contribution[i];
       if (contrib > 0.0f)
       {
-         float cubemapIdx = int(probeConfigData[i].a);
-         vec3 dir = boxProject(surface.P, surface.R, worldToObjArray[i], refScaleArray[i].xyz, inRefPosArray[i].xyz);
+         int cubemapIdx = int(inProbeConfigData[i].a);
+         vec3 dir = boxProject(surface.P, surface.R, inWorldToObjArray[i], inRefScaleArray[i].xyz, inRefPosArray[i].xyz);
 
          irradiance += textureLod(irradianceCubemapAR, vec4(dir, cubemapIdx), 0).xyz * contrib;
          specular += textureLod(specularCubemapAR, vec4(dir, cubemapIdx), lod).xyz * contrib;
@@ -491,8 +482,8 @@ vec4 computeForwardProbes(Surface surface,
    vec3 kD = 1.0f - F;
    kD *= 1.0f - surface.metalness;
 
-   float dfgNdotV = max( surface.NdotV , 0.0009765625f ); //0.5f/512.0f (512 is size of dfg/brdf lookup tex)
-   vec2 envBRDF = textureLod(BRDFTexture, vec2(dfgNdotV, surface.roughness),0).rg;
+   //float dfgNdotV = max( surface.NdotV , 0.0009765625f ); //0.5f/512.0f (512 is size of dfg/brdf lookup tex)
+   vec2 envBRDF = textureLod(BRDFTexture, vec2(surface.NdotV, surface.roughness),0).rg;
    specular *= F * envBRDF.x + surface.f90 * envBRDF.y;
    irradiance *= kD * surface.baseColor.rgb;
 
@@ -504,13 +495,16 @@ vec4 computeForwardProbes(Surface surface,
    float horizonOcclusion = 1.3;
    float horizon = saturate( 1 + horizonOcclusion * dot(surface.R, surface.N));
    horizon *= horizon;
-
-   return vec4((irradiance + specular) * horizon, 0);//alpha writes disabled
+#if CAPTURING == 1
+    return vec4(mix(surface.baseColor.rgb,(irradiance + specular* horizon) ,surface.metalness/2),0);
+#else
+   return vec4((irradiance + specular* horizon) , 0);//alpha writes disabled
+#endif
 }
 
 vec4 debugVizForwardProbes(Surface surface,
-    float cubeMips, int numProbes, mat4 worldToObjArray[MAX_FORWARD_PROBES], vec4 probeConfigData[MAX_FORWARD_PROBES], 
-    vec4 inProbePosArray[MAX_FORWARD_PROBES], vec4 refScaleArray[MAX_FORWARD_PROBES], vec4 inRefPosArray[MAX_FORWARD_PROBES],
+    float cubeMips, int numProbes, mat4 inWorldToObjArray[MAX_FORWARD_PROBES], vec4 inProbeConfigData[MAX_FORWARD_PROBES], 
+    vec4 inProbePosArray[MAX_FORWARD_PROBES], vec4 inRefScaleArray[MAX_FORWARD_PROBES], vec4 inRefPosArray[MAX_FORWARD_PROBES],
     float skylightCubemapIdx, sampler2D BRDFTexture, 
 	 samplerCubeArray irradianceCubemapAR, samplerCubeArray specularCubemapAR, int showAtten, int showContrib, int showSpec, int showDiff)
 {
@@ -527,15 +521,15 @@ vec4 debugVizForwardProbes(Surface surface,
   {
       contribution[i] = 0;
 
-      if (probeConfigData[i].r == 0) //box
+      if (inProbeConfigData[i].r == 0) //box
       {
-         contribution[i] = defineBoxSpaceInfluence(surface.P, worldToObjArray[i], probeConfigData[i].b);
+         contribution[i] = defineBoxSpaceInfluence(surface.P, inWorldToObjArray[i], inProbeConfigData[i].b);
          if (contribution[i] > 0.0)
             probehits++;
       }
-      else if (probeConfigData[i].r == 1) //sphere
+      else if (inProbeConfigData[i].r == 1) //sphere
       {
-         contribution[i] = defineSphereSpaceInfluence(surface.P, inProbePosArray[i].xyz, probeConfigData[i].g);
+         contribution[i] = defineSphereSpaceInfluence(surface.P, inProbePosArray[i].xyz, inProbeConfigData[i].g);
          if (contribution[i] > 0.0)
             probehits++;
       }
@@ -620,8 +614,8 @@ vec4 debugVizForwardProbes(Surface surface,
       float contrib = contribution[i];
       if (contrib > 0.0f)
       {
-         float cubemapIdx = probeConfigData[i].a;
-         vec3 dir = boxProject(surface.P, surface.R, worldToObjArray[i], refScaleArray[i].xyz, inRefPosArray[i].xyz);
+         float cubemapIdx = inProbeConfigData[i].a;
+         vec3 dir = boxProject(surface.P, surface.R, inWorldToObjArray[i], inRefScaleArray[i].xyz, inRefPosArray[i].xyz);
 
          irradiance += textureLod(irradianceCubemapAR, vec4(dir, cubemapIdx), 0).xyz * contrib;
          specular += textureLod(specularCubemapAR, vec4(dir, cubemapIdx), lod).xyz * contrib;
@@ -650,8 +644,7 @@ vec4 debugVizForwardProbes(Surface surface,
    vec3 kD = 1.0f - F;
    kD *= 1.0f - surface.metalness;
 
-   float dfgNdotV = max( surface.NdotV , 0.0009765625f ); //0.5f/512.0f (512 is size of dfg/brdf lookup tex)
-   vec2 envBRDF = textureLod(BRDFTexture, vec2(dfgNdotV, surface.roughness),0).rg;
+   vec2 envBRDF = textureLod(BRDFTexture, vec2(surface.NdotV, surface.roughness),0).rg;
    specular *= F * envBRDF.x + surface.f90 * envBRDF.y;
    irradiance *= kD * surface.baseColor.rgb;
 
@@ -664,5 +657,5 @@ vec4 debugVizForwardProbes(Surface surface,
    float horizon = saturate( 1 + horizonOcclusion * dot(surface.R, surface.N));
    horizon *= horizon;
 
-   return vec4((irradiance + specular) * horizon, 0);//alpha writes disabled
+   return vec4((irradiance + specular* horizon) , 0);//alpha writes disabled
 }

@@ -1,0 +1,14 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="WarningMaterial"
+    materialDefinitionName="WarningMaterial"
+    VersionId="1">
+    <Material
+        Name="WarningMaterial">
+        <Material.Stages>
+            <Stages_beginarray
+                DiffuseMapAsset="Core_Rendering:missingTexture_image"/>
+        </Material.Stages>
+    </Material>
+</MaterialAsset>

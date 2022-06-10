@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(MessagePopupDlg) {
+$guiContent = new GuiControl(MessagePopupDlg) {
    profile = "GuiDefaultProfile";
    horizSizing = "width";
    vertSizing = "height";

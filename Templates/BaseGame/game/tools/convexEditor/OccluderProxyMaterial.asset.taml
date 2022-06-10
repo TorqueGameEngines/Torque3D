@@ -1,7 +1,0 @@
-<MaterialAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    AssetName="OccluderProxyMaterial"
-    scriptFile="@assetFile=materials.tscript"
-    materialDefinitionName="OccluderProxyMaterial"
-    VersionId="1" />

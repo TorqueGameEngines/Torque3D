@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -64,7 +64,7 @@ int Android_SurfaceWidth           = 0;
 int Android_SurfaceHeight          = 0;
 static int Android_DeviceWidth     = 0;
 static int Android_DeviceHeight    = 0;
-static Uint32 Android_ScreenFormat = SDL_PIXELFORMAT_UNKNOWN;
+static Uint32 Android_ScreenFormat = SDL_PIXELFORMAT_RGB565; /* Default SurfaceView format, in case this is queried before being filled */
 static int Android_ScreenRate      = 0;
 SDL_sem *Android_PauseSem          = NULL;
 SDL_sem *Android_ResumeSem         = NULL;
@@ -122,12 +122,14 @@ Android_CreateDevice(int devindex)
     device->SetWindowTitle = Android_SetWindowTitle;
     device->SetWindowFullscreen = Android_SetWindowFullscreen;
     device->MinimizeWindow = Android_MinimizeWindow;
+    device->SetWindowResizable = Android_SetWindowResizable;
     device->DestroyWindow = Android_DestroyWindow;
     device->GetWindowWMInfo = Android_GetWindowWMInfo;
 
     device->free = Android_DeleteDevice;
 
     /* GL pointers */
+#if SDL_VIDEO_OPENGL_EGL
     device->GL_LoadLibrary = Android_GLES_LoadLibrary;
     device->GL_GetProcAddress = Android_GLES_GetProcAddress;
     device->GL_UnloadLibrary = Android_GLES_UnloadLibrary;
@@ -137,6 +139,7 @@ Android_CreateDevice(int devindex)
     device->GL_GetSwapInterval = Android_GLES_GetSwapInterval;
     device->GL_SwapWindow = Android_GLES_SwapWindow;
     device->GL_DeleteContext = Android_GLES_DeleteContext;
+#endif
 
 #if SDL_VIDEO_VULKAN
     device->Vulkan_LoadLibrary = Android_Vulkan_LoadLibrary;
@@ -194,7 +197,7 @@ Android_VideoInit(_THIS)
         return -1;
     }
     display = SDL_GetDisplay(display_index);
-    display->orientation = Android_JNI_GetDisplayOrientation();    
+    display->orientation = Android_JNI_GetDisplayOrientation();
 
     SDL_AddDisplayMode(&_this->displays[0], &mode);
 
@@ -222,14 +225,52 @@ Android_GetDisplayDPI(_THIS, SDL_VideoDisplay *display, float *ddpi, float *hdpi
 }
 
 void
-Android_SetScreenResolution(int surfaceWidth, int surfaceHeight, int deviceWidth, int deviceHeight, Uint32 format, float rate)
+Android_SetScreenResolution(int surfaceWidth, int surfaceHeight, int deviceWidth, int deviceHeight, float rate)
 {
     Android_SurfaceWidth  = surfaceWidth;
     Android_SurfaceHeight = surfaceHeight;
     Android_DeviceWidth   = deviceWidth;
     Android_DeviceHeight  = deviceHeight;
-    Android_ScreenFormat  = format;
     Android_ScreenRate    = (int)rate;
+}
+
+static
+Uint32 format_to_pixelFormat(int format) {
+    Uint32 pf;
+    if (format == AHARDWAREBUFFER_FORMAT_R8G8B8A8_UNORM) {  /* 1 */
+        pf = SDL_PIXELFORMAT_RGBA8888;
+    } else if (format == AHARDWAREBUFFER_FORMAT_R8G8B8X8_UNORM) { /* 2 */
+        pf = SDL_PIXELFORMAT_RGBX8888;
+    } else if (format == AHARDWAREBUFFER_FORMAT_R8G8B8_UNORM) { /* 3 */
+        pf = SDL_PIXELFORMAT_RGB24;
+    } else if (format == AHARDWAREBUFFER_FORMAT_R5G6B5_UNORM) { /* 4*/
+        pf = SDL_PIXELFORMAT_RGB565;
+    } else if (format == 5) {
+        pf = SDL_PIXELFORMAT_BGRA8888;
+    } else if (format == 6) {
+        pf = SDL_PIXELFORMAT_RGBA5551;
+    } else if (format == 7) {
+        pf = SDL_PIXELFORMAT_RGBA4444;
+    } else {
+        pf = SDL_PIXELFORMAT_UNKNOWN;
+    }
+    return pf;
+}
+
+void
+Android_SetFormat(int format_wanted, int format_got)
+{
+    Uint32 pf_wanted;
+    Uint32 pf_got;
+
+    pf_wanted = format_to_pixelFormat(format_wanted);
+    pf_got = format_to_pixelFormat(format_got);
+
+    Android_ScreenFormat = pf_got;
+
+    SDL_Log("pixel format wanted %s (%d), got %s (%d)",
+            SDL_GetPixelFormatName(pf_wanted), format_wanted,
+            SDL_GetPixelFormatName(pf_got), format_got);
 }
 
 void Android_SendResize(SDL_Window *window)

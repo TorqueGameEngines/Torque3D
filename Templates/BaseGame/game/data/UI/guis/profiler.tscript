@@ -101,7 +101,7 @@ function showMetics(%var)
 
 GlobalActionMap.bind(keyboard, "ctrl F2", showMetics);
 
-%guiContent = new GuiControl(FrameOverlayGui) {
+$guiContent = new GuiControl(FrameOverlayGui) {
 	profile = "GuiModelessDialogProfile";
 	horizSizing = "right";
 	vertSizing = "bottom";
@@ -192,8 +192,7 @@ function sfxMetricsCallback()
 {
    return "  | SFX |" @
           "  Sounds: " @ $SFX::numSounds @
-          "  Lists: " @ ( $SFX::numSources - $SFX::numSounds - $SFX::Device::fmodNumEventSource ) @
-          "  Events: " @ $SFX::fmodNumEventSources @
+          "  Lists: " @ ( $SFX::numSources - $SFX::numSounds ) @
           "  Playing: " @ $SFX::numPlaying @
           "  Culled: " @ $SFX::numCulled @
           "  Voices: " @ $SFX::numVoices @

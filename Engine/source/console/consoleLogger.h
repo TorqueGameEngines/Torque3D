@@ -81,7 +81,7 @@ class ConsoleLogger : public SimObject
       /// // Example script constructor usage.
       /// %obj = new ConsoleLogger( objName, logFileName, [append = false] );
       /// @endcode
-      bool processArguments( S32 argc, ConsoleValueRef *argv );
+      bool processArguments( S32 argc, ConsoleValue *argv );
 
       /// Default constructor, make sure to initalize
       ConsoleLogger();

@@ -5,13 +5,13 @@
 # stolen from Manish Singh
 # Shamelessly stolen from Owen Taylor
 
-# serial 1
+# serial 2
 
 dnl AM_PATH_SDL2([MINIMUM-VERSION, [ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]]])
 dnl Test for SDL, and define SDL_CFLAGS and SDL_LIBS
 dnl
 AC_DEFUN([AM_PATH_SDL2],
-[dnl 
+[dnl
 dnl Get the cflags and libraries from the sdl2-config script
 dnl
 AC_ARG_WITH(sdl-prefix,[  --with-sdl-prefix=PFX   Prefix where SDL is installed (optional)],
@@ -80,41 +80,19 @@ dnl Now check if the installed SDL is sufficiently new. (Also sanity
 dnl checks the results of sdl2-config to some extent
 dnl
       rm -f conf.sdltest
-      AC_TRY_RUN([
+      AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include "SDL.h"
-
-char*
-my_strdup (char *str)
-{
-  char *new_str;
-  
-  if (str)
-    {
-      new_str = (char *)malloc ((strlen (str) + 1) * sizeof(char));
-      strcpy (new_str, str);
-    }
-  else
-    new_str = NULL;
-  
-  return new_str;
-}
 
 int main (int argc, char *argv[])
 {
   int major, minor, micro;
-  char *tmp_version;
+  FILE *fp = fopen("conf.sdltest", "w");
 
-  /* This hangs on some systems (?)
-  system ("touch conf.sdltest");
-  */
-  { FILE *fp = fopen("conf.sdltest", "a"); if ( fp ) fclose(fp); }
+  if (fp) fclose(fp);
 
-  /* HP/UX 9 (%@#!) writes to sscanf strings */
-  tmp_version = my_strdup("$min_sdl_version");
-  if (sscanf(tmp_version, "%d.%d.%d", &major, &minor, &micro) != 3) {
+  if (sscanf("$min_sdl_version", "%d.%d.%d", &major, &minor, &micro) != 3) {
      printf("%s, bad version string\n", "$min_sdl_version");
      exit(1);
    }
@@ -137,7 +115,7 @@ int main (int argc, char *argv[])
     }
 }
 
-],, no_sdl=yes,[echo $ac_n "cross compiling; assumed OK... $ac_c"])
+]])], [], [no_sdl=yes], [echo $ac_n "cross compiling; assumed OK... $ac_c"])
         CFLAGS="$ac_save_CFLAGS"
         CXXFLAGS="$ac_save_CXXFLAGS"
         LIBS="$ac_save_LIBS"
@@ -165,7 +143,7 @@ int main (int argc, char *argv[])
           CFLAGS="$CFLAGS $SDL_CFLAGS"
           CXXFLAGS="$CXXFLAGS $SDL_CFLAGS"
           LIBS="$LIBS $SDL_LIBS"
-          AC_TRY_LINK([
+          AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #include <stdio.h>
 #include "SDL.h"
 
@@ -173,7 +151,7 @@ int main(int argc, char *argv[])
 { return 0; }
 #undef  main
 #define main K_and_R_C_main
-],      [ return 0; ],
+]], [[ return 0; ]])],
         [ echo "*** The test program compiled, but did not run. This usually means"
           echo "*** that the run-time linker is not finding SDL or finding the wrong"
           echo "*** version of SDL. If it is not finding SDL, you'll need to set your"
@@ -228,7 +206,7 @@ int main(int argc, char *argv[])
 # ----------------------------------
 AC_DEFUN([PKG_PROG_PKG_CONFIG],
 [m4_pattern_forbid([^_?PKG_[A-Z_]+$])
-m4_pattern_allow([^PKG_CONFIG(_PATH)?$])
+m4_pattern_allow([^PKG_CONFIG(_PATH|_LIBDIR)?$])
 AC_ARG_VAR([PKG_CONFIG], [path to pkg-config utility])
 AC_ARG_VAR([PKG_CONFIG_PATH], [directories to add to pkg-config's search path])
 AC_ARG_VAR([PKG_CONFIG_LIBDIR], [path overriding pkg-config's built-in search path])
@@ -309,7 +287,7 @@ AC_ARG_VAR([$1][_CFLAGS], [C compiler flags for $1, overriding pkg-config])dnl
 AC_ARG_VAR([$1][_LIBS], [linker flags for $1, overriding pkg-config])dnl
 
 pkg_failed=no
-AC_MSG_CHECKING([for $1])
+AC_MSG_CHECKING([for $2])
 
 _PKG_CONFIG([$1][_CFLAGS], [cflags], [$2])
 _PKG_CONFIG([$1][_LIBS], [libs], [$2])
@@ -337,7 +315,7 @@ $$1_PKG_ERRORS
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-_PKG_TEXT])dnl
+_PKG_TEXT])[]dnl
         ])
 elif test $pkg_failed = untried; then
      	AC_MSG_RESULT([no])
@@ -348,7 +326,7 @@ path to pkg-config.
 
 _PKG_TEXT
 
-To get pkg-config, see <http://pkg-config.freedesktop.org/>.])dnl
+To get pkg-config, see <http://pkg-config.freedesktop.org/>.])[]dnl
         ])
 else
 	$1[]_CFLAGS=$pkg_cv_[]$1[]_CFLAGS

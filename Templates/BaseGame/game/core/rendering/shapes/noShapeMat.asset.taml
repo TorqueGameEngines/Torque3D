@@ -1,0 +1,18 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="NoShapeMat"
+    materialDefinitionName="NoShapeMat"
+    VersionId="1">
+    <Material
+        Name="NoShapeMat"
+        mapTo="NoShape"
+        translucent="1"
+        translucentBlendOp="LerpAlpha";
+        castShadows="0">
+        <Material.Stages>
+            <Stages_beginarray
+                diffuseColor="0.8 0.003067 0 .8"/>
+        </Material.Stages>
+    </Material>
+</MaterialAsset>

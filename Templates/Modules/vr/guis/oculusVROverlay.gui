@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = singleton GuiControl(OculusVROverlay) {
+$guiContent = singleton GuiControl(OculusVROverlay) {
    canSaveDynamicFields = "0";
    Enabled = "1";
    isContainer = "1";

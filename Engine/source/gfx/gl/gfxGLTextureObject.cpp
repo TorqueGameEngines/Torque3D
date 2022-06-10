@@ -45,8 +45,8 @@ GFXGLTextureObject::GFXGLTextureObject(GFXDevice * aDevice, GFXTextureProfile *p
    mFrameAllocatorPtr(NULL)
 {
 
-#if TORQUE_DEBUG
-   mFrameAllocatorMarkGuard == FrameAllocator::getWaterMark();
+#ifdef TORQUE_DEBUG
+   mFrameAllocatorMarkGuard = FrameAllocator::getWaterMark();
 #endif
 
    dMemset(&mLockedRect, 0, sizeof(mLockedRect));
@@ -90,7 +90,7 @@ GFXLockedRect* GFXGLTextureObject::lock(U32 mipLevel, RectI *inRect)
    mFrameAllocatorMark = FrameAllocator::getWaterMark();
    mFrameAllocatorPtr = (U8*)FrameAllocator::alloc( size );
    mLockedRect.bits = mFrameAllocatorPtr;
-#if TORQUE_DEBUG
+#ifdef TORQUE_DEBUG
    mFrameAllocatorMarkGuard = FrameAllocator::getWaterMark();
 #endif
    
@@ -162,8 +162,8 @@ bool GFXGLTextureObject::copyToBmp(GBitmap * bmp)
    if (mFormat != GFXFormatR16G16B16A16F && mFormat != GFXFormatR8G8B8A8 && mFormat != GFXFormatR8G8B8A8_LINEAR_FORCE && mFormat != GFXFormatR8G8B8A8_SRGB)
 	   return false;
 
-   AssertFatal(bmp->getWidth() == getWidth(), "GFXGLTextureObject::copyToBmp - invalid size");
-   AssertFatal(bmp->getHeight() == getHeight(), "GFXGLTextureObject::copyToBmp - invalid size");
+   AssertFatal(bmp->getWidth() == getWidth(), avar("GFXGLTextureObject::copyToBmp - Width mismatch: %i vs %i", bmp->getWidth(), getWidth()));
+   AssertFatal(bmp->getHeight() == getHeight(), avar("GFXGLTextureObject::copyToBmp - Height mismatch: %i vs %i", bmp->getHeight(), getHeight()));
 
    PROFILE_SCOPE(GFXGLTextureObject_copyToBmp);
 

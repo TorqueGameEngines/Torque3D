@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -279,7 +279,7 @@ static int ConnectSensor(ISensor *sensor)
 
     hr = ISensor_GetFriendlyName(sensor, &bstr_name);
     if (SUCCEEDED(hr) && bstr_name) {
-        name = WIN_StringToUTF8(bstr_name);
+        name = WIN_StringToUTF8W(bstr_name);
     } else {
         name = SDL_strdup("Unknown Sensor");
     }
@@ -294,6 +294,7 @@ static int ConnectSensor(ISensor *sensor)
     new_sensors = (SDL_Windows_Sensor *)SDL_realloc(SDL_sensors, (SDL_num_sensors + 1) * sizeof(SDL_Windows_Sensor));
     if (new_sensors == NULL) {
         SDL_UnlockSensors();
+        SDL_free(name);
         return SDL_OutOfMemory();
     }
 
@@ -324,7 +325,10 @@ static int DisconnectSensor(ISensor *sensor)
     for (i = 0; i < SDL_num_sensors; ++i) {
         old_sensor = &SDL_sensors[i];
         if (sensor == old_sensor->sensor) {
-            ISensor_SetEventSink(sensor, NULL);
+            /* This call hangs for some reason:
+             * https://github.com/libsdl-org/SDL/issues/5288
+             */
+            /*ISensor_SetEventSink(sensor, NULL);*/
             ISensor_Release(sensor);
             SDL_free(old_sensor->name);
             --SDL_num_sensors;
@@ -351,12 +355,14 @@ SDL_WINDOWS_SensorInit(void)
 
     hr = CoCreateInstance(&SDL_CLSID_SensorManager, NULL, CLSCTX_INPROC_SERVER, &SDL_IID_SensorManager, (LPVOID *) &SDL_sensor_manager);
     if (FAILED(hr)) {
-        return WIN_SetErrorFromHRESULT("Couldn't create the sensor manager", hr);
+        /* If we can't create a sensor manager (i.e. on Wine), we won't have any sensors, but don't fail the init */
+        return 0; /* WIN_SetErrorFromHRESULT("Couldn't create the sensor manager", hr); */
     }
 
     hr = ISensorManager_SetEventSink(SDL_sensor_manager, &sensor_manager_events);
     if (FAILED(hr)) {
         ISensorManager_Release(SDL_sensor_manager);
+        SDL_sensor_manager = NULL;
         return WIN_SetErrorFromHRESULT("Couldn't set the sensor manager event sink", hr);
     }
 

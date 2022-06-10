@@ -1,4 +1,4 @@
-%guiContent = new GuiControl(SuperTooltipDlg) {
+$guiContent = new GuiControl(SuperTooltipDlg) {
    canSaveDynamicFields = "0";
    Profile = "GuiTransparentProfileModeless";
    class = "SuperTooltip";

@@ -43,6 +43,10 @@ typedef unsigned long  U64;
 // Compiler Version
 #define TORQUE_COMPILER_GCC (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
 
+#define TORQUE_FORCEINLINE __attribute__((always_inline))
+#define TORQUE_CASE_FALLTHROUGH __attribute__((fallthrough))
+#define TORQUE_NOINLINE __attribute__ ((noinline))
+#define TORQUE_UNLIKELY
 
 //--------------------------------------
 // Identify the compiler string
@@ -103,7 +107,7 @@ typedef unsigned long  U64;
 // This could be reconfigured for static builds, though minimal impact
 //#     define TORQUE_SUPPORTS_NASM
 #  endif
-#else 
+#else
 #  error "GCC: Unsupported Operating System"
 #endif
 
@@ -165,5 +169,8 @@ typedef unsigned long  U64;
 #endif
 #endif
 
-#endif // INCLUDED_TYPES_GCC_H
+#define TORQUE_U16_ENDIANSWAP_BUILTIN __builtin_bswap16
+#define TORQUE_U32_ENDIANSWAP_BUILTIN __builtin_bswap32
+#define TORQUE_U64_ENDIANSWAP_BUILTIN __builtin_bswap64
 
+#endif // INCLUDED_TYPES_GCC_H

@@ -114,15 +114,15 @@ struct StringStack
    }
 
    /// Get an integer representation of the top of the stack.
-   inline U32 getIntValue()
+   inline S64 getIntValue()
    {
-      return dAtoi(mBuffer + mStart);
+      return dAtol(mBuffer + mStart);
    }
 
    /// Get a float representation of the top of the stack.
    inline F64 getFloatValue()
    {
-      return dAtof(mBuffer + mStart);
+      return dAtod(mBuffer + mStart);
    }
 
    /// Get a string representation of the top of the stack.
@@ -136,16 +136,6 @@ struct StringStack
    inline const char *getPreviousStringValue()
    {
       return mBuffer + mStartOffsets[mStartStackSize-1];
-   }
-
-   inline StringStackPtr getStringValuePtr()
-   {
-      return (getStringValue() - mBuffer);
-   }
-
-   inline StringStackPtr getPreviousStringValuePtr()
-   {
-      return (getPreviousStringValue() - mBuffer);
    }
 
    /// Advance the start stack, placing a zero length string on the top.
@@ -179,61 +169,10 @@ struct StringStack
    /// and returning true if they matched, false if they didn't.
    U32 compare();
 
-   void pushFrame();
-
-   void popFrame();
-
    void clearFrames();
-
-   /// Get the arguments for a function call from the stack.
-   void getArgcArgv(StringTableEntry name, U32 *argc, const char ***in_argv, bool popStackFrame = false);
-};
-
-
-// New console value stack
-class ConsoleValueStack
-{
-   enum {
-      MaxStackDepth = 1024,
-      MaxArgs = 20,
-      ReturnBufferSpace = 512
-   };
-
-public:
-   ConsoleValueStack();
-   ~ConsoleValueStack();
-
-   void pushVar(ConsoleValue *variable);
-   void pushValue(ConsoleValue &value);
-   ConsoleValue* reserveValues(U32 numValues);
-   bool reserveValues(U32 numValues, ConsoleValueRef *values);
-   ConsoleValue* pop();
-
-   ConsoleValue *pushString(const char *value);
-   ConsoleValue *pushStackString(const char *value);
-   ConsoleValue *pushStringStackPtr(StringStackPtr ptr);
-   ConsoleValue *pushUINT(U32 value);
-   ConsoleValue *pushFLT(float value);
-
-   void pushFrame();
-   void popFrame();
-
-   void resetFrame();
-   void clearFrames();
-
-   void getArgcArgv(StringTableEntry name, U32 *argc, ConsoleValueRef **in_argv, bool popStackFrame = false);
-
-   ConsoleValue mStack[MaxStackDepth];
-   U32 mStackFrames[MaxStackDepth];
-
-   U32 mFrame;
-   U32 mStackPos;
-
-   ConsoleValueRef mArgv[MaxArgs];
 };
 
 extern StringStack STR;
-extern ConsoleValueStack CSTK;
 
 inline char* StringStackPtrRef::getPtr(StringStack *stk) { return stk->mBuffer + mOffset; }
 

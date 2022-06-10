@@ -989,9 +989,10 @@ afxEffectron::start_effect(afxEffectronData* datablock, SimObject* extra)
   }
 
   // CALL SCRIPT afxEffectronData::onPreactivate(%params, %extra)
-  const char* result = Con::executef(datablock, "onPreactivate", 
+  ConsoleValue cValue = Con::executef(datablock, "onPreactivate", 
                                      Con::getIntArg(param_holder->getId()), 
                                      (extra) ? Con::getIntArg(extra->getId()) : "");
+  const char* result = cValue.getString();
   if (result && result[0] != '\0' && !dAtob(result))
   {
 #if defined(TORQUE_DEBUG)

@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -65,11 +65,36 @@
 #undef __LINUX__ /* do we need to do this? */
 #define __ANDROID__ 1
 #endif
+#if defined(__NGAGE__)
+#undef __NGAGE__
+#define __NGAGE__ 1
+#endif
 
 #if defined(__APPLE__)
 /* lets us know what version of Mac OS X we're compiling on */
-#include "AvailabilityMacros.h"
-#include "TargetConditionals.h"
+#include <AvailabilityMacros.h>
+#include <TargetConditionals.h>
+
+/* Fix building with older SDKs that don't define these
+   See this for more information:
+   https://stackoverflow.com/questions/12132933/preprocessor-macro-for-os-x-targets
+*/
+#ifndef TARGET_OS_MACCATALYST
+#define TARGET_OS_MACCATALYST 0
+#endif
+#ifndef TARGET_OS_IOS
+#define TARGET_OS_IOS 0
+#endif
+#ifndef TARGET_OS_IPHONE
+#define TARGET_OS_IPHONE 0
+#endif
+#ifndef TARGET_OS_TV
+#define TARGET_OS_TV 0
+#endif
+#ifndef TARGET_OS_SIMULATOR
+#define TARGET_OS_SIMULATOR 0
+#endif
+
 #if TARGET_OS_TV
 #undef __TVOS__
 #define __TVOS__ 1
@@ -83,9 +108,9 @@
 /* if not compiling for iOS */
 #undef __MACOSX__
 #define __MACOSX__  1
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
-# error SDL for Mac OS X only supports deploying on 10.6 and above.
-#endif /* MAC_OS_X_VERSION_MIN_REQUIRED < 1060 */
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1070
+# error SDL for Mac OS X only supports deploying on 10.7 and above.
+#endif /* MAC_OS_X_VERSION_MIN_REQUIRED < 1070 */
 #endif /* TARGET_OS_IPHONE */
 #endif /* defined(__APPLE__) */
 
@@ -175,6 +200,9 @@
 #define __SDL_NOGETPROCADDR__
 #endif
 
+#if defined(__vita__)
+#define __VITA__ 1
+#endif
 
 #include "begin_code.h"
 /* Set up for C function definitions, even when using C++ */
@@ -183,7 +211,20 @@ extern "C" {
 #endif
 
 /**
- *  \brief Gets the name of the platform.
+ * Get the name of the platform.
+ *
+ * Here are the names returned for some (but not all) supported platforms:
+ *
+ * - "Windows"
+ * - "Mac OS X"
+ * - "Linux"
+ * - "iOS"
+ * - "Android"
+ *
+ * \returns the name of the platform. If the correct platform name is not
+ *          available, returns a string beginning with the text "Unknown".
+ *
+ * \since This function is available since SDL 2.0.0.
  */
 extern DECLSPEC const char * SDLCALL SDL_GetPlatform (void);
 

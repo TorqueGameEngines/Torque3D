@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="prefabIcon_image"
+    imageFile="@assetFile=prefabIcon.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

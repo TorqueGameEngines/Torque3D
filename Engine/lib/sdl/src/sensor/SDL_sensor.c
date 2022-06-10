@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -39,10 +39,13 @@ static SDL_SensorDriver *SDL_sensor_drivers[] = {
     &SDL_COREMOTION_SensorDriver,
 #endif
 #ifdef SDL_SENSOR_WINDOWS
-	&SDL_WINDOWS_SensorDriver,
+    &SDL_WINDOWS_SensorDriver,
 #endif
 #if defined(SDL_SENSOR_DUMMY) || defined(SDL_SENSOR_DISABLED)
     &SDL_DUMMY_SensorDriver
+#endif
+#if defined(SDL_SENSOR_VITA)
+    &SDL_VITA_SensorDriver
 #endif
 };
 static SDL_Sensor *SDL_sensors = NULL;

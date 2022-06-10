@@ -1,6 +1,0 @@
-<ShapeAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    AssetName="ReflectProbeSphere"
-    fileName="@assetFile=ReflectProbeSphere.dae"
-    constuctorFileName="@assetFile=ReflectProbeSphere.tscript" />

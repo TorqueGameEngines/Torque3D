@@ -40,9 +40,18 @@ public:
    VfsXMLPrinter(FileStream& stream, bool compact = false, int depth = 0);
    ~VfsXMLPrinter() override;
 
+   // Re-implement protected functionality in TinyXML2 library, and make it public
+   // (This is a bit dirty, but it's necessary for the PrettyXMLPrinter)
+   bool CompactMode(const tinyxml2::XMLElement& element) override { return tinyxml2::XMLPrinter::CompactMode(element); }
+   void PrintSpace(int depth) override { tinyxml2::XMLPrinter::PrintSpace(depth); }
+   inline void Write(const char* data) { Write(data, strlen(data)); }
+
+   // Add VFS friendly implementations of output functions
    void Print(const char* format, ...) override;
    void Write(const char* data, size_t size) override;
    void Putc(char ch) override;
+
+   // Accept a virtual FileStream instead of a FILE pointer
    FileStream& m_Stream;
 };
 
@@ -126,5 +135,104 @@ public:
       }
    }
 };
+
+class PrettyXMLPrinter : public tinyxml2::XMLPrinter
+{
+   // Re-implement private functionality in TinyXML2
+   static const char LINE_FEED = static_cast<char>(0x0a); // all line endings are normalized to LF
+   static const char LF = LINE_FEED;
+   static const char CARRIAGE_RETURN = static_cast<char>(0x0d); // CR gets filtered out
+   static const char CR = CARRIAGE_RETURN;
+   static const char SINGLE_QUOTE = '\'';
+   static const char DOUBLE_QUOTE = '\"';
+
+   struct Entity
+   {
+      const char* pattern;
+      int length;
+      char value;
+   };
+
+   static const int NUM_ENTITIES = 5;
+   static constexpr  Entity entities[NUM_ENTITIES] = {
+      {"quot", 4, DOUBLE_QUOTE},
+      {"amp", 3, '&'},
+      {"apos", 4, SINGLE_QUOTE},
+      {"lt", 2, '<'},
+      {"gt", 2, '>'}
+   };
+public:
+   PrettyXMLPrinter(VfsXMLPrinter& innerPrinter, int depth = 0);
+
+   /// Visit a document.
+   virtual bool VisitEnter(const tinyxml2::XMLDocument& doc)
+   {
+      mProcessEntities = doc.ProcessEntities();
+      return mInnerPrinter.VisitEnter(doc);
+   }
+
+   /// Visit a document.
+   virtual bool VisitExit(const tinyxml2::XMLDocument& doc)
+   {
+      return mInnerPrinter.VisitExit(doc);
+   }
+
+   /// Visit an element.
+   virtual bool VisitEnter(const tinyxml2::XMLElement& element, const tinyxml2::XMLAttribute* firstAttribute);
+   /// Visit an element.
+   virtual bool VisitExit(const tinyxml2::XMLElement& element)
+   {
+      mDepth--;
+      return mInnerPrinter.VisitExit(element);
+   }
+
+   /// Visit a declaration.
+   virtual bool Visit(const tinyxml2::XMLDeclaration& declaration)
+   {
+      return mInnerPrinter.Visit(declaration);
+   }
+
+   /// Visit a text node.
+   virtual bool Visit(const tinyxml2::XMLText& text)
+   {
+      return mInnerPrinter.Visit(text);
+   }
+
+   /// Visit a comment node.
+   virtual bool Visit(const tinyxml2::XMLComment& comment)
+   {
+      return mInnerPrinter.Visit(comment);
+   }
+
+   /// Visit an unknown node.
+   virtual bool Visit(const tinyxml2::XMLUnknown& unknown)
+   {
+      return mInnerPrinter.Visit(unknown);
+   }
+   
+   void PushAttribute(const char* name, const char* value, bool compactMode);
+
+   // Re-implement private functionality in TinyXML2 library, this is just a copy-paste job
+   void PrintString(const char*, bool restrictedEntitySet); // prints out, after detecting entities.
+
+   // The inner printer we are wrapping, we only support VfsXMLPrinter based classes because
+   // stock tinyxml printer is very closed
+   VfsXMLPrinter& mInnerPrinter;
+
+   // Track private fields that are necessary for private functionality in TinyXML2
+   int mDepth;
+   bool mProcessEntities;
+   bool mCompactMode;
+
+   enum
+   {
+      ENTITY_RANGE = 64,
+      BUF_SIZE = 200
+   };
+
+   bool mEntityFlag[ENTITY_RANGE];
+   bool mRestrictedEntityFlag[ENTITY_RANGE];
+};
+
 
 #endif //_FSTINYXML_H_

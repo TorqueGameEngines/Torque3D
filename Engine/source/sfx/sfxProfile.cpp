@@ -35,6 +35,7 @@
 #include "core/stream/bitStream.h"
 #include "core/resourceManager.h"
 #include "console/engineAPI.h"
+#include "core/stream/fileStream.h"
 
 using namespace Torque;
 
@@ -49,7 +50,7 @@ ConsoleDocClass( SFXProfile,
    "for it to be created.  However, several of the SFX functions (sfxPlayOnce(), sfxCreateSource()) perform "
    "this creation internally for convenience using temporary profile objects.\n\n"
    
-   "Sound files can be in either OGG or WAV format.  However, extended format support is available when using FMOD. "
+   "Sound files can be in either OGG or WAV format. "
    "See @ref SFX_formats.\n\n"
 
    "@section SFXProfile_loading Profile Loading\n\n"
@@ -283,8 +284,13 @@ bool SFXProfile::_preloadBuffer()
 
 Resource<SFXResource>& SFXProfile::getResource()
 {
-   if( !mResource && mFilename != StringTable->EmptyString())
-      mResource = SFXResource::load( mFilename );
+   char buf[1024];
+   FileName fullFilename = String(Platform::makeFullPathName(mFilename, buf, sizeof(buf)));
+
+   if (!mResource && SFXResource::exists(fullFilename))
+      mResource = SFXResource::load(mFilename);
+   else
+      mResource = NULL;
 
    return mResource;
 }

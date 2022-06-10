@@ -48,7 +48,7 @@ public:
 
 public:
    DECLARE_IMAGEASSET(afxBillboardData, Texture, onChangeTexture, GFXStaticTextureSRGBProfile);
-   DECLARE_IMAGEASSET_SETGET(afxBillboardData, Texture);
+   DECLARE_ASSET_SETGET(afxBillboardData, Texture);
 
 
   LinearColorF            color;

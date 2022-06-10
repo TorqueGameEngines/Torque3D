@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -22,7 +22,9 @@
 
 #if defined(__IPHONEOS__) || defined(__ANDROID__) || defined(__EMSCRIPTEN__) || defined(__NACL__) \
     || defined(__WINDOWS__) || defined(__LINUX__)
+#ifndef HAVE_OPENGLES2
 #define HAVE_OPENGLES2
+#endif
 #endif
 
 #ifdef HAVE_OPENGLES2
@@ -36,6 +38,18 @@ typedef struct GLES2_Context
 #undef SDL_PROC
 } GLES2_Context;
 
+typedef struct shader_data
+{
+    GLuint shader_program, shader_frag, shader_vert;
+
+    GLint attr_position;
+    GLint attr_color, attr_mvp;
+
+    int angle_x, angle_y, angle_z;
+
+    GLuint position_buffer;
+    GLuint color_buffer;
+} shader_data;
 
 static SDLTest_CommonState *state;
 static SDL_GLContext *context = NULL;
@@ -195,13 +209,13 @@ multiply_matrix(float *lhs, float *rhs, float *r)
  * source: Passed-in shader source code.
  * shader_type: Passed to GL, e.g. GL_VERTEX_SHADER.
  */
-void 
+static void
 process_shader(GLuint *shader, const char * source, GLint shader_type)
 {
     GLint status = GL_FALSE;
     const char *shaders[1] = { NULL };
     char buffer[1024];
-    GLsizei length;
+    GLsizei length = 0;
 
     /* Create shader and load into GL. */
     *shader = GL_CHECK(ctx.glCreateShader(shader_type));
@@ -219,10 +233,32 @@ process_shader(GLuint *shader, const char * source, GLint shader_type)
 
     /* Dump debug info (source and log) if compilation failed. */
     if(status != GL_TRUE) {
-        ctx.glGetProgramInfoLog(*shader, sizeof(buffer), &length, &buffer[0]);
+        ctx.glGetShaderInfoLog(*shader, sizeof(buffer), &length, &buffer[0]);
         buffer[length] = '\0';
-        SDL_Log("Shader compilation failed: %s", buffer);fflush(stderr);
+        SDL_Log("Shader compilation failed: %s", buffer);
+        fflush(stderr);
         quit(-1);
+    }
+}
+
+static void
+link_program(struct shader_data *data)
+{
+    GLint status = GL_FALSE;
+    char buffer[1024];
+    GLsizei length = 0;
+
+    GL_CHECK(ctx.glAttachShader(data->shader_program, data->shader_vert));
+    GL_CHECK(ctx.glAttachShader(data->shader_program, data->shader_frag));
+    GL_CHECK(ctx.glLinkProgram(data->shader_program));
+    GL_CHECK(ctx.glGetProgramiv(data->shader_program, GL_LINK_STATUS, &status));
+
+    if(status != GL_TRUE) {
+         ctx.glGetProgramInfoLog(data->shader_program, sizeof(buffer), &length, &buffer[0]);
+         buffer[length] = '\0';
+         SDL_Log("Program linking failed: %s", buffer);
+         fflush(stderr);
+         quit(-1);
     }
 }
 
@@ -360,17 +396,6 @@ const char* _shader_frag_src =
 " void main() { "
 "    gl_FragColor = vec4(vv3color, 1.0); "
 " } ";
-
-typedef struct shader_data
-{
-    GLuint shader_program, shader_frag, shader_vert;
-
-    GLint attr_position;
-    GLint attr_color, attr_mvp;
-
-    int angle_x, angle_y, angle_z;
-
-} shader_data;
 
 static void
 Render(unsigned int width, unsigned int height, shader_data* data)
@@ -668,9 +693,7 @@ main(int argc, char *argv[])
         data->shader_program = GL_CHECK(ctx.glCreateProgram());
 
         /* Attach shaders and link shader_program */
-        GL_CHECK(ctx.glAttachShader(data->shader_program, data->shader_vert));
-        GL_CHECK(ctx.glAttachShader(data->shader_program, data->shader_frag));
-        GL_CHECK(ctx.glLinkProgram(data->shader_program));
+        link_program(data);
 
         /* Get attribute locations of non-fixed attributes like color and texture coordinates. */
         data->attr_position = GL_CHECK(ctx.glGetAttribLocation(data->shader_program, "av4position"));
@@ -686,8 +709,18 @@ main(int argc, char *argv[])
         GL_CHECK(ctx.glEnableVertexAttribArray(data->attr_color));
 
         /* Populate attributes for position, color and texture coordinates etc. */
-        GL_CHECK(ctx.glVertexAttribPointer(data->attr_position, 3, GL_FLOAT, GL_FALSE, 0, _vertices));
-        GL_CHECK(ctx.glVertexAttribPointer(data->attr_color, 3, GL_FLOAT, GL_FALSE, 0, _colors));
+
+        GL_CHECK(ctx.glGenBuffers(1, &data->position_buffer));
+        GL_CHECK(ctx.glBindBuffer(GL_ARRAY_BUFFER, data->position_buffer));
+        GL_CHECK(ctx.glBufferData(GL_ARRAY_BUFFER, sizeof(_vertices), _vertices, GL_STATIC_DRAW));
+        GL_CHECK(ctx.glVertexAttribPointer(data->attr_position, 3, GL_FLOAT, GL_FALSE, 0, 0));
+        GL_CHECK(ctx.glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+        GL_CHECK(ctx.glGenBuffers(1, &data->color_buffer));
+        GL_CHECK(ctx.glBindBuffer(GL_ARRAY_BUFFER, data->color_buffer));
+        GL_CHECK(ctx.glBufferData(GL_ARRAY_BUFFER, sizeof(_colors), _colors, GL_STATIC_DRAW));
+        GL_CHECK(ctx.glVertexAttribPointer(data->attr_color, 3, GL_FLOAT, GL_FALSE, 0, 0));
+        GL_CHECK(ctx.glBindBuffer(GL_ARRAY_BUFFER, 0));
 
         GL_CHECK(ctx.glEnable(GL_CULL_FACE));
         GL_CHECK(ctx.glEnable(GL_DEPTH_TEST));

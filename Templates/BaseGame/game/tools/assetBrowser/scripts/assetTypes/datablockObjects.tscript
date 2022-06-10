@@ -63,7 +63,22 @@ function AssetBrowser::buildDatablockPreview(%this, %assetDef, %previewData)
                            "\nDatablock Type: " @ %assetDef.getClassName() @
                            "\nDefinition Path: " @ %assetDef.getFilename();
                            
-   %previewData.doubleClickCommand = "AssetBrowser.schedule(10, \"spawnDatablockObject\",\""@ %assetDef @"\");";//browseTo %assetDef.dirPath / %assetDef.assetName
+   
+   if(%this.selectMode)
+   {
+      %previewData.doubleClickCommand = "AssetBrowser.selectAsset( AssetBrowser.selectedAsset );";
+   }
+   else
+   {
+      if(EditorSettings.value("Assets/Browser/doubleClickAction", "Edit Asset") $= "Edit Asset")
+      {
+         %previewData.doubleClickCommand = "DatablockEditorPlugin.openDatablock( "@%assetDef@" );";
+      }
+      else
+      {
+         %previewData.doubleClickCommand = "AssetBrowser.onDatablockEditorDropped( "@%assetDef@" );";
+      }
+   }
 }
 
 function spawnDatablockObject(%datablock)
@@ -73,7 +88,7 @@ function spawnDatablockObject(%datablock)
    %cmd = %class @ "::create(" @ %name @ ");";
    
    %shapePath = ( %datablock.shapeAsset !$= "" ) ? %datablock.shapeFile : %datablock.shapeName;
-   %createCmd = "EWCreatorWindow.createObject( \"" @ %cmd @ "\" );";
+   %createCmd = "ObjectCreator.createObject( \"" @ %cmd @ "\" );";
    return eval(%createCmd);//eval("showImportDialog( \"" @ %shapePath @ "\", \"" @ %createCmd @ "\" );");
 }
 
@@ -156,7 +171,7 @@ function AssetBrowser::onDatablockEditorDropped(%this, %assetDef, %position)
    %camPos = LocalClientConnection.camera.getPosition();
    %rayResult = containerRayCast(%camPos, %targetPosition, -1);
    
-   %pos = EWCreatorWindow.getCreateObjectPosition();
+   %pos = ObjectCreator.getCreateObjectPosition();
 
    if(%rayResult != 0)
    {

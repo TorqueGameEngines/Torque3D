@@ -98,6 +98,9 @@ BasicClouds::BasicClouds()
    mTexOffset[0].set( 0.5f, 0.5f );
    mTexOffset[1].set( 0.5f, 0.5f );
    mTexOffset[2].set( 0.5f, 0.5f );
+
+   for (U32 i=0; i< TEX_COUNT;i++)
+      INIT_IMAGEASSET_ARRAY(Texture, GFXStaticTextureSRGBProfile, i);
 }
 
 IMPLEMENT_CO_NETOBJECT_V1( BasicClouds );
@@ -215,7 +218,7 @@ U32 BasicClouds::packUpdate( NetConnection *conn, U32 mask, BitStream *stream )
    {
       stream->writeFlag( mLayerEnabled[i] );
 
-      PACK_IMAGEASSET_ARRAY(conn, Texture, i);
+      PACK_ASSET_ARRAY(conn, Texture, i);
 
       stream->write( mTexScale[i] );
       mathWrite( *stream, mTexDirection[i] );
@@ -236,7 +239,7 @@ void BasicClouds::unpackUpdate( NetConnection *conn, BitStream *stream )
    {
       mLayerEnabled[i] = stream->readFlag();
 
-      UNPACK_IMAGEASSET_ARRAY(conn, Texture, i);
+      UNPACK_ASSET_ARRAY(conn, Texture, i);
       
       stream->read( &mTexScale[i] );      
       mathRead( *stream, &mTexDirection[i] );

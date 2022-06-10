@@ -52,6 +52,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.Hashtable;
 import java.util.Locale;
@@ -62,6 +63,106 @@ import java.util.Locale;
 */
 public class SDLActivity extends Activity implements View.OnSystemUiVisibilityChangeListener {
     private static final String TAG = "SDL";
+/*
+    // Display InputType.SOURCE/CLASS of events and devices
+    //
+    // SDLActivity.debugSource(device.getSources(), "device[" + device.getName() + "]");
+    // SDLActivity.debugSource(event.getSource(), "event");
+    public static void debugSource(int sources, String prefix) {
+        int s = sources;
+        int s_copy = sources;
+        String cls = "";
+        String src = "";
+        int tst = 0;
+        int FLAG_TAINTED = 0x80000000;
+
+        if ((s & InputDevice.SOURCE_CLASS_BUTTON) != 0)     cls += " BUTTON";
+        if ((s & InputDevice.SOURCE_CLASS_JOYSTICK) != 0)   cls += " JOYSTICK";
+        if ((s & InputDevice.SOURCE_CLASS_POINTER) != 0)    cls += " POINTER";
+        if ((s & InputDevice.SOURCE_CLASS_POSITION) != 0)   cls += " POSITION";
+        if ((s & InputDevice.SOURCE_CLASS_TRACKBALL) != 0)  cls += " TRACKBALL";
+
+
+        int s2 = s_copy & ~InputDevice.SOURCE_ANY; // keep class bits
+        s2 &= ~(  InputDevice.SOURCE_CLASS_BUTTON 
+                | InputDevice.SOURCE_CLASS_JOYSTICK
+                | InputDevice.SOURCE_CLASS_POINTER
+                | InputDevice.SOURCE_CLASS_POSITION
+                | InputDevice.SOURCE_CLASS_TRACKBALL);
+
+        if (s2 != 0) cls += "Some_Unkown";
+
+        s2 = s_copy & InputDevice.SOURCE_ANY; // keep source only, no class;
+
+        tst = InputDevice.SOURCE_BLUETOOTH_STYLUS;
+        if ((s & tst) == tst) src += " BLUETOOTH_STYLUS";
+        s2 &= ~tst;
+
+        tst = InputDevice.SOURCE_DPAD;
+        if ((s & tst) == tst) src += " DPAD";
+        s2 &= ~tst;
+
+        tst = InputDevice.SOURCE_GAMEPAD;
+        if ((s & tst) == tst) src += " GAMEPAD";
+        s2 &= ~tst;
+
+        tst = InputDevice.SOURCE_HDMI;
+        if ((s & tst) == tst) src += " HDMI";
+        s2 &= ~tst;
+
+        tst = InputDevice.SOURCE_JOYSTICK;
+        if ((s & tst) == tst) src += " JOYSTICK";
+        s2 &= ~tst;
+
+        tst = InputDevice.SOURCE_KEYBOARD;
+        if ((s & tst) == tst) src += " KEYBOARD";
+        s2 &= ~tst;
+
+        tst = InputDevice.SOURCE_MOUSE;
+        if ((s & tst) == tst) src += " MOUSE";
+        s2 &= ~tst;
+
+        if (Build.VERSION.SDK_INT >= 26) {
+            tst = InputDevice.SOURCE_MOUSE_RELATIVE;
+            if ((s & tst) == tst) src += " MOUSE_RELATIVE";
+            s2 &= ~tst;
+
+            tst = InputDevice.SOURCE_ROTARY_ENCODER;
+            if ((s & tst) == tst) src += " ROTARY_ENCODER";
+            s2 &= ~tst;
+        }
+        tst = InputDevice.SOURCE_STYLUS;
+        if ((s & tst) == tst) src += " STYLUS";
+        s2 &= ~tst;
+
+        tst = InputDevice.SOURCE_TOUCHPAD;
+        if ((s & tst) == tst) src += " TOUCHPAD";
+        s2 &= ~tst;
+
+        tst = InputDevice.SOURCE_TOUCHSCREEN;
+        if ((s & tst) == tst) src += " TOUCHSCREEN";
+        s2 &= ~tst;
+
+        tst = InputDevice.SOURCE_TOUCH_NAVIGATION;
+        if ((s & tst) == tst) src += " TOUCH_NAVIGATION";
+        s2 &= ~tst;
+
+        tst = InputDevice.SOURCE_TRACKBALL;
+        if ((s & tst) == tst) src += " TRACKBALL";
+        s2 &= ~tst;
+
+        tst = InputDevice.SOURCE_ANY;
+        if ((s & tst) == tst) src += " ANY";
+        s2 &= ~tst;
+
+        if (s == FLAG_TAINTED) src += " FLAG_TAINTED";
+        s2 &= ~FLAG_TAINTED;
+
+        if (s2 != 0) src += " Some_Unkown";
+
+        Log.v(TAG, prefix + "int=" + s_copy + " CLASS={" + cls + " } source(s):" + src);
+    }
+*/
 
     public static boolean mIsResumedCalled, mHasFocus;
     public static final boolean mHasMultiWindow = (Build.VERSION.SDK_INT >= 24);
@@ -163,7 +264,6 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
      */
     protected String[] getLibraries() {
         return new String[] {
-            "hidapi",
             "SDL2",
             // "SDL2_image",
             // "SDL2_mixer",
@@ -378,10 +478,13 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
     }
 
     public static int getCurrentOrientation() {
-        final Context context = SDLActivity.getContext();
-        final Display display = ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
-
         int result = SDL_ORIENTATION_UNKNOWN;
+
+        Activity activity = (Activity)getContext();
+        if (activity == null) {
+            return result;
+        }
+        Display display = activity.getWindowManager().getDefaultDisplay();
 
         switch (display.getRotation()) {
             case Surface.ROTATION_0:
@@ -496,8 +599,8 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
         // If we do, the normal hardware back button will no longer work and people have to use home,
         // but the mouse right click will work.
         //
-        String trapBack = SDLActivity.nativeGetHint("SDL_ANDROID_TRAP_BACK_BUTTON");
-        if ((trapBack != null) && trapBack.equals("1")) {
+        boolean trapBack = SDLActivity.nativeGetHintBoolean("SDL_ANDROID_TRAP_BACK_BUTTON", false);
+        if (trapBack) {
             // Exit and let the mouse handler handle this button (if appropriate)
             return;
         }
@@ -604,7 +707,6 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
     static final int COMMAND_CHANGE_TITLE = 1;
     static final int COMMAND_CHANGE_WINDOW_STYLE = 2;
     static final int COMMAND_TEXTEDIT_HIDE = 3;
-    static final int COMMAND_CHANGE_SURFACEVIEW_FORMAT = 4;
     static final int COMMAND_SET_KEEP_SCREEN_ON = 5;
 
     protected static final int COMMAND_USER = 0x8000;
@@ -702,32 +804,6 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
                 }
                 break;
             }
-            case COMMAND_CHANGE_SURFACEVIEW_FORMAT:
-            {
-                int format = (Integer) msg.obj;
-                int pf;
-
-                if (SDLActivity.mSurface == null) {
-                    return;
-                }
-
-                SurfaceHolder holder = SDLActivity.mSurface.getHolder();
-                if (holder == null) {
-                    return;
-                }
-
-                if (format == 1) {
-                    pf = PixelFormat.RGBA_8888;
-                } else if (format == 2) {
-                    pf = PixelFormat.RGBX_8888;
-                } else {
-                    pf = PixelFormat.RGB_565;
-                }
-
-                holder.setFormat(pf);
-
-                break;
-            }
             default:
                 if ((context instanceof SDLActivity) && !((SDLActivity) context).onUnhandledMessage(msg.arg1, msg.obj)) {
                     Log.e(TAG, "error handling message, command is " + msg.arg1);
@@ -811,7 +887,7 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
     public static native void nativeResume();
     public static native void nativeFocusChanged(boolean hasFocus);
     public static native void onNativeDropFile(String filename);
-    public static native void nativeSetScreenResolution(int surfaceWidth, int surfaceHeight, int deviceWidth, int deviceHeight, int format, float rate);
+    public static native void nativeSetScreenResolution(int surfaceWidth, int surfaceHeight, int deviceWidth, int deviceHeight, float rate);
     public static native void onNativeResize();
     public static native void onNativeKeyDown(int keycode);
     public static native void onNativeKeyUp(int keycode);
@@ -827,6 +903,7 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
     public static native void onNativeSurfaceChanged();
     public static native void onNativeSurfaceDestroyed();
     public static native String nativeGetHint(String name);
+    public static native boolean nativeGetHintBoolean(String name, boolean default_value);
     public static native void nativeSetenv(String name, String value);
     public static native void onNativeOrientationChanged(int orientation);
     public static native void nativeAddTouch(int touchId, String name);
@@ -986,11 +1063,6 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
      */
     public static boolean supportsRelativeMouse()
     {
-        // ChromeOS doesn't provide relative mouse motion via the Android 7 APIs
-        if (isChromebook()) {
-            return false;
-        }
-
         // DeX mode in Samsung Experience 9.0 and earlier doesn't support relative mice properly under
         // Android 7 APIs, and simply returns no data under Android 8 APIs.
         //
@@ -1222,13 +1294,6 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
         return SDLActivity.mSurface.getNativeSurface();
     }
 
-    /**
-     * This method is called by SDL using JNI.
-     */
-    public static void setSurfaceViewFormat(int format) {
-        mSingleton.sendCommand(COMMAND_CHANGE_SURFACEVIEW_FORMAT, format);
-    }
-
     // Input
 
     /**
@@ -1239,8 +1304,21 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
 
         for (int id : ids) {
             InputDevice device = InputDevice.getDevice(id);
-            if (device != null && (device.getSources() & InputDevice.SOURCE_TOUCHSCREEN) != 0) {
-                nativeAddTouch(device.getId(), device.getName());
+            /* Allow SOURCE_TOUCHSCREEN and also Virtual InputDevices because they can send TOUCHSCREEN events */
+            if (device != null && ((device.getSources() & InputDevice.SOURCE_TOUCHSCREEN) == InputDevice.SOURCE_TOUCHSCREEN
+                    || device.isVirtual())) {
+
+                int touchDevId = device.getId();
+                /*
+                 * Prevent id to be -1, since it's used in SDL internal for synthetic events
+                 * Appears when using Android emulator, eg:
+                 *  adb shell input mouse tap 100 100
+                 *  adb shell input touchscreen tap 100 100
+                 */
+                if (touchDevId < 0) {
+                    touchDevId -= 1;
+                }
+                nativeAddTouch(touchDevId, device.getName());
             }
         }
     }
@@ -1517,6 +1595,19 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
     /**
      * This method is called by SDL using JNI.
      */
+    public static void destroyCustomCursor(int cursorID) {
+        if (Build.VERSION.SDK_INT >= 24) {
+            try {
+                mCursors.remove(cursorID);
+            } catch (Exception e) {
+            }
+        }
+        return;
+    }
+
+    /**
+     * This method is called by SDL using JNI.
+     */
     public static boolean setCustomCursor(int cursorID) {
 
         if (Build.VERSION.SDK_INT >= 24) {
@@ -1626,6 +1717,52 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
 
             mSingleton.startActivity(i);
         } catch (Exception ex) {
+            return -1;
+        }
+        return 0;
+    }
+
+    /**
+     * This method is called by SDL using JNI.
+     */
+    public static int showToast(String message, int duration, int gravity, int xOffset, int yOffset)
+    {
+        if(null == mSingleton) {
+            return - 1;
+        }
+
+        try
+        {
+            class OneShotTask implements Runnable {
+                String mMessage;
+                int mDuration;
+                int mGravity;
+                int mXOffset;
+                int mYOffset;
+
+                OneShotTask(String message, int duration, int gravity, int xOffset, int yOffset) {
+                    mMessage  = message;
+                    mDuration = duration;
+                    mGravity  = gravity;
+                    mXOffset  = xOffset;
+                    mYOffset  = yOffset;
+                }
+
+                public void run() {
+                    try
+                    {
+                        Toast toast = Toast.makeText(mSingleton, mMessage, mDuration);
+                        if (mGravity >= 0) {
+                            toast.setGravity(mGravity, mXOffset, mYOffset);
+                        }
+                        toast.show();
+                    } catch(Exception ex) {
+                        Log.e(TAG, ex.getMessage());
+                    }
+                }
+            }
+            mSingleton.runOnUiThread(new OneShotTask(message, duration, gravity, xOffset, yOffset));
+        } catch(Exception ex) {
             return -1;
         }
         return 0;
@@ -1754,30 +1891,6 @@ class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
             return;
         }
 
-        int sdlFormat = 0x15151002; // SDL_PIXELFORMAT_RGB565 by default
-        switch (format) {
-        case PixelFormat.RGBA_8888:
-            Log.v("SDL", "pixel format RGBA_8888");
-            sdlFormat = 0x16462004; // SDL_PIXELFORMAT_RGBA8888
-            break;
-        case PixelFormat.RGBX_8888:
-            Log.v("SDL", "pixel format RGBX_8888");
-            sdlFormat = 0x16261804; // SDL_PIXELFORMAT_RGBX8888
-            break;
-        case PixelFormat.RGB_565:
-            Log.v("SDL", "pixel format RGB_565");
-            sdlFormat = 0x15151002; // SDL_PIXELFORMAT_RGB565
-            break;
-        case PixelFormat.RGB_888:
-            Log.v("SDL", "pixel format RGB_888");
-            // Not sure this is right, maybe SDL_PIXELFORMAT_RGB24 instead?
-            sdlFormat = 0x16161804; // SDL_PIXELFORMAT_RGB888
-            break;
-        default:
-            Log.v("SDL", "pixel format unknown " + format);
-            break;
-        }
-
         mWidth = width;
         mHeight = height;
         int nDeviceWidth = width;
@@ -1800,7 +1913,7 @@ class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
 
         Log.v("SDL", "Window size: " + width + "x" + height);
         Log.v("SDL", "Device size: " + nDeviceWidth + "x" + nDeviceHeight);
-        SDLActivity.nativeSetScreenResolution(width, height, nDeviceWidth, nDeviceHeight, sdlFormat, mDisplay.getRefreshRate());
+        SDLActivity.nativeSetScreenResolution(width, height, nDeviceWidth, nDeviceHeight, mDisplay.getRefreshRate());
         SDLActivity.onNativeResize();
 
         // Prevent a screen distortion glitch,
@@ -1895,7 +2008,7 @@ class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
             }
         }
 
-        if ((source & InputDevice.SOURCE_KEYBOARD) != 0) {
+        if ((source & InputDevice.SOURCE_KEYBOARD) == InputDevice.SOURCE_KEYBOARD) {
             if (event.getAction() == KeyEvent.ACTION_DOWN) {
                 if (SDLActivity.isTextInputEvent(event)) {
                     SDLInputConnection.nativeCommitText(String.valueOf((char) event.getUnicodeChar()), 1);
@@ -1908,7 +2021,7 @@ class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
             }
         }
 
-        if ((source & InputDevice.SOURCE_MOUSE) != 0) {
+        if ((source & InputDevice.SOURCE_MOUSE) == InputDevice.SOURCE_MOUSE) {
             // on some devices key events are sent for mouse BUTTON_BACK/FORWARD presses
             // they are ignored here because sending them as mouse input to SDL is messy
             if ((keyCode == KeyEvent.KEYCODE_BACK) || (keyCode == KeyEvent.KEYCODE_FORWARD)) {

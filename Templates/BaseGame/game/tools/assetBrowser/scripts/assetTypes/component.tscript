@@ -54,12 +54,7 @@ function AssetBrowser::createComponentAsset(%this)
 	%moduleDef = ModuleDatabase.findModule(%moduleName, 1);
 	AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
 
-	AssetBrowser.loadFilters();
-	
-	%treeItemId = AssetBrowserFilterTree.findItemByName(%moduleName);
-	%smItem = AssetBrowserFilterTree.findChildItemByName(%treeItemId, "ComponentAsset");
-	
-	AssetBrowserFilterTree.onSelect(%smItem);
+	AssetBrowser.refresh();
 	
 	return %tamlpath;
 }
@@ -110,7 +105,7 @@ function AssetBrowser::renameComponentAsset(%this, %assetDef, %newAssetId, %orig
          %line = %file.readLine();
          %line = trim( %line );
          
-         %editedFileContents = %editedFileContents @ strreplace(%line, %originalAssetName, %newName) @ "\n";
+         %editedFileContents = %editedFileContents @ strreplace(%line, %originalName, %newName) @ "\n";
       }
       
       %file.close();

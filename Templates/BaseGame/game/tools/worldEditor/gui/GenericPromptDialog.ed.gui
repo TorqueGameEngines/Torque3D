@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(GenericPromptDialog) {
+$guiContent = new GuiControl(GenericPromptDialog) {
    canSaveDynamicFields = "0";
    Enabled = "1";
    isContainer = "1";

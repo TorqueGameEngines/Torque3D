@@ -1,7 +1,5 @@
 <GUIAsset
-    canSave="true"
-    canSaveDynamicFields="true"
     AssetName="PauseMenu"
-    scriptFile="@assetFile=pauseMenu.gui"
+    scriptFile="@assetFile=pauseMenu"
     GUIFile="@assetFile=pauseMenu.gui"
-    VersionId="1" />
+    VersionId="1"/>

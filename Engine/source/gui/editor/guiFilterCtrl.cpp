@@ -83,7 +83,7 @@ DefineEngineStringlyVariadicMethod( GuiFilterCtrl, setValue, void, 3, 20, "(f1, 
 {
    Filter filter;
 
-   StringStackWrapper args(argc - 2, argv + 2);
+   ConsoleValueToStringArrayWrapper args(argc - 2, argv + 2);
 
    filter.set(args.count(), args);
 	object->set(filter);

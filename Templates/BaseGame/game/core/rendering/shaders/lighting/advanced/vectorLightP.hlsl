@@ -42,7 +42,6 @@ uniform float4 lightColor;
 uniform float4 lightAmbient;
 
 uniform float shadowSoftness;
-uniform float3 eyePosWorld;
 
 uniform float4 atlasXOffset;
 uniform float4 atlasYOffset;

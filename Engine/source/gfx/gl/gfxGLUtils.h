@@ -208,7 +208,7 @@ GFXGLPreserveInteger TORQUE_CONCAT(preserve_, __LINE__) (GL_READ_FRAMEBUFFER, GL
 GFXGLPreserveInteger TORQUE_CONCAT(preserve2_, __LINE__) (GL_DRAW_FRAMEBUFFER, GL_DRAW_FRAMEBUFFER_BINDING, (GFXGLPreserveInteger::BindFn)glBindFramebuffer)
 
 
-#if TORQUE_DEBUG
+#ifdef TORQUE_DEBUG
 
     // Handy macro for checking the status of a framebuffer.  Framebuffers can fail in 
     // all sorts of interesting ways, these are just the most common.  Further, no existing GL profiling 

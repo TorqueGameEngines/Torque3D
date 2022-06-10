@@ -47,6 +47,9 @@
 #ifndef _ASSET_PTR_H_
 #include "assets/assetPtr.h"
 #endif
+#ifndef SOUND_ASSET_H
+#include "T3D/assets/SoundAsset.h"
+#endif
 
 class CubemapData;
 class SFXTrack;
@@ -204,49 +207,49 @@ public:
    //-----------------------------------------------------------------------
    // Data
    //-----------------------------------------------------------------------
-   DECLARE_IMAGEASSET_ARRAY(Material, DiffuseMap, GFXStaticTextureSRGBProfile, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, DiffuseMap, MAX_STAGES);
    DECLARE_IMAGEASSET_ARRAY_SETGET(Material, DiffuseMap);
 
    bool     mDiffuseMapSRGB[MAX_STAGES];   // SRGB diffuse
-   DECLARE_IMAGEASSET_ARRAY(Material, OverlayMap, GFXStaticTextureProfile, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, OverlayMap, MAX_STAGES);
    DECLARE_IMAGEASSET_ARRAY_SETGET(Material, OverlayMap);
 
-   DECLARE_IMAGEASSET_ARRAY(Material, LightMap, GFXStaticTextureProfile, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, LightMap, MAX_STAGES);
    DECLARE_IMAGEASSET_ARRAY_SETGET(Material, LightMap);
 
-   DECLARE_IMAGEASSET_ARRAY(Material, ToneMap, GFXStaticTextureProfile, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, ToneMap, MAX_STAGES);
    DECLARE_IMAGEASSET_ARRAY_SETGET(Material, ToneMap);
 
-   DECLARE_IMAGEASSET_ARRAY(Material, DetailMap, GFXStaticTextureProfile, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, DetailMap, MAX_STAGES);
    DECLARE_IMAGEASSET_ARRAY_SETGET(Material, DetailMap);
 
-   DECLARE_IMAGEASSET_ARRAY(Material, NormalMap, GFXNormalMapProfile, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, NormalMap, MAX_STAGES);
    DECLARE_IMAGEASSET_ARRAY_SETGET(Material, NormalMap);
 
-   DECLARE_IMAGEASSET_ARRAY(Material, ORMConfigMap, GFXStaticTextureProfile, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, ORMConfigMap, MAX_STAGES);
    DECLARE_IMAGEASSET_ARRAY_SETGET(Material, ORMConfigMap);
 
    bool     mIsSRGb[MAX_STAGES];
-   DECLARE_IMAGEASSET_ARRAY(Material, RoughMap, GFXStaticTextureProfile, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, RoughMap, MAX_STAGES);
    DECLARE_IMAGEASSET_ARRAY_SETGET(Material, RoughMap);
 
    bool     mInvertRoughness[MAX_STAGES];
    F32      mRoughnessChan[MAX_STAGES];
-   DECLARE_IMAGEASSET_ARRAY(Material, AOMap, GFXStaticTextureProfile, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, AOMap, MAX_STAGES);
    DECLARE_IMAGEASSET_ARRAY_SETGET(Material, AOMap);
 
    F32      mAOChan[MAX_STAGES];
-   DECLARE_IMAGEASSET_ARRAY(Material, MetalMap, GFXStaticTextureProfile, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, MetalMap, MAX_STAGES);
    DECLARE_IMAGEASSET_ARRAY_SETGET(Material, MetalMap);
 
    F32      mMetalChan[MAX_STAGES];
-   DECLARE_IMAGEASSET_ARRAY(Material, GlowMap, GFXStaticTextureProfile, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, GlowMap, MAX_STAGES);
    DECLARE_IMAGEASSET_ARRAY_SETGET(Material, GlowMap);
 
    F32      mGlowMul[MAX_STAGES];
    /// A second normal map which repeats at the detail map
    /// scale and blended with the base normal map.
-   DECLARE_IMAGEASSET_ARRAY(Material, DetailNormalMap, GFXNormalMapProfile, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY(Material, DetailNormalMap, MAX_STAGES);
    DECLARE_IMAGEASSET_ARRAY_SETGET(Material, DetailNormalMap);
 
    /// The strength scalar for the detail normal map.
@@ -367,8 +370,10 @@ public:
    /// Sound effect to play when walking on surface with this material.
    /// If defined, overrides mFootstepSoundId.
    /// @see mFootstepSoundId
-   SFXTrack* mFootstepSoundCustom;
-   SFXTrack* mImpactSoundCustom;
+   DECLARE_SOUNDASSET(Material, CustomFootstepSound);
+   DECLARE_ASSET_SETGET(Material, CustomFootstepSound);
+   DECLARE_SOUNDASSET(Material, CustomImpactSound);
+   DECLARE_ASSET_SETGET(Material, CustomImpactSound);
 
    F32 mFriction;                   ///< Friction coefficient when moving along surface.
 

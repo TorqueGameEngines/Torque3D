@@ -220,6 +220,8 @@ SFXPlayList::SFXPlayList()
      mTrace( false ),
      mNumSlotsToPlay( NUM_SLOTS )
 {
+   for (U32 i=0;i<NUM_SLOTS;i++)
+      INIT_ASSET_ARRAY(Track, i);
 }
 
 //-----------------------------------------------------------------------------
@@ -247,7 +249,7 @@ void SFXPlayList::initPersistFields()
    
       addArray( "slots", NUM_SLOTS );
       
-         addField( "track",                  TypeSFXTrackName, Offset( mSlots.mTrack, SFXPlayList ), NUM_SLOTS,
+         INITPERSISTFIELD_SOUNDASSET_ARRAY( Track, NUM_SLOTS, SFXPlayList,
             "Track to play in this slot.\n"
             "This must be set for the slot to be considered for playback.  Other settings for a slot "
             "will not take effect except this field is set." );
@@ -350,11 +352,19 @@ bool SFXPlayList::preload( bool server, String& errorStr )
    {
       for( U32 i = 0; i < NUM_SLOTS; ++ i )
       {
-         if( !sfxResolve( &mSlots.mTrack[ i ], errorStr ) )
+         StringTableEntry track = getTrack(i);
+         if (track != StringTable->EmptyString())
+         {
+            _setTrack(getTrack(i), i);
+         if (!getTrackProfile(i))
+         {
+            Con::errorf("SFXPlayList::Preload() - unable to find sfxProfile for asset %s", mTrackAssetId[i]);
             return false;
+         }
             
-         if( !sfxResolve( &mSlots.mState[ i ], errorStr ) )
+            if (!sfxResolve(&mSlots.mState[i], errorStr))
             return false;
+         }
       }
    }
       
@@ -419,7 +429,7 @@ void SFXPlayList::packData( BitStream* stream )
       stream->write( mSlots.mRepeatCount[ i ] );
       
    FOR_EACH_SLOT sfxWrite( stream, mSlots.mState[ i ] );
-   FOR_EACH_SLOT sfxWrite( stream, mSlots.mTrack[ i ] );
+   FOR_EACH_SLOT PACKDATA_ASSET_ARRAY(Track, i);
 }
 
 //-----------------------------------------------------------------------------
@@ -458,7 +468,7 @@ void SFXPlayList::unpackData( BitStream* stream )
    FOR_EACH_SLOT if(stream->readFlag()){ stream->read( &mSlots.mRepeatCount[ i ] );}
       
    FOR_EACH_SLOT sfxRead( stream, &mSlots.mState[ i ] );
-   FOR_EACH_SLOT sfxRead( stream, &mSlots.mTrack[ i ] );
+   FOR_EACH_SLOT UNPACKDATA_ASSET_ARRAY(Track, i);
    
    #undef FOR_EACH_SLOT
 }

@@ -1551,13 +1551,10 @@ void ParticleEmitter::updateBBox()
 
    for (Particle* part = part_list_head.next; part != NULL; part = part->next)
    {
-      for (Particle* part = part_list_head.next; part != NULL; part = part->next)
-      {
-         Point3F particleSize(part->size * 0.5f);
-         F32 motion = getMax((part->vel.len() * part->totalLifetime / 1000.0f), 1.0f);
-         minPt.setMin(part->pos - particleSize - Point3F(motion));
-         maxPt.setMax(part->pos + particleSize + Point3F(motion));
-      }
+      Point3F particleSize(part->size * 0.5f);
+      F32 motion = getMax((part->vel.len() * part->totalLifetime / 1000.0f), 1.0f);
+      minPt.setMin(part->pos - particleSize - Point3F(motion));
+      maxPt.setMax(part->pos + particleSize + Point3F(motion));
    }
    
    mObjBox = Box3F(minPt, maxPt);
@@ -1675,8 +1672,8 @@ void ParticleEmitter::addParticle(const Point3F& pos, const Point3F& axis, const
    }
    else
    {
-      U32 dBlockIndex = gRandGen.randI() % mDataBlock->particleDataBlocks.size();
-   mDataBlock->particleDataBlocks[dBlockIndex]->initializeParticle(pNew, vel);
+      dBlockIndex = gRandGen.randI() % mDataBlock->particleDataBlocks.size();
+      mDataBlock->particleDataBlocks[dBlockIndex]->initializeParticle(pNew, vel);
    }
    updateKeyData( pNew );
 
@@ -1911,42 +1908,21 @@ void ParticleEmitter::copyToVB( const Point3F &camPos, const LinearColorF &ambie
 
       if (mDataBlock->reverseOrder)
       {
-         buffPtr += 4 * (n_parts - 1);
-         // do sorted-oriented particles
-         if (mDataBlock->sortParticles)
-         {
-            SortParticle* partPtr = orderedVector.address();
-            for (U32 i = 0; i < n_parts - 1; i++, partPtr++, buffPtr -= 4)
-               setupRibbon(partPtr->p, partPtr++->p, partPtr--->p, camPos, ambientColor, buffPtr);
-         }
-         // do unsorted-oriented particles
-         else
-         {
             Particle* oldPtr = NULL;
-            for (Particle* partPtr = part_list_head.next; partPtr != NULL; partPtr = partPtr->next, buffPtr -= 4) {
+            for (Particle* partPtr = part_list_head.next; partPtr != NULL; partPtr = partPtr->next, buffPtr -= 4)
+            {
                setupRibbon(partPtr, partPtr->next, oldPtr, camPos, ambientColor, buffPtr);
                oldPtr = partPtr;
             }
-         }
       }
       else
       {
-         // do sorted-oriented particles
-         if (mDataBlock->sortParticles)
-         {
-            SortParticle* partPtr = orderedVector.address();
-            for (U32 i = 0; i < n_parts - 1; i++, partPtr++, buffPtr += 4)
-               setupRibbon(partPtr->p, partPtr++->p, partPtr--->p, camPos, ambientColor, buffPtr);
-         }
-         // do unsorted-oriented particles
-         else
-         {
             Particle* oldPtr = NULL;
-            for (Particle* partPtr = part_list_head.next; partPtr != NULL; partPtr = partPtr->next, buffPtr += 4) {
+            for (Particle* partPtr = part_list_head.next; partPtr != NULL; partPtr = partPtr->next, buffPtr += 4)
+            {
                setupRibbon(partPtr, partPtr->next, oldPtr, camPos, ambientColor, buffPtr);
                oldPtr = partPtr;
             }
-         }
       }
       PROFILE_END();
    }
@@ -2220,7 +2196,7 @@ void ParticleEmitter::setupOriented( Particle *part,
    LinearColorF partCol = mLerp( part->color, ( part->color * ambientColor ), ambientLerp );
    const ColorI color = partCol.toColorI();
    // Here we deal with UVs for animated particle (oriented)
-   if (part->dataBlock->animateTexture)
+   if (part->dataBlock->animateTexture && !part->dataBlock->animTexFrames.empty())
    { 
       // Let particle compute the UV indices for current frame
       S32 fm = (S32)(part->currentAge*(1.0f/1000.0f)*part->dataBlock->framesPerSec);
@@ -2331,7 +2307,7 @@ void ParticleEmitter::setupAligned( const Particle *part,
    LinearColorF partCol = mLerp( part->color, ( part->color * ambientColor ), ambientLerp );
    const ColorI color = partCol.toColorI();
    // Here we deal with UVs for animated particle
-   if (part->dataBlock->animateTexture)
+   if (part->dataBlock->animateTexture && !part->dataBlock->animTexFrames.empty())
    { 
       // Let particle compute the UV indices for current frame
       S32 fm = (S32)(part->currentAge*(1.0f/1000.0f)*part->dataBlock->framesPerSec);
@@ -2520,7 +2496,7 @@ void ParticleEmitter::setupRibbon(Particle *part,
    ColorI pCol = partCol.toColorI();
 
    // Here we deal with UVs for animated particle (oriented)
-   if (part->dataBlock->animateTexture)
+   if (part->dataBlock->animateTexture && !part->dataBlock->animTexFrames.empty())
    {
       // Let particle compute the UV indices for current frame
       S32 fm = (S32)(part->currentAge*(1.0f / 1000.0f)*part->dataBlock->framesPerSec);

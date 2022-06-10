@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -161,14 +161,14 @@ UIKit_CreateWindow(_THIS, SDL_Window *window)
     @autoreleasepool {
         SDL_VideoDisplay *display = SDL_GetDisplayForWindow(window);
         SDL_DisplayData *data = (__bridge SDL_DisplayData *) display->driverdata;
-		SDL_Window *other;
+        SDL_Window *other;
 
         /* We currently only handle a single window per display on iOS */
-		for (other = _this->windows; other; other = other->next) {
-			if (other != window && SDL_GetDisplayForWindow(other) == display) {
-				return SDL_SetError("Only one window allowed per display.");
-			}
-		}
+        for (other = _this->windows; other; other = other->next) {
+            if (other != window && SDL_GetDisplayForWindow(other) == display) {
+                return SDL_SetError("Only one window allowed per display.");
+            }
+        }
 
         /* If monitor has a resolution of 0x0 (hasn't been explicitly set by the
          * user, so it's in standby), try to force the display to a resolution
@@ -318,6 +318,28 @@ UIKit_SetWindowFullscreen(_THIS, SDL_Window * window, SDL_VideoDisplay * display
     @autoreleasepool {
         UIKit_UpdateWindowBorder(_this, window);
     }
+}
+
+void
+UIKit_SetWindowMouseGrab(_THIS, SDL_Window * window, SDL_bool grabbed)
+{
+    /* There really isn't a concept of window grab or cursor confinement on iOS */
+}
+
+void
+UIKit_UpdatePointerLock(_THIS, SDL_Window * window)
+{
+#if !TARGET_OS_TV
+#if defined(__IPHONE_14_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_14_0
+    @autoreleasepool {
+        SDL_WindowData *data = (__bridge SDL_WindowData *) window->driverdata;
+        SDL_uikitviewcontroller *viewcontroller = data.viewcontroller;
+        if (@available(iOS 14.0, *)) {
+            [viewcontroller setNeedsUpdateOfPrefersPointerLocked];
+        }
+    }
+#endif /* defined(__IPHONE_14_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_14_0 */
+#endif /* !TARGET_OS_TV */
 }
 
 void

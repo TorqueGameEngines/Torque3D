@@ -130,7 +130,7 @@ function fillRemapList()
 {
    %device = $remapListDevice;
    
-	OptionsMenuSettingsList.clearRows();
+	OptionsMenuSettingsList.clear();
 
    //build out our list of action maps
    %actionMapCount = ActionMapGroup.getCount();
@@ -158,7 +158,7 @@ function fillRemapList()
    if($activeRemapControlSet $= "")
       $activeRemapControlSet = getField(%actionMapList, 0);
    
-   OptionsMenuSettingsList.addOptionRow("Control Set", %actionMapList, false, "controlSetChanged", -1, -30, true, "Which keybind control set to edit", $activeRemapControlSet);
+   OptionsMenuSettingsList.addOptionRow("Control Set", "$activeRemapControlSet", %actionMapList, false, "controlSetChanged", true, "Which keybind control set to edit", $activeRemapControlSet);
 	
    for ( %i = 0; %i < $RemapCount; %i++ )
    {
@@ -173,16 +173,18 @@ function fillRemapList()
       %keyMap = buildFullMapString( %i, $RemapActionMap[%i], %device );
       %description = $RemapDescription[%i];
       
-      OptionsMenuSettingsList.addKeybindRow(getField(%keyMap, 0), getButtonBitmap(%device, getField(%keyMap, 1)), "doKeyRemap", -1, -15, true, %description);
+      %buttonImageAsset = getButtonBitmap(%device, getField(%keyMap, 1));
+      
+      OptionsMenuSettingsList.addKeybindRow(getField(%keyMap, 0), %buttonImageAsset, "doKeyRemap", true, %description);
    }
 
-   OptionsMenuSettingsList.refresh();
+   //OptionsMenuSettingsList.refresh();
       //OptionsMenu.addRow( %i, %this.buildFullMapString( %i ) );
 }
 
 function controlSetChanged()
 {
-   $activeRemapControlSet = OptionsMenuSettingsList.getCurrentOption(0);
+   $activeRemapControlSet = OptionsMenuSettingsList.getCurrentOption();
    fillRemapList();
 }
 
@@ -194,6 +196,11 @@ function doKeyRemap( %rowIndex )
 	RemapDlg-->OptRemapText.setValue( "Re-bind \"" @ %name @ "\" to..." );
 	OptRemapInputCtrl.index = %rowIndex;
 	Canvas.pushDialog( RemapDlg );
+	
+	//Let the options menu know
+   %actionMap = $RemapActionMap[%rowIndex];
+   
+   OptionsMenu.onKeybindChanged(%actionMap, %name);
 }
 
 function ControlsMenuRebindButton::onClick(%this)

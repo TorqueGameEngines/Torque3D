@@ -290,7 +290,7 @@ GFXAdapter *GFXInit::getBestAdapterChoice()
    {
      S32 adapterIdx = dAtoi(adapterDevice.c_str());
      if (adapterIdx == -1)
-        adapter = chooseAdapter(adapterType, outputDevice.c_str());
+        adapter = chooseAdapter(NullDevice, outputDevice.c_str());
      else
         adapter = chooseAdapter(adapterType, adapterIdx);
    }

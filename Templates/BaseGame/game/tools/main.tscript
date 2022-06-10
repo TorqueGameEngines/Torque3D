@@ -82,7 +82,6 @@ function onStart()
    // Common GUI stuff.
    exec( "./gui/cursors.ed." @ $TorqueScriptFileExtension );
    exec( "./gui/messageBoxes/messageBox.ed." @ $TorqueScriptFileExtension );
-   exec( "./editorClasses/gui/panels/navPanelProfiles.ed." @ $TorqueScriptFileExtension );
    
    // Make sure we get editor profiles before any GUI's
    // BUG: these dialogs are needed earlier in the init sequence, and should be moved to
@@ -255,7 +254,7 @@ function EditorCreateFakeGameSession(%fileName)
    
    $Game::MissionGroup = "MissionGroup";
 
-   exec(%file);
+   exec(%fileName);
 }
 
 function fastLoadWorldEdit(%val)
@@ -278,7 +277,35 @@ function fastLoadWorldEdit(%val)
          
       if( !$missionRunning )
       {
+         if(EditorSettings.value("WorldEditor/LevelLoad/LoadMode", "Editor Default Scene") $= "Editor Default Scene")
+         {
          EditorNewLevel("ToolsModule:DefaultEditorLevel");
+         }
+         else
+         {
+            //go back through our recent levels list to find the most recent valid editor level.
+            //if NONE work, then just load the default editor scene
+            %recentLevels = EditorSettings.value("WorldEditor/recentLevelsList");
+            %recentCount = getTokenCount(%recentLevels, ",");
+            %loadedScene = false;
+            
+            for(%i=0; %i < %recentCount; %i++)
+            {
+               %recentEntry = getToken(%recentLevels, ",", %i);
+               
+               if(AssetDatabase.isDeclaredAsset(%recentEntry))
+               {
+                  EditorOpenMission(%recentEntry);
+                  %loadedScene = true;
+                  break;
+               }
+            }
+            
+            if(!%loadedScene)
+            {
+               EditorNewLevel("ToolsModule:DefaultEditorLevel");
+            }
+         }
       }
       else
       {

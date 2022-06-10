@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiFadeinBitmapCtrl(StartupGui) {
+$guiContent = new GuiFadeinBitmapCtrl(StartupGui) {
    canSaveDynamicFields = "0";
    Enabled = "1";
    isContainer = "1";
@@ -35,7 +35,7 @@
       Visible = "1";
       tooltipprofile = "GuiToolTipProfile";
       hovertime = "1000";
-      bitmap = "";
+      bitmapAsset = "";
       wrap = "0";
       command = "StartupGui.click();";
    };
@@ -54,7 +54,7 @@
       Visible = "1";
       tooltipprofile = "GuiToolTipProfile";
       hovertime = "1000";
-      bitmap = "";
+      bitmapAsset = "";
       wrap = "0";
       command = "StartupGui.click();";
    };

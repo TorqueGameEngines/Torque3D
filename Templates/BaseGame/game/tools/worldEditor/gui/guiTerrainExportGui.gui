@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(TerrainExportGui, EditorGuiGroup) {
+$guiContent = new GuiControl(TerrainExportGui, EditorGuiGroup) {
    canSaveDynamicFields = "0";
    Profile = "ToolsGuiOverlayProfile";
    Enabled = "1";
@@ -288,6 +288,9 @@ function TerrainExportGui::selectFolder( %this )
 
 function TerrainExportGui::doOpenDialog( %this, %filter, %callback )
 {
+   // TODO
+   %currentFile = "";
+
    %dlg = new OpenFolderDialog()
    {
       Title = "Select Export Folder";

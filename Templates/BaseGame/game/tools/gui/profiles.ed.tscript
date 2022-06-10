@@ -39,7 +39,7 @@ new GuiControlProfile (ToolsGuiDefaultProfile)
    // fill color
    opaque = false;
    fillColor = EditorSettings.value("Theme/tabsColor");
-   fillColorHL = EditorSettings.value("Theme/tabsGLColor");
+   fillColorHL = EditorSettings.value("Theme/tabsHLColor");
    fillColorSEL = EditorSettings.value("Theme/tabsSELColor");
    fillColorNA = EditorSettings.value("Theme/tabsSELColor");
 
@@ -163,7 +163,8 @@ new GuiControlProfile (ToolsGuiWindowProfile)
    opaque = false;
    border = 1;
    fillColor = EditorSettings.value("Theme/tabsColor");
-   fillColorHL = EditorSettings.value("Theme/tabsColor");
+   fillColorHL = EditorSettings.value("Theme/tabsHLColor");
+   fillColorSEL = EditorSettings.value("Theme/tabsSELColor");
    fillColorNA = EditorSettings.value("Theme/tabsColor");
    fontColor = EditorSettings.value("Theme/headerTextColor");
    fontColorHL = EditorSettings.value("Theme/headerTextColor");
@@ -284,6 +285,12 @@ new GuiControlProfile( ToolsGuiTextArrayProfile : ToolsGuiTextProfile )
 if( !isObject( ToolsGuiTextListProfile ) )
 new GuiControlProfile( ToolsGuiTextListProfile : ToolsGuiTextProfile ) 
 {
+   fontColor = EditorSettings.value("Theme/fieldTextColor");
+   fontColorHL = EditorSettings.value("Theme/fieldTextHLColor");
+   fontColorSEL = EditorSettings.value("Theme/fieldTextSELColor");
+   fillColor = EditorSettings.value("Theme/fieldBGColor");
+   fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
+   fillColorSEL = EditorSettings.value("Theme/fieldBGSELColor");
    tab = true;
    canKeyFocus = true;
    category = "Tools";
@@ -354,7 +361,7 @@ new GuiControlProfile( ToolsGuiButtonProfile )
    opaque = true;
    border = true;
    fillColor = EditorSettings.value("Theme/tabsColor");
-   fillColorHL = EditorSettings.value("Theme/tabsGLColor");
+   fillColorHL = EditorSettings.value("Theme/tabsHLColor");
    fillColorSEL = EditorSettings.value("Theme/tabsSELColor");
    fillColorNA = EditorSettings.value("Theme/tabsSELColor");
    
@@ -696,22 +703,6 @@ new GuiControlProfile( ToolsGuiFormProfile : ToolsGuiTextProfile )
 };
 
 // ----------------------------------------------------------------------------
-
-singleton GuiControlProfile( GuiEditorClassProfile )
-{
-   opaque = true;
-   fillColor = "232 232 232";
-   border = 1;
-   borderColor   = "42 42 42 140";
-   borderColorHL = "127 127 127";
-   fontColor = "215 215 215";
-   fontColorHL = "50 50 50";
-   fixedExtent = true;
-   justify = "center";
-   bitmapAsset = "ToolsModule:scrollBar_image";
-   hasBitmapArray = true;
-   category = "Editor";
-};
 
 singleton GuiControlProfile( GuiBackFillProfile )
 {
@@ -1244,4 +1235,29 @@ singleton GuiControlProfile (IconDropdownProfile)
    //bitmap = "./icon-dropdownbar";
    
    fillColor = EditorSettings.value("Theme/headerColor");
+};
+
+//
+singleton GuiControlProfile (GuiSimpleBorderProfile)
+{
+   opaque = false;   
+   border = 1;   
+   category = "Editor";
+};
+
+singleton GuiControlProfile (GuiDisabledTextEditProfile)
+{
+   opaque = false;   
+   border = 0;
+   bitmapAsset = "ToolsModule:textEdit_image";
+   borderColor = "255 255 255 200";
+   fontColor = "0 0 0";
+   fontColorHL = "255 255 255";
+   fontColorNA = "128 128 128";
+   textOffset = "4 2";
+   autoSizeWidth = false;
+   autoSizeHeight = false;
+   tab = false;
+   canKeyFocus = false;   
+   category = "Editor";
 };

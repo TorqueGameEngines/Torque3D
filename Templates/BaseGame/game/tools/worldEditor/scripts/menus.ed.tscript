@@ -158,7 +158,7 @@ function EditorGui::buildMenus(%this)
    //%fileMenu.appendItem("Create Blank Terrain" TAB "" TAB "Canvas.pushDialog( CreateNewTerrainGui );");
    %fileMenu.appendItem("Create Blank Terrain" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"TerrainAsset\", AssetBrowser.selectedModule, createTerrainBlock);");         
      
-   %fileMenu.appendItem("Import Terrain Heightmap" TAB "" TAB "Canvas.pushDialog( TerrainImportGui );");
+   %fileMenu.appendItem("Import Terrain Heightmap" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"TerrainAsset\", AssetBrowser.selectedModule, createTerrainBlock); Canvas.pushDialog( TerrainImportGui );");
    
    %fileMenu.appendItem("Export Terrain Heightmap" TAB "" TAB "Canvas.pushDialog( TerrainExportGui );");
    %fileMenu.appendItem("-");
@@ -167,10 +167,7 @@ function EditorGui::buildMenus(%this)
       //item[6] = "Import Texture Data..." TAB "" TAB "Texture::import();";
       //item[7] = "-";
       //item[8] = "Export Terraform Data..." TAB "" TAB "Heightfield::saveBitmap(\"\");";
-   
-   %fileMenu.appendItem( "-" );
-   %fileMenu.appendItem( "Add FMOD Designer Audio..." TAB "" TAB "AddFMODProjectDlg.show();" );
-   
+  
    %fileMenu.appendItem("-");
    %fileMenu.appendItem("Play Level" TAB "F11" TAB "Editor.close(ProjectSettings.value(\"UI/playGUIName\"));");
       
@@ -357,7 +354,7 @@ function EditorGui::buildMenus(%this)
 
       barTitle = "Tools";
          
-      item[0] = "Network Graph" TAB "n" TAB "toggleNetGraph();";
+      item[0] = "Network Graph" TAB "ctrl n" TAB "toggleNetGraph();";
       item[1] = "Profiler" TAB "ctrl F2" TAB "showMetrics(true);";
 	  item[2] = "Torque SimView" TAB "" TAB "tree();";
       item[3] = "Make Selected a Mesh" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"ShapeAsset\", AssetBrowser.selectedModule, \"makeSelectedAMesh\");";
@@ -462,9 +459,11 @@ function EditorGui::buildMenus(%this)
          Item[18] = "Explode Selected Prefab" TAB "" TAB "EditorExplodePrefab();";
          Item[19] = "-";
          Item[20] = "Take control of entity" TAB "" TAB "EditorTakeControlOfEntity();";
-         Item[21] = "-";
-         Item[22] = "Mount Selection A to B" TAB "" TAB "EditorMount();";
-         Item[23] = "Unmount Selected Object" TAB "" TAB "EditorUnmount();";
+         Item[21] = "Release control of entity" TAB "" TAB "EditorReleaseControlOfEntity();";
+
+         Item[22] = "-";
+         Item[23] = "Mount Selection A to B" TAB "" TAB "EditorMount();";
+         Item[24] = "Unmount Selected Object" TAB "" TAB "EditorUnmount();";
       };
    }
 }

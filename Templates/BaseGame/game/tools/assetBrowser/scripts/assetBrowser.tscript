@@ -35,6 +35,9 @@ function AssetBrowser::initialize(%this)
    if(!isObject(AssetPreviewArray))
       new ArrayObject(AssetPreviewArray);
       
+   if(!isObject(ObjectCreator))
+      new ScriptObject(ObjectCreator);
+      
    if(!isObject(%this.dirHandler))
    {
       %this.dirHandler = makedirectoryHandler(AssetBrowser-->filterTree, "cache,shaderCache", ""); 
@@ -263,6 +266,8 @@ function AssetBrowser::selectAsset( %this, %asset )
       //eval("materialEd_previewMaterial." @ %propertyField @ " = " @ %value @ ";");
       if( AssetBrowser.returnType $= "name" )
       {
+         // TODO!
+         %name = "";
          eval( "" @ AssetBrowser.selectCallback @ "(" @ %name  @ ");");
       }
       else
@@ -277,6 +282,7 @@ function AssetBrowser::selectAsset( %this, %asset )
       %this.changeAsset();
    }
    
+   if(isObject(Inspector))
    Inspector.refresh();
    
    AssetBrowser.hideDialog();
@@ -354,8 +360,13 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
    {
       %this.previewData = new ScriptObject();      
    }
-   
-   AssetPreviewArray.empty();
+   else
+   {
+      %this.previewData.tooltip = "";
+      %this.previewData.assetName = "";
+      %this.previewData.previewImage = "";
+      %this.previewData.doubleClickCommand = "";
+   }
    
    %previewImage = "core/art/warnmat";
    
@@ -487,8 +498,6 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
    
    %tooltip = %assetName;
    
-   %doubleClickCommand = "AssetBrowser.editAsset( "@%assetDesc@" );";
-   
    %textBottomPad = 20;
    
    %previewButton = new GuiIconButtonCtrl()
@@ -501,6 +510,7 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
       textLocation = "Bottom";
       extent = %previewSize.x SPC %previewSize.y + %textBottomPad;
       buttonType = "RadioButton";
+      buttonMargin = "0 -10";
       profile = ToolsGuiDefaultProfile;
    };
    
@@ -512,22 +522,38 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
       AssetBrowser-->previewSlider.setValue(1);
    }
    
-   if(%previewScaleSize == 0)
+   if(%previewScaleSize == 0 || startsWith(AssetBrowser.dirHandler.currentAddress, "Creator"))
    {
       %previewButton.iconLocation = "Left";
       %previewButton.textLocation = "Right";
       %previewButton.setextent(120,20);
+      %previewButton.buttonMargin = "0 0";
+      
+      AssetBrowser.previewListMode = true;
    }
    else
    {
       %size = %previewSize.x * %previewScaleSize;
       %previewButton.setextent(%size,%size + %textBottomPad);
+      
+      AssetBrowser.previewListMode = false;
    }
    
    //%previewButton.extent = %previewSize.x + %previewBounds SPC %previewSize.y + %previewBounds + 24;
    %previewButton.assetName = %assetName;
    %previewButton.moduleName = %moduleName;
    %previewButton.assetType = %assetType;
+   
+   if(%this.selectMode)
+   {
+      %doubleClickCommand = "AssetBrowser.selectAsset( AssetBrowser.selectedAsset );";
+   }
+   else
+   {
+      %doubleClickCommand = "AssetBrowser.editAsset( "@%assetDesc@" );";
+   }
+   
+   %this.previewData.previewLoaded = true;
    
    //Build out the preview
    %buildCommand = %this @ ".build" @ %assetType @ "Preview(\"" @ %assetDesc @ "\"," @ %this.previewData @ ");";
@@ -537,7 +563,9 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
    %tooltip = %this.previewData.tooltip;
    %assetName = %this.previewData.assetName;
    %previewImage = %this.previewData.previewImage;
-   %doubleClickCommand = %this.previewData.doubleClickCommand;
+   
+   if(%this.previewData.doubleClickCommand !$= "")
+      %doubleClickCommand = %this.previewData.doubleClickCommand;
    
    %previewButton.assetName = %assetName;
    %previewButton.moduleName = %moduleName;
@@ -557,7 +585,8 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
    AssetBrowser-->assetList.add(%previewButton);
    
    // add to the array object for reference later
-   AssetPreviewArray.add( %previewButton, %this.previewData.previewImage );
+   if(%this.previewData.previewLoaded == false)
+      AssetPreviewArray.add( %previewButton );
 }
 
 function AssetBrowser::refresh(%this)
@@ -583,6 +612,25 @@ function AssetBrowser::doRefresh(%this)
       AssetBrowser-->filterTree.expandItem(%dataItem);
       
       %this.dirty = false;
+   }
+}
+
+function AssetBrowser::populatePreviewImages(%this)
+{
+   echo("AssetBrowser::populatePreviewImages() - Previews to generate: " @ AssetPreviewArray.count());
+   for(%i=0; %i < AssetPreviewArray.count(); %i++)
+   {
+      %previewButton = AssetPreviewArray.getKey(%i);
+      %type = %previewButton.assetType;
+      
+      echo("   - Generating preview for asset: " @ %previewButton.moduleName @ ":" @ %previewButton.assetName);
+      
+      AssetBrowser.call("generate" @ %previewButton.assetType @ "PreviewImage", %previewButton);
+      AssetPreviewArray.erase(%i);
+      
+      echo("   - done, scheduling another pass");
+      AssetBrowser.schedule(32, "populatePreviewImages");
+      return;
    }
 }
 //
@@ -616,7 +664,25 @@ function AssetBrowser::loadDirectories( %this )
    
    %dataItem = AssetBrowser-->filterTree.insertItem(AssetBrowser-->filterTree.modulesIdx, "data");
    AssetBrowser-->filterTree.tagsIdx = AssetBrowser-->filterTree.insertItem(1, "Tags");
-   AssetBrowser-->filterTree.creatorIdx = AssetBrowser-->filterTree.insertItem(1, "Creator");
+   
+      AssetBrowser-->filterTree.creatorIdx = AssetBrowser-->filterTree.insertItem(1, "Creator");
+   
+   AssetBrowser-->filterTree.clearSelection();
+      
+   if(%this.selectMode)
+   {
+      //Due to a fluke in how this tracks, it overrides the current addres, so we'll
+      //store it real fast
+      %curAdd = AssetBrowser.dirHandler.currentAddress;
+      
+      //Disable these for this go
+      AssetBrowser-->filterTree.addSelection(AssetBrowser-->filterTree.collectionsIdx);
+      AssetBrowser-->filterTree.addSelection(AssetBrowser-->filterTree.creatorIdx);
+      AssetBrowser-->filterTree.hideSelection();
+      AssetBrowser-->filterTree.clearSelection();
+      
+      AssetBrowser.dirHandler.currentAddress = %curAdd;
+   }
    
    %this.dirHandler.loadFolders("data", %dataItem);
    
@@ -624,7 +690,8 @@ function AssetBrowser::loadDirectories( %this )
    
    %this.loadTags();
    
-   %this.loadCreatorClasses();
+   if (!%this.selectMode)
+      %this.loadCreatorClasses();
    
    //If set to, show core
    if(EditorSettings.value("Assets/Browser/showCoreModule", false) == 1)
@@ -640,55 +707,12 @@ function AssetBrowser::loadDirectories( %this )
       %this.dirHandler.loadFolders("tools", %toolsItem);
    }
    
-   //Add Non-Asset Scripted Objects. Datablock, etc based
-   /*%category = getWord( %breadcrumbPath, 1 );                  
-   %dataGroup = "DataBlockGroup";
-   
-   if(%dataGroup.getCount() != 0)
-   {
-      %scriptedItem = AssetBrowser-->filterTree.insertItem(1, "Scripted");
-      
-      for ( %i = 0; %i < %dataGroup.getCount(); %i++ )
-      {
-         %obj = %dataGroup.getObject(%i);
-         // echo ("Obj: " @ %obj.getName() @ " - " @ %obj.category );
-         
-         //if ( %obj.category $= "" && %obj.category == 0 )
-         //   continue;
-         
-         %dbFilename = %obj.getFileName();
-         %dbFilePath = filePath(%dbFilename);
-         
-         if(%breadcrumbPath $= %dbFilePath)
-         {
-         
-         //if ( %breadcrumbPath $= "" )
-         //{         
-            %catItem = AssetBrowser-->filterTree.findItemByName(%obj.category);
-            
-            if(%catItem == 0)
-               AssetBrowser-->filterTree.insertItem(%scriptedItem, %obj.category, "scripted");
-            /*%ctrl = %this.findIconCtrl( %obj.category );
-            if ( %ctrl == -1 )
-            {
-               %this.addFolderIcon( %obj.category );
-            }*/
-         //}
-         /*else if ( %breadcrumbPath $= %obj.category )
-         {            
-            AssetBrowser-->filterTree.insertItem(%scriptedItem, %obj.getName());
-         }*/
-         //}
-      //}
-  // }
-   
-   AssetPreviewArray.empty();
-   
    AssetBrowser-->filterTree.buildVisibleTree(true);
    
    //Remove any modules that have no assets if we have that filter on
    if(%this.onlyShowModulesWithAssets)
    {
+      %modulesList = ModuleDatabase.findModules();
       for(%i=0; %i < getWordCount(%modulesList); %i++)
       {
          %moduleName = getWord(%modulesList, %i).ModuleId;
@@ -709,9 +733,6 @@ function AssetBrowser::loadDirectories( %this )
       AssetBrowser.newModuleId = ""; 
    }
    
-   //%dataItem = AssetBrowser-->filterTree.findItemByName("data");
-   //AssetBrowser-->filterTree.expandItem(%dataItem);
-   
    AssetBrowser.dirHandler.expandTreeToAddress(AssetBrowser.dirHandler.currentAddress);
    
    %selectedItem = AssetBrowser.dirHandler.getFolderTreeItemFromAddress(AssetBrowser.dirHandler.currentAddress);
@@ -724,20 +745,6 @@ function AssetBrowser::loadDirectories( %this )
 
 function AssetBrowser::updateSelection( %this, %asset, %moduleName )
 {
-   /*%isAssetBorder = 0;
-   eval("%isAssetBorder = isObject(AssetBrowser-->"@%asset@"Border);");
-   if( %isAssetBorder )
-   {
-      eval( "AssetBrowser-->"@%asset@"Border.setStateOn(1);");
-   }
-      
-   %isAssetBorderPrevious = 0;
-   eval("%isAssetBorderPrevious = isObject(AssetBrowser-->"@%this.prevSelectedMaterialHL@"Border);");
-   if( %isAssetBorderPrevious )
-   {
-      eval( "AssetBrowser-->"@%this.prevSelectedMaterialHL@"Border.setStateOn(0);");
-   }*/
-   
    //If we had an existing selected assetDef, clear the reference
    if(isObject(AssetBrowser.selectedAssetDef))
       AssetDatabase.releaseAsset(AssetBrowser.selectedAssetDef.getAssetId());
@@ -749,11 +756,13 @@ function AssetBrowser::updateSelection( %this, %asset, %moduleName )
    if(strstr(%moduleName, "/") != -1)
       return;
       
-   //Otherwise, it's an asset so we'll select the definition while we're at it
+   //Check if this is an actual assetId, or if it's just a programmatic reference
+   //like what we use for the creator entries
+   if(AssetDatabase.isDeclaredAsset(AssetBrowser.selectedAsset))
+   {
+      //Looks good, it's an asset so we'll select the definition while we're at it
    AssetBrowser.selectedAssetDef = AssetDatabase.acquireAsset(AssetBrowser.selectedAsset);
-   //AssetBrowser.selectedPreviewImagePath = %previewImagePath;
-   
-   //%this.prevSelectedMaterialHL = %asset;
+   }
 }
 
 function AssetBrowser::loadCollectionSets(%this)
@@ -830,137 +839,6 @@ function AssetBrowser::setTagActive(%this, %tag)
    %this.rebuildAssetArray();
 }
 
-function AssetBrowser::loadCreatorClasses(%this)
-{
-   // Just so we can recall this method for testing changes
-   // without restarting.
-   if ( isObject( %this.creatorClassArray ) )
-      %this.creatorClassArray.delete();
-      
-   %this.creatorClassArray = new ArrayObject();
-   %this.creatorClassArray.caseSensitive = true; 
-   //%this.setListView( true );
-   
-   %this.beginCreatorGroup( "Environment" );
-   
-      // Removed Prefab as there doesn't really seem to be a point in creating a blank one
-      //%this.addCreatorClass( "Prefab",              "Prefab" );
-      %this.addCreatorClass( "SkyBox",              "Sky Box" );
-      %this.addCreatorClass( "CloudLayer",          "Cloud Layer" );
-      %this.addCreatorClass( "BasicClouds",         "Basic Clouds" );
-      %this.addCreatorClass( "ScatterSky",          "Scatter Sky" );
-      %this.addCreatorClass( "Sun",                 "Basic Sun" );
-      %this.addCreatorClass( "Lightning" );
-      %this.addCreatorClass( "WaterBlock",          "Water Block" );
-      %this.addCreatorClass( "SFXEmitter",          "Sound Emitter" );
-      %this.addCreatorClass( "Precipitation" );
-      %this.addCreatorClass( "ParticleEmitterNode", "Particle Emitter" );
-      
-      // Legacy features. Users should use Ground Cover and the Forest Editor.   
-      //%this.addCreatorClass( "fxShapeReplicator",   "Shape Replicator" );
-      //%this.addCreatorClass( "fxFoliageReplicator", "Foliage Replicator" );
-      
-      %this.addCreatorClass( "PointLight",          "Point Light" );
-      %this.addCreatorClass( "SpotLight",           "Spot Light" );
-      %this.addCreatorClass( "GroundCover",         "Ground Cover" );
-      %this.addCreatorClass( "TerrainBlock",        "Terrain Block" );
-      %this.addCreatorClass( "GroundPlane",         "Ground Plane" );
-      %this.addCreatorClass( "WaterPlane",          "Water Plane" );
-      %this.addCreatorClass( "PxCloth",             "Cloth" );
-      %this.addCreatorClass( "ForestWindEmitter",   "Wind Emitter" );
-               
-      %this.addCreatorClass( "DustEmitter", "Dust Emitter" );
-      %this.addCreatorClass( "DustSimulation", "Dust Simulation" );
-      %this.addCreatorClass( "DustEffecter", "Dust Effecter" );
-      
-   %this.endCreatorGroup();
-
-   %this.beginCreatorGroup( "Level" );
-   
-      %this.addCreatorClass("MissionArea",  "Mission Area" );
-      %this.addCreatorClass("Path" );
-      %this.addCreatorClass("Marker",       "Path Node" );
-      %this.addCreatorClass("Trigger" );
-      %this.addCreatorClass("PhysicalZone", "Physical Zone" );
-      %this.addCreatorClass("Camera" );
-      %this.addCreatorClass( "LevelInfo",    "Level Info" );
-      %this.addCreatorClass( "TimeOfDay",    "Time of Day" );
-      %this.addCreatorClass( "Zone",         "Zone" );
-      %this.addCreatorClass( "Portal",       "Zone Portal" );
-      %this.addCreatorClass( "SpawnSphere",  "Player Spawn Sphere"/*, "PlayerDropPoint"*/ );
-      %this.addCreatorClass( "SpawnSphere",  "Observer Spawn Sphere"/*, "ObserverDropPoint"*/ );
-      %this.addCreatorClass( "SFXSpace",      "Sound Space" );
-      %this.addCreatorClass( "OcclusionVolume", "Occlusion Volume" );
-      
-   %this.endCreatorGroup();
-   
-   %this.beginCreatorGroup( "System" );
-   
-      %this.addCreatorClass( "SimGroup" );
-      %this.addCreatorClass( "AIPathGroup" );
-      
-   %this.endCreatorGroup();  
-
-   %this.beginCreatorGroup( "ExampleObjects" );
-   
-      %this.addCreatorClass( "RenderObjectExample" );
-      %this.addCreatorClass( "RenderMeshExample" );
-      %this.addCreatorClass( "RenderShapeExample" );
-      
-   %this.endCreatorGroup(); 
-   
-   %this.creatorClassArray.sortk();
-}
-
-function AssetBrowser::beginCreatorGroup(%this, %group)
-{
-   AssetBrowser-->filterTree.insertItem(AssetBrowser-->filterTree.creatorIdx, %group);
-   %this.currentCreatorGroup = %group;
-}
-
-function AssetBrowser::endCreatorGroup(%this, %group)
-{
-   %this.currentCreatorGroup = "";
-}
-
-function AssetBrowser::addCreatorClass(%this, %class, %name, %buildfunc)
-{
-   if( !isClass(%class) )
-      return;
-      
-   if ( %name $= "" )
-      %name = %class;
-      
-   if ( %this.currentCreatorGroup !$= "" && %group $= "" )
-      %group = %this.currentCreatorGroup;
-   
-   if ( %class $= "" || %group $= "" )
-   {
-      warn( "AssetBrowser::addCreatorClass, invalid parameters!" );
-      return;  
-   }
-   
-   if(%buildfunc $= "")
-   {
-      %method = "build" @ %buildfunc;
-      if( !ObjectBuilderGui.isMethod( %method ) )
-         %method = "build" @ %class;
-
-      if( !ObjectBuilderGui.isMethod( %method ) )
-         %cmd = "return new " @ %class @ "();";
-      else
-         %cmd = "ObjectBuilderGui." @ %method @ "();";
-
-      %buildfunc = "ObjectBuilderGui.newObjectCallback = \"AssetBrowser.onFinishCreateObject\"; EWCreatorWindow.createObject( \"" @ %cmd @ "\" );";
-   }
-
-   %args = new ScriptObject();
-   %args.val[0] = %class;
-   %args.val[1] = %name;
-   %args.val[2] = %buildfunc;
-   
-   %this.creatorClassArray.push_back( %group, %args );
-}
 //
 //needs to be deleted with the persistence manager and needs to be blanked out of the matmanager
 //also need to update instances... i guess which is the tricky part....
@@ -1036,13 +914,7 @@ function AssetBrowser::deleteMaterial( %this, %materialName, %secondFilter, %sec
       AssetBrowserPerMan.saveDirty();
    }
       
-   AssetBrowser.preloadFilter();
-}
-
-function AssetBrowser::thumbnailCountUpdate(%this)
-{
-   $Pref::AssetBrowser::ThumbnailCountIndex = AssetBrowser-->materialPreviewCountPopup.getSelected();
-   AssetBrowser.LoadFilter( AssetBrowser.currentFilter, AssetBrowser.currentStaticFilter );
+   AssetBrowser.refresh();
 }
 
 function AssetBrowser::toggleTagFilterPopup(%this)
@@ -1074,6 +946,13 @@ function AssetBrowser::toggleTagFilterPopup(%this)
 		//now, add the asset's category
 		%assetType = AssetDatabase.getAssetCategory(%assetId);
 		
+      // TODO?
+      %text = "";
+      %var = "";
+      %cmd = "";
+      %textLength = strlen(%text);
+      // end todo
+
 		%checkBox = new GuiCheckBoxCtrl()
 		{
 			canSaveDynamicFields = "0";
@@ -1103,13 +982,30 @@ function AssetBrowser::toggleTagFilterPopup(%this)
 
 function AssetBrowser::changeAsset(%this)
 {
+   %targetObject = %this.fieldTargetObject;
+   %inspectorObject = "";
+   
+   if(%this.fieldTargetObject.isInNamespaceHierarchy("GuiInspector"))
+   {
+      %inspectorObject = %this.fieldTargetObject;
+      %targetObject = %inspectorObject.getInspectObject();
+   }
+   
    //alright, we've selectd an asset for a field, so time to set it!
    if(%this.fieldTargetName $= "")
-      %cmd = %this.fieldTargetObject @ ".apply(\""@ %this.selectedAsset @ "\");";
+      %cmd = %targetObject @ ".apply(\""@ %this.selectedAsset @ "\");";
    else
-      %cmd = %this.fieldTargetObject @ "." @ %this.fieldTargetName @ "=\"" @ %this.selectedAsset @ "\";";
-   echo("Changing asset via the " @ %cmd @ " command");
+      %cmd = %targetObject @ "." @ %this.fieldTargetName @ "=\"" @ %this.selectedAsset @ "\";";
+   //echo("Changing asset via the " @ %cmd @ " command");
    eval(%cmd);
+   
+   //Force update our object with the field change
+   %targetObject.inspectPostApply();
+   
+   if(isObject(%inspectorObject))
+   {
+      %inspectorObject.refresh();
+   }
    
    //Flag us as dirty for editing purposes
    EWorldEditor.setSceneAsDirty();
@@ -1134,6 +1030,9 @@ function AssetBrowser::reImportAsset(%this)
          //if(%assetType $= "ImageAsset")
          //   %filters = "";
             
+         //TODO
+         %currentFile = "";
+
          %dlg = new OpenFileDialog()
          {
             Filters = "(All Files (*.*)|*.*|";
@@ -1175,10 +1074,10 @@ function AssetBrowserPreviewButton::onRightClick(%this)
    
    //Do some enabling/disabling of options depending on asset type
    EditAssetPopup.enableItem(0, true);
-   EditAssetPopup.enableItem(7, true);
+   EditAssetPopup.enableItem(9, true);
    
    //Is it an editable type?
-   if(%assetType $= "ImageAsset" /*|| %assetType $= "GameObjectAsset"*/ || %assetType $= "CppAsset" || %assetType $= "SoundAsset")
+   if(%assetType $= "ImageAsset" /*|| %assetType $= "GameObjectAsset"*/ || %assetType $= "CppAsset")
    {
       EditAssetPopup.enableItem(0, false);
    }
@@ -1188,8 +1087,17 @@ function AssetBrowserPreviewButton::onRightClick(%this)
        || %assetType $= "MaterialAsset" || %assetType $= "ParticleAsset"  || %assetType $= "PostEffectAsset" || %assetType $= "ScriptAsset"
        || %assetType $= "StateMachineAsset")
    {
-      EditAssetPopup.enableItem(7, false);
+      EditAssetPopup.enableItem(9, false);
    }
+   
+   %assetDef = AssetDatabase.acquireAsset(EditAssetPopup.assetId);
+   if(%assetDef.originalFilePath $= "" || !isFile(%assetDef.originalFilePath))
+   {
+      //if we have no noted original import file path or it's invalid
+      //we can't reimport either
+      EditAssetPopup.enableItem(9, false);
+   }
+   AssetDatabase.releaseAsset(EditAssetPopup.assetId);
    
    if(%assetType $= "LevelAsset")
    {
@@ -1289,6 +1197,86 @@ function AssetBrowser::openAssetSettings(%this)
    %assetEditIndex = ESettingsWindowList.findTextIndex("Asset Editing");
    ESettingsWindowList.setSelectedRow( %assetEditIndex );
 }
+
+function ESettingsWindow::getAssetManagementSettings(%this)
+{
+   SettingsInspector.startGroup("Modules");
+   SettingsInspector.addSettingsField("AssetManagement/Modules/coreModulePath", "Core Module Path", "string", "");
+   SettingsInspector.addSettingsField("AssetManagement/Modules/gameDataModulePath", "Game Data Module Path", "string", "");
+   SettingsInspector.addSettingsField("AssetManagement/Modules/moduleExtension", "Module Extension", "string", "");
+   
+   %moduleList = ModuleDatabase.findModules(true);
+   %moduleList = strreplace(%moduleList, " ", ",");
+   
+   SettingsInspector.addSettingsField("AssetManagement/Modules/DefaultModule", "Default Module", "list", %moduleList);
+   SettingsInspector.endGroup();
+   
+   SettingsInspector.startGroup("Assets");
+   SettingsInspector.addSettingsField("AssetManagement/Assets/assetExtension", "Asset Extension", "string", "");
+   SettingsInspector.addSettingsField("AssetManagement/Assets/datablockCaching", "Cache Datablocks", "bool", "");
+   //SettingsInspector.addSettingsField("AssetManagement/Assets/moduleExtension", "Module Extension", "string", "");
+   
+   SettingsInspector.endGroup();
+} 
+
+function ESettingsWindow::getAssetEditingSettings(%this)
+{
+   ImportAssetWindow::reloadImportOptionConfigs();
+   
+   //First, get our list of modules
+   %moduleList = ModuleDatabase.findModules();
+   %formattedModuleList = "";
+   
+   %count = getWordCount(%moduleList);
+   for(%i=0; %i < %count; %i++)
+   {
+      %module = getWord(%moduleList, %i);
+      if(%module.group !$= "Tools" && %module.group !$= "Core")
+      {
+         if(%formattedModuleList $= "")
+            %formattedModuleList = %module.moduleId;
+         else
+            %formattedModuleList = %formattedModuleList @ "," @ %module.moduleId;  
+      }
+   }
+   
+   SettingsInspector.startGroup("Asset Creation");
+   SettingsInspector.addSettingsField("Assets/New/defaultModule", "Default Module", "list", "Default Module for new assets to be created into", %formattedModuleList); 
+   SettingsInspector.addSettingsField("Assets/New/alwaysPromptModuleTarget", "Always Prompt Target Module", "bool", "If off, use the default module"); 
+   SettingsInspector.endGroup();
+   
+   %formattedConfigList = "";
+   for(%i=0; %i < ImportAssetWindow.importConfigsList.Count(); %i++)
+   {
+      %configName = ImportAssetWindow.importConfigsList.getKey(%i);
+      %formattedConfigList = %i == 0 ? %configName : %formattedConfigList @ "," @ %configName;
+   }
+   
+   SettingsInspector.startGroup("Assets Importing");
+   SettingsInspector.addField("Edit Import Configs", "Edit Asset Import Configs", "button", "Open Asset Import Config Editor", "", "Canvas.pushDialog(AssetImportConfigEditor);");
+   SettingsInspector.addSettingsField("Assets/AssetImporDefaultConfig", "Default Asset Import Config", "list", "", %formattedConfigList); 
+   SettingsInspector.addSettingsField("Assets/AutoImport", "Automatically Import using default config", "bool", "If on, the asset importing process" @
+                                                                                                                        "will attempt to automatically import any inbound assets"@
+                                                                                                                        "using the default config, without prompting the import window."@
+                                                                                                                        "The window will still display if any issues are detected", ""); 
+   SettingsInspector.addSettingsField("Assets/AutoImportLooseFiles", "Automatically Import Loose Files", "bool", "If on, will automatically import unassociated loose files in assets when navigating the Asset Browser.", ""); 
+   SettingsInspector.endGroup();
+   
+   SettingsInspector.startGroup("Asset Browser");
+   SettingsInspector.addSettingsField("Assets/Browser/showCoreModule", "Show Core Module in Asset Browser", "bool", ""); 
+   SettingsInspector.addSettingsField("Assets/Browser/showToolsModule", "Show Tools Module in Asset Browser", "bool", ""); 
+   SettingsInspector.addSettingsField("Assets/Browser/showOnlyPopulatedModule", "Show Only Modules with Assets in Asset Browser", "bool", "");
+   SettingsInspector.addSettingsField("Assets/Browser/showFolders", "Show Folders in Tiles view in Asset Browser", "bool", "");
+   SettingsInspector.addSettingsField("Assets/Browser/showEmptyFolders", "Show Empty Folders in Tiles view in Asset Browser", "bool", "");
+   SettingsInspector.addSettingsField("Assets/Browser/showLooseFiles", "Show Loose Files when viewing in Asset Browser", "bool", "");
+   SettingsInspector.addSettingsField("AssetManagement/Assets/promptOnRename", "Prompt on Rename", "bool", "");
+   SettingsInspector.addSettingsField("Assets/Browser/doubleClickAction", "Double Click Action", "list", "Dictates what sort of action double clicking on an asset in the Browser will invoke", "Edit Asset,Spawn Asset");
+   SettingsInspector.addSettingsField("AssetManagement/Assets/closeBrowserOnDragAction", "Close Browser on Drag Action", "bool", "If on, the Asset Browser will automatically close after dragging an asset from it to the editor interface.");
+   SettingsInspector.endGroup();
+}
+//
+//
+//
 
 function AssetBrowser::showVisibiltyOptions(%this)
 {
@@ -1449,111 +1437,6 @@ function AssetBrowser::doRebuildAssetArray(%this)
 
    %finalAssetCount = 0;
    
-    //now, we'll iterate through, and find the assets that are in this module, and this category
-    for( %i=0; %i < %numAssetsFound; %i++)
-    {
-	    %assetId = %assetQuery.getAsset(%i);
-	    
-	    %assetPath = makeRelativePath(AssetDatabase.getAssetFilePath(%assetId));
-       %assetBasePath = filePath(%assetPath);
-       
-       //clean up the path
-       %assetBasePath = strreplace(%assetBasePath, "//", "/");
-       
-       %searchActive = AssetSearchTerms.count() != 0;
-       if(%assetBasePath $= %breadcrumbPath || (%searchActive && startsWith(%assetBasePath,%breadcrumbPath)))
-       {
-          //first, get the asset's module, as our major categories
-		    %module = AssetDatabase.getAssetModule(%assetId);
-		    %moduleName = %module.moduleId;
-		    
-		    //it's good, so test that the category is right!
-			%assetType = AssetDatabase.getAssetCategory(%assetId);
-			if(%assetType $= "")
-			{
-			   %assetType = AssetDatabase.getAssetType(%assetId);
-			}
-			
-			/*%validType = false;
-         
-         if(AssetBrowser.assetTypeFilter $= "")
-         {
-            if(AssetTypeListPopup.isItemChecked(0))
-            {
-               %validType = true;
-            }
-            else
-            {
-               for(%f=1; %f < AssetFilterTypeList.Count(); %f++)
-               {
-                  %isChecked = AssetTypeListPopup.isItemChecked(%f+1);  
-                  
-                  if(%isChecked)
-                  {
-                     %filterTypeName = AssetFilterTypeList.getKey(%f);
-                     
-                     if(%activeTypeFilterList $= "")
-                        %activeTypeFilterList = %filterTypeName;
-                     else
-                        %activeTypeFilterList = %activeTypeFilterList @ ", " @ %filterTypeName;
-                        
-                     if(%filterTypeName @ "Asset" $= %assetType)
-                     {
-                        %validType = true;
-                        break;  
-                     }
-                  }
-               }
-            }
-            
-            if(!%validType)
-               continue;
-         }
-         else
-         {
-            if(%assetType !$= AssetBrowser.assetTypeFilter)
-               continue;  
-         }*/
-			
-         //stop adding after previewsPerPage is hit
-         %assetName = AssetDatabase.getAssetName(%assetId);
-
-         if(%searchActive)
-         {
-            if(matchesSearch(%assetName, %assetType))
-            {
-               $AssetBrowser::AssetArray.add( %moduleName, %assetId);
-                  
-               if(%assetType !$= "Folder")
-                  %finalAssetCount++;
-                  
-               continue;
-            }
-         }
-         else
-         {
-            if(AssetBrowser.assetTypeFilter !$= "")
-            {
-               if(AssetBrowser.assetTypeFilter $= %assetType)
-               {
-                  $AssetBrowser::AssetArray.add( %moduleName, %assetId );
-                  
-                  if(%assetType !$= "Folder")
-                     %finalAssetCount++;
-               }
-            }
-            else
-            {
-               //got it.	
-               $AssetBrowser::AssetArray.add( %moduleName, %assetId );
-               
-               if(%assetType !$= "Folder")
-                  %finalAssetCount++;
-            }
-         }
-      }
-   }
-   
    //Add folders
    if(EditorSettings.value("Assets/Browser/showFolders", true) == true)
    {
@@ -1587,9 +1470,93 @@ function AssetBrowser::doRebuildAssetArray(%this)
          }
       }
    }
+   
+    //now, we'll iterate through, and find the assets that are in this module, and this category
+    for( %i=0; %i < %numAssetsFound; %i++)
+    {
+	    %assetId = %assetQuery.getAsset(%i);
+	    
+	    %assetPath = makeRelativePath(AssetDatabase.getAssetFilePath(%assetId));
+       %assetBasePath = filePath(%assetPath);
+       
+       //clean up the path
+       %assetBasePath = strreplace(%assetBasePath, "//", "/");
+       
+       %searchActive = AssetSearchTerms.count() != 0;
+       if(%assetBasePath $= %breadcrumbPath || (%searchActive && startsWith(%assetBasePath,%breadcrumbPath)))
+       {
+          //first, get the asset's module, as our major categories
+		    %module = AssetDatabase.getAssetModule(%assetId);
+		    %moduleName = %module.moduleId;
+		    
+		    //it's good, so test that the category is right!
+			%assetType = AssetDatabase.getAssetCategory(%assetId);
+			if(%assetType $= "")
+			{
+			   %assetType = AssetDatabase.getAssetType(%assetId);
+			}
+			
+         //stop adding after previewsPerPage is hit
+         %assetName = AssetDatabase.getAssetName(%assetId);
+
+         if(%searchActive)
+         {
+            if(matchesSearch(%assetName, %assetType))
+            {
+               $AssetBrowser::AssetArray.add( %moduleName, %assetId);
+                  
+               if(%assetType !$= "Folder")
+                  %finalAssetCount++;
+                  
+               continue;
+            }
+         }
+         else
+         {
+            if(AssetBrowser.assetTypeFilter !$= "")
+            {
+               %filtersCount = getWordCount(AssetBrowser.assetTypeFilter);
+               for(%fltrIdx = 0; %fltrIdx < %filtersCount; %fltrIdx++)
+               {
+                  %fltr = getWord(AssetBrowser.assetTypeFilter, %fltrIdx);
+                  if(%fltr $= %assetType)
+               {
+                  $AssetBrowser::AssetArray.add( %moduleName, %assetId );
+                  
+                  if(%assetType !$= "Folder")
+                     %finalAssetCount++;
+               }
+            }
+            }
+            else
+            {
+               //got it.	
+               $AssetBrowser::AssetArray.add( %moduleName, %assetId );
+               
+               if(%assetType !$= "Folder")
+                  %finalAssetCount++;
+            }
+         }
+      }
+   }
 
    //Add Non-Asset Scripted Objects. Datablock, etc based
-   if(AssetBrowser.assetTypeFilter $= "" && %breadcrumbPath !$= "" && !startsWith(%breadcrumbPath, "Creator/"))
+   %hasDBFilter = true;
+   if(AssetBrowser.assetTypeFilter !$= "")
+   {
+      %hasDBFilter = false;
+      %filterCount = getWordCount(AssetBrowser.assetTypeFilter);
+      for(%fltrIdx = 0; %fltrIdx < %filterCount; %fltrIdx++)
+      {
+         %fltr = getWord(AssetBrowser.assetTypeFilter, %fltrIdx);
+         if(%fltr $= "Datablock" || %fltr $= "Datablocks")
+         {
+            %hasDBFilter = true;
+            break;  
+         }
+      }
+   }
+   if(%hasDBFilter && %breadcrumbPath !$= "" && isDirectory(%breadcrumbPath))
    {
       %category = getWord( %breadcrumbPath, 1 );                  
       %dataGroup = "DataBlockGroup";
@@ -1779,24 +1746,48 @@ function AssetBrowser::doRebuildAssetArray(%this)
       //One of the creator folders was selected
       %creatorGroup = AssetBrowserFilterTree.getItemText(AssetBrowserFilterTree.getSelectedItem(0));
             
+      if(%creatorGroup $= "Creator")
+      {
+         //add folders for the groups
+         %placeholderVar = "";
+      }
+      else
+      {
       for ( %i = 0; %i < AssetBrowser.creatorClassArray.count(); %i++ )
       {
          %group = AssetBrowser.creatorClassArray.getKey( %i );
 
-         if ( %group $= %creatorGroup )
+            //Do some filter logic do skip out of groups if we're in the wrong editor mode for it
+            %creatorEditorFilter = "WorldEditor";
+            if(GuiEditorIsActive())
+            {
+               %creatorEditorFilter = "GuiEditor";
+            }
+            
+            %creatorGroupIndex = AssetBrowserCreatorGroupsList.getIndexFromValue(%group);
+            %creatorGroupKey = AssetBrowserCreatorGroupsList.getKey(%creatorGroupIndex);
+            
+            if ( %group $= %creatorGroup && %creatorGroupKey $= %creatorEditorFilter )
          {
             %creatorObj = AssetBrowser.creatorClassArray.getValue( %i );
             %class = %creatorObj.val[0];
             %name = %creatorObj.val[1];
             %func = %creatorObj.val[2];
             
+               %searchActive = AssetSearchTerms.count() != 0;
+               if(%searchActive && !matchesSearch(%name, "Creator"))
+                  continue;
+                     
             $AssetBrowser::AssetArray.add( %name, "Creator" TAB %creatorObj );
          }               
       }   
 	}
+	}
 	
    for(%i=0; %i < $AssetBrowser::AssetArray.count(); %i++)
 		AssetBrowser.buildAssetPreview( $AssetBrowser::AssetArray.getValue(%i), $AssetBrowser::AssetArray.getKey(%i) );  
+   //Queue population of any non-Type Card preview images
+   AssetBrowser.schedule(32, "populatePreviewImages");
 		
    AssetBrowser_FooterText.text = %finalAssetCount @ " Assets";
    
@@ -1941,7 +1932,7 @@ function matchesSearch(%assetName, %assetType)
          }
          else
          {
-            if(%assetName.tags !$= %word)
+            if(strstr(strlwr(%assetName.tags), strlwr(%word)) != -1)
                %matchTags = true;
          }
       }
@@ -2421,7 +2412,7 @@ function EWorldEditor::onControlDropped( %this, %payload, %position )
 
    %assetType = %payload.assetType;
    
-   %pos = EWCreatorWindow.getCreateObjectPosition(); //LocalClientConnection.camera.position; 
+   %pos = ObjectCreator.getCreateObjectPosition(); //LocalClientConnection.camera.position; 
    %module = %payload.moduleName;
    %asset = %payload.assetName;
    
@@ -2455,6 +2446,60 @@ function EWorldEditor::onControlDropped( %this, %payload, %position )
    EWorldEditor.isDirty = true;
 }
 
+function GuiEditor::onControlDropped(%this, %payload, %position)
+{  
+   Canvas.popDialog(EditorDragAndDropLayer);
+   // Make sure we have the right kind of D&D.
+   
+   if( !%payload.parentGroup.isInNamespaceHierarchy( "GuiDragAndDropControlType_GuiControl" ) &&
+         !%payload.parentGroup.isInNamespaceHierarchy( "AssetPreviewControlType_AssetDrop" ))
+      return;
+      
+   if( %payload.dragSourceControl == %this )
+      return;
+
+   %pos = %payload.getGlobalPosition();
+   %x = getWord(%pos, 0);
+   %y = getWord(%pos, 1);
+   
+   if(%payload.assetType !$= "Creator")
+   {
+      //dealing with an actual asset, so build the assetName
+      %assetId = %payload.moduleName @ ":" @ %payload.assetName;
+      %assetType = AssetDatabase.getAssetType(%assetId);
+      
+      if(%assetType $= "ImageAsset")
+      {
+         %cmd = "return new guiBitmapCtrl();";
+         %ctrl = eval( %cmd ); 
+         %ctrl.bitmap = %assetId;
+      }
+   }
+   else
+   {
+      %className = %payload.assetName;
+      if(%payload.altCommand !$= "")
+      {
+         %cmd = %payload.altCommand;
+      }
+      else
+      {
+      %cmd = "return new " @ %className @ "();";
+      }
+      %ctrl = eval( %cmd );
+   }
+
+   %this.addNewCtrl(%ctrl);
+   
+   %ctrl.setPositionGlobal(%x, %y);
+   %this.setFirstResponder();
+   
+   if(EditorSettings.value("AssetManagement/Assets/closeBrowserOnDragAction", false))
+   {
+      AssetBrowser.hideDialog();  
+   }
+}
+
 function AssetBrowserFilterTree::onControlDropped( %this, %payload, %position )
 {
    Canvas.popDialog(EditorDragAndDropLayer);
@@ -2466,11 +2511,7 @@ function AssetBrowserFilterTree::onControlDropped( %this, %payload, %position )
    %assetName = %payload.assetName;
    %moduleName = %payload.moduleName;
    
-   echo("DROPPED A " @ %assetType @ " ON THE ASSET BROWSER NAVIGATION TREE!");
-   
    %item = %this.getItemAtPosition(%position);
-   
-   echo("DROPPED IT ON ITEM " @ %item);
    
    %parent = %this.getParentItem(%item);
    
@@ -2478,7 +2519,6 @@ function AssetBrowserFilterTree::onControlDropped( %this, %payload, %position )
    {
       //we're a folder entry, cool
       %path = %this.getItemValue(%item) @ "/" @ %this.getItemText(%item);
-      echo("DROPPED IT ON PATH " @ %path);  
       
       if(%path !$= AssetBrowser.dirHandler.CurrentAddress)
       {
@@ -2493,7 +2533,11 @@ function AssetBrowserFilterTree::onControlDropped( %this, %payload, %position )
             
             //Do any cleanup required given the type
             if(AssetBrowser.isMethod("moveFolder"))
+            {
                eval(AssetBrowser @ ".moveFolder(\""@%originFolder@"\",\""@%path@"\");");
+               
+               AssetBrowser.refresh();
+            }
          }
          else
          {
@@ -2506,6 +2550,8 @@ function AssetBrowserFilterTree::onControlDropped( %this, %payload, %position )
             {
                %command = AssetBrowser @ ".move" @ %assetType @ "(" @ %assetDef @ ",\"" @ %path @ "\");";
                eval(AssetBrowser @ ".move" @ %assetType @ "(" @ %assetDef @ ",\"" @ %path @ "\");");
+               
+               AssetBrowser.refresh();
             }
          }
       }
@@ -2514,11 +2560,13 @@ function AssetBrowserFilterTree::onControlDropped( %this, %payload, %position )
 
 function AssetBrowserFilterTree::onDragDropped( %this )
 {
-   %asdgadfhg =true;
 }
 
 function AssetBrowser::hasLooseFilesInDir(%this)
 {
+   if(!isDirectory(%this.dirHandler.currentAddress))
+      return false;
+   
    //First, wipe out any files inside the folder first
    %file = findFirstFileMultiExpr( %this.dirHandler.currentAddress @ "/*.*", false);
    
@@ -2559,8 +2607,10 @@ function AssetBrowser::autoImportSimpleLooseFiles(%this)
 
    while( %file !$= "" )
    {      
-      if(!strIsMatchExpr("*.asset.taml", %file) && !strIsMatchExpr("*.taml", %file) && !strIsMatchExpr("*.cached.dts", %file))
+      if(!strIsMatchExpr("*.asset.taml", %file) && !strIsMatchExpr("*.taml", %file) && !strIsMatchExpr("*.cached.dts", %file) 
+         && !strIsMatchExpr("*.cs", %file) && !strIsMatchExpr("*.tscript", %file) && !strIsMatchExpr("*.module", %file))
       {
+         %aq.clear();
          %assetsFound = AssetDatabase.findAssetLooseFile(%aq, %file);
          
          if(%assetsFound == 0)
@@ -2622,4 +2672,51 @@ function AssetBrowser::importLooseFiles(%this)
 {
    echo("Adding loose files at directory " @ %this.dirHandler.currentAddress);
    LooseFileAuditWindow.showDialog(%this.dirHandler.currentAddress);  
+}
+
+//
+function getAssetPreviewImage(%asset)
+{
+   if(isFile(%asset))
+   {
+      %aq = new AssetQuery();
+      %assetsFound = AssetDatabase.findAssetLooseFile(%aq, %asset);
+      if(%assetsFound != 0)
+      {
+         %asset = %aq.getAsset(0);
+      }
+      else
+      {
+         %previewPath = %asset;
+      }
+      
+      %aq.delete();
+   }
+   
+   if(AssetDatabase.isDeclaredAsset(%asset))
+   {
+      %moduleName = AssetDatabase.getAssetModule(%asset).ModuleId;
+      %assetName = AssetDatabase.getAssetName(%asset);
+      %previewAssetName = "ToolsModule:" @ %moduleName @ "_" @ %assetName @ "_PreviewImage";
+      
+      if(AssetDatabase.isDeclaredAsset(%previewAssetName))
+      {
+         %previewDef = AssetDatabase.acquireAsset(%previewAssetName);  
+         %previewPath = %previewDef.getImagePath();
+         AssetDatabase.releaseAsset(%previewAssetName);
+      }
+      else
+      {
+         %previewPath = %asset;  
+      }
+   }
+   else
+   {
+      %previewPath = %asset;
+   }
+   
+   if(%previewPath $= "")
+      %previewPath = "ToolsModule:unknownImage_image";
+   
+   return %previewPath;
 }

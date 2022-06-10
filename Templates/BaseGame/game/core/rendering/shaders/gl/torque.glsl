@@ -291,8 +291,8 @@ void fizzle(vec2 vpos, float visibility)
    // I'm sure there are many more patterns here to 
    // discover for different effects.
    
-   mat2x2 m = mat2x2( vpos.x, vpos.y, 0.916, 0.350 );
-   if( (visibility - fract( determinant( m ) )) < 0 ) //if(a < 0) discard;
+   mat2x2 m = mat2x2( vpos.x, 0.916, vpos.y, 0.350 );
+   if( (visibility - fract( determinant( m ) )) < 0 )
       discard;
 }
 #endif //TORQUE_PIXEL_SHADER

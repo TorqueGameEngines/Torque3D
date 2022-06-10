@@ -45,7 +45,8 @@ struct FlyingVehicleData: public VehicleData {
       EngineSound,
       MaxSounds,
    };
-   SFXProfile* sound[MaxSounds];
+   DECLARE_SOUNDASSET_ARRAY(FlyingVehicleData, FlyingSounds, Sounds::MaxSounds);
+   DECLARE_ASSET_ARRAY_SETGET(FlyingVehicleData, FlyingSounds);
 
    enum Jets {
       // These enums index into a static name list.

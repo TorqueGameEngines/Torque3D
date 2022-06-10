@@ -54,6 +54,7 @@
 #include "materials/materialFeatureTypes.h"
 #include "console/engineAPI.h"
 #include "T3D/accumulationVolume.h"
+#include "math/mTransform.h"
 
 #include "gui/editor/inspector/group.h"
 #include "console/typeValidators.h"
@@ -149,7 +150,7 @@ TSStatic::TSStatic()
    mAnimOffset = 0.0f;
    mAnimSpeed = 1.0f;
 
-   INIT_SHAPEASSET(Shape);
+   INIT_ASSET(Shape);
 }
 
 TSStatic::~TSStatic()
@@ -418,6 +419,8 @@ bool TSStatic::_createShape()
       // Reapply the current skin
       mAppliedSkinName = "";
       reSkin();
+
+      updateMaterials();
    }
 
    prepCollision();
@@ -958,7 +961,7 @@ U32 TSStatic::packUpdate(NetConnection* con, U32 mask, BitStream* stream)
 
    if (stream->writeFlag(mask & AdvancedStaticOptionsMask))
    {
-      PACK_SHAPEASSET(con, Shape);
+      PACK_ASSET(con, Shape);
 
       stream->write((U32)mDecalType);
 
@@ -1015,7 +1018,7 @@ U32 TSStatic::packUpdate(NetConnection* con, U32 mask, BitStream* stream)
          con->packNetStringHandleU(stream, matNameStr);
       }
 
-      mChangingMaterials.clear();
+      //mChangingMaterials.clear();
    }
 
    return retMask;
@@ -1073,7 +1076,7 @@ void TSStatic::unpackUpdate(NetConnection* con, BitStream* stream)
 
    if (stream->readFlag()) // AdvancedStaticOptionsMask
    {
-      UNPACK_SHAPEASSET(con, Shape);
+      UNPACK_ASSET(con, Shape);
 
       stream->read((U32*)&mDecalType);
 
@@ -1085,15 +1088,16 @@ void TSStatic::unpackUpdate(NetConnection* con, BitStream* stream)
 
       stream->read(&mForceDetail);
 
-   if (stream->readFlag())
-      mAnimOffset = stream->readFloat(7);
+      if (stream->readFlag())
+         mAnimOffset = stream->readFloat(7);
 
-   if (stream->readFlag())
-      mAnimSpeed = stream->readSignedFloat(7) * AnimSpeedMax;
+      if (stream->readFlag())
+         mAnimSpeed = stream->readSignedFloat(7) * AnimSpeedMax;
 
       mPlayAmbient = stream->readFlag();
 
-
+      //update our shape, figuring that it likely changed
+      _createShape();
    }
 
    mUseAlphaFade = stream->readFlag();
@@ -1585,7 +1589,7 @@ U32 TSStatic::getNumDetails()
 
 void TSStatic::updateMaterials()
 {
-   if (mChangingMaterials.empty() || !mShape)
+   if (mChangingMaterials.empty() || !mShapeInstance)
       return;
 
    TSMaterialList* pMatList = mShapeInstance->getMaterialList();
@@ -1616,8 +1620,6 @@ void TSStatic::updateMaterials()
          }
       }
    }
-
-   mChangingMaterials.clear();
 
    // Initialize the material instances
    mShapeInstance->initMaterialList();
@@ -1670,53 +1672,45 @@ void TSStatic::onInspect(GuiInspector* inspector)
       {
          StringTableEntry materialname = StringTable->insert(mShapeAsset->getShape()->materialList->getMaterialName(i).c_str());
 
-         //Iterate through our assetList to find the compliant entry in our matList
-         for (U32 m = 0; m < mShapeAsset->getMaterialCount(); m++)
+         AssetPtr<MaterialAsset> matAsset;
+         if(MaterialAsset::getAssetByMaterialName(materialname, &matAsset) == MaterialAsset::Ok)
          {
-            AssetPtr<MaterialAsset> matAsset = mShapeAsset->getMaterialAsset(m);
+            dSprintf(matFieldName, 128, "MaterialSlot%d", i);
 
-            if (matAsset->getMaterialDefinitionName() == materialname)
+            GuiInspectorField* fieldGui = materialGroup->constructField(TypeMaterialAssetPtr);
+            fieldGui->init(inspector, materialGroup);
+
+            fieldGui->setSpecialEditField(true);
+            fieldGui->setTargetObject(this);
+
+            StringTableEntry fldnm = StringTable->insert(matFieldName);
+
+            fieldGui->setSpecialEditVariableName(fldnm);
+
+            fieldGui->setInspectorField(NULL, fldnm);
+            fieldGui->setDocs("");
+
+            if (fieldGui->registerObject())
             {
-               dSprintf(matFieldName, 128, "MaterialSlot%d", i);
+               StringTableEntry fieldValue = matAsset->getAssetId();
 
-               //addComponentField(matFieldName, "A material used in the shape file", "Material", matAsset->getAssetId(), "");
-               //Con::executef(this, "onConstructComponentField", mTargetComponent, field->mFieldName);
-               Con::printf("Added material field for MaterialSlot %d", i);
-
-               GuiInspectorField* fieldGui = materialGroup->constructField(TypeMaterialAssetPtr);
-               fieldGui->init(inspector, materialGroup);
-
-               fieldGui->setSpecialEditField(true);
-               fieldGui->setTargetObject(this);
-
-               StringTableEntry fldnm = StringTable->insert(matFieldName);
-
-               fieldGui->setSpecialEditVariableName(fldnm);
-
-               fieldGui->setInspectorField(NULL, fldnm);
-               fieldGui->setDocs("");
-
-               if (fieldGui->registerObject())
+               //Check if we'd already actually changed it, and display the modified value
+               for (U32 c = 0; c < mChangingMaterials.size(); c++)
                {
-                  fieldGui->setValue(materialname);
-
-                  stack->addObject(fieldGui);
-               }
-               else
-               {
-                  SAFE_DELETE(fieldGui);
+                  if (mChangingMaterials[c].slot == i)
+                  {
+                     fieldValue = StringTable->insert(mChangingMaterials[i].assetId.c_str());
+                     break;
+                  }
                }
 
-               /*if (materialGroup->isMethod("onConstructField"))
-               {
-                  //ensure our stack variable is bound if we need it
-                  //Con::evaluatef("%d.stack = %d;", materialGroup->getId(), materialGroup->at(0)->getId());
+               fieldGui->setValue(fieldValue);
 
-                  Con::executef(materialGroup, "onConstructField", matFieldName,
-                     matFieldName, "material", matFieldName,
-                     materialname, "", "", this);
-               }*/
-               break;
+               stack->addObject(fieldGui);
+            }
+            else
+            {
+               SAFE_DELETE(fieldGui);
             }
          }
       }
@@ -1871,3 +1865,31 @@ void TSStatic::setSelectionFlags(U8 flags)
    }
 }
 
+void TSStatic::getNodeTransform(const char *nodeName, const MatrixF &xfm, MatrixF *outMat)
+{
+
+    S32 nodeIDx = getShapeResource()->findNode(nodeName);
+
+    MatrixF mountTransform = mShapeInstance->mNodeTransforms[nodeIDx];
+    mountTransform.mul(xfm);
+    const Point3F &scale = getScale();
+    // The position of the mount point needs to be scaled.
+    Point3F position = mountTransform.getPosition();
+    position.convolve(scale);
+    mountTransform.setPosition(position);
+    // Also we would like the object to be scaled to the model.
+    outMat->mul(mObjToWorld, mountTransform);
+    return;
+}
+
+
+DefineEngineMethod(TSStatic, getNodeTransform, TransformF, (const char *nodeName), ,
+   "@brief Get the world transform of the specified mount slot.\n\n"
+
+   "@param slot Image slot to query\n"
+   "@return the mount transform\n\n")
+{
+   MatrixF xf(true);
+   object->getNodeTransform(nodeName, MatrixF::Identity, &xf);
+   return xf;
+}

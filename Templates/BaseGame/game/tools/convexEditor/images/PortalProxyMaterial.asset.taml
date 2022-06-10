@@ -1,0 +1,14 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="PortalProxyMaterial"
+    materialDefinitionName="PortalProxyMaterial"
+    VersionId="1">
+    <Material
+        Name="PortalProxyMaterial">
+        <Material.Stages>
+            <Stages_beginarray
+                DiffuseMapAsset="ToolsModule:portalProxyImage_image"/>
+        </Material.Stages>
+    </Material>
+</MaterialAsset>

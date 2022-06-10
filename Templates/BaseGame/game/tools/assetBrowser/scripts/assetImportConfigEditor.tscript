@@ -1,6 +1,9 @@
 function AssetImportConfigEditor::onWake(%this)
 {
    %this.refresh();
+   
+   %index = AssetImportConfigList.findTextIndex(EditorSettings.value("Assets/AssetImporDefaultConfig", ""));
+   AssetImportConfigList.setSelectedRow(%index);
 }
 
 function AssetImportConfigEditor::refresh(%this)
@@ -30,20 +33,20 @@ function AssetImportConfigEditor::apply(%this)
 
 function AssetImportConfigList::onSelect( %this, %id, %text )
 {
-   ImportOptionsConfigList.clearFields();
-   ImportOptionsConfigList.setAutoUpdate(false); //we don't want to be updating every time we add a field in here
+   AssetImportConfigEditorInspector.clearFields();
+   AssetImportConfigEditorInspector.setAutoUpdate(false); //we don't want to be updating every time we add a field in here
    
    %this.currentConfig = %text;
    
    %this.populateConfigListByGroup("General");
    %this.populateConfigListByGroup("Meshes");
    %this.populateConfigListByGroup("Materials");
-   %this.populateConfigListByGroup("Animations");
    %this.populateConfigListByGroup("Images");
-   %this.populateConfigListByGroup("Collision");
-   %this.populateConfigListByGroup("Sound");
+   %this.populateConfigListByGroup("Sounds");
+   %this.populateConfigListByGroup("Animations");
+   //%this.populateConfigListByGroup("Collision");
    
-   ImportOptionsConfigList.update();  
+   AssetImportConfigEditorInspector.update();  
 }
 
 function AssetImportConfigList::populateConfigListByGroup(%this, %groupName)

@@ -69,6 +69,8 @@ function GuiEditor::createNewProfile( %this, %name, %copySource )
 
 function GuiEditor::getProfileCategory( %this, %profile )
 {
+   // TODO
+   %name = "";
    if( %this.isDefaultProfile( %name ) )
       return "Default";
    else if( %profile.category !$= "" )

@@ -90,7 +90,7 @@ public:
    void render( ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *overrideMat );
 
    ///
-   void setFile( String file );
+   void setFile(StringTableEntry file );
 
    /// Removes all children from this Prefab and puts them into a SimGroup
    /// which is added to the Scene and returned to the caller.
@@ -101,6 +101,13 @@ public:
    bool buildExportPolyList(ColladaUtils::ExportData* exportData, const Box3F &box, const SphereF &);
 
    virtual void getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList);
+
+   S32 getChildGroup() {
+      if (mChildGroup.isValid())
+         return mChildGroup->getId();
+
+      return 0;
+   }
 
 protected:
 

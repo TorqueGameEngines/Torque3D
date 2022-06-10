@@ -120,12 +120,14 @@ void PopupMenu::handleSelectEvent(U32 popID, U32 command)
 //-----------------------------------------------------------------------------
 bool PopupMenu::onMessageReceived(StringTableEntry queue, const char* event, const char* data)
 {
-   return Con::executef(this, "onMessageReceived", queue, event, data);
+   ConsoleValue returnValue = Con::executef(this, "onMessageReceived", queue, event, data);
+   return returnValue.getBool();
 }
 
 bool PopupMenu::onMessageObjectReceived(StringTableEntry queue, Message *msg )
 {
-   return Con::executef(this, "onMessageReceived", queue, Con::getIntArg(msg->getId()));
+   ConsoleValue returnValue = Con::executef(this, "onMessageReceived", queue, Con::getIntArg(msg->getId()));
+   return returnValue.getBool();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -286,7 +288,8 @@ bool PopupMenu::canHandleID(U32 id)
 
 bool PopupMenu::handleSelect(U32 command, const char *text /* = NULL */)
 {
-   return dAtob(Con::executef(this, "onSelectItem", Con::getIntArg(command), text ? text : ""));
+   ConsoleValue cValue = Con::executef(this, "onSelectItem", Con::getIntArg(command), text ? text : "");
+   return cValue.getBool();
 }
 
 //////////////////////////////////////////////////////////////////////////

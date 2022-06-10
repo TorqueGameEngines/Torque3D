@@ -32,6 +32,7 @@
 class afxCurveEval
 {
 public:
+  virtual ~afxCurveEval() { }
   virtual Point2F evaluateCurve(Point2F& v0, Point2F& v1, F32 t)=0;
   virtual Point2F evaluateCurve(Point2F& v0, Point2F& v1, Point2F& t0, Point2F& t1, F32 t)=0;
   virtual Point2F evaluateCurveTangent(Point2F& v0, Point2F& v1, F32 t)=0;

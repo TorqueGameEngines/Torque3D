@@ -92,7 +92,7 @@ singleton GuiControlProfile ( VEditorBitmapButtonProfile : VEditorDefaultProfile
     justify = "center";
     
     hasBitmapArray = true;
-    bitmap         = "./Images/Button";
+    bitmapAsset         = "ToolsModule:button_image";
 };
 
 //-----------------------------------------------------------------------------

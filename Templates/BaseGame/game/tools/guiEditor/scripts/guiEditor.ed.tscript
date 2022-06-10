@@ -121,6 +121,8 @@ function GuiEditor::close(%this)
    if(Canvas.getContent() != GuiEditorGui.getId())
       return;
 
+   $InGuiEditor = false;
+
    GuiGroup.add(GuiEditorGui);
    
    Canvas.setContent(GuiEditor.lastContent);
@@ -666,25 +668,6 @@ function GuiEditor::onControlDragged( %this, %payload, %position )
 
 //---------------------------------------------------------------------------------------------
 
-function GuiEditor::onControlDropped(%this, %payload, %position)
-{  
-   // Make sure we have the right kind of D&D.
-   
-   if( !%payload.parentGroup.isInNamespaceHierarchy( "GuiDragAndDropControlType_GuiControl" ) )
-      return;
-
-   %pos = %payload.getGlobalPosition();
-   %x = getWord(%pos, 0);
-   %y = getWord(%pos, 1);
-
-   %this.addNewCtrl(%payload);
-   
-   %payload.setPositionGlobal(%x, %y);
-   %this.setFirstResponder();
-}
-
-//---------------------------------------------------------------------------------------------
-
 function GuiEditor::onGainFirstResponder(%this)
 {
    %this.enableMenuItems(true);
@@ -714,6 +697,64 @@ function GuiEditor::onMouseModeChange( %this )
 {
    GuiEditorStatusBar.setText( GuiEditorStatusBar.getMouseModeHelp() );
 }
+
+//
+function GuiEditor::onBeginDropFiles( %this )
+{   
+   if(!%this.isVisible())
+      return;
+      
+   AssetBrowser_setAssetTarget.showDialog("EWorldEditor.doFileDropProcessing();");
+   
+   if(!isObject($EditorImportFileList))
+      $EditorImportFileList = new ArrayObject();
+      
+   $EditorImportFileList.empty();
+}
+
+function GuiEditor::onDropFile( %this, %filePath )
+{
+   if(!%this.isVisible())
+      return;
+      
+   $EditorImportFileList.add(%filePath);
+}
+
+function GuiEditor::onDropZipFile(%this, %filePath)
+{
+   if(!%this.isVisible())
+      return;
+}
+
+function GuiEditor::onDropFolder(%this, %filePath)
+{
+   if(!%this.isVisible())
+      return;
+}
+
+function GuiEditor::onEndDropFiles( %this )
+{
+   if(!%this.isVisible())
+      return;
+}
+
+function GuiEditor::doFileDropProcessing(%this)
+{
+   if(!ImportAssetWindow.isAwake())
+      ImportAssetWindow.showDialog();
+   
+   for(%i=0; %i < $EditorImportFileList.Count(); %i++)
+   {
+      %file = $EditorImportFileList.getKey(%i);
+      ImportAssetWindow.importer.addImportingFile(%file);
+   }
+   
+   $EditorImportFileList.empty();
+   
+   ImportAssetWindow.refresh();
+}
+
+//
 
 //=============================================================================================
 //    Resolution List.
@@ -844,6 +885,8 @@ function GuiEditorTabBook::onWake( %this )
          item[ 0 ] = "Alphabetical View" TAB "" TAB "GuiEditorToolbox.setViewType( \"Alphabetical\" );";
          item[ 1 ] = "Categorized View" TAB "" TAB "GuiEditorToolbox.setViewType( \"Categorized\" );";
       };
+      
+   GlobalActionMap.bindCmd( keyboard, "shift space", "", "AssetBrowser.toggleDialog();" );
 }
 
 //---------------------------------------------------------------------------------------------
@@ -980,11 +1023,6 @@ function GuiEditorGui::onWake( %this )
 
    %this.initSettings();
    %this.readSettings();
-   
-   // Initialize toolbox.
-
-   if( !GuiEditorToolbox.isInitialized )
-      GuiEditorToolbox.initialize();
 
    // Set up initial menu toggle states.
    
@@ -1008,6 +1046,8 @@ function GuiEditorGui::onWake( %this )
 
 function GuiEditorGui::onSleep( %this)
 {
+   GlobalActionMap.unbind( keyboard, space );
+   
    // If we are editing a control, store its guide state.
    
    %content = GuiEditor.getContentControl();

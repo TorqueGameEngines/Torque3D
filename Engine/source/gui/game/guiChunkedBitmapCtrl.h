@@ -18,7 +18,7 @@ private:
 protected:
 
    DECLARE_IMAGEASSET(GuiChunkedBitmapCtrl, Bitmap, onImageChanged, GFXDefaultGUIProfile);
-   DECLARE_IMAGEASSET_SETGET(GuiChunkedBitmapCtrl, Bitmap);
+   DECLARE_ASSET_SETGET(GuiChunkedBitmapCtrl, Bitmap);
 
    bool  mUseVariable;
    bool  mTile;

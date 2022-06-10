@@ -1,7 +1,0 @@
-<MaterialAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    AssetName="AL_ConvexLightState"
-    scriptFile="@assetFile=advancedLighting_Shaders.tscript"
-    materialDefinitionName="AL_ConvexLightState"
-    VersionId="1" />

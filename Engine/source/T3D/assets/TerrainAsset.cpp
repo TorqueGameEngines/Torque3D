@@ -247,7 +247,7 @@ bool TerrainAsset::getAssetByFilename(StringTableEntry fileName, AssetPtr<Terrai
    {
       //Didn't find any assets
       //If possible, see if we can run an in-place import and the get the asset from that
-#if TORQUE_DEBUG
+#ifdef TORQUE_DEBUG
       Con::warnf("TerrainAsset::getAssetByFilename - Attempted to in-place import a terrainFile(%s) that had no associated asset", fileName);
 #endif
 
@@ -465,10 +465,8 @@ GuiControl* GuiInspectorTypeTerrainAssetPtr::constructEditControl()
    // Change filespec
    char szBuffer[512];
    dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"TerrainAsset\", \"AssetBrowser.changeAsset\", %s, %s);",
-      mInspector->getInspectObject()->getIdString(), mCaption);
+      mInspector->getIdString(), mCaption);
    mBrowseButton->setField("Command", szBuffer);
-
-   const char* id = mInspector->getInspectObject()->getIdString();
 
    setDataField(StringTable->insert("targetObject"), NULL, mInspector->getInspectObject()->getIdString());
 

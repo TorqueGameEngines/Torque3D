@@ -31,7 +31,7 @@ function VSceneObjectGroup::PopulateBuildStack( %this, %stack )
 
 function VSceneObjectGroup::ResolveBuildStack( %this, %stack )
 {
-    VGroup::ResolveBuildStack( %this, %stack, %groupObject );
+    VGroup::ResolveBuildStack( %this, %stack );
     
     // Fetch the Controller.
     %controller = %this.getRoot();

@@ -18,6 +18,7 @@
 #include "materials/materialManager.h"
 
 #include "console/persistenceManager.h"
+#include "core/util/timeClass.h"
 
 ConsoleDocClass(AssetImportConfig,
    "@brief Defines properties for an AssetImprotConfig object.\n"
@@ -78,6 +79,8 @@ AssetImportConfig::AssetImportConfig() :
    SeparateAnimationPrefix(""),
    animTiming("FrameCount"),
    animFPS(false),
+   AlwaysAddShapeAnimationSuffix(true),
+   AddedShapeAnimationSuffix("_anim"),
    GenerateCollisions(false),
    GenCollisionType(""),
    CollisionMeshPrefix(""),
@@ -104,7 +107,9 @@ AssetImportConfig::AssetImportConfig() :
    importSounds(true),
    VolumeAdjust(false),
    PitchAdjust(false),
-   SoundsCompressed(false)
+   SoundsCompressed(false),
+   AlwaysAddSoundSuffix(false),
+   AddedSoundSuffix("_sound")
 {
 }
 
@@ -187,6 +192,8 @@ void AssetImportConfig::initPersistFields()
       addField("SeparateAnimationPrefix", TypeRealString, Offset(SeparateAnimationPrefix, AssetImportConfig), "If separating animations out from a source file, what prefix should be added to the names for grouping association");
       addField("animTiming", TypeRealString, Offset(animTiming, AssetImportConfig), "Defines the animation timing for the given animation sequence. Options are FrameTime, Seconds, Milliseconds");
       addField("animFPS", TypeBool, Offset(animFPS, AssetImportConfig), "The FPS of the animation sequence");
+      addField("AlwaysAddShapeAnimationSuffix", TypeBool, Offset(AlwaysAddShapeAnimationSuffix, AssetImportConfig), "When importing a shape animation, this indicates if it should automatically add a standard suffix onto the name");
+      addField("AddedShapeAnimationSuffix", TypeString, Offset(AddedShapeAnimationSuffix, AssetImportConfig), " If AlwaysAddShapeAnimationSuffix is on, this is the suffix to be added");
    endGroup("Animation");
 
    addGroup("Collision");
@@ -284,6 +291,8 @@ void AssetImportConfig::loadImportConfig(Settings* configSettings, String config
    SeparateAnimationPrefix = configSettings->value(String(configName + "/Animations/SeparateAnimationPrefix").c_str());
    animTiming = configSettings->value(String(configName + "/Animations/animTiming").c_str());
    animFPS = dAtof(configSettings->value(String(configName + "/Animations/animFPS").c_str()));
+   AlwaysAddShapeAnimationSuffix = dAtob(configSettings->value(String(configName + "/Animations/AlwaysAddShapeAnimationSuffix").c_str()));
+   AddedShapeAnimationSuffix = configSettings->value(String(configName + "/Animations/AddedShapeAnimationSuffix").c_str());
 
    //Collisions
    GenerateCollisions = dAtob(configSettings->value(String(configName + "/Collision/GenerateCollisions").c_str()));
@@ -316,6 +325,8 @@ void AssetImportConfig::loadImportConfig(Settings* configSettings, String config
    VolumeAdjust = dAtof(configSettings->value(String(configName + "/Sounds/VolumeAdjust").c_str()));
    PitchAdjust = dAtof(configSettings->value(String(configName + "/Sounds/PitchAdjust").c_str()));
    SoundsCompressed = dAtob(configSettings->value(String(configName + "/Sounds/Compressed").c_str()));
+   AlwaysAddSoundSuffix = dAtob(configSettings->value(String(configName + "/Sounds/AlwaysAddSoundSuffix").c_str()));
+   AddedSoundSuffix = configSettings->value(String(configName + "/Sounds/AddedSoundSuffix").c_str());
 }
 
 void AssetImportConfig::CopyTo(AssetImportConfig* target) const
@@ -374,6 +385,8 @@ void AssetImportConfig::CopyTo(AssetImportConfig* target) const
    target->SeparateAnimationPrefix = SeparateAnimationPrefix;
    target->animTiming = animTiming;
    target->animFPS = animFPS;
+   target->AlwaysAddShapeAnimationSuffix = AlwaysAddShapeAnimationSuffix;
+   target->AddedShapeAnimationSuffix = AddedShapeAnimationSuffix;
 
    //Collisions
    target->GenerateCollisions = GenerateCollisions;
@@ -406,6 +419,8 @@ void AssetImportConfig::CopyTo(AssetImportConfig* target) const
    target->VolumeAdjust = VolumeAdjust;
    target->PitchAdjust = PitchAdjust;
    target->SoundsCompressed = SoundsCompressed;
+   target->AlwaysAddSoundSuffix = AlwaysAddSoundSuffix;
+   target->AddedSoundSuffix = AddedSoundSuffix;
 }
 
 ConsoleDocClass(AssetImportObject,
@@ -420,8 +435,7 @@ IMPLEMENT_CONOBJECT(AssetImportObject);
 
 AssetImportObject::AssetImportObject() :
    dirty(false),
-   skip(false),
-   processed(false),
+   importStatus(AssetImportObject::NotProcessed),
    generatedAsset(false),
    parentAssetItem(nullptr),
    tamlFilePath(""),
@@ -463,8 +477,6 @@ void AssetImportObject::initPersistFields()
    addField("statusInfo", TypeRealString, Offset(statusInfo, AssetImportObject), "What is the articulated information of the status of the asset. Contains the error or warning log data");
 
    addField("dirty", TypeBool, Offset(dirty, AssetImportObject), "Is the asset item currently flagged as dirty");
-   addField("skip", TypeBool, Offset(skip, AssetImportObject), "Is this asset item marked to be skipped. If it is, it's usually due to being marked as deleted");
-   addField("processed", TypeBool, Offset(processed, AssetImportObject), "Has the asset item been processed");
    addField("generatedAsset", TypeBool, Offset(generatedAsset, AssetImportObject), "Is this specific asset item generated as part of the import process of another item");
 
    addField("tamlFilePath", TypeRealString, Offset(tamlFilePath, AssetImportObject), "What is the ultimate asset taml file path for this import item");
@@ -503,7 +515,8 @@ AssetImporter::AssetImporter() :
    isReimport(false),
    assetHeirarchyChanged(false),
    importLogBuffer(""),
-   activeImportConfig(nullptr)
+   activeImportConfig(nullptr),
+   mDumpLogs(true)
 {
 }
 
@@ -531,6 +544,7 @@ void AssetImporter::initPersistFields()
    addField("targetModuleId", TypeRealString, Offset(targetModuleId, AssetImporter), "The Id of the module the assets are to be imported into");
    addField("finalImportedAssetPath", TypeRealString, Offset(finalImportedAssetPath, AssetImporter), "The Id of the module the assets are to be imported into");
    addField("targetPath", TypeRealString, Offset(targetPath, AssetImporter), "The path any imported assets are placed in as their destination");
+   addField("dumpLogs", TypeBool, Offset(mDumpLogs, AssetImporter), "Indicates if the importer always dumps its logs or not");
 }
 
 //
@@ -603,13 +617,32 @@ AssetImportObject* AssetImporter::addImportingAsset(String assetType, Torque::Pa
    assetImportObj->registerObject();
 
    //sanitize
-   assetName.replace(' ', '_');
-   assetName.replace('~', '_');
-   assetName.replace('`', '_');
-   assetName.replace('-', '_');
-   assetName.replace('*', '_');
-   assetName.replace('-', '_');
-   assetName.replace('+', '_');
+   String processedString = assetName;
+
+   U32 start;
+   U32 end;
+   String firstNumber = String::GetFirstNumber(processedString, start, end);
+   if (!firstNumber.isEmpty() && processedString.startsWith(firstNumber.c_str()))
+      processedString = processedString.replace(firstNumber, "");
+
+   processedString = processedString.replace(" ", "_");
+
+   U32 len = processedString.length() + 1;
+   char* sanitizedStr = Con::getReturnBuffer(len);
+   dStrcpy(sanitizedStr, processedString.c_str(), len);
+
+   U32 pos = dStrcspn(sanitizedStr, "-+*/%$&�=()[].?\\\"#,;!~<>|�^{}");
+   while (pos < dStrlen(sanitizedStr))
+   {
+      dStrcpy(sanitizedStr + pos, sanitizedStr + pos + 1, len - pos);
+      pos = dStrcspn(sanitizedStr, "-+*/%$&�=()[].?\\\"#,;!~<>|�^{}");
+   }
+
+   //If we did, indeed, modify the name, update it now
+   if (String(sanitizedStr) != assetName)
+   {
+      assetName = sanitizedStr;
+   }
 
    assetImportObj->assetType = assetType;
    assetImportObj->filePath = filePath;
@@ -622,9 +655,16 @@ AssetImportObject* AssetImporter::addImportingAsset(String assetType, Torque::Pa
    assetImportObj->statusInfo = "";
 
    assetImportObj->dirty = false;
-   assetImportObj->skip = false;
-   assetImportObj->processed = false;
+   assetImportObj->importStatus = AssetImportObject::NotProcessed;
    assetImportObj->generatedAsset = false;
+
+   //If the config is marked to always set the directory prefix, do that now
+   if (activeImportConfig->AddDirectoryPrefixToAssetName)
+   {
+      assetName = getFolderPrefixedName(assetImportObj);
+      assetImportObj->assetName = assetName;
+      assetImportObj->cleanAssetName = assetName;
+   }
 
    if (parentItem != nullptr)
    {
@@ -656,7 +696,7 @@ AssetImportObject* AssetImporter::addImportingAsset(String assetType, Torque::Pa
 
 void AssetImporter::deleteImportingAsset(AssetImportObject* assetItem)
 {
-   assetItem->skip = true;
+   assetItem->importStatus = AssetImportObject::Skipped;
 
    //log it
    dSprintf(importLogBuffer, sizeof(importLogBuffer), "Deleting Importing Asset %s and all it's child items", assetItem->assetName.c_str());
@@ -665,36 +705,21 @@ void AssetImporter::deleteImportingAsset(AssetImportObject* assetItem)
 
 AssetImportObject* AssetImporter::findImportingAssetByName(String assetName, AssetImportObject* assetItem)
 {
-   if (assetItem == nullptr)
-   {
-      for (U32 i = 0; i < importingAssets.size(); i++)
-      {
-         if (importingAssets[i]->cleanAssetName == assetName)
-         {
-            return importingAssets[i];
-         }
+   Vector<AssetImportObject*> itemList = importingAssets;
+   if (assetItem != nullptr)
+      itemList = assetItem->childAssetItems;
 
-         //If it wasn't a match, try recusing on the children(if any)
-         AssetImportObject* retItem = findImportingAssetByName(assetName, importingAssets[i]);
-         if (retItem != nullptr)
-            return retItem;
-      }
-   }
-   else
+   for (U32 i = 0; i < itemList.size(); i++)
    {
-      //this is the child recursing section
-      for (U32 i = 0; i < assetItem->childAssetItems.size(); i++)
+      if (itemList[i]->cleanAssetName == assetName)
       {
-         if (assetItem->childAssetItems[i]->cleanAssetName == assetName)
-         {
-            return assetItem->childAssetItems[i];
-         }
-
-         //If it wasn't a match, try recusing on the children(if any)
-         AssetImportObject* retItem = findImportingAssetByName(assetName, assetItem->childAssetItems[i]);
-         if (retItem != nullptr)
-            return retItem;
+         return itemList[i];
       }
+
+      //If it wasn't a match, try recusing on the children(if any)
+      AssetImportObject* retItem = findImportingAssetByName(assetName, itemList[i]);
+      if (retItem != nullptr)
+         return retItem;
    }
 
    return nullptr;
@@ -722,27 +747,27 @@ String AssetImporter::parseImageSuffixes(String assetName, String* suffixType)
       {
          case 0:
             suffixList = activeImportConfig->DiffuseTypeSuffixes;
-            suffixType->insert(0, "Albedo", 10);
+            suffixType->insert(0, "Albedo", 6);
             break;
          case 1:
             suffixList = activeImportConfig->NormalTypeSuffixes;
-            suffixType->insert(0, "Normal", 10);
+            suffixType->insert(0, "Normal", 6);
             break;
          case 2:
             suffixList = activeImportConfig->RoughnessTypeSuffixes;
-            suffixType->insert(0, "Roughness", 10);
+            suffixType->insert(0, "Roughness", 9);
             break;
          case 3:
             suffixList = activeImportConfig->AOTypeSuffixes;
-            suffixType->insert(0, "AO", 10);
+            suffixType->insert(0, "AO", 2);
             break;
          case 4:
             suffixList = activeImportConfig->MetalnessTypeSuffixes;
-            suffixType->insert(0, "Metalness", 10);
+            suffixType->insert(0, "Metalness", 9);
             break;
          case 5:
             suffixList = activeImportConfig->PBRTypeSuffixes;
-            suffixType->insert(0, "ORMConfig", 10);
+            suffixType->insert(0, "ORMConfig", 9);
             break;
          default:
             suffixList = "";
@@ -928,9 +953,41 @@ String AssetImporter::getActivityLogLine(U32 line)
 
 void AssetImporter::dumpActivityLog()
 {
-   for (U32 i = 0; i < activityLog.size(); i++)
+   if (!mDumpLogs)
+      return;
+
+   FileObject logFile;
+
+   //If there's nothing logged, don't bother
+   if (activityLog.size() == 0)
+      return;
+
+   Torque::Time::DateTime curTime;
+   Torque::Time::getCurrentDateTime(curTime);
+
+   String logName = String("tools/logs/AssetImportLog_") + String::ToString(curTime.year + 1900) + "-" +
+      String::ToString(curTime.month + 1) + "-" + String::ToString(curTime.day) + "_" +
+      String::ToString(curTime.hour) + "-" + String::ToString(curTime.minute) + "-" + String::ToString(curTime.second)
+      + "-" + String::ToString(curTime.microsecond) + ".log";
+
+   if (logFile.openForWrite(logName.c_str()))
    {
-      Con::printf(activityLog[i].c_str());
+      for (U32 i = 0; i < activityLog.size(); i++)
+      {
+         logFile.writeLine((const U8*)activityLog[i].c_str());
+      }
+
+      logFile.close();
+
+      Con::warnf("Asset Import log file dumped to: %s", logName.c_str());
+   }
+   else
+   {
+      Con::errorf("Error: Failed to open log file for writing! Dumping log results to console!");
+      for (U32 i = 0; i < activityLog.size(); i++)
+      {
+         Con::printf(activityLog[i].c_str());
+      }
    }
 }
 
@@ -1127,12 +1184,76 @@ static bool enumColladaForImport(const char* shapePath, GuiTreeViewCtrl* tree, b
       {
          domImage* img = libraryImages->getImage_array()[j];
 
-         S32 materialID = tree->findItemByName(_GetNameOrId(img));
+         String imageName = _GetNameOrId(img);
+
+         S32 materialID = tree->findItemByName(imageName.c_str());
 
          if (materialID == 0)
-            continue;
+         {
+            bool materialFound = false;
+            String matName = "";
 
-         tree->setItemValue(materialID, img->getInit_from()->getValue().str().c_str());
+            //If we don't have an immediate name match, we'll have to actually go look it up
+            for (S32 e = 0; e < root->getLibrary_effects_array().getCount(); e++)
+            {
+               const domLibrary_effects* libraryEffects = root->getLibrary_effects_array()[e];
+
+               for (S32 f = 0; f < libraryEffects->getEffect_array().getCount(); f++)
+               {
+                  domEffect* efct = libraryEffects->getEffect_array()[f];
+
+                  String effectName = efct->getID();
+
+                  for (S32 p = 0; p < efct->getFx_profile_abstract_array().getCount(); p++)
+                  {
+                     domProfile_COMMON* profile = daeSafeCast<domProfile_COMMON>(efct->getFx_profile_abstract_array()[p]);
+
+                     for (S32 n = 0; n < profile->getNewparam_array().getCount(); n++)
+                     {
+                        domCommon_newparam_typeRef param = profile->getNewparam_array()[n];
+                        String paramName = param->getSid();
+                        if (paramName.endsWith("-surface"))
+                        {
+                           //ok it's surface data, parse out the name
+                           String surfaceName = paramName.substr(0, paramName.length() - 8);
+                           if (surfaceName == imageName)
+                           {
+                              //got a match!
+                              matName = effectName;
+                              if (matName.endsWith("-effect"))
+                              {
+                                 matName = matName.substr(0, matName.length() - 7);
+                                 materialFound = true;
+                                 break;
+                              }
+                           }
+                        }
+                     }
+
+                     if (materialFound)
+                        break;
+                  }
+
+                  if (materialFound)
+                  {
+                     materialID = tree->findItemByName(matName.c_str());
+                  }
+
+                  if (materialID != 0)
+                     break;
+               }
+            }
+
+            //if we STILL haven't found a match, then yes, we've failed
+            if (materialID == 0)
+               continue;
+         }
+
+         String imagePath = img->getInit_from()->getValue().str().c_str();
+         if (imagePath.startsWith("/"))
+            imagePath = imagePath.substr(1, imagePath.length() - 1);
+
+         tree->setItemValue(materialID, StringTable->insert(imagePath.c_str()));
       }
    }
 
@@ -1385,105 +1506,55 @@ void AssetImportConfig::loadSISFile(Torque::Path filePath)
 
 void AssetImporter::processImportAssets(AssetImportObject* assetItem)
 {
-   if (assetItem == nullptr)
+   Vector<AssetImportObject*> itemList = importingAssets;
+   if (assetItem != nullptr)
+      itemList = assetItem->childAssetItems;
+
+   assetHeirarchyChanged = false;
+
+   for (U32 i = 0; i < itemList.size(); i++)
    {
-      assetHeirarchyChanged = false;
+      AssetImportObject* item = itemList[i];
+      if (item->importStatus != AssetImportObject::NotProcessed)
+         continue;
 
-      for (U32 i = 0; i < importingAssets.size(); i++)
+      //Sanitize before modifying our asset name(suffix additions, etc)
+      if (item->assetName != item->cleanAssetName)
+         item->assetName = item->cleanAssetName;
+
+		//process the asset items
+		if (item->assetType == String("ImageAsset"))
+		{
+		   processImageAsset(item);
+		}
+		else if (item->assetType == String("ShapeAsset"))
+		{
+		   processShapeAsset(item);
+		}
+		else if (item->assetType == String("SoundAsset"))
+		{
+		   processSoundAsset(item);
+		}
+		else if (item->assetType == String("MaterialAsset"))
+		{
+		   processMaterialAsset(item);
+		}
+      else if (item->assetType == String("ShapeAnimationAsset"))
       {
-         AssetImportObject* item = importingAssets[i];
-         if (item->skip)
-            continue;
-
-         if (!item->processed)
-         {
-            //Sanitize before modifying our asset name(suffix additions, etc)
-            if (item->assetName != item->cleanAssetName)
-               item->assetName = item->cleanAssetName;
-
-            //handle special pre-processing here for any types that need it
-
-            //process the asset items
-            if (item->assetType == String("ImageAsset"))
-            {
-               processImageAsset(item);
-            }
-            else if (item->assetType == String("ShapeAsset"))
-            {
-               processShapeAsset(item);
-            }
-            /*else if (item->assetType == String("SoundAsset"))
-               SoundAsset::prepareAssetForImport(this, item);*/
-            else if (item->assetType == String("MaterialAsset"))
-            {
-               processMaterialAsset(item);
-            }
-            /*else if (item->assetType == String("ShapeAnimationAsset"))
-               ShapeAnimationAsset::prepareAssetForImport(this, item);*/
-            else
-            {
-               String processCommand = "process";
-               processCommand += item->assetType;
-               if(isMethod(processCommand.c_str()))
-                  Con::executef(this, processCommand.c_str(), item);
-            }
-
-            item->processed = true;
-         }
-
-         //try recusing on the children(if any)
-         processImportAssets(item);
+         processShapeAnimationAsset(item);
       }
-   }
-   else
-   {
-      //this is the child recursing section
-      for (U32 i = 0; i < assetItem->childAssetItems.size(); i++)
-      {
-         AssetImportObject* childItem = assetItem->childAssetItems[i];
+		else
+		{
+		   String processCommand = "process";
+		   processCommand += item->assetType;
+         if (isMethod(processCommand.c_str()))
+		      Con::executef(this, processCommand.c_str(), item);
+		}
 
-         if (childItem->skip)
-            continue;
+      item->importStatus = AssetImportObject::Processed;
 
-         if (!childItem->processed)
-         {
-            //Sanitize before modifying our asset name(suffix additions, etc)
-            //if (childItem->assetName != childItem->cleanAssetName)
-            //   childItem->assetName = childItem->cleanAssetName;
-
-            //handle special pre-processing here for any types that need it
-
-            //process the asset items
-            if (childItem->assetType == String("ImageAsset"))
-            {
-               processImageAsset(childItem);
-            }
-            else if (childItem->assetType == String("ShapeAsset"))
-            {
-               processShapeAsset(childItem);
-            }
-            /*else if (item->assetType == String("SoundAsset"))
-               SoundAsset::prepareAssetForImport(this, item);*/
-            else if (childItem->assetType == String("MaterialAsset"))
-            {
-               processMaterialAsset(childItem);
-            }
-            /*else if (item->assetType == String("ShapeAnimationAsset"))
-               ShapeAnimationAsset::prepareAssetForImport(this, item);*/
-            else
-            {
-               String processCommand = "process";
-               processCommand += childItem->assetType;
-               if (isMethod(processCommand.c_str()))
-                  Con::executef(this, processCommand.c_str(), childItem);
-            }
-
-            childItem->processed = true;
-         }
-
-         //try recusing on the children(if any)
-         processImportAssets(childItem);
-      }
+      //try recusing on the children(if any)
+      processImportAssets(item);
    }
 
    //If our hierarchy changed, it's because we did so during processing
@@ -1562,7 +1633,7 @@ void AssetImporter::processImageAsset(AssetImportObject* assetItem)
          {
             String diffuseToken = StringUnit::getUnit(activeImportConfig->DiffuseTypeSuffixes, 0, ",;\t");
             assetItem->assetName = assetItem->assetName + diffuseToken;
-            assetItem->cleanAssetName = assetItem->assetName;
+            //assetItem->cleanAssetName = assetItem->assetName;
          }
          else
          {
@@ -1571,7 +1642,7 @@ void AssetImporter::processImageAsset(AssetImportObject* assetItem)
             if ((materialAsset && materialAsset->assetName.compare(assetItem->assetName) == 0) || activeImportConfig->AlwaysAddImageSuffix)
             {
                assetItem->assetName = assetItem->assetName + activeImportConfig->AddedImageSuffix;
-               assetItem->cleanAssetName = assetItem->assetName;
+               //assetItem->cleanAssetName = assetItem->assetName;
             }
          }
 
@@ -1602,11 +1673,11 @@ void AssetImporter::processImageAsset(AssetImportObject* assetItem)
 
    if(assetItem->assetName == assetItem->cleanAssetName && activeImportConfig->AlwaysAddImageSuffix)
    {
-      assetItem->assetName = assetItem->assetName + activeImportConfig->AddedImageSuffix;
-      assetItem->cleanAssetName = assetItem->assetName;
+      if (!assetItem->assetName.endsWith(activeImportConfig->AddedImageSuffix.c_str()))
+         assetItem->assetName = assetItem->assetName + activeImportConfig->AddedImageSuffix;
    }
 
-   assetItem->processed = true;
+   assetItem->importStatus = AssetImportObject::Processed;
 }
 
 void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
@@ -1629,7 +1700,7 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
          String ignoredName = StringUnit::getUnit(activeImportConfig->IgnoreMaterials, i, ",;\t");
          if (FindMatch::isMatch(ignoredName.c_str(), assetName, false))
          {
-            assetItem->skip = true;
+            assetItem->importStatus = AssetImportObject::Skipped;
 
             dSprintf(importLogBuffer, sizeof(importLogBuffer), "Material %s has been ignored due to it's name being listed in the IgnoreMaterials list in the Import Config.", assetItem->assetName.c_str());
             activityLog.push_back(importLogBuffer);
@@ -1638,6 +1709,7 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
       }
    }
 
+   bool foundExistingMaterial = false;
    if (activeImportConfig->UseExistingMaterials)
    {
       //So if the material already exists, we should just use that. So first, let's find out if it already exists
@@ -1645,9 +1717,9 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
       //check to see if the definition for this already exists
       StringTableEntry existingMatAsset = MaterialAsset::getAssetIdByMaterialName(StringTable->insert(assetName));
 
-      if (existingMatAsset != StringTable->EmptyString())
+      if (existingMatAsset != StringTable->EmptyString() && existingMatAsset != StringTable->insert("Core_Rendering:NoMaterial"))
       {
-         assetItem->skip = true;
+         assetItem->importStatus = AssetImportObject::UseForDependencies;
          dSprintf(importLogBuffer, sizeof(importLogBuffer), "Material %s has been skipped because we already found an asset Id that uses that material definition. The found assetId is: %s", assetItem->assetName.c_str(), existingMatAsset);
          activityLog.push_back(importLogBuffer);
          return;
@@ -1655,7 +1727,8 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
 
       //If there was no existing assetId, then lets see if it already exists in a legacy file, like a materials.cs or materials.tscript
       //If it does, we'll just make our asset point to that instead of a new file
-      Material* mat = MATMGR->getMaterialDefinitionByName(assetName);
+      Material* mat;
+      Sim::findObject(assetName, mat);
 
       if (!mat)
          mat = MATMGR->getMaterialDefinitionByMapTo(assetName);
@@ -1672,14 +1745,16 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
       {
          //We found a match, so just modify our asset item's info to point against it. This will create the asset definition, but otherwise leave the material definition as-is.
          assetItem->filePath = (Torque::Path)(mat->getFilename());
+         foundExistingMaterial = true;
       }
    }
-   else
+
+   if(!foundExistingMaterial)
    {
       if (activeImportConfig->AlwaysAddMaterialSuffix) //we only opt to force on the suffix if we're not obligating using the original material defs
       {
-         assetItem->assetName += activeImportConfig->AddedMaterialSuffix;
-         assetItem->cleanAssetName = assetItem->assetName;
+         if(!assetItem->assetName.endsWith(activeImportConfig->AddedMaterialSuffix.c_str()))
+            assetItem->assetName += activeImportConfig->AddedMaterialSuffix;
       }
 
       if (activeImportConfig->PopulateMaterialMaps)
@@ -1696,7 +1771,7 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
          {
             AssetImportObject* childAssetItem = assetItem->childAssetItems[i];
 
-            if (childAssetItem->skip || childAssetItem->assetType != String("ImageAsset"))
+            if (childAssetItem->importStatus == AssetImportObject::Skipped || childAssetItem->assetType != String("ImageAsset"))
                continue;
 
             for (S32 t = 0; t < ImageAsset::ImageTypeCount; t++)
@@ -1774,6 +1849,32 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
                   }
                   else
                   {
+                     //Check to see if our target module has a matching assetId for this slot already
+                     String testAssetId = targetModuleId + ":" + assetItem->cleanAssetName + StringUnit::getUnit(suffixList.c_str(), i, ",;\t");
+                     bool localAssetFound = false;
+
+                     if (AssetDatabase.isDeclaredAsset(testAssetId.c_str()))
+                        localAssetFound = true;
+
+                     if (localAssetFound == false)
+                        //Didn't work, try checking the common default type suffix
+                        testAssetId = targetModuleId + ":" + assetItem->cleanAssetName + StringUnit::getUnit(suffixList.c_str(), i, ",;\t") + activeImportConfig->AddedImageSuffix;
+
+                     if (localAssetFound)
+                     {
+                        //got a match!
+                        ImageAsset* foundImageAsset = AssetDatabase.acquireAsset<ImageAsset>(testAssetId.c_str());
+                        imagePath = foundImageAsset->getImagePath();
+
+                        AssetImportObject* newImageAssetObj = addImportingAsset("ImageAsset", imagePath, assetItem, "");
+
+                        newImageAssetObj->imageSuffixType = ImageAsset::getImageTypeNameFromType((ImageAsset::ImageTypes)t);
+                        newImageAssetObj->importStatus = AssetImportObject::UseForDependencies; //we aren't going to actually IMPORT an already imported asset,
+                                                                                                //so mark it as dependency use only
+                        matchedImageTypes[t] = newImageAssetObj;
+                        break;
+                     }
+
                      if (materialImageNoSuffix.isNotEmpty())
                      {
                         testPath = assetItem->filePath.getRootAndPath();
@@ -1788,6 +1889,32 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
 
                            newImageAssetObj->imageSuffixType = ImageAsset::getImageTypeNameFromType((ImageAsset::ImageTypes)t);
 
+                           matchedImageTypes[t] = newImageAssetObj;
+                           break;
+                        }
+
+                        //Check to see if our target module has a matching assetId for this slot already based on our trimmed mat name
+                        testAssetId = targetModuleId + ":" + materialImageNoSuffix + StringUnit::getUnit(suffixList.c_str(), i, ",;\t");
+                        bool localAssetFound = false;
+
+                        if (AssetDatabase.isDeclaredAsset(testAssetId.c_str()))
+                           localAssetFound = true;
+
+                        if (localAssetFound == false)
+                           //Didn't work, try checking the common default type suffix
+                           testAssetId = targetModuleId + ":" + materialImageNoSuffix + StringUnit::getUnit(suffixList.c_str(), i, ",;\t") + activeImportConfig->AddedImageSuffix;
+
+                        if (localAssetFound)
+                        {
+                           //got a match!
+                           ImageAsset* foundImageAsset = AssetDatabase.acquireAsset<ImageAsset>(testAssetId.c_str());
+                           imagePath = foundImageAsset->getImagePath();
+
+                           AssetImportObject* newImageAssetObj = addImportingAsset("ImageAsset", imagePath, assetItem, "");
+
+                           newImageAssetObj->imageSuffixType = ImageAsset::getImageTypeNameFromType((ImageAsset::ImageTypes)t);
+                           newImageAssetObj->importStatus = AssetImportObject::UseForDependencies; //we aren't going to actually IMPORT an already imported asset,
+                                                                                                   //so mark it as dependency use only
                            matchedImageTypes[t] = newImageAssetObj;
                            break;
                         }
@@ -1810,7 +1937,7 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
                      if (newImageAssetObj->assetName == assetItem->assetName)
                      {
                         newImageAssetObj->assetName += StringUnit::getUnit(suffixList.c_str(), 0, ",;\t");
-                        newImageAssetObj->cleanAssetName = newImageAssetObj->assetName;
+                        //newImageAssetObj->cleanAssetName = newImageAssetObj->assetName;
                      }
 
                      newImageAssetObj->imageSuffixType = ImageAsset::getImageTypeNameFromType(ImageAsset::ImageTypes::Albedo);
@@ -1828,27 +1955,14 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
                if (matchedImageTypes[t]->assetName == assetItem->assetName)
                {
                   matchedImageTypes[t]->assetName += StringUnit::getUnit(suffixList.c_str(), 0, ",;\t");
-                  matchedImageTypes[t]->cleanAssetName = matchedImageTypes[t]->assetName;
+                  //matchedImageTypes[t]->cleanAssetName = matchedImageTypes[t]->assetName;
                }
             }
          }
-
-         /*for (U32 i = 0; i < assetItem->childAssetItems.size(); i++)
-         {
-            AssetImportObject* childAssetItem = assetItem->childAssetItems[i];
-
-            if (childAssetItem->skip || childAssetItem->processed || childAssetItem->assetType != String("ImageAsset"))
-               continue;
-
-            if (childAssetItem->imageSuffixType == String("Albedo"))
-            {
-               assetItem->diffuseImageAsset = % childAssetItem;
-            }
-         }*/
       }
    }
    
-   assetItem->processed = true;
+   assetItem->importStatus = AssetImportObject::Processed;
 }
 
 void AssetImporter::processShapeAsset(AssetImportObject* assetItem)
@@ -1887,15 +2001,13 @@ void AssetImporter::processShapeAsset(AssetImportObject* assetItem)
 
    if (activeImportConfig->AlwaysAddShapeSuffix)
    {
-      assetItem->assetName += activeImportConfig->AddedShapeSuffix;
-      assetItem->cleanAssetName = assetItem->assetName;
+      if(!assetItem->assetName.endsWith(activeImportConfig->AddedShapeSuffix.c_str()))
+         assetItem->assetName += activeImportConfig->AddedShapeSuffix;
    }
 
    S32 meshCount = dAtoi(assetItem->shapeInfo->getDataField(StringTable->insert("_meshCount"), nullptr));
-   S32 shapeItem = assetItem->shapeInfo->findItemByName("Meshes");
 
    S32 animCount = dAtoi(assetItem->shapeInfo->getDataField(StringTable->insert("_animCount"), nullptr));
-   S32 animItem = assetItem->shapeInfo->findItemByName("Animations");
 
    S32 materialCount = dAtoi(assetItem->shapeInfo->getDataField(StringTable->insert("_materialCount"), nullptr));
    S32 matItem = assetItem->shapeInfo->findItemByName("Materials");
@@ -1944,7 +2056,74 @@ void AssetImporter::processShapeAsset(AssetImportObject* assetItem)
    cachedConfig->CopyTo(activeImportConfig);
    cachedConfig->deleteObject();
 
-   assetItem->processed = true;
+   assetItem->importStatus = AssetImportObject::Processed;
+}
+
+void AssetImporter::processShapeAnimationAsset(AssetImportObject* assetItem)
+{
+   dSprintf(importLogBuffer, sizeof(importLogBuffer), "Preparing Shape Animation for Import: %s", assetItem->assetName.c_str());
+   activityLog.push_back(importLogBuffer);
+
+   String filePath = assetItem->filePath.getFullPath();
+   String fileName = assetItem->filePath.getFileName();
+   String fileExt = assetItem->filePath.getExtension();
+
+   if (assetItem->shapeInfo == nullptr)
+   {
+      GuiTreeViewCtrl* shapeInfo = new GuiTreeViewCtrl();
+      shapeInfo->registerObject();
+
+      if (fileExt.compare("dae") == 0)
+      {
+         enumColladaForImport(filePath, shapeInfo, false);
+      }
+      else if (fileExt.compare("dts") == 0 || fileExt.compare("dsq") == 0)
+      {
+         enumDTSForImport(filePath, shapeInfo);
+      }
+      else
+      {
+         // Check if a cached DTS is available => no need to import the source file
+         // if we can load the DTS instead
+
+         AssimpShapeLoader loader;
+         loader.fillGuiTreeView(filePath.c_str(), shapeInfo);
+      }
+
+      assetItem->shapeInfo = shapeInfo;
+   }
+
+   if (activeImportConfig->AlwaysAddShapeAnimationSuffix)
+   {
+      if (!assetItem->assetName.endsWith(activeImportConfig->AddedShapeAnimationSuffix.c_str()))
+         assetItem->assetName += activeImportConfig->AddedShapeAnimationSuffix;
+   }
+
+   S32 animCount = dAtoi(assetItem->shapeInfo->getDataField(StringTable->insert("_animCount"), nullptr));
+
+   dSprintf(importLogBuffer, sizeof(importLogBuffer), "   Shape Animation Info: Anim Count: %i", animCount);
+   activityLog.push_back(importLogBuffer);
+
+   AssetImportConfig* cachedConfig = new AssetImportConfig();;
+   cachedConfig->registerObject();
+   activeImportConfig->CopyTo(cachedConfig);
+
+   if (!activeImportConfig->UseManualShapeConfigRules)
+   {
+      //Try and load a sis file if it exists for this format
+      activeImportConfig->loadSISFile(assetItem->filePath);
+   }
+
+   if (activeImportConfig->ImportAnimations && animCount > 0)
+   {
+      
+   }
+
+   //restore the cached version just in case we loaded a sis file
+   cachedConfig->CopyTo(activeImportConfig);
+   cachedConfig->deleteObject();
+
+   assetItem->importStatus = AssetImportObject::Processed;
 }
 
 void AssetImporter::processShapeMaterialInfo(AssetImportObject* assetItem, S32 materialItemId)
@@ -1986,7 +2165,7 @@ void AssetImporter::processShapeMaterialInfo(AssetImportObject* assetItem, S32 m
    else
    {
       Torque::Path filePath = materialItemValue;
-      String fullFilePath = filePath.getFullFileName().c_str();
+      String fullFilePath = filePath.getFullPath().c_str();
       String shapePathBase = assetItem->filePath.getRootAndPath();
 
       if (fullFilePath.isNotEmpty())
@@ -2000,36 +2179,44 @@ void AssetImporter::processShapeMaterialInfo(AssetImportObject* assetItem, S32 m
             fullFilePath = fullFilePath.replace(" (Not Found)", "");
             fullFilePath = fullFilePath.replace(" (not found)", "");
 
-            String testFileName = shapePathBase + "/" + fullFilePath;
-            if (Platform::isFile(testFileName.c_str()))
+            if(filePath.getPath().isEmpty())
+               fullFilePath = shapePathBase + "/" + fullFilePath;
+ 
+            if (Platform::isFile(fullFilePath.c_str()))
             {
-               filePath = testFileName;
+               filePath = Torque::Path(fullFilePath);
             }
             else
             {
                //Hmm, didn't find it. It could be that the in-model filename could be different by virtue of
                //image extension. Some files have source content files like psd's, but the mesh was exported to use
                //a dds or png, etc
-               Torque::Path testFilePath = testFileName;
+               Torque::Path testFilePath = fullFilePath;
                String imgFileName = AssetImporter::findImagePath(testFilePath.getPath() + "/" + testFilePath.getFileName());
                if (imgFileName.isNotEmpty())
                   filePath = imgFileName;
+               else
+                  filePath = Torque::Path(""); //no luck, so we just won't try importing in the image
             }
          }
  
-         matAssetItem = addImportingAsset("MaterialAsset", shapePathBase + "/", assetItem, matName);
-         AssetImportObject* imageAssetItem = addImportingAsset("ImageAsset", filePath, matAssetItem, "");
+         matAssetItem = addImportingAsset("MaterialAsset", shapePathBase + "/" + matName, assetItem, matName);
 
-         String suffixType;
-         String suffix = parseImageSuffixes(imageAssetItem->assetName, &suffixType);
-         if (suffix.isNotEmpty())
+         if (!filePath.isEmpty())
          {
-            imageAssetItem->imageSuffixType = suffixType;
-         }
-         else
-         {
-            //we'll assume it's albedo
-            imageAssetItem->imageSuffixType = "Albedo";
+            AssetImportObject* imageAssetItem = addImportingAsset("ImageAsset", filePath, matAssetItem, "");
+
+            String suffixType;
+            String suffix = parseImageSuffixes(imageAssetItem->assetName, &suffixType);
+            if (suffix.isNotEmpty())
+            {
+               imageAssetItem->imageSuffixType = suffixType;
+            }
+            else
+            {
+               //we'll assume it's albedo
+               imageAssetItem->imageSuffixType = "Albedo";
+            }
          }
       }
       else
@@ -2046,93 +2233,18 @@ void AssetImporter::processShapeMaterialInfo(AssetImportObject* assetItem, S32 m
 
 void AssetImporter::processSoundAsset(AssetImportObject* assetItem)
 {
-   dSprintf(importLogBuffer, sizeof(importLogBuffer), "Preparing Image for Import: %s", assetItem->assetName.c_str());
+   dSprintf(importLogBuffer, sizeof(importLogBuffer), "Preparing Sound for Import: %s", assetItem->assetName.c_str());
    activityLog.push_back(importLogBuffer);
 
-   if ((activeImportConfig->GenerateMaterialOnImport && assetItem->parentAssetItem == nullptr)/* || assetItem->parentAssetItem != nullptr*/)
+   if (activeImportConfig->AlwaysAddSoundSuffix)
    {
-      //find our suffix match, if any
-      String noSuffixName = assetItem->assetName;
-      String suffixType;
-      String suffix = parseImageSuffixes(assetItem->assetName, &suffixType);
-      if (suffix.isNotEmpty())
-      {
-         assetItem->imageSuffixType = suffixType;
-         S32 suffixPos = assetItem->assetName.find(suffix, 0, String::NoCase | String::Left);
-         noSuffixName = assetItem->assetName.substr(0, suffixPos);
-      }
-
-      //We try to automatically populate materials under the naming convention: materialName: Rock, image maps: Rock_Albedo, Rock_Normal, etc
-
-      AssetImportObject* materialAsset = findImportingAssetByName(noSuffixName);
-      if (materialAsset != nullptr && materialAsset->assetType != String("MaterialAsset"))
-      {
-         //We may have a situation where an asset matches the no-suffix name, but it's not a material asset. Ignore this
-         //asset item for now
-
-         materialAsset = nullptr;
-      }
-
-      //If we didn't find a matching material asset in our current items, we'll make one now
-      if (materialAsset == nullptr)
-      {
-         if (!assetItem->filePath.isEmpty())
-         {
-            materialAsset = addImportingAsset("MaterialAsset", assetItem->filePath, nullptr, noSuffixName);
-         }
-      }
-
-      //Not that, one way or another, we have the generated material asset, lets move on to associating our image with it
-      if (materialAsset != nullptr && materialAsset != assetItem->parentAssetItem)
-      {
-         if (assetItem->parentAssetItem != nullptr)
-         {
-            //If the image had an existing parent, it gets removed from that parent's child item list
-            assetItem->parentAssetItem->childAssetItems.remove(assetItem);
-         }
-         else
-         {
-            //If it didn't have one, we're going to pull it from the importingAssets list
-            importingAssets.remove(assetItem);
-         }
-
-         //Now we can add it to the correct material asset
-         materialAsset->childAssetItems.push_back(assetItem);
-         assetItem->parentAssetItem = materialAsset;
-
-         assetHeirarchyChanged = true;
-      }
-
-      //Now to do some cleverness. If we're generating a material, we can parse like assets being imported(similar filenames) but different suffixes
-      //If we find these, we'll just populate into the original's material
-
-      //if we need to append the diffuse suffix and indeed didn't find a suffix on the name, do that here
-      if (suffixType.isEmpty())
-      {
-         if (activeImportConfig->UseDiffuseSuffixOnOriginImage)
-         {
-            String diffuseToken = StringUnit::getUnit(activeImportConfig->DiffuseTypeSuffixes, 0, ",;\t");
-            assetItem->assetName = assetItem->assetName + diffuseToken;
-            assetItem->cleanAssetName = assetItem->assetName;
-         }
-         else
-         {
-            //We need to ensure that our image asset doesn't match the same name as the material asset, so if we're not trying to force the diffuse suffix
-            //we'll give it a generic one
-            if ((materialAsset && materialAsset->assetName.compare(assetItem->assetName) == 0) || activeImportConfig->AlwaysAddImageSuffix)
-            {
-               assetItem->assetName = assetItem->assetName + activeImportConfig->AddedImageSuffix;
-               assetItem->cleanAssetName = assetItem->assetName;
-            }
-         }
-
-         //Assume for abledo if it has no suffix matches
-         assetItem->imageSuffixType = "Albedo";
-      }
+      if (!assetItem->assetName.endsWith(activeImportConfig->AddedSoundSuffix.c_str()))
+         assetItem->assetName += activeImportConfig->AddedSoundSuffix;
    }
 
-   assetItem->processed = true;
+   assetItem->importStatus = AssetImportObject::Processed;
 }
+
 //
 // Validation
 //
@@ -2154,12 +2266,21 @@ bool AssetImporter::validateAssets()
 
 void AssetImporter::validateAsset(AssetImportObject* assetItem)
 {
-   if (assetItem->skip)
+   if (assetItem->importStatus == AssetImportObject::Skipped || assetItem->importStatus == AssetImportObject::NotProcessed
+      || assetItem->importStatus == AssetImportObject::UseForDependencies)
       return;
 
-   bool hasCollision = checkAssetForCollision(assetItem);
+   //If this item's already been marked as being in error, don't bother with it. It knows what it did.
+   //This avoids running collision checks on an item already known to have a collision, which could erroneously
+   //mark the original, not-colliding item as colliding with this item, invaliding both
+   if (assetItem->status == String("Error") || assetItem->statusType.isNotEmpty())
+   {
+      importIssues = true;
+      return;
+   }
 
-   if (hasCollision)
+   //Runm this item against our other importing assets and check for any collisions
+   if (checkAssetForCollision(assetItem))
    {
       importIssues = true;
       return;
@@ -2170,7 +2291,6 @@ void AssetImporter::validateAsset(AssetImportObject* assetItem)
       AssetQuery aQuery;
       U32 numAssetsFound = AssetDatabase.findAllAssets(&aQuery);
 
-      bool hasCollision = false;
       for (U32 i = 0; i < numAssetsFound; i++)
       {
          StringTableEntry assetId = aQuery.mAssetList[i];
@@ -2184,7 +2304,6 @@ void AssetImporter::validateAsset(AssetImportObject* assetItem)
 
          if (assetName == StringTable->insert(assetItem->assetName.c_str()))
          {
-            hasCollision = true;
             assetItem->status = "Error";
             assetItem->statusType = "DuplicateAsset";
             assetItem->statusInfo = "Duplicate asset names found within the target module!\nAsset \"" + assetItem->assetName + "\" of type \"" + assetItem->assetType + "\" has a matching name.\nPlease rename it and try again!";
@@ -2234,36 +2353,21 @@ void AssetImporter::validateAsset(AssetImportObject* assetItem)
 
 void AssetImporter::resetAssetValidationStatus(AssetImportObject* assetItem)
 {
-   if (assetItem == nullptr)
+   Vector<AssetImportObject*> itemList = importingAssets;
+   if (assetItem != nullptr)
+      itemList = assetItem->childAssetItems;
+
+   for (U32 i = 0; i < itemList.size(); i++)
    {
-      for (U32 i = 0; i < importingAssets.size(); i++)
-      {
-         if (importingAssets[i]->skip)
-            continue;
+      if (itemList[i]->importStatus == AssetImportObject::Skipped)
+         continue;
 
-         importingAssets[i]->status = "";
-         importingAssets[i]->statusType = "";
-         importingAssets[i]->statusInfo = "";
+      itemList[i]->status = "";
+      itemList[i]->statusType = "";
+      itemList[i]->statusInfo = "";
 
-         //If it wasn't a match, try recusing on the children(if any)
-         resetAssetValidationStatus(importingAssets[i]);
-      }
-   }
-   else
-   {
-      //this is the child recursing section
-      for (U32 i = 0; i < assetItem->childAssetItems.size(); i++)
-      {
-         if (assetItem->childAssetItems[i]->skip)
-            continue;
-
-         assetItem->childAssetItems[i]->status = "";
-         assetItem->childAssetItems[i]->statusType = "";
-         assetItem->childAssetItems[i]->statusInfo = "";
-
-         //If it wasn't a match, try recusing on the children(if any)
-         resetAssetValidationStatus(assetItem->childAssetItems[i]);
-      }
+      //If it wasn't a match, try recusing on the children(if any)
+      resetAssetValidationStatus(itemList[i]);
    }
 }
 
@@ -2271,68 +2375,37 @@ bool AssetImporter::checkAssetForCollision(AssetImportObject* assetItemToCheck, 
 {
    bool results = false;
 
-   if (assetItem == nullptr)
+   Vector<AssetImportObject*> itemList = importingAssets;
+   if (assetItem != nullptr)
+      itemList = assetItem->childAssetItems;
+
+   for (U32 i = 0; i < itemList.size(); i++)
    {
-      for (U32 i = 0; i < importingAssets.size(); i++)
+      AssetImportObject* importingAsset = itemList[i];
+
+      if (importingAsset->importStatus == AssetImportObject::Skipped || importingAsset->importStatus == AssetImportObject::UseForDependencies)
+         continue;
+
+      if ((assetItemToCheck->assetName.compare(importingAsset->assetName) == 0) && (assetItemToCheck->getId() != importingAsset->getId()))
       {
-         AssetImportObject* importingAsset = importingAssets[i];
-
-         if (importingAsset->skip)
-            continue;
-
-         if ((assetItemToCheck->assetName.compare(importingAsset->assetName) == 0) && (assetItemToCheck->getId() != importingAsset->getId()))
-         {
-            //we do have a collision, note the collsion and bail out
-            assetItemToCheck->status = "Warning";
-            assetItemToCheck->statusType = "DuplicateImportAsset";
-            assetItemToCheck->statusInfo = "Duplicate asset names found with importing assets!\nAsset \"" + importingAsset->assetName + "\" of the type \"" + importingAsset->assetType + "\" and \"" +
-                                             assetItemToCheck->assetName + "\" of the type \"" + assetItemToCheck->assetType + "\" have matching names.\nPlease rename one of them.";
-
-             dSprintf(importLogBuffer, sizeof(importLogBuffer), "Warning! Asset %s, type %s has a naming collision with another importing asset: %s, type %s",
-                assetItemToCheck->assetName.c_str(), assetItemToCheck->assetType.c_str(),
-                importingAsset->assetName.c_str(), importingAsset->assetType.c_str());
-             activityLog.push_back(importLogBuffer);
-
-            return true;
-         }
-
-         //If it wasn't a match, try recusing on the children(if any)
-         results = checkAssetForCollision(assetItemToCheck, importingAsset);
-         if (results)
-            return results;
-      }
-   }
-   else
-   {
-      //this is the child recursing section
-      for (U32 i = 0; i < assetItem->childAssetItems.size(); i++)
-      {
-         AssetImportObject* childAsset = assetItem->childAssetItems[i];
-
-         if (childAsset->skip)
-            continue;
-
-         if ((assetItemToCheck->assetName.compare(childAsset->assetName) == 0) && (assetItemToCheck->getId() != childAsset->getId()))
-         {
-            //we do have a collision, note the collsion and bail out
-            assetItemToCheck->status = "Warning";
-            assetItemToCheck->statusType = "DuplicateImportAsset";
-            assetItemToCheck->statusInfo = "Duplicate asset names found with importing assets!\nAsset \"" + assetItem->assetName + "\" of the type \"" + assetItem->assetType + "\" and \"" +
-               assetItemToCheck->assetName + "\" of the type \"" + assetItemToCheck->assetType + "\" have matching names.\nPlease rename one of them.";
+         //we do have a collision, note the collsion and bail out
+         assetItemToCheck->status = "Warning";
+         assetItemToCheck->statusType = "DuplicateImportAsset";
+         assetItemToCheck->statusInfo = "Duplicate asset names found with importing assets!\nAsset \"" + importingAsset->assetName + "\" of the type \"" + importingAsset->assetType + "\" and \"" +
+                                          assetItemToCheck->assetName + "\" of the type \"" + assetItemToCheck->assetType + "\" have matching names.\nPlease rename one of them.";
 
             dSprintf(importLogBuffer, sizeof(importLogBuffer), "Warning! Asset %s, type %s has a naming collision with another importing asset: %s, type %s",
                assetItemToCheck->assetName.c_str(), assetItemToCheck->assetType.c_str(),
-               childAsset->assetName.c_str(), childAsset->assetType.c_str());
+               importingAsset->assetName.c_str(), importingAsset->assetType.c_str());
             activityLog.push_back(importLogBuffer);
 
-            return true;
-         }
-
-         //If it wasn't a match, try recusing on the children(if any)
-         results = checkAssetForCollision(assetItemToCheck, childAsset);
-         if (results)
-            return results;
+         return true;
       }
+
+      //If it wasn't a match, try recusing on the children(if any)
+      results = checkAssetForCollision(assetItemToCheck, importingAsset);
+      if (results)
+         return results;
    }
 
    return results;
@@ -2348,7 +2421,16 @@ void AssetImporter::resolveAssetItemIssues(AssetImportObject* assetItem)
       if (activeImportConfig->DuplicateAutoResolution == String("AutoPrune"))
       {
          //delete the item
-         deleteImportingAsset(assetItem);
+         if (assetItem->parentAssetItem == nullptr)
+         {
+            //if there's no parent, just delete
+            deleteImportingAsset(assetItem);
+         }
+         else
+         {
+            //otherwise, we'll likely want to retain our dependency for our parent
+            assetItem->importStatus = AssetImportObject::UseForDependencies;
+         }
 
          //log it's deletion
          dSprintf(importLogBuffer, sizeof(importLogBuffer), "Asset %s was autopruned due to %s as part of the Import Configuration", assetItem->assetName.c_str(), humanReadableReason.c_str());
@@ -2360,7 +2442,49 @@ void AssetImporter::resolveAssetItemIssues(AssetImportObject* assetItem)
       {
          //Set trailing number
          String renamedAssetName = assetItem->assetName;
-         renamedAssetName = Sim::getUniqueName(renamedAssetName.c_str());
+         String renamedAssetId = assetItem->moduleName + ":" + renamedAssetName;
+
+         String addedSuffix;
+
+         if (assetItem->assetType == String("ShapeAsset"))
+            addedSuffix = activeImportConfig->AddedShapeSuffix;
+         else if (assetItem->assetType == String("MaterialAsset"))
+            addedSuffix = activeImportConfig->AddedMaterialSuffix;
+         else if (assetItem->assetType == String("ImageAsset"))
+            addedSuffix = activeImportConfig->AddedImageSuffix;
+         else if (assetItem->assetType == String("SoundAsset"))
+            addedSuffix = activeImportConfig->AddedSoundSuffix;
+
+         //do the suffix if it isn't already on it
+         if (!renamedAssetName.endsWith(addedSuffix.c_str()))
+         {
+            renamedAssetName += addedSuffix;
+            renamedAssetId = assetItem->moduleName + ":" + renamedAssetName;
+            assetItem->assetName = renamedAssetName;
+         }
+
+         //if still conflicted
+         //add the directory prefix
+         if (AssetDatabase.isDeclaredAsset(renamedAssetId.c_str()))
+         {
+            renamedAssetName = getFolderPrefixedName(assetItem);
+            renamedAssetId = assetItem->moduleName + ":" + renamedAssetName;
+            assetItem->assetName = renamedAssetName;
+         }
+
+         bool appendedNumber = false;
+         U32 uniqueNumber = 0;
+         while (AssetDatabase.isDeclaredAsset(renamedAssetId.c_str()))
+         {
+            uniqueNumber++;
+            renamedAssetId = assetItem->moduleName + ":" + renamedAssetName + String::ToString(uniqueNumber);
+            appendedNumber = true;
+         }
+
+         if (appendedNumber)
+         {
+            renamedAssetName += String::ToString(uniqueNumber);
+         }
 
          //Log it's renaming
          dSprintf(importLogBuffer, sizeof(importLogBuffer), "Asset %s was renamed due to %s as part of the Import Configuration", assetItem->assetName.c_str(), humanReadableReason.c_str());
@@ -2381,25 +2505,7 @@ void AssetImporter::resolveAssetItemIssues(AssetImportObject* assetItem)
       }
       else if (activeImportConfig->DuplicateAutoResolution == String("FolderPrefix"))
       {
-         String renamedAssetName = assetItem->assetName;
-
-         //Set trailing number
-         S32 dirIndex = assetItem->filePath.getDirectoryCount() - 1;
-         while (dirIndex > -1)
-         {
-            renamedAssetName = assetItem->assetName;
-            String owningFolder = assetItem->filePath.getDirectory(dirIndex);
-
-            renamedAssetName = owningFolder + "_" + renamedAssetName;
-
-            if (AssetDatabase.isDeclaredAsset(renamedAssetName))
-            {
-               dirIndex--;
-               continue;
-            }
-
-            break;
-         }
+         String renamedAssetName = getFolderPrefixedName(assetItem);
 
          //Log it's renaming
          dSprintf(importLogBuffer, sizeof(importLogBuffer), "Asset %s was renamed due to %s as part of the Import Configuration", assetItem->assetName.c_str(), humanReadableReason.c_str());
@@ -2430,7 +2536,6 @@ void AssetImporter::resetImportConfig()
       activeImportConfig->registerObject();
    }
 
-   bool foundConfig = false;
    Settings* editorSettings;
    //See if we can get our editor settings
    if (Sim::findObject("EditorSettings", editorSettings))
@@ -2441,6 +2546,9 @@ void AssetImporter::resetImportConfig()
       Settings* importConfigs;
       if (Sim::findObject("AssetImportSettings", importConfigs))
       {
+         dSprintf(importLogBuffer, sizeof(importLogBuffer), "Loading import config: %s!", defaultImportConfig.c_str());
+         activityLog.push_back(importLogBuffer);
+
          //Now load the editor setting-deigned config!
          activeImportConfig->loadImportConfig(importConfigs, defaultImportConfig.c_str());
       }
@@ -2511,11 +2619,16 @@ StringTableEntry AssetImporter::autoImportFile(Torque::Path filePath, String typ
    else
    {
       importAssets();
+
+      acquireAssets();
    }
 
    dumpActivityLog();
 
-   if (hasIssues)
+   if (hasIssues ||
+      assetItem->importStatus == AssetImportObject::Skipped ||
+      assetItem->importStatus == AssetImportObject::UseForDependencies ||
+      assetItem->importStatus == AssetImportObject::Error)
    {
       return StringTable->EmptyString();
    }
@@ -2534,163 +2647,139 @@ void AssetImporter::importAssets(AssetImportObject* assetItem)
    {
       dSprintf(importLogBuffer, sizeof(importLogBuffer), "AssetImporter::importAssets - Unable to find moduleId %s", targetModuleId.c_str());
       activityLog.push_back(importLogBuffer);
+      dumpActivityLog();
       return;
    }
 
-   if (assetItem == nullptr)
+   Vector<AssetImportObject*> itemList = importingAssets;
+   if (assetItem != nullptr)
+      itemList = assetItem->childAssetItems;
+
+   for (U32 i = 0; i < itemList.size(); i++)
    {
-      for (U32 i = 0; i < importingAssets.size(); i++)
+      AssetImportObject* item = itemList[i];
+      if (!item->canImport())
+         continue;
+
+      Torque::Path assetPath;
+      if (item->assetType == String("ImageAsset"))
       {
-         if (importingAssets[i]->skip)
-            continue;
-
-         Torque::Path assetPath;
-         if (importingAssets[i]->assetType == String("ImageAsset"))
-         {
-            assetPath = importImageAsset(importingAssets[i]);
-         }
-         else if (importingAssets[i]->assetType == String("ShapeAsset"))
-         {
-            assetPath = importShapeAsset(importingAssets[i]);
-         }
-         else if (importingAssets[i]->assetType == String("SoundAsset"))
-         {
-            assetPath = importSoundAsset(importingAssets[i]);
-         }
-         else if (importingAssets[i]->assetType == String("MaterialAsset"))
-         {
-            assetPath = importMaterialAsset(importingAssets[i]);
-         }
-         else
-         {
-            finalImportedAssetPath = String::EmptyString;
-
-            String processCommand = "import";
-            processCommand += importingAssets[i]->assetType;
-            if (isMethod(processCommand.c_str()))
-            {
-               Con::executef(this, processCommand.c_str(), importingAssets[i]);
-
-               assetPath = finalImportedAssetPath;
-            }
-         }
-         /*else if (importingAssets[i]->assetType == String("ShapeAnimationAsset"))
-            assetPath = ShapeAnimationAsset::importAsset(importingAssets[i]);*/
-
-         if (assetPath.isEmpty() && importingAssets[i]->assetType != String("MaterialAsset"))
-         {
-            dSprintf(importLogBuffer, sizeof(importLogBuffer), "AssetImporter::importAssets - Import attempt of %s failed, so skipping asset.", importingAssets[i]->assetName.c_str());
-            activityLog.push_back(importLogBuffer);
-
-            continue;
-         }
-         else
-         {
-            //If we got a valid filepath back from the import action, then we know we're good to go and we can go ahead and register the asset!
-            if (!isReimport)
-            {
-               bool registerSuccess = AssetDatabase.addDeclaredAsset(moduleDef, assetPath.getFullPath().c_str());
-
-               if (!registerSuccess)
-               {
-                  dSprintf(importLogBuffer, sizeof(importLogBuffer), "AssetImporter::importAssets - Failed to successfully register new asset at path %s to moduleId %s", assetPath.getFullPath().c_str(), targetModuleId.c_str());
-                  activityLog.push_back(importLogBuffer);
-               }
-            }
-            else
-            {
-               String assetId = importingAssets[i]->moduleName + ":" + importingAssets[i]->assetName;
-               bool refreshSuccess = AssetDatabase.refreshAsset(assetId.c_str());
-
-               if (!refreshSuccess)
-               {
-                  dSprintf(importLogBuffer, sizeof(importLogBuffer), "AssetImporter::importAssets - Failed to refresh reimporting asset %s.", importingAssets[i]->assetName.c_str());
-                  activityLog.push_back(importLogBuffer);
-               }
-            }
-         }
-
-         //recurse if needed
-         importAssets(importingAssets[i]);
+         assetPath = importImageAsset(item);
       }
-   }
-   else
-   {
-      //this is the child recursing section
-      for (U32 i = 0; i < assetItem->childAssetItems.size(); i++)
+      else if (item->assetType == String("ShapeAsset"))
       {
-         AssetImportObject* childItem = assetItem->childAssetItems[i];
+         assetPath = importShapeAsset(item);
+      }
+      else if (item->assetType == String("SoundAsset"))
+      {
+         assetPath = importSoundAsset(item);
+      }
+      else if (item->assetType == String("MaterialAsset"))
+      {
+         assetPath = importMaterialAsset(item);
+      }
+      else if (item->assetType == String("ShapeAnimationAsset"))
+      {
+         assetPath = importShapeAnimationAsset(item);
+      }
+      else
+      {
+         finalImportedAssetPath = String::EmptyString;
 
-         if (childItem->skip)
-            continue;
+         String processCommand = "import";
+         processCommand += item->assetType;
+         if (isMethod(processCommand.c_str()))
+         {
+            Con::executef(this, processCommand.c_str(), item);
 
-         Torque::Path assetPath;
-         if (childItem->assetType == String("ImageAsset"))
-         {
-            assetPath = importImageAsset(childItem);
+            assetPath = finalImportedAssetPath;
          }
-         else if (childItem->assetType == String("ShapeAsset"))
-         {
-            assetPath = importShapeAsset(childItem);
-         }
-         else if (childItem->assetType == String("SoundAsset"))
-         {
-            assetPath = importSoundAsset(childItem);
-         }
-         else if (childItem->assetType == String("MaterialAsset"))
-         {
-            assetPath = importMaterialAsset(childItem);
-         }
-         /*else if (childItem->assetType == String("ShapeAnimationAsset"))
-            assetPath = ShapeAnimationAsset::importAsset(childItem);*/
-         else
-         {
-            finalImportedAssetPath = String::EmptyString;
+      }
+      /*else if (importingAssets[i]->assetType == String("ShapeAnimationAsset"))
+         assetPath = ShapeAnimationAsset::importAsset(importingAssets[i]);*/
 
-            String processCommand = "import";
-            processCommand += childItem->assetType;
-            if (isMethod(processCommand.c_str()))
+      if (assetPath.isEmpty() && item->assetType != String("MaterialAsset"))
+      {
+         dSprintf(importLogBuffer, sizeof(importLogBuffer), "AssetImporter::importAssets - Import attempt of %s failed, so skipping asset.", item->assetName.c_str());
+         activityLog.push_back(importLogBuffer);
+
+         continue;
+      }
+      else
+      {
+         //If we got a valid filepath back from the import action, then we know we're good to go and we can go ahead and register the asset!
+         if (!isReimport)
+         {
+            bool registerSuccess = AssetDatabase.addDeclaredAsset(moduleDef, assetPath.getFullPath().c_str());
+
+            String assetIdStr = item->moduleName + ":" + item->assetName;
+            StringTableEntry assetId = StringTable->insert(assetIdStr.c_str());
+
+            if (!registerSuccess)
             {
-               ConsoleValueRef importReturnVal = Con::executef(this, processCommand.c_str(), childItem);
-               assetPath = Torque::Path(importReturnVal.getStringValue());
-            }
-         }
-
-         if (assetPath.isEmpty() && childItem->assetType != String("MaterialAsset"))
-         {
-            dSprintf(importLogBuffer, sizeof(importLogBuffer), "AssetImporter::importAssets - Import attempt of %s failed, so skipping asset.", childItem->assetName.c_str());
-            activityLog.push_back(importLogBuffer);
-
-            continue;
-         }
-         else
-         {
-            //If we got a valid filepath back from the import action, then we know we're good to go and we can go ahead and register the asset!
-            if (!isReimport)
-            {
-               bool registerSuccess = AssetDatabase.addDeclaredAsset(moduleDef, assetPath.getFullPath().c_str());
-
-               if (!registerSuccess)
-               {
-                  dSprintf(importLogBuffer, sizeof(importLogBuffer), "AssetImporter::importAssets - Failed to successfully register new asset at path %s to moduleId %s", assetPath.getFullPath().c_str(), targetModuleId.c_str());
-                  activityLog.push_back(importLogBuffer);
-               }
+               dSprintf(importLogBuffer, sizeof(importLogBuffer), "AssetImporter::importAssets - Failed to successfully register new asset at path %s to moduleId %s", assetPath.getFullPath().c_str(), targetModuleId.c_str());
+               activityLog.push_back(importLogBuffer);
             }
             else
             {
-               String assetId = childItem->moduleName + ":" + childItem->assetName;
-               bool refreshSuccess = AssetDatabase.refreshAsset(assetId.c_str());
-
-               if (!refreshSuccess)
+               //Any special-case post-reg stuff here
+               if (item->assetType == String("ShapeAsset") || item->assetType == String("ShapeAnimationAsset"))
                {
-                  dSprintf(importLogBuffer, sizeof(importLogBuffer), "AssetImporter::importAssets - Failed to refresh reimporting asset %s.", childItem->assetName.c_str());
-                  activityLog.push_back(importLogBuffer);
+                  //forcefully update it's shape constructor
+                  TSShapeConstructor* tss = TSShapeConstructor::findShapeConstructorByAssetId(assetId);
+
+                  if(tss)
+                     tss->setShapeAssetId(assetId);
                }
             }
          }
+         else
+         {
+            String assetId = item->moduleName + ":" + item->assetName;
+            bool refreshSuccess = AssetDatabase.refreshAsset(assetId.c_str());
 
-         //recurse if needed
-         importAssets(childItem);
+            if (!refreshSuccess)
+            {
+               dSprintf(importLogBuffer, sizeof(importLogBuffer), "AssetImporter::importAssets - Failed to refresh reimporting asset %s.", item->assetName.c_str());
+               activityLog.push_back(importLogBuffer);
+            }
+         }
+      }
+
+      //Mark us as successfully imported
+      item->importStatus = AssetImportObject::Imported;
+
+      //recurse if needed
+      importAssets(item);
+   }
+
+   dumpActivityLog();
+}
+
+void AssetImporter::acquireAssets(AssetImportObject* assetItem)
+{
+   Vector<AssetImportObject*> itemList = importingAssets;
+   if (assetItem != nullptr)
+      itemList = assetItem->childAssetItems;
+
+   for (U32 i = 0; i < itemList.size(); i++)
+   {
+      AssetImportObject* item = itemList[i];
+      if (item->importStatus == AssetImportObject::Skipped ||
+         item->importStatus == AssetImportObject::NotProcessed ||
+         item->importStatus == AssetImportObject::Error)
+         continue;
+
+      //recurse if needed, we want to process child items first for dependency reasons
+      acquireAssets(item);
+
+      //Go ahead and force the asset to load now just to kick it for immediate use
+      String assetId = item->moduleName + ":" + item->assetName;
+
+      if (AssetDatabase.isDeclaredAsset(assetId))
+      {
+         AssetBase* assetDef = AssetDatabase.acquireAsset<AssetBase>(assetId);
+         AssetDatabase.releaseAsset(assetId);
       }
    }
 }
@@ -2725,7 +2814,7 @@ Torque::Path AssetImporter::importImageAsset(AssetImportObject* assetItem)
 
    //If it's not a re-import, check that the file isn't being in-place imported. If it isn't, store off the original
    //file path for reimporting support later
-   if (!isReimport && String::compare(qualifiedFromFile, qualifiedToFile))
+   if (!isReimport && String::compare(qualifiedFromFile, qualifiedToFile) && Platform::isFile(qualifiedFromFile))
    {
       newAsset->setDataField(StringTable->insert("originalFilePath"), nullptr, qualifiedFromFile);
    }
@@ -2776,8 +2865,6 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
    StringTableEntry assetName = StringTable->insert(assetItem->assetName.c_str());
 
    String tamlPath = targetPath + "/" + assetName + ".asset.taml";
-   String scriptName = assetItem->assetName + "." TORQUE_SCRIPT_EXTENSION;
-   String scriptPath = targetPath + "/" + scriptName;
    String originalPath = assetItem->filePath.getFullPath().c_str();
 
    char qualifiedFromFile[2048];
@@ -2785,10 +2872,13 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
    Platform::makeFullPathName(originalPath.c_str(), qualifiedFromFile, sizeof(qualifiedFromFile));
 
    newAsset->setAssetName(assetName);
-   newAsset->setScriptFile(scriptName.c_str());
+
+   if (!isReimport && Platform::isFile(qualifiedFromFile))
+   {
    newAsset->setDataField(StringTable->insert("originalFilePath"), nullptr, qualifiedFromFile);
+   }
+
    newAsset->setDataField(StringTable->insert("materialDefinitionName"), nullptr, assetName);
-   
 
    //iterate through and write out the material maps dependencies
    S32 dependencySlotId = 0;
@@ -2796,7 +2886,7 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
    {
       AssetImportObject* childItem = assetItem->childAssetItems[i];
 
-      if (childItem->skip || !childItem->processed || childItem->assetType.compare("ImageAsset") != 0)
+      if ((!childItem->canImport() && childItem->importStatus != AssetImportObject::UseForDependencies) || childItem->assetType.compare("ImageAsset") != 0)
          continue;
 
       char dependencyFieldName[64];
@@ -2808,16 +2898,6 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
       newAsset->setDataField(StringTable->insert(dependencyFieldName), nullptr, dependencyFieldDef);
 
       dependencySlotId++;
-   }
-
-   Taml tamlWriter;
-   bool importSuccessful = tamlWriter.write(newAsset, tamlPath.c_str());
-
-   if (!importSuccessful)
-   {
-      dSprintf(importLogBuffer, sizeof(importLogBuffer), "Error! Unable to write asset taml file %s", tamlPath.c_str());
-      activityLog.push_back(importLogBuffer);
-      return "";
    }
 
    //build the ORMConfig file if we're flagged to and have valid image maps
@@ -2833,7 +2913,7 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
       {
          AssetImportObject* childItem = assetItem->childAssetItems[i];
 
-         if (childItem->skip || childItem->assetType.compare("ImageAsset") != 0)
+         if (childItem->canImport() || childItem->assetType.compare("ImageAsset") != 0)
             continue;
 
          if (childItem->imageSuffixType.compare("ORMConfig") == 0)
@@ -2858,175 +2938,73 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
       }
    }
 
-   FileObject* file = new FileObject();
-   file->registerObject();
-
-   if (activeImportConfig->UseExistingMaterials && Platform::isFile(qualifiedFromFile))
+   //If we're not using existing materials, or the material in question doesn't actually already exist, spool it up
+   if (!activeImportConfig->UseExistingMaterials || !Sim::findObject(assetName))
    {
-      //Now write the script file containing our material out
-      //There's 2 ways to do this. If we're in-place importing an existing asset, we can see if the definition existed already, like in an old
-      //materials.tscript file. if it does, we can just find the object by name, and save it out to our new file
-      //If not, we'll just generate one
-      Material* existingMat = MATMGR->getMaterialDefinitionByName(assetName);
-
-      //It's also possible that, for legacy models, the material hooks in via the material's mapTo field, and the material name is something completely different
-      //So we'll check for that as well if we didn't find it by name up above
-      if (existingMat == nullptr)
-         existingMat = MATMGR->getMaterialDefinitionByMapTo(assetName);
-
-      if (existingMat == nullptr && assetItem->assetName != assetItem->cleanAssetName)
-      {
-         existingMat = MATMGR->getMaterialDefinitionByName(assetItem->cleanAssetName);
-         if (existingMat == nullptr)
-            existingMat = MATMGR->getMaterialDefinitionByMapTo(assetItem->cleanAssetName);
-      }
-
-      if (existingMat)
-      {
-         PersistenceManager* persistMgr;
-         if (Sim::findObject("ImageAssetValidator", persistMgr))
-         {
-            for (U32 i = 0; i < assetItem->childAssetItems.size(); i++)
-            {
-               AssetImportObject* childItem = assetItem->childAssetItems[i];
-
-               if (childItem->skip || !childItem->processed || childItem->assetType.compare("ImageAsset") != 0)
-                  continue;
-
-               String path = childItem->filePath.getFullFileName();
-
-               String mapFieldName = "";
-               String assetFieldName = "";
-
-               ImageAsset::ImageTypes imageType = ImageAsset::getImageTypeFromName(childItem->imageSuffixType);
-
-               if (imageType == ImageAsset::ImageTypes::Albedo || childItem->imageSuffixType.isEmpty())
-               {
-                  mapFieldName = "DiffuseMap";
-               }
-               else if (imageType == ImageAsset::ImageTypes::Normal)
-               {
-                  mapFieldName = "NormalMap";
-               }
-               else if (imageType == ImageAsset::ImageTypes::ORMConfig)
-               {
-                  mapFieldName = "ORMConfig";
-               }
-               else if (imageType == ImageAsset::ImageTypes::Metalness)
-               {
-                  mapFieldName = "MetalnessMap";
-               }
-               else if (imageType == ImageAsset::ImageTypes::AO)
-               {
-                  mapFieldName = "AOMap";
-               }
-               else if (imageType == ImageAsset::ImageTypes::Roughness)
-               {
-                  mapFieldName = "RoughnessMap";
-               }
-
-               assetFieldName = mapFieldName + "Asset[0]";
-               mapFieldName += "[0]";
-
-               //If there's already an existing image map file on the material definition in this slot, don't override it
-               if (!path.isEmpty())
-                  existingMat->writeField(mapFieldName.c_str(), path.c_str());
-
-               String targetAsset = targetModuleId + ":" + childItem->assetName;
-
-               existingMat->writeField(assetFieldName.c_str(), targetAsset.c_str());
-            }
-
-            persistMgr->setDirty(existingMat);
-         }
-         else
-         {
-            Con::errorf("ImageAssetValidator not found!");
-         }
-      }
-      else
-      {
-         dSprintf(importLogBuffer, sizeof(importLogBuffer), "Error! Failed to find original material definition %s!", assetName);
-         activityLog.push_back(importLogBuffer);
-         return tamlPath;
-      }
-   }
-   else if (file->openForWrite(scriptPath.c_str()))
-   {
-      file->writeLine((U8*)"//--- OBJECT WRITE BEGIN ---");
-
-      char lineBuffer[1024];
-      dSprintf(lineBuffer, 1024, "singleton Material(%s) {", assetName);
-      file->writeLine((U8*)lineBuffer);
-
-      dSprintf(lineBuffer, 1024, "   mapTo=\"%s\";", assetName);
-      file->writeLine((U8*)lineBuffer);
+      Material* newMat = new Material();
+      newMat->registerObject(assetName);
+      newMat->mMapTo = assetItem->cleanAssetName;
 
       bool hasRoughness = false;
       for (U32 i = 0; i < assetItem->childAssetItems.size(); i++)
       {
          AssetImportObject* childItem = assetItem->childAssetItems[i];
 
-         if (childItem->skip || !childItem->processed || childItem->assetType.compare("ImageAsset") != 0)
+         if ((!childItem->canImport() && childItem->importStatus != AssetImportObject::UseForDependencies) || childItem->assetType.compare("ImageAsset") != 0)
             continue;
-
-         String mapFieldName = "";
-
-         String assetFieldName = "";
 
          ImageAsset::ImageTypes imageType = ImageAsset::getImageTypeFromName(childItem->imageSuffixType);
 
+         String assetMapFillIn = targetModuleId + ":" + childItem->assetName;
+         StringTableEntry assetMapFillInStr = StringTable->insert(assetMapFillIn.c_str());
+
          if (imageType == ImageAsset::ImageTypes::Albedo || childItem->imageSuffixType.isEmpty())
          {
-            mapFieldName = "DiffuseMap";
+            newMat->mDiffuseMapAssetId[0] = assetMapFillInStr;
          }
          else if (imageType == ImageAsset::ImageTypes::Normal)
          {
-            mapFieldName = "NormalMap";
+            newMat->mNormalMapAssetId[0] = assetMapFillInStr;
          }
          else if (imageType == ImageAsset::ImageTypes::ORMConfig)
          {
-            mapFieldName = "ORMConfigMap";
+            newMat->mORMConfigMapAssetId[0] = assetMapFillInStr;
          }
          else if (imageType == ImageAsset::ImageTypes::Metalness)
          {
-            mapFieldName = "MetalnessMap";
+            newMat->mMetalMapAssetId[0] = assetMapFillInStr;
          }
          else if (imageType == ImageAsset::ImageTypes::AO)
          {
-            mapFieldName = "AOMap";
+            newMat->mAOMapAssetId[0] = assetMapFillInStr;
          }
          else if (imageType == ImageAsset::ImageTypes::Roughness)
          {
-            mapFieldName = "RoughnessMap";
+            newMat->mRoughMapAssetId[0] = assetMapFillInStr;
             hasRoughness = true;
          }
-
-         assetFieldName = mapFieldName + "Asset";
-         mapFieldName += "[0]";
-
-         //String path = childItem->filePath.getFullFileName();
-         //dSprintf(lineBuffer, 1024, "   %s = \"%s\";", mapFieldName.c_str(), path.c_str());
-         //file->writeLine((U8*)lineBuffer);
-
-         dSprintf(lineBuffer, 1024, "   %s = \"%s:%s\";", assetFieldName.c_str(), targetModuleId.c_str(), childItem->assetName.c_str());
-         file->writeLine((U8*)lineBuffer);
       }
 
       if (hasRoughness)
       {
-         file->writeLine((U8*)"   invertSmoothness = true;");
-         
+         newMat->mInvertRoughness[0] = true;
       }
 
-      file->writeLine((U8*)"};");
-      file->writeLine((U8*)"//--- OBJECT WRITE END ---");
-
-      file->close();
+      newAsset->addObject(newMat);
    }
-   else
+   else 
    {
-      dSprintf(importLogBuffer, sizeof(importLogBuffer), "Error! Unable to write asset script file %s", scriptPath.c_str());
+      dSprintf(importLogBuffer, sizeof(importLogBuffer), "Set to use an existing material, so avoiding writing a material definition to new asset definition for material: %s", assetName);
+      activityLog.push_back(importLogBuffer);
+      return "";
+   }
+
+   Taml tamlWriter;
+   bool importSuccessful = tamlWriter.write(newAsset, tamlPath.c_str());
+
+   if (!importSuccessful)
+   {
+      dSprintf(importLogBuffer, sizeof(importLogBuffer), "Error! Unable to write asset taml file %s", tamlPath.c_str());
       activityLog.push_back(importLogBuffer);
       return "";
    }
@@ -3079,7 +3057,7 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
 
    //If it's not a re-import, check that the file isn't being in-place imported. If it isn't, store off the original
    //file path for reimporting support later
-   if (!isReimport && String::compare(qualifiedFromFile, qualifiedToFile))
+   if (!isReimport && String::compare(qualifiedFromFile, qualifiedToFile) && Platform::isFile(qualifiedFromFile))
    {
       newAsset->setDataField(StringTable->insert("originalFilePath"), nullptr, qualifiedFromFile);
    }
@@ -3090,7 +3068,7 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
    {
       AssetImportObject* childItem = assetItem->childAssetItems[i];
 
-      if (childItem->skip || !childItem->processed)
+      if (!childItem->canImport() && childItem->importStatus != AssetImportObject::UseForDependencies)
          continue;
 
       if (childItem->assetType.compare("MaterialAsset") == 0)
@@ -3117,6 +3095,15 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
 
          dependencySlotId++;
       }
+   }
+
+   if (Con::getBoolVariable("$TSLastDetail::dumpImposters", false))
+   {
+      String imposterPath = assetItem->assetName + "_imposter.png";
+      String normalsPath = assetItem->assetName + "_imposter_normals.png";
+
+      newAsset->setDiffuseImposterFile(imposterPath.c_str());
+      newAsset->setNormalImposterFile(normalsPath.c_str());
    }
 
    Taml tamlWriter;
@@ -3195,7 +3182,8 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
       TSShapeConstructor* constructor = TSShapeConstructor::findShapeConstructorByFilename(Torque::Path(qualifiedToFile).getFullPath());
       if (constructor == nullptr)
       {
-         constructor = new TSShapeConstructor(StringTable->insert(qualifiedToFile));
+         String fullAssetName = assetItem->moduleName + ":" + assetItem->assetName;
+         constructor = new TSShapeConstructor(StringTable->insert(fullAssetName.c_str()));
 
          String constructorName = assetItem->filePath.getFileName() + assetItem->filePath.getExtension().substr(0, 3);
          constructorName.replace(" ", "_");
@@ -3344,7 +3332,7 @@ Torque::Path AssetImporter::importSoundAsset(AssetImportObject* assetItem)
 
    //If it's not a re-import, check that the file isn't being in-place imported. If it isn't, store off the original
    //file path for reimporting support later
-   if (!isReimport && String::compare(qualifiedFromFile, qualifiedToFile))
+   if (!isReimport && String::compare(qualifiedFromFile, qualifiedToFile) && Platform::isFile(qualifiedFromFile))
    {
       newAsset->setDataField(StringTable->insert("originalFilePath"), nullptr, qualifiedFromFile);
    }
@@ -3400,7 +3388,7 @@ Torque::Path AssetImporter::importShapeAnimationAsset(AssetImportObject* assetIt
 
    //If it's not a re-import, check that the file isn't being in-place imported. If it isn't, store off the original
    //file path for reimporting support later
-   if (!isReimport && String::compare(qualifiedFromFile, qualifiedToFile))
+   if (!isReimport && String::compare(qualifiedFromFile, qualifiedToFile) && Platform::isFile(qualifiedFromFile))
    {
       newAsset->setDataField(StringTable->insert("originalFilePath"), nullptr, qualifiedFromFile);
    }

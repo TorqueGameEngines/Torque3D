@@ -106,7 +106,7 @@ void GuiCheckBoxCtrl::onRender(Point2I offset, const RectI &updateRect)
    }
 
    ColorI backColor = mActive ? mProfile->mFillColor : mProfile->mFillColorNA;
-   ColorI fontColor = mActive ? (mMouseOver ? mProfile->mFontColorHL : mProfile->mFontColor) : mProfile->mFontColorNA;
+   ColorI fontColor = mActive ? (mHighlighted ? mProfile->mFontColorHL : mProfile->mFontColor) : mProfile->mFontColorNA;
    ColorI insideBorderColor = isFirstResponder() ? mProfile->mBorderColorHL : mProfile->mBorderColor;
 
    // just draw the check box and the text:

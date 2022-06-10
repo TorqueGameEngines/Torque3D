@@ -25,8 +25,10 @@
 #include "core/strings/stringFunctions.h"
 #include "console/console.h"
 
-#ifdef TORQUE_OS_WIN
-   #include "tWGL.h"
+#if defined(TORQUE_OS_WIN)
+#include "tWGL.h"
+#elif defined(TORQUE_OS_LINUX)
+#include "tXGL.h"
 #endif
 
 namespace GL
@@ -41,7 +43,18 @@ namespace GL
 
    void gglPerformExtensionBinds(void *context)
    {
-	
+#if defined(TORQUE_OS_WIN)
+      if (!gladLoadWGL((HDC)context))
+      {
+         AssertFatal(false, "Unable to load WGL in GLAD. Make sure your OpenGL drivers are up to date!");
+      }
+#elif defined(TORQUE_OS_LINUX)
+
+      if (!gladLoadGLX(NULL, 0))
+      {
+         AssertFatal(false, "Unable to load GLX in GLAD. Make sure your OpenGL drivers are up to date!");
+      }
+#endif
    }
 }
 

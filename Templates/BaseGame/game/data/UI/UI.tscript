@@ -35,11 +35,17 @@ function UI::initClient(%this)
    //Profiles
    %this.queueExec("./scripts/profiles");
    
+   //Navigation Utility Scripts
+   %this.queueExec("./scripts/menuNavigation");
+   
    //Now gui files
-   %this.queueExec("./scripts/menuInputButtons");
+   %this.queueExec("./scripts/menuInputHandling");
    
    %this.queueExec("./guis/mainMenu");
    %this.queueExec("./guis/mainMenu.gui");
+   
+   %this.queueExec("./guis/mainMenuButtons");
+   %this.queueExec("./guis/mainMenuButtons.gui");
    
    %this.queueExec("./guis/chooseLevelDlg");
    %this.queueExec("./guis/chooseLevelDlg.gui");
@@ -79,6 +85,9 @@ function UI::initClient(%this)
    %this.queueExec("./scripts/help");
    %this.queueExec("./scripts/cursors");
    %this.queueExec("./scripts/utility");
+   
+   if(isToolBuild())
+      %this.queueExec("./tools/creator.tscript");
 }
 
 function UI::onCreateClientConnection(%this){}

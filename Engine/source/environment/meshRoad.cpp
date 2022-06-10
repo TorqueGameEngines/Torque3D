@@ -920,9 +920,9 @@ MeshRoad::MeshRoad()
       mTriangleCount[i] = 0;
    }
 
-   INIT_MATERIALASSET(TopMaterial);
-   INIT_MATERIALASSET(BottomMaterial);
-   INIT_MATERIALASSET(SideMaterial);
+   INIT_ASSET(TopMaterial);
+   INIT_ASSET(BottomMaterial);
+   INIT_ASSET(SideMaterial);
 
    mSideProfile.mRoad = this;
 }
@@ -954,10 +954,10 @@ void MeshRoad::initPersistFields()
 
    addGroup( "Internal" );
 
-      addProtectedField( "Node", TypeString, NULL, &addNodeFromField, &emptyStringProtectedGetFn, 
+      addProtectedField( "Node", TypeString, 0, &addNodeFromField, &emptyStringProtectedGetFn,
          "Do not modify, for internal use." );
 
-      addProtectedField( "ProfileNode", TypeString, NULL, &addProfileNodeFromField, &emptyStringProtectedGetFn,
+      addProtectedField( "ProfileNode", TypeString, 0, &addProfileNodeFromField, &emptyStringProtectedGetFn,
          "Do not modify, for internal use." );
 
    endGroup( "Internal" );
@@ -1416,9 +1416,9 @@ U32 MeshRoad::packUpdate(NetConnection * con, U32 mask, BitStream * stream)
       stream->writeAffineTransform( mObjToWorld );
 
       // Write Materials
-      PACK_MATERIALASSET(con, TopMaterial);
-      PACK_MATERIALASSET(con, BottomMaterial);
-      PACK_MATERIALASSET(con, SideMaterial);
+      PACK_ASSET(con, TopMaterial);
+      PACK_ASSET(con, BottomMaterial);
+      PACK_ASSET(con, SideMaterial);
 
       stream->write( mTextureLength );      
       stream->write( mBreakAngle );
@@ -1515,9 +1515,9 @@ void MeshRoad::unpackUpdate(NetConnection * con, BitStream * stream)
       stream->readAffineTransform(&ObjectMatrix);
       Parent::setTransform(ObjectMatrix);
 
-      UNPACK_MATERIALASSET(con, TopMaterial);
-      UNPACK_MATERIALASSET(con, BottomMaterial);
-      UNPACK_MATERIALASSET(con, SideMaterial);
+      UNPACK_ASSET(con, TopMaterial);
+      UNPACK_ASSET(con, BottomMaterial);
+      UNPACK_ASSET(con, SideMaterial);
 
       if ( isProperlyAdded() )
          _initMaterial(); 
@@ -2896,7 +2896,6 @@ void MeshRoad::_generateVerts()
 
    // Make Primitive Buffers   
    U32 p00, p01, p11, p10;
-   U32 pb00, pb01, pb11, pb10;
    U32 offset = 0;
    U16 *pIdx = NULL;   
    U32 curIdx = 0; 

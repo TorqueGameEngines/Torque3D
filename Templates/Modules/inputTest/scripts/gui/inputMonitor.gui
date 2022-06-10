@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(InputMonitorDlg) {
+$guiContent = new GuiControl(InputMonitorDlg) {
    position = "0 0";
    extent = "1024 768";
    minExtent = "8 8";
@@ -55,7 +55,7 @@
          canSaveDynamicFields = "0";
       };
       new GuiChunkedBitmapCtrl() {
-         bitmap = "data/ui/art/hudfill.png";
+         bitmap = "data/ui/images/hudfill.png";
          useVariable = "0";
          tile = "0";
          position = "0 0";

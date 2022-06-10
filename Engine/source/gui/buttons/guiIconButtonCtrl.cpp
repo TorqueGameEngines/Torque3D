@@ -85,7 +85,7 @@ ConsoleDocClass( GuiIconButtonCtrl,
 
 GuiIconButtonCtrl::GuiIconButtonCtrl()
 {
-   INIT_IMAGEASSET(Bitmap);
+   INIT_ASSET(Bitmap);
    mTextLocation = TextLocLeft;
    mIconLocation = IconLocLeft;
    mTextMargin = 4;
@@ -218,7 +218,7 @@ void GuiIconButtonCtrl::onRender(Point2I offset, const RectI& updateRect)
 
 void GuiIconButtonCtrl::renderButton( Point2I &offset, const RectI& updateRect )
 {
-   bool highlight = mMouseOver;
+   bool highlight = mHighlighted;
    bool depressed = mDepressed;
    
    ColorI fontColor   = mActive ? (highlight ? mProfile->mFontColorHL : mProfile->mFontColor) : mProfile->mFontColorNA;
@@ -236,14 +236,19 @@ void GuiIconButtonCtrl::renderButton( Point2I &offset, const RectI& updateRect )
       else
          renderSlightlyLoweredBox(boundsRect, mProfile);
    }
-   else if(mMouseOver && mActive)
+   else if(mHighlighted && mActive)
    {
       // If there is a bitmap array then render using it.  
       // Otherwise use a standard fill.
-      if(mProfile->mUseBitmapArray && mProfile->mBitmapArrayRects.size())
+      if (mProfile->mUseBitmapArray && mProfile->mBitmapArrayRects.size())
+      {
          renderBitmapArray(boundsRect, stateMouseOver);
+      }
       else
-         renderSlightlyRaisedBox(boundsRect, mProfile);
+      {
+         drawer->drawRectFill(boundsRect, mProfile->mFillColorHL);
+         drawer->drawRect(boundsRect, mProfile->mBorderColorHL);
+      }
    }
    else
    {
@@ -258,8 +263,16 @@ void GuiIconButtonCtrl::renderButton( Point2I &offset, const RectI& updateRect )
       }
       else
       {
-         drawer->drawRectFill(boundsRect, mProfile->mFillColorNA);
-         drawer->drawRect(boundsRect, mProfile->mBorderColorNA);
+         if (mActive)
+         {
+            drawer->drawRectFill(boundsRect, mProfile->mFillColor);
+            drawer->drawRect(boundsRect, mProfile->mBorderColor);
+         }
+         else
+         {
+            drawer->drawRectFill(boundsRect, mProfile->mFillColorNA);
+            drawer->drawRect(boundsRect, mProfile->mBorderColorNA);
+         }
       }
    }
 
@@ -302,7 +315,7 @@ void GuiIconButtonCtrl::renderButton( Point2I &offset, const RectI& updateRect )
       } 
       else
       {
-         iconRect.set( offset + mButtonMargin, getExtent() - (mButtonMargin * 2) );
+         iconRect.set( offset + mButtonMargin, getExtent() - (Point2I(mAbs(mButtonMargin.x), mAbs(mButtonMargin.y)) * 2) );
          
          if ( mMakeIconSquare )
          {
@@ -311,6 +324,20 @@ void GuiIconButtonCtrl::renderButton( Point2I &offset, const RectI& updateRect )
                iconRect.extent.y = iconRect.extent.x;
             else
                iconRect.extent.x = iconRect.extent.y;            
+         }
+
+         if (mIconLocation == IconLocRight)
+         {
+            iconRect.point.x = (offset.x + getWidth()) - iconRect.extent.x + mButtonMargin.x;
+         }
+         else if (mIconLocation == IconLocLeft)
+         {
+            //default state presumes left positioning
+         }
+         else if (mIconLocation == IconLocCenter)
+         {
+            iconRect.point.x = offset.x + (getWidth() / 2) - (iconRect.extent.x / 2) + mButtonMargin.x;
+            iconRect.point.y = offset.y + (getHeight() / 2) - (iconRect.extent.y / 2) + mButtonMargin.y;
          }
 
          drawer->drawBitmapStretch( mBitmap, iconRect );
@@ -412,4 +439,4 @@ void GuiIconButtonCtrl::renderBitmapArray(RectI &bounds, S32 state)
    }
 }
 
-DEF_IMAGEASSET_BINDS(GuiIconButtonCtrl, Bitmap);
+DEF_ASSET_BINDS(GuiIconButtonCtrl, Bitmap);

@@ -1,28 +1,17 @@
 
-function JoinServerMenu::onWake()
+function JoinServerMenu::onWake(%this)
 {
-   // Double check the status. Tried setting this the control
-   // inactive to start with, but that didn't seem to work.
-   JoinServerJoinBtn.setActive(JS_serverList.rowCount() > 0);
-   
-   JoinServerButtonHolder.setActive();
-   
-   JoinServerMenuInputHandler.setFirstResponder();
 }   
 
-function JoinServerButtonHolder::onWake(%this)
+function JoinServerMenu::onOpen(%this)
 {
-   %this-->joinButton.set("btn_start", "Return", "Join", "JoinServerMenu.join();");
-   %this-->backButton.set("btn_b", "Escape", "Back", "JoinServerMenu.backOut();");
-   %this-->refreshButton.set("btn_y", "R", "Refresh", "JoinServerMenu.refresh();");
-   %this-->queryLANButton.set("btn_a", "Q", "Query LAN", "JoinServerMenu.queryLan();");
-   %this-->queryInternetButton.set("btn_x", "E", "Query Internet", "JoinServerMenu.query();");
-}
+   JoinServerList.setAsActiveMenuList();
 
-function JoinServerMenuInputHandler::onInputEvent(%this, %device, %action, %state)
-{
-   if(%state)
-      $activeMenuButtonContainer.processInputs(%device, %action);
+   $activeMenuButtonContainer-->button1.set("btn_y", "R", "Refresh", "JoinServerMenu.refresh();");
+   $activeMenuButtonContainer-->button2.set("btn_a", "Q", "Query LAN", "JoinServerMenu.queryLan();");
+   $activeMenuButtonContainer-->button3.set("btn_x", "E", "Query Online", "JoinServerMenu.query();");
+   $activeMenuButtonContainer-->button4.set("btn_start", "Return", "Join", "JoinServerMenu.join();");
+   $activeMenuButtonContainer-->button5.set("btn_b", "Escape", "Back", "cancelServerQuery(); " @ %this @ ".navigation.popPage();");
 }
 
 //----------------------------------------
@@ -81,7 +70,7 @@ function JoinServerMenu::join(%this)
 function JoinServerMenu::refresh(%this)
 {
    cancelServerQuery();
-   %index= JS_serverList.getSelectedId();
+   %index= JoinServerList.getActiveRow();
 
    // The server info index is stored in the row along with the
    // rest of displayed info.
@@ -96,37 +85,27 @@ function JoinServerMenu::refreshSelectedServer( %this )
 }
 
 //----------------------------------------
-function JoinServerMenu::backOut(%this)
-{
-   cancelServerQuery();
-   
-   Canvas.popDialog(JoinServerMenu);
-   if(isObject(JoinServerMenu.returnGui) && JoinServerMenu.returnGui.isMethod("onReturnTo"))    
-      JoinServerMenu.returnGui.onReturnTo();  
-}
-
-//----------------------------------------
 function JoinServerMenu::update(%this)
 {
    // Copy the servers into the server list.
    JS_queryStatus.setVisible(false);
-   JS_serverList.clear();
+   JoinServerList.clear();
    %sc = getServerCount();
    for( %i = 0; %i < %sc; %i ++ ) {
       setServerInfo(%i);
-      JS_serverList.addRow( %i,
-         $ServerInfo::Name TAB
-         $ServerInfo::Ping TAB
-         $ServerInfo::PlayerCount @ "/" @ $ServerInfo::MaxPlayers TAB
-         $ServerInfo::Version TAB
-         $ServerInfo::MissionName
-      );
+      %serverBtn = new GuiButtonCtrl(){
+         text = $ServerInfo::Name TAB
+            $ServerInfo::Ping TAB
+            $ServerInfo::PlayerCount @ "/" @ $ServerInfo::MaxPlayers TAB
+            $ServerInfo::Version TAB
+            $ServerInfo::MissionName;
+         profile = GuiJoinServerButtonProfile;      
+         extent = JoinServerList.extent.x SPC 30; 
+      };
+      JoinServerList.add(%serverBtn);
    }
-   JS_serverList.sort(0);
-   JS_serverList.setSelectedRow(0);
-   JS_serverList.scrollVisible(0);
 
-   JoinServerJoinBtn.setActive(JS_serverList.rowCount() > 0);
+   $activeMenuButtonContainer-->button4.setActive(JoinServerList.getCount() > 0);
 } 
 
 //----------------------------------------
@@ -141,11 +120,9 @@ function onServerQueryStatus(%status, %msg, %value)
 
    switch$ (%status) {
       case "start":
-         JoinServerJoinBtn.setActive(false);
-         JoinServerQryInternetBtn.setActive(false);
          JS_statusText.setText(%msg);
          JS_statusBar.setValue(0);
-         JS_serverList.clear();
+         JoinServerList.clear();
 
       case "ping":
          JS_statusText.setText("Ping Servers");
@@ -156,7 +133,6 @@ function onServerQueryStatus(%status, %msg, %value)
          JS_statusBar.setValue(%value);
 
       case "done":
-         JoinServerQryInternetBtn.setActive(true);
          JS_queryStatus.setVisible(false);
          JS_status.setText(%msg);
          JoinServerMenu.update();

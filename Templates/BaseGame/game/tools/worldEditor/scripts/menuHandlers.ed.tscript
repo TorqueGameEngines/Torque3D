@@ -204,8 +204,7 @@ function EditorNewLevel( %level )
    %saveFirst = false;
    if ( EditorIsDirty() )
    {
-      error(knob);
-      %saveFirst = toolsMessageBox("Mission Modified", "Would you like to save changes to the current mission \"" @
+      %saveFirst = MessageBox("Mission Modified", "Would you like to save changes to the current mission \"" @
          $Server::MissionFile @ "\" before creating a new mission?", "SaveDontSave", "Question") == $MROk;
    }
       
@@ -300,7 +299,7 @@ function EditorSaveMission()
    // first check for dirty and read-only files:
    if((EWorldEditor.isDirty || ETerrainEditor.isMissionDirty) && !isWriteableFileName($Server::MissionFile))
    {
-      toolsMessageBox("Error", "Mission file \""@ $Server::MissionFile @ "\" is read-only.  Continue?", "Ok", "Stop");
+      MessageBox("Error", "Mission file \""@ $Server::MissionFile @ "\" is read-only.  Continue?", "Ok", "Stop");
       return false;
    }
    if(ETerrainEditor.isDirty)
@@ -310,9 +309,18 @@ function EditorSaveMission()
 
       while ((%terrainObject = containerSearchNext()) != 0)
       {
-         if (!isWriteableFileName(%terrainObject.terrainFile))
+         %terrFile = %terrainObject.getTerrain();
+         if(AssetDatabase.isDeclaredAsset(%terrFile))
          {
-            if (toolsMessageBox("Error", "Terrain file \""@ %terrainObject.terrainFile @ "\" is read-only.  Continue?", "Ok", "Stop") == $MROk)
+            %assetDef = AssetDatabase.acquireAsset(%terrFile);  
+            %file = %assetDef.getTerrainFilePath();
+            AssetDatabase.releaseAsset(%terrFile);
+            %terrFile = %file;
+         }
+         
+         if (!isWriteableFileName(%terrFile))
+         {
+            if (MessageBox("Error", "Terrain file \""@ %terrainObject.terrainFile @ "\" is read-only.  Continue?", "Ok", "Stop") == $MROk)
                continue;
             else
                return false;
@@ -497,12 +505,12 @@ function EditorOpenMission(%levelAsset)
    if( EditorIsDirty())
    {
       // "EditorSaveBeforeLoad();", "getLoadFilename(\"*.mis\", \"EditorDoLoadMission\");"
-      if(toolsMessageBox("Mission Modified", "Would you like to save changes to the current mission \"" @
+      if(MessageBox("Mission Modified", "Would you like to save changes to the current mission \"" @
          $Server::MissionFile @ "\" before opening a new mission?", SaveDontSave, Question) == $MROk)
       {
-         if(! EditorSaveMission())
-            return;
-      }
+      if(!EditorSaveMission())
+        return;
+   }
    }
 
    if(%levelAsset $= "")
@@ -779,8 +787,20 @@ function makeSelectedAMesh(%assetId)
 function EditorTakeControlOfEntity()
 {
    %object = EWorldEditor.getSelectedObject(0);
-   switchCamera(localClientConnection, %object);
-   switchControlObject(localClientConnection, %object);  
+   if(isObject(%object) && %object.getClassName() !$= "Camera")
+   {
+      $Editor::previousControlObject = localClientConnection.getControlObject(); 
+      localClientConnection.setControlObject(%object);
+
+   }
+}
+
+function EditorReleaseControlOfEntity()
+{
+   if(isObject($Editor::previousControlObject))
+   {
+      localClientConnection.setControlObject($Editor::previousControlObject);
+   }
 }
 
 function EditorMount()
@@ -890,9 +910,18 @@ function EditorMenuEditPaste()
 
 function EditorToolsMenu::onSelectItem(%this, %id)
 {
-   %toolName = getField( %this.item[%id], 2 );  
+   %tool = getField( %this.item[%id], 2 ); 
 
-   EditorGui.setEditor(%toolName, %paletteName  );
+   if(isObject(%tool)) 
+   {
+      %paletteName = "";
+      EditorGui.setEditor(%tool, %paletteName  );
+   }
+   else
+   {
+      //it's an embedded command, so we'll just execute it
+      eval(%tool);  
+   }
    
    %this.checkRadioItem(0, %this.getItemCount(), %id);
    return true;

@@ -3,7 +3,14 @@ function AssetBrowser_editAsset::saveAsset(%this)
    %file = AssetDatabase.getAssetFilePath(%this.editedAssetId);
    %success = TamlWrite(AssetBrowser_editAsset.editedAsset, %file);
    
-   AssetBrowser.loadFilters();
+   AssetBrowser.reloadAsset(%this.editedAssetId);
+
+   AssetBrowser.refresh();
+   
+   %assetType = AssetDatabase.getAssetType(%this.editedAssetId);
+   %assetDef = AssetDatabase.acquireAsset(%this.editedAssetId);
+   AssetBrowser.call("on" @ %assetType @ "Changed", %assetDef);
+   AssetDatabase.releaseAsset(%this.editedAssetId);
 
    Canvas.popDialog(AssetBrowser_editAsset);
 }
@@ -79,6 +86,17 @@ function AssetBrowser::editAssetInfo(%this)
 }
 
 //------------------------------------------------------------
+function AssetBrowser::reloadAsset(%this, %assetId)
+{
+   %moduleName = getToken(%assetId, ":", 0);
+   %moduleDef = ModuleDatabase.findModule(%moduleName);
+   
+   %assetName = getToken(%assetId, ":", 1);
+   %assetFilePath = AssetDatabase.getAssetFilePath(%assetId);
+   
+   AssetDatabase.removeDeclaredAsset(%assetId);
+   AssetDatabase.addDeclaredAsset(%moduleDef, %assetFilePath);  
+}
 
 function AssetBrowser::refreshAsset(%this, %assetId)
 {
@@ -93,7 +111,19 @@ function AssetBrowser::refreshAsset(%this, %assetId)
 }
 
 //------------------------------------------------------------
+function AssetBrowser::regeneratePreviewImage(%this)
+{
+   %assetDef = AssetDatabase.acquireAsset(EditAssetPopup.assetId);
+   %dummyObj = new ScriptObject();
+   %regenCommand = "AssetBrowser.build" @ EditAssetPopup.assetType @ 
+                     "Preview(" @%assetDef @ "," @ %dummyObj @ ", true);";
+   eval(%regenCommand);
 
+   %dummyObj.delete();
+   AssetDatabase.releaseAsset(EditAssetPopup.assetId);
+}
+
+//------------------------------------------------------------
 function AssetBrowser::renameAsset(%this)
 {
    //Find out what type it is
@@ -143,6 +173,10 @@ function AssetBrowser::performRenameAsset(%this, %originalAssetName, %newName)
    //Update the selection to immediately jump to the new asset
    AssetBrowser-->filterTree.clearSelection();
    %ModuleItem = AssetBrowser-->filterTree.findItemByName(%moduleName);
+
+   // TODO is this correct?
+   /*%assetType = %ModuleItem.getClassName();
+
    %assetTypeId = AssetBrowser-->filterTree.findChildItemByName(%ModuleItem, %assetType);
    
    AssetBrowser-->filterTree.selectItem(%assetTypeId);
@@ -150,7 +184,7 @@ function AssetBrowser::performRenameAsset(%this, %originalAssetName, %newName)
    %selectedItem = AssetBrowser-->filterTree.getSelectedItem();
    AssetBrowser-->filterTree.scrollVisibleByObjectId(%selectedItem);
    
-   AssetBrowser-->filterTree.buildVisibleTree(); 
+   AssetBrowser-->filterTree.buildVisibleTree();*/ 
 }
 
 function renameAssetFile(%assetDef, %newName)
@@ -236,9 +270,9 @@ function moveAssetFile(%assetDef, %destinationPath)
    %assetPath = makeFullPath(AssetDatabase.getAssetFilePath(%assetDef.getAssetId()));
    %assetFilename = fileName(%assetPath);
    
-   %newAssetPath = %destination @ "/" @ %assetFilename;
+   %newAssetPath = %destinationPath @ "/" @ %assetFilename;
    
-   %copiedSuccess = pathCopy(%assetPath, %destination @ "/" @ %assetFilename);
+   %copiedSuccess = pathCopy(%assetPath, %destinationPath @ "/" @ %assetFilename);
    
    if(!%copiedSuccess)
       return "";
@@ -442,4 +476,54 @@ function AssetBrowser::updateAssetReference(%this, %targetPath, %oldAssetId, %ne
    
    lineCache.delete();
    %fileObj.delete();
+}
+
+function AssetBrowser::openFileLocation(%this)
+{
+   %filePath = "";
+   if(EditAssetPopup.assetId !$= "")
+   {
+      %filePath = AssetDatabase.getAssetPath(EditAssetPopup.assetId);
+   }
+   else if(EditLevelAssetPopup.assetId !$= "")
+   {
+      %filePath = AssetDatabase.getAssetPath(EditAssetPopup.assetId);
+   }
+   else if(EditTerrainAssetPopup.assetId !$= "")
+   {
+      %filePath = AssetDatabase.getAssetPath(EditAssetPopup.assetId);
+   }
+   
+   if(%filePath !$= "")
+   {
+      if($platform $= "windows")
+      {
+         %cmd = "cd \"" @ makeFullPath(%filePath) @ "\" && start .";
+         systemCommand(%cmd);
+      }
+      else
+      {
+         %cmd = "open \"" @ makeFullPath(%filePath) @ "\"";
+         systemCommand(%cmd);
+      }
+   }
+}
+
+function AssetBrowser::openFolderLocation(%this)
+{
+   %filePath = AssetBrowser.dirHandler.currentAddress;
+   
+   if(%filePath !$= "")
+   {
+      if($platform $= "windows")
+      {
+         %cmd = "cd \"" @ makeFullPath(%filePath) @ "\" && start .";
+         systemCommand(%cmd);
+      }
+      else
+      {
+         %cmd = "open \"" @ makeFullPath(%filePath) @ "\"";
+         systemCommand(%cmd);
+      }
+   }
 }

@@ -31,12 +31,29 @@
 #include "SDL_thread.h"
 #include "SDL_mutex.h"
 
-#ifdef SDL_JOYSTICK_HIDAPI
+#ifndef HAVE_WCSDUP
+#ifdef HAVE__WCSDUP
+#define wcsdup _wcsdup
+#else
+#define wcsdup _dupwcs
+static wchar_t *_dupwcs(const wchar_t *src)
+{
+    wchar_t *dst = NULL;
+    if (src) {
+        size_t len = SDL_wcslen(src) + 1;
+        len *= sizeof(wchar_t);
+        dst = (wchar_t *) malloc(len);
+        if (dst) memcpy(dst, src, len);
+    }
+    return dst;
+}
+#endif
+#endif /* HAVE_WCSDUP */
 
 #include <libusb.h>
 #include <locale.h> /* setlocale */
 
-#include "hidapi.h"
+#include "../hidapi/hidapi.h"
 
 #ifdef NAMESPACE
 namespace NAMESPACE
@@ -57,12 +74,8 @@ typedef struct _SDL_ThreadBarrier
 
 static int SDL_CreateThreadBarrier(SDL_ThreadBarrier *barrier, Uint32 count)
 {
-	if (barrier == NULL) {
-		return SDL_SetError("barrier must be non-NULL");
-	}
-	if (count == 0) {
-		return SDL_SetError("count must be > 0");
-	}
+	SDL_assert(barrier != NULL);
+	SDL_assert(count != 0);
 
 	barrier->mutex = SDL_CreateMutex();
 	if (barrier->mutex == NULL) {
@@ -157,7 +170,7 @@ struct hid_device_ {
 	SDL_cond *condition;
 	SDL_ThreadBarrier barrier; /* Ensures correct startup sequence */
 	int shutdown_thread;
-	int cancelled;
+	int transfer_loop_finished;
 	struct libusb_transfer *transfer;
 
 	/* List of received input reports. */
@@ -196,7 +209,6 @@ static void free_hid_device(hid_device *dev)
 /*TODO: Implement this function on hidapi/libusb.. */
 static void register_error(hid_device *dev, const char *op)
 {
-
 }
 #endif
 
@@ -320,7 +332,6 @@ static inline int libusb_get_string_descriptor(libusb_device_handle *dev,
 		(LIBUSB_DT_STRING << 8) | descriptor_index,
 		lang_id, data, (uint16_t) length, 1000);
 }
-
 #endif
 
 
@@ -373,12 +384,16 @@ static int is_language_supported(libusb_device_handle *dev, uint16_t lang)
 /* This function returns a newly allocated wide string containing the USB
    device string numbered by the index. The returned string must be freed
    by using free(). */
+#if defined(__OS2__) /* don't use iconv on OS/2: no support for wchar_t. */
+#define NO_ICONV
+#endif
 static wchar_t *get_usb_string(libusb_device_handle *dev, uint8_t idx)
 {
 	char buf[512];
 	int len;
 	wchar_t *str = NULL;
 
+#if !defined(NO_ICONV)
 	wchar_t wbuf[256];
 	SDL_iconv_t ic;
 	size_t inbytes;
@@ -386,6 +401,9 @@ static wchar_t *get_usb_string(libusb_device_handle *dev, uint8_t idx)
 	size_t res;
 	const char *inptr;
 	char *outptr;
+#else
+	int i;
+#endif
 
 	/* Determine which language to use. */
 	uint16_t lang;
@@ -402,6 +420,23 @@ static wchar_t *get_usb_string(libusb_device_handle *dev, uint8_t idx)
 	if (len < 0)
 		return NULL;
 
+#if defined(NO_ICONV) /* original hidapi code for NO_ICONV : */
+
+	/* Bionic does not have wchar_t iconv support, so it
+	   has to be done manually.  The following code will only work for
+	   code points that can be represented as a single UTF-16 character,
+	   and will incorrectly convert any code points which require more
+	   than one UTF-16 character.
+
+	   Skip over the first character (2-bytes).  */
+	len -= 2;
+	str = (wchar_t*) malloc((len / 2 + 1) * sizeof(wchar_t));
+	for (i = 0; i < len / 2; i++) {
+		str[i] = buf[i * 2 + 2] | (buf[i * 2 + 3] << 8);
+	}
+	str[len / 2] = 0x00000000;
+
+#else
 	/* buf does not need to be explicitly NULL-terminated because
 	   it is only passed into iconv() which does not need it. */
 
@@ -434,8 +469,98 @@ static wchar_t *get_usb_string(libusb_device_handle *dev, uint8_t idx)
 
 err:
 	SDL_iconv_close(ic);
+#endif
 
 	return str;
+}
+
+struct usb_string_cache_entry {
+	uint16_t vid;
+	uint16_t pid;
+	wchar_t *vendor;
+	wchar_t *product;
+};
+
+static struct usb_string_cache_entry *usb_string_cache = NULL;
+static size_t usb_string_cache_size = 0;
+static size_t usb_string_cache_insert_pos = 0;
+
+static int usb_string_cache_grow()
+{
+	struct usb_string_cache_entry *new_cache;
+	size_t allocSize;
+	size_t new_cache_size;
+
+	new_cache_size = usb_string_cache_size + 8;
+	allocSize = sizeof(struct usb_string_cache_entry) * new_cache_size;
+	new_cache = (struct usb_string_cache_entry *)realloc(usb_string_cache, allocSize);
+	if (!new_cache)
+		return -1;
+
+	usb_string_cache = new_cache;
+	usb_string_cache_size = new_cache_size;
+
+	return 0;
+}
+
+static void usb_string_cache_destroy()
+{
+	size_t i;
+	for (i = 0; i < usb_string_cache_insert_pos; i++) {
+		free(usb_string_cache[i].vendor);
+		free(usb_string_cache[i].product);
+	}
+	free(usb_string_cache);
+
+	usb_string_cache = NULL;
+	usb_string_cache_size = 0;
+	usb_string_cache_insert_pos = 0;
+}
+
+static struct usb_string_cache_entry *usb_string_cache_insert()
+{
+	struct usb_string_cache_entry *new_entry = NULL;
+	if (usb_string_cache_insert_pos >= usb_string_cache_size) {
+		if (usb_string_cache_grow() < 0)
+			return NULL;
+	}
+	new_entry = &usb_string_cache[usb_string_cache_insert_pos];
+	usb_string_cache_insert_pos++;
+	return new_entry;
+}
+
+static const struct usb_string_cache_entry *usb_string_cache_find(struct libusb_device_descriptor *desc, struct libusb_device_handle *handle)
+{
+	struct usb_string_cache_entry *entry = NULL;
+	size_t i;
+
+	/* Search for existing string cache entry */
+	for (i = 0; i < usb_string_cache_insert_pos; i++) {
+		entry = &usb_string_cache[i];
+		if (entry->vid != desc->idVendor)
+			continue;
+		if (entry->pid != desc->idProduct)
+			continue;
+		return entry;
+	}
+
+	/* Not found, create one. */
+	entry = usb_string_cache_insert();
+	if (!entry)
+		return NULL;
+
+	entry->vid = desc->idVendor;
+	entry->pid = desc->idProduct;
+	if (desc->iManufacturer > 0)
+		entry->vendor = get_usb_string(handle, desc->iManufacturer);
+	else
+		entry->vendor = NULL;
+	if (desc->iProduct > 0)
+		entry->product = get_usb_string(handle, desc->iProduct);
+	else
+		entry->product = NULL;
+
+	return entry;
 }
 
 static char *make_path(libusb_device *dev, int interface_number)
@@ -471,6 +596,8 @@ int HID_API_EXPORT hid_init(void)
 
 int HID_API_EXPORT hid_exit(void)
 {
+	usb_string_cache_destroy();
+
 	if (usb_context) {
 		libusb_exit(usb_context);
 		usb_context = NULL;
@@ -504,7 +631,9 @@ static int is_xbox360(unsigned short vendor_id, const struct libusb_interface_de
 		0x15e4, /* Numark */
 		0x162e, /* Joytech */
 		0x1689, /* Razer Onza */
+		0x1949, /* Lab126, Inc. */
 		0x1bad, /* Harmonix */
+		0x20d6, /* PowerA */
 		0x24c6, /* PowerA */
 	};
 
@@ -524,17 +653,18 @@ static int is_xbox360(unsigned short vendor_id, const struct libusb_interface_de
 
 static int is_xboxone(unsigned short vendor_id, const struct libusb_interface_descriptor *intf_desc)
 {
-    static const int XB1_IFACE_SUBCLASS = 71;
-    static const int XB1_IFACE_PROTOCOL = 208;
-    static const int SUPPORTED_VENDORS[] = {
-        0x045e, /* Microsoft */
-        0x0738, /* Mad Catz */
-        0x0e6f, /* PDP */
-        0x0f0d, /* Hori */
-        0x1532, /* Razer Wildcat */
-        0x24c6, /* PowerA */
-        0x2e24, /* Hyperkin */
-    };
+	static const int XB1_IFACE_SUBCLASS = 71;
+	static const int XB1_IFACE_PROTOCOL = 208;
+	static const int SUPPORTED_VENDORS[] = {
+		0x045e, /* Microsoft */
+		0x0738, /* Mad Catz */
+		0x0e6f, /* PDP */
+		0x0f0d, /* Hori */
+		0x1532, /* Razer Wildcat */
+		0x20d6, /* PowerA */
+		0x24c6, /* PowerA */
+		0x2e24, /* Hyperkin */
+	};
 
 	if (intf_desc->bInterfaceNumber == 0 &&
 	    intf_desc->bInterfaceClass == LIBUSB_CLASS_VENDOR_SPEC &&
@@ -612,6 +742,7 @@ struct hid_device_info  HID_API_EXPORT *hid_enumerate(unsigned short vendor_id, 
 
 							if (res >= 0) {
 								struct hid_device_info *tmp;
+								const struct usb_string_cache_entry *string_cache;
 
 								/* VID/PID match. Create the record. */
 								tmp = (struct hid_device_info*) calloc(1, sizeof(struct hid_device_info));
@@ -633,12 +764,24 @@ struct hid_device_info  HID_API_EXPORT *hid_enumerate(unsigned short vendor_id, 
 										get_usb_string(handle, desc.iSerialNumber);
 
 								/* Manufacturer and Product strings */
-								if (desc.iManufacturer > 0)
-									cur_dev->manufacturer_string =
-										get_usb_string(handle, desc.iManufacturer);
-								if (desc.iProduct > 0)
-									cur_dev->product_string =
-										get_usb_string(handle, desc.iProduct);
+								if (dev_vid && dev_pid) {
+									string_cache = usb_string_cache_find(&desc, handle);
+									if (string_cache) {
+										if (string_cache->vendor) {
+											cur_dev->manufacturer_string = wcsdup(string_cache->vendor);
+										}
+										if (string_cache->product) {
+											cur_dev->product_string = wcsdup(string_cache->product);
+										}
+									}
+								} else {
+									if (desc.iManufacturer > 0)
+										cur_dev->manufacturer_string =
+											get_usb_string(handle, desc.iManufacturer);
+									if (desc.iProduct > 0)
+										cur_dev->product_string =
+											get_usb_string(handle, desc.iProduct);
+								}
 
 #ifdef INVASIVE_GET_USAGE
 {
@@ -825,13 +968,9 @@ static void LIBUSB_CALL read_callback(struct libusb_transfer *transfer)
 	}
 	else if (transfer->status == LIBUSB_TRANSFER_CANCELLED) {
 		dev->shutdown_thread = 1;
-		dev->cancelled = 1;
-		return;
 	}
 	else if (transfer->status == LIBUSB_TRANSFER_NO_DEVICE) {
 		dev->shutdown_thread = 1;
-		dev->cancelled = 1;
-		return;
 	}
 	else if (transfer->status == LIBUSB_TRANSFER_TIMED_OUT) {
 		//LOG("Timeout (normal)\n");
@@ -840,12 +979,17 @@ static void LIBUSB_CALL read_callback(struct libusb_transfer *transfer)
 		LOG("Unknown transfer code: %d\n", transfer->status);
 	}
 
+	if (dev->shutdown_thread) {
+		dev->transfer_loop_finished = 1;
+		return;
+	}
+
 	/* Re-submit the transfer object. */
 	res = libusb_submit_transfer(transfer);
 	if (res != 0) {
 		LOG("Unable to submit URB. libusb error code: %d\n", res);
 		dev->shutdown_thread = 1;
-		dev->cancelled = 1;
+		dev->transfer_loop_finished = 1;
 	}
 }
 
@@ -888,6 +1032,7 @@ static int read_thread(void *param)
 			    res != LIBUSB_ERROR_TIMEOUT &&
 			    res != LIBUSB_ERROR_OVERFLOW &&
 			    res != LIBUSB_ERROR_INTERRUPTED) {
+				dev->shutdown_thread = 1;
 				break;
 			}
 		}
@@ -897,8 +1042,8 @@ static int read_thread(void *param)
 	   if no transfers are pending, but that's OK. */
 	libusb_cancel_transfer(dev->transfer);
 
-	while (!dev->cancelled)
-		libusb_handle_events_completed(usb_context, &dev->cancelled);
+	while (!dev->transfer_loop_finished)
+		libusb_handle_events_completed(usb_context, &dev->transfer_loop_finished);
 
 	/* Now that the read thread is stopping, Wake any threads which are
 	   waiting on data (in hid_read_timeout()). Do this under a mutex to
@@ -920,35 +1065,46 @@ static int read_thread(void *param)
 	return 0;
 }
 
-static void init_xboxone(libusb_device_handle *device_handle, struct libusb_config_descriptor *conf_desc)
+static void init_xboxone(libusb_device_handle *device_handle, unsigned short idVendor, unsigned short idProduct, struct libusb_config_descriptor *conf_desc)
 {
-        static const int XB1_IFACE_SUBCLASS = 71;
-        static const int XB1_IFACE_PROTOCOL = 208;
+	static const int VENDOR_MICROSOFT = 0x045e;
+	static const int XB1_IFACE_SUBCLASS = 71;
+	static const int XB1_IFACE_PROTOCOL = 208;
 	int j, k, res;
 
 	for (j = 0; j < conf_desc->bNumInterfaces; j++) {
 		const struct libusb_interface *intf = &conf_desc->interface[j];
 		for (k = 0; k < intf->num_altsetting; k++) {
-			const struct libusb_interface_descriptor *intf_desc;
-			intf_desc = &intf->altsetting[k];
-
-			if (intf_desc->bInterfaceNumber != 0 &&
-			    intf_desc->bAlternateSetting == 0 &&
-			    intf_desc->bInterfaceClass == LIBUSB_CLASS_VENDOR_SPEC &&
+			const struct libusb_interface_descriptor *intf_desc = &intf->altsetting[k];
+			if (intf_desc->bInterfaceClass == LIBUSB_CLASS_VENDOR_SPEC &&
 			    intf_desc->bInterfaceSubClass == XB1_IFACE_SUBCLASS &&
 			    intf_desc->bInterfaceProtocol == XB1_IFACE_PROTOCOL) {
-				res = libusb_claim_interface(device_handle, intf_desc->bInterfaceNumber);
-				if (res < 0) {
-					LOG("can't claim interface %d: %d\n", intf_desc->bInterfaceNumber, res);
-					continue;
+				int bSetAlternateSetting = 0;
+
+				/* Newer Microsoft Xbox One controllers have a high speed alternate setting */
+				if (idVendor == VENDOR_MICROSOFT &&
+				    intf_desc->bInterfaceNumber == 0 && intf_desc->bAlternateSetting == 1) {
+					bSetAlternateSetting = 1;
+				} else if (intf_desc->bInterfaceNumber != 0 && intf_desc->bAlternateSetting == 0) {
+					bSetAlternateSetting = 1;
 				}
 
-				res = libusb_set_interface_alt_setting(device_handle, intf_desc->bInterfaceNumber, intf_desc->bAlternateSetting);
-				if (res < 0) {
-					LOG("xbox init: can't set alt setting %d: %d\n", intf_desc->bInterfaceNumber, res);
-				}
+				if (bSetAlternateSetting) {
+					res = libusb_claim_interface(device_handle, intf_desc->bInterfaceNumber);
+					if (res < 0) {
+						LOG("can't claim interface %d: %d\n", intf_desc->bInterfaceNumber, res);
+						continue;
+					}
 
-				libusb_release_interface(device_handle, intf_desc->bInterfaceNumber);
+					LOG("Setting alternate setting for VID/PID 0x%x/0x%x interface %d to %d\n",  idVendor, idProduct, intf_desc->bInterfaceNumber, intf_desc->bAlternateSetting);
+
+					res = libusb_set_interface_alt_setting(device_handle, intf_desc->bInterfaceNumber, intf_desc->bAlternateSetting);
+					if (res < 0) {
+						LOG("xbox init: can't set alt setting %d: %d\n", intf_desc->bInterfaceNumber, res);
+					}
+
+					libusb_release_interface(device_handle, intf_desc->bInterfaceNumber);
+				}
 			}
 		}
 	}
@@ -1030,7 +1186,7 @@ hid_device * HID_API_EXPORT hid_open_path(const char *path, int bExclusive)
 
 						/* Initialize XBox One controllers */
 						if (is_xboxone(desc.idVendor, intf_desc)) {
-							init_xboxone(dev->device_handle, conf_desc);
+							init_xboxone(dev->device_handle, desc.idVendor, desc.idProduct, conf_desc);
 						}
 
 						/* Store off the string descriptor indexes */
@@ -1173,20 +1329,20 @@ static void cleanup_mutex(void *param)
 }
 #endif
 
-
 int HID_API_EXPORT hid_read_timeout(hid_device *dev, unsigned char *data, size_t length, int milliseconds)
 {
-	int bytes_read = -1;
-
 #if 0
 	int transferred;
 	int res = libusb_interrupt_transfer(dev->device_handle, dev->input_endpoint, data, length, &transferred, 5000);
 	LOG("transferred: %d\n", transferred);
 	return transferred;
 #endif
+	int bytes_read;
 
 	SDL_LockMutex(dev->mutex);
 	/* TODO: pthread_cleanup SDL? */
+
+	bytes_read = -1;
 
 	/* There's an input report queued up. Return it. */
 	if (dev->input_reports) {
@@ -1341,6 +1497,7 @@ void HID_API_EXPORT hid_close(hid_device *dev)
 
 	/* Clean up the Transfer objects allocated in read_thread(). */
 	free(dev->transfer->buffer);
+	dev->transfer->buffer = NULL;
 	libusb_free_transfer(dev->transfer);
 
 	/* release the interface */
@@ -1620,5 +1777,3 @@ uint16_t get_usb_code_for_current_locale(void)
 #ifdef NAMESPACE
 }
 #endif
-
-#endif /* SDL_JOYSTICK_HIDAPI */

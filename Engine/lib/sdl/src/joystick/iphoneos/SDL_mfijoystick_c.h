@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -50,6 +50,7 @@ typedef struct joystick_hwdata
     Uint32 button_mask;
     SDL_bool has_dualshock_touchpad;
     SDL_bool has_xbox_paddles;
+    SDL_bool has_xbox_share_button;
 
     struct joystick_hwdata *next;
 } joystick_hwdata;

@@ -68,6 +68,16 @@ ConsoleDocClass( HoverVehicle,
    "@ingroup Vehicles\n"
 );
 
+typedef HoverVehicleData::Sounds hoverSoundsEnum;
+DefineEnumType(hoverSoundsEnum);
+
+ImplementEnumType(hoverSoundsEnum, "enum types.\n"
+   "@ingroup HoverVehicleData\n\n")
+   { HoverVehicleData::JetSound,       "JetSound", "..." },
+   { HoverVehicleData::EngineSound,    "EngineSound", "..." },
+   { HoverVehicleData::FloatSound,     "FloatSound", "..." },
+EndImplementEnumType;
+
 namespace {
 
 const U32 sCollisionMoveMask = (TerrainObjectType     | PlayerObjectType  | 
@@ -152,7 +162,7 @@ HoverVehicleData::HoverVehicleData()
       jetEmitter[j] = 0;
 
    for (S32 i = 0; i < MaxSounds; i++)
-      sound[i] = 0;
+      INIT_ASSET_ARRAY(HoverSounds, i);
 }
 
 HoverVehicleData::~HoverVehicleData()
@@ -232,14 +242,8 @@ void HoverVehicleData::initPersistFields()
    addField( "pitchForce", TypeF32, Offset(pitchForce, HoverVehicleData),
       "Pitch (rotation about the X-axis) force applied when steering in the y-axis direction." );
 
-   addField( "jetSound", TYPEID< SFXProfile >(), Offset(sound[JetSound], HoverVehicleData),
-      "Looping sound played when the vehicle is jetting." );
-   addField( "engineSound", TYPEID< SFXProfile >(), Offset(sound[EngineSound], HoverVehicleData),
-      "Looping engine sound.\nThe volume is dynamically adjusted based on the "
-      "current thrust level." );
-   addField( "floatSound", TYPEID< SFXProfile >(), Offset(sound[FloatSound], HoverVehicleData),
-      "Looping sound played while the vehicle is floating.\n\n@see stabMinLen" );
-
+   INITPERSISTFIELD_SOUNDASSET_ENUMED(HoverSounds, hoverSoundsEnum, Sounds::MaxSounds, HoverVehicleData, "Sounds for hover vehicle.");
+   
    addField( "dustTrailEmitter", TYPEID< ParticleEmitterData >(), Offset(dustTrailEmitter, HoverVehicleData),
       "Emitter to generate particles for the vehicle's dust trail.\nThe trail "
       "of dust particles is generated only while the vehicle is moving." );
@@ -311,9 +315,13 @@ bool HoverVehicleData::preload(bool server, String &errorStr)
 
    // Resolve objects transmitted from server
    if (!server) {
+
       for (S32 i = 0; i < MaxSounds; i++)
-         if (sound[i])
-            Sim::findObject(SimObjectId((uintptr_t)sound[i]),sound[i]);
+         if (getHoverSounds(i) != StringTable->EmptyString())
+         {
+            _setHoverSounds(getHoverSounds(i), i);
+         }
+
       for (S32 j = 0; j < MaxJetEmitters; j++)
          if (jetEmitter[j])
             Sim::findObject(SimObjectId((uintptr_t)jetEmitter[j]),jetEmitter[j]);
@@ -361,9 +369,9 @@ void HoverVehicleData::packData(BitStream* stream)
    stream->write(dustTrailFreqMod);
 
    for (S32 i = 0; i < MaxSounds; i++)
-      if (stream->writeFlag(sound[i]))
-         stream->writeRangedU32(mPacked ? SimObjectId((uintptr_t)sound[i]):
-                                sound[i]->getId(),DataBlockObjectIdFirst,DataBlockObjectIdLast);
+   {
+      PACKDATA_ASSET_ARRAY(HoverSounds, i);
+   }
 
    for (S32 j = 0; j < MaxJetEmitters; j++)
    {
@@ -410,9 +418,9 @@ void HoverVehicleData::unpackData(BitStream* stream)
    stream->read(&dustTrailFreqMod);
 
    for (S32 i = 0; i < MaxSounds; i++)
-      sound[i] = stream->readFlag()?
-         (SFXProfile*)(uintptr_t)stream->readRangedU32(DataBlockObjectIdFirst,
-                                               DataBlockObjectIdLast): 0;
+   {
+      UNPACKDATA_ASSET_ARRAY(HoverSounds, i);
+   }
 
    for (S32 j = 0; j < MaxJetEmitters; j++) {
       jetEmitter[j] = NULL;
@@ -504,10 +512,6 @@ bool HoverVehicle::onAdd()
       }
    }
 
-
-   if (isServerObject())
-      scriptOnAdd();
-
    return true;
 }
 
@@ -518,7 +522,6 @@ void HoverVehicle::onRemove()
    SFX_DELETE( mEngineSound );
    SFX_DELETE( mFloatSound );
 
-   scriptOnRemove();
    removeFromScene();
    Parent::onRemove();
 }
@@ -539,14 +542,14 @@ bool HoverVehicle::onNewDataBlock(GameBaseData* dptr, bool reload)
       SFX_DELETE( mFloatSound );
       SFX_DELETE( mJetSound );
 
-      if ( mDataBlock->sound[HoverVehicleData::EngineSound] )
-         mEngineSound = SFX->createSource( mDataBlock->sound[HoverVehicleData::EngineSound], &getTransform() );
+      if ( mDataBlock->getHoverSounds(HoverVehicleData::EngineSound) )
+         mEngineSound = SFX->createSource( mDataBlock->getHoverSoundsProfile(HoverVehicleData::EngineSound), &getTransform() );
 
-      if ( !mDataBlock->sound[HoverVehicleData::FloatSound] )
-         mFloatSound = SFX->createSource( mDataBlock->sound[HoverVehicleData::FloatSound], &getTransform() );
+      if ( !mDataBlock->getHoverSounds(HoverVehicleData::FloatSound) )
+         mFloatSound = SFX->createSource( mDataBlock->getHoverSoundsProfile(HoverVehicleData::FloatSound), &getTransform() );
 
-      if ( mDataBlock->sound[HoverVehicleData::JetSound] )
-         mJetSound = SFX->createSource( mDataBlock->sound[HoverVehicleData::JetSound], &getTransform() );
+      if ( mDataBlock->getHoverSounds(HoverVehicleData::JetSound) )
+         mJetSound = SFX->createSource( mDataBlock->getHoverSoundsProfile(HoverVehicleData::JetSound), &getTransform() );
    }
 
    // Todo: Uncomment if this is a "leaf" class

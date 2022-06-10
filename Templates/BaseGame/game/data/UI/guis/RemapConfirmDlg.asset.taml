@@ -1,7 +1,4 @@
 <GUIAsset
-    canSave="true"
-    canSaveDynamicFields="true"
     AssetName="RemapConfirmDlg"
-    scriptFile="@assetFile=remapConfirmDlg.gui"
     GUIFile="@assetFile=remapConfirmDlg.gui"
-    VersionId="1" />
+    VersionId="1"/>

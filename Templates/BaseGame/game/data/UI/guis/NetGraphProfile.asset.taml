@@ -1,7 +1,0 @@
-<GUIAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    AssetName="NetGraphProfile"
-    scriptFile="@assetFile=netGraphGui.gui"
-    GUIFile="@assetFile=netGraphGui.gui"
-    VersionId="1" />

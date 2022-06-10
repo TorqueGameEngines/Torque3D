@@ -528,9 +528,6 @@ void GFXD3D11CubemapArray::init(const U32 cubemapCount, const U32 cubemapFaceSiz
 
 void GFXD3D11CubemapArray::updateTexture(const GFXCubemapHandle &cubemap, const U32 slot)
 {
-   U32 cubeMapSz = cubemap->getSize();
-   U32 cubeMapSize = cubemap->getMipMapLevels();
-
    AssertFatal(slot <= mNumCubemaps, "GFXD3D11CubemapArray::updateTexture - trying to update a cubemap texture that is out of bounds!");
    AssertFatal(mFormat == cubemap->getFormat(), "GFXD3D11CubemapArray::updateTexture - Destination format doesn't match");
    AssertFatal(mSize == cubemap->getSize(), "GFXD3D11CubemapArray::updateTexture - Destination size doesn't match");

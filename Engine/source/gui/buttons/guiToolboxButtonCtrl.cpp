@@ -43,9 +43,9 @@ ConsoleDocClass( GuiToolboxButtonCtrl,
 //-------------------------------------
 GuiToolboxButtonCtrl::GuiToolboxButtonCtrl()
 {
-   INIT_IMAGEASSET(NormalBitmap);
-   INIT_IMAGEASSET(LoweredBitmap);
-   INIT_IMAGEASSET(HoverBitmap);
+   INIT_ASSET(NormalBitmap);
+   INIT_ASSET(LoweredBitmap);
+   INIT_ASSET(HoverBitmap);
 
    setMinExtent(Point2I(16,16));
    setExtent(48, 48);
@@ -144,7 +144,7 @@ void GuiToolboxButtonCtrl::onRender(Point2I offset, const RectI& updateRect)
       RectI r(offset, getExtent());
       if ( mDepressed  || mStateOn )
          renderStateRect( mLoweredBitmap , r );
-      else if ( mMouseOver )
+      else if ( mHighlighted )
          renderStateRect( mHoverBitmap , r );
    }
 
@@ -193,6 +193,6 @@ void GuiToolboxButtonCtrl::renderButton(GFXTexHandle &texture, Point2I &offset, 
    }
 }
 
-DEF_IMAGEASSET_BINDS(GuiToolboxButtonCtrl, NormalBitmap);
-DEF_IMAGEASSET_BINDS(GuiToolboxButtonCtrl, LoweredBitmap);
-DEF_IMAGEASSET_BINDS(GuiToolboxButtonCtrl, HoverBitmap);
+DEF_ASSET_BINDS(GuiToolboxButtonCtrl, NormalBitmap);
+DEF_ASSET_BINDS(GuiToolboxButtonCtrl, LoweredBitmap);
+DEF_ASSET_BINDS(GuiToolboxButtonCtrl, HoverBitmap);

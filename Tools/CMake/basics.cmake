@@ -22,10 +22,19 @@
 
 project("Torque3DEngine")
 
-if( CMAKE_CXX_SIZEOF_DATA_PTR EQUAL 8 )
-    set( TORQUE_CPU_X64 ON )
-elseif( CMAKE_CXX_SIZEOF_DATA_PTR EQUAL 4 )
-    set( TORQUE_CPU_X32 ON )
+# Detect 32bit and 64bit x86/ARM
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "arm")
+    if( CMAKE_CXX_SIZEOF_DATA_PTR EQUAL 8 )
+        set( TORQUE_CPU_ARM64 ON )
+    elseif( CMAKE_CXX_SIZEOF_DATA_PTR EQUAL 4 )
+        set( TORQUE_CPU_ARM32 ON )
+    endif()
+else()
+    if( CMAKE_CXX_SIZEOF_DATA_PTR EQUAL 8 )
+        set( TORQUE_CPU_X64 ON )
+    elseif( CMAKE_CXX_SIZEOF_DATA_PTR EQUAL 4 )
+        set( TORQUE_CPU_X32 ON )
+    endif()
 endif()
 
 if(NOT TORQUE_TEMPLATE)
@@ -93,6 +102,20 @@ endmacro()
 # finds and adds sources files in a folder recursively
 macro(addPathRec dir)
     addPath("${dir}" "REC")
+endmacro()
+
+###############################################################################
+###  Gameplay Modules Lib Check
+###############################################################################
+macro(subDirCmake result curdir)
+	file(GLOB children RELATIVE ${curdir} ${curdir}/*)
+	set(dirList "")
+	foreach(child ${children})
+		if(IS_DIRECTORY ${curdir}/${child})
+			LIST(APPEND dirList ${curdir}/${child})
+		endif()
+	endforeach()
+	set(${result} ${dirList})
 endmacro()
 
 ###############################################################################
@@ -325,12 +348,17 @@ macro(finishLibrary)
         add_library("${PROJECT_NAME}" SHARED ${${PROJECT_NAME}_files})
     endif()
 
+    target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_11)
+
     # omg - only use the first folder ... otherwise we get lots of header name collisions
     #foreach(dir ${${PROJECT_NAME}_paths})
     addInclude("${firstDir}")
     #endforeach()
 
     _postTargetProcess()
+
+    #set the folder property name
+    set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${TORQUE_LIBS_FOLDER_NAME})
 endmacro()
 
 # macro to add an executable
@@ -358,16 +386,20 @@ macro(finishExecutable)
     else()
         add_executable("${PROJECT_NAME}" WIN32 ${${PROJECT_NAME}_files})
     endif()
+
+    # Torque requires c++17
+    target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
+
     addInclude("${firstDir}")
 
     _postTargetProcess()
 endmacro()
 
 macro(setupVersionNumbers)
-    set(TORQUE_APP_VERSION_MAJOR 1 CACHE INTEGER "")
-    set(TORQUE_APP_VERSION_MINOR 0 CACHE INTEGER "")
-    set(TORQUE_APP_VERSION_PATCH 0 CACHE INTEGER "")
-    set(TORQUE_APP_VERSION_TWEAK 0 CACHE INTEGER "")
+    set(TORQUE_APP_VERSION_MAJOR 1 CACHE STRING "")
+    set(TORQUE_APP_VERSION_MINOR 0 CACHE STRING "")
+    set(TORQUE_APP_VERSION_PATCH 0 CACHE STRING "")
+    set(TORQUE_APP_VERSION_TWEAK 0 CACHE STRING "")
     mark_as_advanced(TORQUE_APP_VERSION_TWEAK)
     MATH(EXPR TORQUE_APP_VERSION "${TORQUE_APP_VERSION_MAJOR} * 1000 + ${TORQUE_APP_VERSION_MINOR} * 100 + ${TORQUE_APP_VERSION_PATCH} * 10 + ${TORQUE_APP_VERSION_TWEAK}")
     set(TORQUE_APP_VERSION_STRING "${TORQUE_APP_VERSION_MAJOR}.${TORQUE_APP_VERSION_MINOR}.${TORQUE_APP_VERSION_PATCH}.${TORQUE_APP_VERSION_TWEAK}")
@@ -400,17 +432,17 @@ set(TORQUE_STATIC ON)
 #option(TORQUE_STATIC "enables or disable static" OFF)
 
 if(WIN32)
-    set(TORQUE_CXX_FLAGS_EXECUTABLES "/wd4018 /wd4100 /wd4121 /wd4127 /wd4130 /wd4244 /wd4245 /wd4389 /wd4511 /wd4512 /wd4800 /wd4995 " CACHE TYPE STRING)
+    set(TORQUE_CXX_FLAGS_EXECUTABLES "/wd4018 /wd4100 /wd4121 /wd4127 /wd4130 /wd4244 /wd4245 /wd4389 /wd4511 /wd4512 /wd4800 /wd4995 " CACHE STRING "")
     mark_as_advanced(TORQUE_CXX_FLAGS_EXECUTABLES)
 
-    set(TORQUE_CXX_FLAGS_LIBS "/W0" CACHE TYPE STRING)
+    set(TORQUE_CXX_FLAGS_LIBS "/W0" CACHE STRING "")
     mark_as_advanced(TORQUE_CXX_FLAGS_LIBS)
 
     set(TORQUE_CXX_FLAGS_COMMON_DEFAULT "-DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS /MP /O2 /Ob2 /Oi /Ot /Oy /GT /Zi /W4 /nologo /GF /EHsc /GS- /Gy- /Qpar- /fp:precise /fp:except- /GR /Zc:wchar_t-" )
     if( TORQUE_CPU_X32 )
        set(TORQUE_CXX_FLAGS_COMMON_DEFAULT "${TORQUE_CXX_FLAGS_COMMON_DEFAULT} /arch:SSE2")
     endif()
-    set(TORQUE_CXX_FLAGS_COMMON ${TORQUE_CXX_FLAGS_COMMON_DEFAULT} CACHE TYPE STRING)
+    set(TORQUE_CXX_FLAGS_COMMON ${TORQUE_CXX_FLAGS_COMMON_DEFAULT} CACHE STRING "")
 
     mark_as_advanced(TORQUE_CXX_FLAGS_COMMON)
 
@@ -435,29 +467,37 @@ if(WIN32)
         ENDFOREACH()
     endif()
 else()
+    if(${CMAKE_VERSION} VERSION_LESS "3.16.0")
+        macro(CHECK_OBJC_SOURCE_COMPILES SOURCE VAR)
+            set(PREV_REQUIRED_DEFS "${CMAKE_REQUIRED_DEFINITIONS}")
+            set(CMAKE_REQUIRED_DEFINITIONS "-x objective-c ${PREV_REQUIRED_DEFS}")
+            CHECK_C_SOURCE_COMPILES(${SOURCE} ${VAR})
+            set(CMAKE_REQUIRED_DEFINITIONS "${PREV_REQUIRED_DEFS}")
+        endmacro()
+    else()
+        include(CheckOBJCSourceCompiles)
+        if (APPLE)
+            enable_language(OBJC)
+        endif()
+    endif()
     # TODO: improve default settings on other platforms
-    set(TORQUE_CXX_FLAGS_EXECUTABLES "" CACHE TYPE STRING)
+    set(TORQUE_CXX_FLAGS_EXECUTABLES "" CACHE STRING "")
     mark_as_advanced(TORQUE_CXX_FLAGS_EXECUTABLES)
-    set(TORQUE_CXX_FLAGS_LIBS "" CACHE TYPE STRING)
+    set(TORQUE_CXX_FLAGS_LIBS "" CACHE STRING "")
     mark_as_advanced(TORQUE_CXX_FLAGS_LIBS)
-    set(TORQUE_CXX_FLAGS_COMMON "" CACHE TYPE STRING)
+    set(TORQUE_CXX_FLAGS_COMMON "" CACHE STRING "")
     mark_as_advanced(TORQUE_CXX_FLAGS)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORQUE_CXX_FLAGS}")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CMAKE_CXX_FLAGS}")
 endif()
 
-if(UNIX AND NOT APPLE)
+if(UNIX)
 	SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${projectOutDir}")
 	set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${projectOutDir}")
 	SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG "${projectOutDir}")
 	set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG "${projectOutDir}")
-endif()
-
-if(APPLE)
-  SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE "${projectOutDir}")
-  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE "${projectOutDir}")
-  SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG "${projectOutDir}")
-  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG "${projectOutDir}")
+	SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE "${projectOutDir}")
+	set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE "${projectOutDir}")
 endif()
 
 # fix the debug/release subfolders on windows

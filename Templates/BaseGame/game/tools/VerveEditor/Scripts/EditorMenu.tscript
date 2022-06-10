@@ -76,7 +76,7 @@ function VerveEditorWindow::onCreateMenu( %this )
     // Store Menu Bars.
     if ( !isObject( %this.MenuSet ) )
     {
-        %this.MenuSet = new SimSet();
+        %this.MenuSet = new GuiMenuBar();
     }
     
     // CMD Key.
@@ -103,14 +103,14 @@ function VerveEditorWindow::onCreateMenu( %this )
     {
         SuperClass = "VerveWindowMenu";
         
-        Label    = "&File";
+        Label    = "File";
         Position = 0;
         
-        Item[0] = "&New"         TAB %cmdKey @ "+N"       TAB "VerveEditor::NewFile();";
-        Item[1] = "&Open"        TAB %cmdKey @ "+O"       TAB "VerveEditor::LoadFile();";
+        Item[0] = "New"         TAB %cmdKey @ "+N"       TAB "VerveEditor::NewFile();";
+        Item[1] = "Open"        TAB %cmdKey @ "+O"       TAB "VerveEditor::LoadFile();";
         Item[2] = ""             TAB "";
-        Item[3] = "&Save"        TAB %cmdKey @ "+S"       TAB "VerveEditor::SaveFile();";
-        Item[4] = "Save &As"     TAB %cmdKey @ "-Shift+S" TAB "VerveEditor::SaveFile( true );";
+        Item[3] = "Save"        TAB %cmdKey @ "+S"       TAB "VerveEditor::SaveFile();";
+        Item[4] = "Save As"     TAB %cmdKey @ "-Shift+S" TAB "VerveEditor::SaveFile( true );";
         Item[5] = ""             TAB "";
         Item[6] = "Recent Files" TAB %recentSequenceMenu;
     };
@@ -133,34 +133,38 @@ function VerveEditorWindow::onCreateMenu( %this )
         Class      = "VerveWindowEditMenu";
         SuperClass = "VerveWindowMenu";
         
-        Label    = "&Edit";
+        Label    = "Edit";
         Position = 1;
         
-        Item[0]  = "&Undo"            TAB %cmdKey @ "+Z" TAB "VerveEditor::Undo();";
-        Item[1]  = "&Redo"            TAB %cmdKey @ "+Y" TAB "VerveEditor::Redo();";
+        Item[0]  = "Undo"            TAB %cmdKey @ "+Z" TAB "VerveEditor::Undo();";
+        Item[1]  = "Redo"            TAB %cmdKey @ "+Y" TAB "VerveEditor::Redo();";
         Item[2]  = ""                 TAB "";
-        Item[3]  = "Cu&t"             TAB %cmdKey @ "+X" TAB "VerveEditor::CutSelection();"    TAB VerveEditorEditMap;
-        Item[4]  = "&Copy"            TAB %cmdKey @ "+C" TAB "VerveEditor::CopySelection();"   TAB VerveEditorEditMap;
-        Item[5]  = "&Paste"           TAB %cmdKey @ "+V" TAB "VerveEditor::Paste();"           TAB VerveEditorEditMap;
+        Item[3]  = "Cut"             TAB %cmdKey @ "+X" TAB "VerveEditor::CutSelection();"    TAB VerveEditorEditMap;
+        Item[4]  = "Copy"            TAB %cmdKey @ "+C" TAB "VerveEditor::CopySelection();"   TAB VerveEditorEditMap;
+        Item[5]  = "Paste"           TAB %cmdKey @ "+V" TAB "VerveEditor::Paste();"           TAB VerveEditorEditMap;
         
         Item[6]  = ""                 TAB "";
-        Item[7]  = "&Delete"          TAB "Del"          TAB "VerveEditor::DeleteSelection();" TAB VerveEditorEditMap;
+        Item[7]  = "Delete"          TAB "Del"          TAB "VerveEditor::DeleteSelection();" TAB VerveEditorEditMap;
         
         Item[8]  = ""                 TAB "";
-        Item[9]  = "&Clear Selection" TAB "Esc"          TAB "VerveEditor::ClearSelection();";
+        Item[9]  = "Clear Selection" TAB "Esc"          TAB "VerveEditor::ClearSelection();";
         
         Item[10] = ""                 TAB "";
-        Item[11] = "&Preferences"     TAB %cmdKey @ "+P" TAB "VerveEditor::LaunchEditorPreferences();";
+        Item[11] = "Preferences"     TAB %cmdKey @ "+P" TAB "VerveEditor::LaunchEditorPreferences();";
     };
     %this.MenuSet.add( %editMenu );
     
     // Init Popups.
-    %fileMenu.Init();
-    %editMenu.Init();
+    //%fileMenu.Init();
+    //%editMenu.Init();
     
     // Attach.
-    %fileMenu.attachToMenuBar( %this, %fileMenu.Position, %fileMenu.Label );
-    %editMenu.attachToMenuBar( %this, %editMenu.Position, %editMenu.Label );
+    if($Verve::UseSeparateWindow)
+    {
+       %this.setMenuBar(%this.MenuSet);
+       //%fileMenu.attachToMenuBar( %this, %fileMenu.Position, %fileMenu.Label );
+       //%editMenu.attachToMenuBar( %this, %editMenu.Position, %editMenu.Label );
+    }
 }
 
 function VerveEditorWindow::ClearMenu( %this )

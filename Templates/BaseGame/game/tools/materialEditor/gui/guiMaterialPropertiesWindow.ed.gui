@@ -1,5 +1,5 @@
 //--- OBJECT WRITE BEGIN ---
-%guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
+$guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
    canSaveDynamicFields = "0";
    internalName = "MatEdPropertiesWindowContainer";
    Enabled = "1";
@@ -113,7 +113,7 @@
                   HorizSizing = "left";
                   tooltip = "Swap material on the object with existing";
                   bitmapAsset = "ToolsModule:change_material_btn_n_image";
-                  command = "materialSelector.showDialog(\"MaterialEditorGui.showMaterialChangeSaveDialog\");"; 
+                  command = "MaterialEditorGui.swapMaterial();"; 
                };
                
                new GuiTextEditCtrl(){ 
@@ -233,8 +233,6 @@
                   Margin = "4 4 4 0";
                   DragSizable = false;
                   container = true;
-                  parentRollout = %this.rollout;
-                  object = %behavior;
                   
                   new GuiStackControl() {
                      StackingType = "Vertical";
@@ -262,6 +260,7 @@
                         position = "6 21";
                         Extent = "185 52";
                         HorizSizing = "width";
+                        className = "materialEditorDiffuseMapContainer";
 
                         new GuiBitmapCtrl() {
                            canSaveDynamicFields = "0";
@@ -414,6 +413,7 @@
                         position = "6 79";
                         Extent = "185 52";
                         HorizSizing = "width";
+                        className = "materialEditorNormalMapContainer";
                         
                         new GuiBitmapCtrl() {
                            canSaveDynamicFields = "0";
@@ -543,9 +543,6 @@
                   Margin = "4 4 4 0";
                   DragSizable = false;
                   container = true;
-                  parentRollout = %this.rollout;
-                  object = %behavior;
-                  object = %behavior;
                   
                   new GuiStackControl() {
                      StackingType = "Vertical";
@@ -769,6 +766,7 @@
                         position = "6 364";
                         Extent = "185 52";
                         HorizSizing = "width";
+                        className = "materialEditorORMConfigMapContainer";
                         
                         new GuiBitmapCtrl() {
                            canSaveDynamicFields = "0";
@@ -990,6 +988,7 @@
 					  isContainer = "1";
 					  canSave = "1";
 					  canSaveDynamicFields = "0";
+					  className = "materialEditorRoughnessMapContainer";
 
 					  new GuiBitmapCtrl() {
 						 bitmapAsset = "ToolsModule:unknownImage_image";
@@ -1226,6 +1225,7 @@
 					  isContainer = "1";
 					  canSave = "1";
 					  canSaveDynamicFields = "0";
+					  className = "materialEditorAOMapContainer";
 
 					  new GuiBitmapCtrl() {
 						 bitmapAsset = "ToolsModule:unknownImage_image";
@@ -1462,6 +1462,7 @@
 					  isContainer = "1";
 					  canSave = "1";
 					  canSaveDynamicFields = "0";
+					  className = "materialEditorMetalMapContainer";
 
 					  new GuiBitmapCtrl() {
 						 bitmapAsset = "ToolsModule:unknownImage_image";
@@ -1715,6 +1716,8 @@
 					  isContainer = "1";
 					  canSave = "1";
 					  canSaveDynamicFields = "0";
+					  className = "materialEditorGlowMapContainer";
+					  
 					  new GuiBitmapCtrl() {
 						 bitmapAsset = "ToolsModule:unknownImage_image";
 						 wrap = "0";
@@ -1923,8 +1926,6 @@
                   Margin = "4 4 4 0";
                   DragSizable = false;
                   container = true;
-                  parentRollout = %this.rollout;
-                  object = %behavior;
                   
                   new GuiStackControl() {
                      StackingType = "Vertical";
@@ -1952,6 +1953,7 @@
                         position = "6 193";
                         Extent = "185 52";
                         HorizSizing = "width";
+                        className = "materialEditorDetailMapContainer";
                         
                         new GuiBitmapCtrl() {
                            canSaveDynamicFields = "0";
@@ -2097,6 +2099,7 @@
                         position = "6 136";
                         Extent = "185 52";
                         HorizSizing = "width";
+                        className = "materialEditorDetailNormalMapContainer";
                         
                         new GuiBitmapCtrl() {
                            canSaveDynamicFields = "0";
@@ -2242,6 +2245,7 @@
                         position = "6 136";
                         Extent = "185 52";
                         HorizSizing = "width";
+                        className = "materialEditorOverlayMapContainer";
                         
                         new GuiBitmapCtrl() {
                            canSaveDynamicFields = "0";
@@ -2368,6 +2372,7 @@
                         position = "6 250";
                         Extent = "185 52";
                         HorizSizing = "width";
+                        className = "materialEditorLightMapContainer";
                         
                         new GuiBitmapCtrl() {
                            canSaveDynamicFields = "0";
@@ -2494,6 +2499,7 @@
                         position = "6 307";
                         Extent = "185 52";
                         HorizSizing = "width";
+                        className = "materialEditorToneMapContainer";
                         
                         new GuiBitmapCtrl() {
                            canSaveDynamicFields = "0";
@@ -2623,8 +2629,6 @@
                   Margin = "-1 0 0 0";
                   DragSizable = false;
                   container = true;
-                  parentRollout = %this.rollout;
-                  object = %behavior;
                   
                   new GuiStackControl() {
                      StackingType = "Vertical";
@@ -3100,8 +3104,6 @@
                   Margin = "-1 0 0 0";
                   DragSizable = false;
                   container = true;
-                  parentRollout = %this.rollout;
-                  object = %behavior;
                   
                   new GuiStackControl() {
                      StackingType = "Vertical";
@@ -3373,8 +3375,6 @@
                   Margin = "-1 0 0 0";
                   DragSizable = false;
                   container = true;
-                  parentRollout = %this.rollout;
-                  object = %behavior;
                   
                   new GuiStackControl() {
                      StackingType = "Vertical";
@@ -4191,8 +4191,6 @@
                   Margin = "4 4 4 0";
                   DragSizable = false;
                   container = true;
-                  parentRollout = %this.rollout;
-                  object = %behavior;
                            
                   new GuiStackControl() {
                      StackingType = "Vertical";
@@ -4447,6 +4445,7 @@
                         VertSizing = "bottom";
                         Position = "0 95";
                         Extent = "212 25";
+                        visible = "0";
                         
                         new GuiBitmapCtrl(){
                            position="2 2";

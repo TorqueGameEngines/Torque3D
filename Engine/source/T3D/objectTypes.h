@@ -167,6 +167,10 @@ enum SceneObjectTypes
    PathShapeObjectType = BIT( 28 ),
    // PATHSHAPE END
 
+   /// A turret object.
+   /// @see TurretShape
+   TurretObjectType = BIT(29),
+
    /// @}
 };
 
@@ -225,7 +229,7 @@ enum SceneObjectTypeMasks : U32
                                  EnvironmentObjectType ),
 
    SKYLIGHT_CAPTURE_TYPEMASK = (EnvironmentObjectType),
-   REFLECTION_PROBE_CAPTURE_TYPEMASK = (StaticObjectType | StaticShapeObjectType)
+   REFLECTION_PROBE_CAPTURE_TYPEMASK = (StaticObjectType | StaticShapeObjectType | LightObjectType)
 };
 
 #endif

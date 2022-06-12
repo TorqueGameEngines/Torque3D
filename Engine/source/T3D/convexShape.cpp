@@ -263,7 +263,7 @@ bool ConvexShape::protectedSetSurfaceTexture(void *object, const char *index, co
 
    surfaceMaterial surface;
 
-   surface._setMaterial(data);
+   surface._setMaterial(StringTable->insert(data));
 
    shape->mSurfaceTextures.push_back(surface);
 

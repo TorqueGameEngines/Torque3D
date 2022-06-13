@@ -2819,7 +2819,7 @@ Torque::Path AssetImporter::importImageAsset(AssetImportObject* assetItem)
 
    //If it's not a re-import, check that the file isn't being in-place imported. If it isn't, store off the original
    //file path for reimporting support later
-   if (!isReimport && String::compare(qualifiedFromFile, qualifiedToFile) && Torque::FS::isFile(qualifiedFromFile))
+   if (!isReimport && String::compare(qualifiedFromFile, qualifiedToFile) && Torque::FS::IsFile(qualifiedFromFile))
    {
       newAsset->setDataField(StringTable->insert("originalFilePath"), nullptr, qualifiedFromFile);
    }
@@ -2882,7 +2882,7 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
 
    newAsset->setAssetName(assetName);
 
-   if (!isReimport && Torque::FS::isFile(qualifiedFromFile))
+   if (!isReimport && Torque::FS::IsFile(qualifiedFromFile))
    {
    newAsset->setDataField(StringTable->insert("originalFilePath"), nullptr, qualifiedFromFile);
    }
@@ -3072,7 +3072,7 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
 
    //If it's not a re-import, check that the file isn't being in-place imported. If it isn't, store off the original
    //file path for reimporting support later
-   if (!isReimport && String::compare(qualifiedFromFile, qualifiedToFile) && Torque::FS::isFile(qualifiedFromFile))
+   if (!isReimport && String::compare(qualifiedFromFile, qualifiedToFile) && Torque::FS::IsFile(qualifiedFromFile))
    {
       newAsset->setDataField(StringTable->insert("originalFilePath"), nullptr, qualifiedFromFile);
    }
@@ -3352,7 +3352,7 @@ Torque::Path AssetImporter::importSoundAsset(AssetImportObject* assetItem)
 
    //If it's not a re-import, check that the file isn't being in-place imported. If it isn't, store off the original
    //file path for reimporting support later
-   if (!isReimport && String::compare(qualifiedFromFile, qualifiedToFile) && Torque::FS::isFile(qualifiedFromFile))
+   if (!isReimport && String::compare(qualifiedFromFile, qualifiedToFile) && Torque::FS::IsFile(qualifiedFromFile))
    {
       newAsset->setDataField(StringTable->insert("originalFilePath"), nullptr, qualifiedFromFile);
    }
@@ -3413,7 +3413,7 @@ Torque::Path AssetImporter::importShapeAnimationAsset(AssetImportObject* assetIt
 
    //If it's not a re-import, check that the file isn't being in-place imported. If it isn't, store off the original
    //file path for reimporting support later
-   if (!isReimport && String::compare(qualifiedFromFile, qualifiedToFile) && Torque::FS:::isFile(qualifiedFromFile))
+   if (!isReimport && String::compare(qualifiedFromFile, qualifiedToFile) && Torque::FS::IsFile(qualifiedFromFile))
    {
       newAsset->setDataField(StringTable->insert("originalFilePath"), nullptr, qualifiedFromFile);
    }

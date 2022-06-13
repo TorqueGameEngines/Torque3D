@@ -584,17 +584,33 @@ DefineEngineFunction(compareFileTimes, S32, (const char* fileA, const char* file
    "@return S32. If value is 1, then fileA is newer. If value is -1, then fileB is newer. If value is 0, they are equal.\n"
    "@ingroup FileSystem")
 {
-   Con::expandScriptFilename(sgScriptFilenameBuffer, sizeof(sgScriptFilenameBuffer), fileA);
+   Torque::FS::FileNodeRef nodeA = Torque::FS::GetFileNode(fileA);
+   Torque::FS::FileNodeRef nodeB = Torque::FS::GetFileNode(fileB);
 
-   FileTime fileATime = { 0 };
-   Platform::getFileTimes(sgScriptFilenameBuffer, NULL, &fileATime);
+   // Can't do anything if either file doesn't exist
+   if (!nodeA || !nodeB)
+   {
+      return 0;
+   }
 
-   Con::expandScriptFilename(sgScriptFilenameBuffer, sizeof(sgScriptFilenameBuffer), fileB);
+   Torque::FS::FileNode::Attributes fileAAttributes;
+   Torque::FS::FileNode::Attributes fileABttributes;
 
-   FileTime fileBTime = { 0 };
-   Platform::getFileTimes(sgScriptFilenameBuffer, NULL, &fileBTime);
+   // If retrieval of attributes fails, we can't compare   
+   if (!nodeA->getAttributes(&fileAAttributes) || !nodeB->getAttributes(&fileABttributes))
+   {
+      return 0;
+   }
 
-   return Platform::compareFileTimes(fileATime, fileBTime);
+   if (fileAAttributes.mtime > fileABttributes.mtime)
+   {
+      return 1;
+   }
+   else if (fileAAttributes.mtime < fileABttributes.mtime)
+   {
+      return -1;
+   }
+   return 0;
 }
 
 DefineEngineFunction(fileDelete, bool, ( const char* path ),,

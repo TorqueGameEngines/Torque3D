@@ -1,6 +1,4 @@
 <ModuleDefinition
-    canSave="true"
-    canSaveDynamicFields="true"
     ModuleId="Prototyping"
     VersionId="1"
     Group="Game"
@@ -8,8 +6,6 @@
     CreateFunction="onCreate"
     DestroyFunction="onDestroy">
     <DeclaredAssets
-        canSave="true"
-        canSaveDynamicFields="true"
         Extension="asset.taml"
-        Recurse="true" />
+        Recurse="true"/>
 </ModuleDefinition>

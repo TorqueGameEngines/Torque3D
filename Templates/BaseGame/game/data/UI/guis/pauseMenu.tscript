@@ -8,19 +8,23 @@ function PauseMenu::onWake(%this)
    }
    
    PauseMenuList.hidden = false;
-   PauseMenuList.setFirstResponder();
-   PauseButtonHolder.setActive();
    
-   PauseMenuList.clearRows();
+   PauseMenuList.clear();
    
    if($Tools::loaded && EditorIsActive())
    {
-      PauseMenuList.addRow("Exit Editor", "fastLoadWorldEdit", -1, -30); 
+      %this.addPauseMenuButton("Exit Editor", "fastLoadWorldEdit();"); 
    }
    
-   PauseMenuList.addRow("Options", "openPauseMenuOptions", -1, -30);
-   PauseMenuList.addRow("Exit to Menu", "pauseMenuExitToMenu", -1, -30);
-   PauseMenuList.addRow("Exit to Desktop", "pauseMenuExitToDesktop", -1, -30); 
+   %this.addPauseMenuButton("Options", "openPauseMenuOptions();");
+   %this.addPauseMenuButton("Exit to Menu", "pauseMenuExitToMenu();");
+   %this.addPauseMenuButton("Exit to Desktop", "pauseMenuExitToDesktop();"); 
+   
+   PauseMenuList.setAsActiveMenuList();
+   PauseButtonHolder.setActive();
+   PauseMenuInputHandler.setFirstResponder();
+   
+   %this.resizePages = true;
 }
 
 
@@ -33,34 +37,52 @@ function PauseMenu::onSleep(%this)
    }
 }
 
-function PauseMenu::onReturnTo(%this)
-{
-   PauseMenuList.hidden = false;
-   PauseMenuList.setFirstResponder();
-   PauseButtonHolder.setActive();
-}
-
 function openPauseMenuOptions()
 {
-   Canvas.pushDialog(OptionsMenu);
-   OptionsMenu.returnGui = PauseMenu; 
-   PauseMenuList.hidden = true;
+   PauseMenu.pushPage(OptionsMenu);
 }
 
 function pauseMenuExitToMenu()
 {
-   PauseMenuList.hidden = true;
-   MessageBoxOKCancel("Exit?", "Do you wish to exit to the Main Menu?", "escapeFromGame();", "PauseMenu.onReturnTo();");
+   MessageBoxOKCancel("Exit?", "Do you wish to exit to the Main Menu?", "escapeFromGame();", "");
 }
 
 function pauseMenuExitToDesktop()
 {
-   PauseMenuList.hidden = true;
-   MessageBoxOKCancel("Exit?", "Do you wish to exit to the desktop?", "quit();", "PauseMenu.onReturnTo();");
+   MessageBoxOKCancel("Exit?", "Do you wish to exit to the desktop?", "quit();", "");
 }
 
 function PauseButtonHolder::onWake(%this)
 {
-   %this-->goButton.set("btn_a", "Return", "OK", "PauseMenuList.activateRow();", true);
-   %this-->backButton.set("btn_b", "Escape", "Back", "Canvas.popDialog();");
+   %this-->button1.disable();
+   %this-->button2.disable();
+   %this-->button3.disable();
+   %this-->button4.set("btn_a", "", "OK", "PauseMenuList.activate();");
+   %this-->button4.set("btn_b", "Escape", "Back", "Canvas.popDialog();");
+}
+
+function PauseMenu::addPauseMenuButton(%this, %buttonText, %buttonCallback)
+{
+   %newButton = new GuiButtonCtrl() {
+      text = %buttonText;
+      groupNum = "-1";
+      buttonType = "PushButton";
+      useMouseEvents = "0";
+      position = "0 0";
+      extent = "400 55";
+      minExtent = "8 2";
+      horizSizing = "right";
+      vertSizing = "bottom";
+      profile = "GuiMenuButtonProfile";
+      visible = "1";
+      active = "1";
+      command = %buttonCallback;
+      tooltipProfile = "GuiToolTipProfile";
+      hovertime = "1000";
+      isContainer = "0";
+      canSave = "1";
+      canSaveDynamicFields = "0";
+   };
+   
+   PauseMenuList.add(%newButton);
 }

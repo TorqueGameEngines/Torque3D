@@ -261,6 +261,16 @@ public:
    /// </summary>
    F32 animFPS;
 
+   /// <summary>
+   /// When importing a shape animation, this indicates if it should automatically add a standard suffix onto the name
+   /// </summary>
+   bool AlwaysAddShapeAnimationSuffix;
+
+   /// <summary>
+   /// If AlwaysAddShapeAnimationSuffix is on, this is the suffix to be added
+   /// </summary>
+   String AddedShapeAnimationSuffix;
+
    //
    //Collision
    /// <summary>
@@ -800,10 +810,16 @@ public:
    void processMaterialAsset(AssetImportObject* assetItem);
 
    /// <summary>
-   /// Process a specific AssetImportObject that is an ShapeAsset type to prepare it for importing
+   /// Process a specific AssetImportObject that is an ShapeAnimationAsset type to prepare it for importing
    /// <para>@param assetItem, The AssetImportObject to process</para>
    /// </summary>
    void processShapeAsset(AssetImportObject* assetItem);
+
+   /// <summary>
+   /// Process a specific AssetImportObject that is an ShapeAsset type to prepare it for importing
+   /// <para>@param assetItem, The AssetImportObject to process</para>
+   /// </summary>
+   void processShapeAnimationAsset(AssetImportObject* assetItem);
 
    /// <summary>
    /// Process a specific ShapeAsset AssetImportObject with a material id in order to parse and handle the materials listed in the shape file
@@ -897,6 +913,12 @@ public:
    /// <para>@return TAML File path of the new asset that was imported. If import failed, it will be empty.</para>
    /// </summary>
    Torque::Path importShapeAnimationAsset(AssetImportObject* assetItem);
+
+   /// <summary>
+   /// Iterates over all the items in the current session and acquires them, which jumpstarts the loading/init'ng process on them, making the available for use immediately
+   /// <para>@param assetItem, if null, will loop over and recurse the main import asset items, if a specific AssetImportObject is passed in, it will recurse it's children</para>
+   /// </summary>
+   void acquireAssets(AssetImportObject* assetItem = nullptr);
 
    //
    /// <summary>

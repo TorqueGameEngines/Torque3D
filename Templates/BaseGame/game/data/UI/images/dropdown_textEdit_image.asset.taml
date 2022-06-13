@@ -1,8 +1,0 @@
-<ImageAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    AssetName="dropdown_textEdit_image"
-    imageFile="@assetFile=dropdown-textEdit.png"
-    UseMips="true"
-    isHDRImage="false"
-    imageType="Albedo" />

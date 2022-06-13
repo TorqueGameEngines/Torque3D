@@ -303,6 +303,7 @@ void SDLInputManager::processEvent(SDL_Event &evt)
    {
       onSDLDeviceDisconnected_callback(evt.jdevice.which);
       closeJoystick(evt.jdevice.which);
+      break;
    }
 
    case SDL_CONTROLLERAXISMOTION:

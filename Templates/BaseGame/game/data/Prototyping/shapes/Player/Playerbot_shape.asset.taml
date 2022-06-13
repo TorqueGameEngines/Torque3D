@@ -1,0 +1,7 @@
+<ShapeAsset
+    AssetName="Playerbot_shape"
+    fileName="@assetFile=Playerbot.dae"
+    constuctorFileName="@assetFile=Playerbot.tscript"
+    materialSlot0="@asset=Prototyping:metalGray"
+    materialSlot1="@asset=Prototyping:interactiveRed"
+    originalFilePath="C:/dev/Resources/Art/Playerbot.dae"/>

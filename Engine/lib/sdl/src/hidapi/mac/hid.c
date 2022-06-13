@@ -21,8 +21,6 @@
  ********************************************************/
 #include "../../SDL_internal.h"
 
-#ifdef SDL_JOYSTICK_HIDAPI
-
 /* See Apple Technical Note TN2187 for details on IOHidManager. */
 
 #include <IOKit/hid/IOHIDManager.h>
@@ -33,7 +31,9 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-#include "hidapi.h"
+#include "../hidapi/hidapi.h"
+
+#define VALVE_USB_VID		0x28DE
 
 /* Barrier implementation because Mac OSX doesn't have pthread_barrier.
  It also doesn't have clock_gettime(). So much for POSIX and SUSv2.
@@ -251,12 +251,15 @@ static int get_string_property(IOHIDDeviceRef device, CFStringRef prop, wchar_t 
 	
 	if (!len)
 		return 0;
-	
+
+	if (CFGetTypeID(prop) != CFStringGetTypeID())
+		return 0;
+
 	str = (CFStringRef)IOHIDDeviceGetProperty(device, prop);
 	
 	buf[0] = 0;
 	
-	if (str) {
+	if (str && CFGetTypeID(str) == CFStringGetTypeID()) {
 		len --;
 		
 		CFIndex str_len = CFStringGetLength(str);
@@ -288,11 +291,14 @@ static int get_string_property_utf8(IOHIDDeviceRef device, CFStringRef prop, cha
 	if (!len)
 		return 0;
 	
+	if (CFGetTypeID(prop) != CFStringGetTypeID())
+		return 0;
+
 	str = (CFStringRef)IOHIDDeviceGetProperty(device, prop);
 	
 	buf[0] = 0;
 	
-	if (str) {
+	if (str && CFGetTypeID(str) == CFStringGetTypeID()) {
 		len--;
 		
 		CFIndex str_len = CFStringGetLength(str);
@@ -392,20 +398,86 @@ static void hid_device_removal_callback(void *context, IOReturn result,
 	}
 }
 
+static CFDictionaryRef
+create_usage_match(const UInt32 page, const UInt32 usage, int *okay)
+{
+	CFDictionaryRef retval = NULL;
+	CFNumberRef pageNumRef = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &page);
+	CFNumberRef usageNumRef = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &usage);
+	const void *keys[2] = { (void *) CFSTR(kIOHIDDeviceUsagePageKey), (void *) CFSTR(kIOHIDDeviceUsageKey) };
+	const void *vals[2] = { (void *) pageNumRef, (void *) usageNumRef };
+
+	if (pageNumRef && usageNumRef) {
+		retval = CFDictionaryCreate(kCFAllocatorDefault, keys, vals, 2, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+	}
+
+	if (pageNumRef) {
+		CFRelease(pageNumRef);
+	}
+	if (usageNumRef) {
+		CFRelease(usageNumRef);
+	}
+
+	if (!retval) {
+		*okay = 0;
+	}
+
+	return retval;
+}
+
+static CFDictionaryRef
+create_vendor_match(const UInt32 vendor, int *okay)
+{
+	CFDictionaryRef retval = NULL;
+	CFNumberRef vidNumRef = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &vendor);
+	const void *keys[1] = { (void *) CFSTR(kIOHIDVendorIDKey) };
+	const void *vals[1] = { (void *) vidNumRef };
+
+	if (vidNumRef) {
+		retval = CFDictionaryCreate(kCFAllocatorDefault, keys, vals, 1, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+		CFRelease(vidNumRef);
+	}
+
+	if (!retval) {
+		*okay = 0;
+	}
+
+	return retval;
+}
+
 /* Initialize the IOHIDManager. Return 0 for success and -1 for failure. */
 static int init_hid_manager(void)
 {
+	int okay = 1;
+	const void *vals[] = {
+		(void *) create_usage_match(kHIDPage_GenericDesktop, kHIDUsage_GD_Joystick, &okay),
+		(void *) create_usage_match(kHIDPage_GenericDesktop, kHIDUsage_GD_GamePad, &okay),
+		(void *) create_usage_match(kHIDPage_GenericDesktop, kHIDUsage_GD_MultiAxisController, &okay),
+		(void *) create_vendor_match(VALVE_USB_VID, &okay),
+	};
+	const size_t numElements = SDL_arraysize(vals);
+	CFArrayRef matchingArray = okay ? CFArrayCreate(kCFAllocatorDefault, vals, numElements, &kCFTypeArrayCallBacks) : NULL;
+	size_t i;
+
+	for (i = 0; i < numElements; i++) {
+		if (vals[i]) {
+			CFRelease((CFTypeRef) vals[i]);
+		}
+	}
 
 	/* Initialize all the HID Manager Objects */
 	hid_mgr = IOHIDManagerCreate(kCFAllocatorDefault, kIOHIDOptionsTypeNone);
 	if (hid_mgr) {
-		IOHIDManagerSetDeviceMatching(hid_mgr, NULL);
+		IOHIDManagerSetDeviceMatchingMultiple(hid_mgr, matchingArray);
 		IOHIDManagerScheduleWithRunLoop(hid_mgr, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
 		IOHIDManagerRegisterDeviceRemovalCallback(hid_mgr, hid_device_removal_callback, NULL);
-		return 0;
 	}
 	
-	return -1;
+	if (matchingArray != NULL) {
+		CFRelease(matchingArray);
+	}
+
+	return hid_mgr ? 0 : -1;
 }
 
 /* Initialize the IOHIDManager if necessary. This is the public function, and
@@ -482,6 +554,17 @@ struct hid_device_info  HID_API_EXPORT *hid_enumerate(unsigned short vendor_id, 
 			continue;
 		}
 
+#if 0 // Prefer direct HID support as that has extended functionality
+#if defined(SDL_JOYSTICK_MFI)
+		// We want to prefer Game Controller support where available,
+		// as Apple will likely be requiring that for supported devices.
+		extern SDL_bool IOS_SupportedHIDDevice(IOHIDDeviceRef device);
+		if (IOS_SupportedHIDDevice(dev)) {
+			continue;
+		}
+#endif
+#endif
+
 		dev_vid = get_vendor_id(dev);
 		dev_pid = get_product_id(dev);
 		
@@ -489,8 +572,7 @@ struct hid_device_info  HID_API_EXPORT *hid_enumerate(unsigned short vendor_id, 
 		if ((vendor_id == 0x0 && product_id == 0x0) ||
 		    (vendor_id == dev_vid && product_id == dev_pid)) {
 			struct hid_device_info *tmp;
-			size_t len;
-			
+
 			/* VID/PID match. Create the record. */
 			tmp = (struct hid_device_info *)calloc(1, sizeof(struct hid_device_info));
 			if (cur_dev) {
@@ -507,7 +589,7 @@ struct hid_device_info  HID_API_EXPORT *hid_enumerate(unsigned short vendor_id, 
 			
 			/* Fill out the record */
 			cur_dev->next = NULL;
-			len = make_path(dev, cbuf, sizeof(cbuf));
+			make_path(dev, cbuf, sizeof(cbuf));
 			cur_dev->path = strdup(cbuf);
 			
 			/* Serial Number */
@@ -734,10 +816,9 @@ hid_device * HID_API_EXPORT hid_open_path(const char *path, int bExclusive)
 	CFSetGetValues(device_set, (const void **) device_array);	
 	for (i = 0; i < num_devices; i++) {
 		char cbuf[BUF_LEN];
-		size_t len;
 		IOHIDDeviceRef os_dev = device_array[i];
 		
-		len = make_path(os_dev, cbuf, sizeof(cbuf));
+		make_path(os_dev, cbuf, sizeof(cbuf));
 		if (!strcmp(cbuf, path)) {
 			// Matched Paths. Open this Device.
 			IOReturn ret = IOHIDDeviceOpen(os_dev, kIOHIDOptionsTypeNone);
@@ -750,6 +831,7 @@ hid_device * HID_API_EXPORT hid_open_path(const char *path, int bExclusive)
 				
 				/* Create the buffers for receiving data */
 				dev->max_input_report_len = (CFIndex) get_max_report_length(os_dev);
+				SDL_assert(dev->max_input_report_len > 0);
 				dev->input_report_buf = (uint8_t *)calloc(dev->max_input_report_len, sizeof(uint8_t));
 				
 				/* Create the Run Loop Mode for this device.
@@ -853,11 +935,14 @@ static int return_data(hid_device *dev, unsigned char *data, size_t length)
 	/* Copy the data out of the linked list item (rpt) into the
 	 return buffer (data), and delete the liked list item. */
 	struct input_report *rpt = dev->input_reports;
-	size_t len = (length < rpt->len)? length: rpt->len;
-	memcpy(data, rpt->data, len);
-	dev->input_reports = rpt->next;
-	free(rpt->data);
-	free(rpt);
+	size_t len = 0;
+	if (rpt != NULL) {
+		len = (length < rpt->len)? length: rpt->len;
+		memcpy(data, rpt->data, len);
+		dev->input_reports = rpt->next;
+		free(rpt->data);
+		free(rpt);
+	}
 	return (int)len;
 }
 
@@ -1173,5 +1258,3 @@ int main(void)
 	return 0;
 }
 #endif
-
-#endif /* SDL_JOYSTICK_HIDAPI */

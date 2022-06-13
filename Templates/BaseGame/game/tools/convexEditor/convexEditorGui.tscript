@@ -51,6 +51,8 @@ function ConvexEditorGui::onSleep( %this )
 function ConvexEditorGui::createConvexBox( %this )
 {
    %obj = genericCreateObject( "ConvexShape" );
+   %obj.setMaterial(%this.materialName); //set whatever the editor has as it's default material to the new one
+   
    %this.handleDeselect();
    %this.selectConvex( %obj );
    %this.dropSelectionAtScreenCenter();
@@ -177,7 +179,7 @@ function ConvexEditorMaterialBtn::gotMaterialName(%this, %name)
 
    ConvexEditorOptionsWindow-->matPreviewBtn.setBitmap(getAssetPreviewImage(%diffusemap));
 
-   ConvexEditorOptionsWindow.activeMaterial = %materialAsset.materialDefinitionName;
+   ConvexEditorOptionsWindow.activeMaterial = %materialAsset.getAssetId();
 }
 
 function ConvexEditorMaterialApplyBtn::onClick(%this)
@@ -245,4 +247,12 @@ function ConvexEditorDefaultMaterialBtn::gotMaterialName(%this, %name)
    ConvexEditorOptionsWindow.activeShape.setMaterial(%name);
 
    ConvexEditorGui.updateShape();
+}
+
+function ESettingsWindow::getConvexEditorSettings(%this)
+{
+   SettingsInspector.startGroup("Defaults");
+   SettingsInspector.addSettingsField("ConvexEditor/MaterialName", "Default Material", "string", 
+                           "The default material when creating a convexShape");
+   SettingsInspector.endGroup();
 }

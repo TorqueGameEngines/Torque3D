@@ -98,7 +98,8 @@ bool GuiBitmapCtrl::onWake()
       return false;
    setActive(true);
 
-   setBitmap(getBitmap());
+   if (mBitmapName != StringTable->insert("texhandle"))
+      setBitmap(getBitmap());
    return true;
 }
 
@@ -152,7 +153,7 @@ void GuiBitmapCtrl::setBitmapHandle(GFXTexHandle handle, bool resize)
 {
    mBitmap = handle;
 
-   mBitmapName = String("texhandle");
+   mBitmapName = StringTable->insert("texhandle");
 
    // Resize the control to fit the bitmap
    if (resize) 

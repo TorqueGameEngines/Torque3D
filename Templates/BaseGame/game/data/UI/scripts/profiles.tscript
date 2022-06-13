@@ -145,6 +145,12 @@ new GuiControlProfile( GuiBlankMenuButtonProfile )
    category = "Core";
 };
 
+if( !isObject( GuiJoinServerButtonProfile ) )
+new GuiControlProfile( GuiJoinServerButtonProfile : GuiMenuButtonProfile )
+{
+   justify = "left";
+};
+
 if( !isObject( GuiMenuTextProfile ) )
 new GuiControlProfile( GuiMenuTextProfile )
 {
@@ -342,7 +348,7 @@ new GuiControlProfile( GuiPopupMenuItemBorder : GuiButtonProfile )
    fixedExtent = false;
    justify = "center";
    canKeyFocus = false;
-   bitmap = "data/ui/images/button";
+   bitmapAsset = "UI:menubutton_image";
    category = "Core";
 };
 

@@ -11,6 +11,22 @@ function AssetBrowser::onSoundAssetChanged(%this, %assetDef)
         sfxStop($PreviewSoundSource);
 }
 
+function AssetBrowser::moveSoundAsset(%this, %assetDef, %destination)
+{
+   %currentModule = AssetDatabase.getAssetModule(%assetDef.getAssetId());
+   %targetModule = AssetBrowser.dirHandler.getModuleFromAddress(%destination);
+   
+   %newAssetPath = moveAssetFile(%assetDef, %destination);
+   
+   if(%newAssetPath $= "")
+      return false;
+
+   moveAssetLooseFile(%assetDef.getSoundPath(), %destination);
+   
+   AssetDatabase.removeDeclaredAsset(%assetDef.getAssetId());
+   AssetDatabase.addDeclaredAsset(%targetModule, %newAssetPath);
+}
+
 function AssetBrowser::buildSoundAssetPreview(%this, %assetDef, %previewData)
 {
    %previewData.assetName = %assetDef.assetName;
@@ -75,7 +91,7 @@ function AssetBrowser::onSoundAssetEditorDropped(%this, %assetDef, %position)
    
 }
 
-function GuiInspectorTypeShapeAssetPtr::onControlDropped( %this, %payload, %position )
+function GuiInspectorTypeSoundAssetPtr::onControlDropped( %this, %payload, %position )
 {
    Canvas.popDialog(EditorDragAndDropLayer);
    

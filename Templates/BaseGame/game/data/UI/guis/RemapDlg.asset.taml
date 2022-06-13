@@ -1,7 +1,4 @@
 <GUIAsset
-    canSave="true"
-    canSaveDynamicFields="true"
     AssetName="RemapDlg"
-    scriptFile="@assetFile=remapDlg.gui"
     GUIFile="@assetFile=remapDlg.gui"
-    VersionId="1" />
+    VersionId="1"/>

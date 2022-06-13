@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -23,9 +23,9 @@
 #include "../../core/windows/SDL_windows.h"
 #include "../SDL_syslocale.h"
 
-typedef BOOL (WINAPI *pfnGetUserPreferredUILanguages)(DWORD,PULONG,/*PZZWSTR*/WCHAR*,PULONG);
+typedef BOOL (WINAPI *pfnGetUserPreferredUILanguages)(DWORD,PULONG,WCHAR*,PULONG);
 #ifndef MUI_LANGUAGE_NAME
-#define MUI_LANGUAGE_NAME 0x8 
+#define MUI_LANGUAGE_NAME 0x8
 #endif
 
 static pfnGetUserPreferredUILanguages pGetUserPreferredUILanguages = NULL;
@@ -39,11 +39,11 @@ SDL_SYS_GetPreferredLocales_winxp(char *buf, size_t buflen)
     char lang[16];
     char country[16];
 
-	const int langrc = GetLocaleInfoA(LOCALE_USER_DEFAULT,
+    const int langrc = GetLocaleInfoA(LOCALE_USER_DEFAULT,
                                       LOCALE_SISO639LANGNAME,
                                       lang, sizeof (lang));
 
-	const int ctryrc =  GetLocaleInfoA(LOCALE_USER_DEFAULT,
+    const int ctryrc =  GetLocaleInfoA(LOCALE_USER_DEFAULT,
                                        LOCALE_SISO3166CTRYNAME,
                                        country, sizeof (country));
 
@@ -100,7 +100,7 @@ void
 SDL_SYS_GetPreferredLocales(char *buf, size_t buflen)
 {
     if (!kernel32) {
-        kernel32 = LoadLibraryW(L"kernel32.dll");
+        kernel32 = GetModuleHandle(TEXT("kernel32.dll"));
         if (kernel32) {
             pGetUserPreferredUILanguages = (pfnGetUserPreferredUILanguages) GetProcAddress(kernel32, "GetUserPreferredUILanguages");
         }

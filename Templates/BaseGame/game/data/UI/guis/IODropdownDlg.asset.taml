@@ -1,7 +1,4 @@
 <GUIAsset
-    canSave="true"
-    canSaveDynamicFields="true"
     AssetName="IODropdownDlg"
-    scriptFile="@assetFile=IODropdownDlg.ed.gui"
     GUIFile="@assetFile=IODropdownDlg.ed.gui"
-    VersionId="1" />
+    VersionId="1"/>

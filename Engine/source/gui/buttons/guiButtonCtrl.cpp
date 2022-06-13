@@ -83,7 +83,7 @@ bool GuiButtonCtrl::onWake()
 void GuiButtonCtrl::onRender(Point2I      offset,
                              const RectI& updateRect)
 {
-   bool highlight = mMouseOver;
+   bool highlight = mHighlighted;
    bool depressed = mDepressed;
 
    ColorI fontColor   = mActive ? ( highlight ? mProfile->mFontColorHL : mProfile->mFontColor ) : mProfile->mFontColorNA;
@@ -107,7 +107,7 @@ void GuiButtonCtrl::onRender(Point2I      offset,
          indexMultiplier = 4;
       else if ( mDepressed || mStateOn )
          indexMultiplier = 2;
-      else if ( mMouseOver )
+      else if ( mHighlighted )
          indexMultiplier = 3;
 
       renderSizableBitmapBordersFilled( boundsRect, indexMultiplier, mProfile );
@@ -123,3 +123,4 @@ void GuiButtonCtrl::onRender(Point2I      offset,
    //render the children
    renderChildControls( offset, updateRect);
 }
+

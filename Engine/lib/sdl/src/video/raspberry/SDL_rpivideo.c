@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -120,7 +120,6 @@ RPI_Create()
     device->MaximizeWindow = RPI_MaximizeWindow;
     device->MinimizeWindow = RPI_MinimizeWindow;
     device->RestoreWindow = RPI_RestoreWindow;
-    device->SetWindowGrab = RPI_SetWindowGrab;
     device->DestroyWindow = RPI_DestroyWindow;
 #if 0
     device->GetWindowWMInfo = RPI_GetWindowWMInfo;
@@ -420,11 +419,6 @@ RPI_MinimizeWindow(_THIS, SDL_Window * window)
 void
 RPI_RestoreWindow(_THIS, SDL_Window * window)
 {
-}
-void
-RPI_SetWindowGrab(_THIS, SDL_Window * window, SDL_bool grabbed)
-{
-
 }
 
 /*****************************************************************************/

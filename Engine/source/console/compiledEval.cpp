@@ -1620,17 +1620,17 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          ++ip; // To skip the recurse flag if the object wasnt found
          if (curObject)
          {
-            SimGroup* group = dynamic_cast<SimGroup*>(curObject);
-            if (group)
+            SimSet* set = dynamic_cast<SimSet*>(curObject);
+            if (set)
             {
                StringTableEntry intName = StringTable->insert(stack[_STK].getString());
                bool recurse = code[ip - 1];
-               SimObject* obj = group->findObjectByInternalName(intName, recurse);
+               SimObject* obj = set->findObjectByInternalName(intName, recurse);
                stack[_STK].setInt(obj ? obj->getId() : 0);
             }
             else
             {
-               Con::errorf(ConsoleLogEntry::Script, "%s: Attempt to use -> on non-group %s of class %s.", getFileLine(ip - 2), curObject->getName(), curObject->getClassName());
+               Con::errorf(ConsoleLogEntry::Script, "%s: Attempt to use -> on non-set %s of class %s.", getFileLine(ip - 2), curObject->getName(), curObject->getClassName());
                stack[_STK].setInt(0);
             }
          }

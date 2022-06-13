@@ -1,7 +1,4 @@
 <GUIAsset
-    canSave="true"
-    canSaveDynamicFields="true"
     AssetName="recordingsDlg"
-    scriptFile="@assetFile=RecordingsDlg.gui"
     GUIFile="@assetFile=RecordingsDlg.gui"
-    VersionId="1" />
+    VersionId="1"/>

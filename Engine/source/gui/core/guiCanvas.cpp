@@ -549,8 +549,7 @@ void GuiCanvas::setCursorPos(const Point2I &pt)
    }
    else
    {
-      Point2I screenPt( mPlatformWindow->clientToScreen( pt ) );
-      mPlatformWindow->setCursorPosition( screenPt.x, screenPt.y ); 
+      mPlatformWindow->setCursorPosition(pt.x, pt.y);
    }
 }
 
@@ -706,6 +705,9 @@ bool GuiCanvas::processInputEvent(InputEventInfo &inputEvent)
       if (mCursorEnabled || mForceMouseToGUI || 
          (mAlwaysHandleMouseButtons && inputEvent.objType == SI_BUTTON) )
       {
+         if (inputEvent.objType != SI_AXIS && inputEvent.action == SI_MAKE)
+            bool asdfasdf = true;
+
          return processMouseEvent(inputEvent);
       }
       break;

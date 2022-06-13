@@ -26,12 +26,7 @@ function AssetBrowser::createShapeAsset(%this)
 	%moduleDef = ModuleDatabase.findModule(%moduleName, 1);
 	AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
 
-	AssetBrowser.loadFilters();
-	
-	%treeItemId = AssetBrowserFilterTree.findItemByName(%moduleName);
-	%smItem = AssetBrowserFilterTree.findChildItemByName(%treeItemId, "ShapeAsset");
-	
-	AssetBrowserFilterTree.onSelect(%smItem);
+	AssetBrowser.refresh();
 	
 	return %tamlpath;
 }
@@ -49,6 +44,23 @@ function AssetBrowser::onShapeAssetChanged(%this, %assetDef)
 function AssetBrowser::deleteShapeAsset(%this, %assetDef)
 {
    
+}
+
+function AssetBrowser::moveShapeAsset(%this, %assetDef, %destination)
+{
+   %currentModule = AssetDatabase.getAssetModule(%assetDef.getAssetId());
+   %targetModule = AssetBrowser.dirHandler.getModuleFromAddress(%destination);
+   
+   %newAssetPath = moveAssetFile(%assetDef, %destination);
+   
+   if(%newAssetPath $= "")
+      return false;
+
+   moveAssetLooseFile(%assetDef.getShapePath(), %destination);
+   moveAssetLooseFile(%assetDef.getShapeConstructorFilePath(), %destination);
+   
+   AssetDatabase.removeDeclaredAsset(%assetDef.getAssetId());
+   AssetDatabase.addDeclaredAsset(%targetModule, %newAssetPath);
 }
 
 function AssetBrowser::prepareImportShapeAsset(%this, %assetItem)
@@ -131,9 +143,14 @@ function AssetBrowser::importShapeAsset(%this, %assetItem)
       assetName = %assetName;
       versionId = 1;
       fileName = fileName(%filePath);
-      originalFilePath = %filePath;
       isNewShape = true;
    };
+   
+   //No point in indicating the original path data if it was imported in-place
+   if(!startsWith(makeFullPath(%filePath), getMainDotCsDir()))
+   {
+      %newAsset.originalFilePath = %filePath;
+   }
    
    //check dependencies
    %dependencySlotId = 0;
@@ -246,80 +263,20 @@ function AssetBrowser::importShapeAsset(%this, %assetItem)
       AssetDatabase.refreshAsset(%assetId);
 }
 
-function AssetBrowser::buildShapeAssetPreview(%this, %assetDef, %previewData)
+function AssetBrowser::buildShapeAssetPreview(%this, %assetDef, %previewData, %forcePreviewRegenerate)
 {
-   %module = %this.dirHandler.getModuleFromAddress(makeRelativePath(filePath(%assetDef.getShapeFile())));
-   %previewPath = "tools/resources/previewCache/" @ %module.moduleId @ "/";
-   
-   if(!IsDirectory(%previewPath))
-   {
-      %this.dirHandler.createFolder(%previewPath);
-   }
-   
-   %generatePreview = false;
-   
-   %previewFilePath = %previewPath @ %assetDef.assetName @ "_Preview.png";
-   if(!isFile(%previewFilePath) || (compareFileTimes(%assetDef.getShapeFile(), %previewFilePath) == 1))
-   {
-      %generatePreview = true;
-   }
-   
-   %previewAssetName = %module.moduleId @ "_" @ %assetDef.assetName @ "_PreviewImage";
-   
-   if(%generatePreview)
-   {
-      displayEditorLoadingGui("Generating Shape Asset Preview...");
-      
-      //This is slightly hacky, but we're going to utilize the imposter/last detail system
-      //to generate our previews for us and then clean up the unneeded bits
-      %oldImposterSetting = $TSLastDetail::dumpImposters;
-      $TSLastDetail::dumpImposters = true;
-      
-      %filePath = %assetDef.generateCachedPreviewImage();
-      
-      %imposterPath = %filePath @ ".imposter.png";
-      pathCopy(%imposterPath, %previewFilePath);
-      
-      //cleanup
-      fileDelete(%imposterPath);
-      fileDelete(%filePath @ ".imposter.dds");
-      fileDelete(%filePath @ ".imposter_normals.png");
-      fileDelete(%filePath @ ".imposter_normals.dds");
-      
-      $TSLastDetail::dumpImposters = %oldImposterSetting;
-      
-      %previewAsset = new ImageAsset()
-      {
-         assetName = %previewAssetName;
-         versionId = 1;
-         imageFile = fileName(%previewFilePath);
-      };
-      
-      %previewImgAssetPath = %previewPath @ %previewAsset.assetName @ ".asset.taml";
-      %assetImportSuccessful = TAMLWrite(%previewAsset, %previewImgAssetPath); 
-      
-      %toolsModuleDef = ModuleDatabase.findModule("ToolsModule",1);
-         
-      %success = AssetDatabase.addDeclaredAsset(%toolsModuleDef, %previewImgAssetPath);
-      
-      hideEditorLoadingGui();
-   }
-   
-   //Revalidate. If it didn't work, just use the default placeholder one
-   if(!isFile(%previewFilePath))
-      %previewAssetName = "ToolsModule:genericAssetIcon_image";
+   %previewData.previewImage = "ToolsModule:genericAssetIcon_image";
+   %previewData.previewLoaded = false; //this marks it for loading progressively later
    
    %previewData.assetName = %assetDef.assetName;
    %previewData.assetPath = %assetDef.fileName;
-
-   %previewData.previewImage = "ToolsModule:" @ %previewAssetName;//%assetDef.fileName;
    
    %previewData.assetFriendlyName = %assetDef.assetName;
    %previewData.assetDesc = %assetDef.description;
    %previewData.tooltip = "Asset Name: " @ %assetDef.assetName @ "\n" @ 
                            "Asset Type: Shape Asset\n" @ 
                            "Asset Definition ID: " @  %assetDef @ "\n" @ 
-                           "Shape File path: " @ %assetDef.getShapeFile();
+                           "Shape File path: " @ %assetDef.getShapePath();
                            
    if(%this.selectMode)
    {
@@ -336,6 +293,90 @@ function AssetBrowser::buildShapeAssetPreview(%this, %assetDef, %previewData)
          %previewData.doubleClickCommand = "AssetBrowser.onShapeAssetEditorDropped( "@%assetDef@" );";
       }
    }
+}
+
+function AssetBrowser::generateShapeAssetPreviewImage(%this, %previewButton, %forceRegenerate)
+{
+   if(%forceRegenerate $= "")
+      %forceRegenerate = false;
+      
+   %assetId = %previewButton.moduleName @ ":" @ %previewButton.assetName;
+      
+   %assetDef = AssetDatabase.acquireAsset(%assetId);
+      
+   %module = %this.dirHandler.getModuleFromAddress(makeRelativePath(filePath(%assetDef.getShapePath())));
+   %previewPath = "tools/resources/previewCache/" @ %module.moduleId @ "/";
+   
+   if(!IsDirectory(%previewPath))
+   {
+      %this.dirHandler.createFolder(%previewPath);
+   }
+   
+   %generatePreview = false;
+   
+   %previewFilePath = %previewPath @ %assetDef.assetName @ "_Preview.dds";
+   if(!isFile(%previewFilePath) || (compareFileTimes(%assetDef.getShapePath(), %previewFilePath) == 1))
+   {
+      %generatePreview = true;
+   }
+   
+   %previewAssetName = %module.moduleId @ "_" @ %assetDef.assetName @ "_PreviewImage";
+   
+   if(%generatePreview || %forceRegenerate)
+   {
+      //real fast, we'll be 100% sure that the image resource we need is loaded
+      
+      %matSlot0AssetId = %assetDef.materialSlot0;
+      if(AssetDatabase.isDeclaredAsset(%matSlot0AssetId))
+      {
+         %matAsset = AssetDatabase.acquireAsset(%matSlot0AssetId);
+         AssetDatabase.releaseAsset(%matSlot0AssetId);
+      }
+      
+      //This is slightly hacky, but we're going to utilize the imposter/last detail system
+      //to generate our previews for us and then clean up the unneeded bits
+      
+      %filePath = %assetDef.generateCachedPreviewImage();
+      
+      pathCopy(%filePath, %previewFilePath, false);
+      fileDelete(%filePath); //cleanup
+      
+      if(!AssetDatabase.isDeclaredAsset("ToolsModule:" @ %previewAssetName))
+      {
+         %previewAsset = new ImageAsset()
+         {
+            assetName = %previewAssetName;
+            versionId = 1;
+            imageFile = fileName(%previewFilePath);
+         };
+         
+         %previewImgAssetPath = %previewPath @ %previewAsset.assetName @ ".asset.taml";
+         %assetImportSuccessful = TAMLWrite(%previewAsset, %previewImgAssetPath); 
+         
+         %toolsModuleDef = ModuleDatabase.findModule("ToolsModule",1);
+            
+         %success = AssetDatabase.addDeclaredAsset(%toolsModuleDef, %previewImgAssetPath);
+      
+         if(!%success)
+         {
+            return false; //failed to register the preview image for some reason?
+   }
+   }
+   
+      %previewButton.bitmapAsset = "ToolsModule:" @ %previewAssetName;
+      return true;
+   }
+   else
+   {
+      //just map the existing one then
+      if(AssetDatabase.isDeclaredAsset("ToolsModule:" @ %previewAssetName))
+      {
+         %previewButton.bitmapAsset = "ToolsModule:" @ %previewAssetName;
+         return true;
+      }
+   }
+   
+   return false;
 }
 
 function AssetBrowser::onShapeAssetEditorDropped(%this, %assetDef, %position)

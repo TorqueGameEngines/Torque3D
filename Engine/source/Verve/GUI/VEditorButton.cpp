@@ -186,7 +186,7 @@ void VEditorButton::onRender( Point2I offset, const RectI& updateRect )
         {
             RectI boundsRect( offset, getExtent() );
 
-            if ( mDepressed || mStateOn || mMouseOver )
+            if ( mDepressed || mStateOn || mHighlighted )
             {
                 renderFilledBorder( boundsRect, mProfile->mBorderColorHL, mProfile->mFillColorHL );
             }

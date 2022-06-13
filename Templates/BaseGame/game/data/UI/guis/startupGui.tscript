@@ -32,7 +32,7 @@ function loadStartup()
    // A list of the splash screens and logos
    // to cycle through. Note that they have to
    // be in consecutive numerical order
-   StartupGui.bitmap[0]     = "UI:background_dark_image";
+   StartupGui.bitmap[0]     = "UI:backgrounddark_image";
    StartupGui.logo[0]       = "UI:Torque_3D_logo_alt_image";
    StartupGui.logoPos[0]    = "178 251";
    StartupGui.logoExtent[0] = "443 139";

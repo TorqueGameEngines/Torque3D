@@ -160,7 +160,6 @@ class Vector
    void erase(U32 index, U32 count);
    void erase_fast(iterator);
    void clear();
-   void resetAndTreatAsScratchBuffer();
    void compact();
    void sort(compare_func f);
    void fill( const T& value );
@@ -527,15 +526,6 @@ template<class T> inline const T& Vector<T>::last() const
 template<class T> inline void Vector<T>::clear()
 {
    destroy(0, mElementCount);
-   mElementCount = 0;
-}
-
-/// This method sets the vector as its 0 and will overwrite memory on subsequent usage.
-/// Note that the current memory in use is never freed or deallocated, so only use this if the vector
-/// is being used as a scratch buffer only.
-template<class T> inline
-void Vector<T>::resetAndTreatAsScratchBuffer()
-{
    mElementCount = 0;
 }
 

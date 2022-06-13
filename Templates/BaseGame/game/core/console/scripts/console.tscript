@@ -53,25 +53,10 @@ function ConsoleEntry::eval()
    $Con::warnVoidAssignment = false;
 
    echo("==>" @ %text);
-   if(   !startsWith(%text, "function ")
-       && !startsWith(%text, "datablock ")
-       && !startsWith(%text, "foreach(")
-       && !startsWith(%text, "foreach$(")
-       && !startsWith(%text, "if(")
-       && !startsWith(%text, "while(")
-       && !startsWith(%text, "for(")
-       && !startsWith(%text, "switch(")
-       && !startsWith(%text, "switch$("))
-      %result = eval("return" SPC %text);
-   else
-      eval(%text);
+   eval(%text);
    $Con::warnVoidAssignment = %oldWarnVoidAssignment;
 
    ConsoleEntry.setValue("");
-
-   // Echo result.
-   if(%result !$= "")
-      echo(%result);
 }
 
 function ToggleConsole(%make)

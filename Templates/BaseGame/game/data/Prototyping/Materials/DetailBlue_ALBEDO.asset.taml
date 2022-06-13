@@ -1,9 +1,4 @@
 <ImageAsset
-    canSave="true"
-    canSaveDynamicFields="true"
     AssetName="DetailBlue_ALBEDO"
     imageFile="@assetFile=DetailBlue.png"
-    UseMips="true"
-    isHDRImage="false"
-    imageType="Albedo"
-    originalFilePath="D:/Gamedev/art/Blockout/DetailBlue.png" />
+    originalFilePath="C:/dev/T3D/PRs/MiscFixes20220525/Templates/BaseGame/game/data/Prototyping/Materials/DetailBlue.png"/>

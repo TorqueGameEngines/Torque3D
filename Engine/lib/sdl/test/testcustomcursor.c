@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -128,7 +128,7 @@ init_system_cursor(const char *image[])
       }
     }
   }
-  sscanf(image[4+row], "%d,%d", &hot_x, &hot_y);
+  SDL_sscanf(image[4+row], "%d,%d", &hot_x, &hot_y);
   return SDL_CreateCursor(data, mask, 32, 32, hot_x, hot_y);
 }
 
@@ -160,7 +160,28 @@ loop()
                 if (current_cursor == SDL_arraysize(cursors)) {
                     current_cursor = 0;
                 }
+
                 SDL_SetCursor(cursors[current_cursor]);
+
+                if (current_cursor == 0) {
+                    SDL_Log("Custom cursor");
+                } else {
+                    switch ((SDL_SystemCursor) (current_cursor-1)) {
+                        case SDL_SYSTEM_CURSOR_ARROW:     SDL_Log("Arrow"); break;
+                        case SDL_SYSTEM_CURSOR_IBEAM:     SDL_Log("I-beam"); break;
+                        case SDL_SYSTEM_CURSOR_WAIT:      SDL_Log("Wait"); break;
+                        case SDL_SYSTEM_CURSOR_CROSSHAIR: SDL_Log("Crosshair"); break;
+                        case SDL_SYSTEM_CURSOR_WAITARROW: SDL_Log("Small wait cursor (or Wait if not available)"); break;
+                        case SDL_SYSTEM_CURSOR_SIZENWSE:  SDL_Log("Double arrow pointing northwest and southeast"); break;
+                        case SDL_SYSTEM_CURSOR_SIZENESW:  SDL_Log("Double arrow pointing northeast and southwest"); break;
+                        case SDL_SYSTEM_CURSOR_SIZEWE:    SDL_Log("Double arrow pointing west and east"); break;
+                        case SDL_SYSTEM_CURSOR_SIZENS:    SDL_Log("Double arrow pointing north and south"); break;
+                        case SDL_SYSTEM_CURSOR_SIZEALL:   SDL_Log("Four pointed arrow pointing north, south, east, and west"); break;
+                        case SDL_SYSTEM_CURSOR_NO:        SDL_Log("Slashed circle or crossbones"); break;
+                        case SDL_SYSTEM_CURSOR_HAND:      SDL_Log("Hand"); break;
+                        default: SDL_Log("UNKNOWN CURSOR TYPE, FIX THIS PROGRAM."); break;
+                    }
+                }
             } else {
                 show_cursor = !show_cursor;
                 SDL_ShowCursor(show_cursor);

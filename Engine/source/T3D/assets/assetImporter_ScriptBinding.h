@@ -92,7 +92,9 @@ DefineEngineMethod(AssetImporter, resolveAssetItemIssues, void, (AssetImportObje
 DefineEngineMethod(AssetImporter, importAssets, void, (),,
    "Runs the actual import action on the items.")
 {
-   return object->importAssets();
+   object->importAssets();
+
+   object->acquireAssets();
 }
 
 DefineEngineMethod(AssetImporter, getAssetItemCount, S32, (),,

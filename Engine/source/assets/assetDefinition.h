@@ -35,8 +35,8 @@
 #include "console/sim.h"
 #endif
 
-#ifndef _SIMOBJECT_H_
-#include "console/simObject.h"
+#ifndef _SIMSET_H_
+#include "console/simSet.h"
 #endif
 
 #ifndef _CONSOLEOBJECT_H_

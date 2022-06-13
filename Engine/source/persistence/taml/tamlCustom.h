@@ -640,7 +640,7 @@ public:
 private:
     inline TamlCustomField* registerField( TamlCustomField* pCustomField )
     {
-#if TORQUE_DEBUG
+#ifdef TORQUE_DEBUG
         // Ensure a field name conflict does not exist.
         for( Vector<TamlCustomField*>::iterator nodeFieldItr = mFields.begin(); nodeFieldItr != mFields.end(); ++nodeFieldItr )
         {
@@ -724,7 +724,7 @@ public:
         // Set ignore-empty flag.
         pCustomNode->setIgnoreEmpty( ignoreEmpty );
 
-#if TORQUE_DEBUG
+#ifdef TORQUE_DEBUG
         // Ensure a node name conflict does not exist.
         for( TamlCustomNodeVector::iterator nodeItr = mNodes.begin(); nodeItr != mNodes.end(); ++nodeItr )
         {

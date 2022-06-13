@@ -1,0 +1,14 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="ZoneProxyMaterial"
+    materialDefinitionName="ZoneProxyMaterial"
+    VersionId="1">
+    <Material
+        Name="ZoneProxyMaterial">
+        <Material.Stages>
+            <Stages_beginarray
+                DiffuseMapAsset="ToolsModule:zoneProxyImage_image"/>
+        </Material.Stages>
+    </Material>
+</MaterialAsset>

@@ -41,10 +41,6 @@
 #include "renderInstance/renderPassManager.h"
 #endif
 
-#ifndef RENDER_PROBE_MGR_H
-#include "renderInstance/renderProbeMgr.h"
-#endif
-
 class BaseMatInstance;
 
 //-----------------------------------------------------------------------------
@@ -72,6 +68,67 @@ public:
       StaticCubemap = 1,
       BakedCubemap = 2,
       DynamicCubemap = 5,
+   };
+
+   /// <summary>
+   /// This contains all the important data the Probe uses for rendering.
+   /// </summary>
+   struct ProbeInfo
+   {
+      bool mIsEnabled;
+
+      MatrixF mTransform;
+
+      ReflectionProbe* mObject;
+
+      F32 mRadius;
+
+      bool mDirty;
+
+      Box3F mBounds;
+      Point3F mExtents;
+      Point3F mPosition;
+      Point3F mProbeRefOffset;
+      Point3F mProbeRefScale;
+      F32 mAtten;
+
+      F32 mScore;
+
+      GFXCubemapHandle mPrefilterCubemap;
+      GFXCubemapHandle mIrradianceCubemap;
+
+      /// The priority of this light used for
+      /// light and shadow scoring.
+      F32 mPriority;
+
+      enum ProbeShapeType
+      {
+         Box = 0,            
+         Sphere = 1,               
+         Skylight = 2
+      };
+
+      ProbeShapeType mProbeShapeType;
+
+   public:
+
+      ProbeInfo() : mScore(0) {}
+      ~ProbeInfo() {}
+
+      // Copies data passed in from light
+      void set(const ProbeInfo* probeInfo);
+
+      // Accessors
+      const MatrixF& getTransform() const { return mTransform; }
+      void setTransform(const MatrixF& xfm) { mTransform = xfm; }
+
+      Point3F getPosition() const { return mPosition; }
+      void setPosition(const Point3F& pos) { mPosition = pos; }
+
+      void setPriority(F32 priority) { mPriority = priority; }
+      F32 getPriority() const { return mPriority; }
+
+      void clear();
    };
 
 protected:
@@ -124,7 +181,7 @@ protected:
    /// <summary>
    /// The shape of the probe
    /// </summary>
-   ProbeRenderInst::ProbeShapeType mProbeShapeType;
+   ProbeInfo::ProbeShapeType mProbeShapeType;
 
    /// <summary>
    /// This is effectively a packed cache of the probe data actually utilized for rendering.
@@ -132,7 +189,7 @@ protected:
    /// When the manager goes to render it has the compacted data to read over more efficiently for setting up what probes should
    /// Actually render in that frame
    /// </summary>
-   ProbeRenderInst mProbeInfo;
+   ProbeInfo mProbeInfo;
 
    /// <summary>
    /// Used to dictate what sort of cubemap the probes use when using IBL
@@ -166,14 +223,13 @@ protected:
    CubemapData *mStaticCubemap;
    GFXCubemapHandle  mDynamicCubemap;
 
-   String cubeDescName;
-   U32 cubeDescId;
-   ReflectorDesc *reflectorDesc;
+   //String cubeDescName;
+   //U32 cubeDescId;
+   //ReflectorDesc *reflectorDesc;
 
    //Utilized in dynamic reflections
    //CubeReflector mCubeReflector;
 
-   ///Prevents us from saving out the cubemaps(for now) but allows us the full HDR range on the in-memory cubemap captures
    bool mUseHDRCaptures;
 
    //irridiance resources
@@ -196,7 +252,6 @@ protected:
    U32 mDynamicLastBakeMS;
    U32 mRefreshRateMS;
 
-   F32 mMaxDrawDistance;
 
    bool mResourcesCreated;
    U32 mCaptureMask;
@@ -313,7 +368,7 @@ public:
    void bake();
 };
 
-typedef ProbeRenderInst::ProbeShapeType ReflectProbeType;
+typedef ReflectionProbe::ProbeInfo::ProbeShapeType ReflectProbeType;
 DefineEnumType(ReflectProbeType);
 
 typedef ReflectionProbe::ReflectionModeType ReflectionModeEnum;

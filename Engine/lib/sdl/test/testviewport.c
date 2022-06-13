@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -21,7 +21,7 @@
 
 #include "SDL_test.h"
 #include "SDL_test_common.h"
-
+#include "testutils.h"
 
 static SDLTest_CommonState *state;
 
@@ -42,57 +42,8 @@ quit(int rc)
     exit(rc);
 }
 
-int
-LoadSprite(char *file, SDL_Renderer *renderer)
-{
-    SDL_Surface *temp;
-
-    /* Load the sprite image */
-    temp = SDL_LoadBMP(file);
-    if (temp == NULL) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't load %s: %s\n", file, SDL_GetError());
-        return (-1);
-    }
-    sprite_w = temp->w;
-    sprite_h = temp->h;
-
-    /* Set transparent pixel as the pixel at (0,0) */
-    if (temp->format->palette) {
-        SDL_SetColorKey(temp, SDL_TRUE, *(Uint8 *) temp->pixels);
-    } else {
-        switch (temp->format->BitsPerPixel) {
-        case 15:
-            SDL_SetColorKey(temp, SDL_TRUE,
-                            (*(Uint16 *) temp->pixels) & 0x00007FFF);
-            break;
-        case 16:
-            SDL_SetColorKey(temp, SDL_TRUE, *(Uint16 *) temp->pixels);
-            break;
-        case 24:
-            SDL_SetColorKey(temp, SDL_TRUE,
-                            (*(Uint32 *) temp->pixels) & 0x00FFFFFF);
-            break;
-        case 32:
-            SDL_SetColorKey(temp, SDL_TRUE, *(Uint32 *) temp->pixels);
-            break;
-        }
-    }
-
-    /* Create textures from the image */
-    sprite = SDL_CreateTextureFromSurface(renderer, temp);
-    if (!sprite) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create texture: %s\n", SDL_GetError());
-        SDL_FreeSurface(temp);
-        return (-1);
-    }
-    SDL_FreeSurface(temp);
-
-    /* We're ready to roll. :) */
-    return (0);
-}
-
 void
-DrawOnViewport(SDL_Renderer * renderer, SDL_Rect viewport)
+DrawOnViewport(SDL_Renderer * renderer)
 {    
     SDL_Rect rect;
 
@@ -174,7 +125,7 @@ loop()
             continue;
 
         /* Draw using viewport */
-        DrawOnViewport(state->renderers[i], viewport);
+        DrawOnViewport(state->renderers[i]);
 
         /* Update the screen! */
         if (use_target) {
@@ -229,7 +180,9 @@ main(int argc, char *argv[])
         quit(2);
     }
 
-    if (LoadSprite("icon.bmp", state->renderers[0]) < 0) {
+    sprite = LoadTexture(state->renderers[0], "icon.bmp", SDL_TRUE, &sprite_w, &sprite_h);
+
+    if (sprite == NULL) {
         quit(2);
     }
 

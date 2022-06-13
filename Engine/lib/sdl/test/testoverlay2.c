@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -25,6 +25,7 @@
 #include "SDL.h"
 
 #include "testyuv_cvt.h"
+#include "testutils.h"
 
 #define MOOSEPIC_W 64
 #define MOOSEPIC_H 88
@@ -144,7 +145,6 @@ SDL_Texture *MooseTexture;
 SDL_Rect displayrect;
 int window_w;
 int window_h;
-SDL_Window *window;
 SDL_Renderer *renderer;
 int paused = 0;
 int i;
@@ -244,6 +244,7 @@ main(int argc, char **argv)
     int fps = 12;
     int nodelay = 0;
     int scale = 5;
+    char *filename = NULL;
 
     /* Enable standard application logging */
     SDL_LogSetPriority(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO);
@@ -316,7 +317,13 @@ main(int argc, char **argv)
     }
 
     /* load the trojan moose images */
-    handle = SDL_RWFromFile("moose.dat", "rb");
+    filename = GetResourceFilename(NULL, "moose.dat");
+    if (filename == NULL) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Out of memory\n");
+        return -1;
+    }
+    handle = SDL_RWFromFile(filename, "rb");
+    SDL_free(filename);
     if (handle == NULL) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Can't find the file moose.dat !\n");
         SDL_free(RawMooseData);

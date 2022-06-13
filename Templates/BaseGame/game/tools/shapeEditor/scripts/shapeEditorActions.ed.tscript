@@ -301,7 +301,6 @@ function ActionEditNodeTransform::undo( %this )
 // Add sequence
 function onAddAnimationAssetShapeEditor(%selectedAnimation)
 {
-   echo("SELECTED MUH ASSET");
    ShapeEditor.doAddSequence(%selectedAnimation, 0, 0, 0);
 }
 

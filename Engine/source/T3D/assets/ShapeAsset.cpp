@@ -51,6 +51,9 @@
 #endif
 #include "util/imposterCapture.h"
 
+#include "ts/tsShapeInstance.h"
+#include "gfx/bitmap/imageUtils.h"
+
 StringTableEntry ShapeAsset::smNoShapeAssetFallback = NULL;
 
 //-----------------------------------------------------------------------------
@@ -470,6 +473,10 @@ StringTableEntry ShapeAsset::getAssetIdByFilename(StringTableEntry fileName)
       //acquire and bind the asset, and return it out
       shapeAssetId = query.mAssetList[0];
    }
+   else
+   {
+      AssetPtr<ShapeAsset> shapeAsset = shapeAssetId; //ensures the fallback is loaded
+   }
 
    return shapeAssetId;
 }
@@ -560,25 +567,97 @@ ShapeAnimationAsset* ShapeAsset::getAnimation(S32 index)
 }
 
 #ifdef TORQUE_TOOLS
-const char* ShapeAsset::generateCachedPreviewImage(S32 resolution)
+const char* ShapeAsset::generateCachedPreviewImage(S32 resolution, String overrideMaterial)
 {
    if (!mShape)
       return "";
 
-   TSLastDetail* dt = new TSLastDetail(mShape,
-      mFilePath,
-      1,
-      0,
-      0,
-      false,
-      0,
-      resolution);
+   // We're gonna render... make sure we can.
+   bool sceneBegun = GFX->canCurrentlyRender();
+   if (!sceneBegun)
+      GFX->beginScene();
 
-   dt->update();
+   // We need to create our own instance to render with.
+   TSShapeInstance* shape = new TSShapeInstance(mShape, true);
 
-   delete dt;
+   if (overrideMaterial.isNotEmpty())
+   {
+      Material *tMat = dynamic_cast<Material*>(Sim::findObject(overrideMaterial));
+      if (tMat)
+         shape->reSkin(tMat->mMapTo, mShape->materialList->getMaterialName(0));
+   }
+   // Animate the shape once.
+   shape->animate(0);
 
-   return mFilePath;
+   // So we don't have to change it everywhere.
+   const GFXFormat format = GFXFormatR8G8B8A8;
+
+   GBitmap* imposter = NULL;
+   GBitmap* imposterNrml = NULL;
+
+   ImposterCapture* imposterCap = new ImposterCapture();
+
+   static const MatrixF topXfm(EulerF(-M_PI_F / 2.0f, 0, 0));
+   static const MatrixF bottomXfm(EulerF(M_PI_F / 2.0f, 0, 0));
+
+   MatrixF angMat;
+
+   S32 mip = 0;
+
+   PROFILE_START(ShapeAsset_generateCachedPreviewImage);
+
+   //dMemset(destBmp.getWritableBits(mip), 0, destBmp.getWidth(mip) * destBmp.getHeight(mip) * GFXFormat_getByteSize(format));
+
+   F32 rotX = -(mDegToRad(60.0) - 0.5f * M_PI_F);
+   F32 rotZ = -(mDegToRad(45.0) - 0.5f * M_PI_F);
+
+   // We capture the images in a particular order which must
+   // match the order expected by the imposter renderer.
+
+   imposterCap->begin(shape, 0, resolution, mShape->mRadius, mShape->center);
+
+   angMat.mul(MatrixF(EulerF(rotX, 0, 0)),
+      MatrixF(EulerF(0, 0, rotZ)));
+
+   imposterCap->capture(angMat, &imposter, &imposterNrml);
+
+   imposterCap->end();
+
+   PROFILE_END(); // ShapeAsset_generateCachedPreviewImage
+
+   delete imposterCap;
+   delete shape;
+
+   String dumpPath = String(mFilePath) + "_Preview.dds";
+
+   char* returnBuffer = Con::getReturnBuffer(128);
+   dSprintf(returnBuffer, 128, "%s", dumpPath.c_str());
+
+   /*FileStream stream;
+   if (stream.open(dumpPath, Torque::FS::File::Write))
+      destBmp.writeBitmap("png", stream);
+   stream.close();*/
+   
+   DDSFile* ddsDest = DDSFile::createDDSFileFromGBitmap(imposter);
+   ImageUtil::ddsCompress(ddsDest, GFXFormatBC2);
+
+   // Finally save the imposters to disk.
+   FileStream fs;
+   if (fs.open(returnBuffer, Torque::FS::File::Write))
+   {
+      ddsDest->write(fs);
+      fs.close();
+   }
+
+   delete ddsDest;
+   delete imposter;
+   delete imposterNrml;
+
+   // If we did a begin then end it now.
+   if (!sceneBegun)
+      GFX->endScene();
+
+   return returnBuffer;
 }
 #endif
 
@@ -604,7 +683,7 @@ DefineEngineMethod(ShapeAsset, getAnimation, ShapeAnimationAsset*, (S32 index), 
    return object->getAnimation(index);
 }
 
-DefineEngineMethod(ShapeAsset, getShapeFile, const char*, (), ,
+DefineEngineMethod(ShapeAsset, getShapePath, const char*, (), ,
    "Gets the shape's file path\n"
    "@return The filename of the shape file")
 {
@@ -625,9 +704,12 @@ DefineEngineMethod(ShapeAsset, getStatusString, String, (), , "get status string
 
 
 #ifdef TORQUE_TOOLS
-DefineEngineMethod(ShapeAsset, generateCachedPreviewImage, const char*, (S32 resolution), (256), "")
+DefineEngineMethod(ShapeAsset, generateCachedPreviewImage, const char*, (S32 resolution, const char* overrideMaterialName), (256, ""),
+   "Generates a baked preview image of the given shapeAsset. Only really used for generating Asset Browser icons.\n"
+   "@param resolution Optional field for what resolution to bake the preview image at. Must be pow2\n"
+   "@param overrideMaterialName Optional field for overriding the material used when rendering the shape for the bake.")
 {
-   return object->generateCachedPreviewImage(resolution);
+   return object->generateCachedPreviewImage(resolution, overrideMaterialName);
 }
 
 DefineEngineStaticMethod(ShapeAsset, getAssetIdByFilename, const char*, (const char* filePath), (""),

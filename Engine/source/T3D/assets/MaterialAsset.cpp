@@ -154,8 +154,9 @@ void MaterialAsset::initPersistFields()
    Parent::initPersistFields();
 
    //addField("shaderGraph", TypeRealString, Offset(mShaderGraphFile, MaterialAsset), "");
-   addProtectedField("scriptFile", TypeAssetLooseFilePath, Offset(mScriptFile, MaterialAsset),
-      &setScriptFile, &getScriptFile, "Path to the file containing the material definition.");
+   //addProtectedField("scriptFile", TypeAssetLooseFilePath, Offset(mScriptFile, MaterialAsset),
+   //   &setScriptFile, &getScriptFile, "Path to the file containing the material definition.");
+   addField("scriptFile", TypeAssetLooseFilePath, Offset(mScriptFile, MaterialAsset), "");
 
    addField("materialDefinitionName", TypeString, Offset(mMatDefinitionName, MaterialAsset), "Name of the material definition this asset is for.");
 }
@@ -173,7 +174,11 @@ void MaterialAsset::initializeAsset()
       return;
    }
 
-   if (Torque::FS::IsScriptFile(mScriptPath))
+   if (size() != 0 && mScriptPath == StringTable->EmptyString())
+   {
+      mLoadedState = EmbeddedDefinition;
+   }
+   else if (Torque::FS::IsScriptFile(mScriptPath))
    {
       if (!Sim::findObject(mMatDefinitionName))
       {
@@ -230,7 +235,6 @@ void MaterialAsset::setScriptFile(const char* pScriptFile)
    // Sanity!
    AssertFatal(pScriptFile != NULL, "Cannot use a NULL script file.");
 
-   // Fetch image file.
    pScriptFile = StringTable->insert(pScriptFile, true);
 
    // Update.
@@ -245,9 +249,28 @@ void MaterialAsset::setScriptFile(const char* pScriptFile)
 void MaterialAsset::loadMaterial()
 {
    if (mMaterialDefinition)
-      SAFE_DELETE(mMaterialDefinition);
+   {
+      mMaterialDefinition->safeDeleteObject();
+   }
 
-   if ((mLoadedState == ScriptLoaded || mLoadedState == DefinitionAlreadyExists) && mMatDefinitionName != StringTable->EmptyString())
+   if (mLoadedState == EmbeddedDefinition)
+   {
+      if (size() != 0)
+      {
+         for (U32 i = 0; i < size(); i++)
+         {
+            mMaterialDefinition = dynamic_cast<Material*>(getObject(i));
+            if (mMaterialDefinition)
+            {
+               mLoadedState = Ok;
+               mMaterialDefinition->setInternalName(getAssetId());
+               mMaterialDefinition->reload();
+               return;
+            }
+         }
+      }
+   }
+   else if ((mLoadedState == ScriptLoaded || mLoadedState == DefinitionAlreadyExists) && mMatDefinitionName != StringTable->EmptyString())
    {
       Material* matDef;
       if (!Sim::findObject(mMatDefinitionName, matDef))
@@ -260,7 +283,7 @@ void MaterialAsset::loadMaterial()
       mMaterialDefinition = matDef;
 
       mLoadedState = Ok;
-
+      mMaterialDefinition->setInternalName(getAssetId());
       mMaterialDefinition->reload();
       return;
    }
@@ -296,11 +319,11 @@ U32 MaterialAsset::getAssetByMaterialName(StringTableEntry matName, AssetPtr<Mat
       //handle noshape not being loaded itself
       if ((*matAsset)->mLoadedState == BadFileReference)
       {
-         Con::warnf("ShapeAsset::getAssetByMaterialName - Finding of associated with aterial name %s failed, and fallback asset reported error of Bad File Reference.", matName);
+         Con::warnf("MaterialAsset::getAssetByMaterialName - Finding of associated with aterial name %s failed, and fallback asset reported error of Bad File Reference.", matName);
          return AssetErrCode::BadFileReference;
       }
 
-      Con::warnf("ShapeAsset::getAssetByMaterialName - Finding of associated with aterial name %s failed, utilizing fallback asset", matName);
+      Con::warnf("MaterialAsset::getAssetByMaterialName - Finding of associated with aterial name %s failed, utilizing fallback asset", matName);
 
       (*matAsset)->mLoadedState = AssetErrCode::UsingFallback;
       return AssetErrCode::UsingFallback;
@@ -388,6 +411,17 @@ U32 MaterialAsset::getAssetById(StringTableEntry assetId, AssetPtr<MaterialAsset
    }
 }
 
+SimObjectPtr<Material> MaterialAsset::findMaterialDefinitionByAssetId(StringTableEntry assetId)
+{
+   SimSet* matSet = MATMGR->getMaterialSet();
+   if (matSet)
+   {
+      SimObjectPtr<Material> matDef = dynamic_cast<Material*>(matSet->findObjectByInternalName(assetId));
+      return matDef;
+   }
+   return nullptr;
+}
+
 #ifdef TORQUE_TOOLS
 DefineEngineStaticMethod(MaterialAsset, getAssetIdByMaterialName, const char*, (const char* materialName), (""),
    "Queries the Asset Database to see if any asset exists that is associated with the provided material name.\n"
@@ -396,9 +430,21 @@ DefineEngineStaticMethod(MaterialAsset, getAssetIdByMaterialName, const char*, (
    return MaterialAsset::getAssetIdByMaterialName(StringTable->insert(materialName));
 }
 
+//MaterialAsset::findMaterialDefinitionByAssetId("Prototyping:Detail")
+DefineEngineStaticMethod(MaterialAsset, findMaterialDefinitionByAssetId, S32, (const char* assetId), (""),
+   "Queries the MaterialSet to see if any MaterialDefinition exists that is associated to the provided assetId.\n"
+   "@return The MaterialDefinition Id associated to the assetId, if any")
+{
+   SimObjectPtr<Material> matDef = MaterialAsset::findMaterialDefinitionByAssetId(StringTable->insert(assetId));
+   if (matDef.isNull())
+      return SimObjectId(0);
+   else
+      return matDef->getId();
+}
+
+
 DefineEngineMethod(MaterialAsset, getScriptPath, const char*, (), ,
-   "Queries the Asset Database to see if any asset exists that is associated with the provided material name.\n"
-   "@return The AssetId of the associated asset, if any.")
+   "Gets the script file path for the asset.")
 {
    return object->getScriptPath();
 }

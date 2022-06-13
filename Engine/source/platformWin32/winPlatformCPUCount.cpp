@@ -26,6 +26,7 @@
 #if defined( TORQUE_OS_WIN )
 
 #include "platform/platformCPUCount.h"
+#include "console/console.h"
 #include <windows.h>
 #include <intrin.h>
 #include <stdio.h>
@@ -52,12 +53,10 @@ namespace CPUInfo {
       return bitSetCount;
    }
 
-   EConfig CPUCount( U32& TotAvailLogical, U32& TotAvailCore, U32& PhysicalNum )
+   EConfig CPUCount( U32& TotAvailLogical, U32& TotAvailCore )
    {
-      EConfig StatusFlag = CONFIG_UserConfigIssue;
       TotAvailLogical = 0;
       TotAvailCore = 0;
-      PhysicalNum = 0;
 
       PSYSTEM_LOGICAL_PROCESSOR_INFORMATION buffer = NULL;
       DWORD returnLength = 0;
@@ -68,42 +67,37 @@ namespace CPUInfo {
 
       rc = GetLogicalProcessorInformation( buffer, &returnLength );      
 
+      // if we fail, assume single threaded
       if( FALSE == rc )
       {           
          free( buffer );
-         return StatusFlag;
+         Con::errorf("Unable to determine CPU Count, assuming 1 core");
+         TotAvailCore = 1;
+         TotAvailLogical = 1;
+         return CONFIG_SingleCoreAndHTNotCapable;
       }      
 
+#pragma push
+#pragma warning (disable: 6011)
       PSYSTEM_LOGICAL_PROCESSOR_INFORMATION ptr = buffer;
 
       DWORD byteOffset = 0;
       while( byteOffset + sizeof( SYSTEM_LOGICAL_PROCESSOR_INFORMATION ) <= returnLength )
       {
-         switch( ptr->Relationship )
-         {         
-
-         case RelationProcessorCore:
+         if (ptr->Relationship == RelationProcessorCore)
+         {
             TotAvailCore++;
-
-            // A hyperthreaded core supplies more than one logical processor.
-            TotAvailLogical += CountSetBits( ptr->ProcessorMask );
-            break;         
-
-         case RelationProcessorPackage:
-            // Logical processors share a physical package.
-            PhysicalNum++;
-            break;
-
-         default:            
-            break;
+            TotAvailLogical += CountSetBits(ptr->ProcessorMask);
          }
+
          byteOffset += sizeof( SYSTEM_LOGICAL_PROCESSOR_INFORMATION );
          ptr++;
-      }      
+      }
 
       free( buffer );
+#pragma pop
 
-      StatusFlag = CONFIG_SingleCoreAndHTNotCapable;
+      EConfig StatusFlag = CONFIG_SingleCoreAndHTNotCapable;
 
       if( TotAvailCore == 1 && TotAvailLogical > TotAvailCore )
          StatusFlag = CONFIG_SingleCoreHTEnabled;

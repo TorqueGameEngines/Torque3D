@@ -32,6 +32,7 @@
 #include "console/console.h"
 #include "platform/profiler.h"
 #include "console/engineAPI.h"
+#include "gfx/bitmap/ddsFile.h"
 
 using namespace Torque;
 
@@ -1361,44 +1362,78 @@ DefineEngineFunction( getBitmapInfo, String, ( const char *filename ),,
                                           image->getFormat());
 }
 
-DefineEngineFunction(saveScaledImage, bool, (const char* bitmapSource, const char* bitmapDest, S32 resolutionSize), ("", "", 512),
-   "Returns image info in the following format: width TAB height TAB bytesPerPixel TAB format. "
-   "It will return an empty string if the file is not found.\n"
-   "@ingroup Rendering\n")
+DefineEngineFunction(saveScaledImage, bool, (const char* bitmapSource, const char* bitmapDest, S32 resolutionSize), ("", "", 256),
+   "Loads an image from the source path, and scales it down to the target resolution before"
+   "Saving it out to the destination path.\n")
 {
-   Resource<GBitmap> image = GBitmap::load(bitmapSource);
-   if (!image)
-      return false;
+   bool isDDS = false;
 
-   Torque::Path sourcePath = Torque::Path(bitmapSource);
-
-   /*if (String("dds").equal(sourcePath.getExtension(), String::NoCase))
+   if (bitmapSource == 0 || bitmapSource[0] == '\0' || bitmapDest == 0 || bitmapDest[0] == '\0')
    {
-      dds = DDSFile::load(correctPath, scalePower);
+      return false;
+   }
+
+   if (!Platform::isFile(bitmapSource))
+   {
+      return false;
+   }
+
+   //First, gotta check the extension, as we have some extra work to do if it's
+   //a DDS file
+   const char* ret = dStrrchr(bitmapSource, '.');
+   if (ret)
+   {
+      if (String::ToLower(ret) == String(".dds"))
+         isDDS = true;
+   }
+   else
+   {
+      return false; //no extension? bail out
+   }
+
+   GBitmap* image = NULL;
+   if (isDDS)
+   {
+      Resource<DDSFile> dds = DDSFile::load(bitmapSource, 0);
       if (dds != NULL)
       {
+         image = new GBitmap();
          if (!dds->decompressToGBitmap(image))
          {
             delete image;
             image = NULL;
-            return false;
          }
       }
-   }*/
-   if (isPow2(image->getWidth())&& isPow2(image->getHeight()))
+   }
+   else
+   {
+      Resource<GBitmap> resImage = GBitmap::load(bitmapSource);
+      image = new GBitmap(*resImage);
+   }
+
+   if (!image)
+      return false;
+   Torque::Path sourcePath = Torque::Path(bitmapSource);
+
+   if (isPow2(image->getWidth()) && isPow2(image->getHeight()))
       image->extrudeMipLevels();
 
    U32 mipCount = image->getNumMipLevels();
-   U32 targetMips = mFloor(mLog2((F32)resolutionSize)) + 1;
+   U32 targetMips = mFloor(mLog2((F32)(resolutionSize ? resolutionSize : 256))) + 1;
 
    if (mipCount > targetMips)
    {
       image->chopTopMips(mipCount - targetMips);
    }
 
+   //TODO: support different format targets, for now we just force
+   //to png for simplicity
+   Torque::Path destinationPath = Torque::Path(bitmapDest);
+   destinationPath.setExtension("png");
+
    // Open up the file on disk.
    FileStream fs;
-   if (!fs.open(bitmapDest, Torque::FS::File::Write))
+   if (!fs.open(destinationPath.getFullPath(), Torque::FS::File::Write))
    {
       Con::errorf("saveScaledImage() - Failed to open output file '%s'!", bitmapDest);
       return false;

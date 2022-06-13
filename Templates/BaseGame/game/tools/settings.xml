@@ -39,11 +39,18 @@
         <Group
             name="Browser">
             <Setting
+				name="doubleClickAction">Edit Asset</Setting>
+            <Setting
                 name="previewTileSize">1</Setting>
             <Setting
                 name="showCoreModule">1</Setting>
             <Setting
                 name="showToolsModule">1</Setting>
+        </Group>
+        <Group
+            name="New">
+            <Setting
+                name="defaultModule">ExampleModule</Setting>
         </Group>
     </Group>
     <Group
@@ -364,13 +371,9 @@
         <Setting
             name="forceSidebarToSide">1</Setting>
         <Setting
-            name="lastEditedLevel">FPSGameplay:EmptyLevel</Setting>
-        <Setting
             name="orthoFOV">4.60158</Setting>
         <Setting
             name="orthoShowGrid">1</Setting>
-        <Setting
-            name="recentLevelsList">FPSGameplay:EmptyLevel,FPSGameplay:EmptyTerrain,pbr:PbrMatTestLevel,TTR:DasBootLevel</Setting>
         <Setting
             name="startupMode">Blank Level</Setting>
         <Setting

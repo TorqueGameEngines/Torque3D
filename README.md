@@ -1,28 +1,37 @@
-# Torque 3D
+# Torque3D
 
-MIT Licensed Open Source version of [Torque 3D](http://torque3d.org) from [GarageGames](http://www.garagegames.com)
+MIT Licensed Open Source version of [Torque3D](https://torque3d.org) from [GarageGames](http://www.garagegames.com)
 
-[![GitHub tag](https://img.shields.io/github/tag/GarageGames/Torque3D.svg)](https://github.com/GarageGames/Torque3D/tags)
-[![GitHub release](https://img.shields.io/github/release/GarageGames/Torque3D.svg)](https://github.com/GarageGames/Torque3D/releases/latest)
-[![Github All Releases](https://img.shields.io/github/downloads/GarageGames/Torque3D/total.svg)](https://github.com/GarageGames/Torque3D/releases/latest)
+[![GitHub tag](https://img.shields.io/github/tag/TorqueGameEngines/Torque3D.svg)](https://github.com/TorqueGameEngines/Torque3D/tags)
+[![GitHub release](https://img.shields.io/github/release/TorqueGameEngines/Torque3D.svg)](https://github.com/TorqueGameEngines/Torque3D/releases/latest)
+[![Github All Releases](https://img.shields.io/github/downloads/TorqueGameEngines/Torque3D/total.svg)](https://github.com/TorqueGameEngines/Torque3D/releases/latest)
 
-[![Discord](https://img.shields.io/badge/Discord%20-%237289DA.svg?&logo=discord&logoColor=white)](https://discord.com/invite/qdAZxT4) [![IRC](https://img.shields.io/badge/irc-%23garagegames-green.svg)](https://kiwiirc.com/client/irc.maxgaming.net/?nick=wiki_user|?#garagegames) 
+[![Discord](https://img.shields.io/badge/Discord%20-%237289DA.svg?&logo=discord&logoColor=white)](https://discord.com/invite/qdAZxT4)
+[![IRC](https://img.shields.io/badge/irc-%23garagegames-green.svg)](https://kiwiirc.com/client/irc.maxgaming.net/?nick=wiki_user|?#garagegames) 
 
 ## More Information
 
-* [Homepage](http://torque3d.org)
+* [Homepage](https://torque3d.org)
 * [Torque 3D wiki](http://wiki.torque3d.org)
-* [Community forum](http://forums.torque3d.org)
-* [GarageGames forum](http://www.garagegames.com/community/forums)
-* [GarageGames professional services](http://services.garagegames.com/)
+* [Community forum](https://torque3d.org/forums)
+* [Roadmap](https://github.com/orgs/TorqueGameEngines/projects/1)
+* [Binaries](https://github.com/TorqueGameEngines/Torque3D-Binaries)
+* [Guide Docs](https://torque3d.org/docs/t3d/)
+* [Reference Docs](https://reference.torque3d.org/)
+* [Work Blog](https://torque3d.org/blogs/blog/1-work-blog/)
+
+**Extras:**
+[Torque3D Resources](https://github.com/Torque3DResources) | [Awesome Torque3D](https://github.com/TorqueGameEngines/awesome-torque3d)
 
 ## Pre-compiled Version
 
 In addition to GitHub we also have a couple of pre-packaged files for you to download if you would prefer to not compile the code yourself.
-They are available from the [downloads](http://wiki.torque3d.org/main:downloads) page on the wiki.
+They are available from the [Torque3D Binaries](https://github.com/TorqueGameEngines/Torque3D-Binaries) repo.
 
-## Related repositories
-
+### Legacy Links
+* [Legacy Repository](https://github.com/GarageGames/Torque3D)
+* [GarageGames forum](http://www.garagegames.com/community/forums)
+* [GarageGames professional services](http://services.garagegames.com/)
 * [Project Manager repository](https://github.com/GarageGames/Torque3D-ProjectManager)
 * [Offline documentation repository](https://github.com/Torque3D-GameEngine/Torque3D-Documentation)
 

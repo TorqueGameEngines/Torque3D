@@ -1,7 +1,7 @@
 singleton GuiControlProfile(AssetBrowserPreviewImageAsset : ToolsGuiDefaultProfile)
 {
-   fillColor = "128 128 128 255"; //hovered/selected
-   //fillColorNA = "230 126 0 255"; //fill color default
+   fillcolor = EditorSettings.value("Theme/windowBackgroundColor");
+   fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
    
    border = true;
    borderColor   = "230 126 0 255";
@@ -10,7 +10,8 @@ singleton GuiControlProfile(AssetBrowserPreviewImageAsset : ToolsGuiDefaultProfi
 
 singleton GuiControlProfile(AssetBrowserPreviewMaterialAsset : ToolsGuiDefaultProfile)
 {
-   fillColor = "128 128 128 255"; //hovered/selected
+   fillcolor = EditorSettings.value("Theme/windowBackgroundColor");
+   fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
    
    border = true;
    borderColor   = "0 100 0 255";
@@ -19,7 +20,8 @@ singleton GuiControlProfile(AssetBrowserPreviewMaterialAsset : ToolsGuiDefaultPr
 
 singleton GuiControlProfile(AssetBrowserPreviewShapeAsset : ToolsGuiDefaultProfile)
 {
-   fillColor = "128 128 128 255"; //hovered/selected
+   fillcolor = EditorSettings.value("Theme/windowBackgroundColor");
+   fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
    
    border = true;
    borderColor   = "0 0 200 255";
@@ -28,7 +30,8 @@ singleton GuiControlProfile(AssetBrowserPreviewShapeAsset : ToolsGuiDefaultProfi
 
 singleton GuiControlProfile(AssetBrowserPreviewShapeAnimationAsset : ToolsGuiDefaultProfile)
 {
-   fillColor = "128 128 128 255"; //hovered/selected
+   fillcolor = EditorSettings.value("Theme/windowBackgroundColor");
+   fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
    
    border = true;
    borderColor   = "0 0 200 255";
@@ -37,7 +40,8 @@ singleton GuiControlProfile(AssetBrowserPreviewShapeAnimationAsset : ToolsGuiDef
 
 singleton GuiControlProfile(AssetBrowserPreviewSoundAsset : ToolsGuiDefaultProfile)
 {
-   fillColor = "128 128 128 255"; //hovered/selected
+   fillcolor = EditorSettings.value("Theme/windowBackgroundColor");
+   fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
    
    border = true;
    borderColor   = "75 101 135 255";
@@ -46,7 +50,8 @@ singleton GuiControlProfile(AssetBrowserPreviewSoundAsset : ToolsGuiDefaultProfi
 
 singleton GuiControlProfile(AssetBrowserPreviewTerrainAsset : ToolsGuiDefaultProfile)
 {
-   fillColor = "128 128 128 255"; //hovered/selected
+   fillcolor = EditorSettings.value("Theme/windowBackgroundColor");
+   fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
    
    border = true;
    borderColor   = "200 198 198 255";
@@ -55,7 +60,8 @@ singleton GuiControlProfile(AssetBrowserPreviewTerrainAsset : ToolsGuiDefaultPro
 
 singleton GuiControlProfile(AssetBrowserPreviewTerrainMaterialAsset : ToolsGuiDefaultProfile)
 {
-   fillColor = "128 128 128 255"; //hovered/selected
+   fillcolor = EditorSettings.value("Theme/windowBackgroundColor");
+   fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
    
    border = true;
    borderColor   = "200 198 198 255";
@@ -64,7 +70,8 @@ singleton GuiControlProfile(AssetBrowserPreviewTerrainMaterialAsset : ToolsGuiDe
 
 singleton GuiControlProfile(AssetBrowserPreviewStateMachineAsset : ToolsGuiDefaultProfile)
 {
-   fillColor = "128 128 128 255"; //hovered/selected
+   fillcolor = EditorSettings.value("Theme/windowBackgroundColor");
+   fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
    
    border = true;
    borderColor   = "0 76 135 255";
@@ -73,7 +80,8 @@ singleton GuiControlProfile(AssetBrowserPreviewStateMachineAsset : ToolsGuiDefau
 
 singleton GuiControlProfile(AssetBrowserPreviewGUIAsset : ToolsGuiDefaultProfile)
 {
-   fillColor = "128 128 128 255"; //hovered/selected
+   fillcolor = EditorSettings.value("Theme/windowBackgroundColor");
+   fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
    
    border = true;
    borderColor   = "17 5 44 255";
@@ -82,7 +90,8 @@ singleton GuiControlProfile(AssetBrowserPreviewGUIAsset : ToolsGuiDefaultProfile
 
 singleton GuiControlProfile(AssetBrowserPreviewLevelAsset : ToolsGuiDefaultProfile)
 {
-   fillColor = "128 128 128 255"; //hovered/selected
+   fillcolor = EditorSettings.value("Theme/windowBackgroundColor");
+   fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
    
    border = true;
    borderColor   = "0 208 186 255";

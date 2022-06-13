@@ -1,7 +1,5 @@
 <GUIAsset
-    canSave="true"
-    canSaveDynamicFields="true"
     AssetName="ChooseLevelDlg"
-    scriptFile="@assetFile=chooseLevelDlg.gui"
+    scriptFile="@assetFile=chooseLevelDlg"
     GUIFile="@assetFile=chooseLevelDlg.gui"
-    VersionId="1" />
+    VersionId="1"/>

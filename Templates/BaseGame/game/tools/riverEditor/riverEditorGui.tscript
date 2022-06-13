@@ -215,6 +215,20 @@ function RiverEditorGui::prepSelectionMode( %this )
 }
 
 //------------------------------------------------------------------------------
+function ESettingsWindow::getRiverEditorSettings(%this)
+{
+   SettingsInspector.startGroup("Defaults");
+   SettingsInspector.addSettingsField("RiverEditor/DefaultWidth", "Width", "string", "");
+   SettingsInspector.addSettingsField("RiverEditor/DefaultDepth", "Depth", "string", "");
+   SettingsInspector.addSettingsField("RiverEditor/DefaultNormal", "Normal", "string", "");
+   SettingsInspector.endGroup();
+   
+   SettingsInspector.startGroup("Colors");
+   SettingsInspector.addSettingsField("RiverEditor/HoverSplineColor", "Hover Spline", "colorI", "");
+   SettingsInspector.addSettingsField("RiverEditor/SelectedSplineColor", "Selected Spline", "colorI", "");
+   SettingsInspector.endGroup();
+}
+//------------------------------------------------------------------------------
 function ERiverEditorSelectModeBtn::onClick(%this)
 {
    EditorGuiStatusBar.setInfo(%this.ToolTip);

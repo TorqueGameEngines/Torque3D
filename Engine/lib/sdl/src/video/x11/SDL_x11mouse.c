@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -77,7 +77,7 @@ X11_CreateDefaultCursor()
     cursor = SDL_calloc(1, sizeof(*cursor));
     if (cursor) {
         /* None is used to indicate the default cursor */
-        cursor->driverdata = (void*)None;
+        cursor->driverdata = (void*)(uintptr_t)None;
     } else {
         SDL_OutOfMemory();
     }
@@ -195,6 +195,8 @@ X11_CreatePixmapCursor(SDL_Surface * surface, int hot_x, int hot_y)
                                  &fg, &bg, hot_x, hot_y);
     X11_XFreePixmap(display, data_pixmap);
     X11_XFreePixmap(display, mask_pixmap);
+    SDL_free(data_bits);
+    SDL_free(mask_bits);
 
     return cursor;
 }
@@ -216,7 +218,7 @@ X11_CreateCursor(SDL_Surface * surface, int hot_x, int hot_y)
         if (x11_cursor == None) {
             x11_cursor = X11_CreatePixmapCursor(surface, hot_x, hot_y);
         }
-        cursor->driverdata = (void*)x11_cursor;
+        cursor->driverdata = (void*)(uintptr_t)x11_cursor;
     } else {
         SDL_OutOfMemory();
     }
@@ -242,8 +244,8 @@ X11_CreateSystemCursor(SDL_SystemCursor id)
     case SDL_SYSTEM_CURSOR_WAIT:      shape = XC_watch; break;
     case SDL_SYSTEM_CURSOR_CROSSHAIR: shape = XC_tcross; break;
     case SDL_SYSTEM_CURSOR_WAITARROW: shape = XC_watch; break;
-    case SDL_SYSTEM_CURSOR_SIZENWSE:  shape = XC_fleur; break;
-    case SDL_SYSTEM_CURSOR_SIZENESW:  shape = XC_fleur; break;
+    case SDL_SYSTEM_CURSOR_SIZENWSE:  shape = XC_top_left_corner; break;
+    case SDL_SYSTEM_CURSOR_SIZENESW:  shape = XC_top_right_corner; break;
     case SDL_SYSTEM_CURSOR_SIZEWE:    shape = XC_sb_h_double_arrow; break;
     case SDL_SYSTEM_CURSOR_SIZENS:    shape = XC_sb_v_double_arrow; break;
     case SDL_SYSTEM_CURSOR_SIZEALL:   shape = XC_fleur; break;
@@ -257,7 +259,7 @@ X11_CreateSystemCursor(SDL_SystemCursor id)
 
         x11_cursor = X11_XCreateFontCursor(GetDisplay(), shape);
 
-        cursor->driverdata = (void*)x11_cursor;
+        cursor->driverdata = (void*)(uintptr_t)x11_cursor;
     } else {
         SDL_OutOfMemory();
     }
@@ -292,14 +294,15 @@ X11_ShowCursor(SDL_Cursor * cursor)
         SDL_VideoDevice *video = SDL_GetVideoDevice();
         Display *display = GetDisplay();
         SDL_Window *window;
-        SDL_WindowData *data;
 
         for (window = video->windows; window; window = window->next) {
-            data = (SDL_WindowData *)window->driverdata;
-            if (x11_cursor != None) {
-                X11_XDefineCursor(display, data->xwindow, x11_cursor);
-            } else {
-                X11_XUndefineCursor(display, data->xwindow);
+            SDL_WindowData *data = (SDL_WindowData *)window->driverdata;
+            if (data) {
+                if (x11_cursor != None) {
+                    X11_XDefineCursor(display, data->xwindow, x11_cursor);
+                } else {
+                    X11_XUndefineCursor(display, data->xwindow);
+                }
             }
         }
         X11_XFlush(display);
@@ -321,7 +324,15 @@ static void
 X11_WarpMouse(SDL_Window * window, int x, int y)
 {
     SDL_WindowData *data = (SDL_WindowData *) window->driverdata;
+
+#if SDL_VIDEO_DRIVER_X11_XFIXES
+    /* If we have no barrier, we need to warp */
+    if (data->pointer_barrier_active == SDL_FALSE) {
+        WarpMouseInternal(data->xwindow, x, y);
+    }
+#else
     WarpMouseInternal(data->xwindow, x, y);
+#endif
 }
 
 static int
@@ -395,6 +406,8 @@ X11_GetGlobalMouseState(int *x, int *y)
                     buttons |= (mask & Button1Mask) ? SDL_BUTTON_LMASK : 0;
                     buttons |= (mask & Button2Mask) ? SDL_BUTTON_MMASK : 0;
                     buttons |= (mask & Button3Mask) ? SDL_BUTTON_RMASK : 0;
+                    /* Use the SDL state for the extended buttons - it's better than nothing */
+                    buttons |= (SDL_GetMouseState(NULL, NULL) & (SDL_BUTTON_X1MASK|SDL_BUTTON_X2MASK));
                     /* SDL_DisplayData->x,y point to screen origin, and adding them to mouse coordinates relative to root window doesn't do the right thing
                      * (observed on dual monitor setup with primary display being the rightmost one - mouse was offset to the right).
                      *

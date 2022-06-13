@@ -81,7 +81,7 @@ function GuiEditCanvas::onCreateMenu(%this)
          internalName = "FileMenu";
          
          item[0] = "New Gui..." TAB %cmdCtrl SPC "N" TAB %this @ ".create();";
-         item[1] = "Open..." TAB %cmdCtrl SPC "O" TAB %this @ ".open();";
+         item[1] = "Open GUI File..." TAB %cmdCtrl SPC "O" TAB %this @ ".open();";
          item[2] = "Save" TAB %cmdCtrl SPC "S" TAB %this @ ".save( false, true );";
          item[3] = "Save As..." TAB %cmdCtrl @ "-Shift S" TAB %this @ ".save( false );";
          item[4] = "Save Selected As..." TAB %cmdCtrl @ "-Alt S" TAB %this @ ".save( true );";
@@ -186,6 +186,15 @@ function GuiEditCanvas::onCreateMenu(%this)
          item[8] = "Show Guides" TAB "" TAB "GuiEditor.toggleDrawGuides();";
          item[9] = "Clear Guides" TAB "" TAB "GuiEditor.clearGuides();";
       };
+      
+      new PopupMenu()
+      {
+         superClass = "MenuBuilder";
+         barTitle = "Tools";
+         internalName = "ToolsMenu";
+
+         item[0] = "Project Importer" TAB "" TAB "ProjectImporter::beginProjectImport();";
+      };
 
       new PopupMenu()
       {
@@ -245,9 +254,13 @@ function GuiEditCanvas::onWindowClose(%this)
 
 function GuiEditCanvas::create( %this )
 {
-   GuiEditorNewGuiDialog.init( "NewGui", "GuiControl" );
+   AssetBrowser.setupCreateNewAsset("GUIAsset", AssetBrowser.selectedModule, "GuiEditCanvas.finishCreateNewGUI");
+}
       
-   Canvas.pushDialog( GuiEditorNewGuiDialog );
+function GuiEditCanvas::finishCreateNewGUI(%this, %newGUIAssetId)
+{
+   %assetDef = AssetDatabase.acquireAsset(%newGUIAssetId);
+   AssetBrowser.editAsset(%assetDef);
 }
 
 //---------------------------------------------------------------------------------------------

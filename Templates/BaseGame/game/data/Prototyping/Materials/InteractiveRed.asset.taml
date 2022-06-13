@@ -1,8 +1,14 @@
 <MaterialAsset
-    canSave="true"
-    canSaveDynamicFields="true"
     AssetName="InteractiveRed"
-    scriptFile="@assetFile=InteractiveRed.tscript"
     materialDefinitionName="InteractiveRed"
-    imageMap0="@Asset=Prototyping:InteractiveRed_ALBEDO"
-    originalFilePath="D:/Gamedev/art/Blockout/InteractiveRed.png" />
+    imageMap0="@asset=Prototyping:InteractiveRed_ALBEDO"
+    originalFilePath="C:/dev/T3D/PRs/MiscFixes20220525/Templates/BaseGame/game/data/Prototyping/Materials/InteractiveRed.png">
+    <Material
+        Name="InteractiveRed"
+        mapTo="InteractiveRed">
+        <Material.Stages>
+            <Stages_beginarray
+                DiffuseMapAsset="Prototyping:InteractiveRed_ALBEDO"/>
+        </Material.Stages>
+    </Material>
+</MaterialAsset>

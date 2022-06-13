@@ -1,0 +1,3 @@
+<ImageAsset
+    AssetName="inactiveoverlay_image"
+    imageFile="@assetFile=inactiveoverlay.png"/>

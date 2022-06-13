@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -20,7 +20,7 @@
 */
 #include "../../SDL_internal.h"
 
-#if SDL_VIDEO_DRIVER_ANDROID
+#if SDL_VIDEO_DRIVER_ANDROID && SDL_VIDEO_OPENGL_EGL
 
 /* Android SDL video driver implementation */
 
@@ -69,7 +69,7 @@ Android_GLES_SwapWindow(_THIS, SDL_Window * window)
 
     /* The following two calls existed in the original Java code
      * If you happen to have a device that's affected by their removal,
-     * please report to Bugzilla. -- Gabriel
+     * please report to our bug tracker. -- Gabriel
      */
 
     /*_this->egl_data->eglWaitNative(EGL_CORE_NATIVE_ENGINE);

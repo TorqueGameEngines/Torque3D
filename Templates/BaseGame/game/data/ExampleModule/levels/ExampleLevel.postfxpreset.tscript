@@ -1,0 +1,14 @@
+$PostFX::HDRPostFX::Enabled = 1;
+$PostFX::HDRPostFX::minLuminace = 0.001;
+$PostFX::HDRPostFX::whiteCutoff = 1;
+$PostFX::HDRPostFX::adaptRate = 2;
+$PostFX::HDRPostFX::tonemapMode = "ACES";
+$PostFX::HDRPostFX::enableBloom = 1;
+$PostFX::HDRPostFX::brightPassThreshold = 1;
+$PostFX::HDRPostFX::gaussMultiplier = 0.3;
+$PostFX::HDRPostFX::gaussMean = 0;
+$PostFX::HDRPostFX::gaussStdDev = 0.8;
+$PostFX::HDRPostFX::enableAutoExposure = "0";
+$PostFX::HDRPostFX::keyValue = 0.18;
+$PostFX::HDRPostFX::enableBlueShift = 0;
+$PostFX::HDRPostFX::blueShiftColor = "1.05 0.97 1.27";

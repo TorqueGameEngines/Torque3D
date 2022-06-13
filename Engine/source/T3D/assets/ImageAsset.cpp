@@ -58,7 +58,7 @@ StringTableEntry ImageAsset::smNoImageAssetFallback = NULL;
 
 IMPLEMENT_CONOBJECT(ImageAsset);
 
-ConsoleType(ImageAssetPtr, TypeImageAssetPtr, const char*, ASSET_ID_FIELD_PREFIX)
+ConsoleType(ImageAssetPtr, TypeImageAssetPtr, const char*, "")
 
 //-----------------------------------------------------------------------------
 
@@ -85,7 +85,7 @@ ConsoleSetType(TypeImageAssetPtr)
    Con::warnf("(TypeImageAssetPtr) - Cannot set multiple args to a single asset.");
 }
 
-ConsoleType(assetIdString, TypeImageAssetId, const char*, ASSET_ID_FIELD_PREFIX)
+ConsoleType(assetIdString, TypeImageAssetId, const char*, "")
 
 ConsoleGetType(TypeImageAssetId)
 {
@@ -218,6 +218,10 @@ StringTableEntry ImageAsset::getAssetIdByFilename(StringTableEntry fileName)
    {
       //acquire and bind the asset, and return it out
       imageAssetId = query.mAssetList[0];
+   }
+   else
+   {
+      AssetPtr<ImageAsset> imageAsset = imageAssetId; //ensures the fallback is loaded
    }
 
    return imageAssetId;

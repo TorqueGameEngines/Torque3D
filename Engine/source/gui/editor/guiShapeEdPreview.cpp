@@ -557,16 +557,20 @@ void GuiShapeEdPreview::refreshThreadSequences()
 //-----------------------------------------------------------------------------
 // MOUNTING
 
-bool GuiShapeEdPreview::mountShape(const char* modelName, const char* nodeName, const char* mountType, S32 slot)
+bool GuiShapeEdPreview::mountShape(const char* shapeAssetId, const char* nodeName, const char* mountType, S32 slot)
 {
-   if ( !modelName || !modelName[0] )
+   if ( !shapeAssetId || !shapeAssetId[0] )
       return false;
 
-   Resource<TSShape> model = ResourceManager::get().load( modelName );
-   if ( !bool( model ) )
+   if (!AssetDatabase.isDeclaredAsset(shapeAssetId))
       return false;
 
-   TSShapeInstance* tsi = new TSShapeInstance( model, true );
+   ShapeAsset* model = AssetDatabase.acquireAsset<ShapeAsset>(shapeAssetId);
+
+   if (model == nullptr || !model->getShapeResource())
+      return false;
+
+   TSShapeInstance* tsi = new TSShapeInstance(model->getShapeResource(), true );
 
    if ( slot == -1 )
    {
@@ -1864,14 +1868,14 @@ DefineEngineMethod( GuiShapeEdPreview, refreshThreadSequences, void, (),,
 
 //-----------------------------------------------------------------------------
 // Mounting
-DefineEngineMethod( GuiShapeEdPreview, mountShape, bool, ( const char* shapePath, const char* nodeName, const char* type, S32 slot ),,
+DefineEngineMethod( GuiShapeEdPreview, mountShape, bool, ( const char* shapeAssetId, const char* nodeName, const char* type, S32 slot ),,
    "Mount a shape onto the main shape at the specified node\n\n"
-   "@param shapePath path to the shape to mount\n"
+   "@param shapeAssetId AssetId of the shape to mount\n"
    "@param nodeName name of the node on the main shape to mount to\n"
    "@param type type of mounting to use (Object, Image or Wheel)\n"
    "@param slot mount slot\n" )
 {
-   return object->mountShape( shapePath, nodeName, type, slot );
+   return object->mountShape(shapeAssetId, nodeName, type, slot );
 }
 
 DefineEngineMethod( GuiShapeEdPreview, setMountNode, void, ( S32 slot, const char* nodeName ),,

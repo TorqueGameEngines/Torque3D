@@ -5,9 +5,9 @@ function AssetBrowser::setupCreateNewTerrainAsset(%this)
    NewAssetPropertiesInspector.addField("genWithNoise", "Generate Terrain With Noise", "bool",  "Is this script used on the server?", "0", "2", %this.newAssetSettings);
    NewAssetPropertiesInspector.endGroup();
    
-   NewAssetPropertiesInspector.startGroup("Terrain - Import");
+   /*NewAssetPropertiesInspector.startGroup("Terrain - Import");
    NewAssetPropertiesInspector.addField("importDetails", "Import Heightmap", "button",  "Import an existing heightmap", "", "Canvas.pushDialog( TerrainImportGui );", %this.newAssetSettings);
-   NewAssetPropertiesInspector.endGroup();
+   NewAssetPropertiesInspector.endGroup();*/
 }
 
 function AssetBrowser::createTerrainAsset(%this)
@@ -159,6 +159,22 @@ function AssetBrowser::renameTerrainAsset(%this, %assetDef, %newAssetId, %origin
 
 function AssetBrowser::deleteTerrainAsset(%this, %assetDef)
 {
+}
+
+function AssetBrowser::moveTerrainAsset(%this, %assetDef, %destination)
+{
+   %currentModule = AssetDatabase.getAssetModule(%assetDef.getAssetId());
+   %targetModule = AssetBrowser.dirHandler.getModuleFromAddress(%destination);
+   
+   %newAssetPath = moveAssetFile(%assetDef, %destination);
+   
+   if(%newAssetPath $= "")
+      return false;
+
+   moveAssetLooseFile(%assetDef.getTerrainFilePath(), %destination);
+   
+   AssetDatabase.removeDeclaredAsset(%assetDef.getAssetId());
+   AssetDatabase.addDeclaredAsset(%targetModule, %newAssetPath);
 }
 
 function AssetBrowser::buildTerrainAssetPreview(%this, %assetDef, %previewData)

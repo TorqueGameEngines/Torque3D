@@ -1657,9 +1657,10 @@ function RibbonData::create( %datablock )
 
 function ParticleEmitterData::create( %datablock ) 
 {
-   %obj = new ParticleEmitter()
+   %obj = new ParticleEmitterNode()
    {
-      dataBlock = %datablock;
+      emitter = %datablock;
+      dataBlock = "DefaultEmitterNodeData";
       parentGroup = ObjectCreator.objectGroup;
    };
    return %obj;

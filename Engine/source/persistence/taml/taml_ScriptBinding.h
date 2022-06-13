@@ -256,8 +256,10 @@ DefineEngineFunction(TamlWrite, bool, (SimObject* simObject, const char* filenam
    }
    else
    {
-         // No, so warn.
-         Con::warnf( "TamlWrite() - Setting binary compression is only valid for XML formatting." );
+#ifdef TORQUE_DEBUG
+      // No, so warn.
+      Con::warnf( "TamlWrite() - Setting binary compression is only valid for XML formatting." );
+#endif
    }
 
    // Turn-off auto-formatting.

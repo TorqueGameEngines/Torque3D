@@ -108,7 +108,8 @@ function isShapeFormat(%fileExt)
    (%fileExt $= ".gltf") || 
    (%fileExt $= ".glb") || 
    (%fileExt $= ".obj") || 
-   (%fileExt $= ".blend"))
+   (%fileExt $= ".blend") || 
+   (%fileExt $= ".dsq"))
       return true;
       
    return false;

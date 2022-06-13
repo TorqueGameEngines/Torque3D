@@ -1,0 +1,14 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="OccluderProxyMaterial"
+    materialDefinitionName="OccluderProxyMaterial"
+    VersionId="1">
+    <Material
+        Name="OccluderProxyMaterial">
+        <Material.Stages>
+            <Stages_beginarray
+                DiffuseMapAsset="ToolsModule:occluderProxyImage_image"/>
+        </Material.Stages>
+    </Material>
+</MaterialAsset>

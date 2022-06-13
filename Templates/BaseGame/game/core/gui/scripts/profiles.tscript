@@ -26,6 +26,10 @@ if($Gui::fontCacheDirectory $= "")
    $Gui::fontCacheDirectory = expandFilename("data/cache/fonts");
 }
 
+$TextMediumEmphasisColor = "200 200 200";
+$TextHighEmphasisColor = "224 224 224";
+$TextDisabledColor = "108 108 108";
+
 // ----------------------------------------------------------------------------
 // GuiDefaultProfile is a special profile that all other profiles inherit
 // defaults from. It must exist.
@@ -75,6 +79,12 @@ new GuiControlProfile (GuiDefaultProfile)
    returnTab = false;
    numbersOnly = false;
    cursorColor = "0 0 0 255";
+};
+
+if(!isObject(GuiNonModalDefaultProfile))
+new GuiControlProfile (GuiNonModalDefaultProfile : GuiDefaultProfile)
+{
+   modal = false;
 };
 
 if(!isObject(GuiToolTipProfile))
@@ -137,13 +147,20 @@ new GuiControlProfile(GuiTextEditProfile)
    category = "Core";
 };
 
-if(!isObject(GuiScrollProfile))
-new GuiControlProfile(GuiScrollProfile)
+if(!isObject(GuiMenuScrollProfile))
+new GuiControlProfile(GuiMenuScrollProfile)
 {
    opaque = true;
-   fillcolor = "255 255 255";
-   fontColor = "0 0 0";
-   fontColorHL = "150 150 150";
+   fontColor = $TextMediumEmphasisColor;
+   fontColorHL = $TextMediumEmphasisColor;
+   fontColorNA = $TextDisabledColor;
+   fontColorSEL = $TextMediumEmphasisColor;
+   fillColor = "40 40 40";
+   fillColorHL = "56 56 56";
+   fillColorNA = "40 40 40";
+   borderColor = "87 87 87";
+   borderColorNA = "0 0 0";
+   borderColorHL = "255 255 255";
    border = true;
    bitmapAsset = "Core_GUI:scrollBar_image";
    hasBitmapArray = true;
@@ -232,5 +249,13 @@ if( !isObject( GuiSliderProfile ) )
 new GuiControlProfile( GuiSliderProfile )
 {
    bitmapAsset = "Core_GUI:slider_image";
+   category = "Core";
+};
+
+//
+if(!isObject(GuiScrollProfile))
+new GuiControlProfile(GuiScrollProfile)
+{
+	bitmapAsset = "Core_GUI:scrollBar_image";
    category = "Core";
 };

@@ -2859,3 +2859,21 @@ DefineEngineFunction(getTimestamp, const char*, (), ,
 
    return returnBuffer;
 }
+
+#ifdef TORQUE_TOOLS
+DefineEngineFunction(systemCommand, S32, (const char* commandLineAction, const char* callBackFunction), (""), "")
+{
+   if (commandLineAction != "")
+   {
+      S32 result = system(commandLineAction);
+
+      if (callBackFunction != "" && callBackFunction[0])
+      {
+         if (Con::isFunction(callBackFunction))
+            Con::executef(callBackFunction, result);
+      }
+   }
+
+   return -1;
+}
+#endif

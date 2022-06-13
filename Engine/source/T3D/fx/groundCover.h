@@ -312,7 +312,7 @@ protected:
    /// The maximum world space elevation for placement.
    F32 mMaxElevation[MAX_COVERTYPES];
 
-   /// Terrain material name to limit coverage to, or
+   /// Terrain material assetId to limit coverage to, or
    /// left empty to cover entire terrain.
    StringTableEntry mLayer[MAX_COVERTYPES];
 

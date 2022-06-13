@@ -60,6 +60,7 @@ RenderMeshExample::RenderMeshExample()
    mTypeMask |= StaticObjectType | StaticShapeObjectType;
 
    INIT_ASSET(Material);
+   mMaterialInst = NULL;
 }
 
 RenderMeshExample::~RenderMeshExample()

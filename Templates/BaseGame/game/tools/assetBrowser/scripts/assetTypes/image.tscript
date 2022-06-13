@@ -148,9 +148,14 @@ function AssetBrowser::importImageAsset(%this, %assetItem)
       assetName = %assetName;
       versionId = 1;
       imageFile = fileName(%filePath);
-      originalFilePath = %filePath;
       imageType = %assetItem.imageType;
    };
+   
+   //No point in indicating the original path data if it was imported in-place
+   if(!startsWith(makeFullPath(%filePath), getMainDotCsDir()))
+   {
+      %newAsset.originalFilePath = %filePath;
+   }
    
    %assetImportSuccessful = TAMLWrite(%newAsset, %assetPath @ "/" @ %assetName @ ".asset.taml"); 
    
@@ -172,15 +177,46 @@ function AssetBrowser::importImageAsset(%this, %assetItem)
 
 function AssetBrowser::buildImageAssetPreview(%this, %assetDef, %previewData)
 {
-   %module = %this.dirHandler.getModuleFromAddress(makeRelativePath(filePath(%assetDef.getImagePath())));
-   %previewPath = "tools/resources/previewCache/" @ %module.moduleId @ "/";
+   //%module = %this.dirHandler.getModuleFromAddress(makeRelativePath(filePath(%assetDef.getImagePath())));
+      
+   %previewData.previewImage = "ToolsModule:genericAssetIcon_image";
+   %previewData.previewLoaded = false; //this marks it for loading progressively later
+   
+   %previewData.assetName = %assetDef.assetName;
+   %previewData.assetPath = %assetDef.scriptFile;
+   
+   %previewData.assetFriendlyName = %assetDef.assetName;
+   %previewData.assetDesc = %assetDef.description;
+   
+   //image info
+   //%info = %assetDef.getImageInfo();
+   
+   %previewData.tooltip = "Asset Name: " @ %assetDef.assetName @ "\n" @
+      "Asset Type: Image Asset\n" @ 
+      "Asset Definition ID: " @ %assetDef @ "\n" @ 
+      "Image Type: " @ %assetDef.imageType @ "\n" @ 
+     /* "Format: " @ getWord(%info, 0) @ "\n" @ 
+      "Height: " @ getWord(%info, 1) @ "\n" @ 
+      "Width: " @ getWord(%info, 2) @ "\n" @ 
+      "Depth: " @ getWord(%info, 3) @ "\n" @ */
+      "Image File path: " @ %assetDef.getImagePath();
+}
+
+function AssetBrowser::generateImageAssetPreviewImage(%this, %previewButton, %forceRegenerate)
+{
+   if(%forceRegenerate $= "")
+      %forceRegenerate = false;
+      
+   %previewPath = "tools/resources/previewCache/" @ %previewButton.moduleName @ "/";
    
    if(!IsDirectory(%previewPath))
    {
       %this.dirHandler.createFolder(%previewPath);
    }
    
-   %generatePreview = false;
+   %assetId = %previewButton.moduleName @ ":" @ %previewButton.assetName;
+      
+   %assetDef = AssetDatabase.acquireAsset(%assetId);
    
    %previewFilePath = %previewPath @ %assetDef.assetName @ "_Preview.png";
    if(!isFile(%previewFilePath) || (compareFileTimes(%assetDef.getImagePath(), %previewFilePath) == 1))
@@ -188,68 +224,52 @@ function AssetBrowser::buildImageAssetPreview(%this, %assetDef, %previewData)
       %generatePreview = true;
    }
    
-   %previewAssetName = %module.moduleId @ "_" @ %assetDef.assetName @ "_PreviewImage";
+   %previewAssetName = %previewButton.moduleName @ "_" @ %assetDef.assetName @ "_PreviewImage";
    
-   if(%generatePreview)
+   if(%generatePreview || %forceRegenerate)
    {
-      displayEditorLoadingGui("Generating Image Asset Preview...");
-      
-      %success = saveScaledImage(%assetDef.getImagePath(), %previewFilePath);
+      %success = saveScaledImage(%assetDef.getImagePath(), %previewFilePath, EditorSettings.value("Assets/Browser/PreviewImageSize"));
       
       if(%success)
       {
-         %previewAsset = new ImageAsset()
+         if(!AssetDatabase.isDeclaredAsset("ToolsModule:" @ %previewAssetName))
          {
-            assetName = %previewAssetName;
-            versionId = 1;
-            imageFile = fileName(%previewFilePath);
-         };
-      
-         %previewAssetName = "ToolsModule:" @ %previewAssetName;
-         %previewImgAssetPath = %previewPath @ %previewAsset.assetName @ ".asset.taml";
-         %assetImportSuccessful = TAMLWrite(%previewAsset, %previewImgAssetPath); 
-      
-         %toolsModuleDef = ModuleDatabase.findModule("ToolsModule",1);
+            %previewAsset = new ImageAsset()
+            {
+               assetName = %previewAssetName;
+               versionId = 1;
+               imageFile = fileName(%previewFilePath);
+            };
          
-         %success = AssetDatabase.addDeclaredAsset(%toolsModuleDef, %previewImgAssetPath);
+            %previewAssetName = "ToolsModule:" @ %previewAssetName;
+            %previewImgAssetPath = %previewPath @ %previewAsset.assetName @ ".asset.taml";
+            %assetImportSuccessful = TAMLWrite(%previewAsset, %previewImgAssetPath); 
+         
+            %toolsModuleDef = ModuleDatabase.findModule("ToolsModule",1);
+            
+            %success = AssetDatabase.addDeclaredAsset(%toolsModuleDef, %previewImgAssetPath);
+            
+            if(!%success)
+            {
+               return false; //failed to register the preview image for some reason?
+         }
       }
-      else
-      {
-         %previewFilePath = %assetDef.getImagePath();
-         %previewAssetName = %module.moduleId @ ":" @ %assetDef.assetName;  
+         
+         %previewButton.bitmapAsset = %previewAssetName;
+         return true;
       }
-      
-      hideEditorLoadingGui();
    }
    else
    {
-      %previewAssetName = "ToolsModule:" @ %previewAssetName;
+      //just map the existing one then
+      if(AssetDatabase.isDeclaredAsset("ToolsModule:" @ %previewAssetName))
+   {
+         %previewButton.bitmapAsset = "ToolsModule:" @ %previewAssetName;
+         return true;
+   }
    }
    
-   //Revalidate. If it didn't work, just use the default placeholder one
-   if(!isFile(%previewFilePath))
-      %previewAssetName = "ToolsModule:genericAssetIcon_image";
-   
-   %previewData.assetName = %assetDef.assetName;
-   %previewData.assetPath = %assetDef.scriptFile;
-   
-   %previewData.previewImage = %previewAssetName;
-   
-   %previewData.assetFriendlyName = %assetDef.assetName;
-   %previewData.assetDesc = %assetDef.description;
-   
-   //image info
-   %info = %assetDef.getImageInfo();
-   
-   %previewData.tooltip = "Asset Name: " @ %assetDef.assetName @ "\n" @
-      "Asset Type: Image Asset\n" @ 
-      "Asset Definition ID: " @ %assetDef @ "\n" @ 
-      "Image Type: " @ %assetDef.imageType @ "\n" @ 
-      "Format: " @ getWord(%info, 0) @ "\n" @ 
-      "Height: " @ getWord(%info, 1) @ "\n" @ 
-      "Width: " @ getWord(%info, 2) @ "\n" @ 
-      "Depth: " @ getWord(%info, 3) @ "\n" @ 
-      "Image File path: " @ %assetDef.getImagePath(); 
+   return false;
 }
 
 //Renames the asset
@@ -294,14 +314,14 @@ function AssetBrowser::deleteImageAsset(%this, %assetDef)
 function AssetBrowser::moveImageAsset(%this, %assetDef, %destination)
 {
    %currentModule = AssetDatabase.getAssetModule(%assetDef.getAssetId());
-   %targetModule = AssetBrowser.getModuleFromAddress(%destination);
+   %targetModule = AssetBrowser.dirHandler.getModuleFromAddress(%destination);
    
    %newAssetPath = moveAssetFile(%assetDef, %destination);
    
    if(%newAssetPath $= "")
       return false;
 
-   moveAssetLooseFile(%assetDef.imageFile, %destination);
+   moveAssetLooseFile(%assetDef.getImagePath(), %destination);
    
    AssetDatabase.removeDeclaredAsset(%assetDef.getAssetId());
    AssetDatabase.addDeclaredAsset(%targetModule, %newAssetPath);
@@ -319,7 +339,14 @@ function GuiInspectorTypeImageAssetPtr::onControlDropped( %this, %payload, %posi
    
    if(%assetType $= "ImageAsset")
    {
-      echo("DROPPED A IMAGE ON AN IMAGE ASSET COMPONENT FIELD!");  
+      %module = %payload.moduleName;
+      %asset = %payload.assetName;
+      
+      %oldValue = %this.targetObject.bitmapAsset;
+      %arrayIndex = "";
+      
+      %targetObject = %this.targetObject;
+      %targetObject.bitmapAsset = %module @ ":" @ %asset; 
    }
    
    EWorldEditor.isDirty = true;

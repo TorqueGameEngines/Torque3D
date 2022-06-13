@@ -229,6 +229,9 @@ Material::Material()
 
    dMemset(mEffectColor, 0, sizeof(mEffectColor));
 
+   mEffectColor[0] = LinearColorF::WHITE;
+   mEffectColor[1] = LinearColorF::WHITE;
+
    mFootstepSoundId = -1;     mImpactSoundId = -1;
    mImpactFXIndex = -1;
    INIT_ASSET(CustomFootstepSound);
@@ -516,7 +519,8 @@ bool Material::writeField(StringTableEntry fieldname, const char* value)
       fieldname == StringTable->insert("overlayTex") ||
       fieldname == StringTable->insert("bumpTex") ||
       fieldname == StringTable->insert("envTex") ||
-      fieldname == StringTable->insert("colorMultiply"))
+      fieldname == StringTable->insert("colorMultiply") ||
+      fieldname == StringTable->insert("internalName"))
       return false;
 
    return Parent::writeField(fieldname, value);
@@ -532,7 +536,7 @@ bool Material::onAdd()
    if (mTranslucentBlendOp >= NumBlendTypes || mTranslucentBlendOp < 0)
    {
       Con::errorf("Invalid blend op in material: %s", getName());
-      mTranslucentBlendOp = LerpAlpha;
+      mTranslucentBlendOp = PreMul;
    }
 
    SimSet* matSet = MATMGR->getMaterialSet();

@@ -48,7 +48,9 @@
 #include "sim/netConnection.h"
 #endif
 
+#ifndef _GUI_INSPECTOR_TYPES_H_
 #include "gui/editor/guiInspectorTypes.h"
+#endif
 
 #include "materials/matTextureTarget.h"
 #include "materials/materialDefinition.h"
@@ -75,6 +77,7 @@ public:
    {
       ScriptLoaded = AssetErrCode::Extended,
       DefinitionAlreadyExists,
+      EmbeddedDefinition,
       Extended
    };
 
@@ -108,6 +111,7 @@ public:
    /// <returns>AssetId of matching asset.</returns>
    static StringTableEntry getAssetIdByMaterialName(StringTableEntry matName);
    static U32 getAssetById(StringTableEntry assetId, AssetPtr<MaterialAsset>* materialAsset);
+   static SimObjectPtr<Material> findMaterialDefinitionByAssetId(StringTableEntry assetId);
    static U32 getAssetByMaterialName(StringTableEntry matName, AssetPtr<MaterialAsset>* matAsset);
 
    /// Declare Console Object.

@@ -1,0 +1,237 @@
+function ExampleGameMode::onCreateGame()
+{
+   // Note: The Game object will be cleaned up by MissionCleanup.  Therefore its lifetime is
+   // limited to that of the mission.
+   new ScriptObject(ExampleGameMode){};
+
+   return ExampleGameMode;
+}
+
+//-----------------------------------------------------------------------------
+// The server has started up so do some game start up
+//-----------------------------------------------------------------------------
+function ExampleGameMode::onMissionStart(%this)
+{
+   //set up the game and game variables
+   %this.initGameVars();
+
+   if (%this.Running)
+   {
+      error("onMissionStart: End the game first!");
+      return;
+   }
+
+   // Inform the client we're starting up
+   for (%clientIndex = 0; %clientIndex < ClientGroup.getCount(); %clientIndex++)
+   {
+      %cl = ClientGroup.getObject(%clientIndex);
+      commandToClient(%cl, 'GameStart');
+   }
+      
+   %this.Running = true;
+}
+
+function ExampleGameMode::onMissionEnded(%this)
+{
+   if (!%this.Running)
+   {
+      error("onMissionEnded: No game running!");
+      return;
+   }
+
+   for (%clientIndex = 0; %clientIndex < ClientGroup.getCount(); %clientIndex++)
+   {
+      %cl = ClientGroup.getObject(%clientIndex);
+      commandToClient(%cl, 'GameEnd', %this.EndGamePause);
+   }
+
+   %this.Running = false;
+}
+
+function ExampleGameMode::onMissionReset(%this)
+{
+   // Called by resetMission(), after all the temporary mission objects
+   // have been deleted.
+   %this.initGameVars();
+}
+
+function ExampleGameMode::initGameVars(%this)
+{
+   //-----------------------------------------------------------------------------
+   // What kind of "camera" is spawned is either controlled directly by the
+   // SpawnSphere or it defaults back to the values set here. This also controls
+   // which SimGroups to attempt to select the spawn sphere's from by walking down
+   // the list of SpawnGroups till it finds a valid spawn object.
+   // These override the values set in core/scripts/server/spawn.cs
+   //-----------------------------------------------------------------------------
+   %this.defaultCameraClass = "Camera";
+   %this.defaultCameraDataBlock = "Observer";
+   %this.defaultCameraSpawnGroups = "CameraSpawnPoints PlayerSpawnPoints PlayerDropPoints";
+}
+
+function ExampleGameMode::onGameDurationEnd(%this)
+{
+}
+
+function ExampleGameMode::onClientEnterGame(%this, %client)
+{
+   // This function currently relies on some helper functions defined in
+   // core/scripts/spawn.cs. For custom spawn behaviors one can either
+   // override the properties on the SpawnSphere's or directly override the
+   // functions themselves.
+
+   //echo (%game @"\c4 -> "@ %game.class @" -> GameCore::onClientEntergame");
+
+   // Sync the client's clocks to the server's
+   commandToClient(%client, 'SyncClock', $Sim::Time - %this.StartTime);
+   
+   //Set the player name based on the client's connection data
+   %client.setPlayerName(%client.connectData);
+
+   // Find a spawn point for the camera
+   // This function currently relies on some helper functions defined in
+   // core/scripts/server/spawn.cs. For custom spawn behaviors one can either
+   // override the properties on the SpawnSphere's or directly override the
+   // functions themselves.
+   %cameraSpawnPoint = %this.pickCameraSpawnPoint(%this.DefaultCameraSpawnGroups);
+   // Spawn a camera for this client using the found %spawnPoint
+   %this.spawnCamera(%client, %cameraSpawnPoint);
+
+   // Inform the client of all the other clients
+   %count = ClientGroup.getCount();
+   for (%cl = 0; %cl < %count; %cl++)
+   {
+      %other = ClientGroup.getObject(%cl);
+      if ((%other != %client))
+      {
+         // These should be "silent" versions of these messages...
+         messageClient(%client, 'MsgClientJoin', "",
+            %other.playerName,
+            %other,
+            %other.sendGuid,
+            %other.team,
+            %other.score,
+            %other.kills,
+            %other.deaths,
+            %other.isAIControlled(),
+            %other.isAdmin,
+            %other.isSuperAdmin);
+      }
+   }
+
+   // Inform the client we've joined up
+   messageClient(%client,
+      'MsgClientJoin', '\c2Welcome to the Torque demo app %1.',
+      %client.playerName,
+      %client,
+      %client.sendGuid,
+      %client.team,
+      %client.score,
+      %client.kills,
+      %client.deaths,
+      %client.isAiControlled(),
+      %client.isAdmin,
+      %client.isSuperAdmin);
+
+   // Inform all the other clients of the new guy
+   messageAllExcept(%client, -1, 'MsgClientJoin', '\c1%1 joined the game.',
+      %client.playerName,
+      %client,
+      %client.sendGuid,
+      %client.team,
+      %client.score,
+      %client.kills,
+      %client.deaths,
+      %client.isAiControlled(),
+      %client.isAdmin,
+      %client.isSuperAdmin);
+}
+
+function ExampleGameMode::onClientLeaveGame(%this, %client)
+{
+   // Cleanup the camera
+   if (isObject(%client.camera))
+      %client.camera.delete();
+}
+
+function ExampleGameMode::onInitialControlSet(%this)
+{
+   
+}
+
+function ExampleGameMode::spawnCamera(%this, %client, %spawnPoint)
+{
+   // Set the control object to the default camera
+   if (!isObject(%client.camera))
+   {
+      if (%this.defaultCameraClass !$= "")
+         %client.camera = spawnObject(%this.defaultCameraClass, %this.defaultCameraDataBlock);
+   }
+
+   // If we have a camera then set up some properties
+   if (isObject(%client.camera))
+   {
+      MissionCleanup.add( %client.camera );
+      %client.camera.scopeToClient(%client);
+
+      %client.setControlObject(%client.camera);
+      
+      if(!isObject(%spawnPoint))
+         %spawnPoint = %this.pickCameraSpawnPoint(%this.defaultCameraSpawnGroups);
+
+      if (isObject(%spawnPoint))
+      {
+         // Attempt to treat %spawnPoint as an object
+         if (getWordCount(%spawnPoint) == 1 && isObject(%spawnPoint))
+         {
+            %client.camera.setTransform(%spawnPoint.getTransform());
+         }
+         else
+         {
+            // Treat %spawnPoint as an AxisAngle transform
+            %client.camera.setTransform(%spawnPoint);
+         }
+      }
+   }
+}
+
+//-----------------------------------------------------------------------------
+// pickCameraSpawnPoint() is responsible for finding a valid spawn point for a
+// camera.
+//-----------------------------------------------------------------------------
+function ExampleGameMode::pickCameraSpawnPoint(%this, %spawnGroups)
+{
+   // Walk through the groups until we find a valid object
+   for (%i = 0; %i < getWordCount(%spawnGroups); %i++)
+   {
+      %group = getWord(%spawnGroups, %i);
+      
+      %count = getWordCount(%group);
+
+      if (isObject(%group))
+         %spawnPoint = %group.getRandom();
+
+      if (isObject(%spawnPoint))
+         return %spawnPoint;
+   }
+
+   // Didn't find a spawn point by looking for the groups
+   // so let's return the "default" SpawnSphere
+   // First create it if it doesn't already exist
+   if (!isObject(DefaultCameraSpawnSphere))
+   {
+      %spawn = new SpawnSphere(DefaultCameraSpawnSphere)
+      {
+         dataBlock      = "SpawnSphereMarker";
+         spawnClass     = $Game::DefaultCameraClass;
+         spawnDatablock = $Game::DefaultCameraDataBlock;
+      };
+
+      // Add it to the MissionCleanup group so that it
+      // doesn't get saved to the Mission (and gets cleaned
+      // up of course)
+      MissionCleanup.add(%spawn);
+   }
+
+   return DefaultCameraSpawnSphere;
+}

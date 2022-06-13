@@ -474,7 +474,7 @@ function DepthOfFieldPostFX::populatePostFXSettings(%this)
 
 function PostEffectEditorInspector::toggleDepthOfFieldPostFX(%this)
 {
-   if($PostFX::DepthOfFieldPostFX::Enabled)
+   if($PostFX::DepthOfFieldPostFX::Enabled && $pref::PostFX::EnableDOF)
       DepthOfFieldPostFX.enable();
    else
       DepthOfFieldPostFX.disable();
@@ -482,7 +482,7 @@ function PostEffectEditorInspector::toggleDepthOfFieldPostFX(%this)
 
 function DepthOfFieldPostFX::applyFromPreset(%this)
 {
-   if($PostFX::DepthOfFieldPostFX::Enabled)
+   if($PostFX::DepthOfFieldPostFX::Enabled && $pref::PostFX::EnableDOF)
       DepthOfFieldPostFX.enable();
    else
       DepthOfFieldPostFX.disable();

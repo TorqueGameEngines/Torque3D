@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -41,7 +41,6 @@ SDL_PROC(void, glEnableVertexAttribArray, (GLuint))
 SDL_PROC(void, glFinish, (void))
 SDL_PROC(void, glGenFramebuffers, (GLsizei, GLuint *))
 SDL_PROC(void, glGenTextures, (GLsizei, GLuint *))
-SDL_PROC(void, glGetBooleanv, (GLenum, GLboolean *))
 SDL_PROC(const GLubyte *, glGetString, (GLenum))
 SDL_PROC(GLenum, glGetError, (void))
 SDL_PROC(void, glGetIntegerv, (GLenum, GLint *))

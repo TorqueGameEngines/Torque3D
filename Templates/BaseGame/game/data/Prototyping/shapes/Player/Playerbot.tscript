@@ -1,0 +1,12 @@
+
+singleton TSShapeConstructor(Playerbotdae)
+{
+   baseShapeAsset = "Prototyping:Playerbot_shape";
+   singleDetailSize = "0";
+   neverImportMat = "DefaultMaterial	ColorEffect*";
+   flipUVCoords = "0";
+   JoinIdenticalVerts = "0";
+   reverseWindingOrder = "0";
+   removeRedundantMats = "0";
+   animFPS = "2";
+};

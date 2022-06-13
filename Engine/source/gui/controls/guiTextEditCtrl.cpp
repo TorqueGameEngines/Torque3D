@@ -804,85 +804,7 @@ bool GuiTextEditCtrl::onKeyDown(const GuiEvent &event)
    {
       switch(event.keyCode)
       {
-#if defined(TORQUE_OS_MAC)
-         // Added UNIX emacs key bindings - just a little hack here...
-
-         // Ctrl-B - move one character back
-         case KEY_B:
-         { 
-            GuiEvent new_event;
-            new_event.modifier = 0;
-            new_event.keyCode = KEY_LEFT;
-            return(onKeyDown(new_event));
-         }
-
-         // Ctrl-F - move one character forward
-         case KEY_F:
-         { 
-            GuiEvent new_event;
-            new_event.modifier = 0;
-            new_event.keyCode = KEY_RIGHT;
-            return(onKeyDown(new_event));
-         }
-
-         // Ctrl-A - move to the beginning of the line
-         case KEY_A:
-         { 
-            GuiEvent new_event;
-            new_event.modifier = 0;
-            new_event.keyCode = KEY_HOME;
-            return(onKeyDown(new_event));
-         }
-
-         // Ctrl-E - move to the end of the line
-         case KEY_E:
-         { 
-            GuiEvent new_event;
-            new_event.modifier = 0;
-            new_event.keyCode = KEY_END;
-            return(onKeyDown(new_event));
-         }
-
-         // Ctrl-P - move backward in history
-         case KEY_P:
-         { 
-            GuiEvent new_event;
-            new_event.modifier = 0;
-            new_event.keyCode = KEY_UP;
-            return(onKeyDown(new_event));
-         }
-
-         // Ctrl-N - move forward in history
-         case KEY_N:
-         { 
-            GuiEvent new_event;
-            new_event.modifier = 0;
-            new_event.keyCode = KEY_DOWN;
-            return(onKeyDown(new_event));
-         }
-
-         // Ctrl-D - delete under cursor
-         case KEY_D:
-         { 
-            GuiEvent new_event;
-            new_event.modifier = 0;
-            new_event.keyCode = KEY_DELETE;
-            return(onKeyDown(new_event));
-         }
-
-         case KEY_U:
-         { 
-            GuiEvent new_event;
-            new_event.modifier = SI_CTRL;
-            new_event.keyCode = KEY_DELETE;
-            return(onKeyDown(new_event));
-         }
-
-         // End added UNIX emacs key bindings
-#endif
-
          // Adding word jump navigation.
-
          case KEY_LEFT:
          {
 
@@ -900,7 +822,6 @@ bool GuiTextEditCtrl::onKeyDown(const GuiEvent &event)
             return true;
          }         
          
-#if !defined(TORQUE_OS_MAC)
          // Select all
          case KEY_A:
          {
@@ -931,7 +852,6 @@ bool GuiTextEditCtrl::onKeyDown(const GuiEvent &event)
                onUndo();
                return true;
             }
-#endif
 
          case KEY_DELETE:
          case KEY_BACKSPACE:

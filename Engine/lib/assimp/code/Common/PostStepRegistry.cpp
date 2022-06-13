@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2019, assimp team
+Copyright (c) 2006-2022, assimp team
 
 
 
@@ -123,7 +123,7 @@ corresponding preprocessor flag to selectively disable steps.
 #   include "PostProcessing/OptimizeGraph.h"
 #endif
 #ifndef ASSIMP_BUILD_NO_SPLITBYBONECOUNT_PROCESS
-#   include "Common/SplitByBoneCountProcess.h"
+#   include "PostProcessing/SplitByBoneCountProcess.h"
 #endif
 #ifndef ASSIMP_BUILD_NO_DEBONE_PROCESS
 #   include "PostProcessing/DeboneProcess.h"
@@ -131,9 +131,13 @@ corresponding preprocessor flag to selectively disable steps.
 #if (!defined ASSIMP_BUILD_NO_GLOBALSCALE_PROCESS)
 #   include "PostProcessing/ScaleProcess.h"
 #endif
+#if (!defined ASSIMP_BUILD_NO_ARMATUREPOPULATE_PROCESS)
+#   include "PostProcessing/ArmaturePopulate.h"
+#endif
 #if (!defined ASSIMP_BUILD_NO_GENBOUNDINGBOXES_PROCESS)
 #   include "PostProcessing/GenBoundingBoxesProcess.h"
 #endif
+
 
 
 namespace Assimp {
@@ -179,6 +183,9 @@ void GetPostProcessingStepInstanceList(std::vector< BaseProcess* >& out)
 #endif
 #if (!defined ASSIMP_BUILD_NO_GLOBALSCALE_PROCESS)
     out.push_back( new ScaleProcess());
+#endif
+#if (!defined ASSIMP_BUILD_NO_ARMATUREPOPULATE_PROCESS)
+    out.push_back( new ArmaturePopulate());
 #endif
 #if (!defined ASSIMP_BUILD_NO_PRETRANSFORMVERTICES_PROCESS)
     out.push_back( new PretransformVertices());

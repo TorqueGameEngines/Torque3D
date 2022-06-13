@@ -436,6 +436,7 @@ DefineEngineMethod(TerrainAsset, getTerrainFilePath, const char*, (), ,
    return object->getTerrainFilePath();
 }
 
+#ifdef TORQUE_TOOLS
 //-----------------------------------------------------------------------------
 // GuiInspectorTypeAssetId
 //-----------------------------------------------------------------------------
@@ -529,3 +530,4 @@ void GuiInspectorTypeTerrainAssetId::consoleInit()
 
    ConsoleBaseType::getType(TypeTerrainAssetId)->setInspectorFieldType("GuiInspectorTypeTerrainAssetId");
 }
+#endif

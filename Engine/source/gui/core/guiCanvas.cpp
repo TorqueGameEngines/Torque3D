@@ -330,7 +330,7 @@ void GuiCanvas::onRemove()
 
    Parent::onRemove();
 }
-
+#ifdef TORQUE_TOOLS
 void GuiCanvas::setMenuBar(SimObject *obj)
 {
     GuiControl *oldMenuBar = mMenuBarCtrl;
@@ -382,7 +382,7 @@ void GuiCanvas::setMenuBar(SimObject *obj)
            newMenu->buildWindowAcceleratorMap(*getPlatformWindow()->getInputGenerator());
     }
 }
-
+#endif
 void GuiCanvas::setWindowTitle(const char *newTitle)
 {
    if (mPlatformWindow)
@@ -705,9 +705,6 @@ bool GuiCanvas::processInputEvent(InputEventInfo &inputEvent)
       if (mCursorEnabled || mForceMouseToGUI || 
          (mAlwaysHandleMouseButtons && inputEvent.objType == SI_BUTTON) )
       {
-         if (inputEvent.objType != SI_AXIS && inputEvent.action == SI_MAKE)
-            bool asdfasdf = true;
-
          return processMouseEvent(inputEvent);
       }
       break;
@@ -1441,10 +1438,10 @@ void GuiCanvas::setContentControl(GuiControl *gui)
 
       Sim::getGuiGroup()->addObject( ctrl );
    }
-
+#ifdef TORQUE_TOOLS
    // set current menu bar
    setMenuBar( mMenuBarCtrl );
-
+#endif
    // lose the first responder from the old GUI
    GuiControl* responder = gui->findFirstTabable();
    if(responder)
@@ -2795,6 +2792,7 @@ DefineEngineMethod( GuiCanvas, setFocus, void, (), , "() - Claim OS input focus 
    }
 }
 
+#ifdef TORQUE_TOOLS
 DefineEngineMethod( GuiCanvas, setMenuBar, void, ( GuiControl* menu ),,
    "Translate a coordinate from canvas window-space to screen-space.\n"
    "@param coordinate The coordinate in window-space.\n"
@@ -2802,6 +2800,7 @@ DefineEngineMethod( GuiCanvas, setMenuBar, void, ( GuiControl* menu ),,
 {
    return object->setMenuBar( menu );
 }
+#endif
 
 DefineEngineMethod( GuiCanvas, setVideoMode, void, 
                (U32 width, U32 height, bool fullscreen, U32 bitDepth, U32 refreshRate, U32 antialiasLevel), 

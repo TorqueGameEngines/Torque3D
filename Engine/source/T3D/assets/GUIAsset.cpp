@@ -233,7 +233,6 @@ DefineEngineMethod(GUIAsset, getGUIPath, const char*, (), ,
 {
    return object->getGUIPath();
 }
-#endif
 
 //-----------------------------------------------------------------------------
 // GuiInspectorTypeAssetId
@@ -312,3 +311,4 @@ bool GuiInspectorTypeGUIAssetPtr::updateRects()
 
    return resized;
 }
+#endif

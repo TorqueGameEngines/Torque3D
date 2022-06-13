@@ -115,9 +115,10 @@ ReflectionProbe::ReflectionProbe()
    mStaticCubemap = NULL;
    mProbeUniqueID = "";
 
+#ifdef TORQUE_TOOLS
    mEditorShapeInst = NULL;
    mEditorShape = NULL;
-
+#endif
    mRefreshRateMS = 200;
    mDynamicLastBakeMS = 0;
 
@@ -135,9 +136,11 @@ ReflectionProbe::ReflectionProbe()
 
 ReflectionProbe::~ReflectionProbe()
 {
+
+#ifdef TORQUE_TOOLS
    if (mEditorShapeInst)
       SAFE_DELETE(mEditorShapeInst);
-
+#endif
    if (mReflectionModeType == StaticCubemap && mStaticCubemap)
       mStaticCubemap->deleteObject();
 }

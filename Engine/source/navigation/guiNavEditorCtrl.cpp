@@ -19,7 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
-
+#ifdef TORQUE_TOOLS
 #include "platform/platform.h"
 #include "guiNavEditorCtrl.h"
 #include "duDebugDrawTorque.h"
@@ -636,3 +636,4 @@ DefineEngineMethod(GuiNavEditorCtrl, setMode, void, (String mode),, "setMode(Str
 {
    object->setMode(mode);
 }
+#endif

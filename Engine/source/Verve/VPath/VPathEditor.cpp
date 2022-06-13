@@ -20,6 +20,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#ifdef TORQUE_TOOLS
 #include "VPathEditor.h"
 
 #include "console/consoleTypes.h"
@@ -2188,3 +2189,4 @@ F32 Utility::GetYaw( const VectorF &pVec )
 
     return yaw;
 }
+#endif

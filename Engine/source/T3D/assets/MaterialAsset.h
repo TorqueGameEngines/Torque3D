@@ -131,7 +131,7 @@ protected:
 
 DefineConsoleType(TypeMaterialAssetPtr, MaterialAsset)
 DefineConsoleType(TypeMaterialAssetId, String)
-
+#ifdef TORQUE_TOOLS
 //-----------------------------------------------------------------------------
 // TypeAssetId GuiInspectorField Class
 //-----------------------------------------------------------------------------
@@ -157,7 +157,7 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeMaterialAssetId);
    static void consoleInit();
 };
-
+#endif
 #pragma region Singular Asset Macros
 
 //Singular assets

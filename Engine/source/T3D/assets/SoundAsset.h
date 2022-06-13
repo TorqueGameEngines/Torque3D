@@ -145,7 +145,7 @@ protected:
 
 DefineConsoleType(TypeSoundAssetPtr, SoundAsset)
 DefineConsoleType(TypeSoundAssetId, String)
-
+#ifdef TORQUE_TOOLS
 //-----------------------------------------------------------------------------
 // TypeAssetId GuiInspectorField Class
 //-----------------------------------------------------------------------------
@@ -171,7 +171,7 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeSoundAssetId);
    static void consoleInit();
 };
-
+#endif
 #pragma region Singular Asset Macros
 
 //Singular assets

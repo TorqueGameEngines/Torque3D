@@ -37,25 +37,6 @@ void sdl_CloseSplashWindow(void* hinst);
 
 #ifdef TORQUE_SDL
 
-#ifdef TORQUE_SECURE_VFS
-PlatformWindowManagerSDL::DragAndDropFSInfo::DragAndDropFSInfo()
-{
-}
-
-PlatformWindowManagerSDL::DragAndDropFSInfo::DragAndDropFSInfo(String rootName, Torque::FS::FileSystemRef fileSystem) : mRootName(rootName), mDragAndDropFS(fileSystem)
-{
-   if (!Torque::FS::Mount(rootName, fileSystem))
-   {
-      Con::errorf("Could not mount drag and drop FS!");
-   }
-}
-
-PlatformWindowManagerSDL::DragAndDropFSInfo::~DragAndDropFSInfo()
-{
-
-}
-#endif
-
 PlatformWindowManager * CreatePlatformWindowManager()
 {
    return new PlatformWindowManagerSDL();
@@ -87,15 +68,6 @@ PlatformWindowManagerSDL::PlatformWindowManagerSDL()
 
 PlatformWindowManagerSDL::~PlatformWindowManagerSDL()
 {
-   // Unmount all drag and drop FS mounts
-   for (auto iteration = mActiveDragAndDropFSByPath.begin(); iteration != mActiveDragAndDropFSByPath.end(); ++iteration)
-   {
-      auto&& mapping = *iteration;
-      Torque::FS::Unmount(mapping.value.mDragAndDropFS);
-   }
-   mActiveDragAndDropByRoot.clear();
-   mActiveDragAndDropFSByPath.clear();
-
    // Kill all our windows first.
    while(mWindowListHead)
       // The destructors update the list, so this works just fine.
@@ -457,61 +429,7 @@ void PlatformWindowManagerSDL::_process()
             if (!Platform::isDirectory(fileName) && !Platform::isFile(fileName))
                break;
 
-#ifdef TORQUE_SECURE_VFS
-            // Determine what the directory is so we can mount it
-            Torque::Path targetDirectory = Torque::Path(fileName);
-
-            // If we're dropping a file, strip off file information - otherwise if a directory mount it directly
-            if (Platform::isFile(fileName))
-            {
-               targetDirectory.setExtension("");
-               targetDirectory.setFileName("");
-            }
-            const String directoryName = targetDirectory.getDirectory(targetDirectory.getDirectoryCount() - 1);
-
-            auto dropFSMount = mActiveDragAndDropFSByPath.find(targetDirectory);
-            if (dropFSMount == mActiveDragAndDropFSByPath.end())
-            {
-               Torque::FS::FileSystemRef newMount = Platform::FS::createNativeFS(targetDirectory.getFullPath());
-
-               // Search for an unused root in case we have duplicate names
-               U32 rootCounter = 1;
-               String chosenRootName = directoryName;
-               auto search = mActiveDragAndDropByRoot.find(chosenRootName);
-               while (search != mActiveDragAndDropByRoot.end())
-               {
-                  char buffer[32];
-                  dSprintf(buffer, sizeof(buffer), "%u", rootCounter);
-                  chosenRootName = directoryName + buffer;
-
-                  search = mActiveDragAndDropByRoot.find(chosenRootName);
-               }
-
-               mActiveDragAndDropFSByPath[targetDirectory] = DragAndDropFSInfo(directoryName, newMount);
-               mActiveDragAndDropFSByPath[chosenRootName] = mActiveDragAndDropFSByPath[targetDirectory];
-            }
-
-            DragAndDropFSInfo& filesystemInformation = mActiveDragAndDropFSByPath[targetDirectory];
-
-            // Load source file information
-            Torque::Path sourceFile = fileName;
-
-            // Build a reference to the file in VFS
-            Torque::Path targetFile;
-            targetFile.setRoot(filesystemInformation.mRootName);
-            targetFile.setPath("/");
-
-            // Only copy file & extension information if we're dropping a file
-            if (Platform::isFile(fileName))
-            {
-               targetFile.setFileName(sourceFile.getFileName());
-               targetFile.setExtension(sourceFile.getExtension());
-            }
-
-            Con::executef("onDropFile", StringTable->insert(targetFile.getFullPath()));
-#else
             Con::executef("onDropFile", StringTable->insert(fileName));
-#endif
 
             SDL_free(fileName);    // Free dropped_filedir memory
             break;

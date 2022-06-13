@@ -59,15 +59,18 @@ bool  MountDefaults()
 
    // Always mount the data dir so scripts work in either configuration. This is used for eg. preferences storage.
    Path dataDirectory = Platform::getUserDataDirectory();
-   Path appDataDirectory;
-   appDataDirectory.setPath(dataDirectory.getFileName());
-   dataDirectory.appendPath(appDataDirectory);
+   Path appDataDirectory = Path::Join(dataDirectory.getFullPath().c_str(), '/', TORQUE_APP_NAME);
 
-   dataDirectory.setFileName(TORQUE_APP_NAME);
+   // Ensure the root of the data directory exists before trying to mount data VFS
+   if (!Platform::FS::IsDirectory(appDataDirectory) && !Platform::FS::CreateDirectory(appDataDirectory))
+   {
+      // NOTE: We can't Con::errorf here because it doesn't actually output by this point in execution
+   }
 
-   mounted = Mount("data", Platform::FS::createNativeFS(dataDirectory.getFullPath()));
+   mounted = Mount("data", Platform::FS::createNativeFS(appDataDirectory.getFullPath()));
    if (!mounted)
    {
+      // NOTE: We can't Con::errorf here because it doesn't actually output by this point in execution
       return false;
    }
 

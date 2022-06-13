@@ -57,9 +57,12 @@ bool  MountDefaults()
    }
 #endif
 
-   // Always mount the data dir so scripts work in either configuration. This is used for eg. preferences storage.
+#ifndef TORQUE_DISABLE_VIRTUAL_MOUNT_SYSTEM
+   // Always mount the data & home dir so scripts work in either configuration. This is used for eg. preferences storage.
    Path dataDirectory = Platform::getUserDataDirectory();
    Path appDataDirectory = Path::Join(dataDirectory.getFullPath().c_str(), '/', TORQUE_APP_NAME);
+   Path homeDirectory = Platform::getUserHomeDirectory();
+   Path appHomeDirectory = Path::Join(homeDirectory.getFullPath().c_str(), '/', TORQUE_APP_NAME);
 
    // Ensure the root of the data directory exists before trying to mount data VFS
    if (!Platform::FS::IsDirectory(appDataDirectory) && !Platform::FS::CreateDirectory(appDataDirectory))
@@ -67,6 +70,13 @@ bool  MountDefaults()
       // NOTE: We can't Con::errorf here because it doesn't actually output by this point in execution
    }
 
+   // Ensure the root of the home directory exists before trying to mount home VFS
+   if (!Platform::FS::IsDirectory(appHomeDirectory) && !Platform::FS::CreateDirectory(appHomeDirectory))
+   {
+      // NOTE: We can't Con::errorf here because it doesn't actually output by this point in execution
+   }
+
+   // data:/ points to a directory that is usually buried someplace harder to reach on OS
    mounted = Mount("data", Platform::FS::createNativeFS(appDataDirectory.getFullPath()));
    if (!mounted)
    {
@@ -74,7 +84,14 @@ bool  MountDefaults()
       return false;
    }
 
-#ifndef TORQUE_DISABLE_VIRTUAL_MOUNT_SYSTEM
+   // home:/ refers to your Documents/<APPNAME> folder which is easier to reach than the data:/ mount
+   mounted = Mount("home", Platform::FS::createNativeFS(appHomeDirectory.getFullPath()));
+   if (!mounted)
+   {
+      // NOTE: We can't Con::errorf here because it doesn't actually output by this point in execution
+      return false;
+   }
+
    // Note that the VirtualMountSystem must be enabled in volume.cpp for zip support to work.
    return MountZips("game");
 #else

@@ -594,19 +594,19 @@ DefineEngineFunction(compareFileTimes, S32, (const char* fileA, const char* file
    }
 
    Torque::FS::FileNode::Attributes fileAAttributes;
-   Torque::FS::FileNode::Attributes fileABttributes;
+   Torque::FS::FileNode::Attributes fileBAttributes;
 
    // If retrieval of attributes fails, we can't compare   
-   if (!nodeA->getAttributes(&fileAAttributes) || !nodeB->getAttributes(&fileABttributes))
+   if (!nodeA->getAttributes(&fileAAttributes) || !nodeB->getAttributes(&fileBAttributes))
    {
       return 0;
    }
 
-   if (fileAAttributes.mtime > fileABttributes.mtime)
+   if (fileAAttributes.mtime > fileBAttributes.mtime)
    {
       return 1;
    }
-   else if (fileAAttributes.mtime < fileABttributes.mtime)
+   else if (fileAAttributes.mtime < fileBAttributes.mtime)
    {
       return -1;
    }

@@ -158,6 +158,7 @@ S32 ArrayObject::getIndexFromValue( const String &value ) const
    S32 foundIndex = -1;
    for ( S32 i = mCurrentIndex; i < mArray.size(); i++ )
    {
+      if (mCurrentIndex < 0) continue;
       if ( isEqual( mArray[i].value, value ) )
       {
          foundIndex = i;
@@ -187,6 +188,7 @@ S32 ArrayObject::getIndexFromKey( const String &key ) const
    S32 foundIndex = -1;
    for ( S32 i = mCurrentIndex; i < mArray.size(); i++ )
    {
+      if (mCurrentIndex < 0) continue;
       if ( isEqual( mArray[i].key, key ) )
       {
          foundIndex = i;

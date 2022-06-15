@@ -155,7 +155,7 @@ bool ArrayObject::_addKeyFromField( void *object, const char *index, const char 
 
 S32 ArrayObject::getIndexFromValue( const String &value ) const
 {
-   S32 currentIndex = mMin(mCurrentIndex, 0);
+   S32 currentIndex = mMax(mCurrentIndex, 0);
    S32 foundIndex = -1;
    for ( S32 i = currentIndex; i < mArray.size(); i++ )
    {
@@ -185,7 +185,7 @@ S32 ArrayObject::getIndexFromValue( const String &value ) const
 
 S32 ArrayObject::getIndexFromKey( const String &key ) const
 {
-   S32 currentIndex = mMin(mCurrentIndex, 0);
+   S32 currentIndex = mMax(mCurrentIndex, 0);
    S32 foundIndex = -1;
    for ( S32 i = currentIndex; i < mArray.size(); i++ )
    {
@@ -215,7 +215,7 @@ S32 ArrayObject::getIndexFromKey( const String &key ) const
 
 S32 ArrayObject::getIndexFromKeyValue( const String &key, const String &value ) const
 {
-   S32 currentIndex = mMin(mCurrentIndex, 0);
+   S32 currentIndex = mMax(mCurrentIndex, 0);
    S32 foundIndex = -1;
    for ( S32 i = currentIndex; i < mArray.size(); i++ )
    {

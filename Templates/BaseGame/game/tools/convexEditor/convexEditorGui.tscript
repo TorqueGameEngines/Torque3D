@@ -38,7 +38,7 @@ function ConvexEditorGui::onWake( %this )
 		   %mat = %matName;
 		}
 		
-		ConvexEditorOptionsWindow-->matPreviewBtn.setBitmap( getAssetPreviewImage(%mat.getDiffuseMap(0)));
+		ConvexEditorOptionsWindow-->matPreviewBtn.bitmapAsset = getAssetPreviewImage(%mat.getDiffuseMap(0));
 		
 		ConvexEditorOptionsWindow.activeMaterial = %mat;
 	}
@@ -78,7 +78,7 @@ function ConvexEditorGui::onSelectionChanged( %this, %shape, %face )
 
    ConvexEditorOptionsWindow-->defMatPreviewBtn.setText("");
    %shapeMat = %shape.getMaterial();
-   ConvexEditorOptionsWindow-->defMatPreviewBtn.setBitmap(getAssetPreviewImage(%shapeMat.getDiffuseMap(0)));
+   ConvexEditorOptionsWindow-->defMatPreviewBtn.bitmapAsset = getAssetPreviewImage(%shapeMat.getDiffuseMap(0));
 
    ConvexEditorOptionsWindow.activeShape = %shape;
       
@@ -166,18 +166,8 @@ function ConvexEditorMaterialBtn::gotMaterialName(%this, %name)
    //eval(%this.object @ "." @ %this.targetField @ " = " @ %name @ ";");
    //%this.object.changeMaterial(getTrailingNumber(%this.targetField), %name);
    //%this.object.inspectorApply();
-   %diffusemap = %materialAsset.materialDefinitionName.getDiffuseMap(0);
-   if(%diffusemap $= "")
-   {
-      %diffuseAsset = %materialAsset.materialDefinitionName.getDiffuseMapAsset(0);
-      if(%diffuseAsset !$= "")
-      {
-         %diffuseAssetDef = AssetDatabase.acquireAsset(%diffuseAsset);
-         %diffusemap = %diffuseAssetDef.getImagePath();
-      }
-   }
-
-   ConvexEditorOptionsWindow-->matPreviewBtn.setBitmap(getAssetPreviewImage(%diffusemap));
+   %diffusemap = %materialAsset.materialDefinitionName.getDiffuseMapAsset(0);
+   ConvexEditorOptionsWindow-->matPreviewBtn.bitmapAsset = getAssetPreviewImage(%diffusemap);
 
    ConvexEditorOptionsWindow.activeMaterial = %materialAsset.getAssetId();
 }
@@ -242,7 +232,7 @@ function ConvexEditorDefaultMaterialBtn::gotMaterialName(%this, %name)
       }
    }
 
-   ConvexEditorOptionsWindow-->defMatPreviewBtn.setBitmap(getAssetPreviewImage(%diffusemap));
+   ConvexEditorOptionsWindow-->defMatPreviewBtn.bitmapAsset = getAssetPreviewImage(%diffusemap);
 
    ConvexEditorOptionsWindow.activeShape.setMaterial(%name);
 

@@ -156,6 +156,7 @@ DefineEngineMethod(StateMachineAsset, notifyAssetChanged, void, (),,"")
    ResourceManager::get().getChangedSignal().trigger(object->getStateMachineFile());
 }
 
+#ifdef TORQUE_TOOLS
 //-----------------------------------------------------------------------------
 // GuiInspectorTypeAssetId
 //-----------------------------------------------------------------------------
@@ -233,3 +234,4 @@ bool GuiInspectorTypeStateMachineAssetPtr::updateRects()
 
    return resized;
 }
+#endif

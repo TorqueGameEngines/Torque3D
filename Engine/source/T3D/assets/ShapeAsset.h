@@ -209,10 +209,10 @@ protected:
    static const char* getNormalImposterFile(void* obj, const char* data) { return static_cast<ShapeAsset*>(obj)->getNormalImposterFile(); }
 };
 
-#ifdef TORQUE_TOOLS
 DefineConsoleType(TypeShapeAssetPtr, S32)
 DefineConsoleType(TypeShapeAssetId, String)
 
+#ifdef TORQUE_TOOLS
 //-----------------------------------------------------------------------------
 // TypeAssetId GuiInspectorField Class
 //-----------------------------------------------------------------------------

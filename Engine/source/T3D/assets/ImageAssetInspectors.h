@@ -6,6 +6,7 @@
 #include "gui/editor/guiInspectorTypes.h"
 #endif
 
+#ifdef TORQUE_TOOLS
 class GuiInspectorTypeImageAssetPtr : public GuiInspectorTypeFileName
 {
    typedef GuiInspectorTypeFileName Parent;
@@ -29,3 +30,4 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeImageAssetId);
    static void consoleInit();
 };
+#endif

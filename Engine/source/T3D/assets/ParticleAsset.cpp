@@ -122,6 +122,7 @@ void ParticleAsset::copyTo(SimObject* object)
 }
 
 
+#ifdef TORQUE_TOOLS
 //-----------------------------------------------------------------------------
 // GuiInspectorTypeAssetId
 //-----------------------------------------------------------------------------
@@ -199,3 +200,4 @@ bool GuiInspectorTypeParticleAssetPtr::updateRects()
 
    return resized;
 }
+#endif

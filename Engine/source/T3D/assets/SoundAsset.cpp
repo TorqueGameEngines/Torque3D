@@ -360,7 +360,6 @@ DefineEngineStaticMethod(SoundAsset, getAssetIdByFilename, const char*, (const c
 {
    return SoundAsset::getAssetIdByFileName(StringTable->insert(filePath));
 }
-#endif
 IMPLEMENT_CONOBJECT(GuiInspectorTypeSoundAssetPtr);
 
 ConsoleDocClass(GuiInspectorTypeSoundAssetPtr,
@@ -451,3 +450,4 @@ void GuiInspectorTypeSoundAssetId::consoleInit()
 
    ConsoleBaseType::getType(TypeSoundAssetId)->setInspectorFieldType("GuiInspectorTypeSoundAssetId");
 }
+#endif

@@ -222,10 +222,10 @@ public:
 
    virtual bool onAdd();
    virtual void onRemove();
-
+#ifdef TORQUE_TOOLS
    void setMenuBar(SimObject *obj);
    SimObject* getMenuBar() { return mMenuBarCtrl; }
-
+#endif
    static void initPersistFields();
 
    static CanvasSizeChangeSignal& getCanvasSizeChangeSignal() { return smCanvasSizeChangeSignal; }

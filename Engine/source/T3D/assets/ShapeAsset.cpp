@@ -117,7 +117,7 @@ ConsoleSetType(TypeShapeAssetId)
 
 //-----------------------------------------------------------------------------
 
-const String ShapeAsset::mErrCodeStrings[] =
+const String ShapeAsset::mShapeErrCodeStrings[] =
 {
    "TooManyVerts",
    "TooManyBones",

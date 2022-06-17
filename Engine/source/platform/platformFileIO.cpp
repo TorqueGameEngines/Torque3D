@@ -328,8 +328,13 @@ char * Platform::makeFullPathName(const char *path, char *buffer, U32 size, cons
    // [rene, 05/05/2008] Based on overall file handling in Torque, it does not seem to make
    //    that much sense to me to base things off the current working directory here.
 
+   #ifndef TORQUE_SCECURE_VFS
    if(cwd == NULL)
       cwd = Con::isCurrentScriptToolScript() ? Platform::getMainDotCsDir() : Platform::getCurrentDirectory();
+   #else
+   if (cwd == NULL)
+      cwd = "game:/";
+   #endif
 
    dStrncpy(buffer, cwd, size);
    buffer[size-1] = 0;

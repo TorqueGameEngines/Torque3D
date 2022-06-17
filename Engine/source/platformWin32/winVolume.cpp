@@ -143,6 +143,10 @@ static void _CopyStatAttributes(const WIN32_FIND_DATAW& info, FileNode::Attribut
    attr->atime = Win32FileTimeToTime(
       info.ftLastAccessTime.dwLowDateTime,
       info.ftLastAccessTime.dwHighDateTime);
+
+   attr->ctime = Win32FileTimeToTime(
+      info.ftCreationTime.dwLowDateTime,
+      info.ftCreationTime.dwHighDateTime);
 }
 
 
@@ -758,6 +762,7 @@ String   Platform::FS::getAssetDir()
 /// file systems.
 bool Platform::FS::InstallFileSystems()
 {
+#ifndef TORQUE_SECURE_VFS
    WCHAR buffer[1024];
 
    // [8/24/2009 tomb] This stops Windows from complaining about drives that have no disks in
@@ -792,6 +797,7 @@ bool Platform::FS::InstallFileSystems()
    wd += '/';
 
    Platform::FS::SetCwd(wd);
+#endif
 
    return true;
 }

@@ -255,6 +255,64 @@ File::~File() {}
 Directory::Directory() {}
 Directory::~Directory() {}
 
+bool Directory::dump(Vector<Path>& out)
+{
+   const Path sourcePath = getName();
+
+   FileNode::Attributes currentAttributes;
+   while (read(&currentAttributes))
+   {
+      Path currentPath = sourcePath;
+      currentPath.appendPath(currentPath.getFileName());
+      currentPath.setFileName(currentAttributes.name);
+
+      out.push_back(currentPath);
+   }
+
+   return true;
+}
+
+bool Directory::dumpFiles(Vector<Path>& out)
+{
+   const Path sourcePath = getName();
+
+   FileNode::Attributes currentAttributes;
+   while (read(&currentAttributes))
+   {
+      Path currentPath = sourcePath;
+      currentPath.appendPath(currentPath.getFileName());
+      currentPath.setFileName(currentAttributes.name);
+
+      if (IsFile(currentPath))
+      {
+         out.push_back(currentPath);
+      }
+   }
+
+   return true;
+}
+
+bool Directory::dumpDirectories(Vector<Path>& out)
+{
+   const Path sourcePath = getName();
+
+   FileNode::Attributes currentAttributes;
+   while (read(&currentAttributes))
+   {
+      Path currentPath = sourcePath;
+      currentPath.appendPath(currentPath.getFileName());
+      currentPath.setFileName(currentAttributes.name);
+
+      const bool result = IsDirectory(currentPath);
+      if (result)
+      {
+         out.push_back(currentPath);
+      }
+   }
+
+   return true;
+}
+
 
 FileNode::FileNode()
 :  mChecksum(0)
@@ -271,6 +329,18 @@ Time   FileNode::getModifiedTime()
       return Time();
 
    return attrs.mtime;
+}
+
+Time  FileNode::getCreatedTime()
+{
+   Attributes attrs;
+
+   bool success = getAttributes(&attrs);
+
+   if (!success)
+      return Time();
+
+   return attrs.ctime;
 }
 
 U64    FileNode::getSize()
@@ -498,6 +568,90 @@ Path MountSystem::_normalize(const Path& path)
       po.setPath( Path::CompressPath( Path::Join( mCWD.getPath(),'/',po.getPath() ) ) );
    }
    return po;
+}
+
+bool MountSystem::copyFile(const Path& source, const Path& destination, bool noOverwrite)
+{
+   // Exit out early if we're not overriding
+   if (isFile(destination) && noOverwrite)
+   {
+      return true;
+   }
+
+   FileRef sourceFile = openFile(source, FS::File::AccessMode::Read);
+   const U64 sourceFileSize = sourceFile->getSize();
+
+   void* writeBuffer = dMalloc(sourceFileSize);
+   sourceFile->read(writeBuffer, sourceFileSize);
+
+   FileRef destinationFile = openFile(destination, FS::File::AccessMode::Write);
+   const bool success = destinationFile->write(writeBuffer, sourceFileSize) == sourceFileSize;
+
+   dFree(writeBuffer);
+
+   return success;
+}
+
+bool MountSystem::_dumpDirectories(DirectoryRef directory, Vector<StringTableEntry>& directories, S32 depth, bool noBasePath, S32 currentDepth, const Path& basePath)
+{
+   Vector<Torque::Path> directoryPaths;
+   if (!directory->dumpDirectories(directoryPaths))
+   {
+      return false;
+   }
+
+   // Queries against / will return a directory count of 1, but the code relies on actual directory entries (Eg. /data) so we handle that special case
+   const U32 basePathDirectoryCount = String::compare(basePath.getFullPathWithoutRoot(), "/") == 0 ? basePath.getDirectoryCount() - 1 : basePath.getDirectoryCount();
+
+   for (U32 iteration = 0; iteration < directoryPaths.size(); ++iteration)
+   {
+      const Path& directoryPath = directoryPaths[iteration];
+
+      // Load the full path to the directory unless we're not supposed to include base paths
+      String directoryPathString = directoryPath.getFullPath().c_str();
+      if (noBasePath)
+      {
+         // Build a path representing the directory tree *after* the base path query but excluding the base
+         // So if we queried for data/ and are currently processing data/ExampleModule/datablocks we want to output
+         // ExampleModule/datablocks
+         Path newDirectoryPath;
+         for (U32 iteration = basePathDirectoryCount; iteration < directoryPath.getDirectoryCount(); ++iteration)
+         {
+            if (iteration > basePathDirectoryCount)
+            {
+               newDirectoryPath.setPath(newDirectoryPath.getPath() + "/");
+            }
+            newDirectoryPath.setPath(newDirectoryPath.getPath() + directoryPath.getDirectory(iteration));
+         }
+
+         newDirectoryPath.setFileName(directoryPath.getFileName());
+         newDirectoryPath.setExtension(directoryPath.getExtension());
+         directoryPathString = newDirectoryPath.getFullPathWithoutRoot();
+      }
+
+      // Output result and enumerate subdirectories if we're not too deep according to the depth parameter
+      directories.push_back(StringTable->insert(directoryPathString, true));
+      if (currentDepth <= depth)
+      {
+         const String subdirectoryPath = directoryPath.getFullPath() + "/";
+
+         DirectoryRef nextDirectory = OpenDirectory(subdirectoryPath);
+         _dumpDirectories(nextDirectory, directories, depth, noBasePath, currentDepth + 1, basePath);
+      }
+   }
+
+   return true;
+}
+
+bool MountSystem::dumpDirectories(const Path& path, Vector<StringTableEntry>& directories, S32 depth, bool noBasePath)
+{
+   if (!isDirectory(path))
+   {
+      return false;
+   }
+
+   DirectoryRef sourceDirectory = openDirectory(path);
+   return _dumpDirectories(sourceDirectory, directories, depth, noBasePath, 1, path);
 }
 
 FileRef MountSystem::createFile(const Path& path)
@@ -792,22 +946,19 @@ bool MountSystem::isDirectory(const Path& path, FileSystemRef fsRef)
 {
    FileNode::Attributes attr;
 
+   bool result = false;
    if (fsRef.isNull())
    {
-      if (getFileAttributes(path,&attr))
-         return attr.flags & FileNode::Directory;
-      return false;
+      if (getFileAttributes(path, &attr))
+         result = (attr.flags & FileNode::Directory) != 0;
    }
    else
    {
       FileNodeRef fnRef = fsRef->resolve(path);
-      if (fnRef.isNull())
-         return false;
-
-      if (fnRef->getAttributes(&attr))
-         return attr.flags & FileNode::Directory;
-      return false;
+      if (!fnRef.isNull() && fnRef->getAttributes(&attr))
+         result = (attr.flags & FileNode::Directory) != 0;
    }
+   return result;
 }
 
 bool MountSystem::isReadOnly(const Path& path)
@@ -903,6 +1054,16 @@ namespace FS
 FileRef CreateFile(const Path &path)
 {
    return sgMountSystem.createFile(path);
+}
+
+bool CopyFile(const Path& source, const Path& destination, bool noOverwrite)
+{
+   return sgMountSystem.copyFile(source, destination, noOverwrite);
+}
+
+bool DumpDirectories(const Path& path, Vector<StringTableEntry>& directories, S32 depth, bool noBasePath)
+{
+   return sgMountSystem.dumpDirectories(path, directories, depth, noBasePath);
 }
 
 DirectoryRef CreateDirectory(const Path &path)

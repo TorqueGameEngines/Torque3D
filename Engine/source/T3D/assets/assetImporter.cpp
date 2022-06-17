@@ -1426,7 +1426,7 @@ void AssetImportConfig::loadSISFile(Torque::Path filePath)
    String settingsFile = settingsFilePath + "/" + fileExtension + ".sis";
 
    FileObject* fileObj = new FileObject();
-   if (Platform::isFile(settingsFile))
+   if (Torque::FS::IsFile(settingsFile))
    {
       if (!fileObj->readMemory(settingsFile.c_str()))
       {
@@ -2170,7 +2170,7 @@ void AssetImporter::processShapeMaterialInfo(AssetImportObject* assetItem, S32 m
 
       if (fullFilePath.isNotEmpty())
       {
-         if (!Platform::isFile(fullFilePath.c_str()))
+         if (!Torque::FS::IsFile(fullFilePath.c_str()))
          {
             //could be a stale path reference, such as if it was downloaded elsewhere. Trim to just the filename and see
             //if we can find it there
@@ -2182,7 +2182,7 @@ void AssetImporter::processShapeMaterialInfo(AssetImportObject* assetItem, S32 m
             if(filePath.getPath().isEmpty())
                fullFilePath = shapePathBase + "/" + fullFilePath;
  
-            if (Platform::isFile(fullFilePath.c_str()))
+            if (Torque::FS::IsFile(fullFilePath.c_str()))
             {
                filePath = Torque::Path(fullFilePath);
             }
@@ -2316,7 +2316,7 @@ void AssetImporter::validateAsset(AssetImportObject* assetItem)
       }
    }
 
-   if (!assetItem->filePath.isEmpty() && !assetItem->generatedAsset && !Platform::isFile(assetItem->filePath.getFullPath().c_str()))
+   if (!assetItem->filePath.isEmpty() && !assetItem->generatedAsset && !Torque::FS::IsFile(assetItem->filePath.getFullPath().c_str()))
    {
       assetItem->status = "Error";
       assetItem->statusType = "MissingFile";
@@ -2806,15 +2806,20 @@ Torque::Path AssetImporter::importImageAsset(AssetImportObject* assetItem)
    char qualifiedFromFile[2048];
    char qualifiedToFile[2048];
 
+#ifndef TORQUE_SECURE_VFS
    Platform::makeFullPathName(originalPath.c_str(), qualifiedFromFile, sizeof(qualifiedFromFile));
    Platform::makeFullPathName(assetPath.c_str(), qualifiedToFile, sizeof(qualifiedToFile));
+#else
+   dStrcpy(qualifiedFromFile, originalPath.c_str(), sizeof(qualifiedFromFile));
+   dStrcpy(qualifiedToFile, assetPath.c_str(), sizeof(qualifiedToFile));
+#endif
    
    newAsset->setAssetName(assetName);
    newAsset->setImageFileName(imageFileName.c_str());
 
    //If it's not a re-import, check that the file isn't being in-place imported. If it isn't, store off the original
    //file path for reimporting support later
-   if (!isReimport && String::compare(qualifiedFromFile, qualifiedToFile) && Platform::isFile(qualifiedFromFile))
+   if (!isReimport && String::compare(qualifiedFromFile, qualifiedToFile) && Torque::FS::IsFile(qualifiedFromFile))
    {
       newAsset->setDataField(StringTable->insert("originalFilePath"), nullptr, qualifiedFromFile);
    }
@@ -2843,7 +2848,7 @@ Torque::Path AssetImporter::importImageAsset(AssetImportObject* assetItem)
    {
       bool isInPlace = !String::compare(qualifiedFromFile, qualifiedToFile);
 
-      if (!isInPlace && !dPathCopy(qualifiedFromFile, qualifiedToFile, !isReimport))
+      if (!isInPlace && !Torque::FS::CopyFile(qualifiedFromFile, qualifiedToFile, !isReimport))
       {
          dSprintf(importLogBuffer, sizeof(importLogBuffer), "Error! Unable to copy file %s", assetItem->filePath.getFullPath().c_str());
          activityLog.push_back(importLogBuffer);
@@ -2869,11 +2874,15 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
 
    char qualifiedFromFile[2048];
 
+#ifndef TORQUE_SECURE_VFS
    Platform::makeFullPathName(originalPath.c_str(), qualifiedFromFile, sizeof(qualifiedFromFile));
+#else
+   dStrcpy(qualifiedFromFile, originalPath.c_str(), sizeof(qualifiedFromFile));
+#endif
 
    newAsset->setAssetName(assetName);
 
-   if (!isReimport && Platform::isFile(qualifiedFromFile))
+   if (!isReimport && Torque::FS::IsFile(qualifiedFromFile))
    {
    newAsset->setDataField(StringTable->insert("originalFilePath"), nullptr, qualifiedFromFile);
    }
@@ -3035,11 +3044,17 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
    char qualifiedFromCSFile[2048];
    char qualifiedToCSFile[2048];
 
+#ifndef TORQUE_SECURE_VFS
    Platform::makeFullPathName(originalPath.c_str(), qualifiedFromFile, sizeof(qualifiedFromFile));
    Platform::makeFullPathName(assetPath.c_str(), qualifiedToFile, sizeof(qualifiedToFile));
-
    Platform::makeFullPathName(originalConstructorPath.c_str(), qualifiedFromCSFile, sizeof(qualifiedFromCSFile));
    Platform::makeFullPathName(constructorPath.c_str(), qualifiedToCSFile, sizeof(qualifiedToCSFile));
+#else
+   dStrcpy(qualifiedFromFile, originalPath.c_str(), sizeof(qualifiedFromFile));
+   dStrcpy(qualifiedToFile, assetPath.c_str(), sizeof(qualifiedToFile));
+   dStrcpy(qualifiedFromCSFile, originalConstructorPath.c_str(), sizeof(qualifiedFromCSFile));
+   dStrcpy(qualifiedToCSFile, constructorPath.c_str(), sizeof(qualifiedToCSFile));
+#endif
 
    newAsset->setAssetName(assetName);
    newAsset->setShapeFile(shapeFileName.c_str());
@@ -3057,7 +3072,7 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
 
    //If it's not a re-import, check that the file isn't being in-place imported. If it isn't, store off the original
    //file path for reimporting support later
-   if (!isReimport && String::compare(qualifiedFromFile, qualifiedToFile) && Platform::isFile(qualifiedFromFile))
+   if (!isReimport && String::compare(qualifiedFromFile, qualifiedToFile) && Torque::FS::IsFile(qualifiedFromFile))
    {
       newAsset->setDataField(StringTable->insert("originalFilePath"), nullptr, qualifiedFromFile);
    }
@@ -3121,7 +3136,7 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
    {
       bool isInPlace = !String::compare(qualifiedFromFile, qualifiedToFile);
 
-      if (!isInPlace && !dPathCopy(qualifiedFromFile, qualifiedToFile, !isReimport))
+      if (!isInPlace && !Torque::FS::CopyFile(qualifiedFromFile, qualifiedToFile, !isReimport))
       {
          dSprintf(importLogBuffer, sizeof(importLogBuffer), "Error! Unable to copy file %s", qualifiedFromFile);
          activityLog.push_back(importLogBuffer);
@@ -3130,9 +3145,9 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
 
       if (!isInPlace)
       {
-         if (Platform::isFile(qualifiedFromCSFile))
+         if (Torque::FS::IsFile(qualifiedFromCSFile))
          {
-            if (!dPathCopy(qualifiedFromCSFile, qualifiedToCSFile, !isReimport))
+            if (!Torque::FS::CopyFile(qualifiedFromCSFile, qualifiedToCSFile, !isReimport))
             {
                dSprintf(importLogBuffer, sizeof(importLogBuffer), "Error! Unable to copy file %s", qualifiedFromCSFile);
                activityLog.push_back(importLogBuffer);
@@ -3149,7 +3164,7 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
       else
       {
          //We're doing an in-place import, so double check we've already got a constructor file in the expected spot
-         if (Platform::isFile(qualifiedFromCSFile))
+         if (Torque::FS::IsFile(qualifiedFromCSFile))
          {
             //Yup, found it, we're good to go
             makeNewConstructor = false;
@@ -3162,7 +3177,7 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
             Torque::Path constrFilePath = qualifiedFromCSFile;
             constrFilePath.setExtension("cs");
 
-            if (Platform::isFile(constrFilePath.getFullPath().c_str()))
+            if (Torque::FS::IsFile(constrFilePath.getFullPath().c_str()))
             {
                //Yup, found it, we're good to go
                makeNewConstructor = false;
@@ -3324,15 +3339,20 @@ Torque::Path AssetImporter::importSoundAsset(AssetImportObject* assetItem)
    char qualifiedFromFile[2048];
    char qualifiedToFile[2048];
 
+#ifndef TORQUE_SECURE_VFS
    Platform::makeFullPathName(originalPath.c_str(), qualifiedFromFile, sizeof(qualifiedFromFile));
    Platform::makeFullPathName(assetPath.c_str(), qualifiedToFile, sizeof(qualifiedToFile));
+#else
+   dStrcpy(qualifiedFromFile, originalPath.c_str(), sizeof(qualifiedFromFile));
+   dStrcpy(qualifiedToFile, assetPath.c_str(), sizeof(qualifiedToFile));
+#endif
 
    newAsset->setAssetName(assetName);
    newAsset->setSoundFile(imageFileName.c_str());
 
    //If it's not a re-import, check that the file isn't being in-place imported. If it isn't, store off the original
    //file path for reimporting support later
-   if (!isReimport && String::compare(qualifiedFromFile, qualifiedToFile) && Platform::isFile(qualifiedFromFile))
+   if (!isReimport && String::compare(qualifiedFromFile, qualifiedToFile) && Torque::FS::IsFile(qualifiedFromFile))
    {
       newAsset->setDataField(StringTable->insert("originalFilePath"), nullptr, qualifiedFromFile);
    }
@@ -3351,7 +3371,7 @@ Torque::Path AssetImporter::importSoundAsset(AssetImportObject* assetItem)
    {
       bool isInPlace = !String::compare(qualifiedFromFile, qualifiedToFile);
 
-      if (!isInPlace && !dPathCopy(qualifiedFromFile, qualifiedToFile, !isReimport))
+      if (!isInPlace && !Torque::FS::CopyFile(qualifiedFromFile, qualifiedToFile, !isReimport))
       {
          dSprintf(importLogBuffer, sizeof(importLogBuffer), "Error! Unable to copy file %s", assetItem->filePath.getFullPath().c_str());
          activityLog.push_back(importLogBuffer);
@@ -3380,15 +3400,20 @@ Torque::Path AssetImporter::importShapeAnimationAsset(AssetImportObject* assetIt
    char qualifiedFromFile[2048];
    char qualifiedToFile[2048];
 
+#ifndef TORQUE_SECURE_VFS
    Platform::makeFullPathName(originalPath.c_str(), qualifiedFromFile, sizeof(qualifiedFromFile));
    Platform::makeFullPathName(assetPath.c_str(), qualifiedToFile, sizeof(qualifiedToFile));
+#else
+   dStrcpy(qualifiedFromFile, originalPath.c_str(), sizeof(qualifiedFromFile));
+   dStrcpy(qualifiedToFile, assetPath.c_str(), sizeof(qualifiedToFile));
+#endif
 
    newAsset->setAssetName(assetName);
    newAsset->setAnimationFile(imageFileName.c_str());
 
    //If it's not a re-import, check that the file isn't being in-place imported. If it isn't, store off the original
    //file path for reimporting support later
-   if (!isReimport && String::compare(qualifiedFromFile, qualifiedToFile) && Platform::isFile(qualifiedFromFile))
+   if (!isReimport && String::compare(qualifiedFromFile, qualifiedToFile) && Torque::FS::IsFile(qualifiedFromFile))
    {
       newAsset->setDataField(StringTable->insert("originalFilePath"), nullptr, qualifiedFromFile);
    }
@@ -3407,7 +3432,7 @@ Torque::Path AssetImporter::importShapeAnimationAsset(AssetImportObject* assetIt
    {
       bool isInPlace = !String::compare(qualifiedFromFile, qualifiedToFile);
 
-      if (!isInPlace && !dPathCopy(qualifiedFromFile, qualifiedToFile, !isReimport))
+      if (!isInPlace && !Torque::FS::CopyFile(qualifiedFromFile, qualifiedToFile, !isReimport))
       {
          dSprintf(importLogBuffer, sizeof(importLogBuffer), "Error! Unable to copy file %s", assetItem->filePath.getFullPath().c_str());
          activityLog.push_back(importLogBuffer);

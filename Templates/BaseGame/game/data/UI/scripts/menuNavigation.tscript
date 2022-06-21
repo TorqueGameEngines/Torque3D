@@ -175,8 +175,11 @@ function UINavigation::popPage(%this, %callback)
    }
    
    %newTopPage = %this.getCurrentPage();
-   if(%newTopPage.isMethod("onOpen"))
-      %newTopPage.call("onOpen");
+   if(isObject(%newTopPage))
+   {
+   	  if(%newTopPage.isMethod("onOpen"))
+         %newTopPage.call("onOpen");
+   }
    
    if(%callback !$= "")
    eval(%callback);

@@ -110,7 +110,7 @@ function OptionsMenu::onOpen(%this)
    OptionsMenuCategoryList.setAsActiveMenuList();
    
    $activeMenuButtonContainer-->button1.set("btn_back", "R", "Reset", "OptionsMenu.resetToDefaults();");
-   $activeMenuButtonContainer-->button1.disable();
+   $activeMenuButtonContainer-->button2.disable();
    $activeMenuButtonContainer-->button3.set("", "Space", "Apply", "OptionsMenu.apply();");
    $activeMenuButtonContainer-->button4.set("btn_a", "", "Select", "OptionsMenu.select();");
    $activeMenuButtonContainer-->button5.set("btn_b", "Escape", "Back", %this @ ".navigation.popPage();");
@@ -130,7 +130,6 @@ function OptionsMenu::canClose(%this)
    if(OptionsMenuSettingsList.isActiveMenuList())
    {
    OptionsMenuCategoryList.setAsActiveMenuList();
-      %this.updateSelectButton();
       return false;
    }
    else
@@ -168,19 +167,6 @@ function OptionsMenu::select(%this)
    if(OptionsMenuCategoryList.isActiveMenuList())
    {
       OptionsMenuSettingsList.setAsActiveMenuList();
-      %this.updateSelectButton();
-   }
-}
-
-function OptionsMenu::updateSelectButton(%this)
-{
-   if(OptionsMenuCategoryList.isActiveMenuList())
-   {
-      %this-->selectButton.setHidden(false);
-   }
-   else if(OptionsMenuSettingsList.isActiveMenuList())
-   {
-      %this-->selectButton.setHidden(true);
    }
 }
 
@@ -763,7 +749,8 @@ function populateGamepadSettingsList()
 //
 function OptionsMenuList::activateRow(%this)
 {
-   OptionsMenuSettingsList.setFirstResponder();
+   //OptionsMenuSettingsList.setFirstResponder();
+   OptionsMenuSettingsList.setAsActiveMenuList();
 }
 
 function OptionsMenuSettingsList::setRowEnabled(%this, %row, %status)
@@ -797,6 +784,29 @@ function OptionsMenuSettingsList::addOptionRow(%this, %label, %targetPrefVar, %o
    };
    
    %option.targetPrefVar = %targetPrefVar; //create a var-option association
+   
+   if(%defaultValue $= "")
+   {
+      %unappliedPrefIndex = OptionsMenu.unappliedChanges.getIndexFromKey(%targetPrefVar);
+      if(%unappliedPrefIndex != -1)
+      {
+            %value = OptionsMenu.unappliedChanges.getValue(%unappliedPrefIndex);
+            %defaultValue = strreplace(%value, "\"", "");
+      }
+   
+      if(%defaultValue $= "")
+      {
+         %sanitizedVar = strReplace(%targetPrefVar, "[", "");
+         %sanitizedVar = strReplace(%sanitizedVar, "]", "");
+         %sanitizedVar = strReplace(%sanitizedVar, ",", "_");
+         %defaultValue = getVariable(%sanitizedVar);
+      }
+   }
+   
+   if(%defaultValue $= "Off" || %defaultValue $= "No")
+      %defaultValue = "0";
+   if(%defaultValue $= "On" || %defaultValue $= "Yes")
+      %defaultValue = "1";
    
    %option.setListSetting(%label, %optionsList, %wrapOptions, %callback, %enabled, %description, %defaultValue);
 

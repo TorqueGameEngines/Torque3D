@@ -17,7 +17,7 @@ $guiContent = new GuiControl(PauseMenu) {
       isContainer = "1";
       canSaveDynamicFields = "1";
    };
-   new GuiControl() {
+   new GuiControl(PauseMenuButtons) {
       position = "162 125";
       extent = "700 518";
       horizSizing = "center";

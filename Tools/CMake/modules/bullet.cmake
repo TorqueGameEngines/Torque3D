@@ -9,6 +9,7 @@ if(TORQUE_PHYSICS_BULLET)
                                                      Bullet2FileLoader BulletDynamics Bullet3OpenCL_clew Bullet3Common
                                                      LinearMath Bullet3Geometry Bullet3Collision)
   set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} TORQUE_PHYSICS_BULLET TORQUE_PHYSICS_ENABLED)
+  set(TORQUE_INCLUDE_DIRECTORIES ${TORQUE_INCLUDE_DIRECTORIES} "${CMAKE_SOURCE_DIR}/Engine/lib/bullet/src" )
 
   # Since Bullet lives elsewhere we need to ensure it is known to Torque when providing a link to it
   set(BUILD_SHARED_LIBS OFF CACHE BOOL "Bullet Shared Libs" FORCE)

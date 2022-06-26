@@ -5,7 +5,7 @@ function AssetBrowser::createPrefab(%this)
       
    %assetName = AssetBrowser.newAssetSettings.assetName;  
    
-   %assetPath = AssetBrowser.dirHandler.currentAddress @ "/";    
+   %assetPath = NewAssetTargetAddress.getText() @ "/";    
    
    %tamlpath = %assetPath @ %assetName @ ".asset.taml";
    %prefabFilePath = %assetPath @ %assetName @ ".prefab";

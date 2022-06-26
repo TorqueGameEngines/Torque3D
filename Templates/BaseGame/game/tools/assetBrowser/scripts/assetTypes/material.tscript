@@ -5,7 +5,7 @@ function AssetBrowser::createMaterialAsset(%this)
    %moduleName = AssetBrowser.newAssetSettings.moduleName;
    %modulePath = "data/" @ %moduleName;
    
-   %assetPath = AssetBrowser.dirHandler.currentAddress @ "/";   
+   %assetPath = NewAssetTargetAddress.getText() @ "/";   
    
    %tamlpath = %assetPath @ %assetName @ ".asset.taml";
    
@@ -309,7 +309,7 @@ function AssetBrowser::importMaterialAsset(%this, %assetItem)
    %assetImportSuccessful = false;
    %assetId = %moduleName@":"@%assetName;
    
-   %assetPath = AssetBrowser.dirHandler.currentAddress @ "/";
+   %assetPath = NewAssetTargetAddress.getText() @ "/";
    %tamlpath = %assetPath @ %assetName @ ".asset.taml";
    %sgfPath = %assetPath @ %assetName @ ".sgf";
    %scriptPath = %assetPath @ %assetName @ "." @ $TorqueScriptFileExtension;

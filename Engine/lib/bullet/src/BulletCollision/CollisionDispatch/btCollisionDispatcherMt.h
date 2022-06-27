@@ -1,6 +1,6 @@
 /*
 Bullet Continuous Collision Detection and Physics Library
-Copyright (c) 2003-2006 Erwin Coumans  http://continuousphysics.com/Bullet/
+Copyright (c) 2003-2006 Erwin Coumans  https://bulletphysics.org
 
 This software is provided 'as-is', without any express or implied warranty.
 In no event will the authors be held liable for any damages arising from the use of this software.
@@ -19,21 +19,21 @@ subject to the following restrictions:
 #include "BulletCollision/CollisionDispatch/btCollisionDispatcher.h"
 #include "LinearMath/btThreads.h"
 
-
 class btCollisionDispatcherMt : public btCollisionDispatcher
 {
 public:
-    btCollisionDispatcherMt( btCollisionConfiguration* config, int grainSize = 40 );
+	btCollisionDispatcherMt(btCollisionConfiguration* config, int grainSize = 40);
 
-    virtual btPersistentManifold* getNewManifold( const btCollisionObject* body0, const btCollisionObject* body1 ) BT_OVERRIDE;
-    virtual void releaseManifold( btPersistentManifold* manifold ) BT_OVERRIDE;
+	virtual btPersistentManifold* getNewManifold(const btCollisionObject* body0, const btCollisionObject* body1) BT_OVERRIDE;
+	virtual void releaseManifold(btPersistentManifold* manifold) BT_OVERRIDE;
 
-    virtual void dispatchAllCollisionPairs( btOverlappingPairCache* pairCache, const btDispatcherInfo& info, btDispatcher* dispatcher ) BT_OVERRIDE;
+	virtual void dispatchAllCollisionPairs(btOverlappingPairCache* pairCache, const btDispatcherInfo& info, btDispatcher* dispatcher) BT_OVERRIDE;
 
 protected:
-    bool m_batchUpdating;
-    int m_grainSize;
+	btAlignedObjectArray<btAlignedObjectArray<btPersistentManifold*> > m_batchManifoldsPtr;
+	btAlignedObjectArray<btAlignedObjectArray<btPersistentManifold*> > m_batchReleasePtr;
+	bool m_batchUpdating;
+	int m_grainSize;
 };
 
-#endif //BT_COLLISION_DISPATCHER_MT_H
-
+#endif  //BT_COLLISION_DISPATCHER_MT_H

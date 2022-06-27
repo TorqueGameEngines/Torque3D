@@ -1,6 +1,6 @@
 /*
 Bullet Continuous Collision Detection and Physics Library
-Copyright (c) 2003-2006 Erwin Coumans  http://continuousphysics.com/Bullet/
+Copyright (c) 2003-2006 Erwin Coumans  https://bulletphysics.org
 
 This software is provided 'as-is', without any express or implied warranty.
 In no event will the authors be held liable for any damages arising from the use of this software.
@@ -12,7 +12,6 @@ subject to the following restrictions:
 2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
 3. This notice may not be removed or altered from any source distribution.
 */
-
 
 #ifndef BT_SUBSIMPLEX_CONVEX_CAST_H
 #define BT_SUBSIMPLEX_CONVEX_CAST_H
@@ -28,23 +27,21 @@ class btConvexShape;
 class btSubsimplexConvexCast : public btConvexCast
 {
 	btSimplexSolverInterface* m_simplexSolver;
-	const btConvexShape*	m_convexA;
-	const btConvexShape*	m_convexB;
+	const btConvexShape* m_convexA;
+	const btConvexShape* m_convexB;
 
 public:
-
-	btSubsimplexConvexCast (const btConvexShape*	shapeA,const btConvexShape*	shapeB,btSimplexSolverInterface* simplexSolver);
+	btSubsimplexConvexCast(const btConvexShape* shapeA, const btConvexShape* shapeB, btSimplexSolverInterface* simplexSolver);
 
 	//virtual ~btSubsimplexConvexCast();
 	///SimsimplexConvexCast calculateTimeOfImpact calculates the time of impact+normal for the linear cast (sweep) between two moving objects.
 	///Precondition is that objects should not penetration/overlap at the start from the interval. Overlap can be tested using btGjkPairDetector.
-	virtual bool	calcTimeOfImpact(
-			const btTransform& fromA,
-			const btTransform& toA,
-			const btTransform& fromB,
-			const btTransform& toB,
-			CastResult& result);
-
+	virtual bool calcTimeOfImpact(
+		const btTransform& fromA,
+		const btTransform& toA,
+		const btTransform& fromB,
+		const btTransform& toB,
+		CastResult& result);
 };
 
-#endif //BT_SUBSIMPLEX_CONVEX_CAST_H
+#endif  //BT_SUBSIMPLEX_CONVEX_CAST_H

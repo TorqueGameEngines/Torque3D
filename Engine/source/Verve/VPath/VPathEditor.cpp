@@ -20,6 +20,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#include "torqueConfig.h"
+
 #ifdef TORQUE_TOOLS
 #include "VPathEditor.h"
 

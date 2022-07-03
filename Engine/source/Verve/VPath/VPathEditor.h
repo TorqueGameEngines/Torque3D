@@ -22,6 +22,8 @@
 //-----------------------------------------------------------------------------
 #ifndef _VT_VPATHEDITOR_H_
 #define _VT_VPATHEDITOR_H_
+
+#include "torqueConfig.h"
 #ifdef TORQUE_TOOLS
 #ifndef _EDITTSCTRL_H_
 #include "gui/worldEditor/editTSCtrl.h"

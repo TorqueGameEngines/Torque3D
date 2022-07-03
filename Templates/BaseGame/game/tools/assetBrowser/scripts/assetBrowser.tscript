@@ -1090,14 +1090,17 @@ function AssetBrowserPreviewButton::onRightClick(%this)
       EditAssetPopup.enableItem(9, false);
    }
    
-   %assetDef = AssetDatabase.acquireAsset(EditAssetPopup.assetId);
-   if(%assetDef.originalFilePath $= "" || !isFile(%assetDef.originalFilePath))
+   if(AssetDatabase.acquireAsset(EditAssetPopup.assetId))
    {
-      //if we have no noted original import file path or it's invalid
-      //we can't reimport either
-      EditAssetPopup.enableItem(9, false);
+      %assetDef = AssetDatabase.acquireAsset(EditAssetPopup.assetId);
+      if(%assetDef.originalFilePath $= "" || !isFile(%assetDef.originalFilePath))
+      {
+         //if we have no noted original import file path or it's invalid
+         //we can't reimport either
+         EditAssetPopup.enableItem(9, false);
+      }
+      AssetDatabase.releaseAsset(EditAssetPopup.assetId);
    }
-   AssetDatabase.releaseAsset(EditAssetPopup.assetId);
    
    if(%assetType $= "LevelAsset")
    {

@@ -579,6 +579,9 @@ bool MountSystem::copyFile(const Path& source, const Path& destination, bool noO
    }
 
    FileRef sourceFile = openFile(source, FS::File::AccessMode::Read);
+   if (!sourceFile)
+      return false;
+
    const U64 sourceFileSize = sourceFile->getSize();
 
    void* writeBuffer = dMalloc(sourceFileSize);

@@ -503,7 +503,7 @@ void SceneManager::_renderScene( SceneRenderState* state, U32 objectMask, SceneZ
          const Box3F& worldBox = object->getWorldBox();
          GFX->getDrawUtil()->drawObjectBox(
             desc,
-            Point3F( worldBox.len_x(), worldBox.len_y(), worldBox.len_z() ),
+            Point3F( worldBox.len_x() / 2, worldBox.len_y() / 2, worldBox.len_z() / 2),
             worldBox.getCenter(),
             MatrixF::Identity,
             ColorI::WHITE

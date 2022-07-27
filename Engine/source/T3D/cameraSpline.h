@@ -37,6 +37,7 @@ public:
       Point3F mPosition;
       QuatF   mRotation;
       F32     mSpeed;    /// in meters per second
+      String mHitCommand;
       enum Type {
          NORMAL,
          POSITION_ONLY,
@@ -56,7 +57,7 @@ public:
 
       Knot();
       Knot(const Knot &k);
-      Knot(const Point3F &p, const QuatF &r, F32 s, Knot::Type type = NORMAL, Knot::Path path = SPLINE);
+      Knot(const Point3F &p, const QuatF &r, F32 s, Knot::Type type = NORMAL, Knot::Path path = SPLINE, String hitCommand = String::EmptyString);
    };
 
 

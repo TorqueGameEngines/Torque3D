@@ -279,16 +279,16 @@ public: \
    }\
    SFXProfile* get##name##Profile()\
    {\
-      if (get##name() != StringTable->EmptyString() && m##name##Asset.notNull())\
+      if (get##name() != StringTable->EmptyString() && m##name##Asset.notNull()){\
          m##name##Profile = m##name##Asset->getSfxProfile();\
-         return m##name##Profile;\
+         return m##name##Profile;}\
       return NULL;\
    }\
    SFXDescription* get##name##Description()\
    {\
-      if (get##name() != StringTable->EmptyString() && m##name##Asset.notNull())\
+      if (get##name() != StringTable->EmptyString() && m##name##Asset.notNull()){\
          m##name##Desc = m##name##Asset->getSfxDescription();\
-         return m##name##Desc;\
+         return m##name##Desc;}\
       return NULL;\
    }\
    bool is##name##Valid() { return (get##name() != StringTable->EmptyString() && m##name##Asset->getStatus() == AssetBase::Ok); }

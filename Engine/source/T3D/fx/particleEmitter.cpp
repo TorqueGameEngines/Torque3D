@@ -787,6 +787,7 @@ void ParticleEmitterData::allocPrimBuffer( S32 overrideSize )
 {
    // calculate particle list size
    AssertFatal(particleDataBlocks.size() > 0, "Error, no particles found." );
+   if (particleDataBlocks.empty()) return;
    U32 maxPartLife = particleDataBlocks[0]->lifetimeMS + particleDataBlocks[0]->lifetimeVarianceMS;
    for (S32 i = 1; i < particleDataBlocks.size(); i++)
    {

@@ -840,6 +840,13 @@ class SceneObject : public NetObject, private SceneContainer::Link, public Proce
       SceneObject* nextSibling;        ///< Link to next child object of this object's parent 
       MatrixF      objToParent;   ///< this obects transformation in the parent object's space
       MatrixF      RenderobjToParent;   ///< this obects Render Offset transformation to the parent object
+      AttachInfo() {
+         firstChild = NULL;
+         parent = NULL;
+         nextSibling = NULL;
+         objToParent.identity();
+         RenderobjToParent.identity();
+      };
    } mGraph;
 // PATHSHAPE END
 
@@ -934,13 +941,17 @@ class SceneObject : public NetObject, private SceneContainer::Link, public Proce
 
 
    /// Called to let instance specific code happen 
-   virtual void onLostParent(SceneObject *oldParent);   
+   virtual void onLostParent(SceneObject *oldParent);
+   DECLARE_CALLBACK(void, onLostParent, (SceneObject *oldParent));
    /// Called to let instance specific code happen 
-   virtual void onNewParent(SceneObject *newParent);   
+   virtual void onNewParent(SceneObject *newParent);
+   DECLARE_CALLBACK(void, onNewParent, (SceneObject *oldParent));
    /// notification that a direct child object has been attached
-   virtual void onNewChild(SceneObject *subObject);   
+   virtual void onNewChild(SceneObject *subObject);
+   DECLARE_CALLBACK(void, onNewChild, (SceneObject *subObject));
    /// notification that a direct child object has been detached
-   virtual void onLostChild(SceneObject *subObject);   
+   virtual void onLostChild(SceneObject *subObject);
+   DECLARE_CALLBACK(void, onLostChild, (SceneObject *subObject));
 // PATHSHAPE END
 
    virtual void getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList) {}

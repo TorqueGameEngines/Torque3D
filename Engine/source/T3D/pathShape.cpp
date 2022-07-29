@@ -76,11 +76,10 @@ PathShape::PathShape()
    mTarget = 0;
    mTargetSet = false;
 
-   MatrixF mat(1);
-   mat.setPosition(Point3F(0,0,700));
+   MatrixF mat = MatrixF::Identity;
+   mLastXform = MatrixF::Identity;
+
    Parent::setTransform(mat);
-   
-   mLastXform = mat; 
    for (U32 i = 0; i < 4; i++)
    {
       mControl[i] = StringTable->insert("");
@@ -350,7 +349,10 @@ void PathShape::popFront()
 void PathShape::onNode(S32 node)
 {
    if (!isGhost())
-      Con::executef(mDataBlock,"onNode",getIdString(), Con::getIntArg(node));
+   {
+      Con::executef(mDataBlock, "onNode", getIdString(), Con::getIntArg(node));
+      Con::executef(mDataBlock, mSpline.getKnot(node)->mHitCommand.c_str(), getIdString());   
+   }
 }
 
 
@@ -523,8 +525,8 @@ static CameraSpline::Knot::Path resolveKnotPath(const char *arg)
    return CameraSpline::Knot::SPLINE;
 }
 
-DefineEngineMethod(PathShape, pushBack, void, (TransformF transform, F32 speed, const char* type, const char* path),
-   (TransformF::Identity, 1.0f, "Normal", "Linear"),
+DefineEngineMethod(PathShape, pushBack, void, (TransformF transform, F32 speed, const char* type, const char* path, const char *hitCommand),
+   (TransformF::Identity, 1.0f, "Normal", "Linear",""),
    "@brief Adds a new knot to the back of a path camera's path.\n"
    "@param transform Transform for the new knot.  In the form of \"x y z ax ay az aa\" such as returned by SceneObject::getTransform()\n"
    "@param speed Speed setting for this knot.\n"
@@ -545,7 +547,7 @@ DefineEngineMethod(PathShape, pushBack, void, (TransformF transform, F32 speed, 
 {
    QuatF rot(transform.getOrientation());
 
-   object->pushBack(new CameraSpline::Knot(transform.getPosition(), rot, speed, resolveKnotType(type), resolveKnotPath(path)));
+   object->pushBack(new CameraSpline::Knot(transform.getPosition(), rot, speed, resolveKnotType(type), resolveKnotPath(path), String(hitCommand)));
 }
 
 DefineEngineMethod(PathShape, pushFront, void, (TransformF transform, F32 speed, const char* type, const char* path),

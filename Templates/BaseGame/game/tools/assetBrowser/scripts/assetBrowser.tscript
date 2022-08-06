@@ -1023,8 +1023,20 @@ function AssetBrowser::reImportAsset(%this)
       
       %reimportingPath = %assetDef.originalFilePath;
       
+      if(%reimportingPath $= "" || !isFile(%reimportingPath))
+      {
+         //if we have no defined original file path, attempt to re-import the 
+         //current loosefile
+         if(%assetType $= "ShapeAsset")
+            %reimportingPath = %assetDef.getShapePath();
+         else if(%assetType $= "ImageAsset")
+            %reimportingPath = %assetDef.getImagePath();
+         else if(%assetType $= "SoundAsset")
+            %reimportingPath = %assetDef.getSoundPath();
+      }
+      
       //first, double-check we have an originating file. if we don't then we need to basically go out looking for it
-      if(!isFile(%assetDef.originalFilePath))
+      if(!isFile(%reimportingPath))
       {
          //if(%assetType $= "ImageAsset")
          //   %filters = "";
@@ -1089,7 +1101,7 @@ function AssetBrowserPreviewButton::onRightClick(%this)
       EditAssetPopup.enableItem(9, false);
    }
    
-   if(AssetDatabase.acquireAsset(EditAssetPopup.assetId))
+   /*if(AssetDatabase.acquireAsset(EditAssetPopup.assetId))
    {
       %assetDef = AssetDatabase.acquireAsset(EditAssetPopup.assetId);
       if(%assetDef.originalFilePath $= "" || !isFile(%assetDef.originalFilePath))
@@ -1099,7 +1111,7 @@ function AssetBrowserPreviewButton::onRightClick(%this)
          EditAssetPopup.enableItem(9, false);
       }
       AssetDatabase.releaseAsset(EditAssetPopup.assetId);
-   }
+   }*/
    
    if(%assetType $= "LevelAsset")
    {

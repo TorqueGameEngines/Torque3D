@@ -1865,28 +1865,45 @@ void TSStatic::setSelectionFlags(U8 flags)
    }
 }
 
+bool TSStatic::hasNode(const char* nodeName)
+{
+
+   S32 nodeIDx = getShapeResource()->findNode(nodeName);
+   return nodeIDx >= 0;
+}
+
 void TSStatic::getNodeTransform(const char *nodeName, const MatrixF &xfm, MatrixF *outMat)
 {
 
     S32 nodeIDx = getShapeResource()->findNode(nodeName);
 
-    MatrixF mountTransform = mShapeInstance->mNodeTransforms[nodeIDx];
-    mountTransform.mul(xfm);
-    const Point3F &scale = getScale();
+    MatrixF nodeTransform(xfm);
+    const Point3F& scale = getScale();
+    if (nodeIDx != -1)
+    {
+       nodeTransform = mShapeInstance->mNodeTransforms[nodeIDx];
+       nodeTransform.mul(xfm);
+    }
     // The position of the mount point needs to be scaled.
-    Point3F position = mountTransform.getPosition();
+    Point3F position = nodeTransform.getPosition();
     position.convolve(scale);
-    mountTransform.setPosition(position);
+    nodeTransform.setPosition(position);
     // Also we would like the object to be scaled to the model.
-    outMat->mul(mObjToWorld, mountTransform);
+    outMat->mul(mObjToWorld, nodeTransform);
     return;
 }
 
 
-DefineEngineMethod(TSStatic, getNodeTransform, TransformF, (const char *nodeName), ,
-   "@brief Get the world transform of the specified mount slot.\n\n"
+DefineEngineMethod(TSStatic, hasNode, bool, (const char* nodeName), ,
+   "@brief Get if this model has this node name.\n\n")
+{
+   return object->hasNode(nodeName);
+}
 
-   "@param slot Image slot to query\n"
+DefineEngineMethod(TSStatic, getNodeTransform, TransformF, (const char *nodeName), ,
+   "@brief Get the world transform of the specified node name.\n\n"
+
+   "@param node name query\n"
    "@return the mount transform\n\n")
 {
    MatrixF xf(true);

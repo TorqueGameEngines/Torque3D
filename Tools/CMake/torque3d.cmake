@@ -161,14 +161,6 @@ mark_as_advanced(TORQUE_DEDICATED)
 ###############################################################################
 # options
 ###############################################################################
-if(NOT MSVC AND NOT APPLE) # handle single-configuration generator
-    set(TORQUE_BUILD_TYPE "Debug" CACHE STRING "Select one of Debug, Release and RelWithDebInfo")
-    set_property(CACHE TORQUE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "RelWithDebInfo")
-
-    set(TORQUE_ADDITIONAL_LINKER_FLAGS "" CACHE STRING "Additional linker flags")
-    mark_as_advanced(TORQUE_ADDITIONAL_LINKER_FLAGS)
-endif()
-
 option(TORQUE_SECURE_VFS "Secure VFS configuration. Arbitrary script access to file system will be heavily restricted." OFF)
 mark_as_advanced(TORQUE_SECURE_VFS)
 
@@ -248,20 +240,6 @@ if(WIN32)
 		else()
 			link_directories($ENV{DXSDK_DIR}/Lib/x86)
 		endif()
-	endif()
-endif()
-
-# build types
-if(NOT MSVC AND NOT APPLE) # handle single-configuration generator
-	set(CMAKE_BUILD_TYPE ${TORQUE_BUILD_TYPE})
-	if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        set(TORQUE_DEBUG TRUE)
-    elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-        set(TORQUE_RELEASE TRUE)
-    elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-        set(TORQUE_RELEASE TRUE)
-    else()
-		message(FATAL_ERROR "Please select Debug, Release or RelWithDebInfo for TORQUE_BUILD_TYPE")
 	endif()
 endif()
 
@@ -786,6 +764,7 @@ endif()
 # Always enabled Definitions
 ###############################################################################
 addDef(TORQUE_DEBUG Debug)
+addDef(TORQUE_RELEASE "RelWithDebInfo;Release")
 addDef(TORQUE_ENABLE_ASSERTS "Debug;RelWithDebInfo")
 addDef(TORQUE_DEBUG_GFX_MODE "RelWithDebInfo")
 addDef(TORQUE_SHADERGEN)

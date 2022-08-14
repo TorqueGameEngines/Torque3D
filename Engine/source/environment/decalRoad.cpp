@@ -734,7 +734,7 @@ void DecalRoad::prepRenderImage( SceneRenderState* state )
    coreRI.sortDistSq = F32_MAX;
 
 	// If we need lights then set them up.
-   if ( matInst->isForwardLit() )
+   if ( matInst->isForwardLit() && !coreRI.lights[0])
    {
       LightQuery query;
       query.init( getWorldSphere() );
@@ -784,6 +784,7 @@ void DecalRoad::prepRenderImage( SceneRenderState* state )
 
       *ri = coreRI;
 
+      ri->matInst = matInst;
       ri->prim = renderPass->allocPrim();
       ri->prim->type = GFXTriangleList;
       ri->prim->minIndex = 0;
@@ -791,6 +792,7 @@ void DecalRoad::prepRenderImage( SceneRenderState* state )
       ri->prim->numPrimitives = triangleCount;
       ri->prim->startVertex = 0;
       ri->prim->numVertices = endBatch.endVert + 1;
+      ri->translucentSort = !matInst->getMaterial()->isTranslucent();
 
       // For sorting we first sort by render priority
       // and then by objectId. 

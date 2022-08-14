@@ -3,7 +3,7 @@ function AssetBrowser::createPostEffectAsset(%this)
    %moduleName = AssetBrowser.newAssetSettings.moduleName;
       
    %assetName = AssetBrowser.newAssetSettings.assetName;   
-   %assetPath = AssetBrowser.dirHandler.currentAddress @ "/";
+   %assetPath = NewAssetTargetAddress.getText() @ "/";
    
    %tamlpath = %assetPath @ %assetName @ ".asset.taml";
    %scriptPath = %assetPath @ %assetName @ "." @ $TorqueScriptFileExtension;

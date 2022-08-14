@@ -2988,7 +2988,8 @@ void AssetManager::unloadAsset( AssetDefinition* pAssetDefinition )
     PROFILE_SCOPE(AssetManager_UnloadAsset);
 
     // Destroy the asset.
-    pAssetDefinition->mpAssetBase->deleteObject();
+    if(pAssetDefinition->mpAssetBase->isProperlyAdded())
+      pAssetDefinition->mpAssetBase->deleteObject();
 
     // Increase unloaded count.
     pAssetDefinition->mAssetUnloadedCount++;

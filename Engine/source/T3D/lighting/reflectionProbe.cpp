@@ -115,9 +115,10 @@ ReflectionProbe::ReflectionProbe()
    mStaticCubemap = NULL;
    mProbeUniqueID = "";
 
+#ifdef TORQUE_TOOLS
    mEditorShapeInst = NULL;
    mEditorShape = NULL;
-
+#endif
    mRefreshRateMS = 200;
    mDynamicLastBakeMS = 0;
 
@@ -135,9 +136,11 @@ ReflectionProbe::ReflectionProbe()
 
 ReflectionProbe::~ReflectionProbe()
 {
+
+#ifdef TORQUE_TOOLS
    if (mEditorShapeInst)
       SAFE_DELETE(mEditorShapeInst);
-
+#endif
    if (mReflectionModeType == StaticCubemap && mStaticCubemap)
       mStaticCubemap->deleteObject();
 }
@@ -327,15 +330,15 @@ void ReflectionProbe::handleDeleteAction()
    if (mReflectionModeType != StaticCubemap)
    {
       String prefilPath = getPrefilterMapPath();
-      if (Platform::isFile(prefilPath))
+      if (Torque::FS::IsFile(prefilPath))
       {
-         Platform::fileDelete(prefilPath);
+         Torque::FS::Remove(prefilPath);
       }
 
       String irrPath = getIrradianceMapPath();
-      if (Platform::isFile(irrPath))
+      if (Torque::FS::IsFile(irrPath))
       {
-         Platform::fileDelete(irrPath);
+         Torque::FS::Remove(irrPath);
       }
    }
 

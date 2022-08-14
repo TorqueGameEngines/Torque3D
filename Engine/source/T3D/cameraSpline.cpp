@@ -51,7 +51,7 @@ CameraSpline::Knot::Knot(const Knot &k)
    prev = NULL; next = NULL;
 }
 
-CameraSpline::Knot::Knot(const Point3F &p, const QuatF &r, F32 s, Knot::Type type, Knot::Path path)
+CameraSpline::Knot::Knot(const Point3F &p, const QuatF &r, F32 s, Knot::Type type, Knot::Path path, String hitCommand)
 {
    mPosition = p;
    mRotation = r;
@@ -59,6 +59,7 @@ CameraSpline::Knot::Knot(const Point3F &p, const QuatF &r, F32 s, Knot::Type typ
    mType = type;
    mPath = path;
    mDistance = 0.0f;
+   mHitCommand = hitCommand;
    prev = NULL; next = NULL;
 }
 

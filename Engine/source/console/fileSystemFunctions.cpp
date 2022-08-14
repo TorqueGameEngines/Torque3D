@@ -368,15 +368,11 @@ DefineEngineFunction(getFileCRC, S32, ( const char* fileName ),,
    
    "@ingroup FileSystem")
 {
-   String cleanfilename(Torque::Path::CleanSeparators(fileName));
-   Con::expandScriptFilename(sgScriptFilenameBuffer, sizeof(sgScriptFilenameBuffer), cleanfilename.c_str());
-
-   Torque::Path givenPath(Torque::Path::CompressPath(sgScriptFilenameBuffer));
-   Torque::FS::FileNodeRef fileRef = Torque::FS::GetFileNode( givenPath );
+   Torque::FS::FileNodeRef fileRef = Torque::FS::GetFileNode( fileName );
 
    if ( fileRef == NULL )
    {
-      Con::errorf("getFileCRC() - could not access file: [%s]", givenPath.getFullPath().c_str() );
+      Con::errorf("getFileCRC() - could not access file: [%s]", fileName );
       return -1;
    }
 
@@ -391,10 +387,7 @@ DefineEngineFunction(isFile, bool, ( const char* fileName ),,
    
    "@ingroup FileSystem")
 {
-   String cleanfilename(Torque::Path::CleanSeparators(fileName));
-   Con::expandScriptFilename(sgScriptFilenameBuffer, sizeof(sgScriptFilenameBuffer), cleanfilename.c_str());
-
-   Torque::Path givenPath(Torque::Path::CompressPath(sgScriptFilenameBuffer));
+   Torque::Path givenPath(fileName);
 
    if (givenPath.getFileName().isEmpty() && givenPath.getExtension().isNotEmpty())
    {
@@ -415,11 +408,7 @@ DefineEngineFunction(isScriptFile, bool, (const char* fileName), ,
 
    "@ingroup FileSystem")
 {
-   String cleanfilename(Torque::Path::CleanSeparators(fileName));
-   Con::expandScriptFilename(sgScriptFilenameBuffer, sizeof(sgScriptFilenameBuffer), cleanfilename.c_str());
-
-   Torque::Path givenPath(Torque::Path::CompressPath(sgScriptFilenameBuffer));
-   return Torque::FS::IsScriptFile(givenPath.getFullPath());
+   return Torque::FS::IsScriptFile(fileName);
 }
 
 DefineEngineFunction( IsDirectory, bool, ( const char* directory ),,
@@ -432,11 +421,7 @@ DefineEngineFunction( IsDirectory, bool, ( const char* directory ),,
 
    "@ingroup FileSystem")
 {
-   String dir(Torque::Path::CleanSeparators(directory));
-   Con::expandScriptFilename(sgScriptFilenameBuffer, sizeof(sgScriptFilenameBuffer), dir.c_str());
-
-   Torque::Path givenPath(Torque::Path::CompressPath(sgScriptFilenameBuffer));
-   return Torque::FS::IsDirectory( givenPath );
+   return Torque::FS::IsDirectory( directory );
 }
 
 DefineEngineFunction(isWriteableFileName, bool, ( const char* fileName ),,
@@ -447,14 +432,7 @@ DefineEngineFunction(isWriteableFileName, bool, ( const char* fileName ),,
 
    "@ingroup FileSystem")
 {
-   String filename(Torque::Path::CleanSeparators(fileName));
-   Con::expandScriptFilename(sgScriptFilenameBuffer, sizeof(sgScriptFilenameBuffer), filename.c_str());
-
-   Torque::Path givenPath(Torque::Path::CompressPath(sgScriptFilenameBuffer));
-   Torque::FS::FileSystemRef fs = Torque::FS::GetFileSystem(givenPath);
-   Torque::Path path = fs->mapTo(givenPath);
-
-   return !Torque::FS::IsReadOnly(path);
+   return !Torque::FS::IsReadOnly(fileName);
 }
 
 DefineEngineFunction(startFileChangeNotifications, void, (),,
@@ -487,7 +465,12 @@ DefineEngineFunction(getDirectoryList, String, ( const char* path, S32 depth ), 
 {
    // Grab the full path.
    char fullpath[1024];
+
+#ifdef TORQUE_SECURE_VFS
+   dStrcpy(fullpath, path, sizeof(fullpath));
+#else
    Platform::makeFullPathName(String::compare(path, "/") == 0 ? "" : path, fullpath, sizeof(fullpath));
+#endif
 
    //dSprintf(fullpath, 511, "%s/%s", Platform::getWorkingDirectory(), path);
 
@@ -501,7 +484,7 @@ DefineEngineFunction(getDirectoryList, String, ( const char* path, S32 depth ), 
 
    // Dump the directories.
    Vector<StringTableEntry> directories;
-   Platform::dumpDirectories(fullpath, directories, depth, true);
+   Torque::FS::DumpDirectories(fullpath, directories, depth, true);
 
    if( directories.empty() )
       return "";
@@ -539,8 +522,12 @@ DefineEngineFunction(fileSize, S32, ( const char* fileName ),,
 
    "@ingroup FileSystem")
 {
-   Con::expandScriptFilename(sgScriptFilenameBuffer, sizeof(sgScriptFilenameBuffer), fileName);
-   return Platform::getFileSize( sgScriptFilenameBuffer );
+   StrongRefPtr<Torque::FS::FileNode> node = Torque::FS::GetFileNode(fileName);
+   if (node.isValid())
+   {
+      return node->getSize();
+   }
+   return -1;
 }
 
 DefineEngineFunction( fileModifiedTime, String, ( const char* fileName ),,
@@ -550,20 +537,20 @@ DefineEngineFunction( fileModifiedTime, String, ( const char* fileName ),,
    "@return Formatted string (OS specific) containing modified time, \"9/3/2010 12:33:47 PM\" for example\n"
    "@ingroup FileSystem")
 {
-   Con::expandScriptFilename(sgScriptFilenameBuffer, sizeof(sgScriptFilenameBuffer), fileName);
+   Torque::FS::FileNodeRef node = Torque::FS::GetFileNode(fileName);
 
-   FileTime ft = {0};
-   Platform::getFileTimes( sgScriptFilenameBuffer, NULL, &ft );
+   if (node)
+   {
+      Platform::LocalTime lt = node->getModifiedTime().toLocalTime();
 
-   Platform::LocalTime lt = {0};
-   Platform::fileToLocalTime( ft, &lt );   
-   
-   String fileStr = Platform::localTimeToString( lt );
-   
-   char *buffer = Con::getReturnBuffer( fileStr.size() );
-   dStrcpy( buffer, fileStr, fileStr.size() );
-   
-   return buffer;
+      String fileStr = Platform::localTimeToString(lt);
+
+      char *buffer = Con::getReturnBuffer(fileStr.size());
+      dStrcpy(buffer, fileStr, fileStr.size());
+
+      return buffer;
+   }
+   return "";
 }
 
 DefineEngineFunction( fileCreatedTime, String, ( const char* fileName ),,
@@ -573,20 +560,20 @@ DefineEngineFunction( fileCreatedTime, String, ( const char* fileName ),,
    "@return Formatted string (OS specific) containing created time, \"9/3/2010 12:33:47 PM\" for example\n"
    "@ingroup FileSystem")
 {
-   Con::expandScriptFilename( sgScriptFilenameBuffer, sizeof(sgScriptFilenameBuffer), fileName );
+   Torque::FS::FileNodeRef node = Torque::FS::GetFileNode(fileName);
 
-   FileTime ft = {0};
-   Platform::getFileTimes( sgScriptFilenameBuffer, &ft, NULL );
+   if (node)
+   {
+      Platform::LocalTime lt = node->getCreatedTime().toLocalTime();
 
-   Platform::LocalTime lt = {0};
-   Platform::fileToLocalTime( ft, &lt );   
+      String fileStr = Platform::localTimeToString(lt);
 
-   String fileStr = Platform::localTimeToString( lt );
+      char *buffer = Con::getReturnBuffer(fileStr.size());
+      dStrcpy(buffer, fileStr, fileStr.size());
 
-   char *buffer = Con::getReturnBuffer( fileStr.size() );
-   dStrcpy( buffer, fileStr, fileStr.size() );
-
-   return buffer;
+      return buffer;
+   }
+   return "";
 }
 
 DefineEngineFunction(compareFileTimes, S32, (const char* fileA, const char* fileB), ("", ""),
@@ -597,17 +584,33 @@ DefineEngineFunction(compareFileTimes, S32, (const char* fileA, const char* file
    "@return S32. If value is 1, then fileA is newer. If value is -1, then fileB is newer. If value is 0, they are equal.\n"
    "@ingroup FileSystem")
 {
-   Con::expandScriptFilename(sgScriptFilenameBuffer, sizeof(sgScriptFilenameBuffer), fileA);
+   Torque::FS::FileNodeRef nodeA = Torque::FS::GetFileNode(fileA);
+   Torque::FS::FileNodeRef nodeB = Torque::FS::GetFileNode(fileB);
 
-   FileTime fileATime = { 0 };
-   Platform::getFileTimes(sgScriptFilenameBuffer, NULL, &fileATime);
+   // Can't do anything if either file doesn't exist
+   if (!nodeA || !nodeB)
+   {
+      return 0;
+   }
 
-   Con::expandScriptFilename(sgScriptFilenameBuffer, sizeof(sgScriptFilenameBuffer), fileB);
+   Torque::FS::FileNode::Attributes fileAAttributes;
+   Torque::FS::FileNode::Attributes fileBAttributes;
 
-   FileTime fileBTime = { 0 };
-   Platform::getFileTimes(sgScriptFilenameBuffer, NULL, &fileBTime);
+   // If retrieval of attributes fails, we can't compare   
+   if (!nodeA->getAttributes(&fileAAttributes) || !nodeB->getAttributes(&fileBAttributes))
+   {
+      return 0;
+   }
 
-   return Platform::compareFileTimes(fileATime, fileBTime);
+   if (fileAAttributes.mtime > fileBAttributes.mtime)
+   {
+      return 1;
+   }
+   else if (fileAAttributes.mtime < fileBAttributes.mtime)
+   {
+      return -1;
+   }
+   return 0;
 }
 
 DefineEngineFunction(fileDelete, bool, ( const char* path ),,
@@ -618,13 +621,7 @@ DefineEngineFunction(fileDelete, bool, ( const char* path ),,
    "@return True if file was successfully deleted\n"
    "@ingroup FileSystem")
 {
-   static char fileName[1024];
-   static char sandboxFileName[1024];
-
-   Con::expandScriptFilename( fileName, sizeof( fileName ), path );
-   Platform::makeFullPathName(fileName, sandboxFileName, sizeof(sandboxFileName));
-
-   return dFileDelete(sandboxFileName);
+   return Torque::FS::Remove(path);
 }
 
 
@@ -839,13 +836,7 @@ DefineEngineFunction( pathCopy, bool, ( const char* fromFile, const char* toFile
    "@note Only present in a Tools build of Torque.\n"
    "@ingroup FileSystem")
 {
-   char qualifiedFromFile[ 2048 ];
-   char qualifiedToFile[ 2048 ];
-   
-   Platform::makeFullPathName( fromFile, qualifiedFromFile, sizeof( qualifiedFromFile ) );
-   Platform::makeFullPathName( toFile, qualifiedToFile, sizeof( qualifiedToFile ) );
-
-   return dPathCopy( qualifiedFromFile, qualifiedToFile, noOverwrite );
+   return Torque::FS::CopyFile(fromFile, toFile, noOverwrite);
 }
 
 //-----------------------------------------------------------------------------
@@ -857,7 +848,11 @@ DefineEngineFunction( getCurrentDirectory, String, (),,
    "@see getWorkingDirectory()"
    "@ingroup FileSystem")
 {
+#ifdef TORQUE_SECURE_VFS
+   return Torque::FS::GetCwd();
+#else
    return Platform::getCurrentDirectory();
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -870,8 +865,11 @@ DefineEngineFunction( setCurrentDirectory, bool, ( const char* path ),,
    "@note Only present in a Tools build of Torque.\n"
    "@ingroup FileSystem")
 {
+#ifdef TORQUE_SECURE_VFS
+   return Torque::FS::SetCwd(path);
+#else
    return Platform::setCurrentDirectory( StringTable->insert( path ) );
-
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -885,11 +883,7 @@ DefineEngineFunction( createPath, bool, ( const char* path ),,
    "@note Only present in a Tools build of Torque.\n"
    "@ingroup FileSystem" )
 {
-   static char pathName[1024];
-
-   Con::expandScriptFilename( pathName, sizeof( pathName ), path );
-
-   return Platform::createPath( pathName );
+   return Torque::FS::CreatePath(path);
 }
 
 DefineEngineFunction(deleteDirectory, bool, (const char* path), ,

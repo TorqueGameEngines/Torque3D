@@ -220,7 +220,7 @@ void main()
       
       #ifdef PSSM_DEBUG_RENDER
          if ( fadeOutAmt > 1.0 )
-            lightingColor = 1.0;
+            lightingColor = vec3(1.0,1.0,1.0);
       #endif
 
    #endif //NO_SHADOW
@@ -229,7 +229,7 @@ void main()
       vec3 factor = lightingColor.rgb * max(surfaceToLight.NdotL, 0) * shadow * lightBrightness;
       vec3 diffuse = BRDF_GetDebugDiffuse(surface,surfaceToLight) * factor;
 
-      vec3 final = max(0.0f, diffuse);
+      vec3 final = max(vec3(0.0f,0.0f,0.0f), diffuse);
       
       OUT_col = vec4(final, 0);
       return;
@@ -239,7 +239,7 @@ void main()
       vec3 factor = lightingColor.rgb * max(surfaceToLight.NdotL, 0) * shadow * lightBrightness;
       vec3 spec = BRDF_GetDebugSpecular(surface, surfaceToLight) * factor;
 
-      vec3 final = max(0.0f, factor);
+      vec3 final = max(vec3(0.0f,0.0f,0.0f), factor);
       
       OUT_col = vec4(final, 0);
       return;
@@ -250,7 +250,7 @@ void main()
       vec3 diffuse = BRDF_GetDebugDiffuse(surface,surfaceToLight) * factor;
       vec3 spec = BRDF_GetDebugSpecular(surface,surfaceToLight) * factor;
 
-      vec3 final = max(0.0f, diffuse + spec);
+      vec3 final = max(vec3(0.0f,0.0f,0.0f), diffuse + spec);
       
       OUT_col = vec4(final, 0);
       return;

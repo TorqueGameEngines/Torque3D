@@ -195,4 +195,29 @@ void Time::get(S32 *pyear, S32 *pmonth, S32 *pday, S32 *phour, S32 *pminute, S32
       *pmicrosecond = time % OneSecond;
 }
 
+Platform::LocalTime Time::toLocalTime()
+{
+   Platform::LocalTime result;
+   result.isdst = false;
+
+   S32 year;
+   S32 month;
+   S32 day;
+   S32 hour;
+   S32 minute;
+   S32 second;
+   S32 microsecond;
+
+   get(&year, &month, &day, &hour, &minute, &second, &microsecond);
+   result.year = year - 1900;
+   result.month = month - 1;
+   result.yearday = day;
+   result.hour = hour;
+   result.min = minute;
+   result.sec = second;
+   result.monthday = day % 32;
+   result.weekday = day % 7;
+   return result;
+}
+
 } // Namespace

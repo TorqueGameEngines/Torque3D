@@ -23,7 +23,7 @@ $guiContnt = new GuiControl(ConvexEditorOptions)
       anchorRight = "0";
       Position = Canvas.extent.x - 209
             SPC getWord(EditorGuiToolbar.extent, 1) - 2;
-      Extent = "210 485";
+      Extent = "210 550";
       minExtent = "210 298";
       horizSizing = "windowRelative";
       vertSizing = "windowRelative";
@@ -743,6 +743,93 @@ $guiContnt = new GuiControl(ConvexEditorOptions)
                   class = "ConvexEditorUVVertFlipBtn";
                };
             };
+         };
+      };
+   
+      new GuiContainer() {
+         docking = "Top";
+         margin = "0 0 3 3";
+         padding = "0 0 0 0";
+         anchorTop = "1";
+         anchorBottom = "0";
+         anchorLeft = "1";
+         anchorRight = "0";
+         position = "4 502";
+         extent = "1432 50";
+         minExtent = "8 2";
+         horizSizing = "width";
+         vertSizing = "bottom";
+         profile = "inspectorStyleRolloutDarkProfile";
+         visible = "1";
+         active = "1";
+         tooltipProfile = "GuiToolTipProfile";
+         hovertime = "1000";
+         isContainer = "1";
+         canSave = "1";
+         canSaveDynamicFields = "0";
+
+         new GuiTextCtrl() {
+            text = "Brush Actions";
+            maxLength = "1024";
+            margin = "0 0 0 0";
+            padding = "0 0 0 0";
+            anchorTop = "1";
+            anchorBottom = "0";
+            anchorLeft = "1";
+            anchorRight = "0";
+            position = "5 0";
+            extent = "121 18";
+            minExtent = "8 2";
+            horizSizing = "right";
+            vertSizing = "bottom";
+            profile = "ToolsGuiDefaultProfile";
+            visible = "1";
+            active = "1";
+            tooltipProfile = "GuiToolTipProfile";
+            hovertime = "1000";
+            isContainer = "1";
+            canSave = "1";
+            canSaveDynamicFields = "0";
+         };
+         
+         new GuiButtonCtrl() {
+            text = "Hollow Selected";
+            groupNum = "-1";
+            buttonType = "PushButton";
+            position = "5 22";
+            extent = "90 21";
+            minExtent = "8 2";
+            horizSizing = "right";
+            vertSizing = "bottom";
+            profile = "ToolsGuiButtonProfile";
+            visible = "1";
+            active = "1";
+            tooltipProfile = "GuiToolTipProfile";
+            hovertime = "1000";
+            isContainer = "0";
+            canSave = "1";
+            canSaveDynamicFields = "0";
+            command = "ConvexEditorGui.hollowSelection();";
+         };
+         
+         new GuiButtonCtrl() {
+            text = "Recenter Selected";
+            groupNum = "-1";
+            buttonType = "PushButton";
+            position = "100 22";
+            extent = "110 21";
+            minExtent = "8 2";
+            horizSizing = "right";
+            vertSizing = "bottom";
+            profile = "ToolsGuiButtonProfile";
+            visible = "1";
+            active = "1";
+            tooltipProfile = "GuiToolTipProfile";
+            hovertime = "1000";
+            isContainer = "0";
+            canSave = "1";
+            canSaveDynamicFields = "0";
+            command = "ConvexEditorGui.recenterSelection();";
          };
       };
    };

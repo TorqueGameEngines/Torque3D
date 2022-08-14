@@ -33,6 +33,17 @@ function AssetBrowser::editAsset(%this, %assetDef)
          {
             AssetBrowser.navigateTo(%folder);
          }
+         else
+         {
+            %object = getToken(EditAssetPopup.assetId, ":", 1);
+            if(isObject(%object))
+            {
+               if(%object.isMemberOfClass("SimDatablock"))
+               {
+                  DatablockEditorPlugin.openDatablock( %object );
+               }
+            }
+         }
       }
    }
    else if(AssetDatabase.isDeclaredAsset(%assetDef))
@@ -42,12 +53,14 @@ function AssetBrowser::editAsset(%this, %assetDef)
       %assetDef = AssetDatabase.acquireAsset(%assetDef);
    }
       
+   if(%assetDef !$= "")
+   {
+      %assetType = %assetDef.getClassName();
       
-   %assetType = %assetDef.getClassName();
-   
-   //Build out the edit command
-   %buildCommand = %this @ ".edit" @ %assetType @ "(" @ %assetDef @ ");";
-   eval(%buildCommand);
+      //Build out the edit command
+      %buildCommand = %this @ ".edit" @ %assetType @ "(" @ %assetDef @ ");";
+      eval(%buildCommand);
+   }
 }
 
 function AssetBrowser::appendSubLevel(%this)

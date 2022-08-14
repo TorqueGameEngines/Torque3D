@@ -870,11 +870,13 @@ void GuiWindowCtrl::onMouseDragged(const GuiEvent &event)
          GuiCanvas* guiCanvas = getRoot();
          if (guiCanvas)
          {
+#ifdef TORQUE_TOOLS
             GuiMenuBar* menuBar = dynamic_cast<GuiMenuBar*>(guiCanvas->getMenuBar());
             if (menuBar)
             {
                menuBarHeight = menuBar->getHeight();
             }
+#endif
          }
          
          // Build valid snap and window vectors to compare against

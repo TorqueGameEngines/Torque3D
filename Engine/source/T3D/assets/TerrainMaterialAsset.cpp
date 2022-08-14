@@ -482,7 +482,6 @@ DefineEngineMethod(TerrainMaterialAsset, getFXMaterialDefinition, S32, (), ,
    else
       return 0;
 }
-#endif
 //-----------------------------------------------------------------------------
 // GuiInspectorTypeAssetId
 //-----------------------------------------------------------------------------
@@ -577,3 +576,4 @@ void GuiInspectorTypeTerrainMaterialAssetId::consoleInit()
 
    ConsoleBaseType::getType(TypeTerrainMaterialAssetId)->setInspectorFieldType("GuiInspectorTypeTerrainMaterialAssetId");
 }
+#endif

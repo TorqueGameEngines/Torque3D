@@ -690,7 +690,7 @@ void SFXEmitter::_update()
 
    if (mSoundAsset.notNull() )
    {
-      mLocalProfile = *mSoundAsset->getSfxProfile();
+      //mLocalProfile = *mSoundAsset->getSfxProfile();
       mDescription = *mSoundAsset->getSfxDescription();
    }
 

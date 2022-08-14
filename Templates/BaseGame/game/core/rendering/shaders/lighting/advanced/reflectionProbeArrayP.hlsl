@@ -8,7 +8,7 @@ TORQUE_UNIFORM_SAMPLER2D(deferredBuffer, 0);
 TORQUE_UNIFORM_SAMPLER2D(colorBuffer, 1);
 TORQUE_UNIFORM_SAMPLER2D(matInfoBuffer, 2);
 TORQUE_UNIFORM_SAMPLER2D(BRDFTexture, 3);
-
+uniform float3 ambientColor;
 uniform float4 rtParams0;
 uniform float4 vsFarPlane;
 uniform float4x4 cameraToWorld;
@@ -190,6 +190,6 @@ float4 main(PFXVertToPix IN) : SV_TARGET
 #if CAPTURING == 1
     return float4(lerp(surface.baseColor.rgb,(irradiance + specular* horizon) ,surface.metalness/2),0);
 #else
-   return float4((irradiance + specular* horizon) , 0);//alpha writes disabled   
+   return float4((irradiance + specular* horizon)*ambientColor, 0);//alpha writes disabled   
 #endif
 }

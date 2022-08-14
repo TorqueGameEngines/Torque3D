@@ -121,6 +121,7 @@ class Marker : public SceneObject
 
 
    U32   mSeqNum;
+   String mHitCommand;
    U32   mSmoothingType;
    U32   mKnotType;
 

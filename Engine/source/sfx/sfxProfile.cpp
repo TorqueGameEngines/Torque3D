@@ -284,10 +284,7 @@ bool SFXProfile::_preloadBuffer()
 
 Resource<SFXResource>& SFXProfile::getResource()
 {
-   char buf[1024];
-   FileName fullFilename = String(Platform::makeFullPathName(mFilename, buf, sizeof(buf)));
-
-   if (!mResource && SFXResource::exists(fullFilename))
+   if (!mResource && SFXResource::exists(mFilename))
       mResource = SFXResource::load(mFilename);
    else
       mResource = NULL;

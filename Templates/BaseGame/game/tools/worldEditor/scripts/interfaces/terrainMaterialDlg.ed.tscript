@@ -153,6 +153,14 @@ function TerrainMaterialDlg::dialogApply( %this )
 {
    // Move all new materials we have created to the root group.
    
+   if(%this-->diffuseMapAssetId.text $= "None" ||
+   %this-->detailMapAssetId.text $= "None")
+   {
+      toolsMessageBoxOK("Invalid Terrain Material",
+                  "Terrain Materials require Diffuse and Detail textures to display and blend correctly.");
+      return;
+   }
+   
    %newCount = TerrainMaterialDlgNewGroup.getCount();
    for( %i = 0; %i < %newCount; %i ++ )
       RootGroup.add( TerrainMaterialDlgNewGroup.getObject( %i ) );
@@ -640,7 +648,7 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %materialAssetId )
             
    // Read out properties from the dialog.
    
-   %newName = %this-->matNameCtrl.getText(); 
+   %newName = %this-->matNameCtrl.text;
    
    %blankBitmap = AssetDatabase.acquireAsset($TerrainMaterialEditor::emptyMaterialImage).getImagePath();
    

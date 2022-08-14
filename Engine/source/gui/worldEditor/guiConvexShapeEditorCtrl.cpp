@@ -1075,7 +1075,7 @@ void GuiConvexEditorCtrl::renderScene(const RectI & updateRect)
          Point3F boxPos = objBox.getCenter();
          objMat.mulP( boxPos );
          
-         drawer->drawObjectBox( desc, objBox.getExtents(), boxPos, objMat, ColorI::WHITE );
+         drawer->drawObjectBox( desc, objBox.getExtents() / 2, boxPos, objMat, ColorI::WHITE );
       }
       else
       {

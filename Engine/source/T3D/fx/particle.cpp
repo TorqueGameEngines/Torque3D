@@ -293,7 +293,7 @@ void ParticleData::packData(BitStream* stream)
       stream->writeFloat( times[i], 8);
    }
 
-   //PACKDATA_ASSET(Texture);
+   PACKDATA_ASSET(Texture);
 
    for (i = 0; i < 4; i++)
       mathWrite(*stream, texCoords[i]);
@@ -307,7 +307,7 @@ void ParticleData::packData(BitStream* stream)
       stream->writeInt(framesPerSec, 8);
    }
 
-   //PACKDATA_ASSET(TextureExt);
+   PACKDATA_ASSET(TextureExt);
 
    stream->writeFlag(constrain_pos);
    stream->writeFloat(start_angle/360.0f, 11);
@@ -378,7 +378,7 @@ void ParticleData::unpackData(BitStream* stream)
       times[i] = stream->readFloat(8);
    }
 
-   //UNPACKDATA_ASSET(Texture);
+   UNPACKDATA_ASSET(Texture);
 
    for (i = 0; i < 4; i++)
       mathRead(*stream, &texCoords[i]);
@@ -391,7 +391,7 @@ void ParticleData::unpackData(BitStream* stream)
      framesPerSec = stream->readInt(8);
    }
 
-   //UNPACKDATA_ASSET(Texture);
+   UNPACKDATA_ASSET(TextureExt);
 
    constrain_pos = stream->readFlag();
    start_angle = 360.0f*stream->readFloat(11);

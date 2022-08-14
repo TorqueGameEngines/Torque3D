@@ -22,7 +22,8 @@
 // IN THE SOFTWARE.
 //
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
-
+#include "torqueConfig.h"
+#ifdef TORQUE_TOOLS
 #include "afx/arcaneFX.h"
 
 #include "gui/editor/inspector/customField.h"
@@ -203,3 +204,4 @@ void afxGuiSubstitutionField::_executeSelectedCallback()
 }
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+#endif

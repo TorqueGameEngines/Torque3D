@@ -511,8 +511,25 @@ bool GuiGameSettingsCtrl::onWake()
    if( !Parent::onWake() )
       return false;
 
+   _setNextBitmap(getNextBitmap());
+   _setPreviousBitmap(getPreviousBitmap());
+   _setKeybindBitmap(getKeybindBitmap());
+
    return true;
 }
+
+void GuiGameSettingsCtrl::onSleep()
+{
+   if (mNextBitmapAsset.notNull())
+      mNextBitmap = NULL;
+   if (mPreviousBitmapAsset.notNull())
+      mPreviousBitmap = NULL;
+   if (mKeybindBitmapAsset.notNull())
+      mKeybindBitmap = NULL;
+
+   Parent::onSleep();
+}
+
 void GuiGameSettingsCtrl::activate()
 {
    if(isSelected() && isEnabled() && (mScriptCallback != StringTable->EmptyString()))

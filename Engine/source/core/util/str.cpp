@@ -254,17 +254,16 @@ class String::StringData : protected StringDataImpl
    public:
 
       ///
-      StringData( const StringChar* data, bool interned = false )
+      StringData( const StringChar* data, U32 length, bool interned = false )
       {
          mRefCount = 1;
          mNumChars = U32_MAX;
          mHashCase = U32_MAX;
          mHashNoCase = U32_MAX;
          mUTF16 = NULL;
+         mLength = length;
          mIsInterned = interned;
          
-         // mLength is initialized by operator new()
-
          if( data )
          {
             dMemcpy( mData, data, sizeof( StringChar ) * mLength );
@@ -280,14 +279,26 @@ class String::StringData : protected StringDataImpl
 
       ~StringData()
       {
+         AssertFatal( mRefCount == 0, "StringData::~StringData invalid refcount" );
+
          if( mUTF16 )
             delete [] mUTF16;
       }
-
-      TORQUE_NOINLINE void* operator new(size_t size, U32 len);
-      TORQUE_NOINLINE void* operator new( size_t size, U32 len, DataChunker& chunker );
-      void operator delete(void *);
-
+      
+      static StringData* Create(const StringChar* data, U32 len, bool interned = false)
+      {
+         void* memory = dMalloc(sizeof(StringData) + sizeof(StringChar) * len);
+         StringData* result = new(memory) StringData(data, len, interned);
+         return result;
+      }
+      
+      static StringData* Create(const StringChar* data, U32 len, DataChunker& chunker, bool interned = false)
+      {
+         void* memory = chunker.alloc( sizeof(StringData) + len * sizeof(StringChar));
+         StringData* result = new(memory) StringData(data, len, interned);
+         return result;
+      }
+ 
       bool isShared() const
       {
          return ( mRefCount > 1 );
@@ -492,51 +503,6 @@ DefineEngineFunction( dumpStringMemStats, void, (), , "()"
 
 //-----------------------------------------------------------------------------
 
-void* String::StringData::operator new( size_t size, U32 len )
-{
-   AssertFatal( len != 0, "String::StringData::operator new() - string must not be empty" );
-   StringData *str = static_cast<StringData*>( dMalloc( size + len * sizeof(StringChar) ) );
-
-   str->mLength      = len;
-
-#ifdef TORQUE_DEBUG
-   dFetchAndAdd( sgStringMemBytes, size + len * sizeof(StringChar) );
-   dFetchAndAdd( sgStringInstances, 1 );
-#endif
-
-   return str;
-}
-
-void String::StringData::operator delete(void *ptr)
-{
-   StringData* sub = static_cast<StringData *>(ptr);
-   AssertFatal( sub->mRefCount == 0, "StringData::delete() - invalid refcount" );
-
-#ifdef TORQUE_DEBUG
-   dFetchAndAdd( sgStringMemBytes, U32( -( S32( sizeof( StringData ) + sub->mLength * sizeof(StringChar) ) ) ) );
-   dFetchAndAdd( sgStringInstances, U32( -1 ) );
-#endif
-
-   dFree( ptr );
-}
-
-void* String::StringData::operator new( size_t size, U32 len, DataChunker& chunker )
-{
-   AssertFatal( len != 0, "String::StringData::operator new() - string must not be empty" );
-   StringData *str = static_cast<StringData*>( chunker.alloc( size + len * sizeof(StringChar) ) );
-
-   str->mLength      = len;
-
-#ifdef TORQUE_DEBUG
-   dFetchAndAdd( sgStringMemBytes, size + len * sizeof(StringChar) );
-   dFetchAndAdd( sgStringInstances, 1 );
-#endif
-
-   return str;
-}
-
-//-----------------------------------------------------------------------------
-
 String::String()
 {
    PROFILE_SCOPE(String_default_constructor);
@@ -556,7 +522,7 @@ String::String(const StringChar *str)
    if( str && *str )
    {
       U32 len = dStrlen(str);
-      _string = new ( len ) StringData( str );
+     _string = StringData::Create(str, len);
    }
    else
       _string = StringData::Empty();
@@ -567,7 +533,7 @@ String::String(const StringChar *str, SizeType len)
    PROFILE_SCOPE(String_char_len_constructor);
    if (str && *str && len!=0)
    {
-      _string = new ( len ) StringData( str );
+      _string = StringData::Create(str, len);
    }
    else
       _string = StringData::Empty();
@@ -581,7 +547,7 @@ String::String(const UTF16 *str)
    {
       UTF8* utf8 = createUTF8string( str );
       U32 len = dStrlen( utf8 );
-      _string = new ( len ) StringData( utf8 );
+      _string = StringData::Create(utf8, len);
       delete [] utf8;
    }
    else
@@ -619,7 +585,7 @@ String String::intern() const
       
    // Create new.
    
-   StringData* data = new ( length(), sInternTable->mChunker ) StringData( c_str(), true );
+   StringData* data = StringData::Create(c_str(), length(), sInternTable->mChunker, true);
    iter = sInternTable->insertUnique( data, data );
    
    return ( *iter ).value;
@@ -710,7 +676,7 @@ String& String::operator=(StringChar c)
 {
    _string->release();
 
-   _string = new ( 2 ) StringData( 0 );
+   _string = StringData::Create(NULL, 2);
    _string->utf8()[ 0 ] = c;
    _string->utf8()[ 1 ] = '\0';
 
@@ -721,8 +687,8 @@ String& String::operator+=(StringChar c)
 {
    // Append the given string into a new string
    U32 len = _string->getLength();
-   StringData* sub = new ( len + 1 ) StringData( NULL );
-
+   StringData* sub = StringData::Create(NULL, len + 1);
+   
    copy( sub->utf8(), _string->utf8(), len );
    sub->utf8()[len] = c;
    sub->utf8()[len+1] = 0;
@@ -748,7 +714,7 @@ String& String::operator=(const StringChar *str)
    if (str && *str)
    {
       U32 len = dStrlen(str);
-      _string = new ( len ) StringData( str );
+     _string = StringData::Create(str, len);
    }
    else
       _string = StringData::Empty();
@@ -782,7 +748,7 @@ String& String::operator+=(const StringChar *src)
       sub = StringData::Empty();
    else
    {
-      sub = new ( newlen ) StringData( NULL );
+      sub = StringData::Create(NULL, newlen);
 
       copy(sub->utf8(),_string->utf8(),lena);
       copy(sub->utf8() + lena,src,lenb + 1);
@@ -809,7 +775,7 @@ String& String::operator+=(const String &src)
       sub = StringData::Empty();
    else
    {
-      sub = new ( newlen ) StringData( NULL );
+      sub = StringData::Create(NULL, newlen);
 
       copy(sub->utf8(),_string->utf8(),lena);
       copy(sub->utf8() + lena,src._string->utf8(),lenb + 1);
@@ -835,7 +801,7 @@ String operator+(const String &a, const String &b)
    U32 lena = a.length();
    U32 lenb = b.length();
 
-   String::StringData *sub = new ( lena + lenb ) String::StringData( NULL );
+   String::StringData* sub = String::StringData::Create(NULL, lena + lenb);
 
    String::copy(sub->utf8(),a._string->utf8(),lena);
    String::copy(sub->utf8() + lena,b._string->utf8(),lenb + 1);
@@ -848,7 +814,7 @@ String operator+(const String &a, StringChar c)
    //PROFILE_SCOPE( String_String_plus_Char );
 
    U32 lena = a.length();
-   String::StringData *sub = new ( lena + 1 ) String::StringData( NULL );
+   String::StringData* sub = String::StringData::Create(NULL, lena + 1);
 
    String::copy(sub->utf8(),a._string->utf8(),lena);
 
@@ -863,7 +829,7 @@ String operator+(StringChar c, const String &a)
    //PROFILE_SCOPE( String_Char_plus_String );
 
    U32 lena = a.length();
-   String::StringData *sub = new ( lena + 1 ) String::StringData( NULL );
+   String::StringData* sub = String::StringData::Create(NULL, lena + 1);
 
    String::copy(sub->utf8() + 1,a._string->utf8(),lena + 1);
    sub->utf8()[0] = c;
@@ -886,7 +852,7 @@ String operator+(const String &a, const StringChar *b)
    if( !lenb )
       return a;
 
-   String::StringData *sub = new ( lena + lenb ) String::StringData( NULL );
+   String::StringData* sub = String::StringData::Create(NULL, lena + lenb);
 
    String::copy(sub->utf8(),a._string->utf8(),lena);
    String::copy(sub->utf8() + lena,b,lenb + 1);
@@ -908,7 +874,7 @@ String operator+(const StringChar *a, const String &b)
 
    U32 lenb = b.length();
 
-   String::StringData* sub = new ( lena + lenb ) String::StringData( NULL );
+   String::StringData* sub = String::StringData::Create(NULL, lena + lenb);
 
    String::copy(sub->utf8(),a,lena);
    String::copy(sub->utf8() + lena,b._string->utf8(),lenb + 1);
@@ -1117,7 +1083,7 @@ String& String::insert(SizeType pos, const StringChar *str, SizeType len)
       sub = StringData::Empty();
    else
    {
-      sub = new ( newlen ) StringData( NULL );
+      sub = StringData::Create(NULL, newlen);
 
       String::copy(sub->utf8(),_string->utf8(),pos);
       String::copy(sub->utf8() + pos,str,len);
@@ -1146,7 +1112,7 @@ String& String::erase(SizeType pos, SizeType len)
       sub = StringData::Empty();
    else
    {
-      sub = new ( newlen ) StringData( NULL );
+      sub = StringData::Create(NULL, newlen);
 
       if (pos > 0)
          String::copy(sub->utf8(),_string->utf8(),pos);
@@ -1176,7 +1142,7 @@ String& String::replace(SizeType pos, SizeType len, const StringChar *str)
       sub = StringData::Empty();
    else
    {
-      sub = new ( newlen ) StringData( NULL );
+      sub = StringData::Create(NULL, newlen);
 
       String::copy(sub->utf8(),_string->utf8(), pos);
       String::copy(sub->utf8() + pos,str,rlen);
@@ -1207,7 +1173,8 @@ String& String::replace( StringChar c1, StringChar c2 )
       {
          if( !foundReplacement )
          {
-            sub = new ( length() ) StringData( _string->utf8() );
+             sub = StringData::Create(_string->utf8(), length());
+
             c = &sub->utf8()[ c - _string->utf8() ];
             foundReplacement = true;
          }
@@ -1261,7 +1228,7 @@ String &String::replace(const String &s1, const String &s2)
       sub = StringData::Empty();
    else
    {
-      sub = new (newSize - 1 ) StringData( NULL );
+      sub = StringData::Create(NULL, newSize - 1);
 
       // Now assemble the new string from the pieces of the old...
 
@@ -1327,7 +1294,7 @@ String String::substr(SizeType pos, SizeType len) const
    if( !len )
       sub = StringData::Empty();
    else
-      sub = new ( len ) StringData( _string->utf8() + pos );
+      sub = StringData::Create(_string->utf8() + pos, len);
 
    return sub;
 }
@@ -1356,7 +1323,7 @@ String String::trim() const
    if( !len )
       sub = StringData::Empty();
    else
-      sub = new ( len ) StringData( start );
+      sub = StringData::Create(start, len);
 
    return sub;
 }
@@ -1573,7 +1540,7 @@ String String::VToString(const char* str, va_list args)
       sub = StringData::Empty();
    else
    {
-      sub = new ( len ) StringData( NULL );
+      sub = StringData::Create(NULL, len);
 
       format.copy( sub->utf8() );
       sub->utf8()[ len ] = 0;
@@ -1590,7 +1557,7 @@ String   String::SpanToString(const char *start, const char *end)
    AssertFatal( end > start, "Invalid arguments to String::SpanToString - end is before start" );
 
    U32         len = U32(end - start);
-   StringData* sub = new ( len ) StringData( start );
+   String::StringData* sub = StringData::Create(start, len);
 
    return sub;
 }
@@ -1600,7 +1567,8 @@ String String::ToLower(const String &string)
    if ( string.isEmpty() )
       return String();
 
-   StringData* sub = new ( string.length() ) StringData( string );
+   String::StringData* sub = StringData::Create(string, string.length());
+
    dStrlwr( sub->utf8() );
 
    return sub;
@@ -1611,7 +1579,8 @@ String String::ToUpper(const String &string)
    if ( string.isEmpty() )
       return String();
 
-   StringData* sub = new ( string.length() ) StringData( string );
+   String::StringData* sub = StringData::Create(string, string.length());
+
    dStrupr( sub->utf8() );
 
    return sub;

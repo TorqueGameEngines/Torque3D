@@ -228,6 +228,9 @@ bool SoundAsset::loadSound()
          mSFXProfile.setDescription(&mProfileDesc);
          mSFXProfile.setSoundFileName(mSoundPath);
          mSFXProfile.setPreload(mPreload);
+
+         //give it a nudge to preload if required
+         mSFXProfile.getBuffer();
       }
 
    }
@@ -341,7 +344,10 @@ DefineEngineMethod(SoundAsset, playSound, S32, (Point3F position), (Point3F::Zer
       MatrixF transform;
       transform.setPosition(position);
       SFXSource* source = SFX->playOnce(object->getSfxProfile(), &transform, NULL, -1);
-      return source->getId();
+      if(source)
+         return source->getId();
+      else
+         return 0;
    }
    else
       return 0;
@@ -354,7 +360,6 @@ DefineEngineStaticMethod(SoundAsset, getAssetIdByFilename, const char*, (const c
 {
    return SoundAsset::getAssetIdByFileName(StringTable->insert(filePath));
 }
-#endif
 IMPLEMENT_CONOBJECT(GuiInspectorTypeSoundAssetPtr);
 
 ConsoleDocClass(GuiInspectorTypeSoundAssetPtr,
@@ -445,3 +450,4 @@ void GuiInspectorTypeSoundAssetId::consoleInit()
 
    ConsoleBaseType::getType(TypeSoundAssetId)->setInspectorFieldType("GuiInspectorTypeSoundAssetId");
 }
+#endif

@@ -23,7 +23,7 @@
 function EditorLightingMenu::onAdd( %this )
 {
    Parent::onAdd( %this );
-   
+   return;
    // Get the light manager names.
    %lightManagers = getLightManagerNames();
 

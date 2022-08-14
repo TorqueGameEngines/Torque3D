@@ -82,6 +82,7 @@ void Zone::consoleInit()
    getStaticClassRep()->mIsRenderEnabled = false;
 }
 
+#ifdef TORQUE_TOOLS
 void Zone::initPersistFields()
 {
    addProtectedField("selectAll", TypeBool, Offset(mSelecting, Zone),
@@ -90,13 +91,10 @@ void Zone::initPersistFields()
    Parent::initPersistFields();
 }
 
-
 bool Zone::_doSelect(void* object, const char* index, const char* data)
 {
    Zone* zone = reinterpret_cast<Zone*>(object);
-
    zone->selectWithin();
-
    return false;
 }
 
@@ -138,6 +136,7 @@ void Zone::selectWithin()
       }
    }
 }
+#endif
 //=============================================================================
 //    Console API.
 //=============================================================================
@@ -162,9 +161,10 @@ DefineEngineMethod( Zone, dumpZoneState, void, ( bool updateFirst ), ( true ),
 {
    object->dumpZoneState( updateFirst );
 }
-
+#ifdef TORQUE_TOOLS
 DefineEngineMethod(Zone, selectWithin, void, () ,,
    "select a list of all objects assigned to the zone")
 {
    object->selectWithin();
 }
+#endif

@@ -74,7 +74,7 @@ protected:
 };
 
 DefineConsoleType(TypeStateMachineAssetPtr, StateMachineAsset)
-
+#ifdef TORQUE_TOOLS
 //-----------------------------------------------------------------------------
 // TypeAssetId GuiInspectorField Class
 //-----------------------------------------------------------------------------
@@ -91,6 +91,6 @@ public:
    virtual GuiControl* constructEditControl();
    virtual bool updateRects();
 };
-
+#endif
 #endif
 

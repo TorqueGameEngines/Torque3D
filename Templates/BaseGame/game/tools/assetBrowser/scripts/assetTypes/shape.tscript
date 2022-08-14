@@ -5,7 +5,7 @@ function AssetBrowser::createShapeAsset(%this)
       
    %assetName = AssetBrowser.newAssetSettings.assetName;
    
-   %assetPath = AssetBrowser.dirHandler.currentAddress @ "/";
+   %assetPath = NewAssetTargetAddress.getText() @ "/";
    
    %tamlpath = %assetPath @ %assetName @ ".asset.taml";
    %shapeFilePath = %assetPath @ %assetName @ ".dae";
@@ -135,7 +135,7 @@ function AssetBrowser::importShapeAsset(%this, %assetItem)
    %assetImportSuccessful = false;
    %assetId = %moduleName@":"@%assetName;
    
-   %assetPath = AssetBrowser.dirHandler.currentAddress @ "/";
+   %assetPath = NewAssetTargetAddress.getText() @ "/";
    %assetFullPath = %assetPath @ fileName(%filePath);
    
    %newAsset = new ShapeAsset()

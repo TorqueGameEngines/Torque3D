@@ -1425,6 +1425,7 @@ void DecalManager::prepRenderImage( SceneRenderState* state )
       ri->prim->numPrimitives = currentBatch->iCount / 3;
       ri->prim->startVertex = 0;
       ri->prim->numVertices = currentBatch->vCount;
+      ri->translucentSort = !currentBatch->matInst->getMaterial()->isTranslucent();
 
       // Ugly hack for ProjectedShadow!
       if ( customTex )

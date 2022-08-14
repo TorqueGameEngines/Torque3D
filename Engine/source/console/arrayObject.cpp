@@ -155,8 +155,9 @@ bool ArrayObject::_addKeyFromField( void *object, const char *index, const char 
 
 S32 ArrayObject::getIndexFromValue( const String &value ) const
 {
+   S32 currentIndex = mMax(mCurrentIndex, 0);
    S32 foundIndex = -1;
-   for ( S32 i = mCurrentIndex; i < mArray.size(); i++ )
+   for ( S32 i = currentIndex; i < mArray.size(); i++ )
    {
       if ( isEqual( mArray[i].value, value ) )
       {
@@ -167,7 +168,7 @@ S32 ArrayObject::getIndexFromValue( const String &value ) const
 
    if( foundIndex < 0 )
    {
-      for ( S32 i = 0; i < mCurrentIndex; i++ )
+      for ( S32 i = 0; i < currentIndex; i++ )
       {
          if ( isEqual( mArray[i].value, value ) )
          {
@@ -184,8 +185,9 @@ S32 ArrayObject::getIndexFromValue( const String &value ) const
 
 S32 ArrayObject::getIndexFromKey( const String &key ) const
 {
+   S32 currentIndex = mMax(mCurrentIndex, 0);
    S32 foundIndex = -1;
-   for ( S32 i = mCurrentIndex; i < mArray.size(); i++ )
+   for ( S32 i = currentIndex; i < mArray.size(); i++ )
    {
       if ( isEqual( mArray[i].key, key ) )
       {
@@ -196,7 +198,7 @@ S32 ArrayObject::getIndexFromKey( const String &key ) const
 
    if( foundIndex < 0 )
    {
-      for ( S32 i = 0; i < mCurrentIndex; i++ )
+      for ( S32 i = 0; i < currentIndex; i++ )
       {
          if ( isEqual( mArray[i].key, key ) )
          {
@@ -213,8 +215,9 @@ S32 ArrayObject::getIndexFromKey( const String &key ) const
 
 S32 ArrayObject::getIndexFromKeyValue( const String &key, const String &value ) const
 {
+   S32 currentIndex = mMax(mCurrentIndex, 0);
    S32 foundIndex = -1;
-   for ( S32 i = mCurrentIndex; i < mArray.size(); i++ )
+   for ( S32 i = currentIndex; i < mArray.size(); i++ )
    {
       if ( isEqual( mArray[i].key, key ) && isEqual( mArray[i].value, value ) )
       {
@@ -225,7 +228,7 @@ S32 ArrayObject::getIndexFromKeyValue( const String &key, const String &value ) 
 
    if ( foundIndex < 0 )
    {
-      for ( S32 i = 0; i < mCurrentIndex; i++ )
+      for ( S32 i = 0; i < currentIndex; i++ )
       {
          if ( isEqual( mArray[i].key, key ) && isEqual( mArray[i].value, value ) )
          {

@@ -22,7 +22,8 @@
 
 #ifndef _GUINAVEDITORCTRL_H_
 #define _GUINAVEDITORCTRL_H_
-
+#include "torqueConfig.h"
+#ifdef TORQUE_TOOLS
 #ifndef _EDITTSCTRL_H_
 #include "gui/worldEditor/editTSCtrl.h"
 #endif
@@ -179,7 +180,7 @@ public:
    virtual void undo();
    virtual void redo() { undo(); }
 };
-
+#endif
 #endif
 
 

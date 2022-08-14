@@ -22,6 +22,8 @@
 
 #include "windowManager/sdl/sdlWindowMgr.h"
 #include "platformSDL/sdlInputManager.h"
+#include "platform/platformVolume.h"
+#include "core/util/path.h"
 #include "gfx/gfxDevice.h"
 #include "core/util/journal/process.h"
 #include "core/strings/unicode.h"

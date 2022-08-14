@@ -175,7 +175,7 @@ function getUserPath()
 
 function getPrefpath()
 {
-   $prefPath = getUserPath() @ "/preferences";
+   $prefPath = "home:/preferences";
 	return $prefPath;
 }
 

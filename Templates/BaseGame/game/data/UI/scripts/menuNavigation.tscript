@@ -14,6 +14,9 @@ function UINavigation::setRootPage(%this, %rootPage)
       %this.pageStack = new ArrayObject();  
    }
    
+   if(%this.rootPage $= %rootPage)
+      return;
+   
    if(isObject(%this.rootPage))
    {
       %canClose = true;
@@ -70,6 +73,11 @@ function UINavigation::pushPage(%this, %newPage, %callback)
    {
       %this.pageStack = new ArrayObject();
    }
+   
+   //don't re-add pages
+   if(%this.getPageCount() != 0 && 
+      %this.pageStack.getIndexFromKey(%newPage) != -1)
+      return;
    
    %canChange = true;
    if(%newPage.isMethod("canOpen"))
@@ -167,8 +175,11 @@ function UINavigation::popPage(%this, %callback)
    }
    
    %newTopPage = %this.getCurrentPage();
-   if(%newTopPage.isMethod("onOpen"))
-      %newTopPage.call("onOpen");
+   if(isObject(%newTopPage))
+   {
+   	  if(%newTopPage.isMethod("onOpen"))
+         %newTopPage.call("onOpen");
+   }
    
    if(%callback !$= "")
    eval(%callback);
@@ -281,3 +292,17 @@ function UINavigation::getPageCount(%this)
       
    return %count;
 }
+
+//==============================================================================
+/// Summary:
+/// Force the page to reprocess to ensure it's status is up to date
+function UINavigation::refreshPage(%this)
+{
+   %page = %this.getCurrentPage();
+   if(!isObject(%page))
+      return;
+      
+   if(%page.isMethod("onOpen"))
+      %page.call("onOpen");
+}
+

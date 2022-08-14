@@ -169,7 +169,7 @@ void CubemapAsset::setScriptFile(const char* pScriptFile)
    // Refresh the asset.
    refreshAsset();
 }
-
+#ifdef TORQUE_TOOLS
 //-----------------------------------------------------------------------------
 // GuiInspectorTypeAssetId
 //-----------------------------------------------------------------------------
@@ -249,3 +249,4 @@ bool GuiInspectorTypeCubemapAssetPtr::updateRects()
 
    return resized;
 }
+#endif

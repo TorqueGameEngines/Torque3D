@@ -135,6 +135,7 @@ static void copyStatAttributes(const struct stat& info, FileNode::Attributes* at
    attr->size = info.st_size;
    attr->mtime = UnixTimeToTime(info.st_mtime);
    attr->atime = UnixTimeToTime(info.st_atime);
+   attr->ctime = UnixTimeToTime(info.st_ctime);
 }
 
 
@@ -595,6 +596,7 @@ String   Platform::FS::getAssetDir()
 /// file systems.
 bool Platform::FS::InstallFileSystems()
 {
+#ifndef TORQUE_SECURE_VFS
    Platform::FS::Mount( "/", Platform::FS::createNativeFS( String() ) );
 
    // Setup the current working dir.
@@ -611,6 +613,7 @@ bool Platform::FS::InstallFileSystems()
    // Mount the home directory
    if (char* home = getenv("HOME"))
       Platform::FS::Mount( "home", Platform::FS::createNativeFS(home) );
+#endif
 
    return true;
 }

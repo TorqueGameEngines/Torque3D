@@ -2157,7 +2157,7 @@ DefineEngineFunction( gotoWebPage, void, ( const char* address ),,
    // the bogus url, and hope for the best.
    
    String addr;
-   if( Platform::isFile( address ) || Platform::isDirectory( address ) )
+   if( Torque::FS::IsFile( address ) || Torque::FS::IsDirectory( address ) )
    {
 #ifdef TORQUE2D_TOOLS_FIXME
       addr = String::ToString( "file://%s", address );

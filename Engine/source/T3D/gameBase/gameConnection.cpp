@@ -1566,12 +1566,7 @@ void GameConnection::play2D(StringTableEntry assetId)
 {
    if (AssetDatabase.isDeclaredAsset(assetId))
    {
-
-      AssetPtr<SoundAsset> tempSoundAsset;
-      tempSoundAsset = assetId;
-
-      postNetEvent(new SimSoundAssetEvent(tempSoundAsset));
-
+      postNetEvent(new SimSoundAssetEvent(assetId));
    }
 }
 
@@ -1587,7 +1582,7 @@ void GameConnection::play3D(StringTableEntry assetId, const MatrixF *transform)
       tempSoundAsset = assetId;
 
       if (!mControlObject)
-         postNetEvent(new SimSoundAssetEvent(tempSoundAsset, transform));
+         postNetEvent(new SimSoundAssetEvent(assetId, *transform));
       else
       {
          // TODO: Maybe improve this to account for the duration
@@ -1601,7 +1596,7 @@ void GameConnection::play3D(StringTableEntry assetId, const MatrixF *transform)
          transform->getColumn(3, &pos);
          mControlObject->getTransform().getColumn(3, &ear);
          if ((ear - pos).len() < tempSoundAsset->getSfxDescription()->mMaxDistance)
-            postNetEvent(new SimSoundAssetEvent(tempSoundAsset, transform));
+            postNetEvent(new SimSoundAssetEvent(assetId, *transform));
       }
 
    }

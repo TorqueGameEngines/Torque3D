@@ -112,6 +112,7 @@ SceneObject::SceneObject()
 
    mObjScale.set(1,1,1);
    mObjToWorld.identity();
+   mLastXform.identity();
    mWorldToObj.identity();
 
    mObjBox      = Box3F(Point3F(0, 0, 0), Point3F(0, 0, 0));
@@ -416,6 +417,7 @@ void SceneObject::setTransform( const MatrixF& mat )
 
    PROFILE_SCOPE( SceneObject_setTransform );
 // PATHSHAPE
+   UpdateXformChange(mat);
    PerformUpdatesForChildren(mat);
 // PATHSHAPE END
 
@@ -1661,7 +1663,6 @@ void SceneObject::moveRender(const Point3F &delta)
 }
 
 void SceneObject::PerformUpdatesForChildren(MatrixF mat){
-	    UpdateXformChange(mat);
 		for (U32 i=0; i < getNumChildren(); i++) {
 			SceneObject *o = getChild(i);
 			o->updateChildTransform(); //update the position of the child object
@@ -1988,8 +1989,11 @@ DefineEngineMethod(SceneObject, detachChild, bool, (const char*_subObject),, "Sc
         return false;  
 }
 
-// subclasses can do something with these if they care to
-void SceneObject::onNewParent(SceneObject *newParent) {}  
-void SceneObject::onLostParent(SceneObject *oldParent){}    
-void SceneObject::onNewChild(SceneObject *newKid){}   
-void SceneObject::onLostChild(SceneObject *lostKid){}
+IMPLEMENT_CALLBACK(SceneObject, onNewParent, void, (SceneObject *newParent), (newParent), "");
+IMPLEMENT_CALLBACK(SceneObject, onLostParent, void, (SceneObject *oldParent), (oldParent), "");
+IMPLEMENT_CALLBACK(SceneObject, onNewChild, void, (SceneObject *newKid), (newKid), "");
+IMPLEMENT_CALLBACK(SceneObject, onLostChild, void, (SceneObject *lostKid), (lostKid), "");
+void SceneObject::onNewParent(SceneObject *newParent) { onNewParent_callback(newParent); }
+void SceneObject::onLostParent(SceneObject *oldParent) { onLostParent_callback(oldParent); }
+void SceneObject::onNewChild(SceneObject *newKid) { onNewChild_callback(newKid); }
+void SceneObject::onLostChild(SceneObject *lostKid) { onLostChild_callback(lostKid); }

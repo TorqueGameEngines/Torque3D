@@ -481,6 +481,7 @@ void Splash::processTick(const Move*)
       if( mCurrMS >= mEndingMS )
       {
          mDead = true;
+         deleteObject();
       }
    }
 }

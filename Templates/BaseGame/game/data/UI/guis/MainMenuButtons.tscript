@@ -11,7 +11,7 @@ function MainMenuButtons::onSleep(%this)
 // set MainMenuButtonList as it's root page. 
 // This is an optional function, but is called as part of the validation that the page
 // CAN be opened, so it's shown here as an example
-function MainMenuButtonList::canOpen(%this)
+function MainMenuButtons::canOpen(%this)
 {
    return true;
 }
@@ -21,7 +21,7 @@ function MainMenuButtonList::canOpen(%this)
 // set MainMenuButtonList as it's root page. 
 // Once the page is added to the MainMenuGUI's UINavigation page stack, onOpen here is called
 // Which allows us to actually do the work we need to do for display
-function MainMenuButtonList::onOpen(%this)
+function MainMenuButtons::onOpen(%this)
 {
    //Here, we set the MainMenuButtonList - a GuiStackControl with the MenuList class
    // to be the active menu list.
@@ -57,13 +57,13 @@ function MainMenuButtonList::onOpen(%this)
 }
 
 //Optional, as the check defaults to true, but here as an example case
-function MainMenuButtonList::canClose(%this)
+function MainMenuButtons::canClose(%this)
 {
    return true;
 }
 
 
-function MainMenuButtonList::onClose(%this)
+function MainMenuButtons::onClose(%this)
 {
 }
 

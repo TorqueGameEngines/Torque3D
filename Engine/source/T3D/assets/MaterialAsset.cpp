@@ -450,6 +450,7 @@ DefineEngineMethod(MaterialAsset, getScriptPath, const char*, (), ,
 }
 #endif
 
+#ifdef TORQUE_TOOLS
 //-----------------------------------------------------------------------------
 // GuiInspectorTypeAssetId
 //-----------------------------------------------------------------------------
@@ -544,3 +545,4 @@ void GuiInspectorTypeMaterialAssetId::consoleInit()
 
    ConsoleBaseType::getType(TypeMaterialAssetId)->setInspectorFieldType("GuiInspectorTypeMaterialAssetId");
 }
+#endif

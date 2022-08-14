@@ -18,7 +18,7 @@ function AssetBrowser::createLevelAsset(%this)
    
    %assetName = AssetBrowser.newAssetSettings.assetName;
    
-   %assetPath = AssetBrowser.dirHandler.currentAddress @ "/";
+   %assetPath = NewAssetTargetAddress.getText() @ "/";
    
    %tamlpath = %assetPath @ %assetName @ ".asset.taml";
    %levelPath = %assetPath @ %assetName @ ".mis";

@@ -117,7 +117,7 @@ ConsoleSetType(TypeShapeAssetId)
 
 //-----------------------------------------------------------------------------
 
-const String ShapeAsset::mErrCodeStrings[] =
+const String ShapeAsset::mShapeErrCodeStrings[] =
 {
    "TooManyVerts",
    "TooManyBones",
@@ -720,11 +720,11 @@ DefineEngineStaticMethod(ShapeAsset, getAssetIdByFilename, const char*, (const c
 }
 #endif
 
+#ifdef TORQUE_TOOLS
 //-----------------------------------------------------------------------------
 // GuiInspectorTypeAssetId
 //-----------------------------------------------------------------------------
 
-#ifdef TORQUE_TOOLS
 IMPLEMENT_CONOBJECT(GuiInspectorTypeShapeAssetPtr);
 
 ConsoleDocClass(GuiInspectorTypeShapeAssetPtr,

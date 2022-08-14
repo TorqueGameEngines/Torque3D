@@ -2,7 +2,7 @@ function AssetBrowser::createStateMachineAsset(%this)
 {
    %assetName = AssetBrowser.newAssetSettings.assetName;
    %moduleName = AssetBrowser.selectedModule;
-   %assetPath = AssetBrowser.dirHandler.currentAddress @ "/";
+   %assetPath = NewAssetTargetAddress.getText() @ "/";
       
    %assetQuery = new AssetQuery();
    

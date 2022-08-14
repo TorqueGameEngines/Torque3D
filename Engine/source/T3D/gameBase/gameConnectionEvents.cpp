@@ -297,13 +297,13 @@ void SimDataBlockEvent::process(NetConnection *cptr)
 static F32 SoundPosAccuracy = 0.5;
 static S32 SoundRotBits = 8;
 
-SimSoundAssetEvent::SimSoundAssetEvent(AssetPtr<SoundAsset> asset, const MatrixF* mat)
+SimSoundAssetEvent::SimSoundAssetEvent(StringTableEntry assetId, const MatrixF& mat)
 {
    // cant get here unless the asset is declared.
-   mAsset = asset;
+   mAsset = assetId;
 
    if (mat)
-      mTransform = *mat;
+      mTransform = mat;
 }
 
 void SimSoundAssetEvent::pack(NetConnection* con, BitStream* stream)

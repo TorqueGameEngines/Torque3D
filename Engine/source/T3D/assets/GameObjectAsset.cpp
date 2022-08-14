@@ -231,6 +231,7 @@ DefineEngineMethod(GameObjectAsset, createObject, const char*, (),,
    return object->create();
 }
 
+#ifdef TORQUE_TOOLS
 //-----------------------------------------------------------------------------
 // GuiInspectorTypeAssetId
 //-----------------------------------------------------------------------------
@@ -316,3 +317,4 @@ bool GuiInspectorTypeGameObjectAssetPtr::updateRects()
 
    return resized;
 }
+#endif

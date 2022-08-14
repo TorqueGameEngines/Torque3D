@@ -140,19 +140,19 @@ void DebugVizHLSL::processPix(Vector<ShaderComponent*>& componentList,
       Var* skylightCubemapIdx = (Var*)LangElement::find("inSkylightCubemapIdx");
       Var* inProbePosArray = (Var*)LangElement::find("inProbePosArray");
       Var* inRefPosArray = (Var*)LangElement::find("inRefPosArray");
-      Var* refScaleArray = (Var*)LangElement::find("inRefScale");
+      Var* refScaleArray = (Var*)LangElement::find("inRefScaleArray");
 
-      Var* probeConfigData = (Var*)LangElement::find("inProbeConfigData");
+      Var* probeConfigData = (Var*)LangElement::find("inProbeConfigDataArray");
       Var* worldToObjArray = (Var*)LangElement::find("inWorldToObjArray");
 
       Var* BRDFTexture = (Var*)LangElement::find("BRDFTexture");
       Var* BRDFTextureTex = (Var*)LangElement::find("texture_BRDFTexture");
 
-      Var* specularCubemapAR = (Var*)LangElement::find("inSpecularCubemapAR");
-      Var* specularCubemapARTex = (Var*)LangElement::find("texture_inSpecularCubemapAR");
+      Var* specularCubemapAR = (Var*)LangElement::find("SpecularCubemapAR");
+      Var* specularCubemapARTex = (Var*)LangElement::find("texture_SpecularCubemapAR");
 
-      Var* irradianceCubemapAR = (Var*)LangElement::find("inIrradianceCubemapAR");
-      Var* irradianceCubemapARTex = (Var*)LangElement::find("texture_inIrradianceCubemapAR");
+      Var* irradianceCubemapAR = (Var*)LangElement::find("IrradianceCubemapAR");
+      Var* irradianceCubemapARTex = (Var*)LangElement::find("texture_IrradianceCubemapAR");
 
       Var* matinfo = (Var*)LangElement::find("ORMConfig");
       Var* metalness = (Var*)LangElement::find("metalness");

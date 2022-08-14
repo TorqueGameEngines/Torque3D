@@ -104,7 +104,7 @@ public:
 
    static StringTableEntry smNoShapeAssetFallback;
 
-   static const String mErrCodeStrings[ShapeAssetErrCode::Extended - Parent::Extended + 1];
+   static const String mShapeErrCodeStrings[ShapeAssetErrCode::Extended - Parent::Extended + 1];
 
    static U32 getAssetErrCode(AssetPtr<ShapeAsset> shapeAsset) { if (shapeAsset) return shapeAsset->mLoadedState; else return 0; }
 
@@ -112,7 +112,7 @@ public:
    {
       if (errCode < Parent::Extended) return Parent::getAssetErrstrn(errCode);
       if (errCode > ShapeAssetErrCode::Extended) return "undefined error";
-      return mErrCodeStrings[errCode];
+      return mShapeErrCodeStrings[errCode - Parent::Extended];
    };
 
    ShapeAsset();
@@ -209,10 +209,10 @@ protected:
    static const char* getNormalImposterFile(void* obj, const char* data) { return static_cast<ShapeAsset*>(obj)->getNormalImposterFile(); }
 };
 
-#ifdef TORQUE_TOOLS
 DefineConsoleType(TypeShapeAssetPtr, S32)
 DefineConsoleType(TypeShapeAssetId, String)
 
+#ifdef TORQUE_TOOLS
 //-----------------------------------------------------------------------------
 // TypeAssetId GuiInspectorField Class
 //-----------------------------------------------------------------------------

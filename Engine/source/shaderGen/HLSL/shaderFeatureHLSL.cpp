@@ -3149,7 +3149,15 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    meta->addStatement(new GenOp(computeForwardProbes.c_str(), new DecOp(ibl), surface, cubeMips, numProbes, worldToObjArray, probeConfigData, inProbePosArray, refScaleArray, inRefPosArray, eyePos,
       skylightCubemapIdx, BRDFTexture,
       irradianceCubemapAR, specularCubemapAR));
-
+   
+   Var *ambient = (Var *)LangElement::find("ambient");
+   if (!ambient)
+   {
+      ambient = new Var("ambient","float3");
+      eyePos->uniform = true;
+      eyePos->constSortPos = cspPass;
+   }
+   meta->addStatement(new GenOp("   @.rgb *= @.rgb;\r\n", ibl, ambient));
    meta->addStatement(new GenOp("   @.rgb = @.rgb;\r\n", curColor, ibl));
 
    output = meta;

@@ -39,6 +39,7 @@ function callOnModules(%functionName, %moduleGroup, %var0, %var1, %var2, %var3, 
    }
    
    ExecFilesList.pop_back(); //cleanup
+   %execArray.delete();
 }
 
 function loadModuleMaterials(%moduleGroup)

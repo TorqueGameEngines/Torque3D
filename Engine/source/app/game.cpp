@@ -58,7 +58,7 @@
 #include "afx/arcaneFX.h"
 #endif
 
-#ifdef TORQUE_PLAYER
+#if defined(TORQUE_PLAYER) || !defined(TORQUE_TOOLS)
 // See matching #ifdef in editor/editor.cpp
 bool gEditingMission = false;
 #endif

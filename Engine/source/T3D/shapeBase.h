@@ -504,6 +504,8 @@ struct ShapeBaseImageData: public GameBaseData {
    
    void inspectPostApply();
 
+   void handleStateSoundTrack(const U32& stateId);
+
    /// @}
 
    /// @name Callbacks

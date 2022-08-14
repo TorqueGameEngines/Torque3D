@@ -448,7 +448,6 @@ DefineEngineStaticMethod(ImageAsset, getAssetIdByFilename, const char*, (const c
 {
    return ImageAsset::getAssetIdByFilename(StringTable->insert(filePath));
 }
-#endif
 
 //-----------------------------------------------------------------------------
 // GuiInspectorTypeAssetId
@@ -620,3 +619,5 @@ void GuiInspectorTypeImageAssetId::consoleInit()
 
    ConsoleBaseType::getType(TypeImageAssetId)->setInspectorFieldType("GuiInspectorTypeImageAssetId");
 }
+
+#endif

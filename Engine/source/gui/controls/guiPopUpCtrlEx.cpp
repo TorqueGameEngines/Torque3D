@@ -1386,6 +1386,9 @@ bool GuiPopUpMenuCtrlEx::onKeyDown(const GuiEvent &event)
 //------------------------------------------------------------------------------
 void GuiPopUpMenuCtrlEx::onAction()
 {
+   if (!mActive)
+      return;
+
    GuiControl *canCtrl = getParent();
 
    addChildren();

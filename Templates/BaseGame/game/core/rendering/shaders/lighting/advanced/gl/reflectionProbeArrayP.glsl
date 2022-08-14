@@ -12,6 +12,7 @@ uniform sampler2D colorBuffer;
 uniform sampler2D matInfoBuffer;
 uniform sampler2D BRDFTexture;
 
+uniform vec3 ambientColor;
 uniform vec4 rtParams0;
 uniform vec4 vsFarPlane;
 uniform mat4 cameraToWorld;
@@ -202,6 +203,6 @@ void main()
 #if CAPTURING == 1
    OUT_col = vec4(mix(surface.baseColor.rgb,(irradiance + specular* horizon) ,surface.metalness/2),0);
 #else
-   OUT_col = vec4((irradiance + specular* horizon) , 0);//alpha writes disabled
+   OUT_col = vec4((irradiance + specular* horizon)*ambientColor, 0);//alpha writes disabled
 #endif
 }

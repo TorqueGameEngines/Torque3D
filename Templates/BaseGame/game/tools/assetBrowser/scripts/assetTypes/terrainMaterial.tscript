@@ -6,7 +6,7 @@ function AssetBrowser::createTerrainMaterialAsset(%this)
    %assetName = AssetBrowser.newAssetSettings.assetName;      
    
    %assetType = AssetBrowser.newAssetSettings.assetType;
-   %assetPath = AssetBrowser.dirHandler.currentAddress @ "/";    
+   %assetPath = NewAssetTargetAddress.getText() @ "/";    
    
    %tamlpath = %assetPath @ %assetName @ ".asset.taml";
    %scriptPath = %assetPath @ %assetName @ "." @ $TorqueScriptFileExtension;

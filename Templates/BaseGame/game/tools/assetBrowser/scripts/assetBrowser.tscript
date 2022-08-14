@@ -989,23 +989,22 @@ function AssetBrowser::changeAsset(%this)
    {
       %inspectorObject = %this.fieldTargetObject;
       %targetObject = %inspectorObject.getInspectObject();
+      
+      %inspectorObject.setObjectField(%this.fieldTargetName, %this.selectedAsset);
    }
-   
-   //alright, we've selectd an asset for a field, so time to set it!
-   if(%this.fieldTargetName $= "")
-      %cmd = %targetObject @ ".apply(\""@ %this.selectedAsset @ "\");";
    else
-      %cmd = %targetObject @ "." @ %this.fieldTargetName @ "=\"" @ %this.selectedAsset @ "\";";
-   //echo("Changing asset via the " @ %cmd @ " command");
-   eval(%cmd);
+   {
+      //alright, we've selectd an asset for a field, so time to set it!
+      if(%this.fieldTargetName $= "")
+         %cmd = %targetObject @ ".apply(\""@ %this.selectedAsset @ "\");";
+      else
+         %cmd = %targetObject @ "." @ %this.fieldTargetName @ "=\"" @ %this.selectedAsset @ "\";";
+      //echo("Changing asset via the " @ %cmd @ " command");
+      eval(%cmd);
+   }
    
    //Force update our object with the field change
    %targetObject.inspectPostApply();
-   
-   if(isObject(%inspectorObject))
-   {
-      %inspectorObject.refresh();
-   }
    
    //Flag us as dirty for editing purposes
    EWorldEditor.setSceneAsDirty();
@@ -1090,14 +1089,17 @@ function AssetBrowserPreviewButton::onRightClick(%this)
       EditAssetPopup.enableItem(9, false);
    }
    
-   %assetDef = AssetDatabase.acquireAsset(EditAssetPopup.assetId);
-   if(%assetDef.originalFilePath $= "" || !isFile(%assetDef.originalFilePath))
+   if(AssetDatabase.acquireAsset(EditAssetPopup.assetId))
    {
-      //if we have no noted original import file path or it's invalid
-      //we can't reimport either
-      EditAssetPopup.enableItem(9, false);
+      %assetDef = AssetDatabase.acquireAsset(EditAssetPopup.assetId);
+      if(%assetDef.originalFilePath $= "" || !isFile(%assetDef.originalFilePath))
+      {
+         //if we have no noted original import file path or it's invalid
+         //we can't reimport either
+         EditAssetPopup.enableItem(9, false);
+      }
+      AssetDatabase.releaseAsset(EditAssetPopup.assetId);
    }
-   AssetDatabase.releaseAsset(EditAssetPopup.assetId);
    
    if(%assetType $= "LevelAsset")
    {

@@ -45,11 +45,13 @@
 class Zone : public SceneAmbientSoundObject< ScenePolyhedralZone >
 {
    public:
+      typedef SceneAmbientSoundObject< ScenePolyhedralZone > Parent;
       bool mSelecting = false;
+#ifdef TORQUE_TOOLS
       static void initPersistFields();
       static bool _doSelect(void* object, const char* index, const char* data);
-      typedef SceneAmbientSoundObject< ScenePolyhedralZone > Parent;
       void selectWithin();
+#endif
    protected:
 
       // SceneVolume.

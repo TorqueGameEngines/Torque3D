@@ -563,7 +563,10 @@ function ShapeEdSelectWindow::addObjectHint( %this, %type, %name, %desc, %presen
       %ctrl.text = %name;
 
    %ctrl.tooltip = %desc;
-   %ctrl.setBitmap( "tools/editorClasses/gui/images/" @ ( %present ? "iconAccept" : "iconCancel" ) );
+   if(%present)
+      %ctrl.setBitmap( "ToolsModule:iconAccept_image" );
+   else
+      %ctrl.setBitmap( "ToolsModule:iconCancel_image" );
    %ctrl.setStateOn( false );
    %ctrl.resetState();
 

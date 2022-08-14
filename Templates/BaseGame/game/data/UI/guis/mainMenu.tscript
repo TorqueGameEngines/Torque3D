@@ -24,18 +24,19 @@ function MainMenuGui::onWake(%this)
    //We set up this catch by making said control our first responder, here
    MainMenuInputHandler.setFirstResponder();
    
-   //Lastly, we go ahead and display some actual navigable content up on our main menu here
-   //In this case, we set the MainMenuButtonList as our root page, so we always come back
-   //to having the main menu buttons on screen if every other page is closed.
-   //This will ultimately call MainMenuButtonList::onOpen(), so to see where the navigation
-   //chain continues, see that function.
-   %this.setRootPage(MainMenuButtonList);
-   
    //We also go ahead and mark for any future pages being added to the UINavigation's page stack
    //to be prompted to resize when added. This isn't required, but helps keep pages formated to 
    //the current size of the UINavigation, which is useful when dealing with aspect ratio or resolution
    //changes.
    %this.resizePages = true;
+   //Lastly, we go ahead and display some actual navigable content up on our main menu here
+   //In this case, we set the MainMenuButtons as our root page, so we always come back
+   //to having the main menu buttons on screen if every other page is closed.
+   //This will ultimately call MainMenuButtons::onOpen(), so to see where the navigation
+   //chain continues, see that function.
+   %this.setRootPage(MainMenuButtons);
+   
+   %this.refreshPage();
 }
 
 function MainMenuButtonHolder::onWake(%this)

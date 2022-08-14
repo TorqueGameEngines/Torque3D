@@ -26,7 +26,9 @@
 #ifndef _TORQUE_TYPES_H_
 #include "platform/types.h"
 #endif
-
+#ifndef _PLATFORM_H_
+#include "platform/platform.h"
+#endif
 
 #if defined(TORQUE_COMPILER_VISUALC)
    #define TORQUE_CONSTANT_S64(a) (a##I64)
@@ -104,6 +106,8 @@ public:
    S64 getMilliseconds() const;
    S64 getMicroseconds() const;
    S64 getInternalRepresentation() const;
+
+   Platform::LocalTime toLocalTime();
 
 private:
    class Tester

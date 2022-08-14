@@ -32,7 +32,7 @@
 MODULE_BEGIN( ShaderGenFeatureMgr )
 
    MODULE_INIT_BEFORE( ShaderGen )
-   MODULE_SHUTDOWN_AFTER( Sim ) // allow registered features to be removed before destroying singleton
+   MODULE_SHUTDOWN_AFTER(Scene)
 
    MODULE_INIT
    {

@@ -71,6 +71,20 @@ function GameConnection::onControlObjectChange(%this)
    //turnOffZoom();
 }
 
+function GameConnection::onConnectionTimedOut(%this)
+{
+   // Called when an established connection times out
+   disconnectedCleanup();
+   MessageBoxOK( "TIMED OUT", "The server connection has timed out.");
+}
+
+function GameConnection::onConnectionDropped(%this, %msg)
+{
+   // Established connection was dropped by the server
+   disconnectedCleanup();
+   MessageBoxOK( "DISCONNECT", "The server has dropped the connection: " @ %msg);
+}
+
 function GameConnection::onConnectionError(%this, %msg)
 {
    // General connection error, usually raised by ghosted objects

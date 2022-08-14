@@ -50,6 +50,9 @@
 /// Define me if you want path case insensitivity support in ZIP files.
 #cmakedefine TORQUE_ZIP_PATH_CASE_INSENSITIVE
 
+/// Define me if you want to enable secure VFS support.
+#cmakedefine TORQUE_SECURE_VFS
+
 /// Define me if you want to enable multithreading support.
 #cmakedefine TORQUE_MULTITHREAD
 

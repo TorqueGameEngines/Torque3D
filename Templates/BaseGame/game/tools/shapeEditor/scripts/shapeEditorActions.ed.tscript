@@ -318,7 +318,7 @@ function ShapeEditor::doAddSequence( %this, %seqName, %from, %start, %end )
 
 function ActionAddSequence::doit( %this )
 {
-   if(ShapeEditorPlugin.selectedAssetDef $= "")
+   if(ShapeEditorPlugin.selectedAssetDef $= "" || !AssetDatabase.isDeclaredAsset(%this.seqName))
    {
       // If adding this sequence from an existing sequence, make a backup copy of
       // the existing sequence first, so we can edit the start/end frames later

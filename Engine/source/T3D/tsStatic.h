@@ -270,9 +270,9 @@ public:
 
    const Vector<S32>& getLOSDetails() const { return mLOSDetails; }
    bool hasAnim() { return mAmbientThread != NULL; }
-
+#ifdef TORQUE_TOOLS
    virtual void onInspect(GuiInspector*);
-
+#endif
    void updateMaterials();
 
    bool isAnimated() { return mPlayAmbient; }

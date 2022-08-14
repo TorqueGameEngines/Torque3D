@@ -139,7 +139,7 @@ function AssetBrowser::importImageAsset(%this, %assetItem)
    %assetImportSuccessful = false;
    %assetId = %moduleName@":"@%assetName;
    
-   %assetPath = AssetBrowser.dirHandler.currentAddress @ "/";
+   %assetPath = NewAssetTargetAddress.getText() @ "/";
    
    %assetFullPath = %assetPath @ "/" @ fileName(%filePath);
    

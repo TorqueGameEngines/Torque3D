@@ -130,7 +130,7 @@ protected:
 
 DefineConsoleType(TypeTerrainMaterialAssetPtr, TerrainMaterialAsset)
 DefineConsoleType(TypeTerrainMaterialAssetId, String)
-
+#ifdef TORQUE_TOOLS
 //-----------------------------------------------------------------------------
 // TypeAssetId GuiInspectorField Class
 //-----------------------------------------------------------------------------
@@ -155,6 +155,6 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeTerrainMaterialAssetId);
    static void consoleInit();
 };
-
+#endif
 #endif // _ASSET_BASE_H_
 

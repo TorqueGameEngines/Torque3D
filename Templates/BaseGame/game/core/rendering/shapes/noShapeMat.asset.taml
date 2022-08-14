@@ -8,7 +8,7 @@
         Name="NoShapeMat"
         mapTo="NoShape"
         translucent="1"
-        translucentBlendOp="LerpAlpha";
+        translucentBlendOp="LerpAlpha"
         castShadows="0">
         <Material.Stages>
             <Stages_beginarray

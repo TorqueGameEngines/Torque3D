@@ -777,11 +777,13 @@ function GuiEditorResList::init( %this )
    // Widescreen formats.
    
    %this.add( "1280x720 (WXGA, 16:9)", 720 );
-   %this.add( "1600x900 (16:9)", 900 );
-   %this.add( "1920x1080 (16:9)", 1080 );
+   %this.add( "1600x900 (HD+, 16:9)", 900 );
+   %this.add( "1920x1080 (FHD, 16:9)", 1080 );
+   %this.add( "2560x1440 (QHD, 16:9)", 1440 );
+   %this.add( "3840x2160 (4K UHD, 16:9)", 2160 );
    %this.add( "1440x900 (WXGA+, 16:10)", 900 );
    %this.add( "1680x1050 (WSXGA+, 16:10)", 1050 );
-   %this.add( "1920x1200 (WUXGA, 16:10)", 1200 );   
+   %this.add( "1920x1200 (WUXGA, 16:10)", 1200 );
 }
 
 //---------------------------------------------------------------------------------------------
@@ -865,6 +867,12 @@ function GuiEditorResList::onSelect( %this, %id )
          
       case 1200:
          GuiEditor.setPreviewResolution( 1920, 1200 );
+         
+      case 1440:
+         GuiEditor.setPreviewResolution( 2560, 1440 );
+         
+      case 2160:
+         GuiEditor.setPreviewResolution( 3840, 2160 );
    }
 }
 

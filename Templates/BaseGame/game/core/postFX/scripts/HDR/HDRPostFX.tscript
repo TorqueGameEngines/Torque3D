@@ -62,7 +62,7 @@ $PostFX::HDRPostFX::enableBloom = 1.0;
 
 /// The threshold luminace value for pixels which are
 /// considered "bright" and need to be bloomed.
-$PostFX::HDRPostFX::brightPassThreshold = 0.01;
+$PostFX::HDRPostFX::brightPassThreshold = 0.2;
 
 /// These are used in the gaussian blur of the
 /// bright pass for the bloom effect.

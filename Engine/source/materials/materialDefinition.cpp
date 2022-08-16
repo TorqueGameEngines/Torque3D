@@ -207,7 +207,7 @@ Material::Material()
    mDoubleSided = false;
 
    mTranslucent = false;
-   mTranslucentBlendOp = LerpAlpha;
+   mTranslucentBlendOp = PreMul;
    mTranslucentZWrite = false;
 
    mAlphaTest = false;

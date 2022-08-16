@@ -14,7 +14,8 @@ $appName = "@TORQUE_APP_NAME@";
 // Load up scripts to initialise subsystems.
 ModuleDatabase.setModuleExtension("module");
 ModuleDatabase.scanModules( "core", false );
-ModuleDatabase.LoadExplicit( "CoreModule" );
+if (!ModuleDatabase.LoadExplicit( "CoreModule" ))
+    quit();
 
 // Display a splash window immediately to improve app responsiveness before
 // engine is initialized and main window created.

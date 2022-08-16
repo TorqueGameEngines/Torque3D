@@ -52,20 +52,24 @@ $guiContent = new GuiControl(MainMenuButtons) {
          tooltipProfile = "GuiToolTipProfile";
       };
       new GuiButtonCtrl(MainMenuWorldEditBtn) {
-         text = "Open World Editor";
+         text = "Open World Editor (F11)";
          position = "0 280";
          extent = "400 55";
          profile = "GuiMenuButtonProfile";
          command = "openWorldEditorBtn();";
          tooltipProfile = "GuiToolTipProfile";
+         enabled = (ModuleDatabase.findModule("ToolsModule") !$= "");
+         visible = (ModuleDatabase.findModule("ToolsModule") !$= "");
       };
       new GuiButtonCtrl(MainMenuGuiEditBtn) {
-         text = "Open GUI Editor";
+         text = "Open GUI Editor (F10)";
          position = "0 350";
          extent = "400 55";
          profile = "GuiMenuButtonProfile";
          command = "openGUIEditorBtn();";
          tooltipProfile = "GuiToolTipProfile";
+         enabled = (ModuleDatabase.findModule("ToolsModule") !$= "");
+         visible = (ModuleDatabase.findModule("ToolsModule") !$= "");
       };
       new GuiButtonCtrl(MainMenuExitBtn) {
          text = "Exit";

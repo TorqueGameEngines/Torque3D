@@ -98,6 +98,7 @@ void SFXALProvider::init()
    {
       ALDeviceInfo* info = new ALDeviceInfo;
       
+      info->internalName = String( mALDL->GetInternalDeviceName( i ) );
       info->name = String( mALDL->GetDeviceName( i ) );
 
       mDeviceInfo.push_back( info );
@@ -121,7 +122,7 @@ SFXDevice *SFXALProvider::createDevice( const String& deviceName, bool useHardwa
 
    // Do we find one to create?
    if (info)
-      return new SFXALDevice(this, mOpenAL, info->name, useHardware, maxBuffers);
+      return new SFXALDevice(this, mOpenAL, info->internalName, useHardware, maxBuffers);
 
    return NULL;
 }

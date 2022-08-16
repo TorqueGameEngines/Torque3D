@@ -248,6 +248,8 @@ SFXALDevice::SFXALDevice(  SFXProvider *provider,
 #endif
    attribs[1] = 4;
 
+   printALInfo(NULL);
+
    mDevice = mOpenAL.alcOpenDevice( name );
    U32 err = mOpenAL.alcGetError(mDevice);
    if (err != ALC_NO_ERROR)

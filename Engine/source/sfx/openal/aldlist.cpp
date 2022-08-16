@@ -82,7 +82,19 @@ ALDeviceList::ALDeviceList( const OPENALFNTABLE &oalft )
       {
          dMemset(&ALDeviceInfo, 0, sizeof(ALDEVICEINFO));
          ALDeviceInfo.bSelected = true;
-         dStrncpy(ALDeviceInfo.strDeviceName, devices, sizeof(ALDeviceInfo.strDeviceName));
+         dStrncpy(ALDeviceInfo.strInternalDeviceName, devices, sizeof(ALDeviceInfo.strInternalDeviceName));
+         char* openFind = dStrchr(devices, '(');
+         if (openFind)
+         {
+            devices = openFind + 1;
+            char* closeFind = dStrchr(devices, ')');
+            if (closeFind)
+               (*closeFind) = '\0';
+
+            dStrncpy(ALDeviceInfo.strDeviceName, devices, sizeof(ALDeviceInfo.strDeviceName));
+
+         }
+
          vDeviceInfo.push_back(ALDeviceInfo);
       }
 
@@ -111,13 +123,22 @@ int ALDeviceList::GetNumDevices()
 /* 
  * Returns the device name at an index in the complete device list
  */
-const char *ALDeviceList::GetDeviceName(int index)
+const char *ALDeviceList::GetInternalDeviceName(int index)
 {
 	if (index < GetNumDevices())
-		return vDeviceInfo[index].strDeviceName;
+		return vDeviceInfo[index].strInternalDeviceName;
 	else
 		return NULL;
 }
+
+const char* ALDeviceList::GetDeviceName(int index)
+{
+   if (index < GetNumDevices())
+      return vDeviceInfo[index].strDeviceName;
+   else
+      return NULL;
+}
+
 
 /*
  * Returns the major and minor version numbers for a device at a specified index in the complete list

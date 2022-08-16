@@ -1265,15 +1265,7 @@ DefineEngineFunction( sfxGetAvailableDevices, const char*, (),,
          const SFXDeviceInfo* info = deviceInfo[d];
          const char *providerName = provider->getName().c_str();
          char *infoName = (char*)info->name.c_str();
-         char* openFind = dStrchr(&infoName[0], '(');
-         if (openFind)
-         {
-            infoName = openFind + 1;
-            char* closeFind = dStrchr(infoName, ')');
-            if (closeFind)
-               (*closeFind) = '\0';
-         }
-
+         
          dSprintf(ptr, len, "%s\t%s\t%s\t%i\n", providerName, infoName, info->hasHardware ? "1" : "0", info->maxBuffers);
 
          ptr += dStrlen(ptr);

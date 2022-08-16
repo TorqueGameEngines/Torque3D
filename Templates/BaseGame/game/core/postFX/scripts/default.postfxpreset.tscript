@@ -1,5 +1,5 @@
 $PostFX::HDRPostFX::Enabled = 1;
-$PostFX::HDRPostFX::_ExposureValue = "1";
+$PostFX::HDRPostFX::ExposureValue = "1";
 $PostFX::HDRPostFX::minLuminace = "0.001";
 $PostFX::HDRPostFX::whiteCutoff = "1.0";
 $PostFX::HDRPostFX::adaptRate = "1";

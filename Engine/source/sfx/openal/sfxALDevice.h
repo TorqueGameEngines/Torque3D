@@ -53,7 +53,12 @@ class SFXALDevice : public SFXDevice
       typedef SFXDevice Parent;
       friend class SFXALVoice; // mDistanceFactor, mRolloffFactor
 
-      SFXALDevice(   SFXProvider *provider, 
+      void printALInfo(ALCdevice* device);
+      void printHRTFInfo(ALCdevice* device);
+      void getEFXInfo(ALCdevice* device);
+      S32 getMaxSources();
+
+      SFXALDevice(   SFXProvider *provider,
                      const OPENALFNTABLE &openal, 
                      String name, 
                      bool useHardware, 

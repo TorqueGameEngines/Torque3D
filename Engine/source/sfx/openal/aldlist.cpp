@@ -1,17 +1,17 @@
 /*
  * Copyright (c) 2006, Creative Labs Inc.
  * All rights reserved.
- *
+ * 
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided
  * that the following conditions are met:
- *
+ * 
  *     * Redistributions of source code must retain the above copyright notice, this list of conditions and
  * 	     the following disclaimer.
  *     * Redistributions in binary form must reproduce the above copyright notice, this list of conditions
  * 	     and the following disclaimer in the documentation and/or other materials provided with the distribution.
  *     * Neither the name of Creative Labs Inc. nor the names of its contributors may be used to endorse or
  * 	     promote products derived from this software without specific prior written permission.
- *
+ * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
  * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
@@ -33,20 +33,19 @@
 #include <al/alc.h>
 #endif
 
-/*
+/* 
  * Init call
  */
-ALDeviceList::ALDeviceList(const OPENALFNTABLE& oalft)
+ALDeviceList::ALDeviceList( const OPENALFNTABLE &oalft )
 {
-   VECTOR_SET_ASSOCIATION(vDeviceInfo);
+   VECTOR_SET_ASSOCIATION( vDeviceInfo );
 
-   ALDEVICEINFO	ALDeviceInfo;
-   char* devices;
-   int index;
-   const char* defaultDeviceName;
-   const char* actualDeviceName;
+	ALDEVICEINFO	ALDeviceInfo;
+	char *devices;
+	int index;
+	const char *defaultDeviceName;
 
-   dMemcpy(&ALFunction, &oalft, sizeof(OPENALFNTABLE));
+   dMemcpy( &ALFunction, &oalft, sizeof( OPENALFNTABLE ) );
 
    // DeviceInfo vector stores, for each enumerated device, it's device name, selection status, spec version #, and extension support
    vDeviceInfo.clear();
@@ -54,176 +53,41 @@ ALDeviceList::ALDeviceList(const OPENALFNTABLE& oalft)
 
    defaultDeviceIndex = 0;
 
-   if (ALFunction.alcIsExtensionPresent(NULL, "ALC_ENUMERATION_EXT"))
+   // grab function pointers for 1.0-API functions, and if successful proceed to enumerate all devices
+   if (ALFunction.alcIsExtensionPresent(NULL, "ALC_ENUMERATE_ALL_EXT")) {
+          devices = (char *)ALFunction.alcGetString(NULL, ALC_ALL_DEVICES_SPECIFIER);
+          defaultDeviceName = (char *)ALFunction.alcGetString(NULL, ALC_DEFAULT_ALL_DEVICES_SPECIFIER);
+   }
+   else
    {
-      devices = (char*)ALFunction.alcGetString(NULL, ALC_DEVICE_SPECIFIER);
-      defaultDeviceName = (char*)ALFunction.alcGetString(NULL, ALC_DEFAULT_DEVICE_SPECIFIER);
-      index = 0;
-      while (*devices != NULL)
-      {
-         if (dStrcmp(defaultDeviceName, devices) == 0)
-         {
-            defaultDeviceIndex = index;
-         }
-         ALCdevice* device = ALFunction.alcOpenDevice(devices);
-
-         if (device)
-         {
-            ALCcontext* context = ALFunction.alcCreateContext(device, NULL);
-            if (context)
-            {
-               ALFunction.alcMakeContextCurrent(context);
-
-               actualDeviceName = ALFunction.alcGetString(device, ALC_DEVICE_SPECIFIER);
-               bool bNewName = true;
-               for (int i = 0; i < GetNumDevices(); i++) {
-                  if (dStrcmp(GetDeviceName(i), actualDeviceName) == 0) {
-                     bNewName = false;
-                  }
-               }
-
-               if ((bNewName) && (actualDeviceName != NULL) && (dStrlen(actualDeviceName) > 0))
-               {
-                  dMemset(&ALDeviceInfo, 0, sizeof(ALDEVICEINFO));
-                  ALDeviceInfo.bSelected = true;
-                  dStrncpy(ALDeviceInfo.strDeviceName, actualDeviceName, sizeof(ALDeviceInfo.strDeviceName));
-
-                  ALFunction.alcGetIntegerv(device, ALC_MAJOR_VERSION, sizeof(int), &ALDeviceInfo.iMajorVersion);
-                  ALFunction.alcGetIntegerv(device, ALC_MINOR_VERSION, sizeof(int), &ALDeviceInfo.iMinorVersion);
-
-                  ALDeviceInfo.iCapsFlags = 0;
-
-                  if (ALFunction.alcIsExtensionPresent(device, "ALC_EXT_CAPTURE") == AL_TRUE)
-                     ALDeviceInfo.iCapsFlags |= SFXALCapture;
-
-                  if (ALFunction.alcIsExtensionPresent(device, "ALC_EXT_EFX") == AL_TRUE)
-                     ALDeviceInfo.iCapsFlags |= SFXALEFX;
-
-                  if (ALFunction.alIsExtensionPresent("AL_EXT_OFFSET") == AL_TRUE)
-                     ALDeviceInfo.iCapsFlags |= SFXALOffset;
-
-                  if (ALFunction.alIsExtensionPresent("AL_EXT_LINEAR_DISTANCE") == AL_TRUE)
-                     ALDeviceInfo.iCapsFlags |= SFXALLinearDistance;
-
-                  if (ALFunction.alIsExtensionPresent("AL_EXT_EXPONENT_DISTANCE") == AL_TRUE)
-                     ALDeviceInfo.iCapsFlags |= SFXALExponentDistance;
-                   
-                  if (ALFunction.alIsExtensionPresent("EAX2.0") == AL_TRUE)
-                     ALDeviceInfo.iCapsFlags |= SFXALEAX2;
-
-                  if (ALFunction.alIsExtensionPresent("EAX3.0") == AL_TRUE)
-                     ALDeviceInfo.iCapsFlags |= SFXALEAX3;
-
-                  if (ALFunction.alIsExtensionPresent("EAX4.0") == AL_TRUE)
-                     ALDeviceInfo.iCapsFlags |= SFXALEAX4;
-
-                  if (ALFunction.alIsExtensionPresent("EAX5.0") == AL_TRUE)
-                     ALDeviceInfo.iCapsFlags |= SFXALEAX5;
-
-                  if (ALFunction.alIsExtensionPresent("EAX-RAM") == AL_TRUE)
-                     ALDeviceInfo.iCapsFlags |= SFXALEAXRAM;
-
-                  // Get Source Count
-                  ALDeviceInfo.uiSourceCount = GetMaxNumSources();
-
-                  vDeviceInfo.push_back(ALDeviceInfo);
-
-               }
-               ALFunction.alcMakeContextCurrent(NULL);
-               ALFunction.alcDestroyContext(context);
-            }
-            ALFunction.alcCloseDevice(device);
-         }
-         devices += dStrlen(devices) + 1;
-         index += 1;
-      }
+       devices = (char *)ALFunction.alcGetString(NULL, ALC_DEVICE_SPECIFIER);
+       defaultDeviceName = (char *)ALFunction.alcGetString(NULL, ALC_DEFAULT_DEVICE_SPECIFIER);
    }
 
    index = 0;
-
-   if (ALFunction.alcIsExtensionPresent(NULL, "ALC_ENUMERATE_ALL_EXT"))
-   {
-      devices = (char*)ALFunction.alcGetString(NULL, ALC_ALL_DEVICES_SPECIFIER);
-      defaultDeviceName = (char*)ALFunction.alcGetString(NULL, ALC_DEFAULT_ALL_DEVICES_SPECIFIER);
-      index = 0;
-      while (*devices != NULL)
-      {
-         if (dStrcmp(defaultDeviceName, devices) == 0)
-         {
-            defaultDeviceIndex = index;
-         }
-         ALCdevice* device = ALFunction.alcOpenDevice(devices);
-
-         if (device)
-         {
-            ALCcontext* context = ALFunction.alcCreateContext(device, NULL);
-            if (context)
-            {
-               ALFunction.alcMakeContextCurrent(context);
-
-               actualDeviceName = ALFunction.alcGetString(device, ALC_ALL_DEVICES_SPECIFIER);
-               bool bNewName = true;
-               for (int i = 0; i < GetNumDevices(); i++) {
-                  if (dStrcmp(GetDeviceName(i), actualDeviceName) == 0) {
-                     bNewName = false;
-                  }
-               }
-
-               if ((bNewName) && (actualDeviceName != NULL) && (dStrlen(actualDeviceName) > 0))
-               {
-                  dMemset(&ALDeviceInfo, 0, sizeof(ALDEVICEINFO));
-                  ALDeviceInfo.bSelected = true;
-                  dStrncpy(ALDeviceInfo.strDeviceName, actualDeviceName, sizeof(ALDeviceInfo.strDeviceName));
-
-                  ALFunction.alcGetIntegerv(device, ALC_MAJOR_VERSION, sizeof(int), &ALDeviceInfo.iMajorVersion);
-                  ALFunction.alcGetIntegerv(device, ALC_MINOR_VERSION, sizeof(int), &ALDeviceInfo.iMinorVersion);
-
-                  ALDeviceInfo.iCapsFlags = 0;
-
-                  if (ALFunction.alcIsExtensionPresent(device, "ALC_EXT_CAPTURE") == AL_TRUE)
-                     ALDeviceInfo.iCapsFlags |= SFXALCapture;
-
-                  if (ALFunction.alcIsExtensionPresent(device, "ALC_EXT_EFX") == AL_TRUE)
-                     ALDeviceInfo.iCapsFlags |= SFXALEFX;
-
-                  if (ALFunction.alIsExtensionPresent("AL_EXT_OFFSET") == AL_TRUE)
-                     ALDeviceInfo.iCapsFlags |= SFXALOffset;
-
-                  if (ALFunction.alIsExtensionPresent("AL_EXT_LINEAR_DISTANCE") == AL_TRUE)
-                     ALDeviceInfo.iCapsFlags |= SFXALLinearDistance;
-
-                  if (ALFunction.alIsExtensionPresent("AL_EXT_EXPONENT_DISTANCE") == AL_TRUE)
-                     ALDeviceInfo.iCapsFlags |= SFXALExponentDistance;
-
-                  if (ALFunction.alIsExtensionPresent("EAX2.0") == AL_TRUE)
-                     ALDeviceInfo.iCapsFlags |= SFXALEAX2;
-
-                  if (ALFunction.alIsExtensionPresent("EAX3.0") == AL_TRUE)
-                     ALDeviceInfo.iCapsFlags |= SFXALEAX3;
-
-                  if (ALFunction.alIsExtensionPresent("EAX4.0") == AL_TRUE)
-                     ALDeviceInfo.iCapsFlags |= SFXALEAX4;
-
-                  if (ALFunction.alIsExtensionPresent("EAX5.0") == AL_TRUE)
-                     ALDeviceInfo.iCapsFlags |= SFXALEAX5;
-
-                  if (ALFunction.alIsExtensionPresent("EAX-RAM") == AL_TRUE)
-                     ALDeviceInfo.iCapsFlags |= SFXALEAXRAM;
-
-                  // Get Source Count
-                  ALDeviceInfo.uiSourceCount = GetMaxNumSources();
-
-                  vDeviceInfo.push_back(ALDeviceInfo);
-
-               }
-               ALFunction.alcMakeContextCurrent(NULL);
-               ALFunction.alcDestroyContext(context);
-            }
-            ALFunction.alcCloseDevice(device);
-         }
-         devices += dStrlen(devices) + 1;
-         index += 1;
+      // go through device list (each device terminated with a single NULL, list terminated with double NULL)
+   while (*devices != 0) {
+      if (String::compare(defaultDeviceName, devices) == 0) {
+         defaultDeviceIndex = index;
       }
+
+      bool bNewName = true;
+      for (int i = 0; i < GetNumDevices(); i++) {
+         if (String::compare(GetDeviceName(i), devices) == 0) {
+            bNewName = false;
+         }
+      }
+
+      if ((bNewName) && (devices != NULL) && (dStrlen(devices) > 0))
+      {
+         dMemset(&ALDeviceInfo, 0, sizeof(ALDEVICEINFO));
+         ALDeviceInfo.bSelected = true;
+         dStrncpy(ALDeviceInfo.strDeviceName, devices, sizeof(ALDeviceInfo.strDeviceName));
+         vDeviceInfo.push_back(ALDeviceInfo);
+      }
+
+      devices += dStrlen(devices) + 1;
+      index += 1;
    }
 
 	ResetFilters();

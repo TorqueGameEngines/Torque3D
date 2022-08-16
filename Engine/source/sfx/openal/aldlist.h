@@ -31,12 +31,12 @@
 
 typedef struct
 {
-	char        strDeviceName[256];
-	S32			iMajorVersion;
-	S32			iMinorVersion;
-   U32	      uiSourceCount;
-	S32         iCapsFlags;
-	bool			bSelected;
+	char           strDeviceName[256];
+	S32				iMajorVersion;
+	S32				iMinorVersion;
+   U32	         uiSourceCount;
+	S32            iCapsFlags;
+	bool			   bSelected;
 } ALDEVICEINFO, *LPALDEVICEINFO;
 
 class ALDeviceList

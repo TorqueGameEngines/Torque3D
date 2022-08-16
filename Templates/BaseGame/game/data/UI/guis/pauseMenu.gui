@@ -17,6 +17,18 @@ $guiContent = new GuiControl(PauseMenu) {
       isContainer = "1";
       canSaveDynamicFields = "1";
    };
+   new GuiInputCtrl(PauseMenuInputHandler) {
+      sendAxisEvents = "1";
+      sendBreakEvents = "1";
+      ignoreMouseEvents = "1";
+      position = "-50 0";
+      extent = "10 10";
+      horizSizing = "width";
+      vertSizing = "height";
+      profile = "GuiInputCtrlProfile";
+      tooltipProfile = "GuiToolTipProfile";
+      class = "MenuInputHandler";
+   };
    new GuiControl(PauseMenuButtons) {
       position = "162 125";
       extent = "700 518";
@@ -146,18 +158,6 @@ $guiContent = new GuiControl(PauseMenu) {
          class = "MenuInputButton";
          hidden = "1";
       };
-   };
-   new GuiInputCtrl(PauseMenuInputHandler) {
-      sendAxisEvents = "1";
-      sendBreakEvents = "1";
-      ignoreMouseEvents = "1";
-      position = "-50 0";
-      extent = "10 10";
-      horizSizing = "width";
-      vertSizing = "height";
-      profile = "GuiInputCtrlProfile";
-      tooltipProfile = "GuiToolTipProfile";
-      class = "MenuInputHandler";
    };
 };
 //--- OBJECT WRITE END ---

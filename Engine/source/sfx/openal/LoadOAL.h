@@ -165,6 +165,13 @@ typedef void			  (ALAPIENTRY *LPALGETAUXILIARYEFFECTSLOTIV)(ALuint effectslot, A
 typedef void			  (ALAPIENTRY *LPALGETAUXILIARYEFFECTSLOTF)(ALuint effectslot, ALenum param, ALfloat *value);
 typedef void			  (ALAPIENTRY *LPALGETAUXILIARYEFFECTSLOTFV)(ALuint effectslot, ALenum param, ALfloat *values);
 typedef void			  (ALAPIENTRY *LPALSOURCE3I)(ALuint source, ALenum param, ALint value1, ALint value2, ALint value3);
+// Changes for Filters.
+typedef void           (ALAPIENTRY* LPALGENFILTERS)(ALsizei n, ALuint* filter);
+typedef void			  (ALAPIENTRY* LPALDELETEFILTERS)(ALsizei n, const ALuint* filters);
+typedef void			  (ALAPIENTRY* LPALFILTERI)(ALuint filter , ALenum param, ALint value);
+// Changes for HRTF
+typedef const ALCchar* (ALCAPIENTRY* LPALCGETSTRINGISOFT)(ALCdevice* device, ALCenum param, ALint value1);
+
 
 typedef struct
 {
@@ -261,6 +268,12 @@ typedef struct
    LPALGETAUXILIARYEFFECTSLOTF			alGetAuxiliaryEffectSlotf;
    LPALGETAUXILIARYEFFECTSLOTFV			alGetAuxiliaryEffectSlotfv;
 #endif
+   LPALGENFILTERS         alGenFilters;
+   LPALDELETEFILTERS      alDeleteFilters;
+   LPALFILTERI            alFilteri;
+
+   LPALCGETSTRINGISOFT alcGetStringiSOFT;
+
 } OPENALFNTABLE, *LPOPENALFNTABLE;
 #endif
 

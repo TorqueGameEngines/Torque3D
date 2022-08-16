@@ -32,11 +32,12 @@
 typedef struct
 {
 	char           strDeviceName[256];
+	char           strInternalDeviceName[256];
 	S32				iMajorVersion;
 	S32				iMinorVersion;
-   U32	uiSourceCount;
-	S32 iCapsFlags;
-	bool			bSelected;
+   U32	         uiSourceCount;
+	S32            iCapsFlags;
+	bool			   bSelected;
 } ALDEVICEINFO, *LPALDEVICEINFO;
 
 class ALDeviceList
@@ -52,6 +53,7 @@ public:
 	~ALDeviceList ();
 	S32 GetNumDevices();
 	const char *GetDeviceName(S32 index);
+	const char *GetInternalDeviceName(S32 index);
 	void GetDeviceVersion(S32 index, S32 *major, S32 *minor);
    U32 GetMaxNumSources(S32 index);
 	bool IsExtensionSupported(S32 index, SFXALCaps caps);

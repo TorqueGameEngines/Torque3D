@@ -552,6 +552,35 @@ ALboolean LoadOAL10Library(char *szOALFullPathName, LPOPENALFNTABLE lpOALFnTable
       OutputDebugStringA("Failed to retrieve 'alGetAuxiliaryEffectSlotiv' function address\n");
    }
    lpOALFnTable->alSource3i = (LPALSOURCE3I)GetProcAddress(g_hOpenALDLL, "alSource3i");
+
+   lpOALFnTable->alGenFilters = (LPALGENFILTERS)GetProcAddress(g_hOpenALDLL, "alGenFilters");
+   if (lpOALFnTable->alGenFilters == NULL)
+   {
+      OutputDebugStringA("Failed to retrieve 'alGenFilters' function address\n");
+      return AL_FALSE;
+   }
+
+   lpOALFnTable->alDeleteFilters = (LPALDELETEFILTERS)GetProcAddress(g_hOpenALDLL, "alDeleteFilters");
+   if (lpOALFnTable->alGenFilters == NULL)
+   {
+      OutputDebugStringA("Failed to retrieve 'alDeleteFilters' function address\n");
+      return AL_FALSE;
+   }
+
+   lpOALFnTable->alFilteri = (LPALFILTERI)GetProcAddress(g_hOpenALDLL, "alFilteri");
+   if (lpOALFnTable->alGenFilters == NULL)
+   {
+      OutputDebugStringA("Failed to retrieve 'alFilteri' function address\n");
+      return AL_FALSE;
+   }
+   
+   lpOALFnTable->alcGetStringiSOFT = (LPALCGETSTRINGISOFT)GetProcAddress(g_hOpenALDLL, "alcGetStringiSOFT");
+   if (lpOALFnTable->alcGetStringiSOFT == NULL)
+   {
+      OutputDebugStringA("Failed to retrieve 'alcGetStringiSOFT' function address\n");
+      return AL_FALSE;
+   }
+
 #endif
 	return AL_TRUE;
 }

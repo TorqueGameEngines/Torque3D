@@ -1,18 +1,18 @@
 <MaterialAsset
-    canSave="true"
-    canSaveDynamicFields="true"
     AssetName="moon_noglow"
     materialDefinitionName="moon_noglow"
     VersionId="1">
     <Material
         Name="moon_noglow"
         mapTo="moon_noglow"
-        emissive="1"
-        translucent="1">
+        translucent="true"
+        translucentBlendOp="LerpAlpha"
+        originalAssetName="moon_noglow">
         <Material.Stages>
             <Stages_beginarray
                 DiffuseMapAsset="Core_Rendering:moon_noglow_image"
-                vertColor="1"/>
+                VertColor="true"
+                Emissive="true"/>
         </Material.Stages>
     </Material>
 </MaterialAsset>

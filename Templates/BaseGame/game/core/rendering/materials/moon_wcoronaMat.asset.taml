@@ -1,18 +1,18 @@
 <MaterialAsset
-    canSave="true"
-    canSaveDynamicFields="true"
     AssetName="moon_wcorona"
     materialDefinitionName="moon_wcorona"
     VersionId="1">
     <Material
         Name="moon_wcorona"
         mapTo="moon_wcorona"
-        emissive="1"
-        translucent="1">
+        translucent="true"
+        translucentBlendOp="LerpAlpha"
+        originalAssetName="moon_wcorona">
         <Material.Stages>
             <Stages_beginarray
                 DiffuseMapAsset="Core_Rendering:moon_wcorona_image"
-                vertColor="1"/>
+                VertColor="true"
+                Emissive="true"/>
         </Material.Stages>
     </Material>
 </MaterialAsset>

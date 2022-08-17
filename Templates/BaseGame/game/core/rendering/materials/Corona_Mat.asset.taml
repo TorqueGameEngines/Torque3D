@@ -1,0 +1,18 @@
+<MaterialAsset
+    AssetName="Corona_Mat"
+    materialDefinitionName="Corona_Mat">
+    <Material
+        Name="Corona_Mat"
+        mapTo="Corona_Mat"
+        castShadows="false"
+        translucent="true"
+        translucentBlendOp="LerpAlpha"
+        castDynamicShadows="0"
+        originalAssetName="Corona_Mat">
+        <Material.Stages>
+            <Stages_beginarray
+                DiffuseMapAsset="Core_Rendering:corona_image"
+                Emissive="true"/>
+        </Material.Stages>
+    </Material>
+</MaterialAsset>

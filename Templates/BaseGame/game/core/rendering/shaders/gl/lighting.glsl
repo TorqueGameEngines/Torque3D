@@ -132,7 +132,7 @@ Surface createSurface(vec4 gbuffer0, sampler2D gbufferTex1, sampler2D gbufferTex
    surface.N = tMul(invView, vec4(gbuffer0.xyz,0)).xyz;
    surface.V = normalize(wsEyePos - surface.P);
    surface.baseColor = gbuffer1;
-	surface.roughness = clamp(gbuffer2.b, 0.01f, 1.0f);
+   surface.roughness = gbuffer2.b*0.92f+0.04f;
    surface.metalness = gbuffer2.a;
    surface.ao = gbuffer2.g;
    surface.matFlag = gbuffer2.r;
@@ -150,7 +150,7 @@ Surface createForwardSurface(vec4 baseColor, vec3 normal, vec4 pbrProperties, in
    surface.N = normal;
    surface.V = normalize(wsEyePos - surface.P);
    surface.baseColor = baseColor;
-   surface.roughness = clamp(pbrProperties.b, 0.01f, 1.0f);
+   surface.roughness = pbrProperties.b*0.92f+0.04f;
    surface.metalness = pbrProperties.a;
    surface.ao = pbrProperties.g;
    surface.matFlag = pbrProperties.r;
@@ -233,7 +233,7 @@ vec3 evaluateStandardBRDF(Surface surface, SurfaceToLight surfaceToLight)
    float D = D_GGX(surfaceToLight.NdotH, surface.linearRoughnessSq);
    vec3 Fr = D * F * Vis;
 
-#ifdef CAPTURING
+#if CAPTURING == 1
    return saturate(mix(Fd + Fr,surface.f0,surface.metalness));
 #else
    return saturate(Fd + Fr);
@@ -243,14 +243,14 @@ vec3 evaluateStandardBRDF(Surface surface, SurfaceToLight surfaceToLight)
 
 vec3 getDirectionalLight(Surface surface, SurfaceToLight surfaceToLight, vec3 lightColor, float lightIntensity, float shadow)
 {
-   vec3 factor = lightColor * max(surfaceToLight.NdotL * shadow * lightIntensity*(1.0-surface.metalness), 0.0f);
+   vec3 factor = lightColor * max(surfaceToLight.NdotL * shadow * lightIntensity, 0.0f);
    return evaluateStandardBRDF(surface,surfaceToLight) * factor;
 }
 
 vec3 getPunctualLight(Surface surface, SurfaceToLight surfaceToLight, vec3 lightColor, float lightIntensity, float radius, float shadow)
 {
    float attenuation = getDistanceAtt(surfaceToLight.Lu, radius);
-   vec3 factor = lightColor * max(surfaceToLight.NdotL * shadow * lightIntensity * attenuation*(1.0-surface.metalness), 0.0f);
+   vec3 factor = lightColor * max(surfaceToLight.NdotL * shadow * lightIntensity * attenuation, 0.0f);
    return evaluateStandardBRDF(surface,surfaceToLight) * factor;
 }
 

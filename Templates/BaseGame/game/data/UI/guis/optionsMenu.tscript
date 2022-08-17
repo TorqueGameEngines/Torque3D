@@ -235,6 +235,17 @@ function OptionsMenu::apply(%this)
                      setVariable(%targetVar, %newValue);
                   }
                }
+               //This is a bit of hackery to have an intermediate variable because we display in text
+               //but save by index, so we take the applied name and get the index of the deviceId
+               else if(%targetVar $= "$pref::Video::displayDeviceId")
+               {
+                  %deviceId = getDisplayDeviceId($pref::Video::displayDeviceId);
+                  if(%deviceId == -1)
+                     %deviceId = 0;
+                  
+                   $pref::Video::deviceId = %deviceId;
+                   $pref::Video::displayDeviceId = "";
+               }
             }
             else if(startsWith(%targetVar, "$pref::SFX::"))
             {
@@ -305,6 +316,9 @@ function OptionsMenu::resetToDefaults(%this)
 
 function OptionsMenu::refresh(%this)
 {
+   //cache our scroll position so we can ensure we end up back at it after the refresh
+   %lastScrollPos = OptionsMenuSettingsScroll.getScrollPosition();
+   
    %cat = %this.currentCategory;
    if(%this.currentCategory !$= "")
    {
@@ -327,6 +341,9 @@ function OptionsMenu::refresh(%this)
    {
       Canvas.setCursorPos(Canvas.getCursorPos());  
    }
+   
+   //restore scroll position
+   OptionsMenuSettingsScroll.setScrollPosition(%lastScrollPos.x, %lastScrollPos.y);
 }
 
 function OptionsMenu::getOptionVariableValue(%this, %variableName)
@@ -397,18 +414,13 @@ function populateDisplaySettingsList()
    OptionsMenuSettingsList.addOptionRow("Display API", "$pref::Video::displayDevice", %apiList, false, "",  true, "The display API used for rendering.", %displayDevice);
    
    %numDevices = Canvas.getMonitorCount();
-   %devicesList = "";
-   for(%i = 0; %i < %numDevices; %i++)
-   {
-      %device = (%i+1) @ " - " @ Canvas.getMonitorName(%i);
-      if(%i==0)
-         %devicesList = %device;
-      else
-         %devicesList = %devicesList @ "\t" @ %device;
-   }
+ 
+   %devicesList = getDisplayDeviceList();
    
-   %selectedDevice = getField(%devicesList, $pref::Video::deviceId);
-   OptionsMenuSettingsList.addOptionRow("Display Device", "$pref::Video::deviceId", %devicesList, false, "", true, "The display devices the window should be on.", %selectedDevice);
+   if($pref::Video::displayDeviceId $= "")
+      $pref::Video::displayDeviceId = getField(%devicesList, $pref::Video::deviceId);
+      
+   OptionsMenuSettingsList.addOptionRow("Display Device", "$pref::Video::displayDeviceId", %devicesList, false, "", true, "The display devices the window should be on.");
       
    if (%numDevices > 1)
       OptionsMenuSettingsList.setRowEnabled(1, true);
@@ -432,7 +444,7 @@ function populateDisplaySettingsList()
       OptionsMenuSettingsList.addOptionRow("Resolution", "$pref::Video::Resolution", %resolutionList, false, "",  true, "Resolution of the game window", %resolution);
    }
    
-   OptionsMenuSettingsList.addOptionBoolRow("VSync", "$pref::Video::disableVerticalSync", $yesNoList, false, "",  true, "");
+   OptionsMenuSettingsList.addOptionBoolRow("VSync", "$pref::Video::disableVerticalSync", $yesNoList, false, "",  true, "", "");
 
 
    %refreshList = getScreenRefreshList($pref::Video::mode);
@@ -491,8 +503,10 @@ function populateGraphicsSettingsList()
       ShaderQualityGroup, false, "",  true, "Dictates the overall shader quality level, adjusting what features are enabled.");
    OptionsMenuSettingsList.addOptionRow("Anisotropic Filtering", "$pref::Video::defaultAnisotropy", %anisoFilter, false, "",  true, "Amount of Anisotropic Filtering on textures, which dictates their sharpness at a distance");
    OptionsMenuSettingsList.addOptionRow("Anti-Aliasing", "$pref::Video::AA", %aaFilter, false, "",  true, "Amount of Post-Processing Anti-Aliasing applied to rendering");
-   OptionsMenuSettingsList.addOptionBoolRow("Parallax", "$pref::Video::disableParallaxMapping", %onOffList, false, "",  true, "Whether the surface parallax shader effect is enabled");
-   OptionsMenuSettingsList.addOptionBoolRow("Water Reflections", "$pref::Water::disableTrueReflections", %onOffList, false, "",  true, "Whether water reflections are enabled");
+   
+   OptionsMenuSettingsList.addOptionBoolRow("Parallax", "$pref::Video::disableParallaxMapping", %onOffList, false, "",  true, "Whether the surface parallax shader effect is enabled", "");
+   OptionsMenuSettingsList.addOptionBoolRow("Water Reflections", "$pref::Water::disableTrueReflections", %onOffList, false, "",  true, "Whether water reflections are enabled", "");
+   
    OptionsMenuSettingsList.addOptionBoolRow("SSAO", "$pref::PostFX::EnableSSAO", %onOffList, false, "",  true, "Whether Screen-Space Ambient Occlusion is enabled");
    OptionsMenuSettingsList.addOptionBoolRow("Depth of Field", "$pref::PostFX::EnableDOF", %onOffList, false, "",  true, "Whether the Depth of Field effect is enabled");
    OptionsMenuSettingsList.addOptionBoolRow("Vignette", "$pref::PostFX::EnableVignette", %onOffList, false, "",  true, "Whether the vignette effect is enabled");
@@ -747,6 +761,39 @@ function populateGamepadSettingsList()
 //
 //
 //
+function getDisplayDeviceList()
+{
+   %numDevices = Canvas.getMonitorCount();
+   %devicesList = "";
+   for(%i = 0; %i < %numDevices; %i++)
+   {
+      %device = (%i+1) @ " - " @ Canvas.getMonitorName(%i);
+      if(%i==0)
+         %devicesList = %device;
+      else
+         %devicesList = %devicesList @ "\t" @ %device;
+   }
+   
+   return %devicesList;  
+}
+
+function getDisplayDeviceId(%displayDeviceName)
+{
+   %deviceList = getDisplayDeviceList();
+   
+   %deviceCount = getFieldCount(%deviceList);
+   for(%d = 0; %d < %deviceCount; %d++)
+   {
+      %deviceName = getField(%deviceList, %d);
+      if(%deviceName $= %displayDeviceName)
+         return %d;  
+   }
+   
+   return -1;
+}
+//
+//
+//
 function OptionsMenuList::activateRow(%this)
 {
    //OptionsMenuSettingsList.setFirstResponder();
@@ -803,10 +850,10 @@ function OptionsMenuSettingsList::addOptionRow(%this, %label, %targetPrefVar, %o
       }
    }
    
-   if(%defaultValue $= "Off" || %defaultValue $= "No")
+   /*if(%defaultValue $= "Off" || %defaultValue $= "No")
       %defaultValue = "0";
    if(%defaultValue $= "On" || %defaultValue $= "Yes")
-      %defaultValue = "1";
+      %defaultValue = "1";*/
    
    %option.setListSetting(%label, %optionsList, %wrapOptions, %callback, %enabled, %description, %defaultValue);
 
@@ -840,11 +887,23 @@ function OptionsMenuSettingsList::addOptionQualityLevelRow(%this, %label, %targe
       %wrapOptions, %callback, %enabled, %description, %defaultValue);
 }
 
-function OptionsMenuSettingsList::addOptionBoolRow(%this, %label, %targetPrefVar, %qualityLevelList, %wrapOptions, %callback, %enabled, %description, %defaultValue)
+function OptionsMenuSettingsList::addOptionBoolRow(%this, %label, %targetPrefVar, %qualityLevelList, %wrapOptions, %callback, %enabled, %description, %defaultValue, %inverted)
 {
    if(%defaultValue $= "")
       %defaultValue = OptionsMenu.getOptionVariableValue(%targetPrefVar);
       
+   if(%inverted $= "")
+      %inverted = false;
+      
+   //Lame and hacky, but some variables are 'disabled' and some are 'enabled'
+   if(isInt(%defaultValue) && %inverted)
+   {
+      if(%defaultValue == 0)
+         %defaultValue = 1;
+      else
+         %defaultValue = 0;
+   }
+   
    if(%qualityLevelList $= $yesNoList && isInt(%defaultValue))
    {
       %defaultValue = convertBoolToYesNo(%defaultValue);
@@ -998,27 +1057,28 @@ function MenuOptionsButton::onChange(%this)
    
    if(%optionMode == 0)
    {
-   %currentValue = %this.getCurrentOption();
-   if(%currentValue !$= "")
-   {
-      if(%currentValue $= "yes" || %currentValue $= "on")
-         %saveReadyValue = 1;
-      else if(%currentValue $= "no" || %currentValue $= "off")
-         %saveReadyValue = 0;
-      else 
-         %saveReadyValue = %currentValue;
-      
-      %prefIndex = OptionsMenu.unappliedChanges.getIndexFromKey(%targetVar);
-      if(%prefIndex == -1)
+      %currentValue = %this.getCurrentOption();
+      if(%currentValue !$= "")
       {
-         echo("Setting UnappliedChanges via add: key:" @ %targetVar @", value: " @ %saveReadyValue);
-         OptionsMenu.unappliedChanges.add(%targetVar, "\"" @ %saveReadyValue @ "\"" );
-      }
-      else
+         if(%currentValue $= "yes" || %currentValue $= "on")
+            %saveReadyValue = 1;
+         else if(%currentValue $= "no" || %currentValue $= "off")
+            %saveReadyValue = 0;
+         else 
+            %saveReadyValue = %currentValue;
+         
+         %prefIndex = OptionsMenu.unappliedChanges.getIndexFromKey(%targetVar);
+         if(%prefIndex == -1)
          {
-         OptionsMenu.unappliedChanges.setValue("\"" @ %saveReadyValue @ "\"", %prefIndex);
+            echo("Setting UnappliedChanges via add: key:" @ %targetVar @", value: " @ %saveReadyValue);
+            OptionsMenu.unappliedChanges.add(%targetVar, "\"" @ %saveReadyValue @ "\"" );
+         }
+         else
+         {
+            echo("Setting UnappliedChanges via modify: key:" @ %targetVar @", value: " @ %saveReadyValue);
+            OptionsMenu.unappliedChanges.setValue("\"" @ %saveReadyValue @ "\"", %prefIndex);
+         }
       }
-   }
    }
    else if(%optionMode == 1)
    {

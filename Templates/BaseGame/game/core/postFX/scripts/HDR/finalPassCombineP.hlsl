@@ -44,8 +44,24 @@ uniform float g_fBloomScale;
 uniform float g_fOneOverGamma;
 uniform float Brightness;
 uniform float Contrast;
+uniform float ExposureValue;
+   
 
-// uncharted 2 tonemapper see: http://filmicgames.com/archives/75
+float3 Reinhard(float3 x) 
+{
+    x *= 2.0;    
+    return x / (1.0 + x);
+} 
+ 
+ 
+float3 Filmic(float3 x)
+{   
+    x *= 0.4;   
+    x = max(0,x-0.004);
+    return (x*(6.2*x+.5))/(x*(6.2*x+1.7)+0.06);
+}   
+   
+// Uncharted 2 tonemapper see: http://filmicgames.com/archives/75
 float3 Uncharted2Tonemap(const float3 x)
 {
    const float A = 0.15;
@@ -71,18 +87,31 @@ float3 tonemap(float3 color)
 {
    if(g_fTonemapMode == 1.0)
    {
-      const float W = 11.2;
-      float ExposureBias = 2.0f;
-      //float ExposureAdjust = 1.5f;
-      //c *= ExposureAdjust;
-      color = Uncharted2Tonemap(ExposureBias*color);
-      color = color * (1.0f / Uncharted2Tonemap(W));
-   }
-   else if(g_fTonemapMode == 2.0)
-   {
       color = ACESFilm(color);
    }
-
+    
+   if(g_fTonemapMode == 2.0)
+   { 
+        
+      color *= 2.5; // compensate exposure to final image  
+      const float W = 11.2;
+      float ExposureBias = 2.0f;
+      
+      color = Uncharted2Tonemap(ExposureBias*color);
+      color = color * (1.0f / Uncharted2Tonemap(W));
+   } 
+    
+   if (g_fTonemapMode == 3.0)
+   {  
+       
+      color = Filmic(color);
+   } 
+       
+   else if (g_fTonemapMode == 4.0)
+   {   
+      color = Reinhard(color);
+   }
+    
    return color;
 }
 
@@ -112,6 +141,8 @@ float4 main( PFXVertToPix IN ) : TORQUE_TARGET0
       bloom.rgb = lerp( bloom.rgb, rodColor, coef );
    }
 
+   sample.rgb *= ExposureValue;
+   
    // Add the bloom effect.
    sample += saturate(g_fBloomScale * bloom);
 

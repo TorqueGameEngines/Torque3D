@@ -31,6 +31,9 @@ $PostFX::HDRPostFX::enableToneMapping = 0.5;
 ///
 $PostFX::HDRPostFX::keyValue = 0.18;
 
+
+$PostFX::HDRPostFX::exposureValue = 1.0;
+
 /// The minimum luninace value to allow when tone mapping 
 /// the scene.  Is particularly useful if your scene very 
 /// dark or has a black ambient color in places.
@@ -59,13 +62,13 @@ $PostFX::HDRPostFX::enableBloom = 1.0;
 
 /// The threshold luminace value for pixels which are
 /// considered "bright" and need to be bloomed.
-$PostFX::HDRPostFX::brightPassThreshold = 1.0;
+$PostFX::HDRPostFX::brightPassThreshold = 0.2;
 
 /// These are used in the gaussian blur of the
 /// bright pass for the bloom effect.
-$PostFX::HDRPostFX::gaussMultiplier = 0.3;
-$PostFX::HDRPostFX::gaussMean = 0.0;
-$PostFX::HDRPostFX::gaussStdDev = 0.8;
+$PostFX::HDRPostFX::gaussMultiplier = 0.145;
+$PostFX::HDRPostFX::gaussMean = 0;
+$PostFX::HDRPostFX::gaussStdDev = 0.5;
 
 // The tonemapping algo to use
 $PostFX::HDRPostFX::tonemapMode = "Filmic";
@@ -222,7 +225,8 @@ singleton GFXStateBlockData( HDRStateBlock )
 function HDRPostFX::setShaderConsts( %this )
 {
    %this.setShaderConst( "$brightPassThreshold", $PostFX::HDRPostFX::brightPassThreshold );
-   %this.setShaderConst( "$g_fMiddleGray", $PostFX::HDRPostFX::keyValue );   
+   %this.setShaderConst( "$g_fMiddleGray", $PostFX::HDRPostFX::keyValue );  
+   %this.setShaderConst( "$ExposureValue", $PostFX::HDRPostFX::exposureValue );    
          
    %bloomH = %this-->bloomH;
    %bloomH.setShaderConst( "$gaussMultiplier", $PostFX::HDRPostFX::gaussMultiplier );
@@ -248,6 +252,7 @@ function HDRPostFX::setShaderConsts( %this )
    %combinePass = %this-->combinePass;   
    %combinePass.setShaderConst( "$g_fEnableToneMapping", $PostFX::HDRPostFX::enableToneMapping );
    %combinePass.setShaderConst( "$g_fMiddleGray", $PostFX::HDRPostFX::keyValue );
+   %combinePass.setShaderConst( "$ExposureValue", $PostFX::HDRPostFX::exposureValue );
    %combinePass.setShaderConst( "$g_fBloomScale", $PostFX::HDRPostFX::enableBloom );      
    %combinePass.setShaderConst( "$g_fEnableBlueShift", $PostFX::HDRPostFX::enableBlueShift );   
    %combinePass.setShaderConst( "$g_fBlueShiftColor", $PostFX::HDRPostFX::blueShiftColor );   
@@ -255,10 +260,15 @@ function HDRPostFX::setShaderConsts( %this )
    %combinePass.setShaderConst( "$g_fEnableAutoExposure", $PostFX::HDRPostFX::enableAutoExposure );
    
    %tonemapMode = 1;
-   if($PostFX::HDRPostFX::tonemapMode $= "Filmic")
+   if($PostFX::HDRPostFX::tonemapMode $= "ACES")
       %tonemapMode = 1;
-   else if($PostFX::HDRPostFX::tonemapMode $= "ACES")
+   else if($PostFX::HDRPostFX::tonemapMode $= "Uncharted 2")
       %tonemapMode = 2;
+   else if($PostFX::HDRPostFX::tonemapMode $= "Filmic")
+      %tonemapMode = 3;
+ else if($PostFX::HDRPostFX::tonemapMode $= "Reinhard")
+      %tonemapMode = 4;
+ 
       
    %combinePass.setShaderConst( "$g_fTonemapMode", %tonemapMode );
    
@@ -356,7 +366,8 @@ function HDRPostFX::populatePostFXSettings(%this)
    PostEffectEditorInspector.endGroup();
    
    PostEffectEditorInspector.startGroup("HDR - Tonemapping");
-   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::tonemapMode", "Tonemapping Mode", "list", "", $PostFX::HDRPostFX::tonemapMode, "Filmic,ACES");
+   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::tonemapMode", "Tonemapping Mode", "list", "", $PostFX::HDRPostFX::tonemapMode, "ACES,Uncharted 2,Filmic,Reinhard");
+   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::exposureValue", "Exposure", "float", "", $PostFX::HDRPostFX::exposureValue, " 1");
    PostEffectEditorInspector.endGroup();
    
    PostEffectEditorInspector.startGroup("HDR - Bloom");
@@ -395,6 +406,7 @@ function HDRPostFX::applyFromPreset(%this)
 function HDRPostFX::savePresetSettings(%this)
 {
    PostFXManager::savePresetSetting("$PostFX::HDRPostFX::Enabled");
+   PostFXManager::savePresetSetting("$PostFX::HDRPostFX::exposureValue");
    PostFXManager::savePresetSetting("$PostFX::HDRPostFX::minLuminace");
    PostFXManager::savePresetSetting("$PostFX::HDRPostFX::whiteCutoff");
    PostFXManager::savePresetSetting("$PostFX::HDRPostFX::adaptRate");

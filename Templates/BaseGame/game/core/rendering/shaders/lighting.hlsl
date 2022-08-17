@@ -133,7 +133,7 @@ inline Surface createSurface(float4 gbuffer0, TORQUE_SAMPLER2D(gbufferTex1), TOR
 	surface.N = mul(invView, float4(gbuffer0.xyz,0)).xyz;
 	surface.V = normalize(wsEyePos - surface.P);
 	surface.baseColor = gbuffer1;
-	surface.roughness = clamp(gbuffer2.b, 0.01f, 1.0f);
+	surface.roughness = gbuffer2.b*0.92f+0.04f;
 	surface.metalness = gbuffer2.a;
    surface.ao = gbuffer2.g;
    surface.matFlag = gbuffer2.r;
@@ -151,7 +151,7 @@ inline Surface createForwardSurface(float4 baseColor, float3 normal, float4 pbrP
    surface.N = normal;
    surface.V = normalize(wsEyePos - surface.P);
    surface.baseColor = baseColor;
-   surface.roughness = clamp(pbrProperties.b, 0.01f, 1.0f);
+   surface.roughness = pbrProperties.b*0.92f+0.04f;
    surface.metalness = pbrProperties.a;
    surface.ao = pbrProperties.g;
    surface.matFlag = pbrProperties.r;
@@ -233,8 +233,8 @@ float3 evaluateStandardBRDF(Surface surface, SurfaceToLight surfaceToLight)
    float Vis = V_SmithGGXCorrelated(surface.NdotV, surfaceToLight.NdotL, surface.linearRoughnessSq);
    float D = D_GGX(surfaceToLight.NdotH, surface.linearRoughnessSq);
    float3 Fr = D * F * Vis;
-   
-#ifdef CAPTURING
+
+#if CAPTURING == 1
     return saturate(lerp(Fd + Fr,surface.f0,surface.metalness));
 #else
    return saturate(Fd + Fr);
@@ -244,14 +244,14 @@ float3 evaluateStandardBRDF(Surface surface, SurfaceToLight surfaceToLight)
 
 float3 getDirectionalLight(Surface surface, SurfaceToLight surfaceToLight, float3 lightColor, float lightIntensity, float shadow)
 {
-   float3 factor = lightColor * max(surfaceToLight.NdotL* shadow * lightIntensity*(1.0-surface.metalness), 0.0f) ;
+   float3 factor = lightColor * max(surfaceToLight.NdotL* shadow * lightIntensity, 0.0f) ;
    return evaluateStandardBRDF(surface,surfaceToLight) * factor;
 }
 
 float3 getPunctualLight(Surface surface, SurfaceToLight surfaceToLight, float3 lightColor, float lightIntensity, float radius, float shadow)
 {
    float attenuation = getDistanceAtt(surfaceToLight.Lu, radius);
-   float3 factor = lightColor * max(surfaceToLight.NdotL* shadow * lightIntensity * attenuation*(1.0-surface.metalness), 0.0f) ;
+   float3 factor = lightColor * max(surfaceToLight.NdotL* shadow * lightIntensity * attenuation, 0.0f) ;
    return evaluateStandardBRDF(surface,surfaceToLight) * factor;
 }
 

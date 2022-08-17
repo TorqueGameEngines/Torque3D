@@ -138,7 +138,7 @@ $guiContent = new GuiControl(OptionsMenu) {
             tooltipProfile = "GuiToolTipProfile";
             internalName = "panel2";
 
-            new GuiScrollCtrl() {
+            new GuiScrollCtrl(OptionsMenuSettingsScroll) {
                hScrollBar = "alwaysOff";
                vScrollBar = "dynamic";
                extent = "676 554";

@@ -184,3 +184,5 @@ Project Manager.exe
 projects.xml
 Qt*.dll
 .vs
+Engine/lib/assimp/include/assimp/config.h
+Engine/lib/assimp/revision.h

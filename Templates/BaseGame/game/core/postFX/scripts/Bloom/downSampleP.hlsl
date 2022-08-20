@@ -27,16 +27,15 @@
 //-----------------------------------------------------------------------------
 
 TORQUE_UNIFORM_SAMPLER2D(inputTex, 0);
-//uniform float2 targetSize;
+//uniform float2 oneOverTargetSize;
  
 //-----------------------------------------------------------------------------
 // Main
 //-----------------------------------------------------------------------------
 float4 main(PFXVertToPix IN) : TORQUE_TARGET0
 {
-	float2 texSize = 1.0f / float2(1024.0f, 1024.0f);
-	float x = texSize.x;
-	float y = texSize.y;
+	float x = 0.01f;
+	float y = 0.01f;
 	float4 a = TORQUE_TEX2D( inputTex, IN.uv0 + float2(-x*2.0f, y*2.0f));
 	float4 b = TORQUE_TEX2D( inputTex, IN.uv0 + float2( 0.0f  , y*2.0f));
 	float4 c = TORQUE_TEX2D( inputTex, IN.uv0 + float2( x*2.0f, y*2.0f));

@@ -26,7 +26,7 @@ TORQUE_UNIFORM_SAMPLER2D(inputTex, 0);
 
 float4 main(PFXVertToPix IN) : TORQUE_TARGET0
 {
-	float4 color = TORQUE_TEX2D(inputTex, IN.uv0);
-	float brightness = max(color.r, max(color.g, color.b));
-	return float4(color.rgb * pow(brightness, 8.0f), color.a);
+	float4 screenColor = TORQUE_TEX2D(inputTex, IN.uv0);
+	float brightness = max(screenColor.r, max(screenColor.g, screenColor.b));
+	return float4(screenColor.rgb * saturate(pow(brightness, 8.0f)), screenColor.a);
 }

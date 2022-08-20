@@ -30,12 +30,12 @@ struct Conn
 
 TORQUE_UNIFORM_SAMPLER2D(inputTex0, 0);
 TORQUE_UNIFORM_SAMPLER2D(inputTex1, 1);
-uniform float filterRadius;
+//uniform float filterRadius;
 
 float4 main( Conn V_IN ) : TORQUE_TARGET0
 {
-	float x = filterRadius;
-	float y = filterRadius;
+	float x = 1.0f;
+	float y = 1.0f;
 	
 	float4 a = TORQUE_TEX2D( inputTex0, V_IN.texCoord + float2(-x, y));
 	float4 b = TORQUE_TEX2D( inputTex0, V_IN.texCoord + float2( 0, y));

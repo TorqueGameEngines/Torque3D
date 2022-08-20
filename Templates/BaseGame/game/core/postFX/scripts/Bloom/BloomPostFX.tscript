@@ -30,15 +30,15 @@ singleton ShaderData( PFX_Bloom_Shader )
 	 pixVersion = 3.0;
 };
 
-singleton ShaderData( PFX_BloomDownSample_Shader )
-{
-   DXVertexShaderFile = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
-	 DXPixelShaderFile  = "./downSampleP.hlsl";
-	 
-	 samplerNames[0] = "$inputTex";
-	 
-	 pixVersion = 3.0;
-};
+//singleton ShaderData( PFX_BloomDownSample_Shader )
+//{
+//   DXVertexShaderFile = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
+//	 DXPixelShaderFile  = "./downSampleP.hlsl";
+//	 
+//	 samplerNames[0] = "$inputTex";
+//	 
+//	 pixVersion = 3.0;
+//};
 
 singleton GFXStateBlockData( BloomPostFX_SampleStateBlock : PFX_DefaultStateBlock )
 {
@@ -46,13 +46,13 @@ singleton GFXStateBlockData( BloomPostFX_SampleStateBlock : PFX_DefaultStateBloc
    samplerStates[0] = SamplerClampLinear;
 };
 
-function BloomPostFX::setShaderConsts( %this )
-{
-}
-
-function BloomPostFX::preProcess( %this )
-{
-}
+//function BloomPostFX::setShaderConsts( %this )
+//{
+//}
+//
+//function BloomPostFX::preProcess( %this )
+//{
+//}
 
 function BloomPostFX::onAdd(%this)
 {
@@ -120,34 +120,33 @@ singleton PostEffect( BloomPostFX )
    stateBlock = BloomPostFX_SampleStateBlock;
    texture[0] = "$backBuffer";
    target = "$outTex";
-	 targetFormat = "GFXFormatR16G16B16A16F";
 	 
-	 new PostEffect()
-	 {
-		allowReflectPass = false;
-		shader = PFX_BloomDownSample_Shader;
-		stateBlock = BloomPostFX_SampleStateBlock;
-		texture[0] = "$inTex";
-		target = "#bloom0";
-		targetScale = "0.5 0.5";
-	 };
-	 
-	 new PostEffect()
-	 {
-		allowReflectPass = false;
-		shader = PFX_BloomDownSample_Shader;
-		stateBlock = BloomPostFX_SampleStateBlock;
-		texture[0] = "#bloom0";
-		target = "#bloom1";
-		targetScale = "0.25 0.25";
-	 };
+	// new PostEffect()
+	// {
+	//	allowReflectPass = false;
+	//	shader = PFX_BloomDownSample_Shader;
+	//	stateBlock = BloomPostFX_SampleStateBlock;
+	//	texture[0] = "$inTex";
+	//	target = "#bloom0";
+	//	targetScale = "0.5 0.5";
+	// };
+	// 
+	// new PostEffect()
+	// {
+	//	allowReflectPass = false;
+	//	shader = PFX_BloomDownSample_Shader;
+	//	stateBlock = BloomPostFX_SampleStateBlock;
+	//	texture[0] = "#bloom0";
+	//	target = "#bloom1";
+	//	targetScale = "0.25 0.25";
+	// };
 	 
 	 new PostEffect()
 	 {
 		allowReflectPass = false;
 		shader = PFX_PassthruShader;
 		stateBlock = BloomPostFX_SampleStateBlock;
-		texture[0] = "#bloom1";
+		texture[0] = "$inTex";
 		target = "$backBuffer";
 	 };
 };

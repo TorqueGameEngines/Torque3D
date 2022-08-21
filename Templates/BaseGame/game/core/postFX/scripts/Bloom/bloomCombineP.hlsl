@@ -22,11 +22,15 @@
 
 #include "core/rendering/shaders/postFX/postFx.hlsl"
 
-TORQUE_UNIFORM_SAMPLER2D(inputTex, 0);
+TORQUE_UNIFORM_SAMPLER2D(inputTex0, 0);
+TORQUE_UNIFORM_SAMPLER2D(inputTex1, 1);
+TORQUE_UNIFORM_SAMPLER2D(colorTex, 2);
+uniform float intensity;
 
 float4 main(PFXVertToPix IN) : TORQUE_TARGET0
 {
-	float4 screenColor = TORQUE_TEX2D(inputTex, IN.uv0);
-	float brightness = max(screenColor.r, max(screenColor.g, screenColor.b));
-	return float4(screenColor.rgb * saturate(pow(brightness, 8.0f)), screenColor.a);
+	float4 bloom = (TORQUE_TEX2D(inputTex0, IN.uv0) + TORQUE_TEX2D(inputTex1, IN.uv0)) * 0.5f;
+	float4 screenColor = TORQUE_TEX2D(colorTex, IN.uv0);
+	screenColor.rgb += bloom.rgb * intensity;
+	return screenColor;
 }

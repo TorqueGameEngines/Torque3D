@@ -1,1 +1,5 @@
 $PostFX::BloomPostFX::Enabled = "1";
+$PostFX::BloomPostFX::quality = "3";
+$PostFX::BloomPostFX::threshold = "1";
+$PostFX::BloomPostFX::intensity = "2";
+$PostFX::BloomPostFX::radius = "6";

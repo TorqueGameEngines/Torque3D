@@ -31,6 +31,6 @@ float4 main(PFXVertToPix IN) : TORQUE_TARGET0
 	float brightness = max(screenColor.r, max(screenColor.g, screenColor.b));
 	float contribution = max(brightness - threshold, 0);
 	contribution /= max(brightness, 0.0001f);
-	clip(contribution > 0.00001f ? 1 : -1);
+	clip(contribution > 0.0001f ? 1 : -1);
 	return screenColor * contribution;
 }

@@ -1,6 +1,6 @@
 $PostFX::BloomPostFX::Enabled = "1";
-$PostFX::BloomPostFX::threshold = "0.5";
-$PostFX::BloomPostFX::intensity = "0.5";
+$PostFX::BloomPostFX::threshold = "0.394230783";
+$PostFX::BloomPostFX::intensity = "0.192307696";
 $PostFX::BloomPostFX::radius = "8";
 $PostFX::BloomPostFX::dirtEnabled = "1";
 $PostFX::BloomPostFX::dirtScale = "2048";
@@ -11,7 +11,7 @@ $PostFX::HDRPostFX::exposureValue = 1;
 $PostFX::HDRPostFX::minLuminace = 0.001;
 $PostFX::HDRPostFX::whiteCutoff = 1;
 $PostFX::HDRPostFX::adaptRate = "1";
-$PostFX::HDRPostFX::tonemapMode = "ACES";
+$PostFX::HDRPostFX::tonemapMode = "Filmic";
 $PostFX::HDRPostFX::enableBloom = "0";
 $PostFX::HDRPostFX::brightPassThreshold = 1;
 $PostFX::HDRPostFX::gaussMultiplier = 0.3;

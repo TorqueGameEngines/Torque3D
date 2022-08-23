@@ -28,55 +28,53 @@ $PostFX::BloomPostFX::dirtEnabled = true;
 $PostFX::BloomPostFX::dirtScale = 2048.0;
 $PostFX::BloomPostFX::dirtIntensity = 7.0;
 
-$mipsCount = 4;
-
 singleton ShaderData( PFX_BloomThreshold_Shader )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
-	 DXPixelShaderFile  = "./bloomThresholdP.hlsl";
-	 
-	 samplerNames[0] = "$inputTex";
-	 
-	 pixVersion = 3.0;
+   DXPixelShaderFile  = "./bloomThresholdP.hlsl";
+   
+   samplerNames[0] = "$inputTex";
+   
+   pixVersion = 3.0;
 };
 
 singleton ShaderData( PFX_BloomDownSample_Shader )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
-	 DXPixelShaderFile  = "./downSampleP.hlsl";
-	 
-	 samplerNames[0] = "$inputTex";
-	 
-	 pixVersion = 3.0;
+   DXPixelShaderFile  = "./downSampleP.hlsl";
+   
+   samplerNames[0] = "$inputTex";
+   
+   pixVersion = 3.0;
 };
 
 singleton ShaderData( PFX_BloomUpSample_Shader )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
-	 DXPixelShaderFile  = "./upSampleP.hlsl";
-	 
-	 samplerNames[0] = "$nxtTex";
-	 samplerNames[1] = "$mipTex";
-	 
-	 pixVersion = 3.0;
+   DXPixelShaderFile  = "./upSampleP.hlsl";
+   
+   samplerNames[0] = "$nxtTex";
+   samplerNames[1] = "$mipTex";
+   
+   pixVersion = 3.0;
 };
 
 singleton ShaderData( PFX_BloomStrength_Shader )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
-	 DXPixelShaderFile  = "./bloomStrengthP.hlsl";
-	 
-	 samplerNames[0] = "$inputTex";
-	 samplerNames[1] = "$dirtTex";
-	 
-	 pixVersion = 3.0;
+   DXPixelShaderFile  = "./bloomStrengthP.hlsl";
+   
+   samplerNames[0] = "$inputTex";
+   samplerNames[1] = "$dirtTex";
+   
+   pixVersion = 3.0;
 };
 
 singleton GFXStateBlockData( BloomPostFX_SampleStateBlock : PFX_DefaultStateBlock )
 {
    samplersDefined = true;
    samplerStates[0] = SamplerClampLinear;
-	 samplerStates[1] = SamplerClampLinear;
+   samplerStates[1] = SamplerClampLinear;
 };
 
 singleton GFXStateBlockData( BloomPostFX_Add_SampleStateBlock : PFX_DefaultStateBlock )
@@ -92,120 +90,119 @@ singleton GFXStateBlockData( BloomPostFX_Add_SampleStateBlock : PFX_DefaultState
    blendSrc = GFXBlendOne;
    blendDest = GFXBlendOne;
 
-	 samplersDefined = true;
+   samplersDefined = true;
    samplerStates[0] = SamplerClampLinear;
-	 samplerStates[1] = SamplerWrapLinear;
+   samplerStates[1] = SamplerWrapLinear;
 };
 
 function BloomPostFX::setShaderConsts( %this )
 {
-	%this.setShaderConst("$threshold", $PostFX::BloomPostFX::threshold);
-	
-	%blur = %this->bloomBlur;
-	for (%idx = 0; %idx < $mipsCount; %idx++)
-	{
-		%mip = %blur.getObject($mipsCount + %idx);
-		%mip.setShaderConst("$filterRadius", $PostFX::BloomPostFX::radius);
-	}
-	
-	%final = %this->bloomFinal;
-	%final.setShaderConst("$strength", $PostFX::BloomPostFX::intensity);
-	
-	%dirtScale = $PostFX::BloomPostFX::dirtScale;
-	%dirtIntensity = $PostFX::BloomPostFX::dirtIntensity;
-	%final.setShaderConst("$dirtParams", %dirtScale SPC %dirtScale SPC %dirtIntensity);
+   %this.setShaderConst("$threshold", $PostFX::BloomPostFX::threshold);
+   
+   %blur = %this->bloomBlur;
+   for (%idx = 0; %idx < %this.mipsCount; %idx++)
+   {
+     %mip = %blur.getObject(%this.mipsCount + %idx);
+     %mip.setShaderConst("$filterRadius", $PostFX::BloomPostFX::radius);
+   }
+   
+   %final = %this->bloomFinal;
+   %final.setShaderConst("$strength", $PostFX::BloomPostFX::intensity);
+   
+   %dirtScale = $PostFX::BloomPostFX::dirtScale;
+   %dirtIntensity = $PostFX::BloomPostFX::dirtIntensity;
+   %final.setShaderConst("$dirtParams", %dirtScale SPC %dirtScale SPC %dirtIntensity);
 }
 
 function BloomPostFX::preProcess( %this )
 {
-	if (%this.dirtEnabled != $PostFX::BloomPostFX::dirtEnabled)
-	{
-		%this.dirtEnabled = $PostFX::BloomPostFX::dirtEnabled;
-		
-		%final = %this->bloomFinal;
-		if (%this.dirtEnabled)
-		{
-			%final.setShaderMacro("USE_DIRT");
-		} else {
-			%final.removeShaderMacro("USE_DIRT");
-		}
-	}
-	
-	if($PostFX::BloomPostFX::dirtImage $= "")
-	{
+  if (%this.dirtEnabled != $PostFX::BloomPostFX::dirtEnabled)
+  {
+     %this.dirtEnabled = $PostFX::BloomPostFX::dirtEnabled;
+     
+     %final = %this->bloomFinal;
+     if (%this.dirtEnabled)
+     {
+       %final.setShaderMacro("USE_DIRT");
+     } else {
+       %final.removeShaderMacro("USE_DIRT");
+     }
+  }
+  
+  if($PostFX::BloomPostFX::dirtImage $= "")
+  {
     $PostFX::BloomPostFX::dirtImage = "core/postFX/images/lensDirt.png";
-	}
-	
-	if($PostFX::BloomPostFX::dirtImage !$= "")
-	{
-		%final = %this->bloomFinal;
-		%final.setTexture(1, $PostFX::BloomPostFX::dirtImage);
-	}
+  }
+  
+  if($PostFX::BloomPostFX::dirtImage !$= "")
+  {
+    %final = %this->bloomFinal;
+    %final.setTexture(1, $PostFX::BloomPostFX::dirtImage);
+  }
 }
 
 // This function sets up s sort of "mip-chain" for the bloom effect
 // Not really "optimal" but it works well enough
-function SetupBlurFX()
+function BloomPostFX::SetupBlurFX( %this )
 {
-	%blurFX = new PostEffect()
-	{
-	   internalName = "bloomBlur";
-	   allowReflectPass = false;
-		 shader = PFX_BloomDownSample_Shader;
-  	 stateBlock = BloomPostFX_SampleStateBlock;
-		 texture[0] = "#threshold";
-  	 target = "#bloom_0";
-		 targetFormat = "GFXFormatR16G16B16A16F";
-	};
-	
-  %textureName = "#bloom_0";
-  for (%idx = 0; %idx < $mipsCount; %idx++)
-  {
-  	%mipName = "bloom_" @ (%idx + 1);
-  	%mipFX = new PostEffect()
-  	{ 
-  		internalName = %mipName;
-  		allowReflectPass = false;
-  		shader = PFX_BloomDownSample_Shader;
-  		stateBlock = BloomPostFX_SampleStateBlock;
-  		texture[0] = %textureName;
-  		target = "#" @ %mipName;
-			targetScale = "0.5 0.5";
-  		targetFormat = "GFXFormatR16G16B16A16F";
-  	};
-  	
-  	%blurFX.add(%mipFX);
-		%textureName = "#" @ %mipName;
-  }
-	
-	for (%idx = $mipsCount; %idx > 0; %idx--)
-	{
-		%nxt = "#bloom_" @ (%idx - 1);
-		%mipName = "upsample_" @ (%idx - 1);
-		echo(%mipName SPC %textureName SPC %nxt);
-		
-		%mipFX = new PostEffect()
-  	{
-			internalName = %mipName;
-			allowReflectPass = false;
-			shader = PFX_BloomUpSample_Shader;
-			stateBlock = BloomPostFX_SampleStateBlock;
-			texture[0] = %nxt;
-			texture[1] = %textureName;
-			target = "#" @ %mipName;
-		};
-		
-		%blurFX.add(%mipFX);
-		%textureName = "#" @ %mipName;
-	}
-	
-	return %blurFX;
+   %blurFX = new PostEffect()
+   {
+     internalName = "bloomBlur";
+     allowReflectPass = false;
+     shader = PFX_BloomDownSample_Shader;
+     stateBlock = BloomPostFX_SampleStateBlock;
+     texture[0] = "#threshold";
+     target = "#bloom_0";
+     targetFormat = "GFXFormatR16G16B16A16F";
+   };
+  
+   %textureName = "#bloom_0";
+   for (%idx = 0; %idx < %this.mipsCount; %idx++)
+   {
+     %mipName = "bloom_" @ (%idx + 1);
+     %mipFX = new PostEffect()
+     { 
+       internalName = %mipName;
+       allowReflectPass = false;
+       shader = PFX_BloomDownSample_Shader;
+       stateBlock = BloomPostFX_SampleStateBlock;
+       texture[0] = %textureName;
+       target = "#" @ %mipName;
+       targetScale = "0.5 0.5";
+       targetFormat = "GFXFormatR16G16B16A16F";
+     };
+     
+     %blurFX.add(%mipFX);
+     %textureName = "#" @ %mipName;
+   }
+   
+   for (%idx = %this.mipsCount; %idx > 0; %idx--)
+   {
+     %nxt = "#bloom_" @ (%idx - 1);
+     %mipName = "upsample_" @ (%idx - 1);
+     echo(%mipName SPC %textureName SPC %nxt);
+     
+     %mipFX = new PostEffect()
+     {
+       internalName = %mipName;
+       allowReflectPass = false;
+       shader = PFX_BloomUpSample_Shader;
+       stateBlock = BloomPostFX_SampleStateBlock;
+       texture[0] = %nxt;
+       texture[1] = %textureName;
+       target = "#" @ %mipName;
+     };
+     
+     %blurFX.add(%mipFX);
+     %textureName = "#" @ %mipName;
+   }
+   
+   %this.add(%blurFX);
 }
 
 function BloomPostFX::onAdd(%this)
 {
-	 %this.add(SetupBlurFX());
-	 
+   %this.SetupBlurFX();
    //Register the postFX with the manager
    PostFXManager.registerPostEffect(%this);
 }
@@ -227,17 +224,17 @@ function BloomPostFX::populatePostFXSettings(%this)
 {
    PostEffectEditorInspector.startGroup("BloomPostFX - General");
    PostEffectEditorInspector.addCallbackField("$PostFX::BloomPostFX::Enabled", "Enabled", "bool", "", $PostFX::BloomPostFX::Enabled, "", "toggleBloomPostFX");
-	 PostEffectEditorInspector.addField("$PostFX::BloomPostFX::threshold", "Threshold", "range", "", $PostFX::BloomPostFX::threshold, "0 1 10");
-	 PostEffectEditorInspector.addField("$PostFX::BloomPostFX::intensity", "Intensity", "range", "", $PostFX::BloomPostFX::intensity, "0 2 10");
-	 PostEffectEditorInspector.addField("$PostFX::BloomPostFX::radius", "Radius", "float", "", $PostFX::BloomPostFX::radius, "");
+   PostEffectEditorInspector.addField("$PostFX::BloomPostFX::threshold", "Threshold", "range", "", $PostFX::BloomPostFX::threshold, "0 1 10");
+   PostEffectEditorInspector.addField("$PostFX::BloomPostFX::intensity", "Intensity", "range", "", $PostFX::BloomPostFX::intensity, "0 2 10");
+   PostEffectEditorInspector.addField("$PostFX::BloomPostFX::radius", "Radius", "float", "", $PostFX::BloomPostFX::radius, "");
    PostEffectEditorInspector.endGroup();
-	 
-	 PostEffectEditorInspector.startGroup("BloomPostFX - Dirt");
-	 PostEffectEditorInspector.addField("$PostFX::BloomPostFX::dirtEnabled", "Enable Dirt", "bool", "", $PostFX::BloomPostFX::dirtEnabled, "");
-	 PostEffectEditorInspector.addField("$PostFX::BloomPostFX::dirtScale", "Scale", "float", "", $PostFX::BloomPostFX::dirtScale, "");
-	 PostEffectEditorInspector.addField("$PostFX::BloomPostFX::dirtIntensity", "Intensity", "float", "", $PostFX::BloomPostFX::dirtIntensity, "");
-	 PostEffectEditorInspector.addField("$PostFX::BloomPostFX::dirtImage", "Dirt Image", "image", "", $PostFX::BloomPostFX::dirtImage, "");
-	 PostEffectEditorInspector.endGroup();
+   
+   PostEffectEditorInspector.startGroup("BloomPostFX - Lens Dirt");
+   PostEffectEditorInspector.addField("$PostFX::BloomPostFX::dirtEnabled", "Enable Dirt", "bool", "", $PostFX::BloomPostFX::dirtEnabled, "");
+   PostEffectEditorInspector.addField("$PostFX::BloomPostFX::dirtScale", "Scale", "float", "", $PostFX::BloomPostFX::dirtScale, "");
+   PostEffectEditorInspector.addField("$PostFX::BloomPostFX::dirtIntensity", "Intensity", "float", "", $PostFX::BloomPostFX::dirtIntensity, "");
+   PostEffectEditorInspector.addField("$PostFX::BloomPostFX::dirtImage", "Dirt Image", "image", "", $PostFX::BloomPostFX::dirtImage, "");
+   PostEffectEditorInspector.endGroup();
 }
 
 //This is called back from our callbackField defined in populatePostFXSettings to
@@ -264,41 +261,42 @@ function BloomPostFX::applyFromPreset(%this)
 function BloomPostFX::savePresetSettings(%this)
 {
    PostFXManager::savePresetSetting("$PostFX::BloomPostFX::Enabled");
-	 PostFXManager::savePresetSetting("$PostFX::BloomPostFX::threshold");
-	 PostFXManager::savePresetSetting("$PostFX::BloomPostFX::intensity");
-	 PostFXManager::savePresetSetting("$PostFX::BloomPostFX::radius");
-	 
-	 PostFXManager::savePresetSetting("$PostFX::BloomPostFX::dirtEnabled");
-	 PostFXManager::savePresetSetting("$PostFX::BloomPostFX::dirtScale");
-	 PostFXManager::savePresetSetting("$PostFX::BloomPostFX::dirtIntensity");
-	 PostFXManager::savePresetSetting("$PostFX::BloomPostFX::dirtImage");
+   PostFXManager::savePresetSetting("$PostFX::BloomPostFX::threshold");
+   PostFXManager::savePresetSetting("$PostFX::BloomPostFX::intensity");
+   PostFXManager::savePresetSetting("$PostFX::BloomPostFX::radius");
+   
+   PostFXManager::savePresetSetting("$PostFX::BloomPostFX::dirtEnabled");
+   PostFXManager::savePresetSetting("$PostFX::BloomPostFX::dirtScale");
+   PostFXManager::savePresetSetting("$PostFX::BloomPostFX::dirtIntensity");
+   PostFXManager::savePresetSetting("$PostFX::BloomPostFX::dirtImage");
 }
 
 //Our actual postFX
 singleton PostEffect( BloomPostFX )
 {
+   mipsCount = 4;
    enabled = false;
-	 allowReflectPass = false;
+   allowReflectPass = false;
    
    renderTime = "PFXBeforeBin";
-	 renderBin = "EditorBin";
-   renderPriority = 9999; 
-	 
+   renderBin = "EditorBin";
+   renderPriority = 9998; 
+   
    shader = PFX_BloomThreshold_Shader;
    stateBlock = BloomPostFX_SampleStateBlock;
    texture[0] = "$backBuffer";
    target = "#threshold";
-	 targetFormat = "GFXFormatR16G16B16A16F";
-	 targetClear = PFXTargetClear_OnDraw;
-	 targetClearColor = "0 0 0 0";
-	 
-	 new PostEffect()
-	 {
-	  internalName = "bloomFinal";
-		allowReflectPass = false;
-		shader = PFX_BloomStrength_Shader;
-		stateBlock = BloomPostFX_Add_SampleStateBlock;
-		texture[0] = "#upsample_0";
-		target = "$backBuffer";
-	 };
+   targetFormat = "GFXFormatR16G16B16A16F";
+   targetClear = PFXTargetClear_OnDraw;
+   targetClearColor = "0 0 0 0";
+   
+   new PostEffect()
+   {
+    internalName = "bloomFinal";
+    allowReflectPass = false;
+    shader = PFX_BloomStrength_Shader;
+    stateBlock = BloomPostFX_Add_SampleStateBlock;
+    texture[0] = "#upsample_0";
+    target = "$backBuffer";
+   };
 };

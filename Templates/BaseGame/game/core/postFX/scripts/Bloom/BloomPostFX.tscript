@@ -24,6 +24,10 @@ $PostFX::BloomPostFX::threshold = 0.75;
 $PostFX::BloomPostFX::intensity = 0.5;
 $PostFX::BloomPostFX::radius = 8.0;
 
+$PostFX::BloomPostFX::dirtEnabled = true;
+$PostFX::BloomPostFX::dirtScale = 2048.0;
+$PostFX::BloomPostFX::dirtIntensity = 7.0;
+
 $mipsCount = 4;
 
 singleton ShaderData( PFX_BloomThreshold_Shader )
@@ -63,6 +67,7 @@ singleton ShaderData( PFX_BloomStrength_Shader )
 	 DXPixelShaderFile  = "./bloomStrengthP.hlsl";
 	 
 	 samplerNames[0] = "$inputTex";
+	 samplerNames[1] = "$dirtTex";
 	 
 	 pixVersion = 3.0;
 };
@@ -89,6 +94,7 @@ singleton GFXStateBlockData( BloomPostFX_Add_SampleStateBlock : PFX_DefaultState
 
 	 samplersDefined = true;
    samplerStates[0] = SamplerClampLinear;
+	 samplerStates[1] = SamplerWrapLinear;
 };
 
 function BloomPostFX::setShaderConsts( %this )
@@ -104,10 +110,37 @@ function BloomPostFX::setShaderConsts( %this )
 	
 	%final = %this->bloomFinal;
 	%final.setShaderConst("$strength", $PostFX::BloomPostFX::intensity);
+	
+	%dirtScale = $PostFX::BloomPostFX::dirtScale;
+	%dirtIntensity = $PostFX::BloomPostFX::dirtIntensity;
+	%final.setShaderConst("$dirtParams", %dirtScale SPC %dirtScale SPC %dirtIntensity);
 }
 
 function BloomPostFX::preProcess( %this )
 {
+	if (%this.dirtEnabled != $PostFX::BloomPostFX::dirtEnabled)
+	{
+		%this.dirtEnabled = $PostFX::BloomPostFX::dirtEnabled;
+		
+		%final = %this->bloomFinal;
+		if (%this.dirtEnabled)
+		{
+			%final.setShaderMacro("USE_DIRT");
+		} else {
+			%final.removeShaderMacro("USE_DIRT");
+		}
+	}
+	
+	if($PostFX::BloomPostFX::dirtImage $= "")
+	{
+    $PostFX::BloomPostFX::dirtImage = "core/postFX/images/lensDirt.png";
+	}
+	
+	if($PostFX::BloomPostFX::dirtImage !$= "")
+	{
+		%final = %this->bloomFinal;
+		%final.setTexture(1, $PostFX::BloomPostFX::dirtImage);
+	}
 }
 
 // This function sets up s sort of "mip-chain" for the bloom effect
@@ -198,6 +231,13 @@ function BloomPostFX::populatePostFXSettings(%this)
 	 PostEffectEditorInspector.addField("$PostFX::BloomPostFX::intensity", "Intensity", "range", "", $PostFX::BloomPostFX::intensity, "0 2 10");
 	 PostEffectEditorInspector.addField("$PostFX::BloomPostFX::radius", "Radius", "float", "", $PostFX::BloomPostFX::radius, "");
    PostEffectEditorInspector.endGroup();
+	 
+	 PostEffectEditorInspector.startGroup("BloomPostFX - Dirt");
+	 PostEffectEditorInspector.addField("$PostFX::BloomPostFX::dirtEnabled", "Enable Dirt", "bool", "", $PostFX::BloomPostFX::dirtEnabled, "");
+	 PostEffectEditorInspector.addField("$PostFX::BloomPostFX::dirtScale", "Scale", "float", "", $PostFX::BloomPostFX::dirtScale, "");
+	 PostEffectEditorInspector.addField("$PostFX::BloomPostFX::dirtIntensity", "Intensity", "float", "", $PostFX::BloomPostFX::dirtIntensity, "");
+	 PostEffectEditorInspector.addField("$PostFX::BloomPostFX::dirtImage", "Dirt Image", "image", "", $PostFX::BloomPostFX::dirtImage, "");
+	 PostEffectEditorInspector.endGroup();
 }
 
 //This is called back from our callbackField defined in populatePostFXSettings to
@@ -227,6 +267,11 @@ function BloomPostFX::savePresetSettings(%this)
 	 PostFXManager::savePresetSetting("$PostFX::BloomPostFX::threshold");
 	 PostFXManager::savePresetSetting("$PostFX::BloomPostFX::intensity");
 	 PostFXManager::savePresetSetting("$PostFX::BloomPostFX::radius");
+	 
+	 PostFXManager::savePresetSetting("$PostFX::BloomPostFX::dirtEnabled");
+	 PostFXManager::savePresetSetting("$PostFX::BloomPostFX::dirtScale");
+	 PostFXManager::savePresetSetting("$PostFX::BloomPostFX::dirtIntensity");
+	 PostFXManager::savePresetSetting("$PostFX::BloomPostFX::dirtImage");
 }
 
 //Our actual postFX

@@ -23,11 +23,25 @@
 #include "core/rendering/shaders/postFX/postFx.hlsl"
 
 TORQUE_UNIFORM_SAMPLER2D(inputTex, 0);
+TORQUE_UNIFORM_SAMPLER2D(dirtTex, 1);
 uniform float strength;
+// XY: Dirt Texture Size/Scale
+// Z: Dirt Effect Strength
+uniform float3 dirtParams;
+uniform float2 oneOverTargetSize;
 
 float4 main(PFXVertToPix IN) : TORQUE_TARGET0
 {
+	#if defined(USE_DIRT)
+	float3 dirt = TORQUE_TEX2D(dirtTex, IN.uv0 / (dirtParams.xy * oneOverTargetSize)).rgb * dirtParams.z;
+	#endif
+	
 	float4 upSample = TORQUE_TEX2D(inputTex, IN.uv0);
+	
+	#if defined(USE_DIRT)
+	upSample.rgb += upSample.rgb * dirt;
+	#endif
+	
 	upSample.rgb *= strength;
 	
 	return upSample;

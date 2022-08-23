@@ -672,6 +672,11 @@ void PlatformWindowSDL::_processSDLEvent(SDL_Event &evt)
             case SDL_WINDOWEVENT_RESTORED:
                Con::setBoolVariable("pref::Video::isMaximized", false);
                break;
+            case SDL_WINDOWEVENT_DISPLAY_CHANGED:
+               Con::printf("Window moved to display #%d", evt.window.data1);
+               Con::setIntVariable("pref::Video::deviceId", evt.window.data1);
+               Con::evaluate("configureCanvas();");
+               break;
 
             default:
                break;

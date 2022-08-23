@@ -20,12 +20,11 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-$PostFX::BloomPostFX::threshold = 1.0;
+$PostFX::BloomPostFX::threshold = 0.75;
 $PostFX::BloomPostFX::intensity = 0.5;
 $PostFX::BloomPostFX::radius = 8.0;
 
-// Valid Values: 0, 1, 2, 3
-$PostFX::BloomPostFX::quality = 1;
+$mipsCount = 4;
 
 singleton ShaderData( PFX_BloomThreshold_Shader )
 {
@@ -37,30 +36,31 @@ singleton ShaderData( PFX_BloomThreshold_Shader )
 	 pixVersion = 3.0;
 };
 
-//singleton ShaderData( PFX_BloomDownSample_Shader )
-//{
-//   DXVertexShaderFile = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
-//	 DXPixelShaderFile  = "./downSampleP.hlsl";
-//	 
-//	 samplerNames[0] = "$inputTex";
-//	 
-//	 pixVersion = 3.0;
-//};
-
-singleton ShaderData( PFX_BloomUpSample_Shader )
+singleton ShaderData( PFX_BloomDownSample_Shader )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
-	 DXPixelShaderFile  = "./upSampleP.hlsl";
+	 DXPixelShaderFile  = "./downSampleP.hlsl";
 	 
 	 samplerNames[0] = "$inputTex";
 	 
 	 pixVersion = 3.0;
 };
 
-singleton ShaderData( PFX_BloomCombine_Shader )
+singleton ShaderData( PFX_BloomUpSample_Shader )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
-	 DXPixelShaderFile  = "./bloomCombineP.hlsl";
+	 DXPixelShaderFile  = "./upSampleP.hlsl";
+	 
+	 samplerNames[0] = "$nxtTex";
+	 samplerNames[1] = "$mipTex";
+	 
+	 pixVersion = 3.0;
+};
+
+singleton ShaderData( PFX_BloomStrength_Shader )
+{
+   DXVertexShaderFile = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
+	 DXPixelShaderFile  = "./bloomStrengthP.hlsl";
 	 
 	 samplerNames[0] = "$inputTex";
 	 
@@ -71,51 +71,108 @@ singleton GFXStateBlockData( BloomPostFX_SampleStateBlock : PFX_DefaultStateBloc
 {
    samplersDefined = true;
    samplerStates[0] = SamplerClampLinear;
+	 samplerStates[1] = SamplerClampLinear;
 };
 
-singleton GFXStateBlockData( BloomPostFX_Combine_SampleStateBlock : PFX_DefaultStateBlock )
+singleton GFXStateBlockData( BloomPostFX_Add_SampleStateBlock : PFX_DefaultStateBlock )
 {
-   samplersDefined = true;
+   alphaDefined = true;
+   alphaTestEnable = true;
+   alphaTestRef = 1;
+   alphaTestFunc = GFXCmpGreaterEqual;
+         
+   // Do a one to one blend.
+   blendDefined = true;
+   blendEnable = true;
+   blendSrc = GFXBlendOne;
+   blendDest = GFXBlendOne;
+
+	 samplersDefined = true;
    samplerStates[0] = SamplerClampLinear;
-	 samplerStates[1] = SamplerClampLinear;
-	 samplerStates[2] = SamplerClampLinear;
 };
 
 function BloomPostFX::setShaderConsts( %this )
 {
 	%this.setShaderConst("$threshold", $PostFX::BloomPostFX::threshold);
 	
-	%blurOne = %this->blur_one;
-	%blurOne.setShaderConst("$blurRadius", $PostFX::BloomPostFX::radius);
+	%blur = %this->bloomBlur;
+	for (%idx = 0; %idx < $mipsCount; %idx++)
+	{
+		%mip = %blur.getObject($mipsCount + %idx);
+		%mip.setShaderConst("$filterRadius", $PostFX::BloomPostFX::radius);
+	}
 	
-	%blurTwo = %this->blur_two;
-	%blurTwo.setShaderConst("$blurRadius", $PostFX::BloomPostFX::radius);
-	
-	%combine = %this->bloom_combine;
-	%combine.setShaderConst("$intensity", $PostFX::BloomPostFX::intensity);
-	
-	%steps = mRound($PostFX::BloomPostFX::radius * 0.333 + 1);
-	echo(%steps);
-	
-	%blurOne.setShaderConst("$numSteps", %steps);
-	%blurTwo.setShaderConst("$numSteps", %steps);
+	%final = %this->bloomFinal;
+	%final.setShaderConst("$strength", $PostFX::BloomPostFX::intensity);
 }
 
 function BloomPostFX::preProcess( %this )
 {
-	if ( $PostFX::BloomPostFX::quality !$= %this.quality )
+}
+
+// This function sets up s sort of "mip-chain" for the bloom effect
+// Not really "optimal" but it works well enough
+function SetupBlurFX()
+{
+	%blurFX = new PostEffect()
+	{
+	   internalName = "bloomBlur";
+	   allowReflectPass = false;
+		 shader = PFX_BloomDownSample_Shader;
+  	 stateBlock = BloomPostFX_SampleStateBlock;
+		 texture[0] = "#threshold";
+  	 target = "#bloom_0";
+		 targetFormat = "GFXFormatR16G16B16A16F";
+	};
+	
+  %textureName = "#bloom_0";
+  for (%idx = 0; %idx < $mipsCount; %idx++)
   {
-		%this.quality = mClamp( mRound( $PostFX::BloomPostFX::quality ), 0, 3 );
+  	%mipName = "bloom_" @ (%idx + 1);
+  	%mipFX = new PostEffect()
+  	{ 
+  		internalName = %mipName;
+  		allowReflectPass = false;
+  		shader = PFX_BloomDownSample_Shader;
+  		stateBlock = BloomPostFX_SampleStateBlock;
+  		texture[0] = %textureName;
+  		target = "#" @ %mipName;
+			targetScale = "0.5 0.5";
+  		targetFormat = "GFXFormatR16G16B16A16F";
+  	};
+  	
+  	%blurFX.add(%mipFX);
+		%textureName = "#" @ %mipName;
+  }
+	
+	for (%idx = $mipsCount; %idx > 0; %idx--)
+	{
+		%nxt = "#bloom_" @ (%idx - 1);
+		%mipName = "upsample_" @ (%idx - 1);
+		echo(%mipName SPC %textureName SPC %nxt);
 		
-		%blurOne = %this->blur_one;
-		%blurTwo = %this->blur_two;
-		%blurOne.setShaderMacro( "QUALITY", %this.quality );
-		%blurTwo.setShaderMacro( "QUALITY", %this.quality );
+		%mipFX = new PostEffect()
+  	{
+			internalName = %mipName;
+			allowReflectPass = false;
+			shader = PFX_BloomUpSample_Shader;
+			stateBlock = BloomPostFX_SampleStateBlock;
+			texture[0] = %nxt;
+			texture[1] = %textureName;
+			target = "#" @ %mipName;
+		};
+		
+		%blurFX.add(%mipFX);
+		%textureName = "#" @ %mipName;
 	}
+	
+	return %blurFX;
 }
 
 function BloomPostFX::onAdd(%this)
 {
+	 %this.add(SetupBlurFX());
+	 
    //Register the postFX with the manager
    PostFXManager.registerPostEffect(%this);
 }
@@ -137,7 +194,6 @@ function BloomPostFX::populatePostFXSettings(%this)
 {
    PostEffectEditorInspector.startGroup("BloomPostFX - General");
    PostEffectEditorInspector.addCallbackField("$PostFX::BloomPostFX::Enabled", "Enabled", "bool", "", $PostFX::BloomPostFX::Enabled, "", "toggleBloomPostFX");
-	 PostEffectEditorInspector.addField("$PostFX::BloomPostFX::quality", "Quality", "list", "0,1,2,3", $PostFX::BloomPostFX::quality, "0,1,2,3");
 	 PostEffectEditorInspector.addField("$PostFX::BloomPostFX::threshold", "Threshold", "range", "", $PostFX::BloomPostFX::threshold, "0 1 10");
 	 PostEffectEditorInspector.addField("$PostFX::BloomPostFX::intensity", "Intensity", "range", "", $PostFX::BloomPostFX::intensity, "0 2 10");
 	 PostEffectEditorInspector.addField("$PostFX::BloomPostFX::radius", "Radius", "float", "", $PostFX::BloomPostFX::radius, "");
@@ -168,7 +224,6 @@ function BloomPostFX::applyFromPreset(%this)
 function BloomPostFX::savePresetSettings(%this)
 {
    PostFXManager::savePresetSetting("$PostFX::BloomPostFX::Enabled");
-	 PostFXManager::savePresetSetting("$PostFX::BloomPostFX::quality");
 	 PostFXManager::savePresetSetting("$PostFX::BloomPostFX::threshold");
 	 PostFXManager::savePresetSetting("$PostFX::BloomPostFX::intensity");
 	 PostFXManager::savePresetSetting("$PostFX::BloomPostFX::radius");
@@ -180,66 +235,25 @@ singleton PostEffect( BloomPostFX )
    enabled = false;
 	 allowReflectPass = false;
    
-   renderTime = "PFXAfterDiffuse";
-	 renderBin = "ObjTranslucentBin";
-   renderPriority = 0.9; 
+   renderTime = "PFXBeforeBin";
+	 renderBin = "EditorBin";
+   renderPriority = 9999; 
 	 
    shader = PFX_BloomThreshold_Shader;
    stateBlock = BloomPostFX_SampleStateBlock;
    texture[0] = "$backBuffer";
-   target = "$outTex";
+   target = "#threshold";
+	 targetFormat = "GFXFormatR16G16B16A16F";
 	 targetClear = PFXTargetClear_OnDraw;
+	 targetClearColor = "0 0 0 0";
 	 
 	 new PostEffect()
 	 {
+	  internalName = "bloomFinal";
 		allowReflectPass = false;
-		shader = PFX_PassthruShader;
-		stateBlock = BloomPostFX_SampleStateBlock;
-		texture[0] = "$inTex";
-		target = "#bloom0";
-		targetScale = "0.5 0.5";
-	 };
-	 
-	 new PostEffect()
-	 {
-		allowReflectPass = false;
-		shader = PFX_PassthruShader;
-		stateBlock = BloomPostFX_SampleStateBlock;
-		texture[0] = "#bloom0";
-		target = "#bloom1";
-		targetScale = "0.25 0.25";
-	 };
-	 
-	 new PostEffect()
-	 {
-		internalName = "blur_one";
-		allowReflectPass = false;
-		shader = PFX_BloomUpSample_Shader;
-		stateBlock = BloomPostFX_SampleStateBlock;
-		texture[0] = "#bloom0";
-		target = "#blur0";
-	 };
-	 
-	 new PostEffect()
-	 {
-	  internalName = "blur_two";
-		allowReflectPass = false;
-		shader = PFX_BloomUpSample_Shader;
-		stateBlock = BloomPostFX_SampleStateBlock;
-		texture[0] = "#bloom1";
-		target = "#blur1";
-		targetScale = "0.5 0.5";
-	 };
-	 
-	 new PostEffect()
-	 {
-	  internalName = "bloom_combine";
-		allowReflectPass = false;
-		shader = PFX_BloomCombine_Shader;
-		stateBlock = BloomPostFX_Combine_SampleStateBlock;
-		texture[0] = "#blur0";
-		texture[1] = "#blur1";
-		texture[2] = "$backBuffer";
+		shader = PFX_BloomStrength_Shader;
+		stateBlock = BloomPostFX_Add_SampleStateBlock;
+		texture[0] = "#upsample_0";
 		target = "$backBuffer";
 	 };
 };

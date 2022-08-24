@@ -85,12 +85,7 @@ singleton GFXStateBlockData( BloomPostFX_SampleStateBlock : PFX_DefaultStateBloc
 };
 
 singleton GFXStateBlockData( BloomPostFX_Add_SampleStateBlock : PFX_DefaultStateBlock )
-{
-   alphaDefined = true;
-   alphaTestEnable = true;
-   alphaTestRef = 1;
-   alphaTestFunc = GFXCmpGreaterEqual;
-         
+{ 
    // Do a one to one blend.
    blendDefined = true;
    blendEnable = true;

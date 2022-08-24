@@ -45,7 +45,6 @@ float4 main(PFXVertToPix IN) : TORQUE_TARGET0
 	
 	#if defined(USE_DIRT)
 		upSample.rgb += upSample.rgb * dirt;
-		//upSample.rgb = dirt;
 	#endif
 	
 	return upSample;

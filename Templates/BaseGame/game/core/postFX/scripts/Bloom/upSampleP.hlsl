@@ -24,15 +24,15 @@
 
 static const int KERNEL_SAMPLES = 9;
 static const float3 KERNEL[9] = {
-	float3( 0.0000, 0.0000, 0.2500),
-	float3( 1.0000, 0.0000, 0.1250),
-	float3( 0.0000, 1.0000, 0.1250),
-	float3(-1.0000, 0.0000, 0.1250),
-	float3( 0.0000,-1.0000, 0.1250),
-	float3( 0.7070, 0.7070, 0.0625),
-	float3( 0.7070,-0.7070, 0.0625),
-	float3(-0.7070,-0.7070, 0.0625),
-	float3(-0.7070, 0.7070, 0.0625)
+	float3( 0.0000f, 0.0000f, 0.5000f),
+	float3( 1.0000f, 0.0000f, 0.0625f),
+	float3( 0.0000f, 1.0000f, 0.0625f),
+	float3(-1.0000f, 0.0000f, 0.0625f),
+	float3( 0.0000f,-1.0000f, 0.0625f),
+	float3( 0.7070f, 0.7070f, 0.0625f),
+	float3( 0.7070f,-0.7070f, 0.0625f),
+	float3(-0.7070f,-0.7070f, 0.0625f),
+	float3(-0.7070f, 0.7070f, 0.0625f)
 };
 
 TORQUE_UNIFORM_SAMPLER2D(nxtTex, 0);
@@ -56,33 +56,7 @@ float4 main(PFXVertToPix IN) : TORQUE_TARGET0
 		upSample += sampleCol * weight;
 	}
 	
-	upSample = TORQUE_TEX2D(nxtTex, IN.uv0) + upSample;
-	upSample.a = saturate(upSample.a);
+	upSample = (TORQUE_TEX2D(nxtTex, IN.uv0) + upSample) * 0.5f;
 	
 	return upSample;
-	
-	//float x = filterRadius * oneOverTargetSize.x;
-	//float y = filterRadius * oneOverTargetSize.y;
-	//
-	//float4 a = TORQUE_TEX2D(mipTex, IN.uv0 + float2(-x, y));
-	//float4 b = TORQUE_TEX2D(mipTex, IN.uv0 + float2( 0, y));
-	//float4 c = TORQUE_TEX2D(mipTex, IN.uv0 + float2( x, y));
-	//
-	//float4 d = TORQUE_TEX2D(mipTex, IN.uv0 + float2(-x, 0));
-	//float4 e = TORQUE_TEX2D(mipTex, IN.uv0 + float2( 0, 0));
-	//float4 f = TORQUE_TEX2D(mipTex, IN.uv0 + float2( x, 0));
-	//
-	//float4 g = TORQUE_TEX2D(mipTex, IN.uv0 + float2(-x,-y));
-	//float4 h = TORQUE_TEX2D(mipTex, IN.uv0 + float2( 0,-y));
-	//float4 i = TORQUE_TEX2D(mipTex, IN.uv0 + float2( x,-y));
-	//
-	//float4 upSample = e * 4.0f;
-	//upSample += (b+d+f+h) * 2.0f;
-	//upSample += (a+c+g+i);
-	//upSample *= 1.0f / 16.0f;
-	//
-	//upSample = TORQUE_TEX2D(nxtTex, IN.uv0) + upSample;
-	//upSample.a = saturate(upSample.a);
-	
-	//return upSample;
 }

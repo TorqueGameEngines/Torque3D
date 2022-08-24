@@ -22,40 +22,37 @@
 
 #include "core/rendering/shaders/postFX/postFx.hlsl"
 
-//-----------------------------------------------------------------------------
-// Data 
-//-----------------------------------------------------------------------------
+static const int KERNEL_SAMPLES = 9;
+static const float3 KERNEL[9] = {
+	float3( 0.0000f, 0.0000f, 0.2500f),
+	float3( 1.0000f, 0.0000f, 0.1250f),
+	float3( 0.0000f, 1.0000f, 0.1250f),
+	float3(-1.0000f, 0.0000f, 0.1250f),
+	float3( 0.0000f,-1.0000f, 0.1250f),
+	float3( 1.0000f, 1.0000f, 0.0625f),
+	float3( 1.0000f,-1.0000f, 0.0625f),
+	float3(-1.0000f,-1.0000f, 0.0625f),
+	float3(-1.0000f, 1.0000f, 0.0625f)
+};
 
 TORQUE_UNIFORM_SAMPLER2D(inputTex, 0);
 uniform float2 oneOverTargetSize;
  
-//-----------------------------------------------------------------------------
-// Main
-//-----------------------------------------------------------------------------
 float4 main(PFXVertToPix IN) : TORQUE_TARGET0
 {
-	float x = oneOverTargetSize.x;
-	float y = oneOverTargetSize.y;
-	float4 a = TORQUE_TEX2D(inputTex, IN.uv0 + float2(-x*2.0f, y*2.0f));
-	float4 b = TORQUE_TEX2D(inputTex, IN.uv0 + float2( 0.0f  , y*2.0f));
-	float4 c = TORQUE_TEX2D(inputTex, IN.uv0 + float2( x*2.0f, y*2.0f));
-																	
-	float4 d = TORQUE_TEX2D(inputTex, IN.uv0 + float2(-x*2.0f,   0.0f));
-	float4 e = TORQUE_TEX2D(inputTex, IN.uv0);
-	float4 f = TORQUE_TEX2D(inputTex, IN.uv0 + float2( x*2.0f,   0.0f));
-																	
-	float4 g = TORQUE_TEX2D(inputTex, IN.uv0 + float2(-x*2.0f,-y*2.0f));
-	float4 h = TORQUE_TEX2D(inputTex, IN.uv0 + float2( 0.0f  ,-y*2.0f));
-	float4 i = TORQUE_TEX2D(inputTex, IN.uv0 + float2( x*2.0f,-y*2.0f));
-																	
-	float4 j = TORQUE_TEX2D(inputTex, IN.uv0 + float2(-x, y));
-	float4 k = TORQUE_TEX2D(inputTex, IN.uv0 + float2( x, y));
-	float4 l = TORQUE_TEX2D(inputTex, IN.uv0 + float2(-x,-y));
-	float4 m = TORQUE_TEX2D(inputTex, IN.uv0 + float2( x,-y));
+	float4 downSample = float4(0, 0, 0, 0);
 	
-	float4 downSample = e * 0.125f;
-	downSample += (a+c+g+i) * 0.03125f;
-	downSample += (b+d+f+h) * 0.0625;
-	downSample += (j+k+l+m) * 0.125;
+	[unroll]
+	for (int i=0; i<KERNEL_SAMPLES; i++)
+	{
+		// XY: Sample Offset
+		// Z: Sample Weight
+		float3 offsetWeight = KERNEL[i];
+		float2 offset = offsetWeight.xy * oneOverTargetSize;
+		float weight = offsetWeight.z;
+		float4 sampleCol = TORQUE_TEX2D(inputTex, IN.uv0 + offset);
+		downSample += sampleCol * weight;
+	}
+	
 	return downSample;
 }

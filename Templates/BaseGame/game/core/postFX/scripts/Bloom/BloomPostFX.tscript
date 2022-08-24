@@ -20,13 +20,20 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-$PostFX::BloomPostFX::threshold = 0.75;
+// Inspired by bloom described in paper listed here:
+// http://www.iryoku.com/next-generation-post-processing-in-call-of-duty-advanced-warfare
+
+$PostFX::BloomPostFX::threshold = 0.65;
 $PostFX::BloomPostFX::intensity = 0.5;
-$PostFX::BloomPostFX::radius = 8.0;
+$PostFX::BloomPostFX::radius = 4.0;
 
 $PostFX::BloomPostFX::dirtEnabled = true;
 $PostFX::BloomPostFX::dirtScale = 2048.0;
-$PostFX::BloomPostFX::dirtIntensity = 7.0;
+$PostFX::BloomPostFX::dirtIntensity = 2.0;
+$PostFX::BloomPostFX::dirtEdgeMinDist = 0.125;
+$PostFX::BloomPostFX::dirtEdgeMaxDist = 0.75;
+$PostFX::BloomPostFX::dirtEdgeMinVal = 0.05;
+$PostFX::BloomPostFX::dirtImage = "core/postFX/images/lensDirt.png";
 
 singleton ShaderData( PFX_BloomThreshold_Shader )
 {
@@ -112,6 +119,11 @@ function BloomPostFX::setShaderConsts( %this )
    %dirtScale = $PostFX::BloomPostFX::dirtScale;
    %dirtIntensity = $PostFX::BloomPostFX::dirtIntensity;
    %final.setShaderConst("$dirtParams", %dirtScale SPC %dirtScale SPC %dirtIntensity);
+	 
+	 %edgeMin = $PostFX::BloomPostFX::dirtEdgeMinDist;
+	 %edgeMax = $PostFX::BloomPostFX::dirtEdgeMaxDist;
+	 %edgeVal = $PostFX::BloomPostFX::dirtEdgeMinVal;
+	 %final.setShaderConst("$edgeParams", %edgeMin SPC %edgeMax SPC %edgeVal);
 }
 
 function BloomPostFX::preProcess( %this )
@@ -129,15 +141,12 @@ function BloomPostFX::preProcess( %this )
      }
   }
   
-  if($PostFX::BloomPostFX::dirtImage $= "")
+  if(%this.dirtImage !$= $PostFX::BloomPostFX::dirtImage)
   {
-    $PostFX::BloomPostFX::dirtImage = "core/postFX/images/lensDirt.png";
-  }
-  
-  if($PostFX::BloomPostFX::dirtImage !$= "")
-  {
+		%this.dirtImage = $PostFX::BloomPostFX::dirtImage;
+		
     %final = %this->bloomFinal;
-    %final.setTexture(1, $PostFX::BloomPostFX::dirtImage);
+    %final.setTexture(1, %this.dirtImage);
   }
 }
 
@@ -153,7 +162,8 @@ function BloomPostFX::SetupBlurFX( %this )
      stateBlock = BloomPostFX_SampleStateBlock;
      texture[0] = "#threshold";
      target = "#bloom_0";
-     targetFormat = "GFXFormatR16G16B16A16F";
+		 targetScale = "0.5 0.5";
+     targetFormat = %this.selTexFormat;
    };
   
    %textureName = "#bloom_0";
@@ -169,7 +179,7 @@ function BloomPostFX::SetupBlurFX( %this )
        texture[0] = %textureName;
        target = "#" @ %mipName;
        targetScale = "0.5 0.5";
-       targetFormat = "GFXFormatR16G16B16A16F";
+       targetFormat = %this.selTexFormat;
      };
      
      %blurFX.add(%mipFX);
@@ -179,7 +189,7 @@ function BloomPostFX::SetupBlurFX( %this )
    for (%idx = %this.mipsCount; %idx > 0; %idx--)
    {
      %nxt = "#bloom_" @ (%idx - 1);
-     %mipName = "upsample_" @ (%idx - 1);
+     %mipName = "upSample_" @ (%idx - 1);
      echo(%mipName SPC %textureName SPC %nxt);
      
      %mipFX = new PostEffect()
@@ -191,6 +201,8 @@ function BloomPostFX::SetupBlurFX( %this )
        texture[0] = %nxt;
        texture[1] = %textureName;
        target = "#" @ %mipName;
+			 targetScale = "1.0 1.0";
+			 targetFormat = %this.selTexFormat;
      };
      
      %blurFX.add(%mipFX);
@@ -233,6 +245,9 @@ function BloomPostFX::populatePostFXSettings(%this)
    PostEffectEditorInspector.addField("$PostFX::BloomPostFX::dirtEnabled", "Enable Dirt", "bool", "", $PostFX::BloomPostFX::dirtEnabled, "");
    PostEffectEditorInspector.addField("$PostFX::BloomPostFX::dirtScale", "Scale", "float", "", $PostFX::BloomPostFX::dirtScale, "");
    PostEffectEditorInspector.addField("$PostFX::BloomPostFX::dirtIntensity", "Intensity", "float", "", $PostFX::BloomPostFX::dirtIntensity, "");
+	 PostEffectEditorInspector.addField("$PostFX::BloomPostFX::dirtEdgeMinDist", "Min Dist", "range", "", $PostFX::BloomPostFX::dirtEdgeMinDist, "0 1 10");
+	 PostEffectEditorInspector.addField("$PostFX::BloomPostFX::dirtEdgeMaxDist", "Max Dist", "range", "", $PostFX::BloomPostFX::dirtEdgeMaxDist, "0 1 10");
+	 PostEffectEditorInspector.addField("$PostFX::BloomPostFX::dirtEdgeMinVal", "Min Value", "range", "", $PostFX::BloomPostFX::dirtEdgeMinVal, "0 1 10");
    PostEffectEditorInspector.addField("$PostFX::BloomPostFX::dirtImage", "Dirt Image", "image", "", $PostFX::BloomPostFX::dirtImage, "");
    PostEffectEditorInspector.endGroup();
 }
@@ -269,12 +284,18 @@ function BloomPostFX::savePresetSettings(%this)
    PostFXManager::savePresetSetting("$PostFX::BloomPostFX::dirtScale");
    PostFXManager::savePresetSetting("$PostFX::BloomPostFX::dirtIntensity");
    PostFXManager::savePresetSetting("$PostFX::BloomPostFX::dirtImage");
+	 
+	 PostFXManager::savePresetSetting("$PostFX::BloomPostFX::dirtEdgeMinDist");
+	 PostFXManager::savePresetSetting("$PostFX::BloomPostFX::dirtEdgeMaxDist");
+	 PostFXManager::savePresetSetting("$PostFX::BloomPostFX::dirtEdgeMinVal");
 }
 
 //Our actual postFX
 singleton PostEffect( BloomPostFX )
 {
-   mipsCount = 4;
+   mipsCount = 5;
+	 selTexFormat = "GFXFormatR16G16B16A16F";
+	 
    enabled = false;
    allowReflectPass = false;
    
@@ -287,8 +308,6 @@ singleton PostEffect( BloomPostFX )
    texture[0] = "$backBuffer";
    target = "#threshold";
    targetFormat = "GFXFormatR16G16B16A16F";
-   targetClear = PFXTargetClear_OnDraw;
-   targetClearColor = "0 0 0 0";
    
    new PostEffect()
    {
@@ -296,7 +315,7 @@ singleton PostEffect( BloomPostFX )
     allowReflectPass = false;
     shader = PFX_BloomStrength_Shader;
     stateBlock = BloomPostFX_Add_SampleStateBlock;
-    texture[0] = "#upsample_0";
+    texture[0] = "#upSample_0";
     target = "$backBuffer";
    };
 };

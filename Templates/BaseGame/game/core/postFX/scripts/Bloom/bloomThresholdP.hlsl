@@ -29,8 +29,7 @@ float4 main(PFXVertToPix IN) : TORQUE_TARGET0
 {
 	float4 screenColor = TORQUE_TEX2D(inputTex, IN.uv0);
 	float brightness = max(screenColor.r, max(screenColor.g, screenColor.b));
-	float contribution = max(brightness - threshold, 0);
+	float contribution = pow(brightness, threshold * 10.0f);
 	contribution /= max(brightness, 0.0001f);
-	clip(contribution > 0.0001f ? 1 : -1);
 	return screenColor * contribution;
 }

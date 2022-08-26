@@ -55,7 +55,10 @@
 #endif 
 #ifndef TERRAINASSET_H
 #include "T3D/assets/TerrainAsset.h"
-#endif 
+#endif
+#ifndef _CONVEX_H_
+#include "collision/convex.h"
+#endif
 
 class GBitmap;
 class TerrainBlock;
@@ -216,6 +219,9 @@ protected:
 
    /// True if the zoning needs to be recalculated for the terrain.
    bool mZoningDirty;
+
+   /// Holds the generated convex list stuff for this terrain
+   Convex mTerrainConvexList;
 
    String _getBaseTexCacheFileName() const;
 

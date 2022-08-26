@@ -5,6 +5,7 @@
     materialDefinitionName="CameraMat"
     VersionId="1">
     <Material
+        mapTo="CameraMat"
         Name="CameraMat"
         doubleSided="1"
         translucent="1"

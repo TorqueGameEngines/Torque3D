@@ -470,9 +470,6 @@ void GuiInspectorTypeImageAssetPtr::consoleInit()
 
 GuiControl* GuiInspectorTypeImageAssetPtr::constructEditControl()
 {
-   if (mInspector->getInspectObject() == nullptr)
-      return nullptr;
-
    // Create base filename edit controls
    GuiControl* retCtrl = Parent::constructEditControl();
    if (retCtrl == NULL)
@@ -480,16 +477,28 @@ GuiControl* GuiInspectorTypeImageAssetPtr::constructEditControl()
 
    retCtrl->getRenderTooltipDelegate().bind(this, &GuiInspectorTypeImageAssetPtr::renderTooltip);
 
-   // Change filespec
-   char szBuffer[512];
-   dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"ImageAsset\", \"AssetBrowser.changeAsset\", %s, %s);",
-      mInspector->getIdString(), mCaption);
-   mBrowseButton->setField("Command", szBuffer);
+   if (mInspector->getInspectObject() != nullptr)
+   {
+      // Change filespec
+         char szBuffer[512];
+      dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"ImageAsset\", \"AssetBrowser.changeAsset\", %s, %s);",
+         mInspector->getIdString(), mCaption);
+      mBrowseButton->setField("Command", szBuffer);
 
-   setDataField(StringTable->insert("targetObject"), NULL, mInspector->getInspectObject()->getIdString());
+      setDataField(StringTable->insert("targetObject"), NULL, mInspector->getInspectObject()->getIdString());
+   }
+   else
+   {
+      //if we don't have a target object, we'll be manipulating the desination value directly
+      char szBuffer[512];
+      dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"ImageAsset\", \"AssetBrowser.changeAsset\", %s, %s);",
+         mInspector->getIdString(), mVariableName);
+      mBrowseButton->setField("Command", szBuffer);
+   }
 
-   // Create "Open in ShapeEditor" button
-   mImageEdButton = new GuiBitmapButtonCtrl();
+   mImageEdButton = NULL;
+   // Create "Open in ImageEditor" button
+   /*mImageEdButton = new GuiBitmapButtonCtrl();
 
    char bitmapName[512] = "ToolsModule:GameTSCtrl_image";
    mImageEdButton->setBitmap(StringTable->insert(bitmapName));
@@ -498,10 +507,10 @@ GuiControl* GuiInspectorTypeImageAssetPtr::constructEditControl()
    mImageEdButton->setDataField(StringTable->insert("Profile"), NULL, "GuiButtonProfile");
    mImageEdButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
    mImageEdButton->setDataField(StringTable->insert("hovertime"), NULL, "1000");
-   mImageEdButton->setDataField(StringTable->insert("tooltip"), NULL, "Open this file in the Shape Editor");
+   mImageEdButton->setDataField(StringTable->insert("tooltip"), NULL, "Open this file in the Image Editor");
 
    mImageEdButton->registerObject();
-   addObject(mImageEdButton);
+   addObject(mImageEdButton);*/
 
    return retCtrl;
 }
@@ -517,16 +526,19 @@ bool GuiInspectorTypeImageAssetPtr::updateRects()
    mEditCtrlRect.set(fieldExtent.x - dividerPos + dividerMargin, 1, dividerPos - dividerMargin - 34, fieldExtent.y);
 
    bool resized = mEdit->resize(mEditCtrlRect.point, mEditCtrlRect.extent);
-   if (mBrowseButton != NULL)
-   {
-      mBrowseRect.set(fieldExtent.x - 32, 2, 14, fieldExtent.y - 4);
-      resized |= mBrowseButton->resize(mBrowseRect.point, mBrowseRect.extent);
-   }
-
    if (mImageEdButton != NULL)
    {
       RectI shapeEdRect(fieldExtent.x - 16, 2, 14, fieldExtent.y - 4);
       resized |= mImageEdButton->resize(shapeEdRect.point, shapeEdRect.extent);
+   }
+
+   if (mBrowseButton != NULL)
+   {
+      if(mImageEdButton != NULL)
+         mBrowseRect.set(fieldExtent.x - 32, 2, 14, fieldExtent.y - 4);
+      else
+         mBrowseRect.set(fieldExtent.x - 16, 2, 14, fieldExtent.y - 4);
+      resized |= mBrowseButton->resize(mBrowseRect.point, mBrowseRect.extent);
    }
 
    return resized;

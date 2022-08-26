@@ -137,18 +137,9 @@ function AssetBrowser::buildPopupMenus(%this)
          item[ 3 ] = "-";
          item[ 4 ] = "Create Terrain Data" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"TerrainAsset\", AssetBrowser.selectedModule);";
          item[ 5 ] = "-";         
-         item[ 6 ] = "Create Shape" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"Shape\", AssetBrowser.selectedModule);";
-         item[ 7 ] = "Create Shape Animation" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"ShapeAnimationAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewShapeAnimationAsset(\"NewShapeAnimation\", AssetBrowser.selectedModule);";
-         item[ 8 ] = "-";
-         item[ 9 ] = "Create GUI" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"GUIAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewGUIAsset(\"NewGUI\", AssetBrowser.selectedModule);";
-         item[ 10 ] = "-";
-         item[ 11 ] = "Create Post Effect" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"PostEffectAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewPostEffectAsset(\"NewPostEffect\", AssetBrowser.selectedModule);";
-         item[ 12 ] = "-";
-         item[ 13 ] = "Create Sound" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"SoundAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewSoundAsset(\"NewSound\", AssetBrowser.selectedModule);";
-         item[ 14 ] = "-";
-         item[ 15 ] = "Create Particle Effect" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"ParticleEffectAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewParticleEffectAsset(\"NewParticleEffect\", AssetBrowser.selectedModule);";
-         item[ 16 ] = "-";
-         item[ 17 ] = "Create Cubemap" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"CubemapAsset\", AssetBrowser.selectedModule);";
+         item[ 6 ] = "Create GUI" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"GUIAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewGUIAsset(\"NewGUI\", AssetBrowser.selectedModule);";
+         item[ 7 ] = "-";
+         item[ 8 ] = "Create Post Effect" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"PostEffectAsset\", AssetBrowser.selectedModule);";//"AssetBrowser.createNewPostEffectAsset(\"NewPostEffect\", AssetBrowser.selectedModule);";
       };
    }
    
@@ -231,13 +222,6 @@ function AssetBrowser::buildPopupMenus(%this)
          item[ 0 ] = "Turn Folder into Module" TAB "" TAB "AssetBrowser.ConvertFolderIntoModule();";
       };
    }
-   
-   //Some assets are not yet ready/implemented, so disable their creation here
-   AddNewArtAssetPopup.enableItem(6, false); //shape
-   AddNewArtAssetPopup.enableItem(7, false); //shape animation
-   AddNewArtAssetPopup.enableItem(13, false); //sound asset
-   AddNewArtAssetPopup.enableItem(15, false); //particle effect
-   AddNewArtAssetPopup.enableItem(17, false); //cubemap
    
    if( !isObject( EditFolderPopup ) )
    {

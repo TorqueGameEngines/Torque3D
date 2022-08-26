@@ -42,9 +42,14 @@ function PostFXEditor::editDefaultPostFXSettings( %this )
    PostFXEditorActionButton.command = "PostFXManager::savePresetHandler($PostFXManager::defaultPreset);";
 }
 
+function PostEffectEditorInspector::refresh(%this)
+{
+   PostFXEditor.refresh();
+}
 
 function PostFXEditor::refresh(%this)
 {
+   %selectedItem = PostEffectEditorList.getSelectedRow();
    PostEffectEditorList.clear();
 
    %count = PostFXManager.Count();
@@ -55,6 +60,8 @@ function PostFXEditor::refresh(%this)
       if(%postEffect.isEnabled())
          PostEffectEditorList.addRow( %i, %postEffect.getName() );
    }
+   
+   PostEffectEditorList.setSelectedRow(%selectedItem);
 }
 
 function PostFXEditor::apply(%this)

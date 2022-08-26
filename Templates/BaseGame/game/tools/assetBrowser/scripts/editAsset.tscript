@@ -499,7 +499,30 @@ function AssetBrowser::openFileLocation(%this)
    %filePath = "";
    if(EditAssetPopup.assetId !$= "")
    {
-      %filePath = AssetDatabase.getAssetPath(EditAssetPopup.assetId);
+      if(AssetDatabase.isDeclaredAsset(EditAssetPopup.assetId))
+      {
+         %filePath = AssetDatabase.getAssetPath(EditAssetPopup.assetId);
+      }
+      else
+      {
+         //probably a file path
+         %pathSplit = strpos(EditAssetPopup.assetId, ":");
+         if(%pathSplit != -1)
+         {
+            %path = getSubStr(EditAssetPopup.assetId, 0, %pathSplit);
+            %file = getSubStr(EditAssetPopup.assetId, %pathSplit + 1);
+            
+            //datablocks pack the originator file in the parent path as-is, so check that
+            if(fileExt(%path) !$= "")
+            {
+               %filePath = %path;  
+            }
+            else
+            {
+               %filePath = %path @ "/" @ %file;  
+            }
+         }
+      }
    }
    else if(EditLevelAssetPopup.assetId !$= "")
    {
@@ -510,16 +533,20 @@ function AssetBrowser::openFileLocation(%this)
       %filePath = AssetDatabase.getAssetPath(EditAssetPopup.assetId);
    }
    
-   if(%filePath !$= "")
+   if(isFile(%filePath) || isDirectory(%filePath))
    {
+      %fullPath = makeFullPath(%filePath);
+      if(fileExt(%fullPath) $= ".tscript")
+         %fullPath = filePath(%fullPath);
+         
       if($platform $= "windows")
       {
-         %cmd = "cd \"" @ makeFullPath(%filePath) @ "\" && start .";
+         %cmd = "cd \"" @ %fullPath @ "\" && start .";
          systemCommand(%cmd);
       }
       else
       {
-         %cmd = "open \"" @ makeFullPath(%filePath) @ "\"";
+         %cmd = "open \"" @ %fullPath @ "\"";
          systemCommand(%cmd);
       }
    }

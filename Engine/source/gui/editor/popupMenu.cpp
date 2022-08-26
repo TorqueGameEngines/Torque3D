@@ -428,7 +428,7 @@ void PopupMenu::showPopup(GuiCanvas *owner, S32 x /* = -1 */, S32 y /* = -1 */)
    Point2I pos = Point2I::Zero;
 
    if (x == -1 && y == -1)
-      pos = owner->getCursorPos();
+      pos = owner->getCursorPosLocal();
    else
       pos = Point2I(x, y);
 

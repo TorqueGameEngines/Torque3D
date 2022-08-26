@@ -436,3 +436,55 @@ function toggleVolumeViz(%vizName)
       EVisibilityVolumeOptions.checkItem(7, $SFXSpace::isRenderable);
    }
 }
+
+//
+//
+function togglePlayerCollisionViz()
+{
+   $Player::renderCollision = !$Player::renderCollision;
+   EVisibilityDebugRenderOptions.checkItem(0, $Player::renderCollision);
+}
+
+function toggleTerrainDebugViz()
+{
+   $TerrainBlock::debugRender = !$TerrainBlock::debugRender;
+   EVisibilityDebugRenderOptions.checkItem(1, $TerrainBlock::debugRender);
+}
+
+function toggleDecalsDebugViz()
+{
+   $Decals::debugRender = !$Decals::debugRender; 
+   EVisibilityDebugRenderOptions.checkItem(2, $Decals::debugRender); 
+}
+
+function toggleBoundingBoxesViz()
+{
+   $Scene::renderBoundingBoxes = !$Scene::renderBoundingBoxes;
+   EVisibilityDebugRenderOptions.checkItem(3, $Scene::renderBoundingBoxes); 
+}
+
+//
+//
+function toggleWireframeViz()
+{
+   $gfx::wireframe = !$gfx::wireframe;
+   EditorVisibilityOptions.checkItem(3, $gfx::wireframe); 
+}
+
+function toggleFrustumLockViz()
+{
+   $Scene::lockCull = !$Scene::lockCull;
+   EditorVisibilityOptions.checkItem(4, $Scene::lockCull); 
+}
+
+function toggleZoneCulling()
+{
+   $Scene::disableZoneCulling = !$Scene::disableZoneCulling; 
+   EditorVisibilityOptions.checkItem(7, $Scene::disableZoneCulling); 
+}
+
+function toggleTerrainCulling()
+{
+   $Scene::disableTerrainOcclusion = !$Scene::disableTerrainOcclusion; 
+   EditorVisibilityOptions.checkItem(8, $Scene::disableTerrainOcclusion);  
+}

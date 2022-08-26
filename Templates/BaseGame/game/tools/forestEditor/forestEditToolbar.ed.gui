@@ -362,8 +362,8 @@ new GuiMouseEventCtrl(ForestBrushSizeSliderCtrlContainer,EditorGuiGroup) {
       Profile = "ToolsGuiSliderBoxProfile";
       HorizSizing = "right";
       VertSizing = "bottom";
-      position = firstWord(ForestBrushSizeTextEditContainer.position) + firstWord(ForestEditToolbar.position)+11 SPC 
-         (getWord(ForestBrushSizeTextEditContainer, 1)) + 25;
+      position = ForestBrushSizeTextEditContainer.position.x + ForestEditToolbar.position.x + 50 SPC 
+         ForestBrushSizeTextEditContainer.position.y + 50;
       Extent = "112 20";
       MinExtent = "8 2";
       canSave = "1";
@@ -392,8 +392,8 @@ new GuiMouseEventCtrl(ForestBrushPressureSliderCtrlContainer,EditorGuiGroup) {
       Profile = "ToolsGuiSliderBoxProfile";
       HorizSizing = "right";
       VertSizing = "bottom";
-      position = firstWord(ForestBrushPressureTextEditContainer.position) + firstWord(ForestEditToolbar.position) SPC 
-         (getWord(ForestBrushPressureTextEditContainer, 1)) + 25;
+      position = ForestBrushPressureTextEditContainer.position.x + ForestEditToolbar.position.x + 50 SPC 
+         ForestBrushPressureTextEditContainer.position.y + 50;
       Extent = "112 20";
       MinExtent = "8 2";
       canSave = "1";
@@ -422,8 +422,8 @@ new GuiMouseEventCtrl(ForestBrushHardnessSliderCtrlContainer,EditorGuiGroup) {
       Profile = "ToolsGuiSliderBoxProfile";
       HorizSizing = "right";
       VertSizing = "bottom";
-      position = firstWord(ForestBrushHardnessTextEditContainer.position) + firstWord(ForestEditToolbar.position) SPC 
-         (getWord(TForestBrushHardnessTextEditContainer, 1)) + 25;
+      position = ForestBrushPressureTextEditContainer.position.x + ForestEditToolbar.position.x + 50 SPC 
+         ForestBrushPressureTextEditContainer.position.y + 50;
       Extent = "112 20";
       MinExtent = "8 2";
       canSave = "1";

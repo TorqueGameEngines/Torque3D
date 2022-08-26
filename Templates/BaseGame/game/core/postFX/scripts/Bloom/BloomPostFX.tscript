@@ -39,6 +39,8 @@ singleton ShaderData( PFX_BloomThreshold_Shader )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
    DXPixelShaderFile  = "./bloomThresholdP.hlsl";
+	 OGLVertexShaderFile= $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";
+	 OGLPixelShaderFile = "./gl/bloomThresholdP.glsl";
    
    samplerNames[0] = "$inputTex";
    
@@ -49,6 +51,8 @@ singleton ShaderData( PFX_BloomDownSample_Shader )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
    DXPixelShaderFile  = "./downSampleP.hlsl";
+	 OGLVertexShaderFile= $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";
+	 OGLPixelShaderFile = "./gl/downSampleP.glsl";
    
    samplerNames[0] = "$inputTex";
    
@@ -59,6 +63,8 @@ singleton ShaderData( PFX_BloomUpSample_Shader )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
    DXPixelShaderFile  = "./upSampleP.hlsl";
+	 OGLVertexShaderFile= $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";
+	 OGLPixelShaderFile = "./gl/upSampleP.glsl";
    
    samplerNames[0] = "$nxtTex";
    samplerNames[1] = "$mipTex";
@@ -70,6 +76,8 @@ singleton ShaderData( PFX_BloomStrength_Shader )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
    DXPixelShaderFile  = "./bloomStrengthP.hlsl";
+	 OGLVertexShaderFile= $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";
+	 OGLPixelShaderFile = "./gl/bloomStrengthP.glsl";
    
    samplerNames[0] = "$inputTex";
    samplerNames[1] = "$dirtTex";
@@ -296,7 +304,7 @@ singleton PostEffect( BloomPostFX )
    
    renderTime = "PFXBeforeBin";
    renderBin = "EditorBin";
-   renderPriority = 9998; 
+   renderPriority = 10000; 
    
    shader = PFX_BloomThreshold_Shader;
    stateBlock = BloomPostFX_SampleStateBlock;

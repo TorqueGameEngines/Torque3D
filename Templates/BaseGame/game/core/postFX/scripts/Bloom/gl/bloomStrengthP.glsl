@@ -20,43 +20,37 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#include "core/rendering/shaders/postFX/postFx.hlsl"
+#include "core/rendering/shaders/gl/hlslCompat.glsl"
+#include "shadergen:/autogenConditioners.h"
 
-#define KERNEL_SAMPLES 9
-static const float3 KERNEL[9] = {
-	float3( 0.0000f, 0.0000f, 0.5000f),
-	float3( 1.0000f, 0.0000f, 0.0625f),
-	float3( 0.0000f, 1.0000f, 0.0625f),
-	float3(-1.0000f, 0.0000f, 0.0625f),
-	float3( 0.0000f,-1.0000f, 0.0625f),
-	float3( 0.7070f, 0.7070f, 0.0625f),
-	float3( 0.7070f,-0.7070f, 0.0625f),
-	float3(-0.7070f,-0.7070f, 0.0625f),
-	float3(-0.7070f, 0.7070f, 0.0625f)
-};
-
-TORQUE_UNIFORM_SAMPLER2D(nxtTex, 0);
-TORQUE_UNIFORM_SAMPLER2D(mipTex, 1);
-uniform float filterRadius;
+uniform sampler2D inputTex;
+uniform sampler2D dirtTex;
+uniform float strength;
+// XY: Dirt Texture Size/Scale
+// Z: Dirt Effect Strength
+uniform float3 dirtParams;
+// XY: Edge Min & Max Distance
+// Z: Edge Min Value
+uniform float3 edgeParams;
 uniform float2 oneOverTargetSize;
 
-float4 main(PFXVertToPix IN) : TORQUE_TARGET0
+in float2 uv0;
+
+out float4 OUT_col;
+
+void main()
 {
-	float4 upSample = float4(0, 0, 0, 0);
+	#if defined(USE_DIRT)
+		float edge = distance(uv0, float2(0.5f, 0.5f));
+		edge = max(smoothstep(edgeParams.x, edgeParams.y, edge), edgeParams.z);
+		float3 dirt = tex2D(dirtTex, uv0 / (dirtParams.xy * oneOverTargetSize)).rgb * dirtParams.z * edge;
+	#endif
 	
-	[unroll]
-	for (int i=0; i<KERNEL_SAMPLES; i++)
-	{
-		// XY: Sample Offset
-		// Z: Sample Weight
-		float3 offsetWeight = KERNEL[i];
-		float2 offset = offsetWeight.xy * oneOverTargetSize * filterRadius;
-		float weight = offsetWeight.z;
-		float4 sampleCol = TORQUE_TEX2D(mipTex, IN.uv0 + offset);
-		upSample += sampleCol * weight;
-	}
+	float4 upSample = tex2D(inputTex, uv0) * strength;
 	
-	upSample = (TORQUE_TEX2D(nxtTex, IN.uv0) + upSample);
+	#if defined(USE_DIRT)
+		upSample.rgb += upSample.rgb * dirt;
+	#endif
 	
-	return upSample;
+	OUT_col = upSample;
 }

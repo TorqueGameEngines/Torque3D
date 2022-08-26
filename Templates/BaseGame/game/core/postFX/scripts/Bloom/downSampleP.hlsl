@@ -22,7 +22,7 @@
 
 #include "core/rendering/shaders/postFX/postFx.hlsl"
 
-static const int KERNEL_SAMPLES = 9;
+#define KERNEL_SAMPLES 9
 static const float3 KERNEL[9] = {
 	float3( 0.0000f, 0.0000f, 0.2500f),
 	float3( 1.0000f, 0.0000f, 0.1250f),

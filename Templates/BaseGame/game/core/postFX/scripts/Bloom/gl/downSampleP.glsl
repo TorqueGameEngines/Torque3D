@@ -20,43 +20,43 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#include "core/rendering/shaders/postFX/postFx.hlsl"
+#include "core/rendering/shaders/gl/hlslCompat.glsl"
+#include "shadergen:/autogenConditioners.h"
 
 #define KERNEL_SAMPLES 9
-static const float3 KERNEL[9] = {
-	float3( 0.0000f, 0.0000f, 0.5000f),
-	float3( 1.0000f, 0.0000f, 0.0625f),
-	float3( 0.0000f, 1.0000f, 0.0625f),
-	float3(-1.0000f, 0.0000f, 0.0625f),
-	float3( 0.0000f,-1.0000f, 0.0625f),
-	float3( 0.7070f, 0.7070f, 0.0625f),
-	float3( 0.7070f,-0.7070f, 0.0625f),
-	float3(-0.7070f,-0.7070f, 0.0625f),
-	float3(-0.7070f, 0.7070f, 0.0625f)
-};
+const float3 KERNEL[9] = float3[](
+	float3( 0.0000, 0.0000, 0.2500),
+	float3( 1.0000, 0.0000, 0.1250),
+	float3( 0.0000, 1.0000, 0.1250),
+	float3(-1.0000, 0.0000, 0.1250),
+	float3( 0.0000,-1.0000, 0.1250),
+	float3( 1.0000, 1.0000, 0.0625),
+	float3( 1.0000,-1.0000, 0.0625),
+	float3(-1.0000,-1.0000, 0.0625),
+	float3(-1.0000, 1.0000, 0.0625)
+);
 
-TORQUE_UNIFORM_SAMPLER2D(nxtTex, 0);
-TORQUE_UNIFORM_SAMPLER2D(mipTex, 1);
-uniform float filterRadius;
+uniform sampler2D inputTex;
 uniform float2 oneOverTargetSize;
 
-float4 main(PFXVertToPix IN) : TORQUE_TARGET0
+in float2 uv0;
+
+out float4 OUT_col;
+ 
+void main()
 {
-	float4 upSample = float4(0, 0, 0, 0);
+	float4 downSample = float4(0, 0, 0, 0);
 	
-	[unroll]
 	for (int i=0; i<KERNEL_SAMPLES; i++)
 	{
 		// XY: Sample Offset
 		// Z: Sample Weight
 		float3 offsetWeight = KERNEL[i];
-		float2 offset = offsetWeight.xy * oneOverTargetSize * filterRadius;
+		float2 offsetXY = offsetWeight.xy * oneOverTargetSize;
 		float weight = offsetWeight.z;
-		float4 sampleCol = TORQUE_TEX2D(mipTex, IN.uv0 + offset);
-		upSample += sampleCol * weight;
+		float4 sampleCol = tex2D(inputTex, uv0 + offsetXY);
+		downSample += sampleCol * weight;
 	}
 	
-	upSample = (TORQUE_TEX2D(nxtTex, IN.uv0) + upSample);
-	
-	return upSample;
+	OUT_col = downSample;
 }

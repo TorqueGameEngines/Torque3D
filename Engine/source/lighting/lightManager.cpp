@@ -42,7 +42,6 @@
 Signal<void(const char*,bool)> LightManager::smActivateSignal;
 LightManager *LightManager::smActiveLM = NULL;
 
-LinearColorF gFallbackAmbient;
 
 LightManager::LightManager( const char *name, const char *id )
    :  mName( name ),
@@ -163,28 +162,19 @@ LightInfo* LightManager::getDefaultLight()
 {
    // The sun is always our default light when
    // when its registered.
-   if (mSpecialLights[LightManager::slSunLightType])
-   {
-      mSpecialLights[LightManager::slSunLightType]->setAmbient(gFallbackAmbient);
-      return mSpecialLights[LightManager::slSunLightType];
-   }
+   if ( mSpecialLights[ LightManager::slSunLightType ] )
+      return mSpecialLights[ LightManager::slSunLightType ];
 
    // Else return a dummy special light.
-   if (!mDefaultLight)
-   {
+   if ( !mDefaultLight )
       mDefaultLight = createLightInfo();
-   }
-   mDefaultLight->setAmbient(gFallbackAmbient);
    return mDefaultLight;
 }
 
 LightInfo* LightManager::getSpecialLight( LightManager::SpecialLightTypesEnum type, bool useDefault )
 {
-   if (mSpecialLights[type])
-   {
-      mSpecialLights[LightManager::slSunLightType]->setAmbient(gFallbackAmbient);
+   if ( mSpecialLights[type] )
       return mSpecialLights[type];
-   }
 
    if ( useDefault )
       return getDefaultLight();

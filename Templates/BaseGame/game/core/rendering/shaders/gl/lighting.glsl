@@ -500,7 +500,7 @@ vec4 computeForwardProbes(Surface surface,
    float horizon = saturate( 1 + horizonOcclusion * dot(surface.R, surface.N));
    horizon *= horizon;
 #if CAPTURING == 1
-    return vec4(mix(surface.baseColor.rgb,(irradiance + specular* horizon) ,surface.metalness/2),0);
+    return vec4(mix((irradiance + specular* horizon),surface.baseColor.rgb,surface.metalness),0);
 #else
    return vec4((irradiance + specular* horizon) , 0);//alpha writes disabled
 #endif

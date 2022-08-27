@@ -608,8 +608,11 @@ function AssetBrowser::doRefresh(%this)
       //Forces a clean collapse of the tree for any not-really-exposed items
       %dataItem = AssetBrowser-->filterTree.findItemByName("data");
 
-      AssetBrowser-->filterTree.expandItem(%dataItem, false);
-      AssetBrowser-->filterTree.expandItem(%dataItem);
+      if(%dataItem != 0)
+      {
+         AssetBrowser-->filterTree.expandItem(%dataItem, false);
+         AssetBrowser-->filterTree.expandItem(%dataItem);
+      }
       
       %this.dirty = false;
    }
@@ -985,14 +988,21 @@ function AssetBrowser::changeAsset(%this)
    %targetObject = %this.fieldTargetObject;
    %inspectorObject = "";
    
-   if(%this.fieldTargetObject.isInNamespaceHierarchy("GuiInspector"))
+   if(isObject(%this.fieldTargetObject) && %this.fieldTargetObject.isInNamespaceHierarchy("GuiInspector"))
    {
       %inspectorObject = %this.fieldTargetObject;
-      %targetObject = %inspectorObject.getInspectObject();
-      
-      %inspectorObject.setObjectField(%this.fieldTargetName, %this.selectedAsset);
+      if(%inspectorObject.getNumInspectObjects() != 0)
+      {
+         %targetObject = %inspectorObject.getInspectObject();
+         %inspectorObject.setObjectField(%this.fieldTargetName, %this.selectedAsset);
+      }
+      else if(startsWith(%this.fieldTargetName, "$"))
+      {
+         //we're targeting a variable directly, so deal with that then
+         %cmd = %this.fieldTargetName @ "=\"" @ %this.selectedAsset @ "\";";
+      }
    }
-   else
+   else if(isObject(%this.fieldTargetObject))
    {
       //alright, we've selectd an asset for a field, so time to set it!
       if(%this.fieldTargetName $= "")
@@ -1000,11 +1010,23 @@ function AssetBrowser::changeAsset(%this)
       else
          %cmd = %targetObject @ "." @ %this.fieldTargetName @ "=\"" @ %this.selectedAsset @ "\";";
       //echo("Changing asset via the " @ %cmd @ " command");
-      eval(%cmd);
+   }
+   else if(startsWith(%this.fieldTargetName, "$"))
+   {
+      //we're targeting a variable directly, so deal with that then
+      %cmd = %this.fieldTargetName @ "=\"" @ %this.selectedAsset @ "\";";
    }
    
+   eval(%cmd);
+   
    //Force update our object with the field change
-   %targetObject.inspectPostApply();
+   if(isObject(%targetObject))
+   {
+      if(%this.fieldTargetObject.isInNamespaceHierarchy("GuiInspector"))
+         %this.fieldTargetObject.refresh();
+      else
+         %targetObject.inspectPostApply();
+   }
    
    //Flag us as dirty for editing purposes
    EWorldEditor.setSceneAsDirty();

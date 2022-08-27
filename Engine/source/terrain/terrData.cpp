@@ -220,13 +220,10 @@ TerrainBlock::TerrainBlock()
    mTerrainAssetId = StringTable->EmptyString();
 }
 
-
-extern Convex sTerrainConvexList;
-
 TerrainBlock::~TerrainBlock()
 {
    // Kill collision
-   sTerrainConvexList.nukeList();
+   mTerrainConvexList.nukeList();
 
    SAFE_DELETE(mLightMap);
    mLightMapTex = NULL;

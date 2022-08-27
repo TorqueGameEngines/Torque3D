@@ -734,7 +734,7 @@ function EditorGui::addCameraBookmarkByGui( %this )
    // look for a NewCamera name to grab
    for(%i = 0; ; %i++){
       %name = "NewCamera_" @ %i;
-      if( !CameraBookmarks.findObjectByInternalName(%name) ){
+      if( !isObject(CameraBookmarks) || !CameraBookmarks.findObjectByInternalName(%name) ){
          break;
       }
    }
@@ -1340,7 +1340,9 @@ function CameraTypesDropdownToggle()
 
 function VisibilityDropdownToggle()
 {
-   EditorVisibilityOptions.showPopup(Canvas);
+   %pos = visibilityToggleBtn.getGlobalPosition();
+   %pos.y += visibilityToggleBtn.extent.y;
+   EditorVisibilityOptions.showPopup(Canvas, %pos.x, %pos.y);
 }
 
 function CameraTypesDropdownDecoy::onMouseLeave()

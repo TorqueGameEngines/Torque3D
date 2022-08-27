@@ -34,9 +34,6 @@ static const U32 MaxExtent = 256;
 
 
 //----------------------------------------------------------------------------
-
-Convex sTerrainConvexList;
-
 // Number of vertices followed by point index
 S32 sVertexList[5][5] = {
    { 3, 1,2,3 },  // 135 B
@@ -350,7 +347,7 @@ void TerrainBlock::buildConvex(const Box3F& box,Convex* convex)
 {
    PROFILE_SCOPE( TerrainBlock_buildConvex );
    
-   sTerrainConvexList.collectGarbage();
+   mTerrainConvexList.collectGarbage();
 
    // First check to see if the query misses the 
    // terrain elevation range.
@@ -415,7 +412,7 @@ void TerrainBlock::buildConvex(const Box3F& box,Convex* convex)
 
          // Create a new convex.
          TerrainConvex* cp = new TerrainConvex;
-         sTerrainConvexList.registerObject(cp);
+         mTerrainConvexList.registerObject(cp);
          convex->addToWorkingList(cp);
          cp->halfA = true;
          cp->square = 0;
@@ -448,7 +445,7 @@ void TerrainBlock::buildConvex(const Box3F& box,Convex* convex)
             cp->normal[1].normalize();
             if (mDot(vp[3] - vp[1],cp->normal[0]) > 0) {
                TerrainConvex* nc = new TerrainConvex(*cp);
-               sTerrainConvexList.registerObject(nc);
+               mTerrainConvexList.registerObject(nc);
                convex->addToWorkingList(nc);
                nc->halfA = false;
                nc->square = cp;
@@ -463,7 +460,7 @@ void TerrainBlock::buildConvex(const Box3F& box,Convex* convex)
             cp->normal[1].normalize();
             if (mDot(vp[2] - vp[0],cp->normal[0]) > 0) {
                TerrainConvex* nc = new TerrainConvex(*cp);
-               sTerrainConvexList.registerObject(nc);
+               mTerrainConvexList.registerObject(nc);
                convex->addToWorkingList(nc);
                nc->halfA = false;
                nc->square = cp;

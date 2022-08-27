@@ -302,8 +302,8 @@ new GuiMouseEventCtrl(MeshRoadDefaultWidthSliderCtrlContainer, EditorGuiGroup) {
       Profile = "ToolsGuiSliderBoxProfile";
       HorizSizing = "right";
       VertSizing = "bottom";
-      position = firstWord(MeshRoadDefaultWidthTextEditContainer.position) + firstWord(MeshRoadEditorToolbar.position) + 10 SPC 
-         (getWord(MeshRoadDefaultWidthTextEditContainer, 1)) + 25;
+      position = MeshRoadDefaultWidthTextEditContainer.position.x + MeshRoadEditorToolbar.position.x + 50 SPC 
+         MeshRoadDefaultWidthTextEditContainer.position.y + 50;
       Extent = "112 20";
       MinExtent = "8 2";
       canSave = "1";
@@ -331,8 +331,8 @@ new GuiMouseEventCtrl(MeshRoadDefaultDepthSliderCtrlContainer, EditorGuiGroup) {
       Profile = "ToolsGuiSliderBoxProfile";
       HorizSizing = "right";
       VertSizing = "bottom";
-      position = firstWord(MeshRoadDefaultDepthTextEditContainer.position) + firstWord(MeshRoadEditorToolbar.position) + 10 SPC 
-         (getWord(MeshRoadDefaultDepthTextEditContainer, 1)) + 25;
+      position = MeshRoadDefaultDepthTextEditContainer.position.x + MeshRoadEditorToolbar.position.x + 50 SPC 
+         MeshRoadDefaultDepthTextEditContainer.position.y + 50;
       Extent = "112 20";
       MinExtent = "8 2";
       canSave = "1";

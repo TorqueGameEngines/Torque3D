@@ -259,8 +259,8 @@ new GuiMouseEventCtrl(RoadDefaultWidthSliderCtrlContainer, EditorGuiGroup) {
       Profile = "ToolsGuiSliderBoxProfile";
       HorizSizing = "right";
       VertSizing = "bottom";
-      position = firstWord(RoadDefaultWidthTextEditContainer.position) + firstWord(RoadEditorToolbar.position) + 10 SPC 
-         (getWord(RoadDefaultWidthTextEditContainer, 1)) + 25;
+      position = RoadDefaultWidthTextEditContainer.position.x + RoadEditorToolbar.position.x + 50 SPC 
+         RoadDefaultWidthTextEditContainer.position.y + 50;
       Extent = "112 20";
       MinExtent = "8 2";
       canSave = "1";

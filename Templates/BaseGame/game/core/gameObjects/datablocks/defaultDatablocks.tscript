@@ -139,7 +139,7 @@ datablock MissionMarkerData(SpawnSphereMarker)
 datablock MissionMarkerData(CameraBookmarkMarker)
 {
    category = "Misc";
-   shapeAsset = "Core_GameObjects:Camera";
+   shapeAsset = "Core_GameObjects:camera_shape";
 };
 
 datablock CameraData(Observer)

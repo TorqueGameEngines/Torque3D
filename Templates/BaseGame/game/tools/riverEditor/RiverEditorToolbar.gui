@@ -280,8 +280,8 @@ new GuiMouseEventCtrl(RiverDefaultWidthSliderCtrlContainer, EditorGuiGroup) {
       Profile = "ToolsGuiSliderBoxProfile";
       HorizSizing = "right";
       VertSizing = "bottom";
-      position = firstWord(RiverDefaultWidthTextEditContainer.position) + firstWord(RiverEditorToolbar.position) + 10 SPC 
-         (getWord(RiverDefaultWidthTextEditContainer, 1)) + 25;
+      position = RiverDefaultWidthTextEditContainer.position.x + RiverEditorToolbar.position.x + 50 SPC 
+         RiverDefaultWidthTextEditContainer.position.y + 50;
       Extent = "112 20";
       MinExtent = "8 2";
       canSave = "1";
@@ -309,8 +309,8 @@ new GuiMouseEventCtrl(RiverDefaultDepthSliderCtrlContainer, EditorGuiGroup) {
       Profile = "ToolsGuiSliderBoxProfile";
       HorizSizing = "right";
       VertSizing = "bottom";
-      position = firstWord(RiverDefaultDepthTextEditContainer.position) + firstWord(RiverEditorToolbar.position) + 10 SPC 
-         (getWord(RiverDefaultDepthTextEditContainer, 1)) + 25;
+      position = RiverDefaultDepthTextEditContainer.position.x + RiverEditorToolbar.position.x + 50 SPC 
+         RiverDefaultDepthTextEditContainer.position.y + 50;
       Extent = "112 20";
       MinExtent = "8 2";
       canSave = "1";

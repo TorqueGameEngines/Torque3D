@@ -98,15 +98,17 @@ function setupEditorVisibilityMenu()
       superClass = "MenuBuilder";
       class = "EditorWorldMenu";
       
-      item[ 0 ] = "Show Player Collision" TAB "" TAB "$Player::renderCollision = !$Player::renderCollision;";
-      item[ 1 ] = "Show Terrain Debug" TAB "" TAB "$TerrainBlock::debugRender = !$TerrainBlock::debugRender;";
-      item[ 2 ] = "Show Decals Debug" TAB "" TAB "$Decals::debugRender = !$Decals::debugRender;";
-      item[ 3 ] = "Show Bounding Boxes" TAB "" TAB "$Scene::renderBoundingBoxes = !$Scene::renderBoundingBoxes;";
+      item[ 0 ] = "Show Player Collision" TAB "" TAB "togglePlayerCollisionViz();";
+      item[ 1 ] = "Show Terrain Debug" TAB "" TAB "toggleTerrainDebugViz();";
+      item[ 2 ] = "Show Decals Debug" TAB "" TAB "toggleDecalsDebugViz();";
+      item[ 3 ] = "Show Bounding Boxes" TAB "" TAB "toggleBoundingBoxesViz();";
       item[ 4 ] = "Show Physics World" TAB "" TAB "togglePhysicsDebugViz();";
       item[ 5 ] = "Show Texel Density" TAB "" TAB "toggleTexelDensityViz();";
    };
    
-   %debugRenderpopup.enableItem(4, false);
+   if(!physicsPluginPresent())
+      %debugRenderpopup.enableItem(4, false);
+      
    %debugRenderpopup.enableItem(5, false);
    
    //
@@ -231,12 +233,12 @@ function setupEditorVisibilityMenu()
       item[ 0 ] = "Volumes Visibility" TAB EVisibilityVolumeOptions;
       item[ 1 ] = "Debug Rendering" TAB EVisibilityDebugRenderOptions;
       item[ 2 ] = "-" TAB "" TAB "";
-      item[ 3 ] = "Wireframe" TAB "" TAB "$gfx::wireframe = !$gfx::wireframe;";
-      item[ 4 ] = "Frustum Lock" TAB "" TAB "$Scene::lockCull = !$Scene::lockCull;";
+      item[ 3 ] = "Wireframe" TAB "" TAB "toggleWireframeViz();";
+      item[ 4 ] = "Frustum Lock" TAB "" TAB "toggleFrustumLockViz();";
       item[ 5 ] = "Colorblindness" TAB EVisibilityColorblindnessOptions;
       item[ 6 ] = "-" TAB "" TAB "";
-      item[ 7 ] = "Disable Zone Culling" TAB "" TAB "$Scene::disableZoneCulling = !$Scene::disableZoneCulling;";
-      item[ 8 ] = "Disable Terrain Culling" TAB "" TAB "$Scene::disableTerrainOcclusion = !$Scene::disableTerrainOcclusion;";
+      item[ 7 ] = "Disable Zone Culling" TAB "" TAB "toggleZoneCulling();";
+      item[ 8 ] = "Disable Terrain Culling" TAB "" TAB "toggleTerrainCulling();";
       item[ 9 ] = "-" TAB "" TAB "";
       item[ 10 ] = "Lighting Modes" TAB EVisibilityLightingModesOptions;
       item[ 11 ] = "Lights" TAB EVisibilityLightsOptions;
@@ -383,14 +385,17 @@ function EVisibility::addClassOptions( %this )
    }
 }
 
-function togglePhysicsDebugViz( %enable )
+function togglePhysicsDebugViz( )
 {
-   $PhysicsWorld::render = %enable;
+   $PhysicsWorld::render = !$PhysicsWorld::render;
    
    if(physicsPluginPresent())
    {
-      physicsDebugDraw(%enable);
+      physicsDebugDraw($PhysicsWorld::render);
    }
+   
+   EVisibilityDebugRenderOptions.checkItem(4, $PhysicsWorld::render);
+   
 }
 
 function disableVisualizers()

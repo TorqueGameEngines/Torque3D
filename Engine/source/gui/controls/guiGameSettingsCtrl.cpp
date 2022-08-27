@@ -393,7 +393,7 @@ void GuiGameSettingsCtrl::onRenderSliderOption(Point2I currentOffset)
    GFont* font = mProfile->mFont;
 
    char stringVal[32];
-   dSprintf(stringVal, 32, "%f", mValue);
+   dSprintf(stringVal, 32, "%.1f", mValue);
 
    S32 stringWidth = font->getStrWidth(stringVal);
    Point2I textOffset(sliderRect.point.x + sliderRect.extent.x, 0);

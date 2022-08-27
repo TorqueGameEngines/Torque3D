@@ -510,8 +510,8 @@ new GuiMouseEventCtrl(TerrainBrushSizeSliderCtrlContainer,EditorGuiGroup) {
       Profile = "ToolsGuiSliderBoxProfile";
       HorizSizing = "right";
       VertSizing = "bottom";
-      position = firstWord(TerrainBrushSizeTextEditContainer.position) + firstWord(EWTerrainEditToolbar.position)+11 SPC 
-         (getWord(TerrainBrushSizeTextEditContainer, 1)) + 25;
+      position = TerrainBrushSizeTextEditContainer.position.x + EWTerrainEditToolbar.position.x + 50 SPC 
+         TerrainBrushSizeTextEditContainer.position.y + 50;
       Extent = "112 20";
       MinExtent = "8 2";
       canSave = "1";
@@ -540,8 +540,8 @@ new GuiMouseEventCtrl(TerrainBrushPressureSliderCtrlContainer,EditorGuiGroup) {
       Profile = "ToolsGuiSliderBoxProfile";
       HorizSizing = "right";
       VertSizing = "bottom";
-      position = firstWord(TerrainBrushPressureTextEditContainer.position) + firstWord(EWTerrainEditToolbar.position) SPC 
-         (getWord(TerrainBrushPressureTextEditContainer, 1)) + 25;
+      position = TerrainBrushPressureTextEditContainer.position.x + EWTerrainEditToolbar.position.x + 50 SPC 
+         TerrainBrushPressureTextEditContainer.position.y + 50;
       Extent = "112 20";
       MinExtent = "8 2";
       canSave = "1";
@@ -570,8 +570,8 @@ new GuiMouseEventCtrl(TerrainBrushSoftnessSliderCtrlContainer,EditorGuiGroup) {
       Profile = "ToolsGuiSliderBoxProfile";
       HorizSizing = "right";
       VertSizing = "bottom";
-      position = firstWord(TerrainBrushSoftnessTextEditContainer.position) + firstWord(EWTerrainEditToolbar.position) SPC 
-         (getWord(TerrainBrushSoftnessTextEditContainer, 1)) + 25;
+      position = TerrainBrushSoftnessTextEditContainer.position.x + EWTerrainEditToolbar.position.x + 50 SPC 
+         TerrainBrushSoftnessTextEditContainer.position.y + 50;
       Extent = "112 20";
       MinExtent = "8 2";
       canSave = "1";
@@ -600,8 +600,8 @@ new GuiMouseEventCtrl(TerrainSetHeightSliderCtrlContainer,EditorGuiGroup) {
       Profile = "ToolsGuiSliderBoxProfile";
       HorizSizing = "right";
       VertSizing = "bottom";
-      position = firstWord(TerrainSetHeightTextEditContainer.position) + firstWord(EWTerrainEditToolbar.position) SPC 
-         (getWord(TerrainSetHeightTextEditContainer, 1)) + 25;
+      position = TerrainSetHeightTextEditContainer.position.x + EWTerrainEditToolbar.position.x SPC 
+         TerrainSetHeightTextEditContainer.position.y + 50;
       Extent = "112 20";
       MinExtent = "8 2";
       canSave = "1";

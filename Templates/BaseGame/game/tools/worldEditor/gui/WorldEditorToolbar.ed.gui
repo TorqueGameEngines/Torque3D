@@ -684,8 +684,8 @@ new GuiMouseEventCtrl(softSnapSizeSliderCtrlContainer, EditorGuiGroup) {
       Profile = "ToolsGuiSliderBoxProfile";
       HorizSizing = "right";
       VertSizing = "bottom";
-      position = firstWord(EWorldEditorToolbar-->softSnapSizeTextEdit.getGlobalPosition()) - 12 SPC 
-         (getWord(EWorldEditorToolbar-->softSnapSizeTextEdit.getGlobalPosition(), 1)) + 18;
+      position = EWorldEditorToolbar.position.x + EWorldEditorToolbar-->softSnapSizeTextEditContainer.position.x + 50 SPC 
+         EWorldEditorToolbar-->softSnapSizeTextEdit.position.y + 50;
       Extent = "112 20";
       MinExtent = "8 2";
       canSave = "1";

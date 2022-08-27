@@ -479,11 +479,22 @@ GuiControl* GuiInspectorTypeMaterialAssetPtr::constructEditControl()
 
    // Change filespec
    char szBuffer[512];
-   dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"MaterialAsset\", \"AssetBrowser.changeAsset\", %s, %s);",
-      mInspector->getIdString(), mCaption);
-   mBrowseButton->setField("Command", szBuffer);
 
-   setDataField(StringTable->insert("targetObject"), NULL, mInspector->getInspectObject()->getIdString());
+   if (mInspector->getInspectObject() != nullptr)
+   {
+      dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"MaterialAsset\", \"AssetBrowser.changeAsset\", %s, %s);",
+         mInspector->getIdString(), mCaption);
+      mBrowseButton->setField("Command", szBuffer);
+
+      setDataField(StringTable->insert("targetObject"), NULL, mInspector->getInspectObject()->getIdString());
+   }
+   else
+   {
+      //if we don't have a target object, we'll be manipulating the desination value directly
+      dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"MaterialAsset\", \"AssetBrowser.changeAsset\", %s, %s);",
+         mInspector->getIdString(), mVariableName);
+      mBrowseButton->setField("Command", szBuffer);
+   }
 
    // Create "Open in Editor" button
    mEditButton = new GuiBitmapButtonCtrl();

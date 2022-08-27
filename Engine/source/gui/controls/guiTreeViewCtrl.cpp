@@ -1982,7 +1982,7 @@ bool GuiTreeViewCtrl::_hitTest(const Point2I & pnt, Item* & item, BitSet32 & fla
    min += mProfile->mTextOffset.x;
 
    FrameAllocatorMarker txtAlloc;
-   U32 bufLen = item->getDisplayTextLength() + 1;
+   U32 bufLen = item->getDisplayTextLength() + 2;
    char *buf = (char*)txtAlloc.alloc(bufLen);
    item->getDisplayText(bufLen, buf);
 

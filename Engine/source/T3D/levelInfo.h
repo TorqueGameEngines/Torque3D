@@ -78,7 +78,7 @@ class LevelInfo : public NetObject
       /// Interpolation for going from one global ambient color
       /// to a different one.
       EaseF mAmbientLightBlendCurve;
-
+      LinearColorF mFallbackAmbient;
       /// @}
       
       /// @name Sound Properties

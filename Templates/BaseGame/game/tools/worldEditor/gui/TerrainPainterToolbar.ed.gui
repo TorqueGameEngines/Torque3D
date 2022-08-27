@@ -222,7 +222,7 @@ $guiContent = new GuiControl(EWTerrainPainterToolbar,EditorGuiGroup) {
          Profile = "ToolsGuiDefaultProfile";
          HorizSizing = "right";
          VertSizing = "bottom";
-         Position = "222 5";
+         Position = "245 5";
          Extent = "256 50";
          MinExtent = "8 2";
          canSave = "1";
@@ -382,7 +382,7 @@ $guiContent = new GuiControl(EWTerrainPainterToolbar,EditorGuiGroup) {
          Profile = "ToolsGuiTransparentProfile";
          HorizSizing = "right";
          VertSizing = "bottom";
-         position = "480 5";
+         position = "490 5";
          Extent = "120 50";
          MinExtent = "8 2";
          canSave = "1";
@@ -524,8 +524,8 @@ new GuiMouseEventCtrl(PaintBrushSizeSliderCtrlContainer,EditorGuiGroup) {
       Profile = "ToolsGuiSliderBoxProfile";
       HorizSizing = "right";
       VertSizing = "bottom";
-      position = firstWord(PaintBrushSizeTextEditContainer.position) + firstWord(EWTerrainPainterToolbar.position)+11 SPC 
-         (getWord(PaintBrushSizeTextEditContainer, 1)) + 25;
+      position = PaintBrushSizeTextEditContainer.position.x + EWTerrainPainterToolbar.position.x + 50 SPC 
+         PaintBrushSizeTextEditContainer.position.y + 50;
       Extent = "112 20";
       MinExtent = "8 2";
       canSave = "1";
@@ -554,8 +554,8 @@ new GuiMouseEventCtrl(PaintBrushSlopeMinContainer,EditorGuiGroup) {
       Profile = "ToolsGuiSliderBoxProfile";
       HorizSizing = "right";
       VertSizing = "bottom";
-      position = firstWord(PaintBrushSlopeControl.position) + firstWord(EWTerrainPainterToolbar.position)+firstWord(PaintBrushSlopeControl->SlopeMinAngle.position) - 40 SPC
-         (getWord(PaintBrushSlopeControl, 1)) + 25;
+      position = PaintBrushSlopeControl.position.x + EWTerrainPainterToolbar.position.x + PaintBrushSlopeControl->SlopeMinAngle.position.x - 40 SPC
+         PaintBrushSlopeControl.position.y + 50;
       Extent = "112 20";
       MinExtent = "8 2";
       canSave = "1";
@@ -589,8 +589,8 @@ new GuiMouseEventCtrl(PaintBrushSlopeMaxContainer,EditorGuiGroup) {
       Profile = "ToolsGuiSliderBoxProfile";
       HorizSizing = "right";
       VertSizing = "bottom";
-      position = firstWord(PaintBrushSlopeControl.position) + firstWord(EWTerrainPainterToolbar.position)+firstWord(PaintBrushSlopeControl->SlopeMaxAngle.position) - 40 SPC
-         (getWord(PaintBrushSlopeControl, 1)) + 25;
+      position = PaintBrushSlopeControl.position.x + EWTerrainPainterToolbar.position.x + PaintBrushSlopeControl->SlopeMaxAngle.position.x - 40 SPC
+         PaintBrushSlopeControl.position.y + 50;
       Extent = "112 20";
       MinExtent = "8 2";
       canSave = "1";
@@ -629,8 +629,8 @@ new GuiMouseEventCtrl(PaintBrushPressureSliderCtrlContainer,EditorGuiGroup) {
       Profile = "ToolsGuiSliderBoxProfile";
       HorizSizing = "right";
       VertSizing = "bottom";
-      position = firstWord(PaintBrushPressureTextEditContainer.position) + firstWord(EWTerrainPainterToolbar.position) SPC 
-         (getWord(PaintBrushPressureTextEditContainer, 1)) + 25;
+      position = PaintBrushPressureTextEditContainer.position.x + EWTerrainPainterToolbar.position.x + 50 SPC 
+         PaintBrushPressureTextEditContainer.position.y + 50;
       Extent = "112 20";
       MinExtent = "8 2";
       canSave = "1";
@@ -659,8 +659,8 @@ new GuiMouseEventCtrl(PaintBrushSoftnessSliderCtrlContainer,EditorGuiGroup) {
       Profile = "ToolsGuiSliderBoxProfile";
       HorizSizing = "right";
       VertSizing = "bottom";
-      position = firstWord(PaintBrushSoftnessTextEditContainer.position) + firstWord(EWTerrainPainterToolbar.position) SPC 
-         (getWord(PaintBrushSoftnessTextEditContainer, 1)) + 25;
+      position = PaintBrushSoftnessTextEditContainer.position.x + EWTerrainPainterToolbar.position.x + 50 SPC 
+         PaintBrushSoftnessTextEditContainer.position.y + 50;
       Extent = "112 20";
       MinExtent = "8 2";
       canSave = "1";

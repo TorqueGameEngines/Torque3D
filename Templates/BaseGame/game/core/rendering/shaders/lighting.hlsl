@@ -386,6 +386,8 @@ float4 computeForwardProbes(Surface surface,
    float probehits = 0;
    //Set up our struct data
    float contribution[MAX_FORWARD_PROBES];
+   
+   float blendCap = 0;
    //Process prooooobes
   for (i = 0; i < numProbes; ++i)
   {
@@ -406,21 +408,24 @@ float4 computeForwardProbes(Surface surface,
          contribution[i] = 0.0;
 
       blendSum += contribution[i];
+      blendCap = max(contribution[i],blendCap);
    }
 
-   if (probehits > 1.0)//if we overlap
+   if (probehits > 0.0)
    {
-      invBlendSum = (probehits - blendSum)/(probehits-1); //grab the remainder 
+      invBlendSum = (probehits - blendSum)/probehits; //grab the remainder 
       for (i = 0; i < numProbes; i++)
       {
          blendFactor[i] = contribution[i]/blendSum; //what % total is this instance
-         blendFactor[i] *= blendFactor[i] / invBlendSum;  //what should we add to sum to 1
+         blendFactor[i] *= blendFactor[i]/invBlendSum;  //what should we add to sum to 1
          blendFacSum += blendFactor[i]; //running tally of results
       }
 
       for (i = 0; i < numProbes; ++i)
-      {
-         contribution[i] *= blendFactor[i]/blendFacSum; //normalize
+      { 
+         //normalize, but in the range of the highest value applied
+         //to preserve blend vs skylight
+         contribution[i] = blendFactor[i]/blendFacSum*blendCap;
       }
    }
 

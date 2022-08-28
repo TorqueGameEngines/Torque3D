@@ -817,7 +817,7 @@ void ReflectionProbe::createEditorResources()
 
 void ReflectionProbe::prepRenderImage(SceneRenderState *state)
 {
-   if (!mEnabled || (!RenderProbeMgr::smRenderReflectionProbes && dStrcmp(Con::getVariable("$Probes::Capturing", "0"),"1")))
+   if (!mEnabled || (!RenderProbeMgr::smRenderReflectionProbes && !dStrcmp(Con::getVariable("$Probes::Capturing", "0"),"1")))
       return;
 
    Point3F distVec = getRenderPosition() - state->getCameraPosition();

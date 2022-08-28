@@ -813,7 +813,7 @@ void RenderProbeMgr::render( SceneRenderState *state )
    _setupPerFrameParameters(state);
 
    // Early out if nothing to draw.
-   if ((!RenderProbeMgr::smRenderReflectionProbes && dStrcmp(Con::getVariable("$Probes::Capturing", "0"), "1")) || (!mHasSkylight && mProbeData.effectiveProbeCount == 0))
+   if ((!RenderProbeMgr::smRenderReflectionProbes && !dStrcmp(Con::getVariable("$Probes::Capturing", "0"), "1")) || (!mHasSkylight && mProbeData.effectiveProbeCount == 0))
    {
       getProbeArrayEffect()->setSkip(true);
       mActiveProbes.clear();

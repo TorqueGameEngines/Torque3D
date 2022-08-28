@@ -29,8 +29,11 @@
 
 #if defined(TORQUE_OS_MAC)
 //#define AL_ALEXT_PROTOTYPES true
-#  include <OpenAL/al.h>
-#  include <OpenAL/alc.h>
+#  include <soft_oal/al.h>
+#  include <soft_oal/alc.h>
+#  include <soft_oal/alext.h>
+#  include <soft_oal/efx.h>
+#  include <soft_oal/efx-presets.h>
 #elif defined(TORQUE_OS_LINUX)
 #  include <AL/al.h>
 #  include <AL/alc.h>
@@ -243,7 +246,6 @@ typedef struct
 	LPALCGETPROCADDRESS			alcGetProcAddress;
 	LPALCGETENUMVALUE			   alcGetEnumValue;
     
-#if defined(AL_ALEXT_PROTOTYPES)
    LPALGENEFFECTS				   alGenEffects;
    LPALDELETEEFFECTS			   alDeleteEffects;
    LPALISEFFECT				   alIsEffect;
@@ -267,7 +269,6 @@ typedef struct
    LPALGETAUXILIARYEFFECTSLOTIV			alGetAuxiliaryEffectSlotiv;
    LPALGETAUXILIARYEFFECTSLOTF			alGetAuxiliaryEffectSlotf;
    LPALGETAUXILIARYEFFECTSLOTFV			alGetAuxiliaryEffectSlotfv;
-#endif
    LPALGENFILTERS         alGenFilters;
    LPALDELETEFILTERS      alDeleteFilters;
    LPALFILTERI            alFilteri;

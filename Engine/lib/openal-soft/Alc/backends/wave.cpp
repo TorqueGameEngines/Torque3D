@@ -20,7 +20,7 @@
 
 #include "config.h"
 
-#include "backends/wave.h"
+#include "wave.h"
 
 #include <algorithm>
 #include <atomic>
@@ -35,12 +35,11 @@
 
 #include "albit.h"
 #include "albyte.h"
-#include "alcmain.h"
-#include "alconfig.h"
+#include "alc/alconfig.h"
 #include "almalloc.h"
 #include "alnumeric.h"
-#include "alu.h"
-#include "compat.h"
+#include "core/device.h"
+#include "core/helpers.h"
 #include "core/logging.h"
 #include "opthelpers.h"
 #include "strutils.h"
@@ -93,7 +92,7 @@ void fwrite32le(uint val, FILE *f)
 
 
 struct WaveBackend final : public BackendBase {
-    WaveBackend(ALCdevice *device) noexcept : BackendBase{device} { }
+    WaveBackend(DeviceBase *device) noexcept : BackendBase{device} { }
     ~WaveBackend() override;
 
     int mixerProc();
@@ -132,8 +131,8 @@ int WaveBackend::mixerProc()
 
     int64_t done{0};
     auto start = std::chrono::steady_clock::now();
-    while(!mKillNow.load(std::memory_order_acquire) &&
-          mDevice->Connected.load(std::memory_order_acquire))
+    while(!mKillNow.load(std::memory_order_acquire)
+        && mDevice->Connected.load(std::memory_order_acquire))
     {
         auto now = std::chrono::steady_clock::now();
 
@@ -150,29 +149,23 @@ int WaveBackend::mixerProc()
             mDevice->renderSamples(mBuffer.data(), mDevice->UpdateSize, frameStep);
             done += mDevice->UpdateSize;
 
-            if_constexpr(al::endian::native != al::endian::little)
+            if(al::endian::native != al::endian::little)
             {
                 const uint bytesize{mDevice->bytesFromFmt()};
 
                 if(bytesize == 2)
                 {
-                    ushort *samples = reinterpret_cast<ushort*>(mBuffer.data());
-                    const size_t len{mBuffer.size() / 2};
-                    for(size_t i{0};i < len;i++)
-                    {
-                        const ushort samp{samples[i]};
-                        samples[i] = static_cast<ushort>((samp>>8) | (samp<<8));
-                    }
+                    const size_t len{mBuffer.size() & ~size_t{1}};
+                    for(size_t i{0};i < len;i+=2)
+                        std::swap(mBuffer[i], mBuffer[i+1]);
                 }
                 else if(bytesize == 4)
                 {
-                    uint *samples = reinterpret_cast<uint*>(mBuffer.data());
-                    const size_t len{mBuffer.size() / 4};
-                    for(size_t i{0};i < len;i++)
+                    const size_t len{mBuffer.size() & ~size_t{3}};
+                    for(size_t i{0};i < len;i+=4)
                     {
-                        const uint samp{samples[i]};
-                        samples[i] = (samp>>24) | ((samp>>8)&0x0000ff00) |
-                                     ((samp<<8)&0x00ff0000) | (samp<<24);
+                        std::swap(mBuffer[i  ], mBuffer[i+3]);
+                        std::swap(mBuffer[i+1], mBuffer[i+2]);
                     }
                 }
             }
@@ -204,8 +197,8 @@ int WaveBackend::mixerProc()
 
 void WaveBackend::open(const char *name)
 {
-    const char *fname{GetConfigValue(nullptr, "wave", "file", "")};
-    if(!fname[0]) throw al::backend_exception{al::backend_error::NoDevice,
+    auto fname = ConfigValueStr(nullptr, "wave", "file");
+    if(!fname) throw al::backend_exception{al::backend_error::NoDevice,
         "No wave output filename"};
 
     if(!name)
@@ -214,17 +207,20 @@ void WaveBackend::open(const char *name)
         throw al::backend_exception{al::backend_error::NoDevice, "Device name \"%s\" not found",
             name};
 
+    /* There's only one "device", so if it's already open, we're done. */
+    if(mFile) return;
+
 #ifdef _WIN32
     {
-        std::wstring wname = utf8_to_wstr(fname);
+        std::wstring wname{utf8_to_wstr(fname->c_str())};
         mFile = _wfopen(wname.c_str(), L"wb");
     }
 #else
-    mFile = fopen(fname, "wb");
+    mFile = fopen(fname->c_str(), "wb");
 #endif
     if(!mFile)
         throw al::backend_exception{al::backend_error::DeviceError, "Could not open file '%s': %s",
-            fname, strerror(errno)};
+            fname->c_str(), strerror(errno)};
 
     mDevice->DeviceName = name;
 }
@@ -267,9 +263,10 @@ bool WaveBackend::reset()
     case DevFmtStereo: chanmask = 0x01 | 0x02; break;
     case DevFmtQuad:   chanmask = 0x01 | 0x02 | 0x10 | 0x20; break;
     case DevFmtX51: chanmask = 0x01 | 0x02 | 0x04 | 0x08 | 0x200 | 0x400; break;
-    case DevFmtX51Rear: chanmask = 0x01 | 0x02 | 0x04 | 0x08 | 0x010 | 0x020; break;
     case DevFmtX61: chanmask = 0x01 | 0x02 | 0x04 | 0x08 | 0x100 | 0x200 | 0x400; break;
     case DevFmtX71: chanmask = 0x01 | 0x02 | 0x04 | 0x08 | 0x010 | 0x020 | 0x200 | 0x400; break;
+    /* NOTE: Same as 7.1. */
+    case DevFmtX3D71: chanmask = 0x01 | 0x02 | 0x04 | 0x08 | 0x010 | 0x020 | 0x200 | 0x400; break;
     case DevFmtAmbi3D:
         /* .amb output requires FuMa */
         mDevice->mAmbiOrder = minu(mDevice->mAmbiOrder, 3);
@@ -392,7 +389,7 @@ std::string WaveBackendFactory::probe(BackendType type)
     return outnames;
 }
 
-BackendPtr WaveBackendFactory::createBackend(ALCdevice *device, BackendType type)
+BackendPtr WaveBackendFactory::createBackend(DeviceBase *device, BackendType type)
 {
     if(type == BackendType::Playback)
         return BackendPtr{new WaveBackend{device}};

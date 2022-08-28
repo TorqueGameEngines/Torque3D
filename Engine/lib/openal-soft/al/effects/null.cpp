@@ -4,8 +4,12 @@
 #include "AL/al.h"
 #include "AL/efx.h"
 
+#include "alc/effects/base.h"
 #include "effects.h"
-#include "effects/base.h"
+
+#ifdef ALSOFT_EAX
+#include "al/eax/exception.h"
+#endif // ALSOFT_EAX
 
 
 namespace {
@@ -91,3 +95,48 @@ EffectProps genDefaultProps() noexcept
 DEFINE_ALEFFECT_VTABLE(Null);
 
 const EffectProps NullEffectProps{genDefaultProps()};
+
+
+#ifdef ALSOFT_EAX
+namespace {
+
+class EaxNullEffect final : public EaxEffect {
+public:
+    EaxNullEffect() noexcept;
+
+    void dispatch(const EaxCall& call) override;
+    /*[[nodiscard]]*/ bool commit() override;
+}; // EaxNullEffect
+
+
+class EaxNullEffectException : public EaxException
+{
+public:
+    explicit EaxNullEffectException(const char* message)
+        : EaxException{"EAX_NULL_EFFECT", message}
+    {}
+}; // EaxNullEffectException
+
+EaxNullEffect::EaxNullEffect() noexcept
+    : EaxEffect{AL_EFFECT_NULL}
+{}
+
+void EaxNullEffect::dispatch(const EaxCall& call)
+{
+    if(call.get_property_id() != 0)
+        throw EaxNullEffectException{"Unsupported property id."};
+}
+
+bool EaxNullEffect::commit()
+{
+    return false;
+}
+
+} // namespace
+
+EaxEffectUPtr eax_create_eax_null_effect()
+{
+    return std::make_unique<EaxNullEffect>();
+}
+
+#endif // ALSOFT_EAX

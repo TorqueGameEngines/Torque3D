@@ -20,15 +20,15 @@
 
 #include "config.h"
 
-#include "backends/portaudio.h"
+#include "portaudio.h"
 
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 
-#include "alcmain.h"
-#include "alu.h"
-#include "alconfig.h"
+#include "alc/alconfig.h"
+#include "alnumeric.h"
+#include "core/device.h"
 #include "core/logging.h"
 #include "dynload.h"
 #include "ringbuffer.h"
@@ -72,7 +72,7 @@ MAKE_FUNC(Pa_GetStreamInfo);
 
 
 struct PortPlayback final : public BackendBase {
-    PortPlayback(ALCdevice *device) noexcept : BackendBase{device} { }
+    PortPlayback(DeviceBase *device) noexcept : BackendBase{device} { }
     ~PortPlayback() override;
 
     int writeCallback(const void *inputBuffer, void *outputBuffer, unsigned long framesPerBuffer,
@@ -123,52 +123,57 @@ void PortPlayback::open(const char *name)
         throw al::backend_exception{al::backend_error::NoDevice, "Device name \"%s\" not found",
             name};
 
-    mUpdateSize = mDevice->UpdateSize;
-
+    PaStreamParameters params{};
     auto devidopt = ConfigValueInt(nullptr, "port", "device");
-    if(devidopt && *devidopt >= 0) mParams.device = *devidopt;
-    else mParams.device = Pa_GetDefaultOutputDevice();
-    mParams.suggestedLatency = mDevice->BufferSize / static_cast<double>(mDevice->Frequency);
-    mParams.hostApiSpecificStreamInfo = nullptr;
+    if(devidopt && *devidopt >= 0) params.device = *devidopt;
+    else params.device = Pa_GetDefaultOutputDevice();
+    params.suggestedLatency = mDevice->BufferSize / static_cast<double>(mDevice->Frequency);
+    params.hostApiSpecificStreamInfo = nullptr;
 
-    mParams.channelCount = ((mDevice->FmtChans == DevFmtMono) ? 1 : 2);
+    params.channelCount = ((mDevice->FmtChans == DevFmtMono) ? 1 : 2);
 
     switch(mDevice->FmtType)
     {
     case DevFmtByte:
-        mParams.sampleFormat = paInt8;
+        params.sampleFormat = paInt8;
         break;
     case DevFmtUByte:
-        mParams.sampleFormat = paUInt8;
+        params.sampleFormat = paUInt8;
         break;
     case DevFmtUShort:
         /* fall-through */
     case DevFmtShort:
-        mParams.sampleFormat = paInt16;
+        params.sampleFormat = paInt16;
         break;
     case DevFmtUInt:
         /* fall-through */
     case DevFmtInt:
-        mParams.sampleFormat = paInt32;
+        params.sampleFormat = paInt32;
         break;
     case DevFmtFloat:
-        mParams.sampleFormat = paFloat32;
+        params.sampleFormat = paFloat32;
         break;
     }
 
 retry_open:
-    PaError err{Pa_OpenStream(&mStream, nullptr, &mParams, mDevice->Frequency, mDevice->UpdateSize,
+    PaStream *stream{};
+    PaError err{Pa_OpenStream(&stream, nullptr, &params, mDevice->Frequency, mDevice->UpdateSize,
         paNoFlag, &PortPlayback::writeCallbackC, this)};
     if(err != paNoError)
     {
-        if(mParams.sampleFormat == paFloat32)
+        if(params.sampleFormat == paFloat32)
         {
-            mParams.sampleFormat = paInt16;
+            params.sampleFormat = paInt16;
             goto retry_open;
         }
         throw al::backend_exception{al::backend_error::NoDevice, "Failed to open stream: %s",
             Pa_GetErrorText(err)};
     }
+
+    Pa_CloseStream(mStream);
+    mStream = stream;
+    mParams = params;
+    mUpdateSize = mDevice->UpdateSize;
 
     mDevice->DeviceName = name;
 }
@@ -195,7 +200,7 @@ bool PortPlayback::reset()
         return false;
     }
 
-    if(mParams.channelCount == 2)
+    if(mParams.channelCount >= 2)
         mDevice->FmtChans = DevFmtStereo;
     else if(mParams.channelCount == 1)
         mDevice->FmtChans = DevFmtMono;
@@ -226,7 +231,7 @@ void PortPlayback::stop()
 
 
 struct PortCapture final : public BackendBase {
-    PortCapture(ALCdevice *device) noexcept : BackendBase{device} { }
+    PortCapture(DeviceBase *device) noexcept : BackendBase{device} { }
     ~PortCapture() override;
 
     int readCallback(const void *inputBuffer, void *outputBuffer, unsigned long framesPerBuffer,
@@ -426,7 +431,7 @@ std::string PortBackendFactory::probe(BackendType type)
     return outnames;
 }
 
-BackendPtr PortBackendFactory::createBackend(ALCdevice *device, BackendType type)
+BackendPtr PortBackendFactory::createBackend(DeviceBase *device, BackendType type)
 {
     if(type == BackendType::Playback)
         return BackendPtr{new PortPlayback{device}};

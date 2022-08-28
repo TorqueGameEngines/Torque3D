@@ -2,21 +2,24 @@
 
 cmake_minimum_required(VERSION 3.0.2)
 
-# The workaround for try_compile failing with code signing
-# since cmake-3.18.2, not required
-set(CMAKE_TRY_COMPILE_PLATFORM_VARIABLES
-    "CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED"
-    "CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED")
-set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED NO)
-set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED NO)
+if(APPLE)
+    # The workaround for try_compile failing with code signing
+    # since cmake-3.18.2, not required
+    set(CMAKE_TRY_COMPILE_PLATFORM_VARIABLES
+        ${CMAKE_TRY_COMPILE_PLATFORM_VARIABLES}
+        "CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED"
+        "CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED")
+    set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED NO)
+    set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED NO)
+endif()
 
-# Fix compile failure with armv7 deployment target >= 11.0, xcode clang will
-# report:
-# error: invalid iOS deployment version '--target=armv7-apple-ios13.6',
-# iOS 10 is the maximum deployment target for 32-bit targets
-# If CMAKE_OSX_DEPLOYMENT_TARGET is not defined, cmake will choose latest
-# deployment target
 if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
+    # Fix compile failure with armv7 deployment target >= 11.0, xcode clang
+    # will report:
+    # error: invalid iOS deployment version '--target=armv7-apple-ios13.6',
+    # iOS 10 is the maximum deployment target for 32-bit targets
+    # If CMAKE_OSX_DEPLOYMENT_TARGET is not defined, cmake will choose latest
+    # deployment target
     if("${CMAKE_OSX_ARCHITECTURES}" MATCHES ".*armv7.*")
         if(NOT DEFINED CMAKE_OSX_DEPLOYMENT_TARGET
             OR NOT CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS "11.0")
@@ -26,8 +29,6 @@ if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
         endif()
     endif()
 endif()
-
-project(OpenAL)
 
 if(COMMAND CMAKE_POLICY)
     cmake_policy(SET CMP0003 NEW)
@@ -44,7 +45,15 @@ if(COMMAND CMAKE_POLICY)
     if(POLICY CMP0075)
         cmake_policy(SET CMP0075 NEW)
     endif(POLICY CMP0075)
+    if(POLICY CMP0092)
+        cmake_policy(SET CMP0092 NEW)
+    endif(POLICY CMP0092)
+    if(POLICY CMP0117)
+        cmake_policy(SET CMP0117 NEW)
+    endif(POLICY CMP0117)
 endif(COMMAND CMAKE_POLICY)
+
+project(OpenAL)
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING
@@ -69,7 +78,10 @@ include(CheckCXXCompilerFlag)
 include(CheckCSourceCompiles)
 include(CheckCXXSourceCompiles)
 include(CheckStructHasMember)
+include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
+
+find_package(PkgConfig)
 
 
 option(ALSOFT_DLOPEN  "Check for the dlopen API for loading optional libs"  ON)
@@ -88,6 +100,13 @@ option(ALSOFT_INSTALL_AMBDEC_PRESETS "Install AmbDec preset files" ON)
 option(ALSOFT_INSTALL_EXAMPLES "Install example programs (alplay, alstream, ...)" ON)
 option(ALSOFT_INSTALL_UTILS "Install utility programs (openal-info, alsoft-config, ...)" ON)
 option(ALSOFT_UPDATE_BUILD_VERSION "Update git build version info" ON)
+
+option(ALSOFT_EAX "Enable legacy EAX extensions" ${WIN32})
+
+option(ALSOFT_SEARCH_INSTALL_DATADIR "Search the installation data directory" OFF)
+if(ALSOFT_SEARCH_INSTALL_DATADIR)
+    set(ALSOFT_INSTALL_DATADIR ${CMAKE_INSTALL_FULL_DATADIR})
+endif()
 
 if(DEFINED SHARE_INSTALL_DIR)
     message(WARNING "SHARE_INSTALL_DIR is deprecated.  Use the variables provided by the GNUInstallDirs module instead")
@@ -115,7 +134,7 @@ set(LINKER_FLAGS )
 set(EXTRA_LIBS )
 
 if(WIN32)
-    set(CPP_DEFS ${CPP_DEFS} _WIN32)
+    set(CPP_DEFS ${CPP_DEFS} _WIN32 NOMINMAX)
     if(MINGW)
         set(CPP_DEFS ${CPP_DEFS} __USE_MINGW_ANSI_STDIO)
     endif()
@@ -142,8 +161,8 @@ if(NOT LIBTYPE)
 endif()
 
 set(LIB_MAJOR_VERSION "1")
-set(LIB_MINOR_VERSION "21")
-set(LIB_REVISION "0")
+set(LIB_MINOR_VERSION "22")
+set(LIB_REVISION "2")
 set(LIB_VERSION "${LIB_MAJOR_VERSION}.${LIB_MINOR_VERSION}.${LIB_REVISION}")
 set(LIB_VERSION_NUM ${LIB_MAJOR_VERSION},${LIB_MINOR_VERSION},${LIB_REVISION},0)
 
@@ -196,27 +215,22 @@ else()
 endif()
 unset(OLD_REQUIRED_LIBRARIES)
 
-# Include liblog for Android logging
-check_library_exists(log __android_log_print "" HAVE_LIBLOG)
-if(HAVE_LIBLOG)
-    set(EXTRA_LIBS log ${EXTRA_LIBS})
-    set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} log)
+if(ANDROID)
+    # Include liblog for Android logging
+    check_library_exists(log __android_log_print "" HAVE_LIBLOG)
+    if(HAVE_LIBLOG)
+        set(EXTRA_LIBS log ${EXTRA_LIBS})
+        set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} log)
+    endif()
 endif()
 
 if(MSVC)
-    set(CPP_DEFS ${CPP_DEFS} _CRT_SECURE_NO_WARNINGS NOMINMAX)
+    set(CPP_DEFS ${CPP_DEFS} _CRT_SECURE_NO_WARNINGS)
     check_cxx_compiler_flag(/permissive- HAVE_PERMISSIVE_SWITCH)
     if(HAVE_PERMISSIVE_SWITCH)
         set(C_FLAGS ${C_FLAGS} $<$<COMPILE_LANGUAGE:CXX>:/permissive->)
     endif()
-    set(C_FLAGS ${C_FLAGS} /W4 /w14640 /wd4065 /wd4268 /wd4324 /wd5030)
-    # Remove /W3, which is added by default, since we set /W4. Some build
-    # generators with MSVC complain about both /W3 and /W4 being specified.
-    foreach(flag_var  CMAKE_C_FLAGS CMAKE_CXX_FLAGS)
-        if(${flag_var} MATCHES "/W3")
-            string(REGEX REPLACE "/W3" "" ${flag_var} "${${flag_var}}")
-        endif()
-    endforeach()
+    set(C_FLAGS ${C_FLAGS} /W4 /w14640 /wd4065 /wd4127 /wd4268 /wd4324 /wd5030)
 
     if(NOT DXSDK_DIR)
         string(REGEX REPLACE "\\\\" "/" DXSDK_DIR "$ENV{DXSDK_DIR}")
@@ -345,17 +359,17 @@ endif()
 
 set(SSE2_SWITCH "")
 
-set(OLD_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
 if(NOT MSVC)
+    set(OLD_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
     # Yes GCC, really don't accept command line options you don't support
     set(CMAKE_REQUIRED_FLAGS "${OLD_REQUIRED_FLAGS} -Werror")
+    check_c_compiler_flag(-msse2 HAVE_MSSE2_SWITCH)
+    if(HAVE_MSSE2_SWITCH)
+        set(SSE2_SWITCH "-msse2")
+    endif()
+    set(CMAKE_REQUIRED_FLAGS ${OLD_REQUIRED_FLAGS})
+    unset(OLD_REQUIRED_FLAGS)
 endif()
-check_c_compiler_flag(-msse2 HAVE_MSSE2_SWITCH)
-if(HAVE_MSSE2_SWITCH)
-    set(SSE2_SWITCH "-msse2")
-endif()
-set(CMAKE_REQUIRED_FLAGS ${OLD_REQUIRED_FLAGS})
-unset(OLD_REQUIRED_FLAGS)
 
 check_include_file(xmmintrin.h HAVE_XMMINTRIN_H)
 check_include_file(emmintrin.h HAVE_EMMINTRIN_H)
@@ -369,19 +383,24 @@ set(HAVE_SSE3       0)
 set(HAVE_SSE4_1     0)
 set(HAVE_NEON       0)
 
-# Check for SSE+SSE2 support
+# Check for SSE support
 option(ALSOFT_REQUIRE_SSE "Require SSE support" OFF)
-option(ALSOFT_REQUIRE_SSE2 "Require SSE2 support" OFF)
-if(HAVE_XMMINTRIN_H AND HAVE_EMMINTRIN_H)
+if(HAVE_XMMINTRIN_H)
     option(ALSOFT_CPUEXT_SSE "Enable SSE support" ON)
-    option(ALSOFT_CPUEXT_SSE2 "Enable SSE2 support" ON)
-    if(ALSOFT_CPUEXT_SSE AND ALSOFT_CPUEXT_SSE2)
+    if(ALSOFT_CPUEXT_SSE)
         set(HAVE_SSE 1)
-        set(HAVE_SSE2 1)
     endif()
 endif()
 if(ALSOFT_REQUIRE_SSE AND NOT HAVE_SSE)
     message(FATAL_ERROR "Failed to enabled required SSE CPU extensions")
+endif()
+
+option(ALSOFT_REQUIRE_SSE2 "Require SSE2 support" OFF)
+if(HAVE_EMMINTRIN_H)
+    option(ALSOFT_CPUEXT_SSE2 "Enable SSE2 support" ON)
+    if(HAVE_SSE AND ALSOFT_CPUEXT_SSE2)
+        set(HAVE_SSE2 1)
+    endif()
 endif()
 if(ALSOFT_REQUIRE_SSE2 AND NOT HAVE_SSE2)
     message(FATAL_ERROR "Failed to enable required SSE2 CPU extensions")
@@ -435,7 +454,14 @@ set(FPMATH_SET "0")
 if(CMAKE_SIZEOF_VOID_P MATCHES "4" AND HAVE_SSE2)
     option(ALSOFT_ENABLE_SSE2_CODEGEN "Enable SSE2 code generation instead of x87 for 32-bit targets." TRUE)
     if(ALSOFT_ENABLE_SSE2_CODEGEN)
-        if(SSE2_SWITCH OR NOT MSVC)
+        if(MSVC)
+            check_c_compiler_flag("/arch:SSE2" HAVE_ARCH_SSE2)
+            if(HAVE_ARCH_SSE2)
+                set(SSE_FLAGS ${SSE_FLAGS} "/arch:SSE2")
+                set(C_FLAGS ${C_FLAGS} ${SSE_FLAGS})
+                set(FPMATH_SET 2)
+            endif()
+        elseif(SSE2_SWITCH)
             check_c_compiler_flag("${SSE2_SWITCH} -mfpmath=sse" HAVE_MFPMATH_SSE_2)
             if(HAVE_MFPMATH_SSE_2)
                 set(SSE_FLAGS ${SSE_FLAGS} ${SSE2_SWITCH} -mfpmath=sse)
@@ -447,13 +473,6 @@ if(CMAKE_SIZEOF_VOID_P MATCHES "4" AND HAVE_SSE2)
             # OSs don't guarantee this on 32-bit, so externally-callable
             # functions need to ensure an aligned stack.
             set(EXPORT_DECL "${EXPORT_DECL} __attribute__((force_align_arg_pointer))")
-        elseif(MSVC)
-            check_c_compiler_flag("/arch:SSE2" HAVE_ARCH_SSE2)
-            if(HAVE_ARCH_SSE2)
-                set(SSE_FLAGS ${SSE_FLAGS} "/arch:SSE2")
-                set(C_FLAGS ${C_FLAGS} ${SSE_FLAGS})
-                set(FPMATH_SET 2)
-            endif()
         endif()
     endif()
 endif()
@@ -551,51 +570,11 @@ if(NOT WIN32)
         check_symbol_exists(pthread_setname_np "pthread.h;pthread_np.h" HAVE_PTHREAD_SETNAME_NP)
         if(NOT HAVE_PTHREAD_SETNAME_NP)
             check_symbol_exists(pthread_set_name_np "pthread.h;pthread_np.h" HAVE_PTHREAD_SET_NAME_NP)
-        else()
-            check_c_source_compiles("
-#include <pthread.h>
-#include <pthread_np.h>
-int main()
-{
-    pthread_setname_np(\"testname\");
-    return 0;
-}"
-                PTHREAD_SETNAME_NP_ONE_PARAM
-            )
-            check_c_source_compiles("
-#include <pthread.h>
-#include <pthread_np.h>
-int main()
-{
-    pthread_setname_np(pthread_self(), \"%s\", \"testname\");
-    return 0;
-}"
-                PTHREAD_SETNAME_NP_THREE_PARAMS
-            )
         endif()
     else()
         check_symbol_exists(pthread_setname_np pthread.h HAVE_PTHREAD_SETNAME_NP)
         if(NOT HAVE_PTHREAD_SETNAME_NP)
             check_symbol_exists(pthread_set_name_np pthread.h HAVE_PTHREAD_SET_NAME_NP)
-        else()
-            check_c_source_compiles("
-#include <pthread.h>
-int main()
-{
-    pthread_setname_np(\"testname\");
-    return 0;
-}"
-                PTHREAD_SETNAME_NP_ONE_PARAM
-            )
-            check_c_source_compiles("
-#include <pthread.h>
-int main()
-{
-    pthread_setname_np(pthread_self(), \"%s\", \"testname\");
-    return 0;
-}"
-                PTHREAD_SETNAME_NP_THREE_PARAMS
-            )
         endif()
     endif()
 endif()
@@ -615,17 +594,19 @@ set(COMMON_OBJS
     common/alfstream.h
     common/almalloc.cpp
     common/almalloc.h
+    common/alnumbers.h
     common/alnumeric.h
     common/aloptional.h
     common/alspan.h
     common/alstring.cpp
     common/alstring.h
     common/atomic.h
+    common/comptr.h
     common/dynload.cpp
     common/dynload.h
     common/intrusive_ptr.h
-    common/math_defs.h
     common/opthelpers.h
+    common/phase_shifter.h
     common/polyphase_resampler.cpp
     common/polyphase_resampler.h
     common/pragmadefs.h
@@ -642,17 +623,32 @@ set(COMMON_OBJS
 set(CORE_OBJS
     core/ambdec.cpp
     core/ambdec.h
+    core/ambidefs.cpp
     core/ambidefs.h
+    core/async_event.h
+    core/bformatdec.cpp
+    core/bformatdec.h
     core/bs2b.cpp
     core/bs2b.h
     core/bsinc_defs.h
     core/bsinc_tables.cpp
     core/bsinc_tables.h
     core/bufferline.h
+    core/buffer_storage.cpp
+    core/buffer_storage.h
+    core/context.cpp
+    core/context.h
+    core/converter.cpp
+    core/converter.h
     core/cpu_caps.cpp
     core/cpu_caps.h
     core/devformat.cpp
     core/devformat.h
+    core/device.cpp
+    core/device.h
+    core/effects/base.h
+    core/effectslot.cpp
+    core/effectslot.h
     core/except.cpp
     core/except.h
     core/filters/biquad.h
@@ -665,12 +661,69 @@ set(CORE_OBJS
     core/fmt_traits.h
     core/fpu_ctrl.cpp
     core/fpu_ctrl.h
+    core/front_stablizer.h
+    core/helpers.cpp
+    core/helpers.h
+    core/hrtf.cpp
+    core/hrtf.h
     core/logging.cpp
     core/logging.h
     core/mastering.cpp
     core/mastering.h
+    core/mixer.cpp
+    core/mixer.h
+    core/resampler_limits.h
     core/uhjfilter.cpp
     core/uhjfilter.h
+    core/uiddefs.cpp
+    core/voice.cpp
+    core/voice.h
+    core/voice_change.h)
+
+set(HAVE_RTKIT 0)
+if(NOT WIN32)
+    option(ALSOFT_REQUIRE_RTKIT "Require RTKit/D-Bus support" FALSE)
+    find_package(DBus1 QUIET)
+    if(NOT DBus1_FOUND AND PkgConfig_FOUND)
+        pkg_check_modules(DBUS dbus-1)
+    endif()
+    if(DBus1_FOUND OR DBUS_FOUND)
+        option(ALSOFT_RTKIT "Enable RTKit support" ON)
+        if(ALSOFT_RTKIT)
+            set(HAVE_RTKIT 1)
+            set(CORE_OBJS ${CORE_OBJS} core/dbus_wrap.cpp core/dbus_wrap.h
+                core/rtkit.cpp core/rtkit.h)
+            if(NOT DBus1_FOUND)
+                set(INC_PATHS ${INC_PATHS} ${DBUS_INCLUDE_DIRS})
+                set(CPP_DEFS ${CPP_DEFS} ${DBUS_CFLAGS_OTHER})
+                if(NOT HAVE_DLFCN_H)
+                    set(EXTRA_LIBS ${EXTRA_LIBS} ${DBUS_LINK_LIBRARIES})
+                endif()
+            elseif(HAVE_DLFCN_H)
+                set(INC_PATHS ${INC_PATHS} ${DBus1_INCLUDE_DIRS})
+                set(CPP_DEFS ${CPP_DEFS} ${DBus1_DEFINITIONS})
+            else()
+                set(EXTRA_LIBS ${EXTRA_LIBS} ${DBus1_LIBRARIES})
+            endif()
+        endif()
+    else()
+        set(MISSING_VARS "")
+        if(NOT DBus1_INCLUDE_DIRS)
+            set(MISSING_VARS "${MISSING_VARS} DBus1_INCLUDE_DIRS")
+        endif()
+        if(NOT DBus1_LIBRARIES)
+            set(MISSING_VARS "${MISSING_VARS} DBus1_LIBRARIES")
+        endif()
+        message(STATUS "Could NOT find DBus1 (missing:${MISSING_VARS})")
+        unset(MISSING_VARS)
+    endif()
+endif()
+if(ALSOFT_REQUIRE_RTKIT AND NOT HAVE_RTKIT)
+    message(FATAL_ERROR "Failed to enabled required RTKit support")
+endif()
+
+# Default mixers, always available
+set(CORE_OBJS ${CORE_OBJS}
     core/mixer/defs.h
     core/mixer/hrtfbase.h
     core/mixer/hrtfdefs.h
@@ -691,6 +744,7 @@ set(OPENAL_OBJS
     al/effects/dedicated.cpp
     al/effects/distortion.cpp
     al/effects/echo.cpp
+	al/effects/effects.cpp
     al/effects/effects.h
     al/effects/equalizer.cpp
     al/effects/fshifter.cpp
@@ -714,22 +768,14 @@ set(OPENAL_OBJS
 # ALC and related routines
 set(ALC_OBJS
     alc/alc.cpp
-    alc/alcmain.h
     alc/alu.cpp
     alc/alu.h
     alc/alconfig.cpp
     alc/alconfig.h
-    alc/alcontext.h
-    alc/async_event.h
-    alc/bformatdec.cpp
-    alc/bformatdec.h
-    alc/buffer_storage.cpp
-    alc/buffer_storage.h
-    alc/compat.h
-    alc/converter.cpp
-    alc/converter.h
-    alc/effectslot.cpp
-    alc/effectslot.h
+    alc/context.cpp
+    alc/context.h
+    alc/device.cpp
+    alc/device.h
     alc/effects/base.h
     alc/effects/autowah.cpp
     alc/effects/chorus.cpp
@@ -745,22 +791,40 @@ set(ALC_OBJS
     alc/effects/pshifter.cpp
     alc/effects/reverb.cpp
     alc/effects/vmorpher.cpp
-    alc/front_stablizer.h
-    alc/helpers.cpp
-    alc/hrtf.cpp
-    alc/hrtf.h
     alc/inprogext.h
-    alc/panning.cpp
-    alc/uiddefs.cpp
-    alc/voice.cpp
-    alc/voice.h
-    alc/voice_change.h)
+    alc/panning.cpp)
+
+if (ALSOFT_EAX)
+    set(OPENAL_OBJS
+        ${OPENAL_OBJS}
+        al/eax/api.cpp
+        al/eax/api.h
+        al/eax/call.cpp
+        al/eax/call.h
+        al/eax/effect.h
+        al/eax/exception.cpp
+        al/eax/exception.h
+        al/eax/fx_slot_index.cpp
+        al/eax/fx_slot_index.h
+        al/eax/fx_slots.cpp
+        al/eax/fx_slots.h
+        al/eax/globals.cpp
+        al/eax/globals.h
+        al/eax/utils.cpp
+        al/eax/utils.h
+        al/eax/x_ram.h
+)
+endif ()
 
 # Include SIMD mixers
 set(CPU_EXTS "Default")
+if(HAVE_SSE)
+    set(CORE_OBJS  ${CORE_OBJS} core/mixer/mixer_sse.cpp)
+    set(CPU_EXTS "${CPU_EXTS}, SSE")
+endif()
 if(HAVE_SSE2)
-    set(CORE_OBJS  ${CORE_OBJS} core/mixer/mixer_sse.cpp core/mixer/mixer_sse2.cpp)
-    set(CPU_EXTS "${CPU_EXTS}, SSE, SSE2")
+    set(CORE_OBJS  ${CORE_OBJS} core/mixer/mixer_sse2.cpp)
+    set(CPU_EXTS "${CPU_EXTS}, SSE2")
 endif()
 if(HAVE_SSE3)
     set(CORE_OBJS  ${CORE_OBJS} core/mixer/mixer_sse3.cpp)
@@ -778,6 +842,7 @@ endif()
 
 set(HAVE_ALSA       0)
 set(HAVE_OSS        0)
+set(HAVE_PIPEWIRE   0)
 set(HAVE_SOLARIS    0)
 set(HAVE_SNDIO      0)
 set(HAVE_DSOUND     0)
@@ -847,6 +912,25 @@ if(OSS_FOUND)
 endif()
 if(ALSOFT_REQUIRE_OSS AND NOT HAVE_OSS)
     message(FATAL_ERROR "Failed to enabled required OSS backend")
+endif()
+
+# Check PipeWire backend
+option(ALSOFT_REQUIRE_PIPEWIRE "Require PipeWire backend" OFF)
+if(PkgConfig_FOUND)
+    pkg_check_modules(PIPEWIRE libpipewire-0.3>=0.3.23)
+    if(PIPEWIRE_FOUND)
+        option(ALSOFT_BACKEND_PIPEWIRE "Enable PipeWire backend" ON)
+        if(ALSOFT_BACKEND_PIPEWIRE)
+            set(HAVE_PIPEWIRE 1)
+            set(BACKENDS  "${BACKENDS} PipeWire${IS_LINKED},")
+            set(ALC_OBJS  ${ALC_OBJS} alc/backends/pipewire.cpp alc/backends/pipewire.h)
+            add_backend_libs(${PIPEWIRE_LIBRARIES})
+            set(INC_PATHS ${INC_PATHS} ${PIPEWIRE_INCLUDE_DIRS})
+        endif()
+    endif()
+endif()
+if(ALSOFT_REQUIRE_PIPEWIRE AND NOT HAVE_PIPEWIRE)
+    message(FATAL_ERROR "Failed to enabled required PipeWire backend")
 endif()
 
 # Check Solaris backend
@@ -1058,8 +1142,11 @@ if(ANDROID)
 
         set(OBOE_TARGET oboe)
     else()
-        find_package(Oboe)
-        if(OBOE_FOUND)
+        find_package(oboe CONFIG)
+        if(NOT TARGET oboe::oboe)
+            find_package(Oboe)
+        endif()
+        if(TARGET oboe::oboe)
             set(OBOE_TARGET "oboe::oboe")
         endif()
     endif()
@@ -1148,10 +1235,16 @@ if(ALSOFT_EMBED_HRTF_DATA)
 endif()
 
 
-if(ALSOFT_UTILS AND NOT ALSOFT_NO_CONFIG_UTIL)
-    find_package(Qt5Widgets)
+if(ALSOFT_UTILS)
+    find_package(MySOFA)
+    if(NOT ALSOFT_NO_CONFIG_UTIL)
+        find_package(Qt5Widgets QUIET)
+        if(NOT Qt5Widgets_FOUND)
+            message(STATUS "Could NOT find Qt5Widgets")
+        endif()
+    endif()
 endif()
-if(ALSOFT_EXAMPLES)
+if(ALSOFT_UTILS OR ALSOFT_EXAMPLES)
     find_package(SndFile)
     find_package(SDL2)
     if(SDL2_FOUND)
@@ -1168,9 +1261,9 @@ endif()
 # Needed for openal.pc.in
 set(prefix ${CMAKE_INSTALL_PREFIX})
 set(exec_prefix "\${prefix}")
-set(libdir "\${exec_prefix}/${CMAKE_INSTALL_LIBDIR}")
-set(bindir "\${exec_prefix}/${CMAKE_INSTALL_BINDIR}")
-set(includedir "\${prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
+set(libdir "${CMAKE_INSTALL_FULL_LIBDIR}")
+set(bindir "${CMAKE_INSTALL_FULL_BINDIR}")
+set(includedir "${CMAKE_INSTALL_FULL_INCLUDEDIR}")
 set(PACKAGE_VERSION "${LIB_VERSION}")
 set(PKG_CONFIG_CFLAGS )
 set(PKG_CONFIG_PRIVATE_LIBS )
@@ -1212,6 +1305,7 @@ if(LIBTYPE STREQUAL "STATIC")
     add_library(${IMPL_TARGET} STATIC ${COMMON_OBJS} ${OPENAL_OBJS} ${ALC_OBJS} ${CORE_OBJS})
     target_compile_definitions(${IMPL_TARGET} PUBLIC AL_LIBTYPE_STATIC)
     target_link_libraries(${IMPL_TARGET} PRIVATE ${LINKER_FLAGS} ${EXTRA_LIBS} ${MATH_LIB})
+
     if(WIN32)
         # This option is for static linking OpenAL Soft into another project
         # that already defines the IDs. It is up to that project to ensure all
@@ -1232,13 +1326,14 @@ else()
             router/al.cpp
         )
         target_compile_definitions(OpenAL
-            PRIVATE AL_BUILD_LIBRARY AL_ALEXT_PROTOTYPES ${CPP_DEFS})
+            PRIVATE AL_BUILD_LIBRARY AL_ALEXT_PROTOTYPES "ALC_API=${EXPORT_DECL}"
+            "AL_API=${EXPORT_DECL}" ${CPP_DEFS})
         target_compile_options(OpenAL PRIVATE ${C_FLAGS})
         target_link_libraries(OpenAL PRIVATE common ${LINKER_FLAGS})
         target_include_directories(OpenAL
           PUBLIC
             $<BUILD_INTERFACE:${OpenAL_SOURCE_DIR}/include>
-            $<INSTALL_INTERFACE:include>
+            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
           PRIVATE
             ${OpenAL_SOURCE_DIR}/common
             ${OpenAL_BINARY_DIR}
@@ -1257,7 +1352,7 @@ else()
 
     # !important: for osx framework public header works, the headers must be in
     # the project
-    set(TARGET_PUBLIC_HEADERS include/AL/al.h include/AL/alc.h include/AL/alext.h include/AL/efx.h)
+    set(TARGET_PUBLIC_HEADERS include/AL/al.h include/AL/alc.h include/AL/alext.h include/AL/efx.h include/AL/efx-presets.h)
     add_library(${IMPL_TARGET} SHARED ${OPENAL_OBJS} ${ALC_OBJS} ${CORE_OBJS} ${RC_CONFIG}
         ${TARGET_PUBLIC_HEADERS})
     if(WIN32)
@@ -1290,8 +1385,8 @@ else()
             FRAMEWORK_VERSION C
             MACOSX_FRAMEWORK_NAME "${IMPL_TARGET}"
             MACOSX_FRAMEWORK_IDENTIFIER "org.openal-soft.openal"
-            MACOSX_FRAMEWORK_SHORT_VERSION_STRING ${LIB_VERSION}
-            MACOSX_FRAMEWORK_BUNDLE_VERSION ${BUNDLE_VERSION}
+            MACOSX_FRAMEWORK_SHORT_VERSION_STRING "${LIB_VERSION}"
+            MACOSX_FRAMEWORK_BUNDLE_VERSION "${BUNDLE_VERSION}"
             XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY ""
             XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED "NO"
             XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED "NO"
@@ -1303,12 +1398,14 @@ endif()
 target_include_directories(${IMPL_TARGET}
   PUBLIC
     $<BUILD_INTERFACE:${OpenAL_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
+  INTERFACE
+    $<BUILD_INTERFACE:${OpenAL_SOURCE_DIR}/include/AL>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/AL>
   PRIVATE
     ${INC_PATHS}
     ${OpenAL_BINARY_DIR}
     ${OpenAL_SOURCE_DIR}
-    ${OpenAL_SOURCE_DIR}/alc
     ${OpenAL_SOURCE_DIR}/common
 )
 
@@ -1317,7 +1414,8 @@ set_target_properties(${IMPL_TARGET} PROPERTIES OUTPUT_NAME ${LIBNAME}
     SOVERSION ${LIB_MAJOR_VERSION}
 )
 target_compile_definitions(${IMPL_TARGET}
-    PRIVATE AL_BUILD_LIBRARY AL_ALEXT_PROTOTYPES ${CPP_DEFS})
+    PRIVATE AL_BUILD_LIBRARY AL_ALEXT_PROTOTYPES "ALC_API=${EXPORT_DECL}" "AL_API=${EXPORT_DECL}"
+    ${CPP_DEFS})
 target_compile_options(${IMPL_TARGET} PRIVATE ${C_FLAGS})
 
 if(TARGET build_version)
@@ -1351,25 +1449,35 @@ if(HAS_ROUTER)
     message(STATUS "Building DLL router")
 endif()
 
-message(STATUS "
-Building OpenAL with support for the following backends:
-    ${BACKENDS}
-
-Building with support for CPU extensions:
-    ${CPU_EXTS}
-")
+message(STATUS "")
+message(STATUS "Building OpenAL with support for the following backends:")
+message(STATUS "   ${BACKENDS}")
+message(STATUS "")
+message(STATUS "Building with support for CPU extensions:")
+message(STATUS "    ${CPU_EXTS}")
+message(STATUS "")
 if(FPMATH_SET)
-    message(STATUS "Building with SSE${FPMATH_SET} codegen
-")
+    message(STATUS "Building with SSE${FPMATH_SET} codegen")
+    message(STATUS "")
+endif()
+
+if(ALSOFT_EAX)
+    message(STATUS "Building with legacy EAX extension support")
+    message(STATUS "")
 endif()
 
 if(ALSOFT_EMBED_HRTF_DATA)
-    message(STATUS "Embedding HRTF datasets
-")
+    message(STATUS "Embedding HRTF datasets")
+    message(STATUS "")
 endif()
+
+# An alias for sub-project builds
+add_library(OpenAL::OpenAL ALIAS OpenAL)
 
 # Install main library
 if(ALSOFT_INSTALL)
+    configure_package_config_file(OpenALConfig.cmake.in OpenALConfig.cmake
+        INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/OpenAL)
     install(TARGETS OpenAL EXPORT OpenAL
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -1378,15 +1486,17 @@ if(ALSOFT_INSTALL)
         INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} ${CMAKE_INSTALL_INCLUDEDIR}/AL)
     export(TARGETS OpenAL
         NAMESPACE OpenAL::
-        FILE OpenALConfig.cmake)
+        FILE OpenALTargets.cmake)
     install(EXPORT OpenAL
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/OpenAL
         NAMESPACE OpenAL::
-        FILE OpenALConfig.cmake)
+        FILE OpenALTargets.cmake)
     install(DIRECTORY include/AL
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
     install(FILES "${OpenAL_BINARY_DIR}/openal.pc"
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
+    install(FILES "${OpenAL_BINARY_DIR}/OpenALConfig.cmake"
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/OpenAL")
     if(TARGET soft_oal)
         install(TARGETS soft_oal
             RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
@@ -1429,7 +1539,24 @@ if(ALSOFT_UTILS)
         set(EXTRA_INSTALLS ${EXTRA_INSTALLS} openal-info)
     endif()
 
-    find_package(MySOFA)
+    if(SNDFILE_FOUND)
+        add_executable(uhjdecoder utils/uhjdecoder.cpp)
+        target_compile_definitions(uhjdecoder PRIVATE ${CPP_DEFS})
+        target_include_directories(uhjdecoder
+            PRIVATE ${OpenAL_BINARY_DIR} ${OpenAL_SOURCE_DIR}/common)
+        target_compile_options(uhjdecoder PRIVATE ${C_FLAGS})
+        target_link_libraries(uhjdecoder PUBLIC common
+            PRIVATE ${LINKER_FLAGS} SndFile::SndFile ${UNICODE_FLAG})
+
+        add_executable(uhjencoder utils/uhjencoder.cpp)
+        target_compile_definitions(uhjencoder PRIVATE ${CPP_DEFS})
+        target_include_directories(uhjencoder
+            PRIVATE ${OpenAL_BINARY_DIR} ${OpenAL_SOURCE_DIR}/common)
+        target_compile_options(uhjencoder PRIVATE ${C_FLAGS})
+        target_link_libraries(uhjencoder PUBLIC common
+            PRIVATE ${LINKER_FLAGS} SndFile::SndFile ${UNICODE_FLAG})
+    endif()
+
     if(MYSOFA_FOUND)
         set(SOFA_SUPPORT_SRCS
             utils/sofa-support.cpp

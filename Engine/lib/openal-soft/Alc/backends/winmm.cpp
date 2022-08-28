@@ -20,7 +20,7 @@
 
 #include "config.h"
 
-#include "backends/winmm.h"
+#include "winmm.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -38,9 +38,9 @@
 #include <algorithm>
 #include <functional>
 
-#include "alcmain.h"
-#include "alu.h"
-#include "compat.h"
+#include "alnumeric.h"
+#include "core/device.h"
+#include "core/helpers.h"
 #include "core/logging.h"
 #include "ringbuffer.h"
 #include "strutils.h"
@@ -125,7 +125,7 @@ void ProbeCaptureDevices(void)
 
 
 struct WinMMPlayback final : public BackendBase {
-    WinMMPlayback(ALCdevice *device) noexcept : BackendBase{device} { }
+    WinMMPlayback(DeviceBase *device) noexcept : BackendBase{device} { }
     ~WinMMPlayback() override;
 
     void CALLBACK waveOutProc(HWAVEOUT device, UINT msg, DWORD_PTR param1, DWORD_PTR param2) noexcept;
@@ -181,8 +181,6 @@ FORCE_ALIGN int WinMMPlayback::mixerProc()
     SetRTPriority();
     althrd_setname(MIXER_THREAD_NAME);
 
-    const size_t frame_step{mDevice->channelsFromFmt()};
-
     while(!mKillNow.load(std::memory_order_acquire)
         && mDevice->Connected.load(std::memory_order_acquire))
     {
@@ -196,9 +194,9 @@ FORCE_ALIGN int WinMMPlayback::mixerProc()
         size_t widx{mIdx};
         do {
             WAVEHDR &waveHdr = mWaveBuffer[widx];
-            widx = (widx+1) % mWaveBuffer.size();
+            if(++widx == mWaveBuffer.size()) widx = 0;
 
-            mDevice->renderSamples(waveHdr.lpData, mDevice->UpdateSize, frame_step);
+            mDevice->renderSamples(waveHdr.lpData, mDevice->UpdateSize, mFormat.nChannels);
             mWritable.fetch_sub(1, std::memory_order_acq_rel);
             waveOutWrite(mOutHdl, &waveHdr, sizeof(WAVEHDR));
         } while(--todo);
@@ -223,39 +221,46 @@ void WinMMPlayback::open(const char *name)
             name};
     auto DeviceID = static_cast<UINT>(std::distance(PlaybackDevices.cbegin(), iter));
 
+    DevFmtType fmttype{mDevice->FmtType};
 retry_open:
-    mFormat = WAVEFORMATEX{};
-    if(mDevice->FmtType == DevFmtFloat)
+    WAVEFORMATEX format{};
+    if(fmttype == DevFmtFloat)
     {
-        mFormat.wFormatTag = WAVE_FORMAT_IEEE_FLOAT;
-        mFormat.wBitsPerSample = 32;
+        format.wFormatTag = WAVE_FORMAT_IEEE_FLOAT;
+        format.wBitsPerSample = 32;
     }
     else
     {
-        mFormat.wFormatTag = WAVE_FORMAT_PCM;
-        if(mDevice->FmtType == DevFmtUByte || mDevice->FmtType == DevFmtByte)
-            mFormat.wBitsPerSample = 8;
+        format.wFormatTag = WAVE_FORMAT_PCM;
+        if(fmttype == DevFmtUByte || fmttype == DevFmtByte)
+            format.wBitsPerSample = 8;
         else
-            mFormat.wBitsPerSample = 16;
+            format.wBitsPerSample = 16;
     }
-    mFormat.nChannels = ((mDevice->FmtChans == DevFmtMono) ? 1 : 2);
-    mFormat.nBlockAlign = static_cast<WORD>(mFormat.wBitsPerSample * mFormat.nChannels / 8);
-    mFormat.nSamplesPerSec = mDevice->Frequency;
-    mFormat.nAvgBytesPerSec = mFormat.nSamplesPerSec * mFormat.nBlockAlign;
-    mFormat.cbSize = 0;
+    format.nChannels = ((mDevice->FmtChans == DevFmtMono) ? 1 : 2);
+    format.nBlockAlign = static_cast<WORD>(format.wBitsPerSample * format.nChannels / 8);
+    format.nSamplesPerSec = mDevice->Frequency;
+    format.nAvgBytesPerSec = format.nSamplesPerSec * format.nBlockAlign;
+    format.cbSize = 0;
 
-    MMRESULT res{waveOutOpen(&mOutHdl, DeviceID, &mFormat,
+    HWAVEOUT outHandle{};
+    MMRESULT res{waveOutOpen(&outHandle, DeviceID, &format,
         reinterpret_cast<DWORD_PTR>(&WinMMPlayback::waveOutProcC),
         reinterpret_cast<DWORD_PTR>(this), CALLBACK_FUNCTION)};
     if(res != MMSYSERR_NOERROR)
     {
-        if(mDevice->FmtType == DevFmtFloat)
+        if(fmttype == DevFmtFloat)
         {
-            mDevice->FmtType = DevFmtShort;
+            fmttype = DevFmtShort;
             goto retry_open;
         }
         throw al::backend_exception{al::backend_error::DeviceError, "waveOutOpen failed: %u", res};
     }
+
+    if(mOutHdl)
+        waveOutClose(mOutHdl);
+    mOutHdl = outHandle;
+    mFormat = format;
 
     mDevice->DeviceName = PlaybackDevices[DeviceID];
 }
@@ -296,25 +301,18 @@ bool WinMMPlayback::reset()
         return false;
     }
 
-    uint chanmask{};
-    if(mFormat.nChannels == 2)
-    {
+    if(mFormat.nChannels >= 2)
         mDevice->FmtChans = DevFmtStereo;
-        chanmask = SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT;
-    }
     else if(mFormat.nChannels == 1)
-    {
         mDevice->FmtChans = DevFmtMono;
-        chanmask = SPEAKER_FRONT_CENTER;
-    }
     else
     {
         ERR("Unhandled channel count: %d\n", mFormat.nChannels);
         return false;
     }
-    setChannelOrderFromWFXMask(chanmask);
+    setDefaultWFXChannelOrder();
 
-    uint BufferSize{mDevice->UpdateSize * mDevice->frameSizeFromFmt()};
+    uint BufferSize{mDevice->UpdateSize * mFormat.nChannels * mDevice->bytesFromFmt()};
 
     al_free(mWaveBuffer[0].lpData);
     mWaveBuffer[0] = WAVEHDR{};
@@ -334,9 +332,8 @@ bool WinMMPlayback::reset()
 void WinMMPlayback::start()
 {
     try {
-        std::for_each(mWaveBuffer.begin(), mWaveBuffer.end(),
-            [this](WAVEHDR &waveHdr) -> void
-            { waveOutPrepareHeader(mOutHdl, &waveHdr, sizeof(WAVEHDR)); });
+        for(auto &waveHdr : mWaveBuffer)
+            waveOutPrepareHeader(mOutHdl, &waveHdr, sizeof(WAVEHDR));
         mWritable.store(static_cast<uint>(mWaveBuffer.size()), std::memory_order_release);
 
         mKillNow.store(false, std::memory_order_release);
@@ -356,15 +353,14 @@ void WinMMPlayback::stop()
 
     while(mWritable.load(std::memory_order_acquire) < mWaveBuffer.size())
         mSem.wait();
-    std::for_each(mWaveBuffer.begin(), mWaveBuffer.end(),
-        [this](WAVEHDR &waveHdr) -> void
-        { waveOutUnprepareHeader(mOutHdl, &waveHdr, sizeof(WAVEHDR)); });
+    for(auto &waveHdr : mWaveBuffer)
+        waveOutUnprepareHeader(mOutHdl, &waveHdr, sizeof(WAVEHDR));
     mWritable.store(0, std::memory_order_release);
 }
 
 
 struct WinMMCapture final : public BackendBase {
-    WinMMCapture(ALCdevice *device) noexcept : BackendBase{device} { }
+    WinMMCapture(DeviceBase *device) noexcept : BackendBase{device} { }
     ~WinMMCapture() override;
 
     void CALLBACK waveInProc(HWAVEIN device, UINT msg, DWORD_PTR param1, DWORD_PTR param2) noexcept;
@@ -471,9 +467,9 @@ void WinMMCapture::open(const char *name)
 
     case DevFmtQuad:
     case DevFmtX51:
-    case DevFmtX51Rear:
     case DevFmtX61:
     case DevFmtX71:
+    case DevFmtX3D71:
     case DevFmtAmbi3D:
         throw al::backend_exception{al::backend_error::DeviceError, "%s capture not supported",
             DevFmtChannelsString(mDevice->FmtChans)};
@@ -615,7 +611,7 @@ std::string WinMMBackendFactory::probe(BackendType type)
     return outnames;
 }
 
-BackendPtr WinMMBackendFactory::createBackend(ALCdevice *device, BackendType type)
+BackendPtr WinMMBackendFactory::createBackend(DeviceBase *device, BackendType type)
 {
     if(type == BackendType::Playback)
         return BackendPtr{new WinMMPlayback{device}};

@@ -1,6 +1,8 @@
 #ifndef INTRUSIVE_PTR_H
 #define INTRUSIVE_PTR_H
 
+#include <utility>
+
 #include "atomic.h"
 #include "opthelpers.h"
 
@@ -60,6 +62,8 @@ public:
 
     intrusive_ptr& operator=(const intrusive_ptr &rhs) noexcept
     {
+        static_assert(noexcept(std::declval<T*>()->release()), "release must be noexcept");
+
         if(rhs.mPtr) rhs.mPtr->add_ref();
         if(mPtr) mPtr->release();
         mPtr = rhs.mPtr;
@@ -67,14 +71,15 @@ public:
     }
     intrusive_ptr& operator=(intrusive_ptr&& rhs) noexcept
     {
-        if(mPtr)
-            mPtr->release();
-        mPtr = rhs.mPtr;
-        rhs.mPtr = nullptr;
+        if(likely(&rhs != this))
+        {
+            if(mPtr) mPtr->release();
+            mPtr = std::exchange(rhs.mPtr, nullptr);
+        }
         return *this;
     }
 
-    operator bool() const noexcept { return mPtr != nullptr; }
+    explicit operator bool() const noexcept { return mPtr != nullptr; }
 
     T& operator*() const noexcept { return *mPtr; }
     T* operator->() const noexcept { return mPtr; }
@@ -87,12 +92,7 @@ public:
         mPtr = ptr;
     }
 
-    T* release() noexcept
-    {
-        T *ret{mPtr};
-        mPtr = nullptr;
-        return ret;
-    }
+    T* release() noexcept { return std::exchange(mPtr, nullptr); }
 
     void swap(intrusive_ptr &rhs) noexcept { std::swap(mPtr, rhs.mPtr); }
     void swap(intrusive_ptr&& rhs) noexcept { std::swap(mPtr, rhs.mPtr); }

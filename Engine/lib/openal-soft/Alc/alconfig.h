@@ -7,9 +7,7 @@
 
 void ReadALConfig();
 
-int ConfigValueExists(const char *devName, const char *blockName, const char *keyName);
-const char *GetConfigValue(const char *devName, const char *blockName, const char *keyName, const char *def);
-int GetConfigValueBool(const char *devName, const char *blockName, const char *keyName, int def);
+bool GetConfigValueBool(const char *devName, const char *blockName, const char *keyName, bool def);
 
 al::optional<std::string> ConfigValueStr(const char *devName, const char *blockName, const char *keyName);
 al::optional<int> ConfigValueInt(const char *devName, const char *blockName, const char *keyName);

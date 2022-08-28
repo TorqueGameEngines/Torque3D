@@ -28,23 +28,6 @@ AL_API void AL_APIENTRY alFlushMappedBufferSOFT(ALuint buffer, ALsizei offset, A
 #endif
 #endif
 
-#ifndef AL_SOFT_callback_buffer
-#define AL_SOFT_callback_buffer
-#define AL_BUFFER_CALLBACK_FUNCTION_SOFT         0x19A0
-#define AL_BUFFER_CALLBACK_USER_PARAM_SOFT       0x19A1
-typedef ALsizei (AL_APIENTRY*LPALBUFFERCALLBACKTYPESOFT)(ALvoid *userptr, ALvoid *sampledata, ALsizei numsamples);
-typedef void (AL_APIENTRY*LPALBUFFERCALLBACKSOFT)(ALuint buffer, ALenum format, ALsizei freq, LPALBUFFERCALLBACKTYPESOFT callback, ALvoid *userptr, ALbitfieldSOFT flags);
-typedef void (AL_APIENTRY*LPALGETBUFFERPTRSOFT)(ALuint buffer, ALenum param, ALvoid **value);
-typedef void (AL_APIENTRY*LPALGETBUFFER3PTRSOFT)(ALuint buffer, ALenum param, ALvoid **value1, ALvoid **value2, ALvoid **value3);
-typedef void (AL_APIENTRY*LPALGETBUFFERPTRVSOFT)(ALuint buffer, ALenum param, ALvoid **values);
-#ifdef AL_ALEXT_PROTOTYPES
-AL_API void AL_APIENTRY alBufferCallbackSOFT(ALuint buffer, ALenum format, ALsizei freq, LPALBUFFERCALLBACKTYPESOFT callback, ALvoid *userptr, ALbitfieldSOFT flags);
-AL_API void AL_APIENTRY alGetBufferPtrSOFT(ALuint buffer, ALenum param, ALvoid **ptr);
-AL_API void AL_APIENTRY alGetBuffer3PtrSOFT(ALuint buffer, ALenum param, ALvoid **ptr0, ALvoid **ptr1, ALvoid **ptr2);
-AL_API void AL_APIENTRY alGetBufferPtrvSOFT(ALuint buffer, ALenum param, ALvoid **ptr);
-#endif
-#endif
-
 #ifndef AL_SOFT_bformat_hoa
 #define AL_SOFT_bformat_hoa
 #define AL_UNPACK_AMBISONIC_ORDER_SOFT           0x199D
@@ -65,6 +48,23 @@ AL_API void AL_APIENTRY alAuxiliaryEffectSlotStopSOFT(ALuint slotid);
 AL_API void AL_APIENTRY alAuxiliaryEffectSlotStopvSOFT(ALsizei n, const ALuint *slotids);
 #endif
 #endif
+
+#ifndef AL_SOFT_hold_on_disconnect
+#define AL_SOFT_hold_on_disconnect
+#define AL_STOP_SOURCES_ON_DISCONNECT_SOFT       0x19AB
+#endif
+
+
+/* Non-standard export. Not part of any extension. */
+AL_API const ALchar* AL_APIENTRY alsoft_get_version(void);
+
+
+/* Functions from abandoned extenions. Only here for binary compatibility. */
+AL_API void AL_APIENTRY alSourceQueueBufferLayersSOFT(ALuint src, ALsizei nb,
+    const ALuint *buffers);
+
+AL_API ALint64SOFT AL_APIENTRY alGetInteger64SOFT(ALenum pname);
+AL_API void AL_APIENTRY alGetInteger64vSOFT(ALenum pname, ALint64SOFT *values);
 
 #ifdef __cplusplus
 } /* extern "C" */

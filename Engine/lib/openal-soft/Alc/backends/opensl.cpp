@@ -21,7 +21,7 @@
 
 #include "config.h"
 
-#include "backends/opensl.h"
+#include "opensl.h"
 
 #include <stdlib.h>
 #include <jni.h>
@@ -33,9 +33,9 @@
 #include <functional>
 
 #include "albit.h"
-#include "alcmain.h"
-#include "alu.h"
-#include "compat.h"
+#include "alnumeric.h"
+#include "core/device.h"
+#include "core/helpers.h"
 #include "core/logging.h"
 #include "opthelpers.h"
 #include "ringbuffer.h"
@@ -68,13 +68,11 @@ constexpr SLuint32 GetChannelMask(DevFmtChannels chans) noexcept
     case DevFmtX51: return SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT |
         SL_SPEAKER_FRONT_CENTER | SL_SPEAKER_LOW_FREQUENCY | SL_SPEAKER_SIDE_LEFT |
         SL_SPEAKER_SIDE_RIGHT;
-    case DevFmtX51Rear: return SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT |
-        SL_SPEAKER_FRONT_CENTER | SL_SPEAKER_LOW_FREQUENCY | SL_SPEAKER_BACK_LEFT |
-        SL_SPEAKER_BACK_RIGHT;
     case DevFmtX61: return SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT |
         SL_SPEAKER_FRONT_CENTER | SL_SPEAKER_LOW_FREQUENCY | SL_SPEAKER_BACK_CENTER |
         SL_SPEAKER_SIDE_LEFT | SL_SPEAKER_SIDE_RIGHT;
-    case DevFmtX71: return SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT |
+    case DevFmtX71:
+    case DevFmtX3D71: return SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT |
         SL_SPEAKER_FRONT_CENTER | SL_SPEAKER_LOW_FREQUENCY | SL_SPEAKER_BACK_LEFT |
         SL_SPEAKER_BACK_RIGHT | SL_SPEAKER_SIDE_LEFT | SL_SPEAKER_SIDE_RIGHT;
     case DevFmtAmbi3D:
@@ -105,7 +103,7 @@ constexpr SLuint32 GetTypeRepresentation(DevFmtType type) noexcept
 
 constexpr SLuint32 GetByteOrderEndianness() noexcept
 {
-    if_constexpr(al::endian::native == al::endian::little)
+    if(al::endian::native == al::endian::little)
         return SL_BYTEORDER_LITTLEENDIAN;
     return SL_BYTEORDER_BIGENDIAN;
 }
@@ -151,7 +149,7 @@ const char *res_str(SLresult result) noexcept
 
 
 struct OpenSLPlayback final : public BackendBase {
-    OpenSLPlayback(ALCdevice *device) noexcept : BackendBase{device} { }
+    OpenSLPlayback(DeviceBase *device) noexcept : BackendBase{device} { }
     ~OpenSLPlayback() override;
 
     void process(SLAndroidSimpleBufferQueueItf bq) noexcept;
@@ -315,6 +313,9 @@ void OpenSLPlayback::open(const char *name)
     else if(strcmp(name, opensl_device) != 0)
         throw al::backend_exception{al::backend_error::NoDevice, "Device name \"%s\" not found",
             name};
+
+    /* There's only one device, so if it's already open, there's nothing to do. */
+    if(mEngineObj) return;
 
     // create engine
     SLresult result{slCreateEngine(&mEngineObj, 0, nullptr, 0, nullptr, nullptr)};
@@ -612,6 +613,8 @@ void OpenSLPlayback::stop()
             result = VCALL(bufferQueue,GetState)(&state);
         } while(SL_RESULT_SUCCESS == result && state.count > 0);
         PRINTERR(result, "bufferQueue->GetState");
+
+        mRing.reset();
     }
 }
 
@@ -629,7 +632,7 @@ ClockLatency OpenSLPlayback::getClockLatency()
 
 
 struct OpenSLCapture final : public BackendBase {
-    OpenSLCapture(ALCdevice *device) noexcept : BackendBase{device} { }
+    OpenSLCapture(DeviceBase *device) noexcept : BackendBase{device} { }
     ~OpenSLCapture() override;
 
     void process(SLAndroidSimpleBufferQueueItf bq) noexcept;
@@ -810,8 +813,11 @@ void OpenSLCapture::open(const char* name)
     if(SL_RESULT_SUCCESS == result)
     {
         const uint chunk_size{mDevice->UpdateSize * mFrameSize};
+        const auto silence = (mDevice->FmtType == DevFmtUByte) ? al::byte{0x80} : al::byte{0};
 
         auto data = mRing->getWriteVector();
+        std::fill_n(data.first.buf, data.first.len*chunk_size, silence);
+        std::fill_n(data.second.buf, data.second.len*chunk_size, silence);
         for(size_t i{0u};i < data.first.len && SL_RESULT_SUCCESS == result;i++)
         {
             result = VCALL(bufferQueue,Enqueue)(data.first.buf + chunk_size*i, chunk_size);
@@ -903,33 +909,51 @@ void OpenSLCapture::captureSamples(al::byte *buffer, uint samples)
 
         i += rem;
     }
-    mRing->readAdvance(adv_count);
 
     SLAndroidSimpleBufferQueueItf bufferQueue{};
-    if LIKELY(mDevice->Connected.load(std::memory_order_acquire))
+    if(likely(mDevice->Connected.load(std::memory_order_acquire)))
     {
         const SLresult result{VCALL(mRecordObj,GetInterface)(SL_IID_ANDROIDSIMPLEBUFFERQUEUE,
             &bufferQueue)};
         PRINTERR(result, "recordObj->GetInterface");
-        if UNLIKELY(SL_RESULT_SUCCESS != result)
+        if(unlikely(SL_RESULT_SUCCESS != result))
         {
             mDevice->handleDisconnect("Failed to get capture buffer queue: 0x%08x", result);
             bufferQueue = nullptr;
         }
     }
+    if(unlikely(!bufferQueue) || adv_count == 0)
+        return;
 
-    if LIKELY(bufferQueue)
+    /* For each buffer chunk that was fully read, queue another writable buffer
+     * chunk to keep the OpenSL queue full. This is rather convulated, as a
+     * result of the ring buffer holding more elements than are writable at a
+     * given time. The end of the write vector increments when the read pointer
+     * advances, which will "expose" a previously unwritable element. So for
+     * every element that we've finished reading, we queue that many elements
+     * from the end of the write vector.
+     */
+    mRing->readAdvance(adv_count);
+
+    SLresult result{SL_RESULT_SUCCESS};
+    auto wdata = mRing->getWriteVector();
+    if(likely(adv_count > wdata.second.len))
     {
-        SLresult result{SL_RESULT_SUCCESS};
-        auto wdata = mRing->getWriteVector();
-        for(size_t i{0u};i < wdata.first.len && SL_RESULT_SUCCESS == result;i++)
+        auto len1 = std::min(wdata.first.len, adv_count-wdata.second.len);
+        auto buf1 = wdata.first.buf + chunk_size*(wdata.first.len-len1);
+        for(size_t i{0u};i < len1 && SL_RESULT_SUCCESS == result;i++)
         {
-            result = VCALL(bufferQueue,Enqueue)(wdata.first.buf + chunk_size*i, chunk_size);
+            result = VCALL(bufferQueue,Enqueue)(buf1 + chunk_size*i, chunk_size);
             PRINTERR(result, "bufferQueue->Enqueue");
         }
-        for(size_t i{0u};i < wdata.second.len && SL_RESULT_SUCCESS == result;i++)
+    }
+    if(wdata.second.len > 0)
+    {
+        auto len2 = std::min(wdata.second.len, adv_count);
+        auto buf2 = wdata.second.buf + chunk_size*(wdata.second.len-len2);
+        for(size_t i{0u};i < len2 && SL_RESULT_SUCCESS == result;i++)
         {
-            result = VCALL(bufferQueue,Enqueue)(wdata.second.buf + chunk_size*i, chunk_size);
+            result = VCALL(bufferQueue,Enqueue)(buf2 + chunk_size*i, chunk_size);
             PRINTERR(result, "bufferQueue->Enqueue");
         }
     }
@@ -959,7 +983,7 @@ std::string OSLBackendFactory::probe(BackendType type)
     return outnames;
 }
 
-BackendPtr OSLBackendFactory::createBackend(ALCdevice *device, BackendType type)
+BackendPtr OSLBackendFactory::createBackend(DeviceBase *device, BackendType type)
 {
     if(type == BackendType::Playback)
         return BackendPtr{new OpenSLPlayback{device}};

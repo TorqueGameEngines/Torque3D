@@ -133,8 +133,8 @@ static void CrestDetector(Compressor *Comp, const uint SamplesToDo)
     {
         const float x2{clampf(x_abs * x_abs, 0.000001f, 1000000.0f)};
 
-        y2_peak = maxf(x2, lerp(x2, y2_peak, a_crest));
-        y2_rms = lerp(x2, y2_rms, a_crest);
+        y2_peak = maxf(x2, lerpf(x2, y2_peak, a_crest));
+        y2_rms = lerpf(x2, y2_rms, a_crest);
         return y2_peak / y2_rms;
     };
     auto side_begin = std::begin(Comp->mSideChain) + Comp->mLookAhead;
@@ -243,15 +243,15 @@ void GainCompressor(Compressor *Comp, const uint SamplesToDo)
          * above to compensate for the chained operating mode.
          */
         const float x_L{-slope * y_G};
-        y_1 = maxf(x_L, lerp(x_L, y_1, a_rel));
-        y_L = lerp(y_1, y_L, a_att);
+        y_1 = maxf(x_L, lerpf(x_L, y_1, a_rel));
+        y_L = lerpf(y_1, y_L, a_att);
 
         /* Knee width and make-up gain automation make use of a smoothed
          * measurement of deviation between the control signal and estimate.
          * The estimate is also used to bias the measurement to hot-start its
          * average.
          */
-        c_dev = lerp(-(y_L+c_est), c_dev, a_adp);
+        c_dev = lerpf(-(y_L+c_est), c_dev, a_adp);
 
         if(autoPostGain)
         {
@@ -334,7 +334,7 @@ std::unique_ptr<Compressor> Compressor::Create(const size_t NumChans, const floa
             size += sizeof(*Compressor::mHold);
     }
 
-    auto Comp = std::unique_ptr<Compressor>{new (al_calloc(16, size)) Compressor{}};
+    auto Comp = CompressorPtr{al::construct_at(static_cast<Compressor*>(al_calloc(16, size)))};
     Comp->mNumChans = NumChans;
     Comp->mAuto.Knee = AutoKnee;
     Comp->mAuto.Attack = AutoAttack;
@@ -361,17 +361,15 @@ std::unique_ptr<Compressor> Compressor::Create(const size_t NumChans, const floa
     {
         if(hold > 1)
         {
-            Comp->mHold = ::new (static_cast<void*>(Comp.get() + 1)) SlidingHold{};
+            Comp->mHold = al::construct_at(reinterpret_cast<SlidingHold*>(Comp.get() + 1));
             Comp->mHold->mValues[0] = -std::numeric_limits<float>::infinity();
             Comp->mHold->mExpiries[0] = hold;
             Comp->mHold->mLength = hold;
-            Comp->mDelay = ::new(static_cast<void*>(Comp->mHold + 1)) FloatBufferLine[NumChans];
+            Comp->mDelay = reinterpret_cast<FloatBufferLine*>(Comp->mHold + 1);
         }
         else
-        {
-            Comp->mDelay = ::new(static_cast<void*>(Comp.get() + 1)) FloatBufferLine[NumChans];
-        }
-        std::fill_n(Comp->mDelay, NumChans, FloatBufferLine{});
+            Comp->mDelay = reinterpret_cast<FloatBufferLine*>(Comp.get() + 1);
+        std::uninitialized_fill_n(Comp->mDelay, NumChans, FloatBufferLine{});
     }
 
     Comp->mCrestCoeff = std::exp(-1.0f / (0.200f * SampleRate)); // 200ms

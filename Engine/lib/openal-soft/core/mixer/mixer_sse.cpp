@@ -15,9 +15,8 @@ struct BSincTag;
 struct FastBSincTag;
 
 
-/* SSE2 is required for any SSE support. */
-#if defined(__GNUC__) && !defined(__clang__) && !defined(__SSE2__)
-#pragma GCC target("sse2")
+#if defined(__GNUC__) && !defined(__clang__) && !defined(__SSE__)
+#pragma GCC target("sse")
 #endif
 
 namespace {
@@ -27,7 +26,7 @@ constexpr uint FracPhaseDiffOne{1 << FracPhaseBitDiff};
 
 #define MLA4(x, y, z) _mm_add_ps(x, _mm_mul_ps(y, z))
 
-inline void ApplyCoeffs(float2 *RESTRICT Values, const size_t IrSize, const HrirArray &Coeffs,
+inline void ApplyCoeffs(float2 *RESTRICT Values, const size_t IrSize, const ConstHrirSpan Coeffs,
     const float left, const float right)
 {
     const __m128 lrlr{_mm_setr_ps(left, right, left, right)};
@@ -37,7 +36,17 @@ inline void ApplyCoeffs(float2 *RESTRICT Values, const size_t IrSize, const Hrir
      * systems that support SSE, which is the only one that needs to know the
      * alignment of Values (which alternates between 8- and 16-byte aligned).
      */
-    if(reinterpret_cast<intptr_t>(Values)&0x8)
+    if(!(reinterpret_cast<uintptr_t>(Values)&15))
+    {
+        for(size_t i{0};i < IrSize;i += 2)
+        {
+            const __m128 coeffs{_mm_load_ps(&Coeffs[i][0])};
+            __m128 vals{_mm_load_ps(&Values[i][0])};
+            vals = MLA4(vals, lrlr, coeffs);
+            _mm_store_ps(&Values[i][0], vals);
+        }
+    }
+    else
     {
         __m128 imp0, imp1;
         __m128 coeffs{_mm_load_ps(&Coeffs[0][0])};
@@ -62,16 +71,6 @@ inline void ApplyCoeffs(float2 *RESTRICT Values, const size_t IrSize, const Hrir
         vals = _mm_add_ps(imp0, vals);
         _mm_storel_pi(reinterpret_cast<__m64*>(&Values[i][0]), vals);
     }
-    else
-    {
-        for(size_t i{0};i < IrSize;i += 2)
-        {
-            const __m128 coeffs{_mm_load_ps(&Coeffs[i][0])};
-            __m128 vals{_mm_load_ps(&Values[i][0])};
-            vals = MLA4(vals, lrlr, coeffs);
-            _mm_store_ps(&Values[i][0], vals);
-        }
-    }
 }
 
 } // namespace
@@ -83,6 +82,7 @@ float *Resample_<BSincTag,SSETag>(const InterpState *state, float *RESTRICT src,
     const float *const filter{state->bsinc.filter};
     const __m128 sf4{_mm_set1_ps(state->bsinc.sf)};
     const size_t m{state->bsinc.m};
+    ASSUME(m > 0);
 
     src -= state->bsinc.l;
     for(float &out_sample : dst)
@@ -95,10 +95,10 @@ float *Resample_<BSincTag,SSETag>(const InterpState *state, float *RESTRICT src,
         __m128 r4{_mm_setzero_ps()};
         {
             const __m128 pf4{_mm_set1_ps(pf)};
-            const float *fil{filter + m*pi*4};
-            const float *phd{fil + m};
-            const float *scd{phd + m};
-            const float *spd{scd + m};
+            const float *RESTRICT fil{filter + m*pi*2};
+            const float *RESTRICT phd{fil + m};
+            const float *RESTRICT scd{fil + BSincPhaseCount*2*m};
+            const float *RESTRICT spd{scd + m};
             size_t td{m >> 2};
             size_t j{0u};
 
@@ -129,6 +129,7 @@ float *Resample_<FastBSincTag,SSETag>(const InterpState *state, float *RESTRICT 
 {
     const float *const filter{state->bsinc.filter};
     const size_t m{state->bsinc.m};
+    ASSUME(m > 0);
 
     src -= state->bsinc.l;
     for(float &out_sample : dst)
@@ -141,8 +142,8 @@ float *Resample_<FastBSincTag,SSETag>(const InterpState *state, float *RESTRICT 
         __m128 r4{_mm_setzero_ps()};
         {
             const __m128 pf4{_mm_set1_ps(pf)};
-            const float *fil{filter + m*pi*4};
-            const float *phd{fil + m};
+            const float *RESTRICT fil{filter + m*pi*2};
+            const float *RESTRICT phd{fil + m};
             size_t td{m >> 2};
             size_t j{0u};
 
@@ -180,7 +181,7 @@ void MixHrtfBlend_<SSETag>(const float *InSamples, float2 *AccumSamples, const u
 }
 
 template<>
-void MixDirectHrtf_<SSETag>(FloatBufferLine &LeftOut, FloatBufferLine &RightOut,
+void MixDirectHrtf_<SSETag>(const FloatBufferSpan LeftOut, const FloatBufferSpan RightOut,
     const al::span<const FloatBufferLine> InSamples, float2 *AccumSamples,
     float *TempBuf, HrtfChannelState *ChanState, const size_t IrSize, const size_t BufferSize)
 {
@@ -210,7 +211,7 @@ void Mix_<SSETag>(const al::span<const float> InSamples, const al::span<FloatBuf
         {
             float step_count{0.0f};
             /* Mix with applying gain steps in aligned multiples of 4. */
-            if(size_t todo{(min_len-pos) >> 2})
+            if(size_t todo{min_len >> 2})
             {
                 const __m128 four4{_mm_set1_ps(4.0f)};
                 const __m128 step4{_mm_set1_ps(step)};

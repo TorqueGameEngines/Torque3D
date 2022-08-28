@@ -434,7 +434,6 @@ ALboolean LoadOAL10Library(char *szOALFullPathName, LPOPENALFNTABLE lpOALFnTable
 		warn("Failed to retrieve 'alcGetEnumValue' function address\n");
 		return AL_FALSE;
 	}
-#if defined(AL_ALEXT_PROTOTYPES)
     //efx
     lpOALFnTable->alGenEffects = (LPALGENEFFECTS)alGenEffects;
     if (lpOALFnTable->alGenEffects == NULL)
@@ -574,7 +573,27 @@ ALboolean LoadOAL10Library(char *szOALFullPathName, LPOPENALFNTABLE lpOALFnTable
         warn("Failed to retrieve 'alSource3i' function address\n");
         return AL_FALSE;
     }
-#endif
+   lpOALFnTable->alcGetStringiSOFT = (LPALCGETSTRINGISOFT)alcGetStringiSOFT;
+   if (lpOALFnTable->alcGetStringiSOFT == NULL) {
+      warn("Failed to retrieve 'alcGetStringiSoft' function address\n");
+      return AL_FALSE;
+   }
+   lpOALFnTable->alGenFilters = (LPALGENFILTERS)alGenFilters;
+   if(lpOALFnTable->alGenFilters == NULL){
+      warn("Failed to retrieve 'alGenFilters' function address\n");
+      return AL_FALSE;
+   }
+   lpOALFnTable->alDeleteFilters = (LPALDELETEFILTERS)alDeleteFilters;
+   if(lpOALFnTable->alDeleteFilters == NULL){
+      warn("Failed to retrieve 'alDeleteFilters' function address\n");
+      return AL_FALSE;
+   }
+   lpOALFnTable->alFilteri = (LPALFILTERI)alFilteri;
+   if(lpOALFnTable->alFilteri == NULL){
+      warn("Failed to retrieve 'alFilteri' function address\n");
+      return AL_FALSE;
+   }
+   
 	return AL_TRUE;
 }
 

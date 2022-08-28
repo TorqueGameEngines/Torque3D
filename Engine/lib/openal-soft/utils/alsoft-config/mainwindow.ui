@@ -62,7 +62,7 @@
        <rect>
         <x>110</x>
         <y>50</y>
-        <width>76</width>
+        <width>80</width>
         <height>31</height>
        </rect>
       </property>
@@ -111,7 +111,7 @@ float and converted to the output sample type as needed.</string>
        <rect>
         <x>110</x>
         <y>20</y>
-        <width>76</width>
+        <width>80</width>
         <height>31</height>
        </rect>
       </property>
@@ -129,7 +129,7 @@ to stereo output.</string>
        <rect>
         <x>380</x>
         <y>20</y>
-        <width>96</width>
+        <width>100</width>
         <height>31</height>
        </rect>
       </property>
@@ -437,12 +437,15 @@ frames needed for each mixing update.</string>
        </property>
        <property name="toolTip">
         <string>Pan Pot uses standard amplitude panning (aka
-pair-wise, stereo pair, etc) between -30 and +30
-degrees, while UHJ creates a stereo-compatible
-two-channel UHJ mix, which encodes some
-surround sound information into stereo output
-that can be decoded with a surround sound
-receiver.</string>
+pair-wise, stereo pair, etc).
+
+UHJ creates a stereo-compatible two-channel
+UHJ mix, which encodes some surround sound
+information into stereo output that can be
+decoded with a surround sound receiver.
+
+Binaural applies HRTF filters to create a sense
+of 3D space with headphones.</string>
        </property>
       </widget>
       <widget class="QLabel" name="label_19">
@@ -622,15 +625,16 @@ quantization with low-level whitenoise.</string>
        <string>Enables high-quality ambisonic rendering. This mode is
 capable of frequency-dependent processing, creating a
 better reproduction of 3D sound rendering over
-surround sound speakers. Enabling this also requires
-specifying decoder configuration files for the
-appropriate speaker configuration you intend to use.</string>
+surround sound speakers.</string>
       </property>
       <property name="layoutDirection">
        <enum>Qt::RightToLeft</enum>
       </property>
       <property name="text">
        <string>High Quality Mode:</string>
+      </property>
+      <property name="tristate">
+       <bool>true</bool>
       </property>
      </widget>
      <widget class="QCheckBox" name="decoderDistCompCheckBox">
@@ -664,9 +668,9 @@ configuration file.</string>
       <property name="geometry">
        <rect>
         <x>-10</x>
-        <y>160</y>
+        <y>140</y>
         <width>551</width>
-        <height>161</height>
+        <height>231</height>
        </rect>
       </property>
       <property name="title">
@@ -678,10 +682,10 @@ configuration file.</string>
       <widget class="QLineEdit" name="decoderQuadLineEdit">
        <property name="geometry">
         <rect>
-         <x>120</x>
+         <x>130</x>
          <y>30</y>
-         <width>311</width>
-         <height>21</height>
+         <width>301</width>
+         <height>25</height>
         </rect>
        </property>
       </widget>
@@ -690,8 +694,8 @@ configuration file.</string>
         <rect>
          <x>20</x>
          <y>30</y>
-         <width>91</width>
-         <height>21</height>
+         <width>101</width>
+         <height>25</height>
         </rect>
        </property>
        <property name="text">
@@ -707,7 +711,7 @@ configuration file.</string>
          <x>440</x>
          <y>30</y>
          <width>91</width>
-         <height>21</height>
+         <height>25</height>
         </rect>
        </property>
        <property name="text">
@@ -717,10 +721,10 @@ configuration file.</string>
       <widget class="QLineEdit" name="decoder51LineEdit">
        <property name="geometry">
         <rect>
-         <x>120</x>
-         <y>60</y>
-         <width>311</width>
-         <height>21</height>
+         <x>130</x>
+         <y>70</y>
+         <width>301</width>
+         <height>25</height>
         </rect>
        </property>
       </widget>
@@ -728,9 +732,9 @@ configuration file.</string>
        <property name="geometry">
         <rect>
          <x>440</x>
-         <y>60</y>
+         <y>70</y>
          <width>91</width>
-         <height>21</height>
+         <height>25</height>
         </rect>
        </property>
        <property name="text">
@@ -741,9 +745,9 @@ configuration file.</string>
        <property name="geometry">
         <rect>
          <x>20</x>
-         <y>60</y>
-         <width>91</width>
-         <height>21</height>
+         <y>70</y>
+         <width>101</width>
+         <height>25</height>
         </rect>
        </property>
        <property name="text">
@@ -757,9 +761,9 @@ configuration file.</string>
        <property name="geometry">
         <rect>
          <x>20</x>
-         <y>90</y>
-         <width>91</width>
-         <height>21</height>
+         <y>110</y>
+         <width>101</width>
+         <height>25</height>
         </rect>
        </property>
        <property name="text">
@@ -772,10 +776,10 @@ configuration file.</string>
       <widget class="QLineEdit" name="decoder61LineEdit">
        <property name="geometry">
         <rect>
-         <x>120</x>
-         <y>90</y>
-         <width>311</width>
-         <height>21</height>
+         <x>130</x>
+         <y>110</y>
+         <width>301</width>
+         <height>25</height>
         </rect>
        </property>
       </widget>
@@ -783,9 +787,9 @@ configuration file.</string>
        <property name="geometry">
         <rect>
          <x>440</x>
-         <y>90</y>
+         <y>110</y>
          <width>91</width>
-         <height>21</height>
+         <height>25</height>
         </rect>
        </property>
        <property name="text">
@@ -796,9 +800,9 @@ configuration file.</string>
        <property name="geometry">
         <rect>
          <x>440</x>
-         <y>120</y>
+         <y>150</y>
          <width>91</width>
-         <height>21</height>
+         <height>25</height>
         </rect>
        </property>
        <property name="text">
@@ -808,10 +812,10 @@ configuration file.</string>
       <widget class="QLineEdit" name="decoder71LineEdit">
        <property name="geometry">
         <rect>
-         <x>120</x>
-         <y>120</y>
-         <width>311</width>
-         <height>21</height>
+         <x>130</x>
+         <y>150</y>
+         <width>301</width>
+         <height>25</height>
         </rect>
        </property>
       </widget>
@@ -819,9 +823,9 @@ configuration file.</string>
        <property name="geometry">
         <rect>
          <x>20</x>
-         <y>120</y>
-         <width>91</width>
-         <height>21</height>
+         <y>150</y>
+         <width>101</width>
+         <height>25</height>
         </rect>
        </property>
        <property name="text">
@@ -829,6 +833,45 @@ configuration file.</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_33">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>190</y>
+         <width>101</width>
+         <height>25</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>3D7.1 Surround:</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+      <widget class="QLineEdit" name="decoder3D71LineEdit">
+       <property name="geometry">
+        <rect>
+         <x>130</x>
+         <y>190</y>
+         <width>301</width>
+         <height>25</height>
+        </rect>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="decoder3D71Button">
+       <property name="geometry">
+        <rect>
+         <x>440</x>
+         <y>190</y>
+         <width>91</width>
+         <height>25</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Browse...</string>
        </property>
       </widget>
      </widget>
@@ -1221,6 +1264,11 @@ application or system to determine if it should be used.</string>
       </item>
       <item>
        <property name="text">
+        <string>PipeWire</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
         <string>JACK</string>
        </property>
       </item>
@@ -1421,6 +1469,26 @@ drop-outs.</string>
         </property>
        </widget>
       </widget>
+      <widget class="QWidget" name="page_8">
+       <widget class="QCheckBox" name="pwireAssumeAudioCheckBox">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>10</y>
+          <width>161</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <property name="toolTip">
+         <string>Assumes PipeWire has support for audio, allowing
+the backend to initialize even when no audio devices
+are reported.</string>
+        </property>
+        <property name="text">
+         <string>Assume audio support</string>
+        </property>
+       </widget>
+      </widget>
       <widget class="QWidget" name="page_7">
        <widget class="QCheckBox" name="jackAutospawnCheckBox">
         <property name="geometry">
@@ -1442,7 +1510,7 @@ drop-outs.</string>
         <property name="geometry">
          <rect>
           <x>10</x>
-          <y>70</y>
+          <y>110</y>
           <width>401</width>
           <height>80</height>
          </rect>
@@ -1450,7 +1518,8 @@ drop-outs.</string>
         <property name="toolTip">
          <string>The update buffer size, in samples, that the backend
 will keep buffered to handle the server's real-time
-processing requests. Must be a power of 2.</string>
+processing requests. Must be a power of 2. Ignored
+when Real-time Mixing is used.</string>
         </property>
         <property name="title">
          <string>Buffer Size</string>
@@ -1511,6 +1580,30 @@ processing requests. Must be a power of 2.</string>
         </property>
         <property name="text">
          <string>AutoConnect Ports</string>
+        </property>
+        <property name="tristate">
+         <bool>true</bool>
+        </property>
+       </widget>
+       <widget class="QCheckBox" name="jackRtMixCheckBox">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>70</y>
+          <width>141</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <property name="toolTip">
+         <string>Renders samples directly in the real-time
+processing callback. This allows for lower
+latency and less overall CPU utilization, but
+can increase the risk of underruns when
+increasing the amount of processing the
+mixer needs to do.</string>
+        </property>
+        <property name="text">
+         <string>Real-time Mixing</string>
         </property>
         <property name="tristate">
          <bool>true</bool>
@@ -2054,7 +2147,7 @@ be useful for preventing those extensions from being used.</string>
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>100</y>
+        <y>60</y>
         <width>511</width>
         <height>241</height>
        </rect>
@@ -2317,7 +2410,7 @@ added by the ALC_EXT_DEDICATED extension.</string>
        <rect>
         <x>160</x>
         <y>20</y>
-        <width>131</width>
+        <width>135</width>
         <height>31</height>
        </rect>
       </property>
@@ -2459,6 +2552,22 @@ added by the ALC_EXT_DEDICATED extension.</string>
         <string>Psychotic</string>
        </property>
       </item>
+     </widget>
+     <widget class="QCheckBox" name="enableEaxCheck">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>320</y>
+        <width>231</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="toolTip">
+       <string>Enables legacy EAX API support.</string>
+      </property>
+      <property name="text">
+       <string>Enable EAX API support</string>
+      </property>
      </widget>
     </widget>
    </widget>

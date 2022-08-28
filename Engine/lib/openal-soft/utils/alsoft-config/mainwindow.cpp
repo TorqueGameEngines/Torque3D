@@ -28,6 +28,9 @@ static const struct {
 #ifdef HAVE_JACK
     { "jack", "JACK" },
 #endif
+#ifdef HAVE_PIPEWIRE
+    { "pipewire", "PipeWire" },
+#endif
 #ifdef HAVE_PULSEAUDIO
     { "pulse", "PulseAudio" },
 #endif
@@ -80,10 +83,10 @@ static const struct NameValuePair {
     { "Mono", "mono" },
     { "Stereo", "stereo" },
     { "Quadraphonic", "quad" },
-    { "5.1 Surround (Side)", "surround51" },
-    { "5.1 Surround (Rear)", "surround51rear" },
+    { "5.1 Surround", "surround51" },
     { "6.1 Surround", "surround61" },
     { "7.1 Surround", "surround71" },
+    { "3D7.1 Surround", "surround3d71" },
 
     { "Ambisonic, 1st Order", "ambi1" },
     { "Ambisonic, 2nd Order", "ambi2" },
@@ -122,18 +125,21 @@ static const struct NameValuePair {
     { "Default", "" },
     { "Pan Pot", "panpot" },
     { "UHJ", "uhj" },
+    { "Binaural", "hrtf" },
 
     { "", "" }
 }, ambiFormatList[] = {
     { "Default", "" },
     { "AmbiX (ACN, SN3D)", "ambix" },
-    { "ACN, N3D", "acn+n3d" },
     { "Furse-Malham", "fuma" },
+    { "ACN, N3D", "acn+n3d" },
+    { "ACN, FuMa", "acn+fuma" },
 
     { "", "" }
 }, hrtfModeList[] = {
     { "1st Order Ambisonic", "ambi1" },
     { "2nd Order Ambisonic", "ambi2" },
+    { "3rd Order Ambisonic", "ambi3" },
     { "Default (Full)", "" },
     { "Full", "full" },
 
@@ -200,7 +206,11 @@ static QStringList getAllDataPaths(const QString &append)
     QString paths = qgetenv("XDG_DATA_DIRS");
     if(paths.isEmpty())
         paths = "/usr/local/share/:/usr/share/";
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+    list += paths.split(QChar(':'), Qt::SkipEmptyParts);
+#else
     list += paths.split(QChar(':'), QString::SkipEmptyParts);
+#endif
 #endif
     QStringList::iterator iter = list.begin();
     while(iter != list.end())
@@ -340,6 +350,12 @@ MainWindow::MainWindow(QWidget *parent) :
 
 #endif
 
+#ifndef ALSOFT_EAX
+    ui->enableEaxCheck->setChecked(Qt::Unchecked);
+    ui->enableEaxCheck->setEnabled(false);
+    ui->enableEaxCheck->setVisible(false);
+#endif
+
     mPeriodSizeValidator = new QIntValidator{64, 8192, this};
     ui->periodSizeEdit->setValidator(mPeriodSizeValidator);
     mPeriodCountValidator = new QIntValidator{2, 16, this};
@@ -397,6 +413,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->decoder61Button, &QPushButton::clicked, this, &MainWindow::select61DecoderFile);
     connect(ui->decoder71LineEdit, &QLineEdit::textChanged, this, &MainWindow::enableApplyButton);
     connect(ui->decoder71Button, &QPushButton::clicked, this, &MainWindow::select71DecoderFile);
+    connect(ui->decoder3D71LineEdit, &QLineEdit::textChanged, this, &MainWindow::enableApplyButton);
+    connect(ui->decoder3D71Button, &QPushButton::clicked, this, &MainWindow::select3D71DecoderFile);
 
     connect(ui->preferredHrtfComboBox, qcb_cicint, this, &MainWindow::enableApplyButton);
     connect(ui->hrtfStateComboBox, qcb_cicint, this, &MainWindow::enableApplyButton);
@@ -439,14 +457,18 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->enableDedicatedCheck, &QCheckBox::stateChanged, this, &MainWindow::enableApplyButton);
     connect(ui->enablePitchShifterCheck, &QCheckBox::stateChanged, this, &MainWindow::enableApplyButton);
     connect(ui->enableVocalMorpherCheck, &QCheckBox::stateChanged, this, &MainWindow::enableApplyButton);
+    connect(ui->enableEaxCheck, &QCheckBox::stateChanged, this, &MainWindow::enableApplyButton);
 
     connect(ui->pulseAutospawnCheckBox, &QCheckBox::stateChanged, this, &MainWindow::enableApplyButton);
     connect(ui->pulseAllowMovesCheckBox, &QCheckBox::stateChanged, this, &MainWindow::enableApplyButton);
     connect(ui->pulseFixRateCheckBox, &QCheckBox::stateChanged, this, &MainWindow::enableApplyButton);
     connect(ui->pulseAdjLatencyCheckBox, &QCheckBox::stateChanged, this, &MainWindow::enableApplyButton);
 
+    connect(ui->pwireAssumeAudioCheckBox, &QCheckBox::stateChanged, this, &MainWindow::enableApplyButton);
+
     connect(ui->jackAutospawnCheckBox, &QCheckBox::stateChanged, this, &MainWindow::enableApplyButton);
     connect(ui->jackConnectPortsCheckBox, &QCheckBox::stateChanged, this, &MainWindow::enableApplyButton);
+    connect(ui->jackRtMixCheckBox, &QCheckBox::stateChanged, this, &MainWindow::enableApplyButton);
     connect(ui->jackBufferSizeSlider, &QSlider::valueChanged, this, &MainWindow::updateJackBufferSizeEdit);
     connect(ui->jackBufferSizeLine, &QLineEdit::editingFinished, this, &MainWindow::updateJackBufferSizeSlider);
 
@@ -635,6 +657,8 @@ void MainWindow::loadConfig(const QString &fname)
     ui->channelConfigCombo->setCurrentIndex(0);
     if(channelconfig.isEmpty() == false)
     {
+        if(channelconfig == "surround51rear")
+            channelconfig = "surround51";
         QString str{getNameFromValue(speakerModeList, channelconfig)};
         if(!str.isEmpty())
         {
@@ -735,8 +759,7 @@ void MainWindow::loadConfig(const QString &fname)
         }
     }
 
-    bool hqmode{settings.value("decoder/hq-mode", true).toBool()};
-    ui->decoderHQModeCheckBox->setChecked(hqmode);
+    ui->decoderHQModeCheckBox->setChecked(getCheckState(settings.value("decoder/hq-mode")));
     ui->decoderDistCompCheckBox->setCheckState(getCheckState(settings.value("decoder/distance-comp")));
     ui->decoderNFEffectsCheckBox->setCheckState(getCheckState(settings.value("decoder/nfc")));
     double refdelay{settings.value("decoder/nfc-ref-delay", 0.0).toDouble()};
@@ -760,11 +783,9 @@ void MainWindow::loadConfig(const QString &fname)
 
     QString hrtfmode{settings.value("hrtf-mode").toString().trimmed()};
     ui->hrtfmodeSlider->setValue(2);
-    ui->hrtfmodeLabel->setText(hrtfModeList[2].name);
-    /* The "basic" mode name is no longer supported, and "ambi3" is temporarily
-     * disabled. Use "ambi2" instead.
-     */
-    if(hrtfmode == "basic" || hrtfmode == "ambi3")
+    ui->hrtfmodeLabel->setText(hrtfModeList[3].name);
+    /* The "basic" mode name is no longer supported. Use "ambi2" instead. */
+    if(hrtfmode == "basic")
         hrtfmode = "ambi2";
     for(int i = 0;hrtfModeList[i].name[0];i++)
     {
@@ -911,14 +932,20 @@ void MainWindow::loadConfig(const QString &fname)
     ui->enableDedicatedCheck->setChecked(!excludefx.contains("dedicated", Qt::CaseInsensitive));
     ui->enablePitchShifterCheck->setChecked(!excludefx.contains("pshifter", Qt::CaseInsensitive));
     ui->enableVocalMorpherCheck->setChecked(!excludefx.contains("vmorpher", Qt::CaseInsensitive));
+    if(ui->enableEaxCheck->isEnabled())
+        ui->enableEaxCheck->setChecked(getCheckState(settings.value("eax/enable")) != Qt::Unchecked);
 
     ui->pulseAutospawnCheckBox->setCheckState(getCheckState(settings.value("pulse/spawn-server")));
     ui->pulseAllowMovesCheckBox->setCheckState(getCheckState(settings.value("pulse/allow-moves")));
     ui->pulseFixRateCheckBox->setCheckState(getCheckState(settings.value("pulse/fix-rate")));
     ui->pulseAdjLatencyCheckBox->setCheckState(getCheckState(settings.value("pulse/adjust-latency")));
 
+    ui->pwireAssumeAudioCheckBox->setCheckState(settings.value("pipewire/assume-audio").toBool()
+        ? Qt::Checked : Qt::Unchecked);
+
     ui->jackAutospawnCheckBox->setCheckState(getCheckState(settings.value("jack/spawn-server")));
     ui->jackConnectPortsCheckBox->setCheckState(getCheckState(settings.value("jack/connect-ports")));
+    ui->jackRtMixCheckBox->setCheckState(getCheckState(settings.value("jack/rt-mix")));
     ui->jackBufferSizeLine->setText(settings.value("jack/buffer-size", QString()).toString());
     updateJackBufferSizeSlider();
 
@@ -998,9 +1025,7 @@ void MainWindow::saveConfig(const QString &fname) const
     settings.setValue("output-limiter", getCheckValue(ui->outputLimiterCheckBox));
     settings.setValue("dither", getCheckValue(ui->outputDitherCheckBox));
 
-    settings.setValue("decoder/hq-mode",
-        ui->decoderHQModeCheckBox->isChecked() ? QString{/*"true"*/} : QString{"false"}
-    );
+    settings.setValue("decoder/hq-mode", getCheckValue(ui->decoderHQModeCheckBox));
     settings.setValue("decoder/distance-comp", getCheckValue(ui->decoderDistCompCheckBox));
     settings.setValue("decoder/nfc", getCheckValue(ui->decoderNFEffectsCheckBox));
     double refdelay = ui->decoderNFRefDelaySpinBox->value();
@@ -1121,14 +1146,21 @@ void MainWindow::saveConfig(const QString &fname) const
     if(!ui->enableVocalMorpherCheck->isChecked())
         strlist.append("vmorpher");
     settings.setValue("excludefx", strlist.join(QChar{','}));
+    settings.setValue("eax/enable",
+        (!ui->enableEaxCheck->isEnabled() || ui->enableEaxCheck->isChecked())
+        ? QString{/*"true"*/} : QString{"false"});
 
     settings.setValue("pulse/spawn-server", getCheckValue(ui->pulseAutospawnCheckBox));
     settings.setValue("pulse/allow-moves", getCheckValue(ui->pulseAllowMovesCheckBox));
     settings.setValue("pulse/fix-rate", getCheckValue(ui->pulseFixRateCheckBox));
     settings.setValue("pulse/adjust-latency", getCheckValue(ui->pulseAdjLatencyCheckBox));
 
+    settings.setValue("pipewire/assume-audio", ui->pwireAssumeAudioCheckBox->isChecked()
+        ? QString{"true"} : QString{/*"false"*/});
+
     settings.setValue("jack/spawn-server", getCheckValue(ui->jackAutospawnCheckBox));
     settings.setValue("jack/connect-ports", getCheckValue(ui->jackConnectPortsCheckBox));
+    settings.setValue("jack/rt-mix", getCheckValue(ui->jackRtMixCheckBox));
     settings.setValue("jack/buffer-size", ui->jackBufferSizeLine->text());
 
     settings.setValue("alsa/device", ui->alsaDefaultDeviceLine->text());
@@ -1223,6 +1255,8 @@ void MainWindow::select61DecoderFile()
 { selectDecoderFile(ui->decoder61LineEdit, "Select 6.1 Surround Decoder");}
 void MainWindow::select71DecoderFile()
 { selectDecoderFile(ui->decoder71LineEdit, "Select 7.1 Surround Decoder");}
+void MainWindow::select3D71DecoderFile()
+{ selectDecoderFile(ui->decoder3D71LineEdit, "Select 3D7.1 Surround Decoder");}
 void MainWindow::selectDecoderFile(QLineEdit *line, const char *caption)
 {
     QString dir{line->text()};

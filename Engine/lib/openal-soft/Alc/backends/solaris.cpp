@@ -20,7 +20,7 @@
 
 #include "config.h"
 
-#include "backends/solaris.h"
+#include "solaris.h"
 
 #include <sys/ioctl.h>
 #include <sys/types.h>
@@ -34,15 +34,15 @@
 #include <errno.h>
 #include <poll.h>
 #include <math.h>
+#include <string.h>
 
 #include <thread>
 #include <functional>
 
-#include "alcmain.h"
 #include "albyte.h"
-#include "alu.h"
-#include "alconfig.h"
-#include "compat.h"
+#include "alc/alconfig.h"
+#include "core/device.h"
+#include "core/helpers.h"
 #include "core/logging.h"
 #include "threads.h"
 #include "vector.h"
@@ -58,7 +58,7 @@ std::string solaris_driver{"/dev/audio"};
 
 
 struct SolarisBackend final : public BackendBase {
-    SolarisBackend(ALCdevice *device) noexcept : BackendBase{device} { }
+    SolarisBackend(DeviceBase *device) noexcept : BackendBase{device} { }
     ~SolarisBackend() override;
 
     int mixerProc();
@@ -70,6 +70,7 @@ struct SolarisBackend final : public BackendBase {
 
     int mFd{-1};
 
+    uint mFrameStep{};
     al::vector<al::byte> mBuffer;
 
     std::atomic<bool> mKillNow{true};
@@ -147,10 +148,14 @@ void SolarisBackend::open(const char *name)
         throw al::backend_exception{al::backend_error::NoDevice, "Device name \"%s\" not found",
             name};
 
-    mFd = ::open(solaris_driver.c_str(), O_WRONLY);
-    if(mFd == -1)
+    int fd{::open(solaris_driver.c_str(), O_WRONLY)};
+    if(fd == -1)
         throw al::backend_exception{al::backend_error::NoDevice, "Could not open %s: %s",
             solaris_driver.c_str(), strerror(errno)};
+
+    if(mFd != -1)
+        ::close(mFd);
+    mFd = fd;
 
     mDevice->DeviceName = name;
 }
@@ -161,12 +166,7 @@ bool SolarisBackend::reset()
     AUDIO_INITINFO(&info);
 
     info.play.sample_rate = mDevice->Frequency;
-
-    if(mDevice->FmtChans != DevFmtMono)
-        mDevice->FmtChans = DevFmtStereo;
-    uint numChannels{mDevice->channelsFromFmt()};
-    info.play.channels = numChannels;
-
+    info.play.channels = mDevice->channelsFromFmt();
     switch(mDevice->FmtType)
     {
     case DevFmtByte:
@@ -188,9 +188,7 @@ bool SolarisBackend::reset()
         info.play.encoding = AUDIO_ENCODING_LINEAR;
         break;
     }
-
-    uint frameSize{numChannels * mDevice->bytesFromFmt()};
-    info.play.buffer_size = mDevice->BufferSize * frameSize;
+    info.play.buffer_size = mDevice->BufferSize * mDevice->frameSizeFromFmt();
 
     if(ioctl(mFd, AUDIO_SETINFO, &info) < 0)
     {
@@ -200,28 +198,39 @@ bool SolarisBackend::reset()
 
     if(mDevice->channelsFromFmt() != info.play.channels)
     {
-        ERR("Failed to set %s, got %u channels instead\n", DevFmtChannelsString(mDevice->FmtChans),
-            info.play.channels);
-        return false;
+        if(info.play.channels >= 2)
+            mDevice->FmtChans = DevFmtStereo;
+        else if(info.play.channels == 1)
+            mDevice->FmtChans = DevFmtMono;
+        else
+            throw al::backend_exception{al::backend_error::DeviceError,
+                "Got %u device channels", info.play.channels};
     }
 
-    if(!((info.play.precision == 8 && info.play.encoding == AUDIO_ENCODING_LINEAR8 && mDevice->FmtType == DevFmtUByte) ||
-         (info.play.precision == 8 && info.play.encoding == AUDIO_ENCODING_LINEAR && mDevice->FmtType == DevFmtByte) ||
-         (info.play.precision == 16 && info.play.encoding == AUDIO_ENCODING_LINEAR && mDevice->FmtType == DevFmtShort) ||
-         (info.play.precision == 32 && info.play.encoding == AUDIO_ENCODING_LINEAR && mDevice->FmtType == DevFmtInt)))
+    if(info.play.precision == 8 && info.play.encoding == AUDIO_ENCODING_LINEAR8)
+        mDevice->FmtType = DevFmtUByte;
+    else if(info.play.precision == 8 && info.play.encoding == AUDIO_ENCODING_LINEAR)
+        mDevice->FmtType = DevFmtByte;
+    else if(info.play.precision == 16 && info.play.encoding == AUDIO_ENCODING_LINEAR)
+        mDevice->FmtType = DevFmtShort;
+    else if(info.play.precision == 32 && info.play.encoding == AUDIO_ENCODING_LINEAR)
+        mDevice->FmtType = DevFmtInt;
+    else
     {
-        ERR("Could not set %s samples, got %d (0x%x)\n", DevFmtTypeString(mDevice->FmtType),
-            info.play.precision, info.play.encoding);
+        ERR("Got unhandled sample type: %d (0x%x)\n", info.play.precision, info.play.encoding);
         return false;
     }
 
+    uint frame_size{mDevice->bytesFromFmt() * info.play.channels};
+    mFrameStep = info.play.channels;
     mDevice->Frequency = info.play.sample_rate;
-    mDevice->BufferSize = info.play.buffer_size / frameSize;
+    mDevice->BufferSize = info.play.buffer_size / frame_size;
+    /* How to get the actual period size/count? */
     mDevice->UpdateSize = mDevice->BufferSize / 2;
 
     setDefaultChannelOrder();
 
-    mBuffer.resize(mDevice->UpdateSize * mDevice->frameSizeFromFmt());
+    mBuffer.resize(mDevice->UpdateSize * size_t{frame_size});
     std::fill(mBuffer.begin(), mBuffer.end(), al::byte{});
 
     return true;
@@ -286,7 +295,7 @@ std::string SolarisBackendFactory::probe(BackendType type)
     return outnames;
 }
 
-BackendPtr SolarisBackendFactory::createBackend(ALCdevice *device, BackendType type)
+BackendPtr SolarisBackendFactory::createBackend(DeviceBase *device, BackendType type)
 {
     if(type == BackendType::Playback)
         return BackendPtr{new SolarisBackend{device}};

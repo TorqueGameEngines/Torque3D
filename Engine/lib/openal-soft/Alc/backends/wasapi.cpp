@@ -20,7 +20,7 @@
 
 #include "config.h"
 
-#include "backends/wasapi.h"
+#include "wasapi.h"
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -47,6 +47,7 @@
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
+#include <cstring>
 #include <deque>
 #include <functional>
 #include <future>
@@ -56,10 +57,11 @@
 #include <vector>
 
 #include "albit.h"
-#include "alcmain.h"
-#include "alu.h"
-#include "compat.h"
-#include "converter.h"
+#include "alnumeric.h"
+#include "comptr.h"
+#include "core/converter.h"
+#include "core/device.h"
+#include "core/helpers.h"
 #include "core/logging.h"
 #include "ringbuffer.h"
 #include "strutils.h"
@@ -118,7 +120,8 @@ constexpr DWORD X51RearMask{MaskFromTopBits(X5DOT1REAR)};
 constexpr DWORD X61Mask{MaskFromTopBits(X6DOT1)};
 constexpr DWORD X71Mask{MaskFromTopBits(X7DOT1)};
 
-#define DEVNAME_HEAD "OpenAL Soft on "
+constexpr char DevNameHead[] = "OpenAL Soft on ";
+constexpr size_t DevNameHeadLen{al::size(DevNameHead) - 1};
 
 
 /* Scales the given reftime value, rounding the result. */
@@ -127,69 +130,6 @@ inline uint RefTime2Samples(const ReferenceTime &val, uint srate)
     const auto retval = (val*srate + ReferenceTime{seconds{1}}/2) / seconds{1};
     return static_cast<uint>(mini64(retval, std::numeric_limits<uint>::max()));
 }
-
-
-template<typename T>
-class ComPtr {
-    T *mPtr{nullptr};
-
-public:
-    ComPtr() noexcept = default;
-    ComPtr(const ComPtr &rhs) : mPtr{rhs.mPtr} { if(mPtr) mPtr->AddRef(); }
-    ComPtr(ComPtr&& rhs) noexcept : mPtr{rhs.mPtr} { rhs.mPtr = nullptr; }
-    ComPtr(std::nullptr_t) noexcept { }
-    explicit ComPtr(T *ptr) noexcept : mPtr{ptr} { }
-    ~ComPtr() { if(mPtr) mPtr->Release(); }
-
-    ComPtr& operator=(const ComPtr &rhs)
-    {
-        if(!rhs.mPtr)
-        {
-            if(mPtr)
-                mPtr->Release();
-            mPtr = nullptr;
-        }
-        else
-        {
-            rhs.mPtr->AddRef();
-            try {
-                if(mPtr)
-                    mPtr->Release();
-                mPtr = rhs.mPtr;
-            }
-            catch(...) {
-                rhs.mPtr->Release();
-                throw;
-            }
-        }
-        return *this;
-    }
-    ComPtr& operator=(ComPtr&& rhs)
-    {
-        if(mPtr)
-            mPtr->Release();
-        mPtr = rhs.mPtr;
-        rhs.mPtr = nullptr;
-        return *this;
-    }
-
-    operator bool() const noexcept { return mPtr != nullptr; }
-
-    T& operator*() const noexcept { return *mPtr; }
-    T* operator->() const noexcept { return mPtr; }
-    T* get() const noexcept { return mPtr; }
-    T** getPtr() noexcept { return &mPtr; }
-
-    T* release() noexcept
-    {
-        T *ret{mPtr};
-        mPtr = nullptr;
-        return ret;
-    }
-
-    void swap(ComPtr &rhs) noexcept { std::swap(mPtr, rhs.mPtr); }
-    void swap(ComPtr&& rhs) noexcept { std::swap(mPtr, rhs.mPtr); }
-};
 
 
 class GuidPrinter {
@@ -238,10 +178,9 @@ struct DevMap {
 
 bool checkName(const al::vector<DevMap> &list, const std::string &name)
 {
-    return std::find_if(list.cbegin(), list.cend(),
-        [&name](const DevMap &entry) -> bool
-        { return entry.name == name; }
-    ) != list.cend();
+    auto match_name = [&name](const DevMap &entry) -> bool
+    { return entry.name == name; };
+    return std::find_if(list.cbegin(), list.cend(), match_name) != list.cend();
 }
 
 al::vector<DevMap> PlaybackDevices;
@@ -253,8 +192,7 @@ NameGUIDPair get_device_name_and_guid(IMMDevice *device)
 {
     static constexpr char UnknownName[]{"Unknown Device Name"};
     static constexpr char UnknownGuid[]{"Unknown Device GUID"};
-    std::string name{DEVNAME_HEAD};
-    std::string guid;
+    std::string name, guid;
 
     ComPtr<IPropertyStore> ps;
     HRESULT hr = device->OpenPropertyStore(STGM_READ, ps.getPtr());
@@ -297,26 +235,26 @@ NameGUIDPair get_device_name_and_guid(IMMDevice *device)
     return std::make_pair(std::move(name), std::move(guid));
 }
 
-void get_device_formfactor(IMMDevice *device, EndpointFormFactor *formfactor)
+EndpointFormFactor get_device_formfactor(IMMDevice *device)
 {
     ComPtr<IPropertyStore> ps;
-    HRESULT hr = device->OpenPropertyStore(STGM_READ, ps.getPtr());
+    HRESULT hr{device->OpenPropertyStore(STGM_READ, ps.getPtr())};
     if(FAILED(hr))
     {
         WARN("OpenPropertyStore failed: 0x%08lx\n", hr);
-        return;
+        return UnknownFormFactor;
     }
 
+    EndpointFormFactor formfactor{UnknownFormFactor};
     PropVariant pvform;
-    hr = ps->GetValue(reinterpret_cast<const PROPERTYKEY&>(PKEY_AudioEndpoint_FormFactor), pvform.get());
+    hr = ps->GetValue(PKEY_AudioEndpoint_FormFactor, pvform.get());
     if(FAILED(hr))
         WARN("GetValue AudioEndpoint_FormFactor failed: 0x%08lx\n", hr);
     else if(pvform->vt == VT_UI4)
-        *formfactor = static_cast<EndpointFormFactor>(pvform->ulVal);
-    else if(pvform->vt == VT_EMPTY)
-        *formfactor = UnknownFormFactor;
-    else
+        formfactor = static_cast<EndpointFormFactor>(pvform->ulVal);
+    else if(pvform->vt != VT_EMPTY)
         WARN("Unexpected PROPVARIANT type: 0x%04x\n", pvform->vt);
+    return formfactor;
 }
 
 
@@ -484,26 +422,27 @@ void TraceFormat(const char *msg, const WAVEFORMATEX *format)
 
 enum class MsgType {
     OpenDevice,
+    ReopenDevice,
     ResetDevice,
     StartDevice,
     StopDevice,
     CloseDevice,
     EnumeratePlayback,
     EnumerateCapture,
-    QuitThread,
 
-    Count
+    Count,
+    QuitThread = Count
 };
 
 constexpr char MessageStr[static_cast<size_t>(MsgType::Count)][20]{
     "Open Device",
+    "Reopen Device",
     "Reset Device",
     "Start Device",
     "Stop Device",
     "Close Device",
     "Enumerate Playback",
-    "Enumerate Capture",
-    "Quit"
+    "Enumerate Capture"
 };
 
 
@@ -511,7 +450,7 @@ constexpr char MessageStr[static_cast<size_t>(MsgType::Count)][20]{
 struct WasapiProxy {
     virtual ~WasapiProxy() = default;
 
-    virtual HRESULT openProxy() = 0;
+    virtual HRESULT openProxy(const char *name) = 0;
     virtual void closeProxy() = 0;
 
     virtual HRESULT resetProxy() = 0;
@@ -521,19 +460,22 @@ struct WasapiProxy {
     struct Msg {
         MsgType mType;
         WasapiProxy *mProxy;
+        const char *mParam;
         std::promise<HRESULT> mPromise;
+
+        explicit operator bool() const noexcept { return mType != MsgType::QuitThread; }
     };
     static std::deque<Msg> mMsgQueue;
     static std::mutex mMsgQueueLock;
     static std::condition_variable mMsgQueueCond;
 
-    std::future<HRESULT> pushMessage(MsgType type)
+    std::future<HRESULT> pushMessage(MsgType type, const char *param=nullptr)
     {
         std::promise<HRESULT> promise;
         std::future<HRESULT> future{promise.get_future()};
         {
             std::lock_guard<std::mutex> _{mMsgQueueLock};
-            mMsgQueue.emplace_back(Msg{type, this, std::move(promise)});
+            mMsgQueue.emplace_back(Msg{type, this, param, std::move(promise)});
         }
         mMsgQueueCond.notify_one();
         return future;
@@ -545,19 +487,19 @@ struct WasapiProxy {
         std::future<HRESULT> future{promise.get_future()};
         {
             std::lock_guard<std::mutex> _{mMsgQueueLock};
-            mMsgQueue.emplace_back(Msg{type, nullptr, std::move(promise)});
+            mMsgQueue.emplace_back(Msg{type, nullptr, nullptr, std::move(promise)});
         }
         mMsgQueueCond.notify_one();
         return future;
     }
 
-    static bool popMessage(Msg &msg)
+    static Msg popMessage()
     {
         std::unique_lock<std::mutex> lock{mMsgQueueLock};
         mMsgQueueCond.wait(lock, []{return !mMsgQueue.empty();});
-        msg = std::move(mMsgQueue.front());
+        Msg msg{std::move(mMsgQueue.front())};
         mMsgQueue.pop_front();
-        return msg.mType != MsgType::QuitThread;
+        return msg;
     }
 
     static int messageHandler(std::promise<HRESULT> *promise);
@@ -597,12 +539,11 @@ int WasapiProxy::messageHandler(std::promise<HRESULT> *promise)
 
     TRACE("Starting message loop\n");
     uint deviceCount{0};
-    Msg msg;
-    while(popMessage(msg))
+    while(Msg msg{popMessage()})
     {
-        TRACE("Got message \"%s\" (0x%04x, this=%p)\n",
+        TRACE("Got message \"%s\" (0x%04x, this=%p, param=%p)\n",
             MessageStr[static_cast<size_t>(msg.mType)], static_cast<uint>(msg.mType),
-            decltype(std::declval<void*>()){msg.mProxy});
+            static_cast<void*>(msg.mProxy), static_cast<const void*>(msg.mParam));
 
         switch(msg.mType)
         {
@@ -611,7 +552,7 @@ int WasapiProxy::messageHandler(std::promise<HRESULT> *promise)
             if(++deviceCount == 1)
                 hr = cohr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
             if(SUCCEEDED(hr))
-                hr = msg.mProxy->openProxy();
+                hr = msg.mProxy->openProxy(msg.mParam);
             msg.mPromise.set_value(hr);
 
             if(FAILED(hr))
@@ -619,6 +560,11 @@ int WasapiProxy::messageHandler(std::promise<HRESULT> *promise)
                 if(--deviceCount == 0 && SUCCEEDED(cohr))
                     CoUninitialize();
             }
+            continue;
+
+        case MsgType::ReopenDevice:
+            hr = msg.mProxy->openProxy(msg.mParam);
+            msg.mPromise.set_value(hr);
             continue;
 
         case MsgType::ResetDevice:
@@ -669,11 +615,11 @@ int WasapiProxy::messageHandler(std::promise<HRESULT> *promise)
                 CoUninitialize();
             continue;
 
-        default:
-            ERR("Unexpected message: %u\n", static_cast<uint>(msg.mType));
-            msg.mPromise.set_value(E_FAIL);
-            continue;
+        case MsgType::QuitThread:
+            break;
         }
+        ERR("Unexpected message: %u\n", static_cast<uint>(msg.mType));
+        msg.mPromise.set_value(E_FAIL);
     }
     TRACE("Message loop finished\n");
 
@@ -682,13 +628,13 @@ int WasapiProxy::messageHandler(std::promise<HRESULT> *promise)
 
 
 struct WasapiPlayback final : public BackendBase, WasapiProxy {
-    WasapiPlayback(ALCdevice *device) noexcept : BackendBase{device} { }
+    WasapiPlayback(DeviceBase *device) noexcept : BackendBase{device} { }
     ~WasapiPlayback() override;
 
     int mixerProc();
 
     void open(const char *name) override;
-    HRESULT openProxy() override;
+    HRESULT openProxy(const char *name) override;
     void closeProxy() override;
 
     bool reset() override;
@@ -699,8 +645,6 @@ struct WasapiPlayback final : public BackendBase, WasapiProxy {
     void stopProxy() override;
 
     ClockLatency getClockLatency() override;
-
-    std::wstring mDevId;
 
     HRESULT mOpenStatus{E_FAIL};
     ComPtr<IMMDevice> mMMDev{nullptr};
@@ -796,11 +740,14 @@ void WasapiPlayback::open(const char *name)
 {
     HRESULT hr{S_OK};
 
-    mNotifyEvent = CreateEventW(nullptr, FALSE, FALSE, nullptr);
-    if(mNotifyEvent == nullptr)
+    if(!mNotifyEvent)
     {
-        ERR("Failed to create notify events: %lu\n", GetLastError());
-        hr = E_FAIL;
+        mNotifyEvent = CreateEventW(nullptr, FALSE, FALSE, nullptr);
+        if(mNotifyEvent == nullptr)
+        {
+            ERR("Failed to create notify events: %lu\n", GetLastError());
+            hr = E_FAIL;
+        }
     }
 
     if(SUCCEEDED(hr))
@@ -808,71 +755,75 @@ void WasapiPlayback::open(const char *name)
         if(name)
         {
             if(PlaybackDevices.empty())
-                pushMessage(MsgType::EnumeratePlayback).wait();
+                pushMessage(MsgType::EnumeratePlayback);
+            if(std::strncmp(name, DevNameHead, DevNameHeadLen) == 0)
+            {
+                name += DevNameHeadLen;
+                if(*name == '\0')
+                    name = nullptr;
+            }
+        }
 
-            hr = E_FAIL;
-            auto iter = std::find_if(PlaybackDevices.cbegin(), PlaybackDevices.cend(),
-                [name](const DevMap &entry) -> bool
-                { return entry.name == name || entry.endpoint_guid == name; });
-            if(iter == PlaybackDevices.cend())
-            {
-                const std::wstring wname{utf8_to_wstr(name)};
-                iter = std::find_if(PlaybackDevices.cbegin(), PlaybackDevices.cend(),
-                    [&wname](const DevMap &entry) -> bool
-                    { return entry.devid == wname; });
-            }
-            if(iter == PlaybackDevices.cend())
-                WARN("Failed to find device name matching \"%s\"\n", name);
-            else
-            {
-                mDevId = iter->devid;
-                mDevice->DeviceName = iter->name;
-                hr = S_OK;
-            }
+        if(SUCCEEDED(mOpenStatus))
+            hr = pushMessage(MsgType::ReopenDevice, name).get();
+        else
+        {
+            hr = pushMessage(MsgType::OpenDevice, name).get();
+            mOpenStatus = hr;
         }
     }
 
-    if(SUCCEEDED(hr))
-        hr = pushMessage(MsgType::OpenDevice).get();
-    mOpenStatus = hr;
-
     if(FAILED(hr))
-    {
-        if(mNotifyEvent != nullptr)
-            CloseHandle(mNotifyEvent);
-        mNotifyEvent = nullptr;
-
-        mDevId.clear();
-
         throw al::backend_exception{al::backend_error::DeviceError, "Device init failed: 0x%08lx",
             hr};
-    }
 }
 
-HRESULT WasapiPlayback::openProxy()
+HRESULT WasapiPlayback::openProxy(const char *name)
 {
+    const wchar_t *devid{nullptr};
+    if(name)
+    {
+        auto iter = std::find_if(PlaybackDevices.cbegin(), PlaybackDevices.cend(),
+            [name](const DevMap &entry) -> bool
+            { return entry.name == name || entry.endpoint_guid == name; });
+        if(iter == PlaybackDevices.cend())
+        {
+            const std::wstring wname{utf8_to_wstr(name)};
+            iter = std::find_if(PlaybackDevices.cbegin(), PlaybackDevices.cend(),
+                [&wname](const DevMap &entry) -> bool
+                { return entry.devid == wname; });
+        }
+        if(iter == PlaybackDevices.cend())
+        {
+            WARN("Failed to find device name matching \"%s\"\n", name);
+            return E_FAIL;
+        }
+        name = iter->name.c_str();
+        devid = iter->devid.c_str();
+    }
+
     void *ptr;
+    ComPtr<IMMDevice> mmdev;
     HRESULT hr{CoCreateInstance(CLSID_MMDeviceEnumerator, nullptr, CLSCTX_INPROC_SERVER,
         IID_IMMDeviceEnumerator, &ptr)};
     if(SUCCEEDED(hr))
     {
         ComPtr<IMMDeviceEnumerator> enumerator{static_cast<IMMDeviceEnumerator*>(ptr)};
-        if(mDevId.empty())
-            hr = enumerator->GetDefaultAudioEndpoint(eRender, eMultimedia, mMMDev.getPtr());
+        if(!devid)
+            hr = enumerator->GetDefaultAudioEndpoint(eRender, eMultimedia, mmdev.getPtr());
         else
-            hr = enumerator->GetDevice(mDevId.c_str(), mMMDev.getPtr());
+            hr = enumerator->GetDevice(devid, mmdev.getPtr());
     }
-    if(SUCCEEDED(hr))
-        hr = mMMDev->Activate(IID_IAudioClient, CLSCTX_INPROC_SERVER, nullptr, &ptr);
-    if(SUCCEEDED(hr))
+    if(FAILED(hr))
     {
-        mClient = ComPtr<IAudioClient>{static_cast<IAudioClient*>(ptr)};
-        if(mDevice->DeviceName.empty())
-            mDevice->DeviceName = get_device_name_and_guid(mMMDev.get()).first;
+        WARN("Failed to open device \"%s\"\n", name?name:"(default)");
+        return hr;
     }
 
-    if(FAILED(hr))
-        mMMDev = nullptr;
+    mClient = nullptr;
+    mMMDev = std::move(mmdev);
+    if(name) mDevice->DeviceName = std::string{DevNameHead} + name;
+    else mDevice->DeviceName = DevNameHead + get_device_name_and_guid(mMMDev.get()).first;
 
     return hr;
 }
@@ -912,6 +863,7 @@ HRESULT WasapiPlayback::resetProxy()
         ERR("Failed to get mix format: 0x%08lx\n", hr);
         return hr;
     }
+    TraceFormat("Device mix format", wfx);
 
     WAVEFORMATEXTENSIBLE OutputType;
     if(!MakeExtensible(&OutputType, wfx))
@@ -924,11 +876,16 @@ HRESULT WasapiPlayback::resetProxy()
 
     const ReferenceTime per_time{ReferenceTime{seconds{mDevice->UpdateSize}} / mDevice->Frequency};
     const ReferenceTime buf_time{ReferenceTime{seconds{mDevice->BufferSize}} / mDevice->Frequency};
+    bool isRear51{false};
 
     if(!mDevice->Flags.test(FrequencyRequest))
         mDevice->Frequency = OutputType.Format.nSamplesPerSec;
     if(!mDevice->Flags.test(ChannelsRequest))
     {
+        /* If not requesting a channel configuration, auto-select given what
+         * fits the mask's lsb (to ensure no gaps in the output channels). If
+         * there's no mask, we can only assume mono or stereo.
+         */
         const uint32_t chancount{OutputType.Format.nChannels};
         const DWORD chanmask{OutputType.dwChannelMask};
         if(chancount >= 8 && (chanmask&X71Mask) == X7DOT1)
@@ -938,15 +895,24 @@ HRESULT WasapiPlayback::resetProxy()
         else if(chancount >= 6 && (chanmask&X51Mask) == X5DOT1)
             mDevice->FmtChans = DevFmtX51;
         else if(chancount >= 6 && (chanmask&X51RearMask) == X5DOT1REAR)
-            mDevice->FmtChans = DevFmtX51Rear;
+        {
+            mDevice->FmtChans = DevFmtX51;
+            isRear51 = true;
+        }
         else if(chancount >= 4 && (chanmask&QuadMask) == QUAD)
             mDevice->FmtChans = DevFmtQuad;
-        else if(chancount >= 2 && (chanmask&StereoMask) == STEREO)
+        else if(chancount >= 2 && ((chanmask&StereoMask) == STEREO || !chanmask))
             mDevice->FmtChans = DevFmtStereo;
-        else if(chancount >= 1 && (chanmask&MonoMask) == MONO)
+        else if(chancount >= 1 && ((chanmask&MonoMask) == MONO || !chanmask))
             mDevice->FmtChans = DevFmtMono;
         else
             ERR("Unhandled channel config: %d -- 0x%08lx\n", chancount, chanmask);
+    }
+    else
+    {
+        const uint32_t chancount{OutputType.Format.nChannels};
+        const DWORD chanmask{OutputType.dwChannelMask};
+        isRear51 = (chancount == 6 && (chanmask&X51RearMask) == X5DOT1REAR);
     }
 
     OutputType.Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
@@ -969,17 +935,14 @@ HRESULT WasapiPlayback::resetProxy()
         break;
     case DevFmtX51:
         OutputType.Format.nChannels = 6;
-        OutputType.dwChannelMask = X5DOT1;
-        break;
-    case DevFmtX51Rear:
-        OutputType.Format.nChannels = 6;
-        OutputType.dwChannelMask = X5DOT1REAR;
+        OutputType.dwChannelMask = isRear51 ? X5DOT1REAR : X5DOT1;
         break;
     case DevFmtX61:
         OutputType.Format.nChannels = 7;
         OutputType.dwChannelMask = X6DOT1;
         break;
     case DevFmtX71:
+    case DevFmtX3D71:
         OutputType.Format.nChannels = 8;
         OutputType.dwChannelMask = X7DOT1;
         break;
@@ -1050,27 +1013,65 @@ HRESULT WasapiPlayback::resetProxy()
         mDevice->Frequency = OutputType.Format.nSamplesPerSec;
         const uint32_t chancount{OutputType.Format.nChannels};
         const DWORD chanmask{OutputType.dwChannelMask};
-        if(chancount >= 8 && (chanmask&X71Mask) == X7DOT1)
-            mDevice->FmtChans = DevFmtX71;
-        else if(chancount >= 7 && (chanmask&X61Mask) == X6DOT1)
-            mDevice->FmtChans = DevFmtX61;
-        else if(chancount >= 6 && (chanmask&X51Mask) == X5DOT1)
-            mDevice->FmtChans = DevFmtX51;
-        else if(chancount >= 6 && (chanmask&X51RearMask) == X5DOT1REAR)
-            mDevice->FmtChans = DevFmtX51Rear;
-        else if(chancount >= 4 && (chanmask&QuadMask) == QUAD)
-            mDevice->FmtChans = DevFmtQuad;
-        else if(chancount >= 2 && (chanmask&StereoMask) == STEREO)
-            mDevice->FmtChans = DevFmtStereo;
-        else if(chancount >= 1 && (chanmask&MonoMask) == MONO)
-            mDevice->FmtChans = DevFmtMono;
-        else
+        /* Don't update the channel format if the requested format fits what's
+         * supported.
+         */
+        bool chansok{false};
+        if(mDevice->Flags.test(ChannelsRequest))
         {
-            ERR("Unhandled extensible channels: %d -- 0x%08lx\n", OutputType.Format.nChannels,
-                OutputType.dwChannelMask);
-            mDevice->FmtChans = DevFmtStereo;
-            OutputType.Format.nChannels = 2;
-            OutputType.dwChannelMask = STEREO;
+            /* When requesting a channel configuration, make sure it fits the
+             * mask's lsb (to ensure no gaps in the output channels). If
+             * there's no mask, assume the request fits with enough channels.
+             */
+            switch(mDevice->FmtChans)
+            {
+            case DevFmtMono:
+                chansok = (chancount >= 1 && ((chanmask&MonoMask) == MONO || !chanmask));
+                break;
+            case DevFmtStereo:
+                chansok = (chancount >= 2 && ((chanmask&StereoMask) == STEREO || !chanmask));
+                break;
+            case DevFmtQuad:
+                chansok = (chancount >= 4 && ((chanmask&QuadMask) == QUAD || !chanmask));
+                break;
+            case DevFmtX51:
+                chansok = (chancount >= 6 && ((chanmask&X51Mask) == X5DOT1
+                        || (chanmask&X51RearMask) == X5DOT1REAR || !chanmask));
+                break;
+            case DevFmtX61:
+                chansok = (chancount >= 7 && ((chanmask&X61Mask) == X6DOT1 || !chanmask));
+                break;
+            case DevFmtX71:
+            case DevFmtX3D71:
+                chansok = (chancount >= 8 && ((chanmask&X71Mask) == X7DOT1 || !chanmask));
+                break;
+            case DevFmtAmbi3D:
+                break;
+            }
+        }
+        if(!chansok)
+        {
+            if(chancount >= 8 && (chanmask&X71Mask) == X7DOT1)
+                mDevice->FmtChans = DevFmtX71;
+            else if(chancount >= 7 && (chanmask&X61Mask) == X6DOT1)
+                mDevice->FmtChans = DevFmtX61;
+            else if(chancount >= 6 && ((chanmask&X51Mask) == X5DOT1
+                || (chanmask&X51RearMask) == X5DOT1REAR))
+                mDevice->FmtChans = DevFmtX51;
+            else if(chancount >= 4 && (chanmask&QuadMask) == QUAD)
+                mDevice->FmtChans = DevFmtQuad;
+            else if(chancount >= 2 && ((chanmask&StereoMask) == STEREO || !chanmask))
+                mDevice->FmtChans = DevFmtStereo;
+            else if(chancount >= 1 && ((chanmask&MonoMask) == MONO || !chanmask))
+                mDevice->FmtChans = DevFmtMono;
+            else
+            {
+                ERR("Unhandled extensible channels: %d -- 0x%08lx\n", OutputType.Format.nChannels,
+                    OutputType.dwChannelMask);
+                mDevice->FmtChans = DevFmtStereo;
+                OutputType.Format.nChannels = 2;
+                OutputType.dwChannelMask = STEREO;
+            }
         }
 
         if(IsEqualGUID(OutputType.SubFormat, KSDATAFORMAT_SUBTYPE_PCM))
@@ -1105,12 +1106,10 @@ HRESULT WasapiPlayback::resetProxy()
     }
     mFrameStep = OutputType.Format.nChannels;
 
-    EndpointFormFactor formfactor{UnknownFormFactor};
-    get_device_formfactor(mMMDev.get(), &formfactor);
-    mDevice->IsHeadphones = (mDevice->FmtChans == DevFmtStereo
-        && (formfactor == Headphones || formfactor == Headset));
+    const EndpointFormFactor formfactor{get_device_formfactor(mMMDev.get())};
+    mDevice->Flags.set(DirectEar, (formfactor == Headphones || formfactor == Headset));
 
-    setChannelOrderFromWFXMask(OutputType.dwChannelMask);
+    setDefaultWFXChannelOrder();
 
     hr = mClient->Initialize(AUDCLNT_SHAREMODE_SHARED, AUDCLNT_STREAMFLAGS_EVENTCALLBACK,
         buf_time.count(), 0, &OutputType.Format, nullptr);
@@ -1220,13 +1219,13 @@ ClockLatency WasapiPlayback::getClockLatency()
 
 
 struct WasapiCapture final : public BackendBase, WasapiProxy {
-    WasapiCapture(ALCdevice *device) noexcept : BackendBase{device} { }
+    WasapiCapture(DeviceBase *device) noexcept : BackendBase{device} { }
     ~WasapiCapture() override;
 
     int recordProc();
 
     void open(const char *name) override;
-    HRESULT openProxy() override;
+    HRESULT openProxy(const char *name) override;
     void closeProxy() override;
 
     HRESULT resetProxy() override;
@@ -1237,8 +1236,6 @@ struct WasapiCapture final : public BackendBase, WasapiProxy {
 
     void captureSamples(al::byte *buffer, uint samples) override;
     uint availableSamples() override;
-
-    std::wstring mDevId;
 
     HRESULT mOpenStatus{E_FAIL};
     ComPtr<IMMDevice> mMMDev{nullptr};
@@ -1376,45 +1373,21 @@ void WasapiCapture::open(const char *name)
         if(name)
         {
             if(CaptureDevices.empty())
-                pushMessage(MsgType::EnumerateCapture).wait();
-
-            hr = E_FAIL;
-            auto iter = std::find_if(CaptureDevices.cbegin(), CaptureDevices.cend(),
-                [name](const DevMap &entry) -> bool
-                { return entry.name == name || entry.endpoint_guid == name; });
-            if(iter == CaptureDevices.cend())
+                pushMessage(MsgType::EnumerateCapture);
+            if(std::strncmp(name, DevNameHead, DevNameHeadLen) == 0)
             {
-                const std::wstring wname{utf8_to_wstr(name)};
-                iter = std::find_if(CaptureDevices.cbegin(), CaptureDevices.cend(),
-                    [&wname](const DevMap &entry) -> bool
-                    { return entry.devid == wname; });
-            }
-            if(iter == CaptureDevices.cend())
-                WARN("Failed to find device name matching \"%s\"\n", name);
-            else
-            {
-                mDevId = iter->devid;
-                mDevice->DeviceName = iter->name;
-                hr = S_OK;
+                name += DevNameHeadLen;
+                if(*name == '\0')
+                    name = nullptr;
             }
         }
+        hr = pushMessage(MsgType::OpenDevice, name).get();
     }
-
-    if(SUCCEEDED(hr))
-        hr = pushMessage(MsgType::OpenDevice).get();
     mOpenStatus = hr;
 
     if(FAILED(hr))
-    {
-        if(mNotifyEvent != nullptr)
-            CloseHandle(mNotifyEvent);
-        mNotifyEvent = nullptr;
-
-        mDevId.clear();
-
         throw al::backend_exception{al::backend_error::DeviceError, "Device init failed: 0x%08lx",
             hr};
-    }
 
     hr = pushMessage(MsgType::ResetDevice).get();
     if(FAILED(hr))
@@ -1425,30 +1398,50 @@ void WasapiCapture::open(const char *name)
     }
 }
 
-HRESULT WasapiCapture::openProxy()
+HRESULT WasapiCapture::openProxy(const char *name)
 {
+    const wchar_t *devid{nullptr};
+    if(name)
+    {
+        auto iter = std::find_if(CaptureDevices.cbegin(), CaptureDevices.cend(),
+            [name](const DevMap &entry) -> bool
+            { return entry.name == name || entry.endpoint_guid == name; });
+        if(iter == CaptureDevices.cend())
+        {
+            const std::wstring wname{utf8_to_wstr(name)};
+            iter = std::find_if(CaptureDevices.cbegin(), CaptureDevices.cend(),
+                [&wname](const DevMap &entry) -> bool
+                { return entry.devid == wname; });
+        }
+        if(iter == CaptureDevices.cend())
+        {
+            WARN("Failed to find device name matching \"%s\"\n", name);
+            return E_FAIL;
+        }
+        name = iter->name.c_str();
+        devid = iter->devid.c_str();
+    }
+
     void *ptr;
     HRESULT hr{CoCreateInstance(CLSID_MMDeviceEnumerator, nullptr, CLSCTX_INPROC_SERVER,
         IID_IMMDeviceEnumerator, &ptr)};
     if(SUCCEEDED(hr))
     {
         ComPtr<IMMDeviceEnumerator> enumerator{static_cast<IMMDeviceEnumerator*>(ptr)};
-        if(mDevId.empty())
+        if(!devid)
             hr = enumerator->GetDefaultAudioEndpoint(eCapture, eMultimedia, mMMDev.getPtr());
         else
-            hr = enumerator->GetDevice(mDevId.c_str(), mMMDev.getPtr());
+            hr = enumerator->GetDevice(devid, mMMDev.getPtr());
     }
-    if(SUCCEEDED(hr))
-        hr = mMMDev->Activate(IID_IAudioClient, CLSCTX_INPROC_SERVER, nullptr, &ptr);
-    if(SUCCEEDED(hr))
+    if(FAILED(hr))
     {
-        mClient = ComPtr<IAudioClient>{static_cast<IAudioClient*>(ptr)};
-        if(mDevice->DeviceName.empty())
-            mDevice->DeviceName = get_device_name_and_guid(mMMDev.get()).first;
+        WARN("Failed to open device \"%s\"\n", name?name:"(default)");
+        return hr;
     }
 
-    if(FAILED(hr))
-        mMMDev = nullptr;
+    mClient = nullptr;
+    if(name) mDevice->DeviceName = std::string{DevNameHead} + name;
+    else mDevice->DeviceName = DevNameHead + get_device_name_and_guid(mMMDev.get()).first;
 
     return hr;
 }
@@ -1472,11 +1465,32 @@ HRESULT WasapiCapture::resetProxy()
     }
     mClient = ComPtr<IAudioClient>{static_cast<IAudioClient*>(ptr)};
 
+    WAVEFORMATEX *wfx;
+    hr = mClient->GetMixFormat(&wfx);
+    if(FAILED(hr))
+    {
+        ERR("Failed to get capture format: 0x%08lx\n", hr);
+        return hr;
+    }
+    TraceFormat("Device capture format", wfx);
+
+    WAVEFORMATEXTENSIBLE InputType{};
+    if(!MakeExtensible(&InputType, wfx))
+    {
+        CoTaskMemFree(wfx);
+        return E_FAIL;
+    }
+    CoTaskMemFree(wfx);
+    wfx = nullptr;
+
+    const bool isRear51{InputType.Format.nChannels == 6
+        && (InputType.dwChannelMask&X51RearMask) == X5DOT1REAR};
+
     // Make sure buffer is at least 100ms in size
     ReferenceTime buf_time{ReferenceTime{seconds{mDevice->BufferSize}} / mDevice->Frequency};
     buf_time = std::max(buf_time, ReferenceTime{milliseconds{100}});
 
-    WAVEFORMATEXTENSIBLE InputType{};
+    InputType = {};
     InputType.Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
     switch(mDevice->FmtChans)
     {
@@ -1494,11 +1508,7 @@ HRESULT WasapiCapture::resetProxy()
         break;
     case DevFmtX51:
         InputType.Format.nChannels = 6;
-        InputType.dwChannelMask = X5DOT1;
-        break;
-    case DevFmtX51Rear:
-        InputType.Format.nChannels = 6;
-        InputType.dwChannelMask = X5DOT1REAR;
+        InputType.dwChannelMask = isRear51 ? X5DOT1REAR : X5DOT1;
         break;
     case DevFmtX61:
         InputType.Format.nChannels = 7;
@@ -1509,6 +1519,7 @@ HRESULT WasapiCapture::resetProxy()
         InputType.dwChannelMask = X7DOT1;
         break;
 
+    case DevFmtX3D71:
     case DevFmtAmbi3D:
         return E_FAIL;
     }
@@ -1545,8 +1556,12 @@ HRESULT WasapiCapture::resetProxy()
     InputType.Format.cbSize = sizeof(InputType) - sizeof(InputType.Format);
 
     TraceFormat("Requesting capture format", &InputType.Format);
-    WAVEFORMATEX *wfx;
     hr = mClient->IsFormatSupported(AUDCLNT_SHAREMODE_SHARED, &InputType.Format, &wfx);
+    if(FAILED(hr))
+    {
+        WARN("Failed to check format support: 0x%08lx\n", hr);
+        hr = mClient->GetMixFormat(&wfx);
+    }
     if(FAILED(hr))
     {
         ERR("Failed to check format support: 0x%08lx\n", hr);
@@ -1567,7 +1582,7 @@ HRESULT WasapiCapture::resetProxy()
         CoTaskMemFree(wfx);
         wfx = nullptr;
 
-        auto validate_fmt = [](ALCdevice *device, uint32_t chancount, DWORD chanmask) noexcept
+        auto validate_fmt = [](DeviceBase *device, uint32_t chancount, DWORD chanmask) noexcept
             -> bool
         {
             switch(device->FmtChans)
@@ -1584,14 +1599,15 @@ HRESULT WasapiCapture::resetProxy()
                 return (chancount == 4 && (chanmask == 0 || (chanmask&QuadMask) == QUAD));
             /* 5.1 (Side) and 5.1 (Rear) are interchangeable here. */
             case DevFmtX51:
-            case DevFmtX51Rear:
                 return (chancount == 6 && (chanmask == 0 || (chanmask&X51Mask) == X5DOT1
                         || (chanmask&X51RearMask) == X5DOT1REAR));
             case DevFmtX61:
                 return (chancount == 7 && (chanmask == 0 || (chanmask&X61Mask) == X6DOT1));
             case DevFmtX71:
+            case DevFmtX3D71:
                 return (chancount == 8 && (chanmask == 0 || (chanmask&X71Mask) == X7DOT1));
-            case DevFmtAmbi3D: return (chanmask == 0 && device->channelsFromFmt());
+            case DevFmtAmbi3D:
+                return (chanmask == 0 && chancount == device->channelsFromFmt());
             }
             return false;
         };
@@ -1808,31 +1824,30 @@ bool WasapiBackendFactory::querySupport(BackendType type)
 std::string WasapiBackendFactory::probe(BackendType type)
 {
     std::string outnames;
-    auto add_device = [&outnames](const DevMap &entry) -> void
-    {
-        /* +1 to also append the null char (to ensure a null-separated list and
-         * double-null terminated list).
-         */
-        outnames.append(entry.name.c_str(), entry.name.length()+1);
-    };
-
     switch(type)
     {
     case BackendType::Playback:
         WasapiProxy::pushMessageStatic(MsgType::EnumeratePlayback).wait();
-        std::for_each(PlaybackDevices.cbegin(), PlaybackDevices.cend(), add_device);
+        for(const DevMap &entry : PlaybackDevices)
+        {
+            /* +1 to also append the null char (to ensure a null-separated list
+             * and double-null terminated list).
+             */
+            outnames.append(DevNameHead).append(entry.name.c_str(), entry.name.length()+1);
+        }
         break;
 
     case BackendType::Capture:
         WasapiProxy::pushMessageStatic(MsgType::EnumerateCapture).wait();
-        std::for_each(CaptureDevices.cbegin(), CaptureDevices.cend(), add_device);
+        for(const DevMap &entry : CaptureDevices)
+            outnames.append(DevNameHead).append(entry.name.c_str(), entry.name.length()+1);
         break;
     }
 
     return outnames;
 }
 
-BackendPtr WasapiBackendFactory::createBackend(ALCdevice *device, BackendType type)
+BackendPtr WasapiBackendFactory::createBackend(DeviceBase *device, BackendType type)
 {
     if(type == BackendType::Playback)
         return BackendPtr{new WasapiPlayback{device}};

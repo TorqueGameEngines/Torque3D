@@ -82,6 +82,12 @@ if(WIN32)
     add_subdirectory( ${libDir}/openal-soft ${CMAKE_CURRENT_BINARY_DIR}/openal-soft)
 endif()
 
+if(APPLE)
+    set(ALSOFT_REQUIRE_COREAUDIO ON CACHE BOOL "Require Core Audio" FORCE)
+    set(ALSOFT_OSX_FRAMEWORK ON CACHE BOOL "Output an osx framework" FORCE)
+    add_subdirectory( ${libDir}/openal-soft ${CMAKE_CURRENT_BINARY_DIR}/openal-soft)
+endif()
+
 if(TORQUE_SFX_OPENAL)
     #Hide some unnecessary fields as advanced
     mark_as_advanced(ALSOFT_INSTALL_AMBDEC_PRESETS)
@@ -427,7 +433,7 @@ if(TORQUE_SFX_OPENAL AND NOT TORQUE_DEDICATED)
    if(APPLE)
       option(AL_ALEXT_PROTOTYPES "Use Extended OpenAL options" OFF)
       addPath("${srcDir}/sfx/openal/mac")
-      addFramework("OpenAL")
+      addFramework("soft_oal")
     endif()
 endif()
 

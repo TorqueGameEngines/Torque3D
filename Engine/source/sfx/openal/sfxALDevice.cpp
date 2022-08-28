@@ -284,16 +284,16 @@ SFXALDevice::SFXALDevice(  SFXProvider *provider,
       SFXInternal::gUpdateThread->start();
    }
 #endif
-
+    
+   printALInfo(mDevice);
+    
 #if defined(AL_ALEXT_PROTOTYPES)
    dMemset(effectSlot, 0, sizeof(effectSlot));
    dMemset(effect, 0, sizeof(effect));
    uLoop = 0;
-#endif
-
-   printALInfo(mDevice);
    printHRTFInfo(mDevice);
    getEFXInfo(mDevice);
+#endif
 
    mMaxBuffers = getMaxSources();
 

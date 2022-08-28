@@ -83,6 +83,7 @@ ALDeviceList::ALDeviceList( const OPENALFNTABLE &oalft )
          dMemset(&ALDeviceInfo, 0, sizeof(ALDEVICEINFO));
          ALDeviceInfo.bSelected = true;
          dStrncpy(ALDeviceInfo.strInternalDeviceName, devices, sizeof(ALDeviceInfo.strInternalDeviceName));
+         
          char* openFind = dStrchr(devices, '(');
          if (openFind)
          {
@@ -93,6 +94,10 @@ ALDeviceList::ALDeviceList( const OPENALFNTABLE &oalft )
 
             dStrncpy(ALDeviceInfo.strDeviceName, devices, sizeof(ALDeviceInfo.strDeviceName));
 
+         }
+         else
+         {
+            dStrncpy(ALDeviceInfo.strDeviceName, devices, sizeof(ALDeviceInfo.strDeviceName));
          }
 
          vDeviceInfo.push_back(ALDeviceInfo);

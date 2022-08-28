@@ -20,23 +20,33 @@
 
 #include "config.h"
 
-#include <cmath>
-#include <cstdlib>
-#include <array>
-#include <complex>
 #include <algorithm>
+#include <array>
+#include <cmath>
+#include <complex>
+#include <cstdlib>
+#include <iterator>
 
-#include "alcmain.h"
+#include "alc/effects/base.h"
 #include "alcomplex.h"
-#include "alcontext.h"
+#include "almalloc.h"
+#include "alnumbers.h"
 #include "alnumeric.h"
-#include "alu.h"
-#include "effectslot.h"
-#include "math_defs.h"
+#include "alspan.h"
+#include "core/bufferline.h"
+#include "core/devformat.h"
+#include "core/device.h"
+#include "core/effectslot.h"
+#include "core/mixer.h"
+#include "core/mixer/defs.h"
+#include "intrusive_ptr.h"
+
+struct ContextBase;
 
 
 namespace {
 
+using uint = unsigned int;
 using complex_d = std::complex<double>;
 
 #define STFT_SIZE      1024
@@ -53,7 +63,7 @@ std::array<double,STFT_SIZE> InitHannWindow()
     /* Create lookup table of the Hann window for the desired size, i.e. STFT_SIZE */
     for(size_t i{0};i < STFT_SIZE>>1;i++)
     {
-        constexpr double scale{al::MathDefs<double>::Pi() / double{STFT_SIZE}};
+        constexpr double scale{al::numbers::pi / double{STFT_SIZE}};
         const double val{std::sin(static_cast<double>(i+1) * scale)};
         ret[i] = ret[STFT_SIZE-1-i] = val * val;
     }
@@ -71,6 +81,7 @@ struct FrequencyBin {
 struct PshifterState final : public EffectState {
     /* Effect parameters */
     size_t mCount;
+    size_t mPos;
     uint mPitchShiftI;
     double mPitchShift;
 
@@ -92,8 +103,8 @@ struct PshifterState final : public EffectState {
     float mTargetGains[MAX_OUTPUT_CHANNELS];
 
 
-    void deviceUpdate(const ALCdevice *device, const Buffer &buffer) override;
-    void update(const ALCcontext *context, const EffectSlot *slot, const EffectProps *props,
+    void deviceUpdate(const DeviceBase *device, const Buffer &buffer) override;
+    void update(const ContextBase *context, const EffectSlot *slot, const EffectProps *props,
         const EffectTarget target) override;
     void process(const size_t samplesToDo, const al::span<const FloatBufferLine> samplesIn,
         const al::span<FloatBufferLine> samplesOut) override;
@@ -101,10 +112,11 @@ struct PshifterState final : public EffectState {
     DEF_NEWDEL(PshifterState)
 };
 
-void PshifterState::deviceUpdate(const ALCdevice*, const Buffer&)
+void PshifterState::deviceUpdate(const DeviceBase*, const Buffer&)
 {
     /* (Re-)initializing parameters and clear the buffers. */
-    mCount       = FIFO_LATENCY;
+    mCount       = 0;
+    mPos         = FIFO_LATENCY;
     mPitchShiftI = MixerFracOne;
     mPitchShift  = 1.0;
 
@@ -120,7 +132,7 @@ void PshifterState::deviceUpdate(const ALCdevice*, const Buffer&)
     std::fill(std::begin(mTargetGains),  std::end(mTargetGains),  0.0f);
 }
 
-void PshifterState::update(const ALCcontext*, const EffectSlot *slot,
+void PshifterState::update(const ContextBase*, const EffectSlot *slot,
     const EffectProps *props, const EffectTarget target)
 {
     const int tune{props->Pshifter.CoarseTune*100 + props->Pshifter.FineTune};
@@ -143,16 +155,16 @@ void PshifterState::process(const size_t samplesToDo, const al::span<const Float
     /* Cycle offset per update expected of each frequency bin (bin 0 is none,
      * bin 1 is x1, bin 2 is x2, etc).
      */
-    constexpr double expected_cycles{al::MathDefs<double>::Tau() / OVERSAMP};
+    constexpr double expected_cycles{al::numbers::pi*2.0 / OVERSAMP};
 
     for(size_t base{0u};base < samplesToDo;)
     {
-        const size_t todo{minz(STFT_SIZE-mCount, samplesToDo-base)};
+        const size_t todo{minz(STFT_STEP-mCount, samplesToDo-base)};
 
         /* Retrieve the output samples from the FIFO and fill in the new input
          * samples.
          */
-        auto fifo_iter = mFIFO.begin() + mCount;
+        auto fifo_iter = mFIFO.begin()+mPos + mCount;
         std::transform(fifo_iter, fifo_iter+todo, mBufferOut.begin()+base,
             [](double d) noexcept -> float { return static_cast<float>(d); });
 
@@ -161,14 +173,17 @@ void PshifterState::process(const size_t samplesToDo, const al::span<const Float
         base += todo;
 
         /* Check whether FIFO buffer is filled with new samples. */
-        if(mCount < STFT_SIZE) break;
-        mCount = FIFO_LATENCY;
+        if(mCount < STFT_STEP) break;
+        mCount = 0;
+        mPos = (mPos+STFT_STEP) & (mFIFO.size()-1);
 
         /* Time-domain signal windowing, store in FftBuffer, and apply a
          * forward FFT to get the frequency-domain signal.
          */
-        for(size_t k{0u};k < STFT_SIZE;k++)
-            mFftBuffer[k] = mFIFO[k] * HannWindow[k];
+        for(size_t src{mPos}, k{0u};src < STFT_SIZE;++src,++k)
+            mFftBuffer[k] = mFIFO[src] * HannWindow[k];
+        for(size_t src{0u}, k{STFT_SIZE-mPos};src < mPos;++src,++k)
+            mFftBuffer[k] = mFIFO[src] * HannWindow[k];
         forward_fft(mFftBuffer);
 
         /* Analyze the obtained data. Since the real FFT is symmetric, only
@@ -183,8 +198,8 @@ void PshifterState::process(const size_t samplesToDo, const al::span<const Float
             double tmp{(phase - mLastPhase[k]) - static_cast<double>(k)*expected_cycles};
 
             /* Map delta phase into +/- Pi interval */
-            int qpd{double2int(tmp / al::MathDefs<double>::Pi())};
-            tmp -= al::MathDefs<double>::Pi() * (qpd + (qpd%2));
+            int qpd{double2int(tmp / al::numbers::pi)};
+            tmp -= al::numbers::pi * (qpd + (qpd%2));
 
             /* Get deviation from bin frequency from the +/- Pi interval */
             tmp /= expected_cycles;
@@ -229,15 +244,14 @@ void PshifterState::process(const size_t samplesToDo, const al::span<const Float
          * for the output with windowing.
          */
         inverse_fft(mFftBuffer);
-        for(size_t k{0u};k < STFT_SIZE;k++)
-            mOutputAccum[k] += HannWindow[k]*mFftBuffer[k].real() * (4.0/OVERSAMP/STFT_SIZE);
+        for(size_t dst{mPos}, k{0u};dst < STFT_SIZE;++dst,++k)
+            mOutputAccum[dst] += HannWindow[k]*mFftBuffer[k].real() * (4.0/OVERSAMP/STFT_SIZE);
+        for(size_t dst{0u}, k{STFT_SIZE-mPos};dst < mPos;++dst,++k)
+            mOutputAccum[dst] += HannWindow[k]*mFftBuffer[k].real() * (4.0/OVERSAMP/STFT_SIZE);
 
-        /* Shift FIFO and accumulator. */
-        fifo_iter = std::copy(mFIFO.begin()+STFT_STEP, mFIFO.end(), mFIFO.begin());
-        std::copy_n(mOutputAccum.begin(), STFT_STEP, fifo_iter);
-        auto accum_iter = std::copy(mOutputAccum.begin()+STFT_STEP, mOutputAccum.end(),
-            mOutputAccum.begin());
-        std::fill(accum_iter, mOutputAccum.end(), 0.0);
+        /* Copy out the accumulated result, then clear for the next iteration. */
+        std::copy_n(mOutputAccum.begin() + mPos, STFT_STEP, mFIFO.begin() + mPos);
+        std::fill_n(mOutputAccum.begin() + mPos, STFT_STEP, 0.0);
     }
 
     /* Now, mix the processed sound data to the output. */

@@ -17,12 +17,17 @@
 #include "version.h"
 
 
-std::vector<DriverIface> DriverList;
+std::vector<DriverIfacePtr> DriverList;
 
 thread_local DriverIface *ThreadCtxDriver;
 
 enum LogLevel LogLevel = LogLevel_Error;
 FILE *LogFile;
+
+#ifdef __MINGW32__
+DriverIface *GetThreadDriver() noexcept { return ThreadCtxDriver; }
+void SetThreadDriver(DriverIface *driver) noexcept { ThreadCtxDriver = driver; }
+#endif
 
 static void LoadDriverList(void);
 
@@ -79,13 +84,13 @@ static void AddModule(HMODULE module, const WCHAR *name)
 {
     for(auto &drv : DriverList)
     {
-        if(drv.Module == module)
+        if(drv->Module == module)
         {
             TRACE("Skipping already-loaded module %p\n", decltype(std::declval<void*>()){module});
             FreeLibrary(module);
             return;
         }
-        if(drv.Name == name)
+        if(drv->Name == name)
         {
             TRACE("Skipping similarly-named module %ls\n", name);
             FreeLibrary(module);
@@ -93,8 +98,8 @@ static void AddModule(HMODULE module, const WCHAR *name)
         }
     }
 
-    DriverList.emplace_back(name, module);
-    DriverIface &newdrv = DriverList.back();
+    DriverList.emplace_back(std::make_unique<DriverIface>(name, module));
+    DriverIface &newdrv = *DriverList.back();
 
     /* Load required functions. */
     int err = 0;
@@ -209,7 +214,10 @@ static void AddModule(HMODULE module, const WCHAR *name)
         if(newdrv.alcGetError(nullptr) == ALC_NO_ERROR)
             newdrv.ALCVer = MAKE_ALC_VER(alc_ver[0], alc_ver[1]);
         else
+        {
+            WARN("Failed to query ALC version for %ls, assuming 1.0\n", name);
             newdrv.ALCVer = MAKE_ALC_VER(1, 0);
+        }
 
 #undef LOAD_PROC
 #define LOAD_PROC(x) do {                                                     \

@@ -51,20 +51,6 @@ uniform float logContrast;
 uniform float brightnessValue;
 uniform float saturationValue;
 uniform float3 colorFilter;
-
-vec3 ACESFitted(vec3 x, float w)
-{
-     x = tMul(ACESInputMat, x);
-
-     // Apply RRT and ODT
-     x = RRTAndODTFit(x, w);
-
-     x = tMul(ACESOutputMat, x);
-     
-     // Clamp to [0, 1]
-    return saturate(x);
-     
-}
             
 float3 Tonemap(float3 x)
 { 

@@ -290,6 +290,11 @@ private:
    /// </summary>
    bool mUseHDRCaptures;
 
+   /// <summary>
+   /// holds the normal render state for light fade so we can capture them before and restore them after baking
+   /// </summary>
+   S32 mRenderMaximumNumOfLights;
+   bool mRenderUseLightFade;
 protected:
    /// The current active light manager.
    static RenderProbeMgr* smProbeManager;
@@ -413,7 +418,8 @@ public:
    /// Takes a reflection probe and runs the cubemap bake process on it, outputting the resulting files to disk
    /// </summary>
    void bakeProbe(ReflectionProbe* probe);
-
+   void preBake();
+   void postBake();
    /// <summary>
    /// Runs the cubemap bake on all probes in the current scene
    /// </summary>

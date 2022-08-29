@@ -470,6 +470,21 @@ void RenderProbeMgr::reloadTextures()
    }
 }
 
+void RenderProbeMgr::preBake()
+{
+   Con::setVariable("$Probes::Capturing", "1");
+   mRenderMaximumNumOfLights = AdvancedLightBinManager::smMaximumNumOfLights;
+   mRenderUseLightFade = AdvancedLightBinManager::smUseLightFade;
+
+   AdvancedLightBinManager::smMaximumNumOfLights = -1;
+   AdvancedLightBinManager::smUseLightFade = false;
+}
+void RenderProbeMgr::postBake()
+{
+   Con::setVariable("$Probes::Capturing", "0");
+   AdvancedLightBinManager::smMaximumNumOfLights = mRenderMaximumNumOfLights;
+   AdvancedLightBinManager::smUseLightFade = mRenderUseLightFade;
+}
 void RenderProbeMgr::bakeProbe(ReflectionProbe* probe)
 {
    GFXDEBUGEVENT_SCOPE(RenderProbeMgr_Bake, ColorI::WHITE);
@@ -477,7 +492,7 @@ void RenderProbeMgr::bakeProbe(ReflectionProbe* probe)
    Con::warnf("RenderProbeMgr::bakeProbe() - Beginning bake!");
    U32 startMSTime = Platform::getRealMilliseconds();
 
-   Con::setVariable("$Probes::Capturing", "1");
+   preBake();
 
    String path = Con::getVariable("$pref::ReflectionProbes::CurrentLevelPath", "levels/");
    U32 resolution = Con::getIntVariable("$pref::ReflectionProbes::BakeResolution", 64);
@@ -598,7 +613,7 @@ void RenderProbeMgr::bakeProbe(ReflectionProbe* probe)
    if (!renderWithProbes)
       RenderProbeMgr::smRenderReflectionProbes = probeRenderState;
 
-   Con::setVariable("$Probes::Capturing", "0");
+   postBake();
 
    cubeRefl.unregisterReflector();
 
@@ -798,7 +813,7 @@ void RenderProbeMgr::render( SceneRenderState *state )
    _setupPerFrameParameters(state);
 
    // Early out if nothing to draw.
-   if ((!RenderProbeMgr::smRenderReflectionProbes && dStrcmp(Con::getVariable("$Probes::Capturing", "0"), "1")) || (!mHasSkylight && mProbeData.effectiveProbeCount == 0))
+   if ((!RenderProbeMgr::smRenderReflectionProbes && !dStrcmp(Con::getVariable("$Probes::Capturing", "0"), "1")) || (!mHasSkylight && mProbeData.effectiveProbeCount == 0))
    {
       getProbeArrayEffect()->setSkip(true);
       mActiveProbes.clear();

@@ -57,6 +57,9 @@ class SFXALDevice : public SFXDevice
       void printHRTFInfo(ALCdevice* device);
       void getEFXInfo(ALCdevice* device);
       S32 getMaxSources();
+   
+      // Compatibility with pre openal 1.2
+      S32 getMaxSourcesOld();
 
       SFXALDevice(   SFXProvider *provider,
                      const OPENALFNTABLE &openal, 

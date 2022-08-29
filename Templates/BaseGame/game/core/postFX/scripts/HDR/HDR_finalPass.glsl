@@ -53,7 +53,7 @@ uniform float whitePoint;
 uniform float logContrast;
 uniform float brightnessValue;
 uniform float saturationValue;
-uniform float3 colorFilter;
+uniform vec3 colorFilter;
 
 out vec4 OUT_col;
 

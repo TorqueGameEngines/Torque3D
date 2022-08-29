@@ -376,7 +376,7 @@ function HDRPostFX::populatePostFXSettings(%this)
    PostEffectEditorInspector.addField("$PostFX::HDRPostFX::whitePoint", "White Point", "float", "", $PostFX::HDRPostFX::whitePoint, " 2");
    PostEffectEditorInspector.endGroup();
     
-   PostEffectEditorInspector.startGroup("HDR - Color Correction");
+   PostEffectEditorInspector.startGroup("HDR - Image Adjustments");
    PostEffectEditorInspector.addField("$PostFX::HDRPostFX::logContrast", "Contrast", "range", "", $PostFX::HDRPostFX::logContrast, "1 2 20");
    PostEffectEditorInspector.addField("$PostFX::HDRPostFX::saturationValue", "Saturation", "range", "", $PostFX::HDRPostFX::saturationValue, "0 2 20");
    PostEffectEditorInspector.addField("$PostFX::HDRPostFX::colorFilter", "Color Tint", "colorF", "", $PostFX::HDRPostFX::colorFilter, "0 0 0");

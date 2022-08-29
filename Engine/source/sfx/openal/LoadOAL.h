@@ -28,7 +28,7 @@
 #endif
 
 #if defined(TORQUE_OS_MAC)
-//#define AL_ALEXT_PROTOTYPES true
+#undef AL_ALEXT_PROTOTYPES
 #  include <OpenAL/al.h>
 #  include <OpenAL/alc.h>
 #elif defined(TORQUE_OS_LINUX)
@@ -267,12 +267,11 @@ typedef struct
    LPALGETAUXILIARYEFFECTSLOTIV			alGetAuxiliaryEffectSlotiv;
    LPALGETAUXILIARYEFFECTSLOTF			alGetAuxiliaryEffectSlotf;
    LPALGETAUXILIARYEFFECTSLOTFV			alGetAuxiliaryEffectSlotfv;
-#endif
    LPALGENFILTERS         alGenFilters;
    LPALDELETEFILTERS      alDeleteFilters;
    LPALFILTERI            alFilteri;
-
    LPALCGETSTRINGISOFT alcGetStringiSOFT;
+#endif
 
 } OPENALFNTABLE, *LPOPENALFNTABLE;
 #endif

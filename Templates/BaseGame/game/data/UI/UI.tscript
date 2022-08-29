@@ -29,9 +29,6 @@ function UI::onDestroyGameServer(%this){}
 function UI::initClient(%this)
 {
    //Load UI stuff
-   //we need to load this because some of the menu profiles use the sounds here
-   %this.queueExec("./datablocks/guiSounds");
-   
    //Profiles
    %this.queueExec("./scripts/profiles");
    

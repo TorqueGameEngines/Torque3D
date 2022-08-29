@@ -218,60 +218,6 @@ bool GuiControlProfile::protectedSetBitmap( void *object, const char *index, con
    return false;
 }
 
-const char* GuiControlProfile::protectedGetSoundButtonDown( void* object, const char* data )
-{
-   GuiControlProfile* profile = reinterpret_cast< GuiControlProfile* >( object );
-
-   SFXTrack* track = profile->mSoundButtonDown;
-   if( !track )
-      return "";
-
-   return track->getName();
-}
-
-bool GuiControlProfile::protectedSetSoundButtonDown( void* object, const char* index, const char* data )
-{
-   GuiControlProfile* profile = reinterpret_cast< GuiControlProfile* >( object );
-   
-   SFXTrack* track = NULL;
-   if( data && data[ 0] && !Sim::findObject( data, track ) )
-   {
-      Con::errorf( "GuiControlProfile::protectedSetSoundButtonDown - no SFXTrack '%s'", data );
-      return false;
-   }
-   
-   profile->mSoundButtonDown = track;
-   
-   return false;
-}
-
-const char* GuiControlProfile::protectedGetSoundButtonOver( void* object, const char* data )
-{
-   GuiControlProfile* profile = reinterpret_cast< GuiControlProfile* >( object );
-
-   SFXTrack* track = profile->mSoundButtonOver;
-   if( !track )
-      return "";
-
-   return track->getName();
-}
-
-bool GuiControlProfile::protectedSetSoundButtonOver( void* object, const char* index, const char* data )
-{
-   GuiControlProfile* profile = reinterpret_cast< GuiControlProfile* >( object );
-   
-   SFXTrack* track = NULL;
-   if( data && data[ 0] && !Sim::findObject( data, track ) )
-   {
-      Con::errorf( "GuiControlProfile::protectedSetSoundButtonOver - no SFXTrack '%s'", data );
-      return false;
-   }
-   
-   profile->mSoundButtonOver = track;
-   
-   return false;
-}
-
 GuiControlProfile::GuiControlProfile(void) :
    mFillColor(255,0,255,255),
    mFillColorHL(255,0,255,255),
@@ -293,6 +239,8 @@ GuiControlProfile::GuiControlProfile(void) :
    mTextOffset(0,0),
    mBitmapArrayRects(0)
 {
+   INIT_ASSET(SoundButtonDown);
+   INIT_ASSET(SoundButtonOver);
    mLoadCount = 0;
    mUseCount = 0;
    
@@ -367,8 +315,19 @@ GuiControlProfile::GuiControlProfile(void) :
       mTextOffset     = def->mTextOffset;
 
       // default sound
-      mSoundButtonDown = def->mSoundButtonDown;
-      mSoundButtonOver = def->mSoundButtonOver;
+      _setSoundButtonDown(def->getSoundButtonDown());
+      if (getSoundButtonDown() != StringTable->EmptyString())
+      {
+         if (!getSoundButtonDownProfile())
+            Con::errorf(ConsoleLogEntry::General, "GuiControlProfile: Can't get default button pressed sound asset.");
+      }
+
+      _setSoundButtonOver(def->getSoundButtonOver());
+      if (getSoundButtonOver() != StringTable->EmptyString())
+      {
+         if (!getSoundButtonOverProfile())
+            Con::errorf(ConsoleLogEntry::General, "GuiControlProfile: Can't get default button hover sound asset.");
+      }
 
       //used by GuiTextCtrl
       mModal         = def->mModal;
@@ -478,9 +437,9 @@ void GuiControlProfile::initPersistFields()
       addField("hasBitmapArray", TypeBool,      Offset(mUseBitmapArray, GuiControlProfile),
          "If true, 'bitmap' is an array of images." );
 
-      addProtectedField( "soundButtonDown", TypeSFXTrackName,  Offset(mSoundButtonDown, GuiControlProfile),
-         &GuiControlProfile::protectedSetSoundButtonDown, &GuiControlProfile::protectedGetSoundButtonDown,
-         "Sound to play when mouse has been pressed on control." );
+      INITPERSISTFIELD_SOUNDASSET(SoundButtonDown, GuiControlProfile, "The sound button down.");
+      INITPERSISTFIELD_SOUNDASSET(SoundButtonOver, GuiControlProfile, "The sound button down.");
+
       addProtectedField( "soundButtonOver", TypeSFXTrackName,  Offset(mSoundButtonOver, GuiControlProfile),
          &GuiControlProfile::protectedSetSoundButtonOver, &GuiControlProfile::protectedGetSoundButtonOver,
          "Sound to play when mouse is hovering over control." );

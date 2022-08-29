@@ -20,19 +20,21 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+#include "core/rendering/shaders/gl/hlslCompat.glsl"
+#include "core/rendering/shaders/postFX/gl/postFx.glsl"
 #include "shadergen:/autogenConditioners.h"
+
+#line 27
 
 uniform sampler2D inputTex;
 uniform float threshold;
-
-in vec2 uv0;
 
 out vec4 OUT_col;
 
 void main()
 {
-	vec4 screenColor = texture(inputTex, uv0);
+	vec4 screenColor = texture(inputTex, IN_uv0);
 	float brightness = max(screenColor.r, max(screenColor.g, screenColor.b));
-	float contribution = clamp(brightness - threshold) / max(brightness, 0.0001, 0.0, 1.0);
+	float contribution = clamp(brightness - threshold, 0.0, 1.0) / max(brightness, 0.0001);
 	OUT_col = screenColor * contribution;
 }

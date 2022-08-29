@@ -20,7 +20,11 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+#include "core/rendering/shaders/gl/hlslCompat.glsl"
+#include "core/rendering/shaders/postFX/gl/postFx.glsl"
 #include "shadergen:/autogenConditioners.h"
+
+#line 27
 
 #define KERNEL_SAMPLES 9
 const vec3 KERNEL[9] = vec3[](
@@ -38,8 +42,6 @@ const vec3 KERNEL[9] = vec3[](
 uniform sampler2D inputTex;
 uniform vec2 oneOverTargetSize;
 
-in vec2 uv0;
-
 out vec4 OUT_col;
  
 void main()
@@ -53,7 +55,7 @@ void main()
 		vec3 offsetWeight = KERNEL[i];
 		vec2 offsetXY = offsetWeight.xy * oneOverTargetSize;
 		float weight = offsetWeight.z;
-		vec4 sampleCol = texture(inputTex, uv0 + offsetXY);
+		vec4 sampleCol = texture(inputTex, IN_uv0 + offsetXY);
 		downSample += sampleCol * weight;
 	}
 	

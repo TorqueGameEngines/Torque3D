@@ -20,7 +20,11 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+#include "core/rendering/shaders/gl/hlslCompat.glsl"
+#include "core/rendering/shaders/postFX/gl/postFx.glsl"
 #include "shadergen:/autogenConditioners.h"
+
+#line 27
 
 uniform sampler2D inputTex;
 uniform sampler2D dirtTex;
@@ -33,19 +37,17 @@ uniform vec3 dirtParams;
 uniform vec3 edgeParams;
 uniform vec2 oneOverTargetSize;
 
-in vec2 uv0;
-
 out vec4 OUT_col;
 
 void main()
 {
 	#ifdef USE_DIRT
-		float edge = distance(uv0, vec2(0.5, 0.5));
+		float edge = distance(IN_uv0, vec2(0.5, 0.5));
 		edge = max(smoothstep(edgeParams.x, edgeParams.y, edge), edgeParams.z);
-		vec3 dirt = texture(dirtTex, uv0 / (dirtParams.xy * oneOverTargetSize)).rgb * dirtParams.z * edge;
+		vec3 dirt = texture(dirtTex, IN_uv0 / (dirtParams.xy * oneOverTargetSize)).rgb * dirtParams.z * edge;
 	#endif
 	
-	vec4 upSample = texture(inputTex, uv0) * strength;
+	vec4 upSample = texture(inputTex, IN_uv0) * strength;
 	
 	#ifdef USE_DIRT
 		upSample.rgb += upSample.rgb * dirt;

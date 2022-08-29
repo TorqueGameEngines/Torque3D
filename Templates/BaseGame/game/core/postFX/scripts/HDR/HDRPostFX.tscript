@@ -29,49 +29,48 @@ $PostFX::HDRPostFX::enableToneMapping = 0.5;
 ///
 /// 0.18 is fairly common value.
 ///
-$PostFX::HDRPostFX::keyValue = 0.18;
+
+$PostFX::HDRPostFX::keyValue = 0.115;
 
 
-$PostFX::HDRPostFX::exposureValue = 1.0;
+//Explicit HDR Params
+$PostFX::HDRPostFX::exposureValue = 1.5;
+
+$PostFX::HDRPostFX::whitePoint = 2.5;
+
+//HDR Color Corrections Vars
+
+$PostFX::HDRPostFX::logContrast = 1.0;
+
+$PostFX::HDRPostFX::saturationValue = 1.0;
+
+$PostFX::HDRPostFX::colorFilter = "1.0 1.0 1.0";
+
 
 /// The minimum luninace value to allow when tone mapping 
 /// the scene.  Is particularly useful if your scene very 
 /// dark or has a black ambient color in places.
 $PostFX::HDRPostFX::minLuminace = 0.001;
 
-/// The lowest luminance value which is mapped to white.  This
-/// is usually set to the highest visible luminance in your 
-/// scene.  By setting this to smaller values you get a contrast
-/// enhancement.
-$PostFX::HDRPostFX::whiteCutoff = 1.0;
-
 /// The rate of adaptation from the previous and new 
 /// average scene luminance. 
-$PostFX::HDRPostFX::adaptRate = 2.0;
-
-/// Blends between the scene and the blue shifted version
-/// of the scene for a cinematic desaturated night effect.
-$PostFX::HDRPostFX::enableBlueShift = 0.0;
-
-/// The blue shift color value.
-$PostFX::HDRPostFX::blueShiftColor = "1.05 0.97 1.27";
-
+$PostFX::HDRPostFX::adaptRate = 0.85;
 
 /// Blends between the scene and the bloomed scene.
 $PostFX::HDRPostFX::enableBloom = 1.0;
 
 /// The threshold luminace value for pixels which are
 /// considered "bright" and need to be bloomed.
-$PostFX::HDRPostFX::brightPassThreshold = 0.2;
+$PostFX::HDRPostFX::brightPassThreshold = 0.08;
 
 /// These are used in the gaussian blur of the
 /// bright pass for the bloom effect.
-$PostFX::HDRPostFX::gaussMultiplier = 0.145;
+$PostFX::HDRPostFX::gaussMultiplier = 0.4;
 $PostFX::HDRPostFX::gaussMean = 0;
 $PostFX::HDRPostFX::gaussStdDev = 0.5;
 
 // The tonemapping algo to use
-$PostFX::HDRPostFX::tonemapMode = "Filmic";
+$PostFX::HDRPostFX::tonemapMode = "ACES";
 
 $PostFX::HDRPostFX::enableAutoExposure = true;
 
@@ -79,9 +78,9 @@ $PostFX::HDRPostFX::enableAutoExposure = true;
 singleton ShaderData( HDR_BrightPassShader )
 {
    DXVertexShaderFile 	= $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
-   DXPixelShaderFile 	= "./brightPassFilterP.hlsl";   
+   DXPixelShaderFile 	= "./HDR_utils/brightPassFilterP.hlsl";   
    OGLVertexShaderFile  = $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";
-   OGLPixelShaderFile   = "./brightPassFilterP.glsl";
+   OGLPixelShaderFile   = "./HDR_utils/brightPassFilterP.glsl";
    
    samplerNames[0] = "$inputTex";
    samplerNames[1] = "$luminanceTex";
@@ -91,10 +90,10 @@ singleton ShaderData( HDR_BrightPassShader )
 
 singleton ShaderData( HDR_DownScale4x4Shader )
 {
-   DXVertexShaderFile 	= "./downScale4x4V.hlsl";
-   DXPixelShaderFile 	= "./downScale4x4P.hlsl";
-   OGLVertexShaderFile  = "./downScale4x4V.glsl";
-   OGLPixelShaderFile   = "./downScale4x4P.glsl";
+   DXVertexShaderFile 	= "./HDR_Bloom/downScale4x4V.hlsl";
+   DXPixelShaderFile 	= "./HDR_Bloom/downScale4x4P.hlsl";
+   OGLVertexShaderFile  = "./HDR_Bloom/downScale4x4V.glsl";
+   OGLPixelShaderFile   = "./HDR_Bloom/downScale4x4P.glsl";
    
    samplerNames[0] = "$inputTex";
    
@@ -104,9 +103,9 @@ singleton ShaderData( HDR_DownScale4x4Shader )
 singleton ShaderData( HDR_BloomGaussBlurHShader )
 {
    DXVertexShaderFile 	= $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
-   DXPixelShaderFile 	= "./bloomGaussBlurHP.hlsl";
+   DXPixelShaderFile 	= "./HDR_Bloom/bloomGaussBlurHP.hlsl";
    OGLVertexShaderFile  = $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";
-   OGLPixelShaderFile   = "./bloomGaussBlurHP.glsl";
+   OGLPixelShaderFile   = "./HDR_Bloom/bloomGaussBlurHP.glsl";
    
    samplerNames[0] = "$inputTex";
    
@@ -116,9 +115,9 @@ singleton ShaderData( HDR_BloomGaussBlurHShader )
 singleton ShaderData( HDR_BloomGaussBlurVShader )
 {
    DXVertexShaderFile 	= $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
-   DXPixelShaderFile 	= "./bloomGaussBlurVP.hlsl";
+   DXPixelShaderFile 	= "./HDR_Bloom/bloomGaussBlurVP.hlsl";
    OGLVertexShaderFile  = $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";
-   OGLPixelShaderFile   = "./bloomGaussBlurVP.glsl";
+   OGLPixelShaderFile   = "./HDR_Bloom/bloomGaussBlurVP.glsl";
    
    samplerNames[0] = "$inputTex";
    
@@ -128,9 +127,9 @@ singleton ShaderData( HDR_BloomGaussBlurVShader )
 singleton ShaderData( HDR_SampleLumShader )
 {
    DXVertexShaderFile 	= $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
-   DXPixelShaderFile 	= "./sampleLumInitialP.hlsl";
+   DXPixelShaderFile 	= "./HDR_utils/sampleLumInitialP.hlsl";
    OGLVertexShaderFile  = $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";
-   OGLPixelShaderFile   = "./sampleLumInitialP.glsl";
+   OGLPixelShaderFile   = "./HDR_utils/sampleLumInitialP.glsl";
    
    samplerNames[0] = "$inputTex";
    
@@ -140,9 +139,9 @@ singleton ShaderData( HDR_SampleLumShader )
 singleton ShaderData( HDR_DownSampleLumShader )
 {
    DXVertexShaderFile 	= $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
-   DXPixelShaderFile 	= "./sampleLumIterativeP.hlsl";
+   DXPixelShaderFile 	= "./HDR_utils/sampleLumIterativeP.hlsl";
    OGLVertexShaderFile  = $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";
-   OGLPixelShaderFile   = "./sampleLumIterativeP.glsl";
+   OGLPixelShaderFile   = "./HDR_utils/sampleLumIterativeP.glsl";
    
    samplerNames[0] = "$inputTex";
    
@@ -152,9 +151,9 @@ singleton ShaderData( HDR_DownSampleLumShader )
 singleton ShaderData( HDR_CalcAdaptedLumShader )
 {
    DXVertexShaderFile 	= $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
-   DXPixelShaderFile 	= "./calculateAdaptedLumP.hlsl";
+   DXPixelShaderFile 	= "./HDR_utils/calculateAdaptedLumP.hlsl";
    OGLVertexShaderFile  = $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";
-   OGLPixelShaderFile   = "./calculateAdaptedLumP.glsl";
+   OGLPixelShaderFile   = "./HDR_utils/calculateAdaptedLumP.glsl";
    
    samplerNames[0] = "$currLum";
    samplerNames[1] = "$lastAdaptedLum";
@@ -165,9 +164,9 @@ singleton ShaderData( HDR_CalcAdaptedLumShader )
 singleton ShaderData( HDR_CombineShader )
 {
    DXVertexShaderFile 	= $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
-   DXPixelShaderFile 	= "./finalPassCombineP.hlsl";
+   DXPixelShaderFile 	= "./HDR_finalPass.hlsl";
    OGLVertexShaderFile  = $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";
-   OGLPixelShaderFile   = "./finalPassCombineP.glsl";
+   OGLPixelShaderFile   = "./HDR_finalPass.glsl";
    
    samplerNames[0] = "$sceneTex";
    samplerNames[1] = "$luminanceTex";
@@ -225,8 +224,12 @@ singleton GFXStateBlockData( HDRStateBlock )
 function HDRPostFX::setShaderConsts( %this )
 {
    %this.setShaderConst( "$brightPassThreshold", $PostFX::HDRPostFX::brightPassThreshold );
-   %this.setShaderConst( "$g_fMiddleGray", $PostFX::HDRPostFX::keyValue );  
-   %this.setShaderConst( "$ExposureValue", $PostFX::HDRPostFX::exposureValue );    
+   %this.setShaderConst( "$g_fMiddleGray",   $PostFX::HDRPostFX::keyValue );  
+   %this.setShaderConst( "$exposureValue",   $PostFX::HDRPostFX::exposureValue );
+   %this.setShaderConst( "$whitePoint",      $PostFX::HDRPostFX::whitePoint ); 
+   %this.setShaderConst( "$logContrast",     $PostFX::HDRPostFX::logContrast );
+   %this.setShaderConst( "$saturationValue",     $PostFX::HDRPostFX::saturationValue );
+   
          
    %bloomH = %this-->bloomH;
    %bloomH.setShaderConst( "$gaussMultiplier", $PostFX::HDRPostFX::gaussMultiplier );
@@ -249,25 +252,31 @@ function HDRPostFX::setShaderConsts( %this )
         
    %this-->finalLum.setShaderConst( "$adaptRate", $PostFX::HDRPostFX::adaptRate );
    
+  
    %combinePass = %this-->combinePass;   
    %combinePass.setShaderConst( "$g_fEnableToneMapping", $PostFX::HDRPostFX::enableToneMapping );
    %combinePass.setShaderConst( "$g_fMiddleGray", $PostFX::HDRPostFX::keyValue );
-   %combinePass.setShaderConst( "$ExposureValue", $PostFX::HDRPostFX::exposureValue );
-   %combinePass.setShaderConst( "$g_fBloomScale", $PostFX::HDRPostFX::enableBloom );      
-   %combinePass.setShaderConst( "$g_fEnableBlueShift", $PostFX::HDRPostFX::enableBlueShift );   
-   %combinePass.setShaderConst( "$g_fBlueShiftColor", $PostFX::HDRPostFX::blueShiftColor );   
    
+   %combinePass.setShaderConst( "$whitePoint", $PostFX::HDRPostFX::whitePoint );
+   %combinePass.setShaderConst( "$exposureValue", $PostFX::HDRPostFX::exposureValue );
+   %combinePass.setShaderConst( "$colorFilter", $PostFX::HDRPostFX::colorFilter );  
+   %combinePass.setShaderConst( "$saturationValue", $PostFX::HDRPostFX::saturationValue );
+   %combinePass.setShaderConst( "$logContrast", $PostFX::HDRPostFX::logContrast );
+ 
+   %combinePass.setShaderConst( "$g_fBloomScale", $PostFX::HDRPostFX::enableBloom );       
    %combinePass.setShaderConst( "$g_fEnableAutoExposure", $PostFX::HDRPostFX::enableAutoExposure );
    
    %tonemapMode = 1;
    if($PostFX::HDRPostFX::tonemapMode $= "ACES")
       %tonemapMode = 1;
-   else if($PostFX::HDRPostFX::tonemapMode $= "Uncharted 2")
+   else if($PostFX::HDRPostFX::tonemapMode $= "Filmic Helji")
       %tonemapMode = 2;
-   else if($PostFX::HDRPostFX::tonemapMode $= "Filmic")
+   else if($PostFX::HDRPostFX::tonemapMode $= "Hable U2")
       %tonemapMode = 3;
- else if($PostFX::HDRPostFX::tonemapMode $= "Reinhard")
-      %tonemapMode = 4;
+   else if($PostFX::HDRPostFX::tonemapMode $= "Reinhard")
+      %tonemapMode = 4;	  
+ else if($PostFX::HDRPostFX::tonemapMode $= "Linear")
+      %tonemapMode = 5;
  
       
    %combinePass.setShaderConst( "$g_fTonemapMode", %tonemapMode );
@@ -276,10 +285,7 @@ function HDRPostFX::setShaderConsts( %this )
    %combinePass.setShaderConst( "$g_fOneOverGamma",  1 / %clampedGamma );       
    %combinePass.setShaderConst( "$Brightness", $pref::Video::Brightness );
    %combinePass.setShaderConst( "$Contrast", $pref::Video::Contrast );
-
-   %whiteCutoff = ( $PostFX::HDRPostFX::whiteCutoff * $PostFX::HDRPostFX::whiteCutoff ) *
-                  ( $PostFX::HDRPostFX::whiteCutoff * $PostFX::HDRPostFX::whiteCutoff );                  
-   %combinePass.setShaderConst( "$g_fWhiteCutoff", %whiteCutoff );
+ 
 }
 
 function HDRPostFX::preProcess( %this )
@@ -352,6 +358,7 @@ function HDRPostFX::onAdd( %this )
    PostFXManager.registerPostEffect(%this);
    
    $PostFX::HDRPostFX::enableToneMapping = 1;
+	
 }
 
 //This is used to populate the PostFXEditor's settings so the post FX can be edited
@@ -361,29 +368,31 @@ function HDRPostFX::populatePostFXSettings(%this)
 {
    PostEffectEditorInspector.startGroup("HDR - General");
    PostEffectEditorInspector.addCallbackField("$PostFX::HDRPostFX::Enabled", "Enabled", "bool", "", $PostFX::HDRPostFX::Enabled, "", "toggleHDRPostFX");
-   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::minLuminace", "Minimum Luminance", "range", "", $PostFX::HDRPostFX::minLuminace, "0 1 100");
-   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::whiteCutoff", "White Cutoff", "range", "", $PostFX::HDRPostFX::whiteCutoff, "0 10 20");
+   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::exposureValue", "Exposure", "range", "", $PostFX::HDRPostFX::exposureValue, "0 5 50");
    PostEffectEditorInspector.endGroup();
    
    PostEffectEditorInspector.startGroup("HDR - Tonemapping");
-   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::tonemapMode", "Tonemapping Mode", "list", "", $PostFX::HDRPostFX::tonemapMode, "ACES,Uncharted 2,Filmic,Reinhard");
-   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::exposureValue", "Exposure", "float", "", $PostFX::HDRPostFX::exposureValue, " 1");
+   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::tonemapMode", "Tonemapping Mode", "list", "", $PostFX::HDRPostFX::tonemapMode, "ACES,Filmic Helji,Hable U2,Reinhard,Linear");
+   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::whitePoint", "White Point", "float", "", $PostFX::HDRPostFX::whitePoint, " 2");
+   PostEffectEditorInspector.endGroup();
+    
+   PostEffectEditorInspector.startGroup("HDR - Image Adjustments");
+   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::logContrast", "Contrast", "range", "", $PostFX::HDRPostFX::logContrast, "1 2 20");
+   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::saturationValue", "Saturation", "range", "", $PostFX::HDRPostFX::saturationValue, "0 2 20");
+   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::colorFilter", "Color Tint", "colorF", "", $PostFX::HDRPostFX::colorFilter, "0 0 0");
    PostEffectEditorInspector.endGroup();
    
-   PostEffectEditorInspector.startGroup("HDR - Bloom");
-   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::enableBloom", "Enable Bloom", "bool", "", $PostFX::HDRPostFX::enableBloom, "");
+   PostEffectEditorInspector.startGroup("HDR - HDR Bloom");
+   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::enableBloom", "Enable HDR Bloom", "bool", "", $PostFX::HDRPostFX::enableBloom, "");
+   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::gaussMultiplier", "Bloom Multiplier", "range", "", $PostFX::HDRPostFX::gaussMultiplier, "0.0 1.0 2.0");
    PostEffectEditorInspector.addField("$PostFX::HDRPostFX::brightPassThreshold", "Bright Pass Threshold", "float", "", $PostFX::HDRPostFX::brightPassThreshold, "");
-   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::gaussMultiplier", "Blur Multiplier", "range", "", $PostFX::HDRPostFX::gaussMultiplier, "0 1 10");
-   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::gaussMean", "Blur Mean Value", "range", "", $PostFX::HDRPostFX::gaussMean, "0 1 10");
-   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::gaussStdDev", "Blur Std. Dev Value", "range", "", $PostFX::HDRPostFX::gaussStdDev, "0 1 10");
-   PostEffectEditorInspector.endGroup();
+   PostEffectEditorInspector.endGroup(); 
    
    PostEffectEditorInspector.startGroup("HDR - Adaptation");
    PostEffectEditorInspector.addField("$PostFX::HDRPostFX::enableAutoExposure", "Enable Auto Exposure", "bool", "", $PostFX::HDRPostFX::enableAutoExposure, "");
+   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::minLuminace", "Minimum Luminance", "range", "", $PostFX::HDRPostFX::minLuminace, "0 1 100");
    PostEffectEditorInspector.addField("$PostFX::HDRPostFX::adaptRate", "Brightness Adapt Rate", "range", "", $PostFX::HDRPostFX::adaptRate, "0 1 10");
    PostEffectEditorInspector.addField("$PostFX::HDRPostFX::keyValue", "Key Value", "range", "", $PostFX::HDRPostFX::keyValue, "0 1 10");
-   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::enableBlueShift", "Enable Blue Shift", "bool", "", $PostFX::HDRPostFX::enableBlueShift, "");
-   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::blueShiftColor", "Blue Shift Color", "colorF", "", $PostFX::HDRPostFX::blueShiftColor, "");
    PostEffectEditorInspector.endGroup();
 }
 
@@ -403,10 +412,16 @@ function HDRPostFX::applyFromPreset(%this)
       HDRPostFX.disable();
 }
 
+
+
 function HDRPostFX::savePresetSettings(%this)
 {
    PostFXManager::savePresetSetting("$PostFX::HDRPostFX::Enabled");
    PostFXManager::savePresetSetting("$PostFX::HDRPostFX::exposureValue");
+   PostFXManager::savePresetSetting("$PostFX::HDRPostFX::whitePoint");
+   PostFXManager::savePresetSetting("$PostFX::HDRPostFX::logContrast");
+   PostFXManager::savePresetSetting("$PostFX::HDRPostFX::saturationValue");
+   PostFXManager::savePresetSetting("$PostFX::HDRPostFX::colorFilter");
    PostFXManager::savePresetSetting("$PostFX::HDRPostFX::minLuminace");
    PostFXManager::savePresetSetting("$PostFX::HDRPostFX::whiteCutoff");
    PostFXManager::savePresetSetting("$PostFX::HDRPostFX::adaptRate");
@@ -414,12 +429,8 @@ function HDRPostFX::savePresetSettings(%this)
    PostFXManager::savePresetSetting("$PostFX::HDRPostFX::enableBloom");
    PostFXManager::savePresetSetting("$PostFX::HDRPostFX::brightPassThreshold");
    PostFXManager::savePresetSetting("$PostFX::HDRPostFX::gaussMultiplier");
-   PostFXManager::savePresetSetting("$PostFX::HDRPostFX::gaussMean");
-   PostFXManager::savePresetSetting("$PostFX::HDRPostFX::gaussStdDev");
    PostFXManager::savePresetSetting("$PostFX::HDRPostFX::enableAutoExposure");
    PostFXManager::savePresetSetting("$PostFX::HDRPostFX::keyValue");
-   PostFXManager::savePresetSetting("$PostFX::HDRPostFX::enableBlueShift");
-   PostFXManager::savePresetSetting("$PostFX::HDRPostFX::blueShiftColor");
 }
 
 singleton PostEffect( HDRPostFX )
@@ -570,9 +581,9 @@ singleton PostEffect( HDRPostFX )
 singleton ShaderData( LuminanceVisShader )
 {
    DXVertexShaderFile 	= $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
-   DXPixelShaderFile 	= $Core::CommonShaderPath @ "/postFX/hdr/luminanceVisP.hlsl";
+   DXPixelShaderFile 	= $Core::CommonShaderPath @ "/postFX/hdr/HDR_utils/luminanceVisP.hlsl";
    OGLVertexShaderFile  = $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";
-   OGLPixelShaderFile   = $Core::CommonShaderPath @ "/postFX/hdr/gl/luminanceVisP.glsl";
+   OGLPixelShaderFile   = $Core::CommonShaderPath @ "/postFX/hdr/HDR_utils/luminanceVisP.glsl";
    
    samplerNames[0] = "$inputTex";
    

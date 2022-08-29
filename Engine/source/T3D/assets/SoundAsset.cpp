@@ -48,6 +48,8 @@
 #include "platform/profiler.h"
 #include "sfx/sfxTypes.h"
 
+#include "SoundAssetInspectors.h"
+
 //-----------------------------------------------------------------------------
 
 IMPLEMENT_CONOBJECT(SoundAsset);

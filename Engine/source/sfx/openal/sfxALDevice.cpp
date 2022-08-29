@@ -69,7 +69,38 @@ S32 SFXALDevice::getMaxSources()
    ALCint nummono;
    mOpenAL.alcGetIntegerv(mDevice, ALC_MONO_SOURCES, 1, &nummono);
    
+   if(nummono == 0)
+      nummono = getMaxSourcesOld();
+   
    return nummono;
+}
+
+S32 SFXALDevice::getMaxSourcesOld()
+{
+   ALuint uiSource[256];
+   S32 sourceCount = 0;
+   
+   // clear errors.
+   mOpenAL.alGetError();
+   
+   for(sourceCount = 0; sourceCount < 256; sourceCount++)
+   {
+      mOpenAL.alGenSources(1,&uiSource[sourceCount]);
+      if(mOpenAL.alGetError() != AL_NO_ERROR)
+         break;
+   }
+   
+   mOpenAL.alDeleteSources(sourceCount, uiSource);
+   if(mOpenAL.alGetError() != AL_NO_ERROR)
+   {
+      for(U32 i = 0; i < 256; i++)
+      {
+         mOpenAL.alDeleteSources(1,&uiSource[i]);
+      }
+   }
+   
+   return sourceCount;
+   
 }
 
 //-----------------------------------------------------------------------------

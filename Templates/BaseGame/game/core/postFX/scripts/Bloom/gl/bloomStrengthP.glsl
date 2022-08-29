@@ -20,7 +20,6 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#include "core/rendering/shaders/gl/hlslCompat.glsl"
 #include "shadergen:/autogenConditioners.h"
 
 uniform sampler2D inputTex;
@@ -28,27 +27,27 @@ uniform sampler2D dirtTex;
 uniform float strength;
 // XY: Dirt Texture Size/Scale
 // Z: Dirt Effect Strength
-uniform float3 dirtParams;
+uniform vec3 dirtParams;
 // XY: Edge Min & Max Distance
 // Z: Edge Min Value
-uniform float3 edgeParams;
-uniform float2 oneOverTargetSize;
+uniform vec3 edgeParams;
+uniform vec2 oneOverTargetSize;
 
-in float2 uv0;
+in vec2 uv0;
 
-out float4 OUT_col;
+out vec4 OUT_col;
 
 void main()
 {
-	#if defined(USE_DIRT)
-		float edge = distance(uv0, float2(0.5f, 0.5f));
+	#ifdef USE_DIRT
+		float edge = distance(uv0, vec2(0.5, 0.5));
 		edge = max(smoothstep(edgeParams.x, edgeParams.y, edge), edgeParams.z);
-		float3 dirt = tex2D(dirtTex, uv0 / (dirtParams.xy * oneOverTargetSize)).rgb * dirtParams.z * edge;
+		vec3 dirt = texture(dirtTex, uv0 / (dirtParams.xy * oneOverTargetSize)).rgb * dirtParams.z * edge;
 	#endif
 	
-	float4 upSample = tex2D(inputTex, uv0) * strength;
+	vec4 upSample = texture(inputTex, uv0) * strength;
 	
-	#if defined(USE_DIRT)
+	#ifdef USE_DIRT
 		upSample.rgb += upSample.rgb * dirt;
 	#endif
 	

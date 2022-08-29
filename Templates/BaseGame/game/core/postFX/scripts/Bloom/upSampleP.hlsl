@@ -56,7 +56,7 @@ float4 main(PFXVertToPix IN) : TORQUE_TARGET0
 		upSample += sampleCol * weight;
 	}
 	
-	upSample = (TORQUE_TEX2D(nxtTex, IN.uv0) + upSample);
+	upSample = TORQUE_TEX2D(nxtTex, IN.uv0) + upSample;
 	
 	return upSample;
 }

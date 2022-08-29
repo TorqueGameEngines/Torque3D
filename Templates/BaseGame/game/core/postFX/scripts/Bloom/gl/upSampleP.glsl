@@ -20,47 +20,46 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#include "core/rendering/shaders/gl/hlslCompat.glsl"
 #include "shadergen:/autogenConditioners.h"
 
 #define KERNEL_SAMPLES 9
-const float3 KERNEL[9] = float3[](
-	float3( 0.0000, 0.0000, 0.5000),
-	float3( 1.0000, 0.0000, 0.0625),
-	float3( 0.0000, 1.0000, 0.0625),
-	float3(-1.0000, 0.0000, 0.0625),
-	float3( 0.0000,-1.0000, 0.0625),
-	float3( 0.7070, 0.7070, 0.0625),
-	float3( 0.7070,-0.7070, 0.0625),
-	float3(-0.7070,-0.7070, 0.0625),
-	float3(-0.7070, 0.7070, 0.0625)
+const vec3 KERNEL[9] = vec3[](
+	vec3( 0.0000, 0.0000, 0.5000),
+	vec3( 1.0000, 0.0000, 0.0625),
+	vec3( 0.0000, 1.0000, 0.0625),
+	vec3(-1.0000, 0.0000, 0.0625),
+	vec3( 0.0000,-1.0000, 0.0625),
+	vec3( 0.7070, 0.7070, 0.0625),
+	vec3( 0.7070,-0.7070, 0.0625),
+	vec3(-0.7070,-0.7070, 0.0625),
+	vec3(-0.7070, 0.7070, 0.0625)
 );
 
 uniform sampler2D nxtTex;
 uniform sampler2D mipTex;
 uniform float filterRadius;
-uniform float2 oneOverTargetSize;
+uniform vec2 oneOverTargetSize;
 
-in float2 uv0;
+in vec2 uv0;
 
-out float4 OUT_col;
+out vec4 OUT_col;
 
 void main()
 {
-	float4 upSample = float4(0, 0, 0, 0);
+	vec4 upSample = vec4(0, 0, 0, 0);
 
 	for (int i=0; i<KERNEL_SAMPLES; i++)
 	{
 		// XY: Sample Offset
 		// Z: Sample Weight
-		float3 offsetWeight = KERNEL[i];
-		float2 offsetXY = offsetWeight.xy * oneOverTargetSize * filterRadius;
+		vec3 offsetWeight = KERNEL[i];
+		vec2 offsetXY = offsetWeight.xy * oneOverTargetSize * filterRadius;
 		float weight = offsetWeight.z;
-		float4 sampleCol = tex2D(mipTex, uv0 + offsetXY);
+		vec4 sampleCol = texture(mipTex, uv0 + offsetXY);
 		upSample += sampleCol * weight;
 	}
 	
-	upSample = (tex2D(nxtTex, uv0) + upSample);
+	upSample = texture(nxtTex, uv0) + upSample;
 	
 	OUT_col = upSample;
 }

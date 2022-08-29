@@ -29,7 +29,7 @@ $PostFX::BloomPostFX::radius = 4.0;
 
 $PostFX::BloomPostFX::dirtEnabled = true;
 $PostFX::BloomPostFX::dirtScale = 2048.0;
-$PostFX::BloomPostFX::dirtIntensity = 2.0;
+$PostFX::BloomPostFX::dirtIntensity = 28.0;
 $PostFX::BloomPostFX::dirtEdgeMinDist = 0.125;
 $PostFX::BloomPostFX::dirtEdgeMaxDist = 0.75;
 $PostFX::BloomPostFX::dirtEdgeMinVal = 0.05;
@@ -146,6 +146,9 @@ function BloomPostFX::preProcess( %this )
   
   if(%this.dirtImage !$= $PostFX::BloomPostFX::dirtImage)
   {
+		if ($PostFX::BloomPostFX::dirtImage $= "")
+			$PostFX::BloomPostFX::dirtImage = "core/postFX/images/lensDirt.png";
+		
 		%this.dirtImage = $PostFX::BloomPostFX::dirtImage;
 		
     %final = %this->bloomFinal;

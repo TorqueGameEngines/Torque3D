@@ -39,7 +39,6 @@
 #include "assets/assetFieldTypes.h"
 #endif
 
-#include "gui/editor/guiInspectorTypes.h"
 #ifndef _ASSET_PTR_H_
 #include "assets/assetPtr.h"
 #endif 
@@ -145,33 +144,7 @@ protected:
 
 DefineConsoleType(TypeSoundAssetPtr, SoundAsset)
 DefineConsoleType(TypeSoundAssetId, String)
-#ifdef TORQUE_TOOLS
-//-----------------------------------------------------------------------------
-// TypeAssetId GuiInspectorField Class
-//-----------------------------------------------------------------------------
-class GuiInspectorTypeSoundAssetPtr : public GuiInspectorTypeFileName
-{
-   typedef GuiInspectorTypeFileName Parent;
-public:
 
-   GuiBitmapButtonCtrl* mEditButton;
-
-   DECLARE_CONOBJECT(GuiInspectorTypeSoundAssetPtr);
-   static void consoleInit();
-
-   virtual GuiControl* constructEditControl();
-   virtual bool updateRects();
-};
-
-class GuiInspectorTypeSoundAssetId : public GuiInspectorTypeSoundAssetPtr
-{
-   typedef GuiInspectorTypeSoundAssetPtr Parent;
-public:
-
-   DECLARE_CONOBJECT(GuiInspectorTypeSoundAssetId);
-   static void consoleInit();
-};
-#endif
 #pragma region Singular Asset Macros
 
 //Singular assets

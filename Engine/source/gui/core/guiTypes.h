@@ -36,6 +36,10 @@
 #include "console/dynamicTypes.h"
 #endif
 
+#ifndef SOUND_ASSET_H_
+#include "T3D/assets/SoundAsset.h"
+#endif
+
 #include "T3D/assets/ImageAsset.h"
 
 #include "gfx/gfxDevice.h"
@@ -562,9 +566,11 @@ public:
    bool mUseBitmapArray;                           ///< Flag to use the bitmap array or to fallback to non-array rendering
    Vector<RectI> mBitmapArrayRects;                ///< Used for controls which use an array of bitmaps such as checkboxes
 
-   // sound members
-   SimObjectPtr< SFXTrack > mSoundButtonDown;                   ///< Sound played when the object is "down" ie a button is pushed
-   SimObjectPtr< SFXTrack > mSoundButtonOver;                   ///< Sound played when the mouse is over the object
+   DECLARE_SOUNDASSET(GuiControlProfile, SoundButtonDown);     ///< Sound played when a button is pressed.
+   DECLARE_ASSET_SETGET(GuiControlProfile, SoundButtonDown);
+
+   DECLARE_SOUNDASSET(GuiControlProfile, SoundButtonOver);     ///< Sound played when a button is hovered.
+   DECLARE_ASSET_SETGET(GuiControlProfile, SoundButtonOver);
 
    StringTableEntry mChildrenProfileName;       ///< The name of the profile to use for the children controls
 
@@ -583,10 +589,6 @@ protected:
    GuiControlProfile* mChildrenProfile;         ///< Profile used with children controls (such as the scroll bar on a popup menu) when defined.
 
    static bool protectedSetBitmap( void *object, const char *index, const char *data );
-   static bool protectedSetSoundButtonDown( void* object, const char* index, const char* data );
-   static bool protectedSetSoundButtonOver( void* object, const char* index, const char* data );
-   static const char* protectedGetSoundButtonDown( void* object, const char* data );
-   static const char* protectedGetSoundButtonOver( void* object, const char* data );
 
 public:
    DECLARE_CONOBJECT(GuiControlProfile);

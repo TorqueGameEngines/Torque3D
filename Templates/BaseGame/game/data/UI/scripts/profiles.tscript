@@ -100,8 +100,8 @@ new GuiControlProfile( GuiMenuButtonProfile )
    canKeyFocus = false;
    //bitmapAsset = "UI:menu_button_image";
    hasBitmapArray = false;
-   soundButtonDown = menuButtonPressed;
-   soundButtonOver = menuButtonHover;
+   soundButtonDown = "UI:buttonClick";
+   soundButtonOver = "UI:buttonHover";
    category = "Core";
 };
 

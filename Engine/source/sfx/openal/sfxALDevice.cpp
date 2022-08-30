@@ -62,162 +62,45 @@ void SFXALDevice::printALInfo(ALCdevice* device)
   
 }
 
-void SFXALDevice::printHRTFInfo(ALCdevice* device)
-{
-   if (mOpenAL.alcIsExtensionPresent(device, "ALC_SOFT_HRTF") == AL_FALSE)
-   {
-      Con::printf("HRTF Extensions not compatible");
-      return;
-   }
-
-   ALCint numHrtfs;
-
-   mOpenAL.alcGetIntegerv(device, ALC_NUM_HRTF_SPECIFIERS_SOFT, 1, &numHrtfs);
-   if (!numHrtfs)
-      Con::printf("No HRTFs Found");
-   else
-   {
-      Con::printf("Available HRTFs");
-      for (U32 i = 0; i < numHrtfs; ++i)
-      {
-         const ALCchar* name = mOpenAL.alcGetStringiSOFT(device, ALC_HRTF_SPECIFIER_SOFT, i);
-         printf("   %s", name);
-      }
-   }
-
-   U32 err = mOpenAL.alcGetError(device);
-   if (err != ALC_NO_ERROR)
-      Con::errorf("SFXALDevice - Error Retrieving HRTF info: %s", mOpenAL.alcGetString(device, err));
-
-}
-
-void SFXALDevice::getEFXInfo(ALCdevice *device)
-{
-   static const ALint filters[] = {
-        AL_FILTER_LOWPASS, AL_FILTER_HIGHPASS, AL_FILTER_BANDPASS,
-        AL_FILTER_NULL
-   };
-
-   char filterNames[] = "Low-pass,High-pass,Band-pass,";
-   static const ALint effects[] = {
-       AL_EFFECT_EAXREVERB, AL_EFFECT_REVERB, AL_EFFECT_CHORUS,
-       AL_EFFECT_DISTORTION, AL_EFFECT_ECHO, AL_EFFECT_FLANGER,
-       AL_EFFECT_FREQUENCY_SHIFTER, AL_EFFECT_VOCAL_MORPHER,
-       AL_EFFECT_PITCH_SHIFTER, AL_EFFECT_RING_MODULATOR,
-       AL_EFFECT_AUTOWAH, AL_EFFECT_COMPRESSOR, AL_EFFECT_EQUALIZER,
-       AL_EFFECT_NULL
-   };
-   static const ALint dedeffects[] = {
-       AL_EFFECT_DEDICATED_DIALOGUE, AL_EFFECT_DEDICATED_LOW_FREQUENCY_EFFECT,
-       AL_EFFECT_NULL
-   };
-   char effectNames[] = "EAX Reverb,Reverb,Chorus,Distortion,Echo,Flanger,"
-      "Frequency Shifter,Vocal Morpher,Pitch Shifter,Ring Modulator,Autowah,"
-      "Compressor,Equalizer,Dedicated Dialog,Dedicated LFE,";
-
-   ALCint major, minor, sends;
-   ALuint obj;
-
-   char* current;
-   U32 i;
-
-   if (mOpenAL.alcIsExtensionPresent(device, "ALC_EXT_EFX") == AL_FALSE)
-   {
-      Con::printf("SFXALDevice - EFX Not available.");
-      return;
-   }
-
-   mOpenAL.alcGetIntegerv(device, ALC_EFX_MAJOR_VERSION, 1, &major);
-   mOpenAL.alcGetIntegerv(device, ALC_EFX_MINOR_VERSION, 1, &minor);
-   U32 err = mOpenAL.alcGetError(device);
-   if (err != ALC_NO_ERROR)
-      Con::errorf("SFXALDevice - Error Retrieving EFX Version: %s", mOpenAL.alcGetString(device, err));
-   else
-   {
-      Con::printf("| EFX Version: %d.%d", major, minor);
-   }
-
-   mOpenAL.alcGetIntegerv(device, ALC_MAX_AUXILIARY_SENDS, 1, &sends);
-   err = mOpenAL.alcGetError(device);
-   if (err != ALC_NO_ERROR)
-      Con::errorf("SFXALDevice - Error Retrieving Auxiliary Sends: %s", mOpenAL.alcGetString(device, err));
-   else
-   {
-      Con::printf("| Max Aux Sends: %d", sends);
-   }
-
-   mOpenAL.alGenFilters(1, &obj);
-   err = mOpenAL.alcGetError(device);
-   if (err != ALC_NO_ERROR)
-      Con::errorf("SFXALDevice - Error Generating filter: %s", mOpenAL.alcGetString(device, err));
-
-   current = filterNames;
-   for (i = 0; filters[i] != AL_FILTER_NULL; i++)
-   {
-      char* next = dStrchr(current, ',');
-
-      mOpenAL.alFilteri(obj, AL_FILTER_TYPE, filters[i]);
-      if (mOpenAL.alGetError() != AL_NO_ERROR)
-         dMemmove(current, next + 1, strlen(next));
-      else
-         current = next + 1;
-   }
-
-   Con::printf("| Supported Filters: %s", filterNames);
-
-   mOpenAL.alDeleteFilters(1, &obj);
-
-   mOpenAL.alGenEffects(1, &obj);
-   err = mOpenAL.alcGetError(device);
-   if (err != ALC_NO_ERROR)
-      Con::errorf("SFXALDevice - Error Generating effects: %s", mOpenAL.alcGetString(device, err));
-
-   current = effectNames;
-   for (i = 0; effects[i] != AL_EFFECT_NULL; i++)
-   {
-      char* next = dStrchr(current, ',');
-      mOpenAL.alEffecti(obj, AL_FILTER_TYPE, effects[i]);
-      if (mOpenAL.alGetError() != AL_NO_ERROR)
-         dMemmove(current, next + 1, strlen(next));
-      else
-         current = next + 1;
-   }
-
-   if (mOpenAL.alcIsExtensionPresent(device, "ALC_EXT_DEDICATED"))
-   {
-      for (i = 0; dedeffects[i] != AL_EFFECT_NULL; i++)
-      {
-         char* next = dStrchr(current, ',');
-         mOpenAL.alEffecti(obj, AL_FILTER_TYPE, dedeffects[i]);
-         if (mOpenAL.alGetError() != AL_NO_ERROR)
-            dMemmove(current, next + 1, strlen(next));
-         else
-            current = next + 1;
-      }
-   }
-   else
-   {
-      for (i = 0; dedeffects[i] != AL_EFFECT_NULL; i++)
-      {
-         char* next = dStrchr(current, ',');
-         dMemmove(current, next + 1, strlen(next));
-      }
-   }
-
-   Con::printf("| Supported Effects: %s", effectNames);
-
-   mOpenAL.alDeleteEffects(1, &obj);
-}
-
 S32 SFXALDevice::getMaxSources()
 {
-   // Clear AL Error Code
    mOpenAL.alGetError();
-
+   
    ALCint nummono;
    mOpenAL.alcGetIntegerv(mDevice, ALC_MONO_SOURCES, 1, &nummono);
-
+   
+   if(nummono == 0)
+      nummono = getMaxSourcesOld();
+   
    return nummono;
+}
+
+S32 SFXALDevice::getMaxSourcesOld()
+{
+   ALuint uiSource[256];
+   S32 sourceCount = 0;
+   
+   // clear errors.
+   mOpenAL.alGetError();
+   
+   for(sourceCount = 0; sourceCount < 256; sourceCount++)
+   {
+      mOpenAL.alGenSources(1,&uiSource[sourceCount]);
+      if(mOpenAL.alGetError() != AL_NO_ERROR)
+         break;
+   }
+   
+   mOpenAL.alDeleteSources(sourceCount, uiSource);
+   if(mOpenAL.alGetError() != AL_NO_ERROR)
+   {
+      for(U32 i = 0; i < 256; i++)
+      {
+         mOpenAL.alDeleteSources(1,&uiSource[i]);
+      }
+   }
+   
+   return sourceCount;
+   
 }
 
 //-----------------------------------------------------------------------------
@@ -292,8 +175,7 @@ SFXALDevice::SFXALDevice(  SFXProvider *provider,
 #endif
 
    printALInfo(mDevice);
-   printHRTFInfo(mDevice);
-   getEFXInfo(mDevice);
+   
 
    mMaxBuffers = getMaxSources();
 

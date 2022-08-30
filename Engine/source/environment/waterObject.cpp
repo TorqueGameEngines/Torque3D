@@ -137,7 +137,7 @@ void WaterMatParams::init( BaseMatInstance* matInst )
 
 
 bool WaterObject::smWireframe = false;
-bool WaterObject::smDisableTrueReflections = false;
+bool WaterObject::smEnableTrueReflections = true;
 
 //-------------------------------------------------------------------------
 // WaterObject Class
@@ -406,7 +406,7 @@ void WaterObject::consoleInit()
 {
    Parent::consoleInit();
 
-   Con::addVariable( "$pref::Water::disableTrueReflections", TypeBool, &WaterObject::smDisableTrueReflections, 
+   Con::addVariable( "$pref::Water::EnableTrueReflections", TypeBool, &WaterObject::smEnableTrueReflections, 
       "Force all water objects to use static cubemap reflections.\n"
 	  "@ingroup Water");     
 }
@@ -438,7 +438,7 @@ bool WaterObject::_setFullReflect( void *object, const char *index, const char *
    {
       bool isEnabled = water->mPlaneReflector.isEnabled();
 
-      bool enable = water->mFullReflect && !smDisableTrueReflections;
+      bool enable = water->mFullReflect && smEnableTrueReflections;
 
       if ( enable && !isEnabled )
          water->mPlaneReflector.registerReflector( water, &water->mReflectorDesc );
@@ -582,7 +582,7 @@ void WaterObject::unpackUpdate( NetConnection * conn, BitStream *stream )
          mReflectorDesc.useOcclusionQuery = stream->readFlag();
          mReflectorDesc.texSize = stream->readInt( 32 );
 
-         if ( isProperlyAdded() && !mPlaneReflector.isEnabled() && !smDisableTrueReflections )
+         if ( isProperlyAdded() && !mPlaneReflector.isEnabled() && smEnableTrueReflections )
             mPlaneReflector.registerReflector( this, &mReflectorDesc );
       }
       else
@@ -868,8 +868,8 @@ bool WaterObject::onAdd()
    if ( !Parent::onAdd() )
       return false;
 
-   Con::NotifyDelegate clbk( this, &WaterObject::_onDisableTrueRelfections );   
-   Con::addVariableNotify( "$pref::Water::disableTrueReflections", clbk );
+   Con::NotifyDelegate clbk( this, &WaterObject::_onEnableTrueReflections );   
+   Con::addVariableNotify( "$pref::Water::EnableTrueReflections", clbk );
 
    if ( isClientObject() )
    {
@@ -886,7 +886,7 @@ bool WaterObject::onAdd()
 
       initTextures();
       
-      if ( mFullReflect && !smDisableTrueReflections )
+      if ( mFullReflect && smEnableTrueReflections )
          mPlaneReflector.registerReflector( this, &mReflectorDesc );
    }
 
@@ -895,8 +895,8 @@ bool WaterObject::onAdd()
 
 void WaterObject::onRemove()
 {
-   Con::NotifyDelegate clbk( this, &WaterObject::_onDisableTrueRelfections ); 
-   Con::removeVariableNotify( "$pref::Water::disableTrueReflections", clbk );
+   Con::NotifyDelegate clbk( this, &WaterObject::_onEnableTrueReflections ); 
+   Con::removeVariableNotify( "$pref::Water::EnableTrueReflections", clbk );
 
    if ( isClientObject() )
    {
@@ -911,14 +911,14 @@ void WaterObject::onRemove()
    Parent::onRemove();
 }
 
-void WaterObject::_onDisableTrueRelfections()
+void WaterObject::_onEnableTrueReflections()
 {
    // Same code as _setFullReflect
    if ( isProperlyAdded() && isClientObject() )
    {
       bool isEnabled = mPlaneReflector.isEnabled();
 
-      bool enable = mFullReflect && !smDisableTrueReflections;
+      bool enable = mFullReflect && smEnableTrueReflections;
 
       if ( enable && !isEnabled )
          mPlaneReflector.registerReflector( this, &mReflectorDesc );

@@ -444,7 +444,7 @@ function populateDisplaySettingsList()
       OptionsMenuSettingsList.addOptionRow("Resolution", "$pref::Video::Resolution", %resolutionList, false, "",  true, "Resolution of the game window", %resolution);
    }
    
-   OptionsMenuSettingsList.addOptionBoolRow("VSync", "$pref::Video::disableVerticalSync", $yesNoList, false, "",  true, "", "");
+   OptionsMenuSettingsList.addOptionBoolRow("VSync", "$pref::Video::enableVerticalSync", $YesNoList, false, "",  true, "", "");
 
 
    %refreshList = getScreenRefreshList($pref::Video::mode);
@@ -504,8 +504,8 @@ function populateGraphicsSettingsList()
    OptionsMenuSettingsList.addOptionRow("Anisotropic Filtering", "$pref::Video::defaultAnisotropy", %anisoFilter, false, "",  true, "Amount of Anisotropic Filtering on textures, which dictates their sharpness at a distance");
    OptionsMenuSettingsList.addOptionRow("Anti-Aliasing", "$pref::Video::AA", %aaFilter, false, "",  true, "Amount of Post-Processing Anti-Aliasing applied to rendering");
    
-   OptionsMenuSettingsList.addOptionBoolRow("Parallax", "$pref::Video::disableParallaxMapping", %onOffList, false, "",  true, "Whether the surface parallax shader effect is enabled", "");
-   OptionsMenuSettingsList.addOptionBoolRow("Water Reflections", "$pref::Water::disableTrueReflections", %onOffList, false, "",  true, "Whether water reflections are enabled", "");
+   OptionsMenuSettingsList.addOptionBoolRow("Parallax", "$pref::Video::enableParallaxMapping", %onOffList, false, "",  true, "Whether the surface parallax shader effect is enabled", "");
+   OptionsMenuSettingsList.addOptionBoolRow("Water Reflections", "$pref::Water::enableTrueReflections", %onOffList, false, "",  true, "Whether water reflections are enabled", "");
    
    OptionsMenuSettingsList.addOptionBoolRow("SSAO", "$pref::PostFX::EnableSSAO", %onOffList, false, "",  true, "Whether Screen-Space Ambient Occlusion is enabled");
    OptionsMenuSettingsList.addOptionBoolRow("Depth of Field", "$pref::PostFX::EnableDOF", %onOffList, false, "",  true, "Whether the Depth of Field effect is enabled");
@@ -581,7 +581,7 @@ function updateDisplaySettings()
    %newBpp = 32; // ... its not 1997 anymore.
 	%newFullScreen = %deviceModeName $= "Fullscreen" ? true : false;
 	%newRefresh    = $pref::Video::RefreshRate;
-	%newVsync = !$pref::Video::disableVerticalSync;	
+	%newVsync = $pref::Video::enableVerticalSync;	
 	%newFSAA = $pref::Video::AA;
 	
    // Build the final mode string.
@@ -589,7 +589,7 @@ function updateDisplaySettings()
 	
    // Change the video mode.   
    if (  %newMode !$= $pref::Video::mode || %newDeviceID != $pref::Video::deviceId ||
-         %newVsync != $pref::Video::disableVerticalSync || %newDeviceMode != $pref::Video::deviceMode)
+         %newVsync != $pref::Video::enableVerticalSync || %newDeviceMode != $pref::Video::deviceMode)
    {
       //****Edge Case Hack
       // If we're in fullscreen mode and switching to a different monitor at the
@@ -607,7 +607,7 @@ function updateDisplaySettings()
       }
 
       $pref::Video::mode = %newMode;
-      $pref::Video::disableVerticalSync = %newVsync;
+      $pref::Video::enableVerticalSync = %newVsync;
       $pref::Video::deviceId = %newDeviceID;
       $pref::Video::deviceMode = %newDeviceMode;
       $pref::Video::Resolution = %newRes;

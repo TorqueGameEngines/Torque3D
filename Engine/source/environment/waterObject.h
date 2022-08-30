@@ -199,8 +199,8 @@ protected:
 
    virtual void _getWaterPlane( const Point3F &camPos, PlaneF &outPlane, Point3F &outPos ) {}
 
-   /// Callback used internally when smDisableTrueReflections changes.
-   void _onDisableTrueRelfections();
+   /// Callback used internally when smEnableTrueReflections changes.
+   void _onEnableTrueReflections();
 
    void onRippleTexChanged() {}
    void onFoamTexChanged() {}
@@ -307,7 +307,7 @@ protected:
    static bool smWireframe;
 
    /// Force all water objects to use static cubemap reflections
-   static bool smDisableTrueReflections;
+   static bool smEnableTrueReflections;
 
    // Rendering   
    bool mBasicLighting;

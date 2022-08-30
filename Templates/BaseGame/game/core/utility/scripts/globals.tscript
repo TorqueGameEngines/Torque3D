@@ -37,7 +37,7 @@ $pref::Input::JoystickEnabled = 0;
 // Set directory paths for various data or default images.
 $pref::Video::ProfilePath = "core/rendering/scripts/gfxprofile";
 
-$pref::Video::disableVerticalSync = 1;
+$pref::Video::enableVerticalSync = 0;
 $pref::Video::mode = "1920 1080 false 32 60 4";
 $pref::Video::defaultFenceCount = 0;
 
@@ -50,7 +50,7 @@ $pref::Video::disableHardwareAA = true;
 $pref::Video::disableNormalmapping = false;
 $pref::Video::disablePixSpecular = false;
 $pref::Video::disableCubemapping = false;
-$pref::Video::disableParallaxMapping = false;
+$pref::Video::enableParallaxMapping = true;
 
 // The number of mipmap levels to drop on loaded textures to reduce video memory
 // usage.  It will skip any textures that have been defined as not allowing down

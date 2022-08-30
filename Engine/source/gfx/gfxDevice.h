@@ -525,7 +525,7 @@ protected:
    static bool smWireframe;
 
    /// The global vsync state.
-   static bool smDisableVSync;
+   static bool smEnableVSync;
 
    /// The forced shader model version if non-zero.
    static F32 smForcedPixVersion;

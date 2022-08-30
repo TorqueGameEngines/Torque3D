@@ -1,13 +1,3 @@
-$PostFX::HDRPostFX::Enabled = 1;
-$PostFX::HDRPostFX::exposureValue = "1.5";
-$PostFX::HDRPostFX::whitePoint = "2";
-$PostFX::HDRPostFX::logContrast = "1.25";
-$PostFX::HDRPostFX::saturationValue = "1";
-$PostFX::HDRPostFX::colorFilter = "1.0 1.0 1.0";
-$PostFX::HDRPostFX::minLuminace = "0.001";
-$PostFX::HDRPostFX::adaptRate = "0.85";
-$PostFX::HDRPostFX::tonemapMode = "ACES";
-$PostFX::HDRPostFX::enableBloom = "1";
 $PostFX::HDRPostFX::brightPassThreshold = "0.02";
 $PostFX::HDRPostFX::gaussMultiplier = "0.4";
 $PostFX::HDRPostFX::enableAutoExposure = "1";

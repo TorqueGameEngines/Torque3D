@@ -491,7 +491,7 @@ GuiControl* GuiInspectorTypeMaterialAssetPtr::constructEditControl()
    else
    {
       //if we don't have a target object, we'll be manipulating the desination value directly
-      dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"MaterialAsset\", \"AssetBrowser.changeAsset\", %s, %s);",
+      dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"MaterialAsset\", \"AssetBrowser.changeAsset\", %s, \"%s\");",
          mInspector->getIdString(), mVariableName);
       mBrowseButton->setField("Command", szBuffer);
    }

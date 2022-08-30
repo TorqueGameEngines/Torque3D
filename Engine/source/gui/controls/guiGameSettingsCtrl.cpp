@@ -776,55 +776,38 @@ IMPLEMENT_CONOBJECT(GuiGameSettingsCtrl);
 
 void GuiGameSettingsCtrl::clickSlider(S32 xPos)
 {
-   F32 xScale = (float)getWidth();
+   RectI sliderRect;
 
-   S32 leftArrowX1 = mColumnSplit;
-   S32 leftArrowX2 = leftArrowX1 + mArrowSize;
+   S32 sliderOffset = 5;
+   S32 height = getHeight();
 
-   S32 rightArrowX2 = getWidth() - mRightPad;
-   S32 rightArrowX1 = rightArrowX2 - mArrowSize;
+   RectI optionRect;
 
-   S32 sliderWidth = rightArrowX1 - leftArrowX2;
-   sliderWidth *= 0.6; //remove the number text spacing
+   sliderRect.point.x = mColumnSplit + mArrowSize;
+   sliderRect.point.y = sliderOffset;
 
-   /*if ((leftArrowX1 <= xPos) && (xPos <= leftArrowX2))
+   sliderRect.extent.x = (getWidth() - mRightPad - mArrowSize) - sliderRect.point.x;
+   sliderRect.extent.y = height - sliderOffset * 2;
+
+   optionRect = sliderRect;
+
+   S32 textWidth = sliderRect.extent.x * 0.3;
+   sliderRect.extent.x -= textWidth;
+
+   //Now adjust the bar to match-to our value
+
+   S32 barStart = sliderRect.point.x;
+   S32 barEnd = sliderRect.point.x + sliderRect.extent.x;
+
+   if (xPos >= barStart && xPos <= barEnd)
    {
-      mValue -= mStepSize;
+      //find the position
+      F32 newValue = (((xPos - barStart) * (mRange.y - mRange.x)) / (barEnd - barStart)) + mRange.x;
 
-      mValue = mRound(mValue / mStepSize) * mStepSize;
+      newValue = mRound(newValue / mStepSize) * mStepSize;
 
-      if (mValue < mRange.x)
-         mValue = mRange.x;
-
+      mValue = newValue;
    }
-   else if ((rightArrowX1 <= xPos) && (xPos <= rightArrowX2))
-   {
-      //F32 snap = mValue % mStepSize;
-      //mValue.y -= snap;
-
-      mValue += mStepSize;
-
-      mValue = mRound(mValue / mStepSize) * mStepSize;
-
-      if (mValue > mRange.y)
-         mValue = mRange.y;
-   }
-   else
-   {*/
-      //see if we clicked on the sliderbar itself
-      S32 barStart = leftArrowX2;
-      S32 barEnd = barStart + sliderWidth;
-
-      if (xPos >= barStart && xPos <= barEnd)
-      {
-         //find the position
-         F32 newValue = (((xPos - barStart) * (mRange.y - mRange.x)) / (barEnd - barStart)) + mRange.x;
-
-         newValue = mRound(newValue / mStepSize) * mStepSize;
-
-         mValue = newValue;
-      }
-   //}
 
    onChange_callback();
 }

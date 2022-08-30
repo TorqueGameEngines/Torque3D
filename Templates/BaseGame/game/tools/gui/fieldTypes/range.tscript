@@ -111,13 +111,13 @@ function GuiInspectorVariableGroup::buildRangeField(%this, %fieldName, %fieldLab
 
 function guiInspectorRangeField::onResize(%this)
 {
-   echo("RESIIIIIIIIIIIZED");  
 }
 
 function guiInspectorRangeFieldText::onReturn(%this)
 {
    %value = %this.getText();
    %this.sliderControl.setValue(%value);
+   %this.sliderControl.onDragComplete();
 }
 
 function guiInspectorRangeFieldSlider::onDragComplete( %this )
@@ -141,4 +141,9 @@ function guiInspectorRangeFieldSlider::onDragComplete( %this )
    }
    
    eval(%setCommand);
+}
+
+function guiInspectorRangeFieldSlider::onMouseDragged(%this)
+{
+   %this.onDragComplete();
 }

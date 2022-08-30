@@ -21,6 +21,7 @@
 //-----------------------------------------------------------------------------
 
 #include "core/rendering/shaders/postFX/postFx.hlsl"
+#include "core/rendering/shaders/torque.hlsl"
 
 TORQUE_UNIFORM_SAMPLER2D(inputTex, 0);
 TORQUE_UNIFORM_SAMPLER2D(dirtTex, 1);
@@ -47,5 +48,5 @@ float4 main(PFXVertToPix IN) : TORQUE_TARGET0
 		upSample.rgb += upSample.rgb * dirt;
 	#endif
 	
-	return upSample;
+	return upSample * M_1OVER_PI_F;
 }

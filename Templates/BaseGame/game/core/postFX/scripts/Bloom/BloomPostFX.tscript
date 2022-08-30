@@ -23,8 +23,8 @@
 // Inspired by bloom described in paper listed here:
 // http://www.iryoku.com/next-generation-post-processing-in-call-of-duty-advanced-warfare
 
-$PostFX::BloomPostFX::threshold = 0.65;
-$PostFX::BloomPostFX::intensity = 0.5;
+$PostFX::BloomPostFX::threshold = 0.75;
+$PostFX::BloomPostFX::intensity = 1.0;
 $PostFX::BloomPostFX::radius = 4.0;
 
 $PostFX::BloomPostFX::dirtEnabled = true;
@@ -35,7 +35,7 @@ $PostFX::BloomPostFX::dirtEdgeMaxDist = 0.75;
 $PostFX::BloomPostFX::dirtEdgeMinVal = 0.05;
 $PostFX::BloomPostFX::dirtImage = "core/postFX/images/lensDirt.png";
 
-singleton ShaderData( PFX_BloomThreshold_Shader )
+singleton ShaderData( Bloom_ThresholdShader )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
    DXPixelShaderFile  = "./bloomThresholdP.hlsl";
@@ -47,7 +47,7 @@ singleton ShaderData( PFX_BloomThreshold_Shader )
    pixVersion = 3.0;
 };
 
-singleton ShaderData( PFX_BloomDownSample_Shader )
+singleton ShaderData( Bloom_DownSampleShader )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
    DXPixelShaderFile  = "./downSampleP.hlsl";
@@ -59,7 +59,7 @@ singleton ShaderData( PFX_BloomDownSample_Shader )
    pixVersion = 3.0;
 };
 
-singleton ShaderData( PFX_BloomUpSample_Shader )
+singleton ShaderData( Bloom_UpSampleShader )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
    DXPixelShaderFile  = "./upSampleP.hlsl";
@@ -72,7 +72,7 @@ singleton ShaderData( PFX_BloomUpSample_Shader )
    pixVersion = 3.0;
 };
 
-singleton ShaderData( PFX_BloomStrength_Shader )
+singleton ShaderData( Bloom_StrengthShader )
 {
    DXVertexShaderFile = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
    DXPixelShaderFile  = "./bloomStrengthP.hlsl";
@@ -85,14 +85,14 @@ singleton ShaderData( PFX_BloomStrength_Shader )
    pixVersion = 3.0;
 };
 
-singleton GFXStateBlockData( BloomPostFX_SampleStateBlock : PFX_DefaultStateBlock )
+singleton GFXStateBlockData( Bloom_SampleStateBlock : PFX_DefaultStateBlock )
 {
    samplersDefined = true;
    samplerStates[0] = SamplerClampLinear;
    samplerStates[1] = SamplerClampLinear;
 };
 
-singleton GFXStateBlockData( BloomPostFX_Add_SampleStateBlock : PFX_DefaultStateBlock )
+singleton GFXStateBlockData( Bloom_Add_SampleStateBlock : PFX_DefaultStateBlock )
 { 
    // Do a one to one blend.
    blendDefined = true;
@@ -164,8 +164,8 @@ function BloomPostFX::SetupBlurFX( %this )
    {
      internalName = "bloomBlur";
      allowReflectPass = false;
-     shader = PFX_BloomDownSample_Shader;
-     stateBlock = BloomPostFX_SampleStateBlock;
+     shader = Bloom_DownSampleShader;
+     stateBlock = Bloom_SampleStateBlock;
      texture[0] = "#threshold";
      target = "#bloom_0";
 		 targetScale = "0.5 0.5";
@@ -180,8 +180,8 @@ function BloomPostFX::SetupBlurFX( %this )
      { 
        internalName = %mipName;
        allowReflectPass = false;
-       shader = PFX_BloomDownSample_Shader;
-       stateBlock = BloomPostFX_SampleStateBlock;
+       shader = Bloom_DownSampleShader;
+       stateBlock = Bloom_SampleStateBlock;
        texture[0] = %textureName;
        target = "#" @ %mipName;
        targetScale = "0.5 0.5";
@@ -202,8 +202,8 @@ function BloomPostFX::SetupBlurFX( %this )
      {
        internalName = %mipName;
        allowReflectPass = false;
-       shader = PFX_BloomUpSample_Shader;
-       stateBlock = BloomPostFX_SampleStateBlock;
+       shader = Bloom_UpSampleShader;
+       stateBlock = Bloom_SampleStateBlock;
        texture[0] = %nxt;
        texture[1] = %textureName;
        target = "#" @ %mipName;
@@ -243,7 +243,7 @@ function BloomPostFX::populatePostFXSettings(%this)
    PostEffectEditorInspector.startGroup("BloomPostFX - General");
    PostEffectEditorInspector.addCallbackField("$PostFX::BloomPostFX::Enabled", "Enabled", "bool", "", $PostFX::BloomPostFX::Enabled, "", "toggleBloomPostFX");
    PostEffectEditorInspector.addField("$PostFX::BloomPostFX::threshold", "Threshold", "range", "", $PostFX::BloomPostFX::threshold, "0 1 10");
-   PostEffectEditorInspector.addField("$PostFX::BloomPostFX::intensity", "Intensity", "range", "", $PostFX::BloomPostFX::intensity, "0 2 10");
+   PostEffectEditorInspector.addField("$PostFX::BloomPostFX::intensity", "Intensity", "range", "", $PostFX::BloomPostFX::intensity, "0 10 10");
    PostEffectEditorInspector.addField("$PostFX::BloomPostFX::radius", "Radius", "float", "", $PostFX::BloomPostFX::radius, "");
    PostEffectEditorInspector.endGroup();
    
@@ -309,8 +309,8 @@ singleton PostEffect( BloomPostFX )
    renderBin = "EditorBin";
    renderPriority = 10000; 
    
-   shader = PFX_BloomThreshold_Shader;
-   stateBlock = BloomPostFX_SampleStateBlock;
+   shader = Bloom_ThresholdShader;
+   stateBlock = Bloom_SampleStateBlock;
    texture[0] = "$backBuffer";
    target = "#threshold";
    targetFormat = "GFXFormatR16G16B16A16F";
@@ -319,8 +319,8 @@ singleton PostEffect( BloomPostFX )
    {
     internalName = "bloomFinal";
     allowReflectPass = false;
-    shader = PFX_BloomStrength_Shader;
-    stateBlock = BloomPostFX_Add_SampleStateBlock;
+    shader = Bloom_StrengthShader;
+    stateBlock = Bloom_Add_SampleStateBlock;
     texture[0] = "#upSample_0";
     target = "$backBuffer";
    };

@@ -22,6 +22,7 @@
 
 #include "core/rendering/shaders/gl/hlslCompat.glsl"
 #include "core/rendering/shaders/postFX/gl/postFx.glsl"
+#include "core/rendering/shaders/gl/torque.glsl"
 #include "shadergen:/autogenConditioners.h"
 
 #line 27
@@ -34,7 +35,11 @@ out vec4 OUT_col;
 void main()
 {
 	vec4 screenColor = texture(inputTex, IN_uv0);
+	float lum = hdrLuminance(screenColor.rgb);
+	
 	float brightness = max(screenColor.r, max(screenColor.g, screenColor.b));
 	float contribution = clamp(brightness - threshold, 0.0, 1.0) / max(brightness, 0.0001);
-	OUT_col = screenColor * contribution;
+	contribution = sqr(lum * contribution);
+	
+	OUT_col = max(screenColor * sqr(contribution), 0.0001);
 }

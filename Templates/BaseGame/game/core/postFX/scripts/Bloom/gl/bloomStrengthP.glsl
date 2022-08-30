@@ -22,6 +22,7 @@
 
 #include "core/rendering/shaders/gl/hlslCompat.glsl"
 #include "core/rendering/shaders/postFX/gl/postFx.glsl"
+#include "core/rendering/shaders/gl/torque.glsl"
 #include "shadergen:/autogenConditioners.h"
 
 #line 27
@@ -53,5 +54,5 @@ void main()
 		upSample.rgb += upSample.rgb * dirt;
 	#endif
 	
-	OUT_col = upSample;
+	OUT_col = upSample * M_1OVER_PI_F;
 }

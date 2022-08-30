@@ -29,7 +29,7 @@ $PostFX::BloomPostFX::radius = 4.0;
 
 $PostFX::BloomPostFX::dirtEnabled = true;
 $PostFX::BloomPostFX::dirtScale = 2048.0;
-$PostFX::BloomPostFX::dirtIntensity = 28.0;
+$PostFX::BloomPostFX::dirtIntensity = 2.0;
 $PostFX::BloomPostFX::dirtEdgeMinDist = 0.125;
 $PostFX::BloomPostFX::dirtEdgeMaxDist = 0.75;
 $PostFX::BloomPostFX::dirtEdgeMinVal = 0.05;
@@ -169,7 +169,7 @@ function BloomPostFX::SetupBlurFX( %this )
      texture[0] = "#threshold";
      target = "#bloom_0";
 		 targetScale = "0.5 0.5";
-     targetFormat = %this.selTexFormat;
+     targetFormat = %this.mipTexFormat;
    };
   
    %textureName = "#bloom_0";
@@ -185,7 +185,7 @@ function BloomPostFX::SetupBlurFX( %this )
        texture[0] = %textureName;
        target = "#" @ %mipName;
        targetScale = "0.5 0.5";
-       targetFormat = %this.selTexFormat;
+       targetFormat = %this.mipTexFormat;
      };
      
      %blurFX.add(%mipFX);
@@ -196,7 +196,6 @@ function BloomPostFX::SetupBlurFX( %this )
    {
      %nxt = "#bloom_" @ (%idx - 1);
      %mipName = "upSample_" @ (%idx - 1);
-     echo(%mipName SPC %textureName SPC %nxt);
      
      %mipFX = new PostEffect()
      {
@@ -208,7 +207,7 @@ function BloomPostFX::SetupBlurFX( %this )
        texture[1] = %textureName;
        target = "#" @ %mipName;
 			 targetScale = "1.0 1.0";
-			 targetFormat = %this.selTexFormat;
+			 targetFormat = %this.mipTexFormat;
      };
      
      %blurFX.add(%mipFX);
@@ -300,7 +299,7 @@ function BloomPostFX::savePresetSettings(%this)
 singleton PostEffect( BloomPostFX )
 {
    mipsCount = 5;
-	 selTexFormat = "GFXFormatR16G16B16A16F";
+	 mipTexFormat = "GFXFormatR16G16B16A16F";
 	 
    enabled = false;
    allowReflectPass = false;

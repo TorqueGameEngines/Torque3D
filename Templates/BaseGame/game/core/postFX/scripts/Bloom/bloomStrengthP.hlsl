@@ -36,17 +36,17 @@ uniform float2 oneOverTargetSize;
 
 float4 main(PFXVertToPix IN) : TORQUE_TARGET0
 {
-	#ifdef USE_DIRT
-		float edge = distance(IN.uv0, float2(0.5f, 0.5f));
-		edge = max(smoothstep(edgeParams.x, edgeParams.y, edge), edgeParams.z);
-		float3 dirt = TORQUE_TEX2D(dirtTex, IN.uv0 / (dirtParams.xy * oneOverTargetSize)).rgb * dirtParams.z * edge;
-	#endif
-	
-	float4 upSample = TORQUE_TEX2D(inputTex, IN.uv0) * strength;
-	
-	#ifdef USE_DIRT
-		upSample.rgb += upSample.rgb * dirt;
-	#endif
-	
-	return upSample * M_1OVER_PI_F;
+  #ifdef USE_DIRT
+    float edge = distance(IN.uv0, float2(0.5f, 0.5f));
+    edge = max(smoothstep(edgeParams.x, edgeParams.y, edge), edgeParams.z);
+    float3 dirt = TORQUE_TEX2D(dirtTex, IN.uv0 / (dirtParams.xy * oneOverTargetSize)).rgb * dirtParams.z * edge;
+  #endif
+  
+  float4 upSample = TORQUE_TEX2D(inputTex, IN.uv0) * strength;
+  
+  #ifdef USE_DIRT
+    upSample.rgb += upSample.rgb * dirt;
+  #endif
+  
+  return upSample * M_1OVER_PI_F;
 }

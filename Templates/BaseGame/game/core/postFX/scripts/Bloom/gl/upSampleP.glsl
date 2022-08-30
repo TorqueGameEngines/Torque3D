@@ -28,15 +28,15 @@
 
 #define KERNEL_SAMPLES 9
 const vec3 KERNEL[9] = vec3[](
-	vec3( 0.0000, 0.0000, 0.5000),
-	vec3( 1.0000, 0.0000, 0.0625),
-	vec3( 0.0000, 1.0000, 0.0625),
-	vec3(-1.0000, 0.0000, 0.0625),
-	vec3( 0.0000,-1.0000, 0.0625),
-	vec3( 0.7070, 0.7070, 0.0625),
-	vec3( 0.7070,-0.7070, 0.0625),
-	vec3(-0.7070,-0.7070, 0.0625),
-	vec3(-0.7070, 0.7070, 0.0625)
+  vec3( 0.0000, 0.0000, 0.5000),
+  vec3( 1.0000, 0.0000, 0.0625),
+  vec3( 0.0000, 1.0000, 0.0625),
+  vec3(-1.0000, 0.0000, 0.0625),
+  vec3( 0.0000,-1.0000, 0.0625),
+  vec3( 0.7070, 0.7070, 0.0625),
+  vec3( 0.7070,-0.7070, 0.0625),
+  vec3(-0.7070,-0.7070, 0.0625),
+  vec3(-0.7070, 0.7070, 0.0625)
 );
 
 uniform sampler2D nxtTex;
@@ -48,20 +48,20 @@ out vec4 OUT_col;
 
 void main()
 {
-	vec4 upSample = vec4(0, 0, 0, 0);
+  vec4 upSample = vec4(0, 0, 0, 0);
 
-	for (int i=0; i<KERNEL_SAMPLES; i++)
-	{
-		// XY: Sample Offset
-		// Z: Sample Weight
-		vec3 offsetWeight = KERNEL[i];
-		vec2 offsetXY = offsetWeight.xy * oneOverTargetSize * filterRadius;
-		float weight = offsetWeight.z;
-		vec4 sampleCol = texture(mipTex, IN_uv0 + offsetXY);
-		upSample += sampleCol * weight;
-	}
-	
-	upSample = texture(nxtTex, IN_uv0) + upSample;
-	
-	OUT_col = upSample;
+  for (int i=0; i<KERNEL_SAMPLES; i++)
+  {
+    // XY: Sample Offset
+    // Z: Sample Weight
+    vec3 offsetWeight = KERNEL[i];
+    vec2 offsetXY = offsetWeight.xy * oneOverTargetSize * filterRadius;
+    float weight = offsetWeight.z;
+    vec4 sampleCol = texture(mipTex, IN_uv0 + offsetXY);
+    upSample += sampleCol * weight;
+  }
+  
+  upSample = texture(nxtTex, IN_uv0) + upSample;
+  
+  OUT_col = upSample;
 }

@@ -28,15 +28,15 @@
 
 #define KERNEL_SAMPLES 9
 const vec3 KERNEL[9] = vec3[](
-	vec3( 0.0000, 0.0000, 0.2500),
-	vec3( 1.0000, 0.0000, 0.1250),
-	vec3( 0.0000, 1.0000, 0.1250),
-	vec3(-1.0000, 0.0000, 0.1250),
-	vec3( 0.0000,-1.0000, 0.1250),
-	vec3( 1.0000, 1.0000, 0.0625),
-	vec3( 1.0000,-1.0000, 0.0625),
-	vec3(-1.0000,-1.0000, 0.0625),
-	vec3(-1.0000, 1.0000, 0.0625)
+  vec3( 0.0000, 0.0000, 0.2500),
+  vec3( 1.0000, 0.0000, 0.1250),
+  vec3( 0.0000, 1.0000, 0.1250),
+  vec3(-1.0000, 0.0000, 0.1250),
+  vec3( 0.0000,-1.0000, 0.1250),
+  vec3( 1.0000, 1.0000, 0.0625),
+  vec3( 1.0000,-1.0000, 0.0625),
+  vec3(-1.0000,-1.0000, 0.0625),
+  vec3(-1.0000, 1.0000, 0.0625)
 );
 
 uniform sampler2D inputTex;
@@ -46,18 +46,18 @@ out vec4 OUT_col;
  
 void main()
 {
-	vec4 downSample = vec4(0, 0, 0, 0);
-	
-	for (int i=0; i<KERNEL_SAMPLES; i++)
-	{
-		// XY: Sample Offset
-		// Z: Sample Weight
-		vec3 offsetWeight = KERNEL[i];
-		vec2 offsetXY = offsetWeight.xy * oneOverTargetSize;
-		float weight = offsetWeight.z;
-		vec4 sampleCol = texture(inputTex, IN_uv0 + offsetXY);
-		downSample += sampleCol * weight;
-	}
-	
-	OUT_col = downSample;
+  vec4 downSample = vec4(0, 0, 0, 0);
+  
+  for (int i=0; i<KERNEL_SAMPLES; i++)
+  {
+    // XY: Sample Offset
+    // Z: Sample Weight
+    vec3 offsetWeight = KERNEL[i];
+    vec2 offsetXY = offsetWeight.xy * oneOverTargetSize;
+    float weight = offsetWeight.z;
+    vec4 sampleCol = texture(inputTex, IN_uv0 + offsetXY);
+    downSample += sampleCol * weight;
+  }
+  
+  OUT_col = downSample;
 }

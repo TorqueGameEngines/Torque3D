@@ -42,17 +42,17 @@ out vec4 OUT_col;
 
 void main()
 {
-	#ifdef USE_DIRT
-		float edge = distance(IN_uv0, vec2(0.5, 0.5));
-		edge = max(smoothstep(edgeParams.x, edgeParams.y, edge), edgeParams.z);
-		vec3 dirt = texture(dirtTex, IN_uv0 / (dirtParams.xy * oneOverTargetSize)).rgb * dirtParams.z * edge;
-	#endif
-	
-	vec4 upSample = texture(inputTex, IN_uv0) * strength;
-	
-	#ifdef USE_DIRT
-		upSample.rgb += upSample.rgb * dirt;
-	#endif
-	
-	OUT_col = upSample * M_1OVER_PI_F;
+  #ifdef USE_DIRT
+    float edge = distance(IN_uv0, vec2(0.5, 0.5));
+    edge = max(smoothstep(edgeParams.x, edgeParams.y, edge), edgeParams.z);
+    vec3 dirt = texture(dirtTex, IN_uv0 / (dirtParams.xy * oneOverTargetSize)).rgb * dirtParams.z * edge;
+  #endif
+  
+  vec4 upSample = texture(inputTex, IN_uv0) * strength;
+  
+  #ifdef USE_DIRT
+    upSample.rgb += upSample.rgb * dirt;
+  #endif
+  
+  OUT_col = upSample * M_1OVER_PI_F;
 }

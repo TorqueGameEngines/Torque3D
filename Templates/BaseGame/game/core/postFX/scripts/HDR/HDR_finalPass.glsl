@@ -24,7 +24,9 @@
 #include "core/rendering/shaders/gl/hlslCompat.glsl"
 #include "core/rendering/shaders/postFX/gl/postFx.glsl"
 #include "shadergen:/autogenConditioners.h"
-
+#include "HDR_Tonemap.glsl"   
+#include "HDR_colorUtils.glsl"
+#line 29
 uniform sampler2D sceneTex;
 uniform sampler2D luminanceTex;
 uniform sampler2D bloomTex;
@@ -39,59 +41,57 @@ uniform float g_fWhiteCutoff;
 uniform float g_fEnableAutoExposure;
 uniform float g_fTonemapMode;
 
-uniform float g_fEnableBlueShift;
-uniform vec3 g_fBlueShiftColor; 
-
 uniform float g_fBloomScale;
 
 uniform float g_fOneOverGamma;
 uniform float Brightness;
 uniform float Contrast;
 
+//Explicit HDR Params
+uniform float exposureValue;
+uniform float whitePoint;
+uniform float logContrast;
+uniform float brightnessValue;
+uniform float saturationValue;
+uniform vec3 colorFilter;
+
 out vec4 OUT_col;
 
-// uncharted 2 tonemapper see: http://filmicgames.com/archives/75
-vec3 Uncharted2Tonemap(vec3 x)
-{
-   const float A = 0.15;
-   const float B = 0.50;
-   const float C = 0.10;
-   const float D = 0.20;
-   const float E = 0.02;
-   const float F = 0.30;
-   return ((x*(A*x + C*B) + D*E) / (x*(A*x + B) + D*F)) - E / F;
-}
 
-float3 ACESFilm( float3 x )
-{
-    const float a = 2.51;
-    const float b = 0.03;
-    const float c = 2.43;
-    const float d = 0.59;
-    const float e = 0.14;
-    return saturate((x*(a*x+b))/(x*(c*x+d)+e));
-}
-
-vec3 tonemap(vec3 c)
-{
-   vec3 colorOut = c;
-    
-   if(g_fTonemapMode == 1.0)
-   {
-      const float W = 11.2;
-      float ExposureBias = 2.0f;
-      //float ExposureAdjust = 1.5f;
-      //c *= ExposureAdjust;
-      colorOut = Uncharted2Tonemap(ExposureBias*colorOut);
-      colorOut = colorOut * (1.0f / Uncharted2Tonemap(vec3(W,W,W)));
+vec3 Tonemap(vec3 x)
+{ 
+    //ACES      
+    if(g_fTonemapMode == 1.0f)    
+   {           
+	  x = ACESFitted(x, whitePoint);    	  
+   }             
+   //Filmic Helji	       
+   if(g_fTonemapMode == 2.0f) 
+   {             
+      x = TO_Hejl(x, whitePoint);
+   }   
+   //Hable Uncharted 2          
+   if (g_fTonemapMode == 3.0)      
+   {                                              
+      x = TO_HableU2(x, whitePoint);         
+   }      
+                           
+   //Reinhard       
+   if (g_fTonemapMode == 4.0)
+   {   
+	  float L = hdrLuminance(x);   
+      vec3 nL = TO_Reinhard(vec3(L), whitePoint);
+      x *= (nL / L);                  	    	                           
+   }  
+        
+   //Linear Tonemap  
+   else if (g_fTonemapMode == 5.0)
+   {  
+      x = TO_Linear(x);  	   
    }
-   else if(g_fTonemapMode == 2.0)
-   {
-      colorOut = ACESFilm(colorOut);
-   }
-
-   return colorOut;
-}
+        
+   return x;
+}  
 
 void main()
 {
@@ -99,45 +99,48 @@ void main()
    float adaptedLum = texture( luminanceTex, vec2( 0.5f, 0.5f ) ).r;
    vec4 bloom = texture( bloomTex, IN_uv0 );
 
-   // For very low light conditions, the rods will dominate the perception
-   // of light, and therefore color will be desaturated and shifted
-   // towards blue.
-   if ( g_fEnableBlueShift > 0.0f )
-   {
-      const vec3 LUMINANCE_VECTOR = vec3(0.2125f, 0.7154f, 0.0721f);
-
-      // Define a linear blending from -1.5 to 2.6 (log scale) which
-      // determines the mix amount for blue shift
-      float coef = 1.0f - ( adaptedLum + 1.5 ) / 4.1;
-      coef = saturate( coef * g_fEnableBlueShift );
-
-      // Lerp between current color and blue, desaturated copy
-      vec3 rodColor = dot( _sample.rgb, LUMINANCE_VECTOR ) * g_fBlueShiftColor;
-      _sample.rgb = mix( _sample.rgb, rodColor, coef );
-	  
-      rodColor = dot( bloom.rgb, LUMINANCE_VECTOR ) * g_fBlueShiftColor;
-      bloom.rgb = mix( bloom.rgb, rodColor, coef );
-   }
-
-   // Add the bloom effect.
-   _sample.rgb += clamp(vec3(g_fBloomScale,g_fBloomScale,g_fBloomScale) * bloom.rgb, vec3(0,0,0), vec3(1.0,1.0,1.0));
+   
+        	    
+   // Add the bloom effect.     
+   _sample += (g_fBloomScale * bloom) / 10; 
+   
+   //Apply Exposure     
+   _sample.rgb *= TO_Exposure(_sample.rgb, exposureValue, colorFilter);
+   
+   	//Apply Saturation
+   _sample.rgb = TO_Saturation(_sample.rgb, saturationValue);
 
    // Apply contrast
    _sample.rgb = ((_sample.rgb - 0.5f) * Contrast) + 0.5f;
 
    // Apply brightness
    //_sample.rgb += Brightness;
+   
+    //Apply Color Contrast   
+   _sample.r = TO_LogContrast(_sample.r, logContrast);
+   _sample.g = TO_LogContrast(_sample.g, logContrast);  
+   _sample.b = TO_LogContrast(_sample.b, logContrast);
 
    //tonemapping - TODO fix up eye adaptation
-   if ( g_fEnableToneMapping > 0.0f )
-   {
-      float adapation = 1;
-
-      if ( g_fEnableAutoExposure > 0.0f )
-         adapation = (g_fMiddleGray / (adaptedLum + 0.0001)) * hdrLuminance( _sample.rgb );
-
-      _sample.rgb = tonemap(_sample.rgb * adapation);
-   }
+   if ( g_fEnableToneMapping > 0.0f )  
+   {    
+      float adapation = 1.0;  
+	   
+      if( g_fEnableAutoExposure > 0.0f )  
+	   {  	     		 
+         adaptedLum = saturate(adaptedLum); 
+         float linearExposure = (g_fMiddleGray / adaptedLum);
+         adapation = log2(max(linearExposure, 0.0001f));     
+		          
+         _sample.rgb = Tonemap(exposureValue * _sample.rgb *exp2(adapation)); 
+	   }   
+         
+        else {
+		
+		  _sample.rgb = Tonemap(_sample.rgb);
+	    }		
+      	           
+   }      
 
    OUT_col = _sample;
 }

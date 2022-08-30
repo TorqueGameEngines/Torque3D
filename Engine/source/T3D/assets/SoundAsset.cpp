@@ -48,6 +48,8 @@
 #include "platform/profiler.h"
 #include "sfx/sfxTypes.h"
 
+#include "SoundAssetInspectors.h"
+
 //-----------------------------------------------------------------------------
 
 IMPLEMENT_CONOBJECT(SoundAsset);
@@ -225,6 +227,8 @@ bool SoundAsset::loadSound()
       }
       else
       {// = new SFXProfile(mProfileDesc, mSoundFile, mPreload);
+         if (mProfileDesc.mSourceGroup == NULL)
+            mProfileDesc.mSourceGroup = dynamic_cast<SFXSource*>(Sim::findObject("AudioChannelMaster"));
          mSFXProfile.setDescription(&mProfileDesc);
          mSFXProfile.setSoundFileName(mSoundPath);
          mSFXProfile.setPreload(mPreload);

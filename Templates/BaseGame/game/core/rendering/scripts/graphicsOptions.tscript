@@ -678,8 +678,8 @@ function AutodetectGraphics_Apply(%shaderVer, %intel, %videoMem )
          
          $pref::Shadows::useShadowCaching = true;
          
-         $pref::Water::disableTrueReflections = true;
-         $pref::Video::disableParallaxMapping = true;
+         $pref::Water::enableTrueReflections = false;
+         $pref::Video::enableParallaxMapping = false;
          $pref::PostFX::EnableSSAO = false;
          $pref::PostFX::EnableHDR = false;
          $pref::PostFX::EnableDOF = false;
@@ -704,8 +704,8 @@ function AutodetectGraphics_Apply(%shaderVer, %intel, %videoMem )
          
          $pref::Shadows::useShadowCaching = true;
          
-         $pref::Water::disableTrueReflections = true;
-         $pref::Video::disableParallaxMapping = true;
+         $pref::Water::enableTrueReflections = false;
+         $pref::Video::enableParallaxMapping = false;
          $pref::PostFX::EnableSSAO = false;
          $pref::PostFX::EnableHDR = false;
          $pref::PostFX::EnableDOF = false;
@@ -734,8 +734,8 @@ function AutodetectGraphics_Apply(%shaderVer, %intel, %videoMem )
          //Should this default to on in ultra settings?
          $pref::Shadows::useShadowCaching = true;
          
-         $pref::Water::disableTrueReflections = false;
-         $pref::Video::disableParallaxMapping = false;
+         $pref::Water::enableTrueReflections = true;
+         $pref::Video::enableParallaxMapping = true;
          $pref::PostFX::EnableSSAO = true;
          $pref::PostFX::EnableHDR = true;
          $pref::PostFX::EnableDOF = true;
@@ -760,8 +760,8 @@ function AutodetectGraphics_Apply(%shaderVer, %intel, %videoMem )
          
          $pref::Shadows::useShadowCaching = true;
          
-         $pref::Water::disableTrueReflections = false;
-         $pref::Video::disableParallaxMapping = true;
+         $pref::Water::enableTrueReflections = true;
+         $pref::Video::enableParallaxMapping = true;
          $pref::PostFX::EnableSSAO = false;
          $pref::PostFX::EnableHDR = true;
          $pref::PostFX::EnableDOF = true;
@@ -789,8 +789,8 @@ function AutodetectGraphics_Apply(%shaderVer, %intel, %videoMem )
          
          $pref::Shadows::useShadowCaching = true;
          
-         $pref::Water::disableTrueReflections = false;
-         $pref::Video::disableParallaxMapping = true;
+         $pref::Water::enableTrueReflections = true;
+         $pref::Video::enableParallaxMapping = true;
          $pref::PostFX::EnableSSAO = false;
          $pref::PostFX::EnableHDR = false;
          $pref::PostFX::EnableDOF = false;

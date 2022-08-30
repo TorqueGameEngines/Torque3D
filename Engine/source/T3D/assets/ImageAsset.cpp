@@ -491,7 +491,7 @@ GuiControl* GuiInspectorTypeImageAssetPtr::constructEditControl()
    {
       //if we don't have a target object, we'll be manipulating the desination value directly
       char szBuffer[512];
-      dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"ImageAsset\", \"AssetBrowser.changeAsset\", %s, %s);",
+      dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"ImageAsset\", \"AssetBrowser.changeAsset\", %s, \"%s\");",
          mInspector->getIdString(), mVariableName);
       mBrowseButton->setField("Command", szBuffer);
    }

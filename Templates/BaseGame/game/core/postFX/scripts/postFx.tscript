@@ -50,6 +50,13 @@ function postFXInit()
       
       while( %file !$= "" )
       {      
+         //we need to make sure we don't inadvertently forcefully exec the default postfx preset
+         if(fileName(%file) $= "default.postfxpreset.tscript")
+         {
+            %file = findNextFile( %pattern );
+            continue;
+         }
+            
          exec( %file );
          %file = findNextFile( %pattern );
       }

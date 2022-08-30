@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Soundasset.h"
+#include "SoundAsset.h"
 
 #ifndef _GUI_INSPECTOR_TYPES_H_
 #include "gui/editor/guiInspectorTypes.h"

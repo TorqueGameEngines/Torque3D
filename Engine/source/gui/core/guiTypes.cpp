@@ -440,9 +440,6 @@ void GuiControlProfile::initPersistFields()
       INITPERSISTFIELD_SOUNDASSET(SoundButtonDown, GuiControlProfile, "The sound button down.");
       INITPERSISTFIELD_SOUNDASSET(SoundButtonOver, GuiControlProfile, "The sound button down.");
 
-      addProtectedField( "soundButtonOver", TypeSFXTrackName,  Offset(mSoundButtonOver, GuiControlProfile),
-         &GuiControlProfile::protectedSetSoundButtonOver, &GuiControlProfile::protectedGetSoundButtonOver,
-         "Sound to play when mouse is hovering over control." );
       addField("profileForChildren", TypeString,      Offset(mChildrenProfileName, GuiControlProfile));
    
    endGroup( "Misc" );

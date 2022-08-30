@@ -47,7 +47,7 @@
 
 GFXDevice * GFXDevice::smGFXDevice = NULL;
 bool GFXDevice::smWireframe = false;
-bool GFXDevice::smDisableVSync = true;
+bool GFXDevice::smEnableVSync = false;
 F32 GFXDevice::smForcedPixVersion = -1.0f;
 bool GFXDevice::smDisableOcclusionQuery = false;
 bool gDisassembleAllShaders = false;
@@ -71,8 +71,8 @@ void GFXDevice::initConsole()
       "them to return only the visibile state.\n"
       "@ingroup GFX\n" );
 
-   Con::addVariable( "$pref::Video::disableVerticalSync", TypeBool, &smDisableVSync,
-      "Disables vertical sync on the active device.\n"
+   Con::addVariable( "$pref::Video::enableVerticalSync", TypeBool, &smEnableVSync,
+      "Enables vertical sync on the active device.\n"
       "@note The video mode must be reset for the change to take affect.\n"
       "@ingroup GFX\n" );
 

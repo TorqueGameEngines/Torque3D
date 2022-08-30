@@ -367,7 +367,7 @@ GFXFormat GFXD3D11WindowTarget::getFormat()
 
 bool GFXD3D11WindowTarget::present()
 {
-   HRESULT hr = mSwapChain->Present(!D3D11->smDisableVSync, 0);
+   HRESULT hr = mSwapChain->Present(D3D11->smEnableVSync, 0);
    if (hr == DXGI_ERROR_DEVICE_REMOVED)
    {
       HRESULT result = D3D11->getDevice()->GetDeviceRemovedReason();

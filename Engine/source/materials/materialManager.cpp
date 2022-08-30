@@ -87,8 +87,8 @@ MaterialManager::MaterialManager()
    Con::addVariableNotify( "$pref::Video::disableNormalMapping", callabck2 );
    Con::setVariable( "$pref::Video::disableCubemapping", "false" );
    Con::addVariableNotify( "$pref::Video::disableCubemapping", callabck2 );
-   Con::setVariable( "$pref::Video::disableParallaxMapping", "false" );
-   Con::addVariableNotify( "$pref::Video::disableParallaxMapping", callabck2 );
+   Con::setVariable( "$pref::Video::enableParallaxMapping", "true" );
+   Con::addVariableNotify( "$pref::Video::enableParallaxMapping", callabck2 );
 }
 
 MaterialManager::~MaterialManager()
@@ -472,7 +472,7 @@ void MaterialManager::recalcFeaturesFromPrefs()
                                     Con::getBoolVariable( "$pref::Video::disableCubemapping", false ) );
 
    mExclusionFeatures.setFeature(   MFT_Parallax, 
-                                    Con::getBoolVariable( "$pref::Video::disableParallaxMapping", false ) );
+                                    !Con::getBoolVariable( "$pref::Video::enableParallaxMapping", true ) );
 }
 
 bool MaterialManager::_handleGFXEvent( GFXDevice::GFXDeviceEventType event_ )

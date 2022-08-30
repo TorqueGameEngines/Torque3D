@@ -228,7 +228,7 @@ DXGI_SWAP_CHAIN_DESC GFXD3D11Device::setupPresentParams(const GFXVideoMode &mode
 
    mMultisampleDesc = sampleDesc;
 
-   d3dpp.BufferCount = !smDisableVSync ? 2 : 1; // triple buffering when vsync is on.
+   d3dpp.BufferCount = smEnableVSync ? 2 : 1; // triple buffering when vsync is on.
    d3dpp.BufferDesc.Width = mode.resolution.x;
    d3dpp.BufferDesc.Height = mode.resolution.y;
    d3dpp.BufferDesc.Format = GFXD3D11TextureFormat[GFXFormatR8G8B8A8_SRGB];

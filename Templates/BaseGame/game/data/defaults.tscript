@@ -28,7 +28,7 @@ $sceneLighting::purgeMethod = "lastCreated";
 $sceneLighting::cacheLighting = 1;
 
 $pref::Video::displayDevice = ($platform $= "windows") ? "D3D11" : "OpenGL";
-$pref::Video::disableVerticalSync = 1;
+$pref::Video::enableVerticalSync = 0;
 $pref::Video::defaultFenceCount = 0;
 $pref::Video::screenShotSession = 0;
 $pref::Video::screenShotFormat = "PNG";
@@ -50,7 +50,7 @@ $pref::Video::disablePixSpecular = false;
 $pref::Video::disableCubemapping = false;
 
 ///
-$pref::Video::disableParallaxMapping = false;
+$pref::Video::enableParallaxMapping = true;
 
 $pref::Video::Gamma = 2.2;
 $pref::Video::Contrast = 1.0;
@@ -137,7 +137,7 @@ $pref::Reflect::refractTexScale = 1.0;
 $pref::Reflect::frameLimitMS = 10;
 
 /// Set true to force all water objects to use static cubemap reflections.
-$pref::Water::disableTrueReflections = false;
+$pref::Water::enableTrueReflections = true;
 
 // A global LOD scalar which can reduce the overall density of placed GroundCover.
 $pref::GroundCover::densityScale = 1.0;

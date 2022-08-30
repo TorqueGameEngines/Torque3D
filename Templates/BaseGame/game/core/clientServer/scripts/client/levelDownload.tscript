@@ -45,12 +45,12 @@ function clientCmdMissionStartPhase1_LoadCache(%seq, %levelAsset)
 {
   if ($pref::Client::EnableDatablockCache && $loadFromDatablockCache)
   {
-    if (!$pref::Video::disableVerticalSync)
+    if ($pref::Video::enableVerticalSync)
     {
       warn("Disabling Vertical Sync during datablock cache load to avoid significant slowdown.");
       $AFX_tempDisableVSync = true;
 
-      $pref::Video::disableVerticalSync = true;
+      $pref::Video::enableVerticalSync = false;
       Canvas.resetVideoMode();
     }
 
@@ -75,7 +75,7 @@ function updateLoadDatablockCacheProgress(%seq, %levelAsset)
      warn("Restoring Vertical Sync setting.");
      $AFX_tempDisableVSync = false;
 
-     $pref::Video::disableVerticalSync = false;
+     $pref::Video::enableVerticalSync = true;
      Canvas.resetVideoMode();
    }
 
@@ -96,7 +96,7 @@ function updateLoadDatablockCacheProgress(%seq, %levelAsset)
      warn("Restoring Vertical Sync setting.");
      $AFX_tempDisableVSync = false;
 
-     $pref::Video::disableVerticalSync = false;
+     $pref::Video::enableVerticalSync = true;
      Canvas.resetVideoMode();
    }
 

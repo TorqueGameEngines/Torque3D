@@ -434,7 +434,7 @@ function populateDisplaySettingsList()
    
    if(%mode !$= "Borderless")
    {
-      %resolutionList = getScreenResolutionList($pref::Video::deviceId, $pref::Video::deviceMode);
+      %resolutionList = getScreenResolutionList($pref::Video::deviceId, $Video::Mode[%mode]);
       %resolution = OptionsMenu.getOptionVariableValue("$pref::Video::Resolution");
       if(%resolution $= "")
          %resolution =  $pref::Video::mode;

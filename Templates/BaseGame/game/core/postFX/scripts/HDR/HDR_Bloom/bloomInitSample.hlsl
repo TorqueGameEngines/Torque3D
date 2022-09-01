@@ -20,31 +20,37 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#define IN_GLSL
-#include "core/rendering/shaders/shdrConsts.h"
-#include "core/rendering/shaders/gl/hlslCompat.glsl"
-#include "shadergen:/autogenConditioners.h"
+#include "core/rendering/shaders/postFX/postFx.hlsl"
+#include "core/rendering/shaders/torque.hlsl"
 
-in vec4 texCoords[8];
-#define IN_texCoords texCoords
+#define KERNEL_SAMPLES 4
+static const float2 KERNEL[4] = {
+  float2( 0.5f, 0.5f),
+  float2( 0.5f,-0.5f),
+  float2(-0.5f,-0.5f),
+  float2(-0.5f, 0.5f)
+};
 
-uniform sampler2D inputTex;
-
-out vec4 OUT_col;
-
-//-----------------------------------------------------------------------------
-// Main
-//-----------------------------------------------------------------------------
-void main()
+TORQUE_UNIFORM_SAMPLER2D(inputTex, 0);
+TORQUE_UNIFORM_SAMPLER2D(luminanceTex, 1);
+uniform float g_fMiddleGray;
+uniform float2 oneOverTargetSize;
+ 
+float4 main(PFXVertToPix IN) : TORQUE_TARGET0
 {
-   // We calculate the texture coords
-   // in the vertex shader as an optimization.
-   vec4 _sample = vec4(0.0f);
-   for ( int i = 0; i < 8; i++ )
-   {
-      _sample += texture( inputTex, IN_texCoords[i].xy );
-      _sample += texture( inputTex, IN_texCoords[i].zw );
-   }
+   const float weight = 1.0f / KERNEL_SAMPLES;
+   float4 downSample = float4(0, 0, 0, 0);
    
-	OUT_col = _sample / 16;
+   [unroll]
+   for (int i=0; i<KERNEL_SAMPLES; i++)
+   {
+     float2 offset = KERNEL[i] * oneOverTargetSize;
+     float4 sampleCol = hdrDecode( TORQUE_TEX2D(inputTex, IN.uv0 + offset) );
+     downSample += sampleCol;
+   }
+
+   float adaptedLum = TORQUE_TEX2D( luminanceTex, float2( 0.5f, 0.5f ) ).r;
+   float lum = (g_fMiddleGray / (adaptedLum + 0.0001f));
+   
+   return downSample * weight * lum;
 }

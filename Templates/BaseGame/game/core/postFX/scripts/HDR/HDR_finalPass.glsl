@@ -41,7 +41,7 @@ uniform float g_fWhiteCutoff;
 uniform float g_fEnableAutoExposure;
 uniform float g_fTonemapMode;
 
-uniform float g_fBloomScale;
+//uniform float g_fBloomScale;
 
 uniform float g_fOneOverGamma;
 uniform float Brightness;
@@ -102,7 +102,7 @@ void main()
    
         	    
    // Add the bloom effect.     
-   _sample += (g_fBloomScale * bloom) / 10; 
+   _sample += bloom; 
    
    //Apply Exposure     
    _sample.rgb *= TO_Exposure(_sample.rgb, exposureValue, colorFilter);

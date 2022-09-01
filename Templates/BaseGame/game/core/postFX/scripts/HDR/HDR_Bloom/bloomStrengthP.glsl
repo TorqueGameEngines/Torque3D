@@ -54,5 +54,5 @@ void main()
     upSample.rgb += upSample.rgb * dirt;
   #endif
   
-  OUT_col = max(upSample * M_1OVER_PI_F, 0.0);
+  OUT_col = max(upSample, 0.0);
 }

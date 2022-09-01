@@ -29,11 +29,9 @@ uniform float threshold;
 float4 main(PFXVertToPix IN) : TORQUE_TARGET0
 {
   float4 screenColor = TORQUE_TEX2D(inputTex, IN.uv0);
-  float lum = hdrLuminance(screenColor.rgb);
   
   float brightness = max(screenColor.r, max(screenColor.g, screenColor.b));
   float contribution = saturate(brightness - threshold) / max(brightness, 0.0001f);
-  contribution = sqr(lum * contribution);
   
-  return max(screenColor * sqr(contribution), 0.0001f);
+  return max(screenColor * contribution, 0.0001f);
 }

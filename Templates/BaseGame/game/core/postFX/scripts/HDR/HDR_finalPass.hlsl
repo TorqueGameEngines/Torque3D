@@ -39,7 +39,7 @@ uniform float g_fMiddleGray;
 uniform float g_fEnableAutoExposure;
 uniform float g_fTonemapMode;
 
-uniform float g_fBloomScale;
+//uniform float g_fBloomScale;
 uniform float g_fOneOverGamma;
 uniform float Brightness;
 uniform float Contrast;
@@ -94,7 +94,7 @@ float4 main( PFXVertToPix IN ) : TORQUE_TARGET0
    float4 bloom = TORQUE_TEX2D( bloomTex, IN.uv0 ); 
         	    
    // Add the bloom effect.     
-   sample += (g_fBloomScale * bloom) / 10;         
+   sample += bloom;         
    			
 	//Apply Exposure     
    sample.rgb *= TO_Exposure(sample.rgb, exposureValue, colorFilter); 

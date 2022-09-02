@@ -20,34 +20,33 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#define IN_HLSL
-#include "core/rendering/shaders/shdrConsts.h"
 #include "core/rendering/shaders/postFX/postFx.hlsl"
-
-//-----------------------------------------------------------------------------
-// Data 
-//-----------------------------------------------------------------------------
-struct VertIn
-{
-	float4 hpos : TORQUE_POSITION;
-	float4 texCoords[8] : TEXCOORD0;
-};
+#include "core/rendering/shaders/torque.hlsl"
 
 TORQUE_UNIFORM_SAMPLER2D(inputTex, 0);
- 
-//-----------------------------------------------------------------------------
-// Main
-//-----------------------------------------------------------------------------
-float4 main(  VertIn IN) : TORQUE_TARGET0
+TORQUE_UNIFORM_SAMPLER2D(dirtTex, 1);
+uniform float strength;
+// XY: Dirt Texture Size/Scale
+// Z: Dirt Effect Strength
+uniform float3 dirtParams;
+// XY: Edge Min & Max Distance
+// Z: Edge Min Value
+uniform float3 edgeParams;
+uniform float2 oneOverTargetSize;
+
+float4 main(PFXVertToPix IN) : TORQUE_TARGET0
 {
-   // We calculate the texture coords
-   // in the vertex shader as an optimization.
-   float4 sample = 0.0f;
-   for ( int i = 0; i < 8; i++ )
-   {
-      sample += TORQUE_TEX2D( inputTex, IN.texCoords[i].xy );
-      sample += TORQUE_TEX2D( inputTex, IN.texCoords[i].zw );
-   }
-   
-	return sample / 16;
+  #ifdef USE_DIRT
+    float edge = distance(IN.uv0, float2(0.5f, 0.5f));
+    edge = max(smoothstep(edgeParams.x, edgeParams.y, edge), edgeParams.z);
+    float3 dirt = TORQUE_TEX2D(dirtTex, IN.uv0 / (dirtParams.xy * oneOverTargetSize)).rgb * dirtParams.z * edge;
+  #endif
+  
+  float4 upSample = TORQUE_TEX2D(inputTex, IN.uv0) * strength;
+  
+  #ifdef USE_DIRT
+    upSample.rgb += upSample.rgb * dirt;
+  #endif
+  
+  return max(upSample, 0.0f);
 }

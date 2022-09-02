@@ -1,3 +1,27 @@
+<<<<<<< HEAD
+$PostFX::BloomPostFX::Enabled = "1";
+$PostFX::BloomPostFX::threshold = "0.5";
+$PostFX::BloomPostFX::intensity = "0.5";
+$PostFX::BloomPostFX::radius = "4";
+$PostFX::BloomPostFX::dirtEnabled = "1";
+$PostFX::BloomPostFX::dirtScale = "2048";
+$PostFX::BloomPostFX::dirtIntensity = "40";
+$PostFX::BloomPostFX::dirtImage = "core/postFX/images/lensDirt.png";
+$PostFX::BloomPostFX::dirtEdgeMinDist = "0.115384616";
+$PostFX::BloomPostFX::dirtEdgeMaxDist = "0.951923072";
+$PostFX::BloomPostFX::dirtEdgeMinVal = "0.00961538497";
+$PostFX::HDRPostFX::Enabled = 1;
+$PostFX::HDRPostFX::exposureValue = "1.5";
+$PostFX::HDRPostFX::whitePoint = "2";
+$PostFX::HDRPostFX::logContrast = "1.25";
+$PostFX::HDRPostFX::saturationValue = "1";
+$PostFX::HDRPostFX::colorFilter = "1.0 1.0 1.0";
+$PostFX::HDRPostFX::minLuminace = "0.001";
+$PostFX::HDRPostFX::adaptRate = "0.85";
+$PostFX::HDRPostFX::tonemapMode = "ACES";
+$PostFX::HDRPostFX::enableBloom = "1";
+=======
+>>>>>>> development
 $PostFX::HDRPostFX::brightPassThreshold = "0.02";
 $PostFX::HDRPostFX::gaussMultiplier = "0.4";
 $PostFX::HDRPostFX::enableAutoExposure = "1";

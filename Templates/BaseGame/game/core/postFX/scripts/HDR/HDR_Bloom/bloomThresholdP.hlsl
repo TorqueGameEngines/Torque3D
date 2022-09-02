@@ -20,31 +20,18 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#define IN_GLSL
-#include "core/rendering/shaders/shdrConsts.h"
-#include "core/rendering/shaders/gl/hlslCompat.glsl"
-#include "shadergen:/autogenConditioners.h"
+#include "core/rendering/shaders/postFX/postFx.hlsl"
+#include "core/rendering/shaders/torque.hlsl"
 
-in vec4 texCoords[8];
-#define IN_texCoords texCoords
+TORQUE_UNIFORM_SAMPLER2D(inputTex, 0);
+uniform float threshold;
 
-uniform sampler2D inputTex;
-
-out vec4 OUT_col;
-
-//-----------------------------------------------------------------------------
-// Main
-//-----------------------------------------------------------------------------
-void main()
+float4 main(PFXVertToPix IN) : TORQUE_TARGET0
 {
-   // We calculate the texture coords
-   // in the vertex shader as an optimization.
-   vec4 _sample = vec4(0.0f);
-   for ( int i = 0; i < 8; i++ )
-   {
-      _sample += texture( inputTex, IN_texCoords[i].xy );
-      _sample += texture( inputTex, IN_texCoords[i].zw );
-   }
-   
-	OUT_col = _sample / 16;
+  float4 screenColor = TORQUE_TEX2D(inputTex, IN.uv0);
+  
+  float brightness = max(screenColor.r, max(screenColor.g, screenColor.b));
+  float contribution = saturate(brightness - threshold) / max(brightness, 0.0001f);
+  
+  return max(screenColor * contribution, 0.0001f);
 }

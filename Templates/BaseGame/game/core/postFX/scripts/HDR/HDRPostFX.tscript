@@ -56,31 +56,33 @@ $PostFX::HDRPostFX::minLuminace = 0.001;
 /// average scene luminance. 
 $PostFX::HDRPostFX::adaptRate = 0.85;
 
-/// Blends between the scene and the bloomed scene.
-$PostFX::HDRPostFX::enableBloom = 1.0;
+// Inspired by bloom described in paper listed here:
+// http://www.iryoku.com/next-generation-post-processing-in-call-of-duty-advanced-warfare
 
-/// The threshold luminace value for pixels which are
-/// considered "bright" and need to be bloomed.
-$PostFX::HDRPostFX::brightPassThreshold = 0.08;
+$PostFX::HDRPostFX::enableBloom = true;
+$PostFX::HDRPostFX::threshold = 1.25;
+$PostFX::HDRPostFX::intensity = 0.25;
+$PostFX::HDRPostFX::radius = 4.0;
 
-/// These are used in the gaussian blur of the
-/// bright pass for the bloom effect.
-$PostFX::HDRPostFX::gaussMultiplier = 0.4;
-$PostFX::HDRPostFX::gaussMean = 0;
-$PostFX::HDRPostFX::gaussStdDev = 0.5;
+$PostFX::HDRPostFX::enableDirt = true;
+$PostFX::HDRPostFX::dirtScale = 2048.0;
+$PostFX::HDRPostFX::dirtIntensity = 2.0;
+$PostFX::HDRPostFX::dirtEdgeMinDist = 0.125;
+$PostFX::HDRPostFX::dirtEdgeMaxDist = 0.75;
+$PostFX::HDRPostFX::dirtEdgeMinVal = 0.05;
+$PostFX::HDRPostFX::dirtImage = "core/postFX/images/lensDirt.png";
 
 // The tonemapping algo to use
 $PostFX::HDRPostFX::tonemapMode = "ACES";
 
 $PostFX::HDRPostFX::enableAutoExposure = true;
 
-
-singleton ShaderData( HDR_BrightPassShader )
+singleton ShaderData( HDR_BloomInitShader )
 {
-   DXVertexShaderFile 	= $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
-   DXPixelShaderFile 	= "./HDR_utils/brightPassFilterP.hlsl";   
-   OGLVertexShaderFile  = $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";
-   OGLPixelShaderFile   = "./HDR_utils/brightPassFilterP.glsl";
+   DXVertexShaderFile = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
+   DXPixelShaderFile  = "./HDR_Bloom/bloomInitSample.hlsl";
+   OGLVertexShaderFile= $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";
+   OGLPixelShaderFile = "./HDR_Bloom/bloomInitSample.glsl";
    
    samplerNames[0] = "$inputTex";
    samplerNames[1] = "$luminanceTex";
@@ -88,38 +90,52 @@ singleton ShaderData( HDR_BrightPassShader )
    pixVersion = 3.0;
 };
 
-singleton ShaderData( HDR_DownScale4x4Shader )
+singleton ShaderData( HDR_BloomThresholdShader )
 {
-   DXVertexShaderFile 	= "./HDR_Bloom/downScale4x4V.hlsl";
-   DXPixelShaderFile 	= "./HDR_Bloom/downScale4x4P.hlsl";
-   OGLVertexShaderFile  = "./HDR_Bloom/downScale4x4V.glsl";
-   OGLPixelShaderFile   = "./HDR_Bloom/downScale4x4P.glsl";
-   
-   samplerNames[0] = "$inputTex";
-   
-   pixVersion = 2.0;
-};
-
-singleton ShaderData( HDR_BloomGaussBlurHShader )
-{
-   DXVertexShaderFile 	= $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
-   DXPixelShaderFile 	= "./HDR_Bloom/bloomGaussBlurHP.hlsl";
-   OGLVertexShaderFile  = $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";
-   OGLPixelShaderFile   = "./HDR_Bloom/bloomGaussBlurHP.glsl";
+   DXVertexShaderFile = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
+   DXPixelShaderFile  = "./HDR_Bloom/bloomThresholdP.hlsl";
+   OGLVertexShaderFile= $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";
+   OGLPixelShaderFile = "./HDR_Bloom/bloomThresholdP.glsl";
    
    samplerNames[0] = "$inputTex";
    
    pixVersion = 3.0;
 };
 
-singleton ShaderData( HDR_BloomGaussBlurVShader )
+singleton ShaderData( HDR_BloomDownSampleShader )
 {
-   DXVertexShaderFile 	= $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
-   DXPixelShaderFile 	= "./HDR_Bloom/bloomGaussBlurVP.hlsl";
-   OGLVertexShaderFile  = $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";
-   OGLPixelShaderFile   = "./HDR_Bloom/bloomGaussBlurVP.glsl";
+   DXVertexShaderFile = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
+   DXPixelShaderFile  = "./HDR_Bloom/downSampleP.hlsl";
+   OGLVertexShaderFile= $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";
+   OGLPixelShaderFile = "./HDR_Bloom/downSampleP.glsl";
    
    samplerNames[0] = "$inputTex";
+   
+   pixVersion = 3.0;
+};
+
+singleton ShaderData( HDR_BloomUpSampleShader )
+{
+   DXVertexShaderFile = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
+   DXPixelShaderFile  = "./HDR_Bloom/upSampleP.hlsl";
+   OGLVertexShaderFile= $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";
+   OGLPixelShaderFile = "./HDR_Bloom/upSampleP.glsl";
+   
+   samplerNames[0] = "$nxtTex";
+   samplerNames[1] = "$mipTex";
+   
+   pixVersion = 3.0;
+};
+
+singleton ShaderData( HDR_BloomDirtShader )
+{
+   DXVertexShaderFile = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
+   DXPixelShaderFile  = "./HDR_Bloom/bloomStrengthP.hlsl";
+   OGLVertexShaderFile= $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";
+   OGLPixelShaderFile = "./HDR_Bloom/bloomStrengthP.glsl";
+   
+   samplerNames[0] = "$inputTex";
+   samplerNames[1] = "$dirtTex";
    
    pixVersion = 3.0;
 };
@@ -191,6 +207,13 @@ singleton GFXStateBlockData( HDR_DownSampleStateBlock : PFX_DefaultStateBlock )
    samplerStates[1] = SamplerClampLinear;
 };
 
+singleton GFXStateBlockData( HDR_LensDirtStateBlock : PFX_DefaultStateBlock )
+{ 
+   samplersDefined = true;
+   samplerStates[0] = SamplerClampLinear;
+   samplerStates[1] = SamplerWrapLinear;
+};
+
 singleton GFXStateBlockData( HDR_CombineStateBlock : PFX_DefaultStateBlock )
 {
    samplersDefined = true;
@@ -223,23 +246,7 @@ singleton GFXStateBlockData( HDRStateBlock )
 
 function HDRPostFX::setShaderConsts( %this )
 {
-   %this.setShaderConst( "$brightPassThreshold", $PostFX::HDRPostFX::brightPassThreshold );
-   %this.setShaderConst( "$g_fMiddleGray",   $PostFX::HDRPostFX::keyValue );  
-   %this.setShaderConst( "$exposureValue",   $PostFX::HDRPostFX::exposureValue );
-   %this.setShaderConst( "$whitePoint",      $PostFX::HDRPostFX::whitePoint ); 
-   %this.setShaderConst( "$logContrast",     $PostFX::HDRPostFX::logContrast );
-   %this.setShaderConst( "$saturationValue",     $PostFX::HDRPostFX::saturationValue );
-   
-         
-   %bloomH = %this-->bloomH;
-   %bloomH.setShaderConst( "$gaussMultiplier", $PostFX::HDRPostFX::gaussMultiplier );
-   %bloomH.setShaderConst( "$gaussMean", $PostFX::HDRPostFX::gaussMean );
-   %bloomH.setShaderConst( "$gaussStdDev", $PostFX::HDRPostFX::gaussStdDev );   
-
-   %bloomV = %this-->bloomV;
-   %bloomV.setShaderConst( "$gaussMultiplier", $PostFX::HDRPostFX::gaussMultiplier );
-   %bloomV.setShaderConst( "$gaussMean", $PostFX::HDRPostFX::gaussMean );
-   %bloomV.setShaderConst( "$gaussStdDev", $PostFX::HDRPostFX::gaussStdDev );   
+   %this.setShaderConst( "$g_fMiddleGray",   $PostFX::HDRPostFX::keyValue );
 
    %minLuminace = $PostFX::HDRPostFX::minLuminace;
    if ( %minLuminace <= 0.0 )
@@ -262,8 +269,7 @@ function HDRPostFX::setShaderConsts( %this )
    %combinePass.setShaderConst( "$colorFilter", $PostFX::HDRPostFX::colorFilter );  
    %combinePass.setShaderConst( "$saturationValue", $PostFX::HDRPostFX::saturationValue );
    %combinePass.setShaderConst( "$logContrast", $PostFX::HDRPostFX::logContrast );
- 
-   %combinePass.setShaderConst( "$g_fBloomScale", $PostFX::HDRPostFX::enableBloom );       
+       
    %combinePass.setShaderConst( "$g_fEnableAutoExposure", $PostFX::HDRPostFX::enableAutoExposure );
    
    %tonemapMode = 1;
@@ -285,7 +291,35 @@ function HDRPostFX::setShaderConsts( %this )
    %combinePass.setShaderConst( "$g_fOneOverGamma",  1 / %clampedGamma );       
    %combinePass.setShaderConst( "$Brightness", $pref::Video::Brightness );
    %combinePass.setShaderConst( "$Contrast", $pref::Video::Contrast );
- 
+   
+   // /----- BLOOM CONSTS -----/
+   %bloom = %this->hdrbloom;
+   %bloom.skip = !$PostFX::HDRPostFX::enableBloom;
+
+   %bloom.setShaderConst("$threshold", $PostFX::HDRPostFX::threshold);
+
+   for (%idx = 0; %idx < %this.mipsCount; %idx++)
+   {
+     %mip = %bloom.getObject(%this.mipsCount + %idx);
+     %mip.setShaderConst("$filterRadius", $PostFX::HDRPostFX::radius);
+   }
+
+   %strength = $PostFX::HDRPostFX::intensity;
+   if (!$PostFX::HDRPostFX::enableBloom)
+      %strength = 0.0;
+   
+   %bloomFinal = %this->hdrbloom_end;
+   %bloomFinal.setShaderConst("$strength", %strength);
+   
+   %dirtScale = $PostFX::HDRPostFX::dirtScale;
+   %dirtIntensity = $PostFX::HDRPostFX::dirtIntensity;
+   %bloomFinal.setShaderConst("$dirtParams", %dirtScale SPC %dirtScale SPC %dirtIntensity);
+   
+   %edgeMin = $PostFX::HDRPostFX::dirtEdgeMinDist;
+   %edgeMax = $PostFX::HDRPostFX::dirtEdgeMaxDist;
+   %edgeVal = $PostFX::HDRPostFX::dirtEdgeMinVal;
+   %bloomFinal.setShaderConst("$edgeParams", %edgeMin SPC %edgeMax SPC %edgeVal);
+   // \----- BLOOM CONSTS -----\
 }
 
 function HDRPostFX::preProcess( %this )
@@ -293,7 +327,31 @@ function HDRPostFX::preProcess( %this )
    %combinePass = %this-->combinePass;
    
    if ( %combinePass.texture[3] !$= $PostFX::HDRPostFX::colorCorrectionRamp )
-      %combinePass.setTexture( 3, $PostFX::HDRPostFX::colorCorrectionRamp );         
+      %combinePass.setTexture( 3, $PostFX::HDRPostFX::colorCorrectionRamp );    
+
+   // /----- BLOOM CONSTS -----/
+   %bloomFinal = %this->hdrbloom_end;
+
+   if (%this.enableDirt != $PostFX::HDRPostFX::enableDirt)
+   {
+      %this.enableDirt = $PostFX::HDRPostFX::enableDirt;
+      
+      if (%this.enableDirt)
+      {
+        %bloomFinal.setShaderMacro("USE_DIRT");
+      } else {
+        %bloomFinal.removeShaderMacro("USE_DIRT");
+      }
+   }
+   
+   if(%bloomFinal.texture[1] !$= $PostFX::HDRPostFX::dirtImage)
+   {
+      if ($PostFX::HDRPostFX::dirtImage $= "")
+        $PostFX::HDRPostFX::dirtImage = "core/postFX/images/lensDirt.png";
+      
+      %bloomFinal.setTexture(1, $PostFX::HDRPostFX::dirtImage);
+   }
+   // \----- BLOOM CONSTS -----\     
 }
 
 function HDRPostFX::onEnabled( %this )
@@ -355,6 +413,8 @@ function HDRPostFX::onDisabled( %this )
 
 function HDRPostFX::onAdd( %this )
 {
+   %this.SetupBloomFX();
+
    PostFXManager.registerPostEffect(%this);
    
    $PostFX::HDRPostFX::enableToneMapping = 1;
@@ -382,11 +442,24 @@ function HDRPostFX::populatePostFXSettings(%this)
    PostEffectEditorInspector.addField("$PostFX::HDRPostFX::colorFilter", "Color Tint", "colorF", "", $PostFX::HDRPostFX::colorFilter, "0 0 0");
    PostEffectEditorInspector.endGroup();
    
-   PostEffectEditorInspector.startGroup("HDR - HDR Bloom");
-   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::enableBloom", "Enable HDR Bloom", "bool", "", $PostFX::HDRPostFX::enableBloom, "");
-   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::gaussMultiplier", "Bloom Multiplier", "range", "", $PostFX::HDRPostFX::gaussMultiplier, "0.0 1.0 2.0");
-   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::brightPassThreshold", "Bright Pass Threshold", "float", "", $PostFX::HDRPostFX::brightPassThreshold, "");
-   PostEffectEditorInspector.endGroup(); 
+   // /----- BLOOM SETTINGS -----/
+   PostEffectEditorInspector.startGroup("HDR - Bloom");
+   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::enableBloom", "Enable Bloom", "bool", "", $PostFX::HDRPostFX::enableBloom, "");
+   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::threshold", "Threshold", "range", "", $PostFX::HDRPostFX::threshold, "0 2 10");
+   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::intensity", "Intensity", "range", "", $PostFX::HDRPostFX::intensity, "0 10 10");
+   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::radius", "Radius", "float", "", $PostFX::HDRPostFX::radius, "");
+   PostEffectEditorInspector.endGroup();
+   
+   PostEffectEditorInspector.startGroup("HDR - Lens Dirt");
+   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::enableDirt", "Enable Dirt", "bool", "", $PostFX::HDRPostFX::enableDirt, "");
+   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::dirtScale", "Scale", "float", "", $PostFX::HDRPostFX::dirtScale, "");
+   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::dirtIntensity", "Intensity", "float", "", $PostFX::HDRPostFX::dirtIntensity, "");
+   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::dirtEdgeMinDist", "Min Dist", "range", "", $PostFX::HDRPostFX::dirtEdgeMinDist, "0 1 10");
+   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::dirtEdgeMaxDist", "Max Dist", "range", "", $PostFX::HDRPostFX::dirtEdgeMaxDist, "0 1 10");
+   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::dirtEdgeMinVal", "Min Value", "range", "", $PostFX::HDRPostFX::dirtEdgeMinVal, "0 1 10");
+   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::dirtImage", "Dirt Image", "image", "", $PostFX::HDRPostFX::dirtImage, "");
+   PostEffectEditorInspector.endGroup();
+   // \----- BLOOM SETTINGS -----\
    
    PostEffectEditorInspector.startGroup("HDR - Adaptation");
    PostEffectEditorInspector.addField("$PostFX::HDRPostFX::enableAutoExposure", "Enable Auto Exposure", "bool", "", $PostFX::HDRPostFX::enableAutoExposure, "");
@@ -426,11 +499,93 @@ function HDRPostFX::savePresetSettings(%this)
    PostFXManager::savePresetSetting("$PostFX::HDRPostFX::whiteCutoff");
    PostFXManager::savePresetSetting("$PostFX::HDRPostFX::adaptRate");
    PostFXManager::savePresetSetting("$PostFX::HDRPostFX::tonemapMode");
-   PostFXManager::savePresetSetting("$PostFX::HDRPostFX::enableBloom");
-   PostFXManager::savePresetSetting("$PostFX::HDRPostFX::brightPassThreshold");
-   PostFXManager::savePresetSetting("$PostFX::HDRPostFX::gaussMultiplier");
    PostFXManager::savePresetSetting("$PostFX::HDRPostFX::enableAutoExposure");
    PostFXManager::savePresetSetting("$PostFX::HDRPostFX::keyValue");
+
+   // /----- BLOOM SETTINGS -----/
+   PostFXManager::savePresetSetting("$PostFX::HDRPostFX::enableBloom");
+   PostFXManager::savePresetSetting("$PostFX::HDRPostFX::threshold");
+   PostFXManager::savePresetSetting("$PostFX::HDRPostFX::intensity");
+   PostFXManager::savePresetSetting("$PostFX::HDRPostFX::radius");
+   PostFXManager::savePresetSetting("$PostFX::HDRPostFX::enableDirt");
+   PostFXManager::savePresetSetting("$PostFX::HDRPostFX::dirtScale");
+   PostFXManager::savePresetSetting("$PostFX::HDRPostFX::dirtIntensity");
+   PostFXManager::savePresetSetting("$PostFX::HDRPostFX::dirtImage");
+   PostFXManager::savePresetSetting("$PostFX::HDRPostFX::dirtEdgeMinDist");
+   PostFXManager::savePresetSetting("$PostFX::HDRPostFX::dirtEdgeMaxDist");
+   PostFXManager::savePresetSetting("$PostFX::HDRPostFX::dirtEdgeMinVal");
+   // \----- BLOOM SETTINGS -----\
+}
+
+// This function sets up s sort of "mip-chain" for the bloom effect
+// Not really "optimal" but it works well enough
+function HDRPostFX::SetupBloomFX( %this )
+{
+   %bloomFX = new PostEffect()
+   {
+     internalName = "hdrbloom";
+     allowReflectPass = false;
+     shader = HDR_BloomThresholdShader;
+     stateBlock = HDR_DownSampleStateBlock;
+     texture[0] = "#hdrInitBloom";
+     target = "#hdrbloom_0";
+     targetFormat = %this.mipTexFormat;
+   };
+  
+   %textureName = "#hdrbloom_0";
+   for (%idx = 0; %idx < %this.mipsCount; %idx++)
+   {
+     %mipName = "hdrbloom_" @ (%idx + 1);
+     %mipFX = new PostEffect()
+     { 
+       internalName = %mipName;
+       allowReflectPass = false;
+       shader = HDR_BloomDownSampleShader;
+       stateBlock = HDR_DownSampleStateBlock;
+       texture[0] = %textureName;
+       target = "#" @ %mipName;
+       targetScale = "0.5 0.5";
+       targetFormat = %this.mipTexFormat;
+     };
+     
+     %bloomFX.add(%mipFX);
+     %textureName = "#" @ %mipName;
+   }
+   
+   for (%idx = %this.mipsCount; %idx > 0; %idx--)
+   {
+     %nxt = "#hdrbloom_" @ (%idx - 1);
+     %mipName = "hdrbloom_up_" @ (%idx - 1);
+     
+     %mipFX = new PostEffect()
+     {
+       internalName = %mipName;
+       allowReflectPass = false;
+       shader = HDR_BloomUpSampleShader;
+       stateBlock = HDR_DownSampleStateBlock;
+       texture[0] = %nxt;
+       texture[1] = %textureName;
+       target = "#" @ %mipName;
+       targetFormat = %this.mipTexFormat;
+     };
+     
+     %bloomFX.add(%mipFX);
+     %textureName = "#" @ %mipName;
+   }
+
+   %finalFX = new PostEffect()
+   {
+     internalName = "hdrbloom_end";
+     allowReflectPass = false;
+     shader = HDR_BloomDirtShader;
+     stateBlock = HDR_LensDirtStateBlock;
+     texture[0] = "#hdrbloom_up_0";
+     target = "#hdrbloom_end";
+     targetFormat = %this.mipTexFormat;
+   };
+
+   %this.add(%bloomFX);
+   %this.add(%finalFX);
 }
 
 singleton PostEffect( HDRPostFX )
@@ -443,6 +598,12 @@ singleton PostEffect( HDRPostFX )
    renderTime = "PFXBeforeBin";
    renderBin = "EditorBin";
    renderPriority = 9999;
+
+   // Hardcoded bloom settings.
+   // -- Amount of mip targets the bloom uses.
+   mipsCount = 5;
+   // -- Texture format for mip targets.
+   mipTexFormat = "GFXFormatR16G16B16A16F";
       
    // The bright pass generates a bloomed version of 
    // the scene for pixels which are brighter than a 
@@ -452,48 +613,15 @@ singleton PostEffect( HDRPostFX )
    // at the end of this post effect chain.
    //
                                 
-      shader = HDR_BrightPassShader;
-      stateBlock = HDR_DownSampleStateBlock;
-      texture[0] = "$backBuffer";
-      texture[1] = "#adaptedLum";
-      target = "$outTex";
-      targetFormat = "GFXFormatR16G16B16A16F"; 
-      targetScale = "0.5 0.5";
-      
-      new PostEffect()
-      {
-         allowReflectPass = false;
-         shader = HDR_DownScale4x4Shader;
-         stateBlock = HDR_DownSampleStateBlock;
-         texture[0] = "$inTex";
-         target = "$outTex";
-         targetFormat = "GFXFormatR16G16B16A16F";
-         targetScale = "0.25 0.25";
-      };
-      
-      new PostEffect()
-      {
-         allowReflectPass = false;
-         internalName = "bloomH";
-         
-         shader = HDR_BloomGaussBlurHShader;
-         stateBlock = HDR_DownSampleStateBlock;
-         texture[0] = "$inTex";
-         target = "$outTex";
-         targetFormat = "GFXFormatR16G16B16A16F";   
-      };
+   shader = HDR_BloomInitShader;
+   stateBlock = HDR_DownSampleStateBlock;
+   texture[0] = "$backBuffer";
+   texture[1] = "#adaptedLum";
+   target = "#hdrInitBloom";
+   targetFormat = "GFXFormatR16G16B16A16F"; 
+   targetScale = "0.5 0.5";
 
-      new PostEffect()
-      {
-         allowReflectPass = false;
-         internalName = "bloomV";
-                  
-         shader = HDR_BloomGaussBlurVShader;
-         stateBlock = HDR_DownSampleStateBlock;
-         texture[0] = "$inTex";
-         target = "#bloomFinal";
-         targetFormat = "GFXFormatR16G16B16A16F";    
-      };
+   // Bloom should get inserted about here.
 
    // BrightPass End
    
@@ -572,7 +700,7 @@ singleton PostEffect( HDRPostFX )
       stateBlock = HDR_CombineStateBlock;
       texture[0] = "$backBuffer";
       texture[1] = "#adaptedLum";            
-      texture[2] = "#bloomFinal";
+      texture[2] = "#hdrbloom_end";
       texture[3] = $PostFX::HDRPostFX::colorCorrectionRamp;
       target = "$backBuffer";
    };

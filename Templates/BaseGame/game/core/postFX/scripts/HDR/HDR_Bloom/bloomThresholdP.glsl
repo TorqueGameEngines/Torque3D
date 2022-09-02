@@ -21,52 +21,23 @@
 //-----------------------------------------------------------------------------
 
 #include "core/rendering/shaders/gl/hlslCompat.glsl"
-#include "shadergen:/autogenConditioners.h"
 #include "core/rendering/shaders/postFX/gl/postFx.glsl"
+#include "core/rendering/shaders/gl/torque.glsl"
+#include "shadergen:/autogenConditioners.h"
 
-uniform sampler2D inputTex ;
-uniform vec2 oneOverTargetSize;
-uniform float gaussMultiplier;
-uniform float gaussMean;
-uniform float gaussStdDev;
+#line 28
+
+uniform sampler2D inputTex;
+uniform float threshold;
 
 out vec4 OUT_col;
 
-#define PI 3.141592654
-
-float computeGaussianValue( float x, float mean, float std_deviation )
-{
-    // The gaussian equation is defined as such:
-    /*    
-      -(x - mean)^2
-      -------------
-      1.0               2*std_dev^2
-      f(x,mean,std_dev) = -------------------- * e^
-      sqrt(2*pi*std_dev^2)
-      
-     */
-
-    float tmp = ( 1.0f / sqrt( 2.0f * PI * std_deviation * std_deviation ) );
-    float tmp2 = exp( ( -( ( x - mean ) * ( x - mean ) ) ) / ( 2.0f * std_deviation * std_deviation ) );
-    return tmp * tmp2;
-}
-
 void main()
 {
-   vec4 color = vec4( 0.0f, 0.0f, 0.0f, 0.0f );
-   float offset = 0;
-   float weight = 0;
-   float x = 0;
-   float fI = 0;
-
-   for( int i = 0; i < 9; i++ )
-   {
-      fI = float(i);
-      offset = (i - 4.0) * oneOverTargetSize.x;
-      x = (i - 4.0) / 4.0;
-      weight = gaussMultiplier * computeGaussianValue( x, gaussMean, gaussStdDev );
-      color += (texture( inputTex, IN_uv0 + vec2( offset, 0.0f ) ) * weight );
-   }
-   
-   OUT_col = vec4( color.rgb, 1.0f );
+  vec4 screenColor = texture(inputTex, IN_uv0);
+  
+  float brightness = max(screenColor.r, max(screenColor.g, screenColor.b));
+  float contribution = clamp(brightness - threshold, 0.0, 1.0) / max(brightness, 0.0001);
+  
+  OUT_col = max(screenColor * contribution, 0.0001);
 }

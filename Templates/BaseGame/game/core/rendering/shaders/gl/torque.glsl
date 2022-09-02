@@ -27,7 +27,7 @@
 float M_HALFPI_F   = 1.57079632679489661923;
 float M_PI_F       = 3.14159265358979323846;
 float M_2PI_F      = 6.28318530717958647692;
-float M_1OVER_PI_F  = 0.31830988618f;
+float M_1OVER_PI_F  = 0.31830988618;
 
 /// Calculate fog based on a start and end positions in worldSpace.
 float computeSceneFog(  vec3 startPos,

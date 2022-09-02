@@ -1,15 +1,38 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8" standalone ="yes"?>
 <ProjectSettings>
-    <Group name="UI">
-        <Setting name="mainMenuName">MainMenuGUI</Setting>
-        <Setting name="playGUIName">PlayGUI</Setting>
-    </Group>
-    <Group name="AssetManagement">
-        <Group name="Modules">
-            <Setting name="coreModulePath">core/</Setting>
+    <Group
+        name="AssetManagement">
+        <Group
+            name="Modules">
+            <Setting
+                name="coreModulePath">core/</Setting>
         </Group>
     </Group>
-    <Group name="General">
-        <Setting name="LightingMode">Deferred</Setting>
+    <Group
+        name="General">
+        <Setting
+            name="LightingMode">Deferred</Setting>
+    </Group>
+    <Group
+        name="Terrain">
+        <Setting
+            name="BlendDepth">0.560687482</Setting>
+        <Setting
+            name="DetailTextureFormat">12</Setting>
+        <Setting
+            name="LerpBlend">0</Setting>
+        <Setting
+            name="MacroTextureFormat">12</Setting>
+        <Setting
+            name="NormalTextureFormat">12</Setting>
+        <Setting
+            name="OrmTextureFormat">12</Setting>
+    </Group>
+    <Group
+        name="UI">
+        <Setting
+            name="mainMenuName">MainMenuGUI</Setting>
+        <Setting
+            name="playGUIName">PlayGUI</Setting>
     </Group>
 </ProjectSettings>

@@ -294,7 +294,7 @@ function HDRPostFX::setShaderConsts( %this )
    
    // /----- BLOOM CONSTS -----/
    %bloom = %this->hdrbloom;
-   %bloom.skip = !$PostFX::HDRPostFX::enableBloom;
+   %bloom.skip = (!$PostFX::HDRPostFX::enableBloom || !$pref::PostFX::EnableHDRBloom);
 
    %bloom.setShaderConst("$threshold", $PostFX::HDRPostFX::threshold);
 
@@ -305,7 +305,7 @@ function HDRPostFX::setShaderConsts( %this )
    }
 
    %strength = $PostFX::HDRPostFX::intensity;
-   if (!$PostFX::HDRPostFX::enableBloom)
+   if (!$PostFX::HDRPostFX::enableBloom || !$pref::PostFX::EnableHDRBloom)
       %strength = 0.0;
    
    %bloomFinal = %this->hdrbloom_end;

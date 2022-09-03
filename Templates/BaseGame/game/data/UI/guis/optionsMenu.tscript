@@ -538,6 +538,12 @@ function updateGraphicsSettings()
       DecalLifetimeGroup.applySetting($pref::Graphics::DecalLifetime);
    if($pref::Graphics::GroundCoverDensity !$= getCurrentQualityLevel(GroundCoverDensityGroup))
       GroundCoverDensityGroup.applySetting($pref::Graphics::GroundCoverDensity);
+   if($pref::Graphics::ShaderQuality !$= getCurrentQualityLevel(ShaderQualityGroup))
+   {
+      ShaderQualityGroup.applySetting($pref::Graphics::ShaderQuality);
+      //this has ties into postFX behaviors, so we'll force an update to it here
+      updatePostFXSettings();
+   }
 }
 
 function updateDisplaySettings()

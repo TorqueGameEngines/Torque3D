@@ -4,10 +4,13 @@
     imageMap0="@asset=Prototyping:kork_chan_image">
     <Material
         Name="kork_chan_mat"
-        mapTo="kork_chan">
+        mapTo="kork_chan"
+        alphaTest="true"
+        alphaRef="100">
         <Material.Stages>
             <Stages_beginarray
-                DiffuseMapAsset="Prototyping:kork_chan_image"/>
+                DiffuseMapAsset="Prototyping:kork_chan_image"
+                doubleSided="true"/>
         </Material.Stages>
     </Material>
 </MaterialAsset>

@@ -5,11 +5,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2017, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2022, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at https://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -18,36 +18,34 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
+ * SPDX-License-Identifier: curl
+ *
  ***************************************************************************/
 
 #include "curl_setup.h"
 
 #include <curl/curl.h>
 
-#ifndef CURL_DISABLE_HTTP
+#include "formdata.h"
+#if !defined(CURL_DISABLE_HTTP) && !defined(CURL_DISABLE_MIME)
 
 #if defined(HAVE_LIBGEN_H) && defined(HAVE_BASENAME)
 #include <libgen.h>
 #endif
 
 #include "urldata.h" /* for struct Curl_easy */
-#include "formdata.h"
 #include "mime.h"
-#include "non-ascii.h"
 #include "vtls/vtls.h"
 #include "strcase.h"
 #include "sendf.h"
 #include "strdup.h"
 #include "rand.h"
+#include "warnless.h"
 /* The last 3 #include files should be in this order */
 #include "curl_printf.h"
 #include "curl_memory.h"
 #include "memdebug.h"
 
-
-/* What kind of Content-Type to use on un-specified files with unrecognized
-   extensions. */
-#define HTTPPOST_CONTENTTYPE_DEFAULT "application/octet-stream"
 
 #define HTTPPOST_PTRNAME CURL_HTTPPOST_PTRNAME
 #define HTTPPOST_FILENAME CURL_HTTPPOST_FILENAME
@@ -80,10 +78,15 @@ AddHttpPost(char *name, size_t namelength,
             struct curl_httppost **last_post)
 {
   struct curl_httppost *post;
+  if(!namelength && name)
+    namelength = strlen(name);
+  if((bufferlength > LONG_MAX) || (namelength > LONG_MAX))
+    /* avoid overflow in typecasts below */
+    return NULL;
   post = calloc(1, sizeof(struct curl_httppost));
   if(post) {
     post->name = name;
-    post->namelength = (long)(name?(namelength?namelength:strlen(name)):0);
+    post->namelength = (long)namelength;
     post->contents = value;
     post->contentlen = contentslength;
     post->buffer = buffer;
@@ -126,11 +129,11 @@ AddHttpPost(char *name, size_t namelength,
  * parent_form_info is NULL.
  *
  ***************************************************************************/
-static FormInfo * AddFormInfo(char *value,
-                              char *contenttype,
-                              FormInfo *parent_form_info)
+static struct FormInfo *AddFormInfo(char *value,
+                                    char *contenttype,
+                                    struct FormInfo *parent_form_info)
 {
-  FormInfo *form_info;
+  struct FormInfo *form_info;
   form_info = calloc(1, sizeof(struct FormInfo));
   if(form_info) {
     if(value)
@@ -151,60 +154,6 @@ static FormInfo * AddFormInfo(char *value,
   }
 
   return form_info;
-}
-
-/***************************************************************************
- *
- * ContentTypeForFilename()
- *
- * Provides content type for filename if one of the known types (else
- * (either the prevtype or the default is returned).
- *
- * Returns some valid contenttype for filename.
- *
- ***************************************************************************/
-static const char *ContentTypeForFilename(const char *filename,
-                                          const char *prevtype)
-{
-  const char *contenttype = NULL;
-  unsigned int i;
-  /*
-   * No type was specified, we scan through a few well-known
-   * extensions and pick the first we match!
-   */
-  struct ContentType {
-    const char *extension;
-    const char *type;
-  };
-  static const struct ContentType ctts[]={
-    {".gif",  "image/gif"},
-    {".jpg",  "image/jpeg"},
-    {".jpeg", "image/jpeg"},
-    {".txt",  "text/plain"},
-    {".html", "text/html"},
-    {".xml", "application/xml"}
-  };
-
-  if(prevtype)
-    /* default to the previously set/used! */
-    contenttype = prevtype;
-  else
-    contenttype = HTTPPOST_CONTENTTYPE_DEFAULT;
-
-  if(filename) { /* in case a NULL was passed in */
-    for(i = 0; i<sizeof(ctts)/sizeof(ctts[0]); i++) {
-      if(strlen(filename) >= strlen(ctts[i].extension)) {
-        if(strcasecompare(filename +
-                          strlen(filename) - strlen(ctts[i].extension),
-                          ctts[i].extension)) {
-          contenttype = ctts[i].type;
-          break;
-        }
-      }
-    }
-  }
-  /* we have a contenttype by now */
-  return contenttype;
 }
 
 /***************************************************************************
@@ -261,7 +210,7 @@ CURLFORMcode FormAdd(struct curl_httppost **httppost,
                      struct curl_httppost **last_post,
                      va_list params)
 {
-  FormInfo *first_form, *current_form, *form = NULL;
+  struct FormInfo *first_form, *current_form, *form = NULL;
   CURLFORMcode return_value = CURL_FORMADD_OK;
   const char *prevtype = NULL;
   struct curl_httppost *post = NULL;
@@ -326,14 +275,8 @@ CURLFORMcode FormAdd(struct curl_httppost **httppost,
        * Set the Name property.
        */
     case CURLFORM_PTRNAME:
-#ifdef CURL_DOES_CONVERSIONS
-      /* Treat CURLFORM_PTR like CURLFORM_COPYNAME so that libcurl will copy
-       * the data in all cases so that we'll have safe memory for the eventual
-       * conversion.
-       */
-#else
       current_form->flags |= HTTPPOST_PTRNAME; /* fall through */
-#endif
+
       /* FALLTHROUGH */
     case CURLFORM_COPYNAME:
       if(current_form->name)
@@ -359,7 +302,8 @@ CURLFORMcode FormAdd(struct curl_httppost **httppost,
        * Set the contents property.
        */
     case CURLFORM_PTRCONTENTS:
-      current_form->flags |= HTTPPOST_PTRCONTENTS; /* fall through */
+      current_form->flags |= HTTPPOST_PTRCONTENTS;
+      /* FALLTHROUGH */
     case CURLFORM_COPYCONTENTS:
       if(current_form->value)
         return_value = CURL_FORMADD_OPTION_TWICE;
@@ -577,7 +521,7 @@ CURLFORMcode FormAdd(struct curl_httppost **httppost,
   if(CURL_FORMADD_OK != return_value) {
     /* On error, free allocated fields for all nodes of the FormInfo linked
        list without deallocating nodes. List nodes are deallocated later on */
-    FormInfo *ptr;
+    struct FormInfo *ptr;
     for(ptr = first_form; ptr != NULL; ptr = ptr->more) {
       if(ptr->name_alloc) {
         Curl_safefree(ptr->name);
@@ -625,11 +569,17 @@ CURLFORMcode FormAdd(struct curl_httppost **httppost,
       if(((form->flags & HTTPPOST_FILENAME) ||
           (form->flags & HTTPPOST_BUFFER)) &&
          !form->contenttype) {
-        char *f = form->flags & HTTPPOST_BUFFER?
+        char *f = (form->flags & HTTPPOST_BUFFER)?
           form->showfilename : form->value;
+        char const *type;
+        type = Curl_mime_contenttype(f);
+        if(!type)
+          type = prevtype;
+        if(!type)
+          type = FILE_CONTENTTYPE_DEFAULT;
 
         /* our contenttype is missing */
-        form->contenttype = strdup(ContentTypeForFilename(f, prevtype));
+        form->contenttype = strdup(type);
         if(!form->contenttype) {
           return_value = CURL_FORMADD_MEMORY;
           break;
@@ -652,7 +602,7 @@ CURLFORMcode FormAdd(struct curl_httppost **httppost,
         /* Note that there's small risk that form->name is NULL here if the
            app passed in a bad combo, so we better check for that first. */
         if(form->name) {
-          /* copy name (without strdup; possibly not nul-terminated) */
+          /* copy name (without strdup; possibly not null-terminated) */
           form->name = Curl_memdup(form->name, form->namelength?
                                    form->namelength:
                                    strlen(form->name) + 1);
@@ -700,7 +650,7 @@ CURLFORMcode FormAdd(struct curl_httppost **httppost,
       /* On error, free allocated fields for nodes of the FormInfo linked
          list which are not already owned by the httppost linked list
          without deallocating nodes. List nodes are deallocated later on */
-      FormInfo *ptr;
+      struct FormInfo *ptr;
       for(ptr = form; ptr != NULL; ptr = ptr->more) {
         if(ptr->name_alloc) {
           Curl_safefree(ptr->name);
@@ -726,7 +676,7 @@ CURLFORMcode FormAdd(struct curl_httppost **httppost,
      fields given that these have either been deallocated or are owned
      now by the httppost linked list */
   while(first_form) {
-    FormInfo *ptr = first_form->more;
+    struct FormInfo *ptr = first_form->more;
     free(first_form);
     first_form = ptr;
   }
@@ -773,19 +723,15 @@ int curl_formget(struct curl_httppost *form, void *arg,
 
   while(!result) {
     char buffer[8192];
-    size_t nread = Curl_mime_read(buffer, 1, sizeof buffer, &toppart);
+    size_t nread = Curl_mime_read(buffer, 1, sizeof(buffer), &toppart);
 
     if(!nread)
       break;
 
-    switch(nread) {
-    default:
-      if(append(arg, buffer, nread) != nread)
-        result = CURLE_READ_ERROR;
-      break;
-    case CURL_READFUNC_ABORT:
-    case CURL_READFUNC_PAUSE:
-      break;
+    if(nread > sizeof(buffer) || append(arg, buffer, nread) != nread) {
+      result = CURLE_READ_ERROR;
+      if(nread == CURL_READFUNC_ABORT)
+        result = CURLE_ABORTED_BY_CALLBACK;
     }
   }
 
@@ -825,7 +771,7 @@ void curl_formfree(struct curl_httppost *form)
 }
 
 
-/* Set mime part name, taking care of non nul-terminated name string. */
+/* Set mime part name, taking care of non null-terminated name string. */
 static CURLcode setname(curl_mimepart *part, const char *name, size_t len)
 {
   char *zname;
@@ -860,7 +806,6 @@ CURLcode Curl_getformdata(struct Curl_easy *data,
 {
   CURLcode result = CURLE_OK;
   curl_mime *form = NULL;
-  curl_mime *multipart;
   curl_mimepart *part;
   struct curl_httppost *file;
 
@@ -879,7 +824,7 @@ CURLcode Curl_getformdata(struct Curl_easy *data,
   /* Process each top part. */
   for(; !result && post; post = post->next) {
     /* If we have more than a file here, create a mime subpart and fill it. */
-    multipart = form;
+    curl_mime *multipart = form;
     if(post->more) {
       part = curl_mime_addpart(form);
       if(!part)
@@ -920,8 +865,6 @@ CURLcode Curl_getformdata(struct Curl_easy *data,
 
         if(post->flags & CURL_HTTPPOST_LARGE)
           clen = post->contentlen;
-        if(!clen)
-          clen = -1;
 
         if(post->flags & (HTTPPOST_FILENAME | HTTPPOST_READFILE)) {
           if(!strcmp(file->contents, "-")) {
@@ -931,7 +874,8 @@ CURLcode Curl_getformdata(struct Curl_easy *data,
                compatibility: use of "-" pseudo file name should be avoided. */
             result = curl_mime_data_cb(part, (curl_off_t) -1,
                                        (curl_read_callback) fread,
-                                       (curl_seek_callback) fseek,
+                                       CURLX_FUNCTION_CAST(curl_seek_callback,
+                                                           fseek),
                                        NULL, (void *) stdin);
           }
           else
@@ -942,18 +886,21 @@ CURLcode Curl_getformdata(struct Curl_easy *data,
         else if(post->flags & HTTPPOST_BUFFER)
           result = curl_mime_data(part, post->buffer,
                                   post->bufferlength? post->bufferlength: -1);
-        else if(post->flags & HTTPPOST_CALLBACK)
+        else if(post->flags & HTTPPOST_CALLBACK) {
           /* the contents should be read with the callback and the size is set
              with the contentslength */
+          if(!clen)
+            clen = -1;
           result = curl_mime_data_cb(part, clen,
                                      fread_func, NULL, NULL, post->userp);
+        }
         else {
-          result = curl_mime_data(part, post->contents, (ssize_t) clen);
-#ifdef CURL_DOES_CONVERSIONS
-          /* Convert textual contents now. */
-          if(!result && data && part->datasize)
-            result = Curl_convert_to_network(data, part->data, part->datasize);
-#endif
+          size_t uclen;
+          if(!clen)
+            uclen = CURL_ZERO_TERMINATED;
+          else
+            uclen = (size_t)clen;
+          result = curl_mime_data(part, post->contents, uclen);
         }
       }
 
@@ -971,7 +918,8 @@ CURLcode Curl_getformdata(struct Curl_easy *data,
   return result;
 }
 
-#else  /* CURL_DISABLE_HTTP */
+#else
+/* if disabled */
 CURLFORMcode curl_formadd(struct curl_httppost **httppost,
                           struct curl_httppost **last_post,
                           ...)
@@ -996,5 +944,4 @@ void curl_formfree(struct curl_httppost *form)
   /* does nothing HTTP is disabled */
 }
 
-
-#endif  /* !defined(CURL_DISABLE_HTTP) */
+#endif  /* if disabled */

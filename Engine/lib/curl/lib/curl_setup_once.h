@@ -7,11 +7,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2013, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2022, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at https://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -19,6 +19,8 @@
  *
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
+ *
+ * SPDX-License-Identifier: curl
  *
  ***************************************************************************/
 
@@ -32,6 +34,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <ctype.h>
+#include <time.h>
 
 #ifdef HAVE_ERRNO_H
 #include <errno.h>
@@ -55,13 +58,6 @@
 
 #ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
-#ifdef TIME_WITH_SYS_TIME
-#include <time.h>
-#endif
-#else
-#ifdef HAVE_TIME_H
-#include <time.h>
-#endif
 #endif
 
 #ifdef WIN32
@@ -100,7 +96,6 @@
 #    endif
 #  endif
 #endif
-
 
 /*
  * Definition of timeval struct for platforms that don't have it.
@@ -209,46 +204,6 @@ struct timeval {
 #endif /* HAVE_SEND */
 
 
-#if 0
-#if defined(HAVE_RECVFROM)
-/*
- * Currently recvfrom is only used on udp sockets.
- */
-#if !defined(RECVFROM_TYPE_ARG1) || \
-    !defined(RECVFROM_TYPE_ARG2) || \
-    !defined(RECVFROM_TYPE_ARG3) || \
-    !defined(RECVFROM_TYPE_ARG4) || \
-    !defined(RECVFROM_TYPE_ARG5) || \
-    !defined(RECVFROM_TYPE_ARG6) || \
-    !defined(RECVFROM_TYPE_RETV)
-  /* */
-  Error Missing_definition_of_return_and_arguments_types_of_recvfrom
-  /* */
-#else
-#define sreadfrom(s,b,bl,f,fl) (ssize_t)recvfrom((RECVFROM_TYPE_ARG1)  (s),  \
-                                                 (RECVFROM_TYPE_ARG2 *)(b),  \
-                                                 (RECVFROM_TYPE_ARG3)  (bl), \
-                                                 (RECVFROM_TYPE_ARG4)  (0),  \
-                                                 (RECVFROM_TYPE_ARG5 *)(f),  \
-                                                 (RECVFROM_TYPE_ARG6 *)(fl))
-#endif
-#else /* HAVE_RECVFROM */
-#ifndef sreadfrom
-  /* */
-  Error Missing_definition_of_macro_sreadfrom
-  /* */
-#endif
-#endif /* HAVE_RECVFROM */
-
-
-#ifdef RECVFROM_TYPE_ARG6_IS_VOID
-#  define RECVFROM_ARG6_T int
-#else
-#  define RECVFROM_ARG6_T RECVFROM_TYPE_ARG6
-#endif
-#endif /* if 0 */
-
-
 /*
  * Function-like macro definition used to close a socket.
  */
@@ -273,25 +228,6 @@ struct timeval {
 #else
 #  define sfcntl  fcntl
 #endif
-
-/*
- * Uppercase macro versions of ANSI/ISO is*() functions/macros which
- * avoid negative number inputs with argument byte codes > 127.
- */
-
-#define ISSPACE(x)  (isspace((int)  ((unsigned char)x)))
-#define ISDIGIT(x)  (isdigit((int)  ((unsigned char)x)))
-#define ISALNUM(x)  (isalnum((int)  ((unsigned char)x)))
-#define ISXDIGIT(x) (isxdigit((int) ((unsigned char)x)))
-#define ISGRAPH(x)  (isgraph((int)  ((unsigned char)x)))
-#define ISALPHA(x)  (isalpha((int)  ((unsigned char)x)))
-#define ISPRINT(x)  (isprint((int)  ((unsigned char)x)))
-#define ISUPPER(x)  (isupper((int)  ((unsigned char)x)))
-#define ISLOWER(x)  (islower((int)  ((unsigned char)x)))
-#define ISASCII(x)  (isascii((int)  ((unsigned char)x)))
-
-#define ISBLANK(x)  (int)((((unsigned char)x) == ' ') || \
-                          (((unsigned char)x) == '\t'))
 
 #define TOLOWER(x)  (tolower((int)  ((unsigned char)x)))
 
@@ -332,6 +268,14 @@ struct timeval {
 #  define HAVE_BOOL_T
 #endif
 
+/* the type we use for storing a single boolean bit */
+#ifdef _MSC_VER
+typedef bool bit;
+#define BIT(x) bool x
+#else
+typedef unsigned int bit;
+#define BIT(x) bit x:1
+#endif
 
 /*
  * Redefine TRUE and FALSE too, to catch current use. With this
@@ -347,56 +291,7 @@ struct timeval {
 #define FALSE false
 #endif
 
-
-/*
- * Macro WHILE_FALSE may be used to build single-iteration do-while loops,
- * avoiding compiler warnings. Mostly intended for other macro definitions.
- */
-
-#define WHILE_FALSE  while(0)
-
-#if defined(_MSC_VER) && !defined(__POCC__)
-#  undef WHILE_FALSE
-#  if (_MSC_VER < 1500)
-#    define WHILE_FALSE  while(1, 0)
-#  else
-#    define WHILE_FALSE \
-__pragma(warning(push)) \
-__pragma(warning(disable:4127)) \
-while(0) \
-__pragma(warning(pop))
-#  endif
-#endif
-
-
-/*
- * Typedef to 'int' if sig_atomic_t is not an available 'typedefed' type.
- */
-
-#ifndef HAVE_SIG_ATOMIC_T
-typedef int sig_atomic_t;
-#define HAVE_SIG_ATOMIC_T
-#endif
-
-
-/*
- * Convenience SIG_ATOMIC_T definition
- */
-
-#ifdef HAVE_SIG_ATOMIC_T_VOLATILE
-#define SIG_ATOMIC_T static sig_atomic_t
-#else
-#define SIG_ATOMIC_T static volatile sig_atomic_t
-#endif
-
-
-/*
- * Default return type for signal handlers.
- */
-
-#ifndef RETSIGTYPE
-#define RETSIGTYPE void
-#endif
+#include "curl_ctype.h"
 
 
 /*
@@ -406,7 +301,7 @@ typedef int sig_atomic_t;
 #ifdef DEBUGBUILD
 #define DEBUGF(x) x
 #else
-#define DEBUGF(x) do { } WHILE_FALSE
+#define DEBUGF(x) do { } while(0)
 #endif
 
 
@@ -414,10 +309,11 @@ typedef int sig_atomic_t;
  * Macro used to include assertion code only in debug builds.
  */
 
+#undef DEBUGASSERT
 #if defined(DEBUGBUILD) && defined(HAVE_ASSERT_H)
 #define DEBUGASSERT(x) assert(x)
 #else
-#define DEBUGASSERT(x) do { } WHILE_FALSE
+#define DEBUGASSERT(x) do { } while(0)
 #endif
 
 
@@ -520,6 +416,8 @@ typedef int sig_atomic_t;
 
 #ifdef __VMS
 #define argv_item_t  __char_ptr32
+#elif defined(_UNICODE)
+#define argv_item_t wchar_t *
 #else
 #define argv_item_t  char *
 #endif
@@ -534,4 +432,3 @@ typedef int sig_atomic_t;
 
 
 #endif /* HEADER_CURL_SETUP_ONCE_H */
-

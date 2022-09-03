@@ -5,11 +5,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2017, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2022, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at https://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -17,6 +17,8 @@
  *
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
+ *
+ * SPDX-License-Identifier: curl
  *
  ***************************************************************************/
 
@@ -50,7 +52,6 @@
 #include "hostip.h"
 #include "hash.h"
 #include "share.h"
-#include "strerror.h"
 #include "url.h"
 #include "inet_pton.h"
 #include "connect.h"
@@ -59,70 +60,14 @@
 #include "curl_memory.h"
 #include "memdebug.h"
 
-#if defined(CURLDEBUG) && defined(HAVE_GETNAMEINFO)
-/* These are strictly for memory tracing and are using the same style as the
- * family otherwise present in memdebug.c. I put these ones here since they
- * require a bunch of structs I didn't want to include in memdebug.c
- */
-
-/*
- * For CURLRES_ARS, this should be written using ares_gethostbyaddr()
- * (ignoring the fact c-ares doesn't return 'serv').
- */
-
-int curl_dogetnameinfo(GETNAMEINFO_QUAL_ARG1 GETNAMEINFO_TYPE_ARG1 sa,
-                       GETNAMEINFO_TYPE_ARG2 salen,
-                       char *host, GETNAMEINFO_TYPE_ARG46 hostlen,
-                       char *serv, GETNAMEINFO_TYPE_ARG46 servlen,
-                       GETNAMEINFO_TYPE_ARG7 flags,
-                       int line, const char *source)
-{
-  int res = (getnameinfo)(sa, salen,
-                          host, hostlen,
-                          serv, servlen,
-                          flags);
-  if(0 == res)
-    /* success */
-    curl_memlog("GETNAME %s:%d getnameinfo()\n",
-                source, line);
-  else
-    curl_memlog("GETNAME %s:%d getnameinfo() failed = %d\n",
-                source, line, res);
-  return res;
-}
-#endif /* defined(CURLDEBUG) && defined(HAVE_GETNAMEINFO) */
-
-/*
- * Curl_ipv6works() returns TRUE if IPv6 seems to work.
- */
-bool Curl_ipv6works(void)
-{
-  /* the nature of most system is that IPv6 status doesn't come and go
-     during a program's lifetime so we only probe the first time and then we
-     have the info kept for fast re-use */
-  static int ipv6_works = -1;
-  if(-1 == ipv6_works) {
-    /* probe to see if we have a working IPv6 stack */
-    curl_socket_t s = socket(PF_INET6, SOCK_DGRAM, 0);
-    if(s == CURL_SOCKET_BAD)
-      /* an IPv6 address was requested but we can't get/use one */
-      ipv6_works = 0;
-    else {
-      ipv6_works = 1;
-      Curl_closesocket(NULL, s);
-    }
-  }
-  return (ipv6_works>0)?TRUE:FALSE;
-}
-
 /*
  * Curl_ipvalid() checks what CURL_IPRESOLVE_* requirements that might've
  * been set and returns TRUE if they are OK.
  */
-bool Curl_ipvalid(struct connectdata *conn)
+bool Curl_ipvalid(struct Curl_easy *data, struct connectdata *conn)
 {
   if(conn->ip_version == CURL_IPRESOLVE_V6)
-    return Curl_ipv6works();
+    return Curl_ipv6works(data);
 
   return TRUE;
 }
@@ -130,18 +75,16 @@ bool Curl_ipvalid(struct connectdata *conn)
 #if defined(CURLRES_SYNCH)
 
 #ifdef DEBUG_ADDRINFO
-static void dump_addrinfo(struct connectdata *conn, const Curl_addrinfo *ai)
+static void dump_addrinfo(struct connectdata *conn,
+                          const struct Curl_addrinfo *ai)
 {
   printf("dump_addrinfo:\n");
   for(; ai; ai = ai->ai_next) {
-    char  buf[INET6_ADDRSTRLEN];
-
+    char buf[INET6_ADDRSTRLEN];
     printf("    fam %2d, CNAME %s, ",
            ai->ai_family, ai->ai_canonname ? ai->ai_canonname : "<none>");
-    if(Curl_printable_address(ai, buf, sizeof(buf)))
-      printf("%s\n", buf);
-    else
-      printf("failed; %s\n", Curl_strerror(conn, SOCKERRNO));
+    Curl_printable_address(ai, buf, sizeof(buf));
+    printf("%s\n", buf);
   }
 }
 #else
@@ -157,46 +100,31 @@ static void dump_addrinfo(struct connectdata *conn, const Curl_addrinfo *ai)
  * memory we need to free after use. That memory *MUST* be freed with
  * Curl_freeaddrinfo(), nothing else.
  */
-Curl_addrinfo *Curl_getaddrinfo(struct connectdata *conn,
-                                const char *hostname,
-                                int port,
-                                int *waitp)
+struct Curl_addrinfo *Curl_getaddrinfo(struct Curl_easy *data,
+                                       const char *hostname,
+                                       int port,
+                                       int *waitp)
 {
   struct addrinfo hints;
-  Curl_addrinfo *res;
+  struct Curl_addrinfo *res;
   int error;
   char sbuf[12];
   char *sbufptr = NULL;
 #ifndef USE_RESOLVE_ON_IPS
   char addrbuf[128];
 #endif
-  int pf;
-#if !defined(CURL_DISABLE_VERBOSE_STRINGS)
-  struct Curl_easy *data = conn->data;
-#endif
+  int pf = PF_INET;
 
   *waitp = 0; /* synchronous response only */
 
-  /* Check if a limited name resolve has been requested */
-  switch(conn->ip_version) {
-  case CURL_IPRESOLVE_V4:
-    pf = PF_INET;
-    break;
-  case CURL_IPRESOLVE_V6:
-    pf = PF_INET6;
-    break;
-  default:
+  if(Curl_ipv6works(data))
+    /* The stack seems to be IPv6-enabled */
     pf = PF_UNSPEC;
-    break;
-  }
-
-  if((pf != PF_INET) && !Curl_ipv6works())
-    /* The stack seems to be a non-IPv6 one */
-    pf = PF_INET;
 
   memset(&hints, 0, sizeof(hints));
   hints.ai_family = pf;
-  hints.ai_socktype = conn->socktype;
+  hints.ai_socktype = (data->conn->transport == TRNSPRT_TCP) ?
+    SOCK_STREAM : SOCK_DGRAM;
 
 #ifndef USE_RESOLVE_ON_IPS
   /*
@@ -211,13 +139,13 @@ Curl_addrinfo *Curl_getaddrinfo(struct connectdata *conn,
 #endif
 
   if(port) {
-    snprintf(sbuf, sizeof(sbuf), "%d", port);
+    msnprintf(sbuf, sizeof(sbuf), "%d", port);
     sbufptr = sbuf;
   }
 
   error = Curl_getaddrinfo_ex(hostname, sbufptr, &hints, &res);
   if(error) {
-    infof(data, "getaddrinfo(3) failed for %s:%d\n", hostname, port);
+    infof(data, "getaddrinfo(3) failed for %s:%d", hostname, port);
     return NULL;
   }
 

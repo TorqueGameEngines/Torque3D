@@ -7,11 +7,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 2009 - 2017, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 2009 - 2022, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at https://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -19,6 +19,8 @@
  *
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
+ *
+ * SPDX-License-Identifier: curl
  *
  ***************************************************************************/
 
@@ -58,6 +60,7 @@ struct IMAP {
   char *mailbox;          /* Mailbox to select */
   char *uidvalidity;      /* UIDVALIDITY to check in select */
   char *uid;              /* Message UID to fetch */
+  char *mindex;           /* Index in mail box of mail to fetch */
   char *section;          /* Message SECTION to fetch */
   char *partial;          /* Message PARTIAL to fetch */
   char *query;            /* Query to search for */
@@ -74,13 +77,14 @@ struct imap_conn {
   bool preauth;               /* Is this connection PREAUTH? */
   struct SASL sasl;           /* SASL-related parameters */
   unsigned int preftype;      /* Preferred authentication type */
-  int cmdid;                  /* Last used command ID */
+  unsigned int cmdid;         /* Last used command ID */
   char resptag[5];            /* Response tag to wait for */
   bool tls_supported;         /* StartTLS capability supported by server */
   bool login_disabled;        /* LOGIN command disabled by server */
   bool ir_supported;          /* Initial response supported by server */
   char *mailbox;              /* The last selected mailbox */
   char *mailbox_uidvalidity;  /* UIDVALIDITY parsed from select response */
+  struct dynbuf dyn;          /* for the IMAP commands */
 };
 
 extern const struct Curl_handler Curl_handler_imap;

@@ -208,3 +208,5 @@ $pref::PostFX::EnableVignette = 1;
 $pref::PostFX::EnableLightRays = 1;
 $pref::PostFX::EnableHDR = 1;
 $pref::PostFX::EnableSSAO = 1;
+
+$pref::PostFX::EnableHDRBloom = 1;

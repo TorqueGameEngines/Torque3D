@@ -54,7 +54,10 @@ $WORD::FULLSCREEN = 2;
 $WORD::BITDEPTH = 3;
 $WORD::REFRESH = 4;
 $WORD::AA = 5;
-$Video::ModeTags = "Windowed\tBorderless\tFullscreen";
+if($platform $= "windows")
+   $Video::ModeTags = "Windowed\tBorderless";
+else
+   $Video::ModeTags = "Windowed\tBorderless\tFullscreen";
 $Video::ModeWindowed = 0;
 $Video::ModeBorderless = 1;
 $Video::ModeFullscreen = 2;

@@ -599,6 +599,7 @@ new SimGroup( ShaderQualityGroup )
       
       key["$pref::Video::disablePixSpecular"] = false;
       key["$pref::Video::disableNormalmapping"] = false;
+      key["$pref::PostFX::EnableHDRBloom"] = true;
    };
    new ArrayObject()
    {
@@ -609,6 +610,7 @@ new SimGroup( ShaderQualityGroup )
       
       key["$pref::Video::disablePixSpecular"] = true;
       key["$pref::Video::disableNormalmapping"] = true;
+      key["$pref::PostFX::EnableHDRBloom"] = false;
    };
 };
 

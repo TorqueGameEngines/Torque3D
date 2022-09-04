@@ -128,6 +128,7 @@ protected:
 
    GFXShaderConstHandle *mRTSizeSC;
    GFXShaderConstHandle *mOneOverRTSizeSC;
+   GFXShaderConstHandle* mRTRatioSC;
 
    GFXShaderConstHandle *mTexSizeSC[NumTextures];
    GFXShaderConstHandle *mRenderTargetParamsSC[NumTextures];

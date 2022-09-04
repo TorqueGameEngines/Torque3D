@@ -751,7 +751,7 @@ void PostEffect::_setupConstants( const SceneRenderState *state )
 
       mRTSizeSC = mShader->getShaderConstHandle( "$targetSize" );
       mOneOverRTSizeSC = mShader->getShaderConstHandle( "$oneOverTargetSize" );
-
+      mRTRatioSC = mShader->getShaderConstHandle("$targetRatio");
       for (U32 i = 0; i < NumTextures; i++)
       {
          mTexSizeSC[i] = mShader->getShaderConstHandle(String::ToString("$texSize%d", i));
@@ -815,7 +815,11 @@ void PostEffect::_setupConstants( const SceneRenderState *state )
 
       mShaderConsts->set( mOneOverRTSizeSC, oneOverTargetSize );
    }
-
+   if (mRTRatioSC->isValid())
+   {
+      const Point2I& resolution = GFX->getActiveRenderTarget()->getSize();
+      mShaderConsts->set(mRTRatioSC, (F32)resolution.x/ (F32)resolution.y);
+   }
    // Set up additional textures
    Point2F texSizeConst;
    for( U32 i = 0; i < NumTextures; i++ )

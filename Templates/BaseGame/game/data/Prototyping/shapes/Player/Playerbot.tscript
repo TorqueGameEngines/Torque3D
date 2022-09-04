@@ -18,8 +18,7 @@ function Playerbotdae::onLoad(%this)
    %this.addSequence("ambient", "Back", "51", "70", "1", "0");
    %this.addSequence("ambient", "Side", "71", "90", "1", "0");
    %this.addSequence("ambient", "Crouch_Root", "91", "120", "1", "0");
-   %this.addSequence("ambient", "Look", "121", "122", "1", "0");
+   %this.addSequence("ambient", "Look", "121", "127", "1", "0");
+   %this.setSequenceBlend("Look", "1", "ambient", "0");
    %this.setSequenceCyclic("Look", "0");
-   %this.setSequenceBlend("Look", "0", "", "0");
-   %this.setSequenceBlend("Look", "1", "ambient", "121");
 }

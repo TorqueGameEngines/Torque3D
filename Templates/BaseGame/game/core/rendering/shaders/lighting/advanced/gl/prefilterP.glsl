@@ -84,13 +84,13 @@ vec3 ImportanceSampleGGX(vec2 Xi, vec3 N)
 	return normalize(sampleVec);
 }
 
-vec4 prefilterEnvMap(vec3 R)
+vec3 prefilterEnvMap(vec3 R)
 {
     int sampleCount = resolution*2;
 	vec3 N = R;
 	vec3 V = R;
 	float totalWeight = 0.0;
-	vec4 prefilteredColor = vec4(0.0, 0.0, 0.0, 0.0);
+	vec3 prefilteredColor = vec3(0.0, 0.0, 0.0);
 
 	for (int i = 0; i < sampleCount; ++i)
 	{
@@ -112,7 +112,7 @@ vec4 prefilterEnvMap(vec3 R)
 
 				float mipLevel = roughness == 0.0 ? 0.0 : 0.5 * log2(saSample / saTexel);
 
-				prefilteredColor += texture(environmentMap, L, mipLevel) * NdotL;				
+				prefilteredColor += texture(environmentMap, L, mipLevel).rgb * NdotL;				
 
 				totalWeight += NdotL;
 			}
@@ -126,6 +126,5 @@ out vec4 OUT_col;
 void main()
 {   
 	vec3 N = getCubeDir(face, uv0);
-	OUT_col = prefilterEnvMap(N);
-	OUT_col.a = 1;
+	OUT_col = vec4(toGamma(prefilterEnvMap(N)),1);
 }

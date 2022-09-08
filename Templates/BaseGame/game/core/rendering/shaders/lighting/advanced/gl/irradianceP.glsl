@@ -56,5 +56,5 @@ void main()
     }
     irradiance = M_PI_F * irradiance * (1.0 / float(nrSamples));
     
-    OUT_col =  vec4(irradiance, 1.0);
+    OUT_col =  vec4(toGamma(irradiance), 1.0);
 }

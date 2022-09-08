@@ -59,5 +59,5 @@ float4 main(ConnectData IN) : TORQUE_TARGET0
     }
     irradiance = M_PI_F * irradiance * (1.0 / float(nrSamples));
     
-    return float4(irradiance, 1.0);
+    return float4(toGamma(irradiance), 1.0);
 }

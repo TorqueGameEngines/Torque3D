@@ -55,5 +55,5 @@ void main()
    float adaptedLum = texture( luminanceTex, vec2( 0.5, 0.5 ) ).r;
    float lum = (g_fMiddleGray / (adaptedLum + 0.0001));
    
-   return downSample * weight * lum;
+   OUT_col = downSample * weight * lum;
 }

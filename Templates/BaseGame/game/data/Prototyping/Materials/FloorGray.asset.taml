@@ -9,8 +9,7 @@
         originalAssetName="FloorGray">
         <Material.Stages>
             <Stages_beginarray
-                DiffuseMapAsset="Prototyping:FloorGray_ALBEDO"
-                Roughness="0.2"/>
+                DiffuseMapAsset="Prototyping:FloorGray_ALBEDO"/>
         </Material.Stages>
     </Material>
 </MaterialAsset>

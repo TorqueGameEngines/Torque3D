@@ -9,8 +9,7 @@
         originalAssetName="WallOrange">
         <Material.Stages>
             <Stages_beginarray
-                DiffuseMapAsset="Prototyping:WallOrange_ALBEDO"
-                Roughness="0.2"/>
+                DiffuseMapAsset="Prototyping:WallOrange_ALBEDO"/>
         </Material.Stages>
     </Material>
 </MaterialAsset>

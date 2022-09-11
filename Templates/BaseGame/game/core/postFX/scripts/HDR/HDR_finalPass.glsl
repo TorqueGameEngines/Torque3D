@@ -59,10 +59,11 @@ out vec4 OUT_col;
 
 
 vec3 Tonemap(vec3 x)
-{ 
+{    
     //ACES      
     if(g_fTonemapMode == 1.0f)    
    {           
+      x *= 2.0f; //ACES is crushing our blacks, need to pre-expose! 
 	  x = ACESFitted(x, whitePoint);    	  
    }             
    //Filmic Helji	       
@@ -102,8 +103,8 @@ void main()
    
         	    
    // Add the bloom effect.     
-   _sample += bloom; 
-   
+   _sample += bloom;  
+           
    //Apply Exposure     
    _sample.rgb *= TO_Exposure(_sample.rgb, exposureValue, colorFilter);
    

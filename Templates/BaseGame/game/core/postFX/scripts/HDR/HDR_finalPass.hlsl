@@ -53,12 +53,13 @@ uniform float saturationValue;
 uniform float3 colorFilter;
             
 float3 Tonemap(float3 x)
-{ 
-    //ACES      
+{    
+    //ACES           
     if(g_fTonemapMode == 1.0f)    
-   {           
-	  x = ACESFitted(x, whitePoint);    	  
-   }             
+   {   
+      x *= 2.0;  //ACES is crushing our blacks, need to pre-expose! 
+      x = ACESFitted(x, whitePoint); 
+   }                            
    //Filmic Helji	       
    if(g_fTonemapMode == 2.0f) 
    {             
@@ -95,7 +96,7 @@ float4 main( PFXVertToPix IN ) : TORQUE_TARGET0
         	    
    // Add the bloom effect.     
    sample += bloom;         
-   			
+   		 	
 	//Apply Exposure     
    sample.rgb *= TO_Exposure(sample.rgb, exposureValue, colorFilter); 
                                         

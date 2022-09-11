@@ -46,7 +46,7 @@ float4 main(PFXVertToPix IN) : TORQUE_TARGET0
   
   #ifdef USE_DIRT
     upSample.rgb += upSample.rgb * dirt;
-  #endif
-  
-  return max(upSample, 0.0f);
+  #endif 
+   
+  return max(upSample, 0.0f)/M_PI_F;
 }

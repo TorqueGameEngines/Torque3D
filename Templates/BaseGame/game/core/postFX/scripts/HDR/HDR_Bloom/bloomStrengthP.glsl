@@ -39,7 +39,7 @@ uniform vec3 edgeParams;
 uniform vec2 oneOverTargetSize;
 
 out vec4 OUT_col;
-
+  
 void main()
 {
   #ifdef USE_DIRT
@@ -54,5 +54,5 @@ void main()
     upSample.rgb += upSample.rgb * dirt;
   #endif
   
-  OUT_col = max(upSample, 0.0);
+  OUT_col = max(upSample, 0.0)/M_PI_F;
 }

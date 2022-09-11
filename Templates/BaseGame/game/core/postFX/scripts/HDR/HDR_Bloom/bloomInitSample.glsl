@@ -24,9 +24,9 @@
 #include "core/rendering/shaders/postFX/gl/postFx.glsl"
 #include "core/rendering/shaders/gl/torque.glsl"
 #include "shadergen:/autogenConditioners.h"
-
+#line 27
 #define KERNEL_SAMPLES 4
-const vec2 KERNEL[9] = vec2[](
+const vec2 KERNEL[KERNEL_SAMPLES] = vec2[](
   vec2( 0.5, 0.5),
   vec2( 0.5,-0.5),
   vec2(-0.5,-0.5),

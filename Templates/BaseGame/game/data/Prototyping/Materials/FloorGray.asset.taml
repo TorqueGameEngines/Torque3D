@@ -5,10 +5,12 @@
     originalFilePath="C:/dev/T3D/PRs/MiscFixes20220525/Templates/BaseGame/game/data/Prototyping/Materials/FloorGray.png">
     <Material
         Name="FloorGray"
-        mapTo="FloorGray">
+        mapTo="FloorGray"
+        originalAssetName="FloorGray">
         <Material.Stages>
             <Stages_beginarray
-                DiffuseMapAsset="Prototyping:FloorGray_ALBEDO"/>
+                DiffuseMapAsset="Prototyping:FloorGray_ALBEDO"
+                Roughness="0.2"/>
         </Material.Stages>
     </Material>
 </MaterialAsset>

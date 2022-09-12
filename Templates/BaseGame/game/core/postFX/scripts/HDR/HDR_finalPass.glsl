@@ -59,12 +59,11 @@ out vec4 OUT_col;
 
 
 vec3 Tonemap(vec3 x)
-{    
+{     
     //ACES      
     if(g_fTonemapMode == 1.0f)    
-   {           
-      x *= 2.0f; //ACES is crushing our blacks, need to pre-expose! 
-	  x = ACESFitted(x, whitePoint);    	  
+   {
+	  x = ACESFitted(x, whitePoint) * 1.4f;  //ACES is crushing our blacks, need to pre-expose!    	  
    }             
    //Filmic Helji	       
    if(g_fTonemapMode == 2.0f) 

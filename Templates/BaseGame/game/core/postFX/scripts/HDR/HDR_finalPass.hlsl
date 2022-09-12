@@ -51,15 +51,15 @@ uniform float logContrast;
 uniform float brightnessValue;
 uniform float saturationValue;
 uniform float3 colorFilter;
-            
+            	 
+			
 float3 Tonemap(float3 x)
-{    
+{     
     //ACES           
     if(g_fTonemapMode == 1.0f)    
-   {   
-      x *= 2.0;  //ACES is crushing our blacks, need to pre-expose! 
-      x = ACESFitted(x, whitePoint); 
-   }                            
+   {              
+      x = ACESFitted(x, whitePoint) * 1.4f; //ACES is crushing our blacks, need to pre-expose!  
+   }                             
    //Filmic Helji	       
    if(g_fTonemapMode == 2.0f) 
    {             

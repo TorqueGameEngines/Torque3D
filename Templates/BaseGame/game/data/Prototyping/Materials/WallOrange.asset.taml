@@ -5,7 +5,8 @@
     originalFilePath="C:/dev/T3D/PRs/MiscFixes20220525/Templates/BaseGame/game/data/Prototyping/Materials/WallOrange.png">
     <Material
         Name="WallOrange"
-        mapTo="WallOrange">
+        mapTo="WallOrange"
+        originalAssetName="WallOrange">
         <Material.Stages>
             <Stages_beginarray
                 DiffuseMapAsset="Prototyping:WallOrange_ALBEDO"/>

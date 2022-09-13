@@ -102,8 +102,8 @@ EditorSettings.endGroup();
 EditorSettings.beginGroup( "Docs" );
 EditorSettings.setDefaultValue(  "documentationLocal",      "../../../Documentation/Official Documentation.html"  );
 EditorSettings.setDefaultValue(  "documentationReference",  "../../../Documentation/Torque 3D - Script Manual.chm");
-EditorSettings.setDefaultValue(  "documentationURL",        "http://www.garagegames.com/products/torque-3d/documentation/user"           );
-EditorSettings.setDefaultValue(  "forumURL",                "http://www.garagegames.com/products/torque-3d/forums"      );
+EditorSettings.setDefaultValue(  "documentationURL",        "https://docs.torque3d.org/"           );
+EditorSettings.setDefaultValue(  "forumURL",                "https://torque3d.org/"      );
 EditorSettings.endGroup();
 
 EditorSettings.endGroup(); // WorldEditor
@@ -178,31 +178,31 @@ EditorSettings.endGroup();
 
 //-------------------------------------
 EditorSettings.beginGroup( "Theme", true );
-EditorSettings.setDefaultValue(  "headerColor",             "50 49 48 255");
-EditorSettings.setDefaultValue(  "windowBackgroundColor",   "32 31 30 255");
+EditorSettings.setDefaultValue(  "headerColor",             "40 40 40 255");
+EditorSettings.setDefaultValue(  "windowBackgroundColor",   "35 35 35 255");
 
-EditorSettings.setDefaultValue(  "tabsColor",               "37 36 35 255" );
-EditorSettings.setDefaultValue(  "tabsHLColor",             "50 49 48 255" );
-EditorSettings.setDefaultValue(  "tabsSELColor",            "59 58 57 255" );
+EditorSettings.setDefaultValue(  "tabsColor",               "40 40 40 255" );
+EditorSettings.setDefaultValue(  "tabsHLColor",             "180 180 180 255" );
+EditorSettings.setDefaultValue(  "tabsSELColor",            "100 110 120 255" );
 
-EditorSettings.setDefaultValue(  "dividerDarkColor",        "17 16 15 255");
-EditorSettings.setDefaultValue(  "dividerMidColor",         "50 49 48 255");
-EditorSettings.setDefaultValue(  "dividerLightColor",       "96 94 92 255");
+EditorSettings.setDefaultValue(  "dividerDarkColor",        "30 30 30 255");
+EditorSettings.setDefaultValue(  "dividerMidColor",         "150 160 190 100");
+EditorSettings.setDefaultValue(  "dividerLightColor",       "150 150 150 255");
 
-EditorSettings.setDefaultValue(  "headerTextColor",         "236 234 232 255");
+EditorSettings.setDefaultValue(  "headerTextColor",         "185 185 185 255");
 
-EditorSettings.setDefaultValue(  "fieldTextColor",          "178 175 172 255");
-EditorSettings.setDefaultValue(  "fieldTextHLColor",        "234 232 230 255");
+EditorSettings.setDefaultValue(  "fieldTextColor",          "185 185 185 255");
+EditorSettings.setDefaultValue(  "fieldTextHLColor",        "255 255 255 255");
 EditorSettings.setDefaultValue(  "fieldTextSELColor",       "255 255 255 255");
-EditorSettings.setDefaultValue(  "fieldTextNAColor",        "120 120 120 255");
+EditorSettings.setDefaultValue(  "fieldTextNAColor",        "100 100 100 255");
 
-EditorSettings.setDefaultValue(  "fieldBGColor",            "59 58 57 255");
-EditorSettings.setDefaultValue(  "fieldBGHLColor",          "72 70 68 255");
-EditorSettings.setDefaultValue(  "fieldBGSELColor",         "100 98 96 255");
+EditorSettings.setDefaultValue(  "fieldBGColor",            "40 40 40 255");
+EditorSettings.setDefaultValue(  "fieldBGHLColor",          "100 110 120 255");
+EditorSettings.setDefaultValue(  "fieldBGSELColor",         "150 160 170 255");
 
-EditorSettings.setDefaultValue(  "tooltipBGColor",          "43 43 43 255");
+EditorSettings.setDefaultValue(  "tooltipBGColor",          "100 110 120 255");
 EditorSettings.setDefaultValue(  "tooltipTextColor",        "255 255 255 255");
-EditorSettings.setDefaultValue(  "tooltipDivColor",         "72 70 68 255");
+EditorSettings.setDefaultValue(  "tooltipDivColor",         "150 150 150 255");
 EditorSettings.endGroup();
 //-------------------------------------
 

@@ -57,7 +57,7 @@ new GuiControlProfile (GuiDefaultProfile)
    borderColorNA = "75 75 75"; 
 
    // font
-   fontType = "Arial";
+   fontType = "Noto Sans";
    fontSize = 14;
    fontCharset = ANSI;
 
@@ -97,7 +97,7 @@ new GuiControlProfile (GuiToolTipProfile)
    borderColor   = "87 87 87";
 
    // font
-   fontType = "Arial";
+   fontType = "Noto Sans";
    fontSize = 14;
    fontColor = "200 200 200";
 
@@ -218,7 +218,7 @@ if( !isObject( GuiProgressTextProfile ) )
 new GuiControlProfile( GuiProgressTextProfile )
 {
    fontSize = "14";
-	fontType = "Arial";
+	fontType = "Noto Sans";
    fontColor = "0 0 0";
    justify = "center";
    category = "Core";   

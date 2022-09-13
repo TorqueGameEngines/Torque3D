@@ -41,8 +41,6 @@
             <Setting
                 name="doubleClickAction">Edit Asset</Setting>
             <Setting
-                name="LastPosExt">35 89 615 609</Setting>
-            <Setting
                 name="previewTileSize">1</Setting>
             <Setting
                 name="showCoreModule">1</Setting>
@@ -51,8 +49,6 @@
         </Group>
         <Group
             name="New">
-            <Setting
-                name="alwaysPromptModuleTarget">0</Setting>
             <Setting
                 name="defaultModule">ExampleModule</Setting>
         </Group>
@@ -88,7 +84,7 @@
             <Setting
                 name="renderPlaneHashes">0</Setting>
             <Setting
-                name="snapToGrid">1</Setting>
+                name="snapToGrid">0</Setting>
         </Group>
     </Group>
     <Group
@@ -187,11 +183,6 @@
                 name="Empty Terrain.mis">
                 <Setting
                     name="cameraSpeed">25</Setting>
-            </Group>
-            <Group
-                name="ExampleLevel.mis">
-                <Setting
-                    name="cameraSpeed">16.4706</Setting>
             </Group>
             <Group
                 name="PbrMatTest.mis">
@@ -430,7 +421,7 @@
             <Setting
                 name="gridSize">1</Setting>
             <Setting
-                name="gridSnap">1</Setting>
+                name="gridSnap">0</Setting>
         </Group>
         <Group
             name="Images">

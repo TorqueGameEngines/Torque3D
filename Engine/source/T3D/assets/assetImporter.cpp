@@ -606,6 +606,7 @@ void AssetImporter::addImportingAssetItem(AssetImportObject* assetItem, AssetImp
 AssetImportObject* AssetImporter::addImportingAsset(String assetType, Torque::Path filePath, AssetImportObject* parentItem, String assetNameOverride)
 {
    String assetName;
+   String origionalName;
 
    //In some cases(usually generated assets on import, like materials) we'll want to specifically define the asset name instead of peeled from the filePath
    if (assetNameOverride.isNotEmpty())
@@ -638,6 +639,8 @@ AssetImportObject* AssetImporter::addImportingAsset(String assetType, Torque::Pa
       pos = dStrcspn(sanitizedStr, "-+*/%$&�=()[].?\\\"#,;!~<>|�^{}");
    }
 
+   origionalName = assetName;
+
    //If we did, indeed, modify the name, update it now
    if (String(sanitizedStr) != assetName)
    {
@@ -648,7 +651,7 @@ AssetImportObject* AssetImporter::addImportingAsset(String assetType, Torque::Pa
    assetImportObj->filePath = filePath;
    assetImportObj->filePathString = StringTable->insert(filePath.getFullPath().c_str());
    assetImportObj->assetName = assetName;
-   assetImportObj->cleanAssetName = assetName;
+   assetImportObj->cleanAssetName = origionalName;
    assetImportObj->moduleName = targetModuleId;
    assetImportObj->status = "";
    assetImportObj->statusType = "";

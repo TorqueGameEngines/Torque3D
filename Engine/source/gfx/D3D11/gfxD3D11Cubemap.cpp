@@ -396,19 +396,8 @@ void GFXD3D11CubemapArray::init(GFXCubemapHandle *cubemaps, const U32 cubemapCou
    AssertFatal(cubemaps, "GFXD3D11CubemapArray::initStatic - Got null GFXCubemapHandle!");
    AssertFatal(*cubemaps, "GFXD3D11CubemapArray::initStatic - Got empty cubemap!");
 
-   U32 downscalePower = GFXTextureManager::smTextureReductionLevel;
-   U32 scaledSize = cubemaps[0]->getSize();
-
-   if (downscalePower != 0)
-   {
-      // Otherwise apply the appropriate scale...
-      scaledSize >>= downscalePower;
-   }
-
-   //all cubemaps must be the same size,format and number of mipmaps. Grab the details from the first cubemap
-   mSize = scaledSize;
+   setCubeTexSize(cubemaps);
    mFormat = cubemaps[0]->getFormat();
-   mMipMapLevels = cubemaps[0]->getMipMapLevels() - downscalePower;
    mNumCubemaps = cubemapCount;
 
    //create texture object
@@ -475,16 +464,7 @@ void GFXD3D11CubemapArray::init(GFXCubemapHandle *cubemaps, const U32 cubemapCou
 //Just allocate the cubemap array but we don't upload any data
 void GFXD3D11CubemapArray::init(const U32 cubemapCount, const U32 cubemapFaceSize, const GFXFormat format)
 {
-   U32 downscalePower = GFXTextureManager::smTextureReductionLevel;
-   U32 scaledSize = cubemapFaceSize;
-
-   if (downscalePower != 0)
-   {
-      scaledSize >>= downscalePower;
-   }
-
-   mSize = scaledSize;
-   mMipMapLevels = ImageUtil::getMaxMipCount(cubemapFaceSize, cubemapFaceSize) - downscalePower;
+   setCubeTexSize(cubemapFaceSize);
    mNumCubemaps = cubemapCount;
    mFormat = format;
 

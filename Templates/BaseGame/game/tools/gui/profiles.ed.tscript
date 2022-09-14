@@ -309,8 +309,10 @@ new GuiControlProfile( ToolsGuiTextEditProfile )
    fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
    fillColorSEL = EditorSettings.value("Theme/fieldBGSELColor");
    
+   
    fontColor = EditorSettings.value("Theme/fieldTextColor");
-   fontColorSEL = EditorSettings.value("Theme/fieldBGSELColor");
+   //fontColorSEL = EditorSettings.value("Theme/fieldBGSELColor");
+   fontColorSEL = EditorSettings.value("Theme/dividerMidColor");
    fontColorHL = EditorSettings.value("Theme/fieldTextSELColor");
    fontColorNA = EditorSettings.value("Theme/fieldTextNAColor");
    textOffset = "4 2";
@@ -798,6 +800,7 @@ singleton GuiControlProfile( GuiInspectorTextEditRightProfile : GuiInspectorText
    category = "Editor";
 };
 
+//Scene Tree GUI Inspector Dropdown menus
 singleton GuiControlProfile( GuiInspectorGroupProfile )
 {
    fontType    = "Noto Sans";
@@ -843,7 +846,7 @@ singleton GuiControlProfile( GuiInspectorFieldProfile)
    fontColor = EditorSettings.value("Theme/fieldTextColor");
    fontColorHL = EditorSettings.value("Theme/fieldTextHLColor");
    fontColorNA = EditorSettings.value("Theme/fieldTextSELColor");
-   textOffset = "10 0";
+   textOffset = "15 0";
 
    tab = true;
    canKeyFocus = true;
@@ -1137,7 +1140,7 @@ singleton GuiControlProfile( ToolsGuiMenuBarProfile )
    fontColorSEL = EditorSettings.value("Theme/fieldTextSELColor");
    fontColorHL = EditorSettings.value("Theme/fieldTextHLColor");
    fontColorNA = EditorSettings.value("Theme/fieldTextNAColor");
-   border = 0;
+   border = 1;
    borderThickness = 1;
    opaque = true;
    mouseOverSelected = true;

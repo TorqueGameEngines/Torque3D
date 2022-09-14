@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8" standalone ="yes"?>
 <EditorSettings>
     <Group
         name="AssetBrowser">
@@ -39,7 +39,7 @@
         <Group
             name="Browser">
             <Setting
-				name="doubleClickAction">Edit Asset</Setting>
+                name="doubleClickAction">Edit Asset</Setting>
             <Setting
                 name="previewTileSize">1</Setting>
             <Setting
@@ -318,43 +318,45 @@
     <Group
         name="Theme">
         <Setting
-            name="dividerDarkColor">17 16 15 255</Setting>
+            name="dividerDarkColor">30 30 30 255</Setting>
         <Setting
-            name="dividerLightColor">96 94 92 255</Setting>
+            name="dividerLightColor">150 150 150 255</Setting>
         <Setting
-            name="dividerMidColor">50 49 48 255</Setting>
+            name="dividerMidColor">150 160 190 100</Setting>
         <Setting
-            name="fieldBGColor">59 58 57 255</Setting>
+            name="fieldBGColor">40 40 40 255</Setting>
         <Setting
-            name="fieldBGHLColor">72 70 68 255</Setting>
+            name="fieldBGHLColor">100 110 120 255</Setting>
         <Setting
-            name="fieldBGSELColor">100 98 96 255</Setting>
+            name="fieldBGSELColor">150 160 170 255</Setting>
         <Setting
-            name="fieldTextColor">178 175 172 255</Setting>
+            name="fieldTextColor">185 185 185 255</Setting>
         <Setting
-            name="fieldTextHLColor">234 232 230 255</Setting>
+            name="fieldTextHLColor">255 255 255 255</Setting>
         <Setting
-            name="fieldTextNAColor">120 120 120 255</Setting>
+            name="fieldTextNAColor">100 100 100 255</Setting>
         <Setting
             name="fieldTextSELColor">255 255 255 255</Setting>
         <Setting
-            name="headerColor">50 49 48 255</Setting>
+            name="headerColor">40 40 40 255</Setting>
         <Setting
-            name="headerTextColor">236 234 232 255</Setting>
+            name="headerTextColor">185 185 185 255</Setting>
         <Setting
-            name="tabsColor">37 36 35 255</Setting>
+            name="tabsColor">40 40 40 255</Setting>
         <Setting
-            name="tabsHLColor">50 49 48 255</Setting>
+            name="tabsHLColor">180 180 180 255</Setting>
         <Setting
-            name="tabsSELColor">59 58 57 255</Setting>
+            name="tabsSELColor">100 110 120 255</Setting>
         <Setting
-            name="tooltipBGColor">43 43 43 255</Setting>
+            name="tooltipBGColor">100 110 120 255</Setting>
+        <Setting
+            name="tooltipDivColor">150 150 150 255</Setting>
         <Setting
             name="tooltipDividerColor">72 70 68 255</Setting>
         <Setting
             name="tooltipTextColor">255 255 255 255</Setting>
         <Setting
-            name="windowBackgroundColor">32 31 30 255</Setting>
+            name="windowBackgroundColor">35 35 35 255</Setting>
     </Group>
     <Group
         name="WorldEditor">
@@ -371,7 +373,7 @@
         <Setting
             name="forceSidebarToSide">1</Setting>
         <Setting
-            name="orthoFOV">4.60158</Setting>
+            name="orthoFOV">4.60158014</Setting>
         <Setting
             name="orthoShowGrid">1</Setting>
         <Setting

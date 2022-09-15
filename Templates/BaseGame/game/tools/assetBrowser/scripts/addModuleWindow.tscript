@@ -51,7 +51,7 @@ function AssetBrowser_addModuleWindow::CreateNewModule(%this)
    {
       ModuleId = %newModuleName;
       versionId = 1;
-      ScriptFile = %newModuleName @ "." @ $TorqueScriptFileExtension;
+      ScriptFile = %newModuleName;
       CreateFunction="onCreate";
 	   DestroyFunction="onDestroy";
 	   Group = "Game";

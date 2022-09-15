@@ -100,7 +100,7 @@ GFXTextureManager::~GFXTextureManager()
 
 U32 GFXTextureManager::getTextureDownscalePower( GFXTextureProfile *profile )
 {
-   if ( !profile || profile->canDownscale() )
+   if ( profile && profile->canDownscale() )
       return smTextureReductionLevel;
 
    return 0;

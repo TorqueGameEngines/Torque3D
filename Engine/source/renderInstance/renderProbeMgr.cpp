@@ -223,9 +223,10 @@ bool RenderProbeMgr::onAdd()
    mIrradianceArray = GFXCubemapArrayHandle(GFX->createCubemapArray());
    mPrefilterArray = GFXCubemapArrayHandle(GFX->createCubemapArray());
 
+   U32 scaledSize = getProbeTexSize();
    //pre-allocate a few slots
-   mIrradianceArray->init(PROBE_ARRAY_SLOT_BUFFER_SIZE, RenderProbeMgr::smProbeBakeResolution, PROBE_FORMAT);
-   mPrefilterArray->init(PROBE_ARRAY_SLOT_BUFFER_SIZE, RenderProbeMgr::smProbeBakeResolution, PROBE_FORMAT);
+   mIrradianceArray->init(PROBE_ARRAY_SLOT_BUFFER_SIZE, scaledSize, PROBE_FORMAT);
+   mPrefilterArray->init(PROBE_ARRAY_SLOT_BUFFER_SIZE, scaledSize, PROBE_FORMAT);
    mCubeSlotCount = PROBE_ARRAY_SLOT_BUFFER_SIZE;
 
    String brdfTexturePath = GFXTextureManager::getBRDFTexturePath();
@@ -362,8 +363,9 @@ void RenderProbeMgr::registerProbe(ReflectionProbe::ProbeInfo* newProbe)
       GFXCubemapArrayHandle irr = GFXCubemapArrayHandle(GFX->createCubemapArray());
       GFXCubemapArrayHandle prefilter = GFXCubemapArrayHandle(GFX->createCubemapArray());
 
-      irr->init(mCubeSlotCount + PROBE_ARRAY_SLOT_BUFFER_SIZE, RenderProbeMgr::smProbeBakeResolution, PROBE_FORMAT);
-      prefilter->init(mCubeSlotCount + PROBE_ARRAY_SLOT_BUFFER_SIZE, RenderProbeMgr::smProbeBakeResolution, PROBE_FORMAT);
+      U32 scaledSize = getProbeTexSize();
+      irr->init(mCubeSlotCount + PROBE_ARRAY_SLOT_BUFFER_SIZE, scaledSize, PROBE_FORMAT);
+      prefilter->init(mCubeSlotCount + PROBE_ARRAY_SLOT_BUFFER_SIZE, scaledSize, PROBE_FORMAT);
 
       mIrradianceArray->copyTo(irr);
       mPrefilterArray->copyTo(prefilter);
@@ -428,23 +430,35 @@ PostEffect* RenderProbeMgr::getProbeArrayEffect()
    return mProbeArrayEffect;
 }
 
+U32 RenderProbeMgr::getProbeTexSize()
+{
+   U32 scaledSize = RenderProbeMgr::smProbeBakeResolution;
+   U32 downscalePower = 0;// GFXTextureManager::smTextureReductionLevel;
+   if (downscalePower != 0)
+   {
+      // Otherwise apply the appropriate scale...
+      scaledSize >>= downscalePower;
+   }
+   return scaledSize;
+}
+
 void RenderProbeMgr::updateProbeTexture(ReflectionProbe::ProbeInfo* probeInfo)
 {
    //If we don't have a registered probe, there's no point in updating the cubemap array for it
    ProbeRenderInst* probe = findProbeInst(probeInfo);
    if (probe == nullptr)
       return;
-
+   U32 scaledSize = getProbeTexSize();
    //Some basic sanity checking that we have valid cubemaps to work with
    if (probeInfo->mIrradianceCubemap.isNull() || !probeInfo->mIrradianceCubemap->isInitialized() ||
-      probeInfo->mIrradianceCubemap->getSize() != RenderProbeMgr::smProbeBakeResolution)
+      probeInfo->mIrradianceCubemap->getSize() != scaledSize)
    {
       Con::errorf("RenderProbeMgr::updateProbeTexture() - tried to update a probe's texture with an invalid or uninitialized irradiance map!");
       return;
    }
 
    if (probeInfo->mPrefilterCubemap.isNull() || !probeInfo->mPrefilterCubemap->isInitialized() ||
-      probeInfo->mPrefilterCubemap->getSize() != RenderProbeMgr::smProbeBakeResolution)
+      probeInfo->mPrefilterCubemap->getSize() != scaledSize)
    {
       Con::errorf("RenderProbeMgr::updateProbeTexture() - tried to update a probe's texture with an invalid or uninitialized specular map!");
       return;

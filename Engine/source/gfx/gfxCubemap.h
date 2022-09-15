@@ -127,7 +127,10 @@ protected:
 public:
    GFXCubemapArray() :mNumCubemaps(0), mSize(0), mMipMapLevels(0), mFormat(GFXFormat_FIRST) {}
    virtual ~GFXCubemapArray() {};
+
    /// Initialize from an array of cubemaps
+   void setCubeTexSize(GFXCubemapHandle* cubemaps);
+   void setCubeTexSize(const U32 cubemapFaceSize);
    virtual void init(GFXCubemapHandle *cubemaps, const U32 cubemapCount) = 0;
    /// Initialize cubemapCount number of blank cubemaps in the array
    virtual void init(const U32 cubemapCount, const U32 cubemapFaceSize, const GFXFormat format) = 0;

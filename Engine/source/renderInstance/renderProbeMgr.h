@@ -402,7 +402,7 @@ public:
    /// </summary>
    /// <returns>the PostEffect object</returns>
    PostEffect* getProbeArrayEffect();
-
+   U32 getProbeTexSize();
    /// <summary>
    /// Finds the associated cubemap array slot for the incoming ProbeInfo and updates the array's texture(s) from it
    /// </summary>

@@ -7,4 +7,5 @@
     DecalsFile="@assetFile=ExampleLevel.mis.decals"
     ForestFile="@assetFile=ExampleLevel.forest"
     NavmeshFile="@assetFile=ExampleLevel.nav"
+    staticObjectAssetDependency0="@asset=Prototyping:FloorGray"
     VersionId="1"/>

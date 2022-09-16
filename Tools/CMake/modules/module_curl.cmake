@@ -20,7 +20,8 @@
 # IN THE SOFTWARE.
 # -----------------------------------------------------------------------------
 
-option(TORQUE_NET_CURL "Use CURL and enable HTTPObject" ON)
+option(TORQUE_NET_CURL "Use CURL and enable HTTPObject" OFF)
+mark_as_advanced(TORQUE_NET_CURL)
 
 if( NOT TORQUE_NET_CURL )
     return()

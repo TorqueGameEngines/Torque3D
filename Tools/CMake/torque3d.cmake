@@ -247,7 +247,7 @@ endif()
 # Always enabled paths first
 ###############################################################################
 addPath("${srcDir}/") # must come first :)
-addPathRec("${srcDir}/app")
+addPath("${srcDir}/app")
 addPath("${srcDir}/sfx/media")
 addPath("${srcDir}/sfx/null")
 addPath("${srcDir}/sfx")
@@ -295,7 +295,7 @@ addPath("${srcDir}/platform/output")
 addPath("${srcDir}/app")
 
 if (NOT TORQUE_NET_CURL)
-    set(BLACKLIST "httpObject.h httpObject.cpp")
+    set(BLACKLIST "httpObject.h" "httpObject.cpp" )
 endif()
 addPath("${srcDir}/app/net")
 set(BLACKLIST "")

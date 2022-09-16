@@ -28,6 +28,7 @@ function AssetBrowser::createShapeAnimationAsset(%this)
 function AssetBrowser::editShapeAnimationAsset(%this, %assetDef)
 {
    %this.hideDialog();
+   EditorGui.setEditor( ShapeEditorPlugin );
    ShapeEditorPlugin.openShapeAsset(%assetDef);   
 }
 

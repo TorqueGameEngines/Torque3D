@@ -34,7 +34,7 @@ $pref::Video::screenShotSession = 0;
 $pref::Video::screenShotFormat = "PNG";
 
 /// This disables the hardware FSAA/MSAA so that
-/// we depend completely on the FXAA post effect
+/// we depend completely on the AA post effects
 /// which works on all cards and in deferred mode.
 ///
 /// Note the new Intel Hybrid graphics on laptops
@@ -42,6 +42,8 @@ $pref::Video::screenShotFormat = "PNG";
 /// enabled... so you've been warned.
 ///
 $pref::Video::disableHardwareAA = true;
+
+$pref::video::AAMode = "None";
 
 $pref::Video::disableNormalmapping = false;
 

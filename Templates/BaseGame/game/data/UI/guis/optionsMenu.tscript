@@ -474,7 +474,7 @@ function populateGraphicsSettingsList()
    %yesNoList = "No\tYes";
    %onOffList = "Off\tOn";
    %anisoFilter = "Off\t4\t8\t16";
-   %aaFilter = "Off\t1\t2\t4";
+   %aaTypeFilter = "None\tFXAA\tSMAA\tSMAA High";
    OptionsMenuSettingsList.addOptionQualityLevelRow("Lighting Quality", "$pref::Graphics::LightingQuality", 
       LightingQualityList, false, "",  true, "Amount and drawdistance of local lights");
    OptionsMenuSettingsList.addOptionQualityLevelRow("Shadow Quality", "$pref::Graphics::ShadowQuality", 
@@ -502,8 +502,9 @@ function populateGraphicsSettingsList()
    OptionsMenuSettingsList.addOptionQualityLevelRow("Shader Quality", "$pref::Graphics::ShaderQuality", 
       ShaderQualityGroup, false, "",  true, "Dictates the overall shader quality level, adjusting what features are enabled.");
    OptionsMenuSettingsList.addOptionRow("Anisotropic Filtering", "$pref::Video::defaultAnisotropy", %anisoFilter, false, "",  true, "Amount of Anisotropic Filtering on textures, which dictates their sharpness at a distance");
-   OptionsMenuSettingsList.addOptionRow("Anti-Aliasing", "$pref::Video::AA", %aaFilter, false, "",  true, "Amount of Post-Processing Anti-Aliasing applied to rendering");
    
+   OptionsMenuSettingsList.addOptionRow("Anti-Aliasing Type", "$pref::Video::AAMode", %aaTypeFilter, false, "",  true, "The Anti-Aliasing Method applied to rendering");
+
    OptionsMenuSettingsList.addOptionBoolRow("Parallax", "$pref::Video::enableParallaxMapping", %onOffList, false, "",  true, "Whether the surface parallax shader effect is enabled", "");
    OptionsMenuSettingsList.addOptionBoolRow("Water Reflections", "$pref::Water::enableTrueReflections", %onOffList, false, "",  true, "Whether water reflections are enabled", "");
    
@@ -588,10 +589,10 @@ function updateDisplaySettings()
 	%newFullScreen = %deviceModeName $= "Fullscreen" ? true : false;
 	%newRefresh    = $pref::Video::RefreshRate;
 	%newVsync = $pref::Video::enableVerticalSync;	
-	%newFSAA = $pref::Video::AA;
+	%newAA = $pref::Video::AA;
 	
    // Build the final mode string.
-	%newMode = $pref::Video::Resolution SPC %newFullScreen SPC %newBpp SPC %newRefresh SPC %newFSAA;
+	%newMode = $pref::Video::Resolution SPC %newFullScreen SPC %newBpp SPC %newRefresh SPC %newAA;
 	
    // Change the video mode.   
    if (  %newMode !$= $pref::Video::mode || %newDeviceID != $pref::Video::deviceId ||
@@ -609,7 +610,7 @@ function updateDisplaySettings()
          $pref::Video::deviceId = %newDeviceID;
          $pref::Video::deviceMode = $Video::ModeBorderless;
          %tmpModeStr = Canvas.getMonitorMode(%newDeviceID, 0);
-         Canvas.setVideoMode(%tmpModeStr.x, %tmpModeStr.y, false, 32, getWord(%tmpModeStr, $WORD::REFRESH), %newFSAA);
+         Canvas.setVideoMode(%tmpModeStr.x, %tmpModeStr.y, false, 32, getWord(%tmpModeStr, $WORD::REFRESH), %newAA);
       }
 
       $pref::Video::mode = %newMode;
@@ -619,7 +620,7 @@ function updateDisplaySettings()
       $pref::Video::Resolution = %newRes;
       $pref::Video::FullScreen = %newFullScreen;
       $pref::Video::RefreshRate = %newRefresh;
-      $pref::Video::AA = %newFSAA;
+      $pref::Video::AA = %newAA;
       configureCanvas();
    }
 }

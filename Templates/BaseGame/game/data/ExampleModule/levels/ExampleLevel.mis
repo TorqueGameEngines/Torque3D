@@ -12,7 +12,6 @@ new Scene(ExampleLevel) {
       Enabled = "1";
    };
    new SkyBox(theSky) {
-      Material = "BlankSkyMat";
       MaterialAsset = "Core_Rendering:BlankSkyMat";
       drawBottom = "0";
       dirtyGameObject = "0";
@@ -22,6 +21,7 @@ new Scene(ExampleLevel) {
       elevation = "45";
       color = "0.968628 0.901961 0.901961 1";
       ambient = "0.337255 0.533333 0.619608 1";
+      brightness = "2";
       texSize = "2048";
       overDarkFactor = "3000 1500 750 250";
       shadowDistance = "200";

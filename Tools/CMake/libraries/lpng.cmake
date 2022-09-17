@@ -26,7 +26,7 @@ project(lpng)
 
 # Enables NEON for libpng
 if ( TORQUE_CPU_ARM32 OR TORQUE_CPU_ARM64 )
-    set(PNG_INTEL_NEON on CACHE STRING "")
+    set(PNG_ARM_NEON on CACHE STRING "")
     add_definitions(-DPNG_ARM_NEON_OPT=1)
     addPath("${libDir}/lpng/arm")
 else()
@@ -43,6 +43,9 @@ else()
     set(PNG_INTEL_SSE off CACHE STRING "")
     add_definitions(-DPNG_INTEL_SSE_OPT=0)
 endif()
+
+mark_as_advanced(PNG_INTEL_SSE)
+mark_as_advanced(PNG_ARM_NEON)
 
 addInclude(${libDir}/zlib)
 

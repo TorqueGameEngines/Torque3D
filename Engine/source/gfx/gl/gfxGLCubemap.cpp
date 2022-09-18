@@ -340,6 +340,13 @@ void GFXGLCubemapArray::init(GFXCubemapHandle *cubemaps, const U32 cubemapCount)
    for (U32 i = 0; i < cubemapCount; i++)
    {
       GFXGLCubemap* glTex = static_cast<GFXGLCubemap*>(cubemaps[i].getPointer());
+      //yes checking the first one(cubemap at index 0) is pointless but saves a further if statement
+      if (cubemaps[i]->getSize() != mSize || cubemaps[i]->getFormat() != mFormat || cubemaps[i]->getMipMapLevels() != mMipMapLevels)
+      {
+         Con::printf("Trying to add an invalid Cubemap to a CubemapArray");
+         //destroy array here first
+         AssertFatal(false, "GFXD3D11CubemapArray::initStatic - invalid cubemap");
+      }
       for (U32 face = 0; face < 6; face++)
       {
          for (U32 currentMip = 0; currentMip < mMipMapLevels; currentMip++)
@@ -368,7 +375,7 @@ void GFXGLCubemapArray::init(GFXCubemapHandle *cubemaps, const U32 cubemapCount)
 //Just allocate the cubemap array but we don't upload any data
 void GFXGLCubemapArray::init(const U32 cubemapCount, const U32 cubemapFaceSize, const GFXFormat format)
 {
-   setCubeTexSize(cubemapCount);
+   setCubeTexSize(cubemapFaceSize);
    mFormat = format;
    mNumCubemaps = cubemapCount;
    const bool isCompressed = ImageUtil::isCompressedFormat(mFormat);

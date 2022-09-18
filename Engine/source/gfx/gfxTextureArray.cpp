@@ -123,13 +123,13 @@ void GFXTextureArray::setTexture(const GFXTexHandle& texture, U32 slot)
       {
          if (texture.getHeight() != mHeight || texture.getWidth() != mWidth)
          {
-            AssertWarn(true, "GFXTextureArray::setTexture all textures should be the same size");
-            Con::warnf("GFXTextureArray::setTexture all textures should be the same size");
+            AssertWarn(true, avar("GFXTextureArray::setTexture all textures should be the same size: %i vs %i", texture.getHeight(), mHeight));
+            Con::warnf(avar("GFXTextureArray::setTexture all textures should be the same size: %i vs %i", texture.getHeight(), mHeight));
          }
          else if (texture->getMipLevels() < mMipLevels)
          {
-            AssertWarn(true, "GFXTextureArray::setTexture all textures should have at least the same number of mips");
-            Con::warnf("GFXTextureArray::setTexture all textures should have at least the same number of mips");
+            AssertWarn(true, avar("GFXTextureArray::setTexture all textures should have at least the same number of mips: %i vs %i", texture->getMipLevels(), mMipLevels));
+            Con::warnf(avar("GFXTextureArray::setTexture all textures should have at least the same number of mips: %i vs %i", texture->getMipLevels(), mMipLevels));
          }
          else
          {

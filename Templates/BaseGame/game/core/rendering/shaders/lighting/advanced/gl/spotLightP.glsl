@@ -24,7 +24,6 @@
 #include "farFrustumQuad.glsl"
 #include "../../shadowMap/shadowMapIO_GLSL.h"
 #include "shadergen:/autogenConditioners.h"
-#include "softShadow.glsl"
 #include "../../../gl/lighting.glsl"
 #include "../../../gl/torque.glsl"
 
@@ -33,17 +32,16 @@ in vec4 ssPos;
 in vec4 vsEyeDir;
 in vec4 color;
 
-#ifdef USE_COOKIE_TEX
-
-/// The texture for cookie rendering.
-uniform sampler2D cookieMap;
-
-#endif
-
 uniform sampler2D deferredBuffer;
 uniform sampler2D shadowMap;
+//contains gTapRotationTex sampler 
+#include "softShadow.glsl"
 uniform sampler2D colorBuffer;
 uniform sampler2D matInfoBuffer;
+#ifdef USE_COOKIE_TEX
+/// The texture for cookie rendering.
+uniform sampler2D cookieMap;
+#endif
 
 uniform vec4 rtParams0;
 

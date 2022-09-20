@@ -26,7 +26,6 @@
 #include "farFrustumQuad.glsl"
 #include "../../../gl/lighting.glsl"
 #include "../../shadowMap/shadowMapIO_GLSL.h"
-#include "softShadow.glsl"
 #include "../../../gl/torque.glsl"
 #line 31
 
@@ -35,12 +34,6 @@ in vec4 ssPos;
 in vec4 vsEyeDir;
 in vec4 color;
 
-#ifdef USE_COOKIE_TEX
-
-/// The texture for cookie rendering.
-uniform samplerCube cookieMap;
-
-#endif
 
 
 #ifdef SHADOW_CUBE
@@ -106,16 +99,19 @@ uniform samplerCube cookieMap;
 #endif
 
 uniform sampler2D deferredBuffer;
-
 #ifdef SHADOW_CUBE
 	uniform samplerCube shadowMap;
 #else
 	uniform sampler2D shadowMap;
 #endif
-
-uniform sampler2D lightBuffer;
+//contains gTapRotationTex sampler 
+#include "softShadow.glsl"
 uniform sampler2D colorBuffer;
 uniform sampler2D matInfoBuffer;
+#ifdef USE_COOKIE_TEX
+/// The texture for cookie rendering.
+uniform samplerCube cookieMap;
+#endif
 
 uniform vec4 rtParams0;
 

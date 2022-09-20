@@ -26,7 +26,6 @@
 #include "farFrustumQuad.hlsl"
 #include "../../lighting.hlsl"
 #include "../shadowMap/shadowMapIO_HLSL.h"
-#include "softShadow.hlsl"
 #include "../../torque.hlsl"
 
 struct ConvexConnectP
@@ -39,16 +38,15 @@ struct ConvexConnectP
 
 TORQUE_UNIFORM_SAMPLER2D(deferredBuffer, 0);
 TORQUE_UNIFORM_SAMPLER2D(shadowMap, 1);
-
+//contains gTapRotationTex sampler 
+#include "softShadow.hlsl"
+TORQUE_UNIFORM_SAMPLER2D(colorBuffer, 3);
+TORQUE_UNIFORM_SAMPLER2D(matInfoBuffer, 4);
 #ifdef USE_COOKIE_TEX
-
 /// The texture for cookie rendering.
-TORQUE_UNIFORM_SAMPLER2D(cookieMap, 2);
+TORQUE_UNIFORM_SAMPLER2D(cookieMap, 5);
 
 #endif
-TORQUE_UNIFORM_SAMPLER2D(colorBuffer, 5);
-TORQUE_UNIFORM_SAMPLER2D(matInfoBuffer, 6);
-
 uniform float4 rtParams0;
 
 uniform float  lightBrightness;

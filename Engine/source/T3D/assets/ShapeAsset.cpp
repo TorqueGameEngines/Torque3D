@@ -207,8 +207,9 @@ void ShapeAsset::initializeAsset()
    //Ensure our path is expando'd if it isn't already
    mFilePath = getOwned() ? expandAssetFilePath(mFileName) : mFilePath;
 
-   mConstructorFilePath = getOwned() ? expandAssetFilePath(mConstructorFilePath) : mConstructorFilePath;
-
+   mConstructorFilePath = getOwned() ? expandAssetFilePath(mConstructorFileName) : mConstructorFilePath;
+   if (!Torque::FS::IsFile(mConstructorFilePath))
+      Con::errorf("ShapeAsset::initializeAsset could not find %s!", mConstructorFilePath);
    mDiffuseImposterPath = getOwned() ? expandAssetFilePath(mDiffuseImposterFileName) : mDiffuseImposterFileName;
    if (mDiffuseImposterPath == StringTable->EmptyString())
    {

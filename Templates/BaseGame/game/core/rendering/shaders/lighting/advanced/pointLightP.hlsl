@@ -25,7 +25,6 @@
 #include "farFrustumQuad.hlsl"
 #include "../../lighting.hlsl"
 #include "../shadowMap/shadowMapIO_HLSL.h"
-#include "softShadow.hlsl"
 #include "../../torque.hlsl"
 
 struct ConvexConnectP
@@ -35,14 +34,6 @@ struct ConvexConnectP
    float4 ssPos : TEXCOORD1;
    float4 vsEyeDir : TEXCOORD2;
 };
-
-#ifdef USE_COOKIE_TEX
-
-/// The texture for cookie rendering.
-TORQUE_UNIFORM_SAMPLERCUBE(cookieMap, 3);
-
-#endif
-
 
 #ifdef SHADOW_CUBE
 
@@ -107,16 +98,19 @@ TORQUE_UNIFORM_SAMPLERCUBE(cookieMap, 3);
 #endif
 
 TORQUE_UNIFORM_SAMPLER2D(deferredBuffer, 0);
-
 #ifdef SHADOW_CUBE
 TORQUE_UNIFORM_SAMPLERCUBE(shadowMap, 1);
 #else
 TORQUE_UNIFORM_SAMPLER2D(shadowMap, 1);
 #endif
-
-TORQUE_UNIFORM_SAMPLER2D(lightBuffer, 5);
-TORQUE_UNIFORM_SAMPLER2D(colorBuffer, 6);
-TORQUE_UNIFORM_SAMPLER2D(matInfoBuffer, 7);
+//contains gTapRotationTex sampler 
+#include "softShadow.hlsl"
+TORQUE_UNIFORM_SAMPLER2D(colorBuffer, 3);
+TORQUE_UNIFORM_SAMPLER2D(matInfoBuffer, 4);
+#ifdef USE_COOKIE_TEX
+/// The texture for cookie rendering.
+TORQUE_UNIFORM_SAMPLERCUBE(cookieMap, 5);
+#endif
 
 uniform float4 rtParams0;
 uniform float4 lightColor;

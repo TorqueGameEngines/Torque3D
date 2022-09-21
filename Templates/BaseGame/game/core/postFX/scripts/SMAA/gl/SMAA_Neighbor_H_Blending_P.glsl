@@ -20,7 +20,7 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 #include "core/rendering/shaders/gl/hlslCompat.glsl"
-
+#include "core/rendering/shaders/gl/torque.glsl"
 
 #include "SMAA_Params.glsl"
 #define SMAA_INCLUDE_VS 0
@@ -41,6 +41,6 @@ out vec4 OUT_col;
 void main() 
 {                                    
    //OUT_col =  vec4(texture(blendTex, uv0.xy));     
-  OUT_col= SMAANeighborhoodBlendingPS(uv0, offset, sceneTex, blendTex);
+  OUT_col= toLinear(SMAANeighborhoodBlendingPS(uv0, offset, sceneTex, blendTex));
 } 
 

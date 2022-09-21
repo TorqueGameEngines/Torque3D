@@ -37,7 +37,7 @@ void Platform::init()
     Con::printf("Initializing platform...");
    
    // Set the platform variable for the scripts
-   Con::setVariable( "$platform", "MacOSX" );
+   Con::setVariable( "$platform", "macos" );
    
    Input::init();
    

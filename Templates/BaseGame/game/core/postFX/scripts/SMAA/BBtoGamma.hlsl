@@ -19,25 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
-#include "core/rendering/shaders/shaderModel.hlsl"
 #include "core/rendering/shaders/torque.hlsl"
-#include "SMAA_Params.hlsl"
-    
-                                                                         
-TORQUE_UNIFORM_SAMPLER2D(sceneTex, 0);
-TORQUE_UNIFORM_SAMPLER2D(blendTex, 1);
+#include "core/rendering/shaders/postFX/postFx.hlsl"
 
-struct v_NHBlend
+TORQUE_UNIFORM_SAMPLER2D(backBuffer, 0);
+
+float4 main(PFXVertToPix IN) : TORQUE_TARGET0
 {
-   float4 hpos    : TORQUE_POSITION;
-   float2 uv0     : TEXCOORD0;
-   float4 offset  : TEXCOORD1;
-};
-
-            
-float4 main( v_NHBlend IN ) : TORQUE_TARGET0
-{   
-    //return float4(TORQUE_TEX2D(blendTex, IN.uv0));
-   return toLinear(SMAANeighborhoodBlendingPS(IN.uv0, IN.offset, texture_sceneTex, texture_blendTex));
-} 
-
+   return toGamma(TORQUE_TEX2D(backBuffer, IN.uv0));  
+}

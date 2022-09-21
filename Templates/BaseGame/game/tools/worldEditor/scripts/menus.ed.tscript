@@ -113,8 +113,8 @@ function EditorGui::buildMenus(%this)
    %this.menuBar = new GuiMenuBar(WorldEditorMenubar)
    {
       dynamicItemInsertPos = 3;
-      extent = Canvas.extent.x SPC "20";
-      minExtent = "320 20";
+      extent = Canvas.extent.x SPC "30";
+      minExtent = "320 30";
       horizSizing = "width";
       profile = "ToolsGuiMenuBarProfile";
    };

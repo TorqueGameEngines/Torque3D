@@ -179,7 +179,7 @@ function MeshRoadInspector::onInspectorFieldModified( %this, %object, %fieldName
 
 function MeshRoadInspector::onFieldSelected( %this, %fieldName, %fieldTypeStr, %fieldDoc )
 {
-   MeshFieldInfoControl.setText( "<font:ArialBold:14>" @ %fieldName @ "<font:ArialItalic:14> (" @ %fieldTypeStr @ ") " NL "<font:Arial:14>" @ %fieldDoc );
+   MeshFieldInfoControl.setText( "<font:Arial Bold:14>" @ %fieldName @ "<font:Arial Italic:14> (" @ %fieldTypeStr @ ") " NL "<font:Arial:14>" @ %fieldDoc );
 }
 
 function MeshRoadTreeView::onInspect(%this, %obj)

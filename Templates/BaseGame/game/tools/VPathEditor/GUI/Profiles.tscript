@@ -7,6 +7,6 @@ singleton GuiControlProfile( VPathEditorProfile )
 {
    CanKeyFocus = true;
    
-   FontType  = "Noto Sans Bold";
+   FontType  = "Arial Bold";
    FontColor = "0 0 0";
 };

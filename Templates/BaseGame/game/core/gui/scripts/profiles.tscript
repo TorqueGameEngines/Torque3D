@@ -57,7 +57,7 @@ new GuiControlProfile (GuiDefaultProfile)
    borderColorNA = "75 75 75"; 
 
    // font
-   fontType = "Noto Sans";
+   fontType = "Arial";
    fontSize = 14;
    fontCharset = ANSI;
 
@@ -97,7 +97,7 @@ new GuiControlProfile (GuiToolTipProfile)
    borderColor   = "87 87 87";
 
    // font
-   fontType = "Noto Sans";
+   fontType = "Arial";
    fontSize = 14;
    fontColor = "200 200 200";
 
@@ -185,9 +185,10 @@ new GuiControlProfile(GuiCheckBoxProfile)
    border = false;
    borderColor = "100 100 100";
    fontSize = 14;
-   fontColor = "20 20 20";
+   fontType  = "Arial"; 
+   fontColor = "215 215 215";
    fontColorHL = "80 80 80";
-	fontColorNA = "200 200 200";
+   fontColorNA = "200 200 200";
    fixedExtent = true;
    justify = "left";
    bitmapAsset = "Core_GUI:checkbox_image";
@@ -218,7 +219,7 @@ if( !isObject( GuiProgressTextProfile ) )
 new GuiControlProfile( GuiProgressTextProfile )
 {
    fontSize = "14";
-	fontType = "Noto Sans";
+   fontType = "Arial";
    fontColor = "0 0 0";
    justify = "center";
    category = "Core";   

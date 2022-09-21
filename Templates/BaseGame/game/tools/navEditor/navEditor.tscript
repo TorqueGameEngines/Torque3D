@@ -303,7 +303,7 @@ function NavInspector::onInspectorFieldModified(%this, %object, %fieldName, %arr
 
 function NavInspector::onFieldSelected(%this, %fieldName, %fieldTypeStr, %fieldDoc)
 {
-   NavFieldInfoControl.setText("<font:ArialBold:14>" @ %fieldName @ "<font:ArialItalic:14> (" @ %fieldTypeStr @ ") " NL "<font:Arial:14>" @ %fieldDoc);
+   NavFieldInfoControl.setText("<font:Arial Bold:14>" @ %fieldName @ "<font:Arial Italic:14> (" @ %fieldTypeStr @ ") " NL "<font:Arial:14>" @ %fieldDoc);
 }
 
 function NavTreeView::onInspect(%this, %obj)

@@ -7,7 +7,7 @@ $guiContent = new GuiContainer(EWToolsToolbar) {
    Profile = "ToolsMenubarProfile";
    HorizSizing = "right";
    VertSizing = "bottom";
-   Position = "0 31";
+   Position = "0 41";
    Extent = "0 33";
    MinExtent = "8 2";
    canSave = "1";
@@ -15,7 +15,7 @@ $guiContent = new GuiContainer(EWToolsToolbar) {
    hovertime = "1000";
    isClosed = "0";
    isDynamic = "0";
-  
+   
    new GuiDynamicCtrlArrayControl(ToolsToolbarArray) {
       canSaveDynamicFields = "0";
       Enabled = "1";

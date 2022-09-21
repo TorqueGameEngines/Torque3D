@@ -31,7 +31,7 @@ singleton GuiControlProfile (GuiMatEdSliderProfile)
 singleton GuiControlProfile (GuiMatEdRightJustifyProfile)
 {
    // font
-   fontType = "Noto Sans";
+   fontType = "Arial";
    fontSize = 14;
    fontCharset = ANSI;
 

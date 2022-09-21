@@ -423,7 +423,7 @@ function Inspector::onInspectorFieldModified( %this, %object, %fieldName, %array
 
 function Inspector::onFieldSelected( %this, %fieldName, %fieldTypeStr, %fieldDoc )
 {
-   FieldInfoControl.setText( "<font:ArialBold:14>" @ %fieldName @ "<font:ArialItalic:14> (" @ %fieldTypeStr @ ") " NL "<font:Arial:14>" @ %fieldDoc );
+   FieldInfoControl.setText( "<font:Arial Bold:14>" @ %fieldName @ "<font:Arial Italic:14> (" @ %fieldTypeStr @ ") " NL "<font:Arial:14>" @ %fieldDoc );
 }
 
 // The following three methods are for fields that edit field value live and thus cannot record

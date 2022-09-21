@@ -50,7 +50,7 @@ new GuiControlProfile (ToolsGuiDefaultProfile)
    borderColorNA = EditorSettings.value("Theme/dividerLightColor"); 
 
    // font
-   fontType = "Noto Sans";
+   fontType = "Arial";
    fontSize = 14;
    fontCharset = ANSI;
 
@@ -132,7 +132,7 @@ new GuiControlProfile (ToolsGuiToolTipProfile)
    borderColor   = EditorSettings.value("Theme/tooltipDivColor");
 
    // font
-   fontType = "Noto Sans";
+   fontType = "Arial";
    fontSize = 14;
    fontColor = EditorSettings.value("Theme/tooltipTextColor");
 
@@ -204,14 +204,14 @@ new GuiControlProfile (ToolsGuiTextProfile)
 if( !isObject( ToolsGuiTextBoldProfile ) )
 new GuiControlProfile (ToolsGuiTextBoldProfile : ToolsGuiTextProfile)
 {
-   fontType = "Noto Sans Bold";
+   fontType = "Arial Bold";
 };
 
 if( !isObject( ToolsGuiTextBoldCenterProfile ) )
 new GuiControlProfile (ToolsGuiTextBoldCenterProfile : ToolsGuiTextProfile)
 {
    fontColor = EditorSettings.value("Theme/headerTextColor");
-   fontType = "Noto Sans Bold";
+   fontType = "Arial Bold";
    fontSize = 16;
    justify = "center";
    category = "Tools";
@@ -227,7 +227,7 @@ new GuiControlProfile (ToolsGuiTextRightProfile : ToolsGuiTextProfile)
 if( !isObject( ToolsGuiTextBoldRightProfile ) )
 new GuiControlProfile (ToolsGuiTextBoldRightProfile : ToolsGuiTextRightProfile)
 {
-   fontType = "Noto Sans Bold";
+   fontType = "Arial Bold";
    fontSize = 16;
 };
 
@@ -306,13 +306,13 @@ new GuiControlProfile( ToolsGuiTextEditProfile )
    //borderWidth = "1";  // fix to display textEdit img
    //borderColor = "100 100 100";
    fillColor = EditorSettings.value("Theme/fieldBGColor");
-   fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
+   fillColorHL = "75 75 75 255";
    fillColorSEL = EditorSettings.value("Theme/fieldBGSELColor");
    
-   
+   fontSize = 14;
    fontColor = EditorSettings.value("Theme/fieldTextColor");
-   //fontColorSEL = EditorSettings.value("Theme/fieldBGSELColor");
-   fontColorSEL = EditorSettings.value("Theme/dividerMidColor");
+   fontColorSEL = EditorSettings.value("Theme/fieldBGSELColor");
+   //fontColorSEL = EditorSettings.value("Theme/dividerMidColor");
    fontColorHL = EditorSettings.value("Theme/fieldTextSELColor");
    fontColorNA = EditorSettings.value("Theme/fieldTextNAColor");
    textOffset = "4 2";
@@ -351,7 +351,7 @@ if( !isObject( ToolsGuiProgressTextProfile ) )
 new GuiControlProfile( ToolsGuiProgressTextProfile )
 {
    fontSize = "14";
-	fontType = "Noto Sans";
+	fontType = "Arial";
    fontColor = "215 215 215";
    justify = "center";
    category = "Tools";   
@@ -611,7 +611,7 @@ new GuiControlProfile( ToolsGuiTabBookProfile )
    fontColor = EditorSettings.value("Theme/headerTextColor");
    fontColorHL = EditorSettings.value("Theme/fieldTextHLColor");
    fontColorNA = EditorSettings.value("Theme/fieldTextSELColor");
-   fontType = "Noto Sans";
+   fontType = "Arial";
    fontSize = 14;
    justify = "center";
    bitmapAsset = "ToolsModule:tab_image";
@@ -635,7 +635,7 @@ new GuiControlProfile( ToolsGuiTabBookNoBitmapProfile : ToolsGuiTabBookProfile )
 if( !isObject( ToolsGuiTabPageProfile ) )
 new GuiControlProfile( ToolsGuiTabPageProfile : ToolsGuiDefaultProfile )
 {
-   fontType = "Noto Sans";
+   fontType = "Arial";
    fontSize = 10;
    justify = "center";
    bitmapAsset = "ToolsModule:tab_image";
@@ -712,7 +712,7 @@ singleton GuiControlProfile( GuiBackFillProfile )
    fillColor = "0 94 94";
    border = true;
    borderColor = "255 128 128";
-   fontType = "Noto Sans";
+   fontType = "Arial";
    fontSize = 12;
    fontColor = "215 215 215";
    fontColorHL = "50 50 50";
@@ -780,7 +780,7 @@ singleton GuiControlProfile( GuiInspectorTextEditProfile )
    canKeyFocus = true;
 
    // font
-   fontType = "Noto Sans";
+   fontType = "Arial";
    fontSize = 14;
 
    fontColor = EditorSettings.value("Theme/fieldTextColor");
@@ -803,8 +803,8 @@ singleton GuiControlProfile( GuiInspectorTextEditRightProfile : GuiInspectorText
 //Scene Tree GUI Inspector Dropdown menus
 singleton GuiControlProfile( GuiInspectorGroupProfile )
 {
-   fontType    = "Noto Sans";
-   fontSize    = "14";
+   fontType = "Arial";
+   fontSize = "14";
    
    fontColor = EditorSettings.value("Theme/fieldTextColor");
    fontColorHL = EditorSettings.value("Theme/fieldTextHLColor");
@@ -840,7 +840,7 @@ singleton GuiControlProfile( GuiInspectorFieldProfile)
    //bevelColorLL = "0 0 0";
 
    // font
-   fontType = "Noto Sans";
+   fontType = "Arial";
    fontSize = 14;
 
    fontColor = EditorSettings.value("Theme/fieldTextColor");
@@ -881,7 +881,7 @@ singleton GuiControlProfile( GuiInspectorDynamicFieldProfile : GuiInspectorField
    canKeyFocus = true;
 
    // font
-   fontType = "Noto Sans";
+   fontType = "Arial";
    fontSize = 14;
 
    fontColor = EditorSettings.value("Theme/headerTextColor");
@@ -910,7 +910,7 @@ singleton GuiControlProfile( GuiRolloutProfile )
 singleton GuiControlProfile( GuiInspectorRolloutProfile0 )
 {
    // font
-   fontType = "Noto Sans";
+   fontType = "Arial";
    fontSize = 14;
 
    fontColor = "32 32 32";
@@ -920,10 +920,10 @@ singleton GuiControlProfile( GuiInspectorRolloutProfile0 )
    justify = "left";
    opaque = false;
    
-   border = 0;
+   border = false;
    borderColor   = "190 190 190";
    borderColorHL = "156 156 156";
-   borderColorNA = "64 64 64";
+   borderColorNA = "255 64 64";
   
    bitmapAsset = "ToolsModule:rollout_plusminus_header_image";
    
@@ -984,7 +984,7 @@ singleton GuiControlProfile( GuiInspectorTypeFileNameProfile )
    canKeyFocus = true;
 
    // font
-   fontType = "Noto Sans";
+   fontType = "Arial";
    fontSize = 14;
    
    // Center text
@@ -1048,7 +1048,7 @@ singleton GuiControlProfile( GuiDirectoryTreeProfile : ToolsGuiTreeViewProfile )
    fontColorSEL= EditorSettings.value("Theme/fieldTextSELColor"); 
    fillColorHL = EditorSettings.value("Theme/fieldBGColor");
    fontColorNA = EditorSettings.value("Theme/fieldTextSELColor");
-   fontType = "Noto Sans";
+   fontType = "Arial";
    fontSize = 14;
    category = "Editor";
 };
@@ -1059,7 +1059,7 @@ singleton GuiControlProfile( GuiDirectoryFileListProfile )
    fontColorSEL= EditorSettings.value("Theme/fieldTextSELColor"); 
    fillColorHL = EditorSettings.value("Theme/fieldBGColor");
    fontColorNA = EditorSettings.value("Theme/fieldTextSELColor");
-   fontType = "Noto Sans";
+   fontType = "Arial";
    fontSize = 14;
    category = "Editor";
 };
@@ -1112,7 +1112,7 @@ singleton GuiControlProfile( GuiCreatorIconButtonProfile )
    //tab = true;
    //canKeyFocus = true;
 
-   fontType = "Noto Sans";
+   fontType = "Arial";
    fontSize = 14;
 
    fontColor = EditorSettings.value("Theme/fieldTextColor");
@@ -1154,6 +1154,7 @@ singleton GuiControlProfile( ToolsMenubarProfile : ToolsGuiDefaultProfile )
    category = "Editor";
    
    opaque = true;
+   border = false;
    
    fillColor = EditorSettings.value("Theme/headerColor");
    fontColor = EditorSettings.value("Theme/headerTextColor");

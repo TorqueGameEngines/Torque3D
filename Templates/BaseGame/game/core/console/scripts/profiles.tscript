@@ -22,12 +22,14 @@
 
 if(!isObject(GuiConsoleProfile))
 new GuiControlProfile(GuiConsoleProfile)
-{
+{ 
+   border = true;
+   borderColor = "15 15 15";
    fontType = ($platform $= "macos") ? "Monaco" : "Lucida Console";
-   fontSize = ($platform $= "macos") ? 13 : 12;
-   fontColor = "255 255 255";
-   fontColorHL = "0 255 255";
-   fontColorNA = "255 0 0";
+   fontSize = ($platform $= "macos") ? 14 : 13;
+   fontColor = "225 225 225";
+   fontColorHL = "165 214 255";
+   fontColorNA = "255 65 65";
    fontColors[6] = "100 100 100";
    fontColors[7] = "100 100 0";
    fontColors[8] = "0 0 100";
@@ -50,7 +52,7 @@ new GuiControlProfile(GuiConsoleTextProfile)
    category = "Core";
 };
 
-$ConsoleDefaultFillColor = "0 0 0 175";
+$ConsoleDefaultFillColor = "12 14 19 175";
 
 if(!isObject(ConsoleScrollProfile))
 new GuiControlProfile(ConsoleScrollProfile : GuiScrollProfile)
@@ -66,7 +68,12 @@ new GuiControlProfile(ConsoleScrollProfile : GuiScrollProfile)
 if(!isObject(ConsoleTextEditProfile))
 new GuiControlProfile(ConsoleTextEditProfile : GuiTextEditProfile)
 {
-   fillColor = "242 241 240 255";
-   fillColorHL = "255 255 255";   
+   opaque = true;
+   border =false;
+   fontType = "Arial";
+   fontSize = 16;
+   fontColor = "255 255 255";
+   fillColorHL = "30 30 30 255";  
+   cursorColor = "255 255 255";  
    category = "Core";
 };

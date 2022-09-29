@@ -106,6 +106,7 @@ function OptionsMenu::onOpen(%this)
    }
    
    %this.unappliedChanges.empty();
+   $pref::Video::displayDeviceId = "";
    
    OptionsMenuCategoryList.setAsActiveMenuList();
    
@@ -442,6 +443,11 @@ function populateDisplaySettingsList()
       %resolution = _makePrettyResString(%resolution);
    
       OptionsMenuSettingsList.addOptionRow("Resolution", "$pref::Video::Resolution", %resolutionList, false, "",  true, "Resolution of the game window", %resolution);
+
+      // If the requested resolution could not be set, mark the control and pref as changed.
+      %resControl = OptionsMenuSettingsList.getObject(OptionsMenuSettingsList.getCount()-1);
+      if (%resControl.getCurrentOption() !$= %resolution)
+         %resControl.onChange();
    }
    
    OptionsMenuSettingsList.addOptionBoolRow("VSync", "$pref::Video::enableVerticalSync", $YesNoList, false, "",  true, "", "");

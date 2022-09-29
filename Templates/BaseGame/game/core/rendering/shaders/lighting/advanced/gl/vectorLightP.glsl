@@ -26,7 +26,6 @@
 #include "../../../gl/torque.glsl"
 #include "../../../gl/lighting.glsl"
 #include "../../shadowMap/shadowMapIO_GLSL.h"
-#include "softShadow.glsl"
 #line 30
 in vec4 hpos;
 in vec2 uv0;
@@ -35,6 +34,8 @@ in vec3 vsEyeRay;
 
 uniform sampler2D deferredBuffer;
 uniform sampler2D shadowMap;
+//contains gTapRotationTex sampler 
+#include "softShadow.glsl"
 
 uniform sampler2D colorBuffer;
 uniform sampler2D matInfoBuffer;             

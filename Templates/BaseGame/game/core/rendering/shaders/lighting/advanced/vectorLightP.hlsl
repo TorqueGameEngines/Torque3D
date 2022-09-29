@@ -27,13 +27,14 @@
 #include "../../torque.hlsl"
 #include "../../lighting.hlsl"
 #include "../shadowMap/shadowMapIO_HLSL.h"
-#include "softShadow.hlsl"
 
 TORQUE_UNIFORM_SAMPLER2D(deferredBuffer, 0);
 TORQUE_UNIFORM_SAMPLER2D(shadowMap, 1);
 
-TORQUE_UNIFORM_SAMPLER2D(colorBuffer, 5);
-TORQUE_UNIFORM_SAMPLER2D(matInfoBuffer, 6);
+//contains gTapRotationTex sampler 
+#include "softShadow.hlsl"
+TORQUE_UNIFORM_SAMPLER2D(colorBuffer, 3);
+TORQUE_UNIFORM_SAMPLER2D(matInfoBuffer, 4);
 
 uniform float  lightBrightness;
 uniform float3 lightDirection;

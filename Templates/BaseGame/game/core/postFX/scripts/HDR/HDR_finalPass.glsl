@@ -87,7 +87,7 @@ vec3 Tonemap(vec3 x)
    //Linear Tonemap  
    else if (g_fTonemapMode == 5.0)
    {  
-      x = TO_Linear(x);  	   
+      x = toLinear(TO_Linear(toGamma(x)));    	   
    }
         
    return x;

@@ -646,7 +646,11 @@ void PlatformWindowSDL::_processSDLEvent(SDL_Event &evt)
                break;
             case SDL_WINDOWEVENT_MOVED:
             {
+               S32 oldDisplay = Con::getIntVariable("pref::Video::deviceId", 0);
                _updateMonitorFromMove(evt);
+               // If display device has changed, make sure window params are compatible with the new device.
+               if (oldDisplay != Con::getIntVariable("pref::Video::deviceId", 0))
+                  Con::evaluate("configureCanvas();");
                break;
             }
             case SDL_WINDOWEVENT_RESIZED:
@@ -671,11 +675,6 @@ void PlatformWindowSDL::_processSDLEvent(SDL_Event &evt)
                break;
             case SDL_WINDOWEVENT_RESTORED:
                Con::setBoolVariable("pref::Video::isMaximized", false);
-               break;
-            case SDL_WINDOWEVENT_DISPLAY_CHANGED:
-               Con::printf("Window moved to display #%d", evt.window.data1);
-               Con::setIntVariable("pref::Video::deviceId", evt.window.data1);
-               Con::evaluate("configureCanvas();");
                break;
 
             default:

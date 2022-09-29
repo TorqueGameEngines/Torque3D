@@ -55,7 +55,7 @@ function parseArgs()
       {
          $userDirs = $defaultGame;
          $dirCount = 1;
-         %isDedicated = true;
+         $isDedicated = true;
       }*/
 
       switch$ ($arg)
@@ -64,7 +64,7 @@ function parseArgs()
          case "-dedicated":
             $userDirs = $defaultGame;
             $dirCount = 1;
-            %isDedicated = true;
+            $isDedicated = true;
             $Server::Dedicated = true;
             enableWinConsole(true);
             $argUsed[%i]++;
@@ -138,7 +138,7 @@ function parseArgs()
             {
                // Set the selected dir --NOTE: we no longer allow tools with this argument
                /*
-               if( %isDedicated )
+               if( $isDedicated )
                {
                   $userDirs = $nextArg;
                   $dirCount = 1;
@@ -311,7 +311,7 @@ function parseArgs()
          case "-help":
             $displayHelp = true;
             $argUsed[%i]++;
-
+            displayHelp();
          //-------------------
          case "-compileAll":
             $compileAll = true;

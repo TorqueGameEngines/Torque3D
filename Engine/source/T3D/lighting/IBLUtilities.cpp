@@ -206,16 +206,16 @@ namespace IBLUtilities
 
    void bakeReflection(String outputPath, S32 resolution)
    {
-      //GFXDEBUGEVENT_SCOPE(ReflectionProbe_Bake, ColorI::WHITE);
+      GFXDEBUGEVENT_SCOPE(ReflectionProbe_Bake, ColorI::WHITE);
 
-      /*PostEffect *preCapture = dynamic_cast<PostEffect*>(Sim::findObject("AL_PreCapture"));
+      *PostEffect *preCapture = dynamic_cast<PostEffect*>(Sim::findObject("AL_PreCapture"));
       PostEffect *deferredShading = dynamic_cast<PostEffect*>(Sim::findObject("AL_DeferredShading"));
       if (preCapture)
          preCapture->enable();
       if (deferredShading)
          deferredShading->disable();
 
-      //if (mReflectionModeType == StaticCubemap || mReflectionModeType == BakedCubemap || mReflectionModeType == SkyLight)
+      if (mReflectionModeType == StaticCubemap || mReflectionModeType == BakedCubemap || mReflectionModeType == SkyLight)
       {
          if (!mCubemap)
          {
@@ -226,7 +226,7 @@ namespace IBLUtilities
 
       if (mReflectionModeType == DynamicCubemap && mDynamicCubemap.isNull())
       {
-         //mCubemap->createMap();
+         mCubemap->createMap();
          mDynamicCubemap = GFX->createCubemap();
          mDynamicCubemap->initDynamic(resolution, GFXFormatR8G8B8);
       }
@@ -249,8 +249,8 @@ namespace IBLUtilities
       // it for child control rendering below.
       GFXTransformSaver saver;
 
-      //bool saveEditingMission = gEditingMission;
-      //gEditingMission = false;
+      bool saveEditingMission = gEditingMission;
+      gEditingMission = false;
 
       //Set this to true to use the prior method where it goes through the SPT_Reflect path for the bake
       bool probeRenderState = ReflectionProbe::smRenderReflectionProbes;
@@ -346,7 +346,7 @@ namespace IBLUtilities
          mDirty = false;
       }
 
-      //calculateSHTerms();
+      calculateSHTerms();
 
       ReflectionProbe::smRenderReflectionProbes = probeRenderState;
       setMaskBits(-1);
@@ -433,7 +433,7 @@ namespace IBLUtilities
       rotMat.setColumn(0, cross);
       rotMat.setColumn(1, vLookatPt);
       rotMat.setColumn(2, vUpVec);
-      //rotMat.inverse();
+      rotMat.inverse();
 
       return rotMat;
    }
@@ -572,7 +572,7 @@ namespace IBLUtilities
       for (U32 i = 0; i < 6; i++)
          SAFE_DELETE(cubeFaceBitmaps[i]);
 
-      /*bool mExportSHTerms = false;
+      *bool mExportSHTerms = false;
       if (mExportSHTerms)
       {
          for (U32 f = 0; f < 6; f++)

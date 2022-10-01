@@ -149,6 +149,12 @@ function sfxInit()
    if( sfxGetDeviceInfo() !$= "" )
       sfxShutdown();
       
+   if ($isDedicated)
+   {
+      sfxCreateDevice("Null","Null Device", false, 8);
+      return true;
+   }
+   
    // Start it up!
    %maxBuffers = $pref::SFX::useHardware ? -1 : $pref::SFX::maxSoftwareBuffers;
    if ( !sfxCreateDevice( $pref::SFX::provider, $pref::SFX::device, $pref::SFX::useHardware, %maxBuffers ) )

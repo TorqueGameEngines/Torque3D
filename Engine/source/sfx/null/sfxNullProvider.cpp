@@ -77,7 +77,8 @@ SFXNullProvider::~SFXNullProvider()
 void SFXNullProvider::addDeviceDesc( const String& name, const String& desc )
 {
    SFXDeviceInfo* info = new SFXDeviceInfo;
-   info->name = desc;
+   info->internalName = desc;
+   info->name = "Null Device";
    info->driver = name;
    info->hasHardware = false;
    info->maxBuffers = 8;
@@ -91,7 +92,7 @@ SFXDevice* SFXNullProvider::createDevice( const String& deviceName, bool useHard
 
    // Do we find one to create?
    if ( info )
-      return new SFXNullDevice( this, info->name, useHardware, maxBuffers );
+      return new SFXNullDevice( this, info->internalName, useHardware, maxBuffers );
 
    return NULL;
 }

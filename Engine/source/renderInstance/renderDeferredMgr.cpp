@@ -593,6 +593,7 @@ void ProcessedDeferredMaterial::_determineFeatures( U32 stageNum,
                                                    MaterialFeatureData &fd,
                                                    const FeatureSet &features )
 {
+   if (GFX->getAdapterType() == NullDevice) return;
    Parent::_determineFeatures( stageNum, fd, features );
    if (fd.features.hasFeature(MFT_ForwardShading))
       return;

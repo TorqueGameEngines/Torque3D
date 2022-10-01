@@ -44,7 +44,7 @@ if(isFunction("loadStartup"))
 else
 {
    //If nothing else set a main menu, try to do so now
-   if(!isObject(Canvas.getContent()))
+   if(isObject(Canvas) && !isObject(Canvas.getContent()))
    {
       if (isObject( ProjectSettings.value("UI/mainMenuName") ))
          Canvas.setContent( ProjectSettings.value("UI/mainMenuName") );

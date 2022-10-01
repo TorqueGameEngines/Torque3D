@@ -87,8 +87,16 @@ GFXNullTextureObject::GFXNullTextureObject(GFXDevice * aDevice, GFXTextureProfil
 
 class GFXNullTextureManager : public GFXTextureManager
 {
+public:
+   GFXTextureObject* createTexture(GBitmap* bmp, const String& resourceName, GFXTextureProfile* profile, bool deleteBmp) { return nullptr; } // _createNullTextureObject();}
+   GFXTextureObject* createTexture(DDSFile* dds, GFXTextureProfile* profile, bool deleteDDS) { return nullptr; }
+   GFXTextureObject* createTexture(const Torque::Path& path, GFXTextureProfile* profile) { return nullptr; }
+   GFXTextureObject* createTexture(U32 width, U32 height, void* pixels, GFXFormat format, GFXTextureProfile* profile) { return nullptr; }
+   GFXTextureObject* createTexture(U32 width, U32 height, U32 depth, GFXFormat format, GFXTextureProfile* profile, U32 numMipLevels = 1) { return nullptr; }
+   GFXTextureObject* createTexture(U32 width, U32 height, GFXFormat format, GFXTextureProfile* profile, U32 numMipLevels, S32 antialiasLevel) { return nullptr; }
+   GFXTextureObject* createCompositeTexture(GBitmap* bmp[4], U32 inputKey[4], const String& resourceName, GFXTextureProfile* profile, bool deleteBmp) { return nullptr; }
 protected:
-      virtual GFXTextureObject *_createTextureObject( U32 height, 
+      GFXTextureObject *_createTextureObject( U32 height, 
                                                       U32 width, 
                                                       U32 depth, 
                                                       GFXFormat format, 

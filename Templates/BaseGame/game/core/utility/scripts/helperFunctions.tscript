@@ -499,18 +499,24 @@ function displayHelp()
    // (flushing the write buffer) after every write.
    // -log 2 overwrites any existing logfile; it also only closes
    // the logfile when the application shuts down.  (default)
-
-   error(
-      "Torque Demo command line options:\n"@
-      "  -log <logmode>         Logging behavior; see main." @ $TorqueScriptFileExtension @ " comments for details\n"@
-      "  -game <game_name>      Reset list of mods to only contain <game_name>\n"@
-      "  <game_name>            Works like the -game argument\n"@
-      "  -dir <dir_name>        Add <dir_name> to list of directories\n"@
-      "  -console               Open a separate console\n"@
-      "  -jSave  <file_name>    Record a journal\n"@
-      "  -jPlay  <file_name>    Play back a journal\n"@
-      "  -help                  Display this help message\n"
-   );
+   
+     %helpstring = "Torque Demo command line options:\n";
+     %helpstring =%helpstring @ "  -log <logmode>         Logging behavior; see main." @ $TorqueScriptFileExtension @ " comments for details\n";
+     %helpstring =%helpstring @ "  -game <game_name>      Reset list of mods to only contain <game_name>\n";
+     %helpstring =%helpstring @ "  <game_name>            Works like the -game argument\n";
+     %helpstring =%helpstring @ "  -dir <dir_name>        Add <dir_name> to list of directories\n";
+     %helpstring =%helpstring @ "  -console               Open a separate console\n";
+     %helpstring =%helpstring @ "  -jSave  <file_name>    Record a journal\n";
+     %helpstring =%helpstring @ "  -jPlay  <file_name>    Play back a journal\n";
+     %helpstring =%helpstring @ "  -help                  Display this help message\n";
+      
+   error(%helpstring);
+   
+   %file = new FileObject();
+   if(%file.openForWrite("help.txt"))
+      %file.writeLine(%helpstring);
+   %file.close();
+   %file.delete();
 }
 
 // Execute startup scripts for each mod, starting at base and working up

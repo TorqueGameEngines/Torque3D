@@ -358,8 +358,9 @@ bool ShapeAsset::loadShape()
       mLoadedState = BadFileReference;
       return false; //if it failed to load, bail out
    }
-
-   mShape->setupBillboardDetails(mFilePath, mDiffuseImposterPath, mNormalImposterPath);
+   // Construct billboards if not done already
+   if (GFXDevice::devicePresent())
+      mShape->setupBillboardDetails(mFilePath, mDiffuseImposterPath, mNormalImposterPath);
 
    //If they exist, grab our imposters here and bind them to our shapeAsset
 

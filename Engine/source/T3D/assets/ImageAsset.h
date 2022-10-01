@@ -48,6 +48,8 @@
 
 #include <string>
 #include "assetMacroHelpers.h"
+
+#include "gfx/gfxDevice.h"
 //-----------------------------------------------------------------------------
 class ImageAsset : public AssetBase
 {
@@ -250,7 +252,8 @@ public: \
       }\
       else if (!m##name)\
       {\
-         Con::errorf("%s(%s)::_set%s() - Couldn't load image \"%s\"", macroText(className), getName(), macroText(name), _in);\
+         if (GFX->getAdapterType() != NullDevice)\
+            Con::errorf("%s(%s)::_set%s() - Couldn't load image \"%s\"", macroText(className), getName(), macroText(name), _in);\
          return false;\
       }\
       return true;\
@@ -392,7 +395,8 @@ public: \
       }\
       else if (!m##name[index])\
       {\
-         Con::errorf("%s(%s)::_set%s(%i) - Couldn't load image \"%s\"", macroText(className), getName(), macroText(name), index, _in);\
+         if (GFX->getAdapterType() != NullDevice)\
+            Con::errorf("%s(%s)::_set%s(%i) - Couldn't load image \"%s\"", macroText(className), getName(), macroText(name), index, _in);\
          return false; \
       }\
       return true;\

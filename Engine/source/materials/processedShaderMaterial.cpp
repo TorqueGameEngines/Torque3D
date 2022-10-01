@@ -295,6 +295,7 @@ void ProcessedShaderMaterial::_determineFeatures(  U32 stageNum,
                                                    MaterialFeatureData &fd, 
                                                    const FeatureSet &features )
 {
+   if (GFX->getAdapterType() == NullDevice) return;
    PROFILE_SCOPE( ProcessedShaderMaterial_DetermineFeatures );
 
    const F32 shaderVersion = GFX->getPixelShaderVersion();

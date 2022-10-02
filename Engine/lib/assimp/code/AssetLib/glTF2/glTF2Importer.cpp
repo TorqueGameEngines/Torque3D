@@ -103,9 +103,7 @@ glTF2Importer::glTF2Importer() :
     // empty
 }
 
-glTF2Importer::~glTF2Importer() {
-    // empty
-}
+glTF2Importer::~glTF2Importer() = default;
 
 const aiImporterDesc *glTF2Importer::GetInfo() const {
     return &desc;
@@ -284,7 +282,7 @@ static aiMaterial *ImportMaterial(std::vector<int> &embeddedTexIdxs, Asset &r, M
         aimat->AddProperty(&alphaMode, AI_MATKEY_GLTF_ALPHAMODE);
         aimat->AddProperty(&mat.alphaCutoff, 1, AI_MATKEY_GLTF_ALPHACUTOFF);
 
-        //pbrSpecularGlossiness
+        // pbrSpecularGlossiness
         if (mat.pbrSpecularGlossiness.isPresent) {
             PbrSpecularGlossiness &pbrSG = mat.pbrSpecularGlossiness.value;
 
@@ -606,7 +604,10 @@ void glTF2Importer::ImportMeshes(glTF2::Asset &r) {
                         }
                     }
                     if (needTangents) {
-                        if (target.tangent[0]->count != aim->mNumVertices) {
+                        if (!aiAnimMesh.HasNormals()) {
+                            // prevent nullptr access to aiAnimMesh.mNormals below when no normals are available
+                            ASSIMP_LOG_WARN("Bitangents of target ", i, " in mesh \"", mesh.name, "\" can't be computed, because mesh has no normals.");
+                        } else if (target.tangent[0]->count != aim->mNumVertices) {
                             ASSIMP_LOG_WARN("Tangents of target ", i, " in mesh \"", mesh.name, "\" does not match the vertex count");
                         } else {
                             Tangent *tangent = nullptr;
@@ -698,12 +699,12 @@ void glTF2Importer::ImportMeshes(glTF2::Asset &r) {
                     nFaces = count - 2;
                     facePtr = faces = new aiFace[nFaces];
                     for (unsigned int i = 0; i < nFaces; ++i) {
-                        //The ordering is to ensure that the triangles are all drawn with the same orientation
+                        // The ordering is to ensure that the triangles are all drawn with the same orientation
                         if ((i + 1) % 2 == 0) {
-                            //For even n, vertices n + 1, n, and n + 2 define triangle n
+                            // For even n, vertices n + 1, n, and n + 2 define triangle n
                             SetFaceAndAdvance3(facePtr, aim->mNumVertices, data.GetUInt(i + 1), data.GetUInt(i), data.GetUInt(i + 2));
                         } else {
-                            //For odd n, vertices n, n+1, and n+2 define triangle n
+                            // For odd n, vertices n, n+1, and n+2 define triangle n
                             SetFaceAndAdvance3(facePtr, aim->mNumVertices, data.GetUInt(i), data.GetUInt(i + 1), data.GetUInt(i + 2));
                         }
                     }
@@ -776,12 +777,12 @@ void glTF2Importer::ImportMeshes(glTF2::Asset &r) {
                     nFaces = count - 2;
                     facePtr = faces = new aiFace[nFaces];
                     for (unsigned int i = 0; i < nFaces; ++i) {
-                        //The ordering is to ensure that the triangles are all drawn with the same orientation
+                        // The ordering is to ensure that the triangles are all drawn with the same orientation
                         if ((i + 1) % 2 == 0) {
-                            //For even n, vertices n + 1, n, and n + 2 define triangle n
+                            // For even n, vertices n + 1, n, and n + 2 define triangle n
                             SetFaceAndAdvance3(facePtr, aim->mNumVertices, i + 1, i, i + 2);
                         } else {
-                            //For odd n, vertices n, n+1, and n+2 define triangle n
+                            // For odd n, vertices n, n+1, and n+2 define triangle n
                             SetFaceAndAdvance3(facePtr, aim->mNumVertices, i, i + 1, i + 2);
                         }
                     }
@@ -904,14 +905,14 @@ void glTF2Importer::ImportLights(glTF2::Asset &r) {
             ail->mAttenuationLinear = 0.0;
             ail->mAttenuationQuadratic = 0.0;
         } else {
-            //in PBR attenuation is calculated using inverse square law which can be expressed
-            //using assimps equation: 1/(att0 + att1 * d + att2 * d*d) with the following parameters
-            //this is correct equation for the case when range (see
-            //https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_lights_punctual)
-            //is not present. When range is not present it is assumed that it is infinite and so numerator is 1.
-            //When range is present then numerator might be any value in range [0,1] and then assimps equation
-            //will not suffice. In this case range is added into metadata in ImportNode function
-            //and its up to implementation to read it when it wants to
+            // in PBR attenuation is calculated using inverse square law which can be expressed
+            // using assimps equation: 1/(att0 + att1 * d + att2 * d*d) with the following parameters
+            // this is correct equation for the case when range (see
+            // https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_lights_punctual)
+            // is not present. When range is not present it is assumed that it is infinite and so numerator is 1.
+            // When range is present then numerator might be any value in range [0,1] and then assimps equation
+            // will not suffice. In this case range is added into metadata in ImportNode function
+            // and its up to implementation to read it when it wants to
             ail->mAttenuationConstant = 0.0;
             ail->mAttenuationLinear = 0.0;
             ail->mAttenuationQuadratic = 1.0;
@@ -967,8 +968,10 @@ static void BuildVertexWeightMapping(Mesh::Primitive &primitive, std::vector<std
     struct Weights {
         float values[4];
     };
-    Weights *weights = nullptr;
-    attr.weight[0]->ExtractData(weights);
+    Weights **weights = new Weights*[attr.weight.size()];
+    for (size_t w = 0; w < attr.weight.size(); ++w) {
+        attr.weight[w]->ExtractData(weights[w]);
+    }
 
     struct Indices8 {
         uint8_t values[4];
@@ -976,12 +979,18 @@ static void BuildVertexWeightMapping(Mesh::Primitive &primitive, std::vector<std
     struct Indices16 {
         uint16_t values[4];
     };
-    Indices8 *indices8 = nullptr;
-    Indices16 *indices16 = nullptr;
+    Indices8 **indices8 = nullptr;
+    Indices16 **indices16 = nullptr;
     if (attr.joint[0]->GetElementSize() == 4) {
-        attr.joint[0]->ExtractData(indices8);
+        indices8 = new Indices8*[attr.joint.size()];
+        for (size_t j = 0; j < attr.joint.size(); ++j) {
+            attr.joint[j]->ExtractData(indices8[j]);
+        }
     } else {
-        attr.joint[0]->ExtractData(indices16);
+        indices16 = new Indices16 *[attr.joint.size()];
+        for (size_t j = 0; j < attr.joint.size(); ++j) {
+            attr.joint[j]->ExtractData(indices16[j]);
+        }
     }
     //
     if (nullptr == indices8 && nullptr == indices16) {
@@ -990,17 +999,26 @@ static void BuildVertexWeightMapping(Mesh::Primitive &primitive, std::vector<std
         return;
     }
 
-    for (size_t i = 0; i < num_vertices; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            const unsigned int bone = (indices8 != nullptr) ? indices8[i].values[j] : indices16[i].values[j];
-            const float weight = weights[i].values[j];
-            if (weight > 0 && bone < map.size()) {
-                map[bone].reserve(8);
-                map[bone].emplace_back(static_cast<unsigned int>(i), weight);
+    for (size_t w = 0; w < attr.weight.size(); ++w) {
+        for (size_t i = 0; i < num_vertices; ++i) {
+            for (int j = 0; j < 4; ++j) {
+                const unsigned int bone = (indices8 != nullptr) ? indices8[w][i].values[j] : indices16[w][i].values[j];
+                const float weight = weights[w][i].values[j];
+                if (weight > 0 && bone < map.size()) {
+                    map[bone].reserve(8);
+                    map[bone].emplace_back(static_cast<unsigned int>(i), weight);
+                }
             }
         }
     }
 
+    for (size_t w = 0; w < attr.weight.size(); ++w) {
+        delete[] weights[w];
+        if(indices8)
+            delete[] indices8[w];
+        if (indices16)
+            delete[] indices16[w];
+    }
     delete[] weights;
     delete[] indices8;
     delete[] indices16;
@@ -1161,8 +1179,8 @@ aiNode *ImportNode(aiScene *pScene, glTF2::Asset &r, std::vector<unsigned int> &
         if (node.light) {
             pScene->mLights[node.light.GetIndex()]->mName = ainode->mName;
 
-            //range is optional - see https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_lights_punctual
-            //it is added to meta data of parent node, because there is no other place to put it
+            // range is optional - see https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_lights_punctual
+            // it is added to meta data of parent node, because there is no other place to put it
             if (node.light->range.isPresent) {
                 if (!ainode->mMetaData) {
                     ainode->mMetaData = aiMetadata::Alloc(1);
@@ -1556,9 +1574,9 @@ void glTF2Importer::ImportEmbeddedTextures(glTF2::Asset &r) {
             if (ext) {
                 if (strcmp(ext, "jpeg") == 0) {
                     ext = "jpg";
-                } else if (strcmp(ext, "ktx2") == 0) { //basisu: ktx remains
+                } else if (strcmp(ext, "ktx2") == 0) { // basisu: ktx remains
                     ext = "kx2";
-                } else if (strcmp(ext, "basis") == 0) { //basisu
+                } else if (strcmp(ext, "basis") == 0) { // basisu
                     ext = "bu";
                 }
 

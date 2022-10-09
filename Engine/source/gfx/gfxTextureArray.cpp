@@ -131,11 +131,6 @@ void GFXTextureArray::setTexture(const GFXTexHandle& texture, U32 slot)
             AssertWarn(true, avar("GFXTextureArray::setTexture all textures should have at least the same number of mips: %i vs %i", texture->getMipLevels(), mMipLevels));
             Con::warnf(avar("GFXTextureArray::setTexture all textures should have at least the same number of mips: %i vs %i", texture->getMipLevels(), mMipLevels));
          }
-         else
-         {
-            AssertWarn(true, "GFXTextureArray::setTexture all textures should have the same format");
-            Con::warnf("GFXTextureArray::setTexture all textures should have the same format");
-         }
 
          GBitmap* inBitmap = TEXMGR->loadUncompressedTexture(texture->getPath(), &GFXTexturePersistentProfile, mWidth, mHeight);
          if (!inBitmap->setFormat(mFormat))

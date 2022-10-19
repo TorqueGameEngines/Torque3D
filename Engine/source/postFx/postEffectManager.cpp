@@ -129,7 +129,7 @@ void PostEffectManager::_onPostRenderPass( SceneManager *sceneGraph, const Scene
    renderEffects( sceneState, PFXAfterDiffuse );
 }
 
-GFXTextureObject* PostEffectManager::getBackBufferTex()
+GFXTextureObject* PostEffectManager::getBackBufferTex(bool asLinear)
 {
    GFXTarget *target = GFX->getActiveRenderTarget();
 
@@ -138,10 +138,10 @@ GFXTextureObject* PostEffectManager::getBackBufferTex()
    {
       const Point2I &targetSize = target->getSize();
       GFXFormat targetFormat = target->getFormat();
-
+      GFXTextureProfile* texProfile = asLinear ? &PostFxTextureSRGBProfile : &PostFxTextureProfile;
       mBackBufferCopyTex.set( targetSize.x, targetSize.y, 
                               targetFormat, 
-                              &PostFxTextureSRGBProfile, "mBackBufferCopyTex" );
+                              texProfile, "mBackBufferCopyTex" );
 
       target->resolveTo( mBackBufferCopyTex );
       mLastBackBufferTarget = target;

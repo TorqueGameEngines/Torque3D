@@ -103,59 +103,22 @@ singleton ShaderData( SMAA_Neighbor_H_Shader )
    pixVersion = 3.0;
 };
 
-singleton GFXStateBlockData( BBtoGamma_StateBlock )
-{
-   zDefined = true;
-   zEnable = false;
-   zWriteEnable = false;
-      
-   samplersDefined = true;
-   samplerStates[0] = SamplerClampLinear;
-};
-
-singleton ShaderData( BBtoGammaShader )
-{
-   DXVertexShaderFile 	= $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
-   DXPixelShaderFile 	= "./BBtoGamma.hlsl";   
-   OGLVertexShaderFile  = $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";
-   OGLPixelShaderFile   = "./gl/BBtoGamma.glsl";
-   
-   samplerNames[0] = "$backBuffer";
-   
-   pixVersion = 3.0;
-};
-
 singleton PostEffect( SMAAPostFX )
 {
    enabled = false;   
    allowReflectPass = false;
    renderTime = "PFXBeforeBin";
    renderBin = "EditorBin";
+   backBufferSRGB = false;
    texture[0] = "$backBuffer";
-   target = "#BBtoGamma";
-   renderPriority = 1; 
    targetClear = PFXTargetClear_OnDraw;
    targetClearColor = "0 0 0 0";
-   shader = BBtoGammaShader;
-   stateBlock = BBtoGamma_StateBlock;
+   texture[0] = "$backBuffer";
+   texture[1] = "#deferred";
+   target = "#edgesPass";
+   shader = SMAA_Edge_D_Shader;
+   stateBlock = SMAA_Edge_D_StateBlock;
    
-   singleton PostEffect()
-   {
-      enabled = false;
-   
-      allowReflectPass = false;
-      renderTime = "PFXAfterDiffuse";
-   
-      texture[0] = "#BBtoGamma";
-      texture[1] = "#deferred";
-
-      target = "#edgesPass";
-      targetClear = PFXTargetClear_OnDraw;
-      targetClearColor = "0 0 0 0";
-   
-      shader = SMAA_Edge_D_Shader;
-      stateBlock = SMAA_Edge_D_StateBlock;
-   }; 
    singleton PostEffect()
    {
       internalName = "Edge Pass";
@@ -177,7 +140,8 @@ singleton PostEffect( SMAAPostFX )
    {
       internalName = "BlendPass";
 	  
-      texture[0] = "#BBtoGamma";
+      backBufferSRGB = false;
+      texture[0] = "$backBuffer";
 	  texture[1] = "#blendPass";
 	  
 	  target = "$backBuffer";

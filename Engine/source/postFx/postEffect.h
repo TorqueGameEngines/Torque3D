@@ -94,7 +94,7 @@ protected:
    DECLARE_IMAGEASSET_ARRAY_SETGET(PostEffect, Texture);
 
    bool mTexSRGB[NumTextures];
-
+   bool mBackBufferSRGB;
    enum
    {
       NormalTextureType = 0,

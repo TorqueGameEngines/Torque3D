@@ -500,6 +500,7 @@ PostEffect::PostEffect()
       mMatScreenToCameraSC(NULL)
 {
    dMemset( mTexSRGB, 0, sizeof(bool) * NumTextures);
+   mBackBufferSRGB = true;
    dMemset( mActiveTextures, 0, sizeof( GFXTextureObject* ) * NumTextures );
    dMemset( mActiveNamedTarget, 0, sizeof( NamedTexTarget* ) * NumTextures );
    dMemset( mActiveTextureViewport, 0, sizeof( RectI ) * NumTextures );
@@ -558,6 +559,8 @@ void PostEffect::initPersistFields()
 
    addField("textureSRGB", TypeBool, Offset(mTexSRGB, PostEffect), NumTextures,
       "Set input texture to be sRGB");
+
+   addField("backBufferSRGB", TypeBool, Offset(mBackBufferSRGB, PostEffect), "Set backbuffer input texture to be sRGB");
 
    addField( "renderTime", TYPEID< PFXRenderTime >(), Offset( mRenderTime, PostEffect ),
       "When to process this effect during the frame." );
@@ -1148,7 +1151,7 @@ void PostEffect::_setupTexture( U32 stage, GFXTexHandle &inputTex, const RectI *
    }
    else if ( texFilename.compare( "$backBuffer", 0, String::NoCase ) == 0 )
    {
-      theTex = PFXMGR->getBackBufferTex();
+      theTex = PFXMGR->getBackBufferTex(mBackBufferSRGB);
 
       // Always use the GFX viewport when reading from the backbuffer
    }

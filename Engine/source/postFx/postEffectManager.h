@@ -110,7 +110,7 @@ public:
    /// Returns the current back buffer texture taking
    /// a copy of if the target has changed or the buffer
    /// was previously released.
-   GFXTextureObject* getBackBufferTex();
+   GFXTextureObject* getBackBufferTex(bool asLinear = false);
    
    /// Releases the current back buffer so that a
    /// new copy is made on the next request.

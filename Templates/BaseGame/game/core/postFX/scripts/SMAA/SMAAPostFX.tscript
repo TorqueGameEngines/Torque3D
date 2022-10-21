@@ -30,7 +30,7 @@ singleton GFXStateBlockData( SMAA_Edge_D_StateBlock : PFX_DefaultStateBlock )
    stencilEnable = true;
    stencilPassOp = GFXStencilOpReplace;
    stencilFunc = GFXCmpAlways;
-   stencilRef = 1;
+   stencilRef = 0;
 
    samplersDefined = true;   
    samplerStates[0] = SamplerClampLinear;
@@ -56,7 +56,7 @@ singleton GFXStateBlockData( SMAA_Blend_W_StateBlock : PFX_DefaultStateBlock )
    stencilEnable = true;
    stencilPassOp = GFXStencilOpKeep;
    stencilFunc = GFXCmpEqual;
-   stencilRef = 1;
+   stencilRef = 0;
 
    samplersDefined = true;   
    samplerStates[0] = SamplerClampLinear; 

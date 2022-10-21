@@ -129,16 +129,17 @@ void PostEffectManager::_onPostRenderPass( SceneManager *sceneGraph, const Scene
    renderEffects( sceneState, PFXAfterDiffuse );
 }
 
-GFXTextureObject* PostEffectManager::getBackBufferTex(bool asLinear)
+GFXTextureObject* PostEffectManager::getBackBufferTex(bool asSRGB)
 {
    GFXTarget *target = GFX->getActiveRenderTarget();
-
+   
    if (  mBackBufferCopyTex.isNull() ||
-         target != mLastBackBufferTarget )
+         target != mLastBackBufferTarget ||
+         mBackBufferCopyTex->mProfile->isSRGB() != asSRGB)
    {
       const Point2I &targetSize = target->getSize();
       GFXFormat targetFormat = target->getFormat();
-      GFXTextureProfile* texProfile = asLinear ? &PostFxTextureSRGBProfile : &PostFxTextureProfile;
+      GFXTextureProfile* texProfile = asSRGB ? &PostFxTextureSRGBProfile : &PostFxTextureProfile;
       mBackBufferCopyTex.set( targetSize.x, targetSize.y, 
                               targetFormat, 
                               texProfile, "mBackBufferCopyTex" );

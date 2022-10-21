@@ -38,6 +38,6 @@ struct v_NHBlend
 float4 main( v_NHBlend IN ) : TORQUE_TARGET0
 {   
     //return float4(TORQUE_TEX2D(blendTex, IN.uv0));
-   return toLinear(SMAANeighborhoodBlendingPS(IN.uv0, IN.offset, texture_sceneTex, texture_blendTex));
+   return SMAANeighborhoodBlendingPS(IN.uv0, IN.offset, texture_sceneTex, texture_blendTex);
 } 
 

@@ -113,7 +113,6 @@ singleton PostEffect( SMAAPostFX )
    texture[0] = "$backBuffer";
    targetClear = PFXTargetClear_OnDraw;
    targetClearColor = "0 0 0 0";
-   texture[0] = "$backBuffer";
    texture[1] = "#deferred";
    target = "#edgesPass";
    shader = SMAA_Edge_D_Shader;

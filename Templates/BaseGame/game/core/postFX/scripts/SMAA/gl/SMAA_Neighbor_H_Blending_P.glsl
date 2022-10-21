@@ -41,6 +41,6 @@ out vec4 OUT_col;
 void main() 
 {                                    
    //OUT_col =  vec4(texture(blendTex, uv0.xy));     
-  OUT_col= toLinear(SMAANeighborhoodBlendingPS(uv0, offset, sceneTex, blendTex));
+  OUT_col= SMAANeighborhoodBlendingPS(uv0, offset, sceneTex, blendTex);
 } 
 

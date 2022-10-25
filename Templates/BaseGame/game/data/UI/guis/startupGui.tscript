@@ -155,5 +155,8 @@ function StartupGui::onDone(%this)
          // We do have a bitmap so cycle to it
          %this.next();
       }
-   }
+   }   
+   
+   if ($startGUIEditor) fastLoadGUIEdit(1);
+   if ($startWorldEditor) fastLoadWorldEdit(1);
 }

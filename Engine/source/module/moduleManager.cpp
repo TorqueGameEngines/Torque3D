@@ -80,17 +80,25 @@ S32 QSORT_CALLBACK moduleDependencySort(const void* a, const void* b)
    ModuleDefinition* pDefinition1 = *(ModuleDefinition * *)a;
    ModuleDefinition* pDefinition2 = *(ModuleDefinition * *)b;
 
-   // Fetch version Ids.
+   // if A depends on B move A down the list
    ModuleDefinition::typeModuleDependencyVector moduleDependencies = pDefinition1->getDependencies();
-   bool foundDependant = false;
    for (ModuleDefinition::typeModuleDependencyVector::const_iterator dependencyItr = moduleDependencies.begin(); dependencyItr != moduleDependencies.end(); ++dependencyItr)
    {
       if (String::compare(dependencyItr->mModuleId, pDefinition2->getModuleId())
          && (dependencyItr->mVersionId == pDefinition2->getVersionId()))
-            foundDependant = true;
+         return -1;
    }
 
-   return foundDependant ? 1 : -1;
+   //If B depends on A, move A up the list
+   ModuleDefinition::typeModuleDependencyVector moduleDependencies2 = pDefinition2->getDependencies();
+   for (ModuleDefinition::typeModuleDependencyVector::const_iterator dependencyItr2 = moduleDependencies2.begin(); dependencyItr2 != moduleDependencies2.end(); ++dependencyItr2)
+   {
+      if (String::compare(dependencyItr2->mModuleId, pDefinition1->getModuleId())
+         && (dependencyItr2->mVersionId == pDefinition1->getVersionId()))
+         return 1;
+   }
+   //if neither depend on the other leave the order alone
+   return 0;
 }
 
 //-----------------------------------------------------------------------------

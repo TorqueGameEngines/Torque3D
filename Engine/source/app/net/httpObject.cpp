@@ -270,7 +270,7 @@ void HTTPObject::processLines()
       //Write to the output file
       FileStream *stream = new FileStream();
 
-      if (!stream->open(path, Torque::FS::File::Read)) {
+      if (!stream->open(path, Torque::FS::File::Write)) {
          Con::errorf("Could not download %s: error opening stream.");
          onDownloadFailed(path);
          return;
@@ -413,6 +413,7 @@ void HTTPObject::setDownloadPath(const std::string &path)
    char expanded[0x100];
    Con::expandScriptFilename(expanded, 0x100, path.c_str());
    mDownloadPath = std::string(expanded);
+   mDownload = true;
 }
 
 void HTTPObject::addHeader(const std::string &name, const std::string &value)

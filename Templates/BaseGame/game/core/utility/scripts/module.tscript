@@ -10,7 +10,7 @@ function callOnModules(%functionName, %moduleGroup, %var0, %var1, %var2, %var3, 
    %execArray = new ArrayObject("callOn" @ %functionName @ "_" @ %moduleGroup);
    ExecFilesList.push_back(%execArray);
    //Get our modules so we can exec any specific client-side loading/handling
-   %modulesList = ModuleDatabase.findModules(false);
+   %modulesList = ModuleDatabase.findModules();
    %modlist = "modlist:";
    for(%i=0; %i < getWordCount(%modulesList); %i++)
    {

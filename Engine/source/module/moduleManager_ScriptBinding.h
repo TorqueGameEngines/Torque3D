@@ -151,7 +151,7 @@ DefineEngineMethod(ModuleManager, findModuleByFilePath, String, (const char* fil
 
 //-----------------------------------------------------------------------------
 
-DefineEngineMethod(ModuleManager, findModules, String, (bool loadedOnly), (false),
+DefineEngineMethod(ModuleManager, findModules, String, (bool loadedOnly), (true),
    "Find all the modules registered with the specified loaded state.\n"
    "@param loadedOnly Whether to return only modules that are loaded or not.\n"
    "@return A list of space - separated module definition object Ids.\n")

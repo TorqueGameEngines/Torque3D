@@ -157,7 +157,7 @@ DefineEngineMethod(ModuleManager, findModules, String, (bool loadedOnly), (false
    "@return A list of space - separated module definition object Ids.\n")
 {
     // Find module type definitions.
-    Vector<const ModuleDefinition*> moduleDefinitions;
+    Vector<ModuleDefinition*> moduleDefinitions;
 
     // Find modules.
     object->findModules( loadedOnly, moduleDefinitions );

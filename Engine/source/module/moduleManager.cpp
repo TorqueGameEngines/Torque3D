@@ -74,23 +74,29 @@ S32 QSORT_CALLBACK moduleDefinitionVersionIdSort( const void* a, const void* b )
    return versionId1 > versionId2 ? -1 : versionId1 < versionId2 ? 1 : 0;
 }
 
-S32 QSORT_CALLBACK moduleDependencySort(const void* a, const void* b)
+S32 ModuleManager::moduleDependencySort(ModuleDefinition* const* a, ModuleDefinition* const* b)
 {
-   // Fetch module definitions.
-   ModuleDefinition* pDefinition1 = *(ModuleDefinition * *)a;
-   ModuleDefinition* pDefinition2 = *(ModuleDefinition * *)b;
-
-   // Fetch version Ids.
-   ModuleDefinition::typeModuleDependencyVector moduleDependencies = pDefinition1->getDependencies();
-   bool foundDependant = false;
+   // if A depends on B move A down the list
+   ModuleDefinition::typeModuleDependencyVector moduleDependencies = (*a)->getDependencies();
    for (ModuleDefinition::typeModuleDependencyVector::const_iterator dependencyItr = moduleDependencies.begin(); dependencyItr != moduleDependencies.end(); ++dependencyItr)
    {
-      if (String::compare(dependencyItr->mModuleId, pDefinition2->getModuleId())
-         && (dependencyItr->mVersionId == pDefinition2->getVersionId()))
-            foundDependant = true;
+      if ((String::compare(dependencyItr->mModuleId, (*b)->getModuleId()) == 0)
+         && (dependencyItr->mVersionId == (*b)->getVersionId()))
+         return 1;
    }
 
-   return foundDependant ? 1 : -1;
+   //If B depends on A, move A up the list
+   ModuleDefinition::typeModuleDependencyVector moduleDependencies2 = (*b)->getDependencies();
+   for (ModuleDefinition::typeModuleDependencyVector::const_iterator dependencyItr2 = moduleDependencies2.begin(); dependencyItr2 != moduleDependencies2.end(); ++dependencyItr2)
+   {
+      if ((String::compare(dependencyItr2->mModuleId, (*a)->getModuleId()) == 0)
+         && (dependencyItr2->mVersionId == (*a)->getVersionId()))
+         return -1;
+   }
+   //didn't find any explicit dependencies between the two, so sort by which has more
+   if (moduleDependencies.size() > moduleDependencies2.size()) return 1;
+   if (moduleDependencies.size() < moduleDependencies2.size()) return -1;
+   return 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -1066,39 +1072,49 @@ ModuleDefinition* ModuleManager::findLoadedModule( const char* pModuleId )
 
 //-----------------------------------------------------------------------------
 
-void ModuleManager::findModules( const bool loadedOnly, typeConstModuleDefinitionVector& moduleDefinitions )
+void ModuleManager::findModules(const bool loadedOnly, typeModuleDefinitionVector& moduleDefinitions)
 {
-    // Iterate module Ids.
-    for( typeModuleIdDatabaseHash::iterator moduleIdItr = mModuleIdDatabase.begin(); moduleIdItr != mModuleIdDatabase.end(); ++moduleIdItr )
-    {
-        // Fetch module definition entry.
-        ModuleDefinitionEntry* pModuleDefinitionEntry = moduleIdItr->value;
+   if (loadedOnly)
+   {
+      for (U32 i = 0; i < mModulesLoaded.size(); i++)
+      {
+         moduleDefinitions.push_back(mModulesLoaded[i].mpModuleDefinition);
+      }
+   }
+   else
+   {
+      // Iterate module Ids.
+      for (typeModuleIdDatabaseHash::iterator moduleIdItr = mModuleIdDatabase.begin(); moduleIdItr != mModuleIdDatabase.end(); ++moduleIdItr)
+      {
+         // Fetch module definition entry.
+         ModuleDefinitionEntry* pModuleDefinitionEntry = moduleIdItr->value;
 
-        // Iterate module definitions.
-        for ( typeModuleDefinitionVector::iterator moduleDefinitionItr = pModuleDefinitionEntry->begin(); moduleDefinitionItr != pModuleDefinitionEntry->end(); ++moduleDefinitionItr )
-        {
+         // Iterate module definitions.
+         for (typeModuleDefinitionVector::iterator moduleDefinitionItr = pModuleDefinitionEntry->begin(); moduleDefinitionItr != pModuleDefinitionEntry->end(); ++moduleDefinitionItr)
+         {
             // Fetch module definition.
             ModuleDefinition* pModuleDefinition = *moduleDefinitionItr;
 
             // Are we searching for loaded modules only?
-            if ( loadedOnly )
+            if (loadedOnly)
             {
-                // Yes, so skip if the module is not loaded.
-                if ( pModuleDefinition->getLoadCount() == 0 )
-                    continue;
+               // Yes, so skip if the module is not loaded.
+               if (pModuleDefinition->getLoadCount() == 0)
+                  continue;
 
-                // Use module definition.
-                moduleDefinitions.push_back( pModuleDefinition );
+               // Use module definition.
+               moduleDefinitions.push_back(pModuleDefinition);
 
-                // Finish iterating module definitions as only a single module in this entry can be loaded concurrently.
-                break;
+               // Finish iterating module definitions as only a single module in this entry can be loaded concurrently.
+               break;
             }
 
             // use module definition.
-            moduleDefinitions.push_back( pModuleDefinition );
-        }
-    }
-    dQsort(moduleDefinitions.address(), moduleDefinitions.size(), sizeof(ModuleDefinition*), moduleDependencySort);
+            moduleDefinitions.push_back(pModuleDefinition);
+         }
+      }
+      moduleDefinitions.sort(&moduleDependencySort);
+   }
 }
 
 //-----------------------------------------------------------------------------
@@ -1571,7 +1587,7 @@ bool ModuleManager::synchronizeDependencies( ModuleDefinition* pRootModuleDefini
     }
 
     // Find any target modules left, These are orphaned modules not depended upon by any other module.
-    typeConstModuleDefinitionVector orphanedTargetModules;
+    typeModuleDefinitionVector orphanedTargetModules;
     targetModuleManager.findModules( false, orphanedTargetModules );
 
     // Iterate module definitions.
@@ -1619,7 +1635,7 @@ bool ModuleManager::canMergeModules( const char* pMergeSourcePath )
     mergeModuleManager.scanModules( pMergeSourcePath );
 
     // Find all the merge modules.
-    typeConstModuleDefinitionVector mergeModules;
+    typeModuleDefinitionVector mergeModules;
     mergeModuleManager.findModules( false, mergeModules );
 
     // Iterate found merge module definitions.
@@ -1708,7 +1724,7 @@ bool ModuleManager::mergeModules( const char* pMergeTargetPath, const bool remov
     sourceModuleManager.scanModules( mergeSourcePath );
 
     // Find all the source modules.
-    typeConstModuleDefinitionVector sourceModules;
+    typeModuleDefinitionVector sourceModules;
     sourceModuleManager.findModules( false, sourceModules );
 
     // Iterate found merge module definitions.

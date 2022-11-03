@@ -305,10 +305,10 @@ void TerrainBaseMapFeatHLSL::processVert(Vector<ShaderComponent*>& componentList
    {
       Var* inNormal = (Var*)LangElement::find("normal");
       meta->addStatement( 
-         new GenOp("   @.z = clamp(abs( dot( normalize( float3( @.x, @.y, 0 ) ), float3( 0, 1, 0 ) ) ), 0.0, 1.0);\r\n",
+         new GenOp("   @.z = dot( normalize( float3( @.x, @.y, 0 ) ), float3( 0, 1, 0 ) );\r\n",
             outTex, inNormal, inNormal));
       meta->addStatement(
-         new GenOp("   @.w = 1.0 - abs( dot( normalize( @.xyz ), float3( 0, 0, 1 ) ) );\r\n",
+         new GenOp("   @.w = 1.0 - dot( normalize( @.xyz ), float3( 0, 0, 1 ) );\r\n",
             outTex, inNormal));
    }
    else
@@ -418,8 +418,8 @@ void TerrainDetailMapFeatHLSL::processVert(  Vector<ShaderComponent*> &component
 
    // Grab incoming texture coords... the base map feature
    // made sure this was created.
-   Var *inTex = (Var*)LangElement::find( "texCoord" );
-   AssertFatal( inTex, "The texture coord is missing!" );
+   Var * inTexCoord = (Var*)LangElement::find( "texCoord" );
+   AssertFatal(inTexCoord, "The texture coord is missing!" );
 
    // Grab the input position.
    Var *inPos = (Var*)LangElement::find( "inPosition" );
@@ -465,10 +465,10 @@ void TerrainDetailMapFeatHLSL::processVert(  Vector<ShaderComponent*> &component
 
    // grab connector texcoord register
    ShaderConnector *connectComp = dynamic_cast<ShaderConnector *>( componentList[C_CONNECTOR] );
-   Var *outTex = connectComp->getElement( RT_TEXCOORD );
-   outTex->setName( String::ToString( "detCoord%d", detailIndex ) );
-   outTex->setStructName( "OUT" );
-   outTex->setType( "float4" );
+   Var * detCoord = connectComp->getElement( RT_TEXCOORD );
+   detCoord->setName( String::ToString( "detCoord%d", detailIndex ) );
+   detCoord->setStructName( "OUT" );
+   detCoord->setType( "float4" );
 
    // Get the detail scale and fade info.
    Var* detScaleAndFade = (Var*)LangElement::find("detailScaleAndFade");
@@ -492,11 +492,11 @@ void TerrainDetailMapFeatHLSL::processVert(  Vector<ShaderComponent*> &component
    //
    // See TerrainBaseMapFeatHLSL::processVert().
    //
-   meta->addStatement( new GenOp( "   @.xyz = @ * @.xyx;\r\n", outTex, inTex, new IndexOp(detScaleAndFade, detailIndex) ) );
+   meta->addStatement( new GenOp( "   @.xyz = @ * @.xyx;\r\n", detCoord, inTexCoord, new IndexOp(detScaleAndFade, detailIndex) ) );
 
    // And sneak the detail fade thru the w detailCoord.
-   meta->addStatement(new GenOp("   @.w = clamp( ( @.z - @ ) * @.w, 0.0, 1.0 );\r\n",
-      outTex, new IndexOp(detScaleAndFade, detailIndex), dist, new IndexOp(detScaleAndFade, detailIndex)));
+   meta->addStatement(new GenOp("   @.w = ( @.z - @ ) * @.w;\r\n",
+      detCoord, new IndexOp(detScaleAndFade, detailIndex), dist, new IndexOp(detScaleAndFade, detailIndex)));
 
    output = meta;
 }
@@ -505,7 +505,7 @@ void TerrainDetailMapFeatHLSL::processPix(   Vector<ShaderComponent*> &component
                                              const MaterialFeatureData &fd )
 {
    const S32 detailIndex = getProcessIndex();
-   Var *inTex = getVertTexCoord( "texCoord" );
+   Var *inTexCoord = getVertTexCoord( "texCoord" );
    
    MultiLine *meta = new MultiLine;
 
@@ -553,7 +553,7 @@ void TerrainDetailMapFeatHLSL::processPix(   Vector<ShaderComponent*> &component
       layerTexObj->constNum = layerTex->constNum;
       // Read the layer texture to get the samples.
       meta->addStatement(new GenOp("   @ = round( @.Sample( @, @.xy ) * 255.0f );\r\n",
-         new DecOp(layerSample), layerTexObj, layerTex, inTex));
+         new DecOp(layerSample), layerTexObj, layerTex, inTexCoord));
    }
 
    Var *layerSize = (Var*)LangElement::find( "layerSize" );
@@ -567,7 +567,7 @@ void TerrainDetailMapFeatHLSL::processPix(   Vector<ShaderComponent*> &component
    }
 
    // Grab the incoming detail coord.
-   Var *inDet = _getInDetailCoord( componentList );
+   Var * detCoord = _getInDetailCoord( componentList );
 
    // Get the detail id.
    Var *detailInfo = _getDetailIdStrengthParallax();
@@ -579,7 +579,7 @@ void TerrainDetailMapFeatHLSL::processPix(   Vector<ShaderComponent*> &component
 
    // Calculate the blend for this detail texture.
    meta->addStatement( new GenOp( "   @ = calcBlend( @.x, @.xy, @, @ );\r\n", 
-                                    new DecOp( detailBlend ), new IndexOp(detailInfo, detailIndex), inTex, layerSize, layerSample ) );
+                                    new DecOp( detailBlend ), new IndexOp(detailInfo, detailIndex), inTexCoord, layerSize, layerSample ) );
 
    // If we had a parallax feature... then factor in the parallax
    // amount so that it fades out with the layer blending.
@@ -592,12 +592,12 @@ void TerrainDetailMapFeatHLSL::processPix(   Vector<ShaderComponent*> &component
       if (fd.features.hasFeature(MFT_IsBC3nm, detailIndex))
       {
          meta->addStatement(new GenOp("   @.xy += parallaxOffsetDxtnmTexArray( @, @, float3(@.xy, @.x), @, @.z * @ );\r\n",
-            inDet, normalMapArray, normalMapSampler, inDet, new IndexOp(detailInfo, detailIndex), negViewTS, new IndexOp(detailInfo, detailIndex), detailBlend));
+            detCoord, normalMapArray, normalMapSampler, detCoord, new IndexOp(detailInfo, detailIndex), negViewTS, new IndexOp(detailInfo, detailIndex), detailBlend));
       }
       else
       {
          meta->addStatement(new GenOp("   @.xy += parallaxOffsetTexArray( @, @, float3(@.xy, @.x), @, @.z * @ );\r\n",
-            inDet, normalMapArray, normalMapSampler, inDet, new IndexOp(detailInfo, detailIndex), negViewTS, new IndexOp(detailInfo, detailIndex), detailBlend));
+            detCoord, normalMapArray, normalMapSampler, detCoord, new IndexOp(detailInfo, detailIndex), negViewTS, new IndexOp(detailInfo, detailIndex), detailBlend));
       }
      
    }
@@ -619,19 +619,18 @@ void TerrainDetailMapFeatHLSL::processPix(   Vector<ShaderComponent*> &component
    {
       meta->addStatement(new GenOp("   @ = ( lerp( @.Sample( @, float3(@.xy, @.x) ), lerp( @.Sample( @, float3(@.yz, @.x) ), @.Sample( @, float3(@.xz, @.x) ), @.z ), @.w) * 2.0 ) - 1.0;\r\n",
          detailColor,
-         detailMapArray, detailMapSampler, inDet, new IndexOp(detailInfo, detailIndex),
-         detailMapArray, detailMapSampler, inDet, new IndexOp(detailInfo, detailIndex),
-         detailMapArray, detailMapSampler, inDet, new IndexOp(detailInfo, detailIndex),
-         inTex, inTex));
+         detailMapArray, detailMapSampler, detCoord, new IndexOp(detailInfo, detailIndex),
+         detailMapArray, detailMapSampler, detCoord, new IndexOp(detailInfo, detailIndex),
+         detailMapArray, detailMapSampler, detCoord, new IndexOp(detailInfo, detailIndex),
+         inTexCoord, inTexCoord));
    }
    else
    {
       meta->addStatement(new GenOp("   @ = ( @.Sample( @, float3(@.xy, @.x) ) * 2.0 ) - 1.0;\r\n",
-         detailColor, detailMapArray, detailMapSampler, inDet, new IndexOp(detailInfo, detailIndex)));
+         detailColor, detailMapArray, detailMapSampler, detCoord, new IndexOp(detailInfo, detailIndex)));
    }
 
-   meta->addStatement(new GenOp("   @ *= @.y * @.w;\r\n",
-      detailColor, new IndexOp(detailInfo, detailIndex), inDet));
+   meta->addStatement(new GenOp("   @ *= @.y * @;\r\n", detailColor, new IndexOp(detailInfo, detailIndex), detailBlend));
 
    if (!fd.features.hasFeature(MFT_TerrainNormalMap))
    {
@@ -647,32 +646,14 @@ void TerrainDetailMapFeatHLSL::processPix(   Vector<ShaderComponent*> &component
       {
          Var* viewToTangent = getInViewToTangent(componentList);
 
-         meta->addStatement(new GenOp("   @ = lerp( @, @[2], min( @, @.w ) );\r\n",
-            gbNormal, gbNormal, viewToTangent, detailBlend, inDet));
+         meta->addStatement(new GenOp("   @ = lerp( @, @[2], @ );\r\n", gbNormal, gbNormal, viewToTangent, detailBlend));
       }
 
-      // If we're using SM 3.0 then take advantage of 
-      // dynamic branching to skip layers per-pixel.
-      if (GFX->getPixelShaderVersion() >= 3.0f)
-         meta->addStatement(new GenOp("   if ( @ > 0.0f )\r\n", detailBlend));
-
-      meta->addStatement(new GenOp("   {\r\n"));
-
-      ShaderFeature::OutputTarget target = ShaderFeature::DefaultTarget;
-
-      if (fd.features.hasFeature(MFT_isDeferred))
-         target = ShaderFeature::RenderTarget1;
+      ShaderFeature::OutputTarget target = (fd.features[MFT_isDeferred]) ? RenderTarget1 : DefaultTarget;
 
       Var* outColor = (Var*)LangElement::find(getOutputTargetVarName(target));
 
-      meta->addStatement(new GenOp("      @.rgb = toGamma(@.rgb);\r\n", outColor, outColor));
-
-      meta->addStatement(new GenOp("      @ += @ * @;\r\n",
-         outColor, detailColor, detailBlend));
-
-      meta->addStatement(new GenOp("      @.rgb = toLinear(clamp(@.rgb, 0, 1));\r\n", outColor, outColor));
-
-      meta->addStatement(new GenOp("   }\r\n"));
+      meta->addStatement(new GenOp("      @ += @ * @;\r\n", outColor, detailColor, detailBlend));
    }
 
    output = meta;
@@ -769,7 +750,7 @@ void TerrainMacroMapFeatHLSL::processVert(  Vector<ShaderComponent*> &componentL
    meta->addStatement( new GenOp( "   @.xyz = @ * @.xyx;\r\n", outTex, inTex, new IndexOp(macroScaleAndFade, detailIndex)) );
 
    // And sneak the detail fade thru the w detailCoord.
-   meta->addStatement( new GenOp( "   @.w = clamp( ( @.z - @ ) * @.w, 0.0, 1.0 );\r\n", 
+   meta->addStatement( new GenOp( "   @.w = ( @.z - @ ) * @.w;\r\n", 
                                     outTex, new IndexOp(macroScaleAndFade, detailIndex), dist, new IndexOp(macroScaleAndFade, detailIndex)) );
 
    output = meta;
@@ -916,19 +897,12 @@ void TerrainMacroMapFeatHLSL::processPix(   Vector<ShaderComponent*> &componentL
    meta->addStatement( new GenOp( "   @ *= @.y * @.w;\r\n",
                                     detailColor, new IndexOp(detailInfo, detailIndex), inDet ) );
 
-   ShaderFeature::OutputTarget target = ShaderFeature::DefaultTarget;
-
-   if (fd.features.hasFeature(MFT_isDeferred))
-      target= ShaderFeature::RenderTarget1;
+   ShaderFeature::OutputTarget target = (fd.features[MFT_isDeferred]) ? RenderTarget1 : DefaultTarget;
 
    Var *outColor = (Var*)LangElement::find( getOutputTargetVarName(target) );
 
-   meta->addStatement(new GenOp("      @.rgb = toGamma(@.rgb);\r\n", outColor, outColor));
-
    meta->addStatement(new GenOp("      @ += @ * @;\r\n",
                                     outColor, detailColor, detailBlend));
-
-   meta->addStatement(new GenOp("      @.rgb = toLinear(clamp(@.rgb, 0, 1));\r\n", outColor, outColor));
 
    meta->addStatement( new GenOp( "   }\r\n" ) );
 
@@ -1321,11 +1295,7 @@ void TerrainHeightMapBlendHLSL::processVert(Vector<ShaderComponent*>& componentL
 void TerrainHeightMapBlendHLSL::processPix(Vector<ShaderComponent*>& componentList,
    const MaterialFeatureData& fd)
 {
-
-   ShaderFeature::OutputTarget target = ShaderFeature::DefaultTarget;
-
-   if (fd.features.hasFeature(MFT_isDeferred))
-      target = ShaderFeature::RenderTarget1;
+   ShaderFeature::OutputTarget target = (fd.features[MFT_isDeferred]) ? RenderTarget1 : DefaultTarget;
 
    Var* outColor = (Var*)LangElement::find(getOutputTargetVarName(target));
 
@@ -1334,18 +1304,11 @@ void TerrainHeightMapBlendHLSL::processPix(Vector<ShaderComponent*>& componentLi
 
    MultiLine* meta = new MultiLine;
 
-   Var* detailTot = (Var*)LangElement::find("detailTot");
-   if (detailTot == NULL)
-   {
-      detailTot = new Var("detailTot","float");
-      meta->addStatement(new GenOp("@=0;\r\n", new DecOp(detailTot)));
-   }
-
    // Count number of detail layers
    int detailCount = 0;
    while (true)
    {
-      if(LangElement::find(String::ToString("detailBlend%d", detailCount)) == NULL)
+      if (LangElement::find(String::ToString("detailBlend%d", detailCount)) == NULL)
       {
          break;
       }
@@ -1353,15 +1316,26 @@ void TerrainHeightMapBlendHLSL::processPix(Vector<ShaderComponent*>& componentLi
       ++detailCount;
    }
 
-   if ( detailCount == 0 )
+   if (detailCount == 0)
    {
       return;
    }
 
+   Var* depth = (Var*)LangElement::find("baseBlendDepth");
+   if (depth == NULL)
+   {
+      depth = new Var;
+      depth->setType("float");
+      depth->setName("baseBlendDepth");
+      depth->uniform = true;
+      depth->constSortPos = cspPrimitive;
+   }
+
+   Var* heightRange = new Var("heightRange", "float2");
+   meta->addStatement(new GenOp("   @ = float2(2.0f,0);//x=min, y=max\r\n", new DecOp(heightRange)));
    // Compute blend factors
    for (S32 idx = 0; idx < detailCount; ++idx)
    {
-      Var* detailBlend = (Var*)LangElement::find(String::ToString("detailBlend%d", idx));
       Var* bumpNormal = (Var*)LangElement::find(String::ToString("bumpNormal%d", idx));
       Var* blendDepth = (Var*)LangElement::find(String::ToString("blendDepth%d", idx));
       if (!blendDepth)
@@ -1382,134 +1356,78 @@ void TerrainHeightMapBlendHLSL::processPix(Vector<ShaderComponent*>& componentLi
          blendContrast->uniform = true;
          blendContrast->constSortPos = cspPrimitive;
       }
-
       Var* detailH = (Var*)LangElement::find(String::ToString("detailH%d", idx));
+      Var* detailBlend = (Var*)LangElement::find(String::ToString("detailBlend%d", idx));
       if (!detailH)
       {
          detailH = new Var;
          detailH->setType("float");
          detailH->setName(String::ToString("detailH%d", idx));
 
-         meta->addStatement(new GenOp("   @ = 0;\r\n",
-            new DecOp(detailH)));
-         meta->addStatement(new GenOp("   if (@ > 0.0f) {\r\n", detailBlend));
+         meta->addStatement(new GenOp("   @ = @+@;\r\n", new DecOp(detailH), blendDepth, depth));
          if (bumpNormal != NULL)
          {
-            meta->addStatement(new GenOp("      @ = clamp(@.a + @, 0.0, 1.0);\r\n",
-               detailH, bumpNormal, blendDepth));
+            meta->addStatement(new GenOp("   @ += @.a * @;\r\n", detailH, bumpNormal, blendContrast));
          }
-         else
-         {
-            meta->addStatement(new GenOp("      @ = clamp(@, 0.0, 1.0);\r\n",
-               detailH, blendDepth));
-         }
-
-         meta->addStatement(new GenOp("      @ = max((@ * 2.0f - 1.0f) * @, 0.0f);\r\n",
-            detailH, detailH, blendContrast));
-
-         meta->addStatement(new GenOp("   }\r\n"));
+         meta->addStatement(new GenOp("   @ *= @;\r\n", detailH, detailBlend));
+         meta->addStatement(new GenOp("   @ = float2(min(@.x,@),max(@.y,@));\r\n", heightRange, heightRange, detailH, heightRange, detailH));
       }
    }
 
    meta->addStatement(new GenOp("\r\n"));
-
-   Var* depth = (Var*)LangElement::find("baseBlendDepth");
-   if (depth == NULL)
+   if (detailCount > 1)
    {
-      depth = new Var;
-      depth->setType("float");
-      depth->setName("baseBlendDepth");
-      depth->uniform = true;
-      depth->constSortPos = cspPrimitive;
-   }
-
-   Var* ma = (Var*)LangElement::find("ma");
-   if (ma == NULL)
-   {
-      ma = new Var;
-      ma->setType("float");
-      ma->setName("ma");
-      meta->addStatement(new GenOp("   @ = 0;\r\n",
-         new DecOp(ma)));
-   }
-
-   for (S32 idx = 0; idx < detailCount; ++idx)
-   {
-      Var* detailH = (Var*)LangElement::find(String::ToString("detailH%d", idx));
-      Var* detailBlend = (Var*)LangElement::find(String::ToString("detailBlend%d", idx));
-
-      meta->addStatement(new GenOp("   @ = max(@, @ + @);\r\n",
-         ma, ma, detailH, detailBlend));
-   }
-
-   meta->addStatement(new GenOp("   @ -= @;\r\n",
-      ma, depth));
-
-   meta->addStatement(new GenOp("\r\n"));
-
-   for (S32 idx = 0; idx < detailCount; ++idx)
-   {
-      Var* detailH = (Var*)LangElement::find(String::ToString("detailH%d", idx));
-      Var* detailBlend = (Var*)LangElement::find(String::ToString("detailBlend%d", idx));
-      Var* detailB = (Var*)LangElement::find(String::ToString("detailB%d", idx));
-      if (!detailB)
+      for (S32 idx = 0; idx < detailCount; ++idx)
       {
-         detailB = new Var;
-         detailB->setType("float");
-         detailB->setName(String::ToString("detailB%d", idx));
-
-         meta->addStatement(new GenOp("   @ = max(@ + @ - @, 0);\r\n",
-            new DecOp(detailB), detailH, detailBlend, ma));
+         Var* detailBlend = (Var*)LangElement::find(String::ToString("detailBlend%d", idx));
+         Var* detailH = (Var*)LangElement::find(String::ToString("detailH%d", idx));
+         meta->addStatement(new GenOp("   @ = (@-@.x)/(@.y-@.x);\r\n", detailH, detailH, heightRange, heightRange, heightRange));
       }
-      meta->addStatement(new GenOp("   @ += @;\r\n", detailTot, detailB));
+      meta->addStatement(new GenOp("\r\n"));
+   }
+   else
+   {
+      for (S32 idx = 0; idx < detailCount; ++idx)
+      {
+         Var* detailH = (Var*)LangElement::find(String::ToString("detailH%d", idx));
+         meta->addStatement(new GenOp("   @ = 1.0;\r\n", detailH));
+      }
    }
 
-   meta->addStatement(new GenOp("\r\n"));
-
-   // Compute albedo
-   meta->addStatement(new GenOp("   @.rgb = toGamma(@.rgb);\r\n",
-      outColor, outColor));
-
-   meta->addStatement(new GenOp("   @.rgb += (",
-      outColor));
+   meta->addStatement(new GenOp("   @.rgb += (", outColor));
 
    for (S32 idx = 0; idx < detailCount; ++idx)
    {
       Var* detailColor = (Var*)LangElement::find(String::ToString("detailColor%d", idx));
-      Var* detailB = (Var*)LangElement::find(String::ToString("detailB%d", idx));
-
+      Var* detailH = (Var*)LangElement::find(String::ToString("detailH%d", idx));
+      Var* detCoord = (Var*)LangElement::find(String::ToString("detCoord%d", idx));
 
       if (idx > 0)
       {
          meta->addStatement(new GenOp(" + "));
       }
 
-      meta->addStatement(new GenOp("@.rgb * @", detailColor, detailB));
+      meta->addStatement(new GenOp("((@.rgb * @)*max(@.w,0))", detailColor, detailH, detCoord));
    }
 
-   meta->addStatement(new GenOp(") / @;\r\n", detailTot));
-   meta->addStatement(new GenOp("   @.rgb = toLinear(clamp(@.rgb, 0, 1));\r\n",
-      outColor, outColor));
-
-   meta->addStatement(new GenOp("\r\n"));
+   meta->addStatement(new GenOp(");\r\n"));
 
    // Compute ORM
    Var* ormOutput;
-   OutputTarget targ = DefaultTarget;
    if (fd.features[MFT_isDeferred])
    {
-      targ = RenderTarget2;
+      ormOutput = (Var*)LangElement::find(getOutputTargetVarName(RenderTarget2));
    }
-   ormOutput = (Var*)LangElement::find(getOutputTargetVarName(targ));
-
-   meta->addStatement(new GenOp("   @.gba = (",
-      ormOutput));
+   else
+   {
+      ormOutput = (Var*)LangElement::find("ORMConfig");
+   }
+   meta->addStatement(new GenOp("   @.gba = (", ormOutput));
 
    for (S32 idx = 0; idx < detailCount; ++idx)
    {
       Var* matinfoCol = (Var*)LangElement::find(String::ToString("matinfoCol%d", idx));
-      Var* detailB = (Var*)LangElement::find(String::ToString("detailB%d", idx));
-
+      Var* detailH = (Var*)LangElement::find(String::ToString("detailH%d", idx));
 
       if (idx > 0)
       {
@@ -1517,104 +1435,42 @@ void TerrainHeightMapBlendHLSL::processPix(Vector<ShaderComponent*>& componentLi
       }
       if (matinfoCol)
       {
-         meta->addStatement(new GenOp("@ * @", matinfoCol, detailB));
+         meta->addStatement(new GenOp("(@ * @)", matinfoCol, detailH));
       }
       else
       {
-         meta->addStatement(new GenOp("float3(1.0, 1.0, 0.0) * @", detailB));
+         meta->addStatement(new GenOp("(float3(1.0, 1.0, 0.0) * @)", detailH));
       }
    }
 
-   meta->addStatement(new GenOp(") / @;\r\n", detailTot));
+   meta->addStatement(new GenOp(");\r\n"));
 
-   meta->addStatement(new GenOp("\r\n"));
+    // Compute normals
+   Var* viewToTangent = getInViewToTangent(componentList);
+   Var* bumpSum = new Var("bumpNorm", "float3");
 
-   // Compute normal-specific blending factors
-   // LukasPJ: I'm not sure why this is necessary, it might not be.
-   Var* normalMa = (Var*)LangElement::find("normalMa");
-   if (normalMa == NULL)
-   {
-      normalMa = new Var;
-      normalMa->setType("float");
-      normalMa->setName("normalMa");
-      meta->addStatement(new GenOp("   @ = 0;\r\n",
-         new DecOp(normalMa)));
-   }
-
+   meta->addStatement(new GenOp("   @ = float3(0, 0, 1)", new DecOp(bumpSum)));
    for (S32 idx = 0; idx < detailCount; ++idx)
    {
-      Var* detCoord = (Var*)LangElement::find(String::ToString("detCoord%d", idx));
-
       Var* detailH = (Var*)LangElement::find(String::ToString("detailH%d", idx));
-      Var* detailBlend = (Var*)LangElement::find(String::ToString("detailBlend%d", idx));
-
-      meta->addStatement(new GenOp("   @ = max(@, @ + min(@, @.w));\r\n",
-         normalMa, normalMa, detailH, detailBlend, detCoord));
-   }
-
-   meta->addStatement(new GenOp("   @ -= @;\r\n",
-      normalMa, depth));
-
-   meta->addStatement(new GenOp("\r\n"));
-
-   for (S32 idx = 0; idx < detailCount; ++idx)
-   {
+      Var* bumpNormal = (Var*)LangElement::find(String::ToString("bumpNormal%d", idx));
       Var* detCoord = (Var*)LangElement::find(String::ToString("detCoord%d", idx));
-
-      Var* detailH = (Var*)LangElement::find(String::ToString("detailH%d", idx));
-      Var* detailBlend = (Var*)LangElement::find(String::ToString("detailBlend%d", idx));
-      Var* normalDetailB = (Var*)LangElement::find(String::ToString("normalDetailB%d", idx));
-      if (!normalDetailB)
+      if (bumpNormal != NULL)
       {
-         normalDetailB = new Var;
-         normalDetailB->setType("float");
-         normalDetailB->setName(String::ToString("normalDetailB%d", idx));
-
-         meta->addStatement(new GenOp("   @ = max(@ + min(@, @.w) - @, 0);\r\n",
-            new DecOp(normalDetailB), detailH, detailBlend, detCoord, normalMa));
+         meta->addStatement(new GenOp("+(@.xyz * @*max(@.w,0))", bumpNormal, detailH, detCoord));
       }
+         
    }
+   meta->addStatement(new GenOp(";\r\n"));
 
-   // Compute normals
    Var* gbNormal = (Var*)LangElement::find("gbNormal");
    if (!gbNormal)
    {
-      gbNormal = new Var;
-      gbNormal->setName("gbNormal");
-      gbNormal->setType("float3");
-      meta->addStatement(new GenOp("   @;\r\n", new DecOp(gbNormal)));
+      gbNormal = new Var("gbNormal","float3");
+      meta->addStatement(new GenOp("   @ = ", new DecOp(gbNormal)));
    }
-
-   if (gbNormal != NULL)
-   {
-      meta->addStatement(new GenOp("   @ = (",
-         gbNormal));
-
-      for (S32 idx = 0; idx < detailCount; ++idx)
-      {
-         Var* normalDetailB = (Var*)LangElement::find(String::ToString("normalDetailB%d", idx));
-         Var* bumpNormal = (Var*)LangElement::find(String::ToString("bumpNormal%d", idx));
-         Var* viewToTangent = getInViewToTangent(componentList);
-
-
-         if (idx > 0)
-         {
-            meta->addStatement(new GenOp(" + "));
-         }
-
-         if (bumpNormal != NULL)
-         {
-            meta->addStatement(new GenOp("mul(@.xyz, @) * @", bumpNormal, viewToTangent, normalDetailB));
-         }
-         else
-         {
-            meta->addStatement(new GenOp("@[2] * @", viewToTangent, normalDetailB));
-         }
-      }
-
-      meta->addStatement(new GenOp(") / @;\r\n", detailTot));
-   }
-
-
+   else
+      meta->addStatement(new GenOp("   @ = ", gbNormal));
+   meta->addStatement(new GenOp("mul(normalize(@),@);\r\n", bumpSum, viewToTangent));
    output = meta;
 }

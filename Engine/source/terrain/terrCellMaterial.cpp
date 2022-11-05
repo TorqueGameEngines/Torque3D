@@ -374,43 +374,36 @@ bool TerrainCellMaterial::_initShader(bool deferredMat,
 
          // We only include materials that 
          // have more than a base texture.
-         if (mat->getDetailSize() <= 0 ||
-            mat->getDetailDistance() <= 0 ||
-            mat->getDetailMap() == StringTable->EmptyString())
+         if (!(mat->DetailMapValid() && mat->getDetailSize() > 0 && mat->getDetailDistance()>0))
             continue;
-
-         // check for macro detail texture
-         if (!(mat->getMacroSize() <= 0 || mat->getMacroDistance() <= 0 || mat->getMacroMap() == StringTable->EmptyString()))
-         {
-            if (deferredMat)
-               features.addFeature(MFT_isDeferred, featureIndex);
-            features.addFeature(MFT_TerrainMacroMap, featureIndex);
-         }
 
          if (deferredMat)
             features.addFeature(MFT_isDeferred, featureIndex);
          features.addFeature(MFT_TerrainDetailMap, featureIndex);
 
-         if (deferredMat)
+         // check for macro detail texture
+         if (mat->MacroMapValid() && mat->getMacroSize() > 0 && mat->getMacroDistance() > 0)
          {
-            if (!(mat->getORMConfigMap() == StringTable->EmptyString()))
-            {
-               features.addFeature(MFT_TerrainORMMap, featureIndex);
-            }
-            else
-            {
-               features.addFeature(MFT_DeferredTerrainBlankInfoMap, featureIndex);
-            }
+            features.addFeature(MFT_TerrainMacroMap, featureIndex);
+         }
+
+         if (mat->ORMConfigMapValid())
+         {
+            features.addFeature(MFT_TerrainORMMap, featureIndex);
+         }
+         else
+         {
+            features.addFeature(MFT_DeferredTerrainBlankInfoMap, featureIndex);
          }
          
          if (mat->getInvertRoughness())
             features.addFeature(MFT_InvertRoughness, featureIndex);
 
-         normalMaps.increment();
 
          // Skip normal maps if we need to.
-         if (!disableNormalMaps && mat->getNormalMap() != StringTable->EmptyString())
+         if (!disableNormalMaps && mat->NormalMapValid())
          {
+            normalMaps.increment();
             features.addFeature(MFT_TerrainNormalMap, featureIndex);
 
             normalMaps.last() = mat->getNormalMapResource();
@@ -639,9 +632,7 @@ bool TerrainCellMaterial::_initShader(bool deferredMat,
 
       // We only include materials that 
       // have more than a base texture.
-      if (mat->getDetailSize() <= 0 ||
-         mat->getDetailDistance() <= 0 ||
-         mat->getDetailMap() == StringTable->EmptyString())
+      if (!(mat->DetailMapValid() && mat->getDetailSize() > 0 && mat->getDetailDistance() > 0))
          continue;
 
       mMaterialInfos[i]->mBlendDepthConst = mShader->getShaderConstHandle(avar("$blendDepth%d", i));
@@ -684,11 +675,7 @@ void TerrainCellMaterial::_updateMaterialConsts( )
       if (mat == NULL)
          continue;
 
-      // We only include materials that 
-      // have more than a base texture.
-      if (mat->getDetailSize() <= 0 ||
-         mat->getDetailDistance() <= 0 ||
-         mat->getDetailMap() == StringTable->EmptyString())
+      if (!(mat->DetailMapValid() && mat->getDetailSize() > 0 && mat->getDetailDistance() > 0))
          continue;
 
       detailMatCount++;
@@ -713,11 +700,7 @@ void TerrainCellMaterial::_updateMaterialConsts( )
       if (mat == NULL)
          continue;
 
-      // We only include materials that 
-      // have more than a base texture.
-      if (mat->getDetailSize() <= 0 ||
-         mat->getDetailDistance() <= 0 ||
-         mat->getDetailMap() == StringTable->EmptyString())
+      if (!(mat->DetailMapValid() && mat->getDetailSize() > 0 && mat->getDetailDistance() > 0))
          continue;
 
       F32 detailSize = matInfo->mat->getDetailSize();

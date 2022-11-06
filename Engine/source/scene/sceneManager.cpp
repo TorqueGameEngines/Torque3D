@@ -117,6 +117,8 @@ SceneManager::SceneManager( bool isClient )
      mVisibleDistance( 500.f ),
      mVisibleGhostDistance( 0 ),
      mNearClip( 0.1f ),
+     mTorque2DScene(false),
+     mCameraSize(16.0f, 9.0f),
      mLightManager( NULL ),
      mAmbientLightColor( LinearColorF( 0.1f, 0.1f, 0.1f, 1.0f ) ),
      mDefaultRenderPass( NULL )
@@ -358,6 +360,9 @@ void SceneManager::_renderScene( SceneRenderState* state, U32 objectMask, SceneZ
 
    if( gEditingMission && state->isDiffusePass() )
       objectMask = EDITOR_RENDER_TYPEMASK;
+
+   if( isTorque2DScene() )
+      objectMask = TORQUE2D_RENDER_TYPEMASK;
 
    // Update the zoning state and traverse zones.
 

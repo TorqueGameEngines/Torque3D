@@ -164,6 +164,22 @@ GuiTSCtrl::GuiTSCtrl()
    mLastCameraQuery.hasStereoTargets = false;
 
    mLastCameraQuery.ortho = false;
+
+   /// Torque2D specifics ---------------
+   /// These should not be touched by the 3d camera (or used) but
+   /// will be updated by the current scene to set the scaling for
+   /// the level and render area.
+   mLastCameraQuery.mSceneMin.set(0.0f, 0.0f);
+   mLastCameraQuery.mSceneMax.set(16.0f, 9.0f);
+   mLastCameraQuery.mCameraSize.set(16.0f, 9.0f);
+   mLastCameraQuery.mCameraScale.set(1.0f, 1.0f);
+   /// setup a default cam area so we are actually rendering something.
+   mLastCameraQuery.mCamArea = RectF(  0.0f - (mLastCameraQuery.mCameraSize.x * 0.5f),
+                                       0.0f - (mLastCameraQuery.mCameraSize.y * 0.5f),
+                                       mLastCameraQuery.mCameraSize.x,
+                                       mLastCameraQuery.mCameraSize.y);
+   /// Torque2D specifics end------------
+
    mOrthoWidth = 0.1f;
    mOrthoHeight = 0.1f;
 }
@@ -267,6 +283,18 @@ F32 GuiTSCtrl::projectRadius( F32 dist, F32 radius ) const
 
 //-----------------------------------------------------------------------------
 
+void GuiTSCtrl::windowToScene(const Point2F& srcPt, Point2F& dstPt)
+{
+   dstPt.set(( srcPt.x * mLastCameraQuery.mCameraScale.x) + mLastCameraQuery.mSceneMin.x,
+               mLastCameraQuery.mSceneMax.y - (srcPt.y * mLastCameraQuery.mCameraScale.y));
+}
+
+void GuiTSCtrl::sceneToWindow(const Point2F& srcPt, Point2F& dstPt)
+{
+   dstPt.set(  (srcPt.x - mLastCameraQuery.mSceneMin.x) / mLastCameraQuery.mCameraScale.x,
+               (mLastCameraQuery.mSceneMax.y - srcPt.y) / mLastCameraQuery.mCameraScale.y);
+}
+
 bool GuiTSCtrl::project( const Point3F &pt, Point3F *dest ) const
 {
    return MathUtils::mProjectWorldToScreen(pt,dest,mSaveViewport,mSaveModelview,mSaveProjection);
@@ -361,6 +389,15 @@ void GuiTSCtrl::_internalRender(RectI guiViewport, RectI renderViewport, Frustum
    Point2I renderSize = renderViewport.extent;
    GFXTarget *origTarget = GFX->getActiveRenderTarget();
    S32 origStereoTarget = GFX->getCurrentStereoTarget();
+
+   if (gClientSceneGraph->isTorque2DScene())
+   {
+      // look down the z buddy.
+      mCameraZRot = 0;
+      mLastCameraQuery.cameraMatrix.setColumn(0, Point3F(1.0, 0.0, 0.0));
+      mLastCameraQuery.cameraMatrix.setColumn(1, Point3F(0.0, 0.0, -1.0));
+      mLastCameraQuery.cameraMatrix.setColumn(2, Point3F(0.0, 1.0, 0.0));
+   }
 
    if (mCameraZRot)
    {
@@ -667,38 +704,89 @@ void GuiTSCtrl::onRender(Point2I offset, const RectI &updateRect)
    }
    else
    {
-      // set up the camera and viewport stuff:
-      F32 wwidth;
-      F32 wheight;
-      F32 renderWidth = F32(renderSize.x);
-      F32 renderHeight = F32(renderSize.y);
-      F32 aspectRatio = renderWidth / renderHeight;
 
-      if (mForceFOV != 0)
-         mLastCameraQuery.fov = mDegToRad(mForceFOV);
-
-      // Use the FOV to calculate the viewport height scale
-      // then generate the width scale from the aspect ratio.
-      if (!mLastCameraQuery.ortho)
+      if(gClientSceneGraph->isTorque2DScene())
       {
-         wheight = mLastCameraQuery.nearPlane * mTan(mLastCameraQuery.fov / 2.0f);
-         wwidth = aspectRatio * wheight;
+         // render in glorious TORQUE2D MUTHA FUCKA!!!!!
+         // set up the camera and viewport stuff:
+
+         // set the render style used for logic in the render loop.
+         GFX->setCurrentRenderStyle(GFXDevice::RS_Torque2D);
+
+         const RectI& bounds = getBounds();
+         
+         mLastCameraQuery.mSceneMin.x = mLastCameraQuery.mCamArea.point.x;
+         mLastCameraQuery.mSceneMin.y = mLastCameraQuery.mCamArea.point.y;
+         mLastCameraQuery.mSceneMax.x = mLastCameraQuery.mSceneMin.x + mLastCameraQuery.mCamArea.len_x();
+         mLastCameraQuery.mSceneMax.y = mLastCameraQuery.mSceneMin.y + mLastCameraQuery.mCamArea.len_y();
+
+         mLastCameraQuery.mCameraScale.x = (mLastCameraQuery.mSceneMax.x - mLastCameraQuery.mSceneMin.x) / bounds.len_x();
+         mLastCameraQuery.mCameraScale.y = (mLastCameraQuery.mSceneMax.y - mLastCameraQuery.mSceneMin.y) / bounds.len_y();
+
+         const Point2I globalTopLeft(updateRect.point.x, updateRect.point.y);
+         const Point2I localTopLeft = globalToLocalCoord(globalTopLeft);
+         const Point2I globalBottomRight(updateRect.point.x + updateRect.extent.x, updateRect.point.y + updateRect.extent.y);
+         const Point2I localBottomRight = globalToLocalCoord(globalBottomRight);
+
+         const Point2F& cameraScale = mLastCameraQuery.mCameraScale;
+         Point2F sceneMin = mLastCameraQuery.mSceneMin;
+         Point2F sceneMax = mLastCameraQuery.mSceneMax;
+
+         if (localTopLeft.y > 0)
+            sceneMax.y -= localTopLeft.y * cameraScale.y;
+
+         if (localTopLeft.x > 0)
+            sceneMin.x += localTopLeft.x * cameraScale.x;
+
+         if (localBottomRight.y < bounds.extent.y)
+            sceneMin.y += (bounds.extent.y - localBottomRight.y) * cameraScale.y;
+
+         if (localBottomRight.x < bounds.extent.x)
+            sceneMax.x -= (bounds.extent.x - localBottomRight.x) * cameraScale.x;
+
+         mLastCameraQuery.farPlane = MAX_LAYERS_SUPPORTED;
+
+         frustum.set(mLastCameraQuery.ortho, sceneMin.x, sceneMax.x, sceneMax.y, sceneMin.y, mLastCameraQuery.nearPlane, mLastCameraQuery.farPlane);
+         GFX->setOrtho(sceneMin.x, sceneMax.x, sceneMin.y, sceneMax.y, 0.00f, mLastCameraQuery.farPlane);
       }
       else
       {
-         wheight = mLastCameraQuery.fov;
-         wwidth = aspectRatio * wheight;
+         // is this needed if there is a switch from 2d->3d?
+         GFX->setCurrentRenderStyle(origStyle);
+
+         // set up the camera and viewport stuff:
+         F32 wwidth;
+         F32 wheight;
+         F32 renderWidth = F32(renderSize.x);
+         F32 renderHeight = F32(renderSize.y);
+         F32 aspectRatio = renderWidth / renderHeight;
+
+         if (mForceFOV != 0)
+            mLastCameraQuery.fov = mDegToRad(mForceFOV);
+
+         // Use the FOV to calculate the viewport height scale
+         // then generate the width scale from the aspect ratio.
+         if (!mLastCameraQuery.ortho)
+         {
+            wheight = mLastCameraQuery.nearPlane * mTan(mLastCameraQuery.fov / 2.0f);
+            wwidth = aspectRatio * wheight;
+         }
+         else
+         {
+            wheight = mLastCameraQuery.fov;
+            wwidth = aspectRatio * wheight;
+         }
+
+         F32 hscale = wwidth * 2.0f / renderWidth;
+         F32 vscale = wheight * 2.0f / renderHeight;
+
+         F32 left = (updateRect.point.x - offset.x) * hscale - wwidth;
+         F32 right = (updateRect.point.x + updateRect.extent.x - offset.x) * hscale - wwidth;
+         F32 top = wheight - vscale * (updateRect.point.y - offset.y);
+         F32 bottom = wheight - vscale * (updateRect.point.y + updateRect.extent.y - offset.y);
+
+         frustum.set(mLastCameraQuery.ortho, left, right, top, bottom, mLastCameraQuery.nearPlane, mLastCameraQuery.farPlane);
       }
-
-      F32 hscale = wwidth * 2.0f / renderWidth;
-      F32 vscale = wheight * 2.0f / renderHeight;
-
-      F32 left = (updateRect.point.x - offset.x) * hscale - wwidth;
-      F32 right = (updateRect.point.x + updateRect.extent.x - offset.x) * hscale - wwidth;
-      F32 top = wheight - vscale * (updateRect.point.y - offset.y);
-      F32 bottom = wheight - vscale * (updateRect.point.y + updateRect.extent.y - offset.y);
-
-      frustum.set(mLastCameraQuery.ortho, left, right, top, bottom, mLastCameraQuery.nearPlane, mLastCameraQuery.farPlane);
 
       // Manipulate the frustum for tiled screenshots
       const bool screenShotMode = gScreenShot && gScreenShot->isPending();

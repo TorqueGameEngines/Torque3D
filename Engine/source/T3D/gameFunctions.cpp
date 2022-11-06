@@ -342,12 +342,16 @@ bool GameProcessCameraQuery(CameraQuery *query)
    if (connection && connection->getControlCameraTransform(0.032f, &query->cameraMatrix))
    {
       query->object = dynamic_cast<GameBase*>(connection->getCameraObject());
-      query->nearPlane = gClientSceneGraph->getNearClip();
+      
 
       // Scale the normal visible distance by the performance 
       // tuning scale which we never let over 1.
       CameraAndFOV::sVisDistanceScale = mClampF( CameraAndFOV::sVisDistanceScale, 0.01f, 1.0f );
-      query->farPlane = gClientSceneGraph->getVisibleDistance() * CameraAndFOV::sVisDistanceScale;
+      if (!gClientSceneGraph->isTorque2DScene())
+      {
+         query->farPlane = gClientSceneGraph->getVisibleDistance() * CameraAndFOV::sVisDistanceScale;
+         query->nearPlane = gClientSceneGraph->getNearClip();
+      }
 
       // Provide some default values
       query->stereoTargets[0] = 0;
@@ -413,6 +417,23 @@ bool GameProcessCameraQuery(CameraQuery *query)
       }
 
       query->fov = mDegToRad(cameraFov);
+
+      /// Torque2D changes.
+      if (gClientSceneGraph->isTorque2DScene())
+      {
+         query->ortho = true;
+         /// change the camera pos to a 2d position
+         Point2F pos(query->cameraMatrix.getPosition().x, query->cameraMatrix.getPosition().y);
+
+         /// pass camera size off to query.
+         query->mCameraSize = gClientSceneGraph->getCameraSize();
+
+         /// set camera area 
+         query->mCamArea = RectF(pos.x - (query->mCameraSize.x * 0.5f),
+                                 pos.y - (query->mCameraSize.y * 0.5f),
+                                 query->mCameraSize.x, query->mCameraSize.y);
+      }
+
       return true;
    }
    return false;

@@ -130,6 +130,8 @@ public:
    static const RenderInstType RIT_Editor;
    static const RenderInstType RIT_Probes;
 
+   static const RenderInstType RIT_T2DObject;
+
 public:
 
    RenderPassManager();
@@ -324,6 +326,31 @@ struct ObjectRenderInst : public RenderInst
    Delegate<void( ObjectRenderInst *ri, 
                   SceneRenderState *state, 
                   BaseMatInstance *overrideMat )> renderDelegate;
+
+   // Clear this instance.
+   void clear();
+};
+
+struct T2DObjectRenderInst : public RenderInst
+{
+   /// This is a delegate specific index which is usually
+   /// used to define a mounted object.
+   S32 objectIndex;
+
+   /// Extra data to be used within the render callback.
+   /// ObjectRenderInst does not own or cleanup this data.
+   void* userData;
+
+   /// The lights we pass to the material for this 
+   /// mesh in order light importance.
+   LightInfo* lights[4];
+
+   // textures
+   GFXTextureObject* lightmap;
+
+   Delegate<void( T2DObjectRenderInst* ri,
+                  SceneRenderState* state,
+                  BaseMatInstance* overrideMat)> renderDelegate;
 
    // Clear this instance.
    void clear();

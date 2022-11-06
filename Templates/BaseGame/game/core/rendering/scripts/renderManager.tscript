@@ -80,6 +80,10 @@ function initRenderManager()
    
    DiffuseRenderPassManager.addManager(new RenderObjectMgr(FogBin){ bintype = "ObjectVolumetricFog"; renderOrder = 1.45; processAddOrder = 1.45; } );
    
+   // add our t2d bin after everything this should (hopefully) force it into the gui space
+   // we may want this after the glowbin in future for actual gui elements but for now this is sceneBin.
+   DiffuseRenderPassManager.addManager(new RenderT2DObjectMgr(Torque2DBin) { bintype = "T2DObject"; renderOrder = 1.46; processAddOrder = 1.46; } );
+   
    // Note that the GlowPostFx is triggered after this bin.
    DiffuseRenderPassManager.addManager( new RenderGlowMgr(GlowBin) { renderOrder = 1.5; processAddOrder = 1.5; } );
    

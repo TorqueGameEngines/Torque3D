@@ -1,0 +1,17 @@
+<SpriteAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Blocks_sprite"
+    AssetDescription="Test Asset"
+    spriteFile="@assetFile=Blocks.png"
+	normalFile="@assetFile=Blocks_n.png"
+    cellRowOrder="true"
+    cellOffsetX="0"
+    cellOffsetY="0"
+    cellStrideX="0"
+    cellStrideY="0"
+    cellCountX="8"
+    cellCountY="7"
+    cellWidth="64"
+    cellHeight="64"
+    VersionId="1" />

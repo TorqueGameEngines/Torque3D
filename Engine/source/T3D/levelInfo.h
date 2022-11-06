@@ -66,6 +66,10 @@ class LevelInfo : public NetObject
 
       ColorI mCanvasClearColor;
 
+      // torque2d settings
+      Point2F mCameraSize;
+      bool mTorque2DScene;
+
       /// @name Lighting Properties
       /// @{
 

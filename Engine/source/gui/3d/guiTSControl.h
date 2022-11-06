@@ -61,6 +61,13 @@ struct CameraQuery
    GFXTextureTarget* stereoTargets[2];
    GuiCanvas* drawCanvas; // Canvas we are drawing to. Needed for VR
 
+   // Torque2D Specifics
+   RectF mCamArea;
+   Point2F mSceneMin;
+   Point2F mSceneMax;
+   Point2F mCameraScale;
+   Point2F mCameraSize;
+
    IDisplayDevice* displayDevice;
 };
 
@@ -157,7 +164,13 @@ public:
    const Point2F& getWorldToScreenScale() const { return mSaveWorldToScreenScale; }
 
    /// Returns the last camera query set in onRender.
-   const CameraQuery& getLastCameraQuery() const { return mLastCameraQuery; }   
+   const CameraQuery& getLastCameraQuery() const { return mLastCameraQuery; }
+
+   /// Torque2D functions for converting windowPoint to scene point based on camera.
+   void windowToScene(const Point2F& srcPt, Point2F& dstPt);
+
+   /// Torque2D functions for converting scene Point to window Point based on camera.
+   void sceneToWindow(const Point2F& srcPt, Point2F& dstPt);
    
    /// Returns the screen space X,Y and Z for world space point.
    /// The input z coord is depth, from 0 to 1.

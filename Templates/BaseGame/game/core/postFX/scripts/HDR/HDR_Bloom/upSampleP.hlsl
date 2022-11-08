@@ -52,7 +52,7 @@ float4 main(PFXVertToPix IN) : TORQUE_TARGET0
     float3 offsetWeight = KERNEL[i];
     float2 offset = offsetWeight.xy * oneOverTargetSize * filterRadius;
     float weight = offsetWeight.z;
-    float4 sampleCol = TORQUE_TEX2D(mipTex, IN.uv0 + offset);
+    float4 sampleCol = TORQUE_TEX2D(mipTex, IN.uv1 + offset);
     upSample += sampleCol * weight;
   }
   

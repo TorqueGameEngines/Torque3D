@@ -57,7 +57,7 @@ void main()
     vec3 offsetWeight = KERNEL[i];
     vec2 offsetXY = offsetWeight.xy * oneOverTargetSize * filterRadius;
     float weight = offsetWeight.z;
-    vec4 sampleCol = texture(mipTex, IN_uv0 + offsetXY);
+    vec4 sampleCol = texture(mipTex, IN_uv1 + offsetXY);
     upSample += sampleCol * weight;
   }
   

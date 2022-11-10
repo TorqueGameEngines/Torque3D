@@ -97,7 +97,7 @@ void main()
 {
    vec4 _sample = hdrDecode( texture( sceneTex, IN_uv0 ) );
    float adaptedLum = texture( luminanceTex, vec2( 0.5f, 0.5f ) ).r;
-   vec4 bloom = texture( bloomTex, IN_uv0 );
+   vec4 bloom = texture( bloomTex, IN_uv2 );
 
    
         	    

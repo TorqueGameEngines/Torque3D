@@ -92,7 +92,7 @@ float4 main( PFXVertToPix IN ) : TORQUE_TARGET0
 {
    float4 sample = hdrDecode( TORQUE_TEX2D( sceneTex, IN.uv0 ) );
    float adaptedLum = TORQUE_TEX2D( luminanceTex, float2( 0.5f, 0.5f ) ).r;
-   float4 bloom = TORQUE_TEX2D( bloomTex, IN.uv0 ); 
+   float4 bloom = TORQUE_TEX2D( bloomTex, IN.uv2 ); 
         	    
    // Add the bloom effect.     
    sample += bloom;         

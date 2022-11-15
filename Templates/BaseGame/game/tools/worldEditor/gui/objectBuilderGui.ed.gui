@@ -1082,6 +1082,22 @@ function ObjectBuilderGui::buildObject(%this, %className)
 //------------------------------------------------------------------------------
 // Environment
 //------------------------------------------------------------------------------
+function ObjectBuilderGui::buildSkyBox( %this)
+{
+   OBObjectName.setValue( "sky" );
+   %this.objectClassName = "skybox";     
+   %this.addField("MaterialAsset", "TypeImageAssetId", "MaterialAsset",  "Core_Rendering:BlankSkyMat"); 
+   %this.process();
+}
+function ObjectBuilderGui::buildGroundPlane( %this )
+{
+   OBObjectName.setValue( "Ground" );
+   %this.objectClassName = "GroundPlane";     
+   %this.addField("MaterialAsset", "TypeImageAssetId", "MaterialAsset",  "Prototyping:FloorGray"); 
+   %this.addField("scaleU", "TypeF32", "scaleU",  "25");
+   %this.addField("scaleV", "TypeF32", "scaleV",  "25");
+   %this.process();
+}
 
 function ObjectBuilderGui::buildScatterSky( %this, %dontWarnAboutSun )
 {   

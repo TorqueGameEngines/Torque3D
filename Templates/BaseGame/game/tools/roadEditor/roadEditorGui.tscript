@@ -79,6 +79,7 @@ function RoadEditorGui::onEscapePressed( %this )
 //just in case we need it later
 function RoadEditorGui::onRoadCreation( %this )
 {
+   %this.road.MaterialAsset = "Core_GameObjects:DefaultDecalRoadMaterial";
 }
 
 function RoadEditorGui::onRoadSelected( %this, %road )

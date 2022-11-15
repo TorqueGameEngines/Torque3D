@@ -84,6 +84,13 @@ function MeshRoadEditorGui::onRoadSelected( %this, %road )
    }
 }
 
+function MeshRoadEditorGui::onRoadCreation( %this )
+{
+   %this.road.TopMaterialAsset = "Core_GameObjects:DefaultDecalRoadMaterial";
+   %this.road.SideMaterialAsset = "Core_GameObjects:DefaultRoadMaterialOther";
+   %this.road.BottomMaterialAsset = "Core_GameObjects:DefaultRoadMaterialOther";
+}
+
 function MeshRoadEditorGui::onNodeSelected( %this, %nodeIdx )
 {
    if ( %nodeIdx == -1 )

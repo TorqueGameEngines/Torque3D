@@ -677,6 +677,10 @@ void GuiMeshRoadEditorCtrl::on3DMouseDown(const Gui3DMouseEvent & event)
       // Submit it.               
       undoMan->addAction( action );
 
+      //send a callback to script after were done here if one exists
+      if (isMethod("onRoadCreation"))
+         Con::executef(this, "onRoadCreation");
+
 		return;
    }
 	else if ( mMode == mAddNodeMode )

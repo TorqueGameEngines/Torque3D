@@ -786,7 +786,6 @@ void Precipitation::unpackUpdate(NetConnection* con, BitStream* stream)
       mUseWind = stream->readFlag();
       mFollowCam = stream->readFlag();
       mAnimateSplashes = stream->readFlag();
-
       mDropHitMask = dropHitMask | 
          ( mDropHitPlayers ? PlayerObjectType : 0 ) | 
          ( mDropHitVehicles ? VehicleObjectType : 0 );

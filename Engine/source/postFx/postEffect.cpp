@@ -492,6 +492,7 @@ PostEffect::PostEffect()
       mLightDirectionSC( NULL ),
       mCameraForwardSC( NULL ),
       mAccumTimeSC( NULL ),
+      mDampnessSC(NULL),   
       mDeltaTimeSC( NULL ),
       mInvCameraMatSC( NULL ),
       mMatCameraToWorldSC( NULL),
@@ -785,6 +786,8 @@ void PostEffect::_setupConstants( const SceneRenderState *state )
       mCameraForwardSC = mShader->getShaderConstHandle( "$camForward" );
 
       mAccumTimeSC = mShader->getShaderConstHandle( "$accumTime" );
+      mDampnessSC = mShader->getShaderConstHandle("$dampness");
+      
       mDeltaTimeSC = mShader->getShaderConstHandle( "$deltaTime" );
 
       mInvCameraMatSC = mShader->getShaderConstHandle( "$invCameraMat" );
@@ -965,7 +968,8 @@ void PostEffect::_setupConstants( const SceneRenderState *state )
    }
    mShaderConsts->setSafe( mAccumTimeSC, MATMGR->getTotalTime() );
    mShaderConsts->setSafe( mDeltaTimeSC, MATMGR->getDeltaTime() );
-
+   mShaderConsts->setSafe(mDampnessSC, MATMGR->getDampnessClamped());
+   
    // Now set all the constants that are dependent on the scene state.
    if ( state )
    {

@@ -105,7 +105,10 @@ public:
    F32 getTotalTime() const { return mAccumTime; }
    F32 getDeltaTime() const { return mDt; }
    U32 getLastUpdateTime() const { return mLastTime; }
-
+   
+   F32 getDampness() const { return mDampness; }
+   F32 getDampnessClamped() const { return mClampF(mDampness, 0.0, 1.0); }
+   void setDampness(F32 dampness) { mDampness = dampness; }
    /// Signal used to notify systems that 
    /// procedural shaders have been flushed.
    typedef Signal<void()> FlushSignal;
@@ -163,6 +166,7 @@ protected:
    F32 mDt;
    F32 mAccumTime;
    U32 mLastTime;
+   F32 mDampness;
 
    BaseMatInstance* mWarningInst;
 

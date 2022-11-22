@@ -47,6 +47,7 @@ String GFXTextureManager::smMissingTexturePath(Con::getVariable("$Core::MissingT
 String GFXTextureManager::smUnavailableTexturePath(Con::getVariable("$Core::UnAvailableTexturePath"));
 String GFXTextureManager::smWarningTexturePath(Con::getVariable("$Core::WarningTexturePath"));
 String GFXTextureManager::smBRDFTexturePath(Con::getVariable("$Core::BRDFTexture"));
+String GFXTextureManager::smWetnessTexturePath(Con::getVariable("$Core::WetnessTexture"));
 
 GFXTextureManager::EventSignal GFXTextureManager::smEventSignal;
 
@@ -74,7 +75,11 @@ void GFXTextureManager::init()
       "@ingroup GFX\n" );
 
    Con::addVariable("$Core::BRDFTexture", TypeRealString, &smBRDFTexturePath,
-      "The file path of the texture used as the default irradiance cubemap for PBR.\n"
+      "The file path of the texture used as the default BRDF lut for PBR.\n"
+      "@ingroup GFX\n");
+
+   Con::addVariable("$Core::WetnessTexture", TypeRealString, &smWetnessTexturePath,
+      "The file path of the texture used as the default wetness influence map for PBR.\n"
       "@ingroup GFX\n");
 }
 

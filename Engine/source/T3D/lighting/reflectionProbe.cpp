@@ -132,6 +132,7 @@ ReflectionProbe::ReflectionProbe()
    mEditPosOffset = false;
 
    mCaptureMask = REFLECTION_PROBE_CAPTURE_TYPEMASK;
+   mCanDamp = false;
 }
 
 ReflectionProbe::~ReflectionProbe()
@@ -150,6 +151,7 @@ ReflectionProbe::~ReflectionProbe()
 //-----------------------------------------------------------------------------
 void ReflectionProbe::initPersistFields()
 {
+   addField("canDamp", TypeBool, Offset(mCanDamp, ReflectionProbe),"wetness allowed");
    addGroup("Rendering");
       addProtectedField("enabled", TypeBool, Offset(mEnabled, ReflectionProbe),
          &_setEnabled, &defaultProtectedGetFn, "Is the probe enabled or not");
@@ -435,6 +437,7 @@ U32 ReflectionProbe::packUpdate(NetConnection *conn, U32 mask, BitStream *stream
    {
       stream->writeFlag(mEnabled);
    }
+   stream->writeFlag(mCanDamp);
 
    return retMask;
 }
@@ -491,6 +494,7 @@ void ReflectionProbe::unpackUpdate(NetConnection *conn, BitStream *stream)
 
       mDirty = true;
    }
+   mCanDamp = stream->readFlag();
 }
 
 //-----------------------------------------------------------------------------
@@ -555,7 +559,8 @@ void ReflectionProbe::updateProbeParams()
 
    mProbeInfo.mProbeRefOffset = mProbeRefOffset;
    mProbeInfo.mProbeRefScale = mProbeRefScale;
-
+   mProbeInfo.mCanDamp = mCanDamp;
+   
    mProbeInfo.mDirty = true;
 
    if (mCubemapDirty)

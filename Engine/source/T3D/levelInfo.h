@@ -92,6 +92,8 @@ class LevelInfo : public NetObject
       
       ///
       SFXSoundscape* mSoundscape;
+
+      F32 mDampness; ///<applies wetness
          
       /// @}
       

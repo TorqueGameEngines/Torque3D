@@ -367,14 +367,36 @@ vec3 boxProject(vec3 wsPosition, vec3 wsReflectVec, mat4 worldToObj, vec3 refSca
    return posonbox - refPosition.xyz;
 }
 
+void dampen(inout Surface surface, sampler2D WetnessTexture, float accumTime, float degree)
+{   
+   if (degree<=0.0) return;
+   vec3 n = abs(surface.N);
+
+   float grav = 2.0-pow(dot(float3(0,0,-1),surface.N),3);
+   if (grav<0) grav*=-1.0;
+   
+   float speed = accumTime*(1.0-surface.roughness)*grav;
+   vec2 wetoffset = vec2(speed,speed/2)*0.1; 
+      
+   float wetness = texture(WetnessTexture, vec2(surface.P.xy*0.2+wetoffset)).b;
+   wetness = lerp(wetness,texture(WetnessTexture,vec2(surface.P.zx*0.2+wetoffset)).b,n.y);
+   wetness = lerp(wetness,texture(WetnessTexture,vec2(surface.P.zy*0.2+wetoffset)).b,n.x);
+   wetness = pow(wetness,3)*degree;
+   
+   surface.roughness = lerp(surface.roughness,(1.0-pow(wetness,2))*surface.roughness*0.92f+0.04f,degree);
+   surface.baseColor.rgb = lerp(surface.baseColor.rgb,surface.baseColor.rgb*(2.0-wetness)/2,degree); 
+   updateSurface(surface);
+}
+
 vec4 computeForwardProbes(Surface surface,
     float cubeMips, int numProbes, mat4x4 inWorldToObjArray[MAX_FORWARD_PROBES], vec4 inProbeConfigData[MAX_FORWARD_PROBES], 
     vec4 inProbePosArray[MAX_FORWARD_PROBES], vec4 inRefScaleArray[MAX_FORWARD_PROBES], vec4 inRefPosArray[MAX_FORWARD_PROBES],
-    vec3 wsEyePos, float skylightCubemapIdx, sampler2D BRDFTexture, 
+    vec3 wsEyePos, float skylightCubemapIdx, int SkylightDamp, sampler2D BRDFTexture, sampler2D WetnessTexture, float accumTime, float dampness,
 	samplerCubeArray irradianceCubemapAR, samplerCubeArray specularCubemapAR)
 {
    int i = 0;
    float alpha = 1;
+   float wetAmmout = 0;
    float blendFactor[MAX_FORWARD_PROBES];
    float blendSum = 0;
    float blendFacSum = 0;
@@ -383,7 +405,7 @@ vec4 computeForwardProbes(Surface surface,
    //Set up our struct data
    float contribution[MAX_FORWARD_PROBES];
    float blendCap = 0;
-  for (i = 0; i < numProbes; ++i)
+  for (i = 0; i < numProbes; i++)
   {
       contribution[i] = 0;
       float atten = 1.0-(length(wsEyePos-inProbePosArray[i].xyz)/maxProbeDrawDistance);
@@ -401,9 +423,15 @@ vec4 computeForwardProbes(Surface surface,
       else
          contribution[i] = 0.0;
 
+      if (inRefScaleArray[i].w>0)
+         wetAmmout += contribution[i];
+      else
+         wetAmmout -= contribution[i];
+         
       blendSum += contribution[i];
       blendCap = max(contribution[i],blendCap);
    }
+   if (wetAmmout<0) wetAmmout =0;
 
    if (probehits > 0.0)
    {
@@ -415,7 +443,7 @@ vec4 computeForwardProbes(Surface surface,
          blendFacSum += blendFactor[i]; //running tally of results
       }
 
-      for (i = 0; i < numProbes; ++i)
+      for (i = 0; i < numProbes; i++)
       {
          //normalize, but in the range of the highest value applied
          //to preserve blend vs skylight
@@ -425,7 +453,7 @@ vec4 computeForwardProbes(Surface surface,
 
 #if (DEBUGVIZ_ATTENUATION == 1)
       float contribAlpha = 1;
-      for (i = 0; i < numProbes; ++i)
+      for (i = 0; i < numProbes; i++)
       {
          contribAlpha -= contribution[i];
       }
@@ -442,7 +470,7 @@ vec4 computeForwardProbes(Surface surface,
 
    vec3 finalContribColor = vec3(0, 0, 0);
    float contribAlpha = 1;
-   for (i = 0; i < numProbes; ++i)
+   for (i = 0; i < numProbes; i++)
    {
       finalContribColor += contribution[i] *probeContribColors[i].rgb;
       contribAlpha -= contribution[i];
@@ -458,10 +486,22 @@ vec4 computeForwardProbes(Surface surface,
    vec3 irradiance = vec3(0, 0, 0);
    vec3 specular = vec3(0, 0, 0);
 
+   for (i = 0; i < numProbes; i++)
+   {
+      float contrib = contribution[i];
+      if (contrib > 0.0f)
+      {
+         alpha -= contrib;
+      }
+   }
+   if (SkylightDamp>0)
+      wetAmmout += alpha;
+   dampen(surface, WetnessTexture, accumTime, wetAmmout*dampness);
+      
    // Radiance (Specular)
    float lod = roughnessToMipLevel(surface.roughness, cubeMips);
 
-   for (i = 0; i < numProbes; ++i)
+   for (i = 0; i < numProbes; i++)
    {
       float contrib = contribution[i];
       if (contrib > 0.0f)
@@ -471,16 +511,15 @@ vec4 computeForwardProbes(Surface surface,
 
          irradiance += textureLod(irradianceCubemapAR, vec4(dir, cubemapIdx), 0).xyz * contrib;
          specular += textureLod(specularCubemapAR, vec4(dir, cubemapIdx), lod).xyz * contrib;
-         alpha -= contrib;
       }
    }
-
+      
    if(skylightCubemapIdx != -1 && alpha >= 0.001)
    {
       irradiance = mix(irradiance,textureLod(irradianceCubemapAR, vec4(surface.R, skylightCubemapIdx), 0).xyz, alpha);
       specular = mix(specular,textureLod(specularCubemapAR, vec4(surface.R, skylightCubemapIdx), lod).xyz, alpha);
    }
-
+   
    //energy conservation
    vec3 F = FresnelSchlickRoughness(surface.NdotV, surface.f0, surface.roughness);
    vec3 kD = 1.0f - F;
@@ -521,7 +560,7 @@ vec4 debugVizForwardProbes(Surface surface,
    float probehits = 0;
    //Set up our struct data
    float contribution[MAX_FORWARD_PROBES];
-  for (i = 0; i < numProbes; ++i)
+  for (i = 0; i < numProbes; i++)
   {
       contribution[i] = 0;
 
@@ -561,7 +600,7 @@ vec4 debugVizForwardProbes(Surface surface,
       }
 
       float invBlendSumWeighted = 1.0f / blendFacSum;
-      for (i = 0; i < numProbes; ++i)
+      for (i = 0; i < numProbes; i++)
       {
          blendFactor[i] *= invBlendSumWeighted;
          contribution[i] *= blendFactor[i];
@@ -571,7 +610,7 @@ vec4 debugVizForwardProbes(Surface surface,
    if(showAtten == 1)
    {
       float contribAlpha = 1;
-      for (i = 0; i < numProbes; ++i)
+      for (i = 0; i < numProbes; i++)
       {
          contribAlpha -= contribution[i];
       }
@@ -589,7 +628,7 @@ vec4 debugVizForwardProbes(Surface surface,
 
       vec3 finalContribColor = vec3(0, 0, 0);
       float contribAlpha = 1;
-      for (i = 0; i < numProbes; ++i)
+      for (i = 0; i < numProbes; i++)
       {
          finalContribColor += contribution[i] *probeContribColors[i].rgb;
          contribAlpha -= contribution[i];
@@ -613,7 +652,7 @@ vec4 debugVizForwardProbes(Surface surface,
       lod = 0;
    }
 
-   for (i = 0; i < numProbes; ++i)
+   for (i = 0; i < numProbes; i++)
    {
       float contrib = contribution[i];
       if (contrib > 0.0f)

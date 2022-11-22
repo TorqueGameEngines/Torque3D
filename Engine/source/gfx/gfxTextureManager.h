@@ -76,6 +76,7 @@ public:
    static const String& getWarningTexturePath() { return smWarningTexturePath; }
 
    static const String& getBRDFTexturePath() { return smBRDFTexturePath; }
+   static const String& getWetnessTexturePath() { return smWetnessTexturePath; }
 
    /// Update width and height based on available resources.
    ///
@@ -215,7 +216,8 @@ protected:
    static String smWarningTexturePath;
 
    static String smBRDFTexturePath;
-
+   static String smWetnessTexturePath;
+   
    GFXTextureObject *mListHead;
    GFXTextureObject *mListTail;
 

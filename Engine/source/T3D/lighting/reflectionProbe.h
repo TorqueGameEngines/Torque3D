@@ -109,7 +109,7 @@ public:
       };
 
       ProbeShapeType mProbeShapeType;
-
+      bool mCanDamp;
    public:
 
       ProbeInfo() : mScore(0) {}
@@ -255,7 +255,7 @@ protected:
 
    bool mResourcesCreated;
    U32 mCaptureMask;
-
+   bool mCanDamp;
 public:
    ReflectionProbe();
    virtual ~ReflectionProbe();

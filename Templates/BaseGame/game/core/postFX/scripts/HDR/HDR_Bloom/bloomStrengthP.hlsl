@@ -42,7 +42,7 @@ float4 main(PFXVertToPix IN) : TORQUE_TARGET0
     float3 dirt = TORQUE_TEX2D(dirtTex, IN.uv0 / (dirtParams.xy * oneOverTargetSize)).rgb * dirtParams.z * edge;
   #endif
   
-  float4 upSample = TORQUE_TEX2D(inputTex, IN.uv0) * strength;
+  float4 upSample = TORQUE_TEX2D(inputTex, IN.uv0) * (strength+1.0);
   
   #ifdef USE_DIRT
     upSample.rgb += upSample.rgb * dirt;

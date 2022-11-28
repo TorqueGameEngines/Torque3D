@@ -554,7 +554,7 @@ void SFXSound::setTransform( const MatrixF& transform )
 {
    Parent::setTransform( transform );
 
-   if( mVoice && is3d() )
+   if( mVoice && mDescription && is3d() )
       mVoice->setTransform( mTransform );      
 }
 

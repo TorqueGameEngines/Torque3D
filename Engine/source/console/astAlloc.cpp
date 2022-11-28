@@ -243,7 +243,7 @@ FloatNode* FloatNode::alloc(S32 lineNumber, F64 value)
    return ret;
 }
 
-StrConstNode* StrConstNode::alloc(S32 lineNumber, char* str, bool tag, bool doc)
+StrConstNode* StrConstNode::alloc(S32 lineNumber, const char* str, bool tag, bool doc)
 {
    StrConstNode* ret = (StrConstNode*)consoleAlloc(sizeof(StrConstNode));
    constructInPlace(ret);

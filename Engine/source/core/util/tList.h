@@ -411,22 +411,14 @@ inline List<Type>::_Iterator<U,E>::_Iterator(E* ptr)
 // recheck this and remove if fixed with VS2008 SP1
 
 template<class Type> template<class U,typename E>
-#ifdef _MSC_VER
-inline typename List<Type>:: _Iterator<U,E>& List<Type>::_Iterator<U,E>::operator++()
-#else
 inline typename List<Type>::template _Iterator<U,E>& List<Type>::_Iterator<U,E>::operator++()
-#endif
 {
    _link = _link->next;
    return *this;
 }
 
 template<class Type> template<class U,typename E>
-#ifdef _MSC_VER
-inline typename List<Type>:: _Iterator<U,E> List<Type>::_Iterator<U,E>::operator++(int)
-#else
 inline typename List<Type>::template _Iterator<U,E> List<Type>::_Iterator<U,E>::operator++(int)
-#endif
 {
    _Iterator itr(*this);
    _link = _link->next;
@@ -434,22 +426,14 @@ inline typename List<Type>::template _Iterator<U,E> List<Type>::_Iterator<U,E>::
 }
 
 template<class Type> template<class U,typename E>
-#ifdef _MSC_VER
-inline typename List<Type>:: _Iterator<U,E>& List<Type>::_Iterator<U,E>::operator--()
-#else
 inline typename List<Type>::template _Iterator<U,E>& List<Type>::_Iterator<U,E>::operator--()
-#endif
 {
    _link = _link->prev;
    return *this;
 }
 
 template<class Type> template<class U,typename E>
-#ifdef _MSC_VER
-inline typename List<Type>:: _Iterator<U,E> List<Type>::_Iterator<U,E>::operator--(int)
-#else
 inline typename List<Type>::template _Iterator<U,E> List<Type>::_Iterator<U,E>::operator--(int)
-#endif
 {
    _Iterator itr(*this);
    _link = _link->prev;

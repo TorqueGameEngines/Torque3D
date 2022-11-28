@@ -69,7 +69,7 @@ String RenderPassData::describeSelf() const
    for ( U32 i=0; i < Material::MAX_TEX_PER_PASS; i++ )
    {
       if ( mTexType[i] == Material::TexTarget )
-         texName = ( mTexSlot[i].texTarget ) ? mTexSlot[i].texTarget->getName() : "null_texTarget";
+         texName = ( mTexSlot[i].texTarget ) ? mTexSlot[i].texTarget->getName() : String("null_texTarget");
       else if ( mTexType[i] == Material::Cube && mCubeMap )
          texName = mCubeMap->getPath();
       else if ( mTexSlot[i].texObject )

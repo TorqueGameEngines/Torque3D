@@ -113,7 +113,7 @@ extern int serrors;
 #define YY_ARGS(x)   x
 
 int CMDlex();
-void CMDerror(char *, ...);
+void CMDerror(const char *, ...);
 
 #ifdef alloca
 #undef alloca

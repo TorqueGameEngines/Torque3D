@@ -116,7 +116,6 @@ struct ConsoleLogEntry
 };
 
 typedef const char *StringTableEntry;
-extern char *typeValueEmpty;
 
 enum ConsoleValueType
 {

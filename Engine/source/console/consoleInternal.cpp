@@ -462,9 +462,6 @@ const char *Dictionary::tabComplete(const char *prevText, S32 baseLen, bool fFor
    return bestMatch;
 }
 
-
-char *typeValueEmpty = "";
-
 Dictionary::Entry::Entry(StringTableEntry in_name)
 {
    name = in_name;
@@ -477,7 +474,7 @@ Dictionary::Entry::Entry(StringTableEntry in_name)
 
    ival = 0;
    fval = 0;
-   sval = typeValueEmpty;
+   sval = NULL;
    bufferLen = 0;
 }
 
@@ -489,7 +486,7 @@ Dictionary::Entry::~Entry()
 void Dictionary::Entry::reset()
 {
    name = NULL;
-   if (type <= TypeInternalString && sval != typeValueEmpty)
+   if (type <= TypeInternalString && sval != NULL)
       dFree(sval);
    if (notify)
       delete notify;
@@ -540,7 +537,7 @@ void Dictionary::Entry::setStringValue(const char* value)
       // may as well pad to the next cache line
       U32 newLen = ((stringLen + 1) + 15) & ~15;
 
-      if (sval == typeValueEmpty)
+      if (sval == NULL)
          sval = (char*)dMalloc(newLen);
       else if (newLen > bufferLen)
          sval = (char*)dRealloc(sval, newLen);
@@ -631,7 +628,7 @@ Dictionary::Entry* Dictionary::addVariable(const char *name,
 
    Entry *ent = add(StringTable->insert(name));
 
-   if (ent->type <= Entry::TypeInternalString && ent->sval != typeValueEmpty)
+   if (ent->type <= Entry::TypeInternalString && ent->sval != NULL)
       dFree(ent->sval);
 
    ent->mUsage = usage;

@@ -140,7 +140,7 @@ void AppVertConnectorGLSL::sortVars()
    // Not required in GLSL
 }
 
-void AppVertConnectorGLSL::setName( char *newName )
+void AppVertConnectorGLSL::setName( const char *newName )
 {
    dStrcpy( (char*)mName, newName, 32 );
 }
@@ -285,7 +285,7 @@ void VertPixelConnectorGLSL::sortVars()
    // Not needed in GLSL
 }
 
-void VertPixelConnectorGLSL::setName( char *newName )
+void VertPixelConnectorGLSL::setName( const char *newName )
 {
    dStrcpy( (char*)mName, newName, 32 );
 }

@@ -32,6 +32,9 @@ inline Token< T > MakeToken( T value, U32 lineNumber )
 
 #include "console/cmdgram.h"
 
+// HACK: C++17 and beyond can't use register keyword
+#define register
+
 using namespace Compiler;
 
 #define YY_NEVER_INTERACTIVE 1
@@ -80,7 +83,7 @@ void CMDSetScanBuffer(const char *sb, const char *fn);
 const char * CMDgetFileLine(int &lineNumber);
 
 // Error reporting
-void CMDerror(char * s, ...);
+void CMDerror(const char * s, ...);
 
 // Reset the parser.
 void CMDrestart(FILE *in);
@@ -238,7 +241,7 @@ int CMDGetCurrentLine()
 
 extern bool gConsoleSyntaxError;
 
-void CMDerror(char *format, ...)
+void CMDerror(const char *format, ...)
 {
    Compiler::gSyntaxError = true;
 

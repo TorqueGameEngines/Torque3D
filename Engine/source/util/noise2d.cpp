@@ -88,13 +88,6 @@ U32 Noise2D::getSeed()
    return mSeed;
 }
 
-
-inline F32 Noise2D::lerp(F32 t, F32 a, F32 b)
-{
-   return a + t * (b - a);
-}
-
-
 inline F32 Noise2D::curve(F32 t)
 {
    return t * t * (3.0f - 2.0f * t);
@@ -505,16 +498,16 @@ F32 Noise2D::getValue(F32 x, F32 y, S32 interval)
    F32 v = dot(mGradient[ b10 ], rx1,ry0);
 
 	// Interpolation along the X axis.
-	F32 a = lerp(sx, u, v);
+	F32 a = mLerp(u, v,sx);
 
    u = dot(mGradient[ b01 ], rx0,ry1);
    v = dot(mGradient[ b11 ], rx1,ry1);
 
 	// Interpolation along the Y axis.
-	F32 b = lerp(sx, u, v);
+	F32 b = mLerp( u, v, sx);
 
 	// Final Interpolation
-	return lerp(sy, a, b);
+	return mLerp(a, b,sy);
 }
 
 

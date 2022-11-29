@@ -558,7 +558,7 @@ void afxXM_WaveBase::updateParams(F32 dt, F32 elapsed, afxXM_Params& params)
   else
   {
     F32 wt_factor = calc_weight_factor(elapsed);
-    F32 final_t = afxXM_WaveInterp::lerp(wt_factor, db->off_duty_t, last_t);
+    F32 final_t = mLerp(db->off_duty_t, last_t, wt_factor);
     interpolator->interpolate(final_t, params);
   }
 }
@@ -602,7 +602,7 @@ void afxXM_WaveRiderBase::updateParams(F32 dt, F32 elapsed, afxXM_Params& params
   else
   {
     F32 wt_factor = calc_weight_factor(elapsed);
-    F32 final_t = afxXM_WaveInterp::lerp(wt_factor, db->off_duty_t, t);
+    F32 final_t = mLerp(db->off_duty_t, t, wt_factor);
     interpolator->interpolate(final_t, params);
   }
 }

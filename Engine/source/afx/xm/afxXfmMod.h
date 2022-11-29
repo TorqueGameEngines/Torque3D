@@ -169,19 +169,6 @@ protected:
 public:
   /*C*/         afxXM_WeightedBase(afxXM_WeightedBaseData*, afxEffectWrapper*);
   virtual       ~afxXM_WeightedBase() { }
-
-  F32 lerp(F32 t, F32 a, F32 b)
-  {
-    return a + t * (b - a);
-  }
-
-  Point3F lerpV(F32 t, const Point3F& a, const Point3F& b)
-  {
-    return Point3F( a.x + t * (b.x - a.x),
-                    a.y + t * (b.y - a.y),
-                    a.z + t * (b.z - a.z) );
-  }
-
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

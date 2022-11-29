@@ -90,7 +90,7 @@ public:
   afxXM_WaveInterp_Scalar_Add(U32 o) : afxXM_WaveInterp_Scalar() { offset = o; }
   virtual void interpolate(F32 t, afxXM_Params& params)
   {
-    *((F32*)(((char*)(&params)) + offset)) += lerp(t, mA, mB);
+    *((F32*)(((char*)(&params)) + offset)) += mLerp(mA, mB,t);
   }
 };
 
@@ -104,7 +104,7 @@ public:
   afxXM_WaveInterp_Scalar_Mul(U32 o) : afxXM_WaveInterp_Scalar() { offset = o; }
   virtual void interpolate(F32 t, afxXM_Params& params)
   {
-    *((F32*)(((char*)(&params)) + offset)) *= lerp(t, mA, mB);
+    *((F32*)(((char*)(&params)) + offset)) *= mLerp(mA, mB,t);
   }
 };
 
@@ -118,7 +118,7 @@ public:
   afxXM_WaveInterp_Scalar_Rep(U32 o) : afxXM_WaveInterp_Scalar() { offset = o; }
   virtual void interpolate(F32 t, afxXM_Params& params)
   {
-    *((F32*)(((char*)(&params)) + offset)) = lerp(t, mA, mB);
+    *((F32*)(((char*)(&params)) + offset)) = mLerp(mA, mB,t);
   }
 };
 
@@ -132,7 +132,7 @@ public:
   afxXM_WaveInterp_Scalar_PointAdd(U32 o) : afxXM_WaveInterp_Scalar() { offset = o; }
   virtual void interpolate(F32 t, afxXM_Params& params)
   {
-    F32 scalar_at_t = lerp(t, mA, mB);
+    F32 scalar_at_t = mLerp(mA, mB,t);
     Point3F point_at_t(scalar_at_t, scalar_at_t, scalar_at_t);
     *((Point3F*)(((char*)(&params)) + offset)) += point_at_t;
   }
@@ -148,7 +148,7 @@ public:
   afxXM_WaveInterp_Scalar_PointMul(U32 o) : afxXM_WaveInterp_Scalar() { offset = o; }
   virtual void interpolate(F32 t, afxXM_Params& params)
   {
-    *((Point3F*)(((char*)(&params)) + offset)) *= lerp(t, mA, mB);
+    *((Point3F*)(((char*)(&params)) + offset)) *= mLerp(mA, mB,t);
   }
 };
 
@@ -162,7 +162,7 @@ public:
   afxXM_WaveInterp_Scalar_PointRep(U32 o) : afxXM_WaveInterp_Scalar() { offset = o; }
   virtual void interpolate(F32 t, afxXM_Params& params)
   {
-    F32 scalar_at_t = lerp(t,mA, mB);
+    F32 scalar_at_t = mLerp(mA, mB,t);
     Point3F point_at_t(scalar_at_t, scalar_at_t, scalar_at_t);
     *((Point3F*)(((char*)(&params)) + offset)) = point_at_t;
   }
@@ -179,7 +179,7 @@ public:
   afxXM_WaveInterp_Scalar_Axis_PointAdd(U32 o, Point3F ax) : afxXM_WaveInterp_Scalar() { offset = o; axis = ax; }
   virtual void interpolate(F32 t, afxXM_Params& params)
   {
-    Point3F point_at_t = axis*lerp(t, mA, mB);
+    Point3F point_at_t = axis* mLerp(mA, mB,t);
     *((Point3F*)(((char*)(&params)) + offset)) += point_at_t;
   }
 };
@@ -195,7 +195,7 @@ public:
   {
     Point3F local_axis(axis); 
     params.ori.mulV(local_axis);
-    Point3F point_at_t = local_axis*lerp(t, mA, mB);
+    Point3F point_at_t = local_axis* mLerp(mA, mB,t);
     *((Point3F*)(((char*)(&params)) + offset)) += point_at_t;
   }
 };
@@ -211,7 +211,7 @@ public:
   afxXM_WaveInterp_Scalar_Axis_PointMul(U32 o, Point3F ax) : afxXM_WaveInterp_Scalar() { offset = o; axis = ax; }
   virtual void interpolate(F32 t, afxXM_Params& params)
   {
-    Point3F point_at_t = axis*lerp(t, mA, mB);
+    Point3F point_at_t = axis* mLerp(mA, mB,t);
     *((Point3F*)(((char*)(&params)) + offset)) *= point_at_t;
   }
 };
@@ -227,7 +227,7 @@ public:
   {
     Point3F local_axis(axis); 
     params.ori.mulV(local_axis);
-    Point3F point_at_t = local_axis*lerp(t, mA, mB);
+    Point3F point_at_t = local_axis* mLerp(mA, mB,t);
     *((Point3F*)(((char*)(&params)) + offset)) *= point_at_t;
   }
 };
@@ -243,7 +243,7 @@ public:
   afxXM_WaveInterp_Scalar_Axis_PointRep(U32 o, Point3F ax) : afxXM_WaveInterp_Scalar() { offset = o; axis = ax; }
   virtual void interpolate(F32 t, afxXM_Params& params)
   {
-    Point3F point_at_t = axis*lerp(t, mA, mB);
+    Point3F point_at_t = axis* mLerp(mA, mB,t);
     *((Point3F*)(((char*)(&params)) + offset)) = point_at_t;
   }
 };
@@ -259,7 +259,7 @@ public:
   {
     Point3F local_axis(axis); 
     params.ori.mulV(local_axis);
-    Point3F point_at_t = local_axis*lerp(t, mA, mB);
+    Point3F point_at_t = local_axis* mLerp(mA, mB,t);
     *((Point3F*)(((char*)(&params)) + offset)) = point_at_t;
   }
 };
@@ -272,7 +272,7 @@ public:
   afxXM_WaveInterp_Scalar_ColorAdd() : afxXM_WaveInterp_Scalar() { }
   virtual void interpolate(F32 t, afxXM_Params& params)
   {
-    F32 scalar_at_t = lerp(t, mA, mB);
+    F32 scalar_at_t = mLerp(mA, mB,t);
     LinearColorF color_at_t(scalar_at_t, scalar_at_t, scalar_at_t, scalar_at_t);
     params.color += color_at_t;
   }
@@ -286,7 +286,7 @@ public:
   afxXM_WaveInterp_Scalar_ColorMul() : afxXM_WaveInterp_Scalar() { }
   virtual void interpolate(F32 t, afxXM_Params& params)
   {
-    params.color *= lerp(t, mA, mB);
+    params.color *= mLerp(mA, mB,t);
   }
 };
 
@@ -298,7 +298,7 @@ public:
   afxXM_WaveInterp_Scalar_ColorRep() : afxXM_WaveInterp_Scalar() { }
   virtual void interpolate(F32 t, afxXM_Params& params)
   {
-    F32 scalar_at_t = lerp(t, mA, mB);
+    F32 scalar_at_t = mLerp(mA, mB,t);
     params.color.set(scalar_at_t, scalar_at_t, scalar_at_t, scalar_at_t);
   }
 };
@@ -313,7 +313,7 @@ public:
   afxXM_WaveInterp_Scalar_OriMul(Point3F& ax) : afxXM_WaveInterp_Scalar() { axis = ax;  }
   virtual void interpolate(F32 t, afxXM_Params& params)
   {
-    F32 theta = mDegToRad(lerp(t, mA, mB));
+    F32 theta = mDegToRad(mLerp(mA, mB,t));
     AngAxisF rot_aa(axis, theta);
     MatrixF rot_xfm; rot_aa.setMatrix(&rot_xfm);
     params.ori.mul(rot_xfm);  
@@ -330,7 +330,7 @@ public:
   afxXM_WaveInterp_Scalar_OriRep(Point3F& ax) : afxXM_WaveInterp_Scalar() { axis = ax;  }
   virtual void interpolate(F32 t, afxXM_Params& params)
   {
-    F32 theta = mDegToRad(lerp(t, mA, mB));
+    F32 theta = mDegToRad(mLerp(mA, mB,t));
     AngAxisF rot_aa(axis, theta);
     rot_aa.setMatrix(&params.ori);
   }

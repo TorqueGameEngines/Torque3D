@@ -236,7 +236,7 @@ void afxXM_Oscillate_rot::updateParams(F32 dt, F32 elapsed, afxXM_Params& params
   F32 wt_factor = calc_weight_factor(elapsed);
 
   F32 t = mSin(db->speed*elapsed);  // [-1,1]
-  F32 theta = lerp((t+1)/2, db->min.x*wt_factor, db->max.x*wt_factor);
+  F32 theta = mLerp(db->min.x*wt_factor, db->max.x*wt_factor, (t + 1) / 2);
   theta = mDegToRad(theta);
 
   AngAxisF rot_aa(db->axis, theta);
@@ -258,7 +258,7 @@ void afxXM_Oscillate_scale::updateParams(F32 dt, F32 elapsed, afxXM_Params& para
   F32 wt_factor = calc_weight_factor(elapsed);
 
   F32 t = mSin(db->speed*elapsed);  // [-1,1]
-  F32 s = lerp((t+1)/2, db->min.x*wt_factor, db->max.x*wt_factor);
+  F32 s = mLerp( db->min.x*wt_factor, db->max.x*wt_factor, (t + 1) / 2);
   Point3F xm_scale = db->axis*s;
   
   if (db->additive_scale)
@@ -280,7 +280,7 @@ void afxXM_Oscillate_position::updateParams(F32 dt, F32 elapsed, afxXM_Params& p
   F32 wt_factor = calc_weight_factor(elapsed);
 
   F32 t = mSin(db->speed*elapsed);  // [-1,1]
-  Point3F offset = lerpV(t, db->min*wt_factor, db->max*wt_factor);
+  Point3F offset = mLerp(db->min*wt_factor, db->max*wt_factor,t);
   
   if (db->local_offset)
   {
@@ -304,7 +304,7 @@ void afxXM_Oscillate_position2::updateParams(F32 dt, F32 elapsed, afxXM_Params& 
   F32 wt_factor = calc_weight_factor(elapsed);
 
   F32 t = mSin(db->speed*elapsed);  // [-1,1]
-  Point3F offset = lerpV(t, db->min*wt_factor, db->max*wt_factor);
+  Point3F offset = mLerp(db->min*wt_factor, db->max*wt_factor,t);
 
   params.pos2 += offset;
 }
@@ -325,7 +325,7 @@ void afxXM_Oscillate::updateParams(F32 dt, F32 elapsed, afxXM_Params& params)
 
   if (db->mask & POSITION)
   {
-    Point3F offset = lerpV(t, db->min*wt_factor, db->max*wt_factor);
+    Point3F offset = mLerp(db->min*wt_factor, db->max*wt_factor,t);
     if (db->local_offset)
     {
       params.ori.mulV(offset);
@@ -337,13 +337,13 @@ void afxXM_Oscillate::updateParams(F32 dt, F32 elapsed, afxXM_Params& params)
 
   if (db->mask & POSITION2)
   {
-    Point3F offset = lerpV(t, db->min*wt_factor, db->max*wt_factor);
+    Point3F offset = mLerp(db->min*wt_factor, db->max*wt_factor, t);
     params.pos2 += offset;
   }
 
   if (db->mask & SCALE)
   {
-    F32 s = lerp((t+1)/2, db->min.x*wt_factor, db->max.x*wt_factor);
+    F32 s = mLerp(db->min.x*wt_factor, db->max.x*wt_factor, (t + 1) / 2);
     Point3F xm_scale = db->axis*s;
     if (db->additive_scale)
       params.scale += xm_scale;
@@ -353,7 +353,7 @@ void afxXM_Oscillate::updateParams(F32 dt, F32 elapsed, afxXM_Params& params)
   
   if (db->mask & ORIENTATION)
   {
-    F32 theta = lerp((t+1)/2, db->min.x*wt_factor, db->max.x*wt_factor);
+    F32 theta = mLerp(db->min.x*wt_factor, db->max.x*wt_factor, (t + 1) / 2);
     theta = mDegToRad(theta);
     AngAxisF rot_aa(db->axis, theta);
     MatrixF rot_xfm; rot_aa.setMatrix(&rot_xfm);

@@ -58,7 +58,8 @@ MaterialManager::MaterialManager()
 
    mDt = 0.0f; 
    mAccumTime = 0.0f; 
-   mLastTime = 0; 
+   mLastTime = 0;
+   mDampness = 0.0f;
    mWarningInst = NULL;
    
    GFXDevice::getDeviceEventSignal().notify( this, &MaterialManager::_handleGFXEvent );

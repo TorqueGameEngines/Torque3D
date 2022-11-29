@@ -93,7 +93,7 @@ protected:
 
    enum
    {
-      NumTextures = 8
+      NumTextures = 16
    };
 
    String mSamplerNames[NumTextures]; 

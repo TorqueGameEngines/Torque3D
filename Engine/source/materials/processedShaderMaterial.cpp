@@ -94,6 +94,7 @@ void ShaderConstHandles::init( GFXShader *shader, CustomMaterial* mat /*=NULL*/)
    mEyeMatSC = shader->getShaderConstHandle(ShaderGenVars::eyeMat);
    mOneOverFarplane = shader->getShaderConstHandle(ShaderGenVars::oneOverFarplane);
    mAccumTimeSC = shader->getShaderConstHandle(ShaderGenVars::accumTime);
+   mDampnessSC = shader->getShaderConstHandle(ShaderGenVars::dampness);
    mMinnaertConstantSC = shader->getShaderConstHandle(ShaderGenVars::minnaertConstant);
    mSubSurfaceParamsSC = shader->getShaderConstHandle(ShaderGenVars::subSurfaceParams);
    mDiffuseAtlasParamsSC = shader->getShaderConstHandle(ShaderGenVars::diffuseAtlasParams);
@@ -1097,6 +1098,7 @@ void ProcessedShaderMaterial::_setShaderConstants(SceneRenderState * state, cons
 
    shaderConsts->setSafe( handles->mAccumTimeSC, MATMGR->getTotalTime() );
 
+   shaderConsts->setSafe(handles->mDampnessSC, MATMGR->getDampnessClamped());
    // If the shader constants have not been lost then
    // they contain the content from a previous render pass.
    //

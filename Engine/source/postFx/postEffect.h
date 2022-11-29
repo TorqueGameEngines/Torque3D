@@ -85,7 +85,7 @@ public:
 
    enum
    {
-      NumTextures = 8,
+      NumTextures = 16,
    };
 
 protected:
@@ -156,6 +156,7 @@ protected:
    GFXShaderConstHandle *mLightDirectionSC;
    GFXShaderConstHandle *mCameraForwardSC;
    GFXShaderConstHandle *mAccumTimeSC;
+   GFXShaderConstHandle* mDampnessSC;
    GFXShaderConstHandle *mDeltaTimeSC;
    GFXShaderConstHandle *mInvCameraMatSC;
    GFXShaderConstHandle *mMatCameraToWorldSC;

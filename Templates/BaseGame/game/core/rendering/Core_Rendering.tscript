@@ -5,7 +5,8 @@ function Core_Rendering::onCreate(%this)
    $Core::UnAvailableTexturePath = "core/rendering/images/unavailable";
    $Core::WarningTexturePath = "core/rendering/images/warnMat";
    $Core::CommonShaderPath = "core/rendering/shaders";
-   $Core::BRDFTexture = "core/rendering/images/brdfTexture.dds";
+   $Core::BRDFTexture = "core/rendering/images/brdfTexture.dds";   
+   $Core::WetnessTexture = "core/rendering/images/wetMap.png";
    
    $Core::NoImageAssetFallback = "Core_Rendering:missingTexture_image";
    $Core::NoMaterialAssetFallback = "Core_Rendering:noMaterial";

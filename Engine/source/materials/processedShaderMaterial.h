@@ -81,6 +81,7 @@ public:
    GFXShaderConstHandle* mEyeMatSC;
    GFXShaderConstHandle* mOneOverFarplane;
    GFXShaderConstHandle* mAccumTimeSC;
+   GFXShaderConstHandle* mDampnessSC;
    GFXShaderConstHandle* mMinnaertConstantSC;
    GFXShaderConstHandle* mSubSurfaceParamsSC;
    GFXShaderConstHandle* mDiffuseAtlasParamsSC;

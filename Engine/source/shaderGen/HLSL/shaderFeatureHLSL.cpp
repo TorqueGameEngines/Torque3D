@@ -3060,6 +3060,10 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    skylightCubemapIdx->uniform = true;
    skylightCubemapIdx->constSortPos = cspPotentialPrimitive;
 
+   Var* SkylightDamp = new Var("SkylightDamp", "int");
+   SkylightDamp->uniform = true;
+   SkylightDamp->constSortPos = cspPotentialPrimitive;
+
    Var *inProbePosArray = new Var("inProbePosArray", "float4");
    inProbePosArray->arraySize = MAX_FORWARD_PROBES;
    inProbePosArray->uniform = true;
@@ -3115,6 +3119,16 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    irradianceCubemapARTex->texture = true;
    irradianceCubemapARTex->constNum = irradianceCubemapAR->constNum;
 
+   Var* WetnessTexture = new Var("WetnessTexture", "SamplerState");
+   WetnessTexture->uniform = true;
+   WetnessTexture->sampler = true;
+   WetnessTexture->constNum = Var::getTexUnitNum();     // used as texture unit num here
+
+   Var* WetnessTextureTex = new Var("texture_WetnessTexture", "Texture2D");
+   WetnessTextureTex->uniform = true;
+   WetnessTextureTex->texture = true;
+   WetnessTextureTex->constNum = WetnessTexture->constNum;
+
    Var* surface = getSurface(componentList, meta, fd);
 
    if (!surface)
@@ -3142,12 +3156,28 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
       eyePos->constSortPos = cspPass;
    }
 
+   Var* accumTime = (Var*)LangElement::find("accumTime");
+   if (!accumTime)
+   {
+      accumTime = new Var("accumTime", "float");
+      accumTime->uniform = true;
+      accumTime->constSortPos = cspPass;
+   }
+
+   Var* dampness = (Var*)LangElement::find("dampness");
+   if (!dampness)
+   {
+      dampness = new Var("dampness", "float");
+      dampness->uniform = true;
+      dampness->constSortPos = cspPass;
+   }
+
    String computeForwardProbes = String("   @ = computeForwardProbes(@,@,@,@,@,@,@,@,@,\r\n\t\t");
-   computeForwardProbes += String("@,TORQUE_SAMPLER2D_MAKEARG(@),\r\n\t\t"); 
+   computeForwardProbes += String("@,@,TORQUE_SAMPLER2D_MAKEARG(@),TORQUE_SAMPLER2D_MAKEARG(@), @, @,\r\n\t\t"); 
    computeForwardProbes += String("TORQUE_SAMPLERCUBEARRAY_MAKEARG(@),TORQUE_SAMPLERCUBEARRAY_MAKEARG(@)).rgb; \r\n");
       
    meta->addStatement(new GenOp(computeForwardProbes.c_str(), new DecOp(ibl), surface, cubeMips, numProbes, worldToObjArray, probeConfigData, inProbePosArray, refScaleArray, inRefPosArray, eyePos,
-      skylightCubemapIdx, BRDFTexture,
+      skylightCubemapIdx, SkylightDamp, BRDFTexture, WetnessTexture, accumTime, dampness,
       irradianceCubemapAR, specularCubemapAR));
    
    Var *ambient = (Var *)LangElement::find("ambient");
@@ -3167,8 +3197,8 @@ ShaderFeature::Resources ReflectionProbeFeatHLSL::getResources(const MaterialFea
 {
    Resources res;
 
-   res.numTex = 3;
-   res.numTexReg = 3;
+   res.numTex = 4;
+   res.numTexReg = 4;
 
    return res;
 }
@@ -3187,5 +3217,7 @@ void ReflectionProbeFeatHLSL::setTexData(Material::StageData &stageDat,
       passData.mTexType[texIndex++] = Material::SGCube;
       passData.mSamplerNames[texIndex] = "IrradianceCubemapAR";
       passData.mTexType[texIndex++] = Material::SGCube;
+      passData.mSamplerNames[texIndex] = "WetnessTexture";
+      passData.mTexType[texIndex++] = Material::Standard;
    }
 }

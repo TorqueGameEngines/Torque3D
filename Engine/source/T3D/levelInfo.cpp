@@ -37,6 +37,8 @@
 
 #include "torqueConfig.h"
 #include "T3D/accumulationVolume.h"
+#include "console/typeValidators.h"
+#include "materials/materialManager.h"
 
 IMPLEMENT_CO_NETOBJECT_V1(LevelInfo);
 
@@ -88,7 +90,8 @@ LevelInfo::LevelInfo()
       mAmbientLightBlendPhase( 1.f ),
       mSoundAmbience( NULL ),
       mSoundDistanceModel( SFXDistanceModelLinear ),
-      mSoundscape( NULL )
+      mSoundscape( NULL ),
+      mDampness(0.0)
 {
    mFogData.density = 0.0f;
    mFogData.densityOffset = 0.0f;
@@ -120,6 +123,8 @@ LevelInfo::~LevelInfo()
 
 //-----------------------------------------------------------------------------
 
+FRangeValidator ValiDampnessRange(0.0f, 1.0f);
+
 void LevelInfo::initPersistFields()
 {
    addGroup( "Visibility" );
@@ -130,6 +135,8 @@ void LevelInfo::initPersistFields()
       addField( "decalBias", TypeF32, Offset( mDecalBias, LevelInfo ),
          "NearPlane bias used when rendering Decal and DecalRoad. This should be tuned to the visibleDistance in your level." );
 
+      addFieldV("dampness", TypeF32, Offset(mDampness, LevelInfo), &ValiDampnessRange,
+         "@brief dampness influence");
    endGroup( "Visibility" );
 
    addGroup( "Fog" );
@@ -199,6 +206,7 @@ U32 LevelInfo::packUpdate(NetConnection *conn, U32 mask, BitStream *stream)
    stream->write( mNearClip );
    stream->write( mVisibleDistance );
    stream->write( mDecalBias );
+   stream->write(mDampness);
 
    stream->write( mFogData.density );
    stream->write( mFogData.densityOffset );
@@ -229,6 +237,8 @@ void LevelInfo::unpackUpdate(NetConnection *conn, BitStream *stream)
    stream->read( &mNearClip );
    stream->read( &mVisibleDistance );
    stream->read( &mDecalBias );
+   stream->read(&mDampness);
+   MATMGR->setDampness(mDampness);
 
    stream->read( &mFogData.density );
    stream->read( &mFogData.densityOffset );

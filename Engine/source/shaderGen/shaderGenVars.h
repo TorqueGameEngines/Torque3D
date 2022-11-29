@@ -59,6 +59,7 @@ struct ShaderGenVars
    const static String alphaTestValue;
    const static String texMat;
    const static String accumTime;
+   const static String dampness;   
    const static String minnaertConstant;
    const static String subSurfaceParams;
 
@@ -101,11 +102,12 @@ struct ShaderGenVars
    const static String probeCount;
 
    const static String BRDFTextureMap;
-
+   const static String WetnessTextureMap;   
    const static String maxProbeDrawDistance;
 
    //Skylight
    const static String skylightCubemapIdx;
+   const static String skylightDamp;
    
    // Textures
    const static String fogMap;

@@ -48,7 +48,7 @@ void main()
     vec3 dirt = texture(dirtTex, IN_uv0 / (dirtParams.xy * oneOverTargetSize)).rgb * dirtParams.z * edge;
   #endif
   
-  vec4 upSample = texture(inputTex, IN_uv0) * strength;
+  vec4 upSample = texture(inputTex, IN_uv0) * (strength+1.0);
   
   #ifdef USE_DIRT
     upSample.rgb += upSample.rgb * dirt;

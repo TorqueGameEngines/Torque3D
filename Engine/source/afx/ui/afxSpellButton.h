@@ -77,7 +77,7 @@ public:
   void              setBitmap(const char *name, bool placholder=false);
   void              setSpellBook(afxSpellBook*, U8 page);
   void              setPage(U8 page);
-  char*             formatDesc(char* buffer, int len) const;
+  const char*       formatDesc(char* buffer, int len) const;
 
   afxMagicSpellData*      getSpellDataBlock() const;
   afxRPGMagicSpellData*   getSpellRPGDataBlock() const;

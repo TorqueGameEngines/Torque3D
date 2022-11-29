@@ -730,6 +730,12 @@ class SimObject: public ConsoleObject, public TamlCallbacks
       /// @param   name  Name to assign to the object.
       bool registerObject(const char *name);
 
+      /// Register the object, assigning the name.
+      ///
+      /// @see registerObject()
+      /// @param   name  Name to assign to the object.
+      bool registerObject(const String& name);
+
       /// Register the object, assigning a name and ID.
       ///
       /// @see registerObject()

@@ -387,8 +387,8 @@ macro(finishExecutable)
         add_executable("${PROJECT_NAME}" WIN32 ${${PROJECT_NAME}_files})
     endif()
 
-    # Torque requires c++17
-    target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
+    # Torque requires c++20
+    target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
     addInclude("${firstDir}")
 

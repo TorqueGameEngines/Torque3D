@@ -530,7 +530,7 @@ void GuiShapeEdPreview::setThreadSequence(GuiShapeEdPreview::Thread& thread, TSS
 
 const char* GuiShapeEdPreview::getThreadSequence() const
 {
-   return ( mActiveThread >= 0 ) ? mThreads[mActiveThread].seqName : "";
+   return ( mActiveThread >= 0 ) ? mThreads[mActiveThread].seqName.c_str() : "";
 }
 
 void GuiShapeEdPreview::refreshThreadSequences()

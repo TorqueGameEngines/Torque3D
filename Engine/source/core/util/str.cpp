@@ -415,11 +415,12 @@ class String::StringData : protected StringDataImpl
 
       static StringData* Empty()
       {
-         static UTF16 emptyUTF16[ 1 ] = { 0 };
+         static UTF16 emptyUTF16[1] = { 0 };
+         static UTF8 emptyUTF8[1] = { 0 };
          static StringDataImpl empty =
          {
             #ifdef TORQUE_DEBUG
-            "",            // mString
+            emptyUTF8,     // mString
             #endif
             
             U32_MAX,       // mRefCount

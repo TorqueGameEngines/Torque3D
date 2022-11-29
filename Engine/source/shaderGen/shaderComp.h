@@ -87,7 +87,7 @@ public:
                               U32 numElements = 1, 
                               U32 numRegisters = -1 ) = 0;
 
-   virtual void setName( char *newName ) = 0;
+   virtual void setName( const char *newName ) = 0;
    virtual void reset() = 0;
    virtual void sortVars() = 0;
 

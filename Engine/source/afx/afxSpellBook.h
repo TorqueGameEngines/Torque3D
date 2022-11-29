@@ -118,7 +118,7 @@ public:
   static void             initPersistFields();
 
   S32                     getPageSlotIndex(S32 page, S32 slot);
-  char*                   formatDesc(char* buffer, int len, S32 page, S32 slot) const;
+  const char*             formatDesc(char* buffer, int len, S32 page, S32 slot) const;
   const char*             getSpellIcon(S32 page, S32 slot) const;
   bool                    isPlaceholder(S32 page, S32 slot) const;
   afxMagicSpellData*      getSpellData(S32 page, S32 slot);

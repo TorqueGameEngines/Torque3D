@@ -72,6 +72,7 @@ public:
 
    bool operator == (const Path& path) const { return getFullPath().equal(path.getFullPath()); }
    bool operator != (const Path& path) const { return !(*this == path); }
+   bool operator != (const String& path) const { return !(getFullPath().equal(path)); }
 
    bool isEmpty() const { return getFullPath().isEmpty(); }
 

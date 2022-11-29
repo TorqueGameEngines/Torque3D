@@ -352,7 +352,7 @@ struct StrConstNode : ExprNode
    bool tag;
    bool doc; // Specifies that this string is a documentation block.
 
-   static StrConstNode* alloc(S32 lineNumber, char* str, bool tag, bool doc = false);
+   static StrConstNode* alloc(S32 lineNumber, const char* str, bool tag, bool doc = false);
 
    U32 compile(CodeStream& codeStream, U32 ip, TypeReq type);
    TypeReq getPreferredType();

@@ -258,9 +258,9 @@ void afxSpellBook::unpackUpdate(NetConnection * con, BitStream * stream)
   }
 }
 
-#define SPELL_DATA_NOT_FOUND "\n<just:center><font:Arial:20><color:FF0000>** Spell data not found **\n\n\n\n"
+#define SPELL_DATA_NOT_FOUND "\n<just:center><font:Arial:20><color:FF0000>** Spell data not found **\n\n\n\n";
 
-char* afxSpellBook::formatDesc(char* buffer, int len, S32 page, S32 slot) const
+const char* afxSpellBook::formatDesc(char* buffer, int len, S32 page, S32 slot) const
 {
   S32 idx = mDataBlock->getPageSlotIndex(page, slot);
   if (idx < 0 || !mDataBlock->rpg_spells[idx])

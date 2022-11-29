@@ -85,7 +85,7 @@ public:
   virtual void interpolate(F32 t, afxXM_Params& params)=0;
   virtual void pulse()=0;
 
-  static F32 lerp(F32 t, F32 a, F32 b) { return a + t * (b - a); }
+  static inline F32 lerp(F32 t, F32 a, F32 b) { return a + t * (b - a); }
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

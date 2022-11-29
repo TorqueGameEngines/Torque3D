@@ -230,7 +230,7 @@ void ShaderConnectorHLSL::sortVars()
    return;
 }
 
-void ShaderConnectorHLSL::setName( char *newName )
+void ShaderConnectorHLSL::setName( const char *newName )
 {
    dStrcpy( (char*)mName, newName, 32 );
 }

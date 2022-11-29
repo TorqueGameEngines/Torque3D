@@ -830,6 +830,14 @@ bool SimObject::registerObject(const char *name)
 
 //-----------------------------------------------------------------------------
 
+bool SimObject::registerObject(const String& name)
+{
+   assignName(name.c_str());
+   return registerObject();
+}
+
+//-----------------------------------------------------------------------------
+
 bool SimObject::registerObject(const char *name, U32 id)
 {
    setId(id);
@@ -1466,7 +1474,7 @@ SimObject* SimObject::clone()
    simObject->assignFieldsFrom( this );
 
    String name = Sim::getUniqueName( getName() );
-   if( !simObject->registerObject( name ) )
+   if( !simObject->registerObject( name.c_str() ) )
    {
       delete simObject;
       return NULL;
@@ -3269,8 +3277,7 @@ DefineEngineMethod( SimObject, getDebugInfo, ArrayObject*, (),,
    array->push_back( "Object|Description", object->describeSelf() );
    array->push_back( "Object|FileName", object->getFilename() );
    array->push_back( "Object|DeclarationLine", String::ToString( object->getDeclarationLine() ) );
-   array->push_back( "Object|CopySource", object->getCopySource() ?
-      String::ToString( "%i:%s (%s)", object->getCopySource()->getId(), object->getCopySource()->getClassName(), object->getCopySource()->getName() ) : "" );
+   array->push_back( "Object|CopySource", object->getCopySource() ? String::ToString( "%i:%s (%s)", object->getCopySource()->getId(), object->getCopySource()->getClassName(), object->getCopySource()->getName() ) : String("") );
    array->push_back( "Flag|EditorOnly", object->isEditorOnly() ? "true" : "false" );
    array->push_back( "Flag|NameChangeAllowed", object->isNameChangeAllowed() ? "true" : "false" );
    array->push_back( "Flag|AutoDelete", object->isAutoDeleted() ? "true" : "false" );

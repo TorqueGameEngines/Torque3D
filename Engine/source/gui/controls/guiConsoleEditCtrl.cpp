@@ -134,7 +134,7 @@ bool GuiConsoleEditCtrl::onKeyDown(const GuiEvent &event)
 
          text = String::ToString( "echo(%s);", text.c_str() );
 
-         setText( text );
+         setText( text.utf8() );
       }
 
 		return Parent::dealWithEnter(false);

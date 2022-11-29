@@ -443,7 +443,7 @@ bool afxMagicMissileData::onAdd()
    {
       // Tokenize input string and convert to Point3F array
       //
-      Vector<char*> dataBlocks(__FILE__, __LINE__);
+      Vector<String> dataBlocks(__FILE__, __LINE__);
 
       // make a copy of points_string
       dsize_t tokCopyLen = dStrlen(wiggle_axis_string) + 1;

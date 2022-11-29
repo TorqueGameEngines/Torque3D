@@ -353,7 +353,7 @@ public:
 
          ival = 0;
          fval = 0;
-         sval = typeValueEmpty;
+         sval = NULL;
          bufferLen = 0;
       }
 
@@ -404,10 +404,10 @@ public:
          {
             fval = (F32)val;
             ival = val;
-            if (sval != typeValueEmpty)
+            if (sval != NULL)
             {
                dFree(sval);
-               sval = typeValueEmpty;
+               sval = NULL;
             }
             type = TypeInternalInt;
          }
@@ -434,10 +434,10 @@ public:
          {
             fval = val;
             ival = static_cast<U32>(val);
-            if (sval != typeValueEmpty)
+            if (sval != NULL)
             {
                dFree(sval);
-               sval = typeValueEmpty;
+               sval = NULL;
             }
             type = TypeInternalFloat;
          }

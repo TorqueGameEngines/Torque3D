@@ -88,7 +88,7 @@ static MYGUID IID_IDxDiagContainer( 0x7D0F462F, 0x4064, 0x4862, 0xBC, 0x7F, 0x93
 
 //------------------------------------------------------------------------------
 
-WCHAR *WMIVideoInfo::smPVIQueryTypeToWMIString [] =
+const WCHAR *WMIVideoInfo::smPVIQueryTypeToWMIString [] =
 {
    L"MaxNumberControlled",    //PVI_NumDevices
    L"Description",            //PVI_Description

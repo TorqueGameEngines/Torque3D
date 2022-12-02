@@ -610,7 +610,7 @@ DefineEngineStringlyVariadicMethod(SQLiteObject, query, S32, 1, 5,
 		}
 		else
 			return 0; // incorrect number of question marks vs arguments
-		Con::printf("Old SQL: %s\nNew SQL: %s", argv[1].getStringValue(), szNew);
+		Con::printf("Old SQL: %s\nNew SQL: %s", argv[1].getString(), szNew);
 		return object->ExecuteSQL(szNew);
 	}
 

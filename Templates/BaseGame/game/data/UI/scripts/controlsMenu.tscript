@@ -184,7 +184,7 @@ function fillRemapList()
 
 function controlSetChanged()
 {
-   $activeRemapControlSet = OptionsMenuSettingsList.getCurrentOption();
+   $activeRemapControlSet = OptionsMenuSettingsList.getObject(0).getCurrentOption();
    fillRemapList();
 }
 

@@ -230,15 +230,15 @@ public:
    DECLARE_IMAGEASSET_ARRAY_SETGET(Material, ORMConfigMap);
 
    bool     mIsSRGb[MAX_STAGES];
-   DECLARE_IMAGEASSET_ARRAY(Material, RoughMap, MAX_STAGES);
-   DECLARE_IMAGEASSET_ARRAY_SETGET(Material, RoughMap);
-
-   bool     mInvertRoughness[MAX_STAGES];
-   F32      mRoughnessChan[MAX_STAGES];
    DECLARE_IMAGEASSET_ARRAY(Material, AOMap, MAX_STAGES);
    DECLARE_IMAGEASSET_ARRAY_SETGET(Material, AOMap);
-
    F32      mAOChan[MAX_STAGES];
+
+   DECLARE_IMAGEASSET_ARRAY(Material, RoughMap, MAX_STAGES);
+   DECLARE_IMAGEASSET_ARRAY_SETGET(Material, RoughMap);
+   bool     mInvertRoughness[MAX_STAGES];
+   F32      mRoughnessChan[MAX_STAGES];
+
    DECLARE_IMAGEASSET_ARRAY(Material, MetalMap, MAX_STAGES);
    DECLARE_IMAGEASSET_ARRAY_SETGET(Material, MetalMap);
 

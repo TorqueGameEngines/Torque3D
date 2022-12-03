@@ -129,10 +129,10 @@ Material::Material()
       mMetalness[i] = 0.0f;
 
       mIsSRGb[i] = false;
-      mInvertRoughness[i] = false;
 
-      mRoughnessChan[i] = 0;
-      mAOChan[i] = 1;
+      mAOChan[i] = 0;
+      mInvertRoughness[i] = false;
+      mRoughnessChan[i] = 1;
       mMetalChan[i] = 2;
 
       mAccuEnabled[i] = false;

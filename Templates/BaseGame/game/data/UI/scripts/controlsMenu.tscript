@@ -145,6 +145,23 @@ function fillRemapList()
       
       %actionMapName = %actionMap.humanReadableName $= "" ? %actionMap.getName() : %actionMap.humanReadableName;
       
+      //see if we have any actual listed remappable keys for this movemap. if so, drop it from the listing
+      %hasRemaps = false;
+      for ( %r = 0; %r < $RemapCount; %r++ )
+      {
+         %testMapName = $RemapActionMap[%r].humanReadableName $= "" ? $RemapActionMap[%r].getName() : $RemapActionMap[%r].humanReadableName; 
+         
+         if(%actionMapName $= %testMapName)
+         {
+            //got a match to at least one, so we're ok to continue
+            %hasRemaps = true;
+            break;  
+         }
+      }
+      
+      if(!%hasRemaps)
+         continue;
+      
       if(%actionMapList $= "")
          %actionMapList = %actionMapName;
       else

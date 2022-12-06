@@ -1,70 +1,21 @@
-$RemapName[$RemapCount] = "Forward";
-$RemapCmd[$RemapCount] = "moveforward";
-$RemapActionMap[$RemapCount] = "ExampleMoveMap";
-$RemapDevice[$RemapCount] = "keyboard";
-$RemapDescription[$RemapCount] = "Forward Movement";
-$RemapCount++;
-$RemapName[$RemapCount] = "Backward";
-$RemapCmd[$RemapCount] = "movebackward";
-$RemapActionMap[$RemapCount] = "ExampleMoveMap";
-$RemapDevice[$RemapCount] = "keyboard";
-$RemapDescription[$RemapCount] = "Backward Movement";
-$RemapCount++;
-$RemapName[$RemapCount] = "Strafe Left";
-$RemapCmd[$RemapCount] = "moveleft";
-$RemapActionMap[$RemapCount] = "ExampleMoveMap";
-$RemapDevice[$RemapCount] = "keyboard";
-$RemapDescription[$RemapCount] = "Left Strafing Movement";
-$RemapCount++;
-$RemapName[$RemapCount] = "Strafe Right";
-$RemapCmd[$RemapCount] = "moveright";
-$RemapActionMap[$RemapCount] = "ExampleMoveMap";
-$RemapDevice[$RemapCount] = "keyboard";
-$RemapDescription[$RemapCount] = "Right Strafing Movement";
-$RemapCount++;
-$RemapName[$RemapCount] = "Ascend";
-$RemapCmd[$RemapCount] = "moveup";
-$RemapActionMap[$RemapCount] = "ExampleMoveMap";
-$RemapDevice[$RemapCount] = "keyboard";
-$RemapDescription[$RemapCount] = "Makes the camera ascend";
-$RemapCount++;
-$RemapName[$RemapCount] = "Descend";
-$RemapCmd[$RemapCount] = "movedown";
-$RemapActionMap[$RemapCount] = "ExampleMoveMap";
-$RemapDevice[$RemapCount] = "keyboard";
-$RemapDescription[$RemapCount] = "Makes the camera descend";
-$RemapCount++;
-$RemapName[$RemapCount] = "Jump";
-$RemapCmd[$RemapCount] = "jump";
-$RemapActionMap[$RemapCount] = "ExampleMoveMap";
-$RemapDevice[$RemapCount] = "keyboard";
-$RemapDescription[$RemapCount] = "Jump";
-$RemapCount++;
+if(!isObject( ExampleMoveMap ) )
+{
+   new ActionMap(ExampleMoveMap)
+   {
+      humanReadableName = "Example Movement";
+   };
+}
 
-$RemapName[$RemapCount] = "Ascend";
-$RemapCmd[$RemapCount] = "moveup";
-$RemapActionMap[$RemapCount] = "ExampleMoveMap";
-$RemapDevice[$RemapCount] = "gamepad";
-$RemapDescription[$RemapCount] = "Makes the camera ascend";
-$RemapCount++;
-$RemapName[$RemapCount] = "Descend";
-$RemapCmd[$RemapCount] = "movedown";
-$RemapActionMap[$RemapCount] = "ExampleMoveMap";
-$RemapDevice[$RemapCount] = "gamepad";
-$RemapDescription[$RemapCount] = "Makes the camera descend";
-$RemapCount++;
-$RemapName[$RemapCount] = "Jump";
-$RemapCmd[$RemapCount] = "jump";
-$RemapActionMap[$RemapCount] = "ExampleMoveMap";
-$RemapDevice[$RemapCount] = "gamepad";
-$RemapDescription[$RemapCount] = "Jump";
-$RemapCount++;
-
-if ( isObject( ExampleMoveMap ) )
-   ExampleMoveMap.delete();
-   
-new ActionMap(ExampleMoveMap);
-ExampleMoveMap.humanReadableName = "Example Movement";
+//------------------------------------------------------------------------------
+// Set up remappable entries
+//------------------------------------------------------------------------------
+addKeyRemap("Forward", "ExampleMoveMap", "keyboard", "moveForward", "Forward Movement");
+addKeyRemap("Backward", "ExampleMoveMap", "keyboard", "movebackward", "Backward Movement");
+addKeyRemap("Strafe Left", "ExampleMoveMap", "keyboard", "moveleft", "Left Strafing Movement");
+addKeyRemap("Strafe Right", "ExampleMoveMap", "keyboard", "moveright", "Right Strafing Movement");
+addKeyRemap("Ascend", "ExampleMoveMap", "keyboard", "moveup", "Makes the camera ascend");
+addKeyRemap("Descend", "ExampleMoveMap", "keyboard", "movedown", "Makes the camera descend");
+addKeyRemap("Jump", "ExampleMoveMap", "keyboard", "jump", "Jump");
 
 //------------------------------------------------------------------------------
 // Non-remapable binds

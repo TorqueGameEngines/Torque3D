@@ -9,3 +9,22 @@ function getMouseAdjustAmount(%val)
    // based on a default camera FOV of 90'
    return(%val * ($cameraFov / 90) * 0.01) * $pref::Input::LinkMouseSensitivity;
 }
+
+function addKeyRemap(%name, %actionMap, %device, %command, %description)
+{
+   if(%name $= "" ||
+      %actionMap $= "" ||
+      %device $= "" ||
+      %command $= "")
+   {
+      error("addKeybindRemap() - tried to add a remap entry, but didn't have all the keeded info!");
+      return;
+   }
+   
+   $RemapName[$RemapCount] = %name;
+   $RemapCmd[$RemapCount] = %command;
+   $RemapActionMap[$RemapCount] = %actionMap;
+   $RemapDevice[$RemapCount] = %device;
+   $RemapDescription[$RemapCount] = %description;
+   $RemapCount++;  
+}

@@ -12,6 +12,33 @@
 // When a local game is started - a listen server - via calling StartGame() a server is created and then the client is
 // connected to it via createAndConnectToLocalServer().
 
+function Core_ClientServer::onLoadMap(%this)
+{
+    %this.finishMapLoad();
+}
+
+function Core_ClientServer::finishMapLoad()
+{
+    Core_ClientServer.GetEventManager().postEvent( "mapLoadComplete" );
+}
+
+function Core_ClientServerListener::onMapLoadComplete(%this)
+{
+    $moduleLoadedDone++;
+    %numModsNeedingLoaded = 0;
+    %modulesList = ModuleDatabase.findModules();
+    for(%i=0; %i < getWordCount(%modulesList); %i++)
+    {
+        %module = getWord(%modulesList, %i);
+        if (%module.ModuleId.isMethod("finishMapLoad"))
+            %numModsNeedingLoaded++;
+    }
+    if ($moduleLoadedDone == %numModsNeedingLoaded)
+    {
+        loadMissionStage3();  
+    }
+}
+
 function Core_ClientServer::onCreate( %this )
 {
    echo("\n--------- Initializing Directory: scripts ---------");
@@ -33,6 +60,9 @@ function Core_ClientServer::onCreate( %this )
    {
       initClient();
    }
+   %this.GetEventManager().registerEvent("mapLoadComplete");
+   %this.listener = new ScriptMsgListener() {class = Core_ClientServerListener;}; 
+   %this.GetEventManager().subscribe( %this.listener, "mapLoadComplete" ); 
 }
 
 function Core_ClientServer::onDestroy( %this )

@@ -745,12 +745,15 @@ void GuiInspectorTypeShapeAssetPtr::consoleInit()
 GuiControl* GuiInspectorTypeShapeAssetPtr::constructEditControl()
 {
    // Create base filename edit controls
-   GuiControl *retCtrl = Parent::constructEditControl();
+   GuiControl* retCtrl = Parent::constructEditControl();
    if (retCtrl == NULL)
       return retCtrl;
 
    // Change filespec
    char szBuffer[512];
+
+   const char* previewImage;
+
    if (mInspector->getInspectObject() != nullptr)
    {
       dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"ShapeAsset\", \"AssetBrowser.changeAsset\", %s, %s);",
@@ -758,6 +761,8 @@ GuiControl* GuiInspectorTypeShapeAssetPtr::constructEditControl()
       mBrowseButton->setField("Command", szBuffer);
 
       setDataField(StringTable->insert("targetObject"), NULL, mInspector->getInspectObject()->getIdString());
+
+      previewImage = mInspector->getInspectObject()->getDataField(mCaption, NULL);
    }
    else
    {
@@ -765,52 +770,151 @@ GuiControl* GuiInspectorTypeShapeAssetPtr::constructEditControl()
       dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"ShapeAsset\", \"AssetBrowser.changeAsset\", %s, \"%s\");",
          mInspector->getIdString(), mVariableName);
       mBrowseButton->setField("Command", szBuffer);
+
+      previewImage = Con::getVariable(mVariableName);
    }
 
-   // Create "Open in ShapeEditor" button
-   mShapeEdButton = new GuiBitmapButtonCtrl();
+   mLabel = new GuiTextCtrl();
+   mLabel->registerObject();
+   mLabel->setControlProfile(mProfile);
+   mLabel->setText(mCaption);
+   addObject(mLabel);
+
+   //
+   GuiTextEditCtrl* editTextCtrl = static_cast<GuiTextEditCtrl*>(retCtrl);
+   GuiControlProfile* toolEditProfile;
+   if (Sim::findObject("ToolsGuiTextEditProfile", toolEditProfile))
+      editTextCtrl->setControlProfile(toolEditProfile);
+
+   GuiControlProfile* toolDefaultProfile = nullptr;
+   Sim::findObject("ToolsGuiDefaultProfile", toolDefaultProfile);
+
+   //
+   mPreviewImage = new GuiBitmapCtrl();
+   mPreviewImage->registerObject();
+
+   if (toolDefaultProfile)
+      mPreviewImage->setControlProfile(toolDefaultProfile);
+
+   updatePreviewImage();
+
+   addObject(mPreviewImage);
+
+   //
+   mPreviewBorderButton = new GuiBitmapButtonCtrl();
+   mPreviewBorderButton->registerObject();
+
+   if (toolDefaultProfile)
+      mPreviewBorderButton->setControlProfile(toolDefaultProfile);
+
+   mPreviewBorderButton->_setBitmap(StringTable->insert("ToolsModule:cubemapBtnBorder_n_image"));
+
+   mPreviewBorderButton->setField("Command", szBuffer); //clicking the preview does the same thing as the edit button, for simplicity
+   addObject(mPreviewBorderButton);
+
+   //
+   // Create "Open in Editor" button
+   mEditButton = new GuiBitmapButtonCtrl();
 
    dSprintf(szBuffer, sizeof(szBuffer), "ShapeEditorPlugin.openShapeAssetId(%d.getText());", retCtrl->getId());
-   mShapeEdButton->setField("Command", szBuffer);
+   mEditButton->setField("Command", szBuffer);
 
-   char bitmapName[512] = "ToolsModule:shape_editor_n_image";
-   mShapeEdButton->setBitmap(StringTable->insert(bitmapName));
+   mEditButton->setText("Edit");
+   mEditButton->setSizing(horizResizeLeft, vertResizeAspectTop);
 
-   mShapeEdButton->setDataField(StringTable->insert("Profile"), NULL, "GuiButtonProfile");
-   mShapeEdButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
-   mShapeEdButton->setDataField(StringTable->insert("hovertime"), NULL, "1000");
-   mShapeEdButton->setDataField(StringTable->insert("tooltip"), NULL, "Open this file in the Shape Editor");
+   mEditButton->setDataField(StringTable->insert("Profile"), NULL, "ToolsGuiButtonProfile");
+   mEditButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
+   mEditButton->setDataField(StringTable->insert("hovertime"), NULL, "1000");
+   mEditButton->setDataField(StringTable->insert("tooltip"), NULL, "Open this asset in the Shape Editor");
 
-   mShapeEdButton->registerObject();
-   addObject(mShapeEdButton);
+   mEditButton->registerObject();
+   addObject(mEditButton);
+
+   //
+   mUseHeightOverride = true;
+   mHeightOverride = 72;
 
    return retCtrl;
 }
 
 bool GuiInspectorTypeShapeAssetPtr::updateRects()
 {
+   S32 rowSize = 18;
    S32 dividerPos, dividerMargin;
    mInspector->getDivider(dividerPos, dividerMargin);
    Point2I fieldExtent = getExtent();
    Point2I fieldPos = getPosition();
 
-   mCaptionRect.set(0, 0, fieldExtent.x - dividerPos - dividerMargin, fieldExtent.y);
-   mEditCtrlRect.set(fieldExtent.x - dividerPos + dividerMargin, 1, dividerPos - dividerMargin - 34, fieldExtent.y);
+   mEditCtrlRect.set(0, 0, fieldExtent.x, fieldExtent.y);
+   mLabel->resize(Point2I(mProfile->mTextOffset.x, 0), Point2I(fieldExtent.x, rowSize));
 
-   bool resized = mEdit->resize(mEditCtrlRect.point, mEditCtrlRect.extent);
-   if (mBrowseButton != NULL)
+   RectI previewRect = RectI(Point2I(mProfile->mTextOffset.x, rowSize), Point2I(50, 50));
+   mPreviewBorderButton->resize(previewRect.point, previewRect.extent);
+   mPreviewImage->resize(previewRect.point, previewRect.extent);
+
+   S32 editPos = previewRect.point.x + previewRect.extent.x + 10;
+   mEdit->resize(Point2I(editPos, rowSize * 1.5), Point2I(fieldExtent.x - editPos - 5, rowSize));
+
+   mEditButton->resize(Point2I(fieldExtent.x - 105, previewRect.point.y + previewRect.extent.y - rowSize), Point2I(100, rowSize));
+
+   mBrowseButton->setHidden(true);
+
+   return true;
+}
+
+void GuiInspectorTypeShapeAssetPtr::updateValue()
+{
+   Parent::updateValue();
+
+   updatePreviewImage();
+}
+
+void GuiInspectorTypeShapeAssetPtr::updatePreviewImage()
+{
+   const char* previewImage;
+   if (mInspector->getInspectObject() != nullptr)
+      previewImage = mInspector->getInspectObject()->getDataField(mCaption, NULL);
+   else
+      previewImage = Con::getVariable(mVariableName);
+
+   //if what we're working with isn't even a valid asset, don't present like we found a good one
+   if (!AssetDatabase.isDeclaredAsset(previewImage))
    {
-      mBrowseRect.set(fieldExtent.x - 32, 2, 14, fieldExtent.y - 4);
-      resized |= mBrowseButton->resize(mBrowseRect.point, mBrowseRect.extent);
+      mPreviewImage->_setBitmap(StringTable->EmptyString());
+      return;
    }
 
-   if (mShapeEdButton != NULL)
+   String shpPreviewAssetId = String(previewImage) + "_PreviewImage";
+   shpPreviewAssetId.replace(":", "_");
+   shpPreviewAssetId = "ToolsModule:" + shpPreviewAssetId;
+   if (AssetDatabase.isDeclaredAsset(shpPreviewAssetId.c_str()))
    {
-      RectI shapeEdRect(fieldExtent.x - 16, 2, 14, fieldExtent.y - 4);
-      resized |= mShapeEdButton->resize(shapeEdRect.point, shapeEdRect.extent);
+      mPreviewImage->setBitmap(StringTable->insert(shpPreviewAssetId.c_str()));
    }
 
-   return resized;
+   if (mPreviewImage->getBitmapAsset().isNull())
+      mPreviewImage->_setBitmap(StringTable->insert("ToolsModule:genericAssetIcon_image"));
+}
+
+void GuiInspectorTypeShapeAssetPtr::setPreviewImage(StringTableEntry assetId)
+{
+   //if what we're working with isn't even a valid asset, don't present like we found a good one
+   if (!AssetDatabase.isDeclaredAsset(assetId))
+   {
+      mPreviewImage->_setBitmap(StringTable->EmptyString());
+      return;
+   }
+
+   String shpPreviewAssetId = String(assetId) + "_PreviewImage";
+   shpPreviewAssetId.replace(":", "_");
+   shpPreviewAssetId = "ToolsModule:" + shpPreviewAssetId;
+   if (AssetDatabase.isDeclaredAsset(shpPreviewAssetId.c_str()))
+   {
+      mPreviewImage->setBitmap(StringTable->insert(shpPreviewAssetId.c_str()));
+   }
+
+   if (mPreviewImage->getBitmapAsset().isNull())
+      mPreviewImage->_setBitmap(StringTable->insert("ToolsModule:genericAssetIcon_image"));
 }
 
 IMPLEMENT_CONOBJECT(GuiInspectorTypeShapeAssetId);

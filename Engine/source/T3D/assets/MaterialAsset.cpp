@@ -480,6 +480,8 @@ GuiControl* GuiInspectorTypeMaterialAssetPtr::constructEditControl()
    // Change filespec
    char szBuffer[512];
 
+   const char* previewImage;
+
    if (mInspector->getInspectObject() != nullptr)
    {
       dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"MaterialAsset\", \"AssetBrowser.changeAsset\", %s, %s);",
@@ -487,6 +489,8 @@ GuiControl* GuiInspectorTypeMaterialAssetPtr::constructEditControl()
       mBrowseButton->setField("Command", szBuffer);
 
       setDataField(StringTable->insert("targetObject"), NULL, mInspector->getInspectObject()->getIdString());
+
+      previewImage = mInspector->getInspectObject()->getDataField(mCaption, NULL);
    }
    else
    {
@@ -494,18 +498,59 @@ GuiControl* GuiInspectorTypeMaterialAssetPtr::constructEditControl()
       dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"MaterialAsset\", \"AssetBrowser.changeAsset\", %s, \"%s\");",
          mInspector->getIdString(), mVariableName);
       mBrowseButton->setField("Command", szBuffer);
+
+      previewImage = Con::getVariable(mVariableName);
    }
 
+   mLabel = new GuiTextCtrl();
+   mLabel->registerObject();
+   mLabel->setControlProfile(mProfile);
+   mLabel->setText(mCaption);
+   addObject(mLabel);
+
+   //
+   GuiTextEditCtrl* editTextCtrl = static_cast<GuiTextEditCtrl*>(retCtrl);
+   GuiControlProfile* toolEditProfile;
+   if (Sim::findObject("ToolsGuiTextEditProfile", toolEditProfile))
+      editTextCtrl->setControlProfile(toolEditProfile);
+
+   GuiControlProfile* toolDefaultProfile = nullptr;
+   Sim::findObject("ToolsGuiDefaultProfile", toolDefaultProfile);
+
+   //
+   mPreviewImage = new GuiBitmapCtrl();
+   mPreviewImage->registerObject();
+
+   if(toolDefaultProfile)
+      mPreviewImage->setControlProfile(toolDefaultProfile);
+
+   updatePreviewImage();
+
+   addObject(mPreviewImage);
+
+   //
+   mPreviewBorderButton = new GuiBitmapButtonCtrl();
+   mPreviewBorderButton->registerObject();
+
+   if(toolDefaultProfile)
+      mPreviewBorderButton->setControlProfile(toolDefaultProfile);
+
+   mPreviewBorderButton->_setBitmap(StringTable->insert("ToolsModule:cubemapBtnBorder_n_image"));
+
+   mPreviewBorderButton->setField("Command", szBuffer); //clicking the preview does the same thing as the edit button, for simplicity
+   addObject(mPreviewBorderButton);
+
+   //
    // Create "Open in Editor" button
    mEditButton = new GuiBitmapButtonCtrl();
 
    dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.editAsset(%d.getText());", retCtrl->getId());
    mEditButton->setField("Command", szBuffer);
 
-   char bitmapName[512] = "ToolsModule:material_editor_n_image";
-   mEditButton->setBitmap(StringTable->insert(bitmapName));
+   mEditButton->setText("Edit");
+   mEditButton->setSizing(horizResizeLeft, vertResizeAspectTop);
 
-   mEditButton->setDataField(StringTable->insert("Profile"), NULL, "GuiButtonProfile");
+   mEditButton->setDataField(StringTable->insert("Profile"), NULL, "ToolsGuiButtonProfile");
    mEditButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
    mEditButton->setDataField(StringTable->insert("hovertime"), NULL, "1000");
    mEditButton->setDataField(StringTable->insert("tooltip"), NULL, "Open this asset in the Material Editor");
@@ -513,33 +558,113 @@ GuiControl* GuiInspectorTypeMaterialAssetPtr::constructEditControl()
    mEditButton->registerObject();
    addObject(mEditButton);
 
+   //
+   mUseHeightOverride = true;
+   mHeightOverride = 72;
+
    return retCtrl;
 }
 
 bool GuiInspectorTypeMaterialAssetPtr::updateRects()
 {
+   S32 rowSize = 18;
    S32 dividerPos, dividerMargin;
    mInspector->getDivider(dividerPos, dividerMargin);
    Point2I fieldExtent = getExtent();
    Point2I fieldPos = getPosition();
 
-   mCaptionRect.set(0, 0, fieldExtent.x - dividerPos - dividerMargin, fieldExtent.y);
-   mEditCtrlRect.set(fieldExtent.x - dividerPos + dividerMargin, 1, dividerPos - dividerMargin - 34, fieldExtent.y);
+   mEditCtrlRect.set(0, 0, fieldExtent.x, fieldExtent.y);
+   mLabel->resize(Point2I(mProfile->mTextOffset.x, 0), Point2I(fieldExtent.x, rowSize));
 
-   bool resized = mEdit->resize(mEditCtrlRect.point, mEditCtrlRect.extent);
-   if (mBrowseButton != NULL)
+   RectI previewRect = RectI(Point2I(mProfile->mTextOffset.x, rowSize), Point2I(50, 50));
+   mPreviewBorderButton->resize(previewRect.point, previewRect.extent);
+   mPreviewImage->resize(previewRect.point, previewRect.extent);
+
+   S32 editPos = previewRect.point.x + previewRect.extent.x + 10;
+   mEdit->resize(Point2I(editPos, rowSize * 1.5), Point2I(fieldExtent.x - editPos - 5, rowSize));
+
+   mEditButton->resize(Point2I(fieldExtent.x - 105, previewRect.point.y + previewRect.extent.y - rowSize), Point2I(100, rowSize));
+
+   mBrowseButton->setHidden(true);
+
+   return true;
+}
+
+void GuiInspectorTypeMaterialAssetPtr::updateValue()
+{
+   Parent::updateValue();
+
+   updatePreviewImage();
+}
+
+void GuiInspectorTypeMaterialAssetPtr::updatePreviewImage()
+{
+   const char* previewImage;
+   if (mInspector->getInspectObject() != nullptr)
+      previewImage = mInspector->getInspectObject()->getDataField(mCaption, NULL);
+   else
+      previewImage = Con::getVariable(mVariableName);
+
+   //if what we're working with isn't even a valid asset, don't present like we found a good one
+   if (!AssetDatabase.isDeclaredAsset(previewImage))
    {
-      mBrowseRect.set(fieldExtent.x - 32, 2, 14, fieldExtent.y - 4);
-      resized |= mBrowseButton->resize(mBrowseRect.point, mBrowseRect.extent);
+      mPreviewImage->_setBitmap(StringTable->EmptyString());
+      return;
    }
 
-   if (mEditButton != NULL)
+   String matPreviewAssetId = String(previewImage) + "_PreviewImage";
+   matPreviewAssetId.replace(":", "_");
+   matPreviewAssetId = "ToolsModule:" + matPreviewAssetId;
+   if (AssetDatabase.isDeclaredAsset(matPreviewAssetId.c_str()))
    {
-      RectI shapeEdRect(fieldExtent.x - 16, 2, 14, fieldExtent.y - 4);
-      resized |= mEditButton->resize(shapeEdRect.point, shapeEdRect.extent);
+      mPreviewImage->setBitmap(StringTable->insert(matPreviewAssetId.c_str()));
+   }
+   else
+   {
+      if (AssetDatabase.isDeclaredAsset(previewImage))
+      {
+         MaterialAsset* matAsset = AssetDatabase.acquireAsset<MaterialAsset>(previewImage);
+         if (matAsset && matAsset->getMaterialDefinition())
+         {
+            mPreviewImage->_setBitmap(matAsset->getMaterialDefinition()->mDiffuseMapAssetId[0]);
+         }
+      }
    }
 
-   return resized;
+   if (mPreviewImage->getBitmapAsset().isNull())
+      mPreviewImage->_setBitmap(StringTable->insert("ToolsModule:genericAssetIcon_image"));
+}
+
+void GuiInspectorTypeMaterialAssetPtr::setPreviewImage(StringTableEntry assetId)
+{
+   //if what we're working with isn't even a valid asset, don't present like we found a good one
+   if (!AssetDatabase.isDeclaredAsset(assetId))
+   {
+      mPreviewImage->_setBitmap(StringTable->EmptyString());
+      return;
+   }
+
+   String matPreviewAssetId = String(assetId) + "_PreviewImage";
+   matPreviewAssetId.replace(":", "_");
+   matPreviewAssetId = "ToolsModule:" + matPreviewAssetId;
+   if (AssetDatabase.isDeclaredAsset(matPreviewAssetId.c_str()))
+   {
+      mPreviewImage->setBitmap(StringTable->insert(matPreviewAssetId.c_str()));
+   }
+   else
+   {
+      if (AssetDatabase.isDeclaredAsset(assetId))
+      {
+         MaterialAsset* matAsset = AssetDatabase.acquireAsset<MaterialAsset>(assetId);
+         if (matAsset && matAsset->getMaterialDefinition())
+         {
+            mPreviewImage->_setBitmap(matAsset->getMaterialDefinition()->mDiffuseMapAssetId[0]);
+         }
+      }
+   }
+
+   if (mPreviewImage->getBitmapAsset().isNull())
+      mPreviewImage->_setBitmap(StringTable->insert("ToolsModule:genericAssetIcon_image"));
 }
 
 IMPLEMENT_CONOBJECT(GuiInspectorTypeMaterialAssetId);

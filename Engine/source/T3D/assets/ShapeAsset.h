@@ -221,13 +221,21 @@ class GuiInspectorTypeShapeAssetPtr : public GuiInspectorTypeFileName
    typedef GuiInspectorTypeFileName Parent;
 public:
 
-   GuiBitmapButtonCtrl* mShapeEdButton;
+   GuiTextCtrl* mLabel;
+   GuiBitmapButtonCtrl* mPreviewBorderButton;
+   GuiBitmapCtrl* mPreviewImage;
+   GuiButtonCtrl* mEditButton;
 
    DECLARE_CONOBJECT(GuiInspectorTypeShapeAssetPtr);
    static void consoleInit();
 
    virtual GuiControl* constructEditControl();
    virtual bool updateRects();
+
+   virtual void updateValue();
+
+   void updatePreviewImage();
+   void setPreviewImage(StringTableEntry assetId);
 };
 
 class GuiInspectorTypeShapeAssetId : public GuiInspectorTypeShapeAssetPtr

@@ -57,6 +57,7 @@
 #include "materials/customMaterialDefinition.h"
 #include "materials/materialManager.h"
 #include "assetMacroHelpers.h"
+#include <gui/controls/guiBitmapCtrl.h>
 
 //-----------------------------------------------------------------------------
 class MaterialAsset : public AssetBase
@@ -140,13 +141,21 @@ class GuiInspectorTypeMaterialAssetPtr : public GuiInspectorTypeFileName
    typedef GuiInspectorTypeFileName Parent;
 public:
 
-   GuiBitmapButtonCtrl* mEditButton;
+   GuiTextCtrl* mLabel;
+   GuiBitmapButtonCtrl* mPreviewBorderButton;
+   GuiBitmapCtrl* mPreviewImage;
+   GuiButtonCtrl* mEditButton;
 
    DECLARE_CONOBJECT(GuiInspectorTypeMaterialAssetPtr);
    static void consoleInit();
 
    virtual GuiControl* constructEditControl();
    virtual bool updateRects();
+
+   virtual void updateValue();
+
+   void updatePreviewImage();
+   void setPreviewImage(StringTableEntry assetId);
 };
 
 class GuiInspectorTypeMaterialAssetId : public GuiInspectorTypeMaterialAssetPtr

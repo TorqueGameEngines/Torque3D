@@ -411,8 +411,8 @@ bool TSStatic::_createShape()
    resetWorldBox();
 
    mShapeInstance = new TSShapeInstance(mShape, isClientObject());
-   if (isClientObject())
-      mShapeInstance->cloneMaterialList();
+   mShapeInstance->resetMaterialList();
+   mShapeInstance->cloneMaterialList();
 
    if (isGhost())
    {
@@ -1638,7 +1638,7 @@ void TSStatic::getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList)
 #ifdef TORQUE_TOOLS
 void TSStatic::onInspect(GuiInspector* inspector)
 {
-   if (mShapeAsset == nullptr)
+   //if (mShapeAsset == nullptr)
       return;
 
    //Put the GameObject group before everything that'd be gameobject-effecting, for orginazational purposes
@@ -1649,28 +1649,18 @@ void TSStatic::onInspect(GuiInspector* inspector)
    GuiControl* stack = dynamic_cast<GuiControl*>(materialGroup->findObjectByInternalName(StringTable->insert("Stack")));
 
    //Do this on both the server and client
-   S32 materialCount = mShapeAsset->getShape()->materialList->getMaterialNameList().size(); //mMeshAsset->getMaterialCount();
+   TSMaterialList* matList = mShapeInstance->getMaterialList();
+   Vector<String> matListNames = matList->getMaterialNameList();
+   S32 materialCount = matListNames.size();
 
    if (isServerObject())
    {
-      //we need to update the editor
-      /*for (U32 i = 0; i < mFields.size(); i++)
-      {
-         //find any with the materialslot title and clear them out
-         if (FindMatch::isMatch("MaterialSlot*", mFields[i].mFieldName, false))
-         {
-            setDataField(mFields[i].mFieldName, NULL, "");
-            mFields.erase(i);
-            continue;
-         }
-      }*/
-
       //next, get a listing of our materials in the shape, and build our field list for them
       char matFieldName[128];
 
       for (U32 i = 0; i < materialCount; i++)
       {
-         StringTableEntry materialname = StringTable->insert(mShapeAsset->getShape()->materialList->getMaterialName(i).c_str());
+         StringTableEntry materialname = StringTable->insert(mShapeInstance->getMaterialList()->getMaterialName(i).c_str());
 
          AssetPtr<MaterialAsset> matAsset;
          if(MaterialAsset::getAssetByMaterialName(materialname, &matAsset) == MaterialAsset::Ok)
@@ -1693,6 +1683,9 @@ void TSStatic::onInspect(GuiInspector* inspector)
             if (fieldGui->registerObject())
             {
                StringTableEntry fieldValue = matAsset->getAssetId();
+
+               GuiInspectorTypeMaterialAssetPtr* matFieldPtr = dynamic_cast<GuiInspectorTypeMaterialAssetPtr*>(fieldGui);
+               matFieldPtr->setPreviewImage(fieldValue);
 
                //Check if we'd already actually changed it, and display the modified value
                for (U32 c = 0; c < mChangingMaterials.size(); c++)

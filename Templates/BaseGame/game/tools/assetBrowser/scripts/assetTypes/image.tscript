@@ -336,17 +336,13 @@ function GuiInspectorTypeImageAssetPtr::onControlDropped( %this, %payload, %posi
       return;
 
    %assetType = %payload.assetType;
+   %module = %payload.moduleName;
+   %assetName = %payload.assetName;
    
    if(%assetType $= "ImageAsset")
    {
-      %module = %payload.moduleName;
-      %asset = %payload.assetName;
-      
-      %oldValue = %this.targetObject.bitmapAsset;
-      %arrayIndex = "";
-      
-      %targetObject = %this.targetObject;
-      %targetObject.bitmapAsset = %module @ ":" @ %asset; 
+      %cmd = %this @ ".apply(\""@ %module @ ":" @ %assetName @ "\");";
+      eval(%cmd);
    }
    
    EWorldEditor.isDirty = true;

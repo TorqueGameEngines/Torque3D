@@ -126,9 +126,6 @@ void GuiBitmapCtrl::inspectPostApply()
 
 void GuiBitmapCtrl::setBitmap( const char *name, bool resize )
 {
-   if ( !isAwake() )
-      return;
-
    _setBitmap(StringTable->insert(name));
 
    if (mBitmap && resize)

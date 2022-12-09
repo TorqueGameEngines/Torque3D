@@ -34,9 +34,9 @@ $PostFX::HDRPostFX::keyValue = 0.115;
 
 
 //Explicit HDR Params
-$PostFX::HDRPostFX::exposureValue = 1.5;
+$PostFX::HDRPostFX::exposureValue = 1.0;
 
-$PostFX::HDRPostFX::whitePoint = 2.5;
+$PostFX::HDRPostFX::whitePoint = 1.0;
 
 //HDR Color Corrections Vars
 
@@ -60,8 +60,8 @@ $PostFX::HDRPostFX::adaptRate = 0.85;
 // http://www.iryoku.com/next-generation-post-processing-in-call-of-duty-advanced-warfare
 
 $PostFX::HDRPostFX::enableBloom = true;
-$PostFX::HDRPostFX::threshold = 1.25;
-$PostFX::HDRPostFX::intensity = 0.25;
+$PostFX::HDRPostFX::threshold = 1.0;
+$PostFX::HDRPostFX::intensity = 1.0;
 $PostFX::HDRPostFX::radius = 4.0;
 
 $PostFX::HDRPostFX::enableDirt = true;

@@ -342,7 +342,6 @@ function GuiInspectorTypeImageAssetPtr::onControlDropped( %this, %payload, %posi
    if(%assetType $= "ImageAsset")
    {
       %cmd = %this @ ".apply(\""@ %module @ ":" @ %assetName @ "\");";
-      echo("Changing asset via the " @ %cmd @ " command");
       eval(%cmd);
    }
    

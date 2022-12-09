@@ -417,7 +417,6 @@ function GuiInspectorTypeShapeAssetPtr::onControlDropped( %this, %payload, %posi
    if(%assetType $= "ShapeAsset")
    {
       %cmd = %this @ ".apply(\""@ %module @ ":" @ %assetName @ "\");";
-      echo("Changing asset via the " @ %cmd @ " command");
       eval(%cmd);
    }
    

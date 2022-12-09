@@ -305,7 +305,7 @@ new GuiControlProfile( ToolsGuiTextEditProfile )
    border = -2; // fix to display textEdit img
    //borderWidth = "1";  // fix to display textEdit img
    //borderColor = "100 100 100";
-   fillColor = EditorSettings.value("Theme/fieldBGColor");
+   fillColor = EditorSettings.value("Theme/dividerDarkColor");
    fillColorHL = "75 75 75 255";
    fillColorSEL = EditorSettings.value("Theme/fieldBGSELColor");
    

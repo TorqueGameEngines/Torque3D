@@ -411,18 +411,14 @@ function GuiInspectorTypeShapeAssetPtr::onControlDropped( %this, %payload, %posi
       return;
 
    %assetType = %payload.assetType;
+   %module = %payload.moduleName;
+   %assetName = %payload.assetName;
    
    if(%assetType $= "ShapeAsset")
    {
-      %module = %payload.moduleName;
-      %asset = %payload.assetName;
-      
-      %oldValue = %this.targetObject.shapeAsset;
-      %arrayIndex = "";
-      
-      %targetObject = %this.targetObject;
-      %targetObject.shapeAsset = %module @ ":" @ %asset;
-
+      %cmd = %this @ ".apply(\""@ %module @ ":" @ %assetName @ "\");";
+      echo("Changing asset via the " @ %cmd @ " command");
+      eval(%cmd);
    }
    
    EWorldEditor.isDirty = true;

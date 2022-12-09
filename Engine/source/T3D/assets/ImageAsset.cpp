@@ -475,6 +475,8 @@ GuiControl* GuiInspectorTypeImageAssetPtr::constructEditControl()
    if (retCtrl == NULL)
       return retCtrl;
 
+   retCtrl->getRenderTooltipDelegate().bind(this, &GuiInspectorTypeImageAssetPtr::renderTooltip);
+
    // Change filespec
    char szBuffer[512];
 

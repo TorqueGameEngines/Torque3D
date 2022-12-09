@@ -825,7 +825,7 @@ GuiControl* GuiInspectorTypeShapeAssetPtr::constructEditControl()
    mEditButton->setDataField(StringTable->insert("Profile"), NULL, "ToolsGuiButtonProfile");
    mEditButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
    mEditButton->setDataField(StringTable->insert("hovertime"), NULL, "1000");
-   mEditButton->setDataField(StringTable->insert("tooltip"), NULL, "Open this asset in the Material Editor");
+   mEditButton->setDataField(StringTable->insert("tooltip"), NULL, "Open this asset in the Shape Editor");
 
    mEditButton->registerObject();
    addObject(mEditButton);
@@ -852,9 +852,10 @@ bool GuiInspectorTypeShapeAssetPtr::updateRects()
    mPreviewBorderButton->resize(previewRect.point, previewRect.extent);
    mPreviewImage->resize(previewRect.point, previewRect.extent);
 
-   mEdit->resize(Point2I(previewRect.point.x + previewRect.extent.x + 10, rowSize * 1.5), Point2I(200, rowSize));
+   S32 editPos = previewRect.point.x + previewRect.extent.x + 10;
+   mEdit->resize(Point2I(editPos, rowSize * 1.5), Point2I(fieldExtent.x - editPos - 5, rowSize));
 
-   mEditButton->resize(Point2I(fieldExtent.x - 100, fieldExtent.y - rowSize), Point2I(100, rowSize));
+   mEditButton->resize(Point2I(fieldExtent.x - 105, previewRect.point.y + previewRect.extent.y - rowSize), Point2I(100, rowSize));
 
    mBrowseButton->setHidden(true);
 
@@ -876,6 +877,13 @@ void GuiInspectorTypeShapeAssetPtr::updatePreviewImage()
    else
       previewImage = Con::getVariable(mVariableName);
 
+   //if what we're working with isn't even a valid asset, don't present like we found a good one
+   if (!AssetDatabase.isDeclaredAsset(previewImage))
+   {
+      mPreviewImage->_setBitmap(StringTable->EmptyString());
+      return;
+   }
+
    String shpPreviewAssetId = String(previewImage) + "_PreviewImage";
    shpPreviewAssetId.replace(":", "_");
    shpPreviewAssetId = "ToolsModule:" + shpPreviewAssetId;
@@ -890,6 +898,13 @@ void GuiInspectorTypeShapeAssetPtr::updatePreviewImage()
 
 void GuiInspectorTypeShapeAssetPtr::setPreviewImage(StringTableEntry assetId)
 {
+   //if what we're working with isn't even a valid asset, don't present like we found a good one
+   if (!AssetDatabase.isDeclaredAsset(assetId))
+   {
+      mPreviewImage->_setBitmap(StringTable->EmptyString());
+      return;
+   }
+
    String shpPreviewAssetId = String(assetId) + "_PreviewImage";
    shpPreviewAssetId.replace(":", "_");
    shpPreviewAssetId = "ToolsModule:" + shpPreviewAssetId;

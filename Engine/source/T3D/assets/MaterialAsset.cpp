@@ -580,9 +580,10 @@ bool GuiInspectorTypeMaterialAssetPtr::updateRects()
    mPreviewBorderButton->resize(previewRect.point, previewRect.extent);
    mPreviewImage->resize(previewRect.point, previewRect.extent);
 
-   mEdit->resize(Point2I(previewRect.point.x + previewRect.extent.x + 10, rowSize * 1.5), Point2I(200, rowSize));
+   S32 editPos = previewRect.point.x + previewRect.extent.x + 10;
+   mEdit->resize(Point2I(editPos, rowSize * 1.5), Point2I(fieldExtent.x - editPos - 5, rowSize));
 
-   mEditButton->resize(Point2I(fieldExtent.x - 100, fieldExtent.y - rowSize), Point2I(100, rowSize));
+   mEditButton->resize(Point2I(fieldExtent.x - 105, previewRect.point.y + previewRect.extent.y - rowSize), Point2I(100, rowSize));
 
    mBrowseButton->setHidden(true);
 
@@ -603,6 +604,13 @@ void GuiInspectorTypeMaterialAssetPtr::updatePreviewImage()
       previewImage = mInspector->getInspectObject()->getDataField(mCaption, NULL);
    else
       previewImage = Con::getVariable(mVariableName);
+
+   //if what we're working with isn't even a valid asset, don't present like we found a good one
+   if (!AssetDatabase.isDeclaredAsset(previewImage))
+   {
+      mPreviewImage->_setBitmap(StringTable->EmptyString());
+      return;
+   }
 
    String matPreviewAssetId = String(previewImage) + "_PreviewImage";
    matPreviewAssetId.replace(":", "_");
@@ -629,6 +637,13 @@ void GuiInspectorTypeMaterialAssetPtr::updatePreviewImage()
 
 void GuiInspectorTypeMaterialAssetPtr::setPreviewImage(StringTableEntry assetId)
 {
+   //if what we're working with isn't even a valid asset, don't present like we found a good one
+   if (!AssetDatabase.isDeclaredAsset(assetId))
+   {
+      mPreviewImage->_setBitmap(StringTable->EmptyString());
+      return;
+   }
+
    String matPreviewAssetId = String(assetId) + "_PreviewImage";
    matPreviewAssetId.replace(":", "_");
    matPreviewAssetId = "ToolsModule:" + matPreviewAssetId;

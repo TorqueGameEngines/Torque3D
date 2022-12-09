@@ -542,7 +542,7 @@ GuiControl* GuiInspectorTypeImageAssetPtr::constructEditControl()
 
    //
    // Create "Open in Editor" button
-   mEditButton = new GuiBitmapButtonCtrl();
+   /*mEditButton = new GuiBitmapButtonCtrl();
 
    dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.editAsset(%d.getText());", retCtrl->getId());
    mEditButton->setField("Command", szBuffer);
@@ -553,10 +553,10 @@ GuiControl* GuiInspectorTypeImageAssetPtr::constructEditControl()
    mEditButton->setDataField(StringTable->insert("Profile"), NULL, "ToolsGuiButtonProfile");
    mEditButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
    mEditButton->setDataField(StringTable->insert("hovertime"), NULL, "1000");
-   mEditButton->setDataField(StringTable->insert("tooltip"), NULL, "Open this asset in the Material Editor");
+   mEditButton->setDataField(StringTable->insert("tooltip"), NULL, "Open this asset in the Image Editor");
 
    mEditButton->registerObject();
-   addObject(mEditButton);
+   addObject(mEditButton);*/
 
    //
    mUseHeightOverride = true;
@@ -580,9 +580,10 @@ bool GuiInspectorTypeImageAssetPtr::updateRects()
    mPreviewBorderButton->resize(previewRect.point, previewRect.extent);
    mPreviewImage->resize(previewRect.point, previewRect.extent);
 
-   mEdit->resize(Point2I(previewRect.point.x + previewRect.extent.x + 10, rowSize * 1.5), Point2I(200, rowSize));
+   S32 editPos = previewRect.point.x + previewRect.extent.x + 10;
+   mEdit->resize(Point2I(editPos, rowSize * 1.5), Point2I(fieldExtent.x - editPos - 5, rowSize));
 
-   mEditButton->resize(Point2I(fieldExtent.x - 100, fieldExtent.y - rowSize), Point2I(100, rowSize));
+   //mEditButton->resize(Point2I(fieldExtent.x - 105, previewRect.point.y + previewRect.extent.y - rowSize), Point2I(100, rowSize));
 
    mBrowseButton->setHidden(true);
 
@@ -677,6 +678,13 @@ void GuiInspectorTypeImageAssetPtr::updatePreviewImage()
    else
       previewImage = Con::getVariable(mVariableName);
 
+   //if what we're working with isn't even a valid asset, don't present like we found a good one
+   if (!AssetDatabase.isDeclaredAsset(previewImage))
+   {
+      mPreviewImage->_setBitmap(StringTable->EmptyString());
+      return;
+   }
+
    String imgPreviewAssetId = String(previewImage) + "_PreviewImage";
    imgPreviewAssetId.replace(":", "_");
    imgPreviewAssetId = "ToolsModule:" + imgPreviewAssetId;
@@ -702,6 +710,13 @@ void GuiInspectorTypeImageAssetPtr::updatePreviewImage()
 
 void GuiInspectorTypeImageAssetPtr::setPreviewImage(StringTableEntry assetId)
 {
+   //if what we're working with isn't even a valid asset, don't present like we found a good one
+   if (!AssetDatabase.isDeclaredAsset(assetId))
+   {
+      mPreviewImage->_setBitmap(StringTable->EmptyString());
+      return;
+   }
+
    String imgPreviewAssetId = String(assetId) + "_PreviewImage";
    imgPreviewAssetId.replace(":", "_");
    imgPreviewAssetId = "ToolsModule:" + imgPreviewAssetId;

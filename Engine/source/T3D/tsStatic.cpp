@@ -1638,7 +1638,7 @@ void TSStatic::getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList)
 #ifdef TORQUE_TOOLS
 void TSStatic::onInspect(GuiInspector* inspector)
 {
-   if (mShapeAsset == nullptr)
+   //if (mShapeAsset == nullptr)
       return;
 
    //Put the GameObject group before everything that'd be gameobject-effecting, for orginazational purposes

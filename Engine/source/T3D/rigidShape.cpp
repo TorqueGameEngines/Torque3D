@@ -1234,6 +1234,10 @@ collision, impact and contact forces are generated.
 
 bool RigidShape::updateCollision(F32 dt)
 {
+   PROFILE_SCOPE(RigidShape_updateCollision);
+
+   if (mRigid.atRest || mDisableMove || (getVelocity().lenSquared() < mDataBlock->contactTol * mDataBlock->contactTol)) return false;
+
    // Update collision information
    MatrixF mat,cmat;
    mConvex.transform = &mat;
@@ -1262,6 +1266,7 @@ on standard collision resolution formulas.
 */
 bool RigidShape::resolveCollision(Rigid&  ns,CollisionList& cList)
 {
+   PROFILE_SCOPE(RigidShape_resolveCollision);
    // Apply impulses to resolve collision
    bool collided = false;
    for (S32 i = 0; i < cList.getCount(); i++)
@@ -1314,6 +1319,7 @@ on the depth of penetration and the moment of inertia at the point of contact.
 */
 bool RigidShape::resolveContacts(Rigid& ns,CollisionList& cList,F32 dt)
 {
+   PROFILE_SCOPE(RigidShape_resolveContacts);
    // Use spring forces to manage contact constraints.
    bool collided = false;
    Point3F t,p(0,0,0),l(0,0,0);

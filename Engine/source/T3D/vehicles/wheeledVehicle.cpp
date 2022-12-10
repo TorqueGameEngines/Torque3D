@@ -799,7 +799,7 @@ void WheeledVehicle::advanceTime(F32 dt)
 
    // Stick the wheels to the ground.  This is purely so they look
    // good while the vehicle is being interpolated.
-   extendWheels();
+   //extendWheels();
 
    // Update wheel angular position and slip, this is a client visual
    // feature only, it has no affect on the physics.

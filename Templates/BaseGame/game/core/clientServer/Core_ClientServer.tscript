@@ -12,19 +12,30 @@
 // When a local game is started - a listen server - via calling StartGame() a server is created and then the client is
 // connected to it via createAndConnectToLocalServer().
 
+function Core_ClientServer::clearLoadStatus()
+{
+   Core_ClientServer.moduleLoadedDone = 0;
+   Core_ClientServer.moduleLoadedFailed = 0;
+}
 function Core_ClientServer::onLoadMap(%this)
 {
     %this.finishMapLoad();
 }
 
-function Core_ClientServer::finishMapLoad()
+function Core_ClientServer::finishMapLoad(%this)
 {
     Core_ClientServer.GetEventManager().postEvent( "mapLoadComplete" );
 }
 
+function Core_ClientServer::FailMapLoad(%this, %moduleName, %isFine)
+{    
+    Core_ClientServer.failedModuleName = %moduleName;
+    Core_ClientServer.GetEventManager().postEvent( "mapLoadFail", %isFine );
+}
+
 function Core_ClientServerListener::onMapLoadComplete(%this)
 {
-    $moduleLoadedDone++;
+    Core_ClientServer.moduleLoadedDone++;
     %numModsNeedingLoaded = 0;
     %modulesList = ModuleDatabase.findModules();
     for(%i=0; %i < getWordCount(%modulesList); %i++)
@@ -33,7 +44,7 @@ function Core_ClientServerListener::onMapLoadComplete(%this)
         if (%module.ModuleId.isMethod("finishMapLoad"))
             %numModsNeedingLoaded++;
     }
-    if ($moduleLoadedDone == %numModsNeedingLoaded)
+    if (Core_ClientServer.moduleLoadedDone == %numModsNeedingLoaded)
     {
         loadMissionStage3();  
     }
@@ -47,11 +58,11 @@ function Core_ClientServerListener::onmapLoadFail(%this, %isFine)
         return;
     }
     
-    $moduleLoadedFailed++;
-    echo("onmapLoadFail!");
-    if ($moduleLoadedFailed>1) return; // yeah, we know
+    Core_ClientServer.moduleLoadedFailed++;
+    if (Core_ClientServer.moduleLoadedFailed>1) return; // yeah, we know
         
-    $Server::LoadFailMsg = "Failed to load map!";
+    $Server::LoadFailMsg = Core_ClientServer.failedModuleName @" failed to load mission specific data!";
+    error($Server::LoadFailMsg);
     // Inform clients that are already connected
     
     for (%clientIndex = 0; %clientIndex < ClientGroup.getCount(); %clientIndex++)

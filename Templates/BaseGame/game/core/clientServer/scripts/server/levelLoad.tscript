@@ -126,8 +126,7 @@ function loadMissionStage2()
    // Set mission name.
    if( isObject( theLevelInfo ) )
       $Server::MissionName = theLevelInfo.levelName;
-   $moduleLoadedDone = 0;
-   $moduleLoadedFailed = 0;
+   Core_ClientServer.clearLoadStatus();
    callOnModules("onLoadMap");
 
 }

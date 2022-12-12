@@ -127,6 +127,7 @@ function loadMissionStage2()
    if( isObject( theLevelInfo ) )
       $Server::MissionName = theLevelInfo.levelName;
    $moduleLoadedDone = 0;
+   $moduleLoadedFailed = 0;
    callOnModules("onLoadMap");
 
 }

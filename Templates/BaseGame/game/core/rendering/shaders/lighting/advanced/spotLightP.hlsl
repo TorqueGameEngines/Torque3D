@@ -153,9 +153,16 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
    #endif
 
       //get Punctual light contribution   
-      lighting = getPunctualLight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, shadowed);
+      
       //get spot angle attenuation
-      lighting *= getSpotAngleAtt(-surfaceToLight.L, lightDirection, lightSpotParams );
+	  float att = 1;
+	  att *= getDistanceAtt(surfaceToLight.L, lightInvSqrRange);
+      att *= getSpotAngleAtt(-surfaceToLight.L, lightDirection, lightSpotParams, lightRange);
+	  float3 lCol = lightColor.rgb *(lightBrightness / (4.0 * 3.14159265359));
+	  float3 radince = lCol * att;
+	  float3 factor = saturate(surfaceToLight.NdotL) * shadowed * radince;
+	  lighting = evaluateStandardBRDF(surface,surfaceToLight) * factor;
+	  //
    }
    
    return float4(lighting, 0);

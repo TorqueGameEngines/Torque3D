@@ -807,7 +807,9 @@ void AdvancedLightBinManager::LightMaterialInfo::setLightParameters( const Light
          const F32 innerCone = getMin(lightInfo->getInnerConeAngle(), outerCone);
          const F32 outerCos = mCos(mDegToRad(outerCone / 2.0f));
          const F32 innerCos = mCos(mDegToRad(innerCone / 2.0f));
-         Point2F spotParams(outerCos,innerCos - outerCos); 
+         const F32 lightAngleScale = 1.0f / getMax(0.001f, (innerCos - outerCos));
+         const F32 lightAngleOffset = -outerCos * lightAngleScale;
+         Point2F spotParams(lightAngleScale, lightAngleOffset);
 
          matParams->setSafe( lightSpotParams, spotParams );
          matParams->setSafe( lightDirection, lightInfo->getDirection());

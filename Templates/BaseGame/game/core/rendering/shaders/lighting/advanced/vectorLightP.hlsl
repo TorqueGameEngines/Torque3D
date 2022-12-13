@@ -30,11 +30,11 @@
 
 TORQUE_UNIFORM_SAMPLER2D(deferredBuffer, 0);
 TORQUE_UNIFORM_SAMPLER2D(shadowMap, 1);
-
 //contains gTapRotationTex sampler 
 #include "softShadow.hlsl"
 TORQUE_UNIFORM_SAMPLER2D(colorBuffer, 3);
 TORQUE_UNIFORM_SAMPLER2D(matInfoBuffer, 4);
+TORQUE_UNIFORM_SAMPLER2DCMP(shadowMapCmp, 5);
 
 uniform float  lightBrightness;
 uniform float3 lightDirection;
@@ -65,6 +65,8 @@ uniform float4 offsetX;
 uniform float4 offsetY;
 
 float4 AL_VectorLightShadowCast( TORQUE_SAMPLER2D(sourceShadowMap),
+								TORQUE_SAMPLER2DCMP(sourceShadowMapCMP),
+								float2 screenPos,
                                 float2 texCoord,
                                 float4x4 worldToLightProj,
                                 float3 worldPos,
@@ -163,8 +165,16 @@ float4 AL_VectorLightShadowCast( TORQUE_SAMPLER2D(sourceShadowMap),
       float farPlaneScale = dot( farPlaneScalePSSM, finalMask );
       distToLight *= farPlaneScale;
 
-      return float4(debugColor, softShadow_filter(  TORQUE_SAMPLER2D_MAKEARG(sourceShadowMap), texCoord, shadowCoord, farPlaneScale * shadowSoftness,
-                                distToLight, dotNL, dot( finalMask, overDarkPSSM ) ) );
+      return float4(debugColor, softShadow_filter(  
+	  TORQUE_SAMPLER2D_MAKEARG(sourceShadowMap),
+	  TORQUE_SAMPLER2D_MAKEARG(sourceShadowMapCMP),
+	  screenPos, 
+	  texCoord, 
+	  shadowCoord, 
+	  farPlaneScale * shadowSoftness,
+      distToLight, 
+	  dotNL, 
+	  dot( finalMask, overDarkPSSM ) ) );
 };
 
 
@@ -197,8 +207,19 @@ float4 main(FarFrustumQuadConnectP IN) : SV_TARGET
       float4 zDist = (zNearFarInvNearFar.x + zNearFarInvNearFar.y * surface.depth);
       float fadeOutAmt = ( zDist.x - fadeStartLength.x ) * fadeStartLength.y;
 
-      float4 shadowed_colors = AL_VectorLightShadowCast( TORQUE_SAMPLER2D_MAKEARG(shadowMap), IN.uv0.xy, worldToLightProj, surface.P, scaleX, scaleY, offsetX, offsetY,
-                                                             farPlaneScalePSSM, surfaceToLight.NdotL);
+      float4 shadowed_colors = AL_VectorLightShadowCast( 
+	  TORQUE_SAMPLER2D_MAKEARG(shadowMap), 
+	  TORQUE_SAMPLER2D_MAKEARG(shadowMapCmp),
+	  IN.hpos.xy, 
+	  IN.uv0.xy,
+	  worldToLightProj, 
+	  surface.P, 
+	  scaleX, 
+	  scaleY, 
+	  offsetX, 
+	  offsetY,
+      farPlaneScalePSSM, 
+	  surfaceToLight.NdotL);
 
       float shadow = shadowed_colors.a;
 	  

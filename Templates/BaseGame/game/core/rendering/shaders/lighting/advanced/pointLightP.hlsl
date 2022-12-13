@@ -101,7 +101,7 @@ TORQUE_UNIFORM_SAMPLER2D(deferredBuffer, 0);
 #ifdef SHADOW_CUBE
 TORQUE_UNIFORM_SAMPLERCUBE(shadowMap, 1);
 #else
-TORQUE_UNIFORM_SAMPLER2D(shadowMap, 1);
+TORQUE_UNIFORM_SAMPLER2DCMP(shadowMap, 1);
 #endif
 //contains gTapRotationTex sampler 
 #include "softShadow.hlsl"
@@ -174,7 +174,8 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
 
    #else
       float2 shadowCoord = decodeShadowCoord( mul( worldToLightProj, -surfaceToLight.L ) ).xy;
-      float shadowed = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(shadowMap), ssPos.xy, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
+      float4 shadowed = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(shadowMap), IN.pos.xy, ssPos.xy, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
+	  float shadowed = shadowed_colors.a;
    #endif
    
    #endif // !NO_SHADOW

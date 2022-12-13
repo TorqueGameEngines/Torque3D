@@ -20,6 +20,14 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+singleton GFXSamplerStateData(ShadowSampler)
+{
+   addressModeU = GFXAddressMirror;
+   addressModeV = GFXAddressMirror;
+   magFilter = GFXTextureFilterLinear;
+   minFilter = GFXTextureFilterLinear;
+   samplerFunc = GFXCmpGreater;
+};
 
 // Vector Light State
 singleton GFXStateBlockData( AL_VectorLightState )
@@ -44,9 +52,10 @@ singleton GFXStateBlockData( AL_VectorLightState )
    samplersDefined = true;
    samplerStates[0] = SamplerClampPoint;  // G-buffer
    samplerStates[1] = SamplerClampPoint;  // Shadow Map (Do not change this to linear, as all cards can not filter equally.)
-   samplerStates[3] = SamplerWrapPoint;   // gTapRotationTex Random Direction Map
-   samplerStates[4] = SamplerClampPoint;   // colorBuffer
-   samplerStates[5] = SamplerClampPoint;   // matInfoBuffer
+   samplerStates[2] = SamplerWrapPoint;   // gTapRotationTex Random Direction Map
+   samplerStates[3] = SamplerClampPoint;   // colorBuffer
+   samplerStates[4] = SamplerClampPoint;   // matInfoBuffer
+   samplerStates[5] = ShadowSampler;  // Shadow Map (Do not change this to linear, as all cards can not filter equally.)
    
    cullDefined = true;
    cullMode = GFXCullNone;
@@ -69,7 +78,8 @@ singleton shaderData( AL_VectorLightShader )
    samplerNames[1] = "$shadowMap";
    samplerNames[2] = "$gTapRotationTex";
    samplerNames[3] = "$colorBuffer";
-   samplerNames[4] = "$matInfoBuffer";  
+   samplerNames[4] = "$matInfoBuffer";
+   samplerNames[5] = "$shadowMapCMP";
    
    pixVersion = 3.0;
 };
@@ -83,6 +93,7 @@ singleton CustomMaterial( AL_VectorLightMaterial )
    sampler["shadowMap"] = "$dynamiclight";
    sampler["colorBuffer"] = "#color";
    sampler["matInfoBuffer"] = "#matinfo";
+   sampler["shadowMapCMP"] = "$dynamiclight";
    
    target = "AL_FormatToken";
    

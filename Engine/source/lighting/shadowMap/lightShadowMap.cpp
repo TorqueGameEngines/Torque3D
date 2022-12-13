@@ -265,8 +265,16 @@ bool LightShadowMap::setTextureStage( U32 currTexFlag, LightingShaderConstants* 
    {
       S32 reg = lsc->mShadowMapSC->getSamplerRegister();
 
-      if ( reg != -1 )
-         GFX->setTexture( reg, mShadowMapTex);
+      if (reg != -1)
+      {
+         GFX->setTexture(reg, mShadowMapTex);
+      }
+
+      reg = lsc->mShadowMapCMPSC->getSamplerRegister();
+      if (reg != -1)
+      {
+         GFX->setTexture(reg, mShadowMapTex);
+      }
 
       return true;
    } else if ( currTexFlag == Material::DynamicLightMask )
@@ -427,7 +435,8 @@ LightingShaderConstants::LightingShaderConstants()
       mVectorLightDirectionSC(NULL),
       mVectorLightColorSC(NULL),
       mVectorLightBrightnessSC(NULL),
-      mShadowMapSC(NULL), 
+      mShadowMapSC(NULL),
+      mShadowMapCMPSC(NULL),
       mShadowMapSizeSC(NULL), 
       mCookieMapSC(NULL),
       mRandomDirsConst(NULL),
@@ -487,6 +496,7 @@ void LightingShaderConstants::init(GFXShader* shader)
    mVectorLightBrightnessSC = shader->getShaderConstHandle(ShaderGenVars::vectorLightBrightness);
 
    mShadowMapSC = shader->getShaderConstHandle("$shadowMap");
+   mShadowMapCMPSC = shader->getShaderConstHandle("$shadowMapCMP");
    mShadowMapSizeSC = shader->getShaderConstHandle("$shadowMapSize");
 
    mCookieMapSC = shader->getShaderConstHandle("$cookieMap");

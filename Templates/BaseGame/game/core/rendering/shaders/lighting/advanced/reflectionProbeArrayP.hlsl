@@ -58,7 +58,7 @@ float4 main(PFXVertToPix IN) : SV_TARGET
    }
 
    #ifdef USE_SSAO_MASK
-      float ssao =  1.0 - TORQUE_TEX2D( ssaoMask, viewportCoordToRenderTarget( IN.uv0.xy, rtParams6 ) ).r;
+      float ssao =  1.0 - TORQUE_TEX2D( ssaoMask, viewportCoordToRenderTarget( IN.uv0.xy, rtParams7 ) ).r;
       surface.ao = min(surface.ao, ssao);  
    #endif
 

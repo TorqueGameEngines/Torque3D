@@ -828,7 +828,7 @@ function OptionsMenuSettingsList::addOptionRow(%this, %label, %targetPrefVar, %o
       %enabled = true;
       
    %optionsRowSize = 30;
-   %optionColumnWidth = %this.extent.x * 0.3;//todo, calculate off longest option text?
+   %optionColumnWidth = %this.extent.x * 0.5;//todo, calculate off longest option text?
       
    %option = new GuiGameSettingsCtrl() { 
       class = "MenuOptionsButton";
@@ -936,7 +936,7 @@ function OptionsMenuSettingsList::addSliderRow(%this, %label, %targetPrefVar, %i
       %enabled = true;
       
    %optionsRowSize = 30;
-   %optionColumnWidth = %this.extent.x - 450;//todo, calculate off longest option text?
+   %optionColumnWidth = %this.extent.x * 0.5;//todo, calculate off longest option text?
       
    %option = new GuiGameSettingsCtrl() { 
       class = "MenuOptionsButton";
@@ -965,7 +965,7 @@ function OptionsMenuSettingsList::addKeybindRow(%this, %label, %bitmapName, %cal
       %enabled = true;
       
    %optionsRowSize = 40;
-   %optionColumnWidth = %this.extent.x - 450;
+   %optionColumnWidth = %this.extent.x * 0.5;//todo, calculate off longest option text?
       
    %option = new GuiGameSettingsCtrl() { 
       class = "MenuOptionsButton";

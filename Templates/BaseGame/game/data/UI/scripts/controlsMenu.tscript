@@ -205,12 +205,13 @@ function controlSetChanged()
    fillRemapList();
 }
 
-function doKeyRemap( %rowIndex )
+function doKeyRemap( %row )
 {
+   %rowIndex = %row.getParent().getObjectIndex(%row);
    %rowIndex--; //Offset the rowIndex to account for controlset option
    %name = $RemapName[%rowIndex];
 
-	RemapDlg-->OptRemapText.setValue( "Re-bind \"" @ %name @ "\" to..." );
+	RemapDlg-->OptRemapText.text = "Re-bind \"" @ %name @ "\" to..." ;
 	OptRemapInputCtrl.index = %rowIndex;
 	Canvas.pushDialog( RemapDlg );
 	
@@ -223,7 +224,7 @@ function doKeyRemap( %rowIndex )
 function ControlsMenuRebindButton::onClick(%this)
 {
    %name = $RemapName[%this.keybindIndex];
-   RemapDlg-->OptRemapText.setValue( "Re-bind \"" @ %name @ "\" to..." );
+   RemapDlg-->OptRemapText.text = "Re-bind \"" @ %name @ "\" to..." ;
    
    OptRemapInputCtrl.index = %this.keybindIndex;
    OptRemapInputCtrl.optionIndex = %this.optionIndex;
@@ -305,16 +306,12 @@ function OptRemapInputCtrl::onInputEvent( %this, %device, %action )
    %prevCmdName = $RemapName[%prevMapIndex];
    Canvas.pushDialog( RemapConfirmDlg );
    
-   RemapConfirmationText.setText("\"" @ %mapName @ "\" is already bound to \""
-      @ %prevCmdName @ "\"! Do you wish to replace this mapping?");
-   RemapConfirmationYesButton.command = "redoMapping(" @ %device @ ", " @ %actionMap @ ", \"" @ %action @ "\", \"" @
+   %remapWarnText = "\"" @ %mapName @ "\" is already bound to \"" @ %prevCmdName @ "\"! Do you wish to replace this mapping?";
+   %doRemapCommand = "redoMapping(" @ %device @ ", " @ %actionMap @ ", \"" @ %action @ "\", \"" @
                               %cmd @ "\", " @ %prevMapIndex @ ", " @ %this.index @ "); Canvas.popDialog();";
-   RemapConfirmationNoButton.command = "Canvas.popDialog();";
+   %cancelCommand = "Canvas.popDialog();";
    
-   /*MessageBoxYesNo( "Warning",
-      "\"" @ %mapName @ "\" is already bound to \""
-      @ %prevCmdName @ "\"!\nDo you wish to replace this mapping?",
-       %callback, "" );*/
+   MessageBoxYesNo( "Key already in use", %remapWarnText, %doRemapCommand, %cancelCommand );
 }
 
 function findRemapCmdIndex( %command )

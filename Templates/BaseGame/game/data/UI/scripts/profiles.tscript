@@ -78,6 +78,11 @@ new GuiControlProfile(MenuMLSubHeaderText)
    autoSizeHeight = true;  
 };
 
+new GuiControlProfile(MenuMLSubHeaderTextCenter : MenuMLSubHeaderText)
+{
+   justify = "center";
+};
+
 if( !isObject( GuiMenuButtonProfile ) )
 new GuiControlProfile( GuiMenuButtonProfile )
 {

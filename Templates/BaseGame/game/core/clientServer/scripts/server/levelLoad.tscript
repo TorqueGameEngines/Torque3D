@@ -126,7 +126,14 @@ function loadMissionStage2()
    // Set mission name.
    if( isObject( theLevelInfo ) )
       $Server::MissionName = theLevelInfo.levelName;
+   Core_ClientServer.clearLoadStatus();
+   callOnModules("onLoadMap");
 
+}
+
+function loadMissionStage3() 
+{
+   echo("*** Stage 3 load");
    
    %hasGameMode = callGamemodeFunction("onCreateGame");
    
@@ -143,8 +150,8 @@ function loadMissionStage2()
 
    // Go ahead and launch the game
    %hasGameMode = callGamemodeFunction("onMissionStart");
+   
 }
-
 function endMission()
 {
    if (!isObject( getScene(0) ))

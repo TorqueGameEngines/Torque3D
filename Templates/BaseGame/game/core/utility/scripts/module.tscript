@@ -317,3 +317,10 @@ function SimSet::unQueueExec(%scopeSet, %execFilePath)
       %execFileList.echo();
 }
 
+function SimSet::GetEventManager(%this)
+{
+   if( !isObject( %this.eventManager ) )
+      %this.eventManager = new EventManager() { queue = "ModuleEventManager"; };
+      
+   return %this.eventManager;
+}

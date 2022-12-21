@@ -1432,7 +1432,7 @@ const char* GuiListBoxCtrl::getStringElement( const char* inString, const U32 in
     }
 
     // Sanity!
-    AssertFatal( false, "t2dSceneObject::getStringElement() - Couldn't find specified string element!" );
+    AssertFatal( false, "GuiListBoxCtrl::getStringElement() - Couldn't find specified string element!" );
     // Didn't find it
     return " ";
 }

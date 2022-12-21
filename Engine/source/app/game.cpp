@@ -40,15 +40,9 @@
 #include "console/consoleTypes.h"
 #include "console/engineAPI.h"
 #include "gui/controls/guiMLTextCtrl.h"
-#ifdef TORQUE_TGB_ONLY
-#include "T2D/oldModel/networking/t2dGameConnection.h"
-#include "T2D/oldModel/networking/t2dNetworkServerSceneProcess.h"
-#include "T2D/oldModel/networking/t2dNetworkClientSceneProcess.h"
-#else
 #include "T3D/gameBase/gameConnection.h"
 #include "T3D/gameFunctions.h"
 #include "T3D/gameBase/gameProcess.h"
-#endif
 #include "platform/profiler.h"
 #include "gfx/gfxCubemap.h"
 #include "gfx/gfxTextureManager.h"
@@ -252,30 +246,17 @@ bool clientProcess(U32 timeDelta)
    arcaneFX::advanceTime(timeDelta);
 #endif
    bool ret = true;
-
-#ifndef TORQUE_TGB_ONLY
+   
    ret = ClientProcessList::get()->advanceTime(timeDelta);
-#else
-	ret = gt2dNetworkClientProcess.advanceTime( timeDelta );
-#endif
 
    ITickable::advanceTime(timeDelta);
-
-#ifndef TORQUE_TGB_ONLY
+   
    // Determine if we're lagging
    GameConnection* connection = GameConnection::getConnectionToServer();
    if(connection)
 	{
       connection->detectLag();
 	}
-#else
-   // Determine if we're lagging
-   t2dGameConnection* connection = t2dGameConnection::getConnectionToServer();
-   if(connection)
-	{
-      connection->detectLag();
-	}
-#endif
 
    // Let SFX process.
    SFX->_update();
@@ -286,11 +267,7 @@ bool clientProcess(U32 timeDelta)
 bool serverProcess(U32 timeDelta)
 {
    bool ret = true;
-#ifndef TORQUE_TGB_ONLY
    ret =  ServerProcessList::get()->advanceTime(timeDelta);
-#else
-   ret =  gt2dNetworkServerProcess.advanceTime( timeDelta );
-#endif
    return ret;
 }
 

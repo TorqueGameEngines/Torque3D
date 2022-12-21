@@ -962,7 +962,7 @@ class SimObject: public ConsoleObject, public TamlCallbacks
 
       static void initPersistFields();
 
-      /// Copy SimObject to another SimObject (Originally designed for T2D).
+      /// Copy SimObject to another SimObject.
       virtual void copyTo(SimObject* object);
 
       // Component Console Overrides

@@ -869,8 +869,7 @@ namespace Con
    /// @param ...       Variables to be written
    /// @see Con::errorf()
    void errorf(ConsoleLogEntry::Type type, const char *_format, ...);
-
-   //some additions from t2d
+   
    /// Prints a separator to the console.
    inline void printSeparator(void) { printf("--------------------------------------------------------------------------------"); }
 

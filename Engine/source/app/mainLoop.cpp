@@ -58,7 +58,6 @@
 #include "util/sampler.h"
 #include "platform/threads/threadPool.h"
 
-// For the TickMs define... fix this for T2D...
 #include "T3D/gameBase/processList.h"
 #include "cinterface/cinterface.h"
 

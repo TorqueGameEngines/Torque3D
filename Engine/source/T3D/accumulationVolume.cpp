@@ -39,7 +39,6 @@
 #include "console/console.h"
 #include "console/engineAPI.h"
 #include "gfx/gfxTextureHandle.h"
-#include "scene/sceneContainer.h"
 
 #include "math/mPolyhedron.impl.h"
 

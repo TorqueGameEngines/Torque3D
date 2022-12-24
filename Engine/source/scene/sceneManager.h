@@ -59,6 +59,10 @@
 #include "core/util/tSignal.h"
 #endif
 
+#ifndef _SCENECONTAINER_H_
+#include "scene/sceneContainer.h"
+#endif
+
 
 class LightManager;
 class SceneRootZone;

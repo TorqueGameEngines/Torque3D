@@ -48,6 +48,10 @@
 #include "console/simObject.h"
 #endif
 
+#ifndef _SCENEOBJECT_H_
+#include "scene/sceneObject.h"
+#endif
+
 
 /// @file
 /// SceneObject database.
@@ -61,78 +65,307 @@ class Point3F;
 
 struct RayInfo;
 
-
-template< typename T >
-class SceneObjectRefBase
+inline U32 dCalcBlocks(U32 value, U32 blockSize)
 {
-   public:
+   U32 curBlock = value / blockSize;
+   U32 nextBlock = curBlock + 1;
+   return nextBlock * blockSize;
+}
 
-      /// Object that is referenced in the link.
-      SceneObject* object;
-
-      /// Next link in chain of container.
-      T* nextInBin;
-
-      /// Previous link in chain of container.
-      T* prevInBin;
-
-      /// Next link in chain that is associated with #object.
-      T* nextInObj;
-};
-
-
-/// Reference to a scene object.
-class SceneObjectRef : public SceneObjectRefBase< SceneObjectRef > {};
-
-
-/// A contextual hint passed to the polylist methods which
-/// allows it to return the appropriate geometry.
-enum PolyListContext
+/// Allocates a list of T in blocks of mBlockSize, doesn't shrink unless forced
+template<typename T> class LazyItemAllocator
 {
-   /// A hint that the polyist is intended 
-   /// for collision testing.
-   PLC_Collision,
-   
-   /// A hint that the polyist is for decal
-   /// geometry generation.
-   PLC_Decal,
+protected:
+   T* mItems;
+   U32 mSize;
+   U32 mBlockSize;
 
-   /// A hint that the polyist is used for
-   /// selection from an editor or other tool.
-   PLC_Selection,
+public:
+   LazyItemAllocator(U32 blockSize) : mItems(NULL), mSize(0), mBlockSize(blockSize)
+   {
+   }
 
-   /// A hint that the polylist is used for
-   /// building a representation of the environment
-   /// used for navigation.
-   PLC_Navigation,
+   ~LazyItemAllocator()
+   {
+      if (mItems)
+         delete mItems;
+   }
 
-   /// A hint that the polyist will be used
-   /// to export geometry and would like to have
-   /// texture coords and materials.   
-   PLC_Export
-};
+   inline bool isNull() const
+   {
+      return mItems == NULL;
+   }
 
+   inline T* getPtr()
+   {
+      return mItems;
+   }
 
-/// For simple queries.  Simply creates a vector of the objects
-class SimpleQueryList
-{
-   public:
+   inline bool canFit(U32 count) const
+   {
+      return count < mSize;
+   }
 
-      Vector< SceneObject* > mList;
-
-      SimpleQueryList() 
+   void realloc(U32 requiredItems, bool force)
+   {
+      U32 requiredSize = dCalcBlocks(requiredItems, mBlockSize);
+      if (mSize < requiredSize || (force && (mSize != requiredSize)))
       {
-         VECTOR_SET_ASSOCIATION( mList );
+         if (mItems == NULL)
+            mItems = (T*)dMalloc(sizeof(T) * requiredSize);
+         else
+            dRealloc(mItems, sizeof(T) * requiredSize);
+
+         mSize = requiredSize;
+      }
+   }
+};
+
+/// Maintains a set of bin lists for SceneObjects
+/// Use allocList to allocate a list. freeList frees the list, 
+/// and reallocList handles reallocating an existing list handle.
+template<typename T> class SceneContainerBinRefList
+{
+public:
+
+   /// Index type for a bin reference
+   typedef T BinValue;
+
+   /// Type for number of bins used by a reference list
+   typedef T BinCount;
+
+   /// Handle used for bin lists
+   typedef U32 ListHandle;
+
+   // Defaults
+   enum
+   {
+      /// Chunk size of reference lists
+      ReserveSize = 20000,
+      
+      /// Chunk count of reference list entries
+      DataReserveSize = 20000*4,
+
+      /// Number of unused references when compaction should occur
+      CompactionThreshold = 4096
+   };
+
+protected:
+
+#pragma pack(2)
+   struct BinList
+   {
+      // Start reference
+      U32 startValue;
+
+      /// References allocated
+      BinCount numValues;
+   };
+#pragma pack()
+
+   /// List of bin lists
+   Vector<BinList> mBinLists;
+
+   /// Current bin values
+   LazyItemAllocator<BinValue> mBinValues;
+
+   /// Temporary compaction list
+   LazyItemAllocator<BinValue> mCompactData;
+
+   /// Offset (+1) of first free mBinLists
+   U32 mFreeListStart;
+
+   /// Chunks of mRefList to allocate
+   U32 mListChunkSize;
+
+   /// Current used ref count (in mBinValues)
+   U32 mUsedValues;
+
+   /// Current reference index we are writing
+   U32 mLastValueIdx;
+
+public:
+
+   SceneContainerBinRefList() :
+      mBinValues(DataReserveSize),
+      mCompactData(DataReserveSize),
+      mFreeListStart(0),
+      mListChunkSize(ReserveSize),
+      mUsedValues(0),
+      mLastValueIdx(0)
+   {
+   }
+
+   ~SceneContainerBinRefList()
+   {
+   }
+
+   /// Resets the SceneContainerBinRefList
+   void clear()
+   {
+      mBinLists.clear();
+      mBinValues.realloc(0, true);
+      mCompactData.realloc(0, true);
+
+      mFreeListStart = 0;
+      mUsedValues = 0;
+      mLastValueIdx = 0;
+   }
+
+   /// Gets a BinValue list based on a ListHandle.
+   BinValue* getValues(ListHandle handle, U32& numValues)
+   {
+      if (handle == 0)
+      {
+         numValues = 0;
+         return NULL;
       }
 
-      void insertObject( SceneObject* obj ) { mList.push_back(obj); }
-      static void insertionCallback( SceneObject* obj, void* key )
-      {
-         SimpleQueryList* pList = reinterpret_cast< SimpleQueryList* >( key );
-         pList->insertObject( obj );
-      }
-};
+      U32 realIDX = handle - 1;
+      BinList& list = mBinLists[realIDX];
+      numValues = list.numValues;
 
+      return mBinValues.getPtr() + list.startValue;
+   }
+
+protected:
+
+   /// Gets a free entry from the free entry list.
+   bool getFreeEntry(ListHandle& outIDX)
+   {
+      if (mFreeListStart > 0)
+      {
+         outIDX = mFreeListStart - 1;
+         mFreeListStart = mBinLists[outIDX].startValue;
+         return true;
+      }
+
+      return false;
+   }
+
+public:
+
+   /// Allocates a new ListHandle with numValue values copied from values.
+   ListHandle allocList(BinCount numValues, BinValue* values)
+   {
+      BinList list;
+      ListHandle retHandle = 0;
+      
+      list.numValues = numValues;
+      list.startValue = mLastValueIdx;
+
+      mLastValueIdx += numValues;
+      mUsedValues += numValues;
+
+      // Use free list or push new entry
+      if (!getFreeEntry(retHandle))
+      {
+         mBinLists.push_back(list);
+         retHandle = mBinLists.size();
+      }
+      else
+      {
+         mBinLists[retHandle++] = list;
+      }
+
+      // Manage lists
+      mBinLists.reserve(dCalcBlocks(mBinLists.size(), mListChunkSize));
+      mBinValues.realloc(mLastValueIdx, false);
+
+      // Copy data
+      dCopyArray(mBinValues.getPtr() + list.startValue, values, numValues);
+      return retHandle;
+   }
+
+   /// Reallocates an existing ListHandle.
+   /// Existing memory will be used if numValues is the same, 
+   /// otherwise new list memory will be allocated.
+   void reallocList(ListHandle handle, BinCount numValues, BinValue* values)
+   {
+      if (handle == 0)
+         return;
+
+      U32 realIDX = handle - 1;
+      BinList& list = mBinLists[realIDX];
+
+      if (list.numValues != numValues)
+      {
+         // Allocate new entry
+         mUsedValues -= list.numValues;
+         mUsedValues += numValues;
+
+         list.numValues = numValues;
+         list.startValue = mLastValueIdx;
+         
+         mLastValueIdx += numValues;
+         mBinValues.realloc(mLastValueIdx, false);
+      }
+
+      dCopyArray(mBinValues.getPtr() + list.startValue, values, numValues);
+   }
+
+   /// Frees an existing ListHandle
+   void freeList(ListHandle handle)
+   {
+      if (handle == 0)
+         return;
+
+      U32 realIDX = handle - 1;
+      BinList& list = mBinLists[realIDX];
+
+      mUsedValues -= list.numValues;
+      list.numValues = 0;
+
+      // Add to free list
+      list.startValue = mFreeListStart;
+      // Next
+      mFreeListStart = handle;
+
+      AssertFatal(mLastValueIdx >= mUsedValues, "ref overflow");
+
+      // Automatically compact if we have enough free items
+      if ((mLastValueIdx - mUsedValues) > CompactionThreshold)
+      {
+         compact();
+      }
+   }
+
+   /// Compacts the BinValue lists. 
+   /// This will automatically be called by freeList usually
+   /// once CompactionThreshold list values have been freed.
+   void compact()
+   {
+      if (mBinValues.isNull())
+         return;
+
+      mCompactData.realloc(mUsedValues, false);
+      BinValue* outPtr = mCompactData.getPtr();
+      U32 newOutStart = 0;
+
+      // Copy list values to scratch list
+      for (BinList& list : mBinLists)
+      {
+         if (list.numValues == 0)
+            continue;
+
+         const BinValue* inPtr = mBinValues.getPtr() + list.startValue;
+         dCopyArray(outPtr, inPtr, list.numValues);
+
+         // Update counters
+         list.startValue = newOutStart;
+         outPtr += list.numValues;
+         newOutStart += list.numValues;
+      }
+
+      AssertFatal(newOutStart == mUsedValues, "value count mismatch");
+
+      mLastValueIdx = mUsedValues;
+      mBinValues.realloc(mLastValueIdx, true);
+
+      const U32 copySize = newOutStart * sizeof(BinValue);
+      memcpy(mBinValues.getPtr(), mCompactData.getPtr(), copySize);
+   }
+};
 
 //----------------------------------------------------------------------------
 
@@ -141,6 +374,7 @@ class SimpleQueryList
 /// ScenceContainer implements a grid-based spatial subdivision for the contents of a scene.
 class SceneContainer
 {
+   public:
       enum CastRayType
       {
          CollisionGeometry,
@@ -149,14 +383,16 @@ class SceneContainer
 
    public:
 
-      struct Link
-      {
-         Link* mNext;
-         Link* mPrev;
-         Link();
-         void unlink();
-         void linkAfter(Link* ptr);
-      };
+      typedef SceneContainerBinRefList<U16> BinValueList;
+
+      /// Base object list type, should conform to Vector
+      typedef Vector<SceneObject*> ObjectList;
+
+      /// Type to reference a bin list
+      typedef U32 BinListIndex;
+
+      /// Type to reference a bin. This should be changed if there are more than 65536 bins.
+      typedef U16 BinRef;
 
       struct CallbackInfo 
       {
@@ -169,9 +405,6 @@ class SceneContainer
 
    private:
 
-      Link mStart;
-      Link mEnd;
-
       /// Container queries based on #mCurrSeqKey are are not re-entrant;
       /// this is used to detect when it happens.
       bool mSearchInProgress;
@@ -179,23 +412,40 @@ class SceneContainer
       /// Current sequence key.
       U32 mCurrSeqKey;
 
-      SceneObjectRef* mFreeRefPool;
-      Vector< SceneObjectRef* > mRefPoolBlocks;
+      /// Binned object lists
+      ObjectList* mBinArray;
 
-      SceneObjectRef* mBinArray;
-      SceneObjectRef mOverflowBin;
+      /// Large objects
+      ObjectList mOverflowBin;
+
+      /// Every single object not categorized by bin
+      ObjectList mGlobalList;
 
       /// A vector that contains just the water and physical zone
       /// object types which is used to optimize searches.
-      Vector< SceneObject* > mWaterAndZones;
+      ObjectList mWaterAndZones;
 
       /// Vector that contains just the terrain objects in the container.
-      Vector< SceneObject* > mTerrains;
+      ObjectList mTerrains;
 
-      static const U32 csmNumBins;
+      /// Temporary list for value insert
+      Vector<BinValueList::BinValue> mBinValueList;
+
+      /// Maintains a list of bin references
+      BinValueList mBinRefLists;
+
+   public:
+      /// World units of side of bin
       static const F32 csmBinSize;
-      static const F32 csmTotalBinSize;
-      static const U32 csmRefPoolBlockSize;
+      /// World units of entire side of bin grid
+      static const F32 csmTotalAxisBinSize;
+
+      /// Size of grid on any axis
+      static const U32 csmNumAxisBins;
+      /// Index used to store overflow entries
+      static const U32 csmOverflowBinIdx;
+      /// Total number of bin lists to allocate
+      static const U32 csmTotalNumBins;
 
    public:
 
@@ -273,9 +523,6 @@ class SceneContainer
       /// @param object A SceneObject.
       bool removeObject( SceneObject* object );
 
-      void addRefPoolBlock();
-      SceneObjectRef* allocateObjectRef();
-      void freeObjectRef(SceneObjectRef*);
       void insertIntoBins( SceneObject* object );
       void removeFromBins( SceneObject* object );
 
@@ -283,7 +530,7 @@ class SceneContainer
       /// where it came from.  The overloaded insertInto is so we don't calculate
       /// the ranges twice.
       void checkBins( SceneObject* object );
-      void insertIntoBins(SceneObject*, U32, U32, U32, U32);
+      void insertIntoBins(SceneObject*, const SceneBinRange& range);
 
       void initRadiusSearch(const Point3F& searchPoint,
          const F32      searchRadius,
@@ -308,40 +555,38 @@ class SceneContainer
       void _findSpecialObjects( const Vector< SceneObject* >& vector, U32 mask, FindCallback, void *key = NULL );
       void _findSpecialObjects( const Vector< SceneObject* >& vector, const Box3F &box, U32 mask, FindCallback callback, void *key = NULL );   
 
+
+public:
+
+      static inline void getBinRange( const Point2F minExtents, const Point2F maxExtents, SceneBinRange& outRange )
+      {
+         U32 outMin, outMax;
+         getBinRange(minExtents.x, maxExtents.x, outMin, outMax);
+         outRange.minCoord[0] = outMin;
+         outRange.maxCoord[0] = outMax;
+         getBinRange(minExtents.y, maxExtents.y, outMin, outMax);
+         outRange.minCoord[1] = outMin;
+         outRange.maxCoord[1] = outMax;
+      }
+
       static void getBinRange( const F32 min, const F32 max, U32& minBin, U32& maxBin );
 public:
       Vector<SimObjectPtr<SceneObject>*>& getRadiusSearchList() { return mSearchList; }
+
 };
+
+//-----------------------------------------------------------------------------
+
+inline bool SceneBinRange::shouldOverflow() const
+{
+   return
+      ((getWidth() + 1) >= SceneContainer::csmNumAxisBins ||
+         ((getHeight() + 1) >= SceneContainer::csmNumAxisBins));
+}
 
 //-----------------------------------------------------------------------------
 
 extern SceneContainer gServerContainer;
 extern SceneContainer gClientContainer;
-
-//-----------------------------------------------------------------------------
-
-inline void SceneContainer::freeObjectRef(SceneObjectRef* trash)
-{
-   trash->object = NULL;
-   trash->nextInBin = NULL;
-   trash->prevInBin = NULL;
-   trash->nextInObj = mFreeRefPool;
-   mFreeRefPool     = trash;
-}
-
-//-----------------------------------------------------------------------------
-
-inline SceneObjectRef* SceneContainer::allocateObjectRef()
-{
-   if( mFreeRefPool == NULL )
-      addRefPoolBlock();
-   AssertFatal( mFreeRefPool!=NULL, "Error, should always have a free reference here!" );
-
-   SceneObjectRef* ret = mFreeRefPool;
-   mFreeRefPool = mFreeRefPool->nextInObj;
-
-   ret->nextInObj = NULL;
-   return ret;
-}
 
 #endif // !_SCENECONTAINER_H_

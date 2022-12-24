@@ -27,6 +27,7 @@
 #include "core/dataChunker.h"
 #include "collision/collision.h"
 #include "scene/sceneObject.h"
+#include "scene/sceneContainer.h"
 #include "collision/gjk.h"
 #include "collision/concretePolyList.h"
 #include "platform/profiler.h"

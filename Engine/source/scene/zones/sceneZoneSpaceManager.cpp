@@ -25,9 +25,9 @@
 
 #include "platform/profiler.h"
 #include "platform/platformMemory.h"
-#include "scene/sceneContainer.h"
 #include "scene/zones/sceneRootZone.h"
 #include "scene/zones/sceneZoneSpace.h"
+#include "scene/sceneContainer.h"
 
 
 // Uncomment to enable verification code for debugging.  This slows the

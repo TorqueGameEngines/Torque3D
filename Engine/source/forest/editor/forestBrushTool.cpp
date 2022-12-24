@@ -39,6 +39,7 @@
 #include "core/strings/stringUnit.h"
 #include "math/mRandomDeck.h"
 #include "math/mRandomSet.h"
+#include "scene/sceneContainer.h"
 
 
 bool ForestBrushTool::protectedSetSize( void *object, const char *index, const char *data )

@@ -30,6 +30,7 @@
 #include "windowManager/platformCursorController.h"
 #include "forest/editor/forestUndo.h"
 #include "gui/worldEditor/undoActions.h"
+#include "scene/sceneContainer.h"
 
 
 IMPLEMENT_CONOBJECT( ForestEditorCtrl );

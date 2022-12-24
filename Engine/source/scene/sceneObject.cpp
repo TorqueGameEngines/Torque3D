@@ -126,18 +126,12 @@ SceneObject::SceneObject()
 
    mContainerSeqKey = 0;
 
-   mBinRefHead = NULL;
-
    mSceneManager = NULL;
 
    mNumCurrZones = 0;
    mZoneRefHead = NULL;
    mZoneRefDirty = false;
 
-   mBinMinX = 0xFFFFFFFF;
-   mBinMaxX = 0xFFFFFFFF;
-   mBinMinY = 0xFFFFFFFF;
-   mBinMaxY = 0xFFFFFFFF;
    mLightPlugin = NULL;
 
    mMount.object = NULL;
@@ -172,13 +166,14 @@ SceneObject::SceneObject()
 
 SceneObject::~SceneObject()
 {
-   AssertFatal( mZoneRefHead == NULL && mBinRefHead == NULL,
+   AssertFatal(mContainer == NULL,
+      "SceneObject::~SceneObject - Object still in container!");
+   AssertFatal( mZoneRefHead == NULL,
       "SceneObject::~SceneObject - Object still linked in reference lists!");
    AssertFatal( !mSceneObjectLinks,
       "SceneObject::~SceneObject() - object is still linked to SceneTrackers" );
 
    mAccuTex = NULL;
-   unlink();
 }
 
 //-----------------------------------------------------------------------------

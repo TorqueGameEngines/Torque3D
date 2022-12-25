@@ -1572,7 +1572,7 @@ void ShapeBase::setControllingClient( GameConnection* client )
          
          gSFX3DWorld->setListener( NULL );
       }
-      else if( client && client->isConnectionToServer() && !getControllingObject() )
+      else if( client && client->isConnectionToServer() && (getControllingObject() != this) )
       {
          // We're on the local client and not controlled by another object, so make
          // us the current SFX listener.

@@ -171,6 +171,7 @@ class Vehicle : public RigidShape
    void readPacketData (GameConnection * conn, BitStream *stream);
    U32  packUpdate  (NetConnection *conn, U32 mask, BitStream *stream);
    void unpackUpdate(NetConnection *conn,           BitStream *stream);
+   void setControllingClient(GameConnection* connection);
 
    void updateLiftoffDust( F32 dt );
    void updateDamageSmoke( F32 dt );

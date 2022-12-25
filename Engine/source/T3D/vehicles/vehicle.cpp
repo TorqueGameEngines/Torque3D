@@ -1376,6 +1376,10 @@ void Vehicle::unpackUpdate(NetConnection *con, BitStream *stream)
    setEnergyLevel(stream->readFloat(8) * mDataBlock->maxEnergy);
 }
 
+void Vehicle::setControllingClient(GameConnection* client)
+{
+   ShapeBase::setControllingClient(client);
+}
 
 //----------------------------------------------------------------------------
 

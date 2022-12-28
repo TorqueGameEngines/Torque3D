@@ -486,15 +486,15 @@ if (m##name##AssetId[index] != StringTable->EmptyString())\
       const char* enumString = castConsoleTypeToString(static_cast<enumType>(itter));\
       if (enumString && enumString[0])\
       {\
-         addField(assetEnumNameConcat(enumString, File), TypeSoundFilename, Offset(m##name##Name[0], consoleClass) + sizeof(m##name##Name[0])*i, assetText(name, docs), AbstractClassRep::FIELD_HideInInspectors); \
-         addField(assetEnumNameConcat(enumString, Asset), TypeSoundAssetId, Offset(m##name##AssetId[0], consoleClass) + sizeof(m##name##AssetId[0])*i, assetText(name, asset reference.));\
+         addField(assetEnumNameConcat(enumString, File), TypeSoundFilename, Offset(m##name##Name[i], consoleClass), assetText(name, docs), AbstractClassRep::FIELD_HideInInspectors); \
+         addField(assetEnumNameConcat(enumString, Asset), TypeSoundAssetId, Offset(m##name##AssetId[i], consoleClass), assetText(name, asset reference.));\
       }\
    }
 
 #define PACKDATA_SOUNDASSET_ARRAY(name, index)\
-   if (stream->writeFlag(m##name##Asset[index].notNull()))\
+   if (stream->writeFlag(AssetDatabase.isDeclaredAsset(m##name##AssetId[index])))\
    {\
-      stream->writeString(m##name##Asset[index].getAssetId());\
+      stream->writeString(m##name##AssetId[index]);\
    }\
    else\
    {\

@@ -78,6 +78,12 @@ function spawnGameObject(%name, %addToScene)
 	return 0;
 }
 
+function GameBaseData::onNewDataBlock(%this, %obj)
+{
+    %this.onRemove(%obj);
+    %this.onAdd(%obj);
+}
+
 function saveGameObject(%name, %tamlPath, %scriptPath)
 {
 	%gameObjectAsset = findGameObject(%name);

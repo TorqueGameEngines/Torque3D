@@ -242,7 +242,7 @@ LightningData::LightningData()
 
    for (S32 i = 0; i < MaxThunders; i++)
    {
-      INIT_ASSET_ARRAY(ThunderSound, i);
+      INIT_SOUNDASSET_ARRAY(ThunderSound, i);
    }
 
    for (S32 i = 0; i < MaxTextures; i++)
@@ -335,7 +335,7 @@ void LightningData::packData(BitStream* stream)
    U32 i;
    for (i = 0; i < MaxThunders; i++)
    {
-      PACKDATA_ASSET_ARRAY(ThunderSound, i);
+      PACKDATA_SOUNDASSET_ARRAY(ThunderSound, i);
    }
 
    stream->writeInt(mNumStrikeTextures, 4);
@@ -353,7 +353,7 @@ void LightningData::unpackData(BitStream* stream)
    U32 i;
    for (i = 0; i < MaxThunders; i++)
    {
-      UNPACKDATA_ASSET_ARRAY(ThunderSound, i);
+      UNPACKDATA_SOUNDASSET_ARRAY(ThunderSound, i);
    }
 
    mNumStrikeTextures = stream->readInt(4);

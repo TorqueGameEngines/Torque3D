@@ -423,7 +423,7 @@ PlayerData::PlayerData()
    boxHeadFrontPercentage = 1;
 
    for (S32 i = 0; i < MaxSounds; i++)
-      INIT_ASSET_ARRAY(PlayerSound, i);
+      INIT_SOUNDASSET_ARRAY(PlayerSound, i);
 
    footPuffEmitter = NULL;
    footPuffID = 0;
@@ -469,17 +469,17 @@ bool PlayerData::preload(bool server, String &errorStr)
 {
    if(!Parent::preload(server, errorStr))
       return false;
-
-   for (U32 i = 0; i < MaxSounds; ++i)
-   {
-      _setPlayerSound(getPlayerSound(i), i);
-      if (getPlayerSound(i) != StringTable->EmptyString())
+   if (!server) {
+      for (U32 i = 0; i < MaxSounds; ++i)
       {
-         if (!getPlayerSoundProfile(i))
-            Con::errorf("PlayerData::Preload() - unable to find sfxProfile for asset %d %s", i, mPlayerSoundAssetId[i]);
+         _setPlayerSound(getPlayerSound(i), i);
+         if (getPlayerSound(i) != StringTable->EmptyString())
+         {
+            if (!getPlayerSoundProfile(i))
+               Con::errorf("PlayerData::Preload() - unable to find sfxProfile for asset %d %s", i, mPlayerSoundAssetId[i]);
+         }
       }
    }
-
    //
    runSurfaceCos = mCos(mDegToRad(runSurfaceAngle));
    jumpSurfaceCos = mCos(mDegToRad(jumpSurfaceAngle));
@@ -1271,7 +1271,7 @@ void PlayerData::packData(BitStream* stream)
    stream->write(minLateralImpactSpeed);
 
    for (U32 i = 0; i < MaxSounds; i++)
-      PACKDATA_ASSET_ARRAY(PlayerSound, i);
+      PACKDATA_SOUNDASSET_ARRAY(PlayerSound, i);
 
    mathWrite(*stream, boxSize);
    mathWrite(*stream, crouchBoxSize);
@@ -1452,7 +1452,7 @@ void PlayerData::unpackData(BitStream* stream)
    stream->read(&minLateralImpactSpeed);
 
    for (U32 i = 0; i < MaxSounds; i++)
-      UNPACKDATA_ASSET_ARRAY(PlayerSound, i);
+      UNPACKDATA_SOUNDASSET_ARRAY(PlayerSound, i);
 
    mathRead(*stream, &boxSize);
    mathRead(*stream, &crouchBoxSize);

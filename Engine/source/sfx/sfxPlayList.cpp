@@ -221,7 +221,7 @@ SFXPlayList::SFXPlayList()
      mNumSlotsToPlay( NUM_SLOTS )
 {
    for (U32 i=0;i<NUM_SLOTS;i++)
-      INIT_ASSET_ARRAY(Track, i);
+      INIT_SOUNDASSET_ARRAY(Track, i);
 }
 
 //-----------------------------------------------------------------------------
@@ -429,7 +429,7 @@ void SFXPlayList::packData( BitStream* stream )
       stream->write( mSlots.mRepeatCount[ i ] );
       
    FOR_EACH_SLOT sfxWrite( stream, mSlots.mState[ i ] );
-   FOR_EACH_SLOT PACKDATA_ASSET_ARRAY(Track, i);
+   FOR_EACH_SLOT PACKDATA_SOUNDASSET_ARRAY(Track, i);
 }
 
 //-----------------------------------------------------------------------------
@@ -468,7 +468,7 @@ void SFXPlayList::unpackData( BitStream* stream )
    FOR_EACH_SLOT if(stream->readFlag()){ stream->read( &mSlots.mRepeatCount[ i ] );}
       
    FOR_EACH_SLOT sfxRead( stream, &mSlots.mState[ i ] );
-   FOR_EACH_SLOT UNPACKDATA_ASSET_ARRAY(Track, i);
+   FOR_EACH_SLOT UNPACKDATA_SOUNDASSET_ARRAY(Track, i);
    
    #undef FOR_EACH_SLOT
 }

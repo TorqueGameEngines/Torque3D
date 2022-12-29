@@ -817,16 +817,9 @@ void GuiGameSettingsCtrl::clickKeybind(S32 xPos)
    S32 columnSplit = mColumnSplit;
 
    S32 height = getHeight();
+   S32 width = getWidth();
 
-   Point2I button;
-   button.x = columnSplit + (columnSplit / 2.5)/* + (optionWidth / 2)*/;
-   button.y = 0;
-
-   Point2I buttonSize;
-   buttonSize.x = height;
-   buttonSize.y = height;
-
-   RectI rect(button, buttonSize);
+   RectI rect(Point2I::Zero, Point2I(width, height));
 
    onChange_callback();
 

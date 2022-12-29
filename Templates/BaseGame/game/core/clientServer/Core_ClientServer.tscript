@@ -12,6 +12,70 @@
 // When a local game is started - a listen server - via calling StartGame() a server is created and then the client is
 // connected to it via createAndConnectToLocalServer().
 
+function Core_ClientServer::clearLoadStatus()
+{
+   Core_ClientServer.moduleLoadedDone = 0;
+   Core_ClientServer.moduleLoadedFailed = 0;
+}
+function Core_ClientServer::onLoadMap(%this)
+{
+    %this.finishMapLoad();
+}
+
+function Core_ClientServer::finishMapLoad(%this)
+{
+    Core_ClientServer.GetEventManager().postEvent( "mapLoadComplete" );
+}
+
+function Core_ClientServer::FailMapLoad(%this, %moduleName, %isFine)
+{    
+    Core_ClientServer.failedModuleName = %moduleName;
+    Core_ClientServer.GetEventManager().postEvent( "mapLoadFail", %isFine );
+}
+
+function Core_ClientServerListener::onMapLoadComplete(%this)
+{
+    Core_ClientServer.moduleLoadedDone++;
+    %numModsNeedingLoaded = 0;
+    %modulesList = ModuleDatabase.findModules();
+    for(%i=0; %i < getWordCount(%modulesList); %i++)
+    {
+        %module = getWord(%modulesList, %i);
+        if (%module.ModuleId.isMethod("finishMapLoad"))
+            %numModsNeedingLoaded++;
+    }
+    if (Core_ClientServer.moduleLoadedDone == %numModsNeedingLoaded)
+    {
+        loadMissionStage3();  
+    }
+}
+
+function Core_ClientServerListener::onmapLoadFail(%this, %isFine)
+{   
+    if (%isFine) 
+    {
+        %this.onMapLoadComplete();
+        return;
+    }
+    
+    Core_ClientServer.moduleLoadedFailed++;
+    if (Core_ClientServer.moduleLoadedFailed>1) return; // yeah, we know
+        
+    $Server::LoadFailMsg = Core_ClientServer.failedModuleName @" failed to load mission specific data!";
+    error($Server::LoadFailMsg);
+    // Inform clients that are already connected
+    
+    for (%clientIndex = 0; %clientIndex < ClientGroup.getCount(); %clientIndex++)
+    {
+        %cl = ClientGroup.getObject( %clientIndex );
+        %cl.onConnectionDropped($Server::LoadFailMsg);
+        %cl.endMission();
+        %cl.resetGhosting();
+        %cl.clearPaths();
+    }
+    destroyServer();
+}
+
 function Core_ClientServer::onCreate( %this )
 {
    echo("\n--------- Initializing Directory: scripts ---------");
@@ -33,6 +97,11 @@ function Core_ClientServer::onCreate( %this )
    {
       initClient();
    }
+   %this.GetEventManager().registerEvent("mapLoadComplete");
+   %this.GetEventManager().registerEvent("mapLoadFail");
+   %this.listener = new ScriptMsgListener() {class = Core_ClientServerListener;}; 
+   %this.GetEventManager().subscribe( %this.listener, "mapLoadComplete" ); 
+   %this.GetEventManager().subscribe( %this.listener, "mapLoadFail" ); 
 }
 
 function Core_ClientServer::onDestroy( %this )

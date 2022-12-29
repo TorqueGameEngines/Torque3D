@@ -22,26 +22,31 @@
 
 project(lpng)
 
-# addDef(PNG_NO_ASSEMBLER_CODE)
-
-# Enables NEON for libpng
-if ( TORQUE_CPU_ARM32 OR TORQUE_CPU_ARM64 )
-    set(PNG_ARM_NEON on CACHE STRING "")
-    add_definitions(-DPNG_ARM_NEON_OPT=1)
+if (APPLE AND TORQUE_MACOS_UNIVERSAL_BINARY)
     addPath("${libDir}/lpng/arm")
-else()
-    set(PNG_ARM_NEON off CACHE STRING "")
-    add_definitions(-DPNG_ARM_NEON_OPT=0)
-endif()
 
-# Enables SSE for libpng - also takes care of compiler warnings.
-if ( TORQUE_CPU_X32 OR TORQUE_CPU_X64 )
-    set(PNG_INTEL_SSE on CACHE STRING "")
-    add_definitions(-DPNG_INTEL_SSE_OPT=1)
-    addPath("${libDir}/lpng/intel")
+    set(CMAKE_XCODE_ATTRIBUTE_PER_ARCH_CFLAGS_x86_64 "-DPNG_INTEL_SSE_OPT=1 -DPNG_ARM_NEON_OPT=0")
+    set(CMAKE_XCODE_ATTRIBUTE_PER_ARCH_CFLAGS_arm64 "-DPNG_ARM_NEON_OPT=1 -DPNG_INTEL_SSE_OPT=0")
 else()
-    set(PNG_INTEL_SSE off CACHE STRING "")
-    add_definitions(-DPNG_INTEL_SSE_OPT=0)
+    # Enables NEON for libpng
+    if ( TORQUE_CPU_ARM32 OR TORQUE_CPU_ARM64 )
+        set(PNG_ARM_NEON on CACHE STRING "" FORCE)
+        add_definitions(-DPNG_ARM_NEON_OPT=1)
+        addPath("${libDir}/lpng/arm")
+    else()
+        set(PNG_ARM_NEON off CACHE STRING "" FORCE)
+        add_definitions(-DPNG_ARM_NEON_OPT=0)
+    endif()
+
+    # Enables SSE for libpng - also takes care of compiler warnings.
+    if ( TORQUE_CPU_X32 OR TORQUE_CPU_X64 )
+        set(PNG_INTEL_SSE on CACHE STRING "" FORCE)
+        add_definitions(-DPNG_INTEL_SSE_OPT=1)
+        addPath("${libDir}/lpng/intel")
+    else()
+        set(PNG_INTEL_SSE off CACHE STRING "" FORCE)
+        add_definitions(-DPNG_INTEL_SSE_OPT=0)
+    endif()
 endif()
 
 mark_as_advanced(PNG_INTEL_SSE)
@@ -50,3 +55,4 @@ mark_as_advanced(PNG_ARM_NEON)
 addInclude(${libDir}/zlib)
 
 finishLibrary("${libDir}/${PROJECT_NAME}")
+

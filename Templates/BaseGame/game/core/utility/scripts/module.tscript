@@ -104,7 +104,7 @@ function loadAssetsByType(%assetType)
    }
 }
 
-function SimSet::getModulePath(%scopeSet)
+function ModuleRoot::getModulePath(%scopeSet)
 {
    %name = %scopeSet.getName();
    %moduleDef = ModuleDatabase.findModule(%name);
@@ -115,7 +115,7 @@ function SimSet::getModulePath(%scopeSet)
    return "";
 }
 
-function SimSet::registerDatablock(%scopeSet, %datablockFilePath, %isExclusive)
+function ModuleRoot::registerDatablock(%scopeSet, %datablockFilePath, %isExclusive)
 {
    if ($traceModuleCalls)
       warn("SimSet::registerDatablock");
@@ -171,7 +171,7 @@ function SimSet::registerDatablock(%scopeSet, %datablockFilePath, %isExclusive)
       DatablockFilesList.echo();
 }
 
-function SimSet::unRegisterDatablock(%scopeSet, %datablockFilePath)
+function ModuleRoot::unRegisterDatablock(%scopeSet, %datablockFilePath)
 {
    if ($traceModuleCalls)
       warn("SimSet::unRegisterDatablock");
@@ -215,7 +215,7 @@ function SimSet::unRegisterDatablock(%scopeSet, %datablockFilePath)
       DatablockFilesList.echo();
 }
 
-function SimSet::queueExec(%scopeSet, %execFilePath, %isExclusive)
+function ModuleRoot::queueExec(%scopeSet, %execFilePath, %isExclusive)
 {
    if ($traceModuleCalls)
       warn("SimSet::queueExec");
@@ -272,7 +272,7 @@ function SimSet::queueExec(%scopeSet, %execFilePath, %isExclusive)
       %execFileList.echo();
 }
 
-function SimSet::unQueueExec(%scopeSet, %execFilePath)
+function ModuleRoot::unQueueExec(%scopeSet, %execFilePath)
 {
    if ($traceModuleCalls)
       warn("SimSet::unRegisterDatablock");
@@ -317,3 +317,10 @@ function SimSet::unQueueExec(%scopeSet, %execFilePath)
       %execFileList.echo();
 }
 
+function ModuleRoot::GetEventManager(%scopeSet)
+{
+   if( !isObject( %scopeSet.eventManager ) )
+      %scopeSet.eventManager = new EventManager() { queue = "ModuleEventManager"; };
+      
+   return %scopeSet.eventManager;
+}

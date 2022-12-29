@@ -323,7 +323,7 @@ void TerrainBaseMapFeatGLSL::processPix(  Vector<ShaderComponent*> &componentLis
       meta->addStatement(new GenOp("   @;\r\n", new DecOp(ormConfig)));
    }
 
-   meta->addStatement(new GenOp("   @ = float4(0.0, 1.0, 1.0, 0.0);\r\n", ormConfig));
+   meta->addStatement(new GenOp("   @ = float4(1.0f/255.0f, 1.0, 1.0, 0.0);\r\n", ormConfig));
 
    output = meta;
 
@@ -1109,7 +1109,7 @@ void TerrainORMMapFeatGLSL::processPix(Vector<ShaderComponent*> &componentList,
    }
    if (compositeIndex == 0)
    {
-      meta->addStatement(new GenOp("   @ = vec4(0.0, 0.0, 0.0, 0.0);\r\n", ormConfig));
+      meta->addStatement(new GenOp("   @ = vec4(1.0f/255.0f, 1.0, 1.0, 0.0);\r\n", ormConfig));
    }
 
 	Var *detailBlend = (Var*)LangElement::find(String::ToString("detailBlend%d", compositeIndex));
@@ -1176,7 +1176,7 @@ void TerrainBlankInfoMapFeatGLSL::processPix(Vector<ShaderComponent*> &component
 
    if (compositeIndex == 0)
    {
-      meta->addStatement(new GenOp("   @ = float4(0.0, 0.0, 0.0, 0.0);\r\n", ormConfig));
+      meta->addStatement(new GenOp("   @ = float4(1.0f/255.0f, 1.0, 1.0, 0.0);\r\n", ormConfig));
    }
 
    Var* detailBlend = (Var*)LangElement::find(String::ToString("detailBlend%d", compositeIndex));

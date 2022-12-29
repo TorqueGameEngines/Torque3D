@@ -86,12 +86,6 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
    Surface surface = createSurface( normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
                                     uvScene, eyePosWorld, wsEyeRay, cameraToWorld);
 
-   //early out if we take no shadows
-   if (!getFlag(surface.matFlag, 0))
-   {   
-      return float4(surface.albedo, 0);
-   }
-
    float3 L = lightPosition - surface.P;
    float dist = length(L);
    float3 lighting = 0.0.xxx;

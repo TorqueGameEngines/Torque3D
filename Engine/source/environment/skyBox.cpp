@@ -610,6 +610,7 @@ void SkyBox::_initMaterial()
    FeatureSet features = MATMGR->getDefaultFeatures();
    features.removeFeature( MFT_RTLighting );
    features.removeFeature( MFT_Visibility );
+   features.removeFeature(MFT_ReflectionProbes);
    features.addFeature(MFT_isBackground);   
    features.addFeature(MFT_SkyBox);
 

@@ -3156,7 +3156,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                         };
                         new GuiCheckBoxCtrl() {
                            canSaveDynamicFields = "0";
-                           internalName = "emissiveCheckbox";
+                           internalName = "receiveShadowsCheckbox";
                            Enabled = "1";
                            isContainer = "0";
                            Profile = "ToolsGuiCheckBoxProfile";
@@ -3167,11 +3167,11 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                            MinExtent = "8 2";
                            canSave = "1";
                            Visible = "1";
-                           Command = "MaterialEditorGui.updateActiveMaterial(\"emissive[\" @ MaterialEditorGui.currentLayer @ \"]\",$ThisControl.getValue());";
+                           Command = "MaterialEditorGui.updateActiveMaterial(\"receiveShadows[\" @ MaterialEditorGui.currentLayer @ \"]\",$ThisControl.getValue());";
                            tooltipprofile = "ToolsGuiDefaultProfile";
-                           ToolTip = "Emissive causes an object to not be affected by lights. Good for light sources.";
+                           ToolTip = "Do we recieve shadows?";
                            hovertime = "1000";
-                           text = "Emissive";
+                           text = "receiveShadows";
                            groupNum = "-1";
                            buttonType = "ToggleButton";
                            useMouseEvents = "0";

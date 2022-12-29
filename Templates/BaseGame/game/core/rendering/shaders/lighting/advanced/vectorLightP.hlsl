@@ -176,23 +176,17 @@ float4 main(FarFrustumQuadConnectP IN) : SV_TARGET
    //create surface
    Surface surface = createSurface( normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
                                     IN.uv0, eyePosWorld, IN.wsEyeRay, cameraToWorld);
-                                    
-   //early out if emissive
-   if (getFlag(surface.matFlag, 0))
-   {   
-      return float4(0, 0, 0, 0);
-	}
-   
+                                      
    //create surface to light                           
    SurfaceToLight surfaceToLight = createSurfaceToLight(surface, -lightDirection);
 
    //light color might be changed by PSSM_DEBUG_RENDER
    float3 lightingColor = lightColor.rgb;
    
-   #ifdef NO_SHADOW
-      float shadow = 1.0;
-   #else
-
+   float shadow = 1.0;
+   #ifndef NO_SHADOW
+   if (getFlag(surface.matFlag, 0)) //also skip if we don't recieve shadows
+   {  
       // Fade out the shadow at the end of the range.
       float4 zDist = (zNearFarInvNearFar.x + zNearFarInvNearFar.y * surface.depth);
       float fadeOutAmt = ( zDist.x - fadeStartLength.x ) * fadeStartLength.y;
@@ -200,7 +194,7 @@ float4 main(FarFrustumQuadConnectP IN) : SV_TARGET
       float4 shadowed_colors = AL_VectorLightShadowCast( TORQUE_SAMPLER2D_MAKEARG(shadowMap), IN.uv0.xy, worldToLightProj, surface.P, scaleX, scaleY, offsetX, offsetY,
                                                              farPlaneScalePSSM, surfaceToLight.NdotL);
 
-      float shadow = shadowed_colors.a;
+      shadow = shadowed_colors.a;
 	  
       #ifdef PSSM_DEBUG_RENDER
 	     lightingColor = shadowed_colors.rgb;
@@ -212,7 +206,7 @@ float4 main(FarFrustumQuadConnectP IN) : SV_TARGET
          if ( fadeOutAmt > 1.0 )
             lightingColor = 1.0;
       #endif
-
+   }
    #endif //NO_SHADOW
    
    #ifdef DIFFUSE_LIGHT_VIZ

@@ -73,9 +73,9 @@ DefineEnumType(hoverSoundsEnum);
 
 ImplementEnumType(hoverSoundsEnum, "enum types.\n"
    "@ingroup HoverVehicleData\n\n")
-   { HoverVehicleData::JetSound,       "JetSound", "..." },
-   { HoverVehicleData::EngineSound,    "EngineSound", "..." },
-   { HoverVehicleData::FloatSound,     "FloatSound", "..." },
+   { hoverSoundsEnum::JetSound,       "JetSound", "..." },
+   { hoverSoundsEnum::EngineSound,    "EngineSound", "..." },
+   { hoverSoundsEnum::FloatSound,     "FloatSound", "..." },
 EndImplementEnumType;
 
 namespace {
@@ -162,7 +162,7 @@ HoverVehicleData::HoverVehicleData()
       jetEmitter[j] = 0;
 
    for (S32 i = 0; i < MaxSounds; i++)
-      INIT_ASSET_ARRAY(HoverSounds, i);
+      INIT_SOUNDASSET_ARRAY(HoverSounds, i);
 }
 
 HoverVehicleData::~HoverVehicleData()
@@ -370,7 +370,7 @@ void HoverVehicleData::packData(BitStream* stream)
 
    for (S32 i = 0; i < MaxSounds; i++)
    {
-      PACKDATA_ASSET_ARRAY(HoverSounds, i);
+      PACKDATA_SOUNDASSET_ARRAY(HoverSounds, i);
    }
 
    for (S32 j = 0; j < MaxJetEmitters; j++)
@@ -419,7 +419,7 @@ void HoverVehicleData::unpackData(BitStream* stream)
 
    for (S32 i = 0; i < MaxSounds; i++)
    {
-      UNPACKDATA_ASSET_ARRAY(HoverSounds, i);
+      UNPACKDATA_SOUNDASSET_ARRAY(HoverSounds, i);
    }
 
    for (S32 j = 0; j < MaxJetEmitters; j++) {

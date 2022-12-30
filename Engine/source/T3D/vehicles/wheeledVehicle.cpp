@@ -289,15 +289,15 @@ ConsoleDocClass( WheeledVehicleData,
    "@ingroup Vehicles\n"
 );
 
-typedef WheeledVehicleData::Sounds wheelSoundsEnum;
-DefineEnumType(wheelSoundsEnum);
+typedef WheeledVehicleData::Sounds WheeledVehicleSoundsEnum;
+DefineEnumType(WheeledVehicleSoundsEnum);
 
-ImplementEnumType(wheelSoundsEnum, "enum types.\n"
+ImplementEnumType(WheeledVehicleSoundsEnum, "enum types.\n"
    "@ingroup WheeledVehicleData\n\n")
-   {WheeledVehicleData::JetSound,          "JetSound", "..." },
-   {WheeledVehicleData::EngineSound,       "EngineSound", "..." },
-   {WheeledVehicleData::SquealSound,       "SquealSound", "..." },
-   {WheeledVehicleData::WheelImpactSound,  "WheelImpactSound", "..." },
+   { WheeledVehicleSoundsEnum::JetSound,          "JetSound", "..." },
+   { WheeledVehicleSoundsEnum::EngineSound,       "EngineSound", "..." },
+   { WheeledVehicleSoundsEnum::SquealSound,       "SquealSound", "..." },
+   { WheeledVehicleSoundsEnum::WheelImpactSound,  "WheelImpactSound", "..." },
 EndImplementEnumType;
 
 WheeledVehicleData::WheeledVehicleData()
@@ -312,7 +312,7 @@ WheeledVehicleData::WheeledVehicleData()
    wheelCount = 0;
    dMemset(&wheel, 0, sizeof(wheel));
    for (S32 i = 0; i < MaxSounds; i++)
-      INIT_ASSET_ARRAY(WheeledVehicleSounds, i);
+      INIT_SOUNDASSET_ARRAY(WheeledVehicleSounds, i);
 }
 
 
@@ -448,7 +448,9 @@ bool WheeledVehicleData::mirrorWheel(Wheel* we)
 
 void WheeledVehicleData::initPersistFields()
 {
-   INITPERSISTFIELD_SOUNDASSET_ENUMED(WheeledVehicleSounds, wheelSoundsEnum, MaxSounds, WheeledVehicleData, "Sounds related to wheeled vehicle.");
+   addGroup("Sounds");
+   INITPERSISTFIELD_SOUNDASSET_ENUMED(WheeledVehicleSounds, WheeledVehicleSoundsEnum, MaxSounds, WheeledVehicleData, "Sounds related to wheeled vehicle.");
+   endGroup("Sounds");
 
    addField("tireEmitter",TYPEID< ParticleEmitterData >(), Offset(tireEmitter, WheeledVehicleData),
       "ParticleEmitterData datablock used to generate particles from each wheel "
@@ -483,7 +485,7 @@ void WheeledVehicleData::packData(BitStream* stream)
 
    for (S32 i = 0; i < MaxSounds; i++)
    {
-      PACKDATA_ASSET_ARRAY(WheeledVehicleSounds, i);
+      PACKDATA_SOUNDASSET_ARRAY(WheeledVehicleSounds, i);
    }
 
    stream->write(maxWheelSpeed);
@@ -502,7 +504,7 @@ void WheeledVehicleData::unpackData(BitStream* stream)
 
    for (S32 i = 0; i < MaxSounds; i++)
    {
-      UNPACKDATA_ASSET_ARRAY(WheeledVehicleSounds, i);
+      UNPACKDATA_SOUNDASSET_ARRAY(WheeledVehicleSounds, i);
    }
 
    stream->read(&maxWheelSpeed);

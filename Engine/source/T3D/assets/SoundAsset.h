@@ -159,7 +159,7 @@ DefineConsoleType(TypeSoundAssetId, String)
    AssetPtr<SoundAsset> m##name##Asset = NULL;\
    SFXProfile* m##name##Profile = NULL;\
    SFXDescription* m##name##Desc = NULL;\
-   SimObjectId m##name##SFXId = NULL;\
+   SimObjectId m##name##SFXId = 0;\
 public: \
    const StringTableEntry get##name##File() const { return m##name##Name; }\
    void set##name##File(const FileName &_in) { m##name##Name = StringTable->insert(_in.c_str());}\

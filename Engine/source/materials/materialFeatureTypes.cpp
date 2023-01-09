@@ -78,7 +78,6 @@ ImplementFeatureType( MFT_IsBC3nm, U32(-1), -1, true );
 ImplementFeatureType( MFT_IsBC5nm, U32(-1), -1, true);
 ImplementFeatureType( MFT_IsTranslucent, U32(-1), -1, true );
 ImplementFeatureType( MFT_IsTranslucentZWrite, U32(-1), -1, true );
-ImplementFeatureType( MFT_IsEmissive, U32(-1), -1, true );
 ImplementFeatureType( MFT_DiffuseMapAtlas, U32(-1), -1, true );
 ImplementFeatureType( MFT_NormalMapAtlas, U32(-1), -1, true );
 ImplementFeatureType( MFT_InterlacedDeferred, U32(-1), -1, true );

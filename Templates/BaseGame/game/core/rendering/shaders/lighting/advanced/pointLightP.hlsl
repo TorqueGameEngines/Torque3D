@@ -147,12 +147,6 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
    Surface surface = createSurface( normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
                                     uvScene, eyePosWorld, wsEyeRay, cameraToWorld);
 
-   //early out if emissive
-   if (getFlag(surface.matFlag, 0))
-   {   
-      return float4(0, 0, 0, 0);
-   }
-
    float3 L = lightPosition - surface.P;
    float dist = length(L);
    float3 lighting = 0.0.xxx;
@@ -162,21 +156,21 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
       float distToLight = dist / lightRange;
       SurfaceToLight surfaceToLight = createSurfaceToLight(surface, L);
 
-   #ifdef NO_SHADOW
-      float shadowed = 1.0;
-   #else
-
+   float shadow = 1.0;
+   #ifndef NO_SHADOW
+   if (getFlag(surface.matFlag, 0)) //also skip if we don't recieve shadows
+   {
    #ifdef SHADOW_CUBE
 
       // TODO: We need to fix shadow cube to handle soft shadows!
       float occ = TORQUE_TEXCUBE( shadowMap, mul( worldToLightProj, -surfaceToLight.L ) ).r;
-      float shadowed = saturate( exp( lightParams.y * ( occ - distToLight ) ) );
+      shadow = saturate( exp( lightParams.y * ( occ - distToLight ) ) );
 
    #else
       float2 shadowCoord = decodeShadowCoord( mul( worldToLightProj, -surfaceToLight.L ) ).xy;
-      float shadowed = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(shadowMap), ssPos.xy, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
+      shadow = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(shadowMap), ssPos.xy, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
    #endif
-   
+   }
    #endif // !NO_SHADOW
    
       float3 lightCol = lightColor.rgb;
@@ -221,7 +215,7 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
    #endif
 
       //get punctual light contribution   
-      lighting = getPunctualLight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, shadowed);
+      lighting = getPunctualLight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, shadow);
    }
       
    return float4(lighting, 0);

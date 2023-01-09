@@ -146,13 +146,6 @@ void main()
    //create surface
    Surface surface = createSurface( normDepth, colorBuffer, matInfoBuffer,
                                     uvScene, eyePosWorld, wsEyeRay, cameraToWorld);
-   
-   //early out if emissive
-   if (getFlag(surface.matFlag, 0))
-   {
-      OUT_col = vec4(0, 0, 0, 0);
-      return;
-   }
 
    vec3 L = lightPosition - surface.P;
    float dist = length(L);
@@ -162,22 +155,22 @@ void main()
       float distToLight = dist / lightRange;
       SurfaceToLight surfaceToLight = createSurfaceToLight(surface, L);
 
-   #ifdef NO_SHADOW
-      float shadowed = 1.0;
-   #else
-
+      float shadow = 1.0;
+      #ifndef NO_SHADOW
+      if (getFlag(surface.matFlag, 0)) //also skip if we don't recieve shadows
+      {
       #ifdef SHADOW_CUBE
               
          // TODO: We need to fix shadow cube to handle soft shadows!
          float occ = texture( shadowMap, tMul( worldToLightProj, -surfaceToLight.L ) ).r;
-         float shadowed = saturate( exp( lightParams.y * ( occ - distToLight ) ) );
+         shadow = saturate( exp( lightParams.y * ( occ - distToLight ) ) );
          
       #else
-      vec2 shadowCoord = decodeShadowCoord( tMul( worldToLightProj, -surfaceToLight.L ) ).xy;
-      float shadowed = softShadow_filter(shadowMap, ssPos.xy/ssPos.w, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
+         vec2 shadowCoord = decodeShadowCoord( tMul( worldToLightProj, -surfaceToLight.L ) ).xy;
+         shadow = softShadow_filter(shadowMap, ssPos.xy/ssPos.w, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
       #endif
-
-   #endif // !NO_SHADOW
+      }
+      #endif // !NO_SHADOW
    
       vec3 lightCol = lightColor.rgb;
    #ifdef USE_COOKIE_TEX
@@ -225,7 +218,7 @@ void main()
    #endif
 
       //get punctual light contribution   
-      lighting = getPunctualLight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, shadowed);
+      lighting = getPunctualLight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, shadow);
    }
 
    OUT_col = vec4(lighting, 0);

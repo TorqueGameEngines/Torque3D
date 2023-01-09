@@ -384,8 +384,7 @@ bool MatInstance::processMaterial()
       mUsesHardwareSkinning = finalFeatures.hasFeature( MFT_HardwareSkinning );
 
       mIsForwardLit =   (  custMat && custMat->mForwardLit ) || 
-                        (  !finalFeatures.hasFeature( MFT_IsEmissive ) &&
-                           finalFeatures.hasFeature( MFT_ForwardShading ) );
+                        (  finalFeatures.hasFeature( MFT_ForwardShading ) );
 
       mIsHardwareSkinned = finalFeatures.hasFeature( MFT_HardwareSkinning );
 

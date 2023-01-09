@@ -86,12 +86,6 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
    Surface surface = createSurface( normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
                                     uvScene, eyePosWorld, wsEyeRay, cameraToWorld);
 
-   //early out if emissive
-   if (getFlag(surface.matFlag, 0))
-   {
-      return float4(0, 0, 0, 0);
-	}
-
    float3 L = lightPosition - surface.P;
    float dist = length(L);
    float3 lighting = 0.0.xxx;
@@ -100,17 +94,18 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
 	{     
       SurfaceToLight surfaceToLight = createSurfaceToLight(surface, L);
       float3 lightCol = lightColor.rgb;
-      
-      #ifdef NO_SHADOW   
-         float shadowed = 1.0;      	
-      #else
+         
+      float shadow = 1.0; 
+      #ifndef NO_SHADOW      
+      if (getFlag(surface.matFlag, 0)) //also skip if we don't recieve shadows
+      {  
          // Get the shadow texture coordinate
          float4 pxlPosLightProj = mul( worldToLightProj, float4( surface.P, 1 ) );
          float2 shadowCoord = ( ( pxlPosLightProj.xy / pxlPosLightProj.w ) * 0.5 ) + float2( 0.5, 0.5 );
          shadowCoord.y = 1.0f - shadowCoord.y;
          //distance to light in shadow map space
          float distToLight = pxlPosLightProj.z / lightRange;
-         float shadowed = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(shadowMap), ssPos.xy, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
+         shadow = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(shadowMap), ssPos.xy, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
          #ifdef USE_COOKIE_TEX
             // Lookup the cookie sample.
             float4 cookie = TORQUE_TEX2D(cookieMap, shadowCoord);
@@ -121,6 +116,7 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
             // regions of the cookie texture.
             lightCol *= max(cookie.r, max(cookie.g, cookie.b));
          #endif
+      }
       #endif
 
    #ifdef DIFFUSE_LIGHT_VIZ
@@ -153,7 +149,7 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
    #endif
 
       //get Punctual light contribution   
-      lighting = getPunctualLight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, shadowed);
+      lighting = getPunctualLight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, shadow);
       //get spot angle attenuation
       lighting *= getSpotAngleAtt(-surfaceToLight.L, lightDirection, lightSpotParams );
    }

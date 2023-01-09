@@ -41,6 +41,7 @@
 #include "materials/baseMatInstance.h"
 #include "materials/sceneData.h"
 #include "environment/timeOfDay.h"
+#include "materials/materialFeatureTypes.h"
 
 
 ConsoleDocClass( ScatterSky,
@@ -913,7 +914,12 @@ void ScatterSky::_initMoon()
 
    if (mMoonMatAsset.notNull())
    {
-      mMoonMatInst = MATMGR->createMatInstance(mMoonMatAsset->getMaterialDefinitionName(), MATMGR->getDefaultFeatures(), getGFXVertexFormat<GFXVertexPCT>());
+      FeatureSet features = MATMGR->getDefaultFeatures();
+      features.removeFeature(MFT_RTLighting);
+      features.removeFeature(MFT_Visibility);
+      features.removeFeature(MFT_ReflectionProbes);      
+      features.addFeature(MFT_isBackground);
+      mMoonMatInst = MATMGR->createMatInstance(mMoonMatAsset->getMaterialDefinitionName(), features, getGFXVertexFormat<GFXVertexPCT>());
    }
 }
 

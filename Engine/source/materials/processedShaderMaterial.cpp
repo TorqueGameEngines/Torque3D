@@ -353,15 +353,10 @@ void ProcessedShaderMaterial::_determineFeatures(  U32 stageNum,
    if ( mMaterial->mAlphaTest )
       fd.features.addFeature( MFT_AlphaTest );
 
-   if (mMaterial->mEmissive[stageNum])
-   {
-      fd.features.addFeature(MFT_IsEmissive);
-   }
-   else
+   if (mMaterial->isTranslucent())
    {
       fd.features.addFeature(MFT_RTLighting);
-	  if (mMaterial->isTranslucent())
-		  fd.features.addFeature(MFT_ReflectionProbes);
+      fd.features.addFeature(MFT_ReflectionProbes);
    }
 
    if ( mMaterial->mAnimFlags[stageNum] )
@@ -1204,8 +1199,8 @@ void ProcessedShaderMaterial::_setShaderConstants(SceneRenderState * state, cons
 
    // Deferred Shading: Determine Material Info Flags
    S32 matInfoFlags = 
-            (mMaterial->mEmissive[stageNum] ? 1 : 0) | //emissive
-            (mMaterial->mSubSurface[stageNum] ? 2 : 0); //subsurface
+            (mMaterial->mReceiveShadows[stageNum] ? 1 : 0) | //ReceiveShadows 
+            (mMaterial->mSubSurface[stageNum] ? 1 << 2 : 0); //subsurface
    mMaterial->mMatInfoFlags[stageNum] = matInfoFlags / 255.0f;
    shaderConsts->setSafe(handles->mMatInfoFlagsSC, mMaterial->mMatInfoFlags[stageNum]);   
    if( handles->mAccuScaleSC->isValid() )

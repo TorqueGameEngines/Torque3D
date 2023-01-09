@@ -254,7 +254,7 @@ BaseMatInstance * MaterialManager::createMeshDebugMatInstance(const LinearColorF
       debugMat = allocateAndRegister( meshDebugStr );
 
       debugMat->mDiffuse[0] = meshColor;
-      debugMat->mEmissive[0] = true;
+      debugMat->mReceiveShadows[0] = false;
    }
 
    BaseMatInstance   *debugMatInstance = NULL;

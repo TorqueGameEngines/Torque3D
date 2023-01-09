@@ -228,8 +228,8 @@ enum SceneObjectTypeMasks : U32
    OUTDOOR_OBJECT_TYPEMASK = (   TerrainObjectType |
                                  EnvironmentObjectType ),
 
-   SKYLIGHT_CAPTURE_TYPEMASK = (EnvironmentObjectType),
-   REFLECTION_PROBE_CAPTURE_TYPEMASK = (StaticObjectType | StaticShapeObjectType | LightObjectType)
+   SKYLIGHT_CAPTURE_TYPEMASK = (OUTDOOR_OBJECT_TYPEMASK) & ~(PhysicalZoneObjectType | MarkerObjectType | TriggerObjectType),
+   REFLECTION_PROBE_CAPTURE_TYPEMASK = (SKYLIGHT_CAPTURE_TYPEMASK | StaticObjectType | StaticShapeObjectType | LightObjectType)
 };
 
 #endif

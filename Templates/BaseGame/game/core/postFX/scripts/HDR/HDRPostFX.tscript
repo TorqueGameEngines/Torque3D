@@ -283,8 +283,7 @@ function HDRPostFX::setShaderConsts( %this )
       %tonemapMode = 4;	  
  else if($PostFX::HDRPostFX::tonemapMode $= "Linear")
       %tonemapMode = 5;
- 
-      
+   
    %combinePass.setShaderConst( "$g_fTonemapMode", %tonemapMode );
    
    %clampedGamma  = mClamp( $pref::Video::Gamma, 2.0, 2.5);
@@ -302,6 +301,7 @@ function HDRPostFX::setShaderConsts( %this )
    {
      %mip = %bloom.getObject(%this.mipsCount + %idx);
      %mip.setShaderConst("$filterRadius", $PostFX::HDRPostFX::radius);
+     %mip.setShaderConst("$mipId", %idx);
    }
 
    %strength = $PostFX::HDRPostFX::intensity;
@@ -447,7 +447,7 @@ function HDRPostFX::populatePostFXSettings(%this)
    PostEffectEditorInspector.addField("$PostFX::HDRPostFX::enableBloom", "Enable Bloom", "bool", "", $PostFX::HDRPostFX::enableBloom, "");
    PostEffectEditorInspector.addField("$PostFX::HDRPostFX::threshold", "Threshold", "range", "", $PostFX::HDRPostFX::threshold, "0 2 10");
    PostEffectEditorInspector.addField("$PostFX::HDRPostFX::intensity", "Intensity", "range", "", $PostFX::HDRPostFX::intensity, "0 10 10");
-   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::radius", "Radius", "float", "", $PostFX::HDRPostFX::radius, "");
+   PostEffectEditorInspector.addField("$PostFX::HDRPostFX::radius", "Radius", "range", "", $PostFX::HDRPostFX::radius, "0 25 50");
    PostEffectEditorInspector.endGroup();
    
    PostEffectEditorInspector.startGroup("HDR - Lens Dirt");
@@ -763,4 +763,3 @@ function LuminanceVisPostFX::onDisabled( %this )
 {      
    HDRPostFX.skip = false; 
 }
-

@@ -20,43 +20,66 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+#include "core/rendering/shaders/gl/torque.glsl"
 #include "core/rendering/shaders/gl/hlslCompat.glsl"
 #include "core/rendering/shaders/postFX/gl/postFx.glsl"
+#include "core/postFX/scripts/HDR/HDR_colorUtils.glsl"
 #include "shadergen:/autogenConditioners.h"
-
-#line 27
-
-#define KERNEL_SAMPLES 9
-const vec3 KERNEL[9] = vec3[](
-  vec3( 0.0000, 0.0000, 0.2500),
-  vec3( 1.0000, 0.0000, 0.1250),
-  vec3( 0.0000, 1.0000, 0.1250),
-  vec3(-1.0000, 0.0000, 0.1250),
-  vec3( 0.0000,-1.0000, 0.1250),
-  vec3( 1.0000, 1.0000, 0.0625),
-  vec3( 1.0000,-1.0000, 0.0625),
-  vec3(-1.0000,-1.0000, 0.0625),
-  vec3(-1.0000, 1.0000, 0.0625)
-);
-
+#line 28
 uniform sampler2D inputTex;
 uniform vec2 oneOverTargetSize;
+uniform int mipId;
 
 out vec4 OUT_col;
  
 void main()
 {
   vec4 downSample = vec4(0, 0, 0, 0);
+  float x = oneOverTargetSize.x;
+  float y = oneOverTargetSize.y;
   
-  for (int i=0; i<KERNEL_SAMPLES; i++)
+  vec3 a = texture(inputTex, vec2(IN_uv0.x - 2 * x, IN_uv0.y + 2 * y)).rgb;
+  vec3 b = texture(inputTex, vec2(IN_uv0.x,         IN_uv0.y + 2 * y)).rgb;
+  vec3 c = texture(inputTex, vec2(IN_uv0.x + 2 * x, IN_uv0.y + 2 * y)).rgb;
+
+  vec3 d = texture(inputTex, vec2(IN_uv0.x - 2 * x, IN_uv0.y)).rgb;
+  vec3 e = texture(inputTex, vec2(IN_uv0.x,         IN_uv0.y)).rgb;
+  vec3 f = texture(inputTex, vec2(IN_uv0.x + 2 * x, IN_uv0.y)).rgb;
+
+  vec3 g = texture(inputTex, vec2(IN_uv0.x - 2 * x, IN_uv0.y - 2 * y)).rgb;
+  vec3 h = texture(inputTex, vec2(IN_uv0.x,         IN_uv0.y - 2 * y)).rgb;
+  vec3 i = texture(inputTex, vec2(IN_uv0.x + 2 * x, IN_uv0.y - 2 * y)).rgb;
+
+  vec3 j = texture(inputTex, vec2(IN_uv0.x - x, IN_uv0.y + y)).rgb;
+  vec3 k = texture(inputTex, vec2(IN_uv0.x + x, IN_uv0.y + y)).rgb;
+  vec3 l = texture(inputTex, vec2(IN_uv0.x - x, IN_uv0.y - y)).rgb;
+  vec3 m = texture(inputTex, vec2(IN_uv0.x + x, IN_uv0.y - y)).rgb;
+
+  vec3 group[5];
+  switch (mipId)
   {
-    // XY: Sample Offset
-    // Z: Sample Weight
-    vec3 offsetWeight = KERNEL[i];
-    vec2 offsetXY = offsetWeight.xy * oneOverTargetSize;
-    float weight = offsetWeight.z;
-    vec4 sampleCol = texture(inputTex, IN_uv0 + offsetXY);
-    downSample += sampleCol * weight;
+	case 0:
+		group[0] = (a+b+d+e) * (0.125f/4.0f);
+		group[1] = (b+c+e+f) * (0.125f/4.0f);
+		group[2] = (d+e+g+h) * (0.125f/4.0f);
+		group[3] = (e+f+h+i) * (0.125f/4.0f);
+		group[4] = (j+k+l+m) * (0.5f/4.0f);
+		group[0] *= KarisAverage(group[0]);
+		group[1] *= KarisAverage(group[1]);
+		group[2] *= KarisAverage(group[2]);
+		group[3] *= KarisAverage(group[3]);
+		group[4] *= KarisAverage(group[4]);
+		downSample.rgb = group[0]+group[1]+group[2]+group[3]+group[4];
+		downSample.a = 1.0;
+		break;
+		
+	default:
+		downSample.rgb = e*0.125;
+		downSample.rgb += (a+c+g+i)*0.03125;
+		downSample.rgb += (b+d+f+h)*0.0625;
+		downSample.rgb += (j+k+l+m)*0.125;
+		downSample.a = 1.0;
+		break;
   }
   
   OUT_col = downSample;

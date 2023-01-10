@@ -22,19 +22,6 @@
 
 #include "core/rendering/shaders/postFX/postFx.hlsl"
 
-#define KERNEL_SAMPLES 9
-static const float3 KERNEL[9] = {
-  float3( 0.0000f, 0.0000f, 0.5000f),
-  float3( 1.0000f, 0.0000f, 0.0625f),
-  float3( 0.0000f, 1.0000f, 0.0625f),
-  float3(-1.0000f, 0.0000f, 0.0625f),
-  float3( 0.0000f,-1.0000f, 0.0625f),
-  float3( 0.7070f, 0.7070f, 0.0625f),
-  float3( 0.7070f,-0.7070f, 0.0625f),
-  float3(-0.7070f,-0.7070f, 0.0625f),
-  float3(-0.7070f, 0.7070f, 0.0625f)
-};
-
 TORQUE_UNIFORM_SAMPLER2D(nxtTex, 0);
 TORQUE_UNIFORM_SAMPLER2D(mipTex, 1);
 uniform float filterRadius;
@@ -43,18 +30,26 @@ uniform float2 oneOverTargetSize;
 float4 main(PFXVertToPix IN) : TORQUE_TARGET0
 {
   float4 upSample = float4(0, 0, 0, 0);
+  float x = filterRadius*oneOverTargetSize.x;
+  float y = filterRadius*oneOverTargetSize.y;
   
-  [unroll]
-  for (int i=0; i<KERNEL_SAMPLES; i++)
-  {
-    // XY: Sample Offset
-    // Z: Sample Weight
-    float3 offsetWeight = KERNEL[i];
-    float2 offset = offsetWeight.xy * oneOverTargetSize * filterRadius;
-    float weight = offsetWeight.z;
-    float4 sampleCol = TORQUE_TEX2D(mipTex, IN.uv1 + offset);
-    upSample += sampleCol * weight;
-  }
+  float3 a = TORQUE_TEX2D(mipTex, float2(IN.uv1.x - x, IN.uv1.y + y)).rgb;
+  float3 b = TORQUE_TEX2D(mipTex, float2(IN.uv1.x,     IN.uv1.y + y)).rgb;
+  float3 c = TORQUE_TEX2D(mipTex, float2(IN.uv1.x + x, IN.uv1.y + y)).rgb;
+  
+  float3 d = TORQUE_TEX2D(mipTex, float2(IN.uv1.x - x, IN.uv1.y)).rgb;
+  float3 e = TORQUE_TEX2D(mipTex, float2(IN.uv1.x,     IN.uv1.y)).rgb;
+  float3 f = TORQUE_TEX2D(mipTex, float2(IN.uv1.x + x, IN.uv1.y)).rgb;
+
+  float3 g = TORQUE_TEX2D(mipTex, float2(IN.uv1.x - x, IN.uv1.y - y)).rgb;
+  float3 h = TORQUE_TEX2D(mipTex, float2(IN.uv1.x,     IN.uv1.y - y)).rgb;
+  float3 i = TORQUE_TEX2D(mipTex, float2(IN.uv1.x + x, IN.uv1.y - y)).rgb;
+  
+  upSample.rgb = e*4.0;
+  upSample.rgb += (b+d+f+h)*2.0;
+  upSample.rgb += (a+c+g+i);
+  upSample.rgb *= 1.0 / 16.0;
+  upSample.a = 1.0;
   
   upSample = TORQUE_TEX2D(nxtTex, IN.uv0) + upSample;
   

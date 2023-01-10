@@ -51,12 +51,6 @@ float4 main(PFXVertToPix IN) : SV_TARGET
    Surface surface = createSurface(normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
       IN.uv0.xy, eyePosWorld, IN.wsEyeRay, cameraToWorld);
 
-   //early out if emissive
-   if (getFlag(surface.matFlag, 0))
-   {
-      return float4(surface.albedo, 0);
-   }
-
    #ifdef USE_SSAO_MASK
       float ssao =  1.0 - TORQUE_TEX2D( ssaoMask, viewportCoordToRenderTarget( IN.uv0.xy, rtParams7 ) ).r;
       surface.ao = min(surface.ao, ssao);  

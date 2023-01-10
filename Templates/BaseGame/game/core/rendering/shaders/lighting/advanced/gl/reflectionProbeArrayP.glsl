@@ -55,13 +55,6 @@ void main()
 
    //create surface
    Surface surface = createSurface(normDepth, colorBuffer, matInfoBuffer, IN_uv0.xy, eyePosWorld, IN_wsEyeRay, cameraToWorld);
-
-   //early out if emissive
-   if (getFlag(surface.matFlag, 0))
-   {
-      OUT_col = vec4(surface.albedo, 0);
-      return;
-   }
    
    #ifdef USE_SSAO_MASK
       float ssao =  1.0 - texture( ssaoMask, viewportCoordToRenderTarget( IN_uv0.xy, rtParams7 ) ).r;

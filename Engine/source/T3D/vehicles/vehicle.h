@@ -39,18 +39,6 @@ struct VehicleData : public RigidShapeData
 {
    typedef RigidShapeData Parent;
 
-   struct Body {
-      enum Sounds {
-         SoftImpactSound,
-         HardImpactSound,
-         MaxSounds,
-      };
-      F32 restitution;
-      F32 friction;
-   } body;
-
-   DECLARE_SOUNDASSET_ARRAY(VehicleData, VehicleBodySounds, Body::Sounds::MaxSounds)
-
    enum VehicleConsts
    {
       VC_NUM_DUST_EMITTERS = 1,
@@ -62,43 +50,10 @@ struct VehicleData : public RigidShapeData
       VC_BUBBLE_EMITTER = VC_NUM_DAMAGE_EMITTERS - VC_NUM_BUBBLE_EMITTERS,
    };
 
-  enum Sounds {
-      ExitWater,
-      ImpactSoft,
-      ImpactMedium,
-      ImpactHard,
-      Wake,
-      MaxSounds
-   };
-
-  DECLARE_SOUNDASSET_ARRAY(VehicleData, VehicleWaterSounds, Sounds::MaxSounds)
-
-   F32 exitSplashSoundVel;
-   F32 softSplashSoundVel;
-   F32 medSplashSoundVel;
-   F32 hardSplashSoundVel;
-
-   F32 minImpactSpeed;
-   F32 softImpactSpeed;
-   F32 hardImpactSpeed;
-   F32 minRollSpeed;
    F32 maxSteeringAngle;
 
    F32 collDamageThresholdVel;
    F32 collDamageMultiplier;
-
-   bool cameraRoll;           ///< Roll the 3rd party camera
-   F32 cameraLag;             ///< Amount of camera lag (lag += car velocity * lag)
-   F32 cameraDecay;           ///< Rate at which camera returns to target pos.
-   F32 cameraOffset;          ///< Vertical offset
-
-   F32 minDrag;
-   F32 maxDrag;
-   S32 integration;           ///< # of physics steps per tick
-   F32 collisionTol;          ///< Collision distance tolerance
-   F32 contactTol;            ///< Contact velocity tolerance
-   Point3F massCenter;        ///< Center of mass for rigid body
-   Point3F massBox;           ///< Size of inertial box
 
    F32 jetForce;
    F32 jetEnergyDrain;        ///< Energy drain/tick
@@ -108,21 +63,11 @@ struct VehicleData : public RigidShapeData
    F32 steeringReturnSpeedScale;
    bool powerSteering;
 
-   ParticleEmitterData * dustEmitter;
-   S32 dustID;
-   F32 triggerDustHeight;  ///< height vehicle has to be under to kick up dust
-   F32 dustHeight;         ///< dust height above ground
-
    ParticleEmitterData *   damageEmitterList[ VC_NUM_DAMAGE_EMITTERS ];
    Point3F damageEmitterOffset[ VC_NUM_DAMAGE_EMITTER_AREAS ];
    S32 damageEmitterIDList[ VC_NUM_DAMAGE_EMITTERS ];
    F32 damageLevelTolerance[ VC_NUM_DAMAGE_LEVELS ];
    F32 numDmgEmitterAreas;
-
-   ParticleEmitterData* splashEmitterList[VC_NUM_SPLASH_EMITTERS];
-   S32 splashEmitterIDList[VC_NUM_SPLASH_EMITTERS];
-   F32 splashFreqMod;
-   F32 splashVelEpsilon;
 
    bool enablePhysicsRep;
 
@@ -171,6 +116,7 @@ class Vehicle : public RigidShape
    void readPacketData (GameConnection * conn, BitStream *stream);
    U32  packUpdate  (NetConnection *conn, U32 mask, BitStream *stream);
    void unpackUpdate(NetConnection *conn,           BitStream *stream);
+   void setControllingClient(GameConnection* connection);
 
    void updateLiftoffDust( F32 dt );
    void updateDamageSmoke( F32 dt );

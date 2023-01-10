@@ -64,7 +64,6 @@ class RigidShapeData : public ShapeBaseData
    } body;
 
    DECLARE_SOUNDASSET_ARRAY(RigidShapeData, BodySounds, Body::Sounds::MaxSounds)
-   DECLARE_ASSET_ARRAY_SETGET(RigidShapeData, BodySounds);
 
    enum RigidShapeConsts
    {

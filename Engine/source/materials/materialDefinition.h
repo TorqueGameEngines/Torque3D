@@ -305,7 +305,7 @@ public:
    F32 mSeqSegSize[MAX_STAGES];
 
    bool mGlow[MAX_STAGES];          // entire stage glows
-   bool mEmissive[MAX_STAGES];
+   bool mReceiveShadows[MAX_STAGES];
 
    Point2I mCellIndex[MAX_STAGES];
    Point2I mCellLayout[MAX_STAGES];

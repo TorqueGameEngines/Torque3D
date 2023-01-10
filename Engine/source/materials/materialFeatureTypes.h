@@ -115,7 +115,6 @@ DeclareFeatureType( MFT_AlphaTest );
 DeclareFeatureType( MFT_NormalMap );
 DeclareFeatureType( MFT_RTLighting );
 
-DeclareFeatureType( MFT_IsEmissive );
 DeclareFeatureType( MFT_SubSurface );
 DeclareFeatureType( MFT_LightMap );
 DeclareFeatureType( MFT_ToneMap );

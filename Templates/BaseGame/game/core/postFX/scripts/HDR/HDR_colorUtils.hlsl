@@ -40,4 +40,10 @@ float TO_LogContrast (float x, float contrast)
 {       
     float a =  0.15 + (log2(x + 0.0001f ) - 0.15)* contrast ;
     return clamp(exp2(a)-0.0001f,0.0 , 2.5);  
-}  
+}
+
+float KarisAverage(float3 col)
+{
+	float luma = rgbToHSL(col).z;
+	return 1.0 / (1.0f + luma);
+}

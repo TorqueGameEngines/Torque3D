@@ -22,8 +22,7 @@
 
 #include "torque.glsl"
 #include "hlslCompat.glsl"
-
-
+#line 25
 // Conn
 in vec4  rayleighColor;
 #define IN_rayleighColor rayleighColor

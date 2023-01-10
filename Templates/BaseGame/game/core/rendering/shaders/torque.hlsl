@@ -301,25 +301,98 @@ bool getFlag(float flags, int num)
    return (fmod(process, pow(2, squareNum)) >= squareNum); 
 }
 
+// RGB -> HSL
+float3 rgbToHSL(float3 col)
+{
+	float cmax, cmin, h, s, l;
+	cmax = max(col.r, max(col.g, col.b));
+	cmin = min(col.r, min(col.g, col.b));
+	l = min(1.0, (cmax + cmin) / 2.0);
+
+    if (cmax == cmin) {
+    h = s = 0.0; /* achromatic */
+    }
+    else 
+	{
+        float cdelta = cmax - cmin;
+        s = l > 0.5 ? cdelta / (2.0 - cmax - cmin) : cdelta / (cmax + cmin);
+        if (cmax == col.r) {
+          h = (col.g - col.b) / cdelta + (col.g < col.b ? 6.0 : 0.0);
+        }
+        else if (cmax == col.g) {
+          h = (col.b - col.r) / cdelta + 2.0;
+        }
+        else {
+          h = (col.r - col.b) / cdelta + 4.0;
+        }
+    }
+    h /= 6.0;
+
+	
+	return float3(h,s,l);
+}
+
+// HSL -> RGB
+float3 hslToRGB(float3 hsl)
+{
+	float nr, ng, nb, chroma, h, s, l;
+	h = hsl.r;
+	s = hsl.g;
+	l = hsl.b;
+	
+	nr = abs(h * 6.0 - 3.0) - 1.0;
+	ng = 2.0 - abs(h * 6.0 - 2.0);
+	nb = 2.0 - abs(h * 6.0 - 4.0);
+	
+	nr = clamp(nr, 0.0, 1.0);
+	nb = clamp(nb, 0.0, 1.0);
+	ng = clamp(ng, 0.0, 1.0);
+
+	chroma = (1.0 - abs(2.0 * l - 1.0)) * s;
+	
+	return float3((nr - 0.5) * chroma + l, (ng - 0.5) * chroma + l, (nb - 0.5) * chroma + l);
+  
+}
+
 // Sample in linear space. Decodes gamma.
+float toLinear(float col)
+{
+	if(col < 0.04045)
+	{
+		return (col < 0.0) ? 0.0 : col * (1.0 / 12.92);
+	}
+	
+	return pow(abs(col + 0.055) * (1.0 / 1.055), 2.4);
+}
 float4 toLinear(float4 tex)
 {
-   return float4(pow(abs(tex.rgb), 2.2), tex.a);
+   return float4(toLinear(tex.r),toLinear(tex.g),toLinear(tex.b), tex.a);
 }
-// Encodes gamma.
-float4 toGamma(float4 tex)
-{
-   return float4(pow(abs(tex.rgb), 1.0/2.2), tex.a);
-}
-// Sample in linear space. Decodes gamma.
+
 float3 toLinear(float3 tex)
 {
-   return pow(abs(tex.rgb), 2.2);
+   return float3(toLinear(tex.r),toLinear(tex.g),toLinear(tex.b));
 }
+
 // Encodes gamma.
+float toGamma(float col)
+{
+	if(col < 0.0031308)
+	{
+		return (col < 0.0) ? 0.0 : col * 12.92;
+	}
+	
+	return 1.055 * pow(abs(col), 1.0 / 2.4) - 0.055;
+}
+
+float4 toGamma(float4 tex)
+{
+   return float4(toGamma(tex.r), toGamma(tex.g), toGamma(tex.b), tex.a);
+}
+
 float3 toGamma(float3 tex)
 {
-   return pow(abs(tex.rgb), 1.0/2.2);
+   return float3(toGamma(tex.r), toGamma(tex.g), toGamma(tex.b));
 }
 
 //

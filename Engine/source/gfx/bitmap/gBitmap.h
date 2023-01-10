@@ -58,8 +58,8 @@ public:
    enum Constants
    {
       /// The maximum mipmap levels we support.  The current
-      /// value lets us support up to 4096 x 4096 images.
-      c_maxMipLevels = 13 
+      /// value lets us support up to 8192 x 8192 images.
+      c_maxMipLevels = 14 
    };
 
    enum TextureOp

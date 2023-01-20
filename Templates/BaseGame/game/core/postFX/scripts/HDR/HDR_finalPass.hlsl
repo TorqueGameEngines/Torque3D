@@ -95,7 +95,7 @@ float4 main( PFXVertToPix IN ) : TORQUE_TARGET0
    float4 bloom = TORQUE_TEX2D( bloomTex, IN.uv2 ); 
         	    
    // Add the bloom effect.     
-   sample.rgb = lerp(sample.rgb, bloom.rgb, float3(0.04, 0.04, 0.04));        
+   sample.rgb += bloom.rgb;        
    		 	
 	//Apply Exposure     
    sample.rgb *= TO_Exposure(sample.rgb, exposureValue, colorFilter); 

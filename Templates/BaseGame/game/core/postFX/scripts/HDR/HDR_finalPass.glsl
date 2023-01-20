@@ -100,7 +100,7 @@ void main()
    vec4 bloom = texture( bloomTex, IN_uv2 );
 
    // Add the bloom effect.     
-   _sample.rgb = mix(_sample.rgb, bloom.rgb, vec3(0.4));  
+   _sample.rgb +=bloom.rgb;  
            
    //Apply Exposure     
    _sample.rgb *= TO_Exposure(_sample.rgb, exposureValue, colorFilter);

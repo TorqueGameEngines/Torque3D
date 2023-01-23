@@ -180,7 +180,7 @@ torqueAddSourceDirectories("shaderGen")
 
 if (WIN32 AND TORQUE_D3D11)
   torqueAddSourceDirectories("shaderGen/HLSL")
-endif (WIN32)
+endif (WIN32 AND TORQUE_D3D11)
 
 if (TORQUE_OPENGL)
   torqueAddSourceDirectories("shaderGen/GLSL")

@@ -1,3 +1,5 @@
+add_subdirectory(nativeFileDialogs ${CMAKE_BINARY_DIR}/temp/nfd EXCLUDE_FROM_ALL)
+
 # Ask CMake to perform builds in a temporary directory for all of these.
 # We also use EXCLUDE_FROM_ALL to ensure we only build and install what we want
 set(SDL_SHARED on CACHE BOOL "" FORCE)

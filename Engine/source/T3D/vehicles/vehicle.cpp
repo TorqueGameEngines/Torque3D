@@ -127,7 +127,6 @@ ConsoleDocClass( VehicleData,
 
 VehicleData::VehicleData()
 {
-   shadowEnable = true;
    shadowSize = 256;
    shadowProjectionDistance = 14.0f;
    maxSteeringAngle = M_PI_F/4.0f; // 45 deg.
@@ -280,25 +279,38 @@ void VehicleData::initPersistFields()
       "@brief Creates a representation of the object in the physics plugin.\n");
    endGroup("Physics");
 
-   addField( "jetForce", TypeF32, Offset(jetForce, VehicleData),
-      "@brief Additional force applied to the vehicle when it is jetting.\n\n"
-      "For WheeledVehicles, the force is applied in the forward direction. For "
-      "FlyingVehicles, the force is applied in the thrust direction." );
-   addField( "jetEnergyDrain", TypeF32, Offset(jetEnergyDrain, VehicleData),
-      "@brief Energy amount to drain for each tick the vehicle is jetting.\n\n"
-      "Once the vehicle's energy level reaches 0, it will no longer be able to jet." );
-   addField( "minJetEnergy", TypeF32, Offset(minJetEnergy, VehicleData),
-      "Minimum vehicle energy level to begin jetting." );
+   addGroup("Collision");
+   addField( "collDamageThresholdVel", TypeF32, Offset(collDamageThresholdVel, VehicleData),
+      "Minimum collision velocity to cause damage to this vehicle.\nCurrently unused." );
+   addField( "collDamageMultiplier", TypeF32, Offset(collDamageMultiplier, VehicleData),
+      "@brief Damage to this vehicle after a collision (multiplied by collision "
+      "velocity).\n\nCurrently unused." );
+   endGroup("Collision");
 
+   addGroup("Steering");
+      addField( "jetForce", TypeF32, Offset(jetForce, VehicleData),
+         "@brief Additional force applied to the vehicle when it is jetting.\n\n"
+         "For WheeledVehicles, the force is applied in the forward direction. For "
+         "FlyingVehicles, the force is applied in the thrust direction." );
+      addField( "jetEnergyDrain", TypeF32, Offset(jetEnergyDrain, VehicleData),
+      "@brief Energy amount to drain for each tick the vehicle is jetting.\n\n"
+         "Once the vehicle's energy level reaches 0, it will no longer be able to jet." );
+      addField( "minJetEnergy", TypeF32, Offset(minJetEnergy, VehicleData),
+      "Minimum vehicle energy level to begin jetting." );
+      addField( "maxSteeringAngle", TypeF32, Offset(maxSteeringAngle, VehicleData),
+         "Maximum yaw (horizontal) and pitch (vertical) steering angle in radians." );
+   endGroup("Steering");
+
+   addGroup("AutoCorrection");
+   addField( "powerSteering", TypeBool, Offset(powerSteering, VehicleData),
+      "If true, steering does not auto-centre while the vehicle is being steered by its driver." );
    addField( "steeringReturn", TypeF32, Offset(steeringReturn, VehicleData),
       "Rate at which the vehicle's steering returns to forwards when it is moving." );
    addField( "steeringReturnSpeedScale", TypeF32, Offset(steeringReturnSpeedScale, VehicleData),
       "Amount of effect the vehicle's speed has on its rate of steering return." );
-   addField( "powerSteering", TypeBool, Offset(powerSteering, VehicleData),
-      "If true, steering does not auto-centre while the vehicle is being steered by its driver." );
-   addField( "maxSteeringAngle", TypeF32, Offset(maxSteeringAngle, VehicleData),
-      "Maximum yaw (horizontal) and pitch (vertical) steering angle in radians." );
+   endGroup("AutoCorrection");
 
+   addGroup("Particle Effects");
    addField( "damageEmitter", TYPEID< ParticleEmitterData >(), Offset(damageEmitterList, VehicleData), VC_NUM_DAMAGE_EMITTERS,
       "@brief Array of particle emitters used to generate damage (dust, smoke etc) "
       "effects.\n\n"
@@ -326,11 +338,7 @@ void VehicleData::initPersistFields()
    addField( "numDmgEmitterAreas", TypeF32, Offset(numDmgEmitterAreas, VehicleData),
       "Number of damageEmitterOffset values to use for each damageEmitter.\n\n"
       "@see damageEmitterOffset" );
-   addField( "collDamageThresholdVel", TypeF32, Offset(collDamageThresholdVel, VehicleData),
-      "Minimum collision velocity to cause damage to this vehicle.\nCurrently unused." );
-   addField( "collDamageMultiplier", TypeF32, Offset(collDamageMultiplier, VehicleData),
-      "@brief Damage to this vehicle after a collision (multiplied by collision "
-      "velocity).\n\nCurrently unused." );
+   endGroup("Particle Effects");
 
    Parent::initPersistFields();
 }

@@ -110,19 +110,20 @@ bool PhysicsDebrisData::preload( bool server, String &errorStr )
 
 void PhysicsDebrisData::initPersistFields()
 {
-   addGroup( "Display" );
+   addGroup( "Shapes" );
 
       addProtectedField( "shapeFile", TypeShapeFilename, Offset( mShapeName, PhysicsDebrisData ), &_setShapeData, &defaultProtectedGetFn,
          "@brief Path to the .DAE or .DTS file to use for this shape.\n\n"
          "Compatable with Live-Asset Reloading.", AbstractClassRep::FIELD_HideInInspectors);
-         
+
       INITPERSISTFIELD_SHAPEASSET(Shape, PhysicsDebrisData, "@brief Shape to use with this debris.\n\n"
          "Compatable with Live-Asset Reloading.");
+   endGroup( "Shapes" );
 
+   addGroup("Rendering");
       addField( "castShadows", TypeBool, Offset( castShadows, PhysicsDebrisData ), 
         "@brief Determines if the shape's shadow should be cast onto the environment.\n\n" );
-
-   endGroup( "Display" );
+   endGroup("Rendering");
 
    addGroup( "Physical Properties" );
 

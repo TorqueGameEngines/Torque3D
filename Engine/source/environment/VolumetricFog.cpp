@@ -165,10 +165,11 @@ VolumetricFog::~VolumetricFog()
 
 void VolumetricFog::initPersistFields()
 {
+   addGroup("Shapes");
+      INITPERSISTFIELD_SHAPEASSET(Shape, VolumetricFog, "The source shape asset.");
+   endGroup("Shapes");
+
    addGroup("VolumetricFogData");
-
-   INITPERSISTFIELD_SHAPEASSET(Shape, VolumetricFog, "The source shape asset.");
-
    addField("FogColor", TypeColorI, Offset(mFogColor, VolumetricFog),
       "Fog color RGBA (Alpha is ignored)");
    addField("FogDensity", TypeF32, Offset(mFogDensity, VolumetricFog), 

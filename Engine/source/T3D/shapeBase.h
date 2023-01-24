@@ -354,7 +354,6 @@ struct ShapeBaseImageData: public GameBaseData {
    bool useRemainderDT;
 
    //
-   bool emap;                       ///< Environment mapping on?
    bool correctMuzzleVector;        ///< Adjust 1st person firing vector to eye's LOS point?
    bool correctMuzzleVectorTP;      ///< Adjust 3rd person firing vector to camera's LOS point?
    bool firstPerson;                ///< Render the image when in first person?
@@ -542,7 +541,6 @@ public:
 
    // TODO: These are only really used in Basic Lighting
    // mode... we should probably move them somewhere else.
-   bool shadowEnable;
    U32 shadowSize;
    F32 shadowMaxVisibleDistance;
    F32 shadowProjectionDistance;

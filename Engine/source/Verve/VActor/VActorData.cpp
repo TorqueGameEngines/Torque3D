@@ -35,7 +35,6 @@ VActorData::VActorData( void ) :
         mSubmergeCoverage( 0.25f )
 {
     // Setup Shadowing.
-    shadowEnable = true;
     shadowSize = 256;
     shadowProjectionDistance = 14.0f;
 

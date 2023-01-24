@@ -448,13 +448,7 @@ bool WheeledVehicleData::mirrorWheel(Wheel* we)
 
 void WheeledVehicleData::initPersistFields()
 {
-   addGroup("Sounds");
-   INITPERSISTFIELD_SOUNDASSET_ENUMED(WheeledVehicleSounds, WheeledVehicleSoundsEnum, MaxSounds, WheeledVehicleData, "Sounds related to wheeled vehicle.");
-   endGroup("Sounds");
-
-   addField("tireEmitter",TYPEID< ParticleEmitterData >(), Offset(tireEmitter, WheeledVehicleData),
-      "ParticleEmitterData datablock used to generate particles from each wheel "
-      "when the vehicle is moving and the wheel is in contact with the ground.");
+   addGroup("Steering");
    addField("maxWheelSpeed", TypeF32, Offset(maxWheelSpeed, WheeledVehicleData),
       "@brief Maximum linear velocity of each wheel.\n\n"
       "This caps the maximum speed of the vehicle." );
@@ -468,6 +462,17 @@ void WheeledVehicleData::initPersistFields()
    addField("brakeTorque", TypeF32, Offset(brakeTorque, WheeledVehicleData),
       "@brief Torque applied when braking.\n\n"
       "This controls how fast the vehicle will stop when the brakes are applied." );
+   endGroup("Steering");
+
+   addGroup("Particle Effects");
+   addField("tireEmitter",TYPEID< ParticleEmitterData >(), Offset(tireEmitter, WheeledVehicleData),
+      "ParticleEmitterData datablock used to generate particles from each wheel "
+      "when the vehicle is moving and the wheel is in contact with the ground.");
+   endGroup("Particle Effects");
+
+   addGroup("Sounds");
+      INITPERSISTFIELD_SOUNDASSET_ENUMED(WheeledVehicleSounds, WheeledVehicleSoundsEnum, MaxSounds, WheeledVehicleData, "Sounds related to wheeled vehicle.");
+   endGroup("Sounds");
    
    Parent::initPersistFields();
 }

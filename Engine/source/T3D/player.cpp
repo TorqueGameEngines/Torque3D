@@ -282,7 +282,6 @@ IMPLEMENT_CALLBACK( PlayerData, onLeaveMissionArea, void, ( Player* obj ), ( obj
 
 PlayerData::PlayerData()
 {
-   shadowEnable = true;
    shadowSize = 256;
    shadowProjectionDistance = 14.0f;
 

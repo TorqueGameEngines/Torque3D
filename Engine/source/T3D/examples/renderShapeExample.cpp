@@ -72,9 +72,9 @@ RenderShapeExample::~RenderShapeExample()
 //-----------------------------------------------------------------------------
 void RenderShapeExample::initPersistFields()
 {
-   addGroup( "Rendering" );
+   addGroup( "Shapes" );
    INITPERSISTFIELD_SHAPEASSET(Shape, RenderShapeExample, "The path to the shape file.")
-   endGroup( "Rendering" );
+   endGroup( "Shapes" );
 
    // SceneObject already handles exposing the transform
    Parent::initPersistFields();

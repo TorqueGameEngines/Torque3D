@@ -89,7 +89,7 @@ void PhysicsShapeData::initPersistFields()
 {
    Parent::initPersistFields();
 
-   addGroup("Media");
+   addGroup("Shapes");
 
       INITPERSISTFIELD_SHAPEASSET(Shape, PhysicsShapeData, "@brief Shape asset to be used with this physics object.\n\n"
          "Compatable with Live-Asset Reloading. ")
@@ -103,7 +103,7 @@ void PhysicsShapeData::initPersistFields()
       addField( "destroyedShape", TYPEID< SimObjectRef<PhysicsShapeData> >(), Offset( destroyedShape, PhysicsShapeData ),
          "@brief Name of a PhysicsShapeData to spawn when this shape is destroyed (optional)." );
 
-   endGroup("Media");
+   endGroup("Shapes");
 
    addGroup( "Physics" );
       

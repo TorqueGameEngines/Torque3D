@@ -95,9 +95,6 @@ ConsoleDocClass( StaticShapeData,
 StaticShapeData::StaticShapeData()
 {
    dynamicTypeField     = 0;
-
-   shadowEnable = true;
-
    noIndividualDamage = false;
 }
 

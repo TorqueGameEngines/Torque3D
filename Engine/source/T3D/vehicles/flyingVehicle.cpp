@@ -404,8 +404,17 @@ void FlyingVehicle::onRemove()
 
 //----------------------------------------------------------------------------
 
+void FlyingVehicle::interpolateTick(F32 dt)
+{
+   PROFILE_SCOPE(FlyingVehicle_InterpolateTick);
+   Parent::interpolateTick(dt);
+   updateEngineSound(1);
+   updateJet(dt);
+}
+
 void FlyingVehicle::advanceTime(F32 dt)
 {
+   PROFILE_SCOPE(FlyingVehicle_AdvanceTime);
    Parent::advanceTime(dt);
 
    updateEngineSound(1);

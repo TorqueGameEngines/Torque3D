@@ -187,6 +187,7 @@ class FlyingVehicle: public Vehicle
 
    bool onAdd();
    void onRemove();
+   void interpolateTick(F32 dt);
    void advanceTime(F32 dt);
 
    void writePacketData(GameConnection *conn, BitStream *stream);

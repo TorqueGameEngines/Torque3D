@@ -232,6 +232,45 @@ ProjectileData::ProjectileData(const ProjectileData& other, bool temp_clone) : G
 
 void ProjectileData::initPersistFields()
 {
+   addGroup("Shapes");
+      addProtectedField("projectileShapeName", TypeShapeFilename, Offset(mProjectileShapeName, ProjectileData), &_setProjectileShapeData, &defaultProtectedGetFn,
+         "@brief File path to the model of the projectile.\n\n", AbstractClassRep::FIELD_HideInInspectors);
+      INITPERSISTFIELD_SHAPEASSET(ProjectileShape, ProjectileData, "@brief The model of the projectile.\n\n");
+      addField("scale", TypePoint3F, Offset(scale, ProjectileData),
+         "@brief Scale to apply to the projectile's size.\n\n"
+         "@note This is applied after SceneObject::scale\n");
+   endGroup("Shapes");
+
+   addGroup("Particle Effects");
+      addField("particleEmitter", TYPEID< ParticleEmitterData >(), Offset(particleEmitter, ProjectileData),
+         "@brief Particle emitter datablock used to generate particles while the projectile is outside of water.\n\n"
+         "@note If datablocks are defined for both particleEmitter and particleWaterEmitter, both effects will play "
+         "as the projectile enters or leaves water.\n\n"
+         "@see particleWaterEmitter\n");
+      addField("particleWaterEmitter", TYPEID< ParticleEmitterData >(), Offset(particleWaterEmitter, ProjectileData),
+         "@brief Particle emitter datablock used to generate particles while the projectile is submerged in water.\n\n"
+         "@note If datablocks are defined for both particleWaterEmitter and particleEmitter , both effects will play "
+         "as the projectile enters or leaves water.\n\n"
+         "@see particleEmitter\n");
+      addField("explosion", TYPEID< ExplosionData >(), Offset(explosion, ProjectileData),
+         "@brief Explosion datablock used when the projectile explodes outside of water.\n\n");
+      addField("waterExplosion", TYPEID< ExplosionData >(), Offset(waterExplosion, ProjectileData),
+         "@brief Explosion datablock used when the projectile explodes underwater.\n\n");
+      addField("splash", TYPEID< SplashData >(), Offset(splash, ProjectileData),
+         "@brief Splash datablock used to create splash effects as the projectile enters or leaves water\n\n");
+      addField("decal", TYPEID< DecalData >(), Offset(decal, ProjectileData),
+         "@brief Decal datablock used for decals placed at projectile explosion points.\n\n");
+   endGroup("Particle Effects");
+
+   addGroup("Sounds");
+      INITPERSISTFIELD_SOUNDASSET(ProjectileSound, ProjectileData, "The sound for the projectile.");
+   endGroup("Sounds");
+
+   addGroup("Light Emitter");
+      addField("lightDesc", TYPEID< LightDescription >(), Offset(lightDesc, ProjectileData),
+         "@brief LightDescription datablock used for lights attached to the projectile.\n\n");
+   endGroup("Light Emitter");   
+
    addGroup("Physics");
       addProtectedField("lifetime", TypeS32, Offset(lifetime, ProjectileData), &setLifetime, &getScaledValue,
          "@brief Amount of time, in milliseconds, before the projectile is removed from the simulation.\n\n"
@@ -276,46 +315,7 @@ void ProjectileData::initPersistFields()
          "@note ProjectileData::isBallistic must be true for this to have any affect.");
    endGroup("Physics");
 
-   addGroup("Shapes");
-      addProtectedField("projectileShapeName", TypeShapeFilename, Offset(mProjectileShapeName, ProjectileData), &_setProjectileShapeData, &defaultProtectedGetFn,
-         "@brief File path to the model of the projectile.\n\n", AbstractClassRep::FIELD_HideInInspectors);
-      INITPERSISTFIELD_SHAPEASSET(ProjectileShape, ProjectileData, "@brief The model of the projectile.\n\n");
-      addField("scale", TypePoint3F, Offset(scale, ProjectileData),
-         "@brief Scale to apply to the projectile's size.\n\n"
-         "@note This is applied after SceneObject::scale\n");
-   endGroup("Shapes");
-
-   addGroup("Particle Effects");
-      addField("particleEmitter", TYPEID< ParticleEmitterData >(), Offset(particleEmitter, ProjectileData),
-         "@brief Particle emitter datablock used to generate particles while the projectile is outside of water.\n\n"
-         "@note If datablocks are defined for both particleEmitter and particleWaterEmitter, both effects will play "
-         "as the projectile enters or leaves water.\n\n"
-         "@see particleWaterEmitter\n");
-      addField("particleWaterEmitter", TYPEID< ParticleEmitterData >(), Offset(particleWaterEmitter, ProjectileData),
-         "@brief Particle emitter datablock used to generate particles while the projectile is submerged in water.\n\n"
-         "@note If datablocks are defined for both particleWaterEmitter and particleEmitter , both effects will play "
-         "as the projectile enters or leaves water.\n\n"
-         "@see particleEmitter\n");
-      addField("explosion", TYPEID< ExplosionData >(), Offset(explosion, ProjectileData),
-         "@brief Explosion datablock used when the projectile explodes outside of water.\n\n");
-      addField("waterExplosion", TYPEID< ExplosionData >(), Offset(waterExplosion, ProjectileData),
-         "@brief Explosion datablock used when the projectile explodes underwater.\n\n");
-      addField("splash", TYPEID< SplashData >(), Offset(splash, ProjectileData),
-         "@brief Splash datablock used to create splash effects as the projectile enters or leaves water\n\n");
-      addField("decal", TYPEID< DecalData >(), Offset(decal, ProjectileData),
-         "@brief Decal datablock used for decals placed at projectile explosion points.\n\n");
-   endGroup("Particle Effects");
-
-   addGroup("Sounds");
-      INITPERSISTFIELD_SOUNDASSET(ProjectileSound, ProjectileData, "The sound for the projectile.");
-   endGroup("Sounds");
-
-   addGroup("Light Emitter");
-      addField("lightDesc", TYPEID< LightDescription >(), Offset(lightDesc, ProjectileData),
-         "@brief LightDescription datablock used for lights attached to the projectile.\n\n");
-   endGroup("Light Emitter");   
-
-
+   Parent::initPersistFields();
    // disallow some field substitutions
    onlyKeepClearSubstitutions("explosion");
    onlyKeepClearSubstitutions("particleEmitter");
@@ -323,8 +323,6 @@ void ProjectileData::initPersistFields()
    onlyKeepClearSubstitutions("sound");
    onlyKeepClearSubstitutions("splash");
    onlyKeepClearSubstitutions("waterExplosion");
-
-   Parent::initPersistFields();
 }
 
 

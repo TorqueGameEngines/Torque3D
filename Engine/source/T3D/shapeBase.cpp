@@ -534,9 +534,11 @@ bool ShapeBaseData::_setMass( void* object, const char* index, const char* data 
 
 void ShapeBaseData::initPersistFields()
 {
-
    addGroup( "Shapes" );
       INITPERSISTFIELD_SHAPEASSET(Shape, ShapeBaseData, "The source shape asset.");
+      addField("computeCRC", TypeBool, Offset(computeCRC, ShapeBaseData),
+         "If true, verify that the CRC of the client's shape model matches the "
+         "server's CRC for the shape model when loaded by the client.");
       addField("silentBBoxValidation", TypeBool, Offset(silent_bbox_check, ShapeBaseData));
       INITPERSISTFIELD_SHAPEASSET(DebrisShape, ShapeBaseData, "The shape asset to use for auto-generated breakups via blowup(). @note may not be functional.");
    endGroup( "Shapes" );
@@ -614,12 +616,6 @@ void ShapeBaseData::initPersistFields()
          "transform and FOV (instead of the default eye transform)." );
    endGroup("Camera");
 
-   addGroup( "Misc" );
-      addField( "computeCRC", TypeBool, Offset(computeCRC, ShapeBaseData),
-         "If true, verify that the CRC of the client's shape model matches the "
-         "server's CRC for the shape model when loaded by the client." );
-   endGroup( "Misc" );
-
    addGroup( "Reflection" );
       addField( "cubeReflectorDesc", TypeRealString, Offset( cubeDescName, ShapeBaseData ), 
          "References a ReflectorDesc datablock that defines performance and quality properties for dynamic reflections.\n");
@@ -630,6 +626,12 @@ void ShapeBaseData::initPersistFields()
    endGroup( "Reflection" );
 
    addField("remapTextureTags",      TypeString,   Offset(remap_txr_tags, ShapeBaseData));
+
+   // disallow some field substitutions
+   onlyKeepClearSubstitutions("debris"); // subs resolving to "~~", or "~0" are OK
+   onlyKeepClearSubstitutions("explosion");
+   onlyKeepClearSubstitutions("underwaterExplosion");
+   Parent::initPersistFields();
 
    addGroup("BL Projected Shadows");
       addField("shadowSize", TypeS32, Offset(shadowSize, ShapeBaseData),
@@ -644,11 +646,6 @@ void ShapeBaseData::initPersistFields()
          "on the shape bounds but can be adjusted with this field).");
    endGroup("BL Projected Shadows");
 
-   // disallow some field substitutions
-   onlyKeepClearSubstitutions("debris"); // subs resolving to "~~", or "~0" are OK
-   onlyKeepClearSubstitutions("explosion");
-   onlyKeepClearSubstitutions("underwaterExplosion");
-   Parent::initPersistFields();
 }
 
 DefineEngineMethod( ShapeBaseData, checkDeployPos, bool, ( TransformF txfm ),,

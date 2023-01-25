@@ -331,18 +331,19 @@ void afxMagicMissileData::initPersistFields()
 {
    static IRangeValidatorScaled ticksFromMS(TickMs, 0, MaxLifetimeTicks);
 
-   addGroup("Particle Effects");
-      addField("particleEmitter", TYPEID<ParticleEmitterData>(), Offset(particleEmitter, afxMagicMissileData));
-      addField("particleWaterEmitter", TYPEID<ParticleEmitterData>(), Offset(particleWaterEmitter, afxMagicMissileData));
-   endGroup("Particle Effects");
-
    addGroup("Shapes");
       INITPERSISTFIELD_SHAPEASSET(ProjectileShape, afxMagicMissileData, "Shape for the projectile");
       addField("scale", TypePoint3F, Offset(scale, afxMagicMissileData));
    endGroup("Shapes");
 
-   INITPERSISTFIELD_SOUNDASSET(ProjectileSound, afxMagicMissileData, "sound for the projectile");
+   addGroup("Particle Effects");
+      addField("particleEmitter", TYPEID<ParticleEmitterData>(), Offset(particleEmitter, afxMagicMissileData));
+      addField("particleWaterEmitter", TYPEID<ParticleEmitterData>(), Offset(particleWaterEmitter, afxMagicMissileData));
+   endGroup("Particle Effects");
 
+   addGroup("Sounds");
+      INITPERSISTFIELD_SOUNDASSET(ProjectileSound, afxMagicMissileData, "sound for the projectile");
+   endGroup("Sounds");
    /* From stock Projectile code...
    addField("explosion", TYPEID< ExplosionData >(), Offset(explosion, ProjectileData));
    addField("waterExplosion", TYPEID< ExplosionData >(), Offset(waterExplosion, ProjectileData));

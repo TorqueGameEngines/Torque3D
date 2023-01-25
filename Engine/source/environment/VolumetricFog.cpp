@@ -165,6 +165,7 @@ VolumetricFog::~VolumetricFog()
 
 void VolumetricFog::initPersistFields()
 {
+   Parent::initPersistFields();
    addGroup("Shapes");
       INITPERSISTFIELD_SHAPEASSET(Shape, VolumetricFog, "The source shape asset.");
    endGroup("Shapes");
@@ -212,7 +213,6 @@ void VolumetricFog::initPersistFields()
    addField("lightRayMod", TypeF32, Offset(mLightRayMod, VolumetricFog),
       "Modifier for LightRay PostFX when inside Fog.");
    endGroup("PostFX");
-   Parent::initPersistFields();
 }
 
 bool VolumetricFog::_setShapeAsset(void* obj, const char* index, const char* data)

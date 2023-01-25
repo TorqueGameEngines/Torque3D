@@ -58,8 +58,6 @@ ForestItemData::ForestItemData()
 
 void ForestItemData::initPersistFields()
 {
-   Parent::initPersistFields();
-
    addGroup( "Shapes" );
 
       INITPERSISTFIELD_SHAPEASSET(Shape, ForestItemData, "Shape asset for this item type");
@@ -108,6 +106,7 @@ void ForestItemData::initPersistFields()
          "Frequency (speed) of the effect on leafs/fronds." );
 
    endGroup( "Wind" );
+   Parent::initPersistFields();
 }
 
 void ForestItemData::consoleInit()

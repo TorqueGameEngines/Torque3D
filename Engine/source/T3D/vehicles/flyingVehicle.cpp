@@ -175,6 +175,8 @@ bool FlyingVehicleData::preload(bool server, String &errorStr)
 
 void FlyingVehicleData::initPersistFields()
 {
+   Parent::initPersistFields();
+
    addGroup("Physics");
    addField( "rollForce", TypeF32, Offset(rollForce, FlyingVehicleData),
       "@brief Damping torque against rolling maneuvers (rotation about the y-axis), "
@@ -249,7 +251,6 @@ void FlyingVehicleData::initPersistFields()
    addGroup("Sounds");
       INITPERSISTFIELD_SOUNDASSET_ENUMED(FlyingSounds, engineSounds, Sounds::MaxSounds, FlyingVehicleData, "EngineSounds.");
    endGroup("Sounds");
-   Parent::initPersistFields();
 }
 
 void FlyingVehicleData::packData(BitStream* stream)

@@ -176,7 +176,7 @@ void afxModelData::initPersistFields()
       INITPERSISTFIELD_SHAPEASSET(Shape, afxModelData, "The name of a .dts format file to use for the model.");
    addGroup("Shapes");
 
-   addGroup("Rendering");
+   addGroup("Animation");
       addField("sequence",              TypeString, myOffset(sequence),
          "The name of an animation sequence to play in the model.");
       addField("sequenceRate",          TypeF32,      myOffset(seq_rate),
@@ -185,6 +185,9 @@ void afxModelData::initPersistFields()
          "An offset in seconds indicating a starting point for the animation sequence "
          "specified by the sequence field. A rate of 1.0 (rather than sequenceRate) is used "
          "to convert from seconds to the thread offset.");
+   endGroup("Animation");
+
+   addGroup("Rendering");
       addField("alphaMult",             TypeF32,      myOffset(alpha_mult),
          "An alpha multiplier used to set maximum opacity of the model.");
       addField("fogMult",               TypeF32,      myOffset(fog_mult), "");
@@ -196,7 +199,7 @@ void afxModelData::initPersistFields()
          "that exists in the model, while the second is a new name to replace it. The string "
          "can have any number of remapping tokens as long as the total string length does not "
          "exceed 255.");
-  addGroup("Rendering");
+  endGroup("Rendering");
 
   addGroup("Deprecated");
   addField("useVertexAlpha",        TypeBool,     myOffset(use_vertex_alpha),

@@ -274,6 +274,38 @@ void VehicleData::unpackData(BitStream* stream)
 
 void VehicleData::initPersistFields()
 {
+   Parent::initPersistFields();   
+
+   addGroup("Particle Effects");
+   addField( "damageEmitter", TYPEID< ParticleEmitterData >(), Offset(damageEmitterList, VehicleData), VC_NUM_DAMAGE_EMITTERS,
+      "@brief Array of particle emitters used to generate damage (dust, smoke etc) "
+      "effects.\n\n"
+      "Currently, the first two emitters (indices 0 and 1) are used when the damage "
+      "level exceeds the associated damageLevelTolerance. The 3rd emitter is used "
+      "when the emitter point is underwater.\n\n"
+      "@see damageEmitterOffset" );
+   addField( "damageEmitterOffset", TypePoint3F, Offset(damageEmitterOffset, VehicleData), VC_NUM_DAMAGE_EMITTER_AREAS,
+      "@brief Object space \"x y z\" offsets used to emit particles for the "
+      "active damageEmitter.\n\n"
+      "@tsexample\n"
+      "// damage levels\n"
+      "damageLevelTolerance[0] = 0.5;\n"
+      "damageEmitter[0] = SmokeEmitter;\n"
+      "// emit offsets (used for all active damage level emitters)\n"
+      "damageEmitterOffset[0] = \"0.5 3 1\";\n"
+      "damageEmitterOffset[1] = \"-0.5 3 1\";\n"
+      "numDmgEmitterAreas = 2;\n"
+      "@endtsexample\n" );
+   addField( "damageLevelTolerance", TypeF32, Offset(damageLevelTolerance, VehicleData), VC_NUM_DAMAGE_LEVELS,
+      "@brief Damage levels (as a percentage of maxDamage) above which to begin "
+      "emitting particles from the associated damageEmitter.\n\n"
+      "Levels should be in order of increasing damage.\n\n"
+      "@see damageEmitterOffset" );
+   addField( "numDmgEmitterAreas", TypeF32, Offset(numDmgEmitterAreas, VehicleData),
+      "Number of damageEmitterOffset values to use for each damageEmitter.\n\n"
+      "@see damageEmitterOffset" );
+   endGroup("Particle Effects");
+
    addGroup("Physics");
    addField("enablePhysicsRep", TypeBool, Offset(enablePhysicsRep, VehicleData),
       "@brief Creates a representation of the object in the physics plugin.\n");
@@ -309,38 +341,6 @@ void VehicleData::initPersistFields()
    addField( "steeringReturnSpeedScale", TypeF32, Offset(steeringReturnSpeedScale, VehicleData),
       "Amount of effect the vehicle's speed has on its rate of steering return." );
    endGroup("AutoCorrection");
-
-   addGroup("Particle Effects");
-   addField( "damageEmitter", TYPEID< ParticleEmitterData >(), Offset(damageEmitterList, VehicleData), VC_NUM_DAMAGE_EMITTERS,
-      "@brief Array of particle emitters used to generate damage (dust, smoke etc) "
-      "effects.\n\n"
-      "Currently, the first two emitters (indices 0 and 1) are used when the damage "
-      "level exceeds the associated damageLevelTolerance. The 3rd emitter is used "
-      "when the emitter point is underwater.\n\n"
-      "@see damageEmitterOffset" );
-   addField( "damageEmitterOffset", TypePoint3F, Offset(damageEmitterOffset, VehicleData), VC_NUM_DAMAGE_EMITTER_AREAS,
-      "@brief Object space \"x y z\" offsets used to emit particles for the "
-      "active damageEmitter.\n\n"
-      "@tsexample\n"
-      "// damage levels\n"
-      "damageLevelTolerance[0] = 0.5;\n"
-      "damageEmitter[0] = SmokeEmitter;\n"
-      "// emit offsets (used for all active damage level emitters)\n"
-      "damageEmitterOffset[0] = \"0.5 3 1\";\n"
-      "damageEmitterOffset[1] = \"-0.5 3 1\";\n"
-      "numDmgEmitterAreas = 2;\n"
-      "@endtsexample\n" );
-   addField( "damageLevelTolerance", TypeF32, Offset(damageLevelTolerance, VehicleData), VC_NUM_DAMAGE_LEVELS,
-      "@brief Damage levels (as a percentage of maxDamage) above which to begin "
-      "emitting particles from the associated damageEmitter.\n\n"
-      "Levels should be in order of increasing damage.\n\n"
-      "@see damageEmitterOffset" );
-   addField( "numDmgEmitterAreas", TypeF32, Offset(numDmgEmitterAreas, VehicleData),
-      "Number of damageEmitterOffset values to use for each damageEmitter.\n\n"
-      "@see damageEmitterOffset" );
-   endGroup("Particle Effects");
-
-   Parent::initPersistFields();
 }
 
 

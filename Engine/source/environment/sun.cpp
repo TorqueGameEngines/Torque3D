@@ -138,9 +138,22 @@ void Sun::onRemove()
    removeFromScene();
    Parent::onRemove();
 }
+const char * getDocsLink(const char* filename, U32 lineNumber)
+{
+   Vector<String> fileStringSplit;
+   String::String(filename).split("source", fileStringSplit);
+   String fileString = fileStringSplit.last();
+   String fileLineString = fileString + String::String("#L") + String::ToString(lineNumber);
+   String URL = String::String("<a:https://github.com/TorqueGameEngines/Torque3D/blob/development/Engine/source/") + fileLineString + String::String(">docs</a>");
+
+   return (new String(URL))->c_str();
+}
+
+#define doDocsLink getDocsLink(__FILE__,__LINE__)
 
 void Sun::initPersistFields()
 {
+   addProtectedField("docs", TypeBool, NULL, &defaultProtectedNotSetFn, &defaultProtectedGetFn, doDocsLink);
    addGroup( "Orbit" );
 
       addField( "azimuth", TypeF32, Offset( mSunAzimuth, Sun ), 

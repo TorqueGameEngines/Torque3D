@@ -125,7 +125,7 @@ void PhysicsDebrisData::initPersistFields()
         "@brief Determines if the shape's shadow should be cast onto the environment.\n\n" );
    endGroup("Rendering");
 
-   addGroup( "Physical Properties" );
+   addGroup( "Physics" );
 
       addField("lifetime", TypeF32, Offset( lifetime, PhysicsDebrisData ),
          "@brief Base time, in seconds, that debris persists after time of creation.\n\n"
@@ -193,8 +193,7 @@ void PhysicsDebrisData::initPersistFields()
          "The result of the calculated buoyancy is relative to the density of the WaterObject the PhysicsDebris is within."
          "@see WaterObject::density");
 
-   endGroup( "Physical Properties" );
-
+   endGroup( "Physics" );
    Parent::initPersistFields();
 }
 

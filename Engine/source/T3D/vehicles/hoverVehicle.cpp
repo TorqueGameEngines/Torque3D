@@ -174,6 +174,7 @@ HoverVehicleData::~HoverVehicleData()
 //--------------------------------------------------------------------------
 void HoverVehicleData::initPersistFields()
 {
+   Parent::initPersistFields();
    addGroup("Physics");
       addField( "normalForce", TypeF32, Offset(normalForce, HoverVehicleData),
          "Force generated in the ground normal direction when the vehicle is not "
@@ -273,10 +274,6 @@ void HoverVehicleData::initPersistFields()
    addGroup("Particle Effects");
       INITPERSISTFIELD_SOUNDASSET_ENUMED(HoverSounds, hoverSoundsEnum, Sounds::MaxSounds, HoverVehicleData, "Sounds for hover vehicle.");
    endGroup("Sounds");
-
-
-
-   Parent::initPersistFields();
 }
 
 

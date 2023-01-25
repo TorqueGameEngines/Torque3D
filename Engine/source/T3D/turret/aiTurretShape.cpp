@@ -124,6 +124,7 @@ AITurretShapeData::AITurretShapeData()
 
 void AITurretShapeData::initPersistFields()
 {
+   Parent::initPersistFields();
    addGroup("AI Steering");
       addField("maxScanHeading",       TypeF32,       Offset(maxScanHeading,        AITurretShapeData),
          "@brief Maximum number of degrees to scan left and right.\n\n"
@@ -194,8 +195,6 @@ void AITurretShapeData::initPersistFields()
          "Scoped to AITurretShapeData.");
 
    endArray( "States" );
-
-   Parent::initPersistFields();
 }
 
 bool AITurretShapeData::onAdd()

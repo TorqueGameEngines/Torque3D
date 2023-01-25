@@ -87,8 +87,6 @@ PhysicsShapeData::~PhysicsShapeData()
 
 void PhysicsShapeData::initPersistFields()
 {
-   Parent::initPersistFields();
-
    addGroup("Shapes");
 
       INITPERSISTFIELD_SHAPEASSET(Shape, PhysicsShapeData, "@brief Shape asset to be used with this physics object.\n\n"
@@ -173,7 +171,8 @@ void PhysicsShapeData::initPersistFields()
       addField( "simType", TYPEID< PhysicsShapeData::SimType >(), Offset( simType, PhysicsShapeData ),
          "@brief Controls whether this shape is simulated on the server, client, or both physics simulations.\n\n" );
 
-   endGroup( "Networking" );   
+   endGroup( "Networking" );
+   Parent::initPersistFields();
 }
 
 void PhysicsShapeData::packData( BitStream *stream )

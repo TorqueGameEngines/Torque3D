@@ -131,6 +131,7 @@ TurretShapeData::TurretShapeData()
 
 void TurretShapeData::initPersistFields()
 {
+   Parent::initPersistFields();
    addGroup("Steering");
       addField("zRotOnly",       TypeBool,         Offset(zRotOnly,       TurretShapeData),
          "@brief Should the turret allow only z rotations.\n\n"
@@ -168,9 +169,6 @@ void TurretShapeData::initPersistFields()
    addField("cameraOffset",      TypeF32,       Offset(cameraOffset,       TurretShapeData),
       "Vertical (Z axis) height of the camera above the turret." );
    endGroup("Camera");
-
-
-   Parent::initPersistFields();
 }
 
 void TurretShapeData::packData(BitStream* stream)

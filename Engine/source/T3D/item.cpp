@@ -137,6 +137,7 @@ EndImplementEnumType;
 
 void ItemData::initPersistFields()
 {
+   Parent::initPersistFields();
    addGroup("Physics");
       addField("friction",          TypeF32,       Offset(friction,           ItemData), "A floating-point value specifying how much velocity is lost to impact and sliding friction.");
       addField("elasticity",        TypeF32,       Offset(elasticity,         ItemData), "A floating-point value specifying how 'bouncy' this ItemData is.");
@@ -172,8 +173,6 @@ void ItemData::initPersistFields()
          "@brief If true, this ItemData will only cast a light if the Item for this ItemData has a static value of true.\n\n"
          "@see lightType\n");
    endGroup("Light Emitter");
-
-   Parent::initPersistFields();
 }
 
 void ItemData::packData(BitStream* stream)

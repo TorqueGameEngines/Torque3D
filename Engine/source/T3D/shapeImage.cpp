@@ -689,7 +689,7 @@ void ShapeBaseImageData::initPersistFields()
          "the amount of time it takes to transition from the previously playing animation sequence to"
          "the new script prefix-based animation sequence.\n"
          "@see ShapeBase::setImageScriptAnimPrefix()");
-   addGroup("Animation");
+   endGroup("Animation");
 
    addField( "projectile", TYPEID< ProjectileData >(), Offset(projectile, ShapeBaseImageData),
       "@brief The projectile fired by this Image\n\n" );

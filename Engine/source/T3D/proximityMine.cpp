@@ -88,6 +88,7 @@ ProximityMineData::ProximityMineData()
 
 void ProximityMineData::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
    addGroup("Sounds");
       INITPERSISTFIELD_SOUNDASSET(ArmSound, ProximityMineData, "Arming sound for this proximity mine.");

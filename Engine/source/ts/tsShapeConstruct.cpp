@@ -202,6 +202,7 @@ bool TSShapeConstructor::addSequenceFromField(void* obj, const char* index, cons
 
 void TSShapeConstructor::initPersistFields()
 {
+   docsURL;
    addGroup("Media");
    addField("baseShapeAsset", TypeShapeAssetId, Offset(mShapeAssetId, TSShapeConstructor),
       "Specifies the path to the DTS or DAE file to be operated on by this object.\n"

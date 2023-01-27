@@ -70,6 +70,7 @@ afxAnimLockData::afxAnimLockData()
 
 void afxAnimLockData::initPersistFields()
 {
+   docsURL;
   Parent::initPersistFields();
 }
 

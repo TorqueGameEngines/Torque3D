@@ -130,6 +130,7 @@ GuiTextListCtrl::GuiTextListCtrl()
 
 void GuiTextListCtrl::initPersistFields()
 {
+   docsURL;
    addField("columns",                 TypeS32Vector, Offset(mColumnOffsets, GuiTextListCtrl), "A vector of column offsets.  The number of values determines the number of columns in the table.\n" );
    addField("fitParentWidth",          TypeBool, Offset(mFitParentWidth, GuiTextListCtrl), "If true, the width of this control will match the width of its parent.\n");
    addField("clipColumnText",          TypeBool, Offset(mClipColumnText, GuiTextListCtrl), "If true, text exceeding a column's given width will get clipped.\n" );

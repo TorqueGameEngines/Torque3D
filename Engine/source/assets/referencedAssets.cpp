@@ -36,6 +36,7 @@ IMPLEMENT_CONOBJECT( ReferencedAssets );
 
 void ReferencedAssets::initPersistFields()
 {
+   docsURL;
     // Call Parent.
     Parent::initPersistFields();
         

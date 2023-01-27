@@ -136,6 +136,7 @@ GuiBitmapButtonCtrl::GuiBitmapButtonCtrl()
 
 void GuiBitmapButtonCtrl::initPersistFields()
 {
+   docsURL;
    addGroup( "Bitmap" );
 
       addProtectedField("Bitmap", TypeImageFilename, Offset(mBitmapName, GuiBitmapButtonCtrl), _setBitmapFieldData, &defaultProtectedGetFn, "Texture file to display on this button.\n"

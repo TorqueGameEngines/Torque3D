@@ -633,6 +633,7 @@ void SceneObject::setHidden( bool hidden )
 
 void SceneObject::initPersistFields()
 {
+   docsURL;
    //Disabled temporarily
    /*addGroup("GameObject");
    addField("GameObject", TypeGameObjectAssetPtr, Offset(mGameObjectAsset, SceneObject), "The asset Id used for the game object this entity is based on.");

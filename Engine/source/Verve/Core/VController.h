@@ -152,7 +152,7 @@ public:
     VController();
     ~VController();
 
-    static  void    initPersistFields( void );
+    static  void    initPersistFields();
 
     // ITickable.
 

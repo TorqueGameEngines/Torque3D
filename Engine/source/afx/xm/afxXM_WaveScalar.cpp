@@ -631,6 +631,7 @@ afxXM_WaveScalarData::afxXM_WaveScalarData(const afxXM_WaveScalarData& other, bo
 
 void afxXM_WaveScalarData::initPersistFields()
 {
+   docsURL;
   addField("a",               TypeF32,      Offset(a, afxXM_WaveScalarData),
     "...");
   addField("b",               TypeF32,      Offset(b, afxXM_WaveScalarData),
@@ -757,6 +758,7 @@ afxXM_WaveRiderScalarData::afxXM_WaveRiderScalarData(const afxXM_WaveRiderScalar
 
 void afxXM_WaveRiderScalarData::initPersistFields()
 {
+   docsURL;
   addField("a",               TypeF32,      Offset(a, afxXM_WaveRiderScalarData),
     "...");
   addField("b",               TypeF32,      Offset(b, afxXM_WaveRiderScalarData),

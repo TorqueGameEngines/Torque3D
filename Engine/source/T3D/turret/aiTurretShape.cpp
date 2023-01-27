@@ -464,6 +464,7 @@ AITurretShape::~AITurretShape()
 
 void AITurretShape::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 

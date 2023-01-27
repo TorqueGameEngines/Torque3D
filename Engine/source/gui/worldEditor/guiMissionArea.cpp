@@ -87,6 +87,7 @@ GuiMissionAreaCtrl::~GuiMissionAreaCtrl()
 
 void GuiMissionAreaCtrl::initPersistFields()
 {
+   docsURL;
    addField( "squareBitmap",        TypeBool,      Offset(mSquareBitmap, GuiMissionAreaCtrl));
 
    INITPERSISTFIELD_IMAGEASSET(HandleBitmap, GuiMissionAreaCtrl, "Bitmap for the mission area handles.\n");

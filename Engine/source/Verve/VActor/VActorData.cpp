@@ -47,8 +47,9 @@ VActorData::~VActorData( void )
     // Void.
 }
 
-void VActorData::initPersistFields( void )
+void VActorData::initPersistFields()
 {
+   docsURL;
     Parent::initPersistFields();
 
     addField( "MaxStepHeight",    TypeF32, Offset( mMaxStepHeight,    VActorData ) );

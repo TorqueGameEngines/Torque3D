@@ -238,6 +238,7 @@ ForestWindEmitter::~ForestWindEmitter()
 
 void ForestWindEmitter::initPersistFields()
 {
+   docsURL;
    // Initialise parents' persistent fields.
    Parent::initPersistFields();
 

@@ -43,6 +43,7 @@ IMPLEMENT_CONOBJECT( AssetQuery );
 
 void AssetQuery::initPersistFields()
 {
+   docsURL;
     // Call parent.
     Parent::initPersistFields();
 

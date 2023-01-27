@@ -48,7 +48,7 @@ public:
 
     VSceneObjectGroup( void );
 
-    static void                         initPersistFields( void );
+    static void                         initPersistFields();
 
     // Reference Methods.
     

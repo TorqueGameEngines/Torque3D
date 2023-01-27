@@ -126,6 +126,7 @@ GuiShapeNameHud::GuiShapeNameHud()
 
 void GuiShapeNameHud::initPersistFields()
 {
+   docsURL;
    addGroup("Colors");     
    addField( "fillColor",  TypeColorF, Offset( mFillColor, GuiShapeNameHud ), "Standard color for the background of the control." );
    addField( "frameColor", TypeColorF, Offset( mFrameColor, GuiShapeNameHud ), "Color for the control's frame."  );

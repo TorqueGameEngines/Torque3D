@@ -65,6 +65,7 @@ afxMachineGunData::afxMachineGunData(const afxMachineGunData& other, bool temp_c
 
 void afxMachineGunData::initPersistFields()
 {
+   docsURL;
   addField("projectile", TYPEID<ProjectileData>(), myOffset(projectile_data),
     "A ProjectileData datablock describing the projectile to be launched.");
   addField("roundsPerMinute", TypeS32, myOffset(rounds_per_minute),

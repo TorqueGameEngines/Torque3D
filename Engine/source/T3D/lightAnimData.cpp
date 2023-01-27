@@ -62,6 +62,7 @@ ConsoleDocClass( LightAnimData,
 
 void LightAnimData::initPersistFields()
 {
+   docsURL;
    addGroup( "Offset",
       "The XYZ translation animation state relative to the light position." );
 

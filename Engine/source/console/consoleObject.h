@@ -55,6 +55,10 @@
    #include "tinyxml2.h"
 #endif
 
+#ifndef _CONSOLFUNCTIONS_H_
+#include "console/consoleFunctions.h"
+#endif
+
 /// @file
 /// Legacy console object system.
 
@@ -824,8 +828,11 @@ protected:
    ConsoleObject(const ConsoleObject&);
 
 public:
-
-   ConsoleObject() {}
+   /// <summary>
+   /// Only used for interfacing with the editor's inspector docsURL button
+   /// </summary>
+   bool mDocsClick;
+   ConsoleObject() { mDocsClick = false; }
 
    /// Get a reference to a field by name.
    const AbstractClassRep::Field *findField(StringTableEntry fieldName) const;

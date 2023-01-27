@@ -130,6 +130,7 @@ void MissionArea::inspectPostApply()
 
 void MissionArea::initPersistFields()
 {
+   docsURL;
    addGroup("Dimensions");	
    addField("area", TypeRectI, Offset(mArea, MissionArea), "Four corners (X1, X2, Y1, Y2) that makes up the level's boundaries");
    addField("flightCeiling", TypeF32, Offset(mFlightCeiling, MissionArea), "Represents the top of the mission area, used by FlyingVehicle. ");

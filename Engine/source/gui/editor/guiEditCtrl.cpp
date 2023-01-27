@@ -139,6 +139,7 @@ GuiEditCtrl::GuiEditCtrl()
 
 void GuiEditCtrl::initPersistFields()
 {
+   docsURL;
    addGroup( "Snapping" );
    addField( "snapToControls",      TypeBool,   Offset( mSnapToControls, GuiEditCtrl ),
       "If true, edge and center snapping will work against controls." );

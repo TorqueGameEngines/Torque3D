@@ -285,6 +285,7 @@ GuiMLTextCtrl::~GuiMLTextCtrl()
 //--------------------------------------------------------------------------
 void GuiMLTextCtrl::initPersistFields()
 {
+   docsURL;
    addGroup( "Text" );
    
       addField("lineSpacing",       TypeS32,    Offset(mLineSpacingPixels, GuiMLTextCtrl), "The number of blank pixels to place between each line.\n");

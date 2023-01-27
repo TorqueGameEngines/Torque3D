@@ -96,6 +96,7 @@ EndImplementEnumType;
 
 void RenderTexTargetBinManager::initPersistFields()
 {
+   docsURL;
    // TOM_TODO:
    //addField( "targetScale", mTargetScale );
    //addPropertyNOPS( "targetSizeType", mTargetSizeType)->setEnumTable(gSizeTypeEnumTable);

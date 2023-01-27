@@ -174,6 +174,7 @@ HoverVehicleData::~HoverVehicleData()
 //--------------------------------------------------------------------------
 void HoverVehicleData::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
    addGroup("Physics");
       addField( "normalForce", TypeF32, Offset(normalForce, HoverVehicleData),

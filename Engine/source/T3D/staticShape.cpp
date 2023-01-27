@@ -108,6 +108,7 @@ StaticShapeData::StaticShapeData(const StaticShapeData& other, bool temp_clone) 
 
 void StaticShapeData::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
    addField("noIndividualDamage",   TypeBool, Offset(noIndividualDamage,   StaticShapeData), "Deprecated\n\n @internal");
    addField("dynamicType",          TypeS32,  Offset(dynamicTypeField,     StaticShapeData), 
@@ -193,6 +194,7 @@ StaticShape::~StaticShape()
 
 void StaticShape::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 

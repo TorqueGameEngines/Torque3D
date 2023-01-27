@@ -83,6 +83,7 @@ afxSpellButton::~afxSpellButton()
 
 void afxSpellButton::initPersistFields()
 {
+   docsURL;
   addField("bitmap",      TypeFilename,   Offset(mBitmapName, afxSpellButton),
     "...");
   addField("book_slot",   TypePoint2I,    Offset(book_slot, afxSpellButton),

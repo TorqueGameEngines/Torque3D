@@ -2781,6 +2781,7 @@ void WorldEditor::renderScene( const RectI &updateRect )
 
 void WorldEditor::initPersistFields()
 {
+   docsURL;
    addGroup( "Grid" );
    
       addField( "gridSnap",               TypeBool,   Offset( mGridSnap, WorldEditor ),

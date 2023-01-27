@@ -103,6 +103,7 @@ GroundPlane::~GroundPlane()
 
 void GroundPlane::initPersistFields()
 {
+   docsURL;
    addGroup( "Plane" );
 
       addField( "squareSize",    TypeF32,          Offset( mSquareSize, GroundPlane ), "Square size in meters to which %GroundPlane subdivides its geometry." );

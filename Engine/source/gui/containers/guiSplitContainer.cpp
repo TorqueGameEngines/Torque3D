@@ -113,6 +113,7 @@ GuiSplitContainer::GuiSplitContainer()
 
 void GuiSplitContainer::initPersistFields()
 {
+   docsURL;
    addGroup( "Splitter", "Options to configure split panels contained by this control" );
    
       addField( "orientation",   TYPEID< Orientation >(),   Offset( mOrientation, GuiSplitContainer),

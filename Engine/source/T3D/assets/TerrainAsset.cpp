@@ -134,6 +134,7 @@ TerrainAsset::~TerrainAsset()
 
 void TerrainAsset::initPersistFields()
 {
+   docsURL;
    // Call parent.
    Parent::initPersistFields();
 

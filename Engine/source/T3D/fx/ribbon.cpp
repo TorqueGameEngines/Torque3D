@@ -68,6 +68,7 @@ RibbonData::RibbonData()
 
 void RibbonData::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 
    addGroup("Ribbon");
@@ -205,6 +206,7 @@ Ribbon::~Ribbon()
 //--------------------------------------------------------------------------
 void Ribbon::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 

@@ -72,6 +72,7 @@ RenderShapeExample::~RenderShapeExample()
 //-----------------------------------------------------------------------------
 void RenderShapeExample::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
    addGroup( "Shapes" );
    INITPERSISTFIELD_SHAPEASSET(Shape, RenderShapeExample, "The path to the shape file.")

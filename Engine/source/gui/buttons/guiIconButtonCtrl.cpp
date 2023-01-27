@@ -121,6 +121,7 @@ EndImplementEnumType;
 
 void GuiIconButtonCtrl::initPersistFields()
 {
+   docsURL;
    addField( "buttonMargin",     TypePoint2I,   Offset( mButtonMargin, GuiIconButtonCtrl ),"Margin area around the button.\n");
 
    addProtectedField( "iconBitmap", TypeImageFilename,  Offset( mBitmapName, GuiIconButtonCtrl ), &_setBitmapData, &defaultProtectedGetFn, "Bitmap file for the icon to display on the button.\n", AbstractClassRep::FIELD_HideInInspectors);

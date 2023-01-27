@@ -176,6 +176,7 @@ FRangeValidator speedValidator(0.0f, AnimSpeedMax);
 
 void TSStatic::initPersistFields()
 {
+   docsURL;
    addGroup("Shape");
 
    INITPERSISTFIELD_SHAPEASSET(Shape, TSStatic, "Model to use for this TSStatic");

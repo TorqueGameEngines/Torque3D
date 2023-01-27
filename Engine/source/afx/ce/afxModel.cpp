@@ -172,6 +172,7 @@ bool afxModelData::preload(bool server, String &errorStr)
 
 void afxModelData::initPersistFields()
 {
+   docsURL;
    addGroup("Shapes");
       INITPERSISTFIELD_SHAPEASSET(Shape, afxModelData, "The name of a .dts format file to use for the model.");
    addGroup("Shapes");

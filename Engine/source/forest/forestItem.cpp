@@ -58,6 +58,7 @@ ForestItemData::ForestItemData()
 
 void ForestItemData::initPersistFields()
 {
+   docsURL;
    addGroup( "Shapes" );
 
       INITPERSISTFIELD_SHAPEASSET(Shape, ForestItemData, "Shape asset for this item type");

@@ -41,6 +41,7 @@ ModuleMergeDefinition::ModuleMergeDefinition() :
 
 void ModuleMergeDefinition::initPersistFields()
 {
+   docsURL;
     // Call parent.
     Parent::initPersistFields();
 

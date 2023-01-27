@@ -40,6 +40,7 @@ NotesObject::~NotesObject()
 //-----------------------------------------------------------------------------
 void NotesObject::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 
    addField("Note", TypeCommand, Offset(mNote, NotesObject), "");

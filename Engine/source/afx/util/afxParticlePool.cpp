@@ -70,6 +70,7 @@ afxParticlePoolData::~afxParticlePoolData()
 
 void afxParticlePoolData::initPersistFields()
 {
+   docsURL;
   addField("poolType",    TYPEID< afxParticlePoolData::PoolType >(),    Offset(pool_type,    afxParticlePoolData),
     "...");
   addField("baseColor",   TypeColorF,  Offset(base_color,   afxParticlePoolData),

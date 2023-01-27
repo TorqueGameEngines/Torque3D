@@ -64,6 +64,7 @@ afxSpellBookData::afxSpellBookData()
 
 void afxSpellBookData::initPersistFields()
 {
+   docsURL;
   addField("spellsPerPage",  TypeS8,                myOffset(spells_per_page),
     "...");
   addField("pagesPerBook",   TypeS8,                myOffset(pages_per_book),
@@ -172,6 +173,7 @@ afxSpellBook::~afxSpellBook()
 
 void afxSpellBook::initPersistFields()
 {
+   docsURL;
 	Parent::initPersistFields();
 }
 

@@ -68,6 +68,7 @@ afxChoreographerData::afxChoreographerData(const afxChoreographerData& other, bo
 
 void afxChoreographerData::initPersistFields()
 {
+   docsURL;
   addField("execOnNewClients",    TypeBool,       myOffset(exec_on_new_clients),
     "...");
   addField("echoPacketUsage",     TypeS8,         myOffset(echo_packet_usage),
@@ -178,6 +179,7 @@ afxChoreographer::~afxChoreographer()
 
 void afxChoreographer::initPersistFields()
 {
+   docsURL;
   // conditionals
   addField("extra",              TYPEID<SimObject>(), Offset(mExtra, afxChoreographer),
     "...");

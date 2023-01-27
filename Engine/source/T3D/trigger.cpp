@@ -370,6 +370,7 @@ void Trigger::consoleInit()
 
 void Trigger::initPersistFields()
 {
+   docsURL;
    addField("polyhedron", TypeTriggerPolyhedron, Offset(mTriggerPolyhedron, Trigger),
       "@brief Defines a non-rectangular area for the trigger.\n\n"
       "Rather than the standard rectangular bounds, this optional parameter defines a quadrilateral "

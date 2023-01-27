@@ -629,6 +629,7 @@ S32 ShapeBaseImageData::lookupState(const char* name)
 
 void ShapeBaseImageData::initPersistFields()
 {
+   docsURL;
    addGroup("Shapes");
       INITPERSISTFIELD_SHAPEASSET_ARRAY(Shape, MaxShapes, ShapeBaseImageData, "The shape asset to use for this image in the third person")
    //addProtectedField("shapeFileFP", TypeShapeFilename, Offset(mShapeName[1], ShapeBaseImageData), _setShapeData, defaultProtectedGetFn, "deprecated alias for ShapeFPFile/Asset", AbstractClassRep::FIELD_HideInInspectors);

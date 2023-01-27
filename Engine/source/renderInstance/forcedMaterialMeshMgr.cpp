@@ -63,6 +63,7 @@ ForcedMaterialMeshMgr::~ForcedMaterialMeshMgr()
 
 void ForcedMaterialMeshMgr::initPersistFields()
 {
+   docsURL;
    addProtectedField("material", TYPEID< Material >(), Offset(mOverrideMaterial, ForcedMaterialMeshMgr),
       &_setOverrideMat, &_getOverrideMat, "Material used to draw all meshes in the render bin.");
 

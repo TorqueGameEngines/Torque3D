@@ -110,6 +110,7 @@ void afxEffectronData::reloadReset()
 
 void afxEffectronData::initPersistFields()
 {
+   docsURL;
   addField("duration",    TypeF32,      myOffset(duration),
     "...");
   addField("numLoops",    TypeS32,      myOffset(n_loops),

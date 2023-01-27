@@ -51,6 +51,7 @@ GuiDirectoryFileListCtrl::GuiDirectoryFileListCtrl()
 
 void GuiDirectoryFileListCtrl::initPersistFields()
 {
+   docsURL;
    addProtectedField( "filePath", TypeString, Offset( mFilePath, GuiDirectoryFileListCtrl ),
                       &_setFilePath, &defaultProtectedGetFn, "Path in game directory from which to list files." );
    addProtectedField( "fileFilter", TypeString, Offset( mFilter, GuiDirectoryFileListCtrl ),

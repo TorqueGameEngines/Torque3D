@@ -133,6 +133,7 @@ FileDialog::~FileDialog()
 
 void FileDialog::initPersistFields()
 {
+   docsURL;
    addProtectedField("defaultPath", TypeString, Offset(mData.mDefaultPath, FileDialog), &setDefaultPath, &defaultProtectedGetFn,
       "The default directory path when the dialog is shown.");
 
@@ -581,6 +582,7 @@ IMPLEMENT_CONOBJECT(OpenFileDialog);
 //-----------------------------------------------------------------------------
 void OpenFileDialog::initPersistFields()
 {
+   docsURL;
    addProtectedField("MustExist", TypeBool, Offset(mMustExist, OpenFileDialog), &setMustExist, &getMustExist, "True/False whether the file returned must exist or not");
    addProtectedField("MultipleFiles", TypeBool, Offset(mMultipleFiles, OpenFileDialog), &setMultipleFiles, &getMultipleFiles, "True/False whether multiple files may be selected and returned or not");
 
@@ -703,6 +705,7 @@ IMPLEMENT_CONOBJECT(SaveFileDialog);
 //-----------------------------------------------------------------------------
 void SaveFileDialog::initPersistFields()
 {
+   docsURL;
    addProtectedField("OverwritePrompt", TypeBool, Offset(mOverwritePrompt, SaveFileDialog), &setOverwritePrompt, &getOverwritePrompt, "True/False whether the dialog should prompt before accepting an existing file name");
 
    Parent::initPersistFields();
@@ -761,6 +764,7 @@ ConsoleDocClass(OpenFolderDialog,
 
 void OpenFolderDialog::initPersistFields()
 {
+   docsURL;
    addField("fileMustExist", TypeFilename, Offset(mMustExistInDir, OpenFolderDialog), "File that must be in selected folder for it to be valid");
 
    Parent::initPersistFields();

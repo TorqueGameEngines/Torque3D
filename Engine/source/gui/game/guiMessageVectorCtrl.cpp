@@ -192,6 +192,7 @@ GuiMessageVectorCtrl::~GuiMessageVectorCtrl()
 //--------------------------------------------------------------------------
 void GuiMessageVectorCtrl::initPersistFields()
 {
+   docsURL;
    addField("lineSpacing",        TypeS32,    Offset(mLineSpacingPixels,      GuiMessageVectorCtrl));
    addField("lineContinuedIndex", TypeS32,    Offset(mLineContinuationIndent, GuiMessageVectorCtrl));
    addField("allowedMatches",     TypeString, Offset(mAllowedMatches,         GuiMessageVectorCtrl), 16);

@@ -119,6 +119,7 @@ GuiShapeEdPreview::~GuiShapeEdPreview()
 
 void GuiShapeEdPreview::initPersistFields()
 {
+   docsURL;
    addGroup( "Rendering" );
    addField( "editSun",        TypeBool,         Offset( mEditingSun, GuiShapeEdPreview ),
       "If true, dragging the gizmo will rotate the sun direction" );

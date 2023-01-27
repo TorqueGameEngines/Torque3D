@@ -80,6 +80,7 @@ afxCameraPuppetData::afxCameraPuppetData(const afxCameraPuppetData& other, bool 
 
 void afxCameraPuppetData::initPersistFields()
 {
+   docsURL;
   addField("cameraSpec",          TypeString,   myOffset(cam_spec),
     "This field is like the effect-wrapper fields for specifying constraint sources, "
     "but here it specifies a target for the camera-puppet effect.");

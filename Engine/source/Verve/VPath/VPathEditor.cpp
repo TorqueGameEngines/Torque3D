@@ -85,8 +85,9 @@ bool VPathEditor::onWake( void )
     return Parent::onWake();
 }
 
-void VPathEditor::initPersistFields( void )
+void VPathEditor::initPersistFields()
 {
+   docsURL;
     addField( "IsDirty",  TypeBool,           Offset( mIsDirty,  VPathEditor ) );
     addField( "EditMode", TYPEID<EditMode>(), Offset( mEditMode, VPathEditor ) );
 

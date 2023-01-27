@@ -349,6 +349,7 @@ GuiPopUpMenuCtrlEx::~GuiPopUpMenuCtrlEx()
 //------------------------------------------------------------------------------
 void GuiPopUpMenuCtrlEx::initPersistFields(void)
 {
+   docsURL;
    addField("maxPopupHeight",           TypeS32,          Offset(mMaxPopupHeight, GuiPopUpMenuCtrlEx), "Length of menu when it extends");
    addField("sbUsesNAColor",            TypeBool,         Offset(mRenderScrollInNA, GuiPopUpMenuCtrlEx), "Deprecated" "@internal");
    addField("reverseTextList",          TypeBool,         Offset(mReverseTextList, GuiPopUpMenuCtrlEx), "Reverses text list if popup extends up, instead of down");

@@ -105,6 +105,7 @@ EndImplementEnumType;
 
 void afxXM_BoxConformData::initPersistFields()
 {
+   docsURL;
   addField("boxAlignment",    TYPEID< afxXM_BoxConformType >(),    Offset(aabb_alignment, afxXM_BoxConformData),
     "...");
 

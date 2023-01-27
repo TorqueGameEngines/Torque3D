@@ -114,6 +114,7 @@ GuiButtonBaseCtrl::GuiButtonBaseCtrl()
 
 void GuiButtonBaseCtrl::initPersistFields()
 {
+   docsURL;
    addGroup( "Button" );
    	
       addField( "text", TypeCaseString, Offset(mButtonText, GuiButtonBaseCtrl),

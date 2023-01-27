@@ -110,6 +110,7 @@ bool PhysicsDebrisData::preload( bool server, String &errorStr )
 
 void PhysicsDebrisData::initPersistFields()
 {
+   docsURL;
    addGroup( "Shapes" );
 
       addProtectedField( "shapeFile", TypeShapeFilename, Offset( mShapeName, PhysicsDebrisData ), &_setShapeData, &defaultProtectedGetFn,
@@ -332,6 +333,7 @@ PhysicsDebris::~PhysicsDebris()
 
 void PhysicsDebris::initPersistFields()
 {
+   docsURL;
    Con::addVariable( "$pref::PhysicsDebris::lifetimeScale", TypeF32, &smLifetimeScale,
       "@brief Scales how long %PhysicsDebris will live before being removed.\n"
       "@note A value of 0 will disable PhysicsDebris entirely.");

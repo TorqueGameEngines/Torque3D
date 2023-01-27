@@ -252,6 +252,7 @@ void GuiControl::consoleInit()
 
 void GuiControl::initPersistFields()
 {
+   docsURL;
    addGroup( "Layout" );
    
       addField("position",          TypePoint2I,      Offset(mBounds.point, GuiControl),

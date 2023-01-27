@@ -62,6 +62,7 @@ afxT3DPointLightData::afxT3DPointLightData(const afxT3DPointLightData& other, bo
 //
 void afxT3DPointLightData::initPersistFields()
 {
+   docsURL;
    addGroup( "Light" );
       
       addField( "radius", TypeF32, Offset( mRadius, afxT3DPointLightData ),

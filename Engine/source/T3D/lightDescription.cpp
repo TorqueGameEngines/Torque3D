@@ -90,6 +90,7 @@ ConsoleDocClass( LightDescription,
 
 void LightDescription::initPersistFields()
 {
+   docsURL;
    addGroup( "Light" );
 
       addField( "color", TypeColorF, Offset( color, LightDescription ), "Changes the base color hue of the light." );

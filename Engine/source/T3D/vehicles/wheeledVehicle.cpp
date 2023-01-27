@@ -112,6 +112,7 @@ bool WheeledVehicleTire::preload(bool server, String &errorStr)
 
 void WheeledVehicleTire::initPersistFields()
 {
+   docsURL;
    INITPERSISTFIELD_SHAPEASSET(Shape, WheeledVehicleTire, "The shape to use for the wheel.");
 
    addField( "mass", TypeF32, Offset(mass, WheeledVehicleTire),
@@ -233,6 +234,7 @@ WheeledVehicleSpring::WheeledVehicleSpring()
 
 void WheeledVehicleSpring::initPersistFields()
 {
+   docsURL;
    addField( "length", TypeF32, Offset(length, WheeledVehicleSpring),
       "@brief Maximum spring length. ie. how far the wheel can extend from the "
       "root hub position.\n\n"
@@ -448,6 +450,7 @@ bool WheeledVehicleData::mirrorWheel(Wheel* we)
 
 void WheeledVehicleData::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 
    addGroup("Particle Effects");
@@ -560,6 +563,7 @@ WheeledVehicle::~WheeledVehicle()
 
 void WheeledVehicle::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 

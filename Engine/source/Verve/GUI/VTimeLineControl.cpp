@@ -43,8 +43,9 @@ VTimeLineControl::VTimeLineControl( void ) :
     mSelection.EndTime   = 0;
 }
 
-void VTimeLineControl::initPersistFields( void )
+void VTimeLineControl::initPersistFields()
 {
+   docsURL;
     Parent::initPersistFields();
 
     addField( "IsController",   TypeBool,              Offset( mIsController,   VTimeLineControl ) );

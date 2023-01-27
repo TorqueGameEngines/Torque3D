@@ -71,6 +71,7 @@ RenderTerrainMgr::~RenderTerrainMgr()
 
 void RenderTerrainMgr::initPersistFields()
 {
+   docsURL;
    Con::addVariable( "RenderTerrainMgr::renderWireframe", TypeBool, &smRenderWireframe,
       "Used to enable wireframe rendering on terrain for debugging.\n"
       "@ingroup RenderBin\n" );

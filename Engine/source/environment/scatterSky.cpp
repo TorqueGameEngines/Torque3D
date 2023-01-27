@@ -320,6 +320,7 @@ void ScatterSky::inspectPostApply()
 
 void ScatterSky::initPersistFields()
 {
+   docsURL;
    addGroup( "ScatterSky",
       "Only azimuth and elevation are networked fields. To trigger a full update of all other fields use the applyChanges ConsoleMethod." );
 

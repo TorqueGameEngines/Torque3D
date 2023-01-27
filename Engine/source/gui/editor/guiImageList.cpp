@@ -138,6 +138,7 @@ U32 GuiImageList::IndexFromPath ( const char* Path )
 
 void GuiImageList::initPersistFields()
 {
+   docsURL;
   Parent::initPersistFields();
 }
 

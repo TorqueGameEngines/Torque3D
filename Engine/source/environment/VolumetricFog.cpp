@@ -165,6 +165,7 @@ VolumetricFog::~VolumetricFog()
 
 void VolumetricFog::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
    addGroup("Shapes");
       INITPERSISTFIELD_SHAPEASSET(Shape, VolumetricFog, "The source shape asset.");

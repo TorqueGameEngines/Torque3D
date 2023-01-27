@@ -69,6 +69,7 @@ CustomShaderFeatureData::~CustomShaderFeatureData()
 //-----------------------------------------------------------------------------
 void CustomShaderFeatureData::initPersistFields()
 {
+   docsURL;
    // SceneObject already handles exposing the transform
    Parent::initPersistFields();
 }

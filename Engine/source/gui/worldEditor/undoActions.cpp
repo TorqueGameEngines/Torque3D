@@ -47,6 +47,7 @@ MECreateUndoAction::~MECreateUndoAction()
 
 void MECreateUndoAction::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 
@@ -132,6 +133,7 @@ MEDeleteUndoAction::~MEDeleteUndoAction()
 
 void MEDeleteUndoAction::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 
@@ -238,6 +240,7 @@ InspectorFieldUndoAction::InspectorFieldUndoAction( const UTF8 *actionName )
 
 void InspectorFieldUndoAction::initPersistFields()
 {
+   docsURL;
    addField( "inspectorGui", TYPEID< GuiInspector >(), Offset( mInspector, InspectorFieldUndoAction ) );
    addField( "objectId", TypeS32, Offset( mObjId, InspectorFieldUndoAction ) );
    addField( "fieldName", TypeString, Offset( mSlotName, InspectorFieldUndoAction ) );

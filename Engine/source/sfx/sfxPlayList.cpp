@@ -228,6 +228,7 @@ SFXPlayList::SFXPlayList()
 
 void SFXPlayList::initPersistFields()
 {
+   docsURL;
    addGroup( "Sound" );
    
       addField( "random",           TYPEID< ERandomMode >(), Offset( mRandomMode, SFXPlayList ),

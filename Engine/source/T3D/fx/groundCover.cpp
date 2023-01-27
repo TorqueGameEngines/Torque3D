@@ -540,6 +540,7 @@ IMPLEMENT_CO_NETOBJECT_V1(GroundCover);
 
 void GroundCover::initPersistFields()
 {
+   docsURL;
    addGroup( "GroundCover General" );
 
       INITPERSISTFIELD_MATERIALASSET(Material, GroundCover, "Material used by all GroundCover segments.");

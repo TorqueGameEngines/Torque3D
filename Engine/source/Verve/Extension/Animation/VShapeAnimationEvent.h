@@ -46,7 +46,7 @@ public:
 
     VShapeAnimationEvent( void );
 
-    static void     initPersistFields( void );
+    static void     initPersistFields();
 
     // Callback Methods.
 

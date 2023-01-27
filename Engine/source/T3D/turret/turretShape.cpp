@@ -300,6 +300,7 @@ TurretShape::~TurretShape()
 
 void TurretShape::initPersistFields()
 {
+   docsURL;
    addField("respawn",        TypeBool,      Offset(mRespawn,      TurretShape),
       "@brief Respawn the turret after it has been destroyed.\n\n"
       "If true, the turret will respawn after it is destroyed.\n");

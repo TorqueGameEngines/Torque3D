@@ -35,8 +35,9 @@ VDirectorEvent::VDirectorEvent( void ) :
     // Void.
 }
 
-void VDirectorEvent::initPersistFields( void )
+void VDirectorEvent::initPersistFields()
 {
+   docsURL;
     Parent::initPersistFields();
 
     addField( "Target", TypeRealString, Offset( mTarget, VDirectorEvent ), "The name of the CameraGroup that will be activated upon triggering." );

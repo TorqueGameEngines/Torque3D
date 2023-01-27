@@ -156,6 +156,7 @@ bool GameBaseData::onAdd()
 
 void GameBaseData::initPersistFields()
 {
+   docsURL;
    addGroup("Scripting");
 
       addField( "category", TypeCaseString, Offset(mCategory, GameBaseData ),
@@ -721,6 +722,7 @@ DefineEngineMethod( GameBase, setDataBlock, bool, ( GameBaseData* data ),,
 
 void GameBase::initPersistFields()
 {
+   docsURL;
    addGroup( "Game" );
 
       addProtectedField( "dataBlock", TYPEID< GameBaseData >(), Offset(mDataBlock, GameBase),

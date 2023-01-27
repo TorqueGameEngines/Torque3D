@@ -62,6 +62,7 @@ GuiConsoleEditCtrl::GuiConsoleEditCtrl()
 
 void GuiConsoleEditCtrl::initPersistFields()
 {
+   docsURL;
    addGroup("GuiConsoleEditCtrl");
    addField("useSiblingScroller", TypeBool, Offset(mUseSiblingScroller, GuiConsoleEditCtrl));
    endGroup("GuiConsoleEditCtrl");

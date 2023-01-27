@@ -1033,6 +1033,7 @@ ShapeBase::~ShapeBase()
 
 void ShapeBase::initPersistFields()
 {
+   docsURL;
    addProtectedField( "skin", TypeRealString, Offset(mAppliedSkinName, ShapeBase), &_setFieldSkin, &_getFieldSkin,
       "@brief The skin applied to the shape.\n\n"
 

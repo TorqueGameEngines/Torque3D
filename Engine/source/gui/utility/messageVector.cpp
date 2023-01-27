@@ -425,6 +425,7 @@ MessageVector::~MessageVector()
 //--------------------------------------------------------------------------
 void MessageVector::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 

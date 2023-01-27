@@ -120,6 +120,7 @@ afxXM_SpinData::afxXM_SpinData(const afxXM_SpinData& other, bool temp_clone) : a
 
 void afxXM_SpinData::initPersistFields()
 {
+   docsURL;
   addField("spinAxis",            TypePoint3F,  Offset(spin_axis, afxXM_SpinData),
     "...");
   addField("spinAngle",           TypeF32,      Offset(spin_angle, afxXM_SpinData),

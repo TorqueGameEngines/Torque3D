@@ -85,6 +85,7 @@ ConsoleDocClass( CameraData,
 
 void CameraData::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 
@@ -1307,6 +1308,7 @@ void Camera::unpackUpdate(NetConnection *con, BitStream *bstream)
 
 void Camera::initPersistFields()
 {
+   docsURL;
    addGroup( "Camera" );
       addProtectedField( "controlMode", TYPEID< CameraMotionMode >(), Offset( mMode, Camera ),
          &_setModeField, &defaultProtectedGetFn,

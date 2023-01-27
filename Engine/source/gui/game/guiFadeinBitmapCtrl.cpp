@@ -87,6 +87,7 @@ GuiFadeinBitmapCtrl::GuiFadeinBitmapCtrl()
 
 void GuiFadeinBitmapCtrl::initPersistFields()
 {
+   docsURL;
    addGroup( "Fading" );
    
       addField( "fadeColor", TypeColorF, Offset( mFadeColor, GuiFadeinBitmapCtrl ),

@@ -148,6 +148,7 @@ void PhysicalZone::consoleInit()
 
 void PhysicalZone::initPersistFields()
 {
+   docsURL;
    addGroup("Misc");
    addField("velocityMod",  TypeF32,               Offset(mVelocityMod,  PhysicalZone), "Multiply velocity of objects entering zone by this value every tick.");
    addField("gravityMod",   TypeF32,               Offset(mGravityMod,   PhysicalZone), "Gravity in PhysicalZone. Multiplies against standard gravity.");

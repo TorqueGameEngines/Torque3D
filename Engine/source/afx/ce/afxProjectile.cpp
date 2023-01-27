@@ -82,6 +82,7 @@ EndImplementEnumType;
 
 void afxProjectileData::initPersistFields()
 {
+   docsURL;
    addGroup("Physics");
       addField("ignoreSourceTimeout",     TypeBool,     myOffset(ignore_src_timeout), "...");
       addField("dynamicCollisionMask",    TypeS32,      myOffset(dynamicCollisionMask), "...");

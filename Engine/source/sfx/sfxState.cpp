@@ -114,6 +114,7 @@ SFXState::SFXState()
 
 void SFXState::initPersistFields()
 {
+   docsURL;
    addGroup( "State" );
    
       addField( "includedStates", TypeSFXStateName, Offset( mIncludedStates, SFXState ),

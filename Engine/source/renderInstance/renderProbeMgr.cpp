@@ -258,6 +258,7 @@ void RenderProbeMgr::onRemove()
 
 void RenderProbeMgr::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 

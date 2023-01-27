@@ -175,6 +175,7 @@ bool FlyingVehicleData::preload(bool server, String &errorStr)
 
 void FlyingVehicleData::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 
    addGroup("Physics");
@@ -806,6 +807,7 @@ void FlyingVehicle::unpackUpdate(NetConnection *con, BitStream *stream)
 
 void FlyingVehicle::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 

@@ -105,6 +105,7 @@ GuiTextEditSliderBitmapCtrl::~GuiTextEditSliderBitmapCtrl()
 
 void GuiTextEditSliderBitmapCtrl::initPersistFields()
 {
+   docsURL;
    addField("format",    TypeString,  Offset(mFormat, GuiTextEditSliderBitmapCtrl), "Character format type to place in the control.\n");
    addField("range",     TypePoint2F, Offset(mRange, GuiTextEditSliderBitmapCtrl), "Maximum vertical and horizontal range to allow in the control.\n");
    addField("increment", TypeF32,     Offset(mIncAmount,     GuiTextEditSliderBitmapCtrl), "How far to increment the slider on each step.\n");

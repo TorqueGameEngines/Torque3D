@@ -64,6 +64,7 @@ guiAnimBitmapCtrl::~guiAnimBitmapCtrl(void)
 }
 void guiAnimBitmapCtrl::initPersistFields()
 {
+   docsURL;
    addField("AnimTexTiling", TYPEID< Point2I >(), Offset(mAnimTexTiling, guiAnimBitmapCtrl),
       "@brief The number of frames, in rows and columns stored in textureName "
       "(when animateTexture is true).\n\n"

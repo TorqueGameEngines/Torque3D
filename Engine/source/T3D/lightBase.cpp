@@ -88,6 +88,7 @@ LightBase::~LightBase()
 
 void LightBase::initPersistFields()
 {
+   docsURL;
    // We only add the basic lighting options that all lighting
    // systems would use... the specific lighting system options
    // are injected at runtime by the lighting system itself.

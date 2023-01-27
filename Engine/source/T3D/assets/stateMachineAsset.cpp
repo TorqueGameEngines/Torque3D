@@ -106,6 +106,7 @@ StateMachineAsset::~StateMachineAsset()
 
 void StateMachineAsset::initPersistFields()
 {
+   docsURL;
    // Call parent.
    Parent::initPersistFields();
 

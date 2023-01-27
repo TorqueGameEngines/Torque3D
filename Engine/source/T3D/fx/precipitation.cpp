@@ -143,6 +143,7 @@ PrecipitationData::PrecipitationData()
 
 void PrecipitationData::initPersistFields()
 {
+   docsURL;
    INITPERSISTFIELD_SOUNDASSET(Sound, PrecipitationData, "Looping SFXProfile effect to play while Precipitation is active.");
 
    addProtectedField( "dropTexture", TypeFilename, Offset(mDropName, PrecipitationData), &_setDropData, &defaultProtectedGetFn,
@@ -367,6 +368,7 @@ IRangeValidator ValidNumDropsRange(1, 100000);
 
 void Precipitation::initPersistFields()
 {
+   docsURL;
    addGroup("Precipitation");
 
       addFieldV( "numDrops", TypeS32, Offset(mNumDrops, Precipitation), &ValidNumDropsRange,

@@ -104,6 +104,7 @@ ExampleAsset::~ExampleAsset()
 
 void ExampleAsset::initPersistFields()
 {
+   docsURL;
    // Call parent.
    Parent::initPersistFields();
 

@@ -345,6 +345,7 @@ fxFoliageReplicator::~fxFoliageReplicator()
 
 void fxFoliageReplicator::initPersistFields()
 {
+   docsURL;
    // Add out own persistent fields.
    addGroup( "Debugging" );	// MM: Added Group Header.
       addField( "UseDebugInfo",        TypeBool,      Offset( mFieldData.mUseDebugInfo,         fxFoliageReplicator ), "Culling bins are drawn when set to true." );

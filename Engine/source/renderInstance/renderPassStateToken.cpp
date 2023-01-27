@@ -86,6 +86,7 @@ static const char *_get_enable(void* obj, const char* data)
 
 void RenderPassStateToken::initPersistFields()
 {
+   docsURL;
    addProtectedField("enabled", TypeBool, 0, &_set_enable, &_get_enable, "Enables or disables this token.");
    Parent::initPersistFields();
 }
@@ -136,6 +137,7 @@ void RenderPassStateBin::sort()
 
 void RenderPassStateBin::initPersistFields()
 {
+   docsURL;
    addProtectedField( "stateToken", TYPEID< RenderPassStateToken >(), Offset( mStateToken, RenderPassStateBin ),
       _setStateToken, _getStateToken, "");
    

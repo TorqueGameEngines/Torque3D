@@ -101,6 +101,7 @@ EndImplementEnumType;
 
 void GuiColorPickerCtrl::initPersistFields()
 {
+   docsURL;
    addGroup("ColorPicker");
       addField("baseColor", TypeColorF, Offset(mBaseColor, GuiColorPickerCtrl));
       addField("pickColor", TypeColorF, Offset(mPickColor, GuiColorPickerCtrl));

@@ -79,6 +79,7 @@ bool GuiFormCtrl::_setHasMenu( void *object, const char *index, const char *data
 
 void GuiFormCtrl::initPersistFields()
 {
+   docsURL;
    addField("caption",        TypeRealString, Offset(mCaption,        GuiFormCtrl));
    addField("contentLibrary",TypeString,     Offset(mContentLibrary, GuiFormCtrl));
    addField("content",       TypeString,     Offset(mContent,        GuiFormCtrl));

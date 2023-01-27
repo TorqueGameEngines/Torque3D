@@ -169,6 +169,7 @@ void BasicClouds::onRemove()
 
 void BasicClouds::initPersistFields()
 {
+   docsURL;
    addGroup( "BasicClouds" );
 
       addArray( "Layers", TEX_COUNT );

@@ -102,6 +102,7 @@ GuiGraphCtrl::GuiGraphCtrl()
 
 void GuiGraphCtrl::initPersistFields()
 {
+   docsURL;
    addGroup( "Graph" );
    
       addField( "centerY", TypeF32, Offset( mCenterY, GuiGraphCtrl ),

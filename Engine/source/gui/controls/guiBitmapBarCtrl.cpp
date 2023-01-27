@@ -43,6 +43,7 @@ GuiBitmapBarCtrl::GuiBitmapBarCtrl(void)
 
 void GuiBitmapBarCtrl::initPersistFields()
 {
+   docsURL;
    addField("percent", TypeF32, Offset(mPercent, GuiBitmapBarCtrl),
       "% shown");
    addField("vertical", TypeBool, Offset(mVertical, GuiBitmapBarCtrl),

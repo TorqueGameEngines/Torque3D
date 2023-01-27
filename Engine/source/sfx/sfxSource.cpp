@@ -297,6 +297,7 @@ SFXSource::~SFXSource()
 
 void SFXSource::initPersistFields()
 {
+   docsURL;
    addGroup( "Sound" );
    
       addProtectedField( "description", TypeSFXDescriptionName, Offset( mDescription, SFXSource ),

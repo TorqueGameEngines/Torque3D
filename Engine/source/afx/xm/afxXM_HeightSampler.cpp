@@ -91,6 +91,7 @@ afxXM_HeightSamplerData::afxXM_HeightSamplerData(const afxXM_HeightSamplerData& 
 
 void afxXM_HeightSamplerData::initPersistFields()
 {
+   docsURL;
   Parent::initPersistFields();
 }
 

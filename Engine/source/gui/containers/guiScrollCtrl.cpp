@@ -96,6 +96,7 @@ GuiScrollCtrl::GuiScrollCtrl()
 
 void GuiScrollCtrl::initPersistFields()
 {
+   docsURL;
    addGroup( "Scolling" );
    
       addField( "willFirstRespond",     TypeBool,    Offset(mWillFirstRespond, GuiScrollCtrl));

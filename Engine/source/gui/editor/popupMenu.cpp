@@ -82,6 +82,7 @@ ConsoleDocClass( PopupMenu,
 //-----------------------------------------------------------------------------
 void PopupMenu::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 
    addField("barTitle", TypeCaseString, Offset(mBarTitle, PopupMenu), "");

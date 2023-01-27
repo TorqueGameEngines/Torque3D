@@ -58,6 +58,7 @@ GuiTabPageCtrl::GuiTabPageCtrl(void)
 
 void GuiTabPageCtrl::initPersistFields()
 {
+   docsURL;
    addField( "fitBook", TypeBool, Offset( mFitBook, GuiTabPageCtrl ),
       "Determines whether to resize this page when it is added to the tab book. "
       "If true, the page will be resized according to the tab book extents and "

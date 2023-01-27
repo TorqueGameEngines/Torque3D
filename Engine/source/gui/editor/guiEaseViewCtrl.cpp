@@ -49,6 +49,7 @@ GuiEaseViewCtrl::GuiEaseViewCtrl()
 
 void GuiEaseViewCtrl::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 
    addField("ease", TypeEaseF, Offset( mEase, GuiEaseViewCtrl ) );

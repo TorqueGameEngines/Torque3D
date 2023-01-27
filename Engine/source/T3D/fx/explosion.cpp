@@ -387,6 +387,7 @@ ExplosionData* ExplosionData::cloneAndPerformSubstitutions(const SimObject* owne
 
 void ExplosionData::initPersistFields()
 {
+   docsURL;
    addGroup("Shapes");
       INITPERSISTFIELD_SHAPEASSET(ExplosionShape, ExplosionData, "@brief Optional shape asset to place at the center of the explosion.\n\n"
          "The <i>ambient</i> animation of this model will be played automatically at the start of the explosion.");
@@ -980,6 +981,7 @@ void Explosion::setInitialState(const Point3F& point, const Point3F& normal, con
 //--------------------------------------------------------------------------
 void Explosion::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
    addField("initialNormal", TypePoint3F, Offset(mInitialNormal, Explosion), "Initial starting Normal.");
    //

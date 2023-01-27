@@ -122,7 +122,7 @@ public:
     virtual bool    onAdd( void );
     virtual bool    onWake( void );
 
-    static  void    initPersistFields( void );
+    static  void    initPersistFields();
 
     // Gui Events.
 

@@ -309,6 +309,7 @@ ConvexShape::~ConvexShape()
 
 void ConvexShape::initPersistFields()
 {
+   docsURL;
    addGroup( "Rendering" );
 
       INITPERSISTFIELD_MATERIALASSET(Material, ConvexShape, "Default material used to render the ConvexShape surface.");

@@ -109,6 +109,7 @@ GameObjectAsset::~GameObjectAsset()
 
 void GameObjectAsset::initPersistFields()
 {
+   docsURL;
    // Call parent.
    Parent::initPersistFields();
 

@@ -55,6 +55,7 @@ WorldEditorSelection::~WorldEditorSelection()
 
 void WorldEditorSelection::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 

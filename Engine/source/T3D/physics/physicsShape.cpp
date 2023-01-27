@@ -87,6 +87,7 @@ PhysicsShapeData::~PhysicsShapeData()
 
 void PhysicsShapeData::initPersistFields()
 {
+   docsURL;
    addGroup("Shapes");
 
       INITPERSISTFIELD_SHAPEASSET(Shape, PhysicsShapeData, "@brief Shape asset to be used with this physics object.\n\n"
@@ -430,7 +431,8 @@ void PhysicsShape::consoleInit()
 }
 
 void PhysicsShape::initPersistFields()
-{   
+{
+   docsURL;
    addGroup( "PhysicsShape" );
 
       addField( "playAmbient", TypeBool, Offset( mPlayAmbient, PhysicsShape ),

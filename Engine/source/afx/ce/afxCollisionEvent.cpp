@@ -65,6 +65,7 @@ afxCollisionEventData::afxCollisionEventData(const afxCollisionEventData& other,
 
 void afxCollisionEventData::initPersistFields()
 {
+   docsURL;
   addField("methodName",        TypeString,   myOffset(method_name),
     "...");
   addField("scriptData",        TypeString,   myOffset(script_data),

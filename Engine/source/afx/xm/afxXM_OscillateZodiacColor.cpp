@@ -90,6 +90,7 @@ afxXM_OscillateZodiacColorData::afxXM_OscillateZodiacColorData()
 
 void afxXM_OscillateZodiacColorData::initPersistFields()
 {
+   docsURL;
   addField("colorA",              TypeColorF,   Offset(color_a,   afxXM_OscillateZodiacColorData),
     "...");
   addField("colorB",              TypeColorF,   Offset(color_b,   afxXM_OscillateZodiacColorData),

@@ -150,6 +150,7 @@ void MaterialAsset::consoleInit()
 
 void MaterialAsset::initPersistFields()
 {
+   docsURL;
    // Call parent.
    Parent::initPersistFields();
 

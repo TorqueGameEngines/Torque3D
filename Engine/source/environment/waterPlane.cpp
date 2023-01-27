@@ -118,6 +118,7 @@ void WaterPlane::onRemove()
 
 void WaterPlane::initPersistFields()
 {
+   docsURL;
    addGroup( "WaterPlane" );     
 
       addProtectedField( "gridSize", TypeS32, Offset( mGridSize, WaterPlane ), &protectedSetGridSize, &defaultProtectedGetFn,

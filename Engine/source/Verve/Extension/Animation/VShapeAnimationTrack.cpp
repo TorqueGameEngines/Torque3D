@@ -38,8 +38,9 @@ VShapeAnimationTrack::VShapeAnimationTrack( void ) :
 
 //-----------------------------------------------------------------------------
 
-void VShapeAnimationTrack::initPersistFields( void )
+void VShapeAnimationTrack::initPersistFields()
 {
+   docsURL;
     Parent::initPersistFields();
 
     addField( "ThreadIndex", TypeS32, Offset( mThreadIndex, VShapeAnimationTrack ), "The index of the Animation Thread to play." );

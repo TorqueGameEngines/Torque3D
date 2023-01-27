@@ -112,6 +112,7 @@ ShapeAnimationAsset::~ShapeAnimationAsset()
 
 void ShapeAnimationAsset::initPersistFields()
 {
+   docsURL;
    // Call parent.
    Parent::initPersistFields();
 

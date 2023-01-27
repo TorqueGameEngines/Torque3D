@@ -232,6 +232,7 @@ ProjectileData::ProjectileData(const ProjectileData& other, bool temp_clone) : G
 
 void ProjectileData::initPersistFields()
 {
+   docsURL;
    addGroup("Shapes");
       addProtectedField("projectileShapeName", TypeShapeFilename, Offset(mProjectileShapeName, ProjectileData), &_setProjectileShapeData, &defaultProtectedGetFn,
          "@brief File path to the model of the projectile.\n\n", AbstractClassRep::FIELD_HideInInspectors);
@@ -647,6 +648,7 @@ Projectile::~Projectile()
 //--------------------------------------------------------------------------
 void Projectile::initPersistFields()
 {
+   docsURL;
    addGroup("Physics");
 
    addProtectedField("initialPosition",  TypePoint3F, Offset(mInitialPosition, Projectile), &_setInitialPosition, &defaultProtectedGetFn,

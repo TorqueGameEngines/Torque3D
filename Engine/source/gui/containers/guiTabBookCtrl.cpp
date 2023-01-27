@@ -98,6 +98,7 @@ GuiTabBookCtrl::GuiTabBookCtrl()
 
 void GuiTabBookCtrl::initPersistFields()
 {
+   docsURL;
    addGroup( "TabBook" );
    
       addField( "tabPosition",     TYPEID< TabPosition >(), Offset( mTabPosition,    GuiTabBookCtrl ),

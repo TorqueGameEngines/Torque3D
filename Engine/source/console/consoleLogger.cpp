@@ -70,6 +70,7 @@ EndImplementEnumType;
 
 void ConsoleLogger::initPersistFields()
 {
+   docsURL;
    addGroup( "Logging" );
    addField( "level",   TYPEID< ConsoleLogEntry::Level >(),     Offset( mLevel,    ConsoleLogger ), "Determines the priority level and attention the logged entry gets when recorded\n\n" );
    endGroup( "Logging" );

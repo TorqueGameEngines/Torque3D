@@ -66,6 +66,7 @@ afxGuiControllerData::afxGuiControllerData(const afxGuiControllerData& other, bo
 
 void afxGuiControllerData::initPersistFields()
 {
+   docsURL;
   addField("controlName",           TypeString,     myOffset(control_name),
     "Specifies the name of an existing gui-control.");
   addField("preservePosition",      TypeBool,       myOffset(preserve_pos),

@@ -45,7 +45,7 @@ public:
 
     VPostEffectToggleTrack( void );
 
-    static  void               initPersistFields( void );
+    static  void               initPersistFields();
 
     // Camera Methods.
 

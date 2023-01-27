@@ -188,6 +188,7 @@ IRangeValidator ValidIterations(1, S32_MAX);
 
 void NavPath::initPersistFields()
 {
+   docsURL;
    addGroup("NavPath");
 
    addProtectedField("from", TypePoint3F, Offset(mFrom, NavPath),

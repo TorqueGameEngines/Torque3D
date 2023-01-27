@@ -54,7 +54,8 @@ PhysicsForce::~PhysicsForce()
 }
 
 void PhysicsForce::initPersistFields()
-{   
+{
+   docsURL;
    Parent::initPersistFields();   
 }
 

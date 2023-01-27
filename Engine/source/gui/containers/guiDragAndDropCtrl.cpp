@@ -164,6 +164,7 @@ GuiDragAndDropControl::GuiDragAndDropControl() : mDeleteOnMouseUp(true), mUseWho
 
 void GuiDragAndDropControl::initPersistFields()
 {
+   docsURL;
    addField( "deleteOnMouseUp", TypeBool, Offset( mDeleteOnMouseUp, GuiDragAndDropControl ),
       "If true, the control deletes itself when the left mouse button is released.\n\n"
       "If at this point, the drag&drop control still contains its payload, it will be deleted along with the control." );

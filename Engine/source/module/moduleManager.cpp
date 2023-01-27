@@ -142,6 +142,7 @@ void ModuleManager::onRemove()
 
 void ModuleManager::initPersistFields()
 {
+   docsURL;
     // Call parent.
     Parent::initPersistFields();
 

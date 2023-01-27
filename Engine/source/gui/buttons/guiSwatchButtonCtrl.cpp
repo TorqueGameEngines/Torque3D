@@ -71,6 +71,7 @@ GuiSwatchButtonCtrl::GuiSwatchButtonCtrl()
 
 void GuiSwatchButtonCtrl::initPersistFields()
 {
+   docsURL;
    addField("color", TypeColorF, Offset(mSwatchColor, GuiSwatchButtonCtrl), "The foreground color of GuiSwatchButtonCtrl");
    addField( "gridBitmap", TypeRealString, Offset( mGridBitmap, GuiSwatchButtonCtrl ), "The bitmap used for the transparent grid" );
    

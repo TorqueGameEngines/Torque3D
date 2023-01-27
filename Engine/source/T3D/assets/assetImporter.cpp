@@ -134,6 +134,7 @@ void AssetImportConfig::onRemove()
 /// Engine.
 void AssetImportConfig::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 
    addGroup("General");
@@ -466,6 +467,7 @@ void AssetImportObject::onRemove()
 
 void AssetImportObject::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 
    addField("assetType", TypeRealString, Offset(assetType, AssetImportObject), "What type is the importing asset");
@@ -539,6 +541,7 @@ void AssetImporter::onRemove()
 
 void AssetImporter::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 
    addField("targetModuleId", TypeRealString, Offset(targetModuleId, AssetImporter), "The Id of the module the assets are to be imported into");

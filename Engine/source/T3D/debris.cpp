@@ -295,6 +295,7 @@ bool DebrisData::preload(bool server, String &errorStr)
 
 void DebrisData::initPersistFields()
 {
+   docsURL;
    addGroup("Shapes");
       addField("texture",              TypeString,                  Offset(textureName,         DebrisData), 
          "@brief Texture imagemap to use for this debris object.\n\nNot used any more.\n", AbstractClassRep::FIELD_HideInInspectors);
@@ -567,6 +568,7 @@ Debris::~Debris()
 
 void Debris::initPersistFields()
 {
+   docsURL;
    addGroup( "Debris" );	
    
       addField( "lifetime", TypeF32, Offset(mLifetime, Debris), 

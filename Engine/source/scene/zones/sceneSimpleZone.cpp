@@ -55,6 +55,7 @@ SceneSimpleZone::SceneSimpleZone()
 
 void SceneSimpleZone::initPersistFields()
 {
+   docsURL;
    addGroup( "Lighting" );
 
       addProtectedField( "useAmbientLightColor", TypeBool, Offset( mUseAmbientLightColor, SceneSimpleZone ),

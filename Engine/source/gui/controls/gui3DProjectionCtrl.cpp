@@ -70,7 +70,8 @@ Gui3DProjectionCtrl::Gui3DProjectionCtrl()
 }  
   
 void Gui3DProjectionCtrl::initPersistFields()  
-{  
+{
+   docsURL;
    Parent::initPersistFields();  
    addGroup("3DProjection");  
    addField("pointWorld"      , TypePoint3F , Offset(mPtWorld          , Gui3DProjectionCtrl));  

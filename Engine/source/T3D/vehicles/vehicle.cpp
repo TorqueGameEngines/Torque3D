@@ -274,6 +274,7 @@ void VehicleData::unpackData(BitStream* stream)
 
 void VehicleData::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();   
 
    addGroup("Particle Effects");
@@ -1108,6 +1109,7 @@ void Vehicle::consoleInit()
 
 void Vehicle::initPersistFields()
 {
+   docsURL;
    addField( "disableMove", TypeBool, Offset(mDisableMove, Vehicle),
       "When this flag is set, the vehicle will ignore throttle changes." );
 

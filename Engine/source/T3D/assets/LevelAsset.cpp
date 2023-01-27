@@ -111,6 +111,7 @@ LevelAsset::~LevelAsset()
 
 void LevelAsset::initPersistFields()
 {
+   docsURL;
    // Call parent.
    Parent::initPersistFields();
 

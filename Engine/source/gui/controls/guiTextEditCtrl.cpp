@@ -169,6 +169,7 @@ GuiTextEditCtrl::~GuiTextEditCtrl()
 
 void GuiTextEditCtrl::initPersistFields()
 {
+   docsURL;
    addProtectedField("placeholderText", TypeCaseString, Offset(mPlaceholderText, GuiTextEditCtrl), setPlaceholderText, getPlaceholderText,
       "The text to show on the control.");
 

@@ -1272,6 +1272,7 @@ void TerrainBlock::setScale( const VectorF &scale )
 
 void TerrainBlock::initPersistFields()
 {
+   docsURL;
    addGroup( "Media" );
 
       addProtectedField("terrainAsset", TypeTerrainAssetId, Offset(mTerrainAssetId, TerrainBlock),

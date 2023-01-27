@@ -60,8 +60,9 @@ VController::~VController( void )
     // Void.
 }
 
-void VController::initPersistFields( void )
+void VController::initPersistFields()
 {
+   docsURL;
     addGroup( "Controller" );
         addProtectedField( "Time",      TypeS32,  Offset( mTime,              VController ), &setTime,      &defaultProtectedGetFn, "Current position of the Controller (in milliseconds)." );
         addProtectedField( "Duration",  TypeS32,  Offset( mDuration,          VController ), &setDuration,  &defaultProtectedGetFn, "Total length of the sequence (in milliseconds)." );

@@ -149,6 +149,7 @@ bool SimObject::processArguments(S32 argc, ConsoleValue *argv)
 
 //-----------------------------------------------------------------------------
 
+
 void SimObject::initPersistFields()
 {
    addGroup( "Ungrouped" );

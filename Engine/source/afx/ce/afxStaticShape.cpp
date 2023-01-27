@@ -70,6 +70,7 @@ afxStaticShapeData::afxStaticShapeData(const afxStaticShapeData& other, bool tem
 
 void afxStaticShapeData::initPersistFields()
 {
+   docsURL;
    addGroup("Animation");
       addField("sequence",              TypeString, myOffset(sequence),
     "An animation sequence in the StaticShape to play.");

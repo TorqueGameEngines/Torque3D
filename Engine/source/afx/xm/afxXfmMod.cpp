@@ -132,6 +132,7 @@ afxXM_BaseData::afxXM_BaseData(const afxXM_BaseData& other, bool temp_clone) : G
 
 void afxXM_BaseData::initPersistFields()
 {
+   docsURL;
   addField("ignoreTimeFactor",  TypeBool,   Offset(ignore_time_factor, afxXM_BaseData),
     "...");
 
@@ -213,6 +214,7 @@ F32 afxXM_WeightedBaseData::getWeightFactor() const
 
 void afxXM_WeightedBaseData::initPersistFields()
 {
+   docsURL;
   addField("delay",         TypeF32,      Offset(delay,         afxXM_WeightedBaseData),
     "...");
   addField("lifetime",      TypeF32,      Offset(lifetime,      afxXM_WeightedBaseData),

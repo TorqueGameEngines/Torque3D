@@ -97,6 +97,7 @@ GuiClockHud::GuiClockHud()
 
 void GuiClockHud::initPersistFields()
 {
+   docsURL;
    addGroup("Misc");		
    addField( "showFill", TypeBool, Offset( mShowFill, GuiClockHud ), "If true, draws a background color behind the control.");
    addField( "showFrame", TypeBool, Offset( mShowFrame, GuiClockHud ), "If true, draws a frame around the control." );

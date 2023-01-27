@@ -39,8 +39,9 @@ VCameraShakeEvent::VCameraShakeEvent( void ) :
     setLabel( "CameraShakeEvent" );
 }
 
-void VCameraShakeEvent::initPersistFields( void )
+void VCameraShakeEvent::initPersistFields()
 {
+   docsURL;
     Parent::initPersistFields();
 
     addField( "Amplitude", TypePoint3F, Offset( mAmplitude, VCameraShakeEvent ), "Amplitude of the Camera Shake event." );

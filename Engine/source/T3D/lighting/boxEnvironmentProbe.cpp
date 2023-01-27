@@ -90,6 +90,7 @@ BoxEnvironmentProbe::~BoxEnvironmentProbe()
 //-----------------------------------------------------------------------------
 void BoxEnvironmentProbe::initPersistFields()
 {
+   docsURL;
    // SceneObject already handles exposing the transform
    Parent::initPersistFields();
 

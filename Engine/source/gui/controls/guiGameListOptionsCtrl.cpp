@@ -446,6 +446,7 @@ ConsoleDocClass( GuiGameListOptionsCtrl,
 
 void GuiGameListOptionsCtrl::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 
@@ -542,6 +543,7 @@ ConsoleDocClass( GuiGameListOptionsProfile,
 
 void GuiGameListOptionsProfile::initPersistFields()
 {
+   docsURL;
    addField( "columnSplit", TypeS32, Offset(mColumnSplit, GuiGameListOptionsProfile),
       "Padding between the leftmost edge of the control, and the row's left arrow." );
 

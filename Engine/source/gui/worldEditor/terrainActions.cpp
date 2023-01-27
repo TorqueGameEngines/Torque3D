@@ -779,6 +779,7 @@ TerrainSmoothAction::TerrainSmoothAction()
 
 void TerrainSmoothAction::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 

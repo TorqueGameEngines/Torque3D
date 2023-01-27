@@ -293,6 +293,7 @@ void GuiMouseEventCtrl::sendMouseEvent(const char * name, const GuiEvent & event
 //------------------------------------------------------------------------------
 void GuiMouseEventCtrl::initPersistFields()
 {
+   docsURL;
    addGroup( "Input" );
    
       addField("lockMouse", TypeBool, Offset(mLockMouse, GuiMouseEventCtrl),

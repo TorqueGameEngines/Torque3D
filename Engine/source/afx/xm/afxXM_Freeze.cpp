@@ -161,6 +161,7 @@ afxXM_FreezeData::afxXM_FreezeData(const afxXM_FreezeData& other, bool temp_clon
 
 void afxXM_FreezeData::initPersistFields()
 {
+   docsURL;
   addField("mask",  TypeS32,    Offset(mask, afxXM_FreezeData),
     "...");
   addField("delay", TypeF32,    Offset(delay, afxXM_FreezeData),

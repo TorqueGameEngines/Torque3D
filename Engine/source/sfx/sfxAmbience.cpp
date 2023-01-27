@@ -95,6 +95,7 @@ SFXAmbience::SFXAmbience()
 
 void SFXAmbience::initPersistFields()
 {
+   docsURL;
    addGroup( "Sound" );
    
       addField( "environment",            TypeSFXEnvironmentName, Offset( mEnvironment, SFXAmbience ),

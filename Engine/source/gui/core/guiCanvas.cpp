@@ -201,6 +201,7 @@ bool GuiCanvas::setProtectedNumFences( void *object, const char *index, const ch
 
 void GuiCanvas::initPersistFields()
 {
+   docsURL;
    addGroup("Mouse Handling");
       addField("alwaysHandleMouseButtons", TypeBool, Offset(mAlwaysHandleMouseButtons, GuiCanvas),
          "Deal with mouse buttons, even if the cursor is hidden." );

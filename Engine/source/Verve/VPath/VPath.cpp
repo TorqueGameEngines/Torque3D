@@ -166,8 +166,9 @@ void VPath::onRemove( void )
     Parent::onRemove();
 }
 
-void VPath::initPersistFields( void )
+void VPath::initPersistFields()
 {
+   docsURL;
     Parent::initPersistFields();
 
     addProtectedField( "PathType", TYPEID<ePathType>(), Offset( mPathType, VPath ), &setPathType, &defaultProtectedGetFn, "The type of path this is." );

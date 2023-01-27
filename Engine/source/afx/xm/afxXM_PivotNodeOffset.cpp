@@ -102,6 +102,7 @@ afxXM_PivotNodeOffsetData::afxXM_PivotNodeOffsetData(const afxXM_PivotNodeOffset
 
 void afxXM_PivotNodeOffsetData::initPersistFields()
 {
+   docsURL;
   addField("nodeName",      TypeString,   Offset(node_name, afxXM_PivotNodeOffsetData),
     "...");
   addField("nodeIsStatic",  TypeBool, Offset(node_is_static, afxXM_PivotNodeOffsetData),

@@ -34,8 +34,9 @@ VParticleEffectToggleEvent::VParticleEffectToggleEvent( void ) :
     setLabel( "ToggleEvent" );
 }
 
-void VParticleEffectToggleEvent::initPersistFields( void )
+void VParticleEffectToggleEvent::initPersistFields()
 {
+   docsURL;
     Parent::initPersistFields();
 
     addField( "Action", TYPEID<VActionToggle>(), Offset( mEventType, VParticleEffectToggleEvent ) );

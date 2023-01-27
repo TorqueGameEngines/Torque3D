@@ -36,8 +36,9 @@ VSlowMoEvent::VSlowMoEvent( void ) :
     setLabel( "SlowMoEvent" );
 }
 
-void VSlowMoEvent::initPersistFields( void )
+void VSlowMoEvent::initPersistFields()
 {
+   docsURL;
     Parent::initPersistFields();
 
     addField( "TimeScale", TypeF32, Offset( mTimeScale, VSlowMoEvent ), "The Time Scale to be applied to the Root Controller." );

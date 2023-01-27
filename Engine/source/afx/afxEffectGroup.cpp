@@ -140,6 +140,7 @@ void afxEffectGroupData::unpack_fx(BitStream* stream, afxEffectList& fx)
 
 void afxEffectGroupData::initPersistFields()
 {
+   docsURL;
   addField("groupEnabled",   TypeBool,    myOffset(group_enabled),
     "...");
   addField("count",          TypeS32,     myOffset(group_count),

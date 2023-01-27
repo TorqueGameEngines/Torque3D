@@ -216,6 +216,7 @@ afxXM_WaveColorData::afxXM_WaveColorData(const afxXM_WaveColorData& other, bool 
 
 void afxXM_WaveColorData::initPersistFields()
 {
+   docsURL;
   addField("a",               TypeColorF,      Offset(a, afxXM_WaveColorData),
     "...");
   addField("b",               TypeColorF,      Offset(b, afxXM_WaveColorData),
@@ -331,6 +332,7 @@ afxXM_WaveRiderColorData::afxXM_WaveRiderColorData(const afxXM_WaveRiderColorDat
 
 void afxXM_WaveRiderColorData::initPersistFields()
 {
+   docsURL;
   addField("a",               TypeColorF,      Offset(a, afxXM_WaveRiderColorData),
     "...");
   addField("b",               TypeColorF,      Offset(b, afxXM_WaveRiderColorData),

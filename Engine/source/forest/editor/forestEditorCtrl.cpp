@@ -59,6 +59,7 @@ bool ForestEditorCtrl::onAdd()
 
 void ForestEditorCtrl::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 

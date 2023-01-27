@@ -199,6 +199,7 @@ void SimXMLDocument::onRemove()
 // -----------------------------------------------------------------------------
 void SimXMLDocument::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 

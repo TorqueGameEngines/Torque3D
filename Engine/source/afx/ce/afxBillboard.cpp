@@ -91,6 +91,7 @@ EndImplementEnumType;
 
 void afxBillboardData::initPersistFields()
 {
+   docsURL;
   addField("color",           TypeColorF,     myOffset(color),
     "The color assigned to the quadrangle geometry. The way it combines with the given "
     "texture varies according to the setting of the textureFunction field.");

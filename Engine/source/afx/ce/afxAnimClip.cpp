@@ -101,6 +101,7 @@ void afxAnimClipData::onStaticModified(const char* slot, const char* newValue)
 
 void afxAnimClipData::initPersistFields()
 {
+   docsURL;
   addField("clipName",          TYPEID< StringTableEntry >(),  myOffset(clip_name),
     "The name of an animation sequence to be played by a ShapeBase-derived object to which this effect is "
     "constrained. Also works on afxModel effects.\n"

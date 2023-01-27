@@ -329,6 +329,7 @@ FRangeValidator missileBallisticCoefficientValidator(0, 1);
 
 void afxMagicMissileData::initPersistFields()
 {
+   docsURL;
    static IRangeValidatorScaled ticksFromMS(TickMs, 0, MaxLifetimeTicks);
 
    addGroup("Shapes");
@@ -983,6 +984,7 @@ afxMagicMissile::~afxMagicMissile()
 //--------------------------------------------------------------------------
 void afxMagicMissile::initPersistFields()
 {
+   docsURL;
    addGroup("Physics");
    addField("initialPosition", TypePoint3F, Offset(mCurrPosition, afxMagicMissile) ,
      "Initial starting position for this missile.");

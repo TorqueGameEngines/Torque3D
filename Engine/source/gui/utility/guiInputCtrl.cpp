@@ -70,6 +70,7 @@ GuiInputCtrl::GuiInputCtrl()
 
 void GuiInputCtrl::initPersistFields()
 {
+   docsURL;
    addGroup("GuiInputCtrl");
    addField("sendAxisEvents", TypeBool, Offset(mSendAxisEvents, GuiInputCtrl),
       "If true, onAxisEvent callbacks will be sent for SI_AXIS Move events (Default false).");

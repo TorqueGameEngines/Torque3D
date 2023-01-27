@@ -128,6 +128,7 @@ afxXM_PathConformData::afxXM_PathConformData(const afxXM_PathConformData& other,
 
 void afxXM_PathConformData::initPersistFields()
 {
+   docsURL;
   addField("paths",           TypeString,   Offset(paths_string, afxXM_PathConformData),
     "...");
   addField("pathMult",        TypeF32,      Offset(path_mult, afxXM_PathConformData),

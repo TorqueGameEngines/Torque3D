@@ -36,8 +36,9 @@ VSceneObjectGroup::VSceneObjectGroup( void ) :
     setLabel( "SceneObjectGroup" );
 };
 
-void VSceneObjectGroup::initPersistFields( void )
+void VSceneObjectGroup::initPersistFields()
 {
+   docsURL;
     Parent::initPersistFields();
 
     addField( "Reference", TypeRealString, Offset( mDataReference, VSceneObjectGroup ), "The name of the data field referencing the targeted object." );

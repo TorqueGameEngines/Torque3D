@@ -69,6 +69,7 @@ void SceneZoneSpace::onSceneRemove()
 
 void SceneZoneSpace::initPersistFields()
 {
+   docsURL;
    addGroup( "Zoning" );
 
       addProtectedField( "zoneGroup", TypeS32, Offset( mZoneGroup, SceneZoneSpace ),

@@ -260,6 +260,7 @@ FRangeValidator CornerAngle(0.0f, 90.0f);
 
 void NavMesh::initPersistFields()
 {
+   docsURL;
    addGroup("NavMesh Options");
 
    addField("fileName", TypeString, Offset(mFileName, NavMesh),

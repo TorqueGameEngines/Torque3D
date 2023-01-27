@@ -67,6 +67,7 @@ U32 afxCameraData::sCameraCollisionMask = TerrainObjectType | InteriorLikeObject
 
 void afxCameraData::initPersistFields()
 {
+   docsURL;
   Con::addVariable("pref::afxCamera::collisionMask", TypeS32, &sCameraCollisionMask);
 
   Parent::initPersistFields();

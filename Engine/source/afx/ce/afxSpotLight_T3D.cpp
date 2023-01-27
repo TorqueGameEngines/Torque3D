@@ -66,6 +66,7 @@ afxT3DSpotLightData::afxT3DSpotLightData(const afxT3DSpotLightData& other, bool 
 //
 void afxT3DSpotLightData::initPersistFields()
 {
+   docsURL;
    addGroup( "Light" );
       
       addField( "range", TypeF32, Offset( mRange, afxT3DSpotLightData ),

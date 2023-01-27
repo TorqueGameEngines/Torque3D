@@ -36,6 +36,7 @@ IMPLEMENT_CONOBJECT( DeclaredAssets );
 
 void DeclaredAssets::initPersistFields()
 {
+   docsURL;
     // Call Parent.
     Parent::initPersistFields();
         

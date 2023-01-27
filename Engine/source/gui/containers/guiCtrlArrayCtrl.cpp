@@ -53,6 +53,7 @@ GuiControlArrayControl::GuiControlArrayControl()
 
 void GuiControlArrayControl::initPersistFields()
 {
+   docsURL;
    addGroup( "Array" );
    
       addField( "colCount",     TypeS32,       Offset(mCols,        GuiControlArrayControl),

@@ -36,8 +36,9 @@ VSoundEffectEvent::VSoundEffectEvent( void ) :
     setLabel( "SoundEvent" );
 }
 
-void VSoundEffectEvent::initPersistFields( void )
+void VSoundEffectEvent::initPersistFields()
 {
+   docsURL;
     Parent::initPersistFields();
 
     addProtectedField( "SoundEffect", TYPEID<VTorque::SoundEffectType>(), Offset( mSoundEffect, VSoundEffectEvent ), &setSoundData, &defaultProtectedGetFn, "" );

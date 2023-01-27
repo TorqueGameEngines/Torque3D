@@ -279,6 +279,7 @@ ConsoleDocClass(  GFXSamplerStateData,
 
 void GFXSamplerStateData::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 
    addGroup( "Address Mode" );

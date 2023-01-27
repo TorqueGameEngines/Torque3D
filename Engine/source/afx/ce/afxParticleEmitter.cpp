@@ -232,6 +232,7 @@ afxParticleEmitterVectorData::afxParticleEmitterVectorData(const afxParticleEmit
 
 void afxParticleEmitterVectorData::initPersistFields()
 {
+   docsURL;
   Parent::initPersistFields();
 }
 
@@ -289,6 +290,7 @@ afxParticleEmitterConeData::afxParticleEmitterConeData(const afxParticleEmitterC
 
 void afxParticleEmitterConeData::initPersistFields()
 {
+   docsURL;
   addField("spreadMin",   TypeF32,    Offset(spread_min, afxParticleEmitterConeData),
     "...");
   addField("spreadMax",   TypeF32,    Offset(spread_max, afxParticleEmitterConeData),
@@ -399,6 +401,7 @@ EndImplementEnumType;
 
 void afxParticleEmitterPathData::initPersistFields()
 {
+   docsURL;
   addField("paths",         TypeString,  Offset(epaths_string,    afxParticleEmitterPathData),
     "...");
 
@@ -642,6 +645,7 @@ afxParticleEmitterDiscData::afxParticleEmitterDiscData(const afxParticleEmitterD
 
 void afxParticleEmitterDiscData::initPersistFields()
 {
+   docsURL;
   addField("radiusMin",   TypeF32,    Offset(pe_radius_min, afxParticleEmitterDiscData),
     "...");
   addField("radiusMax",   TypeF32,    Offset(pe_radius_max, afxParticleEmitterDiscData),

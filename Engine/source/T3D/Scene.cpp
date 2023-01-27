@@ -24,6 +24,7 @@ Scene::~Scene()
 
 void Scene::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 
    addGroup("Internal");

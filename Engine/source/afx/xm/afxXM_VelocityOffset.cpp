@@ -166,6 +166,7 @@ afxXM_VelocityOffsetData::afxXM_VelocityOffsetData(const afxXM_VelocityOffsetDat
 
 void afxXM_VelocityOffsetData::initPersistFields()
 {
+   docsURL;
   addField("offsetFactor",    TypeF32,      Offset(offset_factor, afxXM_VelocityOffsetData),
     "...");
   addField("offsetPos2",      TypeBool,     Offset(offset_pos2, afxXM_VelocityOffsetData),

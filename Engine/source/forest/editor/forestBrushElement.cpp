@@ -58,7 +58,8 @@ ForestBrushElement::ForestBrushElement()
 
 
 void ForestBrushElement::initPersistFields()
-{   
+{
+   docsURL;
    Parent::initPersistFields();
 
    addGroup( "ForestBrushElement" );

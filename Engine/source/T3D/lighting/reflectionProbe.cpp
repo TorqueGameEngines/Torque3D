@@ -151,6 +151,7 @@ ReflectionProbe::~ReflectionProbe()
 //-----------------------------------------------------------------------------
 void ReflectionProbe::initPersistFields()
 {
+   docsURL;
    addField("canDamp", TypeBool, Offset(mCanDamp, ReflectionProbe),"wetness allowed");
    addGroup("Rendering");
       addProtectedField("enabled", TypeBool, Offset(mEnabled, ReflectionProbe),

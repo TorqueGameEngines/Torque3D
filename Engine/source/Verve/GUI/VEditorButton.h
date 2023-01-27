@@ -39,7 +39,7 @@ public:
 
     VEditorButton();
 
-    static void     initPersistFields( void );
+    static void     initPersistFields();
 
     void            onMouseDown( const GuiEvent &pEvent );
     void            onMouseUp( const GuiEvent &pEvent );

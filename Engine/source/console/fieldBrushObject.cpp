@@ -51,6 +51,7 @@ FieldBrushObject::FieldBrushObject()
 //-----------------------------------------------------------------------------
 void FieldBrushObject::initPersistFields()
 {
+   docsURL;
     // Add Fields.
     addProtectedField("description", TypeCaseString, Offset(mDescription, FieldBrushObject), setDescription, defaultProtectedGetFn, "");
     addProtectedField("sortName", TypeString, Offset(mSortName, FieldBrushObject), setSortName, defaultProtectedGetFn, "");

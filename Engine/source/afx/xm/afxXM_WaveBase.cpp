@@ -143,6 +143,7 @@ EndImplementEnumType;
 
 void afxXM_WaveBaseData::initPersistFields()
 {
+   docsURL;
   addField("waveform",      TYPEID< afxXM_WaveBaseData::WaveFormType >(),  Offset(waveform_type, afxXM_WaveBaseData),
     "...");
   addField("parameter",     TYPEID< afxXM_WaveBaseData::WaveParamType >(), Offset(parameter, afxXM_WaveBaseData),
@@ -365,6 +366,7 @@ afxXM_WaveRiderBaseData::afxXM_WaveRiderBaseData(const afxXM_WaveRiderBaseData& 
 
 void afxXM_WaveRiderBaseData::initPersistFields()
 {
+   docsURL;
   addField("waveform",      TYPEID< afxXM_WaveBaseData::WaveFormType >(),  Offset(waveform_type, afxXM_WaveRiderBaseData),
     "...");
   addField("parameter",     TYPEID< afxXM_WaveBaseData::WaveParamType >(), Offset(parameter, afxXM_WaveRiderBaseData),

@@ -34,8 +34,9 @@ VSpawnSphereSpawnTargetEvent::VSpawnSphereSpawnTargetEvent( void )
     setLabel( "SpawnTargetEvent" );
 }
 
-void VSpawnSphereSpawnTargetEvent::initPersistFields( void )
+void VSpawnSphereSpawnTargetEvent::initPersistFields()
 {
+   docsURL;
     Parent::initPersistFields();
 }
 

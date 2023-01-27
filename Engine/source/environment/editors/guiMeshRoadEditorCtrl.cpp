@@ -214,6 +214,7 @@ bool GuiMeshRoadEditorCtrl::onAdd()
 
 void GuiMeshRoadEditorCtrl::initPersistFields()
 {
+   docsURL;
    addField( "DefaultWidth",        TypeF32,    Offset( mDefaultWidth, GuiMeshRoadEditorCtrl ) );
 	addField( "DefaultDepth",        TypeF32,    Offset( mDefaultDepth, GuiMeshRoadEditorCtrl ) );
 	addField( "DefaultNormal",       TypePoint3F,Offset( mDefaultNormal, GuiMeshRoadEditorCtrl ) );

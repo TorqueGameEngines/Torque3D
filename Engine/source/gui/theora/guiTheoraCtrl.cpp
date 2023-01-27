@@ -82,6 +82,7 @@ GuiTheoraCtrl::GuiTheoraCtrl()
 
 void GuiTheoraCtrl::initPersistFields()
 {
+   docsURL;
    addGroup( "Playback");
 
       addField( "theoraFile",       TypeStringFilename,  Offset( mFilename,         GuiTheoraCtrl ),

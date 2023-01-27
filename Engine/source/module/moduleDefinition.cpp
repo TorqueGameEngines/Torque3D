@@ -79,6 +79,7 @@ mModuleId(StringTable->EmptyString()),
 
 void ModuleDefinition::initPersistFields()
 {
+   docsURL;
     // Call parent.
     Parent::initPersistFields();
 

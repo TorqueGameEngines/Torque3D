@@ -147,6 +147,7 @@ Portal::Portal()
 
 void Portal::initPersistFields()
 {
+   docsURL;
    addGroup( "Zoning" );
 
       addProtectedField( "frontSidePassable", TypeBool, Offset( mPassableSides[ FrontSide ], Portal ),

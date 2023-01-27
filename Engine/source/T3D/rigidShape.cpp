@@ -512,6 +512,7 @@ void RigidShapeData::unpackData(BitStream* stream)
 
 void RigidShapeData::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 
    addGroup( "Particle Effects" );
@@ -1685,6 +1686,7 @@ void RigidShape::consoleInit()
 
 void RigidShape::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 

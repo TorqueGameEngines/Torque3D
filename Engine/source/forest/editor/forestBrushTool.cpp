@@ -104,7 +104,8 @@ ConsoleDocClass( ForestBrushTool,
 );
 
 void ForestBrushTool::initPersistFields()
-{  
+{
+   docsURL;
    addGroup( "ForestBrushTool" );
       
       addField( "mode", TYPEID< BrushMode >(), Offset( mMode, ForestBrushTool) );

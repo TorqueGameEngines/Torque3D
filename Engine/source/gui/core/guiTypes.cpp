@@ -350,6 +350,7 @@ GuiControlProfile::~GuiControlProfile()
 
 void GuiControlProfile::initPersistFields()
 {
+   docsURL;
    addGroup( "Behavior" );
    
       addField( "tab",           TypeBool,       Offset(mTabable, GuiControlProfile));

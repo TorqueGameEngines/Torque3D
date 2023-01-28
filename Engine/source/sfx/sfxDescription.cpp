@@ -213,6 +213,7 @@ SFXDescription::SFXDescription(const SFXDescription& other, bool temp_clone)
 
 void SFXDescription::initPersistFields()
 {
+   docsURL;
    addGroup( "Playback" );
    
       addField( "sourceGroup",         TypeSFXSourceName, Offset( mSourceGroup, SFXDescription ),

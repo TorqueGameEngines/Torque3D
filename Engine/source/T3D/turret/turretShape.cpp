@@ -131,6 +131,7 @@ TurretShapeData::TurretShapeData()
 
 void TurretShapeData::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
    addGroup("Steering");
       addField("zRotOnly",       TypeBool,         Offset(zRotOnly,       TurretShapeData),

@@ -137,6 +137,7 @@ EndImplementEnumType;
 
 void ItemData::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
    addGroup("Physics");
       addField("friction",          TypeF32,       Offset(friction,           ItemData), "A floating-point value specifying how much velocity is lost to impact and sliding friction.");

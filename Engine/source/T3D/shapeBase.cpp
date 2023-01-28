@@ -534,6 +534,7 @@ bool ShapeBaseData::_setMass( void* object, const char* index, const char* data 
 
 void ShapeBaseData::initPersistFields()
 {
+   docsURL;
    addGroup( "Shapes" );
       INITPERSISTFIELD_SHAPEASSET(Shape, ShapeBaseData, "The source shape asset.");
       addField("computeCRC", TypeBool, Offset(computeCRC, ShapeBaseData),

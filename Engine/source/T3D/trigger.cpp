@@ -98,6 +98,7 @@ bool TriggerData::onAdd()
 
 void TriggerData::initPersistFields()
 {
+   docsURL;
    addGroup("Callbacks");
 
       addField( "tickPeriodMS",  TypeS32,    Offset( tickPeriodMS, TriggerData ),

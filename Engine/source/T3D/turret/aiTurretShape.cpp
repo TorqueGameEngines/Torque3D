@@ -124,6 +124,7 @@ AITurretShapeData::AITurretShapeData()
 
 void AITurretShapeData::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
    addGroup("AI Steering");
       addField("maxScanHeading",       TypeF32,       Offset(maxScanHeading,        AITurretShapeData),

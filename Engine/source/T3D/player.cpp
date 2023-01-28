@@ -704,6 +704,7 @@ bool PlayerData::isJumpAction(U32 action)
 
 void PlayerData::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 
    addField( "pickupRadius", TypeF32, Offset(pickupRadius, PlayerData),

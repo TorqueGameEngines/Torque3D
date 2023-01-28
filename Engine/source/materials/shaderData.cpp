@@ -71,6 +71,7 @@ ShaderData::ShaderData()
 
 void ShaderData::initPersistFields()
 {
+   docsURL;
    addField("DXVertexShaderFile",   TypeStringFilename,  Offset(mDXVertexShaderName,   ShaderData),
 	   "@brief %Path to the DirectX vertex shader file to use for this ShaderData.\n\n"
 	   "It must contain only one program and no pixel shader, just the vertex shader."

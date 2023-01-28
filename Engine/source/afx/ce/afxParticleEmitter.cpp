@@ -70,6 +70,7 @@ afxParticleEmitterData::afxParticleEmitterData(const afxParticleEmitterData& oth
 
 void afxParticleEmitterData::initPersistFields()
 {
+   docsURL;
   addField("fadeVelocity",      TypeBool,    Offset(fade_velocity, afxParticleEmitterData),
     "If true, the initial velocity of emitted particles is multiplied by the fade amount "
     "of the containing effect wrapper. As the effect fades-in and out, so does the "

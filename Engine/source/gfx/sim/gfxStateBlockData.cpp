@@ -65,6 +65,7 @@ GFXStateBlockData::GFXStateBlockData()
 
 void GFXStateBlockData::initPersistFields()
 {
+   docsURL;
    addGroup( "Alpha Blending" );
 
       addField( "blendDefined", TypeBool, Offset(mState.blendDefined, GFXStateBlockData),

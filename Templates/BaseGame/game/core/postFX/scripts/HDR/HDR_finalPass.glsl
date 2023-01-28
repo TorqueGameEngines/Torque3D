@@ -63,7 +63,7 @@ vec3 Tonemap(vec3 x)
     //ACES      
     if(g_fTonemapMode == 1.0f)    
    {
-	  x = ACESFitted(x, whitePoint) * 1.4f;  //ACES is crushing our blacks, need to pre-expose!    	  
+	  x = ACESFitted(x, whitePoint);  //ACES is crushing our blacks, need to pre-expose!    	  
    }             
    //Filmic Helji	       
    if(g_fTonemapMode == 2.0f) 
@@ -87,7 +87,7 @@ vec3 Tonemap(vec3 x)
    //Linear Tonemap  
    else if (g_fTonemapMode == 5.0)
    {  
-      x = toLinear(TO_Linear(toGamma(x)));    	   
+      x = toLinear(x);    	   
    }
         
    return x;
@@ -99,10 +99,8 @@ void main()
    float adaptedLum = texture( luminanceTex, vec2( 0.5f, 0.5f ) ).r;
    vec4 bloom = texture( bloomTex, IN_uv2 );
 
-   
-        	    
    // Add the bloom effect.     
-   _sample += bloom;  
+   _sample.rgb +=bloom.rgb;  
            
    //Apply Exposure     
    _sample.rgb *= TO_Exposure(_sample.rgb, exposureValue, colorFilter);

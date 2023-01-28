@@ -21,37 +21,60 @@
 //-----------------------------------------------------------------------------
 
 #include "core/rendering/shaders/postFX/postFx.hlsl"
-
-#define KERNEL_SAMPLES 9
-static const float3 KERNEL[9] = {
-  float3( 0.0000f, 0.0000f, 0.2500f),
-  float3( 1.0000f, 0.0000f, 0.1250f),
-  float3( 0.0000f, 1.0000f, 0.1250f),
-  float3(-1.0000f, 0.0000f, 0.1250f),
-  float3( 0.0000f,-1.0000f, 0.1250f),
-  float3( 1.0000f, 1.0000f, 0.0625f),
-  float3( 1.0000f,-1.0000f, 0.0625f),
-  float3(-1.0000f,-1.0000f, 0.0625f),
-  float3(-1.0000f, 1.0000f, 0.0625f)
-};
+#include "core/postFX/scripts/HDR/HDR_colorUtils.hlsl"
 
 TORQUE_UNIFORM_SAMPLER2D(inputTex, 0);
 uniform float2 oneOverTargetSize;
+uniform int mipId;
  
 float4 main(PFXVertToPix IN) : TORQUE_TARGET0
 {
   float4 downSample = float4(0, 0, 0, 0);
+  float x = oneOverTargetSize.x;
+  float y = oneOverTargetSize.y;
   
-  [unroll]
-  for (int i=0; i<KERNEL_SAMPLES; i++)
+  float3 a = TORQUE_TEX2D(inputTex, float2(IN.uv0.x - 2 * x, IN.uv0.y + 2*y)).rgb;
+  float3 b = TORQUE_TEX2D(inputTex, float2(IN.uv0.x		   , IN.uv0.y + 2*y)).rgb;
+  float3 c = TORQUE_TEX2D(inputTex, float2(IN.uv0.x + 2 * x, IN.uv0.y + 2*y)).rgb;
+  
+  float3 d = TORQUE_TEX2D(inputTex, float2(IN.uv0.x - 2 * x, IN.uv0.y)).rgb;
+  float3 e = TORQUE_TEX2D(inputTex, float2(IN.uv0.x		   , IN.uv0.y)).rgb;
+  float3 f = TORQUE_TEX2D(inputTex, float2(IN.uv0.x + 2 * x, IN.uv0.y)).rgb;
+  
+  float3 g = TORQUE_TEX2D(inputTex, float2(IN.uv0.x - 2 * x, IN.uv0.y - 2*y)).rgb;
+  float3 h = TORQUE_TEX2D(inputTex, float2(IN.uv0.x		   , IN.uv0.y - 2*y)).rgb;
+  float3 i = TORQUE_TEX2D(inputTex, float2(IN.uv0.x + 2 * x, IN.uv0.y - 2*y)).rgb;
+  
+  float3 j = TORQUE_TEX2D(inputTex, float2(IN.uv0.x - x, IN.uv0.y + y)).rgb;
+  float3 k = TORQUE_TEX2D(inputTex, float2(IN.uv0.x + x, IN.uv0.y + y)).rgb;
+  float3 l = TORQUE_TEX2D(inputTex, float2(IN.uv0.x - x, IN.uv0.y - y)).rgb;
+  float3 m = TORQUE_TEX2D(inputTex, float2(IN.uv0.x + x, IN.uv0.y - y)).rgb;
+  
+  float3 group[5];
+  switch (mipId)
   {
-    // XY: Sample Offset
-    // Z: Sample Weight
-    float3 offsetWeight = KERNEL[i];
-    float2 offset = offsetWeight.xy * oneOverTargetSize;
-    float weight = offsetWeight.z;
-    float4 sampleCol = TORQUE_TEX2D(inputTex, IN.uv0 + offset);
-    downSample += sampleCol * weight;
+	case 0:
+		group[0] = (a+b+d+e) * (0.125f/4.0f);
+		group[1] = (b+c+e+f) * (0.125f/4.0f);
+		group[2] = (d+e+g+h) * (0.125f/4.0f);
+		group[3] = (e+f+h+i) * (0.125f/4.0f);
+		group[4] = (j+k+l+m) * (0.5f/4.0f);
+		group[0] *= KarisAverage(group[0]);
+		group[1] *= KarisAverage(group[1]);
+		group[2] *= KarisAverage(group[2]);
+		group[3] *= KarisAverage(group[3]);
+		group[4] *= KarisAverage(group[4]);
+		downSample.rgb = group[0]+group[1]+group[2]+group[3]+group[4];
+		downSample.a = 1.0;
+		break;
+		
+	default:
+		downSample.rgb = e*0.125;
+		downSample.rgb += (a+c+g+i)*0.03125;
+		downSample.rgb += (b+d+f+h)*0.0625;
+		downSample.rgb += (j+k+l+m)*0.125;
+		downSample.a = 1.0;
+		break;
   }
   
   return downSample;

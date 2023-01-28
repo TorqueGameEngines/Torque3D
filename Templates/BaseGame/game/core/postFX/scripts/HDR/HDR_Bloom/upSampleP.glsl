@@ -23,22 +23,7 @@
 #include "core/rendering/shaders/gl/hlslCompat.glsl"
 #include "core/rendering/shaders/postFX/gl/postFx.glsl"
 #include "shadergen:/autogenConditioners.h"
-
-#line 27
-
-#define KERNEL_SAMPLES 9
-const vec3 KERNEL[9] = vec3[](
-  vec3( 0.0000, 0.0000, 0.5000),
-  vec3( 1.0000, 0.0000, 0.0625),
-  vec3( 0.0000, 1.0000, 0.0625),
-  vec3(-1.0000, 0.0000, 0.0625),
-  vec3( 0.0000,-1.0000, 0.0625),
-  vec3( 0.7070, 0.7070, 0.0625),
-  vec3( 0.7070,-0.7070, 0.0625),
-  vec3(-0.7070,-0.7070, 0.0625),
-  vec3(-0.7070, 0.7070, 0.0625)
-);
-
+#line 26
 uniform sampler2D nxtTex;
 uniform sampler2D mipTex;
 uniform float filterRadius;
@@ -49,17 +34,26 @@ out vec4 OUT_col;
 void main()
 {
   vec4 upSample = vec4(0, 0, 0, 0);
+  float x = filterRadius*oneOverTargetSize.x;
+  float y = filterRadius*oneOverTargetSize.y;
 
-  for (int i=0; i<KERNEL_SAMPLES; i++)
-  {
-    // XY: Sample Offset
-    // Z: Sample Weight
-    vec3 offsetWeight = KERNEL[i];
-    vec2 offsetXY = offsetWeight.xy * oneOverTargetSize * filterRadius;
-    float weight = offsetWeight.z;
-    vec4 sampleCol = texture(mipTex, IN_uv1 + offsetXY);
-    upSample += sampleCol * weight;
-  }
+  vec3 a = texture(mipTex, vec2(IN_uv1.x - x, IN_uv1.y + y)).rgb;
+  vec3 b = texture(mipTex, vec2(IN_uv1.x,     IN_uv1.y + y)).rgb;
+  vec3 c = texture(mipTex, vec2(IN_uv1.x + x, IN_uv1.y + y)).rgb;
+
+  vec3 d = texture(mipTex, vec2(IN_uv1.x - x, IN_uv1.y)).rgb;
+  vec3 e = texture(mipTex, vec2(IN_uv1.x,     IN_uv1.y)).rgb;
+  vec3 f = texture(mipTex, vec2(IN_uv1.x + x, IN_uv1.y)).rgb;
+
+  vec3 g = texture(mipTex, vec2(IN_uv1.x - x, IN_uv1 - y)).rgb;
+  vec3 h = texture(mipTex, vec2(IN_uv1.x,     IN_uv1 - y)).rgb;
+  vec3 i = texture(mipTex, vec2(IN_uv1.x + x, IN_uv1 - y)).rgb;
+
+  upSample.rgb = e*4.0;
+  upSample.rgb += (b+d+f+h)*2.0;
+  upSample.rgb += (a+c+g+i);
+  upSample.rgb *= 1.0 / 16.0; 
+  upSample.a = 1.0;
   
   upSample = texture(nxtTex, IN_uv0) + upSample;
   

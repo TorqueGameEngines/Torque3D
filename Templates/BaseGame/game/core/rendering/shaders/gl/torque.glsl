@@ -311,49 +311,98 @@ bool getFlag(float flags, float num)
    return (mod(process, pow(2.0, squareNum)) >= squareNum); 
 }
 
-// #define TORQUE_STOCK_GAMMA
-#ifdef TORQUE_STOCK_GAMMA
+// RGB -> HSL
+vec3 rgbToHSL(vec3 col)
+{
+	float cmax, cmin, h, s, l;
+	cmax = max(col.r, max(col.g, col.b));
+	cmin = min(col.r, min(col.g, col.b));
+	l = min(1.0, (cmax + cmin) / 2.0);
+
+    if (cmax == cmin) {
+    h = s = 0.0; /* achromatic */
+    }
+    else 
+	{
+        float cdelta = cmax - cmin;
+        s = l > 0.5 ? cdelta / (2.0 - cmax - cmin) : cdelta / (cmax + cmin);
+        if (cmax == col.r) {
+          h = (col.g - col.b) / cdelta + (col.g < col.b ? 6.0 : 0.0);
+        }
+        else if (cmax == col.g) {
+          h = (col.b - col.r) / cdelta + 2.0;
+        }
+        else {
+          h = (col.r - col.b) / cdelta + 4.0;
+        }
+    }
+    h /= 6.0;
+
+	
+	return vec3(h,s,l);
+}
+
+// HSL -> RGB
+vec3 hslToRGB(vec3 hsl)
+{
+	float nr, ng, nb, chroma, h, s, l;
+	h = hsl.r;
+	s = hsl.g;
+	l = hsl.b;
+	
+	nr = abs(h * 6.0 - 3.0) - 1.0;
+	ng = 2.0 - abs(h * 6.0 - 2.0);
+	nb = 2.0 - abs(h * 6.0 - 4.0);
+	
+	nr = clamp(nr, 0.0, 1.0);
+	nb = clamp(nb, 0.0, 1.0);
+	ng = clamp(ng, 0.0, 1.0);
+
+	chroma = (1.0 - abs(2.0 * l - 1.0)) * s;
+	
+	return vec3((nr - 0.5) * chroma + l, (ng - 0.5) * chroma + l, (nb - 0.5) * chroma + l);
+}
+
 // Sample in linear space. Decodes gamma.
+float toLinear(float col)
+{
+	if(col < 0.04045)
+	{
+		return (col < 0.0) ? 0.0 : col * (1.0 / 12.92);
+	}
+	
+	return pow(abs(col + 0.055) * (1.0 / 1.055), 2.4);
+}
 vec4 toLinear(vec4 tex)
 {
-   return tex;
+   return vec4(toLinear(tex.r),toLinear(tex.g),toLinear(tex.b), tex.a);
 }
-// Encodes gamma.
-vec4 toGamma(vec4 tex)
-{
-   return tex;
-}
+
 vec3 toLinear(vec3 tex)
 {
-   return tex;
+   return vec3(toLinear(tex.r),toLinear(tex.g),toLinear(tex.b));
 }
+
 // Encodes gamma.
-vec3 toGamma(vec3 tex)
+float toGamma(float col)
 {
-   return tex;
+	if(col < 0.0031308)
+	{
+		return (col < 0.0) ? 0.0 : col * 12.92;
+	}
+	
+	return 1.055 * pow(abs(col), 1.0 / 2.4) - 0.055;
 }
-#else
-// Sample in linear space. Decodes gamma.
-vec4 toLinear(vec4 tex)
-{
-   return vec4(pow(abs(tex.rgb), vec3(2.2)), tex.a);
-}
-// Encodes gamma.
+
 vec4 toGamma(vec4 tex)
 {
-   return vec4(pow(abs(tex.rgb), vec3(1.0/2.2)), tex.a);
+   return vec4(toGamma(tex.r), toGamma(tex.g), toGamma(tex.b), tex.a);
 }
-// Sample in linear space. Decodes gamma.
-vec3 toLinear(vec3 tex)
-{
-   return pow(abs(tex), vec3(2.2));
-}
-// Encodes gamma.
+
 vec3 toGamma(vec3 tex)
 {
-   return pow(abs(tex), vec3(1.0/2.2));
+   return vec3(toGamma(tex.r), toGamma(tex.g), toGamma(tex.b));
 }
-#endif //
 
 vec3 PBRFresnel(vec3 albedo, vec3 indirect, float metalness, float fresnel)
 {

@@ -58,7 +58,7 @@ float3 Tonemap(float3 x)
     //ACES           
     if(g_fTonemapMode == 1.0f)    
    {              
-      x = ACESFitted(x, whitePoint) * 1.4f; //ACES is crushing our blacks, need to pre-expose!  
+      x = ACESFitted(x, whitePoint); //ACES is crushing our blacks, need to pre-expose!  
    }                             
    //Filmic Helji	       
    if(g_fTonemapMode == 2.0f) 
@@ -82,7 +82,7 @@ float3 Tonemap(float3 x)
    //Linear Tonemap  
    else if (g_fTonemapMode == 5.0)
    {  
-      x = toLinear(TO_Linear(toGamma(x)));   	   
+      x = toLinear(x);   	   
    }
         
    return x;
@@ -95,7 +95,7 @@ float4 main( PFXVertToPix IN ) : TORQUE_TARGET0
    float4 bloom = TORQUE_TEX2D( bloomTex, IN.uv2 ); 
         	    
    // Add the bloom effect.     
-   sample += bloom;         
+   sample.rgb += bloom.rgb;        
    		 	
 	//Apply Exposure     
    sample.rgb *= TO_Exposure(sample.rgb, exposureValue, colorFilter); 

@@ -2896,7 +2896,7 @@ const char* getDocsLink(const char* filename, U32 lineNumber)
 bool getDocsURL(void* obj, const char* array, const char* data)
 {
    ConsoleObject* cObj = static_cast<ConsoleObject*>(obj);
-   if (cObj->mDocsClick)
+   //if (cObj->mDocsClick)
    {
 
       String docpage = String(cObj->findField(StringTable->insert("docsURL"))->pFieldDocs);
@@ -2906,7 +2906,7 @@ bool getDocsURL(void* obj, const char* array, const char* data)
       Con::errorf("%s", docpage.c_str());
       gotoWebPage(docpage.c_str());
    }
-   cObj->mDocsClick = !cObj->mDocsClick;
+   //cObj->mDocsClick = !cObj->mDocsClick;
    return false;
 }
 

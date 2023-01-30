@@ -147,6 +147,7 @@ FRangeValidator spinRandFValidator(-1000.f, 1000.f);
 //-----------------------------------------------------------------------------
 void ParticleData::initPersistFields()
 {
+   docsURL;
    addFieldV( "dragCoefficient", TYPEID< F32 >(), Offset(dragCoefficient, ParticleData), &dragCoefFValidator,
       "Particle physics drag amount." );
    addField( "windCoefficient", TYPEID< F32 >(), Offset(windCoefficient, ParticleData),

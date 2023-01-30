@@ -219,6 +219,7 @@ void EditTSCtrl::onRender(Point2I offset, const RectI &updateRect)
 
 void EditTSCtrl::initPersistFields()
 {
+   docsURL;
    addGroup( "Grid" );
    
       addField( "gridSize", TypeF32, Offset( mGridPlaneSize, EditTSCtrl ) );

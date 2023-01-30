@@ -92,6 +92,7 @@ TerrainMaterial::~TerrainMaterial()
 
 void TerrainMaterial::initPersistFields()
 {
+   docsURL;
    INITPERSISTFIELD_IMAGEASSET(DiffuseMap, TerrainMaterial,"Base Albedo stretched over the whole map");
    addField( "diffuseSize", TypeF32, Offset( mDiffuseSize, TerrainMaterial ), "Used to scale the diffuse map to the material square" );
 

@@ -89,6 +89,7 @@ ParticleEmitterNodeData::~ParticleEmitterNodeData()
 //-----------------------------------------------------------------------------
 void ParticleEmitterNodeData::initPersistFields()
 {
+   docsURL;
    addField( "timeMultiple", TYPEID< F32 >(), Offset(timeMultiple, ParticleEmitterNodeData),
       "@brief Time multiplier for particle emitter nodes.\n\n"
       "Increasing timeMultiple is like running the emitter at a faster rate - single-shot "
@@ -181,6 +182,7 @@ ParticleEmitterNode::~ParticleEmitterNode()
 //-----------------------------------------------------------------------------
 void ParticleEmitterNode::initPersistFields()
 {
+   docsURL;
    addField( "active", TYPEID< bool >(), Offset(mActive,ParticleEmitterNode),
       "Controls whether particles are emitted from this node." );
    addField( "emitter",  TYPEID< ParticleEmitterData >(), Offset(mEmitterDatablock, ParticleEmitterNode),

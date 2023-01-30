@@ -50,7 +50,7 @@ public:
 
     VSoundEffectEvent( void );
 
-    static void     initPersistFields( void );
+    static void     initPersistFields();
 
     static bool     setSoundData( void *pObject, const char *pArray, const char *pData );
 

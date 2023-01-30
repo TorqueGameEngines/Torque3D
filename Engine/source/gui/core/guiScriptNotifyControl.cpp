@@ -67,6 +67,7 @@ GuiScriptNotifyCtrl::~GuiScriptNotifyCtrl()
 
 void GuiScriptNotifyCtrl::initPersistFields()
 {
+   docsURL;
    // Callbacks Group
    addGroup("Callbacks");
    addField("notifyOnChildAdded", TypeBool, Offset( mOnChildAdded, GuiScriptNotifyCtrl ), "Enables/disables onChildAdded callback" );

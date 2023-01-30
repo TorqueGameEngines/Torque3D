@@ -93,6 +93,7 @@ AssetBase::~AssetBase()
 
 void AssetBase::initPersistFields()
 {
+   docsURL;
    // Call parent.
    Parent::initPersistFields();
 

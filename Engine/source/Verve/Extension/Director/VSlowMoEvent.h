@@ -42,7 +42,7 @@ public:
 
     VSlowMoEvent( void );
 
-    static void     initPersistFields( void );
+    static void     initPersistFields();
 
     // Event Methods.
 

@@ -73,6 +73,7 @@ GuiFileTreeCtrl::GuiFileTreeCtrl()
 
 void GuiFileTreeCtrl::initPersistFields()
 {
+   docsURL;
    addGroup( "File Tree" );
    addField( "rootPath",   TypeRealString,   Offset( mRootPath, GuiFileTreeCtrl ),     "Path in game directory that should be displayed in the control." );
    addProtectedField( "fileFilter", TypeRealString,   Offset( mFileFilter, GuiFileTreeCtrl ),

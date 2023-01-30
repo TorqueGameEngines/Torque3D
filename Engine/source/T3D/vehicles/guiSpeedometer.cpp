@@ -108,6 +108,7 @@ GuiSpeedometerHud::GuiSpeedometerHud()
 
 void GuiSpeedometerHud::initPersistFields()
 {
+   docsURL;
    addGroup("Needle");
 
    addField("maxSpeed", TypeF32, Offset( mMaxSpeed, GuiSpeedometerHud ),

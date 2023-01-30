@@ -95,6 +95,7 @@ SFXController::~SFXController()
 
 void SFXController::initPersistFields()
 {
+   docsURL;
    addGroup( "Debug" );
       addField( "trace", TypeBool, Offset( mTrace, SFXController ),
          "If true, the controller logs its operation to the console.\n"

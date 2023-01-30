@@ -34,8 +34,9 @@ VSpawnSphereSpawnTargetTrack::VSpawnSphereSpawnTargetTrack( void )
    setLabel( "SpawnTargetTrack" );
 }
 
-void VSpawnSphereSpawnTargetTrack::initPersistFields( void )
+void VSpawnSphereSpawnTargetTrack::initPersistFields()
 {
+   docsURL;
     // Parent Call.
     Parent::initPersistFields();
 

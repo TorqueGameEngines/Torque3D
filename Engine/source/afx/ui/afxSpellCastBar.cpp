@@ -103,6 +103,7 @@ void afxSpellCastBar::onStaticModified(const char* slotName, const char* newValu
 // STATIC 
 void afxSpellCastBar::initPersistFields()
 {
+   docsURL;
   addGroup("Colors");
   addField( "backgroundColor",  TypeColorF, Offset(rgba_background, afxSpellCastBar),
     "...");

@@ -36,8 +36,9 @@ VPostEffectToggleTrack::VPostEffectToggleTrack( void ) :
     setLabel( "PostEffectTrack" );
 }
 
-void VPostEffectToggleTrack::initPersistFields( void )
+void VPostEffectToggleTrack::initPersistFields()
 {
+   docsURL;
     Parent::initPersistFields();
 
     addField( "PostEffect", TYPEID<VTorque::PostEffectType>(), Offset( mPostEffect, VPostEffectToggleTrack ), "The name of the PostEffect object to be triggered." );

@@ -39,8 +39,9 @@ VMotionTrack::VMotionTrack( void ) :
     setLabel( "MotionTrack" );
 }
 
-void VMotionTrack::initPersistFields( void )
+void VMotionTrack::initPersistFields()
 {
+   docsURL;
     Parent::initPersistFields();
 
     addField( "Reference", TypeRealString, Offset( mDataReference, VMotionTrack ), "The name of the data field referencing the object to be attached to the path." );

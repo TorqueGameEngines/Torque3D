@@ -527,6 +527,7 @@ bool WaterBlock::setGridSizeProperty( void *obj, const char *index, const char *
 //-----------------------------------------------------------------------------
 void WaterBlock::initPersistFields()
 {
+   docsURL;
    addGroup( "WaterBlock" );
       addProtectedField( "gridElementSize", TypeF32,  Offset( mGridElementSize, WaterBlock ), 
          &setGridSizeProperty, &defaultProtectedGetFn, "Spacing between vertices in the WaterBlock mesh" );

@@ -48,7 +48,7 @@ public:
 
     VEvent( void );
 
-    static  void    initPersistFields( void );
+    static  void    initPersistFields();
 
     // Controller Methods.
 

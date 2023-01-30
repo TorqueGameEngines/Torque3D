@@ -81,6 +81,7 @@ bool GuiTerrPreviewCtrl::onAdd()
 
 void GuiTerrPreviewCtrl::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 

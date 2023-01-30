@@ -71,6 +71,7 @@ CoverPoint::~CoverPoint()
 //-----------------------------------------------------------------------------
 void CoverPoint::initPersistFields()
 {
+   docsURL;
    addGroup("CoverPoint");
 
    addField("size", TYPEID<CoverPointSize>(), Offset(mSize, CoverPoint),

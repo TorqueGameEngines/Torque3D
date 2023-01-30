@@ -127,6 +127,7 @@ FRangeValidator ValiDampnessRange(0.0f, 1.0f);
 
 void LevelInfo::initPersistFields()
 {
+   docsURL;
    addGroup( "Visibility" );
 
       addField( "nearClip", TypeF32, Offset( mNearClip, LevelInfo ), "Closest distance from the camera's position to render the world." );

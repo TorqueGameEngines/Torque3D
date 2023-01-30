@@ -262,6 +262,7 @@ LightningData::~LightningData()
 //--------------------------------------------------------------------------
 void LightningData::initPersistFields()
 {
+   docsURL;
 
    INITPERSISTFIELD_SOUNDASSET(StrikeSound, LightningData, "Sound to play when lightning STRIKES!");
 
@@ -411,6 +412,7 @@ Lightning::~Lightning()
 //--------------------------------------------------------------------------
 void Lightning::initPersistFields()
 {
+   docsURL;
    addGroup( "Strikes" );
    addField( "strikesPerMinute", TypeS32, Offset(strikesPerMinute, Lightning),
       "@brief Number of lightning strikes to perform per minute.\n\n"

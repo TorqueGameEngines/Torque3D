@@ -168,6 +168,7 @@ bool GuiRiverEditorCtrl::onAdd()
 
 void GuiRiverEditorCtrl::initPersistFields()
 {
+   docsURL;
    addField( "DefaultWidth",        TypeF32,    Offset( mDefaultWidth, GuiRiverEditorCtrl ) );
 	addField( "DefaultDepth",        TypeF32,    Offset( mDefaultDepth, GuiRiverEditorCtrl ) );
 	addField( "DefaultNormal",       TypePoint3F,Offset( mDefaultNormal, GuiRiverEditorCtrl ) );

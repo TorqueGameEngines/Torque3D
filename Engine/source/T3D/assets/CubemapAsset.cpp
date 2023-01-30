@@ -111,6 +111,7 @@ CubemapAsset::~CubemapAsset()
 
 void CubemapAsset::initPersistFields()
 {
+   docsURL;
    // Call parent.
    Parent::initPersistFields();
 

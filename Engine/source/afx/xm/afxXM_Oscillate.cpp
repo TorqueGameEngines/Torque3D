@@ -160,6 +160,7 @@ afxXM_OscillateData::afxXM_OscillateData(const afxXM_OscillateData& other, bool 
 
 void afxXM_OscillateData::initPersistFields()
 {
+   docsURL;
   addField("mask",                TypeS32,      Offset(mask,  afxXM_OscillateData),
     "...");
   addField("min",                 TypePoint3F,  Offset(min,   afxXM_OscillateData),

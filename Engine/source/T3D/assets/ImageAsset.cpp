@@ -155,6 +155,7 @@ void ImageAsset::consoleInit()
 
 void ImageAsset::initPersistFields()
 {
+   docsURL;
    // Call parent.
    Parent::initPersistFields();
 

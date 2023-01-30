@@ -275,6 +275,7 @@ WaterObject::~WaterObject()
 
 void WaterObject::initPersistFields()
 {
+   docsURL;
    addGroup( "WaterObject" );
 
       addProtectedField( "density", TypeF32, Offset( mDensity, WaterObject ), &WaterObject::_checkDensity, &defaultProtectedGetFn, "Affects buoyancy of an object, thus affecting the Z velocity of a player (jumping, falling, etc.");

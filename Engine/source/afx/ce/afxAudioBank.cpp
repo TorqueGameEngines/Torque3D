@@ -121,6 +121,7 @@ void afxAudioBank::onPerformSubstitutions()
 
 void afxAudioBank::initPersistFields()
 {
+   docsURL;
   addField("path",        TypeFilename,             Offset(mPath, afxAudioBank),
     "A filesystem path to the folder containing the sound files specified by the "
     "filenames[] field. All sound files used in a single AudioBank must be located in "

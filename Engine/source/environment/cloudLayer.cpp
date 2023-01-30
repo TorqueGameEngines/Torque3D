@@ -191,6 +191,7 @@ void CloudLayer::onRemove()
 
 void CloudLayer::initPersistFields()
 {
+   docsURL;
    addGroup( "CloudLayer" );
 
       INITPERSISTFIELD_IMAGEASSET(Texture, CloudLayer, "An RGBA texture which should contain normals and opacity (density).");

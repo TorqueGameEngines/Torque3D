@@ -36,6 +36,7 @@ IMPLEMENT_CONOBJECT(AutoloadAssets);
 
 void AutoloadAssets::initPersistFields()
 {
+   docsURL;
    // Call Parent.
    Parent::initPersistFields();
 

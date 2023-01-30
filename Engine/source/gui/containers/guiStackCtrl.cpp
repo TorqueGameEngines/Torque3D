@@ -96,6 +96,7 @@ GuiStackControl::GuiStackControl()
 
 void GuiStackControl::initPersistFields()
 {
+   docsURL;
 
    addGroup( "Stacking" );
    addField( "stackingType", TYPEID< StackingType >(), Offset(mStackingType, GuiStackControl),

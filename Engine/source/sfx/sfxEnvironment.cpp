@@ -142,6 +142,7 @@ SFXEnvironment::SFXEnvironment()
 
 void SFXEnvironment::initPersistFields()
 {
+   docsURL;
    addGroup( "Reverb" );
    
    addField("reverbDensity", TypeF32, Offset(mReverb.flDensity, SFXEnvironment),

@@ -97,6 +97,7 @@ ConsoleDocClass( GuiDynamicCtrlArrayControl,
 
 void GuiDynamicCtrlArrayControl::initPersistFields()
 {
+   docsURL;
    addField( "colCount", TypeS32, Offset( mCols, GuiDynamicCtrlArrayControl ),
       "Number of columns the child controls have been arranged into. This "
       "value is calculated automatically when children are added, removed or "

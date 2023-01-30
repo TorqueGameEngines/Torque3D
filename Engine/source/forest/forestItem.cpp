@@ -58,22 +58,21 @@ ForestItemData::ForestItemData()
 
 void ForestItemData::initPersistFields()
 {
-   Parent::initPersistFields();
-
-   addGroup( "Media" );
+   docsURL;
+   addGroup( "Shapes" );
 
       INITPERSISTFIELD_SHAPEASSET(Shape, ForestItemData, "Shape asset for this item type");
       
       addProtectedField( "shapeFile",  TypeShapeFilename, Offset( mShapeName, ForestItemData ), &_setShapeData, &defaultProtectedGetFn,
          "Shape file for this item type", AbstractClassRep::FIELD_HideInInspectors );
+   endGroup( "Shape(s)" );
 
+   addGroup("Physics");
       addField( "collidable",   TypeBool, Offset( mCollidable, ForestItemData ),
          "Can other objects or spacial queries hit items of this type." );
-
       addField( "radius", TypeF32, Offset( mRadius, ForestItemData ),
          "Radius used during placement to ensure items are not crowded." );
-
-   endGroup( "Media" );
+   endGroup("Physics");
 
    addGroup( "Wind" );
       
@@ -108,6 +107,7 @@ void ForestItemData::initPersistFields()
          "Frequency (speed) of the effect on leafs/fronds." );
 
    endGroup( "Wind" );
+   Parent::initPersistFields();
 }
 
 void ForestItemData::consoleInit()

@@ -114,6 +114,7 @@ void SkyBox::onRemove()
 
 void SkyBox::initPersistFields()
 {
+   docsURL;
    addGroup( "Sky Box" );	
 
    INITPERSISTFIELD_MATERIALASSET(Material, SkyBox, "The name of a cubemap material for the sky box.");

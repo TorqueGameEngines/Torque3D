@@ -74,7 +74,6 @@ afxModelData::afxModelData()
   useCustomAmbientLighting = false;
   customAmbientForSelfIllumination = false;
   customAmbientLighting = LinearColorF(0.0f, 0.0f, 0.0f);
-  shadowEnable = false;
 
   shadowSize = 128;
   shadowMaxVisibleDistance = 80.0f;
@@ -103,7 +102,6 @@ afxModelData::afxModelData(const afxModelData& other, bool temp_clone) : GameBas
   useCustomAmbientLighting = other.useCustomAmbientLighting;
   customAmbientForSelfIllumination = other.customAmbientForSelfIllumination;
   customAmbientLighting = other.customAmbientLighting;
-  shadowEnable = other.shadowEnable;
 
   shadowSize = other.shadowSize;
   shadowMaxVisibleDistance = other.shadowMaxVisibleDistance;
@@ -174,31 +172,37 @@ bool afxModelData::preload(bool server, String &errorStr)
 
 void afxModelData::initPersistFields()
 {
-   INITPERSISTFIELD_SHAPEASSET(Shape, afxModelData, "The name of a .dts format file to use for the model.");
-  addField("sequence",              TypeString, myOffset(sequence),
-    "The name of an animation sequence to play in the model.");
-  addField("sequenceRate",          TypeF32,      myOffset(seq_rate),
-    "The rate of playback for the sequence.");
-  addField("sequenceOffset",        TypeF32,      myOffset(seq_offset),
-    "An offset in seconds indicating a starting point for the animation sequence "
-    "specified by the sequence field. A rate of 1.0 (rather than sequenceRate) is used "
-    "to convert from seconds to the thread offset.");
-  addField("alphaMult",             TypeF32,      myOffset(alpha_mult),
-    "An alpha multiplier used to set maximum opacity of the model.");
+   docsURL;
+   addGroup("Shapes");
+      INITPERSISTFIELD_SHAPEASSET(Shape, afxModelData, "The name of a .dts format file to use for the model.");
+   addGroup("Shapes");
 
-  addField("fogMult",               TypeF32,      myOffset(fog_mult),
-    "");
-  addField("remapTextureTags",      TypeString,   myOffset(remap_txr_tags),
-    "Rename one or more texture tags in the model. Texture tags are what link a "
-    "model's textures to materials.\n"
-    "Field should be a string containing space-separated remapping tokens. A remapping "
-    "token is two names separated by a colon, ':'. The first name should be a texture-tag "
-    "that exists in the model, while the second is a new name to replace it. The string "
-    "can have any number of remapping tokens as long as the total string length does not "
-    "exceed 255.");
-  addField("shadowEnable",                  TypeBool,   myOffset(shadowEnable),
-    "Sets whether the model casts a shadow.");
+   addGroup("Animation");
+      addField("sequence",              TypeString, myOffset(sequence),
+         "The name of an animation sequence to play in the model.");
+      addField("sequenceRate",          TypeF32,      myOffset(seq_rate),
+         "The rate of playback for the sequence.");
+      addField("sequenceOffset",        TypeF32,      myOffset(seq_offset),
+         "An offset in seconds indicating a starting point for the animation sequence "
+         "specified by the sequence field. A rate of 1.0 (rather than sequenceRate) is used "
+         "to convert from seconds to the thread offset.");
+   endGroup("Animation");
 
+   addGroup("Rendering");
+      addField("alphaMult",             TypeF32,      myOffset(alpha_mult),
+         "An alpha multiplier used to set maximum opacity of the model.");
+      addField("fogMult",               TypeF32,      myOffset(fog_mult), "");
+      addField("remapTextureTags",      TypeString,   myOffset(remap_txr_tags),
+         "Rename one or more texture tags in the model. Texture tags are what link a "
+         "model's textures to materials.\n"
+         "Field should be a string containing space-separated remapping tokens. A remapping "
+         "token is two names separated by a colon, ':'. The first name should be a texture-tag "
+         "that exists in the model, while the second is a new name to replace it. The string "
+         "can have any number of remapping tokens as long as the total string length does not "
+         "exceed 255.");
+  endGroup("Rendering");
+
+  addGroup("Deprecated");
   addField("useVertexAlpha",        TypeBool,     myOffset(use_vertex_alpha),
     "deprecated");
   addField("forceOnMaterialFlags",  TypeS32,      myOffset(force_on_material_flags),
@@ -229,6 +233,7 @@ void afxModelData::initPersistFields()
     "deprecated");
   addField("shadowSphereAdjust",            TypeF32,    myOffset(shadowSphereAdjust),
     "deprecated");
+  endGroup("Deprecated");
 
   Parent::initPersistFields();
 
@@ -273,7 +278,6 @@ void afxModelData::packData(BitStream* stream)
   stream->writeFlag(customAmbientForSelfIllumination);
   stream->write(customAmbientLighting);
   stream->writeFlag(receiveLMLighting);
-  stream->writeFlag(shadowEnable);
 
   stream->write(shadowSize);
   stream->write(shadowMaxVisibleDistance);
@@ -305,7 +309,6 @@ void afxModelData::unpackData(BitStream* stream)
   customAmbientForSelfIllumination = stream->readFlag();
   stream->read(&customAmbientLighting);
   receiveLMLighting = stream->readFlag();
-  shadowEnable = stream->readFlag();
 
   stream->read(&shadowSize);
   stream->read(&shadowMaxVisibleDistance);

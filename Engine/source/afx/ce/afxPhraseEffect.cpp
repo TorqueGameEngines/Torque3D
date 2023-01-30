@@ -139,6 +139,7 @@ EndImplementEnumType;
 
 void afxPhraseEffectData::initPersistFields()
 {
+   docsURL;
   addField("duration",    TypeF32,      myOffset(duration),
     "Specifies a duration for the phrase-effect. If set to infinity, the phrase-effect "
     "needs to have a phraseType of continuous. Set infinite duration using "

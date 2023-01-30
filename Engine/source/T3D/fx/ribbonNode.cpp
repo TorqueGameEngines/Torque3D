@@ -56,6 +56,7 @@ RibbonNodeData::~RibbonNodeData()
 //-----------------------------------------------------------------------------
 void RibbonNodeData::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 
@@ -90,6 +91,7 @@ RibbonNode::~RibbonNode()
 //-----------------------------------------------------------------------------
 void RibbonNode::initPersistFields()
 {
+   docsURL;
    addField( "active", TYPEID< bool >(), Offset(mActive,RibbonNode),
       "Controls whether ribbon is emitted from this node." );
    addField( "ribbon",  TYPEID< RibbonData >(), Offset(mRibbonDatablock, RibbonNode),

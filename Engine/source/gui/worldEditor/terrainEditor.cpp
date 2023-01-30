@@ -2794,6 +2794,7 @@ DefineEngineMethod(TerrainEditor, getTerrainUnderWorldPoint, S32, (const char * 
 
 void TerrainEditor::initPersistFields()
 {
+   docsURL;
    addGroup("Misc");
    addField("isDirty", TypeBool, Offset(mIsDirty, TerrainEditor));
    addField("isMissionDirty", TypeBool, Offset(mIsMissionDirty, TerrainEditor));

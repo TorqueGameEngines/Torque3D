@@ -142,6 +142,7 @@ afxPathData::~afxPathData()
 
 void afxPathData::initPersistFields()
 {
+   docsURL;
   addField("points",     TypeString,  Offset(points_string, afxPathData),
     "...");
   addField("roll",       TypeString,  Offset(roll_string,   afxPathData),

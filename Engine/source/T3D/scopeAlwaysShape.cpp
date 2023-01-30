@@ -40,6 +40,7 @@ ScopeAlwaysShape::ScopeAlwaysShape()
 
 void ScopeAlwaysShape::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 

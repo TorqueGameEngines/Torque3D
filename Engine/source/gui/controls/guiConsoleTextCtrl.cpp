@@ -46,6 +46,7 @@ GuiConsoleTextCtrl::~GuiConsoleTextCtrl()
 
 void GuiConsoleTextCtrl::initPersistFields()
 {
+   docsURL;
    addGroup("GuiConsoleTextCtrl");		
    addField("expression",  TypeRealString,  Offset(mConsoleExpression, GuiConsoleTextCtrl));
    endGroup("GuiConsoleTextCtrl");

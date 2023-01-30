@@ -73,6 +73,7 @@ afxPlayerPuppetData::afxPlayerPuppetData(const afxPlayerPuppetData& other, bool 
 
 void afxPlayerPuppetData::initPersistFields()
 {
+   docsURL;
   addField("objectSpec",      TypeString,   myOffset(obj_spec),
     "...");
   addField("networking",      TypeS8,       myOffset(networking),

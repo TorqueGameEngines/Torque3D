@@ -119,6 +119,7 @@ SFXParameter::~SFXParameter()
 
 void SFXParameter::initPersistFields()
 {
+   docsURL;
    addGroup( "Sound" );
    
       addProtectedField( "value",         TypeF32,       Offset( mValue, SFXParameter ),

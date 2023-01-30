@@ -165,10 +165,13 @@ VolumetricFog::~VolumetricFog()
 
 void VolumetricFog::initPersistFields()
 {
+   docsURL;
+   Parent::initPersistFields();
+   addGroup("Shapes");
+      INITPERSISTFIELD_SHAPEASSET(Shape, VolumetricFog, "The source shape asset.");
+   endGroup("Shapes");
+
    addGroup("VolumetricFogData");
-
-   INITPERSISTFIELD_SHAPEASSET(Shape, VolumetricFog, "The source shape asset.");
-
    addField("FogColor", TypeColorI, Offset(mFogColor, VolumetricFog),
       "Fog color RGBA (Alpha is ignored)");
    addField("FogDensity", TypeF32, Offset(mFogDensity, VolumetricFog), 
@@ -211,7 +214,6 @@ void VolumetricFog::initPersistFields()
    addField("lightRayMod", TypeF32, Offset(mLightRayMod, VolumetricFog),
       "Modifier for LightRay PostFX when inside Fog.");
    endGroup("PostFX");
-   Parent::initPersistFields();
 }
 
 bool VolumetricFog::_setShapeAsset(void* obj, const char* index, const char* data)

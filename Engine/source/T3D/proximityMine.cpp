@@ -88,12 +88,16 @@ ProximityMineData::ProximityMineData()
 
 void ProximityMineData::initPersistFields()
 {
+   docsURL;
+   Parent::initPersistFields();
+   addGroup("Sounds");
+      INITPERSISTFIELD_SOUNDASSET(ArmSound, ProximityMineData, "Arming sound for this proximity mine.");
+      INITPERSISTFIELD_SOUNDASSET(TriggerSound, ProximityMineData, "Arming sound for this proximity mine.");
+   endGroup("Sounds");
+
    addGroup( "Arming" );
    addField( "armingDelay", TypeF32, Offset(armingDelay, ProximityMineData), 
       "Delay (in seconds) from when the mine is placed to when it becomes active." );
-
-   INITPERSISTFIELD_SOUNDASSET(ArmSound, ProximityMineData, "Arming sound for this proximity mine.");
-
    endGroup( "Arming" );
 
    addGroup( "Triggering" );
@@ -111,9 +115,6 @@ void ProximityMineData::initPersistFields()
       "Speed above which moving objects within the trigger radius will trigger the mine" );
    addField( "triggerDelay", TypeF32, Offset(triggerDelay, ProximityMineData),
       "Delay (in seconds) from when the mine is triggered until it explodes." );
-
-   INITPERSISTFIELD_SOUNDASSET(TriggerSound, ProximityMineData, "Arming sound for this proximity mine.");
-
    endGroup( "Triggering" );
 
    addGroup( "Explosion" );
@@ -124,8 +125,6 @@ void ProximityMineData::initPersistFields()
       "ground, which can end up blocking the explosion.  This offset along the mine's "
       "'up' normal allows you to raise the explosion origin to a better height.");
    endGroup( "Explosion" );
-
-   Parent::initPersistFields();
 }
 
 bool ProximityMineData::preload( bool server, String& errorStr )

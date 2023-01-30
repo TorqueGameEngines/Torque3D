@@ -52,6 +52,7 @@ afxForceData::afxForceData(const afxForceData& other, bool temp_clone) : GameBas
 
 void afxForceData::initPersistFields()
 {
+   docsURL;
   addField("forceSetName",    TypeString,   myOffset(force_set_name),
     "...");
 

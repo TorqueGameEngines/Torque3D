@@ -104,7 +104,7 @@ public:
     void                onDeleteNotify( SimObject *pObject );
     void                onRemove( void );
 
-    static void         initPersistFields( void );
+    static void         initPersistFields();
 
     static SimSet      *getServerSet( void );
 

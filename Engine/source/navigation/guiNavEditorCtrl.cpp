@@ -97,6 +97,7 @@ bool GuiNavEditorCtrl::onAdd()
 
 void GuiNavEditorCtrl::initPersistFields()
 {
+   docsURL;
    addField("isDirty", TypeBool, Offset(mIsDirty, GuiNavEditorCtrl));
 
    addField("spawnClass", TypeRealString, Offset(mSpawnClass, GuiNavEditorCtrl),

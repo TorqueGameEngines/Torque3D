@@ -138,6 +138,7 @@ void DecalData::onRemove()
 
 void DecalData::initPersistFields()
 {
+   docsURL;
    addGroup( "Decal" );
 
       addField( "size", TypeF32, Offset( size, DecalData ), 

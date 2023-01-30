@@ -366,6 +366,7 @@ void NetObject::onCameraScopeQuery(NetConnection *cr, CameraScopeQuery* /*camInf
 
 void NetObject::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 

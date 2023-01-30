@@ -40,8 +40,9 @@ VEvent::VEvent( void ) :
     setLabel( "DefaultEvent" );
 }
 
-void VEvent::initPersistFields( void )
+void VEvent::initPersistFields()
 {
+   docsURL;
     Parent::initPersistFields();
 
     addProtectedField( "TriggerTime", TypeS32, Offset( mTriggerTime, VEvent ), &setTriggerTime, &defaultProtectedGetFn, "The time that this event is triggered." );

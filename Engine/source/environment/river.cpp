@@ -626,6 +626,7 @@ River::~River()
 
 void River::initPersistFields()
 {
+   docsURL;
    addGroup( "River" );
 
       addField( "SegmentLength",       TypeF32,    Offset( mMetersPerSegment, River ),

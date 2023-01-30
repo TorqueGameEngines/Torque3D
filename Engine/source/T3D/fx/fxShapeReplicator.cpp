@@ -139,6 +139,7 @@ fxShapeReplicator::~fxShapeReplicator()
 
 void fxShapeReplicator::initPersistFields()
 {
+   docsURL;
    // Add out own persistent fields.
    addGroup( "Debugging" );	// MM: Added Group Header.
       addField( "HideReplications",    TypeBool,      Offset( mFieldData.mHideReplications,     fxShapeReplicator ), "Replicated shapes are hidden when set to true." );

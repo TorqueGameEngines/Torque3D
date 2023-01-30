@@ -81,6 +81,7 @@ Prefab::~Prefab()
 
 void Prefab::initPersistFields()
 {
+   docsURL;
    addGroup( "Prefab" );
 
       addProtectedField( "filename", TypePrefabFilename, Offset( mFilename, Prefab ),         

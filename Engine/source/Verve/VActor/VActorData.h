@@ -106,7 +106,7 @@ public:
     VActorData( void );
     ~VActorData( void );
 
-    static void     initPersistFields( void );
+    static void     initPersistFields();
 
     virtual bool    initAnimationSequenceList( const S32 &pSize, const sAnimationSequence *pTable );
     virtual bool    initAnimationTransitionList( const S32 &pSize, const sAnimationTransition *pTable );

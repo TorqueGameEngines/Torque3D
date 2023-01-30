@@ -522,6 +522,7 @@ PostEffect::~PostEffect()
 
 void PostEffect::initPersistFields()
 {
+   docsURL;
    addField( "shader", TypeRealString, Offset( mShaderName, PostEffect ),
       "Name of a GFXShaderData for this effect." );
 

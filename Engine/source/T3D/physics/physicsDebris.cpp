@@ -110,21 +110,23 @@ bool PhysicsDebrisData::preload( bool server, String &errorStr )
 
 void PhysicsDebrisData::initPersistFields()
 {
-   addGroup( "Display" );
+   docsURL;
+   addGroup( "Shapes" );
 
       addProtectedField( "shapeFile", TypeShapeFilename, Offset( mShapeName, PhysicsDebrisData ), &_setShapeData, &defaultProtectedGetFn,
          "@brief Path to the .DAE or .DTS file to use for this shape.\n\n"
          "Compatable with Live-Asset Reloading.", AbstractClassRep::FIELD_HideInInspectors);
-         
+
       INITPERSISTFIELD_SHAPEASSET(Shape, PhysicsDebrisData, "@brief Shape to use with this debris.\n\n"
          "Compatable with Live-Asset Reloading.");
+   endGroup( "Shapes" );
 
+   addGroup("Rendering");
       addField( "castShadows", TypeBool, Offset( castShadows, PhysicsDebrisData ), 
         "@brief Determines if the shape's shadow should be cast onto the environment.\n\n" );
+   endGroup("Rendering");
 
-   endGroup( "Display" );
-
-   addGroup( "Physical Properties" );
+   addGroup( "Physics" );
 
       addField("lifetime", TypeF32, Offset( lifetime, PhysicsDebrisData ),
          "@brief Base time, in seconds, that debris persists after time of creation.\n\n"
@@ -192,8 +194,7 @@ void PhysicsDebrisData::initPersistFields()
          "The result of the calculated buoyancy is relative to the density of the WaterObject the PhysicsDebris is within."
          "@see WaterObject::density");
 
-   endGroup( "Physical Properties" );
-
+   endGroup( "Physics" );
    Parent::initPersistFields();
 }
 
@@ -332,6 +333,7 @@ PhysicsDebris::~PhysicsDebris()
 
 void PhysicsDebris::initPersistFields()
 {
+   docsURL;
    Con::addVariable( "$pref::PhysicsDebris::lifetimeScale", TypeF32, &smLifetimeScale,
       "@brief Scales how long %PhysicsDebris will live before being removed.\n"
       "@note A value of 0 will disable PhysicsDebris entirely.");

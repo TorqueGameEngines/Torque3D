@@ -61,6 +61,7 @@ void PathCameraData::consoleInit()
 
 void PathCameraData::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 
@@ -201,6 +202,7 @@ void PathCamera::onEditorDisable()
 
 void PathCamera::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 

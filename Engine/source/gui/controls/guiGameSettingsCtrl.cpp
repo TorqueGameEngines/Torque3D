@@ -900,6 +900,7 @@ IMPLEMENT_CALLBACK(GuiGameSettingsCtrl, onAxisEvent, void, (const char* device, 
 
 void GuiGameSettingsCtrl::initPersistFields()
 {
+   docsURL;
    INITPERSISTFIELD_IMAGEASSET(KeybindBitmap, GuiGameSettingsCtrl, "Bitmap used to display the bound key for this keybind option.");
    INITPERSISTFIELD_IMAGEASSET(PreviousBitmap, GuiGameSettingsCtrl, "Bitmap used for the previous button when in list mode.");
    INITPERSISTFIELD_IMAGEASSET(NextBitmap, GuiGameSettingsCtrl, "Bitmap used for the next button when in list mode.");

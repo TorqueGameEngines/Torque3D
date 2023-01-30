@@ -240,6 +240,7 @@ bool GizmoProfile::onAdd()
 
 void GizmoProfile::initPersistFields()
 {
+   docsURL;
    addField( "alignment",           TYPEID< GizmoAlignment >(),   Offset(alignment, GizmoProfile ) );
    addField( "mode",                TYPEID< GizmoMode >(),   Offset(mode, GizmoProfile ) );
 
@@ -371,6 +372,7 @@ void Gizmo::onRemove()
 
 void Gizmo::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 
    //addField( "profile",)  

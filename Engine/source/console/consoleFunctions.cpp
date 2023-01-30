@@ -2130,24 +2130,15 @@ DefineEngineFunction( quitWithStatus, void, ( S32 status ), (0),
 }
 
 //-----------------------------------------------------------------------------
-
-DefineEngineFunction( gotoWebPage, void, ( const char* address ),,
-   "Open the given URL or file in the user's web browser.\n\n"
-   "@param address The address to open.  If this is not prefixed by a protocol specifier (\"...://\"), then "
-      "the function checks whether the address refers to a file or directory and if so, prepends \"file://\" "
-      "to @a adress; if the file check fails, \"http://\" is prepended to @a address.\n\n"
-   "@tsexample\n"
-      "gotoWebPage( \"http://www.garagegames.com\" );\n"
-   "@endtsexample\n\n"
-   "@ingroup Platform" )
+void gotoWebPage(const char* address)
 {
    // If there's a protocol prefix in the address, just invoke
    // the browser on the given address.
-   
-   char* protocolSep = dStrstr( address,"://");
-   if( protocolSep != NULL )
+
+   char* protocolSep = dStrstr(address, "://");
+   if (protocolSep != NULL)
    {
-      Platform::openWebBrowser( address );
+      Platform::openWebBrowser(address);
       return;
    }
 
@@ -2155,21 +2146,34 @@ DefineEngineFunction( gotoWebPage, void, ( const char* address ),,
    // sent us a bad url. We'll first check to see if a file inside the sandbox
    // with that name exists, then we'll just glom "http://" onto the front of 
    // the bogus url, and hope for the best.
-   
+
    String addr;
-   if( Torque::FS::IsFile( address ) || Torque::FS::IsDirectory( address ) )
+   if (Torque::FS::IsFile(address) || Torque::FS::IsDirectory(address))
    {
 #ifdef TORQUE2D_TOOLS_FIXME
-      addr = String::ToString( "file://%s", address );
+      addr = String::ToString("file://%s", address);
 #else
-      addr = String::ToString( "file://%s/%s", Platform::getCurrentDirectory(), address );
+      addr = String::ToString("file://%s/%s", Platform::getCurrentDirectory(), address);
 #endif
    }
    else
-      addr = String::ToString( "http://%s", address );
-   
-   Platform::openWebBrowser( addr );
+      addr = String::ToString("http://%s", address);
+
+   Platform::openWebBrowser(addr);
    return;
+}
+
+DefineEngineFunction( gotoWebPage, void, ( const char* address ),,
+   "Open the given URL or file in the user's web browser.\n\n"
+   "@param address The address to open.  If this is not prefixed by a protocol specifier (\"...://\"), then "
+      "the function checks whether the address refers to a file or directory and if so, prepends \"file://\" "
+      "to @a adress; if the file check fails, \"http://\" is prepended to @a address.\n\n"
+   "@tsexample\n"
+      "gotoWebPage( \"https://torque3d.org/\" );\n"
+   "@endtsexample\n\n"
+   "@ingroup Platform" )
+{
+   gotoWebPage(address);
 }
 
 //-----------------------------------------------------------------------------
@@ -2876,4 +2880,34 @@ DefineEngineFunction(systemCommand, S32, (const char* commandLineAction, const c
 
    return -1;
 }
+
+const char* getDocsLink(const char* filename, U32 lineNumber)
+{
+   Vector<String> fileStringSplit;
+   String(filename).split("source", fileStringSplit);
+   String fileString = fileStringSplit.last();
+   String fileLineString = fileString + String("#L") + String::ToString(lineNumber-2);
+   String baseUrL = String(Con::getVariable("Pref::DocURL","https://github.com/TorqueGameEngines/Torque3D/blob/development/Engine/source"));
+   String URL = String("<a:") + baseUrL + fileLineString + String(">docs</a>");
+
+   return (new String(URL))->c_str();
+}
+
+bool getDocsURL(void* obj, const char* array, const char* data)
+{
+   ConsoleObject* cObj = static_cast<ConsoleObject*>(obj);
+   //if (cObj->mDocsClick)
+   {
+
+      String docpage = String(cObj->findField(StringTable->insert("docsURL"))->pFieldDocs);
+      //strip wrapper
+      docpage.replace("<a:", "");
+      docpage.replace(">docs</a>", "");
+      Con::errorf("%s", docpage.c_str());
+      gotoWebPage(docpage.c_str());
+   }
+   //cObj->mDocsClick = !cObj->mDocsClick;
+   return false;
+}
+
 #endif

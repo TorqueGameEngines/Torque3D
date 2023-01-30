@@ -159,6 +159,7 @@ ImplementEnumType(_TamlFormatMode,
 
    void Taml::initPersistFields()
    {
+      docsURL;
       // Call parent.
       Parent::initPersistFields();
 

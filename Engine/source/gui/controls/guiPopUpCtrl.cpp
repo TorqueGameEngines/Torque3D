@@ -297,6 +297,7 @@ GuiPopUpMenuCtrl::~GuiPopUpMenuCtrl()
 //------------------------------------------------------------------------------
 void GuiPopUpMenuCtrl::initPersistFields(void)
 {
+   docsURL;
    addField("maxPopupHeight",           TypeS32,          Offset(mMaxPopupHeight, GuiPopUpMenuCtrl));
    addField("sbUsesNAColor",            TypeBool,         Offset(mRenderScrollInNA, GuiPopUpMenuCtrl));
    addField("reverseTextList",          TypeBool,         Offset(mReverseTextList, GuiPopUpMenuCtrl));

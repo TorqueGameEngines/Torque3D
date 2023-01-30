@@ -65,6 +65,7 @@ ConsoleDocClass( GuiChunkedBitmapCtrl,
 
 void GuiChunkedBitmapCtrl::initPersistFields()
 {
+   docsURL;
    addGroup("GuiChunkedBitmapCtrl");
       INITPERSISTFIELD_IMAGEASSET(Bitmap, GuiChunkedBitmapCtrl, "This is the bitmap to render to the control.");
 

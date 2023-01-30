@@ -88,7 +88,6 @@ ConsoleDocClass( ItemData,
       "   density = 2;\n"
 	   "   drag = 0.5;\n"
 	   "   maxVelocity = \"10.0\";\n"
-	   "   emap = true;\n"
 	   "   sticky = false;\n"
 	   "   dynamicType = \"0\"\n;"
 	   "   lightOnlyStatic = false;\n"
@@ -109,9 +108,6 @@ ConsoleDocClass( ItemData,
 
 ItemData::ItemData()
 {
-   shadowEnable = true;
-
-
    friction = 0;
    elasticity = 0;
 
@@ -141,40 +137,43 @@ EndImplementEnumType;
 
 void ItemData::initPersistFields()
 {
-   addField("friction",          TypeF32,       Offset(friction,           ItemData), "A floating-point value specifying how much velocity is lost to impact and sliding friction.");
-   addField("elasticity",        TypeF32,       Offset(elasticity,         ItemData), "A floating-point value specifying how 'bouncy' this ItemData is.");
-   addField("sticky",            TypeBool,      Offset(sticky,             ItemData), 
-      "@brief If true, ItemData will 'stick' to any surface it collides with.\n\n"
-      "When an item does stick to a surface, the Item::onStickyCollision() callback is called.  The Item has methods to retrieve "
-      "the world position and normal the Item is stuck to.\n"
-      "@note Valid objects to stick to must be of StaticShapeObjectType.\n");
-   addField("gravityMod",        TypeF32,       Offset(gravityMod,         ItemData), "Floating point value to multiply the existing gravity with, just for this ItemData.");
-   addField("maxVelocity",       TypeF32,       Offset(maxVelocity,        ItemData), "Maximum velocity that this ItemData is able to move.");
-
-   addField("lightType",         TYPEID< Item::LightType >(),      Offset(lightType, ItemData), "Type of light to apply to this ItemData. Options are NoLight, ConstantLight, PulsingLight. Default is NoLight." );
-   addField("lightColor",        TypeColorF,    Offset(lightColor,         ItemData),
-      "@brief Color value to make this light. Example: \"1.0,1.0,1.0\"\n\n"
-      "@see lightType\n");
-   addField("lightTime",         TypeS32,       Offset(lightTime,          ItemData), 
-      "@brief Time value for the light of this ItemData, used to control the pulse speed of the PulsingLight LightType.\n\n"
-      "@see lightType\n");
-   addField("lightRadius",       TypeF32,       Offset(lightRadius,        ItemData), 
-      "@brief Distance from the center point of this ItemData for the light to affect\n\n"
-      "@see lightType\n");
-   addField("lightOnlyStatic",   TypeBool,      Offset(lightOnlyStatic,    ItemData), 
-      "@brief If true, this ItemData will only cast a light if the Item for this ItemData has a static value of true.\n\n"
-      "@see lightType\n");
-
-   addField("simpleServerCollision",   TypeBool,  Offset(simpleServerCollision,    ItemData), 
-      "@brief Determines if only simple server-side collision will be used (for pick ups).\n\n"
-      "If set to true then only simple, server-side collision detection will be used.  This is often the case "
-      "if the item is used for a pick up object, such as ammo.  If set to false then a full collision volume "
-      "will be used as defined by the shape.  The default is true.\n"
-      "@note Only applies when using a physics library.\n"
-      "@see TurretShape and ProximityMine for examples that should set this to false to allow them to be "
-      "shot by projectiles.\n");
-
+   docsURL;
    Parent::initPersistFields();
+   addGroup("Physics");
+      addField("friction",          TypeF32,       Offset(friction,           ItemData), "A floating-point value specifying how much velocity is lost to impact and sliding friction.");
+      addField("elasticity",        TypeF32,       Offset(elasticity,         ItemData), "A floating-point value specifying how 'bouncy' this ItemData is.");
+      addField("sticky",            TypeBool,      Offset(sticky,             ItemData),
+         "@brief If true, ItemData will 'stick' to any surface it collides with.\n\n"
+         "When an item does stick to a surface, the Item::onStickyCollision() callback is called.  The Item has methods to retrieve "
+         "the world position and normal the Item is stuck to.\n"
+         "@note Valid objects to stick to must be of StaticShapeObjectType.\n");
+      addField("gravityMod",        TypeF32,       Offset(gravityMod,         ItemData), "Floating point value to multiply the existing gravity with, just for this ItemData.");
+      addField("maxVelocity",       TypeF32,       Offset(maxVelocity,        ItemData), "Maximum velocity that this ItemData is able to move.");
+      addField("simpleServerCollision",   TypeBool,  Offset(simpleServerCollision,    ItemData),
+         "@brief Determines if only simple server-side collision will be used (for pick ups).\n\n"
+         "If set to true then only simple, server-side collision detection will be used.  This is often the case "
+         "if the item is used for a pick up object, such as ammo.  If set to false then a full collision volume "
+         "will be used as defined by the shape.  The default is true.\n"
+         "@note Only applies when using a physics library.\n"
+         "@see TurretShape and ProximityMine for examples that should set this to false to allow them to be "
+         "shot by projectiles.\n");
+   endGroup("Physics");
+
+   addGroup("Light Emitter");
+      addField("lightType",         TYPEID< Item::LightType >(),      Offset(lightType, ItemData), "Type of light to apply to this ItemData. Options are NoLight, ConstantLight, PulsingLight. Default is NoLight." );
+      addField("lightColor",        TypeColorF,    Offset(lightColor,         ItemData),
+         "@brief Color value to make this light. Example: \"1.0,1.0,1.0\"\n\n"
+         "@see lightType\n");
+      addField("lightTime",         TypeS32,       Offset(lightTime,          ItemData), 
+         "@brief Time value for the light of this ItemData, used to control the pulse speed of the PulsingLight LightType.\n\n"
+         "@see lightType\n");
+      addField("lightRadius",       TypeF32,       Offset(lightRadius,        ItemData), 
+         "@brief Distance from the center point of this ItemData for the light to affect\n\n"
+         "@see lightType\n");
+      addField("lightOnlyStatic",   TypeBool,      Offset(lightOnlyStatic,    ItemData), 
+         "@brief If true, this ItemData will only cast a light if the Item for this ItemData has a static value of true.\n\n"
+         "@see lightType\n");
+   endGroup("Light Emitter");
 }
 
 void ItemData::packData(BitStream* stream)
@@ -262,7 +261,6 @@ ConsoleDocClass( Item,
       "   mass = 2;\n"
       "   friction = 1;\n"
       "   elasticity = 0.3;\n"
-      "   emap = true;\n\n"
       "   // Dynamic properties used by the scripts\n"
       "   pickupName = \"a health patch\";\n"
       "   repairAmount = 50;\n"
@@ -1304,6 +1302,7 @@ bool Item::_setRotate(void *object, const char *index, const char *data)
 
 void Item::initPersistFields()
 {
+   docsURL;
    addGroup("Misc");	
    addProtectedField("static", TypeBool, Offset(mStatic, Item), &_setStatic, &defaultProtectedGetFn, "If true, the object is not moving in the world.\n");
    addProtectedField("rotate", TypeBool, Offset(mRotate, Item), &_setRotate, &defaultProtectedGetFn, "If true, the object will automatically rotate around its Z axis.\n");

@@ -172,6 +172,7 @@ GuiTSCtrl::GuiTSCtrl()
 
 void GuiTSCtrl::initPersistFields()
 {
+   docsURL;
    addGroup( "Camera" );
    
       addField("cameraZRot", TypeF32, Offset(mCameraZRot, GuiTSCtrl),

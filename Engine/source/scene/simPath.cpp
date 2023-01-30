@@ -171,6 +171,7 @@ Path::~Path()
 //--------------------------------------------------------------------------
 void Path::initPersistFields()
 {
+   docsURL;
    addField("isLooping",   TypeBool, Offset(mIsLooping, Path), "If this is true, the loop is closed, otherwise it is open.\n");
    addField("Speed",   TypeF32, Offset(mPathSpeed, Path), "Speed.\n");
    addProtectedField("mPathShape", TYPEID< PathShapeData >(), Offset(mDataBlock, Path),
@@ -421,6 +422,7 @@ EndImplementEnumType;
 
 void Marker::initPersistFields()
 {
+   docsURL;
    addGroup( "Misc" );
    addField("seqNum",   TypeS32, Offset(mSeqNum,   Marker), "Marker position in sequence of markers on this path.\n");
    addField("hitCommand", TypeCommand, Offset(mHitCommand, Marker), "The command to execute when a path follower reaches this marker.");

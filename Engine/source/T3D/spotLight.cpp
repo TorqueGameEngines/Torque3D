@@ -95,6 +95,7 @@ SpotLight::~SpotLight()
 
 void SpotLight::initPersistFields()
 {
+   docsURL;
    addGroup( "Light" );
       
       addField( "range", TypeF32, Offset( mRange, SpotLight ) );

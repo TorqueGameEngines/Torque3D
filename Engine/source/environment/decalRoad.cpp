@@ -303,6 +303,7 @@ IMPLEMENT_CO_NETOBJECT_V1(DecalRoad);
 
 void DecalRoad::initPersistFields()
 {
+   docsURL;
    addGroup( "DecalRoad" );
 
       INITPERSISTFIELD_MATERIALASSET(Material, DecalRoad, "Material used for rendering.");

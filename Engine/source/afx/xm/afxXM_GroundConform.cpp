@@ -101,6 +101,7 @@ afxXM_GroundConformData::afxXM_GroundConformData(const afxXM_GroundConformData& 
 
 void afxXM_GroundConformData::initPersistFields()
 {
+   docsURL;
   addField("height",              TypeF32,      Offset(height, afxXM_GroundConformData),
     "...");
   addField("conformToTerrain",    TypeBool,     Offset(do_terrain, afxXM_GroundConformData),

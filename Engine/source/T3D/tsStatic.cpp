@@ -176,11 +176,7 @@ FRangeValidator speedValidator(0.0f, AnimSpeedMax);
 
 void TSStatic::initPersistFields()
 {
-   addFieldV("AnimOffset", TypeF32, Offset(mAnimOffset, TSStatic), &percentValidator,
-      "Percent Animation Offset.");
-
-   addFieldV("AnimSpeed", TypeF32, Offset(mAnimSpeed, TSStatic), &speedValidator,
-      "Percent Animation Speed.");
+   docsURL;
    addGroup("Shape");
 
    INITPERSISTFIELD_SHAPEASSET(Shape, TSStatic, "Model to use for this TSStatic");
@@ -219,16 +215,21 @@ void TSStatic::initPersistFields()
       "name as the new target.\n\n");
    endGroup("Materials");
 
-   addGroup("Rendering");
-
+   addGroup("Animation");
    addField("playAmbient", TypeBool, Offset(mPlayAmbient, TSStatic),
       "Enables automatic playing of the animation sequence named \"ambient\" (if it exists) when the TSStatic is loaded.");
+   addFieldV("AnimOffset", TypeF32, Offset(mAnimOffset, TSStatic), &percentValidator,
+      "Percent Animation Offset.");
+   addFieldV("AnimSpeed", TypeF32, Offset(mAnimSpeed, TSStatic), &speedValidator,
+      "Percent Animation Speed.");
+   endGroup("Animation");
+
+   addGroup("Rendering");
    addField("meshCulling", TypeBool, Offset(mMeshCulling, TSStatic),
       "Enables detailed culling of meshes within the TSStatic. Should only be used "
       "with large complex shapes like buildings which contain many submeshes.");
    addField("originSort", TypeBool, Offset(mUseOriginSort, TSStatic),
       "Enables translucent sorting of the TSStatic by its origin instead of the bounds.");
-
    endGroup("Rendering");
 
    addGroup("Reflection");

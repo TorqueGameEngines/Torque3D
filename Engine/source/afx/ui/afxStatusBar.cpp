@@ -134,6 +134,7 @@ void afxStatusBar::onSleep()
 // STATIC 
 void afxStatusBar::initPersistFields()
 {
+   docsURL;
   addField("fillColor",      TypeColorF, Offset(rgba_fill, afxStatusBar),
     "...");
   addField("displayEnergy",  TypeBool,   Offset(show_energy, afxStatusBar),

@@ -104,6 +104,7 @@ afxXM_MountedImageNodeData::afxXM_MountedImageNodeData(const afxXM_MountedImageN
 
 void afxXM_MountedImageNodeData::initPersistFields()
 {
+   docsURL;
   addField("imageSlot",   TypeS32,      Offset(image_slot, afxXM_MountedImageNodeData),
     "...");
   addField("nodeName",    TypeString,   Offset(node_name, afxXM_MountedImageNodeData),

@@ -61,6 +61,7 @@ afxConsoleMessageData::afxConsoleMessageData(const afxConsoleMessageData& other,
 
 void afxConsoleMessageData::initPersistFields()
 {
+   docsURL;
   addField("message",    TypeString,     myOffset(message_str),
     "A text message to be displayed when the effect is executed.");
 

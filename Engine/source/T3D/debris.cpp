@@ -295,21 +295,23 @@ bool DebrisData::preload(bool server, String &errorStr)
 
 void DebrisData::initPersistFields()
 {
-   addGroup("Display");
-   addField("texture",              TypeString,                  Offset(textureName,         DebrisData), 
-      "@brief Texture imagemap to use for this debris object.\n\nNot used any more.\n", AbstractClassRep::FIELD_HideInInspectors);
+   docsURL;
+   addGroup("Shapes");
+      addField("texture",              TypeString,                  Offset(textureName,         DebrisData), 
+         "@brief Texture imagemap to use for this debris object.\n\nNot used any more.\n", AbstractClassRep::FIELD_HideInInspectors);
+      INITPERSISTFIELD_SHAPEASSET(Shape, DebrisData, "Shape to use for this debris object.");
+   endGroup("Shapes");
 
-   INITPERSISTFIELD_SHAPEASSET(Shape, DebrisData, "Shape to use for this debris object.");
-   endGroup("Display");
-
+   addGroup("Particle Effects");
+      addField("emitters",             TYPEID< ParticleEmitterData >(),  Offset(emitterList,    DebrisData), DDC_NUM_EMITTERS, 
+         "@brief List of particle emitters to spawn along with this debris object.\n\nThese are optional.  You could have Debris made up of only a shape.\n");
+   addGroup("Particle Effects");
    addGroup("Datablocks");
-   addField("emitters",             TYPEID< ParticleEmitterData >(),  Offset(emitterList,    DebrisData), DDC_NUM_EMITTERS, 
-      "@brief List of particle emitters to spawn along with this debris object.\n\nThese are optional.  You could have Debris made up of only a shape.\n");
    addField("explosion",            TYPEID< ExplosionData >(),   Offset(explosion,           DebrisData), 
       "@brief ExplosionData to spawn along with this debris object.\n\nThis is optional as not all Debris explode.\n");
    endGroup("Datablocks");
 
-   addGroup("Physical Properties");
+   addGroup("Physics");
    addField("elasticity",           TypeF32,                     Offset(elasticity,          DebrisData), 
       "@brief A floating-point value specifying how 'bouncy' this object is.\n\nMust be in the range of -10 to 10.\n");
    addField("friction",             TypeF32,                     Offset(friction,            DebrisData), 
@@ -338,7 +340,7 @@ void DebrisData::initPersistFields()
       "@brief Use mass calculations based on radius.\n\nAllows for the adjustment of elasticity and friction based on the Debris size.\n@see baseRadius\n");
    addField("baseRadius",           TypeF32,                     Offset(baseRadius,          DebrisData), 
       "@brief Radius at which the standard elasticity and friction apply.\n\nOnly used when useRaduisMass is true.\n@see useRadiusMass.\n");
-   endGroup("Physical Properties");
+   endGroup("Physics");
 
    addGroup("Behavior");
    addField("explodeOnMaxBounce",   TypeBool,                    Offset(explodeOnMaxBounce,  DebrisData), 
@@ -566,6 +568,7 @@ Debris::~Debris()
 
 void Debris::initPersistFields()
 {
+   docsURL;
    addGroup( "Debris" );	
    
       addField( "lifetime", TypeF32, Offset(mLifetime, Debris), 

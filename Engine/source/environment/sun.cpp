@@ -141,6 +141,7 @@ void Sun::onRemove()
 
 void Sun::initPersistFields()
 {
+   docsURL;
    addGroup( "Orbit" );
 
       addField( "azimuth", TypeF32, Offset( mSunAzimuth, Sun ), 

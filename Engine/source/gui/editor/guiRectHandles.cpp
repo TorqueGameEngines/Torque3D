@@ -53,6 +53,7 @@ GuiRectHandles::~GuiRectHandles()
 //--------------------------------------------------------------------------
 void GuiRectHandles::initPersistFields()
 {
+   docsURL;
    addField("handleRect",     TypeRectF,  Offset(mHandleRect,  GuiRectHandles),     "RectF of handle's box." );
    addField("handleSize",     TypeS32,    Offset(mHandleSize,  GuiRectHandles),     "Size of handles in pixels." );
    addField("useCustomColor", TypeBool,   Offset(mUseCustomColor,  GuiRectHandles), "Use given custom color for handles." );

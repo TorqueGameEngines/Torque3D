@@ -113,7 +113,8 @@ void GuiConvexEditorCtrl::onRemove()
 }
 
 void GuiConvexEditorCtrl::initPersistFields()
-{   
+{
+   docsURL;
    addField( "isDirty", TypeBool, Offset( mIsDirty, GuiConvexEditorCtrl ) );
 	addField( "materialName", TypeMaterialAssetId, Offset(mMaterialName, GuiConvexEditorCtrl) );
 

@@ -113,6 +113,7 @@ void SkySphere::onRemove()
 
 void SkySphere::initPersistFields()
 {
+   docsURL;
    addGroup("Sky Sphere");
 
    INITPERSISTFIELD_MATERIALASSET(Material, SkySphere, "The name of a cubemap material for the sky box.");

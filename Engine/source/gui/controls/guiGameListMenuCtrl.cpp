@@ -1475,6 +1475,7 @@ IMPLEMENT_CALLBACK(GuiGameListMenuCtrl, onAxisEvent, void, (const char* device, 
 
 void GuiGameListMenuCtrl::initPersistFields()
 {
+   docsURL;
    addField("debugRender", TypeBool, Offset(mDebugRender, GuiGameListMenuCtrl),
       "Enable debug rendering" );
 
@@ -1862,6 +1863,7 @@ ConsoleDocClass( GuiGameListMenuProfile,
 
 void GuiGameListMenuProfile::initPersistFields()
 {
+   docsURL;
    addField( "hitAreaUpperLeft", TypePoint2I, Offset(mHitAreaUpperLeft, GuiGameListMenuProfile),
       "Position of the upper left corner of the row hit area (relative to row's top left corner)" );
 

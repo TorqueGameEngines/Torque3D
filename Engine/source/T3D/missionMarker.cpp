@@ -179,7 +179,9 @@ void MissionMarker::unpackUpdate(NetConnection * con, BitStream * stream)
    }
 }
 
-void MissionMarker::initPersistFields() {
+void MissionMarker::initPersistFields()
+{
+   docsURL;
    Parent::initPersistFields();
 }
 
@@ -281,6 +283,7 @@ void WayPoint::unpackUpdate(NetConnection * con, BitStream * stream)
 
 void WayPoint::initPersistFields()
 {
+   docsURL;
    addGroup("Misc"); 
    addField("markerName", TypeCaseString, Offset(mName, WayPoint), "Unique name representing this waypoint");
    endGroup("Misc");
@@ -468,6 +471,7 @@ void SpawnSphere::advanceTime( F32 timeDelta )
 
 void SpawnSphere::initPersistFields()
 {
+   docsURL;
    addGroup( "Spawn" );
    addField( "spawnClass", TypeRealString, Offset(mSpawnClass, SpawnSphere),
       "Object class to create (eg. Player, AIPlayer, Debris etc)" );
@@ -611,6 +615,7 @@ void CameraBookmark::unpackUpdate(NetConnection * con, BitStream * stream)
 
 void CameraBookmark::initPersistFields()
 {
+   docsURL;
    //addGroup("Misc");  
    //addField("name", TypeCaseString, Offset(mName, CameraBookmark));
    //endGroup("Misc");

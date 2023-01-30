@@ -935,6 +935,7 @@ MeshRoad::~MeshRoad()
 
 void MeshRoad::initPersistFields()
 {
+   docsURL;
    addGroup( "MeshRoad" );
 
       INITPERSISTFIELD_MATERIALASSET(TopMaterial, MeshRoad, "Material for the upper surface of the road.");

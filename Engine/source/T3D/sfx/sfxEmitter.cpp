@@ -174,6 +174,7 @@ void SFXEmitter::consoleInit()
 
 void SFXEmitter::initPersistFields()
 {
+   docsURL;
    addGroup( "Media" );
 
    INITPERSISTFIELD_SOUNDASSET(Sound, SFXEmitter, "");

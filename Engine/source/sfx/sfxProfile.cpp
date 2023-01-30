@@ -103,6 +103,7 @@ SFXProfile::SFXProfile( SFXDescription* desc, const String& filename, bool prelo
 
 void SFXProfile::initPersistFields()
 {
+   docsURL;
    addGroup( "Sound" );
    
       addField( "filename",    TypeStringFilename,        Offset( mFilename, SFXProfile ),

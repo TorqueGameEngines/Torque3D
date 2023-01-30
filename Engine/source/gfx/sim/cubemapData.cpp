@@ -76,6 +76,7 @@ ConsoleDocClass( CubemapData,
 
 void CubemapData::initPersistFields()
 {
+   docsURL;
    addProtectedField( "cubeFace", TypeStringFilename, Offset(mCubeMapFaceName, CubemapData), _setCubeMapFaceData, defaultProtectedGetFn, 6,
       "@brief The 6 cubemap face textures for a static cubemap.\n\n"
       "They are in the following order:\n"

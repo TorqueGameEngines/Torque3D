@@ -62,6 +62,7 @@ UndoAction::~UndoAction()
 //-----------------------------------------------------------------------------
 void UndoAction::initPersistFields()
 {
+   docsURL;
    addField("actionName", TypeRealString, Offset(mActionName, UndoAction), 
       "A brief description of the action, for UI representation of this undo/redo action.");
 
@@ -185,6 +186,7 @@ UndoManager::~UndoManager()
 //-----------------------------------------------------------------------------
 void UndoManager::initPersistFields()
 {
+   docsURL;
    addField("numLevels", TypeS32, Offset(mNumLevels, UndoManager), "Number of undo & redo levels.");
    // arrange for the default undo manager to exist.
 //   UndoManager &def = getDefaultManager();

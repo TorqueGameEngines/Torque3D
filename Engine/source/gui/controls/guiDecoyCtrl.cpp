@@ -65,6 +65,7 @@ GuiDecoyCtrl::~GuiDecoyCtrl()
 
 void GuiDecoyCtrl::initPersistFields()
 {
+   docsURL;
    addField("isDecoy",       TypeBool,         Offset(mIsDecoy, GuiDecoyCtrl), "Sets this control to decoy mode");
 
    Parent::initPersistFields();

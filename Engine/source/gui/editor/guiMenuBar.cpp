@@ -1126,6 +1126,7 @@ void GuiMenuBar::onRemove()
 
 void GuiMenuBar::initPersistFields()
 {
+   docsURL;
    addField("padding", TypeS32, Offset( mPadding, GuiMenuBar ),"Extra padding to add to the bounds of the control.\n");
 
    addField("menubarHeight", TypeS32, Offset(mMenubarHeight, GuiMenuBar), "Sets the height of the menubar when attached to the canvas.\n");

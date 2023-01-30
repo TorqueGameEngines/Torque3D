@@ -176,6 +176,7 @@ GuiListBoxCtrl::~GuiListBoxCtrl()
 
 void GuiListBoxCtrl::initPersistFields()
 {
+   docsURL;
    addField( "allowMultipleSelections", TypeBool, Offset( mMultipleSelections, GuiListBoxCtrl), "If true, will allow the selection of multiple items in the listbox.\n");
    addField( "fitParentWidth", TypeBool, Offset( mFitParentWidth, GuiListBoxCtrl), "If true, the width of the listbox will match the width of its parent control.\n");
    addField( "colorBullet", TypeBool, Offset( mColorBullet, GuiListBoxCtrl), "If true, colored items will render a colored rectangular bullet next to the item text.\n");

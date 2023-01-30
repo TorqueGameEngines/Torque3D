@@ -133,6 +133,7 @@ ArrayObject::ArrayObject()
 
 void ArrayObject::initPersistFields()
 {
+   docsURL;
    addField( "caseSensitive",    TypeBool,   Offset( mCaseSensitive, ArrayObject ), 
       "Makes the keys and values case-sensitive.\n"
       "By default, comparison of key and value strings will be case-insensitive." );

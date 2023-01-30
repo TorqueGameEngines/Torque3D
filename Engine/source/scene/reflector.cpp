@@ -95,6 +95,7 @@ ReflectorDesc::~ReflectorDesc()
 
 void ReflectorDesc::initPersistFields()
 {
+   docsURL;
    addGroup( "ReflectorDesc" );
 
       addField( "texSize", TypeS32, Offset( texSize, ReflectorDesc ), 

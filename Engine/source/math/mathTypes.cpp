@@ -1011,6 +1011,11 @@ DefineEngineFunction( VectorOrthoBasis, MatrixF, ( AngAxisF aa ),,
    return mat;
 }
 
+DefineEngineFunction(toEuler, VectorF, (MatrixF _in), ,
+   "#Brief get the rotation of a matrix\n")
+{
+   return _in.getForwardVector();
+}
 //-----------------------------------------------------------------------------
 
 //ConsoleFunction(VectorRot, const char*, 3, 3, "(Vector3F, float) rotate a vector in 2d")

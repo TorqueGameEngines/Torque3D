@@ -85,6 +85,7 @@ void Zone::consoleInit()
 #ifdef TORQUE_TOOLS
 void Zone::initPersistFields()
 {
+   docsURL;
    addProtectedField("selectAll", TypeBool, Offset(mSelecting, Zone),
       &_doSelect, &defaultProtectedGetFn, "Select all in this zone", AbstractClassRep::FieldFlags::FIELD_ComponentInspectors);
 

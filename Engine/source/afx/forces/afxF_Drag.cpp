@@ -103,6 +103,7 @@ afxF_DragData::afxF_DragData(const afxF_DragData& other, bool temp_clone) : afxF
 
 void afxF_DragData::initPersistFields()
 {
+   docsURL;
   addField("drag",                TypeF32,      myOffset(drag_coefficient),
     "...");
   addField("airDensity",          TypeF32,      myOffset(air_density),

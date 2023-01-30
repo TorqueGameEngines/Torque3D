@@ -210,6 +210,7 @@ void afxMagicSpellData::reloadReset()
 
 void afxMagicSpellData::initPersistFields()
 {
+   docsURL;
   static ewValidator _castingPhrase(CASTING_PHRASE);
   static ewValidator _launchPhrase(LAUNCH_PHRASE);
   static ewValidator _deliveryPhrase(DELIVERY_PHRASE);
@@ -980,6 +981,7 @@ void afxMagicSpell::onDeleteNotify(SimObject* obj)
 // static
 void afxMagicSpell::initPersistFields()
 {
+   docsURL;
   addField("caster", TYPEID<SimObject>(), Offset(mCaster_field, afxMagicSpell),
     "...");
   addField("target", TYPEID<SimObject>(), Offset(mTarget_field, afxMagicSpell),

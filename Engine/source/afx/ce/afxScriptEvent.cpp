@@ -63,6 +63,7 @@ afxScriptEventData::afxScriptEventData(const afxScriptEventData& other, bool tem
 
 void afxScriptEventData::initPersistFields()
 {
+   docsURL;
   addField("methodName",  TypeString,   myOffset(method_name),
     "The name of a script method defined for the instance class of an effects "
     "choreographer. The arguments used to call this method are determined by the type "

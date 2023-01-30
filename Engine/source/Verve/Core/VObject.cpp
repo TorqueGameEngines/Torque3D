@@ -42,8 +42,9 @@ VObject::~VObject( void )
     remove();
 }
 
-void VObject::initPersistFields( void )
+void VObject::initPersistFields()
 {
+   docsURL;
     // Don't Use Parent Fields.
     // Parent::initPersistFields();
 

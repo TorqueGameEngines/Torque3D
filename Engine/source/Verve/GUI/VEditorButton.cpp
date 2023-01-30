@@ -36,8 +36,9 @@ VEditorButton::VEditorButton( void ) :
     // Void.
 }
 
-void VEditorButton::initPersistFields( void )
+void VEditorButton::initPersistFields()
 {
+   docsURL;
     Parent::initPersistFields();
 
     addField( "IsDraggable", TypeBool, Offset( mIsDraggable, VEditorButton ) );

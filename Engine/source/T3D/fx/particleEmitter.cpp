@@ -207,6 +207,7 @@ FRangeValidator phiFValidator(0.f, 360.f);
 //-----------------------------------------------------------------------------
 void ParticleEmitterData::initPersistFields()
 {
+   docsURL;
    addGroup( "ParticleEmitterData" );
 
       addFieldV("ejectionPeriodMS", TYPEID< S32 >(), Offset(ejectionPeriodMS,   ParticleEmitterData), &ejectPeriodIValidator,

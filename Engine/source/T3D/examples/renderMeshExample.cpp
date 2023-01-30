@@ -74,6 +74,7 @@ RenderMeshExample::~RenderMeshExample()
 //-----------------------------------------------------------------------------
 void RenderMeshExample::initPersistFields()
 {
+   docsURL;
    addGroup( "Rendering" );
    INITPERSISTFIELD_MATERIALASSET(Material, RenderMeshExample, "The material used to render the mesh.");
    endGroup( "Rendering" );

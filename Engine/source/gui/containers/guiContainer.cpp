@@ -75,6 +75,7 @@ GuiContainer::~GuiContainer()
 
 void GuiContainer::initPersistFields()
 {
+   docsURL;
    Con::setIntVariable("$DOCKING_NONE",   Docking::dockNone);
    Con::setIntVariable("$DOCKING_CLIENT", Docking::dockClient);
    Con::setIntVariable("$DOCKING_TOP",    Docking::dockTop);

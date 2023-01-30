@@ -126,6 +126,7 @@ ScriptTickObject::ScriptTickObject()
 
 void ScriptTickObject::initPersistFields()
 {
+   docsURL;
    addField("callOnAdvanceTime", TypeBool,   Offset(mCallOnAdvanceTime,  ScriptTickObject), "Call the onAdvaceTime() callback.");
 
    Parent::initPersistFields();

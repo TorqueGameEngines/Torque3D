@@ -396,6 +396,7 @@ void afxEA_Zodiac::do_runtime_substitutions()
 
 void afxEA_Zodiac::initPersistFields()
 {
+   docsURL;
   addField("liveColor",         TypeColorF,     myOffset(live_color),
     "...");
   addField("liveColorFactor",   TypeF32,        myOffset(live_color_factor),

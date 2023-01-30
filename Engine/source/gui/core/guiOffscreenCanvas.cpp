@@ -27,6 +27,7 @@ GuiOffscreenCanvas::~GuiOffscreenCanvas()
 
 void GuiOffscreenCanvas::initPersistFields()
 {
+   docsURL;
    addField( "targetSize", TypePoint2I, Offset( mTargetSize, GuiOffscreenCanvas ),"" );
    addField( "targetFormat", TypeGFXFormat, Offset( mTargetFormat, GuiOffscreenCanvas ), "");
    addField( "targetName", TypeRealString, Offset( mTargetName, GuiOffscreenCanvas ), "");

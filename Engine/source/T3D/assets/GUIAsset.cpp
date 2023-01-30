@@ -95,6 +95,7 @@ GUIAsset::~GUIAsset()
 
 void GUIAsset::initPersistFields()
 {
+   docsURL;
    // Call parent.
    Parent::initPersistFields();
 

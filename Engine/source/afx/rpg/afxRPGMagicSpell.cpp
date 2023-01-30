@@ -81,6 +81,7 @@ EndImplementEnumType;
 
 void afxRPGMagicSpellData::initPersistFields()
 {
+   docsURL;
   // spell parameters
   addField("spellName",         TypeString,     myOffset(spell_name),
     "...");

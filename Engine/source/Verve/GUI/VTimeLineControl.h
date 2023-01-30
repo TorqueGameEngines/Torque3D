@@ -57,7 +57,7 @@ public:
 
     VTimeLineControl( void );
 
-    static void     initPersistFields( void );
+    static void     initPersistFields();
 
     // Mouse.
 

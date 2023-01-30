@@ -77,6 +77,7 @@ TheoraTextureObject::TheoraTextureObject()
 
 void TheoraTextureObject::initPersistFields()
 {
+   docsURL;
    addGroup( "Theora" );
 
       addField( "theoraFile", TypeStringFilename,  Offset( mFilename, TheoraTextureObject ),

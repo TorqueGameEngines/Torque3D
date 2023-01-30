@@ -147,6 +147,7 @@ SoundAsset::~SoundAsset()
 
 void SoundAsset::initPersistFields()
 {
+   docsURL;
    // Call parent.
    Parent::initPersistFields();
 

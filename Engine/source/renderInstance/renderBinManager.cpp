@@ -52,6 +52,7 @@ ConsoleDocClass( RenderBinManager,
 
 void RenderBinManager::initPersistFields()
 {
+   docsURL;
    addField( "binType", TypeRealString, Offset(mRenderInstType.mName, RenderBinManager),
       "Sets the render bin type which limits what render instances are added to this bin." );
 

@@ -107,6 +107,7 @@ GuiAutoScrollCtrl::GuiAutoScrollCtrl()
 
 void GuiAutoScrollCtrl::initPersistFields()
 {
+   docsURL;
    addGroup( "Scrolling" );
    
       addField( "scrollDirection", TYPEID< Direction >(), Offset( mDirection, GuiAutoScrollCtrl ),

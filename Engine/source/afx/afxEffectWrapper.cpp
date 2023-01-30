@@ -213,6 +213,7 @@ afxEffectWrapperData::~afxEffectWrapperData()
 
 void afxEffectWrapperData::initPersistFields()
 {
+   docsURL;
   // the wrapped effect
   addField("effect",       TYPEID<SimDataBlock>(),    myOffset(effect_data),
     "...");
@@ -737,6 +738,7 @@ afxEffectWrapper::~afxEffectWrapper()
 
 void afxEffectWrapper::initPersistFields()
 {
+   docsURL;
   addField("liveScaleFactor",     TypeF32,    myOffset(mLive_scale_factor),
     "...");
   addField("liveFadeFactor",      TypeF32,    myOffset(mLive_fade_factor),

@@ -165,6 +165,7 @@ void ShapeAsset::consoleInit()
 
 void ShapeAsset::initPersistFields()
 {
+   docsURL;
    // Call parent.
    Parent::initPersistFields();
 

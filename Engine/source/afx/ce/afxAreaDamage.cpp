@@ -74,6 +74,7 @@ afxAreaDamageData::afxAreaDamageData(const afxAreaDamageData& other, bool temp_c
 
 void afxAreaDamageData::initPersistFields()
 {
+   docsURL;
   addField("flavor",                    TypeString,     myOffset(flavor),
     "An arbitrary string which is passed as an argument to a spell's onDamage() script "
     "method. It is used to classify a type of damage such as 'melee', 'magical', or "

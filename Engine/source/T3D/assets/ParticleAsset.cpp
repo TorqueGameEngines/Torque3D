@@ -106,6 +106,7 @@ ParticleAsset::~ParticleAsset()
 
 void ParticleAsset::initPersistFields()
 {
+   docsURL;
    // Call parent.
    Parent::initPersistFields();
 

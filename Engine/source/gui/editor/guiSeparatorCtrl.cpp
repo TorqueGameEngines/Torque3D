@@ -72,6 +72,7 @@ GuiSeparatorCtrl::GuiSeparatorCtrl() : GuiControl()
 //--------------------------------------------------------------------------
 void GuiSeparatorCtrl::initPersistFields()
 {
+   docsURL;
    addField("caption",        TypeRealString, Offset(mText,           GuiSeparatorCtrl),
       "Optional text label to display." );
    addField("type",           TYPEID< separatorTypeOptions >(), Offset(mSeparatorType,  GuiSeparatorCtrl),

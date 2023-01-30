@@ -90,6 +90,7 @@ Skylight::~Skylight()
 //-----------------------------------------------------------------------------
 void Skylight::initPersistFields()
 {
+   docsURL;
    // SceneObject already handles exposing the transform
    Parent::initPersistFields();
 

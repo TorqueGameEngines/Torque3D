@@ -36,8 +36,9 @@ VLightObjectAnimationEvent::VLightObjectAnimationEvent( void ) :
     setLabel( "AnimationEvent" );
 }
 
-void VLightObjectAnimationEvent::initPersistFields( void )
+void VLightObjectAnimationEvent::initPersistFields()
 {
+   docsURL;
     Parent::initPersistFields();
 
     addField( "AnimationData", TYPEID<VTorque::LightAnimationDataType>(), Offset( mAnimationData, VLightObjectAnimationEvent ) );

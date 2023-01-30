@@ -149,8 +149,10 @@ bool SimObject::processArguments(S32 argc, ConsoleValue *argv)
 
 //-----------------------------------------------------------------------------
 
+
 void SimObject::initPersistFields()
 {
+   docsURL;
    addGroup( "Ungrouped" );
 
       addProtectedField( "name", TypeName, Offset(mObjectName, SimObject), &setProtectedName, &defaultProtectedGetFn,
@@ -911,6 +913,9 @@ void SimObject::assignFieldsFrom(SimObject *parent)
       for(U32 i = 0; i < list.size(); i++)
       {
          const AbstractClassRep::Field* f = &list[i];
+
+         if (f->pFieldname == StringTable->insert("docsURL"))
+            continue;
 
          // Skip the special field types.
          if ( f->type >= AbstractClassRep::ARCFirstCustomField )

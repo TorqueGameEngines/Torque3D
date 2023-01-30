@@ -66,7 +66,7 @@ public:
     VObject( void );
     virtual ~VObject( void );
 
-    static  void           initPersistFields( void );
+    static  void           initPersistFields();
 
     // Reference Methods.
 

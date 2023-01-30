@@ -88,6 +88,7 @@ GuiCursor::~GuiCursor()
 
 void GuiCursor::initPersistFields()
 {
+   docsURL;
    addField("hotSpot",     TypePoint2I,   Offset(mHotSpot, GuiCursor), "The location of the cursor's hot spot (which pixel carries the click).");
    addField("renderOffset",TypePoint2F,   Offset(mRenderOffset, GuiCursor), "Offset of the bitmap, where 0 signifies left edge of the bitmap, 1, the right. Similarly for the Y-component.");
 
@@ -349,6 +350,7 @@ GuiControlProfile::~GuiControlProfile()
 
 void GuiControlProfile::initPersistFields()
 {
+   docsURL;
    addGroup( "Behavior" );
    
       addField( "tab",           TypeBool,       Offset(mTabable, GuiControlProfile));

@@ -71,6 +71,7 @@ GuiTextEditSliderCtrl::~GuiTextEditSliderCtrl()
 
 void GuiTextEditSliderCtrl::initPersistFields()
 {
+   docsURL;
    addField("format",    TypeString,  Offset(mFormat, GuiTextEditSliderCtrl), "Character format type to place in the control.\n");
    addField("range",     TypePoint2F, Offset(mRange, GuiTextEditSliderCtrl), "Maximum vertical and horizontal range to allow in the control.\n");
    addField("increment", TypeF32,     Offset(mIncAmount,     GuiTextEditSliderCtrl), "How far to increment the slider on each step.\n");

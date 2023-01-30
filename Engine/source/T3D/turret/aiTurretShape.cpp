@@ -124,34 +124,34 @@ AITurretShapeData::AITurretShapeData()
 
 void AITurretShapeData::initPersistFields()
 {
-   addField("maxScanHeading",       TypeF32,       Offset(maxScanHeading,        AITurretShapeData),
-      "@brief Maximum number of degrees to scan left and right.\n\n"
-      "@note Maximum scan heading is 90 degrees.\n");
-   addField("maxScanPitch",         TypeF32,       Offset(maxScanPitch,          AITurretShapeData),
-      "@brief Maximum number of degrees to scan up and down.\n\n"
-      "@note Maximum scan pitch is 90 degrees.\n");
-   addField("maxScanDistance",      TypeF32,       Offset(maxScanDistance,       AITurretShapeData),
-      "@brief Maximum distance to scan.\n\n"
-      "When combined with maxScanHeading and maxScanPitch this forms a 3D scanning wedge used to initially "
-      "locate a target.\n");
-
-   addField("scanTickFrequency",          TypeS32,       Offset(scanTickFrequency,       AITurretShapeData),
-      "@brief How often should we perform a full scan when looking for a target.\n\n"
-      "Expressed as the number of ticks between full scans, but no less than 1.\n");
-   addField("scanTickFrequencyVariance",  TypeS32,       Offset(scanTickFrequencyVariance,       AITurretShapeData),
-      "@brief Random amount that should be added to the scan tick frequency each scan period.\n\n"
-      "Expressed as the number of ticks to randomly add, but no less than zero.\n");
-
-   addField("trackLostTargetTime",  TypeF32,       Offset(trackLostTargetTime,       AITurretShapeData),
-      "@brief How long after the turret has lost the target should it still track it.\n\n"
-      "Expressed in seconds.\n");
-
+   docsURL;
+   Parent::initPersistFields();
+   addGroup("AI Steering");
+      addField("maxScanHeading",       TypeF32,       Offset(maxScanHeading,        AITurretShapeData),
+         "@brief Maximum number of degrees to scan left and right.\n\n"
+         "@note Maximum scan heading is 90 degrees.\n");
+      addField("maxScanPitch",         TypeF32,       Offset(maxScanPitch,          AITurretShapeData),
+         "@brief Maximum number of degrees to scan up and down.\n\n"
+         "@note Maximum scan pitch is 90 degrees.\n");
+      addField("maxScanDistance",      TypeF32,       Offset(maxScanDistance,       AITurretShapeData),
+         "@brief Maximum distance to scan.\n\n"
+         "When combined with maxScanHeading and maxScanPitch this forms a 3D scanning wedge used to initially "
+         "locate a target.\n");
+      addField("scanTickFrequency",          TypeS32,       Offset(scanTickFrequency,       AITurretShapeData),
+         "@brief How often should we perform a full scan when looking for a target.\n\n"
+         "Expressed as the number of ticks between full scans, but no less than 1.\n");
+      addField("scanTickFrequencyVariance",  TypeS32,       Offset(scanTickFrequencyVariance,       AITurretShapeData),
+         "@brief Random amount that should be added to the scan tick frequency each scan period.\n\n"
+         "Expressed as the number of ticks to randomly add, but no less than zero.\n");
+      addField("trackLostTargetTime",  TypeF32,       Offset(trackLostTargetTime,       AITurretShapeData),
+         "@brief How long after the turret has lost the target should it still track it.\n\n"
+         "Expressed in seconds.\n");
    addField("maxWeaponRange",       TypeF32,       Offset(maxWeaponRange,       AITurretShapeData),
       "@brief Maximum distance that the weapon will fire upon a target.\n\n");
-
    addField("weaponLeadVelocity",   TypeF32,       Offset(weaponLeadVelocity,   AITurretShapeData),
       "@brief Velocity used to lead target.\n\n"
       "If value <= 0, don't lead target.\n");
+   endGroup("AI Steering");
 
    // State arrays
    addArray( "States", MaxStates );
@@ -196,8 +196,6 @@ void AITurretShapeData::initPersistFields()
          "Scoped to AITurretShapeData.");
 
    endArray( "States" );
-
-   Parent::initPersistFields();
 }
 
 bool AITurretShapeData::onAdd()
@@ -467,6 +465,7 @@ AITurretShape::~AITurretShape()
 
 void AITurretShape::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 

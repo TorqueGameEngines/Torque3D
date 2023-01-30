@@ -50,6 +50,7 @@ bool GuiMissionAreaEditorCtrl::onAdd()
 
 void GuiMissionAreaEditorCtrl::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 

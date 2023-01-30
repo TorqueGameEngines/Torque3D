@@ -38,8 +38,9 @@ VShapeAnimationEvent::VShapeAnimationEvent( void ) :
 
 //-----------------------------------------------------------------------------
 
-void VShapeAnimationEvent::initPersistFields( void )
+void VShapeAnimationEvent::initPersistFields()
 {
+   docsURL;
     Parent::initPersistFields();
 
     addField( "AnimationData", TypeRealString, Offset( mAnimationData, VShapeAnimationEvent ), "The name of the Animation Sequence to play upon triggering." );

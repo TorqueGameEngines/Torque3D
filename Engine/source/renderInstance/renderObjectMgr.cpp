@@ -49,6 +49,7 @@ RenderObjectMgr::RenderObjectMgr(RenderInstType riType, F32 renderOrder, F32 pro
 
 void RenderObjectMgr::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 

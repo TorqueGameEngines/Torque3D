@@ -70,17 +70,23 @@ afxStaticShapeData::afxStaticShapeData(const afxStaticShapeData& other, bool tem
 
 void afxStaticShapeData::initPersistFields()
 {
-  addField("sequence",              TypeString, myOffset(sequence),
+   docsURL;
+   addGroup("Animation");
+      addField("sequence",              TypeString, myOffset(sequence),
     "An animation sequence in the StaticShape to play.");
-  addField("ignoreSceneAmbient",    TypeBool,     myOffset(ignore_scene_amb),
-    "...");
-  addField("useCustomSceneAmbient", TypeBool,     myOffset(use_custom_scene_amb),
-    "...");
-  addField("customSceneAmbient",    TypeColorF,   myOffset(custom_scene_amb),
-    "...");
-  addField("doSpawn",               TypeBool,     myOffset(do_spawn),
-    "When true, the StaticShape effect will leave behind the StaticShape object as a "
-    "permanent part of the scene.");
+   endGroup("Animation");
+
+   addGroup("Rendering");
+      addField("ignoreSceneAmbient",    TypeBool,     myOffset(ignore_scene_amb), "...");
+      addField("useCustomSceneAmbient", TypeBool,     myOffset(use_custom_scene_amb), "...");
+      addField("customSceneAmbient",    TypeColorF,   myOffset(custom_scene_amb), "...");
+   endGroup("Rendering");
+
+   addGroup("Behaviour");
+      addField("doSpawn",               TypeBool,     myOffset(do_spawn),
+         "When true, the StaticShape effect will leave behind the StaticShape object as a "
+         "permanent part of the scene.");
+   endGroup("Behaviour");
 
   Parent::initPersistFields();
 }

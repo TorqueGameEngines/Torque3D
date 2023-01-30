@@ -133,6 +133,7 @@ AIPlayer::~AIPlayer()
 
 void AIPlayer::initPersistFields()
 {
+   docsURL;
    addGroup( "AI" );
 
       addField( "mMoveTolerance", TypeF32, Offset( mMoveTolerance, AIPlayer ), 

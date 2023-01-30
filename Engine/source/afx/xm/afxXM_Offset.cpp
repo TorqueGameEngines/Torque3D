@@ -231,6 +231,7 @@ afxXM_LocalOffsetData::afxXM_LocalOffsetData(const afxXM_LocalOffsetData& other,
 
 void afxXM_LocalOffsetData::initPersistFields()
 {
+   docsURL;
   addField("localOffset",  TypePoint3F,   Offset(local_offset, afxXM_LocalOffsetData),
     "...");
   addField("offsetPos2",   TypeBool,      Offset(offset_pos2, afxXM_LocalOffsetData),
@@ -384,6 +385,7 @@ afxXM_WorldOffsetData::afxXM_WorldOffsetData(const afxXM_WorldOffsetData& other,
 
 void afxXM_WorldOffsetData::initPersistFields()
 {
+   docsURL;
   addField("worldOffset",   TypePoint3F,  Offset(world_offset, afxXM_WorldOffsetData),
     "...");
   addField("offsetPos2",    TypeBool,     Offset(offset_pos2, afxXM_WorldOffsetData),

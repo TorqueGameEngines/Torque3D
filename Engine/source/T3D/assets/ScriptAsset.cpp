@@ -105,6 +105,7 @@ ScriptAsset::~ScriptAsset()
 
 void ScriptAsset::initPersistFields()
 {
+   docsURL;
    // Call parent.
    Parent::initPersistFields();
 

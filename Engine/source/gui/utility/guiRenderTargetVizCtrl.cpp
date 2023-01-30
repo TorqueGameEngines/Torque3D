@@ -78,6 +78,7 @@ bool GuiRenderTargetVizCtrl::onWake()
 
 void GuiRenderTargetVizCtrl::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 
    addField("RenderTargetName", TypeString, Offset(mTargetName, GuiRenderTargetVizCtrl), "");

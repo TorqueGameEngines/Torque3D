@@ -74,6 +74,7 @@ afxDamageData::afxDamageData(const afxDamageData& other, bool temp_clone) : Game
 
 void afxDamageData::initPersistFields()
 {
+   docsURL;
   addField("label",               TypeString,     myOffset(label),
     "An arbitrary string which is passed as an argument to a spell's onDamage() script "
     "method. It can be used to identify which damage effect the damage came from in "

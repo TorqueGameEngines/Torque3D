@@ -111,6 +111,7 @@ GuiSliderCtrl::GuiSliderCtrl()
 
 void GuiSliderCtrl::initPersistFields()
 {
+   docsURL;
    addGroup( "Slider" );
    
       addField( "range", TypePoint2F, Offset( mRange, GuiSliderCtrl ),

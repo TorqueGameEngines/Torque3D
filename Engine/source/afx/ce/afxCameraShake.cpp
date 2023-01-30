@@ -66,6 +66,7 @@ afxCameraShakeData::afxCameraShakeData(const afxCameraShakeData& other, bool tem
 
 void afxCameraShakeData::initPersistFields()
 {
+   docsURL;
   addField("frequency", TypePoint3F,   Offset(camShakeFreq,       afxCameraShakeData),
     "The camera shake frequencies for all three axes: X, Y, Z.");
   addField("amplitude", TypePoint3F,   Offset(camShakeAmp,        afxCameraShakeData),

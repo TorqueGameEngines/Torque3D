@@ -135,6 +135,7 @@ GuiObjectView::~GuiObjectView()
 
 void GuiObjectView::initPersistFields()
 {
+   docsURL;
    addGroup( "Model" );
    
       addField( "shapeFile", TypeStringFilename, Offset( mModelName, GuiObjectView ),

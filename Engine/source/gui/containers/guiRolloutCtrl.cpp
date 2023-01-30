@@ -92,6 +92,7 @@ GuiRolloutCtrl::~GuiRolloutCtrl()
 
 void GuiRolloutCtrl::initPersistFields()
 {
+   docsURL;
    addGroup( "Rollout" );
    
       addField( "caption", TypeRealString, Offset( mCaption, GuiRolloutCtrl ),

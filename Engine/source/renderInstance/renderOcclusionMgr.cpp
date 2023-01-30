@@ -160,6 +160,7 @@ void RenderOcclusionMgr::consoleInit()
 
 void RenderOcclusionMgr::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 

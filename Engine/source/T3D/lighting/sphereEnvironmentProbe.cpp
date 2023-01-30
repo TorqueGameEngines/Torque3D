@@ -89,6 +89,7 @@ SphereEnvironmentProbe::~SphereEnvironmentProbe()
 //-----------------------------------------------------------------------------
 void SphereEnvironmentProbe::initPersistFields()
 {
+   docsURL;
    // SceneObject already handles exposing the transform
    Parent::initPersistFields();
 

@@ -153,6 +153,7 @@ void TerrainMaterialAsset::consoleInit()
 
 void TerrainMaterialAsset::initPersistFields()
 {
+   docsURL;
    // Call parent.
    Parent::initPersistFields();
 

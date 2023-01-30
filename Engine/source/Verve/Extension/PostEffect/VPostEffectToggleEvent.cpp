@@ -36,8 +36,9 @@ VPostEffectToggleEvent::VPostEffectToggleEvent( void ) :
     setLabel( "ToggleEvent" );
 }
 
-void VPostEffectToggleEvent::initPersistFields( void )
+void VPostEffectToggleEvent::initPersistFields()
 {
+   docsURL;
     Parent::initPersistFields();
 
     addField( "Action", TYPEID<VActionToggle>(), Offset( mEventType, VPostEffectToggleEvent ) );

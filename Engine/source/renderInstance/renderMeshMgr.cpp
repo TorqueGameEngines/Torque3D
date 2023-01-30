@@ -72,6 +72,7 @@ void RenderMeshMgr::init()
 
 void RenderMeshMgr::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 

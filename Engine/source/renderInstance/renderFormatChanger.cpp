@@ -320,6 +320,7 @@ bool RenderFormatToken::isEnabled() const
 
 void RenderFormatToken::initPersistFields()
 {
+   docsURL;
    addProtectedField("format", TypeGFXFormat, Offset(mColorFormat, RenderFormatToken), &_setFmt, &defaultProtectedGetFn, 
       "Sets the color buffer format for this token.");
 

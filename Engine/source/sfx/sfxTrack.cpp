@@ -78,6 +78,7 @@ SFXTrack::SFXTrack(const SFXTrack& other, bool temp_clone) : SimDataBlock(other,
 
 void SFXTrack::initPersistFields()
 {
+   docsURL;
    addGroup( "Sound" );
    
       addField( "description",   TypeSFXDescriptionName, Offset( mDescription, SFXTrack ),

@@ -232,6 +232,7 @@ GuiGradientCtrl::GuiGradientCtrl()
 //--------------------------------------------------------------------------
 void GuiGradientCtrl::initPersistFields()
 {
+   docsURL;
    addGroup("ColorPicker");
    addField("baseColor", TypeColorF, Offset(mBaseColor, GuiGradientCtrl));
    addField("pickColor", TypeColorF, Offset(mPickColor, GuiGradientCtrl));

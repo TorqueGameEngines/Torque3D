@@ -142,6 +142,7 @@ LightFlareData::~LightFlareData()
 
 void LightFlareData::initPersistFields()
 {
+   docsURL;
    addGroup( "LightFlareData" );
 
       addField( "overallScale", TypeF32, Offset( mScale, LightFlareData ),

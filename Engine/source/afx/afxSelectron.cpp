@@ -148,6 +148,7 @@ void afxSelectronData::reloadReset()
 
 void afxSelectronData::initPersistFields()
 {
+   docsURL;
    static ewValidator _mainPhrase(MAIN_PHRASE);
    static ewValidator _selectPhrase(SELECT_PHRASE);
    static ewValidator _deselectPhrase(DESELECT_PHRASE);

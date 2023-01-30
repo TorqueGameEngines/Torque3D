@@ -34,8 +34,9 @@ VLightObjectToggleEvent::VLightObjectToggleEvent( void ) :
     setLabel( "ToggleEvent" );
 }
 
-void VLightObjectToggleEvent::initPersistFields( void )
+void VLightObjectToggleEvent::initPersistFields()
 {
+   docsURL;
     Parent::initPersistFields();
 
     addField( "Action", TYPEID<VActionToggle>(), Offset( mEventType, VLightObjectToggleEvent ) );

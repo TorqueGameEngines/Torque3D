@@ -85,6 +85,7 @@ EndImplementEnumType;
 //-----------------------------------------------------------------------------
 void GuiFrameSetCtrl::initPersistFields()
 {
+   docsURL;
    addField( "columns", TypeS32Vector, Offset(mColumnOffsets, GuiFrameSetCtrl),
       "A vector of column offsets (determines the width of each column)." );
 

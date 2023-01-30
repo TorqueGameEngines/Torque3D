@@ -859,6 +859,7 @@ GuiTreeViewCtrl::~GuiTreeViewCtrl()
 
 void GuiTreeViewCtrl::initPersistFields()
 {
+   docsURL;
    addGroup( "TreeView" );
 
       addField( "tabSize",              TypeS32,    Offset(mTabSize,              GuiTreeViewCtrl));

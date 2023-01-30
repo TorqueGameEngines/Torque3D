@@ -74,6 +74,7 @@ afxFootSwitchData::afxFootSwitchData(const afxFootSwitchData& other, bool temp_c
 
 void afxFootSwitchData::initPersistFields()
 {
+   docsURL;
   addField("overrideAll",       TypeBool,       myOffset(override_all),
     "When true, all of a Player's footstep effects are turned off for the duration of "
     "the foot-switch effect.");

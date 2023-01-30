@@ -282,7 +282,6 @@ IMPLEMENT_CALLBACK( PlayerData, onLeaveMissionArea, void, ( Player* obj ), ( obj
 
 PlayerData::PlayerData()
 {
-   shadowEnable = true;
    shadowSize = 256;
    shadowProjectionDistance = 14.0f;
 
@@ -705,6 +704,9 @@ bool PlayerData::isJumpAction(U32 action)
 
 void PlayerData::initPersistFields()
 {
+   docsURL;
+   Parent::initPersistFields();
+
    addField( "pickupRadius", TypeF32, Offset(pickupRadius, PlayerData),
       "@brief Radius around the player to collide with Items in the scene (on server).\n\n"
       "Internally the pickupRadius is added to the larger side of the initial bounding box "
@@ -1163,8 +1165,6 @@ void PlayerData::initPersistFields()
          "need to.\n");
 
    endGroup( "Third Person" );
-
-   Parent::initPersistFields();
 }
 
 void PlayerData::packData(BitStream* stream)

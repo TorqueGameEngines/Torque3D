@@ -99,6 +99,7 @@ GuiCrossHairHud::GuiCrossHairHud()
 
 void GuiCrossHairHud::initPersistFields()
 {
+   docsURL;
    addGroup("Damage");		
    addField( "damageFillColor", TypeColorF, Offset( mDamageFillColor, GuiCrossHairHud ), "As the health bar depletes, this color will represent the health loss amount." );
    addField( "damageFrameColor", TypeColorF, Offset( mDamageFrameColor, GuiCrossHairHud ), "Color for the health bar's frame." );

@@ -60,6 +60,7 @@ afxGuiTextHud::afxGuiTextHud()
 
 void afxGuiTextHud::initPersistFields()
 {
+   docsURL;
    addGroup("Colors");
    addField( "fillColor",  TypeColorF, Offset( mFillColor, afxGuiTextHud ),
     "...");

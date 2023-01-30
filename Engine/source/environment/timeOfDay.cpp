@@ -124,6 +124,7 @@ bool TimeOfDay::setDayLength( void *object, const char *index, const char *data 
 
 void TimeOfDay::initPersistFields()
 {
+   docsURL;
 	  addGroup( "TimeOfDay" );
 
       addField( "axisTilt", TypeF32, Offset( mAxisTilt, TimeOfDay ),

@@ -75,6 +75,7 @@ afxPhysicalZoneData::afxPhysicalZoneData(const afxPhysicalZoneData& other, bool 
 
 void afxPhysicalZoneData::initPersistFields()
 {
+   docsURL;
   addField("velocityMod",               TypeF32,         myOffset(mVelocityMod),
     "A multiplier that biases the velocity of an object every tick it is within the "
     "zone.");

@@ -75,6 +75,7 @@ RenderImposterMgr::RenderImposterMgr( F32 renderOrder, F32 processAddOrder )
 
 void RenderImposterMgr::initPersistFields()
 {
+   docsURL;
    GFXDevice::getDeviceEventSignal().notify( &RenderImposterMgr::_clearStats );
 
    Con::addVariable( "$ImposterStats::rendered", TypeS32, &smRendered, "@internal" );

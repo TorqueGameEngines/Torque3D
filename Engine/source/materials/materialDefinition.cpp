@@ -245,6 +245,7 @@ Material::Material()
 
 void Material::initPersistFields()
 {
+   docsURL;
    addField("mapTo", TypeRealString, Offset(mMapTo, Material),
       "Used to map this material to the material name used by TSShape.");
 

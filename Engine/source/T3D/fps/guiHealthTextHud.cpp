@@ -115,7 +115,8 @@ GuiHealthTextHud::GuiHealthTextHud()
 }  
   
 void GuiHealthTextHud::initPersistFields()  
-{  
+{
+   docsURL;
    addGroup("Colors");       
    addField("fillColor", TypeColorF, Offset(mFillColor, GuiHealthTextHud), "Color for the background of the control.");  
    addField("frameColor", TypeColorF, Offset(mFrameColor, GuiHealthTextHud), "Color for the control's frame.");  

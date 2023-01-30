@@ -66,6 +66,7 @@ GuiInspector::~GuiInspector()
 
 void GuiInspector::initPersistFields()
 {
+   docsURL;
    addGroup( "Inspector" );
    
       addField( "dividerMargin", TypeS32, Offset( mDividerMargin, GuiInspector ) );

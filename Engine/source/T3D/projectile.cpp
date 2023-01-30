@@ -232,88 +232,91 @@ ProjectileData::ProjectileData(const ProjectileData& other, bool temp_clone) : G
 
 void ProjectileData::initPersistFields()
 {
-   addField("particleEmitter", TYPEID< ParticleEmitterData >(), Offset(particleEmitter, ProjectileData),
-      "@brief Particle emitter datablock used to generate particles while the projectile is outside of water.\n\n"
-      "@note If datablocks are defined for both particleEmitter and particleWaterEmitter, both effects will play "
-      "as the projectile enters or leaves water.\n\n"
-      "@see particleWaterEmitter\n");
-   addField("particleWaterEmitter", TYPEID< ParticleEmitterData >(), Offset(particleWaterEmitter, ProjectileData),
-      "@brief Particle emitter datablock used to generate particles while the projectile is submerged in water.\n\n"
-      "@note If datablocks are defined for both particleWaterEmitter and particleEmitter , both effects will play "
-      "as the projectile enters or leaves water.\n\n"
-      "@see particleEmitter\n");
+   docsURL;
+   addGroup("Shapes");
+      addProtectedField("projectileShapeName", TypeShapeFilename, Offset(mProjectileShapeName, ProjectileData), &_setProjectileShapeData, &defaultProtectedGetFn,
+         "@brief File path to the model of the projectile.\n\n", AbstractClassRep::FIELD_HideInInspectors);
+      INITPERSISTFIELD_SHAPEASSET(ProjectileShape, ProjectileData, "@brief The model of the projectile.\n\n");
+      addField("scale", TypePoint3F, Offset(scale, ProjectileData),
+         "@brief Scale to apply to the projectile's size.\n\n"
+         "@note This is applied after SceneObject::scale\n");
+   endGroup("Shapes");
 
-   addProtectedField("projectileShapeName", TypeShapeFilename, Offset(mProjectileShapeName, ProjectileData), &_setProjectileShapeData, &defaultProtectedGetFn,
-      "@brief File path to the model of the projectile.\n\n", AbstractClassRep::FIELD_HideInInspectors);
-      
-   INITPERSISTFIELD_SHAPEASSET(ProjectileShape, ProjectileData, "@brief The model of the projectile.\n\n");
+   addGroup("Particle Effects");
+      addField("particleEmitter", TYPEID< ParticleEmitterData >(), Offset(particleEmitter, ProjectileData),
+         "@brief Particle emitter datablock used to generate particles while the projectile is outside of water.\n\n"
+         "@note If datablocks are defined for both particleEmitter and particleWaterEmitter, both effects will play "
+         "as the projectile enters or leaves water.\n\n"
+         "@see particleWaterEmitter\n");
+      addField("particleWaterEmitter", TYPEID< ParticleEmitterData >(), Offset(particleWaterEmitter, ProjectileData),
+         "@brief Particle emitter datablock used to generate particles while the projectile is submerged in water.\n\n"
+         "@note If datablocks are defined for both particleWaterEmitter and particleEmitter , both effects will play "
+         "as the projectile enters or leaves water.\n\n"
+         "@see particleEmitter\n");
+      addField("explosion", TYPEID< ExplosionData >(), Offset(explosion, ProjectileData),
+         "@brief Explosion datablock used when the projectile explodes outside of water.\n\n");
+      addField("waterExplosion", TYPEID< ExplosionData >(), Offset(waterExplosion, ProjectileData),
+         "@brief Explosion datablock used when the projectile explodes underwater.\n\n");
+      addField("splash", TYPEID< SplashData >(), Offset(splash, ProjectileData),
+         "@brief Splash datablock used to create splash effects as the projectile enters or leaves water\n\n");
+      addField("decal", TYPEID< DecalData >(), Offset(decal, ProjectileData),
+         "@brief Decal datablock used for decals placed at projectile explosion points.\n\n");
+   endGroup("Particle Effects");
 
-   addField("scale", TypePoint3F, Offset(scale, ProjectileData),
-      "@brief Scale to apply to the projectile's size.\n\n"
-      "@note This is applied after SceneObject::scale\n");
+   addGroup("Sounds");
+      INITPERSISTFIELD_SOUNDASSET(ProjectileSound, ProjectileData, "The sound for the projectile.");
+   endGroup("Sounds");
 
-   INITPERSISTFIELD_SOUNDASSET(ProjectileSound, ProjectileData, "The sound for the projectile.");
+   addGroup("Light Emitter");
+      addField("lightDesc", TYPEID< LightDescription >(), Offset(lightDesc, ProjectileData),
+         "@brief LightDescription datablock used for lights attached to the projectile.\n\n");
+   endGroup("Light Emitter");   
 
-   addField("explosion", TYPEID< ExplosionData >(), Offset(explosion, ProjectileData),
-      "@brief Explosion datablock used when the projectile explodes outside of water.\n\n");
-   addField("waterExplosion", TYPEID< ExplosionData >(), Offset(waterExplosion, ProjectileData),
-      "@brief Explosion datablock used when the projectile explodes underwater.\n\n");
+   addGroup("Physics");
+      addProtectedField("lifetime", TypeS32, Offset(lifetime, ProjectileData), &setLifetime, &getScaledValue,
+         "@brief Amount of time, in milliseconds, before the projectile is removed from the simulation.\n\n"
+         "Used with fadeDelay to determine the transparency of the projectile at a given time. "
+         "A projectile may exist up to a maximum of 131040ms (or 4095 ticks) as defined by Projectile::MaxLivingTicks in the source code."
+         "@see fadeDelay");
+      addProtectedField("armingDelay", TypeS32, Offset(armingDelay, ProjectileData), &setArmingDelay, &getScaledValue,
+         "@brief Amount of time, in milliseconds, before the projectile will cause damage or explode on impact.\n\n"
+         "This value must be equal to or less than the projectile's lifetime.\n\n"
+         "@see lifetime");
+      addProtectedField("fadeDelay", TypeS32, Offset(fadeDelay, ProjectileData), &setFadeDelay, &getScaledValue,
+         "@brief Amount of time, in milliseconds, before the projectile begins to fade out.\n\n"
+         "This value must be smaller than the projectile's lifetime to have an affect.");
+      addField("isBallistic", TypeBool, Offset(isBallistic, ProjectileData),
+         "@brief Detetmines if the projectile should be affected by gravity and whether or not "
+         "it bounces before exploding.\n\n");
+      addField("velInheritFactor", TypeF32, Offset(velInheritFactor, ProjectileData),
+         "@brief Amount of velocity the projectile recieves from the source that created it.\n\n"
+         "Use an amount between 0 and 1 for the best effect. "
+         "This value is never modified by the engine.\n"
+         "@note This value by default is not transmitted between the server and the client.");
+      addField("muzzleVelocity", TypeF32, Offset(muzzleVelocity, ProjectileData),
+         "@brief Amount of velocity the projectile recieves from the \"muzzle\" of the gun.\n\n"
+         "Used with velInheritFactor to determine the initial velocity of the projectile. "
+         "This value is never modified by the engine.\n\n"
+         "@note This value by default is not transmitted between the server and the client.\n\n"
+         "@see velInheritFactor");
+      addField("impactForce", TypeF32, Offset(impactForce, ProjectileData));
+      addField("bounceElasticity", TypeF32, Offset(bounceElasticity, ProjectileData),
+         "@brief Influences post-bounce velocity of a projectile that does not explode on contact.\n\n"
+         "Scales the velocity from a bounce after friction is taken into account. "
+         "A value of 1.0 will leave it's velocity unchanged while values greater than 1.0 will increase it.\n");
+      addField("bounceFriction", TypeF32, Offset(bounceFriction, ProjectileData),
+         "@brief Factor to reduce post-bounce velocity of a projectile that does not explode on contact.\n\n"
+         "Reduces bounce velocity by this factor and a multiple of the tangent to impact. "
+         "Used to simulate surface friction.\n");
+      addField("gravityMod", TypeF32, Offset(gravityMod, ProjectileData),
+         "@brief Scales the influence of gravity on the projectile.\n\n"
+         "The larger this value is, the more that gravity will affect the projectile. "
+         "A value of 1.0 will assume \"normal\" influence upon it.\n"
+         "The magnitude of gravity is assumed to be 9.81 m/s/s\n\n"
+         "@note ProjectileData::isBallistic must be true for this to have any affect.");
+   endGroup("Physics");
 
-   addField("splash", TYPEID< SplashData >(), Offset(splash, ProjectileData),
-      "@brief Splash datablock used to create splash effects as the projectile enters or leaves water\n\n");
-
-   addField("decal", TYPEID< DecalData >(), Offset(decal, ProjectileData),
-      "@brief Decal datablock used for decals placed at projectile explosion points.\n\n");
-
-   addField("lightDesc", TYPEID< LightDescription >(), Offset(lightDesc, ProjectileData),
-      "@brief LightDescription datablock used for lights attached to the projectile.\n\n");
-
-   addField("isBallistic", TypeBool, Offset(isBallistic, ProjectileData),
-      "@brief Detetmines if the projectile should be affected by gravity and whether or not "
-      "it bounces before exploding.\n\n");
-
-   addField("velInheritFactor", TypeF32, Offset(velInheritFactor, ProjectileData),
-      "@brief Amount of velocity the projectile recieves from the source that created it.\n\n"
-      "Use an amount between 0 and 1 for the best effect. "
-      "This value is never modified by the engine.\n"
-      "@note This value by default is not transmitted between the server and the client.");
-   addField("muzzleVelocity", TypeF32, Offset(muzzleVelocity, ProjectileData),
-      "@brief Amount of velocity the projectile recieves from the \"muzzle\" of the gun.\n\n"
-      "Used with velInheritFactor to determine the initial velocity of the projectile. "
-      "This value is never modified by the engine.\n\n"
-      "@note This value by default is not transmitted between the server and the client.\n\n"
-      "@see velInheritFactor");
-   
-   addField("impactForce", TypeF32, Offset(impactForce, ProjectileData));
-
-   addProtectedField("lifetime", TypeS32, Offset(lifetime, ProjectileData), &setLifetime, &getScaledValue, 
-      "@brief Amount of time, in milliseconds, before the projectile is removed from the simulation.\n\n"
-      "Used with fadeDelay to determine the transparency of the projectile at a given time. "
-      "A projectile may exist up to a maximum of 131040ms (or 4095 ticks) as defined by Projectile::MaxLivingTicks in the source code."
-      "@see fadeDelay");
-
-   addProtectedField("armingDelay", TypeS32, Offset(armingDelay, ProjectileData), &setArmingDelay, &getScaledValue, 
-      "@brief Amount of time, in milliseconds, before the projectile will cause damage or explode on impact.\n\n"
-      "This value must be equal to or less than the projectile's lifetime.\n\n"
-      "@see lifetime");
-   addProtectedField("fadeDelay", TypeS32, Offset(fadeDelay, ProjectileData), &setFadeDelay, &getScaledValue,
-      "@brief Amount of time, in milliseconds, before the projectile begins to fade out.\n\n"
-      "This value must be smaller than the projectile's lifetime to have an affect.");
-
-   addField("bounceElasticity", TypeF32, Offset(bounceElasticity, ProjectileData), 
-      "@brief Influences post-bounce velocity of a projectile that does not explode on contact.\n\n"
-      "Scales the velocity from a bounce after friction is taken into account. "
-      "A value of 1.0 will leave it's velocity unchanged while values greater than 1.0 will increase it.\n");
-   addField("bounceFriction", TypeF32, Offset(bounceFriction, ProjectileData),
-      "@brief Factor to reduce post-bounce velocity of a projectile that does not explode on contact.\n\n"
-      "Reduces bounce velocity by this factor and a multiple of the tangent to impact. "
-      "Used to simulate surface friction.\n");
-   addField("gravityMod", TypeF32, Offset(gravityMod, ProjectileData ),
-      "@brief Scales the influence of gravity on the projectile.\n\n"
-      "The larger this value is, the more that gravity will affect the projectile. "
-      "A value of 1.0 will assume \"normal\" influence upon it.\n"
-      "The magnitude of gravity is assumed to be 9.81 m/s/s\n\n"
-      "@note ProjectileData::isBallistic must be true for this to have any affect.");
+   Parent::initPersistFields();
    // disallow some field substitutions
    onlyKeepClearSubstitutions("explosion");
    onlyKeepClearSubstitutions("particleEmitter");
@@ -321,8 +324,6 @@ void ProjectileData::initPersistFields()
    onlyKeepClearSubstitutions("sound");
    onlyKeepClearSubstitutions("splash");
    onlyKeepClearSubstitutions("waterExplosion");
-
-   Parent::initPersistFields();
 }
 
 
@@ -647,6 +648,7 @@ Projectile::~Projectile()
 //--------------------------------------------------------------------------
 void Projectile::initPersistFields()
 {
+   docsURL;
    addGroup("Physics");
 
    addProtectedField("initialPosition",  TypePoint3F, Offset(mInitialPosition, Projectile), &_setInitialPosition, &defaultProtectedGetFn,

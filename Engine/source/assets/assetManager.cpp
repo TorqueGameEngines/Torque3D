@@ -127,6 +127,7 @@ void AssetManager::onRemove()
 
 void AssetManager::initPersistFields()
 {
+   docsURL;
     // Call parent.
     Parent::initPersistFields();
 

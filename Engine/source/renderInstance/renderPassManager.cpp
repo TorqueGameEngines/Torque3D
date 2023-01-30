@@ -123,6 +123,7 @@ RenderPassManager::RenderBinEventSignal& RenderPassManager::getRenderBinSignal()
 
 void RenderPassManager::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 

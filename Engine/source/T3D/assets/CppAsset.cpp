@@ -107,6 +107,7 @@ CppAsset::~CppAsset()
 
 void CppAsset::initPersistFields()
 {
+   docsURL;
    // Call parent.
    Parent::initPersistFields();
 

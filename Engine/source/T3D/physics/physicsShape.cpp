@@ -87,9 +87,8 @@ PhysicsShapeData::~PhysicsShapeData()
 
 void PhysicsShapeData::initPersistFields()
 {
-   Parent::initPersistFields();
-
-   addGroup("Media");
+   docsURL;
+   addGroup("Shapes");
 
       INITPERSISTFIELD_SHAPEASSET(Shape, PhysicsShapeData, "@brief Shape asset to be used with this physics object.\n\n"
          "Compatable with Live-Asset Reloading. ")
@@ -103,7 +102,7 @@ void PhysicsShapeData::initPersistFields()
       addField( "destroyedShape", TYPEID< SimObjectRef<PhysicsShapeData> >(), Offset( destroyedShape, PhysicsShapeData ),
          "@brief Name of a PhysicsShapeData to spawn when this shape is destroyed (optional)." );
 
-   endGroup("Media");
+   endGroup("Shapes");
 
    addGroup( "Physics" );
       
@@ -173,7 +172,8 @@ void PhysicsShapeData::initPersistFields()
       addField( "simType", TYPEID< PhysicsShapeData::SimType >(), Offset( simType, PhysicsShapeData ),
          "@brief Controls whether this shape is simulated on the server, client, or both physics simulations.\n\n" );
 
-   endGroup( "Networking" );   
+   endGroup( "Networking" );
+   Parent::initPersistFields();
 }
 
 void PhysicsShapeData::packData( BitStream *stream )
@@ -431,7 +431,8 @@ void PhysicsShape::consoleInit()
 }
 
 void PhysicsShape::initPersistFields()
-{   
+{
+   docsURL;
    addGroup( "PhysicsShape" );
 
       addField( "playAmbient", TypeBool, Offset( mPlayAmbient, PhysicsShape ),

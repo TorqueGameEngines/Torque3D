@@ -82,23 +82,24 @@ EndImplementEnumType;
 
 void afxProjectileData::initPersistFields()
 {
-  addField("networking",              TypeS8,       myOffset(networking),
-    "...");
-  addField("launchPosSpec",           TypeString,   myOffset(launch_pos_spec),
-    "...");
-  addField("launchDirBias",           TypePoint3F,  myOffset(launch_dir_bias),
-    "...");
-  addField("ignoreSourceTimeout",     TypeBool,     myOffset(ignore_src_timeout),
-    "...");
-  addField("dynamicCollisionMask",    TypeS32,      myOffset(dynamicCollisionMask),
-    "...");
-  addField("staticCollisionMask",     TypeS32,      myOffset(staticCollisionMask),
-    "...");
-  addField("overrideCollisionMasks",  TypeBool,     myOffset(override_collision_masks),
-    "...");
+   docsURL;
+   addGroup("Physics");
+      addField("ignoreSourceTimeout",     TypeBool,     myOffset(ignore_src_timeout), "...");
+      addField("dynamicCollisionMask",    TypeS32,      myOffset(dynamicCollisionMask), "...");
+      addField("staticCollisionMask",     TypeS32,      myOffset(staticCollisionMask), "...");
+      addField("overrideCollisionMasks",  TypeBool,     myOffset(override_collision_masks), "...");
+   endGroup("Physics");
 
-  addField("launchDirMethod", TYPEID<afxProjectileData::LaunchDirType>(), myOffset(launch_dir_method),
-    "Possible values: towardPos2Constraint, orientConstraint, or launchDirField.");
+   addGroup("Physics-Launch");
+      addField("launchPosSpec",           TypeString,   myOffset(launch_pos_spec), "...");
+      addField("launchDirBias",           TypePoint3F,  myOffset(launch_dir_bias), "...");
+      addField("launchDirMethod", TYPEID<afxProjectileData::LaunchDirType>(), myOffset(launch_dir_method),
+         "Possible values: towardPos2Constraint, orientConstraint, or launchDirField.");
+   endGroup("Physics-Launch");
+
+   addGroup("Networking");
+      addField("networking",              TypeS8,       myOffset(networking), "...");
+   endGroup("Networking");
 
   Parent::initPersistFields();
 }

@@ -100,6 +100,7 @@ Forest::~Forest()
 
 void Forest::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 
    addField( "dataFile",  TypeFilename, Offset( mDataFileName, Forest ),

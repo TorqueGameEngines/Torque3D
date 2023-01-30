@@ -67,6 +67,7 @@ afxMooringData::afxMooringData(const afxMooringData& other, bool temp_clone) : G
 
 void afxMooringData::initPersistFields()
 {
+   docsURL;
   addField("displayAxisMarker",   TypeBool,     myOffset(display_axis_marker),
     "Specifies whether to display an axis to help visualize the position and orientation "
     "of the mooring.");

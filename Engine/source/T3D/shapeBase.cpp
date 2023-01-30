@@ -153,7 +153,7 @@ static const char *sDamageStateName[] =
 //----------------------------------------------------------------------------
 
 ShapeBaseData::ShapeBaseData()
- : shadowEnable( false ),
+ :
    shadowSize( 128 ),
    shadowMaxVisibleDistance( 80.0f ),
    shadowProjectionDistance( 10.0f ),
@@ -208,7 +208,6 @@ ShapeBaseData::ShapeBaseData()
 
 ShapeBaseData::ShapeBaseData(const ShapeBaseData& other, bool temp_clone) : GameBaseData(other, temp_clone)
 {
-   shadowEnable = other.shadowEnable;
    shadowSize = other.shadowSize;
    shadowMaxVisibleDistance = other.shadowMaxVisibleDistance;
    shadowProjectionDistance = other.shadowProjectionDistance;
@@ -535,31 +534,17 @@ bool ShapeBaseData::_setMass( void* object, const char* index, const char* data 
 
 void ShapeBaseData::initPersistFields()
 {
-   addGroup( "Shadows" );
-
-      addField( "shadowEnable", TypeBool, Offset(shadowEnable, ShapeBaseData),
-         "Enable shadows for this shape (currently unused, shadows are always enabled)." );
-      addField( "shadowSize", TypeS32, Offset(shadowSize, ShapeBaseData),
-         "Size of the projected shadow texture (must be power of 2)." );
-      addField( "shadowMaxVisibleDistance", TypeF32, Offset(shadowMaxVisibleDistance, ShapeBaseData),
-         "Maximum distance at which shadow is visible (currently unused)." );
-      addField( "shadowProjectionDistance", TypeF32, Offset(shadowProjectionDistance, ShapeBaseData),
-         "Maximum height above ground to project shadow. If the object is higher "
-         "than this no shadow will be rendered." );
-      addField( "shadowSphereAdjust", TypeF32, Offset(shadowSphereAdjust, ShapeBaseData),
-         "Scalar applied to the radius of spot shadows (initial radius is based "
-         "on the shape bounds but can be adjusted with this field)." );
-
-   endGroup( "Shadows" );
-
-   addGroup( "Render" );
-
+   docsURL;
+   addGroup( "Shapes" );
       INITPERSISTFIELD_SHAPEASSET(Shape, ShapeBaseData, "The source shape asset.");
+      addField("computeCRC", TypeBool, Offset(computeCRC, ShapeBaseData),
+         "If true, verify that the CRC of the client's shape model matches the "
+         "server's CRC for the shape model when loaded by the client.");
+      addField("silentBBoxValidation", TypeBool, Offset(silent_bbox_check, ShapeBaseData));
+      INITPERSISTFIELD_SHAPEASSET(DebrisShape, ShapeBaseData, "The shape asset to use for auto-generated breakups via blowup(). @note may not be functional.");
+   endGroup( "Shapes" );
 
-   endGroup( "Render" );
-
-   addGroup( "Destruction", "Parameters related to the destruction effects of this object." );
-
+   addGroup("Particle Effects");
       addField( "explosion", TYPEID< ExplosionData >(), Offset(explosion, ShapeBaseData),
          "%Explosion to generate when this shape is blown up." );
       addField( "underwaterExplosion", TYPEID< ExplosionData >(), Offset(underwaterExplosion, ShapeBaseData),
@@ -568,23 +553,17 @@ void ShapeBaseData::initPersistFields()
          "%Debris to generate when this shape is blown up." );
       addField( "renderWhenDestroyed", TypeBool, Offset(renderWhenDestroyed, ShapeBaseData),
          "Whether to render the shape when it is in the \"Destroyed\" damage state." );
+   endGroup("Particle Effects");
 
-      INITPERSISTFIELD_SHAPEASSET(DebrisShape, ShapeBaseData, "The shape asset to use for auto-generated breakups. @note may not be functional.");
-
-   endGroup( "Destruction" );
-
-   addGroup( "Physics" );
-   
+   addGroup( "Physics" );   
       addProtectedField("mass", TypeF32, Offset(mass, ShapeBaseData), &_setMass, &defaultProtectedGetFn, "Shape mass.\nUsed in simulation of moving objects.\n"  );
       addField( "drag", TypeF32, Offset(drag, ShapeBaseData),
          "Drag factor.\nReduces velocity of moving objects." );
       addField( "density", TypeF32, Offset(density, ShapeBaseData),
          "Shape density.\nUsed when computing buoyancy when in water.\n" );
-
    endGroup( "Physics" );
 
    addGroup( "Damage/Energy" );
-
       addField( "maxEnergy", TypeF32, Offset(maxEnergy, ShapeBaseData),
          "Maximum energy level for this object." );
       addField( "maxDamage", TypeF32, Offset(maxDamage, ShapeBaseData),
@@ -605,11 +584,9 @@ void ShapeBaseData::initPersistFields()
       addField( "isInvincible", TypeBool, Offset(isInvincible, ShapeBaseData),
          "Invincible flag; when invincible, the object cannot be damaged or "
          "repaired." );
-
    endGroup( "Damage/Energy" );
 
    addGroup( "Camera", "The settings used by the shape when it is the camera." );
-
       addField( "cameraMaxDist", TypeF32, Offset(cameraMaxDist, ShapeBaseData),
          "The maximum distance from the camera to the object.\n"
          "Used when computing a custom camera transform for this object.\n\n"
@@ -638,35 +615,38 @@ void ShapeBaseData::initPersistFields()
          "Observe this object through its camera transform and default fov.\n"
          "If true, when this object is the camera it can provide a custom camera "
          "transform and FOV (instead of the default eye transform)." );
-
    endGroup("Camera");
 
-   addGroup( "Misc" );
-
-      addField( "computeCRC", TypeBool, Offset(computeCRC, ShapeBaseData),
-         "If true, verify that the CRC of the client's shape model matches the "
-         "server's CRC for the shape model when loaded by the client." );
-
-   endGroup( "Misc" );
-
    addGroup( "Reflection" );
-
       addField( "cubeReflectorDesc", TypeRealString, Offset( cubeDescName, ShapeBaseData ), 
          "References a ReflectorDesc datablock that defines performance and quality properties for dynamic reflections.\n");
       //addField( "reflectMaxRateMs", TypeS32, Offset( reflectMaxRateMs, ShapeBaseData ), "reflection will not be updated more frequently than this" );
       //addField( "reflectMaxDist", TypeF32, Offset( reflectMaxDist, ShapeBaseData ), "distance at which reflection is never updated" );
       //addField( "reflectMinDist", TypeF32, Offset( reflectMinDist, ShapeBaseData ), "distance at which reflection is always updated" );
       //addField( "reflectDetailAdjust", TypeF32, Offset( reflectDetailAdjust, ShapeBaseData ), "scale up or down the detail level for objects rendered in a reflection" );
-
    endGroup( "Reflection" );
 
    addField("remapTextureTags",      TypeString,   Offset(remap_txr_tags, ShapeBaseData));
-   addField("silentBBoxValidation",  TypeBool,     Offset(silent_bbox_check, ShapeBaseData));
+
    // disallow some field substitutions
    onlyKeepClearSubstitutions("debris"); // subs resolving to "~~", or "~0" are OK
    onlyKeepClearSubstitutions("explosion");
    onlyKeepClearSubstitutions("underwaterExplosion");
    Parent::initPersistFields();
+
+   addGroup("BL Projected Shadows");
+      addField("shadowSize", TypeS32, Offset(shadowSize, ShapeBaseData),
+         "Size of the projected shadow texture (must be power of 2).");
+      addField("shadowMaxVisibleDistance", TypeF32, Offset(shadowMaxVisibleDistance, ShapeBaseData),
+         "Maximum distance at which shadow is visible (currently unused).");
+      addField("shadowProjectionDistance", TypeF32, Offset(shadowProjectionDistance, ShapeBaseData),
+         "Maximum height above ground to project shadow. If the object is higher "
+         "than this no shadow will be rendered.");
+      addField("shadowSphereAdjust", TypeF32, Offset(shadowSphereAdjust, ShapeBaseData),
+         "Scalar applied to the radius of spot shadows (initial radius is based "
+         "on the shape bounds but can be adjusted with this field).");
+   endGroup("BL Projected Shadows");
+
 }
 
 DefineEngineMethod( ShapeBaseData, checkDeployPos, bool, ( TransformF txfm ),,
@@ -751,7 +731,6 @@ void ShapeBaseData::packData(BitStream* stream)
    if(stream->writeFlag(computeCRC))
       stream->write(mCRC);
 
-   stream->writeFlag(shadowEnable);
    stream->write(shadowSize);
    stream->write(shadowMaxVisibleDistance);
    stream->write(shadowProjectionDistance);
@@ -829,7 +808,6 @@ void ShapeBaseData::unpackData(BitStream* stream)
    if(computeCRC)
       stream->read(&mCRC);
 
-   shadowEnable = stream->readFlag();
    stream->read(&shadowSize);
    stream->read(&shadowMaxVisibleDistance);
    stream->read(&shadowProjectionDistance);
@@ -1056,6 +1034,7 @@ ShapeBase::~ShapeBase()
 
 void ShapeBase::initPersistFields()
 {
+   docsURL;
    addProtectedField( "skin", TypeRealString, Offset(mAppliedSkinName, ShapeBase), &_setFieldSkin, &_getFieldSkin,
       "@brief The skin applied to the shape.\n\n"
 

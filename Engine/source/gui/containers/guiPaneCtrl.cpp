@@ -78,6 +78,7 @@ GuiPaneControl::GuiPaneControl()
 
 void GuiPaneControl::initPersistFields()
 {
+   docsURL;
    addGroup( "Pane" );
    
       addField("caption",       TypeRealString,  Offset(mCaption,        GuiPaneControl),

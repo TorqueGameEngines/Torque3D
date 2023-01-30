@@ -98,6 +98,7 @@ afxXM_ScaleData::afxXM_ScaleData(const afxXM_ScaleData& other, bool temp_clone) 
 
 void afxXM_ScaleData::initPersistFields()
 {
+   docsURL;
   addField("scale",  TypePoint3F,   Offset(scale, afxXM_ScaleData),
     "...");
 

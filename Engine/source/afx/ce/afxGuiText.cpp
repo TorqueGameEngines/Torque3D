@@ -63,6 +63,7 @@ afxGuiTextData::afxGuiTextData(const afxGuiTextData& other, bool temp_clone) : G
 
 void afxGuiTextData::initPersistFields()
 {
+   docsURL;
   addField("text",    TypeString,     myOffset(text_str),
     "The literal text to display on the afxGuiTextHud. The center of the text will be "
     "placed at the projection of the 3D constraint position into 2D screen space.\n"

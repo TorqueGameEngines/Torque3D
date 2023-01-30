@@ -50,6 +50,7 @@ GuiFilterCtrl::GuiFilterCtrl()
 
 void GuiFilterCtrl::initPersistFields()
 {
+   docsURL;
    addField("controlPoints", TypeS32, Offset(mControlPointRequest, GuiFilterCtrl),
       "Total number of control points in the spline curve." );
    addField("filter", TypeF32Vector, Offset(mFilter, GuiFilterCtrl),

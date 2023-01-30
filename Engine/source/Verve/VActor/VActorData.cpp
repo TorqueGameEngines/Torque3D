@@ -35,7 +35,6 @@ VActorData::VActorData( void ) :
         mSubmergeCoverage( 0.25f )
 {
     // Setup Shadowing.
-    shadowEnable = true;
     shadowSize = 256;
     shadowProjectionDistance = 14.0f;
 
@@ -48,8 +47,9 @@ VActorData::~VActorData( void )
     // Void.
 }
 
-void VActorData::initPersistFields( void )
+void VActorData::initPersistFields()
 {
+   docsURL;
     Parent::initPersistFields();
 
     addField( "MaxStepHeight",    TypeF32, Offset( mMaxStepHeight,    VActorData ) );

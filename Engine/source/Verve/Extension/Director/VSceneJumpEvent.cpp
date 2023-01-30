@@ -38,8 +38,9 @@ VSceneJumpEvent::VSceneJumpEvent( void ) :
     setLabel( "SceneJumpEvent" );
 }
 
-void VSceneJumpEvent::initPersistFields( void )
+void VSceneJumpEvent::initPersistFields()
 {
+   docsURL;
     Parent::initPersistFields();
 
     addField( "Target", TypeRealString, Offset( mTarget, VSceneJumpEvent ), "The name of the Scene that the controller will jump to upon triggering." );

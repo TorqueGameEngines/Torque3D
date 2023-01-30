@@ -681,6 +681,7 @@ bool ConsoleObject::removeField(const char* in_pFieldname)
 //--------------------------------------
 void ConsoleObject::initPersistFields()
 {
+   docsURL;
 }
 
 //--------------------------------------

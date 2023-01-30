@@ -44,6 +44,7 @@ bool PathShapeData::preload(bool server, String &errorStr)
 
 void PathShapeData::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 
@@ -146,6 +147,7 @@ PathShapeData::PathShapeData()
 
 void PathShape::initPersistFields()
 {
+   docsURL;
 
    addField( "Path", TYPEID< SimObjectRef<SimPath::Path> >(), Offset( mSimPath, PathShape ),
          "@brief Name of a Path to follow." );

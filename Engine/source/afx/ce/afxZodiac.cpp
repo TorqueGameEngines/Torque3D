@@ -156,6 +156,7 @@ EndImplementEnumType;
 
 void afxZodiacData::initPersistFields()
 {
+   docsURL;
    INITPERSISTFIELD_IMAGEASSET(Texture, afxZodiacData, "An image to use as the zodiac's texture.");
   addField("radius",                TypeF32,        Offset(radius_xy,         afxZodiacData),
     "The zodiac's radius in scene units.");

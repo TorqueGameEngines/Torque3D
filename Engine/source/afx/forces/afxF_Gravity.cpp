@@ -95,6 +95,7 @@ afxF_GravityData::afxF_GravityData(const afxF_GravityData& other, bool temp_clon
 
 void afxF_GravityData::initPersistFields()
 {
+   docsURL;
   addField("gravity",   TypeF32,     myOffset(gravity),
     "...");
 

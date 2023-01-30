@@ -387,134 +387,148 @@ ExplosionData* ExplosionData::cloneAndPerformSubstitutions(const SimObject* owne
 
 void ExplosionData::initPersistFields()
 {
-   INITPERSISTFIELD_SHAPEASSET(ExplosionShape, ExplosionData, "@brief Optional shape asset to place at the center of the explosion.\n\n"
-      "The <i>ambient</i> animation of this model will be played automatically at the start of the explosion.");
+   docsURL;
+   addGroup("Shapes");
+      INITPERSISTFIELD_SHAPEASSET(ExplosionShape, ExplosionData, "@brief Optional shape asset to place at the center of the explosion.\n\n"
+         "The <i>ambient</i> animation of this model will be played automatically at the start of the explosion.");
+   endGroup("Shapes");
 
-   addField( "explosionScale", TypePoint3F, Offset(explosionScale, ExplosionData),
+   addGroup("Sounds");
+      INITPERSISTFIELD_SOUNDASSET(Sound, ExplosionData, "Sound to play when this explosion explodes.");
+   endGroup("Sounds");
+
+   addGroup("Particle Effects");
+      addField( "faceViewer", TypeBool, Offset(faceViewer, ExplosionData),
+         "Controls whether the visual effects of the explosion always face the camera." );
+
+      addField( "particleEmitter", TYPEID< ParticleEmitterData >(), Offset(particleEmitter, ExplosionData),
+         "@brief Emitter used to generate a cloud of particles at the start of the explosion.\n\n"
+         "Explosions can generate two different particle effects. The first is a "
+         "single burst of particles at the start of the explosion emitted in a "
+         "spherical cloud using particleEmitter.\n\n"
+         "The second effect spawns the list of ParticleEmitters given by the emitter[] "
+         "field. These emitters generate particles in the normal way throughout the "
+         "lifetime of the explosion." );
+      addField( "particleDensity", TypeS32, Offset(particleDensity, ExplosionData),
+         "@brief Density of the particle cloud created at the start of the explosion.\n\n"
+         "@see particleEmitter" );
+      addField( "particleRadius", TypeF32, Offset(particleRadius, ExplosionData),
+         "@brief Radial distance from the explosion center at which cloud particles "
+         "are emitted.\n\n"
+         "@see particleEmitter" );
+      addField( "emitter", TYPEID< ParticleEmitterData >(), Offset(emitterList, ExplosionData), EC_NUM_EMITTERS,
+         "@brief List of additional ParticleEmitterData objects to spawn with this "
+         "explosion.\n\n"
+         "@see particleEmitter" );
+   endGroup("Particle Effects");
+
+   addGroup("Debris");
+      addField( "debris", TYPEID< DebrisData >(), Offset(debrisList, ExplosionData), EC_NUM_DEBRIS_TYPES,
+         "List of DebrisData objects to spawn with this explosion." );
+      addField( "debrisThetaMin", TypeF32, Offset(debrisThetaMin, ExplosionData),
+         "Minimum angle, from the horizontal plane, to eject debris from." );
+      addField( "debrisThetaMax", TypeF32, Offset(debrisThetaMax, ExplosionData),
+         "Maximum angle, from the horizontal plane, to eject debris from." );
+      addField( "debrisPhiMin", TypeF32, Offset(debrisPhiMin, ExplosionData),
+         "Minimum reference angle, from the vertical plane, to eject debris from." );
+      addField( "debrisPhiMax", TypeF32, Offset(debrisPhiMax, ExplosionData),
+         "Maximum reference angle, from the vertical plane, to eject debris from." );
+      addField( "debrisNum", TypeS32, Offset(debrisNum, ExplosionData),
+         "Number of debris objects to create." );
+      addField( "debrisNumVariance", TypeS32, Offset(debrisNumVariance, ExplosionData),
+         "Variance in the number of debris objects to create (must be from 0 - debrisNum)." );
+      addField( "debrisVelocity", TypeF32, Offset(debrisVelocity, ExplosionData),
+         "Velocity to toss debris at." );
+      addField( "debrisVelocityVariance", TypeF32, Offset(debrisVelocityVariance, ExplosionData),
+         "Variance in the debris initial velocity (must be >= 0)." );
+      addField( "subExplosion", TYPEID< ExplosionData >(), Offset(explosionList, ExplosionData), EC_MAX_SUB_EXPLOSIONS,
+         "List of additional ExplosionData objects to create at the start of the explosion." );
+   endGroup("Debris");
+
+
+   addGroup("Animation");
+      addField("explosionScale", TypePoint3F, Offset(explosionScale, ExplosionData),
       "\"X Y Z\" scale factor applied to the explosionShape model at the start "
-      "of the explosion." );
-   addField( "playSpeed", TypeF32, Offset(playSpeed, ExplosionData),
-      "Time scale at which to play the explosionShape <i>ambient</i> sequence." );
+      "of the explosion.");
+       addField("playSpeed", TypeF32, Offset(playSpeed, ExplosionData),
+          "Time scale at which to play the explosionShape <i>ambient</i> sequence.");
 
-   INITPERSISTFIELD_SOUNDASSET(Sound, ExplosionData, "Sound to play when this explosion explodes.");
+      addField( "delayMS", TypeS32, Offset(delayMS, ExplosionData),
+         "Amount of time, in milliseconds, to delay the start of the explosion effect "
+         "from the creation of the Explosion object." );
+      addField( "delayVariance", TypeS32, Offset(delayVariance, ExplosionData),
+         "Variance, in milliseconds, of delayMS." );
+      addField( "lifetimeMS", TypeS32, Offset(lifetimeMS, ExplosionData),
+         "@brief Lifetime, in milliseconds, of the Explosion object.\n\n"
+         "@note If explosionShape is defined and contains an <i>ambient</i> animation, "
+         "this field is ignored, and the playSpeed scaled duration of the animation "
+         "is used instead." );
+      addField( "lifetimeVariance", TypeS32, Offset(lifetimeVariance, ExplosionData),
+         "Variance, in milliseconds, of the lifetimeMS of the Explosion object.\n" );
+      addField( "offset", TypeF32, Offset(offset, ExplosionData),
+         "@brief Offset distance (in a random direction) of the center of the explosion "
+         "from the Explosion object position.\n\n"
+         "Most often used to create some variance in position for subExplosion effects." );
 
-   addField( "faceViewer", TypeBool, Offset(faceViewer, ExplosionData),
-      "Controls whether the visual effects of the explosion always face the camera." );
+      addField( "times", TypeF32, Offset(times, ExplosionData), EC_NUM_TIME_KEYS,
+         "@brief Time keyframes used to scale the explosionShape model.\n\n"
+         "Values should be in increasing order from 0.0 - 1.0, and correspond to "
+         "the life of the Explosion where 0 is the beginning and 1 is the end of "
+         "the explosion lifetime.\n"
+         "@see lifetimeMS" );
+      addField( "sizes", TypePoint3F, Offset(sizes, ExplosionData), EC_NUM_TIME_KEYS,
+         "@brief \"X Y Z\" size keyframes used to scale the explosionShape model.\n\n"
+         "The explosionShape (if defined) will be scaled using the times/sizes "
+         "keyframes over the lifetime of the explosion.\n"
+         "@see lifetimeMS" );
+   endGroup("Animation");
 
-   addField( "particleEmitter", TYPEID< ParticleEmitterData >(), Offset(particleEmitter, ExplosionData),
-      "@brief Emitter used to generate a cloud of particles at the start of the explosion.\n\n"
-      "Explosions can generate two different particle effects. The first is a "
-      "single burst of particles at the start of the explosion emitted in a "
-      "spherical cloud using particleEmitter.\n\n"
-      "The second effect spawns the list of ParticleEmitters given by the emitter[] "
-      "field. These emitters generate particles in the normal way throughout the "
-      "lifetime of the explosion." );
-   addField( "particleDensity", TypeS32, Offset(particleDensity, ExplosionData),
-      "@brief Density of the particle cloud created at the start of the explosion.\n\n"
-      "@see particleEmitter" );
-   addField( "particleRadius", TypeF32, Offset(particleRadius, ExplosionData),
-      "@brief Radial distance from the explosion center at which cloud particles "
-      "are emitted.\n\n"
-      "@see particleEmitter" );
-   addField( "emitter", TYPEID< ParticleEmitterData >(), Offset(emitterList, ExplosionData), EC_NUM_EMITTERS,
-      "@brief List of additional ParticleEmitterData objects to spawn with this "
-      "explosion.\n\n"
-      "@see particleEmitter" );
+   addGroup("Camera Shake");
+      addField( "shakeCamera", TypeBool, Offset(shakeCamera, ExplosionData),
+         "Controls whether the camera shakes during this explosion." );
+      addField( "camShakeFreq", TypePoint3F, Offset(camShakeFreq, ExplosionData),
+         "Frequency of camera shaking, defined in the \"X Y Z\" axes." );
+      addField( "camShakeAmp", TypePoint3F, Offset(camShakeAmp, ExplosionData),
+         "@brief Amplitude of camera shaking, defined in the \"X Y Z\" axes.\n\n"
+         "Set any value to 0 to disable shaking in that axis." );
+      addField( "camShakeDuration", TypeF32, Offset(camShakeDuration, ExplosionData),
+         "Duration (in seconds) to shake the camera." );
+      addField( "camShakeRadius", TypeF32, Offset(camShakeRadius, ExplosionData),
+         "Radial distance that a camera's position must be within relative to the "
+         "center of the explosion to be shaken." );
+      addField( "camShakeFalloff", TypeF32, Offset(camShakeFalloff, ExplosionData),
+         "Falloff value for the camera shake." );
+   endGroup("Camera Shake");
 
-   addField( "debris", TYPEID< DebrisData >(), Offset(debrisList, ExplosionData), EC_NUM_DEBRIS_TYPES,
-      "List of DebrisData objects to spawn with this explosion." );
-   addField( "debrisThetaMin", TypeF32, Offset(debrisThetaMin, ExplosionData),
-      "Minimum angle, from the horizontal plane, to eject debris from." );
-   addField( "debrisThetaMax", TypeF32, Offset(debrisThetaMax, ExplosionData),
-      "Maximum angle, from the horizontal plane, to eject debris from." );
-   addField( "debrisPhiMin", TypeF32, Offset(debrisPhiMin, ExplosionData),
-      "Minimum reference angle, from the vertical plane, to eject debris from." );
-   addField( "debrisPhiMax", TypeF32, Offset(debrisPhiMax, ExplosionData),
-      "Maximum reference angle, from the vertical plane, to eject debris from." );
-   addField( "debrisNum", TypeS32, Offset(debrisNum, ExplosionData),
-      "Number of debris objects to create." );
-   addField( "debrisNumVariance", TypeS32, Offset(debrisNumVariance, ExplosionData),
-      "Variance in the number of debris objects to create (must be from 0 - debrisNum)." );
-   addField( "debrisVelocity", TypeF32, Offset(debrisVelocity, ExplosionData),
-      "Velocity to toss debris at." );
-   addField( "debrisVelocityVariance", TypeF32, Offset(debrisVelocityVariance, ExplosionData),
-      "Variance in the debris initial velocity (must be >= 0)." );
-
-   addField( "subExplosion", TYPEID< ExplosionData >(), Offset(explosionList, ExplosionData), EC_MAX_SUB_EXPLOSIONS,
-      "List of additional ExplosionData objects to create at the start of the "
-      "explosion." );
-
-   addField( "delayMS", TypeS32, Offset(delayMS, ExplosionData),
-      "Amount of time, in milliseconds, to delay the start of the explosion effect "
-      "from the creation of the Explosion object." );
-   addField( "delayVariance", TypeS32, Offset(delayVariance, ExplosionData),
-      "Variance, in milliseconds, of delayMS." );
-   addField( "lifetimeMS", TypeS32, Offset(lifetimeMS, ExplosionData),
-      "@brief Lifetime, in milliseconds, of the Explosion object.\n\n"
-      "@note If explosionShape is defined and contains an <i>ambient</i> animation, "
-      "this field is ignored, and the playSpeed scaled duration of the animation "
-      "is used instead." );
-   addField( "lifetimeVariance", TypeS32, Offset(lifetimeVariance, ExplosionData),
-      "Variance, in milliseconds, of the lifetimeMS of the Explosion object.\n" );
-   addField( "offset", TypeF32, Offset(offset, ExplosionData),
-      "@brief Offset distance (in a random direction) of the center of the explosion "
-      "from the Explosion object position.\n\n"
-      "Most often used to create some variance in position for subExplosion effects." );
-
-   addField( "times", TypeF32, Offset(times, ExplosionData), EC_NUM_TIME_KEYS,
-      "@brief Time keyframes used to scale the explosionShape model.\n\n"
-      "Values should be in increasing order from 0.0 - 1.0, and correspond to "
-      "the life of the Explosion where 0 is the beginning and 1 is the end of "
-      "the explosion lifetime.\n"
-      "@see lifetimeMS" );
-   addField( "sizes", TypePoint3F, Offset(sizes, ExplosionData), EC_NUM_TIME_KEYS,
-      "@brief \"X Y Z\" size keyframes used to scale the explosionShape model.\n\n"
-      "The explosionShape (if defined) will be scaled using the times/sizes "
-      "keyframes over the lifetime of the explosion.\n"
-      "@see lifetimeMS" );
-
-   addField( "shakeCamera", TypeBool, Offset(shakeCamera, ExplosionData),
-      "Controls whether the camera shakes during this explosion." );
-   addField( "camShakeFreq", TypePoint3F, Offset(camShakeFreq, ExplosionData),
-      "Frequency of camera shaking, defined in the \"X Y Z\" axes." );
-   addField( "camShakeAmp", TypePoint3F, Offset(camShakeAmp, ExplosionData),
-      "@brief Amplitude of camera shaking, defined in the \"X Y Z\" axes.\n\n"
-      "Set any value to 0 to disable shaking in that axis." );
-   addField( "camShakeDuration", TypeF32, Offset(camShakeDuration, ExplosionData),
-      "Duration (in seconds) to shake the camera." );
-   addField( "camShakeRadius", TypeF32, Offset(camShakeRadius, ExplosionData),
-      "Radial distance that a camera's position must be within relative to the "
-      "center of the explosion to be shaken." );
-   addField( "camShakeFalloff", TypeF32, Offset(camShakeFalloff, ExplosionData),
-      "Falloff value for the camera shake." );
-
-   addField( "lightStartRadius", TypeF32, Offset(lightStartRadius, ExplosionData),
-      "@brief Initial radius of the PointLight created by this explosion.\n\n"
-      "Radius is linearly interpolated from lightStartRadius to lightEndRadius "
-      "over the lifetime of the explosion.\n"
-      "@see lifetimeMS" );
-   addField( "lightEndRadius", TypeF32, Offset(lightEndRadius, ExplosionData),
-      "@brief Final radius of the PointLight created by this explosion.\n\n"
-      "@see lightStartRadius" );
-   addField( "lightStartColor", TypeColorF, Offset(lightStartColor, ExplosionData),
-      "@brief Initial color of the PointLight created by this explosion.\n\n"
-      "Color is linearly interpolated from lightStartColor to lightEndColor "
-      "over the lifetime of the explosion.\n"
-      "@see lifetimeMS" );
-   addField( "lightEndColor", TypeColorF, Offset(lightEndColor, ExplosionData),
-      "@brief Final color of the PointLight created by this explosion.\n\n"
-      "@see lightStartColor" );
-   addField( "lightStartBrightness", TypeF32, Offset(lightStartBrightness, ExplosionData),
-      "@brief Initial brightness of the PointLight created by this explosion.\n\n"
-      "Brightness is linearly interpolated from lightStartBrightness to "
-      "lightEndBrightness over the lifetime of the explosion.\n"
-      "@see lifetimeMS" );
-   addField("lightEndBrightness", TypeF32, Offset(lightEndBrightness, ExplosionData),
-      "@brief Final brightness of the PointLight created by this explosion.\n\n"
-      "@see lightStartBrightness" );
-   addField( "lightNormalOffset", TypeF32, Offset(lightNormalOffset, ExplosionData),
-      "Distance (in the explosion normal direction) of the PointLight position "
-      "from the explosion center." );
+   addGroup("Light Emitter");
+      addField( "lightStartRadius", TypeF32, Offset(lightStartRadius, ExplosionData),
+         "@brief Initial radius of the PointLight created by this explosion.\n\n"
+         "Radius is linearly interpolated from lightStartRadius to lightEndRadius "
+         "over the lifetime of the explosion.\n"
+         "@see lifetimeMS" );
+      addField( "lightEndRadius", TypeF32, Offset(lightEndRadius, ExplosionData),
+         "@brief Final radius of the PointLight created by this explosion.\n\n"
+         "@see lightStartRadius" );
+      addField( "lightStartColor", TypeColorF, Offset(lightStartColor, ExplosionData),
+         "@brief Initial color of the PointLight created by this explosion.\n\n"
+         "Color is linearly interpolated from lightStartColor to lightEndColor "
+         "over the lifetime of the explosion.\n"
+         "@see lifetimeMS" );
+      addField( "lightEndColor", TypeColorF, Offset(lightEndColor, ExplosionData),
+         "@brief Final color of the PointLight created by this explosion.\n\n"
+         "@see lightStartColor" );
+      addField( "lightStartBrightness", TypeF32, Offset(lightStartBrightness, ExplosionData),
+         "@brief Initial brightness of the PointLight created by this explosion.\n\n"
+         "Brightness is linearly interpolated from lightStartBrightness to "
+         "lightEndBrightness over the lifetime of the explosion.\n"
+         "@see lifetimeMS" );
+      addField("lightEndBrightness", TypeF32, Offset(lightEndBrightness, ExplosionData),
+         "@brief Final brightness of the PointLight created by this explosion.\n\n"
+         "@see lightStartBrightness" );
+      addField( "lightNormalOffset", TypeF32, Offset(lightNormalOffset, ExplosionData),
+         "Distance (in the explosion normal direction) of the PointLight position "
+         "from the explosion center." );
+   endGroup("Light Emitter");
 
    // disallow some field substitutions
    onlyKeepClearSubstitutions("debris"); // subs resolving to "~~", or "~0" are OK
@@ -967,6 +981,7 @@ void Explosion::setInitialState(const Point3F& point, const Point3F& normal, con
 //--------------------------------------------------------------------------
 void Explosion::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
    addField("initialNormal", TypePoint3F, Offset(mInitialNormal, Explosion), "Initial starting Normal.");
    //

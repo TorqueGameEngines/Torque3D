@@ -111,6 +111,7 @@ PostEffectAsset::~PostEffectAsset()
 
 void PostEffectAsset::initPersistFields()
 {
+   docsURL;
    // Call parent.
    Parent::initPersistFields();
 

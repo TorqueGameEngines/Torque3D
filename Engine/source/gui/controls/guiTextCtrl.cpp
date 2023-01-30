@@ -89,6 +89,7 @@ DefineEngineMethod( GuiTextCtrl, setTextID, void, (const char* textID),,
 
 void GuiTextCtrl::initPersistFields()
 {
+   docsURL;
    addProtectedField("text", TypeCaseString, Offset(mInitialText, GuiTextCtrl), setText, getTextProperty,
       "The text to show on the control.");
 

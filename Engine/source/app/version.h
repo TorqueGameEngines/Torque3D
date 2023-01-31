@@ -44,7 +44,7 @@
 #define TORQUE_GAME_ENGINE          4002
 
 /// Human readable engine version string.
-#define TORQUE_GAME_ENGINE_VERSION_STRING  "4.0.2"
+#define TORQUE_GAME_ENGINE_VERSION_STRING  "4.0.3"
 
 /// Gets the engine version number.  The version number is specified as a global in version.cc
 U32 getVersionNumber();

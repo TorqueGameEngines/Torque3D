@@ -275,7 +275,11 @@ function NavEditorGui::followObject(%this)
       %text = NavEditorOptionsWindow-->TestProperties->FollowObject.getText();
       if(%text !$= "")
       {
-         %obj = eval("return " @ %text);
+         %command = "return " @ %text;
+         if(!endsWith(%command, ";"))
+            %command = %command @ ";";
+            
+         %obj = eval(%command);
          if(!isObject(%obj))
             toolsMessageBoxOk("Error", "Cannot find object" SPC %text);
       }

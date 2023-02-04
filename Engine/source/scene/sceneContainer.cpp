@@ -1047,11 +1047,13 @@ bool SceneContainer::_castRay( U32 type, const Point3F& start, const Point3F& en
 
    if (simpleCase)
    {
-      foundCandidate = foundCandidate && SceneRayHelper::castInBinSimple(rayParams, rayQuery, mBinArray, info, del);
+      if (SceneRayHelper::castInBinSimple(rayParams, rayQuery, mBinArray, info, del))
+         foundCandidate = true;
    }
    else
    {
-      foundCandidate = foundCandidate && SceneRayHelper::castInBins(rayParams, rayQuery, mBinArray, info, del);
+      if (SceneRayHelper::castInBins(rayParams, rayQuery, mBinArray, info, del))
+         foundCandidate = true;
    }
 
    mSearchInProgress = false;
@@ -1171,11 +1173,13 @@ bool SceneContainer::collideBox(const Point3F &start, const Point3F &end, U32 ma
 
    if (simpleCase)
    {
-      foundCandidate = foundCandidate && SceneRayHelper::castInBinSimple(rayParams, rayQuery, mBinArray, info, BoxRayCallbackDelegate());
+      if (SceneRayHelper::castInBinSimple(rayParams, rayQuery, mBinArray, info, BoxRayCallbackDelegate()))
+         foundCandidate = true;
    }
    else
    {
-      foundCandidate = foundCandidate && SceneRayHelper::castInBins(rayParams, rayQuery, mBinArray, info, BoxRayCallbackDelegate());
+      if (SceneRayHelper::castInBins(rayParams, rayQuery, mBinArray, info, BoxRayCallbackDelegate()))
+         foundCandidate = true;
    }
 
    mSearchInProgress = false;

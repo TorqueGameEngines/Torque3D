@@ -167,7 +167,7 @@ class SceneZoneSpaceManager
       void _zoneInsert( SceneObject* object, bool queryListInitialized = false );
 
       /// Detach zoning state from the given object.
-      void _zoneRemove( SceneObject* object );
+      void _zoneRemove( SceneObject* object, bool freeList = true );
 
       /// Realloc zoning state to the given object.
       void _zoneRealloc(SceneObject* object, bool queryListInitialized = false);

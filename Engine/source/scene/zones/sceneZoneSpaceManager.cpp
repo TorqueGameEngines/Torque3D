@@ -426,7 +426,7 @@ void SceneZoneSpaceManager::_rezoneObject( SceneObject* object )
    // Update the object's zoning information by removing and recomputing
    // its zoning information.
 
-   _zoneRemove( object );
+   _zoneRemove( object, false );
    _zoneInsert( object, true ); // Query already in place.
 }
 
@@ -607,6 +607,8 @@ void SceneZoneSpaceManager::_zoneInsert( SceneObject* object, bool queryListInit
    U32 numGlobalZones = 0;
    U32 remainingZones = SceneObject::MaxObjectZones;
    U32 globalZones[SceneObject::MaxObjectZones];
+   bool outsideIncluded = true;
+   mTempObjectZones.clear();
 
    if (!outsideOnly)
    {
@@ -619,10 +621,8 @@ void SceneZoneSpaceManager::_zoneInsert( SceneObject* object, bool queryListInit
       // Go through the zone spaces and link all zones that the object
       // overlaps.
 
-      bool outsideIncluded = true;
       const U32 numZoneSpaces = mZoneSpacesQueryList.size();
 
-      mTempObjectZones.clear();
       mTempObjectZones.reserve(numZoneSpaces);
 
       for (U32 i = 0; i < numZoneSpaces; ++i)
@@ -663,34 +663,35 @@ void SceneZoneSpaceManager::_zoneInsert( SceneObject* object, bool queryListInit
             dCopyArray(globalZones + numGlobalZones, zones, numZones);
 
             mTempObjectZones.push_back(zoneRecord);
-            zoneSpace->_onZoneAddObject(object, zones + zoneRecord.startZone, numZones);
 
             numGlobalZones += zoneRecord.numZones;
             remainingZones -= zoneRecord.numZones;
          }
       }
-
-      // If the object crosses into the outside zone or hasn't been
-      // added to any zone above, add it to the outside zone.
-
-      if (outsideOnly || (outsideIncluded && remainingZones > 0))
-      {
-         TempZoneRecord zoneRecord;
-         zoneRecord.numZones = 1;
-         zoneRecord.space = static_cast<SceneZoneSpace*>(getRootZone());
-         zoneRecord.startZone = numGlobalZones;
-         globalZones[numGlobalZones++] = RootZoneId;
-         mTempObjectZones.push_back(zoneRecord);
-      }
    }
 
+   // If the object crosses into the outside zone or hasn't been
+   // added to any zone above, add it to the outside zone.
+
+   if (outsideOnly || (outsideIncluded && remainingZones > 0))
+   {
+      TempZoneRecord zoneRecord;
+      zoneRecord.numZones = 1;
+      zoneRecord.space = static_cast<SceneZoneSpace*>(getRootZone());
+      zoneRecord.startZone = numGlobalZones;
+      globalZones[numGlobalZones++] = RootZoneId;
+      mTempObjectZones.push_back(zoneRecord);
+   }
+
+   if (numGlobalZones > 0)
+   {
+      _setObjectZoneList(object, numGlobalZones, globalZones);
+   }
 
    for (TempZoneRecord record : mTempObjectZones)
    {
       // Let the zone manager know we have added objects to its
       // zones.
-
-      _setObjectZoneList(object, numGlobalZones, globalZones);
 
       if (record.numZones > 0)
       {
@@ -705,7 +706,7 @@ void SceneZoneSpaceManager::_zoneInsert( SceneObject* object, bool queryListInit
 
 //-----------------------------------------------------------------------------
 
-void SceneZoneSpaceManager::_zoneRemove( SceneObject* obj )
+void SceneZoneSpaceManager::_zoneRemove( SceneObject* obj, bool freeList )
 {
    if (obj->mZoneListHandle == 0)
       return;
@@ -777,6 +778,8 @@ void SceneZoneSpaceManager::_setObjectZoneList( SceneObject* object, U32 numZone
    {
       mObjectZoneLists.reallocList(object->mZoneListHandle, numZones, zoneList);
    }
+
+   object->mNumCurrZones = numZones;
 }
 
 //-----------------------------------------------------------------------------

@@ -224,77 +224,20 @@ class SceneObject : public NetObject, public ProcessObject
       /// @name Zoning
       /// @{
 
-      /// Bidirectional link between a zone manager and its objects.
-      struct ZoneRef
-      {
-         /// ID of zone.
-         U32 zone;
-
-         /// Object that is referenced in the link.
-         SceneObject* object;
-
-         /// Next link in chain of container.
-         ZoneRef* nextInBin;
-
-         /// Previous link in chain of container.
-         ZoneRef* prevInBin;
-
-         /// Next link in chain that is associated with #object.
-         ZoneRef* nextInObj;
-      };
-
-      /// Iterator over the zones that the object is assigned to.
-      /// @note This iterator expects a clean zoning state.  It will not update the
-      ///   zoning state in case it is dirty.
-      struct ObjectZonesIterator
-      {
-            ObjectZonesIterator( SceneObject* object )
-               : mCurrent( object->_getZoneRefHead() ) {}
-
-            bool isValid() const
-            {
-               return ( mCurrent != NULL );
-            }
-            ObjectZonesIterator& operator ++()
-            {
-               AssertFatal( isValid(), "SceneObject::ObjectZonesIterator::operator++ - Invalid iterator!" );
-               mCurrent = mCurrent->nextInObj;
-               return *this;
-            }
-            U32 operator *() const
-            {
-               AssertFatal( isValid(), "SceneObject::ObjectZonesIterator::operator* - Invalid iterator!" );
-               return mCurrent->zone;
-            }
-
-         private:
-            ZoneRef* mCurrent;
-      };
-
-      friend struct ObjectZonesIterator;
-
       /// If an object moves, its zoning state needs to be updated.  This is deferred
       /// to when the state is actually needed and this flag indicates a refresh
       /// is necessary.
-      mutable bool mZoneRefDirty;
+      bool mZoneRefDirty;
 
       /// Number of zones this object is assigned to.
       /// @note If #mZoneRefDirty is set, this might be outdated.
-      mutable U32 mNumCurrZones;
+      U32 mNumCurrZones;
 
-      /// List of zones that this object is part of.
-      /// @note If #mZoneRefDirty is set, this might be outdated.
-      mutable ZoneRef* mZoneRefHead;
+      /// Handle for the zone list of this object
+      U32 mZoneListHandle;
 
       /// Refresh the zoning state of this object, if it isn't up-to-date anymore.
-      void _updateZoningState() const;
-
-      /// Return the first link in the zone list of this object.  Each link represents
-      /// a single zone that the object is assigned to.
-      ///
-      /// @note This method will return the zoning list as is.  In case the zoning state
-      ///   of the object is dirty, the list contents may be outdated.
-      ZoneRef* _getZoneRefHead() const { return mZoneRefHead; }
+      void _updateZoningState();
       
       /// @}
 
@@ -763,7 +706,7 @@ class SceneObject : public NetObject, public ProcessObject
       U32 getNumCurrZones() const { return mNumCurrZones; }
 
       /// Returns the nth zone containing this object.
-      U32 getCurrZone(const U32 index) const;
+      U32 getCurrZone(const U32 index);
 
       /// @}   
 

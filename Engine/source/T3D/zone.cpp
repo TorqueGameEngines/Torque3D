@@ -108,20 +108,31 @@ void Zone::selectWithin()
       SceneZoneSpaceManager* zoneManager = zoneClient->getSceneManager()->getZoneManager();
       if (zoneManager)
       {
+         SceneZoneSpaceManager::ObjectZoneValueIterator itr, itrEnd;
+
          for (U32 zoneId = zoneClient->mZoneRangeStart; zoneId < zoneClient->mZoneRangeStart + zoneClient->mNumZones; ++zoneId)
-            for (SceneZoneSpaceManager::ZoneContentIterator iter(zoneManager, zoneId, false); iter.isValid(); ++iter)
+         {
+            SceneZoneSpaceManager::ZoneObjectList* list = zoneManager->mZoneLists[zoneId];
+            for (SceneObject* zoneObject : list->getObjects())
             {
-               SceneObject* obj = (SceneObject*)iter->getServerObject();
+               SceneObject* obj = (SceneObject*)zoneObject->getServerObject();
                bool fullyEnclosed = true;
 
-            for (SceneObject::ObjectZonesIterator zoneIter(obj); zoneIter.isValid(); ++zoneIter)
-            {
-               if (*zoneIter != zoneId)
-                  fullyEnclosed = false;
+               zoneManager->getObjectZoneValueIterators(obj, itr, itrEnd);
+
+               for (itr; itr != itrEnd; itr++)
+               {
+                  if (*itr != zoneId)
+                  {
+                     fullyEnclosed = false;
+                     break;
+                  }
                }
+
                if (fullyEnclosed)
                   sql.insertObject(obj);
             }
+         }
       }
    }
 

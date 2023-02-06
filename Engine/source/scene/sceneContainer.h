@@ -96,7 +96,7 @@ public:
       return mItems == NULL;
    }
 
-   inline T* getPtr()
+   inline T* getPtr() const
    {
       return mItems;
    }
@@ -148,6 +148,67 @@ public:
 
       /// Number of unused references when compaction should occur
       CompactionThreshold = 4096
+   };
+
+   struct ValueIterator
+   {
+      T* binList;
+      BinCount numElements;
+      BinCount currentElement;
+
+      ValueIterator() : binList(NULL), numElements(0), currentElement(0) { ; }
+      ValueIterator(T* list, U32 count, U32 idx=0) : binList(list), numElements(count), currentElement(idx)
+      {
+      }
+
+      inline T operator*()
+      {
+         return binList[currentElement];
+      }
+
+      inline bool isValid() const
+      {
+         return currentElement < numElements;
+      }
+
+      inline ValueIterator& operator++()
+      {
+         if (currentElement < numElements)
+            currentElement++;
+         return *this;
+      }
+
+      inline ValueIterator& operator++(int other)
+      {
+         currentElement += other;
+         currentElement = mMin(currentElement, numElements);
+         return *this;
+      }
+
+      inline ValueIterator& operator+(const U32 other)
+      {
+         currentElement += other;
+         currentElement = mMin(currentElement, numElements);
+         return *this;
+      }
+
+      inline ValueIterator& operator=(const ValueIterator& other)
+      {
+         binList = other.binList;
+         numElements = other.numElements;
+         currentElement = other.currentElement;
+         return *this;
+      }
+
+      inline bool operator==(const ValueIterator& other) const
+      {
+         return binList == other.binList && currentElement == other.currentElement;
+      }
+
+      inline bool operator!=(const ValueIterator& other) const
+      {
+         return !(binList == other.binList && currentElement == other.currentElement);
+      }
    };
 
 protected:
@@ -228,6 +289,35 @@ public:
       return mBinValues.getPtr() + list.startValue;
    }
 
+   void getValueIterators(ListHandle handle, ValueIterator& start, ValueIterator& end)
+   {
+      if (handle == 0)
+      {
+         start = ValueIterator(NULL, 0);
+         end = ValueIterator(NULL, 0);
+         return;
+      }
+
+      U32 realIDX = handle - 1;
+      BinList& list = mBinLists[realIDX];
+
+      start = ValueIterator(mBinValues.getPtr() + list.startValue, list.numValues, 0);
+      end = ValueIterator(mBinValues.getPtr() + list.startValue, list.numValues, list.numValues);
+   }
+
+   ValueIterator getValueIterator(ListHandle handle)
+   {
+      if (handle == 0)
+      {
+         return ValueIterator(NULL, 0);
+      }
+
+      U32 realIDX = handle - 1;
+      BinList& list = mBinLists[realIDX];
+
+      return ValueIterator(mBinValues.getPtr() + list.startValue, list.numValues);
+   }
+
 protected:
 
    /// Gets a free entry from the free entry list.
@@ -250,7 +340,7 @@ public:
    {
       BinList list;
       ListHandle retHandle = 0;
-      
+
       list.numValues = numValues;
       list.startValue = mLastValueIdx;
 
@@ -296,7 +386,7 @@ public:
 
          list.numValues = numValues;
          list.startValue = mLastValueIdx;
-         
+
          mLastValueIdx += numValues;
          mBinValues.realloc(mLastValueIdx, false);
       }
@@ -328,6 +418,41 @@ public:
       {
          compact();
       }
+   }
+
+   void replaceListBin(ListHandle handle, BinValue oldValue, BinValue newValue)
+   {
+      if (handle == 0)
+         return;
+
+      U32 realIDX = handle - 1;
+      BinList& list = mBinLists[realIDX];
+
+      BinValue* values = mBinValues.getPtr() + list.startValue;
+      for (U32 i = 0; i < list.numValues; i++)
+      {
+         if (values[i] == oldValue)
+            values[i] = newValue;
+         break;
+      }
+   }
+
+   bool containsBinItem(ListHandle handle, BinValue value) const
+   {
+      if (handle == 0)
+         return false;
+
+      U32 realIDX = handle - 1;
+      const BinList& list = mBinLists[realIDX];
+
+      const BinValue* values = mBinValues.getPtr() + list.startValue;
+      for (U32 i = 0; i < list.numValues; i++)
+      {
+         if (values[i] == value)
+            return true;
+      }
+
+      return false;
    }
 
    /// Compacts the BinValue lists. 

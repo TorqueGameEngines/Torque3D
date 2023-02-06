@@ -348,7 +348,8 @@ void SceneZoneSpace::dumpZoneState( bool update )
 
       Con::printf( "--- Zone %i", zoneId );
 
-      for( SceneZoneSpaceManager::ZoneContentIterator iter( mManager, zoneId, false ); iter.isValid(); ++ iter )
+      SceneZoneSpaceManager::ZoneObjectList* list = mManager->mZoneLists[zoneId];
+      for( SceneObject* iter : list->getObjects() )
          Con::printf( iter->describeSelf() );
    }
 }

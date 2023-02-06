@@ -39,22 +39,24 @@
 #include "core/dataChunker.h"
 #endif
 
+#ifndef _SCENECONTAINER_H_
+#include "scene/sceneContainer.h"
+#endif
+
 
 
 class SceneContainer;
 class SceneRootZone;
 class SceneZoneSpace;
-
+class Zone;
 
 /// Object that manages zone spaces in a scene.
 class SceneZoneSpaceManager
 {
    public:
 
-      class ZoneContentIterator;
-
       friend class SceneZoneSpace; // mZoneLists
-      friend class ZoneContentIterator; // mZoneLists
+      friend class Zone;
 
       /// A signal used to notify that the zone setup of the scene has changed.
       ///
@@ -65,6 +67,10 @@ class SceneZoneSpaceManager
       ///   of time.
       typedef Signal< void( SceneZoneSpaceManager* ) > ZoningChangedSignal;
 
+
+      typedef SceneContainerBinRefList<U32> ZoneValueList;
+      typedef SceneContainerBinRefList<U32>::ValueIterator ObjectZoneValueIterator;
+
       enum : U32
       {
          /// Zone ID of the exterior zone.
@@ -74,64 +80,21 @@ class SceneZoneSpaceManager
          InvalidZoneId = 0xFFFFFFFF,
       };
 
-      /// Iterator for the contents of a given zone.
-      class ZoneContentIterator
+      class ZoneObjectList
       {
-         public:
+      protected:
 
-            ZoneContentIterator( SceneZoneSpaceManager* manager, S32 zoneId, bool upToDate = true )
-            {
-               AssertFatal( zoneId < manager->getNumZones(), "SceneZoneSpaceManager::ZoneContentIterator - Zone ID out of range" );
+         friend class SceneZoneSpaceManager;
 
-               if( upToDate )
-               {
-                  // Since zoning is updated lazily, the zone contents may actually
-                  // be out of date.  Force an update by triggering rezoning on the
-                  // zone object.  This is brute-force but this iterator is not meant
-                  // to be used for high-frequency code anyway.
-                  //
-                  // Use the area-based rezoning so that we can also properly iterate
-                  // over the contents of SceneRootZone.
-                  manager->_rezoneObjects( ( ( SceneObject* ) manager->getZoneOwner( zoneId ) )->getWorldBox() );
-               }
+         SceneObject* mManager;
+         Vector<SceneObject*> mObjects;
 
-               mCurrent = manager->mZoneLists[ zoneId ]->nextInBin; // Skip zone object entry.
-            }
+      public:
 
-            bool isValid() const
-            {
-               return ( mCurrent != NULL );
-            }
-            bool operator !() const
-            {
-               return ( mCurrent == NULL );
-            }
-            ZoneContentIterator& operator ++()
-            {
-               if( mCurrent )
-                  mCurrent = mCurrent->nextInBin;
-               return *this;
-            }
-            ZoneContentIterator& operator --()
-            {
-               if( mCurrent )
-                  mCurrent = mCurrent->prevInBin;
-               return *this;
-            }
-            SceneObject* operator *() const
-            {
-               AssertFatal( mCurrent != NULL, "SceneManager::ZoneContentIterator::operator* - Invalid iterator" );
-               return mCurrent->object;
-            }
-            SceneObject* operator ->() const
-            {
-               AssertFatal( mCurrent != NULL, "SceneManager::ZoneContentIterator::operator-> - Invalid iterator" );
-               return mCurrent->object;
-            }
+         ZoneObjectList(SceneObject* manager) : mManager(manager) { ; }
 
-         private:
-
-            SceneObject::ZoneRef* mCurrent;
+         inline SceneObject* getManager() const { return mManager; }
+         inline Vector<SceneObject*> getObjects() const { return mObjects; }
       };
 
    protected:
@@ -153,13 +116,25 @@ class SceneZoneSpaceManager
 
       /// Object list for each zone in the scene.
       /// First entry in the list points back to the zone manager.
-      Vector< SceneObject::ZoneRef* > mZoneLists;
+      Vector< ZoneObjectList* > mZoneLists;
+
+      /// Free zone pool
+      Vector< ZoneObjectList* > mZoneListPool;
+
+      /// Pool for allocating object zone lists
+      ZoneValueList mObjectZoneLists;
 
       /// Vector used repeatedly for zone space queries on the container.
       mutable Vector< SceneObject* > mZoneSpacesQueryList;
 
-      /// Allocator for ZoneRefs.
-      static ClassChunker< SceneObject::ZoneRef > smZoneRefChunker;
+      struct TempZoneRecord
+      {
+         SceneZoneSpace* space;
+         U32 startZone;
+         U32 numZones;
+      };
+
+      Vector<TempZoneRecord> mTempObjectZones;
 
       /// @name Dirty Lists
       /// Updating the zoning state of a scene is done en block rather than
@@ -194,8 +169,11 @@ class SceneZoneSpaceManager
       /// Detach zoning state from the given object.
       void _zoneRemove( SceneObject* object );
 
-      /// Add to given object to the zone list of the given zone.
-      void _addToZoneList( U32 zoneId, SceneObject* object );
+      /// Realloc zoning state to the given object.
+      void _zoneRealloc(SceneObject* object, bool queryListInitialized = false);
+
+      /// Sets the entire zone list for an object
+      void _setObjectZoneList( SceneObject* object, U32 numZones, U32* zoneList );
 
       /// Clear all objects assigned to the given zone.
       /// @note This does not remove the first link in the zone list which is the link
@@ -203,10 +181,7 @@ class SceneZoneSpaceManager
       void _clearZoneList( U32 zoneId );
 
       /// Find the given object in the zone list of the given zone.
-      SceneObject::ZoneRef* _findInZoneList( U32 zoneId, SceneObject* object ) const;
-
-      /// Assign the given object to the outdoor zone.
-      void _addToOutdoorZone( SceneObject* object );
+      bool _isInZoneList( U32 zoneId, SceneObject* object ) const;
 
       /// Rezone all objects in the given area.
       void _rezoneObjects( const Box3F& area );
@@ -216,6 +191,10 @@ class SceneZoneSpaceManager
 
       /// Fill #mZoneSpacesQueryList with all ZoneObjectType objects in the given area.
       void _queryZoneSpaces( const Box3F& area ) const;
+
+      ZoneObjectList* _allocZoneList(SceneZoneSpace* space);
+
+      void _freeZoneList(ZoneObjectList* list);
 
    public:
 
@@ -277,7 +256,8 @@ class SceneZoneSpaceManager
       SceneZoneSpace* getZoneOwner( const U32 zoneId ) const
       {
          AssertFatal( isValidZoneId( zoneId ), "SceneManager::getZoneOwner - Invalid zone ID!");
-         return ( SceneZoneSpace* ) mZoneLists[ zoneId ]->object;
+         ZoneObjectList* list = mZoneLists[zoneId];
+         return ( SceneZoneSpace* )(list ? list->getManager() : NULL);
       }
 
       /// Return the total number of zones in the scene.
@@ -324,6 +304,21 @@ class SceneZoneSpaceManager
       void dumpZoneStates( bool update = true );
 
       /// @}
+
+      inline U32* getZoneIDS(SceneObject* object, U32& numZones)
+      {
+         return mObjectZoneLists.getValues(object->mZoneListHandle, numZones);
+      }
+
+      ObjectZoneValueIterator makeObjectZoneValueIterator(SceneObject* obj)
+      {
+         return mObjectZoneLists.getValueIterator(obj->mZoneListHandle);
+      }
+
+      void getObjectZoneValueIterators(SceneObject* obj, ObjectZoneValueIterator& start, ObjectZoneValueIterator& end)
+      {
+         mObjectZoneLists.getValueIterators(obj->mZoneListHandle, start, end);
+      }
 
       /// @}
 };

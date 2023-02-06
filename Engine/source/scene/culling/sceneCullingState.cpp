@@ -96,10 +96,20 @@ SceneCullingState::SceneCullingState( SceneManager* sceneManager, const SceneCam
 
 bool SceneCullingState::isWithinVisibleZone( SceneObject* object ) const
 {
-   for(  SceneObject::ZoneRef* ref = object->_getZoneRefHead();
-         ref != NULL; ref = ref->nextInObj )
-      if( mZoneVisibilityFlags.test( ref->zone ) )
+   SceneManager* mgr = object->getSceneManager();
+   SceneZoneSpaceManager* zm = mgr->getZoneManager();
+
+   U32 numZones = 0;
+   U32* zones = NULL;
+
+   SceneZoneSpaceManager::ObjectZoneValueIterator itr, itrEnd;
+   zm->getObjectZoneValueIterators(object, itr, itrEnd);
+
+   for (itr; itr != itrEnd; itr++)
+   {
+      if (mZoneVisibilityFlags.test(*itr))
          return true;
+   }
 
    return false;
 }
@@ -148,8 +158,19 @@ void SceneCullingState::addOccluder( SceneObject* object )
 
    // Add the frustum to all zones that the object is assigned to.
 
-   for( SceneObject::ZoneRef* ref = object->_getZoneRefHead(); ref != NULL; ref = ref->nextInObj )
-      addCullingVolumeToZone( ref->zone, volume );
+   U32 numZones = 0;
+   U32* zones = NULL;
+   //object->getSceneManager()->getZoneManager()
+
+   SceneManager* sm = object->getSceneManager();
+   SceneZoneSpaceManager* zm = sm->getZoneManager();
+   SceneZoneSpaceManager::ObjectZoneValueIterator itr, itrEnd;
+   zm->getObjectZoneValueIterators(object, itr, itrEnd);
+   
+   for (itr; itr != itrEnd; itr++)
+   {
+      addCullingVolumeToZone(*itr, volume);
+   }
 }
 
 //-----------------------------------------------------------------------------
@@ -679,7 +700,7 @@ bool SceneCullingState::isOccluded( SceneObject* object ) const
 
    CullingTestResult result = _testOccludersOnly(
       object->getWorldBox(),
-      SceneObject::ObjectZonesIterator( object )
+      mSceneManager->getZoneManager()->makeObjectZoneValueIterator(object)
    );
 
    return ( result == SceneZoneCullingState::CullingTestPositiveByOcclusion );
@@ -718,6 +739,8 @@ U32 SceneCullingState::cullObjects( SceneObject** objects, U32 numObjects, U32 c
    // repeatedly, so fetch the planes now.
    const PlaneF& nearPlane = getCullingFrustum().getPlanes()[ Frustum::PlaneNear ];
    const PlaneF& farPlane = getCullingFrustum().getPlanes()[ Frustum::PlaneFar ];
+
+   SceneZoneSpaceManager* zoneMgr = mSceneManager->getZoneManager();
 
    for( U32 i = 0; i < numObjects; ++ i )
    {
@@ -777,7 +800,7 @@ U32 SceneCullingState::cullObjects( SceneObject** objects, U32 numObjects, U32 c
       {
          CullingTestResult result = _test(
             object->getWorldBox(),
-            SceneObject::ObjectZonesIterator( object ),
+            zoneMgr->makeObjectZoneValueIterator( object ),
             nearPlane,
             farPlane
          );

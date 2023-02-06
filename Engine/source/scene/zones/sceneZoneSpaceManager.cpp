@@ -37,10 +37,6 @@
 
 //#define DEBUG_SPEW
 
-
-ClassChunker< SceneObject::ZoneRef > SceneZoneSpaceManager::smZoneRefChunker;
-
-
 //-----------------------------------------------------------------------------
 
 SceneZoneSpaceManager::SceneZoneSpaceManager( SceneContainer* container )
@@ -89,15 +85,7 @@ void SceneZoneSpaceManager::registerZones( SceneZoneSpace* object, U32 numZones 
    mZoneLists.increment( numZones );
    for( U32 i = zoneRangeStart; i < mNumTotalAllocatedZones; ++ i )
    {
-      SceneObject::ZoneRef* zoneRef = smZoneRefChunker.alloc();
-
-      zoneRef->object    = object;
-      zoneRef->nextInBin = NULL;
-      zoneRef->prevInBin = NULL;
-      zoneRef->nextInObj = NULL;
-      zoneRef->zone      = i;
-
-      mZoneLists[ i ] = zoneRef;
+      mZoneLists[i] = _allocZoneList(object);
    }
 
    // Add space to list.
@@ -143,14 +131,12 @@ void SceneZoneSpaceManager::unregisterZones( SceneZoneSpace* object )
 
    for( U32 j = zoneRangeStart; j < zoneRangeStart + numZones; j ++ )
    {
-      // Delete all object links.
+      ZoneObjectList* list = mZoneLists[j];
 
+      // Delete all object links.
       _clearZoneList( j );
 
-      // Delete the first link which refers to the zone itself.
-
-      smZoneRefChunker.free( mZoneLists[ j ] );
-      mZoneLists[ j ] = NULL;
+      _freeZoneList(list);
    }
 
    // Destroy the connections the zone space has.
@@ -219,7 +205,7 @@ void SceneZoneSpaceManager::_compactZonesCheck()
    const U32 numZoneSpaces = mZoneSpaces.size();
    U32 nextZoneId = 0;
    
-   Vector< SceneObject::ZoneRef* > newZoneLists;
+   Vector< ZoneObjectList* > newZoneLists;
    newZoneLists.setSize( mNumActiveZones );
 
    for( U32 i = 0; i < numZoneSpaces; ++ i )
@@ -247,10 +233,15 @@ void SceneZoneSpaceManager::_compactZonesCheck()
 
          newZoneLists[ newZoneId ] = mZoneLists[ oldZoneId ];
 
+         if (mZoneLists[ newZoneId ] == NULL)
+            continue;
+
          // Update entries.
 
-         for( SceneObject::ZoneRef* ref = newZoneLists[ newZoneId ]; ref != NULL; ref = ref->nextInBin )
-            ref->zone = newZoneId;
+         for (SceneObject* obj : mZoneLists[ newZoneId ]->getObjects())
+         {
+            mObjectZoneLists.replaceListBin(obj->mZoneListHandle, oldZoneId, newZoneId);
+         }
       }
    }
 
@@ -415,6 +406,9 @@ void SceneZoneSpaceManager::_rezoneObject( SceneObject* object )
 
    _queryZoneSpaces( object->getWorldBox() );
 
+   U32 numZones = 0;
+   U32* zones = mObjectZoneLists.getValues(object->mZoneListHandle, numZones);
+
    const U32 numZoneSpaces = mZoneSpacesQueryList.size();
    if( !numZoneSpaces )
    {
@@ -422,8 +416,7 @@ void SceneZoneSpaceManager::_rezoneObject( SceneObject* object )
       // root zone, then we don't need an update.  Otherwise, we do.
 
       if( object->mNumCurrZones == 1 &&
-          object->mZoneRefHead &&
-          object->mZoneRefHead->zone == RootZoneId )
+          zones[0] == RootZoneId )
       {
          object->mZoneRefDirty = false;
          return;
@@ -610,64 +603,99 @@ void SceneZoneSpaceManager::_zoneInsert( SceneObject* object, bool queryListInit
    // just the outdoor zone.  Finally, also do it for all object types that
    // we want to restrict to the outdoor zone.
 
-   if( mNumActiveZones == 1 || object->isGlobalBounds() || object->getTypeMask() & OUTDOOR_OBJECT_TYPEMASK )
-      _addToOutdoorZone( object );
-   else
+   bool outsideOnly = mNumActiveZones == 1 || object->isGlobalBounds() || (object->getTypeMask() & OUTDOOR_OBJECT_TYPEMASK);
+   U32 numGlobalZones = 0;
+   U32 remainingZones = SceneObject::MaxObjectZones;
+   U32 globalZones[SceneObject::MaxObjectZones];
+
+   if (!outsideOnly)
    {
       // Otherwise find all zones spaces that intersect with the object's
       // world box.
 
-      if( !queryListInitialized )
-         _queryZoneSpaces( object->getWorldBox() );
+      if (!queryListInitialized)
+         _queryZoneSpaces(object->getWorldBox());
 
       // Go through the zone spaces and link all zones that the object
       // overlaps.
 
       bool outsideIncluded = true;
       const U32 numZoneSpaces = mZoneSpacesQueryList.size();
-      for( U32 i = 0; i < numZoneSpaces; ++ i )
+
+      mTempObjectZones.clear();
+      mTempObjectZones.reserve(numZoneSpaces);
+
+      for (U32 i = 0; i < numZoneSpaces; ++i)
       {
-         SceneZoneSpace* zoneSpace = dynamic_cast< SceneZoneSpace* >( mZoneSpacesQueryList[ i ] );
-         if( !zoneSpace )
+         SceneZoneSpace* zoneSpace = dynamic_cast<SceneZoneSpace*>(mZoneSpacesQueryList[i]);
+         if (!zoneSpace)
             continue;
 
-         AssertFatal( zoneSpace != getRootZone(), "SceneZoneSpaceManager::_zoneInsert - SceneRootZone returned by zone space query" );
+         AssertFatal(zoneSpace != getRootZone(), "SceneZoneSpaceManager::_zoneInsert - SceneRootZone returned by zone space query");
 
          // If we are inserting a zone space, then the query will turn up
          // the object itself at some point.  Skip it.
 
-         if( zoneSpace == object )
+         if (zoneSpace == object)
             continue;
 
          // Find the zones that the object overlaps within
          // the zone space.
 
          U32 numZones = 0;
-         U32 zones[ SceneObject::MaxObjectZones ];
-
-         bool overlapsOutside = zoneSpace->getOverlappingZones( object, zones, numZones );
-         AssertFatal( numZones != 0 || overlapsOutside,
-            "SceneZoneSpaceManager::_zoneInsert - Object must be fully contained in one or more zones or intersect the outside zone" );
+         U32 zones[SceneObject::MaxObjectZones];
+         bool overlapsOutside = zoneSpace->getOverlappingZones(object, zones, numZones);
+         AssertFatal(numZones != 0 || overlapsOutside,
+            "SceneZoneSpaceManager::_zoneInsert - Object must be fully contained in one or more zones or intersect the outside zone");
 
          outsideIncluded &= overlapsOutside; // Only include outside if *none* of the zones fully contains the object.
 
-         // Link the object to the zones.
+         // Clamp the zone count
+         numZones = getMin(remainingZones, numZones);
 
-         for( U32 n = 0; n < numZones; ++ n )
-            _addToZoneList( zones[ n ], object );
+         if (numZones > 0)
+         {
+            // Add to temp list
+            TempZoneRecord zoneRecord;
+            zoneRecord.numZones = numZones;
+            zoneRecord.space = zoneSpace;
+            zoneRecord.startZone = numGlobalZones;
+            dCopyArray(globalZones + numGlobalZones, zones, numZones);
 
-         // Let the zone manager know we have added objects to its
-         // zones.
+            mTempObjectZones.push_back(zoneRecord);
+            zoneSpace->_onZoneAddObject(object, zones + zoneRecord.startZone, numZones);
 
-         if( numZones > 0 )
-            zoneSpace->_onZoneAddObject( object, zones, numZones );
+            numGlobalZones += zoneRecord.numZones;
+            remainingZones -= zoneRecord.numZones;
+         }
       }
 
       // If the object crosses into the outside zone or hasn't been
       // added to any zone above, add it to the outside zone.
 
-      if( outsideIncluded )
-         _addToOutdoorZone( object );
+      if (outsideOnly || (outsideIncluded && remainingZones > 0))
+      {
+         TempZoneRecord zoneRecord;
+         zoneRecord.numZones = 1;
+         zoneRecord.space = static_cast<SceneZoneSpace*>(getRootZone());
+         zoneRecord.startZone = numGlobalZones;
+         globalZones[numGlobalZones++] = RootZoneId;
+         mTempObjectZones.push_back(zoneRecord);
+      }
+   }
+
+
+   for (TempZoneRecord record : mTempObjectZones)
+   {
+      // Let the zone manager know we have added objects to its
+      // zones.
+
+      _setObjectZoneList(object, numGlobalZones, globalZones);
+
+      if (record.numZones > 0)
+      {
+         record.space->_onZoneAddObject(object, globalZones + record.startZone, record.numZones);
+      }
    }
 
    // Mark the zoning state of the object as current.
@@ -679,65 +707,76 @@ void SceneZoneSpaceManager::_zoneInsert( SceneObject* object, bool queryListInit
 
 void SceneZoneSpaceManager::_zoneRemove( SceneObject* obj )
 {
+   if (obj->mZoneListHandle == 0)
+      return;
+
    PROFILE_SCOPE( SceneZoneSpaceManager_zoneRemove );
 
    // Remove the object from the zone lists.
 
-   for( SceneObject::ZoneRef* walk = obj->mZoneRefHead; walk != NULL; )
+   U32 numZones = 0;
+   U32* zones = NULL;
+   zones = mObjectZoneLists.getValues(obj->mZoneListHandle, numZones);
+
+   for (U32 i=0; i<numZones; i++)
    {
       // Let the zone owner know we are removing an object
       // from its zones.
 
-      getZoneOwner( walk->zone )->_onZoneRemoveObject( walk->object );
-
-      // Now remove the ZoneRef link this object has in the
-      // zone list of the current zone.
-
-      SceneObject::ZoneRef* remove = walk;
-      walk = walk->nextInObj;
-
-      remove->prevInBin->nextInBin = remove->nextInBin;
-      if( remove->nextInBin )
-         remove->nextInBin->prevInBin = remove->prevInBin;
-
-      smZoneRefChunker.free( remove );
+      getZoneOwner( zones[i] )->_onZoneRemoveObject(obj);
    }
 
    // Clear the object's zoning state.
 
-   obj->mZoneRefHead = NULL;
+   mObjectZoneLists.freeList(obj->mZoneListHandle);
+
+   obj->mZoneListHandle = 0;
    obj->mZoneRefDirty = false;
    obj->mNumCurrZones = 0;
 }
 
 //-----------------------------------------------------------------------------
 
-void SceneZoneSpaceManager::_addToZoneList( U32 zoneId, SceneObject* object )
+/// Realloc zoning state to the given object.
+void SceneZoneSpaceManager::_zoneRealloc(SceneObject* object, bool queryListInitialized)
 {
-   SceneObject::ZoneRef* zoneList = mZoneLists[ zoneId ];
+   if (object->mZoneListHandle == 0)
+      return _zoneInsert(object, queryListInitialized);
 
-   AssertFatal( zoneList != NULL, "SceneZoneSpaceManager::_addToZoneList - Zone list not initialized" );
-   AssertFatal( object != zoneList->object, "SCene::_addToZoneList - Cannot add zone to itself" );
 
-   SceneObject::ZoneRef* newRef = smZoneRefChunker.alloc();
+}
 
-   // Add the object to the zone list.
+//-----------------------------------------------------------------------------
 
-   newRef->zone      = zoneId;
-   newRef->object    = object;
-   newRef->nextInBin = zoneList->nextInBin;
-   newRef->prevInBin = zoneList;
+void SceneZoneSpaceManager::_setObjectZoneList( SceneObject* object, U32 numZones, U32* zoneList )
+{
+#ifdef TORQUE_ENABLE_ASSERTS
+   SceneZoneSpace* zoneSpace = dynamic_cast<SceneZoneSpace*>(object);
+   if (zoneSpace)
+   {
+      for (U32 i = 0; i < numZones; i++)
+      {
+         bool inRange = zoneList[i] >= zoneSpace->mZoneRangeStart && zoneList[i] < (zoneSpace->mZoneRangeStart+zoneSpace->mNumZones);
+         AssertFatal(!inRange, "SCene::_addToZoneList - Cannot add zone to itself");
+      }
+   }
+#endif
 
-   if( zoneList->nextInBin )
-      zoneList->nextInBin->prevInBin = newRef;
+   // Alloc or re-use entry
 
-   zoneList->nextInBin = newRef;
-
-   // Add the zone to the object list.
-
-   newRef->nextInObj = object->mZoneRefHead;
-   object->mZoneRefHead = newRef;
-   object->mNumCurrZones ++;
+   if (object->mZoneListHandle == 0)
+   {
+      object->mZoneListHandle = mObjectZoneLists.allocList(numZones, zoneList);
+   }
+   else if (numZones == 0)
+   {
+      mObjectZoneLists.freeList(object->mZoneListHandle);
+      object->mZoneListHandle = 0;
+   }
+   else
+   {
+      mObjectZoneLists.reallocList(object->mZoneListHandle, numZones, zoneList);
+   }
 }
 
 //-----------------------------------------------------------------------------
@@ -746,31 +785,16 @@ void SceneZoneSpaceManager::_clearZoneList( U32 zoneId )
 {
    AssertFatal( zoneId < getNumZones(), "SceneZoneSpaceManager::_clearZoneList - Zone ID out of range" );
 
-   SceneObject::ZoneRef* list = mZoneLists[ zoneId ];
+   ZoneObjectList* list = mZoneLists[zoneId];
    SceneZoneSpace* zoneSpace = getZoneOwner( zoneId );
 
    // Go through the objects in the zone list and unlink and
    // delete their zone entries.
 
-   for( SceneObject::ZoneRef* walk = list->nextInBin; walk != NULL; walk = walk->nextInBin )
+   for( SceneObject* object : list->getObjects() )
    {
-      SceneObject* object = walk->object;
       AssertFatal( object != NULL, "SceneZoneSpaceManager::_clearZoneList - Object field not set on link" );
-
-      // The zone entry links on the objects are singly-linked lists
-      // linked through nextInObject so we need to find where in the
-      // objects zone entry list the node for the current zone is.
-
-      SceneObject::ZoneRef** ptrNext = &object->mZoneRefHead;
-      while( *ptrNext && *ptrNext != walk )
-         ptrNext = &( *ptrNext )->nextInObj;
-
-      AssertFatal( *ptrNext == walk, "SceneZoneSpaceManager::_clearZoneList - Zone entry not found on object in zone list!");
-
-      // Unlink and delete the entry.
-
-      *ptrNext = ( *ptrNext )->nextInObj;
-      smZoneRefChunker.free( walk );
+      AssertFatal( object->mNumCurrZones > 0, "SceneZoneSpaceManager::_clearZoneList - Bad reference count" );
 
       object->mNumCurrZones --;
 
@@ -778,47 +802,30 @@ void SceneZoneSpaceManager::_clearZoneList( U32 zoneId )
       // its zoning state as dirty so it will get assigned
       // to the outdoor zone on the next update.
 
-      if( !object->mZoneRefHead )
+      if( object->mNumCurrZones == 0 )
          object->mZoneRefDirty = true;
 
       // Let the zone know we have removed the object.
 
       zoneSpace->_onZoneRemoveObject( object );
    }
-
-   list->nextInBin = NULL;
 }
 
 //-----------------------------------------------------------------------------
 
-SceneObject::ZoneRef* SceneZoneSpaceManager::_findInZoneList( U32 zoneId, SceneObject* object ) const
+bool SceneZoneSpaceManager::_isInZoneList( U32 zoneId, SceneObject* object ) const
 {
-   for( SceneObject::ZoneRef* ref = object->mZoneRefHead; ref != NULL; ref = ref->nextInObj )
-      if( ref->zone == zoneId )
-         return ref;
+   SceneZoneSpaceManager::ZoneObjectList* list = mZoneLists[zoneId];
+   if (list == NULL)
+      return false;
 
-   return NULL;
-}
+   for (SceneObject* obj : list->getObjects())
+   {
+      if (obj == object)
+         return true;
+   }
 
-//-----------------------------------------------------------------------------
-
-void SceneZoneSpaceManager::_addToOutdoorZone( SceneObject* object )
-{
-   AssertFatal( !object->mZoneRefHead || !_findInZoneList( RootZoneId, object ),
-      "SceneZoneSpaceManager::_addToOutdoorZone - Object already added to outdoor zone" );
-
-   // Add the object to the outside's zone list.  This method is always called
-   // *last* after the object has already been assigned to any other zone it
-   // intersects.  Since we always prepend to the zoning lists, this means that
-   // the outdoor zone will always be *first* in the list of zones that an object
-   // is assigned to which generally is a good order.
-
-   _addToZoneList( RootZoneId, object );
-
-   // Let the zone know we added an object to it.
-
-   const U32 zoneId = RootZoneId;
-   static_cast< SceneZoneSpace* >( getRootZone() )->_onZoneAddObject( object, &zoneId, 1 );
+   return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -880,12 +887,11 @@ void SceneZoneSpaceManager::verifyState()
          AssertFatal( isValidZoneId( zoneId ), "SceneZoneSpaceManager::verifyState - Zone space is assigned in invalid zone ID!" );
 
          AssertFatal( mZoneLists[ zoneId ] != NULL, "SceneZoneSpaceManager::verifyState - Zone list missing for zone!" );
-         AssertFatal( mZoneLists[ zoneId ]->object == space, "SceneZoneSpaceManager::verifyState - Zone list entry #0 is not referring back to zone!" );
+         AssertFatal( mZoneLists[ zoneId ]->mManager == space, "SceneZoneSpaceManager::verifyState - Zone list entry #0 is not referring back to zone!" );
 
-         for( SceneObject::ZoneRef* ref = mZoneLists[ zoneId ]; ref != NULL; ref = ref->nextInBin )
+         for( SceneObject* object : mZoneLists[ zoneId ]->getObjects() )
          {
-            AssertFatal( ref->zone == zoneId, "SceneZoneSpaceManager::verifyState - Incorrect ID in zone list!" );
-            AssertFatal( ref->object != NULL, "SceneZoneSpaceManager::verifyState - Null object pointer in zone list!" );
+            AssertFatal( mObjectZoneLists.containsBinItem(object->mZoneListHandle, zoneId), "SceneZoneSpaceManager::verifyState - Object doesn't have zone in list!");
 
             #ifndef TORQUE_DISABLE_MEMORY_MANAGER
             Memory::checkPtr( ref->object );
@@ -920,4 +926,33 @@ void SceneZoneSpaceManager::verifyState()
    }
 
    //TODO: can do a lot more validation here
+}
+
+//-----------------------------------------------------------------------------
+
+SceneZoneSpaceManager::ZoneObjectList* SceneZoneSpaceManager::_allocZoneList(SceneZoneSpace* space)
+{
+   SceneZoneSpaceManager::ZoneObjectList* ret = NULL;
+
+   if (!mZoneListPool.empty())
+   {
+      ret = mZoneListPool.last();
+      ret->mManager = space;
+      mZoneListPool.pop_back();
+   }
+   else
+   {
+      ret = new SceneZoneSpaceManager::ZoneObjectList(space);
+   }
+
+   return ret;
+}
+
+//-----------------------------------------------------------------------------
+
+void SceneZoneSpaceManager::_freeZoneList(SceneZoneSpaceManager::ZoneObjectList* list)
+{
+   list->mManager = NULL;
+   list->getObjects().clear();
+   mZoneListPool.push_back(list);
 }

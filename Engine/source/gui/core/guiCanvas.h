@@ -475,11 +475,14 @@ private:
    static const U32 MAX_GAMEPADS = 4; ///< The maximum number of supported gamepads
   protected:
      bool   mConsumeLastInputEvent;
+     S32    mLastInputDeviceType;
   public:
      void clearMouseRightButtonDown(void) { mMouseRightButtonDown = false; }
      void clearMouseButtonDown(void) { mMouseButtonDown = false; }
      void setConsumeLastInputEvent(bool flag) { mConsumeLastInputEvent = flag; }
      bool getLastCursorPoint(Point2I& pt) const { pt = mLastCursorPt; return mLastCursorEnabled; }
+
+     StringTableEntry getLastInputDeviceType();
 };
 typedef GuiCanvas::KeyTranslationMode KeyboardTranslationMode;
 DefineEnumType(KeyboardTranslationMode);

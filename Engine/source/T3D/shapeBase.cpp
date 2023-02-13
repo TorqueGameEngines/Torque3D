@@ -976,7 +976,7 @@ ShapeBase::ShapeBase()
    mFadeElapsedTime( 0.0f ),
    mFadeTime( 1.0f ),
    mFadeDelay( 0.0f ),
-   mTeamId(0)
+   mTeamId(0),
    mCameraFov( 90.0f ),
    mIsControlled( false ),
    mLastRenderFrame( 0 ),

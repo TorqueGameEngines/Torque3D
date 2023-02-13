@@ -62,21 +62,54 @@ protected:
    void processTick();
    void advanceTime( F32 timeDelta ) {};
 
+   /// Dirty flags used to handle sound property
+   enum Dirty
+   {
+      Track = BIT(0),
+      Filename = BIT(2),
+      Volume = BIT(4),
+      IsLooping = BIT(5),
+      SourceGroup = BIT(13),
+      IsStreaming = BIT(15),
+      FadeInTime = BIT(16),
+      FadeOutTime = BIT(17),
+      Pitch = BIT(18),
+      TrackOnly = BIT(20),
+
+      AllDirtyMask = 0xFFFFFFFF,
+   };
+
    S32 mTickPeriodMS;
    U32 mLastThink;
    U32 mCurrTick;
    String mPlayIf;
    SFXSource* mSoundPlaying;
+   /// Whether to leave sound setup exclusively to the assigned mTrack and not
+   /// override part of the track's description with emitter properties.
+   bool mUseTrackDescriptionOnly;
+
+   /// The description used by the local profile.
+   SFXDescription mDescription;
+
+   /// The current dirty flags.
+   BitSet32 mDirty;
+
+   /// Called when the emitter state has been marked
+   /// dirty and the source needs to be updated.
+   void _update();
+
 public:
    DECLARE_SOUNDASSET(GuiAudioCtrl, Sound);
    DECLARE_ASSET_SETGET(GuiAudioCtrl, Sound);
    GuiAudioCtrl();
+   ~GuiAudioCtrl();
    // GuiControl.
    bool onWake();
    void onSleep();
    void setActive(bool value) {};
    bool testCondition();
    static void initPersistFields();
+   void onStaticModified(const char* slotName, const char* newValue = NULL);
    DECLARE_CONOBJECT(GuiAudioCtrl);
    DECLARE_CATEGORY( "Gui Other" );
 };

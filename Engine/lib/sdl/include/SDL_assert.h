@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2014 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -19,10 +19,10 @@
   3. This notice may not be removed or altered from any source distribution.
 */
 
-#ifndef _SDL_assert_h
-#define _SDL_assert_h
+#ifndef SDL_assert_h_
+#define SDL_assert_h_
 
-#include "SDL_config.h"
+#include "SDL_stdinc.h"
 
 #include "begin_code.h"
 /* Set up for C function definitions, even when using C++ */
@@ -51,9 +51,17 @@ assert can have unique static variables associated with it.
 /* Don't include intrin.h here because it contains C++ code */
     extern void __cdecl __debugbreak(void);
     #define SDL_TriggerBreakpoint() __debugbreak()
-#elif (defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__)))
+#elif _SDL_HAS_BUILTIN(__builtin_debugtrap)
+    #define SDL_TriggerBreakpoint() __builtin_debugtrap()
+#elif ( (!defined(__NACL__)) && ((defined(__GNUC__) || defined(__clang__)) && (defined(__i386__) || defined(__x86_64__))) )
     #define SDL_TriggerBreakpoint() __asm__ __volatile__ ( "int $3\n\t" )
-#elif defined(HAVE_SIGNAL_H)
+#elif ( defined(__APPLE__) && (defined(__arm64__) || defined(__aarch64__)) )  /* this might work on other ARM targets, but this is a known quantity... */
+    #define SDL_TriggerBreakpoint() __asm__ __volatile__ ( "brk #22\n\t" )
+#elif defined(__APPLE__) && defined(__arm__)
+    #define SDL_TriggerBreakpoint() __asm__ __volatile__ ( "bkpt #22\n\t" )
+#elif defined(__386__) && defined(__WATCOMC__)
+    #define SDL_TriggerBreakpoint() { _asm { int 0x03 } }
+#elif defined(HAVE_SIGNAL_H) && !defined(__WATCOMC__)
     #include <signal.h>
     #define SDL_TriggerBreakpoint() raise(SIGTRAP)
 #else
@@ -63,7 +71,7 @@ assert can have unique static variables associated with it.
 
 #if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L) /* C99 supports __func__ as a standard. */
 #   define SDL_FUNCTION __func__
-#elif ((__GNUC__ >= 2) || defined(_MSC_VER))
+#elif ((__GNUC__ >= 2) || defined(_MSC_VER) || defined (__WATCOMC__))
 #   define SDL_FUNCTION __FUNCTION__
 #else
 #   define SDL_FUNCTION "???"
@@ -86,8 +94,10 @@ This also solves the problem of...
 disable assertions.
 */
 
+/* "while (0,0)" fools Microsoft's compiler's /W4 warning level into thinking
+    this condition isn't constant. And looks like an owl's face! */
 #ifdef _MSC_VER  /* stupid /W4 warnings. */
-#define SDL_NULL_WHILE_LOOP_CONDITION (-1 == __LINE__)
+#define SDL_NULL_WHILE_LOOP_CONDITION (0,0)
 #else
 #define SDL_NULL_WHILE_LOOP_CONDITION (0)
 #endif
@@ -102,9 +112,9 @@ typedef enum
     SDL_ASSERTION_ABORT,  /**< Terminate the program. */
     SDL_ASSERTION_IGNORE,  /**< Ignore the assert. */
     SDL_ASSERTION_ALWAYS_IGNORE  /**< Ignore the assert from now on. */
-} SDL_assert_state;
+} SDL_AssertState;
 
-typedef struct SDL_assert_data
+typedef struct SDL_AssertData
 {
     int always_ignore;
     unsigned int trigger_count;
@@ -112,13 +122,13 @@ typedef struct SDL_assert_data
     const char *filename;
     int linenum;
     const char *function;
-    const struct SDL_assert_data *next;
-} SDL_assert_data;
+    const struct SDL_AssertData *next;
+} SDL_AssertData;
 
 #if (SDL_ASSERT_LEVEL > 0)
 
 /* Never call this directly. Use the SDL_assert* macros. */
-extern DECLSPEC SDL_assert_state SDLCALL SDL_ReportAssertion(SDL_assert_data *,
+extern DECLSPEC SDL_AssertState SDLCALL SDL_ReportAssertion(SDL_AssertData *,
                                                              const char *,
                                                              const char *, int)
 #if defined(__clang__)
@@ -141,16 +151,13 @@ extern DECLSPEC SDL_assert_state SDLCALL SDL_ReportAssertion(SDL_assert_data *,
 #define SDL_enabled_assert(condition) \
     do { \
         while ( !(condition) ) { \
-            static struct SDL_assert_data assert_data = { \
+            static struct SDL_AssertData sdl_assert_data = { \
                 0, 0, #condition, 0, 0, 0, 0 \
             }; \
-            const SDL_assert_state state = SDL_ReportAssertion(&assert_data, \
-                                                               SDL_FUNCTION, \
-                                                               SDL_FILE, \
-                                                               SDL_LINE); \
-            if (state == SDL_ASSERTION_RETRY) { \
+            const SDL_AssertState sdl_assert_state = SDL_ReportAssertion(&sdl_assert_data, SDL_FUNCTION, SDL_FILE, SDL_LINE); \
+            if (sdl_assert_state == SDL_ASSERTION_RETRY) { \
                 continue; /* go again. */ \
-            } else if (state == SDL_ASSERTION_BREAK) { \
+            } else if (sdl_assert_state == SDL_ASSERTION_BREAK) { \
                 SDL_TriggerBreakpoint(); \
             } \
             break; /* not retrying. */ \
@@ -184,94 +191,129 @@ extern DECLSPEC SDL_assert_state SDLCALL SDL_ReportAssertion(SDL_assert_data *,
 #define SDL_assert_always(condition) SDL_enabled_assert(condition)
 
 
-typedef SDL_assert_state (SDLCALL *SDL_AssertionHandler)(
-                                 const SDL_assert_data* data, void* userdata);
+/**
+ * A callback that fires when an SDL assertion fails.
+ *
+ * \param data a pointer to the SDL_AssertData structure corresponding to the
+ *             current assertion
+ * \param userdata what was passed as `userdata` to SDL_SetAssertionHandler()
+ * \returns an SDL_AssertState value indicating how to handle the failure.
+ */
+typedef SDL_AssertState (SDLCALL *SDL_AssertionHandler)(
+                                 const SDL_AssertData* data, void* userdata);
 
 /**
- *  \brief Set an application-defined assertion handler.
+ * Set an application-defined assertion handler.
  *
- *  This allows an app to show its own assertion UI and/or force the
- *  response to an assertion failure. If the app doesn't provide this, SDL
- *  will try to do the right thing, popping up a system-specific GUI dialog,
- *  and probably minimizing any fullscreen windows.
+ * This function allows an application to show its own assertion UI and/or
+ * force the response to an assertion failure. If the application doesn't
+ * provide this, SDL will try to do the right thing, popping up a
+ * system-specific GUI dialog, and probably minimizing any fullscreen windows.
  *
- *  This callback may fire from any thread, but it runs wrapped in a mutex, so
- *  it will only fire from one thread at a time.
+ * This callback may fire from any thread, but it runs wrapped in a mutex, so
+ * it will only fire from one thread at a time.
  *
- *  Setting the callback to NULL restores SDL's original internal handler.
+ * This callback is NOT reset to SDL's internal handler upon SDL_Quit()!
  *
- *  This callback is NOT reset to SDL's internal handler upon SDL_Quit()!
+ * \param handler the SDL_AssertionHandler function to call when an assertion
+ *                fails or NULL for the default handler
+ * \param userdata a pointer that is passed to `handler`
  *
- *  \return SDL_assert_state value of how to handle the assertion failure.
+ * \since This function is available since SDL 2.0.0.
  *
- *  \param handler Callback function, called when an assertion fails.
- *  \param userdata A pointer passed to the callback as-is.
+ * \sa SDL_GetAssertionHandler
  */
 extern DECLSPEC void SDLCALL SDL_SetAssertionHandler(
                                             SDL_AssertionHandler handler,
                                             void *userdata);
 
 /**
- *  \brief Get the default assertion handler.
+ * Get the default assertion handler.
  *
- *  This returns the function pointer that is called by default when an
- *   assertion is triggered. This is an internal function provided by SDL,
- *   that is used for assertions when SDL_SetAssertionHandler() hasn't been
- *   used to provide a different function.
+ * This returns the function pointer that is called by default when an
+ * assertion is triggered. This is an internal function provided by SDL, that
+ * is used for assertions when SDL_SetAssertionHandler() hasn't been used to
+ * provide a different function.
  *
- *  \return The default SDL_AssertionHandler that is called when an assert triggers.
+ * \returns the default SDL_AssertionHandler that is called when an assert
+ *          triggers.
+ *
+ * \since This function is available since SDL 2.0.2.
+ *
+ * \sa SDL_GetAssertionHandler
  */
 extern DECLSPEC SDL_AssertionHandler SDLCALL SDL_GetDefaultAssertionHandler(void);
 
 /**
- *  \brief Get the current assertion handler.
+ * Get the current assertion handler.
  *
- *  This returns the function pointer that is called when an assertion is
- *   triggered. This is either the value last passed to
- *   SDL_SetAssertionHandler(), or if no application-specified function is
- *   set, is equivalent to calling SDL_GetDefaultAssertionHandler().
+ * This returns the function pointer that is called when an assertion is
+ * triggered. This is either the value last passed to
+ * SDL_SetAssertionHandler(), or if no application-specified function is set,
+ * is equivalent to calling SDL_GetDefaultAssertionHandler().
  *
- *   \param puserdata Pointer to a void*, which will store the "userdata"
- *                    pointer that was passed to SDL_SetAssertionHandler().
- *                    This value will always be NULL for the default handler.
- *                    If you don't care about this data, it is safe to pass
- *                    a NULL pointer to this function to ignore it.
- *  \return The SDL_AssertionHandler that is called when an assert triggers.
+ * The parameter `puserdata` is a pointer to a void*, which will store the
+ * "userdata" pointer that was passed to SDL_SetAssertionHandler(). This value
+ * will always be NULL for the default handler. If you don't care about this
+ * data, it is safe to pass a NULL pointer to this function to ignore it.
+ *
+ * \param puserdata pointer which is filled with the "userdata" pointer that
+ *                  was passed to SDL_SetAssertionHandler()
+ * \returns the SDL_AssertionHandler that is called when an assert triggers.
+ *
+ * \since This function is available since SDL 2.0.2.
+ *
+ * \sa SDL_SetAssertionHandler
  */
 extern DECLSPEC SDL_AssertionHandler SDLCALL SDL_GetAssertionHandler(void **puserdata);
 
 /**
- *  \brief Get a list of all assertion failures.
+ * Get a list of all assertion failures.
  *
- *  Get all assertions triggered since last call to SDL_ResetAssertionReport(),
- *  or the start of the program.
+ * This function gets all assertions triggered since the last call to
+ * SDL_ResetAssertionReport(), or the start of the program.
  *
- *  The proper way to examine this data looks something like this:
+ * The proper way to examine this data looks something like this:
  *
- *  <code>
- *  const SDL_assert_data *item = SDL_GetAssertionReport();
- *  while (item) {
- *      printf("'%s', %s (%s:%d), triggered %u times, always ignore: %s.\n",
- *             item->condition, item->function, item->filename,
- *             item->linenum, item->trigger_count,
- *             item->always_ignore ? "yes" : "no");
- *      item = item->next;
- *  }
- *  </code>
+ * ```c
+ * const SDL_AssertData *item = SDL_GetAssertionReport();
+ * while (item) {
+ *    printf("'%s', %s (%s:%d), triggered %u times, always ignore: %s.\\n",
+ *           item->condition, item->function, item->filename,
+ *           item->linenum, item->trigger_count,
+ *           item->always_ignore ? "yes" : "no");
+ *    item = item->next;
+ * }
+ * ```
  *
- *  \return List of all assertions.
- *  \sa SDL_ResetAssertionReport
+ * \returns a list of all failed assertions or NULL if the list is empty. This
+ *          memory should not be modified or freed by the application.
+ *
+ * \since This function is available since SDL 2.0.0.
+ *
+ * \sa SDL_ResetAssertionReport
  */
-extern DECLSPEC const SDL_assert_data * SDLCALL SDL_GetAssertionReport(void);
+extern DECLSPEC const SDL_AssertData * SDLCALL SDL_GetAssertionReport(void);
 
 /**
- *  \brief Reset the list of all assertion failures.
+ * Clear the list of all assertion failures.
  *
- *  Reset list of all assertions triggered.
+ * This function will clear the list of all assertions triggered up to that
+ * point. Immediately following this call, SDL_GetAssertionReport will return
+ * no items. In addition, any previously-triggered assertions will be reset to
+ * a trigger_count of zero, and their always_ignore state will be false.
  *
- *  \sa SDL_GetAssertionReport
+ * \since This function is available since SDL 2.0.0.
+ *
+ * \sa SDL_GetAssertionReport
  */
 extern DECLSPEC void SDLCALL SDL_ResetAssertionReport(void);
+
+
+/* these had wrong naming conventions until 2.0.4. Please update your app! */
+#define SDL_assert_state SDL_AssertState
+#define SDL_assert_data SDL_AssertData
+
 
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus
@@ -279,6 +321,6 @@ extern DECLSPEC void SDLCALL SDL_ResetAssertionReport(void);
 #endif
 #include "close_code.h"
 
-#endif /* _SDL_assert_h */
+#endif /* SDL_assert_h_ */
 
 /* vi: set ts=4 sw=4 expandtab: */

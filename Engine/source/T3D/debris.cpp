@@ -20,6 +20,11 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+// Arcane-FX for MIT Licensed Open Source version of Torque 3D from GarageGames
+// Copyright (C) 2015 Faust Logic, Inc.
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+
 #include "platform/platform.h"
 #include "T3D/debris.h"
 
@@ -42,9 +47,6 @@
 
 
 const U32 csmStaticCollisionMask = TerrainObjectType | StaticShapeObjectType | StaticObjectType;
-
-const U32 csmDynamicCollisionMask = StaticShapeObjectType;
-
 
 IMPLEMENT_CO_DATABLOCK_V1(DebrisData);
 
@@ -107,13 +109,89 @@ DebrisData::DebrisData()
    minSpinSpeed = 0.0f;
    maxSpinSpeed = 0.0f;
    textureName = NULL;
-   shapeName = NULL;
    fade = true;
    useRadiusMass = false;
    baseRadius = 1.0f;
    gravModifier = 1.0f;
    terminalVelocity = 0.0f;
    ignoreWater = true;
+
+   INIT_ASSET(Shape);
+}
+
+//#define TRACK_DEBRIS_DATA_CLONES
+
+#ifdef TRACK_DEBRIS_DATA_CLONES
+static int debris_data_clones = 0;
+#endif
+
+DebrisData::DebrisData(const DebrisData& other, bool temp_clone) : GameBaseData(other, temp_clone)
+{
+#ifdef TRACK_DEBRIS_DATA_CLONES
+   debris_data_clones++;
+   if (debris_data_clones == 1)
+      Con::errorf("DebrisData -- Clones are on the loose!");
+#endif
+   velocity = other.velocity;
+   velocityVariance = other.velocityVariance;
+   friction = other.friction;
+   elasticity = other.elasticity;
+   lifetime = other.lifetime;
+   lifetimeVariance = other.lifetimeVariance;
+   numBounces = other.numBounces;
+   bounceVariance = other.bounceVariance;
+   minSpinSpeed = other.minSpinSpeed;
+   maxSpinSpeed = other.maxSpinSpeed;
+   explodeOnMaxBounce = other.explodeOnMaxBounce;
+   staticOnMaxBounce = other.staticOnMaxBounce;
+   snapOnMaxBounce = other.snapOnMaxBounce;
+   fade = other.fade;
+   useRadiusMass = other.useRadiusMass;
+   baseRadius = other.baseRadius;
+   gravModifier = other.gravModifier;
+   terminalVelocity = other.terminalVelocity;
+   ignoreWater = other.ignoreWater;
+
+   CLONE_ASSET(Shape);
+
+   textureName = other.textureName;
+   explosionId = other.explosionId; // -- for pack/unpack of explosion ptr
+   explosion = other.explosion;
+   dMemcpy( emitterList, other.emitterList, sizeof( emitterList ) );
+   dMemcpy( emitterIDList, other.emitterIDList, sizeof( emitterIDList ) ); // -- for pack/unpack of emitterList ptrs
+}
+
+DebrisData::~DebrisData()
+{
+   if (!isTempClone())
+      return;
+
+#ifdef TRACK_DEBRIS_DATA_CLONES
+   if (debris_data_clones > 0)
+   {
+      debris_data_clones--;
+      if (debris_data_clones == 0)
+         Con::errorf("DebrisData -- Clones eliminated!");
+   }
+   else
+      Con::errorf("DebrisData -- Too many clones deleted!");
+#endif
+}
+
+DebrisData* DebrisData::cloneAndPerformSubstitutions(const SimObject* owner, S32 index)
+{
+   if (!owner || getSubstitutionCount() == 0)
+      return this;
+
+   DebrisData* sub_debris_db = new DebrisData(*this, true);
+   performSubstitutions(sub_debris_db, owner, index);
+
+   return sub_debris_db;
+}
+
+void DebrisData::onPerformSubstitutions() 
+{ 
+   _setShape(getShape());
 }
 
 bool DebrisData::onAdd()
@@ -196,20 +274,20 @@ bool DebrisData::preload(bool server, String &errorStr)
 
    if( server ) return true;
 
-   if( shapeName && shapeName[0] != '\0' && !bool(shape) )
+   if (mShapeAsset.notNull())
    {
-      shape = ResourceManager::get().load(shapeName);
-      if( bool(shape) == false )
+      if (!mShape)
       {
-         errorStr = String::ToString("DebrisData::load: Couldn't load shape \"%s\"", shapeName);
+         errorStr = String::ToString("DebrisData::load: Couldn't load shape \"%s\"", mShapeAssetId);
          return false;
       }
       else
       {
-         TSShapeInstance* pDummy = new TSShapeInstance(shape, !server);
+         TSShapeInstance* pDummy = new TSShapeInstance(mShape, !server);
          delete pDummy;
+         if (!server && !mShape->preloadMaterialList(mShape.getPath()) && NetConnection::filesWereDownloaded())
+            return false;
       }
-
    }
 
    return true;
@@ -217,21 +295,23 @@ bool DebrisData::preload(bool server, String &errorStr)
 
 void DebrisData::initPersistFields()
 {
-   addGroup("Display");
-   addField("texture",              TypeString,                  Offset(textureName,         DebrisData), 
-      "@brief Texture imagemap to use for this debris object.\n\nNot used any more.\n");
-   addField("shapeFile",            TypeShapeFilename,           Offset(shapeName,           DebrisData), 
-      "@brief Object model to use for this debris object.\n\nThis shape is optional.  You could have Debris made up of only particles.\n");
-   endGroup("Display");
+   docsURL;
+   addGroup("Shapes");
+      addField("texture",              TypeString,                  Offset(textureName,         DebrisData), 
+         "@brief Texture imagemap to use for this debris object.\n\nNot used any more.\n", AbstractClassRep::FIELD_HideInInspectors);
+      INITPERSISTFIELD_SHAPEASSET(Shape, DebrisData, "Shape to use for this debris object.");
+   endGroup("Shapes");
 
+   addGroup("Particle Effects");
+      addField("emitters",             TYPEID< ParticleEmitterData >(),  Offset(emitterList,    DebrisData), DDC_NUM_EMITTERS, 
+         "@brief List of particle emitters to spawn along with this debris object.\n\nThese are optional.  You could have Debris made up of only a shape.\n");
+   addGroup("Particle Effects");
    addGroup("Datablocks");
-   addField("emitters",             TYPEID< ParticleEmitterData >(),  Offset(emitterList,    DebrisData), DDC_NUM_EMITTERS, 
-      "@brief List of particle emitters to spawn along with this debris object.\n\nThese are optional.  You could have Debris made up of only a shape.\n");
    addField("explosion",            TYPEID< ExplosionData >(),   Offset(explosion,           DebrisData), 
       "@brief ExplosionData to spawn along with this debris object.\n\nThis is optional as not all Debris explode.\n");
    endGroup("Datablocks");
 
-   addGroup("Physical Properties");
+   addGroup("Physics");
    addField("elasticity",           TypeF32,                     Offset(elasticity,          DebrisData), 
       "@brief A floating-point value specifying how 'bouncy' this object is.\n\nMust be in the range of -10 to 10.\n");
    addField("friction",             TypeF32,                     Offset(friction,            DebrisData), 
@@ -260,7 +340,7 @@ void DebrisData::initPersistFields()
       "@brief Use mass calculations based on radius.\n\nAllows for the adjustment of elasticity and friction based on the Debris size.\n@see baseRadius\n");
    addField("baseRadius",           TypeF32,                     Offset(baseRadius,          DebrisData), 
       "@brief Radius at which the standard elasticity and friction apply.\n\nOnly used when useRaduisMass is true.\n@see useRadiusMass.\n");
-   endGroup("Physical Properties");
+   endGroup("Physics");
 
    addGroup("Behavior");
    addField("explodeOnMaxBounce",   TypeBool,                    Offset(explodeOnMaxBounce,  DebrisData), 
@@ -272,6 +352,9 @@ void DebrisData::initPersistFields()
    addField("ignoreWater",          TypeBool,                    Offset(ignoreWater,         DebrisData), "If true, this debris object will not collide with water, acting as if the water is not there.");
    endGroup("Behavior");
 
+   // disallow some field substitutions
+   onlyKeepClearSubstitutions("emitters"); // subs resolving to "~~", or "~0" are OK
+   onlyKeepClearSubstitutions("explosion");
    Parent::initPersistFields();
 }
 
@@ -300,7 +383,8 @@ void DebrisData::packData(BitStream* stream)
    stream->write(ignoreWater);
 
    stream->writeString( textureName );
-   stream->writeString( shapeName );
+
+   PACKDATA_ASSET(Shape);
 
    for( S32 i=0; i<DDC_NUM_EMITTERS; i++ )
    {
@@ -312,7 +396,7 @@ void DebrisData::packData(BitStream* stream)
 
    if( stream->writeFlag( explosion ) )
    {
-      stream->writeRangedU32(packed? SimObjectId((uintptr_t)explosion):
+      stream->writeRangedU32(mPacked ? SimObjectId((uintptr_t)explosion):
          explosion->getId(),DataBlockObjectIdFirst,DataBlockObjectIdLast);
    }
 
@@ -343,7 +427,8 @@ void DebrisData::unpackData(BitStream* stream)
    stream->read(&ignoreWater);
 
    textureName = stream->readSTString();
-   shapeName   = stream->readSTString();
+
+   UNPACKDATA_ASSET(Shape);
 
    for( S32 i=0; i<DDC_NUM_EMITTERS; i++ )
    {
@@ -449,11 +534,15 @@ Debris::Debris()
    mInitialTrans.identity();
    mRadius = 0.2f;
    mStatic = false;
+   mElasticity = 0.5f;
+   mFriction = 0.5f;
 
    dMemset( mEmitterList, 0, sizeof( mEmitterList ) );
 
    // Only allocated client side.
    mNetFlags.set( IsGhost );
+   ss_object = 0;
+   ss_index = 0;
 }
 
 Debris::~Debris()
@@ -469,10 +558,17 @@ Debris::~Debris()
       delete mPart;
       mPart = NULL;
    }
+   
+   if (mDataBlock && mDataBlock->isTempClone())
+   { 
+      delete mDataBlock;
+      mDataBlock = 0;
+   }
 }
 
 void Debris::initPersistFields()
 {
+   docsURL;
    addGroup( "Debris" );	
    
       addField( "lifetime", TypeF32, Offset(mLifetime, Debris), 
@@ -498,6 +594,8 @@ bool Debris::onNewDataBlock( GameBaseData *dptr, bool reload )
    if( !mDataBlock || !Parent::onNewDataBlock( dptr, reload ) )
       return false;
 
+   if (mDataBlock->isTempClone())
+      return true;
    scriptOnNewDataBlock();
    return true;
 
@@ -522,7 +620,7 @@ bool Debris::onAdd()
       if( mDataBlock->emitterList[i] != NULL )
       {
          ParticleEmitter * pEmitter = new ParticleEmitter;
-         pEmitter->onNewDataBlock( mDataBlock->emitterList[i], false );
+         pEmitter->onNewDataBlock(mDataBlock->emitterList[i]->cloneAndPerformSubstitutions(ss_object, ss_index), false);
          if( !pEmitter->registerObject() )
          {
             Con::warnf( ConsoleLogEntry::General, "Could not register emitter for particle of class: %s", mDataBlock->getName() );
@@ -540,7 +638,8 @@ bool Debris::onAdd()
    {
       sizeList[0] = mSize * 0.5;
       sizeList[1] = mSize;
-      sizeList[2] = mSize * 1.5;
+      for (U32 i = 2; i < ParticleData::PDC_NUM_KEYS; i++)
+         sizeList[i] = mSize * 1.5;
 
       mEmitterList[0]->setSizes( sizeList );
    }
@@ -549,7 +648,8 @@ bool Debris::onAdd()
    {
       sizeList[0] = 0.0;
       sizeList[1] = mSize * 0.5;
-      sizeList[2] = mSize;
+      for (U32 i = 2; i < ParticleData::PDC_NUM_KEYS; i++)
+         sizeList[i] = mSize;
 
       mEmitterList[1]->setSizes( sizeList );
    }
@@ -571,18 +671,18 @@ bool Debris::onAdd()
    mFriction = mDataBlock->friction;
 
    // Setup our bounding box
-   if( mDataBlock->shape )
+   if( mDataBlock->mShape )
    {
-      mObjBox = mDataBlock->shape->bounds;
+      mObjBox = mDataBlock->mShape->mBounds;
    }
    else
    {
       mObjBox = Box3F(Point3F(-1, -1, -1), Point3F(1, 1, 1));
    }
 
-   if( mDataBlock->shape )
+   if( mDataBlock->mShape)
    {
-      mShape = new TSShapeInstance( mDataBlock->shape, true);
+      mShape = new TSShapeInstance( mDataBlock->mShape, true);
    }
 
    if( mPart )
@@ -801,7 +901,8 @@ void Debris::explode()
    Point3F explosionPos = getPosition();
 
    Explosion* pExplosion = new Explosion;
-   pExplosion->onNewDataBlock(mDataBlock->explosion, false);
+   pExplosion->setSubstitutionData(ss_object, ss_index);
+   pExplosion->onNewDataBlock(mDataBlock->explosion->cloneAndPerformSubstitutions(ss_object, ss_index), false);
 
    MatrixF trans( true );
    trans.setPosition( getPosition() );

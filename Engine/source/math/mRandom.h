@@ -33,7 +33,7 @@
 class MRandomGenerator
 {
 protected:
-   MRandomGenerator() {}
+   MRandomGenerator() :mSeed(-1) {}
    S32  mSeed;
 
 public:
@@ -54,7 +54,7 @@ public:
 inline F32 MRandomGenerator::randF()
 {
    // default: multiply by 1/(2^31)
-   return  F32(randI()) * (1.0f/2147483647.0f);
+   return F32(randI()) * (1.0f / F64(S32_MAX));
 }
 
 inline S32 MRandomGenerator::randI(S32 i, S32 n)

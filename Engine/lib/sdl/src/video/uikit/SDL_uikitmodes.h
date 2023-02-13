@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2014 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -20,32 +20,37 @@
 */
 #include "../../SDL_internal.h"
 
-#ifndef _SDL_uikitmodes_h
-#define _SDL_uikitmodes_h
+#ifndef SDL_uikitmodes_h_
+#define SDL_uikitmodes_h_
 
 #include "SDL_uikitvideo.h"
 
-typedef struct
-{
-    UIScreen *uiscreen;
-    CGFloat scale;
-} SDL_DisplayData;
+@interface SDL_DisplayData : NSObject
 
-typedef struct
-{
-    UIScreenMode *uiscreenmode;
-    CGFloat scale;
-} SDL_DisplayModeData;
+- (instancetype)initWithScreen:(UIScreen*)screen;
 
-extern BOOL SDL_UIKit_supports_multiple_displays;
+@property (nonatomic, strong) UIScreen *uiscreen;
+@property (nonatomic) float screenDPI;
+
+@end
+
+@interface SDL_DisplayModeData : NSObject
+
+@property (nonatomic, strong) UIScreenMode *uiscreenmode;
+
+@end
 
 extern SDL_bool UIKit_IsDisplayLandscape(UIScreen *uiscreen);
 
 extern int UIKit_InitModes(_THIS);
+extern int UIKit_AddDisplay(UIScreen *uiscreen, SDL_bool send_event);
+extern void UIKit_DelDisplay(UIScreen *uiscreen);
 extern void UIKit_GetDisplayModes(_THIS, SDL_VideoDisplay * display);
+extern int UIKit_GetDisplayDPI(_THIS, SDL_VideoDisplay * display, float * ddpi, float * hdpi, float * vdpi);
 extern int UIKit_SetDisplayMode(_THIS, SDL_VideoDisplay * display, SDL_DisplayMode * mode);
 extern void UIKit_QuitModes(_THIS);
+extern int UIKit_GetDisplayUsableBounds(_THIS, SDL_VideoDisplay * display, SDL_Rect * rect);
 
-#endif /* _SDL_uikitmodes_h */
+#endif /* SDL_uikitmodes_h_ */
 
 /* vi: set ts=4 sw=4 expandtab: */

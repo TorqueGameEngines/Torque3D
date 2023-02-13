@@ -80,6 +80,29 @@ void EchoOp::print( Stream &stream )
    WRITESTR( mStatement );
 }
 
+//**************************************************************************
+// Index operation
+//**************************************************************************
+IndexOp::IndexOp( Var* var, U32 index ) : Parent( NULL, NULL )
+{
+   mInput[0] = var;
+   mIndex = index;
+}
+
+//--------------------------------------------------------------------------
+// Print
+//--------------------------------------------------------------------------
+void IndexOp::print( Stream &stream )
+{
+   Var* var = dynamic_cast<Var*>(mInput[0]);
+
+   mInput[0]->print(stream);
+   if (var->arraySize > 1)
+   {
+      WRITESTR(String::ToString("[%d]", mIndex));
+   }
+}
+
 
 //**************************************************************************
 // General operation

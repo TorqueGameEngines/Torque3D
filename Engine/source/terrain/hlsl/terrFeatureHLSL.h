@@ -37,11 +37,22 @@ class TerrainFeatHLSL : public ShaderFeatureHLSL
 {
 protected:
 
+   ShaderIncludeDependency mTorqueDep;
+
+public:
+   TerrainFeatHLSL();
    Var* _getInDetailCoord(Vector<ShaderComponent*> &componentList );
 
    Var* _getInMacroCoord(Vector<ShaderComponent*> &componentList );
 
+   Var* _getDetailMapSampler();
+   Var* _getDetailMapArray();
+   Var* _getNormalMapSampler();
+   Var* _getNormalMapArray();
+   Var* _getOrmMapSampler();
+   Var* _getOrmMapArray();
    Var* _getNormalMapTex();
+   Var* _getORMConfigMapTex();
 
    static Var* _getUniformVar( const char *name, const char *type, ConstantSortPosition csp );
 
@@ -64,6 +75,8 @@ public:
    virtual Resources getResources( const MaterialFeatureData &fd );
 
    virtual String getName() { return "Terrain Base Texture"; }
+
+   virtual U32 getOutputTargets( const MaterialFeatureData &fd ) const;
 };
 
 
@@ -87,6 +100,8 @@ public:
    virtual Resources getResources( const MaterialFeatureData &fd );
 
    virtual String getName() { return "Terrain Detail Texture"; }
+
+   virtual U32 getOutputTargets( const MaterialFeatureData &fd ) const;
 };
 
 
@@ -110,6 +125,8 @@ public:
    virtual Resources getResources( const MaterialFeatureData &fd );
 
    virtual String getName() { return "Terrain Macro Texture"; }
+
+   virtual U32 getOutputTargets( const MaterialFeatureData &fd ) const;
 };
 
 
@@ -140,15 +157,42 @@ public:
    virtual String getName() { return "Terrain Lightmap Texture"; }
 };
 
-
-class TerrainAdditiveFeatHLSL : public TerrainFeatHLSL
+class TerrainORMMapFeatHLSL : public TerrainFeatHLSL
 {
 public:
 
-   virtual void processPix( Vector<ShaderComponent*> &componentList, 
-                            const MaterialFeatureData &fd );
+   virtual void processVert(Vector<ShaderComponent*> &componentList,
+      const MaterialFeatureData &fd);
 
-   virtual String getName() { return "Terrain Additive"; }
+   virtual void processPix(Vector<ShaderComponent*> &componentList,
+      const MaterialFeatureData &fd);
+
+   virtual Resources getResources(const MaterialFeatureData &fd);
+
+   virtual U32 getOutputTargets(const MaterialFeatureData &fd) const;
+   virtual String getName() { return "Composite Matinfo map"; }
+};
+
+class TerrainBlankInfoMapFeatHLSL : public TerrainFeatHLSL
+{
+public:
+
+   virtual void processPix(Vector<ShaderComponent*> &componentList,
+      const MaterialFeatureData &fd);
+   virtual String getName() { return "Blank Matinfo map"; }
+};
+
+class TerrainHeightMapBlendHLSL : public TerrainFeatHLSL
+{
+public:
+
+   virtual void processVert(Vector<ShaderComponent*>& componentList,
+      const MaterialFeatureData& fd);
+
+   virtual void processPix(Vector<ShaderComponent*>& componentList,
+      const MaterialFeatureData& fd);
+
+   virtual String getName() { return "Terrain Heightmap Blend"; }
 };
 
 #endif // _TERRFEATUREHLSL_H_

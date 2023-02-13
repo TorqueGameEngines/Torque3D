@@ -147,6 +147,7 @@ Portal::Portal()
 
 void Portal::initPersistFields()
 {
+   docsURL;
    addGroup( "Zoning" );
 
       addProtectedField( "frontSidePassable", TypeBool, Offset( mPassableSides[ FrontSide ], Portal ),
@@ -294,7 +295,7 @@ void Portal::_renderObject( ObjectRenderInst *ri, SceneRenderState *state, BaseM
    GFX->getDrawUtil()->drawPolygon( desc, mPortalPolygonWS.address(), mPortalPolygonWS.size(), color );
 
    desc.setFillModeWireframe();
-   GFX->getDrawUtil()->drawPolygon( desc, mPortalPolygonWS.address(), mPortalPolygonWS.size(), ColorF::RED );
+   GFX->getDrawUtil()->drawPolygon( desc, mPortalPolygonWS.address(), mPortalPolygonWS.size(), ColorI::RED );
 
    // Render rest.
 

@@ -26,7 +26,7 @@
 Vector<AppMaterial*> AppMesh::appMaterials;
 
 AppMesh::AppMesh()
-   : flags(0), numFrames(0), numMatFrames(0), vertsPerFrame(0)
+   : flags(0), vertsPerFrame(0),numFrames(0),  numMatFrames(0), detailSize(1)
 {
 }
 
@@ -147,22 +147,23 @@ TSMesh* AppMesh::constructTSMesh()
    }
 
    // Copy mesh elements
-   tsmesh->verts = points;
-   tsmesh->norms = normals;
-   tsmesh->tverts = uvs;
-   tsmesh->primitives = primitives;
-   tsmesh->indices = indices;
-   tsmesh->colors = colors;
-   tsmesh->tverts2 = uv2s;
+   tsmesh->mVerts = points;
+   tsmesh->mNorms = normals;
+   tsmesh->mTverts = uvs;
+   tsmesh->mPrimitives = primitives;
+   tsmesh->mIndices = indices;
+   tsmesh->mColors = colors;
+   tsmesh->mTverts2 = uv2s;
 
    // Finish initializing the shape
    tsmesh->setFlags(flags);
+   tsmesh->updateMeshFlags();
    tsmesh->computeBounds();
    tsmesh->numFrames = numFrames;
    tsmesh->numMatFrames = numMatFrames;
    tsmesh->vertsPerFrame = vertsPerFrame;
-   tsmesh->createTangents(tsmesh->verts, tsmesh->norms);
-   tsmesh->encodedNorms.set(NULL,0);
+   tsmesh->createTangents(tsmesh->mVerts, tsmesh->mNorms);
+   tsmesh->mEncodedNorms.set(NULL,0);
 
    return tsmesh;
 }

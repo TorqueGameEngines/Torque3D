@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="fit_selection_n_image"
+    imageFile="@assetFile=fit-selection_n.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

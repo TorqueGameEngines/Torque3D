@@ -73,7 +73,8 @@ PhysicsDebrisData::PhysicsDebrisData()
 {
    lifetime = 5.0f;
    lifetimeVariance = 0.0f;
-   shapeName = NULL;
+
+   INIT_ASSET(Shape);
 }
 
 bool PhysicsDebrisData::onAdd()
@@ -91,21 +92,17 @@ bool PhysicsDebrisData::preload( bool server, String &errorStr )
 
    if ( server ) return true;
 
-   if ( shapeName && shapeName[0] != '\0' && !bool(shape) )
+   if ( mShapeAsset.notNull() )
    {
-      shape = ResourceManager::get().load( shapeName );
-      if ( bool(shape) == false )
-      {
-         errorStr = String::ToString( "PhysicsDebrisData::load: Couldn't load shape \"%s\"", shapeName );
-         return false;
-      }
-      else
-      {
-         // Create a dummy shape to force the generation of shaders and materials
-         // during the level load and not during gameplay.
-         TSShapeInstance *pDummy = new TSShapeInstance( shape, !server );
-         delete pDummy;
-      }
+      // Create a dummy shape to force the generation of shaders and materials
+      // during the level load and not during gameplay.
+      TSShapeInstance *pDummy = new TSShapeInstance( mShape, !server );
+      delete pDummy;
+   }
+   else
+   {
+      errorStr = String::ToString("PhysicsDebrisData::load: Couldn't load shape asset \"%s\"", mShapeAssetId);
+      return false;
    }
 
    return true;
@@ -113,18 +110,23 @@ bool PhysicsDebrisData::preload( bool server, String &errorStr )
 
 void PhysicsDebrisData::initPersistFields()
 {
-   addGroup( "Display" );
+   docsURL;
+   addGroup( "Shapes" );
 
-      addField( "shapeFile", TypeShapeFilename, Offset( shapeName, PhysicsDebrisData ),
+      addProtectedField( "shapeFile", TypeShapeFilename, Offset( mShapeName, PhysicsDebrisData ), &_setShapeData, &defaultProtectedGetFn,
          "@brief Path to the .DAE or .DTS file to use for this shape.\n\n"
-         "Compatable with Live-Asset Reloading.");
+         "Compatable with Live-Asset Reloading.", AbstractClassRep::FIELD_HideInInspectors);
 
+      INITPERSISTFIELD_SHAPEASSET(Shape, PhysicsDebrisData, "@brief Shape to use with this debris.\n\n"
+         "Compatable with Live-Asset Reloading.");
+   endGroup( "Shapes" );
+
+   addGroup("Rendering");
       addField( "castShadows", TypeBool, Offset( castShadows, PhysicsDebrisData ), 
         "@brief Determines if the shape's shadow should be cast onto the environment.\n\n" );
+   endGroup("Rendering");
 
-   endGroup( "Display" );
-
-   addGroup( "Physical Properties" );
+   addGroup( "Physics" );
 
       addField("lifetime", TypeF32, Offset( lifetime, PhysicsDebrisData ),
          "@brief Base time, in seconds, that debris persists after time of creation.\n\n"
@@ -192,8 +194,7 @@ void PhysicsDebrisData::initPersistFields()
          "The result of the calculated buoyancy is relative to the density of the WaterObject the PhysicsDebris is within."
          "@see WaterObject::density");
 
-   endGroup( "Physical Properties" );
-
+   endGroup( "Physics" );
    Parent::initPersistFields();
 }
 
@@ -214,7 +215,8 @@ void PhysicsDebrisData::packData(BitStream* stream)
    stream->write( angularSleepThreshold );
    stream->write( waterDampingScale );
    stream->write( buoyancyDensity );
-   stream->writeString( shapeName );
+
+   PACKDATA_ASSET(Shape);
 }
 
 void PhysicsDebrisData::unpackData(BitStream* stream)
@@ -235,10 +237,10 @@ void PhysicsDebrisData::unpackData(BitStream* stream)
    stream->read( &waterDampingScale );
    stream->read( &buoyancyDensity );
 
-   shapeName   = stream->readSTString();
+   UNPACKDATA_ASSET(Shape);
 }
 
-DefineConsoleMethod( PhysicsDebrisData, preload, void, (), , 
+DefineEngineMethod( PhysicsDebrisData, preload, void, (), , 
    "@brief Loads some information to have readily available at simulation time.\n\n"
    "Forces generation of shaders, materials, and other data used by the %PhysicsDebris object. "
    "This function should be used while a level is loading in order to shorten "
@@ -246,7 +248,8 @@ DefineConsoleMethod( PhysicsDebrisData, preload, void, (), ,
 {
    String errorStr;
 
-   object->shape = NULL;
+   object->_setShape(object->getShape());
+
    if( !object->preload( false, errorStr ) )
       Con::errorf( "PhsysicsDebrisData::preload - error: %s", errorStr.c_str() );
 }
@@ -312,11 +315,11 @@ PhysicsDebris* PhysicsDebris::create(  PhysicsDebrisData *datablock,
 }
 
 PhysicsDebris::PhysicsDebris()
-   :  mDataBlock( NULL ),
-      mLifetime( 0.0f ),
+   :  mLifetime( 0.0f ),
+      mInitialLinVel( Point3F::Zero ),
+      mDataBlock( NULL ),
       mShapeInstance( NULL ),
-      mWorld( NULL ),
-      mInitialLinVel( Point3F::Zero )
+      mWorld( NULL )
 {
    mTypeMask |= DebrisObjectType | DynamicShapeObjectType;
 
@@ -330,6 +333,7 @@ PhysicsDebris::~PhysicsDebris()
 
 void PhysicsDebris::initPersistFields()
 {
+   docsURL;
    Con::addVariable( "$pref::PhysicsDebris::lifetimeScale", TypeF32, &smLifetimeScale,
       "@brief Scales how long %PhysicsDebris will live before being removed.\n"
       "@note A value of 0 will disable PhysicsDebris entirely.");
@@ -358,7 +362,7 @@ bool PhysicsDebris::onAdd()
    }
 
    // Setup our bounding box
-   mObjBox = mDataBlock->shape->bounds;   
+   mObjBox = mDataBlock->mShape->mBounds;
    resetWorldBox();
 
    // Add it to the client scene.
@@ -621,7 +625,7 @@ void PhysicsDebris::_createFragments()
    if ( !mWorld )
       return;
 
-   TSShape *shape = mDataBlock->shape;
+   TSShape *shape = mDataBlock->mShape;
 
    mShapeInstance = new TSShapeInstance( shape, true );
    mShapeInstance->animate();
@@ -695,7 +699,7 @@ void PhysicsDebris::_findNodes( U32 colNode, Vector<U32> &nodeIds )
    // 1. Visible mesh nodes are siblings of the collision node under a common parent dummy node
    // 2. Collision node is a child of its visible mesh node
 
-   TSShape *shape = mDataBlock->shape;
+   TSShape *shape = mDataBlock->mShape;
    S32 itr = shape->nodes[colNode].parentIndex;
    itr = shape->nodes[itr].firstChild;
 

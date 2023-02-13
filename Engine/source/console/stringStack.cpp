@@ -24,182 +24,158 @@
 #include "console/consoleInternal.h"
 #include "console/stringStack.h"
 
-
-void ConsoleValueStack::getArgcArgv(StringTableEntry name, U32 *argc, ConsoleValueRef **in_argv, bool popStackFrame /* = false */)
+StringStack::StringStack()
 {
-   U32 startStack = mStackFrames[mFrame-1];
-   U32 argCount   = getMin(mStackPos - startStack, (U32)MaxArgs - 1);
-
-   *in_argv = mArgv;
-   mArgv[0] = name;
-   
-   for(U32 i = 0; i < argCount; i++) {
-      ConsoleValueRef *ref = &mArgv[i+1];
-      ref->value = &mStack[startStack + i];
-      ref->stringStackValue = NULL;
-   }
-   argCount++;
-   
-   *argc = argCount;
-
-   if(popStackFrame)
-      popFrame();
+   mBufferSize = 0;
+   mBuffer = NULL;
+   mArgBufferSize = 0;
+   mArgBuffer = NULL;
+   for (U32 i = 0; i < MaxArgs; i++)
+      mArgV[i] = "";
+   dMemset(mFrameOffsets, 0, sizeof(mFrameOffsets));
+   dMemset(mStartOffsets, 0, sizeof(mStartOffsets));
+   mNumFrames = 0;
+   mArgc = 0;
+   mStart = 0;
+   mLen = 0;
+   mStartStackSize = 0;
+   validateBufferSize(8192);
+   validateArgBufferSize(2048);
+   dMemset(mBuffer, '\0', mBufferSize);
+   dMemset(mArgBuffer, '\0', mArgBufferSize);
 }
 
-ConsoleValueStack::ConsoleValueStack() : 
-mFrame(0),
-mStackPos(0)
+StringStack::~StringStack()
 {
-   for (int i=0; i<ConsoleValueStack::MaxStackDepth; i++) {
-      mStack[i].init();
-      mStack[i].type = ConsoleValue::TypeInternalString;
-   }
+   if( mBuffer )
+      dFree( mBuffer );
+   if( mArgBuffer )
+      dFree( mArgBuffer );
 }
 
-ConsoleValueStack::~ConsoleValueStack()
+void StringStack::validateBufferSize(U32 size)
 {
-}
-
-void ConsoleValueStack::pushVar(ConsoleValue *variable)
-{
-   if (mStackPos == ConsoleValueStack::MaxStackDepth) {
-      AssertFatal(false, "Console Value Stack is empty");
-      return;
-   }
-
-   switch (variable->type)
+   if(size > mBufferSize)
    {
-   case ConsoleValue::TypeInternalInt:
-      mStack[mStackPos++].setIntValue((S32)variable->getIntValue());
-   case ConsoleValue::TypeInternalFloat:
-      mStack[mStackPos++].setFloatValue((F32)variable->getFloatValue());
-   default:
-      mStack[mStackPos++].setStackStringValue(variable->getStringValue());
+      mBufferSize = size + 2048;
+      mBuffer = (char *) dRealloc(mBuffer, mBufferSize);
    }
 }
 
-void ConsoleValueStack::pushValue(ConsoleValue &variable)
+void StringStack::validateArgBufferSize(U32 size)
 {
-   if (mStackPos == ConsoleValueStack::MaxStackDepth) {
-      AssertFatal(false, "Console Value Stack is empty");
-      return;
-   }
-
-   switch (variable.type)
+   if(size > mArgBufferSize)
    {
-   case ConsoleValue::TypeInternalInt:
-      mStack[mStackPos++].setIntValue((S32)variable.getIntValue());
-   case ConsoleValue::TypeInternalFloat:
-      mStack[mStackPos++].setFloatValue((F32)variable.getFloatValue());
-   default:
-      mStack[mStackPos++].setStringValue(variable.getStringValue());
+      mArgBufferSize = size + 2048;
+      mArgBuffer = (char *) dRealloc(mArgBuffer, mArgBufferSize);
    }
 }
 
-ConsoleValue *ConsoleValueStack::pushString(const char *value)
+void StringStack::setIntValue(U32 i)
 {
-   if (mStackPos == ConsoleValueStack::MaxStackDepth) {
-      AssertFatal(false, "Console Value Stack is empty");
-      return NULL;
+   validateBufferSize(mStart + 32);
+   dSprintf(mBuffer + mStart, 32, "%d", i);
+   mLen = dStrlen(mBuffer + mStart);
+}
+
+void StringStack::setFloatValue(F64 v)
+{
+   validateBufferSize(mStart + 32);
+   dSprintf(mBuffer + mStart, 32, "%.9g", v);
+   mLen = dStrlen(mBuffer + mStart);
+}
+
+char *StringStack::getReturnBuffer(U32 size)
+{
+   if(size > ReturnBufferSpace)
+   {
+      AssertFatal(Con::isMainThread(), "Manipulating return buffer from a secondary thread!");
+      validateArgBufferSize(size);
+      return mArgBuffer;
    }
-
-   //Con::printf("[%i]CSTK pushString %s", mStackPos, value);
-
-   mStack[mStackPos++].setStringValue(value);
-   return &mStack[mStackPos-1];
-}
-
-ConsoleValue *ConsoleValueStack::pushStackString(const char *value)
-{
-   if (mStackPos == ConsoleValueStack::MaxStackDepth) {
-      AssertFatal(false, "Console Value Stack is empty");
-      return NULL;
+   else
+   {
+      validateBufferSize(mStart + size);
+      return mBuffer + mStart;
    }
-
-   //Con::printf("[%i]CSTK pushString %s", mStackPos, value);
-
-   mStack[mStackPos++].setStackStringValue(value);
-   return &mStack[mStackPos-1];
 }
 
-ConsoleValue *ConsoleValueStack::pushUINT(U32 value)
+char *StringStack::getArgBuffer(U32 size)
 {
-   if (mStackPos == ConsoleValueStack::MaxStackDepth) {
-      AssertFatal(false, "Console Value Stack is empty");
-      return NULL;
-   }
-
-   //Con::printf("[%i]CSTK pushUINT %i", mStackPos, value);
-
-   mStack[mStackPos++].setIntValue(value);
-   return &mStack[mStackPos-1];
+   AssertFatal(Con::isMainThread(), "Manipulating console arg buffer from a secondary thread!");
+   validateBufferSize(mStart + mFunctionOffset + size);
+   char *ret = mBuffer + mStart + mFunctionOffset;
+   mFunctionOffset += size;
+   return ret;
 }
 
-ConsoleValue *ConsoleValueStack::pushFLT(float value)
+void StringStack::clearFunctionOffset()
 {
-   if (mStackPos == ConsoleValueStack::MaxStackDepth) {
-      AssertFatal(false, "Console Value Stack is empty");
-      return NULL;
-   }
-
-   //Con::printf("[%i]CSTK pushFLT %f", mStackPos, value);
-
-   mStack[mStackPos++].setFloatValue(value);
-   return &mStack[mStackPos-1];
+   //Con::printf("StringStack mFunctionOffset = 0 (from %i)", mFunctionOffset);
+   mFunctionOffset = 0;
 }
 
-static ConsoleValue gNothing;
-
-ConsoleValue* ConsoleValueStack::pop()
+void StringStack::setStringValue(const char *s)
 {
-   if (mStackPos == 0) {
-      AssertFatal(false, "Console Value Stack is empty");
-      return &gNothing;
-   }
-
-   return &mStack[--mStackPos];
-}
-
-void ConsoleValueStack::pushFrame()
-{
-   //Con::printf("CSTK pushFrame[%i] (%i)", mFrame, mStackPos);
-   mStackFrames[mFrame++] = mStackPos;
-}
-
-void ConsoleValueStack::resetFrame()
-{
-   if (mFrame == 0) {
-      mStackPos = 0;
+   if(!s)
+   {
+      mLen = 0;
+      mBuffer[mStart] = 0;
       return;
    }
+   mLen = dStrlen(s);
 
-   U32 start = mStackFrames[mFrame-1];
-   //for (U32 i=start; i<mStackPos; i++) {
-      //mStack[i].clear();
-   //}
-   mStackPos = start;
-   //Con::printf("CSTK resetFrame to %i", mStackPos);
+   validateBufferSize(mStart + mLen + 2);
+   dStrcpy(mBuffer + mStart, s, mBufferSize - mStart);
 }
 
-void ConsoleValueStack::clearFrames()
+void StringStack::advance()
 {
-   mStackPos = 0;
-   mFrame = 0;
+   mStartOffsets[mStartStackSize++] = mStart;
+   mStart += mLen;
+   mLen = 0;
 }
 
-void ConsoleValueStack::popFrame()
+void StringStack::advanceChar(char c)
 {
-   //Con::printf("CSTK popFrame");
-   if (mFrame == 0) {
-      // Go back to start
-      mStackPos = 0;
-      return;
-   }
+   mStartOffsets[mStartStackSize++] = mStart;
+   mStart += mLen;
+   mBuffer[mStart] = c;
+   mBuffer[mStart+1] = 0;
+   mStart += 1;
+   mLen = 0;
+}
 
-   U32 start = mStackFrames[mFrame-1];
-   //for (U32 i=start; i<mStackPos; i++) {
-      //mStack[i].clear();
-   //}
-   mStackPos = start;
-   mFrame--;
+void StringStack::push()
+{
+   advanceChar(0);
+}
+
+void StringStack::rewind()
+{
+   mStart = mStartOffsets[--mStartStackSize];
+   mLen = dStrlen(mBuffer + mStart);
+}
+
+void StringStack::rewindTerminate()
+{
+   mBuffer[mStart] = 0;
+   mStart = mStartOffsets[--mStartStackSize];
+   mLen   = dStrlen(mBuffer + mStart);
+}
+
+U32 StringStack::compare()
+{
+   // Figure out the 1st and 2nd item offsets.
+   U32 oldStart = mStart;
+   mStart = mStartOffsets[--mStartStackSize];
+
+   // Compare current and previous strings.
+   U32 ret = !dStricmp(mBuffer + mStart, mBuffer + oldStart);
+
+   // Put an empty string on the top of the stack.
+   mLen = 0;
+   mBuffer[mStart] = 0;
+
+   return ret;
 }

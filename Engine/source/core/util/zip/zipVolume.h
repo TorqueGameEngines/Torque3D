@@ -40,7 +40,14 @@ public:
 
    String   getTypeStr() const { return "Zip"; }
 
+   // Strict resolve function will reteurn a node if it is mounted *AS* the requested path.
    FileNodeRef resolve(const Path& path);
+
+   // Loose resolve function will return a node if it is mounted as or under the requested path.
+   // This is needed so mounted subdirectories will be included in recursive FindByPatern searches.
+   // i.e. If data/ui.zip is mounted as data/ui, a search for data/*.module will only include files
+   // under data/ui if the loose resolve function is used.
+   FileNodeRef resolveLoose(const Path& path);
 
    // these are unsupported, ZipFileSystem is currently read only access
    FileNodeRef create(const Path& path,FileNode::Mode) { return 0; }

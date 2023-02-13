@@ -233,11 +233,13 @@ class Point3D
    bool  isZero() const;
    F64 len()    const;
    F64 lenSquared() const;
+   F64 magnitudeSafe() const;
 
    //-------------------------------------- Mathematical mutators
   public:
    void neg();
    void normalize();
+   void normalizeSafe();
    void normalize(F64 val);
    void convolve(const Point3D&);
    void convolveInverse(const Point3D&);
@@ -274,8 +276,8 @@ public:
 //-------------------------------------- Point3I
 //
 inline Point3I::Point3I()
+   : x(0), y(0), z(0)
 {
-   //
 }
 
 inline Point3I::Point3I(const Point3I& _copy)
@@ -429,9 +431,7 @@ inline Point3I& Point3I::operator/=(S32 div)
 //-------------------------------------- Point3F
 //
 inline Point3F::Point3F()
-#if defined(TORQUE_OS_LINUX)
- : x(0.f), y(0.f), z(0.f)
-#endif
+ : x(0.0f), y(0.0f), z(0.0f)
 {
 // Uninitialized points are definitely a problem.
 // Enable the following code to see how often they crop up.
@@ -728,11 +728,13 @@ inline Point3F& Point3F::operator*=(const Point3F &_vec)
 
 inline Point3F Point3F::operator/(const Point3F &_vec) const
 {
+   AssertFatal(_vec.x != 0.0f && _vec.y != 0.0f && _vec.z != 0.0f, "Error, div by zero attempted");
    return Point3F(x / _vec.x, y / _vec.y, z / _vec.z);
 }
 
 inline Point3F& Point3F::operator/=(const Point3F &_vec)
 {
+   AssertFatal(_vec.x != 0.0f && _vec.y != 0.0f && _vec.z != 0.0f, "Error, div by zero attempted");
    x /= _vec.x;
    y /= _vec.y;
    z /= _vec.z;
@@ -757,6 +759,7 @@ inline Point3F& Point3F::operator=(const Point3D &_vec)
 //-------------------------------------- Point3D
 //
 inline Point3D::Point3D()
+   : x(0.0), y(0.0), z(0.0)
 {
    //
 }
@@ -855,12 +858,35 @@ inline F64 Point3D::lenSquared() const
 
 inline F64 Point3D::len() const
 {
-   return mSqrtD(x*x + y*y + z*z);
+   F64 temp = x*x + y*y + z*z;
+   return (temp > 0.0) ? mSqrtD(temp) : 0.0;
 }
 
 inline void Point3D::normalize()
 {
    m_point3D_normalize(*this);
+}
+
+inline F64 Point3D::magnitudeSafe() const
+{
+   if( isZero() )
+   {
+      return 0.0;
+   }
+   else
+   {
+      return len();
+   }
+}
+
+inline void Point3D::normalizeSafe()
+{
+   F64 vmag = magnitudeSafe();
+
+   if( vmag > POINT_EPSILON )
+   {
+      *this *= F64(1.0 / vmag);
+   }
 }
 
 inline void Point3D::normalize(F64 val)

@@ -134,7 +134,7 @@ StringTableEntry _StringTable::insert(const char* _val, const bool caseSens)
    U32 key = hashString(val);
    walk = &buckets[key % numBuckets];
    while((temp = *walk) != NULL)   {
-      if(caseSens && !dStrcmp(temp->val, val))
+      if(caseSens && !String::compare(temp->val, val))
          return temp->val;
       else if(!caseSens && !dStricmp(temp->val, val))
          return temp->val;
@@ -142,10 +142,11 @@ StringTableEntry _StringTable::insert(const char* _val, const bool caseSens)
    }
    char *ret = 0;
    if(!*walk) {
+      dsize_t valLen = dStrlen(val) + 1;
       *walk = (Node *) mempool.alloc(sizeof(Node));
       (*walk)->next = 0;
-      (*walk)->val = (char *) mempool.alloc(dStrlen(val) + 1);
-      dStrcpy((*walk)->val, val);
+      (*walk)->val = (char *) mempool.alloc(valLen);
+      dStrcpy((*walk)->val, val, valLen);
       ret = (*walk)->val;
       itemCount ++;
    }
@@ -174,7 +175,7 @@ StringTableEntry _StringTable::lookup(const char* val, const bool  caseSens)
    U32 key = hashString(val);
    walk = &buckets[key % numBuckets];
    while((temp = *walk) != NULL)   {
-      if(caseSens && !dStrcmp(temp->val, val))
+      if(caseSens && !String::compare(temp->val, val))
             return temp->val;
       else if(!caseSens && !dStricmp(temp->val, val))
          return temp->val;
@@ -232,7 +233,7 @@ void _StringTable::resize(const U32 _newSize)
    walk = head;
    while(walk) {
       U32 key;
-      Node *temp = walk;
+      temp = walk;
 
       walk = walk->next;
       key = hashString(temp->val);

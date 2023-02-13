@@ -39,6 +39,8 @@
 #include "gui/worldEditor/undoActions.h"
 #include "materials/materialDefinition.h"
 
+#include "T3D/Scene.h"
+
 IMPLEMENT_CONOBJECT(GuiRoadEditorCtrl);
 
 ConsoleDocClass( GuiRoadEditorCtrl,
@@ -80,9 +82,10 @@ GuiRoadEditorCtrl::GuiRoadEditorCtrl()
    mSelectedSplineColor.set( 0,255,0,255 );
    mHoverNodeColor.set( 255,255,255,255 );
 
+   mSavedDrag = false;
    mIsDirty = false;
 
-	mMaterialName = StringTable->insert("DefaultDecalRoadMaterial");
+   mMaterialAssetId = Con::getVariable("$DecalRoadEditor::defaultMaterialAsset");
 }
 
 GuiRoadEditorCtrl::~GuiRoadEditorCtrl()
@@ -97,7 +100,7 @@ void GuiRoadEditorUndoAction::undo()
       return;
 
    // Temporarily save the roads current data.
-   String materialName = road->mMaterialName;
+   String materialAssetId = road->mMaterialAssetId;
    F32 textureLength = road->mTextureLength;
    F32 breakAngle = road->mBreakAngle;
    F32 segmentsPerBatch = road->mSegmentsPerBatch;
@@ -105,7 +108,7 @@ void GuiRoadEditorUndoAction::undo()
    nodes.merge( road->mNodes );
 
    // Restore the Road properties saved in the UndoAction
-   road->mMaterialName = materialName;
+   road->_setMaterial(materialAssetId);
    road->mBreakAngle = breakAngle;
    road->mSegmentsPerBatch = segmentsPerBatch;
    road->mTextureLength = textureLength;
@@ -127,7 +130,7 @@ void GuiRoadEditorUndoAction::undo()
 
    // Now save the previous Road data in this UndoAction
    // since an undo action must become a redo action and vice-versa
-   mMaterialName = materialName;
+   mMaterialAssetId = materialAssetId;
    mBreakAngle = breakAngle;
    mSegmentsPerBatch = segmentsPerBatch;
    mTextureLength = textureLength;
@@ -155,13 +158,15 @@ bool GuiRoadEditorCtrl::onAdd()
 
 void GuiRoadEditorCtrl::initPersistFields()
 {
+   docsURL;
    addField( "DefaultWidth",        TypeF32,    Offset( mDefaultWidth, GuiRoadEditorCtrl ) );
    addField( "HoverSplineColor",    TypeColorI, Offset( mHoverSplineColor, GuiRoadEditorCtrl ) );
    addField( "SelectedSplineColor", TypeColorI, Offset( mSelectedSplineColor, GuiRoadEditorCtrl ) );
    addField( "HoverNodeColor",      TypeColorI, Offset( mHoverNodeColor, GuiRoadEditorCtrl ) );
    addField( "isDirty",             TypeBool,   Offset( mIsDirty, GuiRoadEditorCtrl ) );
-	addField( "materialName",			TypeString, Offset( mMaterialName, GuiRoadEditorCtrl ),
-      "Default Material used by the Road Editor on road creation." );
+
+   INITPERSISTFIELD_MATERIALASSET(Material, GuiRoadEditorCtrl, "Default Material used by the Road Editor on road creation.");
+
    //addField( "MoveNodeCursor", TYPEID< SimObject >(), Offset( mMoveNodeCursor, GuiRoadEditorCtrl) );
    //addField( "AddNodeCursor", TYPEID< SimObject >(), Offset( mAddNodeCursor, GuiRoadEditorCtrl) );
    //addField( "InsertNodeCursor", TYPEID< SimObject >(), Offset( mInsertNodeCursor, GuiRoadEditorCtrl) );
@@ -402,17 +407,17 @@ void GuiRoadEditorCtrl::on3DMouseDown(const Gui3DMouseEvent & event)
 
 		DecalRoad *newRoad = new DecalRoad;
 		
-
-		newRoad->mMaterialName = mMaterialName;
+      if (mMaterialAsset.notNull())
+         newRoad->_setMaterial(mMaterialAssetId);
 
       newRoad->registerObject();
 
-      // Add to MissionGroup                              
-      SimGroup *missionGroup;
-      if ( !Sim::findObject( "MissionGroup", missionGroup ) )               
-         Con::errorf( "GuiDecalRoadEditorCtrl - could not find MissionGroup to add new DecalRoad" );
+      // Add to scene                              
+      Scene* scene = Scene::getRootScene();
+      if ( !scene )               
+         Con::errorf( "GuiDecalRoadEditorCtrl - could not find scene to add new DecalRoad" );
       else
-         missionGroup->addObject( newRoad );               
+         scene->addObject( newRoad );               
 
       newRoad->insertNode( tPos, mDefaultWidth, 0 );
       U32 newNode = newRoad->insertNode( tPos, mDefaultWidth, 1 );
@@ -722,7 +727,7 @@ void GuiRoadEditorCtrl::renderScene(const RectI & updateRect)
    // Draw the spline based from the client-side road
    // because the serverside spline is not actually reliable...
    // Can be incorrect if the DecalRoad is before the TerrainBlock
-   // in the MissionGroup.
+   // in the scene.
 
    if ( mHoverRoad && mHoverRoad != mSelRoad )
    {      
@@ -979,7 +984,7 @@ F32 GuiRoadEditorCtrl::getNodeWidth()
    return 0.0f;   
 }
 
-void GuiRoadEditorCtrl::setNodePosition( Point3F pos )
+void GuiRoadEditorCtrl::setNodePosition(const Point3F& pos)
 {
    if ( mSelRoad && mSelNode != -1 )
    {
@@ -1024,7 +1029,7 @@ void GuiRoadEditorCtrl::submitUndo( const UTF8 *name )
 
    action->mObjId = mSelRoad->getId();
    action->mBreakAngle = mSelRoad->mBreakAngle;
-   action->mMaterialName = mSelRoad->mMaterialName;
+   action->mMaterialAssetId = mSelRoad->mMaterialAssetId;
    action->mSegmentsPerBatch = mSelRoad->mSegmentsPerBatch;   
    action->mTextureLength = mSelRoad->mTextureLength;
    action->mRoadEditor = this;
@@ -1037,47 +1042,47 @@ void GuiRoadEditorCtrl::submitUndo( const UTF8 *name )
    undoMan->addAction( action );
 }
 
-DefineConsoleMethod( GuiRoadEditorCtrl, deleteNode, void, (), , "deleteNode()" )
+DefineEngineMethod( GuiRoadEditorCtrl, deleteNode, void, (), , "deleteNode()" )
 {
    object->deleteSelectedNode();
 }
 
-DefineConsoleMethod( GuiRoadEditorCtrl, getMode, const char*, (), , "" )
+DefineEngineMethod( GuiRoadEditorCtrl, getMode, const char*, (), , "" )
 {
    return object->getMode();
 }
 
-DefineConsoleMethod( GuiRoadEditorCtrl, setMode, void, ( const char * mode ), , "setMode( String mode )" )
+DefineEngineMethod( GuiRoadEditorCtrl, setMode, void, ( const char * mode ), , "setMode( String mode )" )
 {
    String newMode = ( mode );
    object->setMode( newMode );
 }
 
-DefineConsoleMethod( GuiRoadEditorCtrl, getNodeWidth, F32, (), , "" )
+DefineEngineMethod( GuiRoadEditorCtrl, getNodeWidth, F32, (), , "" )
 {
    return object->getNodeWidth();
 }
 
-DefineConsoleMethod( GuiRoadEditorCtrl, setNodeWidth, void, ( F32 width ), , "" )
+DefineEngineMethod( GuiRoadEditorCtrl, setNodeWidth, void, ( F32 width ), , "" )
 {
    object->setNodeWidth( width );
 }
 
-DefineConsoleMethod( GuiRoadEditorCtrl, getNodePosition, Point3F, (), , "" )
+DefineEngineMethod( GuiRoadEditorCtrl, getNodePosition, Point3F, (), , "" )
 {
 
 	return object->getNodePosition();
 }
 
-DefineConsoleMethod( GuiRoadEditorCtrl, setNodePosition, void, ( Point3F pos ), , "" )
+DefineEngineMethod( GuiRoadEditorCtrl, setNodePosition, void, ( Point3F pos ), , "" )
 {
 
    object->setNodePosition( pos );
 }
 
-DefineConsoleMethod( GuiRoadEditorCtrl, setSelectedRoad, void, ( const char * pathRoad ), (""), "" )
+DefineEngineMethod( GuiRoadEditorCtrl, setSelectedRoad, void, ( const char * pathRoad ), (""), "" )
 {
-   if (dStrcmp( pathRoad,"")==0 )
+   if (String::compare( pathRoad,"")==0 )
       object->setSelectedRoad(NULL);
    else
    {
@@ -1087,21 +1092,21 @@ DefineConsoleMethod( GuiRoadEditorCtrl, setSelectedRoad, void, ( const char * pa
    }
 }
 
-DefineConsoleMethod( GuiRoadEditorCtrl, getSelectedRoad, S32, (), , "" )
+DefineEngineMethod( GuiRoadEditorCtrl, getSelectedRoad, S32, (), , "" )
 {
    DecalRoad *road = object->getSelectedRoad();
    if ( road )
       return road->getId();
    
-   return NULL;
+   return 0;
 }
 
-DefineConsoleMethod( GuiRoadEditorCtrl, getSelectedNode, S32, (), , "" )
+DefineEngineMethod( GuiRoadEditorCtrl, getSelectedNode, S32, (), , "" )
 {
    return object->getSelectedNode();
 }
 
-DefineConsoleMethod( GuiRoadEditorCtrl, deleteRoad, void, (), , "" )
+DefineEngineMethod( GuiRoadEditorCtrl, deleteRoad, void, (), , "" )
 {
    object->deleteSelectedRoad();
 }

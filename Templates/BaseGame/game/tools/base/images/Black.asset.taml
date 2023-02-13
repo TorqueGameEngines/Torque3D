@@ -1,0 +1,14 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Black"
+    materialDefinitionName="Black"
+    VersionId="1">
+    <Material
+        Name="Black">
+        <Material.Stages>
+            <Stages_beginarray
+                DiffuseMapAsset="ToolsModule:black_image"/>
+        </Material.Stages>
+    </Material>
+</MaterialAsset>

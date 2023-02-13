@@ -42,8 +42,8 @@ CreatorTree::Node::Node() :
    mFlags(0),
    mParent(0),
    mName(0),
-   mValue(0),
    mId(0),
+   mValue(0),
    mTab(0)
 {
    VECTOR_SET_ASSOCIATION(mChildren);
@@ -145,8 +145,10 @@ S32 CreatorTree::Node::getSelected()
 //------------------------------------------------------------------------------
 CreatorTree::CreatorTree() :
    mCurId(0),
+   mRoot(0),
    mTxtOffset(5),
-   mRoot(0)
+   mTabSize(11),
+   mMaxWidth(0)
 {
    VECTOR_SET_ASSOCIATION(mNodeList);
    clear();
@@ -219,7 +221,7 @@ void CreatorTree::sort()
 }
 
 //------------------------------------------------------------------------------
-DefineConsoleMethod( CreatorTree, addGroup, S32, (S32 group, const char * name, const char * value), , "(string group, string name, string value)")
+DefineEngineMethod( CreatorTree, addGroup, S32, (S32 group, const char * name, const char * value), , "(string group, string name, string value)")
 {
    CreatorTree::Node * grp = object->findNode(group);
 
@@ -236,7 +238,7 @@ DefineConsoleMethod( CreatorTree, addGroup, S32, (S32 group, const char * name, 
    return(node ? node->getId() : -1);
 }
 
-DefineConsoleMethod( CreatorTree, addItem, S32, (S32 group, const char * name, const char * value), , "(Node group, string name, string value)")
+DefineEngineMethod( CreatorTree, addItem, S32, (S32 group, const char * name, const char * value), , "(Node group, string name, string value)")
 {
    CreatorTree::Node * grp = object->findNode(group);
 
@@ -249,7 +251,7 @@ DefineConsoleMethod( CreatorTree, addItem, S32, (S32 group, const char * name, c
 }
 
 //------------------------------------------------------------------------------
-DefineConsoleMethod( CreatorTree, fileNameMatch, bool, (const char * world, const char * type, const char * filename), , "(string world, string type, string filename)")
+DefineEngineMethod( CreatorTree, fileNameMatch, bool, (const char * world, const char * type, const char * filename), , "(string world, string type, string filename)")
 {
    // argv[2] - world short
    // argv[3] - type short
@@ -269,12 +271,12 @@ DefineConsoleMethod( CreatorTree, fileNameMatch, bool, (const char * world, cons
    return(!dStrnicmp(filename+1, type, typeLen));
 }
 
-DefineConsoleMethod( CreatorTree, getSelected, S32, (), , "Return a handle to the currently selected item.")
+DefineEngineMethod( CreatorTree, getSelected, S32, (), , "Return a handle to the currently selected item.")
 {
    return(object->getSelected());
 }
 
-DefineConsoleMethod( CreatorTree, isGroup, bool, (const char * group), , "(Group g)")
+DefineEngineMethod( CreatorTree, isGroup, bool, (const char * group), , "(Group g)")
 {
    CreatorTree::Node * node = object->findNode(dAtoi(group));
    if(node && node->isGroup())
@@ -282,24 +284,24 @@ DefineConsoleMethod( CreatorTree, isGroup, bool, (const char * group), , "(Group
    return(false);
 }
 
-DefineConsoleMethod( CreatorTree, getName, const char*, (const char * item), , "(Node item)")
+DefineEngineMethod( CreatorTree, getName, const char*, (const char * item), , "(Node item)")
 {
    CreatorTree::Node * node = object->findNode(dAtoi(item));
    return(node ? node->mName : 0);
 }
 
-DefineConsoleMethod( CreatorTree, getValue, const char*, (S32 nodeValue), , "(Node n)")
+DefineEngineMethod( CreatorTree, getValue, const char*, (S32 nodeValue), , "(Node n)")
 {
    CreatorTree::Node * node = object->findNode(nodeValue);
    return(node ? node->mValue : 0);
 }
 
-DefineConsoleMethod( CreatorTree, clear, void, (), , "Clear the tree.")
+DefineEngineMethod( CreatorTree, clear, void, (), , "Clear the tree.")
 {
    object->clear();
 }
 
-DefineConsoleMethod( CreatorTree, getParent, S32, (S32 nodeValue), , "(Node n)")
+DefineEngineMethod( CreatorTree, getParent, S32, (S32 nodeValue), , "(Node n)")
 {
    CreatorTree::Node * node = object->findNode(nodeValue);
    if(node && node->mParent)

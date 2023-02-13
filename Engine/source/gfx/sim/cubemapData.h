@@ -39,6 +39,7 @@
 #include "scene/sceneManager.h"
 #endif
 
+#include "T3D/assets/ImageAsset.h"
 
 /// A script interface for creating static or dynamic cubemaps.
 class CubemapData : public SimObject
@@ -63,14 +64,25 @@ public:
    // Update a static cubemap @ pos
 	void updateFaces();
 
-protected:
+   void setCubemapFile(FileName newCubemapFile);
 
-   FileName mCubeFaceFile[6];
-   GFXTexHandle mCubeFace[6];
+   void setCubeFaceFile(U32 index, FileName newFaceFile);
+
+   void setCubeFaceTexture(U32 index, GFXTexHandle newFaceTexture);
+
+   GFXTexHandle* getCubeFaceTexture(U32 faceIdx) { return &mCubeMapFace[faceIdx]; }
+
+protected:
+   DECLARE_IMAGEASSET(CubemapData, CubeMap, onCubemapChanged, GFXStaticTextureSRGBProfile);
+   DECLARE_ASSET_SETGET(CubemapData, CubeMap);
+
+   DECLARE_IMAGEASSET_ARRAY(CubemapData, CubeMapFace, 6);
+   DECLARE_IMAGEASSET_ARRAY_SETGET(CubemapData, CubeMapFace);
 
    GFXTexHandle mDepthBuff;
    GFXTextureTargetRef mRenderTarget;
+
+   void onCubemapChanged() {}
 };
 
 #endif // CUBEMAPDATA
-

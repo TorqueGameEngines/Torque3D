@@ -1,0 +1,15 @@
+//-----------------------------------------------------------------------------
+// Verve
+// Copyright (C) - Violent Tulip
+//-----------------------------------------------------------------------------
+
+function VerveEditor::InitControllerScripts()
+{
+    // Core.
+    exec( "./VController." @ $TorqueScriptFileExtension );
+    exec( "./VControllerProperties." @ $TorqueScriptFileExtension );
+    
+    // Custom.
+    // Exec Custom Controller Scripts.
+}
+VerveEditor::InitControllerScripts();

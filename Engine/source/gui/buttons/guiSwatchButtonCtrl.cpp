@@ -58,7 +58,7 @@ ConsoleDocClass( GuiSwatchButtonCtrl,
 //-----------------------------------------------------------------------------
 
 GuiSwatchButtonCtrl::GuiSwatchButtonCtrl()
- : mSwatchColor( 1, 1, 1, 1 )
+   : mSwatchColor(1, 1, 1, 1)
 {
    mButtonText = StringTable->insert( "" );   
    setExtent(140, 30);
@@ -71,9 +71,9 @@ GuiSwatchButtonCtrl::GuiSwatchButtonCtrl()
 
 void GuiSwatchButtonCtrl::initPersistFields()
 {
-   addField( "color", TypeColorF, Offset( mSwatchColor, GuiSwatchButtonCtrl ), "The foreground color of GuiSwatchButtonCtrl" );
-
-   addField( "gridBitmap", TypeString, Offset( mGridBitmap, GuiSwatchButtonCtrl ), "The bitmap used for the transparent grid" );
+   docsURL;
+   addField("color", TypeColorF, Offset(mSwatchColor, GuiSwatchButtonCtrl), "The foreground color of GuiSwatchButtonCtrl");
+   addField( "gridBitmap", TypeRealString, Offset( mGridBitmap, GuiSwatchButtonCtrl ), "The bitmap used for the transparent grid" );
    
    Parent::initPersistFields();
 }
@@ -91,9 +91,8 @@ bool GuiSwatchButtonCtrl::onWake()
 
 void GuiSwatchButtonCtrl::onRender( Point2I offset, const RectI &updateRect )
 {
-   bool highlight = mMouseOver;
+   bool highlight = mHighlighted;
 
-   ColorI backColor   = mSwatchColor;
    ColorI borderColor = mActive ? ( highlight ? mProfile->mBorderColorHL : mProfile->mBorderColor ) : mProfile->mBorderColorNA;
 
    RectI renderRect( offset, getExtent() );
@@ -108,7 +107,7 @@ void GuiSwatchButtonCtrl::onRender( Point2I offset, const RectI &updateRect )
       drawer->drawBitmapStretch( mGrid, renderRect );
 
    // Draw swatch color as fill...
-   drawer->drawRectFill( renderRect, mSwatchColor );
+   drawer->drawRectFill(renderRect, mSwatchColor.toColorI());
 
    // Draw any borders...
    drawer->drawRect( renderRect, borderColor );

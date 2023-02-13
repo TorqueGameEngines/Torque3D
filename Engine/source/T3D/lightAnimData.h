@@ -47,7 +47,7 @@ struct LightAnimState
 {  
    /// Constructor.
    LightAnimState()
-      :  active( true ),
+      :  active( false ),
          animationPhase( 1.0f ),
          animationPeriod( 1.0f ),
          brightness( 1.0f ),
@@ -74,7 +74,7 @@ struct LightAnimState
    MatrixF transform;
 
    /// The set light color before animation occurs.
-   ColorF color;
+   LinearColorF color;
 };
 
 
@@ -151,7 +151,7 @@ public:
       /// Performs the animation returning the results in the output if
       /// the time scale is greater than zero.
       /// @return Returns true if the animation was performed.
-      bool animate( F32 time, F32 *output );
+      bool animate(F32 time, F32 *output, bool multiply = false);
 
       /// Called when the key string is changed to update the
       /// key length and time scale.

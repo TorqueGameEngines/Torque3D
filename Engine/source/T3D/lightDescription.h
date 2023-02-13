@@ -97,10 +97,12 @@ public:
 
    bool _preload( bool server, String &errorStr );
    
-   ColorF color;
+   LinearColorF color;
    F32 brightness;
    F32 range;
    bool castShadows;
+   S32 mStaticRefreshFreq;
+   S32 mDynamicRefreshFreq;
 
    LightAnimData *animationData;   
    S32 animationDataId;

@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2014 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -70,8 +70,7 @@ int
 SDL_CondSignal(SDL_cond * cond)
 {
     if (!cond) {
-        SDL_SetError("Passed a NULL condition variable");
-        return -1;
+        return SDL_InvalidParamError("cond");
     }
 
     cond->cpp_cond.notify_one();
@@ -84,8 +83,7 @@ int
 SDL_CondBroadcast(SDL_cond * cond)
 {
     if (!cond) {
-        SDL_SetError("Passed a NULL condition variable");
-        return -1;
+        return SDL_InvalidParamError("cond");
     }
 
     cond->cpp_cond.notify_all();
@@ -118,17 +116,15 @@ int
 SDL_CondWaitTimeout(SDL_cond * cond, SDL_mutex * mutex, Uint32 ms)
 {
     if (!cond) {
-        SDL_SetError("Passed a NULL condition variable");
-        return -1;
+        return SDL_InvalidParamError("cond");
     }
 
     if (!mutex) {
-        SDL_SetError("Passed a NULL mutex variable");
-        return -1;
+        return SDL_InvalidParamError("mutex");
     }
 
     try {
-        std::unique_lock<std::recursive_mutex> cpp_lock(mutex->cpp_mutex, std::defer_lock_t());
+        std::unique_lock<std::recursive_mutex> cpp_lock(mutex->cpp_mutex, std::adopt_lock_t());
         if (ms == SDL_MUTEX_MAXWAIT) {
             cond->cpp_cond.wait(
                 cpp_lock
@@ -148,8 +144,7 @@ SDL_CondWaitTimeout(SDL_cond * cond, SDL_mutex * mutex, Uint32 ms)
             }
         }
     } catch (std::system_error & ex) {
-        SDL_SetError("unable to wait on a C++ condition variable: code=%d; %s", ex.code(), ex.what());
-        return -1;
+        return SDL_SetError("unable to wait on a C++ condition variable: code=%d; %s", ex.code(), ex.what());
     }
 }
 

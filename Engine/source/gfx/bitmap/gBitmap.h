@@ -39,12 +39,15 @@
 #include "gfx/gfxEnums.h" // For the format
 #endif
 
+#ifndef _PROFILER_H_
+#include "platform/profiler.h"
+#endif
 //-------------------------------------- Forward decls.
 class Stream;
 class RectI;
 class Point2I;
 class ColorI;
-class ColorF;
+class LinearColorF;
 
 //------------------------------------------------------------------------------
 //-------------------------------------- GBitmap
@@ -55,8 +58,14 @@ public:
    enum Constants
    {
       /// The maximum mipmap levels we support.  The current
-      /// value lets us support up to 4096 x 4096 images.
-      c_maxMipLevels = 13 
+      /// value lets us support up to 8192 x 8192 images.
+      c_maxMipLevels = 14 
+   };
+
+   enum TextureOp
+   {
+      Add,
+      Subtract
    };
 
    struct Registration
@@ -79,6 +88,9 @@ public:
 
       Registration()
       {
+         readFunc = NULL;
+         writeFunc = NULL;
+         defaultCompression = 0;
          priority = 0;
          VECTOR_SET_ASSOCIATION( extensions );
       }
@@ -148,7 +160,13 @@ public:
                        const bool in_extrudeMipLevels = false,
                        const GFXFormat in_format = GFXFormatR8G8B8 );
 
+   void allocateBitmapWithMips(const U32  in_width,
+      const U32  in_height,
+      const U32  in_numMips,
+      const GFXFormat in_format = GFXFormatR8G8B8);
+
    void extrudeMipLevels(bool clearBorders = false);
+   void chopTopMips(U32 mipsToChop);
    void extrudeMipLevelsDetail();
 
    U32   getNumMipLevels() const { return mNumMipLevels; }
@@ -179,6 +197,8 @@ public:
    U32         getByteSize() const { return mByteSize; }
    U32         getBytesPerPixel() const { return mBytesPerPixel; }
 
+   U32         getSurfaceSize(const U32 mipLevel) const;
+
    /// Use these functions to set and get the mHasTransparency value
    /// This is used to indicate that this bitmap has pixels that have
    /// an alpha value less than 255 (used by the auto-Material mapper)
@@ -191,9 +211,10 @@ public:
    /// the bitmap bits and to check for alpha values less than 255
    bool        checkForTransparency();
 
-   ColorF      sampleTexel(F32 u, F32 v) const;
+   LinearColorF      sampleTexel(F32 u, F32 v, bool retAlpha = false) const;
    bool        getColor(const U32 x, const U32 y, ColorI& rColor) const;
    bool        setColor(const U32 x, const U32 y, const ColorI& rColor);
+   U8          getChanelValueAt(U32 x, U32 y, U32 chan);
 
    /// This method will combine bitmapA and bitmapB using the operation specified
    /// by combineOp. The result will be stored in the bitmap that this method is
@@ -203,7 +224,7 @@ public:
    ///
    /// @note There are some restrictions on ops and formats that will probably change
    /// based on how we use this function.
-   bool combine( const GBitmap *bitmapA, const GBitmap *bitmapB, const GFXTextureOp combineOp );
+   bool combine( const GBitmap *bitmapA, const GBitmap *bitmapB, const TextureOp combineOp );
 
    /// Fills the first mip level of the bitmap with the specified color.
    void fill( const ColorI &rColor );

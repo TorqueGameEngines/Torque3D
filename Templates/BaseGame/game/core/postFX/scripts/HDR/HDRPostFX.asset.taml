@@ -1,0 +1,6 @@
+<PostEffectAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="HDRPostFX"
+    scriptFile="@assetFile=HDRPostFX.cs"
+    VersionId="1" />

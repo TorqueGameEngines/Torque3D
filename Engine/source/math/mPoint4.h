@@ -39,7 +39,7 @@
 class Point4I
 {
   public:
-   Point4I() {}
+   Point4I() :x(0), y(0), z(0), w(0) {}
    Point4I(S32 _x, S32 _y, S32 _z, S32 _w);
 
    void zero();   ///< Zero all values
@@ -127,6 +127,7 @@ inline void Point4I::zero()
 //-------------------------------------- Point4F
 //
 inline Point4F::Point4F()
+   :x(0.0f), y(0.0f), z(0.0f), w(0.0f)
 {
 }
 
@@ -219,6 +220,11 @@ inline Point4F Point4F::operator /(F32 t) const
 {
    F32 f = 1.0f / t;
    return Point4F( x * f, y * f, z * f, w * f );
+}
+
+inline F32 mDot(const Point4F &p1, const Point4F &p2)
+{
+   return (p1.x*p2.x + p1.y*p2.y + p1.z*p2.z + p1.w*p2.w);
 }
 
 //------------------------------------------------------------------------------

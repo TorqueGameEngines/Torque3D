@@ -1,0 +1,6 @@
+<ScriptAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="guiSounds"
+    scriptFile="@assetFile=guiSounds"
+    VersionId="1" />

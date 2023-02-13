@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="RiverEditorSettingsTab,EditorGuiGroup"
+    scriptFile="@assetFile=RiverEditorSettingsTab.gui"
+    GUIFile="@assetFile=RiverEditorSettingsTab.gui"
+    VersionId="1" />

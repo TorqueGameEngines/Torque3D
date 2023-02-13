@@ -23,12 +23,30 @@
 #ifndef _CODEBLOCK_H_
 #define _CODEBLOCK_H_
 
+#include <vector>
+#include <unordered_map>
+
+struct CompilerLocalVariableToRegisterMappingTable
+{
+   struct RemappingTable
+   {
+      std::vector<StringTableEntry> varList;
+   };
+
+   std::unordered_map<StringTableEntry, RemappingTable> localVarToRegister;
+
+   void add(StringTableEntry functionName, StringTableEntry namespaceName, StringTableEntry varName);
+   S32 lookup(StringTableEntry namespaceName, StringTableEntry functionName, StringTableEntry varName);
+   CompilerLocalVariableToRegisterMappingTable copy();
+   void reset();
+   void write(Stream& stream);
+};
+
 #include "console/compiler.h"
 #include "console/consoleParser.h"
 
 class Stream;
 class ConsoleValue;
-class ConsoleValueRef;
 
 /// Core TorqueScript code management class.
 ///
@@ -38,7 +56,7 @@ class CodeBlock
 private:
    static CodeBlock* smCodeBlockList;
    static CodeBlock* smCurrentCodeBlock;
-   
+
 public:
    static bool                      smInFunction;
    static Compiler::ConsoleParser * smCurrentParser;
@@ -77,6 +95,8 @@ public:
    U32 codeSize;
    U32 *code;
 
+   CompilerLocalVariableToRegisterMappingTable variableRegisterTable;
+
    U32 refCount;
    U32 lineBreakPairCount;
    U32 *lineBreakPairs;
@@ -89,7 +109,7 @@ public:
    void calcBreakList();
    void clearAllBreaks();
    void setAllBreaks();
-   void dumpInstructions( U32 startIp = 0, bool upToReturn = false );
+   void dumpInstructions(U32 startIp = 0, bool upToReturn = false);
 
    /// Returns the first breakable line or 0 if none was found.
    /// @param lineNumber The one based line number.
@@ -106,7 +126,7 @@ public:
    const char *getFileLine(U32 ip);
 
    /// 
-   String getFunctionArgs( U32 offset );
+   String getFunctionArgs(U32 offset);
 
    bool read(StringTableEntry fileName, Stream &st);
    bool compile(const char *dsoName, StringTableEntry fileName, const char *script, bool overrideNoDso = false);
@@ -129,8 +149,8 @@ public:
    /// with, zero being the top of the stack. If the the index is
    /// -1 a new frame is created. If the index is out of range the
    /// top stack frame is used.
-   const char *compileExec(StringTableEntry fileName, const char *script, 
-      bool noCalls, S32 setFrame = -1 );
+   ConsoleValue compileExec(StringTableEntry fileName, const char *script,
+      bool noCalls, S32 setFrame = -1);
 
    /// Executes the existing code in the CodeBlock. The return string is any 
    /// result of the code executed, if any, or an empty string.
@@ -147,8 +167,8 @@ public:
    /// -1 a new frame is created. If the index is out of range the
    /// top stack frame is used.
    /// @param packageName The code package name or null.
-   ConsoleValueRef exec(U32 offset, const char *fnName, Namespace *ns, U32 argc, 
-      ConsoleValueRef *argv, bool noCalls, StringTableEntry packageName,
+   ConsoleValue exec(U32 offset, const char *fnName, Namespace *ns, U32 argc,
+      ConsoleValue *argv, bool noCalls, StringTableEntry packageName,
       S32 setFrame = -1);
 };
 

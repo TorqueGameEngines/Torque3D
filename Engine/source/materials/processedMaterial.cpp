@@ -69,7 +69,7 @@ String RenderPassData::describeSelf() const
    for ( U32 i=0; i < Material::MAX_TEX_PER_PASS; i++ )
    {
       if ( mTexType[i] == Material::TexTarget )
-         texName = ( mTexSlot[i].texTarget ) ? mTexSlot[i].texTarget->getName() : "null_texTarget";
+         texName = ( mTexSlot[i].texTarget ) ? mTexSlot[i].texTarget->getName() : String("null_texTarget");
       else if ( mTexType[i] == Material::Cube && mCubeMap )
          texName = mCubeMap->getPath();
       else if ( mTexSlot[i].texObject )
@@ -103,7 +103,7 @@ ProcessedMaterial::ProcessedMaterial()
 
 ProcessedMaterial::~ProcessedMaterial()
 {
-   for_each( mPasses.begin(), mPasses.end(), delete_pointer() );
+	T3D::for_each( mPasses.begin(), mPasses.end(), T3D::delete_pointer() );
 }
 
 void ProcessedMaterial::_setBlendState(Material::BlendOp blendOp, GFXStateBlockDesc& desc )
@@ -125,13 +125,26 @@ void ProcessedMaterial::_setBlendState(Material::BlendOp blendOp, GFXStateBlockD
    case Material::Mul:
       {
          desc.blendSrc = GFXBlendDestColor;
-         desc.blendDest = GFXBlendZero;
+         desc.blendDest = GFXBlendInvSrcAlpha;
+         break;
+      }
+   case Material::PreMul:
+      {
+         desc.blendSrc = GFXBlendOne;
+         desc.blendDest = GFXBlendInvSrcAlpha;
          break;
       }
    case Material::LerpAlpha:
       {
          desc.blendSrc = GFXBlendSrcAlpha;
          desc.blendDest = GFXBlendInvSrcAlpha;
+         break;
+      }
+   case Material::Sub:
+      {
+         desc.blendOp = GFXBlendOpSubtract;
+         desc.blendSrc = GFXBlendOne;
+         desc.blendDest = GFXBlendOne;
          break;
       }
 
@@ -174,6 +187,11 @@ GFXTexHandle ProcessedMaterial::_createTexture( const char* filename, GFXTexture
    return GFXTexHandle( _getTexturePath(filename), profile, avar("%s() - NA (line %d)", __FUNCTION__, __LINE__) );
 }
 
+GFXTexHandle ProcessedMaterial::_createCompositeTexture(const char *filenameR, const char *filenameG, const char *filenameB, const char *filenameA, U32 inputKey[4], GFXTextureProfile *profile)
+{
+   return GFXTexHandle(_getTexturePath(filenameR), _getTexturePath(filenameG), _getTexturePath(filenameB), _getTexturePath(filenameA), inputKey, profile, avar("%s() - NA (line %d)", __FUNCTION__, __LINE__));
+}
+
 void ProcessedMaterial::addStateBlockDesc(const GFXStateBlockDesc& sb)
 {
    mUserDefined = sb;
@@ -192,10 +210,6 @@ void ProcessedMaterial::_initStateBlockTemplates(GFXStateBlockDesc& stateTranslu
    stateTranslucent.alphaTestRef = mMaterial->mAlphaRef;
    stateTranslucent.alphaTestFunc = GFXCmpGreaterEqual;
    stateTranslucent.samplersDefined = true;
-   stateTranslucent.samplers[0].textureColorOp = GFXTOPModulate;
-   stateTranslucent.samplers[0].alphaOp = GFXTOPModulate;   
-   stateTranslucent.samplers[0].alphaArg1 = GFXTATexture;
-   stateTranslucent.samplers[0].alphaArg2 = GFXTADiffuse;   
 
    // Glow   
    stateGlow.zDefined = true;
@@ -250,7 +264,6 @@ void ProcessedMaterial::_initPassStateBlock( RenderPassData *rpd, GFXStateBlockD
       {
          default:
          {
-            result.samplers[i].textureColorOp = GFXTOPModulate;
             result.samplers[i].addressModeU = GFXAddressWrap;
             result.samplers[i].addressModeV = GFXAddressWrap;
 
@@ -275,6 +288,8 @@ void ProcessedMaterial::_initPassStateBlock( RenderPassData *rpd, GFXStateBlockD
             result.samplers[i].addressModeU = GFXAddressClamp;
             result.samplers[i].addressModeV = GFXAddressClamp;
             result.samplers[i].addressModeW = GFXAddressClamp;
+            result.samplers[i].minFilter = GFXTextureFilterLinear;
+            result.samplers[i].magFilter = GFXTextureFilterLinear;
             break;
          }
 
@@ -288,9 +303,9 @@ void ProcessedMaterial::_initPassStateBlock( RenderPassData *rpd, GFXStateBlockD
       }
    }
 
-   // The prepass will take care of writing to the 
+   // The deferred will take care of writing to the 
    // zbuffer, so we don't have to by default.
-   if (  MATMGR->getPrePassEnabled() && 
+   if (  MATMGR->getDeferredEnabled() && 
          !mFeatures.hasFeature(MFT_ForwardShading))
       result.setZReadWrite( result.zEnable, false );
 
@@ -350,7 +365,7 @@ U32 ProcessedMaterial::_getRenderStateIndex( const SceneRenderState *sceneState,
    if ( sceneState && sceneState->isReflectPass() )
       currState |= RenderPassData::STATE_REFLECT;
 
-   if ( sgData.binType != SceneData::PrePassBin &&
+   if ( sgData.binType != SceneData::DeferredBin &&
         mMaterial->isTranslucent() )
       currState |= RenderPassData::STATE_TRANSLUCENT;
 
@@ -377,105 +392,138 @@ void ProcessedMaterial::_setRenderState(  const SceneRenderState *state,
 void ProcessedMaterial::_setStageData()
 {
    // Only do this once
-   if ( mHasSetStageData ) 
+   if (mHasSetStageData)
       return;
    mHasSetStageData = true;
 
    U32 i;
 
    // Load up all the textures for every possible stage
-   for( i=0; i<Material::MAX_STAGES; i++ )
+   for (i = 0; i < Material::MAX_STAGES; i++)
    {
       // DiffuseMap
-      if( mMaterial->mDiffuseMapFilename[i].isNotEmpty() )
+      if (mMaterial->mDiffuseMapAsset[i] && !mMaterial->mDiffuseMapAsset[i].isNull())
       {
-         mStages[i].setTex( MFT_DiffuseMap, _createTexture( mMaterial->mDiffuseMapFilename[i], &GFXDefaultStaticDiffuseProfile ) );
-         if (!mStages[i].getTex( MFT_DiffuseMap ))
+         mStages[i].setTex(MFT_DiffuseMap, mMaterial->getDiffuseMapResource(i));
+         //mStages[i].setTex(MFT_DiffuseMap, _createTexture(mMaterial->getDiffuseMap(i), &GFXStaticTextureSRGBProfile));
+         if (!mStages[i].getTex(MFT_DiffuseMap))
          {
-            mMaterial->logError("Failed to load diffuse map %s for stage %i", _getTexturePath(mMaterial->mDiffuseMapFilename[i]).c_str(), i);
-            
             // Load a debug texture to make it clear to the user 
             // that the texture for this stage was missing.
-            mStages[i].setTex( MFT_DiffuseMap, _createTexture( GFXTextureManager::getMissingTexturePath().c_str(), &GFXDefaultStaticDiffuseProfile ) );
+            mStages[i].setTex(MFT_DiffuseMap, _createTexture(GFXTextureManager::getMissingTexturePath().c_str(), &GFXStaticTextureSRGBProfile));
+         }
+      }
+      else if (mMaterial->mDiffuseMapName[i] != StringTable->EmptyString())
+      {
+         mStages[i].setTex(MFT_DiffuseMap, _createTexture(mMaterial->mDiffuseMapName[i], &GFXStaticTextureSRGBProfile));
+         if (!mStages[i].getTex(MFT_DiffuseMap))
+         {
+            //If we start with a #, we're probably actually attempting to hit a named target and it may not get a hit on the first pass. So we'll
+            //pass on the error rather than spamming the console
+            if (!String(mMaterial->mDiffuseMapName[i]).startsWith("#"))
+               mMaterial->logError("Failed to load diffuse map %s for stage %i", mMaterial->mDiffuseMapName[i], i);
+
+            // Load a debug texture to make it clear to the user 
+            // that the texture for this stage was missing.
+            mStages[i].setTex(MFT_DiffuseMap, _createTexture(GFXTextureManager::getMissingTexturePath().c_str(), &GFXStaticTextureSRGBProfile));
          }
       }
 
       // OverlayMap
-      if( mMaterial->mOverlayMapFilename[i].isNotEmpty() )
+      if (mMaterial->getOverlayMap(i) != StringTable->EmptyString())
       {
-         mStages[i].setTex( MFT_OverlayMap, _createTexture( mMaterial->mOverlayMapFilename[i], &GFXDefaultStaticDiffuseProfile ) );
-         if(!mStages[i].getTex( MFT_OverlayMap ))
-            mMaterial->logError("Failed to load overlay map %s for stage %i", _getTexturePath(mMaterial->mOverlayMapFilename[i]).c_str(), i);
+         mStages[i].setTex(MFT_OverlayMap, mMaterial->getOverlayMapResource(i));
+         if (!mStages[i].getTex(MFT_OverlayMap))
+            mMaterial->logError("Failed to load overlay map %s for stage %i", mMaterial->getOverlayMap(i), i);
       }
 
       // LightMap
-      if( mMaterial->mLightMapFilename[i].isNotEmpty() )
+      if (mMaterial->getLightMap(i) != StringTable->EmptyString())
       {
-         mStages[i].setTex( MFT_LightMap, _createTexture( mMaterial->mLightMapFilename[i], &GFXDefaultStaticDiffuseProfile ) );
-         if(!mStages[i].getTex( MFT_LightMap ))
-            mMaterial->logError("Failed to load light map %s for stage %i", _getTexturePath(mMaterial->mLightMapFilename[i]).c_str(), i);
+         mStages[i].setTex(MFT_LightMap, mMaterial->getLightMapResource(i));
+         if (!mStages[i].getTex(MFT_LightMap))
+            mMaterial->logError("Failed to load light map %s for stage %i", mMaterial->getLightMap(i), i);
       }
 
       // ToneMap
-      if( mMaterial->mToneMapFilename[i].isNotEmpty() )
+      if (mMaterial->getToneMap(i) != StringTable->EmptyString())
       {
-         mStages[i].setTex( MFT_ToneMap, _createTexture( mMaterial->mToneMapFilename[i], &GFXDefaultStaticDiffuseProfile ) );
-         if(!mStages[i].getTex( MFT_ToneMap ))
-            mMaterial->logError("Failed to load tone map %s for stage %i", _getTexturePath(mMaterial->mToneMapFilename[i]).c_str(), i);
+         mStages[i].setTex(MFT_ToneMap, mMaterial->getToneMapResource(i));
+         if (!mStages[i].getTex(MFT_ToneMap))
+            mMaterial->logError("Failed to load tone map %s for stage %i", mMaterial->getToneMap(i), i);
       }
 
       // DetailMap
-      if( mMaterial->mDetailMapFilename[i].isNotEmpty() )
+      if (mMaterial->getDetailMap(i) != StringTable->EmptyString())
       {
-         mStages[i].setTex( MFT_DetailMap, _createTexture( mMaterial->mDetailMapFilename[i], &GFXDefaultStaticDiffuseProfile ) );
-         if(!mStages[i].getTex( MFT_DetailMap ))
-            mMaterial->logError("Failed to load detail map %s for stage %i", _getTexturePath(mMaterial->mDetailMapFilename[i]).c_str(), i);
+         mStages[i].setTex(MFT_DetailMap, mMaterial->getDetailMapResource(i));
+         if (!mStages[i].getTex(MFT_DetailMap))
+            mMaterial->logError("Failed to load detail map %s for stage %i", mMaterial->getDetailMap(i), i);
       }
 
       // NormalMap
-      if( mMaterial->mNormalMapFilename[i].isNotEmpty() )
+      if (mMaterial->getNormalMap(i) != StringTable->EmptyString())
       {
-         mStages[i].setTex( MFT_NormalMap, _createTexture( mMaterial->mNormalMapFilename[i], &GFXDefaultStaticNormalMapProfile ) );
-         if(!mStages[i].getTex( MFT_NormalMap ))
-            mMaterial->logError("Failed to load normal map %s for stage %i", _getTexturePath(mMaterial->mNormalMapFilename[i]).c_str(), i);
+         mStages[i].setTex(MFT_NormalMap, mMaterial->getNormalMapResource(i));
+         if (!mStages[i].getTex(MFT_NormalMap))
+            mMaterial->logError("Failed to load normal map %s for stage %i", mMaterial->getNormalMap(i), i);
       }
 
       // Detail Normal Map
-      if( mMaterial->mDetailNormalMapFilename[i].isNotEmpty() )
+      if (mMaterial->getDetailNormalMap(i) != StringTable->EmptyString())
       {
-         mStages[i].setTex( MFT_DetailNormalMap, _createTexture( mMaterial->mDetailNormalMapFilename[i], &GFXDefaultStaticNormalMapProfile ) );
-         if(!mStages[i].getTex( MFT_DetailNormalMap ))
-            mMaterial->logError("Failed to load normal map %s for stage %i", _getTexturePath(mMaterial->mDetailNormalMapFilename[i]).c_str(), i);
-      }
-      
-      // SpecularMap
-      if( mMaterial->mSpecularMapFilename[i].isNotEmpty() )
-      {
-         mStages[i].setTex( MFT_SpecularMap, _createTexture( mMaterial->mSpecularMapFilename[i], &GFXDefaultStaticDiffuseProfile ) );
-         if(!mStages[i].getTex( MFT_SpecularMap ))
-            mMaterial->logError("Failed to load specular map %s for stage %i", _getTexturePath(mMaterial->mSpecularMapFilename[i]).c_str(), i);
+         mStages[i].setTex(MFT_DetailNormalMap, mMaterial->getDetailNormalMapResource(i));
+         if (!mStages[i].getTex(MFT_DetailNormalMap))
+            mMaterial->logError("Failed to load normal map %s for stage %i", mMaterial->getDetailNormalMap(i), i);
       }
 
-      // EnironmentMap
-      if( mMaterial->mEnvMapFilename[i].isNotEmpty() )
+      //depending on creation method this may or may not have been shoved into srgb space eroneously
+      GFXTextureProfile* profile = &GFXStaticTextureProfile;
+      if (mMaterial->mIsSRGb[i])
+         profile = &GFXStaticTextureSRGBProfile;
+
+      // ORMConfig
+      if (mMaterial->getORMConfigMap(i) != StringTable->EmptyString())
       {
-         mStages[i].setTex( MFT_EnvMap, _createTexture( mMaterial->mEnvMapFilename[i], &GFXDefaultStaticDiffuseProfile ) );
-         if(!mStages[i].getTex( MFT_EnvMap ))
-            mMaterial->logError("Failed to load environment map %s for stage %i", _getTexturePath(mMaterial->mEnvMapFilename[i]).c_str(), i);
+         mStages[i].setTex(MFT_OrmMap, _createTexture(mMaterial->getORMConfigMap(i), profile));
+         if (!mStages[i].getTex(MFT_OrmMap))
+            mMaterial->logError("Failed to load PBR Config map %s for stage %i", mMaterial->getORMConfigMap(i), i);
+      }
+      else
+      {
+         if ((mMaterial->getAOMap(i) != StringTable->EmptyString()) || (mMaterial->getRoughMap(i) != StringTable->EmptyString()) || (mMaterial->getMetalMap(i) != StringTable->EmptyString()))
+         {
+            U32 inputKey[4];
+            inputKey[0] = mMaterial->mAOChan[i];
+            inputKey[1] = mMaterial->mRoughnessChan[i];
+            inputKey[2] = mMaterial->mMetalChan[i];
+            inputKey[3] = 0;
+            mStages[i].setTex(MFT_OrmMap, _createCompositeTexture( mMaterial->getAOMap(i), mMaterial->getRoughMap(i),
+               mMaterial->getMetalMap(i), "",
+               inputKey, profile));
+            if (!mStages[i].getTex(MFT_OrmMap))
+               mMaterial->logError("Failed to dynamically create ORM Config map for stage %i", i);
+         }
+      }
+      if (mMaterial->getGlowMap(i) != StringTable->EmptyString())
+      {
+         mStages[i].setTex(MFT_GlowMap, mMaterial->getGlowMapResource(i));
+         if (!mStages[i].getTex(MFT_GlowMap))
+            mMaterial->logError("Failed to load glow map %s for stage %i", mMaterial->getGlowMap(i), i);
       }
    }
 
-	mMaterial->mCubemapData = dynamic_cast<CubemapData*>(Sim::findObject( mMaterial->mCubemapName ));
-	if( !mMaterial->mCubemapData )
-		mMaterial->mCubemapData = NULL;
-		
-		
+   mMaterial->mCubemapData = dynamic_cast<CubemapData*>(Sim::findObject(mMaterial->mCubemapName));
+   if (!mMaterial->mCubemapData)
+      mMaterial->mCubemapData = NULL;
+
+
    // If we have a cubemap put it on stage 0 (cubemaps only supported on stage 0)
-   if( mMaterial->mCubemapData )
+   if (mMaterial->mCubemapData)
    {
       mMaterial->mCubemapData->createMap();
-      mStages[0].setCubemap( mMaterial->mCubemapData->mCubemap ); 
-      if ( !mStages[0].getCubemap() )
+      mStages[0].setCubemap(mMaterial->mCubemapData->mCubemap);
+      if (!mStages[0].getCubemap())
          mMaterial->logError("Failed to load cubemap");
    }
 }

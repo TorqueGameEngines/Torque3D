@@ -36,7 +36,7 @@
 #include "T3D/gameBase/gameConnection.h"
 #include "gfx/gfxStringEnumTranslate.h"
 #include "console/engineAPI.h"
-#include "renderInstance/renderPrePassMgr.h"
+#include "renderInstance/renderDeferredMgr.h"
 
 
 Signal<void(const char*,bool)> LightManager::smActivateSignal;
@@ -46,11 +46,11 @@ LightManager *LightManager::smActiveLM = NULL;
 LightManager::LightManager( const char *name, const char *id )
    :  mName( name ),
       mId( id ),
-      mIsActive( false ),      
-      mSceneManager( NULL ),
+      mIsActive( false ),
       mDefaultLight( NULL ),
-      mAvailableSLInterfaces( NULL ),
-      mCullPos( Point3F::Zero )
+      mSceneManager( NULL ),
+      mCullPos( Point3F::Zero ),
+      mAvailableSLInterfaces( NULL )
 { 
    _getLightManagers().insert( mName, this );
 
@@ -198,7 +198,7 @@ void LightManager::setSpecialLight( LightManager::SpecialLightTypesEnum type, Li
    registerGlobalLight( light, NULL );
 }
 
-void LightManager::registerGlobalLights( const Frustum *frustum, bool staticLighting )
+void LightManager::registerGlobalLights( const Frustum *frustum, bool staticLighting, bool enableZoneLightCulling)
 {
    PROFILE_SCOPE( LightManager_RegisterGlobalLights );
 
@@ -225,8 +225,20 @@ void LightManager::registerGlobalLights( const Frustum *frustum, bool staticLigh
    else
    {
       // Cull the lights using the frustum.
-      getSceneManager()->getContainer()->findObjectList( *frustum, lightMask, &activeLights );
-
+      getSceneManager()->getContainer()->findObjectList(*frustum, lightMask, &activeLights);
+      /*
+      for (U32 i = 0; i < activeLights.size(); ++i)
+      {
+         for (U32 i = 0; i < activeLights.size(); ++i)
+         {
+            if (!getSceneManager()->mRenderedObjectsList.contains(activeLights[i]))
+            {
+               activeLights.erase(i);
+               --i;
+            }
+         }
+      }
+      */
       // Store the culling position for sun placement
       // later... see setSpecialLight.
       mCullPos = frustum->getPosition();
@@ -236,10 +248,10 @@ void LightManager::registerGlobalLights( const Frustum *frustum, bool staticLigh
       // the shape bounds and can often get culled.
 
       GameConnection *conn = GameConnection::getConnectionToServer();
-      if ( conn->getControlObject() )
+      if (conn->getControlObject())
       {
          GameBase *conObject = conn->getControlObject();
-         activeLights.push_back_unique( conObject );
+         activeLights.push_back_unique(conObject);
       }
    }
 
@@ -294,10 +306,13 @@ void LightManager::_update4LightConsts(   const SceneData &sgData,
                                           GFXShaderConstHandle *lightPositionSC,
                                           GFXShaderConstHandle *lightDiffuseSC,
                                           GFXShaderConstHandle *lightAmbientSC,
-                                          GFXShaderConstHandle *lightInvRadiusSqSC,
+                                          GFXShaderConstHandle *lightConfigDataSC,
                                           GFXShaderConstHandle *lightSpotDirSC,
-                                          GFXShaderConstHandle *lightSpotAngleSC,
-										  GFXShaderConstHandle *lightSpotFalloffSC,
+                                          GFXShaderConstHandle *lightSpotParamsSC,
+                                          GFXShaderConstHandle* hasVectorLightSC,
+                                          GFXShaderConstHandle* vectorLightDirectionSC,
+                                          GFXShaderConstHandle* vectorLightColorSC,
+                                          GFXShaderConstHandle* vectorLightBrightnessSC,
                                           GFXShaderConstBuffer *shaderConsts )
 {
    PROFILE_SCOPE( LightManager_Update4LightConsts );
@@ -305,19 +320,120 @@ void LightManager::_update4LightConsts(   const SceneData &sgData,
    // Skip over gathering lights if we don't have to!
    if (  lightPositionSC->isValid() || 
          lightDiffuseSC->isValid() ||
-         lightInvRadiusSqSC->isValid() ||
+         lightConfigDataSC->isValid() ||
          lightSpotDirSC->isValid() ||
-         lightSpotAngleSC->isValid() ||
-		 lightSpotFalloffSC->isValid() )
+         lightSpotParamsSC->isValid() )
    {
       PROFILE_SCOPE( LightManager_Update4LightConsts_setLights );
 
-         static AlignedArray<Point4F> lightPositions( 3, sizeof( Point4F ) );
-         static AlignedArray<Point4F> lightSpotDirs( 3, sizeof( Point4F ) );
+      //new setup
+      const U32 MAX_FORWARD_LIGHTS = 4;
+
+      static AlignedArray<Point4F> lightPositions(MAX_FORWARD_LIGHTS, sizeof(Point4F));
+      static AlignedArray<Point4F> lightSpotDirs(MAX_FORWARD_LIGHTS, sizeof(Point4F));
+      static AlignedArray<Point4F> lightColors(MAX_FORWARD_LIGHTS, sizeof(Point4F));
+      static AlignedArray<Point4F> lightConfigData(MAX_FORWARD_LIGHTS, sizeof(Point4F)); //type, brightness, range, invSqrRange : rgba
+      static AlignedArray<Point2F> lightSpotParams(MAX_FORWARD_LIGHTS, sizeof(Point2F));
+
+      dMemset(lightPositions.getBuffer(), 0, lightPositions.getBufferSize());
+      dMemset(lightSpotDirs.getBuffer(), 0, lightSpotDirs.getBufferSize());
+      dMemset(lightColors.getBuffer(), 0, lightColors.getBufferSize());
+      dMemset(lightConfigData.getBuffer(), 0, lightConfigData.getBufferSize());
+      dMemset(lightSpotParams.getBuffer(), 0, lightSpotParams.getBufferSize());
+
+      //sun-only
+      F32 vectorLightBrightness;
+      static Point4F vectorLightDirection;
+      static Point4F vectorLightColor;
+      static Point4F vectorLightAmbientColor;
+      int hasVectorLight = 0;
+
+      vectorLightBrightness = 0;
+      vectorLightDirection = Point4F::Zero;
+      vectorLightColor = Point4F::Zero;
+      vectorLightAmbientColor = Point4F::Zero;
+
+      // Gather the data for the first 4 lights.
+      const LightInfo* light;
+      for (U32 i = 0; i < MAX_FORWARD_LIGHTS; i++)
+      {
+         light = sgData.lights[i];
+         if (!light)
+            break;
+
+         if (light->getType() == LightInfo::Vector)
+         {
+            if (hasVectorLight != 0)
+               continue;
+
+            vectorLightBrightness = light->getBrightness();
+            vectorLightDirection = light->getDirection();
+            vectorLightColor = Point4F(light->getColor());
+            vectorLightAmbientColor = Point4F(light->getAmbient());
+            hasVectorLight = 1;
+            continue;
+         }
+
+         // The light positions and spot directions are 
+         // in SoA order to make optimal use of the GPU.
+         const Point3F& lightPos = light->getPosition();
+         lightPositions[i].x = lightPos.x;
+         lightPositions[i].y = lightPos.y;
+         lightPositions[i].z = lightPos.z;
+         lightPositions[i].w = 0;
+
+         const VectorF& lightDir = light->getDirection();
+         lightSpotDirs[i].x = lightDir.x;
+         lightSpotDirs[i].y = lightDir.y;
+         lightSpotDirs[i].z = lightDir.z;
+         lightSpotDirs[i].w = 0;
+
+         lightColors[i] = Point4F(light->getColor());
+
+         if (light->getType() == LightInfo::Point)
+         {
+            lightConfigData[i].x = 0;
+         }
+         else if (light->getType() == LightInfo::Spot)
+         {
+            lightConfigData[i].x = 1;
+
+            const F32 outerCone = light->getOuterConeAngle();
+            const F32 innerCone = getMin(light->getInnerConeAngle(), outerCone);
+            const F32 outerCos = mCos(mDegToRad(outerCone / 2.0f));
+            const F32 innerCos = mCos(mDegToRad(innerCone / 2.0f));
+            Point2F spotParams(outerCos, innerCos - outerCos);
+
+            lightSpotParams[i].x = spotParams.x;
+            lightSpotParams[i].y = spotParams.y;
+         }
+
+         lightConfigData[i].y = light->getBrightness();
+
+         F32 range = light->getRange().x;
+         lightConfigData[i].z = range;
+         lightConfigData[i].w = 1.0f / (range * range);
+      }
+
+      shaderConsts->setSafe(lightPositionSC, lightPositions);
+      shaderConsts->setSafe(lightDiffuseSC, lightColors);
+      shaderConsts->setSafe(lightSpotDirSC, lightSpotDirs);
+      shaderConsts->setSafe(lightConfigDataSC, lightConfigData);
+      shaderConsts->setSafe(lightSpotParamsSC, lightSpotParams);
+
+      shaderConsts->setSafe(hasVectorLightSC, (int)hasVectorLight);
+      shaderConsts->setSafe(vectorLightDirectionSC, vectorLightDirection);
+      shaderConsts->setSafe(vectorLightColorSC, vectorLightColor);
+      shaderConsts->setSafe(vectorLightBrightnessSC, vectorLightBrightness);
+
+      //================================================================
+      //old setup
+      /*static AlignedArray<Point4F> lightPositions( 3, sizeof( Point4F ) );
+      static AlignedArray<Point4F> lightSpotDirs( 3, sizeof( Point4F ) );
       static AlignedArray<Point4F> lightColors( 4, sizeof( Point4F ) );
       static Point4F lightInvRadiusSq;
       static Point4F lightSpotAngle;
-	  static Point4F lightSpotFalloff;
+      static Point4F lightSpotFalloff;
       F32 range;
       
       // Need to clear the buffers so that we don't leak
@@ -331,7 +447,7 @@ void LightManager::_update4LightConsts(   const SceneData &sgData,
 
       // Gather the data for the first 4 lights.
       const LightInfo *light;
-      for ( U32 i=0; i < 4; i++ )
+      for ( U32 i=0; i < MAX_FORWARD_LIGHTS; i++ )
       {
          light = sgData.lights[i];
          if ( !light )            
@@ -350,10 +466,10 @@ void LightManager::_update4LightConsts(   const SceneData &sgData,
             lightSpotDirs[2][i] = lightDir.z;
             
             if ( light->getType() == LightInfo::Spot )
-			{
+         {
                lightSpotAngle[i] = mCos( mDegToRad( light->getOuterConeAngle() / 2.0f ) ); 
-			   lightSpotFalloff[i] = 1.0f / getMax( F32_MIN, mCos( mDegToRad( light->getInnerConeAngle() / 2.0f ) ) - lightSpotAngle[i] );
-			}
+            lightSpotFalloff[i] = 1.0f / getMax( F32_MIN, mCos( mDegToRad( light->getInnerConeAngle() / 2.0f ) ) - lightSpotAngle[i] );
+         }
 
          // Prescale the light color by the brightness to 
          // avoid doing this in the shader.
@@ -368,11 +484,9 @@ void LightManager::_update4LightConsts(   const SceneData &sgData,
       shaderConsts->setSafe( lightDiffuseSC, lightColors );
       shaderConsts->setSafe( lightInvRadiusSqSC, lightInvRadiusSq );
 
-         shaderConsts->setSafe( lightSpotDirSC, lightSpotDirs );
-         shaderConsts->setSafe( lightSpotAngleSC, lightSpotAngle );
-		 shaderConsts->setSafe( lightSpotFalloffSC, lightSpotFalloff );
-
-      
+      shaderConsts->setSafe( lightSpotDirSC, lightSpotDirs );
+      shaderConsts->setSafe( lightSpotAngleSC, lightSpotAngle );
+      shaderConsts->setSafe( lightSpotFalloffSC, lightSpotFalloff );*/
    }
 
    // Setup the ambient lighting from the first 
@@ -410,15 +524,15 @@ bool LightManager::lightScene( const char* callback, const char* param )
    return sl->lightScene( callback, flags );
 }
 
-RenderPrePassMgr* LightManager::_findPrePassRenderBin()
+RenderDeferredMgr* LightManager::_findDeferredRenderBin()
 {
    RenderPassManager* rpm = getSceneManager()->getDefaultRenderPass();
    for( U32 i = 0; i < rpm->getManagerCount(); i++ )
    {
       RenderBinManager *bin = rpm->getManager( i );
-      if( bin->getRenderInstType() == RenderPrePassMgr::RIT_PrePass )
+      if( bin->getRenderInstType() == RenderDeferredMgr::RIT_Deferred )
       {
-         return ( RenderPrePassMgr* ) bin;
+         return ( RenderDeferredMgr* ) bin;
       }
    }
 
@@ -433,7 +547,7 @@ DefineEngineFunction( setLightManager, bool, ( const char *name ),,
    return gClientSceneGraph->setLightManager( name );
 }
 
-DefineEngineFunction( lightScene, bool, ( const char *completeCallbackFn, const char *mode ), ( NULL, NULL ),
+DefineEngineFunction( lightScene, bool, ( const char *completeCallbackFn, const char *mode ), ( nullAsType<const char*>(), nullAsType<const char*>() ),
    "Will generate static lighting for the scene if supported by the active light manager.\n\n"
    "If mode is \"forceAlways\", the lightmaps will be regenerated regardless of whether "
    "lighting cache files can be written to. If mode is \"forceWritable\", then the lightmaps "

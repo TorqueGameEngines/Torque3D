@@ -46,7 +46,7 @@ class GuiTheoraCtrl : public GuiControl
    protected:
    
       /// The Theora file we should play.
-      String mFilename;
+      StringTableEntry mFilename;
       
       /// Theora video player backend.
       TheoraTexture mTheoraTexture;
@@ -57,6 +57,8 @@ class GuiTheoraCtrl : public GuiControl
       /// If true, playback will start automatically when the control receives its
       /// onWake().
       bool mPlayOnWake;
+
+      bool mLoop;
       
       /// Which transcoder to use on the Theora decoder.  This is mostly
       /// meant as a development aid.

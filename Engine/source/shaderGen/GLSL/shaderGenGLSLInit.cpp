@@ -27,13 +27,14 @@
 #include "shaderGen/GLSL/shaderFeatureGLSL.h"
 #include "shaderGen/featureMgr.h"
 #include "shaderGen/GLSL/bumpGLSL.h"
-#include "shaderGen/GLSL/pixSpecularGLSL.h"
 #include "shaderGen/GLSL/depthGLSL.h"
 #include "shaderGen/GLSL/paraboloidGLSL.h"
 #include "materials/materialFeatureTypes.h"
 #include "core/module.h"
 #include "shaderGen/GLSL/accuFeatureGLSL.h"
 
+// Deferred Shading
+#include "lighting/advanced/glsl/deferredShadingFeaturesGLSL.h"
 
 static ShaderGen::ShaderGenInitDelegate sInitDelegate;
 
@@ -45,7 +46,8 @@ void _initShaderGenGLSL( ShaderGen *shaderGen )
 
    FEATUREMGR->registerFeature( MFT_VertTransform, new VertPositionGLSL );
    FEATUREMGR->registerFeature( MFT_RTLighting, new RTLightingFeatGLSL );
-   FEATUREMGR->registerFeature( MFT_IsDXTnm, new NamedFeatureGLSL( "DXTnm" ) );
+   FEATUREMGR->registerFeature( MFT_IsBC3nm, new NamedFeatureGLSL( "BC3nm" ) );
+   FEATUREMGR->registerFeature( MFT_IsBC5nm, new NamedFeatureGLSL( "BC5nm" ) );
    FEATUREMGR->registerFeature( MFT_TexAnim, new TexAnimGLSL );
    FEATUREMGR->registerFeature( MFT_DiffuseMap, new DiffuseMapFeatGLSL );
    FEATUREMGR->registerFeature( MFT_OverlayMap, new OverlayTexFeatGLSL );
@@ -60,14 +62,19 @@ void _initShaderGenGLSL( ShaderGen *shaderGen )
    FEATUREMGR->registerFeature( MFT_NormalMap, new BumpFeatGLSL );
 	FEATUREMGR->registerFeature( MFT_DetailNormalMap, new NamedFeatureGLSL( "Detail Normal Map" ) );
    FEATUREMGR->registerFeature( MFT_DetailMap, new DetailFeatGLSL );
+	FEATUREMGR->registerFeature( MFT_StaticCubemap, new NamedFeatureGLSL( "Static Cubemap" ) );
    FEATUREMGR->registerFeature( MFT_CubeMap, new ReflectCubeFeatGLSL );
-   FEATUREMGR->registerFeature( MFT_PixSpecular, new PixelSpecularGLSL );
-   FEATUREMGR->registerFeature( MFT_SpecularMap, new SpecularMapGLSL );
+   FEATUREMGR->registerFeature( MFT_InvertRoughness, new NamedFeatureGLSL("Roughest = 1.0"));
    FEATUREMGR->registerFeature( MFT_AccuMap, new AccuTexFeatGLSL );
-   FEATUREMGR->registerFeature( MFT_GlossMap, new NamedFeatureGLSL( "Gloss Map" ) );
    FEATUREMGR->registerFeature( MFT_IsTranslucent, new NamedFeatureGLSL( "Translucent" ) );
+   FEATUREMGR->registerFeature( MFT_IsTranslucentZWrite, new NamedFeatureGLSL( "Translucent ZWrite" ) );
    FEATUREMGR->registerFeature( MFT_Visibility, new VisibilityFeatGLSL );
    FEATUREMGR->registerFeature( MFT_Fog, new FogFeatGLSL );
+   FEATUREMGR->registerFeature( MFT_LightbufferMRT, new NamedFeatureGLSL( "Lightbuffer MRT" ) );
+   FEATUREMGR->registerFeature( MFT_RenderTarget1_Zero, new RenderTargetZeroGLSL( ShaderFeature::RenderTarget1 ) );
+   FEATUREMGR->registerFeature( MFT_RenderTarget2_Zero, new RenderTargetZeroGLSL( ShaderFeature::RenderTarget2 ) );
+   FEATUREMGR->registerFeature( MFT_RenderTarget3_Zero, new RenderTargetZeroGLSL( ShaderFeature::RenderTarget3 ) );
+   FEATUREMGR->registerFeature( MFT_Imposter, new NamedFeatureGLSL( "Imposter" ) );
 
 	FEATUREMGR->registerFeature( MFT_NormalsOut, new NormalsOutFeatGLSL );
 	
@@ -79,9 +86,6 @@ void _initShaderGenGLSL( ShaderGen *shaderGen )
    FEATUREMGR->registerFeature( MFT_ParaboloidVertTransform, new ParaboloidVertTransformGLSL );
    FEATUREMGR->registerFeature( MFT_IsSinglePassParaboloid, new NamedFeatureGLSL( "Single Pass Paraboloid" ) );
    FEATUREMGR->registerFeature( MFT_UseInstancing, new NamedFeatureGLSL( "Hardware Instancing" ) );
-
-	FEATUREMGR->registerFeature( MFT_RenderTarget1_Zero, new RenderTargetZeroGLSL
-										 ( ShaderFeature::RenderTarget1 ) );
 	
    FEATUREMGR->registerFeature( MFT_DiffuseMapAtlas, new NamedFeatureGLSL( "Diffuse Map Atlas" ) );
    FEATUREMGR->registerFeature( MFT_NormalMapAtlas, new NamedFeatureGLSL( "Normal Map Atlas" ) );
@@ -93,10 +97,15 @@ void _initShaderGenGLSL( ShaderGen *shaderGen )
 
    FEATUREMGR->registerFeature( MFT_ImposterVert, new ImposterVertFeatureGLSL );
 
-   FEATUREMGR->registerFeature( MFT_LightbufferMRT, new NamedFeatureGLSL( "Lightbuffer MRT" ) );
-   //FEATUREMGR->registerFeature( MFT_IsTranslucentZWrite, new NamedFeatureGLSL( "Translucent ZWrite" ) );
-   //FEATUREMGR->registerFeature( MFT_InterlacedPrePass, new NamedFeatureGLSL( "Interlaced Pre Pass" ) );
-
+   // Deferred Shading
+   FEATUREMGR->registerFeature( MFT_isDeferred, new NamedFeatureGLSL( "Deferred Material" ) );
+   FEATUREMGR->registerFeature( MFT_OrmMap, new DeferredOrmMapGLSL );
+   FEATUREMGR->registerFeature( MFT_ORMConfigVars, new ORMConfigVarsGLSL );
+   FEATUREMGR->registerFeature( MFT_MatInfoFlags, new MatInfoFlagsGLSL );
+   FEATUREMGR->registerFeature( MFT_GlowMap, new GlowMapGLSL);
+   FEATUREMGR->registerFeature( MFT_isBackground, new NamedFeatureGLSL("Background Object"));
+   FEATUREMGR->registerFeature( MFT_SkyBox, new NamedFeatureGLSL( "skybox" ) );
+   FEATUREMGR->registerFeature( MFT_HardwareSkinning, new HardwareSkinningFeatureGLSL );
 }
 
 MODULE_BEGIN( ShaderGenGLSL )

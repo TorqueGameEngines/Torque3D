@@ -42,6 +42,8 @@
 #include "gfx/gfxShader.h"
 #endif
 
+#include "T3D/assets/ImageAsset.h"
+
 class BaseMatInstance;
 
 
@@ -91,7 +93,8 @@ protected:
    static U32 smVertCount;
    static U32 smTriangleCount;
 
-   GFXTexHandle mTexture[TEX_COUNT];
+   DECLARE_IMAGEASSET_ARRAY(BasicClouds, Texture, TEX_COUNT);
+   DECLARE_IMAGEASSET_ARRAY_NET_SETGET(BasicClouds, Texture, -1);
 
    GFXStateBlockRef mStateblock;
 
@@ -111,7 +114,6 @@ protected:
    // Fields...
 
    bool mLayerEnabled[TEX_COUNT];
-   String mTexName[TEX_COUNT];
    F32 mTexScale[TEX_COUNT];
    Point2F mTexDirection[TEX_COUNT];
    F32 mTexSpeed[TEX_COUNT];   

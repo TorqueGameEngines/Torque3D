@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2014 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -18,42 +18,27 @@
      misrepresented as being the original software.
   3. This notice may not be removed or altered from any source distribution.
 */
+
+#if defined(__clang_analyzer__) && !defined(SDL_DISABLE_ANALYZE_MACROS)
+#define SDL_DISABLE_ANALYZE_MACROS 1
+#endif
+
 #include "../SDL_internal.h"
 
 /* This file contains portable memory management functions for SDL */
-
 #include "SDL_stdinc.h"
+#include "SDL_atomic.h"
+#include "SDL_error.h"
 
-#if defined(HAVE_MALLOC)
-
-void *SDL_malloc(size_t size)
-{
-    return malloc(size);
-}
-
-void *SDL_calloc(size_t nmemb, size_t size)
-{
-    return calloc(nmemb, size);
-}
-
-void *SDL_realloc(void *ptr, size_t size)
-{
-    return realloc(ptr, size);
-}
-
-void SDL_free(void *ptr)
-{
-    free(ptr);
-}
-
-#else  /* the rest of this is a LOT of tapdancing to implement malloc. :) */
-
+#ifndef HAVE_MALLOC
 #define LACKS_SYS_TYPES_H
 #define LACKS_STDIO_H
 #define LACKS_STRINGS_H
 #define LACKS_STRING_H
 #define LACKS_STDLIB_H
 #define ABORT
+#define USE_LOCKS 1
+#define USE_DL_PREFIX
 
 /*
   This is a version (aka dlmalloc) of malloc/free/realloc written by
@@ -500,6 +485,7 @@ DEFAULT_MMAP_THRESHOLD       default: 256K
 #define WIN32 1
 #endif /* _WIN32 */
 #endif /* WIN32 */
+
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -516,6 +502,14 @@ DEFAULT_MMAP_THRESHOLD       default: 256K
 #define MALLOC_FAILURE_ACTION
 #define MMAP_CLEARS 0           /* WINCE and some others apparently don't clear */
 #endif /* WIN32 */
+
+#ifdef __OS2__
+#define INCL_DOS
+#include <os2.h>
+#define HAVE_MMAP 1
+#define HAVE_MORECORE 0
+#define LACKS_SYS_MMAN_H
+#endif  /* __OS2__ */
 
 #if defined(DARWIN) || defined(_DARWIN)
 /* Mac OSX docs advise not to use sbrk; it seems better to use mmap */
@@ -630,12 +624,12 @@ DEFAULT_MMAP_THRESHOLD       default: 256K
 #define MALLINFO_FIELD_TYPE size_t
 #endif /* MALLINFO_FIELD_TYPE */
 
+#ifndef memset
 #define memset  SDL_memset
+#endif
+#ifndef memcpy
 #define memcpy  SDL_memcpy
-#define malloc  SDL_malloc
-#define calloc  SDL_calloc
-#define realloc SDL_realloc
-#define free    SDL_free
+#endif
 
 /*
   mallopt tuning options.  SVID/XPG defines four standard parameter
@@ -739,7 +733,7 @@ extern "C"
   maximum supported value of n differs across systems, but is in all
   cases less than the maximum representable value of a size_t.
 */
-    void *dlmalloc(size_t);
+    void * SDLCALL dlmalloc(size_t);
 
 /*
   free(void* p)
@@ -748,14 +742,14 @@ extern "C"
   It has no effect if p is null. If p was not malloced or already
   freed, free(p) will by default cause the current program to abort.
 */
-    void dlfree(void *);
+    void SDLCALL dlfree(void *);
 
 /*
   calloc(size_t n_elements, size_t element_size);
   Returns a pointer to n_elements * element_size bytes, with all locations
   set to zero.
 */
-    void *dlcalloc(size_t, size_t);
+    void * SDLCALL dlcalloc(size_t, size_t);
 
 /*
   realloc(void* p, size_t n)
@@ -780,7 +774,7 @@ extern "C"
   to be used as an argument to realloc is not supported.
 */
 
-    void *dlrealloc(void *, size_t);
+    void * SDLCALL dlrealloc(void *, size_t);
 
 /*
   memalign(size_t alignment, size_t n);
@@ -1357,7 +1351,7 @@ extern size_t getpagesize();
 #define IS_MMAPPED_BIT       (SIZE_T_ONE)
 #define USE_MMAP_BIT         (SIZE_T_ONE)
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined (__OS2__)
 #define CALL_MUNMAP(a, s)    munmap((a), (s))
 #define MMAP_PROT            (PROT_READ|PROT_WRITE)
 #if !defined(MAP_ANONYMOUS) && defined(MAP_ANON)
@@ -1380,6 +1374,42 @@ static int dev_zero_fd = -1;    /* Cached file descriptor for /dev/zero. */
 #endif /* MAP_ANONYMOUS */
 
 #define DIRECT_MMAP(s)       CALL_MMAP(s)
+
+#elif defined(__OS2__)
+
+/* OS/2 MMAP via DosAllocMem */
+static void* os2mmap(size_t size) {
+  void* ptr;
+  if (DosAllocMem(&ptr, size, OBJ_ANY|PAG_COMMIT|PAG_READ|PAG_WRITE) &&
+      DosAllocMem(&ptr, size, PAG_COMMIT|PAG_READ|PAG_WRITE))
+    return MFAIL;
+  return ptr;
+}
+
+#define os2direct_mmap(n)     os2mmap(n)
+
+/* This function supports releasing coalesed segments */
+static int os2munmap(void* ptr, size_t size) {
+  while (size) {
+    ULONG ulSize = size;
+    ULONG ulFlags = 0;
+    if (DosQueryMem(ptr, &ulSize, &ulFlags) != 0)
+      return -1;
+    if ((ulFlags & PAG_BASE) == 0 ||(ulFlags & PAG_COMMIT) == 0 ||
+        ulSize > size)
+      return -1;
+    if (DosFreeMem(ptr) != 0)
+      return -1;
+    ptr = ( void * ) ( ( char * ) ptr + ulSize );
+    size -= ulSize;
+  }
+  return 0;
+}
+
+#define CALL_MMAP(s)         os2mmap(s)
+#define CALL_MUNMAP(a, s)    os2munmap((a), (s))
+#define DIRECT_MMAP(s)       os2direct_mmap(s)
+
 #else /* WIN32 */
 
 /* Win32 MMAP via VirtualAlloc */
@@ -1463,7 +1493,7 @@ win32munmap(void *ptr, size_t size)
     unique mparams values are initialized only once.
 */
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(__OS2__)
 /* By default use posix locks */
 #include <pthread.h>
 #define MLOCK_T pthread_mutex_t
@@ -1476,6 +1506,16 @@ static MLOCK_T morecore_mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif /* HAVE_MORECORE */
 
 static MLOCK_T magic_init_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+#elif defined(__OS2__)
+#define MLOCK_T HMTX
+#define INITIAL_LOCK(l)      DosCreateMutexSem(0, l, 0, FALSE)
+#define ACQUIRE_LOCK(l)      DosRequestMutexSem(*l, SEM_INDEFINITE_WAIT)
+#define RELEASE_LOCK(l)      DosReleaseMutexSem(*l)
+#if HAVE_MORECORE
+static MLOCK_T morecore_mutex;
+#endif /* HAVE_MORECORE */
+static MLOCK_T magic_init_mutex;
 
 #else /* WIN32 */
 /*
@@ -2287,7 +2327,7 @@ static size_t traverse_and_check(mstate m);
 #define treebin_at(M,i)     (&((M)->treebins[i]))
 
 /* assign tree index for size S to variable I */
-#if defined(__GNUC__) && defined(i386)
+#if defined(__GNUC__) && defined(__i386__)
 #define compute_tree_index(S, I)\
 {\
   size_t X = S >> TREEBIN_SHIFT;\
@@ -2352,7 +2392,7 @@ static size_t traverse_and_check(mstate m);
 
 /* index corresponding to given bit */
 
-#if defined(__GNUC__) && defined(i386)
+#if defined(__GNUC__) && defined(__i386__)
 #define compute_bit2idx(X, I)\
 {\
   unsigned int J;\
@@ -2547,10 +2587,15 @@ init_mparams(void)
         }
         RELEASE_MAGIC_INIT_LOCK();
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(__OS2__)
         mparams.page_size = malloc_getpagesize;
         mparams.granularity = ((DEFAULT_GRANULARITY != 0) ?
                                DEFAULT_GRANULARITY : mparams.page_size);
+#elif defined (__OS2__)
+        /* if low-memory is used, os2munmap() would break
+           if it were anything other than 64k */
+        mparams.page_size = 4096u;
+        mparams.granularity = 65536u;
 #else /* WIN32 */
         {
             SYSTEM_INFO system_info;
@@ -2940,13 +2985,17 @@ static void
 internal_malloc_stats(mstate m)
 {
     if (!PREACTION(m)) {
+#ifndef LACKS_STDIO_H
         size_t maxfp = 0;
+#endif
         size_t fp = 0;
         size_t used = 0;
         check_malloc_state(m);
         if (is_initialized(m)) {
             msegmentptr s = &m->seg;
+#ifndef LACKS_STDIO_H
             maxfp = m->max_footprint;
+#endif
             fp = m->footprint;
             used = fp - (m->topsize + TOP_FOOT_SIZE);
 
@@ -5254,5 +5303,134 @@ History:
 */
 
 #endif /* !HAVE_MALLOC */
+
+#ifdef HAVE_MALLOC
+static void* SDLCALL real_malloc(size_t s) { return malloc(s); }
+static void* SDLCALL real_calloc(size_t n, size_t s) { return calloc(n, s); }
+static void* SDLCALL real_realloc(void *p, size_t s) { return realloc(p,s); }
+static void  SDLCALL real_free(void *p) { free(p); }
+#else
+#define real_malloc dlmalloc
+#define real_calloc dlcalloc
+#define real_realloc dlrealloc
+#define real_free dlfree
+#endif
+
+/* Memory functions used by SDL that can be replaced by the application */
+static struct
+{
+    SDL_malloc_func malloc_func;
+    SDL_calloc_func calloc_func;
+    SDL_realloc_func realloc_func;
+    SDL_free_func free_func;
+    SDL_atomic_t num_allocations;
+} s_mem = {
+    real_malloc, real_calloc, real_realloc, real_free, { 0 }
+};
+
+void SDL_GetMemoryFunctions(SDL_malloc_func *malloc_func,
+                            SDL_calloc_func *calloc_func,
+                            SDL_realloc_func *realloc_func,
+                            SDL_free_func *free_func)
+{
+    if (malloc_func) {
+        *malloc_func = s_mem.malloc_func;
+    }
+    if (calloc_func) {
+        *calloc_func = s_mem.calloc_func;
+    }
+    if (realloc_func) {
+        *realloc_func = s_mem.realloc_func;
+    }
+    if (free_func) {
+        *free_func = s_mem.free_func;
+    }
+}
+
+int SDL_SetMemoryFunctions(SDL_malloc_func malloc_func,
+                           SDL_calloc_func calloc_func,
+                           SDL_realloc_func realloc_func,
+                           SDL_free_func free_func)
+{
+    if (!malloc_func) {
+        return SDL_InvalidParamError("malloc_func");
+    }
+    if (!calloc_func) {
+        return SDL_InvalidParamError("calloc_func");
+    }
+    if (!realloc_func) {
+        return SDL_InvalidParamError("realloc_func");
+    }
+    if (!free_func) {
+        return SDL_InvalidParamError("free_func");
+    }
+
+    s_mem.malloc_func = malloc_func;
+    s_mem.calloc_func = calloc_func;
+    s_mem.realloc_func = realloc_func;
+    s_mem.free_func = free_func;
+    return 0;
+}
+
+int SDL_GetNumAllocations(void)
+{
+    return SDL_AtomicGet(&s_mem.num_allocations);
+}
+
+void *SDL_malloc(size_t size)
+{
+    void *mem;
+
+    if (!size) {
+        size = 1;
+    }
+
+    mem = s_mem.malloc_func(size);
+    if (mem) {
+        SDL_AtomicIncRef(&s_mem.num_allocations);
+    }
+    return mem;
+}
+
+void *SDL_calloc(size_t nmemb, size_t size)
+{
+    void *mem;
+
+    if (!nmemb || !size) {
+        nmemb = 1;
+        size = 1;
+    }
+
+    mem = s_mem.calloc_func(nmemb, size);
+    if (mem) {
+        SDL_AtomicIncRef(&s_mem.num_allocations);
+    }
+    return mem;
+}
+
+void *SDL_realloc(void *ptr, size_t size)
+{
+    void *mem;
+
+    if (!ptr && !size) {
+        size = 1;
+    }
+
+    mem = s_mem.realloc_func(ptr, size);
+    if (mem && !ptr) {
+        SDL_AtomicIncRef(&s_mem.num_allocations);
+    }
+    return mem;
+}
+
+void SDL_free(void *ptr)
+{
+    if (!ptr) {
+        return;
+    }
+
+    s_mem.free_func(ptr);
+    (void)SDL_AtomicDecRef(&s_mem.num_allocations);
+}
 
 /* vi: set ts=4 sw=4 expandtab: */

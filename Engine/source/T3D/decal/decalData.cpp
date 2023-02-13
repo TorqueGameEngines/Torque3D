@@ -76,7 +76,7 @@ ConsoleDocClass( DecalData,
 DecalData::DecalData()
 {
    size = 5;
-   materialName = "";
+   INIT_ASSET(Material);
 
    lifeSpan = 5000;
    fadeTime = 1000;
@@ -89,7 +89,6 @@ DecalData::DecalData()
    fadeStartPixelSize = -1.0f;
    fadeEndPixelSize = 200.0f;
 
-   material = NULL;
    matInst = NULL;
 
    renderPriority = 10;
@@ -139,13 +138,13 @@ void DecalData::onRemove()
 
 void DecalData::initPersistFields()
 {
+   docsURL;
    addGroup( "Decal" );
 
       addField( "size", TypeF32, Offset( size, DecalData ), 
          "Width and height of the decal in meters before scale is applied." );
 
-      addField( "material", TypeMaterialName, Offset( materialName, DecalData ),
-         "Material to use for this decal." );
+      INITPERSISTFIELD_MATERIALASSET(Material, DecalData, "Material to use for this decal.");
 
       addField( "lifeSpan", TypeS32, Offset( lifeSpan, DecalData ),
          "Time (in milliseconds) before this decal will be automatically deleted." );
@@ -204,7 +203,7 @@ void DecalData::initPersistFields()
          "grid; use #textureCoords to manually specify UV coordinates for "
          "irregular sized frames." );
 
-      addField( "textureCoords", TypeRectF,  Offset( texRect, DecalData ), MAX_TEXCOORD_COUNT,
+      addField( "textureCoords", TypeRectUV,  Offset( texRect, DecalData ), MAX_TEXCOORD_COUNT,
          "@brief An array of RectFs (topleft.x topleft.y extent.x extent.y) "
          "representing the UV coordinates for each frame in the imagemap.\n\n"
          "@note This field should only be set if the imagemap frames are "
@@ -226,7 +225,7 @@ void DecalData::onStaticModified( const char *slotName, const char *newValue )
    // To allow changing materials live.
    if ( dStricmp( slotName, "material" ) == 0 )
    {
-      materialName = newValue;
+      _setMaterial(newValue);
       _updateMaterial();
    }
    // To allow changing name live.
@@ -259,7 +258,9 @@ void DecalData::packData( BitStream *stream )
 
    stream->write( lookupName );
    stream->write( size );
-   stream->write( materialName );
+
+   PACKDATA_ASSET(Material);
+
    stream->write( lifeSpan );
    stream->write( fadeTime );
 	stream->write( texCoordCount );
@@ -284,8 +285,11 @@ void DecalData::unpackData( BitStream *stream )
    Parent::unpackData( stream );
 
    stream->read( &lookupName );
-   stream->read( &size );  
-   stream->read( &materialName );
+   assignName(lookupName);
+   stream->read( &size );
+
+   UNPACKDATA_ASSET(Material);
+   
    _updateMaterial();
    stream->read( &lifeSpan );
    stream->read( &fadeTime );
@@ -310,8 +314,12 @@ void DecalData::_initMaterial()
 {
    SAFE_DELETE( matInst );
 
-   if ( material )
-      matInst = material->createMatInstance();
+   _setMaterial(getMaterial());
+
+   if (mMaterialAsset.notNull() && mMaterialAsset->getStatus() == MaterialAsset::Ok)
+   {
+      matInst = getMaterialResource()->createMatInstance();
+   }
    else
       matInst = MATMGR->createMatInstance( "WarningMaterial" );
 
@@ -323,7 +331,7 @@ void DecalData::_initMaterial()
    matInst->init( MATMGR->getDefaultFeatures(), getGFXVertexFormat<DecalVertex>() );
    if( !matInst->isValid() )
    {
-      Con::errorf( "DecalData::_initMaterial - failed to create material instance for '%s'", materialName.c_str() );
+      Con::errorf( "DecalData::_initMaterial - failed to create material instance for '%s'", mMaterialAssetId );
       SAFE_DELETE( matInst );
       matInst = MATMGR->createMatInstance( "WarningMaterial" );
       matInst->init( MATMGR->getDefaultFeatures(), getGFXVertexFormat< DecalVertex >() );
@@ -332,38 +340,29 @@ void DecalData::_initMaterial()
 
 void DecalData::_updateMaterial()
 {
-   if ( materialName.isEmpty() )
+   if(mMaterialAsset.isNull())
       return;
-
-   Material *pMat = NULL;
-   if ( !Sim::findObject( materialName, pMat ) )
-   {
-      Con::printf( "DecalData::unpackUpdate, failed to find Material of name %s!", materialName.c_str() );
-      return;
-   }
-
-   material = pMat;
 
    // Only update material instance if we have one allocated.
    if ( matInst )
       _initMaterial();
 }
 
-Material* DecalData::getMaterial()
+Material* DecalData::getMaterialDefinition()
 {
-   if ( !material )
+   if ( !getMaterialResource() )
    {
       _updateMaterial();
-      if ( !material )
-         material = static_cast<Material*>( Sim::findObject("WarningMaterial") );
+      if ( !mMaterial )
+         mMaterial = static_cast<Material*>( Sim::findObject("WarningMaterial") );
    }
 
-   return material;
+   return mMaterial;
 }
 
 BaseMatInstance* DecalData::getMaterialInstance()
 {
-   if ( !material || !matInst || matInst->getMaterial() != material )
+   if ( !mMaterial || !matInst || matInst->getMaterial() != mMaterial)
       _initMaterial();
 
    return matInst;

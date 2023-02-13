@@ -39,6 +39,7 @@
 #include "console/engineStructs.h"
 #endif
 
+template<typename T> inline const T nullAsType(){ return nullptr; }
 
 /// @file
 /// Legacy TS-based console type definitions.
@@ -48,11 +49,7 @@
 /// @{
 
 #ifndef Offset
-#if defined(TORQUE_COMPILER_GCC) && (__GNUC__ > 3) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 1))
-#define Offset(m,T) ((int)(&((T *)1)->m) - 1)
-#else
-#define Offset(x, cls) ((dsize_t)((const char *)&(((cls *)0)->x)-(const char *)0))
-#endif
+#define Offset(x, cls) offsetof(cls, x)
 #endif
 
 class GFXShader;
@@ -76,7 +73,9 @@ DefineConsoleType( TypeCaseString, const char * )
 DefineConsoleType( TypeRealString, String )
 DefineConsoleType( TypeCommand, String )
 DefineConsoleType( TypeFilename, const char * )
-DefineConsoleType( TypeStringFilename, String )
+DefineConsoleType( TypeStringFilename, const char*)
+
+DefineConsoleType(TypeRotationF, RotationF)
 
 /// A universally unique identifier.
 DefineConsoleType( TypeUUID, Torque::UUID )
@@ -88,22 +87,27 @@ DefineUnmappedConsoleType( TypePID, SimPersistID* );
 /// TypeImageFilename is equivalent to TypeStringFilename in its usage,
 /// it exists for the benefit of GuiInspector, which will provide a custom
 /// InspectorField for this type that can display a texture preview.
-DefineConsoleType( TypeImageFilename, String )
+DefineConsoleType( TypeImageFilename, const char* )
 
 /// TypePrefabFilename is equivalent to TypeStringFilename in its usage,
 /// it exists for the benefit of GuiInspector, which will provide a 
 /// custom InspectorField for this type.
-DefineConsoleType( TypePrefabFilename, String )
+DefineConsoleType( TypePrefabFilename, const char*)
 
 /// TypeShapeFilename is equivalent to TypeStringFilename in its usage,
 /// it exists for the benefit of GuiInspector, which will provide a 
 /// custom InspectorField for this type.
-DefineConsoleType( TypeShapeFilename, String )
+DefineConsoleType( TypeShapeFilename, const char* )
+
+/// TypeSoundFilename is exactly the same as TypeShapeFilename 
+/// it exists for the benefit of GuiInspector, which will provide a 
+/// custom InspectorField for this type.
+DefineConsoleType(TypeSoundFilename, const char*)
 
 /// TypeMaterialName is equivalent to TypeRealString in its usage,
 /// it exists for the benefit of GuiInspector, which will provide a 
 /// custom InspectorField for this type.
-DefineConsoleType( TypeMaterialName, String )
+DefineConsoleType( TypeMaterialName, const char*)
 
 /// TypeTerrainMaterialIndex is equivalent to TypeS32 in its usage,
 /// it exists for the benefit of GuiInspector, which will provide a 
@@ -117,15 +121,17 @@ DefineConsoleType( TypeTerrainMaterialName, const char * )
 
 /// TypeCubemapName is equivalent to TypeRealString in its usage,
 /// but the Inspector will provide a drop-down list of CubemapData objects.
-DefineConsoleType( TypeCubemapName, String )
+DefineConsoleType( TypeCubemapName, const char*)
 
 DefineConsoleType( TypeParticleParameterString, const char * )
 
 DefineConsoleType( TypeFlag, S32 )
 DefineConsoleType( TypeColorI, ColorI )
-DefineConsoleType( TypeColorF, ColorF )
+DefineConsoleType( TypeColorF, LinearColorF )
 DefineConsoleType( TypeSimObjectName, SimObject* )
 DefineConsoleType( TypeShader, GFXShader * )
+
+DefineConsoleType(TypeSimObjectPtr, SimObject*)
 
 /// A persistent reference to an object.  This reference indirectly goes
 /// through the referenced object's persistent ID.

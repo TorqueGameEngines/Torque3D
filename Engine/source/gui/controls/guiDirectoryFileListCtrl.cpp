@@ -51,6 +51,7 @@ GuiDirectoryFileListCtrl::GuiDirectoryFileListCtrl()
 
 void GuiDirectoryFileListCtrl::initPersistFields()
 {
+   docsURL;
    addProtectedField( "filePath", TypeString, Offset( mFilePath, GuiDirectoryFileListCtrl ),
                       &_setFilePath, &defaultProtectedGetFn, "Path in game directory from which to list files." );
    addProtectedField( "fileFilter", TypeString, Offset( mFilter, GuiDirectoryFileListCtrl ),
@@ -189,13 +190,13 @@ DefineEngineMethod( GuiDirectoryFileListCtrl, getSelectedFiles, const char*, (),
    // Fetch the remaining entries
    for( S32 i = 1; i < ItemVector.size(); i++ )
    {
-      StringTableEntry itemText = object->getItemText( ItemVector[i] );
+      itemText = object->getItemText( ItemVector[i] );
       if( !itemText )
          continue;
 
       dMemset( itemBuffer, 0, itemBufSize );
       dSprintf( itemBuffer, itemBufSize, " %s", itemText );
-      dStrcat( returnBuffer, itemBuffer );
+      dStrcat( returnBuffer, itemBuffer, itemBufSize );
    }
 
    return returnBuffer;

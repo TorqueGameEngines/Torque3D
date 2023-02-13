@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2014 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -24,7 +24,7 @@
    Sources:
    - Linux kernel source input.h
 */
-/* *INDENT-OFF* */
+/* *INDENT-OFF* */ /* clang-format off */
 static SDL_Scancode const linux_scancode_table[] = {
     /*  0 */    SDL_SCANCODE_UNKNOWN,
     /*  1 */    SDL_SCANCODE_ESCAPE,
@@ -111,7 +111,7 @@ static SDL_Scancode const linux_scancode_table[] = {
     /*  82 */    SDL_SCANCODE_KP_0,
     /*  83 */    SDL_SCANCODE_KP_PERIOD,
     0,
-    /*  85 */    SDL_SCANCODE_UNKNOWN, /* KEY_ZENKAKUHANKAKU */
+    /*  85 */    SDL_SCANCODE_LANG5, /* KEY_ZENKAKUHANKAKU */
     /*  86 */    SDL_SCANCODE_NONUSBACKSLASH, /* KEY_102ND */
     /*  87 */    SDL_SCANCODE_F11,
     /*  88 */    SDL_SCANCODE_F12,
@@ -153,7 +153,7 @@ static SDL_Scancode const linux_scancode_table[] = {
     /*  124 */    SDL_SCANCODE_INTERNATIONAL3, /* KEY_YEN */
     /*  125 */    SDL_SCANCODE_LGUI,
     /*  126 */    SDL_SCANCODE_RGUI,
-    /*  127 */    SDL_SCANCODE_UNKNOWN, /* KEY_COMPOSE */
+    /*  127 */    SDL_SCANCODE_APPLICATION, /* KEY_COMPOSE */
     /*  128 */    SDL_SCANCODE_STOP,
     /*  129 */    SDL_SCANCODE_AGAIN,
     /*  130 */    SDL_SCANCODE_UNKNOWN, /* KEY_PROPS */
@@ -174,9 +174,9 @@ static SDL_Scancode const linux_scancode_table[] = {
     /*  145 */    SDL_SCANCODE_UNKNOWN, /* KEY_SENDFILE */
     /*  146 */    SDL_SCANCODE_UNKNOWN, /* KEY_DELETEFILE */
     /*  147 */    SDL_SCANCODE_UNKNOWN, /* KEY_XFER */
-    /*  148 */    SDL_SCANCODE_UNKNOWN, /* KEY_PROG1 */
-    /*  149 */    SDL_SCANCODE_UNKNOWN, /* KEY_PROG2 */
-    /*  150 */    SDL_SCANCODE_UNKNOWN, /* KEY_WWW */
+    /*  148 */    SDL_SCANCODE_APP1, /* KEY_PROG1 */
+    /*  149 */    SDL_SCANCODE_APP2, /* KEY_PROG2 */
+    /*  150 */    SDL_SCANCODE_WWW, /* KEY_WWW */
     /*  151 */    SDL_SCANCODE_UNKNOWN, /* KEY_MSDOS */
     /*  152 */    SDL_SCANCODE_UNKNOWN, /* KEY_COFFEE */
     /*  153 */    SDL_SCANCODE_UNKNOWN, /* KEY_DIRECTION */
@@ -192,9 +192,9 @@ static SDL_Scancode const linux_scancode_table[] = {
     /*  163 */    SDL_SCANCODE_AUDIONEXT, /* KEY_NEXTSONG */
     /*  164 */    SDL_SCANCODE_AUDIOPLAY, /* KEY_PLAYPAUSE */
     /*  165 */    SDL_SCANCODE_AUDIOPREV, /* KEY_PREVIOUSSONG */
-    /*  166 */    SDL_SCANCODE_UNKNOWN, /* KEY_STOPCD */
+    /*  166 */    SDL_SCANCODE_AUDIOSTOP, /* KEY_STOPCD */
     /*  167 */    SDL_SCANCODE_UNKNOWN, /* KEY_RECORD */
-    /*  168 */    SDL_SCANCODE_UNKNOWN, /* KEY_REWIND */
+    /*  168 */    SDL_SCANCODE_AUDIOREWIND, /* KEY_REWIND */
     /*  169 */    SDL_SCANCODE_UNKNOWN, /* KEY_PHONE */
     /*  170 */    SDL_SCANCODE_UNKNOWN, /* KEY_ISO */
     /*  171 */    SDL_SCANCODE_UNKNOWN, /* KEY_CONFIG */
@@ -221,7 +221,7 @@ static SDL_Scancode const linux_scancode_table[] = {
     /*  192 */    SDL_SCANCODE_F22,
     /*  193 */    SDL_SCANCODE_F23,
     /*  194 */    SDL_SCANCODE_F24,
-    0, 0, 0, 0,
+    0, 0, 0, 0, 0,
     /*  200 */    SDL_SCANCODE_UNKNOWN, /* KEY_PLAYCD */
     /*  201 */    SDL_SCANCODE_UNKNOWN, /* KEY_PAUSECD */
     /*  202 */    SDL_SCANCODE_UNKNOWN, /* KEY_PROG3 */
@@ -230,7 +230,7 @@ static SDL_Scancode const linux_scancode_table[] = {
     /*  205 */    SDL_SCANCODE_UNKNOWN, /* KEY_SUSPEND */
     /*  206 */    SDL_SCANCODE_UNKNOWN, /* KEY_CLOSE */
     /*  207 */    SDL_SCANCODE_UNKNOWN, /* KEY_PLAY */
-    /*  208 */    SDL_SCANCODE_UNKNOWN, /* KEY_FASTFORWARD */
+    /*  208 */    SDL_SCANCODE_AUDIOFASTFORWARD, /* KEY_FASTFORWARD */
     /*  209 */    SDL_SCANCODE_UNKNOWN, /* KEY_BASSBOOST */
     /*  210 */    SDL_SCANCODE_UNKNOWN, /* KEY_PRINT */
     /*  211 */    SDL_SCANCODE_UNKNOWN, /* KEY_HP */
@@ -260,4 +260,4 @@ static SDL_Scancode const linux_scancode_table[] = {
     /*  235 */    SDL_SCANCODE_UNKNOWN, /* KEY_DOCUMENTS */
     /*  236 */    SDL_SCANCODE_UNKNOWN, /* KEY_BATTERY */
 };
-/* *INDENT-ON* */
+/* *INDENT-ON* */ /* clang-format on */

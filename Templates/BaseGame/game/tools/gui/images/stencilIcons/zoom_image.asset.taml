@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="zoom_image"
+    imageFile="@assetFile=zoom.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

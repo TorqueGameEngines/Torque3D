@@ -24,7 +24,15 @@
 #include "gfx/gfxDevice.h"
 #include "gfx/bitmap/gBitmap.h"
 #include "gfx/gfxTextureManager.h"
+#include "gfx/bitmap/imageUtils.h"
 
+
+GFXCubemap::GFXCubemap()
+{
+   mPath = "";
+   mMipMapLevels = 0;
+   mInitialized = false;
+}
 
 GFXCubemap::~GFXCubemap()
 {
@@ -33,6 +41,23 @@ GFXCubemap::~GFXCubemap()
    // remove us from the cache.
    if ( mPath.isNotEmpty() )
       TEXMGR->releaseCubemap( this );
+}
+
+U32 GFXCubemap::zUpFaceIndex(const U32 index)
+{
+   switch (index)
+   {
+   case 2:
+      return 4;
+   case 3:
+      return 5;
+   case 4:
+      return 2;
+   case 5:
+      return 3;
+   default:
+      return index;
+   };
 }
 
 void GFXCubemap::initNormalize( U32 size )
@@ -83,7 +108,7 @@ void GFXCubemap::initNormalize( U32 size )
          }
       }
 
-      tex.set(bitmap, &GFXDefaultStaticDiffuseProfile, true, "Cubemap");
+      tex.set(bitmap, &GFXStaticTextureSRGBProfile, true, "Cubemap");
    }
 
    initStatic(faces);
@@ -106,4 +131,41 @@ bool GFXCubemapHandle::set( const String &cubemapDDS )
    StrongRefPtr<GFXCubemap>::set( TEXMGR->createCubemap( cubemapDDS ) );
 
    return isValid();
+}
+
+const String GFXCubemapArray::describeSelf() const
+{
+   // We've got nothing
+   return String();
+}
+
+
+void GFXCubemapArray::setCubeTexSize(GFXCubemapHandle* cubemaps)
+{
+   U32 downscalePower = 0;// GFXTextureManager::smTextureReductionLevel;
+   U32 scaledSize = cubemaps[0]->getSize();
+
+   if (downscalePower != 0)
+   {
+      // Otherwise apply the appropriate scale...
+      scaledSize >>= downscalePower;
+   }
+
+   //all cubemaps must be the same size,format and number of mipmaps. Grab the details from the first cubemap
+   mSize = scaledSize;
+   mMipMapLevels = cubemaps[0]->getMipMapLevels() - downscalePower;
+}
+
+void GFXCubemapArray::setCubeTexSize(U32 cubemapFaceSize)
+{
+   U32 downscalePower = 0;// GFXTextureManager::smTextureReductionLevel;
+   U32 scaledSize = cubemapFaceSize;
+
+   if (downscalePower != 0)
+   {
+      scaledSize >>= downscalePower;
+   }
+
+   mSize = scaledSize;
+   mMipMapLevels = ImageUtil::getMaxMipCount(cubemapFaceSize, cubemapFaceSize) - downscalePower;
 }

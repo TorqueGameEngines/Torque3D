@@ -1,0 +1,14 @@
+<MaterialAsset
+    AssetName="NatureGreen"
+    materialDefinitionName="NatureGreen"
+    imageMap0="@asset=Prototyping:NatureGreen_ALBEDO"
+    originalFilePath="C:/dev/T3D/PRs/MiscFixes20220525/Templates/BaseGame/game/data/Prototyping/Materials/NatureGreen.png">
+    <Material
+        Name="NatureGreen"
+        mapTo="NatureGreen">
+        <Material.Stages>
+            <Stages_beginarray
+                DiffuseMapAsset="Prototyping:NatureGreen_ALBEDO"/>
+        </Material.Stages>
+    </Material>
+</MaterialAsset>

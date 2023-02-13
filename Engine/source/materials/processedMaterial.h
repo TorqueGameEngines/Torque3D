@@ -39,6 +39,10 @@
 #include "materials/matStateHint.h"
 #endif
 
+#ifndef CUSTOMSHADERBINDINGDATA_H
+#include "materials/customShaderBindingData.h"
+#endif
+
 class ShaderFeature;
 class MaterialParameters;
 class MaterialParameterHandle;
@@ -46,7 +50,7 @@ class SceneRenderState;
 class GFXVertexBufferHandleBase;
 class GFXPrimitiveBufferHandle;
 class MatrixSet;
-
+class GuiTreeViewCtrl;
 
 /// This contains the common data needed to render a pass.
 struct RenderPassData
@@ -142,6 +146,12 @@ public:
    /// Sets the transformation matrix, i.e. Model * View * Projection
    virtual void setTransforms(const MatrixSet &matrixSet, SceneRenderState *state, const U32 pass) = 0;
    
+   /// Sets the node transforms for HW Skinning
+   virtual void setNodeTransforms(const MatrixF *address, const U32 numTransforms, const U32 pass) = 0;
+
+   /// Sets any custom shader data
+   virtual void setCustomShaderData(Vector<CustomShaderBindingData> &shaderData, const U32 pass) = 0;
+   
    /// Sets the scene info like lights for the given pass.
    virtual void setSceneInfo(SceneRenderState *, const SceneData& sgData, U32 pass) = 0;
 
@@ -215,6 +225,8 @@ public:
    /// Dump shader info, or FF texture info?
    virtual void dumpMaterialInfo() { }
 
+   virtual void getMaterialInfo(GuiTreeViewCtrl* tree, U32 item) {}
+
    /// Returns the source material.
    Material* getMaterial() const { return mMaterial; }
 
@@ -282,6 +294,7 @@ protected:
 
    /// Loads the texture located at _getTexturePath(filename) and gives it the specified profile
    GFXTexHandle _createTexture( const char *filename, GFXTextureProfile *profile );
+   GFXTexHandle _createCompositeTexture(const char *filenameR, const char *filenameG, const char *filenameB, const char *filenameA, U32 inputKey[4], GFXTextureProfile *profile);
 
    /// @name State blocks
    ///

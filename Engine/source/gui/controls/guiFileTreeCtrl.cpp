@@ -67,12 +67,13 @@ GuiFileTreeCtrl::GuiFileTreeCtrl()
    mSupportMouseDragging = false;
    mMultipleSelections = false;
 
-   mFileFilter = "*.cs *.gui *.ed.cs";
+   mFileFilter = "*." TORQUE_SCRIPT_EXTENSION " *.gui *.ed." TORQUE_SCRIPT_EXTENSION;
    _initFilters();
 }
 
 void GuiFileTreeCtrl::initPersistFields()
 {
+   docsURL;
    addGroup( "File Tree" );
    addField( "rootPath",   TypeRealString,   Offset( mRootPath, GuiFileTreeCtrl ),     "Path in game directory that should be displayed in the control." );
    addProtectedField( "fileFilter", TypeRealString,   Offset( mFileFilter, GuiFileTreeCtrl ),
@@ -111,7 +112,7 @@ void GuiFileTreeCtrl::updateTree()
    if( !mRootPath.isEmpty() )
       rootPath = String::ToString( "%s/%s", rootPath.c_str(), mRootPath.c_str() );
 
-   // get the files in the main.cs dir
+   // get the files in the main.tscript dir
    Vector<StringTableEntry> pathVec;
    Platform::dumpDirectories( rootPath, pathVec, 0, true);
    _dumpFiles( rootPath, pathVec, 0);
@@ -276,7 +277,7 @@ void GuiFileTreeCtrl::recurseInsert( Item* parent, StringTableEntry path )
 
    char szPathCopy [ 1024 ];
    dMemset( szPathCopy, 0, 1024 );
-   dStrcpy( szPathCopy, path );
+   dStrcpy( szPathCopy, path, 1024 );
 
    // Jump over the first character if it's a root /
    char *curPos = szPathCopy;
@@ -315,7 +316,7 @@ void GuiFileTreeCtrl::recurseInsert( Item* parent, StringTableEntry path )
    {
       bool allowed = (_isDirInMainDotCsPath(value) || matchesFilters(value));
       Item *exists = parent->findChildByValue( szValue );
-      if( allowed && !exists && dStrcmp( curPos, "" ) != 0 )
+      if( allowed && !exists && String::compare( curPos, "" ) != 0 )
       {
          // Since we're adding a child this parent can't be a virtual parent, so clear that flag
          parent->setVirtualParent( false );
@@ -357,7 +358,7 @@ void GuiFileTreeCtrl::recurseInsert( Item* parent, StringTableEntry path )
    }
    if( delim )
    {
-      if( ( dStrcmp( delim, "" ) == 0 ) && item )
+      if( ( String::compare( delim, "" ) == 0 ) && item )
       {
          item->setExpanded( false );
          if( parent && _hasChildren( item->getValue() ) )
@@ -379,18 +380,18 @@ void GuiFileTreeCtrl::recurseInsert( Item* parent, StringTableEntry path )
 
 }
 
-DefineConsoleMethod( GuiFileTreeCtrl, getSelectedPath, const char*, (), , "getSelectedPath() - returns the currently selected path in the tree")
+DefineEngineMethod( GuiFileTreeCtrl, getSelectedPath, const char*, (), , "getSelectedPath() - returns the currently selected path in the tree")
 {
    const String& path = object->getSelectedPath();
    return Con::getStringArg( path );
 }
 
-DefineConsoleMethod( GuiFileTreeCtrl, setSelectedPath, bool, (const char * path), , "setSelectedPath(path) - expands the tree to the specified path")
+DefineEngineMethod( GuiFileTreeCtrl, setSelectedPath, bool, (const char * path), , "setSelectedPath(path) - expands the tree to the specified path")
 {
    return object->setSelectedPath( path );
 }
 
-DefineConsoleMethod( GuiFileTreeCtrl, reload, void, (), , "() - Reread the directory tree hierarchy." )
+DefineEngineMethod( GuiFileTreeCtrl, reload, void, (), , "() - Reread the directory tree hierarchy." )
 {
    object->updateTree();
 }

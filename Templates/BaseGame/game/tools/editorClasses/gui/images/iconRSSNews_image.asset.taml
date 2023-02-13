@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="iconRSSNews_image"
+    imageFile="@assetFile=iconRSSNews.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

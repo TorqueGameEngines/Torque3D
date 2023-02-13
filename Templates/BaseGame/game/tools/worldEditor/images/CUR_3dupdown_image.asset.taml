@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="CUR_3dupdown_image"
+    imageFile="@assetFile=CUR_3dupdown.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

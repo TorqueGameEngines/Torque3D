@@ -23,7 +23,7 @@
 #include "windowManager/windowInputGenerator.h"
 #include "windowManager/platformWindow.h"
 #include "sim/actionMap.h"
-#include "component/interfaces/IProcessInput.h"
+#include "platform/input/IProcessInput.h"
 
 
 extern InputModifiers convertModifierBits(const U32 in);
@@ -32,20 +32,16 @@ extern InputModifiers convertModifierBits(const U32 in);
 //-----------------------------------------------------------------------------
 // Constructor/Destructor
 //-----------------------------------------------------------------------------
-WindowInputGenerator::WindowInputGenerator( PlatformWindow *window ) : 
+WindowInputGenerator::WindowInputGenerator( PlatformWindow *window ) :
                                              mWindow(window),
                                              mInputController(NULL),
                                              mLastCursorPos(0,0),
                                              mClampToWindow(true),
+                                             mFocused(false),
                                              mPixelsPerMickey(1.0f),
-                                             mNotifyPosition(true),
-                                             mFocused(false)
+                                             mLastPressWasGlobalActionMap(false)
 {
    AssertFatal(mWindow, "NULL PlatformWindow on WindowInputGenerator creation");
-
-#ifdef TORQUE_OS_XENON
-   mFocused = true;
-#endif
 
    if (mWindow->getOffscreenRender())
       mFocused = true;
@@ -82,27 +78,38 @@ WindowInputGenerator::~WindowInputGenerator()
 //-----------------------------------------------------------------------------
 void WindowInputGenerator::generateInputEvent( InputEventInfo &inputEvent )
 {
-   if( !mInputController || !mFocused )
+   // Reset last press being global
+   mLastPressWasGlobalActionMap = false;
+
+   if (!mInputController)// || !mFocused)
       return;
 
-    if (inputEvent.action == SI_MAKE && inputEvent.deviceType == KeyboardDeviceType)
-    {
-        for( int i = 0; i < mAcceleratorMap.size(); ++i )
-        {
-            const AccKeyMap &acc = mAcceleratorMap[i];
-            if( acc.modifier & inputEvent.modifier && acc.keyCode == inputEvent.objInst )
-            {
-                Con::evaluatef(acc.cmd);
-                return;
-            }
-        }
-    }
+   if (inputEvent.action == SI_MAKE && inputEvent.deviceType == KeyboardDeviceType)
+   {
+      for (int i = 0; i < mAcceleratorMap.size(); ++i)
+      {
+         const AccKeyMap &acc = mAcceleratorMap[i];
+         if (!mWindow->getKeyboardTranslation() &&
+            ((acc.modifier == inputEvent.modifier && acc.modifier != 0) || (acc.modifier == 0 && inputEvent.modifier == 0))
+            && acc.keyCode == inputEvent.objInst)
+         {
+            Con::evaluatef(acc.cmd);
+            return;
+         }
+      }
+   }
 
    // Give the ActionMap first shot.
    if (ActionMap::handleEventGlobal(&inputEvent))
+   {
+      mLastPressWasGlobalActionMap = true;
+      return;
+   }
+
+   if (mInputController->processInputEvent(inputEvent))
       return;
 
-   if( mInputController->processInputEvent( inputEvent ) )
+   if (mWindow->getKeyboardTranslation())
       return;
 
    // If we get here we failed to process it with anything prior... so let
@@ -127,13 +134,18 @@ void WindowInputGenerator::handleMouseMove( WindowId did, U32 modifier, S32 x, S
    //  Because of this we always have to generate and send off for processing
    //  relative events, even if the mouse is not locked.  
    //  I'm considering removing this in the Canvas refactor, thoughts? [7/6/2007 justind]
+   // Now sends the absolute position event whenever an absolute position is received from the OS. [2/13/2019 mar] 
 
    // Generate a base Movement along and Axis event
    InputEventInfo event;
    event.deviceType = MouseDeviceType;
    event.deviceInst = 0;
    event.objType    = SI_AXIS;
-   event.modifier   = convertModifierBits(modifier);
+#ifdef TORQUE_SDL
+   event.modifier = modifier;
+#else
+   event.modifier = convertModifierBits(modifier);
+#endif
    event.ascii      = 0;
 
    // Generate delta movement along each axis
@@ -180,33 +192,23 @@ void WindowInputGenerator::handleMouseMove( WindowId did, U32 modifier, S32 x, S
 
       }
 
-      // When the window gains focus, we send a cursor position event 
-      if( mNotifyPosition )
-      {
-         mNotifyPosition = false;
+      // We use SI_MAKE to signify that the position is being set, not relatively moved.
+      event.action = SI_MAKE;
 
-         // We use SI_MAKE to signify that the position is being set, not relatively moved.
-         event.action     = SI_MAKE;
+      // X Axis
+      event.objInst = SI_XAXIS;
+      event.fValue = (F32)x;
+      generateInputEvent(event);
 
-         // X Axis
-         event.objInst    = SI_XAXIS;
-         event.fValue     = (F32)x;
-         generateInputEvent(event);
-
-         // Y Axis
-         event.objInst = SI_YAXIS;
-         event.fValue     = (F32)y;
-         generateInputEvent(event);      
-      }
+      // Y Axis
+      event.objInst = SI_YAXIS;
+      event.fValue = (F32)y;
+      generateInputEvent(event);
 
       mLastCursorPos = Point2I(x,y);
-
    }
    else
-   {   
       mLastCursorPos += Point2I(x,y);      
-      mNotifyPosition = true;
-   }
 }
 
 void WindowInputGenerator::handleMouseButton( WindowId did, U32 modifiers, U32 action, U16 button )
@@ -219,7 +221,11 @@ void WindowInputGenerator::handleMouseButton( WindowId did, U32 modifiers, U32 a
    event.deviceInst = 0;
    event.objType    = SI_BUTTON;
    event.objInst    = (InputObjectInstances)(KEY_BUTTON0 + button);
-   event.modifier   = convertModifierBits(modifiers);
+#ifdef TORQUE_SDL
+   event.modifier = modifiers;
+#else
+   event.modifier = convertModifierBits(modifiers);
+#endif
    event.ascii      = 0;
    event.action     = (action==IA_MAKE) ? SI_MAKE : SI_BREAK;
    event.fValue     = (action==IA_MAKE) ? 1.0 : 0.0;
@@ -236,7 +242,11 @@ void WindowInputGenerator::handleMouseWheel( WindowId did, U32 modifiers, S32 wh
    event.deviceType = MouseDeviceType;
    event.deviceInst = 0;
    event.objType    = SI_AXIS;
-   event.modifier   = convertModifierBits(modifiers);
+#ifdef TORQUE_SDL
+   event.modifier = modifiers;
+#else
+   event.modifier = convertModifierBits(modifiers);
+#endif
    event.ascii      = 0;
    event.action     = SI_MOVE;
 
@@ -269,7 +279,11 @@ void WindowInputGenerator::handleCharInput( WindowId did, U32 modifier, U16 key 
    event.deviceInst  = 0;
    event.objType     = SI_KEY;
    event.objInst     = KEY_NULL;
-   event.modifier    = convertModifierBits(modifier);
+#ifdef TORQUE_SDL
+   event.modifier = modifier;
+#else
+   event.modifier = convertModifierBits(modifier);
+#endif
    event.ascii       = key;
    event.action      = SI_MAKE;
    event.fValue      = 1.0;
@@ -291,7 +305,11 @@ void WindowInputGenerator::handleKeyboard( WindowId did, U32 modifier, U32 actio
    event.deviceInst  = 0;
    event.objType     = SI_KEY;
    event.objInst     = (InputObjectInstances)key;
-   event.modifier    = convertModifierBits(modifier);
+#ifdef TORQUE_SDL
+   event.modifier    = modifier;
+#else
+   event.modifier = convertModifierBits(modifier);
+#endif
    event.ascii       = 0;
 
    switch(action)
@@ -326,7 +344,7 @@ void WindowInputGenerator::handleKeyboard( WindowId did, U32 modifier, U32 actio
 void WindowInputGenerator::handleInputEvent( U32 deviceInst, F32 fValue, F32 fValue2, F32 fValue3, F32 fValue4, S32 iValue, U16 deviceType, U16 objType, U16 ascii, U16 objInst, U8 action, U8 modifier )
 {
    // Skip it if we don't have focus.
-   if(!mInputController || !mFocused)
+   if(!mInputController)// || !mFocused)
       return;
 
    // Convert to an InputEventInfo and pass it around for processing.
@@ -360,8 +378,6 @@ void WindowInputGenerator::handleAppEvent( WindowId did, S32 event )
    }
    else if(event == GainFocus)
    {
-      // Set an update flag to notify the consumer of the absolute mouse position next move
-      mNotifyPosition = true;
       mFocused = true;
    }
 

@@ -1,0 +1,5 @@
+<GUIAsset
+    AssetName="ProfilerGui"
+    scriptFile="@assetFile=profiler"
+    GUIFile="@assetFile=profiler.gui"
+    VersionId="1"/>

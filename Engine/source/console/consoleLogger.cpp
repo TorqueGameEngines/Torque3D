@@ -70,6 +70,7 @@ EndImplementEnumType;
 
 void ConsoleLogger::initPersistFields()
 {
+   docsURL;
    addGroup( "Logging" );
    addField( "level",   TYPEID< ConsoleLogEntry::Level >(),     Offset( mLevel,    ConsoleLogger ), "Determines the priority level and attention the logged entry gets when recorded\n\n" );
    endGroup( "Logging" );
@@ -79,18 +80,18 @@ void ConsoleLogger::initPersistFields()
 
 //-----------------------------------------------------------------------------
 
-bool ConsoleLogger::processArguments( S32 argc, ConsoleValueRef *argv )
+bool ConsoleLogger::processArguments( S32 argc, ConsoleValue *argv )
 {
    if( argc == 0 )
       return false;
 
    bool append = false;
 
-   if( argc == 2 )
-      append = dAtob( argv[1] );
+   if (argc == 2)
+      append = argv[1].getBool();
 
    mAppend = append;
-   mFilename = StringTable->insert( argv[0] );
+   mFilename = StringTable->insert( argv[0].getString() );
 
    if( init() )
    {
@@ -225,21 +226,21 @@ void ConsoleLogger::log( const char *consoleLine )
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( ConsoleLogger, attach, bool, (), , "() Attaches the logger to the console and begins writing to file"
-			  "@tsexample\n"
-			  "// Create the logger\n"
-			  "// Will automatically start writing to testLogging.txt with normal priority\n"
-			  "new ConsoleLogger(logger, \"testLogging.txt\", false);\n\n"
-			  "// Send something to the console, with the logger consumes and writes to file\n"
-			  "echo(\"This is logged to the file\");\n\n"
-			  "// Stop logging, but do not delete the logger\n"
-			  "logger.detach();\n\n"
-			  "echo(\"This is not logged to the file\");\n\n"
-			  "// Attach the logger to the console again\n"
-			  "logger.attach();\n\n"
-			  "// Logging has resumed\n"
-			  "echo(\"Logging has resumed\");"
-			  "@endtsexample\n\n")
+DefineEngineMethod( ConsoleLogger, attach, bool, (), , "() Attaches the logger to the console and begins writing to file"
+           "@tsexample\n"
+           "// Create the logger\n"
+           "// Will automatically start writing to testLogging.txt with normal priority\n"
+           "new ConsoleLogger(logger, \"testLogging.txt\", false);\n\n"
+           "// Send something to the console, with the logger consumes and writes to file\n"
+           "echo(\"This is logged to the file\");\n\n"
+           "// Stop logging, but do not delete the logger\n"
+           "logger.detach();\n\n"
+           "echo(\"This is not logged to the file\");\n\n"
+           "// Attach the logger to the console again\n"
+           "logger.attach();\n\n"
+           "// Logging has resumed\n"
+           "echo(\"Logging has resumed\");"
+           "@endtsexample\n\n")
 {
    ConsoleLogger *logger = static_cast<ConsoleLogger *>( object );
    return logger->attach();
@@ -247,21 +248,21 @@ DefineConsoleMethod( ConsoleLogger, attach, bool, (), , "() Attaches the logger 
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( ConsoleLogger, detach, bool, (), , "() Detaches the logger from the console and stops writing to file"
-			  "@tsexample\n"
-			  "// Create the logger\n"
-			  "// Will automatically start writing to testLogging.txt with normal priority\n"
-			  "new ConsoleLogger(logger, \"testLogging.txt\", false);\n\n"
-			  "// Send something to the console, with the logger consumes and writes to file\n"
-			  "echo(\"This is logged to the file\");\n\n"
-			  "// Stop logging, but do not delete the logger\n"
-			  "logger.detach();\n\n"
-			  "echo(\"This is not logged to the file\");\n\n"
-			  "// Attach the logger to the console again\n"
-			  "logger.attach();\n\n"
-			  "// Logging has resumed\n"
-			  "echo(\"Logging has resumed\");"
-			  "@endtsexample\n\n")
+DefineEngineMethod( ConsoleLogger, detach, bool, (), , "() Detaches the logger from the console and stops writing to file"
+           "@tsexample\n"
+           "// Create the logger\n"
+           "// Will automatically start writing to testLogging.txt with normal priority\n"
+           "new ConsoleLogger(logger, \"testLogging.txt\", false);\n\n"
+           "// Send something to the console, with the logger consumes and writes to file\n"
+           "echo(\"This is logged to the file\");\n\n"
+           "// Stop logging, but do not delete the logger\n"
+           "logger.detach();\n\n"
+           "echo(\"This is not logged to the file\");\n\n"
+           "// Attach the logger to the console again\n"
+           "logger.attach();\n\n"
+           "// Logging has resumed\n"
+           "echo(\"Logging has resumed\");"
+           "@endtsexample\n\n")
 {
    ConsoleLogger *logger = static_cast<ConsoleLogger *>( object );
    return logger->detach();

@@ -41,17 +41,22 @@ void GFXCardProfiler::loadProfileScript(const char* aScriptName)
    void  *data = NULL;
    U32   dataSize = 0;
 
+   
    Torque::FS::ReadFile( scriptName.c_str(), data, dataSize, true );
 
    if(data == NULL)
    {
+#ifdef TORQUE_DEBUG
       Con::warnf("      - No card profile %s exists", scriptName.c_str());
+#endif
       return;
    }
 
    const char  *script = static_cast<const char *>(data);
 
+#ifdef TORQUE_DEBUG
    Con::printf("      - Loaded card profile %s", scriptName.c_str());
+#endif
 
    Con::evaluate(script, false, NULL);
    delete[] script;
@@ -59,16 +64,16 @@ void GFXCardProfiler::loadProfileScript(const char* aScriptName)
 
 void GFXCardProfiler::loadProfileScripts(const String& render, const String& vendor, const String& card, const String& version)
 {
-   String script = render + ".cs";
+   String script = render + "." TORQUE_SCRIPT_EXTENSION;
    loadProfileScript(script);
 
-   script = render + "." + vendor + ".cs";
+   script = render + "." + vendor + "." TORQUE_SCRIPT_EXTENSION;
    loadProfileScript(script);
 
-   script = render + "." + vendor + "." + card + ".cs";
+   script = render + "." + vendor + "." + card + "." TORQUE_SCRIPT_EXTENSION;
    loadProfileScript(script);
 
-   script = render + "." + vendor + "." + card + "." + version + ".cs";
+   script = render + "." + vendor + "." + card + "." + version + "." TORQUE_SCRIPT_EXTENSION;
    loadProfileScript(script);
 }
 
@@ -206,7 +211,7 @@ DefineEngineStaticMethod( GFXCardProfilerAPI, getVendor, String, (),,
 }
 
 DefineEngineStaticMethod( GFXCardProfilerAPI, getRenderer, String, (),,
-   "Returns the renderer name.  For example D3D9 or OpenGL." )
+   "Returns the renderer name.  For example D3D11 or OpenGL." )
 {
 	return GFX->getCardProfiler()->getRendererString();
 }
@@ -232,3 +237,14 @@ DefineEngineStaticMethod( GFXCardProfilerAPI, queryProfile, S32, ( const char *n
 {
 	return (S32)GFX->getCardProfiler()->queryProfile( name, (U32)defaultValue );
 }
+
+
+DefineEngineStaticMethod( GFXCardProfilerAPI, getBestDepthFormat, String, (),,
+                         "Returns the card name." )
+{
+    if (GFX->getCardProfiler()->queryProfile("GL::Workaround::intel_mac_depth", false))
+        return "GFXFormatD16";
+    else
+        return "GFXFormatD24S8";
+}
+

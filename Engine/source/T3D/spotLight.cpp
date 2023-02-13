@@ -95,6 +95,7 @@ SpotLight::~SpotLight()
 
 void SpotLight::initPersistFields()
 {
+   docsURL;
    addGroup( "Light" );
       
       addField( "range", TypeF32, Offset( mRange, SpotLight ) );
@@ -110,6 +111,11 @@ void SpotLight::initPersistFields()
    // Remove the scale field... it's already 
    // defined by the range and angle.
    removeField( "scale" );
+
+   //These are particular fields for PSSM, so useless for point lights
+   removeField("numSplits");
+   removeField("logWeight");
+   removeField("lastSplitTerrainOnly");
 }
 
 void SpotLight::_conformLights()
@@ -122,6 +128,8 @@ void SpotLight::_conformLights()
    mLight->setColor( mColor );
    mLight->setBrightness( mBrightness );
    mLight->setCastShadows( mCastShadows );
+   mLight->setStaticRefreshFreq(mStaticRefreshFreq);
+   mLight->setDynamicRefreshFreq(mDynamicRefreshFreq);
    mLight->setPriority( mPriority );
 
    mOuterConeAngle = getMax( 0.01f, mOuterConeAngle );
@@ -132,9 +140,18 @@ void SpotLight::_conformLights()
 
    // Update the bounds and scale to fit our spotlight.
    F32 radius = mRange * mSin( mDegToRad( mOuterConeAngle ) * 0.5f );
-   mObjBox.minExtents.set( -1, 0, -1 );
-   mObjBox.maxExtents.set( 1, 1, 1 );
-   mObjScale.set( radius, mRange, radius );
+   Point3F objectScale(radius, mRange, radius);
+   Point3F objectBoxMin(-1, 0, -1);
+
+   if (mAnimationData && mAnimationData->mRot.keyLen[0] > 0)
+   {
+      objectBoxMin.set(-1, -1, -1);
+      objectScale.set(mRange, mRange, mRange);
+   }
+
+   mObjBox.minExtents.set(objectBoxMin);
+   mObjBox.maxExtents.set(1, 1, 1);
+   mObjScale.set(objectScale);
 
    // Skip our transform... it just dirties mask bits.
    Parent::setTransform( mObjToWorld );
@@ -200,7 +217,7 @@ void SpotLight::_renderViz( SceneRenderState *state )
    desc.setBlend( true );
 
    // Base the color on the light color.
-   ColorI color( mColor );
+   ColorI color = mColor.toColorI();
    color.alpha = 16;
 
    F32 radius = mRange * mSin( mDegToRad( mOuterConeAngle * 0.5f ) );

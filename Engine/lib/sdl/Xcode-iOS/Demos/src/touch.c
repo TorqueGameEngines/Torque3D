@@ -5,7 +5,7 @@
  */
 
 #include "SDL.h"
-#include "math.h"
+#include <math.h>
 #include "common.h"
 
 #define BRUSH_SIZE 32           /* width and height of the brush */
@@ -21,20 +21,22 @@ void
 drawLine(SDL_Renderer *renderer, float startx, float starty, float dx, float dy)
 {
 
-    float distance = sqrt(dx * dx + dy * dy);   /* length of line segment (pythagoras) */
+    float distance = SDL_sqrt(dx * dx + dy * dy);   /* length of line segment (pythagoras) */
     int iterations = distance / PIXELS_PER_ITERATION + 1;       /* number of brush sprites to draw for the line */
     float dx_prime = dx / iterations;   /* x-shift per iteration */
     float dy_prime = dy / iterations;   /* y-shift per iteration */
     SDL_Rect dstRect;           /* rect to draw brush sprite into */
+    float x;
+    float y;
+    int i;
 
     dstRect.w = BRUSH_SIZE;
     dstRect.h = BRUSH_SIZE;
 
     /* setup x and y for the location of the first sprite */
-    float x = startx - BRUSH_SIZE / 2.0f;
-    float y = starty - BRUSH_SIZE / 2.0f;
+    x = startx - BRUSH_SIZE / 2.0f;
+    y = starty - BRUSH_SIZE / 2.0f;
 
-    int i;
     /* draw a series of blots to form the line */
     for (i = 0; i < iterations; i++) {
         dstRect.x = x;
@@ -79,7 +81,9 @@ main(int argc, char *argv[])
     SDL_Event event;
     SDL_Window *window;         /* main window */
     SDL_Renderer *renderer;
+    SDL_Texture *target;
     int done;                   /* does user want to quit? */
+    int w, h;
 
     /* initialize SDL */
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -87,38 +91,48 @@ main(int argc, char *argv[])
     }
 
     /* create main window and renderer */
-    window = SDL_CreateWindow(NULL, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT,
-                                SDL_WINDOW_OPENGL |
-                                SDL_WINDOW_BORDERLESS);
+    window = SDL_CreateWindow(NULL, 0, 0, 320, 480, SDL_WINDOW_BORDERLESS | SDL_WINDOW_ALLOW_HIGHDPI);
     renderer = SDL_CreateRenderer(window, 0, 0);
+
+    SDL_GetWindowSize(window, &w, &h);
+    SDL_RenderSetLogicalSize(renderer, w, h);
 
     /* load brush texture */
     initializeTexture(renderer);
 
     /* fill canvass initially with all black */
+    target = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, w, h);
+    SDL_SetRenderTarget(renderer, target);
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
-    SDL_RenderPresent(renderer);
+    SDL_SetRenderTarget(renderer, NULL);
 
     done = 0;
-    while (!done && SDL_WaitEvent(&event)) {
-        switch (event.type) {
-        case SDL_QUIT:
-            done = 1;
-            break;
-        case SDL_MOUSEMOTION:
-            state = SDL_GetMouseState(&x, &y);  /* get its location */
-            SDL_GetRelativeMouseState(&dx, &dy);        /* find how much the mouse moved */
-            if (state & SDL_BUTTON_LMASK) {     /* is the mouse (touch) down? */
-                drawLine(renderer, x - dx, y - dy, dx, dy);       /* draw line segment */
-                SDL_RenderPresent(renderer);
+    while (!done) {
+        while (SDL_PollEvent(&event) == 1) {
+            switch (event.type) {
+            case SDL_QUIT:
+                done = 1;
+                break;
+            case SDL_MOUSEMOTION:
+                state = SDL_GetMouseState(&x, &y);  /* get its location */
+                SDL_GetRelativeMouseState(&dx, &dy);        /* find how much the mouse moved */
+                if (state & SDL_BUTTON_LMASK) {     /* is the mouse (touch) down? */
+                    SDL_SetRenderTarget(renderer, target);
+                    drawLine(renderer, x - dx, y - dy, dx, dy);       /* draw line segment */
+                    SDL_SetRenderTarget(renderer, NULL);
+                }
+                break;
             }
-            break;
         }
+
+        SDL_RenderCopy(renderer, target, NULL, NULL);
+        SDL_RenderPresent(renderer);
     }
 
     /* cleanup */
     SDL_DestroyTexture(brush);
+    SDL_DestroyTexture(target);
     SDL_Quit();
 
     return 0;

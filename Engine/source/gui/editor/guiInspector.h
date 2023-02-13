@@ -82,7 +82,16 @@ public:
    virtual void clearInspectObjects();
 
    /// Get the currently inspected object
-   SimObject* getInspectObject( U32 index = 0 ) { return mTargets[ index ]; }
+   SimObject* getInspectObject(U32 index = 0)
+   {
+      if (!mTargets.empty())
+         return mTargets[index];
+      else
+         return nullptr;
+   }
+
+   S32 getComponentGroupTargetId() { return mComponentGroupTargetId; }
+   void setComponentGroupTargetId(S32 compId) { mComponentGroupTargetId = compId; }
    
    /// Return the number of objects being inspected by this GuiInspector.
    U32 getNumInspectObjects() const { return mTargets.size(); }
@@ -97,12 +106,34 @@ public:
    /// @note Only valid in single-object mode.
    void setName( StringTableEntry newName );
 
+   void addInspectorGroup(GuiInspectorGroup* group)
+   {
+      mGroups.push_back(group);
+   }
+
+   /// <summary>
+   /// Inserts a group into group list at a specific position
+   /// </summary>
+   /// <param name="insertIndex"></param>
+   /// <param name="group"></param>
+   void insertInspectorGroup(U32 insertIndex, GuiInspectorGroup* group)
+   {
+      mGroups.insert(insertIndex, group);
+   }
+
    /// Deletes all GuiInspectorGroups
    void clearGroups();   
 
    /// Returns true if the named group exists
    /// Helper for inspectObject
    GuiInspectorGroup* findExistentGroup( StringTableEntry groupName );
+
+   /// <summary>
+   /// Looks through the group list by name to find it's index
+   /// </summary>
+   /// <param name="groupName"></param>
+   /// <returns>Returns the index position of the group in the group list as S32. -1 if groupName not found.</returns>
+   S32 findExistentGroupIndex(StringTableEntry groupName);
 
    /// Should there be a GuiInspectorField associated with this fieldName,
    /// update it to reflect actual/current value of that field in the inspected object.
@@ -130,7 +161,9 @@ public:
 
    void setObjectField( const char *fieldName, const char *data );
 
-   static GuiInspector* findByObject( SimObject *obj );   
+   static GuiInspector* findByObject( SimObject *obj );
+
+   void refresh();
 
 protected:
       
@@ -140,6 +173,8 @@ protected:
 
    /// Objects being inspected by this GuiInspector.
    TargetVector mTargets;
+
+   S32 mComponentGroupTargetId;
    
    F32 mDividerPos;   
    S32 mDividerMargin;
@@ -148,8 +183,6 @@ protected:
    SimObjectPtr<GuiInspectorField> mHLField;
    String mGroupFilters;   
    bool mShowCustomFields;
-   
-   void refresh();
 };
 
 #endif

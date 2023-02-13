@@ -37,6 +37,7 @@ PlaneExtractorPolyList::PlaneExtractorPolyList()
 {
    VECTOR_SET_ASSOCIATION(mVertexList);
    VECTOR_SET_ASSOCIATION(mPolyPlaneList);
+   mPlaneList = NULL;
 }
 
 PlaneExtractorPolyList::~PlaneExtractorPolyList()

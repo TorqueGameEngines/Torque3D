@@ -55,13 +55,13 @@ protected:
 
    F32 mPixVersion;
 
-   FileName mDXVertexShaderName;
+   StringTableEntry mDXVertexShaderName;
 
-   FileName mDXPixelShaderName;
+   StringTableEntry mDXPixelShaderName;
 
-   FileName mOGLVertexShaderName;
+   StringTableEntry mOGLVertexShaderName;
 
-   FileName mOGLPixelShaderName;
+   StringTableEntry mOGLPixelShaderName;
 
    /// A semicolon, tab, or newline delimited string of case
    /// sensitive defines that are passed to the shader compiler.
@@ -93,7 +93,7 @@ protected:
 
    enum
    {
-      NumTextures = 8
+      NumTextures = 16
    };
 
    String mSamplerNames[NumTextures]; 

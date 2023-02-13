@@ -62,7 +62,9 @@ public:
    }
    virtual void process(NetConnection *connection)
    {
+#ifdef TORQUE_DEBUG_NET
       Con::printf("Mapping string: %s to index: %d", mString.getString(), mIndex);
+#endif
       connection->mapString(mIndex, mString);
    }
 #ifdef TORQUE_DEBUG_NET
@@ -71,7 +73,7 @@ public:
       static char buffer[512];
       dSprintf(buffer, sizeof(buffer), "%s - \"", getClassName());
       expandEscape(buffer + dStrlen(buffer), mString.getString());
-      dStrcat(buffer, "\"");
+      dStrcat(buffer, "\"", 512);
       return buffer;
    }
 #endif

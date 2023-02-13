@@ -34,7 +34,6 @@ namespace GFXGLEnumTranslate
 extern GLenum GFXGLPrimType[GFXPT_COUNT];
 extern GLenum GFXGLBlend[GFXBlend_COUNT];
 extern GLenum GFXGLBlendOp[GFXBlendOp_COUNT];
-extern GLenum GFXGLSamplerState[GFXSAMP_COUNT];
 extern GLenum GFXGLTextureFilter[GFXTextureFilter_COUNT];
 extern GLenum GFXGLTextureAddress[GFXAddress_COUNT];
 extern GLenum GFXGLCmpFunc[GFXCmp_COUNT];
@@ -49,5 +48,7 @@ extern GLenum GFXGLBufferType[GFXBufferType_COUNT];
 extern GLenum GFXGLCullMode[GFXCull_COUNT];
 
 extern GLenum GFXGLFillMode[GFXFill_COUNT];
+
+extern GLenum GFXGLFaceType[6];
 
 #endif

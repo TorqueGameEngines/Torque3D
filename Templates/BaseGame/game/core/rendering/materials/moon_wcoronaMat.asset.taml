@@ -1,0 +1,18 @@
+<MaterialAsset
+    AssetName="moon_wcorona"
+    materialDefinitionName="moon_wcorona"
+    VersionId="1">
+    <Material
+        Name="moon_wcorona"
+        mapTo="moon_wcorona"
+        translucent="true"
+        translucentBlendOp="LerpAlpha"
+        originalAssetName="moon_wcorona">
+        <Material.Stages>
+            <Stages_beginarray
+                DiffuseMapAsset="Core_Rendering:moon_wcorona_image"
+                VertColor="true"
+                Emissive="true"/>
+        </Material.Stages>
+    </Material>
+</MaterialAsset>

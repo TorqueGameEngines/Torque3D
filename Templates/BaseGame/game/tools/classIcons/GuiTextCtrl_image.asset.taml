@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="GuiTextCtrl_image"
+    imageFile="@assetFile=GuiTextCtrl.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

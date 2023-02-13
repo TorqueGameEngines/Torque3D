@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="GuiDecoyCtrl_image"
+    imageFile="@assetFile=GuiDecoyCtrl.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

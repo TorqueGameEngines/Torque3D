@@ -45,9 +45,10 @@ template<> ResourceBase::Signature Resource<TerrainFile>::signature()
 
 
 TerrainFile::TerrainFile()
-   : mNeedsResaving( false ),
+   : mSize( 256 ),
+     mGridLevels(0),
      mFileVersion( FILE_VERSION ),
-     mSize( 256 )
+     mNeedsResaving( false )
 {
    mLayerMap.setSize( mSize * mSize );
    dMemset( mLayerMap.address(), 0, mLayerMap.memSize() );
@@ -110,11 +111,11 @@ void TerrainFile::_buildGridMap()
    mGridMap.compact();
 
    // Assign memory from the pool to each grid level.
-   TerrainSquare *sq = mGridMapPool.address();
+   TerrainSquare *grid = mGridMapPool.address();
    for ( S32 i = mGridLevels; i >= 0; i-- )
    {
-      mGridMap[i] = sq;
-      sq += 1 << ( 2 * ( mGridLevels - i ) );
+      mGridMap[i] = grid;
+	  grid += 1 << ( 2 * ( mGridLevels - i ) );
    }
 
    for( S32 i = mGridLevels; i >= 0; i-- )
@@ -258,8 +259,7 @@ void TerrainFile::_initMaterialInstMapping()
    
    for( U32 i = 0; i < mMaterials.size(); ++ i )
    {
-      Torque::Path path( mMaterials[ i ]->getDiffuseMap() );
-      mMaterialInstMapping.push_back( path.getFileName() );
+      mMaterialInstMapping.push_back(mMaterials[i]->getInternalName());
    }
    
    mMaterialInstMapping.mapMaterials();
@@ -457,7 +457,7 @@ void TerrainFile::_loadLegacy(  FileStream &stream )
          if ( materials[i].isEmpty() )
             continue;
             
-         terrainMat.set( materials[i], &GFXDefaultPersistentProfile, avar( "%s() - (line %d)", __FUNCTION__, __LINE__ ) );
+         terrainMat.set( materials[i], &GFXTexturePersistentSRGBProfile, avar( "%s() - (line %d)", __FUNCTION__, __LINE__ ) );
          if ( terrainMat )
             continue;
 
@@ -470,7 +470,7 @@ void TerrainFile::_loadLegacy(  FileStream &stream )
          {
             matRelPath.setPath( String(Con::getVariable( "$defaultGame" )) + path.substr( n, path.length() - n ) );
 
-            terrainMat.set( matRelPath, &GFXDefaultPersistentProfile, avar( "%s() - (line %d)", __FUNCTION__, __LINE__ ) );
+            terrainMat.set( matRelPath, &GFXTexturePersistentSRGBProfile, avar( "%s() - (line %d)", __FUNCTION__, __LINE__ ) );
             if ( terrainMat )
             {
                materials[i] = matRelPath.getFullPath();
@@ -699,7 +699,7 @@ void TerrainFile::import(  const GBitmap &heightMap,
 
    // Convert the height map to heights.
    U16 *oBits = mHeightMap.address();
-   if ( heightMap.getFormat() == GFXFormatR5G6B5 )
+   if ( heightMap.getFormat() == GFXFormatL16)
    {
       const F32 toFixedPoint = ( 1.0f / (F32)U16_MAX ) * floatToFixed( heightScale );
       const U16 *iBits = (const U16*)heightMap.getBits();
@@ -765,15 +765,15 @@ void TerrainFile::create(  String *inOutFilename,
                            U32 newSize, 
                            const Vector<String> &materials )
 {
-   // Determine the path and basename - first try using the input filename (mission name)
+   // Determine the path and basename
    Torque::Path basePath( *inOutFilename );
-   if ( !basePath.getExtension().equal("mis") )
+   if ( !basePath.getExtension().equal("ter") )
    {
       // Use the default path and filename
       String terrainDirectory( Con::getVariable( "$pref::Directories::Terrain" ) );
       if ( terrainDirectory.isEmpty() )
       {
-         terrainDirectory = "art/terrains";
+         terrainDirectory = "data/terrains";
       }
       basePath.setPath( terrainDirectory );
       basePath.setFileName( "terrain" );

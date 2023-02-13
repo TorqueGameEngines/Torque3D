@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="transp_grid_image"
+    imageFile="@assetFile=transp_grid.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

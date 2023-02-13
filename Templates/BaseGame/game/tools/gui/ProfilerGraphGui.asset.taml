@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="ProfilerGraphGui"
+    scriptFile="@assetFile=profilerGraph.gui"
+    GUIFile="@assetFile=profilerGraph.gui"
+    VersionId="1" />

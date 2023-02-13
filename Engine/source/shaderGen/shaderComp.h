@@ -71,6 +71,8 @@ protected:
    Vector <Var*> mElementList;
 
    U32 mCurTexElem;
+   U32 mCurBlendIndicesElem;
+   U32 mCurBlendWeightsElem;
    U8 mName[32];
 
 public:
@@ -78,12 +80,14 @@ public:
    ShaderConnector();
    virtual ~ShaderConnector();
 
+   U32 getCurTexElem() { return mCurTexElem; }
+
    ///
    virtual Var* getElement(   RegisterType type, 
                               U32 numElements = 1, 
                               U32 numRegisters = -1 ) = 0;
 
-   virtual void setName( char *newName ) = 0;
+   virtual void setName( const char *newName ) = 0;
    virtual void reset() = 0;
    virtual void sortVars() = 0;
 

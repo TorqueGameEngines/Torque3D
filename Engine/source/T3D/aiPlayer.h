@@ -20,6 +20,11 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+// Arcane-FX for MIT Licensed Open Source version of Torque 3D from GarageGames
+// Copyright (C) 2015 Faust Logic, Inc.
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+
 #ifndef _AIPLAYER_H_
 #define _AIPLAYER_H_
 
@@ -49,6 +54,7 @@ private:
    MoveState mMoveState;
    F32 mMoveSpeed;
    F32 mMoveTolerance;                 // Distance from destination before we stop
+   F32 mAttackRadius;                  // Distance to trigger weaponry calcs
    Point3F mMoveDestination;           // Destination for movement
    Point3F mLastLocation;              // For stuck check
    F32 mMoveStuckTolerance;            // Distance tolerance on stuck check
@@ -96,8 +102,6 @@ private:
    /// Path we are currently following.
    PathData mPathData;
 
-   /// Clear out the current path.
-   void clearPath();
 
    /// Get the current path we're following.
    NavPath *getPath() { return mPathData.path; }
@@ -113,8 +117,6 @@ private:
    /// Current cover we're trying to get to.
    CoverData mCoverData;
 
-   /// Stop searching for cover.
-   void clearCover();
 
    /// Information about a target we're following.
    struct FollowData {
@@ -122,18 +124,18 @@ private:
       SimObjectPtr<SceneObject> object;
       /// Distance at whcih to follow.
       F32 radius;
+      Point3F lastPos;
       /// Default constructor.
       FollowData() : object(NULL)
       {
          radius = 5.0f;
+         lastPos = Point3F::Zero;
       }
    };
 
    /// Current object we're following.
    FollowData mFollowData;
 
-   /// Stop following me!
-   void clearFollow();
 
    /// NavMesh we pathfind on.
    SimObjectPtr<NavMesh> mNavMesh;
@@ -158,16 +160,25 @@ public:
    void onRemove();
 
    virtual bool getAIMove( Move *move );
+   virtual void updateMove(const Move *move);
+   /// Clear out the current path.
+   void clearPath();
+   /// Stop searching for cover.
+   void clearCover();
+   /// Stop following me!
+   void clearFollow();
 
    // Targeting and aiming sets/gets
    void setAimObject( GameBase *targetObject );
-   void setAimObject( GameBase *targetObject, Point3F offset );
+   void setAimObject(GameBase *targetObject, const Point3F& offset);
    GameBase* getAimObject() const  { return mAimObject; }
    void setAimLocation( const Point3F &location );
    Point3F getAimLocation() const { return mAimLocation; }
    void clearAim();
+   void getMuzzleVector(U32 imageSlot,VectorF* vec);
    bool checkInLos(GameBase* target = NULL, bool _useMuzzle = false, bool _checkEnabled = false);
    bool checkInFoV(GameBase* target = NULL, F32 camFov = 45.0f, bool _checkEnabled = false);
+   F32 getTargetDistance(GameBase* target, bool _checkEnabled);
 
    // Movement sets/gets
    void setMoveSpeed( const F32 speed );
@@ -177,7 +188,9 @@ public:
    void setMoveDestination( const Point3F &location, bool slowdown );
    Point3F getMoveDestination() const { return mMoveDestination; }
    void stopMove();
-
+   void setAiPose( S32 pose );
+   S32  getAiPose();
+	
    // Trigger sets/gets
    void setMoveTrigger( U32 slot, const bool isSet = true );
    bool getMoveTrigger( U32 slot ) const;
@@ -217,6 +230,18 @@ public:
 
    /// @}
 #endif // TORQUE_NAVIGATION_ENABLED
+   // New method, restartMove(), restores the AIPlayer to its normal move-state
+   // following animation overrides from AFX. The tag argument is used to match
+   // the latest override and prevents interruption of overlapping animation
+   // overrides.
+   // New method, saveMoveState(), stores the current movement state
+   // so that it can be restored when restartMove() is called.
+   // See related anim-clip changes in Player.[h,cc].
+private:
+   S32 mMoveState_saved;
+public:
+   void restartMove(U32 tag);
+   void saveMoveState();
 };
 
 #endif

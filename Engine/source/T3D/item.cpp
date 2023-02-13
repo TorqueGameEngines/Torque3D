@@ -50,8 +50,6 @@ const S32 sCollisionTimeout = 15;       // Timout value in ticks
 static F32 sMinWarpTicks = 0.5 ;        // Fraction of tick at which instant warp occures
 static S32 sMaxWarpTicks = 3;           // Max warp duration in ticks
 
-F32 Item::mGravity = -20.0f;
-
 const U32 sClientCollisionMask = (TerrainObjectType     |
                                   StaticShapeObjectType |
                                   VehicleObjectType     |  
@@ -90,7 +88,6 @@ ConsoleDocClass( ItemData,
       "   density = 2;\n"
 	   "   drag = 0.5;\n"
 	   "   maxVelocity = \"10.0\";\n"
-	   "   emap = true;\n"
 	   "   sticky = false;\n"
 	   "   dynamicType = \"0\"\n;"
 	   "   lightOnlyStatic = false;\n"
@@ -111,9 +108,6 @@ ConsoleDocClass( ItemData,
 
 ItemData::ItemData()
 {
-   shadowEnable = true;
-
-
    friction = 0;
    elasticity = 0;
 
@@ -143,40 +137,43 @@ EndImplementEnumType;
 
 void ItemData::initPersistFields()
 {
-   addField("friction",          TypeF32,       Offset(friction,           ItemData), "A floating-point value specifying how much velocity is lost to impact and sliding friction.");
-   addField("elasticity",        TypeF32,       Offset(elasticity,         ItemData), "A floating-point value specifying how 'bouncy' this ItemData is.");
-   addField("sticky",            TypeBool,      Offset(sticky,             ItemData), 
-      "@brief If true, ItemData will 'stick' to any surface it collides with.\n\n"
-      "When an item does stick to a surface, the Item::onStickyCollision() callback is called.  The Item has methods to retrieve "
-      "the world position and normal the Item is stuck to.\n"
-      "@note Valid objects to stick to must be of StaticShapeObjectType.\n");
-   addField("gravityMod",        TypeF32,       Offset(gravityMod,         ItemData), "Floating point value to multiply the existing gravity with, just for this ItemData.");
-   addField("maxVelocity",       TypeF32,       Offset(maxVelocity,        ItemData), "Maximum velocity that this ItemData is able to move.");
-
-   addField("lightType",         TYPEID< Item::LightType >(),      Offset(lightType, ItemData), "Type of light to apply to this ItemData. Options are NoLight, ConstantLight, PulsingLight. Default is NoLight." );
-   addField("lightColor",        TypeColorF,    Offset(lightColor,         ItemData),
-      "@brief Color value to make this light. Example: \"1.0,1.0,1.0\"\n\n"
-      "@see lightType\n");
-   addField("lightTime",         TypeS32,       Offset(lightTime,          ItemData), 
-      "@brief Time value for the light of this ItemData, used to control the pulse speed of the PulsingLight LightType.\n\n"
-      "@see lightType\n");
-   addField("lightRadius",       TypeF32,       Offset(lightRadius,        ItemData), 
-      "@brief Distance from the center point of this ItemData for the light to affect\n\n"
-      "@see lightType\n");
-   addField("lightOnlyStatic",   TypeBool,      Offset(lightOnlyStatic,    ItemData), 
-      "@brief If true, this ItemData will only cast a light if the Item for this ItemData has a static value of true.\n\n"
-      "@see lightType\n");
-
-   addField("simpleServerCollision",   TypeBool,  Offset(simpleServerCollision,    ItemData), 
-      "@brief Determines if only simple server-side collision will be used (for pick ups).\n\n"
-      "If set to true then only simple, server-side collision detection will be used.  This is often the case "
-      "if the item is used for a pick up object, such as ammo.  If set to false then a full collision volume "
-      "will be used as defined by the shape.  The default is true.\n"
-      "@note Only applies when using a physics library.\n"
-      "@see TurretShape and ProximityMine for examples that should set this to false to allow them to be "
-      "shot by projectiles.\n");
-
+   docsURL;
    Parent::initPersistFields();
+   addGroup("Physics");
+      addField("friction",          TypeF32,       Offset(friction,           ItemData), "A floating-point value specifying how much velocity is lost to impact and sliding friction.");
+      addField("elasticity",        TypeF32,       Offset(elasticity,         ItemData), "A floating-point value specifying how 'bouncy' this ItemData is.");
+      addField("sticky",            TypeBool,      Offset(sticky,             ItemData),
+         "@brief If true, ItemData will 'stick' to any surface it collides with.\n\n"
+         "When an item does stick to a surface, the Item::onStickyCollision() callback is called.  The Item has methods to retrieve "
+         "the world position and normal the Item is stuck to.\n"
+         "@note Valid objects to stick to must be of StaticShapeObjectType.\n");
+      addField("gravityMod",        TypeF32,       Offset(gravityMod,         ItemData), "Floating point value to multiply the existing gravity with, just for this ItemData.");
+      addField("maxVelocity",       TypeF32,       Offset(maxVelocity,        ItemData), "Maximum velocity that this ItemData is able to move.");
+      addField("simpleServerCollision",   TypeBool,  Offset(simpleServerCollision,    ItemData),
+         "@brief Determines if only simple server-side collision will be used (for pick ups).\n\n"
+         "If set to true then only simple, server-side collision detection will be used.  This is often the case "
+         "if the item is used for a pick up object, such as ammo.  If set to false then a full collision volume "
+         "will be used as defined by the shape.  The default is true.\n"
+         "@note Only applies when using a physics library.\n"
+         "@see TurretShape and ProximityMine for examples that should set this to false to allow them to be "
+         "shot by projectiles.\n");
+   endGroup("Physics");
+
+   addGroup("Light Emitter");
+      addField("lightType",         TYPEID< Item::LightType >(),      Offset(lightType, ItemData), "Type of light to apply to this ItemData. Options are NoLight, ConstantLight, PulsingLight. Default is NoLight." );
+      addField("lightColor",        TypeColorF,    Offset(lightColor,         ItemData),
+         "@brief Color value to make this light. Example: \"1.0,1.0,1.0\"\n\n"
+         "@see lightType\n");
+      addField("lightTime",         TypeS32,       Offset(lightTime,          ItemData), 
+         "@brief Time value for the light of this ItemData, used to control the pulse speed of the PulsingLight LightType.\n\n"
+         "@see lightType\n");
+      addField("lightRadius",       TypeF32,       Offset(lightRadius,        ItemData), 
+         "@brief Distance from the center point of this ItemData for the light to affect\n\n"
+         "@see lightType\n");
+      addField("lightOnlyStatic",   TypeBool,      Offset(lightOnlyStatic,    ItemData), 
+         "@brief If true, this ItemData will only cast a light if the Item for this ItemData has a static value of true.\n\n"
+         "@see lightType\n");
+   endGroup("Light Emitter");
 }
 
 void ItemData::packData(BitStream* stream)
@@ -264,7 +261,6 @@ ConsoleDocClass( Item,
       "   mass = 2;\n"
       "   friction = 1;\n"
       "   elasticity = 0.3;\n"
-      "   emap = true;\n\n"
       "   // Dynamic properties used by the scripts\n"
       "   pickupName = \"a health patch\";\n"
       "   repairAmount = 50;\n"
@@ -292,7 +288,7 @@ IMPLEMENT_CALLBACK( Item, onStickyCollision, void, ( const char* objID ),( objID
    "@see Item, ItemData\n"
 );
 
-IMPLEMENT_CALLBACK( Item, onEnterLiquid, void, ( const char* objID, const char* waterCoverage, const char* liquidType ),( objID, waterCoverage, liquidType ),
+IMPLEMENT_CALLBACK( Item, onEnterLiquid, void, ( const char* objID, F32 waterCoverage, const char* liquidType ),( objID, waterCoverage, liquidType ),
    "Informs an Item object that it has entered liquid, along with information about the liquid type.\n"
    "@param objID Object ID for this Item object.\n"
    "@param waterCoverage How much coverage of water this Item object has.\n"
@@ -320,8 +316,8 @@ Item::Item()
    mAtRest = true;
    mAtRestCounter = 0;
    mInLiquid = false;
-   delta.warpTicks = 0;
-   delta.dt = 1;
+   mDelta.warpTicks = 0;
+   mDelta.dt = 1;
    mCollisionObject = 0;
    mCollisionTimeout = 0;
    mPhysicsRep = NULL;
@@ -350,7 +346,7 @@ bool Item::onAdd()
 
    if (mStatic)
       mAtRest = true;
-   mObjToWorld.getColumn(3,&delta.pos);
+   mObjToWorld.getColumn(3,&mDelta.pos);
 
    // Setup the box for our convex object...
    mObjBox.getCenter(&mConvex.mCenter);
@@ -556,26 +552,29 @@ void Item::processTick(const Move* move)
 {
    Parent::processTick(move);
 
+   if ( isMounted() )
+      return;
+
    //
    if (mCollisionObject && !--mCollisionTimeout)
       mCollisionObject = 0;
 
    // Warp to catch up to server
-   if (delta.warpTicks > 0)
+   if (mDelta.warpTicks > 0)
    {
-      delta.warpTicks--;
+	   mDelta.warpTicks--;
 
       // Set new pos.
       MatrixF mat = mObjToWorld;
-      mat.getColumn(3,&delta.pos);
-      delta.pos += delta.warpOffset;
-      mat.setColumn(3,delta.pos);
+      mat.getColumn(3,&mDelta.pos);
+	  mDelta.pos += mDelta.warpOffset;
+      mat.setColumn(3, mDelta.pos);
       Parent::setTransform(mat);
 
       // Backstepping
-      delta.posVec.x = -delta.warpOffset.x;
-      delta.posVec.y = -delta.warpOffset.y;
-      delta.posVec.z = -delta.warpOffset.z;
+	  mDelta.posVec.x = -mDelta.warpOffset.x;
+	  mDelta.posVec.y = -mDelta.warpOffset.y;
+	  mDelta.posVec.z = -mDelta.warpOffset.z;
    }
    else
    {
@@ -598,7 +597,7 @@ void Item::processTick(const Move* move)
       else
       {
          // Need to clear out last updatePos or warp interpolation
-         delta.posVec.set(0,0,0);
+		  mDelta.posVec.set(0,0,0);
       }
    }
 }
@@ -606,13 +605,18 @@ void Item::processTick(const Move* move)
 void Item::interpolateTick(F32 dt)
 {
    Parent::interpolateTick(dt);
+   if ( isMounted() )
+      return;
 
    // Client side interpolation
-   Point3F pos = delta.pos + delta.posVec * dt;
+   Point3F pos = mDelta.pos + mDelta.posVec * dt;
    MatrixF mat = mRenderObjToWorld;
    mat.setColumn(3,pos);
    setRenderTransform(mat);
-   delta.dt = dt;
+   mDelta.dt = dt;
+// PATHSHAPE
+   updateRenderChangesByParent();
+// PATHSHAPE END
 }
 
 
@@ -708,18 +712,20 @@ void Item::updateWorkingCollisionSet(const U32 mask, const F32 dt)
 
 void Item::updateVelocity(const F32 dt)
 {
+   // Container buoyancy & drag
    // Acceleration due to gravity
-   mVelocity.z += (mGravity * mDataBlock->gravityMod) * dt;
+   mVelocity.z += (mNetGravity * mDataBlock->gravityMod) * dt;
+   mVelocity   -= mVelocity * mDrag * dt;
+
+   // Add in physical zone force
+   mVelocity += mAppliedForce;
+
    F32 len;
    if (mDataBlock->maxVelocity > 0 && (len = mVelocity.len()) > (mDataBlock->maxVelocity * 1.05)) {
       Point3F excess = mVelocity * (1.0 - (mDataBlock->maxVelocity / len ));
       excess *= 0.1f;
       mVelocity -= excess;
    }
-
-   // Container buoyancy & drag
-   mVelocity.z -= mBuoyancy * (mGravity * mDataBlock->gravityMod * mGravityMod) * dt;
-   mVelocity   -= mVelocity * mDrag * dt;
 }
 
 
@@ -728,7 +734,7 @@ void Item::updatePos(const U32 /*mask*/, const F32 dt)
    // Try and move
    Point3F pos;
    mObjToWorld.getColumn(3,&pos);
-   delta.posVec = pos;
+   mDelta.posVec = pos;
 
    bool contact = false;
    bool nonStatic = false;
@@ -886,9 +892,9 @@ void Item::updatePos(const U32 /*mask*/, const F32 dt)
          if (collisionList.getTime() < 1.0)
          {
             // Set to collision point
-            F32 dt = time * collisionList.getTime();
-            pos += mVelocity * dt;
-            time -= dt;
+            F32 cdt = time * collisionList.getTime();
+            pos += mVelocity * cdt;
+            time -= cdt;
 
             // Pick the most resistant surface
             F32 bd = 0;
@@ -954,9 +960,9 @@ void Item::updatePos(const U32 /*mask*/, const F32 dt)
 
    // If on the client, calculate delta for backstepping
    if (isGhost()) {
-      delta.pos     = pos;
-      delta.posVec -= pos;
-      delta.dt = 1;
+	   mDelta.pos     = pos;
+	   mDelta.posVec -= pos;
+	   mDelta.dt = 1;
    }
 
    // Update transform
@@ -1005,7 +1011,7 @@ void Item::updatePos(const U32 /*mask*/, const F32 dt)
       {
          if(!mInLiquid && mWaterCoverage != 0.0f)
          {
-			onEnterLiquid_callback( getIdString(), Con::getFloatArg(mWaterCoverage), mLiquidType.c_str() );
+			onEnterLiquid_callback( getIdString(), mWaterCoverage, mLiquidType.c_str() );
             mInLiquid = true;
          }
          else if(mInLiquid && mWaterCoverage == 0.0f)
@@ -1126,40 +1132,40 @@ void Item::unpackUpdate(NetConnection *connection, BitStream *stream)
       if (stream->readFlag() && isProperlyAdded()) {
          // Determin number of ticks to warp based on the average
          // of the client and server velocities.
-         delta.warpOffset = pos - delta.pos;
+		  mDelta.warpOffset = pos - mDelta.pos;
          F32 as = (speed + mVelocity.len()) * 0.5f * TickSec;
-         F32 dt = (as > 0.00001f) ? delta.warpOffset.len() / as: sMaxWarpTicks;
-         delta.warpTicks = (S32)((dt > sMinWarpTicks)? getMax(mFloor(dt + 0.5f), 1.0f): 0.0f);
+         F32 dt = (as > 0.00001f) ? mDelta.warpOffset.len() / as: sMaxWarpTicks;
+		 mDelta.warpTicks = (S32)((dt > sMinWarpTicks)? getMax(mFloor(dt + 0.5f), 1.0f): 0.0f);
 
-         if (delta.warpTicks)
+         if (mDelta.warpTicks)
          {
             // Setup the warp to start on the next tick, only the
             // object's position is warped.
-            if (delta.warpTicks > sMaxWarpTicks)
-               delta.warpTicks = sMaxWarpTicks;
-            delta.warpOffset /= (F32)delta.warpTicks;
+            if (mDelta.warpTicks > sMaxWarpTicks)
+				mDelta.warpTicks = sMaxWarpTicks;
+			mDelta.warpOffset /= (F32)mDelta.warpTicks;
          }
          else {
             // Going to skip the warp, server and client are real close.
             // Adjust the frame interpolation to move smoothly to the
             // new position within the current tick.
-            Point3F cp = delta.pos + delta.posVec * delta.dt;
-            VectorF vec = delta.pos - cp;
+            Point3F cp = mDelta.pos + mDelta.posVec * mDelta.dt;
+            VectorF vec = mDelta.pos - cp;
             F32 vl = vec.len();
             if (vl) {
-               F32 s = delta.posVec.len() / vl;
-               delta.posVec = (cp - pos) * s;
+               F32 s = mDelta.posVec.len() / vl;
+			   mDelta.posVec = (cp - pos) * s;
             }
-            delta.pos = pos;
+			mDelta.pos = pos;
             mat.setColumn(3,pos);
          }
       }
       else {
          // Set the item to the server position
-         delta.warpTicks = 0;
-         delta.posVec.set(0,0,0);
-         delta.pos = pos;
-         delta.dt = 0;
+		  mDelta.warpTicks = 0;
+		  mDelta.posVec.set(0,0,0);
+		  mDelta.pos = pos;
+		  mDelta.dt = 0;
          mat.setColumn(3,pos);
       }
    }
@@ -1204,7 +1210,7 @@ DefineEngineMethod( Item, isRotating, bool, (),,
    return object->isRotating();
 }
 
-DefineEngineMethod( Item, setCollisionTimeout, bool, (S32 ignoreColObj),(NULL), 
+DefineEngineMethod( Item, setCollisionTimeout, bool, (S32 ignoreColObj),, 
    "@brief Temporarily disable collisions against a specific ShapeBase object.\n\n"
 
    "This is useful to prevent a player from immediately picking up an Item they have "
@@ -1249,7 +1255,7 @@ DefineEngineMethod( Item, getLastStickyPos, const char*, (),,
                object->mStickyCollisionPos.y,
                object->mStickyCollisionPos.z);
    else
-      dStrcpy(ret, "0 0 0");
+      dStrcpy(ret, "0 0 0", bufSize);
 
    return ret;
 }
@@ -1272,7 +1278,7 @@ DefineEngineMethod( Item, getLastStickyNormal, const char *, (),,
                object->mStickyCollisionNormal.y,
                object->mStickyCollisionNormal.z);
    else
-      dStrcpy(ret, "0 0 0");
+      dStrcpy(ret, "0 0 0", bufSize);
 
    return ret;
 }
@@ -1296,6 +1302,7 @@ bool Item::_setRotate(void *object, const char *index, const char *data)
 
 void Item::initPersistFields()
 {
+   docsURL;
    addGroup("Misc");	
    addProtectedField("static", TypeBool, Offset(mStatic, Item), &_setStatic, &defaultProtectedGetFn, "If true, the object is not moving in the world.\n");
    addProtectedField("rotate", TypeBool, Offset(mRotate, Item), &_setRotate, &defaultProtectedGetFn, "If true, the object will automatically rotate around its Z axis.\n");
@@ -1365,6 +1372,8 @@ void Item::buildConvex(const Box3F& box, Convex* convex)
 void Item::advanceTime(F32 dt)
 {
    Parent::advanceTime(dt);
+   if ( isMounted() )
+      return;
 
    if( mRotate )
    {

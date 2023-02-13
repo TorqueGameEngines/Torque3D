@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="RoadEditorGui"
+    scriptFile="@assetFile=RoadEditorGui.gui"
+    GUIFile="@assetFile=RoadEditorGui.gui"
+    VersionId="1" />

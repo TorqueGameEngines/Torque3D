@@ -68,10 +68,17 @@ ConsoleDocClass( HoverVehicle,
    "@ingroup Vehicles\n"
 );
 
-namespace {
+typedef HoverVehicleData::Sounds hoverSoundsEnum;
+DefineEnumType(hoverSoundsEnum);
 
-const U32 sIntergrationsPerTick = 1;
-const F32 sHoverVehicleGravity  = -20;
+ImplementEnumType(hoverSoundsEnum, "enum types.\n"
+   "@ingroup HoverVehicleData\n\n")
+   { hoverSoundsEnum::JetSound,       "JetSound", "..." },
+   { hoverSoundsEnum::EngineSound,    "EngineSound", "..." },
+   { hoverSoundsEnum::FloatSound,     "FloatSound", "..." },
+EndImplementEnumType;
+
+namespace {
 
 const U32 sCollisionMoveMask = (TerrainObjectType     | PlayerObjectType  | 
                                 StaticShapeObjectType | VehicleObjectType | 
@@ -141,6 +148,7 @@ HoverVehicleData::HoverVehicleData()
    dustTrailID = 0;
    dustTrailOffset.set( 0.0f, 0.0f, 0.0f );
    dustTrailFreqMod = 15.0f;
+   maxThrustSpeed = 0;
    triggerTrailHeight = 2.5f;
 
    floatingGravMag = 1;
@@ -154,7 +162,7 @@ HoverVehicleData::HoverVehicleData()
       jetEmitter[j] = 0;
 
    for (S32 i = 0; i < MaxSounds; i++)
-      sound[i] = 0;
+      INIT_SOUNDASSET_ARRAY(HoverSounds, i);
 }
 
 HoverVehicleData::~HoverVehicleData()
@@ -166,85 +174,88 @@ HoverVehicleData::~HoverVehicleData()
 //--------------------------------------------------------------------------
 void HoverVehicleData::initPersistFields()
 {
-   addField( "dragForce", TypeF32, Offset(dragForce, HoverVehicleData),
+   docsURL;
+   Parent::initPersistFields();
+   addGroup("Physics");
+      addField( "normalForce", TypeF32, Offset(normalForce, HoverVehicleData),
+         "Force generated in the ground normal direction when the vehicle is not "
+         "floating (within stabalizer length from the ground).\n\n"
+         "@see stabLenMin" );
+      addField( "stabLenMin", TypeF32, Offset(stabLenMin, HoverVehicleData),
+         "Length of the base stabalizer when travelling at minimum speed (0).\n"
+         "Each tick, the vehicle performs 2 raycasts (from the center back and "
+         "center front of the vehicle) to check for contact with the ground. The "
+         "base stabalizer length determines the length of that raycast; if "
+         "neither raycast hit the ground, the vehicle is floating, stabalizer "
+         "spring and ground normal forces are not applied.\n\n"
+         "<img src=\"images/hoverVehicle_forces.png\">\n"
+         "@see stabSpringConstant" );
+      addField( "stabLenMax", TypeF32, Offset(stabLenMax, HoverVehicleData),
+         "Length of the base stabalizer when travelling at maximum speed "
+         "(maxThrustSpeed).\n\n@see stabLenMin\n\n@see mainThrustForce" );
+      addField("vertFactor", TypeF32, Offset(vertFactor, HoverVehicleData),
+         "Scalar applied to the vertical portion of the velocity drag acting on "
+         "the vehicle.\nFor the horizontal (X and Y) components of velocity drag, "
+         "a factor of 0.25 is applied when the vehicle is floating, and a factor "
+         "of 1.0 is applied when the vehicle is not floating. This velocity drag "
+         "is multiplied by the vehicle's dragForce, as defined above, and the "
+         "result is subtracted from it's movement force.\n"
+         "@note The vertFactor must be between 0.0 and 1.0 (inclusive).");
+      addField("stabSpringConstant", TypeF32, Offset(stabSpringConstant, HoverVehicleData),
+         "Value used to generate stabalizer spring force. The force generated "
+         "depends on stabilizer compression, that is how close the vehicle is "
+         "to the ground proportional to current stabalizer length.\n\n"
+         "@see stabLenMin");
+      addField("stabDampingConstant", TypeF32, Offset(stabDampingConstant, HoverVehicleData),
+         "Damping spring force acting against changes in the stabalizer length.\n\n"
+         "@see stabLenMin");
+   endGroup("Physics");
+
+   addGroup("Steering");
+      addField( "steeringForce", TypeF32, Offset(steeringForce, HoverVehicleData),
+         "Yaw (rotation about the Z-axis) force applied when steering in the x-axis direction."
+         "about the vehicle's Z-axis)" );
+      addField( "rollForce", TypeF32, Offset(rollForce, HoverVehicleData),
+      "Roll (rotation about the Y-axis) force applied when steering in the x-axis direction." );
+      addField( "pitchForce", TypeF32, Offset(pitchForce, HoverVehicleData),
+      "Pitch (rotation about the X-axis) force applied when steering in the y-axis direction." );
+      addField( "dragForce", TypeF32, Offset(dragForce, HoverVehicleData),
       "Drag force factor that acts opposite to the vehicle velocity.\nAlso "
       "used to determnine the vehicle's maxThrustSpeed.\n@see mainThrustForce" );
-   addField( "vertFactor", TypeF32, Offset(vertFactor, HoverVehicleData),
-      "Scalar applied to the vertical portion of the velocity drag acting on "
-      "the vehicle.\nFor the horizontal (X and Y) components of velocity drag, "
-      "a factor of 0.25 is applied when the vehicle is floating, and a factor "
-      "of 1.0 is applied when the vehicle is not floating. This velocity drag "
-      "is multiplied by the vehicle's dragForce, as defined above, and the "
-      "result is subtracted from it's movement force.\n"
-      "@note The vertFactor must be between 0.0 and 1.0 (inclusive)." );
-   addField( "floatingThrustFactor", TypeF32, Offset(floatingThrustFactor, HoverVehicleData),
-      "Scalar applied to the vehicle's thrust force when the vehicle is floating.\n"
-      "@note The floatingThrustFactor must be between 0.0 and 1.0 (inclusive)." );
-   addField( "mainThrustForce", TypeF32, Offset(mainThrustForce, HoverVehicleData),
-      "Force generated by thrusting the vehicle forward.\nAlso used to determine "
-      "the maxThrustSpeed:\n\n"
-      "@tsexample\n"
-      "maxThrustSpeed = (mainThrustForce + strafeThrustForce) / dragForce;\n"
-      "@endtsexample\n" );
-   addField( "reverseThrustForce", TypeF32, Offset(reverseThrustForce, HoverVehicleData),
-      "Force generated by thrusting the vehicle backward." );
-   addField( "strafeThrustForce", TypeF32, Offset(strafeThrustForce, HoverVehicleData),
-      "Force generated by thrusting the vehicle to one side.\nAlso used to "
-      "determine the vehicle's maxThrustSpeed.\n@see mainThrustForce" );
-   addField( "turboFactor", TypeF32, Offset(turboFactor, HoverVehicleData),
-      "Scale factor applied to the vehicle's thrust force when jetting." );
+      addField( "mainThrustForce", TypeF32, Offset(mainThrustForce, HoverVehicleData),
+         "Force generated by thrusting the vehicle forward.\nAlso used to determine "
+         "the maxThrustSpeed:\n\n"
+         "@tsexample\n"
+         "maxThrustSpeed = (mainThrustForce + strafeThrustForce) / dragForce;\n"
+         "@endtsexample\n" );
+      addField( "reverseThrustForce", TypeF32, Offset(reverseThrustForce, HoverVehicleData),
+         "Force generated by thrusting the vehicle backward." );
+      addField( "strafeThrustForce", TypeF32, Offset(strafeThrustForce, HoverVehicleData),
+         "Force generated by thrusting the vehicle to one side.\nAlso used to "
+         "determine the vehicle's maxThrustSpeed.\n@see mainThrustForce" );
+      addField( "turboFactor", TypeF32, Offset(turboFactor, HoverVehicleData),
+         "Scale factor applied to the vehicle's thrust force when jetting." );
+      addField( "floatingThrustFactor", TypeF32, Offset(floatingThrustFactor, HoverVehicleData),
+         "Scalar applied to the vehicle's thrust force when the vehicle is floating.\n"
+         "@note The floatingThrustFactor must be between 0.0 and 1.0 (inclusive)." );
+   endGroup("Steering");
 
-   addField( "stabLenMin", TypeF32, Offset(stabLenMin, HoverVehicleData),
-      "Length of the base stabalizer when travelling at minimum speed (0).\n"
-      "Each tick, the vehicle performs 2 raycasts (from the center back and "
-      "center front of the vehicle) to check for contact with the ground. The "
-      "base stabalizer length determines the length of that raycast; if "
-      "neither raycast hit the ground, the vehicle is floating, stabalizer "
-      "spring and ground normal forces are not applied.\n\n"
-      "<img src=\"images/hoverVehicle_forces.png\">\n"
-      "@see stabSpringConstant" );
-   addField( "stabLenMax", TypeF32, Offset(stabLenMax, HoverVehicleData),
-      "Length of the base stabalizer when travelling at maximum speed "
-      "(maxThrustSpeed).\n\n@see stabLenMin\n\n@see mainThrustForce" );
-
-   addField( "stabSpringConstant", TypeF32, Offset(stabSpringConstant, HoverVehicleData),
-      "Value used to generate stabalizer spring force. The force generated "
-      "depends on stabilizer compression, that is how close the vehicle is "
-      "to the ground proportional to current stabalizer length.\n\n"
-      "@see stabLenMin" );
-   addField( "stabDampingConstant", TypeF32, Offset(stabDampingConstant, HoverVehicleData),
-      "Damping spring force acting against changes in the stabalizer length.\n\n"
-      "@see stabLenMin" );
-
+   addGroup("AutoCorrection");
    addField( "gyroDrag", TypeF32, Offset(gyroDrag, HoverVehicleData),
       "Damping torque that acts against the vehicle's current angular momentum." );
-   addField( "normalForce", TypeF32, Offset(normalForce, HoverVehicleData),
-      "Force generated in the ground normal direction when the vehicle is not "
-      "floating (within stabalizer length from the ground).\n\n"
-      "@see stabLenMin" );
    addField( "restorativeForce", TypeF32, Offset(restorativeForce, HoverVehicleData),
       "Force generated to stabalize the vehicle (return it to neutral pitch/roll) "
       "when the vehicle is floating (more than stabalizer length from the "
       "ground.\n\n@see stabLenMin" );
-   addField( "steeringForce", TypeF32, Offset(steeringForce, HoverVehicleData),
-      "Yaw (rotation about the Z-axis) force applied when steering in the x-axis direction."
-      "about the vehicle's Z-axis)" );
-   addField( "rollForce", TypeF32, Offset(rollForce, HoverVehicleData),
-      "Roll (rotation about the Y-axis) force applied when steering in the x-axis direction." );
-   addField( "pitchForce", TypeF32, Offset(pitchForce, HoverVehicleData),
-      "Pitch (rotation about the X-axis) force applied when steering in the y-axis direction." );
+   endGroup("AutoCorrection");
 
-   addField( "jetSound", TYPEID< SFXProfile >(), Offset(sound[JetSound], HoverVehicleData),
-      "Looping sound played when the vehicle is jetting." );
-   addField( "engineSound", TYPEID< SFXProfile >(), Offset(sound[EngineSound], HoverVehicleData),
-      "Looping engine sound.\nThe volume is dynamically adjusted based on the "
-      "current thrust level." );
-   addField( "floatSound", TYPEID< SFXProfile >(), Offset(sound[FloatSound], HoverVehicleData),
-      "Looping sound played while the vehicle is floating.\n\n@see stabMinLen" );
-
+   addGroup("Particle Effects");
    addField( "dustTrailEmitter", TYPEID< ParticleEmitterData >(), Offset(dustTrailEmitter, HoverVehicleData),
       "Emitter to generate particles for the vehicle's dust trail.\nThe trail "
       "of dust particles is generated only while the vehicle is moving." );
+   addField( "forwardJetEmitter", TYPEID< ParticleEmitterData >(), Offset(jetEmitter[ForwardJetEmitter], HoverVehicleData),
+      "Emitter to generate particles for forward jet thrust.\nForward jet "
+      "thrust particles are emitted from model nodes JetNozzle0 and JetNozzle1." );
    addField( "dustTrailOffset", TypePoint3F, Offset(dustTrailOffset, HoverVehicleData),
       "\"X Y Z\" offset from the vehicle's origin from which to generate dust "
       "trail particles.\nBy default particles are emitted directly beneath the "
@@ -259,23 +270,11 @@ void HoverVehicleData::initPersistFields()
       "vehicle's speed is divided by this value to determine how many particles "
       "to generate each frame. Lower values give a more dense trail, higher "
       "values a more sparse trail." );
+   endGroup("Sounds");
 
-   addField( "floatingGravMag", TypeF32, Offset(floatingGravMag, HoverVehicleData),
-      "Scale factor applied to the vehicle gravitational force when the vehicle "
-      "is floating.\n\n@see stabLenMin" );
-   addField( "brakingForce", TypeF32, Offset(brakingForce, HoverVehicleData),
-      "Force generated by braking.\nThe vehicle is considered to be braking if "
-      "it is moving, but the throttle is off, and no left or right thrust is "
-      "being applied. This force is only applied when the vehicle's velocity is "
-      "less than brakingActivationSpeed." );
-   addField( "brakingActivationSpeed", TypeF32, Offset(brakingActivationSpeed, HoverVehicleData),
-      "Maximum speed below which a braking force is applied.\n\n@see brakingForce" );
-
-   addField( "forwardJetEmitter", TYPEID< ParticleEmitterData >(), Offset(jetEmitter[ForwardJetEmitter], HoverVehicleData),
-      "Emitter to generate particles for forward jet thrust.\nForward jet "
-      "thrust particles are emitted from model nodes JetNozzle0 and JetNozzle1." );
-
-   Parent::initPersistFields();
+   addGroup("Particle Effects");
+      INITPERSISTFIELD_SOUNDASSET_ENUMED(HoverSounds, hoverSoundsEnum, Sounds::MaxSounds, HoverVehicleData, "Sounds for hover vehicle.");
+   endGroup("Sounds");
 }
 
 
@@ -313,9 +312,13 @@ bool HoverVehicleData::preload(bool server, String &errorStr)
 
    // Resolve objects transmitted from server
    if (!server) {
+
       for (S32 i = 0; i < MaxSounds; i++)
-         if (sound[i])
-            Sim::findObject(SimObjectId((uintptr_t)sound[i]),sound[i]);
+         if (getHoverSounds(i) != StringTable->EmptyString())
+         {
+            _setHoverSounds(getHoverSounds(i), i);
+         }
+
       for (S32 j = 0; j < MaxJetEmitters; j++)
          if (jetEmitter[j])
             Sim::findObject(SimObjectId((uintptr_t)jetEmitter[j]),jetEmitter[j]);
@@ -363,15 +366,15 @@ void HoverVehicleData::packData(BitStream* stream)
    stream->write(dustTrailFreqMod);
 
    for (S32 i = 0; i < MaxSounds; i++)
-      if (stream->writeFlag(sound[i]))
-         stream->writeRangedU32(packed? SimObjectId((uintptr_t)sound[i]):
-                                sound[i]->getId(),DataBlockObjectIdFirst,DataBlockObjectIdLast);
+   {
+      PACKDATA_SOUNDASSET_ARRAY(HoverSounds, i);
+   }
 
    for (S32 j = 0; j < MaxJetEmitters; j++)
    {
       if (stream->writeFlag(jetEmitter[j]))
       {
-         SimObjectId writtenId = packed ? SimObjectId((uintptr_t)jetEmitter[j]) : jetEmitter[j]->getId();
+         SimObjectId writtenId = mPacked ? SimObjectId((uintptr_t)jetEmitter[j]) : jetEmitter[j]->getId();
          stream->writeRangedU32(writtenId, DataBlockObjectIdFirst,DataBlockObjectIdLast);
       }
    }
@@ -412,14 +415,14 @@ void HoverVehicleData::unpackData(BitStream* stream)
    stream->read(&dustTrailFreqMod);
 
    for (S32 i = 0; i < MaxSounds; i++)
-      sound[i] = stream->readFlag()?
-         (SFXProfile*) stream->readRangedU32(DataBlockObjectIdFirst,
-                                               DataBlockObjectIdLast): 0;
+   {
+      UNPACKDATA_SOUNDASSET_ARRAY(HoverSounds, i);
+   }
 
    for (S32 j = 0; j < MaxJetEmitters; j++) {
       jetEmitter[j] = NULL;
       if (stream->readFlag())
-         jetEmitter[j] = (ParticleEmitterData*)stream->readRangedU32(DataBlockObjectIdFirst,
+         jetEmitter[j] = (ParticleEmitterData*)(uintptr_t)stream->readRangedU32(DataBlockObjectIdFirst,
                                                                      DataBlockObjectIdLast);
    }
 
@@ -438,24 +441,29 @@ void HoverVehicleData::unpackData(BitStream* stream)
 //
 HoverVehicle::HoverVehicle()
 {
+   mDataBlock = NULL;
    // Todo: ScopeAlways?
    mNetFlags.set(Ghostable);
 
    mFloating      = false;
-   mForwardThrust = 0;
-   mReverseThrust = 0;
-   mLeftThrust    = 0;
-   mRightThrust   = 0;
+   mThrustLevel   = 0.0f;
+   mForwardThrust = 0.0f;
+   mReverseThrust = 0.0f;
+   mLeftThrust    = 0.0f;
+   mRightThrust   = 0.0f;
 
    mJetSound    = NULL;
    mEngineSound = NULL;
    mFloatSound  = NULL;
-
+   mThrustDirection = HoverVehicle::ThrustForward;
    mDustTrailEmitter = NULL;
 
    mBackMaintainOn = false;
    for (S32 i = 0; i < JetAnimCount; i++)
-      mJetThread[i] = 0;
+   {
+      mJetSeq[i] = -1;
+      mJetThread[i] = NULL;
+   }
 }
 
 HoverVehicle::~HoverVehicle()
@@ -501,10 +509,6 @@ bool HoverVehicle::onAdd()
       }
    }
 
-
-   if (isServerObject())
-      scriptOnAdd();
-
    return true;
 }
 
@@ -515,7 +519,6 @@ void HoverVehicle::onRemove()
    SFX_DELETE( mEngineSound );
    SFX_DELETE( mFloatSound );
 
-   scriptOnRemove();
    removeFromScene();
    Parent::onRemove();
 }
@@ -536,14 +539,14 @@ bool HoverVehicle::onNewDataBlock(GameBaseData* dptr, bool reload)
       SFX_DELETE( mFloatSound );
       SFX_DELETE( mJetSound );
 
-      if ( mDataBlock->sound[HoverVehicleData::EngineSound] )
-         mEngineSound = SFX->createSource( mDataBlock->sound[HoverVehicleData::EngineSound], &getTransform() );
+      if ( mDataBlock->getHoverSounds(HoverVehicleData::EngineSound) )
+         mEngineSound = SFX->createSource( mDataBlock->getHoverSoundsProfile(HoverVehicleData::EngineSound), &getTransform() );
 
-      if ( !mDataBlock->sound[HoverVehicleData::FloatSound] )
-         mFloatSound = SFX->createSource( mDataBlock->sound[HoverVehicleData::FloatSound], &getTransform() );
+      if ( !mDataBlock->getHoverSounds(HoverVehicleData::FloatSound) )
+         mFloatSound = SFX->createSource( mDataBlock->getHoverSoundsProfile(HoverVehicleData::FloatSound), &getTransform() );
 
-      if ( mDataBlock->sound[HoverVehicleData::JetSound] )
-         mJetSound = SFX->createSource( mDataBlock->sound[HoverVehicleData::JetSound], &getTransform() );
+      if ( mDataBlock->getHoverSounds(HoverVehicleData::JetSound) )
+         mJetSound = SFX->createSource( mDataBlock->getHoverSoundsProfile(HoverVehicleData::JetSound), &getTransform() );
    }
 
    // Todo: Uncomment if this is a "leaf" class
@@ -670,7 +673,7 @@ void HoverVehicle::updateForces(F32 /*dt*/)
 {
    PROFILE_SCOPE( HoverVehicle_UpdateForces );
 
-   Point3F gravForce(0, 0, sHoverVehicleGravity * mRigid.mass * mGravityMod);
+   Point3F gravForce(0, 0, mRigid.mass * mNetGravity);
 
    MatrixF currTransform;
    mRigid.getTransform(&currTransform);
@@ -868,8 +871,6 @@ void HoverVehicle::updateForces(F32 /*dt*/)
    // Add in physical zone force
    force += mAppliedForce;
 
-   // Container buoyancy & drag
-   force  += Point3F(0, 0,-mBuoyancy * sHoverVehicleGravity * mRigid.mass * mGravityMod);
    force  -= mRigid.linVelocity * mDrag;
    torque -= mRigid.angMomentum * mDrag;
 
@@ -967,10 +968,10 @@ void HoverVehicle::updateEmitter(bool active,F32 dt,ParticleEmitterData *emitter
          }
       }
       else {
-         for (S32 j = idx; j < idx + count; j++)
-            if (bool(mJetEmitter[j])) {
-               mJetEmitter[j]->deleteWhenEmpty();
-               mJetEmitter[j] = 0;
+         for (S32 k = idx; k < idx + count; k++)
+            if (bool(mJetEmitter[k])) {
+               mJetEmitter[k]->deleteWhenEmpty();
+               mJetEmitter[k] = 0;
             }
       }
 }

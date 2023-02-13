@@ -32,6 +32,9 @@ inline Token< T > MakeToken( T value, U32 lineNumber )
 
 #include "console/cmdgram.h"
 
+// HACK: C++17 and beyond can't use register keyword
+#define register
+
 using namespace Compiler;
 
 #define YY_NEVER_INTERACTIVE 1
@@ -71,7 +74,7 @@ inline int isatty(int) { return 0; }
          buf[n++] = (char) c; \
       result = n; \
    }
-   
+
 // General helper stuff.
 static int lineIndex;
 
@@ -80,7 +83,7 @@ void CMDSetScanBuffer(const char *sb, const char *fn);
 const char * CMDgetFileLine(int &lineNumber);
 
 // Error reporting
-void CMDerror(char * s, ...);
+void CMDerror(const char * s, ...);
 
 // Reset the parser.
 void CMDrestart(FILE *in);
@@ -105,7 +108,7 @@ HEXDIGIT [a-fA-F0-9]
 %%
          ;
 {SPACE}+ { }
-("///"[^/][^\n\r]*[\n\r]*)+ { return(Sc_ScanDocBlock()); }
+("///"([^/\n\r][^\n\r]*)?[\n\r]+)+ { return(Sc_ScanDocBlock()); }
 "//"[^\n\r]*   ;
 [\r]        ;
 [\n]        {lineIndex++;}
@@ -141,7 +144,7 @@ HEXDIGIT [a-fA-F0-9]
 "SPC"       { CMDlval.i = MakeToken< int >( ' ', lineIndex ); return '@'; }
 "@"         { CMDlval.i = MakeToken< int >( 0, lineIndex ); return '@'; }
 "/*" { /* this comment stops syntax highlighting from getting messed up when editing the lexer in TextPad */
-         register int c = 0, l;
+         int c = 0, l;
          for ( ; ; )
          {
             l = c;
@@ -213,6 +216,7 @@ HEXDIGIT [a-fA-F0-9]
 "true"      { CMDlval.i = MakeToken< int >( 1, lineIndex ); return INTCONST; }
 "false"     { CMDlval.i = MakeToken< int >( 0, lineIndex ); return INTCONST; }
 {VAR}       { return(Sc_ScanVar()); }
+
 {ID}        { return Sc_ScanIdent(); }
 0[xX]{HEXDIGIT}+ return(Sc_ScanHex());
 {INTEGER}   { CMDtext[CMDleng] = 0; CMDlval.i = MakeToken< int >( dAtoi(CMDtext), lineIndex ); return INTCONST; }
@@ -237,7 +241,7 @@ int CMDGetCurrentLine()
 
 extern bool gConsoleSyntaxError;
 
-void CMDerror(char *format, ...)
+void CMDerror(const char *format, ...)
 {
    Compiler::gSyntaxError = true;
 
@@ -250,6 +254,7 @@ void CMDerror(char *format, ...)
 #else
    vsnprintf( tempBuf, BUFMAX, format, args );
 #endif
+    va_end(args);
 
    if(fileName)
    {
@@ -410,10 +415,11 @@ static int Sc_ScanString(int ret)
    CMDtext[CMDleng - 1] = 0;
    if(!collapseEscape(CMDtext+1))
       return -1;
-      
-   char* buffer = ( char* ) consoleAlloc( dStrlen( CMDtext ) );
-   dStrcpy( buffer, CMDtext + 1 );
-   
+
+   dsize_t bufferLen = dStrlen( CMDtext );
+   char* buffer = ( char* ) consoleAlloc( bufferLen );
+   dStrcpy( buffer, CMDtext + 1, bufferLen );
+
    CMDlval.str = MakeToken< char* >( buffer, lineIndex );
    return ret;
 }

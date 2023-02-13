@@ -37,13 +37,13 @@ ConsoleDocClass( RenderPassStateToken,
    
    "The RenderPassStateBin manager changes the rendering state associated with "
    "a token it is declared with. In stock Torque 3D, a single example exists in the "
-   "way of AL_FormatToken (found in renderManager.cs). In that script file, all the "
+   "way of AL_FormatToken (found in renderManager." TORQUE_SCRIPT_EXTENSION "). In that script file, all the "
    "render managers are intialized, and a single RenderFormatToken is used. This "
    "implementation basically exists to ensure Advanced Lighting works with MSAA.\n\n"
 
    "@see RenderFormatToken\n"
    "@see RenderPassStateBin\n"
-   "@see game/core/scripts/client/renderManager.cs\n"
+   "@see game/core/scripts/client/renderManager." TORQUE_SCRIPT_EXTENSION "\n"
 
    "@ingroup RenderBin\n"
 );
@@ -86,7 +86,8 @@ static const char *_get_enable(void* obj, const char* data)
 
 void RenderPassStateToken::initPersistFields()
 {
-   addProtectedField("enabled", TypeBool, NULL, &_set_enable, &_get_enable, "Enables or disables this token.");
+   docsURL;
+   addProtectedField("enabled", TypeBool, 0, &_set_enable, &_get_enable, "Enables or disables this token.");
    Parent::initPersistFields();
 }
 
@@ -136,8 +137,9 @@ void RenderPassStateBin::sort()
 
 void RenderPassStateBin::initPersistFields()
 {
+   docsURL;
    addProtectedField( "stateToken", TYPEID< RenderPassStateToken >(), Offset( mStateToken, RenderPassStateBin ),
-      _setStateToken, _getStateToken );
+      _setStateToken, _getStateToken, "");
    
    Parent::initPersistFields();
 }

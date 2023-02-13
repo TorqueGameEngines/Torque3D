@@ -83,10 +83,21 @@ class Trigger : public GameBase
    U32               mCurrTick;
    Convex            *mConvexList;
 
+   bool              mTripOnce;
+   bool              mTripped;
+   S32               mTrippedBy;
+
+   String            mTripCondition;
    String            mEnterCommand;
    String            mLeaveCommand;
    String            mTickCommand;
 
+   static const U32 CMD_SIZE = 1024;
+
+   void onUnmount(SceneObject* obj,S32 node);
+
+  protected:
+   
    enum TriggerUpdateBits
    {
       TransformMask = Parent::NextFreeMask << 0,
@@ -97,20 +108,19 @@ class Trigger : public GameBase
       NextFreeMask  = Parent::NextFreeMask << 5,
    };
 
-   static const U32 CMD_SIZE = 1024;
-
-  protected:
-
    static bool smRenderTriggers;
    bool testObject(GameBase* enter);
+   bool testTrippable();
+   bool testCondition();
+   bool evalCmD(String*);
    void processTick(const Move *move);
+   void interpolateTick(F32 delta);
 
    void buildConvex(const Box3F& box, Convex* convex);
 
    static bool setEnterCmd(void *object, const char *index, const char *data);
    static bool setLeaveCmd(void *object, const char *index, const char *data);
    static bool setTickCmd(void *object, const char *index, const char *data);
-
   public:
    Trigger();
    ~Trigger();
@@ -123,6 +133,7 @@ class Trigger : public GameBase
 
    static void consoleInit();
    static void initPersistFields();
+   void testObjects();
    bool onAdd();
    void onRemove();
    void onDeleteNotify(SimObject*);
@@ -142,7 +153,7 @@ class Trigger : public GameBase
    // Trigger
    void setTriggerPolyhedron(const Polyhedron&);
 
-   void      potentialEnterObject(GameBase*);
+   virtual void potentialEnterObject(GameBase*);
    U32       getNumTriggeringObjects() const;
    GameBase* getObject(const U32);   
    const Vector<GameBase*>& getObjects() const { return mObjects; }

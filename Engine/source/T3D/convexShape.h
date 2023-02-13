@@ -36,6 +36,8 @@
 #include "collision/convex.h"
 #endif
 
+#include "T3D/assets/MaterialAsset.h"
+
 class ConvexShape;
 
 // Crap name, but whatcha gonna do.
@@ -50,7 +52,7 @@ protected:
 
 public:
 
-	ConvexShapeCollisionConvex() { mType = ConvexShapeCollisionConvexType; }
+   ConvexShapeCollisionConvex() { pShape = NULL; mType = ConvexShapeCollisionConvexType; }
 
 	ConvexShapeCollisionConvex( const ConvexShapeCollisionConvex& cv ) {
 		mType      = ConvexShapeCollisionConvexType;
@@ -75,9 +77,6 @@ GFXDeclareVertexFormat( ConvexVert )
 
 class PhysicsBody;
 
-// Define our vertex format here so we don't have to
-// change it in multiple spots later
-typedef ConvexVert VertexType;
 
 class ConvexShape : public SceneObject
 {
@@ -97,6 +96,10 @@ public:
    // Declaring these structs directly within ConvexShape to prevent
    // the otherwise excessively deep scoping we had.
    // eg. ConvexShape::Face::Triangle ...
+
+   // Define our vertex format here so we don't have to
+   // change it in multiple spots later
+   typedef GFXVertexPNTTB VertexType;
 
    struct Edge
    {
@@ -131,9 +134,49 @@ public:
       S32 id;
    }; 
 
+   struct surfaceMaterial
+   {
+      // The name of the Material we will use for rendering
+      DECLARE_MATERIALASSET(surfaceMaterial, Material);
+      
+      DECLARE_ASSET_SETGET(surfaceMaterial, Material);
+
+      // The actual Material instance
+      BaseMatInstance*  materialInst;
+
+      surfaceMaterial()
+      {
+         INIT_ASSET(Material);
+
+         materialInst = NULL;
+      }
+   };
+
+   struct surfaceUV
+   {
+      S32 matID;
+      Point2F offset;
+      Point2F scale;
+      float   zRot;
+      bool horzFlip;
+      bool vertFlip;
+
+      surfaceUV() : matID(0), offset(Point2F(0.0f, 0.0f)), scale(Point2F(1.0f, 1.0f)), zRot(0.0f), horzFlip(false), vertFlip(false) {}
+   };
+
+   struct surfaceBuffers
+   {
+      // The GFX vertex and primitive buffers
+      GFXVertexBufferHandle< VertexType > mVertexBuffer;
+      GFXPrimitiveBufferHandle            mPrimitiveBuffer;
+
+      U32 mVertCount;
+      U32 mPrimCount;
+   };
+
 	struct Geometry
 	{  
-		void generate( const Vector< PlaneF > &planes, const Vector< Point3F > &tangents );   
+      void generate(const Vector< PlaneF > &planes, const Vector< Point3F > &tangents, const Vector< surfaceMaterial > surfaceTextures, const Vector< Point2F > texOffset, const Vector< Point2F > texScale, const Vector< bool > horzFlip, const Vector< bool > vertFlip);
 
 		Vector< Point3F > points;      
 		Vector< Face > faces;
@@ -172,6 +215,7 @@ public:
    virtual void prepRenderImage( SceneRenderState *state );
    virtual void buildConvex( const Box3F &box, Convex *convex );
    virtual bool buildPolyList( PolyListContext context, AbstractPolyList *polyList, const Box3F &box, const SphereF &sphere );
+   virtual bool buildExportPolyList(ColladaUtils::ExportData* exportData, const Box3F &box, const SphereF &);
    virtual bool castRay( const Point3F &start, const Point3F &end, RayInfo *info );
    virtual bool collideBox( const Point3F &start, const Point3F &end, RayInfo *info );
 
@@ -200,6 +244,8 @@ public:
 
    /// @}
 
+      String getMaterialName() { return mMaterialName; }
+
 protected:
 
    void _updateMaterial();
@@ -212,21 +258,24 @@ protected:
    static S32 QSORT_CALLBACK _comparePlaneDist( const void *a, const void *b );
 
    static bool protectedSetSurface( void *object, const char *index, const char *data );
+
+   static bool protectedSetSurfaceTexture( void *object, const char *index, const char *data );
+   static bool protectedSetSurfaceUV(void *object, const char *index, const char *data);
   
 protected:
    
-   // The name of the Material we will use for rendering
-   String            mMaterialName;
+   DECLARE_MATERIALASSET(ConvexShape, Material);
+   DECLARE_ASSET_SETGET(ConvexShape, Material);
 
    // The actual Material instance
    BaseMatInstance*  mMaterialInst;
 
    // The GFX vertex and primitive buffers
-   GFXVertexBufferHandle< VertexType > mVertexBuffer;
+   /*GFXVertexBufferHandle< VertexType > mVertexBuffer;
    GFXPrimitiveBufferHandle            mPrimitiveBuffer;
 
    U32 mVertCount;
-   U32 mPrimCount;
+   U32 mPrimCount;*/
 
    Geometry mGeometry;  
 
@@ -235,6 +284,11 @@ protected:
    Vector< MatrixF > mSurfaces;
 
    Vector< Point3F > mFaceCenters;
+
+   //this is mostly for storage purposes, so we can save the texture mods
+   Vector< surfaceMaterial > mSurfaceTextures;
+   Vector< surfaceUV > mSurfaceUVs;
+   Vector< surfaceBuffers > mSurfaceBuffers;
 
    Convex *mConvexList;
 

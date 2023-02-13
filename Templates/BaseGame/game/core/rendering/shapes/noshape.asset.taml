@@ -1,0 +1,7 @@
+<ShapeAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="noshape"
+    fileName="@assetFile=noshape.dts"
+    materialSlot0="@asset=Core_Rendering:NoShapeMat"
+    VersionId="1" />

@@ -1,0 +1,18 @@
+<MaterialAsset
+    AssetName="moon_noglow"
+    materialDefinitionName="moon_noglow"
+    VersionId="1">
+    <Material
+        Name="moon_noglow"
+        mapTo="moon_noglow"
+        translucent="true"
+        translucentBlendOp="LerpAlpha"
+        originalAssetName="moon_noglow">
+        <Material.Stages>
+            <Stages_beginarray
+                DiffuseMapAsset="Core_Rendering:moon_noglow_image"
+                VertColor="true"
+                Emissive="true"/>
+        </Material.Stages>
+    </Material>
+</MaterialAsset>

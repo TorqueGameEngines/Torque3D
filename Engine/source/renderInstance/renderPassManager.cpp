@@ -51,14 +51,17 @@ const RenderInstType RenderPassManager::RIT_Terrain("Terrain");
 const RenderInstType RenderPassManager::RIT_Object("Object");      
 const RenderInstType RenderPassManager::RIT_ObjectTranslucent("ObjectTranslucent");
 const RenderInstType RenderPassManager::RIT_Decal("Decal");
+const RenderInstType RenderPassManager::RIT_DecalRoad("DecalRoad");
 const RenderInstType RenderPassManager::RIT_Water("Water");
 const RenderInstType RenderPassManager::RIT_Foliage("Foliage");
+const RenderInstType RenderPassManager::RIT_VolumetricFog("ObjectVolumetricFog");
 const RenderInstType RenderPassManager::RIT_Translucent("Translucent");
 const RenderInstType RenderPassManager::RIT_Begin("Begin");
 const RenderInstType RenderPassManager::RIT_Custom("Custom");
 const RenderInstType RenderPassManager::RIT_Particle("Particle");
 const RenderInstType RenderPassManager::RIT_Occluder("Occluder");
 const RenderInstType RenderPassManager::RIT_Editor("Editor");
+const RenderInstType RenderPassManager::RIT_Probes("Probes");
 
 
 //*****************************************************************************
@@ -100,16 +103,14 @@ void OccluderRenderInst::clear()
    dMemset( this, 0, sizeof(OccluderRenderInst) );
 }
 
-
 IMPLEMENT_CONOBJECT(RenderPassManager);
-
 
 ConsoleDocClass( RenderPassManager, 
    "@brief A grouping of render bin managers which forms a render pass.\n\n"
    "The render pass is used to order a set of RenderBinManager objects which are used "
    "when rendering a scene.  This class does little work itself other than managing "
    "its list of render bins.\n\n"
-   "In 'core/scripts/client/renderManager.cs' you will find the DiffuseRenderPassManager "
+   "In 'core/scripts/client/renderManager." TORQUE_SCRIPT_EXTENSION "' you will find the DiffuseRenderPassManager "
    "which is used by the C++ engine to render the scene.\n\n"
    "@see RenderBinManager\n"
    "@ingroup RenderBin\n" );
@@ -122,6 +123,8 @@ RenderPassManager::RenderBinEventSignal& RenderPassManager::getRenderBinSignal()
 
 void RenderPassManager::initPersistFields()
 {
+   docsURL;
+   Parent::initPersistFields();
 }
 
 RenderPassManager::RenderPassManager()
@@ -296,7 +299,7 @@ GFXTextureObject *RenderPassManager::getDepthTargetTexture()
 
       const Point2I rtSize = GFX->getActiveRenderTarget()->getSize();
       mDepthBuff.set(rtSize.x, rtSize.y, GFXFormatD24S8, 
-         &GFXDefaultZTargetProfile, avar("%s() - mDepthBuff (line %d)", __FUNCTION__, __LINE__));
+         &GFXZTargetProfile, avar("%s() - mDepthBuff (line %d)", __FUNCTION__, __LINE__));
       return mDepthBuff.getPointer();
    }
 

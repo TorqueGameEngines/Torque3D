@@ -46,7 +46,8 @@ namespace Torque
             mBuffer = dMalloc(mBufferSize);
             dMemset(mBuffer, 0, mBufferSize);
             mModified = Time::getCurrentTime();
-            mLastAccess = mModified;    
+            mLastAccess = mModified;
+            mCreated = mModified;
             mFileSystem = fs;
          }
 
@@ -62,6 +63,7 @@ namespace Torque
             attr->size = mFileSize;
             attr->mtime = mModified;
             attr->atime = mLastAccess;
+            attr->ctime = mCreated;
             return true;
          }
 
@@ -81,6 +83,7 @@ namespace Torque
          U32 mBufferSize;  // This is the size of the memory buffer >= mFileSize
          U32 mFileSize;    // This is the size of the "file" <= mBufferSize
          Time mModified;      // Last modified
+         Time mCreated; // When Created
          Time mLastAccess;      // Last access
          MemFileSystem* mFileSystem;
       };

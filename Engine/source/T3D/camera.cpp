@@ -85,6 +85,7 @@ ConsoleDocClass( CameraData,
 
 void CameraData::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 
@@ -279,6 +280,7 @@ Camera::Camera()
 
    mLastAbsoluteYaw = 0.0f;
    mLastAbsolutePitch = 0.0f;
+   mLastAbsoluteRoll = 0.0f;
 
    // For NewtonFlyMode
    mNewtonRotation = false;
@@ -379,6 +381,19 @@ void Camera::getCameraTransform(F32* pos, MatrixF* mat)
    mat->mul( gCamFXMgr.getTrans() );
 }
 
+void Camera::getEyeCameraTransform(IDisplayDevice *displayDevice, U32 eyeId, MatrixF *outMat)
+{
+   // The camera doesn't support a third person mode,
+   // so we want to override the default ShapeBase behavior.
+   ShapeBase * obj = dynamic_cast<ShapeBase*>(static_cast<SimObject*>(mOrbitObject));
+   if(obj && static_cast<ShapeBaseData*>(obj->getDataBlock())->observeThroughObject)
+      obj->getEyeCameraTransform(displayDevice, eyeId, outMat);
+   else
+   {
+      Parent::getEyeCameraTransform(displayDevice, eyeId, outMat);
+   }
+}
+
 //----------------------------------------------------------------------------
 
 F32 Camera::getCameraFov()
@@ -443,13 +458,6 @@ void Camera::processTick(const Move* move)
 
    if ( isMounted() )
    {
-      // Fetch Mount Transform.
-      MatrixF mat;
-      mMount.object->getMountTransform( mMount.node, mMount.xfm, &mat );
-
-      // Apply.
-      setTransform( mat );
-
       // Update SceneContainer.
       updateContainer();
       return;
@@ -547,6 +555,7 @@ void Camera::processTick(const Move* move)
 
                mLastAbsoluteYaw = emove->rotZ[emoveIndex];
                mLastAbsolutePitch = emove->rotX[emoveIndex];
+               mLastAbsoluteRoll = emove->rotY[emoveIndex];
 
                // Bank
                mRot.y = emove->rotY[emoveIndex];
@@ -564,7 +573,7 @@ void Camera::processTick(const Move* move)
          // process input/determine rotation vector
          if(virtualMode != StationaryMode &&
             virtualMode != TrackObjectMode &&
-            (!mLocked || virtualMode != OrbitObjectMode && virtualMode != OrbitPointMode))
+            (!mLocked || ((virtualMode != OrbitObjectMode) && (virtualMode != OrbitPointMode))))
          {
             if(!strafeMode)
             {
@@ -815,16 +824,7 @@ void Camera::interpolateTick(F32 dt)
    Parent::interpolateTick(dt);
 
    if ( isMounted() )
-   {
-      // Fetch Mount Transform.
-      MatrixF mat;
-      mMount.object->getRenderMountTransform( dt, mMount.node, mMount.xfm, &mat );
-
-      // Apply.
-      setRenderTransform( mat );
-
       return;
-   }
 
    Point3F rot = mDelta.rot + mDelta.rotVec * dt;
 
@@ -1276,6 +1276,7 @@ void Camera::unpackUpdate(NetConnection *con, BitStream *bstream)
       bstream->read(&pos.z);
       bstream->read(&rot.x);
       bstream->read(&rot.z);
+      rot.y = 0.0f;
       _setPosition(pos,rot);
 
       // NewtonMode
@@ -1307,6 +1308,7 @@ void Camera::unpackUpdate(NetConnection *con, BitStream *bstream)
 
 void Camera::initPersistFields()
 {
+   docsURL;
    addGroup( "Camera" );
       addProtectedField( "controlMode", TYPEID< CameraMotionMode >(), Offset( mMode, Camera ),
          &_setModeField, &defaultProtectedGetFn,
@@ -1352,7 +1354,7 @@ void Camera::consoleInit()
    // ExtendedMove support
    Con::addVariable("$camera::extendedMovePosRotIndex", TypeS32, &smExtendedMovePosRotIndex, 
       "@brief The ExtendedMove position/rotation index used for camera movements.\n\n"
-	   "@ingroup BaseCamera\n");
+      "@ingroup BaseCamera\n");
 }
 
 //-----------------------------------------------------------------------------

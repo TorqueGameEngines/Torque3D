@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="moon_wcorona_image"
+    imageFile="@assetFile=moon_wcorona.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

@@ -61,6 +61,7 @@ void GFXDrawUtil::_setupStateBlocks()
    bitmapStretchSR.setZReadWrite(false);
    bitmapStretchSR.setBlend(true, GFXBlendSrcAlpha, GFXBlendInvSrcAlpha);
    bitmapStretchSR.samplersDefined = true;
+   bitmapStretchSR.setColorWrites(true, true, true, false); // NOTE: comment this out if alpha write is needed
 
    // Linear: Create wrap SB
    bitmapStretchSR.samplers[0] = GFXSamplerStateDesc::getWrapLinear();
@@ -147,9 +148,8 @@ U32 GFXDrawUtil::drawTextN( GFont *font, const Point2I &ptDraw, const UTF8 *in_s
       return ptDraw.x;
 
    // Convert to UTF16 temporarily.
-   n++; // space for null terminator
-   FrameTemp<UTF16> ubuf( n );
-   convertUTF8toUTF16N(in_string, ubuf, n);
+   FrameTemp<UTF16> ubuf( n + 1 ); // (n+1) to add space for null terminator
+   convertUTF8toUTF16N(in_string, ubuf, n + 1);
 
    return drawTextN( font, ptDraw, ubuf, n, colorTable, maxColorIndex, rot );
 }
@@ -278,7 +278,8 @@ U32 GFXDrawUtil::drawTextN( GFont *font, const Point2I &ptDraw, const UTF16 *in_
       }
 
       // Queue char for rendering..
-      mFontRenderBatcher->queueChar(c, ptX, mBitmapModulation);
+      GFXVertexColor color = mBitmapModulation;
+      mFontRenderBatcher->queueChar(c, ptX, color);
    }
 
 
@@ -302,54 +303,54 @@ U32 GFXDrawUtil::drawTextN( GFont *font, const Point2F &ptDraw, const UTF16 *in_
 //-----------------------------------------------------------------------------
 // Draw Bitmaps
 //-----------------------------------------------------------------------------
-void GFXDrawUtil::drawBitmap( GFXTextureObject* texture, const Point2I &in_rAt, const GFXBitmapFlip in_flip, const GFXTextureFilterType filter , bool in_wrap /*= true*/ )
+void GFXDrawUtil::drawBitmap( GFXTextureObject* texture, const Point2I &in_rAt, const GFXBitmapFlip in_flip, const GFXTextureFilterType filter , bool in_wrap /*= true*/, F32 angle)
 {
-   drawBitmap(texture,Point2F((F32)in_rAt.x,(F32)in_rAt.y),in_flip,filter,in_wrap);
+   drawBitmap(texture,Point2F((F32)in_rAt.x,(F32)in_rAt.y),in_flip,filter,in_wrap, angle);
 }
 
-void GFXDrawUtil::drawBitmapStretch( GFXTextureObject* texture, const RectI &dstRect, const GFXBitmapFlip in_flip, const GFXTextureFilterType filter , bool in_wrap /*= true*/ )
+void GFXDrawUtil::drawBitmapStretch( GFXTextureObject* texture, const RectI &dstRect, const GFXBitmapFlip in_flip, const GFXTextureFilterType filter , bool in_wrap /*= true*/, F32 angle)
 {
-   drawBitmapStretch(texture,RectF((F32)dstRect.point.x,(F32)dstRect.point.y,(F32)dstRect.extent.x,(F32)dstRect.extent.y),in_flip,filter,in_wrap);
+   drawBitmapStretch(texture,RectF((F32)dstRect.point.x,(F32)dstRect.point.y,(F32)dstRect.extent.x,(F32)dstRect.extent.y),in_flip,filter,in_wrap, angle);
 }
 
-void GFXDrawUtil::drawBitmapSR( GFXTextureObject* texture, const Point2I &in_rAt, const RectI &srcRect, const GFXBitmapFlip in_flip, const GFXTextureFilterType filter , bool in_wrap /*= true*/ )
+void GFXDrawUtil::drawBitmapSR( GFXTextureObject* texture, const Point2I &in_rAt, const RectI &srcRect, const GFXBitmapFlip in_flip, const GFXTextureFilterType filter , bool in_wrap /*= true*/, F32 angle)
 {
-   drawBitmapSR(texture,Point2F((F32)in_rAt.x,(F32)in_rAt.y),RectF((F32)srcRect.point.x,(F32)srcRect.point.y,(F32)srcRect.extent.x,(F32)srcRect.extent.y),in_flip,filter,in_wrap);
+   drawBitmapSR(texture,Point2F((F32)in_rAt.x,(F32)in_rAt.y),RectF((F32)srcRect.point.x,(F32)srcRect.point.y,(F32)srcRect.extent.x,(F32)srcRect.extent.y),in_flip,filter,in_wrap, angle);
 }
 
-void GFXDrawUtil::drawBitmapStretchSR( GFXTextureObject *texture, const RectI &dstRect, const RectI &srcRect, const GFXBitmapFlip in_flip, const GFXTextureFilterType filter , bool in_wrap /*= true*/ ) 
+void GFXDrawUtil::drawBitmapStretchSR( GFXTextureObject *texture, const RectI &dstRect, const RectI &srcRect, const GFXBitmapFlip in_flip, const GFXTextureFilterType filter , bool in_wrap /*= true*/, F32 angle)
 {
    RectF dstRectF = RectF((F32)dstRect.point.x,(F32)dstRect.point.y,(F32)dstRect.extent.x,(F32)dstRect.extent.y);
    RectF srcRectF = RectF((F32)srcRect.point.x,(F32)srcRect.point.y,(F32)srcRect.extent.x,(F32)srcRect.extent.y);
-   drawBitmapStretchSR(texture,dstRectF,srcRectF,in_flip,filter,in_wrap);
+   drawBitmapStretchSR(texture,dstRectF,srcRectF,in_flip,filter,in_wrap, angle);
 }
 
-void GFXDrawUtil::drawBitmap( GFXTextureObject*texture, const Point2F &in_rAt, const GFXBitmapFlip in_flip /*= GFXBitmapFlip_None*/, const GFXTextureFilterType filter /*= GFXTextureFilterPoint */ , bool in_wrap /*= true*/ )
+void GFXDrawUtil::drawBitmap( GFXTextureObject*texture, const Point2F &in_rAt, const GFXBitmapFlip in_flip /*= GFXBitmapFlip_None*/, const GFXTextureFilterType filter /*= GFXTextureFilterPoint */ , bool in_wrap /*= true*/, F32 angle)
 {
    AssertFatal( texture != 0, "No texture specified for drawBitmap()" );
 
    RectI subRegion( 0, 0, texture->mBitmapSize.x, texture->mBitmapSize.y );
    RectI stretch( in_rAt.x, in_rAt.y, texture->mBitmapSize.x, texture->mBitmapSize.y );
-   drawBitmapStretchSR( texture, stretch, subRegion, in_flip, filter, in_wrap );
+   drawBitmapStretchSR( texture, stretch, subRegion, in_flip, filter, in_wrap, angle);
 }
 
-void GFXDrawUtil::drawBitmapStretch( GFXTextureObject*texture, const RectF &dstRect, const GFXBitmapFlip in_flip /*= GFXBitmapFlip_None*/, const GFXTextureFilterType filter /*= GFXTextureFilterPoint */ , bool in_wrap /*= true*/ )
+void GFXDrawUtil::drawBitmapStretch( GFXTextureObject*texture, const RectF &dstRect, const GFXBitmapFlip in_flip /*= GFXBitmapFlip_None*/, const GFXTextureFilterType filter /*= GFXTextureFilterPoint */ , bool in_wrap /*= true*/, F32 angle)
 {
    AssertFatal( texture != 0, "No texture specified for drawBitmapStretch()" );
 
    RectF subRegion( 0.f, 0.f, (F32)texture->mBitmapSize.x, (F32)texture->mBitmapSize.y );
-   drawBitmapStretchSR( texture, dstRect, subRegion, in_flip, filter, in_wrap );
+   drawBitmapStretchSR( texture, dstRect, subRegion, in_flip, filter, in_wrap, angle);
 }
 
-void GFXDrawUtil::drawBitmapSR( GFXTextureObject*texture, const Point2F &in_rAt, const RectF &srcRect, const GFXBitmapFlip in_flip /*= GFXBitmapFlip_None*/, const GFXTextureFilterType filter /*= GFXTextureFilterPoint */ , bool in_wrap /*= true*/ )
+void GFXDrawUtil::drawBitmapSR( GFXTextureObject*texture, const Point2F &in_rAt, const RectF &srcRect, const GFXBitmapFlip in_flip /*= GFXBitmapFlip_None*/, const GFXTextureFilterType filter /*= GFXTextureFilterPoint */ , bool in_wrap /*= true*/, F32 angle)
 {
    AssertFatal( texture != 0, "No texture specified for drawBitmapSR()" );
 
    RectF stretch( in_rAt.x, in_rAt.y, srcRect.len_x(), srcRect.len_y() );
-   drawBitmapStretchSR( texture, stretch, srcRect, in_flip, filter, in_wrap );
+   drawBitmapStretchSR( texture, stretch, srcRect, in_flip, filter, in_wrap, angle);
 }
 
-void GFXDrawUtil::drawBitmapStretchSR( GFXTextureObject* texture, const RectF &dstRect, const RectF &srcRect, const GFXBitmapFlip in_flip /*= GFXBitmapFlip_None*/, const GFXTextureFilterType filter /*= GFXTextureFilterPoint */ , bool in_wrap /*= true*/ )
+void GFXDrawUtil::drawBitmapStretchSR( GFXTextureObject* texture, const RectF &dstRect, const RectF &srcRect, const GFXBitmapFlip in_flip /*= GFXBitmapFlip_None*/, const GFXTextureFilterType filter /*= GFXTextureFilterPoint */ , bool in_wrap /*= true*/, F32 angle)
 {
    // Sanity if no texture is specified.
    if(!texture)
@@ -393,6 +394,30 @@ void GFXDrawUtil::drawBitmapStretchSR( GFXTextureObject* texture, const RectF &d
    verts[1].texCoord.set( texRight, texTop );
    verts[2].texCoord.set( texLeft,  texBottom );
    verts[3].texCoord.set( texRight, texBottom );
+
+   if (angle != 0.0f)
+   {
+      U32 i = 0;
+      Point3F points[4];
+
+      points[0] = Point3F(-dstRect.extent.x / 2.0f, -dstRect.extent.y / 2.0f, 0.0);
+      points[1] = Point3F(dstRect.extent.x / 2.0f, -dstRect.extent.y / 2.0f, 0.0);
+      points[2] = Point3F(-dstRect.extent.x / 2.0f, dstRect.extent.y / 2.0f, 0.0);
+      points[3] = Point3F(dstRect.extent.x / 2.0f, dstRect.extent.y / 2.0f, 0.0);
+
+      //calc center by taking position+extent/2
+      Point3F offset(dstRect.point.x + dstRect.extent.x / 2.0f,
+         dstRect.point.y + dstRect.extent.y / 2.0f, 0.0);
+
+      //rotate points by mulitplying by a rotation matrix
+      MatrixF rotMatrix(EulerF(0.0, 0.0, mDegToRad(angle)));
+      for (i = 0; i < 4; i++)
+      {
+         rotMatrix.mulP(points[i]);
+         points[i] += offset;
+         verts[i].point = points[i];
+      }
+   }
 
    verts.unlock();
 
@@ -458,23 +483,23 @@ void GFXDrawUtil::drawRect( const Point2F &upperLeft, const Point2F &lowerRight,
    Point2F nw(-0.5f,-0.5f); /*  \  */
    Point2F ne(0.5f,-0.5f); /*  /  */
 
-   GFXVertexBufferHandle<GFXVertexPC> verts (mDevice, 10, GFXBufferTypeVolatile );
+   GFXVertexBufferHandle<GFXVertexPCT> verts (mDevice, 10, GFXBufferTypeVolatile );
    verts.lock();
 
    F32 ulOffset = 0.5f - mDevice->getFillConventionOffset();
 
    verts[0].point.set( upperLeft.x + ulOffset + nw.x, upperLeft.y + ulOffset + nw.y, 0.0f );
    verts[1].point.set( upperLeft.x + ulOffset - nw.x, upperLeft.y + ulOffset - nw.y, 0.0f );
-   verts[2].point.set( lowerRight.x + ne.x, upperLeft.y + ulOffset + ne.y, 0.0f );
-   verts[3].point.set( lowerRight.x - ne.x, upperLeft.y + ulOffset - ne.y, 0.0f );
-   verts[4].point.set( lowerRight.x - nw.x, lowerRight.y - nw.y, 0.0f );
-   verts[5].point.set( lowerRight.x + nw.x, lowerRight.y + nw.y, 0.0f );
-   verts[6].point.set( upperLeft.x + ulOffset - ne.x, lowerRight.y - ne.y, 0.0f );
-   verts[7].point.set( upperLeft.x + ulOffset + ne.x, lowerRight.y + ne.y, 0.0f );
+   verts[2].point.set( lowerRight.x + ulOffset + ne.x, upperLeft.y + ulOffset + ne.y, 0.0f);
+   verts[3].point.set( lowerRight.x + ulOffset - ne.x, upperLeft.y + ulOffset - ne.y, 0.0f);
+   verts[4].point.set( lowerRight.x + ulOffset - nw.x, lowerRight.y + ulOffset - nw.y, 0.0f);
+   verts[5].point.set( lowerRight.x + ulOffset + nw.x, lowerRight.y + ulOffset + nw.y, 0.0f);
+   verts[6].point.set( upperLeft.x + ulOffset - ne.x, lowerRight.y + ulOffset - ne.y, 0.0f);
+   verts[7].point.set( upperLeft.x + ulOffset + ne.x, lowerRight.y + ulOffset + ne.y, 0.0f);
    verts[8].point.set( upperLeft.x + ulOffset + nw.x, upperLeft.y + ulOffset + nw.y, 0.0f ); // same as 0
    verts[9].point.set( upperLeft.x + ulOffset - nw.x, upperLeft.y + ulOffset - nw.y, 0.0f ); // same as 1
 
-   for (S32 i=0; i<10; i++)
+   for (S32 i = 0; i < 10; i++)
       verts[i].color = color;
 
    verts.unlock();
@@ -521,17 +546,16 @@ void GFXDrawUtil::drawRectFill( const Point2F &upperLeft, const Point2F &lowerRi
    Point2F nw(-0.5,-0.5); /*  \  */
    Point2F ne(0.5,-0.5); /*  /  */
 
-   GFXVertexBufferHandle<GFXVertexPC> verts(mDevice, 4, GFXBufferTypeVolatile);
+   GFXVertexBufferHandle<GFXVertexPCT> verts(mDevice, 4, GFXBufferTypeVolatile);
    verts.lock();
 
    F32 ulOffset = 0.5f - mDevice->getFillConventionOffset();
    
-   verts[0].point.set( upperLeft.x+nw.x+ulOffset, upperLeft.y+nw.y+ulOffset, 0.0f );
-   verts[1].point.set( lowerRight.x+ne.x, upperLeft.y+ne.y+ulOffset, 0.0f );
-   verts[2].point.set( upperLeft.x-ne.x+ulOffset, lowerRight.y-ne.y, 0.0f );
-   verts[3].point.set( lowerRight.x-nw.x, lowerRight.y-nw.y, 0.0f );
-
-   for (S32 i=0; i<4; i++)
+   verts[0].point.set( upperLeft.x+nw.x + ulOffset, upperLeft.y+nw.y + ulOffset, 0.0f );
+   verts[1].point.set( lowerRight.x + ne.x + ulOffset, upperLeft.y + ne.y + ulOffset, 0.0f);
+   verts[2].point.set( upperLeft.x - ne.x + ulOffset, lowerRight.y - ne.y + ulOffset, 0.0f);
+   verts[3].point.set( lowerRight.x - nw.x + ulOffset, lowerRight.y - nw.y + ulOffset, 0.0f);
+   for (S32 i = 0; i < 4; i++)
       verts[i].color = color;
 
    verts.unlock();
@@ -548,7 +572,7 @@ void GFXDrawUtil::draw2DSquare( const Point2F &screenPoint, F32 width, F32 spinA
 
    Point3F offset( screenPoint.x, screenPoint.y, 0.0 );
 
-   GFXVertexBufferHandle<GFXVertexPC> verts( mDevice, 4, GFXBufferTypeVolatile );
+   GFXVertexBufferHandle<GFXVertexPCT> verts( mDevice, 4, GFXBufferTypeVolatile );
    verts.lock();
 
    verts[0].point.set( -width, -width, 0.0f );
@@ -608,12 +632,11 @@ void GFXDrawUtil::drawLine( F32 x1, F32 y1, F32 x2, F32 y2, const ColorI &color 
 
 void GFXDrawUtil::drawLine( F32 x1, F32 y1, F32 z1, F32 x2, F32 y2, F32 z2, const ColorI &color )
 {
-   GFXVertexBufferHandle<GFXVertexPC> verts( mDevice, 2, GFXBufferTypeVolatile );
+   GFXVertexBufferHandle<GFXVertexPCT> verts( mDevice, 2, GFXBufferTypeVolatile );
    verts.lock();
 
    verts[0].point.set( x1, y1, z1 );
    verts[1].point.set( x2, y2, z2 );
-
    verts[0].color = color;
    verts[1].color = color;
 
@@ -647,7 +670,7 @@ void GFXDrawUtil::drawSphere( const GFXStateBlockDesc &desc, F32 radius, const P
    const SphereMesh::TriangleMesh * sphereMesh = gSphere.getMesh(2);
    S32 numPoly = sphereMesh->numPoly;
    S32 totalPoly = 0;
-   GFXVertexBufferHandle<GFXVertexPC> verts(mDevice, numPoly*3, GFXBufferTypeVolatile);
+   GFXVertexBufferHandle<GFXVertexPCT> verts(mDevice, numPoly*3, GFXBufferTypeVolatile);
    verts.lock();
    S32 vertexIndex = 0;
    for (S32 i=0; i<numPoly; i++)
@@ -712,9 +735,8 @@ void GFXDrawUtil::drawTriangle( const GFXStateBlockDesc &desc, const Point3F &p0
 
 void GFXDrawUtil::_drawWireTriangle( const GFXStateBlockDesc &desc, const Point3F &p0, const Point3F &p1, const Point3F &p2, const ColorI &color, const MatrixF *xfm )
 {
-   GFXVertexBufferHandle<GFXVertexPC> verts(mDevice, 4, GFXBufferTypeVolatile);
+   GFXVertexBufferHandle<GFXVertexPCT> verts(mDevice, 4, GFXBufferTypeVolatile);
    verts.lock();
-
    // Set up the line strip
    verts[0].point = p0;
    verts[0].color = color;
@@ -745,9 +767,8 @@ void GFXDrawUtil::_drawWireTriangle( const GFXStateBlockDesc &desc, const Point3
 
 void GFXDrawUtil::_drawSolidTriangle( const GFXStateBlockDesc &desc, const Point3F &p0, const Point3F &p1, const Point3F &p2, const ColorI &color, const MatrixF *xfm )
 {
-   GFXVertexBufferHandle<GFXVertexPC> verts(mDevice, 3, GFXBufferTypeVolatile);
+   GFXVertexBufferHandle<GFXVertexPCT> verts(mDevice, 3, GFXBufferTypeVolatile);
    verts.lock();
-
    // Set up the line strip
    verts[0].point = p0;
    verts[0].color = color;
@@ -778,8 +799,7 @@ void GFXDrawUtil::drawPolygon( const GFXStateBlockDesc& desc, const Point3F* poi
 {
    const bool isWireframe = ( desc.fillMode == GFXFillWireframe );
    const U32 numVerts = isWireframe ? numPoints + 1 : numPoints;
-   GFXVertexBufferHandle< GFXVertexPC > verts( mDevice, numVerts, GFXBufferTypeVolatile );
-
+   GFXVertexBufferHandle< GFXVertexPCT > verts( mDevice, numVerts, GFXBufferTypeVolatile );
    verts.lock();
    for( U32 i = 0; i < numPoints; ++ i )
    {
@@ -809,7 +829,7 @@ void GFXDrawUtil::drawPolygon( const GFXStateBlockDesc& desc, const Point3F* poi
    if( desc.fillMode == GFXFillWireframe )
       mDevice->drawPrimitive( GFXLineStrip, 0, numPoints );
    else
-      mDevice->drawPrimitive( GFXTriangleFan, 0, numPoints - 2 );
+      mDevice->drawPrimitive( GFXTriangleStrip, 0, numPoints - 2 );
 }
 
 void GFXDrawUtil::drawCube( const GFXStateBlockDesc &desc, const Box3F &box, const ColorI &color, const MatrixF *xfm )
@@ -827,11 +847,10 @@ void GFXDrawUtil::drawCube( const GFXStateBlockDesc &desc, const Point3F &size, 
 
 void GFXDrawUtil::_drawWireCube( const GFXStateBlockDesc &desc, const Point3F &size, const Point3F &pos, const ColorI &color, const MatrixF *xfm )
 {
-   GFXVertexBufferHandle<GFXVertexPC> verts(mDevice, 30, GFXBufferTypeVolatile);
+   GFXVertexBufferHandle<GFXVertexPCT> verts(mDevice, 30, GFXBufferTypeVolatile);
    verts.lock();
 
    Point3F halfSize = size * 0.5f;
-
    // setup 6 line loops
    U32 vertexIndex = 0;
    for(S32 i = 0; i < 6; i++)
@@ -850,7 +869,7 @@ void GFXDrawUtil::_drawWireCube( const GFXStateBlockDesc &desc, const Point3F &s
    if ( xfm != NULL )
    {
       for ( U32 i = 0; i < 30; i++ )
-         xfm->mulP( verts[i].point );
+         xfm->mulV( verts[i].point );
    }
 
    // Apply position offset
@@ -870,11 +889,10 @@ void GFXDrawUtil::_drawWireCube( const GFXStateBlockDesc &desc, const Point3F &s
 
 void GFXDrawUtil::_drawSolidCube( const GFXStateBlockDesc &desc, const Point3F &size, const Point3F &pos, const ColorI &color, const MatrixF *xfm )
 {
-   GFXVertexBufferHandle<GFXVertexPC> verts(mDevice, 36, GFXBufferTypeVolatile);
+   GFXVertexBufferHandle<GFXVertexPCT> verts(mDevice, 36, GFXBufferTypeVolatile);
    verts.lock();
 
    Point3F halfSize = size * 0.5f;
-
    // setup 6 line loops
    U32 vertexIndex = 0;
    U32 idx;
@@ -950,10 +968,9 @@ void GFXDrawUtil::_drawWirePolyhedron( const GFXStateBlockDesc &desc, const AnyP
 
    // Allocate a temporary vertex buffer.
 
-   GFXVertexBufferHandle< GFXVertexPC > verts( mDevice, numEdges * 2, GFXBufferTypeVolatile);
+   GFXVertexBufferHandle< GFXVertexPCT > verts( mDevice, numEdges * 2, GFXBufferTypeVolatile);
 
    // Fill it with the vertices for the edges.
-   
    verts.lock();
    for( U32 i = 0; i < numEdges; ++ i )
    {
@@ -997,8 +1014,7 @@ void GFXDrawUtil::_drawSolidPolyhedron( const GFXStateBlockDesc &desc, const Any
    // Create a temp buffer for the vertices and
    // put all the polyhedron's points in there.
 
-   GFXVertexBufferHandle< GFXVertexPC > verts( mDevice, numPoints, GFXBufferTypeVolatile );
-   
+   GFXVertexBufferHandle< GFXVertexPCT > verts( mDevice, numPoints, GFXBufferTypeVolatile );
    verts.lock();
    for( U32 i = 0; i < numPoints; ++ i )
    {
@@ -1015,7 +1031,7 @@ void GFXDrawUtil::_drawSolidPolyhedron( const GFXStateBlockDesc &desc, const Any
 
    // Allocate a temp buffer for the face indices.
 
-   const U32 numIndices = poly.getNumEdges() * 2;
+   const U32 numIndices = poly.getNumEdges() * 3;
    const U32 numPlanes = poly.getNumPlanes();
 
    GFXPrimitiveBufferHandle prims( mDevice, numIndices, 0, GFXBufferTypeVolatile );
@@ -1049,9 +1065,9 @@ void GFXDrawUtil::_drawSolidPolyhedron( const GFXStateBlockDesc &desc, const Any
             continue;
       }
 
-      U32 numPoints = poly.extractFace( i, &indices[ idx ], numIndices - idx );
-      numIndicesForPoly[ numPolys ] = numPoints;
-      idx += numPoints;
+      U32 polyIDx = poly.extractFace( i, &indices[ idx ], numIndices - idx );
+      numIndicesForPoly[ numPolys ] = polyIDx;
+      idx += polyIDx;
 
       numPolys ++;
    }
@@ -1071,7 +1087,7 @@ void GFXDrawUtil::_drawSolidPolyhedron( const GFXStateBlockDesc &desc, const Any
    for( U32 i = 0; i < numPolys; ++ i )
    {
       U32 numVerts = numIndicesForPoly[ i ];
-      mDevice->drawIndexedPrimitive( GFXTriangleFan, 0, 0, numPoints, startIndex, numVerts - 2 );
+      mDevice->drawIndexedPrimitive( GFXTriangleStrip, 0, 0, numPoints, startIndex, numVerts - 2 );
       startIndex += numVerts;
    }
 }
@@ -1087,15 +1103,15 @@ void GFXDrawUtil::drawObjectBox( const GFXStateBlockDesc &desc, const Point3F &s
 
    scaledObjMat.scale( size );
    scaledObjMat.setPosition( pos );
-
+   //to linear is done in primbuilder
    PrimBuild::color( color );
    PrimBuild::begin( GFXLineList, 48 );
 
-   static const Point3F cubePoints[8] = 
+   Point3F cubePts[8];
+   for (U32 i = 0; i < 8; i++)
    {
-      Point3F(-0.5, -0.5, -0.5), Point3F(-0.5, -0.5,  0.5), Point3F(-0.5,  0.5, -0.5), Point3F(-0.5,  0.5,  0.5),
-      Point3F( 0.5, -0.5, -0.5), Point3F( 0.5, -0.5,  0.5), Point3F( 0.5,  0.5, -0.5), Point3F( 0.5,  0.5,  0.5)
-   };
+	   cubePts[i] = cubePoints[i]/2;
+   }
 
    // 8 corner points of the box   
    for ( U32 i = 0; i < 8; i++ )
@@ -1119,7 +1135,7 @@ void GFXDrawUtil::drawObjectBox( const GFXStateBlockDesc &desc, const Point3F &s
    PrimBuild::end();
 }
 
-static const Point2F circlePoints[] = 
+static const Point2F circlePoints[] =
 {
    Point2F(0.707107f, 0.707107f),
    Point2F(0.923880f, 0.382683f),
@@ -1156,15 +1172,14 @@ void GFXDrawUtil::_drawSolidCapsule( const GFXStateBlockDesc &desc, const Point3
       mat = MatrixF::Identity;
 
    S32 numPoints = sizeof(circlePoints)/sizeof(Point2F);
-   GFXVertexBufferHandle<GFXVertexPC> verts(mDevice, numPoints * 2 + 2, GFXBufferTypeVolatile);
+   GFXVertexBufferHandle<GFXVertexPCT> verts(mDevice, numPoints * 2 + 2, GFXBufferTypeVolatile);
    verts.lock();
-
    for (S32 i=0; i<numPoints + 1; i++)
    {
       S32 imod = i % numPoints;      
-      verts[2 * i].point = Point3F( circlePoints[imod].x * radius, circlePoints[imod].y * radius, height );
+      verts[2 * i].point = Point3F( circlePoints[imod].x * radius, circlePoints[imod].y * radius, height/2 );
       verts[2 * i].color = color;
-      verts[2 * i + 1].point = Point3F( circlePoints[imod].x * radius, circlePoints[imod].y * radius, -height );
+      verts[2 * i + 1].point = Point3F( circlePoints[imod].x * radius, circlePoints[imod].y * radius, -height/2 );
       verts[2 * i + 1].color = color;
    }
 
@@ -1172,7 +1187,7 @@ void GFXDrawUtil::_drawSolidCapsule( const GFXStateBlockDesc &desc, const Point3
 
    // Apply xfm if we were passed one.
    for ( U32 i = 0; i < totalNumPnts; i++ )
-      mat.mulP( verts[i].point );
+      mat.mulV( verts[i].point );
 
    // Apply position offset
    for ( U32 i = 0; i < totalNumPnts; i++ )
@@ -1211,43 +1226,61 @@ void GFXDrawUtil::_drawSolidCapsule( const GFXStateBlockDesc &desc, const Point3
 void GFXDrawUtil::_drawWireCapsule( const GFXStateBlockDesc &desc, const Point3F &center, F32 radius, F32 height, const ColorI &color, const MatrixF *xfm )
 {
    MatrixF mat;
-   if ( xfm )
+   if (xfm)
       mat = *xfm;
    else
       mat = MatrixF::Identity;
 
-   mat.scale( Point3F(radius,radius,height*0.5f) );
-   mat.setPosition(center);
-   mDevice->pushWorldMatrix();
-   mDevice->multWorld(mat);
-
-   S32 numPoints = sizeof(circlePoints)/sizeof(Point2F);
-   GFXVertexBufferHandle<GFXVertexPC> verts(mDevice, numPoints, GFXBufferTypeVolatile);
+   S32 numPoints = sizeof(circlePoints) / sizeof(Point2F);
+   GFXVertexBufferHandle<GFXVertexPCT> verts(mDevice, numPoints * 2 + 2, GFXBufferTypeVolatile);
    verts.lock();
-   for (S32 i=0; i< numPoints; i++)
+   for (S32 i = 0; i < numPoints + 1; i++)
    {
-      S32 idx = i & (~1); // just draw the even ones
-      F32 z = i & 1 ? 1.0f : -1.0f;
-      verts[i].point = Point3F(circlePoints[idx].x,circlePoints[idx].y, z);
-      verts[i].color = color;
+      S32 imod = i % numPoints;
+      verts[2 * i].point = Point3F(circlePoints[imod].x * radius, circlePoints[imod].y * radius, height / 2);
+      verts[2 * i].color = color;
+      verts[2 * i + 1].point = Point3F(circlePoints[imod].x * radius, circlePoints[imod].y * radius, -height / 2);
+      verts[2 * i + 1].color = color;
    }
+
+   S32 totalNumPnts = numPoints * 2 + 2;
+
+   // Apply xfm if we were passed one.
+   for (U32 i = 0; i < totalNumPnts; i++)
+      mat.mulV(verts[i].point);
+
+   // Apply position offset
+   for (U32 i = 0; i < totalNumPnts; i++)
+      verts[i].point += center;
+
    verts.unlock();
 
-   mDevice->setStateBlockByDesc( desc );
+   mDevice->setStateBlockByDesc(desc);
 
-   mDevice->setVertexBuffer( verts );
+   mDevice->setVertexBuffer(verts);
    mDevice->setupGenericShaders();
 
-   for (S32 i=0; i<numPoints; i += 2)
-      mDevice->drawPrimitive(GFXLineStrip, i, 1);
-
-   mDevice->popWorldMatrix();
+   mDevice->drawPrimitive(GFXTriangleStrip, 0, 2 * numPoints);
 
    Point3F sphereCenter;
-   sphereCenter.z = center.z + 0.5f * height;
-   drawSphere( desc, radius,sphereCenter,color,true,false);
-   sphereCenter.z = center.z - 0.5f * height;
-   drawSphere( desc, radius,sphereCenter,color,false,true);
+   MatrixF sphereMat;
+
+   if (xfm)
+      sphereMat = *xfm;
+   else
+      sphereMat = MatrixF::Identity;
+
+   sphereCenter.set(0, 0, 0.5f * height);
+   mat.mulV(sphereCenter);
+   sphereCenter += center;
+
+   drawSphere(desc, radius, sphereCenter, color, true, false, &sphereMat);
+
+   sphereCenter.set(0, 0, -0.5f * height);
+   mat.mulV(sphereCenter);
+   sphereCenter += center;
+
+   drawSphere(desc, radius, sphereCenter, color, false, true, &sphereMat);
 }
 
 void GFXDrawUtil::drawCone( const GFXStateBlockDesc &desc, const Point3F &basePnt, const Point3F &tipPnt, F32 baseRadius, const ColorI &color )
@@ -1268,27 +1301,56 @@ void GFXDrawUtil::drawCone( const GFXStateBlockDesc &desc, const Point3F &basePn
    mDevice->multWorld(mat);
 
    S32 numPoints = sizeof(circlePoints)/sizeof(Point2F);
-   GFXVertexBufferHandle<GFXVertexPC> verts(mDevice, numPoints + 2, GFXBufferTypeVolatile);
+   GFXVertexBufferHandle<GFXVertexPCT> verts(mDevice, numPoints * 3 + 2, GFXBufferTypeVolatile);
    verts.lock();
-   verts[0].point = Point3F(0.0f,0.0f,1.0f);
-   verts[0].color = color;
-   for (S32 i=0; i<numPoints + 1; i++)
+   F32 sign = -1.f;
+   S32 indexDown = 0; //counting down from numPoints
+   S32 indexUp = 0; //counting up from 0
+   S32 index = 0; //circlePoints index for cap
+
+   for (S32 i = 0; i < numPoints + 1; i++)
    {
+      //Top cap
+      if (i != numPoints)
+      {
+         if (sign < 0)
+            index = indexDown;
+         else
+            index = indexUp;
+
+         verts[i].point = Point3F(circlePoints[index].x, circlePoints[index].y, 0);
+         verts[i].color = color;
+
+         if (sign < 0)
+            indexUp += 1;
+         else
+            indexDown = numPoints - indexUp;
+
+         // invert sign
+         sign *= -1.0f;
+      }
+
+      //cone
       S32 imod = i % numPoints;
-      verts[i + 1].point = Point3F(circlePoints[imod].x,circlePoints[imod].y, 0.0f);
-      verts[i + 1].color = color;
+      S32 vertindex = 2 * i + numPoints;
+      verts[vertindex].point = Point3F(circlePoints[imod].x, circlePoints[imod].y, 0);
+      verts[vertindex].color = color;
+      verts[vertindex + 1].point = Point3F(0.0f, 0.0f, 1.0f);
+      verts[vertindex + 1].color = color;
    }
+
    verts.unlock();
 
    mDevice->setStateBlockByDesc( desc );
 
    mDevice->setVertexBuffer( verts );
-   mDevice->setupGenericShaders( GFXDevice::GSModColorTexture );
+   mDevice->setupGenericShaders();
 
-   mDevice->drawPrimitive( GFXTriangleFan, 0, numPoints );
-   mDevice->drawPrimitive( GFXTriangleFan, 1, numPoints-1 );
+   mDevice->drawPrimitive(GFXTriangleStrip, 0, numPoints - 2);
+   mDevice->drawPrimitive(GFXTriangleStrip, numPoints, numPoints * 2);
 
    mDevice->popWorldMatrix();
+
 }
 
 void GFXDrawUtil::drawCylinder( const GFXStateBlockDesc &desc, const Point3F &basePnt, const Point3F &tipPnt, F32 radius, const ColorI &color )
@@ -1307,37 +1369,62 @@ void GFXDrawUtil::drawCylinder( const GFXStateBlockDesc &desc, const Point3F &ba
    mDevice->pushWorldMatrix();
    mDevice->multWorld(mat);
 
-   S32 numPoints = sizeof(circlePoints)/sizeof(Point2F);
-   GFXVertexBufferHandle<GFXVertexPC> verts(mDevice, numPoints * 4 + 4, GFXBufferTypeVolatile);
+   S32 numPoints = sizeof(circlePoints) / sizeof(Point2F);
+   GFXVertexBufferHandle<GFXVertexPCT> verts(mDevice, numPoints *4 + 2, GFXBufferTypeVolatile);
    verts.lock();
-   for (S32 i=0; i<numPoints + 1; i++)
-   {
-      S32 imod = i % numPoints;
-      verts[i].point = Point3F(circlePoints[imod].x,circlePoints[imod].y, 0.5f);
-      verts[i].color = color;
-      verts[i + numPoints + 1].point = Point3F(circlePoints[imod].x,circlePoints[imod].y, 0);
-      verts[i + numPoints + 1].color = color;
+   F32 sign = -1.f;
+   S32 indexDown = 0; //counting down from numPoints
+   S32 indexUp = 0; //counting up from 0
+   S32 index = 0; //circlePoints index for caps
 
-      verts[2*numPoints + 2 + 2 * i].point = Point3F(circlePoints[imod].x,circlePoints[imod].y, 0.5f);
-      verts[2*numPoints + 2 + 2 * i].color = color;
-      verts[2*numPoints + 2 + 2 * i + 1].point = Point3F(circlePoints[imod].x,circlePoints[imod].y, 0);
-      verts[2*numPoints + 2 + 2 * i + 1].color = color;
+   for (S32 i = 0; i < numPoints + 1; i++)
+   {
+      //Top/Bottom cap
+      if (i != numPoints)
+      {
+         if (sign < 0)
+            index = indexDown;
+         else
+            index = indexUp;
+
+         verts[i].point = Point3F(circlePoints[index].x, circlePoints[index].y, 0);
+         verts[i].color = color;
+         verts[i + numPoints].point = Point3F(circlePoints[index].x, circlePoints[index].y, 0.5f);
+         verts[i + numPoints].color = color;
+
+         if (sign < 0)
+            indexUp += 1;
+         else
+            indexDown = numPoints - indexUp;
+
+         // invert sign
+         sign *= -1.0f;
+      }
+
+      //cylinder
+      S32 imod = i % numPoints;
+      S32 vertindex = 2 * i + (numPoints * 2);
+      verts[vertindex].point = Point3F(circlePoints[imod].x, circlePoints[imod].y, 0);
+      verts[vertindex].color = color;
+      verts[vertindex + 1].point = Point3F(circlePoints[imod].x, circlePoints[imod].y, 0.5f);
+      verts[vertindex + 1].color = color;
    }
+
    verts.unlock();
 
    mDevice->setStateBlockByDesc( desc );
 
    mDevice->setVertexBuffer( verts );
-   mDevice->setupGenericShaders( GFXDevice::GSModColorTexture );
+   mDevice->setupGenericShaders();
 
-   mDevice->drawPrimitive( GFXTriangleFan, 0, numPoints );
-   mDevice->drawPrimitive( GFXTriangleFan, numPoints + 1, numPoints );
-   mDevice->drawPrimitive( GFXTriangleStrip, 2 * numPoints + 2, 2 * numPoints);
+   mDevice->drawPrimitive( GFXTriangleStrip, 0, numPoints-2 );
+   mDevice->drawPrimitive( GFXTriangleStrip, numPoints, numPoints - 2);
+   mDevice->drawPrimitive( GFXTriangleStrip, numPoints*2, numPoints * 2);
 
    mDevice->popWorldMatrix();
 }
 
-void GFXDrawUtil::drawArrow( const GFXStateBlockDesc &desc, const Point3F &start, const Point3F &end, const ColorI &color )
+void GFXDrawUtil::drawArrow( const GFXStateBlockDesc &desc, const Point3F &start, const Point3F &end, const ColorI &color, F32 baseRad )
 {   
    GFXTransformSaver saver;
 
@@ -1353,8 +1440,8 @@ void GFXDrawUtil::drawArrow( const GFXStateBlockDesc &desc, const Point3F &start
 
    // Calculate the radius of the cone given that we want the cone to have
    // an angle of 25 degrees (just because it looks good).
-   F32 coneLen = ( end - coneBase ).len();
-   F32 coneDiameter = mTan( mDegToRad(25.0f) ) * coneLen;
+   F32 coneLen = (baseRad != 0.0f) ? baseRad * 4.0 :( end - coneBase ).len();
+   F32 coneDiameter = (baseRad != 0.0f) ? baseRad*4.0f : mTan( mDegToRad(25.0f) ) * coneLen;
 
    // Draw the cone on at the arrow's tip.
    drawCone( desc, coneBase, end, coneDiameter / 2.0f, color );
@@ -1367,7 +1454,7 @@ void GFXDrawUtil::drawArrow( const GFXStateBlockDesc &desc, const Point3F &start
    Point3F coneDiff = end - coneBase;
 
    // Draw the cylinder.
-   F32 stickRadius = len * 0.025f;   
+   F32 stickRadius = (baseRad != 0.0f) ? baseRad : len * 0.025f;
    drawCylinder( desc, start, end - coneDiff, stickRadius, color );
 }
 
@@ -1393,9 +1480,8 @@ void GFXDrawUtil::drawFrustum( const Frustum &f, const ColorI &color )
 
 void GFXDrawUtil::drawSolidPlane( const GFXStateBlockDesc &desc, const Point3F &pos, const Point2F &size, const ColorI &color )
 {
-   GFXVertexBufferHandle<GFXVertexPC> verts(mDevice, 4, GFXBufferTypeVolatile);
+   GFXVertexBufferHandle<GFXVertexPCT> verts(mDevice, 4, GFXBufferTypeVolatile);
    verts.lock();
-
    verts[0].point = pos + Point3F( -size.x / 2.0f, -size.y / 2.0f, 0 );
    verts[0].color = color;
    verts[1].point = pos + Point3F( -size.x / 2.0f, size.y / 2.0f, 0 );
@@ -1412,7 +1498,7 @@ void GFXDrawUtil::drawSolidPlane( const GFXStateBlockDesc &desc, const Point3F &
    mDevice->setVertexBuffer( verts );
    mDevice->setupGenericShaders();
 
-   mDevice->drawPrimitive( GFXTriangleFan, 0, 2 );
+   mDevice->drawPrimitive( GFXTriangleStrip, 0, 2 );
 }
 
 void GFXDrawUtil::drawPlaneGrid( const GFXStateBlockDesc &desc, const Point3F &pos, const Point2F &size, const Point2F &step, const ColorI &color, Plane plane )
@@ -1449,9 +1535,8 @@ void GFXDrawUtil::drawPlaneGrid( const GFXStateBlockDesc &desc, const Point3F &p
          break;
    }
 
-   GFXVertexBufferHandle<GFXVertexPC> verts( mDevice, numVertices, GFXBufferTypeVolatile );
+   GFXVertexBufferHandle<GFXVertexPCT> verts( mDevice, numVertices, GFXBufferTypeVolatile );
    verts.lock();
-
    U32 vertCount = 0;
 
    if( plane == PlaneXY || plane == PlaneXZ )
@@ -1541,7 +1626,7 @@ void GFXDrawUtil::drawTransform( const GFXStateBlockDesc &desc, const MatrixF &m
 
    GFX->multWorld( mat );
 
-   GFXVertexBufferHandle<GFXVertexPC> verts( mDevice, 6, GFXBufferTypeVolatile );
+   GFXVertexBufferHandle<GFXVertexPCT> verts( mDevice, 6, GFXBufferTypeVolatile );
    verts.lock();
 
    const static ColorI defColors[3] = 

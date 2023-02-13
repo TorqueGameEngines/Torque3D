@@ -57,6 +57,7 @@ public:
    static void addFormat(String name, String extension);
    static String getFormatExtensions();
    static String getFormatFilters();
+   static bool isSupportedFormat(String extension);
 
 public:
    enum eLoadPhases
@@ -117,8 +118,6 @@ protected:
    Vector<Point3F*>              nodeTransCache;
    Vector<QuatF*>                nodeScaleRotCache;
    Vector<Point3F*>              nodeScaleCache;
-
-   Point3F                       shapeOffset;         ///< Offset used to translate the shape origin
 
    //--------------------------------------------------------------------------
 
@@ -183,7 +182,7 @@ protected:
    void install();
 
 public:
-   TSShapeLoader() : boundsNode(0) { }
+   TSShapeLoader() : boundsNode(0), shape(NULL) { }
    virtual ~TSShapeLoader();
 
    static const Torque::Path& getShapePath() { return shapePath; }

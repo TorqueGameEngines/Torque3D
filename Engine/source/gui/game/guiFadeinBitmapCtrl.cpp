@@ -87,6 +87,7 @@ GuiFadeinBitmapCtrl::GuiFadeinBitmapCtrl()
 
 void GuiFadeinBitmapCtrl::initPersistFields()
 {
+   docsURL;
    addGroup( "Fading" );
    
       addField( "fadeColor", TypeColorF, Offset( mFadeColor, GuiFadeinBitmapCtrl ),
@@ -127,6 +128,12 @@ void GuiFadeinBitmapCtrl::onMouseDown(const GuiEvent &)
 //-----------------------------------------------------------------------------
 
 bool GuiFadeinBitmapCtrl::onKeyDown(const GuiEvent &)
+{
+   click_callback();
+   return true;
+}
+
+bool GuiFadeinBitmapCtrl::onGamepadButtonDown(const GuiEvent& event)
 {
    click_callback();
    return true;
@@ -194,7 +201,7 @@ void GuiFadeinBitmapCtrl::onRender(Point2I offset, const RectI &updateRect)
    
    // Render overlay on top of bitmap.
    
-   ColorI color = mFadeColor;
+   ColorI color = mFadeColor.toColorI();
    color.alpha = alpha;
    
    GFX->getDrawUtil()->drawRectFill( offset, getExtent() + offset, color );

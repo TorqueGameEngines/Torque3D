@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="paint_forest_btn_d_image"
+    imageFile="@assetFile=paint-forest-btn_d.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

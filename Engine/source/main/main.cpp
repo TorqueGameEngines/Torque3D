@@ -32,7 +32,7 @@ extern "C"
    int (*torque_winmain)( HINSTANCE hInstance, HINSTANCE h, LPSTR lpszCmdLine, int nShow) = NULL;
 };
 
-bool getDllName(std::wstring& dllName, const std::wstring suffix)
+bool getDllName(std::wstring& dllName, const std::wstring& suffix)
 {
    wchar_t filenameBuf[MAX_PATH];
    DWORD length = GetModuleFileNameW( NULL, filenameBuf, MAX_PATH );
@@ -282,6 +282,16 @@ int main(int argc, const char **argv)
 #include "platform/platform.h"
 #include "app/mainLoop.h"
 #include "T3D/gameFunctions.h"
+
+#if defined(WIN32) || defined(_WIN32) 
+//tell switchable graphics supported systems that they need to use the beefier GPU
+#include <windows.h>
+extern "C" { __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001; }
+extern "C" { __declspec(dllexport) DWORD AmdPowerXpressRequestHighPerformance = 0x00000001; }
+#else 
+extern "C" { int NvOptimusEnablement = 1; }
+extern "C" { int AmdPowerXpressRequestHighPerformance = 1; }
+#endif
 
 // Entry point for your game.
 //

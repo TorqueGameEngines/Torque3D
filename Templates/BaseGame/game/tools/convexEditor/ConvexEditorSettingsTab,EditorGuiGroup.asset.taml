@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="ConvexEditorSettingsTab,EditorGuiGroup"
+    scriptFile="@assetFile=convexEditorSettingsTab.ed.gui"
+    GUIFile="@assetFile=convexEditorSettingsTab.ed.gui"
+    VersionId="1" />

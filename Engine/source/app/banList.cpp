@@ -86,7 +86,7 @@ void BanList::addBan(S32 uniqueId, const char *TA, S32 banTime)
    }
 
    BanInfo b;
-   dStrcpy(b.transportAddress, TA);
+   dStrcpy(b.transportAddress, TA, 128);
    b.uniqueId = uniqueId;
    b.bannedUntil = banTime;
 
@@ -294,7 +294,7 @@ DefineEngineStaticMethod( BanList, export, void, ( const char* filename ),,
               "Dump the banlist to a file.\n\n"
               "@param filename Path of the file to write the list to.\n\n"
 			  "@tsexample\n"
-			  "BanList::Export(\"./server/banlist.cs\");\n"
+			  "BanList::Export(\"./server/banlist." TORQUE_SCRIPT_EXTENSION "\");\n"
 			  "@endtsexample\n\n")
 {
    BanList::instance()->exportToFile( filename );

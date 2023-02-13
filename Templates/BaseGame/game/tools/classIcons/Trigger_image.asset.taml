@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Trigger_image"
+    imageFile="@assetFile=Trigger.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

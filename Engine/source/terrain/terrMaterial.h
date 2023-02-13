@@ -27,6 +27,7 @@
 #include "console/simBase.h"
 #endif
 
+#include "T3D/assets/ImageAsset.h"
 
 /// The TerrainMaterial class orginizes the material settings 
 /// for a single terrain material layer.
@@ -37,18 +38,25 @@ class TerrainMaterial : public SimObject
 protected:
 
    ///
-   FileName mDiffuseMap;
+  //FileName mDiffuseMap;
+
+   //AssetPtr<ImageAsset> mDiffuseAsset;
+
+   DECLARE_IMAGEASSET(TerrainMaterial, DiffuseMap, onDiffuseMapChanged, GFXStaticTextureSRGBProfile);
+   DECLARE_ASSET_SETGET(TerrainMaterial, DiffuseMap);
 
    /// The size of the diffuse base map in meters 
    /// used to generate its texture coordinates.
    F32 mDiffuseSize;
 
    ///
-   FileName mNormalMap;
+   DECLARE_IMAGEASSET(TerrainMaterial, NormalMap, onNormalMapChanged, GFXNormalMapProfile);
+   DECLARE_ASSET_SETGET(TerrainMaterial, NormalMap);
 
    ///
-   FileName mDetailMap;
-
+   DECLARE_IMAGEASSET(TerrainMaterial, DetailMap, onDetailMapChanged, GFXStaticTextureProfile);
+   DECLARE_ASSET_SETGET(TerrainMaterial, DetailMap);
+   
    /// The size of the detail map in meters used
    /// to generate the texture coordinates for the
    /// detail and normal maps.
@@ -60,19 +68,34 @@ protected:
    /// 
    F32 mDetailDistance;
 
+   ///
+   DECLARE_IMAGEASSET(TerrainMaterial, ORMConfigMap, onORMConfigMapChanged, GFXStaticTextureProfile);
+   DECLARE_ASSET_SETGET(TerrainMaterial, ORMConfigMap);
+
+   bool mIsSRGB;
+   bool mInvertRoughness;
+
    /// Normally the detail is projected on to the xy 
    /// coordinates of the terrain.  If this flag is true
    /// then this detail is projected along the xz and yz
    /// planes.
    bool mSideProjection;
 
-   FileName mMacroMap;
+   DECLARE_IMAGEASSET(TerrainMaterial, MacroMap, onMacroMapChanged, GFXStaticTextureProfile);
+   DECLARE_ASSET_SETGET(TerrainMaterial, MacroMap);
    F32 mMacroSize;
    F32 mMacroStrength;
    F32 mMacroDistance;
 
    ///
    F32 mParallaxScale;
+
+   /// Depth for blending the textures using the new
+   /// blending method. Higher numbers = larger blend
+   /// radius.
+   F32 mBlendDepth;
+
+   F32 mBlendContrast;
 
 public:
 
@@ -93,15 +116,7 @@ public:
    /// a material is not found or defined.
    static TerrainMaterial* getWarningMaterial();
 
-   const String& getDiffuseMap() const { return mDiffuseMap; }
-
    F32 getDiffuseSize() const { return mDiffuseSize; }
-
-   const String& getNormalMap() const { return mNormalMap; }
-
-   const String& getDetailMap() const { return mDetailMap; }
-
-   const String& getMacroMap() const { return mMacroMap; }
 
    F32 getDetailSize() const { return mDetailSize; }
 
@@ -118,6 +133,20 @@ public:
    bool useSideProjection() const { return mSideProjection; }
 
    F32 getParallaxScale() const { return mParallaxScale; }
+
+   F32 getBlendDepth() const { return mBlendDepth; }
+
+   F32 getBlendContrast() const { return mBlendContrast; }
+
+   bool getIsSRGB() const { return mIsSRGB; }
+
+   bool getInvertRoughness() const { return mInvertRoughness; }
+
+   void onDiffuseMapChanged() {}
+   void onNormalMapChanged() {}
+   void onDetailMapChanged() {}
+   void onORMConfigMapChanged() {}
+   void onMacroMapChanged() {}
 
 };
 

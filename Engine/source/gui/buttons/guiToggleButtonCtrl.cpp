@@ -49,7 +49,7 @@ ConsoleDocClass( GuiToggleButtonCtrl,
 GuiToggleButtonCtrl::GuiToggleButtonCtrl()
 {
    setExtent(140, 30);
-   mButtonText = StringTable->insert("");
+   mButtonText = StringTable->EmptyString();
    mStateOn = false;
    mButtonType = ButtonTypeCheck;
 }
@@ -60,13 +60,13 @@ void GuiToggleButtonCtrl::onPreRender()
 
    // If we have a script variable, make sure we're in sync
    if ( mConsoleVariable[0] )
-   	mStateOn = Con::getBoolVariable( mConsoleVariable );
+      mStateOn = Con::getBoolVariable( mConsoleVariable );
 }
 
 void GuiToggleButtonCtrl::onRender(Point2I      offset,
                                    const RectI& updateRect)
 {
-   bool highlight = mMouseOver;
+   bool highlight = mHighlighted;
    bool depressed = mDepressed;
 
    ColorI fontColor   = mActive ? ( highlight ? mProfile->mFontColorHL : mProfile->mFontColor ) : mProfile->mFontColorNA;
@@ -89,7 +89,7 @@ void GuiToggleButtonCtrl::onRender(Point2I      offset,
          indexMultiplier = 4;
       else if ( mDepressed || mStateOn )
          indexMultiplier = 2;
-      else if ( mMouseOver )
+      else if ( mHighlighted )
          indexMultiplier = 3;
 
 

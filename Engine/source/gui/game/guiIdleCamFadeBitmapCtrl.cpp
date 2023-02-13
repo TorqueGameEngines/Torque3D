@@ -114,14 +114,14 @@ public:
       }
 
       ColorI color(255,255,255,alpha);
-      if (mTextureObject)
+      if (mBitmap)
       {
          GFX->getDrawUtil()->setBitmapModulation(color);
 
          if(mWrap)
          {
 
-            GFXTextureObject* texture = mTextureObject;
+            GFXTextureObject* texture = mBitmap;
             RectI srcRegion;
             RectI dstRegion;
             F32 xdone = ((F32)getExtent().x/(F32)texture->mBitmapSize.x)+1;
@@ -144,11 +144,11 @@ public:
          else
          {
             RectI rect(offset, getExtent());
-            GFX->getDrawUtil()->drawBitmapStretch(mTextureObject, rect);
+            GFX->getDrawUtil()->drawBitmapStretch(mBitmap, rect);
          }
       }
 
-      if (mProfile->mBorder || !mTextureObject)
+      if (mProfile->mBorder || !mBitmap)
       {
          RectI rect(offset.x, offset.y, getExtent().x, getExtent().y);
          ColorI borderCol(mProfile->mBorderColor);
@@ -177,13 +177,13 @@ ConsoleDocClass( GuiIdleCamFadeBitmapCtrl,
 				"This is going to be deprecated, and any useful code ported to FadeinBitmap\n\n"
 				"@internal");
 
-DefineConsoleMethod(GuiIdleCamFadeBitmapCtrl, fadeIn, void, (), , "()"
+DefineEngineMethod(GuiIdleCamFadeBitmapCtrl, fadeIn, void, (), , "()"
 			  "@internal")
 {
    object->fadeIn();
 }
 
-DefineConsoleMethod(GuiIdleCamFadeBitmapCtrl, fadeOut, void, (), , "()"
+DefineEngineMethod(GuiIdleCamFadeBitmapCtrl, fadeOut, void, (), , "()"
 			  "@internal")
 {
    object->fadeOut();

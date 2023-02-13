@@ -39,7 +39,7 @@ class GuiInspectorDatablockField : public GuiInspectorTypeMenuBase
 
       AbstractClassRep *mDesiredClass;
 
-      virtual SimSet* _getDatablockSet() const { return Sim::getDataBlockGroup(); }
+      virtual SimSet* _getDatablockSet() const { return Sim::getDataBlockSet(); }
       virtual void _populateMenu( GuiPopUpMenuCtrl* menu );
       
    public:

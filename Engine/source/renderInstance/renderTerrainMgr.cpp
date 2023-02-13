@@ -35,6 +35,7 @@
 #include "terrain/terrCell.h"
 #include "terrain/terrCellMaterial.h"
 #include "math/util/matrixSet.h"
+#include "materials/materialManager.h"
 
 bool RenderTerrainMgr::smRenderWireframe = false;
 
@@ -70,6 +71,7 @@ RenderTerrainMgr::~RenderTerrainMgr()
 
 void RenderTerrainMgr::initPersistFields()
 {
+   docsURL;
    Con::addVariable( "RenderTerrainMgr::renderWireframe", TypeBool, &smRenderWireframe,
       "Used to enable wireframe rendering on terrain for debugging.\n"
       "@ingroup RenderBin\n" );
@@ -115,6 +117,10 @@ void RenderTerrainMgr::clear()
 void RenderTerrainMgr::render( SceneRenderState *state )
 {
    if ( mInstVector.empty() )
+      return;
+
+   // Check if bin is disabled in advanced lighting.
+   if ( MATMGR->getDeferredEnabled() && mBasicOnly )
       return;
 
    PROFILE_SCOPE( RenderTerrainMgr_Render );

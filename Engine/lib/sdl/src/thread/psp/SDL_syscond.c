@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2014 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -19,6 +19,8 @@
   3. This notice may not be removed or altered from any source distribution.
 */
 #include "../../SDL_internal.h"
+
+#if SDL_THREAD_PSP
 
 /* An implementation of condition variables using semaphores and mutexes */
 /*
@@ -82,7 +84,7 @@ int
 SDL_CondSignal(SDL_cond * cond)
 {
     if (!cond) {
-        return SDL_SetError("Passed a NULL condition variable");
+        return SDL_InvalidParamError("cond");
     }
 
     /* If there are waiting threads not already signalled, then
@@ -106,7 +108,7 @@ int
 SDL_CondBroadcast(SDL_cond * cond)
 {
     if (!cond) {
-        return SDL_SetError("Passed a NULL condition variable");
+        return SDL_InvalidParamError("cond");
     }
 
     /* If there are waiting threads not already signalled, then
@@ -162,7 +164,7 @@ SDL_CondWaitTimeout(SDL_cond * cond, SDL_mutex * mutex, Uint32 ms)
     int retval;
 
     if (!cond) {
-        return SDL_SetError("Passed a NULL condition variable");
+        return SDL_InvalidParamError("cond");
     }
 
     /* Obtain the protection mutex, and increment the number of waiters.
@@ -216,5 +218,7 @@ SDL_CondWait(SDL_cond * cond, SDL_mutex * mutex)
 {
     return SDL_CondWaitTimeout(cond, mutex, SDL_MUTEX_MAXWAIT);
 }
+
+#endif /* SDL_THREAD_PSP */
 
 /* vi: set ts=4 sw=4 expandtab: */

@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="3rd_person_camera_n_image"
+    imageFile="@assetFile=3rd-person-camera_n.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

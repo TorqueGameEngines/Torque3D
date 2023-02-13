@@ -1,0 +1,12 @@
+
+function Core_Console::onCreate(%this)
+{
+    exec("./scripts/profiles." @ $TorqueScriptFileExtension);
+    exec("./scripts/console." @ $TorqueScriptFileExtension);
+
+    exec("./guis/console.gui");
+}
+
+function Core_Console::onDestroy(%this)
+{
+}

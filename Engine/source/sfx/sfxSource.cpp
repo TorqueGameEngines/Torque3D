@@ -191,9 +191,7 @@ SFXSource::SFXSource()
    : mStatus( SFXStatusStopped ),
      mSavedStatus( SFXStatusNull ),
      mStatusCallback( NULL ),
-     mPitch( 1.f ),
-     mModulativePitch( 1.f ),
-     mEffectivePitch( 1.f ),
+     mDescription( NULL ),
      mVolume( 1.f ),
      mPreFadeVolume( 1.f ),
      mFadedVolume( 1.f ),
@@ -203,26 +201,28 @@ SFXSource::SFXSource()
      mPriority( 0 ),
      mModulativePriority( 1.f ),
      mEffectivePriority( 0 ),
-     mVelocity( 0, 0, 0 ),
+     mPitch( 1.f ),
+     mModulativePitch( 1.f ),
+     mEffectivePitch( 1.f ),
      mTransform( true ),
+     mVelocity( 0, 0, 0 ),
      mMinDistance( 1 ),
      mMaxDistance( 100 ),
      mConeInsideAngle( 360 ),
      mConeOutsideAngle( 360 ),
      mConeOutsideVolume( 1 ),
-     mDescription( NULL ),
+     mDistToListener( 0.f ),
      mTransformScattered( false ),
-     mPlayStartTick( 0 ),
-     mFadeSegmentEase( NULL ),
      mFadeInTime( 0.f ),
      mFadeOutTime( 0.f ),
      mFadeInPoint( -1.f ),
      mFadeOutPoint( -1.f ),
      mFadeSegmentType( FadeSegmentNone ),
+     mFadeSegmentEase( NULL ),
      mFadeSegmentStartPoint( 0.f ),
      mFadeSegmentEndPoint( 0.f ),
      mSavedFadeTime( -1.f ),
-     mDistToListener( 0.f )
+     mPlayStartTick( 0 )
 {
    VECTOR_SET_ASSOCIATION( mParameters );
 }
@@ -232,12 +232,9 @@ SFXSource::SFXSource()
 SFXSource::SFXSource( SFXTrack* track, SFXDescription* description )
    : mStatus( SFXStatusStopped ),
      mSavedStatus( SFXStatusNull ),
+     mStatusCallback( NULL ),
      mTrack( track ),
      mDescription( description ),
-     mStatusCallback( NULL ),
-     mPitch( 1.f ),
-     mModulativePitch( 1.f ),
-     mEffectivePitch( 1.f ),
      mVolume( 1.f ),
      mPreFadeVolume( 1.f ),
      mFadedVolume( 1.f ),
@@ -247,25 +244,28 @@ SFXSource::SFXSource( SFXTrack* track, SFXDescription* description )
      mPriority( 0 ),
      mModulativePriority( 1.f ),
      mEffectivePriority( 0 ),
-     mVelocity( 0, 0, 0 ),
+     mPitch( 1.f ),
+     mModulativePitch( 1.f ),
+     mEffectivePitch( 1.f ),
      mTransform( true ),
+     mVelocity( 0, 0, 0 ),
      mMinDistance( 1 ),
      mMaxDistance( 100 ),
      mConeInsideAngle( 360 ),
      mConeOutsideAngle( 360 ),
      mConeOutsideVolume( 1 ),
+     mDistToListener( 0.f ),
      mTransformScattered( false ),
-     mPlayStartTick( 0 ),
      mFadeInTime( 0.f ),
      mFadeOutTime( 0.f ),
-     mFadeSegmentEase( NULL ),
      mFadeInPoint( -1.f ),
      mFadeOutPoint( -1.f ),
      mFadeSegmentType( FadeSegmentNone ),
+     mFadeSegmentEase( NULL ),
      mFadeSegmentStartPoint( 0.f ),
      mFadeSegmentEndPoint( 0.f ),
      mSavedFadeTime( -1.f ),
-     mDistToListener( 0.f )
+     mPlayStartTick( 0 )
 {
    VECTOR_SET_ASSOCIATION( mParameters );
    
@@ -297,6 +297,7 @@ SFXSource::~SFXSource()
 
 void SFXSource::initPersistFields()
 {
+   docsURL;
    addGroup( "Sound" );
    
       addProtectedField( "description", TypeSFXDescriptionName, Offset( mDescription, SFXSource ),
@@ -316,7 +317,7 @@ void SFXSource::initPersistFields()
 
 //-----------------------------------------------------------------------------
 
-bool SFXSource::processArguments( S32 argc, ConsoleValueRef *argv )
+bool SFXSource::processArguments( S32 argc, ConsoleValue *argv )
 {
    // Don't allow subclasses of this to be created via script.  Force
    // usage of the SFXSystem functions.
@@ -791,6 +792,9 @@ void SFXSource::_setStatus( SFXStatus status )
 
 void SFXSource::_updateVolume( const MatrixF& listener )
 {
+   if (!mDescription)
+      return;
+
    // Handle fades (compute mFadedVolume).
       
    mFadedVolume = mPreFadeVolume;
@@ -919,13 +923,19 @@ void SFXSource::_updateVolume( const MatrixF& listener )
 
 void SFXSource::_updatePitch()
 {
+   if (!mDescription)
+      return;
+
    mEffectivePitch = mModulativePitch * mPitch;
 }
 
 //-----------------------------------------------------------------------------
 
 void SFXSource::_updatePriority()
-{      
+{
+   if (!mDescription)
+      return;
+
    mEffectivePriority = mPriority * mModulativePriority;
 
    SFXSource* group = getSourceGroup();
@@ -1532,6 +1542,7 @@ DefineEngineMethod( SFXSource, setPitch, void, ( F32 pitch ),,
 // Need an overload here as we can't use a default parameter to signal omission of the direction argument
 // and we need to properly detect the omission to leave the currently set direction on the source as is.
 
+/* LukasPJ: For now, just use the setTransform with strings as parameters.
 DEFINE_CALLIN( fnSFXSoure_setTransform1, setTransform, SFXSource, void, ( SFXSource* source, const VectorF& position ),,,
    "Set the position of the source's 3D sound.\n\n"
    "@param position The new position in world space.\n"
@@ -1551,6 +1562,7 @@ DEFINE_CALLIN( fnSFXSoure_setTransform2, setTransform, SFXSource, void, ( SFXSou
    mat.setColumn( 1, direction );
    source->setTransform( mat );
 }
+*/
 
 // Console interop version.
 
@@ -1569,21 +1581,21 @@ static ConsoleDocFragment _sSetTransform2(
    "void setTransform( Point3F position, Point3F direction )"
 );
 
-DefineConsoleMethod( SFXSource, setTransform, void, ( const char * position, const char * direction ), ( "" ),
+DefineEngineMethod( SFXSource, setTransform, void, ( const char * position, const char * direction ), ( "" ),
    "( vector position [, vector direction ] ) "
    "Set the position and orientation of a 3D sound source.\n"
    "@hide" )
 {
    MatrixF mat = object->getTransform();
 
-   if(dStrcmp( position , "")!=0 )
+   if(String::compare( position , "")!=0 )
    {
       Point3F pos;
       dSscanf( position, "%g %g %g", &pos.x, &pos.y, &pos.z );
       mat.setPosition( pos );
    }
    
-   if(dStrcmp( direction ,"")!=0 )
+   if(String::compare( direction ,"")!=0 )
    {
       Point3F dir;
       dSscanf( direction, "%g %g %g", &dir.x, &dir.y, &dir.z );

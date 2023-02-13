@@ -30,6 +30,10 @@
    #include "sfx/sfxTrack.h"
 #endif
 
+#ifndef SOUND_ASSET_H
+#include "T3D/assets/SoundAsset.h"
+#endif
+
 
 class SFXState;
 
@@ -81,7 +85,7 @@ class SFXPlayList : public SFXTrack
          ///
          /// @note To have longer playlists, simply cascade playlists and use
          ///   wait behaviors.
-         NUM_SLOTS = 16,
+         NUM_SLOTS = 12, // AFX (was 16)
          
          NUM_TRANSITION_MODE_BITS = 3,
          NUM_LOOP_MODE_BITS = 1,
@@ -256,10 +260,7 @@ class SFXPlayList : public SFXTrack
          /// Bahavior when state of this slot is deactivated and the slot's track
          /// is playing.
          EStateMode mStateMode[ NUM_SLOTS ];
-         
-         /// Track to play in this slot.
-         SFXTrack* mTrack[ NUM_SLOTS ];
-         
+
          SlotData()
          {
             dMemset( mReplayMode, 0, sizeof( mReplayMode ) );
@@ -267,7 +268,6 @@ class SFXPlayList : public SFXTrack
             dMemset( mTransitionOut, 0, sizeof( mTransitionOut ) );
             dMemset( mRepeatCount, 0, sizeof( mRepeatCount ) );
             dMemset( mState, 0, sizeof( mState ) );
-            dMemset( mTrack, 0, sizeof( mTrack ) );
             dMemset( mStateMode, 0, sizeof( mStateMode ) );
             
             for( U32 i = 0; i < NUM_SLOTS; ++ i )
@@ -282,7 +282,9 @@ class SFXPlayList : public SFXTrack
             }
          }
       };
-                        
+      DECLARE_SOUNDASSET_ARRAY(SFXPlayList, Track, NUM_SLOTS);
+      DECLARE_ASSET_ARRAY_SETGET(SFXPlayList, Track);
+
    protected:
    
       /// Trace interpreter execution.  This field is not networked.

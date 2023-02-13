@@ -1,0 +1,7 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="NightSkyMat"
+    scriptFile="@assetFile=NightSkyMat.tscript"
+    materialDefinitionName="NightSkyMat"
+    VersionId="1" />

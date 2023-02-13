@@ -41,10 +41,8 @@ ImplementEnumType( GFXAdapterType,
    "Back-end graphics API used by the GFX subsystem.\n\n"
    "@ingroup GFX" )
    { OpenGL, "OpenGL", "OpenGL." },
-   { Direct3D8, "D3D8", "Direct3D 8." },
-   { Direct3D9, "D3D9", "Direct3D 9." },
-   { NullDevice, "NullDevice", "Null device for dedicated servers." },
-   { Direct3D9_360, "Xenon", "Direct3D 9 on Xbox 360." }
+   { Direct3D11, "D3D11", "Direct3D 11." },
+   { NullDevice, "NullDevice", "Null device for dedicated servers." }
 EndImplementEnumType;
 
 ImplementEnumType( GFXBlend,
@@ -100,73 +98,8 @@ ImplementEnumType( GFXTextureFilterType,
    { GFXTextureFilterPoint,   "GFXTextureFilterPoint" },
    { GFXTextureFilterLinear,  "GFXTextureFilterLinear" },
    { GFXTextureFilterAnisotropic, "GFXTextureFilterAnisotropic" },
-   { GFXTextureFilterPyramidalQuad, "GFXTextureFilterPyramidalQuad" },
-   { GFXTextureFilterGaussianQuad, "GFXTextureFilterGaussianQuad" }
 
 EndImplementEnumType;
-
-ImplementEnumType( GFXTextureOp,
-   "The texture operators.\n"
-   "@ingroup GFX" )
-
-   { GFXTOPDisable, "GFXTOPDisable" },
-   { GFXTOPSelectARG1, "GFXTOPSelectARG1" },
-   { GFXTOPSelectARG2, "GFXTOPSelectARG2" },
-   { GFXTOPModulate, "GFXTOPModulate" },
-   { GFXTOPModulate2X, "GFXTOPModulate2X" },
-   { GFXTOPModulate4X, "GFXTOPModulate4X" },
-   { GFXTOPAdd, "GFXTOPAdd" },
-   { GFXTOPAddSigned, "GFXTOPAddSigned" },
-   { GFXTOPAddSigned2X, "GFXTOPAddSigned2X" },
-   { GFXTOPSubtract, "GFXTOPSubtract" },
-   { GFXTOPAddSmooth, "GFXTOPAddSmooth" }, 
-   { GFXTOPBlendDiffuseAlpha, "GFXTOPBlendDiffuseAlpha" },
-   { GFXTOPBlendTextureAlpha, "GFXTOPBlendTextureAlpha" },
-   { GFXTOPBlendFactorAlpha, "GFXTOPBlendFactorAlpha" },
-   { GFXTOPBlendTextureAlphaPM, "GFXTOPBlendTextureAlphaPM" },
-   { GFXTOPBlendCURRENTALPHA, "GFXTOPBlendCURRENTALPHA" },
-   { GFXTOPPreModulate, "GFXTOPPreModulate" },
-   { GFXTOPModulateAlphaAddColor, "GFXTOPModulateAlphaAddColor" },
-   { GFXTOPModulateColorAddAlpha, "GFXTOPModulateColorAddAlpha" },
-   { GFXTOPModulateInvAlphaAddColor, "GFXTOPModulateInvAlphaAddColor" },
-   { GFXTOPModulateInvColorAddAlpha, "GFXTOPModulateInvColorAddAlpha" },
-   { GFXTOPBumpEnvMap, "GFXTOPBumpEnvMap" },
-   { GFXTOPBumpEnvMapLuminance, "GFXTOPBumpEnvMapLuminance" },
-   { GFXTOPDotProduct3, "GFXTOPDotProduct3" },
-   { GFXTOPLERP, "GFXTOPLERP" }
-
-EndImplementEnumType;
-
-ImplementEnumType( GFXTextureArgument,
-   "The texture arguments.\n"
-   "@ingroup GFX" )
-
-   { GFXTADiffuse, "GFXTADiffuse" },
-   { GFXTACurrent, "GFXTACurrent" },
-   { GFXTATexture, "GFXTATexture" },
-   { GFXTATFactor, "GFXTATFactor" },
-   { GFXTASpecular, "GFXTASpecular" },
-   { GFXTATemp, "GFXTATemp" },
-   { GFXTAConstant, "GFXTAConstant" },
-
-   { GFXTAComplement, "OneMinus" },
-   { GFXTAAlphaReplicate, "AlphaReplicate" }
-
-EndImplementEnumType;
-
-ImplementEnumType( GFXTextureTransformFlags,
-   "The texture transform state flags.\n"
-   "@ingroup GFX" )
-
-   { GFXTTFFDisable, "GFXTTFDisable" },
-   { GFXTTFFCoord1D, "GFXTTFFCoord1D" },
-   { GFXTTFFCoord2D, "GFXTTFFCoord2D" },
-   { GFXTTFFCoord3D, "GFXTTFFCoord3D" },
-   { GFXTTFFCoord4D, "GFXTTFFCoord4D" },
-   { GFXTTFFProjected, "GFXTTFProjected" }
-
-EndImplementEnumType;
-
 
 ImplementEnumType( GFXFormat,
    "The texture formats.\n"
@@ -175,6 +108,7 @@ ImplementEnumType( GFXFormat,
 
    { GFXFormatR8G8B8, "GFXFormatR8G8B8" },
    { GFXFormatR8G8B8A8, "GFXFormatR8G8B8A8" },
+   { GFXFormatR8G8B8A8_SRGB, "GFXFormatR8G8B8A8_SRGB" },
    { GFXFormatR8G8B8X8, "GFXFormatR8G8B8X8" },
    { GFXFormatR32F, "GFXFormatR32F" },
    { GFXFormatR5G6B5, "GFXFormatR5G6B5" },
@@ -184,11 +118,11 @@ ImplementEnumType( GFXFormat,
    { GFXFormatA8L8, "GFXFormatA8L8" },
    { GFXFormatA8, "GFXFormatA8" },
    { GFXFormatL8, "GFXFormatL8" },
-   { GFXFormatDXT1, "GFXFormatDXT1" },
-   { GFXFormatDXT2, "GFXFormatDXT2" }, 
-   { GFXFormatDXT3, "GFXFormatDXT3" }, 
-   { GFXFormatDXT4, "GFXFormatDXT4" }, 
-   { GFXFormatDXT5, "GFXFormatDXT5" }, 
+   { GFXFormatBC1, "GFXFormatBC1" },
+   { GFXFormatBC2, "GFXFormatBC2" }, 
+   { GFXFormatBC3, "GFXFormatBC3" }, 
+   { GFXFormatBC4, "GFXFormatBC4" }, 
+   { GFXFormatBC5, "GFXFormatBC5" }, 
    { GFXFormatD32, "GFXFormatD32" }, 
    { GFXFormatD24X8, "GFXFormatD24X8" },
    { GFXFormatD24S8, "GFXFormatD24S8" },

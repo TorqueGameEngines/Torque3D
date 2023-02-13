@@ -48,7 +48,6 @@ private:
 
    MRandom mRandom;
 
-   F32  lerp(F32 t, F32 a, F32 b);
    F32  curve(F32 t);
    void setup(F32 t, S32 &b0, S32 &b1, F32 &r0, F32 &r1);
    F32  dot(const F32 *q, F32 rx, F32 ry);

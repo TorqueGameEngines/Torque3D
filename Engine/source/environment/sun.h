@@ -36,6 +36,8 @@
 #include "T3D/lightFlareData.h"
 #endif
 
+#include "T3D/assets/MaterialAsset.h"
+
 class TimeOfDay;
 class MatrixSet;
 
@@ -50,9 +52,9 @@ protected:
    
    F32 mSunElevation;
 
-   ColorF mLightColor;
+   LinearColorF mLightColor;
 
-   ColorF mLightAmbient;
+   LinearColorF mLightAmbient;
 
    F32 mBrightness;
 
@@ -65,6 +67,8 @@ protected:
    F32  mEndElevation;
 
    bool mCastShadows;
+   S32 mStaticRefreshFreq;
+   S32 mDynamicRefreshFreq;
 
    LightInfo *mLight;
 
@@ -73,11 +77,14 @@ protected:
    F32 mFlareScale;
 
    bool mCoronaEnabled;
-   String mCoronaMatName;
+
+   DECLARE_MATERIALASSET(Sun, CoronaMaterial);
+   DECLARE_ASSET_NET_SETGET(Sun, CoronaMaterial, UpdateMask);
+
    BaseMatInstance *mCoronaMatInst;
    MatrixSet *mMatrixSet;   
    F32 mCoronaScale;
-   ColorF mCoronaTint;
+   LinearColorF mCoronaTint;
    bool mCoronaUseLightColor;
 
    // These are not user specified.
@@ -134,7 +141,7 @@ public:
    void setElevation( F32 elevation );
 
    ///
-   void setColor( const ColorF &color );
+   void setColor( const LinearColorF &color );
 
    ///
    void animate( F32 duration, F32 startAzimuth, F32 endAzimuth, F32 startElevation, F32 endElevation );

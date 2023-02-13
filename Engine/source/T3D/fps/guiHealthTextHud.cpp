@@ -41,10 +41,10 @@ class GuiHealthTextHud : public GuiControl
    bool mShowEnergy;  
    bool mShowTrueHealth;  
   
-   ColorF mFillColor;  
-   ColorF mFrameColor;  
-   ColorF mTextColor;  
-   ColorF mWarnColor;  
+   LinearColorF mFillColor;  
+   LinearColorF mFrameColor;  
+   LinearColorF mTextColor;  
+   LinearColorF mWarnColor;  
   
    F32 mWarnLevel;  
    F32 mPulseThreshold;  
@@ -115,7 +115,8 @@ GuiHealthTextHud::GuiHealthTextHud()
 }  
   
 void GuiHealthTextHud::initPersistFields()  
-{  
+{
+   docsURL;
    addGroup("Colors");       
    addField("fillColor", TypeColorF, Offset(mFillColor, GuiHealthTextHud), "Color for the background of the control.");  
    addField("frameColor", TypeColorF, Offset(mFrameColor, GuiHealthTextHud), "Color for the control's frame.");  
@@ -162,10 +163,12 @@ void GuiHealthTextHud::onRender(Point2I offset, const RectI &updateRect)
       else  
          mValue = 100 - (100 * control->getDamageValue());    
    }  
+
+   GFXDrawUtil* drawUtil = GFX->getDrawUtil();
   
    // If enabled draw background first  
    if (mShowFill)  
-      GFX->getDrawUtil()->drawRectFill(updateRect, mFillColor);  
+      drawUtil->drawRectFill(updateRect, mFillColor.toColorI());
   
    // Prepare text and center it  
    S32 val = (S32)mValue;    
@@ -174,7 +177,7 @@ void GuiHealthTextHud::onRender(Point2I offset, const RectI &updateRect)
    offset.x += (getBounds().extent.x - mProfile->mFont->getStrWidth((const UTF8 *)buf)) / 2;    
    offset.y += (getBounds().extent.y - mProfile->mFont->getHeight()) / 2;    
   
-   ColorF tColor = mTextColor;   
+   LinearColorF tColor = mTextColor;   
   
    // If warning level is exceeded switch to warning color  
    if(mValue < mWarnLevel)   
@@ -190,11 +193,11 @@ void GuiHealthTextHud::onRender(Point2I offset, const RectI &updateRect)
       }  
    }  
   
-   GFX->getDrawUtil()->setBitmapModulation(tColor);    
-   GFX->getDrawUtil()->drawText(mProfile->mFont, offset, buf);    
-   GFX->getDrawUtil()->clearBitmapModulation();    
+   drawUtil->setBitmapModulation(tColor.toColorI());
+   drawUtil->drawText(mProfile->mFont, offset, buf);    
+   drawUtil->clearBitmapModulation();    
   
    // If enabled draw the border last  
    if (mShowFrame)  
-      GFX->getDrawUtil()->drawRect(updateRect, mFrameColor);  
+      drawUtil->drawRect(updateRect, mFrameColor.toColorI());
 }  

@@ -9,7 +9,7 @@
 
   ---------------------------------------------------------------------------
 
-      Copyright (c) 1998-2007 Greg Roelofs.  All rights reserved.
+      Copyright (c) 1998-2007,2017 Greg Roelofs.  All rights reserved.
 
       This software is provided "as is," without warranty of any kind,
       express or implied.  In no event shall the author or contributors
@@ -154,17 +154,26 @@ uch *readpng_get_image(double display_exponent, int *pChannels, ulg *pRowbytes)
     *pRowbytes = rowbytes = channels*width;
     *pChannels = channels;
 
+    Trace((stderr, "readpng_get_image:  rowbytes = %ld, height = %ld\n", rowbytes, height));
+
+    /* Guard against integer overflow */
+    if (height > ((size_t)(-1))/rowbytes) {
+        fprintf(stderr, PROGNAME ":  image_data buffer would be too large\n",
+        return NULL;
+    }
+
     if ((image_data = (uch *)malloc(rowbytes*height)) == NULL) {
         return NULL;
     }
 
-    Trace((stderr, "readpng_get_image:  rowbytes = %ld, height = %ld\n", rowbytes, height));
-
-
     /* now we can go ahead and just read the whole image */
 
-    fread(image_data, 1L, rowbytes*height, saved_infile);
-
+    if (fread(image_data, 1L, rowbytes*height, saved_infile) <
+       rowbytes*height) {
+        free (image_data);
+        image_data = NULL;
+        return NULL;
+    }
 
     return image_data;
 }

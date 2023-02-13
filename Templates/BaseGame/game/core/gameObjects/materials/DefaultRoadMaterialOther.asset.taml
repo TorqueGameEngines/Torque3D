@@ -1,0 +1,14 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="DefaultRoadMaterialOther"
+    materialDefinitionName="DefaultRoadMaterialOther"
+    VersionId="1">
+    <Material
+        Name="DefaultRoadMaterialOther">
+        <Material.Stages>
+            <Stages_beginarray
+                DiffuseMapAsset="Core_GameObjects:defaultRoadTextureOther_image"/>
+        </Material.Stages>
+    </Material>
+</MaterialAsset>

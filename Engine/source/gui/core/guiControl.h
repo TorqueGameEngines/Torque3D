@@ -20,6 +20,11 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+// Arcane-FX for MIT Licensed Open Source version of Torque 3D from GarageGames
+// Copyright (C) 2015 Faust Logic, Inc.
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+
 #ifndef _GUICONTROL_H_
 #define _GUICONTROL_H_
 
@@ -102,6 +107,7 @@ class GuiControl : public SimGroup
    public:
    
       typedef SimGroup Parent;
+      typedef GuiControl Children;
       
       friend class GuiWindowCtrl; // mCollapseGroupVec
       friend class GuiCanvas;
@@ -121,6 +127,9 @@ class GuiControl : public SimGroup
          horizResizeLeft,        ///< fixed on the right and width
          horizResizeCenter,
          horizResizeRelative,     ///< resize relative
+         horizResizeAspectLeft,    ///< resize relative to height delta (offset Left)
+         horizResizeAspectRight,   ///< resize relative to height delta (offset Right)
+         horizResizeAspectCenter,  ///< resize relative to height delta (Centered)
          horizResizeWindowRelative ///< resize window relative
       };
       enum vertSizingOptions
@@ -130,6 +139,9 @@ class GuiControl : public SimGroup
          vertResizeTop,          ///< fixed in height and on the bottom
          vertResizeCenter,
          vertResizeRelative,      ///< resize relative
+         vertResizeAspectTop,     ///< resize relative to width delta (offset Left)
+         vertResizeAspectBottom,  ///< resize relative to width delta (offset Right)
+         vertResizeAspectCenter,  ///< resize relative to width delta Centered)
          vertResizeWindowRelative ///< resize window relative
       };
       
@@ -280,6 +292,8 @@ class GuiControl : public SimGroup
       const char * getConsoleCommand(); ///< Returns the name of the function bound to this GuiControl
       LangTable *getGUILangTable(void);
       const UTF8 *getGUIString(S32 id);
+
+      inline String& getTooltip() { return mTooltip; } ///< Returns the tooltip
       
       /// @}
       
@@ -327,7 +341,7 @@ class GuiControl : public SimGroup
       
       GuiControl();
       virtual ~GuiControl();
-      virtual bool processArguments(S32 argc, ConsoleValueRef *argv);
+      virtual bool processArguments(S32 argc, ConsoleValue *argv);
       
       static void initPersistFields();
       static void consoleInit();
@@ -814,6 +828,10 @@ class GuiControl : public SimGroup
       
       void inspectPostApply();
       void inspectPreApply();
+protected:
+      F32 fade_amt;
+public:
+      void setFadeAmount(F32 amt) { fade_amt = amt; }
 };
 
 typedef GuiControl::horizSizingOptions GuiHorizontalSizing;

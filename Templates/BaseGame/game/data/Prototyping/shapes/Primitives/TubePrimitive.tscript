@@ -1,0 +1,28 @@
+//--- OBJECT WRITE BEGIN ---
+new TSShapeConstructor(TubePrimitive_fbx) {
+   baseShapeAsset = "Prototyping:TubePrimitive";
+   upAxis = "DEFAULT";
+   unit = "-1";
+   LODType = "TrailingNumber";
+   singleDetailSize = "0";
+   IgnoreNodeScale = "0";
+   AdjustCenter = "0";
+   AdjustFloor = "0";
+   forceUpdateMaterials = "0";
+   convertLeftHanded = "0";
+   calcTangentSpace = "0";
+   genUVCoords = "0";
+   transformUVCoords = "0";
+   flipUVCoords = "1";
+   findInstances = "0";
+   limitBoneWeights = "0";
+   JoinIdenticalVerts = "1";
+   reverseWindingOrder = "1";
+   invertNormals = "0";
+   removeRedundantMats = "1";
+   animTiming = "Seconds";
+   animFPS = "2";
+   canSave = "1";
+   canSaveDynamicFields = "1";
+};
+//--- OBJECT WRITE END ---

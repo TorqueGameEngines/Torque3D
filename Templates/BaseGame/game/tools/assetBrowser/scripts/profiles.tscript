@@ -1,0 +1,99 @@
+singleton GuiControlProfile(AssetBrowserPreviewImageAsset : ToolsGuiDefaultProfile)
+{
+   fillcolor = EditorSettings.value("Theme/windowBackgroundColor");
+   fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
+   
+   border = true;
+   borderColor   = "230 126 0 255";
+   borderColorNA = "230 126 0 255";
+};
+
+singleton GuiControlProfile(AssetBrowserPreviewMaterialAsset : ToolsGuiDefaultProfile)
+{
+   fillcolor = EditorSettings.value("Theme/windowBackgroundColor");
+   fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
+   
+   border = true;
+   borderColor   = "0 100 0 255";
+   borderColorNA = "0 100 0 255";
+};
+
+singleton GuiControlProfile(AssetBrowserPreviewShapeAsset : ToolsGuiDefaultProfile)
+{
+   fillcolor = EditorSettings.value("Theme/windowBackgroundColor");
+   fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
+   
+   border = true;
+   borderColor   = "0 0 200 255";
+   borderColorNA = "0 0 200 255";
+};
+
+singleton GuiControlProfile(AssetBrowserPreviewShapeAnimationAsset : ToolsGuiDefaultProfile)
+{
+   fillcolor = EditorSettings.value("Theme/windowBackgroundColor");
+   fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
+   
+   border = true;
+   borderColor   = "0 0 200 255";
+   borderColorNA = "0 0 200 255";
+};
+
+singleton GuiControlProfile(AssetBrowserPreviewSoundAsset : ToolsGuiDefaultProfile)
+{
+   fillcolor = EditorSettings.value("Theme/windowBackgroundColor");
+   fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
+   
+   border = true;
+   borderColor   = "75 101 135 255";
+   borderColorNA = "75 101 135 255";
+};
+
+singleton GuiControlProfile(AssetBrowserPreviewTerrainAsset : ToolsGuiDefaultProfile)
+{
+   fillcolor = EditorSettings.value("Theme/windowBackgroundColor");
+   fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
+   
+   border = true;
+   borderColor   = "200 198 198 255";
+   borderColorNA = "200 198 198 255";
+};
+
+singleton GuiControlProfile(AssetBrowserPreviewTerrainMaterialAsset : ToolsGuiDefaultProfile)
+{
+   fillcolor = EditorSettings.value("Theme/windowBackgroundColor");
+   fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
+   
+   border = true;
+   borderColor   = "200 198 198 255";
+   borderColorNA = "200 198 198 255";
+};
+
+singleton GuiControlProfile(AssetBrowserPreviewStateMachineAsset : ToolsGuiDefaultProfile)
+{
+   fillcolor = EditorSettings.value("Theme/windowBackgroundColor");
+   fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
+   
+   border = true;
+   borderColor   = "0 76 135 255";
+   borderColorNA = "0 76 135 255";
+};
+
+singleton GuiControlProfile(AssetBrowserPreviewGUIAsset : ToolsGuiDefaultProfile)
+{
+   fillcolor = EditorSettings.value("Theme/windowBackgroundColor");
+   fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
+   
+   border = true;
+   borderColor   = "17 5 44 255";
+   borderColorNA = "17 5 44 255";
+};
+
+singleton GuiControlProfile(AssetBrowserPreviewLevelAsset : ToolsGuiDefaultProfile)
+{
+   fillcolor = EditorSettings.value("Theme/windowBackgroundColor");
+   fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
+   
+   border = true;
+   borderColor   = "0 208 186 255";
+   borderColorNA = "0 208 186 255";
+};

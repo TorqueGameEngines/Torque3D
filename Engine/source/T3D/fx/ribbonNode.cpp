@@ -39,7 +39,6 @@ ConsoleDocClass( RibbonNodeData,
 ConsoleDocClass( RibbonNode, ""
    );
 
-
 //-----------------------------------------------------------------------------
 // RibbonNodeData
 //-----------------------------------------------------------------------------
@@ -57,6 +56,7 @@ RibbonNodeData::~RibbonNodeData()
 //-----------------------------------------------------------------------------
 void RibbonNodeData::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 
@@ -91,6 +91,7 @@ RibbonNode::~RibbonNode()
 //-----------------------------------------------------------------------------
 void RibbonNode::initPersistFields()
 {
+   docsURL;
    addField( "active", TYPEID< bool >(), Offset(mActive,RibbonNode),
       "Controls whether ribbon is emitted from this node." );
    addField( "ribbon",  TYPEID< RibbonData >(), Offset(mRibbonDatablock, RibbonNode),
@@ -299,7 +300,7 @@ void RibbonNode::setRibbonDatablock(RibbonData* data)
    mRibbonDatablock = data;
 }
 
-DefineEngineMethod(RibbonNode, setRibbonDatablock, void, (RibbonData* ribbonDatablock), (0),
+DefineEngineMethod(RibbonNode, setRibbonDatablock, void, (RibbonData* ribbonDatablock), (nullAsType<RibbonData*>()),
    "Assigns the datablock for this ribbon node.\n"
    "@param ribbonDatablock RibbonData datablock to assign\n"
    "@tsexample\n"

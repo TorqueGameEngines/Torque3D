@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="textEdit_image"
+    imageFile="@assetFile=textEdit.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

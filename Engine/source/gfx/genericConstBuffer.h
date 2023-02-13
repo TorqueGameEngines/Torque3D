@@ -106,7 +106,7 @@ public:
    virtual ~GenericConstBufferLayout() {}
 
    /// Add a parameter to the buffer
-   void addParameter(const String& name, const GFXShaderConstType constType, const U32 offset, const U32 size, const U32 arraySize, const U32 alignValue);
+   virtual void addParameter(const String& name, const GFXShaderConstType constType, const U32 offset, const U32 size, const U32 arraySize, const U32 alignValue);
 
    /// Get the size of the buffer
    inline U32 getBufferSize() const { return mBufferSize; }
@@ -172,7 +172,7 @@ public:
    inline void set(const GenericConstBufferLayout::ParamDesc& pd, const Point3F& fv) { internalSet(pd, GFXSCT_Float3, sizeof(Point3F), &fv); }
    inline void set(const GenericConstBufferLayout::ParamDesc& pd, const Point4F& fv) { internalSet(pd, GFXSCT_Float4, sizeof(Point4F), &fv); }
    inline void set(const GenericConstBufferLayout::ParamDesc& pd, const PlaneF& fv) { internalSet(pd, GFXSCT_Float4, sizeof(PlaneF), &fv); }
-   inline void set(const GenericConstBufferLayout::ParamDesc& pd, const ColorF& fv) { internalSet(pd, GFXSCT_Float4, sizeof(Point4F), &fv); }
+   inline void set(const GenericConstBufferLayout::ParamDesc& pd, const LinearColorF& fv) { internalSet(pd, GFXSCT_Float4, sizeof(Point4F), &fv); }
    inline void set(const GenericConstBufferLayout::ParamDesc& pd, const S32 f) { internalSet(pd, GFXSCT_Int, sizeof(S32), &f); }
    inline void set(const GenericConstBufferLayout::ParamDesc& pd, const Point2I& fv) { internalSet(pd, GFXSCT_Int2, sizeof(Point2I), &fv); }
    inline void set(const GenericConstBufferLayout::ParamDesc& pd, const Point3I& fv) { internalSet(pd, GFXSCT_Int3, sizeof(Point3I), &fv); }
@@ -190,6 +190,8 @@ public:
    {
       AssertFatal(   matrixType == GFXSCT_Float2x2 || 
                      matrixType == GFXSCT_Float3x3 || 
+                     matrixType == GFXSCT_Float3x4 || 
+                     matrixType == GFXSCT_Float4x3 || 
                      matrixType == GFXSCT_Float4x4, 
          "GenericConstBuffer::set() - Invalid matrix type!" );
 
@@ -200,6 +202,8 @@ public:
    {
       AssertFatal(   matrixType == GFXSCT_Float2x2 || 
                      matrixType == GFXSCT_Float3x3 || 
+                     matrixType == GFXSCT_Float3x4 ||
+                     matrixType == GFXSCT_Float4x3 ||  
                      matrixType == GFXSCT_Float4x4, 
          "GenericConstBuffer::set() - Invalid matrix type!" );
 
@@ -209,6 +213,9 @@ public:
    /// Gets the dirty buffer range and clears the dirty
    /// state at the same time.
    inline const U8* getDirtyBuffer( U32 *start, U32 *size );
+
+   /// Gets the entire buffer ignoring dirty range
+   inline const U8* getEntireBuffer();
 
    /// Sets the entire buffer as dirty or clears the dirty state.
    inline void setDirty( bool dirty );
@@ -346,6 +353,13 @@ inline const U8* GenericConstBuffer::getDirtyBuffer( U32 *start, U32 *size )
    mDirtyEnd = 0;
 
    return buffer;
+}
+
+inline const U8* GenericConstBuffer::getEntireBuffer()
+{
+   AssertFatal(mBuffer, "GenericConstBuffer::getDirtyBuffer() - Buffer is empty!");
+
+   return mBuffer;
 }
 
 inline bool GenericConstBuffer::isEqual( const GenericConstBuffer *buffer ) const

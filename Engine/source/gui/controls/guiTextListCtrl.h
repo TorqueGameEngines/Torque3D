@@ -48,13 +48,15 @@ class GuiTextListCtrl : public GuiArrayCtrl
       UP = 0,
       DOWN = 1
    };
-   enum {
+   enum : U32
+   {
       InvalidId = 0xFFFFFFFF
    };
    Vector<S32> mColumnOffsets;
 
    bool  mFitParentWidth;
    bool  mClipColumnText;
+   S32   mRowHeightPadding;
 
    U32 getRowWidth(Entry *row);
    bool cellSelected(Point2I cell);
@@ -67,8 +69,8 @@ class GuiTextListCtrl : public GuiArrayCtrl
    DECLARE_CATEGORY( "Gui Lists" );
    DECLARE_DESCRIPTION( "A control that displays text in tabular form." );
    
-   DECLARE_CALLBACK( void, onSelect, (const char* cellid, const char* text));
-   DECLARE_CALLBACK( void, onDeleteKey, ( const char* id ));
+   DECLARE_CALLBACK( void, onSelect, (S32 cellid, const char* text));
+   DECLARE_CALLBACK( void, onDeleteKey, ( S32 id ));
 
    static void initPersistFields();
 
@@ -102,6 +104,8 @@ class GuiTextListCtrl : public GuiArrayCtrl
    const char *getSelectedText();
 
    bool onKeyDown(const GuiEvent &event);
+   bool onGamepadAxisUp(const GuiEvent& event);
+   bool onGamepadAxisDown(const GuiEvent& event);
 
    virtual void onRenderCell(Point2I offset, Point2I cell, bool selected, bool mouseOver);
 

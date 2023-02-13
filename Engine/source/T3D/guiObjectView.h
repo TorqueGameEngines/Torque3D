@@ -30,6 +30,8 @@
    #include "ts/tsShapeInstance.h"
 #endif
 
+#include "T3D/assets/ShapeAsset.h"
+
 
 class LightInfo;
 
@@ -68,7 +70,7 @@ class GuiObjectView : public GuiTSCtrl
       /// @{
       
       /// Name of the model loaded for display.
-      String mModelName;
+      StringTableEntry mModelName;
 
       /// Model being displayed in the view.
       TSShapeInstance* mModel;
@@ -145,10 +147,10 @@ class GuiObjectView : public GuiTSCtrl
       LightInfo* mLight;
       
       ///
-      ColorF mLightColor;
+      LinearColorF mLightColor;
       
       ///
-      ColorF mLightAmbient;
+      LinearColorF mLightAmbient;
       
       ///
       Point3F mLightDirection;
@@ -255,10 +257,10 @@ class GuiObjectView : public GuiTSCtrl
       /// @{
       
       ///
-      void setLightColor( const ColorF& color );
+      void setLightColor( const LinearColorF& color );
       
       ///
-      void setLightAmbient( const ColorF& color );
+      void setLightAmbient( const LinearColorF& color );
       
       ///
       void setLightDirection( const Point3F& direction );

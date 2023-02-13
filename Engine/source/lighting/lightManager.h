@@ -49,7 +49,7 @@ class GFXShaderConstBuffer;
 class GFXShaderConstHandle;
 class ShaderConstHandles;
 class SceneRenderState;
-class RenderPrePassMgr;
+class RenderDeferredMgr;
 class Frustum;
 
 ///
@@ -134,7 +134,7 @@ public:
    virtual void registerLocalLight( LightInfo *light );
    virtual void unregisterLocalLight( LightInfo *light );
 
-   virtual void registerGlobalLights( const Frustum *frustum, bool staticlighting );
+   virtual void registerGlobalLights( const Frustum *frustum, bool staticlighting, bool enableZoneLightCulling = false );
    virtual void unregisterAllLights();
 
    /// Returns all unsorted and un-scored lights (both global and local).
@@ -167,7 +167,7 @@ protected:
    static LightManager *smActiveLM;
 
    /// Find the pre-pass render bin on the scene's default render pass.
-   RenderPrePassMgr* _findPrePassRenderBin();
+   RenderDeferredMgr* _findDeferredRenderBin();
 
    /// This helper function sets the shader constansts
    /// for the stock 4 light forward lighting code.
@@ -177,8 +177,11 @@ protected:
                                     GFXShaderConstHandle *lightAmbientSC,
                                     GFXShaderConstHandle *lightInvRadiusSqSC,
                                     GFXShaderConstHandle *lightSpotDirSC,
-                                    GFXShaderConstHandle *lightSpotAngleSC,
-									GFXShaderConstHandle *lightSpotFalloffSC,
+                                    GFXShaderConstHandle * lightSpotParamsSC,
+                                    GFXShaderConstHandle* hasVectorLightSC,
+                                    GFXShaderConstHandle* vectorLightDirectionSC,
+                                    GFXShaderConstHandle* vectorLightColorSC,
+                                    GFXShaderConstHandle* vectorLightBrightnessSC,
                                     GFXShaderConstBuffer *shaderConsts );
 
    /// A dummy default light used when no lights

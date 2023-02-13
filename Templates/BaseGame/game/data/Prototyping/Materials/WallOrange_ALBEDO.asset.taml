@@ -1,0 +1,4 @@
+<ImageAsset
+    AssetName="WallOrange_ALBEDO"
+    imageFile="@assetFile=WallOrange.png"
+    originalFilePath="C:/dev/T3D/PRs/MiscFixes20220525/Templates/BaseGame/game/data/Prototyping/Materials/WallOrange.png"/>

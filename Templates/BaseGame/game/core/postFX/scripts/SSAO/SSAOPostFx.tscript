@@ -1,0 +1,372 @@
+//-----------------------------------------------------------------------------
+// Copyright (c) 2012 GarageGames, LLC
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+// IN THE SOFTWARE.
+//-----------------------------------------------------------------------------
+
+
+///
+$PostFX::SSAOPostFX::overallStrength = 2.0;
+
+// TODO: Add small/large param docs.
+
+// The small radius SSAO settings.
+$PostFX::SSAOPostFX::sRadius = 0.1;
+$PostFX::SSAOPostFX::sStrength = 6.0;
+$PostFX::SSAOPostFX::sDepthMin = 0.1;
+$PostFX::SSAOPostFX::sDepthMax = 1.0;
+$PostFX::SSAOPostFX::sDepthPow = 1.0;
+$PostFX::SSAOPostFX::sNormalTol = 0.0;
+$PostFX::SSAOPostFX::sNormalPow = 1.0;
+
+// The large radius SSAO settings.
+$PostFX::SSAOPostFX::lRadius = 1.0;
+$PostFX::SSAOPostFX::lStrength = 10.0;
+$PostFX::SSAOPostFX::lDepthMin = 0.2;
+$PostFX::SSAOPostFX::lDepthMax = 2.0;
+$PostFX::SSAOPostFX::lDepthPow = 0.2;
+$PostFX::SSAOPostFX::lNormalTol = -0.5;
+$PostFX::SSAOPostFX::lNormalPow = 2.0;
+
+/// Valid values: 0, 1, 2
+$PostFX::SSAOPostFX::quality = 0;
+
+///
+$PostFX::SSAOPostFX::blurDepthTol = 0.001;
+
+/// 
+$PostFX::SSAOPostFX::blurNormalTol = 0.95;
+
+///
+$PostFX::SSAOPostFX::targetScale = "0.5 0.5";
+
+
+function SSAOPostFx::onAdd( %this )
+{  
+   %this.wasVis = "Uninitialized";
+   %this.quality = "Uninitialized";
+   
+   PostFXManager.registerPostEffect(%this);
+}
+
+function SSAOPostFx::preProcess( %this )
+{   
+   if ( $PostFX::SSAOPostFX::quality !$= %this.quality )
+   {
+      %this.quality = mClamp( mRound( $PostFX::SSAOPostFX::quality ), 0, 2 );
+      
+      %this.setShaderMacro( "QUALITY", %this.quality );      
+   }      
+   
+   %this.targetScale = $PostFX::SSAOPostFX::targetScale;
+}
+
+function SSAOPostFx::setShaderConsts( %this )
+{      
+   %this.setShaderConst( "$overallStrength", $PostFX::SSAOPostFX::overallStrength );
+
+   // Abbreviate is s-small l-large.   
+   
+   %this.setShaderConst( "$sRadius",      $PostFX::SSAOPostFX::sRadius );
+   %this.setShaderConst( "$sStrength",    $PostFX::SSAOPostFX::sStrength );
+   %this.setShaderConst( "$sDepthMin",    $PostFX::SSAOPostFX::sDepthMin );
+   %this.setShaderConst( "$sDepthMax",    $PostFX::SSAOPostFX::sDepthMax );
+   %this.setShaderConst( "$sDepthPow",    $PostFX::SSAOPostFX::sDepthPow );
+   %this.setShaderConst( "$sNormalTol",   $PostFX::SSAOPostFX::sNormalTol );
+   %this.setShaderConst( "$sNormalPow",   $PostFX::SSAOPostFX::sNormalPow );
+   
+   %this.setShaderConst( "$lRadius",      $PostFX::SSAOPostFX::lRadius );
+   %this.setShaderConst( "$lStrength",    $PostFX::SSAOPostFX::lStrength );
+   %this.setShaderConst( "$lDepthMin",    $PostFX::SSAOPostFX::lDepthMin );
+   %this.setShaderConst( "$lDepthMax",    $PostFX::SSAOPostFX::lDepthMax );
+   %this.setShaderConst( "$lDepthPow",    $PostFX::SSAOPostFX::lDepthPow );
+   %this.setShaderConst( "$lNormalTol",   $PostFX::SSAOPostFX::lNormalTol );
+   %this.setShaderConst( "$lNormalPow",   $PostFX::SSAOPostFX::lNormalPow );
+   
+   %blur = %this->blurY;
+   %blur.setShaderConst( "$blurDepthTol", $PostFX::SSAOPostFX::blurDepthTol );
+   %blur.setShaderConst( "$blurNormalTol", $PostFX::SSAOPostFX::blurNormalTol );   
+   
+   %blur = %this->blurX;
+   %blur.setShaderConst( "$blurDepthTol", $PostFX::SSAOPostFX::blurDepthTol );
+   %blur.setShaderConst( "$blurNormalTol", $PostFX::SSAOPostFX::blurNormalTol );   
+   
+   %blur = %this->blurY2;
+   %blur.setShaderConst( "$blurDepthTol", $PostFX::SSAOPostFX::blurDepthTol );
+   %blur.setShaderConst( "$blurNormalTol", $PostFX::SSAOPostFX::blurNormalTol );
+      
+   %blur = %this->blurX2;
+   %blur.setShaderConst( "$blurDepthTol", $PostFX::SSAOPostFX::blurDepthTol );
+   %blur.setShaderConst( "$blurNormalTol", $PostFX::SSAOPostFX::blurNormalTol );         
+}
+
+function SSAOPostFx::onEnabled( %this )
+{
+   // This tells the AL shaders to reload and sample
+   // from our #ssaoMask texture target. 
+   $AL::UseSSAOMask = true;
+   
+   $PostFX::SSAOPostFx::Enabled = true;
+   
+   return true;
+}
+
+function SSAOPostFx::onDisabled( %this )
+{
+  $AL::UseSSAOMask = false;
+  
+  $PostFX::SSAOPostFx::Enabled = false;
+}
+
+function SSAOPostFx::populatePostFXSettings(%this)
+{
+   PostEffectEditorInspector.startGroup("SSAO - General");
+   PostEffectEditorInspector.addCallbackField("$PostFX::SSAOPostFx::Enabled", "Enabled", "bool", "", $PostFX::SSAOPostFx::Enabled, "", "toggleSSAOPostFx");
+   PostEffectEditorInspector.addField("$PostFX::SSAOPostFx::quality", "Quality", "list", "0,1,2", $PostFX::SSAOPostFX::quality, "0,1,2");
+   PostEffectEditorInspector.addField("$PostFX::SSAOPostFx::overallStrength", "Overall Strength", "float", "", $PostFX::SSAOPostFX::overallStrength, "");
+   PostEffectEditorInspector.addField("$PostFX::SSAOPostFx::blurDepthTol", "Blur (Softness)", "float", "", $PostFX::SSAOPostFX::blurDepthTol, "");
+   PostEffectEditorInspector.addField("$PostFX::SSAOPostFx::blurNormalTol", "Blur (Normal Maps)", "float", "", $PostFX::SSAOPostFX::blurNormalTol, "");
+   PostEffectEditorInspector.endGroup();
+   
+   PostEffectEditorInspector.startGroup("SSAO - Near");
+   PostEffectEditorInspector.addField("$PostFX::SSAOPostFx::sRadius", "Radius", "float", "", $PostFX::SSAOPostFX::sRadius, "");
+   PostEffectEditorInspector.addField("$PostFX::SSAOPostFx::sStrength", "Strength", "float", "", $PostFX::SSAOPostFX::sStrength, "");
+   PostEffectEditorInspector.addField("$PostFX::SSAOPostFx::sDepthMin", "Depth Min", "float", "", $PostFX::SSAOPostFX::sDepthMin, "");
+   PostEffectEditorInspector.addField("$PostFX::SSAOPostFx::sDepthMax", "Depth Max", "float", "", $PostFX::SSAOPostFX::sDepthMax, "");
+   PostEffectEditorInspector.addField("$PostFX::SSAOPostFx::sNormalTol", "Normal Map Tolerance", "float", "", $PostFX::SSAOPostFX::sNormalTol, "");
+   PostEffectEditorInspector.addField("$PostFX::SSAOPostFx::sNormalPow", "Normal Map Power", "float", "", $PostFX::SSAOPostFX::sNormalPow, "");
+   PostEffectEditorInspector.endGroup();
+   
+   PostEffectEditorInspector.startGroup("SSAO - Far");
+   PostEffectEditorInspector.addField("$PostFX::SSAOPostFx::lRadius", "Radius", "float", "", $PostFX::SSAOPostFX::lRadius, "");
+   PostEffectEditorInspector.addField("$PostFX::SSAOPostFx::lStrength", "Strength", "float", "", $PostFX::SSAOPostFX::lStrength, "");
+   PostEffectEditorInspector.addField("$PostFX::SSAOPostFx::lDepthMin", "Depth Min", "float", "", $PostFX::SSAOPostFX::lDepthMin, "");
+   PostEffectEditorInspector.addField("$PostFX::SSAOPostFx::lDepthMax", "Depth Max", "float", "", $PostFX::SSAOPostFX::lDepthMax, "");
+   PostEffectEditorInspector.addField("$PostFX::SSAOPostFx::lNormalTol", "Normal Map Tolerance", "float", "", $PostFX::SSAOPostFX::lNormalTol, "");
+   PostEffectEditorInspector.addField("$PostFX::SSAOPostFx::lNormalPow", "Normal Map Power", "float", "", $PostFX::SSAOPostFX::lNormalPow, "");
+   PostEffectEditorInspector.endGroup();
+}
+
+function PostEffectEditorInspector::toggleSSAOPostFx(%this)
+{
+   if($PostFX::SSAOPostFx::Enabled && $pref::PostFX::EnableSSAO)
+      SSAOPostFx.enable();
+   else
+      SSAOPostFx.disable();
+}
+
+function SSAOPostFx::applyFromPreset(%this)
+{
+   if($PostFXManager::PostFX::Enable && $pref::PostFX::EnableSSAO)
+      %this.enable();
+   else
+      %this.disable();
+}
+
+function SSAOPostFx::savePresetSettings(%this)
+{
+   PostFXManager::savePresetSetting("$PostFX::SSAOPostFx::Enabled");
+   PostFXManager::savePresetSetting("$PostFX::SSAOPostFx::quality");
+   
+   PostFXManager::savePresetSetting("$PostFX::SSAOPostFx::sRadius");
+   PostFXManager::savePresetSetting("$PostFX::SSAOPostFx::sStrength");
+   PostFXManager::savePresetSetting("$PostFX::SSAOPostFx::sDepthMin");
+   PostFXManager::savePresetSetting("$PostFX::SSAOPostFx::sDepthMax");
+   PostFXManager::savePresetSetting("$PostFX::SSAOPostFx::sNormalTol");
+   PostFXManager::savePresetSetting("$PostFX::SSAOPostFx::sNormalPow");
+   
+   PostFXManager::savePresetSetting("$PostFX::SSAOPostFx::lRadius");
+   PostFXManager::savePresetSetting("$PostFX::SSAOPostFx::lStrength");
+   PostFXManager::savePresetSetting("$PostFX::SSAOPostFx::lDepthMin");
+   PostFXManager::savePresetSetting("$PostFX::SSAOPostFx::lDepthMax");
+   PostFXManager::savePresetSetting("$PostFX::SSAOPostFx::lNormalTol");
+   PostFXManager::savePresetSetting("$PostFX::SSAOPostFx::lNormalPow");
+}
+
+//-----------------------------------------------------------------------------
+// GFXStateBlockData / ShaderData
+//-----------------------------------------------------------------------------
+
+singleton GFXStateBlockData( SSAOStateBlock : PFX_DefaultStateBlock )
+{   
+   samplersDefined = true;
+   samplerStates[0] = SamplerClampPoint;
+   samplerStates[1] = SamplerWrapLinear;
+   samplerStates[2] = SamplerClampPoint;
+};
+
+singleton GFXStateBlockData( SSAOBlurStateBlock : PFX_DefaultStateBlock )
+{   
+   samplersDefined = true;
+   samplerStates[0] = SamplerClampLinear;
+   samplerStates[1] = SamplerClampPoint;
+};
+
+singleton ShaderData( SSAOShader )
+{   
+   DXVertexShaderFile 	= $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
+   DXPixelShaderFile 	= "./SSAO_P.hlsl";            
+   
+   OGLVertexShaderFile  = $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";
+   OGLPixelShaderFile   = "./SSAO_P.glsl";
+
+   samplerNames[0] = "$deferredMap";
+   samplerNames[1] = "$randNormalTex";
+   samplerNames[2] = "$powTable";
+   
+   pixVersion = 3.0;
+};
+
+singleton ShaderData( SSAOBlurYShader )
+{
+   DXVertexShaderFile 	= "./SSAO_Blur_V.hlsl";
+   DXPixelShaderFile 	= "./SSAO_Blur_P.hlsl";   
+   
+   OGLVertexShaderFile  = "./SSAO_Blur_V.glsl";
+   OGLPixelShaderFile   = "./SSAO_Blur_P.glsl";
+   
+   samplerNames[0] = "$occludeMap";
+   samplerNames[1] = "$deferredMap";
+
+   pixVersion = 3.0;      
+   
+   defines = "BLUR_DIR=float2(0.0,1.0)";         
+};
+
+singleton ShaderData( SSAOBlurXShader : SSAOBlurYShader )
+{
+   defines = "BLUR_DIR=float2(1.0,0.0)";
+};
+
+//-----------------------------------------------------------------------------
+// PostEffects
+//-----------------------------------------------------------------------------
+
+singleton PostEffect( SSAOPostFx )
+{     
+   allowReflectPass = false;
+     
+   renderTime = "PFXBeforeBin";
+   renderBin = "ProbeBin";   
+   renderPriority = 10;
+   
+   shader = SSAOShader;
+   stateBlock = SSAOStateBlock;
+         
+   texture[0] = "#deferred";         
+   textureAsset[1] = "Core_PostFX:noise_image";
+   texture[2] = "#ssao_pow_table";
+   
+   target = "$outTex";
+   targetScale = "0.5 0.5";
+   targetViewport = "PFXTargetViewport_NamedInTexture0";
+   
+   singleton PostEffect()
+   {
+      internalName = "blurY";
+      
+      shader = SSAOBlurYShader;
+      stateBlock = SSAOBlurStateBlock;
+      
+      texture[0] = "$inTex";
+      texture[1] = "#deferred";
+      
+      target = "$outTex"; 
+   };
+      
+   singleton PostEffect()
+   {
+      internalName = "blurX";
+      
+      shader = SSAOBlurXShader;
+      stateBlock = SSAOBlurStateBlock;
+      
+      texture[0] = "$inTex";
+      texture[1] = "#deferred";
+      
+      target = "$outTex"; 
+   };   
+   
+   singleton PostEffect()
+   {
+      internalName = "blurY2";
+      
+      shader = SSAOBlurYShader;
+      stateBlock = SSAOBlurStateBlock;
+            
+      texture[0] = "$inTex";
+      texture[1] = "#deferred";
+      
+      target = "$outTex"; 
+   };
+   
+   singleton PostEffect()
+   {
+      internalName = "blurX2";
+            
+      shader = SSAOBlurXShader;
+      stateBlock = SSAOBlurStateBlock;
+            
+      texture[0] = "$inTex";
+      texture[1] = "#deferred";
+            
+      // We write to a mask texture which is then
+      // read by the lighting shaders to mask ambient.
+      target = "#ssaoMask";   
+   };  
+};
+
+
+/// Just here for debug visualization of the 
+/// SSAO mask texture used during lighting.
+singleton PostEffect( SSAOVizPostFx )
+{      
+   allowReflectPass = false;
+        
+   shader = PFX_PassthruShader;
+   stateBlock = PFX_DefaultStateBlock;
+   
+   texture[0] = "#ssaoMask";
+   
+   target = "$backbuffer";
+};
+
+singleton ShaderData( SSAOPowTableShader )
+{
+   DXVertexShaderFile 	= "./SSAO_PowerTable_V.hlsl";
+   DXPixelShaderFile 	= "./SSAO_PowerTable_P.hlsl";            
+   
+   OGLVertexShaderFile  = "./SSAO_PowerTable_V.glsl";
+   OGLPixelShaderFile   = "./SSAO_PowerTable_P.glsl";   
+   
+   pixVersion = 2.0;
+};
+
+singleton PostEffect( SSAOPowTablePostFx )
+{
+   shader = SSAOPowTableShader;
+   stateBlock = PFX_DefaultStateBlock;
+   
+   renderTime = "PFXTexGenOnDemand";
+   
+   target = "#ssao_pow_table"; 
+   
+   targetFormat = "GFXFormatR16F";   
+   targetSize = "256 1";
+};

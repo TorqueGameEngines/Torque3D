@@ -20,6 +20,11 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+// Arcane-FX for MIT Licensed Open Source version of Torque 3D from GarageGames
+// Copyright (C) 2015 Faust Logic, Inc.
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+
 #include "platform/platform.h"
 #include "T3D/aiPlayer.h"
 
@@ -35,9 +40,9 @@ static U32 sAIPlayerLoSMask = TerrainObjectType | StaticShapeObjectType | Static
 IMPLEMENT_CO_NETOBJECT_V1(AIPlayer);
 
 ConsoleDocClass( AIPlayer,
-	"@brief A Player object not controlled by conventional input, but by an AI engine.\n\n"
+   "@brief A Player object not controlled by conventional input, but by an AI engine.\n\n"
 
-	"The AIPlayer provides a Player object that may be controlled from script.  You control "
+   "The AIPlayer provides a Player object that may be controlled from script.  You control "
    "where the player moves and how fast.  You may also set where the AIPlayer is aiming at "
    "-- either a location or another game object.\n\n"
 
@@ -70,19 +75,19 @@ ConsoleDocClass( AIPlayer,
    "position to the center of the target's bounding box.  The LOS ray test only checks against interiors, "
    "statis shapes, and terrain.\n\n"
 
-	"@tsexample\n"
-	"// Create the demo player object\n"
-	"%player = new AiPlayer()\n"
-	"{\n"
-	"	dataBlock = DemoPlayer;\n"
-	"	path = \"\";\n"
-	"};\n"
-	"@endtsexample\n\n"
+   "@tsexample\n"
+   "// Create the demo player object\n"
+   "%player = new AiPlayer()\n"
+   "{\n"
+   "  dataBlock = DemoPlayer;\n"
+   "  path = \"\";\n"
+   "};\n"
+   "@endtsexample\n\n"
 
-	"@see Player for a list of all inherited functions, variables, and base description\n"
+   "@see Player for a list of all inherited functions, variables, and base description\n"
 
-	"@ingroup AI\n"
-	"@ingroup gameObjects\n");
+   "@ingroup AI\n"
+   "@ingroup gameObjects\n");
 /**
  * Constructor
  */
@@ -97,6 +102,9 @@ AIPlayer::AIPlayer()
    mMoveSlowdown = true;
    mMoveState = ModeStop;
 
+   // This new member saves the movement state of the AI so that
+   // it can be restored after a substituted animation is finished.
+   mMoveState_saved = -1;
    mAimObject = 0;
    mAimLocationSet = false;
    mTargetInLOS = false;
@@ -112,6 +120,8 @@ AIPlayer::AIPlayer()
 
    for( S32 i = 0; i < MaxTriggerKeys; i ++ )
       mMoveTriggers[ i ] = false;
+
+   mAttackRadius = 1;
 }
 
 /**
@@ -123,6 +133,7 @@ AIPlayer::~AIPlayer()
 
 void AIPlayer::initPersistFields()
 {
+   docsURL;
    addGroup( "AI" );
 
       addField( "mMoveTolerance", TypeF32, Offset( mMoveTolerance, AIPlayer ), 
@@ -145,6 +156,9 @@ void AIPlayer::initPersistFields()
          "to accelerate to full speed without its initial slow start being considered as stuck.\n"
          "@note Set to zero to have the stuck test start immediately.\n");
 
+      addField( "AttackRadius", TypeF32, Offset( mAttackRadius, AIPlayer ), 
+         "@brief Distance considered in firing range for callback purposes.");
+           
    endGroup( "AI" );
 
 #ifdef TORQUE_NAVIGATION_ENABLED
@@ -157,7 +171,7 @@ void AIPlayer::initPersistFields()
       addField("allowDrop", TypeBool, Offset(mLinkTypes.drop, AIPlayer),
          "Allow the character to use drop links.");
       addField("allowSwim", TypeBool, Offset(mLinkTypes.swim, AIPlayer),
-         "Allow the character tomove in water.");
+         "Allow the character to move in water.");
       addField("allowLedge", TypeBool, Offset(mLinkTypes.ledge, AIPlayer),
          "Allow the character to jump ledges.");
       addField("allowClimb", TypeBool, Offset(mLinkTypes.climb, AIPlayer),
@@ -259,7 +273,7 @@ void AIPlayer::setAimObject( GameBase *targetObject )
  * @param targetObject The object to target
  * @param offset       The offest from the target location to aim at
  */
-void AIPlayer::setAimObject( GameBase *targetObject, Point3F offset )
+void AIPlayer::setAimObject(GameBase *targetObject, const Point3F& offset)
 {
    mAimObject = targetObject;
    mTargetInLOS = false;
@@ -288,6 +302,30 @@ void AIPlayer::clearAim()
    mAimObject = 0;
    mAimLocationSet = false;
    mAimOffset = Point3F(0.0f, 0.0f, 0.0f);
+}
+
+/**
+ * Sets the correct aim for the bot to the target
+ */
+void AIPlayer::getMuzzleVector(U32 imageSlot,VectorF* vec)
+{
+   MatrixF mat;
+   getMuzzleTransform(imageSlot,&mat);
+
+   MountedImage& image = mMountedImageList[imageSlot];
+
+   if (image.dataBlock->correctMuzzleVector)
+   {
+      disableHeadZCalc();
+      if (getCorrectedAim(mat, vec))
+      {
+         enableHeadZCalc();
+         return;
+      }
+      enableHeadZCalc();
+
+   }
+   mat.getColumn(1,vec);
 }
 
 /**
@@ -372,6 +410,11 @@ bool AIPlayer::getAIMove(Move *movePtr)
             {
                clearPath();
                mMoveState = ModeStop;
+            throwCallback("onTargetInRange");
+            }
+            else if((getPosition() - mFollowData.object->getPosition()).len() < mAttackRadius)
+            {
+            throwCallback("onTargetInFiringRange");
             }
          }
       }
@@ -499,7 +542,7 @@ bool AIPlayer::getAIMove(Move *movePtr)
          {
             F32 speed = mMoveSpeed;
             F32 dist = mSqrt(xDiff*xDiff + yDiff*yDiff);
-            F32 maxDist = 5.0f;
+            F32 maxDist = mMoveTolerance*2;
             if (dist < maxDist)
                speed *= dist / maxDist;
             movePtr->x *= speed;
@@ -515,23 +558,27 @@ bool AIPlayer::getAIMove(Move *movePtr)
             mMoveState = ModeMove;
          }
 
-         if (mMoveStuckTestCountdown > 0)
-            --mMoveStuckTestCountdown;
-         else
-         {
-            // We should check to see if we are stuck...
-            F32 locationDelta = (location - mLastLocation).len();
+         // Don't check for ai stuckness if animation during
+         // an anim-clip effect override.
+         if (mDamageState == Enabled && !(anim_clip_flags & ANIM_OVERRIDDEN) && !isAnimationLocked()) {
+	         if (mMoveStuckTestCountdown > 0)
+	            --mMoveStuckTestCountdown;
+	         else
+	         {
+	            // We should check to see if we are stuck...
+	            F32 locationDelta = (location - mLastLocation).len();
             if (locationDelta < mMoveStuckTolerance && mDamageState == Enabled) 
             {
                // If we are slowing down, then it's likely that our location delta will be less than
                // our move stuck tolerance. Because we can be both slowing and stuck
                // we should TRY to check if we've moved. This could use better detection.
                if ( mMoveState != ModeSlowing || locationDelta == 0 )
-               {
-                  mMoveState = ModeStuck;
-                  onStuck();
-               }
-            }
+	               {
+	                  mMoveState = ModeStuck;
+	                  onStuck();
+	               }
+	            }
+	         }
          }
       }
    }
@@ -539,34 +586,42 @@ bool AIPlayer::getAIMove(Move *movePtr)
    // Test for target location in sight if it's an object. The LOS is
    // run from the eye position to the center of the object's bounding,
    // which is not very accurate.
-   if (mAimObject) {
-      MatrixF eyeMat;
-      getEyeTransform(&eyeMat);
-      eyeMat.getColumn(3,&location);
-      Point3F targetLoc = mAimObject->getBoxCenter();
-
-      // This ray ignores non-static shapes. Cast Ray returns true
-      // if it hit something.
-      RayInfo dummy;
-      if (getContainer()->castRay( location, targetLoc,
-            StaticShapeObjectType | StaticObjectType |
-            TerrainObjectType, &dummy)) {
-         if (mTargetInLOS) {
-            throwCallback( "onTargetExitLOS" );
-            mTargetInLOS = false;
-         }
-      }
-      else
-         if (!mTargetInLOS) {
+   if (mAimObject)
+   {
+      if (checkInLos(mAimObject.getPointer()))
+      {
+         if (!mTargetInLOS)
+         {
             throwCallback( "onTargetEnterLOS" );
             mTargetInLOS = true;
          }
    }
+      else if (mTargetInLOS)
+      {
+            throwCallback( "onTargetExitLOS" );
+            mTargetInLOS = false;
+         }
+      }
 
+   Pose desiredPose = mPose;
+
+   if ( mSwimming )  
+      desiredPose = SwimPose;   
+   else if ( mAiPose == 1 && canCrouch() )   
+      desiredPose = CrouchPose;  
+   else if ( mAiPose == 2 && canProne() )  
+      desiredPose = PronePose;  
+   else if ( mAiPose == 3 && canSprint() )  
+      desiredPose = SprintPose;  
+   else if ( canStand() )  
+      desiredPose = StandPose;  
+  
+   setPose( desiredPose );
+   
    // Replicate the trigger state into the move so that
    // triggers can be controlled from scripts.
    for( U32 i = 0; i < MaxTriggerKeys; i++ )
-      movePtr->trigger[ i ] = mMoveTriggers[ i ];
+      movePtr->trigger[ i ] = getImageTriggerState( i );
 
 #ifdef TORQUE_NAVIGATION_ENABLED
    if(mJump == Now)
@@ -586,9 +641,30 @@ bool AIPlayer::getAIMove(Move *movePtr)
    }
 #endif // TORQUE_NAVIGATION_ENABLED
 
+   if (!(anim_clip_flags & ANIM_OVERRIDDEN) && !isAnimationLocked())
    mLastLocation = location;
 
    return true;
+}
+
+void AIPlayer::updateMove(const Move* move)
+{
+   if (!getControllingClient() && isGhost())
+      return;
+
+   Parent::updateMove(move);
+}
+
+void AIPlayer::setAiPose( S32 pose )  
+{  
+   if (!getControllingClient() && isGhost())  
+      return;  
+   mAiPose = pose;  
+}  
+  
+S32 AIPlayer::getAiPose()  
+{  
+   return mAiPose;  
 }
 
 /**
@@ -643,12 +719,11 @@ void AIPlayer::onReachDestination()
  */
 void AIPlayer::onStuck()
 {
+   throwCallback("onMoveStuck");
 #ifdef TORQUE_NAVIGATION_ENABLED
    if(!mPathData.path.isNull())
       repath();
-   else
 #endif
-      throwCallback("onMoveStuck");
 }
 
 #ifdef TORQUE_NAVIGATION_ENABLED
@@ -720,29 +795,26 @@ bool AIPlayer::setPathDestination(const Point3F &pos)
    if(!getNavMesh())
    {
       //setMoveDestination(pos);
+      throwCallback("onPathFailed");
       return false;
    }
 
    // Create a new path.
    NavPath *path = new NavPath();
-   if(path)
+
+   path->mMesh = getNavMesh();
+   path->mFrom = getPosition();
+   path->mTo = pos;
+   path->mFromSet = path->mToSet = true;
+   path->mAlwaysRender = true;
+   path->mLinkTypes = mLinkTypes;
+   path->mXray = true;
+   // Paths plan automatically upon being registered.
+   if(!path->registerObject())
    {
-      path->mMesh = getNavMesh();
-      path->mFrom = getPosition();
-      path->mTo = pos;
-      path->mFromSet = path->mToSet = true;
-      path->mAlwaysRender = true;
-      path->mLinkTypes = mLinkTypes;
-      path->mXray = true;
-      // Paths plan automatically upon being registered.
-      if(!path->registerObject())
-      {
-         delete path;
-         return false;
-      }
-   }
-   else
+      delete path;
       return false;
+   }
 
    if(path->success())
    {
@@ -755,6 +827,7 @@ bool AIPlayer::setPathDestination(const Point3F &pos)
       mPathData.owned = true;
       // Skip node 0, which we are currently standing on.
       moveToNode(1);
+      throwCallback("onPathSuccess");
       return true;
    }
    else
@@ -762,7 +835,7 @@ bool AIPlayer::setPathDestination(const Point3F &pos)
       // Just move normally if we can't path.
       //setMoveDestination(pos, true);
       //return;
-      //throwCallback("onPathFailed");
+      throwCallback("onPathFailed");
       path->deleteObject();
       return false;
    }
@@ -796,7 +869,7 @@ DefineEngineMethod(AIPlayer, getPathDestination, Point3F, (),,
 
    "@see setPathDestination()\n")
 {
-	return object->getPathDestination();
+   return object->getPathDestination();
 }
 
 void AIPlayer::followNavPath(NavPath *path)
@@ -831,11 +904,15 @@ void AIPlayer::followObject(SceneObject *obj, F32 radius)
    if(!isServerObject())
       return;
 
+   if ((mFollowData.lastPos - obj->getPosition()).len()<mMoveTolerance)
+      return;
+
    if(setPathDestination(obj->getPosition()))
    {
       clearCover();
       mFollowData.object = obj;
       mFollowData.radius = radius;
+      mFollowData.lastPos = obj->getPosition();
    }
 }
 
@@ -846,6 +923,10 @@ DefineEngineMethod(AIPlayer, followObject, void, (SimObjectId obj, F32 radius),,
    "@param radius Maximum distance we let the target escape to.")
 {
    SceneObject *follow;
+   object->clearPath();
+   object->clearCover();
+   object->clearFollow();
+
    if(Sim::findObject(obj, follow))
       object->followObject(follow, radius);
 }
@@ -977,9 +1058,9 @@ NavMesh *AIPlayer::findNavMesh() const
          }
          else
          {
-            if(getNavSize() == Small && !m->mSmallCharacters ||
-               getNavSize() == Regular && !m->mRegularCharacters ||
-               getNavSize() == Large && !m->mLargeCharacters)
+            if((getNavSize() == Small && !m->mSmallCharacters) ||
+               (getNavSize() == Regular && !m->mRegularCharacters) ||
+               (getNavSize() == Large && !m->mLargeCharacters))
                continue;
          }
          if(!mesh || m->getWorldBox().getVolume() < mesh->getWorldBox().getVolume())
@@ -1028,11 +1109,11 @@ DefineEngineMethod(AIPlayer, getNavMesh, S32, (),,
 DefineEngineMethod(AIPlayer, setNavSize, void, (const char *size),,
    "@brief Set the size of NavMesh this character uses. One of \"Small\", \"Regular\" or \"Large\".")
 {
-   if(!dStrcmp(size, "Small"))
+   if(!String::compare(size, "Small"))
       object->setNavSize(AIPlayer::Small);
-   else if(!dStrcmp(size, "Regular"))
+   else if(!String::compare(size, "Regular"))
       object->setNavSize(AIPlayer::Regular);
-   else if(!dStrcmp(size, "Large"))
+   else if(!String::compare(size, "Large"))
       object->setNavSize(AIPlayer::Large);
    else
       Con::errorf("AIPlayer::setNavSize: no such size '%s'.", size);
@@ -1082,7 +1163,7 @@ DefineEngineMethod( AIPlayer, setMoveSpeed, void, ( F32 speed ),,
    
    "@see getMoveDestination()\n")
 {
-	object->setMoveSpeed(speed);
+   object->setMoveSpeed(speed);
 }
 
 DefineEngineMethod( AIPlayer, getMoveSpeed, F32, ( ),,
@@ -1120,7 +1201,7 @@ DefineEngineMethod( AIPlayer, getMoveDestination, Point3F, (),,
    
    "@see setMoveDestination()\n")
 {
-	return object->getMoveDestination();
+   return object->getMoveDestination();
 }
 
 DefineEngineMethod( AIPlayer, setAimLocation, void, ( Point3F target ),,
@@ -1130,7 +1211,7 @@ DefineEngineMethod( AIPlayer, setAimLocation, void, ( Point3F target ),,
    
    "@see getAimLocation()\n")
 {
-	object->setAimLocation(target);
+   object->setAimLocation(target);
 }
 
 DefineEngineMethod( AIPlayer, getAimLocation, Point3F, (),,
@@ -1146,7 +1227,7 @@ DefineEngineMethod( AIPlayer, getAimLocation, Point3F, (),,
    "@see setAimLocation()\n"
    "@see setAimObject()\n")
 {
-	return object->getAimLocation();
+   return object->getAimLocation();
 }
 
 ConsoleDocFragment _setAimObject(
@@ -1172,9 +1253,9 @@ ConsoleDocFragment _setAimObject(
    "void setAimObject(GameBase targetObject, Point3F offset);"
 );
 
-DefineConsoleMethod( AIPlayer, setAimObject, void, ( const char * objName, Point3F offset ), (Point3F::Zero), "( GameBase obj, [Point3F offset] )"
+DefineEngineMethod( AIPlayer, setAimObject, void, ( const char * objName, Point3F offset ), (Point3F::Zero), "( GameBase obj, [Point3F offset] )"
               "Sets the bot's target object. Optionally set an offset from target location."
-			  "@hide")
+           "@hide")
 {
 
    // Find the target
@@ -1196,7 +1277,7 @@ DefineEngineMethod( AIPlayer, getAimObject, S32, (),,
    
    "@see setAimObject()\n")
 {
-	GameBase* obj = object->getAimObject();
+   GameBase* obj = object->getAimObject();
    return obj? obj->getId(): -1;
 }
 
@@ -1251,7 +1332,7 @@ bool AIPlayer::checkInLos(GameBase* target, bool _useMuzzle, bool _checkEnabled)
    return hit;
 }
 
-DefineEngineMethod(AIPlayer, checkInLos, bool, (ShapeBase* obj,  bool useMuzzle, bool checkEnabled),(NULL, false, false),
+DefineEngineMethod(AIPlayer, checkInLos, bool, (ShapeBase* obj,  bool useMuzzle, bool checkEnabled),(nullAsType<ShapeBase*>(), false, false),
    "@brief Check whether an object is in line of sight.\n"
    "@obj Object to check. (If blank, it will check the current target).\n"
    "@useMuzzle Use muzzle position. Otherwise use eye position. (defaults to false).\n"
@@ -1300,7 +1381,7 @@ bool AIPlayer::checkInFoV(GameBase* target, F32 camFov, bool _checkEnabled)
    return (dot > mCos(camFov));
 }
 
-DefineEngineMethod(AIPlayer, checkInFoV, bool, (ShapeBase* obj, F32 fov, bool checkEnabled), (NULL, 45.0f, false),
+DefineEngineMethod(AIPlayer, checkInFoV, bool, (ShapeBase* obj, F32 fov, bool checkEnabled), (nullAsType<ShapeBase*>(), 45.0f, false),
    "@brief Check whether an object is within a specified veiw cone.\n"
    "@obj Object to check. (If blank, it will check the current target).\n"
    "@fov view angle in degrees.(Defaults to 45)\n"
@@ -1347,4 +1428,93 @@ DefineEngineMethod( AIPlayer, clearMoveTriggers, void, ( ),,
    "@see clearMoveTrigger()\n")
 {
    object->clearMoveTriggers();
+}
+
+// These changes coordinate with anim-clip mods to parent class, Player.
+
+// New method, restartMove(), restores the AIPlayer to its normal move-state
+// following animation overrides from AFX. The tag argument is used to match
+// the latest override and prevents interruption of overlapping animation
+// overrides. See related anim-clip changes in Player.[h,cc].
+void AIPlayer::restartMove(U32 tag)
+{
+   if (tag != 0 && tag == last_anim_tag)
+   {
+      if (mMoveState_saved != -1)
+      {
+         mMoveState = (MoveState) mMoveState_saved;
+         mMoveState_saved = -1;
+      }
+
+      bool is_death_anim = ((anim_clip_flags & IS_DEATH_ANIM) != 0);
+
+      last_anim_tag = 0;
+      anim_clip_flags &= ~(ANIM_OVERRIDDEN | IS_DEATH_ANIM);
+
+      if (mDamageState != Enabled)
+      {
+         if (!is_death_anim)
+         {
+            // this is a bit hardwired and desperate,
+            // but if he's dead he needs to look like it.
+            setActionThread("death10", false, false, false);
+         }
+      }
+   }
+}
+
+// New method, saveMoveState(), stores the current movement state
+// so that it can be restored when restartMove() is called.
+void AIPlayer::saveMoveState()
+{
+   if (mMoveState_saved == -1)
+      mMoveState_saved = (S32) mMoveState;
+}
+
+F32 AIPlayer::getTargetDistance(GameBase* target, bool _checkEnabled)
+{
+   if (!isServerObject()) return false;
+   if (!target)
+   {
+      target = mAimObject.getPointer();
+      if (!target)
+         return F32_MAX;
+   }
+
+   if (_checkEnabled)
+   {
+      if (target->getTypeMask() & ShapeBaseObjectType)
+      {
+         ShapeBase *shapeBaseCheck = static_cast<ShapeBase *>(target);
+         if (shapeBaseCheck)
+            if (shapeBaseCheck->getDamageState() != Enabled) return false;
+      }
+      else
+         return F32_MAX;
+   }
+
+   return (getPosition() - target->getPosition()).len();
+}
+
+DefineEngineMethod(AIPlayer, getTargetDistance, F32, (ShapeBase* obj, bool checkEnabled), (nullAsType<ShapeBase*>(), false),
+   "@brief The distance to a given object.\n"
+   "@obj Object to check. (If blank, it will check the current target).\n"
+   "@checkEnabled check whether the object can take damage and if so is still alive.(Defaults to false)\n")
+{
+   return object->getTargetDistance(obj, checkEnabled);
+}
+
+DefineEngineMethod( AIPlayer, setAiPose, void, ( S32 pose ),,  
+   "@brief Sets the AiPose for an AI object.\n"
+   "@param pose StandPose=0, CrouchPose=1, PronePose=2, SprintPose=3.\n"
+   "Uses the new AiPose variable from shapebase (as defined in its PlayerData datablock).\n")  
+{  
+   object->setAiPose(pose);  
+}  
+  
+DefineEngineMethod( AIPlayer, getAiPose, S32, (),,  
+   "@brief Get the object's current AiPose.\n"
+   "@return StandPose=0, CrouchPose=1, PronePose=2, SprintPose=3.\n")  
+{  
+   return object->getAiPose();  
 }

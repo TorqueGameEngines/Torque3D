@@ -75,7 +75,8 @@ ConsoleDocClass( SFXController,
 
 SFXController::SFXController( SFXPlayList* playList )
    : Parent( playList ),
-     mTrace( playList->trace() )
+     mTrace( playList->trace() ),
+   mLoopCounter(0)
 {
    VECTOR_SET_ASSOCIATION( mInsns );
    VECTOR_SET_ASSOCIATION( mSources );
@@ -94,6 +95,7 @@ SFXController::~SFXController()
 
 void SFXController::initPersistFields()
 {
+   docsURL;
    addGroup( "Debug" );
       addField( "trace", TypeBool, Offset( mTrace, SFXController ),
          "If true, the controller logs its operation to the console.\n"
@@ -142,7 +144,7 @@ void SFXController::_compileList( SFXPlayList* playList )
          {
             // Randomly exchange slots in the list.
             for( U32 i = 0; i < SFXPlayList::NUM_SLOTS; ++ i )
-               swap( slotList[ gRandGen.randI( 0, SFXPlayList::NUM_SLOTS - 1 ) ], slotList[ i ] );
+				T3D::swap( slotList[ gRandGen.randI( 0, SFXPlayList::NUM_SLOTS - 1 ) ], slotList[ i ] );
          }
          break;
          
@@ -165,7 +167,7 @@ void SFXController::_compileList( SFXPlayList* playList )
       
       // If there's no track in this slot, ignore it.
       
-      if( !playList->getSlots().mTrack[ slotIndex ] )
+      if( !playList->getTrackProfile(slotIndex))
          continue;
          
       // If this is a looped slot and the list is not set to loop
@@ -324,8 +326,8 @@ void SFXController::_printInsn( Insn& insn)
          Con::printf( "[SFXController] ip=%d: slot=%d: state=%s: Delay %f:%f:%f",
             mIp, insn.mSlotIndex, insn.mState ? insn.mState->getName() : "",
             insn.mArg.mDelayTime.mValue[ 0 ],
-            insn.mArg.mDelayTime.mVariance[ 0 ],
-            insn.mArg.mDelayTime.mVariance[ 1 ]
+            insn.mArg.mDelayTime.mVariance[ 0 ][ 0 ],
+            insn.mArg.mDelayTime.mVariance[ 0 ][ 1 ]
          );
          break;
          
@@ -392,7 +394,7 @@ bool SFXController::_execInsn()
       case OP_Play:
       {
          SFXPlayList* playList = getPlayList();
-         SFXTrack* track = playList->getSlots().mTrack[ insn.mSlotIndex ];
+         SFXTrack* track = playList->getTrackProfile(insn.mSlotIndex);
          
          // Handle existing sources playing on this slot and find
          // whether we need to start a new source.
@@ -689,6 +691,7 @@ void SFXController::_play()
    // Unpause sources, if we are paused.
    
    if( mStatus == SFXStatusPaused )
+   {
       for( U32 i = 0; i < mSources.size(); ++ i )
          if( mSources[ i ].mPtr != NULL )
             mSources[ i ].mPtr->play( 0.f ); // We want our fade values to take effect.
@@ -697,6 +700,7 @@ void SFXController::_play()
             mSources.erase( i );
             -- i;
          }
+   }
 }
 
 //-----------------------------------------------------------------------------

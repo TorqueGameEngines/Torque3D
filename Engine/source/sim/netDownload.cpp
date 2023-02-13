@@ -23,6 +23,7 @@
 #include "platform/platform.h"
 #include "core/dnet.h"
 #include "console/simBase.h"
+#include "console/engineAPI.h"
 #include "sim/netConnection.h"
 #include "core/stream/bitStream.h"
 #include "core/stream/fileStream.h"
@@ -52,7 +53,7 @@ public:
 
          for(U32 i = 0; i < nameCount; i++)
          {
-            dStrcpy(mFileNames[i], (*nameList)[i]);
+            dStrcpy(mFileNames[i], (*nameList)[i], 256);
             //Con::printf("Sending request for file %s", mFileNames[i]);
          }
       }

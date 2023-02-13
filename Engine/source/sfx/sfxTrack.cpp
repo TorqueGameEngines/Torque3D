@@ -20,6 +20,10 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+// Arcane-FX for MIT Licensed Open Source version of Torque 3D from GarageGames
+// Copyright (C) 2015 Faust Logic, Inc.
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
 #include "sfx/sfxTrack.h"
 #include "sfx/sfxTypes.h"
 #include "sfx/sfxDescription.h"
@@ -35,7 +39,7 @@ ConsoleDocClass( SFXTrack,
    
    "The term \"track\" is used in the sound system to refer to any entity that can be played "
    "back as a sound source.  These can be individual files (SFXProfile), patterns of other tracks "
-   "(SFXPlayList), or special sound data defined by a device layer (SFXFMODEvent).\n\n"
+   "(SFXPlayList).\n\n"
    
    "Any track must be paired with a SFXDescription that tells the sound system how to set up "
    "playback for the track.\n\n"
@@ -65,10 +69,16 @@ SFXTrack::SFXTrack( SFXDescription* description )
    dMemset( mParameters, 0, sizeof( mParameters ) );
 }
 
+SFXTrack::SFXTrack(const SFXTrack& other, bool temp_clone) : SimDataBlock(other, temp_clone)
+{
+   mDescription = other.mDescription;
+   dMemcpy(mParameters, other.mParameters, sizeof(mParameters));
+}
 //-----------------------------------------------------------------------------
 
 void SFXTrack::initPersistFields()
 {
+   docsURL;
    addGroup( "Sound" );
    
       addField( "description",   TypeSFXDescriptionName, Offset( mDescription, SFXTrack ),
@@ -86,7 +96,7 @@ void SFXTrack::initPersistFields()
 
 //-----------------------------------------------------------------------------
 
-bool SFXTrack::processArguments( S32 argc, ConsoleValueRef *argv )
+bool SFXTrack::processArguments( S32 argc, ConsoleValue *argv )
 {
    if( typeid( *this ) == typeid( SFXTrack ) )
    {

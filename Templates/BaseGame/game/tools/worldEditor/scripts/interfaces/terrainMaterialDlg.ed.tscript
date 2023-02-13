@@ -1,0 +1,1014 @@
+//-----------------------------------------------------------------------------
+// Copyright (c) 2012 GarageGames, LLC
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+// IN THE SOFTWARE.
+//-----------------------------------------------------------------------------
+
+$TerrainMaterialEditor::emptyMaterialImage = "ToolsModule:unknownImage_image";
+
+//-----------------------------------------------------------------------------
+
+function TerrainMaterialDlg::show( %this, %matIndex, %terrMat, %onApplyCallback )
+{
+   Canvas.pushDialog( %this );
+   
+   %this.matIndex = %matIndex; 
+   %this.onApplyCallback = %onApplyCallback;
+
+   %matLibTree = %this-->matLibTree;
+   %item = %matLibTree.findItemByObjectId( %terrMat );
+   if ( %item != -1 )
+   {
+      %matLibTree.selectItem( %item, false );
+      %matLibTree.selectItem( %item );
+      %matLibTree.scrollVisible( %item );
+   }
+   else
+   {
+      for( %i = 1; %i < %matLibTree.getItemCount(); %i++ )
+      {
+         %terrMat = TerrainMaterialDlg-->matLibTree.getItemValue(%i);
+         if( %terrMat.getClassName() $= "TerrainMaterial" )
+         {
+            %matLibTree.selectItem( %i, true );
+            %matLibTree.scrollVisible( %i );
+            break;
+         }
+      }
+   }
+}
+
+//-----------------------------------------------------------------------------
+
+function TerrainMaterialDlg::showByObjectId( %this, %matObjectId, %onApplyCallback )
+{
+   Canvas.pushDialog( %this );
+     
+   %this.matIndex = -1;
+   %this.onApplyCallback = %onApplyCallback;
+                 
+   %matLibTree = %this-->matLibTree;
+   %matLibTree.clearSelection();   
+   %item = %matLibTree.findItemByObjectId( %matObjectId );
+   if ( %item != -1 )
+   {
+      %matLibTree.selectItem( %item );
+      %matLibTree.scrollVisible( %item );
+   }
+}
+
+//-----------------------------------------------------------------------------
+
+function TerrainMaterialDlg::onWake( %this )
+{
+   if( !isObject( TerrainMaterialDlgNewGroup ) )
+      new SimGroup( TerrainMaterialDlgNewGroup );
+   if( !isObject( TerrainMaterialDlgDeleteGroup ) )
+      new SimGroup( TerrainMaterialDlgDeleteGroup );
+      
+   //Run through and grab any TerrainMaterialAssets
+   %assetQuery = new AssetQuery();
+   AssetDatabase.findAssetType(%assetQuery, "TerrainMaterialAsset");
+        
+   %count = %assetQuery.getCount();
+      
+	for(%i=0; %i < %count; %i++)
+	{
+	   %assetId = %assetQuery.getAsset(%i);
+	   
+      AssetDatabase.acquireAsset(%assetId);
+	}	
+	%assetQuery.delete();	   
+      
+   // Snapshot the materials.
+   %this.snapshotMaterials();
+
+   // Refresh the material list.
+   %matLibTree = %this-->matLibTree;
+   %matLibTree.clear();
+   
+   %matLibTree.open( TerrainMaterialSet, false );  
+   
+   %matLibTree.buildVisibleTree( true );   
+   %item = %matLibTree.getFirstRootItem();
+   %matLibTree.expandItem( %item );
+   
+   //Sounds
+   %this-->footstepSoundPopup.clear();
+   %this-->impactSoundPopup.clear();
+
+   %sounds = "<None>" TAB "<Soft>" TAB "<Hard>" TAB "<Metal>" TAB "<Snow>";    // Default sounds
+
+   %assetQuery = new AssetQuery();
+   AssetDatabase.findAssetType(%assetQuery, "SoundAsset");
+   
+   %count = %assetQuery.getCount();   
+   // Get custom sound assets
+   for(%i=0; %i < %count; %i++)
+   {
+	   %assetId = %assetQuery.getAsset(%i);
+       %sounds = %sounds TAB %assetId;
+   }
+
+   %count = getFieldCount(%sounds);
+   for (%i = 0; %i < %count; %i++)
+   {
+      %name = getField(%sounds, %i);
+      %this-->footstepSoundPopup.add(%name);
+      %this-->impactSoundPopup.add(%name);
+   }
+   
+   %this.activateMaterialCtrls( true );      
+}
+
+//-----------------------------------------------------------------------------
+
+function TerrainMaterialDlg::onSleep( %this )
+{
+   if( isObject( TerrainMaterialDlgSnapshot ) )
+      TerrainMaterialDlgSnapshot.delete();
+      
+   %this-->matLibTree.clear();
+}
+
+//-----------------------------------------------------------------------------
+
+function TerrainMaterialDlg::dialogApply( %this )
+{
+   // Move all new materials we have created to the root group.
+   
+   if(%this-->diffuseMapAssetId.text $= "None" ||
+   %this-->detailMapAssetId.text $= "None")
+   {
+      toolsMessageBoxOK("Invalid Terrain Material",
+                  "Terrain Materials require Diffuse and Detail textures to display and blend correctly.");
+      return;
+   }
+   
+   %newCount = TerrainMaterialDlgNewGroup.getCount();
+   for( %i = 0; %i < %newCount; %i ++ )
+      RootGroup.add( TerrainMaterialDlgNewGroup.getObject( %i ) );
+      
+   // Finalize deletion of all removed materials.
+   
+   %deletedCount = TerrainMaterialDlgDeleteGroup.getCount();
+   for( %i = 0; %i < %deletedCount; %i ++ )
+   {
+      %mat = TerrainMaterialDlgDeleteGroup.getObject( %i );
+      ETerrainMaterialPersistMan.removeObjectFromFile( %mat );
+      
+      %matIndex = ETerrainEditor.getMaterialIndex( %mat.internalName );
+      if( %matIndex != -1 )
+      {
+         ETerrainEditor.removeMaterial( %matIndex );
+         EPainter.updateLayers();
+      }
+      
+      %mat.delete();
+   }
+
+
+   %this.prepSaveDirtyMaterial();
+}
+
+//-----------------------------------------------------------------------------
+
+function TerrainMaterialDlg::dialogCancel( %this )
+{
+   if(TerrainMaterialDlg.matDirty)
+   {
+      toolsMessageBoxYesNo("Save Dirty Material?", "The current material has been modified. Do you wish save your changes?", 
+                           "TerrainMaterialDlg.prepSaveDirtyMaterial("@%this-->matLibTree.getSelectedItem()@");TerrainMaterialDlg.closeDialog();", "TerrainMaterialDlg.closeDialog();");
+   }
+   else
+   {
+      %this.closeDialog();
+   }
+}
+
+function TerrainMaterialDlg::closeDialog( %this )
+{
+   // Restore material properties we have changed.
+   
+   %this.restoreMaterials();
+   
+   // Delete all new object we have created.
+   
+   TerrainMaterialDlgNewGroup.clear();
+   
+   // Restore materials we have marked for deletion.
+   
+   %deletedCount = TerrainMaterialDlgDeleteGroup.getCount();
+   for( %i = 0; %i < %deletedCount; %i ++ )
+   {
+      %mat = TerrainMaterialDlgDeleteGroup.getObject( %i );
+      %mat.parentGroup = RootGroup;
+      TerrainMaterialSet.add( %mat );
+   }
+   
+   Canvas.popDialog( TerrainMaterialDlg );  
+}
+
+//-----------------------------------------------------------------------------
+
+function TerrainMaterialDlg::setMaterialName( %this, %newName )
+{
+   %mat = %this.activeMat;
+   
+   if( %mat.internalName !$= %newName )
+   {
+      %existingMat = TerrainMaterialSet.findObjectByInternalName( %newName );
+      if( isObject( %existingMat ) )
+      {
+         toolsMessageBoxOK( "Error",
+            "There already is a terrain material called '" @ %newName @ "'.", "", "" );
+      }
+      else
+      {
+         %mat.setInternalName( %newName );
+         %this-->matLibTree.buildVisibleTree( false );
+         
+         TerrainMaterialDlg.matDirty = true;
+      }
+   }
+}
+
+//-----------------------------------------------------------------------------
+
+function TerrainMaterialDlg::clearTextureMap(%this, %mapName)
+{   
+   %targetMapName = "tex" @ %mapName;
+   %targetMap = %this.findObjectByInternalName(%targetMapName, true);
+      
+   %targetMap.setBitmap($TerrainMaterialEditor::emptyMaterialImage);
+   %targetMap.asset = "";
+
+   %targetMapName = %this.findObjectByInternalName(%mapName @ "AssetId", true);
+   %targetMapName.setText("None");
+
+   TerrainMaterialDlg.matDirty = true;
+
+   if(%mapName $= "DetailMap")
+   {
+      //hide the supplemental maps
+      NormalMapContainer.callOnChildren("setActive", false);  
+      %this.clearTextureMap("NormalMap");
+      
+      ORMConfigMapContainer.callOnChildren("setActive", false);
+      %this.clearTextureMap("ORMConfigMap");
+      
+      MacroMapContainer.callOnChildren("setActive", false);
+      %this.clearTextureMap("MacroMap");
+   }
+}
+
+function TerrainMaterialDlg::updateTextureMap(%this, %mapName)
+{
+   %this.updateTargetMap = %mapName;
+   
+   AssetBrowser.showDialog("ImageAsset", %this@".changeTerrainMatMapAsset", "", "");
+}
+
+function TerrainMaterialDlg::changeTerrainMatMapAsset(%this)
+{
+   %targetMapName = "tex" @ %this.updateTargetMap;
+   %targetMap = %this.findObjectByInternalName(%targetMapName, true);
+
+   %imgAsset = AssetBrowser.selectedAsset;
+   if(%imgAsset !$= "")
+   {   
+      %targetMap.asset = %imgAsset;
+      %image = %imgAsset;
+
+      if(%this.updateTargetMap $= "DetailMap")
+      {
+         //show the supplemental maps
+         NormalMapContainer.callOnChildren("setActive", true);  
+         ORMConfigMapContainer.callOnChildren("setActive", true);
+         MacroMapContainer.callOnChildren("setActive", true);
+      }
+   }
+   else
+   {
+      %image = $TerrainMaterialEditor::emptyMaterialImage;
+   }
+
+   %targetMap.setBitmap( getAssetPreviewImage(%image) );  
+
+   %targetMapNameText = %this.findObjectByInternalName(%this.updateTargetMap @ "AssetId", true);
+   %targetMapNameText.setText(%imgAsset);
+
+   TerrainMaterialDlg.matDirty = true;
+}
+
+//-----------------------------------------------------------------------------
+
+function TerrainMaterialDlg::newMat( %this )
+{
+   // Create a unique material name.
+   /*%matName = getUniqueInternalName( "newMaterial", TerrainMaterialSet, true );
+
+   // Create the new material.
+   %newMat = new TerrainMaterial()
+   {
+      internalName = %matName;
+      parentGroup = TerrainMaterialDlgNewGroup;
+   };
+   %newMat.setFileName( "art/terrains/materials." @ $TorqueScriptFileExtension );
+   
+   // Mark it as dirty and to be saved in the default location.
+   ETerrainMaterialPersistMan.setDirty( %newMat, "art/terrains/materials." @ $TorqueScriptFileExtension );*/
+
+   %scene = getRootScene();
+   %path = filePath(%scene.getFilename());
+   %module = AssetBrowser.dirHandler.getModuleFromAddress(%path);
+   AssetBrowser.selectedModule = %module.moduleID;
+   
+   AssetBrowser.setupCreateNewAsset("TerrainMaterialAsset", AssetBrowser.selectedModule);
+}
+
+//-----------------------------------------------------------------------------
+
+function TerrainMaterialDlg::deleteMat( %this )
+{
+   if( !isObject( %this.activeMat ) )
+      return;
+
+   // Cannot delete this material if it is the only one left on the Terrain
+   if ( ( ETerrainEditor.getMaterialCount() == 1 ) &&
+        ( ETerrainEditor.getMaterialIndex( %this.activeMat.internalName ) != -1 ) )
+   {
+      toolsMessageBoxOK( "Error", "Cannot delete this Material, it is the only " @
+         "Material still in use by the active Terrain." );
+      return;
+   }
+
+   TerrainMaterialSet.remove( %this.activeMat );
+   TerrainMaterialDlgDeleteGroup.add( %this.activeMat );
+   
+   %matLibTree = %this-->matLibTree;
+   %matLibTree.open( TerrainMaterialSet, false );
+   %matLibTree.selectItem( 1 );
+}
+
+//-----------------------------------------------------------------------------
+
+function TerrainMaterialDlg::activateMaterialCtrls( %this, %active )
+{  
+   %parent = %this-->matSettingsParent;
+   %count = %parent.getCount();
+   for ( %i = 0; %i < %count; %i++ )
+   {
+      %ctrl = %parent.getObject( %i );
+      %ctrlnm = %ctrl.getName();
+      %ictrlnm = %ctrl.getInternalName();
+      %parent.getObject( %i ).setActive( %active );      
+}
+
+   %detailz = %this-->texDetailMap.getBitmap();
+   if(%this-->texDetailMap.getBitmap() $= "" || %this-->texDetailMap.getBitmap() $= $TerrainMaterialEditor::emptyMaterialImage)
+   {
+      NormalMapContainer.callOnChildren("setActive", false);  
+      ORMConfigMapContainer.callOnChildren("setActive", false);
+      MacroMapContainer.callOnChildren("setActive", false);
+   }
+   else
+   {
+      NormalMapContainer.callOnChildren("setActive", true);  
+      ORMConfigMapContainer.callOnChildren("setActive", true);
+      MacroMapContainer.callOnChildren("setActive", true); 
+   }
+}
+
+//-----------------------------------------------------------------------------
+
+function TerrainMaterialTreeCtrl::onSelect( %this, %item )
+{
+   if(TerrainMaterialDlg.matDirty)
+   {
+      toolsMessageBoxYesNo("Save Dirty Material?", "The current material has been modified. Do you wish save your changes?", 
+                           "TerrainMaterialDlg.prepSaveDirtyMaterial(" @ TerrainMaterialDlg.previousMat @ ");TerrainMaterialDlg.setActiveMaterial(" @ %item @ ");", 
+                           "TerrainMaterialDlg.setActiveMaterial(" @ %item @ ");");
+   }
+   else
+   {
+      TerrainMaterialDlg.setActiveMaterial( %item );
+   }
+}
+
+//-----------------------------------------------------------------------------
+
+function TerrainMaterialTreeCtrl::onUnSelect( %this, %item )
+{
+   TerrainMaterialDlg.previousMat = %item;
+}
+
+//-----------------------------------------------------------------------------
+
+function TerrainMaterialDlg::setActiveMaterial( %this, %mat )
+{  
+   if (  isObject( %mat ) && 
+         %mat.isMemberOfClass( TerrainMaterial ) )
+   {
+      %this.activeMat = %mat;
+      %this.matDirty = false;
+      
+      %this-->matNameCtrl.setText( %mat.internalName );
+
+      //
+      %imgPath = %mat.getDiffuseMap();
+      %imgPathText = %imgPath !$= "" && %imgPath !$= $TerrainMaterialEditor::emptyMaterialImage ? %mat.getDiffuseMapAsset() : "None";
+      %this-->diffuseMapAssetId.setText( %imgPathText );
+      %this-->texDiffuseMap.setBitmap( getAssetPreviewImage(%imgPath) );
+
+      //
+      %imgPath = %mat.getNormalMap();
+      %imgPathText = %imgPath !$= "" && %imgPath !$= $TerrainMaterialEditor::emptyMaterialImage ? %mat.getNormalMapAsset() : "None";
+      %this-->normalMapAssetId.setText( %imgPathText );
+      %this-->texNormalMap.setBitmap( getAssetPreviewImage(%imgPath) );
+
+      //
+      %imgPath = %mat.getORMConfigMap();
+      %imgPathText = %imgPath !$= "" && %imgPath !$= $TerrainMaterialEditor::emptyMaterialImage ? %mat.getORMConfigMapAsset() : "None";
+      %this-->ORMConfigMapAssetId.setText( %imgPathText );
+      %this-->texORMConfigMap.setBitmap( getAssetPreviewImage(%imgPath) );
+       
+      //
+      %imgPath = %mat.getDetailMap();
+      %imgPathText = %imgPath !$= "" && %imgPath !$= $TerrainMaterialEditor::emptyMaterialImage ? %mat.getDetailMapAsset() : "None";
+      %this-->detailMapAssetId.setText( %imgPathText );
+      %this-->texDetailMap.setBitmap( getAssetPreviewImage(%imgPath) );
+      
+      //
+      %imgPath = %mat.getMacroMap();
+      %imgPathText = %imgPath !$= "" && %imgPath !$= $TerrainMaterialEditor::emptyMaterialImage ? %mat.getMacroMapAsset() : "None";
+      %this-->macroMapAssetId.setText( %imgPathText );
+      %this-->texMacroMap.setBitmap( getAssetPreviewImage(%imgPath) );
+      
+      //
+      %this-->detSizeCtrl.setText( %mat.detailSize );
+      %this-->baseSizeCtrl.setText( %mat.diffuseSize );
+      %this-->detStrengthCtrl.setText( %mat.detailStrength );
+      %this-->detDistanceCtrl.setText( %mat.detailDistance );      
+      %this-->sideProjectionCtrl.setValue( %mat.useSideProjection );
+      %this-->parallaxScaleCtrl.setText( %mat.parallaxScale );
+      
+      %blendHeightBase = mFloor(%mat.blendHeightBase * 1000)/1000;
+      %this-->blendHeightBaseTextEditCtrl.setText( %blendHeightBase );
+      %this-->blendHeightBaseSliderCtrl.setValue( %mat.blendHeightBase );
+      
+      %blendHeightContrast = mFloor(%mat.blendHeightContrast * 1000)/1000;
+      %this-->blendHeightContrastTextEditCtrl.setText( %blendHeightContrast );
+      %this-->blendHeightContrastSliderCtrl.setValue( %mat.blendHeightContrast );
+
+      %this-->macroSizeCtrl.setText( %mat.macroSize );
+      %this-->macroStrengthCtrl.setText( %mat.macroStrength );
+      %this-->macroDistanceCtrl.setText( %mat.macroDistance );      
+      
+      %this-->isSRGB.setValue( %mat.isSRGB );
+      %this-->invertRoughness.setValue( %mat.invertRoughness );
+            
+      //FX material stuffs
+      if(AssetDatabase.isDeclaredAsset(%mat.internalName))
+      {
+         %asset = AssetDatabase.acquireAsset(%mat.internalName);
+         %fxMat = %asset.getFXMaterialDefinition();
+         if(isObject(%fxMat))
+         {
+            %this-->effectColor0Swatch.color = %fxMat.effectColor[0];
+            %this-->effectColor1Swatch.color = %fxMat.effectColor[1];
+            
+            %this-->showFootprintsCheckbox.setValue(%fxMat.showFootprints);
+            %this-->showDustCheckbox.setValue(%fxMat.showDust);
+            %this.updateSoundPopup("Footstep", %fxMat.footstepSoundId, %fxMat.customFootstepSound);
+            %this.updateSoundPopup("Impact", %fxMat.impactSoundId, %fxMat.customImpactSound);
+         }
+         else
+         {
+            %this-->effectColor0Swatch.color = "1 1 1 1";
+            %this-->effectColor1Swatch.color = "1 1 1 1";
+            %this-->showFootprintsCheckbox.setValue(0);
+            %this-->showFootprintsCheckbox.setValue(0);
+            %this.updateSoundPopup("Footstep", 0, "");
+            %this.updateSoundPopup("Impact", 0, "");
+         }
+      }
+            
+      %this.activateMaterialCtrls( true );      
+   }
+   else
+   {
+      %this.activeMat = 0;
+      %this.activateMaterialCtrls( false );        
+   }
+}
+
+function TerrainMaterialDlg::updateSoundPopup(%this, %type, %defaultId, %customName)
+{
+   %ctrl = TerrainMaterialDlg.findObjectByInternalName( %type @ "SoundPopup", true );
+
+   switch (%defaultId)
+   {
+      case 0:        %name = "<Soft>";
+      case 1:        %name = "<Hard>";
+      case 2:        %name = "<Metal>";
+      case 3:        %name = "<Snow>";
+      default:
+         if (%customName $= "")
+            %name = "<None>";
+         else
+            %name = %customName;
+   }
+
+   %r = %ctrl.findText(%name);
+   if (%r != -1)
+      %ctrl.setSelected(%r, false);
+   else
+      %ctrl.setText(%name);
+}
+
+function TerrainMaterialDlg::getBehaviorSound(%this, %type, %sound)
+{
+   %defaultId = -1;
+   %customName = "";
+
+   switch$ (%sound)
+   {
+      case "<Soft>":    %defaultId = 0;
+      case "<Hard>":    %defaultId = 1;
+      case "<Metal>":   %defaultId = 2;
+      case "<Snow>":    %defaultId = 3;
+      default:          %customName = %sound;
+   }
+   
+   return %defaultId TAB %customName;
+}
+
+function TerrainMaterialDlg::updateEffectColor0(%this, %color)
+{
+   %this-->effectColor0Swatch.color = %color;
+}
+
+function TerrainMaterialDlg::updateEffectColor1(%this, %color)
+{
+   %this-->effectColor1Swatch.color = %color;
+}
+//-----------------------------------------------------------------------------
+function TerrainMaterialDlg::prepSaveDirtyMaterial(%this, %material)
+{
+   if(%material $= "")
+      %material = %this.activeMat;
+      
+   if(!isObject(%material))
+   {
+      error("TerrainMaterialDlg::prepSaveDirtyMaterial() - active material is not a valid object");
+      return;
+   }
+   if(!AssetDatabase.isDeclaredAsset(%material.internalName))
+   {
+      //No valid asset, so we probably generated it as a stub due to a leftover
+      //reference. Let's generate a new asset
+      %assetId = %material.internalName;
+      
+      %moduleSplit = strpos(%material.internalName, ":");
+      %moduleName = getSubStr(%material.internalName, 0, %moduleSplit);
+      %assetName = getSubStr(%material.internalName, %moduleSplit+1, -1);
+      if(ModuleDatabase.findModule(%moduleName) !$= "")
+      {
+         AssetBrowser.selectedModule = %moduleName;
+      }
+         
+      //Clear the stub
+      TerrainMaterialSet.remove(%material);
+      %material.delete();
+      
+      %oldMat = TerrainMaterialSet.findObjectByInternalName( %assetId );
+
+      AssetBrowser.setupCreateNewAsset("TerrainMaterialAsset", AssetBrowser.selectedModule, "TerrainMaterialDlg.saveDirtyMaterial", %assetName); 
+   }
+   else
+   {
+      %assetDef = AssetDatabase.acquireAsset(%material.internalName);
+      
+      //If we somehow don't have an FX material, make one     
+      %fxMat = %assetDef.getFXMaterialDefinition();
+      if(!isObject(%fxMat))
+      {
+         %fxMat = new Material("TerrainFX_" @ %assetDef.assetName){
+            mapTo = %material.internalName;
+         };
+         
+         %assetDef.add(%fxMat);
+      }
+   
+      // Make sure we save any changes to the current selection.
+      %this.saveDirtyMaterial( %material.internalName );
+   }
+}
+
+function TerrainMaterialDlg::saveDirtyMaterial( %this, %materialAssetId )
+{
+   %assetDef = "";
+   %mat = "";
+   
+   //If we happen to have been handed an assetId, process it
+   if(AssetDatabase.isDeclaredAsset(%materialAssetId))
+   {
+      %assetDef = AssetDatabase.acquireAsset(%materialAssetId);
+      %mat = %assetDef.getMaterialDefinition();
+   }
+   else
+   {
+      error("TerrainMaterialDlg::saveDirtyMaterial() - attempting to save invalid assetId: " @ %materialAssetId);
+      return;
+   }
+            
+   // Skip over obviously bad cases.
+   if (  !isObject( %mat ) || 
+         !%mat.isMemberOfClass( TerrainMaterial ) )
+      return;
+      
+   %this.activeMat = %mat;
+            
+   // Read out properties from the dialog.
+   
+   %newName = %this-->matNameCtrl.text;
+   
+   %blankBitmap = AssetDatabase.acquireAsset($TerrainMaterialEditor::emptyMaterialImage).getImagePath();
+   
+   
+   //---
+   %newDiffuse = %this-->diffuseMapAssetId.text;
+   if(%newDiffuse $= "None")
+      %newDiffuse = "";
+   
+   //---
+   %newNormal = %this-->normalMapAssetId.text;
+   if(%newNormal $= "None")
+      %newNormal = "";
+   
+   //---
+   %newormConfig = %this-->ORMConfigMapAssetId.text;
+   if(%newormConfig $= "None")
+      %newormConfig = "";
+   
+   //---
+   %newDetail = %this-->detailMapAssetId.text;
+   if(%newDetail $= "None")
+      %newDetail = "";
+   
+   //---
+   %newMacro = %this-->macroMapAssetId.text;
+   if(%newMacro $= "None")
+      %newMacro = "";
+   
+   %detailSize = %this-->detSizeCtrl.getText();      
+   %diffuseSize = %this-->baseSizeCtrl.getText();     
+   %detailStrength = %this-->detStrengthCtrl.getText();
+   %detailDistance = %this-->detDistanceCtrl.getText();   
+   %useSideProjection = %this-->sideProjectionCtrl.getValue();   
+   %parallaxScale = %this-->parallaxScaleCtrl.getText();
+   %blendHeightBase = %this-->blendHeightBaseTextEditCtrl.getText();
+   %blendHeightContrast = %this-->blendHeightContrastTextEditCtrl.getText();
+
+   %macroSize = %this-->macroSizeCtrl.getText();      
+   %macroStrength = %this-->macroStrengthCtrl.getText();
+   %macroDistance = %this-->macroDistanceCtrl.getText();   
+   
+   %isSRGB = %this-->isSRGB.getValue(); 
+   %invertRoughness = %this-->invertRoughness.getValue(); 
+   
+   //Effects
+   %effectColor0 = %this-->effectColor0Swatch.color;
+   %effectColor1 = %this-->effectColor1Swatch.color;
+   %showFootsteps = %this-->showFootprintsCheckbox.getValue();
+   %showDust = %this-->showDustCheckbox.getValue();
+   
+   %footstepSound = %this.getBehaviorSound("Footstep", %this-->footstepSoundPopup.getText());
+   %impactSound = %this.getBehaviorSound("Impact", %this-->impactSoundPopup.getText());
+   
+   %fxMat = %assetDef.getFXMaterialDefinition();   
+   
+   // If no properties of this materials have changed,
+   // return.
+
+   if (  %mat.internalName $= %newName &&
+         %mat.getDiffuseMap() $= %newDiffuse &&
+         %mat.getNormalMap() $= %newNormal &&
+         %mat.getDetailMap() $= %newDetail &&
+         %mat.getORMConfigMap() $= %newormConfig &&
+         %mat.getMacroMap() $= %newMacro &&
+         %mat.detailSize == %detailSize &&
+         %mat.diffuseSize == %diffuseSize &&
+         %mat.detailStrength == %detailStrength &&
+         %mat.detailDistance == %detailDistance &&         
+         %mat.useSideProjection == %useSideProjection &&
+         %mat.macroSize == %macroSize &&
+         %mat.macroStrength == %macroStrength &&
+         %mat.macroDistance == %macroDistance &&         
+         %mat.parallaxScale == %parallaxScale &&
+         %mat.blendHeightBase == %blendHeightBase &&
+         %mat.blendHeightContrast == %blendHeightContrast &&
+         %mat.isSRGB == %isSRGB &&         
+         %mat.invertRoughness == %invertRoughness &&
+         %fxMat.effectColor[0] == %effectColor0 &&
+         %fxMat.effectColor[1] == %effectColor1 &&
+         %fxMat.showFootprints == %showFootsteps &&
+         %fxMat.showDust == %showDust && 
+         %fxMat.footstepSoundId == getField(%footstepSound, 0) &&
+         %fxMat.customFootstepSound == getField(%footstepSound, 1) &&
+         %fxMat.impactSoundId == getField(%impactSound, 0) &&
+         %fxMat.customImpactSound == getField(%impactSound, 1) && false)               
+      return;
+   
+   // Make sure the material name is unique.
+   
+   if( %mat.internalName !$= %newName )
+   {
+      %existingMat = TerrainMaterialSet.findObjectByInternalName( %newName );
+      if( isObject( %existingMat ) )
+      {
+         toolsMessageBoxOK( "Error",
+            "There already is a terrain material called '" @ %newName @ "'.", "", "" );
+            
+         // Reset the name edit control to the old name.
+            
+         %this-->matNameCtrl.setText( %mat.internalName );
+      }
+      else
+         %mat.setInternalName( %newName );    
+   }
+   
+   %mat.setDiffuseMap(%newDiffuse);
+   %mat.setNormalMap(%newNormal);
+   %mat.setORMConfigMap(%newormConfig);
+   %mat.setDetailMap(%newDetail);
+   %mat.setMacroMap(%newMacro);
+   
+   %mat.detailSize = %detailSize;  
+   %mat.diffuseSize = %diffuseSize;
+   %mat.detailStrength = %detailStrength;    
+   %mat.detailDistance = %detailDistance;    
+   %mat.macroSize = %macroSize;  
+   %mat.macroStrength = %macroStrength;    
+   %mat.macroDistance = %macroDistance;    
+   %mat.useSideProjection = %useSideProjection;
+   %mat.parallaxScale = %parallaxScale;
+   %mat.blendHeightBase = %blendHeightBase;
+   %mat.blendHeightContrast = %blendHeightContrast;
+   %mat.isSRGB = %isSRGB;
+   %mat.invertRoughness = %invertRoughness;
+   
+   //effects
+   %fxMat.effectColor[0] = %effectColor0;
+   %fxMat.effectColor[1] = %effectColor1;
+   %fxMat.showFootprints = %showFootsteps;
+   %fxMat.showDust = %showDust; 
+   %fxMat.footstepSoundId = getField(%footstepSound, 0);
+   %fxMat.customFootstepSound = getField(%footstepSound, 1);
+   %fxMat.impactSoundId = getField(%impactSound, 0);
+   %fxMat.customImpactSound = getField(%impactSound, 1);
+   
+   //Save the material asset
+   %didEmbed = false;
+   %matScriptFile = %assetDef.getScriptPath();
+   if(%matScriptFile !$= "")
+   {
+      //lets up-convert to embedded
+      %assetDef.add(%mat);
+      %assetDef.add(%fxMat);
+      %assetDef.scriptFile = "";
+      %didEmbed = true;
+   }
+   
+   //write it out
+   if(%assetDef.saveAsset())
+   {
+      if(%didEmbed)
+      {
+         fileDelete(%matScriptFile); //cleanup the old definition file  
+      }
+   }
+
+   %this.schedule(32, "cleanupDirtyMaterial");
+}
+
+function TerrainMaterialDlg::cleanupDirtyMaterial(%this)
+{
+   // Delete the snapshot.
+   TerrainMaterialDlgSnapshot.delete();
+
+   // Remove ourselves from the canvas.
+   Canvas.popDialog( TerrainMaterialDlg ); 
+                            
+   call( %this.onApplyCallback, %this.activeMat, %this.matIndex );
+   
+   TerrainMaterialDlg.matDirty = false;
+   
+   //%this.setActiveMaterial(%this.activeMat);
+}
+//-----------------------------------------------------------------------------
+
+function TerrainMaterialDlg::snapshotMaterials( %this )
+{
+   if( !isObject( TerrainMaterialDlgSnapshot ) )
+      new SimGroup( TerrainMaterialDlgSnapshot );
+      
+   %group = TerrainMaterialDlgSnapshot;
+   %group.clear();
+   
+   %matCount = TerrainMaterialSet.getCount();
+   for( %i = 0; %i < %matCount; %i ++ )
+   {
+      %mat = TerrainMaterialSet.getObject( %i );
+      if( !isMemberOfClass( %mat.getClassName(), "TerrainMaterial" ) )
+         continue;
+         
+      %snapshot = new ScriptObject()
+      {
+         parentGroup = %group;
+         material = %mat;
+         internalName = %mat.internalName;
+         diffuseMap = %mat.getDiffuseMap();
+         normalMap = %mat.getNormalMap();
+         ormConfigMap = %mat.getORMConfigMap();
+         detailMap = %mat.getDetailMap();
+         macroMap = %mat.getMacroMap();
+         detailSize = %mat.detailSize;
+         diffuseSize = %mat.diffuseSize;
+         detailStrength = %mat.detailStrength;
+         detailDistance = %mat.detailDistance;
+         macroSize = %mat.macroSize;
+         macroStrength = %mat.macroStrength;
+         macroDistance = %mat.macroDistance;
+         useSideProjection = %mat.useSideProjection;
+         parallaxScale = %mat.parallaxScale;
+         blendHeightBase = %mat.blendHeightBase;
+         blendHeightContrast = %mat.blendHeightContrast;
+         isSRGB = %mat.isSRGB;
+         invertRoughness = %mat.invertRoughness;
+      };
+      
+   }
+}
+
+//-----------------------------------------------------------------------------
+
+function TerrainMaterialDlg::restoreMaterials( %this )
+{
+   if( !isObject( TerrainMaterialDlgSnapshot ) )
+   {
+      error( "TerrainMaterial::restoreMaterials - no snapshot present" );
+      return;
+   }
+   
+   %count = TerrainMaterialDlgSnapshot.getCount();
+   for( %i = 0; %i < %count; %i ++ )
+   {
+      %obj = TerrainMaterialDlgSnapshot.getObject( %i );      
+      %mat = %obj.material;
+
+      %mat.setInternalName( %obj.internalName );
+      %mat.setDiffuseMap(%obj.diffuseMap);
+      %mat.setNormalMap(%obj.normalMap);
+      %mat.setORMConfigMap(%obj.ORMConfigMap);
+      %mat.setDetailMap(%obj.detailMap);
+      %mat. setMacroMap(%obj.macroMap);
+      %mat.detailSize = %obj.detailSize;
+      %mat.diffuseSize = %obj.diffuseSize;
+      %mat.detailStrength = %obj.detailStrength;
+      %mat.detailDistance = %obj.detailDistance;
+      %mat.macroSize = %obj.macroSize;
+      %mat.macroStrength = %obj.macroStrength;
+      %mat.macroDistance = %obj.macroDistance;
+      %mat.useSideProjection = %obj.useSideProjection;
+      %mat.parallaxScale = %obj.parallaxScale;
+      %mat.blendHeightBase = %obj.blendHeightBase;
+      %mat.blendHeightContrast = %obj.blendHeightContrast;
+      %mat.isSRGB = %obj.isSRGB;
+      %mat.invertRoughness = %obj.invertRoughness;
+   }
+}
+
+//-----------------------------------------------------------------------------
+
+function TerrainMaterialDlg::_selectTextureFileDialog( %this, %defaultFileName )
+{
+   if( $Pref::TerrainEditor::LastPath $= "" )
+      $Pref::TerrainEditor::LastPath = "data/";
+
+   %dlg = new OpenFileDialog()
+   {
+      Filters        = $TerrainEditor::TextureFileSpec;
+      DefaultPath    = $Pref::TerrainEditor::LastPath;
+      DefaultFile    = %defaultFileName;
+      ChangePath     = false;
+      MustExist      = true;
+   };
+            
+   %ret = %dlg.Execute();
+   if ( %ret )
+   {
+      $Pref::TerrainEditor::LastPath = filePath( %dlg.FileName );
+      %file = %dlg.FileName;
+   }
+      
+   %dlg.delete();
+   
+   if ( !%ret )
+      return; 
+      
+   %file = filePath(%file) @ "/" @ fileBase(%file);
+      
+   return %file;
+}
+
+function TerrainMaterialDlgBlendHeightBaseSlider::onMouseDragged(%this)
+{
+   %value = mFloor(%this.value * 1000)/1000;
+   TerrainMaterialDlgBlendHeightBaseTextEdit.setText(%value);
+   TerrainMaterialDlg.activeMat.blendHeightBase = %this.value;
+   TerrainMaterialDlg.matDirty = true;
+
+}
+
+function TerrainMaterialDlgBlendHeightBaseTextEdit::onValidate(%this)
+{
+   TerrainMaterialDlgBlendHeightBaseSlider.setValue(%this.getText());
+   TerrainMaterialDlg.activeMat.blendHeightBase = %this.getText();
+   TerrainMaterialDlg.matDirty = true;
+}
+
+function TerrainMaterialDlgBlendHeightContrastSlider::onMouseDragged(%this)
+{
+   %value = mFloor(%this.value * 1000)/1000;
+   TerrainMaterialDlgBlendHeightContrastTextEdit.setText(%value);
+   TerrainMaterialDlg.activeMat.blendHeightContrast = %this.value;
+   TerrainMaterialDlg.matDirty = true;
+
+}
+
+function TerrainMaterialDlgBlendHeightContrastTextEdit::onValidate(%this)
+{
+   TerrainMaterialDlgBlendHeightContrastSlider.setValue(%this.getText());
+   TerrainMaterialDlg.activeMat.blendHeightContrast = %this.getText();
+   TerrainMaterialDlg.matDirty = true;
+}
+
+//
+//
+function terrMatEdDragNDropMapAssignment(%mapName, %payload)
+{
+   %assetType = %payload.assetType;
+   if(%assetType !$= "ImageAsset")
+      return;
+      
+   %module = %payload.moduleName;
+   %assetName = %payload.assetName;
+   %assetId = %module @ ":" @ %assetName;
+   
+   TerrainMaterialDlg.updateTargetMap = %mapName;
+   AssetBrowser.selectedAsset = %assetId;
+   TerrainMaterialDlg.changeTerrainMatMapAsset();
+}
+
+function DiffuseMapContainer::onControlDropped( %this, %payload, %position )
+{
+   terrMatEdDragNDropMapAssignment("DiffuseMap", %payload);
+}
+
+function DetailMapContainer::onControlDropped( %this, %payload, %position )
+{
+   terrMatEdDragNDropMapAssignment("DetailMap", %payload);
+}
+
+function NormalMapContainer::onControlDropped( %this, %payload, %position )
+{
+   terrMatEdDragNDropMapAssignment("NormalMap", %payload);
+}
+
+function ORMConfigMapContainer::onControlDropped( %this, %payload, %position )
+{
+   terrMatEdDragNDropMapAssignment("ORMConfigMap", %payload);
+}
+
+function MacroMapContainer::onControlDropped( %this, %payload, %position )
+{
+   terrMatEdDragNDropMapAssignment("MacroMap", %payload);
+}

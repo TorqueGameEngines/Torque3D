@@ -1,0 +1,26 @@
+//onAdd is called when the component is created and then added to it's owner entity.
+//You would also add any script-defined component fields via addComponentField().
+function @@::onAdd(%this)
+{
+    
+}
+//onAdd is called when the component is removed and deleted from it's owner entity.
+function @@::onRemove(%this)
+{
+    
+}
+//onClientConnect is called any time a new client connects to the server.
+function @@::onClientConnect(%this, %client)
+{
+    
+}
+//onClientDisconnect is called any time a client disconnects from the server.
+%function @@::onClientDisonnect(%this, %client)
+{
+
+}
+//update is called when the component does an update tick.
+function @@::Update(%this)
+{
+    
+}

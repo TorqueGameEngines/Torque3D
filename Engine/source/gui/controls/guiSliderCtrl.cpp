@@ -89,6 +89,7 @@ IMPLEMENT_CALLBACK( GuiSliderCtrl, onMouseDragged, void, (), (),
 GuiSliderCtrl::GuiSliderCtrl()
    : mRange( 0., 1.f ),
      mTicks( 10 ),
+     mRenderTicks(true),
      mSnap( false ),
      mValue( 0.5f ),
      mThumbSize( 8, 20 ),
@@ -97,8 +98,12 @@ GuiSliderCtrl::GuiSliderCtrl()
      mIncAmount( 0.f ),
      mDisplayValue( false ),
      mMouseOver( false ),
+     mDepressed( false ),
      mMouseDragged( false ),
-     mDepressed( false )
+     mHasTexture(false),
+     mUseFillBar(false),
+     mFillBarColor(ColorI(255,255,255)),
+     mBitmapBounds(NULL)
 {
 }
 
@@ -106,6 +111,7 @@ GuiSliderCtrl::GuiSliderCtrl()
 
 void GuiSliderCtrl::initPersistFields()
 {
+   docsURL;
    addGroup( "Slider" );
    
       addField( "range", TypePoint2F, Offset( mRange, GuiSliderCtrl ),
@@ -117,6 +123,12 @@ void GuiSliderCtrl::initPersistFields()
       addProtectedField( "value", TypeF32, Offset( mValue, GuiSliderCtrl ),
          _setValue, defaultProtectedGetFn,
          "The value corresponding to the current slider position." );
+      addField("useFillBar", TypeBool, Offset(mUseFillBar, GuiSliderCtrl),
+         "Whether to render the tick marks.");
+      addField("fillBarColor", TypeColorI, Offset(mFillBarColor, GuiSliderCtrl),
+         "Whether to render the tick marks.");
+      addField("renderTicks", TypeBool, Offset(mRenderTicks, GuiSliderCtrl),
+         "Whether to render the tick marks.");
       
    endGroup( "Slider" );
 
@@ -193,6 +205,9 @@ void GuiSliderCtrl::onMouseDown(const GuiEvent &event)
    setFirstResponder();
    mDepressed = true;
 
+   if (mProfile->isSoundButtonDownValid())
+      SFX->playOnce(mProfile->getSoundButtonDownProfile());
+
    Point2I curMousePos = globalToLocalCoord( event.mousePoint );
    F32 value;
    if (getWidth() >= getHeight())
@@ -250,7 +265,8 @@ void GuiSliderCtrl::onMouseEnter(const GuiEvent &event)
       if( mActive && mProfile->mSoundButtonOver )
       {
          //F32 pan = (F32(event.mousePoint.x)/F32(getRoot()->getWidth())*2.0f-1.0f)*0.8f;
-         SFX->playOnce( mProfile->mSoundButtonOver );
+         if (mProfile->isSoundButtonOverValid())
+            SFX->playOnce(mProfile->getSoundButtonOverProfile());
       }
       
       mMouseOver = true;
@@ -363,9 +379,20 @@ void GuiSliderCtrl::onRender(Point2I offset, const RectI &updateRect)
    Point2I ext(getWidth() - mShiftExtent, getHeight());
    RectI thumb = mThumb;
 
+   GFXDrawUtil* drawUtil = GFX->getDrawUtil();
+
+   if (mUseFillBar)
+   {
+
+      drawUtil->drawRectFill(RectI(offset.x, offset.y, getWidth() * mValue, getHeight()), mFillBarColor);
+
+      renderChildControls(offset, updateRect);
+      return;
+   }
+
    if( mHasTexture )
    {
-      if(mTicks > 0)
+      if(mTicks > 0 && mRenderTicks)
       {
          // TODO: tick marks should be positioned based on the bitmap dimensions.
          Point2I mid(ext.x, ext.y/2);
@@ -402,12 +429,12 @@ void GuiSliderCtrl::onRender(Point2I offset, const RectI &updateRect)
       S32 index = SliderButtonNormal;
       if(mMouseOver)
          index = SliderButtonHighlight;
-      GFX->getDrawUtil()->clearBitmapModulation();
+      drawUtil->clearBitmapModulation();
 
       //left border
-      GFX->getDrawUtil()->drawBitmapSR(mProfile->mTextureObject, Point2I(offset.x,offset.y), mBitmapBounds[SliderLineLeft]);
+      drawUtil->drawBitmapSR(mProfile->getBitmapResource(), Point2I(offset.x,offset.y), mBitmapBounds[SliderLineLeft]);
       //right border
-      GFX->getDrawUtil()->drawBitmapSR(mProfile->mTextureObject, Point2I(offset.x + getWidth() - mBitmapBounds[SliderLineRight].extent.x, offset.y), mBitmapBounds[SliderLineRight]);
+      drawUtil->drawBitmapSR(mProfile->getBitmapResource(), Point2I(offset.x + getWidth() - mBitmapBounds[SliderLineRight].extent.x, offset.y), mBitmapBounds[SliderLineRight]);
 
 
       //draw our center piece to our slider control's border and stretch it
@@ -421,11 +448,11 @@ void GuiSliderCtrl::onRender(Point2I offset, const RectI &updateRect)
       stretchRect = mBitmapBounds[SliderLineCenter];
       stretchRect.inset(1,0);
 
-      GFX->getDrawUtil()->drawBitmapStretchSR(mProfile->mTextureObject, destRect, stretchRect);
+      drawUtil->drawBitmapStretchSR(mProfile->getBitmapResource(), destRect, stretchRect);
 
       //draw our control slider button	
       thumb.point += pos;
-      GFX->getDrawUtil()->drawBitmapSR(mProfile->mTextureObject,Point2I(thumb.point.x,offset.y ),mBitmapBounds[index]);
+      drawUtil->drawBitmapSR(mProfile->getBitmapResource(),Point2I(thumb.point.x,offset.y ),mBitmapBounds[index]);
 
    }
    else if (getWidth() >= getHeight())
@@ -441,11 +468,14 @@ void GuiSliderCtrl::onRender(Point2I offset, const RectI &updateRect)
          PrimBuild::vertex2i( pos.x + mid.x, pos.y + mid.y );
 
          // tick marks
-         for( U32 t = 0; t <= ( mTicks + 1 ); t++ )
+         if (mRenderTicks)
          {
-            S32 x = (S32)( F32( mid.x - 1 ) / F32( mTicks + 1 ) * F32( t ) );
-            PrimBuild::vertex2i( pos.x + x, pos.y + mid.y - mShiftPoint );
-            PrimBuild::vertex2i( pos.x + x, pos.y + mid.y + mShiftPoint );
+            for (U32 t = 0; t <= (mTicks + 1); t++)
+            {
+               S32 x = (S32)(F32(mid.x - 1) / F32(mTicks + 1) * F32(t));
+               PrimBuild::vertex2i(pos.x + x, pos.y + mid.y - mShiftPoint);
+               PrimBuild::vertex2i(pos.x + x, pos.y + mid.y + mShiftPoint);
+            }
          }
          PrimBuild::end();
    }
@@ -460,11 +490,14 @@ void GuiSliderCtrl::onRender(Point2I offset, const RectI &updateRect)
          PrimBuild::vertex2i( pos.x + mid.x, pos.y + mid.y );
 
          // tick marks
-         for( U32 t = 0; t <= ( mTicks + 1 ); t++ )
+         if (mRenderTicks)
          {
-            S32 y = (S32)( F32( mid.y - 1 ) / F32( mTicks + 1 ) * F32( t ) );
-            PrimBuild::vertex2i( pos.x + mid.x - mShiftPoint, pos.y + y );
-            PrimBuild::vertex2i( pos.x + mid.x + mShiftPoint, pos.y + y );
+            for (U32 t = 0; t <= (mTicks + 1); t++)
+            {
+               S32 y = (S32)(F32(mid.y - 1) / F32(mTicks + 1) * F32(t));
+               PrimBuild::vertex2i(pos.x + mid.x - mShiftPoint, pos.y + y);
+               PrimBuild::vertex2i(pos.x + mid.x + mShiftPoint, pos.y + y);
+            }
          }
          PrimBuild::end();
       mDisplayValue = false;
@@ -490,8 +523,8 @@ void GuiSliderCtrl::onRender(Point2I offset, const RectI &updateRect)
    	else if(textStart.x + txt_w > offset.x+getWidth())
    		textStart.x -=((textStart.x + txt_w) - (offset.x+getWidth()));
 
-    	GFX->getDrawUtil()->setBitmapModulation(mProfile->mFontColor);
-    	GFX->getDrawUtil()->drawText(mProfile->mFont, textStart, buf, mProfile->mFontColors);
+    	drawUtil->setBitmapModulation(mProfile->mFontColor);
+    	drawUtil->drawText(mProfile->mFont, textStart, buf, mProfile->mFontColors);
    }
    renderChildControls(offset, updateRect);
 }

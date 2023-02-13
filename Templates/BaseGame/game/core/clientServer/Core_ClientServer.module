@@ -1,0 +1,14 @@
+<ModuleDefinition
+	ModuleId="Core_ClientServer"
+	VersionId="1"
+	Description="Default module for the game."
+	ScriptFile="Core_ClientServer"
+	CreateFunction="onCreate"
+	DestroyFunction="onDestroy"
+	Group="Core">
+	<DeclaredAssets
+           canSave="true"
+           canSaveDynamicFields="true"
+           Extension="asset.taml"
+           Recurse="true" />
+</ModuleDefinition>

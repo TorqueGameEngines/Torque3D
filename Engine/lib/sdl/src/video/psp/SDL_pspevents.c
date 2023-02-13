@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2014 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -18,6 +18,9 @@
      misrepresented as being the original software.
   3. This notice may not be removed or altered from any source distribution.
 */
+#include "../../SDL_internal.h"
+
+#if SDL_VIDEO_DRIVER_PSP
 
 /* Being a null driver, there's no event stream. We just define stubs for
    most of the API. */
@@ -28,9 +31,10 @@
 #include "../../events/SDL_keyboard_c.h"
 #include "SDL_pspvideo.h"
 #include "SDL_pspevents_c.h"
-#include "SDL_thread.h"
 #include "SDL_keyboard.h"
+#include "../../thread/SDL_systhread.h"
 #include <psphprm.h>
+#include <pspthreadman.h>
 
 #ifdef PSPIRKEYB
 #include <pspirkeyb.h>
@@ -39,7 +43,7 @@
 #define IRKBD_CONFIG_FILE     NULL    /* this will take ms0:/seplugins/pspirkeyb.ini */
 
 static int irkbd_ready = 0;
-static SDLKey keymap[256];
+static SDL_Keycode keymap[256];
 #endif
 
 static enum PspHprmKeys hprm = 0;
@@ -121,7 +125,7 @@ void PSP_PumpEvents(_THIS)
                 /* not tested */
                 /* SDL_PrivateKeyboard(pressed?SDL_PRESSED:SDL_RELEASED, &sym); */
                 SDL_SendKeyboardKey((keys & keymap_psp[i].id) ?
-                                    SDL_PRESSED : SDL_RELEASED, SDL_GetScancodeFromKey(keymap[raw]);
+                                    SDL_PRESSED : SDL_RELEASED, SDL_GetScancodeFromKey(keymap[raw]));
 
                 }
             }
@@ -257,12 +261,12 @@ void PSP_EventInit(_THIS)
 #endif
     /* Start thread to read data */
     if((event_sem =  SDL_CreateSemaphore(1)) == NULL) {
-        SDL_SetError("Can't create input semaphore\n");
+        SDL_SetError("Can't create input semaphore");
         return;
     }
     running = 1;
-    if((thread = SDL_CreateThread(EventUpdate, "PSPInputThread",NULL)) == NULL) {
-        SDL_SetError("Can't create input thread\n");
+    if((thread = SDL_CreateThreadInternal(EventUpdate, "PSPInputThread", 4096, NULL)) == NULL) {
+        SDL_SetError("Can't create input thread");
         return;
     }
 }
@@ -282,3 +286,6 @@ void PSP_EventQuit(_THIS)
 
 /* end of SDL_pspevents.c ... */
 
+#endif /* SDL_VIDEO_DRIVER_PSP */
+
+/* vi: set ts=4 sw=4 expandtab: */

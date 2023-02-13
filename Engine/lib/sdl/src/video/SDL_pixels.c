@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2014 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -28,6 +28,7 @@
 #include "SDL_blit.h"
 #include "SDL_pixels_c.h"
 #include "SDL_RLEaccel_c.h"
+#include "../SDL_list.h"
 
 
 /* Lookup tables to expand partial bytes to the full 0..255 range */
@@ -94,6 +95,7 @@ SDL_GetPixelFormatName(Uint32 format)
     CASE(SDL_PIXELFORMAT_INDEX8)
     CASE(SDL_PIXELFORMAT_RGB332)
     CASE(SDL_PIXELFORMAT_RGB444)
+    CASE(SDL_PIXELFORMAT_BGR444)
     CASE(SDL_PIXELFORMAT_RGB555)
     CASE(SDL_PIXELFORMAT_BGR555)
     CASE(SDL_PIXELFORMAT_ARGB4444)
@@ -122,6 +124,8 @@ SDL_GetPixelFormatName(Uint32 format)
     CASE(SDL_PIXELFORMAT_YUY2)
     CASE(SDL_PIXELFORMAT_UYVY)
     CASE(SDL_PIXELFORMAT_YVYU)
+    CASE(SDL_PIXELFORMAT_NV12)
+    CASE(SDL_PIXELFORMAT_NV21)
 #undef CASE
     default:
         return "SDL_PIXELFORMAT_UNKNOWN";
@@ -319,12 +323,18 @@ SDL_MasksToPixelFormatEnum(int bpp, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask,
             Amask == 0x0000) {
             return SDL_PIXELFORMAT_RGB444;
         }
+        if (Rmask == 0x000F &&
+            Gmask == 0x00F0 &&
+            Bmask == 0x0F00 &&
+            Amask == 0x0000) {
+            return SDL_PIXELFORMAT_BGR444;
+        }
         break;
     case 15:
         if (Rmask == 0) {
             return SDL_PIXELFORMAT_RGB555;
         }
-        /* Fall through to 16-bit checks */
+        SDL_FALLTHROUGH;
     case 16:
         if (Rmask == 0) {
             return SDL_PIXELFORMAT_RGB565;
@@ -400,6 +410,13 @@ SDL_MasksToPixelFormatEnum(int bpp, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask,
             Bmask == 0xF800 &&
             Amask == 0x0000) {
             return SDL_PIXELFORMAT_BGR565;
+        }
+        if (Rmask == 0x003F &&
+            Gmask == 0x07C0 &&
+            Bmask == 0xF800 &&
+            Amask == 0x0000) {
+            /* Technically this would be BGR556, but Witek says this works in bug 3158 */
+            return SDL_PIXELFORMAT_RGB565;
         }
         break;
     case 24:
@@ -481,16 +498,20 @@ SDL_MasksToPixelFormatEnum(int bpp, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask,
 }
 
 static SDL_PixelFormat *formats;
+static SDL_SpinLock formats_lock = 0;
 
 SDL_PixelFormat *
 SDL_AllocFormat(Uint32 pixel_format)
 {
     SDL_PixelFormat *format;
 
+    SDL_AtomicLock(&formats_lock);
+
     /* Look it up in our list of previously allocated formats */
     for (format = formats; format; format = format->next) {
         if (pixel_format == format->format) {
             ++format->refcount;
+            SDL_AtomicUnlock(&formats_lock);
             return format;
         }
     }
@@ -498,10 +519,12 @@ SDL_AllocFormat(Uint32 pixel_format)
     /* Allocate an empty pixel format structure, and initialize it */
     format = SDL_malloc(sizeof(*format));
     if (format == NULL) {
+        SDL_AtomicUnlock(&formats_lock);
         SDL_OutOfMemory();
         return NULL;
     }
     if (SDL_InitFormat(format, pixel_format) < 0) {
+        SDL_AtomicUnlock(&formats_lock);
         SDL_free(format);
         SDL_InvalidParamError("format");
         return NULL;
@@ -512,6 +535,9 @@ SDL_AllocFormat(Uint32 pixel_format)
         format->next = formats;
         formats = format;
     }
+
+    SDL_AtomicUnlock(&formats_lock);
+
     return format;
 }
 
@@ -589,7 +615,11 @@ SDL_FreeFormat(SDL_PixelFormat *format)
         SDL_InvalidParamError("format");
         return;
     }
+
+    SDL_AtomicLock(&formats_lock);
+
     if (--format->refcount > 0) {
+        SDL_AtomicUnlock(&formats_lock);
         return;
     }
 
@@ -604,6 +634,8 @@ SDL_FreeFormat(SDL_PixelFormat *format)
             }
         }
     }
+
+    SDL_AtomicUnlock(&formats_lock);
 
     if (format->palette) {
         SDL_FreePalette(format->palette);
@@ -646,10 +678,10 @@ int
 SDL_SetPixelFormatPalette(SDL_PixelFormat * format, SDL_Palette *palette)
 {
     if (!format) {
-        return SDL_SetError("SDL_SetPixelFormatPalette() passed NULL format");
+        return SDL_InvalidParamError("SDL_SetPixelFormatPalette(): format");
     }
 
-    if (palette && palette->ncolors != (1 << format->BitsPerPixel)) {
+    if (palette && palette->ncolors > (1 << format->BitsPerPixel)) {
         return SDL_SetError("SDL_SetPixelFormatPalette() passed a palette that doesn't match the format");
     }
 
@@ -740,30 +772,6 @@ SDL_DitherColors(SDL_Color * colors, int bpp)
 }
 
 /*
- * Calculate the pad-aligned scanline width of a surface
- */
-int
-SDL_CalculatePitch(SDL_Surface * surface)
-{
-    int pitch;
-
-    /* Surface should be 4-byte aligned for speed */
-    pitch = surface->w * surface->format->BytesPerPixel;
-    switch (surface->format->BitsPerPixel) {
-    case 1:
-        pitch = (pitch + 7) / 8;
-        break;
-    case 4:
-        pitch = (pitch + 1) / 2;
-        break;
-    default:
-        break;
-    }
-    pitch = (pitch + 3) & ~3;   /* 4-byte aligning */
-    return (pitch);
-}
-
-/*
  * Match an RGB value to a particular palette index
  */
 Uint8
@@ -794,6 +802,54 @@ SDL_FindColor(SDL_Palette * pal, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
     return (pixel);
 }
 
+/* Tell whether palette is opaque, and if it has an alpha_channel */
+void
+SDL_DetectPalette(SDL_Palette *pal, SDL_bool *is_opaque, SDL_bool *has_alpha_channel)
+{
+    int i;
+
+    {
+        SDL_bool all_opaque = SDL_TRUE;
+        for (i = 0; i < pal->ncolors; i++) {
+            Uint8 alpha_value = pal->colors[i].a;
+            if (alpha_value != SDL_ALPHA_OPAQUE) {
+                all_opaque = SDL_FALSE;
+                break;
+            }
+        }
+
+        if (all_opaque) {
+            /* Palette is opaque, with an alpha channel */
+            *is_opaque = SDL_TRUE;
+            *has_alpha_channel = SDL_TRUE;
+            return;
+        }
+    }
+
+    {
+        SDL_bool all_transparent = SDL_TRUE;
+        for (i = 0; i < pal->ncolors; i++) {
+            Uint8 alpha_value = pal->colors[i].a;
+            if (alpha_value != SDL_ALPHA_TRANSPARENT) {
+                all_transparent = SDL_FALSE;
+                break;
+            }
+        }
+
+        if (all_transparent) {
+            /* Palette is opaque, without an alpha channel */
+            *is_opaque = SDL_TRUE;
+            *has_alpha_channel = SDL_FALSE;
+            return;
+        }
+    }
+
+    /* Palette has alpha values */
+    *is_opaque = SDL_FALSE;
+    *has_alpha_channel = SDL_TRUE;
+}
+
+
 /* Find the opaque pixel value corresponding to an RGB triple */
 Uint32
 SDL_MapRGB(const SDL_PixelFormat * format, Uint8 r, Uint8 g, Uint8 b)
@@ -816,7 +872,7 @@ SDL_MapRGBA(const SDL_PixelFormat * format, Uint8 r, Uint8 g, Uint8 b,
         return (r >> format->Rloss) << format->Rshift
             | (g >> format->Gloss) << format->Gshift
             | (b >> format->Bloss) << format->Bshift
-            | ((a >> format->Aloss) << format->Ashift & format->Amask);
+            | ((Uint32)(a >> format->Aloss) << format->Ashift & format->Amask);
     } else {
         return SDL_FindColor(format->palette, r, g, b, a);
     }
@@ -892,7 +948,7 @@ Map1to1(SDL_Palette * src, SDL_Palette * dst, int *identical)
         }
         *identical = 0;
     }
-    map = (Uint8 *) SDL_malloc(src->ncolors);
+    map = (Uint8 *) SDL_calloc(256, sizeof(Uint8));
     if (map == NULL) {
         SDL_OutOfMemory();
         return (NULL);
@@ -916,7 +972,7 @@ Map1toN(SDL_PixelFormat * src, Uint8 Rmod, Uint8 Gmod, Uint8 Bmod, Uint8 Amod,
     SDL_Palette *pal = src->palette;
 
     bpp = ((dst->BytesPerPixel == 3) ? 4 : dst->BytesPerPixel);
-    map = (Uint8 *) SDL_malloc(pal->ncolors * bpp);
+    map = (Uint8 *) SDL_calloc(256, bpp);
     if (map == NULL) {
         SDL_OutOfMemory();
         return (NULL);
@@ -928,7 +984,7 @@ Map1toN(SDL_PixelFormat * src, Uint8 Rmod, Uint8 Gmod, Uint8 Bmod, Uint8 Amod,
         Uint8 G = (Uint8) ((pal->colors[i].g * Gmod) / 255);
         Uint8 B = (Uint8) ((pal->colors[i].b * Bmod) / 255);
         Uint8 A = (Uint8) ((pal->colors[i].a * Amod) / 255);
-        ASSEMBLE_RGBA(&map[i * bpp], dst->BytesPerPixel, dst, R, G, B, A);
+        ASSEMBLE_RGBA(&map[i * bpp], dst->BytesPerPixel, dst, (Uint32)R, (Uint32)G, (Uint32)B, (Uint32)A);
     }
     return (map);
 }
@@ -968,6 +1024,22 @@ SDL_AllocBlitMap(void)
     return (map);
 }
 
+
+void
+SDL_InvalidateAllBlitMap(SDL_Surface *surface)
+{
+    SDL_ListNode *l = surface->list_blitmap;
+
+    surface->list_blitmap = NULL;
+
+    while (l) {
+        SDL_ListNode *tmp = l;
+        SDL_InvalidateMap((SDL_BlitMap *)l->entry);
+        l = l->next;
+        SDL_free(tmp);
+    }
+}
+
 void
 SDL_InvalidateMap(SDL_BlitMap * map)
 {
@@ -975,10 +1047,8 @@ SDL_InvalidateMap(SDL_BlitMap * map)
         return;
     }
     if (map->dst) {
-        /* Release our reference to the surface - see the note below */
-        if (--map->dst->refcount <= 0) {
-            SDL_FreeSurface(map->dst);
-        }
+        /* Un-register from the destination surface */
+        SDL_ListRemove((SDL_ListNode **)&(map->dst->list_blitmap), map);
     }
     map->dst = NULL;
     map->src_palette_version = 0;
@@ -996,9 +1066,11 @@ SDL_MapSurface(SDL_Surface * src, SDL_Surface * dst)
 
     /* Clear out any previous mapping */
     map = src->map;
+#if SDL_HAVE_RLE
     if ((src->flags & SDL_RLEACCEL) == SDL_RLEACCEL) {
         SDL_UnRLESurface(src, 1);
     }
+#endif
     SDL_InvalidateMap(map);
 
     /* Figure out what kind of mapping we're doing */
@@ -1047,14 +1119,8 @@ SDL_MapSurface(SDL_Surface * src, SDL_Surface * dst)
     map->dst = dst;
 
     if (map->dst) {
-        /* Keep a reference to this surface so it doesn't get deleted
-           while we're still pointing at it.
-
-           A better method would be for the destination surface to keep
-           track of surfaces that are mapped to it and automatically
-           invalidate them when it is freed, but this will do for now.
-        */
-        ++map->dst->refcount;
+        /* Register BlitMap to the destination surface, to be invalidated when needed */
+        SDL_ListAdd((SDL_ListNode **)&(map->dst->list_blitmap), map);
     }
 
     if (dstfmt->palette) {
@@ -1099,9 +1165,7 @@ SDL_CalculateGammaRamp(float gamma, Uint16 * ramp)
 
     /* 0.0 gamma is all black */
     if (gamma == 0.0f) {
-        for (i = 0; i < 256; ++i) {
-            ramp[i] = 0;
-        }
+        SDL_memset(ramp, 0, 256 * sizeof(Uint16));
         return;
     } else if (gamma == 1.0f) {
         /* 1.0 gamma is identity */

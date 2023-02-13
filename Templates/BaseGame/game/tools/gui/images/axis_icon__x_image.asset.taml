@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="axis_icon__x_image"
+    imageFile="@assetFile=axis-icon_-x.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

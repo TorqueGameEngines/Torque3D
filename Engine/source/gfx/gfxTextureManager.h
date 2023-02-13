@@ -41,6 +41,7 @@
 #ifndef _TSIGNAL_H_
 #include "core/util/tSignal.h"
 #endif
+#include "gfxTextureHandle.h"
 
 
 namespace Torque
@@ -73,6 +74,9 @@ public:
 
    /// Provide the path to the texture used to warn the developer
    static const String& getWarningTexturePath() { return smWarningTexturePath; }
+
+   static const String& getBRDFTexturePath() { return smBRDFTexturePath; }
+   static const String& getWetnessTexturePath() { return smWetnessTexturePath; }
 
    /// Update width and height based on available resources.
    ///
@@ -114,9 +118,9 @@ public:
    virtual GFXTextureObject *createTexture(  U32 width,
       U32 height,
       U32 depth,
-      void *pixels,
       GFXFormat format,
-      GFXTextureProfile *profile );
+      GFXTextureProfile *profile,
+      U32 numMipLevels = 1);
 
    virtual GFXTextureObject *createTexture(  U32 width,
       U32 height,
@@ -124,6 +128,20 @@ public:
       GFXTextureProfile *profile,
       U32 numMipLevels,
       S32 antialiasLevel);
+
+   Torque::Path validatePath(const Torque::Path &path);
+   GBitmap *loadUncompressedTexture(const Torque::Path& path, GFXTextureProfile* profile, U32 width, U32 height, bool genMips = false);
+   GBitmap *loadUncompressedTexture(const Torque::Path &path, GFXTextureProfile *profile);
+   virtual GFXTextureObject *createCompositeTexture(const Torque::Path &pathR, const Torque::Path &pathG, const Torque::Path &pathB, const Torque::Path &pathA, U32 inputKey[4],
+      GFXTextureProfile *profile);
+
+   void saveCompositeTexture(const Torque::Path &pathR, const Torque::Path &pathG, const Torque::Path &pathB, const Torque::Path &pathA, U32 inputKey[4],
+      const Torque::Path &saveAs,GFXTextureProfile *profile);
+
+   virtual GFXTextureObject *createCompositeTexture(GBitmap*bmp[4], U32 inputKey[4],
+      const String &resourceName,
+      GFXTextureProfile *profile,
+      bool deleteBmp);
 
    void deleteTexture( GFXTextureObject *texture );
    void reloadTexture( GFXTextureObject *texture );
@@ -175,8 +193,7 @@ public:
    /// Used to remove a cubemap from the cache.
    void releaseCubemap( GFXCubemap *cubemap );
 
-protected:
-
+public:
    /// The amount of texture mipmaps to skip when loading a
    /// texture that allows downscaling.
    ///
@@ -185,6 +202,8 @@ protected:
    /// @see GFXTextureProfile::PreserveSize
    /// 
    static S32 smTextureReductionLevel;
+
+protected:
 
    /// File path to the missing texture
    static String smMissingTexturePath;
@@ -196,6 +215,9 @@ protected:
    /// File path to the warning texture
    static String smWarningTexturePath;
 
+   static String smBRDFTexturePath;
+   static String smWetnessTexturePath;
+   
    GFXTextureObject *mListHead;
    GFXTextureObject *mListTail;
 

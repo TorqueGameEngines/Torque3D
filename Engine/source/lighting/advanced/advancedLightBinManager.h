@@ -60,23 +60,27 @@ protected:
    enum
    {
       DynamicLight = 0,
+      SunLight,
       StaticLightNonLMGeometry,
       StaticLightLMGeometry,
-      NUM_LIT_STATES
+      NUM_LIT_STATES,
+      Base = 0,
+      Reflecting = 1
    };
-   GFXStateBlockRef mLitState[NUM_LIT_STATES];
+   GFXStateBlockRef mLitState[NUM_LIT_STATES][2];
 
 public:
-   LightMatInstance(Material &mat) : Parent(mat), mLightMapParamsSC(NULL), mInternalPass(false) {}
+   LightMatInstance(Material &mat) : Parent(mat), mLightMapParamsSC(NULL), mInternalPass(false),  mSpecialLight(false) {}
 
    virtual bool init( const FeatureSet &features, const GFXVertexFormat *vertexFormat );
    virtual bool setupPass( SceneRenderState *state, const SceneData &sgData );
+
+   bool mSpecialLight;
 };
 
-
-class AdvancedLightBinManager : public RenderTexTargetBinManager
+class AdvancedLightBinManager : public RenderBinManager
 {
-   typedef RenderTexTargetBinManager Parent;
+   typedef RenderBinManager Parent;
 
 public:
 
@@ -85,6 +89,11 @@ public:
    
    // registered buffer name
    static const String smBufferName;
+
+   NamedTexTargetRef mDiffuseLightingTarget;
+   GFXTexHandle      mDiffuseLightingTex;
+
+   GFXTextureTargetRef mLightingTargetRef;
 
    /// The shadow filter mode to use on shadowed light materials.
    static ShadowFilterMode smShadowFilterMode;
@@ -95,6 +104,18 @@ public:
    /// Set by the SSAO post effect to tell the vector
    /// light to compile in the SSAO mask.
    static bool smUseSSAOMask;
+
+   //Used to toggle the visualization of diffuse and specular light contribution
+   static bool smDiffuseLightViz;
+   static bool smSpecularLightViz;
+   static bool smDetailLightingViz;
+
+   static S32 smMaximumNumOfLights;
+   static bool smUseLightFade;
+   static F32 smLightFadeEnd;
+   static F32 smLightFadeStart;
+
+   static bool smAllowLocalLightShadows;
 
    // Used for console init
    AdvancedLightBinManager( AdvancedLightManager *lm = NULL, 
@@ -118,12 +139,16 @@ public:
 
    virtual bool setTargetSize(const Point2I &newTargetSize);
 
+   /// Scores the registered lights for sorting/ordering purposes
+   void _scoreLights(const MatrixF& cameraTrans);
+
    // ConsoleObject interface
    DECLARE_CONOBJECT(AdvancedLightBinManager);
 
-   bool MRTLightmapsDuringPrePass() const { return mMRTLightmapsDuringPrePass; }
-   void MRTLightmapsDuringPrePass(bool val);
+   bool MRTLightmapsDuringDeferred() const { return mMRTLightmapsDuringDeferred; }
+   void MRTLightmapsDuringDeferred(bool val);
 
+   bool _updateTargets();
 
    typedef Signal<void(SceneRenderState *, AdvancedLightBinManager *)> RenderSignal;
    static RenderSignal &getRenderSignal();
@@ -157,10 +182,9 @@ protected:
       MaterialParameterHandle *lightDirection;
       MaterialParameterHandle *lightColor;
       MaterialParameterHandle *lightBrightness;
-      MaterialParameterHandle *lightAttenuation;
       MaterialParameterHandle *lightRange;
+      MaterialParameterHandle *lightInvSqrRange;
       MaterialParameterHandle *lightAmbient;
-      MaterialParameterHandle *lightTrilight;
       MaterialParameterHandle *lightSpotParams;
 
       LightMaterialInfo(   const String &matName, 
@@ -176,7 +200,7 @@ protected:
                               const PlaneF &farPlane,
                               const PlaneF &_vsFarPlane );
 
-      void setLightParameters( const LightInfo *light, const SceneRenderState* renderState, const MatrixF &worldViewOnly );
+      void setLightParameters( const LightInfo *light, const SceneRenderState* renderState );
    };
 
 protected:
@@ -194,7 +218,7 @@ protected:
    Vector<LightBinEntry> mLightBin;
    typedef Vector<LightBinEntry>::iterator LightBinIterator;
 
-   bool mMRTLightmapsDuringPrePass;
+   bool mMRTLightmapsDuringDeferred;
 
    /// Used in setupSGData to set the object transform.
    MatrixF mLightMat;
@@ -221,8 +245,6 @@ protected:
    ///
    void _onShadowFilterChanged();
 
-   AdvancedLightBufferConditioner *mConditioner;
-
    typedef GFXVertexPNTT FarFrustumQuadVert; 
    GFXVertexBufferHandle<FarFrustumQuadVert> mFarFrustumQuadVerts;
 
@@ -232,6 +254,8 @@ protected:
    void _setupPerFrameParameters( const SceneRenderState *state );
 
    void setupSGData( SceneData &data, const SceneRenderState* state, LightInfo *light );
+
+   static S32 QSORT_CALLBACK _lightScoreCmp(const LightBinEntry* a, const  LightBinEntry* b);
 };
 
 #endif // _ADVANCEDLIGHTBINMANAGER_H_

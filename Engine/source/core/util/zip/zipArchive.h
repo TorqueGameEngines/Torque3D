@@ -36,8 +36,6 @@
 /// @addtogroup zip_group Zip Code
 // @{
 
-/// Password to use when opening encrypted zip files. Change this to whatever the password is for your zips.
-#define DEFAULT_ZIP_PASSWORD     "changeme"
 
 class ZipTestWrite;
 class ZipTestRead;
@@ -235,7 +233,7 @@ class ZipTempStream;
 /// exists and may be released as a resource in the future.
 /// 
 /// To set the password used for zips, you need to modify the #DEFAULT_ZIP_PASSWORD
-/// define in core/zip/zipArchive.h. This password will be used for all zips that
+/// define in torqueConfig.h. This password will be used for all zips that
 /// require a password. The default password is changeme. This may be used by
 /// TGB Binary users to test encrypted zips with their game. Shipping with the
 /// default password is not recommended for obvious reasons.

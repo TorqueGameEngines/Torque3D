@@ -99,9 +99,8 @@ bool GuiGradientSwatchCtrl::onWake()
 
 void GuiGradientSwatchCtrl::onRender( Point2I offset, const RectI &updateRect )
 {
-   bool highlight = mMouseOver;
+   bool highlight = mHighlighted;
 
-   ColorI backColor   = mSwatchColor;
    ColorI borderColor = mActive ? ( highlight ? mProfile->mBorderColorHL : mProfile->mBorderColor ) : mProfile->mBorderColorNA;
    RectI renderRect( offset, getExtent() );
 
@@ -116,7 +115,7 @@ void GuiGradientSwatchCtrl::onRender( Point2I offset, const RectI &updateRect )
       drawer->drawBitmapStretch( mGrid, renderRect );
 
    // Draw swatch color as fill...
-   drawer->drawRectFill( renderRect, mSwatchColor );
+   drawer->drawRectFill( renderRect, mSwatchColor.toColorI());
 
    // Draw any borders...
    drawer->drawRect( renderRect, borderColor );
@@ -219,20 +218,21 @@ GuiGradientCtrl::GuiGradientCtrl()
    setExtent(140, 30);
    mDisplayMode = pHorizColorRange;
 	mSaveDisplayMode = pHorizColorRange;
-   mBaseColor = ColorF(1.,.0,1.);
-   mPickColor = ColorF(.0,.0,.0);
+   mBaseColor = LinearColorF(1.,.0,1.);
+   mPickColor = LinearColorF(.0,.0,.0);
    mMouseDown = mMouseOver = false;
    mActive = true;
    mPositionChanged = false;
    mActionOnMove = false;
 	mShowReticle = true;
-	colorWhiteBlend = ColorF(1.,1.,1.,.75);
+	colorWhiteBlend = LinearColorF(1.,1.,1.,.75);
 	mSwatchFactor = 7;
 }
 
 //--------------------------------------------------------------------------
 void GuiGradientCtrl::initPersistFields()
 {
+   docsURL;
    addGroup("ColorPicker");
    addField("baseColor", TypeColorF, Offset(mBaseColor, GuiGradientCtrl));
    addField("pickColor", TypeColorF, Offset(mPickColor, GuiGradientCtrl));
@@ -249,8 +249,9 @@ bool GuiGradientCtrl::onAdd()
 {
 	Parent::onAdd();
 
-	S32 l = getBounds().point.x + mSwatchFactor, r = getBounds().point.x + getBounds().extent.x - mSwatchFactor;
-   S32 t = getBounds().point.y, b = getBounds().point.y + getBounds().extent.y - mSwatchFactor;
+   RectI bounds = getBounds();
+   S32 l = bounds.point.x + mSwatchFactor, r = bounds.point.x + bounds.extent.x - mSwatchFactor;
+   S32 t = bounds.point.y, b = bounds.point.y + bounds.extent.y - mSwatchFactor;
 	mBlendRangeBox = RectI( Point2I(l, t), Point2I(r, b) );
 	
 	setupDefaultRange();
@@ -318,77 +319,79 @@ void GuiGradientCtrl::renderColorBox(RectI &bounds)
 void GuiGradientCtrl::drawBlendRangeBox(RectI &bounds, bool vertical, Vector<ColorRange> colorRange)
 {
    GFX->setStateBlock(mStateBlock);
-   
-	// Create new global dimensions
+
+   // Create new global dimensions
    S32 l = bounds.point.x + mSwatchFactor, r = bounds.point.x + bounds.extent.x - mSwatchFactor;
    S32 t = bounds.point.y, b = bounds.point.y + bounds.extent.y - mSwatchFactor;
-	
-	// Draw border using new global dimensions
-	if (mProfile->mBorder)
-      GFX->getDrawUtil()->drawRect( RectI( Point2I(l,t),Point2I(r,b) ), mProfile->mBorderColor);
-	
-	// Update local dimensions
-	mBlendRangeBox.point = globalToLocalCoord(Point2I(l, t));
-	mBlendRangeBox.extent = globalToLocalCoord(Point2I(r, b));
-	
-	if(colorRange.size() == 1) // Only one color to draw
-	{
-		PrimBuild::begin( GFXTriangleFan, 4 );
 
-		PrimBuild::color( colorRange.first().swatch->getColor() );
-		PrimBuild::vertex2i( l, t );
-		PrimBuild::vertex2i( l, b );
+   // Draw border using new global dimensions
+   if (mProfile->mBorder)
+      GFX->getDrawUtil()->drawRect(RectI(Point2I(l, t), Point2I(r, b)), mProfile->mBorderColor);
 
-		PrimBuild::color( colorRange.first().swatch->getColor() );
-		PrimBuild::vertex2i( r, b );
-		PrimBuild::vertex2i( r, t );
+   // Update local dimensions
+   mBlendRangeBox.point = globalToLocalCoord(Point2I(l, t));
+   mBlendRangeBox.extent = globalToLocalCoord(Point2I(r, b));
 
-		PrimBuild::end();
-	}
-	else
-	{
-		PrimBuild::begin( GFXTriangleFan, 4 );
+   if (colorRange.size() == 1) // Only one color to draw
+   {
+      PrimBuild::begin(GFXTriangleStrip, 4);
 
-		PrimBuild::color( colorRange.first().swatch->getColor() );
-		PrimBuild::vertex2i( l, t );
-		PrimBuild::vertex2i( l, b );
+      PrimBuild::color(colorRange.first().swatch->getColor());
+      PrimBuild::vertex2i(l, t);
+      PrimBuild::vertex2i(r, t);
 
-		PrimBuild::color( colorRange.first().swatch->getColor() );
-		PrimBuild::vertex2i( l + colorRange.first().swatch->getPosition().x, b );
-		PrimBuild::vertex2i( l + colorRange.first().swatch->getPosition().x, t );
+      PrimBuild::color(colorRange.first().swatch->getColor());
+      PrimBuild::vertex2i(l, b);
+      PrimBuild::vertex2i(r, b);
 
-		PrimBuild::end();
+      PrimBuild::end();
+   }
+   else
+   {
+      PrimBuild::begin(GFXTriangleStrip, 4);
 
-		for( U16 i = 0;i < colorRange.size() - 1; i++ ) 
-		{
-			PrimBuild::begin( GFXTriangleFan, 4 );
-			if (!vertical)  // Horizontal (+x)
-			{
-				// First color
-				PrimBuild::color( colorRange[i].swatch->getColor() );
-				PrimBuild::vertex2i( l + colorRange[i].swatch->getPosition().x, t );
-				PrimBuild::vertex2i( l + colorRange[i].swatch->getPosition().x, b );
-				
-				// First color
-				PrimBuild::color( colorRange[i+1].swatch->getColor() );
-				PrimBuild::vertex2i( l + colorRange[i+1].swatch->getPosition().x, b );
-				PrimBuild::vertex2i( l + colorRange[i+1].swatch->getPosition().x, t );
-			}
-			PrimBuild::end();
-		}
+      PrimBuild::color(colorRange.first().swatch->getColor());
+      PrimBuild::vertex2i(l, t);
+      PrimBuild::vertex2i(l + colorRange.first().swatch->getPosition().x, t);
 
-		PrimBuild::begin( GFXTriangleFan, 4 );
+      PrimBuild::color(colorRange.first().swatch->getColor());
+      PrimBuild::vertex2i(l, b);
+      PrimBuild::vertex2i(l + colorRange.first().swatch->getPosition().x, b);
 
-		PrimBuild::color( colorRange.last().swatch->getColor() );
-		PrimBuild::vertex2i( l + colorRange.last().swatch->getPosition().x, t );
-		PrimBuild::vertex2i( l + colorRange.last().swatch->getPosition().x, b );
-		
-		PrimBuild::color( colorRange.last().swatch->getColor() );
-		PrimBuild::vertex2i( r, b );
-		PrimBuild::vertex2i( r, t );
+      PrimBuild::end();
 
-		PrimBuild::end();
-	}
+      for (U16 i = 0; i < colorRange.size() - 1; i++)
+      {
+         PrimBuild::begin(GFXTriangleStrip, 4);
+         if (!vertical)  // Horizontal (+x)
+         {
+            // First color
+            PrimBuild::color(colorRange[i].swatch->getColor());
+            PrimBuild::vertex2i(l + colorRange[i].swatch->getPosition().x, t);
+            PrimBuild::color(colorRange[i + 1].swatch->getColor());
+            PrimBuild::vertex2i(l + colorRange[i + 1].swatch->getPosition().x, t);
+
+            // First color
+            PrimBuild::color(colorRange[i].swatch->getColor());
+            PrimBuild::vertex2i(l + colorRange[i].swatch->getPosition().x, b);
+            PrimBuild::color(colorRange[i + 1].swatch->getColor());
+            PrimBuild::vertex2i(l + colorRange[i + 1].swatch->getPosition().x, b);
+         }
+         PrimBuild::end();
+      }
+
+      PrimBuild::begin(GFXTriangleStrip, 4);
+
+      PrimBuild::color(colorRange.last().swatch->getColor());
+      PrimBuild::vertex2i(l + colorRange.last().swatch->getPosition().x, t);
+      PrimBuild::vertex2i(r, t);
+
+      PrimBuild::color(colorRange.last().swatch->getColor());
+      PrimBuild::vertex2i(l + colorRange.last().swatch->getPosition().x, b);
+      PrimBuild::vertex2i(r, b);
+
+      PrimBuild::end();
+   }
 }
 
 void GuiGradientCtrl::onMouseDown(const GuiEvent &event)
@@ -408,7 +411,7 @@ void GuiGradientCtrl::onMouseDown(const GuiEvent &event)
    Point2I resolution = getRoot()->getExtent();
    GFXTexHandle bb( resolution.x, 
                     resolution.y, 
-                    GFXFormatR8G8B8A8, &GFXDefaultRenderTargetProfile, avar("%s() - bb (line %d)", __FUNCTION__, __LINE__) );
+                    GFXFormatR8G8B8A8, &GFXRenderTargetSRGBProfile, avar("%s() - bb (line %d)", __FUNCTION__, __LINE__) );
    
    Point2I tmpPt( event.mousePoint.x, event.mousePoint.y );
    GFXTarget *targ = GFX->getActiveRenderTarget();
@@ -418,7 +421,7 @@ void GuiGradientCtrl::onMouseDown(const GuiEvent &event)
    ColorI tmp;
    bmp.getColor( event.mousePoint.x, event.mousePoint.y, tmp );
 	
-	addColorRange( globalToLocalCoord(event.mousePoint), ColorF(tmp) );
+	addColorRange( globalToLocalCoord(event.mousePoint), LinearColorF(tmp) );
    
    mMouseDown = true;
 }
@@ -504,7 +507,7 @@ void GuiGradientCtrl::reInitSwatches( GuiGradientCtrl::PickMode )
 			mColorRange[i].swatch->registerObject();
 			addObject(mColorRange[i].swatch);
 			mColorRange[i].swatch->setPosition( Point2I( mColorRange[i].pos, b ) );// needs to be adjusted
-			mColorRange[i].swatch->setColor(ColorF(mColorRange[i].color));
+			mColorRange[i].swatch->setColor(LinearColorF(mColorRange[i].color));
 		}
 	}
 
@@ -516,12 +519,12 @@ void GuiGradientCtrl::reInitSwatches( GuiGradientCtrl::PickMode )
 			mAlphaRange[i].swatch->registerObject();
 			addObject(mAlphaRange[i].swatch);
 			mAlphaRange[i].swatch->setPosition( Point2I( mAlphaRange[i].pos, b ) );// needs to be adjusted
-			mAlphaRange[i].swatch->setColor(ColorF(mAlphaRange[i].color));
+			mAlphaRange[i].swatch->setColor(LinearColorF(mAlphaRange[i].color));
 		}
 	}
 }
 
-void GuiGradientCtrl::addColorRange( Point2I pos, ColorF color )
+void GuiGradientCtrl::addColorRange(Point2I pos, const LinearColorF& color)
 {
 	if( pos.x + mSwatchFactor < mBlendRangeBox.point.x &&
 		pos.x + mSwatchFactor > mBlendRangeBox.extent.x )
@@ -599,7 +602,7 @@ void GuiGradientCtrl::sortColorRange()
 		dQsort( mAlphaRange.address(), mAlphaRange.size(), sizeof(ColorRange), _numIncreasing);
 }
 
-DefineConsoleMethod(GuiGradientCtrl, getColorCount, S32, (), , "Get color count")
+DefineEngineMethod(GuiGradientCtrl, getColorCount, S32, (), , "Get color count")
 {
 	if( object->getDisplayMode() == GuiGradientCtrl::pHorizColorRange )
 		return object->mColorRange.size();
@@ -609,7 +612,7 @@ DefineConsoleMethod(GuiGradientCtrl, getColorCount, S32, (), , "Get color count"
 	return 0;
 }
 
-DefineConsoleMethod(GuiGradientCtrl, getColor, ColorF, (S32 idx), , "Get color value")
+DefineEngineMethod(GuiGradientCtrl, getColor, LinearColorF, (S32 idx), , "Get color value")
 {
 
 	if( object->getDisplayMode() == GuiGradientCtrl::pHorizColorRange )
@@ -629,5 +632,5 @@ DefineConsoleMethod(GuiGradientCtrl, getColor, ColorF, (S32 idx), , "Get color v
 		}
 	}
 
-	return ColorF::ONE;
+	return LinearColorF::ONE;
 }

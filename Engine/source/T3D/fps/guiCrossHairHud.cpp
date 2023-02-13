@@ -42,8 +42,8 @@ class GuiCrossHairHud : public GuiBitmapCtrl
 {
    typedef GuiBitmapCtrl Parent;
 
-   ColorF   mDamageFillColor;
-   ColorF   mDamageFrameColor;
+   LinearColorF   mDamageFillColor;
+   LinearColorF   mDamageFrameColor;
    Point2I  mDamageRectSize;
    Point2I  mDamageOffset;
 
@@ -99,6 +99,7 @@ GuiCrossHairHud::GuiCrossHairHud()
 
 void GuiCrossHairHud::initPersistFields()
 {
+   docsURL;
    addGroup("Damage");		
    addField( "damageFillColor", TypeColorF, Offset( mDamageFillColor, GuiCrossHairHud ), "As the health bar depletes, this color will represent the health loss amount." );
    addField( "damageFrameColor", TypeColorF, Offset( mDamageFrameColor, GuiCrossHairHud ), "Color for the health bar's frame." );
@@ -117,7 +118,7 @@ void GuiCrossHairHud::onRender(Point2I offset, const RectI &updateRect)
    GameConnection* conn = GameConnection::getConnectionToServer();
    if (!conn)
       return;
-   ShapeBase* control = dynamic_cast<ShapeBase*>(conn->getControlObject());
+   GameBase* control = dynamic_cast<GameBase*>(conn->getCameraObject());
    if (!control || !(control->getTypeMask() & ObjectMask) || !conn->isFirstPerson())
       return;
 
@@ -178,7 +179,7 @@ void GuiCrossHairHud::drawDamage(Point2I offset, F32 damage, F32 opacity)
    rect.point.x -= mDamageRectSize.x / 2;
 
    // Draw the border
-   GFX->getDrawUtil()->drawRect(rect, mDamageFrameColor);
+   GFX->getDrawUtil()->drawRect(rect, mDamageFrameColor.toColorI());
 
    // Draw the damage % fill
    rect.point += Point2I(1, 1);
@@ -187,5 +188,5 @@ void GuiCrossHairHud::drawDamage(Point2I offset, F32 damage, F32 opacity)
    if (rect.extent.x == 1)
       rect.extent.x = 2;
    if (rect.extent.x > 0)
-      GFX->getDrawUtil()->drawRectFill(rect, mDamageFillColor);
+      GFX->getDrawUtil()->drawRectFill(rect, mDamageFillColor.toColorI());
 }

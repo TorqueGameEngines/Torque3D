@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="particleeditor_d_image"
+    imageFile="@assetFile=particleeditor_d.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

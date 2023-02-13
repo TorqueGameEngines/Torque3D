@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="portalProxyImage_image"
+    imageFile="@assetFile=portalProxyImage.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

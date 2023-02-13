@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="512_forestgreen_lines_image"
+    imageFile="@assetFile=512_forestgreen_lines.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

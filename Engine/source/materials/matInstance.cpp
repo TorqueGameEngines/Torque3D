@@ -26,7 +26,6 @@
 #include "materials/materialManager.h"
 #include "materials/customMaterialDefinition.h"
 #include "materials/processedMaterial.h"
-#include "materials/processedFFMaterial.h"
 #include "materials/processedShaderMaterial.h"
 #include "materials/processedCustomMaterial.h"
 #include "materials/materialFeatureTypes.h"
@@ -35,6 +34,9 @@
 #include "gfx/sim/cubemapData.h"
 #include "gfx/gfxCubemap.h"
 #include "core/util/safeDelete.h"
+#include "ts/tsShape.h"
+
+#include "gui/controls/guiTreeViewCtrl.h"
 
 class MatInstParameters;
 
@@ -140,7 +142,7 @@ void MatInstParameters::set(MaterialParameterHandle* handle, const Point4F& fv)
    MATINSTPARAMSET(handle, fv);
 }
 
-void MatInstParameters::set(MaterialParameterHandle* handle, const ColorF& fv)
+void MatInstParameters::set(MaterialParameterHandle* handle, const LinearColorF& fv)
 {
    MATINSTPARAMSET(handle, fv);
 }
@@ -248,8 +250,11 @@ void MatInstance::construct()
    mActiveParameters = NULL;
    mDefaultParameters = NULL;
    mHasNormalMaps = false;
+   mUsesHardwareSkinning = false;
    mIsForwardLit = false;
    mIsValid = false;
+   mIsHardwareSkinned = false;
+   needsHighlighting = false;
 
    MATMGR->_track(this);
 }
@@ -341,16 +346,14 @@ bool MatInstance::processMaterial()
          {            
             AssertWarn(custMat->mVersion == 0.0f, avar("Can't load CustomMaterial %s for %s, using generic FF fallback", 
                String(mMaterial->getName()).isEmpty() ? "Unknown" : mMaterial->getName(), custMat->mMapTo.c_str()));
-            mProcessedMaterial = new ProcessedFFMaterial(*mMaterial);
          }
       }
       else 
          mProcessedMaterial = new ProcessedCustomMaterial(*mMaterial);
    }
-   else if(GFX->getPixelShaderVersion() > 0.001)
-      mProcessedMaterial = getShaderMaterial();
    else
-      mProcessedMaterial = new ProcessedFFMaterial(*mMaterial);
+      mProcessedMaterial = getShaderMaterial();
+
 
    if (mProcessedMaterial)
    {
@@ -360,6 +363,11 @@ bool MatInstance::processMaterial()
 
       FeatureSet features( mFeatureList );
       features.exclude( MATMGR->getExclusionFeatures() );
+
+      if (mVertexFormat->hasBlendIndices() && TSShape::smUseHardwareSkinning)
+      {
+         features.addFeature( MFT_HardwareSkinning );
+      }
       
       if( !mProcessedMaterial->init(features, mVertexFormat, mFeaturesDelegate) )
       {
@@ -373,10 +381,12 @@ bool MatInstance::processMaterial()
 
       const FeatureSet &finalFeatures = mProcessedMaterial->getFeatures();
       mHasNormalMaps = finalFeatures.hasFeature( MFT_NormalMap );
+      mUsesHardwareSkinning = finalFeatures.hasFeature( MFT_HardwareSkinning );
 
       mIsForwardLit =   (  custMat && custMat->mForwardLit ) || 
-                        (  !finalFeatures.hasFeature( MFT_IsEmissive ) &&
-                           finalFeatures.hasFeature( MFT_ForwardShading ) );
+                        (  finalFeatures.hasFeature( MFT_ForwardShading ) );
+
+      mIsHardwareSkinned = finalFeatures.hasFeature( MFT_HardwareSkinning );
 
       return true;
    }
@@ -453,6 +463,18 @@ void MatInstance::setTransforms(const MatrixSet &matrixSet, SceneRenderState *st
 {
    PROFILE_SCOPE(MatInstance_setTransforms);
    mProcessedMaterial->setTransforms(matrixSet, state, getCurPass());
+}
+
+void MatInstance::setNodeTransforms(const MatrixF *address, const U32 numTransforms)
+{
+   PROFILE_SCOPE(MatInstance_setNodeTransforms);
+   mProcessedMaterial->setNodeTransforms(address, numTransforms, getCurPass());
+}
+
+void MatInstance::setCustomShaderData(Vector<CustomShaderBindingData> &shaderData)
+{
+	PROFILE_SCOPE(MatInstance_setCustomShaderData);
+	mProcessedMaterial->setCustomShaderData(shaderData, getCurPass());
 }
 
 void MatInstance::setSceneInfo(SceneRenderState * state, const SceneData& sgData)
@@ -565,6 +587,7 @@ void MatInstance::dumpShaderInfo() const
 
    Con::printf( "Material Info for object %s - %s", mMaterial->getName(), mMaterial->mMapTo.c_str() );
 
+
    if ( mProcessedMaterial == NULL )
    {
       Con::printf( "  [no processed material!]" );
@@ -572,4 +595,36 @@ void MatInstance::dumpShaderInfo() const
    }
 
    mProcessedMaterial->dumpMaterialInfo();
+}
+
+void MatInstance::getShaderInfo(GuiTreeViewCtrl* tree, U32 item) const
+{
+   if (mMaterial == NULL)
+   {
+      Con::errorf("Trying to get Material information on an invalid MatInstance");
+      return;
+   }
+
+   if (mProcessedMaterial == NULL)
+   {
+      Con::printf("  [no processed material!]");
+      return;
+   }
+
+   const FeatureSet features = mProcessedMaterial->getFeatures();
+
+   String featureDesc = "";
+   for (U32 i = 0; i < features.getCount(); i++)
+   {
+      const FeatureType& ft = features.getAt(i);
+
+      featureDesc += ft.getName();
+
+      if(i+1 < features.getCount())
+         featureDesc += ", ";
+   }
+
+   U32 newItem = tree->insertItem(item, featureDesc);
+
+   mProcessedMaterial->getMaterialInfo(tree, newItem);
 }

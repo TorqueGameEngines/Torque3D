@@ -2,30 +2,32 @@
 #include "windowManager/sdl/sdlWindow.h"
 #include "console/console.h"
 
+#ifdef TORQUE_OS_WIN
+#include "gfx/gl/tGL/tWGL.h"
+#endif
+
+#include "gfx/gl/gfxGLUtils.h"
+
 namespace PlatformGL
 {
 
    void init()
    {
-       static bool inited = false;
-
-       if(inited)
-           return;
-
-       inited = true;
-       const U32 majorOGL = 4;
-       const U32 minorOGL = 2;
+       const U32 majorOGL = 3;
+       const U32 minorOGL = 3;
        U32 debugFlag = 0;
 #ifdef TORQUE_DEBUG
        debugFlag |= SDL_GL_CONTEXT_DEBUG_FLAG;
 #endif
 
-#if 0  // cause problem with glew, no extension load
        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, majorOGL);
        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, minorOGL);
        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-#endif
        SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, debugFlag);
+       SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1);
+#ifdef TORQUE_GL_SOFTWARE
+       SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 0);
+#endif
 
        SDL_ClearError();
    }
@@ -70,6 +72,9 @@ namespace PlatformGL
 
    void setVSync(const int i)
    {
+      PRESERVE_FRAMEBUFFER();
+      // Nvidia needs to have the default framebuffer bound or the vsync calls fail
+      glBindFramebuffer(GL_FRAMEBUFFER, 0);
        if( i == 1 || i == -1 )
        {
            int ret = SDL_GL_SetSwapInterval(-1);
@@ -79,6 +84,7 @@ namespace PlatformGL
        }
        else
            SDL_GL_SetSwapInterval(0);
+
    }
 
 }

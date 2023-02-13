@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="open_file_h_image"
+    imageFile="@assetFile=open-file_h.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

@@ -47,7 +47,7 @@
 
 GFXDevice * GFXDevice::smGFXDevice = NULL;
 bool GFXDevice::smWireframe = false;
-bool GFXDevice::smDisableVSync = true;
+bool GFXDevice::smEnableVSync = false;
 F32 GFXDevice::smForcedPixVersion = -1.0f;
 bool GFXDevice::smDisableOcclusionQuery = false;
 bool gDisassembleAllShaders = false;
@@ -71,8 +71,8 @@ void GFXDevice::initConsole()
       "them to return only the visibile state.\n"
       "@ingroup GFX\n" );
 
-   Con::addVariable( "$pref::Video::disableVerticalSync", TypeBool, &smDisableVSync,
-      "Disables vertical sync on the active device.\n"
+   Con::addVariable( "$pref::Video::enableVerticalSync", TypeBool, &smEnableVSync,
+      "Enables vertical sync on the active device.\n"
       "@note The video mode must be reset for the change to take affect.\n"
       "@ingroup GFX\n" );
 
@@ -94,16 +94,12 @@ GFXDevice::GFXDevice()
    VECTOR_SET_ASSOCIATION( mVideoModes );
    VECTOR_SET_ASSOCIATION( mRTStack );
 
-   mWorldMatrixDirty = false;
    mWorldStackSize = 0;
-   mProjectionMatrixDirty = false;
-   mViewMatrixDirty = false;
-   mTextureMatrixCheckDirty = false;
 
    mViewMatrix.identity();
    mProjectionMatrix.identity();
    
-   for( S32 i = 0; i < WORLD_STACK_MAX; i++ )
+   for( S32 i = 0; i < GFX_WORLD_STACK_MAX; i++ )
       mWorldMatrix[i].identity();
    
    AssertFatal(smGFXDevice == NULL, "Already a GFXDevice created! Bad!");
@@ -123,32 +119,20 @@ GFXDevice::GFXDevice()
    mPrimitiveBufferDirty = false;
    mTexturesDirty = false;
    
-   // Use of TEXTURE_STAGE_COUNT in initialization is okay [7/2/2007 Pat]
-   for(U32 i = 0; i < TEXTURE_STAGE_COUNT; i++)
+   // Use of GFX_TEXTURE_STAGE_COUNT in initialization is okay [7/2/2007 Pat]
+   for(U32 i = 0; i < GFX_TEXTURE_STAGE_COUNT; i++)
    {
       mTextureDirty[i] = false;
       mCurrentTexture[i] = NULL;
       mNewTexture[i] = NULL;
       mCurrentCubemap[i] = NULL;
       mNewCubemap[i] = NULL;
+      mCurrentCubemapArray[i] = NULL;
+      mNewTextureArray[i] = NULL;
+      mCurrentTextureArray[i] = NULL;
+      mNewCubemapArray[i] = NULL;
       mTexType[i] = GFXTDT_Normal;
-
-      mTextureMatrix[i].identity();
-      mTextureMatrixDirty[i] = false;
    }
-
-   mLightsDirty = false;
-   for(U32 i = 0; i < LIGHT_STAGE_COUNT; i++)
-   {
-      mLightDirty[i] = false;
-      mCurrentLightEnable[i] = false;
-   }
-
-   mGlobalAmbientColorDirty = false;
-   mGlobalAmbientColor = ColorF(0.0f, 0.0f, 0.0f, 1.0f);
-
-   mLightMaterialDirty = false;
-   dMemset(&mCurrentLightMaterial, NULL, sizeof(GFXLightMaterial));
 
    // State block 
    mStateBlockDirty = false;
@@ -160,16 +144,14 @@ GFXDevice::GFXDevice()
    // misc
    mAllowRender = true;
    mCurrentRenderStyle = RS_Standard;
-   mCurrentProjectionOffset = Point2F::Zero;
-   mStereoEyeOffset = Point3F::Zero;
+   mCurrentStereoTarget = -1;
+   mStereoHeadTransform = MatrixF(1);
    mCanCurrentlyRender = false;
    mInitialized = false;
    
    mRTDirty = false;
    mViewport = RectI::Zero;
    mViewportDirty = false;
-
-   mCurrentFrontBufferIdx = 0;
 
    mDeviceSwizzle32 = NULL;
    mDeviceSwizzle24 = NULL;
@@ -190,13 +172,10 @@ GFXDevice::GFXDevice()
       GFXShader::addGlobalMacro( "TORQUE_OS_MAC" );
    #elif defined TORQUE_OS_LINUX
       GFXShader::addGlobalMacro( "TORQUE_OS_LINUX" );      
-   #elif defined TORQUE_OS_XENON
-      GFXShader::addGlobalMacro( "TORQUE_OS_XENON" );
-   #elif defined TORQUE_OS_XBOX
-      GFXShader::addGlobalMacro( "TORQUE_OS_XBOX" );      
-   #elif defined TORQUE_OS_PS3
-      GFXShader::addGlobalMacro( "TORQUE_OS_PS3" );            
    #endif
+
+   mStereoTargets[0] = NULL;
+   mStereoTargets[1] = NULL;
 }
 
 GFXDrawUtil* GFXDevice::getDrawUtil()
@@ -216,11 +195,11 @@ void GFXDevice::deviceInited()
    // Initialize the static helper textures.
    GBitmap temp( 2, 2, false, GFXFormatR8G8B8A8 );
    temp.fill( ColorI::ONE );
-   GFXTexHandle::ONE.set( &temp, &GFXDefaultStaticDiffuseProfile, false, "GFXTexHandle::ONE" ); 
+   GFXTexHandle::ONE.set( &temp, &GFXStaticTextureSRGBProfile, false, "GFXTexHandle::ONE" ); 
    temp.fill( ColorI::ZERO );
-   GFXTexHandle::ZERO.set( &temp, &GFXDefaultStaticDiffuseProfile, false, "GFXTexHandle::ZERO" ); 
+   GFXTexHandle::ZERO.set( &temp, &GFXStaticTextureSRGBProfile, false, "GFXTexHandle::ZERO" ); 
    temp.fill( ColorI( 128, 128, 255 ) );
-   GFXTexHandle::ZUP.set( &temp, &GFXDefaultStaticNormalMapProfile, false, "GFXTexHandle::ZUP" ); 
+   GFXTexHandle::ZUP.set( &temp, &GFXNormalMapProfile, false, "GFXTexHandle::ZUP" );
 }
 
 bool GFXDevice::destroy()
@@ -259,12 +238,16 @@ GFXDevice::~GFXDevice()
       mCurrentVertexBuffer[i] = NULL;
 
    // Clear out our current texture references
-   for (U32 i = 0; i < TEXTURE_STAGE_COUNT; i++)
+   for (U32 i = 0; i < GFX_TEXTURE_STAGE_COUNT; i++)
    {
       mCurrentTexture[i] = NULL;
       mNewTexture[i] = NULL;
       mCurrentCubemap[i] = NULL;
       mNewCubemap[i] = NULL;
+      mCurrentCubemapArray[i] = NULL;
+      mNewCubemapArray[i] = NULL;
+      mCurrentTextureArray[i] = NULL;
+      mNewTextureArray[i] = NULL;
    }
 
    mCurrentRT = NULL;
@@ -362,10 +345,6 @@ void GFXDevice::updateStates(bool forceSetAll /*=false*/)
          rememberToEndScene = true;
       }
 
-      setMatrix( GFXMatrixProjection, mProjectionMatrix );
-      setMatrix( GFXMatrixWorld, mWorldMatrix[mWorldStackSize] );
-      setMatrix( GFXMatrixView, mViewMatrix );
-
       setVertexDecl( mCurrVertexDecl );
 
       for ( U32 i=0; i < VERTEX_STREAM_COUNT; i++ )
@@ -401,19 +380,28 @@ void GFXDevice::updateStates(bool forceSetAll /*=false*/)
                      setTextureInternal(i, NULL);
                }
                break;
+            case GFXTDT_CubeArray:
+               {
+                  mCurrentCubemapArray[i] = mNewCubemapArray[i];
+                  if (mCurrentCubemapArray[i])
+                     mCurrentCubemapArray[i]->setToTexUnit(i);
+                  else
+                     setTextureInternal(i, NULL);
+               }
+               break;
+            case GFXTDT_TextureArray:
+               {
+                  mCurrentTextureArray[i] = mNewTextureArray[i];
+                  if (mCurrentTextureArray[i])
+                     mCurrentTextureArray[i]->setToTexUnit(i);
+                  else
+                     setTextureInternal(i, NULL);
+               }
+               break;
             default:
                AssertFatal(false, "Unknown texture type!");
                break;
          }
-      }
-
-      // Set our material
-      setLightMaterialInternal(mCurrentLightMaterial);
-
-      // Set our lights
-      for(U32 i = 0; i < LIGHT_STAGE_COUNT; i++)
-      {
-         setLightInternal(i, mCurrentLight[i], mCurrentLightEnable[i]);
       }
 
        _updateRenderTargets();
@@ -429,42 +417,6 @@ void GFXDevice::updateStates(bool forceSetAll /*=false*/)
 
    // Normal update logic begins here.
    mStateDirty = false;
-
-   // Update Projection Matrix
-   if( mProjectionMatrixDirty )
-   {
-      setMatrix( GFXMatrixProjection, mProjectionMatrix );
-      mProjectionMatrixDirty = false;
-   }
-   
-   // Update World Matrix
-   if( mWorldMatrixDirty )
-   {
-      setMatrix( GFXMatrixWorld, mWorldMatrix[mWorldStackSize] );
-      mWorldMatrixDirty = false;
-   }
-   
-   // Update View Matrix
-   if( mViewMatrixDirty )
-   {
-      setMatrix( GFXMatrixView, mViewMatrix );
-      mViewMatrixDirty = false;
-   }
-
-
-   if( mTextureMatrixCheckDirty )
-   {
-      for( S32 i = 0; i < getNumSamplers(); i++ )
-      {
-         if( mTextureMatrixDirty[i] )
-         {
-            mTextureMatrixDirty[i] = false;
-            setMatrix( (GFXMatrixType)(GFXMatrixTexture + i), mTextureMatrix[i] );
-         }
-      }
-
-      mTextureMatrixCheckDirty = false;
-   }
 
    // Update the vertex declaration.
    if ( mVertexDeclDirty )
@@ -512,6 +464,8 @@ void GFXDevice::updateStates(bool forceSetAll /*=false*/)
       mStateBlockDirty = false;
    }
 
+   _updateRenderTargets();
+
    if( mTexturesDirty )
    {
       mTexturesDirty = false;
@@ -538,31 +492,28 @@ void GFXDevice::updateStates(bool forceSetAll /*=false*/)
                   setTextureInternal(i, NULL);
             }
             break;
+         case GFXTDT_CubeArray:
+         {
+            mCurrentCubemapArray[i] = mNewCubemapArray[i];
+            if (mCurrentCubemapArray[i])
+               mCurrentCubemapArray[i]->setToTexUnit(i);
+            else
+               setTextureInternal(i, NULL);
+         }
+            break;
+         case GFXTDT_TextureArray:
+         {
+            mCurrentTextureArray[i] = mNewTextureArray[i];
+            if (mCurrentTextureArray[i])
+               mCurrentTextureArray[i]->setToTexUnit(i);
+            else
+               setTextureInternal(i, NULL);
+         }
+         break;
          default:
             AssertFatal(false, "Unknown texture type!");
             break;
          }
-      }
-   }
-   
-   // Set light material
-   if(mLightMaterialDirty)
-   {
-      setLightMaterialInternal(mCurrentLightMaterial);
-      mLightMaterialDirty = false;
-   }
-
-   // Set our lights
-   if(mLightsDirty)
-   {
-      mLightsDirty = false;
-      for(U32 i = 0; i < LIGHT_STAGE_COUNT; i++)
-      {
-         if(!mLightDirty[i])
-            continue;
-
-         mLightDirty[i] = false;
-         setLightInternal(i, mCurrentLight[i], mCurrentLightEnable[i]);
       }
    }
 
@@ -571,6 +522,13 @@ void GFXDevice::updateStates(bool forceSetAll /*=false*/)
 #ifdef TORQUE_DEBUG_RENDER
    doParanoidStateCheck();
 #endif
+}
+
+void GFXDevice::clearTextureStateImmediate(U32 stage)
+{
+   mCurrentTexture[stage] = NULL;
+   mCurrentCubemap[stage] = NULL;
+   setTextureInternal(stage, NULL);
 }
 
 void GFXDevice::setPrimitiveBuffer( GFXPrimitiveBuffer *buffer )
@@ -713,43 +671,6 @@ Point2F GFXDevice::getWorldToScreenScale() const
 }
 
 //-----------------------------------------------------------------------------
-// Set Light
-//-----------------------------------------------------------------------------
-void GFXDevice::setLight(U32 stage, GFXLightInfo* light)
-{
-   AssertFatal(stage < LIGHT_STAGE_COUNT, "GFXDevice::setLight - out of range stage!");
-
-   if(!mLightDirty[stage])
-   {
-      mStateDirty = true;
-      mLightsDirty = true;
-      mLightDirty[stage] = true;
-   }
-   mCurrentLightEnable[stage] = (light != NULL);
-   if(mCurrentLightEnable[stage])
-      mCurrentLight[stage] = *light;
-}
-
-//-----------------------------------------------------------------------------
-// Set Light Material
-//-----------------------------------------------------------------------------
-void GFXDevice::setLightMaterial(GFXLightMaterial mat)
-{
-   mCurrentLightMaterial = mat;
-   mLightMaterialDirty = true;
-   mStateDirty = true;
-}
-
-void GFXDevice::setGlobalAmbientColor(ColorF color)
-{
-   if(mGlobalAmbientColor != color)
-   {
-      mGlobalAmbientColor = color;
-      mGlobalAmbientColorDirty = true;
-   }
-}
-
-//-----------------------------------------------------------------------------
 // Set texture
 //-----------------------------------------------------------------------------
 void GFXDevice::setTexture( U32 stage, GFXTextureObject *texture )
@@ -771,30 +692,94 @@ void GFXDevice::setTexture( U32 stage, GFXTextureObject *texture )
    // Clear out the cubemaps
    mNewCubemap[stage] = NULL;
    mCurrentCubemap[stage] = NULL;
+   mNewCubemapArray[stage] = NULL;
+   mCurrentCubemapArray[stage] = NULL;
+   mNewTextureArray[stage] = NULL;
+   mCurrentTextureArray[stage] = NULL;
 }
 
 //-----------------------------------------------------------------------------
 // Set cube texture
 //-----------------------------------------------------------------------------
-void GFXDevice::setCubeTexture( U32 stage, GFXCubemap *texture )
+void GFXDevice::setCubeTexture( U32 stage, GFXCubemap *cubemap )
 {
    AssertFatal(stage < getNumSamplers(), "GFXDevice::setTexture - out of range stage!");
 
    if (  mTexType[stage] == GFXTDT_Cube &&
-         (  ( mTextureDirty[stage] && mNewCubemap[stage].getPointer() == texture ) ||
-            ( !mTextureDirty[stage] && mCurrentCubemap[stage].getPointer() == texture ) ) )
+         (  ( mTextureDirty[stage] && mNewCubemap[stage].getPointer() == cubemap) ||
+            ( !mTextureDirty[stage] && mCurrentCubemap[stage].getPointer() == cubemap) ) )
       return;
 
    mStateDirty = true;
    mTexturesDirty = true;
    mTextureDirty[stage] = true;
 
-   mNewCubemap[stage] = texture;
+   mNewCubemap[stage] = cubemap;
    mTexType[stage] = GFXTDT_Cube;
 
-   // Clear out the normal textures
+   // Clear out textures
    mNewTexture[stage] = NULL;
    mCurrentTexture[stage] = NULL;
+   mNewCubemapArray[stage] = NULL;
+   mCurrentCubemapArray[stage] = NULL;
+   mNewTextureArray[stage] = NULL;
+   mCurrentTextureArray[stage] = NULL;
+}
+
+//-----------------------------------------------------------------------------
+// Set cube texture array
+//-----------------------------------------------------------------------------
+void GFXDevice::setCubeArrayTexture(U32 stage, GFXCubemapArray *cubemapArray)
+{
+   AssertFatal(stage < getNumSamplers(), avar("GFXDevice::setTexture - out of range stage! %i>%i", stage, getNumSamplers()));
+
+   if (mTexType[stage] == GFXTDT_CubeArray &&
+      ((mTextureDirty[stage] && mNewCubemapArray[stage].getPointer() == cubemapArray) ||
+      (!mTextureDirty[stage] && mCurrentCubemapArray[stage].getPointer() == cubemapArray)))
+      return;
+
+   mStateDirty = true;
+   mTexturesDirty = true;
+   mTextureDirty[stage] = true;
+
+   mNewCubemapArray[stage] = cubemapArray;
+   mTexType[stage] = GFXTDT_CubeArray;
+
+   // Clear out textures
+   mNewTexture[stage] = NULL;
+   mCurrentTexture[stage] = NULL;
+   mNewCubemap[stage] = NULL;
+   mCurrentCubemap[stage] = NULL;
+   mNewTextureArray[stage] = NULL;
+   mCurrentTextureArray[stage] = NULL;
+}
+
+//-----------------------------------------------------------------------------
+// Set texture array
+//-----------------------------------------------------------------------------
+void GFXDevice::setTextureArray(U32 stage, GFXTextureArray *textureArray)
+{
+   AssertFatal(stage < getNumSamplers(), avar("GFXDevice::setTextureArray - out of range stage! %i>%i", stage, getNumSamplers()));
+
+   if (mTexType[stage] == GFXTDT_TextureArray &&
+      ((mTextureDirty[stage] && mNewTextureArray[stage].getPointer() == textureArray) ||
+      (!mTextureDirty[stage] && mCurrentTextureArray[stage].getPointer() == textureArray)))
+      return;
+
+   mStateDirty = true;
+   mTexturesDirty = true;
+   mTextureDirty[stage] = true;
+
+   mNewTextureArray[stage] = textureArray;
+   mTexType[stage] = GFXTDT_TextureArray;
+
+   // Clear out textures
+   mNewTexture[stage] = NULL;
+   mCurrentTexture[stage] = NULL;
+   mNewCubemap[stage] = NULL;
+   mCurrentCubemap[stage] = NULL;
+   mNewCubemapArray[stage] = NULL;
+   mCurrentCubemapArray[stage] = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -1306,6 +1291,17 @@ DefineEngineFunction( getDisplayDeviceInformation, const char*, (),,
    return adapter.getName();
 }
 
+DefineEngineFunction(getDisplayDeviceType, GFXAdapterType, (), ,
+   "Get the string describing the active GFX device type.\n"
+   "@ingroup GFX\n")
+{
+   if (!GFXDevice::devicePresent())
+      return NullDevice;
+
+   const GFXAdapter& adapter = GFX->getAdapter();
+   return adapter.mType;
+}
+
 DefineEngineFunction( getBestHDRFormat, GFXFormat, (),,
    "Returns the best texture format for storage of HDR data for the active device.\n"
    "@ingroup GFX\n" )
@@ -1316,14 +1312,18 @@ DefineEngineFunction( getBestHDRFormat, GFXFormat, (),,
    // Figure out the best HDR format.  This is the smallest
    // format which supports blending and filtering.
    Vector<GFXFormat> formats;
-   formats.push_back( GFXFormatR10G10B10A2 );
-   formats.push_back( GFXFormatR16G16B16A16F );
-   formats.push_back( GFXFormatR16G16B16A16 );    
-   GFXFormat format = GFX->selectSupportedFormat(  &GFXDefaultRenderTargetProfile,
+   formats.push_back(GFXFormatR16G16B16A16F);
+   formats.push_back( GFXFormatR10G10B10A2 );   
+   GFXFormat format = GFX->selectSupportedFormat(  &GFXRenderTargetProfile,
                                                    formats, 
                                                    true,
                                                    true,
                                                    true );
 
    return format;
+}
+
+DefineEngineFunction(ResetGFX, void, (), , "forces the gbuffer to be reinitialized in cases of improper/lack of buffer clears.")
+{
+   GFX->beginReset();
 }

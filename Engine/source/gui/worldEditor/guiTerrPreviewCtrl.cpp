@@ -36,7 +36,7 @@ ConsoleDocClass( GuiTerrPreviewCtrl,
    "@internal"
 );
 
-GuiTerrPreviewCtrl::GuiTerrPreviewCtrl(void) : mTerrainEditor(NULL), mTerrainSize(2048.0f)
+GuiTerrPreviewCtrl::GuiTerrPreviewCtrl(void) : mTerrainSize(2048.0f), mTerrainEditor(NULL)
 {
    mRoot.set( 0, 0 );
    mOrigin.set( 0, 0 );
@@ -68,14 +68,11 @@ bool GuiTerrPreviewCtrl::onAdd()
    desc.samplersDefined = true;
    desc.samplers[0].addressModeU = GFXAddressWrap;
    desc.samplers[0].addressModeV = GFXAddressWrap;
-   desc.samplers[0].textureColorOp = GFXTOPSelectARG1;
-   desc.samplers[0].colorArg1 = GFXTATexture;
    desc.setCullMode(GFXCullNone);
    desc.setZReadWrite(false);
 
    mTerrainBitmapStateBlock = GFX->createStateBlock(desc);
 
-   desc.samplers[0].textureColorOp = GFXTOPDisable;
 
    mControlsStateBlock = GFX->createStateBlock(desc);
 
@@ -84,39 +81,40 @@ bool GuiTerrPreviewCtrl::onAdd()
 
 void GuiTerrPreviewCtrl::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 
 
-DefineConsoleMethod( GuiTerrPreviewCtrl, reset, void, (), , "Reset the view of the terrain.")
+DefineEngineMethod( GuiTerrPreviewCtrl, reset, void, (), , "Reset the view of the terrain.")
 {
    object->reset();
 }
 
-DefineConsoleMethod( GuiTerrPreviewCtrl, setRoot, void, (), , "Add the origin to the root and reset the origin.")
+DefineEngineMethod( GuiTerrPreviewCtrl, setRoot, void, (), , "Add the origin to the root and reset the origin.")
 {
    object->setRoot();
 }
 
-DefineConsoleMethod( GuiTerrPreviewCtrl, getRoot, Point2F, (), , "Return a Point2F representing the position of the root.")
+DefineEngineMethod( GuiTerrPreviewCtrl, getRoot, Point2F, (), , "Return a Point2F representing the position of the root.")
 {
    return object->getRoot();
 
 }
 
-DefineConsoleMethod( GuiTerrPreviewCtrl, setOrigin, void, (Point2F pos), , "(float x, float y)"
+DefineEngineMethod( GuiTerrPreviewCtrl, setOrigin, void, (Point2F pos), , "(float x, float y)"
               "Set the origin of the view.")
 {
    object->setOrigin( pos );
 }
 
-DefineConsoleMethod( GuiTerrPreviewCtrl, getOrigin, Point2F, (), , "Return a Point2F containing the position of the origin.")
+DefineEngineMethod( GuiTerrPreviewCtrl, getOrigin, Point2F, (), , "Return a Point2F containing the position of the origin.")
 {
    return object->getOrigin();
 
 }
 
-DefineConsoleMethod( GuiTerrPreviewCtrl, getValue, const char*, (), , "Returns a 4-tuple containing: root_x root_y origin_x origin_y")
+DefineEngineMethod( GuiTerrPreviewCtrl, getValue, const char*, (), , "Returns a 4-tuple containing: root_x root_y origin_x origin_y")
 {
    Point2F r = object->getRoot();
    Point2F o = object->getOrigin();
@@ -126,7 +124,7 @@ DefineConsoleMethod( GuiTerrPreviewCtrl, getValue, const char*, (), , "Returns a
    return valuebuf;
 }
 
-DefineConsoleMethod( GuiTerrPreviewCtrl, setValue, void, (const char * tuple), , "Accepts a 4-tuple in the same form as getValue returns.\n\n"
+DefineEngineMethod( GuiTerrPreviewCtrl, setValue, void, (const char * tuple), , "Accepts a 4-tuple in the same form as getValue returns.\n\n"
               "@see GuiTerrPreviewCtrl::getValue()")
 {
    Point2F r,o;
@@ -265,18 +263,18 @@ void GuiTerrPreviewCtrl::onRender(Point2I offset, const RectI &updateRect)
 
          // the texture if flipped horz to reflect how the terrain is really drawn
          PrimBuild::color3f(1.0f, 1.0f, 1.0f);
-         PrimBuild::begin(GFXTriangleFan, 4);
-            PrimBuild::texCoord2f(textureP1.x, textureP2.y);
-            PrimBuild::vertex2f(screenP1.x, screenP2.y);       // left bottom
+         PrimBuild::begin(GFXTriangleStrip, 4);
+         PrimBuild::texCoord2f(textureP1.x, textureP1.y);
+         PrimBuild::vertex2f(screenP1.x, screenP1.y);       // left top
 
-            
-            PrimBuild::texCoord2f(textureP2.x, textureP2.y);
-            PrimBuild::vertex2f(screenP2.x, screenP2.y);       // right bottom
-            PrimBuild::texCoord2f(textureP2.x, textureP1.y);
-            PrimBuild::vertex2f(screenP2.x, screenP1.y);       // right top
+         PrimBuild::texCoord2f(textureP2.x, textureP1.y);
+         PrimBuild::vertex2f(screenP2.x, screenP1.y);       // right top
 
-            PrimBuild::texCoord2f(textureP1.x, textureP1.y);
-            PrimBuild::vertex2f(screenP1.x, screenP1.y);       // left top
+         PrimBuild::texCoord2f(textureP1.x, textureP2.y);
+         PrimBuild::vertex2f(screenP1.x, screenP2.y);       // left bottom
+
+         PrimBuild::texCoord2f(textureP2.x, textureP2.y);
+         PrimBuild::vertex2f(screenP2.x, screenP2.y);       // right bottom
          PrimBuild::end();
       }
    }

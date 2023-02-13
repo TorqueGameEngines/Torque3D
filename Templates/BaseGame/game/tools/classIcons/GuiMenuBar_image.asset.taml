@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="GuiMenuBar_image"
+    imageFile="@assetFile=GuiMenuBar.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

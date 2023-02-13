@@ -41,7 +41,8 @@ static struct { U32 id; SDL_SystemCursor resourceID; SDL_Cursor *cursor;} sgCurs
    { PlatformCursorController::curResizeNESW,  SDL_SYSTEM_CURSOR_SIZENESW,    NULL },
    { PlatformCursorController::curResizeNWSE,  SDL_SYSTEM_CURSOR_SIZENWSE,    NULL },
    { PlatformCursorController::curHand,        SDL_SYSTEM_CURSOR_HAND,        NULL },
-   { 0,                                        SDL_SYSTEM_CURSOR_NO,          NULL },
+   { PlatformCursorController::curWaitArrow,   SDL_SYSTEM_CURSOR_WAITARROW,   NULL },
+   { PlatformCursorController::curNoNo,        SDL_SYSTEM_CURSOR_NO,          NULL },
 };
 
 
@@ -63,17 +64,12 @@ S32 PlatformCursorControllerSDL::getDoubleClickHeight()
 
 void PlatformCursorControllerSDL::setCursorPosition( S32 x, S32 y )
 {
-   if( PlatformWindowManager::get() && PlatformWindowManager::get()->getFirstWindow() )
-   {
-      AssertFatal( dynamic_cast<PlatformWindowSDL*>( PlatformWindowManager::get()->getFirstWindow() ), "");
-      PlatformWindowSDL *window = static_cast<PlatformWindowSDL*>( PlatformWindowManager::get()->getFirstWindow() );
-      SDL_WarpMouseInWindow(window->getSDLWindow(), x, y);
-   }
+   SDL_WarpMouseGlobal(x, y);
 }
 
 void PlatformCursorControllerSDL::getCursorPosition( Point2I &point )
 {
-   SDL_GetMouseState( &point.x, &point.y );
+   SDL_GetGlobalMouseState( &point.x, &point.y );
 }
 
 void PlatformCursorControllerSDL::setCursorVisible( bool visible )
@@ -90,7 +86,7 @@ void PlatformCursorControllerSDL::setCursorShape(U32 cursorID)
 {
    SDL_Cursor* cursor = NULL;
 
-   for(S32 i = 0; sgCursorShapeMap[i].resourceID != SDL_SYSTEM_CURSOR_NO; ++i)
+   for(S32 i = 0; i < numPlatformCursors; ++i)
    {
       if(cursorID == sgCursorShapeMap[i].id)
       {  

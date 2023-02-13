@@ -208,7 +208,7 @@ class SFXWorld : public ScopeTracker< NUM_DIMENSIONS, Object >
          /// between this space and the space above us in the stack.
          Object mObject;
          
-         Scope() {}
+         Scope() :mSortValue(0), mSoundscape(NULL) {}
          Scope( F32 sortValue, Object object )
             : mSortValue( sortValue ),
               mSoundscape( NULL ),
@@ -361,9 +361,11 @@ void SFXWorld< NUM_DIMENSIONS, Object >::_onScopeIn( Object object )
    F32 sortValue = _getSortValue( object );
    while( iter != mScopeStack.end() && iter->mSortValue >= sortValue )
       ++ iter;
-      
-   // Insert the object into the stack.
-   
+   // If the object is already on the scope stack, do not add it again
+   S32 index = _findScope(object);
+   if (index != -1)
+      return;
+   // Insert the object into the stack.   
    mScopeStack.insert( iter, Scope( sortValue, object ) );
 }
 

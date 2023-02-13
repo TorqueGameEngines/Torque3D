@@ -30,7 +30,9 @@
 
 using namespace ColladaUtils;
 
-String cleanString(const String& str)
+#ifndef TORQUE_ASSIMP
+
+String AppMaterial::cleanString(const String& str)
 {
    String cleanStr(str);
 
@@ -46,6 +48,8 @@ String cleanString(const String& str)
    return cleanStr;
 }
 
+#endif // !TORQUE_ASSIMP
+
 //------------------------------------------------------------------------------
 
 ColladaAppMaterial::ColladaAppMaterial(const char* matName)
@@ -59,17 +63,18 @@ ColladaAppMaterial::ColladaAppMaterial(const char* matName)
    flags |= TSMaterialList::S_Wrap;
    flags |= TSMaterialList::T_Wrap;
 
-   diffuseColor = ColorF::ONE;
-   specularColor = ColorF::ONE;
-   specularPower = 8.0f;
+   diffuseColor = LinearColorF::ONE;
+
+   roughness = 0.0f;
+   metalness = 0.0f;
    doubleSided = false;
 }
 
 ColladaAppMaterial::ColladaAppMaterial(const domMaterial *pMat)
 :  mat(pMat),
-   diffuseColor(ColorF::ONE),
-   specularColor(ColorF::ONE),
-   specularPower(8.0f),
+   diffuseColor(LinearColorF::ONE),
+   roughness(0.0f),
+   metalness(0.0f),
    doubleSided(false)
 {
    // Get the effect element for this material
@@ -79,7 +84,6 @@ ColladaAppMaterial::ColladaAppMaterial(const domMaterial *pMat)
    // Get the <profile_COMMON>, <diffuse> and <specular> elements
    const domProfile_COMMON* commonProfile = ColladaUtils::findEffectCommonProfile(effect);
    const domCommon_color_or_texture_type_complexType* domDiffuse = findEffectDiffuse(effect);
-   const domCommon_color_or_texture_type_complexType* domSpecular = findEffectSpecular(effect);
 
    // Wrap flags
    if (effectExt->wrapU)
@@ -94,37 +98,33 @@ ColladaAppMaterial::ColladaAppMaterial(const domMaterial *pMat)
       if (commonProfile->getTechnique()->getConstant()) {
          const domProfile_COMMON::domTechnique::domConstant* constant = commonProfile->getTechnique()->getConstant();
          diffuseColor.set(1.0f, 1.0f, 1.0f, 1.0f);
-         resolveColor(constant->getReflective(), &specularColor);
-         resolveFloat(constant->getReflectivity(), &specularPower);
+         resolveFloat(constant->getReflectivity(), &metalness);
          resolveTransparency(constant, &transparency);
       }
       else if (commonProfile->getTechnique()->getLambert()) {
          const domProfile_COMMON::domTechnique::domLambert* lambert = commonProfile->getTechnique()->getLambert();
          resolveColor(lambert->getDiffuse(), &diffuseColor);
-         resolveColor(lambert->getReflective(), &specularColor);
-         resolveFloat(lambert->getReflectivity(), &specularPower);
+         resolveFloat(lambert->getReflectivity(), &metalness);
          resolveTransparency(lambert, &transparency);
       }
       else if (commonProfile->getTechnique()->getPhong()) {
          const domProfile_COMMON::domTechnique::domPhong* phong = commonProfile->getTechnique()->getPhong();
          resolveColor(phong->getDiffuse(), &diffuseColor);
-         resolveColor(phong->getSpecular(), &specularColor);
-         resolveFloat(phong->getShininess(), &specularPower);
+         resolveFloat(phong->getShininess(), &roughness);
          resolveTransparency(phong, &transparency);
       }
       else if (commonProfile->getTechnique()->getBlinn()) {
          const domProfile_COMMON::domTechnique::domBlinn* blinn = commonProfile->getTechnique()->getBlinn();
          resolveColor(blinn->getDiffuse(), &diffuseColor);
-         resolveColor(blinn->getSpecular(), &specularColor);
-         resolveFloat(blinn->getShininess(), &specularPower);
+         resolveFloat(blinn->getShininess(), &roughness);
          resolveTransparency(blinn, &transparency);
       }
 
       // Normalize specularPower (1-128). Values > 1 are assumed to be
       // already normalized.
-      if (specularPower <= 1.0f)
-         specularPower *= 128;
-      specularPower = mClampF(specularPower, 1.0f, 128.0f);
+      if (roughness <= 1.0f)
+          roughness *= 128;
+      roughness = mClampF(roughness, 1.0f, 128.0f);
 
       // Set translucency
       if (transparency != 0.0f) {
@@ -151,7 +151,6 @@ ColladaAppMaterial::ColladaAppMaterial(const domMaterial *pMat)
    // Get the paths for the various textures => Collada indirection at its finest!
    // <texture>.<newparam>.<sampler2D>.<source>.<newparam>.<surface>.<init_from>.<image>.<init_from>
    diffuseMap = getSamplerImagePath(effect, getTextureSampler(effect, domDiffuse));
-   specularMap = getSamplerImagePath(effect, getTextureSampler(effect, domSpecular));
    normalMap = getSamplerImagePath(effect, effectExt->bumpSampler);
 
    // Set the material name
@@ -174,7 +173,7 @@ void ColladaAppMaterial::resolveFloat(const domCommon_float_or_param_type* value
    }
 }
 
-void ColladaAppMaterial::resolveColor(const domCommon_color_or_texture_type* value, ColorF* dst)
+void ColladaAppMaterial::resolveColor(const domCommon_color_or_texture_type* value, LinearColorF* dst)
 {
    if (value && value->getColor()) {
       dst->red = value->getColor()->getValue()[0];
@@ -209,13 +208,12 @@ Material *ColladaAppMaterial::createMaterial(const Torque::Path& path) const
    Material *newMat = MATMGR->allocateAndRegister( cleanName, getName() );
    Con::setVariable("$Con::File", oldScriptFile);        // restore script path
 
-   newMat->mDiffuseMapFilename[0] = diffuseMap;
-   newMat->mNormalMapFilename[0] = normalMap;
-   newMat->mSpecularMapFilename[0] = specularMap;
+   newMat->mDiffuseMapName[0] = diffuseMap;
+   newMat->mNormalMapName[0] = normalMap;
 
    newMat->mDiffuse[0] = diffuseColor;
-   newMat->mSpecular[0] = specularColor;
-   newMat->mSpecularPower[0] = specularPower;
+   newMat->mRoughness[0] = roughness;
+   newMat->mMetalness[0] = metalness;
 
    newMat->mDoubleSided = doubleSided;
    newMat->mTranslucent = (bool)(flags & TSMaterialList::Translucent);

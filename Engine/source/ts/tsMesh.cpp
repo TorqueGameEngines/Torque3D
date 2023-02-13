@@ -46,6 +46,7 @@
 #include "scene/sceneManager.h"
 #include "scene/sceneRenderState.h"
 #include "materials/matInstance.h"
+#include "materials/materialFeatureTypes.h"
 #include "renderInstance/renderPassManager.h"
 #include "materials/customMaterialDefinition.h"
 #include "gfx/util/triListOpt.h"
@@ -53,11 +54,7 @@
 
 #include "opcode/Opcode.h"
 
-#if defined(TORQUE_OS_XENON)
-#  include "platformXbox/platformXbox.h"
-#endif
-
-GFXPrimitiveType drawTypes[] = { GFXTriangleList, GFXTriangleStrip, GFXTriangleFan };
+GFXPrimitiveType drawTypes[] = { GFXTriangleList, GFXTriangleStrip };
 #define getDrawType(a) (drawTypes[a])
 
 
@@ -78,6 +75,8 @@ Vector<S32*>     TSSkinMesh::smBoneIndexList;
 Vector<F32*>     TSSkinMesh::smWeightList;
 Vector<S32*>     TSSkinMesh::smNodeIndexList;
 
+bool TSSkinMesh::smDebugSkinVerts = false;
+
 Vector<Point3F> gNormalStore;
 
 bool TSMesh::smUseTriangles = false; // convert all primitives to triangle lists on load
@@ -88,6 +87,7 @@ bool TSMesh::smUseEncodedNormals = false;
 const F32 TSMesh::VISIBILITY_EPSILON = 0.0001f;
 
 S32 TSMesh::smMaxInstancingVerts = 200;
+MatrixF TSMesh::smDummyNodeTransform(1);
 
 // quick function to force object to face camera -- currently throws out roll :(
 void tsForceFaceCamera( MatrixF *mat, const Point3F *objScale )
@@ -109,13 +109,9 @@ void tsForceFaceCamera( MatrixF *mat, const Point3F *objScale )
 // TSMesh render methods
 //-----------------------------------------------------
 
-void TSMesh::render( TSVertexBufferHandle &instanceVB, GFXPrimitiveBufferHandle &instancePB )
+void TSMesh::render( TSVertexBufferHandle &instanceVB )
 {
-   // A TSMesh never uses the instanceVB.
-   TORQUE_UNUSED( instanceVB ); 
-   TORQUE_UNUSED( instancePB );
-
-   innerRender( mVB, mPB );
+   innerRender(instanceVB, mPB);
 }
 
 void TSMesh::innerRender( TSVertexBufferHandle &vb, GFXPrimitiveBufferHandle &pb )
@@ -126,7 +122,7 @@ void TSMesh::innerRender( TSVertexBufferHandle &vb, GFXPrimitiveBufferHandle &pb
    GFX->setVertexBuffer( vb );
    GFX->setPrimitiveBuffer( pb );
    
-   for( U32 p = 0; p < primitives.size(); p++ )
+   for( U32 p = 0; p < mPrimitives.size(); p++ )
       GFX->drawPrimitive( p );
 }
 
@@ -136,19 +132,17 @@ void TSMesh::render( TSMaterialList *materials,
                      bool isSkinDirty,
                      const Vector<MatrixF> &transforms, 
                      TSVertexBufferHandle &vertexBuffer,
-                     GFXPrimitiveBufferHandle &primitiveBuffer )
+                     const char *meshName)
 {
    // These are only used by TSSkinMesh.
    TORQUE_UNUSED( isSkinDirty );   
    TORQUE_UNUSED( transforms );
-   TORQUE_UNUSED( vertexBuffer );
-   TORQUE_UNUSED( primitiveBuffer );
 
    // Pass our shared VB.
-   innerRender( materials, rdata, mVB, mPB );
+   innerRender(materials, rdata, vertexBuffer, mPB, meshName);
 }
 
-void TSMesh::innerRender( TSMaterialList *materials, const TSRenderState &rdata, TSVertexBufferHandle &vb, GFXPrimitiveBufferHandle &pb )
+void TSMesh::innerRender( TSMaterialList *materials, const TSRenderState &rdata, TSVertexBufferHandle &vb, GFXPrimitiveBufferHandle &pb, const char *meshName )
 {
    PROFILE_SCOPE( TSMesh_InnerRender );
 
@@ -164,6 +158,9 @@ void TSMesh::innerRender( TSMaterialList *materials, const TSRenderState &rdata,
 
    MeshRenderInst *coreRI = renderPass->allocInst<MeshRenderInst>();
    coreRI->type = RenderPassManager::RIT_Mesh;
+#ifdef TORQUE_ENABLE_GFXDEBUGEVENTS
+   coreRI->meshName = meshName;
+#endif
 
    // Pass accumulation texture along.
    coreRI->accuTex = rdata.getAccuTex();
@@ -210,21 +207,33 @@ void TSMesh::innerRender( TSMaterialList *materials, const TSRenderState &rdata,
 
    coreRI->materialHint = rdata.getMaterialHint();
 
+   coreRI->mCustomShaderData = rdata.getCustomShaderBinding();
+
    coreRI->visibility = meshVisibility;  
    coreRI->cubemap = rdata.getCubemap();
+
+   if ( getMeshType() == TSMesh::SkinMeshType )
+   {
+      rdata.getNodeTransforms(&coreRI->mNodeTransforms, &coreRI->mNodeTransformCount);
+   }
+   else
+   {
+      coreRI->mNodeTransforms = &TSMesh::smDummyNodeTransform;
+      coreRI->mNodeTransformCount = 1;
+   }
 
    // NOTICE: SFXBB is removed and refraction is disabled!
    //coreRI->backBuffTex = GFX->getSfxBackBuffer();
 
-   for ( S32 i = 0; i < primitives.size(); i++ )
+   for ( S32 i = 0; i < mPrimitives.size(); i++ )
    {
-      const TSDrawPrimitive &draw = primitives[i];
+      const TSDrawPrimitive &draw = mPrimitives[i];
 
       // We need to have a material.
       if ( draw.matIndex & TSDrawPrimitive::NoMaterial )
          continue;
 
-#ifdef TORQUE_DEBUG
+#ifdef TORQUE_DEBUG_BREAK_INSPECT
       // for inspection if you happen to be running in a debugger and can't do bit 
       // operations in your head.
       S32 triangles = draw.matIndex & TSDrawPrimitive::Triangles;
@@ -237,6 +246,7 @@ void TSMesh::innerRender( TSMaterialList *materials, const TSRenderState &rdata,
       TORQUE_UNUSED(fan);
       TORQUE_UNUSED(indexed);
       TORQUE_UNUSED(type);
+      //define TORQUE_DEBUG_BREAK_INSPECT, and insert debug break here to inspect the above elements at runtime
 #endif
 
       const U32 matIndex = draw.matIndex & TSDrawPrimitive::MaterialMask;
@@ -245,15 +255,16 @@ void TSMesh::innerRender( TSMaterialList *materials, const TSRenderState &rdata,
 #ifndef TORQUE_OS_MAC
 
       // Get the instancing material if this mesh qualifies.
-      if ( meshType != SkinMeshType && pb->mPrimitiveArray[i].numVertices < smMaxInstancingVerts )
-         matInst = InstancingMaterialHook::getInstancingMat( matInst );
+      if (mMeshType != SkinMeshType && pb->mPrimitiveArray[i].numVertices < smMaxInstancingVerts )
+         if (matInst && !matInst->getFeatures().hasFeature(MFT_HardwareSkinning))
+            matInst = InstancingMaterialHook::getInstancingMat( matInst );
 
 #endif
 
       // If we don't have a material instance after the overload then
       // there is nothing to render... skip this primitive.
       matInst = state->getOverrideMaterial( matInst );
-      if ( !matInst || !matInst->isValid())
+      if ( !matInst || !matInst->isValid() || !matInst->getMaterial())
          continue;
 
       // If the material needs lights then gather them
@@ -266,10 +277,10 @@ void TSMesh::innerRender( TSMaterialList *materials, const TSRenderState &rdata,
 
       ri->matInst = matInst;
       ri->defaultKey = matInst->getStateHint();
-      ri->primBuffIndex = i;
+      ri->primBuffIndex = mPrimBufferOffset + i;
 
       // Translucent materials need the translucent type.
-      if ( matInst->getMaterial()->isTranslucent() )
+      if ( matInst->getMaterial()->isTranslucent() && (!(matInst->getMaterial()->isAlphatest() && state->isShadowPass())))
       {
          ri->type = RenderPassManager::RIT_Translucent;
          ri->translucentSort = true;
@@ -284,13 +295,13 @@ const Point3F * TSMesh::getNormals( S32 firstVert )
    if ( getFlags( UseEncodedNormals ) )
    {
       gNormalStore.setSize( vertsPerFrame );
-      for ( S32 i = 0; i < encodedNorms.size(); i++ )
-         gNormalStore[i] = decodeNormal( encodedNorms[ i + firstVert ] );
+      for ( S32 i = 0; i < mEncodedNorms.size(); i++ )
+         gNormalStore[i] = decodeNormal(mEncodedNorms[ i + firstVert ] );
 
       return gNormalStore.address();
    }
 
-   return &norms[firstVert];
+   return &mNorms[firstVert];
 }
 
 //-----------------------------------------------------
@@ -300,6 +311,7 @@ const Point3F * TSMesh::getNormals( S32 firstVert )
 bool TSMesh::buildPolyList( S32 frame, AbstractPolyList *polyList, U32 &surfaceKey, TSMaterialList *materials )
 {
    S32 firstVert  = vertsPerFrame * frame, i, base = 0;
+   bool hasTVert2 = getHasTVert2();
 
    // add the verts...
    if ( vertsPerFrame )
@@ -314,21 +326,21 @@ bool TSMesh::buildPolyList( S32 frame, AbstractPolyList *polyList, U32 &surfaceK
             {
                // Don't use vertex() method as we want to retain the original indices
                OptimizedPolyList::VertIndex vert;
-               vert.vertIdx   = opList->insertPoint( mVertexData[ i + firstVert ].vert() );
-               vert.normalIdx = opList->insertNormal( mVertexData[ i + firstVert ].normal() );
-               vert.uv0Idx    = opList->insertUV0( mVertexData[ i + firstVert ].tvert() );
-               if ( mHasTVert2 )
-                  vert.uv1Idx = opList->insertUV1( mVertexData[ i + firstVert ].tvert2() );
+               vert.vertIdx   = opList->insertPoint( mVertexData.getBase( i + firstVert ).vert() );
+               vert.normalIdx = opList->insertNormal( mVertexData.getBase( i + firstVert ).normal() );
+               vert.uv0Idx    = opList->insertUV0( mVertexData.getBase( i + firstVert ).tvert() );
+               if ( hasTVert2 )
+                  vert.uv1Idx = opList->insertUV1( mVertexData.getColor( i + firstVert ).tvert2() );
 
                opList->mVertexList.push_back( vert );
             }
          }
          else
          {
-            base = polyList->addPointAndNormal( mVertexData[firstVert].vert(), mVertexData[firstVert].normal() );
+            base = polyList->addPointAndNormal( mVertexData.getBase( firstVert ).vert(), mVertexData.getBase( firstVert ).normal() );
             for ( i = 1; i < vertsPerFrame; i++ )
             {
-               polyList->addPointAndNormal( mVertexData[ i + firstVert ].vert(), mVertexData[ i + firstVert ].normal() );
+               polyList->addPointAndNormal( mVertexData.getBase( i + firstVert ).vert(), mVertexData.getBase( i + firstVert ).normal() );
             }
          }
       }
@@ -342,28 +354,28 @@ bool TSMesh::buildPolyList( S32 frame, AbstractPolyList *polyList, U32 &surfaceK
             {
                // Don't use vertex() method as we want to retain the original indices
                OptimizedPolyList::VertIndex vert;
-               vert.vertIdx   = opList->insertPoint( verts[ i + firstVert ] );
-               vert.normalIdx = opList->insertNormal( norms[ i + firstVert ] );
-               vert.uv0Idx    = opList->insertUV0( tverts[ i + firstVert ] );
-               if ( mHasTVert2 )
-                  vert.uv1Idx = opList->insertUV1( tverts2[ i + firstVert ] );
+               vert.vertIdx   = opList->insertPoint( mVerts[ i + firstVert ] );
+               vert.normalIdx = opList->insertNormal( mNorms[ i + firstVert ] );
+               vert.uv0Idx    = opList->insertUV0( mTverts[ i + firstVert ] );
+               if ( hasTVert2 )
+                  vert.uv1Idx = opList->insertUV1(mTverts[ i + firstVert ] );
 
                opList->mVertexList.push_back( vert );
             }
          }
          else
          {
-            base = polyList->addPointAndNormal( verts[firstVert], norms[firstVert] );
+            base = polyList->addPointAndNormal( mVerts[firstVert], mNorms[firstVert] );
             for ( i = 1; i < vertsPerFrame; i++ )
-               polyList->addPointAndNormal( verts[ i + firstVert ], norms[ i + firstVert ] );
+               polyList->addPointAndNormal(mVerts[ i + firstVert ], mNorms[ i + firstVert ] );
          }
       }
    }
 
    // add the polys...
-   for ( i = 0; i < primitives.size(); i++ )
+   for ( i = 0; i < mPrimitives.size(); i++ )
    {
-      TSDrawPrimitive & draw = primitives[i];
+      TSDrawPrimitive & draw = mPrimitives[i];
       U32 start = draw.start;
 
       AssertFatal( draw.matIndex & TSDrawPrimitive::Indexed,"TSMesh::buildPolyList (1)" );
@@ -376,9 +388,9 @@ bool TSMesh::buildPolyList( S32 frame, AbstractPolyList *polyList, U32 &surfaceK
       {
          for ( S32 j = 0; j < draw.numElements; )
          {
-            U32 idx0 = base + indices[start + j + 0];
-            U32 idx1 = base + indices[start + j + 1];
-            U32 idx2 = base + indices[start + j + 2];
+            U32 idx0 = base + mIndices[start + j + 0];
+            U32 idx1 = base + mIndices[start + j + 1];
+            U32 idx2 = base + mIndices[start + j + 2];
             polyList->begin(material,surfaceKey++);
             polyList->vertex( idx0 );
             polyList->vertex( idx1 );
@@ -392,16 +404,16 @@ bool TSMesh::buildPolyList( S32 frame, AbstractPolyList *polyList, U32 &surfaceK
       {
          AssertFatal( (draw.matIndex & TSDrawPrimitive::TypeMask) == TSDrawPrimitive::Strip,"TSMesh::buildPolyList (2)" );
 
-         U32 idx0 = base + indices[start + 0];
+         U32 idx0 = base + mIndices[start + 0];
          U32 idx1;
-         U32 idx2 = base + indices[start + 1];
+         U32 idx2 = base + mIndices[start + 1];
          U32 * nextIdx = &idx1;
          for ( S32 j = 2; j < draw.numElements; j++ )
          {
             *nextIdx = idx2;
             // nextIdx = (j%2)==0 ? &idx0 : &idx1;
             nextIdx = (U32*) ( (dsize_t)nextIdx ^ (dsize_t)&idx0 ^ (dsize_t)&idx1);
-            idx2 = base + indices[start + j];
+            idx2 = base + mIndices[start + j];
             if ( idx0 == idx1 || idx0 == idx2 || idx1 == idx2 )
                continue;
 
@@ -426,13 +438,13 @@ bool TSMesh::getFeatures( S32 frame, const MatrixF& mat, const VectorF&, ConvexF
    for ( i = 0; i < vertsPerFrame; i++ ) 
    {
       cf->mVertexList.increment();
-      mat.mulP( mVertexData[firstVert + i].vert(), &cf->mVertexList.last() );
+      mat.mulP( mVertexData.getBase(firstVert + i).vert(), &cf->mVertexList.last() );
    }
 
    // add the polys...
-   for ( i = 0; i < primitives.size(); i++ )
+   for ( i = 0; i < mPrimitives.size(); i++ )
    {
-      TSDrawPrimitive & draw = primitives[i];
+      TSDrawPrimitive & draw = mPrimitives[i];
       U32 start = draw.start;
 
       AssertFatal( draw.matIndex & TSDrawPrimitive::Indexed,"TSMesh::buildPolyList (1)" );
@@ -442,22 +454,24 @@ bool TSMesh::getFeatures( S32 frame, const MatrixF& mat, const VectorF&, ConvexF
       {
          for ( S32 j = 0; j < draw.numElements; j += 3 )
          {
-            PlaneF plane( cf->mVertexList[base + indices[start + j + 0]],
-                          cf->mVertexList[base + indices[start + j + 1]],
-                          cf->mVertexList[base + indices[start + j + 2]]);
+            PlaneF plane( cf->mVertexList[base + mIndices[start + j + 0]],
+                          cf->mVertexList[base + mIndices[start + j + 1]],
+                          cf->mVertexList[base + mIndices[start + j + 2]]);
 
             cf->mFaceList.increment();
-            cf->mFaceList.last().normal = plane;
 
-            cf->mFaceList.last().vertex[0] = base + indices[start + j + 0];
-            cf->mFaceList.last().vertex[1] = base + indices[start + j + 1];
-            cf->mFaceList.last().vertex[2] = base + indices[start + j + 2];
+            ConvexFeature::Face& lastFace = cf->mFaceList.last();
+            lastFace.normal = plane;
+
+            lastFace.vertex[0] = base + mIndices[start + j + 0];
+            lastFace.vertex[1] = base + mIndices[start + j + 1];
+            lastFace.vertex[2] = base + mIndices[start + j + 2];
 
             for ( U32 l = 0; l < 3; l++ ) 
             {
                U32 newEdge0, newEdge1;
-               U32 zero = base + indices[start + j + l];
-               U32 one  = base + indices[start + j + ((l+1)%3)];
+               U32 zero = base + mIndices[start + j + l];
+               U32 one  = base + mIndices[start + j + ((l+1)%3)];
                newEdge0 = getMin( zero, one );
                newEdge1 = getMax( zero, one );
                bool found = false;
@@ -484,15 +498,15 @@ bool TSMesh::getFeatures( S32 frame, const MatrixF& mat, const VectorF&, ConvexF
       {
          AssertFatal( (draw.matIndex & TSDrawPrimitive::TypeMask) == TSDrawPrimitive::Strip,"TSMesh::buildPolyList (2)" );
 
-         U32 idx0 = base + indices[start + 0];
+         U32 idx0 = base + mIndices[start + 0];
          U32 idx1;
-         U32 idx2 = base + indices[start + 1];
+         U32 idx2 = base + mIndices[start + 1];
          U32 * nextIdx = &idx1;
          for ( S32 j = 2; j < draw.numElements; j++ )
          {
             *nextIdx = idx2;
             nextIdx = (U32*) ( (dsize_t)nextIdx ^ (dsize_t)&idx0 ^ (dsize_t)&idx1);
-            idx2 = base + indices[start + j];
+            idx2 = base + mIndices[start + j];
             if ( idx0 == idx1 || idx0 == idx2 || idx1 == idx2 )
                continue;
 
@@ -514,8 +528,9 @@ bool TSMesh::getFeatures( S32 frame, const MatrixF& mat, const VectorF&, ConvexF
             S32 k;
             for ( k = 0; k < cf->mEdgeList.size(); k++ ) 
             {
-               if ( cf->mEdgeList[k].vertex[0] == newEdge0 &&
-                    cf->mEdgeList[k].vertex[1] == newEdge1) 
+               ConvexFeature::Edge currentEdge = cf->mEdgeList[k];
+               if (currentEdge.vertex[0] == newEdge0 &&
+                  currentEdge.vertex[1] == newEdge1)
                {
                   found = true;
                   break;
@@ -586,7 +601,7 @@ void TSMesh::support( S32 frame, const Point3F &v, F32 *currMaxDP, Point3F *curr
 
    S32 firstVert = vertsPerFrame * frame;
    m_point3F_bulk_dot( &v.x,
-                       &mVertexData[firstVert].vert().x,
+                       &mVertexData.getBase(firstVert).vert().x,
                        vertsPerFrame,
                        mVertexData.vertSize(),
                        pDots );
@@ -608,13 +623,13 @@ void TSMesh::support( S32 frame, const Point3F &v, F32 *currMaxDP, Point3F *curr
    if ( index != -1 )
    {
       *currMaxDP   = localdp;
-      *currSupport = mVertexData[index + firstVert].vert();
+      *currSupport = mVertexData.getBase(index + firstVert).vert();
    }
 }
 
 bool TSMesh::castRay( S32 frame, const Point3F & start, const Point3F & end, RayInfo * rayInfo, TSMaterialList* materials )
 {
-   if ( planeNormals.empty() )
+   if ( mPlaneNormals.empty() )
       buildConvexHull(); // if haven't done it yet...
 
    // Keep track of startTime and endTime.  They start out at just under 0 and just over 1, respectively.
@@ -644,15 +659,15 @@ bool TSMesh::castRay( S32 frame, const Point3F & start, const Point3F & end, Ray
    S32 * pplane = &curPlane;
    bool * pfound = &found;
 
-   S32 startPlane = frame * planesPerFrame;
-   for ( S32  i = startPlane; i < startPlane + planesPerFrame; i++ )
+   S32 startPlane = frame * mPlanesPerFrame;
+   for ( S32  i = startPlane; i < startPlane + mPlanesPerFrame; i++ )
    {
       // if start & end outside, no collision
       // if start & end inside, continue
       // if start outside, end inside, or visa versa, find intersection of line with plane
       //    then update intersection of line with hull (using startTime and endTime)
-      F32 dot1 = mDot( planeNormals[i], start ) - planeConstants[i];
-      F32 dot2 = mDot( planeNormals[i], end) - planeConstants[i];
+      F32 dot1 = mDot(mPlaneNormals[i], start ) - mPlaneConstants[i];
+      F32 dot2 = mDot(mPlaneNormals[i], end) - mPlaneConstants[i];
       if ( dot1 * dot2 > 0.0f )
       {
          // same side of the plane...which side -- dot==0 considered inside
@@ -734,10 +749,10 @@ bool TSMesh::castRay( S32 frame, const Point3F & start, const Point3F & end, Ray
    // setup rayInfo
    if ( found && rayInfo )
    {
-      curMaterial       = planeMaterials[ curPlane - startPlane ];
+      curMaterial       = mPlaneMaterials[ curPlane - startPlane ];
 
       rayInfo->t        = (F32)startNum/(F32)startDen; // finally divide...
-      rayInfo->normal   = planeNormals[curPlane];
+      rayInfo->normal   = mPlaneNormals[curPlane];
 
       if (materials && materials->size() > 0)
          rayInfo->material = materials->getMaterialInst( curMaterial );
@@ -772,9 +787,9 @@ bool TSMesh::castRayRendered( S32 frame, const Point3F & start, const Point3F & 
    BaseMatInstance* bestMaterial = NULL;
 	Point3F dir = end - start;
 
-   for ( S32 i = 0; i < primitives.size(); i++ )
+   for ( S32 i = 0; i < mPrimitives.size(); i++ )
    {
-      TSDrawPrimitive & draw = primitives[i];
+      TSDrawPrimitive & draw = mPrimitives[i];
       U32 drawStart = draw.start;
 
       AssertFatal( draw.matIndex & TSDrawPrimitive::Indexed,"TSMesh::castRayRendered (1)" );
@@ -789,15 +804,15 @@ bool TSMesh::castRayRendered( S32 frame, const Point3F & start, const Point3F & 
       {
          for ( S32 j = 0; j < draw.numElements-2; j += 3 )
          {
-            idx0 = indices[drawStart + j + 0];
-            idx1 = indices[drawStart + j + 1];
-            idx2 = indices[drawStart + j + 2];
+            idx0 = mIndices[drawStart + j + 0];
+            idx1 = mIndices[drawStart + j + 1];
+            idx2 = mIndices[drawStart + j + 2];
 
 			   F32 cur_t = 0;
 			   Point2F b;
 
-			   if(castRayTriangle(start, dir, mVertexData[firstVert + idx0].vert(),
-               mVertexData[firstVert + idx1].vert(), mVertexData[firstVert + idx2].vert(), cur_t, b))
+			   if(castRayTriangle(start, dir, mVertexData.getBase(firstVert + idx0).vert(),
+               mVertexData.getBase(firstVert + idx1).vert(), mVertexData.getBase(firstVert + idx2).vert(), cur_t, b))
 			   {
 				   if(cur_t < best_t)
 				   {
@@ -815,23 +830,23 @@ bool TSMesh::castRayRendered( S32 frame, const Point3F & start, const Point3F & 
       {
          AssertFatal( (draw.matIndex & TSDrawPrimitive::TypeMask) == TSDrawPrimitive::Strip,"TSMesh::castRayRendered (2)" );
 
-         idx0 = indices[drawStart + 0];
-         idx2 = indices[drawStart + 1];
+         idx0 = mIndices[drawStart + 0];
+         idx2 = mIndices[drawStart + 1];
          U32 * nextIdx = &idx1;
          for ( S32 j = 2; j < draw.numElements; j++ )
          {
             *nextIdx = idx2;
             // nextIdx = (j%2)==0 ? &idx0 : &idx1;
             nextIdx = (U32*) ( (dsize_t)nextIdx ^ (dsize_t)&idx0 ^ (dsize_t)&idx1);
-            idx2 = indices[drawStart + j];
+            idx2 = mIndices[drawStart + j];
             if ( idx0 == idx1 || idx0 == idx2 || idx1 == idx2 )
                continue;
 
 			   F32 cur_t = 0;
 			   Point2F b;
 
-			   if(castRayTriangle(start, dir, mVertexData[firstVert + idx0].vert(), 
-               mVertexData[firstVert + idx1].vert(), mVertexData[firstVert + idx2].vert(), cur_t, b))
+			   if(castRayTriangle(start, dir, mVertexData.getBase(firstVert + idx0).vert(), 
+               mVertexData.getBase(firstVert + idx1).vert(), mVertexData.getBase(firstVert + idx2).vert(), cur_t, b))
 			   {
 				   if(cur_t < best_t)
 				   {
@@ -853,13 +868,13 @@ bool TSMesh::castRayRendered( S32 frame, const Point3F & start, const Point3F & 
       rayInfo->t = best_t;
 
       Point3F normal;
-      mCross(mVertexData[bestIdx2].vert()-mVertexData[bestIdx0].vert(),mVertexData[bestIdx1].vert()-mVertexData[bestIdx0].vert(),&normal);
+      mCross(mVertexData.getBase(bestIdx2).vert()-mVertexData.getBase(bestIdx0).vert(),mVertexData.getBase(bestIdx1).vert()-mVertexData.getBase(bestIdx0).vert(),&normal);
       if ( mDot( normal, normal ) < 0.001f )
       {
-         mCross( mVertexData[bestIdx0].vert() - mVertexData[bestIdx1].vert(), mVertexData[bestIdx2].vert() - mVertexData[bestIdx1].vert(), &normal );
+         mCross( mVertexData.getBase(bestIdx0).vert() - mVertexData.getBase(bestIdx1).vert(), mVertexData.getBase(bestIdx2).vert() - mVertexData.getBase(bestIdx1).vert(), &normal );
          if ( mDot( normal, normal ) < 0.001f )
          {
-            mCross( mVertexData[bestIdx1].vert() - mVertexData[bestIdx2].vert(), mVertexData[bestIdx0].vert() - mVertexData[bestIdx2].vert(), &normal );
+            mCross( mVertexData.getBase(bestIdx1).vert() - mVertexData.getBase(bestIdx2).vert(), mVertexData.getBase(bestIdx0).vert() - mVertexData.getBase(bestIdx2).vert(), &normal );
          }
       }
       normal.normalize();
@@ -886,9 +901,15 @@ bool TSMesh::addToHull( U32 idx0, U32 idx1, U32 idx2 )
    // ways and take the one that gives us the largest vector before we
    // normalize.
    Point3F normal1, normal2, normal3;
-   mCross(mVertexData[idx2].vert()-mVertexData[idx0].vert(),mVertexData[idx1].vert()-mVertexData[idx0].vert(),&normal1);
-   mCross(mVertexData[idx0].vert()-mVertexData[idx1].vert(),mVertexData[idx2].vert()-mVertexData[idx1].vert(),&normal2);
-   mCross(mVertexData[idx1].vert()-mVertexData[idx2].vert(),mVertexData[idx0].vert()-mVertexData[idx2].vert(),&normal3);
+
+   const Point3F& vertex0Data = mVertexData.getBase(idx0).vert();
+   const Point3F& vertex1Data = mVertexData.getBase(idx1).vert();
+   const Point3F& vertex2Data = mVertexData.getBase(idx2).vert();
+
+   mCross(vertex2Data-vertex0Data,vertex1Data-vertex0Data,&normal1);
+   mCross(vertex0Data-vertex1Data,vertex2Data-vertex1Data,&normal2);
+   mCross(vertex1Data-vertex2Data,vertex0Data-vertex2Data,&normal3);
+
    Point3F normal = normal1;
    F32 greatestMagSquared = mDot(normal1, normal1);
    F32 magSquared = mDot(normal2, normal2);
@@ -907,36 +928,36 @@ bool TSMesh::addToHull( U32 idx0, U32 idx1, U32 idx2 )
        return false;
 
    normal.normalize();
-   F32 k = mDot( normal, mVertexData[idx0].vert() );
-   for ( S32 i = 0; i < planeNormals.size(); i++ ) 
+   F32 k = mDot( normal, mVertexData.getBase(idx0).vert() );
+   for ( S32 i = 0; i < mPlaneNormals.size(); i++ )
    {
-      if ( mDot( planeNormals[i], normal ) > 0.99f && mFabs( k-planeConstants[i] ) < 0.01f )
+      if ( mDot(mPlaneNormals[i], normal ) > 0.99f && mFabs( k- mPlaneConstants[i] ) < 0.01f )
          return false;          // this is a repeat...
    }
    // new plane, add it to the list...
-   planeNormals.push_back( normal );
-   planeConstants.push_back( k );
+   mPlaneNormals.push_back( normal );
+   mPlaneConstants.push_back( k );
    return true;
 }
 
 bool TSMesh::buildConvexHull()
 {
    // already done, return without error
-   if ( planeNormals.size() )
+   if (mPlaneNormals.size() )
       return true;
 
    bool error = false;
 
    // should probably only have 1 frame, but just in case...
-   planesPerFrame = 0;
+   mPlanesPerFrame = 0;
    S32 frame, i, j;
    for ( frame = 0; frame < numFrames; frame++ )
    {
       S32 firstVert  = vertsPerFrame * frame;
-      S32 firstPlane = planeNormals.size();
-      for ( i = 0; i < primitives.size(); i++ )
+      S32 firstPlane = mPlaneNormals.size();
+      for ( i = 0; i < mPrimitives.size(); i++ )
       {
-         TSDrawPrimitive & draw = primitives[i];
+         TSDrawPrimitive & draw = mPrimitives[i];
          U32 start = draw.start;
 
          AssertFatal( draw.matIndex & TSDrawPrimitive::Indexed,"TSMesh::buildConvexHull (1)" );
@@ -945,71 +966,71 @@ bool TSMesh::buildConvexHull()
          if ( (draw.matIndex & TSDrawPrimitive::TypeMask) == TSDrawPrimitive::Triangles )
          {
             for ( j = 0;  j < draw.numElements; j += 3 )
-               if ( addToHull(   indices[start + j + 0] + firstVert, 
-                                 indices[start + j + 1] + firstVert, 
-                                 indices[start + j + 2] + firstVert ) && frame == 0 )
-                  planeMaterials.push_back( draw.matIndex & TSDrawPrimitive::MaterialMask );
+               if ( addToHull(   mIndices[start + j + 0] + firstVert, 
+                                 mIndices[start + j + 1] + firstVert, 
+                                 mIndices[start + j + 2] + firstVert ) && frame == 0 )
+				   mPlaneMaterials.push_back( draw.matIndex & TSDrawPrimitive::MaterialMask );
          }
          else
          {
             AssertFatal( (draw.matIndex&TSDrawPrimitive::Strip) == TSDrawPrimitive::Strip,"TSMesh::buildConvexHull (2)" );
 
-            U32 idx0 = indices[start + 0] + firstVert;
+            U32 idx0 = mIndices[start + 0] + firstVert;
             U32 idx1;
-            U32 idx2 = indices[start + 1] + firstVert;
+            U32 idx2 = mIndices[start + 1] + firstVert;
             U32 * nextIdx = &idx1;
             for ( j = 2; j < draw.numElements; j++ )
             {
                *nextIdx = idx2;
 //               nextIdx = (j%2)==0 ? &idx0 : &idx1;
                nextIdx = (U32*) ( (dsize_t)nextIdx ^ (dsize_t)&idx0 ^ (dsize_t)&idx1 );
-               idx2 = indices[start + j] + firstVert;
+               idx2 = mIndices[start + j] + firstVert;
                if ( addToHull( idx0, idx1, idx2 ) && frame == 0 )
-                  planeMaterials.push_back( draw.matIndex & TSDrawPrimitive::MaterialMask );
+				   mPlaneMaterials.push_back( draw.matIndex & TSDrawPrimitive::MaterialMask );
             }
          }
       }
       // make sure all the verts on this frame are inside all the planes
       for ( i = 0; i < vertsPerFrame; i++ )
-         for ( j = firstPlane; j < planeNormals.size(); j++ )
-            if ( mDot( mVertexData[firstVert + i].vert(), planeNormals[j] ) - planeConstants[j] < 0.01 ) // .01 == a little slack
+         for ( j = firstPlane; j < mPlaneNormals.size(); j++ )
+            if ( mDot( mVertexData.getBase(firstVert + i).vert(), mPlaneNormals[j] ) - mPlaneConstants[j] < 0.01 ) // .01 == a little slack
                error = true;
 
       if ( frame == 0 )
-         planesPerFrame = planeNormals.size();
+		  mPlanesPerFrame = mPlaneNormals.size();
 
-      if ( (frame + 1) * planesPerFrame != planeNormals.size() )
+      if ( (frame + 1) * mPlanesPerFrame != mPlaneNormals.size() )
       {
          // eek, not all frames have same number of planes...
-         while ( (frame + 1) * planesPerFrame > planeNormals.size() )
+         while ( (frame + 1) * mPlanesPerFrame > mPlaneNormals.size() )
          {
             // we're short, duplicate last plane till we match
-            U32 sz = planeNormals.size();
-            planeNormals.increment();
-            planeNormals.last() = planeNormals[sz-1];
-            planeConstants.increment();
-            planeConstants.last() = planeConstants[sz-1];
+            U32 sz = mPlaneNormals.size();
+			mPlaneNormals.increment();
+			mPlaneNormals.last() = mPlaneNormals[sz-1];
+			mPlaneConstants.increment();
+			mPlaneConstants.last() = mPlaneConstants[sz-1];
          }
-         while ( (frame + 1) * planesPerFrame < planeNormals.size() )
+         while ( (frame + 1) * mPlanesPerFrame < mPlaneNormals.size() )
          {
             // harsh -- last frame has more than other frames
             // duplicate last plane in each frame
             for ( S32 k = frame - 1; k >= 0; k-- )
             {
-               planeNormals.insert( k * planesPerFrame + planesPerFrame );
-               planeNormals[k * planesPerFrame + planesPerFrame] = planeNormals[k * planesPerFrame + planesPerFrame - 1];
-               planeConstants.insert( k * planesPerFrame + planesPerFrame );
-               planeConstants[k * planesPerFrame + planesPerFrame] = planeConstants[k * planesPerFrame + planesPerFrame - 1];
+				mPlaneNormals.insert( k * mPlanesPerFrame + mPlanesPerFrame );
+				mPlaneNormals[k * mPlanesPerFrame + mPlanesPerFrame] = mPlaneNormals[k * mPlanesPerFrame + mPlanesPerFrame - 1];
+				mPlaneConstants.insert( k * mPlanesPerFrame + mPlanesPerFrame );
+				mPlaneConstants[k * mPlanesPerFrame + mPlanesPerFrame] = mPlaneConstants[k * mPlanesPerFrame + mPlanesPerFrame - 1];
                if ( k == 0 )
                {
-                  planeMaterials.increment();
-                  planeMaterials.last() = planeMaterials[planeMaterials.size() - 2];
+				   mPlaneMaterials.increment();
+				   mPlaneMaterials.last() = mPlaneMaterials[mPlaneMaterials.size() - 2];
                }
             }
-            planesPerFrame++;
+			mPlanesPerFrame++;
          }
       }
-      AssertFatal( (frame + 1) * planesPerFrame == planeNormals.size(),"TSMesh::buildConvexHull (3)" );
+      AssertFatal( (frame + 1) * mPlanesPerFrame == mPlaneNormals.size(),"TSMesh::buildConvexHull (3)" );
    }
    return !error;
 }
@@ -1030,26 +1051,28 @@ void TSMesh::computeBounds( const MatrixF &transform, Box3F &bounds, S32 frame, 
    S32 stride = 0;
    S32 numVerts = 0;
 
-   if(mVertexData.isReady())
+   AssertFatal(!mVertexData.isReady()  || (mVertexData.isReady() && mNumVerts == mVertexData.size() && mNumVerts == vertsPerFrame), "vertex number mismatch");
+
+   if(mVerts.size() == 0 && mVertexData.isReady() && mVertexData.size() > 0)
    {
-      baseVert = &mVertexData[0].vert();
+      baseVert = &mVertexData.getBase(0).vert();
       stride = mVertexData.vertSize();
 
       if ( frame < 0 )
          numVerts = mNumVerts;
       else
       {
-         baseVert = &mVertexData[frame * vertsPerFrame].vert();
+         baseVert = &mVertexData.getBase(frame * vertsPerFrame).vert();
          numVerts = vertsPerFrame;
       }
    }
    else
    {
-      baseVert = verts.address();
+      baseVert = mVerts.address();
       stride = sizeof(Point3F);
 
       if ( frame < 0 )
-         numVerts = verts.size();
+         numVerts = mVerts.size();
       else
       {
          baseVert += frame * vertsPerFrame;
@@ -1110,27 +1133,27 @@ void TSMesh::computeBounds( const Point3F *v, S32 numVerts, S32 stride, const Ma
 S32 TSMesh::getNumPolys() const
 {
    S32 count = 0;
-   for ( S32 i = 0; i < primitives.size(); i++ )
+   for ( S32 i = 0; i < mPrimitives.size(); i++ )
    {
-      switch (primitives[i].matIndex & TSDrawPrimitive::TypeMask)
+      switch (mPrimitives[i].matIndex & TSDrawPrimitive::TypeMask)
       {
          case TSDrawPrimitive::Triangles:
-            count += primitives[i].numElements / 3;
+            count += mPrimitives[i].numElements / 3;
             break;
 
          case TSDrawPrimitive::Fan:
-            count += primitives[i].numElements - 2;
+            count += mPrimitives[i].numElements - 2;
             break;
 
          case TSDrawPrimitive::Strip:
             // Don't count degenerate triangles
-            for ( S32 j = primitives[i].start;
-                  j < primitives[i].start+primitives[i].numElements-2;
+            for ( S32 j = mPrimitives[i].start;
+                  j < mPrimitives[i].start+ mPrimitives[i].numElements-2;
                   j++ )
             {
-               if ((indices[j] != indices[j+1]) &&
-                   (indices[j] != indices[j+2]) &&
-                   (indices[j+1] != indices[j+2]))
+               if ((mIndices[j] != mIndices[j+1]) &&
+                   (mIndices[j] != mIndices[j+2]) &&
+                   (mIndices[j+1] != mIndices[j+2]))
                   count++;
             }
             break;
@@ -1141,24 +1164,33 @@ S32 TSMesh::getNumPolys() const
 
 //-----------------------------------------------------
 
-TSMesh::TSMesh() : meshType( StandardMeshType )
+TSMesh::TSMesh() : mMeshType( StandardMeshType )
 {
-   VECTOR_SET_ASSOCIATION( planeNormals );
-   VECTOR_SET_ASSOCIATION( planeConstants );
-   VECTOR_SET_ASSOCIATION( planeMaterials );
-   parentMesh = -1;
+   VECTOR_SET_ASSOCIATION(mPlaneNormals );
+   VECTOR_SET_ASSOCIATION(mPlaneConstants );
+   VECTOR_SET_ASSOCIATION(mPlaneMaterials );
+   mParentMesh = -1;
 
    mOptTree = NULL;
    mOpMeshInterface = NULL;
    mOpTris = NULL;
    mOpPoints = NULL;
 
-   mDynamic = false;
    mVisibility = 1.0f;
-   mHasTVert2 = false;
-   mHasColor = false;
+
 
    mNumVerts = 0;
+   mVertSize = 0;
+   mVertOffset = 0;
+   mRadius = 0.0f;
+   mVertexFormat = NULL;
+   mPrimBufferOffset = 0;
+   numFrames = 0;
+   numMatFrames = 0;
+   vertsPerFrame = 0;
+   mPlanesPerFrame = 0;
+   mMergeBufferStart = 0;
+   mParentMeshObject = NULL;
 }
 
 //-----------------------------------------------------
@@ -1179,150 +1211,133 @@ TSMesh::~TSMesh()
 // TSSkinMesh methods
 //-----------------------------------------------------
 
-void TSSkinMesh::updateSkin( const Vector<MatrixF> &transforms, TSVertexBufferHandle &instanceVB, GFXPrimitiveBufferHandle &instancePB )
+void TSSkinMesh::updateSkinBuffer( const Vector<MatrixF> &transforms, U8* buffer )
 {
-   PROFILE_SCOPE( TSSkinMesh_UpdateSkin );
+   PROFILE_SCOPE(TSSkinMesh_UpdateSkinBuffer);
 
-   AssertFatal(batchDataInitialized, "Batch data not initialized. Call createBatchData() before any skin update is called.");
+   AssertFatal(batchData.initialized, "Batch data not initialized. Call createSkinBatchData() before any skin update is called.");
 
-   // set arrays
-#if defined(TORQUE_MAX_LIB)
-   verts.setSize(batchData.initialVerts.size());
-   norms.setSize(batchData.initialNorms.size());
-#else
-   if ( !batchDataInitialized && encodedNorms.size() )
-   {
-      // we co-opt responsibility for updating encoded normals from mesh
-      gNormalStore.setSize( vertsPerFrame );
-      for ( S32 i = 0; i < vertsPerFrame; i++ )
-         gNormalStore[i] = decodeNormal( encodedNorms[i] );
+   if (TSShape::smUseHardwareSkinning || mNumVerts == 0)
+      return;
 
-      batchData.initialNorms.set( gNormalStore.address(), vertsPerFrame );
-   }
-#endif
+   const MatrixF *matrices = NULL;
 
    static Vector<MatrixF> sBoneTransforms;
-   sBoneTransforms.setSize( batchData.nodeIndex.size() );
+   sBoneTransforms.setSize(batchData.nodeIndex.size());
 
    // set up bone transforms
    PROFILE_START(TSSkinMesh_UpdateTransforms);
-   for( S32 i=0; i<batchData.nodeIndex.size(); i++ )
+   for (S32 i = 0; i < batchData.nodeIndex.size(); i++)
    {
       S32 node = batchData.nodeIndex[i];
-      sBoneTransforms[i].mul( transforms[node], batchData.initialTransforms[i] );
+      sBoneTransforms[i].mul(transforms[node], batchData.initialTransforms[i]);
    }
-   const MatrixF * matrices = &sBoneTransforms[0];
+
+   matrices = &sBoneTransforms[0];
    PROFILE_END();
 
-   // Perform skinning
-   const bool bBatchByVert = !batchData.vertexBatchOperations.empty();
-   if(bBatchByVert)
-   {
-      const Point3F *inVerts = &batchData.initialVerts[0];
-      const Point3F *inNorms = &batchData.initialNorms[0];
+   const Point3F *inVerts = batchData.initialVerts.address();
+   const Point3F *inNorms = batchData.initialNorms.address();
 
-      Point3F srcVtx, srcNrm;
+   AssertFatal(inVerts, "Something went wrong, verts should be valid");
 
-      AssertFatal( batchData.vertexBatchOperations.size() == batchData.initialVerts.size(), "Assumption failed!" );
-
-      register Point3F skinnedVert;
-      register Point3F skinnedNorm;
-
-      for( Vector<BatchData::BatchedVertex>::const_iterator itr = batchData.vertexBatchOperations.begin(); 
-         itr != batchData.vertexBatchOperations.end(); itr++ )
-      {
-         const BatchData::BatchedVertex &curVert = *itr;
-
-         skinnedVert.zero();
-         skinnedNorm.zero();
-
-         for( S32 tOp = 0; tOp < curVert.transformCount; tOp++ )
-         {      
-            const BatchData::TransformOp &transformOp = curVert.transform[tOp];
-
-            const MatrixF& deltaTransform = matrices[transformOp.transformIndex];
-
-            deltaTransform.mulP( inVerts[curVert.vertexIndex], &srcVtx );
-            skinnedVert += ( srcVtx * transformOp.weight );
-
-            deltaTransform.mulV( inNorms[curVert.vertexIndex], &srcNrm );
-            skinnedNorm += srcNrm * transformOp.weight;
-         }
-
-         // Assign results 
-         __TSMeshVertexBase &dest = mVertexData[curVert.vertexIndex];
-         dest.vert(skinnedVert);
-         dest.normal(skinnedNorm);
-      }
-   }
-   else // Batch by transform
-   {
-      U8 *outPtr = reinterpret_cast<U8 *>(mVertexData.address());
-      dsize_t outStride = mVertexData.vertSize();
-
-#if defined(USE_MEM_VERTEX_BUFFERS)
-      // Initialize it if NULL. 
-      // Skinning includes readbacks from memory (argh) so don't allocate with PAGE_WRITECOMBINE
-      if( instanceVB.isNull() )
-         instanceVB.set( GFX, outStride, mVertexFormat, mNumVerts, GFXBufferTypeDynamic );
-
-      // Grow if needed
-      if( instanceVB.getPointer()->mNumVerts < mNumVerts )
-         instanceVB.resize( mNumVerts );
-
-      // Lock, and skin directly into the final memory destination
-      outPtr = (U8 *)instanceVB.lock();
-      if(!outPtr) return;
-#endif
-      // Set position/normal to zero so we can accumulate
-      zero_vert_normal_bulk(mNumVerts, outPtr, outStride);
-
-      // Iterate over transforms, and perform batch transform x skin_vert
-      for(Vector<S32>::const_iterator itr = batchData.transformKeys.begin();
-          itr != batchData.transformKeys.end(); itr++)
-      {
-         const S32 boneXfmIdx = *itr;
-         const BatchData::BatchedTransform &curTransform = *batchData.transformBatchOperations.retreive(boneXfmIdx);
-         const MatrixF &curBoneMat = matrices[boneXfmIdx];
-         const S32 numVerts = curTransform.numElements;
-
-         // Bulk transform points/normals by this transform
-         m_matF_x_BatchedVertWeightList(curBoneMat, numVerts, curTransform.alignedMem,
-            outPtr, outStride);
-      }
-#if defined(USE_MEM_VERTEX_BUFFERS)
-      instanceVB.unlock();
-#endif
-   }
-}
-
-S32 QSORT_CALLBACK _sort_BatchedVertWeight( const void *a, const void *b )
-{
-   // Sort by vertex index
-   const TSSkinMesh::BatchData::BatchedVertWeight &_a = *reinterpret_cast<const TSSkinMesh::BatchData::BatchedVertWeight *>(a);
-   const TSSkinMesh::BatchData::BatchedVertWeight &_b = *reinterpret_cast<const TSSkinMesh::BatchData::BatchedVertWeight *>(b);
-   return ( _a.vidx - _b.vidx );
-}
-
-// Batch by vertex is useful to emulate the old skinning, or to build batch data
-// sutable for GPU skinning.
-//#define _BATCH_BY_VERTEX
-
-void TSSkinMesh::createBatchData()
-{
-   if(batchDataInitialized)
+   U8 *dest = buffer + mVertOffset;
+   if (!dest)
       return;
 
-   batchDataInitialized = true;
+   Point3F srcVtx, srcNrm;
+
+   AssertFatal(batchData.vertexBatchOperations.size() == batchData.initialVerts.size(), "Assumption failed!");
+
+   Point3F skinnedVert;
+   Point3F skinnedNorm;
+
+   for (Vector<BatchData::BatchedVertex>::const_iterator itr = batchData.vertexBatchOperations.begin();
+      itr != batchData.vertexBatchOperations.end(); itr++)
+   {
+      const BatchData::BatchedVertex &curVert = *itr;
+
+      skinnedVert.zero();
+      skinnedNorm.zero();
+
+      for (S32 tOp = 0; tOp < curVert.transformCount; tOp++)
+      {
+         const BatchData::TransformOp &transformOp = curVert.transform[tOp];
+
+         const MatrixF& deltaTransform = matrices[transformOp.transformIndex];
+
+         deltaTransform.mulP(inVerts[curVert.vertexIndex], &srcVtx);
+         skinnedVert += (srcVtx * transformOp.weight);
+
+         deltaTransform.mulV(inNorms[curVert.vertexIndex], &srcNrm);
+         skinnedNorm += srcNrm * transformOp.weight;
+      }
+
+      // Assign results 
+      __TSMeshVertexBase *dvert = (__TSMeshVertexBase*)(dest + (mVertSize * curVert.vertexIndex));
+      dvert->vert(skinnedVert);
+      dvert->normal(skinnedNorm);
+   }
+}
+
+void TSSkinMesh::updateSkinBones( const Vector<MatrixF> &transforms, Vector<MatrixF>& destTransforms )
+{
+   // Update transforms for current mesh
+   destTransforms.setSize(batchData.nodeIndex.size());
+
+   for (int i = 0; i<batchData.nodeIndex.size(); i++)
+   {
+      S32 node = batchData.nodeIndex[i];
+
+      if (node >= transforms.size())
+         continue; // jamesu - ignore obviously invalid data
+      destTransforms[i].mul(transforms[node], batchData.initialTransforms[i]);
+   }
+}
+
+void TSSkinMesh::createSkinBatchData()
+{
+   if(batchData.initialized)
+      return;
+
+   batchData.initialized = true;
    S32 * curVtx = vertexIndex.begin();
    S32 * curBone = boneIndex.begin();
    F32 * curWeight = weight.begin();
    const S32 * endVtx = vertexIndex.end();
 
+   AssertFatal(batchData.nodeIndex.size() <= TSShape::smMaxSkinBones, "Too many bones are here!!!");
+
    // Temp vector to build batch operations
    Vector<BatchData::BatchedVertex> batchOperations;
 
    bool issuedWeightWarning = false;
+
+   if (mVertexData.isReady())
+   {
+      batchData.initialVerts.setSize(mNumVerts);
+      batchData.initialNorms.setSize(mNumVerts);
+
+      // Fill arrays
+      for (U32 i = 0; i < mNumVerts; i++)
+      {
+         const __TSMeshVertexBase &cv = mVertexData.getBase(i);
+         batchData.initialVerts[i] = cv.vert();
+         batchData.initialNorms[i] = cv.normal();
+      }
+
+      addWeightsFromVertexBuffer();
+
+      curVtx = vertexIndex.begin();
+      curBone = boneIndex.begin();
+      curWeight = weight.begin();
+      endVtx = vertexIndex.end();
+   }
+   else
+   {
+      batchData.initialNorms = mNorms;
+      batchData.initialVerts = mVerts;
+   }
 
    // Build the batch operations
    while( curVtx != endVtx )
@@ -1409,73 +1424,90 @@ void TSSkinMesh::createBatchData()
       }
    }
 
-#ifdef _BATCH_BY_VERTEX
-   // Copy data to member, and be done
    batchData.vertexBatchOperations.set(batchOperations.address(), batchOperations.size());
 
-   // Convert to batch-by-transform, which is better for CPU skinning, 
-   // where-as GPU skinning would data for batch-by-vertex operation
-#else
-   // Iterate the batch-by-vertex, and populate the batch-by-transform structs
-   for( Vector<BatchData::BatchedVertex>::const_iterator itr = batchOperations.begin(); 
-      itr != batchOperations.end(); itr++ )
+   U32 maxValue = 0;
+   for (U32 i = 0; i<batchData.vertexBatchOperations.size(); i++)
    {
-      const BatchData::BatchedVertex &curTransform = *itr;
-      for( S32 i = 0; i < curTransform.transformCount; i++ )
-      {
-         const BatchData::TransformOp &transformOp = curTransform.transform[i];
-
-         // Find the proper batched transform, and add this vertex/weight to the
-         // list of verts affected by the transform
-         BatchData::BatchedTransform *bt = batchData.transformBatchOperations.retreive(transformOp.transformIndex);
-         if(!bt)
-         {
-            bt = new BatchData::BatchedTransform;
-            batchData.transformBatchOperations.insert(bt, transformOp.transformIndex);
-            bt->_tmpVec = new Vector<BatchData::BatchedVertWeight>;
-            batchData.transformKeys.push_back(transformOp.transformIndex);
-         }
-
-         bt->_tmpVec->increment();
-         bt->_tmpVec->last().vert = batchData.initialVerts[curTransform.vertexIndex];
-         bt->_tmpVec->last().normal = batchData.initialNorms[curTransform.vertexIndex];
-         bt->_tmpVec->last().weight = transformOp.weight;
-         bt->_tmpVec->last().vidx = curTransform.vertexIndex;
-      }
+      maxValue = batchData.vertexBatchOperations[i].transformCount > maxValue ? batchData.vertexBatchOperations[i].transformCount : maxValue;
    }
-
-   // Now iterate the resulting operations and convert the vectors to aligned
-   // memory locations
-   const S32 numBatchOps = batchData.transformKeys.size();
-   for(S32 i = 0; i < numBatchOps; i++)
-   {
-      BatchData::BatchedTransform &curTransform = *batchData.transformBatchOperations.retreive(batchData.transformKeys[i]);
-      const S32 numVerts = curTransform._tmpVec->size();
-
-      // Allocate a chunk of aligned memory and copy in values
-      curTransform.numElements = numVerts;
-      curTransform.alignedMem = reinterpret_cast<BatchData::BatchedVertWeight *>(dMalloc_aligned(sizeof(BatchData::BatchedVertWeight) * numVerts, 16));
-      AssertFatal(curTransform.alignedMem, "Aligned malloc failed! Debug!");
-      constructArrayInPlace(curTransform.alignedMem, numVerts);
-      dMemcpy(curTransform.alignedMem, curTransform._tmpVec->address(), numVerts * sizeof(BatchData::BatchedVertWeight));
-
-      // Now free the vector memory
-      delete curTransform._tmpVec;
-      curTransform._tmpVec = NULL;
-   }
-
-   // Now sort the batch data so that the skin function writes close to linear output
-   for(S32 i = 0; i < numBatchOps; i++)
-   {
-      BatchData::BatchedTransform &curTransform = *batchData.transformBatchOperations.retreive(batchData.transformKeys[i]);
-      dQsort(curTransform.alignedMem, curTransform.numElements, sizeof(BatchData::BatchedVertWeight), _sort_BatchedVertWeight);
-   }
-#endif
+   maxBones = maxValue;
 }
 
-void TSSkinMesh::render( TSVertexBufferHandle &instanceVB, GFXPrimitiveBufferHandle &instancePB )
+void TSSkinMesh::setupVertexTransforms()
 {
-   innerRender( instanceVB, instancePB );
+   AssertFatal(mVertexData.vertSize() == mVertSize, "vert size mismatch");
+
+   // Generate the bone transforms for the verts
+   for( Vector<BatchData::BatchedVertex>::const_iterator itr = batchData.vertexBatchOperations.begin();
+      itr != batchData.vertexBatchOperations.end(); itr++ )
+   {
+      const BatchData::BatchedVertex &curTransform = *itr;
+      S32 i=0;
+      S32 j=0;
+      S32 transformsLeft = curTransform.transformCount;
+
+      // Set weights and indices in batches of 4
+      for( i = 0, j = 0; i < curTransform.transformCount; i += 4, j += 1 )
+      {
+         __TSMeshVertex_BoneData &v = mVertexData.getBone(curTransform.vertexIndex, j);
+         S32 vertsSet = transformsLeft > 4 ? 4 : transformsLeft;
+
+         __TSMeshIndex_List indices;
+         Point4F weights;
+         dMemset(&indices, '\0', sizeof(indices));
+         dMemset(&weights, '\0', sizeof(weights));
+
+         switch (vertsSet)
+         {
+         case 1:
+            indices.x = curTransform.transform[i+0].transformIndex;
+            weights.x = curTransform.transform[i+0].weight;
+            break;
+         case 2:
+            indices.x = curTransform.transform[i+0].transformIndex;
+            weights.x = curTransform.transform[i+0].weight;
+            indices.y = curTransform.transform[i+1].transformIndex;
+            weights.y = curTransform.transform[i+1].weight;
+            break;
+         case 3:
+            indices.x = curTransform.transform[i+0].transformIndex;
+            weights.x = curTransform.transform[i+0].weight;
+            indices.y = curTransform.transform[i+1].transformIndex;
+            weights.y = curTransform.transform[i+1].weight;
+            indices.z = curTransform.transform[i+2].transformIndex;
+            weights.z = curTransform.transform[i+2].weight;
+            break;
+         case 4:
+            indices.x = curTransform.transform[i+0].transformIndex;
+            weights.x = curTransform.transform[i+0].weight;
+            indices.y = curTransform.transform[i+1].transformIndex;
+            weights.y = curTransform.transform[i+1].weight;
+            indices.z = curTransform.transform[i+2].transformIndex;
+            weights.z = curTransform.transform[i+2].weight;
+            indices.w = curTransform.transform[i+3].transformIndex;
+            weights.w = curTransform.transform[i+3].weight;
+            break;
+         case 0:
+         default:
+            break;
+         }
+
+         v.index(indices);
+         v.weight(weights);
+         transformsLeft -= 4;
+      }
+   }
+}
+
+U32 TSSkinMesh::getMaxBonesPerVert()
+{
+   return maxBones >= 0 ? maxBones : 0;
+}
+
+void TSSkinMesh::render( TSVertexBufferHandle &instanceVB )
+{
+   innerRender(instanceVB, mPB);
 }
 
 void TSSkinMesh::render(   TSMaterialList *materials, 
@@ -1483,50 +1515,23 @@ void TSSkinMesh::render(   TSMaterialList *materials,
                            bool isSkinDirty,
                            const Vector<MatrixF> &transforms, 
                            TSVertexBufferHandle &vertexBuffer,
-                           GFXPrimitiveBufferHandle &primitiveBuffer )
+                           const char *meshName )
 {
    PROFILE_SCOPE(TSSkinMesh_render);
 
-   if( mNumVerts == 0 )
+   if (mNumVerts == 0)
       return;
 
-   // Initialize the vertex data if it needs it
-   if(!mVertexData.isReady() )
-      _convertToAlignedMeshData(mVertexData, batchData.initialVerts, batchData.initialNorms);
+   // verify stuff first
    AssertFatal(mVertexData.size() == mNumVerts, "Vert # mismatch");
-
-   // Initialize the skin batch if that isn't ready
-   if(!batchDataInitialized)
-      createBatchData();
-
-   const bool vertsChanged = vertexBuffer.isNull() || vertexBuffer->mNumVerts != mNumVerts;
-   const bool primsChanged = primitiveBuffer.isNull() || primitiveBuffer->mIndexCount != indices.size();
-
-   if ( primsChanged || vertsChanged || isSkinDirty )
-   {
-      // Perform skinning
-      updateSkin( transforms, vertexBuffer, primitiveBuffer );
-      
-      // Update GFX vertex buffer
-      _createVBIB( vertexBuffer, primitiveBuffer );
-   }
+   AssertFatal((TSShape::smUseHardwareSkinning && vertexBuffer == mVB) || (!TSShape::smUseHardwareSkinning), "Vertex buffer mismatch");
 
    // render...
-   innerRender( materials, rdata, vertexBuffer, primitiveBuffer );   
+   innerRender(materials, rdata, vertexBuffer, mPB, meshName);
 }
 
 bool TSSkinMesh::buildPolyList( S32 frame, AbstractPolyList *polyList, U32 &surfaceKey, TSMaterialList *materials )
 {
-   // UpdateSkin() here may not be needed... 
-   // we don't capture skinned 
-   // verts in the polylist.
-   
-   // update verts and normals...
-   //if( !smGlowPass && !smRefractPass ) 
-   // updateSkin();
-
-   // render...
-   //Parent::buildPolyList( frame,polyList,surfaceKey, materials );
    return false;
 }
 
@@ -1550,10 +1555,15 @@ void TSSkinMesh::computeBounds( const MatrixF &transform, Box3F &bounds, S32 fra
 {
    TORQUE_UNUSED(frame);
 
-   if (frame < 0)
+   if (mVerts.size() != 0)
    {
       // Use unskinned verts
-      TSMesh::computeBounds( batchData.initialVerts.address(), batchData.initialVerts.size(), sizeof(Point3F), transform, bounds, center, radius );
+      TSMesh::computeBounds(mVerts.address(), mVerts.size(), sizeof(Point3F), transform, bounds, center, radius );
+   }
+   else if (frame <= 0 && batchData.initialVerts.size() > 0)
+   {
+      // Use unskinned verts
+      TSMesh::computeBounds(batchData.initialVerts.address(), batchData.initialVerts.size(), sizeof(Point3F), transform, bounds, center, radius);
    }
    else
    {
@@ -2362,108 +2372,50 @@ S8 * TSMesh::getSharedData8( S32 parentMesh, S32 size, S8 **source, bool skip )
    return ptr;
 }
 
-void TSMesh::createVBIB()
+void TSMesh::dumpPrimitives(U32 startVertex, U32 startIndex, GFXPrimitive *piArray, U16* ibIndices)
 {
-   AssertFatal( getMeshType() != SkinMeshType, "TSMesh::createVBIB() - Invalid call for skinned mesh type!" );
-   _createVBIB( mVB, mPB );
-}
+   // go through and create PrimitiveInfo array
+   GFXPrimitive pInfo;
 
-void TSMesh::_createVBIB( TSVertexBufferHandle &vb, GFXPrimitiveBufferHandle &pb )
-{
-   AssertFatal(mVertexData.isReady(), "Call convertToAlignedMeshData() before calling _createVBIB()");
-
-   if ( mNumVerts == 0 || !GFXDevice::devicePresent() )
-      return;
-
-   PROFILE_SCOPE( TSMesh_CreateVBIB );
-
-   // Number of verts can change in LOD skinned mesh
-   const bool vertsChanged = ( vb && vb->mNumVerts < mNumVerts );
-
-#if defined(USE_MEM_VERTEX_BUFFERS)
-   if(!mDynamic)
+   U32 primitivesSize = mPrimitives.size();
+   for (U32 i = 0; i < primitivesSize; i++)
    {
-#endif
-      // Create the vertex buffer
-      if( vertsChanged || vb == NULL )
-         vb.set( GFX, mVertSize, mVertexFormat, mNumVerts, mDynamic ? 
-#if defined(TORQUE_OS_XENON)
-         // Skinned meshes still will occasionally re-skin more than once per frame.
-         // This cannot happen on the Xbox360. Until this issue is resolved, use
-         // type volatile instead. [1/27/2010 Pat]
-            GFXBufferTypeVolatile : GFXBufferTypeStatic );
-#else
-            GFXBufferTypeDynamic : GFXBufferTypeStatic );
-#endif
+      const TSDrawPrimitive & draw = mPrimitives[i];
 
-      // Copy from aligned memory right into GPU memory
-      U8 *vertData = (U8*)vb.lock();
-      if(!vertData) return;
-#if defined(TORQUE_OS_XENON)
-      XMemCpyStreaming_WriteCombined( vertData, mVertexData.address(), mVertexData.mem_size() );
-#else
-      dMemcpy( vertData, mVertexData.address(), mVertexData.mem_size() );
-#endif
-      vb.unlock();
-#if defined(USE_MEM_VERTEX_BUFFERS)
-   }
-#endif
+      GFXPrimitiveType drawType = getDrawType(draw.matIndex >> 30);
 
-   const bool primsChanged = ( pb.isValid() && pb->mIndexCount != indices.size() );
-   if( primsChanged || pb.isNull() )
-   {
-      // go through and create PrimitiveInfo array
-      Vector <GFXPrimitive> piArray;
-      GFXPrimitive pInfo;
-
-      U32 primitivesSize = primitives.size();
-      for ( U32 i = 0; i < primitivesSize; i++ )
+      switch (drawType)
       {
-         const TSDrawPrimitive & draw = primitives[i];
+      case GFXTriangleList:
+         pInfo.type = drawType;
+         pInfo.numPrimitives = draw.numElements / 3;
+         pInfo.startIndex = startIndex + draw.start;
+         // Use the first index to determine which 16-bit address space we are operating in
+         pInfo.startVertex = (mIndices[draw.start] & 0xFFFF0000); // TODO: figure out a good solution for this
+         pInfo.minIndex = 0; // minIndex are zero based index relative to startVertex. See @GFXDevice
+         pInfo.numVertices = getMin((U32)0x10000, mNumVerts - pInfo.startVertex);
+         pInfo.startVertex += startVertex;
+         break;
 
-         GFXPrimitiveType drawType = getDrawType( draw.matIndex >> 30 );
+      case GFXTriangleStrip:
+         pInfo.type = drawType;
+         pInfo.numPrimitives = draw.numElements - 2;
+         pInfo.startIndex = startIndex + draw.start;
+         // Use the first index to determine which 16-bit address space we are operating in
+         pInfo.startVertex = (mIndices[draw.start] & 0xFFFF0000); // TODO: figure out a good solution for this
+         pInfo.minIndex = 0; // minIndex are zero based index relative to startVertex. See @GFXDevice
+         pInfo.numVertices = getMin((U32)0x10000, mNumVerts - pInfo.startVertex);
+         pInfo.startVertex += startVertex;
+         break;
 
-         switch( drawType )
-         {
-         case GFXTriangleList:
-            pInfo.type = drawType;
-            pInfo.numPrimitives = draw.numElements / 3;
-            pInfo.startIndex = draw.start;
-            // Use the first index to determine which 16-bit address space we are operating in
-            pInfo.startVertex = indices[draw.start] & 0xFFFF0000;
-            pInfo.minIndex = 0; // minIndex are zero based index relative to startVertex. See @GFXDevice
-            pInfo.numVertices = getMin((U32)0x10000, mNumVerts - pInfo.startVertex);
-            break;
-
-         case GFXTriangleStrip:
-         case GFXTriangleFan:
-            pInfo.type = drawType;
-            pInfo.numPrimitives = draw.numElements - 2;
-            pInfo.startIndex = draw.start;
-            // Use the first index to determine which 16-bit address space we are operating in
-            pInfo.startVertex = indices[draw.start] & 0xFFFF0000;
-            pInfo.minIndex = 0; // minIndex are zero based index relative to startVertex. See @GFXDevice
-            pInfo.numVertices = getMin((U32)0x10000, mNumVerts - pInfo.startVertex);
-            break;
-
-         default:
-            AssertFatal( false, "WTF?!" );
-         }
-
-         piArray.push_back( pInfo );
+      default:
+         AssertFatal(false, "WTF?!");
       }
 
-      pb.set( GFX, indices.size(), piArray.size(), GFXBufferTypeStatic );
-
-      U16 *ibIndices = NULL;
-      GFXPrimitive *piInput = NULL;
-      pb.lock( &ibIndices, &piInput );
-
-      dCopyArray( ibIndices, indices.address(), indices.size() );
-      dMemcpy( piInput, piArray.address(), piArray.size() * sizeof(GFXPrimitive) );
-
-      pb.unlock();
+      *piArray++ = pInfo;
    }
+
+   dCopyArray(ibIndices, mIndices.address(), mIndices.size());
 }
 
 void TSMesh::assemble( bool skip )
@@ -2472,57 +2424,71 @@ void TSMesh::assemble( bool skip )
 
    numFrames = tsalloc.get32();
    numMatFrames = tsalloc.get32();
-   parentMesh = tsalloc.get32();
+   mParentMesh = tsalloc.get32();
    tsalloc.get32( (S32*)&mBounds, 6 );
    tsalloc.get32( (S32*)&mCenter, 3 );
    mRadius = (F32)tsalloc.get32();
 
+   if (TSShape::smReadVersion >= 27)
+   {
+      // Offsetted
+      mVertOffset = tsalloc.get32();
+      mNumVerts = tsalloc.get32();
+      mVertSize = tsalloc.get32();
+   }
+   else
+   {
+      mVertOffset = 0;
+      mNumVerts = 0;
+      mVertSize = 0;
+   }
+
    S32 numVerts = tsalloc.get32();
-   S32 *ptr32 = getSharedData32( parentMesh, 3 * numVerts, (S32**)smVertsList.address(), skip );
-   verts.set( (Point3F*)ptr32, numVerts );
+   S32 *ptr32 = getSharedData32(mParentMesh, 3 * numVerts, (S32**)smVertsList.address(), skip );
+   mVerts.set( (Point3F*)ptr32, numVerts );
 
    S32 numTVerts = tsalloc.get32();
-   ptr32 = getSharedData32( parentMesh, 2 * numTVerts, (S32**)smTVertsList.address(), skip );
-   tverts.set( (Point2F*)ptr32, numTVerts );
+   ptr32 = getSharedData32(mParentMesh, 2 * numTVerts, (S32**)smTVertsList.address(), skip );
+   mTverts.set( (Point2F*)ptr32, numTVerts );
 
    if ( TSShape::smReadVersion > 25 )
    {
       numTVerts = tsalloc.get32();
-      ptr32 = getSharedData32( parentMesh, 2 * numTVerts, (S32**)smTVerts2List.address(), skip );
-      tverts2.set( (Point2F*)ptr32, numTVerts );
+      ptr32 = getSharedData32(mParentMesh, 2 * numTVerts, (S32**)smTVerts2List.address(), skip );
+      mTverts2.set( (Point2F*)ptr32, numTVerts );
 
       S32 numVColors = tsalloc.get32();
-      ptr32 = getSharedData32( parentMesh, numVColors, (S32**)smColorsList.address(), skip );
-      colors.set( (ColorI*)ptr32, numVColors );
+      ptr32 = getSharedData32(mParentMesh, numVColors, (S32**)smColorsList.address(), skip );
+      mColors.set( (ColorI*)ptr32, numVColors );
    }
 
    S8 *ptr8;
    if ( TSShape::smReadVersion > 21 && TSMesh::smUseEncodedNormals)
    {
       // we have encoded normals and we want to use them...
-      if ( parentMesh < 0 )
-         tsalloc.getPointer32( numVerts * 3 ); // advance past norms, don't use
-      norms.set( NULL, 0 );
+      if (mParentMesh < 0 )
+         tsalloc.getPointer32( numVerts * 3 ); // adva  nce past norms, don't use
+      mNorms.set( NULL, 0 );
 
-      ptr8 = getSharedData8( parentMesh, numVerts, (S8**)smEncodedNormsList.address(), skip );
-      encodedNorms.set( ptr8, numVerts );
+      ptr8 = getSharedData8(mParentMesh, numVerts, (S8**)smEncodedNormsList.address(), skip );
+      mEncodedNorms.set( ptr8, numVerts );
    }
    else if ( TSShape::smReadVersion > 21 )
    {
       // we have encoded normals but we don't want to use them...
-      ptr32 = getSharedData32( parentMesh, 3 * numVerts, (S32**)smNormsList.address(), skip );
-      norms.set( (Point3F*)ptr32, numVerts );
+      ptr32 = getSharedData32(mParentMesh, 3 * numVerts, (S32**)smNormsList.address(), skip );
+      mNorms.set( (Point3F*)ptr32, numVerts );
 
-      if ( parentMesh < 0 )
+      if (mParentMesh < 0 )
          tsalloc.getPointer8( numVerts ); // advance past encoded normls, don't use
-      encodedNorms.set( NULL, 0 );
+      mEncodedNorms.set( NULL, 0 );
    }
    else
    {
       // no encoded normals...
-      ptr32 = getSharedData32( parentMesh, 3 * numVerts, (S32**)smNormsList.address(), skip );
-      norms.set( (Point3F*)ptr32, numVerts );
-      encodedNorms.set( NULL, 0 );
+      ptr32 = getSharedData32(mParentMesh, 3 * numVerts, (S32**)smNormsList.address(), skip );
+      mNorms.set( (Point3F*)ptr32, numVerts );
+      mEncodedNorms.set( NULL, 0 );
    }
 
    // copy the primitives and indices...how we do this depends on what
@@ -2596,8 +2562,8 @@ void TSMesh::assemble( bool skip )
    AssertFatal(chkPrim==szPrimOut && chkInd==szIndOut,"TSMesh::primitive conversion");
 
    // store output
-   primitives.set(primOut, szPrimOut);
-   indices.set(indOut, szIndOut);
+   mPrimitives.set(primOut, szPrimOut);
+   mIndices.set(indOut, szIndOut);
 
    // delete temporary arrays if necessary
    if (deleteInputArrays)
@@ -2612,18 +2578,25 @@ void TSMesh::assemble( bool skip )
 
    vertsPerFrame = tsalloc.get32();
    U32 flags = (U32)tsalloc.get32();
-   if ( encodedNorms.size() )
+   if ( mEncodedNorms.size() )
       flags |= UseEncodedNormals;
    
    setFlags( flags );
+
+   // Set color & tvert2 flags if we have an old version
+   if (TSShape::smReadVersion < 27)
+   {
+      if (mColors.size() > 0) setFlags(HasColor);
+      if (mTverts2.size() > 0) setFlags(HasTVert2);
+      mNumVerts = mVerts.size();
+   }
 
    tsalloc.checkGuard();
 
    if ( tsalloc.allocShape32( 0 ) && TSShape::smReadVersion < 19 )
       computeBounds(); // only do this if we copied the data...
 
-   if(getMeshType() != SkinMeshType)
-      createTangents(verts, norms);
+   createTangents(mVerts, mNorms);
 }
 
 void TSMesh::disassemble()
@@ -2632,89 +2605,97 @@ void TSMesh::disassemble()
 
    tsalloc.set32( numFrames );
    tsalloc.set32( numMatFrames );
-   tsalloc.set32( parentMesh );
+   tsalloc.set32(mParentMesh);
    tsalloc.copyToBuffer32( (S32*)&mBounds, 6 );
    tsalloc.copyToBuffer32( (S32*)&mCenter, 3 );
    tsalloc.set32( (S32)mRadius );
 
+   bool shouldMakeEditable = TSShape::smVersion < 27 || mVertSize == 0;
+
    // Re-create the vectors
-   if(mVertexData.isReady())
+   if (shouldMakeEditable)
    {
-      verts.setSize(mNumVerts);
-      tverts.setSize(mNumVerts);
-      norms.setSize(mNumVerts);
+      makeEditable();
 
-      if(mHasColor)
-         colors.setSize(mNumVerts);
-      if(mHasTVert2)
-         tverts2.setSize(mNumVerts);
-
-      // Fill arrays
-      for(U32 i = 0; i < mNumVerts; i++)
+      // No Offset
+      if (TSShape::smVersion >= 27)
       {
-         const __TSMeshVertexBase &cv = mVertexData[i];
-         verts[i] = cv.vert();
-         tverts[i] = cv.tvert();
-         norms[i] = cv.normal();
-
-         if(mHasColor)
-            cv.color().getColor(&colors[i]);
-         if(mHasTVert2)
-            tverts2[i] = cv.tvert2();
+         tsalloc.set32(0);
+         tsalloc.set32(0);
+         tsalloc.set32(0);
       }
    }
-
-   // verts...
-   tsalloc.set32( verts.size() );
-   if ( parentMesh < 0 )
-      tsalloc.copyToBuffer32( (S32*)verts.address(), 3 * verts.size() ); // if no parent mesh, then save off our verts
-
-   // tverts...
-   tsalloc.set32( tverts.size() );
-   if ( parentMesh < 0 )
-      tsalloc.copyToBuffer32( (S32*)tverts.address(), 2 * tverts.size() ); // if no parent mesh, then save off our tverts
-
-   if (TSShape::smVersion > 25)
+   else
    {
-      // tverts2...
-      tsalloc.set32( tverts2.size() );
-      if ( parentMesh < 0 )
-         tsalloc.copyToBuffer32( (S32*)tverts2.address(), 2 * tverts2.size() ); // if no parent mesh, then save off our tverts
-
-      // colors
-      tsalloc.set32( colors.size() );
-      if ( parentMesh < 0 )
-         tsalloc.copyToBuffer32( (S32*)colors.address(), colors.size() ); // if no parent mesh, then save off our tverts
+      // Offsetted
+      tsalloc.set32(mVertOffset);
+      tsalloc.set32(mNumVerts);
+      tsalloc.set32(mVertSize);
+      AssertFatal(mNumVerts >= vertsPerFrame, "invalid mNumVerts");
    }
 
-   // norms...
-   if ( parentMesh < 0 ) // if no parent mesh, then save off our norms
-      tsalloc.copyToBuffer32( (S32*)norms.address(), 3 * norms.size() ); // norms.size()==verts.size() or error...
-
-   // encoded norms...
-   if ( parentMesh < 0 )
+   if (TSShape::smVersion >= 27 && mVertexData.isReady())
    {
-      // if no parent mesh, compute encoded normals and copy over
-      for ( S32 i = 0; i < norms.size(); i++ )
+      // If not editable  all arrays are effectively 0.
+      tsalloc.set32(0); // verts
+      tsalloc.set32(0); // tverts
+      tsalloc.set32(0); // tverts2
+      tsalloc.set32(0); // colors
+   }
+   else
+   {
+      // verts...
+      tsalloc.set32(mVerts.size());
+      if (mParentMesh < 0)
+         tsalloc.copyToBuffer32((S32*)mVerts.address(), 3 * mVerts.size()); // if no parent mesh, then save off our verts
+
+      // tverts...
+      tsalloc.set32(mTverts.size());
+      if (mParentMesh < 0)
+         tsalloc.copyToBuffer32((S32*)mTverts.address(), 2 * mTverts.size()); // if no parent mesh, then save off our tverts
+
+      if (TSShape::smVersion > 25)
       {
-         U8 normIdx = encodedNorms.size() ? encodedNorms[i] : encodeNormal( norms[i] );
-         tsalloc.copyToBuffer8( (S8*)&normIdx, 1 );
+         // tverts2...
+         tsalloc.set32(mTverts2.size());
+         if (mParentMesh < 0)
+            tsalloc.copyToBuffer32((S32*)mTverts2.address(), 2 * mTverts2.size()); // if no parent mesh, then save off our tverts
+
+                                                                                 // colors
+         tsalloc.set32(mColors.size());
+         if (mParentMesh < 0)
+            tsalloc.copyToBuffer32((S32*)mColors.address(), mColors.size()); // if no parent mesh, then save off our tverts
+      }
+
+      // norms...
+      if (mParentMesh < 0) // if no parent mesh, then save off our norms
+         tsalloc.copyToBuffer32((S32*)mNorms.address(), 3 * mNorms.size()); // norms.size()==verts.size() or error...
+
+                                                                          // encoded norms...
+      if (mParentMesh < 0)
+      {
+         // if no parent mesh, compute encoded normals and copy over
+         for (S32 i = 0; i < mNorms.size(); i++)
+         {
+            U8 normIdx = mEncodedNorms.size() ? mEncodedNorms[i] : encodeNormal(mNorms[i]);
+            tsalloc.copyToBuffer8((S8*)&normIdx, 1);
+         }
       }
    }
 
    // optimize triangle draw order during disassemble
    {
-      FrameTemp<TriListOpt::IndexType> tmpIdxs(indices.size());
-      for ( S32 i = 0; i < primitives.size(); i++ )
+      FrameTemp<TriListOpt::IndexType> tmpIdxs(mIndices.size());
+      for ( S32 i = 0; i < mPrimitives.size(); i++ )
       {
-         const TSDrawPrimitive& prim = primitives[i];
+         const TSDrawPrimitive& prim = mPrimitives[i];
 
          // only optimize triangle lists (strips and fans are assumed to be already optimized)
          if ( (prim.matIndex & TSDrawPrimitive::TypeMask) == TSDrawPrimitive::Triangles )
          {
-            TriListOpt::OptimizeTriangleOrdering(verts.size(), prim.numElements,
-               indices.address() + prim.start, tmpIdxs.address());
-            dCopyArray(indices.address() + prim.start, tmpIdxs.address(), 
+            TriListOpt::OptimizeTriangleOrdering(mVerts.size(), prim.numElements,
+				mIndices.address() + prim.start, tmpIdxs.address());
+            dCopyArray(mIndices.address() + prim.start, tmpIdxs.address(),
                prim.numElements);
          }
       }
@@ -2723,32 +2704,32 @@ void TSMesh::disassemble()
    if (TSShape::smVersion > 25)
    {
       // primitives...
-      tsalloc.set32( primitives.size() );
-      tsalloc.copyToBuffer32((S32*)primitives.address(),3*primitives.size());
+      tsalloc.set32(mPrimitives.size() );
+      tsalloc.copyToBuffer32((S32*)mPrimitives.address(),3* mPrimitives.size());
 
       // indices...
-      tsalloc.set32(indices.size());
-      tsalloc.copyToBuffer32((S32*)indices.address(),indices.size());
+      tsalloc.set32(mIndices.size());
+      tsalloc.copyToBuffer32((S32*)mIndices.address(),mIndices.size());
    }
    else
    {
       // primitives
-      tsalloc.set32( primitives.size() );
-      for (S32 i=0; i<primitives.size(); i++)
+      tsalloc.set32(mPrimitives.size() );
+      for (S32 i=0; i<mPrimitives.size(); i++)
       {
-         S16 start = (S16)primitives[i].start;
-         S16 numElements = (S16)primitives[i].numElements;
+         S16 start = (S16)mPrimitives[i].start;
+         S16 numElements = (S16)mPrimitives[i].numElements;
 
          tsalloc.copyToBuffer16(&start, 1);
          tsalloc.copyToBuffer16(&numElements, 1);
-         tsalloc.copyToBuffer32(&(primitives[i].matIndex), 1);
+         tsalloc.copyToBuffer32(&(mPrimitives[i].matIndex), 1);
       }
 
       // indices
-      tsalloc.set32(indices.size());
-      Vector<S16> s16_indices(indices.size());
-      for (S32 i=0; i<indices.size(); i++)
-         s16_indices.push_back((S16)indices[i]);
+      tsalloc.set32(mIndices.size());
+      Vector<S16> s16_indices(mIndices.size());
+      for (S32 i=0; i<mIndices.size(); i++)
+         s16_indices.push_back((S16)mIndices[i]);
       tsalloc.copyToBuffer16(s16_indices.address(), s16_indices.size());
    }
 
@@ -2772,67 +2753,126 @@ void TSSkinMesh::assemble( bool skip )
 
    TSMesh::assemble( skip );
 
-   S32 sz = tsalloc.get32();
-   S32 numVerts = sz;
-   S32 * ptr32 = getSharedData32( parentMesh, 3 * numVerts, (S32**)smVertsList.address(), skip );
-   batchData.initialVerts.set( (Point3F*)ptr32, sz );
-
-   S8 * ptr8;
-   if ( TSShape::smReadVersion>21 && TSMesh::smUseEncodedNormals )
+   if (TSShape::smReadVersion >= 27)
    {
-      // we have encoded normals and we want to use them...
-      if ( parentMesh < 0 )
-         tsalloc.getPointer32( numVerts * 3 ); // advance past norms, don't use
-      batchData.initialNorms.set( NULL, 0 );
-
-      ptr8 = getSharedData8( parentMesh, numVerts, (S8**)smEncodedNormsList.address(), skip );
-      encodedNorms.set( ptr8, numVerts );
-      // Note: we don't set the encoded normals flag because we handle them in updateSkin and
-      //       hide the fact that we are using them from base class (TSMesh)
-   }
-   else if ( TSShape::smReadVersion > 21 )
-   {
-      // we have encoded normals but we don't want to use them...
-      ptr32 = getSharedData32( parentMesh, 3 * numVerts, (S32**)smNormsList.address(), skip );
-      batchData.initialNorms.set( (Point3F*)ptr32, numVerts );
-
-      if ( parentMesh < 0 )
-         tsalloc.getPointer8( numVerts ); // advance past encoded normls, don't use
-      
-      encodedNorms.set( NULL, 0 );
+      maxBones = tsalloc.get32();
    }
    else
    {
-      // no encoded normals...
-      ptr32 = getSharedData32( parentMesh, 3 * numVerts, (S32**)smNormsList.address(), skip );
-      batchData.initialNorms.set( (Point3F*)ptr32, numVerts );
-      encodedNorms.set( NULL, 0 );
+      maxBones = -1;
+   }
+
+   S32 sz;
+   S32 * ptr32;
+
+   if (TSShape::smReadVersion < 27)
+   {
+      sz = tsalloc.get32();
+      S32 numVerts = sz;
+      ptr32 = getSharedData32(mParentMesh, 3 * numVerts, (S32**)smVertsList.address(), skip);
+      batchData.initialVerts.set((Point3F*)ptr32, sz);
+
+      S8 * ptr8;
+      if (TSShape::smReadVersion > 21 && TSMesh::smUseEncodedNormals)
+      {
+         // we have encoded normals and we want to use them...
+         if (mParentMesh < 0)
+            tsalloc.getPointer32(numVerts * 3); // advance past norms, don't use
+         batchData.initialNorms.set(NULL, 0);
+
+         ptr8 = getSharedData8(mParentMesh, numVerts, (S8**)smEncodedNormsList.address(), skip);
+         mEncodedNorms.set(ptr8, numVerts);
+         // Note: we don't set the encoded normals flag because we handle them in updateSkin and
+         //       hide the fact that we are using them from base class (TSMesh)
+      }
+      else if (TSShape::smReadVersion > 21)
+      {
+         // we have encoded normals but we don't want to use them...
+         ptr32 = getSharedData32(mParentMesh, 3 * numVerts, (S32**)smNormsList.address(), skip);
+         batchData.initialNorms.set((Point3F*)ptr32, numVerts);
+
+         if (mParentMesh < 0)
+            tsalloc.getPointer8(numVerts); // advance past encoded normls, don't use
+
+		 mEncodedNorms.set(NULL, 0);
+      }
+      else
+      {
+         // no encoded normals...
+         ptr32 = getSharedData32(mParentMesh, 3 * numVerts, (S32**)smNormsList.address(), skip);
+         batchData.initialNorms.set((Point3F*)ptr32, numVerts);
+		 mEncodedNorms.set(NULL, 0);
+      }
+
+      // Sometimes we'll have a mesh with 0 verts but initialVerts is set,
+      // so set these accordingly
+      if (mVerts.size() == 0)
+      {
+		  mVerts = batchData.initialVerts;
+      }
+
+      if (mNorms.size() == 0)
+      {
+		  mNorms = batchData.initialNorms;
+      }
+   }
+   else
+   {
+      // Set from the mesh data
+      batchData.initialVerts = mVerts;
+      batchData.initialNorms = mNorms;
    }
 
    sz = tsalloc.get32();
-   ptr32 = getSharedData32( parentMesh, 16 * sz, (S32**)smInitTransformList.address(), skip );
+   ptr32 = getSharedData32(mParentMesh, 16 * sz, (S32**)smInitTransformList.address(), skip );
    batchData.initialTransforms.set( ptr32, sz );
 
    sz = tsalloc.get32();
-   ptr32 = getSharedData32( parentMesh, sz, (S32**)smVertexIndexList.address(), skip );
+   ptr32 = getSharedData32(mParentMesh, sz, (S32**)smVertexIndexList.address(), skip );
    vertexIndex.set( ptr32, sz );
 
-   ptr32 = getSharedData32( parentMesh, sz, (S32**)smBoneIndexList.address(), skip );
+   ptr32 = getSharedData32(mParentMesh, sz, (S32**)smBoneIndexList.address(), skip );
    boneIndex.set( ptr32, sz );
 
-   ptr32 = getSharedData32( parentMesh, sz, (S32**)smWeightList.address(), skip );
+   ptr32 = getSharedData32(mParentMesh, sz, (S32**)smWeightList.address(), skip );
    weight.set( (F32*)ptr32, sz );
 
    sz = tsalloc.get32();
-   ptr32 = getSharedData32( parentMesh, sz, (S32**)smNodeIndexList.address(), skip );
+   ptr32 = getSharedData32(mParentMesh, sz, (S32**)smNodeIndexList.address(), skip );
    batchData.nodeIndex.set( ptr32, sz );
 
    tsalloc.checkGuard();
 
-   if ( tsalloc.allocShape32( 0 ) && TSShape::smReadVersion < 19 )
-      TSMesh::computeBounds(); // only do this if we copied the data...
+   if (smDebugSkinVerts && ptr32 != NULL)
+   {
+      Con::printf("Loaded skin verts...");
+      for (U32 i = 0; i < vertexIndex.size(); i++)
+      {
+         Con::printf("vi[%i] == %i", i, vertexIndex[i]);
+      }
+      for (U32 i = 0; i < boneIndex.size(); i++)
+      {
+         Con::printf("bi[%i] == %i", i, boneIndex[i]);
+      }
+      for (U32 i = 0; i < batchData.nodeIndex.size(); i++)
+      {
+         Con::printf("ni[%i] == %i", i, batchData.nodeIndex[i]);
+      }
+      for (U32 i = 0; i < boneIndex.size(); i++)
+      {
+         Con::printf("we[%i] == %f", i, weight[i]);
+      }
 
-   createTangents(batchData.initialVerts, batchData.initialNorms);
+      if (mNumVerts != 0)
+      {
+         AssertFatal(batchData.initialVerts.size() == mNumVerts, "err WTF");
+      }
+
+      Con::printf("---");
+   }
+
+   if ( tsalloc.allocShape32( 0 ) && TSShape::smReadVersion < 19 )
+      TSMesh::computeBounds(); // only do this if we copied the data...c
 }
 
 //-----------------------------------------------------------------------------
@@ -2842,39 +2882,65 @@ void TSSkinMesh::disassemble()
 {
    TSMesh::disassemble();
 
-   tsalloc.set32( batchData.initialVerts.size() );
-   // if we have no parent mesh, then save off our verts & norms
-   if ( parentMesh < 0 )
+   if (TSShape::smVersion >= 27)
    {
-      tsalloc.copyToBuffer32( (S32*)batchData.initialVerts.address(), 3 * batchData.initialVerts.size() );
+      AssertFatal(maxBones != 0, "Skin mesh with no bones? No way!");
+      tsalloc.set32(maxBones);
+   }
 
-      // no longer do this here...let tsmesh handle this
-      tsalloc.copyToBuffer32( (S32*)batchData.initialNorms.address(), 3 * batchData.initialNorms.size() );
-
-      // if no parent mesh, compute encoded normals and copy over
-      for ( S32 i = 0; i < batchData.initialNorms.size(); i++ )
+   if (TSShape::smVersion < 27)
+   {
+      tsalloc.set32(batchData.initialVerts.size());
+      // if we have no parent mesh, then save off our verts & norms
+      if (mParentMesh < 0)
       {
-         U8 normIdx = encodedNorms.size() ? encodedNorms[i] : encodeNormal( batchData.initialNorms[i] );
-         tsalloc.copyToBuffer8( (S8*)&normIdx, 1 );
+         tsalloc.copyToBuffer32((S32*)mVerts.address(), 3 * mVerts.size());
+
+         // no longer do this here...let tsmesh handle this
+         tsalloc.copyToBuffer32((S32*)mNorms.address(), 3 * mNorms.size());
+
+         // if no parent mesh, compute encoded normals and copy over
+         for (S32 i = 0; i < mNorms.size(); i++)
+         {
+            U8 normIdx = mEncodedNorms.size() ? mEncodedNorms[i] : encodeNormal(mNorms[i]);
+            tsalloc.copyToBuffer8((S8*)&normIdx, 1);
+         }
       }
    }
 
    tsalloc.set32( batchData.initialTransforms.size() );
-   if ( parentMesh < 0 )
+   if (mParentMesh < 0 )
       tsalloc.copyToBuffer32( (S32*)batchData.initialTransforms.address(), batchData.initialTransforms.size() * 16 );
 
-   tsalloc.set32( vertexIndex.size() );
-   if ( parentMesh < 0 )
+   if (!mVertexData.isReady())
    {
-      tsalloc.copyToBuffer32( (S32*)vertexIndex.address(), vertexIndex.size() );
+      tsalloc.set32(vertexIndex.size());
 
-      tsalloc.copyToBuffer32( (S32*)boneIndex.address(), boneIndex.size() );
+      tsalloc.copyToBuffer32((S32*)vertexIndex.address(), vertexIndex.size());
 
-      tsalloc.copyToBuffer32( (S32*)weight.address(), weight.size() );
+      tsalloc.copyToBuffer32((S32*)boneIndex.address(), boneIndex.size());
+
+      tsalloc.copyToBuffer32((S32*)weight.address(), weight.size());
+   }
+   else
+   {
+      tsalloc.set32(0);
+   }
+
+   if (TSShape::smVersion < 27)
+   {
+      if (mParentMesh < 0)
+      {
+         tsalloc.copyToBuffer32((S32*)vertexIndex.address(), vertexIndex.size());
+
+         tsalloc.copyToBuffer32((S32*)boneIndex.address(), boneIndex.size());
+
+         tsalloc.copyToBuffer32((S32*)weight.address(), weight.size());
+      }
    }
 
    tsalloc.set32( batchData.nodeIndex.size() );
-   if ( parentMesh < 0 )
+   if (mParentMesh < 0 )
       tsalloc.copyToBuffer32( (S32*)batchData.nodeIndex.address(), batchData.nodeIndex.size() );
 
    tsalloc.setGuard();
@@ -2882,9 +2948,9 @@ void TSSkinMesh::disassemble()
 
 TSSkinMesh::TSSkinMesh()
 {
-   meshType = SkinMeshType;
-   mDynamic = true;
-   batchDataInitialized = false;
+   mMeshType = SkinMeshType;
+   batchData.initialized = false;
+   maxBones = -1;
 }
 
 //-----------------------------------------------------------------------------
@@ -2901,9 +2967,9 @@ inline void TSMesh::findTangent( U32 index1,
    const Point3F &v2 = _verts[index2];
    const Point3F &v3 = _verts[index3];
 
-   const Point2F &w1 = tverts[index1];
-   const Point2F &w2 = tverts[index2];
-   const Point2F &w3 = tverts[index3];
+   const Point2F &w1 = mTverts[index1];
+   const Point2F &w2 = mTverts[index2];
+   const Point2F &w3 = mTverts[index3];
 
    F32 x1 = v2.x - v1.x;
    F32 x2 = v3.x - v1.x;
@@ -2951,6 +3017,9 @@ inline void TSMesh::findTangent( U32 index1,
 //-----------------------------------------------------------------------------
 void TSMesh::createTangents(const Vector<Point3F> &_verts, const Vector<Point3F> &_norms)
 {
+   if (_verts.size() == 0) // can only be done in editable mode
+      return;
+
    U32 numVerts = _verts.size();
    U32 numNorms = _norms.size();
    if ( numVerts <= 0 || numNorms <= 0 )
@@ -2965,17 +3034,17 @@ void TSMesh::createTangents(const Vector<Point3F> &_verts, const Vector<Point3F>
    Point3F *tan1 = tan0.address() + numVerts;
    dMemset( tan0.address(), 0, sizeof(Point3F) * 2 * numVerts );
    
-   U32   numPrimatives = primitives.size();
+   U32   numPrimatives = mPrimitives.size();
 
    for (S32 i = 0; i < numPrimatives; i++ )
    {
-      const TSDrawPrimitive & draw = primitives[i];
+      const TSDrawPrimitive & draw = mPrimitives[i];
       GFXPrimitiveType drawType = getDrawType( draw.matIndex >> 30 );
 
       U32 p1Index = 0;
       U32 p2Index = 0;
 
-      U32 *baseIdx = &indices[draw.start];
+      U32 *baseIdx = &mIndices[draw.start];
 
       const U32 numElements = (U32)draw.numElements;
 
@@ -3000,24 +3069,13 @@ void TSMesh::createTangents(const Vector<Point3F> &_verts, const Vector<Point3F>
             }
             break;
          }
-      case GFXTriangleFan:
-         {
-            p1Index = baseIdx[0];
-            p2Index = baseIdx[1];
-            for( U32 j = 2; j < numElements; j++ )
-            {
-               findTangent( p1Index, p2Index, baseIdx[j], tan0.address(), tan1, _verts );
-               p2Index = baseIdx[j];
-            }
-            break;
-         }
 
       default:
          AssertFatal( false, "TSMesh::createTangents: unknown primitive type!" );
       }
    }
 
-   tangents.setSize( numVerts );
+   mTangents.setSize( numVerts );
 
    // fill out final info from accumulated basis data
    for( U32 i = 0; i < numVerts; i++ )
@@ -3028,100 +3086,398 @@ void TSMesh::createTangents(const Vector<Point3F> &_verts, const Vector<Point3F>
 
       Point3F tempPt = t - n * mDot( n, t );
       tempPt.normalize();
-      tangents[i] = tempPt;
+	  mTangents[i] = tempPt;
 
       Point3F cp;
       mCross( n, t, &cp );
       
-      tangents[i].w = (mDot( cp, b ) < 0.0f) ? -1.0f : 1.0f;
+	  mTangents[i].w = (mDot( cp, b ) < 0.0f) ? -1.0f : 1.0f;
    }
 }
 
-void TSMesh::convertToAlignedMeshData()
+void TSMesh::convertToVertexData()
 {
-   if(!mVertexData.isReady())
-      _convertToAlignedMeshData(mVertexData, verts, norms);
-}
-
-
-void TSSkinMesh::convertToAlignedMeshData()
-{
-   if(!mVertexData.isReady())
-      _convertToAlignedMeshData(mVertexData, batchData.initialVerts, batchData.initialNorms);
-}
-
-void TSMesh::_convertToAlignedMeshData( TSMeshVertexArray &vertexData, const Vector<Point3F> &_verts, const Vector<Point3F> &_norms )
-{
-   // If mVertexData is ready, and the input array is different than mVertexData
-   // use mVertexData to quickly initialize the input array
-   if(mVertexData.isReady() && vertexData.address() != mVertexData.address())
+   if (!mVertexData.isReady())
    {
-      AssertFatal(mVertexData.size() == mNumVerts, "Vertex data length mismatch; no idea how this happened.");
-
-      // There doesn't seem to be an _mm_realloc, even though there is an _aligned_realloc
-      // We really shouldn't be re-allocating anyway. Should TSShapeInstance be
-      // storing an array of the data structures? That would certainly bloat memory.
-      void *aligned_mem = dMalloc_aligned(mVertSize * mNumVerts, 16);
-      AssertFatal(aligned_mem, "Aligned malloc failed! Debug!");
-
-      vertexData.set(aligned_mem, mVertSize, mNumVerts);
-      vertexData.setReady(true);
-
-#if defined(TORQUE_OS_XENON)
-      XMemCpyStreaming(vertexData.address(), mVertexData.address(), vertexData.mem_size() );
-#else
-      dMemcpy(vertexData.address(), mVertexData.address(), vertexData.mem_size());
-#endif
-      return;
+      _convertToVertexData(mVertexData, mVerts, mNorms);
    }
+}
 
+void TSSkinMesh::convertToVertexData()
+{
+   if (!mVertexData.isReady())
+   {
+      // Batch data required here
+      createSkinBatchData();
 
-   AssertFatal(!vertexData.isReady(), "Mesh already converted to aligned data! Re-check code!");
+      // Dump verts to buffer
+      _convertToVertexData(mVertexData, batchData.initialVerts, batchData.initialNorms);
+
+      // Setup bones too
+      setupVertexTransforms();
+   }
+}
+
+void TSMesh::copySourceVertexDataFrom(const TSMesh* srcMesh)
+{
+   mVerts = srcMesh->mVerts;
+   mTverts = srcMesh->mTverts;
+   mNorms = srcMesh->mNorms;
+   mColors = srcMesh->mColors;
+   mTverts2 = srcMesh->mTverts2;
+
+   if (mVerts.size() == 0)
+   {
+      bool hasTVert2 = srcMesh->getHasTVert2();
+      bool hasColor = srcMesh->getHasColor();
+
+	  mVerts.setSize(srcMesh->mNumVerts);
+      mTverts.setSize(srcMesh->mNumVerts);
+      mNorms.setSize(srcMesh->mNumVerts);
+
+      if (hasColor)
+         mColors.setSize(mNumVerts);
+      if (hasTVert2)
+         mTverts2.setSize(mNumVerts);
+
+      // Fill arrays
+      for (U32 i = 0; i < mNumVerts; i++)
+      {
+         const __TSMeshVertexBase &cv = srcMesh->mVertexData.getBase(i);
+         const __TSMeshVertex_3xUVColor &cvc = srcMesh->mVertexData.getColor(i);
+         mVerts[i] = cv.vert();
+         mTverts[i] = cv.tvert();
+         mNorms[i] = cv.normal();
+
+         if (hasColor)
+            cvc.color().getColor(&mColors[i]);
+         if (hasTVert2)
+            mTverts2[i] = cvc.tvert2();
+      }
+   }
+}
+
+void TSSkinMesh::copySourceVertexDataFrom(const TSMesh* srcMesh)
+{
+   TSMesh::copySourceVertexDataFrom(srcMesh);
+
+   if (srcMesh->getMeshType() == TSMesh::SkinMeshType)
+   {
+      const TSSkinMesh* srcSkinMesh = static_cast<const TSSkinMesh*>(srcMesh);
+
+      weight = srcSkinMesh->weight;
+      boneIndex = srcSkinMesh->boneIndex;
+      vertexIndex = srcSkinMesh->vertexIndex;
+      maxBones = srcSkinMesh->maxBones;
+
+      // Extract from vertex data
+      if (srcSkinMesh->vertexIndex.size() == 0)
+      {
+         mVertexData = srcMesh->mVertexData;
+         addWeightsFromVertexBuffer();
+         mVertexData.setReady(false);
+      }
+   }
+}
+
+U32 TSMesh::getNumVerts()
+{
+   return mVertexData.isReady() ? mNumVerts : mVerts.size();
+}
+
+void TSMesh::_convertToVertexData(TSMeshVertexArray &outArray, const Vector<Point3F> &_verts, const Vector<Point3F> &_norms)
+{
+   // Update tangents list
+   createTangents(mVerts, mNorms);
+
+   AssertFatal(_verts.size() == mNumVerts, "vert count mismatch");
+   AssertFatal(!getHasColor() || mColors.size() == _verts.size(), "Vector of color elements should be the same size as other vectors");
+   AssertFatal(!getHasTVert2() || mTverts2.size() == _verts.size(), "Vector of tvert2 elements should be the same size as other vectors");
+
+   AssertFatal(!outArray.isReady(), "Mesh already converted to aligned data! Re-check code!");
    AssertFatal(_verts.size() == _norms.size() &&
-               _verts.size() == tangents.size(), 
-               "Vectors: verts, norms, tangents must all be the same size");
-   mNumVerts = _verts.size();
+      _verts.size() == mTangents.size(),
+      "Vectors: verts, norms, tangents must all be the same size");
+   AssertFatal(mVertSize == outArray.vertSize(), "Size inconsistency");
 
-   // Initialize the vertex data
-   vertexData.set(NULL, 0, 0);
-   vertexData.setReady(true);
-
-   if(mNumVerts == 0)
+   if (mNumVerts == 0)
       return;
 
-   mHasColor = !colors.empty();
-   AssertFatal(!mHasColor || colors.size() == _verts.size(), "Vector of color elements should be the same size as other vectors");
+   bool needWeightSet = outArray.getBoneOffset() != 0;
 
-   mHasTVert2 = !tverts2.empty();
-   AssertFatal(!mHasTVert2 || tverts2.size() == _verts.size(), "Vector of tvert2 elements should be the same size as other vectors");
+   bool hasColor = getHasColor();
+   bool hasTVert2 = getHasTVert2();
 
-   // Create the proper array type
-   void *aligned_mem = dMalloc_aligned(mVertSize * mNumVerts, 16);
-   AssertFatal(aligned_mem, "Aligned malloc failed! Debug!");
+   dMemset(&outArray.getBase(0), '\0', mVertSize * mNumVerts);
 
-   dMemset(aligned_mem, 0, mNumVerts * mVertSize);
-   vertexData.set(aligned_mem, mVertSize, mNumVerts);
-
-   for(U32 i = 0; i < mNumVerts; i++)
+   for (U32 i = 0; i < mNumVerts; i++)
    {
-      __TSMeshVertexBase &v = vertexData[i];
+      __TSMeshVertexBase &v = outArray.getBase(i);
       v.vert(_verts[i]);
       v.normal(_norms[i]);
-      v.tangent(tangents[i]);
+      v.tangent(mTangents[i]);
 
-      if(i < tverts.size())
-         v.tvert(tverts[i]);
-      if(mHasTVert2 && i < tverts2.size())
-         v.tvert2(tverts2[i]);
-      if(mHasColor && i < colors.size())
-         v.color(colors[i]);
+      if (i < mTverts.size())
+         v.tvert(mTverts[i]);
+
+      if (hasTVert2 || hasColor)
+      {
+         __TSMeshVertex_3xUVColor &vc = outArray.getColor(i);
+         if (hasTVert2 && i < mTverts2.size())
+            vc.tvert2(mTverts2[i]);
+         if (hasColor && i < mColors.size())
+            vc.color(mColors[i]);
+      }
+
+      // NOTE: skin verts are set later on for the skinned mesh, otherwise we'll set the default (i.e. 0) if we need one for a rigid mesh
+      if (needWeightSet)
+      {
+         const Point4F wt(1.0f, 0.0f, 0.0f, 0.0f);
+         outArray.getBone(i, 0).weight(wt);
+      }
+   }
+}
+
+void TSMesh::makeEditable()
+{
+   bool hasVerts = mVerts.size() != 0;
+
+   if(mVertexData.isReady() && !hasVerts)
+   {
+      copySourceVertexDataFrom(this);
    }
 
-   // Now that the data is in the aligned struct, free the Vector memory
-   verts.free_memory();
-   norms.free_memory();
-   tangents.free_memory();
-   tverts.free_memory();
-   tverts2.free_memory();
-   colors.free_memory();
+   mVertexData.setReady(false);
+
+   mVertSize = 0;
+   mNumVerts = 0;
+   mVertOffset = 0;
+
+   updateMeshFlags();
+}
+
+void TSSkinMesh::addWeightsFromVertexBuffer()
+{
+   weight.setSize(0);
+   boneIndex.setSize(0);
+   vertexIndex.setSize(0);
+
+   U32 numBoneBlocks = maxBones >= 0 ? (maxBones + 3) / 4 : 0;
+   for (U32 i = 0; i < mNumVerts; i++)
+   {
+      for (U32 j = 0; j < numBoneBlocks; j++)
+      {
+         const __TSMeshVertex_BoneData &cv = mVertexData.getBone(i, j);
+
+         if (cv._weights.x != 0.0f)
+         {
+            addWeightForVert(i, cv._indexes.x, cv._weights.x);
+         }
+         if (cv._weights.y != 0.0f)
+         {
+            addWeightForVert(i, cv._indexes.y, cv._weights.y);
+         }
+         if (cv._weights.z != 0.0f)
+         {
+            addWeightForVert(i, cv._indexes.z, cv._weights.z);
+         }
+         if (cv._weights.w != 0.0f)
+         {
+            addWeightForVert(i, cv._indexes.w, cv._weights.w);
+         }
+      }
+   }
+}
+
+void TSSkinMesh::makeEditable()
+{
+   bool hasVerts = mVerts.size() != 0;
+
+   // Reconstruct bone mapping
+   if (mVertexData.isReady() && !hasVerts)
+   {
+      copySourceVertexDataFrom(this);
+
+      weight.setSize(0);
+      boneIndex.setSize(0);
+      vertexIndex.setSize(0);
+
+      addWeightsFromVertexBuffer();
+   }
+
+   mVertexData.setReady(false);
+
+   mVertSize = 0;
+   mNumVerts = 0;
+
+   updateMeshFlags();
+   batchData.initialized = false;
+}
+
+void TSMesh::clearEditable()
+{
+   if (mVerts.size() == 0)
+      return;
+
+   if (mColors.empty())
+      clearFlags(HasColor);
+   else
+      setFlags(HasColor);
+
+   if (mTverts2.empty())
+      clearFlags(HasTVert2);
+   else
+      setFlags(HasTVert2);
+
+   mVerts.free_memory();
+   mNorms.free_memory();
+   mTangents.free_memory();
+   mTverts.free_memory();
+   mTverts2.free_memory();
+   mColors.free_memory();
+}
+
+void TSMesh::updateMeshFlags()
+{
+   // Make sure flags are correct
+   if (mColors.empty())
+      clearFlags(HasColor);
+   else
+      setFlags(HasColor);
+
+   if (mTverts2.empty())
+      clearFlags(HasTVert2);
+   else
+      setFlags(HasTVert2);
+}
+
+void TSSkinMesh::clearEditable()
+{
+   TSMesh::clearEditable();
+
+   weight.free_memory();
+   boneIndex.free_memory();
+   vertexIndex.free_memory();
+}
+
+TSBasicVertexFormat::TSBasicVertexFormat() :
+   texCoordOffset(-1),
+   boneOffset(-1),
+   colorOffset(-1),
+   numBones(0),
+   vertexSize(-1)
+{
+}
+
+TSBasicVertexFormat::TSBasicVertexFormat(TSMesh *mesh)
+{
+   texCoordOffset = -1;
+   boneOffset = -1;
+   colorOffset = -1;
+   numBones = 0;
+   vertexSize = -1;
+
+   addMeshRequirements(mesh);
+}
+
+void TSBasicVertexFormat::getFormat(GFXVertexFormat &fmt)
+{
+   // NOTE: previously the vertex data was padded to allow for verts to be skinned via SSE. 
+   //       since we now prefer to skin on the GPU and use a basic non-SSE fallback for software 
+   //       skinning, adding in padding via GFXSemantic::PADDING or dummy fields is no longer required.
+   fmt.addElement(GFXSemantic::POSITION, GFXDeclType_Float3);
+   fmt.addElement(GFXSemantic::TANGENTW, GFXDeclType_Float, 3);
+   fmt.addElement(GFXSemantic::NORMAL, GFXDeclType_Float3);
+   fmt.addElement(GFXSemantic::TANGENT, GFXDeclType_Float3);
+
+   fmt.addElement(GFXSemantic::TEXCOORD, GFXDeclType_Float2, 0);
+
+   if (texCoordOffset >= 0 || colorOffset >= 0)
+   {
+      fmt.addElement(GFXSemantic::TEXCOORD, GFXDeclType_Float2, 1);
+      fmt.addElement(GFXSemantic::COLOR, GFXDeclType_Color);
+   }
+
+   for (U32 i=0; i<numBones; i++)
+   {
+      fmt.addElement(GFXSemantic::BLENDINDICES, GFXDeclType_UByte4, i);
+      fmt.addElement(GFXSemantic::BLENDWEIGHT, GFXDeclType_Float4, i);
+   }
+}
+
+void TSBasicVertexFormat::calculateSize()
+{
+   GFXVertexFormat fmt;
+   vertexSize = 0;
+   getFormat(fmt);
+   vertexSize = fmt.getSizeInBytes();
+}
+
+void TSBasicVertexFormat::writeAlloc(TSShapeAlloc* alloc)
+{
+   alloc->set16(texCoordOffset);
+   alloc->set16(boneOffset);
+   alloc->set16(colorOffset);
+   alloc->set16(numBones);
+   alloc->set16(vertexSize);
+}
+
+void TSBasicVertexFormat::readAlloc(TSShapeAlloc* alloc)
+{
+   texCoordOffset = alloc->get16();
+   boneOffset = alloc->get16();
+   colorOffset = alloc->get16();
+   numBones = alloc->get16();
+   vertexSize = alloc->get16();
+}
+
+void TSBasicVertexFormat::addMeshRequirements(TSMesh *mesh)
+{
+   bool hasColors = false;
+   bool hasTexcoord2 = false;
+   bool hasSkin = false;
+
+   hasColors = mesh->getHasColor() || (colorOffset != -1);
+   hasTexcoord2 = mesh->getHasTVert2() || (texCoordOffset != -1);
+   hasSkin = (mesh->getMeshType() == TSMesh::SkinMeshType) || (boneOffset != -1);
+
+   S32 offset = sizeof(TSMesh::__TSMeshVertexBase);
+
+   if ((hasTexcoord2 || hasColors))
+   {
+      if (texCoordOffset == -1 || colorOffset == -1)
+      {
+         texCoordOffset = offset;
+         colorOffset = offset + (sizeof(float) * 2);
+      }
+      
+      offset += sizeof(TSMesh::__TSMeshVertex_3xUVColor);
+   }
+
+   if (hasSkin)
+   {
+      boneOffset = offset;
+
+      U32 numMeshBones = mesh->getMaxBonesPerVert();
+      U32 boneBlocks = numMeshBones / 4;
+      U32 extraBlocks = numMeshBones % 4 != 0 ? 1 : 0;
+      U32 neededBones = boneBlocks + extraBlocks;
+      numBones = MAX(neededBones, numBones);
+   }
+}
+
+void TSSkinMesh::printVerts()
+{
+   for (U32 i = 0; i < mNumVerts; i++)
+   {
+      TSMesh::__TSMeshVertexBase &vb = mVertexData.getBase(i);
+      TSMesh::__TSMeshVertex_BoneData &bw = mVertexData.getBone(i, 0);
+
+      Point3F vert = batchData.initialVerts[i];
+      Con::printf("v[%i] == %f,%f,%f; iv == %f,%f,%f. bo=%i,%i,%i,%i bw=%f,%f,%f,%f",
+         i, vb._vert.x, vb._vert.y, vb._vert.z,
+         vert.x, vert.y, vert.z,
+         bw._indexes.x, bw._indexes.y, bw._indexes.z, bw._indexes.w,
+         bw._weights.x, bw._weights.y, bw._weights.z, bw._weights.w);
+   }
 }

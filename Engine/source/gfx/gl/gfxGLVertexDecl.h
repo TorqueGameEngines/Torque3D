@@ -7,7 +7,7 @@ class GFXGLDevice;
 class GFXGLVertexDecl : public GFXVertexDecl
 {
 public:
-   GFXGLVertexDecl() : mFormat(NULL), mVertexAttribActiveMask(0) {}
+   GFXGLVertexDecl() : mFormat(NULL), mVertexAttribActiveMask(0) { std::fill_n(mVertexSize, 4, 0); }
    void init(const GFXVertexFormat *format);
 
    void prepareVertexFormat() const;

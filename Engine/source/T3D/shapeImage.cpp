@@ -80,7 +80,7 @@ EndImplementEnumType;
 ImplementEnumType( ShapeBaseImageLightType,
    "@brief The type of light to attach to this ShapeBaseImage.\n\n"
    "@ingroup gameObjects\n\n")
-	{ ShapeBaseImageData::NoLight,           "NoLight", "No light is attached.\n" },
+   { ShapeBaseImageData::NoLight,           "NoLight", "No light is attached.\n" },
    { ShapeBaseImageData::ConstantLight,     "ConstantLight", "A constant emitting light is attached.\n" },
    { ShapeBaseImageData::SpotLight,         "SpotLight", "A spotlight is attached.\n" },
    { ShapeBaseImageData::PulsingLight,      "PulsingLight", "A pusling light is attached.\n" },
@@ -97,14 +97,14 @@ ConsoleDocClass( ShapeBaseImageData,
    "@ingroup gameObjects\n"
 );
 
-IMPLEMENT_CALLBACK( ShapeBaseImageData, onMount, void, ( ShapeBase* obj, S32 slot, F32 dt ), ( obj, slot, dt ),
+IMPLEMENT_CALLBACK( ShapeBaseImageData, onMount, void, ( SceneObject* obj, S32 slot, F32 dt ), ( obj, slot, dt ),
    "@brief Called when the Image is first mounted to the object.\n\n"
 
    "@param obj object that this Image has been mounted to\n"
    "@param slot Image mount slot on the object\n"
    "@param dt time remaining in this Image update\n" );
 
-IMPLEMENT_CALLBACK( ShapeBaseImageData, onUnmount, void, ( ShapeBase* obj, S32 slot, F32 dt ), ( obj, slot, dt ),
+IMPLEMENT_CALLBACK( ShapeBaseImageData, onUnmount, void, ( SceneObject* obj, S32 slot, F32 dt ), ( obj, slot, dt ),
    "@brief Called when the Image is unmounted from the object.\n\n"
 
    "@param obj object that this Image has been unmounted from\n"
@@ -132,8 +132,11 @@ ShapeBaseImageData::StateData::StateData()
    loaded = IgnoreLoaded;
    spin = IgnoreSpin;
    recoil = NoRecoil;
-   sound = 0;
+   sound = NULL;
+   soundTrack = NULL;
    emitter = NULL;
+   shapeSequence = NULL;
+   shapeSequenceScale = true;
    script = 0;
    ignoreLoadedForReady = false;
    
@@ -154,6 +157,7 @@ ShapeBaseImageData::StateData::StateData()
       flashSequence[i] = false;
       emitterNode[i] = -1;
    }
+
 }
 
 static ShapeBaseImageData::StateData gDefaultStateData;
@@ -162,8 +166,6 @@ static ShapeBaseImageData::StateData gDefaultStateData;
 
 ShapeBaseImageData::ShapeBaseImageData()
 {
-   emap = false;
-
    mountPoint = 0;
    mountOffset.identity();
    eyeOffset.identity();
@@ -189,8 +191,6 @@ ShapeBaseImageData::ShapeBaseImageData()
    lightRadius = 10.f;
    lightBrightness = 1.0f;
 
-   shapeName = "";
-   shapeNameFP = "";
    imageAnimPrefix = "";
    imageAnimPrefixFP = "";
    fireState = -1;
@@ -256,7 +256,7 @@ ShapeBaseImageData::ShapeBaseImageData()
       stateShapeSequence[i] = 0;
       stateScaleShapeSequence[i] = false;
 
-      stateSound[i] = 0;
+      INIT_SOUNDASSET_ARRAY(stateSound, i);
       stateScript[i] = 0;
       stateEmitter[i] = 0;
       stateEmitterTime[i] = 0;
@@ -293,6 +293,8 @@ ShapeBaseImageData::ShapeBaseImageData()
       isAnimated[i] = false;
       hasFlash[i] = false;
       shapeIsValid[i] = false;
+
+      INIT_ASSET_ARRAY(Shape, i);
    }
 
    shakeCamera = false;
@@ -301,6 +303,7 @@ ShapeBaseImageData::ShapeBaseImageData()
    camShakeDuration = 1.5f;
    camShakeRadius = 3.0f;
    camShakeFalloff = 10.0f;
+   
 }
 
 ShapeBaseImageData::~ShapeBaseImageData()
@@ -366,7 +369,9 @@ bool ShapeBaseImageData::onAdd()
          s.shapeSequence = stateShapeSequence[i];
          s.shapeSequenceScale = stateScaleShapeSequence[i];
 
-         s.sound = stateSound[i];
+         //_setstateSound(getstateSound(i),i);
+         handleStateSoundTrack(i);
+
          s.script = stateScript[i];
          s.emitter = stateEmitter[i];
          s.emitterTime = stateEmitterTime[i];
@@ -416,10 +421,14 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
          if (state[i].emitter)
             if (!Sim::findObject(SimObjectId((uintptr_t)state[i].emitter), state[i].emitter))
                Con::errorf(ConsoleLogEntry::General, "Error, unable to load emitter for image datablock");
-               
-         String str;
-         if( !sfxResolve( &state[ i ].sound, str ) )
-            Con::errorf( ConsoleLogEntry::General, str.c_str() );
+
+         if (getstateSound(i) != StringTable->EmptyString())
+         {
+            _setstateSound(getstateSound(i), i);
+            if (!getstateSoundProfile(i))
+               Con::errorf("ShapeBaseImageData::preload() - Could not find profile for asset %s on state %d", getstateSound(i), i);
+         }
+
       }
    }
 
@@ -432,14 +441,12 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
       // Shape 0: Standard image shape
       // Shape 1: Optional first person image shape
 
-      StringTableEntry name;
       if (i == FirstPersonImageShape)
       {
-         if ((useEyeOffset || useEyeNode) && shapeNameFP && shapeNameFP[0])
+         if ((useEyeOffset || useEyeNode) && !mShapeAsset[i].isNull())
          {
             // Make use of the first person shape
             useFirstPersonShape = true;
-            name = shapeNameFP;
          }
          else
          {
@@ -447,27 +454,25 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
             continue;
          }
       }
-      else
-      {
-         name = shapeName;
-      }
 
-      if (name && name[0]) {
+      if (!mShapeAsset[i].isNull())
+      {
          // Resolve shapename
-         shape[i] = ResourceManager::get().load(name);
-         if (!bool(shape[i])) {
-            errorStr = String::ToString("Unable to load shape: %s", name);
+         mShape[i] = mShapeAsset[i]->getShapeResource();
+
+         if (!bool(mShape[i])) {
+            errorStr = String::ToString("Unable to load shape asset: %s", mShapeAsset[i]->getAssetId());
             return false;
          }
          if(computeCRC)
          {
-            Con::printf("Validation required for shape: %s", name);
+            Con::printf("Validation required for shape asset: %s", mShapeAsset[i]->getAssetId());
 
-            Torque::FS::FileNodeRef    fileRef = Torque::FS::GetFileNode(shape[i].getPath());
+            Torque::FS::FileNodeRef    fileRef = Torque::FS::GetFileNode(mShape[i].getPath());
 
             if (!fileRef)
             {
-               errorStr = String::ToString("ShapeBaseImageData: Couldn't load shape \"%s\"",name);
+               errorStr = String::ToString("ShapeBaseImageData: Couldn't load shape asset\"%s\"", mShapeAsset[i]->getAssetId());
                return false;
             }
 
@@ -477,29 +482,29 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
             }
             else if(mCRC[i] != fileRef->getChecksum())
             {
-               errorStr = String::ToString("Shape \"%s\" does not match version on server.",name);
+               errorStr = String::ToString("Shape asset\"%s\" does not match version on server.", mShapeAsset[i]->getAssetId());
                return false;
             }
          }
 
          // Resolve nodes & build mount transform
-         eyeMountNode[i] = shape[i]->findNode("eyeMount");
-         eyeNode[i] = shape[i]->findNode("eye");
+         eyeMountNode[i] = mShape[i]->findNode("eyeMount");
+         eyeNode[i] = mShape[i]->findNode("eye");
          if (eyeNode[i] == -1)
             eyeNode[i] = eyeMountNode[i];
-         ejectNode[i] = shape[i]->findNode("ejectPoint");
-         muzzleNode[i] = shape[i]->findNode("muzzlePoint");
-         retractNode[i] = shape[i]->findNode("retractionPoint");
+         ejectNode[i] = mShape[i]->findNode("ejectPoint");
+         muzzleNode[i] = mShape[i]->findNode("muzzlePoint");
+         retractNode[i] = mShape[i]->findNode("retractionPoint");
          mountTransform[i] = mountOffset;
-         S32 node = shape[i]->findNode("mountPoint");
+         S32 node = mShape[i]->findNode("mountPoint");
          if (node != -1) {
             MatrixF total(1);
             do {
                MatrixF nmat;
                QuatF q;
-               TSTransform::setMatrix(shape[i]->defaultRotations[node].getQuatF(&q),shape[i]->defaultTranslations[node],&nmat);
+               TSTransform::setMatrix(mShape[i]->defaultRotations[node].getQuatF(&q), mShape[i]->defaultTranslations[node],&nmat);
                total.mul(nmat);
-               node = shape[i]->nodes[node].parentIndex;
+               node = mShape[i]->nodes[node].parentIndex;
             }
             while(node != -1);
             total.inverse();
@@ -512,7 +517,7 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
          for (U32 j = 0; j < MaxStates; j++) {
             StateData& s = state[j];
             if (stateSequence[j] && stateSequence[j][0])
-               s.sequence[i] = shape[i]->findSequence(stateSequence[j]);
+               s.sequence[i] = mShape[i]->findSequence(stateSequence[j]);
             if (s.sequence[i] != -1)
             {
                // This state has an animation sequence
@@ -522,8 +527,8 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
             if (stateSequence[j] && stateSequence[j][0] && stateSequenceRandomFlash[j]) {
                char bufferVis[128];
                dStrncpy(bufferVis, stateSequence[j], 100);
-               dStrcat(bufferVis, "_vis");
-               s.sequenceVis[i] = shape[i]->findSequence(bufferVis);
+               dStrcat(bufferVis, "_vis", 128);
+               s.sequenceVis[i] = mShape[i]->findSequence(bufferVis);
             }
             if (s.sequenceVis[i] != -1)
             {
@@ -535,13 +540,13 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
             s.ignoreLoadedForReady = stateIgnoreLoadedForReady[j];
 
             if (stateEmitterNode[j] && stateEmitterNode[j][0])
-               s.emitterNode[i] = shape[i]->findNode(stateEmitterNode[j]);
+               s.emitterNode[i] = mShape[i]->findNode(stateEmitterNode[j]);
             if (s.emitterNode[i] == -1)
                s.emitterNode[i] = muzzleNode[i];
          }
 
-         ambientSequence[i] = shape[i]->findSequence("ambient");
-         spinSequence[i] = shape[i]->findSequence("spin");
+         ambientSequence[i] = mShape[i]->findSequence("ambient");
+         spinSequence[i] = mShape[i]->findSequence("spin");
 
          shapeIsValid[i] = true;
       }
@@ -565,11 +570,50 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
    {
       if( shapeIsValid[i] )
       {
-         TSShapeInstance* pDummy = new TSShapeInstance(shape[i], !server);
+         TSShapeInstance* pDummy = new TSShapeInstance(mShape[i], !server);
          delete pDummy;
       }
    }
    return true;
+}
+
+void ShapeBaseImageData::handleStateSoundTrack(const U32& stateId)
+{
+   if (stateId > MaxStates)
+      return;
+
+   StateData& s = state[stateId];
+
+   s.sound = getstateSoundAsset(stateId);
+
+   if (s.sound == NULL)
+   {
+      if (mstateSoundName[stateId] != StringTable->EmptyString())
+      {
+         //ok, so we've got some sort of special-case here like a fallback or SFXPlaylist. So do the hook-up now
+         SFXTrack* sndTrack;
+         if (!Sim::findObject(mstateSoundName[stateId], sndTrack))
+         {
+            Con::errorf("ShapeBaseImageData::onAdd() - attempted to find sound %s but failed!", mstateSoundName[stateId]);
+         }
+         else
+         {
+            s.soundTrack = sndTrack;
+         }
+      }
+      else if (mstateSoundSFXId[stateId] != 0)
+      {
+         SFXTrack* sndTrack;
+         if (!Sim::findObject(mstateSoundSFXId[stateId], sndTrack))
+         {
+            Con::errorf("ShapeBaseImageData::onAdd() - attempted to find sound %i but failed!", mstateSoundSFXId[stateId]);
+         }
+         else
+         {
+            s.soundTrack = sndTrack;
+         }
+      }
+   }
 }
 
 S32 ShapeBaseImageData::lookupState(const char* name)
@@ -585,102 +629,109 @@ S32 ShapeBaseImageData::lookupState(const char* name)
 
 void ShapeBaseImageData::initPersistFields()
 {
-   addField( "emap", TypeBool, Offset(emap, ShapeBaseImageData),
-      "@brief Whether to enable environment mapping on this Image.\n\n" );
+   docsURL;
+   addGroup("Shapes");
+      INITPERSISTFIELD_SHAPEASSET_ARRAY(Shape, MaxShapes, ShapeBaseImageData, "The shape asset to use for this image in the third person")
+   //addProtectedField("shapeFileFP", TypeShapeFilename, Offset(mShapeName[1], ShapeBaseImageData), _setShapeData, defaultProtectedGetFn, "deprecated alias for ShapeFPFile/Asset", AbstractClassRep::FIELD_HideInInspectors);
+      addField("casing", TYPEID< DebrisData >(), Offset(casing, ShapeBaseImageData),
+            "@brief DebrisData datablock to use for ejected casings.\n\n"
+            "@see stateEjectShell");
+      addField("shellExitDir", TypePoint3F, Offset(shellExitDir, ShapeBaseImageData),
+         "@brief Vector direction to eject shell casings.\n\n"
+         "@see casing");
+      addField("shellExitVariance", TypeF32, Offset(shellExitVariance, ShapeBaseImageData),
+         "@brief Variance (in degrees) from the shellExitDir vector to eject casings.\n\n"
+         "@see shellExitDir");
+      addField("shellVelocity", TypeF32, Offset(shellVelocity, ShapeBaseImageData),
+         "@brief Speed at which to eject casings.\n\n"
+         "@see casing");
+      addField("computeCRC", TypeBool, Offset(computeCRC, ShapeBaseImageData),
+         "If true, verify that the CRC of the client's Image matches the server's "
+         "CRC for the Image when loaded by the client.");
+   endGroup("Shapes");
 
-   addField( "shapeFile", TypeShapeFilename, Offset(shapeName, ShapeBaseImageData),
-      "@brief The DTS or DAE model to use for this Image.\n\n" );
-
-   addField( "shapeFileFP", TypeShapeFilename, Offset(shapeNameFP, ShapeBaseImageData),
-      "@brief The DTS or DAE model to use for this Image when in first person.\n\n"
-      "This is an optional parameter that also requires either eyeOffset or useEyeNode "
-      "to be set.  If none of these conditions is met then shapeFile will be used "
-      "for all cases.\n\n"
-      "Typically you set a first person image for a weapon that "
-      "includes the player's arms attached to it for animating while firing, "
-      "reloading, etc.  This is typical of many FPS games."
-      "@see eyeOffset\n"
-      "@see useEyeNode\n");
-
-   addField( "imageAnimPrefix", TypeCaseString, Offset(imageAnimPrefix, ShapeBaseImageData),
-      "@brief Passed along to the mounting shape to modify animation sequences played in third person. [optional]\n\n" );
-   addField( "imageAnimPrefixFP", TypeCaseString, Offset(imageAnimPrefixFP, ShapeBaseImageData),
-      "@brief Passed along to the mounting shape to modify animation sequences played in first person. [optional]\n\n" );
-
-   addField( "animateAllShapes", TypeBool, Offset(animateAllShapes, ShapeBaseImageData),
-      "@brief Indicates that all shapes should be animated in sync.\n\n"
-      "When multiple shapes are defined for this image datablock, each of them are automatically "
-      "animated in step with each other.  This allows for easy switching between between shapes "
-      "when some other condition changes, such as going from first person to third person, and "
-      "keeping their look consistent.  If you know that you'll never switch between shapes on the "
-      "fly, such as players only being allowed in a first person view, then you could set this to "
-      "false to save some calculations.\n\n"
-      "There are other circumstances internal to the engine that determine that only the current shape "
-      "should be animated rather than all defined shapes.  In those cases, this property is ignored.\n\n"
-      "@note This property is only important if you have more than one shape defined, such as shapeFileFP.\n\n"
-      "@see shapeFileFP\n");
-
-   addField( "animateOnServer", TypeBool, Offset(animateOnServer, ShapeBaseImageData),
-      "@brief Indicates that the image should be animated on the server.\n\n"
-      "In most cases you'll want this set if you're using useEyeNode.  You may also want to "
-      "set this if the muzzlePoint is animated while it shoots.  You can set this "
-      "to false even if these previous cases are true if the image's shape is set "
-      "up in the correct position and orientation in the 'root' pose and none of "
-      "the nodes are animated at key times, such as the muzzlePoint essentially "
-      "remaining at the same position at the start of the fire state (it could "
-      "animate just fine after the projectile is away as the muzzle vector is only "
-      "calculated at the start of the state).\n\n"
-      "You'll also want to set this to true if you're animating the camera using the "
-      "image's 'eye' node -- unless the movement is very subtle and doesn't need to "
-      "be reflected on the server.\n\n"
-      "@note Setting this to true causes up to four animation threads to be advanced on the server "
-      "for each instance in use, although for most images only one or two are actually defined.\n\n"
-      "@see useEyeNode\n");
-
-   addField( "scriptAnimTransitionTime", TypeF32, Offset(scriptAnimTransitionTime, ShapeBaseImageData),
-      "@brief The amount of time to transition between the previous sequence and new sequence when the script prefix has changed.\n\n"
-      "When setImageScriptAnimPrefix() is used on a ShapeBase that has this image mounted, the image "
-      "will attempt to switch to the new animation sequence based on the given script prefix.  This is "
-      "the amount of time it takes to transition from the previously playing animation sequence to"
-      "the new script prefix-based animation sequence.\n"
-      "@see ShapeBase::setImageScriptAnimPrefix()");
+   addGroup("Animation");
+      addField( "imageAnimPrefix", TypeCaseString, Offset(imageAnimPrefix, ShapeBaseImageData),
+         "@brief Passed along to the mounting shape to modify animation sequences played in third person. [optional]\n\n" );
+      addField( "imageAnimPrefixFP", TypeCaseString, Offset(imageAnimPrefixFP, ShapeBaseImageData),
+         "@brief Passed along to the mounting shape to modify animation sequences played in first person. [optional]\n\n" );
+      addField( "animateAllShapes", TypeBool, Offset(animateAllShapes, ShapeBaseImageData),
+         "@brief Indicates that all shapes should be animated in sync.\n\n"
+         "When multiple shapes are defined for this image datablock, each of them are automatically "
+         "animated in step with each other.  This allows for easy switching between between shapes "
+         "when some other condition changes, such as going from first person to third person, and "
+         "keeping their look consistent.  If you know that you'll never switch between shapes on the "
+         "fly, such as players only being allowed in a first person view, then you could set this to "
+         "false to save some calculations.\n\n"
+         "There are other circumstances internal to the engine that determine that only the current shape "
+         "should be animated rather than all defined shapes.  In those cases, this property is ignored.\n\n"
+         "@note This property is only important if you have more than one shape defined, such as shapeFileFP.\n\n"
+         "@see shapeFileFP\n");
+      addField( "animateOnServer", TypeBool, Offset(animateOnServer, ShapeBaseImageData),
+         "@brief Indicates that the image should be animated on the server.\n\n"
+         "In most cases you'll want this set if you're using useEyeNode.  You may also want to "
+         "set this if the muzzlePoint is animated while it shoots.  You can set this "
+         "to false even if these previous cases are true if the image's shape is set "
+         "up in the correct position and orientation in the 'root' pose and none of "
+         "the nodes are animated at key times, such as the muzzlePoint essentially "
+         "remaining at the same position at the start of the fire state (it could "
+         "animate just fine after the projectile is away as the muzzle vector is only "
+         "calculated at the start of the state).\n\n"
+         "You'll also want to set this to true if you're animating the camera using the "
+         "image's 'eye' node -- unless the movement is very subtle and doesn't need to "
+         "be reflected on the server.\n\n"
+         "@note Setting this to true causes up to four animation threads to be advanced on the server "
+         "for each instance in use, although for most images only one or two are actually defined.\n\n"
+         "@see useEyeNode\n");
+      addField( "scriptAnimTransitionTime", TypeF32, Offset(scriptAnimTransitionTime, ShapeBaseImageData),
+         "@brief The amount of time to transition between the previous sequence and new sequence when the script prefix has changed.\n\n"
+         "When setImageScriptAnimPrefix() is used on a ShapeBase that has this image mounted, the image "
+         "will attempt to switch to the new animation sequence based on the given script prefix.  This is "
+         "the amount of time it takes to transition from the previously playing animation sequence to"
+         "the new script prefix-based animation sequence.\n"
+         "@see ShapeBase::setImageScriptAnimPrefix()");
+   endGroup("Animation");
 
    addField( "projectile", TYPEID< ProjectileData >(), Offset(projectile, ShapeBaseImageData),
       "@brief The projectile fired by this Image\n\n" );
-
    addField( "cloakable", TypeBool, Offset(cloakable, ShapeBaseImageData),
       "@brief Whether this Image can be cloaked.\n\n"
       "Currently unused." );
+   addField("usesEnergy", TypeBool, Offset(usesEnergy, ShapeBaseImageData),
+      "@brief Flag indicating whether this Image uses energy instead of ammo.  The energy level comes from the ShapeBase object we're mounted to.\n\n"
+      "@see ShapeBase::setEnergyLevel()");
+   addField("minEnergy", TypeF32, Offset(minEnergy, ShapeBaseImageData),
+      "@brief Minimum Image energy for it to be operable.\n\n"
+      "@see usesEnergy");
 
+   addGroup("Mounting");
    addField( "mountPoint", TypeS32, Offset(mountPoint, ShapeBaseImageData),
       "@brief Mount node # to mount this Image to.\n\n"
       "This should correspond to a mount# node on the ShapeBase derived object we are mounting to." );
-
    addField( "offset", TypeMatrixPosition, Offset(mountOffset, ShapeBaseImageData),
       "@brief \"X Y Z\" translation offset from this Image's <i>mountPoint</i> node to "
       "attach to.\n\n"
       "Defaults to \"0 0 0\". ie. attach this Image's "
       "<i>mountPoint</i> node to the ShapeBase model's mount# node without any offset.\n"
       "@see rotation");
-
    addField( "rotation", TypeMatrixRotation, Offset(mountOffset, ShapeBaseImageData),
       "@brief \"X Y Z ANGLE\" rotation offset from this Image's <i>mountPoint</i> node "
       "to attach to.\n\n"
       "Defaults to \"0 0 0\". ie. attach this Image's "
       "<i>mountPoint</i> node to the ShapeBase model's mount# node without any additional rotation.\n"
       "@see offset");
+   endGroup("Mounting");
 
+   addGroup("Camera");
    addField( "eyeOffset", TypeMatrixPosition, Offset(eyeOffset, ShapeBaseImageData),
       "@brief \"X Y Z\" translation offset from the ShapeBase model's eye node.\n\n"
       "When in first person view, this is the offset from the eye node to place the gun.  This "
       "gives the gun a fixed point in space, typical of a lot of FPS games.\n"
       "@see eyeRotation");
-
    addField( "eyeRotation", TypeMatrixRotation, Offset(eyeOffset, ShapeBaseImageData),
       "@brief \"X Y Z ANGLE\" rotation offset from the ShapeBase model's eye node.\n\n"
       "When in first person view, this is the rotation from the eye node to place the gun.\n"
       "@see eyeOffset");
-
    addField( "useEyeNode", TypeBool, Offset(useEyeNode, ShapeBaseImageData),
       "@brief Mount image using image's eyeMount node and place the camera at the image's eye node (or "
       "at the eyeMount node if the eye node is missing).\n\n"
@@ -692,92 +743,62 @@ void ShapeBaseImageData::initPersistFields()
       "@note Read about the animateOnServer field as you may want to set it to true if you're using useEyeNode.\n\n"
       "@see eyeOffset\n\n"
       "@see animateOnServer\n\n");
+   addField("firstPerson", TypeBool, Offset(firstPerson, ShapeBaseImageData),
+      "@brief Set to true to render the image in first person.");
+   endGroup("Camera");
+   
+   addGroup("Camera Shake");
+      addField( "shakeCamera", TypeBool, Offset(shakeCamera, ShapeBaseImageData),
+         "@brief Flag indicating whether the camera should shake when this Image fires.\n\n" );
+      addField( "camShakeFreq", TypePoint3F, Offset(camShakeFreq, ShapeBaseImageData),
+         "@brief Frequency of the camera shaking effect.\n\n"
+         "@see shakeCamera" );
+      addField( "camShakeAmp", TypePoint3F, Offset(camShakeAmp, ShapeBaseImageData),
+         "@brief Amplitude of the camera shaking effect.\n\n"
+         "@see shakeCamera" );
+      addField( "camShakeDuration", TypeF32, Offset(camShakeDuration, ShapeBaseImageData),
+         "Duration (in seconds) to shake the camera." );
+      addField( "camShakeRadius", TypeF32, Offset(camShakeRadius, ShapeBaseImageData),
+         "Radial distance that a camera's position must be within relative to the "
+         "center of the explosion to be shaken." );
+      addField( "camShakeFalloff", TypeF32, Offset(camShakeFalloff, ShapeBaseImageData),
+         "Falloff value for the camera shake." );
+   endGroup("Camera Shake");
 
+   addGroup("Physics");
    addField( "correctMuzzleVector", TypeBool,  Offset(correctMuzzleVector, ShapeBaseImageData),
       "@brief Flag to adjust the aiming vector to the eye's LOS point when in 1st person view.\n\n"
       "@see ShapeBase::getMuzzleVector()" );
-
    addField( "correctMuzzleVectorTP", TypeBool,  Offset(correctMuzzleVectorTP, ShapeBaseImageData),
       "@brief Flag to adjust the aiming vector to the camera's LOS point when in 3rd person view.\n\n"
       "@see ShapeBase::getMuzzleVector()" );
-
-   addField( "firstPerson", TypeBool, Offset(firstPerson, ShapeBaseImageData),
-      "@brief Set to true to render the image in first person." );
-
    addField( "mass", TypeF32, Offset(mass, ShapeBaseImageData),
       "@brief Mass of this Image.\n\n"
       "This is added to the total mass of the ShapeBase object." );
-
-   addField( "usesEnergy", TypeBool, Offset(usesEnergy,ShapeBaseImageData),
-      "@brief Flag indicating whether this Image uses energy instead of ammo.  The energy level comes from the ShapeBase object we're mounted to.\n\n"
-      "@see ShapeBase::setEnergyLevel()");
-
-   addField( "minEnergy", TypeF32, Offset(minEnergy, ShapeBaseImageData),
-      "@brief Minimum Image energy for it to be operable.\n\n"
-      "@see usesEnergy");
-
    addField( "accuFire", TypeBool, Offset(accuFire, ShapeBaseImageData),
       "@brief Flag to control whether the Image's aim is automatically converged with "
       "the crosshair.\n\n"
       "Currently unused." );
+   endGroup("Physics");
 
-   addField( "lightType", TYPEID< ShapeBaseImageData::LightType >(), Offset(lightType, ShapeBaseImageData),
-      "@brief The type of light this Image emits.\n\n"
-      "@see ShapeBaseImageLightType");
-
-   addField( "lightColor", TypeColorF, Offset(lightColor, ShapeBaseImageData),
-      "@brief The color of light this Image emits.\n\n"
-      "@see lightType");
-
-   addField( "lightDuration", TypeS32, Offset(lightDuration, ShapeBaseImageData),
-      "@brief Duration in SimTime of Pulsing and WeaponFire type lights.\n\n"
-      "@see lightType");
-
-   addField( "lightRadius", TypeF32, Offset(lightRadius, ShapeBaseImageData),
-      "@brief Radius of the light this Image emits.\n\n"
-      "@see lightType");
-
-   addField( "lightBrightness", TypeF32, Offset(lightBrightness, ShapeBaseImageData),
-      "@brief Brightness of the light this Image emits.\n\n"
-      "Only valid for WeaponFireLight."
-      "@see lightType");
-
-   addField( "shakeCamera", TypeBool, Offset(shakeCamera, ShapeBaseImageData),
-      "@brief Flag indicating whether the camera should shake when this Image fires.\n\n" );
-
-   addField( "camShakeFreq", TypePoint3F, Offset(camShakeFreq, ShapeBaseImageData),
-      "@brief Frequency of the camera shaking effect.\n\n"
-      "@see shakeCamera" );
-
-   addField( "camShakeAmp", TypePoint3F, Offset(camShakeAmp, ShapeBaseImageData),
-      "@brief Amplitude of the camera shaking effect.\n\n"
-      "@see shakeCamera" );
-
-   addField( "camShakeDuration", TypeF32, Offset(camShakeDuration, ShapeBaseImageData),
-      "Duration (in seconds) to shake the camera." );
-
-   addField( "camShakeRadius", TypeF32, Offset(camShakeRadius, ShapeBaseImageData),
-      "Radial distance that a camera's position must be within relative to the "
-      "center of the explosion to be shaken." );
-
-   addField( "camShakeFalloff", TypeF32, Offset(camShakeFalloff, ShapeBaseImageData),
-      "Falloff value for the camera shake." );
-
-   addField( "casing", TYPEID< DebrisData >(), Offset(casing, ShapeBaseImageData),
-      "@brief DebrisData datablock to use for ejected casings.\n\n"
-      "@see stateEjectShell" );
-
-   addField( "shellExitDir", TypePoint3F, Offset(shellExitDir, ShapeBaseImageData),
-      "@brief Vector direction to eject shell casings.\n\n"
-      "@see casing");
-
-   addField( "shellExitVariance", TypeF32, Offset(shellExitVariance, ShapeBaseImageData),
-      "@brief Variance (in degrees) from the shellExitDir vector to eject casings.\n\n"
-      "@see shellExitDir");
-
-   addField( "shellVelocity", TypeF32, Offset(shellVelocity, ShapeBaseImageData),
-      "@brief Speed at which to eject casings.\n\n"
-      "@see casing");
+   addGroup("Light Emitter");
+      addField( "lightType", TYPEID< ShapeBaseImageData::LightType >(), Offset(lightType, ShapeBaseImageData),
+         "@brief The type of light this Image emits.\n\n"
+         "@see ShapeBaseImageLightType");
+      addField( "lightColor", TypeColorF, Offset(lightColor, ShapeBaseImageData),
+         "@brief The color of light this Image emits.\n\n"
+         "@see lightType");
+      addField( "lightDuration", TypeS32, Offset(lightDuration, ShapeBaseImageData),
+         "@brief Duration in SimTime of Pulsing and WeaponFire type lights.\n\n"
+         "@see lightType");
+      addField( "lightRadius", TypeF32, Offset(lightRadius, ShapeBaseImageData),
+         "@brief Radius of the light this Image emits.\n\n"
+         "@see lightType");
+      addField( "lightBrightness", TypeF32, Offset(lightBrightness, ShapeBaseImageData),
+         "@brief Brightness of the light this Image emits.\n\n"
+         "Only valid for WeaponFireLight."
+         "@see lightType");
+   endGroup("Light Emitter");
 
    // State arrays
    addArray( "States", MaxStates );
@@ -933,8 +954,8 @@ void ShapeBaseImageData::initPersistFields()
       addField( "stateScaleShapeSequence", TypeBool, Offset(stateScaleShapeSequence, ShapeBaseImageData), MaxStates,
          "Indicates if the sequence to be played on the mounting shape should be scaled to the length of the state." );
 
-      addField( "stateSound", TypeSFXTrackName, Offset(stateSound, ShapeBaseImageData), MaxStates,
-         "Sound to play on entry to this state." );
+      INITPERSISTFIELD_SOUNDASSET_ARRAY(stateSound, MaxStates, ShapeBaseImageData, "State sound.");
+
       addField( "stateScript", TypeCaseString, Offset(stateScript, ShapeBaseImageData), MaxStates,
          "@brief Method to execute on entering this state.\n\n"
          "Scoped to this image class name, then ShapeBaseImageData. The script "
@@ -958,18 +979,17 @@ void ShapeBaseImageData::initPersistFields()
 
    endArray( "States" );
 
-   addField( "computeCRC", TypeBool, Offset(computeCRC, ShapeBaseImageData),
-      "If true, verify that the CRC of the client's Image matches the server's "
-      "CRC for the Image when loaded by the client." );
+   addGroup("Sounds");
+      addField( "maxConcurrentSounds", TypeS32, Offset(maxConcurrentSounds, ShapeBaseImageData),
+         "@brief Maximum number of sounds this Image can play at a time.\n\n"
+         "Any value <= 0 indicates that it can play an infinite number of sounds." );
+   endGroup("Sounds");
 
-   addField( "maxConcurrentSounds", TypeS32, Offset(maxConcurrentSounds, ShapeBaseImageData),
-      "@brief Maximum number of sounds this Image can play at a time.\n\n"
-      "Any value <= 0 indicates that it can play an infinite number of sounds." );
-
-   addField( "useRemainderDT", TypeBool, Offset(useRemainderDT, ShapeBaseImageData), 
-      "@brief If true, allow multiple timeout transitions to occur within a single "
-      "tick (useful if states have a very small timeout).\n\n" );
-
+   addGroup("Animation");
+      addField( "useRemainderDT", TypeBool, Offset(useRemainderDT, ShapeBaseImageData),
+         "@brief If true, allow multiple timeout transitions to occur within a single "
+         "tick (useful if states have a very small timeout).\n\n" );
+   endGroup("Animation");
    Parent::initPersistFields();
 }
 
@@ -985,8 +1005,10 @@ void ShapeBaseImageData::packData(BitStream* stream)
       }
    }
 
-   stream->writeString(shapeName);        // shape 0 for normal use
-   stream->writeString(shapeNameFP);      // shape 1 for first person use (optional)
+   for (U32 j = 0; j < MaxShapes; ++j)
+   {
+      PACKDATA_ASSET_ARRAY(Shape, j);        // shape 0 for normal use, shape 1 for first person use (optional)
+   }
 
    stream->writeString(imageAnimPrefix);
    stream->writeString(imageAnimPrefixFP);
@@ -1019,7 +1041,7 @@ void ShapeBaseImageData::packData(BitStream* stream)
 
    // Write the projectile datablock
    if (stream->writeFlag(projectile))
-      stream->writeRangedU32(packed? SimObjectId((uintptr_t)projectile):
+      stream->writeRangedU32(mPacked ? SimObjectId((uintptr_t)projectile):
                              projectile->getId(),DataBlockObjectIdFirst,DataBlockObjectIdLast);
 
    stream->writeFlag(cloakable);
@@ -1050,7 +1072,7 @@ void ShapeBaseImageData::packData(BitStream* stream)
 
    if( stream->writeFlag( casing ) )
    {
-      stream->writeRangedU32(packed? SimObjectId((uintptr_t)casing):
+      stream->writeRangedU32(mPacked ? SimObjectId((uintptr_t)casing):
          casing->getId(),DataBlockObjectIdFirst,DataBlockObjectIdLast);
    }
 
@@ -1139,7 +1161,7 @@ void ShapeBaseImageData::packData(BitStream* stream)
 
          if (stream->writeFlag(s.emitter))
          {
-            stream->writeRangedU32(packed? SimObjectId((uintptr_t)s.emitter):
+            stream->writeRangedU32(mPacked ? SimObjectId((uintptr_t)s.emitter):
                                    s.emitter->getId(),DataBlockObjectIdFirst,DataBlockObjectIdLast);
             stream->write(s.emitterTime);
 
@@ -1149,7 +1171,7 @@ void ShapeBaseImageData::packData(BitStream* stream)
             }
          }
 
-         sfxWrite( stream, s.sound );
+         PACKDATA_SOUNDASSET_ARRAY(stateSound, i);
       }
    stream->write(maxConcurrentSounds);
    stream->writeFlag(useRemainderDT);
@@ -1167,8 +1189,10 @@ void ShapeBaseImageData::unpackData(BitStream* stream)
       }
    }
 
-   shapeName = stream->readSTString();       // shape 0 for normal use
-   shapeNameFP = stream->readSTString();     // shape 1 for first person use (optional)
+   for (U32 j = 0; j < MaxShapes; ++j)
+   {
+      UNPACKDATA_ASSET_ARRAY(Shape, j);        // shape 0 for normal use, shape 1 for first person use (optional)
+   }
 
    imageAnimPrefix = stream->readSTString();
    imageAnimPrefixFP = stream->readSTString();
@@ -1202,7 +1226,7 @@ void ShapeBaseImageData::unpackData(BitStream* stream)
    }
 
    projectile = (stream->readFlag() ?
-                 (ProjectileData*)stream->readRangedU32(DataBlockObjectIdFirst,
+                 (ProjectileData*)(uintptr_t)stream->readRangedU32(DataBlockObjectIdFirst,
                                                         DataBlockObjectIdLast) : 0);
 
    cloakable = stream->readFlag();
@@ -1340,7 +1364,7 @@ void ShapeBaseImageData::unpackData(BitStream* stream)
 
          if (stream->readFlag())
          {
-            s.emitter = (ParticleEmitterData*) stream->readRangedU32(DataBlockObjectIdFirst,
+            s.emitter = (ParticleEmitterData*)(uintptr_t)stream->readRangedU32(DataBlockObjectIdFirst,
                                                                      DataBlockObjectIdLast);
             stream->read(&s.emitterTime);
 
@@ -1352,7 +1376,8 @@ void ShapeBaseImageData::unpackData(BitStream* stream)
          else
             s.emitter = 0;
             
-         sfxRead( stream, &s.sound );
+         UNPACKDATA_SOUNDASSET_ARRAY(stateSound, i);
+         handleStateSoundTrack(i);
       }
    }
    
@@ -1396,6 +1421,7 @@ ShapeBase::MountedImage::MountedImage()
    dataBlock = 0;
    nextImage = InvalidImagePtr;
    delayTime = 0;
+   rDT = 0.0f;
    ammo = false;
    target = false;
    triggerDown = false;
@@ -1408,6 +1434,7 @@ ShapeBase::MountedImage::MountedImage()
    motion = false;
    lightStart = 0;
    lightInfo = NULL;
+   dMemset(emitter, 0, sizeof(emitter));
 
    for (U32 i=0; i<ShapeBaseImageData::MaxGenericTriggers; ++i)
    {
@@ -1532,7 +1559,7 @@ bool ShapeBase::unmountImage(U32 imageSlot)
 {
    AssertFatal(imageSlot<MaxMountedImages,"Out of range image slot");
 
-	bool returnValue = false;
+   bool returnValue = false;
    MountedImage& image = mMountedImageList[imageSlot];
    if (image.dataBlock)
    {
@@ -2124,7 +2151,7 @@ S32 ShapeBase::getNodeIndex(U32 imageSlot,StringTableEntry nodeName)
 {
    MountedImage& image = mMountedImageList[imageSlot];
    if (image.dataBlock)
-      return image.dataBlock->shape[getImageShapeIndex(image)]->findNode(nodeName);
+      return image.dataBlock->mShape[getImageShapeIndex(image)]->findNode(nodeName);
    else
       return -1;
 }
@@ -2314,7 +2341,7 @@ void ShapeBase::setImage(  U32 imageSlot,
    for (U32 i=0; i<ShapeBaseImageData::MaxShapes; ++i)
    {
       if (image.dataBlock->shapeIsValid[i])
-         image.shapeInstance[i] = new TSShapeInstance(image.dataBlock->shape[i], isClientObject());
+         image.shapeInstance[i] = new TSShapeInstance(image.dataBlock->mShape[i], isClientObject());
    }
 
    if (isClientObject())
@@ -2579,7 +2606,7 @@ bool ShapeBase::hasImageState(U32 imageSlot, const char* state)
    return false;
 }
 
-void ShapeBase::setImageState(U32 imageSlot, U32 newState,bool force)
+void ShapeBase::setImageState(U32 imageSlot, U32 newState, bool force)
 {
    if (!mMountedImageList[imageSlot].dataBlock)
       return;
@@ -2610,12 +2637,12 @@ void ShapeBase::setImageState(U32 imageSlot, U32 newState,bool force)
    // Eject shell casing on every state change (client side only)
    ShapeBaseImageData::StateData& nextStateData = image.dataBlock->state[newState];
    if (isGhost() && nextStateData.ejectShell) {
-      ejectShellCasing( imageSlot );
+      ejectShellCasing(imageSlot);
    }
 
    // Shake camera on client.
    if (isGhost() && nextStateData.fire && image.dataBlock->shakeCamera) {
-      shakeCamera( imageSlot );
+      shakeCamera(imageSlot);
    }
 
    // Server must animate the shape if it is a firestate...
@@ -2631,14 +2658,14 @@ void ShapeBase::setImageState(U32 imageSlot, U32 newState,bool force)
    if (!force && image.state == &image.dataBlock->state[newState]) {
       image.delayTime = image.state->timeoutValue;
       if (image.state->script && !isGhost())
-         scriptCallback(imageSlot,image.state->script);
+         scriptCallback(imageSlot, image.state->script);
 
       // If this is a flash sequence, we need to select a new position for the
       //  animation if we're returning to that state...
       F32 randomPos = Platform::getRandom();
-      for (U32 i=0; i<ShapeBaseImageData::MaxShapes; ++i)
+      for (U32 i = 0; i < ShapeBaseImageData::MaxShapes; ++i)
       {
-         if (!image.dataBlock->shapeIsValid[i] || i != imageShapeIndex && !image.doAnimateAllShapes)
+         if (!image.dataBlock->shapeIsValid[i] || (i != imageShapeIndex && !image.doAnimateAllShapes))
             continue;
 
          if (image.animThread[i] && image.state->sequence[i] != -1 && image.state->flashSequence[i]) {
@@ -2664,7 +2691,7 @@ void ShapeBase::setImageState(U32 imageSlot, U32 newState,bool force)
 
    // Mount pending images
    if (image.nextImage != InvalidImagePtr && stateData.allowImageChange) {
-      setImage(imageSlot,image.nextImage,image.nextSkinNameHandle,image.nextLoaded);
+      setImage(imageSlot, image.nextImage, image.nextSkinNameHandle, image.nextLoaded);
       return;
    }
 
@@ -2672,16 +2699,16 @@ void ShapeBase::setImageState(U32 imageSlot, U32 newState,bool force)
    // (the first key frame should be it's off state).
    // We need to do this across all image shapes to make sure we have no hold overs when switching
    // rendering shapes while in the middle of a state change.
-   for (U32 i=0; i<ShapeBaseImageData::MaxShapes; ++i)
+   for (U32 i = 0; i < ShapeBaseImageData::MaxShapes; ++i)
    {
       // If we are to do a sequence transition then we need to keep the previous animThread active
       if (image.animThread[i] && image.animThread[i]->getSequence()->isCyclic() && (stateData.sequenceNeverTransition || !(stateData.sequenceTransitionIn || lastState->sequenceTransitionOut))) {
-         image.shapeInstance[i]->setPos(image.animThread[i],0);
-         image.shapeInstance[i]->setTimeScale(image.animThread[i],0);
+         image.shapeInstance[i]->setPos(image.animThread[i], 0);
+         image.shapeInstance[i]->setTimeScale(image.animThread[i], 0);
       }
       if (image.flashThread[i]) {
-         image.shapeInstance[i]->setPos(image.flashThread[i],0);
-         image.shapeInstance[i]->setTimeScale(image.flashThread[i],0);
+         image.shapeInstance[i]->setPos(image.flashThread[i], 0);
+         image.shapeInstance[i]->setTimeScale(image.flashThread[i], 0);
       }
    }
 
@@ -2694,10 +2721,10 @@ void ShapeBase::setImageState(U32 imageSlot, U32 newState,bool force)
    if (image.delayTime <= 0 || !stateData.waitForTimeout) 
    {
       if ((ns = stateData.transition.loaded[image.loaded]) != -1) {
-         setImageState(imageSlot,ns);
+         setImageState(imageSlot, ns);
          return;
       }
-      for (U32 i=0; i<ShapeBaseImageData::MaxGenericTriggers; ++i)
+      for (U32 i = 0; i < ShapeBaseImageData::MaxGenericTriggers; ++i)
       {
          if ((ns = stateData.transition.genericTrigger[i][image.genericTrigger[i]]) != -1) {
             setImageState(imageSlot, ns);
@@ -2706,7 +2733,7 @@ void ShapeBase::setImageState(U32 imageSlot, U32 newState,bool force)
       }
       //if (!imageData.usesEnergy)
          if ((ns = stateData.transition.ammo[image.ammo]) != -1) {
-            setImageState(imageSlot,ns);
+         setImageState(imageSlot, ns);
             return;
          }
       if ((ns = stateData.transition.target[image.target]) != -1) {
@@ -2722,11 +2749,11 @@ void ShapeBase::setImageState(U32 imageSlot, U32 newState,bool force)
          return;
       }
       if ((ns = stateData.transition.trigger[image.triggerDown]) != -1) {
-         setImageState(imageSlot,ns);
+         setImageState(imageSlot, ns);
          return;
       }
       if ((ns = stateData.transition.altTrigger[image.altTriggerDown]) != -1) {
-         setImageState(imageSlot,ns);
+         setImageState(imageSlot, ns);
          return;
       }
    }
@@ -2751,35 +2778,44 @@ void ShapeBase::setImageState(U32 imageSlot, U32 newState,bool force)
 
    // Apply recoil
    if (stateData.recoil != ShapeBaseImageData::StateData::NoRecoil)
-      onImageRecoil(imageSlot,stateData.recoil);
+      onImageRecoil(imageSlot, stateData.recoil);
 
    // Apply image state animation on mounting shape
    if (stateData.shapeSequence && stateData.shapeSequence[0])
    {
       onImageStateAnimation(imageSlot, stateData.shapeSequence, stateData.direction, stateData.shapeSequenceScale, stateData.timeoutValue);
    }
-
    // Delete any loooping sounds that were in the previous state.
-   if (lastState->sound && lastState->sound->getDescription()->mIsLooping)  
+   // this is the crazy bit =/ needs to know prev state in order to stop sounds.
+   // lastState does not return an id for the prev state so we keep track of it.
+   if (lastState->sound && lastState->sound->getSfxProfile()->getDescription()->mIsLooping)
    {  
-      for(Vector<SFXSource*>::iterator i = image.mSoundSources.begin(); i != image.mSoundSources.end(); i++)      
+      for (Vector<SFXSource*>::iterator i = image.mSoundSources.begin(); i != image.mSoundSources.end(); i++)
          SFX_DELETE((*i));    
 
       image.mSoundSources.clear();  
    }  
 
    // Play sound
-   if( stateData.sound && isGhost() )
+   if (isGhost())
+   {
+      if (stateData.sound)
    {
       const Point3F& velocity         = getVelocity();
-	   image.addSoundSource(SFX->createSource( stateData.sound, &getRenderTransform(), &velocity )); 
+         image.addSoundSource(SFX->createSource(stateData.sound->getSfxProfile(), &getRenderTransform(), &velocity));
+      }
+      if (stateData.soundTrack)
+      {
+         const Point3F& velocity = getVelocity();
+         image.addSoundSource(SFX->createSource(stateData.soundTrack, &getRenderTransform(), &velocity));
+      }
    }
 
    // Play animation
    updateAnimThread(imageSlot, imageShapeIndex, lastState);
    for (U32 i=0; i<ShapeBaseImageData::MaxShapes; ++i)
    {
-      if (!image.dataBlock->shapeIsValid[i] || i != imageShapeIndex && !image.doAnimateAllShapes)
+      if (!image.dataBlock->shapeIsValid[i] || (i != imageShapeIndex && !image.doAnimateAllShapes))
          continue;
 
       // Start spin thread
@@ -2834,7 +2870,7 @@ void ShapeBase::updateAnimThread(U32 imageSlot, S32 imageShapeIndex, ShapeBaseIm
    F32 randomPos = Platform::getRandom();
    for (U32 i=0; i<ShapeBaseImageData::MaxShapes; ++i)
    {
-      if (!image.dataBlock->shapeIsValid[i] || i != imageShapeIndex && !image.doAnimateAllShapes)
+      if (!image.dataBlock->shapeIsValid[i] || (i != imageShapeIndex && !image.doAnimateAllShapes))
          continue;
 
       if (image.animThread[i] && stateData.sequence[i] != -1) 
@@ -3076,7 +3112,7 @@ TICKAGAIN:
    U32 imageShapeIndex = getImageShapeIndex(image);
    for (U32 i=0; i<ShapeBaseImageData::MaxShapes; ++i)
    {
-      if (!image.dataBlock->shapeIsValid[i] || i != imageShapeIndex && !image.doAnimateAllShapes)
+      if (!image.dataBlock->shapeIsValid[i] || (i != imageShapeIndex && !image.doAnimateAllShapes))
          continue;
 
       if (image.spinThread[i])
@@ -3131,7 +3167,7 @@ void ShapeBase::updateImageAnimation(U32 imageSlot, F32 dt)
    // Advance animation threads
    for (U32 i=0; i<ShapeBaseImageData::MaxShapes; ++i)
    {
-      if (!image.dataBlock->shapeIsValid[i] || i != imageShapeIndex && !image.doAnimateAllShapes)
+      if (!image.dataBlock->shapeIsValid[i] || (i != imageShapeIndex && !image.doAnimateAllShapes))
          continue;
 
       if (image.ambientThread[i])

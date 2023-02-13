@@ -62,6 +62,7 @@ GuiTextEditSliderCtrl::GuiTextEditSliderCtrl()
    mFormat = StringTable->insert("%3.2f");
    mTextAreaHit = None;
    mFocusOnMouseWheel = false;
+   mMouseDownTime = 0.0f;
 }
 
 GuiTextEditSliderCtrl::~GuiTextEditSliderCtrl()
@@ -70,6 +71,7 @@ GuiTextEditSliderCtrl::~GuiTextEditSliderCtrl()
 
 void GuiTextEditSliderCtrl::initPersistFields()
 {
+   docsURL;
    addField("format",    TypeString,  Offset(mFormat, GuiTextEditSliderCtrl), "Character format type to place in the control.\n");
    addField("range",     TypePoint2F, Offset(mRange, GuiTextEditSliderCtrl), "Maximum vertical and horizontal range to allow in the control.\n");
    addField("increment", TypeF32,     Offset(mIncAmount,     GuiTextEditSliderCtrl), "How far to increment the slider on each step.\n");
@@ -355,7 +357,7 @@ void GuiTextEditSliderCtrl::onRender(Point2I offset, const RectI &updateRect)
                Point2I(start.x+14,midPoint.y),
                mProfile->mFontColor);
 
-   GFXVertexBufferHandle<GFXVertexPC> verts(GFX, 6, GFXBufferTypeVolatile);
+   GFXVertexBufferHandle<GFXVertexPCT> verts(GFX, 6, GFXBufferTypeVolatile);
    verts.lock();
 
    verts[0].color.set( 0, 0, 0 );

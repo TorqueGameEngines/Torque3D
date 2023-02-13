@@ -41,10 +41,10 @@ ClassChunker< SceneZoneSpace::ZoneSpaceRef > SceneZoneSpace::smZoneSpaceRefChunk
 
 SceneZoneSpace::SceneZoneSpace()
    : mManager( NULL ),
-     mZoneGroup( InvalidZoneGroup ),
      mZoneRangeStart( SceneZoneSpaceManager::InvalidZoneId ),
-     mZoneFlags( ZoneFlag_IsClosedOffSpace ),
+     mZoneGroup( InvalidZoneGroup ),
      mNumZones( 0 ),
+     mZoneFlags( ZoneFlag_IsClosedOffSpace ),
      mConnectedZoneSpaces( NULL )
 {
    VECTOR_SET_ASSOCIATION( mOccluders );
@@ -69,6 +69,7 @@ void SceneZoneSpace::onSceneRemove()
 
 void SceneZoneSpace::initPersistFields()
 {
+   docsURL;
    addGroup( "Zoning" );
 
       addProtectedField( "zoneGroup", TypeS32, Offset( mZoneGroup, SceneZoneSpace ),

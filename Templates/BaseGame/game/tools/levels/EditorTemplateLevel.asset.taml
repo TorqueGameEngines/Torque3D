@@ -1,0 +1,15 @@
+<LevelAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="EditorTemplateLevel"
+    LevelFile="@assetFile=EditorTemplateLevel.mis"
+    LevelName="EditorTemplateLevel"
+    isSubScene="false"
+    previewImageAsset0="@asset=ToolsModule:DefaultEditorLevel_preview_image"
+    previewImageAsset1="@asset=ToolsModule:DefaultEditorLevel_preview_image"
+    previewImageAsset2="@asset=ToolsModule:DefaultEditorLevel_preview_image"
+    previewImageAsset3="@asset=ToolsModule:DefaultEditorLevel_preview_image"
+    previewImageAsset4="@asset=ToolsModule:DefaultEditorLevel_preview_image"
+    previewImageAsset5="@asset=ToolsModule:DefaultEditorLevel_preview_image"
+    previewImageAsset6="@asset=ToolsModule:DefaultEditorLevel_preview_image"
+    VersionId="1" />

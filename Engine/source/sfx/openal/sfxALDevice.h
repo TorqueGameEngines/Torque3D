@@ -53,7 +53,15 @@ class SFXALDevice : public SFXDevice
       typedef SFXDevice Parent;
       friend class SFXALVoice; // mDistanceFactor, mRolloffFactor
 
-      SFXALDevice(   SFXProvider *provider, 
+      void printALInfo(ALCdevice* device);
+      void printHRTFInfo(ALCdevice* device);
+      void getEFXInfo(ALCdevice* device);
+      S32 getMaxSources();
+   
+      // Compatibility with pre openal 1.2
+      S32 getMaxSourcesOld();
+
+      SFXALDevice(   SFXProvider *provider,
                      const OPENALFNTABLE &openal, 
                      String name, 
                      bool useHardware, 
@@ -85,6 +93,17 @@ class SFXALDevice : public SFXDevice
       virtual void setDistanceModel( SFXDistanceModel model );
       virtual void setDopplerFactor( F32 factor );
       virtual void setRolloffFactor( F32 factor );
+#if defined(AL_ALEXT_PROTOTYPES)
+      //function for openAL to open slots
+      virtual void openSlots();
+      //slots
+      ALuint	effectSlot[4] = { 0 };
+      ALuint	effect[2] = { 0 };
+      ALuint   uLoop;
+      //get values from sfxreverbproperties and pass it to openal device
+      virtual void setReverb(const SFXReverbProperties& reverb);
+#endif
+      virtual void resetReverb() {}
 };
 
 #endif // _SFXALDEVICE_H_

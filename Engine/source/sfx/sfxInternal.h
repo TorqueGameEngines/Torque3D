@@ -324,7 +324,7 @@ class SFXWrapAroundBuffer : public SFXBuffer
 
       SFXWrapAroundBuffer( const ThreadSafeRef< SFXStream >& stream, SFXDescription* description );
       SFXWrapAroundBuffer( SFXDescription* description )
-         : Parent( description ), mBufferSize( 0 ) {}
+         : Parent( description ), mBufferSize( 0 ), mWriteOffset(0) {}
          
       virtual U32 getMemoryUsed() const { return mBufferSize; }
 };
@@ -442,7 +442,7 @@ inline bool isSFXThread()
 {
    ThreadSafeRef< SFXUpdateThread > sfxThread = UPDATE_THREAD();
 
-   U32 threadId;
+   dsize_t threadId;
    if( sfxThread != NULL )
       threadId = sfxThread->getId();
    else

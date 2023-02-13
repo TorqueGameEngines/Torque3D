@@ -39,18 +39,16 @@
 #include "materials/materialFeatureTypes.h"
 #include "math/util/frustum.h"
 #include "scene/sceneObject.h"
-#include "renderInstance/renderPrePassMgr.h"
+#include "renderInstance/renderDeferredMgr.h"
 #include "shaderGen/featureMgr.h"
 #include "shaderGen/HLSL/shaderFeatureHLSL.h"
 #include "shaderGen/HLSL/bumpHLSL.h"
-#include "shaderGen/HLSL/pixSpecularHLSL.h"
 #include "lighting/basic/blTerrainSystem.h"
 #include "lighting/common/projectedShadow.h"
 
 #if defined( TORQUE_OPENGL )
 #include "shaderGen/GLSL/shaderFeatureGLSL.h"
 #include "shaderGen/GLSL/bumpGLSL.h"
-#include "shaderGen/GLSL/pixSpecularGLSL.h"
 #endif
 
 
@@ -167,7 +165,7 @@ void BasicLightManager::activate( SceneManager *sceneManager )
          FEATUREMGR->registerFeature( MFT_ToneMap, new TonemapFeatGLSL );
          FEATUREMGR->registerFeature( MFT_NormalMap, new BumpFeatGLSL );
          FEATUREMGR->registerFeature( MFT_RTLighting, new RTLightingFeatGLSL );
-         FEATUREMGR->registerFeature( MFT_PixSpecular, new PixelSpecularGLSL );
+         FEATUREMGR->registerFeature(MFT_ReflectionProbes, new ReflectionProbeFeatGLSL);
       #endif
    }
    else
@@ -177,20 +175,20 @@ void BasicLightManager::activate( SceneManager *sceneManager )
          FEATUREMGR->registerFeature( MFT_ToneMap, new TonemapFeatHLSL );
          FEATUREMGR->registerFeature( MFT_NormalMap, new BumpFeatHLSL );
          FEATUREMGR->registerFeature( MFT_RTLighting, new RTLightingFeatHLSL );
-         FEATUREMGR->registerFeature( MFT_PixSpecular, new PixelSpecularHLSL );
+         FEATUREMGR->registerFeature(MFT_ReflectionProbes, new ReflectionProbeFeatHLSL);
       #endif
    }
 
    FEATUREMGR->unregisterFeature( MFT_MinnaertShading );
    FEATUREMGR->unregisterFeature( MFT_SubSurface );
 
-   // First look for the prepass bin...
-   RenderPrePassMgr *prePassBin = _findPrePassRenderBin();
+   // First look for the deferred bin...
+   RenderDeferredMgr *deferredBin = _findDeferredRenderBin();
 
    /*
    // If you would like to use forward shading, and have a linear depth pre-pass
    // than un-comment this code block.
-   if ( !prePassBin )
+   if ( !deferredBin )
    {
       Vector<GFXFormat> formats;
       formats.push_back( GFXFormatR32F );
@@ -204,19 +202,19 @@ void BasicLightManager::activate( SceneManager *sceneManager )
       // Uncomment this for a no-color-write z-fill pass. 
       //linearDepthFormat = GFXFormat_COUNT;
 
-      prePassBin = new RenderPrePassMgr( linearDepthFormat != GFXFormat_COUNT, linearDepthFormat );
-      prePassBin->registerObject();
-      rpm->addManager( prePassBin );
+      deferredBin = new RenderDeferredMgr( linearDepthFormat != GFXFormat_COUNT, linearDepthFormat );
+      deferredBin->registerObject();
+      rpm->addManager( deferredBin );
    }
    */
-   mPrePassRenderBin = prePassBin;
+   mDeferredRenderBin = deferredBin;
 
-   // If there is a prepass bin
-   MATMGR->setPrePassEnabled( mPrePassRenderBin.isValid() );
-   sceneManager->setPostEffectFog( mPrePassRenderBin.isValid() && mPrePassRenderBin->getTargetChainLength() > 0  );
+   // If there is a deferred bin
+   MATMGR->setDeferredEnabled( mDeferredRenderBin.isValid() );
+   sceneManager->setPostEffectFog( mDeferredRenderBin.isValid() && mDeferredRenderBin->getTargetChainLength() > 0  );
 
-   // Tell the material manager that we don't use prepass.
-   MATMGR->setPrePassEnabled( false );
+   // Tell the material manager that we don't use deferred.
+   MATMGR->setDeferredEnabled( false );
 
    GFXShader::addGlobalMacro( "TORQUE_BASIC_LIGHTING" );
 
@@ -241,9 +239,9 @@ void BasicLightManager::deactivate()
    }
    mConstantLookup.clear();
 
-   if ( mPrePassRenderBin )
-      mPrePassRenderBin->deleteObject();
-   mPrePassRenderBin = NULL;
+   if ( mDeferredRenderBin )
+      mDeferredRenderBin->deleteObject();
+   mDeferredRenderBin = NULL;
 
    GFXShader::removeGlobalMacro( "TORQUE_BASIC_LIGHTING" );
 
@@ -304,10 +302,13 @@ BasicLightManager::LightingShaderConstants::LightingShaderConstants()
       mLightPosition( NULL ),
       mLightDiffuse( NULL ),
       mLightAmbient( NULL ),
-      mLightInvRadiusSq( NULL ),
+      mLightConfigDataSC( NULL ),
       mLightSpotDir( NULL ),
-      mLightSpotAngle( NULL ),
-	  mLightSpotFalloff( NULL )
+      mLightSpotParamsSC( NULL ),
+      mHasVectorLightSC(NULL),
+      mVectorLightDirectionSC(NULL),
+      mVectorLightColorSC(NULL),
+      mVectorLightBrightnessSC(NULL)
 {
 }
 
@@ -333,11 +334,15 @@ void BasicLightManager::LightingShaderConstants::init(GFXShader* shader)
 
    mLightPosition = shader->getShaderConstHandle( ShaderGenVars::lightPosition );
    mLightDiffuse = shader->getShaderConstHandle( ShaderGenVars::lightDiffuse);
-   mLightInvRadiusSq = shader->getShaderConstHandle( ShaderGenVars::lightInvRadiusSq );
+   mLightConfigDataSC = shader->getShaderConstHandle( ShaderGenVars::lightConfigData );
    mLightAmbient = shader->getShaderConstHandle( ShaderGenVars::lightAmbient );   
    mLightSpotDir = shader->getShaderConstHandle( ShaderGenVars::lightSpotDir );
-   mLightSpotAngle = shader->getShaderConstHandle( ShaderGenVars::lightSpotAngle );
-   mLightSpotFalloff = shader->getShaderConstHandle( ShaderGenVars::lightSpotFalloff );
+   mLightSpotParamsSC = shader->getShaderConstHandle( ShaderGenVars::lightSpotParams );
+
+   mHasVectorLightSC = shader->getShaderConstHandle(ShaderGenVars::hasVectorLight);
+   mVectorLightDirectionSC = shader->getShaderConstHandle(ShaderGenVars::vectorLightDirection);
+   mVectorLightColorSC = shader->getShaderConstHandle(ShaderGenVars::vectorLightColor);
+   mVectorLightBrightnessSC = shader->getShaderConstHandle(ShaderGenVars::vectorLightBrightness);
 
    mInit = true;
 }
@@ -399,9 +404,12 @@ void BasicLightManager::setLightInfo(  ProcessedMaterial* pmat,
                         mLastConstants->mLightPosition,
                         mLastConstants->mLightDiffuse,
                         mLastConstants->mLightAmbient,
-                        mLastConstants->mLightInvRadiusSq,
+                        mLastConstants->mLightConfigDataSC,
                         mLastConstants->mLightSpotDir,
-                        mLastConstants->mLightSpotAngle,
-						mLastConstants->mLightSpotFalloff,
+                        mLastConstants->mLightSpotParamsSC,
+                        mLastConstants->mHasVectorLightSC,
+                        mLastConstants->mVectorLightDirectionSC,
+                        mLastConstants->mVectorLightColorSC,
+                        mLastConstants->mVectorLightBrightnessSC,
                         shaderConsts );
 }

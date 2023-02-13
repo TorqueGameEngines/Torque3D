@@ -54,9 +54,6 @@ static U32 sClientCollisionMask =
       StaticShapeObjectType | VehicleObjectType | 
       VehicleBlockerObjectType;
 
-// Gravity constant
-static F32 sWheeledVehicleGravity = -20;
-
 // Misc. sound constants
 static F32 sMinSquealVolume = 0.05f;
 static F32 sIdleEngineVolume = 0.2f;
@@ -78,8 +75,8 @@ ConsoleDocClass( WheeledVehicleTire,
 
 WheeledVehicleTire::WheeledVehicleTire()
 {
-   shape = 0;
-   shapeName = "";
+   INIT_ASSET(Shape);
+
    staticFriction = 1;
    kineticFriction = 0.5f;
    restitution = 1;
@@ -97,21 +94,17 @@ bool WheeledVehicleTire::preload(bool server, String &errorStr)
 {
    // Load up the tire shape.  ShapeBase has an option to force a
    // CRC check, this is left out here, but could be easily added.
-   if (shapeName && shapeName[0]) 
+   if (!mShape)
    {
-
-      // Load up the shape resource
-      shape = ResourceManager::get().load(shapeName);
-      if (!bool(shape)) 
-      {
-         errorStr = String::ToString("WheeledVehicleTire: Couldn't load shape \"%s\"",shapeName);
-         return false;
-      }
-
+      errorStr = String::ToString("WheeledVehicleTire: Couldn't load shape \"%s\"", mShapeAssetId);
+      return false;
+   }
+   else
+   {
       // Determinw wheel radius from the shape's bounding box.
       // The tire should be built with it's hub axis along the
       // object's Y axis.
-      radius = shape->bounds.len_z() / 2;
+      radius = mShape->mBounds.len_z() / 2;
    }
 
    return true;
@@ -119,8 +112,9 @@ bool WheeledVehicleTire::preload(bool server, String &errorStr)
 
 void WheeledVehicleTire::initPersistFields()
 {
-   addField( "shapeFile",TypeShapeFilename,Offset(shapeName,WheeledVehicleTire),
-      "The path to the shape to use for the wheel." );
+   docsURL;
+   INITPERSISTFIELD_SHAPEASSET(Shape, WheeledVehicleTire, "The shape to use for the wheel.");
+
    addField( "mass", TypeF32, Offset(mass, WheeledVehicleTire),
       "The mass of the wheel.\nCurrently unused." );
    addField( "radius", TypeF32, Offset(radius, WheeledVehicleTire),
@@ -184,7 +178,8 @@ void WheeledVehicleTire::packData(BitStream* stream)
 {
    Parent::packData(stream);
 
-   stream->writeString(shapeName);
+   PACKDATA_ASSET(Shape);
+
    stream->write(mass);
    stream->write(staticFriction);
    stream->write(kineticFriction);
@@ -202,7 +197,8 @@ void WheeledVehicleTire::unpackData(BitStream* stream)
 {
    Parent::unpackData(stream);
 
-   shapeName = stream->readSTString();
+   UNPACKDATA_ASSET(Shape);
+
    stream->read(&mass);
    stream->read(&staticFriction);
    stream->read(&kineticFriction);
@@ -238,6 +234,7 @@ WheeledVehicleSpring::WheeledVehicleSpring()
 
 void WheeledVehicleSpring::initPersistFields()
 {
+   docsURL;
    addField( "length", TypeF32, Offset(length, WheeledVehicleSpring),
       "@brief Maximum spring length. ie. how far the wheel can extend from the "
       "root hub position.\n\n"
@@ -294,6 +291,17 @@ ConsoleDocClass( WheeledVehicleData,
    "@ingroup Vehicles\n"
 );
 
+typedef WheeledVehicleData::Sounds WheeledVehicleSoundsEnum;
+DefineEnumType(WheeledVehicleSoundsEnum);
+
+ImplementEnumType(WheeledVehicleSoundsEnum, "enum types.\n"
+   "@ingroup WheeledVehicleData\n\n")
+   { WheeledVehicleSoundsEnum::JetSound,          "JetSound", "..." },
+   { WheeledVehicleSoundsEnum::EngineSound,       "EngineSound", "..." },
+   { WheeledVehicleSoundsEnum::SquealSound,       "SquealSound", "..." },
+   { WheeledVehicleSoundsEnum::WheelImpactSound,  "WheelImpactSound", "..." },
+EndImplementEnumType;
+
 WheeledVehicleData::WheeledVehicleData()
 {
    tireEmitter = 0;
@@ -304,9 +312,9 @@ WheeledVehicleData::WheeledVehicleData()
    brakeLightSequence = -1;
    steeringSequence = -1;
    wheelCount = 0;
-
+   dMemset(&wheel, 0, sizeof(wheel));
    for (S32 i = 0; i < MaxSounds; i++)
-      sound[i] = 0;
+      INIT_SOUNDASSET_ARRAY(WheeledVehicleSounds, i);
 }
 
 
@@ -339,8 +347,12 @@ bool WheeledVehicleData::preload(bool server, String &errorStr)
    // Resolve objects transmitted from server
    if (!server) {
       for (S32 i = 0; i < MaxSounds; i++)
-         if( !sfxResolve( &sound[ i ], errorStr ) )
-            return false;
+      {
+         if (getWheeledVehicleSounds(i) != StringTable->EmptyString())
+         {
+            _setWheeledVehicleSounds(getWheeledVehicleSounds(i), i);
+         }
+      }
 
       if (tireEmitter)
          Sim::findObject(SimObjectId((uintptr_t)tireEmitter),tireEmitter);
@@ -400,7 +412,7 @@ bool WheeledVehicleData::preload(bool server, String &errorStr)
       MatrixF imat(1);
       SphereF sphere;
       sphere.center = mShape->center;
-      sphere.radius = mShape->radius;
+      sphere.radius = mShape->mRadius;
       PlaneExtractorPolyList polyList;
       polyList.mPlaneList = &rigidBody.mPlaneList;
       polyList.setTransform(&imat, Point3F(1,1,1));
@@ -438,20 +450,20 @@ bool WheeledVehicleData::mirrorWheel(Wheel* we)
 
 void WheeledVehicleData::initPersistFields()
 {
-   addField( "jetSound", TYPEID< SFXTrack >(), Offset(sound[JetSound], WheeledVehicleData),
-      "Looping sound played when the vehicle is jetting." );
-   addField( "engineSound", TYPEID< SFXTrack >(), Offset(sound[EngineSound], WheeledVehicleData),
-      "@brief Looping engine sound.\n\n"
-      "The pitch is dynamically adjusted based on the current engine RPM" );
-   addField("squealSound", TYPEID< SFXTrack >(), Offset(sound[SquealSound], WheeledVehicleData),
-      "@brief Looping sound played while any of the wheels is slipping.\n\n"
-      "The volume is dynamically adjusted based on how much the wheels are slipping." );
-   addField("WheelImpactSound", TYPEID< SFXTrack >(), Offset(sound[WheelImpactSound], WheeledVehicleData),
-      "Sound played when the wheels impact the ground.\nCurrently unused." );
+   docsURL;
+   Parent::initPersistFields();
 
-   addField("tireEmitter",TYPEID< ParticleEmitterData >(), Offset(tireEmitter, WheeledVehicleData),
+   addGroup("Particle Effects");
+   addField("tireEmitter", TYPEID< ParticleEmitterData >(), Offset(tireEmitter, WheeledVehicleData),
       "ParticleEmitterData datablock used to generate particles from each wheel "
       "when the vehicle is moving and the wheel is in contact with the ground.");
+   endGroup("Particle Effects");
+
+   addGroup("Sounds");
+   INITPERSISTFIELD_SOUNDASSET_ENUMED(WheeledVehicleSounds, WheeledVehicleSoundsEnum, MaxSounds, WheeledVehicleData, "Sounds related to wheeled vehicle.");
+   endGroup("Sounds");
+
+   addGroup("Steering");
    addField("maxWheelSpeed", TypeF32, Offset(maxWheelSpeed, WheeledVehicleData),
       "@brief Maximum linear velocity of each wheel.\n\n"
       "This caps the maximum speed of the vehicle." );
@@ -465,8 +477,7 @@ void WheeledVehicleData::initPersistFields()
    addField("brakeTorque", TypeF32, Offset(brakeTorque, WheeledVehicleData),
       "@brief Torque applied when braking.\n\n"
       "This controls how fast the vehicle will stop when the brakes are applied." );
-   
-   Parent::initPersistFields();
+   endGroup("Steering");
 }
 
 
@@ -477,11 +488,13 @@ void WheeledVehicleData::packData(BitStream* stream)
    Parent::packData(stream);
 
    if (stream->writeFlag(tireEmitter))
-      stream->writeRangedU32(packed? SimObjectId((uintptr_t)tireEmitter):
+      stream->writeRangedU32(mPacked ? SimObjectId((uintptr_t)tireEmitter):
          tireEmitter->getId(),DataBlockObjectIdFirst,DataBlockObjectIdLast);
 
    for (S32 i = 0; i < MaxSounds; i++)
-      sfxWrite( stream, sound[ i ] );
+   {
+      PACKDATA_SOUNDASSET_ARRAY(WheeledVehicleSounds, i);
+   }
 
    stream->write(maxWheelSpeed);
    stream->write(engineTorque);
@@ -494,11 +507,13 @@ void WheeledVehicleData::unpackData(BitStream* stream)
    Parent::unpackData(stream);
 
    tireEmitter = stream->readFlag()?
-      (ParticleEmitterData*) stream->readRangedU32(DataBlockObjectIdFirst,
+      (ParticleEmitterData*)(uintptr_t)stream->readRangedU32(DataBlockObjectIdFirst,
          DataBlockObjectIdLast): 0;
 
    for (S32 i = 0; i < MaxSounds; i++)
-      sfxRead( stream, &sound[ i ] );
+   {
+      UNPACKDATA_SOUNDASSET_ARRAY(WheeledVehicleSounds, i);
+   }
 
    stream->read(&maxWheelSpeed);
    stream->read(&engineTorque);
@@ -548,6 +563,7 @@ WheeledVehicle::~WheeledVehicle()
 
 void WheeledVehicle::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 
@@ -560,8 +576,6 @@ bool WheeledVehicle::onAdd()
       return false;
 
    addToScene();
-   if (isServerObject())
-      scriptOnAdd();
    return true;
 }
 
@@ -583,7 +597,6 @@ void WheeledVehicle::onRemove()
    SFX_DELETE( mSquealSound );
 
    //
-   scriptOnRemove();
    removeFromScene();
    Parent::onRemove();
 }
@@ -683,14 +696,14 @@ bool WheeledVehicle::onNewDataBlock(GameBaseData* dptr, bool reload)
       SFX_DELETE( mSquealSound );
       SFX_DELETE( mJetSound );
 
-      if ( mDataBlock->sound[WheeledVehicleData::EngineSound] )
-         mEngineSound = SFX->createSource( mDataBlock->sound[WheeledVehicleData::EngineSound], &getTransform() );
+      if ( mDataBlock->getWheeledVehicleSounds(WheeledVehicleData::EngineSound) )
+         mEngineSound = SFX->createSource( mDataBlock->getWheeledVehicleSoundsProfile(WheeledVehicleData::EngineSound), &getTransform() );
 
-      if ( mDataBlock->sound[WheeledVehicleData::SquealSound] )
-         mSquealSound = SFX->createSource( mDataBlock->sound[WheeledVehicleData::SquealSound], &getTransform() );
+      if ( mDataBlock->getWheeledVehicleSounds(WheeledVehicleData::SquealSound) )
+         mSquealSound = SFX->createSource( mDataBlock->getWheeledVehicleSoundsProfile(WheeledVehicleData::SquealSound), &getTransform() );
 
-      if ( mDataBlock->sound[WheeledVehicleData::JetSound] )
-         mJetSound = SFX->createSource( mDataBlock->sound[WheeledVehicleData::JetSound], &getTransform() );
+      if ( mDataBlock->getWheeledVehicleSounds(WheeledVehicleData::JetSound) )
+         mJetSound = SFX->createSource( mDataBlock->getWheeledVehicleSoundsProfile(WheeledVehicleData::JetSound), &getTransform() );
    }
 
    scriptOnNewDataBlock();
@@ -797,7 +810,7 @@ void WheeledVehicle::advanceTime(F32 dt)
 
    // Stick the wheels to the ground.  This is purely so they look
    // good while the vehicle is being interpolated.
-   extendWheels();
+   //extendWheels();
 
    // Update wheel angular position and slip, this is a client visual
    // feature only, it has no affect on the physics.
@@ -852,6 +865,7 @@ void WheeledVehicle::updateForces(F32 dt)
 
    extendWheels();
 
+   if (mDisableMove) return;
    F32 aMomentum = mMass / mDataBlock->wheelCount;
 
    // Get the current matrix and extact vectors
@@ -897,8 +911,7 @@ void WheeledVehicle::updateForces(F32 dt)
    // Integrate forces, we'll do this ourselves here instead of
    // relying on the rigid class which does it during movement.
    Wheel* wend = &mWheel[mDataBlock->wheelCount];
-   mRigid.force.set(0, 0, 0);
-   mRigid.torque.set(0, 0, 0);
+   mRigid.clearForces();
 
    // Calculate vertical load for friction.  Divide up the spring
    // forces across all the wheels that are in contact with
@@ -1086,8 +1099,11 @@ void WheeledVehicle::updateForces(F32 dt)
    if (mJetting)
       mRigid.force += by * mDataBlock->jetForce;
 
+   // Add in force from physical zones...
+   mRigid.force += mAppliedForce;
+
    // Container drag & buoyancy
-   mRigid.force  += Point3F(0, 0, -mBuoyancy * sWheeledVehicleGravity * mRigid.mass);
+   mRigid.force  += Point3F(0, 0, mRigid.mass * mNetGravity);
    mRigid.force  -= mRigid.linVelocity * mDrag;
    mRigid.torque -= mRigid.angMomentum * mDrag;
 
@@ -1096,17 +1112,13 @@ void WheeledVehicle::updateForces(F32 dt)
    if (mRigid.atRest && (mRigid.force.len() || mRigid.torque.len()))
       mRigid.atRest = false;
 
-   // Gravity
-   mRigid.force += Point3F(0, 0, sWheeledVehicleGravity * mRigid.mass);
-
    // Integrate and update velocity
    mRigid.linMomentum += mRigid.force * dt;
    mRigid.angMomentum += mRigid.torque * dt;
    mRigid.updateVelocity();
 
    // Since we've already done all the work, just need to clear this out.
-   mRigid.force.set(0, 0, 0);
-   mRigid.torque.set(0, 0, 0);
+   mRigid.clearForces();
 
    // If we're still atRest, make sure we're not accumulating anything
    if (mRigid.atRest)
@@ -1232,7 +1244,7 @@ void WheeledVehicle::updateWheelParticles(F32 dt)
 
             if( material)//&& material->mShowDust )
             {
-               ColorF colorList[ ParticleData::PDC_NUM_KEYS ];
+               LinearColorF colorList[ ParticleData::PDC_NUM_KEYS ];
 
                for( U32 x = 0; x < getMin( Material::NUM_EFFECT_COLOR_STAGES, ParticleData::PDC_NUM_KEYS ); ++ x )
                   colorList[ x ] = material->mEffectColor[ x ];
@@ -1541,8 +1553,8 @@ void WheeledVehicle::unpackUpdate(NetConnection *con, BitStream *stream)
 
             // Create an instance of the tire for rendering
             delete wheel->shapeInstance;
-            wheel->shapeInstance = (wheel->tire->shape == NULL) ? 0:
-               new TSShapeInstance(wheel->tire->shape);
+            wheel->shapeInstance = (wheel->tire->mShape == NULL) ? 0:
+               new TSShapeInstance(wheel->tire->mShape);
          }
       }
    }

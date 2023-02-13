@@ -78,16 +78,16 @@ EndImplementEnumType;
 
 
 ForestBrushTool::ForestBrushTool()
- : mSize( 5.0f ),
+ : mRandom( Platform::getRealMilliseconds() + 1 ),
+   mSize( 5.0f ),
    mPressure( 0.1f ),
    mHardness( 1.0f ),
-   mDrawBrush( false ),
-   mCurrAction( NULL ),
-   mStrokeEvent( 0 ),
-   mBrushDown( false ),
-   mColor( ColorI::WHITE ),
    mMode( Paint ),
-   mRandom( Platform::getRealMilliseconds() + 1 )
+   mColor( ColorI::WHITE ),
+   mBrushDown( false ),
+   mDrawBrush( false ),
+   mStrokeEvent( 0 ),
+   mCurrAction( NULL )
 {	
 }
 
@@ -104,7 +104,8 @@ ConsoleDocClass( ForestBrushTool,
 );
 
 void ForestBrushTool::initPersistFields()
-{  
+{
+   docsURL;
    addGroup( "ForestBrushTool" );
       
       addField( "mode", TYPEID< BrushMode >(), Offset( mMode, ForestBrushTool) );
@@ -588,7 +589,8 @@ void ForestBrushTool::_collectElements()
    if ( !Sim::findObject( "ForestEditBrushTree", brushTree ) )
       return;
       
-   const char* objectIdList = Con::executef( brushTree, "getSelectedObjectList" );
+   ConsoleValue cValue = Con::executef( brushTree, "getSelectedObjectList" );
+   const char* objectIdList = cValue.getString();
 
    // Collect those objects in a vector and mark them as selected.
 
@@ -609,9 +611,14 @@ void ForestBrushTool::_collectElements()
    }
 
    // Find all ForestBrushElements that are directly or indirectly selected.
+   SimSet* brushSet;
+   if (!Sim::findObject("ForestBrushSet", brushSet))
+   {
+      Con::errorf("ForestBrushTool::_collectElements() - could not find ForestBrushSet!");
+      return;
+   }
 
-   SimGroup *brushGroup = ForestBrush::getGroup();
-   brushGroup->findObjectByCallback( findSelectedElements, mElements );
+   brushSet->findObjectByCallback( findSelectedElements, mElements );
 
    // We just needed to flag these objects as selected for the benefit of our
    // findSelectedElements callback, we can now mark them un-selected again.
@@ -682,7 +689,7 @@ bool ForestBrushTool::getGroundAt( const Point3F &worldPt, F32 *zValueOut, Vecto
    return true;
 }
 
-DefineConsoleMethod( ForestBrushTool, collectElements, void, (), , "" )
+DefineEngineMethod( ForestBrushTool, collectElements, void, (), , "" )
 {
    object->collectElements();
 }

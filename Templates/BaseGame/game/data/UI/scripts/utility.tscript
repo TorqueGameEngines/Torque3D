@@ -1,0 +1,132 @@
+function getButtonBitmap(%device, %button)
+{
+   if(%device $= "gamepad")
+   {
+      //In the event we passed in a generic gamepad device name, we'll try fetching the actual device here
+      %device = SDLInputManager::JoystickNameForIndex(0);
+      
+      //If we couldn't figure out what it was, just use the generic Xbox images
+      if(%device $= "")
+         %device = "Xbox";
+   }
+   
+   %assetId = "";
+   if(%device $= "PS4")
+   { 
+      %assetId = "UI:PS4_";
+      
+      if(%button $= "A" || %button $= "btn_a")
+         %assetId = %assetId @ "Cross";
+      else if(%button $= "B" || %button $= "btn_b")
+         %assetId = %assetId @ "Circle";
+      else if(%button $= "X" || %button $= "btn_x")
+         %assetId = %assetId @ "Square";
+      else if(%button $= "Y" || %button $= "btn_y")
+         %assetId = %assetId @ "Triangle";
+      else if(%button $= "LB")
+         %assetId = %assetId @ "L1";
+      else if(%button $= "LT")
+         %assetId = %assetId @ "L2";
+      else if(%button $= "RB")
+         %assetId = %assetId @ "R1";
+      else if(%button $= "RT")
+         %assetId = %assetId @ "R2";
+      else if(%button $= "thumbrx" || %button $= "thumbry")
+         %assetId = %assetId @ "Right_Stick";
+      else if(%button $= "thumblx" || %button $= "thumbly")
+         %assetId = %assetId @ "Left_Stick";
+      else if(%button $= "start")
+         %assetId = %assetId @ "Options";
+      else if(%button $= "back")
+         %assetId = %assetId @ "Share";   
+      else if(%button $= "dpadu")
+         %assetId = %assetId @ "Dpad_Up";  
+      else if(%button $= "dpadd")
+         %assetId = %assetId @ "Dpad_Down";  
+      else if(%button $= "dpadl")
+         %assetId = %assetId @ "Dpad_Left";  
+      else if(%button $= "dpadr")
+         %assetId = %assetId @ "Dpad_Right";  
+      
+      %assetId = %assetId @ "_image";
+   }
+   else if(%device $= "Switch")
+   {
+      %assetId = "UI:Switch_";
+      
+      if(%button $= "A" || %button $= "btn_a")
+         %assetId = %assetId @ "B";
+      else if(%button $= "B" || %button $= "btn_b")
+         %assetId = %assetId @ "A";
+      else if(%button $= "X" || %button $= "btn_x")
+         %assetId = %assetId @ "Y";
+      else if(%button $= "Y" || %button $= "btn_y")
+         %assetId = %assetId @ "X";
+      else if(%button $= "LB")
+         %assetId = %assetId @ "LB";
+      else if(%button $= "LT")
+         %assetId = %assetId @ "LT";
+      else if(%button $= "RB")
+         %assetId = %assetId @ "RB";
+      else if(%button $= "RT")
+         %assetId = %assetId @ "RT";
+      else if(%button $= "thumbrx" || %button $= "thumbry")
+         %assetId = %assetId @ "Right_Stick";
+      else if(%button $= "thumblx" || %button $= "thumbly")
+         %assetId = %assetId @ "Left_Stick";
+      else if(%button $= "start")
+         %assetId = %assetId @ "Plus";
+      else if(%button $= "back")
+         %assetId = %assetId @ "Minus";   
+      else if(%button $= "dpadu")
+         %assetId = %assetId @ "Dpad_Up";  
+      else if(%button $= "dpadd")
+         %assetId = %assetId @ "Dpad_Down";  
+      else if(%button $= "dpadl")
+         %assetId = %assetId @ "Dpad_Left";  
+      else if(%button $= "dpadr")
+         %assetId = %assetId @ "Dpad_Right"; 
+         
+      %assetId = %assetId @ "_image";
+   }
+   else if(%device $= "Keyboard" || %device $= "Mouse")
+   {
+      %assetId = "UI:Keyboard_Black_" @ %button @ "_image";
+   }
+   else if(%device !$= "")
+   {
+      %assetId = "UI:Xbox_";
+      
+      if(%button $= "btn_a")
+         %assetId = %assetId @ "B";
+      else if(%button $= "btn_b")
+         %assetId = %assetId @ "A";
+      else if(%button $= "btn_x")
+         %assetId = %assetId @ "Y";
+      else if(%button $= "btn_y")
+         %assetId = %assetId @ "X";
+      else if(%button $= "thumbrx" || %button $= "thumbry")
+         %assetId = %assetId @ "Right_Stick";
+      else if(%button $= "thumblx" || %button $= "thumbly")
+         %assetId = %assetId @ "Left_Stick";
+      else if(%button $= "start")
+         %assetId = %assetId @ "Menu";
+      else if(%button $= "back")
+         %assetId = %assetId @ "Windows";   
+      else if(%button $= "dpadu")
+         %assetId = %assetId @ "Dpad_Up";  
+      else if(%button $= "dpadd")
+         %assetId = %assetId @ "Dpad_Down";  
+      else if(%button $= "dpadl")
+         %assetId = %assetId @ "Dpad_Left";  
+      else if(%button $= "dpadr")
+         %assetId = %assetId @ "Dpad_Right"; 
+         
+      %assetId = %assetId @ "_image";
+   }
+   
+   if(!AssetDatabase.isDeclaredAsset(%assetId))
+      %assetId = "UI:Keyboard_Black_Blank_image";
+   
+   return %assetId;
+}

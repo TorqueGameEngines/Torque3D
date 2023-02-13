@@ -47,6 +47,12 @@
 #ifndef _GFXSHADER_H_
 #include "gfx/gfxShader.h"
 #endif
+#ifndef _GFXOCCLUSIONQUERY_H_
+#include "gfx/gfxOcclusionQuery.h"
+#endif
+#ifndef _PLATFORM_PLATFORMTIMER_H_
+#include "platform/platformTimer.h"
+#endif
 
 class ShadowMapManager;
 class SceneManager;
@@ -58,7 +64,6 @@ struct SceneData;
 class GFXShaderConstBuffer;
 class GFXShaderConstHandle;
 class GFXShader;
-class GFXOcclusionQuery;
 class LightManager;
 class RenderPassManager;
 
@@ -77,15 +82,18 @@ struct LightingShaderConstants
    
    // NOTE: These are the shader constants used for doing 
    // lighting  during the forward pass.  Do not confuse 
-   // these for the prepass lighting constants which are 
+   // these for the deferred lighting constants which are 
    // used from AdvancedLightBinManager.
    GFXShaderConstHandle *mLightPositionSC;
    GFXShaderConstHandle *mLightDiffuseSC;
    GFXShaderConstHandle *mLightAmbientSC;
-   GFXShaderConstHandle *mLightInvRadiusSqSC;
+   GFXShaderConstHandle *mLightConfigDataSC;
    GFXShaderConstHandle *mLightSpotDirSC;
-   GFXShaderConstHandle *mLightSpotAngleSC;
-   GFXShaderConstHandle *mLightSpotFalloffSC;
+
+   GFXShaderConstHandle* mHasVectorLightSC;
+   GFXShaderConstHandle* mVectorLightDirectionSC;
+   GFXShaderConstHandle* mVectorLightColorSC;
+   GFXShaderConstHandle* mVectorLightBrightnessSC;
 
    GFXShaderConstHandle* mShadowMapSC;
    GFXShaderConstHandle* mShadowMapSizeSC;
@@ -94,14 +102,6 @@ struct LightingShaderConstants
 
    GFXShaderConstHandle* mRandomDirsConst;
    GFXShaderConstHandle* mShadowSoftnessConst;
-
-   GFXShaderConstHandle* mWorldToLightProjSC;
-   GFXShaderConstHandle* mViewToLightProjSC;
-
-   GFXShaderConstHandle* mScaleXSC;
-   GFXShaderConstHandle* mScaleYSC;
-   GFXShaderConstHandle* mOffsetXSC;
-   GFXShaderConstHandle* mOffsetYSC;
    GFXShaderConstHandle* mAtlasXOffsetSC;
    GFXShaderConstHandle* mAtlasYOffsetSC;
    GFXShaderConstHandle* mAtlasScaleSC;
@@ -109,10 +109,18 @@ struct LightingShaderConstants
    // fadeStartLength.x = Distance in eye space to start fading shadows
    // fadeStartLength.y = 1 / Length of fade
    GFXShaderConstHandle* mFadeStartLength;
-   GFXShaderConstHandle* mFarPlaneScalePSSM;
    GFXShaderConstHandle* mOverDarkFactorPSSM;
 
    GFXShaderConstHandle* mTapRotationTexSC;
+
+   // Static Specific:   
+   GFXShaderConstHandle* mWorldToLightProjSC;
+   GFXShaderConstHandle* mViewToLightProjSC;
+   GFXShaderConstHandle* mScaleXSC;
+   GFXShaderConstHandle* mScaleYSC;
+   GFXShaderConstHandle* mOffsetXSC;
+   GFXShaderConstHandle* mOffsetYSC;
+   GFXShaderConstHandle* mFarPlaneScalePSSM;
 
    LightingShaderConstants();
    ~LightingShaderConstants();
@@ -147,19 +155,11 @@ public:
    virtual ~LightShadowMap();
 
    void render(   RenderPassManager* renderPass,
-                  const SceneRenderState *diffuseState );
-
-   U32 getLastUpdate() const { return mLastUpdate; }
+                  const SceneRenderState *diffuseState);
 
    //U32 getLastVisible() const { return mLastVisible; }
 
    bool isViewDependent() const { return mIsViewDependent; }
-
-   bool wasOccluded() const { return mWasOccluded; }
-
-   void preLightRender();
-
-   void postLightRender();
 
    void updatePriority( const SceneRenderState *state, U32 currTimeMs );
 
@@ -235,20 +235,8 @@ protected:
    /// be skipped if visible and within active range.
    bool mIsViewDependent;
 
-   /// The time this shadow was last updated.
-   U32 mLastUpdate;
-
    /// The time this shadow was last culled and prioritized.
    U32 mLastCull;
-
-   /// The shadow occlusion query used when the light is
-   /// rendered to determine if any pixel of it is visible.
-   GFXOcclusionQuery *mVizQuery;
-
-   /// If true the light was occluded by geometry the
-   /// last frame it was updated.
-   //the last frame.
-   bool mWasOccluded;
 
    F32 mLastScreenSize;
 
@@ -300,7 +288,9 @@ public:
 
    LightShadowMap* getOrCreateShadowMap();
 
-   bool hasCookieTex() const { return cookie.isNotEmpty(); }
+   bool hasCookieTex() const { return cookie != StringTable->EmptyString(); }
+
+   GFXOcclusionQuery* getOcclusionQuery() const { return mQuery; }
 
    GFXTextureObject* getCookieTex();
 
@@ -315,6 +305,7 @@ protected:
 
    ///
    LightShadowMap *mShadowMap;
+   GFXOcclusionQuery* mQuery;
 
    LightInfo *mLight;
 
@@ -334,7 +325,7 @@ public:
    U32 texSize;
 
    /// 
-   FileName cookie;
+   StringTableEntry cookie;
 
    /// @}
 

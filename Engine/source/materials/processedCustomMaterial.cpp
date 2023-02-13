@@ -40,6 +40,7 @@
 #include "console/propertyParsing.h"
 #include "gfx/util/screenspace.h"
 #include "scene/reflectionManager.h"
+#include "renderInstance/renderProbeMgr.h"
 
 
 ProcessedCustomMaterial::ProcessedCustomMaterial(Material &mat)
@@ -85,7 +86,7 @@ void ProcessedCustomMaterial::_setStageData()
          continue;
       }
 
-      if(filename.equal(String("$dynamiclightmask"), String::NoCase))
+       if(filename.equal(String("$dynamiclightmask"), String::NoCase))
       {
          rpd->mTexType[i] = Material::DynamicLightMask;
          rpd->mSamplerNames[i] = mCustomMaterial->mSamplerNames[i];
@@ -165,7 +166,7 @@ void ProcessedCustomMaterial::_setStageData()
          continue;
       }
 
-      rpd->mTexSlot[i].texObject = _createTexture( filename, &GFXDefaultStaticDiffuseProfile );
+      rpd->mTexSlot[i].texObject = _createTexture( filename, &GFXStaticTextureSRGBProfile );
       if ( !rpd->mTexSlot[i].texObject )
       {
          mMaterial->logError("Failed to load texture %s", _getTexturePath(filename).c_str());
@@ -237,7 +238,7 @@ bool ProcessedCustomMaterial::init( const FeatureSet &features,
       return false;
    }
 
-   rpd->shaderHandles.init( rpd->shader, mCustomMaterial );      
+   rpd->shaderHandles.init( rpd->shader, mCustomMaterial );
    _initMaterialParameters();
    mDefaultParameters = allocMaterialParameters();
    setMaterialParameters( mDefaultParameters, 0 );
@@ -314,8 +315,13 @@ bool ProcessedCustomMaterial::setupPass( SceneRenderState *state, const SceneDat
    if (lm)
       lm->setLightInfo(this, NULL, sgData, state, pass, shaderConsts);
 
-   shaderConsts->setSafe(rpd->shaderHandles.mAccumTimeSC, MATMGR->getTotalTime());   
+   RenderProbeMgr* pm = state ? PROBEMGR : NULL;
+   if (pm)
+      pm->setProbeInfo(this, NULL, sgData, state, pass, shaderConsts);
 
+   shaderConsts->setSafe(rpd->shaderHandles.mAccumTimeSC, MATMGR->getTotalTime());
+   shaderConsts->setSafe(rpd->shaderHandles.mDampnessSC, MATMGR->getDampnessClamped());
+   
    return true;
 }
 

@@ -75,6 +75,7 @@ GuiContainer::~GuiContainer()
 
 void GuiContainer::initPersistFields()
 {
+   docsURL;
    Con::setIntVariable("$DOCKING_NONE",   Docking::dockNone);
    Con::setIntVariable("$DOCKING_CLIENT", Docking::dockClient);
    Con::setIntVariable("$DOCKING_TOP",    Docking::dockTop);
@@ -128,9 +129,6 @@ bool GuiContainer::reOrder(SimObject* obj, SimObject* target)
 
 bool GuiContainer::resize( const Point2I &newPosition, const Point2I &newExtent )
 {
-   RectI oldBounds = getBounds();
-   Point2I minExtent = getMinExtent();
-
    if( !Parent::resize( newPosition, newExtent ) )
       return false;
    
@@ -384,7 +382,7 @@ bool GuiContainer::anchorControl( GuiControl *control, const Point2I &deltaParen
 
    Point2I minExtent = control->getMinExtent();
    // Only resize if our minExtent is satisfied with it.
-   if( !( newRect.extent.x >= control->getMinExtent().x && newRect.extent.y >= control->getMinExtent().y ) )
+   if( !( newRect.extent.x >= minExtent.x && newRect.extent.y >= minExtent.y ) )
       return false;
 
    if( newRect.point == oldRect.point && newRect.extent == oldRect.extent )

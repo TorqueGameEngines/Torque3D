@@ -21,6 +21,7 @@
 //-----------------------------------------------------------------------------
 
 #include "platform/platform.h"
+#include "math/util/frustum.h"
 #include "math/mathUtils.h"
 
 #include "math/mMath.h"
@@ -28,6 +29,7 @@
 #include "math/util/frustum.h"
 #include "platform/profiler.h"
 #include "core/tAlgorithm.h"
+#include "gfx/gfxDevice.h"
 
 namespace MathUtils
 {
@@ -358,6 +360,28 @@ void getVectorFromAngles( VectorF &vec, F32 yawAng, F32 pitchAng )
    mat2.mulV( pnt );
 
    vec = pnt;
+}
+
+F32 getAngleBetweenVectors(VectorF vecA, VectorF vecB)
+{
+   F32 dot = mDot(vecA, vecB);
+   F32 lenSq1 = vecA.lenSquared();
+   F32 lenSq2 = vecB.lenSquared();
+   F32 angle = mAcos(dot / mSqrt(lenSq1 * lenSq2));
+
+   return angle;
+}
+
+F32 getSignedAngleBetweenVectors(VectorF vecA, VectorF vecB, VectorF norm)
+{
+   // angle in 0-180
+   F32 angle = getAngleBetweenVectors(vecA, vecB);
+   F32 sign = mSign(mDot(norm, mCross(vecA, vecB)));
+
+   // angle in -179-180
+   F32 signed_angle = angle * sign;
+
+   return signed_angle;
 }
 
 //-----------------------------------------------------------------------------
@@ -1062,9 +1086,9 @@ bool mRayQuadCollide(   const Quad &quad,
          - (beta * (alpha_11 - 1.0f)) - 1.0f;
       F32 C = alpha;
       F32 D = (B * B) - (4.0f * A * C);
-      F32 Q = -0.5f * (B + (B < 0.0f ? -1.0f : 1.0f) ) * mSqrt(D);
-      u = Q / A;
-      if ((u < 0.0f) || (u > 1.0f)) u = C / Q;
+      F32 F = -0.5f * (B + (B < 0.0f ? -1.0f : 1.0f) ) * mSqrt(D);
+      u = F / A;
+      if ((u < 0.0f) || (u > 1.0f)) u = C / F;
       v = beta / ((u * (beta_11 - 1.0f)) + 1.0f); 
    }
 
@@ -1409,6 +1433,29 @@ void makeProjection( MatrixF *outMatrix,
 
 //-----------------------------------------------------------------------------
 
+void makeFovPortFrustum(
+   Frustum *outFrustum,
+   bool isOrtho,
+   F32 nearDist,
+   F32 farDist,
+   const FovPort &inPort,
+   const MatrixF &transform)
+{
+   F32 leftSize = nearDist * inPort.leftTan;
+   F32 rightSize = nearDist * inPort.rightTan;
+   F32 upSize = nearDist * inPort.upTan;
+   F32 downSize = nearDist * inPort.downTan;
+
+   F32 left = -leftSize;
+   F32 right = rightSize;
+   F32 top = upSize;
+   F32 bottom = -downSize;
+
+   outFrustum->set(isOrtho, left, right, top, bottom, nearDist, farDist, transform);
+}
+
+//-----------------------------------------------------------------------------
+
 /// This is the special rotation matrix applied to
 /// projection matricies for GFX.
 ///
@@ -1416,45 +1463,45 @@ void makeProjection( MatrixF *outMatrix,
 ///
 static const MatrixF sGFXProjRotMatrix( EulerF( (M_PI_F / 2.0f), 0.0f, 0.0f ) );
 
-void makeProjection( MatrixF *outMatrix, 
-                     F32 left, 
-                     F32 right, 
-                     F32 top, 
-                     F32 bottom, 
-                     F32 nearPlane, 
+void makeProjection( MatrixF *outMatrix,
+                     F32 left,
+                     F32 right,
+                     F32 top,
+                     F32 bottom,
+                     F32 nearPlane,
                      F32 farPlane,
-                     bool gfxRotate )
+                     bool gfxRotate)
 {
-
+   const bool isGL = GFX->getAdapterType() == OpenGL;
    Point4F row;
-   row.x = 2.0*nearPlane / (right-left);
-   row.y = 0.0;
-   row.z = 0.0;
-   row.w = 0.0;
-   outMatrix->setRow( 0, row );
+   row.x = 2.0f * nearPlane / (right - left);
+   row.y = 0.0f;
+   row.z = 0.0f;
+   row.w = 0.0f;
+   outMatrix->setRow(0, row);
 
-   row.x = 0.0;
-   row.y = 2.0 * nearPlane / (top-bottom);
-   row.z = 0.0;
-   row.w = 0.0;
-   outMatrix->setRow( 1, row );
+   row.x = 0.0f;
+   row.y = 2.0f * nearPlane / (top - bottom);
+   row.z = 0.0f;
+   row.w = 0.0f;
+   outMatrix->setRow(1, row);
 
-   row.x = (left+right) / (right-left);
-   row.y = (top+bottom) / (top-bottom);
-   row.z = farPlane / (nearPlane-farPlane);
-   row.w = -1.0;
-   outMatrix->setRow( 2, row );
+   row.x = (left + right) / (right - left);
+   row.y = (top + bottom) / (top - bottom);
+   row.z = isGL ? (nearPlane + farPlane) / (nearPlane - farPlane) : farPlane / (nearPlane - farPlane);
+   row.w = -1.0f;
+   outMatrix->setRow(2, row);
 
-   row.x = 0.0;
-   row.y = 0.0;
-   row.z = nearPlane * farPlane / (nearPlane-farPlane);
-   row.w = 0.0;
-   outMatrix->setRow( 3, row );
+   row.x = 0.0f;
+   row.y = 0.0f;
+   row.z = isGL ? 2.0f * nearPlane * farPlane / (nearPlane - farPlane) : farPlane * nearPlane / (nearPlane - farPlane);
+   row.w = 0.0f;
+   outMatrix->setRow(3, row);
 
    outMatrix->transpose();
 
-   if ( gfxRotate )
-      outMatrix->mul( sGFXProjRotMatrix );
+   if (gfxRotate)
+      outMatrix->mul(sGFXProjRotMatrix);
 }
 
 //-----------------------------------------------------------------------------
@@ -1483,11 +1530,8 @@ void makeOrthoProjection(  MatrixF *outMatrix,
 
    row.x = 0.0f;
    row.y = 0.0f;
+   row.z = 1.0f / (nearPlane - farPlane);
    row.w = 0.0f;
-
-   // This may need be modified to work with OpenGL (d3d has 0..1 
-   // projection for z, vs -1..1 in OpenGL)
-   row.z = 1.0f / (nearPlane - farPlane); 
 
    outMatrix->setRow( 2, row );
 
@@ -1662,7 +1706,7 @@ bool clipFrustumByPolygon( const Point3F* points, U32 numPoints, const RectI& vi
       // Make the output of the last iteration the
       // input of this iteration.
 
-      swap( tempPolygon, clippedPolygon );
+	  T3D::swap( tempPolygon, clippedPolygon );
       numTempPolygonVertices = numClippedPolygonVertices;
 
       // Clip our current remainder of the original polygon
@@ -1819,6 +1863,57 @@ U32 extrudePolygonEdgesFromPoint( const Point3F* vertices, U32 numVertices, cons
    }
 
    return numPlanes;
+}
+
+//-----------------------------------------------------------------------------
+
+void mBuildHull2D(const Vector<Point2F> _inPoints, Vector<Point2F> &hullPoints)
+{
+   /// Andrew's monotone chain convex hull algorithm implementation
+
+   struct Util
+   {
+      //compare by x and then by y   
+      static int CompareLexicographic( const Point2F *a, const Point2F *b)
+      {
+         return a->x < b->x || (a->x == b->x && a->y < b->y);
+      }
+   };
+
+   hullPoints.clear();
+   hullPoints.setSize( _inPoints.size()*2 );
+
+   // sort in points by x and then by y
+   Vector<Point2F> inSortedPoints = _inPoints;
+   inSortedPoints.sort( &Util::CompareLexicographic );
+
+   Point2F* lowerHullPtr = hullPoints.address();
+   U32 lowerHullIdx = 0;
+
+   //lower part of hull
+   for( int i = 0; i < inSortedPoints.size(); ++i )
+   {      
+      while( lowerHullIdx >= 2 && mCross( lowerHullPtr[ lowerHullIdx - 2], lowerHullPtr[lowerHullIdx - 1], inSortedPoints[i] ) <= 0 )
+         --lowerHullIdx;
+
+      lowerHullPtr[lowerHullIdx++] = inSortedPoints[i];
+   }
+
+   --lowerHullIdx; // last point are the same as first in upperHullPtr
+
+   Point2F* upperHullPtr = hullPoints.address() + lowerHullIdx;
+   U32 upperHullIdx = 0;
+
+   //upper part of hull
+   for( int i = inSortedPoints.size()-1; i >= 0; --i )
+   {
+      while( upperHullIdx >= 2 && mCross( upperHullPtr[ upperHullIdx - 2], upperHullPtr[upperHullIdx - 1], inSortedPoints[i] ) <= 0 )
+         --upperHullIdx;
+
+      upperHullPtr[upperHullIdx++] = inSortedPoints[i];
+   }
+
+   hullPoints.setSize( lowerHullIdx + upperHullIdx );
 }
 
 } // namespace MathUtils

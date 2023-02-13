@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="formMenu_image"
+    imageFile="@assetFile=formMenu.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

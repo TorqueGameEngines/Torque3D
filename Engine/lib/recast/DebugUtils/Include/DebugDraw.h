@@ -66,6 +66,9 @@ struct duDebugDraw
 	
 	/// End drawing primitives.
 	virtual void end() = 0;
+
+	/// Compute a color for given area.
+	virtual unsigned int areaToCol(unsigned int area);
 };
 
 inline unsigned int duRGBA(int r, int g, int b, int a)
@@ -210,6 +213,10 @@ public:
 	virtual void end();
 	void clear();
 	void draw(struct duDebugDraw* dd);
+private:
+	// Explicitly disabled copy constructor and copy assignment operator.
+	duDisplayList(const duDisplayList&);
+	duDisplayList& operator=(const duDisplayList&);
 };
 
 

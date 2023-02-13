@@ -73,7 +73,7 @@ MODULE_BEGIN( TSShapeInstance )
 
       Con::addVariable("$pref::TS::maxInstancingVerts", TypeS32, &TSMesh::smMaxInstancingVerts,
          "@brief Enables mesh instancing on non-skin meshes that have less that this count of verts.\n"
-         "The default value is 200.  Higher values can degrade performance.\n"
+         "The default value is 2000.  Higher values can degrade performance.\n"
          "@ingroup Rendering\n" );
    }
 
@@ -118,6 +118,7 @@ TSShapeInstance::TSShapeInstance( const Resource<TSShape> &shape, bool loadMater
 
    mShapeResource = shape;
    mShape = mShapeResource;
+   mUseOverrideTexture = false;
    buildInstanceData( mShape, loadMaterials );
 }
 
@@ -135,6 +136,7 @@ TSShapeInstance::TSShapeInstance( TSShape *shape, bool loadMaterials )
 
    mShapeResource = NULL;
    mShape = shape;
+   mUseOverrideTexture = false;
    buildInstanceData( mShape, loadMaterials );
 }
 
@@ -169,6 +171,7 @@ void TSShapeInstance::buildInstanceData(TSShape * _shape, bool loadMaterials)
    // material list...
    mMaterialList = NULL;
    mOwnMaterialList = false;
+   mUseOwnBuffer = false;
 
    //
    mData = 0;
@@ -306,16 +309,19 @@ void TSShapeInstance::reSkin( String newBaseName, String oldBaseName )
    {
       // Try changing base
       const String &pName = materialNames[i];
-      if ( pName.compare( oldBaseName, oldBaseNameLength, String::NoCase ) == 0 )
-      {
-         String newName( pName );
-         newName.replace( 0, oldBaseNameLength, newBaseName );
-         pMatList->renameMaterial( i, newName );
-      }
+	  String newName( String::ToLower(pName) );
+	  newName.replace( String::ToLower(oldBaseName), String::ToLower(newBaseName) );
+	  pMatList->renameMaterial( i, newName );
    }
 
    // Initialize the material instances
    initMaterialList();
+}
+
+void TSShapeInstance::resetMaterialList()
+{
+	TSMaterialList* oMatlist = mShape->materialList;
+	setMaterialList(oMatlist);
 }
 
 //-------------------------------------------------------------------------------------
@@ -368,8 +374,9 @@ void TSShapeInstance::renderDebugNormals( F32 normalScalar, S32 dl )
          PrimBuild::begin( GFXLineList, 2 * numNrms );
          for ( U32 n = 0; n < numNrms; n++ )
          {
-            Point3F norm = mesh->mVertexData[n].normal();
-            Point3F vert = mesh->mVertexData[n].vert();
+            const TSMesh::__TSMeshVertexBase &v = mesh->mVertexData.getBase(n);
+            Point3F norm = v.normal();
+            Point3F vert = v.vert();
 
             meshMat.mulP( vert );
             meshMat.mulV( norm );
@@ -490,7 +497,7 @@ void TSShapeInstance::setMeshForceHidden( const char *meshName, bool hidden )
       S32 nameIndex = iter->object->nameIndex;
       const char *name = mShape->names[ nameIndex ];
 
-      if ( dStrcmp( meshName, name ) == 0 )
+      if ( String::compare( meshName, name ) == 0 )
       {
          iter->forceHidden = hidden;
          return;
@@ -527,15 +534,63 @@ void TSShapeInstance::render( const TSRenderState &rdata, S32 dl, F32 intraDL )
       return;
    }
 
-   // run through the meshes   
    S32 start = rdata.isNoRenderNonTranslucent() ? mShape->subShapeFirstTranslucentObject[ss] : mShape->subShapeFirstObject[ss];
-   S32 end   = rdata.isNoRenderTranslucent() ? mShape->subShapeFirstTranslucentObject[ss] : mShape->subShapeFirstObject[ss] + mShape->subShapeNumObjects[ss];
+   S32 end = rdata.isNoRenderTranslucent() ? mShape->subShapeFirstTranslucentObject[ss] : mShape->subShapeFirstObject[ss] + mShape->subShapeNumObjects[ss];
+   TSVertexBufferHandle *realBuffer;
+
+   if (TSShape::smUseHardwareSkinning && !mUseOwnBuffer)
+   {
+      // For hardware skinning, just using the buffer associated with the shape will work fine
+      realBuffer = &mShape->mShapeVertexBuffer;
+   }
+   else
+   {
+      // For software skinning, we need to update our own buffer each frame
+      realBuffer = &mSoftwareVertexBuffer;
+      if (realBuffer->getPointer() == NULL)
+      {
+         mShape->getVertexBuffer(*realBuffer, GFXBufferTypeDynamic);
+      }
+
+      if (bufferNeedsUpdate(od, start, end))
+      {
+         U8 *buffer = realBuffer->lock();
+         if (!buffer)
+            return;
+
+         // Base vertex data
+         dMemcpy(buffer, mShape->mShapeVertexData.base, mShape->mShapeVertexData.size);
+
+         // Apply skinned verts (where applicable)
+         for (i = start; i < end; i++)
+         {
+            mMeshObjects[i].updateVertexBuffer(od, buffer);
+         }
+
+         realBuffer->unlock();
+      }
+   }
+
+   // run through the meshes
    for (i=start; i<end; i++)
    {
+      TSRenderState objState = rdata;
       // following line is handy for debugging, to see what part of the shape that it is rendering
-      // const char *name = mShape->names[ mMeshObjects[i].object->nameIndex ];
-      mMeshObjects[i].render( od, mMaterialList, rdata, mAlphaAlways ? mAlphaAlwaysValue : 1.0f );
+      const char *name = mShape->names[ mMeshObjects[i].object->nameIndex ];
+      mMeshObjects[i].render( od, *realBuffer, mMaterialList, objState, mAlphaAlways ? mAlphaAlwaysValue : 1.0f, name );
    }
+}
+
+bool TSShapeInstance::bufferNeedsUpdate(S32 objectDetail, S32 start, S32 end)
+{
+   // run through the meshes
+   for (U32 i = start; i<end; i++)
+   {
+      if (mMeshObjects[i].bufferNeedsUpdate(objectDetail))
+         return true;
+   }
+
+   return false;
 }
 
 void TSShapeInstance::setCurrentDetail( S32 dl, F32 intraDL )
@@ -593,7 +648,7 @@ S32 TSShapeInstance::setDetailFromDistance( const SceneRenderState *state, F32 s
    // 4:3 aspect ratio, we've changed the reference value
    // to 300 to be more compatible with legacy shapes.
    //
-   const F32 pixelScale = state->getViewport().extent.y / 300.0f;
+   const F32 pixelScale = (state->getViewport().extent.x / state->getViewport().extent.y)*2;
 
    // This is legacy DTS support for older "multires" based
    // meshes.  The original crossbow weapon uses this.
@@ -612,7 +667,7 @@ S32 TSShapeInstance::setDetailFromDistance( const SceneRenderState *state, F32 s
 
    // We're inlining SceneRenderState::projectRadius here to 
    // skip the unnessasary divide by zero protection.
-   F32 pixelRadius = ( mShape->radius / scaledDistance ) * state->getWorldToScreenScale().y * pixelScale;
+   F32 pixelRadius = ( mShape->mRadius / scaledDistance ) * state->getWorldToScreenScale().y * pixelScale;
    F32 pixelSize = pixelRadius * smDetailAdjust;
 
    if ( pixelSize < smSmallestVisiblePixelSize ) {
@@ -711,15 +766,27 @@ S32 TSShapeInstance::setDetailFromScreenError( F32 errorTolerance )
 // Object (MeshObjectInstance & PluginObjectInstance) render methods
 //-------------------------------------------------------------------------------------
 
-void TSShapeInstance::ObjectInstance::render( S32, TSMaterialList *, const TSRenderState &rdata, F32 alpha )
+void TSShapeInstance::ObjectInstance::render( S32, TSVertexBufferHandle &vb, TSMaterialList *, TSRenderState &rdata, F32 alpha, const char *meshName )
 {
    AssertFatal(0,"TSShapeInstance::ObjectInstance::render:  no default render method.");
 }
 
+void TSShapeInstance::ObjectInstance::updateVertexBuffer( S32 objectDetail, U8 *buffer )
+{
+   AssertFatal(0, "TSShapeInstance::ObjectInstance::updateVertexBuffer:  no default vertex buffer update method.");
+}
+
+bool TSShapeInstance::ObjectInstance::bufferNeedsUpdate( S32 objectDetai )
+{
+   return false;
+}
+
 void TSShapeInstance::MeshObjectInstance::render(  S32 objectDetail, 
+                                                   TSVertexBufferHandle &vb,
                                                    TSMaterialList *materials, 
-                                                   const TSRenderState &rdata, 
-                                                   F32 alpha )
+                                                   TSRenderState &rdata, 
+                                                   F32 alpha,
+                                                   const char *meshName )
 {
    PROFILE_SCOPE( TSShapeInstance_MeshObjectInstance_render );
 
@@ -749,24 +816,61 @@ void TSShapeInstance::MeshObjectInstance::render(  S32 objectDetail,
    // skin is dirty and needs to be updated.  This should result
    // in the skin only updating once per frame in most cases.
    const U32 currTime = Sim::getCurrentTime();
-   bool isSkinDirty = currTime != mLastTime;
+   bool isSkinDirty = (currTime != mLastTime) || (objectDetail != mLastObjectDetail);
+
+   // Update active transform list for bones for GPU skinning
+   if ( mesh->getMeshType() == TSMesh::SkinMeshType )
+   {
+      if (isSkinDirty)
+      {
+         static_cast<TSSkinMesh*>(mesh)->updateSkinBones(*mTransforms, mActiveTransforms);
+      }
+      rdata.setNodeTransforms(mActiveTransforms.address(), mActiveTransforms.size());
+   }
 
    mesh->render(  materials, 
                   rdata, 
                   isSkinDirty,
                   *mTransforms, 
-                  mVertexBuffer,
-                  mPrimitiveBuffer );
+                  vb,
+                  meshName );
 
    // Update the last render time.
    mLastTime = currTime;
-
+   mLastObjectDetail = objectDetail;
    GFX->popWorldMatrix();
 }
 
-TSShapeInstance::MeshObjectInstance::MeshObjectInstance() 
-   : meshList(0), object(0), frame(0), matFrame(0),
-     visible(1.0f), forceHidden(false), mLastTime( 0 )
+void TSShapeInstance::MeshObjectInstance::updateVertexBuffer(S32 objectDetail, U8 *buffer)
+{
+   PROFILE_SCOPE(TSShapeInstance_MeshObjectInstance_updateVertexBuffer);
+
+   if (forceHidden || ((visible) <= 0.01f))
+      return;
+
+   TSMesh *mesh = getMesh(objectDetail);
+   if (!mesh)
+      return;
+
+   // Update the buffer here
+   if (mesh->getMeshType() == TSMesh::SkinMeshType)
+   {
+      static_cast<TSSkinMesh*>(mesh)->updateSkinBuffer(*mTransforms, buffer);
+   }
+
+   mLastTime = Sim::getCurrentTime();
+}
+
+bool TSShapeInstance::MeshObjectInstance::bufferNeedsUpdate( S32 objectDetail )
+{
+   TSMesh *mesh = getMesh(objectDetail);
+   const U32 currTime = Sim::getCurrentTime();
+   return mesh && mesh->getMeshType() == TSMesh::SkinMeshType && currTime != mLastTime;
+}
+
+TSShapeInstance::MeshObjectInstance::MeshObjectInstance()
+	: meshList(0), object(0), frame(0), matFrame(0),
+	visible(1.0f), forceHidden(false), mLastTime(0), mLastObjectDetail(0)
 {
 }
 
@@ -795,3 +899,7 @@ bool TSShapeInstance::hasAccumulation()
    return result;
 }
 
+void TSShapeInstance::setUseOwnBuffer()
+{
+   mUseOwnBuffer = true;
+}

@@ -32,6 +32,7 @@
 #include "console/console.h"
 #include "platform/profiler.h"
 #include "console/engineAPI.h"
+#include "gfx/bitmap/ddsFile.h"
 
 using namespace Torque;
 
@@ -50,8 +51,7 @@ GBitmap::GBitmap()
    mNumMipLevels(0),
    mHasTransparency(false)
 {
-   for (U32 i = 0; i < c_maxMipLevels; i++)
-      mMipLevelOffsets[i] = 0xffffffff;
+   std::fill_n(mMipLevelOffsets, c_maxMipLevels, 0xffffffff);
 }
 
 GBitmap::GBitmap(const GBitmap& rCopy)
@@ -293,15 +293,20 @@ void GBitmap::allocateBitmap(const U32 in_width, const U32 in_height, const bool
       break;
      case GFXFormatR8G8B8:       mBytesPerPixel = 3;
       break;
+     case GFXFormatR8G8B8A8_LINEAR_FORCE:
      case GFXFormatR8G8B8X8:
      case GFXFormatR8G8B8A8:     mBytesPerPixel = 4;
       break;
+	 case GFXFormatL16:
      case GFXFormatR5G6B5:
      case GFXFormatR5G5B5A1:     mBytesPerPixel = 2;
       break;
-     default:
-      AssertFatal(false, "GBitmap::GBitmap: misunderstood format specifier");
-      break;
+     case GFXFormatR16G16B16A16F:
+      case GFXFormatR16G16B16A16: mBytesPerPixel = 8;
+         break;
+      default:
+         AssertFatal(false, "GBitmap::GBitmap: misunderstood format specifier");
+         break;
    }
 
    // Set up the mip levels, if necessary...
@@ -315,7 +320,7 @@ void GBitmap::allocateBitmap(const U32 in_width, const U32 in_height, const bool
       U32 currWidth  = in_width;
       U32 currHeight = in_height;
 
-      do 
+      while (currWidth != 1 || currHeight != 1)
       {
          mMipLevelOffsets[mNumMipLevels] = mMipLevelOffsets[mNumMipLevels - 1] +
                                          (currWidth * currHeight * mBytesPerPixel);
@@ -326,7 +331,10 @@ void GBitmap::allocateBitmap(const U32 in_width, const U32 in_height, const bool
 
          mNumMipLevels++;
          allocPixels += currWidth * currHeight * mBytesPerPixel;
-      } while (currWidth != 1 || currHeight != 1);
+      }
+
+      U32 expectedMips = mFloor(mLog2(mMax(in_width, in_height))) + 1;
+      AssertFatal(mNumMipLevels == expectedMips, "GBitmap::allocateBitmap: mipmap count wrong");
    }
    AssertFatal(mNumMipLevels <= c_maxMipLevels, "GBitmap::allocateBitmap: too many miplevels");
 
@@ -337,6 +345,81 @@ void GBitmap::allocateBitmap(const U32 in_width, const U32 in_height, const bool
    dMemset(mBits, 0xFF, mByteSize);
 
    if(svBits != NULL)
+   {
+      dMemcpy(mBits, svBits, getMin(mByteSize, svByteSize));
+      delete[] svBits;
+   }
+}
+
+//--------------------------------------------------------------------------
+void GBitmap::allocateBitmapWithMips(const U32 in_width, const U32 in_height, const U32 in_numMips, const GFXFormat in_format)
+{
+   //-------------------------------------- Some debug checks...
+   U32 svByteSize = mByteSize;
+   U8 *svBits = mBits;
+
+   AssertFatal(in_width != 0 && in_height != 0, "GBitmap::allocateBitmap: width or height is 0");
+
+   mInternalFormat = in_format;
+   mWidth = in_width;
+   mHeight = in_height;
+
+   mBytesPerPixel = 1;
+   switch (mInternalFormat)
+   {
+   case GFXFormatA8:
+   case GFXFormatL8:           mBytesPerPixel = 1;
+      break;
+   case GFXFormatR8G8B8:       mBytesPerPixel = 3;
+      break;
+   case GFXFormatR8G8B8X8:
+   case GFXFormatR8G8B8A8:     mBytesPerPixel = 4;
+      break;
+   case GFXFormatL16:
+   case GFXFormatR5G6B5:
+   case GFXFormatR5G5B5A1:     mBytesPerPixel = 2;
+      break;
+   case GFXFormatR16G16B16A16F:
+   case GFXFormatR16G16B16A16: mBytesPerPixel = 8;
+      break;
+   default:
+      AssertFatal(false, "GBitmap::GBitmap: misunderstood format specifier");
+      break;
+   }
+
+   // Set up the mip levels, if necessary...
+   mNumMipLevels = 1;
+   U32 allocPixels = in_width * in_height * mBytesPerPixel;
+   mMipLevelOffsets[0] = 0;
+
+
+   if (in_numMips != 0)
+   {
+      U32 currWidth = in_width;
+      U32 currHeight = in_height;
+
+      do
+      {
+         mMipLevelOffsets[mNumMipLevels] = mMipLevelOffsets[mNumMipLevels - 1] +
+            (currWidth * currHeight * mBytesPerPixel);
+         currWidth >>= 1;
+         currHeight >>= 1;
+         if (currWidth == 0) currWidth = 1;
+         if (currHeight == 0) currHeight = 1;
+
+         mNumMipLevels++;
+         allocPixels += currWidth * currHeight * mBytesPerPixel;
+      } while (currWidth != 1 || currHeight != 1 && mNumMipLevels != in_numMips);
+   }
+   AssertFatal(mNumMipLevels <= c_maxMipLevels, "GBitmap::allocateBitmap: too many miplevels");
+
+   // Set up the memory...
+   mByteSize = allocPixels;
+   mBits = new U8[mByteSize];
+
+   dMemset(mBits, 0xFF, mByteSize);
+
+   if (svBits != NULL)
    {
       dMemcpy(mBits, svBits, getMin(mByteSize, svByteSize));
       delete[] svBits;
@@ -372,6 +455,13 @@ void GBitmap::extrudeMipLevels(bool clearBorders)
             bitmapExtrudeRGBA(getBits(i - 1), getWritableBits(i), getHeight(i-1), getWidth(i-1));
          break;
       }
+
+      case GFXFormatR16G16B16A16F:
+      {
+         for (U32 i = 1; i < mNumMipLevels; i++)
+            bitmapExtrudeFPRGBA(getBits(i - 1), getWritableBits(i), getHeight(i - 1), getWidth(i - 1));
+         break;
+      }
       
       default:
          break;
@@ -404,6 +494,38 @@ void GBitmap::extrudeMipLevels(bool clearBorders)
          }
       }
    }
+}
+
+//--------------------------------------------------------------------------
+void GBitmap::chopTopMips(U32 mipsToChop)
+{
+   U32 scalePower = getMin(mipsToChop, getNumMipLevels() - 1);
+   U32 newMipCount = getNumMipLevels() - scalePower;
+
+   U32 realWidth = getMax((U32)1, getWidth() >> scalePower);
+   U32 realHeight = getMax((U32)1, getHeight() >> scalePower);
+
+   U8 *destBits = mBits;
+
+   U32 destOffsets[c_maxMipLevels];
+
+   for (U32 i = scalePower; i<mNumMipLevels; i++)
+   {
+      // Copy to the new bitmap...
+      dMemcpy(destBits,
+         getWritableBits(i),
+         getSurfaceSize(i));
+
+      destOffsets[i - scalePower] = destBits - mBits;
+      destBits += getSurfaceSize(i);
+   }
+
+   dMemcpy(mMipLevelOffsets, destOffsets, sizeof(destOffsets));
+
+   mWidth = realWidth;
+   mHeight = realHeight;
+   mByteSize = destBits - mBits;
+   mNumMipLevels = newMipCount;
 }
 
 //--------------------------------------------------------------------------
@@ -572,6 +694,7 @@ bool GBitmap::checkForTransparency()
    {
       // Non-transparent formats
       case GFXFormatL8:
+	  case GFXFormatL16:
       case GFXFormatR8G8B8:
       case GFXFormatR5G6B5:
          break;
@@ -605,33 +728,40 @@ bool GBitmap::checkForTransparency()
 }
 
 //------------------------------------------------------------------------------
-ColorF GBitmap::sampleTexel(F32 u, F32 v) const
+LinearColorF GBitmap::sampleTexel(F32 u, F32 v, bool retAlpha) const
 {
-	ColorF col(0.5f, 0.5f, 0.5f);
-	// normally sampling wraps all the way around at 1.0,
-	// but locking doesn't support this, and we seem to calc
-	// the uv based on a clamped 0 - 1...
-	Point2F max((F32)(getWidth()-1), (F32)(getHeight()-1));
-	Point2F posf;
-	posf.x = mClampF(((u) * max.x), 0.0f, max.x);
-	posf.y = mClampF(((v) * max.y), 0.0f, max.y);
-	Point2I posi((S32)posf.x, (S32)posf.y);
+   LinearColorF col(0.5f, 0.5f, 0.5f);
+   // normally sampling wraps all the way around at 1.0,
+   // but locking doesn't support this, and we seem to calc
+   // the uv based on a clamped 0 - 1...
+   Point2F max((F32)(getWidth()-1), (F32)(getHeight()-1));
+   Point2F posf;
+   posf.x = mClampF(((u) * max.x), 0.0f, max.x);
+   posf.y = mClampF(((v) * max.y), 0.0f, max.y);
+   Point2I posi((S32)posf.x, (S32)posf.y);
 
-	const U8 *buffer = getBits();
-	U32 lexelindex = ((posi.y * getWidth()) + posi.x) * mBytesPerPixel;
+   const U8 *buffer = getBits();
+   U32 lexelindex = ((posi.y * getWidth()) + posi.x) * mBytesPerPixel;
 
-	if(mBytesPerPixel == 2)
-	{
-		//U16 *buffer = (U16 *)lockrect->pBits;
-	}
-	else if(mBytesPerPixel > 2)
-	{		
-		col.red = F32(buffer[lexelindex + 0]) / 255.0f;
+   if(mBytesPerPixel == 2)
+   {
+      //U16 *buffer = (U16 *)lockrect->pBits;
+   }
+   else if(mBytesPerPixel > 2)
+   {     
+      col.red = F32(buffer[lexelindex + 0]) / 255.0f;
       col.green = F32(buffer[lexelindex + 1]) / 255.0f;
-		col.blue = F32(buffer[lexelindex + 2]) / 255.0f;
-	}
+      col.blue = F32(buffer[lexelindex + 2]) / 255.0f;
+      if (retAlpha)
+      {
+         if (getHasTransparency())
+            col.alpha = F32(buffer[lexelindex + 3]) / 255.0f;
+         else
+            col.alpha = 1.0f;
+      }
+   }
 
-	return col;
+   return col;
 }
 
 //--------------------------------------------------------------------------
@@ -647,7 +777,8 @@ bool GBitmap::getColor(const U32 x, const U32 y, ColorI& rColor) const
      case GFXFormatL8:
       rColor.set( *pLoc, *pLoc, *pLoc, *pLoc );
       break;
-
+	 case GFXFormatL16:
+		 rColor.set(U8(U16((pLoc[0] << 8) + pLoc[1])), 0, 0, 0);
      case GFXFormatR8G8B8:
      case GFXFormatR8G8B8X8:
         rColor.set( pLoc[0], pLoc[1], pLoc[2], 255 );
@@ -696,6 +827,10 @@ bool GBitmap::setColor(const U32 x, const U32 y, const ColorI& rColor)
       *pLoc = rColor.alpha;
       break;
 
+	 case GFXFormatL16:
+		 dMemcpy(pLoc, &rColor, 2 * sizeof(U8));
+		 break;
+
      case GFXFormatR8G8B8:
       dMemcpy( pLoc, &rColor, 3 * sizeof( U8 ) );
       break;
@@ -729,22 +864,27 @@ bool GBitmap::setColor(const U32 x, const U32 y, const ColorI& rColor)
    return true;
 }
 
+//--------------------------------------------------------------------------
+U8 GBitmap::getChanelValueAt(U32 x, U32 y, U32 chan)
+{
+   ColorI pixelColor = ColorI(255,255,255,255);
+   getColor(x, y, pixelColor);
+   if (mInternalFormat == GFXFormatL16)
+   {
+      chan = 0;
+   }
+   switch (chan) {
+   case 0: return pixelColor.red;
+   case 1: return pixelColor.green;
+   case 2: return pixelColor.blue;
+   default: return pixelColor.alpha;
+   }
+}
+
 //-----------------------------------------------------------------------------
 
-bool GBitmap::combine( const GBitmap *bitmapA, const GBitmap *bitmapB, const GFXTextureOp combineOp )
+bool GBitmap::combine( const GBitmap *bitmapA, const GBitmap *bitmapB, const TextureOp combineOp )
 {
-   // Check valid texture ops
-   switch( combineOp )
-   {
-      case GFXTOPAdd:
-      case GFXTOPSubtract:
-         break;
-
-      default:
-         Con::errorf( "GBitmap::combine - Invalid op type" );
-         return false;
-   }
-
    // Check bitmapA format
    switch( bitmapA->getFormat() )
    {
@@ -819,11 +959,11 @@ bool GBitmap::combine( const GBitmap *bitmapA, const GBitmap *bitmapB, const GFX
             // Combine them (clamp values 0-U8_MAX)
             switch( combineOp )
             {
-               case GFXTOPAdd:
+               case Add:
                   *destBits++ = getMin( U8( pxA + pxB ), U8_MAX );
                   break;
 
-               case GFXTOPSubtract:
+               case Subtract:
                   *destBits++ = getMax( U8( pxA - pxB ), U8( 0 ) );
                   break;
                default:
@@ -1001,6 +1141,7 @@ bool GBitmap::read(Stream& io_rStream)
       break;
      case GFXFormatR8G8B8A8:       mBytesPerPixel = 4;
       break;
+	 case GFXFormatL16:
      case GFXFormatR5G6B5:
      case GFXFormatR5G5B5A1:    mBytesPerPixel = 2;
       break;
@@ -1053,12 +1194,13 @@ bool GBitmap::write(Stream& io_rStream) const
 
 bool  GBitmap::readBitmap( const String &bmType, Stream &ioStream )
 {
+   PROFILE_SCOPE(ResourceGBitmap_readBitmap);
    const GBitmap::Registration   *regInfo = GBitmap::sFindRegInfo( bmType );
 
    if ( regInfo == NULL )
    {
       Con::errorf( "[GBitmap::readBitmap] unable to find registration for extension [%s]", bmType.c_str() );
-      return NULL;
+      return false;
    }
 
    return regInfo->readFunc( ioStream, this );
@@ -1071,7 +1213,7 @@ bool  GBitmap::writeBitmap( const String &bmType, Stream &ioStream, U32 compress
    if ( regInfo == NULL )
    {
       Con::errorf( "[GBitmap::writeBitmap] unable to find registration for extension [%s]", bmType.c_str() );
-      return NULL;
+      return false;
    }
 
    return regInfo->writeFunc( this, ioStream, (compressionLevel == U32_MAX) ? regInfo->defaultCompression : compressionLevel );
@@ -1170,8 +1312,43 @@ Resource<GBitmap> GBitmap::_search(const Torque::Path &path)
    return Resource< GBitmap >( NULL );
 }
 
+U32 GBitmap::getSurfaceSize(const U32 mipLevel) const
+{
+   // Bump by the mip level.
+   U32 height = getMax(U32(1), mHeight >> mipLevel);
+   U32 width = getMax(U32(1), mWidth >> mipLevel);
+
+   if (mInternalFormat >= GFXFormatBC1 && mInternalFormat <= GFXFormatBC3)
+   {
+      // From the directX docs:
+      // max(1, width ÷ 4) x max(1, height ÷ 4) x 8(DXT1) or 16(DXT2-5)
+
+      U32 sizeMultiple = 0;
+
+      switch (mInternalFormat)
+      {
+      case GFXFormatBC1:
+         sizeMultiple = 8;
+         break;
+      case GFXFormatBC2:
+      case GFXFormatBC3:
+         sizeMultiple = 16;
+         break;
+      default:
+         AssertISV(false, "DDSFile::getSurfaceSize - invalid compressed texture format, we only support DXT1-5 right now.");
+         break;
+      }
+
+      return getMax(U32(1), width / 4) * getMax(U32(1), height / 4) * sizeMultiple;
+   }
+   else
+   {
+      return height * width* mBytesPerPixel;
+   }
+}
+
 DefineEngineFunction( getBitmapInfo, String, ( const char *filename ),,
-   "Returns image info in the following format: width TAB height TAB bytesPerPixel. "
+   "Returns image info in the following format: width TAB height TAB bytesPerPixel TAB format. "
    "It will return an empty string if the file is not found.\n"
    "@ingroup Rendering\n" )
 {
@@ -1179,7 +1356,94 @@ DefineEngineFunction( getBitmapInfo, String, ( const char *filename ),,
    if ( !image )
       return String::EmptyString;
 
-   return String::ToString( "%d\t%d\t%d", image->getWidth(), 
+   return String::ToString( "%d\t%d\t%d\t%d", image->getWidth(), 
                                           image->getHeight(),
-                                          image->getBytesPerPixel() );
+                                          image->getBytesPerPixel(),
+                                          image->getFormat());
+}
+
+DefineEngineFunction(saveScaledImage, bool, (const char* bitmapSource, const char* bitmapDest, S32 resolutionSize), ("", "", 256),
+   "Loads an image from the source path, and scales it down to the target resolution before"
+   "Saving it out to the destination path.\n")
+{
+   bool isDDS = false;
+
+   if (bitmapSource == 0 || bitmapSource[0] == '\0' || bitmapDest == 0 || bitmapDest[0] == '\0')
+   {
+      return false;
+   }
+
+   if (!Platform::isFile(bitmapSource))
+   {
+      return false;
+   }
+
+   //First, gotta check the extension, as we have some extra work to do if it's
+   //a DDS file
+   const char* ret = dStrrchr(bitmapSource, '.');
+   if (ret)
+   {
+      if (String::ToLower(ret) == String(".dds"))
+         isDDS = true;
+   }
+   else
+   {
+      return false; //no extension? bail out
+   }
+
+   GBitmap* image = NULL;
+   if (isDDS)
+   {
+      Resource<DDSFile> dds = DDSFile::load(bitmapSource, 0);
+      if (dds != NULL)
+      {
+         image = new GBitmap();
+         if (!dds->decompressToGBitmap(image))
+         {
+            delete image;
+            image = NULL;
+         }
+      }
+   }
+   else
+   {
+      Resource<GBitmap> resImage = GBitmap::load(bitmapSource);
+      image = new GBitmap(*resImage);
+   }
+
+   if (!image)
+      return false;
+   Torque::Path sourcePath = Torque::Path(bitmapSource);
+
+   if (isPow2(image->getWidth()) && isPow2(image->getHeight()))
+      image->extrudeMipLevels();
+
+   U32 mipCount = image->getNumMipLevels();
+   U32 targetMips = mFloor(mLog2((F32)(resolutionSize ? resolutionSize : 256))) + 1;
+
+   if (mipCount > targetMips)
+   {
+      image->chopTopMips(mipCount - targetMips);
+   }
+
+   //TODO: support different format targets, for now we just force
+   //to png for simplicity
+   Torque::Path destinationPath = Torque::Path(bitmapDest);
+   destinationPath.setExtension("png");
+
+   // Open up the file on disk.
+   FileStream fs;
+   if (!fs.open(destinationPath.getFullPath(), Torque::FS::File::Write))
+   {
+      Con::errorf("saveScaledImage() - Failed to open output file '%s'!", bitmapDest);
+      return false;
+   }
+   else
+   {
+      image->writeBitmap("png", fs);
+
+      fs.close();
+   }
+
+   return true;
 }

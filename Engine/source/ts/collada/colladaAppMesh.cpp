@@ -152,7 +152,7 @@ private:
 
       // Add the input to the right place in the list (somewhere between start and end)
       for (S32 i = start; i <= end; i++) {
-         const domInputLocalOffset* localOffset = daeSafeCast<domInputLocalOffset>(sortedInputs[i]);
+         localOffset = daeSafeCast<domInputLocalOffset>(sortedInputs[i]);
          domUint set = localOffset ? localOffset->getSet() : 0xFFFFFFFF;
          if (newSet < set) {
             for (S32 j = i + 1; j <= end; j++)
@@ -181,10 +181,10 @@ private:
          const char* semantic = SourceTypeToSemantic( type );
          for (S32 iInput = 0; iInput < vertices->getInput_array().getCount(); iInput++)
          {
-            domInputLocal* input = vertices->getInput_array().get(iInput);
-            if (dStrEqual(input->getSemantic(), semantic))
+            domInputLocal* vInput = vertices->getInput_array().get(iInput);
+            if (dStrEqual(vInput->getSemantic(), semantic))
             {
-               source = daeSafeCast<domSource>(findInputSource(input));
+               source = daeSafeCast<domSource>(findInputSource(vInput));
                break;
             }
          }
@@ -317,7 +317,7 @@ public:
 //------------------------------------------------------------------------------
 
 ColladaAppMesh::ColladaAppMesh(const domInstance_geometry* instance, ColladaAppNode* node)
-   : instanceGeom(instance), instanceCtrl(0), appNode(node), geomExt(0)
+   : appNode(node),instanceGeom(instance), instanceCtrl(0),  geomExt(0)
 {
    flags = 0;
    numFrames = 0;
@@ -325,7 +325,7 @@ ColladaAppMesh::ColladaAppMesh(const domInstance_geometry* instance, ColladaAppN
 }
 
 ColladaAppMesh::ColladaAppMesh(const domInstance_controller* instance, ColladaAppNode* node)
-   : instanceGeom(0), instanceCtrl(instance), appNode(node), geomExt(0)
+   : appNode(node),instanceGeom(0), instanceCtrl(instance),  geomExt(0)
 {
    flags = 0;
    numFrames = 0;
@@ -878,7 +878,11 @@ void ColladaAppMesh::getMorphVertexData(const domMorph* morph, F32 time, const M
       }
       if (colors_array) {
          for (S32 iVert = 0; iVert < vertTuples.size(); iVert++)
-            colors_array[iVert] += targetColors[iVert] * (F32)targetWeights[iTarget];
+         {
+            LinearColorF tCol = colors_array[iVert];
+            tCol += LinearColorF(targetColors[iVert]) * (F32)targetWeights[iTarget];
+            colors_array[iVert] = tCol.toColorI();
+         }
       }
    }
 }
@@ -973,7 +977,7 @@ void ColladaAppMesh::lookupSkinData()
    bool tooManyWeightsWarning = false;
    for (S32 iVert = 0; iVert < vertsPerFrame; iVert++) {
       const domUint* vcount = (domUint*)weights_vcount.getRaw(0);
-      const domInt* vindices = (domInt*)weights_v.getRaw(0);
+      vindices = (domInt*)weights_v.getRaw(0);
       vindices += vindicesOffset[vertTuples[iVert].vertex];
 
       S32 nonZeroWeightCount = 0;

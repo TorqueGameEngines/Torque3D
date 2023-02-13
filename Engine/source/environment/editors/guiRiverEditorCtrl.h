@@ -110,7 +110,7 @@ class GuiRiverEditorCtrl : public EditTSCtrl
       void setNodeDepth( F32 depth );
 
 		Point3F getNodePosition();
-		void setNodePosition( Point3F pos );
+      void setNodePosition(const Point3F& pos);
 
 		VectorF getNodeNormal();
       void setNodeNormal( const VectorF &normal );
@@ -181,6 +181,10 @@ class GuiRiverEditorUndoAction : public UndoAction
 
       GuiRiverEditorUndoAction( const UTF8* actionName ) : UndoAction( actionName )
       {
+         mRiverEditor = NULL;
+         mObjId = 0;
+         mMetersPerSegment = 1.0f;
+         mSegmentsPerBatch = 10;
       }
 
       GuiRiverEditorCtrl *mRiverEditor;         

@@ -45,6 +45,8 @@
 #include "materials/materialDefinition.h"
 #include "T3D/prefab.h"
 
+#include "T3D/Scene.h"
+
 IMPLEMENT_CONOBJECT(GuiMeshRoadEditorCtrl);
 
 ConsoleDocClass( GuiMeshRoadEditorCtrl,
@@ -53,39 +55,55 @@ ConsoleDocClass( GuiMeshRoadEditorCtrl,
    "@internal"
 );
 
+S32 _NodeIndexCmp( U32 const *a, U32 const *b )
+{
+   S32 a2 = (*a);
+   S32 b2 = (*b);
+   S32 diff = a2 - b2;
+   return diff < 0 ? 1 : diff > 0 ? -1 : 0;
+}
+
 GuiMeshRoadEditorCtrl::GuiMeshRoadEditorCtrl()
  : 
 	// Each of the mode names directly correlates with the Mesh Road Editor's
 	// tool palette
 	mSelectMeshRoadMode("MeshRoadEditorSelectMode"),
 	mAddMeshRoadMode("MeshRoadEditorAddRoadMode"),
-	mMovePointMode("MeshRoadEditorMoveMode"),
-	mRotatePointMode("MeshRoadEditorRotateMode"),
-	mScalePointMode("MeshRoadEditorScaleMode"),
 	mAddNodeMode("MeshRoadEditorAddNodeMode"),
 	mInsertPointMode("MeshRoadEditorInsertPointMode"),
 	mRemovePointMode("MeshRoadEditorRemovePointMode"),
-	mMode(mSelectMeshRoadMode),
+	mMovePointMode("MeshRoadEditorMoveMode"),
+    mScalePointMode("MeshRoadEditorScaleMode"),
+	mRotatePointMode("MeshRoadEditorRotateMode"),
+    mSavedDrag(false),
+    mIsDirty( false ),
+    mSavedProfileDrag( false ),
+    mDeselectProfileNode( false ),
+    mProfileNode( -1 ),
+    mProfileColor( 255,255,0 ),
+    mRoadSet( NULL ),
+    mSelNode( -1 ),
+    mHoverNode( -1 ),
+    mAddNodeIdx( 0 ),
+    mSelRoad( NULL ),
+    mHoverRoad( NULL ),
+    mMode(mSelectMeshRoadMode),
+    mDefaultWidth( 10.0f ),
+    mDefaultDepth( 5.0f ),
+    mDefaultNormal( 0,0,1 ),
+    mNodeHalfSize( 4,4 ),
+    mHoverSplineColor( 255,0,0,255 ),
+    mSelectedSplineColor( 0,255,0,255 ),
+    mHoverNodeColor( 255,255,255,255 ),
+	 mHasCopied( false )
+{
+   INIT_ASSET(TopMaterial);
+   INIT_ASSET(BottomMaterial);
+   INIT_ASSET(SideMaterial);
 
-	mHasCopied( false ),
-   mIsDirty( false ),
-   mRoadSet( NULL ),
-   mSelNode( -1 ),
-   mSelRoad( NULL ),
-   mHoverRoad( NULL ),
-   mHoverNode( -1 ),
-   mDefaultWidth( 10.0f ),
-   mDefaultDepth( 5.0f ),
-   mDefaultNormal( 0,0,1 ),
-   mAddNodeIdx( 0 ),
-   mNodeHalfSize( 4,4 ),
-   mHoverSplineColor( 255,0,0,255 ),
-   mSelectedSplineColor( 0,255,0,255 ),
-   mHoverNodeColor( 255,255,255,255 )
-{   
-	mMaterialName[Top] = StringTable->insert("DefaultRoadMaterialTop");
-	mMaterialName[Bottom] = StringTable->insert("DefaultRoadMaterialOther");
-	mMaterialName[Side] = StringTable->insert("DefaultRoadMaterialOther");
+   mTopMaterialAssetId = Con::getVariable("$MeshRoadEditor::defaultTopMaterialAsset");
+   mBottomMaterialAssetId = Con::getVariable("$MeshRoadEditor::defaultBottomMaterialAsset");
+   mSideMaterialAssetId = Con::getVariable("$MeshRoadEditor::defaultSideMaterialAsset");
 }
 
 GuiMeshRoadEditorCtrl::~GuiMeshRoadEditorCtrl()
@@ -113,6 +131,48 @@ void GuiMeshRoadEditorUndoAction::undo()
    {
       object->_addNode( mNodes[i].point, mNodes[i].width, mNodes[i].depth, mNodes[i].normal );      
    }
+
+   // Temporarily save the Roads current profile data.
+   Vector<MeshRoadProfileNode> profNodes;
+   Vector<U8> profMtrls;
+   profNodes.merge( object->mSideProfile.mNodes );
+   profMtrls.merge( object->mSideProfile.mSegMtrls );
+
+   // Restore the Profile Nodes saved in the UndoAction
+   Point3F pos;
+   object->mSideProfile.mNodes.clear();
+   object->mSideProfile.mSegMtrls.clear();
+   for ( U32 i = 0; i < mProfileNodes.size(); i++ )
+   {
+      MeshRoadProfileNode newNode;
+
+      pos = mProfileNodes[i].getPosition();
+      newNode.setSmoothing( mProfileNodes[i].isSmooth() );
+
+      object->mSideProfile.mNodes.push_back( newNode );
+      object->mSideProfile.mNodes.last().setPosition( pos.x, pos.y );
+
+      if(i)
+         object->mSideProfile.mSegMtrls.push_back(mProfileMtrls[i-1]);
+   }
+
+   // Set the first node position to trigger packet update to client
+   pos.set(0.0f, 0.0f, 0.0f);
+   object->mSideProfile.setNodePosition(0,pos);
+
+   // Regenerate the Road
+   object->mSideProfile.generateNormals();
+
+   // If applicable set the selected Road and node
+   mEditor->mProfileNode = -1;
+
+   // Now save the previous Road data in this UndoAction
+   // since an undo action must become a redo action and vice-versa
+   //mMetersPerSegment = metersPerSeg;
+   mProfileNodes.clear();
+   mProfileNodes.merge( profNodes );
+   mProfileMtrls.clear();
+   mProfileMtrls.merge( profMtrls );
 
    // Regenerate the Road
    object->regenerate();
@@ -154,6 +214,7 @@ bool GuiMeshRoadEditorCtrl::onAdd()
 
 void GuiMeshRoadEditorCtrl::initPersistFields()
 {
+   docsURL;
    addField( "DefaultWidth",        TypeF32,    Offset( mDefaultWidth, GuiMeshRoadEditorCtrl ) );
 	addField( "DefaultDepth",        TypeF32,    Offset( mDefaultDepth, GuiMeshRoadEditorCtrl ) );
 	addField( "DefaultNormal",       TypePoint3F,Offset( mDefaultNormal, GuiMeshRoadEditorCtrl ) );
@@ -161,12 +222,11 @@ void GuiMeshRoadEditorCtrl::initPersistFields()
    addField( "SelectedSplineColor", TypeColorI, Offset( mSelectedSplineColor, GuiMeshRoadEditorCtrl ) );
    addField( "HoverNodeColor",      TypeColorI, Offset( mHoverNodeColor, GuiMeshRoadEditorCtrl ) );
    addField( "isDirty",             TypeBool,   Offset( mIsDirty, GuiMeshRoadEditorCtrl ) );
-	addField( "topMaterialName", TypeString, Offset( mMaterialName[Top], GuiMeshRoadEditorCtrl ),
-      "Default Material used by the Mesh Road Editor on upper surface road creation." );
-   addField( "bottomMaterialName", TypeString, Offset( mMaterialName[Bottom], GuiMeshRoadEditorCtrl ),
-		"Default Material used by the Mesh Road Editor on bottom surface road creation." );
-   addField( "sideMaterialName", TypeString, Offset( mMaterialName[Side], GuiMeshRoadEditorCtrl ),
-      "Default Material used by the Mesh Road Editor on side surface road creation." );
+
+   INITPERSISTFIELD_MATERIALASSET(TopMaterial, GuiMeshRoadEditorCtrl, "Default Material used by the Mesh Road Editor on upper surface road creation.");
+   INITPERSISTFIELD_MATERIALASSET(BottomMaterial, GuiMeshRoadEditorCtrl, "Default Material used by the Mesh Road Editor on bottom surface road creation.");
+   INITPERSISTFIELD_MATERIALASSET(SideMaterial, GuiMeshRoadEditorCtrl, "Default Material used by the Mesh Road Editor on side surface road creation.");
+
    //addField( "MoveNodeCursor", TYPEID< SimObject >(), Offset( mMoveNodeCursor, GuiMeshRoadEditorCtrl) );
    //addField( "AddNodeCursor", TYPEID< SimObject >(), Offset( mAddNodeCursor, GuiMeshRoadEditorCtrl) );
    //addField( "InsertNodeCursor", TYPEID< SimObject >(), Offset( mInsertNodeCursor, GuiMeshRoadEditorCtrl) );
@@ -226,6 +286,158 @@ void GuiMeshRoadEditorCtrl::on3DMouseDown(const Gui3DMouseEvent & event)
    if ( !isFirstResponder() )
       setFirstResponder();
 	
+   if( MeshRoad::smShowRoadProfile && mSelRoad )
+   {
+      // Ctrl-Click = Add Node
+      if(event.modifier & SI_CTRL)
+      {
+         S32 clickedNode = _getProfileNodeAtScreenPos( &mSelRoad->mSideProfile, event.mousePoint );
+
+         if(clickedNode != -1)
+         {
+            // If clicked node is already in list, remove it, else add it to list
+            if(!mSelProfNodeList.remove(clickedNode) && clickedNode > 0)
+               mSelProfNodeList.push_back(clickedNode);
+
+            return;
+         }
+
+         Point3F pos;
+
+         PlaneF xy( mSelRoad->mSlices[0].p2, -mSelRoad->mSlices[0].fvec );
+
+         xy.intersect(event.pos, event.vec, &pos);
+
+         mSelRoad->mSideProfile.worldToObj(pos);
+
+         U32 node = mSelRoad->mSideProfile.clickOnLine(pos);
+
+         if(node != -1)
+         {
+            submitUndo( "Add Profile Node" );
+            mSelRoad->mSideProfile.addPoint(node, pos);
+            mProfileNode = node;
+            mSelProfNodeList.clear();
+            mSelProfNodeList.push_back(node);
+            mIsDirty = true;
+         }
+
+         return;
+      }
+
+      // Alt-Click = Delete Node
+      if(event.modifier & SI_ALT)
+      {
+         S32 clickedNode = _getProfileNodeAtScreenPos( &mSelRoad->mSideProfile, event.mousePoint );
+
+
+         if(mSelProfNodeList.find_next(clickedNode) != -1)
+         {
+            submitUndo( "Delete Profile Node" );
+
+            mSelProfNodeList.sort( _NodeIndexCmp );
+            for(U32 i=0; i < mSelProfNodeList.size(); i++)
+               mSelRoad->mSideProfile.removePoint( mSelProfNodeList[i] );
+
+            mProfileNode = -1;
+            mSelProfNodeList.clear();
+            mIsDirty = true;
+         }
+         else if(clickedNode > 0 && clickedNode < mSelRoad->mSideProfile.mNodes.size()-1)
+         {
+            submitUndo( "Delete Profile Node" );
+            mSelRoad->mSideProfile.removePoint( clickedNode );
+            mProfileNode = -1;
+            mSelProfNodeList.clear();
+            mIsDirty = true;
+         }
+
+         return;
+      }
+
+      // Shift-Click = Toggle Node Smoothing
+      if(event.modifier & SI_SHIFT)
+      {
+         S32 clickedNode = _getProfileNodeAtScreenPos( &mSelRoad->mSideProfile, event.mousePoint );
+
+         if(clickedNode != -1)
+         {
+            submitUndo( "Smooth Profile Node" );
+
+            if(mSelProfNodeList.find_next(clickedNode) != -1)
+            {
+               for(U32 i=0; i < mSelProfNodeList.size(); i++)
+                  mSelRoad->mSideProfile.toggleSmoothing(mSelProfNodeList[i]);
+            }
+            else
+            {
+               mSelRoad->mSideProfile.toggleSmoothing(clickedNode);
+
+               if(clickedNode != 0)
+               {
+                  mProfileNode = clickedNode;
+                  mSelProfNodeList.clear();
+                  mSelProfNodeList.push_back(clickedNode);
+               }
+            }
+
+            mIsDirty = true;
+            return;
+         }
+
+         Point3F pos;
+         PlaneF xy( mSelRoad->mSlices[0].p2, -mSelRoad->mSlices[0].fvec );
+         xy.intersect(event.pos, event.vec, &pos);
+         mSelRoad->mSideProfile.worldToObj(pos);
+         U32 node = mSelRoad->mSideProfile.clickOnLine(pos);
+
+         if(node > 0)
+         {
+            submitUndo( "Profile Material" );
+            mSelRoad->mSideProfile.toggleSegMtrl(node-1);
+            mIsDirty = true;
+         }
+
+         return;
+      }
+
+      // Click to select/deselect nodes
+      S32 clickedNode = _getProfileNodeAtScreenPos( &mSelRoad->mSideProfile, event.mousePoint );
+
+      if(clickedNode != -1)
+      {
+         if(mSelProfNodeList.find_next(clickedNode) != -1)
+         {
+            mProfileNode = clickedNode;
+            mDeselectProfileNode = true;
+         }
+         else if(clickedNode != 0)
+         {
+            mProfileNode = clickedNode;
+            mSelProfNodeList.clear();
+            mSelProfNodeList.push_back(clickedNode);
+         }
+         else
+         {
+            mProfileNode = -1;
+            mSelProfNodeList.clear();
+
+            // Reset profile if Node 0 is double-clicked
+            if( event.mouseClickCount > 1 )
+            {
+               submitUndo( "Reset Profile" );
+               mSelRoad->mSideProfile.resetProfile(mSelRoad->mSlices[0].depth);
+               mSelRoad->regenerate();
+            }
+         }
+
+         return;
+      }
+
+      mProfileNode = -1;
+      mSelProfNodeList.clear();
+   }
+
 	// Get the raycast collision position
    Point3F tPos;
    if ( !getStaticPos( event, tPos ) )
@@ -414,19 +626,24 @@ void GuiMeshRoadEditorCtrl::on3DMouseDown(const Gui3DMouseEvent & event)
 		}
 
 		MeshRoad *newRoad = new MeshRoad;  
-		
-		newRoad->mMaterialName[Top] = mMaterialName[Top];
-		newRoad->mMaterialName[Bottom] = mMaterialName[Bottom];
-		newRoad->mMaterialName[Side] = mMaterialName[Side];
+
+      if(mTopMaterialAsset.notNull())
+		   newRoad->_setTopMaterial(mTopMaterialAssetId);
+      if (mBottomMaterialAsset.notNull())
+		   newRoad->_setBottomMaterial(mBottomMaterialAssetId);
+      if (mSideMaterialAsset.notNull())
+		   newRoad->_setSideMaterial(mSideMaterialAssetId);
 			
       newRoad->registerObject();
 
-      // Add to MissionGroup                              
-      SimGroup *missionGroup;
-      if ( !Sim::findObject( "MissionGroup", missionGroup ) )               
-         Con::errorf( "GuiMeshRoadEditorCtrl - could not find MissionGroup to add new MeshRoad" );
+      // Add to scene                              
+      Scene *scene;
+
+      scene = Scene::getRootScene();
+      if ( !scene)
+         Con::errorf( "GuiMeshRoadEditorCtrl - could not find Scene to add new MeshRoad" );
       else
-         missionGroup->addObject( newRoad );
+         scene->addObject( newRoad );
 
       Point3F pos( endPnt );
       pos.z += mDefaultDepth * 0.5f;
@@ -460,6 +677,10 @@ void GuiMeshRoadEditorCtrl::on3DMouseDown(const Gui3DMouseEvent & event)
       
       // Submit it.               
       undoMan->addAction( action );
+
+      //send a callback to script after were done here if one exists
+      if (isMethod("onRoadCreation"))
+         Con::executef(this, "onRoadCreation");
 
 		return;
    }
@@ -584,6 +805,33 @@ void GuiMeshRoadEditorCtrl::on3DMouseUp(const Gui3DMouseEvent & event)
 
    mSavedDrag = false;
 
+   mSavedProfileDrag = false;
+
+   if( MeshRoad::smShowRoadProfile && mSelRoad )
+   {
+      // If we need to deselect node... this means we clicked on a selected node without dragging
+      if( mDeselectProfileNode )
+      {
+         S32 clickedNode = _getProfileNodeAtScreenPos( &mSelRoad->mSideProfile, event.mousePoint );
+
+         if(clickedNode == mProfileNode)
+         {
+            mProfileNode = -1;
+            mSelProfNodeList.clear();
+         }
+
+         mDeselectProfileNode = false;
+      }
+      // Else if we dragged a node, update the road
+      else
+      {
+         S32 clickedNode = _getProfileNodeAtScreenPos( &mSelRoad->mSideProfile, event.mousePoint );
+
+         if(clickedNode == mProfileNode)
+            mSelRoad->regenerate();       // This regens the road for collision purposes on the server
+      }
+   }
+
    mouseUnlock();
 }
 
@@ -657,6 +905,43 @@ void GuiMeshRoadEditorCtrl::on3DMouseMove(const Gui3DMouseEvent & event)
 
 void GuiMeshRoadEditorCtrl::on3DMouseDragged(const Gui3DMouseEvent & event)
 {   
+   if( MeshRoad::smShowRoadProfile && mProfileNode > 0 && mSelRoad)
+   {
+      // If we haven't already saved,
+      // save an undo action to get back to this state,
+      // before we make any modifications to the selected node.
+      if ( !mSavedProfileDrag )
+      {
+         submitUndo( "Modify Profile Node" );
+         mSavedProfileDrag = true;
+         mIsDirty = true;
+      }
+
+      U32 idx;
+      Point3F pos, diff;
+
+      PlaneF xy( mSelRoad->mSlices[0].p2, -mSelRoad->mSlices[0].fvec );
+      xy.intersect(event.pos, event.vec, &pos);
+
+      mSelRoad->mSideProfile.worldToObj(pos);
+      diff = pos - mSelRoad->mSideProfile.mNodes[mProfileNode].getPosition();
+
+      for(U32 i=0; i < mSelProfNodeList.size(); i++)
+      {
+         idx = mSelProfNodeList[i];
+         pos = mSelRoad->mSideProfile.mNodes[idx].getPosition();
+         pos += diff;
+
+         if(pos.x < -mSelRoad->mSlices[0].width/2.0f)
+            pos.x = -mSelRoad->mSlices[0].width/2.0f + 1e-6;
+
+         mSelRoad->mSideProfile.setNodePosition( idx, pos );
+      }
+
+      mDeselectProfileNode = false;
+      return;
+   }
+
    // Drags are only used to transform nodes
    if ( !mSelRoad || mSelNode == -1 ||
       ( mMode != mMovePointMode && mMode != mScalePointMode && mMode != mRotatePointMode ) )
@@ -752,6 +1037,18 @@ void GuiMeshRoadEditorCtrl::renderScene(const RectI & updateRect)
    Point3F camPos;
    mat.getColumn(3,&camPos);
 
+   // Set up transform
+   if( mSelRoad )
+   {
+      MatrixF profileMat(true);
+
+      profileMat.setRow(0, mSelRoad->mSlices[0].rvec);
+      profileMat.setRow(1, mSelRoad->mSlices[0].uvec);
+      profileMat.setRow(2, -mSelRoad->mSlices[0].fvec);
+
+      mSelRoad->mSideProfile.setTransform(profileMat, mSelRoad->mSlices[0].p2);
+   }
+
    if ( mHoverRoad && mHoverRoad != mSelRoad )
    {
       _drawSpline( mHoverRoad, mHoverSplineColor );
@@ -802,6 +1099,37 @@ void GuiMeshRoadEditorCtrl::renderScene(const RectI & updateRect)
       _drawControlNodes( mHoverRoad, mHoverSplineColor );
    if ( mSelRoad )
       _drawControlNodes( mSelRoad, mSelectedSplineColor );
+
+   if(MeshRoad::smShowRoadProfile)
+   {
+      char buf[64];
+      Point2I posi;
+
+      posi.x = 10;
+      posi.y = updateRect.len_y() - 80;
+
+      GFX->getDrawUtil()->setBitmapModulation(ColorI(128, 128, 128));
+      dStrcpy(buf, "Reset Profile: Double-click Start Node", 64);
+      GFX->getDrawUtil()->drawTextN(mProfile->mFont, posi, buf, dStrlen(buf));
+      posi.y -= mProfile->mFont->getCharHeight((U8)buf[0]) + 4;
+      dStrcpy(buf, "Move Node: Click and Drag Node", 64);
+      GFX->getDrawUtil()->drawTextN(mProfile->mFont, posi, buf, dStrlen(buf));
+      posi.y -= mProfile->mFont->getCharHeight((U8)buf[0]) + 4;
+      dStrcpy(buf, "Select Multiple Nodes: Ctrl-click Nodes", 64);
+      GFX->getDrawUtil()->drawTextN(mProfile->mFont, posi, buf, dStrlen(buf));
+      posi.y -= mProfile->mFont->getCharHeight((U8)buf[0]) + 4;
+      dStrcpy(buf, "Toggle Material: Shift-click Spline Segment", 64);
+      GFX->getDrawUtil()->drawTextN(mProfile->mFont, posi, buf, dStrlen(buf));
+      posi.y -= mProfile->mFont->getCharHeight((U8)buf[0]) + 4;
+      dStrcpy(buf, "Toggle Smoothing: Shift-click Node", 64);
+      GFX->getDrawUtil()->drawTextN(mProfile->mFont, posi, buf, dStrlen(buf));
+      posi.y -= mProfile->mFont->getCharHeight((U8)buf[0]) + 4;
+      dStrcpy(buf, "Delete Node: Alt-click Node", 64);
+      GFX->getDrawUtil()->drawTextN(mProfile->mFont, posi, buf, dStrlen(buf));
+      posi.y -= mProfile->mFont->getCharHeight((U8)buf[0]) + 4;
+      dStrcpy(buf, "Add Node: Ctrl-click Spline", 64);
+      GFX->getDrawUtil()->drawTextN(mProfile->mFont, posi, buf, dStrlen(buf));
+   }
 } 
 
 S32 GuiMeshRoadEditorCtrl::_getNodeAtScreenPos( const MeshRoad *pRoad, const Point2I &posi )
@@ -830,6 +1158,33 @@ S32 GuiMeshRoadEditorCtrl::_getNodeAtScreenPos( const MeshRoad *pRoad, const Poi
    return -1;
 }
 
+S32 GuiMeshRoadEditorCtrl::_getProfileNodeAtScreenPos( MeshRoadProfile *pProfile, const Point2I &posi)
+{
+   for ( U32 i = 0; i < pProfile->mNodes.size(); i++ )
+   {
+      Point3F nodePos;
+      pProfile->getNodeWorldPos(i, nodePos);
+
+      Point3F screenPos;
+      project( nodePos, &screenPos );
+
+      if ( screenPos.z < 0.0f )
+         continue;
+
+      Point2I screenPosI( (S32)screenPos.x, (S32)screenPos.y );
+
+      RectI nodeScreenRect( screenPosI - mNodeHalfSize, mNodeHalfSize * 2 );
+
+      if ( nodeScreenRect.pointInRect(posi) )
+      {
+         // we found a hit!
+         return i;
+      }
+   }
+
+   return -1;
+}
+
 void GuiMeshRoadEditorCtrl::_drawSpline( MeshRoad *river, const ColorI &color )
 {
    if ( river->mSlices.size() <= 1 )
@@ -838,8 +1193,12 @@ void GuiMeshRoadEditorCtrl::_drawSpline( MeshRoad *river, const ColorI &color )
 	if ( MeshRoad::smShowSpline )
 	{
 		// Render the River center-line
-		PrimBuild::color( color );
-		PrimBuild::begin( GFXLineStrip, river->mSlices.size() );            
+		if( MeshRoad::smShowRoadProfile )
+			PrimBuild::color( ColorI(100,100,100) );
+		else
+			PrimBuild::color( color );
+
+		PrimBuild::begin( GFXLineStrip, river->mSlices.size() );
 		for ( U32 i = 0; i < river->mSlices.size(); i++ )
 		{            		      
 			PrimBuild::vertex3fv( river->mSlices[i].p1 );		      
@@ -875,6 +1234,100 @@ void GuiMeshRoadEditorCtrl::_drawSpline( MeshRoad *river, const ColorI &color )
 		}
 		PrimBuild::end();
 	}
+
+   // If we are in Profile Edit Mode, draw the profile spline and node normals
+   if ( MeshRoad::smShowRoadProfile )
+   {
+      Point3F nodePos;
+      Point3F normEndPos;
+      U32 numSide, numTop, numBottom;
+
+      numSide = numTop = numBottom = 0;
+
+      for ( U32 i = 0; i < river->mSideProfile.mSegMtrls.size(); i++ )
+      {
+         switch(river->mSideProfile.mSegMtrls[i])
+         {
+         case MeshRoad::Side:		numSide++;		break;
+         case MeshRoad::Top:		numTop++;		break;
+         case MeshRoad::Bottom:	numBottom++;	break;
+         }
+      }
+
+      // Render the profile spline
+      // Side
+      if(numSide)
+      {
+         PrimBuild::color( mProfileColor );
+         PrimBuild::begin( GFXLineList, 2*numSide );
+         for ( U32 i = 0; i < river->mSideProfile.mSegMtrls.size(); i++ )
+         {
+            if(river->mSideProfile.mSegMtrls[i] == MeshRoad::Side)
+            {
+               river->mSideProfile.getNodeWorldPos(i, nodePos);
+               PrimBuild::vertex3fv( nodePos );
+
+               river->mSideProfile.getNodeWorldPos(i+1, nodePos);
+               PrimBuild::vertex3fv( nodePos );
+            }
+         }
+         PrimBuild::end();
+      }
+
+      // Top
+      if(numTop)
+      {
+         PrimBuild::color( ColorI(0,255,0) );
+         PrimBuild::begin( GFXLineList, 2*numTop );
+         for ( U32 i = 0; i < river->mSideProfile.mSegMtrls.size(); i++ )
+         {
+            if(river->mSideProfile.mSegMtrls[i] == MeshRoad::Top)
+            {
+               river->mSideProfile.getNodeWorldPos(i, nodePos);
+               PrimBuild::vertex3fv( nodePos );
+
+               river->mSideProfile.getNodeWorldPos(i+1, nodePos);
+               PrimBuild::vertex3fv( nodePos );
+            }
+         }
+         PrimBuild::end();
+      }
+
+      // Bottom
+      if(numBottom)
+      {
+         PrimBuild::color( ColorI(255,0,255) );
+         PrimBuild::begin( GFXLineList, 2*numBottom );
+         for ( U32 i = 0; i < river->mSideProfile.mSegMtrls.size(); i++ )
+         {
+            if(river->mSideProfile.mSegMtrls[i] == MeshRoad::Bottom)
+            {
+               river->mSideProfile.getNodeWorldPos(i, nodePos);
+               PrimBuild::vertex3fv( nodePos );
+
+               river->mSideProfile.getNodeWorldPos(i+1, nodePos);
+               PrimBuild::vertex3fv( nodePos );
+            }
+         }
+         PrimBuild::end();
+      }
+
+      // Render node normals
+      PrimBuild::color( ColorI(255,0,0) );
+      PrimBuild::begin( GFXLineList, 4*river->mSideProfile.mNodes.size() - 4 );
+      for ( U32 i = 0; i < river->mSideProfile.mNodes.size()-1; i++ )
+      {
+         for( U32 j = 0; j < 2; j++)
+         {
+            river->mSideProfile.getNodeWorldPos(i+j, nodePos);
+            PrimBuild::vertex3fv( nodePos );
+
+            river->mSideProfile.getNormWorldPos(2*i+j, normEndPos);
+            PrimBuild::vertex3fv( normEndPos );
+         }
+      }
+      PrimBuild::end();
+   }
 
    // Segment 
 }
@@ -936,7 +1389,45 @@ void GuiMeshRoadEditorCtrl::_drawControlNodes( MeshRoad *river, const ColorI &co
          }         
       }
 
+      if( MeshRoad::smShowRoadProfile && isSelected )
+         theColor.set(100,100,100);
+
       drawer->drawRectFill( posi - nodeHalfSize, posi + nodeHalfSize, theColor );
+   }
+
+   // Draw profile control nodes
+   if( MeshRoad::smShowRoadProfile && isSelected )
+   {
+      Point3F wpos;
+      Point3F spos;
+      Point2I posi;
+      ColorI theColor;
+
+      for( U32 i = 0; i < river->mSideProfile.mNodes.size(); i++)
+      {
+         river->mSideProfile.getNodeWorldPos(i, wpos);
+
+         project( wpos, &spos );
+
+         if ( spos.z > 1.0f )
+            continue;
+
+         posi.x = spos.x;
+         posi.y = spos.y;
+
+         if ( !bounds.pointInRect( posi ) )
+            continue;
+
+         if(i == 0)
+            theColor.set(mProfileColor.red/3, mProfileColor.green/3, mProfileColor.blue/3,255);
+         else
+            theColor.set(mProfileColor,255);
+
+         if( mSelProfNodeList.find_next(i) != -1 )
+            theColor.set(0,0,255);
+
+         drawer->drawRectFill( posi - mNodeHalfSize, posi + mNodeHalfSize, theColor );
+      }
    }
 }
 
@@ -1091,7 +1582,7 @@ F32 GuiMeshRoadEditorCtrl::getNodeDepth()
    return 0.0f;
 }
 
-void GuiMeshRoadEditorCtrl::setNodePosition( Point3F pos )
+void GuiMeshRoadEditorCtrl::setNodePosition(const Point3F& pos)
 {
    if ( mSelRoad && mSelNode != -1 )
    {
@@ -1133,11 +1624,11 @@ void GuiMeshRoadEditorCtrl::setSelectedNode( S32 node )
    mSelNode = node;
    if ( mSelNode != -1 )
    {
-      const MeshRoadNode &node = mSelRoad->mNodes[mSelNode];
+      const MeshRoadNode &curNode = mSelRoad->mNodes[mSelNode];
 
       MatrixF objMat = mSelRoad->getNodeTransform(mSelNode);      
-      Point3F objScale( node.width, 1.0f, node.depth );
-      Point3F worldPos = node.point;
+      Point3F objScale(curNode.width, 1.0f, curNode.depth );
+      Point3F worldPos = curNode.point;
       
       mGizmo->set( objMat, worldPos, objScale );
    }
@@ -1170,6 +1661,15 @@ void GuiMeshRoadEditorCtrl::submitUndo( const UTF8 *name )
       action->mNodes.push_back( mSelRoad->mNodes[i] );      
    }
       
+   // Save profile nodes and materials
+   for( U32 i = 0; i < mSelRoad->mSideProfile.mNodes.size(); i++)
+   {
+      action->mProfileNodes.push_back( mSelRoad->mSideProfile.mNodes[i] );
+
+      if(i)
+         action->mProfileMtrls.push_back( mSelRoad->mSideProfile.mSegMtrls[i-1] );
+   }
+
    undoMan->addAction( action );
 }
 
@@ -1186,69 +1686,69 @@ void GuiMeshRoadEditorCtrl::matchTerrainToRoad()
    // with the terrain underneath it.
 }
 
-DefineConsoleMethod( GuiMeshRoadEditorCtrl, deleteNode, void, (), , "deleteNode()" )
+DefineEngineMethod( GuiMeshRoadEditorCtrl, deleteNode, void, (), , "deleteNode()" )
 {
    object->deleteSelectedNode();
 }
 
-DefineConsoleMethod( GuiMeshRoadEditorCtrl, getMode, const char*, (), , "" )
+DefineEngineMethod( GuiMeshRoadEditorCtrl, getMode, const char*, (), , "" )
 {
    return object->getMode();
 }
 
-DefineConsoleMethod( GuiMeshRoadEditorCtrl, setMode, void, (const char * mode), , "setMode( String mode )" )
+DefineEngineMethod( GuiMeshRoadEditorCtrl, setMode, void, (const char * mode), , "setMode( String mode )" )
 {
    String newMode = ( mode );
    object->setMode( newMode );
 }
 
-DefineConsoleMethod( GuiMeshRoadEditorCtrl, getNodeWidth, F32, (), , "" )
+DefineEngineMethod( GuiMeshRoadEditorCtrl, getNodeWidth, F32, (), , "" )
 {
    return object->getNodeWidth();
 }
 
-DefineConsoleMethod( GuiMeshRoadEditorCtrl, setNodeWidth, void, ( F32 width ), , "" )
+DefineEngineMethod( GuiMeshRoadEditorCtrl, setNodeWidth, void, ( F32 width ), , "" )
 {
    object->setNodeWidth( width );
 }
 
-DefineConsoleMethod( GuiMeshRoadEditorCtrl, getNodeDepth, F32, (), , "" )
+DefineEngineMethod( GuiMeshRoadEditorCtrl, getNodeDepth, F32, (), , "" )
 {
    return object->getNodeDepth();
 }
 
-DefineConsoleMethod( GuiMeshRoadEditorCtrl, setNodeDepth, void, ( F32 depth ), , "" )
+DefineEngineMethod( GuiMeshRoadEditorCtrl, setNodeDepth, void, ( F32 depth ), , "" )
 {
    object->setNodeDepth( depth );
 }
 
-DefineConsoleMethod( GuiMeshRoadEditorCtrl, getNodePosition, Point3F, (), , "" )
+DefineEngineMethod( GuiMeshRoadEditorCtrl, getNodePosition, Point3F, (), , "" )
 {
 
 	return object->getNodePosition();
 }
 
-DefineConsoleMethod( GuiMeshRoadEditorCtrl, setNodePosition, void, (Point3F pos), , "" )
+DefineEngineMethod( GuiMeshRoadEditorCtrl, setNodePosition, void, (Point3F pos), , "" )
 {
 
    object->setNodePosition( pos );
 }
 
-DefineConsoleMethod( GuiMeshRoadEditorCtrl, getNodeNormal, Point3F, (), , "" )
+DefineEngineMethod( GuiMeshRoadEditorCtrl, getNodeNormal, Point3F, (), , "" )
 {
 
 	return object->getNodeNormal();
 }
 
-DefineConsoleMethod( GuiMeshRoadEditorCtrl, setNodeNormal, void, (Point3F normal), , "" )
+DefineEngineMethod( GuiMeshRoadEditorCtrl, setNodeNormal, void, (Point3F normal), , "" )
 {
 
    object->setNodeNormal( normal );
 }
 
-DefineConsoleMethod( GuiMeshRoadEditorCtrl, setSelectedRoad, void, (const char * objName), (""), "" )
+DefineEngineMethod( GuiMeshRoadEditorCtrl, setSelectedRoad, void, (const char * objName), (""), "" )
 {
-   if ( dStrIsEmpty(objName) )
+   if ( String::isEmpty(objName) )
       object->setSelectedRoad(NULL);
    else
    {
@@ -1258,23 +1758,23 @@ DefineConsoleMethod( GuiMeshRoadEditorCtrl, setSelectedRoad, void, (const char *
    }
 }
 
-DefineConsoleMethod( GuiMeshRoadEditorCtrl, getSelectedRoad, S32, (), , "" )
+DefineEngineMethod( GuiMeshRoadEditorCtrl, getSelectedRoad, S32, (), , "" )
 {
    MeshRoad *road = object->getSelectedRoad();
    if ( !road )
-      return NULL;
+      return 0;
 
    return road->getId();
 }
 
-DefineConsoleMethod( GuiMeshRoadEditorCtrl, regenerate, void, (), , "" )
+DefineEngineMethod( GuiMeshRoadEditorCtrl, regenerate, void, (), , "" )
 {
    MeshRoad *road = object->getSelectedRoad();
    if ( road )
       road->regenerate();
 }
 
-DefineConsoleMethod( GuiMeshRoadEditorCtrl, matchTerrainToRoad, void, (), , "" )
+DefineEngineMethod( GuiMeshRoadEditorCtrl, matchTerrainToRoad, void, (), , "" )
 {
    object->matchTerrainToRoad();
 }

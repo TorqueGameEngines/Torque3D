@@ -98,7 +98,7 @@ EndImplementEnumType;
 GuiButtonBaseCtrl::GuiButtonBaseCtrl()
 {
    mDepressed = false;
-   mMouseOver = false;
+   mHighlighted = false;
    mActive = true;
    static StringTableEntry sButton = StringTable->insert( "Button" );
    mButtonText = sButton;
@@ -114,6 +114,7 @@ GuiButtonBaseCtrl::GuiButtonBaseCtrl()
 
 void GuiButtonBaseCtrl::initPersistFields()
 {
+   docsURL;
    addGroup( "Button" );
    	
       addField( "text", TypeCaseString, Offset(mButtonText, GuiButtonBaseCtrl),
@@ -252,8 +253,8 @@ void GuiButtonBaseCtrl::onMouseDown(const GuiEvent &event)
    if (mProfile->mCanKeyFocus)
       setFirstResponder();
 
-   if (mProfile->mSoundButtonDown)
-      SFX->playOnce(mProfile->mSoundButtonDown);
+   if (mProfile->isSoundButtonDownValid())
+      SFX->playOnce(mProfile->getSoundButtonDownProfile());
       
    mMouseDownPoint = event.mousePoint;
    mMouseDragged = false;
@@ -288,14 +289,14 @@ void GuiButtonBaseCtrl::onMouseEnter(const GuiEvent &event)
    if(isMouseLocked())
    {
       mDepressed = true;
-      mMouseOver = true;
+      mHighlighted = true;
    }
    else
    {
-      if ( mActive && mProfile->mSoundButtonOver )
-         SFX->playOnce(mProfile->mSoundButtonOver);
+      if (mProfile->isSoundButtonOverValid())
+         SFX->playOnce(mProfile->getSoundButtonOverProfile());
 
-      mMouseOver = true;
+      mHighlighted = true;
    }
 }
 
@@ -309,7 +310,7 @@ void GuiButtonBaseCtrl::onMouseLeave(const GuiEvent &)
       onMouseLeave_callback();
    if( isMouseLocked() )
       mDepressed = false;
-   mMouseOver = false;
+   mHighlighted = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -377,8 +378,8 @@ bool GuiButtonBaseCtrl::onKeyDown(const GuiEvent &event)
    if ((event.keyCode == KEY_RETURN || event.keyCode == KEY_SPACE)
        && event.modifier == 0)
    {
-	   if ( mProfile->mSoundButtonDown )
-         SFX->playOnce( mProfile->mSoundButtonDown);
+      if (mProfile->isSoundButtonDownValid())
+         SFX->playOnce(mProfile->getSoundButtonDownProfile());
 
       return true;
    }
@@ -541,4 +542,18 @@ DefineEngineMethod( GuiButtonBaseCtrl, resetState, void, (),,
    "This method should not generally be called." )
 {
    object->resetState();
+}
+
+DefineEngineMethod(GuiButtonBaseCtrl, setHighlighted, void, (bool highlighted), (false),
+   "Reset the mousing state of the button.\n\n"
+   "This method should not generally be called.")
+{
+   object->setHighlighted(highlighted);
+}
+
+DefineEngineMethod(GuiButtonBaseCtrl, isHighlighted, bool, (),,
+   "Reset the mousing state of the button.\n\n"
+   "This method should not generally be called.")
+{
+   return object->isHighlighted();
 }

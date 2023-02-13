@@ -56,7 +56,7 @@ bool dFileDelete(const char * name)
 #ifdef UNICODE
    convertUTF8toUTF16N( name, buf, buf.size );
 #else
-   dStrcpy( buf, name );
+   dStrcpy( buf, name, buf.size );
 #endif
 
    backslash( buf );
@@ -64,6 +64,17 @@ bool dFileDelete(const char * name)
       return DeleteFile( buf );
    else
       return RemoveDirectory( buf );
+}
+
+bool Platform::fileDelete(const char * name)
+{
+   if (!name || (dStrlen(name) >= MAX_PATH))
+      return(false);
+   //return(::DeleteFile(name));
+   if (Platform::isFile(name))
+      return(remove(name) == 0);
+   else
+      return ::RemoveDirectoryA(name) != 0;
 }
 
 bool dFileRename(const char *oldName, const char *newName)
@@ -77,8 +88,8 @@ bool dFileRename(const char *oldName, const char *newName)
    convertUTF8toUTF16N( oldName, oldf, oldf.size );
    convertUTF8toUTF16N( newName, newf, newf.size );
 #else
-   dStrcpy(oldf, oldName);
-   dStrcpy(newf, newName);
+   dStrcpy(oldf, oldName, oldf.size);
+   dStrcpy(newf, newName, newf.size);
 #endif
    backslash(oldf);
    backslash(newf);
@@ -95,7 +106,7 @@ bool dFileTouch(const char * name)
 #ifdef UNICODE
    convertUTF8toUTF16N( name, buf, buf.size );
 #else
-   dStrcpy( buf, name );
+   dStrcpy( buf, name, buf.size );
 #endif
 
    backslash( buf );
@@ -122,8 +133,8 @@ bool dPathCopy(const char *fromName, const char *toName, bool nooverwrite)
    convertUTF8toUTF16N( fromName, from, from.size );
    convertUTF8toUTF16N( toName, to, to.size );
 #else
-   dStrcpy( from, fromName );
-   dStrcpy( to, toName );
+   dStrcpy( from, fromName, from.size );
+   dStrcpy( to, toName, to.size );
 #endif
 
    backslash( from );
@@ -157,7 +168,7 @@ bool dPathCopy(const char *fromName, const char *toName, bool nooverwrite)
          char* toDir = tempBuf;
          Platform::makeFullPathName(fromDir + dStrlen(fromName) + (dStricmp(fromDir, fromName) ? 1 : 0), tempBuf, tempBuf.size, toName);
          if(*(toDir + dStrlen(toDir) - 1) != '/')
-            dStrcat(toDir, "/");
+            dStrcat(toDir, "/", tempBuf.size);
          forwardslash(toDir);
 
          if (!Platform::createPath(toDir))
@@ -180,8 +191,8 @@ bool dPathCopy(const char *fromName, const char *toName, bool nooverwrite)
 
          char* toFile = tempBuf;
          Platform::makeFullPathName(fileInfo[i].pFullPath + dStrlen(fromName) + (dStricmp(fileInfo[i].pFullPath, fromName) ? 1 : 0), tempBuf, tempBuf.size, toName);
-         dStrcat(toFile, "/");
-         dStrcat(toFile, fileInfo[i].pFileName);
+         dStrcat(toFile, "/", tempBuf.size);
+         dStrcat(toFile, fileInfo[i].pFileName, tempBuf.size);
 
          backslash(fromFile);
          backslash(toFile);
@@ -258,7 +269,7 @@ File::FileStatus File::open(const char *filename, const AccessMode openMode)
 #ifdef UNICODE
    convertUTF8toUTF16N( filename, fname, fname.size );
 #else
-   dStrcpy(fname, filename);
+   dStrcpy(fname, filename, fname.size);
 #endif
    backslash( fname );
 
@@ -614,7 +625,7 @@ static bool recurseDumpPath(const char *path, const char *pattern, Vector<Platfo
             continue;
 
          // skip . and .. directories
-         if (dStrcmp( findData.cFileName, TEXT( "." ) ) == 0 || dStrcmp( findData.cFileName, TEXT( ".." ) ) == 0)
+         if (String::compare( findData.cFileName, TEXT( "." ) ) == 0 || String::compare( findData.cFileName, TEXT( ".." ) ) == 0)
             continue;
 
          // Skip excluded directores
@@ -667,7 +678,7 @@ bool Platform::getFileTimes(const char *filePath, FileTime *createTime, FileTime
 #ifdef UNICODE
    convertUTF8toUTF16N( filePath, fp, fp.size );
 #else
-   dStrcpy( fp, filePath );
+   dStrcpy( fp, filePath, fp.size );
 #endif
 
    backslash( fp );
@@ -822,7 +833,7 @@ bool Platform::setCurrentDirectory(StringTableEntry newDir)
 #ifdef UNICODE
    convertUTF8toUTF16N( newDir, buf, buf.size - 1 );
 #else
-   dStrcpy( buf, newDir );
+   dStrcpy( buf, newDir, buf.size );
 #endif
 
    backslash( buf );
@@ -937,7 +948,7 @@ bool Platform::isFile(const char *pFilePath)
 #ifdef UNICODE
    convertUTF8toUTF16N( pFilePath, buf, buf.size );
 #else
-   dStrcpy( buf, pFilePath );
+   dStrcpy( buf, pFilePath, buf.size );
 #endif
    backslash( buf );
 
@@ -976,7 +987,7 @@ S32 Platform::getFileSize(const char *pFilePath)
 #ifdef UNICODE
    convertUTF8toUTF16N( pFilePath, buf, buf.size );
 #else
-   dStrcpy( buf, pFilePath );
+   dStrcpy( buf, pFilePath, buf.size );
 #endif
    backslash( buf );
 
@@ -998,7 +1009,7 @@ S32 Platform::getFileSize(const char *pFilePath)
       return -1;
 
    // must be a real file then
-   return findData.nFileSizeLow;
+   return ((findData.nFileSizeHigh * (MAXDWORD+1)) + findData.nFileSizeLow);
 }
 
 
@@ -1013,7 +1024,7 @@ bool Platform::isDirectory(const char *pDirPath)
 #ifdef UNICODE
    convertUTF8toUTF16N( pDirPath, buf, buf.size );
 #else
-   dStrcpy( buf, pDirPath );
+   dStrcpy( buf, pDirPath, buf.size );
 #endif
    backslash( buf );
 
@@ -1060,8 +1071,8 @@ bool Platform::isSubDirectory(const char *pParent, const char *pDir)
    convertUTF8toUTF16N( fileName, file, file.size );
    convertUTF8toUTF16N( pDir, dir, dir.size );
 #else
-   dStrcpy( file, fileName );
-   dStrcpy( dir, pDir );
+   dStrcpy( file, fileName, file.size );
+   dStrcpy( dir, pDir, dir.size );
 #endif
 
    backslash( file );
@@ -1085,7 +1096,7 @@ bool Platform::isSubDirectory(const char *pParent, const char *pDir)
          //FIXME: this has to be dStrcasecmp but there's no implementation for Unicode
 
          // and the names match
-         if (dStrcmp(dir, findData.cFileName ) == 0)
+         if (String::compare(dir, findData.cFileName ) == 0)
          {
             // then we have a real sub directory
             FindClose(handle);
@@ -1245,7 +1256,7 @@ bool Platform::hasSubDirectory(const char *pPath)
    // Compose our search string - Format : ([path]/[subpath]/*)
    char trail = pPath[ dStrlen(pPath) - 1 ];
    if( trail == '/' )
-      dStrcpy( searchBuf, pPath );
+      dStrcpy( searchBuf, pPath, 1024 );
    else
       dSprintf(searchBuf, 1024, "%s/*", pPath );
 
@@ -1271,7 +1282,7 @@ bool Platform::hasSubDirectory(const char *pPath)
       if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
       {
          // skip . and .. directories
-         if (dStrcmp(findData.cFileName, TEXT( "." ) ) == 0 || dStrcmp(findData.cFileName, TEXT( ".." ) ) == 0)
+         if (String::compare(findData.cFileName, TEXT( "." ) ) == 0 || String::compare(findData.cFileName, TEXT( ".." ) ) == 0)
             continue;
 
 #ifdef UNICODE
@@ -1306,8 +1317,11 @@ static bool recurseDumpDirectories(const char *basePath, const char *subPath, Ve
    // Compose our search string - Format : ([path]/[subpath]/*)
    //-----------------------------------------------------------------------------
 
-   char trail = basePath[ dStrlen(basePath) - 1 ];
-   char subTrail = subPath ? subPath[ dStrlen(subPath) - 1 ] : '\0';
+   dsize_t trLen = basePath ? dStrlen(basePath) : 0;
+   dsize_t subtrLen = subPath ? dStrlen(subPath) : 0;
+   char trail = trLen > 0 ? basePath[ trLen - 1 ] : '\0';
+   char subTrail = subtrLen > 0 ? subPath[ subtrLen - 1 ] : '\0';
+   char subLead = subtrLen > 0 ? subPath[0] : '\0';
 
    if( trail == '/' )
    {
@@ -1367,13 +1381,23 @@ static bool recurseDumpDirectories(const char *basePath, const char *subPath, Ve
       {
          if( ( subPath  && ( dStrncmp( subPath, "", 1 ) != 0 ) ) )
          {
-            char szPath [ 1024 ];
-            dMemset( szPath, 0, 1024 );
-            if( trail != '/' )
-               dSprintf( szPath, 1024, "%s%s", basePath, subPath );
+            char szPath[1024];
+            dMemset(szPath, 0, 1024);
+            if (trail == '/')
+            {
+               if (subLead == '/')
+                  dSprintf(szPath, 1024, "%s%s", basePath, &subPath[1]);
+               else
+                  dSprintf(szPath, 1024, "%s%s", basePath, subPath);
+            }
             else
-               dSprintf( szPath, 1024, "%s%s", basePath, &subPath[1] );
-            directoryVector.push_back( StringTable->insert( szPath ) );
+            {
+               if (subLead == '/')
+                  dSprintf(szPath, 1024, "%s%s", basePath, subPath);
+               else
+                  dSprintf(szPath, 1024, "%s/%s", basePath, subPath);
+            }
+            directoryVector.push_back(StringTable->insert(szPath));
          }
          else
             directoryVector.push_back( StringTable->insert( basePath ) );
@@ -1393,7 +1417,7 @@ static bool recurseDumpDirectories(const char *basePath, const char *subPath, Ve
       if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
       {
          // skip . and .. directories
-         if (dStrcmp(findData.cFileName, TEXT( "." )) == 0 || dStrcmp(findData.cFileName, TEXT( ".." )) == 0)
+         if (String::compare(findData.cFileName, TEXT( "." )) == 0 || String::compare(findData.cFileName, TEXT( ".." )) == 0)
             continue;
 
 #ifdef UNICODE
@@ -1409,9 +1433,9 @@ static bool recurseDumpDirectories(const char *basePath, const char *subPath, Ve
          if( ( subPath  && ( dStrncmp( subPath, "", 1 ) != 0 ) ))
          {
             if( subTrail == '/' )
-               dSprintf(search, search.size, "%s%s", subPath, fileName);
+               dSprintf(search, search.size, "%s%s", subPath, fileName.ptr);
             else
-               dSprintf(search, search.size, "%s/%s", subPath, fileName);
+               dSprintf(search, search.size, "%s/%s", subPath, fileName.ptr);
             char* child = search;
 
             if( currentDepth < recurseDepth || recurseDepth == -1 )
@@ -1425,7 +1449,7 @@ static bool recurseDumpDirectories(const char *basePath, const char *subPath, Ve
                child = fileName;
             else
             {
-               dSprintf(search, search.size, "/%s", fileName);
+               dSprintf(search, search.size, "/%s", fileName.ptr);
                child = search;
             }
 

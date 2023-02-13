@@ -38,7 +38,7 @@ class GFXStateBlockData : public SimObject
    typedef SimObject Parent;
 
    GFXStateBlockDesc mState;
-   GFXSamplerStateData* mSamplerStates[TEXTURE_STAGE_COUNT];
+   GFXSamplerStateData* mSamplerStates[GFX_TEXTURE_STAGE_COUNT];
 public:
    GFXStateBlockData();
 

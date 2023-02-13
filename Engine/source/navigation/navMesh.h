@@ -118,7 +118,7 @@ public:
    /// @}
 
    /// Return the index of the tile included by this point.
-   S32 getTile(Point3F pos);
+   S32 getTile(const Point3F& pos);
 
    /// Return the box of a given tile.
    Box3F getTileBox(U32 id);
@@ -166,14 +166,14 @@ public:
 
    /// @name Annotations
    /// @{
-
+   /* not implemented
    /// Should we automatically generate jump-down links?
    bool mJumpDownLinks;
    /// Height of a 'small' jump link.
    F32 mJumpLinkSmall;
    /// Height of a 'large' jump link.
    F32 mJumpLinkLarge;
-
+   */
    /// Distance to search for cover.
    F32 mCoverDist;
 
@@ -325,7 +325,7 @@ private:
    Vector<TileData> mTileData;
 
    /// List of indices to the tile array which are dirty.
-   std::queue<U32> mDirtyTiles;
+   Vector<U32> mDirtyTiles;
 
    /// Update tile dimensions.
    void updateTiles(bool dirty = false);
@@ -407,7 +407,7 @@ private:
    /// @name Rendering
    /// @{
 
-   duDebugDrawTorque dd;
+   duDebugDrawTorque mDbgDraw;
 
    void renderToDrawer();
 

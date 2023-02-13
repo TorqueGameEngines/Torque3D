@@ -41,6 +41,18 @@
 /// Human readable application version string.
 #define TORQUE_APP_VERSION_STRING  "@TORQUE_APP_VERSION_STRING@"
 
+/// Define me if you want to enable Arcane FX support.
+#cmakedefine TORQUE_AFX_ENABLED
+
+/// Define me if you want path case insensitivity support on POSIX systems. Does nothing on Windows.
+#cmakedefine TORQUE_POSIX_PATH_CASE_INSENSITIVE
+
+/// Define me if you want path case insensitivity support in ZIP files.
+#cmakedefine TORQUE_ZIP_PATH_CASE_INSENSITIVE
+
+/// Define me if you want to enable secure VFS support.
+#cmakedefine TORQUE_SECURE_VFS
+
 /// Define me if you want to enable multithreading support.
 #cmakedefine TORQUE_MULTITHREAD
 
@@ -53,15 +65,30 @@
 /// Define me if you want to disable looking for the root of a given path
 /// within a zip file.  This means that the zip file name itself must be
 /// the root of the path.  Requires the virtual mount system to be active.
+/// i.e. data/ui.zip would be mounted as data/ui, so the zip should not
+/// contain the ui folder, only it's contents. The one exception to this
+/// is if a file game.zip is located in the executable directory. The zip
+/// name 'game' will NOT be added as an extra directory.
 #cmakedefine TORQUE_DISABLE_FIND_ROOT_WITHIN_ZIP
 
-//Uncomment this define if you want to use the alternative zip support where you can 
-//define your directories and files inside the zip just like you would on disk
-//instead of the default zip support that treats the zip as an extra directory.
+/// Define me if you want to use the alternative zip support where you can 
+/// define your directories and files inside the zip just like you would on disk
+/// instead of the default zip support that treats the zip as an extra directory.
+/// With this define, all zips should be placed in the executable directory and
+/// contain the full path structure to the files.
 #cmakedefine TORQUE_ZIP_DISK_LAYOUT
+
+/// If this is defined all zip file names and mount directories will need to
+/// be all lower case (even on windows). This is because the root map
+/// mRootMap.tryGetValue(root, fsList) call is case sensitive. Define to match
+/// legacy zip case behavior.
+/* #undef TORQUE_LOWER_ZIPCASE */
 
 /// Define me if you don't want Torque to compile dso's
 #cmakedefine TORQUE_NO_DSO_GENERATION
+
+/// Define the default extension to be used for TorqueScript files
+#cmakedefine TORQUE_SCRIPT_EXTENSION "@TORQUE_SCRIPT_EXTENSION@"
 
 // Define me if this build is a tools build
 #cmakedefine TORQUE_PLAYER
@@ -150,7 +177,7 @@
 #ifdef TORQUE_DEBUG
 
    #define TORQUE_GATHER_METRICS 0
-   #define TORQUE_ENABLE_PROFILE_PATH
+   
    #ifndef TORQUE_DEBUG_GUARD
       #define TORQUE_DEBUG_GUARD
    #endif
@@ -177,7 +204,9 @@
 
    // Enable the profiler by default, if we're not doing a shipping build.
    #define TORQUE_ENABLE_PROFILER
-
+   #ifdef TORQUE_DEBUG
+      #define TORQUE_ENABLE_PROFILE_PATH
+   #endif
    // Enable the TorqueScript assert() instruction if not shipping.
    #define TORQUE_ENABLE_SCRIPTASSERTS
 
@@ -193,16 +222,10 @@
 #  define TORQUE_INSTANCE_EXCLUSION   "TorqueTest"
 #endif
 
-// Someday, it might make sense to do some pragma magic here so we error
-// on inconsistent flags.
+//use sdl backend?
+#if defined(TORQUE_SDL)
+#include <SDL.h>
+#endif
 
-// The Xbox360 has it's own profiling tools, the Torque Profiler should not be used
-#ifdef TORQUE_OS_XENON
-#  ifdef TORQUE_ENABLE_PROFILER
-#     undef TORQUE_ENABLE_PROFILER
-#  endif
-#
-#  ifdef TORQUE_ENABLE_PROFILE_PATH
-#     undef TORQUE_ENABLE_PROFILE_PATH
-#endif
-#endif
+/// Password to use when opening encrypted zip files. Change this to whatever the password is for your zips.
+#define DEFAULT_ZIP_PASSWORD     "@TORQUE_APP_PASSWORD@"

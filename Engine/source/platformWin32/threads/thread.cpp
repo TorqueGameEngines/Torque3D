@@ -20,9 +20,8 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#ifndef TORQUE_OS_XENON
+
 #include "platformWin32/platformWin32.h"
-#endif
 #include "platform/threads/thread.h"
 #include "platform/threads/semaphore.h"
 #include "platform/platformIntrinsics.h"
@@ -44,7 +43,7 @@ public:
    Thread*                 mThread;
    HANDLE                  mThreadHnd;
    Semaphore               mGateway;
-   U32                     mThreadID;
+   dsize_t                 mThreadID;
    U32                     mDead;
 
    PlatformThreadData()
@@ -53,6 +52,7 @@ public:
       mRunArg     = 0;
       mThread     = 0;
       mThreadHnd  = 0;
+      mThreadID   = 0;
       mDead       = false;
    };
 };
@@ -157,7 +157,7 @@ bool Thread::isAlive()
    return ( !mData->mDead );
 }
 
-U32 Thread::getId()
+dsize_t Thread::getId()
 {
    return mData->mThreadID;
 }
@@ -197,12 +197,12 @@ void Thread::_setName( const char* name )
 #endif
 }
 
-U32 ThreadManager::getCurrentThreadId()
+dsize_t ThreadManager::getCurrentThreadId()
 {
    return GetCurrentThreadId();
 }
 
-bool ThreadManager::compare(U32 threadId_1, U32 threadId_2)
+bool ThreadManager::compare(dsize_t threadId_1, dsize_t threadId_2)
 {
    return (threadId_1 == threadId_2);
 }

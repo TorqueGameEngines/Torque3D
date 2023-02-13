@@ -87,13 +87,18 @@ private:
    /// Menu associated with this window.  This is a passive property of the window and is not required to be used at all.
    void* mMenuHandle;
 
+   /// Indicates if the window is being closed. This allows us to safely ignore other events like focus being gained or losed after cleanup has begun
+   bool mClosing;
+
    /// @}
 
    void _processSDLEvent(SDL_Event &evt);
    void _triggerMouseLocationNotify(const SDL_Event& evt);
    void _triggerMouseButtonNotify(const SDL_Event& event);
+   void _triggerMouseWheelNotify(const SDL_Event& event);
    void _triggerKeyNotify(const SDL_Event& event);
    void _triggerTextNotify(const SDL_Event& event);
+   void _updateMonitorFromMove(const SDL_Event& event);
 
 public:
    PlatformWindowSDL();
@@ -114,7 +119,7 @@ public:
    virtual GFXDevice *getGFXDevice();
    virtual GFXWindowTarget *getGFXTarget();
    
-   virtual void setVideoMode(const GFXVideoMode &mode);
+   virtual void _setVideoMode(const GFXVideoMode &mode);
    virtual const GFXVideoMode &getVideoMode();
    virtual bool clearFullscreen();
    virtual bool isFullscreen();
@@ -158,6 +163,9 @@ public:
    virtual void setMouseLocked(bool enable);
    virtual bool isMouseLocked() const { return mMouseLocked; };
    virtual bool shouldLockMouse() const { return mShouldLockMouse; };
+
+   /// Set if relevant keypress events should be translated into character input events.
+   virtual void setKeyboardTranslation(const bool enabled);
 
    virtual WindowId getWindowId();
 

@@ -266,8 +266,8 @@ class Point2D
 //-------------------------------------- Point2I
 //
 inline Point2I::Point2I()
+   :x(0),y(0)
 {
-   //
 }
 
 
@@ -438,6 +438,7 @@ inline Point2I Point2I::operator/(const Point2I &_vec) const
 
 inline Point2I& Point2I::operator/=(const Point2I &_vec)
 {
+   AssertFatal(_vec.x != 0 && _vec.y != 0, "Error, div by zero attempted");
    x /= _vec.x;
    y /= _vec.y;
    return *this;
@@ -447,8 +448,8 @@ inline Point2I& Point2I::operator/=(const Point2I &_vec)
 //-------------------------------------- Point2F
 //
 inline Point2F::Point2F()
+   :x(0.0f), y(0.0f)
 {
-   //
 }
 
 
@@ -645,6 +646,7 @@ inline Point2F Point2F::operator/(const Point2F &_vec) const
 
 inline Point2F& Point2F::operator/=(const Point2F &_vec)
 {
+   AssertFatal(_vec.x != 0 && _vec.y != 0, "Error, div by zero attempted");
    x /= _vec.x;
    y /= _vec.y;
    return *this;
@@ -690,8 +692,8 @@ inline void Point2F::normalizeSafe()
 //-------------------------------------- Point2D
 //
 inline Point2D::Point2D()
+   :x(0.0), y(0.0)
 {
-   //
 }
 
 
@@ -906,6 +908,14 @@ inline F32 mDotPerp(const Point2F &p1, const Point2F &p2)
 inline bool mIsNaN( const Point2F &p )
 {
    return mIsNaN_F( p.x ) || mIsNaN_F( p.y );
+}
+
+/// Return 0 if points are colinear
+/// Return positive if p0p1p2 are counter-clockwise
+/// Return negative if p0p1p2 are clockwise 
+inline F64 mCross(const Point2F &p0, const Point2F &p1, const Point2F &pt2)
+{
+   return (p1.x - p0.x) * (pt2.y - p0.y) - (p1.y - p0.y) * (pt2.x - p0.x);
 }
 
 

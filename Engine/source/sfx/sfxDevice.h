@@ -63,7 +63,6 @@ class SFXDevice
          CAPS_Occlusion       = BIT( 2 ),    ///< Device has its own sound occlusion handling (SFXOcclusionManager).
          CAPS_DSPEffects      = BIT( 3 ),    ///< Device implements DSP effects (SFXDSPManager).
          CAPS_MultiListener   = BIT( 4 ),    ///< Device supports multiple listeners.
-         CAPS_FMODDesigner    = BIT( 5 ),    ///< FMOD Designer support.
       };
       
    protected:
@@ -178,6 +177,9 @@ public:
       
       /// Set the rolloff scale factor for distance attenuation of 3D sounds.
       virtual void setRolloffFactor( F32 factor ) {}
+
+      /// send empty function to all sfxdevices
+      virtual void openSlots() {}
       
       /// Set the global reverb environment.
       virtual void setReverb( const SFXReverbProperties& reverb ) {}

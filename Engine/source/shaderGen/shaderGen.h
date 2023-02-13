@@ -47,7 +47,6 @@
 #include "materials/materialFeatureData.h"
 #endif
 
-
 /// Base class used by shaderGen to be API agnostic.  Subclasses implement the various methods
 /// in an API specific way.
 class ShaderGenPrinter
@@ -152,7 +151,7 @@ public:
                         F32 *pixVersion,
                         const GFXVertexFormat *vertexFormat,
                         const char* cacheName,
-                        Vector<GFXShaderMacro> &macros );
+                        Vector<GFXShaderMacro> &macros);
 
    // Returns a shader that implements the features listed by dat.
    GFXShader* getShader( const MaterialFeatureData &dat, const GFXVertexFormat *vertexFormat, const Vector<GFXShaderMacro> *macros, const Vector<String> &samplers );
@@ -164,6 +163,8 @@ public:
    void setPrinter(ShaderGenPrinter* printer) { mPrinter = printer; }
    void setComponentFactory(ShaderGenComponentFactory* factory) { mComponentFactory = factory; }
    void setFileEnding(String ending) { mFileEnding = ending; }
+
+   static String smCommonShaderPath;
 
 protected:   
 

@@ -34,6 +34,8 @@
 #include "T3D/physics/physicsShape.h"
 #include "core/util/path.h"
 
+#include "T3D/Scene.h"
+
 // We use this locally ( within this file ) to prevent infinite recursion
 // while loading prefab files that contain other prefabs.
 static Vector<String> sPrefabFileStack;
@@ -69,6 +71,8 @@ Prefab::Prefab()
    mNetFlags.clear(Ghostable);
 
    mTypeMask |= StaticObjectType;
+
+   mFilename = StringTable->EmptyString();
 }
 
 Prefab::~Prefab()
@@ -77,6 +81,7 @@ Prefab::~Prefab()
 
 void Prefab::initPersistFields()
 {
+   docsURL;
    addGroup( "Prefab" );
 
       addProtectedField( "filename", TypePrefabFilename, Offset( mFilename, Prefab ),         
@@ -194,7 +199,7 @@ U32 Prefab::packUpdate( NetConnection *conn, U32 mask, BitStream *stream )
 
    if ( stream->writeFlag( mask & FileMask ) )
    {
-      stream->write( mFilename );
+      stream->writeString( mFilename );
    }
 
    if ( stream->writeFlag( mask & TransformMask ) )
@@ -216,7 +221,7 @@ void Prefab::unpackUpdate(NetConnection *conn, BitStream *stream)
    // FileMask
    if ( stream->readFlag() ) 
    {
-      stream->read( &mFilename );
+      mFilename = stream->readSTString();
    }
 
    // TransformMask
@@ -233,14 +238,12 @@ bool Prefab::protectedSetFile( void *object, const char *index, const char *data
 {
    Prefab *prefab = static_cast<Prefab*>(object);
    
-   String file = String( Platform::makeRelativePathName(data, Platform::getMainDotCsDir()) );
-
-   prefab->setFile( file );
+   prefab->setFile( StringTable->insert(Platform::makeRelativePathName(data, Platform::getMainDotCsDir())));
 
    return false;
 }
 
-void Prefab::setFile( String file )
+void Prefab::setFile( StringTableEntry file )
 {  
    AssertFatal( isServerObject(), "Prefab-bad" );
 
@@ -255,7 +258,7 @@ void Prefab::setFile( String file )
    // be called for the client-side prefab but maybe the user did so accidentally.
    if ( isClientObject() )
    {
-      Con::errorf( "Prefab::setFile( %s ) - Should not be called on a client-side Prefab.", file.c_str() );
+      Con::errorf( "Prefab::setFile( %s ) - Should not be called on a client-side Prefab.", file );
       return;
    }
 
@@ -269,11 +272,11 @@ void Prefab::setFile( String file )
 
 SimGroup* Prefab::explode()
 {
-   SimGroup *missionGroup;
+   Scene* scene = Scene::getRootScene();
 
-   if ( !Sim::findObject( "MissionGroup", missionGroup ) )
+   if ( !scene)
    {
-      Con::errorf( "Prefab::explode, MissionGroup was not found." );
+      Con::errorf( "Prefab::explode, Scene was not found." );
       return NULL;
    }
 
@@ -295,7 +298,7 @@ SimGroup* Prefab::explode()
       smChildToPrefabMap.erase( child->getId() );
    }
    
-   missionGroup->addObject(group);
+   scene->addObject(group);
    mChildGroup = NULL;
    mChildMap.clear();
 
@@ -334,12 +337,12 @@ void Prefab::_loadFile( bool addFileNotify )
 {
    AssertFatal( isServerObject(), "Prefab-bad" );
 
-   if ( mFilename.isEmpty() )
+   if ( mFilename == StringTable->EmptyString())
       return;
 
-   if ( !Platform::isFile( mFilename ) )
+   if ( !Torque::FS::IsScriptFile( mFilename ) )
    {
-      Con::errorf( "Prefab::_loadFile() - file %s was not found.", mFilename.c_str() );
+      Con::errorf( "Prefab::_loadFile() - file %s was not found.", mFilename );
       return;
    }
 
@@ -347,19 +350,19 @@ void Prefab::_loadFile( bool addFileNotify )
    {
       Con::errorf( 
          "Prefab::_loadFile - failed loading prefab file (%s). \n"
-         "File was referenced recursively by both a Parent and Child prefab.", mFilename.c_str() );
+         "File was referenced recursively by both a Parent and Child prefab.", mFilename );
       return;
    }
 
    sPrefabFileStack.push_back(mFilename);
 
-   String command = String::ToString( "exec( \"%s\" );", mFilename.c_str() );
+   String command = String::ToString( "exec( \"%s\" );", mFilename );
    Con::evaluate( command );
 
    SimGroup *group;
    if ( !Sim::findObject( Con::getVariable( "$ThisPrefab" ), group ) )
    {
-      Con::errorf( "Prefab::_loadFile() - file %s did not create $ThisPrefab.", mFilename.c_str() );
+      Con::errorf( "Prefab::_loadFile() - file %s did not create $ThisPrefab.", mFilename );
       return;
    }
 
@@ -468,10 +471,10 @@ Prefab* Prefab::getPrefabByChild( SimObject *child )
 
 bool Prefab::isValidChild( SimObject *simobj, bool logWarnings )
 {
-   if ( simobj->getName() && dStricmp(simobj->getName(),"MissionGroup") == 0 )
+   if ( simobj->getName() && simobj == Scene::getRootScene() )
    {
       if ( logWarnings )
-         Con::warnf( "MissionGroup is not valid within a Prefab." );
+         Con::warnf( "root Scene is not valid within a Prefab." );
       return false;
    }
 
@@ -525,6 +528,51 @@ bool Prefab::isValidChild( SimObject *simobj, bool logWarnings )
    return true;
 }
 
+bool Prefab::buildPolyList(PolyListContext context, AbstractPolyList* polyList, const Box3F &box, const SphereF& sphere)
+{
+   Vector<SceneObject*> foundObjects;
+   if (mChildGroup.isNull() || mChildGroup->empty())
+   {
+	   Con::warnf("Bad Prefab Config! %s has no valid entries!", getName());
+	   return false;
+   }
+   mChildGroup->findObjectByType(foundObjects);
+
+   for (S32 i = 0; i < foundObjects.size(); i++)
+   {
+      foundObjects[i]->buildPolyList(context, polyList, box, sphere);
+   }
+
+   return true;
+}
+
+bool Prefab::buildExportPolyList(ColladaUtils::ExportData* exportData, const Box3F &box, const SphereF &sphere)
+{
+   Vector<SceneObject*> foundObjects;
+   mChildGroup->findObjectByType(foundObjects);
+
+   for (S32 i = 0; i < foundObjects.size(); i++)
+   {
+      foundObjects[i]->buildExportPolyList(exportData, box, sphere);
+   }
+
+   return true;
+}
+
+void Prefab::getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList)
+{
+   if (!mChildGroup) return;
+   Vector<SceneObject*> foundObjects;
+   mChildGroup->findObjectByType(foundObjects);
+
+   for (S32 i = 0; i < foundObjects.size(); i++)
+   {
+      SceneObject* child = foundObjects[i];
+
+      child->getUtilizedAssets(usedAssetsList);
+   }
+}
+
 ExplodePrefabUndoAction::ExplodePrefabUndoAction( Prefab *prefab )
 : UndoAction( "Explode Prefab" )
 {
@@ -568,4 +616,10 @@ void ExplodePrefabUndoAction::redo()
    name += "_exploded";
    name = Sim::getUniqueName( name );
    mGroup->assignName( name );   
+}
+
+DefineEngineMethod(Prefab, getChildGroup, S32, (),,
+   "")
+{
+   return object->getChildGroup();
 }

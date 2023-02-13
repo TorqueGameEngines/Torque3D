@@ -51,6 +51,7 @@ void TSPartInstance::init(TSShapeInstance * sourceShape)
    mCurrentObjectDetail = 0;
    mCurrentIntraDL = 1.0f;
    mData = 0;
+   mRadius = 0.125;
 }
 
 TSPartInstance::~TSPartInstance()
@@ -107,12 +108,22 @@ void TSPartInstance::breakShape(TSShapeInstance * shape, S32 subShape, Vector<TS
    for (S32 i=0; i<partList.size(); i++)
    {
       if (partList[i]->mMeshObjects.size())
-         partList[i]->updateBounds();
-      else
       {
-         partList.erase(i);
-         i--;
-      }
+         partList[i]->updateBounds();
+         // Remove any parts parts with invalid box
+         Box3F box = partList[i]->getBounds();
+         if (!box.isValidBox())
+         {
+            Con::warnf("TSPartInstance::breakShape - part created with invalid object box. Removing from list.");
+            partList.erase(i);
+            i--;
+         }
+     }
+     else
+     {
+        partList.erase(i);
+        i--;
+     }
    }
 }
 
@@ -206,7 +217,11 @@ void TSPartInstance::render(S32 od, const TSRenderState &rdata)
 
    // render mesh objects
    for (i=0; i<mMeshObjects.size(); i++)
-      mMeshObjects[i]->render(od,mSourceShape->getMaterialList(),rdata,1.0);
+   {
+      TSRenderState objState = rdata;
+      const char *meshName = mSourceShape->mShape->names[mMeshObjects[i]->object->nameIndex];
+      mMeshObjects[i]->render(od,mSourceShape->mShape->mShapeVertexBuffer,mSourceShape->getMaterialList(),objState,1.0, meshName);
+   }
 }
 
 //-------------------------------------------------------------------------------------

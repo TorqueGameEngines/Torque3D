@@ -59,7 +59,7 @@
 
 class Point2I;
 class Point2F;
-class ColorF;
+class LinearColorF;
 class MatrixF;
 class GFXShader;
 class GFXVertexFormat;
@@ -176,7 +176,7 @@ public:
    virtual void set(GFXShaderConstHandle* handle, const Point3F& fv) = 0;
    virtual void set(GFXShaderConstHandle* handle, const Point4F& fv) = 0;
    virtual void set(GFXShaderConstHandle* handle, const PlaneF& fv) = 0;
-   virtual void set(GFXShaderConstHandle* handle, const ColorF& fv) = 0;
+   virtual void set(GFXShaderConstHandle* handle, const LinearColorF& fv) = 0;
    virtual void set(GFXShaderConstHandle* handle, const S32 f) = 0;
    virtual void set(GFXShaderConstHandle* handle, const Point2I& fv) = 0;
    virtual void set(GFXShaderConstHandle* handle, const Point3I& fv) = 0;
@@ -262,13 +262,12 @@ protected:
    /// their destructor.
    Vector<GFXShaderConstBuffer*> mActiveBuffers;
 
+   GFXVertexFormat *mInstancingFormat;
+
    /// A protected constructor so it cannot be instantiated.
    GFXShader();
 
-public:
-
-   // TODO: Add this into init().
-   GFXVertexFormat mInstancingFormat;
+public:  
 
    /// Adds a global shader macro which will be merged with
    /// the script defined macros on every shader reload.
@@ -312,7 +311,8 @@ public:
                const Torque::Path &pixFile, 
                F32 pixVersion, 
                const Vector<GFXShaderMacro> &macros,
-               const Vector<String> &samplerNames);
+               const Vector<String> &samplerNames,
+               GFXVertexFormat *instanceFormat = NULL );
 
    /// Reloads the shader from disk.
    bool reload();
@@ -357,6 +357,9 @@ public:
 
    // GFXResource
    const String describeSelf() const { return mDescription; }
+
+   // Get instancing vertex format
+   GFXVertexFormat *getInstancingFormat() { return mInstancingFormat; }
 
 protected:
 

@@ -1,0 +1,41 @@
+function AssetBrowser_SelectModule::showDialog(%this, %callback)
+{
+   AssetBrowser_SelectModule.callback = %callback;
+   Canvas.pushDialog(AssetBrowser_SelectModule);
+}
+
+function AssetBrowser_SelectModule::onWake(%this)
+{
+   AssetBrowser_SelectModuleWindow-->ModuleList.refresh();
+   
+   %defaultModule = EditorSettings.value("Assets/New/defaultModule", "");
+   if(%defaultModule !$= "" && 
+      EditorSettings.value("Assets/New/alwaysPromptModuleTarget", false) == false)
+   {
+      Canvas.popDialog(AssetBrowser_SelectModule);
+      eval(%this.callback @ "(" @ %defaultModule @ ");");
+   }
+}
+
+function AssetBrowser_SelectModule::moduleSelected(%this)
+{
+   Canvas.popDialog(AssetBrowser_SelectModule);
+   
+   %module = AssetBrowser_SelectModuleWindow-->ModuleList.getText();
+   echo("Module Selected: " @ %module);
+   
+   if(%this.callback !$= "")
+      eval(%this.callback @ "(" @ %module @ ");");
+   else
+      error("AssetBrowser_SelectModule - Invalid callback");
+}
+
+function SelectModule_NewAssetModuleBtn::onClick(%this)
+{
+   AssetBrowser.CreateNewModule("AssetBrowser_selectModule.newModuleAdded();");
+}
+
+function AssetBrowser_selectModule::newModuleAdded(%this)
+{
+   AssetBrowser_SelectModuleWindow-->ModuleList.refresh();     
+}

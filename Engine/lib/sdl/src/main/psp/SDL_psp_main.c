@@ -1,14 +1,17 @@
 /*
     SDL_psp_main.c, placed in the public domain by Sam Lantinga  3/13/14
 */
+#include "SDL_config.h"
+
+#ifdef __PSP__
 
 #include "SDL_main.h"
 #include <pspkernel.h>
-#include <pspdebug.h>
-#include <pspsdk.h>
 #include <pspthreadman.h>
-#include <stdlib.h>
-#include <stdio.h>
+
+#ifdef main
+    #undef main
+#endif
 
 /* If application's main() is redefined as SDL_main, and libSDLmain is
    linked, then this file will create the standard exit callback,
@@ -20,11 +23,12 @@
    PSP_MAIN_THREAD_STACK_SIZE, etc.
 */
 
-PSP_MODULE_INFO("SDL App", 0, 1, 1);
+PSP_MODULE_INFO("SDL App", 0, 1, 0);
+PSP_MAIN_THREAD_ATTR(THREAD_ATTR_VFPU | THREAD_ATTR_USER);
 
 int sdl_psp_exit_callback(int arg1, int arg2, void *common)
 {
-    exit(0);
+    sceKernelExitGame();
     return 0;
 }
 
@@ -40,7 +44,7 @@ int sdl_psp_callback_thread(SceSize args, void *argp)
 
 int sdl_psp_setup_callbacks(void)
 {
-    int thid = 0;
+    int thid;
     thid = sceKernelCreateThread("update_thread",
                      sdl_psp_callback_thread, 0x11, 0xFA0, 0, 0);
     if(thid >= 0)
@@ -50,14 +54,14 @@ int sdl_psp_setup_callbacks(void)
 
 int main(int argc, char *argv[])
 {
-    pspDebugScreenInit();
     sdl_psp_setup_callbacks();
-
-    /* Register sceKernelExitGame() to be called when we exit */
-    atexit(sceKernelExitGame);
 
     SDL_SetMainReady();
 
     (void)SDL_main(argc, argv);
     return 0;
 }
+
+#endif /* __PSP__ */
+
+/* vi: set ts=4 sw=4 expandtab: */

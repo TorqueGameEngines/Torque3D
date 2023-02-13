@@ -46,6 +46,8 @@
 /// For frame signal
 #include "gui/core/guiCanvas.h"
 
+#include "T3D/assets/LevelAsset.h"
+
 
 extern bool gEditingMission;
 
@@ -81,8 +83,8 @@ ConsoleDocClass( Forest,
 
 Forest::Forest()
    :  mDataFileName( NULL ),
-      mReflectionLodScalar( 2.0f ),
       mConvexList( new Convex() ),
+      mReflectionLodScalar( 2.0f ),
       mZoningDirty( false )
 {
    mTypeMask |= EnvironmentObjectType | StaticShapeObjectType | StaticObjectType;
@@ -98,6 +100,7 @@ Forest::~Forest()
 
 void Forest::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 
    addField( "dataFile",  TypeFilename, Offset( mDataFileName, Forest ),
@@ -260,7 +263,9 @@ void Forest::setTransform( const MatrixF &mat )
 
 void Forest::_onZoningChanged( SceneZoneSpaceManager *zoneManager )
 {
-   if ( mData == NULL || zoneManager != getSceneManager()->getZoneManager() )
+   const SceneManager* sm = getSceneManager();
+
+   if (mData == NULL || (sm != NULL && sm->getZoneManager() != NULL && zoneManager != sm->getZoneManager()))
       return;
 
    mZoningDirty = true;
@@ -331,18 +336,23 @@ void Forest::createNewFile()
    mData = NULL;
 
    // We need to construct a default file name
-   String missionName( Con::getVariable( "$Client::MissionFile" ) );
-   String levelDirectory( Con::getVariable( "$pref::Directories::Level" ) );
-   if ( levelDirectory.isEmpty() )
-   {
-      levelDirectory = "levels";
-   }
-   missionName.replace( "tools/levels", levelDirectory );
-   missionName = Platform::makeRelativePathName(missionName, Platform::getMainDotCsDir());
+   String levelAssetId(Con::getVariable("$Client::LevelAsset"));
 
-   Torque::Path basePath( missionName );
+   LevelAsset* levelAsset;
+   if (!Sim::findObject(levelAssetId.c_str(), levelAsset))
+   {
+      Con::errorf("Forest::createNewFile() - Unable to find current level's LevelAsset. Unable to construct forest filePath");
+      return;
+   }
+
+   Torque::Path basePath(levelAsset->getForestPath() );
+
+   //If we didn't already define a forestfile to work with, just base it off our filename
+   if (basePath.isEmpty())
+      basePath = (Torque::Path)(levelAsset->getLevelPath());
+
    String fileName = Torque::FS::MakeUniquePath( basePath.getPath(), basePath.getFileName(), "forest" );
-   mDataFileName = StringTable->insert( fileName );
+   mDataFileName = StringTable->insert( fileName.c_str() );
 
    ForestData *file = new ForestData;
    file->write( mDataFileName );
@@ -354,29 +364,29 @@ void Forest::createNewFile()
 
 void Forest::saveDataFile( const char *path )
 {
-   if ( path )
+   if ( path && !String::isEmpty(path))
       mDataFileName = StringTable->insert( path );
 
    if ( mData )
       mData->write( mDataFileName );
 }
 
-DefineConsoleMethod( Forest, saveDataFile, void, (const char * path), (""), "saveDataFile( [path] )" )
+DefineEngineMethod( Forest, saveDataFile, void, (const char * path), (""), "saveDataFile( [path] )" )
 {   
    object->saveDataFile( path );
 }
 
-DefineConsoleMethod(Forest, isDirty, bool, (), , "()")
+DefineEngineMethod(Forest, isDirty, bool, (), , "()")
 {
    return object->getData() && object->getData()->isDirty();
 }
 
-DefineConsoleMethod(Forest, regenCells, void, (), , "()")
+DefineEngineMethod(Forest, regenCells, void, (), , "()")
 {
    object->getData()->regenCells();
 }
 
-DefineConsoleMethod(Forest, clear, void, (), , "()" )
+DefineEngineMethod(Forest, clear, void, (), , "()" )
 {
    object->clear();
 }

@@ -33,7 +33,6 @@
 #include "lighting/lightQuery.h"
 #include "console/engineAPI.h"
 
-
 IMPLEMENT_CO_NETOBJECT_V1(RenderMeshExample);
 
 ConsoleDocClass( RenderMeshExample, 
@@ -60,8 +59,7 @@ RenderMeshExample::RenderMeshExample()
    // Set it as a "static" object that casts shadows
    mTypeMask |= StaticObjectType | StaticShapeObjectType;
 
-   // Make sure we the Material instance to NULL
-   // so we don't try to access it incorrectly
+   INIT_ASSET(Material);
    mMaterialInst = NULL;
 }
 
@@ -76,9 +74,9 @@ RenderMeshExample::~RenderMeshExample()
 //-----------------------------------------------------------------------------
 void RenderMeshExample::initPersistFields()
 {
+   docsURL;
    addGroup( "Rendering" );
-   addField( "material",      TypeMaterialName, Offset( mMaterialName, RenderMeshExample ),
-      "The name of the material used to render the mesh." );
+   INITPERSISTFIELD_MATERIALASSET(Material, RenderMeshExample, "The material used to render the mesh.");
    endGroup( "Rendering" );
 
    // SceneObject already handles exposing the transform
@@ -145,8 +143,10 @@ U32 RenderMeshExample::packUpdate( NetConnection *conn, U32 mask, BitStream *str
    }
 
    // Write out any of the updated editable properties
-   if ( stream->writeFlag( mask & UpdateMask ) )
-      stream->write( mMaterialName );
+   if (stream->writeFlag(mask & UpdateMask))
+   {
+      PACK_ASSET(conn, Material);
+   }
 
    return retMask;
 }
@@ -166,7 +166,7 @@ void RenderMeshExample::unpackUpdate(NetConnection *conn, BitStream *stream)
 
    if ( stream->readFlag() )  // UpdateMask
    {
-      stream->read( &mMaterialName );
+      UNPACK_ASSET(conn, Material);
 
       if ( isProperlyAdded() )
          updateMaterial();
@@ -248,18 +248,18 @@ void RenderMeshExample::createGeometry()
 
 void RenderMeshExample::updateMaterial()
 {
-   if ( mMaterialName.isEmpty() )
-      return;
+   if (mMaterialAsset.notNull())
+   {
+      if (mMaterialInst && String(mMaterialAsset->getMaterialDefinitionName()).equal(mMaterialInst->getMaterial()->getName(), String::NoCase))
+         return;
 
-   // If the material name matches then don't bother updating it.
-   if ( mMaterialInst && mMaterialName.equal( mMaterialInst->getMaterial()->getName(), String::NoCase ) )
-      return;
+      SAFE_DELETE(mMaterialInst);
 
-   SAFE_DELETE( mMaterialInst );
+      mMaterialInst = MATMGR->createMatInstance(mMaterialAsset->getMaterialDefinitionName(), getGFXVertexFormat< VertexType >());
 
-   mMaterialInst = MATMGR->createMatInstance( mMaterialName, getGFXVertexFormat< VertexType >() );
-   if ( !mMaterialInst )
-      Con::errorf( "RenderMeshExample::updateMaterial - no Material called '%s'", mMaterialName.c_str() );
+      if (!mMaterialInst)
+         Con::errorf("RenderMeshExample::updateMaterial - no Material called '%s'", mMaterialAsset->getMaterialDefinitionName());
+   }
 }
 
 void RenderMeshExample::prepRenderImage( SceneRenderState *state )
@@ -269,7 +269,7 @@ void RenderMeshExample::prepRenderImage( SceneRenderState *state )
       createGeometry();
 
    // If we have no material then skip out.
-   if ( !mMaterialInst )
+   if ( !mMaterialInst || !state)
       return;
 
    // If we don't have a material instance after the override then 

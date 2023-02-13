@@ -46,7 +46,11 @@ public:
    ForestConvex() 
    { 
       mType = ForestConvexType; 
-      mTransform.identity(); 
+      mTransform.identity();
+      hullId = 0;
+      mForestItemKey = 0;
+      mData = NULL;
+      mScale = 1.0f;
    }
 
    ForestConvex( const ForestConvex &cv ) 
@@ -58,7 +62,7 @@ public:
       mData          = cv.mData;
       mScale         = cv.mScale;
       hullId         = cv.hullId;
-      box            = box;
+      box            = cv.box;
    }
 
    void           calculateTransform( const MatrixF &worldXfrm );

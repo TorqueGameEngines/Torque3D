@@ -20,6 +20,11 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+// Arcane-FX for MIT Licensed Open Source version of Torque 3D from GarageGames
+// Copyright (C) 2015 Faust Logic, Inc.
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+
 #include "platform/platform.h"
 #include "T3D/gameBase/gameBase.h"
 #include "console/consoleTypes.h"
@@ -36,6 +41,9 @@
 #include "T3D/aiConnection.h"
 #endif
 
+#ifdef TORQUE_AFX_ENABLED
+#include "afx/arcaneFX.h"
+#endif
 //----------------------------------------------------------------------------
 // Ghost update relative priority values
 
@@ -97,14 +105,14 @@ IMPLEMENT_CALLBACK( GameBaseData, onRemove, void, ( GameBase* obj ), ( obj ),
    "@param obj the GameBase object\n\n"
    "@see onAdd for an example\n" );
 
-IMPLEMENT_CALLBACK( GameBaseData, onMount, void, ( GameBase* obj, SceneObject* mountObj, S32 node ), ( obj, mountObj, node ),
+IMPLEMENT_CALLBACK( GameBaseData, onMount, void, ( SceneObject* obj, SceneObject* mountObj, S32 node ), ( obj, mountObj, node ),
    "@brief Called when the object is mounted to another object in the scene.\n\n"
    "@param obj the GameBase object being mounted\n"
    "@param mountObj the object we are mounted to\n"
    "@param node the mountObj node we are mounted to\n\n"
    "@see onAdd for an example\n" );
 
-IMPLEMENT_CALLBACK( GameBaseData, onUnmount, void, ( GameBase* obj, SceneObject* mountObj, S32 node ), ( obj, mountObj, node ),
+IMPLEMENT_CALLBACK( GameBaseData, onUnmount, void, ( SceneObject* obj, SceneObject* mountObj, S32 node ), ( obj, mountObj, node ),
    "@brief Called when the object is unmounted from another object in the scene.\n\n"
    "@param obj the GameBase object being unmounted\n"
    "@param mountObj the object we are unmounted from\n"
@@ -119,8 +127,14 @@ IMPLEMENT_CALLBACK( GameBase, setControl, void, ( bool controlled ), ( controlle
 
 GameBaseData::GameBaseData()
 {
-   category = "";
-   packed = false;
+   mCategory = "";
+   mPacked = false;
+}
+GameBaseData::GameBaseData(const GameBaseData& other, bool temp_clone) : SimDataBlock(other, temp_clone)
+{
+   mPacked = other.mPacked;
+   mCategory = other.mCategory;
+   //mReloadSignal = other.mReloadSignal; // DO NOT copy the mReloadSignal member. 
 }
 
 void GameBaseData::inspectPostApply()
@@ -142,9 +156,10 @@ bool GameBaseData::onAdd()
 
 void GameBaseData::initPersistFields()
 {
+   docsURL;
    addGroup("Scripting");
 
-      addField( "category", TypeCaseString, Offset( category, GameBaseData ),
+      addField( "category", TypeCaseString, Offset(mCategory, GameBaseData ),
          "The group that this datablock will show up in under the \"Scripted\" "
          "tab in the World Editor Library." );
 
@@ -157,14 +172,14 @@ bool GameBaseData::preload(bool server, String &errorStr)
 {
    if (!Parent::preload(server, errorStr))
       return false;
-   packed = false;
+   mPacked = false;
    return true;
 }
 
 void GameBaseData::unpackData(BitStream* stream)
 {
    Parent::unpackData(stream);
-   packed = true;
+   mPacked = true;
 }
 
 //----------------------------------------------------------------------------
@@ -240,10 +255,15 @@ GameBase::GameBase()
    mTicksSinceLastMove = 0;
    mIsAiControlled = false;
 #endif
+   mCameraFov = 90.f;
 }
 
 GameBase::~GameBase()
 {
+#ifdef TORQUE_AFX_ENABLED
+   if (mScope_registered)
+      arcaneFX::unregisterScopedObject(this);
+#endif
 }
 
 
@@ -256,8 +276,21 @@ bool GameBase::onAdd()
 
    // Datablock must be initialized on the server.
    // Client datablock are initialized by the initial update.
+#ifdef TORQUE_AFX_ENABLED
+   if (isClientObject())
+   {
+      if (mScope_id > 0 && !mScope_registered)
+         arcaneFX::registerScopedObject(this);
+   }
+   else
+   {
+      if ( mDataBlock && !onNewDataBlock( mDataBlock, false ) )
+         return false;
+   }
+#else
    if ( isServerObject() && mDataBlock && !onNewDataBlock( mDataBlock, false ) )
       return false;
+#endif
 
    setProcessTick( true );
 
@@ -266,6 +299,10 @@ bool GameBase::onAdd()
 
 void GameBase::onRemove()
 {
+#ifdef TORQUE_AFX_ENABLED
+   if (mScope_registered)
+      arcaneFX::unregisterScopedObject(this);
+#endif
    // EDITOR FEATURE: Remove us from the reload signal of our datablock.
    if ( mDataBlock )
       mDataBlock->mReloadSignal.remove( this, &GameBase::_onDatablockModified );
@@ -290,6 +327,11 @@ bool GameBase::onNewDataBlock( GameBaseData *dptr, bool reload )
 
    if ( !mDataBlock )
       return false;
+#ifdef TORQUE_AFX_ENABLED
+   // Don't set mask when new datablock is a temp-clone.
+   if (mDataBlock->isTempClone())
+      return true;
+#endif
 
    setMaskBits(DataBlockMask);
    return true;
@@ -364,6 +406,12 @@ void GameBase::processTick(const Move * move)
 #endif
 }
 
+void GameBase::interpolateTick(F32 dt)
+{
+   // PATHSHAPE
+   updateRenderChangesByParent();
+   // PATHSHAPE END
+}
 //----------------------------------------------------------------------------
 
 F32 GameBase::getUpdatePriority(CameraScopeQuery *camInfo, U32 updateMask, S32 updateSkips)
@@ -415,7 +463,7 @@ F32 GameBase::getUpdatePriority(CameraScopeQuery *camInfo, U32 updateMask, S32 u
       // Projectiles are more interesting if they
       // are heading for us.
       wInterest = 0.30f;
-      F32 dot = -mDot(pos,getVelocity());
+      dot = -mDot(pos,getVelocity());
       if (dot > 0.0f)
          wInterest += 0.20 * dot;
    }
@@ -431,14 +479,15 @@ F32 GameBase::getUpdatePriority(CameraScopeQuery *camInfo, U32 updateMask, S32 u
    // Weight by updateSkips
    F32 wSkips = updateSkips * 0.5;
 
-   // Calculate final priority, should total to about 1.0f
+   // Calculate final priority, should total to about 1.0f (plus children)
    //
    return
       wFov       * sUpFov +
       wDistance  * sUpDistance +
       wVelocity  * sUpVelocity +
       wSkips     * sUpSkips +
-      wInterest  * sUpInterest;
+      wInterest  * sUpInterest +
+	  getNumChildren();
 }
 
 //----------------------------------------------------------------------------
@@ -543,6 +592,13 @@ U32 GameBase::packUpdate( NetConnection *connection, U32 mask, BitStream *stream
    stream->writeFlag(mIsAiControlled);
 #endif
 
+#ifdef TORQUE_AFX_ENABLED
+   if (stream->writeFlag(mask & ScopeIdMask))
+   {
+      if (stream->writeFlag(mScope_refs > 0))
+         stream->writeInt(mScope_id, SCOPE_ID_BITS);
+   }
+#endif
    return retMask;
 }
 
@@ -581,6 +637,13 @@ void GameBase::unpackUpdate(NetConnection *con, BitStream *stream)
    mTicksSinceLastMove = 0;
    mIsAiControlled = stream->readFlag();
 #endif
+#ifdef TORQUE_AFX_ENABLED
+   if (stream->readFlag())
+   {
+      mScope_id = (stream->readFlag()) ? (U16) stream->readInt(SCOPE_ID_BITS) : 0;
+	  mScope_refs = 0;
+   }
+#endif
 }
 
 void GameBase::onMount( SceneObject *obj, S32 node )
@@ -590,7 +653,7 @@ void GameBase::onMount( SceneObject *obj, S32 node )
    // Are we mounting to a GameBase object?
    GameBase *gbaseObj = dynamic_cast<GameBase*>( obj );
 
-   if ( gbaseObj && gbaseObj->getControlObject() != this )
+   if ( gbaseObj && gbaseObj->getControlObject() != this && gbaseObj->getControllingObject() != this)
       processAfter( gbaseObj );
 
    if (!isGhost()) {
@@ -659,6 +722,7 @@ DefineEngineMethod( GameBase, setDataBlock, bool, ( GameBaseData* data ),,
 
 void GameBase::initPersistFields()
 {
+   docsURL;
    addGroup( "Game" );
 
       addProtectedField( "dataBlock", TYPEID< GameBaseData >(), Offset(mDataBlock, GameBase),
@@ -703,3 +767,44 @@ DefineEngineMethod( GameBase, applyRadialImpulse, void, ( Point3F origin, F32 ra
 {
    object->applyRadialImpulse( origin, radius, magnitude );
 }
+
+// PATHSHAPE
+// Console Methods for attach children. can't put them in sceneobject because  //
+// we want the processafter functions////////////////////////////////////////////
+
+DefineEngineMethod(GameBase, attachChild, bool, (GameBase* _subObject), (nullAsType<GameBase*>()), "(SceneObject subObject)"
+              "attach an object to this one, preserving its present transform.")
+{
+    if (_subObject != nullptr)
+    {              
+		if (_subObject->getParent() != object){
+			Con::errorf("Object is (%d)", _subObject->getId());
+         _subObject->clearProcessAfter();
+         _subObject->processAfter(object);
+			return object->attachChild(_subObject);
+      }
+      else
+         return false;
+   }
+   else 
+   {
+      Con::errorf("Couldn't addObject()!");
+      return false;
+   }
+}
+
+
+DefineEngineMethod(GameBase, detachChild, bool, (GameBase* _subObject), (nullAsType<GameBase*>()), "(SceneObject subObject)"
+              "attach an object to this one, preserving its present transform.")
+{
+   if (_subObject != nullptr)
+	{
+      _subObject->clearProcessAfter();
+		return _subObject->attachToParent(NULL);
+	}
+	else
+	{
+		return false;
+	}
+}//end
+// PATHSHAPE END

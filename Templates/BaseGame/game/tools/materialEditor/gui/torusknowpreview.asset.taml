@@ -1,0 +1,6 @@
+<ShapeAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="torusknowpreview"
+    fileName="@assetFile=torusknowpreview.dts"
+    constuctorFileName="@assetFile=torusknowpreview.tscript" />

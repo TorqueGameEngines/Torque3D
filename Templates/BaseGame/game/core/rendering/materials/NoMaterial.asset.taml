@@ -1,0 +1,14 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="NoMaterial"
+    materialDefinitionName="NoMaterial">
+    <Material
+        Name="NoMaterial"
+        mapTo="NoMaterial">
+        <Material.Stages>
+            <Stages_beginarray
+                DiffuseMapAsset="Core_Rendering:warnMat_image"/>
+        </Material.Stages>
+    </Material>
+</MaterialAsset>

@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2014 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -20,8 +20,8 @@
 */
 #include "../SDL_internal.h"
 
-#ifndef _SDL_mouse_c_h
-#define _SDL_mouse_c_h
+#ifndef SDL_mouse_c_h_
+#define SDL_mouse_c_h_
 
 #include "SDL_mouse.h"
 
@@ -32,6 +32,12 @@ struct SDL_Cursor
     struct SDL_Cursor *next;
     void *driverdata;
 };
+
+typedef struct
+{
+    SDL_MouseID mouseID;
+    Uint32 buttonstate;
+} SDL_MouseInputSource;
 
 typedef struct
 {
@@ -57,11 +63,20 @@ typedef struct
     /* Free a window manager cursor */
     void (*FreeCursor) (SDL_Cursor * cursor);
 
-    /* Warp the mouse to (x,y) */
+    /* Warp the mouse to (x,y) within a window */
     void (*WarpMouse) (SDL_Window * window, int x, int y);
+
+    /* Warp the mouse to (x,y) in screen space */
+    int (*WarpMouseGlobal) (int x, int y);
 
     /* Set relative mode */
     int (*SetRelativeMouseMode) (SDL_bool enabled);
+
+    /* Set mouse capture */
+    int (*CaptureMouse) (SDL_Window * window);
+
+    /* Get absolute mouse coordinates. (x) and (y) are never NULL and set to zero before call. */
+    Uint32 (*GetGlobalMouseState) (int *x, int *y);
 
     /* Data common to all mice */
     SDL_MouseID mouseID;
@@ -71,9 +86,30 @@ typedef struct
     int xdelta;
     int ydelta;
     int last_x, last_y;         /* the last reported x and y coordinates */
-    Uint32 buttonstate;
+    float accumulated_wheel_x;
+    float accumulated_wheel_y;
+    SDL_bool has_position;
     SDL_bool relative_mode;
     SDL_bool relative_mode_warp;
+    float normal_speed_scale;
+    float relative_speed_scale;
+    float scale_accum_x;
+    float scale_accum_y;
+    Uint32 double_click_time;
+    int double_click_radius;
+    SDL_bool touch_mouse_events;
+    SDL_bool mouse_touch_events;
+    SDL_bool was_touch_mouse_events; /* Was a touch-mouse event pending? */
+#if defined(__vita__)
+    Uint8 vita_touch_mouse_device;
+#endif
+    SDL_bool auto_capture;
+    SDL_bool capture_desired;
+    SDL_Window *capture_window;
+
+    /* Data for input source state */
+    int num_sources;
+    SDL_MouseInputSource *sources;
 
     /* Data for double-click tracking */
     int num_clickstates;
@@ -95,14 +131,14 @@ extern int SDL_MouseInit(void);
 /* Get the mouse state structure */
 SDL_Mouse *SDL_GetMouse(void);
 
-/* Set the default double-click interval */
-extern void SDL_SetDoubleClickTime(Uint32 interval);
-
 /* Set the default mouse cursor */
 extern void SDL_SetDefaultCursor(SDL_Cursor * cursor);
 
 /* Set the mouse focus window */
 extern void SDL_SetMouseFocus(SDL_Window * window);
+
+/* Update the mouse capture window */
+extern int SDL_UpdateMouseCapture(SDL_bool force_release);
 
 /* Send a mouse motion event */
 extern int SDL_SendMouseMotion(SDL_Window * window, SDL_MouseID mouseID, int relative, int x, int y);
@@ -110,12 +146,18 @@ extern int SDL_SendMouseMotion(SDL_Window * window, SDL_MouseID mouseID, int rel
 /* Send a mouse button event */
 extern int SDL_SendMouseButton(SDL_Window * window, SDL_MouseID mouseID, Uint8 state, Uint8 button);
 
+/* Send a mouse button event with a click count */
+extern int SDL_SendMouseButtonClicks(SDL_Window * window, SDL_MouseID mouseID, Uint8 state, Uint8 button, int clicks);
+
 /* Send a mouse wheel event */
-extern int SDL_SendMouseWheel(SDL_Window * window, SDL_MouseID mouseID, int x, int y);
+extern int SDL_SendMouseWheel(SDL_Window * window, SDL_MouseID mouseID, float x, float y, SDL_MouseWheelDirection direction);
+
+/* Warp the mouse within the window, potentially overriding relative mode */
+extern void SDL_PerformWarpMouseInWindow(SDL_Window *window, int x, int y, SDL_bool ignore_relative_mode);
 
 /* Shutdown the mouse subsystem */
 extern void SDL_MouseQuit(void);
 
-#endif /* _SDL_mouse_c_h */
+#endif /* SDL_mouse_c_h_ */
 
 /* vi: set ts=4 sw=4 expandtab: */

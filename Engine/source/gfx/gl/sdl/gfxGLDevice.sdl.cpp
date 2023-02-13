@@ -58,7 +58,16 @@ void EnumerateVideoModes(Vector<GFXVideoMode>& outModes)
       GFXVideoMode outMode;
       outMode.resolution.set( mode.w, mode.h );
       outMode.refreshRate = mode.refresh_rate;
-      outMode.bitDepth = SDL_BYTESPERPIXEL( mode.format );
+
+      // BBP = 32 for some reason the engine knows it should be 32, but then we
+      // add some extra code to break what the engine knows.
+      //outMode.bitDepth = SDL_BYTESPERPIXEL( mode.format );     // sets bitdepths to 4
+      //outMode.bitDepth = SDL_BITSPERPIXEL(mode.format);        // sets bitdepth to 24
+      
+      // hardcoded magic numbers ftw
+      // This value is hardcoded in DX, probably to avoid the shenanigans going on here
+      outMode.bitDepth = 32;                                   
+
       outMode.wideScreen = (mode.w / mode.h) > (4 / 3);
       outMode.fullScreen = true;
       
@@ -81,8 +90,20 @@ void GFXGLDevice::enumerateAdapters( Vector<GFXAdapter*> &adapterList )
         480,                               // height, in pixels
         SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN // flags - see below
     );
+   if (!tempWindow)
+   {
+      const char* err = SDL_GetError();
+      Con::printf(err);
+      AssertFatal(0, err);
+      return;
+   }
 
    SDL_ClearError();
+   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+   SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1);
+
    SDL_GLContext tempContext = SDL_GL_CreateContext( tempWindow );
    if( !tempContext )
    {
@@ -102,16 +123,31 @@ void GFXGLDevice::enumerateAdapters( Vector<GFXAdapter*> &adapterList )
        AssertFatal(0, err );
    }
 
-   //check minimun Opengl 3.2
+   // Init GL
+   loadGLCore();
+   loadGLExtensions(tempContext);
+
+   //check minimun Opengl 3.3
    int major, minor;
    glGetIntegerv(GL_MAJOR_VERSION, &major);
    glGetIntegerv(GL_MINOR_VERSION, &minor);
-   if( major < 3 || ( major == 3 && minor < 2 ) )
+   if( major < 3 || ( major == 3 && minor < 3 ) )
    {
       return;
    }
 
-   loadGLCore();
+   //check for required extensions
+   if (!gglHasExtension(ARB_texture_cube_map_array))
+   {
+      Con::warnf("Adapater supports OpenGL 3.3 but doesnt support GL_ARB_texture_cube_map_array");
+      return;
+   }
+
+   if (!gglHasExtension(ARB_gpu_shader5))
+   {
+      Con::warnf("Adapater supports OpenGL 3.3 but doesnt support GL_ARB_gpu_shader5");
+      return;
+   }
     
    GFXAdapter *toAdd = new GFXAdapter;
    toAdd->mIndex = 0;
@@ -121,11 +157,11 @@ void GFXGLDevice::enumerateAdapters( Vector<GFXAdapter*> &adapterList )
 
    if (renderer)
    {
-      dStrcpy(toAdd->mName, renderer);
-      dStrncat(toAdd->mName, " OpenGL", GFXAdapter::MaxAdapterNameLen);
+      dStrcpy(toAdd->mName, renderer, GFXAdapter::MaxAdapterNameLen);
+      dStrcat(toAdd->mName, " OpenGL", GFXAdapter::MaxAdapterNameLen);
    }
    else
-      dStrcpy(toAdd->mName, "OpenGL");
+      dStrcpy(toAdd->mName, "OpenGL", GFXAdapter::MaxAdapterNameLen);
 
    toAdd->mType = OpenGL;
    toAdd->mShaderModel = 0.f;
@@ -151,15 +187,15 @@ void GFXGLDevice::enumerateVideoModes()
 void GFXGLDevice::init( const GFXVideoMode &mode, PlatformWindow *window )
 {
     AssertFatal(window, "GFXGLDevice::init - no window specified, can't init device without a window!");
-    PlatformWindowSDL* x11Window = dynamic_cast<PlatformWindowSDL*>(window);
-    AssertFatal(x11Window, "Window is not a valid PlatformWindowSDL object");
+    PlatformWindowSDL* sdlWindow = dynamic_cast<PlatformWindowSDL*>(window);
+    AssertFatal(sdlWindow, "Window is not a valid PlatformWindowSDL object");
 
     // Create OpenGL context
-    mContext = PlatformGL::CreateContextGL( x11Window );
-    PlatformGL::MakeCurrentGL( x11Window, mContext );
+    mContext = PlatformGL::CreateContextGL( sdlWindow );
+    PlatformGL::MakeCurrentGL( sdlWindow, mContext );
         
     loadGLCore();
-    loadGLExtensions(0);
+    loadGLExtensions(mContext);
     
     // It is very important that extensions be loaded before we call initGLState()
     initGLState();
@@ -185,19 +221,21 @@ U32 GFXGLDevice::getTotalVideoMemory()
 
 GFXWindowTarget *GFXGLDevice::allocWindowTarget( PlatformWindow *window )
 {
-    AssertFatal(!mContext, "This GFXGLDevice is already assigned to a window");
-    
-    GFXGLWindowTarget* ggwt = 0;
-    if( !mContext )
-    {
-        // no context, init the device now
-        init(window->getVideoMode(), window);
-        ggwt = new GFXGLWindowTarget(window, this);
-        ggwt->registerResourceWithDevice(this);
-        ggwt->mContext = mContext;
-    }
+   GFXGLWindowTarget* ggwt = new GFXGLWindowTarget(window, this);
 
-    return ggwt;
+   //first window
+   if (!mContext)
+   {
+      init(window->getVideoMode(), window);
+      ggwt->mSecondaryWindow = false;
+   }
+   else
+      ggwt->mSecondaryWindow = true;
+
+   ggwt->registerResourceWithDevice(this);
+   ggwt->mContext = mContext;
+
+   return ggwt;
 }
 
 GFXFence* GFXGLDevice::_createPlatformSpecificFence()
@@ -220,6 +258,11 @@ void GFXGLWindowTarget::_teardownCurrentMode()
 
 void GFXGLWindowTarget::_setupNewMode()
 {
+}
+
+void GFXGLWindowTarget::_makeContextCurrent()
+{
+   PlatformGL::MakeCurrentGL(mWindow, mContext);
 }
 
 #endif

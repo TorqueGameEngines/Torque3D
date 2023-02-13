@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="CubemapEditor"
+    scriptFile="@assetFile=cubemapEditor.gui"
+    GUIFile="@assetFile=cubemapEditor.gui"
+    VersionId="1" />

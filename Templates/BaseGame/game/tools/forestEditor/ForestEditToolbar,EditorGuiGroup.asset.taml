@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="ForestEditToolbar,EditorGuiGroup"
+    scriptFile="@assetFile=forestEditToolbar.ed.gui"
+    GUIFile="@assetFile=forestEditToolbar.ed.gui"
+    VersionId="1" />

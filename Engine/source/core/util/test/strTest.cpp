@@ -39,9 +39,9 @@ protected:
       const UTF16* mUTF16;
       U32 mLength;
 
-      StrTest() : mData( 0 ), mUTF16( 0 ) {}
+      StrTest() : mData( 0 ), mUTF16( 0 ), mLength( 0 ) {}
       StrTest( const char* str )
-         : mData( str ), mLength( str ? dStrlen( str ) : 0 ), mUTF16( NULL )
+         : mData( str ), mUTF16( NULL ), mLength( str ? dStrlen( str ) : 0 )
       {
          if( str )
             mUTF16 = createUTF16string( mData );
@@ -103,8 +103,8 @@ TEST_FIX(Str, Test1)
       EXPECT_TRUE( !data.mData || dMemcmp( str.utf16(), data.mUTF16, str.length() * sizeof( UTF16 ) ) == 0 );
       EXPECT_TRUE( !data.mData || dMemcmp( str16.utf8(), data.mData, str.length() ) == 0 );
 
-      EXPECT_TRUE( !data.mData || dStrcmp( str.utf8(), data.mData ) == 0 );
-      EXPECT_TRUE( !data.mData || dStrcmp( str.utf16(), data.mUTF16 ) == 0 );
+      EXPECT_TRUE( !data.mData || String::compare( str.utf8(), data.mData ) == 0 );
+      EXPECT_TRUE( !data.mData || String::compare( str.utf16(), data.mUTF16 ) == 0 );
    }
 }
 

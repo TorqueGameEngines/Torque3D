@@ -81,6 +81,7 @@ CustomMaterial::CustomMaterial()
 //--------------------------------------------------------------------------
 void CustomMaterial::initPersistFields()
 {
+   docsURL;
    addField("version",     TypeF32,             Offset(mVersion, CustomMaterial), 
       "@brief Specifies pixel shader version for hardware.\n\n"
       "Valid pixel shader versions include 2.0, 3.0, etc. "
@@ -120,6 +121,7 @@ bool CustomMaterial::onAdd()
    }
    
    const char* samplerDecl = "sampler";
+   S32 samplerDeclLen = dStrlen(samplerDecl);
    S32 i = 0;
    for (SimFieldDictionaryIterator itr(getFieldDictionary()); *itr; ++itr)
    {
@@ -132,7 +134,7 @@ bool CustomMaterial::onAdd()
             return false;
          }
          
-         if (dStrlen(entry->slotName) == dStrlen(samplerDecl))
+         if (dStrlen(entry->slotName) == samplerDeclLen)
          {
          	logError("sampler declarations must have a sampler name, e.g. sampler[\"diffuseMap\"]");
             return false;
@@ -140,7 +142,7 @@ bool CustomMaterial::onAdd()
          
          // Assert sampler names are defined on ShaderData
          S32 pos = -1;
-         String samplerName = entry->slotName + dStrlen(samplerDecl);
+         String samplerName = entry->slotName + samplerDeclLen;
          samplerName.insert(0, '$');
          mShaderData->hasSamplerDef(samplerName, pos);
          

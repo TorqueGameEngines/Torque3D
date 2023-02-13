@@ -41,12 +41,14 @@
 
 #include "gfx/gfxTextureHandle.h"
 
-
+#include "T3D/assets/ImageAsset.h"
+#include "T3D/assets/SoundAsset.h"
 
 class ShapeBase;
 class LightningStrikeEvent;
 class SFXTrack;
 
+#define MAX_LIGHTNING 3
 
 // -------------------------------------------------------------------------
 class LightningData : public GameBaseData
@@ -61,8 +63,13 @@ class LightningData : public GameBaseData
 
    //-------------------------------------- Console set variables
   public:
-   SFXTrack*          thunderSounds[MaxThunders];
-   SFXTrack*         strikeSound;
+
+   DECLARE_SOUNDASSET_ARRAY(LightningData, ThunderSound, MaxThunders);
+   DECLARE_ASSET_ARRAY_SETGET(LightningData, ThunderSound);
+
+   DECLARE_SOUNDASSET(LightningData, StrikeSound);
+   DECLARE_ASSET_SETGET(LightningData, StrikeSound);
+
    StringTableEntry  strikeTextureNames[MaxTextures];
 
    //-------------------------------------- load set variables
@@ -70,6 +77,7 @@ class LightningData : public GameBaseData
 
    GFXTexHandle  strikeTextures[MaxTextures];
    U32           numThunders;
+   U32           mNumStrikeTextures;
 
   protected:
    bool onAdd();
@@ -189,8 +197,8 @@ class Lightning : public GameBase
    F32      chanceToHitTarget;
    F32      strikeRadius;
    F32      boltStartRadius;
-   ColorF   color;
-   ColorF   fadeColor;
+   LinearColorF   color;
+   LinearColorF   fadeColor;
    bool     useFog;
 
    GFXStateBlockRef  mLightningSB;
@@ -227,7 +235,7 @@ class Lightning : public GameBase
 
    void warningFlashes();
    void strikeRandomPoint();
-   void strikeObject(ShapeBase*);
+   void strikeObject(ShapeBase* targetObj);
    void processEvent(LightningStrikeEvent*);
 
    DECLARE_CONOBJECT(Lightning);

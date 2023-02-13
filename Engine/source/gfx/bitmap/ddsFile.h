@@ -65,6 +65,7 @@ struct DDSFile
       CubeMap_NegY_Flag = BIT(11),
       CubeMap_PosZ_Flag = BIT(12),
       CubeMap_NegZ_Flag = BIT(13),
+      CubeMap_All_Flags = CubeMapFlag|CubeMap_PosX_Flag | CubeMap_NegX_Flag | CubeMap_PosY_Flag | CubeMap_NegY_Flag | CubeMap_PosZ_Flag | CubeMap_NegZ_Flag,
    };
 
    /// The index into mSurfaces for each 
@@ -114,9 +115,6 @@ struct DDSFile
       }
 
       Vector<U8*> mMips;
-
-      // Helper function to read in a mipchain.
-      bool readMipChain();
 
       void dumpImage(DDSFile *dds, U32 mip, const char *file);
       
@@ -178,7 +176,15 @@ struct DDSFile
    // For debugging fun!
    static S32 smActiveCopies;
 
-   DDSFile()
+   DDSFile():
+      mBytesPerPixel(0),
+      mHeight(0),
+      mWidth(0),
+      mDepth(0),
+      mFormat(GFXFormat_FIRST),
+      mFourCC(0),
+      mMipMapCount(0),
+      mPitchOrLinearSize(0)
    {
       VECTOR_SET_ASSOCIATION( mSurfaces );
       smActiveCopies++;
@@ -200,6 +206,9 @@ struct DDSFile
    }
 
    static DDSFile *createDDSFileFromGBitmap( const GBitmap *gbmp );
+   //Create a single cubemap texture from 6 GBitmap
+   static DDSFile *createDDSCubemapFileFromGBitmaps(GBitmap **gbmps);
+   bool decompressToGBitmap(GBitmap *dest);
 };
 
 #endif // _DDSFILE_H_

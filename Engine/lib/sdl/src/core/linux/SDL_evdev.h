@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2014 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -21,39 +21,19 @@
 
 #include "../../SDL_internal.h"
 
-#ifndef _SDL_evdev_h
-#define _SDL_evdev_h
+#ifndef SDL_evdev_h_
+#define SDL_evdev_h_
 
 #ifdef SDL_INPUT_LINUXEV
 
 #include "SDL_events.h"
-#include <sys/stat.h>
-
-typedef struct SDL_evdevlist_item
-{
-    char *path;
-    int fd;
-    struct SDL_evdevlist_item *next;
-} SDL_evdevlist_item;
-
-typedef struct SDL_EVDEV_PrivateData
-{
-    SDL_evdevlist_item *first;
-    SDL_evdevlist_item *last;
-    int numdevices;
-    int ref_count;
-    int console_fd;
-    int kb_mode;
-    int tty;
-} SDL_EVDEV_PrivateData;
 
 extern int SDL_EVDEV_Init(void);
 extern void SDL_EVDEV_Quit(void);
 extern void SDL_EVDEV_Poll(void);
 
-
 #endif /* SDL_INPUT_LINUXEV */
 
-#endif /* _SDL_evdev_h */
+#endif /* SDL_evdev_h_ */
 
 /* vi: set ts=4 sw=4 expandtab: */

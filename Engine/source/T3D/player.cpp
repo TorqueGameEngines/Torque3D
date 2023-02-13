@@ -20,6 +20,10 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+// Arcane-FX for MIT Licensed Open Source version of Torque 3D from GarageGames
+// Copyright (C) 2015 Faust Logic, Inc.
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
 #include "platform/platform.h"
 #include "T3D/player.h"
 
@@ -56,9 +60,16 @@
 #include "T3D/decal/decalManager.h"
 #include "T3D/decal/decalData.h"
 #include "materials/baseMatInstance.h"
+#include "math/mathUtils.h"
+#include "gfx/sim/debugDraw.h"
 
 #ifdef TORQUE_EXTENDED_MOVE
    #include "T3D/gameBase/extended/extendedMove.h"
+#endif
+
+#ifdef TORQUE_OPENVR
+#include "platform/input/openVR/openVRProvider.h"
+#include "platform/input/openVR/openVRTrackedObject.h"
 #endif
 
 // Amount of time if takes to transition to a new action sequence.
@@ -102,8 +113,6 @@ static S32 sMaxPredictionTicks = 30;   // Number of ticks to predict
 
 S32 Player::smExtendedMoveHeadPosRotIndex = 0;  // The ExtendedMove position/rotation index used for head movements
 
-// Anchor point compression
-const F32 sAnchorMaxDistance = 32.0f;
 
 //
 static U32 sCollisionMoveMask =  TerrainObjectType       |
@@ -111,7 +120,10 @@ static U32 sCollisionMoveMask =  TerrainObjectType       |
                                  PlayerObjectType        |
                                  StaticShapeObjectType   | 
                                  VehicleObjectType       |
-                                 PhysicalZoneObjectType;
+								 PhysicalZoneObjectType  |
+// PATHSHAPE
+								 PathShapeObjectType;
+// PATHSHAPE END
 
 static U32 sServerCollisionContactMask = sCollisionMoveMask |
                                          ItemObjectType     |
@@ -175,6 +187,32 @@ PlayerData::ActionAnimationDef PlayerData::ActionAnimationList[NumTableActionAni
 
 
 //----------------------------------------------------------------------------
+
+typedef PlayerData::Sounds playerSoundsEnum;
+DefineEnumType(playerSoundsEnum);
+
+ImplementEnumType(playerSoundsEnum, "enum types.\n"
+   "@ingroup PlayerData\n\n")
+   { playerSoundsEnum::FootSoft,            "FootSoft", "..." },
+   { playerSoundsEnum::FootHard,            "FootHard","..." },
+   { playerSoundsEnum::FootMetal,           "FootMetal","..." },
+   { playerSoundsEnum::FootSnow,            "FootSnow","..." },
+   { playerSoundsEnum::FootShallowSplash,   "FootShallowSplash","..." },
+   { playerSoundsEnum::FootWading,          "FootWading","..." },
+   { playerSoundsEnum::FootUnderWater,      "FootUnderWater","..." },
+   { playerSoundsEnum::FootBubbles,         "FootBubbles","..." },
+   { playerSoundsEnum::MoveBubbles,         "MoveBubbles","..." },
+   { playerSoundsEnum::WaterBreath,         "WaterBreath","..." },
+   { playerSoundsEnum::ImpactSoft,          "ImpactSoft","..." },
+   { playerSoundsEnum::ImpactHard,          "ImpactHard","..." },
+   { playerSoundsEnum::ImpactMetal,         "ImpactMetal","..." },
+   { playerSoundsEnum::ImpactSnow,          "ImpactSnow","..." },
+   { playerSoundsEnum::ImpactWaterEasy,     "ImpactWaterEasy","..." },
+   { playerSoundsEnum::ImpactWaterMedium,   "ImpactWaterMedium","..." },
+   { playerSoundsEnum::ImpactWaterHard,     "ImpactWaterHard","..." },
+   { playerSoundsEnum::ExitWater,           "ExitWater","..." },
+EndImplementEnumType;
+
 //----------------------------------------------------------------------------
 
 //----------------------------------------------------------------------------
@@ -244,7 +282,6 @@ IMPLEMENT_CALLBACK( PlayerData, onLeaveMissionArea, void, ( Player* obj ), ( obj
 
 PlayerData::PlayerData()
 {
-   shadowEnable = true;
    shadowSize = 256;
    shadowProjectionDistance = 14.0f;
 
@@ -252,15 +289,15 @@ PlayerData::PlayerData()
    firstPersonShadows = false;
 
    // Used for third person image rendering
-   imageAnimPrefix = StringTable->insert("");
+   imageAnimPrefix = StringTable->EmptyString();
 
    allowImageStateAnimation = false;
 
    // Used for first person image rendering
-   imageAnimPrefixFP = StringTable->insert("");
+   imageAnimPrefixFP = StringTable->EmptyString();
    for (U32 i=0; i<ShapeBase::MaxMountedImages; ++i)
    {
-      shapeNameFP[i] = StringTable->insert("");
+      INIT_ASSET_ARRAY(ShapeFP, i);
       mCRCFP[i] = 0;
       mValidShapeFP[i] = false;
    }
@@ -278,6 +315,7 @@ PlayerData::PlayerData()
 
    maxStepHeight = 1.0f;
    runSurfaceAngle = 80.0f;
+   runSurfaceCos = mCos(mDegToRad(runSurfaceAngle));
 
    fallingSpeedThreshold = -10.0f;
 
@@ -299,6 +337,11 @@ PlayerData::PlayerData()
    jumpEnergyDrain = 0.0f;
    minJumpEnergy = 0.0f;
    jumpSurfaceAngle = 78.0f;
+   jumpSurfaceCos = mCos(mDegToRad(jumpSurfaceAngle));
+
+   for (U32 i = 0; i < NumRecoilSequences; i++)
+      recoilSequence[i] = -1;
+
    jumpDelay = 30;
    minJumpSpeed = 500.0f;
    maxJumpSpeed = 2.0f * minJumpSpeed;
@@ -358,6 +401,9 @@ PlayerData::PlayerData()
 
    actionCount = 0;
    lookAction = 0;
+   dMemset(spineNode, 0, sizeof(spineNode));
+
+   pickupDelta = 0.0f;
 
    // size of bounding box
    boxSize.set(1.0f, 1.0f, 2.3f);
@@ -376,7 +422,7 @@ PlayerData::PlayerData()
    boxHeadFrontPercentage = 1;
 
    for (S32 i = 0; i < MaxSounds; i++)
-      sound[i] = NULL;
+      INIT_SOUNDASSET_ARRAY(PlayerSound, i);
 
    footPuffEmitter = NULL;
    footPuffID = 0;
@@ -413,7 +459,7 @@ PlayerData::PlayerData()
 
    jumpTowardsNormal = true;
 
-   physicsPlayerType = StringTable->insert("");
+   physicsPlayerType = StringTable->EmptyString();
 
    dMemset( actionList, 0, sizeof(actionList) );
 }
@@ -422,18 +468,17 @@ bool PlayerData::preload(bool server, String &errorStr)
 {
    if(!Parent::preload(server, errorStr))
       return false;
-
-   // Resolve objects transmitted from server
-   if( !server )
-   {
-      for( U32 i = 0; i < MaxSounds; ++ i )
+   if (!server) {
+      for (U32 i = 0; i < MaxSounds; ++i)
       {
-         String sfxErrorStr;
-         if( !sfxResolve( &sound[ i ], sfxErrorStr ) )
-            Con::errorf( "PlayerData::preload: %s", sfxErrorStr.c_str() );
+         _setPlayerSound(getPlayerSound(i), i);
+         if (getPlayerSound(i) != StringTable->EmptyString())
+         {
+            if (!getPlayerSoundProfile(i))
+               Con::errorf("PlayerData::Preload() - unable to find sfxProfile for asset %d %s", i, mPlayerSoundAssetId[i]);
+         }
       }
    }
-
    //
    runSurfaceCos = mCos(mDegToRad(runSurfaceAngle));
    jumpSurfaceCos = mCos(mDegToRad(jumpSurfaceAngle));
@@ -564,35 +609,34 @@ bool PlayerData::preload(bool server, String &errorStr)
    {
       bool shapeError = false;
 
-      if (shapeNameFP[i] && shapeNameFP[i][0])
+      if (mShapeFPAssetId[i] != StringTable->EmptyString())
       {
-         mShapeFP[i] = ResourceManager::get().load(shapeNameFP[i]);
-         if (bool(mShapeFP[i]) == false)
+         if (!mShapeFP[i])
          {
-            errorStr = String::ToString("PlayerData: Couldn't load mounted image %d shape \"%s\"",i,shapeNameFP[i]);
+            errorStr = String::ToString("PlayerData: Couldn't load mounted image %d shape \"%s\"", i, mShapeFPAssetId[i]);
             return false;
          }
 
-         if(!server && !mShapeFP[i]->preloadMaterialList(mShapeFP[i].getPath()) && NetConnection::filesWereDownloaded())
+         if (!server && !mShapeFP[i]->preloadMaterialList(mShapeFP[i].getPath()) && NetConnection::filesWereDownloaded())
             shapeError = true;
 
-         if(computeCRC)
+         if (computeCRC)
          {
-            Con::printf("Validation required for mounted image %d shape: %s", i, shapeNameFP[i]);
+            Con::printf("Validation required for mounted image %d shape: %s", i, mShapeFPAssetId[i]);
 
             Torque::FS::FileNodeRef    fileRef = Torque::FS::GetFileNode(mShapeFP[i].getPath());
 
             if (!fileRef)
             {
-               errorStr = String::ToString("PlayerData: Mounted image %d loading failed, shape \"%s\" is not found.",i,mShapeFP[i].getPath().getFullPath().c_str());
+               errorStr = String::ToString("PlayerData: Mounted image %d loading failed, shape \"%s\" is not found.", i, mShapeFP[i].getPath().getFullPath().c_str());
                return false;
             }
 
-            if(server)
+            if (server)
                mCRCFP[i] = fileRef->getChecksum();
-            else if(mCRCFP[i] != fileRef->getChecksum())
+            else if (mCRCFP[i] != fileRef->getChecksum())
             {
-               errorStr = String::ToString("PlayerData: Mounted image %d shape \"%s\" does not match version on server.",i,shapeNameFP[i]);
+               errorStr = String::ToString("PlayerData: Mounted image %d shape \"%s\" does not match version on server.", i, mShapeFPAssetId[i]);
                return false;
             }
          }
@@ -660,6 +704,9 @@ bool PlayerData::isJumpAction(U32 action)
 
 void PlayerData::initPersistFields()
 {
+   docsURL;
+   Parent::initPersistFields();
+
    addField( "pickupRadius", TypeF32, Offset(pickupRadius, PlayerData),
       "@brief Radius around the player to collide with Items in the scene (on server).\n\n"
       "Internally the pickupRadius is added to the larger side of the initial bounding box "
@@ -1001,65 +1048,7 @@ void PlayerData::initPersistFields()
    endGroup( "Interaction: Footsteps" );
 
    addGroup( "Interaction: Sounds" );
-
-      addField( "FootSoftSound", TypeSFXTrackName, Offset(sound[FootSoft], PlayerData),
-         "@brief Sound to play when walking on a surface with Material footstepSoundId 0.\n\n" );
-      addField( "FootHardSound", TypeSFXTrackName, Offset(sound[FootHard], PlayerData),
-         "@brief Sound to play when walking on a surface with Material footstepSoundId 1.\n\n" );
-      addField( "FootMetalSound", TypeSFXTrackName, Offset(sound[FootMetal], PlayerData),
-         "@brief Sound to play when walking on a surface with Material footstepSoundId 2.\n\n" );
-      addField( "FootSnowSound", TypeSFXTrackName, Offset(sound[FootSnow], PlayerData),
-         "@brief Sound to play when walking on a surface with Material footstepSoundId 3.\n\n" );
-
-      addField( "FootShallowSound", TypeSFXTrackName, Offset(sound[FootShallowSplash], PlayerData),
-         "@brief Sound to play when walking in water and coverage is less than "
-         "footSplashHeight.\n\n"
-         "@see footSplashHeight\n" );
-      addField( "FootWadingSound", TypeSFXTrackName, Offset(sound[FootWading], PlayerData),
-         "@brief Sound to play when walking in water and coverage is less than 1, "
-         "but > footSplashHeight.\n\n"
-         "@see footSplashHeight\n" );
-      addField( "FootUnderwaterSound", TypeSFXTrackName, Offset(sound[FootUnderWater], PlayerData),
-         "@brief Sound to play when walking in water and coverage equals 1.0 "
-         "(fully underwater).\n\n" );
-      addField( "FootBubblesSound", TypeSFXTrackName, Offset(sound[FootBubbles], PlayerData),
-         "@brief Sound to play when walking in water and coverage equals 1.0 "
-         "(fully underwater).\n\n" );
-      addField( "movingBubblesSound", TypeSFXTrackName, Offset(sound[MoveBubbles], PlayerData),
-         "@brief Sound to play when in water and coverage equals 1.0 (fully underwater).\n\n"
-         "Note that unlike FootUnderwaterSound, this sound plays even if the "
-         "player is not moving around in the water.\n" );
-      addField( "waterBreathSound", TypeSFXTrackName, Offset(sound[WaterBreath], PlayerData),
-         "@brief Sound to play when in water and coverage equals 1.0 (fully underwater).\n\n"
-         "Note that unlike FootUnderwaterSound, this sound plays even if the "
-         "player is not moving around in the water.\n" );
-
-      addField( "impactSoftSound", TypeSFXTrackName, Offset(sound[ImpactSoft], PlayerData),
-         "@brief Sound to play after falling on a surface with Material footstepSoundId 0.\n\n" );
-      addField( "impactHardSound", TypeSFXTrackName, Offset(sound[ImpactHard], PlayerData),
-         "@brief Sound to play after falling on a surface with Material footstepSoundId 1.\n\n" );
-      addField( "impactMetalSound", TypeSFXTrackName, Offset(sound[ImpactMetal], PlayerData),
-         "@brief Sound to play after falling on a surface with Material footstepSoundId 2.\n\n" );
-      addField( "impactSnowSound", TypeSFXTrackName, Offset(sound[ImpactSnow], PlayerData),
-         "@brief Sound to play after falling on a surface with Material footstepSoundId 3.\n\n" );
-
-      addField( "impactWaterEasy", TypeSFXTrackName, Offset(sound[ImpactWaterEasy], PlayerData),
-         "@brief Sound to play when entering the water with velocity < "
-         "mediumSplashSoundVelocity.\n\n"
-         "@see mediumSplashSoundVelocity\n");
-      addField( "impactWaterMedium", TypeSFXTrackName, Offset(sound[ImpactWaterMedium], PlayerData),
-         "@brief Sound to play when entering the water with velocity >= "
-         "mediumSplashSoundVelocity and < hardSplashSoundVelocity.\n\n"
-         "@see mediumSplashSoundVelocity\n"
-         "@see hardSplashSoundVelocity\n");
-      addField( "impactWaterHard", TypeSFXTrackName, Offset(sound[ImpactWaterHard], PlayerData),
-         "@brief Sound to play when entering the water with velocity >= "
-         "hardSplashSoundVelocity.\n\n"
-         "@see hardSplashSoundVelocity\n");
-      addField( "exitingWater", TypeSFXTrackName, Offset(sound[ExitWater], PlayerData),
-         "@brief Sound to play when exiting the water with velocity >= exitSplashSoundVelocity.\n\n"
-         "@see exitSplashSoundVelocity\n");
-
+   INITPERSISTFIELD_SOUNDASSET_ENUMED(PlayerSound, playerSoundsEnum, PlayerData::Sounds::MaxSounds, PlayerData, "Sounds related to player interaction.");
    endGroup( "Interaction: Sounds" );
 
    addGroup( "Interaction: Splashes" );
@@ -1144,9 +1133,13 @@ void PlayerData::initPersistFields()
 
       // Mounted images arrays
       addArray( "Mounted Images", ShapeBase::MaxMountedImages );
-
-         addField( "shapeNameFP", TypeShapeFilename, Offset(shapeNameFP, PlayerData), ShapeBase::MaxMountedImages,
+         addProtectedField("shapeNameFP", TypeShapeFilename, Offset(mShapeFPName, PlayerData), &_setShapeFPData, &defaultProtectedGetFn, ShapeBase::MaxMountedImages,
             "@brief File name of this player's shape that will be used in conjunction with the corresponding mounted image.\n\n"
+            "These optional parameters correspond to each mounted image slot to indicate a shape that is rendered "
+            "in addition to the mounted image shape.  Typically these are a player's arms (or arm) that is "
+            "animated along with the mounted image's state animation sequences.\n", AbstractClassRep::FIELD_HideInInspectors);
+
+         INITPERSISTFIELD_SHAPEASSET_ARRAY(ShapeFP, ShapeBase::MaxMountedImages, PlayerData, "@brief File name of this player's shape that will be used in conjunction with the corresponding mounted image.\n\n"
             "These optional parameters correspond to each mounted image slot to indicate a shape that is rendered "
             "in addition to the mounted image shape.  Typically these are a player's arms (or arm) that is "
             "animated along with the mounted image's state animation sequences.\n");
@@ -1172,8 +1165,6 @@ void PlayerData::initPersistFields()
          "need to.\n");
 
    endGroup( "Third Person" );
-
-   Parent::initPersistFields();
 }
 
 void PlayerData::packData(BitStream* stream)
@@ -1279,8 +1270,8 @@ void PlayerData::packData(BitStream* stream)
    stream->write(minImpactSpeed);
    stream->write(minLateralImpactSpeed);
 
-   for( U32 i = 0; i < MaxSounds; i++)
-      sfxWrite( stream, sound[ i ] );
+   for (U32 i = 0; i < MaxSounds; i++)
+      PACKDATA_SOUNDASSET_ARRAY(PlayerSound, i);
 
    mathWrite(*stream, boxSize);
    mathWrite(*stream, crouchBoxSize);
@@ -1348,7 +1339,7 @@ void PlayerData::packData(BitStream* stream)
    stream->writeString(imageAnimPrefixFP);
    for (U32 i=0; i<ShapeBase::MaxMountedImages; ++i)
    {
-      stream->writeString(shapeNameFP[i]);
+      PACKDATA_ASSET_ARRAY(ShapeFP, i);
 
       // computeCRC is handled in ShapeBaseData
       if (computeCRC)
@@ -1460,8 +1451,8 @@ void PlayerData::unpackData(BitStream* stream)
    stream->read(&minImpactSpeed);
    stream->read(&minLateralImpactSpeed);
 
-   for( U32 i = 0; i < MaxSounds; i++)
-      sfxRead( stream, &sound[ i ] );
+   for (U32 i = 0; i < MaxSounds; i++)
+      UNPACKDATA_SOUNDASSET_ARRAY(PlayerSound, i);
 
    mathRead(*stream, &boxSize);
    mathRead(*stream, &crouchBoxSize);
@@ -1528,7 +1519,7 @@ void PlayerData::unpackData(BitStream* stream)
    imageAnimPrefixFP = stream->readSTString();
    for (U32 i=0; i<ShapeBase::MaxMountedImages; ++i)
    {
-      shapeNameFP[i] = stream->readSTString();
+      UNPACKDATA_ASSET_ARRAY(ShapeFP, i);
 
       // computeCRC is handled in ShapeBaseData
       if (computeCRC)
@@ -1560,28 +1551,26 @@ ConsoleDocClass( Player,
    "@ingroup gameObjects\n"
 );
 
-F32 Player::mGravity = -20;
-
 //----------------------------------------------------------------------------
 
 Player::Player()
 {
    mTypeMask |= PlayerObjectType | DynamicShapeObjectType;
 
-   delta.pos = mAnchorPoint = Point3F(0,0,100);
-   delta.rot = delta.head = Point3F(0,0,0);
-   delta.rotOffset.set(0.0f,0.0f,0.0f);
-   delta.warpOffset.set(0.0f,0.0f,0.0f);
-   delta.posVec.set(0.0f,0.0f,0.0f);
-   delta.rotVec.set(0.0f,0.0f,0.0f);
-   delta.headVec.set(0.0f,0.0f,0.0f);
-   delta.warpTicks = 0;
-   delta.dt = 1.0f;
-   delta.move = NullMove;
+   mDelta.pos = mAnchorPoint = Point3F(0,0,100);
+   mDelta.rot = mDelta.head = Point3F(0,0,0);
+   mDelta.rotOffset.set(0.0f,0.0f,0.0f);
+   mDelta.warpOffset.set(0.0f,0.0f,0.0f);
+   mDelta.posVec.set(0.0f,0.0f,0.0f);
+   mDelta.rotVec.set(0.0f,0.0f,0.0f);
+   mDelta.headVec.set(0.0f,0.0f,0.0f);
+   mDelta.warpTicks = 0;
+   mDelta.dt = 1.0f;
+   mDelta.move = NullMove;
    mPredictionCount = sMaxPredictionTicks;
-   mObjToWorld.setColumn(3,delta.pos);
-   mRot = delta.rot;
-   mHead = delta.head;
+   mObjToWorld.setColumn(3, mDelta.pos);
+   mRot = mDelta.rot;
+   mHead = mDelta.head;
    mVelocity.set(0.0f, 0.0f, 0.0f);
    mDataBlock = 0;
    mHeadHThread = mHeadVThread = mRecoilThread = mImageStateThread = 0;
@@ -1650,6 +1639,9 @@ Player::Player()
 
    mLastAbsoluteYaw = 0.0f;
    mLastAbsolutePitch = 0.0f;
+   mLastAbsoluteRoll = 0.0f;
+   
+   afx_init();
 }
 
 Player::~Player()
@@ -1775,7 +1767,7 @@ void Player::onRemove()
    mWorkingQueryBox.minExtents.set(-1e9f, -1e9f, -1e9f);
    mWorkingQueryBox.maxExtents.set(-1e9f, -1e9f, -1e9f);
 
-   SAFE_DELETE( mPhysicsRep );		
+   SAFE_DELETE( mPhysicsRep );
 
    Parent::onRemove();
 }
@@ -1907,11 +1899,11 @@ bool Player::onNewDataBlock( GameBaseData *dptr, bool reload )
       SFX_DELETE( mMoveBubbleSound );
       SFX_DELETE( mWaterBreathSound );
 
-      if ( mDataBlock->sound[PlayerData::MoveBubbles] )
-         mMoveBubbleSound = SFX->createSource( mDataBlock->sound[PlayerData::MoveBubbles] );
+      if ( mDataBlock->getPlayerSound(PlayerData::MoveBubbles) )
+         mMoveBubbleSound = SFX->createSource( mDataBlock->getPlayerSoundProfile(PlayerData::MoveBubbles) );
 
-      if ( mDataBlock->sound[PlayerData::WaterBreath] )
-         mWaterBreathSound = SFX->createSource( mDataBlock->sound[PlayerData::WaterBreath] );
+      if ( mDataBlock->getPlayerSound(PlayerData::WaterBreath) )
+         mWaterBreathSound = SFX->createSource( mDataBlock->getPlayerSoundProfile(PlayerData::WaterBreath) );
    }
 
    mObjBox.maxExtents.x = mDataBlock->boxSize.x * 0.5f;
@@ -1941,6 +1933,7 @@ void Player::reSkin()
 {
    if ( isGhost() && mShapeInstance && mSkinNameHandle.isValidString() )
    {
+	  mShapeInstance->resetMaterialList();
       Vector<String> skins;
       String(mSkinNameHandle.getString()).split( ";", skins );
 
@@ -2064,28 +2057,57 @@ void Player::processTick(const Move* move)
    }
 
    Parent::processTick(move);
+   // Check for state changes in the standard move triggers and
+   // set bits for any triggers that switched on this tick in
+   // the fx_s_triggers mask. Flag any changes to be packed to
+   // clients.
+   if (isServerObject())
+   {
+      fx_s_triggers = 0;
+      if (move)
+      {
+         U8 on_bits = 0;
+         for (S32 i = 0; i < MaxTriggerKeys; i++)
+            if (move->trigger[i])
+               on_bits |= BIT(i);
+
+         if (on_bits != move_trigger_states)
+         {
+            U8 switched_on_bits = (on_bits & ~move_trigger_states);
+            if (switched_on_bits)
+            {
+               fx_s_triggers |= (U32)switched_on_bits;
+               setMaskBits(TriggerMask);
+            }
+            move_trigger_states = on_bits;
+         }
+      }
+   }
    // Warp to catch up to server
-   if (delta.warpTicks > 0) {
-      delta.warpTicks--;
+   if (mDelta.warpTicks > 0) {
+	   mDelta.warpTicks--;
 
       // Set new pos
-      getTransform().getColumn(3, &delta.pos);
-      delta.pos += delta.warpOffset;
-      delta.rot += delta.rotOffset;
+      getTransform().getColumn(3, &mDelta.pos);
+	  mDelta.pos += mDelta.warpOffset;
+	  mDelta.rot += mDelta.rotOffset;
 
       // Wrap yaw to +/-PI
-      if (delta.rot.z < - M_PI_F)
-         delta.rot.z += M_2PI_F;
-      else if (delta.rot.z > M_PI_F)
-         delta.rot.z -= M_2PI_F;
+      if (mDelta.rot.z < - M_PI_F)
+		  mDelta.rot.z += M_2PI_F;
+      else if (mDelta.rot.z > M_PI_F)
+		  mDelta.rot.z -= M_2PI_F;
 
-      setPosition(delta.pos,delta.rot);
+      if (!ignore_updates)
+      {
+         setPosition(mDelta.pos, mDelta.rot);
+      }
       updateDeathOffsets();
       updateLookAnimation();
 
       // Backstepping
-      delta.posVec = -delta.warpOffset;
-      delta.rotVec = -delta.rotOffset;
+	  mDelta.posVec = -mDelta.warpOffset;
+	  mDelta.rotVec = -mDelta.rotOffset;
    }
    else {
       // If there is no move, the player is either an
@@ -2098,7 +2120,7 @@ void Player::processTick(const Move* move)
             if (mPredictionCount-- <= 0)
                return;
 
-            move = &delta.move;
+            move = &mDelta.move;
          }
          else
             move = &NullMove;
@@ -2164,6 +2186,9 @@ void Player::processTick(const Move* move)
          }
       }
    }
+// PATHSHAPE
+   if (!isGhost()) updateAttachment(); 
+// PATHSHAPE END
 }
 
 void Player::interpolateTick(F32 dt)
@@ -2174,10 +2199,11 @@ void Player::interpolateTick(F32 dt)
    // Client side interpolation
    Parent::interpolateTick(dt);
 
-   Point3F pos = delta.pos + delta.posVec * dt;
-   Point3F rot = delta.rot + delta.rotVec * dt;
+   Point3F pos = mDelta.pos + mDelta.posVec * dt;
+   Point3F rot = mDelta.rot + mDelta.rotVec * dt;
 
-   setRenderPosition(pos,rot,dt);
+   if (!ignore_updates)
+      setRenderPosition(pos,rot,dt);
 
 /*
    // apply camera effects - is this the best place? - bramage
@@ -2195,13 +2221,19 @@ void Player::interpolateTick(F32 dt)
 */
 
    updateLookAnimation(dt);
-   delta.dt = dt;
+   mDelta.dt = dt;
+// PATHSHAPE
+   updateRenderChangesByParent();
+// PATHSHAPE END
 }
 
 void Player::advanceTime(F32 dt)
 {
    // Client side animations
    Parent::advanceTime(dt);
+   // Increment timer for triggering idle events.
+   if (idle_timer >= 0.0f)
+      idle_timer += dt;
    updateActionThread();
    updateAnimation(dt);
    updateSplash();
@@ -2352,7 +2384,7 @@ void Player::getDamageLocation(const Point3F& in_rPos, const char *&out_rpVert, 
    else
       out_rpVert = "head";
 
-   if(dStrcmp(out_rpVert, "head") != 0)
+   if(String::compare(out_rpVert, "head") != 0)
    {
       if (newPoint.y >= 0.0f)
       {
@@ -2488,9 +2520,48 @@ void Player::allowAllPoses()
    mAllowSwimming = true;
 }
 
+AngAxisF gPlayerMoveRot;
+
 void Player::updateMove(const Move* move)
 {
-   delta.move = *move;
+   struct Move my_move;
+   if (override_movement && movement_op < 3)
+   {
+      my_move = *move;
+      switch (movement_op)
+      {
+      case 0: // add
+         my_move.x += movement_data.x;
+         my_move.y += movement_data.y;
+         my_move.z += movement_data.z;
+         break;
+      case 1: // mult
+         my_move.x *= movement_data.x;
+         my_move.y *= movement_data.y;
+         my_move.z *= movement_data.z;
+         break;
+      case 2: // replace
+         my_move.x = movement_data.x;
+         my_move.y = movement_data.y;
+         my_move.z = movement_data.z;
+         break;
+      }
+      move = &my_move;
+   }
+   mDelta.move = *move;
+
+#ifdef TORQUE_OPENVR
+   if (mControllers[0])
+   {
+      mControllers[0]->processTick(move);
+   }
+
+   if (mControllers[1])
+   {
+      mControllers[1]->processTick(move);
+   }
+
+#endif
 
    // Is waterCoverage high enough to be 'swimming'?
    {
@@ -2527,9 +2598,10 @@ void Player::updateMove(const Move* move)
    // Update current orientation
    if (mDamageState == Enabled) {
       F32 prevZRot = mRot.z;
-      delta.headVec = mHead;
+	  mDelta.headVec = mHead;
 
       bool doStandardMove = true;
+      bool absoluteDelta = false;
       GameConnection* con = getControllingClient();
 
 #ifdef TORQUE_EXTENDED_MOVE
@@ -2608,6 +2680,7 @@ void Player::updateMove(const Move* move)
             }
             mLastAbsoluteYaw = emove->rotZ[emoveIndex];
             mLastAbsolutePitch = emove->rotX[emoveIndex];
+            mLastAbsoluteRoll = emove->rotY[emoveIndex];
 
             // Head bank
             mHead.y = emove->rotY[emoveIndex];
@@ -2615,6 +2688,38 @@ void Player::updateMove(const Move* move)
             // Constrain the range of mHead.y
             while (mHead.y > M_PI_F) 
                mHead.y -= M_2PI_F;
+         }
+         else
+         {
+            // Orient the player so we are looking towards the required position, ignoring any banking
+            AngAxisF moveRot(Point3F(emove->rotX[emoveIndex], emove->rotY[emoveIndex], emove->rotZ[emoveIndex]), emove->rotW[emoveIndex]);
+            MatrixF trans(1);
+            moveRot.setMatrix(&trans);
+            trans.inverse();
+
+            Point3F vecForward(0, 10, 0);
+            Point3F viewAngle;
+            Point3F orient;
+            EulerF rot;
+            trans.mulV(vecForward);
+            viewAngle = vecForward;
+            vecForward.z = 0; // flatten
+            vecForward.normalizeSafe();
+
+            F32 yawAng;
+            F32 pitchAng;
+            MathUtils::getAnglesFromVector(vecForward, yawAng, pitchAng);
+
+            mRot = EulerF(0);
+            mRot.z = yawAng;
+            mHead = EulerF(0);
+
+            while (mRot.z < 0.0f)
+               mRot.z += M_2PI_F;
+            while (mRot.z > M_2PI_F)
+               mRot.z -= M_2PI_F;
+
+            absoluteDelta = true;
          }
       }
 #endif
@@ -2654,22 +2759,29 @@ void Player::updateMove(const Move* move)
             mRot.z -= M_2PI_F;
       }
 
-      delta.rot = mRot;
-      delta.rotVec.x = delta.rotVec.y = 0.0f;
-      delta.rotVec.z = prevZRot - mRot.z;
-      if (delta.rotVec.z > M_PI_F)
-         delta.rotVec.z -= M_2PI_F;
-      else if (delta.rotVec.z < -M_PI_F)
-         delta.rotVec.z += M_2PI_F;
+	  mDelta.rot = mRot;
+	  mDelta.rotVec.x = mDelta.rotVec.y = 0.0f;
+	  mDelta.rotVec.z = prevZRot - mRot.z;
+      if (mDelta.rotVec.z > M_PI_F)
+		  mDelta.rotVec.z -= M_2PI_F;
+      else if (mDelta.rotVec.z < -M_PI_F)
+		  mDelta.rotVec.z += M_2PI_F;
 
-      delta.head = mHead;
-      delta.headVec -= mHead;
+	  mDelta.head = mHead;
+	  mDelta.headVec -= mHead;
+
+      if (absoluteDelta)
+      {
+         mDelta.headVec = Point3F(0, 0, 0);
+		 mDelta.rotVec = Point3F(0, 0, 0);
+      }
+
       for(U32 i=0; i<3; ++i)
       {
-         if (delta.headVec[i] > M_PI_F)
-            delta.headVec[i] -= M_2PI_F;
-         else if (delta.headVec[i] < -M_PI_F)
-            delta.headVec[i] += M_2PI_F;
+         if (mDelta.headVec[i] > M_PI_F)
+            mDelta.headVec[i] -= M_2PI_F;
+         else if (mDelta.headVec[i] < -M_PI_F)
+            mDelta.headVec[i] += M_2PI_F;
       }
    }
    MatrixF zRot;
@@ -2678,7 +2790,12 @@ void Player::updateMove(const Move* move)
    // Desired move direction & speed
    VectorF moveVec;
    F32 moveSpeed;
-   if ((mState == MoveState || (mState == RecoverState && mDataBlock->recoverRunForceScale > 0.0f)) && mDamageState == Enabled)
+   // If BLOCK_USER_CONTROL is set in anim_clip_flags, the user won't be able to
+   // resume control over the player character. This generally happens for
+   // short periods of time synchronized with script driven animation at places
+   // where it makes sense that user motion is prohibited, such as when the 
+   // player is lifted off the ground or knocked down.
+   if ((mState == MoveState || (mState == RecoverState && mDataBlock->recoverRunForceScale > 0.0f)) && mDamageState == Enabled && !isAnimationLocked())
    {
       zRot.getColumn(0,&moveVec);
       moveVec *= (move->x * (mPose == SprintPose ? mDataBlock->sprintStrafeScale : 1.0f));
@@ -2737,8 +2854,13 @@ void Player::updateMove(const Move* move)
       moveSpeed = 0.0f;
    }
 
+   // apply speed bias here.
+   speed_bias = speed_bias + (speed_bias_goal - speed_bias)*0.1f;
+   moveSpeed *= speed_bias;
    // Acceleration due to gravity
-   VectorF acc(0.0f, 0.0f, mGravity * mGravityMod * TickSec);
+   VectorF acc(0.0f, 0.0f, mNetGravity/(1.0 - mBuoyancy) * TickSec);
+   if (getParent() !=NULL)
+	   acc = VectorF::Zero;
 
    // Determine ground contact normal. Only look for contacts if
    // we can move and aren't mounted.
@@ -2895,7 +3017,7 @@ void Player::updateMove(const Move* move)
 
       // get the head pitch and add it to the moveVec
       // This more accurate swim vector calc comes from Matt Fairfax
-      MatrixF xRot, zRot;
+      MatrixF xRot;
       xRot.set(EulerF(mHead.x, 0, 0));
       zRot.set(EulerF(0, 0, mRot.z));
       MatrixF rot;
@@ -2963,7 +3085,9 @@ void Player::updateMove(const Move* move)
       mContactTimer++;   
 
    // Acceleration from Jumping
-   if (move->trigger[sJumpTrigger] && canJump())// !isMounted() && 
+   // While BLOCK_USER_CONTROL is set in anim_clip_flags, the user won't be able to
+   // make the player character jump.
+   if (move->trigger[sJumpTrigger] && canJump() && !isAnimationLocked())
    {
       // Scale the jump impulse base on maxJumpSpeed
       F32 zSpeedScale = mVelocity.z;
@@ -3014,6 +3138,9 @@ void Player::updateMove(const Move* move)
          setActionThread( seq, true, false, true );
 
          mJumpSurfaceLastContact = JumpSkipContactsMax;
+         // Flag the jump event trigger.
+         fx_s_triggers |= PLAYER_JUMP_S_TRIGGER;
+         setMaskBits(TriggerMask);
       }
    }
    else
@@ -3097,30 +3224,6 @@ void Player::updateMove(const Move* move)
       mVelocity.z -= mDataBlock->upResistFactor * TickSec * (mVelocity.z - mDataBlock->upResistSpeed);
    }
 
-   // Container buoyancy & drag
-/* Commented out until the buoyancy calculation can be reworked so that a container and
-** player with the same density will result in neutral buoyancy.
-   if (mBuoyancy != 0)
-   {     
-      // Applying buoyancy when standing still causing some jitters-
-      if (mBuoyancy > 1.0 || !mVelocity.isZero() || !runSurface)
-      {
-         // A little hackery to prevent oscillation
-         // based on http://reinot.blogspot.com/2005/11/oh-yes-they-float-georgie-they-all.html
-
-         F32 buoyancyForce = mBuoyancy * mGravity * mGravityMod * TickSec;
-         F32 currHeight = getPosition().z;
-         const F32 C = 2.0f;
-         const F32 M = 0.1f;
-         
-         if ( currHeight + mVelocity.z * TickSec * C > mLiquidHeight )
-            buoyancyForce *= M;
-                  
-         mVelocity.z -= buoyancyForce;
-      }
-   }
-*/
-
    // Apply drag
    if ( mSwimming )
       mVelocity -= mVelocity * mDrag * TickSec * ( mVelocity.len() / mDataBlock->maxUnderwaterForwardSpeed );
@@ -3164,25 +3267,28 @@ void Player::updateMove(const Move* move)
       {
          // exit-water splash sound happens for client only
          if ( getSpeed() >= mDataBlock->exitSplashSoundVel && !isMounted() )         
-            SFX->playOnce( mDataBlock->sound[PlayerData::ExitWater], &getTransform() );                     
+            SFX->playOnce( mDataBlock->getPlayerSoundProfile(PlayerData::ExitWater), &getTransform() );                     
       }
    }
 
    // Update the PlayerPose
    Pose desiredPose = mPose;
 
-   if ( mSwimming )
-      desiredPose = SwimPose; 
-   else if ( runSurface && move->trigger[sCrouchTrigger] && canCrouch() )     
-      desiredPose = CrouchPose;
-   else if ( runSurface && move->trigger[sProneTrigger] && canProne() )
-      desiredPose = PronePose;
-   else if ( move->trigger[sSprintTrigger] && canSprint() )
-      desiredPose = SprintPose;
-   else if ( canStand() )
-      desiredPose = StandPose;
+   if ( !mIsAiControlled )
+   {
+      if ( mSwimming )
+         desiredPose = SwimPose; 
+      else if ( runSurface && move->trigger[sCrouchTrigger] && canCrouch() )     
+         desiredPose = CrouchPose;
+      else if ( runSurface && move->trigger[sProneTrigger] && canProne() )
+         desiredPose = PronePose;
+      else if ( move->trigger[sSprintTrigger] && canSprint() )
+         desiredPose = SprintPose;
+      else if ( canStand() )
+         desiredPose = StandPose;
 
-   setPose( desiredPose );
+      setPose( desiredPose );
+   }
 }
 
 
@@ -3270,9 +3376,9 @@ bool Player::canCrouch()
    if ( mDataBlock->actionList[PlayerData::CrouchRootAnim].sequence == -1 )
       return false;       
 
-	// We are already in this pose, so don't test it again...
-	if ( mPose == CrouchPose )
-		return true;
+   // We are already in this pose, so don't test it again...
+   if ( mPose == CrouchPose )
+      return true;
 
    // Do standard Torque physics test here!
    if ( !mPhysicsRep )
@@ -3322,8 +3428,8 @@ bool Player::canStand()
       return false;
 
    // We are already in this pose, so don't test it again...
-	if ( mPose == StandPose )
-		return true;
+   if ( mPose == StandPose )
+      return true;
 
    // Do standard Torque physics test here!
    if ( !mPhysicsRep )
@@ -3386,9 +3492,9 @@ bool Player::canProne()
    if ( !mPhysicsRep )
       return true;
 
-	// We are already in this pose, so don't test it again...
-	if ( mPose == PronePose )
-		return true;
+   // We are already in this pose, so don't test it again...
+   if ( mPose == PronePose )
+      return true;
 
    return mPhysicsRep->testSpacials( getPosition(), mDataBlock->proneBoxSize );
 }
@@ -3428,8 +3534,21 @@ void Player::updateDamageState()
 
 void Player::updateLookAnimation(F32 dt)
 {
+   // If the preference setting overrideLookAnimation is true, the player's
+   // arm and head no longer animate according to the view direction. They
+   // are instead given fixed positions.
+   if (overrideLookAnimation)
+   {
+      if (mArmAnimation.thread) 
+         mShapeInstance->setPos(mArmAnimation.thread, armLookOverridePos);
+      if (mHeadVThread) 
+         mShapeInstance->setPos(mHeadVThread, headVLookOverridePos);
+      if (mHeadHThread) 
+         mShapeInstance->setPos(mHeadHThread, headHLookOverridePos);
+      return;
+   }
    // Calculate our interpolated head position.
-   Point3F renderHead = delta.head + delta.headVec * dt;
+   Point3F renderHead = mDelta.head + mDelta.headVec * dt;
 
    // Adjust look pos.  This assumes that the animations match
    // the min and max look angles provided in the datablock.
@@ -3468,6 +3587,8 @@ void Player::updateLookAnimation(F32 dt)
 
 bool Player::inDeathAnim()
 {
+   if ((anim_clip_flags & ANIM_OVERRIDDEN) != 0 && (anim_clip_flags & IS_DEATH_ANIM) == 0)
+      return false;
    if (mActionAnimation.thread && mActionAnimation.action >= 0)
       if (mActionAnimation.action < mDataBlock->actionCount)
          return mDataBlock->actionList[mActionAnimation.action].death;
@@ -3501,7 +3622,10 @@ void Player::updateDeathOffsets()
 
 //----------------------------------------------------------------------------
 
-static const U32 sPlayerConformMask =  StaticShapeObjectType | StaticObjectType | TerrainObjectType;
+// PATHSHAPE
+static const U32 sPlayerConformMask =  StaticShapeObjectType | StaticObjectType |
+                                       TerrainObjectType | PathShapeObjectType;
+// PATHSHAPE END
 
 static void accel(F32& from, F32 to, F32 rate)
 {
@@ -3585,7 +3709,7 @@ MatrixF * Player::Death::fallToGround(F32 dt, const Point3F& loc, F32 curZ, F32 
          normal.normalize();
          mat.set(EulerF (0.0f, 0.0f, curZ));
          mat.mulV(upY, & ahead);
-	      mCross(ahead, normal, &sideVec);
+         mCross(ahead, normal, &sideVec);
          sideVec.normalize();
          mCross(normal, sideVec, &ahead);
 
@@ -3677,6 +3801,8 @@ bool Player::setArmThread(U32 action)
 
 bool Player::setActionThread(const char* sequence,bool hold,bool wait,bool fsp)
 {
+   if (anim_clip_flags & ANIM_OVERRIDDEN)
+      return false;
    for (U32 i = 1; i < mDataBlock->actionCount; i++)
    {
       PlayerData::ActionAnimation &anim = mDataBlock->actionList[i];
@@ -3701,6 +3827,11 @@ void Player::setActionThread(U32 action,bool forward,bool hold,bool wait,bool fs
       return;
    }
 
+   if (isClientObject())
+   {
+      mark_idle = (action == PlayerData::RootAnim);
+      idle_timer = (mark_idle) ? 0.0f : -1.0f;
+   }
    PlayerData::ActionAnimation &anim = mDataBlock->actionList[action];
    if (anim.sequence != -1)
    {
@@ -3768,11 +3899,13 @@ void Player::updateActionThread()
    // Select an action animation sequence, this assumes that
    // this function is called once per tick.
    if(mActionAnimation.action != PlayerData::NullAnimation)
+   {
       if (mActionAnimation.forward)
          mActionAnimation.atEnd = mShapeInstance->getPos(mActionAnimation.thread) == 1;
       else
          mActionAnimation.atEnd = mShapeInstance->getPos(mActionAnimation.thread) == 0;
-
+   }
+    
    // Only need to deal with triggers on the client
    if( isGhost() )
    {
@@ -3791,7 +3924,8 @@ void Player::updateActionThread()
          offset = mDataBlock->decalOffset * getScale().x;
       }
 
-      if( triggeredLeft || triggeredRight )
+      process_client_triggers(triggeredLeft, triggeredRight);
+      if ((triggeredLeft || triggeredRight) && !noFootfallFX)
       {
          Point3F rot, pos;
          RayInfo rInfo;
@@ -3808,7 +3942,7 @@ void Player::updateActionThread()
             // Put footprints on surface, if appropriate for material.
 
             if( material && material->mShowFootprints
-                && mDataBlock->decalData )
+                && mDataBlock->decalData && !footfallDecalOverride )
             {
                Point3F normal;
                Point3F tangent;
@@ -3819,14 +3953,15 @@ void Player::updateActionThread()
             
             // Emit footpuffs.
 
-            if( rInfo.t <= 0.5 && mWaterCoverage == 0.0
-                && material && material->mShowDust )
+            if (!footfallDustOverride && rInfo.t <= 0.5f && mWaterCoverage == 0.0f
+                                         && material && material->mShowDust
+                                         && mDataBlock->footPuffEmitter != nullptr)
             {
                // New emitter every time for visibility reasons
                ParticleEmitter * emitter = new ParticleEmitter;
                emitter->onNewDataBlock( mDataBlock->footPuffEmitter, false );
 
-               ColorF colorList[ ParticleData::PDC_NUM_KEYS];
+               LinearColorF colorList[ ParticleData::PDC_NUM_KEYS];
 
                for( U32 x = 0; x < getMin( Material::NUM_EFFECT_COLOR_STAGES, ParticleData::PDC_NUM_KEYS ); ++ x )
                   colorList[ x ].set( material->mEffectColor[ x ].red,
@@ -3853,6 +3988,7 @@ void Player::updateActionThread()
 
             // Play footstep sound.
             
+            if (footfallSoundOverride <= 0)
             playFootstepSound( triggeredLeft, material, rInfo.object );
          }
       }
@@ -3863,9 +3999,9 @@ void Player::updateActionThread()
    if (mMountPending)
       mMountPending = (isMounted() ? 0 : (mMountPending - 1));
 
-   if (mActionAnimation.action == PlayerData::NullAnimation ||
-       ((!mActionAnimation.waitForEnd || mActionAnimation.atEnd)) &&
-       !mActionAnimation.holdAtEnd && (mActionAnimation.delayTicks -= !mMountPending) <= 0)
+   if ((mActionAnimation.action == PlayerData::NullAnimation) ||
+       ((!mActionAnimation.waitForEnd || mActionAnimation.atEnd) &&
+       (!mActionAnimation.holdAtEnd && (mActionAnimation.delayTicks -= !mMountPending) <= 0)))
    {
       //The scripting language will get a call back when a script animation has finished...
       //  example: When the chat menu animations are done playing...
@@ -3874,8 +4010,10 @@ void Player::updateActionThread()
       pickActionAnimation();
    }
 
+   // prevent scaling of AFX picked actions
    if ( (mActionAnimation.action != PlayerData::LandAnim) &&
-        (mActionAnimation.action != PlayerData::NullAnimation) )
+        (mActionAnimation.action != PlayerData::NullAnimation) &&
+        !(anim_clip_flags & ANIM_OVERRIDDEN))
    {
       // Update action animation time scale to match ground velocity
       PlayerData::ActionAnimation &anim =
@@ -4252,8 +4390,8 @@ void Player::onImageStateAnimation(U32 imageSlot, const char* seqName, bool dire
 
          if (!found && hasImageBasePrefix && hasScriptPrefix)
          {
-            String seqName = String(imageBasePrefix) + String("_") + String(scriptPrefix) + String("_") + baseSeqName;
-            S32 index = mShapeInstance->getShape()->findSequence(seqName);
+            String comboSeqName = String(imageBasePrefix) + String("_") + String(scriptPrefix) + String("_") + baseSeqName;
+            S32 index = mShapeInstance->getShape()->findSequence(comboSeqName);
             if (index != -1)
             {
                seqIndex = index;
@@ -4263,8 +4401,8 @@ void Player::onImageStateAnimation(U32 imageSlot, const char* seqName, bool dire
 
          if (!found && hasImageBasePrefix)
          {
-            String seqName = String(imageBasePrefix) + String("_") + baseSeqName;
-            S32 index = mShapeInstance->getShape()->findSequence(seqName);
+            String imgSeqName = String(imageBasePrefix) + String("_") + baseSeqName;
+            S32 index = mShapeInstance->getShape()->findSequence(imgSeqName);
             if (index != -1)
             {
                seqIndex = index;
@@ -4274,8 +4412,8 @@ void Player::onImageStateAnimation(U32 imageSlot, const char* seqName, bool dire
 
          if (!found && hasScriptPrefix)
          {
-            String seqName = String(scriptPrefix) + String("_") + baseSeqName;
-            S32 index = mShapeInstance->getShape()->findSequence(seqName);
+            String scriptSeqName = String(scriptPrefix) + String("_") + baseSeqName;
+            S32 index = mShapeInstance->getShape()->findSequence(scriptSeqName);
             if (index != -1)
             {
                seqIndex = index;
@@ -4447,7 +4585,7 @@ void Player::onImageAnimThreadUpdate(U32 imageSlot, S32 imageShapeIndex, F32 dt)
    }
 }
 
-void Player::onUnmount( ShapeBase *obj, S32 node )
+void Player::onUnmount( SceneObject *obj, S32 node )
 {
    // Reset back to root position during dismount.
    setActionThread(PlayerData::RootAnim,true,false,false);
@@ -4493,6 +4631,10 @@ void Player::updateAnimation(F32 dt)
    if (mImageStateThread)
       mShapeInstance->advanceTime(dt,mImageStateThread);
 
+   // update any active blend clips
+   if (isGhost())
+      for (S32 i = 0; i < blend_clips.size(); i++)
+         mShapeInstance->advanceTime(dt, blend_clips[i].thread);
    // If we are the client's player on this machine, then we need
    // to make sure the transforms are up to date as they are used
    // to setup the camera.
@@ -4506,6 +4648,11 @@ void Player::updateAnimation(F32 dt)
       else
       {
          updateAnimationTree(false);
+         // This addition forces recently visible players to animate their
+         // skeleton now rather than in pre-render so that constrained effects
+         // get up-to-date node transforms.
+         if (didRenderLastRender())
+            mShapeInstance->animate();
       }
    }
 }
@@ -4514,6 +4661,7 @@ void Player::updateAnimationTree(bool firstPerson)
 {
    S32 mode = 0;
    if (firstPerson)
+   {
       if (mActionAnimation.firstPerson)
          mode = 0;
 //            TSShapeInstance::MaskNodeRotation;
@@ -4521,7 +4669,7 @@ void Player::updateAnimationTree(bool firstPerson)
 //            TSShapeInstance::MaskNodePosY;
       else
          mode = TSShapeInstance::MaskNodeAllButBlend;
-
+   }
    for (U32 i = 0; i < PlayerData::NumSpineNodes; i++)
       if (mDataBlock->spineNode[i] != -1)
          mShapeInstance->setNodeAnimationState(mDataBlock->spineNode[i],mode);
@@ -4600,6 +4748,45 @@ bool Player::step(Point3F *pos,F32 *maxStep,F32 time)
    return false;
 }
 
+// PATHSHAPE
+// This Function does a ray cast down to see if a pathshape object is below
+// If so, it will attempt to attach to it.
+void Player::updateAttachment(){
+   Point3F rot, pos;
+    RayInfo rInfo;
+    MatrixF mat = getTransform();
+    mat.getColumn(3, &pos);
+    if (gServerContainer.castRay(Point3F(pos.x, pos.y, pos.z + 0.1f),
+        Point3F(pos.x, pos.y, pos.z - 1.0f ),
+        PathShapeObjectType, &rInfo))
+    {
+       if( rInfo.object->getTypeMask() & PathShapeObjectType) //Ramen
+       {
+          if (getParent() == NULL)
+          { // ONLY do this if we are not parented
+             //Con::printf("I'm on a pathshape object. Going to attempt attachment.");
+             ShapeBase* col = static_cast<ShapeBase*>(rInfo.object);
+             if (!isGhost())
+             {
+                this->attachToParent(col);
+             } 
+          }
+       }
+       else
+       {
+          //Con::printf("object %i",rInfo.object->getId());
+       }
+    }
+    else
+    {	 
+       if (getParent() !=NULL)
+       {
+          clearProcessAfter();
+          attachToParent(NULL);
+       }
+    }
+}
+// PATHSHAPE END
 
 //----------------------------------------------------------------------------
 inline Point3F createInterpPos(const Point3F& s, const Point3F& e, const F32 t, const F32 d)
@@ -4657,9 +4844,9 @@ Point3F Player::_move( const F32 travelTime, Collision *outCol )
       }
       Point3F distance = end - start;
 
-      if (mFabs(distance.x) < mObjBox.len_x() &&
-          mFabs(distance.y) < mObjBox.len_y() &&
-          mFabs(distance.z) < mObjBox.len_z())
+      if (mFabs(distance.x) < mScaledBox.len_x() &&
+          mFabs(distance.y) < mScaledBox.len_y() &&
+          mFabs(distance.z) < mScaledBox.len_z())
       {
          // We can potentially early out of this.  If there are no polys in the clipped polylist at our
          //  end position, then we can bail, and just set start = end;
@@ -4810,6 +4997,11 @@ Point3F Player::_move( const F32 travelTime, Collision *outCol )
          // we can use it to do impacts
          // and query collision.
          *outCol = *collision;
+         if (isServerObject() && bd > 6.8f && collision->normal.z > 0.7f)
+         {
+            fx_s_triggers |= PLAYER_LANDING_S_TRIGGER;
+            setMaskBits(TriggerMask);
+         }
 
          // Subtract out velocity
          VectorF dv = collision->normal * (bd + sNormalElasticity);
@@ -4929,7 +5121,7 @@ void Player::_handleCollision( const Collision &collision )
 bool Player::updatePos(const F32 travelTime)
 {
    PROFILE_SCOPE(Player_UpdatePos);
-   getTransform().getColumn(3,&delta.posVec);
+   getTransform().getColumn(3,&mDelta.posVec);
 
    // When mounted to another object, only Z rotation used.
    if (isMounted()) {
@@ -5021,7 +5213,7 @@ bool Player::updatePos(const F32 travelTime)
    else
    {
       if ( mVelocity.isZero() )
-         newPos = delta.posVec;
+         newPos = mDelta.posVec;
       else
          newPos = _move( travelTime, &col );
    
@@ -5038,9 +5230,9 @@ bool Player::updatePos(const F32 travelTime)
    // If on the client, calc delta for backstepping
    if (isClientObject())
    {
-      delta.pos = newPos;
-      delta.posVec = delta.posVec - delta.pos;
-      delta.dt = 1.0f;
+      mDelta.pos = newPos;
+	  mDelta.posVec = mDelta.posVec - mDelta.pos;
+	  mDelta.dt = 1.0f;
    }
 
    setPosition( newPos, mRot );
@@ -5276,8 +5468,8 @@ bool Player::displaceObject(const Point3F& displacement)
 
    sBalance--;
 
-   getTransform().getColumn(3, &delta.pos);
-   delta.posVec.set(0.0f, 0.0f, 0.0f);
+   getTransform().getColumn(3, &mDelta.pos);
+   mDelta.posVec.set(0.0f, 0.0f, 0.0f);
 
    return result;
 }
@@ -5296,8 +5488,8 @@ bool Player::displaceObject(const Point3F& displacement)
 
    bool result = updatePos(dt);
 
-   mObjToWorld.getColumn(3, &delta.pos);
-   delta.posVec.set(0.0f, 0.0f, 0.0f);
+   mObjToWorld.getColumn(3, &mDelta.pos);
+   mDelta.posVec.set(0.0f, 0.0f, 0.0f);
 
    return result;
 }
@@ -5311,10 +5503,10 @@ void Player::setPosition(const Point3F& pos,const Point3F& rot)
    MatrixF mat;
    if (isMounted()) {
       // Use transform from mounted object
-      MatrixF nmat,zrot;
-      mMount.object->getMountTransform( mMount.node, mMount.xfm, &nmat );
-      zrot.set(EulerF(0.0f, 0.0f, rot.z));
-      mat.mul(nmat,zrot);
+      //MatrixF nmat,zrot;
+      mMount.object->getMountTransform( mMount.node, mMount.xfm, &mat );
+      //zrot.set(EulerF(0.0f, 0.0f, rot.z));
+      //mat.mul(nmat,zrot);
    }
    else {
       mat.set(EulerF(0.0f, 0.0f, rot.z));
@@ -5333,10 +5525,10 @@ void Player::setRenderPosition(const Point3F& pos, const Point3F& rot, F32 dt)
    MatrixF mat;
    if (isMounted()) {
       // Use transform from mounted object
-      MatrixF nmat,zrot;
-      mMount.object->getRenderMountTransform( dt, mMount.node, mMount.xfm, &nmat );
-      zrot.set(EulerF(0.0f, 0.0f, rot.z));
-      mat.mul(nmat,zrot);
+      //MatrixF nmat,zrot;
+      mMount.object->getRenderMountTransform( dt, mMount.node, mMount.xfm, &mat );
+      //zrot.set(EulerF(0.0f, 0.0f, rot.z));
+      //mat.mul(nmat,zrot);
    }
    else {
       EulerF   orient(0.0f, 0.0f, rot.z);
@@ -5500,10 +5692,10 @@ void Player::getRenderEyeBaseTransform(MatrixF* mat, bool includeBank)
    // Eye transform in world space.  We only use the eye position
    // from the animation and supply our own rotation.
    MatrixF pmat,xmat,zmat;
-   xmat.set(EulerF(delta.head.x + delta.headVec.x * delta.dt, 0.0f, 0.0f));
+   xmat.set(EulerF(mDelta.head.x + mDelta.headVec.x * mDelta.dt, 0.0f, 0.0f));
 
    if (mUseHeadZCalc)
-      zmat.set(EulerF(0.0f, 0.0f, delta.head.z + delta.headVec.z * delta.dt));
+      zmat.set(EulerF(0.0f, 0.0f, mDelta.head.z + mDelta.headVec.z * mDelta.dt));
    else
       zmat.identity();
 
@@ -5513,7 +5705,7 @@ void Player::getRenderEyeBaseTransform(MatrixF* mat, bool includeBank)
       MatrixF imat;
       imat.mul(zmat, xmat);
       MatrixF ymat;
-      ymat.set(EulerF(0.0f, delta.head.y + delta.headVec.y * delta.dt, 0.0f));
+      ymat.set(EulerF(0.0f, mDelta.head.y + mDelta.headVec.y * mDelta.dt, 0.0f));
       pmat.mul(imat, ymat);
    }
    else
@@ -5583,7 +5775,6 @@ void Player::getMuzzleTransform(U32 imageSlot,MatrixF* mat)
   
    *mat = nmat;
 }
-
 
 void Player::getRenderMuzzleTransform(U32 imageSlot,MatrixF* mat)
 {
@@ -5780,7 +5971,7 @@ F32 Player::getSpeed() const
 
 void Player::setVelocity(const VectorF& vel)
 {
-	AssertFatal( !mIsNaN( vel ), "Player::setVelocity() - The velocity is NaN!" );
+   AssertFatal( !mIsNaN( vel ), "Player::setVelocity() - The velocity is NaN!" );
 
    mVelocity = vel;
    setMaskBits(MoveMask);
@@ -5788,7 +5979,7 @@ void Player::setVelocity(const VectorF& vel)
 
 void Player::applyImpulse(const Point3F&,const VectorF& vec)
 {
-	AssertFatal( !mIsNaN( vec ), "Player::applyImpulse() - The vector is NaN!" );
+   AssertFatal( !mIsNaN( vec ), "Player::applyImpulse() - The vector is NaN!" );
 
    // Players ignore angular velocity
    VectorF vel;
@@ -5812,7 +6003,12 @@ void Player::applyImpulse(const Point3F&,const VectorF& vec)
 
 bool Player::castRay(const Point3F &start, const Point3F &end, RayInfo* info)
 {
-   if (getDamageState() != Enabled)
+   // In standard Torque there's a rather brute force culling of all
+   // non-enabled players (corpses) from the ray cast. But, to
+   // demonstrate a resurrection spell, we need corpses to be
+   // selectable, so this code change allows consideration of corpses
+   // in the ray cast if corpsesHiddenFromRayCast is set to false.
+   if (sCorpsesHiddenFromRayCast && getDamageState() != Enabled)
       return false;
 
    // Collide against bounding box. Need at least this for the editor.
@@ -5961,8 +6157,22 @@ void Player::updateWorkingCollisionSet()
       mWorkingQueryBox.maxExtents += twolPoint;
 
       disableCollision();
+
+      //We temporarily disable the collisions of anything mounted to us so we don't accidentally walk into things we've attached to us
+      for (SceneObject *ptr = mMount.list; ptr; ptr = ptr->getMountLink())
+      {
+         ptr->disableCollision();
+      }
+
       mConvex.updateWorkingList(mWorkingQueryBox,
          isGhost() ? sClientCollisionContactMask : sServerCollisionContactMask);
+
+      //And now re-enable the collisions of the mounted things
+      for (SceneObject *ptr = mMount.list; ptr; ptr = ptr->getMountLink())
+      {
+         ptr->enableCollision();
+      }
+
       enableCollision();
    }
 }
@@ -6046,7 +6256,7 @@ void Player::readPacketData(GameConnection *connection, BitStream *stream)
       stream->read(&mVelocity.y);
       stream->read(&mVelocity.z);
       stream->setCompressionPoint(pos);
-      delta.pos = pos;
+	  mDelta.pos = pos;
       mJumpSurfaceLastContact = stream->readInt(4);
 
       if (stream->readFlag())
@@ -6069,7 +6279,7 @@ void Player::readPacketData(GameConnection *connection, BitStream *stream)
       }
    }
    else
-      pos = delta.pos;
+      pos = mDelta.pos;
    stream->read(&mHead.x);
    if(stream->readFlag())
    {
@@ -6079,9 +6289,10 @@ void Player::readPacketData(GameConnection *connection, BitStream *stream)
    stream->read(&mHead.z);
    stream->read(&rot.z);
    rot.x = rot.y = 0;
-   setPosition(pos,rot);
-   delta.head = mHead;
-   delta.rot = rot;
+   if (!ignore_updates)
+      setPosition(pos,rot);
+   mDelta.head = mHead;
+   mDelta.rot = rot;
 
    if (stream->readFlag()) {
       S32 gIndex = stream->readInt(NetConnection::GhostIdBitSize);
@@ -6121,6 +6332,7 @@ U32 Player::packUpdate(NetConnection *con, U32 mask, BitStream *stream)
          mArmAnimation.action != mDataBlock->lookAction))) {
       stream->writeInt(mArmAnimation.action,PlayerData::ActionAnimBits);
    }
+   retMask = afx_packUpdate(con, mask, stream, retMask);
 
    // The rest of the data is part of the control object packet update.
    // If we're controlled by this client, we don't need to send it.
@@ -6133,6 +6345,10 @@ U32 Player::packUpdate(NetConnection *con, U32 mask, BitStream *stream)
    {
       stream->writeFlag(mFalling);
 
+      stream->writeFlag(mSwimming);
+      stream->writeFlag(mJetting);  
+      stream->writeInt(mPose, NumPoseBits);
+     
       stream->writeInt(mState,NumStateBits);
       if (stream->writeFlag(mState == RecoverState))
          stream->writeInt(mRecoverTicks,PlayerData::RecoverDelayBits);
@@ -6151,10 +6367,14 @@ U32 Player::packUpdate(NetConnection *con, U32 mask, BitStream *stream)
             len = 8191;
          stream->writeInt((S32)len, 13);
       }
+
+      // constrain the range of mRot.z
+      mRot.z = mWrapF(mRot.z, 0.0f, M_2PI_F);
+
       stream->writeFloat(mRot.z / M_2PI_F, 7);
       stream->writeSignedFloat(mHead.x / (mDataBlock->maxLookAngle - mDataBlock->minLookAngle), 6);
       stream->writeSignedFloat(mHead.z / mDataBlock->maxFreelookAngle, 6);
-      delta.move.pack(stream);
+	  mDelta.move.pack(stream);
       stream->writeFlag(!(mask & NoWarpMask));
    }
    // Ghost need energy to predict reliably
@@ -6221,6 +6441,7 @@ void Player::unpackUpdate(NetConnection *con, BitStream *stream)
          mArmAnimation.action = action;
    }
 
+   afx_unpackUpdate(con, stream);
    // Done if controlled by client ( and not initial update )
    if(stream->readFlag())
       return;
@@ -6229,7 +6450,11 @@ void Player::unpackUpdate(NetConnection *con, BitStream *stream)
    if (stream->readFlag()) {
       mPredictionCount = sMaxPredictionTicks;
       mFalling = stream->readFlag();
-
+ 
+      mSwimming = stream->readFlag();
+      mJetting = stream->readFlag();  
+      mPose = (Pose)(stream->readInt(NumPoseBits)); 
+     
       ActionState actionState = (ActionState)stream->readInt(NumStateBits);
       if (stream->readFlag()) {
          mRecoverTicks = stream->readInt(PlayerData::RecoverDelayBits);
@@ -6255,80 +6480,82 @@ void Player::unpackUpdate(NetConnection *con, BitStream *stream)
       rot.z = stream->readFloat(7) * M_2PI_F;
       mHead.x = stream->readSignedFloat(6) * (mDataBlock->maxLookAngle - mDataBlock->minLookAngle);
       mHead.z = stream->readSignedFloat(6) * mDataBlock->maxFreelookAngle;
-      delta.move.unpack(stream);
+	  mDelta.move.unpack(stream);
 
-      delta.head = mHead;
-      delta.headVec.set(0.0f, 0.0f, 0.0f);
+	  mDelta.head = mHead;
+	  mDelta.headVec.set(0.0f, 0.0f, 0.0f);
 
       if (stream->readFlag() && isProperlyAdded())
       {
          // Determine number of ticks to warp based on the average
          // of the client and server velocities.
-         delta.warpOffset = pos - delta.pos;
+		  mDelta.warpOffset = pos - mDelta.pos;
          F32 as = (speed + mVelocity.len()) * 0.5f * TickSec;
-         F32 dt = (as > 0.00001f) ? delta.warpOffset.len() / as: sMaxWarpTicks;
-         delta.warpTicks = (S32)((dt > sMinWarpTicks) ? getMax(mFloor(dt + 0.5f), 1.0f) : 0.0f);
+         F32 dt = (as > 0.00001f) ? mDelta.warpOffset.len() / as: sMaxWarpTicks;
+		 mDelta.warpTicks = (S32)((dt > sMinWarpTicks) ? getMax(mFloor(dt + 0.5f), 1.0f) : 0.0f);
 
-         if (delta.warpTicks)
+         if (mDelta.warpTicks)
          {
             // Setup the warp to start on the next tick.
-            if (delta.warpTicks > sMaxWarpTicks)
-               delta.warpTicks = sMaxWarpTicks;
-            delta.warpOffset /= (F32)delta.warpTicks;
+            if (mDelta.warpTicks > sMaxWarpTicks)
+				mDelta.warpTicks = sMaxWarpTicks;
+			mDelta.warpOffset /= (F32)mDelta.warpTicks;
 
-            delta.rotOffset = rot - delta.rot;
+			mDelta.rotOffset = rot - mDelta.rot;
 
             // Ignore small rotation differences
-            if (mFabs(delta.rotOffset.z) < 0.001f)
-               delta.rotOffset.z = 0;
+            if (mFabs(mDelta.rotOffset.z) < 0.001f)
+               mDelta.rotOffset.z = 0;
 
             // Wrap rotation to +/-PI
-            if(delta.rotOffset.z < - M_PI_F)
-               delta.rotOffset.z += M_2PI_F;
-            else if(delta.rotOffset.z > M_PI_F)
-               delta.rotOffset.z -= M_2PI_F;
+            if(mDelta.rotOffset.z < - M_PI_F)
+				mDelta.rotOffset.z += M_2PI_F;
+            else if(mDelta.rotOffset.z > M_PI_F)
+				mDelta.rotOffset.z -= M_2PI_F;
 
-            delta.rotOffset /= (F32)delta.warpTicks;
+			mDelta.rotOffset /= (F32)mDelta.warpTicks;
          }
          else
          {
             // Going to skip the warp, server and client are real close.
             // Adjust the frame interpolation to move smoothly to the
             // new position within the current tick.
-            Point3F cp = delta.pos + delta.posVec * delta.dt;
-            if (delta.dt == 0) 
+            Point3F cp = mDelta.pos + mDelta.posVec * mDelta.dt;
+            if (mDelta.dt == 0)
             {
-               delta.posVec.set(0.0f, 0.0f, 0.0f);
-               delta.rotVec.set(0.0f, 0.0f, 0.0f);
+               mDelta.posVec.set(0.0f, 0.0f, 0.0f);
+               mDelta.rotVec.set(0.0f, 0.0f, 0.0f);
             }
             else
             {
-               F32 dti = 1.0f / delta.dt;
-               delta.posVec = (cp - pos) * dti;
-               delta.rotVec.z = mRot.z - rot.z;
+               F32 dti = 1.0f / mDelta.dt;
+			   mDelta.posVec = (cp - pos) * dti;
+			   mDelta.rotVec.z = mRot.z - rot.z;
 
-               if(delta.rotVec.z > M_PI_F)
-                  delta.rotVec.z -= M_2PI_F;
-               else if(delta.rotVec.z < -M_PI_F)
-                  delta.rotVec.z += M_2PI_F;
+               if(mDelta.rotVec.z > M_PI_F)
+                  mDelta.rotVec.z -= M_2PI_F;
+               else if(mDelta.rotVec.z < -M_PI_F)
+                  mDelta.rotVec.z += M_2PI_F;
 
-               delta.rotVec.z *= dti;
+			   mDelta.rotVec.z *= dti;
             }
-            delta.pos = pos;
-            delta.rot = rot;
-            setPosition(pos,rot);
+			mDelta.pos = pos;
+			mDelta.rot = rot;
+            if (!ignore_updates)
+               setPosition(pos,rot);
          }
       }
       else 
       {
          // Set the player to the server position
-         delta.pos = pos;
-         delta.rot = rot;
-         delta.posVec.set(0.0f, 0.0f, 0.0f);
-         delta.rotVec.set(0.0f, 0.0f, 0.0f);
-         delta.warpTicks = 0;
-         delta.dt = 0.0f;
-         setPosition(pos,rot);
+         mDelta.pos = pos;
+         mDelta.rot = rot;
+		 mDelta.posVec.set(0.0f, 0.0f, 0.0f);
+		 mDelta.rotVec.set(0.0f, 0.0f, 0.0f);
+		 mDelta.warpTicks = 0;
+		 mDelta.dt = 0.0f;
+         if (!ignore_updates)
+            setPosition(pos,rot);
       }
    }
    F32 energy = stream->readFloat(EnergyLevelBits) * mDataBlock->maxEnergy;
@@ -6577,7 +6804,7 @@ DefineEngineMethod( Player, setActionThread, bool, ( const char* name, bool hold
    "@tsexample\n"
       "// Place the player in a sitting position after being mounted\n"
       "%player.setActionThread( \"sitting\", true, true );\n"
-	"@endtsexample\n")
+   "@endtsexample\n")
 {
    return object->setActionThread( name, hold, true, fsp);
 }
@@ -6625,11 +6852,11 @@ DefineEngineMethod( Player, clearControlObject, void, (),,
    "Returns control to the player. This internally calls "
    "Player::setControlObject(0).\n"
    "@tsexample\n"
-		"%player.clearControlObject();\n"
+      "%player.clearControlObject();\n"
       "echo(%player.getControlObject()); //<-- Returns 0, player assumes control\n"
       "%player.setControlObject(%vehicle);\n"
       "echo(%player.getControlObject()); //<-- Returns %vehicle, player controls the vehicle now.\n"
-	"@endtsexample\n"
+   "@endtsexample\n"
    "@note If the player does not have a control object, the player will receive all moves "
    "from its GameConnection.  If you're looking to remove control from the player itself "
    "(i.e. stop sending moves to the player) use GameConnection::setControlObject() to transfer "
@@ -6687,63 +6914,64 @@ void Player::consoleInit()
       "@brief Determines if the player is rendered or not.\n\n"
       "Used on the client side to disable the rendering of all Player objects.  This is "
       "mainly for the tools or debugging.\n"
-	   "@ingroup GameObjects\n");
+      "@ingroup GameObjects\n");
    Con::addVariable("$player::renderMyItems",TypeBool, &sRenderMyItems,
       "@brief Determines if mounted shapes are rendered or not.\n\n"
       "Used on the client side to disable the rendering of all Player mounted objects.  This is "
       "mainly used for the tools or debugging.\n"
-	   "@ingroup GameObjects\n");
+      "@ingroup GameObjects\n");
    Con::addVariable("$player::renderCollision", TypeBool, &sRenderPlayerCollision, 
       "@brief Determines if the player's collision mesh should be rendered.\n\n"
       "This is mainly used for the tools and debugging.\n"
-	   "@ingroup GameObjects\n");
+      "@ingroup GameObjects\n");
 
    Con::addVariable("$player::minWarpTicks",TypeF32,&sMinWarpTicks, 
       "@brief Fraction of tick at which instant warp occures on the client.\n\n"
-	   "@ingroup GameObjects\n");
+      "@ingroup GameObjects\n");
    Con::addVariable("$player::maxWarpTicks",TypeS32,&sMaxWarpTicks, 
       "@brief When a warp needs to occur due to the client being too far off from the server, this is the "
       "maximum number of ticks we'll allow the client to warp to catch up.\n\n"
-	   "@ingroup GameObjects\n");
+      "@ingroup GameObjects\n");
    Con::addVariable("$player::maxPredictionTicks",TypeS32,&sMaxPredictionTicks, 
       "@brief Maximum number of ticks to predict on the client from the last known move obtained from the server.\n\n"
-	   "@ingroup GameObjects\n");
+      "@ingroup GameObjects\n");
 
    Con::addVariable("$player::maxImpulseVelocity", TypeF32, &sMaxImpulseVelocity, 
       "@brief The maximum velocity allowed due to a single impulse.\n\n"
-	   "@ingroup GameObjects\n");
+      "@ingroup GameObjects\n");
 
    // Move triggers
    Con::addVariable("$player::jumpTrigger", TypeS32, &sJumpTrigger, 
       "@brief The move trigger index used for player jumping.\n\n"
-	   "@ingroup GameObjects\n");
+      "@ingroup GameObjects\n");
    Con::addVariable("$player::crouchTrigger", TypeS32, &sCrouchTrigger, 
       "@brief The move trigger index used for player crouching.\n\n"
-	   "@ingroup GameObjects\n");
+      "@ingroup GameObjects\n");
    Con::addVariable("$player::proneTrigger", TypeS32, &sProneTrigger, 
       "@brief The move trigger index used for player prone pose.\n\n"
-	   "@ingroup GameObjects\n");
+      "@ingroup GameObjects\n");
    Con::addVariable("$player::sprintTrigger", TypeS32, &sSprintTrigger, 
       "@brief The move trigger index used for player sprinting.\n\n"
-	   "@ingroup GameObjects\n");
+      "@ingroup GameObjects\n");
    Con::addVariable("$player::imageTrigger0", TypeS32, &sImageTrigger0, 
       "@brief The move trigger index used to trigger mounted image 0.\n\n"
-	   "@ingroup GameObjects\n");
+      "@ingroup GameObjects\n");
    Con::addVariable("$player::imageTrigger1", TypeS32, &sImageTrigger1, 
       "@brief The move trigger index used to trigger mounted image 1 or alternate fire "
       "on mounted image 0.\n\n"
-	   "@ingroup GameObjects\n");
+      "@ingroup GameObjects\n");
    Con::addVariable("$player::jumpJetTrigger", TypeS32, &sJumpJetTrigger, 
       "@brief The move trigger index used for player jump jetting.\n\n"
-	   "@ingroup GameObjects\n");
+      "@ingroup GameObjects\n");
    Con::addVariable("$player::vehicleDismountTrigger", TypeS32, &sVehicleDismountTrigger, 
       "@brief The move trigger index used to dismount player.\n\n"
-	   "@ingroup GameObjects\n");
+      "@ingroup GameObjects\n");
 
    // ExtendedMove support
    Con::addVariable("$player::extendedMoveHeadPosRotIndex", TypeS32, &smExtendedMoveHeadPosRotIndex, 
       "@brief The ExtendedMove position/rotation index used for head movements.\n\n"
-	   "@ingroup GameObjects\n");
+      "@ingroup GameObjects\n");
+   afx_consoleInit();
 }
 
 //--------------------------------------------------------------------------
@@ -6788,63 +7016,47 @@ void Player::calcClassRenderData()
 
 void Player::playFootstepSound( bool triggeredLeft, Material* contactMaterial, SceneObject* contactObject )
 {
+   if (footfallSoundOverride > 0)
+      return;
    MatrixF footMat = getTransform();
    if( mWaterCoverage > 0.0 )
    {
       // Treading water.
 
       if ( mWaterCoverage < mDataBlock->footSplashHeight )
-         SFX->playOnce( mDataBlock->sound[ PlayerData::FootShallowSplash ], &footMat );
+         SFX->playOnce( mDataBlock->getPlayerSoundProfile( PlayerData::FootShallowSplash ), &footMat );
       else
       {
          if ( mWaterCoverage < 1.0 )
-            SFX->playOnce( mDataBlock->sound[ PlayerData::FootWading ], &footMat );
+            SFX->playOnce( mDataBlock->getPlayerSoundProfile( PlayerData::FootWading ), &footMat );
          else
          {
             if ( triggeredLeft )
             {
-               SFX->playOnce( mDataBlock->sound[ PlayerData::FootUnderWater ], &footMat );
-               SFX->playOnce( mDataBlock->sound[ PlayerData::FootBubbles ], &footMat );
+               SFX->playOnce( mDataBlock->getPlayerSoundProfile( PlayerData::FootUnderWater ), &footMat );
+               SFX->playOnce( mDataBlock->getPlayerSoundProfile( PlayerData::FootBubbles ), &footMat );
             }
          }
       }
    }
-   else if( contactMaterial && contactMaterial->mFootstepSoundCustom )
+   else if( contactMaterial && contactMaterial->getCustomFootstepSoundProfile())
    {
       // Footstep sound defined on material.
 
-      SFX->playOnce( contactMaterial->mFootstepSoundCustom, &footMat );
+      SFX->playOnce( contactMaterial->getCustomFootstepSoundProfile(), &footMat );
    }
    else
    {
       // Play default sound.
 
       S32 sound = -1;
-      if( contactMaterial && contactMaterial->mFootstepSoundId != -1 )
+      if (contactMaterial && (contactMaterial->mFootstepSoundId > -1 && contactMaterial->mFootstepSoundId < PlayerData::WaterStart))
          sound = contactMaterial->mFootstepSoundId;
       else if( contactObject && contactObject->getTypeMask() & VehicleObjectType )
          sound = 2;
 
-      switch ( sound )
-      {
-      case 0: // Soft
-         SFX->playOnce( mDataBlock->sound[PlayerData::FootSoft], &footMat );
-         break;
-      case 1: // Hard
-         SFX->playOnce( mDataBlock->sound[PlayerData::FootHard], &footMat );
-         break;
-      case 2: // Metal
-         SFX->playOnce( mDataBlock->sound[PlayerData::FootMetal], &footMat );
-         break;
-      case 3: // Snow
-         SFX->playOnce( mDataBlock->sound[PlayerData::FootSnow], &footMat );
-         break;
-      /*
-      default: //Hard
-         SFX->playOnce( mDataBlock->sound[PlayerData::FootHard], &footMat );
-         break;
-      */
-      }
+      if (sound>=0)
+         SFX->playOnce(mDataBlock->getPlayerSoundProfile(sound), &footMat);
    }
 }
 
@@ -6864,41 +7076,18 @@ void Player:: playImpactSound()
       {
          Material* material = ( rInfo.material ? dynamic_cast< Material* >( rInfo.material->getMaterial() ) : 0 );
 
-         if( material && material->mImpactSoundCustom )
-            SFX->playOnce( material->mImpactSoundCustom, &getTransform() );
+         if( material && material->getCustomImpactSoundProfile() )
+            SFX->playOnce( material->getCustomImpactSoundProfile(), &getTransform() );
          else
          {
             S32 sound = -1;
-            if( material && material->mImpactSoundId )
+            if (material && (material->mImpactSoundId > -1 && material->mImpactSoundId < PlayerData::WaterStart))
                sound = material->mImpactSoundId;
             else if( rInfo.object->getTypeMask() & VehicleObjectType )
                sound = 2; // Play metal;
 
-            switch( sound )
-            {
-            case 0:
-               //Soft
-               SFX->playOnce( mDataBlock->sound[ PlayerData::ImpactSoft ], &getTransform() );
-               break;
-            case 1:
-               //Hard
-               SFX->playOnce( mDataBlock->sound[ PlayerData::ImpactHard ], &getTransform() );
-               break;
-            case 2:
-               //Metal
-               SFX->playOnce( mDataBlock->sound[ PlayerData::ImpactMetal ], &getTransform() );
-               break;
-            case 3:
-               //Snow
-               SFX->playOnce( mDataBlock->sound[ PlayerData::ImpactSnow ], &getTransform() );
-               break;
-               /*
-            default:
-               //Hard
-               alxPlay(mDataBlock->sound[PlayerData::ImpactHard], &getTransform());
-               break;
-               */
-            }
+            if (sound >= 0)
+               SFX->playOnce(mDataBlock->getPlayerSoundProfile(PlayerData::ImpactSoft + sound), &getTransform());
          }
       }
    }
@@ -7052,11 +7241,11 @@ bool Player::collidingWithWater( Point3F &waterHeight )
 void Player::createSplash( Point3F &pos, F32 speed )
 {
    if ( speed >= mDataBlock->hardSplashSoundVel )
-      SFX->playOnce( mDataBlock->sound[PlayerData::ImpactWaterHard], &getTransform() );
+      SFX->playOnce( mDataBlock->getPlayerSoundProfile(PlayerData::ImpactWaterHard), &getTransform() );
    else if ( speed >= mDataBlock->medSplashSoundVel )
-      SFX->playOnce( mDataBlock->sound[PlayerData::ImpactWaterMedium], &getTransform() );
+      SFX->playOnce( mDataBlock->getPlayerSoundProfile(PlayerData::ImpactWaterMedium), &getTransform() );
    else
-      SFX->playOnce( mDataBlock->sound[PlayerData::ImpactWaterEasy], &getTransform() );
+      SFX->playOnce( mDataBlock->getPlayerSoundProfile(PlayerData::ImpactWaterEasy), &getTransform() );
 
    if( mDataBlock->splash )
    {
@@ -7137,3 +7326,370 @@ void Player::renderConvex( ObjectRenderInst *ri, SceneRenderState *state, BaseMa
    mConvex.renderWorkingList();
    GFX->leaveDebugEvent();
 }
+
+// static 
+bool Player::sCorpsesHiddenFromRayCast = true; // this default matches stock Torque behavior.
+
+// static 
+void Player::afx_consoleInit()
+{
+   Con::addVariable("pref::Player::corpsesHiddenFromRayCast", TypeBool, &sCorpsesHiddenFromRayCast);
+}
+
+void Player::afx_init()
+{
+   overrideLookAnimation = false;
+   armLookOverridePos = 0.5f;
+   headVLookOverridePos = 0.5f;
+   headHLookOverridePos = 0.5f;
+   ignore_updates = false;
+   fx_c_triggers = 0;
+   mark_fx_c_triggers = 0;
+   fx_s_triggers = 0;
+   move_trigger_states = 0;
+   z_velocity = 0.0f;
+   mark_idle = false;
+   idle_timer = 0.0f;
+   mark_s_landing = false;
+   speed_bias = 1.0f;
+   speed_bias_goal = 1.0f;
+   override_movement = 0;
+   movement_data.zero();
+   movement_op = 1;
+   last_movement_tag = 0;
+   footfallDecalOverride = 0;
+   footfallSoundOverride = 0;
+   footfallDustOverride = 0;
+   noFootfallFX = false;
+}
+
+U32 Player::afx_packUpdate(NetConnection* con, U32 mask, BitStream* stream, U32 retMask)
+{
+#if 0
+   if (stream->writeFlag(mask & LookOverrideMask))
+#else
+   if (stream->writeFlag(mask & ActionMask))
+#endif
+      stream->writeFlag(overrideLookAnimation);
+
+   if (stream->writeFlag(mask & TriggerMask))
+      stream->write(fx_s_triggers);
+
+   return retMask;
+}
+
+void Player::afx_unpackUpdate(NetConnection* con, BitStream* stream)
+{
+   if (stream->readFlag()) // LookOverrideMask
+      overrideLookAnimation = stream->readFlag();
+
+   if (stream->readFlag()) // TriggerMask
+   {
+      U32 mask;
+      stream->read(&mask);
+      mark_fx_c_triggers = mask;
+   }
+}
+
+// Code for overriding player's animation with sequences selected by the
+// anim-clip component effect.
+
+void Player::restoreAnimation(U32 tag)
+{
+   // check if this is a blended clip
+   if ((tag & BLENDED_CLIP) != 0)
+   {
+      restoreBlendAnimation(tag);
+      return;
+   }
+
+   if (tag != 0 && tag == last_anim_tag)
+   {
+      bool is_death_anim = ((anim_clip_flags & IS_DEATH_ANIM) != 0);
+
+      anim_clip_flags &= ~(ANIM_OVERRIDDEN | IS_DEATH_ANIM);
+
+      if (isClientObject())
+      {
+         if (mDamageState != Enabled)
+         {
+            if (!is_death_anim)
+            {
+               // this is a bit hardwired and desperate,
+               // but if he's dead he needs to look like it.
+               setActionThread("death10", false, false, false);
+            }
+         }
+         else if (mState != MoveState)
+         {
+            // not sure what happens here
+         }
+         else
+         {
+            pickActionAnimation();
+         }
+      }
+
+      last_anim_tag = 0;
+      last_anim_id = -1;
+   }
+}
+
+U32 Player::getAnimationID(const char* name)
+{
+   for (U32 i = 0; i < mDataBlock->actionCount; i++)
+   {
+      PlayerData::ActionAnimation &anim = mDataBlock->actionList[i];
+      if (dStricmp(anim.name, name) == 0)
+         return i;
+   }
+
+   Con::errorf("Player::getAnimationID() -- Player does not contain a sequence that matches the name, %s.", name);
+   return BAD_ANIM_ID;
+}
+
+U32 Player::playAnimationByID(U32 anim_id, F32 pos, F32 rate, F32 trans, bool hold, bool wait, bool is_death_anim)
+{
+   if (anim_id == BAD_ANIM_ID)
+      return 0;
+
+   S32 seq_id = mDataBlock->actionList[anim_id].sequence;
+   if (seq_id == -1)
+   {
+      Con::errorf("Player::playAnimation() problem. BAD_SEQ_ID");
+      return 0;
+   }
+
+   if (mShapeInstance->getShape()->sequences[seq_id].isBlend())
+      return playBlendAnimation(seq_id, pos, rate);
+
+   if (isClientObject())
+   {
+      PlayerData::ActionAnimation &anim = mDataBlock->actionList[anim_id];
+      if (anim.sequence != -1) 
+      {
+         mActionAnimation.action          = anim_id;
+         mActionAnimation.forward         = (rate >= 0);
+         mActionAnimation.firstPerson     = false;
+         mActionAnimation.holdAtEnd       = hold;
+         mActionAnimation.waitForEnd      = hold? true: wait;
+         mActionAnimation.animateOnServer = false;
+         mActionAnimation.atEnd           = false;
+         mActionAnimation.delayTicks      = (S32)sNewAnimationTickTime;
+
+         F32 transTime = (trans < 0) ? sAnimationTransitionTime : trans;  
+
+         mShapeInstance->setTimeScale(mActionAnimation.thread, rate);
+         mShapeInstance->transitionToSequence(mActionAnimation.thread,anim.sequence,
+            pos, transTime, true);
+      }
+   }
+
+   if (is_death_anim)
+      anim_clip_flags |= IS_DEATH_ANIM;
+   else
+      anim_clip_flags &= ~IS_DEATH_ANIM;
+
+   anim_clip_flags |= ANIM_OVERRIDDEN;
+   last_anim_tag = unique_anim_tag_counter++;
+   last_anim_id = anim_id;
+
+   return last_anim_tag;
+}
+
+F32 Player::getAnimationDurationByID(U32 anim_id)
+{
+   if (anim_id == BAD_ANIM_ID)
+      return 0.0f;
+   S32 seq_id = mDataBlock->actionList[anim_id].sequence;
+   if (seq_id >= 0 && seq_id < mDataBlock->mShape->sequences.size())
+      return mDataBlock->mShape->sequences[seq_id].duration;
+
+   return 0.0f;
+}
+
+bool Player::isBlendAnimation(const char* name)
+{
+   U32 anim_id = getAnimationID(name);
+   if (anim_id == BAD_ANIM_ID)
+      return false;
+
+   S32 seq_id = mDataBlock->actionList[anim_id].sequence;
+   if (seq_id >= 0 && seq_id < mDataBlock->mShape->sequences.size())
+      return mDataBlock->mShape->sequences[seq_id].isBlend();
+
+   return false;
+}
+
+const char* Player::getLastClipName(U32 clip_tag)
+{ 
+   if (clip_tag != last_anim_tag || last_anim_id >= PlayerData::NumActionAnims)
+      return "";
+
+   return mDataBlock->actionList[last_anim_id].name;
+}
+
+void Player::unlockAnimation(U32 tag, bool force)
+{
+   if ((tag != 0 && tag == last_anim_lock_tag) || force)
+      anim_clip_flags &= ~BLOCK_USER_CONTROL;
+}
+
+U32 Player::lockAnimation()
+{
+   anim_clip_flags |= BLOCK_USER_CONTROL;
+   last_anim_lock_tag = unique_anim_tag_counter++;
+
+   return last_anim_lock_tag;
+}
+
+DefineEngineMethod(Player, isAnimationLocked, bool, (),, "")
+{
+   return object->isAnimationLocked();
+}
+
+
+void Player::setLookAnimationOverride(bool flag) 
+{ 
+   overrideLookAnimation = flag; 
+#if 0
+   setMaskBits(LookOverrideMask);
+#else
+   setMaskBits(ActionMask);
+#endif
+}
+
+DefineEngineMethod(Player, setLookAnimationOverride, void, (bool flag),, "")
+{
+   object->setLookAnimationOverride(flag);
+}
+
+DefineEngineMethod(Player, copyHeadRotation, void, (Player* other_player),, "")
+{
+   if (other_player)
+      object->copyHeadRotation(other_player);
+}
+void Player::process_client_triggers(bool triggeredLeft, bool triggeredRight)
+{
+   bool mark_landing = false;
+   Point3F my_vel = getVelocity();
+   if (my_vel.z > 5.0f)
+      z_velocity = 1;
+   else if (my_vel.z < -5.0f)
+      z_velocity = -1;
+   else
+   {
+      if (z_velocity < 0)
+         mark_landing = true;
+      z_velocity = 0.0f;
+   }
+
+   fx_c_triggers = mark_fx_c_triggers;
+   if (triggeredLeft)
+      fx_c_triggers |= PLAYER_LF_FOOT_C_TRIGGER;
+   if (triggeredRight)
+      fx_c_triggers |= PLAYER_RT_FOOT_C_TRIGGER;
+   if (mark_landing)
+      fx_c_triggers |= PLAYER_LANDING_C_TRIGGER;
+   if (idle_timer > 10.0f)
+   {
+      fx_c_triggers |= PLAYER_IDLE_C_TRIGGER;
+      idle_timer = 0.0f;
+   }
+   if (fx_c_triggers & PLAYER_LANDING_S_TRIGGER)
+   {
+      fx_c_triggers &= ~(PLAYER_LANDING_S_TRIGGER);
+   }
+}
+U32 Player::unique_movement_tag_counter = 1;
+
+void Player::setMovementSpeedBias(F32 bias) 
+{ 
+   speed_bias_goal = bias; 
+}
+
+U32 Player::setMovementOverride(F32 bias, const Point3F* mov, U32 op) 
+{ 
+   if (mov)
+   {
+      movement_data = *mov;
+      override_movement = true;
+      movement_op = (U8)op;
+   }
+   else
+      override_movement = false;
+
+   speed_bias_goal = bias;
+
+   last_movement_tag = unique_movement_tag_counter++;
+   return last_movement_tag;
+}
+
+void Player::restoreMovement(U32 tag) 
+{ 
+   if (tag != 0 && tag == last_movement_tag)
+   {
+      speed_bias_goal = 1.0;
+      override_movement = false;
+   }
+}
+
+DefineEngineMethod(Player, setMovementSpeedBias, void, (F32 bias),, "setMovementSpeedBias(F32 bias)")
+{
+   object->setMovementSpeedBias(bias);
+}
+
+void Player::overrideFootfallFX(bool decals, bool sounds, bool dust) 
+{ 
+   if (decals)
+      footfallDecalOverride++; 
+   if (sounds)
+      footfallSoundOverride++; 
+   if (dust)
+      footfallDustOverride++; 
+   noFootfallFX = (footfallDecalOverride > 0 && footfallSoundOverride > 0 && footfallDustOverride > 0);
+}
+
+void Player::restoreFootfallFX(bool decals, bool sounds, bool dust) 
+{ 
+   if (decals && footfallDecalOverride) 
+      footfallDecalOverride--; 
+   if (sounds && footfallSoundOverride) 
+      footfallSoundOverride--; 
+   if (dust && footfallDustOverride) 
+      footfallDustOverride--; 
+   noFootfallFX = (footfallDecalOverride > 0 && footfallSoundOverride > 0 && footfallDustOverride > 0);
+}
+#ifdef TORQUE_OPENVR
+void Player::setControllers(Vector<OpenVRTrackedObject*> controllerList)
+{
+   mControllers[0] = controllerList.size() > 0 ? controllerList[0] : NULL;
+   mControllers[1] = controllerList.size() > 1 ? controllerList[1] : NULL;
+}
+
+DefineEngineMethod(Player, setVRControllers, void, (OpenVRTrackedObject* controllerL, OpenVRTrackedObject* controllerR,, "")
+{
+   Vector<OpenVRTrackedObject*> list;
+
+   if (controllerL)
+   {
+      list.push_back(controllerL);
+   }
+   else
+   {
+      list.push_back(NULL);
+   }
+
+   if (controllerR)
+   {
+      list.push_back(controllerR);
+   }
+   else
+   {
+      list.push_back(NULL);
+   }
+
+   object->setControllers(list);
+}
+
+#endif

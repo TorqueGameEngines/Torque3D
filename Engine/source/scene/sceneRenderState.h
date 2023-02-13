@@ -72,9 +72,6 @@ class SceneRenderState
       /// The render style being performed
       SceneRenderStyle mSceneRenderStyle;
 
-      /// When doing stereo rendering, the current field that is being rendered
-      S32 mRenderField;
-
       /// The render pass which we are setting up with this scene state.
       RenderPassManager* mRenderPass;
 
@@ -97,7 +94,7 @@ class SceneRenderState
       Point3F mVectorEye;
 
       /// Global ambient light color.
-      ColorF mAmbientLightColor;
+      LinearColorF mAmbientLightColor;
 
       /// Forces bin based post effects to be disabled
       /// during rendering with this scene state.
@@ -186,10 +183,10 @@ class SceneRenderState
       /// light.
       ///
       /// @return The ambient light color for rendering.
-      ColorF getAmbientLightColor() const { return mAmbientLightColor; }
+      LinearColorF getAmbientLightColor() const { return mAmbientLightColor; }
 
       /// Set the global ambient light color to render with.
-      void setAmbientLightColor( const ColorF& color ) { mAmbientLightColor = color; }
+      void setAmbientLightColor( const LinearColorF& color ) { mAmbientLightColor = color; }
 
       /// If true then Advanced Lighting bin draws are disabled during rendering with
       /// this scene state.
@@ -237,12 +234,6 @@ class SceneRenderState
       /// Set the rendering style used for the scene
       void setSceneRenderStyle(SceneRenderStyle style) { mSceneRenderStyle = style; }
 
-      /// Get the stereo field being rendered
-      S32 getSceneRenderField() const { return mRenderField; }
-
-      /// Set the stereo field being rendered
-      void setSceneRenderField(S32 field) { mRenderField = field; }
-
       /// @}
 
       /// @name Transforms, projections, and viewports.
@@ -256,6 +247,8 @@ class SceneRenderState
 
       /// Return the project transform matrix.
       const MatrixF& getProjectionMatrix() const;
+      /// Return the inverse project transform matrix.
+      const MatrixF& getInvProjectionMatrix() const;
 
       /// Returns the actual camera position.
       /// @see getDiffuseCameraPosition

@@ -137,14 +137,14 @@ static void _keyboardEvent(Win32Window* window,UINT message, WPARAM wParam, WPAR
        && window->getKeyboardTranslation()
 	    && !window->shouldNotTranslate( torqueMods, newVirtKey ) )
 	{
-      U16 chars[ 64 ];
+      wchar_t chars[ 64 ];
       dMemset( chars, 0, sizeof( chars ) );
 
       S32 res = ToUnicode( keyCode, scanCode, keyboardState, chars, sizeof( chars ) / sizeof( chars[ 0 ] ), 0 );
 
    	// This should only happen on Window 9x/ME systems
    	if( res == 0 )
-   		res = ToAscii( keyCode, scanCode, keyboardState, chars, 0 );
+         res = ToAscii( keyCode, scanCode, keyboardState, (LPWORD)chars, 0 );
 
       if( res >= 1 )
       {
@@ -391,7 +391,7 @@ static bool _dispatch(HWND hWnd,UINT message,WPARAM wParam,WPARAM lParam)
 
 			// FIXME [tom, 5/1/2007] Hard coding this is lame since there's a const in win32Window.cpp
 			// CodeReview - this fails if there is a second jug app in the arena.
-			if (hwnd == NULL || dStrcmp(classBuf, L"TorqueJuggernaughtWindow") != 0)
+			if (hwnd == NULL || String::compare(classBuf, L"TorqueJuggernaughtWindow") != 0)
 			{
 				// We are being made inactive and the window being made active isn't
 				// a jugg window. Thus, we need to deactivate input.

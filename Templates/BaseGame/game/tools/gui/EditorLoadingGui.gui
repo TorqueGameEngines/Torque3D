@@ -1,0 +1,92 @@
+//--- OBJECT WRITE BEGIN ---
+$guiContent = new GuiControl(EditorLoadingGui,EditorGuiGroup) {
+   position = "0 0";
+   extent = "1024 768";
+   minExtent = "8 2";
+   horizSizing = "right";
+   vertSizing = "bottom";
+   profile = "GuiOverlayProfile";
+   visible = "1";
+   active = "1";
+   tooltipProfile = "ToolsGuiToolTipProfile";
+   hovertime = "1000";
+   isContainer = "1";
+   canSave = "1";
+   canSaveDynamicFields = "1";
+
+   new GuiControl() {
+      position = "389 355";
+      extent = "245 57";
+      minExtent = "8 2";
+      horizSizing = "center";
+      vertSizing = "center";
+      profile = "ToolsGuiSolidDefaultProfile";
+      visible = "1";
+      active = "1";
+      tooltipProfile = "ToolsGuiToolTipProfile";
+      hovertime = "1000";
+      isContainer = "1";
+      internalName = "Dialog";
+      canSave = "1";
+      canSaveDynamicFields = "0";
+
+      new GuiTextCtrl() {
+         text = "Loading the Editor...";
+         maxLength = "1024";
+         margin = "0 0 0 0";
+         padding = "0 0 0 0";
+         anchorTop = "1";
+         anchorBottom = "0";
+         anchorLeft = "1";
+         anchorRight = "0";
+         position = "5 19";
+         extent = "236 18";
+         minExtent = "8 2";
+         horizSizing = "width";
+         vertSizing = "center";
+         profile = "ToolsGuiTextBoldCenterProfile";
+         visible = "1";
+         active = "1";
+         tooltipProfile = "ToolsGuiToolTipProfile";
+         hovertime = "1000";
+         isContainer = "0";
+         canSave = "1";
+         canSaveDynamicFields = "0";
+         internalName = "loadingText";
+      };
+   };
+};
+//--- OBJECT WRITE END ---
+
+function EditorLoadingGui::onWake(%this)
+{
+   %res = %this.getExtent();
+   %resX = getWord(%res, 0);
+   %resY = getWord(%res, 1);
+   
+   %dialog = %this-->Dialog;
+   %dialogExtent = %dialog.getExtent();
+   %dialogWidth = getWord(%dialogExtent, 0);
+   %dialogHeight = getWord(%dialogExtent, 1);
+   %dialogPostion = %dialog.getPosition();
+   
+   %posX = (%resX / 2) - (%dialogWidth / 2);
+   %posY = (%resY / 2) - (%dialogHeight / 2);
+   %dialog.setPosition(%posX, %posY);
+}
+
+function displayEditorLoadingGui(%displayText)
+{
+   if(%displayText $= "")
+      %displayText = "Loading the Editor...";
+      
+   EditorLoadingGui-->loadingText.setText(%displayText);
+   
+   Canvas.pushDialog( EditorLoadingGui );
+   Canvas.repaint();
+}
+
+function hideEditorLoadingGui()
+{
+   Canvas.popDialog( EditorLoadingGui );
+}

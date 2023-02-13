@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="shape_editor_h_image"
+    imageFile="@assetFile=shape-editor_h.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

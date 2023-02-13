@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="selection_to_prefab_n_image"
+    imageFile="@assetFile=selection-to-prefab_n.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

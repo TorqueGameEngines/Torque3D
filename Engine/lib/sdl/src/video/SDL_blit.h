@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2014 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -20,12 +20,18 @@
 */
 #include "../SDL_internal.h"
 
-#ifndef _SDL_blit_h
-#define _SDL_blit_h
+#ifndef SDL_blit_h_
+#define SDL_blit_h_
 
 #include "SDL_cpuinfo.h"
 #include "SDL_endian.h"
 #include "SDL_surface.h"
+
+/* pixman ARM blitters are 32 bit only : */
+#if defined(__aarch64__)||defined(_M_ARM64)
+#undef SDL_ARM_SIMD_BLITTERS
+#undef SDL_ARM_NEON_BLITTERS
+#endif
 
 /* Table to do pixel byte expansion */
 extern Uint8* SDL_expand_byte[9];
@@ -36,6 +42,7 @@ extern Uint8* SDL_expand_byte[9];
 #define SDL_COPY_BLEND              0x00000010
 #define SDL_COPY_ADD                0x00000020
 #define SDL_COPY_MOD                0x00000040
+#define SDL_COPY_MUL                0x00000080
 #define SDL_COPY_COLORKEY           0x00000100
 #define SDL_COPY_NEAREST            0x00000200
 #define SDL_COPY_RLE_DESIRED        0x00001000
@@ -70,7 +77,8 @@ typedef struct
     Uint8 r, g, b, a;
 } SDL_BlitInfo;
 
-typedef void (SDLCALL * SDL_BlitFunc) (SDL_BlitInfo * info);
+typedef void (*SDL_BlitFunc) (SDL_BlitInfo *info);
+
 
 typedef struct
 {
@@ -125,7 +133,7 @@ extern SDL_BlitFunc SDL_CalculateBlitA(SDL_Surface * surface);
     b = SDL_expand_byte[fmt->Bloss][((Pixel&fmt->Bmask)>>fmt->Bshift)]; \
 }
 #define RGB_FROM_RGB565(Pixel, r, g, b)                                 \
-    {                                                                   \
+{                                                                       \
     r = SDL_expand_byte[3][((Pixel&0xF800)>>11)];                       \
     g = SDL_expand_byte[2][((Pixel&0x07E0)>>5)];                        \
     b = SDL_expand_byte[3][(Pixel&0x001F)];                             \
@@ -261,18 +269,18 @@ do {                                                                    \
 {                                                                       \
     switch (bpp) {                                                      \
         case 1: {                                                       \
-            Uint8 Pixel;                                                \
+            Uint8 _pixel;                                               \
                                                                         \
-            PIXEL_FROM_RGB(Pixel, fmt, r, g, b);                        \
-            *((Uint8 *)(buf)) = Pixel;                                  \
+            PIXEL_FROM_RGB(_pixel, fmt, r, g, b);                       \
+            *((Uint8 *)(buf)) = _pixel;                                 \
         }                                                               \
         break;                                                          \
                                                                         \
         case 2: {                                                       \
-            Uint16 Pixel;                                               \
+            Uint16 _pixel;                                              \
                                                                         \
-            PIXEL_FROM_RGB(Pixel, fmt, r, g, b);                        \
-            *((Uint16 *)(buf)) = Pixel;                                 \
+            PIXEL_FROM_RGB(_pixel, fmt, r, g, b);                       \
+            *((Uint16 *)(buf)) = _pixel;                                \
         }                                                               \
         break;                                                          \
                                                                         \
@@ -290,10 +298,10 @@ do {                                                                    \
         break;                                                          \
                                                                         \
         case 4: {                                                       \
-            Uint32 Pixel;                                               \
+            Uint32 _pixel;                                              \
                                                                         \
-            PIXEL_FROM_RGB(Pixel, fmt, r, g, b);                        \
-            *((Uint32 *)(buf)) = Pixel;                                 \
+            PIXEL_FROM_RGB(_pixel, fmt, r, g, b);                       \
+            *((Uint32 *)(buf)) = _pixel;                                \
         }                                                               \
         break;                                                          \
     }                                                                   \
@@ -402,18 +410,18 @@ do {                                                                    \
 {                                                                       \
     switch (bpp) {                                                      \
         case 1: {                                                       \
-            Uint8 Pixel;                                                \
+            Uint8 _pixel;                                               \
                                                                         \
-            PIXEL_FROM_RGBA(Pixel, fmt, r, g, b, a);                    \
-            *((Uint8 *)(buf)) = Pixel;                                  \
+            PIXEL_FROM_RGBA(_pixel, fmt, r, g, b, a);                   \
+            *((Uint8 *)(buf)) = _pixel;                                 \
         }                                                               \
         break;                                                          \
                                                                         \
         case 2: {                                                       \
-            Uint16 Pixel;                                               \
+            Uint16 _pixel;                                              \
                                                                         \
-            PIXEL_FROM_RGBA(Pixel, fmt, r, g, b, a);                    \
-            *((Uint16 *)(buf)) = Pixel;                                 \
+            PIXEL_FROM_RGBA(_pixel, fmt, r, g, b, a);                   \
+            *((Uint16 *)(buf)) = _pixel;                                \
         }                                                               \
         break;                                                          \
                                                                         \
@@ -431,10 +439,10 @@ do {                                                                    \
         break;                                                          \
                                                                         \
         case 4: {                                                       \
-            Uint32 Pixel;                                               \
+            Uint32 _pixel;                                              \
                                                                         \
-            PIXEL_FROM_RGBA(Pixel, fmt, r, g, b, a);                    \
-            *((Uint32 *)(buf)) = Pixel;                                 \
+            PIXEL_FROM_RGBA(_pixel, fmt, r, g, b, a);                   \
+            *((Uint32 *)(buf)) = _pixel;                                \
         }                                                               \
         break;                                                          \
     }                                                                   \
@@ -443,19 +451,19 @@ do {                                                                    \
 /* Blend the RGB values of two pixels with an alpha value */
 #define ALPHA_BLEND_RGB(sR, sG, sB, A, dR, dG, dB)                      \
 do {                                                                    \
-    dR = ((((unsigned)(sR-dR)*(unsigned)A)/255)+dR);                    \
-    dG = ((((unsigned)(sG-dG)*(unsigned)A)/255)+dG);                    \
-    dB = ((((unsigned)(sB-dB)*(unsigned)A)/255)+dB);                    \
+    dR = (Uint8)((((int)(sR-dR)*(int)A)/255)+dR);                       \
+    dG = (Uint8)((((int)(sG-dG)*(int)A)/255)+dG);                       \
+    dB = (Uint8)((((int)(sB-dB)*(int)A)/255)+dB);                       \
 } while(0)
 
 
 /* Blend the RGBA values of two pixels */
 #define ALPHA_BLEND_RGBA(sR, sG, sB, sA, dR, dG, dB, dA)                \
 do {                                                                    \
-    dR = ((((unsigned)(sR-dR)*(unsigned)sA)/255)+dR);                   \
-    dG = ((((unsigned)(sG-dG)*(unsigned)sA)/255)+dG);                   \
-    dB = ((((unsigned)(sB-dB)*(unsigned)sA)/255)+dB);                   \
-    dA = ((unsigned)sA+(unsigned)dA-((unsigned)sA*dA)/255);             \
+    dR = (Uint8)((((int)(sR-dR)*(int)sA)/255)+dR);                      \
+    dG = (Uint8)((((int)(sG-dG)*(int)sA)/255)+dG);                      \
+    dB = (Uint8)((((int)(sB-dB)*(int)sA)/255)+dB);                      \
+    dA = (Uint8)((int)sA+dA-((int)sA*dA)/255);                          \
 } while(0)
 
 
@@ -471,13 +479,13 @@ do {                                                                    \
 #define DUFFS_LOOP8(pixel_copy_increment, width)                        \
 { int n = (width+7)/8;                                                  \
     switch (width & 7) {                                                \
-    case 0: do {    pixel_copy_increment;                               \
-    case 7:     pixel_copy_increment;                                   \
-    case 6:     pixel_copy_increment;                                   \
-    case 5:     pixel_copy_increment;                                   \
-    case 4:     pixel_copy_increment;                                   \
-    case 3:     pixel_copy_increment;                                   \
-    case 2:     pixel_copy_increment;                                   \
+    case 0: do {    pixel_copy_increment; SDL_FALLTHROUGH;              \
+    case 7:     pixel_copy_increment;     SDL_FALLTHROUGH;              \
+    case 6:     pixel_copy_increment;     SDL_FALLTHROUGH;              \
+    case 5:     pixel_copy_increment;     SDL_FALLTHROUGH;              \
+    case 4:     pixel_copy_increment;     SDL_FALLTHROUGH;              \
+    case 3:     pixel_copy_increment;     SDL_FALLTHROUGH;              \
+    case 2:     pixel_copy_increment;     SDL_FALLTHROUGH;              \
     case 1:     pixel_copy_increment;                                   \
         } while ( --n > 0 );                                            \
     }                                                                   \
@@ -487,9 +495,9 @@ do {                                                                    \
 #define DUFFS_LOOP4(pixel_copy_increment, width)                        \
 { int n = (width+3)/4;                                                  \
     switch (width & 3) {                                                \
-    case 0: do {    pixel_copy_increment;                               \
-    case 3:     pixel_copy_increment;                                   \
-    case 2:     pixel_copy_increment;                                   \
+    case 0: do {    pixel_copy_increment;   SDL_FALLTHROUGH;            \
+    case 3:     pixel_copy_increment;       SDL_FALLTHROUGH;            \
+    case 2:     pixel_copy_increment;       SDL_FALLTHROUGH;            \
     case 1:     pixel_copy_increment;                                   \
         } while (--n > 0);                                              \
     }                                                                   \
@@ -547,6 +555,6 @@ do {                                                                    \
 #pragma warning(disable: 4550)
 #endif
 
-#endif /* _SDL_blit_h */
+#endif /* SDL_blit_h_ */
 
 /* vi: set ts=4 sw=4 expandtab: */

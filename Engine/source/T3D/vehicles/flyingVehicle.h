@@ -45,7 +45,8 @@ struct FlyingVehicleData: public VehicleData {
       EngineSound,
       MaxSounds,
    };
-   SFXProfile* sound[MaxSounds];
+   DECLARE_SOUNDASSET_ARRAY(FlyingVehicleData, FlyingSounds, Sounds::MaxSounds);
+   DECLARE_ASSET_ARRAY_SETGET(FlyingVehicleData, FlyingSounds);
 
    enum Jets {
       // These enums index into a static name list.
@@ -77,7 +78,6 @@ struct FlyingVehicleData: public VehicleData {
 
    // Initialized in preload
    ClippedPolyList rigidBody;
-   S32 surfaceCount;
    F32 maxSpeed;
 
    enum JetNodes {
@@ -187,6 +187,7 @@ class FlyingVehicle: public Vehicle
 
    bool onAdd();
    void onRemove();
+   void interpolateTick(F32 dt);
    void advanceTime(F32 dt);
 
    void writePacketData(GameConnection *conn, BitStream *stream);

@@ -125,7 +125,8 @@ void TSShapeLoader::updateProgress(S32 major, const char* msg, S32 numMinor, S32
       progressMsg = avar("%s (%d of %d)", msg, minor + 1, numMinor);
    }
 
-   Con::executef("updateTSShapeLoadProgress", Con::getFloatArg(progress), progressMsg);
+   if(Con::isFunction("updateTSShapeLoadProgress"))
+      Con::executef("updateTSShapeLoadProgress", Con::getFloatArg(progress), progressMsg);
 }
 
 //-----------------------------------------------------------------------------
@@ -283,11 +284,12 @@ void TSShapeLoader::recurseSubshape(AppNode* appNode, S32 parentIndex, bool recu
 
       // Create the 3space node
       shape->nodes.increment();
-      shape->nodes.last().nameIndex = shape->addName(nodeName);
-      shape->nodes.last().parentIndex = parentIndex;
-      shape->nodes.last().firstObject = -1;
-      shape->nodes.last().firstChild = -1;
-      shape->nodes.last().nextSibling = -1;
+      TSShape::Node& lastNode = shape->nodes.last();
+      lastNode.nameIndex = shape->addName(nodeName);
+      lastNode.parentIndex = parentIndex;
+      lastNode.firstObject = -1;
+      lastNode.firstChild = -1;
+      lastNode.nextSibling = -1;
 
       // Add the AppNode to a matching list (so AppNodes can be accessed using 3space
       // node indices)
@@ -323,12 +325,14 @@ void TSShapeLoader::recurseSubshape(AppNode* appNode, S32 parentIndex, bool recu
             appNode->getBool("BB::INCLUDE_POLES", includePoles);
 
             S32 detIndex = shape->addDetail( "bbDetail", size, -1 );
-            shape->details[detIndex].bbEquatorSteps = numEquatorSteps;
-            shape->details[detIndex].bbPolarSteps = numPolarSteps;
-            shape->details[detIndex].bbDetailLevel = dl;
-            shape->details[detIndex].bbDimension = dim;
-            shape->details[detIndex].bbIncludePoles = includePoles;
-            shape->details[detIndex].bbPolarAngle = polarAngle;
+
+            TSShape::Detail& detIndexDetail = shape->details[detIndex];
+            detIndexDetail.bbEquatorSteps = numEquatorSteps;
+            detIndexDetail.bbPolarSteps = numPolarSteps;
+            detIndexDetail.bbDetailLevel = dl;
+            detIndexDetail.bbDimension = dim;
+            detIndexDetail.bbIncludePoles = includePoles;
+            detIndexDetail.bbPolarAngle = polarAngle;
          }
       }
    }
@@ -409,7 +413,7 @@ void TSShapeLoader::generateObjects()
          AppMesh* mesh = subshape->objMeshes[iMesh];
          mesh->detailSize = 2;
          String name = String::GetTrailingNumber( mesh->getName(), mesh->detailSize );
-         name = getUniqueName( name, cmpMeshNameAndSize, meshNames, &(subshape->objMeshes), (void*)mesh->detailSize );
+         name = getUniqueName( name, cmpMeshNameAndSize, meshNames, &(subshape->objMeshes), (void*)(uintptr_t)mesh->detailSize );
          meshNames.push_back( name );
 
          // Fix up any collision details that don't have a negative detail level.
@@ -462,10 +466,11 @@ void TSShapeLoader::generateObjects()
          if (!lastName || (meshNames[iMesh] != *lastName))
          {
             shape->objects.increment();
-            shape->objects.last().nameIndex = shape->addName(meshNames[iMesh]);
-            shape->objects.last().nodeIndex = subshape->objNodes[iMesh];
-            shape->objects.last().startMeshIndex = appMeshes.size();
-            shape->objects.last().numMeshes = 0;
+            TSShape::Object& lastObject = shape->objects.last();
+            lastObject.nameIndex = shape->addName(meshNames[iMesh]);
+            lastObject.nodeIndex = subshape->objNodes[iMesh];
+            lastObject.startMeshIndex = appMeshes.size();
+            lastObject.numMeshes = 0;
             lastName = &meshNames[iMesh];
          }
 
@@ -1168,7 +1173,7 @@ void TSShapeLoader::install()
       {
          TSMesh *mesh = shape->meshes[obj.startMeshIndex + iMesh];
 
-         if (mesh && !mesh->primitives.size())
+         if (mesh && !mesh->mPrimitives.size())
          {
             S32 oldMeshCount = obj.numMeshes;
             destructInPlace(mesh);
@@ -1190,10 +1195,12 @@ void TSShapeLoader::install()
       shape->meshes.push_back(NULL);
 
       shape->objects.increment();
-      shape->objects.last().nameIndex = shape->addName("dummy");
-      shape->objects.last().nodeIndex = 0;
-      shape->objects.last().startMeshIndex = 0;
-      shape->objects.last().numMeshes = 1;
+
+      TSShape::Object& lastObject = shape->objects.last();
+      lastObject.nameIndex = shape->addName("dummy");
+      lastObject.nodeIndex = 0;
+      lastObject.startMeshIndex = 0;
+      lastObject.numMeshes = 1;
 
       shape->objectStates.increment();
       shape->objectStates.last().frameIndex = 0;
@@ -1214,15 +1221,16 @@ void TSShapeLoader::install()
       }
    }
 
-   computeBounds(shape->bounds);
-   if (!shape->bounds.isValidBox())
-      shape->bounds = Box3F(1.0f);
+   computeBounds(shape->mBounds);
+   if (!shape->mBounds.isValidBox())
+      shape->mBounds = Box3F(1.0f);
 
-   shape->bounds.getCenter(&shape->center);
-   shape->radius = (shape->bounds.maxExtents - shape->center).len();
-   shape->tubeRadius = shape->radius;
+   shape->mBounds.getCenter(&shape->center);
+   shape->mRadius = (shape->mBounds.maxExtents - shape->center).len();
+   shape->tubeRadius = shape->mRadius;
 
    shape->init();
+   shape->finalizeEditable();
 }
 
 void TSShapeLoader::computeBounds(Box3F& bounds)
@@ -1318,16 +1326,32 @@ String TSShapeLoader::getFormatFilters()
    return output.end();
 }
 
-DefineConsoleFunction( getFormatExtensions, const char*, ( ),, 
+bool TSShapeLoader::isSupportedFormat(String extension)
+{
+   String extLower = String::ToLower(extension);
+   for (U32 n = 0; n < smFormats.size(); ++n)
+   {
+      if (smFormats[n].mExtension.equal(extLower))
+         return true;
+   }
+   return false;
+}
+
+DefineEngineFunction( getFormatExtensions, const char*, ( ),, 
   "Returns a list of supported shape format extensions separated by tabs."
   "Example output: *.dsq TAB *.dae TAB")
 {
    return Con::getReturnBuffer(TSShapeLoader::getFormatExtensions());
 }
 
-DefineConsoleFunction( getFormatFilters, const char*, ( ),, 
+DefineEngineFunction( getFormatFilters, const char*, ( ),, 
   "Returns a list of supported shape formats in filter form.\n"
   "Example output: DSQ Files|*.dsq|COLLADA Files|*.dae|")
 {
    return Con::getReturnBuffer(TSShapeLoader::getFormatFilters());
+}
+
+DefineEngineFunction(isSupportedFormat, bool, (const char* extension), , "")
+{
+   return TSShapeLoader::isSupportedFormat(extension);
 }

@@ -108,6 +108,9 @@
 
       // de-tag the command name
 
+      if (mArgc < 1 || mArgv[1][0] != StringTagPrefixByte)
+         return;
+
       for(S32 i = mArgc - 1; i >= 0; i--)
       {
          char *arg = mArgv[i+1];
@@ -128,8 +131,8 @@
       const char *rmtCommandName = dStrchr(mArgv[1], ' ') + 1;
       if(conn->isConnectionToServer())
       {
-         dStrcpy(mBuf, "clientCmd");
-         dStrcat(mBuf, rmtCommandName);
+         dStrcpy(mBuf, "clientCmd", 1024);
+         dStrcat(mBuf, rmtCommandName, 1024);
 
          char *temp = mArgv[1];
          mArgv[1] = mBuf;
@@ -139,8 +142,8 @@
       }
       else
       {
-         dStrcpy(mBuf, "serverCmd");
-         dStrcat(mBuf, rmtCommandName);
+         dStrcpy(mBuf, "serverCmd", 1024);
+         dStrcat(mBuf, rmtCommandName, 1024);
          char *temp = mArgv[1];
 
          dSprintf(idBuf, sizeof(idBuf), "%d", conn->getId());
@@ -212,7 +215,7 @@ ConsoleDocClass( RemoteCommandEvent,
 ConsoleFunctionGroupBegin( Net, "Functions for use with the network; tagged strings and remote commands.");
 
 
-ConsoleFunction( commandToServer, void, 2, RemoteCommandEvent::MaxRemoteCommandArgs + 1, "(string func, ...)"
+DefineEngineStringlyVariadicFunction( commandToServer, void, 2, RemoteCommandEvent::MaxRemoteCommandArgs + 1, "(string func, ...)"
 	"@brief Send a command to the server.\n\n"
 
    "@param func Name of the server command being called\n"
@@ -220,7 +223,7 @@ ConsoleFunction( commandToServer, void, 2, RemoteCommandEvent::MaxRemoteCommandA
 
    "@tsexample\n"
       "// Create a standard function.  Needs to be executed on the client, such \n"
-      "// as within scripts/client/default.bind.cs\n"
+      "// as within scripts/client/default.bind." TORQUE_SCRIPT_EXTENSION "\n"
       "function toggleCamera(%val)\n"
       "{\n"
       "	// If key was down, call a server command named 'ToggleCamera'\n"
@@ -228,7 +231,7 @@ ConsoleFunction( commandToServer, void, 2, RemoteCommandEvent::MaxRemoteCommandA
       "		commandToServer('ToggleCamera');\n"
       "}\n\n"
       "// Server command being called from above.  Needs to be executed on the \n"
-      "// server, such as within scripts/server/commands.cs\n"
+      "// server, such as within scripts/server/commands." TORQUE_SCRIPT_EXTENSION "\n"
       "function serverCmdToggleCamera(%client)\n"
       "{\n"
       "   if (%client.getControlObject() == %client.player)\n"
@@ -251,11 +254,11 @@ ConsoleFunction( commandToServer, void, 2, RemoteCommandEvent::MaxRemoteCommandA
    NetConnection *conn = NetConnection::getConnectionToServer();
    if(!conn)
       return;
-   StringStackWrapper args(argc - 1, argv + 1);
+   ConsoleValueToStringArrayWrapper args(argc - 1, argv + 1);
    RemoteCommandEvent::sendRemoteCommand(conn, args.count(), args);
 }
 
-ConsoleFunction( commandToClient, void, 3, RemoteCommandEvent::MaxRemoteCommandArgs + 2, "(NetConnection client, string func, ...)"
+DefineEngineStringlyVariadicFunction( commandToClient, void, 3, RemoteCommandEvent::MaxRemoteCommandArgs + 2, "(NetConnection client, string func, ...)"
    "@brief Send a command from the server to the client\n\n"
 
    "@param client The numeric ID of a client GameConnection\n"
@@ -264,7 +267,7 @@ ConsoleFunction( commandToClient, void, 3, RemoteCommandEvent::MaxRemoteCommandA
 
    "@tsexample\n"
       "// Set up the client command.  Needs to be executed on the client, such as\n"
-      "// within scripts/client/client.cs\n"
+      "// within scripts/client/client." TORQUE_SCRIPT_EXTENSION "\n"
       "// Update the Ammo Counter with current ammo, if not any then hide the counter.\n"
       "function clientCmdSetAmmoAmountHud(%amount)\n"
       "{\n"
@@ -277,7 +280,7 @@ ConsoleFunction( commandToClient, void, 3, RemoteCommandEvent::MaxRemoteCommandA
       "   }\n"
       "}\n\n"
       "// Call it from a server function.  Needs to be executed on the server, \n"
-      "//such as within scripts/server/game.cs\n"
+      "//such as within scripts/server/game." TORQUE_SCRIPT_EXTENSION "\n"
       "function GameConnection::setAmmoAmountHud(%client, %amount)\n"
       "{\n"
       "   commandToClient(%client, 'SetAmmoAmountHud', %amount);\n"
@@ -289,7 +292,7 @@ ConsoleFunction( commandToClient, void, 3, RemoteCommandEvent::MaxRemoteCommandA
    NetConnection *conn;
    if(!Sim::findObject(argv[1], conn))
       return;
-   StringStackWrapper args(argc - 2, argv + 2);
+   ConsoleValueToStringArrayWrapper args(argc - 2, argv + 2);
    RemoteCommandEvent::sendRemoteCommand(conn, args.count(), args);
 }
 
@@ -349,7 +352,7 @@ DefineEngineFunction(getTaggedString, const char* , (const char *tag), (""),
 
 
 
-ConsoleFunction( buildTaggedString, const char*, 2, 11, "(string format, ...)"
+DefineEngineStringlyVariadicFunction( buildTaggedString, const char*, 2, 11, "(string format, ...)"
    "@brief Build a string using the specified tagged string format.\n\n"
 
    "This function takes an already tagged string (passed in as a tagged string ID) and one "
@@ -409,7 +412,7 @@ ConsoleFunction( buildTaggedString, const char*, 2, 11, "(string format, ...)"
             S32 strLength = dStrlen(argStr);
             if (strLength > strMaxLength)
                goto done;
-            dStrcpy(strBufPtr, argStr);
+            dStrcpy(strBufPtr, argStr, strMaxLength);
             strBufPtr += strLength;
             strMaxLength -= strLength;
             fmtStrPtr += 2;

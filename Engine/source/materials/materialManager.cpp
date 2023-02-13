@@ -32,6 +32,7 @@
 #include "console/consoleTypes.h"
 #include "console/engineAPI.h"
 
+#include "gui/controls/guiTreeViewCtrl.h"
 
 MODULE_BEGIN( MaterialManager )
 
@@ -57,7 +58,8 @@ MaterialManager::MaterialManager()
 
    mDt = 0.0f; 
    mAccumTime = 0.0f; 
-   mLastTime = 0; 
+   mLastTime = 0;
+   mDampness = 0.0f;
    mWarningInst = NULL;
    
    GFXDevice::getDeviceEventSignal().notify( this, &MaterialManager::_handleGFXEvent );
@@ -68,7 +70,7 @@ MaterialManager::MaterialManager()
 
    mMaterialSet = NULL;
 
-   mUsingPrePass = false;
+   mUsingDeferred = false;
 
    mFlushAndReInit = false;
 
@@ -84,12 +86,10 @@ MaterialManager::MaterialManager()
    Con::NotifyDelegate callabck2( this, &MaterialManager::_onDisableMaterialFeature );
    Con::setVariable( "$pref::Video::disableNormalMapping", "false" );
    Con::addVariableNotify( "$pref::Video::disableNormalMapping", callabck2 );
-   Con::setVariable( "$pref::Video::disablePixSpecular", "false" );
-   Con::addVariableNotify( "$pref::Video::disablePixSpecular", callabck2 );
    Con::setVariable( "$pref::Video::disableCubemapping", "false" );
    Con::addVariableNotify( "$pref::Video::disableCubemapping", callabck2 );
-   Con::setVariable( "$pref::Video::disableParallaxMapping", "false" );
-   Con::addVariableNotify( "$pref::Video::disableParallaxMapping", callabck2 );
+   Con::setVariable( "$pref::Video::enableParallaxMapping", "true" );
+   Con::addVariableNotify( "$pref::Video::enableParallaxMapping", callabck2 );
 }
 
 MaterialManager::~MaterialManager()
@@ -162,6 +162,26 @@ Material * MaterialManager::getMaterialDefinitionByName(const String &matName)
    return foundMat;
 }
 
+Material* MaterialManager::getMaterialDefinitionByMapTo(const String& mapTo)
+{
+   // Get the material
+   Material* foundMat = nullptr;
+
+   for (SimSet::iterator itr = mMaterialSet->begin(); itr != mMaterialSet->end(); ++itr)
+   {
+      // Fetch our listed materials.
+      Material* materialDef = dynamic_cast<Material*>(*itr);
+      if (materialDef && materialDef->mMapTo.compare(mapTo, 0U, String::NoCase) == 0)
+      {
+         //We have a match, so keep it and bail the loop
+         foundMat = materialDef;
+         break;
+      }
+   }
+
+   return foundMat;
+}
+
 BaseMatInstance* MaterialManager::createMatInstance(const String &matName)
 {
    BaseMaterialDefinition* mat = NULL;
@@ -208,6 +228,8 @@ BaseMatInstance  * MaterialManager::createWarningMatInstance()
       warnMatInstance->init(  getDefaultFeatures(), 
                               getGFXVertexFormat<GFXVertexPNTTB>() );
    }
+   else
+      Con::errorf("WarningMaterial Not Found!");
 
    return warnMatInstance;
 }
@@ -222,7 +244,7 @@ BaseMatInstance * MaterialManager::getWarningMatInstance()
 }
 
 #ifndef TORQUE_SHIPPING
-BaseMatInstance * MaterialManager::createMeshDebugMatInstance(const ColorF &meshColor)
+BaseMatInstance * MaterialManager::createMeshDebugMatInstance(const LinearColorF &meshColor)
 {
    String  meshDebugStr = String::ToString( "Torque_MeshDebug_%d", meshColor.getRGBAPack() );
 
@@ -232,7 +254,7 @@ BaseMatInstance * MaterialManager::createMeshDebugMatInstance(const ColorF &mesh
       debugMat = allocateAndRegister( meshDebugStr );
 
       debugMat->mDiffuse[0] = meshColor;
-      debugMat->mEmissive[0] = true;
+      debugMat->mReceiveShadows[0] = false;
    }
 
    BaseMatInstance   *debugMatInstance = NULL;
@@ -256,7 +278,7 @@ BaseMatInstance * MaterialManager::createMeshDebugMatInstance(const ColorF &mesh
 }
 
 // Gets the global material instance for a given color, callers should not free this copy
-BaseMatInstance *MaterialManager::getMeshDebugMatInstance(const ColorF &meshColor)
+BaseMatInstance *MaterialManager::getMeshDebugMatInstance(const LinearColorF &meshColor)
 {
    DebugMaterialMap::Iterator itr = mMeshDebugMaterialInsts.find( meshColor.getRGBAPack() );
 
@@ -399,6 +421,36 @@ void MaterialManager::dumpMaterialInstances( BaseMaterialDefinition *target ) co
    Con::printf( "---------------------- Dump complete ----------------------");
 }
 
+void MaterialManager::getMaterialInstances(BaseMaterialDefinition* target, GuiTreeViewCtrl* materailInstanceTree)
+{
+   if (!mMatInstanceList.size())
+      return;
+
+   if (!target)
+   {
+      Con::errorf("Can't form a list without a specific MaterialDefinition");
+      return;
+   }
+
+   if (!materailInstanceTree)
+   {
+      Con::errorf("Requires a valid GuiTreeViewCtrl object to populate data into!");
+      return;
+   }
+
+   U32 matItem = materailInstanceTree->insertItem(0, target->getName());
+
+   for (U32 i = 0; i < mMatInstanceList.size(); i++)
+   {
+      BaseMatInstance* inst = mMatInstanceList[i];
+
+      if (target && inst->getMaterial() != target)
+         continue;
+
+      inst->getShaderInfo(materailInstanceTree, matItem);
+   }
+}
+
 void MaterialManager::_track( MatInstance *matInstance )
 {
    mMatInstanceList.push_back( matInstance );
@@ -417,17 +469,11 @@ void MaterialManager::recalcFeaturesFromPrefs()
    mExclusionFeatures.setFeature(   MFT_NormalMap, 
                                     Con::getBoolVariable( "$pref::Video::disableNormalMapping", false ) );
 
-   mExclusionFeatures.setFeature(   MFT_SpecularMap,
-                                    Con::getBoolVariable( "$pref::Video::disablePixSpecular", false ) );
-
-   mExclusionFeatures.setFeature(   MFT_PixSpecular,
-                                    Con::getBoolVariable( "$pref::Video::disablePixSpecular", false ) );
-
    mExclusionFeatures.setFeature(   MFT_CubeMap, 
                                     Con::getBoolVariable( "$pref::Video::disableCubemapping", false ) );
 
    mExclusionFeatures.setFeature(   MFT_Parallax, 
-                                    Con::getBoolVariable( "$pref::Video::disableParallaxMapping", false ) );
+                                    !Con::getBoolVariable( "$pref::Video::enableParallaxMapping", true ) );
 }
 
 bool MaterialManager::_handleGFXEvent( GFXDevice::GFXDeviceEventType event_ )
@@ -454,14 +500,14 @@ bool MaterialManager::_handleGFXEvent( GFXDevice::GFXDeviceEventType event_ )
    return true;
 }
 
-DefineConsoleFunction( reInitMaterials, void, (),,
+DefineEngineFunction( reInitMaterials, void, (),,
    "@brief Flushes all procedural shaders and re-initializes all active material instances.\n\n" 
    "@ingroup Materials")
 {
    MATMGR->flushAndReInitInstances();
 }
 
-DefineConsoleFunction( addMaterialMapping, void, (const char * texName, const char * matName), , "(string texName, string matName)\n"
+DefineEngineFunction( addMaterialMapping, void, (const char * texName, const char * matName), , "(string texName, string matName)\n"
    "@brief Maps the given texture to the given material.\n\n"
    "Generates a console warning before overwriting.\n\n"
    "Material maps are used by terrain and interiors for triggering "
@@ -472,7 +518,7 @@ DefineConsoleFunction( addMaterialMapping, void, (const char * texName, const ch
    MATMGR->mapMaterial(texName, matName);
 }
 
-DefineConsoleFunction( getMaterialMapping, const char*, (const char * texName), , "(string texName)\n"
+DefineEngineFunction( getMaterialMapping, const char*, (const char * texName), , "(string texName)\n"
    "@brief Returns the name of the material mapped to this texture.\n\n"
    "If no materials are found, an empty string is returned.\n\n"
    "@param texName Name of the texture\n\n"
@@ -481,14 +527,24 @@ DefineConsoleFunction( getMaterialMapping, const char*, (const char * texName), 
    return MATMGR->getMapEntry(texName).c_str();
 }
 
-DefineConsoleFunction( dumpMaterialInstances, void, (), ,
+DefineEngineFunction( dumpMaterialInstances, void, (), ,
    "@brief Dumps a formatted list of currently allocated material instances to the console.\n\n"
    "@ingroup Materials")
 {
    MATMGR->dumpMaterialInstances();
 }
 
-DefineConsoleFunction( getMapEntry, const char*, (const char * texName), ,
+DefineEngineFunction(getMaterialInstances, void, (BaseMaterialDefinition* target, GuiTreeViewCtrl* tree), (nullAsType<BaseMaterialDefinition*>(), nullAsType<GuiTreeViewCtrl*>()),
+   "@brief Dumps a formatted list of currently allocated material instances to the console.\n\n"
+   "@ingroup Materials")
+{
+   if (target == nullptr || tree == nullptr)
+      return;
+
+   MATMGR->getMaterialInstances(target, tree);
+}
+
+DefineEngineFunction( getMapEntry, const char*, (const char * texName), ,
    "@hide")
 {
 	return MATMGR->getMapEntry( String(texName) );

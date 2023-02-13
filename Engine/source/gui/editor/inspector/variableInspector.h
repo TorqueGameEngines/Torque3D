@@ -26,6 +26,9 @@
 #ifndef _GUI_INSPECTOR_H_
 #include "gui/editor/guiInspector.h"
 #endif
+#ifndef _GUI_INSPECTOR_VARIABLEGROUP_H_
+#include "gui/editor/inspector/variableGroup.h"
+#endif
 
 
 class GuiVariableInspector : public GuiInspector
@@ -44,8 +47,29 @@ public:
 
    virtual void loadVars( String searchString );
 
+   void update();
+
+   void startGroup(const char* name);
+   void endGroup();
+   void setGroupExpanded(const char* groupName, bool isExpanded);
+   void setGroupsExpanded(bool isExpanded);
+
+   void addField(const char* name, const char* label, const char* typeName, const char* description, 
+      const char* defaultValue, const char* dataValues, const char* callbackName, SimObject* ownerObj);
+   void addCallbackField(const char* name, const char* label, const char* typeName, const char* description,
+      const char* defaultValue, const char* dataValues, const char* callbackName, SimObject* ownerObj);
+   void setFieldEnabled(const char* name, bool enabled);
+   void clearFields();
+
+   void setAutoUpdate(bool doAutoUpdate) { mAutoUpdate = doAutoUpdate; }
 
 protected:
+   
+   Vector<VariableField*> mFields;
+
+   String mCurrentGroup;
+
+   bool mAutoUpdate;
 
 };
 

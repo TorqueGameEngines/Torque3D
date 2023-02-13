@@ -46,6 +46,9 @@
 #include "gfx/primBuilder.h"
 #include "gfx/gfxDrawUtil.h"
 #include "materials/materialDefinition.h"
+#include "T3D/physics/physicsPlugin.h"
+#include "T3D/physics/physicsBody.h"
+#include "T3D/physics/physicsCollision.h"
 
 
 namespace {
@@ -60,12 +63,9 @@ static F32 sWorkingQueryBoxSizeMultiplier = 2.0f;  // How much larger should the
                                                    // will be updated due to motion, but any non-static shape
                                                    // that moves into the query box will not be noticed.
 
-const U32 sMoveRetryCount = 3;
-
 // Client prediction
 const S32 sMaxWarpTicks = 3;           // Max warp duration in ticks
 const S32 sMaxPredictionTicks = 30;    // Number of ticks to predict
-const F32 sVehicleGravity = -20;
 
 // Physics and collision constants
 static F32 sRestTol = 0.5;             // % of gravity energy to be at rest
@@ -123,87 +123,30 @@ ConsoleDocClass( VehicleData,
    "@ingroup Vehicles\n"
 );
 
-IMPLEMENT_CALLBACK( VehicleData, onEnterLiquid, void, ( Vehicle* obj, F32 coverage, const char* type ), ( obj, coverage, type ),
-   "Called when the vehicle enters liquid.\n"
-   "@param obj the Vehicle object\n"
-   "@param coverage percentage of the vehicle's bounding box covered by the liquid\n"
-   "@param type type of liquid the vehicle has entered\n" );
-
-IMPLEMENT_CALLBACK( VehicleData, onLeaveLiquid, void, ( Vehicle* obj, const char* type ), ( obj, type ),
-   "Called when the vehicle leaves liquid.\n"
-   "@param obj the Vehicle object\n"
-   "@param type type of liquid the vehicle has left\n" );
-
 //----------------------------------------------------------------------------
 
 VehicleData::VehicleData()
 {
-   shadowEnable = true;
    shadowSize = 256;
    shadowProjectionDistance = 14.0f;
-
-
-   body.friction = 0;
-   body.restitution = 1;
-
-   minImpactSpeed = 25;
-   softImpactSpeed = 25;
-   hardImpactSpeed = 50;
-   minRollSpeed = 0;
    maxSteeringAngle = M_PI_F/4.0f; // 45 deg.
-
-   cameraRoll = true;
-   cameraLag = 0;
-   cameraDecay = 0;
-   cameraOffset = 0;
-
-   minDrag = 0;
-   maxDrag = 0;
-   integration = 1;
-   collisionTol = 0.1f;
-   contactTol = 0.1f;
-   massCenter.set(0,0,0);
-   massBox.set(0,0,0);
-
-   drag = 0.7f;
-   density = 4;
-
    jetForce = 500;
    jetEnergyDrain =  0.8f;
    minJetEnergy = 1;
-
    steeringReturn = 0.0f;
    steeringReturnSpeedScale = 0.01f;
    powerSteering = false;
-
-   for (S32 i = 0; i < Body::MaxSounds; i++)
-      body.sound[i] = 0;
-
-   dustEmitter = NULL;
-   dustID = 0;
-   triggerDustHeight = 3.0;
-   dustHeight = 1.0;
 
    dMemset( damageEmitterList, 0, sizeof( damageEmitterList ) );
    dMemset( damageEmitterOffset, 0, sizeof( damageEmitterOffset ) );
    dMemset( damageEmitterIDList, 0, sizeof( damageEmitterIDList ) );
    dMemset( damageLevelTolerance, 0, sizeof( damageLevelTolerance ) );
-   dMemset( splashEmitterList, 0, sizeof( splashEmitterList ) );
-   dMemset( splashEmitterIDList, 0, sizeof( splashEmitterIDList ) );
 
    numDmgEmitterAreas = 0;
 
-   splashFreqMod = 300.0;
-   splashVelEpsilon = 0.50;
-   exitSplashSoundVel = 2.0;
-   softSplashSoundVel = 1.0;
-   medSplashSoundVel = 2.0;
-   hardSplashSoundVel = 3.0;
-
-   dMemset(waterSound, 0, sizeof(waterSound));
-
    collDamageThresholdVel = 20;
-   collDamageMultiplier   = 0.05f;
+   collDamageMultiplier = 0.05f;
+   enablePhysicsRep = true;
 }
 
 
@@ -218,23 +161,8 @@ bool VehicleData::preload(bool server, String &errorStr)
    if (!collisionDetails.size() || collisionDetails[0] == -1)
    {
       Con::errorf("VehicleData::preload failed: Vehicle models must define a collision-1 detail");
-      errorStr = String::ToString("VehicleData: Couldn't load shape \"%s\"",shapeName);
+      errorStr = String::ToString("VehicleData: Couldn't load shape asset \"%s\"", mShapeAsset.getAssetId());
       return false;
-   }
-
-   // Resolve objects transmitted from server
-   if (!server) {
-      for (S32 i = 0; i < Body::MaxSounds; i++)
-         if (body.sound[i])
-            Sim::findObject(SimObjectId((uintptr_t)body.sound[i]),body.sound[i]);
-   }
-
-   if( !dustEmitter && dustID != 0 )
-   {
-      if( !Sim::findObject( dustID, dustEmitter ) )
-      {
-         Con::errorf( ConsoleLogEntry::General, "VehicleData::preload Invalid packet, bad datablockId(dustEmitter): 0x%x", dustID );
-      }
    }
 
    U32 i;
@@ -245,17 +173,6 @@ bool VehicleData::preload(bool server, String &errorStr)
          if( !Sim::findObject( damageEmitterIDList[i], damageEmitterList[i] ) )
          {
             Con::errorf( ConsoleLogEntry::General, "VehicleData::preload Invalid packet, bad datablockId(damageEmitter): 0x%x", damageEmitterIDList[i] );
-         }
-      }
-   }
-
-   for( i=0; i<VC_NUM_SPLASH_EMITTERS; i++ )
-   {
-      if( !splashEmitterList[i] && splashEmitterIDList[i] != 0 )
-      {
-         if( !Sim::findObject( splashEmitterIDList[i], splashEmitterList[i] ) )
-         {
-            Con::errorf( ConsoleLogEntry::General, "VehicleData::preload Invalid packet, bad datablockId(splashEmitter): 0x%x", splashEmitterIDList[i] );
          }
       }
    }
@@ -271,27 +188,7 @@ void VehicleData::packData(BitStream* stream)
    S32 i;
    Parent::packData(stream);
 
-   stream->write(body.restitution);
-   stream->write(body.friction);
-   for (i = 0; i < Body::MaxSounds; i++)
-      if (stream->writeFlag(body.sound[i]))
-         stream->writeRangedU32(packed? SimObjectId((uintptr_t)body.sound[i]):
-                                body.sound[i]->getId(),DataBlockObjectIdFirst,
-                                DataBlockObjectIdLast);
-
-   stream->write(minImpactSpeed);
-   stream->write(softImpactSpeed);
-   stream->write(hardImpactSpeed);
-   stream->write(minRollSpeed);
    stream->write(maxSteeringAngle);
-
-   stream->write(maxDrag);
-   stream->write(minDrag);
-   stream->write(integration);
-   stream->write(collisionTol);
-   stream->write(contactTol);
-   mathWrite(*stream,massCenter);
-   mathWrite(*stream,massBox);
 
    stream->write(jetForce);
    stream->write(jetEnergyDrain);
@@ -301,44 +198,15 @@ void VehicleData::packData(BitStream* stream)
    stream->write(steeringReturnSpeedScale);
    stream->writeFlag(powerSteering);
 
-   stream->writeFlag(cameraRoll);
-   stream->write(cameraLag);
-   stream->write(cameraDecay);
-   stream->write(cameraOffset);
-
-   stream->write( triggerDustHeight );
-   stream->write( dustHeight );
-
    stream->write( numDmgEmitterAreas );
 
-   stream->write(exitSplashSoundVel);
-   stream->write(softSplashSoundVel);
-   stream->write(medSplashSoundVel);
-   stream->write(hardSplashSoundVel);
-
-   // write the water sound profiles
-   for(i = 0; i < MaxSounds; i++)
-      if(stream->writeFlag(waterSound[i]))
-         stream->writeRangedU32(waterSound[i]->getId(), DataBlockObjectIdFirst,  DataBlockObjectIdLast);
-
-   if (stream->writeFlag( dustEmitter ))
-   {
-      stream->writeRangedU32( dustEmitter->getId(), DataBlockObjectIdFirst,  DataBlockObjectIdLast );
-   }
+   stream->write(enablePhysicsRep);
 
    for (i = 0; i < VC_NUM_DAMAGE_EMITTERS; i++)
    {
       if( stream->writeFlag( damageEmitterList[i] != NULL ) )
       {
          stream->writeRangedU32( damageEmitterList[i]->getId(), DataBlockObjectIdFirst,  DataBlockObjectIdLast );
-      }
-   }
-
-   for (i = 0; i < VC_NUM_SPLASH_EMITTERS; i++)
-   {
-      if( stream->writeFlag( splashEmitterList[i] != NULL ) )
-      {
-         stream->writeRangedU32( splashEmitterList[i]->getId(), DataBlockObjectIdFirst,  DataBlockObjectIdLast );
       }
    }
 
@@ -354,9 +222,6 @@ void VehicleData::packData(BitStream* stream)
       stream->write( damageLevelTolerance[k] );
    }
 
-   stream->write(splashFreqMod);
-   stream->write(splashVelEpsilon);
-
    stream->write(collDamageThresholdVel);
    stream->write(collDamageMultiplier);
 }
@@ -365,29 +230,8 @@ void VehicleData::unpackData(BitStream* stream)
 {
    Parent::unpackData(stream);
 
-   stream->read(&body.restitution);
-   stream->read(&body.friction);
    S32 i;
-   for (i = 0; i < Body::MaxSounds; i++) {
-      body.sound[i] = NULL;
-      if (stream->readFlag())
-         body.sound[i] = (SFXProfile*)stream->readRangedU32(DataBlockObjectIdFirst,
-                                                              DataBlockObjectIdLast);
-   }
-
-   stream->read(&minImpactSpeed);
-   stream->read(&softImpactSpeed);
-   stream->read(&hardImpactSpeed);
-   stream->read(&minRollSpeed);
    stream->read(&maxSteeringAngle);
-
-   stream->read(&maxDrag);
-   stream->read(&minDrag);
-   stream->read(&integration);
-   stream->read(&collisionTol);
-   stream->read(&contactTol);
-   mathRead(*stream,&massCenter);
-   mathRead(*stream,&massBox);
 
    stream->read(&jetForce);
    stream->read(&jetEnergyDrain);
@@ -397,47 +241,15 @@ void VehicleData::unpackData(BitStream* stream)
    stream->read(&steeringReturnSpeedScale);
    powerSteering = stream->readFlag();
 
-   cameraRoll = stream->readFlag();
-   stream->read(&cameraLag);
-   stream->read(&cameraDecay);
-   stream->read(&cameraOffset);
-
-   stream->read( &triggerDustHeight );
-   stream->read( &dustHeight );
-
    stream->read( &numDmgEmitterAreas );
 
-   stream->read(&exitSplashSoundVel);
-   stream->read(&softSplashSoundVel);
-   stream->read(&medSplashSoundVel);
-   stream->read(&hardSplashSoundVel);
-
-   // write the water sound profiles
-   for(i = 0; i < MaxSounds; i++)
-      if(stream->readFlag())
-      {
-         U32 id = stream->readRangedU32(DataBlockObjectIdFirst, DataBlockObjectIdLast);
-         waterSound[i] = dynamic_cast<SFXProfile*>( Sim::findObject(id) );
-      }
-
-   if( stream->readFlag() )
-   {
-      dustID = (S32) stream->readRangedU32(DataBlockObjectIdFirst, DataBlockObjectIdLast);
-   }
+   stream->read(&enablePhysicsRep);
 
    for (i = 0; i < VC_NUM_DAMAGE_EMITTERS; i++)
    {
       if( stream->readFlag() )
       {
          damageEmitterIDList[i] = stream->readRangedU32( DataBlockObjectIdFirst, DataBlockObjectIdLast );
-      }
-   }
-
-   for (i = 0; i < VC_NUM_SPLASH_EMITTERS; i++)
-   {
-      if( stream->readFlag() )
-      {
-         splashEmitterIDList[i] = stream->readRangedU32( DataBlockObjectIdFirst, DataBlockObjectIdLast );
       }
    }
 
@@ -453,9 +265,6 @@ void VehicleData::unpackData(BitStream* stream)
       stream->read( &damageLevelTolerance[k] );
    }
 
-   stream->read(&splashFreqMod);
-   stream->read(&splashVelEpsilon);
-
    stream->read(&collDamageThresholdVel);
    stream->read(&collDamageMultiplier);
 }
@@ -465,92 +274,10 @@ void VehicleData::unpackData(BitStream* stream)
 
 void VehicleData::initPersistFields()
 {
-   addField( "jetForce", TypeF32, Offset(jetForce, VehicleData),
-      "@brief Additional force applied to the vehicle when it is jetting.\n\n"
-      "For WheeledVehicles, the force is applied in the forward direction. For "
-      "FlyingVehicles, the force is applied in the thrust direction." );
-   addField( "jetEnergyDrain", TypeF32, Offset(jetEnergyDrain, VehicleData),
-      "@brief Energy amount to drain for each tick the vehicle is jetting.\n\n"
-      "Once the vehicle's energy level reaches 0, it will no longer be able to jet." );
-   addField( "minJetEnergy", TypeF32, Offset(minJetEnergy, VehicleData),
-      "Minimum vehicle energy level to begin jetting." );
+   docsURL;
+   Parent::initPersistFields();   
 
-   addField( "steeringReturn", TypeF32, Offset(steeringReturn, VehicleData),
-      "Rate at which the vehicle's steering returns to forwards when it is moving." );
-   addField( "steeringReturnSpeedScale", TypeF32, Offset(steeringReturnSpeedScale, VehicleData),
-      "Amount of effect the vehicle's speed has on its rate of steering return." );
-   addField( "powerSteering", TypeBool, Offset(powerSteering, VehicleData),
-      "If true, steering does not auto-centre while the vehicle is being steered by its driver." );
-
-   addField( "massCenter", TypePoint3F, Offset(massCenter, VehicleData),
-      "Defines the vehicle's center of mass (offset from the origin of the model)." );
-   addField( "massBox", TypePoint3F, Offset(massBox, VehicleData),
-      "@brief Define the box used to estimate the vehicle's moment of inertia.\n\n"
-      "Currently only used by WheeledVehicle; other vehicle types use a "
-      "unit sphere to compute inertia." );
-   addField( "bodyRestitution", TypeF32, Offset(body.restitution, VehicleData),
-      "Collision 'bounciness'.\nNormally in the range 0 (not bouncy at all) to "
-      "1 (100% bounciness)." );
-   addField( "bodyFriction", TypeF32, Offset(body.friction, VehicleData),
-      "Collision friction coefficient.\nHow well this object will slide against "
-      "objects it collides with." );
-   addField( "softImpactSound", TYPEID< SFXProfile >(), Offset(body.sound[Body::SoftImpactSound], VehicleData),
-      "@brief Sound to play on a 'soft' impact.\n\n"
-      "This sound is played if the impact speed is < hardImpactSpeed and >= "
-      "softImpactSpeed.\n\n"
-      "@see softImpactSpeed" );
-   addField( "hardImpactSound", TYPEID< SFXProfile >(), Offset(body.sound[Body::HardImpactSound], VehicleData),
-      "@brief Sound to play on a 'hard' impact.\n\n"
-      "This sound is played if the impact speed >= hardImpactSpeed.\n\n"
-      "@see hardImpactSpeed" );
-
-   addField( "minImpactSpeed", TypeF32, Offset(minImpactSpeed, VehicleData),
-      "Minimum collision speed for the onImpact callback to be invoked." );
-   addField( "softImpactSpeed", TypeF32, Offset(softImpactSpeed, VehicleData),
-      "Minimum collision speed for the softImpactSound to be played." );
-   addField( "hardImpactSpeed", TypeF32, Offset(hardImpactSpeed, VehicleData),
-      "Minimum collision speed for the hardImpactSound to be played." );
-   addField( "minRollSpeed", TypeF32, Offset(minRollSpeed, VehicleData),
-      "Unused" );
-   addField( "maxSteeringAngle", TypeF32, Offset(maxSteeringAngle, VehicleData),
-      "Maximum yaw (horizontal) and pitch (vertical) steering angle in radians." );
-
-   addField( "maxDrag", TypeF32, Offset(maxDrag, VehicleData),
-      "Maximum drag coefficient.\nCurrently unused." );
-   addField( "minDrag", TypeF32, Offset(minDrag, VehicleData),
-      "Minimum drag coefficient.\nCurrently only used by FlyingVehicle." );
-   addField( "integration", TypeS32, Offset(integration, VehicleData),
-      "Number of integration steps per tick.\nIncrease this to improve simulation "
-      "stability (also increases simulation processing time)." );
-   addField( "collisionTol", TypeF32, Offset(collisionTol, VehicleData),
-      "Minimum distance between objects for them to be considered as colliding." );
-   addField( "contactTol", TypeF32, Offset(contactTol, VehicleData),
-      "Maximum relative velocity between objects for collisions to be resolved "
-      "as contacts.\nVelocities greater than this are handled as collisions." );
-
-   addField( "cameraRoll", TypeBool, Offset(cameraRoll, VehicleData),
-      "If true, the camera will roll with the vehicle. If false, the camera will "
-      "always have the positive Z axis as up." );
-   addField( "cameraLag", TypeF32, Offset(cameraLag, VehicleData),
-      "@brief How much the camera lags behind the vehicle depending on vehicle speed.\n\n"
-      "Increasing this value will make the camera fall further behind the vehicle "
-      "as it accelerates away.\n\n@see cameraDecay." );
-   addField("cameraDecay",  TypeF32, Offset(cameraDecay, VehicleData),
-      "How quickly the camera moves back towards the vehicle when stopped.\n\n"
-      "@see cameraLag." );
-   addField("cameraOffset", TypeF32, Offset(cameraOffset, VehicleData),
-      "Vertical (Z axis) height of the camera above the vehicle." );
-
-   addField( "dustEmitter", TYPEID< ParticleEmitterData >(), Offset(dustEmitter, VehicleData),
-      "Dust particle emitter.\n\n@see triggerDustHeight\n\n@see dustHeight");
-   addField( "triggerDustHeight", TypeF32, Offset(triggerDustHeight, VehicleData),
-      "@brief Maximum height above surface to emit dust particles.\n\n"
-      "If the vehicle is less than triggerDustHeight above a static surface "
-      "with a material that has 'showDust' set to true, the vehicle will emit "
-      "particles from the dustEmitter." );
-   addField( "dustHeight", TypeF32, Offset(dustHeight, VehicleData),
-      "Height above ground at which to emit particles from the dustEmitter." );
-
+   addGroup("Particle Effects");
    addField( "damageEmitter", TYPEID< ParticleEmitterData >(), Offset(damageEmitterList, VehicleData), VC_NUM_DAMAGE_EMITTERS,
       "@brief Array of particle emitters used to generate damage (dust, smoke etc) "
       "effects.\n\n"
@@ -578,47 +305,43 @@ void VehicleData::initPersistFields()
    addField( "numDmgEmitterAreas", TypeF32, Offset(numDmgEmitterAreas, VehicleData),
       "Number of damageEmitterOffset values to use for each damageEmitter.\n\n"
       "@see damageEmitterOffset" );
+   endGroup("Particle Effects");
 
-   addField( "splashEmitter", TYPEID< ParticleEmitterData >(), Offset(splashEmitterList, VehicleData), VC_NUM_SPLASH_EMITTERS,
-      "Array of particle emitters used to generate splash effects." );
-   addField( "splashFreqMod",  TypeF32, Offset(splashFreqMod, VehicleData),
-      "@brief Number of splash particles to generate based on vehicle speed.\n\n"
-      "This value is multiplied by the current speed to determine how many "
-      "particles to generate each frame." );
-   addField( "splashVelEpsilon", TypeF32, Offset(splashVelEpsilon, VehicleData),
-      "Minimum speed when moving through water to generate splash particles." );
+   addGroup("Physics");
+   addField("enablePhysicsRep", TypeBool, Offset(enablePhysicsRep, VehicleData),
+      "@brief Creates a representation of the object in the physics plugin.\n");
+   endGroup("Physics");
 
-   addField( "exitSplashSoundVelocity", TypeF32, Offset(exitSplashSoundVel, VehicleData),
-      "Minimum velocity when leaving the water for the exitingWater sound to play." );
-   addField( "softSplashSoundVelocity", TypeF32, Offset(softSplashSoundVel, VehicleData),
-      "Minimum velocity when entering the water for the imapactWaterEasy sound "
-      "to play.\n\n@see impactWaterEasy" );
-   addField( "mediumSplashSoundVelocity", TypeF32, Offset(medSplashSoundVel, VehicleData),
-      "Minimum velocity when entering the water for the imapactWaterMedium sound "
-      "to play.\n\n@see impactWaterMedium" );
-   addField( "hardSplashSoundVelocity", TypeF32, Offset(hardSplashSoundVel, VehicleData),
-      "Minimum velocity when entering the water for the imapactWaterHard sound "
-      "to play.\n\n@see impactWaterHard" );
-   addField( "exitingWater", TYPEID< SFXProfile >(), Offset(waterSound[ExitWater], VehicleData),
-      "Sound to play when exiting the water." );
-   addField( "impactWaterEasy", TYPEID< SFXProfile >(), Offset(waterSound[ImpactSoft], VehicleData),
-      "Sound to play when entering the water with speed >= softSplashSoundVelocity "
-      "and < mediumSplashSoundVelocity." );
-   addField( "impactWaterMedium", TYPEID< SFXProfile >(), Offset(waterSound[ImpactMedium], VehicleData),
-      "Sound to play when entering the water with speed >= mediumSplashSoundVelocity "
-      "and < hardSplashSoundVelocity." );
-   addField( "impactWaterHard", TYPEID< SFXProfile >(), Offset(waterSound[ImpactHard], VehicleData),
-      "Sound to play when entering the water with speed >= hardSplashSoundVelocity." );
-   addField( "waterWakeSound", TYPEID< SFXProfile >(), Offset(waterSound[Wake], VehicleData),
-      "Looping sound to play while moving through the water." );
-
+   addGroup("Collision");
    addField( "collDamageThresholdVel", TypeF32, Offset(collDamageThresholdVel, VehicleData),
       "Minimum collision velocity to cause damage to this vehicle.\nCurrently unused." );
    addField( "collDamageMultiplier", TypeF32, Offset(collDamageMultiplier, VehicleData),
       "@brief Damage to this vehicle after a collision (multiplied by collision "
       "velocity).\n\nCurrently unused." );
+   endGroup("Collision");
 
-   Parent::initPersistFields();
+   addGroup("Steering");
+      addField( "jetForce", TypeF32, Offset(jetForce, VehicleData),
+         "@brief Additional force applied to the vehicle when it is jetting.\n\n"
+         "For WheeledVehicles, the force is applied in the forward direction. For "
+         "FlyingVehicles, the force is applied in the thrust direction." );
+      addField( "jetEnergyDrain", TypeF32, Offset(jetEnergyDrain, VehicleData),
+      "@brief Energy amount to drain for each tick the vehicle is jetting.\n\n"
+         "Once the vehicle's energy level reaches 0, it will no longer be able to jet." );
+      addField( "minJetEnergy", TypeF32, Offset(minJetEnergy, VehicleData),
+      "Minimum vehicle energy level to begin jetting." );
+      addField( "maxSteeringAngle", TypeF32, Offset(maxSteeringAngle, VehicleData),
+         "Maximum yaw (horizontal) and pitch (vertical) steering angle in radians." );
+   endGroup("Steering");
+
+   addGroup("AutoCorrection");
+   addField( "powerSteering", TypeBool, Offset(powerSteering, VehicleData),
+      "If true, steering does not auto-centre while the vehicle is being steered by its driver." );
+   addField( "steeringReturn", TypeF32, Offset(steeringReturn, VehicleData),
+      "Rate at which the vehicle's steering returns to forwards when it is moving." );
+   addField( "steeringReturnSpeedScale", TypeF32, Offset(steeringReturnSpeedScale, VehicleData),
+      "Amount of effect the vehicle's speed has on its rate of steering return." );
+   endGroup("AutoCorrection");
 }
 
 
@@ -669,9 +392,7 @@ Vehicle::Vehicle()
 
    mCameraOffset.set(0,0,0);
 
-   dMemset( mDustEmitterList, 0, sizeof( mDustEmitterList ) );
    dMemset( mDamageEmitterList, 0, sizeof( mDamageEmitterList ) );
-   dMemset( mSplashEmitterList, 0, sizeof( mSplashEmitterList ) );
 
    mDisableMove = false;
    restCount = 0;
@@ -682,17 +403,14 @@ Vehicle::Vehicle()
    mWorkingQueryBox.minExtents.set(-1e9f, -1e9f, -1e9f);
    mWorkingQueryBox.maxExtents.set(-1e9f, -1e9f, -1e9f);
    mWorkingQueryBoxCountDown = sWorkingQueryBoxStaleThreshold;
+
+   mPhysicsRep = NULL;
 }
 
 U32 Vehicle::getCollisionMask()
 {
    AssertFatal(false, "Vehicle::getCollisionMask is pure virtual!");
    return 0;
-}
-
-Point3F Vehicle::getVelocity() const
-{
-   return mRigid.linVelocity;
 }
 
 //----------------------------------------------------------------------------
@@ -717,21 +435,6 @@ bool Vehicle::onAdd()
    // Create Emitters on the client
    if( isClientObject() )
    {
-      if( mDataBlock->dustEmitter )
-      {
-         for( S32 i=0; i<VehicleData::VC_NUM_DUST_EMITTERS; i++ )
-         {
-            mDustEmitterList[i] = new ParticleEmitter;
-            mDustEmitterList[i]->onNewDataBlock( mDataBlock->dustEmitter, false );
-            if( !mDustEmitterList[i]->registerObject() )
-            {
-               Con::warnf( ConsoleLogEntry::General, "Could not register dust emitter for class: %s", mDataBlock->getName() );
-               delete mDustEmitterList[i];
-               mDustEmitterList[i] = NULL;
-            }
-         }
-      }
-
       U32 j;
       for( j=0; j<VehicleData::VC_NUM_DAMAGE_EMITTERS; j++ )
       {
@@ -748,22 +451,6 @@ bool Vehicle::onAdd()
 
          }
       }
-
-      for( j=0; j<VehicleData::VC_NUM_SPLASH_EMITTERS; j++ )
-      {
-         if( mDataBlock->splashEmitterList[j] )
-         {
-            mSplashEmitterList[j] = new ParticleEmitter;
-            mSplashEmitterList[j]->onNewDataBlock( mDataBlock->splashEmitterList[j], false );
-            if( !mSplashEmitterList[j]->registerObject() )
-            {
-               Con::warnf( ConsoleLogEntry::General, "Could not register splash emitter for class: %s", mDataBlock->getName() );
-               delete mSplashEmitterList[j];
-               mSplashEmitterList[j] = NULL;
-            }
-
-         }
-      }
    }
 
    // Create a new convex.
@@ -776,20 +463,16 @@ bool Vehicle::onAdd()
    mConvex.box.maxExtents.convolve(mObjScale);
    mConvex.findNodeTransform();
 
+   _createPhysics();
+
    return true;
 }
 
 void Vehicle::onRemove()
 {
+   SAFE_DELETE(mPhysicsRep);
+
    U32 i=0;
-   for( i=0; i<VehicleData::VC_NUM_DUST_EMITTERS; i++ )
-   {
-      if( mDustEmitterList[i] )
-      {
-         mDustEmitterList[i]->deleteWhenEmpty();
-         mDustEmitterList[i] = NULL;
-      }
-   }
 
    for( i=0; i<VehicleData::VC_NUM_DAMAGE_EMITTERS; i++ )
    {
@@ -797,15 +480,6 @@ void Vehicle::onRemove()
       {
          mDamageEmitterList[i]->deleteWhenEmpty();
          mDamageEmitterList[i] = NULL;
-      }
-   }
-
-   for( i=0; i<VehicleData::VC_NUM_SPLASH_EMITTERS; i++ )
-   {
-      if( mSplashEmitterList[i] )
-      {
-         mSplashEmitterList[i]->deleteWhenEmpty();
-         mSplashEmitterList[i] = NULL;
       }
    }
 
@@ -822,7 +496,9 @@ void Vehicle::processTick(const Move* move)
 {
    PROFILE_SCOPE( Vehicle_ProcessTick );
 
-   Parent::processTick(move);
+   ShapeBase::processTick(move);
+   if ( isMounted() )
+      return;
 
    // Warp to catch up to server
    if (mDelta.warpCount < mDelta.warpTicks)
@@ -867,7 +543,9 @@ void Vehicle::processTick(const Move* move)
       // Update the physics based on the integration rate
       S32 count = mDataBlock->integration;
       --mWorkingQueryBoxCountDown;
-      updateWorkingCollisionSet(getCollisionMask());
+
+      if (!mDisableMove)
+         updateWorkingCollisionSet(getCollisionMask());
       for (U32 i = 0; i < count; i++)
          updatePos(TickSec / count);
 
@@ -880,25 +558,12 @@ void Vehicle::processTick(const Move* move)
       setPosition(mRigid.linPosition, mRigid.angPosition);
       setMaskBits(PositionMask);
       updateContainer();
+
+      //TODO: Only update when position has actually changed
+      //no need to check if mDataBlock->enablePhysicsRep is false as mPhysicsRep will be NULL if it is
+      if (mPhysicsRep)
+         mPhysicsRep->moveKinematicTo(getTransform());
    }
-}
-
-void Vehicle::interpolateTick(F32 dt)
-{
-   PROFILE_SCOPE( Vehicle_InterpolateTick );
-
-   Parent::interpolateTick(dt);
-
-   if(dt == 0.0f)
-      setRenderPosition(mDelta.pos, mDelta.rot[1]);
-   else
-   {
-      QuatF rot;
-      rot.interpolate(mDelta.rot[1], mDelta.rot[0], dt);
-      Point3F pos = mDelta.pos + mDelta.posVec * dt;
-      setRenderPosition(pos,rot);
-   }
-   mDelta.dt = dt;
 }
 
 void Vehicle::advanceTime(F32 dt)
@@ -909,13 +574,6 @@ void Vehicle::advanceTime(F32 dt)
 
    updateLiftoffDust( dt );
    updateDamageSmoke( dt );
-   updateFroth(dt);
-
-   // Update 3rd person camera offset.  Camera update is done
-   // here as it's a client side only animation.
-   mCameraOffset -=
-      (mCameraOffset * mDataBlock->cameraDecay +
-      mRigid.linVelocity * mDataBlock->cameraLag) * dt;
 }
 
 
@@ -943,9 +601,6 @@ bool Vehicle::onNewDataBlock(GameBaseData* dptr,bool reload)
       // Create the sound ahead of time.  This reduces runtime
       // costs and makes the system easier to understand.
       SFX_DELETE( mWakeSound );
-
-      if ( mDataBlock->waterSound[VehicleData::Wake] )
-         mWakeSound = SFX->createSource( mDataBlock->waterSound[VehicleData::Wake], &getTransform() );
    }
 
    return true;
@@ -966,112 +621,98 @@ void Vehicle::getCameraParameters(F32 *min,F32* max,Point3F* off,MatrixF* rot)
 
 //----------------------------------------------------------------------------
 
-void Vehicle::getCameraTransform(F32* pos,MatrixF* mat)
+void Vehicle::getCameraTransform(F32* pos, MatrixF* mat)
 {
    // Returns camera to world space transform
    // Handles first person / third person camera position
    if (isServerObject() && mShapeInstance)
       mShapeInstance->animateNodeSubtrees(true);
 
-   if (*pos == 0) {
+   if (*pos == 0) 
+   {
       getRenderEyeTransform(mat);
-      return;
-   }
-
-   // Get the shape's camera parameters.
-   F32 min,max;
-   MatrixF rot;
-   Point3F offset;
-   getCameraParameters(&min,&max,&offset,&rot);
-
-   // Start with the current eye position
-   MatrixF eye;
-   getRenderEyeTransform(&eye);
-
-   // Build a transform that points along the eye axis
-   // but where the Z axis is always up.
-   if (mDataBlock->cameraRoll)
-      mat->mul(eye,rot);
-   else 
-   {
-      MatrixF cam(1);
-      VectorF x,y,z(0,0,1);
-      eye.getColumn(1, &y);
-      mCross(y, z, &x);
-      x.normalize();
-      mCross(x, y, &z);
-      z.normalize();
-      cam.setColumn(0,x);
-      cam.setColumn(1,y);
-      cam.setColumn(2,z);
-      mat->mul(cam,rot);
-   }
-
-   // Camera is positioned straight back along the eye's -Y axis.
-   // A ray is cast to make sure the camera doesn't go through
-   // anything solid.
-   VectorF vp,vec;
-   vp.x = vp.z = 0;
-   vp.y = -(max - min) * *pos;
-   eye.mulV(vp,&vec);
-
-   // Use the camera node as the starting position if it exists.
-   Point3F osp,sp;
-   if (mDataBlock->cameraNode != -1) 
-   {
-      mShapeInstance->mNodeTransforms[mDataBlock->cameraNode].getColumn(3,&osp);
-      getRenderTransform().mulP(osp,&sp);
    }
    else
-      eye.getColumn(3,&sp);
+   {
+      // Get the shape's camera parameters.
+      F32 min, max;
+      MatrixF rot;
+      Point3F offset;
+      getCameraParameters(&min, &max, &offset, &rot);
 
-   // Make sure we don't hit ourself...
-   disableCollision();
-   if (isMounted())
-      getObjectMount()->disableCollision();
+      // Start with the current eye position
+      MatrixF eye;
+      getRenderEyeTransform(&eye);
 
-   // Cast the ray into the container database to see if we're going
-   // to hit anything.
-   RayInfo collision;
-   Point3F ep = sp + vec + offset + mCameraOffset;
-   if (mContainer->castRay(sp, ep,
+      // Build a transform that points along the eye axis
+      // but where the Z axis is always up.
+      if (mDataBlock->cameraRoll)
+         mat->mul(eye, rot);
+      else
+      {
+         MatrixF cam(1);
+         VectorF x, y, z(0, 0, 1);
+         eye.getColumn(1, &y);
+         mCross(y, z, &x);
+         x.normalize();
+         mCross(x, y, &z);
+         z.normalize();
+         cam.setColumn(0, x);
+         cam.setColumn(1, y);
+         cam.setColumn(2, z);
+         mat->mul(cam, rot);
+      }
+
+      // Camera is positioned straight back along the eye's -Y axis.
+      // A ray is cast to make sure the camera doesn't go through
+      // anything solid.
+      VectorF vp, vec;
+      vp.x = vp.z = 0;
+      vp.y = -(max - min) * *pos;
+      eye.mulV(vp, &vec);
+
+      // Use the camera node as the starting position if it exists.
+      Point3F osp, sp;
+      if (mDataBlock->cameraNode != -1)
+      {
+         mShapeInstance->mNodeTransforms[mDataBlock->cameraNode].getColumn(3, &osp);
+         getRenderTransform().mulP(osp, &sp);
+      }
+      else
+         eye.getColumn(3, &sp);
+
+      // Make sure we don't hit ourself...
+      disableCollision();
+      if (isMounted())
+         getObjectMount()->disableCollision();
+
+      // Cast the ray into the container database to see if we're going
+      // to hit anything.
+      RayInfo collision;
+      Point3F ep = sp + vec + offset + mCameraOffset;
+      if (mContainer->castRay(sp, ep,
          ~(WaterObjectType | GameBaseObjectType | DefaultObjectType | sTriggerMask),
          &collision) == true) {
 
-      // Shift the collision point back a little to try and
-      // avoid clipping against the front camera plane.
-      F32 t = collision.t - (-mDot(vec, collision.normal) / vec.len()) * 0.1;
-      if (t > 0.0f)
-         ep = sp + offset + mCameraOffset + (vec * t);
-      else
-         eye.getColumn(3,&ep);
-   }
-   mat->setColumn(3,ep);
+         // Shift the collision point back a little to try and
+         // avoid clipping against the front camera plane.
+         F32 t = collision.t - (-mDot(vec, collision.normal) / vec.len()) * 0.1;
+         if (t > 0.0f)
+            ep = sp + offset + mCameraOffset + (vec * t);
+         else
+            eye.getColumn(3, &ep);
+      }
+      mat->setColumn(3, ep);
 
-   // Re-enable our collision.
-   if (isMounted())
-      getObjectMount()->enableCollision();
-   enableCollision();
+      // Re-enable our collision.
+      if (isMounted())
+         getObjectMount()->enableCollision();
+      enableCollision();
+   }
 
    // Apply Camera FX.
    mat->mul( gCamFXMgr.getTrans() );
 }
-
-
-//----------------------------------------------------------------------------
-
-void Vehicle::getVelocity(const Point3F& r, Point3F* v)
-{
-   mRigid.getVelocity(r, v);
-}
-
-void Vehicle::applyImpulse(const Point3F &pos, const Point3F &impulse)
-{
-   Point3F r;
-   mRigid.getOriginVector(pos,&r);
-   mRigid.applyImpulse(r, impulse);
-}
-
 
 //----------------------------------------------------------------------------
 
@@ -1138,51 +779,6 @@ void Vehicle::updateMove(const Move* move)
       mJetting = false;
 }
 
-
-//----------------------------------------------------------------------------
-
-void Vehicle::setPosition(const Point3F& pos,const QuatF& rot)
-{
-   MatrixF mat;
-   rot.setMatrix(&mat);
-   mat.setColumn(3,pos);
-   Parent::setTransform(mat);
-}
-
-void Vehicle::setRenderPosition(const Point3F& pos, const QuatF& rot)
-{
-   MatrixF mat;
-   rot.setMatrix(&mat);
-   mat.setColumn(3,pos);
-   Parent::setRenderTransform(mat);
-}
-
-void Vehicle::setTransform(const MatrixF& newMat)
-{
-   mRigid.setTransform(newMat);
-   Parent::setTransform(newMat);
-   mRigid.atRest = false;
-   mContacts.clear();
-}
-
-
-//-----------------------------------------------------------------------------
-
-void Vehicle::disableCollision()
-{
-   Parent::disableCollision();
-   for (SceneObject* ptr = getMountList(); ptr; ptr = ptr->getMountLink())
-      ptr->disableCollision();
-}
-
-void Vehicle::enableCollision()
-{
-   Parent::enableCollision();
-   for (SceneObject* ptr = getMountList(); ptr; ptr = ptr->getMountLink())
-      ptr->enableCollision();
-}
-
-
 //----------------------------------------------------------------------------
 /** Update the physics
 */
@@ -1199,7 +795,8 @@ void Vehicle::updatePos(F32 dt)
 
    // Update collision information based on our current pos.
    bool collided = false;
-   if (!mRigid.atRest) {
+   if (!mRigid.atRest && !mDisableMove)
+   {
       collided = updateCollision(dt);
 
       // Now that all the forces have been processed, lets
@@ -1210,7 +807,7 @@ void Vehicle::updatePos(F32 dt)
       if (mCollisionList.getCount()) 
       {
          F32 k = mRigid.getKineticEnergy();
-         F32 G = sVehicleGravity * dt;
+         F32 G = mNetGravity * dt;
          F32 Kg = 0.5 * mRigid.mass * G * G;
          if (k < sRestTol * Kg && ++restCount > sRestCount)
             mRigid.setAtRest();
@@ -1220,7 +817,7 @@ void Vehicle::updatePos(F32 dt)
    }
 
    // Integrate forward
-   if (!mRigid.atRest)
+   if (!mRigid.atRest && !mDisableMove)
       mRigid.integrate(dt);
 
    // Deal with client and server scripting, sounds, etc.
@@ -1261,32 +858,32 @@ void Vehicle::updatePos(F32 dt)
          F32 collSpeed = (mRigid.linVelocity - origVelocity).len();
          S32 impactSound = -1;
          if (collSpeed >= mDataBlock->hardImpactSpeed)
-            impactSound = VehicleData::Body::HardImpactSound;
+            impactSound = RigidShapeData::Body::HardImpactSound;
          else
             if (collSpeed >= mDataBlock->softImpactSpeed)
-               impactSound = VehicleData::Body::SoftImpactSound;
+               impactSound = RigidShapeData::Body::SoftImpactSound;
 
-         if (impactSound != -1 && mDataBlock->body.sound[impactSound] != NULL)
-            SFX->playOnce( mDataBlock->body.sound[impactSound], &getTransform() );
+         if (impactSound != -1 && mDataBlock->getBodySoundsProfile(impactSound) != NULL)
+            SFX->playOnce( mDataBlock->getBodySoundsProfile(impactSound), &getTransform() );
       }
 
       // Water volume sounds
       F32 vSpeed = getVelocity().len();
       if (!inLiquid && mWaterCoverage >= 0.8f) {
          if (vSpeed >= mDataBlock->hardSplashSoundVel)
-            SFX->playOnce( mDataBlock->waterSound[VehicleData::ImpactHard], &getTransform() );
+            SFX->playOnce( mDataBlock->getWaterSoundsProfile(RigidShapeData::ImpactHard), &getTransform() );
          else
             if (vSpeed >= mDataBlock->medSplashSoundVel)
-               SFX->playOnce( mDataBlock->waterSound[VehicleData::ImpactMedium], &getTransform() );
+               SFX->playOnce( mDataBlock->getWaterSoundsProfile(RigidShapeData::ImpactMedium), &getTransform() );
          else
             if (vSpeed >= mDataBlock->softSplashSoundVel)
-               SFX->playOnce( mDataBlock->waterSound[VehicleData::ImpactSoft], &getTransform() );
+               SFX->playOnce( mDataBlock->getWaterSoundsProfile(RigidShapeData::ImpactSoft), &getTransform() );
          inLiquid = true;
       }
       else
          if(inLiquid && mWaterCoverage < 0.8f) {
             if (vSpeed >= mDataBlock->exitSplashSoundVel)
-               SFX->playOnce( mDataBlock->waterSound[VehicleData::ExitWater], &getTransform() );
+               SFX->playOnce( mDataBlock->getWaterSoundsProfile(RigidShapeData::ExitWater), &getTransform() );
          inLiquid = false;
       }
    }
@@ -1300,258 +897,6 @@ void Vehicle::updateForces(F32 /*dt*/)
    // Nothing here.
 }
 
-
-//-----------------------------------------------------------------------------
-/** Update collision information
-   Update the convex state and check for collisions. If the object is in
-   collision, impact and contact forces are generated.
-*/
-
-bool Vehicle::updateCollision(F32 dt)
-{
-   PROFILE_SCOPE( Vehicle_UpdateCollision );
-
-   // Update collision information
-   MatrixF mat,cmat;
-   mConvex.transform = &mat;
-   mRigid.getTransform(&mat);
-   cmat = mConvex.getTransform();
-
-   mCollisionList.clear();
-   CollisionState *state = mConvex.findClosestState(cmat, getScale(), mDataBlock->collisionTol);
-   if (state && state->dist <= mDataBlock->collisionTol) 
-   {
-      //resolveDisplacement(ns,state,dt);
-      mConvex.getCollisionInfo(cmat, getScale(), &mCollisionList, mDataBlock->collisionTol);
-   }
-
-   // Resolve collisions
-   bool collided = resolveCollision(mRigid,mCollisionList);
-   resolveContacts(mRigid,mCollisionList,dt);
-   return collided;
-}
-
-
-//----------------------------------------------------------------------------
-/** Resolve collision impacts
-   Handle collision impacts, as opposed to contacts. Impulses are calculated based
-   on standard collision resolution formulas.
-*/
-bool Vehicle::resolveCollision(Rigid&  ns,CollisionList& cList)
-{
-   PROFILE_SCOPE( Vehicle_ResolveCollision );
-
-   // Apply impulses to resolve collision
-   bool collided = false;
-   for (S32 i = 0; i < cList.getCount(); i++) 
-   {
-      Collision& c = cList[i];
-      if (c.distance < mDataBlock->collisionTol) 
-      {
-         // Velocity into surface
-         Point3F v,r;
-         ns.getOriginVector(c.point,&r);
-         ns.getVelocity(r,&v);
-         F32 vn = mDot(v,c.normal);
-
-         // Only interested in velocities greater than sContactTol,
-         // velocities less than that will be dealt with as contacts
-         // "constraints".
-         if (vn < -mDataBlock->contactTol) 
-         {
-
-            // Apply impulses to the rigid body to keep it from
-            // penetrating the surface.
-            ns.resolveCollision(cList[i].point,
-               cList[i].normal);
-            collided  = true;
-
-            // Keep track of objects we collide with
-            if (!isGhost() && c.object->getTypeMask() & ShapeBaseObjectType) 
-            {
-               ShapeBase* col = static_cast<ShapeBase*>(c.object);
-               queueCollision(col,v - col->getVelocity());
-            }
-         }
-      }
-   }
-
-   return collided;
-}
-
-//----------------------------------------------------------------------------
-/** Resolve contact forces
-   Resolve contact forces using the "penalty" method. Forces are generated based
-   on the depth of penetration and the moment of inertia at the point of contact.
-*/
-bool Vehicle::resolveContacts(Rigid& ns,CollisionList& cList,F32 dt)
-{
-   PROFILE_SCOPE( Vehicle_ResolveContacts );
-
-   // Use spring forces to manage contact constraints.
-   bool collided = false;
-   Point3F t,p(0,0,0),l(0,0,0);
-   for (S32 i = 0; i < cList.getCount(); i++) 
-   {
-      const Collision& c = cList[i];
-      if (c.distance < mDataBlock->collisionTol) 
-      {
-
-         // Velocity into the surface
-         Point3F v,r;
-         ns.getOriginVector(c.point,&r);
-         ns.getVelocity(r,&v);
-         F32 vn = mDot(v,c.normal);
-
-         // Only interested in velocities less than mDataBlock->contactTol,
-         // velocities greater than that are dealt with as collisions.
-         if (mFabs(vn) < mDataBlock->contactTol) 
-         {
-            collided = true;
-
-            // Penetration force. This is actually a spring which
-            // will seperate the body from the collision surface.
-            F32 zi = 2 * mFabs(mRigid.getZeroImpulse(r,c.normal));
-            F32 s = (mDataBlock->collisionTol - c.distance) * zi - ((vn / mDataBlock->contactTol) * zi);
-            Point3F f = c.normal * s;
-
-            // Friction impulse, calculated as a function of the
-            // amount of force it would take to stop the motion
-            // perpendicular to the normal.
-            Point3F uv = v - (c.normal * vn);
-            F32 ul = uv.len();
-            if (s > 0 && ul) 
-            {
-               uv /= -ul;
-               F32 u = ul * ns.getZeroImpulse(r,uv);
-               s *= mRigid.friction;
-               if (u > s)
-                  u = s;
-               f += uv * u;
-            }
-
-            // Accumulate forces
-            p += f;
-            mCross(r,f,&t);
-            l += t;
-         }
-      }
-   }
-
-   // Contact constraint forces act over time...
-   ns.linMomentum += p * dt;
-   ns.angMomentum += l * dt;
-   ns.updateVelocity();
-   return true;
-}
-
-
-//----------------------------------------------------------------------------
-
-bool Vehicle::resolveDisplacement(Rigid& ns,CollisionState *state, F32 dt)
-{
-   PROFILE_SCOPE( Vehicle_ResolveDisplacement );
-
-   SceneObject* obj = (state->a->getObject() == this)?
-       state->b->getObject(): state->a->getObject();
-
-   if (obj->isDisplacable() && ((obj->getTypeMask() & ShapeBaseObjectType) != 0))
-   {
-      // Try to displace the object by the amount we're trying to move
-      Point3F objNewMom = ns.linVelocity * obj->getMass() * 1.1f;
-      Point3F objOldMom = obj->getMomentum();
-      Point3F objNewVel = objNewMom / obj->getMass();
-
-      Point3F myCenter;
-      Point3F theirCenter;
-      getWorldBox().getCenter(&myCenter);
-      obj->getWorldBox().getCenter(&theirCenter);
-      if (mDot(myCenter - theirCenter, objNewMom) >= 0.0f || objNewVel.len() < 0.01)
-      {
-         objNewMom = (theirCenter - myCenter);
-         objNewMom.normalize();
-         objNewMom *= 1.0f * obj->getMass();
-         objNewVel = objNewMom / obj->getMass();
-      }
-
-      obj->setMomentum(objNewMom);
-      if (obj->displaceObject(objNewVel * 1.1f * dt) == true)
-      {
-         // Queue collision and change in velocity
-         VectorF dv = (objOldMom - objNewMom) / obj->getMass();
-         queueCollision(static_cast<ShapeBase*>(obj), dv);
-         return true;
-      }
-   }
-
-   return false;
-}
-
-
-//----------------------------------------------------------------------------
-
-void Vehicle::updateWorkingCollisionSet(const U32 mask)
-{
-   PROFILE_SCOPE( Vehicle_UpdateWorkingCollisionSet );
-
-   // First, we need to adjust our velocity for possible acceleration.  It is assumed
-   // that we will never accelerate more than 20 m/s for gravity, plus 30 m/s for
-   // jetting, and an equivalent 10 m/s for vehicle accel.  We also assume that our
-   // working list is updated on a Tick basis, which means we only expand our box by
-   // the possible movement in that tick, plus some extra for caching purposes
-   Box3F convexBox = mConvex.getBoundingBox(getTransform(), getScale());
-   F32 len = (mRigid.linVelocity.len() + 50) * TickSec;
-   F32 l = (len * 1.1) + 0.1;  // fudge factor
-   convexBox.minExtents -= Point3F(l, l, l);
-   convexBox.maxExtents += Point3F(l, l, l);
-
-   // Check to see if it is actually necessary to construct the new working list,
-   // or if we can use the cached version from the last query.  We use the x
-   // component of the min member of the mWorkingQueryBox, which is lame, but
-   // it works ok.
-   bool updateSet = false;
-
-   // Check containment
-   if ((sWorkingQueryBoxStaleThreshold == -1 || mWorkingQueryBoxCountDown > 0) && mWorkingQueryBox.minExtents.x != -1e9f)
-   {
-      if (mWorkingQueryBox.isContained(convexBox) == false)
-         // Needed region is outside the cached region.  Update it.
-         updateSet = true;
-   }
-   else
-   {
-      // Must update
-      updateSet = true;
-   }
-
-   // Actually perform the query, if necessary
-   if (updateSet == true)
-   {
-      mWorkingQueryBoxCountDown = sWorkingQueryBoxStaleThreshold;
-
-      const Point3F  lPoint( sWorkingQueryBoxSizeMultiplier * l );
-      mWorkingQueryBox = convexBox;
-      mWorkingQueryBox.minExtents -= lPoint;
-      mWorkingQueryBox.maxExtents += lPoint;
-
-      disableCollision();
-      mConvex.updateWorkingList(mWorkingQueryBox, mask);
-      enableCollision();
-   }
-}
-
-
-//----------------------------------------------------------------------------
-/** Check collisions with trigger and items
-   Perform a container search using the current bounding box
-   of the main body, wheels are not included.  This method should
-   only be called on the server.
-*/
-void Vehicle::checkTriggers()
-{
-   Box3F bbox = mConvex.getBoundingBox(getTransform(), getScale());
-   gServerContainer.findObjects(bbox,sTriggerMask,findCallback,this);
-}
 
 /** The callback used in by the checkTriggers() method.
    The checkTriggers method uses a container search which will
@@ -1738,6 +1083,10 @@ void Vehicle::unpackUpdate(NetConnection *con, BitStream *stream)
    setEnergyLevel(stream->readFloat(8) * mDataBlock->maxEnergy);
 }
 
+void Vehicle::setControllingClient(GameConnection* client)
+{
+   ShapeBase::setControllingClient(client);
+}
 
 //----------------------------------------------------------------------------
 
@@ -1760,6 +1109,7 @@ void Vehicle::consoleInit()
 
 void Vehicle::initPersistFields()
 {
+   docsURL;
    addField( "disableMove", TypeBool, Offset(mDisableMove, Vehicle),
       "When this flag is set, the vehicle will ignore throttle changes." );
 
@@ -1874,32 +1224,6 @@ void Vehicle::updateFroth( F32 dt )
       }
    }
 
-}
-
-
-//--------------------------------------------------------------------------
-// Returns true if vehicle is intersecting a water surface (roughly)
-//--------------------------------------------------------------------------
-bool Vehicle::collidingWithWater( Point3F &waterHeight )
-{
-   Point3F curPos = getPosition();
-
-   F32 height = mFabs( mObjBox.maxExtents.z - mObjBox.minExtents.z );
-
-   RayInfo rInfo;
-   if( gClientContainer.castRay( curPos + Point3F(0.0, 0.0, height), curPos, WaterObjectType, &rInfo) )
-   {
-      waterHeight = rInfo.point;
-      return true;
-   }
-
-   return false;
-}
-
-void Vehicle::setEnergyLevel(F32 energy)
-{
-   Parent::setEnergyLevel(energy);
-   setMaskBits(EnergyMask);
 }
 
 void Vehicle::prepBatchRender( SceneRenderState *state, S32 mountedImageIndex )

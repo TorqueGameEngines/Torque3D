@@ -36,6 +36,12 @@
    #include "sfx/sfxCommon.h"
 #endif
 
+#ifndef _GFXTEXTUREHANDLE_H_
+#include "gfx/gfxTextureHandle.h"
+#endif
+
+#include "T3D/assets/ImageAsset.h"
+
 class SFXAmbience;
 class SFXSoundscape;
 
@@ -86,6 +92,8 @@ class LevelInfo : public NetObject
       
       ///
       SFXSoundscape* mSoundscape;
+
+      F32 mDampness; ///<applies wetness
          
       /// @}
       
@@ -96,6 +104,12 @@ class LevelInfo : public NetObject
       void _updateSceneGraph();
 
       void _onLMActivate(const char *lm, bool enable);
+   protected:
+
+      DECLARE_IMAGEASSET(LevelInfo, AccuTexture, onAccuTextureChanged, GFXStaticTextureSRGBProfile);
+      DECLARE_ASSET_SETGET(LevelInfo, AccuTexture);
+
+      void onAccuTextureChanged() {}
 
    public:
 
@@ -132,7 +146,8 @@ class LevelInfo : public NetObject
 
       virtual U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream );
       virtual void unpackUpdate( NetConnection *conn, BitStream *stream );
-
+      static bool _setLevelAccuTexture(void *object, const char *index, const char *data);
+      void setLevelAccuTexture(StringTableEntry name);
       /// @}
 };
 

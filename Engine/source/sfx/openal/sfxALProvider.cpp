@@ -36,7 +36,7 @@ class SFXALProvider : public SFXProvider
 public:
 
    SFXALProvider()
-      : SFXProvider( "OpenAL" ) { mALDL = NULL; }
+      : SFXProvider( "OpenAL" ) { dMemset(&mOpenAL,0,sizeof(mOpenAL)); mALDL = NULL; }
    virtual ~SFXALProvider();
 
 protected:
@@ -98,27 +98,8 @@ void SFXALProvider::init()
    {
       ALDeviceInfo* info = new ALDeviceInfo;
       
+      info->internalName = String( mALDL->GetInternalDeviceName( i ) );
       info->name = String( mALDL->GetDeviceName( i ) );
-
-      S32 major, minor, eax = 0;
-
-      mALDL->GetDeviceVersion( i, &major, &minor );
-
-      // Apologies for the blatent enum hack -patw
-      for( S32 j = SFXALEAX2; j < SFXALEAXRAM; j++ )
-         eax += (int)mALDL->IsExtensionSupported( i, (SFXALCaps)j );
-
-      if( eax > 0 )
-      {
-         eax += 2; // EAX support starts at 2.0
-         dSprintf( temp, sizeof( temp ), "[EAX %d.0] %s", eax, ( mALDL->IsExtensionSupported( i, SFXALEAXRAM ) ? "EAX-RAM" : "" ) );
-      }
-      else
-         dStrcpy( temp, "" );
-
-      info->driver = String::ToString( deviceFormat, major, minor, temp );
-      info->hasHardware = eax > 0;
-      info->maxBuffers = mALDL->GetMaxNumSources( i );
 
       mDeviceInfo.push_back( info );
    }
@@ -140,8 +121,8 @@ SFXDevice *SFXALProvider::createDevice( const String& deviceName, bool useHardwa
       ( _findDeviceInfo( deviceName) );
 
    // Do we find one to create?
-   if ( info )
-      return new SFXALDevice( this, mOpenAL, info->name, useHardware, maxBuffers );
+   if (info)
+      return new SFXALDevice(this, mOpenAL, info->internalName, useHardware, maxBuffers);
 
    return NULL;
 }

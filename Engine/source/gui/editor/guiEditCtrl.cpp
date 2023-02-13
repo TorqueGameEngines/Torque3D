@@ -95,13 +95,15 @@ GuiEditCtrl::GuiEditCtrl()
      mDragBeginPoint( -1, -1 ),
      mSnapToControls( true ),
      mSnapToEdges( true ),
-     mSnapToCenters( true ),
      mSnapToGuides( true ),
+     mSnapToCenters( true ),
      mSnapToCanvas( true ),
-     mSnapSensitivity( 2 ),
-     mFullBoxSelection( false ),
      mDrawBorderLines( true ),
-     mDrawGuides( true )
+     mFullBoxSelection( false ),
+     mSnapSensitivity( 2 ),
+     mDrawGuides( true ),
+     mDragAddSelection(false),
+     mDragMoveUndo(false)
 {
    VECTOR_SET_ASSOCIATION( mSelectedControls );
    VECTOR_SET_ASSOCIATION( mDragBeginPoints );
@@ -116,17 +118,28 @@ GuiEditCtrl::GuiEditCtrl()
 
    mDragGuide[ GuideVertical ] = false;
    mDragGuide[ GuideHorizontal ] = false;
+   mDragGuideIndex[0] = 0;
+   mDragGuideIndex[1] = 1;
+
+   std::fill_n(mSnapOffset, 2, 0);
+   std::fill_n(mSnapEdge, 2, SnapEdgeMin);
    
    if( !smGuidesPropertyName[ GuideVertical ] )
       smGuidesPropertyName[ GuideVertical ] = StringTable->insert( "guidesVertical" );
    if( !smGuidesPropertyName[ GuideHorizontal ] )
       smGuidesPropertyName[ GuideHorizontal ] = StringTable->insert( "guidesHorizontal" );
+
+   mTrash = NULL;
+   mSelectedSet = NULL;
+   mMouseDownMode = GuiEditCtrl::Selecting;
+   mSizingMode = GuiEditCtrl::sizingNone;
 }
 
 //-----------------------------------------------------------------------------
 
 void GuiEditCtrl::initPersistFields()
 {
+   docsURL;
    addGroup( "Snapping" );
    addField( "snapToControls",      TypeBool,   Offset( mSnapToControls, GuiEditCtrl ),
       "If true, edge and center snapping will work against controls." );
@@ -542,10 +555,10 @@ void GuiEditCtrl::onMouseDragged( const GuiEvent &event )
       // Snap the mouse cursor to grid if active.  Do this on the mouse cursor so that we handle
       // incremental drags correctly.
       
-      Point2I mousePoint = event.mousePoint;
-      snapToGrid( mousePoint );
+      Point2I dragPoint = event.mousePoint;
+      snapToGrid(dragPoint);
                   
-      Point2I delta = mousePoint - mLastDragPos;
+      Point2I delta = dragPoint - mLastDragPos;
       
       // If CTRL is down, apply smart snapping.
       
@@ -584,7 +597,7 @@ void GuiEditCtrl::onMouseDragged( const GuiEvent &event )
          
       // Remember drag point.
       
-      mLastDragPos = mousePoint;
+      mLastDragPos = dragPoint;
    }
    else if (mMouseDownMode == MovingSelection && mSelectedControls.size())
    {
@@ -716,16 +729,16 @@ void GuiEditCtrl::onRender(Point2I offset, const RectI &updateRect)
          ctOffset = getCurrentAddSet()->localToGlobalCoord(Point2I(0,0));
          RectI box(ctOffset.x, ctOffset.y, cext.x, cext.y);
 
-			box.inset( -5, -5 );
+         box.inset( -5, -5 );
          drawer->drawRect( box, ColorI( 50, 101, 152, 128 ) );
-			box.inset( 1, 1 );
+         box.inset( 1, 1 );
          drawer->drawRect( box, ColorI( 50, 101, 152, 128 ) );
-			box.inset( 1, 1 );
+         box.inset( 1, 1 );
          drawer->drawRect( box, ColorI( 50, 101, 152, 128 ) );
-			box.inset( 1, 1 );
+         box.inset( 1, 1 );
          drawer->drawRect( box, ColorI( 50, 101, 152, 128 ) );
-			box.inset( 1, 1 );
-			drawer->drawRect( box, ColorI( 50, 101, 152, 128 ) );
+         box.inset( 1, 1 );
+         drawer->drawRect( box, ColorI( 50, 101, 152, 128 ) );
       }
       Vector<GuiControl *>::iterator i;
       bool multisel = mSelectedControls.size() > 1;
@@ -770,7 +783,7 @@ void GuiEditCtrl::onRender(Point2I offset, const RectI &updateRect)
          ( mMouseDownMode == MovingSelection || mMouseDownMode == SizingSelection ) &&
          ( mGridSnap.x || mGridSnap.y ) )
    {
-      Point2I cext = getContentControl()->getExtent();
+      cext = getContentControl()->getExtent();
       Point2I coff = getContentControl()->localToGlobalCoord(Point2I(0,0));
       
       // create point-dots
@@ -847,8 +860,8 @@ void GuiEditCtrl::onRender(Point2I offset, const RectI &updateRect)
             
             if( mSnapTargets[ axis ] )
             {
-               RectI bounds = mSnapTargets[ axis ]->getGlobalBounds();
-               drawer->drawRect( bounds, ColorF( .5, .5, .5, .5 ) );
+               RectI snapBounds = mSnapTargets[ axis ]->getGlobalBounds();
+               drawer->drawRect(snapBounds, ColorI( 128, 128, 128, 128 ) );
             }
          }
       }
@@ -868,8 +881,8 @@ void GuiEditCtrl::drawNuts(RectI &box, ColorI &outlineColor, ColorI &nutColor)
 
    if( mDrawBorderLines )
    {
-      ColorF lineColor( 0.7f, 0.7f, 0.7f, 0.25f );
-      ColorF lightLineColor( 0.5f, 0.5f, 0.5f, 0.1f );
+      ColorI lineColor( 179, 179, 179, 64 );
+      ColorI lightLineColor( 128, 128, 128, 26);
       
       if(lx > 0 && ty > 0)
       {
@@ -1015,7 +1028,7 @@ void GuiEditCtrl::removeSelection( GuiControl* ctrl )
 {
    if( selectionContains( ctrl ) )
    {
-      Vector< GuiControl* >::iterator i = ::find( mSelectedControls.begin(), mSelectedControls.end(), ctrl );
+      Vector< GuiControl* >::iterator i = T3D::find( mSelectedControls.begin(), mSelectedControls.end(), ctrl );
       if ( i != mSelectedControls.end() )
          mSelectedControls.erase( i );
 
@@ -2468,7 +2481,7 @@ void GuiEditCtrl::startMouseGuideDrag( guideAxis axis, U32 guideIndex, bool lock
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( GuiEditCtrl, getContentControl, S32, (), , "() - Return the toplevel control edited inside the GUI editor." )
+DefineEngineMethod( GuiEditCtrl, getContentControl, S32, (), , "() - Return the toplevel control edited inside the GUI editor." )
 {
    GuiControl* ctrl = object->getContentControl();
    if( ctrl )
@@ -2479,60 +2492,60 @@ DefineConsoleMethod( GuiEditCtrl, getContentControl, S32, (), , "() - Return the
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( GuiEditCtrl, setContentControl, void, (GuiControl *ctrl ), , "( GuiControl ctrl ) - Set the toplevel control to edit in the GUI editor." )
+DefineEngineMethod( GuiEditCtrl, setContentControl, void, (GuiControl *ctrl ), , "( GuiControl ctrl ) - Set the toplevel control to edit in the GUI editor." )
 {
-	if (ctrl)
-		object->setContentControl(ctrl);
+   if (ctrl)
+      object->setContentControl(ctrl);
 }
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( GuiEditCtrl, addNewCtrl, void, (GuiControl *ctrl), , "(GuiControl ctrl)")
+DefineEngineMethod( GuiEditCtrl, addNewCtrl, void, (GuiControl *ctrl), , "(GuiControl ctrl)")
 {
-	if (ctrl)
-		object->addNewControl(ctrl);
+   if (ctrl)
+      object->addNewControl(ctrl);
 }
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( GuiEditCtrl, addSelection, void, (S32 id), , "selects a control.")
+DefineEngineMethod( GuiEditCtrl, addSelection, void, (S32 id), , "selects a control.")
 {
    object->addSelection(id);
 }
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( GuiEditCtrl, removeSelection, void, (S32 id), , "deselects a control.")
+DefineEngineMethod( GuiEditCtrl, removeSelection, void, (S32 id), , "deselects a control.")
 {
    object->removeSelection(id);
 }
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( GuiEditCtrl, clearSelection, void, (), , "Clear selected controls list.")
+DefineEngineMethod( GuiEditCtrl, clearSelection, void, (), , "Clear selected controls list.")
 {
    object->clearSelection();
 }
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( GuiEditCtrl, select, void, (GuiControl *ctrl), , "(GuiControl ctrl)")
+DefineEngineMethod( GuiEditCtrl, select, void, (GuiControl *ctrl), , "(GuiControl ctrl)")
 {
-	if (ctrl)
+   if (ctrl)
    object->setSelection(ctrl, false);
 }
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( GuiEditCtrl, setCurrentAddSet, void, (GuiControl *addSet), , "(GuiControl ctrl)")
+DefineEngineMethod( GuiEditCtrl, setCurrentAddSet, void, (GuiControl *addSet), , "(GuiControl ctrl)")
 {
-	if (addSet)
+   if (addSet)
    object->setCurrentAddSet(addSet);
 }
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( GuiEditCtrl, getCurrentAddSet, S32, (), , "Returns the set to which new controls will be added")
+DefineEngineMethod( GuiEditCtrl, getCurrentAddSet, S32, (), , "Returns the set to which new controls will be added")
 {
    const GuiControl* add = object->getCurrentAddSet();
    return add ? add->getId() : 0;
@@ -2540,49 +2553,49 @@ DefineConsoleMethod( GuiEditCtrl, getCurrentAddSet, S32, (), , "Returns the set 
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( GuiEditCtrl, toggle, void, (), , "Toggle activation.")
+DefineEngineMethod( GuiEditCtrl, toggle, void, (), , "Toggle activation.")
 {
    object->setEditMode( !object->isActive() );
 }
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( GuiEditCtrl, justify, void, (U32 mode), , "(int mode)" )
+DefineEngineMethod( GuiEditCtrl, justify, void, (U32 mode), , "(int mode)" )
 {
    object->justifySelection( (GuiEditCtrl::Justification)mode );
 }
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( GuiEditCtrl, bringToFront, void, (), , "")
+DefineEngineMethod( GuiEditCtrl, bringToFront, void, (), , "")
 {
    object->bringToFront();
 }
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( GuiEditCtrl, pushToBack, void, (), , "")
+DefineEngineMethod( GuiEditCtrl, pushToBack, void, (), , "")
 {
    object->pushToBack();
 }
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( GuiEditCtrl, deleteSelection, void, (), , "() - Delete the selected controls.")
+DefineEngineMethod( GuiEditCtrl, deleteSelection, void, (), , "() - Delete the selected controls.")
 {
    object->deleteSelection();
 }
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( GuiEditCtrl, moveSelection, void, (S32 dx, S32 dy), , "Move all controls in the selection by (dx,dy) pixels.")
+DefineEngineMethod( GuiEditCtrl, moveSelection, void, (S32 dx, S32 dy), , "Move all controls in the selection by (dx,dy) pixels.")
 {
    object->moveAndSnapSelection(Point2I(dx, dy));
 }
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( GuiEditCtrl, saveSelection, void, (const char * filename), (NULL), "( string fileName=null ) - Save selection to file or clipboard.")
+DefineEngineMethod( GuiEditCtrl, saveSelection, void, (const char * filename), (nullAsType<const char*>()), "( string fileName=null ) - Save selection to file or clipboard.")
 {
       
    object->saveSelection( filename );
@@ -2590,7 +2603,7 @@ DefineConsoleMethod( GuiEditCtrl, saveSelection, void, (const char * filename), 
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( GuiEditCtrl, loadSelection, void, (const char * filename), (NULL), "( string fileName=null ) - Load selection from file or clipboard.")
+DefineEngineMethod( GuiEditCtrl, loadSelection, void, (const char * filename), (nullAsType<const char*>()), "( string fileName=null ) - Load selection from file or clipboard.")
 {
 
    object->loadSelection( filename );
@@ -2598,7 +2611,7 @@ DefineConsoleMethod( GuiEditCtrl, loadSelection, void, (const char * filename), 
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( GuiEditCtrl, selectAll, void, (), , "()")
+DefineEngineMethod( GuiEditCtrl, selectAll, void, (), , "()")
 {
    object->selectAll();
 }
@@ -2613,27 +2626,27 @@ DefineEngineMethod( GuiEditCtrl, getSelection, SimSet*, (),,
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( GuiEditCtrl, getNumSelected, S32, (), , "() - Return the number of controls currently selected." )
+DefineEngineMethod( GuiEditCtrl, getNumSelected, S32, (), , "() - Return the number of controls currently selected." )
 {
    return object->getNumSelected();
 }
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( GuiEditCtrl, getSelectionGlobalBounds, const char*, (), , "() - Returns global bounds of current selection as vector 'x y width height'." )
+DefineEngineMethod( GuiEditCtrl, getSelectionGlobalBounds, const char*, (), , "() - Returns global bounds of current selection as vector 'x y width height'." )
 {
    RectI bounds = object->getSelectionGlobalBounds();
    String str = String::ToString( "%i %i %i %i", bounds.point.x, bounds.point.y, bounds.extent.x, bounds.extent.y );
    
-   char* buffer = Con::getReturnBuffer( str.length() );
-   dStrcpy( buffer, str.c_str() );
+   char* buffer = Con::getReturnBuffer( str.size() );
+   dStrcpy( buffer, str.c_str(), str.size() );
    
    return buffer;
 }
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( GuiEditCtrl, selectParents, void, ( bool addToSelection ), (false), "( bool addToSelection=false ) - Select parents of currently selected controls." )
+DefineEngineMethod( GuiEditCtrl, selectParents, void, ( bool addToSelection ), (false), "( bool addToSelection=false ) - Select parents of currently selected controls." )
 {
       
    object->selectParents( addToSelection );
@@ -2641,7 +2654,7 @@ DefineConsoleMethod( GuiEditCtrl, selectParents, void, ( bool addToSelection ), 
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( GuiEditCtrl, selectChildren, void, ( bool addToSelection ), (false), "( bool addToSelection=false ) - Select children of currently selected controls." )
+DefineEngineMethod( GuiEditCtrl, selectChildren, void, ( bool addToSelection ), (false), "( bool addToSelection=false ) - Select children of currently selected controls." )
 {
       
    object->selectChildren( addToSelection );
@@ -2657,14 +2670,14 @@ DefineEngineMethod( GuiEditCtrl, getTrash, SimGroup*, (),,
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod(GuiEditCtrl, setSnapToGrid, void, (U32 gridsize), , "GuiEditCtrl.setSnapToGrid(gridsize)")
+DefineEngineMethod(GuiEditCtrl, setSnapToGrid, void, (U32 gridsize), , "GuiEditCtrl.setSnapToGrid(gridsize)")
 {
    object->setSnapToGrid(gridsize);
 }
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( GuiEditCtrl, readGuides, void, ( GuiControl* ctrl, S32 axis ), (-1), "( GuiControl ctrl [, int axis ] ) - Read the guides from the given control." )
+DefineEngineMethod( GuiEditCtrl, readGuides, void, ( GuiControl* ctrl, S32 axis ), (-1), "( GuiControl ctrl [, int axis ] ) - Read the guides from the given control." )
 {
    // Find the control.
    
@@ -2694,7 +2707,7 @@ DefineConsoleMethod( GuiEditCtrl, readGuides, void, ( GuiControl* ctrl, S32 axis
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( GuiEditCtrl, writeGuides, void, ( GuiControl* ctrl, S32 axis ), ( -1), "( GuiControl ctrl [, int axis ] ) - Write the guides to the given control." )
+DefineEngineMethod( GuiEditCtrl, writeGuides, void, ( GuiControl* ctrl, S32 axis ), ( -1), "( GuiControl ctrl [, int axis ] ) - Write the guides to the given control." )
 {
    // Find the control.
    
@@ -2724,7 +2737,7 @@ DefineConsoleMethod( GuiEditCtrl, writeGuides, void, ( GuiControl* ctrl, S32 axi
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( GuiEditCtrl, clearGuides, void, ( S32 axis ), (-1), "( [ int axis ] ) - Clear all currently set guide lines." )
+DefineEngineMethod( GuiEditCtrl, clearGuides, void, ( S32 axis ), (-1), "( [ int axis ] ) - Clear all currently set guide lines." )
 {
    if( axis != -1 )
    {
@@ -2745,7 +2758,7 @@ DefineConsoleMethod( GuiEditCtrl, clearGuides, void, ( S32 axis ), (-1), "( [ in
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( GuiEditCtrl, fitIntoParents, void, (bool width, bool height), (true, true), "( bool width=true, bool height=true ) - Fit selected controls into their parents." )
+DefineEngineMethod( GuiEditCtrl, fitIntoParents, void, (bool width, bool height), (true, true), "( bool width=true, bool height=true ) - Fit selected controls into their parents." )
 {
       
    object->fitIntoParents( width, height );
@@ -2753,7 +2766,7 @@ DefineConsoleMethod( GuiEditCtrl, fitIntoParents, void, (bool width, bool height
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( GuiEditCtrl, getMouseMode, const char*, (), , "() - Return the current mouse mode." )
+DefineEngineMethod( GuiEditCtrl, getMouseMode, const char*, (), , "() - Return the current mouse mode." )
 {
    switch( object->getMouseMode() )
    {
@@ -2860,7 +2873,7 @@ class GuiEditorRuler : public GuiControl
       
       void onRender(Point2I offset, const RectI &updateRect)
       {
-         GFX->getDrawUtil()->drawRectFill(updateRect, ColorF(1,1,1,1));
+         GFX->getDrawUtil()->drawRectFill(updateRect, ColorI::WHITE);
          
          Point2I choffset(0,0);
          if( mRefCtrl != NULL )
@@ -2880,7 +2893,7 @@ class GuiEditorRuler : public GuiControl
                      start = 4;
                   if(!(pos % 100))
                      start = 1;
-                  GFX->getDrawUtil()->drawLine(x, offset.y + start, x, offset.y + 10, ColorF(0,0,0,1));
+                  GFX->getDrawUtil()->drawLine(x, offset.y + start, x, offset.y + 10, ColorI::BLACK);
                }
             }
          }
@@ -2898,7 +2911,7 @@ class GuiEditorRuler : public GuiControl
                      start = 4;
                   if(!(pos % 100))
                      start = 1;
-                  GFX->getDrawUtil()->drawLine(offset.x + start, y, offset.x + 10, y, ColorF(0,0,0,1));
+                  GFX->getDrawUtil()->drawLine(offset.x + start, y, offset.x + 10, y, ColorI::BLACK);
                }
             }
          }

@@ -59,6 +59,7 @@ VehicleBlocker::~VehicleBlocker()
 //--------------------------------------------------------------------------
 void VehicleBlocker::initPersistFields()
 {
+   docsURL;
    addField("dimensions", TypePoint3F, Offset(mDimensions, VehicleBlocker));
    Parent::initPersistFields();
 }

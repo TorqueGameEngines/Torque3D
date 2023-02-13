@@ -29,7 +29,9 @@
 #ifndef _ENDIAN_H_
 #include "core/util/endian.h"
 #endif
-
+#ifndef _STRINGFUNCTIONS_H_
+#include "core/strings/stringFunctions.h"
+#endif
 
 /// @defgroup stream_overload Primitive Type Stream Operation Overloads
 /// These macros declare the read and write functions for all primitive types.
@@ -39,10 +41,11 @@
 /// @}
 
 class ColorI;
-class ColorF;
+class LinearColorF;
 struct NetAddress;
 class RawData;
 class String;
+class NetSocket;
 
 namespace Torque {
    class ByteBuffer;
@@ -130,11 +133,20 @@ public:
    /// writeString is safer.
    void writeLongString(U32 maxStringLen, const char *string);
 
+   inline bool Put(char character) { return write(character); }
+
    /// Write raw text to the stream
    void writeText(const char *text);
 
    /// Writes a string to the stream.
    virtual void writeString(const char *stringBuf, S32 maxLen=255);
+
+   /// Writes a formatted buffer to the stream.
+   /// NOTE: A maximum string length of 4K is allowed.
+   bool writeFormattedBuffer(const char *format, ...);
+
+   /// Writes a NULL terminated string buffer.
+   bool writeStringBuffer(const char* buffer) { return write(dStrlen(buffer), buffer); }
 
    // read/write real strings
    void write(const String & str) { _write(str); }
@@ -143,16 +155,21 @@ public:
    /// Write an integral color to the stream.
    bool write(const ColorI&);
    /// Write a floating point color to the stream.
-   bool write(const ColorF&);
+   bool write(const LinearColorF&);
    /// Read an integral color from the stream.
    bool read(ColorI*);
    /// Read a floating point color from the stream.
-   bool read(ColorF*);
+   bool read(LinearColorF*);
 
    /// Write a network address to the stream.
    bool write(const NetAddress &);
    /// Read a network address from the stream.
    bool read(NetAddress*);
+
+   /// Write a network socket to the stream.
+   bool write(const NetSocket &);
+   /// Read a network socket from the stream.
+   bool read(NetSocket*);
 
    /// Write some raw data onto the stream.
    bool write(const RawData &);

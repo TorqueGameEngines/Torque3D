@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="selector_button_image"
+    imageFile="@assetFile=selector_button.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

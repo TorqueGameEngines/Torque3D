@@ -23,6 +23,7 @@
 #ifndef INCLUDED_TYPES_VISUALC_H
 #define INCLUDED_TYPES_VISUALC_H
 
+#include <stdlib.h>
 
 // For more information on VisualC++ predefined macros
 // http://support.microsoft.com/default.aspx?scid=kb;EN-US;q65472
@@ -32,6 +33,16 @@
 typedef signed _int64   S64;
 typedef unsigned _int64 U64;
 
+// The types.h version of TORQUE_UNUSED no longer works for recent versions of MSVC.
+// Since it appears that MS has made this impossible to do in a zero-overhead way,
+// just turn the warning off in release builds.
+#undef TORQUE_UNUSED
+#ifdef TORQUE_DEBUG
+#define TORQUE_UNUSED(var) ((0,0) ? (void)(var) : (void)0)
+#else
+#pragma warning(disable: 4189) // local variable is initialized but not referenced
+#define TORQUE_UNUSED(var) ((void)0)
+#endif
 
 //--------------------------------------
 // Compiler Version
@@ -42,24 +53,14 @@ typedef unsigned _int64 U64;
 #if _MSC_VER < 1200
    // No support for old compilers
 #  error "VC: Minimum VisualC++ 6.0 or newer required"
-#else _MSC_VER >= 1200
+#else // _MSC_VER >= 1200
 #  define TORQUE_COMPILER_STRING "VisualC++"
 #endif
 
 
 //--------------------------------------
 // Identify the Operating System
-#if _XBOX_VER >= 200 
-#  define TORQUE_OS_STRING "Xenon"
-#  ifndef TORQUE_OS_XENON
-#     define TORQUE_OS_XENON
-#  endif
-#  include "platform/types.xenon.h"
-#elif defined( _XBOX_VER )
-#  define TORQUE_OS_STRING "Xbox"
-#  define TORQUE_OS_XBOX
-#  include "platform/types.win.h"
-#elif defined( _WIN32 ) && !defined ( _WIN64 )
+#if defined( _WIN32 ) && !defined ( _WIN64 )
 #  define TORQUE_OS_STRING "Win32"
 #  define TORQUE_OS_WIN
 #  define TORQUE_OS_WIN32
@@ -69,7 +70,7 @@ typedef unsigned _int64 U64;
 #  define TORQUE_OS_WIN
 #  define TORQUE_OS_WIN64
 #  include "platform/types.win.h"
-#else 
+#else
 #  error "VC: Unsupported Operating System"
 #endif
 
@@ -84,12 +85,10 @@ typedef unsigned _int64 U64;
 #  define TORQUE_CPU_STRING "x86"
 #  define TORQUE_CPU_X86
 #  define TORQUE_LITTLE_ENDIAN
+#ifndef __clang__ // asm not yet supported with clang
 #  define TORQUE_SUPPORTS_NASM
 #  define TORQUE_SUPPORTS_VC_INLINE_X86_ASM
-#elif defined( TORQUE_OS_XENON )
-#  define TORQUE_CPU_STRING "ppc"
-#  define TORQUE_CPU_PPC
-#  define TORQUE_BIG_ENDIAN
+#endif
 #else
 #  error "VC: Unsupported Target CPU"
 #endif
@@ -104,8 +103,21 @@ typedef unsigned _int64 U64;
 
 // disable warning caused by memory layer
 // see msdn.microsoft.com "Compiler Warning (level 1) C4291" for more details
-#pragma warning(disable: 4291) 
+#pragma warning(disable: 4291)
 
+#define TORQUE_FORCEINLINE __forceinline
+#define TORQUE_NOINLINE __declspec(noinline)
+
+#if __cplusplus >= 201703L
+#define TORQUE_CASE_FALLTHROUGH [[fallthrough]];
+#define TORQUE_UNLIKELY [[unlikely]]
+#else
+#define TORQUE_CASE_FALLTHROUGH __fallthrough
+#define TORQUE_UNLIKELY
+#endif
+
+#define TORQUE_U16_ENDIANSWAP_BUILTIN _byteswap_ushort
+#define TORQUE_U32_ENDIANSWAP_BUILTIN _byteswap_ulong
+#define TORQUE_U64_ENDIANSWAP_BUILTIN _byteswap_uint64
 
 #endif // INCLUDED_TYPES_VISUALC_H
-

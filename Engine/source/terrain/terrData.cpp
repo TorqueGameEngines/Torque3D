@@ -20,6 +20,11 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+// Arcane-FX for MIT Licensed Open Source version of Torque 3D from GarageGames
+// Copyright (C) 2015 Faust Logic, Inc.
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+
 #include "platform/platform.h"
 #include "terrain/terrData.h"
 
@@ -42,13 +47,15 @@
 #include "materials/baseMatInstance.h"
 #include "gfx/gfxTextureManager.h"
 #include "gfx/gfxCardProfile.h"
+#include "gfx/gfxAPI.h"
 #include "core/resourceManager.h"
 #include "T3D/physics/physicsPlugin.h"
 #include "T3D/physics/physicsBody.h"
 #include "T3D/physics/physicsCollision.h"
 #include "console/engineAPI.h"
+#include "core/util/safeRelease.h"
 
-#include "console/engineAPI.h"
+#include "T3D/assets/TerrainMaterialAsset.h"
 using namespace Torque;
 
 IMPLEMENT_CO_NETOBJECT_V1(TerrainBlock);
@@ -142,7 +149,7 @@ ConsoleDocFragment _getTerrainUnderWorldPoint2(
    "bool getTerrainUnderWorldPoint( F32 x, F32 y, F32 z);"
 );
 
-DefineConsoleFunction( getTerrainUnderWorldPoint, S32, (const char* ptOrX, const char* y, const char* z), ("", ""),
+DefineEngineFunction( getTerrainUnderWorldPoint, S32, (const char* ptOrX, const char* y, const char* z), ("", ""),
                                                       "(Point3F x/y/z) Gets the terrain block that is located under the given world point.\n"
                                                       "@param x/y/z The world coordinates (floating point values) you wish to query at. " 
                                                       "These can be formatted as either a string (\"x y z\") or separately as (x, y, z)\n"
@@ -150,9 +157,9 @@ DefineConsoleFunction( getTerrainUnderWorldPoint, S32, (const char* ptOrX, const
                                                       "@hide")
 {
    Point3F pos;
-   if(!dStrIsEmpty(ptOrX) && dStrIsEmpty(y) && dStrIsEmpty(z))
+   if(!String::isEmpty(ptOrX) && String::isEmpty(y) && String::isEmpty(z))
       dSscanf(ptOrX, "%f %f %f", &pos.x, &pos.y, &pos.z);
-   else if(!dStrIsEmpty(ptOrX) && !dStrIsEmpty(y) && !dStrIsEmpty(z))
+   else if(!String::isEmpty(ptOrX) && !String::isEmpty(y) && !String::isEmpty(z))
    {
       pos.x = dAtof(ptOrX);
       pos.y = dAtof(y);
@@ -176,40 +183,47 @@ ImplementEnumType(baseTexFormat,
 { TerrainBlock::NONE, "NONE", "No cached terrain.\n" },
 { TerrainBlock::DDS, "DDS", "Cache the terrain in a DDS format.\n" },
 { TerrainBlock::PNG, "PNG", "Cache the terrain in a PNG format.\n" },
-{ TerrainBlock::JPG, "JPG", "Cache the terrain in a JPG format.\n" },
 EndImplementEnumType;
 
 TerrainBlock::TerrainBlock()
- : mSquareSize( 1.0f ),
-   mCastShadows( true ),
-   mScreenError( 16 ),   
-   mDetailsDirty( false ),
-   mLayerTexDirty( false ),
-   mLightMap( NULL ),
+ : mLightMap( NULL ),
    mLightMapSize( 256 ),
-   mMaxDetailDistance( 0.0f ),
-   mCell( NULL ),
    mCRC( 0 ),
-   mBaseTexSize( 1024 ),
-   mBaseTexFormat( TerrainBlock::JPG ),
-   mBaseMaterial( NULL ),
-   mDefaultMatInst( NULL ),
+   mMaxDetailDistance( 0.0f ),
    mBaseTexScaleConst( NULL ),
    mBaseTexIdConst( NULL ),
+   mBaseLayerSizeConst(NULL),
+   mDetailsDirty( false ),
+   mLayerTexDirty( false ),
+   mBaseTexSize( 1024 ),
+   mBaseTexFormat( TerrainBlock::DDS ),
+   mCell( NULL ),
+   mBaseMaterial( NULL ),
+   mDefaultMatInst( NULL ),
+   mSquareSize( 1.0f ),
    mPhysicsRep( NULL ),
-   mZoningDirty( false )
+   mScreenError( 16 ),
+   mCastShadows( true ),
+   mZoningDirty( false ),
+   mUpdateBasetex ( true ),
+   mDetailTextureArray( NULL ),
+   mMacroTextureArray( NULL ),
+   mOrmTextureArray( NULL ),
+   mNormalTextureArray( NULL )
 {
    mTypeMask = TerrainObjectType | StaticObjectType | StaticShapeObjectType;
    mNetFlags.set(Ghostable | ScopeAlways);
+   mIgnoreZodiacs = false;
+   zode_primBuffer = 0;
+
+   mTerrainAsset = StringTable->EmptyString();
+   mTerrainAssetId = StringTable->EmptyString();
 }
-
-
-extern Convex sTerrainConvexList;
 
 TerrainBlock::~TerrainBlock()
 {
    // Kill collision
-   sTerrainConvexList.nukeList();
+   mTerrainConvexList.nukeList();
 
    SAFE_DELETE(mLightMap);
    mLightMapTex = NULL;
@@ -219,6 +233,12 @@ TerrainBlock::~TerrainBlock()
    if (editor)
       editor->detachTerrain(this);
 #endif
+   deleteZodiacPrimitiveBuffer();
+
+   SAFE_RELEASE(mDetailTextureArray);
+   SAFE_RELEASE(mMacroTextureArray);
+   SAFE_RELEASE(mNormalTextureArray);
+   SAFE_RELEASE(mOrmTextureArray);
 }
 
 void TerrainBlock::_onTextureEvent( GFXTexCallbackCode code )
@@ -287,8 +307,14 @@ bool TerrainBlock::_setBaseTexFormat(void *obj, const char *index, const char *d
       {
          terrain->mBaseTexFormat = (BaseTexFormat)eTable[i].mInt;
          terrain->_updateMaterials();
+
+         if (terrain->isServerObject()) return false;
          terrain->_updateLayerTexture();
-         terrain->_updateBaseTexture(true);
+         // If the cached base texture is older that the terrain file or
+         // it doesn't exist then generate and cache it.
+         String baseCachePath = terrain->_getBaseTexCacheFileName();
+         if (Platform::compareModifiedTimes(baseCachePath, terrain->mTerrainAsset->getTerrainFilePath()) < 0 && terrain->mUpdateBasetex)
+            terrain->_updateBaseTexture(true);
          break;
       }
    }
@@ -320,7 +346,7 @@ bool TerrainBlock::_setLightMapSize( void *obj, const char *index, const char *d
 
 bool TerrainBlock::setFile( const FileName &terrFileName )
 {
-   if ( terrFileName == mTerrFileName )
+   if ( mTerrainAsset && mTerrainAsset->getTerrainFilePath() == StringTable->insert(terrFileName) )
       return mFile != NULL;
 
    Resource<TerrainFile> file = ResourceManager::get().load( terrFileName );
@@ -333,10 +359,106 @@ bool TerrainBlock::setFile( const FileName &terrFileName )
    return true;
 }
 
-void TerrainBlock::setFile( Resource<TerrainFile> terr )
+void TerrainBlock::setFile(const Resource<TerrainFile>& terr)
 {
+   if (mFile)
+   {
+      GFXTextureManager::removeEventDelegate(this, &TerrainBlock::_onTextureEvent);
+      MATMGR->getFlushSignal().remove(this, &TerrainBlock::_onFlushMaterials);
+   }
+
    mFile = terr;
-   mTerrFileName = terr.getPath();
+
+   if (!mFile)
+   {
+      Con::errorf("TerrainBlock::setFile() - No valid terrain file!");
+      return;
+   }
+
+   if (terr->mNeedsResaving)
+   {
+      if (Platform::messageBox("Update Terrain File", "You appear to have a Terrain file in an older format. Do you want Torque to update it?", MBOkCancel, MIQuestion) == MROk)
+      {
+         mFile->save(terr->mFilePath.getFullPath());
+         mFile->mNeedsResaving = false;
+      }
+   }
+
+   if (terr->mFileVersion != TerrainFile::FILE_VERSION || terr->mNeedsResaving)
+   {
+      Con::errorf(" *********************************************************");
+      Con::errorf(" *********************************************************");
+      Con::errorf(" *********************************************************");
+      Con::errorf(" PLEASE RESAVE THE TERRAIN FILE FOR THIS MISSION!  THANKS!");
+      Con::errorf(" *********************************************************");
+      Con::errorf(" *********************************************************");
+      Con::errorf(" *********************************************************");
+   }
+
+
+   _updateBounds();
+
+   resetWorldBox();
+   setRenderTransform(mObjToWorld);
+
+   if (isClientObject())
+   {
+      if (mCRC != terr.getChecksum())
+      {
+         NetConnection::setLastError("Your terrain file doesn't match the version that is running on the server.");
+         return;
+      }
+
+      clearLightMap();
+
+      // Init the detail layer rendering helper.
+      _updateMaterials();
+      _updateLayerTexture();
+
+      // If the cached base texture is older that the terrain file or
+      // it doesn't exist then generate and cache it.
+      String baseCachePath = _getBaseTexCacheFileName();
+      if (Platform::compareModifiedTimes(baseCachePath, mTerrainAsset->getTerrainFilePath()) < 0 && mUpdateBasetex)
+         _updateBaseTexture(true);
+
+      // The base texture should have been cached by now... so load it.
+      mBaseTex.set(baseCachePath, &GFXStaticTextureSRGBProfile, "TerrainBlock::mBaseTex");
+
+      GFXTextureManager::addEventDelegate(this, &TerrainBlock::_onTextureEvent);
+      MATMGR->getFlushSignal().notify(this, &TerrainBlock::_onFlushMaterials);
+
+      // Build the terrain quadtree.
+      _rebuildQuadtree();
+
+      // Preload all the materials.
+      mCell->preloadMaterials();
+
+      mZoningDirty = true;
+      SceneZoneSpaceManager::getZoningChangedSignal().notify(this, &TerrainBlock::_onZoningChanged);
+   }
+   else
+      mCRC = terr.getChecksum();
+}
+
+bool TerrainBlock::setTerrainAsset(const StringTableEntry terrainAssetId)
+{
+   if (TerrainAsset::getAssetById(terrainAssetId, &mTerrainAsset))
+   {
+      //Special exception case. If we've defaulted to the 'no shape' mesh, don't save it out, we'll retain the original ids/paths so it doesn't break
+      //the TSStatic
+      if (!mTerrainAsset.isNull())
+      {
+         mTerrFileName = StringTable->EmptyString();
+      }
+
+      setFile(mTerrainAsset->getTerrainResource());
+
+      setMaskBits(-1);
+
+      return true;
+   }
+
+   return false;
 }
 
 bool TerrainBlock::save(const char *filename)
@@ -344,10 +466,92 @@ bool TerrainBlock::save(const char *filename)
    return mFile->save(filename);
 }
 
+bool TerrainBlock::saveAsset()
+{
+   if (!mTerrainAsset.isNull() && mTerrainAsset->isAssetValid())
+   {
+      mTerrainAsset->clearAssetDependencyFields("terrainMaterailAsset");
+
+      AssetQuery* pAssetQuery = new AssetQuery();
+      pAssetQuery->registerObject();
+
+      AssetDatabase.findAssetType(pAssetQuery, "TerrainMaterialAsset");
+
+      TerrainBlock* terr = static_cast<TerrainBlock*>(getClientObject());
+      if (!terr)
+      {
+         Con::warnf("No active client terrain while trying to save asset. Could be a server action, but should check to be sure!");
+         terr = this;
+      }
+
+      for (U32 i = 0; i < pAssetQuery->mAssetList.size(); i++)
+      {
+         //Acquire it so we can check it for matches
+         AssetPtr<TerrainMaterialAsset> terrMatAsset = pAssetQuery->mAssetList[i];
+
+         for (U32 m = 0; m < terr->mFile->mMaterials.size(); m++)
+         {
+            StringTableEntry intMatName = terr->mFile->mMaterials[m]->getInternalName();
+
+            StringTableEntry assetMatDefName = terrMatAsset->getMaterialDefinitionName();
+            if (assetMatDefName == intMatName)
+            {
+               mTerrainAsset->addAssetDependencyField("terrainMaterailAsset", terrMatAsset.getAssetId());
+            }
+         }
+
+         terrMatAsset.clear();
+      }
+
+      pAssetQuery->destroySelf();
+
+      bool saveAssetSuccess = mTerrainAsset->saveAsset();
+
+      if (!saveAssetSuccess)
+         return false;
+
+      return mFile->save(mTerrainAsset->getTerrainFilePath());
+   }
+
+   return false;
+}
+
 bool TerrainBlock::_setTerrainFile( void *obj, const char *index, const char *data )
 {
-   static_cast<TerrainBlock*>( obj )->setFile( FileName( data ) );
-   return false;
+   //TerrainBlock* terrain = static_cast<TerrainBlock*>( obj )->setFile( FileName( data ) );
+   TerrainBlock* terrain = static_cast<TerrainBlock*>(obj);
+
+   StringTableEntry file = StringTable->insert(data);
+
+   if (file != StringTable->EmptyString())
+   {
+      StringTableEntry assetId = TerrainAsset::getAssetIdByFilename(file);
+      if (assetId != StringTable->EmptyString())
+      {
+         if (terrain->setTerrainAsset(assetId))
+         {
+            terrain->mTerrainAssetId = assetId;
+            terrain->mTerrFileName = StringTable->EmptyString();
+
+            return false;
+         }
+      }
+      else
+      {
+         terrain->mTerrainAsset = StringTable->EmptyString();
+      }
+   }
+
+   return true;
+}
+
+bool TerrainBlock::_setTerrainAsset(void* obj, const char* index, const char* data)
+{
+   TerrainBlock* terr = static_cast<TerrainBlock*>(obj);// ->setFile(FileName(data));
+
+   terr->mTerrainAssetId = StringTable->insert(data);
+
+   return terr->setTerrainAsset(terr->mTerrainAssetId);
 }
 
 void TerrainBlock::_updateBounds()
@@ -371,7 +575,9 @@ void TerrainBlock::_updateBounds()
 
 void TerrainBlock::_onZoningChanged( SceneZoneSpaceManager *zoneManager )
 {
-   if ( mCell == NULL || zoneManager != getSceneManager()->getZoneManager() )
+   const SceneManager* sm = getSceneManager();
+
+   if (mCell == NULL || (sm != NULL && sm->getZoneManager() != NULL && zoneManager != sm->getZoneManager()))
       return;
 
    mZoningDirty = true;
@@ -774,10 +980,38 @@ void TerrainBlock::addMaterial( const String &name, U32 insertAt )
 {
    TerrainMaterial *mat = TerrainMaterial::findOrCreate( name );
 
+   StringTableEntry newMatName = StringTable->insert(name.c_str());
+
    if ( insertAt == -1 )
    {
+      //Check to ensure we're not trying to add one that already exists, as that'd be kinda dumb
+      for (U32 i = 0; i < mFile->mMaterials.size(); i++)
+      {
+         if (mFile->mMaterials[i]->getInternalName() == newMatName)
+            return;
+      }
+
       mFile->mMaterials.push_back( mat );
       mFile->_initMaterialInstMapping();
+
+      //now we update our asset
+      if (mTerrainAsset)
+      {
+         StringTableEntry terrMatName = StringTable->insert(name.c_str());
+
+         AssetQuery* aq = new AssetQuery();
+         U32 foundCount = AssetDatabase.findAssetType(aq, "TerrainMaterialAsset");
+
+         for (U32 i = 0; i < foundCount; i++)
+         {
+            TerrainMaterialAsset* terrMatAsset = AssetDatabase.acquireAsset<TerrainMaterialAsset>(aq->mAssetList[i]);
+            if (terrMatAsset && terrMatAsset->getMaterialDefinitionName() == terrMatName)
+            {
+               //Do iterative logic to find the next available slot and write to it with our new mat field
+               mTerrainAsset->setDataField(StringTable->insert("terrainMaterialAsset"), nullptr, aq->mAssetList[i]);
+            }
+         }
+      }
    }
    else
    {
@@ -867,7 +1101,7 @@ GFXTextureObject* TerrainBlock::getLightMapTex()
    if ( mLightMapTex.isNull() && mLightMap )
    {
       mLightMapTex.set( mLightMap, 
-                        &GFXDefaultStaticDiffuseProfile, 
+                        &GFXStaticTextureProfile, 
                         false, 
                         "TerrainBlock::getLightMapTex()" );
    }
@@ -888,95 +1122,22 @@ bool TerrainBlock::onAdd()
    if(!Parent::onAdd())
       return false;
 
-   if ( mTerrFileName.isEmpty() )
+   Resource<TerrainFile> terr;
+
+   if (!mTerrainAsset.isNull())
    {
-      mTerrFileName = Con::getVariable( "$Client::MissionFile" );
-      String terrainDirectory( Con::getVariable( "$pref::Directories::Terrain" ) );
-      if ( terrainDirectory.isEmpty() )
+      terr = mTerrainAsset->getTerrainResource();
+
+      if (terr == NULL)
       {
-         terrainDirectory = "art/terrains/";
-      }
-      mTerrFileName.replace("tools/levels/", terrainDirectory);
-      mTerrFileName.replace("levels/", terrainDirectory);
-
-      Vector<String> materials;
-      materials.push_back( "warning_material" );
-      TerrainFile::create( &mTerrFileName, 256, materials );
-   }
-
-   Resource<TerrainFile> terr = ResourceManager::get().load( mTerrFileName );
-   if(terr == NULL)
-   {
-      if(isClientObject())
-         NetConnection::setLastError("You are missing a file needed to play this mission: %s", mTerrFileName.c_str());
-      return false;
-   }
-
-   setFile( terr );
-
-   if ( terr->mNeedsResaving )
-   {
-      if (Platform::messageBox("Update Terrain File", "You appear to have a Terrain file in an older format. Do you want Torque to update it?", MBOkCancel, MIQuestion) == MROk)
-      {
-         terr->save(terr->mFilePath.getFullPath());
-         terr->mNeedsResaving = false;
-      }
-   }
-
-   if (terr->mFileVersion != TerrainFile::FILE_VERSION || terr->mNeedsResaving)
-   {
-      Con::errorf(" *********************************************************");
-      Con::errorf(" *********************************************************");
-      Con::errorf(" *********************************************************");
-      Con::errorf(" PLEASE RESAVE THE TERRAIN FILE FOR THIS MISSION!  THANKS!");
-      Con::errorf(" *********************************************************");
-      Con::errorf(" *********************************************************");
-      Con::errorf(" *********************************************************");
-   }
-
-   _updateBounds();
-   
-   resetWorldBox();
-   setRenderTransform(mObjToWorld);
-
-   if (isClientObject())
-   {
-      if ( mCRC != terr.getChecksum() )
-      {
-         NetConnection::setLastError("Your terrain file doesn't match the version that is running on the server.");
+         if (isClientObject())
+            NetConnection::setLastError("Unable to load terrain asset: %s", mTerrainAsset.getAssetId());
          return false;
       }
 
-      clearLightMap();
-
-      // Init the detail layer rendering helper.
-      _updateMaterials();
-      _updateLayerTexture();
-
-      // If the cached base texture is older that the terrain file or
-      // it doesn't exist then generate and cache it.
-      String baseCachePath = _getBaseTexCacheFileName();
-      if ( Platform::compareModifiedTimes( baseCachePath, mTerrFileName ) < 0 )
-         _updateBaseTexture( true );
-
-      // The base texture should have been cached by now... so load it.
-      mBaseTex.set( baseCachePath, &GFXDefaultStaticDiffuseProfile, "TerrainBlock::mBaseTex" );
-
-      GFXTextureManager::addEventDelegate( this, &TerrainBlock::_onTextureEvent );
-      MATMGR->getFlushSignal().notify( this, &TerrainBlock::_onFlushMaterials );
-
-      // Build the terrain quadtree.
-      _rebuildQuadtree();
-
-      // Preload all the materials.
-      mCell->preloadMaterials();
-
-      mZoningDirty = true;
-      SceneZoneSpaceManager::getZoningChangedSignal().notify( this, &TerrainBlock::_onZoningChanged );
+      setFile(terr);
    }
-   else
-      mCRC = terr.getChecksum();
-
+ 
    addToScene();
 
    _updatePhysics();
@@ -986,7 +1147,7 @@ bool TerrainBlock::onAdd()
 
 String TerrainBlock::_getBaseTexCacheFileName() const
 {
-   Torque::Path basePath( mTerrFileName );
+   Torque::Path basePath( mTerrainAsset->getTerrainFilePath() );
    basePath.setFileName( basePath.getFileName() + "_basetex" );
    basePath.setExtension( formatToExtension(mBaseTexFormat) );
    return basePath.getFullPath();
@@ -1001,6 +1162,7 @@ void TerrainBlock::_rebuildQuadtree()
 
    // Build the shared PrimitiveBuffer.
    mCell->createPrimBuffer( &mPrimBuffer );
+   deleteZodiacPrimitiveBuffer();
 }
 
 void TerrainBlock::_updatePhysics()
@@ -1110,8 +1272,13 @@ void TerrainBlock::setScale( const VectorF &scale )
 
 void TerrainBlock::initPersistFields()
 {
+   docsURL;
    addGroup( "Media" );
-      
+
+      addProtectedField("terrainAsset", TypeTerrainAssetId, Offset(mTerrainAssetId, TerrainBlock),
+         &TerrainBlock::_setTerrainAsset, &defaultProtectedGetFn,
+         "The source terrain data asset.");
+
       addProtectedField( "terrainFile", TypeStringFilename, Offset( mTerrFileName, TerrainBlock ), 
          &TerrainBlock::_setTerrainFile, &defaultProtectedGetFn,
          "The source terrain data file." );
@@ -1140,9 +1307,14 @@ void TerrainBlock::initPersistFields()
          "Light map dimensions in pixels." );
 
       addField( "screenError", TypeS32, Offset( mScreenError, TerrainBlock ), "Not yet implemented." );
+	
+      addField( "updateBasetex", TypeBool, Offset( mUpdateBasetex, TerrainBlock ), "Whether or not to update the Base Texture" );
 
    endGroup( "Misc" );
 
+   addGroup("AFX");
+   addField("ignoreZodiacs",     TypeBool,      Offset(mIgnoreZodiacs,    TerrainBlock));
+   endGroup("AFX");
    Parent::initPersistFields();
 
    removeField( "scale" );
@@ -1170,12 +1342,6 @@ U32 TerrainBlock::packUpdate(NetConnection* con, U32 mask, BitStream *stream)
    if ( stream->writeFlag( mask & TransformMask ) )
       mathWrite( *stream, getTransform() );
 
-   if ( stream->writeFlag( mask & FileMask ) )
-   {
-      stream->write( mTerrFileName );
-      stream->write( mCRC );
-   }
-
    if ( stream->writeFlag( mask & SizeMask ) )
       stream->write( mSquareSize );
 
@@ -1187,12 +1353,21 @@ U32 TerrainBlock::packUpdate(NetConnection* con, U32 mask, BitStream *stream)
       stream->write( mLightMapSize );
    }
 
+   if ( stream->writeFlag( mask & FileMask ) )
+   {
+      stream->write(mCRC);
+      stream->writeString( mTerrainAsset.getAssetId() );
+   }
+
    stream->writeFlag( mask & HeightMapChangeMask );
 
    if ( stream->writeFlag( mask & MiscMask ) )
       stream->write( mScreenError );
 
    stream->writeInt(mBaseTexFormat, 32);
+	
+   stream->writeFlag(mUpdateBasetex);
+   stream->writeFlag(mIgnoreZodiacs);
 
    return retMask;
 }
@@ -1208,23 +1383,13 @@ void TerrainBlock::unpackUpdate(NetConnection* con, BitStream *stream)
       setTransform( mat );
    }
 
-   if ( stream->readFlag() ) // FileMask
-   {
-      FileName terrFile;
-      stream->read( &terrFile );
-      stream->read( &mCRC );
-
-      if ( isProperlyAdded() )
-         setFile( terrFile );
-      else
-         mTerrFileName = terrFile;
-   }
 
    if ( stream->readFlag() ) // SizeMask
       stream->read( &mSquareSize );
 
    mCastShadows = stream->readFlag();
 
+   bool baseTexSizeChanged = false;
    if ( stream->readFlag() ) // MaterialMask
    {
       U32 baseTexSize;
@@ -1232,8 +1397,7 @@ void TerrainBlock::unpackUpdate(NetConnection* con, BitStream *stream)
       if ( mBaseTexSize != baseTexSize )
       {
          mBaseTexSize = baseTexSize;
-         if ( isProperlyAdded() )
-            _updateBaseTexture( NONE );
+         baseTexSizeChanged = true;
       }
 
       U32 lightMapSize;
@@ -1249,6 +1413,17 @@ void TerrainBlock::unpackUpdate(NetConnection* con, BitStream *stream)
       }
    }
 
+   if (stream->readFlag()) // FileMask
+   {
+      stream->read(&mCRC);
+
+      char buffer[256];
+      stream->readString(buffer);
+      setTerrainAsset(StringTable->insert(buffer));
+   }
+   if (baseTexSizeChanged && isProperlyAdded())
+      _updateBaseTexture(NONE);
+
    if ( stream->readFlag() && isProperlyAdded() ) // HeightMapChangeMask
    {
       _updateBounds();
@@ -1262,6 +1437,9 @@ void TerrainBlock::unpackUpdate(NetConnection* con, BitStream *stream)
       stream->read( &mScreenError );
 
    mBaseTexFormat = (BaseTexFormat)stream->readInt(32);
+	
+   mUpdateBasetex = stream->readFlag();
+   mIgnoreZodiacs = stream->readFlag();
 }
 
 void TerrainBlock::getMinMaxHeight( F32 *minHeight, F32 *maxHeight ) const 
@@ -1272,9 +1450,33 @@ void TerrainBlock::getMinMaxHeight( F32 *minHeight, F32 *maxHeight ) const
    *maxHeight = fixedToFloat( sq->maxHeight );
 }
 
+void TerrainBlock::getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList)
+{
+   if (!mTerrainAsset.isNull())
+      usedAssetsList->push_back_unique(mTerrainAsset->getAssetId());
+}
 //-----------------------------------------------------------------------------
 // Console Methods
 //-----------------------------------------------------------------------------
+
+bool TerrainBlock::renameTerrainMaterial(StringTableEntry oldMatName, StringTableEntry newMatName)
+{
+   TerrainMaterial* newMat = TerrainMaterial::findOrCreate(newMatName);
+   if (!newMat)
+      return false;
+
+   U32 terrainMaterialCount = mFile->mMaterials.size();
+   for (U32 i = 0; i < terrainMaterialCount; i++)
+   {
+      if (mFile->mMaterials[i]->getInternalName() == oldMatName)
+      {
+         TerrainMaterial* oldMat = mFile->mMaterials[i];
+         mFile->mMaterials[i] = newMat;
+      }
+   }
+
+   return true;
+}
 
 DefineEngineMethod( TerrainBlock, save, bool, ( const char* fileName),,
 				   "@brief Saves the terrain block's terrain file to the specified file name.\n\n"
@@ -1284,20 +1486,35 @@ DefineEngineMethod( TerrainBlock, save, bool, ( const char* fileName),,
 				   "@return True if file save was successful, false otherwise")
 {
 	char filename[256];
-	dStrcpy(filename,fileName);
+	dStrcpy(filename,fileName,256);
    char *ext = dStrrchr(filename, '.');
    if (!ext || dStricmp(ext, ".ter") != 0)
-      dStrcat(filename, ".ter");
+      dStrcat(filename, ".ter", 256);
    return static_cast<TerrainBlock*>(object)->save(filename);
+}
+
+DefineEngineMethod(TerrainBlock, saveAsset, bool, (), ,
+   "@brief Saves the terrain block's terrain file to the specified file name.\n\n"
+
+   "@param fileName Name and path of file to save terrain data to.\n\n"
+
+   "@return True if file save was successful, false otherwise")
+{
+   return static_cast<TerrainBlock*>(object)->saveAsset();
+}
+
+DefineEngineMethod( TerrainBlock, setMaterialsDirty, void, (),, "")
+{
+   static_cast<TerrainBlock*>(object)->setMaterialsDirty();
 }
 
 //ConsoleMethod(TerrainBlock, save, bool, 3, 3, "(string fileName) - saves the terrain block's terrain file to the specified file name.")
 //{
 //   char filename[256];
-//   dStrcpy(filename,argv[2]);
+//   dStrcpy(filename,argv[2],256);
 //   char *ext = dStrrchr(filename, '.');
 //   if (!ext || dStricmp(ext, ".ter") != 0)
-//      dStrcat(filename, ".ter");
+//      dStrcat(filename, ".ter", 256);
 //   return static_cast<TerrainBlock*>(object)->save(filename);
 //}
 
@@ -1319,7 +1536,7 @@ ConsoleDocFragment _getTerrainHeight2(
    "bool getTerrainHeight( F32 x, F32 y);"
 );
 
-DefineConsoleFunction( getTerrainHeight, F32, (const char* ptOrX, const char* y), (""), "(Point2 pos) - gets the terrain height at the specified position."
+DefineEngineFunction( getTerrainHeight, F32, (const char* ptOrX, const char* y), (""), "(Point2 pos) - gets the terrain height at the specified position."
 				"@param pos The world space point, minus the z (height) value\n Can be formatted as either (\"x y\") or (x,y)\n"
 				"@return Returns the terrain height at the given point as an F32 value.\n"
 				"@hide")
@@ -1327,9 +1544,9 @@ DefineConsoleFunction( getTerrainHeight, F32, (const char* ptOrX, const char* y)
    F32 height = 0.0f;
 
    Point2F pos;
-   if(!dStrIsEmpty(ptOrX) && dStrIsEmpty(y))
+   if(!String::isEmpty(ptOrX) && String::isEmpty(y))
       dSscanf(ptOrX, "%f %f", &pos.x, &pos.y);
-   else if(!dStrIsEmpty(ptOrX) && !dStrIsEmpty(y))
+   else if(!String::isEmpty(ptOrX) && !String::isEmpty(y))
    {
       pos.x = dAtof(ptOrX);
       pos.y = dAtof(y);
@@ -1364,7 +1581,7 @@ ConsoleDocFragment _getTerrainHeightBelowPosition2(
    "bool getTerrainHeightBelowPosition( F32 x, F32 y);"
 );
 
-DefineConsoleFunction( getTerrainHeightBelowPosition, F32, (const char* ptOrX, const char* y, const char* z), ("", ""),
+DefineEngineFunction( getTerrainHeightBelowPosition, F32, (const char* ptOrX, const char* y, const char* z), ("", ""),
             "(Point3F pos) - gets the terrain height at the specified position."
 				"@param pos The world space point. Can be formatted as either (\"x y z\") or (x,y,z)\n"
 				"@note This function is useful if you simply want to grab the terrain height underneath an object.\n"
@@ -1374,9 +1591,9 @@ DefineConsoleFunction( getTerrainHeightBelowPosition, F32, (const char* ptOrX, c
 	F32 height = 0.0f;
 
    Point3F pos;
-   if(!dStrIsEmpty(ptOrX) && dStrIsEmpty(y) && dStrIsEmpty(z))
+   if(!String::isEmpty(ptOrX) && String::isEmpty(y) && String::isEmpty(z))
       dSscanf(ptOrX, "%f %f %f", &pos.x, &pos.y, &pos.z);
-   else if(!dStrIsEmpty(ptOrX) && !dStrIsEmpty(y) && !dStrIsEmpty(z))
+   else if(!String::isEmpty(ptOrX) && !String::isEmpty(y) && !String::isEmpty(z))
    {
       pos.x = dAtof(ptOrX);
       pos.y = dAtof(y);
@@ -1399,4 +1616,50 @@ DefineConsoleFunction( getTerrainHeightBelowPosition, F32, (const char* ptOrX, c
 	}
 	
 	return height;
+}
+const U16* TerrainBlock::getZodiacPrimitiveBuffer()
+{ 
+   if (!zode_primBuffer && !mIgnoreZodiacs)
+      TerrCell::createZodiacPrimBuffer(&zode_primBuffer);
+   return zode_primBuffer;
+}
+
+void TerrainBlock::deleteZodiacPrimitiveBuffer()
+{
+   if (zode_primBuffer != 0)
+   {
+      delete [] zode_primBuffer;
+      zode_primBuffer = 0;
+   }
+}
+
+DefineEngineMethod(TerrainBlock, getTerrain, String, (), , "Returns the terrain file used for this terrain block, either via the asset or the filename assigned, which ever is valid")
+{
+   return object->getTerrain(); 
+}
+DefineEngineMethod(TerrainBlock, getTerrainAsset, String, (), , "Returns the assetId used for this terrain block")
+{
+   return object->getTerrainAssetId();
+}
+DefineEngineMethod(TerrainBlock, setTerrain, bool, (const char* terrain), , "Terrain assignment.first tries asset then flat file.")
+{
+   return object->_setTerrain(StringTable->insert(terrain));
+}
+
+DefineEngineMethod(TerrainBlock, getTerrainMaterialCount, S32, (), , "Gets the number of terrain materials for this block")
+{
+   return object->getTerrainMaterialCount();
+}
+
+DefineEngineMethod(TerrainBlock, getTerrainMaterialName, const char*, (S32 index), , "Gets the number of terrain materials for this block")
+{
+   if (index < 0 || index >= object->getTerrainMaterialCount())
+      return StringTable->EmptyString();
+
+   return object->getTerrainMaterialName(index);
+}
+
+DefineEngineMethod(TerrainBlock, renameTerrainMaterial, bool, (const char* oldMaterialName, const char* newMaterialName), , "Updates the terrain material from the original to the new name in the file. Mostly used for import/conversions.")
+{
+   return object->renameTerrainMaterial(StringTable->insert(oldMaterialName), StringTable->insert(newMaterialName));
 }

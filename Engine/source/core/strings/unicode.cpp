@@ -103,13 +103,17 @@ struct UTF16Cache
       dMemcpy(mString, other.mString, mLength * sizeof(UTF16));
    }
 
-   void operator =(const UTF16Cache &other)
+   UTF16Cache & operator =(const UTF16Cache &other)
    {
-      delete [] mString;
+      if (&other != this)
+      {
+         delete [] mString;
 
-      mLength = other.mLength;
-      mString = new UTF16[mLength];
-      dMemcpy(mString, other.mString, mLength * sizeof(UTF16));
+         mLength = other.mLength;
+         mString = new UTF16[mLength];
+         dMemcpy(mString, other.mString, mLength * sizeof(UTF16));
+      }
+      return *this;
    }
 
    ~UTF16Cache()
@@ -232,8 +236,8 @@ U32 convertUTF16toUTF8DoubleNULL( const UTF16 *unistring, UTF8  *outbuffer, U32 
    }
 
    nCodeunits = getMin(nCodeunits,len - 1);
-   outbuffer[nCodeunits] = NULL;
-   outbuffer[nCodeunits+1] = NULL;
+   outbuffer[nCodeunits] = '\0';
+   outbuffer[nCodeunits+1] = '\0';
 
    PROFILE_END();
    return nCodeunits;
@@ -465,7 +469,7 @@ U32 oneUTF32toUTF8(const UTF32 codepoint, UTF8 *threeByteCodeunitBuf)
 
    //-----------------
    U8  mask = sgByteMask8LUT[0];            // 0011 1111
-   U8  marker = ( ~mask << 1);            // 1000 0000
+   U8  marker = ( ~static_cast<U32>(mask) << 1u);            // 1000 0000
    
    // Process the low order bytes, shifting the codepoint down 6 each pass.
    for( S32 i = bytecount-1; i > 0; i--)
@@ -477,7 +481,7 @@ U32 oneUTF32toUTF8(const UTF32 codepoint, UTF8 *threeByteCodeunitBuf)
    // Process the 1st byte. filter based on the # of expected bytes.
    mask = sgByteMask8LUT[bytecount];
    marker = ( ~mask << 1 );
-   threeByteCodeunitBuf[0] = marker | working & mask;
+   threeByteCodeunitBuf[0] = marker | (working & mask);
    
    PROFILE_END();
    return bytecount;

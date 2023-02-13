@@ -33,10 +33,11 @@ IMPLEMENT_CONOBJECT(RenderBinManager);
 
 
 RenderBinManager::RenderBinManager( const RenderInstType& ritype, F32 renderOrder, F32 processAddOrder ) :
-   mRenderInstType( ritype ),
-   mRenderOrder( renderOrder ),
    mProcessAddOrder( processAddOrder ),
-   mRenderPass( NULL )
+   mRenderOrder( renderOrder ),
+   mRenderInstType( ritype ),  
+   mRenderPass( NULL ),
+   mBasicOnly ( false )
 {
    VECTOR_SET_ASSOCIATION( mElementList );
    mElementList.reserve( 2048 );
@@ -51,6 +52,7 @@ ConsoleDocClass( RenderBinManager,
 
 void RenderBinManager::initPersistFields()
 {
+   docsURL;
    addField( "binType", TypeRealString, Offset(mRenderInstType.mName, RenderBinManager),
       "Sets the render bin type which limits what render instances are added to this bin." );
 
@@ -59,6 +61,9 @@ void RenderBinManager::initPersistFields()
 
    addField("processAddOrder", TypeF32, Offset(mProcessAddOrder, RenderBinManager),
       "Defines the order for adding instances in relation to other bins." );
+
+   addField( "basicOnly", TypeBool, Offset(mBasicOnly, RenderBinManager),
+      "Limites the render bin to basic lighting only." );
 
    Parent::initPersistFields();
 }
@@ -147,7 +152,7 @@ S32 FN_CDECL RenderBinManager::cmpKeyFunc(const void* p1, const void* p2)
    return ( test1 == 0 ) ? S32(mse1->key2) - S32(mse2->key2) : test1;
 }
 
-void RenderBinManager::setupSGData( MeshRenderInst *ri, SceneData &data )
+void RenderBinManager::setupSGData(MeshRenderInst *ri, SceneData &data)
 {
    PROFILE_SCOPE( RenderBinManager_setupSGData );
 
@@ -168,10 +173,21 @@ void RenderBinManager::setupSGData( MeshRenderInst *ri, SceneData &data )
    data.lightmap     = ri->lightmap;
    data.visibility   = ri->visibility;
    data.materialHint = ri->materialHint;
+   data.customShaderData.clear();
+   for (U32 i = 0; i < ri->mCustomShaderData.size(); i++)
+   {
+      data.customShaderData.push_back(&ri->mCustomShaderData[i]);
+   }
 }
 
 DefineEngineMethod( RenderBinManager, getBinType, const char*, (),,
    "Returns the bin type string." )
 {
    return object->getRenderInstType().getName();
+}
+
+DefineEngineMethod(RenderBinManager, getRenderOrder, F32, (), ,
+   "Returns the bin render order.")
+{
+   return object->getRenderOrder();
 }

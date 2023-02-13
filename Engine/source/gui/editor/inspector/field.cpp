@@ -45,11 +45,18 @@ ConsoleDocClass( GuiInspectorField,
 GuiInspectorField::GuiInspectorField( GuiInspector* inspector,
                                       GuiInspectorGroup* parent, 
                                       AbstractClassRep::Field* field ) 
- : mInspector( inspector ),
-   mParent( parent ), 
+ : mParent( parent ),
+   mInspector( inspector ),
    mField( field ), 
    mFieldArrayIndex( NULL ), 
-   mEdit( NULL )
+   mEdit( NULL ),
+   mTargetObject(NULL),
+   mUseHeightOverride(false),
+   mHighlighted(false),
+   mHeightOverride(18),
+   mSpecialEditField(false),
+   mVariableName(StringTable->EmptyString()),
+   mCallbackName(StringTable->EmptyString())
 {
    if( field != NULL )
       mCaption    = field->pFieldname;
@@ -66,13 +73,19 @@ GuiInspectorField::GuiInspectorField( GuiInspector* inspector,
 //-----------------------------------------------------------------------------
 
 GuiInspectorField::GuiInspectorField() 
- : mInspector( NULL ),
-   mParent( NULL ), 
+ : mParent( NULL ),
+   mInspector( NULL ),
+   mField( NULL ),
    mEdit( NULL ),
-   mField( NULL ), 
-   mFieldArrayIndex( NULL ),
    mCaption( StringTable->EmptyString() ),
-   mHighlighted( false )
+   mFieldArrayIndex( NULL ),
+   mHighlighted( false ),
+   mTargetObject(NULL),
+   mVariableName(StringTable->EmptyString()),
+   mCallbackName(StringTable->EmptyString()),
+   mSpecialEditField(false),
+   mUseHeightOverride(false),
+   mHeightOverride(18)
 {
    setCanSave( false );
 }
@@ -107,7 +120,12 @@ bool GuiInspectorField::onAdd()
    if ( mEdit == NULL )
       return false;
 
-   setBounds(0,0,100,18);
+   S32 fieldHeight = 18;
+
+   if (mUseHeightOverride)
+      fieldHeight = mHeightOverride;
+
+   setBounds(0,0,100, fieldHeight);
 
    // Add our edit as a child
    addObject( mEdit );
@@ -118,6 +136,7 @@ bool GuiInspectorField::onAdd()
    // Force our editField to set it's value
    updateValue();
 
+   Con::evaluatef("%d.edit = %d;", this->getId(), mEdit->getId());
    return true;
 }
 
@@ -244,6 +263,24 @@ void GuiInspectorField::onRightMouseUp( const GuiEvent &event )
 
 void GuiInspectorField::setData( const char* data, bool callbacks )
 {
+   if (mSpecialEditField)
+   {
+      if (mTargetObject != nullptr && mVariableName != StringTable->EmptyString())
+      {
+         mTargetObject->setDataField(mVariableName, NULL, data);
+
+         if (mCallbackName != StringTable->EmptyString())
+            Con::executef(mInspector, mCallbackName, mVariableName, data, mTargetObject);
+      }
+      else if (mVariableName != StringTable->EmptyString())
+      {
+         Con::setVariable(mVariableName, data);
+
+         if (mCallbackName != StringTable->EmptyString())
+            Con::executef(mInspector, mCallbackName, mVariableName, data);
+      }
+   }
+
    if( mField == NULL )
       return;
 
@@ -257,7 +294,19 @@ void GuiInspectorField::setData( const char* data, bool callbacks )
             
       for( U32 i = 0; i < numTargets; ++ i )
       {
-         SimObject* target = mInspector->getInspectObject( i );
+         //For now, for simplicity's sake, you can only edit the components in a simple edit
+         SimObject* target = NULL;
+         if (numTargets == 1)
+         {
+            target = mTargetObject;
+
+            if (!target)
+               target = mInspector->getInspectObject(i);
+         }
+         else
+         {
+            target = mInspector->getInspectObject(i);
+         }
          
          String oldValue = target->getDataField( mField->pFieldname, mFieldArrayIndex);
          
@@ -265,11 +314,14 @@ void GuiInspectorField::setData( const char* data, bool callbacks )
          
          String newValue = strData;
          S32 type= mField->type;
+         ConsoleValue evaluationResult;
          if( type == TypeS8 || type == TypeS32 || type == TypeF32 )
          {
             char buffer[ 2048 ];
             expandEscape( buffer, newValue );
-            newValue = Con::evaluatef( "%%f = \"%s\"; return ( %s );", oldValue.c_str(), buffer );
+            evaluationResult = Con::evaluatef("$f = \"%s\"; return ( %s );", oldValue.c_str(), buffer);
+            newValue = evaluationResult.getString();
+            Con::evaluatef("$f=0;");
          }
          else if(    type == TypeS32Vector
                   || type == TypeF32Vector
@@ -284,7 +336,8 @@ void GuiInspectorField::setData( const char* data, bool callbacks )
                   || type == TypeMatrixPosition
                   || type == TypeMatrixRotation
                   || type == TypeBox3F
-                  || type == TypeRectUV )
+                  || type == TypeRectUV
+                  || type == TypeRotationF)
          {
             //TODO: we should actually take strings into account and not chop things up between quotes
 
@@ -303,12 +356,13 @@ void GuiInspectorField::setData( const char* data, bool callbacks )
                char buffer[ 2048 ];
                expandEscape( buffer, newComponentExpr );
 
-               const char* newComponentVal = Con::evaluatef( "%%f = \"%s\"; %%v = \"%s\"; return ( %s );",
-                  oldComponentVal, oldValue.c_str(), buffer );
-               
+               evaluationResult = Con::evaluatef("$f = \"%s\"; $v = \"%s\"; return ( %s );",
+                  oldComponentVal, oldValue.c_str(), buffer);
+               Con::evaluatef("$f=0;$v=0;");
+
                if( !isFirst )
                   strNew.append( ' ' );
-               strNew.append( newComponentVal );
+               strNew.append( evaluationResult.getString() );
                
                isFirst = false;
             }
@@ -346,10 +400,31 @@ void GuiInspectorField::setData( const char* data, bool callbacks )
 
 const char* GuiInspectorField::getData( U32 inspectObjectIndex )
 {
-   if( mField == NULL )
-      return "";
+   if (!mSpecialEditField)
+   {
+      if (mField == NULL)
+         return "";
 
-   return mInspector->getInspectObject( inspectObjectIndex )->getDataField( mField->pFieldname, mFieldArrayIndex );
+      if (mTargetObject)
+         return mTargetObject->getDataField(mField->pFieldname, mFieldArrayIndex);
+
+      return mInspector->getInspectObject(inspectObjectIndex)->getDataField(mField->pFieldname, mFieldArrayIndex);
+   }
+   else
+   {
+      if (mTargetObject != nullptr && mVariableName != StringTable->EmptyString())
+      {
+         return mTargetObject->getDataField(mVariableName, NULL);
+      }
+      else if (mVariableName != StringTable->EmptyString())
+      {
+         return Con::getVariable(mVariableName);
+      }
+      else
+      {
+         return "";
+      }
+   }
 }
 
 //-----------------------------------------------------------------------------
@@ -482,6 +557,17 @@ void GuiInspectorField::setValue( StringTableEntry newValue )
 
 //-----------------------------------------------------------------------------
 
+void GuiInspectorField::setEditControl(GuiControl* editCtrl) 
+{ 
+   if (mEdit)
+      mEdit->deleteObject();
+
+   mEdit = editCtrl; 
+   addObject(mEdit);
+}
+
+//-----------------------------------------------------------------------------
+
 bool GuiInspectorField::updateRects()
 {
    S32 dividerPos, dividerMargin;
@@ -566,7 +652,7 @@ bool GuiInspectorField::hasSameValueInAllObjects()
       if( !value2 )
          value2 = "";
 
-      if( dStrcmp( value1, value2 ) != 0 )
+      if( String::compare( value1, value2 ) != 0 )
          return false;
    }
          
@@ -586,7 +672,10 @@ void GuiInspectorField::_executeSelectedCallback()
 void GuiInspectorField::_registerEditControl( GuiControl *ctrl )
 {
    char szName[512];
-   dSprintf( szName, 512, "IE_%s_%d_%s_Field", ctrl->getClassName(), mInspector->getInspectObject()->getId(), mCaption);
+   if(mInspector->getInspectObject() != nullptr)
+      dSprintf( szName, 512, "IE_%s_%d_%s_Field", ctrl->getClassName(), mInspector->getInspectObject()->getId(), mCaption);
+   else
+      dSprintf(szName, 512, "IE_%s_%s_Field", ctrl->getClassName(), mCaption);
 
    // Register the object
    ctrl->registerObject( szName );
@@ -609,6 +698,28 @@ void GuiInspectorField::_setFieldDocs( StringTableEntry docs )
    }
 }
 
+void GuiInspectorField::setHeightOverride(bool useOverride, U32 heightOverride)
+{
+   mUseHeightOverride = useOverride;
+
+   if (useOverride)
+      mHeightOverride = heightOverride;
+
+   S32 fieldHeight = 18;
+
+   if (mUseHeightOverride)
+      fieldHeight = mHeightOverride;
+
+   RectI bnds = getBounds();
+   setBounds(bnds.point.x, bnds.point.y, bnds.extent.x, fieldHeight);
+
+   // Calculate Caption and EditCtrl Rects
+   updateRects();
+
+   // Force our editField to set it's value
+   updateValue();
+}
+
 //=============================================================================
 //    Console Methods.
 //=============================================================================
@@ -616,49 +727,64 @@ void GuiInspectorField::_setFieldDocs( StringTableEntry docs )
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( GuiInspectorField, getInspector, S32, (), , "() - Return the GuiInspector to which this field belongs." )
+DefineEngineMethod( GuiInspectorField, getInspector, S32, (), , "() - Return the GuiInspector to which this field belongs." )
 {
    return object->getInspector()->getId();
 }
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( GuiInspectorField, getInspectedFieldName, const char*, (), , "() - Return the name of the field edited by this inspector field." )
+DefineEngineMethod( GuiInspectorField, getInspectedFieldName, const char*, (), , "() - Return the name of the field edited by this inspector field." )
 {
    return object->getFieldName();
 }
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( GuiInspectorField, getInspectedFieldType, const char*, (), , "() - Return the type of the field edited by this inspector field." )
+DefineEngineMethod( GuiInspectorField, getInspectedFieldType, const char*, (), , "() - Return the type of the field edited by this inspector field." )
 {
    return object->getFieldType();
 }
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( GuiInspectorField, apply, void, ( const char * newValue, bool callbacks ), (true), "( string newValue, bool callbacks=true ) - Set the field's value. Suppress callbacks for undo if callbacks=false." )
+DefineEngineMethod( GuiInspectorField, apply, void, ( const char * newValue, bool callbacks ), (true), "( string newValue, bool callbacks=true ) - Set the field's value. Suppress callbacks for undo if callbacks=false." )
 {
    object->setData( newValue, callbacks );
 }
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( GuiInspectorField, applyWithoutUndo, void, (const char * data), , "() - Set field value without recording undo (same as 'apply( value, false )')." )
+DefineEngineMethod( GuiInspectorField, applyWithoutUndo, void, (const char * data), , "() - Set field value without recording undo (same as 'apply( value, false )')." )
 {
    object->setData( data, false );
 }
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( GuiInspectorField, getData, const char*, (), , "() - Return the value currently displayed on the field." )
+DefineEngineMethod( GuiInspectorField, getData, const char*, (), , "() - Return the value currently displayed on the field." )
 {
    return object->getData();
 }
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( GuiInspectorField, reset, void, (), , "() - Reset to default value." )
+DefineEngineMethod( GuiInspectorField, reset, void, (), , "() - Reset to default value." )
 {
    object->resetData();
+}
+
+DefineEngineMethod(GuiInspectorField, setCaption, void, (String newCaption),, "() - Reset to default value.")
+{
+   object->setCaption(StringTable->insert(newCaption.c_str()));
+}
+
+DefineEngineMethod(GuiInspectorField, setHeightOverride, void, (bool useOverride, U32 heightOverride), , "")
+{
+   object->setHeightOverride(useOverride, heightOverride);
+}
+
+DefineEngineMethod(GuiInspectorField, setEditControl, void, (GuiControl* editCtrl), (nullAsType<GuiControl*>()), "() - Reset to default value.")
+{
+   object->setEditControl(editCtrl);
 }

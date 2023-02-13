@@ -20,6 +20,11 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+// Arcane-FX for MIT Licensed Open Source version of Torque 3D from GarageGames
+// Copyright (C) 2015 Faust Logic, Inc.
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+
 #include "platform/platform.h"
 #include "T3D/fx/explosion.h"
 
@@ -49,6 +54,8 @@
 #include "T3D/gameBase/gameProcess.h"
 #include "renderInstance/renderPassManager.h"
 #include "console/engineAPI.h"
+
+#include "sfx/sfxProfile.h"
 
 IMPLEMENT_CONOBJECT(Explosion);
 
@@ -218,18 +225,23 @@ ConsoleDocClass( ExplosionData,
 
 ExplosionData::ExplosionData()
 {
-   dtsFileName  = NULL;
    particleDensity = 10;
    particleRadius = 1.0f;
 
    faceViewer   = false;
 
-   soundProfile      = NULL;
+   INIT_ASSET(Sound);
+
+   //soundProfile      = NULL;
    particleEmitter   = NULL;
    particleEmitterId = 0;
 
    explosionScale.set(1.0f, 1.0f, 1.0f);
    playSpeed = 1.0f;
+
+   INIT_ASSET(ExplosionShape);
+
+   explosionAnimation = -1;
 
    dMemset( emitterList, 0, sizeof( emitterList ) );
    dMemset( emitterIDList, 0, sizeof( emitterIDList ) );
@@ -253,10 +265,6 @@ ExplosionData::ExplosionData()
    lifetimeMS = 1000;
    lifetimeVariance = 0;
    offset = 0.0f;
-
-   shockwave = NULL;
-   shockwaveID = 0;
-   shockwaveOnTerrain = false;
 
    shakeCamera = false;
    camShakeFreq.set( 10.0f, 10.0f, 10.0f );
@@ -285,140 +293,248 @@ ExplosionData::ExplosionData()
    lightNormalOffset = 0.1f;
 }
 
+//#define TRACK_EXPLOSION_DATA_CLONES
+
+#ifdef TRACK_EXPLOSION_DATA_CLONES
+static int explosion_data_clones = 0;
+#endif
+
+ExplosionData::ExplosionData(const ExplosionData& other, bool temp_clone) : GameBaseData(other, temp_clone)
+{
+#ifdef TRACK_EXPLOSION_DATA_CLONES
+   explosion_data_clones++;
+   if (explosion_data_clones == 1)
+      Con::errorf("ExplosionData -- Clones are on the loose!");
+#endif
+
+   faceViewer = other.faceViewer;
+   particleDensity = other.particleDensity;
+   particleRadius = other.particleRadius;
+   CLONE_ASSET(Sound);
+   particleEmitter = other.particleEmitter;
+   particleEmitterId = other.particleEmitterId; // -- for pack/unpack of particleEmitter ptr 
+   explosionScale = other.explosionScale;
+   playSpeed = other.playSpeed;
+   CLONE_ASSET(ExplosionShape);
+   explosionAnimation = other.explosionAnimation; // -- from explosionShape sequence "ambient"
+   dMemcpy( emitterList, other.emitterList, sizeof( emitterList ) );
+   dMemcpy( emitterIDList, other.emitterIDList, sizeof( emitterIDList ) ); // -- for pack/unpack of emitterList ptrs
+   dMemcpy( debrisList, other.debrisList, sizeof( debrisList ) );
+   dMemcpy( debrisIDList, other.debrisIDList, sizeof( debrisIDList ) ); // -- for pack/unpack of debrisList ptrs 
+   debrisThetaMin = other.debrisThetaMin;
+   debrisThetaMax = other.debrisThetaMax;
+   debrisPhiMin = other.debrisPhiMin;
+   debrisPhiMax = other.debrisPhiMax;
+   debrisNum = other.debrisNum;
+   debrisNumVariance = other.debrisNumVariance;
+   debrisVelocity = other.debrisVelocity;
+   debrisVelocityVariance = other.debrisVelocityVariance;
+   dMemcpy( explosionList, other.explosionList, sizeof( explosionList ) );
+   dMemcpy( explosionIDList, other.explosionIDList, sizeof( explosionIDList ) ); // -- for pack/unpack of explosionList ptrs
+   delayMS = other.delayMS;
+   delayVariance = other.delayVariance;
+   lifetimeMS = other.lifetimeMS;
+   lifetimeVariance = other.lifetimeVariance;
+   offset = other.offset;
+   dMemcpy( sizes, other.times, sizeof( sizes ) );
+   dMemcpy( times, other.times, sizeof( times ) );
+   shakeCamera = other.shakeCamera;
+   camShakeFreq = other.camShakeFreq;
+   camShakeAmp = other.camShakeAmp;
+   camShakeDuration = other.camShakeDuration;
+   camShakeRadius = other.camShakeRadius;
+   camShakeFalloff = other.camShakeFalloff;
+   lightStartRadius = other.lightStartRadius;
+   lightEndRadius = other.lightEndRadius;
+   lightStartColor = other.lightStartColor;
+   lightEndColor = other.lightEndColor;
+   lightStartBrightness = other.lightStartBrightness;
+   lightEndBrightness = other.lightEndBrightness;
+   lightNormalOffset = other.lightNormalOffset;
+   // Note - Explosion calls mDataBlock->getName() in warning messages but
+   //   that should be safe.
+}
+
+ExplosionData::~ExplosionData()
+{
+   if (!isTempClone())
+      return;
+
+   // particleEmitter, emitterList[*], debrisList[*], explosionList[*] will delete themselves
+
+#ifdef TRACK_EXPLOSION_DATA_CLONES
+   if (explosion_data_clones > 0)
+   {
+      explosion_data_clones--;
+      if (explosion_data_clones == 0)
+         Con::errorf("ExplosionData -- Clones eliminated!");
+   }
+   else
+      Con::errorf("ExplosionData -- Too many clones deleted!");
+#endif
+}
+
+ExplosionData* ExplosionData::cloneAndPerformSubstitutions(const SimObject* owner, S32 index)
+{
+   if (!owner || getSubstitutionCount() == 0)
+      return this;
+
+   ExplosionData* sub_explosion_db = new ExplosionData(*this, true);
+   performSubstitutions(sub_explosion_db, owner, index);
+
+   return sub_explosion_db;
+}
+
 void ExplosionData::initPersistFields()
 {
-   addField( "explosionShape", TypeShapeFilename, Offset(dtsFileName, ExplosionData),
-      "@brief Optional DTS or DAE shape to place at the center of the explosion.\n\n"
-      "The <i>ambient</i> animation of this model will be played automatically at "
-      "the start of the explosion." );
-   addField( "explosionScale", TypePoint3F, Offset(explosionScale, ExplosionData),
+   docsURL;
+   addGroup("Shapes");
+      INITPERSISTFIELD_SHAPEASSET(ExplosionShape, ExplosionData, "@brief Optional shape asset to place at the center of the explosion.\n\n"
+         "The <i>ambient</i> animation of this model will be played automatically at the start of the explosion.");
+   endGroup("Shapes");
+
+   addGroup("Sounds");
+      INITPERSISTFIELD_SOUNDASSET(Sound, ExplosionData, "Sound to play when this explosion explodes.");
+   endGroup("Sounds");
+
+   addGroup("Particle Effects");
+      addField( "faceViewer", TypeBool, Offset(faceViewer, ExplosionData),
+         "Controls whether the visual effects of the explosion always face the camera." );
+
+      addField( "particleEmitter", TYPEID< ParticleEmitterData >(), Offset(particleEmitter, ExplosionData),
+         "@brief Emitter used to generate a cloud of particles at the start of the explosion.\n\n"
+         "Explosions can generate two different particle effects. The first is a "
+         "single burst of particles at the start of the explosion emitted in a "
+         "spherical cloud using particleEmitter.\n\n"
+         "The second effect spawns the list of ParticleEmitters given by the emitter[] "
+         "field. These emitters generate particles in the normal way throughout the "
+         "lifetime of the explosion." );
+      addField( "particleDensity", TypeS32, Offset(particleDensity, ExplosionData),
+         "@brief Density of the particle cloud created at the start of the explosion.\n\n"
+         "@see particleEmitter" );
+      addField( "particleRadius", TypeF32, Offset(particleRadius, ExplosionData),
+         "@brief Radial distance from the explosion center at which cloud particles "
+         "are emitted.\n\n"
+         "@see particleEmitter" );
+      addField( "emitter", TYPEID< ParticleEmitterData >(), Offset(emitterList, ExplosionData), EC_NUM_EMITTERS,
+         "@brief List of additional ParticleEmitterData objects to spawn with this "
+         "explosion.\n\n"
+         "@see particleEmitter" );
+   endGroup("Particle Effects");
+
+   addGroup("Debris");
+      addField( "debris", TYPEID< DebrisData >(), Offset(debrisList, ExplosionData), EC_NUM_DEBRIS_TYPES,
+         "List of DebrisData objects to spawn with this explosion." );
+      addField( "debrisThetaMin", TypeF32, Offset(debrisThetaMin, ExplosionData),
+         "Minimum angle, from the horizontal plane, to eject debris from." );
+      addField( "debrisThetaMax", TypeF32, Offset(debrisThetaMax, ExplosionData),
+         "Maximum angle, from the horizontal plane, to eject debris from." );
+      addField( "debrisPhiMin", TypeF32, Offset(debrisPhiMin, ExplosionData),
+         "Minimum reference angle, from the vertical plane, to eject debris from." );
+      addField( "debrisPhiMax", TypeF32, Offset(debrisPhiMax, ExplosionData),
+         "Maximum reference angle, from the vertical plane, to eject debris from." );
+      addField( "debrisNum", TypeS32, Offset(debrisNum, ExplosionData),
+         "Number of debris objects to create." );
+      addField( "debrisNumVariance", TypeS32, Offset(debrisNumVariance, ExplosionData),
+         "Variance in the number of debris objects to create (must be from 0 - debrisNum)." );
+      addField( "debrisVelocity", TypeF32, Offset(debrisVelocity, ExplosionData),
+         "Velocity to toss debris at." );
+      addField( "debrisVelocityVariance", TypeF32, Offset(debrisVelocityVariance, ExplosionData),
+         "Variance in the debris initial velocity (must be >= 0)." );
+      addField( "subExplosion", TYPEID< ExplosionData >(), Offset(explosionList, ExplosionData), EC_MAX_SUB_EXPLOSIONS,
+         "List of additional ExplosionData objects to create at the start of the explosion." );
+   endGroup("Debris");
+
+
+   addGroup("Animation");
+      addField("explosionScale", TypePoint3F, Offset(explosionScale, ExplosionData),
       "\"X Y Z\" scale factor applied to the explosionShape model at the start "
-      "of the explosion." );
-   addField( "playSpeed", TypeF32, Offset(playSpeed, ExplosionData),
-      "Time scale at which to play the explosionShape <i>ambient</i> sequence." );
-   addField( "soundProfile", TYPEID< SFXTrack >(), Offset(soundProfile, ExplosionData),
-      "Non-looping sound effect that will be played at the start of the explosion." );
-   addField( "faceViewer", TypeBool, Offset(faceViewer, ExplosionData),
-      "Controls whether the visual effects of the explosion always face the camera." );
+      "of the explosion.");
+       addField("playSpeed", TypeF32, Offset(playSpeed, ExplosionData),
+          "Time scale at which to play the explosionShape <i>ambient</i> sequence.");
 
-   addField( "particleEmitter", TYPEID< ParticleEmitterData >(), Offset(particleEmitter, ExplosionData),
-      "@brief Emitter used to generate a cloud of particles at the start of the explosion.\n\n"
-      "Explosions can generate two different particle effects. The first is a "
-      "single burst of particles at the start of the explosion emitted in a "
-      "spherical cloud using particleEmitter.\n\n"
-      "The second effect spawns the list of ParticleEmitters given by the emitter[] "
-      "field. These emitters generate particles in the normal way throughout the "
-      "lifetime of the explosion." );
-   addField( "particleDensity", TypeS32, Offset(particleDensity, ExplosionData),
-      "@brief Density of the particle cloud created at the start of the explosion.\n\n"
-      "@see particleEmitter" );
-   addField( "particleRadius", TypeF32, Offset(particleRadius, ExplosionData),
-      "@brief Radial distance from the explosion center at which cloud particles "
-      "are emitted.\n\n"
-      "@see particleEmitter" );
-   addField( "emitter", TYPEID< ParticleEmitterData >(), Offset(emitterList, ExplosionData), EC_NUM_EMITTERS,
-      "@brief List of additional ParticleEmitterData objects to spawn with this "
-      "explosion.\n\n"
-      "@see particleEmitter" );
+      addField( "delayMS", TypeS32, Offset(delayMS, ExplosionData),
+         "Amount of time, in milliseconds, to delay the start of the explosion effect "
+         "from the creation of the Explosion object." );
+      addField( "delayVariance", TypeS32, Offset(delayVariance, ExplosionData),
+         "Variance, in milliseconds, of delayMS." );
+      addField( "lifetimeMS", TypeS32, Offset(lifetimeMS, ExplosionData),
+         "@brief Lifetime, in milliseconds, of the Explosion object.\n\n"
+         "@note If explosionShape is defined and contains an <i>ambient</i> animation, "
+         "this field is ignored, and the playSpeed scaled duration of the animation "
+         "is used instead." );
+      addField( "lifetimeVariance", TypeS32, Offset(lifetimeVariance, ExplosionData),
+         "Variance, in milliseconds, of the lifetimeMS of the Explosion object.\n" );
+      addField( "offset", TypeF32, Offset(offset, ExplosionData),
+         "@brief Offset distance (in a random direction) of the center of the explosion "
+         "from the Explosion object position.\n\n"
+         "Most often used to create some variance in position for subExplosion effects." );
 
-//   addField( "shockwave", TypeShockwaveDataPtr, Offset(shockwave, ExplosionData) );
-//   addField( "shockwaveOnTerrain", TypeBool, Offset(shockwaveOnTerrain, ExplosionData) );
+      addField( "times", TypeF32, Offset(times, ExplosionData), EC_NUM_TIME_KEYS,
+         "@brief Time keyframes used to scale the explosionShape model.\n\n"
+         "Values should be in increasing order from 0.0 - 1.0, and correspond to "
+         "the life of the Explosion where 0 is the beginning and 1 is the end of "
+         "the explosion lifetime.\n"
+         "@see lifetimeMS" );
+      addField( "sizes", TypePoint3F, Offset(sizes, ExplosionData), EC_NUM_TIME_KEYS,
+         "@brief \"X Y Z\" size keyframes used to scale the explosionShape model.\n\n"
+         "The explosionShape (if defined) will be scaled using the times/sizes "
+         "keyframes over the lifetime of the explosion.\n"
+         "@see lifetimeMS" );
+   endGroup("Animation");
 
-   addField( "debris", TYPEID< DebrisData >(), Offset(debrisList, ExplosionData), EC_NUM_DEBRIS_TYPES,
-      "List of DebrisData objects to spawn with this explosion." );
-   addField( "debrisThetaMin", TypeF32, Offset(debrisThetaMin, ExplosionData),
-      "Minimum angle, from the horizontal plane, to eject debris from." );
-   addField( "debrisThetaMax", TypeF32, Offset(debrisThetaMax, ExplosionData),
-      "Maximum angle, from the horizontal plane, to eject debris from." );
-   addField( "debrisPhiMin", TypeF32, Offset(debrisPhiMin, ExplosionData),
-      "Minimum reference angle, from the vertical plane, to eject debris from." );
-   addField( "debrisPhiMax", TypeF32, Offset(debrisPhiMax, ExplosionData),
-      "Maximum reference angle, from the vertical plane, to eject debris from." );
-   addField( "debrisNum", TypeS32, Offset(debrisNum, ExplosionData),
-      "Number of debris objects to create." );
-   addField( "debrisNumVariance", TypeS32, Offset(debrisNumVariance, ExplosionData),
-      "Variance in the number of debris objects to create (must be from 0 - debrisNum)." );
-   addField( "debrisVelocity", TypeF32, Offset(debrisVelocity, ExplosionData),
-      "Velocity to toss debris at." );
-   addField( "debrisVelocityVariance", TypeF32, Offset(debrisVelocityVariance, ExplosionData),
-      "Variance in the debris initial velocity (must be >= 0)." );
+   addGroup("Camera Shake");
+      addField( "shakeCamera", TypeBool, Offset(shakeCamera, ExplosionData),
+         "Controls whether the camera shakes during this explosion." );
+      addField( "camShakeFreq", TypePoint3F, Offset(camShakeFreq, ExplosionData),
+         "Frequency of camera shaking, defined in the \"X Y Z\" axes." );
+      addField( "camShakeAmp", TypePoint3F, Offset(camShakeAmp, ExplosionData),
+         "@brief Amplitude of camera shaking, defined in the \"X Y Z\" axes.\n\n"
+         "Set any value to 0 to disable shaking in that axis." );
+      addField( "camShakeDuration", TypeF32, Offset(camShakeDuration, ExplosionData),
+         "Duration (in seconds) to shake the camera." );
+      addField( "camShakeRadius", TypeF32, Offset(camShakeRadius, ExplosionData),
+         "Radial distance that a camera's position must be within relative to the "
+         "center of the explosion to be shaken." );
+      addField( "camShakeFalloff", TypeF32, Offset(camShakeFalloff, ExplosionData),
+         "Falloff value for the camera shake." );
+   endGroup("Camera Shake");
 
-   addField( "subExplosion", TYPEID< ExplosionData >(), Offset(explosionList, ExplosionData), EC_MAX_SUB_EXPLOSIONS,
-      "List of additional ExplosionData objects to create at the start of the "
-      "explosion." );
+   addGroup("Light Emitter");
+      addField( "lightStartRadius", TypeF32, Offset(lightStartRadius, ExplosionData),
+         "@brief Initial radius of the PointLight created by this explosion.\n\n"
+         "Radius is linearly interpolated from lightStartRadius to lightEndRadius "
+         "over the lifetime of the explosion.\n"
+         "@see lifetimeMS" );
+      addField( "lightEndRadius", TypeF32, Offset(lightEndRadius, ExplosionData),
+         "@brief Final radius of the PointLight created by this explosion.\n\n"
+         "@see lightStartRadius" );
+      addField( "lightStartColor", TypeColorF, Offset(lightStartColor, ExplosionData),
+         "@brief Initial color of the PointLight created by this explosion.\n\n"
+         "Color is linearly interpolated from lightStartColor to lightEndColor "
+         "over the lifetime of the explosion.\n"
+         "@see lifetimeMS" );
+      addField( "lightEndColor", TypeColorF, Offset(lightEndColor, ExplosionData),
+         "@brief Final color of the PointLight created by this explosion.\n\n"
+         "@see lightStartColor" );
+      addField( "lightStartBrightness", TypeF32, Offset(lightStartBrightness, ExplosionData),
+         "@brief Initial brightness of the PointLight created by this explosion.\n\n"
+         "Brightness is linearly interpolated from lightStartBrightness to "
+         "lightEndBrightness over the lifetime of the explosion.\n"
+         "@see lifetimeMS" );
+      addField("lightEndBrightness", TypeF32, Offset(lightEndBrightness, ExplosionData),
+         "@brief Final brightness of the PointLight created by this explosion.\n\n"
+         "@see lightStartBrightness" );
+      addField( "lightNormalOffset", TypeF32, Offset(lightNormalOffset, ExplosionData),
+         "Distance (in the explosion normal direction) of the PointLight position "
+         "from the explosion center." );
+   endGroup("Light Emitter");
 
-   addField( "delayMS", TypeS32, Offset(delayMS, ExplosionData),
-      "Amount of time, in milliseconds, to delay the start of the explosion effect "
-      "from the creation of the Explosion object." );
-   addField( "delayVariance", TypeS32, Offset(delayVariance, ExplosionData),
-      "Variance, in milliseconds, of delayMS." );
-   addField( "lifetimeMS", TypeS32, Offset(lifetimeMS, ExplosionData),
-      "@brief Lifetime, in milliseconds, of the Explosion object.\n\n"
-      "@note If explosionShape is defined and contains an <i>ambient</i> animation, "
-      "this field is ignored, and the playSpeed scaled duration of the animation "
-      "is used instead." );
-   addField( "lifetimeVariance", TypeS32, Offset(lifetimeVariance, ExplosionData),
-      "Variance, in milliseconds, of the lifetimeMS of the Explosion object.\n" );
-   addField( "offset", TypeF32, Offset(offset, ExplosionData),
-      "@brief Offset distance (in a random direction) of the center of the explosion "
-      "from the Explosion object position.\n\n"
-      "Most often used to create some variance in position for subExplosion effects." );
-
-   addField( "times", TypeF32, Offset(times, ExplosionData), EC_NUM_TIME_KEYS,
-      "@brief Time keyframes used to scale the explosionShape model.\n\n"
-      "Values should be in increasing order from 0.0 - 1.0, and correspond to "
-      "the life of the Explosion where 0 is the beginning and 1 is the end of "
-      "the explosion lifetime.\n"
-      "@see lifetimeMS" );
-   addField( "sizes", TypePoint3F, Offset(sizes, ExplosionData), EC_NUM_TIME_KEYS,
-      "@brief \"X Y Z\" size keyframes used to scale the explosionShape model.\n\n"
-      "The explosionShape (if defined) will be scaled using the times/sizes "
-      "keyframes over the lifetime of the explosion.\n"
-      "@see lifetimeMS" );
-
-   addField( "shakeCamera", TypeBool, Offset(shakeCamera, ExplosionData),
-      "Controls whether the camera shakes during this explosion." );
-   addField( "camShakeFreq", TypePoint3F, Offset(camShakeFreq, ExplosionData),
-      "Frequency of camera shaking, defined in the \"X Y Z\" axes." );
-   addField( "camShakeAmp", TypePoint3F, Offset(camShakeAmp, ExplosionData),
-      "@brief Amplitude of camera shaking, defined in the \"X Y Z\" axes.\n\n"
-      "Set any value to 0 to disable shaking in that axis." );
-   addField( "camShakeDuration", TypeF32, Offset(camShakeDuration, ExplosionData),
-      "Duration (in seconds) to shake the camera." );
-   addField( "camShakeRadius", TypeF32, Offset(camShakeRadius, ExplosionData),
-      "Radial distance that a camera's position must be within relative to the "
-      "center of the explosion to be shaken." );
-   addField( "camShakeFalloff", TypeF32, Offset(camShakeFalloff, ExplosionData),
-      "Falloff value for the camera shake." );
-
-   addField( "lightStartRadius", TypeF32, Offset(lightStartRadius, ExplosionData),
-      "@brief Initial radius of the PointLight created by this explosion.\n\n"
-      "Radius is linearly interpolated from lightStartRadius to lightEndRadius "
-      "over the lifetime of the explosion.\n"
-      "@see lifetimeMS" );
-   addField( "lightEndRadius", TypeF32, Offset(lightEndRadius, ExplosionData),
-      "@brief Final radius of the PointLight created by this explosion.\n\n"
-      "@see lightStartRadius" );
-   addField( "lightStartColor", TypeColorF, Offset(lightStartColor, ExplosionData),
-      "@brief Initial color of the PointLight created by this explosion.\n\n"
-      "Color is linearly interpolated from lightStartColor to lightEndColor "
-      "over the lifetime of the explosion.\n"
-      "@see lifetimeMS" );
-   addField( "lightEndColor", TypeColorF, Offset(lightEndColor, ExplosionData),
-      "@brief Final color of the PointLight created by this explosion.\n\n"
-      "@see lightStartColor" );
-   addField( "lightStartBrightness", TypeF32, Offset(lightStartBrightness, ExplosionData),
-      "@brief Initial brightness of the PointLight created by this explosion.\n\n"
-      "Brightness is linearly interpolated from lightStartBrightness to "
-      "lightEndBrightness over the lifetime of the explosion.\n"
-      "@see lifetimeMS" );
-   addField("lightEndBrightness", TypeF32, Offset(lightEndBrightness, ExplosionData),
-      "@brief Final brightness of the PointLight created by this explosion.\n\n"
-      "@see lightStartBrightness" );
-   addField( "lightNormalOffset", TypeF32, Offset(lightNormalOffset, ExplosionData),
-      "Distance (in the explosion normal direction) of the PointLight position "
-      "from the explosion center." );
-
+   // disallow some field substitutions
+   onlyKeepClearSubstitutions("debris"); // subs resolving to "~~", or "~0" are OK
+   onlyKeepClearSubstitutions("emitter");
+   onlyKeepClearSubstitutions("particleEmitter");
+   onlyKeepClearSubstitutions("subExplosion");
    Parent::initPersistFields();
 }
 
@@ -548,9 +664,11 @@ void ExplosionData::packData(BitStream* stream)
 {
    Parent::packData(stream);
 
-   stream->writeString(dtsFileName);
+   PACKDATA_ASSET(ExplosionShape);
 
-   sfxWrite( stream, soundProfile );
+   //PACKDATA_SOUNDASSET(Sound);
+   PACKDATA_ASSET(Sound);
+
    if (stream->writeFlag(particleEmitter))
       stream->writeRangedU32(particleEmitter->getId(),DataBlockObjectIdFirst,DataBlockObjectIdLast);
 
@@ -651,9 +769,9 @@ void ExplosionData::unpackData(BitStream* stream)
 {
 	Parent::unpackData(stream);
 
-   dtsFileName = stream->readSTString();
+   UNPACKDATA_ASSET(ExplosionShape);
 
-   sfxRead( stream, &soundProfile );
+   UNPACKDATA_ASSET(Sound);
 
    if (stream->readFlag())
       particleEmitterId = stream->readRangedU32(DataBlockObjectIdFirst, DataBlockObjectIdLast);
@@ -755,33 +873,39 @@ bool ExplosionData::preload(bool server, String &errorStr)
 {
    if (Parent::preload(server, errorStr) == false)
       return false;
-      
+
    if( !server )
    {
-      String sfxErrorStr;
-      if( !sfxResolve( &soundProfile, sfxErrorStr ) )
-         Con::errorf(ConsoleLogEntry::General, "Error, unable to load sound profile for explosion datablock: %s", sfxErrorStr.c_str());
-      if (!particleEmitter && particleEmitterId != 0)
-         if (Sim::findObject(particleEmitterId, particleEmitter) == false)
-            Con::errorf(ConsoleLogEntry::General, "Error, unable to load particle emitter for explosion datablock");
-   }
 
-   if (dtsFileName && dtsFileName[0]) {
-      explosionShape = ResourceManager::get().load(dtsFileName);
-      if (!bool(explosionShape)) {
-         errorStr = String::ToString("ExplosionData: Couldn't load shape \"%s\"", dtsFileName);
-         return false;
+      if (getSound() != StringTable->EmptyString())
+      {
+         _setSound(getSound());
+
+         if (!getSoundProfile())
+         {
+            Con::errorf(ConsoleLogEntry::General, "SplashData::preload: Cant get an sfxProfile for splash.");
+            return false;
+         }
       }
 
+      if (!particleEmitter && particleEmitterId != 0)
+         if (Sim::findObject(particleEmitterId, particleEmitter) == false)
+         {
+            Con::errorf(ConsoleLogEntry::General, "Error, unable to load particle emitter for explosion datablock");
+            return false;
+         }
+   }
+
+   if (mExplosionShapeAsset.notNull()) {
+
       // Resolve animations
-      explosionAnimation = explosionShape->findSequence("ambient");
+      explosionAnimation = mExplosionShape->findSequence("ambient");
 
       // Preload textures with a dummy instance...
-      TSShapeInstance* pDummy = new TSShapeInstance(explosionShape, !server);
+      TSShapeInstance* pDummy = new TSShapeInstance(mExplosionShape, !server);
       delete pDummy;
 
    } else {
-      explosionShape     = NULL;
       explosionAnimation = -1;
    }
 
@@ -815,6 +939,11 @@ Explosion::Explosion()
    mLight = LIGHTMGR->createLightInfo();
 
    mNetFlags.set( IsGhost );
+   ss_object = 0;
+   ss_index = 0;
+   mDataBlock = 0;
+   soundProfile_clone = 0;
+   mRandomVal = 0;
 }
 
 Explosion::~Explosion()
@@ -827,6 +956,18 @@ Explosion::~Explosion()
    }
    
    SAFE_DELETE(mLight);
+   
+   if (soundProfile_clone)
+   { 
+      delete soundProfile_clone;
+      soundProfile_clone = 0;
+   }
+
+   if (mDataBlock && mDataBlock->isTempClone())
+   { 
+      delete mDataBlock;
+      mDataBlock = 0;
+   }
 }
 
 
@@ -840,8 +981,9 @@ void Explosion::setInitialState(const Point3F& point, const Point3F& normal, con
 //--------------------------------------------------------------------------
 void Explosion::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
-
+   addField("initialNormal", TypePoint3F, Offset(mInitialNormal, Explosion), "Initial starting Normal.");
    //
 }
 
@@ -985,6 +1127,8 @@ bool Explosion::onNewDataBlock( GameBaseData *dptr, bool reload )
    if (!mDataBlock || !Parent::onNewDataBlock( dptr, reload ))
       return false;
 
+   if (mDataBlock->isTempClone())
+      return true;
    scriptOnNewDataBlock();
    return true;
 }
@@ -1197,7 +1341,8 @@ void Explosion::launchDebris( Point3F &axis )
       launchDir *= debrisVel;
 
       Debris *debris = new Debris;
-      debris->setDataBlock( mDataBlock->debrisList[0] );
+      debris->setSubstitutionData(ss_object, ss_index);
+      debris->setDataBlock(mDataBlock->debrisList[0]->cloneAndPerformSubstitutions(ss_object, ss_index));
       debris->setTransform( getTransform() );
       debris->init( pos, launchDir );
 
@@ -1225,7 +1370,8 @@ void Explosion::spawnSubExplosions()
       {
          MatrixF trans = getTransform();
          Explosion* pExplosion = new Explosion;
-         pExplosion->setDataBlock( mDataBlock->explosionList[i] );
+         pExplosion->setSubstitutionData(ss_object, ss_index);
+         pExplosion->setDataBlock(mDataBlock->explosionList[i]->cloneAndPerformSubstitutions(ss_object, ss_index));
          pExplosion->setTransform( trans );
          pExplosion->setInitialState( trans.getPosition(), mInitialNormal, 1);
          if (!pExplosion->registerObject())
@@ -1248,8 +1394,8 @@ bool Explosion::explode()
    launchDebris( mInitialNormal );
    spawnSubExplosions();
 
-   if (bool(mDataBlock->explosionShape) && mDataBlock->explosionAnimation != -1) {
-      mExplosionInstance = new TSShapeInstance(mDataBlock->explosionShape, true);
+   if (bool(mDataBlock->mExplosionShape) && mDataBlock->explosionAnimation != -1) {
+      mExplosionInstance = new TSShapeInstance(mDataBlock->mExplosionShape, true);
 
       mExplosionThread   = mExplosionInstance->addThread();
       mExplosionInstance->setSequence(mExplosionThread, mDataBlock->explosionAnimation, 0);
@@ -1259,16 +1405,22 @@ bool Explosion::explode()
       mEndingMS = U32(mExplosionInstance->getScaledDuration(mExplosionThread) * 1000.0f);
 
       mObjScale.convolve(mDataBlock->explosionScale);
-      mObjBox = mDataBlock->explosionShape->bounds;
+      mObjBox = mDataBlock->mExplosionShape->mBounds;
       resetWorldBox();
    }
 
-   if (mDataBlock->soundProfile)
-      SFX->playOnce( mDataBlock->soundProfile, &getTransform() );
+   SFXProfile* sound_prof = mDataBlock->getSoundProfile();
+   if (sound_prof)
+   {
+      soundProfile_clone = sound_prof->cloneAndPerformSubstitutions(ss_object, ss_index);
+      SFX->playOnce( soundProfile_clone, &getTransform() );
+      if (!soundProfile_clone->isTempClone())
+         soundProfile_clone = 0;
+   }
 
    if (mDataBlock->particleEmitter) {
       mMainEmitter = new ParticleEmitter;
-      mMainEmitter->setDataBlock(mDataBlock->particleEmitter);
+      mMainEmitter->setDataBlock(mDataBlock->particleEmitter->cloneAndPerformSubstitutions(ss_object, ss_index));
       mMainEmitter->registerObject();
 
       mMainEmitter->emitParticles(getPosition(), mInitialNormal, mDataBlock->particleRadius,
@@ -1280,7 +1432,7 @@ bool Explosion::explode()
       if( mDataBlock->emitterList[i] != NULL )
       {
          ParticleEmitter * pEmitter = new ParticleEmitter;
-         pEmitter->setDataBlock( mDataBlock->emitterList[i] );
+         pEmitter->setDataBlock(mDataBlock->emitterList[i]->cloneAndPerformSubstitutions(ss_object, ss_index));
          if( !pEmitter->registerObject() )
          {
             Con::warnf( ConsoleLogEntry::General, "Could not register emitter for particle of class: %s", mDataBlock->getName() );

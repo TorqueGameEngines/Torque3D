@@ -42,8 +42,9 @@ LangFile::LangFile(const UTF8 *langName /* = NULL */)
 
 	if(langName)
 	{
-		mLangName = new UTF8 [dStrlen(langName) + 1];
-		dStrcpy(mLangName, langName);
+		dsize_t langNameLen = dStrlen(langName) + 1;
+		mLangName = new UTF8 [langNameLen];
+		dStrcpy(mLangName, langName, langNameLen);
 	}
 	else
 		mLangName = NULL;
@@ -86,15 +87,16 @@ bool LangFile::load(const UTF8 *filename)
 
 bool LangFile::load(Stream *s)
 {
-	freeTable();
-	
-	while(s->getStatus() != Stream::EOS)
-	{
-		char buf[256];
-		s->readString(buf);
-		addString((const UTF8*)buf);
-	}
-	return true;
+   freeTable();
+
+   while (s->getStatus() == Stream::Ok)
+   {
+      char buf[2048];
+      s->readLongString(2048, buf);
+      if (s->getStatus() == Stream::Ok)
+         addString((const UTF8*)buf);
+   }
+   return true;
 }
 
 bool LangFile::save(const UTF8 *filename)
@@ -115,15 +117,15 @@ bool LangFile::save(const UTF8 *filename)
 
 bool LangFile::save(Stream *s)
 {
-	if(!isLoaded())
-		return false;
-	
-	U32 i;
-	for(i = 0;i < mStringTable.size();i++)
-	{
-		s->writeString((char*)mStringTable[i]);
-	}
-	return true;
+   if (!isLoaded())
+      return false;
+
+   U32 i;
+   for (i = 0; i < mStringTable.size(); i++)
+   {
+      s->writeLongString(2048, (char*)mStringTable[i]); //irei1as_ lang
+   }
+   return true;
 }
 
 const UTF8 * LangFile::getString(U32 id)
@@ -135,8 +137,9 @@ const UTF8 * LangFile::getString(U32 id)
 
 U32 LangFile::addString(const UTF8 *str)
 {
-	UTF8 *newstr = new UTF8 [dStrlen(str) + 1];
-	dStrcpy(newstr, str);
+	dsize_t newstrLen = dStrlen(str) + 1;
+	UTF8 *newstr = new UTF8 [newstrLen];
+	dStrcpy(newstr, str, newstrLen);
 	mStringTable.push_back(newstr);
 	return mStringTable.size() - 1;
 }
@@ -155,8 +158,9 @@ void LangFile::setString(U32 id, const UTF8 *str)
 
    SAFE_DELETE_ARRAY(mStringTable[id]);
 
-	UTF8 *newstr = new UTF8 [dStrlen(str) + 1];
-	dStrcpy(newstr, str);
+	dsize_t newstrLen = dStrlen(str) + 1;
+	UTF8 *newstr = new UTF8 [newstrLen];
+	dStrcpy(newstr, str, newstrLen);
 	mStringTable[id] = newstr;
 }
 
@@ -165,8 +169,9 @@ void LangFile::setLangName(const UTF8 *newName)
 	if(mLangName)
 		delete [] mLangName;
 	
-	mLangName = new UTF8 [dStrlen(newName) + 1];
-	dStrcpy(mLangName, newName);
+	dsize_t langNameLen = dStrlen(newName) + 1;
+	mLangName = new UTF8 [langNameLen];
+	dStrcpy(mLangName, newName, langNameLen);
 }
 
 void LangFile::setLangFile(const UTF8 *langFile)
@@ -174,8 +179,9 @@ void LangFile::setLangFile(const UTF8 *langFile)
 	if(mLangFile)
 		delete [] mLangFile;
 	
-	mLangFile = new UTF8 [dStrlen(langFile) + 1];
-	dStrcpy(mLangFile, langFile);
+	dsize_t langFileLen = dStrlen(langFile) + 1;
+	mLangFile = new UTF8 [langFileLen];
+	dStrcpy(mLangFile, langFile, langFileLen);
 }
 
 bool LangFile::activateLanguage()
@@ -250,18 +256,16 @@ S32 LangTable::addLanguage(LangFile *lang, const UTF8 *name /* = NULL */)
 S32 LangTable::addLanguage(const UTF8 *filename, const UTF8 *name /* = NULL */)
 {
 	LangFile * lang = new LangFile(name);
-	if(lang != NULL)
+
+   if(Torque::FS::IsFile(filename))
 	{
-      if(Torque::FS::IsFile(filename))
-		{
-			lang->setLangFile(filename);
+		lang->setLangFile(filename);
 			
-      	S32 ret = addLanguage(lang);
-			if(ret >= 0)
-				return ret;
-		}
-		delete lang;
+      S32 ret = addLanguage(lang);
+		if(ret >= 0)
+			return ret;
 	}
+	delete lang;
 
 	return -1;
 }
@@ -325,7 +329,7 @@ void LangTable::setCurrentLanguage(S32 langid)
 
 
 
-DefineConsoleMethod(LangTable, addLanguage, S32, (String filename, String languageName), ("", ""), 
+DefineEngineMethod(LangTable, addLanguage, S32, (String filename, String languageName), ("", ""), 
 			  "(string filename, [string languageName])"
 			  "@brief Adds a language to the table\n\n"
 			  "@param filename Name and path to the language file\n"
@@ -339,7 +343,7 @@ DefineConsoleMethod(LangTable, addLanguage, S32, (String filename, String langua
 	return object->addLanguage(scriptFilenameBuffer, (const UTF8*)languageName);
 }
 
-DefineConsoleMethod(LangTable, getString, const char *, (U32 id), , 
+DefineEngineMethod(LangTable, getString, const char *, (U32 id), , 
 			  "(string filename)"
 			  "@brief Grabs a string from the specified table\n\n"
 			  "If an invalid is passed, the function will attempt to "
@@ -350,22 +354,23 @@ DefineConsoleMethod(LangTable, getString, const char *, (U32 id), ,
 	const char * str =	(const char*)object->getString(id);
 	if(str != NULL)
 	{
-		char * ret = Con::getReturnBuffer(dStrlen(str) + 1);
-		dStrcpy(ret, str);
+		dsize_t retLen = dStrlen(str) + 1;
+		char * ret = Con::getReturnBuffer(retLen);
+		dStrcpy(ret, str, retLen);
 		return ret;
 	}
 	
 	return "";
 }
 
-DefineConsoleMethod(LangTable, setDefaultLanguage, void, (S32 langId), , "(int language)"
+DefineEngineMethod(LangTable, setDefaultLanguage, void, (S32 langId), , "(int language)"
 			  "@brief Sets the default language table\n\n"
 			  "@param language ID of the table\n")
 {
 	object->setDefaultLanguage(langId);
 }
 
-DefineConsoleMethod(LangTable, setCurrentLanguage, void, (S32 langId), , 
+DefineEngineMethod(LangTable, setCurrentLanguage, void, (S32 langId), , 
 			  "(int language)"
 			  "@brief Sets the current language table for grabbing text\n\n"
 			  "@param language ID of the table\n")
@@ -373,14 +378,14 @@ DefineConsoleMethod(LangTable, setCurrentLanguage, void, (S32 langId), ,
 	object->setCurrentLanguage(langId);
 }
 
-DefineConsoleMethod(LangTable, getCurrentLanguage, S32, (), , "()"
+DefineEngineMethod(LangTable, getCurrentLanguage, S32, (), , "()"
 			  "@brief Get the ID of the current language table\n\n"
 			  "@return Numerical ID of the current language table")
 {
 	return object->getCurrentLanguage();
 }
 
-DefineConsoleMethod(LangTable, getLangName, const char *, (S32 langId), , "(int language)"
+DefineEngineMethod(LangTable, getLangName, const char *, (S32 langId), , "(int language)"
 			  "@brief Return the readable name of the language table\n\n"
 			  "@param language Numerical ID of the language table to access\n\n"
 			  "@return String containing the name of the table, NULL if ID was invalid or name was never specified")
@@ -388,15 +393,16 @@ DefineConsoleMethod(LangTable, getLangName, const char *, (S32 langId), , "(int 
 	const char * str = (const char*)object->getLangName(langId);
 	if(str != NULL)
 	{
-		char * ret = Con::getReturnBuffer(dStrlen(str) + 1);
-		dStrcpy(ret, str);
+		dsize_t retLen = dStrlen(str) + 1;
+		char * ret = Con::getReturnBuffer(retLen);
+		dStrcpy(ret, str, retLen);
 		return ret;
 	}
 	
 	return "";
 }
 
-DefineConsoleMethod(LangTable, getNumLang, S32, (), , "()"
+DefineEngineMethod(LangTable, getNumLang, S32, (), , "()"
 			  "@brief Used to find out how many languages are in the table\n\n"
 			  "@return Size of the vector containing the languages, numerical")
 {
@@ -415,7 +421,7 @@ UTF8 *sanitiseVarName(const UTF8 *varName, UTF8 *buffer, U32 bufsize)
 		return NULL;
 	}
 	
-	dStrcpy(buffer, (const UTF8*)"I18N::");
+	dStrcpy(buffer, (const UTF8*)"I18N::", bufsize);
 	
 	UTF8 *dptr = buffer + 6;
 	const UTF8 *sptr = varName;
@@ -479,3 +485,101 @@ const LangTable *getModLangTable(const UTF8 *mod)
 	}
 	return NULL;
 }
+
+//lang_ localization
+bool compiledFileNeedsUpdate(UTF8* filename)
+{
+   Torque::Path filePath = Torque::Path(filename);
+   Torque::FS::FileNodeRef sourceFile = Torque::FS::GetFileNode(filePath);
+   Torque::Path compiledPath = Torque::Path(filePath);
+   compiledPath.setExtension("lso");
+   Torque::FS::FileNodeRef compiledFile = Torque::FS::GetFileNode(compiledPath);
+
+   Torque::Time sourceModifiedTime, compiledModifiedTime;
+
+   if (sourceFile != NULL)
+      sourceModifiedTime = sourceFile->getModifiedTime();
+
+   if (compiledFile != NULL)
+      compiledModifiedTime = compiledFile->getModifiedTime();
+
+   if (sourceModifiedTime > compiledModifiedTime)
+      return true;
+   return false;
+}
+
+DefineEngineFunction(CompileLanguage, void, (const char* inputFile, bool createMap), (false), 
+   "@brief Compiles a LSO language file."
+   " if createIndex is true, will also create languageMap." TORQUE_SCRIPT_EXTENSION " with"
+   " the global variables for each string index."
+   " The input file must follow this example layout:"
+   " TXT_HELLO_WORLD = Hello world in english!")
+{
+   UTF8 scriptFilenameBuffer[1024];
+   Con::expandScriptFilename((char*)scriptFilenameBuffer, sizeof(scriptFilenameBuffer), inputFile);
+
+   if (!Torque::FS::IsFile(scriptFilenameBuffer))
+   {
+      Con::errorf("CompileLanguage - file %s not found", scriptFilenameBuffer);
+      return;
+   }
+
+   FileObject file;
+   if (!file.readMemory(scriptFilenameBuffer))
+   {
+      Con::errorf("CompileLanguage - couldn't read file %s", scriptFilenameBuffer);
+      return;
+   }
+
+   if (compiledFileNeedsUpdate(scriptFilenameBuffer))
+   {
+      FileStream *mapStream = NULL;
+      if (createMap)
+      {
+         Torque::Path mapPath = scriptFilenameBuffer;
+         mapPath.setFileName("languageMap");
+         mapPath.setExtension(TORQUE_SCRIPT_EXTENSION);
+         if ((mapStream = FileStream::createAndOpen(mapPath, Torque::FS::File::Write)) == NULL)
+            Con::errorf("CompileLanguage - failed creating languageMap." TORQUE_SCRIPT_EXTENSION);
+      }
+
+      LangFile langFile;
+      const U8* inLine = NULL;
+      const char* separatorStr = " = ";
+      S32 stringId = 0;
+      while ((inLine = file.readLine())[0] != 0)
+      {
+         char* line;
+         chompUTF8BOM((const char *)inLine, &line);
+         char* div = dStrstr(line, separatorStr);
+         if (div == NULL)
+         {
+            Con::errorf("Separator %s not found in line: %s", separatorStr, line);
+            Con::errorf("Could not determine string name ID");
+            continue;
+         }
+         *div = 0;
+         char* text = div + dStrlen(separatorStr);
+
+         langFile.addString((const UTF8*)text);
+
+         if (mapStream)
+         {
+            String mapLine = String::ToString("$%s = %i;", line, stringId);
+            mapStream->writeLine((const U8*)mapLine.c_str());
+            String commentLine = String::ToString("// %s", text);
+            mapStream->writeLine((const U8*)commentLine.c_str());
+         }
+
+         stringId++;
+      }
+
+      Torque::Path lsoPath = scriptFilenameBuffer;
+      lsoPath.setExtension("lso");
+      langFile.save(lsoPath.getFullPath());
+
+      if (mapStream)
+         delete mapStream;
+   }
+}
+//end lang_ localization

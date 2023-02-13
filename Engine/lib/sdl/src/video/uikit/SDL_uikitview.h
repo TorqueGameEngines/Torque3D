@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2014 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -20,58 +20,30 @@
 */
 
 #import <UIKit/UIKit.h>
-#import "SDL_uikitviewcontroller.h"
+
+#include "../SDL_sysvideo.h"
 
 #include "SDL_touch.h"
 
-#define IPHONE_TOUCH_EFFICIENT_DANGEROUS
-
-#ifndef IPHONE_TOUCH_EFFICIENT_DANGEROUS
-#define MAX_SIMULTANEOUS_TOUCHES 5
-#endif
-
-#if SDL_IPHONE_KEYBOARD
-@interface SDL_uikitview : UIView<UITextFieldDelegate> {
+#if !TARGET_OS_TV && defined(__IPHONE_13_4)
+@interface SDL_uikitview : UIView <UIPointerInteractionDelegate>
 #else
-@interface SDL_uikitview : UIView {
+@interface SDL_uikitview : UIView
 #endif
 
-    SDL_TouchID touchId;
-    UITouch *leftFingerDown;
-#ifndef IPHONE_TOUCH_EFFICIENT_DANGEROUS
-    UITouch *finger[MAX_SIMULTANEOUS_TOUCHES];
+- (instancetype)initWithFrame:(CGRect)frame;
+
+- (void)setSDLWindow:(SDL_Window *)window;
+
+#if !TARGET_OS_TV && defined(__IPHONE_13_4)
+- (UIPointerRegion *)pointerInteraction:(UIPointerInteraction *)interaction regionForRequest:(UIPointerRegionRequest *)request defaultRegion:(UIPointerRegion *)defaultRegion API_AVAILABLE(ios(13.4));
+- (UIPointerStyle *)pointerInteraction:(UIPointerInteraction *)interaction styleForRegion:(UIPointerRegion *)region  API_AVAILABLE(ios(13.4));
 #endif
 
-#if SDL_IPHONE_KEYBOARD
-    UITextField *textField;
-    BOOL keyboardVisible;
-    SDL_Rect textInputRect;
-    int keyboardHeight;
-#endif
-
-@public
-    SDL_uikitviewcontroller *viewcontroller;
-}
 - (CGPoint)touchLocation:(UITouch *)touch shouldNormalize:(BOOL)normalize;
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event;
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event;
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event;
-
-#if SDL_IPHONE_KEYBOARD
-- (void)showKeyboard;
-- (void)hideKeyboard;
-- (void)initializeKeyboard;
-@property (readonly) BOOL keyboardVisible;
-@property (nonatomic,assign) SDL_Rect textInputRect;
-@property (nonatomic,assign) int keyboardHeight;
-
-SDL_bool UIKit_HasScreenKeyboardSupport(_THIS);
-void UIKit_ShowScreenKeyboard(_THIS, SDL_Window *window);
-void UIKit_HideScreenKeyboard(_THIS, SDL_Window *window);
-SDL_bool UIKit_IsScreenKeyboardShown(_THIS, SDL_Window *window);
-void UIKit_SetTextInputRect(_THIS, SDL_Rect *rect);
-
-#endif
 
 @end
 

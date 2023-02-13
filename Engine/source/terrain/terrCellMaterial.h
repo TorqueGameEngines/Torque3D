@@ -40,6 +40,7 @@
 #endif
 
 
+class GFXTextureArray;
 class SceneRenderState;
 struct SceneData;
 class TerrainMaterial;
@@ -58,6 +59,7 @@ protected:
    public:
 
       MaterialInfo()
+         :mat(NULL), layerId(0), mBlendDepthConst(NULL), mBlendContrastConst(NULL)
       {
       }
 
@@ -67,82 +69,63 @@ protected:
 
       TerrainMaterial *mat;
       U32 layerId;
-
-      GFXShaderConstHandle *detailTexConst;
-      GFXTexHandle detailTex;
-
-      GFXShaderConstHandle *macroTexConst;
-      GFXTexHandle macroTex;
-
-      GFXShaderConstHandle *normalTexConst;
-      GFXTexHandle normalTex;
-
-      GFXShaderConstHandle *detailInfoVConst;
-      GFXShaderConstHandle *detailInfoPConst;
-
-	  GFXShaderConstHandle *macroInfoVConst;
-      GFXShaderConstHandle *macroInfoPConst;
+      GFXShaderConstHandle *mBlendDepthConst;
+      GFXShaderConstHandle *mBlendContrastConst;
    };
 
-   class Pass
-   {
-   public:
+   ///
+   GFXShader *mShader;
 
-      Pass() 
-         :  shader( NULL )                     
-      {
-      }
+   GFXShaderConstBufferRef mConsts;
 
-      ~Pass() 
-      {
-         for ( U32 i=0; i < materials.size(); i++ )
-            delete materials[i];
-      }
+   GFXStateBlockRef mStateBlock;
+   GFXStateBlockRef mWireframeStateBlock;
+   GFXStateBlockRef mReflectionStateBlock;
 
-      Vector<MaterialInfo*> materials;
+   GFXShaderConstHandle *mModelViewProjConst;
+   GFXShaderConstHandle *mWorldViewOnlyConst;
+   GFXShaderConstHandle *mViewToObjConst;
 
-      ///
-      GFXShader *shader;
+   GFXShaderConstHandle *mEyePosWorldConst;
+   GFXShaderConstHandle *mEyePosConst;
 
-      GFXShaderConstBufferRef consts;
+   GFXShaderConstHandle *mObjTransConst;
+   GFXShaderConstHandle *mWorldToObjConst;
+   GFXShaderConstHandle *mVEyeConst;
 
-      GFXStateBlockRef stateBlock;
-      GFXStateBlockRef wireframeStateBlock;
+   GFXShaderConstHandle *mLayerSizeConst;
+   GFXShaderConstHandle *mLightParamsConst;
+   GFXShaderConstHandle *mLightInfoBufferConst;
 
-      GFXShaderConstHandle *modelViewProjConst;
-      GFXShaderConstHandle *worldViewOnly;
-      GFXShaderConstHandle *viewToObj;
+   GFXShaderConstHandle *mBaseTexMapConst;
+   GFXShaderConstHandle *mLayerTexConst;
 
-      GFXShaderConstHandle *eyePosWorldConst;
-      GFXShaderConstHandle *eyePosConst;
+   GFXShaderConstHandle *mLightMapTexConst;
 
-      GFXShaderConstHandle *objTransConst;
-      GFXShaderConstHandle *worldToObjConst;
-      GFXShaderConstHandle *vEyeConst;
+   GFXShaderConstHandle *mSquareSizeConst;
+   GFXShaderConstHandle *mOneOverTerrainSizeConst;
 
-      GFXShaderConstHandle *layerSizeConst;
-      GFXShaderConstHandle *lightParamsConst;
-      GFXShaderConstHandle *lightInfoBufferConst;
+   GFXShaderConstHandle* mDetailInfoVArrayConst;
+   GFXShaderConstHandle* mDetailInfoPArrayConst;
+   GFXShaderConstHandle* mMacroInfoVArrayConst;
+   GFXShaderConstHandle* mMacroInfoPArrayConst;
 
-      GFXShaderConstHandle *baseTexMapConst;
-      GFXShaderConstHandle *layerTexConst;
+   GFXShaderConstHandle *mFogDataConst;
+   GFXShaderConstHandle *mFogColorConst;
 
-      GFXShaderConstHandle *lightMapTexConst;
+   GFXShaderConstHandle *mDetailTexArrayConst;
+   GFXShaderConstHandle *mMacroTexArrayConst;
+   GFXShaderConstHandle *mNormalTexArrayConst;
+   GFXShaderConstHandle *mOrmTexArrayConst;
 
-      GFXShaderConstHandle *squareSize;
-      GFXShaderConstHandle *oneOverTerrainSize;
-
-      GFXShaderConstHandle *fogDataConst;
-      GFXShaderConstHandle *fogColorConst;
-   };
+   GFXShaderConstHandle* mBlendDepthConst;
 
    TerrainBlock *mTerrain;
 
-   U64 mMaterials;
-
-   Vector<Pass> mPasses;
-
    U32 mCurrPass;
+
+   U64 mMaterials;
+   Vector<MaterialInfo*> mMaterialInfos;
 
    static const Vector<String> mSamplerNames;
 
@@ -152,8 +135,8 @@ protected:
 
    NamedTexTargetRef mLightInfoTarget;
 
-   /// The prepass material for this material.
-   TerrainCellMaterial *mPrePassMat;
+   /// The deferred material for this material.
+   TerrainCellMaterial *mDeferredMat;
 
    /// The reflection material for this material.
    TerrainCellMaterial *mReflectMat;
@@ -161,14 +144,11 @@ protected:
    /// A vector of all terrain cell materials loaded in the system.
    static Vector<TerrainCellMaterial*> smAllMaterials;
 
-   bool _createPass( Vector<MaterialInfo*> *materials, 
-                     Pass *pass, 
-                     bool firstPass,
-                     bool prePassMat,
+   bool _initShader( bool deferredMat,
                      bool reflectMat,
                      bool baseOnly );
 
-   void _updateMaterialConsts( Pass *pass );
+   void _updateMaterialConsts();
 
 public:
    
@@ -177,12 +157,12 @@ public:
 
    void init(  TerrainBlock *block, 
                U64 activeMaterials,
-               bool prePassMat = false,
+               bool deferredMat = false,
                bool reflectMat = false,
                bool baseOnly = false );
 
-   /// Returns a prepass material from this material.
-   TerrainCellMaterial* getPrePassMat();
+   /// Returns a deferred material from this material.
+   TerrainCellMaterial* getDeferredMat();
 
    /// Returns the reflection material from this material.
    TerrainCellMaterial* getReflectMat();

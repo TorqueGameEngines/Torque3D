@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="ShapeEdAdvancedWindow, EditorGuiGroup"
+    scriptFile="@assetFile=shapeEdAdvancedWindow.ed.gui"
+    GUIFile="@assetFile=shapeEdAdvancedWindow.ed.gui"
+    VersionId="1" />

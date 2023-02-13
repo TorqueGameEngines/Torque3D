@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Keyboard_Black_D_image"
+    imageFile="@assetFile=Keyboard_Black_D.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

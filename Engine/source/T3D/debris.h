@@ -20,6 +20,11 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+// Arcane-FX for MIT Licensed Open Source version of Torque 3D from GarageGames
+// Copyright (C) 2015 Faust Logic, Inc.
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+
 #ifndef _DEBRIS_H_
 #define _DEBRIS_H_
 
@@ -29,6 +34,8 @@
 #ifndef _GAMEBASE_H_
 #include "T3D/gameBase/gameBase.h"
 #endif
+
+#include "T3D/assets/ShapeAsset.h"
 
 class ParticleEmitterData;
 class ParticleEmitter;
@@ -62,8 +69,8 @@ struct DebrisData : public GameBaseData
    F32      elasticity;
    F32      lifetime;
    F32      lifetimeVariance;
-   U32      numBounces;
-   U32      bounceVariance;
+   S32      numBounces;
+   S32      bounceVariance;
    F32      minSpinSpeed;
    F32      maxSpinSpeed;
    bool     explodeOnMaxBounce;  // explodes after it has bounced max times
@@ -76,8 +83,8 @@ struct DebrisData : public GameBaseData
    F32      terminalVelocity;    // max velocity magnitude
    bool     ignoreWater;
 
-   const char* shapeName;
-   Resource<TSShape> shape;
+   DECLARE_SHAPEASSET(DebrisData, Shape, onShapeChanged);
+   DECLARE_ASSET_SETGET(DebrisData, Shape);
 
    StringTableEntry  textureName;
 
@@ -97,6 +104,14 @@ struct DebrisData : public GameBaseData
 
    DECLARE_CONOBJECT(DebrisData);
 
+public:
+   /*C*/        DebrisData(const DebrisData&, bool = false);
+   /*D*/        ~DebrisData();
+   DebrisData*  cloneAndPerformSubstitutions(const SimObject*, S32 index=0);
+   virtual void onPerformSubstitutions();
+   virtual bool allowSubstitutions() const { return true; }
+
+   void onShapeChanged() {}
 };
 
 //**************************************************************************
@@ -165,6 +180,11 @@ public:
 
    DECLARE_CONOBJECT(Debris);
 
+private:
+   SimObject*   ss_object;
+   S32          ss_index;
+public:
+   void         setSubstitutionData(SimObject* obj, S32 idx=0) { ss_object = obj; ss_index = idx; }
 };
 
 

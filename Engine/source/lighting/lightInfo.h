@@ -115,11 +115,11 @@ protected:
    Type mType;
 
    /// The primary light color.
-   ColorF mColor;
+   LinearColorF mColor;
 
    F32 mBrightness;
 
-   ColorF mAmbient;
+   LinearColorF mAmbient;
 
    MatrixF mTransform;
 
@@ -131,6 +131,9 @@ protected:
 
    bool mCastShadows;
 
+   S32 mStaticRefreshFreq;
+   S32 mDynamicRefreshFreq;
+
    ::Vector<LightInfoEx*> mExtended;
 
    /// The priority of this light used for
@@ -140,6 +143,9 @@ protected:
    /// A temporary which holds the score used
    /// when prioritizing lights for rendering.
    F32 mScore;
+
+   /// A temporary value which holds the amount this light is faded due to distance
+   F32 mFadeAmount;
 
    /// Whether to render debugging visualizations
    /// for this light.
@@ -152,9 +158,6 @@ public:
 
    // Copies data passed in from light
    void set( const LightInfo *light );
-
-   // Sets a fixed function GFXLight with our properties 
-   void setGFXLight( GFXLightInfo *light );
 
    // Accessors
    Type getType() const { return mType; }
@@ -169,14 +172,14 @@ public:
    VectorF getDirection() const { return mTransform.getForwardVector(); }
    void setDirection( const VectorF &val );
 
-   const ColorF& getColor() const { return mColor; }
-   void setColor( const ColorF &val ) { mColor = val; }
+   const LinearColorF& getColor() const { return mColor; }
+   void setColor( const LinearColorF &val ) { mColor = val; }
 
    F32 getBrightness() const { return mBrightness; }
    void setBrightness( F32 val ) { mBrightness = val; }
 
-   const ColorF& getAmbient() const { return mAmbient; }
-   void setAmbient( const ColorF &val ) { mAmbient = val; }
+   const LinearColorF& getAmbient() const { return mAmbient; }
+   void setAmbient( const LinearColorF &val ) { mAmbient = val; }
 
    const Point3F& getRange() const { return mRange; }
    void setRange( const Point3F &range ) { mRange = range; }
@@ -190,12 +193,21 @@ public:
 
    bool getCastShadows() const { return mCastShadows; }
    void setCastShadows( bool castShadows ) { mCastShadows = castShadows; }
+   
+   S32 getStaticRefreshFreq() const { return mStaticRefreshFreq; }
+   void setStaticRefreshFreq(S32 _staticRefreshFreq) { mStaticRefreshFreq = _staticRefreshFreq; }
+
+   S32 getDynamicRefreshFreq() const { return mDynamicRefreshFreq; }
+   void setDynamicRefreshFreq(S32 _dynamicRefreshFreq) { mDynamicRefreshFreq = _dynamicRefreshFreq; }
 
    void setPriority( F32 priority ) { mPriority = priority; }
    F32 getPriority() const { return mPriority; }
 
    void setScore( F32 score ) { mScore = score; }
    F32 getScore() const { return mScore; }
+
+   void setFadeAmount(F32 fade) { mFadeAmount = fade; }
+   F32 getFadeAmount() const { return mFadeAmount; }
 
    bool isDebugRenderingEnabled() const { return mDebugRender; }
    void enableDebugRendering( bool value ) { mDebugRender = value; }

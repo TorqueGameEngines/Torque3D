@@ -1,0 +1,521 @@
+function AssetBrowser::prepareImportImageAsset(%this, %assetItem)
+{
+   if((getAssetImportConfigValue("Images/GenerateMaterialOnImport", "1") == 1 && %assetItem.parentAssetItem $= "") || %assetItem.parentAssetItem !$= "")
+   {
+      //First, see if this already has a suffix of some sort based on our import config logic. Many content pipeline tools like substance automatically appends them
+      %foundSuffixType = parseImageSuffixes(%assetItem);
+      
+      if(%foundSuffixType $= "")
+      {
+         %noSuffixName = %assetItem.AssetName;
+      }
+      else
+      {
+         %suffixPos = strpos(strlwr(%assetItem.AssetName), strlwr(%assetItem.ImageType), 0);
+         %noSuffixName = getSubStr(%assetItem.AssetName, 0, %suffixPos);
+      }
+   
+      //Check if our material already exists
+      //First, lets double-check that we don't already have an
+      %materialAsset = ImportAssetWindow.findImportingAssetByName(%noSuffixName);
+      %cratedNewMaterial = false;
+      
+      //Sanity catch in the case we have some naming convention shenanigans in play
+      if(%materialAsset != 0 && %materialAsset.assetType !$= "MaterialAsset")
+         %materialAsset = 0;
+      
+      if(%materialAsset == 0)
+      {
+         %filePath = %assetItem.filePath;
+         if(%filePath !$= "")
+            %materialAsset = AssetBrowser.addImportingAsset("MaterialAsset", "", "", %noSuffixName);
+            
+         //%materialAsset.filePath = filePath(%assetItem.filePath) @ "/" @ %noSuffixName;
+         
+         ImportAssetItems.add(%materialAsset);
+            
+         %cratedNewMaterial = true;
+      }
+      
+      if(isObject(%materialAsset))
+      {
+         if(%assetItem.parentAssetItem !$= "")
+         {
+            %parentIndex = %assetItem.parentAssetItem.childAssetItems.getIndexFromKey(%assetItem);
+            %assetItem.parentAssetItem.childAssetItems.erase(%parentIndex);
+         }
+         else
+         {
+            //if we didn't have a parent until now, we're going to pull from it from our ImportAssetItems list
+            %itemIndex = ImportAssetItems.getIndexFromKey(%assetItem);
+            ImportAssetItems.erase(%itemIndex);
+         }
+         
+         //Establish parentage
+         %materialAsset.childAssetItems.add(%assetItem);
+         %assetItem.parentAssetItem = %materialAsset;
+         
+         ImportAssetWindow.assetHeirarchyChanged = true;
+      }
+      
+      //Lets do some cleverness here. If we're generating a material we can parse like assets being imported(similar file names) but different suffixes
+      //if we find these, we'll just populate into the original's material
+      
+      //If we need to append the diffuse suffix and indeed didn't find a suffix on the name, do that here
+      if(%foundSuffixType $= "")
+      {
+         if(getAssetImportConfigValue("Images/UseDiffuseSuffixOnOriginImg", "1") == 1)
+         {
+            if(%foundSuffixType $= "")
+            {
+               %diffuseToken = getToken(getAssetImportConfigValue("Images/DiffuseTypeSuffixes", ""), ",", 0);
+               %assetItem.AssetName = %assetItem.AssetName @ %diffuseToken;
+            }
+         }
+         else
+         {
+            //We need to ensure that our image asset doesn't match the same name as the material asset, so if we're not trying to force the diffuse suffix
+            //we'll give it a generic one
+            if(%materialAsset.assetName $= %assetItem.assetName)
+            {
+               %assetItem.AssetName = %assetItem.AssetName @ "_image";
+            }
+         }
+         
+         %foundSuffixType = "diffuse";
+      }
+      
+      if(%foundSuffixType !$= "")
+      {
+         //otherwise, if we have some sort of suffix, we'll want to figure out if we've already got an existing material, and should append to it  
+         
+         if(getAssetImportConfigValue("Materials/PopulateMaterialMaps", "1") == 1)
+         {
+            if(%foundSuffixType $= "diffuse")
+               %assetItem.ImageType = "Albedo";
+            else if(%foundSuffixType $= "normal")
+               %assetItem.ImageType = "Normal";
+            else if(%foundSuffixType $= "metalness")
+               %assetItem.ImageType = "metalness";
+            else if(%foundSuffixType $= "roughness")
+               %assetItem.ImageType = "roughness";
+            else if(%foundSuffixType $= "specular")
+               %assetItem.ImageType = "specular";
+            else if(%foundSuffixType $= "AO")
+               %assetItem.ImageType = "AO";
+            else if(%foundSuffixType $= "composite")
+               %assetItem.ImageType = "composite";
+         }
+      }
+      
+      //If we JUST created this material, we need to do a process pass on it to do any other setup for it
+      /*if(%cratedNewMaterial)
+      {
+         AssetBrowser.prepareImportMaterialAsset(%materialAsset);
+      }*/
+   }
+
+   %assetItem.processed = true;
+   
+   refreshImportAssetWindow();
+}
+
+function AssetBrowser::inspectImportingImageAsset(%this, %assetItem)
+{
+   AssetImportCtrl-->NewAssetsInspector.startGroup("Image");
+   AssetImportCtrl-->NewAssetsInspector.addField("ImageType", "Image Type", "list", "Intended usage case of this image. Used to map to material slots and set up texture profiles.", "GUI", 
+                                                      "Albedo,Normal,Composite,Roughness,AO,Metalness,Glow,GUI,Particle,Decal", %assetItem);
+                                                      
+   AssetImportCtrl-->NewAssetsInspector.endGroup();                                                
+}
+
+function AssetBrowser::importImageAsset(%this, %assetItem)
+{
+   %moduleName = AssetImportTargetModule.getText();
+   
+   %assetType = %assetItem.AssetType;
+   %filePath = %assetItem.filePath;
+   %assetName = %assetItem.assetName;
+   %assetImportSuccessful = false;
+   %assetId = %moduleName@":"@%assetName;
+   
+   %assetPath = NewAssetTargetAddress.getText() @ "/";
+   
+   %assetFullPath = %assetPath @ "/" @ fileName(%filePath);
+   
+   %newAsset = new ImageAsset()
+   {
+      assetName = %assetName;
+      versionId = 1;
+      imageFile = fileName(%filePath);
+      imageType = %assetItem.imageType;
+   };
+   
+   //No point in indicating the original path data if it was imported in-place
+   if(!startsWith(makeFullPath(%filePath), getMainDotCsDir()))
+   {
+      %newAsset.originalFilePath = %filePath;
+   }
+   
+   %assetImportSuccessful = TAMLWrite(%newAsset, %assetPath @ "/" @ %assetName @ ".asset.taml"); 
+   
+   //and copy the file into the relevent directory
+   %doOverwrite = !AssetBrowser.isAssetReImport;
+   if(!pathCopy(%filePath, %assetFullPath, %doOverwrite))
+   {
+      error("Unable to import asset: " @ %filePath);
+      return;
+   }
+   
+   %moduleDef = ModuleDatabase.findModule(%moduleName,1);
+         
+   if(!AssetBrowser.isAssetReImport)
+      AssetDatabase.addDeclaredAsset(%moduleDef, %assetPath @ "/" @ %assetName @ ".asset.taml");
+   else
+      AssetDatabase.refreshAsset(%assetId);
+}
+
+function AssetBrowser::buildImageAssetPreview(%this, %assetDef, %previewData)
+{
+   //%module = %this.dirHandler.getModuleFromAddress(makeRelativePath(filePath(%assetDef.getImagePath())));
+      
+   %previewData.previewImage = "ToolsModule:genericAssetIcon_image";
+   %previewData.previewLoaded = false; //this marks it for loading progressively later
+   
+   %previewData.assetName = %assetDef.assetName;
+   %previewData.assetPath = %assetDef.scriptFile;
+   
+   %previewData.assetFriendlyName = %assetDef.assetName;
+   %previewData.assetDesc = %assetDef.description;
+   
+   //image info
+   //%info = %assetDef.getImageInfo();
+   
+   %previewData.tooltip = "Asset Name: " @ %assetDef.assetName @ "\n" @
+      "Asset Type: Image Asset\n" @ 
+      "Asset Definition ID: " @ %assetDef @ "\n" @ 
+      "Image Type: " @ %assetDef.imageType @ "\n" @ 
+     /* "Format: " @ getWord(%info, 0) @ "\n" @ 
+      "Height: " @ getWord(%info, 1) @ "\n" @ 
+      "Width: " @ getWord(%info, 2) @ "\n" @ 
+      "Depth: " @ getWord(%info, 3) @ "\n" @ */
+      "Image File path: " @ %assetDef.getImagePath();
+}
+
+function AssetBrowser::generateImageAssetPreviewImage(%this, %previewButton, %forceRegenerate)
+{
+   if(%forceRegenerate $= "")
+      %forceRegenerate = false;
+      
+   %previewPath = "tools/resources/previewCache/" @ %previewButton.moduleName @ "/";
+   
+   if(!IsDirectory(%previewPath))
+   {
+      %this.dirHandler.createFolder(%previewPath);
+   }
+   
+   %assetId = %previewButton.moduleName @ ":" @ %previewButton.assetName;
+      
+   %assetDef = AssetDatabase.acquireAsset(%assetId);
+   
+   %previewFilePath = %previewPath @ %assetDef.assetName @ "_Preview.png";
+   if(!isFile(%previewFilePath) || (compareFileTimes(%assetDef.getImagePath(), %previewFilePath) == 1))
+   {
+      %generatePreview = true;
+   }
+   
+   %previewAssetName = %previewButton.moduleName @ "_" @ %assetDef.assetName @ "_PreviewImage";
+   
+   if(%generatePreview || %forceRegenerate)
+   {
+      %success = saveScaledImage(%assetDef.getImagePath(), %previewFilePath, EditorSettings.value("Assets/Browser/PreviewImageSize"));
+      
+      if(%success)
+      {
+         if(!AssetDatabase.isDeclaredAsset("ToolsModule:" @ %previewAssetName))
+         {
+            %previewAsset = new ImageAsset()
+            {
+               assetName = %previewAssetName;
+               versionId = 1;
+               imageFile = fileName(%previewFilePath);
+            };
+         
+            %previewAssetName = "ToolsModule:" @ %previewAssetName;
+            %previewImgAssetPath = %previewPath @ %previewAsset.assetName @ ".asset.taml";
+            %assetImportSuccessful = TAMLWrite(%previewAsset, %previewImgAssetPath); 
+         
+            %toolsModuleDef = ModuleDatabase.findModule("ToolsModule",1);
+            
+            %success = AssetDatabase.addDeclaredAsset(%toolsModuleDef, %previewImgAssetPath);
+            
+            if(!%success)
+            {
+               return false; //failed to register the preview image for some reason?
+         }
+      }
+         
+         %previewButton.bitmapAsset = %previewAssetName;
+         return true;
+      }
+   }
+   else
+   {
+      //just map the existing one then
+      if(AssetDatabase.isDeclaredAsset("ToolsModule:" @ %previewAssetName))
+   {
+         %previewButton.bitmapAsset = "ToolsModule:" @ %previewAssetName;
+         return true;
+   }
+   }
+   
+   return false;
+}
+
+//Renames the asset
+function AssetBrowser::renameImageAsset(%this, %assetDef, %newAssetName)
+{
+   %newFilename = renameAssetLooseFile(%assetDef.getImagePath(), %newAssetName);
+   
+   if(!%newFilename $= "")
+      return;
+
+   %assetDef.imageFile = %newFilename;
+   %assetDef.saveAsset();
+   
+   renameAssetFile(%assetDef, %newAssetName);
+}
+
+//Duplicates the asset
+function AssetBrowser::duplicateImageAsset(%this, %assetDef, %newAssetName)
+{
+   %duplicatedAsset = duplicateAssetFile(%assetDef, %newAssetName);
+   
+   %newFilename = duplicateAssetLooseFile(%assetDef.imageFile, %newAssetName);
+   
+   if(!%newFilename $= "")
+      return;
+      
+   %module = AssetBrowser.dirHandler.getModuleFromAddress(%duplicatedAsset);
+      
+   %dupAssetDef = AssetDatabase.acquireAsset(%module.ModuleId @ ":" @ %newAssetName);
+
+   %dupAssetDef.imageFile = fileName(%newFilename);
+   %dupAssetDef.saveAsset();
+}
+
+//Deletes the asset
+function AssetBrowser::deleteImageAsset(%this, %assetDef)
+{
+   AssetDatabase.deleteAsset(%assetDef.getAssetId(), true);
+}
+
+//Moves the asset to a new path/module
+function AssetBrowser::moveImageAsset(%this, %assetDef, %destination)
+{
+   %currentModule = AssetDatabase.getAssetModule(%assetDef.getAssetId());
+   %targetModule = AssetBrowser.dirHandler.getModuleFromAddress(%destination);
+   
+   %newAssetPath = moveAssetFile(%assetDef, %destination);
+   
+   if(%newAssetPath $= "")
+      return false;
+
+   moveAssetLooseFile(%assetDef.getImagePath(), %destination);
+   
+   AssetDatabase.removeDeclaredAsset(%assetDef.getAssetId());
+   AssetDatabase.addDeclaredAsset(%targetModule, %newAssetPath);
+}
+
+function GuiInspectorTypeImageAssetPtr::onControlDropped( %this, %payload, %position )
+{
+   Canvas.popDialog(EditorDragAndDropLayer);
+   
+   // Make sure this is a color swatch drag operation.
+   if( !%payload.parentGroup.isInNamespaceHierarchy( "AssetPreviewControlType_AssetDrop" ) )
+      return;
+
+   %assetType = %payload.assetType;
+   %module = %payload.moduleName;
+   %assetName = %payload.assetName;
+   
+   if(%assetType $= "ImageAsset")
+   {
+      %cmd = %this @ ".apply(\""@ %module @ ":" @ %assetName @ "\");";
+      eval(%cmd);
+   }
+   
+   EWorldEditor.isDirty = true;
+}
+
+function parseImageSuffixes(%assetItem)
+{
+   //diffuse
+   %suffixCount = getTokenCount(getAssetImportConfigValue("Images/DiffuseTypeSuffixes", ""), ",;");
+   for(%sfx = 0; %sfx < %suffixCount; %sfx++)
+   {
+      %suffixToken = getToken(getAssetImportConfigValue("Images/DiffuseTypeSuffixes", ""), ",;", %sfx);
+      if(strIsMatchExpr("*"@%suffixToken, %assetItem.AssetName))
+      {
+         %assetItem.ImageType = %suffixToken;
+         return "diffuse";
+      }
+   }
+   
+   //normal
+   %suffixCount = getTokenCount(getAssetImportConfigValue("Images/NormalTypeSuffixes", ""), ",;");
+   for(%sfx = 0; %sfx < %suffixCount; %sfx++)
+   {
+      %suffixToken = getToken(getAssetImportConfigValue("Images/NormalTypeSuffixes", ""), ",;", %sfx);
+      if(strIsMatchExpr("*"@%suffixToken, %assetItem.AssetName))
+      {
+         %assetItem.ImageType = %suffixToken;
+         return "normal";
+      }
+   }
+   
+   //roughness
+   %suffixCount = getTokenCount(getAssetImportConfigValue("Images/RoughnessTypeSuffixes", ""), ",;");
+   for(%sfx = 0; %sfx < %suffixCount; %sfx++)
+   {
+      %suffixToken = getToken(getAssetImportConfigValue("Images/RoughnessTypeSuffixes", ""), ",;", %sfx);
+      if(strIsMatchExpr("*"@%suffixToken, %assetItem.AssetName))
+      {
+         %assetItem.ImageType = %suffixToken;
+         return "roughness";
+      }
+   }
+   
+   //Ambient Occlusion
+   %suffixCount = getTokenCount(getAssetImportConfigValue("Images/AOTypeSuffixes", ""), ",;");
+   for(%sfx = 0; %sfx < %suffixCount; %sfx++)
+   {
+      %suffixToken = getToken(getAssetImportConfigValue("Images/AOTypeSuffixes", ""), ",;", %sfx);
+      if(strIsMatchExpr("*"@%suffixToken, %assetItem.AssetName))
+      {
+         %assetItem.ImageType = %suffixToken;
+         return "AO";
+      }
+   }
+   
+   //metalness
+   %suffixCount = getTokenCount(getAssetImportConfigValue("Images/MetalnessTypeSuffixes", ""), ",;");
+   for(%sfx = 0; %sfx < %suffixCount; %sfx++)
+   {
+      %suffixToken = getToken(getAssetImportConfigValue("Images/MetalnessTypeSuffixes", ""), ",;", %sfx);
+      if(strIsMatchExpr("*"@%suffixToken, %assetItem.AssetName))
+      {
+         %assetItem.ImageType = %suffixToken;
+         return "metalness";
+      }
+   }
+   
+   //composite
+   %suffixCount = getTokenCount(getAssetImportConfigValue("Images/CompositeTypeSuffixes", ""), ",;");
+   for(%sfx = 0; %sfx < %suffixCount; %sfx++)
+   {
+      %suffixToken = getToken(getAssetImportConfigValue("Images/CompositeTypeSuffixes", ""), ",;", %sfx);
+      if(strIsMatchExpr("*"@%suffixToken, %assetItem.AssetName))
+      {
+         %assetItem.ImageType = %suffixToken;
+         return "composite";
+      }
+   }
+   
+   //specular
+   /*%suffixCount = getTokenCount(ImportAssetWindow.activeImportConfig.SpecularTypeSuffixes, ",;");
+   for(%sfx = 0; %sfx < %suffixCount; %sfx++)
+   {
+      %suffixToken = getToken(ImportAssetWindow.activeImportConfig.SpecularTypeSuffixes, ",;", %sfx);
+      if(strIsMatchExpr("*"@%suffixToken, %assetItem.AssetName))
+      {
+         %assetItem.imageSuffixType = %suffixToken;
+         return "specular";
+      }
+   }*/
+   
+   return "";
+}
+
+function parseImagePathSuffixes(%filePath)
+{
+   //diffuse
+   %diffuseSuffixes = getAssetImportConfigValue("Images/DiffuseTypeSuffixes", "");
+   %suffixCount = getTokenCount(%diffuseSuffixes, ",;");
+   for(%sfx = 0; %sfx < %suffixCount; %sfx++)
+   {
+      %suffixToken = getToken(%diffuseSuffixes, ",;", %sfx);
+      if(strIsMatchExpr("*"@%suffixToken, %filePath))
+      {
+         return "diffuse";
+      }
+   }
+   
+   //normal
+   %suffixCount = getTokenCount(ImportAssetWindow.activeImportConfig.NormalTypeSuffixes, ",;");
+   for(%sfx = 0; %sfx < %suffixCount; %sfx++)
+   {
+      %suffixToken = getToken(ImportAssetWindow.activeImportConfig.NormalTypeSuffixes, ",;", %sfx);
+      if(strIsMatchExpr("*"@%suffixToken, %filePath))
+      {
+         return "normal";
+      }
+   }
+   
+   //roughness
+   %suffixCount = getTokenCount(ImportAssetWindow.activeImportConfig.RoughnessTypeSuffixes, ",;");
+   for(%sfx = 0; %sfx < %suffixCount; %sfx++)
+   {
+      %suffixToken = getToken(ImportAssetWindow.activeImportConfig.RoughnessTypeSuffixes, ",;", %sfx);
+      if(strIsMatchExpr("*"@%suffixToken, %filePath))
+      {
+         return "roughness";
+      }
+   }
+   
+   //Ambient Occlusion
+   %suffixCount = getTokenCount(ImportAssetWindow.activeImportConfig.AOTypeSuffixes, ",;");
+   for(%sfx = 0; %sfx < %suffixCount; %sfx++)
+   {
+      %suffixToken = getToken(ImportAssetWindow.activeImportConfig.AOTypeSuffixes, ",;", %sfx);
+      if(strIsMatchExpr("*"@%suffixToken, %filePath))
+      {
+         return "AO";
+      }
+   }
+   
+   //metalness
+   %suffixCount = getTokenCount(ImportAssetWindow.activeImportConfig.MetalnessTypeSuffixes, ",;");
+   for(%sfx = 0; %sfx < %suffixCount; %sfx++)
+   {
+      %suffixToken = getToken(ImportAssetWindow.activeImportConfig.MetalnessTypeSuffixes, ",;", %sfx);
+      if(strIsMatchExpr("*"@%suffixToken, %filePath))
+      {
+         return "metalness";
+      }
+   }
+   
+   //composite
+   %suffixCount = getTokenCount(ImportAssetWindow.activeImportConfig.CompositeTypeSuffixes, ",;");
+   for(%sfx = 0; %sfx < %suffixCount; %sfx++)
+   {
+      %suffixToken = getToken(ImportAssetWindow.activeImportConfig.CompositeTypeSuffixes, ",;", %sfx);
+      if(strIsMatchExpr("*"@%suffixToken, %filePath))
+      {
+         return "composite";
+      }
+   }
+   
+   //specular
+   %suffixCount = getTokenCount(ImportAssetWindow.activeImportConfig.SpecularTypeSuffixes, ",;");
+   for(%sfx = 0; %sfx < %suffixCount; %sfx++)
+   {
+      %suffixToken = getToken(ImportAssetWindow.activeImportConfig.SpecularTypeSuffixes, ",;", %sfx);
+      if(strIsMatchExpr("*"@%suffixToken, %filePath))
+      {
+         return "specular";
+      }
+   }
+   
+   return "";
+}

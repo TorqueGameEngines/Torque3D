@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="CameraBookmark_image"
+    imageFile="@assetFile=CameraBookmark.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

@@ -57,10 +57,6 @@ GuiControl* GuiInspectorTypeMenuBase::constructEditControl()
 {
    GuiControl* retCtrl = new GuiPopUpMenuCtrl();
 
-   // If we couldn't construct the control, bail!
-   if( retCtrl == NULL )
-      return retCtrl;
-
    GuiPopUpMenuCtrl *menu = dynamic_cast<GuiPopUpMenuCtrl*>(retCtrl);
 
    // Let's make it look pretty.
@@ -218,25 +214,21 @@ GuiControl* GuiInspectorTypeMaterialName::construct(const char* command)
    //return retCtrl;
    mBrowseButton = new GuiBitmapButtonCtrl();
 
-   if ( mBrowseButton != NULL )
-   {
-      RectI browseRect( Point2I( ( getLeft() + getWidth()) - 26, getTop() + 2), Point2I(20, getHeight() - 4) );
+   RectI browseRect( Point2I( ( getLeft() + getWidth()) - 26, getTop() + 2), Point2I(20, getHeight() - 4) );
 
-      char szBuffer[512];
-      dSprintf( szBuffer, 512, command, getId());
-		mBrowseButton->setField( "Command", szBuffer );
+   dSprintf( szBuffer, 512, command, getId());
+	mBrowseButton->setField( "Command", szBuffer );
 
-		//temporary static button name
-		char bitmapName[512] = "tools/materialEditor/gui/change-material-btn";
-		mBrowseButton->setBitmap( bitmapName );
+	//temporary static button name
+	char bitmapName[512] = "ToolsModule:change_material_btn_n_image";
+	mBrowseButton->setBitmap( StringTable->insert(bitmapName) );
 
-      mBrowseButton->setDataField( StringTable->insert("Profile"), NULL, "GuiButtonProfile" );
-      mBrowseButton->registerObject();
-      addObject( mBrowseButton );
+   mBrowseButton->setDataField( StringTable->insert("Profile"), NULL, "GuiButtonProfile" );
+   mBrowseButton->registerObject();
+   addObject( mBrowseButton );
 
-      // Position
-      mBrowseButton->resize( browseRect.point, browseRect.extent );
-   }
+   // Position
+   mBrowseButton->resize( browseRect.point, browseRect.extent );
 
    return retCtrl;
 }
@@ -328,25 +320,21 @@ GuiControl* GuiInspectorTypeTerrainMaterialName::construct(const char* command)
    //return retCtrl;
    mBrowseButton = new GuiBitmapButtonCtrl();
 
-   if ( mBrowseButton != NULL )
-   {
-      RectI browseRect( Point2I( ( getLeft() + getWidth()) - 26, getTop() + 2), Point2I(20, getHeight() - 4) );
+   RectI browseRect( Point2I( ( getLeft() + getWidth()) - 26, getTop() + 2), Point2I(20, getHeight() - 4) );
 
-      char szBuffer[512];
-      dSprintf( szBuffer, 512, command, getId());
-		mBrowseButton->setField( "Command", szBuffer );
+   dSprintf( szBuffer, 512, command, getId());
+	mBrowseButton->setField( "Command", szBuffer );
 
-		//temporary static button name
-		char bitmapName[512] = "tools/gui/images/layers-btn";
-		mBrowseButton->setBitmap( bitmapName );
+	//temporary static button name
+	char bitmapName[512] = "ToolsModule:tools/gui/images/layers_btn_n_image";
+	mBrowseButton->setBitmap(StringTable->insert(bitmapName) );
 
-      mBrowseButton->setDataField( StringTable->insert("Profile"), NULL, "GuiButtonProfile" );
-      mBrowseButton->registerObject();
-      addObject( mBrowseButton );
+   mBrowseButton->setDataField( StringTable->insert("Profile"), NULL, "GuiButtonProfile" );
+   mBrowseButton->registerObject();
+   addObject( mBrowseButton );
 
-      // Position
-      mBrowseButton->resize( browseRect.point, browseRect.extent );
-   }
+   // Position
+   mBrowseButton->resize( browseRect.point, browseRect.extent );
 
    return retCtrl;
 }
@@ -412,30 +400,81 @@ ConsoleDocClass( GuiInspectorTypeCheckBox,
 
 GuiControl* GuiInspectorTypeCheckBox::constructEditControl()
 {
-   GuiControl* retCtrl = new GuiCheckBoxCtrl();
+   if (mField && mField->flag.test(AbstractClassRep::FIELD_CustomInspectors))
+   {
+      // This checkbox (bool field) is meant to be treated as a button.
+      GuiControl* retCtrl = new GuiButtonCtrl();
 
-   // If we couldn't construct the control, bail!
-   if( retCtrl == NULL )
+      // If we couldn't construct the control, bail!
+      if( retCtrl == NULL )
+         return retCtrl;
+
+      GuiButtonCtrl *button = dynamic_cast<GuiButtonCtrl*>(retCtrl);
+
+      // Let's make it look pretty.
+      retCtrl->setDataField( StringTable->insert("profile"), NULL, "InspectorTypeButtonProfile" );
+      retCtrl->setField( "text", "Click Here" );
+
+      retCtrl->setScriptValue( getData() );
+
+      _registerEditControl( retCtrl );
+
+      // Configure it to update our value when the popup is closed
+      char szBuffer[512];
+      dSprintf( szBuffer, 512, "%d.apply(%d.getValue());",getId(), button->getId() );
+      button->setField("Command", szBuffer );
+
       return retCtrl;
+   }
+   else if (mField && mField->flag.test(AbstractClassRep::FieldFlags::FIELD_ComponentInspectors))
+   {
+      // This checkbox (bool field) is meant to be treated as a button.
+      GuiControl* retCtrl = new GuiButtonCtrl();
 
-   GuiCheckBoxCtrl *check = dynamic_cast<GuiCheckBoxCtrl*>(retCtrl);
+      // If we couldn't construct the control, bail!
+      if (retCtrl == NULL)
+         return retCtrl;
 
-   // Let's make it look pretty.
-   retCtrl->setDataField( StringTable->insert("profile"), NULL, "InspectorTypeCheckboxProfile" );
-   retCtrl->setField( "text", "" );
+      GuiButtonCtrl *button = dynamic_cast<GuiButtonCtrl*>(retCtrl);
 
-   check->setIndent( 4 );
+      // Let's make it look pretty.
+      retCtrl->setDataField(StringTable->insert("profile"), NULL, "InspectorTypeButtonProfile");
+      retCtrl->setField("text", "Click Here");
 
-   retCtrl->setScriptValue( getData() );
+      retCtrl->setScriptValue(getData());
 
-   _registerEditControl( retCtrl );
+      _registerEditControl(retCtrl);
 
-   // Configure it to update our value when the popup is closed
-   char szBuffer[512];
-   dSprintf( szBuffer, 512, "%d.apply(%d.getValue());",getId(),check->getId() );
-   check->setField("Command", szBuffer );
+      // Configure it to update our value when the popup is closed
+      char szBuffer[512];
+      dSprintf(szBuffer, 512, "%d.apply(%d.getValue());", getId(), button->getId());
+      button->setField("Command", szBuffer);
 
-   return retCtrl;
+      return retCtrl;
+   }
+   else 
+   {
+      GuiControl* retCtrl = new GuiCheckBoxCtrl();
+
+      GuiCheckBoxCtrl *check = dynamic_cast<GuiCheckBoxCtrl*>(retCtrl);
+
+      // Let's make it look pretty.
+      retCtrl->setDataField(StringTable->insert("profile"), NULL, "InspectorTypeCheckboxProfile");
+      retCtrl->setField("text", "");
+
+      check->setIndent(4);
+
+      retCtrl->setScriptValue(getData());
+
+      _registerEditControl(retCtrl);
+
+      // Configure it to update our value when the popup is closed
+      char szBuffer[512];
+      dSprintf(szBuffer, 512, "%d.apply(%d.getValue());", getId(), check->getId());
+      check->setField("Command", szBuffer);
+
+      return retCtrl;
+   }
 }
 
 
@@ -485,10 +524,6 @@ GuiControl* GuiInspectorTypeFileName::constructEditControl()
 {
    GuiControl* retCtrl = new GuiTextEditCtrl();
 
-   // If we couldn't construct the control, bail!
-   if( retCtrl == NULL )
-      return retCtrl;
-
    // Let's make it look pretty.
    retCtrl->setDataField( StringTable->insert("profile"), NULL, "GuiInspectorTextEditRightProfile" );
    retCtrl->setDataField( StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile" );
@@ -504,20 +539,17 @@ GuiControl* GuiInspectorTypeFileName::constructEditControl()
 
    mBrowseButton = new GuiButtonCtrl();
 
-   if( mBrowseButton != NULL )
-   {
-      RectI browseRect( Point2I( ( getLeft() + getWidth()) - 26, getTop() + 2), Point2I(20, getHeight() - 4) );
-      char szBuffer[512];
-      dSprintf( szBuffer, 512, "getLoadFilename(\"*.*|*.*\", \"%d.apply\", %d.getData());", getId(), getId() );
-      mBrowseButton->setField( "Command", szBuffer );
-      mBrowseButton->setField( "text", "..." );
-      mBrowseButton->setDataField( StringTable->insert("Profile"), NULL, "GuiInspectorButtonProfile" );
-      mBrowseButton->registerObject();
-      addObject( mBrowseButton );
+   RectI browseRect( Point2I( ( getLeft() + getWidth()) - 26, getTop() + 2), Point2I(20, getHeight() - 4) );
 
-      // Position
-      mBrowseButton->resize( browseRect.point, browseRect.extent );
-   }
+   dSprintf( szBuffer, 512, "getLoadFilename(\"*.*|*.*\", \"%d.apply\", %d.getData());", getId(), getId() );
+   mBrowseButton->setField( "Command", szBuffer );
+   mBrowseButton->setField( "text", "..." );
+   mBrowseButton->setDataField( StringTable->insert("Profile"), NULL, "GuiInspectorButtonProfile" );
+   mBrowseButton->registerObject();
+   addObject( mBrowseButton );
+
+   // Position
+   mBrowseButton->resize( browseRect.point, browseRect.extent );
 
    return retCtrl;
 }
@@ -569,13 +601,12 @@ void GuiInspectorTypeFileName::updateValue()
    }
 }
 
-ConsoleMethod( GuiInspectorTypeFileName, apply, void, 3,3, "apply(newValue);" )
+DefineEngineMethod(GuiInspectorTypeFileName, apply, void, (String path), , "")
 {
-   String path( (const char*)argv[2] );
-   if ( path.isNotEmpty() )
-      path = Platform::makeRelativePathName( path, Platform::getMainDotCsDir() );
-      
-   object->setData( path.c_str() );
+   if (path.isNotEmpty())
+      path = Platform::makeRelativePathName(path, Platform::getMainDotCsDir());
+
+   object->setData(path.c_str());
 }
 
 
@@ -658,7 +689,7 @@ bool GuiInspectorTypeImageFileName::renderTooltip( const Point2I &hoverPos, cons
    if ( !filename || !filename[0] )
       return false;
 
-   GFXTexHandle texture( filename, &GFXDefaultStaticDiffuseProfile, avar("%s() - tooltip texture (line %d)", __FUNCTION__, __LINE__) );
+   GFXTexHandle texture( filename, &GFXStaticTextureSRGBProfile, avar("%s() - tooltip texture (line %d)", __FUNCTION__, __LINE__) );
    if ( texture.isNull() )
       return false;
 
@@ -769,23 +800,20 @@ GuiControl* GuiInspectorTypeShapeFilename::constructEditControl()
 
    // Create "Open in ShapeEditor" button
    mShapeEdButton = new GuiBitmapButtonCtrl();
-   if ( mShapeEdButton != NULL )
-   {
-      char szBuffer[512];
-      dSprintf( szBuffer, sizeof(szBuffer), "ShapeEditorPlugin.open(%d.getText());", retCtrl->getId() );
-      mShapeEdButton->setField( "Command", szBuffer );
 
-      char bitmapName[512] = "tools/worldEditor/images/toolbar/shape-editor";
-      mShapeEdButton->setBitmap( bitmapName );
+   dSprintf(szBuffer, sizeof(szBuffer), "ShapeEditorPlugin.open(%d.getText());", retCtrl->getId());
+   mShapeEdButton->setField("Command", szBuffer);
 
-      mShapeEdButton->setDataField( StringTable->insert("Profile"), NULL, "GuiButtonProfile" );
-      mShapeEdButton->setDataField( StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile" );
-      mShapeEdButton->setDataField( StringTable->insert("hovertime"), NULL, "1000" );
-      mShapeEdButton->setDataField( StringTable->insert("tooltip"), NULL, "Open this file in the Shape Editor" );
+   char bitmapName[512] = "ToolsModule:shape_editor_n_image";
+   mShapeEdButton->setBitmap(StringTable->insert(bitmapName));
 
-      mShapeEdButton->registerObject();
-      addObject( mShapeEdButton );
-   }
+   mShapeEdButton->setDataField(StringTable->insert("Profile"), NULL, "GuiButtonProfile");
+   mShapeEdButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
+   mShapeEdButton->setDataField(StringTable->insert("hovertime"), NULL, "1000");
+   mShapeEdButton->setDataField(StringTable->insert("tooltip"), NULL, "Open this file in the Shape Editor");
+
+   mShapeEdButton->registerObject();
+   addObject(mShapeEdButton);
 
    return retCtrl;
 }
@@ -841,10 +869,6 @@ GuiInspectorTypeCommand::GuiInspectorTypeCommand()
 GuiControl* GuiInspectorTypeCommand::constructEditControl()
 {
    GuiButtonCtrl* retCtrl = new GuiButtonCtrl();
-
-   // If we couldn't construct the control, bail!
-   if( retCtrl == NULL )
-      return retCtrl;
 
    // Let's make it look pretty.
    retCtrl->setDataField( StringTable->insert("profile"), NULL, "GuiInspectorTextEditProfile" );
@@ -926,25 +950,21 @@ GuiControl* GuiInspectorTypeRectUV::constructEditControl()
    //return retCtrl;
    mBrowseButton = new GuiBitmapButtonCtrl();
 
-   if ( mBrowseButton != NULL )
-   {
-      RectI browseRect( Point2I( ( getLeft() + getWidth()) - 26, getTop() + 2), Point2I(20, getHeight() - 4) );
+   RectI browseRect( Point2I( ( getLeft() + getWidth()) - 26, getTop() + 2), Point2I(20, getHeight() - 4) );
 
-      char szBuffer[512];
-      dSprintf( szBuffer, 512, "uvEditor.showDialog(\"%d.apply\", %d, %d.getText());", getId(), mInspector->getInspectObject()->getId(), retCtrl->getId());
-		mBrowseButton->setField( "Command", szBuffer );
+   dSprintf( szBuffer, 512, "uvEditor.showDialog(\"%d.apply\", %d, %d.getText());", getId(), mInspector->getInspectObject()->getId(), retCtrl->getId());
+	mBrowseButton->setField( "Command", szBuffer );
 
-		//temporary static button name
-		char bitmapName[512] = "tools/gui/images/uv-editor-btn";
-		mBrowseButton->setBitmap( bitmapName );
+	//temporary static button name
+	char bitmapName[512] = "ToolsModule:uv_editor_btn_n_image";
+	mBrowseButton->setBitmap(StringTable->insert(bitmapName) );
 
-      mBrowseButton->setDataField( StringTable->insert("Profile"), NULL, "GuiButtonProfile" );
-      mBrowseButton->registerObject();
-      addObject( mBrowseButton );
+   mBrowseButton->setDataField( StringTable->insert("Profile"), NULL, "GuiButtonProfile" );
+   mBrowseButton->registerObject();
+   addObject( mBrowseButton );
 
-      // Position
-      mBrowseButton->resize( browseRect.point, browseRect.extent );
-   }
+   // Position
+   mBrowseButton->resize( browseRect.point, browseRect.extent );
 
    return retCtrl;
 }
@@ -1014,7 +1034,6 @@ GuiControl* GuiInspectorTypeEaseF::constructEditControl()
    mBrowseButton = new GuiButtonCtrl();
    {
       RectI browseRect( Point2I( ( getLeft() + getWidth()) - 26, getTop() + 2), Point2I(20, getHeight() - 4) );
-      char szBuffer[512];
       dSprintf( szBuffer, sizeof( szBuffer ), "GetEaseF(%d.getText(), \"%d.apply\", %d.getRoot());", retCtrl->getId(), getId(), getId() );
       mBrowseButton->setField( "Command", szBuffer );
       mBrowseButton->setField( "text", "E" );
@@ -1065,10 +1084,10 @@ bool GuiInspectorTypeEaseF::updateRects()
 }
 
 //-----------------------------------------------------------------------------
-// GuiInspectorTypeColor (Base for ColorI/ColorF) 
+// GuiInspectorTypeColor (Base for ColorI/LinearColorF) 
 //-----------------------------------------------------------------------------
 GuiInspectorTypeColor::GuiInspectorTypeColor()
- : mBrowseButton( NULL )
+ : mColorFunction(NULL), mBrowseButton( NULL )
 {
 }
 
@@ -1084,10 +1103,6 @@ GuiControl* GuiInspectorTypeColor::constructEditControl()
 {
    GuiControl* retCtrl = new GuiTextEditCtrl();
 
-   // If we couldn't construct the control, bail!
-   if( retCtrl == NULL )
-      return retCtrl;
-
    // Let's make it look pretty.
    retCtrl->setDataField( StringTable->insert("profile"), NULL, "GuiInspectorTextEditProfile" );
 
@@ -1101,46 +1116,42 @@ GuiControl* GuiInspectorTypeColor::constructEditControl()
 
    mBrowseButton = new GuiSwatchButtonCtrl();
 
-   if ( mBrowseButton != NULL )
-   {
-      RectI browseRect( Point2I( ( getLeft() + getWidth()) - 26, getTop() + 2), Point2I(20, getHeight() - 4) );
-      mBrowseButton->setDataField( StringTable->insert("Profile"), NULL, "GuiInspectorSwatchButtonProfile" );
-      mBrowseButton->registerObject();
-      addObject( mBrowseButton );
+   RectI browseRect( Point2I( ( getLeft() + getWidth()) - 26, getTop() + 2), Point2I(20, getHeight() - 4) );
+   mBrowseButton->setDataField( StringTable->insert("Profile"), NULL, "GuiInspectorSwatchButtonProfile" );
+   mBrowseButton->registerObject();
+   addObject( mBrowseButton );
 		
-		char szColor[512];
-      if( _getColorConversionFunction() )
-         dSprintf( szColor, 512, "%s( %d.color )", _getColorConversionFunction(), mBrowseButton->getId() );
-      else
-         dSprintf( szColor, 512, "%d.color", mBrowseButton->getId() );
+   char szColor[2048];
+   if( _getColorConversionFunction() )
+      dSprintf( szColor, 512, "%s( %d.color )", _getColorConversionFunction(), mBrowseButton->getId() );
+   else
+      dSprintf( szColor, 512, "%d.color", mBrowseButton->getId() );
          
-      // If the inspector supports the alternate undo recording path,
-      // use this here.
+   // If the inspector supports the alternate undo recording path,
+   // use this here.
 
-		char szBuffer[2048];
-      GuiInspector* inspector = getInspector();
-      if( inspector->isMethod( "onInspectorPreFieldModification" ) )
-      {
-         dSprintf( szBuffer, sizeof( szBuffer ),
-            "%d.onInspectorPreFieldModification(\"%s\",\"%s\"); %s(%s, \"%d.onInspectorPostFieldModification(); %d.applyWithoutUndo\", %d.getRoot(), \"%d.applyWithoutUndo\", \"%d.onInspectorDiscardFieldModification(); %%unused=\");",
-            inspector->getId(), getRawFieldName(), getArrayIndex(),
-            mColorFunction, szColor, inspector->getId(), getId(),
-            getId(),
-            getId(),
-            inspector->getId()
-         );
-      }
-      else
-         dSprintf( szBuffer, sizeof( szBuffer ),
-            "%s(%s, \"%d.apply\", %d.getRoot());",
-            mColorFunction, szColor, getId(), getId() );
-		
-		mBrowseButton->setConsoleCommand( szBuffer );
-      mBrowseButton->setUseMouseEvents( true ); // Allow drag&drop.
-
-      // Position
-      mBrowseButton->resize( browseRect.point, browseRect.extent );
+   GuiInspector* inspector = getInspector();
+   if( inspector->isMethod( "onInspectorPreFieldModification" ) )
+   {
+      dSprintf( szBuffer, sizeof( szBuffer ),
+         "%d.onInspectorPreFieldModification(\"%s\",\"%s\"); %s(%s, \"%d.onInspectorPostFieldModification(); %d.applyWithoutUndo\", %d.getRoot(), \"%d.applyWithoutUndo\", \"%d.onInspectorDiscardFieldModification(); %%unused=\");",
+         inspector->getId(), getRawFieldName(), getArrayIndex(),
+         mColorFunction, szColor, inspector->getId(), getId(),
+         getId(),
+         getId(),
+         inspector->getId()
+      );
    }
+   else
+      dSprintf( szBuffer, sizeof( szBuffer ),
+         "%s(%s, \"%d.apply\", %d.getRoot());",
+         mColorFunction, szColor, getId(), getId() );
+		
+	mBrowseButton->setConsoleCommand( szBuffer );
+   mBrowseButton->setUseMouseEvents( true ); // Allow drag&drop.
+
+   // Position
+   mBrowseButton->resize( browseRect.point, browseRect.extent );
 
    return retCtrl;
 }
@@ -1224,7 +1235,7 @@ void GuiInspectorTypeColorI::setValue( StringTableEntry newValue )
 IMPLEMENT_CONOBJECT(GuiInspectorTypeColorF);
 
 ConsoleDocClass( GuiInspectorTypeColorF,
-   "@brief Inspector field type for ColorF\n\n"
+   "@brief Inspector field type for LinearColorF\n\n"
    "Editor use only.\n\n"
    "@internal"
 );
@@ -1249,7 +1260,7 @@ void GuiInspectorTypeColorF::setValue( StringTableEntry newValue )
    // Now we also set our color swatch button to the new color value.
    if ( mBrowseButton )
    {      
-      ColorF color(1,0,1,1);
+      LinearColorF color(1,0,1,1);
       dSscanf( newValue, "%f %f %f %f", &color.red, &color.green, &color.blue, &color.alpha );
       mBrowseButton->setColor( color );
    }
@@ -1276,10 +1287,6 @@ void GuiInspectorTypeS32::consoleInit()
 GuiControl* GuiInspectorTypeS32::constructEditControl()
 {
    GuiControl* retCtrl = new GuiTextEditSliderCtrl();
-
-   // If we couldn't construct the control, bail!
-   if( retCtrl == NULL )
-      return retCtrl;
 
    retCtrl->setDataField( StringTable->insert("profile"), NULL, "GuiInspectorTextEditProfile" );
 
@@ -1309,9 +1316,9 @@ void GuiInspectorTypeS32::setValue( StringTableEntry newValue )
 //-----------------------------------------------------------------------------
 
 GuiInspectorTypeBitMask32::GuiInspectorTypeBitMask32()
- : mRollout( NULL ),
-   mArrayCtrl( NULL ),
-   mHelper( NULL )
+ : mHelper( NULL ),
+   mRollout( NULL ),
+   mArrayCtrl( NULL )
 {
 }
 
@@ -1493,7 +1500,7 @@ void GuiInspectorTypeBitMask32::updateData()
    setData( data );   
 }
 
-ConsoleMethod( GuiInspectorTypeBitMask32, applyBit, void, 2,2, "apply();" )
+DefineEngineMethod( GuiInspectorTypeBitMask32, applyBit, void, (),, "" )
 {
    object->updateData();
 }
@@ -1537,7 +1544,7 @@ GuiControl* GuiInspectorTypeBitMask32Helper::constructEditControl()
    mButton->setField( "Command", szBuffer );
    mButton->setField( "buttonType", "ToggleButton" );
    mButton->setDataField( StringTable->insert("Profile"), NULL, "GuiInspectorButtonProfile" );
-   mButton->setBitmap( "tools/gui/images/arrowBtn" );
+   mButton->setBitmap(StringTable->insert("ToolsModule:arrowBtn_image") );
    mButton->setStateOn( true );
    mButton->setExtent( 16, 16 );
    mButton->registerObject();

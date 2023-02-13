@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="menu_fullborder_image"
+    imageFile="@assetFile=menu-fullborder.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

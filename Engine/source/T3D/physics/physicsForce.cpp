@@ -41,9 +41,11 @@ ConsoleDocClass( PhysicsForce,
 
 
 PhysicsForce::PhysicsForce()
-   :  mWorld( NULL ),
-      mBody( NULL ),
-      mPhysicsTick( false )
+   :
+      mWorld( NULL ),
+      mForce(0.0f),
+      mPhysicsTick( false ),
+      mBody( NULL )
 {
 }
 
@@ -52,7 +54,8 @@ PhysicsForce::~PhysicsForce()
 }
 
 void PhysicsForce::initPersistFields()
-{   
+{
+   docsURL;
    Parent::initPersistFields();   
 }
 

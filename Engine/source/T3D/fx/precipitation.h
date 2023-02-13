@@ -33,7 +33,10 @@
 #include "renderInstance/renderPassManager.h"
 #endif
 
-class SFXTrack;
+#include "T3D/assets/ImageAsset.h"
+#include "T3D/assets/SoundAsset.h"
+
+//class SFXTrack;
 class SFXSource;
 
 //--------------------------------------------------------------------------
@@ -43,22 +46,31 @@ class PrecipitationData : public GameBaseData
    typedef GameBaseData Parent;
 
   public:
-   SFXTrack*     soundProfile;
+     DECLARE_SOUNDASSET(PrecipitationData, Sound);
+     DECLARE_ASSET_SETGET(PrecipitationData, Sound);
 
-   StringTableEntry mDropName;         ///< Texture filename for drop particles
-   StringTableEntry mDropShaderName;   ///< The name of the shader used for raindrops
-   StringTableEntry mSplashName;       ///< Texture filename for splash particles
-   StringTableEntry mSplashShaderName; ///< The name of the shader used for raindrops
+      DECLARE_IMAGEASSET(PrecipitationData, Drop, onDropChanged, GFXStaticTextureSRGBProfile); ///< Texture for drop particles
+      DECLARE_ASSET_SETGET(PrecipitationData, Drop);
 
-   S32  mDropsPerSide;     ///< How many drops are on a side of the raindrop texture.
-   S32  mSplashesPerSide;  ///< How many splash are on a side of the splash texture.
+      StringTableEntry mDropShaderName;   ///< The name of the shader used for raindrops
+
+      DECLARE_IMAGEASSET(PrecipitationData, Splash, onSplashChanged, GFXStaticTextureSRGBProfile); ///< Texture for splash particles
+      DECLARE_ASSET_SETGET(PrecipitationData, Splash);
+
+      StringTableEntry mSplashShaderName; ///< The name of the shader used for raindrops
+
+      S32  mDropsPerSide;     ///< How many drops are on a side of the raindrop texture.
+      S32  mSplashesPerSide;  ///< How many splash are on a side of the splash texture.
    
-   PrecipitationData();
-   DECLARE_CONOBJECT(PrecipitationData);
-   bool preload( bool server, String& errorStr );
-   static void  initPersistFields();
-   virtual void packData(BitStream* stream);
-   virtual void unpackData(BitStream* stream);
+      PrecipitationData();
+      DECLARE_CONOBJECT(PrecipitationData);
+      bool preload( bool server, String& errorStr );
+      static void  initPersistFields();
+      virtual void packData(BitStream* stream);
+      virtual void unpackData(BitStream* stream);
+
+      void onDropChanged() {}
+      void onSplashChanged() {}
 };
 
 struct Raindrop
@@ -160,7 +172,7 @@ class Precipitation : public GameBase
    bool mUseLighting;            ///< This enables shading of the drops and splashes
                                  ///< by the sun color.
 
-   ColorF mGlowIntensity;        ///< Set it to 0 to disable the glow or use it to control 
+   LinearColorF mGlowIntensity;        ///< Set it to 0 to disable the glow or use it to control 
                                  ///< the intensity of each channel.
 
    bool mReflect;                ///< This enables the precipitation to be rendered
@@ -239,7 +251,7 @@ class Precipitation : public GameBase
    void destroySplash(Raindrop *drop);       ///< Removes a drop from the splash list
 
    GFXPrimitiveBufferHandle mRainIB;
-   GFXVertexBufferHandle<GFXVertexPT> mRainVB;
+   GFXVertexBufferHandle<GFXVertexPCT> mRainVB;
 
    bool onAdd();
    void onRemove();

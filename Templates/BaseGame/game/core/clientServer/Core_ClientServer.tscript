@@ -1,0 +1,179 @@
+
+// The general flow of a gane - server's creation, loading and hosting clients, and then destruction is as follows:
+
+// First, a client will always create a server in the event that they want to host a single player
+// game. Torque3D treats even single player connections as a soft multiplayer game, with some stuff
+// in the networking short-circuited to sidestep around lag and packet transmission times.
+
+// initServer() is called, loading the default server scripts.
+// After that, if this is a dedicated server session, initDedicated() is called, otherwise initClient is called
+// to prep a playable client session.
+
+// When a local game is started - a listen server - via calling StartGame() a server is created and then the client is
+// connected to it via createAndConnectToLocalServer().
+
+function Core_ClientServer::clearLoadStatus()
+{
+   Core_ClientServer.moduleLoadedDone = 0;
+   Core_ClientServer.moduleLoadedFailed = 0;
+}
+function Core_ClientServer::onLoadMap(%this)
+{
+    %this.finishMapLoad();
+}
+
+function Core_ClientServer::finishMapLoad(%this)
+{
+    Core_ClientServer.GetEventManager().postEvent( "mapLoadComplete" );
+}
+
+function Core_ClientServer::FailMapLoad(%this, %moduleName, %isFine)
+{    
+    Core_ClientServer.failedModuleName = %moduleName;
+    Core_ClientServer.GetEventManager().postEvent( "mapLoadFail", %isFine );
+}
+
+function Core_ClientServerListener::onMapLoadComplete(%this)
+{
+    Core_ClientServer.moduleLoadedDone++;
+    %numModsNeedingLoaded = 0;
+    %modulesList = ModuleDatabase.findModules();
+    for(%i=0; %i < getWordCount(%modulesList); %i++)
+    {
+        %module = getWord(%modulesList, %i);
+        if (%module.ModuleId.isMethod("finishMapLoad"))
+            %numModsNeedingLoaded++;
+    }
+    if (Core_ClientServer.moduleLoadedDone == %numModsNeedingLoaded)
+    {
+        loadMissionStage3();  
+    }
+}
+
+function Core_ClientServerListener::onmapLoadFail(%this, %isFine)
+{   
+    if (%isFine) 
+    {
+        %this.onMapLoadComplete();
+        return;
+    }
+    
+    Core_ClientServer.moduleLoadedFailed++;
+    if (Core_ClientServer.moduleLoadedFailed>1) return; // yeah, we know
+        
+    $Server::LoadFailMsg = Core_ClientServer.failedModuleName @" failed to load mission specific data!";
+    error($Server::LoadFailMsg);
+    // Inform clients that are already connected
+    
+    for (%clientIndex = 0; %clientIndex < ClientGroup.getCount(); %clientIndex++)
+    {
+        %cl = ClientGroup.getObject( %clientIndex );
+        %cl.onConnectionDropped($Server::LoadFailMsg);
+        %cl.endMission();
+        %cl.resetGhosting();
+        %cl.clearPaths();
+    }
+    destroyServer();
+}
+
+function Core_ClientServer::onCreate( %this )
+{
+   echo("\n--------- Initializing Directory: scripts ---------");
+   exec( "./scripts/client/client." @ $TorqueScriptFileExtension );
+   exec( "./scripts/server/server." @ $TorqueScriptFileExtension );
+
+   $Game::MainScene = getScene(0);
+   
+   new ArrayObject(DatablockFilesList);
+   
+   $Game::firstTimeServerRun = true;
+
+   // Start up in either client, or dedicated server mode
+   if ($Server::Dedicated)
+   {
+      initDedicated();
+   }
+   else
+   {
+      initClient();
+   }
+   %this.GetEventManager().registerEvent("mapLoadComplete");
+   %this.GetEventManager().registerEvent("mapLoadFail");
+   %this.listener = new ScriptMsgListener() {class = Core_ClientServerListener;}; 
+   %this.GetEventManager().subscribe( %this.listener, "mapLoadComplete" ); 
+   %this.GetEventManager().subscribe( %this.listener, "mapLoadFail" ); 
+}
+
+function Core_ClientServer::onDestroy( %this )
+{
+   // Ensure that we are disconnected and/or the server is destroyed.
+   // This prevents crashes due to the SceneGraph being deleted before
+   // the objects it contains.
+   if ($Server::Dedicated)
+      destroyServer();
+   else
+      disconnect();
+   
+   // Destroy the physics plugin.
+   //physicsDestroy();
+   
+   sfxShutdown();
+      
+   echo("Exporting client prefs");
+   %prefPath = getPrefpath();
+   export("$pref::*", %prefPath @ "/clientPrefs." @ $TorqueScriptFileExtension, false);
+
+   echo("Exporting server prefs");
+   export("$Pref::Server::*", %prefPath @ "/serverPrefs." @ $TorqueScriptFileExtension, false);
+   BanList::Export(%prefPath @ "/banlist." @ $TorqueScriptFileExtension);
+}
+
+//-----------------------------------------------------------------------------
+function StartGame( %levelAsset, %hostingType )
+{
+   if( %levelAsset $= "" )
+   {
+      %levelAsset = $selectedLevelAsset;
+   }
+
+   if (%hostingType !$= "")
+   {
+      %serverType = %hostingType;
+   }
+   else
+   {
+      if ($pref::HostMultiPlayer)
+         %serverType = "MultiPlayer";
+      else
+         %serverType = "SinglePlayer";
+   }
+
+   // Show the loading screen immediately.
+   if ( isObject( LoadingGui ) )
+   {
+      Canvas.setContent("LoadingGui");
+      LoadingProgress.setValue(1);
+      LoadingProgressTxt.setValue("LOADING MISSION FILE");
+      Canvas.repaint();
+   }
+
+   createAndConnectToLocalServer( %serverType, %levelAsset );
+}
+
+function JoinGame( %serverIndex )
+{
+   // The server info index is stored in the row along with the
+   // rest of displayed info.
+   if( setServerInfo( %serverIndex ) )
+   {
+      Canvas.setContent("LoadingGui");
+      LoadingProgress.setValue(1);
+      LoadingProgressTxt.setValue("WAITING FOR SERVER");
+      Canvas.repaint();
+
+      %conn = new GameConnection(ServerConnection);
+      %conn.setConnectArgs($pref::Player::Name);
+      %conn.setJoinPassword($Client::Password);
+      %conn.connect($ServerInfo::Address);
+   }
+}

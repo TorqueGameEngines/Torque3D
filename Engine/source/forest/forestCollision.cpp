@@ -124,7 +124,7 @@ Point3F ForestConvex::support(const VectorF& v) const
 void ForestConvex::getFeatures( const MatrixF &mat, const VectorF &n, ConvexFeature *cf )
 {
    cf->material = 0;
-   cf->object = mObject;
+   cf->mObject = mObject;
 
    TSShapeInstance *si = mData->getShapeInstance();
 
@@ -151,7 +151,7 @@ void ForestConvex::getFeatures( const MatrixF &mat, const VectorF &n, ConvexFeat
    for (i = 0; i < numVerts; i++) 
    {
       cf->mVertexList.increment();
-      U32 index = emitString[currPos++];
+      index = emitString[currPos++];
       mat.mulP(pAccel->vertexList[index], &cf->mVertexList.last());
    }
 
@@ -355,7 +355,7 @@ bool ForestData::castRay( const Point3F &start, const Point3F &end, RayInfo *out
    shortest.t = F32_MAX;
 
    BucketTable::ConstIterator iter = mBuckets.begin();
-   for ( ; iter != mBuckets.end(); iter++ )
+   for (; iter != mBuckets.end(); ++iter)
    {
       if ( iter->value->castRay( start, end, outInfo, rendered ) )
       {

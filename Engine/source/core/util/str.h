@@ -29,6 +29,7 @@
 #include "platform/types.h"
 #endif
 
+#include <string.h>
 
 template< class T > class Vector;
 
@@ -62,7 +63,7 @@ public:
    String();
    String(const String &str);
    String(const StringChar *str);
-   String(const StringChar *str, SizeType size);
+   String(const StringChar *str, SizeType size); ///< Copy from raw data
    String(const UTF16 *str);
    ~String();
 
@@ -74,6 +75,7 @@ public:
    SizeType size() const;     ///< Returns the length of the string in bytes including the NULL terminator.
    SizeType numChars() const; ///< Returns the length of the string in characters.
    bool     isEmpty() const;  ///< Is this an empty string [""]?
+   static bool isEmpty(const char*); // is the input empty?
    bool     isNotEmpty() const { return !isEmpty(); }  ///< Is this not an empty string [""]?
 
    /// Erases all characters in a string.
@@ -101,6 +103,8 @@ public:
    */
    S32 compare(const StringChar *str, SizeType len = 0, U32 mode = Case|Left) const;
    S32 compare(const String &str, SizeType len = 0, U32 mode = Case|Left) const; ///< @see compare(const StringChar *, SizeType, U32) const
+   static S32 compare(const char *str1, const char *str2);
+   static S32 compare(const UTF16 *str1, const UTF16 *str2);
 
    /**
       Compare two strings for equality.
@@ -183,13 +187,14 @@ public:
    static inline String ToString( S32 v ) { return ToString( "%d", v ); }
    static inline String ToString( F32 v ) { return ToString( "%g", v ); }
    static inline String ToString( F64 v ) { return ToString( "%Lg", v ); }
-
+   inline operator const char* () { return c_str(); }
    static String SpanToString(const char* start, const char* end);
 
    static String ToLower(const String &string);
    static String ToUpper(const String &string);
 
    static String GetTrailingNumber(const char* str, S32& number);
+   static String GetFirstNumber(const char* str, U32& startPos, U32& endPos);
 
    /// @}
 
@@ -242,7 +247,7 @@ public:
             _dynamicSize( 0 ),
             _len( 0 )
       {
-         _fixedBuffer[0] = '\0';
+         strncpy(_fixedBuffer, "", 2048);
       }
 
       StrFormat(const char *formatStr, va_list args)
@@ -267,7 +272,7 @@ public:
       void reset()
       {
          _len = 0;
-         _fixedBuffer[0] = '\0';
+         strncpy(_fixedBuffer, "", 2048);
       }
 
       /// Copy the formatted string into the output buffer which must be at least size() characters.
@@ -292,10 +297,9 @@ private:
    // causes an ambiguous cast compile error.  Making it private is simply
    // more insurance that it isn't used on different compilers.
    // NOTE: disable on GCC since it causes hyper casting to U32 on gcc.
-#ifndef TORQUE_COMPILER_GCC
+#if !defined(TORQUE_COMPILER_GCC) && !defined(__clang__)
    operator const bool() const { return false; }
 #endif
-
 
    static void copy(StringChar *dst, const StringChar *src, U32 size);
 
@@ -357,7 +361,9 @@ class StringBuilder
       {
          va_list args;
          va_start(args, fmt);
-         return mFormat.formatAppend(fmt, args);
+         const S32 result = mFormat.formatAppend(fmt, args);
+         va_end(args);
+         return result;
       }
 };
 

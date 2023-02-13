@@ -32,7 +32,7 @@ public:
    /// Initialize core libraries and call registered init functions
    static void init();
 
-   /// Pass command line arguments to registered functions and main.cs
+   /// Pass command line arguments to registered functions and main.tscript
    static bool handleCommandLine(S32 argc, const char **argv);
 
    /// A standard mainloop implementation.

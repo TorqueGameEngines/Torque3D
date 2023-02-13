@@ -50,13 +50,15 @@ GuiTabPageCtrl::GuiTabPageCtrl(void)
 {
    setExtent(Point2I(100, 200));
    mFitBook = false;
-   dStrcpy(mText,(UTF8*)"TabPage");
+   dStrcpy(mText,(UTF8*)"TabPage", MAX_STRING_LENGTH);
    mActive = true;
    mIsContainer = true;
+   mTabIndex = -1;
 }
 
 void GuiTabPageCtrl::initPersistFields()
 {
+   docsURL;
    addField( "fitBook", TypeBool, Offset( mFitBook, GuiTabPageCtrl ),
       "Determines whether to resize this page when it is added to the tab book. "
       "If true, the page will be resized according to the tab book extents and "

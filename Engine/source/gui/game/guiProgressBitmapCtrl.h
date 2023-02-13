@@ -31,6 +31,7 @@
 #include "gui/controls/guiTextCtrl.h"
 #endif
 
+#include "T3D/assets/ImageAsset.h"
 
 //FIXME: WTH is this derived from GuiTextCtrl??  should be a GuiControl
 
@@ -45,7 +46,10 @@ class GuiProgressBitmapCtrl : public GuiTextCtrl
    protected:
 
       F32 mProgress;
-      StringTableEntry mBitmapName;
+
+      DECLARE_IMAGEASSET(GuiProgressBitmapCtrl, Bitmap, onImageChanged, GFXDefaultGUIProfile);
+      DECLARE_ASSET_SETGET(GuiProgressBitmapCtrl, Bitmap);
+
       bool mUseVariable;
       bool mTile;
       S32 mNumberOfBitmaps;
@@ -56,6 +60,8 @@ class GuiProgressBitmapCtrl : public GuiTextCtrl
          static_cast< GuiProgressBitmapCtrl* >( object )->setBitmap( data );
          return false;
       }
+
+      void onImageChanged() {}
 
    public:
          

@@ -36,8 +36,8 @@ static VectorPtr< ConsoleBaseType* > gConsoleTypeTable( __FILE__, __LINE__ );
 //-----------------------------------------------------------------------------
 
 ConsoleBaseType::ConsoleBaseType( const S32 size, S32 *idPtr, const char *aTypeName )
-   :  mInspectorFieldType( NULL ),
-      mTypeSize( size ),
+   :  mTypeSize( size ),
+      mInspectorFieldType( NULL ),
       mTypeInfo( NULL )
 {
    mTypeName = StringTable->insert( aTypeName );
@@ -93,7 +93,7 @@ ConsoleBaseType* ConsoleBaseType::getTypeByName(const char *typeName)
    ConsoleBaseType* walk = getListHead();
    while( walk != NULL )
    {
-      if( dStrcmp( walk->getTypeName(), typeName ) == 0 )
+      if( String::compare( walk->getTypeName(), typeName ) == 0 )
          return walk;
 
       walk = walk->getListNext();
@@ -109,7 +109,7 @@ ConsoleBaseType * ConsoleBaseType::getTypeByClassName(const char *typeName)
    ConsoleBaseType *walk = getListHead();
    while( walk != NULL )
    {
-      if( dStrcmp( walk->getTypeClassName(), typeName ) == 0 )
+      if( String::compare( walk->getTypeClassName(), typeName ) == 0 )
          return walk;
 
       walk = walk->getListNext();

@@ -41,9 +41,8 @@ SimSet* ForestItemData::smSet = NULL;
 
 ForestItemData::ForestItemData()
    :  mNeedPreload( true ),
-      mShapeFile( NULL ),
+      mRadius( 1 ),
       mCollidable( true ),
-      mRadius( 1 ),      
       mWindScale( 0.0f ),
       mTrunkBendScale( 0.0f ),
       mWindBranchAmp( 0.0f ),
@@ -54,24 +53,26 @@ ForestItemData::ForestItemData()
       mTightnessCoefficient( 0.4f ),
       mDampingCoefficient( 0.7f )      
 {
+   INIT_ASSET(Shape);
 }
 
 void ForestItemData::initPersistFields()
 {
-   Parent::initPersistFields();
+   docsURL;
+   addGroup( "Shapes" );
 
-   addGroup( "Media" );
+      INITPERSISTFIELD_SHAPEASSET(Shape, ForestItemData, "Shape asset for this item type");
       
-      addField( "shapeFile",  TypeShapeFilename, Offset( mShapeFile, ForestItemData ),
-         "Shape file for this item type" );
+      addProtectedField( "shapeFile",  TypeShapeFilename, Offset( mShapeName, ForestItemData ), &_setShapeData, &defaultProtectedGetFn,
+         "Shape file for this item type", AbstractClassRep::FIELD_HideInInspectors );
+   endGroup( "Shape(s)" );
 
+   addGroup("Physics");
       addField( "collidable",   TypeBool, Offset( mCollidable, ForestItemData ),
          "Can other objects or spacial queries hit items of this type." );
-
       addField( "radius", TypeF32, Offset( mRadius, ForestItemData ),
          "Radius used during placement to ensure items are not crowded." );
-
-   endGroup( "Media" );
+   endGroup("Physics");
 
    addGroup( "Wind" );
       
@@ -106,6 +107,7 @@ void ForestItemData::initPersistFields()
          "Frequency (speed) of the effect on leafs/fronds." );
 
    endGroup( "Wind" );
+   Parent::initPersistFields();
 }
 
 void ForestItemData::consoleInit()
@@ -162,7 +164,7 @@ void ForestItemData::packData(BitStream* stream)
 
    stream->write( localName );
 
-   stream->writeString(mShapeFile);
+   PACKDATA_ASSET(Shape);
    
    stream->writeFlag( mCollidable );
 
@@ -188,10 +190,7 @@ void ForestItemData::unpackData(BitStream* stream)
    stream->read( &localName );
    setInternalName( localName );
 
-   char readBuffer[1024];
-
-   stream->readString(readBuffer);
-   mShapeFile = StringTable->insert(readBuffer);
+   UNPACKDATA_ASSET(Shape);
    
    mCollidable = stream->readFlag();
 
@@ -215,9 +214,9 @@ ForestItem::ForestItem()
    :  mDataBlock( NULL ),
       mTransform( true ),
       mScale( 0.0f ),
-      mWorldBox( 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f ),
+      mKey( 0 ),
       mRadius( 0.0f ),
-      mKey( 0 )
+      mWorldBox( 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f )
 {
 }
 

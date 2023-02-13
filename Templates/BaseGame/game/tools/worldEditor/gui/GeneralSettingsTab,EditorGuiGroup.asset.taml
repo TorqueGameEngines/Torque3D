@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="GeneralSettingsTab,EditorGuiGroup"
+    scriptFile="@assetFile=GeneralSettingsTab.ed.gui"
+    GUIFile="@assetFile=GeneralSettingsTab.ed.gui"
+    VersionId="1" />

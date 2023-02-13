@@ -36,9 +36,12 @@
 #include "console/engineAPI.h"
 #include "sim/netConnection.h"
 #include "T3D/gameBase/gameConnection.h"
+#include "math/mathUtils.h"
 
 // For player object bounds workaround.
 #include "T3D/player.h"
+
+#include "postFx/postEffectManager.h"
 
 extern bool gEditingMission;
 
@@ -46,7 +49,8 @@ extern bool gEditingMission;
 MODULE_BEGIN( Scene )
 
    MODULE_INIT_AFTER( Sim )   
-   MODULE_SHUTDOWN_BEFORE( Sim )
+   MODULE_SHUTDOWN_AFTER( Sim )
+   MODULE_SHUTDOWN_AFTER( VolumetricFogRTManager )
    
    MODULE_INIT
    {
@@ -105,17 +109,17 @@ SceneManager* gServerSceneGraph = NULL;
 //-----------------------------------------------------------------------------
 
 SceneManager::SceneManager( bool isClient )
-   : mLightManager( NULL ),
-     mCurrentRenderState( NULL ),
-     mIsClient( isClient ),
+   : mIsClient( isClient ),
+     mZoneManager( NULL ),
      mUsePostEffectFog( true ),
      mDisplayTargetResolution( 0, 0 ),
-     mDefaultRenderPass( NULL ),
+     mCurrentRenderState( NULL ),
      mVisibleDistance( 500.f ),
      mVisibleGhostDistance( 0 ),
      mNearClip( 0.1f ),
-     mAmbientLightColor( ColorF( 0.1f, 0.1f, 0.1f, 1.0f ) ),
-     mZoneManager( NULL )
+     mLightManager( NULL ),
+     mAmbientLightColor( LinearColorF( 0.1f, 0.1f, 0.1f, 1.0f ) ),
+     mDefaultRenderPass( NULL )
 {
    VECTOR_SET_ASSOCIATION( mBatchQueryList );
 
@@ -189,7 +193,7 @@ void SceneManager::renderScene( SceneRenderState* renderState, U32 objectMask, S
    // Get the lights for rendering the scene.
 
    PROFILE_START( SceneGraph_registerLights );
-      LIGHTMGR->registerGlobalLights( &renderState->getCullingFrustum(), false );
+      LIGHTMGR->registerGlobalLights( &renderState->getCullingFrustum(), false, renderState->isDiffusePass());
    PROFILE_END();
 
    // If its a diffuse pass, update the current ambient light level.
@@ -208,7 +212,7 @@ void SceneManager::renderScene( SceneRenderState* renderState, U32 objectMask, S
          AssertFatal( baseObject != NULL, "SceneManager::renderScene - findZone() did not return an object" );
       }
 
-      ColorF zoneAmbient;
+      LinearColorF zoneAmbient;
       if( baseObject && baseObject->getZoneAmbientLightColor( baseZone, zoneAmbient ) )
          mAmbientLightColor.setTargetValue( zoneAmbient );
       else
@@ -236,71 +240,64 @@ void SceneManager::renderScene( SceneRenderState* renderState, U32 objectMask, S
       // Store previous values
       RectI originalVP = GFX->getViewport();
       MatrixF originalWorld = GFX->getWorldMatrix();
+      Frustum originalFrustum = GFX->getFrustum();
 
-      Point2F projOffset = GFX->getCurrentProjectionOffset();
-      Point3F eyeOffset = GFX->getStereoEyeOffset();
+      // Save PFX & SceneManager projections
+      MatrixF origNonClipProjection = renderState->getSceneManager()->getNonClipProjection();
+      PFXFrameState origPFXState = PFXMGR->getFrameState();
 
-      // Indicate that we're about to start a field
-      GFX->beginField();
+      const FovPort *currentFovPort = GFX->getStereoFovPort();
+      const MatrixF *worldEyeTransforms = GFX->getInverseStereoEyeTransforms();
 
       // Render left half of display
-      RectI leftVP = originalVP;
-      leftVP.extent.x *= 0.5;
-      GFX->setViewport(leftVP);
+      GFX->activateStereoTarget(0);
+      GFX->beginField();
 
-      MatrixF leftWorldTrans(true);
-      leftWorldTrans.setPosition(Point3F(eyeOffset.x, eyeOffset.y, eyeOffset.z));
-      MatrixF leftWorld(originalWorld);
-      leftWorld.mulL(leftWorldTrans);
-      GFX->setWorldMatrix(leftWorld);
+      GFX->setWorldMatrix(worldEyeTransforms[0]);
 
-      Frustum gfxFrustum = GFX->getFrustum();
-      gfxFrustum.setProjectionOffset(Point2F(projOffset.x, projOffset.y));
+      Frustum gfxFrustum = originalFrustum;
+      MathUtils::makeFovPortFrustum(&gfxFrustum, gfxFrustum.isOrtho(), gfxFrustum.getNearDist(), gfxFrustum.getFarDist(), currentFovPort[0]);
       GFX->setFrustum(gfxFrustum);
 
       SceneCameraState cameraStateLeft = SceneCameraState::fromGFX();
       SceneRenderState renderStateLeft( this, renderState->getScenePassType(), cameraStateLeft );
+      renderStateLeft.getSceneManager()->setNonClipProjection(GFX->getProjectionMatrix());
       renderStateLeft.setSceneRenderStyle(SRS_SideBySide);
-      renderStateLeft.setSceneRenderField(0);
+      PFXMGR->setFrameMatrices(GFX->getWorldMatrix(), GFX->getProjectionMatrix());
 
-      renderSceneNoLights( &renderStateLeft, objectMask, baseObject, baseZone );
+      renderSceneNoLights( &renderStateLeft, objectMask, baseObject, baseZone ); // left
 
       // Indicate that we've just finished a field
+      //GFX->clear(GFXClearTarget | GFXClearZBuffer | GFXClearStencil, ColorI(255,0,0), 1.0f, 0);
       GFX->endField();
-
-      // Indicate that we're about to start a field
-      GFX->beginField();
-
+      
       // Render right half of display
-      RectI rightVP = originalVP;
-      rightVP.extent.x *= 0.5;
-      rightVP.point.x += rightVP.extent.x;
-      GFX->setViewport(rightVP);
+      GFX->activateStereoTarget(1);
+      GFX->beginField();
+      GFX->setWorldMatrix(worldEyeTransforms[1]);
 
-      MatrixF rightWorldTrans(true);
-      rightWorldTrans.setPosition(Point3F(-eyeOffset.x, eyeOffset.y, eyeOffset.z));
-      MatrixF rightWorld(originalWorld);
-      rightWorld.mulL(rightWorldTrans);
-      GFX->setWorldMatrix(rightWorld);
-
-      gfxFrustum = GFX->getFrustum();
-      gfxFrustum.setProjectionOffset(Point2F(-projOffset.x, projOffset.y));
+      gfxFrustum = originalFrustum;
+      MathUtils::makeFovPortFrustum(&gfxFrustum, gfxFrustum.isOrtho(), gfxFrustum.getNearDist(), gfxFrustum.getFarDist(), currentFovPort[1]);
       GFX->setFrustum(gfxFrustum);
 
       SceneCameraState cameraStateRight = SceneCameraState::fromGFX();
       SceneRenderState renderStateRight( this, renderState->getScenePassType(), cameraStateRight );
+      renderStateRight.getSceneManager()->setNonClipProjection(GFX->getProjectionMatrix());
       renderStateRight.setSceneRenderStyle(SRS_SideBySide);
-      renderStateRight.setSceneRenderField(1);
+      PFXMGR->setFrameMatrices(GFX->getWorldMatrix(), GFX->getProjectionMatrix());
 
-      renderSceneNoLights( &renderStateRight, objectMask, baseObject, baseZone );
+      renderSceneNoLights( &renderStateRight, objectMask, baseObject, baseZone ); // right
 
       // Indicate that we've just finished a field
+      //GFX->clear(GFXClearTarget | GFXClearZBuffer | GFXClearStencil, ColorI(0,255,0), 1.0f, 0);
       GFX->endField();
 
       // Restore previous values
+      renderState->getSceneManager()->setNonClipProjection(origNonClipProjection);
+      PFXMGR->setFrameState(origPFXState);
+
       GFX->setWorldMatrix(originalWorld);
-      gfxFrustum.clearProjectionOffset();
-      GFX->setFrustum(gfxFrustum);
+      GFX->setFrustum(originalFrustum);
       GFX->setViewport(originalVP);
    }
    else
@@ -464,6 +461,13 @@ void SceneManager::_renderScene( SceneRenderState* state, U32 objectMask, SceneZ
 
    PROFILE_END();
 
+   //store our rendered objects into a list we can easily look up against later if required
+   mRenderedObjectsList.clear();
+   for (U32 i = 0; i < numRenderObjects; ++i)
+   {
+      mRenderedObjectsList.push_back(mBatchQueryList[i]);
+   }
+
    // Render the remaining objects.
 
    PROFILE_START( Scene_renderObjects );
@@ -499,7 +503,7 @@ void SceneManager::_renderScene( SceneRenderState* state, U32 objectMask, SceneZ
          const Box3F& worldBox = object->getWorldBox();
          GFX->getDrawUtil()->drawObjectBox(
             desc,
-            Point3F( worldBox.len_x(), worldBox.len_y(), worldBox.len_z() ),
+            Point3F( worldBox.len_x() / 2, worldBox.len_y() / 2, worldBox.len_z() / 2),
             worldBox.getCenter(),
             MatrixF::Identity,
             ColorI::WHITE
@@ -712,7 +716,7 @@ RenderPassManager* SceneManager::getDefaultRenderPass() const
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleFunction( sceneDumpZoneStates, void, ( bool updateFirst ), ( true ),
+DefineEngineFunction( sceneDumpZoneStates, void, ( bool updateFirst ), ( true ),
    "Dump the current zoning states of all zone spaces in the scene to the console.\n\n"
    "@param updateFirst If true, zoning states are brought up to date first; if false, the zoning states "
    "are dumped as is.\n\n"
@@ -737,7 +741,7 @@ DefineConsoleFunction( sceneDumpZoneStates, void, ( bool updateFirst ), ( true )
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleFunction( sceneGetZoneOwner, SceneObject*, ( U32 zoneId ), ( true ),
+DefineEngineFunction( sceneGetZoneOwner, SceneObject*, ( U32 zoneId ),,
    "Return the SceneObject that contains the given zone.\n\n"
    "@param zoneId ID of zone.\n"
    "@return A SceneObject or NULL if the given @a zoneId is invalid.\n\n"

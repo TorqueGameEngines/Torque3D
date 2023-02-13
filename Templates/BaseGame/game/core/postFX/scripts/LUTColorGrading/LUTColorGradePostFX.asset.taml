@@ -1,0 +1,8 @@
+<PostEffectAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="LUTColorGradePostFX"
+    scriptFile="@assetFile=LUTColorGradePostFX.cs"
+    hlslShader="@assetFile=LUTColorGradePostFXP.hlsl"
+    glslShader="@assetFile=LUTColorGradePostFXP.glsl"
+    VersionId="1" />

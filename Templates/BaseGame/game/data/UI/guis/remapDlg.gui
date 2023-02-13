@@ -1,0 +1,78 @@
+//--- OBJECT WRITE BEGIN ---
+$guiContent = new GuiControl(RemapDlg) {
+   extent = "1024 768";
+   minExtent = "8 8";
+   profile = "GuiDefaultProfile";
+   tooltipProfile = "GuiToolTipProfile";
+   isContainer = "1";
+   canSaveDynamicFields = "1";
+      helpTag = "0";
+
+   new GuiContainer(RemapPanel) {
+      position = "162 332";
+      extent = "700 104";
+      horizSizing = "center";
+      vertSizing = "center";
+      profile = "GuiDefaultProfile";
+      tooltipProfile = "GuiToolTipProfile";
+
+      new GuiInputCtrl(OptRemapInputCtrl) {
+         position = "480 0";
+         extent = "64 104";
+         minExtent = "8 8";
+         horizSizing = "width";
+         vertSizing = "height";
+         profile = "GuiInputCtrlProfile";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+      new GuiControl(RemapBoxCtrl) {
+         position = "-1 1";
+         extent = "701 102";
+         horizSizing = "center";
+         vertSizing = "center";
+         profile = "GuiDefaultProfile";
+         tooltipProfile = "GuiToolTipProfile";
+         isContainer = "1";
+
+         new GuiBitmapBarCtrl() {
+            BitmapAsset = "UI:panel_image";
+            extent = "701 40";
+            horizSizing = "width";
+            profile = "GuiDefaultProfile";
+            tooltipProfile = "GuiToolTipProfile";
+         };
+         new GuiBitmapBarCtrl() {
+            BitmapAsset = "UI:panel_low_image";
+            position = "0 40";
+            extent = "701 341";
+            horizSizing = "width";
+            profile = "GuiDefaultProfile";
+            tooltipProfile = "GuiToolTipProfile";
+         };
+         new GuiTextCtrl() {
+            text = "Press escape to cancel";
+            maxLength = "255";
+            position = "260 67";
+            extent = "181 23";
+            minExtent = "8 8";
+            horizSizing = "width";
+            vertSizing = "height";
+            profile = "MenuMLSubHeaderTextCenter";
+            tooltipProfile = "GuiToolTipProfile";
+         };
+         new GuiTextCtrl() {
+            text = "Re-bind \"Forward\" to...";
+            maxLength = "255";
+            position = "259 40";
+            extent = "184 23";
+            minExtent = "8 8";
+            horizSizing = "center";
+            vertSizing = "height";
+            profile = "MenuMLSubHeaderTextCenter";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "OptRemapText";
+         };
+      };
+   };
+};
+//--- OBJECT WRITE END ---

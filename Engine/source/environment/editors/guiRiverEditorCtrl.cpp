@@ -43,6 +43,8 @@
 #include "T3D/gameBase/gameConnection.h"
 #include "T3D/prefab.h"
 
+#include "T3D/Scene.h"
+
 IMPLEMENT_CONOBJECT(GuiRiverEditorCtrl);
 
 ConsoleDocClass( GuiRiverEditorCtrl,
@@ -52,9 +54,9 @@ ConsoleDocClass( GuiRiverEditorCtrl,
 );
 
 GuiRiverEditorCtrl::GuiRiverEditorCtrl()
- : mDefaultNormal( 0, 0, 1 ),
-   mDefaultWidth( 10.0f ),
-   mDefaultDepth( 5.0f )
+ : mDefaultWidth( 10.0f ),
+   mDefaultDepth( 5.0f ),
+   mDefaultNormal( 0, 0, 1 )
 {   
 	// Each of the mode names directly correlates with the River Editor's
 	// tool palette
@@ -82,6 +84,7 @@ GuiRiverEditorCtrl::GuiRiverEditorCtrl()
    mStartHeight = -1.0f;
    mStartX = 0;
 
+   mSavedDrag = false;
    mIsDirty = false;
 
    mNodeHalfSize.set(4,4);
@@ -165,6 +168,7 @@ bool GuiRiverEditorCtrl::onAdd()
 
 void GuiRiverEditorCtrl::initPersistFields()
 {
+   docsURL;
    addField( "DefaultWidth",        TypeF32,    Offset( mDefaultWidth, GuiRiverEditorCtrl ) );
 	addField( "DefaultDepth",        TypeF32,    Offset( mDefaultDepth, GuiRiverEditorCtrl ) );
 	addField( "DefaultNormal",       TypePoint3F,Offset( mDefaultNormal, GuiRiverEditorCtrl ) );
@@ -435,7 +439,8 @@ void GuiRiverEditorCtrl::_process3DMouseDown( const Gui3DMouseEvent& event )
          return;
       }
 
-      const char *res = Con::executef( this, "createRiver" );
+      ConsoleValue cValue = Con::executef( this, "createRiver" );
+      const char* res = cValue.getString();
 
       River *newRiver;
       if ( !Sim::findObject( res, newRiver ) )
@@ -444,12 +449,12 @@ void GuiRiverEditorCtrl::_process3DMouseDown( const Gui3DMouseEvent& event )
          return;
       }                
 
-      // Add to MissionGroup                              
-      SimGroup *missionGroup;
-      if ( !Sim::findObject( "MissionGroup", missionGroup ) )               
-         Con::errorf( "GuiRiverEditorCtrl - could not find MissionGroup to add new River" );
+      // Add to Scene                              
+      Scene* scene = Scene::getRootScene();
+      if ( !scene )               
+         Con::errorf( "GuiRiverEditorCtrl - could not find root Scene to add new River" );
       else
-         missionGroup->addObject( newRiver );
+         scene->addObject( newRiver );
 
       Point3F pos( endPnt );
       pos.z += mDefaultDepth * 0.5f;
@@ -1235,7 +1240,7 @@ F32 GuiRiverEditorCtrl::getNodeDepth()
    return 0.0f;
 }
 
-void GuiRiverEditorCtrl::setNodePosition( Point3F pos )
+void GuiRiverEditorCtrl::setNodePosition(const Point3F& pos)
 {
    if ( mSelRiver && mSelNode != -1 )
    {
@@ -1277,11 +1282,11 @@ void GuiRiverEditorCtrl::setSelectedNode( S32 node )
    mSelNode = node;
    if ( mSelNode != -1 )
    {
-      const RiverNode &node = mSelRiver->mNodes[mSelNode];
+      const RiverNode &curNode = mSelRiver->mNodes[mSelNode];
 
       MatrixF objMat = mSelRiver->getNodeTransform(mSelNode);      
-      Point3F objScale( node.width, 1.0f, node.depth );
-      Point3F worldPos = node.point;
+      Point3F objScale(curNode.width, 1.0f, curNode.depth );
+      Point3F worldPos = curNode.point;
 
       mGizmo->set( objMat, worldPos, objScale );
    }
@@ -1393,68 +1398,68 @@ void GuiRiverEditorCtrl::_renderSelectedRiver( ObjectRenderInst *ri, SceneRender
    }
 }
 
-DefineConsoleMethod( GuiRiverEditorCtrl, deleteNode, void, (), , "deleteNode()" )
+DefineEngineMethod( GuiRiverEditorCtrl, deleteNode, void, (), , "deleteNode()" )
 {
    object->deleteSelectedNode();
 }
 
-DefineConsoleMethod( GuiRiverEditorCtrl, getMode, const char*, (), , "" )
+DefineEngineMethod( GuiRiverEditorCtrl, getMode, const char*, (), , "" )
 {
    return object->getMode();
 }
 
-DefineConsoleMethod( GuiRiverEditorCtrl, setMode, void, ( const char * mode ), , "setMode( String mode )" )
+DefineEngineMethod( GuiRiverEditorCtrl, setMode, void, ( const char * mode ), , "setMode( String mode )" )
 {
    String newMode = ( mode );
    object->setMode( newMode );
 }
 
-DefineConsoleMethod( GuiRiverEditorCtrl, getNodeWidth, F32, (), , "" )
+DefineEngineMethod( GuiRiverEditorCtrl, getNodeWidth, F32, (), , "" )
 {
    return object->getNodeWidth();
 }
 
-DefineConsoleMethod( GuiRiverEditorCtrl, setNodeWidth, void, ( F32 width ), , "" )
+DefineEngineMethod( GuiRiverEditorCtrl, setNodeWidth, void, ( F32 width ), , "" )
 {
    object->setNodeWidth( width );
 }
 
-DefineConsoleMethod( GuiRiverEditorCtrl, getNodeDepth, F32, (), , "" )
+DefineEngineMethod( GuiRiverEditorCtrl, getNodeDepth, F32, (), , "" )
 {
    return object->getNodeDepth();
 }
 
-DefineConsoleMethod( GuiRiverEditorCtrl, setNodeDepth, void, ( F32 depth ), , "" )
+DefineEngineMethod( GuiRiverEditorCtrl, setNodeDepth, void, ( F32 depth ), , "" )
 {
    object->setNodeDepth( depth );
 }
 
-DefineConsoleMethod( GuiRiverEditorCtrl, getNodePosition, Point3F, (), , "" )
+DefineEngineMethod( GuiRiverEditorCtrl, getNodePosition, Point3F, (), , "" )
 {
 
 	return  object->getNodePosition();
 }
 
-DefineConsoleMethod( GuiRiverEditorCtrl, setNodePosition, void, (Point3F pos), , "" )
+DefineEngineMethod( GuiRiverEditorCtrl, setNodePosition, void, (Point3F pos), , "" )
 {
    object->setNodePosition( pos );
 }
 
-DefineConsoleMethod( GuiRiverEditorCtrl, getNodeNormal, Point3F, (), , "" )
+DefineEngineMethod( GuiRiverEditorCtrl, getNodeNormal, Point3F, (), , "" )
 {
 
 	return object->getNodeNormal();
 }
 
-DefineConsoleMethod( GuiRiverEditorCtrl, setNodeNormal, void, (Point3F normal), , "" )
+DefineEngineMethod( GuiRiverEditorCtrl, setNodeNormal, void, (Point3F normal), , "" )
 {
 
    object->setNodeNormal( normal );
 }
 
-DefineConsoleMethod( GuiRiverEditorCtrl, setSelectedRiver, void, (const char * objName), (""), "" )
+DefineEngineMethod( GuiRiverEditorCtrl, setSelectedRiver, void, (const char * objName), (""), "" )
 {
-   if (dStrcmp( objName,"" )==0)
+   if (String::compare( objName,"" )==0)
       object->setSelectedRiver(NULL);
    else
    {
@@ -1464,16 +1469,16 @@ DefineConsoleMethod( GuiRiverEditorCtrl, setSelectedRiver, void, (const char * o
    }
 }
 
-DefineConsoleMethod( GuiRiverEditorCtrl, getSelectedRiver, S32, (), , "" )
+DefineEngineMethod( GuiRiverEditorCtrl, getSelectedRiver, S32, (), , "" )
 {
    River *river = object->getSelectedRiver();
    if ( !river )
-      return NULL;
+      return 0;
 
    return river->getId();
 }
 
-DefineConsoleMethod( GuiRiverEditorCtrl, regenerate, void, (), , "" )
+DefineEngineMethod( GuiRiverEditorCtrl, regenerate, void, (), , "" )
 {
    River *river = object->getSelectedRiver();
    if ( river )

@@ -22,7 +22,8 @@
 
 #ifndef _GUINAVEDITORCTRL_H_
 #define _GUINAVEDITORCTRL_H_
-
+#include "torqueConfig.h"
+#ifdef TORQUE_TOOLS
 #ifndef _EDITTSCTRL_H_
 #include "gui/worldEditor/editTSCtrl.h"
 #endif
@@ -125,7 +126,6 @@ protected:
    GFXStateBlockRef mZDisableSB;
    GFXStateBlockRef mZEnableSB;
 
-   bool mSavedDrag;
    bool mIsDirty;
 
    String mMode;
@@ -169,20 +169,18 @@ protected:
 class GuiNavEditorUndoAction : public UndoAction
 {
 public:
-   GuiNavEditorUndoAction(const UTF8* actionName) : UndoAction(actionName)
+   GuiNavEditorUndoAction(const UTF8* actionName) : UndoAction(actionName), mNavEditor(NULL), mObjId(0)
    {
    }
 
    GuiNavEditorCtrl *mNavEditor;         
 
    SimObjectId mObjId;
-   F32 mMetersPerSegment;
-   U32 mSegmentsPerBatch;
 
    virtual void undo();
    virtual void redo() { undo(); }
 };
-
+#endif
 #endif
 
 

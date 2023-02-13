@@ -42,7 +42,7 @@ ConsoleDocClass( RenderFormatToken,
    
    "The RenderPassStateBin manager changes the rendering state associated with "
    "this token. In stock Torque 3D, a single example exists in the "
-   "way of AL_FormatToken (found in renderManager.cs). In that script file, all the "
+   "way of AL_FormatToken (found in renderManager." TORQUE_SCRIPT_EXTENSION "). In that script file, all the "
    "render managers are intialized, and a single RenderFormatToken is used. This "
    "implementation basically exists to ensure Advanced Lighting works with MSAA.\n\n"
 
@@ -72,7 +72,7 @@ ConsoleDocClass( RenderFormatToken,
 
    "@see RenderPassToken\n\n"
    "@see RenderPassStateBin\n"
-   "@see game/core/scripts/client/renderManager.cs\n"
+   "@see game/core/scripts/client/renderManager." TORQUE_SCRIPT_EXTENSION "\n"
 
    "@ingroup GFX\n"
 );
@@ -222,15 +222,12 @@ void RenderFormatToken::_updateTargets()
          if( !mTargetColorTexture[i] || mTargetColorTexture[i].getFormat() != mColorFormat 
             || mTargetColorTexture[i].getWidthHeight() != rtSize)
          {
-         mTargetColorTexture[i].set( rtSize.x, rtSize.y, mColorFormat, 
-            &GFXDefaultRenderTargetProfile, avar( "%s() - (line %d)", __FUNCTION__, __LINE__ ),
-            1, mTargetAALevel );
-         mTargetChain[i]->attachTexture( GFXTextureTarget::Color0, mTargetColorTexture[i] );
-      }
-      }
-
-
-      
+            mTargetColorTexture[i].set( rtSize.x, rtSize.y, mColorFormat, 
+                  &GFXRenderTargetSRGBProfile, avar( "%s() - (line %d)", __FUNCTION__, __LINE__ ),
+                  1, mTargetAALevel );
+            mTargetChain[i]->attachTexture( GFXTextureTarget::Color0, mTargetColorTexture[i] );
+         }
+      }      
 
       // Update depth target
       if(mDepthFormat != GFXFormat_COUNT)
@@ -239,15 +236,16 @@ void RenderFormatToken::_updateTargets()
          if( !mTargetDepthStencilTexture[i] || mTargetDepthStencilTexture[i].getFormat() != mColorFormat 
             || mTargetDepthStencilTexture[i].getWidthHeight() != rtSize)
          {
-         mTargetDepthStencilTexture[i].set( rtSize.x, rtSize.y, mDepthFormat, 
-            &GFXDefaultZTargetProfile, avar( "%s() - (line %d)", __FUNCTION__, __LINE__ ),
-            1, mTargetAALevel );
+            mTargetDepthStencilTexture[i].set( rtSize.x, rtSize.y, mDepthFormat, 
+                  &GFXZTargetProfile, avar( "%s() - (line %d)", __FUNCTION__, __LINE__ ),
+                  1, mTargetAALevel );
             mTargetChain[i]->attachTexture( GFXTextureTarget::DepthStencil, mTargetDepthStencilTexture[i] );
          }
-      }
-
-     
+      }     
    }
+
+   //set the texture for now as the first color target texture
+   mTarget.setTexture(mTargetColorTexture[0]);
 }
 
 void RenderFormatToken::_teardownTargets()
@@ -322,6 +320,7 @@ bool RenderFormatToken::isEnabled() const
 
 void RenderFormatToken::initPersistFields()
 {
+   docsURL;
    addProtectedField("format", TypeGFXFormat, Offset(mColorFormat, RenderFormatToken), &_setFmt, &defaultProtectedGetFn, 
       "Sets the color buffer format for this token.");
 

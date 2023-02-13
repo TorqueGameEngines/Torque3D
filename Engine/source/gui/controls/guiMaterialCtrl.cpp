@@ -45,12 +45,15 @@ ConsoleDocClass( GuiMaterialCtrl,
 GuiMaterialCtrl::GuiMaterialCtrl()
    : mMaterialInst( NULL )
 {
+   INIT_ASSET(Material);
 }
 
 void GuiMaterialCtrl::initPersistFields()
 {
+   docsURL;
    addGroup( "Material" );
-   addProtectedField( "materialName", TypeStringFilename, Offset( mMaterialName, GuiMaterialCtrl ), &GuiMaterialCtrl::_setMaterial, &defaultProtectedGetFn, "" );
+   INITPERSISTFIELD_MATERIALASSET(Material, GuiMaterialCtrl, "");
+   addProtectedField( "materialName", TypeStringFilename, Offset( mMaterialName, GuiMaterialCtrl ), &GuiMaterialCtrl::_setMaterialData, &defaultProtectedGetFn, "", AbstractClassRep::FIELD_HideInInspectors );
    endGroup( "Material" );
 
    Parent::initPersistFields();
@@ -62,7 +65,7 @@ bool GuiMaterialCtrl::onWake()
       return false;
 
    setActive( true );
-   setMaterial( mMaterialName );
+   setMaterial( getMaterial() );
 
    return true;
 }
@@ -85,10 +88,11 @@ bool GuiMaterialCtrl::_setMaterial( void *object, const char *index, const char 
 bool GuiMaterialCtrl::setMaterial( const String &materialName )
 {
    SAFE_DELETE( mMaterialInst );
-   mMaterialName = materialName;
 
-   if ( mMaterialName.isNotEmpty() && isAwake() )
-      mMaterialInst = MATMGR->createMatInstance( mMaterialName, getGFXVertexFormat<GFXVertexPCT>() );
+   _setMaterial(StringTable->insert(materialName.c_str()));
+
+   if ( getMaterial() != StringTable->EmptyString() && isAwake() )
+      mMaterialInst = MATMGR->createMatInstance( getMaterial(), getGFXVertexFormat<GFXVertexPCT>() );
 
    return true;
 }
@@ -167,7 +171,7 @@ void GuiMaterialCtrl::onRender( Point2I offset, const RectI &updateRect )
    GFX->setTexture( 0, NULL );
 }
 
-DefineConsoleMethod( GuiMaterialCtrl, setMaterial, bool, ( const char * materialName ), , "( string materialName )"
+DefineEngineMethod( GuiMaterialCtrl, setMaterial, bool, ( const char * materialName ), , "( string materialName )"
                "Set the material to be displayed in the control." )
 {
    return object->setMaterial( materialName );

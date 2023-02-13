@@ -1,0 +1,6 @@
+<PostEffectAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="fogPostFX"
+    scriptFile="@assetFile=fogPostFX.cs"
+    VersionId="1" />

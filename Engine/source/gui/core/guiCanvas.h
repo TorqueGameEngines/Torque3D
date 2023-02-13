@@ -20,6 +20,11 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+// Arcane-FX for MIT Licensed Open Source version of Torque 3D from GarageGames
+// Copyright (C) 2015 Faust Logic, Inc.
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+
 #ifndef _GUICANVAS_H_
 #define _GUICANVAS_H_
 
@@ -33,15 +38,13 @@
 #include "platform/platformInput.h"
 #endif
 
-#include "component/interfaces/IProcessInput.h"
+#ifndef _SIGNAL_H_
+#include "core/util/tSignal.h"
+#endif
+
+#include "platform/input/IProcessInput.h"
 #include "windowManager/platformWindowMgr.h"
 #include "gfx/gfxFence.h"
-
-#ifdef TORQUE_DEMO_PURCHASE
-#ifndef _PURCHASESCREEN_H_
-#include "demo/purchase/purchaseScreen.h"
-#endif
-#endif
 
 /// A canvas on which rendering occurs.
 ///
@@ -80,6 +83,8 @@
 /// screen will be painted normally. If you are making an animated GuiControl
 /// you need to add your control to the dirty areas of the canvas.
 ///
+class guiCanvas;
+typedef Signal<void(GuiCanvas* canvas)> CanvasSizeChangeSignal;
 class GuiCanvas : public GuiControl, public IProcessInput
 {
 
@@ -173,6 +178,19 @@ protected:
    bool           mHoverPositionSet;
    U32            mHoverLeftControlTime;
 
+public:
+   /// Setting for how to handle 'enableKeyboardTranslation' and 'setNativeAcceleratorsEnabled' requests.
+   enum KeyTranslationMode
+   {
+      TranslationMode_Platform,
+      TranslationMode_Callback,
+      TranslationMode_Ignore,
+   };
+
+protected:
+   KeyTranslationMode mKeyTranslationMode;
+   KeyTranslationMode mNativeAcceleratorMode;
+
    /// @}
 
    // Internal event handling callbacks for use with PlatformWindow.
@@ -189,8 +207,11 @@ protected:
    virtual void setupFences();
    
    void checkLockMouseMove( const GuiEvent& event );
+   //Signal used to let others know this canvas has changed size.
+	static CanvasSizeChangeSignal smCanvasSizeChangeSignal;
 
    GuiControl *mMenuBarCtrl;
+   GuiControl* mMenuBackground;
 
 public:
    DECLARE_CONOBJECT(GuiCanvas);
@@ -201,10 +222,13 @@ public:
 
    virtual bool onAdd();
    virtual void onRemove();
-
+#ifdef TORQUE_TOOLS
    void setMenuBar(SimObject *obj);
-
+   SimObject* getMenuBar() { return mMenuBarCtrl; }
+#endif
    static void initPersistFields();
+
+   static CanvasSizeChangeSignal& getCanvasSizeChangeSignal() { return smCanvasSizeChangeSignal; }
 
    /// @name Rendering methods
    ///
@@ -325,12 +349,19 @@ public:
    /// Returns the point, in screenspace, at which the cursor is located.
    virtual Point2I getCursorPos();
 
+   /// Returns the point, in local coordinates, at which the cursor is located
+   virtual Point2I getCursorPosLocal() { return Point2I(S32(mCursorPt.x), S32(mCursorPt.y)); }
+
    /// Enable/disable rendering of the cursor.
    /// @param   state    True if we should render cursor
    virtual void showCursor(bool state);
 
    /// Returns true if the cursor is being rendered.
    virtual bool isCursorShown();
+
+   void cursorClick(S32 buttonId, bool isDown);
+
+   void cursorNudge(F32 x, F32 y);
    /// @}
 
    ///used by the tooltip resource
@@ -436,23 +467,21 @@ public:
 
    virtual void setWindowTitle(const char *newTitle);
 
+   DECLARE_CALLBACK(bool, onSetKeyboardTranslationEnabled, (bool enable));
+   DECLARE_CALLBACK(bool, onSetNativeAcceleratorsEnabled, (bool enable));
+
+
 private:
    static const U32 MAX_GAMEPADS = 4; ///< The maximum number of supported gamepads
-
-#ifdef TORQUE_DEMO_PURCHASE
-private:
-   PurchaseScreen* mPurchaseScreen;
-   U32             mLastPurchaseHideTime;
-
-public:
-   void showPurchaseScreen(bool show, bool startBlocker, const char* location, bool doExit);
-   void updatePurchaseScreen(const char* value);
-#endif
-
-#ifdef TORQUE_DEMO_TIMEOUT
-private:
-   void checkTimeOut();
-#endif
+  protected:
+     bool   mConsumeLastInputEvent;
+  public:
+     void clearMouseRightButtonDown(void) { mMouseRightButtonDown = false; }
+     void clearMouseButtonDown(void) { mMouseButtonDown = false; }
+     void setConsumeLastInputEvent(bool flag) { mConsumeLastInputEvent = flag; }
+     bool getLastCursorPoint(Point2I& pt) const { pt = mLastCursorPt; return mLastCursorEnabled; }
 };
+typedef GuiCanvas::KeyTranslationMode KeyboardTranslationMode;
+DefineEnumType(KeyboardTranslationMode);
 
 #endif

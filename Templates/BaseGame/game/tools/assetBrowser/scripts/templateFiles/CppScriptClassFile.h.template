@@ -1,0 +1,29 @@
+#pragma once
+
+#include "console/engineAPI.h"
+#include "console/scriptObjects.h"
+
+class @ : public ScriptTickObject
+{
+   typedef ScriptTickObject Parent;
+
+private:
+
+protected:
+
+public:
+   @();
+   ~@();
+
+   // Declare this object as a ConsoleObject so that we can
+   // instantiate it
+   DECLARE_CONOBJECT(@);
+
+   static void initPersistFields();
+   bool onAdd();
+   void onRemove();
+
+   virtual void interpolateTick( F32 delta );
+   virtual void processTick();
+   virtual void advanceTime( F32 timeDelta );
+};

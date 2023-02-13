@@ -50,7 +50,14 @@ const static U32 sCollisionMoveMask = ( TerrainObjectType | WaterObjectType     
 static U32 sServerCollisionMask = sCollisionMoveMask; // ItemObjectType
 static U32 sClientCollisionMask = sCollisionMoveMask;
 
-static F32 sFlyingVehicleGravity = -20.0f;
+typedef FlyingVehicleData::Sounds engineSounds;
+DefineEnumType(engineSounds);
+
+ImplementEnumType(engineSounds, "enum types.\n"
+   "@ingroup VehicleData\n\n")
+   { engineSounds::JetSound, "JetSound", "..." },
+   { engineSounds::EngineSound,  "EngineSound", "..." },
+      EndImplementEnumType;
 
 //
 const char* FlyingVehicle::sJetSequence[FlyingVehicle::JetAnimCount] =
@@ -118,7 +125,7 @@ FlyingVehicleData::FlyingVehicleData()
       jetEmitter[j] = 0;
 
    for (S32 i = 0; i < MaxSounds; i++)
-      sound[i] = 0;
+      INIT_SOUNDASSET_ARRAY(FlyingSounds, i);
 
    vertThrustMultiple = 1.0;
 }
@@ -133,9 +140,12 @@ bool FlyingVehicleData::preload(bool server, String &errorStr)
    // Resolve objects transmitted from server
    if (!server) {
       for (S32 i = 0; i < MaxSounds; i++)
-         if (sound[i])
-            Sim::findObject(SimObjectId((uintptr_t)sound[i]),sound[i]);
-
+      {
+         if (mFlyingSounds[i])
+         {
+            _setFlyingSounds(getFlyingSounds(i), i);
+         }
+      }
       for (S32 j = 0; j < MaxJetEmitters; j++)
          if (jetEmitter[j])
             Sim::findObject(SimObjectId((uintptr_t)jetEmitter[j]),jetEmitter[j]);
@@ -165,17 +175,30 @@ bool FlyingVehicleData::preload(bool server, String &errorStr)
 
 void FlyingVehicleData::initPersistFields()
 {
-   addField( "jetSound", TYPEID< SFXProfile >(), Offset(sound[JetSound], FlyingVehicleData),
-      "Looping sound to play while the vehicle is jetting." );
-   addField( "engineSound", TYPEID< SFXProfile >(), Offset(sound[EngineSound], FlyingVehicleData),
-      "Looping engine sound." );
+   docsURL;
+   Parent::initPersistFields();
 
-   addField( "maneuveringForce", TypeF32, Offset(maneuveringForce, FlyingVehicleData),
-      "@brief Maximum X and Y (horizontal plane) maneuvering force.\n\n"
-      "The actual force applied depends on the current thrust." );
+   addGroup("Physics");
+   addField( "rollForce", TypeF32, Offset(rollForce, FlyingVehicleData),
+      "@brief Damping torque against rolling maneuvers (rotation about the y-axis), "
+      "proportional to linear velocity.\n\n"
+      "Acts to adjust roll to a stable position over time as the vehicle moves." );
+   addField( "rotationalDrag", TypeF32, Offset(rotationalDrag, FlyingVehicleData),
+      "Rotational drag factor (slows vehicle rotation speed in all axes)." );
    addField( "horizontalSurfaceForce", TypeF32, Offset(horizontalSurfaceForce, FlyingVehicleData),
       "@brief Damping force in the opposite direction to sideways velocity.\n\n"
       "Provides \"bite\" into the wind for climbing/diving and turning)." );
+   addField( "hoverHeight", TypeF32, Offset(hoverHeight, FlyingVehicleData),
+      "The vehicle's height off the ground when at rest." );
+   addField( "createHoverHeight", TypeF32, Offset(createHoverHeight, FlyingVehicleData),
+      "@brief The vehicle's height off the ground when useCreateHeight is active.\n\n"
+      "This can help avoid problems with spawning the vehicle." );
+   endGroup("Physics");
+
+   addGroup("Steering");
+   addField( "maneuveringForce", TypeF32, Offset(maneuveringForce, FlyingVehicleData),
+      "@brief Maximum X and Y (horizontal plane) maneuvering force.\n\n"
+      "The actual force applied depends on the current thrust." );
    addField( "verticalSurfaceForce", TypeF32, Offset(verticalSurfaceForce, FlyingVehicleData),
       "@brief Damping force in the opposite direction to vertical velocity.\n\n"
       "Controls side slip; lower numbers give more slide." );
@@ -187,13 +210,9 @@ void FlyingVehicleData::initPersistFields()
    addField( "steeringRollForce", TypeF32, Offset(steeringRollForce, FlyingVehicleData),
       "Roll force induced by sideways steering input value (controls how much "
       "the vehicle rolls when turning)." );
-   addField( "rollForce", TypeF32, Offset(rollForce, FlyingVehicleData),
-      "@brief Damping torque against rolling maneuvers (rotation about the y-axis), "
-      "proportional to linear velocity.\n\n"
-      "Acts to adjust roll to a stable position over time as the vehicle moves." );
-   addField( "rotationalDrag", TypeF32, Offset(rotationalDrag, FlyingVehicleData),
-      "Rotational drag factor (slows vehicle rotation speed in all axes)." );
+   endGroup("Steering");
 
+   addGroup("AutoCorrection");
    addField( "maxAutoSpeed", TypeF32, Offset(maxAutoSpeed, FlyingVehicleData),
       "Maximum speed for automatic vehicle control assistance - vehicles "
       "travelling at speeds above this value do not get control assitance." );
@@ -209,13 +228,9 @@ void FlyingVehicleData::initPersistFields()
       "@brief Corrective torque applied to level out the vehicle when moving at less "
       "than maxAutoSpeed.\n\n"
       "The torque is inversely proportional to vehicle speed." );
+   endGroup("AutoCorrection");
 
-   addField( "hoverHeight", TypeF32, Offset(hoverHeight, FlyingVehicleData),
-      "The vehicle's height off the ground when at rest." );
-   addField( "createHoverHeight", TypeF32, Offset(createHoverHeight, FlyingVehicleData),
-      "@brief The vehicle's height off the ground when useCreateHeight is active.\n\n"
-      "This can help avoid problems with spawning the vehicle." );
-
+   addGroup("Particle Effects");
    addField( "forwardJetEmitter",TYPEID< ParticleEmitterData >(), Offset(jetEmitter[ForwardJetEmitter], FlyingVehicleData),
       "@brief Emitter to generate particles for forward jet thrust.\n\n"
       "Forward jet thrust particles are emitted from model nodes JetNozzle0 "
@@ -232,8 +247,11 @@ void FlyingVehicleData::initPersistFields()
       "Emitter to generate contrail particles from model nodes contrail0 - contrail3." );
    addField( "minTrailSpeed", TypeF32, Offset(minTrailSpeed, FlyingVehicleData),
       "Minimum speed at which to start generating contrail particles." );
+   endGroup("Particle Effects");
 
-   Parent::initPersistFields();
+   addGroup("Sounds");
+      INITPERSISTFIELD_SOUNDASSET_ENUMED(FlyingSounds, engineSounds, Sounds::MaxSounds, FlyingVehicleData, "EngineSounds.");
+   endGroup("Sounds");
 }
 
 void FlyingVehicleData::packData(BitStream* stream)
@@ -242,18 +260,14 @@ void FlyingVehicleData::packData(BitStream* stream)
 
    for (S32 i = 0; i < MaxSounds; i++)
    {
-      if (stream->writeFlag(sound[i]))
-      {
-         SimObjectId writtenId = packed ? SimObjectId((uintptr_t)sound[i]) : sound[i]->getId();
-         stream->writeRangedU32(writtenId, DataBlockObjectIdFirst, DataBlockObjectIdLast);
-      }
+      PACKDATA_SOUNDASSET_ARRAY(FlyingSounds, i);
    }
 
    for (S32 j = 0; j < MaxJetEmitters; j++)
    {
       if (stream->writeFlag(jetEmitter[j]))
       {
-         SimObjectId writtenId = packed ? SimObjectId((uintptr_t)jetEmitter[j]) : jetEmitter[j]->getId();
+         SimObjectId writtenId = mPacked ? SimObjectId((uintptr_t)jetEmitter[j]) : jetEmitter[j]->getId();
          stream->writeRangedU32(writtenId, DataBlockObjectIdFirst,DataBlockObjectIdLast);
       }
    }
@@ -279,17 +293,15 @@ void FlyingVehicleData::unpackData(BitStream* stream)
 {
    Parent::unpackData(stream);
 
-   for (S32 i = 0; i < MaxSounds; i++) {
-      sound[i] = NULL;
-      if (stream->readFlag())
-         sound[i] = (SFXProfile*)stream->readRangedU32(DataBlockObjectIdFirst,
-                                                         DataBlockObjectIdLast);
+   for (S32 i = 0; i < MaxSounds; i++)
+   {
+      UNPACKDATA_SOUNDASSET_ARRAY(FlyingSounds, i);
    }
 
    for (S32 j = 0; j < MaxJetEmitters; j++) {
       jetEmitter[j] = NULL;
       if (stream->readFlag())
-         jetEmitter[j] = (ParticleEmitterData*)stream->readRangedU32(DataBlockObjectIdFirst,
+         jetEmitter[j] = (ParticleEmitterData*)(uintptr_t)stream->readRangedU32(DataBlockObjectIdFirst,
                                                                      DataBlockObjectIdLast);
    }
 
@@ -322,6 +334,7 @@ ConsoleDocClass( FlyingVehicle,
 
 FlyingVehicle::FlyingVehicle()
 {
+   mDataBlock = NULL;
    mSteering.set(0,0);
    mThrottle = 0;
    mJetting = false;
@@ -332,6 +345,10 @@ FlyingVehicle::FlyingVehicle()
    mBackMaintainOn = false;
    mBottomMaintainOn = false;
    createHeightOn = false;
+   mCeilingFactor = 1.0f;
+   mThrustDirection = FlyingVehicle::ThrustForward;
+   for (U32 i=0;i< JetAnimCount;i++)
+      mJetSeq[i] = -1;
 
    for (S32 i = 0; i < JetAnimCount; i++)
       mJetThread[i] = 0;
@@ -350,9 +367,6 @@ bool FlyingVehicle::onAdd()
       return false;
 
    addToScene();
-
-   if (isServerObject())
-      scriptOnAdd();
    return true;
 }
 
@@ -371,11 +385,11 @@ bool FlyingVehicle::onNewDataBlock(GameBaseData* dptr, bool reload)
       SFX_DELETE( mJetSound );
       SFX_DELETE( mEngineSound );
 
-      if ( mDataBlock->sound[FlyingVehicleData::EngineSound] )
-         mEngineSound = SFX->createSource( mDataBlock->sound[FlyingVehicleData::EngineSound], &getTransform() );
+      if ( mDataBlock->getFlyingSounds(FlyingVehicleData::EngineSound) )
+         mEngineSound = SFX->createSource( mDataBlock->getFlyingSoundsProfile(FlyingVehicleData::EngineSound), &getTransform() );
 
-      if ( mDataBlock->sound[FlyingVehicleData::JetSound] )
-         mJetSound = SFX->createSource( mDataBlock->sound[FlyingVehicleData::JetSound], &getTransform() );
+      if ( mDataBlock->getFlyingSounds(FlyingVehicleData::JetSound))
+         mJetSound = SFX->createSource( mDataBlock->getFlyingSoundsProfile(FlyingVehicleData::JetSound), &getTransform() );
    }
 
    // Jet Sequences
@@ -402,7 +416,6 @@ void FlyingVehicle::onRemove()
    SFX_DELETE( mJetSound );
    SFX_DELETE( mEngineSound );
 
-   scriptOnRemove();
    removeFromScene();
    Parent::onRemove();
 }
@@ -410,8 +423,17 @@ void FlyingVehicle::onRemove()
 
 //----------------------------------------------------------------------------
 
+void FlyingVehicle::interpolateTick(F32 dt)
+{
+   PROFILE_SCOPE(FlyingVehicle_InterpolateTick);
+   Parent::interpolateTick(dt);
+   updateEngineSound(1);
+   updateJet(dt);
+}
+
 void FlyingVehicle::advanceTime(F32 dt)
 {
+   PROFILE_SCOPE(FlyingVehicle_AdvanceTime);
    Parent::advanceTime(dt);
 
    updateEngineSound(1);
@@ -480,6 +502,7 @@ void FlyingVehicle::updateForces(F32 /*dt*/)
 {
    PROFILE_SCOPE( FlyingVehicle_UpdateForces );
 
+   if (mDisableMove) return;
    MatrixF currPosMat;
    mRigid.getTransform(&currPosMat);
    mRigid.atRest = false;
@@ -493,7 +516,7 @@ void FlyingVehicle::updateForces(F32 /*dt*/)
    currPosMat.getColumn(2,&zv);
    F32 speed = mRigid.linVelocity.len();
 
-   Point3F force  = Point3F(0, 0, sFlyingVehicleGravity * mRigid.mass * mGravityMod);
+   Point3F force  = Point3F(0, 0, mRigid.mass * mNetGravity);
    Point3F torque = Point3F(0, 0, 0);
 
    // Drag at any speed
@@ -515,7 +538,7 @@ void FlyingVehicle::updateForces(F32 /*dt*/)
    }
 
    // Hovering Jet
-   F32 vf = -sFlyingVehicleGravity * mRigid.mass * mGravityMod;
+   F32 vf = mRigid.mass * -mNetGravity;
    F32 h  = getHeight();
    if (h <= 1) {
       if (h > 0) {
@@ -562,8 +585,6 @@ void FlyingVehicle::updateForces(F32 /*dt*/)
    // Add in force from physical zones...
    force += mAppliedForce;
 
-   // Container buoyancy & drag
-   force -= Point3F(0, 0, 1) * (mBuoyancy * sFlyingVehicleGravity * mRigid.mass * mGravityMod);
    force -= mRigid.linVelocity * mDrag;
 
    //
@@ -731,10 +752,10 @@ void FlyingVehicle::updateEmitter(bool active,F32 dt,ParticleEmitterData *emitte
          }
       }
       else {
-         for (S32 j = idx; j < idx + count; j++)
-            if (bool(mJetEmitter[j])) {
-               mJetEmitter[j]->deleteWhenEmpty();
-               mJetEmitter[j] = 0;
+         for (S32 k = idx; k < idx + count; k++)
+            if (bool(mJetEmitter[k])) {
+               mJetEmitter[k]->deleteWhenEmpty();
+               mJetEmitter[k] = 0;
             }
       }
 }
@@ -786,6 +807,7 @@ void FlyingVehicle::unpackUpdate(NetConnection *con, BitStream *stream)
 
 void FlyingVehicle::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 

@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2014 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -21,13 +21,10 @@
 
 #include "../SDL_internal.h"
 
+#ifndef SDL_syshaptic_h_
+#define SDL_syshaptic_h_
+
 #include "SDL_haptic.h"
-
-
-/*
- * Number of haptic devices on the system.
- */
-extern Uint8 SDL_numhaptics;
 
 
 struct haptic_effect
@@ -65,7 +62,7 @@ struct _SDL_Haptic
 extern int SDL_SYS_HapticInit(void);
 
 /* Function to return the number of haptic devices plugged in right now */
-extern int SDL_SYS_NumHaptics();
+extern int SDL_SYS_NumHaptics(void);
 
 /*
  * Gets the device dependent name of the haptic device
@@ -206,5 +203,6 @@ extern int SDL_SYS_HapticUnpause(SDL_Haptic * haptic);
  */
 extern int SDL_SYS_HapticStopAll(SDL_Haptic * haptic);
 
-/* vi: set ts=4 sw=4 expandtab: */
+#endif /* SDL_syshaptic_h_ */
 
+/* vi: set ts=4 sw=4 expandtab: */

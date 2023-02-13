@@ -29,6 +29,17 @@
 
 //-----------------------------------------------------------------------------
 
+CameraSpline::Knot::Knot()
+{
+   mPosition = Point3F::Zero;
+   mRotation = QuatF::Identity;
+   mSpeed = 0.0f;
+   mType = NORMAL;
+   mPath = SPLINE;
+   mDistance = 0.0f;
+   prev = NULL; next = NULL;
+};
+
 CameraSpline::Knot::Knot(const Knot &k)
 {
    mPosition = k.mPosition;
@@ -36,16 +47,19 @@ CameraSpline::Knot::Knot(const Knot &k)
    mSpeed    = k.mSpeed;
    mType = k.mType;
    mPath = k.mPath;
+   mDistance = k.mDistance;
    prev = NULL; next = NULL;
 }
 
-CameraSpline::Knot::Knot(const Point3F &p, const QuatF &r, F32 s, Knot::Type type, Knot::Path path)
+CameraSpline::Knot::Knot(const Point3F &p, const QuatF &r, F32 s, Knot::Type type, Knot::Path path, String hitCommand)
 {
    mPosition = p;
    mRotation = r;
    mSpeed    = s;
    mType = type;
    mPath = path;
+   mDistance = 0.0f;
+   mHitCommand = hitCommand;
    prev = NULL; next = NULL;
 }
 
@@ -188,7 +202,7 @@ void CameraSpline::renderTimeMap()
    gBuilding = true;
 
    // Build vertex buffer
-   GFXVertexBufferHandle<GFXVertexPC> vb;
+   GFXVertexBufferHandle<GFXVertexPCT> vb;
    vb.set(GFX, mTimeMap.size(), GFXBufferTypeVolatile);
    void *ptr = vb.lock();
    if(!ptr) return;

@@ -1,0 +1,7 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="TexturedRibbonMat"
+    scriptFile="@assetFile=TexturedRibbonMat.tscript"
+    materialDefinitionName="TexturedRibbonMat"
+    VersionId="1" />

@@ -89,6 +89,7 @@ bool GuiMLTextEditCtrl::resize(const Point2I &newPosition, const Point2I &newExt
 //--------------------------------------------------------------------------
 void GuiMLTextEditCtrl::initPersistFields()
 {
+   docsURL;
    addField( "escapeCommand", TypeString, Offset( mEscapeCommand, GuiMLTextEditCtrl ), "Script function to run whenever the 'escape' key is pressed when this control is in focus.\n");
    Parent::initPersistFields();
 }

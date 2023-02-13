@@ -32,7 +32,20 @@ Var * ShaderConnectorHLSL::getElement( RegisterType type,
                                        U32 numElements, 
                                        U32 numRegisters )
 {
-   Var *ret = getIndexedElement( mCurTexElem, type, numElements, numRegisters );
+   Var *ret = NULL;
+   
+   if ( type == RT_BLENDINDICES )
+   {
+      ret = getIndexedElement( mCurBlendIndicesElem, type, numElements, numRegisters );
+   }
+   else if ( type == RT_BLENDWEIGHT )
+   {
+      ret = getIndexedElement( mCurBlendWeightsElem, type, numElements, numRegisters );
+   }
+   else
+   {
+      ret = getIndexedElement( mCurTexElem, type, numElements, numRegisters );
+   }
 
    // Adjust texture offset if this is a texcoord type
    if( type == RT_TEXCOORD )
@@ -41,6 +54,20 @@ Var * ShaderConnectorHLSL::getElement( RegisterType type,
          mCurTexElem += numRegisters;
       else
          mCurTexElem += numElements;
+   }
+   else if ( type == RT_BLENDINDICES )
+   {
+      if ( numRegisters != -1 )
+         mCurBlendIndicesElem += numRegisters;
+      else
+         mCurBlendIndicesElem += numElements;
+   }
+   else if ( type == RT_BLENDWEIGHT )
+   {
+      if ( numRegisters != -1 )
+         mCurBlendWeightsElem += numRegisters;
+      else
+         mCurBlendWeightsElem += numElements;
    }
 
    return ret;
@@ -55,6 +82,25 @@ Var * ShaderConnectorHLSL::getIndexedElement( U32 index, RegisterType type, U32 
          Var *newVar = new Var;
          mElementList.push_back( newVar );
          newVar->setConnectName( "POSITION" );
+         newVar->rank = 0;
+         return newVar;
+      }
+
+   case RT_VPOS:
+      {
+         Var *newVar = new Var;
+         mElementList.push_back(newVar);
+         newVar->setConnectName("VPOS");
+         newVar->rank = 0;
+         return newVar;
+      }
+
+   case RT_SVPOSITION:
+      {
+         Var *newVar = new Var;
+         mElementList.push_back(newVar);
+         newVar->setConnectName("SV_Position");
+         newVar->rank = 0;
          return newVar;
       }
 
@@ -63,6 +109,7 @@ Var * ShaderConnectorHLSL::getIndexedElement( U32 index, RegisterType type, U32 
          Var *newVar = new Var;
          mElementList.push_back( newVar );
          newVar->setConnectName( "NORMAL" );
+         newVar->rank = 1;
          return newVar;
       }
 
@@ -71,6 +118,7 @@ Var * ShaderConnectorHLSL::getIndexedElement( U32 index, RegisterType type, U32 
          Var *newVar = new Var;
          mElementList.push_back( newVar );
          newVar->setConnectName( "BINORMAL" );
+         newVar->rank = 2;
          return newVar;
       }
 
@@ -79,6 +127,7 @@ Var * ShaderConnectorHLSL::getIndexedElement( U32 index, RegisterType type, U32 
          Var *newVar = new Var;
          mElementList.push_back( newVar );
          newVar->setConnectName( "TANGENT" );
+         newVar->rank = 3;
          return newVar;
       }
 
@@ -87,14 +136,7 @@ Var * ShaderConnectorHLSL::getIndexedElement( U32 index, RegisterType type, U32 
          Var *newVar = new Var;
          mElementList.push_back( newVar );
          newVar->setConnectName( "COLOR" );
-         return newVar;
-      }
-
-   case RT_VPOS:
-      {
-         Var *newVar = new Var;
-         mElementList.push_back( newVar );
-         newVar->setConnectName( "VPOS" );
+         newVar->rank = 4;
          return newVar;
       }
 
@@ -113,9 +155,50 @@ Var * ShaderConnectorHLSL::getIndexedElement( U32 index, RegisterType type, U32 
          newVar->setConnectName( out );
          newVar->constNum = index;
          newVar->arraySize = numElements;
+         newVar->rank = 5 + index;
 
          return newVar;
       }
+
+   case RT_BLENDINDICES:
+      {
+         Var *newVar = new Var;
+         mElementList.push_back( newVar );
+
+         // This was needed for hardware instancing, but
+         // i don't really remember why right now.
+         if ( index > mCurBlendIndicesElem )
+            mCurBlendIndicesElem = index + 1;
+
+         char out[32];
+         dSprintf( (char*)out, sizeof(out), "BLENDINDICES%d", index );
+         newVar->setConnectName( out );
+         newVar->constNum = index;
+         newVar->arraySize = numElements;
+
+         return newVar;
+      }
+
+   case RT_BLENDWEIGHT:
+      {
+         Var *newVar = new Var;
+         mElementList.push_back( newVar );
+
+         // This was needed for hardware instancing, but
+         // i don't really remember why right now.
+         if ( index > mCurBlendWeightsElem )
+            mCurBlendWeightsElem = index + 1;
+
+         char out[32];
+         dSprintf( (char*)out, sizeof(out), "BLENDWEIGHT%d", index );
+         newVar->setConnectName( out );
+         newVar->constNum = index;
+         newVar->arraySize = numElements;
+
+         return newVar;
+      }
+
+
 
    default:
       break;
@@ -124,72 +207,32 @@ Var * ShaderConnectorHLSL::getIndexedElement( U32 index, RegisterType type, U32 
    return NULL;
 }
 
-void ShaderConnectorHLSL::sortVars()
+
+
+S32 QSORT_CALLBACK ShaderConnectorHLSL::_hlsl4VarSort(const void* e1, const void* e2)
 {
-   if ( GFX->getPixelShaderVersion() >= 2.0 ) 
-      return;
+   Var* a = *((Var **)e1);
+   Var* b = *((Var **)e2);
 
-   // Sort connector variables - They must be sorted on hardware that is running
-   // ps 1.4 and below.  The reason is that texture coordinate registers MUST
-   // map exactly to their respective texture stage.  Ie.  if you have fog
-   // coordinates being passed into a pixel shader in texture coordinate register
-   // number 4, the fog texture MUST reside in texture stage 4 for it to work.
-   // The problem is solved by pushing non-texture coordinate data to the end
-   // of the structure so that the texture coodinates are all at the "top" of the
-   // structure in the order that the features are processed.
-
-   // create list of just the texCoords, sorting by 'mapsToSampler'
-   Vector< Var * > texCoordList;
-   
-   // - first pass is just coords mapped to a sampler
-   for( U32 i=0; i<mElementList.size(); i++ )
-   {
-      Var *var = mElementList[i];
-      if( var->mapsToSampler )
-      {
-         texCoordList.push_back( var );
-      }
-   }
-   
-   // - next pass is for the others
-   for( U32 i=0; i<mElementList.size(); i++ )
-   {
-      Var *var = mElementList[i];
-      if( dStrstr( (const char *)var->connectName, "TEX" ) &&
-          !var->mapsToSampler )
-      {
-         texCoordList.push_back( var );
-      }
-   }
-   
-   // rename the connectNames
-   for( U32 i=0; i<texCoordList.size(); i++ )
-   {
-      char out[32];
-      dSprintf( (char*)out, sizeof(out), "TEXCOORD%d", i );
-      texCoordList[i]->setConnectName( out );
-   }
-
-   // write new, sorted list over old one
-   if( texCoordList.size() )
-   {
-      U32 index = 0;
-   
-      for( U32 i=0; i<mElementList.size(); i++ )
-      {
-         Var *var = mElementList[i];
-         if( dStrstr( (const char *)var->connectName, "TEX" ) )
-         {
-            mElementList[i] = texCoordList[index];
-            index++;
-         }
-      }
-   }
+   return a->rank - b->rank;
 }
 
-void ShaderConnectorHLSL::setName( char *newName )
+void ShaderConnectorHLSL::sortVars()
 {
-   dStrcpy( (char*)mName, newName );
+
+   // If shader model 4+ than we gotta sort the vars to make sure the order is consistent
+   if (GFX->getPixelShaderVersion() >= 4.f)
+   {
+      dQsort((void *)&mElementList[0], mElementList.size(), sizeof(Var *), _hlsl4VarSort);
+      return;
+   }
+
+   return;
+}
+
+void ShaderConnectorHLSL::setName( const char *newName )
+{
+   dStrcpy( (char*)mName, newName, 32 );
 }
 
 void ShaderConnectorHLSL::reset()
@@ -201,6 +244,8 @@ void ShaderConnectorHLSL::reset()
 
    mElementList.setSize( 0 );
    mCurTexElem = 0;
+   mCurBlendIndicesElem = 0;
+   mCurBlendWeightsElem = 0;
 }
 
 void ShaderConnectorHLSL::print( Stream &stream, bool isVertexShader )
@@ -246,21 +291,32 @@ void ParamsDefHLSL::assignConstantNumbers()
          Var *var = dynamic_cast<Var*>(LangElement::elementList[i]);
          if( var )
          {            
-            bool shaderConst = var->uniform && !var->sampler;
+            bool shaderConst = var->uniform && !var->sampler && !var->texture;
             AssertFatal((!shaderConst) || var->constSortPos != cspUninit, "Const sort position has not been set, variable will not receive a constant number!!");
             if( shaderConst && var->constSortPos == bin)
             {
                var->constNum = mCurrConst;
                // Increment our constant number based on the variable type
-               if (dStrcmp((const char*)var->type, "float4x4") == 0)
+               if (String::compare((const char*)var->type, "float4x4") == 0)
                {
                   mCurrConst += (4 * var->arraySize);
-               } else {
-                  if (dStrcmp((const char*)var->type, "float3x3") == 0)
+               }
+               else
+               {
+                  if (String::compare((const char*)var->type, "float3x3") == 0)
                   {
                      mCurrConst += (3 * var->arraySize);
-                  } else {
-                     mCurrConst += var->arraySize;
+                  }
+                  else
+                  {
+                     if (String::compare((const char*)var->type, "float4x3") == 0)
+                     {
+                        mCurrConst += (3 * var->arraySize);
+                     }
+                     else
+                     {
+                        mCurrConst += var->arraySize;
+                     }
                   }
                }
             }
@@ -327,6 +383,10 @@ void PixelParamsDefHLSL::print( Stream &stream, bool isVerterShader )
             if( var->sampler )
             {
                dSprintf( (char*)varNum, sizeof(varNum), ": register(S%d)", var->constNum );
+            }
+            else if (var->texture)
+            {
+               dSprintf((char*)varNum, sizeof(varNum), ": register(T%d)", var->constNum);
             }
             else
             {

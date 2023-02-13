@@ -19,6 +19,9 @@
 #ifndef DETOURCOMMON_H
 #define DETOURCOMMON_H
 
+#include "DetourMath.h"
+#include <stddef.h>
+
 /**
 @defgroup detour Detour
 
@@ -31,6 +34,11 @@ feature to find minor members.
 
 /// @name General helper functions
 /// @{
+
+/// Used to ignore a function parameter.  VS complains about unused parameters
+/// and this silences the warning.
+///  @param [in] _ Unused parameter
+template<class T> void dtIgnoreUnused(const T&) { }
 
 /// Swaps the values of the two parameters.
 ///  @param[in,out]	a	Value A
@@ -65,11 +73,6 @@ template<class T> inline T dtSqr(T a) { return a*a; }
 ///  @param[in]		mx	The maximum permitted return value.
 ///  @return The value, clamped to the specified range.
 template<class T> inline T dtClamp(T v, T mn, T mx) { return v < mn ? mn : (v > mx ? mx : v); }
-
-/// Returns the square root of the value.
-///  @param[in]		x	The value.
-///  @return The square root of the vlaue.
-float dtSqrt(float x);
 
 /// @}
 /// @name Vector helper functions.
@@ -197,7 +200,7 @@ inline void dtVcopy(float* dest, const float* a)
 /// @return The scalar length of the vector.
 inline float dtVlen(const float* v)
 {
-	return dtSqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+	return dtMathSqrtf(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
 }
 
 /// Derives the square of the scalar length of the vector. (len * len)
@@ -217,7 +220,7 @@ inline float dtVdist(const float* v1, const float* v2)
 	const float dx = v2[0] - v1[0];
 	const float dy = v2[1] - v1[1];
 	const float dz = v2[2] - v1[2];
-	return dtSqrt(dx*dx + dy*dy + dz*dz);
+	return dtMathSqrtf(dx*dx + dy*dy + dz*dz);
 }
 
 /// Returns the square of the distance between two points.
@@ -242,7 +245,7 @@ inline float dtVdist2D(const float* v1, const float* v2)
 {
 	const float dx = v2[0] - v1[0];
 	const float dz = v2[2] - v1[2];
-	return dtSqrt(dx*dx + dz*dz);
+	return dtMathSqrtf(dx*dx + dz*dz);
 }
 
 /// Derives the square of the distance between the specified points on the xz-plane.
@@ -260,7 +263,7 @@ inline float dtVdist2DSqr(const float* v1, const float* v2)
 ///  @param[in,out]	v	The vector to normalize. [(x, y, z)]
 inline void dtVnormalize(float* v)
 {
-	float d = 1.0f / dtSqrt(dtSqr(v[0]) + dtSqr(v[1]) + dtSqr(v[2]));
+	float d = 1.0f / dtMathSqrtf(dtSqr(v[0]) + dtSqr(v[1]) + dtSqr(v[2]));
 	v[0] *= d;
 	v[1] *= d;
 	v[2] *= d;
@@ -376,6 +379,10 @@ bool dtIntersectSegmentPoly2D(const float* p0, const float* p1,
 							  float& tmin, float& tmax,
 							  int& segMin, int& segMax);
 
+bool dtIntersectSegSeg2D(const float* ap, const float* aq,
+						 const float* bp, const float* bq,
+						 float& s, float& t);
+
 /// Determines if the specified point is inside the convex polygon on the xz-plane.
 ///  @param[in]		pt		The point to check. [(x, y, z)]
 ///  @param[in]		verts	The polygon vertices. [(x, y, z) * @p nverts]
@@ -475,6 +482,23 @@ inline void dtSwapEndian(float* v)
 
 void dtRandomPointInConvexPoly(const float* pts, const int npts, float* areas,
 							   const float s, const float t, float* out);
+
+template<typename TypeToRetrieveAs>
+TypeToRetrieveAs* dtGetThenAdvanceBufferPointer(const unsigned char*& buffer, const size_t distanceToAdvance)
+{
+	TypeToRetrieveAs* returnPointer = reinterpret_cast<TypeToRetrieveAs*>(buffer);
+	buffer += distanceToAdvance;
+	return returnPointer;
+}
+
+template<typename TypeToRetrieveAs>
+TypeToRetrieveAs* dtGetThenAdvanceBufferPointer(unsigned char*& buffer, const size_t distanceToAdvance)
+{
+	TypeToRetrieveAs* returnPointer = reinterpret_cast<TypeToRetrieveAs*>(buffer);
+	buffer += distanceToAdvance;
+	return returnPointer;
+}
+
 
 /// @}
 

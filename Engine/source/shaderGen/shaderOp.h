@@ -110,6 +110,21 @@ public:
    virtual void print( Stream &stream );
 };
 
+//----------------------------------------------------------------------------
+/*!
+   Accesses the given index on the variable
+*/
+//----------------------------------------------------------------------------
+class IndexOp : public ShaderOp
+{
+   typedef ShaderOp Parent;
+   U32 mIndex;
+
+public:
+   IndexOp( Var* var, U32 index );
+   virtual void print( Stream &stream );
+};
+
 
 //----------------------------------------------------------------------------
 /*!

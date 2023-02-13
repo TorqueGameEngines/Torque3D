@@ -1,0 +1,103 @@
+//--- OBJECT WRITE BEGIN ---
+$guiContent = new GuiControl(toolsMessageBoxYesNoCancelDlg) {
+   canSaveDynamicFields = "0";
+   Profile = "GuiOverlayProfile";
+   HorizSizing = "width";
+   VertSizing = "height";
+   position = "0 0";
+   Extent = "800 600";
+   MinExtent = "8 8";
+   canSave = "1";
+   Visible = "1";
+   hovertime = "1000";
+
+   new GuiWindowCtrl(MBYesNoCancelFrame) {
+      canSaveDynamicFields = "0";
+      Profile = "ToolsGuiWindowProfile";
+      HorizSizing = "center";
+      VertSizing = "center";
+      position = "250 235";
+      Extent = "300 102";
+      MinExtent = "48 92";
+      canSave = "1";
+      Visible = "1";
+      hovertime = "1000";
+      maxLength = "255";
+      resizeWidth = "1";
+      resizeHeight = "1";
+      canMove = "1";
+      canClose = "1";
+      canMinimize = "0";
+      canMaximize = "0";
+      minSize = "50 50";
+      text = "";
+      closeCommand="MessageCallback(toolsMessageBoxYesNoCancelDlg,toolsMessageBoxYesNoCancelDlg.cancelCallback);";
+
+      new GuiMLTextCtrl(MBYesNoCancelText) {
+         canSaveDynamicFields = "0";
+         Profile = "ToolsGuiMLTextProfile";
+         HorizSizing = "center";
+         VertSizing = "bottom";
+         position = "7 38";
+         Extent = "286 14";
+         MinExtent = "8 8";
+         canSave = "1";
+         Visible = "1";
+         hovertime = "1000";
+         lineSpacing = "2";
+         allowColorChars = "0";
+         maxChars = "-1";
+      };
+      new GuiButtonCtrl() {
+         canSaveDynamicFields = "0";
+         Profile = "ToolsGuiButtonProfile";
+         HorizSizing = "right";
+         VertSizing = "top";
+         position = "7 71";
+         Extent = "80 22";
+         MinExtent = "8 8";
+         canSave = "1";
+         Visible = "1";
+         Command = "MessageCallback(toolsMessageBoxYesNoCancelDlg,toolsMessageBoxYesNoCancelDlg.yesCallback);";
+         Accelerator = "return";
+         hovertime = "1000";
+         text = "Yes";
+         groupNum = "-1";
+         buttonType = "PushButton";
+      };
+      new GuiButtonCtrl() {
+         canSaveDynamicFields = "0";
+         Profile = "ToolsGuiButtonProfile";
+         HorizSizing = "right";
+         VertSizing = "top";
+         position = "92 71";
+         Extent = "80 22";
+         MinExtent = "8 8";
+         canSave = "1";
+         Visible = "1";
+         Command = "MessageCallback(toolsMessageBoxYesNoCancelDlg,toolsMessageBoxYesNoCancelDlg.noCallback);";
+         hovertime = "1000";
+         text = "No";
+         groupNum = "-1";
+         buttonType = "PushButton";
+      };
+      new GuiButtonCtrl() {
+         canSaveDynamicFields = "0";
+         Profile = "ToolsGuiButtonProfile";
+         HorizSizing = "right";
+         VertSizing = "top";
+         position = "213 71";
+         Extent = "80 22";
+         MinExtent = "8 8";
+         canSave = "1";
+         Visible = "1";
+         Command = "MessageCallback(toolsMessageBoxYesNoCancelDlg,toolsMessageBoxYesNoCancelDlg.cancelCallback);";
+         Accelerator = "escape";
+         hovertime = "1000";
+         text = "Cancel";
+         groupNum = "-1";
+         buttonType = "PushButton";
+      };
+   };
+};
+//--- OBJECT WRITE END ---

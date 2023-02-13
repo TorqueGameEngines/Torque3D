@@ -90,13 +90,15 @@ EndImplementEnumType;
 GuiAutoScrollCtrl::GuiAutoScrollCtrl()
    : mDirection( Up ),
      mIsLooping( true ),
-     mCurrentPhase( PhaseComplete ),
+     mCurrentPhase( GuiAutoScrollCtrl::PhaseComplete ),
      mCurrentTime( 0.f ),
+     mCompleteTime(F32_MAX),
+     mCurrentPosition(0.0f),
      mStartDelay( 3.f ),
      mResetDelay( 5.f ),
      mChildBorder( 10 ),
-     mScrollSpeed( 1.f ),
-     mScrollOutOfSight( false )
+     mScrollOutOfSight( false ),
+     mScrollSpeed( 1.f )
 {
    mIsContainer = true;
 }
@@ -105,6 +107,7 @@ GuiAutoScrollCtrl::GuiAutoScrollCtrl()
 
 void GuiAutoScrollCtrl::initPersistFields()
 {
+   docsURL;
    addGroup( "Scrolling" );
    
       addField( "scrollDirection", TYPEID< Direction >(), Offset( mDirection, GuiAutoScrollCtrl ),

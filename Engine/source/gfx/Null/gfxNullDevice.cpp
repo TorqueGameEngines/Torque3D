@@ -87,8 +87,16 @@ GFXNullTextureObject::GFXNullTextureObject(GFXDevice * aDevice, GFXTextureProfil
 
 class GFXNullTextureManager : public GFXTextureManager
 {
+public:
+   GFXTextureObject* createTexture(GBitmap* bmp, const String& resourceName, GFXTextureProfile* profile, bool deleteBmp) { return nullptr; } // _createNullTextureObject();}
+   GFXTextureObject* createTexture(DDSFile* dds, GFXTextureProfile* profile, bool deleteDDS) { return nullptr; }
+   GFXTextureObject* createTexture(const Torque::Path& path, GFXTextureProfile* profile) { return nullptr; }
+   GFXTextureObject* createTexture(U32 width, U32 height, void* pixels, GFXFormat format, GFXTextureProfile* profile) { return nullptr; }
+   GFXTextureObject* createTexture(U32 width, U32 height, U32 depth, GFXFormat format, GFXTextureProfile* profile, U32 numMipLevels = 1) { return nullptr; }
+   GFXTextureObject* createTexture(U32 width, U32 height, GFXFormat format, GFXTextureProfile* profile, U32 numMipLevels, S32 antialiasLevel) { return nullptr; }
+   GFXTextureObject* createCompositeTexture(GBitmap* bmp[4], U32 inputKey[4], const String& resourceName, GFXTextureProfile* profile, bool deleteBmp) { return nullptr; }
 protected:
-      virtual GFXTextureObject *_createTextureObject( U32 height, 
+      GFXTextureObject *_createTextureObject( U32 height, 
                                                       U32 width, 
                                                       U32 depth, 
                                                       GFXFormat format, 
@@ -151,7 +159,7 @@ private:
 public:
    virtual void initStatic( GFXTexHandle *faces ) { };
    virtual void initStatic( DDSFile *dds ) { };
-   virtual void initDynamic( U32 texSize, GFXFormat faceFormat = GFXFormatR8G8B8A8 ) { };
+   virtual void initDynamic( U32 texSize, GFXFormat faceFormat = GFXFormatR8G8B8A8, U32 mipLevels = 0) { };
    virtual U32 getSize() const { return 0; }
    virtual GFXFormat getFormat() const { return GFXFormatR8G8B8A8; }
 
@@ -159,6 +167,36 @@ public:
 
    virtual void zombify() {}
    virtual void resurrect() {}
+};
+
+class GFXNullCubemapArray : public GFXCubemapArray
+{
+   friend class GFXDevice;
+private:
+   // should only be called by GFXDevice
+   virtual void setToTexUnit(U32 tuNum) { };
+
+public:
+   virtual void init(GFXCubemapHandle *cubemaps, const U32 cubemapCount) { };
+   virtual void init(const U32 cubemapCount, const U32 cubemapFaceSize, const GFXFormat format) { };
+   virtual void updateTexture(const GFXCubemapHandle &cubemap, const U32 slot) { };
+   virtual void copyTo(GFXCubemapArray *pDstCubemap) { }
+   virtual ~GFXNullCubemapArray() {};
+   virtual void zombify() {}
+   virtual void resurrect() {}
+};
+
+class GFXNullTextureArray : public GFXTextureArray
+{
+public:
+   void zombify() override {}
+   void resurrect() override {}
+   void Release() override {}
+   void setToTexUnit(U32 tuNum) override { }
+   void init() override { }
+
+protected:
+   void _setTexture(const GFXTexHandle& texture, U32 slot) override { }
 };
 
 class GFXNullVertexBuffer : public GFXVertexBuffer 
@@ -170,7 +208,7 @@ public:
                         const GFXVertexFormat *vertexFormat, 
                         U32 vertexSize, 
                         GFXBufferType bufferType ) :
-      GFXVertexBuffer(device, numVerts, vertexFormat, vertexSize, bufferType) { };
+      GFXVertexBuffer(device, numVerts, vertexFormat, vertexSize, bufferType) {tempBuf =NULL;};
    virtual void lock(U32 vertexStart, U32 vertexEnd, void **vertexPtr);
    virtual void unlock();
    virtual void prepare();
@@ -276,14 +314,16 @@ GFXNullDevice::~GFXNullDevice()
 GFXVertexBuffer *GFXNullDevice::allocVertexBuffer( U32 numVerts, 
                                                    const GFXVertexFormat *vertexFormat,
                                                    U32 vertSize, 
-                                                   GFXBufferType bufferType ) 
+                                                   GFXBufferType bufferType,
+                                                   void* data ) 
 {
    return new GFXNullVertexBuffer(GFX, numVerts, vertexFormat, vertSize, bufferType);
 }
 
 GFXPrimitiveBuffer *GFXNullDevice::allocPrimitiveBuffer( U32 numIndices, 
                                                          U32 numPrimitives, 
-                                                         GFXBufferType bufferType) 
+                                                         GFXBufferType bufferType,
+                                                         void* data ) 
 {
    return new GFXNullPrimitiveBuffer(GFX, numIndices, numPrimitives, bufferType);
 }
@@ -291,6 +331,16 @@ GFXPrimitiveBuffer *GFXNullDevice::allocPrimitiveBuffer( U32 numIndices,
 GFXCubemap* GFXNullDevice::createCubemap()
 { 
    return new GFXNullCubemap(); 
+};
+
+GFXCubemapArray* GFXNullDevice::createCubemapArray()
+{
+   return new GFXNullCubemapArray();
+};
+
+GFXTextureArray* GFXNullDevice::createTextureArray()
+{
+   return new GFXNullTextureArray();
 };
 
 void GFXNullDevice::enumerateAdapters( Vector<GFXAdapter*> &adapterList )
@@ -307,14 +357,9 @@ void GFXNullDevice::enumerateAdapters( Vector<GFXAdapter*> &adapterList )
    vm.resolution.set(800,600);
    toAdd->mAvailableModes.push_back(vm);
 
-   dStrcpy(toAdd->mName, "GFX Null Device");
+   dStrcpy(toAdd->mName, "GFX Null Device", GFXAdapter::MaxAdapterNameLen);
 
    adapterList.push_back(toAdd);
-}
-
-void GFXNullDevice::setLightInternal(U32 lightStage, const GFXLightInfo light, bool lightEnable)
-{
-
 }
 
 void GFXNullDevice::init( const GFXVideoMode &mode, PlatformWindow *window )

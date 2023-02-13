@@ -37,18 +37,34 @@ GFX_ImplementTextureProfile( BackBufferDepthProfile,
 
 GFXGLWindowTarget::GFXGLWindowTarget(PlatformWindow *win, GFXDevice *d)
       : GFXWindowTarget(win), mDevice(d), mContext(NULL), mFullscreenContext(NULL)
-      , mCopyFBO(0), mBackBufferFBO(0)
+      , mCopyFBO(0), mBackBufferFBO(0), mSecondaryWindow(false)
 {      
    win->appEvent.notify(this, &GFXGLWindowTarget::_onAppSignal);
 }
 
+GFXGLWindowTarget::~GFXGLWindowTarget()
+{
+   if(glIsFramebuffer(mCopyFBO))
+   {
+      glDeleteFramebuffers(1, &mCopyFBO);
+   }
+}
+
 void GFXGLWindowTarget::resetMode()
 {
-   if(mWindow->getVideoMode().fullScreen != mWindow->isFullscreen())
+   // Do some validation...
+   bool fullscreen = mWindow->getVideoMode().fullScreen;
+   if (fullscreen && mSecondaryWindow)
+   {
+      AssertFatal(false, "GFXGLWindowTarget::resetMode - Cannot go fullscreen with secondary window!");
+   }
+
+   if (fullscreen != mWindow->isFullscreen())
    {
       _teardownCurrentMode();
       _setupNewMode();
    }
+   GFX->beginReset();
 }
 
 void GFXGLWindowTarget::_onAppSignal(WindowId wnd, S32 event)
@@ -69,7 +85,7 @@ void GFXGLWindowTarget::resolveTo(GFXTextureObject* obj)
    AssertFatal(dynamic_cast<GFXGLTextureObject*>(obj), "GFXGLTextureTarget::resolveTo - Incorrect type of texture, expected a GFXGLTextureObject");
    GFXGLTextureObject* glTexture = static_cast<GFXGLTextureObject*>(obj);
 
-   if( gglHasExtension(ARB_copy_image) )
+   if( GFXGL->mCapabilities.copyImage )
    {
       if(mBackBufferColorTex.getWidth() == glTexture->getWidth()
          && mBackBufferColorTex.getHeight() == glTexture->getHeight()
@@ -102,18 +118,22 @@ void GFXGLWindowTarget::resolveTo(GFXTextureObject* obj)
 inline void GFXGLWindowTarget::_setupAttachments()
 {
    glBindFramebuffer( GL_FRAMEBUFFER, mBackBufferFBO);
+   glEnable(GL_FRAMEBUFFER_SRGB);
    GFXGL->getOpenglCache()->setCacheBinded(GL_FRAMEBUFFER, mBackBufferFBO);
    const Point2I dstSize = getSize();
-   mBackBufferColorTex.set(dstSize.x, dstSize.y, getFormat(), &PostFxTargetProfile, "backBuffer");
+   mBackBufferColorTex.set(dstSize.x, dstSize.y, getFormat(), &GFXRenderTargetSRGBProfile, "backBuffer");
    GFXGLTextureObject *color = static_cast<GFXGLTextureObject*>(mBackBufferColorTex.getPointer());
    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color->getHandle(), 0);
    mBackBufferDepthTex.set(dstSize.x, dstSize.y, GFXFormatD24S8, &BackBufferDepthProfile, "backBuffer");
    GFXGLTextureObject *depth = static_cast<GFXGLTextureObject*>(mBackBufferDepthTex.getPointer());
-   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth->getHandle(), 0);
+   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, depth->getHandle(), 0);
 }
 
 void GFXGLWindowTarget::makeActive()
 {
+   //make the rendering context active on this window
+   _makeContextCurrent();
+
    if(mBackBufferFBO)
    {
       glBindFramebuffer( GL_FRAMEBUFFER, mBackBufferFBO);

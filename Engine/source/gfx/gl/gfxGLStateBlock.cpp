@@ -39,33 +39,36 @@ GFXGLStateBlock::GFXGLStateBlock(const GFXStateBlockDesc& desc) :
    mDesc(desc),
    mCachedHashValue(desc.getHashValue())
 {
-    if( !gglHasExtension(ARB_sampler_objects) )
-	   return;
-
    static Map<GFXSamplerStateDesc, U32> mSamplersMap;
 
-	for(int i = 0; i < TEXTURE_STAGE_COUNT; ++i)
-	{
-		GLuint &id = mSamplerObjects[i];
-		GFXSamplerStateDesc &ssd = mDesc.samplers[i];
+   for(int i = 0; i < GFX_TEXTURE_STAGE_COUNT; ++i)
+   {
+      GLuint &id = mSamplerObjects[i];
+      GFXSamplerStateDesc &ssd = mDesc.samplers[i];
       Map<GFXSamplerStateDesc, U32>::Iterator itr =  mSamplersMap.find(ssd);
       if(itr == mSamplersMap.end())
       {
-		   glGenSamplers(1, &id);
+         glGenSamplers(1, &id);
 
-		   glSamplerParameteri(id, GL_TEXTURE_MIN_FILTER, minificationFilter(ssd.minFilter, ssd.mipFilter, 1) );
-		   glSamplerParameteri(id, GL_TEXTURE_MAG_FILTER, GFXGLTextureFilter[ssd.magFilter]);
-		   glSamplerParameteri(id, GL_TEXTURE_WRAP_S, GFXGLTextureAddress[ssd.addressModeU]);
-		   glSamplerParameteri(id, GL_TEXTURE_WRAP_T, GFXGLTextureAddress[ssd.addressModeV]);
-		   glSamplerParameteri(id, GL_TEXTURE_WRAP_R, GFXGLTextureAddress[ssd.addressModeW]);
-		   if(static_cast< GFXGLDevice* >( GFX )->supportsAnisotropic() )
-			   glSamplerParameterf(id, GL_TEXTURE_MAX_ANISOTROPY_EXT, ssd.maxAnisotropy);
+         glSamplerParameteri(id, GL_TEXTURE_MIN_FILTER, minificationFilter(ssd.minFilter, ssd.mipFilter, 1) );
+         glSamplerParameteri(id, GL_TEXTURE_MAG_FILTER, GFXGLTextureFilter[ssd.magFilter]);
+         glSamplerParameteri(id, GL_TEXTURE_WRAP_S, GFXGLTextureAddress[ssd.addressModeU]);
+         glSamplerParameteri(id, GL_TEXTURE_WRAP_T, GFXGLTextureAddress[ssd.addressModeV]);
+         glSamplerParameteri(id, GL_TEXTURE_WRAP_R, GFXGLTextureAddress[ssd.addressModeW]);
+         
+         //compare modes
+         const bool comparison = ssd.samplerFunc != GFXCmpNever;
+         glSamplerParameteri(id, GL_TEXTURE_COMPARE_MODE, comparison ? GL_COMPARE_R_TO_TEXTURE_ARB : GL_NONE );
+         glSamplerParameteri(id, GL_TEXTURE_COMPARE_FUNC, GFXGLCmpFunc[ssd.samplerFunc]);
+
+         if (static_cast< GFXGLDevice* >(GFX)->supportsAnisotropic())
+            glSamplerParameterf(id, GL_TEXTURE_MAX_ANISOTROPY_EXT, ssd.maxAnisotropy);
 
          mSamplersMap[ssd] = id;
       }
       else
          id = itr->value;
-	}
+   }
 }
 
 GFXGLStateBlock::~GFXGLStateBlock()
@@ -88,6 +91,7 @@ const GFXStateBlockDesc& GFXGLStateBlock::getDesc() const
 /// @param oldState  The current state, used to make sure we don't set redundant states on the device.  Pass NULL to reset all states.
 void GFXGLStateBlock::activate(const GFXGLStateBlock* oldState)
 {
+   PROFILE_SCOPE(GFXGLStateBlock_Activate);
    // Big scary warning copied from Apple docs 
    // http://developer.apple.com/documentation/GraphicsImaging/Conceptual/OpenGL-MacProgGuide/opengl_performance/chapter_13_section_2.html#//apple_ref/doc/uid/TP40001987-CH213-SW12
    // Don't set a state that's already set. Once a feature is enabled, it does not need to be enabled again.
@@ -97,8 +101,8 @@ void GFXGLStateBlock::activate(const GFXGLStateBlock* oldState)
    // the state value even if that value is identical to the current value.
 
 #define STATE_CHANGE(state) (!oldState || oldState->mDesc.state != mDesc.state)
-#define TOGGLE_STATE(state, enum) if(mDesc.state) glEnable(enum); else glDisable(enum)
-#define CHECK_TOGGLE_STATE(state, enum) if(!oldState || oldState->mDesc.state != mDesc.state) if(mDesc.state) glEnable(enum); else glDisable(enum)
+#define TOGGLE_STATE(state, enum) if(mDesc.state) { glEnable(enum); } else { glDisable(enum); }
+#define CHECK_TOGGLE_STATE(state, enum) if(!oldState || oldState->mDesc.state != mDesc.state) { if(mDesc.state) { glEnable(enum); } else { glDisable(enum); }}
 
    // Blending
    CHECK_TOGGLE_STATE(blendEnable, GL_BLEND);
@@ -106,6 +110,14 @@ void GFXGLStateBlock::activate(const GFXGLStateBlock* oldState)
       glBlendFunc(GFXGLBlend[mDesc.blendSrc], GFXGLBlend[mDesc.blendDest]);
    if(STATE_CHANGE(blendOp))
       glBlendEquation(GFXGLBlendOp[mDesc.blendOp]);
+
+   if (mDesc.separateAlphaBlendEnable == true)
+   {
+       if (STATE_CHANGE(separateAlphaBlendSrc) || STATE_CHANGE(separateAlphaBlendDest))
+           glBlendFuncSeparate(GFXGLBlend[mDesc.blendSrc], GFXGLBlend[mDesc.blendDest], GFXGLBlend[mDesc.separateAlphaBlendSrc], GFXGLBlend[mDesc.separateAlphaBlendDest]);
+       if (STATE_CHANGE(separateAlphaBlendOp))
+           glBlendEquationSeparate(GFXGLBlendOp[mDesc.blendOp], GFXGLBlendOp[mDesc.separateAlphaBlendOp]);
+   }
 
    // Color write masks
    if(STATE_CHANGE(colorWriteRed) || STATE_CHANGE(colorWriteBlue) || STATE_CHANGE(colorWriteGreen) || STATE_CHANGE(colorWriteAlpha))
@@ -124,16 +136,19 @@ void GFXGLStateBlock::activate(const GFXGLStateBlock* oldState)
    if(STATE_CHANGE(zFunc))
       glDepthFunc(GFXGLCmpFunc[mDesc.zFunc]);
    
-   if(STATE_CHANGE(zBias))
+   if (STATE_CHANGE(zBias))
    {
       if (mDesc.zBias == 0)
       {
          glDisable(GL_POLYGON_OFFSET_FILL);
-      } else {
-         F32 bias = mDesc.zBias * 10000.0f;
+      }
+      else 
+      {
+         //this assumes 24bit depth
+         const F32 depthMul = F32((1 << 24) - 1);
          glEnable(GL_POLYGON_OFFSET_FILL);
-         glPolygonOffset(bias, bias);
-      } 
+         glPolygonOffset(mDesc.zSlopeBias, mDesc.zBias * depthMul);
+      }
    }
    
    if(STATE_CHANGE(zWriteEnable))
@@ -157,14 +172,10 @@ void GFXGLStateBlock::activate(const GFXGLStateBlock* oldState)
 #undef CHECK_TOGGLE_STATE
 
    //sampler objects
-   if( gglHasExtension(ARB_sampler_objects) )
+   for (U32 i = 0; i < getMin(getOwningDevice()->getNumSamplers(), (U32) GFX_TEXTURE_STAGE_COUNT); i++)
    {
-      for (U32 i = 0; i < getMin(getOwningDevice()->getNumSamplers(), (U32) TEXTURE_STAGE_COUNT); i++)
-      {
-         if(!oldState || oldState->mSamplerObjects[i] != mSamplerObjects[i])
-		      glBindSampler(i, mSamplerObjects[i] );
-      }
-   }	  
-
+      if(!oldState || oldState->mSamplerObjects[i] != mSamplerObjects[i])
+         glBindSampler(i, mSamplerObjects[i] );
+   }
    // TODO: states added for detail blend   
 }

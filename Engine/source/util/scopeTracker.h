@@ -88,7 +88,7 @@ class ScopeTrackerObject
             
             ///
             TrackingNode()
-               : mPosition( 0.0f ), mObject( NULL ), mNext( NULL ), mPrev( NULL ), mOpposite( NULL ) {}
+               : mOpposite( NULL ), mPosition( 0.0f ), mObject( NULL ), mNext( NULL ), mPrev( NULL ) {}
                
             /// Return the object to which this tracking node belongs.
             ScopeTrackerObject* getObject() const { return mObject; }
@@ -515,11 +515,11 @@ void ScopeTracker< NUM_DIMENSIONS, Object >::updateObject( Object object )
       
       while( !mPotentialScopeInObjects.empty() )
       {
-         Object object = mPotentialScopeInObjects.last();
+         Object obj = mPotentialScopeInObjects.last();
          mPotentialScopeInObjects.decrement();
          
-         if( Deref( object ).isInScope() )
-            _onScopeIn( object );
+         if( Deref(obj).isInScope() )
+            _onScopeIn(obj);
       }
    }
    else

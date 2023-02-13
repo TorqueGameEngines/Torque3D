@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2014 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -53,19 +53,29 @@ typedef enum {
 extern Windows::Foundation::Point WINRT_TransformCursorPosition(SDL_Window * window,
                                                                 Windows::Foundation::Point rawPosition,
                                                                 WINRT_CursorNormalizationType normalization);
-extern Uint8 WINRT_GetSDLButtonForPointerPoint(Windows::UI::Input::PointerPoint ^pt);
+extern SDL_bool WINRT_GetSDLButtonForPointerPoint(Windows::UI::Input::PointerPoint ^pt, Uint8 *button, Uint8 *pressed);
 extern void WINRT_ProcessPointerPressedEvent(SDL_Window *window, Windows::UI::Input::PointerPoint ^pointerPoint);
 extern void WINRT_ProcessPointerMovedEvent(SDL_Window *window, Windows::UI::Input::PointerPoint ^pointerPoint);
 extern void WINRT_ProcessPointerReleasedEvent(SDL_Window *window, Windows::UI::Input::PointerPoint ^pointerPoint);
+extern void WINRT_ProcessPointerEnteredEvent(SDL_Window *window, Windows::UI::Input::PointerPoint ^pointerPoint);
+extern void WINRT_ProcessPointerExitedEvent(SDL_Window *window, Windows::UI::Input::PointerPoint ^pointerPoint);
 extern void WINRT_ProcessPointerWheelChangedEvent(SDL_Window *window, Windows::UI::Input::PointerPoint ^pointerPoint);
 extern void WINRT_ProcessMouseMovedEvent(SDL_Window * window, Windows::Devices::Input::MouseEventArgs ^args);
 
 /* Keyboard */
 extern void WINRT_ProcessKeyDownEvent(Windows::UI::Core::KeyEventArgs ^args);
 extern void WINRT_ProcessKeyUpEvent(Windows::UI::Core::KeyEventArgs ^args);
+extern void WINRT_ProcessCharacterReceivedEvent(Windows::UI::Core::CharacterReceivedEventArgs ^args);
+
+#if NTDDI_VERSION >= NTDDI_WIN10
+extern SDL_bool WINRT_HasScreenKeyboardSupport(_THIS);
+extern void WINRT_ShowScreenKeyboard(_THIS, SDL_Window *window);
+extern void WINRT_HideScreenKeyboard(_THIS, SDL_Window *window);
+extern SDL_bool WINRT_IsScreenKeyboardShown(_THIS, SDL_Window *window);
+#endif  // NTDDI_VERSION >= ...
 
 /* XAML Thread Management */
-extern void WINRT_CycleXAMLThread();
+extern void WINRT_CycleXAMLThread(void);
 
 #endif // ifdef __cplusplus_winrt
 

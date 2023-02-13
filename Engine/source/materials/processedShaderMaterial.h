@@ -29,6 +29,9 @@
 #ifndef _GFXSHADER_H_
 #include "gfx/gfxShader.h"
 #endif
+#ifndef CUSTOMSHADERBINDINGDATA_H
+#include "materials/customShaderBindingData.h"
+#endif
 
 class GenericConstBufferLayout;
 class ShaderData;
@@ -37,16 +40,16 @@ class ShaderMaterialParameterHandle;
 class ShaderFeatureConstHandles;
 class CustomMaterial;
 
-
 class ShaderConstHandles
 {
 public:
    GFXShaderConstHandle* mDiffuseColorSC;
    GFXShaderConstHandle* mToneMapTexSC;
    GFXShaderConstHandle* mTexMatSC;
-   GFXShaderConstHandle* mSpecularColorSC;
-   GFXShaderConstHandle* mSpecularPowerSC;
-   GFXShaderConstHandle* mSpecularStrengthSC;
+   GFXShaderConstHandle* mORMConfigSC;
+   GFXShaderConstHandle* mRoughnessSC;
+   GFXShaderConstHandle* mMetalnessSC;
+   GFXShaderConstHandle* mGlowMulSC;
    GFXShaderConstHandle* mParallaxInfoSC;
    GFXShaderConstHandle* mAccuScaleSC;
    GFXShaderConstHandle* mAccuDirectionSC;
@@ -62,9 +65,14 @@ public:
    GFXShaderConstHandle* mModelViewProjSC;
    GFXShaderConstHandle* mWorldViewOnlySC;     
    GFXShaderConstHandle* mWorldToCameraSC;
+   GFXShaderConstHandle* mCameraToWorldSC;
    GFXShaderConstHandle* mWorldToObjSC;         
-   GFXShaderConstHandle* mViewToObjSC;         
+   GFXShaderConstHandle* mViewToObjSC;
+   GFXShaderConstHandle* mInvCameraTransSC;
+   GFXShaderConstHandle* mCameraToScreenSC;
+   GFXShaderConstHandle* mScreenToCameraSC;
    GFXShaderConstHandle* mCubeTransSC;
+   GFXShaderConstHandle* mCubeMipsSC;
    GFXShaderConstHandle* mObjTransSC;
    GFXShaderConstHandle* mCubeEyePosSC;
    GFXShaderConstHandle* mEyePosSC;
@@ -73,6 +81,7 @@ public:
    GFXShaderConstHandle* mEyeMatSC;
    GFXShaderConstHandle* mOneOverFarplane;
    GFXShaderConstHandle* mAccumTimeSC;
+   GFXShaderConstHandle* mDampnessSC;
    GFXShaderConstHandle* mMinnaertConstantSC;
    GFXShaderConstHandle* mSubSurfaceParamsSC;
    GFXShaderConstHandle* mDiffuseAtlasParamsSC;
@@ -87,10 +96,23 @@ public:
    GFXShaderConstHandle *mImposterUVs;
    GFXShaderConstHandle *mImposterLimits;
 
-   GFXShaderConstHandle* mTexHandlesSC[Material::MAX_TEX_PER_PASS];
-   GFXShaderConstHandle* mRTParamsSC[TEXTURE_STAGE_COUNT];
+   // Deferred Shading : Material Info Flags
+   GFXShaderConstHandle* mMatInfoFlagsSC;
 
-   void init( GFXShader* shader, CustomMaterial* mat = NULL );
+   GFXShaderConstHandle* mTexHandlesSC[Material::MAX_TEX_PER_PASS];
+   GFXShaderConstHandle* mRTParamsSC[GFX_TEXTURE_STAGE_COUNT];
+
+   GFXShaderConstHandle* mNodeTransforms;
+
+   struct customHandleData
+   {
+	   StringTableEntry handleName;
+	   GFXShaderConstHandle* handle;
+   };
+   Vector<customHandleData> mCustomHandles;
+
+   void init( GFXShader* shader, CustomMaterial* mat = NULL);
+   
 };
 
 class ShaderRenderPassData : public RenderPassData
@@ -125,10 +147,13 @@ public:
    virtual bool setupPass(SceneRenderState *, const SceneData& sgData, U32 pass);
    virtual void setTextureStages(SceneRenderState *, const SceneData &sgData, U32 pass );
    virtual void setTransforms(const MatrixSet &matrixSet, SceneRenderState *state, const U32 pass);
+   virtual void setNodeTransforms(const MatrixF *address, const U32 numTransforms, const U32 pass);
+   virtual void setCustomShaderData(Vector<CustomShaderBindingData> &shaderData, const U32 pass);
    virtual void setSceneInfo(SceneRenderState *, const SceneData& sgData, U32 pass);
    virtual void setBuffers(GFXVertexBufferHandleBase* vertBuffer, GFXPrimitiveBufferHandle* primBuffer); 
    virtual bool stepInstance();
    virtual void dumpMaterialInfo();
+   virtual void getMaterialInfo(GuiTreeViewCtrl* tree, U32 item);
    virtual MaterialParameters* allocMaterialParameters();    
    virtual MaterialParameters* getDefaultMaterialParameters() { return mDefaultParameters; }   
    virtual MaterialParameterHandle* getMaterialParameterHandle(const String& name);
@@ -164,6 +189,8 @@ protected:
          mInstFormat = instFormat;
          mDeclFormat.copy( *vertexFormat );
          mDeclFormat.append( *mInstFormat, 1 );
+         // Let the declaration know we have instancing.
+         mDeclFormat.enableInstancing();
          mDeclFormat.getDecl();
 
          delete [] mBuffer;
@@ -256,9 +283,11 @@ protected:
    void _setPrimaryLightConst(const LightInfo* light, const MatrixF& objTrans, const U32 stageNum);
 
    /// This is here to deal with the differences between ProcessedCustomMaterials and ProcessedShaderMaterials.
+public:
    virtual GFXShaderConstBuffer* _getShaderConstBuffer(const U32 pass);
    virtual ShaderConstHandles* _getShaderConstHandles(const U32 pass);
 
+protected:
    ///
    virtual void _initMaterialParameters();
 

@@ -1,0 +1,7 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Viz_MaterialComplexityMat"
+    scriptFile="@assetFile=miscViz.tscript"
+    materialDefinitionName="Viz_MaterialComplexityMat"
+    VersionId="1" />

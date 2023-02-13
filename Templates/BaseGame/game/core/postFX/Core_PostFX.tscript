@@ -1,0 +1,14 @@
+
+function Core_PostFX::onCreate(%this)
+{
+   //
+   exec("./scripts/postFxManager." @ $TorqueScriptFileExtension);
+   exec("./scripts/postFx." @ $TorqueScriptFileExtension);
+   
+   //Load the default config
+   PostFXManager.loadPresetHandler("./scripts/default.postfxpreset." @ $TorqueScriptFileExtension);
+}
+
+function Core_PostFX::onDestroy(%this)
+{
+}

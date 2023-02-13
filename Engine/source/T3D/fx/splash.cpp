@@ -67,8 +67,10 @@ ConsoleDocClass( Splash,
 //--------------------------------------------------------------------------
 SplashData::SplashData()
 {
-   soundProfile      = NULL;
-   soundProfileId    = 0;
+   //soundProfile      = NULL;
+   //soundProfileId    = 0;
+
+   INIT_ASSET(Sound);
 
    scale.set(1, 1, 1);
 
@@ -93,9 +95,12 @@ SplashData::SplashData()
    explosion = NULL;
    explosionId = 0;
 
-   dMemset( textureName, 0, sizeof( textureName ) );
-
    U32 i;
+   for (i = 0; i < NUM_TEX; i++)
+   {
+      INIT_IMAGEASSET_ARRAY(Texture, GFXStaticTextureSRGBProfile, i);
+   }
+
    for( i=0; i<NUM_TIME_KEYS; i++ )
       times[i] = 1.0;
 
@@ -109,9 +114,11 @@ SplashData::SplashData()
 //--------------------------------------------------------------------------
 // Init fields
 //--------------------------------------------------------------------------
-   void SplashData::initPersistFields()
+void SplashData::initPersistFields()
 {
-   addField("soundProfile",      TYPEID< SFXProfile >(),       Offset(soundProfile,       SplashData), "SFXProfile effect to play.\n");
+      docsURL;
+   INITPERSISTFIELD_SOUNDASSET(Sound, SplashData, "Sound to play when splash, splashes.");
+
    addField("scale",             TypePoint3F,                  Offset(scale,              SplashData), "The scale of this splashing effect, defined as the F32 points X, Y, Z.\n");
    addField("emitter",           TYPEID< ParticleEmitterData >(),   Offset(emitterList,        SplashData), NUM_EMITTERS, "List of particle emitters to create at the point of this Splash effect.\n");
    addField("delayMS",           TypeS32,                      Offset(delayMS,            SplashData), "Time to delay, in milliseconds, before actually starting this effect.\n");
@@ -125,7 +132,9 @@ SplashData::SplashData()
    addField("acceleration",      TypeF32,                      Offset(acceleration,       SplashData), "Constant acceleration value to place upon the splash effect.\n");
    addField("times",             TypeF32,                      Offset(times,              SplashData), NUM_TIME_KEYS, "Times to transition through the splash effect. Up to 4 allowed. Values are 0.0 - 1.0, and corrispond to the life of the particle where 0 is first created and 1 is end of lifespace.\n" );
    addField("colors",            TypeColorF,                   Offset(colors,             SplashData), NUM_TIME_KEYS, "Color values to set the splash effect, rgba. Up to 4 allowed. Will transition through colors based on values set in the times value. Example: colors[0] = \"0.6 1.0 1.0 0.5\".\n" );
-   addField("texture",           TypeFilename,                 Offset(textureName,        SplashData), NUM_TEX, "Imagemap file to use as the texture for the splash effect.\n");
+
+   INITPERSISTFIELD_IMAGEASSET_ARRAY(Texture, NUM_TEX, SplashData, "Image to use as the texture for the splash effect.\n");
+
    addField("texWrap",           TypeF32,                      Offset(texWrap,            SplashData), "Amount to wrap the texture around the splash ring, 0.0f - 1.0f.\n");
    addField("texFactor",         TypeF32,                      Offset(texFactor,          SplashData), "Factor in which to apply the texture to the splash ring, 0.0f - 1.0f.\n");
    addField("ejectionFreq",      TypeF32,                      Offset(ejectionFreq,       SplashData), "Frequency in which to emit splash rings.\n");
@@ -154,6 +163,8 @@ bool SplashData::onAdd()
 void SplashData::packData(BitStream* stream)
 {
    Parent::packData(stream);
+
+   PACKDATA_ASSET(Sound);
 
    mathWrite(*stream, scale);
    stream->write(delayMS);
@@ -198,7 +209,7 @@ void SplashData::packData(BitStream* stream)
 
    for( i=0; i<NUM_TEX; i++ )
    {
-      stream->writeString(textureName[i]);
+      PACKDATA_ASSET_ARRAY(Texture, i);
    }
 }
 
@@ -208,6 +219,8 @@ void SplashData::packData(BitStream* stream)
 void SplashData::unpackData(BitStream* stream)
 {
    Parent::unpackData(stream);
+
+   UNPACKDATA_ASSET(Sound);
 
    mathRead(*stream, &scale);
    stream->read(&delayMS);
@@ -252,7 +265,7 @@ void SplashData::unpackData(BitStream* stream)
 
    for( i=0; i<NUM_TEX; i++ )
    {
-      textureName[i] = stream->readSTString();
+      UNPACKDATA_ASSET_ARRAY(Texture, i);
    }
 }
 
@@ -266,6 +279,15 @@ bool SplashData::preload(bool server, String &errorStr)
 
    if (!server)
    {
+
+      if (getSound() != StringTable->EmptyString())
+      {
+         _setSound(getSound());
+
+         if(!getSoundProfile())
+            Con::errorf(ConsoleLogEntry::General, "SplashData::preload: Cant get an sfxProfile for splash.");
+      }
+
       S32 i;
       for( i=0; i<NUM_EMITTERS; i++ )
       {
@@ -280,9 +302,9 @@ bool SplashData::preload(bool server, String &errorStr)
 
       for( i=0; i<NUM_TEX; i++ )
       {
-         if (textureName[i] && textureName[i][0])
+         if (mTexture[i].isNull())
          {
-            textureHandle[i] = GFXTexHandle(textureName[i], &GFXDefaultStaticDiffuseProfile, avar("%s() - textureHandle[%d] (line %d)", __FUNCTION__, i, __LINE__) );
+            _setTexture(getTexture(i), i);
          }
       }
    }
@@ -309,6 +331,7 @@ Splash::Splash()
 
    mDelayMS = 0;
    mCurrMS = 0;
+   mRandAngle = 0;
    mEndingMS = 1000;
    mActive = false;
    mRadius = 0.0;
@@ -319,7 +342,8 @@ Splash::Splash()
    mElapsedTime = 0.0;
 
    mInitialNormal.set( 0.0, 0.0, 1.0 );
-
+   mFade = 0;
+   mFog = 0;
    // Only allocated client side.
    mNetFlags.set( IsGhost );
 }
@@ -458,6 +482,7 @@ void Splash::processTick(const Move*)
       if( mCurrMS >= mEndingMS )
       {
          mDead = true;
+         deleteObject();
       }
    }
 }
@@ -661,6 +686,14 @@ void Splash::updateRing( SplashRing& ring, F32 dt )
 void Splash::spawnExplosion()
 {
    if( !mDataBlock->explosion ) return;
+
+   /// could just play the explosion one, but explosion could be weapon specific,
+   /// splash sound could be liquid specific. food for thought.
+   SFXProfile* sound_prof = mDataBlock->getSoundProfile();
+   if (sound_prof)
+   {
+      SFX->playOnce(sound_prof, &getTransform());
+   }
 
    Explosion* pExplosion = new Explosion;
    pExplosion->onNewDataBlock(mDataBlock->explosion, false);

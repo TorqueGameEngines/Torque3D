@@ -76,7 +76,7 @@ void	btSoftRigidDynamicsWorld::predictUnconstraintMotion(btScalar timeStep)
 	btDiscreteDynamicsWorld::predictUnconstraintMotion( timeStep );
 	{
 		BT_PROFILE("predictUnconstraintMotionSoftBody");
-		m_softBodySolver->predictMotion( timeStep );
+		m_softBodySolver->predictMotion( float(timeStep) );
 	}
 }
 
@@ -125,7 +125,7 @@ void	btSoftRigidDynamicsWorld::solveSoftBodiesConstraints( btScalar timeStep )
 
 }
 
-void	btSoftRigidDynamicsWorld::addSoftBody(btSoftBody* body,short int collisionFilterGroup,short int collisionFilterMask)
+void	btSoftRigidDynamicsWorld::addSoftBody(btSoftBody* body, int collisionFilterGroup, int collisionFilterMask)
 {
 	m_softBodies.push_back(body);
 

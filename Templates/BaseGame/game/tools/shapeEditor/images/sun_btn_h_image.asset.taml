@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="sun_btn_h_image"
+    imageFile="@assetFile=sun-btn_h.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2014 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -35,12 +35,13 @@
 
 char *
 SDL_GetBasePath(void)
+{ @autoreleasepool
 {
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
     NSBundle *bundle = [NSBundle mainBundle];
     const char* baseType = [[[bundle infoDictionary] objectForKey:@"SDL_FILESYSTEM_BASE_DIR_TYPE"] UTF8String];
     const char *base = NULL;
     char *retval = NULL;
+
     if (baseType == NULL) {
         baseType = "resource";
     }
@@ -52,6 +53,7 @@ SDL_GetBasePath(void)
         /* this returns the exedir for non-bundled  and the resourceDir for bundled apps */
         base = [[bundle resourcePath] fileSystemRepresentation];
     }
+
     if (base) {
         const size_t len = SDL_strlen(base) + 2;
         retval = (char *) SDL_malloc(len);
@@ -62,16 +64,43 @@ SDL_GetBasePath(void)
         }
     }
 
-    [pool release];
     return retval;
-}
+}}
 
 char *
 SDL_GetPrefPath(const char *org, const char *app)
+{ @autoreleasepool
 {
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-    NSArray *array = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES);
+    if (!app) {
+        SDL_InvalidParamError("app");
+        return NULL;
+    }
+    if (!org) {
+        org = "";
+    }
+
     char *retval = NULL;
+#if !TARGET_OS_TV
+    NSArray *array = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES);
+#else
+    /* tvOS does not have persistent local storage!
+     * The only place on-device where we can store data is
+     * a cache directory that the OS can empty at any time.
+     *
+     * It's therefore very likely that save data will be erased
+     * between sessions. If you want your app's save data to
+     * actually stick around, you'll need to use iCloud storage.
+     */
+
+    static SDL_bool shown = SDL_FALSE;
+    if (!shown)
+    {
+        shown = SDL_TRUE;
+        SDL_LogCritical(SDL_LOG_CATEGORY_SYSTEM, "tvOS does not have persistent local storage! Use iCloud storage if you want your data to persist between sessions.\n");
+    }
+
+    NSArray *array = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+#endif /* !TARGET_OS_TV */
 
     if ([array count] > 0) {  /* we only want the first item in the list. */
         NSString *str = [array objectAtIndex:0];
@@ -83,7 +112,11 @@ SDL_GetPrefPath(const char *org, const char *app)
                 SDL_OutOfMemory();
             } else {
                 char *ptr;
-                SDL_snprintf(retval, len, "%s/%s/%s/", base, org, app);
+                if (*org) {
+                    SDL_snprintf(retval, len, "%s/%s/%s/", base, org, app);
+                } else {
+                    SDL_snprintf(retval, len, "%s/%s/", base, app);
+                }
                 for (ptr = retval+1; *ptr; ptr++) {
                     if (*ptr == '/') {
                         *ptr = '\0';
@@ -96,9 +129,8 @@ SDL_GetPrefPath(const char *org, const char *app)
         }
     }
 
-    [pool release];
     return retval;
-}
+}}
 
 #endif /* SDL_FILESYSTEM_COCOA */
 

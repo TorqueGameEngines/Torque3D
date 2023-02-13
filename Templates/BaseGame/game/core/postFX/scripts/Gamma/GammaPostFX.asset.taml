@@ -1,0 +1,8 @@
+<PostEffectAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="GammaPostFX"
+    scriptFile="@assetFile=GammaPostFX.cs"
+    hlslShader="@assetFile=gammaP.hlsl"
+    glslShader="@assetFile=gammaP.glsl"
+    VersionId="1" />

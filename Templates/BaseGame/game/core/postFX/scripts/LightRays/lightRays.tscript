@@ -1,0 +1,152 @@
+//-----------------------------------------------------------------------------
+// Copyright (c) 2012 GarageGames, LLC
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+// IN THE SOFTWARE.
+//-----------------------------------------------------------------------------
+
+
+$PostFX::LightRayPostFX::brightScalar = 0.75;
+$PostFX::LightRayPostFX::numSamples = 40;
+$PostFX::LightRayPostFX::density = 0.94;
+$PostFX::LightRayPostFX::weight = 5.65;
+$PostFX::LightRayPostFX::decay = 1.0;
+$PostFX::LightRayPostFX::exposure = 0.0005;
+$PostFX::LightRayPostFX::resolutionScale = 1.0;
+
+function LightRayPostFX::onAdd( %this )
+{   
+   PostFXManager.registerPostEffect(%this);
+}
+
+singleton ShaderData( LightRayOccludeShader )
+{
+   DXVertexShaderFile 	= $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
+   DXPixelShaderFile 	= "./lightRayOccludeP.hlsl";
+   OGLVertexShaderFile  = $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";
+   OGLPixelShaderFile   = "./lightRayOccludeP.glsl";
+   
+   samplerNames[0] = "$backBuffer";
+   samplerNames[1] = "$deferredTex";
+
+   pixVersion = 3.0;   
+};
+
+singleton ShaderData( LightRayShader )
+{
+   DXVertexShaderFile 	= $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
+   DXPixelShaderFile 	= "./lightRayP.hlsl";
+   OGLVertexShaderFile  = $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";
+   OGLPixelShaderFile   = "./lightRayP.glsl";
+   
+   samplerNames[0] = "$frameSampler";
+   samplerNames[1] = "$backBuffer";
+
+   pixVersion = 3.0;   
+};
+
+singleton GFXStateBlockData( LightRayStateBlock : PFX_DefaultStateBlock )
+{
+   samplersDefined = true;
+   samplerStates[0] = SamplerClampLinear;
+   samplerStates[1] = SamplerClampLinear;     
+};
+
+singleton PostEffect( LightRayPostFX )
+{
+   enabled = false;
+   allowReflectPass = false;
+        
+   renderTime = "PFXBeforeBin";
+   renderBin = "EditorBin";
+   renderPriority = 10;
+      
+   shader = LightRayOccludeShader;
+   stateBlock = LightRayStateBlock;
+   texture[0] = "$backBuffer";
+   texture[1] = "#deferred";
+   target = "$outTex";
+   targetFormat = "GFXFormatR16G16B16A16F";
+      
+   new PostEffect()
+   {
+      shader = LightRayShader;
+      stateBlock = LightRayStateBlock;
+      internalName = "final";
+      texture[0] = "$inTex";
+      texture[1] = "$backBuffer";
+      target = "$backBuffer";
+   };
+};
+
+function LightRayPostFX::preProcess( %this )
+{   
+   %this.targetScale = $PostFX::LightRayPostFX::resolutionScale SPC $PostFX::LightRayPostFX::resolutionScale;
+}
+
+function LightRayPostFX::setShaderConsts( %this )
+{
+   %this.setShaderConst( "$brightScalar", $PostFX::LightRayPostFX::brightScalar );
+   
+   %pfx = %this-->final;
+   %pfx.setShaderConst( "$numSamples", $PostFX::LightRayPostFX::numSamples );
+   %pfx.setShaderConst( "$density", $PostFX::LightRayPostFX::density );
+   %pfx.setShaderConst( "$weight", $PostFX::LightRayPostFX::weight );
+   %pfx.setShaderConst( "$decay", $PostFX::LightRayPostFX::decay );
+   %pfx.setShaderConst( "$exposure", $PostFX::LightRayPostFX::exposure );
+}
+
+function LightRayPostFX::populatePostFXSettings(%this)
+{
+   PostEffectEditorInspector.startGroup("LightRayPostFX - General");
+   PostEffectEditorInspector.addCallbackField("$PostFX::LightRayPostFX::Enabled", "Enabled", "bool", "", $PostFX::LightRayPostFX::Enabled, "", "toggleLightRayPostFX");
+   PostEffectEditorInspector.addField("$PostFX::LightRayPostFX::brightScalar", "Brightness", "float", "", $PostFX::LightRayPostFX::brightScalar, "");
+   PostEffectEditorInspector.addField("$PostFX::LightRayPostFX::numSamples", "Samples", "float", "", $PostFX::LightRayPostFX::numSamples, "");
+   PostEffectEditorInspector.addField("$PostFX::LightRayPostFX::density", "Density", "float", "", $PostFX::LightRayPostFX::density, "");
+   PostEffectEditorInspector.addField("$PostFX::LightRayPostFX::weight", "Weight", "float", "", $PostFX::LightRayPostFX::weight, "");
+   PostEffectEditorInspector.addField("$PostFX::LightRayPostFX::decay", "Decay", "float", "", $PostFX::LightRayPostFX::decay, "");
+   PostEffectEditorInspector.addField("$PostFX::LightRayPostFX::exposure", "Exposure", "float", "", $PostFX::LightRayPostFX::exposure, "");
+   PostEffectEditorInspector.endGroup();
+}
+
+function PostEffectEditorInspector::toggleLightRayPostFX(%this)
+{
+   if($PostFX::LightRayPostFX::Enabled && $pref::PostFX::EnableLightRays)
+      LightRayPostFX.enable();
+   else
+      LightRayPostFX.disable();
+}
+
+function LightRayPostFX::applyFromPreset(%this)
+{
+   if($PostFX::LightRayPostFX::Enabled && $pref::PostFX::EnableLightRays)
+      %this.enable();
+   else
+      %this.disable();
+}
+
+function LightRayPostFX::savePresetSettings(%this)
+{
+   PostFXManager::savePresetSetting("$PostFX::LightRayPostFX::Enabled");
+   PostFXManager::savePresetSetting("$PostFX::LightRayPostFX::brightScalar");
+   PostFXManager::savePresetSetting("$PostFX::LightRayPostFX::numSamples");
+   PostFXManager::savePresetSetting("$PostFX::LightRayPostFX::density");
+   PostFXManager::savePresetSetting("$PostFX::LightRayPostFX::weight");
+   PostFXManager::savePresetSetting("$PostFX::LightRayPostFX::decay");
+   PostFXManager::savePresetSetting("$PostFX::LightRayPostFX::exposure");   
+}

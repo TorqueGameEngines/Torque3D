@@ -36,6 +36,8 @@
 #include "console/dynamicTypes.h"
 #endif
 
+#include "T3D/assets/MaterialAsset.h"
+
 GFXDeclareVertexFormat( DecalVertex )
 {
    // .xyz = coords
@@ -75,11 +77,8 @@ class DecalData : public SimDataBlock
       F32 fadeStartPixelSize;
       F32 fadeEndPixelSize;
 
-      /// Name of material to use.
-      String materialName;
-      
-      /// Render material for decal.
-      SimObjectPtr<Material> material;
+      DECLARE_MATERIALASSET(DecalData, Material);
+      DECLARE_ASSET_SETGET(DecalData, Material);
       
       /// Material instance for decal.
       BaseMatInstance *matInst;
@@ -113,7 +112,7 @@ class DecalData : public SimDataBlock
       virtual void packData( BitStream* );
       virtual void unpackData( BitStream* );      
       
-      Material* getMaterial();
+      Material* getMaterialDefinition();
       BaseMatInstance* getMaterialInstance();
 
       static SimSet* getSet();

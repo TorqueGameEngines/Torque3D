@@ -171,6 +171,7 @@ public:
 	/* ImplicitFn	*/ 
 	struct	ImplicitFn
 	{
+		virtual ~ImplicitFn() {}
 		virtual btScalar	Eval(const btVector3& x)=0;
 	};
 
@@ -231,15 +232,18 @@ public:
 		int						m_battach:1;	// Attached
 	};
 	/* Link			*/ 
-	struct	Link : Feature
+	ATTRIBUTE_ALIGNED16(struct)	Link : Feature
 	{
+		btVector3				m_c3;			// gradient
 		Node*					m_n[2];			// Node pointers
 		btScalar				m_rl;			// Rest length		
 		int						m_bbending:1;	// Bending link
 		btScalar				m_c0;			// (ima+imb)*kLST
 		btScalar				m_c1;			// rl^2
 		btScalar				m_c2;			// |gradient|^2/c0
-		btVector3				m_c3;			// gradient
+	
+		BT_DECLARE_ALIGNED_ALLOCATOR();
+
 	};
 	/* Face			*/ 
 	struct	Face : Feature
@@ -528,6 +532,7 @@ public:
 	{
 		struct IControl
 		{
+			virtual ~IControl() {}
 			virtual void			Prepare(AJoint*)				{}
 			virtual btScalar		Speed(AJoint*,btScalar current) { return(current); }
 			static IControl*		Default()						{ static IControl def;return(&def); }
@@ -612,7 +617,7 @@ public:
 		RayFromToCaster(const btVector3& rayFrom,const btVector3& rayTo,btScalar mxt);
 		void					Process(const btDbvtNode* leaf);
 
-		static inline btScalar	rayFromToTriangle(const btVector3& rayFrom,
+		static /*inline*/ btScalar	rayFromToTriangle(const btVector3& rayFrom,
 			const btVector3& rayTo,
 			const btVector3& rayNormalizedDirection,
 			const btVector3& a,

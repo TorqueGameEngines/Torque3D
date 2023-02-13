@@ -228,6 +228,7 @@ is_15_bit_in_disguise:
 
 static bool sReadTGA(Stream &stream, GBitmap *bitmap)
 {
+   PROFILE_SCOPE(sReadTGA);
    struct Header
    {
       U8    idLength;         // length of the image_id string below.
@@ -470,6 +471,7 @@ static bool sReadTGA(Stream &stream, GBitmap *bitmap)
 
    default:
        //Con::errorf( "Unknown image type" );
+      delete[] colormap;
       return false;
    }
 
@@ -483,7 +485,7 @@ static bool sReadTGA(Stream &stream, GBitmap *bitmap)
 
 static bool sWriteTGA(GBitmap *bitmap, Stream &stream, U32 compressionLevel)
 {
-   AssertISV(false, "GBitmap::writeTGA - doesn't support writing tga files!")
+   AssertISV(false, "GBitmap::writeTGA - doesn't support writing tga files!");
 
    return false;
 }

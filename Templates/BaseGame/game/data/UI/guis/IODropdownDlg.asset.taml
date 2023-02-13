@@ -1,0 +1,4 @@
+<GUIAsset
+    AssetName="IODropdownDlg"
+    GUIFile="@assetFile=IODropdownDlg.ed.gui"
+    VersionId="1"/>

@@ -52,7 +52,7 @@ class ShadowMapPass
 {
 public:
 
-   ShadowMapPass() {}   // Only called by ConsoleSystem
+   ShadowMapPass() : mTimer(NULL), mLightManager(NULL), mShadowManager(NULL), mActiveLights(0), mPrevCamFov(90.0f) {}   // Only called by ConsoleSystem
    ShadowMapPass(LightManager* LightManager, ShadowMapManager* ShadowManager);
    virtual ~ShadowMapPass();
 
@@ -83,6 +83,11 @@ public:
    static bool smDisableShadowsEditor;
    static bool smDisableShadowsPref;
 
+   /// distance moved per frame before forcing a shadow update
+   static F32 smShadowsTeleportDist;
+   /// angle turned per frame before forcing a shadow update
+   static F32 smShadowsTurnRate;
+
 private:
 
    static U32 smActiveShadowMaps;
@@ -105,6 +110,9 @@ private:
    SimObjectPtr<ShadowRenderPassManager> mShadowRPM;
    LightManager* mLightManager;
    ShadowMapManager* mShadowManager;
+   Point3F mPrevCamPos;
+   Point3F mPrevCamRot;
+   F32 mPrevCamFov;
 };
 
 class ShadowRenderPassManager : public RenderPassManager

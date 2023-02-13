@@ -51,7 +51,7 @@ struct ItemData: public ShapeBaseData {
 
    bool        lightOnlyStatic;
    S32         lightType;
-   ColorF      lightColor;
+   LinearColorF      lightColor;
    S32         lightTime;
    F32         lightRadius;
 
@@ -88,11 +88,10 @@ class Item: public ShapeBase
       Point3F warpOffset;
       F32     dt;
    };
-   StateDelta delta;
+   StateDelta mDelta;
 
    // Static attributes
    ItemData* mDataBlock;
-   static F32 mGravity;
    bool mStatic;
    bool mRotate;
 
@@ -114,7 +113,7 @@ class Item: public ShapeBase
 
   protected:
 	DECLARE_CALLBACK( void, onStickyCollision, ( const char* objID ));
-	DECLARE_CALLBACK( void, onEnterLiquid, ( const char* objID, const char* waterCoverage, const char* liquidType ));
+	DECLARE_CALLBACK( void, onEnterLiquid, ( const char* objID, F32 waterCoverage, const char* liquidType ));
 	DECLARE_CALLBACK( void, onLeaveLiquid, ( const char* objID, const char* liquidType ));
 
   public:

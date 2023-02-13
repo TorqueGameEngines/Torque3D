@@ -111,7 +111,7 @@ void GuiGameListOptionsCtrl::onRender(Point2I offset, const RectI &updateRect)
             arrowOffset.y = currentOffset.y + arrowOffsetY;
 
             drawer->clearBitmapModulation();
-            drawer->drawBitmapStretchSR(profile->mTextureObject, RectI(arrowOffset, arrowExtent), profile->getBitmapArrayRect((U32)iconIndex));
+            drawer->drawBitmapStretchSR(profile->getBitmapResource(), RectI(arrowOffset, arrowExtent), profile->getBitmapArrayRect((U32)iconIndex));
 
             // render the right arrow
             bool arrowOnR = (isRowSelected || isRowHighlighted) && (myRow->mWrapOptions || (myRow->mSelectedOption < myRow->mOptions.size() - 1));
@@ -120,7 +120,7 @@ void GuiGameListOptionsCtrl::onRender(Point2I offset, const RectI &updateRect)
             arrowOffset.y = currentOffset.y + arrowOffsetY;
 
             drawer->clearBitmapModulation();
-            drawer->drawBitmapStretchSR(profile->mTextureObject, RectI(arrowOffset, arrowExtent), profile->getBitmapArrayRect((U32)iconIndex));
+            drawer->drawBitmapStretchSR(profile->getBitmapResource(), RectI(arrowOffset, arrowExtent), profile->getBitmapArrayRect((U32)iconIndex));
          }
 
          // get the appropriate font color
@@ -408,7 +408,7 @@ bool GuiGameListOptionsCtrl::selectOption(S32 rowIndex, const char * theOption)
 
    for (Vector<StringTableEntry>::iterator anOption = row->mOptions.begin(); anOption < row->mOptions.end(); ++anOption)
    {
-      if (dStrcmp(*anOption, theOption) == 0)
+      if (String::compare(*anOption, theOption) == 0)
       {
          S32 newIndex = anOption - row->mOptions.begin();
          row->mSelectedOption = newIndex;
@@ -417,6 +417,11 @@ bool GuiGameListOptionsCtrl::selectOption(S32 rowIndex, const char * theOption)
    }
 
    return false;
+}
+
+void GuiGameListOptionsCtrl::clearRows()
+{
+   mRows.clear();
 }
 
 //-----------------------------------------------------------------------------
@@ -441,6 +446,7 @@ ConsoleDocClass( GuiGameListOptionsCtrl,
 
 void GuiGameListOptionsCtrl::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 
@@ -483,6 +489,15 @@ DefineEngineMethod( GuiGameListOptionsCtrl, setOptions, void, ( S32 row, const c
 {
    object->setOptions( row, optionsList );
 }
+
+DefineEngineMethod(GuiGameListOptionsCtrl, clearOptions, void, (), ,
+   "Sets the list of options on the given row.\n\n"
+   "@param row Index of the row to set options on."
+   "@param optionsList A tab separated list of options for the control.")
+{
+   object->clearRows();
+}
+
 
 //-----------------------------------------------------------------------------
 // GuiGameListOptionsProfile
@@ -528,6 +543,7 @@ ConsoleDocClass( GuiGameListOptionsProfile,
 
 void GuiGameListOptionsProfile::initPersistFields()
 {
+   docsURL;
    addField( "columnSplit", TypeS32, Offset(mColumnSplit, GuiGameListOptionsProfile),
       "Padding between the leftmost edge of the control, and the row's left arrow." );
 

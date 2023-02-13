@@ -37,14 +37,14 @@
 
 //------------------------------------------------------------------------------
 //
-//	Put this in /example/common/editor/editor.cs in function [Editor::create()] (around line 66).
+//	Put this in /example/common/editor/editor.tscript in function [Editor::create()] (around line 66).
 //
 //   // Ignore Replicated fxStatic Instances.
 //   EWorldEditor.ignoreObjClass("fxShapeReplicatedStatic");
 //
 //------------------------------------------------------------------------------
 //
-//	Put this in /example/common/editor/EditorGui.cs in [function Creator::init( %this )]
+//	Put this in /example/common/editor/EditorGui.tscript in [function Creator::init( %this )]
 //
 //   %Environment_Item[8] = "fxShapeReplicator";  <-- ADD THIS.
 //
@@ -60,7 +60,7 @@
 //
 //------------------------------------------------------------------------------
 //
-//	Put this in /example/common/client/missionDownload.cs in [function clientCmdMissionStartPhase3(%seq,%missionName)] (line 65)
+//	Put this in /example/common/client/missionDownload.tscript in [function clientCmdMissionStartPhase3(%seq,%missionName)] (line 65)
 //	after codeline 'onPhase2Complete();'.
 //
 //	StartClientReplication();
@@ -139,6 +139,7 @@ fxShapeReplicator::~fxShapeReplicator()
 
 void fxShapeReplicator::initPersistFields()
 {
+   docsURL;
    // Add out own persistent fields.
    addGroup( "Debugging" );	// MM: Added Group Header.
       addField( "HideReplications",    TypeBool,      Offset( mFieldData.mHideReplications,     fxShapeReplicator ), "Replicated shapes are hidden when set to true." );
@@ -209,7 +210,7 @@ void fxShapeReplicator::CreateShapes(void)
    if (mFieldData.mHideReplications) return;
 
    // Cannot continue without shapes!
-   if (dStrcmp(mFieldData.mShapeFile, "") == 0) return;
+   if (String::compare(mFieldData.mShapeFile, "") == 0) return;
 
    // Check that we can position somewhere!
    if (!(	mFieldData.mAllowOnTerrain ||
@@ -224,7 +225,7 @@ void fxShapeReplicator::CreateShapes(void)
    }
 
    // Check Shapes.
-   AssertFatal(mCurrentShapeCount==0,"Shapes already present, this should not be possible!")
+   AssertFatal(mCurrentShapeCount==0,"Shapes already present, this should not be possible!");
 
       // Check that we have a shape...
       if (!mFieldData.mShapeFile) return;

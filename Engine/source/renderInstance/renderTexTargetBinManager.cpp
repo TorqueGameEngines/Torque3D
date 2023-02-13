@@ -37,7 +37,7 @@ ConsoleDocClass( RenderTexTargetBinManager,
    "@brief An abstract base class for render bin managers that render to a named textue target.\n\n"
    "This bin itself doesn't do any rendering work.  It offers functionality to manage "
    "a texture render target which derived render bin classes can render into.\n\n"
-   "@see RenderPrePassMgr\n"
+   "@see RenderDeferredMgr\n"
    "@ingroup RenderBin\n" );
 
 
@@ -96,6 +96,7 @@ EndImplementEnumType;
 
 void RenderTexTargetBinManager::initPersistFields()
 {
+   docsURL;
    // TOM_TODO:
    //addField( "targetScale", mTargetScale );
    //addPropertyNOPS( "targetSizeType", mTargetSizeType)->setEnumTable(gSizeTypeEnumTable);
@@ -107,8 +108,7 @@ void RenderTexTargetBinManager::initPersistFields()
 
 bool RenderTexTargetBinManager::setTargetSize(const Point2I &newTargetSize)
 {
-   if( GFX->getAdapterType() != OpenGL && // Targets need to match up exactly in size on OpenGL.
-       mTargetSize.x >= newTargetSize.x &&
+   if( mTargetSize.x >= newTargetSize.x &&
        mTargetSize.y >= newTargetSize.y )
       return true;
 
@@ -171,7 +171,7 @@ bool RenderTexTargetBinManager::_updateTargets()
             || mTargetChainTextures[i][j].getFormat() != mTargetFormat)
          {
          ret &= mTargetChainTextures[i][j].set( mTargetSize.x, mTargetSize.y, mTargetFormat,
-            &GFXDefaultRenderTargetProfile, avar( "%s() - (line %d)", __FUNCTION__, __LINE__ ),
+            &GFXRenderTargetProfile, avar( "%s() - (line %d)", __FUNCTION__, __LINE__ ),
             1, GFXTextureManager::AA_MATCH_BACKBUFFER );
 
          mTargetChain[i]->attachTexture( GFXTextureTarget::RenderSlot(GFXTextureTarget::Color0 + j), mTargetChainTextures[i][j] );

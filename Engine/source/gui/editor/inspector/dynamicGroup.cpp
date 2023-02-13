@@ -60,7 +60,7 @@ bool GuiInspectorDynamicGroup::createContent()
          addFieldBtn->setControlProfile( dynamic_cast<GuiControlProfile*>(profilePtr) );
 		
 		// FIXME Hardcoded image
-      addFieldBtn->setBitmap("tools/gui/images/iconAdd.png");
+      addFieldBtn->setBitmap(StringTable->insert("ToolsModule:iconAdd_image"));
 
       char commandBuf[64];
       dSprintf(commandBuf, 64, "%d.addDynamicField();", this->getId());
@@ -177,7 +177,7 @@ void GuiInspectorDynamicGroup::updateAllFields()
    inspectGroup();
 }
 
-DefineConsoleMethod(GuiInspectorDynamicGroup, inspectGroup, bool, (), , "Refreshes the dynamic fields in the inspector.")
+DefineEngineMethod(GuiInspectorDynamicGroup, inspectGroup, bool, (), , "Refreshes the dynamic fields in the inspector.")
 {
    return object->inspectGroup();
 }
@@ -252,11 +252,11 @@ void GuiInspectorDynamicGroup::addDynamicField()
    instantExpand();
 }
 
-DefineConsoleMethod( GuiInspectorDynamicGroup, addDynamicField, void, (), , "obj.addDynamicField();" )
+DefineEngineMethod( GuiInspectorDynamicGroup, addDynamicField, void, (), , "obj.addDynamicField();" )
 {
    object->addDynamicField();
 }
 
-DefineConsoleMethod( GuiInspectorDynamicGroup, removeDynamicField, void, (), , "" )
+DefineEngineMethod( GuiInspectorDynamicGroup, removeDynamicField, void, (), , "" )
 {
 }

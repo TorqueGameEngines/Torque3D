@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="AssetBrowser_AddModule"
+    scriptFile="@assetFile=addModuleWindow.gui"
+    GUIFile="@assetFile=addModuleWindow.gui"
+    VersionId="1" />

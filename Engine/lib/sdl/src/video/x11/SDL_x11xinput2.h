@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2014 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -20,8 +20,8 @@
 */
 #include "../../SDL_internal.h"
 
-#ifndef _SDL_x11xinput2_h
-#define _SDL_x11xinput2_h
+#ifndef SDL_x11xinput2_h_
+#define SDL_x11xinput2_h_
 
 #ifndef SDL_VIDEO_DRIVER_X11_SUPPORTS_GENERIC_EVENTS
 /* Define XGenericEventCookie as forward declaration when
@@ -36,7 +36,9 @@ extern int X11_HandleXinput2Event(SDL_VideoData *videodata,XGenericEventCookie *
 extern int X11_Xinput2IsInitialized(void);
 extern int X11_Xinput2IsMultitouchSupported(void);
 extern void X11_Xinput2SelectTouch(_THIS, SDL_Window *window);
+extern void X11_Xinput2GrabTouch(_THIS, SDL_Window *window);
+extern void X11_Xinput2UngrabTouch(_THIS, SDL_Window *window);
 
-#endif /* _SDL_x11xinput2_h */
+#endif /* SDL_x11xinput2_h_ */
 
 /* vi: set ts=4 sw=4 expandtab: */

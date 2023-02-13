@@ -22,10 +22,12 @@
 
 #include "platform/platform.h"
 #include "gfx/gl/gfxGLDevice.h"
+
+#include "gfxGLTextureArray.h"
 #include "platform/platformGL.h"
 
 #include "gfx/gfxCubemap.h"
-#include "gfx/screenshot.h"
+#include "gfx/gl/screenshotGL.h"
 #include "gfx/gfxDrawUtil.h"
 
 #include "gfx/gl/gfxGLEnumTranslate.h"
@@ -46,6 +48,14 @@
 #include "gfx/gl/gfxGLStateCache.h"
 #include "gfx/gl/gfxGLVertexAttribLocation.h"
 #include "gfx/gl/gfxGLVertexDecl.h"
+#include "shaderGen/shaderGen.h"
+#include "gfxGLUtils.h"
+
+#if defined(TORQUE_OS_WIN)
+#include "gfx/gl/tGL/tWGL.h"
+#elif defined(TORQUE_OS_LINUX)
+#include "gfx/gl/tGL/tXGL.h"
+#endif
 
 GFXAdapter::CreateDeviceInstanceDelegate GFXGLDevice::mCreateDeviceInstance(GFXGLDevice::createInstance); 
 
@@ -81,9 +91,13 @@ void loadGLExtensions(void *context)
    GL::gglPerformExtensionBinds(context);
 }
 
-void STDCALL glDebugCallback(GLenum source, GLenum type, GLuint id,
-    GLenum severity, GLsizei length, const GLchar* message, void* userParam)
+void STDCALL glDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, 
+	const GLchar *message, const void *userParam)
 {
+    // JTH [11/24/2016]: This is a temporary fix so that we do not get spammed for redundant fbo changes.
+    // This only happens on Intel cards. This should be looked into sometime in the near future.
+    if (dStrStartsWith(message, "API_ID_REDUNDANT_FBO"))
+        return;
     if (severity == GL_DEBUG_SEVERITY_HIGH)
         Con::errorf("OPENGL: %s", message);
     else if (severity == GL_DEBUG_SEVERITY_MEDIUM)
@@ -103,27 +117,6 @@ void STDCALL glAmdDebugCallback(GLuint id, GLenum category, GLenum severity, GLs
         Con::printf("AMDOPENGL: %s", message);
 }
 
-
-// >>>> OPENGL INTEL WORKAROUND @todo OPENGL INTEL remove
-PFNGLBINDFRAMEBUFFERPROC __openglBindFramebuffer = NULL;
-
-void STDCALL _t3d_glBindFramebuffer(GLenum target, GLuint framebuffer)
-{
-    if( target == GL_FRAMEBUFFER )
-    {
-        if( GFXGL->getOpenglCache()->getCacheBinded( GL_DRAW_FRAMEBUFFER ) == framebuffer
-            && GFXGL->getOpenglCache()->getCacheBinded( GL_READ_FRAMEBUFFER ) == framebuffer )
-            return;
-    }
-    else if( GFXGL->getOpenglCache()->getCacheBinded( target ) == framebuffer )
-        return;
-
-    __openglBindFramebuffer(target, framebuffer);
-    GFXGL->getOpenglCache()->setCacheBinded( target, framebuffer);
-}
-// <<<< OPENGL INTEL WORKAROUND
-
-
 void GFXGLDevice::initGLState()
 {  
    // We don't currently need to sync device state with a known good place because we are
@@ -134,32 +127,35 @@ void GFXGLDevice::initGLState()
    mCardProfiler = new GFXGLCardProfiler();
    mCardProfiler->init(); 
    glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, (GLint*)&mMaxShaderTextures);
-   glGetIntegerv(GL_MAX_TEXTURE_UNITS, (GLint*)&mMaxFFTextures);
+   // JTH: Needs removed, ffp
+   //glGetIntegerv(GL_MAX_TEXTURE_UNITS, (GLint*)&mMaxFFTextures);
    glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, (GLint*)&mMaxTRColors);
    mMaxTRColors = getMin( mMaxTRColors, (U32)(GFXTextureTarget::MaxRenderSlotId-1) );
    
    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
    
+   // [JTH 5/6/2016] GLSL 1.50 is really SM 4.0
    // Setting mPixelShaderVersion to 3.0 will allow Advanced Lighting to run.   
    mPixelShaderVersion = 3.0;
 
-   mSupportsAnisotropic = mCardProfiler->queryProfile( "GL::suppAnisotropic" );
+	// Set capability extensions.
+   mCapabilities.anisotropicFiltering = mCardProfiler->queryProfile("GL_EXT_texture_filter_anisotropic");
+   mCapabilities.bufferStorage = mCardProfiler->queryProfile("GL_ARB_buffer_storage");
+   mCapabilities.textureStorage = mCardProfiler->queryProfile("GL_ARB_texture_storage");
+   mCapabilities.copyImage = mCardProfiler->queryProfile("GL_ARB_copy_image");
+   mCapabilities.vertexAttributeBinding = mCardProfiler->queryProfile("GL_ARB_vertex_attrib_binding");
+   mCapabilities.khrDebug = mCardProfiler->queryProfile("GL_KHR_debug");
+   mCapabilities.extDebugMarker = mCardProfiler->queryProfile("GL_EXT_debug_marker");
 
    String vendorStr = (const char*)glGetString( GL_VENDOR );
    if( vendorStr.find("NVIDIA", 0, String::NoCase | String::Left) != String::NPos)
       mUseGlMap = false;
-
-
-   if( vendorStr.find("INTEL", 0, String::NoCase | String::Left ) != String::NPos)
-   {
-      // @todo OPENGL INTEL - This is a workaround for a warning spam or even crashes with actual framebuffer code, remove when implemented TGL layer.
-      __openglBindFramebuffer = glBindFramebuffer;
-      glBindFramebuffer = &_t3d_glBindFramebuffer;
-   }
-
-#ifdef TORQUE_NSIGHT_WORKAROUND
-   __GLEW_ARB_buffer_storage = false;
+   
+   // Workaround for all Mac's, has a problem using glMap* with volatile buffers
+#ifdef TORQUE_OS_MAC
+   mUseGlMap = false;
 #endif
+
 #if TORQUE_DEBUG
    if( gglHasExtension(ARB_debug_output) )
    {
@@ -184,18 +180,35 @@ void GFXGLDevice::initGLState()
    }
 #endif
 
-   PlatformGL::setVSync(smDisableVSync ? 0 : 1);
+   PlatformGL::setVSync(smEnableVSync);
+
+   //install vsync callback
+   Con::NotifyDelegate clbk(this, &GFXGLDevice::vsyncCallback);
+   Con::addVariableNotify("$pref::Video::enableVerticalSync", clbk);
 
    //OpenGL 3 need a binded VAO for render
    GLuint vao;
    glGenVertexArrays(1, &vao);
    glBindVertexArray(vao);
+
+   //enable sRGB
+   glEnable(GL_FRAMEBUFFER_SRGB);
+
+   //enable seamless cubemapping
+   glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+}
+
+void GFXGLDevice::vsyncCallback()
+{
+   PlatformGL::setVSync(smEnableVSync);
 }
 
 GFXGLDevice::GFXGLDevice(U32 adapterIndex) :
    mAdapterIndex(adapterIndex),
+   mNeedUpdateVertexAttrib(false),
    mCurrentPB(NULL),
    mDrawInstancesCount(0),
+   mCurrentShader( NULL ),
    m_mCurrentWorld(true),
    m_mCurrentView(true),
    mContext(NULL),
@@ -205,8 +218,6 @@ GFXGLDevice::GFXGLDevice(U32 adapterIndex) :
    mMaxFFTextures(2),
    mMaxTRColors(1),
    mClip(0, 0, 0, 0),
-   mCurrentShader( NULL ),
-   mNeedUpdateVertexAttrib(false),
    mWindowRT(NULL),
    mUseGlMap(true)
 {
@@ -215,6 +226,9 @@ GFXGLDevice::GFXGLDevice(U32 adapterIndex) :
       mCurrentVB[i] = NULL;
       mCurrentVB_Divisor[i] = 0;
    }
+
+   // Initiailize capabilities to false.
+   memset(&mCapabilities, 0, sizeof(GLCapabilities));
 
    loadGLCore();
 
@@ -227,9 +241,9 @@ GFXGLDevice::GFXGLDevice(U32 adapterIndex) :
    mDeviceSwizzle24 = &Swizzles::rgb;
 
    mTextureManager = new GFXGLTextureManager();
-   gScreenShot = new ScreenShot();
+   gScreenShot = new ScreenShotGL();
 
-   for(U32 i = 0; i < TEXTURE_STAGE_COUNT; i++)
+   for(U32 i = 0; i < GFX_TEXTURE_STAGE_COUNT; i++)
       mActiveTextureType[i] = GL_ZERO;
 
    mNumVertexStream = 2;
@@ -254,7 +268,7 @@ GFXGLDevice::~GFXGLDevice()
       mVolatilePBs[i] = NULL;
 
    // Clear out our current texture references
-   for (U32 i = 0; i < TEXTURE_STAGE_COUNT; i++)
+   for (U32 i = 0; i < GFX_TEXTURE_STAGE_COUNT; i++)
    {
       mCurrentTexture[i] = NULL;
       mNewTexture[i] = NULL;
@@ -325,6 +339,7 @@ void GFXGLDevice::resurrect()
 
 GFXVertexBuffer* GFXGLDevice::findVolatileVBO(U32 numVerts, const GFXVertexFormat *vertexFormat, U32 vertSize)
 {
+   PROFILE_SCOPE(GFXGLDevice_findVBPool);
    for(U32 i = 0; i < mVolatileVBs.size(); i++)
       if (  mVolatileVBs[i]->mNumVerts >= numVerts &&
             mVolatileVBs[i]->mVertexFormat.isEqual( *vertexFormat ) &&
@@ -333,6 +348,7 @@ GFXVertexBuffer* GFXGLDevice::findVolatileVBO(U32 numVerts, const GFXVertexForma
          return mVolatileVBs[i];
 
    // No existing VB, so create one
+   PROFILE_SCOPE(GFXGLDevice_createVBPool);
    StrongRefPtr<GFXGLVertexBuffer> buf(new GFXGLVertexBuffer(GFX, numVerts, vertexFormat, vertSize, GFXBufferTypeVolatile));
    buf->registerResourceWithDevice(this);
    mVolatileVBs.push_back(buf);
@@ -355,23 +371,48 @@ GFXPrimitiveBuffer* GFXGLDevice::findVolatilePBO(U32 numIndices, U32 numPrimitiv
 GFXVertexBuffer *GFXGLDevice::allocVertexBuffer(   U32 numVerts, 
                                                    const GFXVertexFormat *vertexFormat, 
                                                    U32 vertSize, 
-                                                   GFXBufferType bufferType ) 
+                                                   GFXBufferType bufferType,
+                                                   void* data )  
 {
+   PROFILE_SCOPE(GFXGLDevice_allocVertexBuffer);
    if(bufferType == GFXBufferTypeVolatile)
       return findVolatileVBO(numVerts, vertexFormat, vertSize);
          
    GFXGLVertexBuffer* buf = new GFXGLVertexBuffer( GFX, numVerts, vertexFormat, vertSize, bufferType );
-   buf->registerResourceWithDevice(this);
+   buf->registerResourceWithDevice(this);   
+
+   if(data)
+   {
+      void* dest;
+      buf->lock(0, numVerts, &dest);
+      dMemcpy(dest, data, vertSize * numVerts);
+      buf->unlock();
+   }
+
    return buf;
 }
 
-GFXPrimitiveBuffer *GFXGLDevice::allocPrimitiveBuffer( U32 numIndices, U32 numPrimitives, GFXBufferType bufferType ) 
+GFXPrimitiveBuffer *GFXGLDevice::allocPrimitiveBuffer( U32 numIndices, U32 numPrimitives, GFXBufferType bufferType, void* data ) 
 {
+   GFXPrimitiveBuffer* buf;
+   
    if(bufferType == GFXBufferTypeVolatile)
-      return findVolatilePBO(numIndices, numPrimitives);
-         
-   GFXGLPrimitiveBuffer* buf = new GFXGLPrimitiveBuffer(GFX, numIndices, numPrimitives, bufferType);
-   buf->registerResourceWithDevice(this);
+   {
+      buf = findVolatilePBO(numIndices, numPrimitives);
+   }
+   else
+   {
+      buf = new GFXGLPrimitiveBuffer(GFX, numIndices, numPrimitives, bufferType);
+      buf->registerResourceWithDevice(this);
+   }
+   
+   if(data)
+   {
+      void* dest;
+      buf->lock(0, numIndices, &dest);
+      dMemcpy(dest, data, sizeof(U16) * numIndices);
+      buf->unlock();
+   }
    return buf;
 }
 
@@ -419,13 +460,93 @@ GFXCubemap* GFXGLDevice::createCubemap()
    return cube; 
 };
 
+GFXCubemapArray *GFXGLDevice::createCubemapArray()
+{
+   GFXGLCubemapArray* cubeArray = new GFXGLCubemapArray();
+   cubeArray->registerResourceWithDevice(this);
+   return cubeArray;
+}
+
+GFXTextureArray* GFXGLDevice::createTextureArray()
+{
+   GFXGLTextureArray* textureArray = new GFXGLTextureArray();
+   textureArray->registerResourceWithDevice(this);
+   return textureArray;
+}
+
 void GFXGLDevice::endSceneInternal() 
 {
    // nothing to do for opengl
    mCanCurrentlyRender = false;
 }
 
-void GFXGLDevice::clear(U32 flags, ColorI color, F32 z, U32 stencil)
+void GFXGLDevice::copyResource(GFXTextureObject* pDst, GFXCubemap* pSrc, const U32 face)
+{
+   AssertFatal(pDst, "GFXGLDevice::copyResource: Destination texture is null");
+   AssertFatal(pSrc, "GFXGLDevice::copyResource: Source cubemap is null");
+
+   GFXGLTextureObject* gGLDst = static_cast<GFXGLTextureObject*>(pDst);
+   GFXGLCubemap* pGLSrc = static_cast<GFXGLCubemap*>(pSrc);
+
+   const GFXFormat format = pGLSrc->getFormat();
+   const bool isCompressed = ImageUtil::isCompressedFormat(format);
+   const U32 mipLevels = pGLSrc->getMipMapLevels();
+   const U32 texSize = pGLSrc->getSize();
+
+   //set up pbo if we don't have copyImage support
+   if (!GFXGL->mCapabilities.copyImage)
+   {
+      const GLuint pbo = gGLDst->getBuffer();
+      glBindBuffer(GL_PIXEL_PACK_BUFFER, pbo);
+      //allocate data
+      glBufferData(GL_PIXEL_PACK_BUFFER, texSize * texSize * GFXFormat_getByteSize(format), NULL, GL_STREAM_COPY);
+   }
+
+   for (U32 mip = 0; mip < mipLevels; mip++)
+   {
+      const U32 mipSize =  texSize >> mip;
+      if (GFXGL->mCapabilities.copyImage)
+      {
+         glCopyImageSubData(pGLSrc->mCubemap, GL_TEXTURE_CUBE_MAP, mip, 0, 0, face, gGLDst->getHandle(), GL_TEXTURE_2D, mip, 0, 0, 0, mipSize, mipSize, 1);
+      }
+      else
+      {
+         //pbo id
+         const GLuint pbo = gGLDst->getBuffer();
+
+         //copy source texture data to pbo
+         glBindTexture(GL_TEXTURE_CUBE_MAP, pGLSrc->mCubemap);
+         glBindBuffer(GL_PIXEL_PACK_BUFFER, pbo);
+
+         if (isCompressed)
+            glGetCompressedTexImage(GFXGLFaceType[face], mip, NULL);
+         else
+            glGetTexImage(GFXGLFaceType[face], mip, GFXGLTextureFormat[format], GFXGLTextureType[format], NULL);
+
+         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+         glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+
+         //copy data from pbo to destination
+         glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pbo);
+         glBindTexture(gGLDst->getBinding(), gGLDst->getHandle());
+
+         if (isCompressed)
+         {
+            const U32 mipDataSize = getCompressedSurfaceSize(format, pGLSrc->getSize(), pGLSrc->getSize(), 0);
+            glCompressedTexSubImage2D(gGLDst->getBinding(), mip, 0, 0, mipSize, mipSize, GFXGLTextureFormat[format], mipDataSize, NULL);
+         }
+         else
+         {
+            glTexSubImage2D(gGLDst->getBinding(), mip, 0, 0, mipSize, mipSize, GFXGLTextureFormat[format], GFXGLTextureType[format], NULL);
+         }
+
+         glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+         glBindTexture(gGLDst->getBinding(), 0);
+      }
+   }
+}
+
+void GFXGLDevice::clear(U32 flags, const LinearColorF& color, F32 z, U32 stencil)
 {
    // Make sure we have flushed our render target state.
    _updateRenderTargets();
@@ -445,10 +566,7 @@ void GFXGLDevice::clear(U32 flags, ColorI color, F32 z, U32 stencil)
    glColorMask(true, true, true, true);
    glDepthMask(true);
    glStencilMask(0xFFFFFFFF);
-   
-
-   ColorF c = color;   
-   glClearColor(c.red, c.green, c.blue, c.alpha);
+   glClearColor(color.red, color.green, color.blue, color.alpha);
    glClearDepth(z);
    glClearStencil(stencil);
 
@@ -467,6 +585,12 @@ void GFXGLDevice::clear(U32 flags, ColorI color, F32 z, U32 stencil)
 
    if(!writeAllStencil)
       glStencilMask(desc->stencilWriteMask);
+}
+
+void GFXGLDevice::clearColorAttachment(const U32 attachment, const LinearColorF& color)
+{
+   const GLfloat clearColor[4] = { color.red, color.green, color.blue, color.alpha };
+   glClearBufferfv(GL_COLOR, attachment, clearColor);
 }
 
 // Given a primitive type and a number of primitives, return the number of indexes/vertexes used.
@@ -489,9 +613,6 @@ inline GLsizei GFXGLDevice::primCountToIndexCount(GFXPrimitiveType primType, U32
       case GFXTriangleStrip :
          return 2 + primitiveCount;
          break;
-      case GFXTriangleFan :
-         return 2 + primitiveCount;
-         break;
       default:
          AssertFatal(false, "GFXGLDevice::primCountToIndexCount - unrecognized prim type");
          break;
@@ -502,6 +623,7 @@ inline GLsizei GFXGLDevice::primCountToIndexCount(GFXPrimitiveType primType, U32
 
 GFXVertexDecl* GFXGLDevice::allocVertexDecl( const GFXVertexFormat *vertexFormat ) 
 {
+   PROFILE_SCOPE(GFXGLDevice_allocVertexDecl);
    typedef Map<void*, GFXGLVertexDecl> GFXGLVertexDeclMap;
    static GFXGLVertexDeclMap declMap;   
    GFXGLVertexDeclMap::Iterator itr = declMap.find( (void*)vertexFormat->getDescription().c_str() ); // description string are interned, safe to use c_str()
@@ -558,7 +680,8 @@ void GFXGLDevice::drawPrimitive( GFXPrimitiveType primType, U32 vertexStart, U32
 {
    preDrawPrimitive();
   
-   vertexStart += mCurrentVB[0]->mBufferVertexOffset;
+   if(mCurrentVB[0])
+      vertexStart += mCurrentVB[0]->mBufferVertexOffset;
 
    if(mDrawInstancesCount)
       glDrawArraysInstanced(GFXGLPrimType[primType], vertexStart, primCountToIndexCount(primType, primitiveCount), mDrawInstancesCount);
@@ -575,13 +698,11 @@ void GFXGLDevice::drawIndexedPrimitive(   GFXPrimitiveType primType,
                                           U32 startIndex, 
                                           U32 primitiveCount )
 {
-   AssertFatal( startVertex == 0, "GFXGLDevice::drawIndexedPrimitive() - Non-zero startVertex unsupported!" );
-
    preDrawPrimitive();
 
-   U16* buf = (U16*)static_cast<GFXGLPrimitiveBuffer*>(mCurrentPrimitiveBuffer.getPointer())->getBuffer() + startIndex;
+   U16* buf = (U16*)static_cast<GFXGLPrimitiveBuffer*>(mCurrentPrimitiveBuffer.getPointer())->getBuffer() + startIndex + mCurrentPrimitiveBuffer->mVolatileStart;
 
-   const U32 baseVertex = mCurrentVB[0]->mBufferVertexOffset;
+   const U32 baseVertex = mCurrentVB[0]->mBufferVertexOffset + startVertex;
 
    if(mDrawInstancesCount)
       glDrawElementsInstancedBaseVertex(GFXGLPrimType[primType], primCountToIndexCount(primType, primitiveCount), GL_UNSIGNED_SHORT, buf, mDrawInstancesCount, baseVertex);
@@ -596,21 +717,6 @@ void GFXGLDevice::setPB(GFXGLPrimitiveBuffer* pb)
    if(mCurrentPB)
       mCurrentPB->finish();
    mCurrentPB = pb;
-}
-
-void GFXGLDevice::setLightInternal(U32 lightStage, const GFXLightInfo light, bool lightEnable)
-{
-   // ONLY NEEDED ON FFP
-}
-
-void GFXGLDevice::setLightMaterialInternal(const GFXLightMaterial mat)
-{
-   // ONLY NEEDED ON FFP
-}
-
-void GFXGLDevice::setGlobalAmbientInternal(ColorF color)
-{
-   glLightModelfv(GL_LIGHT_MODEL_AMBIENT, (GLfloat*)&color);
 }
 
 void GFXGLDevice::setTextureInternal(U32 textureUnit, const GFXTextureObject*texture)
@@ -646,9 +752,36 @@ void GFXGLDevice::setCubemapInternal(U32 textureUnit, const GFXGLCubemap* textur
    }
 }
 
-void GFXGLDevice::setMatrix( GFXMatrixType mtype, const MatrixF &mat )
+void GFXGLDevice::setCubemapArrayInternal(U32 textureUnit, const GFXGLCubemapArray* texture)
 {
-   // ONLY NEEDED ON FFP
+   if (texture)
+   {
+      mActiveTextureType[textureUnit] = GL_TEXTURE_CUBE_MAP_ARRAY_ARB;
+      texture->bind(textureUnit);
+   }
+   else if (mActiveTextureType[textureUnit] != GL_ZERO)
+   {
+      glActiveTexture(GL_TEXTURE0 + textureUnit);
+      glBindTexture(mActiveTextureType[textureUnit], 0);
+      getOpenglCache()->setCacheBindedTex(textureUnit, mActiveTextureType[textureUnit], 0);
+      mActiveTextureType[textureUnit] = GL_ZERO;
+   }
+}
+
+void GFXGLDevice::setTextureArrayInternal(U32 textureUnit, const GFXGLTextureArray* texture)
+{
+   if (texture)
+   {
+      mActiveTextureType[textureUnit] = GL_TEXTURE_2D_ARRAY;
+      texture->bind(textureUnit);
+   }
+   else if (mActiveTextureType[textureUnit] != GL_ZERO)
+   {
+      glActiveTexture(GL_TEXTURE0 + textureUnit);
+      glBindTexture(mActiveTextureType[textureUnit], 0);
+      getOpenglCache()->setCacheBindedTex(textureUnit, mActiveTextureType[textureUnit], 0);
+      mActiveTextureType[textureUnit] = GL_ZERO;
+   }
 }
 
 void GFXGLDevice::setClipRect( const RectI &inRect )
@@ -666,12 +799,12 @@ void GFXGLDevice::setClipRect( const RectI &inRect )
    const F32 right = mClip.point.x + mClip.extent.x;
    const F32 bottom = mClip.extent.y;
    const F32 top = 0.0f;
-   const F32 near = 0.0f;
-   const F32 far = 1.0f;
+   const F32 nearPlane = 0.0f;
+   const F32 farPlane = 1.0f;
    
    const F32 tx = -(right + left)/(right - left);
    const F32 ty = -(top + bottom)/(top - bottom);
-   const F32 tz = -(far + near)/(far - near);
+   const F32 tz = -(farPlane + nearPlane)/(farPlane - nearPlane);
    
    static Point4F pt;
    pt.set(2.0f / (right - left), 0.0f, 0.0f, 0.0f);
@@ -680,7 +813,7 @@ void GFXGLDevice::setClipRect( const RectI &inRect )
    pt.set(0.0f, 2.0f/(top - bottom), 0.0f, 0.0f);
    mProjectionMatrix.setColumn(1, pt);
    
-   pt.set(0.0f, 0.0f, -2.0f/(far - near), 0.0f);
+   pt.set(0.0f, 0.0f, -2.0f/(farPlane - nearPlane), 0.0f);
    mProjectionMatrix.setColumn(2, pt);
    
    pt.set(tx, ty, tz, 1.0f);
@@ -692,8 +825,6 @@ void GFXGLDevice::setClipRect( const RectI &inRect )
    translate.setColumn(3, pt);
    
    mProjectionMatrix *= translate;
-   
-   setMatrix(GFXMatrixProjection, mProjectionMatrix);
    
    MatrixF mTempMatrix(true);
    setViewMatrix( mTempMatrix );
@@ -726,9 +857,9 @@ void GFXGLDevice::setStateBlockInternal(GFXStateBlock* block, bool force)
 
 //------------------------------------------------------------------------------
 
-GFXTextureTarget * GFXGLDevice::allocRenderToTextureTarget()
+GFXTextureTarget * GFXGLDevice::allocRenderToTextureTarget(bool genMips)
 {
-   GFXGLTextureTarget *targ = new GFXGLTextureTarget();
+   GFXGLTextureTarget *targ = new GFXGLTextureTarget(genMips);
    targ->registerResourceWithDevice(this);
    return targ;
 }
@@ -759,43 +890,47 @@ void GFXGLDevice::setupGenericShaders( GenericShaderType type )
       ShaderData *shaderData;
 
       shaderData = new ShaderData();
-      shaderData->setField("OGLVertexShaderFile", "shaders/common/fixedFunction/gl/colorV.glsl");
-      shaderData->setField("OGLPixelShaderFile", "shaders/common/fixedFunction/gl/colorP.glsl");
+      shaderData->setField("OGLVertexShaderFile", ShaderGen::smCommonShaderPath + String("/fixedFunction/gl/colorV.glsl"));
+      shaderData->setField("OGLPixelShaderFile", ShaderGen::smCommonShaderPath + String("/fixedFunction/gl/colorP.glsl"));
       shaderData->setField("pixVersion", "2.0");
       shaderData->registerObject();
       mGenericShader[GSColor] =  shaderData->getShader();
       mGenericShaderBuffer[GSColor] = mGenericShader[GSColor]->allocConstBuffer();
-      mModelViewProjSC[GSColor] = mGenericShader[GSColor]->getShaderConstHandle( "$modelView" ); 
+      mModelViewProjSC[GSColor] = mGenericShader[GSColor]->getShaderConstHandle( "$modelView" );
+      Sim::getRootGroup()->addObject(shaderData);
 
       shaderData = new ShaderData();
-      shaderData->setField("OGLVertexShaderFile", "shaders/common/fixedFunction/gl/modColorTextureV.glsl");
-      shaderData->setField("OGLPixelShaderFile", "shaders/common/fixedFunction/gl/modColorTextureP.glsl");
+      shaderData->setField("OGLVertexShaderFile", ShaderGen::smCommonShaderPath + String("/fixedFunction/gl/modColorTextureV.glsl"));
+      shaderData->setField("OGLPixelShaderFile", ShaderGen::smCommonShaderPath + String("/fixedFunction/gl/modColorTextureP.glsl"));
       shaderData->setSamplerName("$diffuseMap", 0);
       shaderData->setField("pixVersion", "2.0");
       shaderData->registerObject();
       mGenericShader[GSModColorTexture] = shaderData->getShader();
       mGenericShaderBuffer[GSModColorTexture] = mGenericShader[GSModColorTexture]->allocConstBuffer();
-      mModelViewProjSC[GSModColorTexture] = mGenericShader[GSModColorTexture]->getShaderConstHandle( "$modelView" ); 
+      mModelViewProjSC[GSModColorTexture] = mGenericShader[GSModColorTexture]->getShaderConstHandle( "$modelView" );
+      Sim::getRootGroup()->addObject(shaderData);
 
       shaderData = new ShaderData();
-      shaderData->setField("OGLVertexShaderFile", "shaders/common/fixedFunction/gl/addColorTextureV.glsl");
-      shaderData->setField("OGLPixelShaderFile", "shaders/common/fixedFunction/gl/addColorTextureP.glsl");
+      shaderData->setField("OGLVertexShaderFile", ShaderGen::smCommonShaderPath + String("/fixedFunction/gl/addColorTextureV.glsl"));
+      shaderData->setField("OGLPixelShaderFile", ShaderGen::smCommonShaderPath + String("/fixedFunction/gl/addColorTextureP.glsl"));
       shaderData->setSamplerName("$diffuseMap", 0);
       shaderData->setField("pixVersion", "2.0");
       shaderData->registerObject();
       mGenericShader[GSAddColorTexture] = shaderData->getShader();
       mGenericShaderBuffer[GSAddColorTexture] = mGenericShader[GSAddColorTexture]->allocConstBuffer();
-      mModelViewProjSC[GSAddColorTexture] = mGenericShader[GSAddColorTexture]->getShaderConstHandle( "$modelView" ); 
+      mModelViewProjSC[GSAddColorTexture] = mGenericShader[GSAddColorTexture]->getShaderConstHandle( "$modelView" );
+      Sim::getRootGroup()->addObject(shaderData);
 
       shaderData = new ShaderData();
-      shaderData->setField("OGLVertexShaderFile", "shaders/common/fixedFunction/gl/textureV.glsl");
-      shaderData->setField("OGLPixelShaderFile", "shaders/common/fixedFunction/gl/textureP.glsl");
+      shaderData->setField("OGLVertexShaderFile", ShaderGen::smCommonShaderPath + String("/fixedFunction/gl/textureV.glsl"));
+      shaderData->setField("OGLPixelShaderFile", ShaderGen::smCommonShaderPath + String("/fixedFunction/gl/textureP.glsl"));
       shaderData->setSamplerName("$diffuseMap", 0);
       shaderData->setField("pixVersion", "2.0");
       shaderData->registerObject();
       mGenericShader[GSTexture] = shaderData->getShader();
       mGenericShaderBuffer[GSTexture] = mGenericShader[GSTexture]->allocConstBuffer();
       mModelViewProjSC[GSTexture] = mGenericShader[GSTexture]->getShaderConstHandle( "$modelView" );
+      Sim::getRootGroup()->addObject(shaderData);
    }
 
    MatrixF tempMatrix =  mProjectionMatrix * mViewMatrix * mWorldMatrix[mWorldStackSize];  
@@ -806,14 +941,14 @@ void GFXGLDevice::setupGenericShaders( GenericShaderType type )
 }
 GFXShader* GFXGLDevice::createShader()
 {
-   GFXGLShader* shader = new GFXGLShader();
+   GFXGLShader* shader = new GFXGLShader(this);
    shader->registerResourceWithDevice( this );
    return shader;
 }
 
-void GFXGLDevice::setShader( GFXShader *shader )
+void GFXGLDevice::setShader(GFXShader *shader, bool force)
 {
-   if(mCurrentShader == shader)
+   if(mCurrentShader == shader && !force)
       return;
 
    if ( shader )
@@ -830,12 +965,13 @@ void GFXGLDevice::setShader( GFXShader *shader )
 
 void GFXGLDevice::setShaderConstBufferInternal(GFXShaderConstBuffer* buffer)
 {
+   PROFILE_SCOPE(GFXGLDevice_setShaderConstBufferInternal);
    static_cast<GFXGLShaderConstBuffer*>(buffer)->activate();
 }
 
 U32 GFXGLDevice::getNumSamplers() const
 {
-   return getMin((U32)TEXTURE_STAGE_COUNT,mPixelShaderVersion > 0.001f ? mMaxShaderTextures : mMaxFFTextures);
+   return getMin((U32)GFX_TEXTURE_STAGE_COUNT,mPixelShaderVersion > 0.001f ? mMaxShaderTextures : mMaxFFTextures);
 }
 
 GFXTextureObject* GFXGLDevice::getDefaultDepthTex() const 
@@ -945,8 +1081,36 @@ U32 GFXGLDevice::getTotalVideoMemory_GL_EXT()
       return mem / 1024;
    }
 
-   // TODO OPENGL, add supprt for INTEL cards.
-   
+
+#if defined(TORQUE_OS_WIN)
+   else if( (gglHasWExtension(AMD_gpu_association)) )
+   {
+      // Just assume 1 AMD gpu. Who uses crossfire anyways now? And, crossfire doesn't double
+      // vram anyways, so does it really matter?
+      UINT id;
+      if (wglGetGPUIDsAMD(1, &id) != 0)
+      {
+         S32 memorySize;
+         if (wglGetGPUInfoAMD(id, WGL_GPU_RAM_AMD, GL_INT, 1, &memorySize) != -1)
+         {
+            // memory size is returned in MB
+            return memorySize;
+         }
+      }
+   }
+#endif
+
+#if defined(TORQUE_OS_LINUX)
+   else if ( (gglHasXExtension(NULL, NULL, MESA_query_renderer)) )
+   {
+      // memory size is in mb
+      U32 memorySize;
+      glXQueryCurrentRendererIntegerMESA(GLX_RENDERER_VIDEO_MEMORY_MESA, &memorySize);
+      return memorySize;
+   }
+#endif
+
+   // No other way, sad. Probably windows Intel.
    return 0;
 }
 
@@ -964,7 +1128,7 @@ public:
 
 static GFXGLRegisterDevice pGLRegisterDevice;
 
-ConsoleFunction(cycleResources, void, 1, 1, "")
+DefineEngineFunction(cycleResources, void, (),, "")
 {
    static_cast<GFXGLDevice*>(GFX)->zombify();
    static_cast<GFXGLDevice*>(GFX)->resurrect();

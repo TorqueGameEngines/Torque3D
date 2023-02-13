@@ -272,19 +272,24 @@ SimObjectPtr<SimSet> DecalRoad::smServerDecalRoadSet = NULL;
 // Constructors
 
 DecalRoad::DecalRoad()
- : mLoadRenderData( true ),
-   mBreakAngle( 3.0f ),
+ : mBreakAngle( 3.0f ),
    mSegmentsPerBatch( 10 ),
    mTextureLength( 5.0f ),
    mRenderPriority( 10 ),
-   mMaterial( NULL ),
-   mMatInst( NULL ),
+   mLoadRenderData( true ),
+   mTriangleCount(0),
+   mVertCount(0),
    mUpdateEventId( -1 ),
+   mLastEvent(NULL),
    mTerrainUpdateRect( Box3F::Invalid )
 {   
    // Setup NetObject.
    mTypeMask |= StaticObjectType | StaticShapeObjectType;
-   mNetFlags.set(Ghostable);      
+   mNetFlags.set(Ghostable);
+
+   INIT_ASSET(Material);
+
+   mMaterialInst = nullptr;
 }
 
 DecalRoad::~DecalRoad()
@@ -298,9 +303,10 @@ IMPLEMENT_CO_NETOBJECT_V1(DecalRoad);
 
 void DecalRoad::initPersistFields()
 {
+   docsURL;
    addGroup( "DecalRoad" );
 
-      addField( "material", TypeMaterialName, Offset( mMaterialName, DecalRoad ), "Material used for rendering." ); 
+      INITPERSISTFIELD_MATERIALASSET(Material, DecalRoad, "Material used for rendering.");
 
       addProtectedField( "textureLength", TypeF32, Offset( mTextureLength, DecalRoad ), &DecalRoad::ptSetTextureLength, &defaultProtectedGetFn, 
          "The length in meters of textures mapped to the DecalRoad" );      
@@ -315,7 +321,7 @@ void DecalRoad::initPersistFields()
 
    addGroup( "Internal" );
 
-      addProtectedField( "node", TypeString, NULL, &addNodeFromField, &emptyStringProtectedGetFn, 
+      addProtectedField( "node", TypeString, 0, &addNodeFromField, &emptyStringProtectedGetFn,
          "Do not modify, for internal use." );
 
    endGroup( "Internal" );
@@ -392,7 +398,7 @@ bool DecalRoad::onAdd()
 
 void DecalRoad::onRemove()
 {
-   SAFE_DELETE( mMatInst );
+   SAFE_DELETE( mMaterialInst );
 
    TerrainBlock::smUpdateSignal.remove( this, &DecalRoad::_onTerrainChanged );
 
@@ -486,7 +492,7 @@ U32 DecalRoad::packUpdate(NetConnection * con, U32 mask, BitStream * stream)
    if ( stream->writeFlag( mask & DecalRoadMask ) )
    {
       // Write Texture Name.
-      stream->write( mMaterialName );
+      PACK_ASSET(con, Material);
 
       stream->write( mBreakAngle );      
 
@@ -575,24 +581,10 @@ void DecalRoad::unpackUpdate( NetConnection *con, BitStream *stream )
    // DecalRoadMask
    if ( stream->readFlag() )
    {
-      String matName;
-      stream->read( &matName );
-      
-      if ( matName != mMaterialName )
-      {
-         mMaterialName = matName;
-         Material *pMat = NULL;
-         if ( !Sim::findObject( mMaterialName, pMat ) )
-         {
-            Con::printf( "DecalRoad::unpackUpdate, failed to find Material of name %s!", mMaterialName.c_str() );
-         }
-         else
-         {
-            mMaterial = pMat;
-            if ( isProperlyAdded() )
-               _initMaterial(); 
-         }
-      }
+      UNPACK_ASSET(con, Material);
+
+      if (isProperlyAdded())
+         _initMaterial();
 
       stream->read( &mBreakAngle );    
 
@@ -693,13 +685,13 @@ void DecalRoad::prepRenderImage( SceneRenderState* state )
 
    if (  mNodes.size() <= 1 || 
          mBatches.size() == 0 ||
-         !mMatInst ||
+         !mMaterialInst ||
          state->isShadowPass() )
       return;
 
    // If we don't have a material instance after the override then 
    // we can skip rendering all together.
-   BaseMatInstance *matInst = state->getOverrideMaterial( mMatInst );
+   BaseMatInstance *matInst = state->getOverrideMaterial(mMaterialInst);
    if ( !matInst )
       return;
       
@@ -732,18 +724,18 @@ void DecalRoad::prepRenderImage( SceneRenderState* state )
    MathUtils::getZBiasProjectionMatrix( gDecalBias, frustum, tempMat );
    coreRI.projection = tempMat;
 
-   coreRI.type = RenderPassManager::RIT_Decal;
+   coreRI.type = RenderPassManager::RIT_DecalRoad;
    coreRI.vertBuff = &mVB;
    coreRI.primBuff = &mPB;
    coreRI.matInst = matInst;
 
    // Make it the sort distance the max distance so that 
    // it renders after all the other opaque geometry in 
-   // the prepass bin.
+   // the deferred bin.
    coreRI.sortDistSq = F32_MAX;
 
 	// If we need lights then set them up.
-   if ( matInst->isForwardLit() )
+   if ( matInst->isForwardLit() && !coreRI.lights[0])
    {
       LightQuery query;
       query.init( getWorldSphere() );
@@ -793,6 +785,7 @@ void DecalRoad::prepRenderImage( SceneRenderState* state )
 
       *ri = coreRI;
 
+      ri->matInst = matInst;
       ri->prim = renderPass->allocPrim();
       ri->prim->type = GFXTriangleList;
       ri->prim->minIndex = 0;
@@ -800,6 +793,7 @@ void DecalRoad::prepRenderImage( SceneRenderState* state )
       ri->prim->numPrimitives = triangleCount;
       ri->prim->startVertex = 0;
       ri->prim->numVertices = endBatch.endVert + 1;
+      ri->translucentSort = !matInst->getMaterial()->isTranslucent();
 
       // For sorting we first sort by render priority
       // and then by objectId. 
@@ -1053,18 +1047,39 @@ bool DecalRoad::addNodeFromField( void *object, const char *index, const char *d
 
 void DecalRoad::_initMaterial()
 {
-   SAFE_DELETE( mMatInst );
+   _setMaterial(getMaterial());
 
-   if ( mMaterial )
-      mMatInst = mMaterial->createMatInstance();
-   else
-      mMatInst = MATMGR->createMatInstance( "WarningMaterial" );
+   if (mMaterialAsset.notNull())
+   {
+      if (mMaterialInst && String(mMaterialAsset->getMaterialDefinitionName()).equal(mMaterialInst->getMaterial()->getName(), String::NoCase))
+         return;
+
+      SAFE_DELETE(mMaterialInst);
+
+      Material* tMat = nullptr;
+
+      if (!Sim::findObject(mMaterialAsset->getMaterialDefinitionName(), tMat))
+         Con::errorf("DecalRoad::_initMaterial - Material %s was not found.", mMaterialAsset->getMaterialDefinitionName());
+
+      mMaterial = tMat;
+
+      if (mMaterial)
+         mMaterialInst = mMaterial->createMatInstance();
+      else
+         mMaterialInst = MATMGR->createMatInstance("WarningMaterial");
+
+      if (!mMaterialInst)
+         Con::errorf("DecalRoad::_initMaterial - no Material called '%s'", mMaterialAsset->getMaterialDefinitionName());
+   }
+
+   if (!mMaterialInst)
+      return;
 
    GFXStateBlockDesc desc;
    desc.setZReadWrite( true, false );
-   mMatInst->addStateBlockDesc( desc );
+   mMaterialInst->addStateBlockDesc( desc );
 
-   mMatInst->init( MATMGR->getDefaultFeatures(), getGFXVertexFormat<GFXVertexPNTBT>() );
+   mMaterialInst->init( MATMGR->getDefaultFeatures(), getGFXVertexFormat<GFXVertexPNTBT>() );
 }
 
 void DecalRoad::_debugRender( ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance* )
@@ -1265,7 +1280,7 @@ void DecalRoad::_generateEdges()
    //      
    for ( U32 i = 0; i < mEdges.size(); i++ )
    {
-      RoadEdge *edge = &mEdges[i];
+      edge = &mEdges[i];
       edge->p0 = edge->p1 - edge->rvec * edge->width * 0.5f;
       edge->p2 = edge->p1 + edge->rvec * edge->width * 0.5f;
       _getTerrainHeight( edge->p0 );
@@ -1467,20 +1482,20 @@ void DecalRoad::_captureVerts()
    for ( U32 i = 0; i < clipperList.size(); i++ )
    {   
       ClippedPolyList *clipper = &clipperList[i];
-      RoadEdge &edge = mEdges[i];
-      RoadEdge &nextEdge = mEdges[i+1];      
+      edge = &mEdges[i];
+      nextEdge = &mEdges[i+1];      
 
-      VectorF segFvec = nextEdge.p1 - edge.p1;
+      VectorF segFvec = nextEdge->p1 - edge->p1;
       F32 segLen = segFvec.len();
       segFvec.normalize();
 
       F32 texLen = segLen / mTextureLength;
       texEnd = texStart + texLen;
 
-      BiQuadToSqr quadToSquare(  Point2F( edge.p0.x, edge.p0.y ), 
-                                 Point2F( edge.p2.x, edge.p2.y ), 
-                                 Point2F( nextEdge.p2.x, nextEdge.p2.y ), 
-                                 Point2F( nextEdge.p0.x, nextEdge.p0.y ) );  
+      BiQuadToSqr quadToSquare(  Point2F( edge->p0.x, edge->p0.y ),
+                                 Point2F( edge->p2.x, edge->p2.y ),
+                                 Point2F( nextEdge->p2.x, nextEdge->p2.y ),
+                                 Point2F( nextEdge->p0.x, nextEdge->p0.y ) );
 
       //
       if ( i % mSegmentsPerBatch == 0 )
@@ -1572,15 +1587,13 @@ void DecalRoad::_captureVerts()
    Box3F box;
    for ( U32 i = 0; i < mBatches.size(); i++ )
    {
-      const RoadBatch &batch = mBatches[i];
+      batch = &mBatches[i];
 
       if ( i == 0 )      
-         box = batch.bounds;               
+         box = batch->bounds;               
       else      
-         box.intersect( batch.bounds );               
+         box.intersect( batch->bounds );
    }
-
-   Point3F pos = getPosition();
 
    mWorldBox = box;
    resetObjectBox();

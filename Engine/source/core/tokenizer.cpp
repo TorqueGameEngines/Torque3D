@@ -61,7 +61,7 @@ bool Tokenizer::openFile(const char* pFileName)
       delete pStream;
       return false;
    }
-   dStrcpy(mFileName, pFileName);
+   dStrcpy(mFileName, pFileName, 1024);
 
    mBufferSize = pStream->getStreamSize();
    mpBuffer    = new char[mBufferSize];
@@ -99,7 +99,7 @@ void Tokenizer::setBuffer(const char* buffer, U32 bufferSize)
 
    mBufferSize = bufferSize;
    mpBuffer    = new char[mBufferSize + 1];
-   dStrcpy(mpBuffer, buffer);
+   dStrcpy(mpBuffer, buffer, mBufferSize + 1);
 
    reset();
 
@@ -109,7 +109,10 @@ void Tokenizer::setBuffer(const char* buffer, U32 bufferSize)
 void Tokenizer::setSingleTokens(const char* singleTokens)
 {
    if (mSingleTokens)
-      SAFE_DELETE(mSingleTokens);
+   {
+      free(mSingleTokens);
+      mSingleTokens = NULL;
+   }
 
    if (singleTokens)
       mSingleTokens = dStrdup(singleTokens);

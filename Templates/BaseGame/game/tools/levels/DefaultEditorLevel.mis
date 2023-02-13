@@ -1,0 +1,59 @@
+//--- OBJECT WRITE BEGIN ---
+new Scene(EditorTemplateLevel) {
+   canSave = "1";
+   canSaveDynamicFields = "1";
+      Enabled = "1";
+
+   new LevelInfo(theLevelInfo) {
+      nearClip = "0.1";
+      visibleDistance = "1000";
+      visibleGhostDistance = "0";
+      decalBias = "0.0015";
+      fogColor = "0.6 0.6 0.7 1";
+      fogDensity = "0";
+      fogDensityOffset = "700";
+      fogAtmosphereHeight = "0";
+      canvasClearColor = "0 0 0 255";
+      ambientLightBlendPhase = "1";
+      ambientLightBlendCurve = "0 0 -1 -1";
+      soundAmbience = "AudioAmbienceDefault";
+      soundDistanceModel = "Linear";
+      canSave = "1";
+      canSaveDynamicFields = "1";
+         Enabled = "1";
+   };
+   new ScatterSky(DynamicSky) {
+      sunScale = "0.991102 0.921582 0.83077 1";
+      zOffset = "-3000";
+      azimuth = "25";
+      brightness = "5";
+      flareType = "LightFlareExample1";
+      MoonMatAsset = "Core_Rendering:moon_wglow";
+      useNightCubemap = "1";
+      nightCubemap = "nightCubemap";
+      logWeight = "0.9";
+         mieScattering = "0.0045";
+   };
+   new CloudLayer(SkyClouds) {
+      TextureAsset = "Core_Rendering:clouds_normal_displacement_image";
+      coverage = "0.25";
+      windSpeed = "0.5";
+      height = "6";
+   };
+   new Skylight(SkyAmbient) {
+      persistentId = "289ad401-3140-11ed-aae8-c0cb519281fc";
+         reflectionPath = "tools/levels/DefaultEditorLevel/probes/";
+   };
+   
+   new GroundPlane() {
+      scaleU = "32";
+      scaleV = "32";
+      MaterialAsset = "Prototyping:FloorGray";
+         Enabled = "1";
+         position = "0 0 0";
+         rotation = "1 0 0 0";
+         scale = "1 1 1";
+   };
+};
+//--- OBJECT WRITE END ---
+

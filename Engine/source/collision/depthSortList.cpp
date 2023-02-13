@@ -46,6 +46,13 @@ S32 gBadSpots = 0;
 
 DepthSortList::DepthSortList()
 {
+   mBase = 0;
+   mBasePoly = NULL;
+   mBaseNormal = NULL;
+   mBaseDot = 0.0f;
+   mBaseYMax = 0.0f;
+   mMaxTouched = 0;
+   mBaseExtents = NULL;
    VECTOR_SET_ASSOCIATION(mPolyExtentsList);
    VECTOR_SET_ASSOCIATION(mPolyIndexList);
 }
@@ -123,7 +130,7 @@ void DepthSortList::setExtents(Poly & poly, PolyExtents & polyExtents)
    polyExtents.zMin = polyExtents.zMax = p.z;
    for (S32 i=poly.vertexStart+1; i<poly.vertexStart+poly.vertexCount; i++)
    {
-      Point3F p = mVertexList[mIndexList[i]].point;
+      p = mVertexList[mIndexList[i]].point;
 
       // x
       if (p.x < polyExtents.xMin)

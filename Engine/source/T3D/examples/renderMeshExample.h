@@ -33,6 +33,8 @@
 #include "gfx/gfxPrimitiveBuffer.h"
 #endif
 
+#include "T3D/assets/MaterialAsset.h"
+
 class BaseMatInstance;
 
 
@@ -62,17 +64,17 @@ class RenderMeshExample : public SceneObject
       NextFreeMask  = Parent::NextFreeMask << 2
    };
 
-   //--------------------------------------------------------------------------
-   // Rendering variables
-   //--------------------------------------------------------------------------
-   // The name of the Material we will use for rendering
-   String            mMaterialName;
-   // The actual Material instance
-   BaseMatInstance*  mMaterialInst;
-
    // Define our vertex format here so we don't have to
    // change it in multiple spots later
    typedef GFXVertexPNT VertexType;
+
+   //--------------------------------------------------------------------------
+   // Rendering variables
+   //--------------------------------------------------------------------------
+   BaseMatInstance* mMaterialInst;
+
+   DECLARE_MATERIALASSET(RenderMeshExample, Material);
+   DECLARE_ASSET_NET_SETGET(RenderMeshExample, Material, UpdateMask);
 
    // The GFX vertex and primitive buffers
    GFXVertexBufferHandle< VertexType > mVertexBuffer;

@@ -1,0 +1,4 @@
+<GUIAsset
+    AssetName="LoadingGui"
+    GUIFile="@assetFile=loadingGui.gui"
+    VersionId="1"/>

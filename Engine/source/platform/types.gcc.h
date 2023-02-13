@@ -30,7 +30,7 @@
 
 //--------------------------------------
 // Types
-#if TORQUE_X86
+#if defined(TORQUE_X86)
 typedef signed long long    S64;
 typedef unsigned long long  U64;
 #else
@@ -43,6 +43,10 @@ typedef unsigned long  U64;
 // Compiler Version
 #define TORQUE_COMPILER_GCC (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
 
+#define TORQUE_FORCEINLINE __attribute__((always_inline))
+#define TORQUE_CASE_FALLTHROUGH __attribute__((fallthrough))
+#define TORQUE_NOINLINE __attribute__ ((noinline))
+#define TORQUE_UNLIKELY
 
 //--------------------------------------
 // Identify the compiler string
@@ -72,11 +76,6 @@ typedef unsigned long  U64;
 #  define TORQUE_SUPPORTS_NASM
 #  define TORQUE_SUPPORTS_GCC_INLINE_X86_ASM
 #  include "platform/types.win.h"
-
-#elif defined(SN_TARGET_PS3)
-#  define TORQUE_OS_STRING "PS3"
-#  define TORQUE_OS_PS3
-#  include "platform/types.posix.h"
 
 #elif defined(linux) || defined(LINUX)
 #  define TORQUE_OS_STRING "Linux"
@@ -108,14 +107,14 @@ typedef unsigned long  U64;
 // This could be reconfigured for static builds, though minimal impact
 //#     define TORQUE_SUPPORTS_NASM
 #  endif
-#else 
+#else
 #  error "GCC: Unsupported Operating System"
 #endif
 
 
 //--------------------------------------
 // Identify the CPU
-#if defined(i386)
+#if defined(i386) || defined(__i386) || defined(__i386__)
 #  define TORQUE_CPU_STRING "Intel x86"
 #  define TORQUE_CPU_X86
 #  define TORQUE_LITTLE_ENDIAN
@@ -125,15 +124,10 @@ typedef unsigned long  U64;
 #  define TORQUE_CPU_X64
 #  define TORQUE_LITTLE_ENDIAN
 
-#elif defined(__ppc__)
-#  define TORQUE_CPU_STRING "PowerPC"
-#  define TORQUE_CPU_PPC
-#  define TORQUE_BIG_ENDIAN
-
-#elif defined(SN_TARGET_PS3)
-#  define TORQUE_CPU_STRING "PowerPC"
-#  define TORQUE_CPU_PPC
-#  define TORQUE_BIG_ENDIAN
+#elif (defined( __arm64__ ) && defined( __APPLE__ )) || defined( __arch64__ )
+#  define TORQUE_CPU_STRING "Arm 64"
+#  define TORQUE_CPU_ARM64
+#  define TORQUE_LITTLE_ENDIAN
 
 #else
 #  error "GCC: Unsupported Target CPU"
@@ -175,5 +169,8 @@ typedef unsigned long  U64;
 #endif
 #endif
 
-#endif // INCLUDED_TYPES_GCC_H
+#define TORQUE_U16_ENDIANSWAP_BUILTIN __builtin_bswap16
+#define TORQUE_U32_ENDIANSWAP_BUILTIN __builtin_bswap32
+#define TORQUE_U64_ENDIANSWAP_BUILTIN __builtin_bswap64
 
+#endif // INCLUDED_TYPES_GCC_H

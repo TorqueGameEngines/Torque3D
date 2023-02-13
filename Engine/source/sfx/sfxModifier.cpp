@@ -20,6 +20,8 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+#include "console/simBase.h"
+#include "console/engineAPI.h"
 #include "sfx/sfxModifier.h"
 #include "sfx/sfxSource.h"
 
@@ -58,8 +60,8 @@ bool SFXOneShotModifier::update()
 SFXRangeModifier::SFXRangeModifier( SFXSource* source, F32 startTime, F32 endTime, bool removeWhenDone )
    : Parent( source, removeWhenDone ),
      mStartTime( startTime ),
-     mEndTime( endTime ),
-     mIsActive( false )
+     mIsActive( false ),
+     mEndTime( endTime )
 {
 }
 
@@ -105,6 +107,8 @@ bool SFXRangeModifier::update()
 
 SFXFadeModifier::SFXFadeModifier( SFXSource* source, F32 time, F32 endVolume, F32 startTime, EOnEnd onEndDo, bool removeWhenDone )
    : Parent( source, startTime, startTime + time, removeWhenDone ),
+     mStartVolume(source->getVolume()),
+     mCurrentVolume(source->getVolume()),
      mEndVolume( endVolume ),
      mOnEnd( onEndDo )
 {

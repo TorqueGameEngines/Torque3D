@@ -1,0 +1,5 @@
+<GUIAsset
+    AssetName="MainMenuGui"
+    scriptFile="@assetFile=mainMenu"
+    GUIFile="@assetFile=mainMenu.gui"
+    VersionId="1"/>

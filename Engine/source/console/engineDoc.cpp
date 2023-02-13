@@ -114,7 +114,7 @@ static void dumpVariable(  Stream& stream,
 {
    // Skip variables defined in script.
    
-   if( entry->value.type < 0 )
+   if( entry->type <= Dictionary::Entry::TypeInternalString )
       return;
          
    // Skip internals... don't export them.
@@ -149,7 +149,7 @@ static void dumpVariable(  Stream& stream,
             
    // Skip variables for which we can't decipher their type.
 
-   ConsoleBaseType* type = ConsoleBaseType::getType( entry->value.type );
+   ConsoleBaseType* type = ConsoleBaseType::getType( entry->type );
    if( !type )
    {
       Con::errorf( "Can't find type for variable '%s'", entry->name );
@@ -248,13 +248,13 @@ static void dumpFunction(  Stream &stream,
       const char* brief = dStrstr( doc, "@brief" );
       if( !brief )
       {
-         String brief = entry->getBriefDescription( &doc );
+         String briefStr = entry->getBriefDescription( &doc );
          
-         brief.trim();
-         if( !brief.isEmpty() )
+		 briefStr.trim();
+         if( !briefStr.isEmpty() )
          {
             stream.writeText( "@brief " );
-            stream.writeText( brief );
+            stream.writeText(briefStr);
             stream.writeText( "\r\n\r\n" );
          }
       }
@@ -706,7 +706,7 @@ static bool dumpEngineDocs( const char *outputFile )
    // Dump pre-declarations for any groups we encountered
    // so that we don't have to explicitly define them.
    HashTable<String,U32>::Iterator iter = smDocGroups.begin();
-   for ( ; iter != smDocGroups.end(); iter++ )
+   for (; iter != smDocGroups.end(); ++iter)
       stream.writeText( String::ToString( "/*! @addtogroup %s */\r\n\r\n", iter->key.c_str() ) );
 
    return true;

@@ -1,0 +1,11 @@
+<ModuleDefinition
+    ModuleId="Prototyping"
+    VersionId="1"
+    Group="Game"
+    scriptFile="Prototyping.tscript"
+    CreateFunction="onCreate"
+    DestroyFunction="onDestroy">
+    <DeclaredAssets
+        Extension="asset.taml"
+        Recurse="true"/>
+</ModuleDefinition>

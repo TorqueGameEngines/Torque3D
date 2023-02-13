@@ -33,6 +33,8 @@
 #include "gfx/gfxPrimitiveBuffer.h"
 #endif
 
+#include "T3D/assets/MaterialAsset.h"
+
 class PhysicsBody;
 class BaseMatInstance;
 
@@ -76,6 +78,8 @@ public:
 
    static void       initPersistFields();
 
+   virtual void getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList);
+
 protected:
 
    typedef GFXVertexPNTBT VertexType;
@@ -100,8 +104,11 @@ private:
    F32               mSquareSize;   ///< World units per grid cell edge.
    F32               mScaleU;       ///< Scale factor for U texture coordinates.
    F32               mScaleV;       ///< Scale factor for V texture coordinates.
-   String            mMaterialName; ///< Object name of material to use.
-   BaseMatInstance*  mMaterial;     ///< Instantiated material based on given material name.
+
+   BaseMatInstance* mMaterialInst;
+
+   DECLARE_MATERIALASSET(GroundPlane, Material);
+   DECLARE_ASSET_NET_SETGET(GroundPlane, Material, -1);
 
    PhysicsBody *mPhysicsRep;
 

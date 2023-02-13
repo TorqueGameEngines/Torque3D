@@ -35,6 +35,9 @@
 #include "gfx/gfxDrawUtil.h"
 #include "collision/concretePolyList.h"
 
+#include "T3D/assets/ShapeAsset.h"
+#include "T3D/assets/ShapeAnimationAsset.h"
+
 #ifdef TORQUE_COLLADA
    #include "collision/optimizedPolyList.h"
    #include "ts/collada/colladaUtils.h"
@@ -63,28 +66,30 @@ GuiShapeEdPreview::GuiShapeEdPreview()
 :  mOrbitDist( 5.0f ),
    mMoveSpeed ( 1.0f ),
    mZoomSpeed ( 1.0f ),
-   mModel( NULL ),
    mGridDimension( 30, 30 ),
+   mModel( NULL ),
+   mModelName(StringTable->EmptyString()),
    mRenderGhost( false ),
    mRenderNodes( false ),
    mRenderBounds( false ),
    mRenderObjBox( false ),
+   mRenderColMeshes( false ),
    mRenderMounts( true ),
    mSunDiffuseColor( 255, 255, 255, 255 ),
-   mSunAmbientColor( 140, 140, 140, 255 ),
    mSelectedNode( -1 ),
+   mSunAmbientColor( 140, 140, 140, 255 ),
    mHoverNode( -1 ),
    mSelectedObject( -1 ),
-   mSelectedObjDetail( 0 ),
    mUsingAxisGizmo( false ),
-   mGizmoDragID( 0 ),
+   mSelectedObjDetail( 0 ),
    mEditingSun( false ),
+   mGizmoDragID( 0 ),
    mTimeScale( 1.0f ),
    mActiveThread( -1 ),
-   mLastRenderTime( 0 ),
    mFakeSun( NULL ),
-   mSunRot( 45.0f, 0, 135.0f ),
+   mLastRenderTime( 0 ),
    mCameraRot( 0, 0, 3.9f ),
+   mSunRot( 45.0f, 0, 135.0f ),
    mRenderCameraAxes( false ),
    mOrbitPos( 0, 0, 0 ),
    mFixedDetail( true ),
@@ -114,6 +119,7 @@ GuiShapeEdPreview::~GuiShapeEdPreview()
 
 void GuiShapeEdPreview::initPersistFields()
 {
+   docsURL;
    addGroup( "Rendering" );
    addField( "editSun",        TypeBool,         Offset( mEditingSun, GuiShapeEdPreview ),
       "If true, dragging the gizmo will rotate the sun direction" );
@@ -155,11 +161,11 @@ void GuiShapeEdPreview::initPersistFields()
    addGroup( "Animation" );
    addField( "activeThread",              TypeS32,    Offset( mActiveThread, GuiShapeEdPreview ),
       "Index of the active thread, or -1 if none" );
-   addProtectedField( "threadPos",        TypeF32,    NULL, &setFieldThreadPos, &getFieldThreadPos,
+   addProtectedField( "threadPos",        TypeF32,    0, &setFieldThreadPos, &getFieldThreadPos,
       "Current position of the active thread (0-1)" );
-   addProtectedField( "threadDirection",  TypeS32,    NULL, &setFieldThreadDir, &getFieldThreadDir,
+   addProtectedField( "threadDirection",  TypeS32,    0, &setFieldThreadDir, &getFieldThreadDir,
       "Playback direction of the active thread" );
-   addProtectedField( "threadPingPong",   TypeBool,   NULL, &setFieldThreadPingPong, &getFieldThreadPingPong,
+   addProtectedField( "threadPingPong",   TypeBool,   0, &setFieldThreadPingPong, &getFieldThreadPingPong,
       "'PingPong' mode of the active thread" );
    endGroup( "Animation" );
 
@@ -330,10 +336,11 @@ void GuiShapeEdPreview::setCurrentDetail(S32 dl)
 {
    if ( mModel )
    {
-      S32 smallest = mModel->getShape()->mSmallestVisibleDL;
-      mModel->getShape()->mSmallestVisibleDL = mModel->getShape()->details.size()-1;
+      TSShape* shape = mModel->getShape();
+      S32 smallest = shape->mSmallestVisibleDL;
+      shape->mSmallestVisibleDL = shape->details.size() - 1;
       mModel->setCurrentDetail( dl );
-      mModel->getShape()->mSmallestVisibleDL = smallest;
+      shape->mSmallestVisibleDL = smallest;
 
       // Match the camera distance to this detail if necessary
       //@todo if ( !gui->mFixedDetail )
@@ -347,6 +354,8 @@ bool GuiShapeEdPreview::setObjectModel(const char* modelName)
    mThreads.clear();
    mActiveThread = -1;
 
+   ResourceManager::get().getChangedSignal().remove(this, &GuiShapeEdPreview::_onResourceChanged);
+
    if (modelName && modelName[0])
    {
       Resource<TSShape> model = ResourceManager::get().load( modelName );
@@ -359,28 +368,76 @@ bool GuiShapeEdPreview::setObjectModel(const char* modelName)
       mModel = new TSShapeInstance( model, true );
       AssertFatal( mModel, avar("GuiShapeEdPreview: Failed to load model %s. Please check your model name and load a valid model.", modelName ));
 
+      TSShape* shape = mModel->getShape();
+
       // Initialize camera values:
-      mOrbitPos = mModel->getShape()->center;
+      mOrbitPos = shape->center;
 
       // Set camera move and zoom speed according to model size
-      mMoveSpeed = mModel->getShape()->radius / sMoveScaler;
-      mZoomSpeed = mModel->getShape()->radius / sZoomScaler;
+      mMoveSpeed = shape->mRadius / sMoveScaler;
+      mZoomSpeed = shape->mRadius / sZoomScaler;
 
       // Reset node selection
       mHoverNode = -1;
       mSelectedNode = -1;
       mSelectedObject = -1;
       mSelectedObjDetail = 0;
-      mProjectedNodes.setSize( mModel->getShape()->nodes.size() );
+      mProjectedNodes.setSize( shape->nodes.size() );
 
       // Reset detail stats
       mCurrentDL = 0;
 
       // the first time recording
       mLastRenderTime = Platform::getVirtualMilliseconds();
+
+      mModelName = StringTable->insert(modelName);
+
+      //Now to reflect changes when the model file is changed.
+      ResourceManager::get().getChangedSignal().notify(this, &GuiShapeEdPreview::_onResourceChanged);
+   }
+   else
+   {
+      mModelName = StringTable->EmptyString();
    }
 
    return true;
+}
+
+bool GuiShapeEdPreview::setObjectShapeAsset(const char* assetId)
+{
+   SAFE_DELETE(mModel);
+   unmountAll();
+   mThreads.clear();
+   mActiveThread = -1;
+
+   StringTableEntry modelName = StringTable->EmptyString();
+   if (AssetDatabase.isDeclaredAsset(assetId))
+   {
+      StringTableEntry id = StringTable->insert(assetId);
+      StringTableEntry assetType = AssetDatabase.getAssetType(id);
+      if (assetType == StringTable->insert("ShapeAsset"))
+      {
+         ShapeAsset* asset = AssetDatabase.acquireAsset<ShapeAsset>(id);
+         modelName = asset->getShapeFilePath();
+         AssetDatabase.releaseAsset(id);
+      }
+      else if (assetType == StringTable->insert("ShapeAnimationAsset"))
+      {
+         ShapeAnimationAsset* asset = AssetDatabase.acquireAsset<ShapeAnimationAsset>(id);
+         modelName = asset->getAnimationPath();
+         AssetDatabase.releaseAsset(id);
+      }
+   }
+
+   return setObjectModel(modelName);
+}
+
+void GuiShapeEdPreview::_onResourceChanged(const Torque::Path& path)
+{
+   if (path != Torque::Path(mModelName))
+      return;
+
+   setObjectModel(path.getFullPath());
 }
 
 void GuiShapeEdPreview::addThread()
@@ -474,7 +531,7 @@ void GuiShapeEdPreview::setThreadSequence(GuiShapeEdPreview::Thread& thread, TSS
 
 const char* GuiShapeEdPreview::getThreadSequence() const
 {
-   return ( mActiveThread >= 0 ) ? mThreads[mActiveThread].seqName : "";
+   return ( mActiveThread >= 0 ) ? mThreads[mActiveThread].seqName.c_str() : "";
 }
 
 void GuiShapeEdPreview::refreshThreadSequences()
@@ -501,18 +558,20 @@ void GuiShapeEdPreview::refreshThreadSequences()
 //-----------------------------------------------------------------------------
 // MOUNTING
 
-bool GuiShapeEdPreview::mountShape(const char* modelName, const char* nodeName, const char* mountType, S32 slot)
+bool GuiShapeEdPreview::mountShape(const char* shapeAssetId, const char* nodeName, const char* mountType, S32 slot)
 {
-   if ( !modelName || !modelName[0] )
+   if ( !shapeAssetId || !shapeAssetId[0] )
       return false;
 
-   Resource<TSShape> model = ResourceManager::get().load( modelName );
-   if ( !bool( model ) )
+   if (!AssetDatabase.isDeclaredAsset(shapeAssetId))
       return false;
 
-   TSShapeInstance* tsi = new TSShapeInstance( model, true );
-   if ( !tsi )
+   ShapeAsset* model = AssetDatabase.acquireAsset<ShapeAsset>(shapeAssetId);
+
+   if (model == nullptr || !model->getShapeResource())
       return false;
+
+   TSShapeInstance* tsi = new TSShapeInstance(model->getShapeResource(), true );
 
    if ( slot == -1 )
    {
@@ -683,9 +742,11 @@ void GuiShapeEdPreview::refreshShape()
       mModel->initNodeTransforms();
       mModel->initMeshObjects();
 
-      mProjectedNodes.setSize( mModel->getShape()->nodes.size() );
+      TSShape* shape = mModel->getShape();
 
-      if ( mSelectedObject >= mModel->getShape()->objects.size() )
+      mProjectedNodes.setSize( shape->nodes.size() );
+
+      if ( mSelectedObject >= shape->objects.size() )
       {
          mSelectedObject = -1;
          mSelectedObjDetail = 0;
@@ -694,22 +755,22 @@ void GuiShapeEdPreview::refreshShape()
       // Re-compute the collision mesh stats
       mColMeshes = 0;
       mColPolys = 0;
-      for ( S32 i = 0; i < mModel->getShape()->details.size(); i++ )
+      for ( S32 i = 0; i < shape->details.size(); i++ )
       {
-         const TSShape::Detail& det = mModel->getShape()->details[i];
-         const String& detName = mModel->getShape()->getName( det.nameIndex );
+         const TSShape::Detail& det = shape->details[i];
+         const String& detName = shape->getName( det.nameIndex );
          if ( ( det.subShapeNum < 0 ) || !detName.startsWith( "collision-" ) )
             continue;
 
          mColPolys += det.polyCount;
 
          S32 od = det.objectDetailNum;
-         S32 start = mModel->getShape()->subShapeFirstObject[det.subShapeNum];
-         S32 end   = start + mModel->getShape()->subShapeNumObjects[det.subShapeNum];
+         S32 start = shape->subShapeFirstObject[det.subShapeNum];
+         S32 end   = start + shape->subShapeNumObjects[det.subShapeNum];
          for ( S32 j = start; j < end; j++ )
          {
-            const TSShape::Object &obj = mModel->getShape()->objects[j];
-            const TSMesh* mesh = ( od < obj.numMeshes ) ? mModel->getShape()->meshes[obj.startMeshIndex + od] : NULL;
+            const TSShape::Object &obj = shape->objects[j];
+            const TSMesh* mesh = ( od < obj.numMeshes ) ? shape->meshes[obj.startMeshIndex + od] : NULL;
             if ( mesh )
                mColMeshes++;
          }
@@ -850,7 +911,7 @@ void GuiShapeEdPreview::exportToCollada( const String& path )
    if ( mModel )
    {
       MatrixF orientation( true );
-      orientation.setPosition( mModel->getShape()->bounds.getCenter() );
+      orientation.setPosition( mModel->getShape()->mBounds.getCenter() );
       orientation.inverse();
 
       OptimizedPolyList polyList;
@@ -923,8 +984,8 @@ void GuiShapeEdPreview::handleMouseDown(const GuiEvent& event, GizmoMode mode)
       }
    }
 
-   if ( mode == RotateMode )
-      mRenderCameraAxes = true;
+   //if ( mode == RotateMode )
+   //   mRenderCameraAxes = true;
 }
 
 void GuiShapeEdPreview::handleMouseUp(const GuiEvent& event, GizmoMode mode)
@@ -938,8 +999,8 @@ void GuiShapeEdPreview::handleMouseUp(const GuiEvent& event, GizmoMode mode)
       mGizmo->on3DMouseUp( mLastEvent );
    }
 
-   if ( mode == RotateMode )
-      mRenderCameraAxes = false;
+   //if ( mode == RotateMode )
+   //   mRenderCameraAxes = false;
 }
 
 void GuiShapeEdPreview::handleMouseMove(const GuiEvent& event, GizmoMode mode)
@@ -1135,8 +1196,8 @@ bool GuiShapeEdPreview::getCameraTransform(MatrixF* cameraMatrix)
       cameraMatrix->identity();
       if ( mModel )
       {
-         Point3F camPos = mModel->getShape()->bounds.getCenter();
-         F32 offset = mModel->getShape()->bounds.len();
+         Point3F camPos = mModel->getShape()->mBounds.getCenter();
+         F32 offset = mModel->getShape()->mBounds.len();
 
          switch (mDisplayType)
          {
@@ -1161,6 +1222,19 @@ void GuiShapeEdPreview::computeSceneBounds(Box3F& bounds)
 {
    if ( mModel )
       mModel->computeBounds( mCurrentDL, bounds );
+
+   if (bounds.getExtents().x < POINT_EPSILON || bounds.getExtents().y < POINT_EPSILON || bounds.getExtents().z < POINT_EPSILON)
+   {
+      bounds.set(Point3F::Zero);
+
+      //We probably don't have any actual meshes in this model, so compute using the bones if we have them
+      for (S32 i = 0; i < mModel->getShape()->nodes.size(); i++)
+      {
+         Point3F nodePos = mModel->mNodeTransforms[i].getPosition();
+
+         bounds.extend(nodePos);
+      }
+   }
 }
 
 void GuiShapeEdPreview::updateDetailLevel(const SceneRenderState* state)
@@ -1228,9 +1302,9 @@ void GuiShapeEdPreview::updateDetailLevel(const SceneRenderState* state)
             continue;
 
          // Count the number of draw calls and materials
-         mNumDrawCalls += mesh->primitives.size();
-         for ( S32 iPrim = 0; iPrim < mesh->primitives.size(); iPrim++ )
-            usedMaterials.push_back_unique( mesh->primitives[iPrim].matIndex & TSDrawPrimitive::MaterialMask );
+         mNumDrawCalls += mesh->mPrimitives.size();
+         for ( S32 iPrim = 0; iPrim < mesh->mPrimitives.size(); iPrim++ )
+            usedMaterials.push_back_unique( mesh->mPrimitives[iPrim].matIndex & TSDrawPrimitive::MaterialMask );
 
          // For skinned meshes, count the number of bones and weights
          if ( mesh->getMeshType() == TSMesh::SkinMeshType )
@@ -1426,11 +1500,11 @@ void GuiShapeEdPreview::renderWorld(const RectI &updateRect)
       // Render the shape bounding box
       if ( mRenderBounds )
       {
-         Point3F boxSize = mModel->getShape()->bounds.maxExtents - mModel->getShape()->bounds.minExtents;
+         Point3F boxSize = mModel->getShape()->mBounds.maxExtents - mModel->getShape()->mBounds.minExtents;
 
          GFXStateBlockDesc desc;
          desc.fillMode = GFXFillWireframe;
-         GFX->getDrawUtil()->drawCube( desc, boxSize, mModel->getShape()->center, ColorF::WHITE );
+         GFX->getDrawUtil()->drawCube( desc, boxSize, mModel->getShape()->center, ColorI::WHITE );
       }
 
       // Render the selected object bounding box
@@ -1447,7 +1521,7 @@ void GuiShapeEdPreview::renderWorld(const RectI &updateRect)
             const Box3F& bounds = mesh->getBounds();
             GFXStateBlockDesc desc;
             desc.fillMode = GFXFillWireframe;
-            GFX->getDrawUtil()->drawCube( desc, bounds.getExtents(), bounds.getCenter(), ColorF::RED );
+            GFX->getDrawUtil()->drawCube( desc, bounds.getExtents(), bounds.getCenter(), ColorI::RED );
 
             GFX->popWorldMatrix();
          }
@@ -1487,9 +1561,9 @@ void GuiShapeEdPreview::renderGui(Point2I offset, const RectI& updateRect)
    if ( mModel )
    {
       if ( mRenderNodes && mHoverNode != -1 )
-         renderNodeName( mHoverNode, ColorF::WHITE );
+         renderNodeName( mHoverNode, LinearColorF::WHITE );
       if ( mSelectedNode != -1 )
-         renderNodeName( mSelectedNode, ColorF::WHITE );
+         renderNodeName( mSelectedNode, LinearColorF::WHITE );
    }
 }
 
@@ -1527,8 +1601,8 @@ void GuiShapeEdPreview::renderSunDirection() const
    if ( mEditingSun )
    {
       // Render four arrows aiming in the direction of the sun's light
-      ColorI color( mFakeSun->getColor() );
-      F32 length = mModel->getShape()->bounds.len() * 0.8f;
+      ColorI color = LinearColorF( mFakeSun->getColor()).toColorI();
+      F32 length = mModel->getShape()->mBounds.len() * 0.8f;
 
       // Get the sun's vectors
       Point3F fwd = mFakeSun->getTransform().getForwardVector();
@@ -1542,10 +1616,12 @@ void GuiShapeEdPreview::renderSunDirection() const
       GFXStateBlockDesc desc;
       desc.setZReadWrite( true, true );
 
-      GFX->getDrawUtil()->drawArrow( desc, start, end, color );
-      GFX->getDrawUtil()->drawArrow( desc, start + up, end + up, color );
-      GFX->getDrawUtil()->drawArrow( desc, start + right, end + right, color );
-      GFX->getDrawUtil()->drawArrow( desc, start + up + right, end + up + right, color );
+      GFXDrawUtil* drawUtil = GFX->getDrawUtil();
+
+      drawUtil->drawArrow( desc, start, end, color );
+      drawUtil->drawArrow( desc, start + up, end + up, color );
+      drawUtil->drawArrow( desc, start + right, end + right, color );
+      drawUtil->drawArrow( desc, start + up + right, end + up + right, color );
    }
 }
 
@@ -1582,18 +1658,18 @@ void GuiShapeEdPreview::renderNodes() const
          if ( ( i == mSelectedNode ) || ( i == mHoverNode ) )
             continue;   
 
-         renderNodeAxes( i, ColorF::WHITE );
+         renderNodeAxes( i, LinearColorF::WHITE );
       }
 
       // Render the hovered node
       if ( mHoverNode != -1 )
-         renderNodeAxes( mHoverNode, ColorF::GREEN );
+         renderNodeAxes( mHoverNode, LinearColorF::GREEN );
    }
 
    // Render the selected node (even if mRenderNodes is false)
    if ( mSelectedNode != -1 )
    {
-      renderNodeAxes( mSelectedNode, ColorF::GREEN );
+      renderNodeAxes( mSelectedNode, LinearColorF::GREEN );
 
       const MatrixF& nodeMat = mModel->mNodeTransforms[mSelectedNode];
       mGizmo->set( nodeMat, nodeMat.getPosition(), Point3F::One);
@@ -1601,8 +1677,10 @@ void GuiShapeEdPreview::renderNodes() const
    }
 }
 
-void GuiShapeEdPreview::renderNodeAxes(S32 index, const ColorF& nodeColor) const
+void GuiShapeEdPreview::renderNodeAxes(S32 index, const LinearColorF& nodeColor) const
 {
+   if(mModel->mNodeTransforms.size() <= index || index < 0)
+      return;
    const Point3F xAxis( 1.0f,  0.15f, 0.15f );
    const Point3F yAxis( 0.15f, 1.0f,  0.15f );
    const Point3F zAxis( 0.15f, 0.15f, 1.0f  );
@@ -1616,22 +1694,24 @@ void GuiShapeEdPreview::renderNodeAxes(S32 index, const ColorF& nodeColor) const
 
    GFX->pushWorldMatrix();
    GFX->multWorld( mModel->mNodeTransforms[index] );
-
-   GFX->getDrawUtil()->drawCube( desc, xAxis * scale, Point3F::Zero, nodeColor );
-   GFX->getDrawUtil()->drawCube( desc, yAxis * scale, Point3F::Zero, nodeColor );
-   GFX->getDrawUtil()->drawCube( desc, zAxis * scale, Point3F::Zero, nodeColor );
+   const ColorI color = LinearColorF(nodeColor).toColorI();
+   GFX->getDrawUtil()->drawCube( desc, xAxis * scale, Point3F::Zero, color );
+   GFX->getDrawUtil()->drawCube( desc, yAxis * scale, Point3F::Zero, color );
+   GFX->getDrawUtil()->drawCube( desc, zAxis * scale, Point3F::Zero, color );
 
    GFX->popWorldMatrix();
 }
 
-void GuiShapeEdPreview::renderNodeName(S32 index, const ColorF& textColor) const
+void GuiShapeEdPreview::renderNodeName(S32 index, const LinearColorF& textColor) const
 {
+   if(index < 0 || index >= mModel->getShape()->nodes.size() || index >= mProjectedNodes.size())
+      return;
    const TSShape::Node& node = mModel->getShape()->nodes[index];
    const String& nodeName = mModel->getShape()->getName( node.nameIndex );
 
    Point2I pos( mProjectedNodes[index].x, mProjectedNodes[index].y + sNodeRectSize + 6 );
 
-   GFX->getDrawUtil()->setBitmapModulation( textColor );
+   GFX->getDrawUtil()->setBitmapModulation( LinearColorF(textColor).toColorI());
    GFX->getDrawUtil()->drawText( mProfile->mFont, pos, nodeName.c_str() );
 }
 
@@ -1672,6 +1752,14 @@ DefineEngineMethod( GuiShapeEdPreview, setModel, bool, ( const char* shapePath )
    "@return True if the model was loaded successfully, false otherwise.\n" )
 {
    return object->setObjectModel( shapePath );
+}
+
+DefineEngineMethod(GuiShapeEdPreview, setShapeAsset, bool, (const char* shapeAsset), ,
+   "Sets the model to be displayed in this control\n\n"
+   "@param shapeName Name of the model to display.\n"
+   "@return True if the model was loaded successfully, false otherwise.\n")
+{
+   return object->setObjectShapeAsset(shapeAsset);
 }
 
 DefineEngineMethod( GuiShapeEdPreview, fitToShape, void, (),,
@@ -1781,14 +1869,14 @@ DefineEngineMethod( GuiShapeEdPreview, refreshThreadSequences, void, (),,
 
 //-----------------------------------------------------------------------------
 // Mounting
-DefineEngineMethod( GuiShapeEdPreview, mountShape, bool, ( const char* shapePath, const char* nodeName, const char* type, S32 slot ),,
+DefineEngineMethod( GuiShapeEdPreview, mountShape, bool, ( const char* shapeAssetId, const char* nodeName, const char* type, S32 slot ),,
    "Mount a shape onto the main shape at the specified node\n\n"
-   "@param shapePath path to the shape to mount\n"
+   "@param shapeAssetId AssetId of the shape to mount\n"
    "@param nodeName name of the node on the main shape to mount to\n"
    "@param type type of mounting to use (Object, Image or Wheel)\n"
    "@param slot mount slot\n" )
 {
-   return object->mountShape( shapePath, nodeName, type, slot );
+   return object->mountShape(shapeAssetId, nodeName, type, slot );
 }
 
 DefineEngineMethod( GuiShapeEdPreview, setMountNode, void, ( S32 slot, const char* nodeName ),,

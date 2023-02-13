@@ -59,8 +59,8 @@ ConsoleDocClass( GuiMissionAreaCtrl,
 
 GuiMissionAreaCtrl::GuiMissionAreaCtrl()
 {
-   mHandleBitmap = StringTable->EmptyString();
-   mHandleTexture = NULL;
+   INIT_ASSET(HandleBitmap);
+
    mHandleTextureSize = Point2I::Zero;
    mHandleTextureHalfSize = Point2F::Zero;
 
@@ -87,10 +87,10 @@ GuiMissionAreaCtrl::~GuiMissionAreaCtrl()
 
 void GuiMissionAreaCtrl::initPersistFields()
 {
+   docsURL;
    addField( "squareBitmap",        TypeBool,      Offset(mSquareBitmap, GuiMissionAreaCtrl));
 
-   addField( "handleBitmap",        TypeFilename,  Offset( mHandleBitmap, GuiMissionAreaCtrl ),
-      "Bitmap file for the mission area handles.\n");
+   INITPERSISTFIELD_IMAGEASSET(HandleBitmap, GuiMissionAreaCtrl, "Bitmap for the mission area handles.\n");
 
    addField( "missionBoundsColor",  TypeColorI,    Offset(mMissionBoundsColor, GuiMissionAreaCtrl));
    addField( "cameraColor",         TypeColorI,    Offset(mCameraColor, GuiMissionAreaCtrl));
@@ -114,15 +114,13 @@ bool GuiMissionAreaCtrl::onAdd()
    desc.setBlend(true, GFXBlendSrcAlpha, GFXBlendInvSrcAlpha);
    mBlendStateBlock = GFX->createStateBlock( desc );
 
-   if (*mHandleBitmap)
+   if (!mHandleBitmap.isNull())
    {
-      mHandleTexture = GFXTexHandle( mHandleBitmap, &GFXDefaultPersistentProfile, avar("%s() - mHandleTexture (line %d)", __FUNCTION__, __LINE__) );
-      mHandleTextureSize = Point2I( mHandleTexture->getWidth(), mHandleTexture->getHeight() );
+      mHandleTextureSize = Point2I(mHandleBitmap->getWidth(), mHandleBitmap->getHeight() );
       mHandleTextureHalfSize = Point2F(mHandleTextureSize.x, mHandleTextureSize.y) * 0.5f;
    }
    else
    {
-      mHandleTexture = NULL;
       mHandleTextureSize = Point2I::Zero;
       mHandleTextureHalfSize = Point2F::Zero;
    }
@@ -159,7 +157,7 @@ bool GuiMissionAreaCtrl::onWake()
 
 void GuiMissionAreaCtrl::onSleep()
 {
-   mTextureObject = NULL;
+   mBitmap = NULL;
    mMissionArea = 0;
    mTerrainBlock = 0;
 
@@ -357,9 +355,6 @@ GBitmap * GuiMissionAreaCtrl::createTerrainBitmap()
 
    GBitmap * bitmap = new GBitmap(mTerrainBlock->getBlockSize(), mTerrainBlock->getBlockSize(), false, GFXFormatR8G8B8 );
 
-   if(!bitmap)
-      return NULL;
-
    // get the min/max
    F32 min, max;
    mTerrainBlock->getMinMaxHeight(&min, &max);
@@ -423,7 +418,7 @@ void GuiMissionAreaCtrl::setArea(const RectI & area)
 void GuiMissionAreaCtrl::drawHandle(const Point2F & pos)
 {
    Point2F pnt(pos.x-mHandleTextureHalfSize.x, pos.y-mHandleTextureHalfSize.y);
-   GFX->getDrawUtil()->drawBitmap(mHandleTexture, pnt);
+   GFX->getDrawUtil()->drawBitmap(mHandleBitmap, pnt);
 }
 
 void GuiMissionAreaCtrl::drawHandles(RectI & box)
@@ -607,7 +602,7 @@ void GuiMissionAreaCtrl::onRender(Point2I offset, const RectI & updateRect)
 
    GFXDrawUtil *drawer = GFX->getDrawUtil();
    drawer->clearBitmapModulation();
-   drawer->drawBitmapStretch(mTextureObject, rect, GFXBitmapFlip_Y, GFXTextureFilterLinear, false);
+   drawer->drawBitmapStretch(mBitmap, rect, GFXBitmapFlip_Y, GFXTextureFilterLinear, false);
 
    GFX->setStateBlock(mSolidStateBlock);
    drawer->clearBitmapModulation();

@@ -20,6 +20,11 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+// Arcane-FX for MIT Licensed Open Source version of Torque 3D from GarageGames
+// Copyright (C) 2015 Faust Logic, Inc.
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+
 #ifndef _SCENEOBJECT_H_
 #define _SCENEOBJECT_H_
 
@@ -54,7 +59,20 @@
 #ifndef _GFXDEVICE_H_
 #include "gfx/gfxDevice.h"
 #endif
+#ifndef _TSRENDERDATA_H_
+#include "ts/tsRenderState.h"
+#endif
 
+#ifndef _COLLADA_UTILS_H_
+#include "ts/collada/colladaUtils.h"
+#endif
+
+#ifndef _ASSET_PTR_H_
+#include "assets/assetPtr.h"
+#endif 
+#ifndef GAME_OBJECT_ASSET_H
+#include "T3D/assets/GameObjectAsset.h"
+#endif
 
 class SceneManager;
 class SceneRenderState;
@@ -193,6 +211,12 @@ class SceneObject : public NetObject, private SceneContainer::Link, public Proce
       ///
       SimPersistID* mMountPID;
 
+      StringTableEntry		      mGameObjectAssetId;
+      AssetPtr<GameObjectAsset>  mGameObjectAsset;
+
+      //Marked if this entity is a GameObject and deliniates from the parent GO asset
+      bool mDirtyGameObject;
+
       /// @}
 
       /// @name Zoning
@@ -258,16 +282,14 @@ class SceneObject : public NetObject, private SceneContainer::Link, public Proce
       ///   of the object is dirty, the list contents may be outdated.
       ZoneRef* _getZoneRefHead() const { return mZoneRefHead; }
       
-      /// Gets the number of zones containing this object.
-      U32 _getNumCurrZones() const { return mNumCurrZones; }
-
-      /// Returns the nth zone containing this object.
-      U32 _getCurrZone( const U32 index ) const;
-
       /// @}
 
       /// @name Transform and Collision Members
       /// @{
+
+      // PATHSHAPE
+      MatrixF mLastXform;
+      // PATHSHAPE END
 
       /// Transform from object space to world space.
       MatrixF mObjToWorld;
@@ -371,6 +393,7 @@ class SceneObject : public NetObject, private SceneContainer::Link, public Proce
 
       SceneObject();
       virtual ~SceneObject();
+      bool mPathfindingIgnore;
 
       /// Triggered when a SceneObject onAdd is called.
       static Signal< void( SceneObject* ) > smSceneObjectAdd;
@@ -475,7 +498,7 @@ class SceneObject : public NetObject, private SceneContainer::Link, public Proce
       const MatrixF& getWorldTransform() const { return mWorldToObj; }
 
       /// Returns the scale of the object
-      const VectorF& getScale() const { return mObjScale; }
+      virtual const VectorF& getScale() const { return mObjScale; }
 
       /// Returns the bounding box for this object in local coordinates.
       const Box3F& getObjBox() const { return mObjBox; }
@@ -497,6 +520,9 @@ class SceneObject : public NetObject, private SceneContainer::Link, public Proce
       /// Sets the scale for the object
       /// @param   scale   Scaling values
       virtual void setScale( const VectorF &scale );
+
+      /// Sets the forward vector of the object
+      void setForwardVector(VectorF newForward, VectorF upVector = VectorF(0, 0, 1));
 
       /// This sets the render transform for this object
       /// @param   mat   New render transform
@@ -540,6 +566,23 @@ class SceneObject : public NetObject, private SceneContainer::Link, public Proce
                                     AbstractPolyList* polyList, 
                                     const Box3F& box, 
                                     const SphereF& sphere ) { return false; }
+
+      /// Builds a list of polygons which intersect a bounding volume for exporting
+      ///
+      /// This will use either the sphere or the box, not both, the
+      /// SceneObject implementation ignores sphere.
+      ///
+      /// @see AbstractPolyList
+      /// @param   context    A contentual hint as to the type of polylist to build.
+      /// @param   polyList   Poly list build (out)
+      /// @param   box        Box bounding volume
+      /// @param   sphere     Sphere bounding volume
+      ///
+      virtual bool buildExportPolyList(ColladaUtils::ExportData *exportData,
+         const Box3F& box,
+         const SphereF& sphere) {
+         return false;
+      }
 
       /// Casts a ray and obtain collision information, returns true if RayInfo is modified.
       ///
@@ -704,6 +747,12 @@ class SceneObject : public NetObject, private SceneContainer::Link, public Proce
       void setLightingPlugin( SceneObjectLightingPlugin* plugin ) { mLightPlugin = plugin; }
       SceneObjectLightingPlugin* getLightingPlugin() { return mLightPlugin; }
 
+      /// Gets the number of zones containing this object.
+      U32 getNumCurrZones() const { return mNumCurrZones; }
+
+      /// Returns the nth zone containing this object.
+      U32 getCurrZone(const U32 index) const;
+
       /// @}   
 
       /// @name Global Bounds
@@ -746,8 +795,9 @@ class SceneObject : public NetObject, private SceneContainer::Link, public Proce
 
       static void initPersistFields();
 
-      DECLARE_CONOBJECT( SceneObject );
+      static bool _setGameObject(void* object, const char* index, const char* data);
 
+      DECLARE_CONOBJECT( SceneObject );
    private:
 
       SceneObject( const SceneObject& ); ///< @deprecated disallowed
@@ -772,11 +822,139 @@ class SceneObject : public NetObject, private SceneContainer::Link, public Proce
       static bool _setAccuEnabled( void *object, const char *index, const char *data );
 
       /// @}
+// PATHSHAPE
+   /// @}
+   //Anthony's Original Code, still used so i keep it here
+   /// TGE uses the term "mount" in a quirky, staticky way relating to its limited use to have
+   /// riders and guns mounted on a vehicle (and similar)
+   /// I did not alter that code at all (yet) and did not want to keep its terminology for other reasons
+   /// I decided to support a hierarchy of scene objects and dubbed the operations 
+   /// attaching and removing child SceneObjects
+  protected:
+
+      // this member struct tracks the relationship to parent and children
+      // sceneObjects in a hierarchical scene graph whose root is the entire Scene
+   struct AttachInfo {
+      SceneObject* firstChild;  ///< Objects mounted on this object
+      SimObjectPtr<SceneObject>  parent; ///< Object this object is mounted on.
+      SceneObject* nextSibling;        ///< Link to next child object of this object's parent 
+      MatrixF      objToParent;   ///< this obects transformation in the parent object's space
+      MatrixF      RenderobjToParent;   ///< this obects Render Offset transformation to the parent object
+      AttachInfo() {
+         firstChild = NULL;
+         parent = NULL;
+         nextSibling = NULL;
+         objToParent.identity();
+         RenderobjToParent.identity();
+      };
+   } mGraph;
+// PATHSHAPE END
+
 
    // Accumulation Texture
    // Note: This was placed in SceneObject to both ShapeBase and TSStatic could support it.
    public:
       GFXTextureObject* mAccuTex;
+      //   mSelectionFlags field keeps track of flags related to object selection.
+      //     PRE_SELECTED marks an object as pre-selected (object under cursor)
+      //     SELECTED marks an object as selected (a target)
+   protected:
+      U8 mSelectionFlags;
+   public:
+      enum { 
+         SELECTED      = BIT(0), 
+         PRE_SELECTED  = BIT(1), 
+      };
+      virtual void setSelectionFlags(U8 flags) { mSelectionFlags = flags; }
+      U8 getSelectionFlags() const { return mSelectionFlags; }
+      bool needsSelectionHighlighting() const { return (mSelectionFlags != 0); }
+      //   This should only return true if the object represents an independent camera
+      //   as opposed to something like a Player that has a built-in camera that requires
+      //   special calculations to determine the view transform.
+      virtual bool isCamera() const { return false; }
+      // AFX CODE BLOCK (is-camera) >>
+// PATHSHAPE
+// Added for dynamic attaching
+	void UpdateXformChange(const MatrixF &mat);
+      /// this is useful for setting NULL parent (making SceneObject a root object)
+   virtual bool attachToParent(SceneObject *parent, MatrixF *atThisOffset = NULL, S32 node=0);
+   SceneObject *getParent() { return mGraph.parent; };
+
+   
+   /// attach a subobject, but do not alter the subObject's present absolute position or orientation
+   bool attachChild(SceneObject* subObject);   
+   /// attach a subobject, at the specified offset expressed in our local coordinate space
+   bool attachChildAt(SceneObject* subObject, MatrixF atThisTransform, S32 node);   
+
+   /// attach a subobject, at the specified position expressed in our local coordinate space
+   bool attachChildAt(SceneObject* subObject, Point3F atThisPosition);   
+   
+   /// how many child SceneObjects are (directly) attached to this one?
+   U32 getNumChildren() const;
+
+   /// how many child objects does this SceneObject have when we count them recursively?
+   U32 getNumProgeny() const;
+
+   /// returns the (direct) child SceneObject at the given index (0 <= index <= getNumChildren() - 1)
+   SceneObject *getChild(U32 index) const; 
+   
+   /// is this SceneObject a child (directly or indirectly) of the given object?
+   bool isChildOf(SceneObject *);
+
+   /// set position in parent SceneObject's coordinate space (or in world space if no parent)
+   //void setLocalPosition(const Point3F &pos);
+
+   /// move the object in parent SceneObject's coordinate space (or in world space if no parent)
+   //void localMove(const Point3F &delta);
+   /// as localMove(const Point3F &delta), with different signature
+   //void localMove(F32 x, F32 y, F32 z);
+   
+   /// move the object in world space, without altering place in scene hierarchy
+   void move(const Point3F &delta);
+   
+   // Does checks for children objects and updates their positions
+   void PerformUpdatesForChildren(MatrixF mat);
+   
+   // Move the RenderTransform
+   void moveRender(const Point3F &delta);
+   //Calculate how much to adjust the render transform - Called by the child objects
+   void updateRenderChangesByParent();
+   //Calculate how much to adjust the transform - Called by the parent object
+   void updateChildTransform(); 
+   /// as move(const Point3F &delta), with different signature   
+   void move(F32 x, F32 y, F32 z);
+
+   /// returns the transform relative to parent SceneObject transform (or world transform if no parent)
+   //const MatrixF& getLocalTransform() const;
+   /// returns the position within parent SceneObject space (or world space if no parent)
+   //Point3F getLocalPosition() const;
+   
+   
+//   virtual void onParentScaleChanged();   
+//   virtual void onParentTransformChanged();
+      
+   /// Sets the Object -> Parent transform.  If no parent SceneObject, this is equivalent to 
+   ///  setTransform()
+   ///
+   /// @param   mat   New transform matrix
+   //virtual void setLocalTransform(const MatrixF & mat);
+
+
+   /// Called to let instance specific code happen 
+   virtual void onLostParent(SceneObject *oldParent);
+   DECLARE_CALLBACK(void, onLostParent, (SceneObject *oldParent));
+   /// Called to let instance specific code happen 
+   virtual void onNewParent(SceneObject *newParent);
+   DECLARE_CALLBACK(void, onNewParent, (SceneObject *oldParent));
+   /// notification that a direct child object has been attached
+   virtual void onNewChild(SceneObject *subObject);
+   DECLARE_CALLBACK(void, onNewChild, (SceneObject *subObject));
+   /// notification that a direct child object has been detached
+   virtual void onLostChild(SceneObject *subObject);
+   DECLARE_CALLBACK(void, onLostChild, (SceneObject *subObject));
+// PATHSHAPE END
+
+   virtual void getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList) {}
 };
 
 #endif  // _SCENEOBJECT_H_

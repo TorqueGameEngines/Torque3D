@@ -1,0 +1,6 @@
+<ShapeAsset
+    AssetName="CubePrimitive_shape"
+    fileName="@assetFile=CubePrimitive.fbx"
+    constuctorFileName="@assetFile=CubePrimitive.tscript"
+    materialSlot0="@asset=Prototyping:DetailBlue"
+    originalFilePath="C:/dev/T3D/PRs/MiscFixes20220525/Templates/BaseGame/game/data/Prototyping/shapes/Primitives/CubePrimitive.fbx"/>

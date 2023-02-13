@@ -113,6 +113,7 @@ GuiSplitContainer::GuiSplitContainer()
 
 void GuiSplitContainer::initPersistFields()
 {
+   docsURL;
    addGroup( "Splitter", "Options to configure split panels contained by this control" );
    
       addField( "orientation",   TYPEID< Orientation >(),   Offset( mOrientation, GuiSplitContainer),
@@ -444,7 +445,7 @@ bool GuiSplitContainer::layoutControls( RectI &clientRect )
 
 //-----------------------------------------------------------------------------
 
-void GuiSplitContainer::solvePanelConstraints( Point2I newDragPos, GuiContainer * firstPanel, GuiContainer * secondPanel, RectI clientRect )
+void GuiSplitContainer::solvePanelConstraints(Point2I newDragPos, GuiContainer * firstPanel, GuiContainer * secondPanel, const RectI& clientRect)
 {
    if( !firstPanel || !secondPanel )
       return;
@@ -612,4 +613,26 @@ void GuiSplitContainer::onMouseDragged( const GuiEvent &event )
 
       solvePanelConstraints(newDragPos, firstPanel, secondPanel, clientRect);
    }
+}
+
+void GuiSplitContainer::setSplitPoint(Point2I splitPoint)
+{
+   GuiContainer *firstPanel = dynamic_cast<GuiContainer*>(at(0));
+   GuiContainer *secondPanel = dynamic_cast<GuiContainer*>(at(1));
+
+   // This function will constrain the panels to their minExtents and update the mSplitPoint
+   if (firstPanel && secondPanel)
+   {
+      RectI clientRect = getClientRect();
+
+      solvePanelConstraints(splitPoint, firstPanel, secondPanel, clientRect);
+
+      layoutControls(clientRect);
+   }
+}
+
+DefineEngineMethod(GuiSplitContainer, setSplitPoint, void, (Point2I splitPoint), ,
+   "Set the position of the split handle.")
+{
+   object->setSplitPoint(splitPoint);
 }

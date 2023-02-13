@@ -19,7 +19,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
-
+#include "torqueConfig.h"
+#ifdef TORQUE_TOOLS
 #include "platform/platform.h"
 #include "guiNavEditorCtrl.h"
 #include "duDebugDrawTorque.h"
@@ -96,6 +97,7 @@ bool GuiNavEditorCtrl::onAdd()
 
 void GuiNavEditorCtrl::initPersistFields()
 {
+   docsURL;
    addField("isDirty", TypeBool, Offset(mIsDirty, GuiNavEditorCtrl));
 
    addField("spawnClass", TypeRealString, Offset(mSpawnClass, GuiNavEditorCtrl),
@@ -308,7 +310,6 @@ void GuiNavEditorCtrl::on3DMouseDown(const Gui3DMouseEvent & event)
    U8 keys = Input::getModifierKeys();
    bool shift = keys & SI_LSHIFT;
    bool ctrl = keys & SI_LCTRL;
-   bool alt = keys & SI_LALT;
 
    if(mMode == mLinkMode && !mMesh.isNull())
    {
@@ -466,7 +467,6 @@ void GuiNavEditorCtrl::on3DMouseDragged(const Gui3DMouseEvent & event)
    mGizmo->on3DMouseDragged(event);
    if(mGizmo->isDirty())
    {
-      Point3F pos = mGizmo->getPosition();
       Point3F scale = mGizmo->getScale();
       const MatrixF &mat = mGizmo->getTransform();
       VectorF normal;
@@ -537,10 +537,10 @@ void GuiNavEditorCtrl::renderScene(const RectI & updateRect)
          GFXStateBlockDesc desc;
          desc.setBlend(false);
          desc.setZReadWrite(true ,true);
-         MatrixF mat(true);
-         mat.setPosition(mLinkStart);
+         MatrixF linkMat(true);
+		 linkMat.setPosition(mLinkStart);
          Point3F scale(0.8f, 0.8f, 0.8f);
-         GFX->getDrawUtil()->drawTransform(desc, mat, &scale);
+         GFX->getDrawUtil()->drawTransform(desc, linkMat, &scale);
       }
    }
 
@@ -629,13 +629,13 @@ void GuiNavEditorCtrl::_prepRenderImage(SceneManager* sceneGraph, const SceneRen
    }*/
 }
 
-ConsoleMethod(GuiNavEditorCtrl, getMode, const char*, 2, 2, "")
+DefineEngineMethod(GuiNavEditorCtrl, getMode, const char*, (), , "")
 {
    return object->getMode();
 }
 
-ConsoleMethod(GuiNavEditorCtrl, setMode, void, 3, 3, "setMode(String mode)")
+DefineEngineMethod(GuiNavEditorCtrl, setMode, void, (String mode),, "setMode(String mode)")
 {
-   String newMode = (argv[2]);
-   object->setMode(newMode);
+   object->setMode(mode);
 }
+#endif

@@ -20,11 +20,19 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+// Arcane-FX for MIT Licensed Open Source version of Torque 3D from GarageGames
+// Copyright (C) 2015 Faust Logic, Inc.
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+
 #ifndef _OBJECTTYPES_H_
 #define _OBJECTTYPES_H_
 
 #include "platform/types.h"
 
+// Uncomment the AFX_CAP_AFXMODEL_TYPE define below to enable a type flag
+// for afxModel objects.
+//#define AFX_CAP_AFXMODEL_TYPE
 /// Types used for SceneObject type masks (SceneObject::mTypeMask)
 ///
 /// @note If a new object type is added, don't forget to add it to
@@ -147,21 +155,40 @@ enum SceneObjectTypes
    /// @see PhysicalZone
    PhysicalZoneObjectType = BIT( 22 ),
 
+   EntityObjectType = BIT(23),
+   /// @}
+   InteriorLikeObjectType =  BIT(24),
+   TerrainLikeObjectType = BIT(25),
+#if defined(AFX_CAP_AFXMODEL_TYPE) 
+   afxModelObjectType = BIT(26)
+#endif 
+
+   // PATHSHAPE 
+   PathShapeObjectType = BIT( 28 ),
+   // PATHSHAPE END
+
+   /// A turret object.
+   /// @see TurretShape
+   TurretObjectType = BIT(29),
+
    /// @}
 };
 
-enum SceneObjectTypeMasks
+enum SceneObjectTypeMasks : U32
 {
-   STATIC_COLLISION_TYPEMASK = StaticShapeObjectType,
+   STATIC_COLLISION_TYPEMASK = (StaticShapeObjectType |
+   EntityObjectType),
 
    DAMAGEABLE_TYPEMASK = (   PlayerObjectType        |
+                              EntityObjectType |
                              VehicleObjectType ),
 
    /// Typemask for objects that should be rendered into shadow passes.
    /// These should be all objects that are either meant to receive or cast
    /// shadows or both.
    SHADOW_TYPEMASK = (  StaticShapeObjectType |
-                        DynamicShapeObjectType ),
+   DynamicShapeObjectType |
+   EntityObjectType),
 
    /// Typemask for objects that should be subjected to more fine-grained
    /// culling tests.  Anything that is trivial rendering stuff or doesn't
@@ -172,7 +199,9 @@ enum SceneObjectTypeMasks
    CULLING_INCLUDE_TYPEMASK = (  GameBaseObjectType | // Includes most other renderable types; but broader than we ideally want.
                                  StaticShapeObjectType |
                                  DynamicShapeObjectType |
-                                 ZoneObjectType ), // This improves the result of zone traversals.
+                                 EntityObjectType |
+                                 ZoneObjectType |
+                                 LightObjectType ), // This improves the result of zone traversals.
 
    /// Mask for objects that should be specifically excluded from zone culling.
    CULLING_EXCLUDE_TYPEMASK = (  TerrainObjectType |
@@ -185,7 +214,9 @@ enum SceneObjectTypeMasks
                                  StaticShapeObjectType |
                                  DynamicShapeObjectType |
                                  LightObjectType | // Flares.
-                                 GameBaseObjectType ),
+                                 GameBaseObjectType |
+                                 TriggerObjectType | 
+                                 EntityObjectType),
 
    /// Typemask to use for rendering when inside the editor.
    EDITOR_RENDER_TYPEMASK = U32( -1 ),
@@ -195,7 +226,10 @@ enum SceneObjectTypeMasks
    ///
    /// @note Terrains have their own means for rendering inside interior zones.
    OUTDOOR_OBJECT_TYPEMASK = (   TerrainObjectType |
-                                 EnvironmentObjectType )
+                                 EnvironmentObjectType ),
+
+   SKYLIGHT_CAPTURE_TYPEMASK = (OUTDOOR_OBJECT_TYPEMASK) & ~(PhysicalZoneObjectType | MarkerObjectType | TriggerObjectType),
+   REFLECTION_PROBE_CAPTURE_TYPEMASK = (SKYLIGHT_CAPTURE_TYPEMASK | StaticObjectType | StaticShapeObjectType | LightObjectType)
 };
 
 #endif

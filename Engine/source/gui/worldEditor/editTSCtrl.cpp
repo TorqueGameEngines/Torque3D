@@ -38,6 +38,7 @@
 #include "scene/sceneRenderState.h"
 #include "renderInstance/renderBinManager.h"
 
+#include "T3D/Scene.h"
 
 IMPLEMENT_CONOBJECT(EditTSCtrl);
 ConsoleDocClass( EditTSCtrl,
@@ -105,7 +106,7 @@ EditTSCtrl::EditTSCtrl()
    mMiddleMouseDown = false;
    mMiddleMouseTriggered = false;
    mMouseLeft = false;
-
+   mLastMouseClamping = false;
    mBlendSB = NULL;
 
 }
@@ -218,6 +219,7 @@ void EditTSCtrl::onRender(Point2I offset, const RectI &updateRect)
 
 void EditTSCtrl::initPersistFields()
 {
+   docsURL;
    addGroup( "Grid" );
    
       addField( "gridSize", TypeF32, Offset( mGridPlaneSize, EditTSCtrl ) );
@@ -283,6 +285,18 @@ void EditTSCtrl::consoleInit()
 
 //------------------------------------------------------------------------------
 
+bool EditTSCtrl::resize(const Point2I& newPosition, const Point2I& newExtent)
+{
+   if (!Parent::resize(newPosition, newExtent))
+      return false;
+
+   // Notify the scripts
+   if (isMethod("onResize"))
+      Con::executef(this, "onResize", newPosition, newExtent);
+
+   return true;
+}
+//------------------------------------------------------------------------------
 void EditTSCtrl::make3DMouseEvent(Gui3DMouseEvent & gui3DMouseEvent, const GuiEvent & event)
 {
    (GuiEvent&)(gui3DMouseEvent) = event;
@@ -702,12 +716,12 @@ void EditTSCtrl::calcOrthoCamOffset(F32 mousex, F32 mousey, U8 modifier)
          break;
 
       case DisplayTypeFront:
-         mOrthoCamTrans.x += mousex * mOrthoFOV * camScale;
+         mOrthoCamTrans.x -= mousex * mOrthoFOV * camScale;
          mOrthoCamTrans.z += mousey * mOrthoFOV * camScale;
          break;
 
       case DisplayTypeBack:
-         mOrthoCamTrans.x -= mousex * mOrthoFOV * camScale;
+         mOrthoCamTrans.x += mousex * mOrthoFOV * camScale;
          mOrthoCamTrans.z += mousey * mOrthoFOV * camScale;
          break;
 
@@ -795,15 +809,15 @@ void EditTSCtrl::_renderScene( ObjectRenderInst*, SceneRenderState *state, BaseM
    GFXTransformSaver saver;
 
    // render through console callbacks
-   SimSet * missionGroup = static_cast<SimSet*>(Sim::findObject("MissionGroup"));
-   if(missionGroup)
+   Scene* scene = Scene::getRootScene();
+   if(scene)
    {
       mConsoleRendering = true;
 
       // [ rene, 27-Jan-10 ] This calls onEditorRender on the server objects instead
       //    of on the client objects which seems a bit questionable to me.
  
-      for(SimSetIterator itr(missionGroup); *itr; ++itr)
+      for(SimSetIterator itr(scene); *itr; ++itr)
       {
          SceneObject* object = dynamic_cast< SceneObject* >( *itr );
          if( object && object->isRenderEnabled() && !object->isHidden() )
@@ -1125,17 +1139,17 @@ bool EditTSCtrl::processCameraQuery(CameraQuery * query)
                break;
 
             case DisplayTypeFront:
-               camRot.setColumn(0, Point3F(-1.0,  0.0,  0.0));
-               camRot.setColumn(1, Point3F( 0.0, -1.0,  0.0));
-               camRot.setColumn(2, Point3F( 0.0,  0.0,  1.0));
-               camPos.y = getMax(camPos.y + smMinSceneBounds.y, sceneBounds.maxExtents.y + camBuffer);
+               camRot.setColumn(0, Point3F(1.0, 0.0, 0.0));
+               camRot.setColumn(1, Point3F(0.0, 1.0, 0.0));
+               camRot.setColumn(2, Point3F(0.0, 0.0, 1.0));
+               camPos.y = getMin(camPos.y - smMinSceneBounds.y, sceneBounds.minExtents.y - camBuffer);
                break;
 
             case DisplayTypeBack:
-               camRot.setColumn(0, Point3F(1.0,  0.0,  0.0));
-               camRot.setColumn(1, Point3F(0.0,  1.0,  0.0));
-               camRot.setColumn(2, Point3F(0.0,  0.0,  1.0));
-               camPos.y = getMin(camPos.y - smMinSceneBounds.y, sceneBounds.minExtents.y - camBuffer);
+               camRot.setColumn(0, Point3F(-1.0, 0.0, 0.0));
+               camRot.setColumn(1, Point3F(0.0, -1.0, 0.0));
+               camRot.setColumn(2, Point3F(0.0, 0.0, 1.0));
+               camPos.y = getMax(camPos.y + smMinSceneBounds.y, sceneBounds.maxExtents.y + camBuffer);
                break;
 
             case DisplayTypeLeft:
@@ -1162,6 +1176,7 @@ bool EditTSCtrl::processCameraQuery(CameraQuery * query)
 
          query->cameraMatrix = camRot;
          query->cameraMatrix.setPosition(camPos);
+         query->headMatrix = query->cameraMatrix;
          query->fov = mOrthoFOV;
       }
 
@@ -1315,7 +1330,7 @@ DefineEngineMethod( EditTSCtrl, renderCircle, void, ( Point3F pos, Point3F norma
    {
       PrimBuild::color( object->mConsoleFillColor );
 
-      PrimBuild::begin( GFXTriangleFan, points.size() + 2 );
+      PrimBuild::begin( GFXTriangleStrip, points.size() + 2 );
 
       // Center point
       PrimBuild::vertex3fv( pos );

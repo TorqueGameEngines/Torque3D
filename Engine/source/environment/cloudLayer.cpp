@@ -38,6 +38,8 @@
 #include "lighting/lightInfo.h"
 #include "math/mathIO.h"
 
+#include "sim/netConnection.h"
+
 ConsoleDocClass( CloudLayer,
    "@brief A layer of clouds which change shape over time and are affected by scene lighting.\n\n"
 
@@ -73,14 +75,27 @@ U32 CloudLayer::smVertCount = smVertStride * smVertStride;
 U32 CloudLayer::smTriangleCount = smStrideMinusOne * smStrideMinusOne * 2;
 
 CloudLayer::CloudLayer()
-: mBaseColor( 0.9f, 0.9f, 0.9f, 1.0f ),
-  mCoverage( 0.5f ),
+: mLastTime( 0 ),
+  mBaseColor( 0.9f, 0.9f, 0.9f, 1.0f ),
   mExposure( 1.0f ),
-  mWindSpeed( 1.0f ),
-  mLastTime( 0 )
+  mCoverage( 0.5f ),
+  mWindSpeed( 1.0f )
 {
    mTypeMask |= EnvironmentObjectType | StaticObjectType;
    mNetFlags.set(Ghostable | ScopeAlways);
+
+   mModelViewProjSC = NULL;
+   mAmbientColorSC = NULL;
+   mSunColorSC = NULL;
+   mSunVecSC = NULL;
+   mTexScaleSC = NULL;
+   mBaseColorSC = NULL;
+   mCoverageSC = NULL;
+   mExposureSC = NULL;
+   mEyePosWorldSC = NULL;
+   mNormalHeightMapSC = NULL;
+
+   mTexOffsetSC[0] = mTexOffsetSC[1] = mTexOffsetSC[2] = 0;
 
    mTexScale[0] = 1.0;
    mTexScale[1] = 1.0;
@@ -97,6 +112,8 @@ CloudLayer::CloudLayer()
    mTexOffset[0] = mTexOffset[1] = mTexOffset[2] = Point2F::Zero;
 
    mHeight = 4.0f;
+
+   INIT_ASSET(Texture);
 }
 
 IMPLEMENT_CO_NETOBJECT_V1( CloudLayer );
@@ -114,9 +131,10 @@ bool CloudLayer::onAdd()
 
    addToScene();
 
+   LOAD_IMAGEASSET(Texture);
+
    if ( isClientObject() )
    {
-      _initTexture();
       _initBuffers();
 
       // Find ShaderData
@@ -149,7 +167,7 @@ bool CloudLayer::onAdd()
       GFXStateBlockDesc desc;
       desc.setCullMode( GFXCullNone );
       desc.setBlend( true );
-      desc.setZReadWrite( false, false );
+      desc.setZReadWrite( true, false );
       desc.samplersDefined = true;
       desc.samplers[0].addressModeU = GFXAddressWrap;
       desc.samplers[0].addressModeV = GFXAddressWrap;
@@ -157,7 +175,6 @@ bool CloudLayer::onAdd()
       desc.samplers[0].magFilter = GFXTextureFilterLinear;
       desc.samplers[0].minFilter = GFXTextureFilterLinear;
       desc.samplers[0].mipFilter = GFXTextureFilterLinear;
-      desc.samplers[0].textureColorOp = GFXTOPModulate;
 
       mStateblock = GFX->createStateBlock( desc );   
    }
@@ -174,11 +191,11 @@ void CloudLayer::onRemove()
 
 void CloudLayer::initPersistFields()
 {
-   addGroup( "CloudLayer" );	   
-      
-      addField( "texture", TypeImageFilename, Offset( mTextureName, CloudLayer ),
-         "An RGBA texture which should contain normals and opacity (density)." );
+   docsURL;
+   addGroup( "CloudLayer" );
 
+      INITPERSISTFIELD_IMAGEASSET(Texture, CloudLayer, "An RGBA texture which should contain normals and opacity (density).");
+      
       addArray( "Textures", TEX_COUNT );
 
          addField( "texScale", TypeF32, Offset( mTexScale, CloudLayer ), TEX_COUNT,
@@ -226,7 +243,7 @@ U32 CloudLayer::packUpdate( NetConnection *conn, U32 mask, BitStream *stream )
 {
    U32 retMask = Parent::packUpdate( conn, mask, stream );
 
-   stream->write( mTextureName );
+   PACK_ASSET(conn, Texture);
    
    for ( U32 i = 0; i < TEX_COUNT; i++ )
    {
@@ -248,8 +265,10 @@ void CloudLayer::unpackUpdate( NetConnection *conn, BitStream *stream )
 {
    Parent::unpackUpdate( conn, stream );
 
-   String oldTextureName = mTextureName;
-   stream->read( &mTextureName );
+   UNPACK_ASSET(conn, Texture);
+
+   if(mTextureAssetId != StringTable->EmptyString())
+      mTextureAsset = mTextureAssetId;
 
    for ( U32 i = 0; i < TEX_COUNT; i++ )
    {
@@ -260,7 +279,6 @@ void CloudLayer::unpackUpdate( NetConnection *conn, BitStream *stream )
 
    stream->read( &mBaseColor );
 
-   F32 oldCoverage = mCoverage;
    stream->read( &mCoverage );
    stream->read( &mExposure );
 
@@ -271,8 +289,6 @@ void CloudLayer::unpackUpdate( NetConnection *conn, BitStream *stream )
 
    if ( isProperlyAdded() )
    {
-      if ( ( oldTextureName != mTextureName ) || ( ( oldCoverage == 0.0f ) != ( mCoverage == 0.0f ) ) )
-         _initTexture();
       if ( oldHeight != mHeight )
          _initBuffers();
    }
@@ -318,6 +334,9 @@ void CloudLayer::renderObject( ObjectRenderInst *ri, SceneRenderState *state, Ba
 {
    GFXTransformSaver saver;
 
+   if (!mTextureAsset || !mTextureAsset->isAssetValid())
+      return;
+
    const Point3F &camPos = state->getCameraPosition();
    MatrixF xfm(true);
    xfm.setPosition(camPos);
@@ -341,12 +360,12 @@ void CloudLayer::renderObject( ObjectRenderInst *ri, SceneRenderState *state, Ba
    mShaderConsts->setSafe( mEyePosWorldSC, camPos );
 
    LightInfo *lightinfo = LIGHTMGR->getSpecialLight(LightManager::slSunLightType);
-   const ColorF &sunlight = state->getAmbientLightColor();
+   const LinearColorF &sunlight = state->getAmbientLightColor();
 
    Point3F ambientColor( sunlight.red, sunlight.green, sunlight.blue );
    mShaderConsts->setSafe( mAmbientColorSC, ambientColor );   
 
-   const ColorF &sunColor = lightinfo->getColor();
+   const LinearColorF &sunColor = lightinfo->getColor();
    Point3F data( sunColor.red, sunColor.green, sunColor.blue );
    mShaderConsts->setSafe( mSunColorSC, data );
 
@@ -366,7 +385,7 @@ void CloudLayer::renderObject( ObjectRenderInst *ri, SceneRenderState *state, Ba
 
    mShaderConsts->setSafe( mExposureSC, mExposure );
 
-   GFX->setTexture( mNormalHeightMapSC->getSamplerRegister(), mTexture );                            
+   GFX->setTexture( mNormalHeightMapSC->getSamplerRegister(), getTextureResource());
    GFX->setVertexBuffer( mVB );            
    GFX->setPrimitiveBuffer( mPB );
 
@@ -376,21 +395,6 @@ void CloudLayer::renderObject( ObjectRenderInst *ri, SceneRenderState *state, Ba
 
 // CloudLayer Internal Methods....
 
-
-void CloudLayer::_initTexture()
-{
-   if ( mCoverage <= 0.0f )
-   {
-      mTexture = NULL;
-      return;
-   }
-
-   if ( mTextureName.isNotEmpty() )
-      mTexture.set( mTextureName, &GFXDefaultStaticDiffuseProfile, "CloudLayer" );
-
-   if ( mTexture.isNull() )
-      mTexture.set( GFXTextureManager::getWarningTexturePath(), &GFXDefaultStaticDiffuseProfile, "CloudLayer" );
-}
 
 void CloudLayer::_initBuffers()
 {      

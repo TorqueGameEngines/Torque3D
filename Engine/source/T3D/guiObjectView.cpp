@@ -89,21 +89,21 @@ IMPLEMENT_CALLBACK( GuiObjectView, onMouseLeave, void, (),(),
 //------------------------------------------------------------------------------
 
 GuiObjectView::GuiObjectView()
-   :  mMaxOrbitDist( 5.0f ),
-      mMinOrbitDist( 0.0f ),
-      mOrbitDist( 5.0f ),
-      mMouseState( None ),
-      mModel( NULL ),
-      mMountedModel( NULL ),
+   :  mMouseState( None ),
       mLastMousePoint( 0, 0 ),
-      mLastRenderTime( 0 ),
-      mRunThread( NULL ),
-      mLight( NULL ),
-      mAnimationSeq( -1 ),
-      mMountNodeName( "mount0" ),
-      mMountNode( -1 ),
+      mModel( NULL ),
+      mMaxOrbitDist( 5.0f ),
+      mMinOrbitDist( 0.0f ),
+      mCameraRotation( 0.0f, 0.0f, 0.0f ),
+      mOrbitDist( 5.0f ),
       mCameraSpeed( 0.01f ),
-	  mCameraRotation( 0.0f, 0.0f, 0.0f ),
+      mMountNode( -1 ),
+      mMountNodeName( "mount0" ),
+      mMountedModel( NULL ),
+      mAnimationSeq( -1 ),
+      mRunThread( NULL ),
+      mLastRenderTime( 0 ),
+      mLight( NULL ),
       mLightColor( 1.0f, 1.0f, 1.0f ),
       mLightAmbient( 0.5f, 0.5f, 0.5f ),
       mLightDirection( 0.f, 0.707f, -0.707f )
@@ -135,6 +135,7 @@ GuiObjectView::~GuiObjectView()
 
 void GuiObjectView::initPersistFields()
 {
+   docsURL;
    addGroup( "Model" );
    
       addField( "shapeFile", TypeStringFilename, Offset( mModelName, GuiObjectView ),
@@ -367,7 +368,7 @@ void GuiObjectView::setObjectModel( const String& modelName )
    // Initialize camera values.
    
    mOrbitPos = mModel->getShape()->center;
-   mMinOrbitDist = mModel->getShape()->radius;
+   mMinOrbitDist = mModel->getShape()->mRadius;
 
    // Initialize animation.
    
@@ -590,7 +591,7 @@ void GuiObjectView::setCameraRotation( const EulerF& rotation )
 }
 
 //------------------------------------------------------------------------------
-void GuiObjectView::setLightColor( const ColorF& color )
+void GuiObjectView::setLightColor( const LinearColorF& color )
 {
    mLightColor = color;
    if( mLight )
@@ -599,7 +600,7 @@ void GuiObjectView::setLightColor( const ColorF& color )
 
 //------------------------------------------------------------------------------
 
-void GuiObjectView::setLightAmbient( const ColorF& color )
+void GuiObjectView::setLightAmbient( const LinearColorF& color )
 {
    mLightAmbient = color;
    if( mLight )
@@ -634,7 +635,7 @@ void GuiObjectView::_initAnimation()
       {
          Con::errorf( "GuiObjectView::_initAnimation - Cannot find animation sequence '%s' on '%s'",
             mAnimationSeqName.c_str(),
-            mModelName.c_str()
+            mModelName
          );
          
          return;
@@ -649,7 +650,7 @@ void GuiObjectView::_initAnimation()
       {
          Con::errorf( "GuiObjectView::_initAnimation - Sequence '%i' out of range for model '%s'",
             mAnimationSeq,
-            mModelName.c_str()
+            mModelName
          );
          
          mAnimationSeq = -1;
@@ -685,7 +686,7 @@ void GuiObjectView::_initMount()
       {
          Con::errorf( "GuiObjectView::_initMount - No node '%s' on '%s'",
             mMountNodeName.c_str(),
-            mModelName.c_str()
+            mModelName
          );
          
          return;
@@ -698,7 +699,7 @@ void GuiObjectView::_initMount()
    {
       Con::errorf( "GuiObjectView::_initMount - Mount node index '%i' out of range for '%s'",
          mMountNode,
-         mModelName.c_str()
+         mModelName
       );
       
       mMountNode = -1;
@@ -952,7 +953,7 @@ DefineEngineMethod( GuiObjectView, setCameraSpeed, void, (F32 factor),,
 
 //-----------------------------------------------------------------------------
 
-DefineEngineMethod( GuiObjectView, setLightColor, void, ( ColorF color),,
+DefineEngineMethod( GuiObjectView, setLightColor, void, ( LinearColorF color),,
    "@brief Set the light color on the sun object used to render the model.\n\n"
    "@param color Color of sunlight.\n"
    "@tsexample\n"
@@ -968,7 +969,7 @@ DefineEngineMethod( GuiObjectView, setLightColor, void, ( ColorF color),,
 
 //-----------------------------------------------------------------------------
 
-DefineEngineMethod( GuiObjectView, setLightAmbient, void, (ColorF color),,
+DefineEngineMethod( GuiObjectView, setLightAmbient, void, (LinearColorF color),,
    "@brief Set the light ambient color on the sun object used to render the model.\n\n"
    "@param color Ambient color of sunlight.\n"
    "@tsexample\n"

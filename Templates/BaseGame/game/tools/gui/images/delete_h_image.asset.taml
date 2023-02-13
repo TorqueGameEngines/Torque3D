@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="delete_h_image"
+    imageFile="@assetFile=delete_h.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

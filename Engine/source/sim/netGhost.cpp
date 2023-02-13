@@ -52,7 +52,13 @@ public:
          objectId = obj->getId();
          ghostIndex = index;
       }
+      else
+      {
+         objectId = 0;
+         ghostIndex = 0;
+      }
       object = NULL;
+      validObject = false;
    }
    ~GhostAlwaysObjectEvent()
       { delete object; }
@@ -422,7 +428,7 @@ void NetConnection::ghostWritePacket(BitStream *bstream, PacketNotify *notify)
    //
    for(i = mGhostZeroUpdateIndex - 1; i >= 0 && !bstream->isFull(); i--)
    {
-      GhostInfo *walk = mGhostArray[i];
+	   walk = mGhostArray[i];
 		if(walk->flags & (GhostInfo::KillingGhost | GhostInfo::Ghosting))
 		   continue;
 		
@@ -958,7 +964,7 @@ void NetConnection::activateGhosting()
         // Iterate through the scope always objects...
         for (j = mGhostZeroUpdateIndex - 1; j >= 0; j--)
         {
-            AssertFatal((mGhostArray[j]->flags & GhostInfo::ScopeAlways) != 0, "NetConnection::activateGhosting:  Non-scope always in the scope always list.")
+            AssertFatal((mGhostArray[j]->flags & GhostInfo::ScopeAlways) != 0, "NetConnection::activateGhosting:  Non-scope always in the scope always list.");
 
             // Clear the ghost update mask and flags appropriately.
             mGhostArray[j]->updateMask = 0;
@@ -1009,7 +1015,7 @@ void NetConnection::activateGhosting()
         // Iterate through the scope always objects...
         for (j = mGhostZeroUpdateIndex - 1; j >= 0; j--)
         {
-            AssertFatal((mGhostArray[j]->flags & GhostInfo::ScopeAlways) != 0, "NetConnection::activateGhosting:  Non-scope always in the scope always list.")
+            AssertFatal((mGhostArray[j]->flags & GhostInfo::ScopeAlways) != 0, "NetConnection::activateGhosting:  Non-scope always in the scope always list.");
 
             // Clear the ghost update mask and flags appropriately.
             mGhostArray[j]->updateMask = 0;

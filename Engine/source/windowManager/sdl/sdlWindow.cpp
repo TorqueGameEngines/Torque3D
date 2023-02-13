@@ -27,7 +27,6 @@
 #include "windowManager/sdl/sdlWindowMgr.h"
 #include "windowManager/sdl/sdlCursorController.h"
 #include "platformSDL/sdlInput.h"
-#include "platform/menus/popupMenu.h"
 #include "platform/platformInput.h"
 
 #include "gfx/gfxDevice.h"
@@ -51,72 +50,106 @@ namespace
    {
       U32 ret = 0;
 
-      if(mod & KMOD_LSHIFT)
-         ret |= IM_LSHIFT;
+      if (mod & KMOD_LSHIFT)
+      {
+         ret |= SI_LSHIFT;
+         ret |= SI_SHIFT;
+      }
 
-      if(mod & KMOD_RSHIFT)
-         ret |= IM_RSHIFT;
+      if (mod & KMOD_RSHIFT)
+      {
+         ret |= SI_RSHIFT;
+         ret |= SI_SHIFT;
+      }
 
-      if(mod & KMOD_LCTRL)
-         ret |= IM_LCTRL;
+      if (mod & KMOD_LCTRL)
+      {
+         ret |= SI_LCTRL;
+         ret |= SI_CTRL;
+      }
 
-      if(mod & KMOD_RCTRL)
-         ret |= IM_RCTRL;
+      if (mod & KMOD_RCTRL)
+      {
+         ret |= SI_RCTRL;
+         ret |= SI_CTRL;
+      }
 
-      if(mod & KMOD_LALT)
-         ret |= IM_LALT;
+      if (mod & KMOD_LALT)
+      {
+         ret |= SI_LALT;
+         ret |= SI_ALT;
+      }
 
-      if(mod & KMOD_RALT)
-         ret |= IM_RALT;
+      if (mod & KMOD_RALT)
+      {
+         ret |= SI_RALT;
+         ret |= SI_ALT;
+      }
+
+      // NOTE: For MacOS, this will treat command as Left or Right CTRL
+#ifdef TORQUE_OS_MAC
+      if (mod & KMOD_LGUI)
+      {
+         ret |= SI_LCTRL;
+         ret |= SI_CTRL;
+      }
+
+      if (mod & KMOD_RGUI)
+      {
+         ret |= SI_RCTRL;
+         ret |= SI_CTRL;
+      }
+#endif
 
       return ret;
    }
 }
 
 PlatformWindowSDL::PlatformWindowSDL():
-mShouldLockMouse(false),
-mMouseLocked(false),
 mOwningManager(NULL),
 mNextWindow(NULL),
 mWindowHandle(NULL),
 mOldParent(NULL),
-mTarget(NULL),
 mDevice(NULL),
+mTarget(NULL),
+mPosition(0,0),
+mMouseLocked(false),
+mShouldLockMouse(false),
 mSuppressReset(false),
 mMenuHandle(NULL),
-mPosition(0,0)
+mClosing(false)
 {
-	mCursorController = new PlatformCursorControllerSDL( this );
+   mCursorController = new PlatformCursorControllerSDL( this );
 
-	mVideoMode.bitDepth = 32;
-	mVideoMode.fullScreen = false;
-	mVideoMode.refreshRate = 60;
-	mVideoMode.resolution.set(800,600);
+   mVideoMode.bitDepth = 32;
+   mVideoMode.fullScreen = false;
+   mVideoMode.refreshRate = 60;
+   mVideoMode.resolution.set(800,600);
 }
 
 PlatformWindowSDL::~PlatformWindowSDL()
 {
-	// delete our sdl handle..
-	SDL_DestroyWindow(mWindowHandle);
+   // delete our sdl handle..
+   SDL_DestroyWindow(mWindowHandle);
 
-	// unlink ourselves from the window list...
-	AssertFatal(mOwningManager, "PlatformWindowSDL::~PlatformWindowSDL - orphan window, cannot unlink!");
-	mOwningManager->unlinkWindow(this);
+   // unlink ourselves from the window list...
+   AssertFatal(mOwningManager, "PlatformWindowSDL::~PlatformWindowSDL - orphan window, cannot unlink!");
+   mOwningManager->unlinkWindow(this);
 }
 
 GFXDevice * PlatformWindowSDL::getGFXDevice()
 {
-	return mDevice;
+   return mDevice;
 }
 
 GFXWindowTarget * PlatformWindowSDL::getGFXTarget()
 {
-	return mTarget;
+   return mTarget;
 }
 
 const GFXVideoMode & PlatformWindowSDL::getVideoMode()
 {
-	return mVideoMode;
+   return mVideoMode;
 }
 
 void* PlatformWindowSDL::getSystemWindow(const WindowSystem system)
@@ -125,7 +158,7 @@ void* PlatformWindowSDL::getSystemWindow(const WindowSystem system)
      SDL_VERSION(&info.version);
      SDL_GetWindowWMInfo(mWindowHandle,&info);     
 
-#ifdef TORQUE_OS_WIN32
+#ifdef TORQUE_OS_WIN
      if( system == WindowSystem_Windows && info.subsystem == SDL_SYSWM_WINDOWS)
         return info.info.win.window;
 #endif
@@ -139,46 +172,62 @@ void* PlatformWindowSDL::getSystemWindow(const WindowSystem system)
     return NULL;
 }
 
-void PlatformWindowSDL::setVideoMode( const GFXVideoMode &mode )
+void PlatformWindowSDL::_setVideoMode( const GFXVideoMode &mode )
 {
    mVideoMode = mode;
    mSuppressReset = true;
+   S32 newDisplay = Con::getIntVariable("pref::Video::deviceId", 0);
 
-	// Set our window to have the right style based on the mode
+   // Set our window to have the right style based on the mode
    if(mode.fullScreen && !Platform::getWebDeployment() && !mOffscreenRender)
-	{		
+   {
+      SDL_Rect rect_sdl;
+      // Move the window onto the correct monitor before setting fullscreen
+      if (0 == SDL_GetDisplayBounds(newDisplay, &rect_sdl))
+      {
+         SDL_SetWindowPosition(mWindowHandle, rect_sdl.x, rect_sdl.y);
+      }
+
       setSize(mode.resolution);
 
       SDL_SetWindowFullscreen( mWindowHandle, SDL_WINDOW_FULLSCREEN);
 
       // When switching to Fullscreen, reset device after setting style
-	   if(mTarget.isValid())
-		   mTarget->resetMode();
-	}
-	else
-	{
+      if(mTarget.isValid())
+         mTarget->resetMode();
+   }
+   else
+   {
       // Reset device *first*, so that when we call setSize() and let it
-	   // access the monitor settings, it won't end up with our fullscreen
-	   // geometry that is just about to change.
+      // access the monitor settings, it won't end up with our fullscreen
+      // geometry that is just about to change.
 
-	   if(mTarget.isValid())
-		   mTarget->resetMode();
+      if(mTarget.isValid())
+         mTarget->resetMode();
 
       if (!mOffscreenRender)
       {
-		   SDL_SetWindowFullscreen( mWindowHandle, 0);
+         SDL_SetWindowFullscreen( mWindowHandle, 0);
       }
 
-      setSize(mode.resolution);
-      centerWindow();
-	}
+      // Restore the window to it's original size/position before applying changes
+      SDL_RestoreWindow(mWindowHandle);
 
-	mSuppressReset = false;
+      // pref::Video::deviceMode values 0-windowed, 1-borderless, 2-fullscreen
+      bool hasBorder = (0 == Con::getIntVariable("pref::Video::deviceMode", 0));
+      SDL_SetWindowBordered(mWindowHandle, hasBorder ? SDL_TRUE : SDL_FALSE);
+      setSize(mode.resolution);
+      SDL_SetWindowPosition(mWindowHandle, SDL_WINDOWPOS_CENTERED_DISPLAY(newDisplay), SDL_WINDOWPOS_CENTERED_DISPLAY(newDisplay));
+      if (hasBorder && Con::getBoolVariable("pref::Video::isMaximized", false))
+         SDL_MaximizeWindow(mWindowHandle);
+   }
+
+   mSuppressReset = false;
 }
 
 bool PlatformWindowSDL::clearFullscreen()
 {
-	return true;
+   return true;
 }
 
 bool PlatformWindowSDL::isFullscreen()
@@ -192,32 +241,32 @@ bool PlatformWindowSDL::isFullscreen()
 
 void PlatformWindowSDL::_setFullscreen(const bool fullscreen)
 {
-	if( isFullscreen() )
-		return;
+   if( isFullscreen() )
+      return;
 
-	if(fullscreen && !mOffscreenRender)
-	{
-		Con::printf("PlatformWindowSDL::setFullscreen (full) enter");
-		SDL_SetWindowFullscreen( mWindowHandle, SDL_WINDOW_FULLSCREEN);
-	}
-	else
-	{
-		Con::printf("PlatformWindowSDL::setFullscreen (windowed) enter");
+   if(fullscreen && !mOffscreenRender)
+   {
+      Con::printf("PlatformWindowSDL::setFullscreen (full) enter");
+      SDL_SetWindowFullscreen( mWindowHandle, SDL_WINDOW_FULLSCREEN);
+   }
+   else
+   {
+      Con::printf("PlatformWindowSDL::setFullscreen (windowed) enter");
       if (!mOffscreenRender)
       {
-	      SDL_SetWindowFullscreen( mWindowHandle, SDL_WINDOW_FULLSCREEN_DESKTOP);
+         SDL_SetWindowFullscreen( mWindowHandle, SDL_WINDOW_FULLSCREEN_DESKTOP);
       }
 
       setSize(mVideoMode.resolution);
 
-	}
-	Con::printf("PlatformWindowSDL::setFullscreen exit");   
+   }
+   Con::printf("PlatformWindowSDL::setFullscreen exit");   
 }
 
 bool PlatformWindowSDL::setCaption( const char *cap )
 {
    SDL_SetWindowTitle(mWindowHandle, cap);
-	return true;
+   return true;
 }
 
 const char * PlatformWindowSDL::getCaption()
@@ -227,50 +276,50 @@ const char * PlatformWindowSDL::getCaption()
 
 void PlatformWindowSDL::setFocus()
 {
-   SDL_SetWindowGrab( mWindowHandle, SDL_TRUE );
+   SDL_RaiseWindow(mWindowHandle);
 }
 
 void PlatformWindowSDL::setClientExtent( const Point2I newExtent )
 {
-	Point2I oldExtent = getClientExtent();
-	if (oldExtent == newExtent)
-		return;   
+   Point2I oldExtent = getClientExtent();
+   if (oldExtent == newExtent)
+      return;   
 
    SDL_SetWindowSize(mWindowHandle, newExtent.x, newExtent.y);
 }
 
 const Point2I PlatformWindowSDL::getClientExtent()
 {
-	// Fetch Client Rect from Windows
+   // Fetch Client Rect from Windows
    Point2I size;
-	SDL_GetWindowSize(mWindowHandle, &size.x, &size.y);
+   SDL_GetWindowSize(mWindowHandle, &size.x, &size.y);
 
-	return size;
+   return size;
 }
 
 void PlatformWindowSDL::setBounds( const RectI &newBounds )
 {
-	// TODO SDL
+   // TODO SDL
 }
 
 const RectI PlatformWindowSDL::getBounds() const
 {
-	// TODO SDL
-	return RectI(0, 0, 0, 0);   
+   // TODO SDL
+   return RectI(0, 0, 0, 0);   
 }
 
 void PlatformWindowSDL::setPosition( const Point2I newPosition )
 {
-	SDL_SetWindowPosition( mWindowHandle, newPosition.x, newPosition.y );
+   SDL_SetWindowPosition( mWindowHandle, newPosition.x, newPosition.y );
 }
 
 const Point2I PlatformWindowSDL::getPosition()
 {
-	Point2I position;
-	SDL_GetWindowPosition( mWindowHandle, &position.x, &position.y );
+   Point2I position;
+   SDL_GetWindowPosition( mWindowHandle, &position.x, &position.y );
 
-	// Return position
-	return position;
+   // Return position
+   return position;
 }
 
 Point2I PlatformWindowSDL::clientToScreen( const Point2I& pos )
@@ -293,7 +342,7 @@ void PlatformWindowSDL::centerWindow()
    SDL_GetWindowSize(mWindowHandle, &sizeX, &sizeY);
 
    SDL_DisplayMode mode;
-	SDL_GetDesktopDisplayMode(0, &mode);
+   SDL_GetDesktopDisplayMode(0, &mode);
    
    U32 posX = (mode.w/2) - (sizeX/2);
    U32 posY = (mode.h/2) - (sizeY/2);
@@ -304,24 +353,19 @@ void PlatformWindowSDL::centerWindow()
 bool PlatformWindowSDL::setSize( const Point2I &newSize )
 {
    SDL_SetWindowSize(mWindowHandle, newSize.x, newSize.y);
-
-   // Let GFX get an update about the new resolution
-   if (mTarget.isValid())
-		mTarget->resetMode();
-
-	return true;
+   return true;
 }
 
 bool PlatformWindowSDL::isOpen()
 {
-	return mWindowHandle;
+   return mWindowHandle;
 }
 
 bool PlatformWindowSDL::isVisible()
 {
-	// Is the window open and visible, ie. not minimized?
-	if(!mWindowHandle)
-		return false;
+   // Is the window open and visible, ie. not minimized?
+   if(!mWindowHandle)
+      return false;
 
    if (mOffscreenRender)
       return true;
@@ -330,7 +374,7 @@ bool PlatformWindowSDL::isVisible()
    if( flags & SDL_WINDOW_SHOWN)
       return true;
 
-	return false;
+   return false;
 }
 
 bool PlatformWindowSDL::isFocused()
@@ -342,7 +386,7 @@ bool PlatformWindowSDL::isFocused()
    if( flags & SDL_WINDOW_INPUT_FOCUS || flags & SDL_WINDOW_INPUT_GRABBED || flags & SDL_WINDOW_MOUSE_FOCUS )
       return true;
 
-	return true;
+   return false;
 }
 
 bool PlatformWindowSDL::isMinimized()
@@ -371,7 +415,7 @@ bool PlatformWindowSDL::isMaximized()
 
 WindowId PlatformWindowSDL::getWindowId()
 {
-	return mWindowId;
+   return mWindowId;
 }
 
 void PlatformWindowSDL::minimize()
@@ -379,7 +423,7 @@ void PlatformWindowSDL::minimize()
    if (mOffscreenRender)
       return;
 
-	SDL_MinimizeWindow( mWindowHandle );
+   SDL_MinimizeWindow( mWindowHandle );
 }
 
 void PlatformWindowSDL::maximize()
@@ -387,7 +431,7 @@ void PlatformWindowSDL::maximize()
    if (mOffscreenRender)
       return;
 
-	SDL_MaximizeWindow( mWindowHandle );
+   SDL_MaximizeWindow( mWindowHandle );
 }
 
 void PlatformWindowSDL::restore()
@@ -395,7 +439,7 @@ void PlatformWindowSDL::restore()
    if (mOffscreenRender)
       return;
 
-	SDL_RestoreWindow( mWindowHandle );
+   SDL_RestoreWindow( mWindowHandle );
 }
 
 void PlatformWindowSDL::hide()
@@ -403,7 +447,7 @@ void PlatformWindowSDL::hide()
    if (mOffscreenRender)
       return;
 
-	SDL_HideWindow( mWindowHandle );
+   SDL_HideWindow( mWindowHandle );
 }
 
 void PlatformWindowSDL::show()
@@ -411,25 +455,34 @@ void PlatformWindowSDL::show()
    if (mOffscreenRender)
       return;
 
-	SDL_ShowWindow( mWindowHandle );
+   SDL_ShowWindow( mWindowHandle );
 }
 
 void PlatformWindowSDL::close()
 {
-	delete this;
+   delete this;
 }
 
 void PlatformWindowSDL::defaultRender()
 {
-	// TODO SDL
+   // TODO SDL
 }
 
 void PlatformWindowSDL::_triggerMouseLocationNotify(const SDL_Event& evt)
 {
+   U32 mods = getTorqueModFromSDL(SDL_GetModState());
+
    if(!mMouseLocked)
-      mouseEvent.trigger(getWindowId(), 0, evt.motion.x, evt.motion.y, false);
+      mouseEvent.trigger(getWindowId(), mods, evt.motion.x, evt.motion.y, false);
    else
-      mouseEvent.trigger(getWindowId(), 0, evt.motion.xrel, evt.motion.yrel, true);
+      mouseEvent.trigger(getWindowId(), mods, evt.motion.xrel, evt.motion.yrel, true);
+}
+
+void PlatformWindowSDL::_triggerMouseWheelNotify(const SDL_Event& evt)
+{
+   U32 mods = getTorqueModFromSDL(SDL_GetModState());
+   S32 wheelDelta = Con::getIntVariable("$pref::Input::MouseWheelSpeed", 120);
+   wheelEvent.trigger(getWindowId(), mods, evt.wheel.x * wheelDelta, evt.wheel.y * wheelDelta);
 }
 
 void PlatformWindowSDL::_triggerMouseButtonNotify(const SDL_Event& event)
@@ -447,6 +500,12 @@ void PlatformWindowSDL::_triggerMouseButtonNotify(const SDL_Event& event)
          break;
       case SDL_BUTTON_MIDDLE:
          button = 2;
+         break;
+      case SDL_BUTTON_X1:
+         button = 3;
+         break;
+      case SDL_BUTTON_X2:
+         button = 4;
          break;
       default:
          return;
@@ -477,13 +536,20 @@ void PlatformWindowSDL::_triggerKeyNotify(const SDL_Event& evt)
    {
       keyEvent.trigger(getWindowId(), torqueModifiers, inputAction, torqueKey);
       //Con::printf("Key %d : %d", tKey.sym, inputAction);
-   }
 
-   // stop SDL_TEXTINPUT event when unwanted
-   if( inputAction == IA_MAKE && getKeyboardTranslation() && shouldNotTranslate( torqueModifiers, torqueKey ) )	
-      SDL_StopTextInput();
-   else   
-      SDL_StartTextInput();
+      if (inputAction == IA_MAKE && SDL_IsTextInputActive())
+      {
+         // We have to check if we already have a first responder active.
+         // We don't want to type the character if it actually creates another responder!
+         if (mWindowInputGenerator->lastKeyWasGlobalActionMap())
+         {
+            // Turn off Text input, and the next frame turn it back on. This tells SDL
+            // to not generate a text event for this global action map key.
+            SDL_StopTextInput();
+            mOwningManager->updateSDLTextInputState(PlatformWindowManagerSDL::KeyboardInputState::TEXT_INPUT);
+         }
+      }
+   }
 }
 
 void PlatformWindowSDL::_triggerTextNotify(const SDL_Event& evt)
@@ -499,7 +565,7 @@ void PlatformWindowSDL::_triggerTextNotify(const SDL_Event& evt)
    }
    else // get a wchar string
    {
-      const U32 len = strlen(evt.text.text);
+      const dsize_t len = strlen(evt.text.text);
       U16 wchar[16] = {};
       dMemcpy(wchar, evt.text.text, sizeof(char)*len);
 
@@ -509,6 +575,24 @@ void PlatformWindowSDL::_triggerTextNotify(const SDL_Event& evt)
             return;
 
          charEvent.trigger(getWindowId(), mod, wchar[i] );
+      }
+   }
+}
+
+void PlatformWindowSDL::_updateMonitorFromMove(const SDL_Event& evt)
+{
+   SDL_Rect sdlRect;
+   S32 monitorCount = SDL_GetNumVideoDisplays();
+   for (S32 index = 0; index < monitorCount; ++index)
+   {
+      if (0 == SDL_GetDisplayBounds(index, &sdlRect))
+      {
+         if ((evt.window.data1 >= sdlRect.x) && (evt.window.data1 < (sdlRect.x + sdlRect.w)) &&
+            (evt.window.data2 >= sdlRect.y) && (evt.window.data2 < (sdlRect.y + sdlRect.h)))
+         {
+            Con::setIntVariable("pref::Video::deviceId", index);
+            return;
+         }
       }
    }
 }
@@ -530,37 +614,72 @@ void PlatformWindowSDL::_processSDLEvent(SDL_Event &evt)
          break;
       }
 
+      case SDL_MOUSEWHEEL:
+      {
+         _triggerMouseWheelNotify(evt);
+         break;
+      }
+
       case SDL_MOUSEMOTION:
       {
          _triggerMouseLocationNotify(evt);
          break;
       }
-
       case SDL_MOUSEBUTTONDOWN:
       case SDL_MOUSEBUTTONUP:
       {
-         appEvent.trigger(getWindowId(), GainFocus);
          _triggerMouseButtonNotify(evt);
-         
          break;
       }
 
       case SDL_WINDOWEVENT:
       {
-         switch( evt.window.event )
+         if (!mClosing)
          {
-            case SDL_WINDOWEVENT_MAXIMIZED:
+            switch (evt.window.event)
+            {
+            case SDL_WINDOWEVENT_FOCUS_GAINED:
+               appEvent.trigger(getWindowId(), GainFocus);
+               break;
+            case SDL_WINDOWEVENT_FOCUS_LOST:
+               appEvent.trigger(getWindowId(), LoseFocus);
+               break;
+            case SDL_WINDOWEVENT_MOVED:
+            {
+               S32 oldDisplay = Con::getIntVariable("pref::Video::deviceId", 0);
+               _updateMonitorFromMove(evt);
+               // If display device has changed, make sure window params are compatible with the new device.
+               if (oldDisplay != Con::getIntVariable("pref::Video::deviceId", 0))
+                  Con::evaluate("configureCanvas();");
+               break;
+            }
             case SDL_WINDOWEVENT_RESIZED:
             {
                int width, height;
-               SDL_GetWindowSize( mWindowHandle, &width, &height );
-               mVideoMode.resolution.set( width, height );
+               SDL_GetWindowSize(mWindowHandle, &width, &height);
+               mVideoMode.resolution.set(width, height);
                getGFXTarget()->resetMode();
+               resizeEvent.trigger(getWindowId(), width, height);
+               getScreenResChangeSignal().trigger(this, true);
                break;
             }
+            case SDL_WINDOWEVENT_CLOSE:
+            {
+               appEvent.trigger(getWindowId(), WindowClose);
+               mClosing = true;
+            }
+            case SDL_WINDOWEVENT_MINIMIZED:
+               break;
+            case SDL_WINDOWEVENT_MAXIMIZED:
+               Con::setBoolVariable("pref::Video::isMaximized", true);
+               break;
+            case SDL_WINDOWEVENT_RESTORED:
+               Con::setBoolVariable("pref::Video::isMaximized", false);
+               break;
 
             default:
                break;
+            }
          }
       }
    }
@@ -576,7 +695,7 @@ void PlatformWindowSDL::setMouseLocked( bool enable )
    if (mOffscreenRender)
       return;
 
-	mMouseLocked = enable;
+   mMouseLocked = enable;
    
    SDL_SetWindowGrab( mWindowHandle, SDL_bool(enable) );
    SDL_SetRelativeMouseMode( SDL_bool(enable) );
@@ -594,4 +713,15 @@ const UTF16 *PlatformWindowSDL::getCurtainWindowClassName()
    // TODO SDL
    static String str("CurtainWindowClassName");
    return str.utf16();
+}
+
+void PlatformWindowSDL::setKeyboardTranslation(const bool enabled)
+{
+   mEnableKeyboardTranslation = enabled;
+
+   // Flag for update. Let SDL know what kind of input state we are changing to.
+   if (enabled)
+      mOwningManager->updateSDLTextInputState(PlatformWindowManagerSDL::KeyboardInputState::TEXT_INPUT);
+   else
+      mOwningManager->updateSDLTextInputState(PlatformWindowManagerSDL::KeyboardInputState::RAW_INPUT);
 }

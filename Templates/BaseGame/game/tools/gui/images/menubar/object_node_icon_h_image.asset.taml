@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="object_node_icon_h_image"
+    imageFile="@assetFile=object-node-icon_h.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="new_brush_n_image"
+    imageFile="@assetFile=new-brush_n.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

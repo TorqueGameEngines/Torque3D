@@ -20,6 +20,28 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+//-----------------------------------------------------------------------------
+// Copyright (c) 2017 The Platinum Team
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+//-----------------------------------------------------------------------------
+
 #ifndef _HTTPOBJECT_H_
 #define _HTTPOBJECT_H_
 
@@ -30,49 +52,65 @@
 #include "app/net/tcpObject.h"
 #endif
 
-class HTTPObject : public TCPObject
+#include <curl/curl.h>
+#include <string>
+#include <unordered_map>
+
+class HTTPObject : public SimObject
 {
 private:
-   typedef TCPObject Parent;
+   typedef SimObject Parent;
 protected:
-   enum ParseState {
-      ParsingStatusLine,
-      ParsingHeader,
-      ParsingChunkHeader,
-      ProcessingBody,
-      ProcessingDone,
-   };
-   ParseState mParseState;
-   U32 mTotalBytes;
-   U32 mBytesRemaining;
- public:
-   U32 mStatus;
-   F32 mVersion;
-   U32 mContentLength;
-   bool mChunkedEncoding;
-   U32 mChunkSize;
-   const char *mContentType;
-   char *mHostName;
-   char *mPath;
-   char *mQuery;
-   char *mPost;
-   U8 *mBufferSave;
-   U32 mBufferSaveSize;
+   CURL *mCurl;
+   U8 *mBuffer;
+   U32 mBufferSize;
+   U32 mBufferUsed;
+
+   std::string mUrl;
+   std::string mValues;
+
+   bool mDownload;
+   std::string mDownloadPath;
+
+   curl_slist *mHeaders;
+   std::unordered_map<std::string, std::string> mRecieveHeaders;
+
+   static CURLM *gCurlMulti;
+   static int gCurlMultiTotal;
+   static std::unordered_map<CURL *, HTTPObject *> gCurlMap;
+
+   static size_t writeCallback(char *buffer, size_t size, size_t nitems, HTTPObject *object);
+   static size_t headerCallback(char *buffer, size_t size, size_t nitems, HTTPObject *object);
+
+   bool ensureBuffer(U32 length);
+   size_t processData(char *buffer, size_t size, size_t nitems);
+   size_t processHeader(char *buffer, size_t size, size_t nitems);
+
+   void start();
+   void processLines();
+   void finish(CURLcode errorCode);
+
+   void onConnected();
+   void onConnectFailed();
+   void onLine(const std::string& line);
+   void onDownload(const std::string& path);
+   void onDownloadFailed(const std::string& path);
+   void onDisconnect();
+
 public:
-   static void expandPath(char *dest, const char *path, U32 destSize);
-   void get(const char *hostName, const char *urlName, const char *query);
-   void post(const char *host, const char *path, const char *query, const char *post);
    HTTPObject();
-   ~HTTPObject();
+   ~HTTPObject() override;
 
-   //static HTTPObject *find(U32 tag);
+   void setOption(const std::string &option, const std::string &value);
+   void setDownloadPath(const std::string &path);
+   void addHeader(const std::string &name, const std::string &value);
 
-   virtual U32 onDataReceive(U8 *buffer, U32 bufferLen);
-   virtual U32 onReceive(U8 *buffer, U32 bufferLen); // process a buffer of raw packet data
-   virtual void onConnected();
-   virtual void onConnectFailed();
-   virtual void onDisconnect();
-   bool processLine(UTF8 *line);
+   void get(const std::string &address, const std::string &uri, const std::string &query);
+   void post(const std::string &address, const std::string &uri, const std::string &query, const std::string &data);
+
+   static void init();
+   static void process();
+   static void shutdown();
 
    DECLARE_CONOBJECT(HTTPObject);
 };

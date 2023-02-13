@@ -1,0 +1,7 @@
+singleton TerrainMaterial()
+{
+   diffuseSize = "200";
+   detailSize = "10";
+   internalName = "warning_material";
+   diffuseMapAsset = "Core_Rendering:warnMat_image";
+};

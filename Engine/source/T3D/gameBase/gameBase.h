@@ -20,6 +20,11 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+// Arcane-FX for MIT Licensed Open Source version of Torque 3D from GarageGames
+// Copyright (C) 2015 Faust Logic, Inc.
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+
 #ifndef _GAMEBASE_H_
 #define _GAMEBASE_H_
 
@@ -38,6 +43,9 @@
 #ifndef __SCENEMANAGER_H__  
 #include "scene/sceneManager.h"    
 #define __SCENEMANAGER_H__  
+#endif
+#ifndef _IDISPLAYDEVICE_H_
+#include "platform/output/IDisplayDevice.h"
 #endif
 
 class NetConnection;
@@ -83,8 +91,8 @@ private:
 
 public:
 
-   bool packed;
-   StringTableEntry category;
+   bool mPacked;
+   StringTableEntry mCategory;
 
    // Signal triggered when this datablock is modified.
    // GameBase objects referencing this datablock notify with this signal.
@@ -107,9 +115,11 @@ public:
    DECLARE_CALLBACK( void, onAdd, ( GameBase* obj ) );
    DECLARE_CALLBACK( void, onRemove, ( GameBase* obj ) );
    DECLARE_CALLBACK( void, onNewDataBlock, ( GameBase* obj ) );
-   DECLARE_CALLBACK( void, onMount, ( GameBase* obj, SceneObject* mountObj, S32 node ) );
-   DECLARE_CALLBACK( void, onUnmount, ( GameBase* obj, SceneObject* mountObj, S32 node ) );
+   DECLARE_CALLBACK( void, onMount, ( SceneObject* obj, SceneObject* mountObj, S32 node ) );
+   DECLARE_CALLBACK( void, onUnmount, ( SceneObject* obj, SceneObject* mountObj, S32 node ) );
    /// @}
+public:
+   GameBaseData(const GameBaseData&, bool = false);
 };
 
 //----------------------------------------------------------------------------
@@ -226,7 +236,8 @@ public:
    enum GameBaseMasks {      
       DataBlockMask     = Parent::NextFreeMask << 0,
       ExtendedInfoMask  = Parent::NextFreeMask << 1,
-      NextFreeMask      = Parent::NextFreeMask << 2
+      ScopeIdMask       = Parent::NextFreeMask << 2,
+      NextFreeMask      = Parent::NextFreeMask << 3,
    };
 
    // net flags added by game base
@@ -345,7 +356,7 @@ public:
    /// @name Network
    /// @see NetObject, NetConnection
    /// @{
-
+   void interpolateTick(F32 dt);
    F32  getUpdatePriority( CameraScopeQuery *focusObject, U32 updateMask, S32 updateSkips );
    U32  packUpdate  ( NetConnection *conn, U32 mask, BitStream *stream );
    void unpackUpdate( NetConnection *conn,           BitStream *stream );
@@ -418,6 +429,7 @@ public:
    
    // Not implemented here, but should return the Camera to world transformation matrix
    virtual void getCameraTransform (F32 *pos, MatrixF *mat ) { *mat = MatrixF::Identity; }
+   virtual void getEyeCameraTransform ( IDisplayDevice *device, U32 eyeId, MatrixF *mat ) { *mat = MatrixF::Identity; }
 
    /// Returns the water object we are colliding with, it is up to derived
    /// classes to actually set this object.
@@ -449,6 +461,8 @@ private:
    /// within this callback.
    ///   
    void _onDatablockModified();
+protected:
+   void    onScopeIdChange() { setMaskBits(ScopeIdMask); }
 };
 
 

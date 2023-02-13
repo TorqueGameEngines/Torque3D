@@ -27,7 +27,8 @@ class TypeValidator
 {
    public:
    S32 fieldIndex;
-
+   TypeValidator() : fieldIndex(0) {}
+   ~TypeValidator() {}
    /// Prints a console error message for the validator.
    ///
    /// The message is prefaced with with:
@@ -53,6 +54,8 @@ public:
       maxV = maxValue;
    }
    void validateType(SimObject *object, void *typePtr);
+   F32 getMin() { return minV; };
+   F32 getMax() { return maxV; };
 };
 
 /// Signed integer min/max range validator
@@ -66,6 +69,8 @@ public:
       maxV = maxValue;
    }
    void validateType(SimObject *object, void *typePtr);
+   F32 getMin() { return minV; };
+   F32 getMax() { return maxV; };
 };
 
 /// Scaled integer field validator
@@ -93,6 +98,7 @@ class Point3NormalizeValidator : public TypeValidator
 public:
    Point3NormalizeValidator(F32 normalizeLength = 1.0f) : length(normalizeLength) { }
    void validateType(SimObject *object, void *typePtr);
+   F32 getLength() { return length; };
 };
 
 namespace CommonValidators

@@ -1,0 +1,5 @@
+<GUIAsset
+    AssetName="PauseMenu"
+    scriptFile="@assetFile=pauseMenu"
+    GUIFile="@assetFile=pauseMenu.gui"
+    VersionId="1"/>

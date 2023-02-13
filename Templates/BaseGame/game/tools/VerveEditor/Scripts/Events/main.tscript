@@ -1,0 +1,30 @@
+//-----------------------------------------------------------------------------
+// Verve
+// Copyright (C) - Violent Tulip
+//-----------------------------------------------------------------------------
+
+function VerveEditor::InitEventScripts()
+{
+    // Core.
+    exec( "./VEvent." @ $TorqueScriptFileExtension );
+    
+    // Built-In.
+    exec( "./VCameraShakeEvent." @ $TorqueScriptFileExtension );
+    exec( "./VDirectorEvent." @ $TorqueScriptFileExtension );
+    exec( "./VFadeEvent." @ $TorqueScriptFileExtension );
+    exec( "./VLightObjectAnimationEvent." @ $TorqueScriptFileExtension );
+    exec( "./VLightObjectToggleEvent." @ $TorqueScriptFileExtension );
+    exec( "./VMotionEvent." @ $TorqueScriptFileExtension );
+    exec( "./VParticleEffectToggleEvent." @ $TorqueScriptFileExtension );
+    exec( "./VPostEffectToggleEvent." @ $TorqueScriptFileExtension );
+    exec( "./VSceneJumpEvent." @ $TorqueScriptFileExtension );
+    exec( "./VScriptEvent." @ $TorqueScriptFileExtension );
+    exec( "./VShapeAnimationEvent." @ $TorqueScriptFileExtension );
+    exec( "./VSlowMoEvent." @ $TorqueScriptFileExtension );
+    exec( "./VSoundEffectEvent." @ $TorqueScriptFileExtension );
+    exec( "./VSpawnSphereSpawnTargetEvent." @ $TorqueScriptFileExtension );
+    
+    // Custom.
+    // Exec Custom Event Scripts.
+}
+VerveEditor::InitEventScripts();

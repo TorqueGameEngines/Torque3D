@@ -86,8 +86,6 @@ public:
 
    MaterialOverrideDelegate& getMatOverrideDelegate() { return mMatOverrideDelegate; }
 
-protected:
-
    struct MainSortElem
    {
       RenderInst *inst;
@@ -95,6 +93,7 @@ protected:
       U32 key2;
    };
 
+protected:
    void setRenderPass( RenderPassManager *rpm );
 
    /// Called from derived bins to add additional
@@ -128,6 +127,8 @@ protected:
    /// RenderInst if available, otherwise, return NULL.
    inline BaseMatInstance* getMaterial( RenderInst *inst ) const;
 
+   // Limits bin to rendering in basic lighting only.
+   bool mBasicOnly;
 };
 
 
@@ -160,6 +161,7 @@ inline BaseMatInstance* RenderBinManager::getMaterial( RenderInst *inst ) const
 {
    if (  inst->type == RenderPassManager::RIT_Mesh || 
          inst->type == RenderPassManager::RIT_Decal ||
+         inst->type == RenderPassManager::RIT_DecalRoad ||         
          inst->type == RenderPassManager::RIT_Translucent )
       return static_cast<MeshRenderInst*>(inst)->matInst;
 

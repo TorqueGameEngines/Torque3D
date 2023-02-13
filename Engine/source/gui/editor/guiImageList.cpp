@@ -47,8 +47,6 @@ U32 GuiImageList::Insert( const char* texturePath, GFXTextureProfile *Type )
 {
   TextureEntry *t = new TextureEntry;
 
-  if ( ! t ) return -1;
-
   t->TexturePath = StringTable->insert(texturePath);
   if ( *t->TexturePath ) 
   {
@@ -140,6 +138,7 @@ U32 GuiImageList::IndexFromPath ( const char* Path )
 
 void GuiImageList::initPersistFields()
 {
+   docsURL;
   Parent::initPersistFields();
 }
 

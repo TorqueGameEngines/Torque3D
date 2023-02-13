@@ -22,9 +22,7 @@
 
 // For VS2005.
 #define _WIN32_WINNT 0x501
-#ifndef TORQUE_OS_XENON
 #include "platformWin32/platformWin32.h"
-#endif
 #include "platform/async/asyncUpdate.h"
 
 
@@ -61,6 +59,7 @@ AsyncPeriodicUpdateThread::AsyncPeriodicUpdateThread( String name,
 
    // This is a bit contrived.  The 'dueTime' is in 100 nanosecond intervals
    // and relative if it is negative.  The period is in milliseconds.
+   mIntervalMS = intervalMS;
 
    LARGE_INTEGER deltaTime;
    deltaTime.QuadPart = - LONGLONG( intervalMS * 10 /* micro */ * 1000 /* milli */ );

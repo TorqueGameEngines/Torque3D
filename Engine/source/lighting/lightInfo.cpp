@@ -41,17 +41,20 @@ LightInfoExType::LightInfoExType( const char *type )
 
 
 LightInfo::LightInfo() 
-   :  mTransform( true ), 
-      mColor( 0.0f, 0.0f, 0.0f, 1.0f ), 
+   :  mColor( 0.0f, 0.0f, 0.0f, 1.0f ),
+      mTransform( true ),
       mBrightness( 1.0f ),
       mAmbient( 0.0f, 0.0f, 0.0f, 1.0f ), 
       mRange( 1.0f, 1.0f, 1.0f ),
       mInnerConeAngle( 90.0f ), 
-      mOuterConeAngle( 90.0f ),
       mType( Vector ),
+      mOuterConeAngle( 90.0f ),
       mCastShadows( false ),
+      mStaticRefreshFreq( 250 ),
+      mDynamicRefreshFreq( 8 ),
       mPriority( 1.0f ),
       mScore( 0.0f ),
+      mFadeAmount(1.0f),
       mDebugRender( false )
 {
 }
@@ -72,6 +75,8 @@ void LightInfo::set( const LightInfo *light )
    mOuterConeAngle = light->mOuterConeAngle;
    mType = light->mType;
    mCastShadows = light->mCastShadows;
+   mStaticRefreshFreq = light->mStaticRefreshFreq;
+   mDynamicRefreshFreq = light->mDynamicRefreshFreq;
 
    for ( U32 i=0; i < mExtended.size(); i++ )
    {
@@ -84,35 +89,6 @@ void LightInfo::set( const LightInfo *light )
          mExtended[i] = NULL;
       }
    }
-}
-
-void LightInfo::setGFXLight( GFXLightInfo *outLight )
-{
-   switch( getType() )
-   {
-      case LightInfo::Point :
-         outLight->mType = GFXLightInfo::Point;
-         break;
-      case LightInfo::Spot :
-         outLight->mType = GFXLightInfo::Spot;
-         break;
-      case LightInfo::Vector:
-         outLight->mType = GFXLightInfo::Vector;
-         break;
-      case LightInfo::Ambient:
-         outLight->mType = GFXLightInfo::Ambient;
-         break;
-      default:
-         break;
-   }
-
-   outLight->mPos = getPosition();
-   outLight->mDirection = getDirection();
-   outLight->mColor = mColor * mBrightness;
-   outLight->mAmbient = mAmbient;
-   outLight->mRadius = mRange.x;
-   outLight->mInnerConeAngle = mInnerConeAngle;
-   outLight->mOuterConeAngle = mOuterConeAngle;
 }
 
 void LightInfo::setDirection( const VectorF &dir )

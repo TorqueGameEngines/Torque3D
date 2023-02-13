@@ -145,7 +145,7 @@ bool StdClientProcessList::advanceTime( SimTime timeDelta )
       obj->advanceTime( dt );
       obj = obj->mProcessLink.next;
    }
-   
+
    return ret;
 }
 

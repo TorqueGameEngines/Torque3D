@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2014 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -20,14 +20,14 @@
 */
 #include "../../SDL_internal.h"
 
-#ifndef _SDL_windowsvideo_h
-#define _SDL_windowsvideo_h
+#ifndef SDL_windowsvideo_h_
+#define SDL_windowsvideo_h_
 
 #include "../../core/windows/SDL_windows.h"
 
 #include "../SDL_sysvideo.h"
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && (_MSC_VER >= 1500)
 #include <msctf.h>
 #else
 #include "SDL_msctf.h"
@@ -37,6 +37,7 @@
 
 #define MAX_CANDLIST    10
 #define MAX_CANDLENGTH  256
+#define MAX_CANDSIZE    (sizeof(WCHAR) * MAX_CANDLIST * MAX_CANDLENGTH)
 
 #include "SDL_windowsclipboard.h"
 #include "SDL_windowsevents.h"
@@ -75,6 +76,19 @@ typedef struct _TOUCHINPUT {
 } TOUCHINPUT, *PTOUCHINPUT;
 
 #endif /* WINVER < 0x0601 */
+
+#if WINVER < 0x0603
+
+typedef enum MONITOR_DPI_TYPE {
+    MDT_EFFECTIVE_DPI = 0,
+    MDT_ANGULAR_DPI = 1,
+    MDT_RAW_DPI = 2,
+    MDT_DEFAULT = MDT_EFFECTIVE_DPI
+} MONITOR_DPI_TYPE;
+
+#else
+#include <shellscalingapi.h>
+#endif /* WINVER < 0x0603 */
 
 typedef BOOL  (*PFNSHFullScreen)(HWND, DWORD);
 typedef void  (*PFCoordTransform)(SDL_Window*, POINT*);
@@ -124,6 +138,12 @@ typedef struct SDL_VideoData
     BOOL (WINAPI *GetTouchInputInfo)( HTOUCHINPUT, UINT, PTOUCHINPUT, int );
     BOOL (WINAPI *RegisterTouchWindow)( HWND, ULONG );
 
+    void* shcoreDLL;
+    HRESULT (WINAPI *GetDpiForMonitor)( HMONITOR         hmonitor,
+                                        MONITOR_DPI_TYPE dpiType,
+                                        UINT             *dpiX,
+                                        UINT             *dpiY );
+    
     SDL_bool ime_com_initialized;
     struct ITfThreadMgr *ime_threadmgr;
     SDL_bool ime_initialized;
@@ -131,14 +151,16 @@ typedef struct SDL_VideoData
     SDL_bool ime_available;
     HWND ime_hwnd_main;
     HWND ime_hwnd_current;
+    SDL_bool ime_suppress_endcomposition_event;
     HIMC ime_himc;
 
-    WCHAR ime_composition[SDL_TEXTEDITINGEVENT_TEXT_SIZE];
+    WCHAR* ime_composition;
+    int ime_composition_length;
     WCHAR ime_readingstring[16];
     int ime_cursor;
 
     SDL_bool ime_candlist;
-    WCHAR ime_candidates[MAX_CANDLIST][MAX_CANDLENGTH];
+    WCHAR* ime_candidates;
     DWORD ime_candcount;
     DWORD ime_candref;
     DWORD ime_candsel;
@@ -169,12 +191,18 @@ typedef struct SDL_VideoData
     DWORD ime_convmodesinkcookie;
     TSFSink *ime_uielemsink;
     TSFSink *ime_ippasink;
+    LONG ime_uicontext;
+
+    BYTE pre_hook_key_state[256];
+    UINT _SDL_WAKEUP;
 } SDL_VideoData;
 
+extern SDL_bool g_WindowsEnableMessageLoop;
+extern SDL_bool g_WindowFrameUsableWhileCursorHidden;
 
 typedef struct IDirect3D9 IDirect3D9;
 extern SDL_bool D3D_LoadDLL( void **pD3DDLL, IDirect3D9 **pDirect3D9Interface );
 
-#endif /* _SDL_windowsvideo_h */
+#endif /* SDL_windowsvideo_h_ */
 
 /* vi: set ts=4 sw=4 expandtab: */

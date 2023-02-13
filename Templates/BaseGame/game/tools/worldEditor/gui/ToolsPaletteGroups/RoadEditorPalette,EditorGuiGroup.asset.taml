@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="RoadEditorPalette,EditorGuiGroup"
+    scriptFile="@assetFile=RoadEditorPalette.ed.gui"
+    GUIFile="@assetFile=RoadEditorPalette.ed.gui"
+    VersionId="1" />

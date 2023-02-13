@@ -64,6 +64,7 @@ ConsoleDocClass( MessageForwarder,
 
 void MessageForwarder::initPersistFields()
 {
+   docsURL;
    addField("toQueue", TypeCaseString, Offset(mToQueue, MessageForwarder), "Name of queue to forward to");
 
    Parent::initPersistFields();

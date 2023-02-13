@@ -49,6 +49,13 @@
 #ifndef _MATSTATEHINT_H_
 #include "materials/matStateHint.h"
 #endif
+#ifndef _GFXDEVICE_H_
+#include "gfx/gfxDevice.h"
+#endif
+
+#ifndef CUSTOMSHADERBINDINGDATA_H
+#include "materials/customShaderBindingData.h"
+#endif
 
 struct RenderPassData;
 class GFXVertexBufferHandleBase;
@@ -59,7 +66,7 @@ struct GFXStateBlockDesc;
 class GFXVertexFormat;
 class MatrixSet;
 class ProcessedMaterial;
-
+class GuiTreeViewCtrl;
 
 ///
 class BaseMatInstance
@@ -77,8 +84,11 @@ protected:
    /// It is up to the derived class to set this variable appropriately.
    bool mIsValid;
 
-   /// This is set by initialization and used by the prepass.
+   /// This is set by initialization and used by the deferred.
    bool mHasNormalMaps;
+
+   /// This material makes use of bone transforms
+   bool mUsesHardwareSkinning;
 
 public:
 
@@ -149,6 +159,12 @@ public:
    /// @see setupPass
    virtual void setTransforms( const MatrixSet &matrixSet, SceneRenderState *state ) = 0;
 
+   /// Sets node transforms for the current stage. Used for hardware skinning.
+   virtual void setNodeTransforms( const MatrixF *address, const U32 numTransforms ) = 0;
+
+   /// Sets custom shader data
+   virtual void setCustomShaderData(Vector<CustomShaderBindingData> &shaderData) = 0;
+
    /// This initializes various material scene state settings and
    /// should be called after setupPass() within the pass loop.
    /// @see setupPass
@@ -210,9 +226,12 @@ public:
    virtual const GFXVertexFormat* getVertexFormat() const = 0;
 
    virtual void dumpShaderInfo() const = 0;
+   virtual void getShaderInfo(GuiTreeViewCtrl* tree, U32 item) const = 0;
 
    /// Fast test for use of normal maps in this material.
    bool hasNormalMap() const { return mHasNormalMaps; }
+
+   bool usesHardwareSkinning() const { return mUsesHardwareSkinning; }
 
    ///
    MatFeaturesDelegate& getFeaturesDelegate() { return mFeaturesDelegate; }
@@ -244,6 +263,11 @@ public:
 
    virtual const GFXStateBlockDesc &getUserStateBlock() const = 0;
 
+protected:
+   bool needsHighlighting;
+public:
+   bool needsSelectionHighlighting() { return needsHighlighting; };
+   void setSelectionHighlighting(bool flag) { needsHighlighting = flag; };
 };
 
 #endif /// _BASEMATINSTANCE_H_

@@ -26,9 +26,14 @@
 const String ShaderGenVars::modelview("$modelview");
 const String ShaderGenVars::worldViewOnly("$worldViewOnly");
 const String ShaderGenVars::worldToCamera("$worldToCamera");
+const String ShaderGenVars::cameraToWorld("$cameraToWorld");
 const String ShaderGenVars::worldToObj("$worldToObj");
 const String ShaderGenVars::viewToObj("$viewToObj");
+const String ShaderGenVars::invCameraTrans("$invCameraTrans");
+const String ShaderGenVars::cameraToScreen("$cameraToScreen");
+const String ShaderGenVars::screenToCamera("$screenToCamera");
 const String ShaderGenVars::cubeTrans("$cubeTrans");
+const String ShaderGenVars::cubeMips("$cubeMips");
 const String ShaderGenVars::objTrans("$objTrans");
 const String ShaderGenVars::cubeEyePos("$cubeEyePos");
 const String ShaderGenVars::eyePos("$eyePos");
@@ -45,6 +50,7 @@ const String ShaderGenVars::colorMultiply("$colorMultiply");
 const String ShaderGenVars::alphaTestValue("$alphaTestValue");
 const String ShaderGenVars::texMat("$texMat");
 const String ShaderGenVars::accumTime("$accumTime");
+const String ShaderGenVars::dampness("$dampness");
 const String ShaderGenVars::minnaertConstant("$minnaertConstant");
 const String ShaderGenVars::subSurfaceParams("$subSurfaceParams");
 
@@ -59,13 +65,39 @@ const String ShaderGenVars::oneOverTargetSize("$oneOverTargetSize");
 const String ShaderGenVars::lightPosition("$inLightPos");
 const String ShaderGenVars::lightDiffuse("$inLightColor"); 
 const String ShaderGenVars::lightAmbient("$ambient");
-const String ShaderGenVars::lightInvRadiusSq("$inLightInvRadiusSq");
+const String ShaderGenVars::lightConfigData("$inLightConfigData");
 const String ShaderGenVars::lightSpotDir("$inLightSpotDir");
-const String ShaderGenVars::lightSpotAngle("$inLightSpotAngle");
-const String ShaderGenVars::lightSpotFalloff("$inLightSpotFalloff");
-const String ShaderGenVars::specularColor("$specularColor");
-const String ShaderGenVars::specularPower("$specularPower");
-const String ShaderGenVars::specularStrength("$specularStrength");
+const String ShaderGenVars::lightSpotParams("$inlightSpotParams");
+
+const String ShaderGenVars::hasVectorLight("$hasVectorLight");
+const String ShaderGenVars::vectorLightDirection("$vectorLightDirection");
+const String ShaderGenVars::vectorLightColor("$vectorLightColor");
+const String ShaderGenVars::vectorLightBrightness("$vectorLightBrightness");
+
+const String ShaderGenVars::ormConfig("$ORMConfig");
+const String ShaderGenVars::roughness("$roughness");
+const String ShaderGenVars::metalness("$metalness");
+const String ShaderGenVars::glowMul("$glowMul");
+
+//Reflection Probes - Forward lit. not to be confused with the deferred handwritten vars
+//change to parity once we've got the same arrays used for both routes
+const String ShaderGenVars::probePositionArray("$inProbePosArray");
+const String ShaderGenVars::probeRefPosArray("$inRefPosArray");
+const String ShaderGenVars::refScaleArray("$inRefScaleArray");
+const String ShaderGenVars::worldToObjArray("$inWorldToObjArray");
+const String ShaderGenVars::probeConfigDataArray("$inProbeConfigDataArray");
+const String ShaderGenVars::specularCubemapAR("$SpecularCubemapAR");
+const String ShaderGenVars::irradianceCubemapAR("$IrradianceCubemapAR");
+const String ShaderGenVars::probeCount("$inNumProbes");
+
+const String ShaderGenVars::BRDFTextureMap("$BRDFTexture");
+const String ShaderGenVars::WetnessTextureMap("$WetnessTexture");
+
+const String ShaderGenVars::maxProbeDrawDistance("$maxProbeDrawDistance");
+
+//Skylight
+const String ShaderGenVars::skylightCubemapIdx("$inSkylightCubemapIdx");
+const String ShaderGenVars::skylightDamp("$SkylightDamp");
 
 // These are ignored by the D3D layers.
 const String ShaderGenVars::fogMap("$fogMap");
@@ -81,3 +113,6 @@ const String ShaderGenVars::dLightMap("$dlightMap");
 const String ShaderGenVars::dLightMapSec("$dlightMapSec");
 const String ShaderGenVars::dLightMask("$dlightMask");
 const String ShaderGenVars::toneMap("$toneMap");
+
+// Deferred shading
+const String ShaderGenVars::matInfoFlags("$matInfoFlags");

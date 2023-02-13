@@ -182,12 +182,13 @@ GizmoProfile::GizmoProfile()
    gridColor.set(255,255,255,20);
    planeDim = 500.0f;   
 
-   gridSize.set(10,10,10);
+   gridSize.set(1,1,1);
    snapToGrid = false;
    allowSnapRotations = true;
    rotationSnap = 15.0f;
    allowSnapScale = true;
    scaleSnap = 0.1f;
+   forceSnapRotations = false;
 
    rotateScalar = 0.8f;
    scaleScalar = 0.8f;
@@ -201,6 +202,7 @@ GizmoProfile::GizmoProfile()
 
    centroidColor.set( 255, 255, 255 );
    centroidHighlightColor.set( 255, 0, 255 );
+   hideDisabledAxes = true;
 
    restoreDefaultState();
 }
@@ -238,6 +240,7 @@ bool GizmoProfile::onAdd()
 
 void GizmoProfile::initPersistFields()
 {
+   docsURL;
    addField( "alignment",           TYPEID< GizmoAlignment >(),   Offset(alignment, GizmoProfile ) );
    addField( "mode",                TYPEID< GizmoMode >(),   Offset(mode, GizmoProfile ) );
 
@@ -246,6 +249,7 @@ void GizmoProfile::initPersistFields()
    addField( "rotationSnap",        TypeF32,    Offset(rotationSnap, GizmoProfile) );
    addField( "allowSnapScale",      TypeBool,   Offset(allowSnapScale, GizmoProfile) );
    addField( "scaleSnap",           TypeF32,    Offset(scaleSnap, GizmoProfile) );
+   addField( "forceSnapRotations",  TypeBool,   Offset(forceSnapRotations, GizmoProfile));
    addField( "renderWhenUsed",      TypeBool,   Offset(renderWhenUsed, GizmoProfile) );
    addField( "renderInfoText",      TypeBool,   Offset(renderInfoText, GizmoProfile) );
    addField( "renderPlane",         TypeBool,   Offset(renderPlane, GizmoProfile) );
@@ -292,10 +296,11 @@ F32 Gizmo::smProjectDistance = 20000.0f;
 
 Gizmo::Gizmo()
 : mProfile( NULL ),
-  mSelectionIdx( -1 ),
-  mCameraMat( true ),
-  mTransform( true ),
   mObjectMat( true ),
+  mTransform( true ),
+  mCameraMat( true ),
+  mProjLen(1000.0f),
+  mSelectionIdx( -1 ),
   mObjectMatInv( true ),
   mCurrentTransform( true ),
   mSavedTransform( true ),
@@ -303,28 +308,32 @@ Gizmo::Gizmo()
   mDeltaScale( 0,0,0 ),
   mDeltaRot( 0,0,0 ),
   mDeltaPos( 0,0,0 ),
-  mDeltaTotalPos( 0,0,0 ),
-  mDeltaTotalRot( 0,0,0 ),
-  mDeltaTotalScale( 0,0,0 ),
   mCurrentAlignment( World ),
+  mDeltaTotalScale( 0,0,0 ),
+  mDeltaTotalRot( 0,0,0 ),
+  mDeltaAngle(0.0f),
+  mLastAngle(0.0f),
+  mDeltaTotalPos( 0,0,0 ),
   mCurrentMode( MoveMode ),
-  mDirty( false ),
   mMouseDownPos( -1,-1 ),
+  mDirty( false ),
+  mSign(0.0f),
   mMouseDown( false ),
   mLastWorldMat( true ),
   mLastProjMat( true ),
   mLastViewport( 0, 0, 10, 10 ),
   mLastCameraFOV( 1.f ),
-  mElipseCursorCollideVecSS( 1.0f, 0.0f, 0.0f ),
-  mElipseCursorCollidePntSS( 0.0f, 0.0f, 0.0f ),
   mHighlightCentroidHandle( false ),
-  mHighlightAll( false ),
+  mElipseCursorCollidePntSS( 0.0f, 0.0f, 0.0f ),
+  mElipseCursorCollideVecSS( 1.0f, 0.0f, 0.0f ),
   mGridPlaneEnabled( true ),
+  mHighlightAll( false ),
   mMoveGridEnabled( true ),
   mMoveGridSize( 20.f ),
-  mMoveGridSpacing( 1.f )
-{   
-   mUniformHandleEnabled = true;   
+  mMoveGridSpacing( 1.f ),
+  mUniformHandleEnabled(true),
+  mScreenRotateHandleEnabled(false)
+{
    mAxisEnabled[0] = mAxisEnabled[1] = mAxisEnabled[2] = true;
 }
 
@@ -363,6 +372,7 @@ void Gizmo::onRemove()
 
 void Gizmo::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 
    //addField( "profile",)  
@@ -612,12 +622,12 @@ bool Gizmo::collideAxisGizmo( const Gui3DMouseEvent & event )
             Point3F(mOrigin + (p1 + p2) * scale)
          };
 
-         Point3F end = camPos + event.vec * smProjectDistance;
-         F32 t = plane.intersect(camPos, end);
+         Point3F endProj = camPos + event.vec * smProjectDistance;
+         F32 t = plane.intersect(camPos, endProj);
          if ( t >= 0 && t <= 1 )
          {
             Point3F pos;
-            pos.interpolate(camPos, end, t);
+            pos.interpolate(camPos, endProj, t);
 
             // check if inside our 'poly' of this axisIdx vector...
             bool inside = true;
@@ -811,8 +821,6 @@ void Gizmo::on3DMouseDown( const Gui3DMouseEvent & event )
          camPos = event.pos;
       else
          camPos = mCameraPos;
-         
-      Point3F end = camPos + event.vec * smProjectDistance;
 
       if ( 0 <= mSelectionIdx && mSelectionIdx <= 2 )
       {       
@@ -1085,7 +1093,7 @@ void Gizmo::on3DMouseDragged( const Gui3DMouseEvent & event )
       angle *= 0.02f; // scale down to not require rotate scalar to be microscopic
 
       //
-      if( mProfile->allowSnapRotations && event.modifier & SI_SHIFT )
+      if((mProfile->forceSnapRotations && event.modifier | SI_SHIFT) || (mProfile->allowSnapRotations && event.modifier & SI_SHIFT ))
          angle = mDegToRad( _snapFloat( mRadToDeg( angle ), mProfile->rotationSnap ) );
 
       mDeltaAngle = angle - mLastAngle;
@@ -1403,7 +1411,7 @@ void Gizmo::renderGizmo(const MatrixF &cameraTransform, F32 cameraFOV )
 
       for(U32 j = 0; j < 6; j++)
       {
-         PrimBuild::begin( GFXTriangleFan, 4 );
+         PrimBuild::begin( GFXTriangleStrip, 4 );
 
          PrimBuild::vertex3fv( sgCenterBoxPnts[sgBoxVerts[j][0]] * tipScale);
          PrimBuild::vertex3fv( sgCenterBoxPnts[sgBoxVerts[j][1]] * tipScale);
@@ -1599,7 +1607,7 @@ void Gizmo::_renderAxisBoxes()
 
       for(U32 j = 0; j < 6; j++)
       {
-         PrimBuild::begin( GFXTriangleFan, 4 );
+         PrimBuild::begin( GFXTriangleStrip, 4 );
 
          PrimBuild::vertex3fv( sgCenterBoxPnts[sgBoxVerts[j][0]] * tipScale + sgAxisVectors[axisIdx] * pos );
          PrimBuild::vertex3fv( sgCenterBoxPnts[sgBoxVerts[j][1]] * tipScale + sgAxisVectors[axisIdx] * pos );
@@ -1663,7 +1671,7 @@ void Gizmo::_renderAxisCircles()
          ColorI color = mProfile->inActiveColor;
          color.alpha = 100;
          PrimBuild::color( color );
-         PrimBuild::begin( GFXTriangleFan, segments+2 );
+         PrimBuild::begin( GFXTriangleStrip, segments+2 );
          
          PrimBuild::vertex3fv( Point3F(0,0,0) );
 

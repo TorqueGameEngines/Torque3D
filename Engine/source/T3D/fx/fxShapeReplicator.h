@@ -147,13 +147,13 @@ public:
       bool              mHideReplications;
       bool              mShowPlacementArea;
       U32               mPlacementBandHeight;
-      ColorF            mPlaceAreaColour;
+      LinearColorF            mPlaceAreaColour;
 
       tagFieldData()
       {
          // Set Defaults.
          mSeed               = 1376312589;
-         mShapeFile          = StringTable->insert("");
+         mShapeFile          = StringTable->EmptyString();
          mShapeCount         = 10;
          mShapeRetries       = 100;
          mInnerRadiusX       = 0;

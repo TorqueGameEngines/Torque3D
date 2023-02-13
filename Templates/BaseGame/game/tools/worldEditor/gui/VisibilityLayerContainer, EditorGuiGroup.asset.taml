@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="VisibilityLayerContainer, EditorGuiGroup"
+    scriptFile="@assetFile=VisibilityLayerWindow.ed.gui"
+    GUIFile="@assetFile=VisibilityLayerWindow.ed.gui"
+    VersionId="1" />

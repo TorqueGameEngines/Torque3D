@@ -132,9 +132,85 @@ void DebugDrawer::setupStateBlocks()
    
    d.setZReadWrite(false);
    mRenderZOffSB = GFX->createStateBlock(d);
+   
+   d.setCullMode(GFXCullCCW);
+   d.setZReadWrite(true, false);
+   d.setBlend(true);
+   mRenderAlpha = GFX->createStateBlock(d);
 }
 
-void DebugDrawer::render()
+void DebugDrawer::drawBoxOutline(const Point3F &a, const Point3F &b, const LinearColorF &color)
+{
+   Point3F point0(a.x, a.y, a.z);
+   Point3F point1(a.x, b.y, a.z);
+   Point3F point2(b.x, b.y, a.z);
+   Point3F point3(b.x, a.y, a.z);
+
+   Point3F point4(a.x, a.y, b.z);
+   Point3F point5(a.x, b.y, b.z);
+   Point3F point6(b.x, b.y, b.z);
+   Point3F point7(b.x, a.y, b.z);
+
+   // Draw one plane
+   drawLine(point0, point1, color);
+   drawLine(point1, point2, color);
+   drawLine(point2, point3, color);
+   drawLine(point3, point0, color);
+
+   // Draw the other plane
+   drawLine(point4, point5, color);
+   drawLine(point5, point6, color);
+   drawLine(point6, point7, color);
+   drawLine(point7, point4, color);
+
+   // Draw the connecting corners
+   drawLine(point0, point4, color);
+   drawLine(point1, point5, color);
+   drawLine(point2, point6, color);
+   drawLine(point3, point7, color);
+}
+
+void DebugDrawer::drawTransformedBoxOutline(const Point3F &a, const Point3F &b, const LinearColorF &color, const MatrixF& transform)
+{
+   Point3F point0(a.x, a.y, a.z);
+   Point3F point1(a.x, b.y, a.z);
+   Point3F point2(b.x, b.y, a.z);
+   Point3F point3(b.x, a.y, a.z);
+
+   Point3F point4(a.x, a.y, b.z);
+   Point3F point5(a.x, b.y, b.z);
+   Point3F point6(b.x, b.y, b.z);
+   Point3F point7(b.x, a.y, b.z);
+
+   transform.mulP(point0);
+   transform.mulP(point1);
+   transform.mulP(point2);
+   transform.mulP(point3);
+   transform.mulP(point4);
+   transform.mulP(point5);
+   transform.mulP(point6);
+   transform.mulP(point7);
+
+   // Draw one plane
+   drawLine(point0, point1, color);
+   drawLine(point1, point2, color);
+   drawLine(point2, point3, color);
+   drawLine(point3, point0, color);
+
+   // Draw the other plane
+   drawLine(point4, point5, color);
+   drawLine(point5, point6, color);
+   drawLine(point6, point7, color);
+   drawLine(point7, point4, color);
+
+   // Draw the connecting corners
+   drawLine(point0, point4, color);
+   drawLine(point1, point5, color);
+   drawLine(point2, point6, color);
+   drawLine(point3, point7, color);
+}
+
+void DebugDrawer::render(bool clear)
 {
 #ifdef ENABLE_DEBUGDRAW
    if(!isDrawing)
@@ -158,13 +234,23 @@ void DebugDrawer::render()
 
       // Set up the state block...
       GFXStateBlockRef currSB;
-      if(p->useZ)
+      if(p->type==DebugPrim::Capsule)
+      {
+         currSB = mRenderAlpha;
+      }
+      else if(p->useZ)
+      {
          currSB = mRenderZOnSB;
+      }
       else
+      {
          currSB = mRenderZOffSB;
+      }
+
       GFX->setStateBlock( currSB );
 
       Point3F d;
+      const ColorI color = p->color.toColorI();
 
       switch(p->type)
       {
@@ -180,14 +266,58 @@ void DebugDrawer::render()
 
          PrimBuild::end();
          break;
+      case DebugPrim::DirectionLine:
+         {
+            const static   F32      ARROW_LENGTH = 0.2f, ARROW_RADIUS = 0.035f, CYLINDER_RADIUS = 0.008f;
+            Point3F  &start = p->a, &end = p->b;
+            Point3F  direction = end - start;
+            F32      length = direction.len();
+            if( length>ARROW_LENGTH )
+            {
+               //cylinder with arrow on end
+               direction *= (1.0f/length);
+               Point3F  baseArrow = end - (direction*ARROW_LENGTH);
+               GFX->getDrawUtil()->drawCone(currSB->getDesc(),  baseArrow, end, ARROW_RADIUS, color);
+               GFX->getDrawUtil()->drawCylinder(currSB->getDesc(),  start, baseArrow, CYLINDER_RADIUS, color);
+            }
+            else if( length>0 )
+            {
+               //short, so just draw arrow
+               GFX->getDrawUtil()->drawCone(currSB->getDesc(), start, end, ARROW_RADIUS, color);
+            }
+         }
+         break;
+      case DebugPrim::Capsule:
+         GFX->getDrawUtil()->drawCapsule(currSB->getDesc(),  p->a, p->b.x, p->b.y, color);
+         break;
+      case DebugPrim::OutlinedText:
+         {
+            GFXTransformSaver saver;            
+            Point3F result;
+            if (MathUtils::mProjectWorldToScreen(p->a, &result, GFX->getViewport(), GFX->getWorldMatrix(), GFX->getProjectionMatrix()))
+            {
+               GFX->setClipRect(GFX->getViewport());
+               Point2I  where = Point2I(result.x, result.y);
+               //only switch statement that uses p->color2
+               GFX->getDrawUtil()->setBitmapModulation(p->color2.toColorI());
+               GFX->getDrawUtil()->drawText(mFont, Point2I(where.x-1, where.y), p->mText);
+               GFX->getDrawUtil()->drawText(mFont, Point2I(where.x+1, where.y), p->mText);
+               GFX->getDrawUtil()->drawText(mFont, Point2I(where.x, where.y-1), p->mText);
+               GFX->getDrawUtil()->drawText(mFont, Point2I(where.x, where.y+1), p->mText);
+
+               GFX->getDrawUtil()->setBitmapModulation(color); 
+               GFX->getDrawUtil()->drawText(mFont, where, p->mText);
+            }
+         }
+         break;
       case DebugPrim::Box:
          d = p->a - p->b;
-         GFX->getDrawUtil()->drawCube(currSB->getDesc(), d * 0.5, (p->a + p->b) * 0.5, p->color);
+         GFX->getDrawUtil()->drawCube(currSB->getDesc(), d * 0.5, (p->a + p->b) * 0.5, color);
          break;
       case DebugPrim::Line:
          PrimBuild::begin( GFXLineStrip, 2);
 
-         PrimBuild::color(p->color);
+         PrimBuild::color(color);
 
          PrimBuild::vertex3fv(p->a);
          PrimBuild::vertex3fv(p->b);
@@ -201,7 +331,7 @@ void DebugDrawer::render()
             if (MathUtils::mProjectWorldToScreen(p->a, &result, GFX->getViewport(), GFX->getWorldMatrix(), GFX->getProjectionMatrix()))
             {
                GFX->setClipRect(GFX->getViewport());
-               GFX->getDrawUtil()->setBitmapModulation(p->color); 
+               GFX->getDrawUtil()->setBitmapModulation(color); 
                GFX->getDrawUtil()->drawText(mFont, Point2I(result.x, result.y), p->mText);
             }
          }
@@ -215,7 +345,7 @@ void DebugDrawer::render()
          shouldToggleFreeze = false;
       }
 
-      if(p->dieTime <= curTime && !isFrozen && p->dieTime != U32_MAX)
+      if(clear && p->dieTime <= curTime && !isFrozen && p->dieTime != U32_MAX)
       {
          *walk = p->next;
          mPrimChunker.free(p);
@@ -226,7 +356,7 @@ void DebugDrawer::render()
 #endif
 }
 
-void DebugDrawer::drawBox(const Point3F &a, const Point3F &b, const ColorF &color)
+void DebugDrawer::drawBox(const Point3F &a, const Point3F &b, const LinearColorF &color)
 {
    if(isFrozen || !isDrawing)
       return;
@@ -244,7 +374,7 @@ void DebugDrawer::drawBox(const Point3F &a, const Point3F &b, const ColorF &colo
    mHead = n;
 }
 
-void DebugDrawer::drawLine(const Point3F &a, const Point3F &b, const ColorF &color)
+void DebugDrawer::drawLine(const Point3F &a, const Point3F &b, const LinearColorF &color)
 {
    if(isFrozen || !isDrawing)
       return;
@@ -262,7 +392,64 @@ void DebugDrawer::drawLine(const Point3F &a, const Point3F &b, const ColorF &col
    mHead = n;
 }
 
-void DebugDrawer::drawTri(const Point3F &a, const Point3F &b, const Point3F &c, const ColorF &color)
+void DebugDrawer::drawCapsule(const Point3F &a, const F32 &radius, const F32 &height, const LinearColorF &color)
+{
+   if(isFrozen || !isDrawing)
+      return;
+
+   DebugPrim *n = mPrimChunker.alloc();
+
+   n->useZ = true;
+   n->dieTime = 0;
+   n->a = a;
+   n->b.x = radius;
+   n->b.y = height;
+   n->color = color;
+   n->type = DebugPrim::Capsule;
+
+   n->next = mHead;
+   mHead = n;
+
+}
+
+void DebugDrawer::drawDirectionLine(const Point3F &a, const Point3F &b, const LinearColorF &color)
+{
+   if(isFrozen || !isDrawing)
+      return;
+
+   DebugPrim *n = mPrimChunker.alloc();
+
+   n->useZ = true;
+   n->dieTime = 0;
+   n->a = a;
+   n->b = b;
+   n->color = color;
+   n->type = DebugPrim::DirectionLine;
+
+   n->next = mHead;
+   mHead = n;
+}
+
+void DebugDrawer::drawOutlinedText(const Point3F& pos, const String& text, const LinearColorF &color, const LinearColorF &colorOutline)
+{
+   if(isFrozen || !isDrawing)
+      return;
+
+   DebugPrim *n = mPrimChunker.alloc();
+
+   n->useZ = false;
+   n->dieTime = 0;
+   n->a = pos;
+   n->color = color;
+   n->color2 = colorOutline;
+   dStrncpy(n->mText, text.c_str(), 256);   
+   n->type = DebugPrim::OutlinedText;
+
+   n->next = mHead;
+   mHead = n;
+}
+
+void DebugDrawer::drawTri(const Point3F &a, const Point3F &b, const Point3F &c, const LinearColorF &color)
 {
    if(isFrozen || !isDrawing)
       return;
@@ -281,7 +468,7 @@ void DebugDrawer::drawTri(const Point3F &a, const Point3F &b, const Point3F &c, 
    mHead = n;
 }
 
-void DebugDrawer::drawPolyhedron( const AnyPolyhedron& polyhedron, const ColorF& color )
+void DebugDrawer::drawPolyhedron( const AnyPolyhedron& polyhedron, const LinearColorF& color )
 {
    const PolyhedronData::Edge* edges = polyhedron.getEdges();
    const Point3F* points = polyhedron.getPoints();
@@ -357,11 +544,11 @@ void DebugDrawer::drawPolyhedronDebugInfo( const AnyPolyhedron& polyhedron, cons
       p.convolve( scale );
       transform.mulP( p );
 
-      drawText( p, String::ToString( "%i: (%.2f, %.2f, %.2f)", i, p.x, p.y, p.z ), ColorF::WHITE );
+      drawText( p, String::ToString( "%i: (%.2f, %.2f, %.2f)", i, p.x, p.y, p.z ), LinearColorF::WHITE );
    }
 }
 
-void DebugDrawer::drawText(const Point3F& pos, const String& text, const ColorF &color)
+void DebugDrawer::drawText(const Point3F& pos, const String& text, const LinearColorF &color)
 {
    if(isFrozen || !isDrawing)
       return;
@@ -394,13 +581,13 @@ void DebugDrawer::setLastZTest(bool enabled)
    mHead->useZ = enabled;
 }
 
-DefineEngineMethod( DebugDrawer, drawLine, void, ( Point3F a, Point3F b, ColorF color ), ( ColorF::WHITE ),
+DefineEngineMethod( DebugDrawer, drawLine, void, ( Point3F a, Point3F b, LinearColorF color ), ( LinearColorF::WHITE ),
    "Draws a line primitive between two 3d points." )
 {
    object->drawLine( a, b, color );
 }
 
-DefineEngineMethod( DebugDrawer, drawBox, void, ( Point3F a, Point3F b, ColorF color ), ( ColorF::WHITE ),
+DefineEngineMethod( DebugDrawer, drawBox, void, ( Point3F a, Point3F b, LinearColorF color ), ( LinearColorF::WHITE ),
    "Draws an axis aligned box primitive within the two 3d points." )
 {
    object->drawBox( a, b, color );

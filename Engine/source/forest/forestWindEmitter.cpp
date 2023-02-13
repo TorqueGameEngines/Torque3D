@@ -84,12 +84,12 @@ ForestWind::ForestWind(  ForestWindEmitter *emitter )
       mDirection( 1.0f, 0, 0 ),
       mLastGustTime( 0 ),
       mLastYawTime( 0 ),
-      mCurrentTarget( 0, 0 ),
-      mCurrentInterp( 0 ),
       mTargetYawAngle( 0 ),
+      mCurrentInterp( 0 ),
+      mCurrentTarget( 0, 0 ),
       mParent( emitter ),
-      mIsDirty( false ),
-      mRandom( Platform::getRealMilliseconds() + 1 )
+      mRandom( Platform::getRealMilliseconds() + 1 ),
+      mIsDirty( false )
 {
 }
 
@@ -150,10 +150,10 @@ void ForestWind::processTick()
       mCurrentInterp = 0;
       mCurrentTarget.set( 0, 0 );
    
-      Point2F windDir( mDirection.x, mDirection.y );
-      windDir.normalizeSafe();
+      Point2F windNorm( mDirection.x, mDirection.y );
+	  windNorm.normalizeSafe();
 
-      mCurrentTarget = finalVec + windDir;
+      mCurrentTarget = finalVec + windNorm;
    }
    else
    {
@@ -179,6 +179,7 @@ void ForestWind::setStrengthAndDirection( F32 strength, const VectorF &direction
    {
       mStrength = strength;
       mDirection = direction;
+      mCurrentTarget.zero();
       mIsDirty = true;
    }
 }
@@ -204,8 +205,9 @@ void ForestWind::setDirection( const VectorF &direction )
 IMPLEMENT_CO_NETOBJECT_V1(ForestWindEmitter);
 
 ForestWindEmitter::ForestWindEmitter( bool makeClientObject )
-   :  mEnabled( true ),
-      mAddedToScene( false ),      
+   :  
+      mAddedToScene( false ),
+      mEnabled( true ),
       mWind( NULL ),
       mWindStrength( 1 ),
       mWindDirection( 1, 0, 0 ),
@@ -236,6 +238,7 @@ ForestWindEmitter::~ForestWindEmitter()
 
 void ForestWindEmitter::initPersistFields()
 {
+   docsURL;
    // Initialise parents' persistent fields.
    Parent::initPersistFields();
 
@@ -521,8 +524,8 @@ void ForestWindEmitter::_renderEmitterInfo( ObjectRenderInst *ri, SceneRenderSta
    {
       // If the camera is close to the sphere, shrink the sphere so it remains visible.
       GameConnection* gc = GameConnection::getConnectionToServer();
-      GameBase* gb;
-      if ( gc && (gb = gc->getCameraObject()) )
+      GameBase *gb = gc ? gc->getCameraObject() : NULL;
+      if (gb)
       {
          F32 camDist = (gb->getPosition() - getPosition()).len();
          if ( camDist < mWindRadius )

@@ -84,8 +84,11 @@ public:
    virtual inline Point2I getSplitPoint() { return mSplitPoint; };
    /// The Splitters entire Client Rectangle, this takes into account padding of this control
    virtual inline RectI getSplitRect() { return mSplitRect; };
-   virtual void solvePanelConstraints( Point2I newDragPos, GuiContainer * firstPanel, GuiContainer * secondPanel, RectI clientRect );   
+   virtual void solvePanelConstraints(Point2I newDragPos, GuiContainer * firstPanel, GuiContainer * secondPanel, const RectI& clientRect);
    virtual Point2I getMinExtent() const;   
+
+   //Set the positin of the split handler
+   void setSplitPoint(Point2I splitPoint);
 
 protected:
 

@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="probe_n_image"
+    imageFile="@assetFile=probe_n.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

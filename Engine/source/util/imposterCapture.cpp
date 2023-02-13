@@ -118,7 +118,7 @@ void ImposterCaptureMaterialHook::init( BaseMatInstance *inMat )
    mDiffuseMatInst->getFeaturesDelegate().bind( &ImposterCaptureMaterialHook::_overrideFeatures );
    mDiffuseMatInst->init( features, inMat->getVertexFormat() );
    
-   features.addFeature( MFT_IsDXTnm );
+   features.addFeature( MFT_IsBC3nm );
    features.addFeature( MFT_NormalMap );
    features.addFeature( MFT_NormalsOut );
    features.addFeature( MFT_AccuMap );
@@ -136,6 +136,7 @@ void ImposterCaptureMaterialHook::_overrideFeatures(  ProcessedMaterial *mat,
       fd.features.addFeature( MFT_NormalsOut );
 
    fd.features.addFeature( MFT_ForwardShading );
+   fd.features.addFeature( MFT_Imposter );
 }
 
 ImposterCaptureMaterialHook* ImposterCaptureMaterialHook::_getOrCreateHook( BaseMatInstance *inMat )
@@ -154,17 +155,17 @@ ImposterCaptureMaterialHook* ImposterCaptureMaterialHook::_getOrCreateHook( Base
 
 
 ImposterCapture::ImposterCapture()
-:  mShapeInstance( NULL ),
-   mDl( 0 ),
+:  mDl( 0 ),
    mDim( 0 ),
    mRadius( 0.0f ),
    mCenter( Point3F( 0, 0, 0 ) ),
-   mRenderPass( NULL ),
-   mMeshRenderBin( NULL ),
    mBlackBmp( NULL ),
    mWhiteBmp( NULL ),
    mState( NULL ),
-   mRenderTarget( NULL )
+   mShapeInstance( NULL ),
+   mRenderTarget( NULL ),
+   mRenderPass( NULL ),
+   mMeshRenderBin( NULL )
 {     
 }                                   
 
@@ -175,7 +176,7 @@ ImposterCapture::~ImposterCapture()
 
 void ImposterCapture::_colorAverageFilter( U32 dimensions, const U8 *inBmpBits, U8 *outBmpBits )
 {
-   ColorF color;
+   LinearColorF color;
    U32 count = 0;
    U32 index, index2;
 
@@ -371,10 +372,10 @@ void ImposterCapture::begin(  TSShapeInstance *shapeInst,
    mRadius = radius;
    mCenter = center;
 
-   mBlackTex.set( mDim, mDim, GFXFormatR8G8B8A8, &GFXDefaultRenderTargetProfile, avar( "%s() - (line %d)", __FUNCTION__, __LINE__ ) ); 
-   mWhiteTex.set( mDim, mDim, GFXFormatR8G8B8A8, &GFXDefaultRenderTargetProfile, avar( "%s() - (line %d)", __FUNCTION__, __LINE__ ) ); 
-   mNormalTex.set( mDim, mDim, GFXFormatR8G8B8A8, &GFXDefaultRenderTargetProfile, avar( "%s() - (line %d)", __FUNCTION__, __LINE__ ) ); 
-   mDepthBuffer.set( mDim, mDim, GFXFormatD24S8, &GFXDefaultZTargetProfile, avar( "%s() - (line %d)", __FUNCTION__, __LINE__ ) ); 
+   mBlackTex.set( mDim, mDim, GFXFormatR8G8B8A8_SRGB, &GFXRenderTargetSRGBProfile, avar( "%s() - (line %d)", __FUNCTION__, __LINE__ ) );
+   mWhiteTex.set( mDim, mDim, GFXFormatR8G8B8A8_SRGB, &GFXRenderTargetSRGBProfile, avar( "%s() - (line %d)", __FUNCTION__, __LINE__ ) );
+   mNormalTex.set( mDim, mDim, GFXFormatR8G8B8A8, &GFXRenderTargetProfile, avar( "%s() - (line %d)", __FUNCTION__, __LINE__ ) );
+   mDepthBuffer.set( mDim, mDim, GFXFormatD24S8, &GFXZTargetProfile, avar( "%s() - (line %d)", __FUNCTION__, __LINE__ ) );
 
    // copy the black render target data into a bitmap
    mBlackBmp = new GBitmap;

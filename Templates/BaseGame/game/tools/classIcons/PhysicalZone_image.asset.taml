@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="PhysicalZone_image"
+    imageFile="@assetFile=PhysicalZone.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

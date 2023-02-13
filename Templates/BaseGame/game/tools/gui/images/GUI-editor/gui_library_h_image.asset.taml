@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="gui_library_h_image"
+    imageFile="@assetFile=gui-library_h.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

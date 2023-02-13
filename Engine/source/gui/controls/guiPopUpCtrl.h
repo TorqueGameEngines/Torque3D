@@ -38,6 +38,8 @@
 #ifndef _GUISCROLLCTRL_H_
 #include "gui/containers/guiScrollCtrl.h"
 #endif
+
+#include "T3D/assets/ImageAsset.h"
 class GuiPopUpMenuCtrl;
 class GuiPopupTextListCtrl;
 
@@ -115,14 +117,25 @@ protected:
    bool mMouseOver; //  Added
    bool mRenderScrollInNA; //  Added
    bool mReverseTextList;	//  Added - Should we reverse the text list if we display up?
-   StringTableEntry mBitmapName; //  Added
+
+   enum BitmapModes
+   {
+      Normal,
+      Depressed,
+
+      NumBitmapModes = 2
+   };
+
+   DECLARE_IMAGEASSET_ARRAY(GuiPopUpMenuCtrl, Bitmap, NumBitmapModes);
+   DECLARE_IMAGEASSET_ARRAY_SETGET(GuiPopUpMenuCtrl, Bitmap);
+
    Point2I mBitmapBounds; //  Added
-   GFXTexHandle mTextureNormal; //  Added
-   GFXTexHandle mTextureDepressed; //  Added
 	S32 mIdMax;
 
    virtual void addChildren();
    virtual void repositionPopup();
+
+   static bool _setBitmaps(void* obj, const char* index, const char* data);
 
 public:
    GuiPopUpMenuCtrl(void);

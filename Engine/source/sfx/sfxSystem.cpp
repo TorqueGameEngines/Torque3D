@@ -69,6 +69,8 @@ MODULE_END;
 
 SFXSystem* SFXSystem::smSingleton = NULL;
 
+/// Default SFXAmbience used to reset the global soundscape.
+SFXAmbience *sDefaultAmbience;
 
 // Excludes Null and Blocked as these are not passed out to the control layer.
 ImplementEnumType( SFXStatus,
@@ -94,6 +96,9 @@ ImplementEnumType( SFXDistanceModel,
    { SFXDistanceModelLogarithmic, "Logarithmic", 
       "Volume attenuates logarithmically starting from the reference distance and halving every reference distance step from there on. "
       "Attenuation stops at max distance but volume won't reach zero." },
+   { SFXDistanceModelExponent, "Exponential",
+   "Volume attenuates exponentially starting from the reference distance and attenuating every reference distance step by the rolloff factor. "
+   "Attenuation stops at max distance but volume won't reach zero." },
 EndImplementEnumType;
 
 ImplementEnumType( SFXChannel,
@@ -155,8 +160,6 @@ ImplementEnumType( SFXChannel,
       "- 3: Pause\n\n" },
    { SFXChannelUser0,              "User0",
       "Channel available for custom use.  By default ignored by sources.\n\n"
-      "@note For FMOD Designer event sources (SFXFMODEventSource), this channel is used for event parameters "
-         "defined in FMOD Designer and should not be used otherwise.\n\n"
       "@see SFXSource::onParameterValueChange" },
    { SFXChannelUser1,              "User1",
       "Channel available for custom use.  By default ignored by sources.\n\n"
@@ -176,13 +179,11 @@ static const U32 sDeviceCapsVoiceManagement = SFXDevice::CAPS_VoiceManagement;
 static const U32 sDeviceCapsOcclusion = SFXDevice::CAPS_Occlusion;
 static const U32 sDeviceCapsDSPEffects = SFXDevice::CAPS_DSPEffects;
 static const U32 sDeviceCapsMultiListener = SFXDevice::CAPS_MultiListener;
-static const U32 sDeviceCapsFMODDesigner = SFXDevice::CAPS_FMODDesigner;
 
 static const U32 sDeviceInfoProvider = 0;
 static const U32 sDeviceInfoName = 1;
 static const U32 sDeviceInfoUseHardware = 2;
 static const U32 sDeviceInfoMaxBuffers = 3;
-static const U32 sDeviceInfoCaps = 4;
 
 
 //-----------------------------------------------------------------------------
@@ -199,8 +200,8 @@ SFXSystem::SFXSystem()
       mStatNumVoices( 0 ),
       mStatSourceUpdateTime( 0 ),
       mStatParameterUpdateTime( 0 ),
-      mStatAmbientUpdateTime( 0 ),
       mDistanceModel( SFXDistanceModelLinear ),
+      mStatAmbientUpdateTime( 0 ),
       mDopplerFactor( 0.5 ),
       mRolloffFactor( 1.0 ),
       mSoundscapeMgr( NULL )
@@ -251,7 +252,6 @@ SFXSystem::SFXSystem()
    
    Con::addConstant( "$SFX::DEVICE_CAPS_REVERB", TypeS32, &sDeviceCapsReverb,
       "Sound device capability flag indicating that the sound device supports reverb.\n\n"
-      "@note Currently only FMOD implements this.\n\n"
       "@see sfxGetDeviceInfo\n\n"
       "@ref SFX_reverb\n\n"
       "@ingroup SFX" );
@@ -259,7 +259,6 @@ SFXSystem::SFXSystem()
       "Sound device capability flag indicating that the sound device implements its own voice virtualization.\n\n"
       "For these devices, the sound system will deactivate its own voice management and leave voice "
          "virtualization entirely to the device.\n\n"
-      "@note Currently only FMOD implements this.\n\n"
       "@see sfxGetDeviceInfo\n\n"
       "@ref SFXSound_virtualization\n\n"
       "@ingroup SFX" );
@@ -276,15 +275,7 @@ SFXSystem::SFXSystem()
       "@ingroup SFX" );
    Con::addConstant( "$SFX::DEVICE_CAPS_MULTILISTENER", TypeS32, &sDeviceCapsMultiListener,
       "Sound device capability flag indicating that the sound device supports multiple concurrent listeners.\n\n"
-      "@note Currently only FMOD implements this.\n\n"
       "@see sfxGetDeviceInfo\n\n"
-      "@ingroup SFX" );
-   Con::addConstant( "$SFX::DEVICE_CAPS_FMODDESIGNER", TypeS32, &sDeviceCapsFMODDesigner,
-      "Sound device capability flag indicating that the sound device supports FMOD Designer audio projects.\n\n"
-      "@note This is exclusive to FMOD.  If the FMOD Event DLLs are in place and could be successfully loaded, this "
-         "flag will be set after initializating an FMOD audio device.\n\n"
-      "@see sfxGetDeviceInfo\n\n"
-      "@ref FMOD_designer\n\n"
       "@ingroup SFX" );
       
    Con::addConstant( "$SFX::DEVICE_INFO_PROVIDER", TypeS32, &sDeviceInfoProvider,
@@ -375,7 +366,8 @@ void SFXSystem::init()
    // register them in the provider initialization.
 
    // Create the system.
-   smSingleton = new SFXSystem();   
+   smSingleton = new SFXSystem();
+   sDefaultAmbience = new SFXAmbience();
 }
 
 //-----------------------------------------------------------------------------
@@ -395,6 +387,7 @@ void SFXSystem::destroy()
    // Destroy the stream thread pool
 
    SFXInternal::SFXThreadPool::deleteSingleton();
+   delete(sDefaultAmbience);
 }
 
 //-----------------------------------------------------------------------------
@@ -474,6 +467,9 @@ bool SFXSystem::createDevice( const String& providerName, const String& deviceNa
    mDevice->setDistanceModel( mDistanceModel );
    mDevice->setDopplerFactor( mDopplerFactor );
    mDevice->setRolloffFactor( mRolloffFactor );
+   //OpenAL requires slots for effects, this creates an empty function 
+   //that will run when a sfxdevice is created.
+   mDevice->openSlots();
    mDevice->setReverb( mReverb );
       
    // Signal system.
@@ -648,7 +644,7 @@ void SFXSystem::deleteWhenStopped( SFXSource* source )
    // If the source isn't already on the play-once source list,
    // put it there now.
    
-   Vector< SFXSource* >::iterator iter = find( mPlayOnceSources.begin(), mPlayOnceSources.end(), source );
+   Vector< SFXSource* >::iterator iter = T3D::find( mPlayOnceSources.begin(), mPlayOnceSources.end(), source );
    if( iter == mPlayOnceSources.end() )
       mPlayOnceSources.push_back( source );
 }
@@ -675,9 +671,9 @@ void SFXSystem::_onRemoveSource( SFXSource* source )
 {
    // Check if it was a play once source.
    
-   Vector< SFXSource* >::iterator iter = find( mPlayOnceSources.begin(), mPlayOnceSources.end(), source );
-   if ( iter != mPlayOnceSources.end() )
-      mPlayOnceSources.erase_fast( iter );
+   Vector< SFXSource* >::iterator sourceIter = T3D::find( mPlayOnceSources.begin(), mPlayOnceSources.end(), source );
+   if (sourceIter != mPlayOnceSources.end() )
+      mPlayOnceSources.erase_fast(sourceIter);
 
    // Update the stats.
    
@@ -685,9 +681,9 @@ void SFXSystem::_onRemoveSource( SFXSource* source )
    
    if( dynamic_cast< SFXSound* >( source ) )
    {
-      SFXSoundVector::iterator iter = find( mSounds.begin(), mSounds.end(), static_cast< SFXSound* >( source ) );
-      if( iter != mSounds.end() )
-         mSounds.erase_fast( iter );
+      SFXSoundVector::iterator vectorIter = T3D::find( mSounds.begin(), mSounds.end(), static_cast< SFXSound* >( source ) );
+      if(vectorIter != mSounds.end() )
+         mSounds.erase_fast(vectorIter);
          
       mStatNumSounds = mSounds.size();
    }
@@ -1236,7 +1232,7 @@ DefineEngineFunction( sfxGetAvailableDevices, const char*, (),,
    "@verbatim\n"
       "provider TAB device TAB hasHardware TAB numMaxBuffers\n"
    "@endverbatim\n"
-   "- provider: The name of the device provider (e.g. \"FMOD\").\n"
+   "- provider: The name of the device provider (e.g. \"OpenAL\").\n"
    "- device: The name of the device as returned by the device layer.\n"
    "- hasHardware: Whether the device supports hardware mixing or not.\n"
    "- numMaxBuffers: The maximum number of concurrent voices supported by the device's mixer.  If this limit "
@@ -1268,7 +1264,8 @@ DefineEngineFunction( sfxGetAvailableDevices, const char*, (),,
       {
          const SFXDeviceInfo* info = deviceInfo[d];
          const char *providerName = provider->getName().c_str();
-         const char *infoName = info->name.c_str();
+         char *infoName = (char*)info->name.c_str();
+         
          dSprintf(ptr, len, "%s\t%s\t%s\t%i\n", providerName, infoName, info->hasHardware ? "1" : "0", info->maxBuffers);
 
          ptr += dStrlen(ptr);
@@ -1331,7 +1328,7 @@ DefineEngineFunction( sfxGetDeviceInfo, const char*, (),,
    "@verbatim\n"
       "provider TAB device TAB hasHardware TAB numMaxBuffers TAB caps\n"
    "@endverbatim\n"
-   "- provider: The name of the device provider (e.g. \"FMOD\").\n"
+   "- provider: The name of the device provider (e.g. \"OpenALD\").\n"
    "- device: The name of the device as returned by the device layer.\n"
    "- hasHardware: Whether the device supports hardware mixing or not.\n"
    "- numMaxBuffers: The maximum number of concurrent voices supported by the device's mixer.  If this limit "
@@ -1352,7 +1349,6 @@ DefineEngineFunction( sfxGetDeviceInfo, const char*, (),,
    "@see $SFX::DEVICE_CAPS_OCCLUSION\n\n"
    "@see $SFX::DEVICE_CAPS_DSPEFFECTS\n\n"
    "@see $SFX::DEVICE_CAPS_MULTILISTENER\n\n"
-   "@see $SFX::DEVICE_CAPS_FMODDESIGNER\n\n"
    "@ref SFX_devices\n"
    "@ingroup SFX" )
 {
@@ -1374,7 +1370,7 @@ static ConsoleDocFragment _sfxCreateSource1(
    "@param track The track the source should play.\n"
    "@return A new SFXSource for playback of the given track or 0 if no source could be created from the given track.\n\n"
    "@note Trying to create a source for a device-specific track type will fail if the currently selected device "
-      "does not support the type.  Example: trying to create a source for an FMOD Designer event when not running FMOD.\n\n"
+      "does not support the type. \n\n"
    "@tsexample\n"
    "// Create and play a source from a pre-existing profile:\n"
    "%source = sfxCreateSource( SoundFileProfile );\n"
@@ -1395,7 +1391,7 @@ static ConsoleDocFragment _sfxCreateSource2(
    "@param z The Z coordinate of the 3D sound position.\n"
    "@return A new SFXSource for playback of the given track or 0 if no source could be created from the given track.\n\n"
    "@note Trying to create a source for a device-specific track type will fail if the currently selected device "
-      "does not support the type.  Example: trying to create a source for an FMOD Designer event when not running FMOD.\n\n"
+      "does not support the type. \n\n"
    "@tsexample\n"
    "// Create and play a source from a pre-existing profile and position it at (100, 200, 300):\n"
    "%source = sfxCreateSource( SoundFileProfile, 100, 200, 300 );\n"
@@ -1443,7 +1439,7 @@ static ConsoleDocFragment _sfxCreateSource4(
    NULL,
    "SFXSound sfxCreateSource( SFXDescription description, string filename, float x, float y, float z );" );
 
-DefineConsoleFunction( sfxCreateSource, S32, ( const char * sfxType, const char * arg0, const char * arg1, const char * arg2, const char * arg3 ), ("", "", "", ""),
+DefineEngineFunction( sfxCreateSource, S32, ( const char * sfxType, const char * arg0, const char * arg1, const char * arg2, const char * arg3 ), ("", "", "", ""),
                      "( SFXTrack track | ( SFXDescription description, string filename ) [, float x, float y, float z ] ) "
                      "Creates a new paused sound source using a profile or a description "
                      "and filename.  The return value is the source which must be "
@@ -1467,7 +1463,7 @@ DefineConsoleFunction( sfxCreateSource, S32, ( const char * sfxType, const char 
    if ( track )
    {
       // In this overloaded use of the function, arg0..arg2 are x, y, and z.
-      if ( dStrIsEmpty(arg0) )
+      if ( String::isEmpty(arg0) )
       {
          source = SFX->createSource( track );
       }
@@ -1489,7 +1485,7 @@ DefineConsoleFunction( sfxCreateSource, S32, ( const char * sfxType, const char 
       }
       else
       {
-         if ( dStrIsEmpty(arg1) )
+         if ( String::isEmpty(arg1) )
          {
             source = SFX->createSource( tempProfile );
          }
@@ -1548,11 +1544,11 @@ static ConsoleDocFragment _sfxPlay3(
    NULL,
    "void sfxPlay( SFXTrack track, float x, float y, float z );" );
    
-DefineConsoleFunction( sfxPlay, S32, ( const char * trackName, const char * pointOrX, const char * y, const char * z ), ( "", "", ""),
+DefineEngineFunction( sfxPlay, S32, ( const char * trackName, const char * pointOrX, const char * y, const char * z ), ( "", "", ""),
    "Start playing the given source or create a new source for the given track and play it.\n"
    "@hide" )
 {
-   if ( dStrIsEmpty(pointOrX) )
+   if ( String::isEmpty(pointOrX) )
    {
       SFXSource* source = dynamic_cast<SFXSource*>( Sim::findObject( trackName ) );
       if ( source )
@@ -1570,11 +1566,11 @@ DefineConsoleFunction( sfxPlay, S32, ( const char * trackName, const char * poin
    }
 
    Point3F pos(0.f, 0.f, 0.f);
-   if ( !dStrIsEmpty( pointOrX ) && dStrIsEmpty( y ) && dStrIsEmpty( z )  )
+   if ( !String::isEmpty( pointOrX ) && String::isEmpty( y ) && String::isEmpty( z )  )
    {
       dSscanf( pointOrX, "%g %g %g", &pos.x, &pos.y, &pos.z );
    }
-   else if( !dStrIsEmpty( pointOrX ) && !dStrIsEmpty( y ) && !dStrIsEmpty( z ) )
+   else if( !String::isEmpty( pointOrX ) && !String::isEmpty( y ) && !String::isEmpty( z ) )
       pos.set( dAtof(pointOrX), dAtof(y), dAtof(z) );
 
    MatrixF transform;
@@ -1590,133 +1586,70 @@ DefineConsoleFunction( sfxPlay, S32, ( const char * trackName, const char * poin
 //-----------------------------------------------------------------------------
 
 static ConsoleDocFragment _sPlayOnce1(
-   "@brief Create a play-once source for the given @a track.\n\n"
+   "@brief Create a play-once source for the given @a asset.\n\n"
    "Once playback has finished, the source will be automatically deleted in the next sound system update.\n"
    "@param track The sound datablock.\n"
    "@return A newly created temporary source in \"Playing\" state or 0 if the operation failed.\n\n"
    "@ref SFXSource_playonce\n\n"
    "@ingroup SFX",
    NULL,
-   "SFXSource sfxPlayOnce( SFXTrack track );"
+   "SFXSource sfxPlayOnce( StringTableEntry assetID );"
 );
 static ConsoleDocFragment _sPlayOnce2(
-   "@brief Create a play-once source for the given given @a track and position the source's 3D sound at the given coordinates "
-      "only if the track's description is set up for 3D sound).\n\n"
+   "@brief Create a play-once source for the given given @a asset and position the source's 3D sound at the given coordinates "
+      "only if the asset is set up for 3D sound).\n\n"
    "Once playback has finished, the source will be automatically deleted in the next sound system update.\n"
-   "@param track The sound datablock.\n"
+   "@param assetId The sound asset.\n"
    "@param x The X coordinate of the 3D sound position.\n"
    "@param y The Y coordinate of the 3D sound position.\n"
    "@param z The Z coordinate of the 3D sound position.\n"
-   "@param fadeInTime If >=0, this overrides the SFXDescription::fadeInTime value on the track's description.\n"
+   "@param fadeInTime If >=0, this overrides the SFXDescription::fadeInTime value on the asset's definition.\n"
    "@return A newly created temporary source in \"Playing\" state or 0 if the operation failed.\n\n"
    "@tsexample\n"
-      "// Immediately start playing the given track.  Fade it in to full volume over 5 seconds.\n"
-      "sfxPlayOnce( MusicTrack, 0, 0, 0, 5.f );\n"
+      "// Immediately start playing the given asset.  Fade it in to full volume over 5 seconds.\n"
+      "sfxPlayOnce( ExampleModule:MusicTrack, 0, 0, 0, 5.f );\n"
    "@endtsexample\n\n"
    "@ref SFXSource_playonce\n\n"
    "@ingroup SFX",
    NULL,
-   "SFXSource sfxPlayOnce( SFXTrack track, float x, float y, float z, float fadeInTime=-1 );"
-);
-static ConsoleDocFragment _sPlayOnce3(
-   "@brief Create a new temporary SFXProfile from the given @a description and @a filename, then create a play-once source "
-      "for it and start playback.\n\n"
-   "Once playback has finished, the source will be automatically deleted in the next sound system update.  If not referenced "
-      "otherwise by then, the temporary SFXProfile will also be deleted.\n"
-   "@param description The description to use for playback.\n"
-   "@param filename Path to the sound file to play.\n"
-   "@return A newly created temporary source in \"Playing\" state or 0 if the operation failed.\n\n"
-   "@tsexample\n"
-   "// Play a sound effect file once.\n"
-   "sfxPlayOnce( AudioEffects, \"art/sound/weapons/Weapon_pickup\" );\n"
-   "@endtsexample\n\n"
-   "@ref SFXSource_playonce\n\n"
-   "@ingroup SFX",
-   NULL,
-   "SFXSource sfxPlayOnce( SFXDescription description, string filename );"
-);
-static ConsoleDocFragment _sPlayOnce4(
-   "@brief Create a new temporary SFXProfile from the given @a description and @a filename, then create a play-once source "
-      "for it and start playback.  Position the source's 3D sound at the given coordinates (only if the description "
-      "is set up for 3D sound).\n\n"
-   "Once playback has finished, the source will be automatically deleted in the next sound system update.  If not referenced "
-      "otherwise by then, the temporary SFXProfile will also be deleted.\n"
-   "@param description The description to use for playback.\n"
-   "@param filename Path to the sound file to play.\n"
-   "@param x The X coordinate of the 3D sound position.\n"
-   "@param y The Y coordinate of the 3D sound position.\n"
-   "@param z The Z coordinate of the 3D sound position.\n"
-   "@param fadeInTime If >=0, this overrides the SFXDescription::fadeInTime value on the track's description.\n"
-   "@return A newly created temporary source in \"Playing\" state or 0 if the operation failed.\n\n"
-   "@tsexample\n"
-   "// Play a sound effect file once using a 3D sound with a default falloff placed at the origin.\n"
-   "sfxPlayOnce( AudioDefault3D, \"art/sound/weapons/Weapon_pickup\", 0, 0, 0 );\n"
-   "@endtsexample\n\n"
-   "@ref SFXSource_playonce\n\n"
-   "@ingroup SFX",
-   NULL,
-   "SFXSource sfxPlayOnce( SFXDescription description, string filename, float x, float y, float z, float fadeInTime=-1 );"
+   "SFXSource sfxPlayOnce( StringTableEntry assetID, float x, float y, float z, float fadeInTime=-1 );"
 );
 
-DefineConsoleFunction( sfxPlayOnce, S32, ( const char * sfxType, const char * arg0, const char * arg1, const char * arg2, const char * arg3, const char* arg4 ), ("", "", "", "", "-1.0f"),
+DefineEngineFunction( sfxPlayOnce, S32, (StringTableEntry assetId, const char* arg0, const char * arg1, const char * arg2, const char * arg3 ), (StringTable->EmptyString(), "", "", "", "-1.0f"),
    "SFXSource sfxPlayOnce( ( SFXTrack track | SFXDescription description, string filename ) [, float x, float y, float z, float fadeInTime=-1 ] ) "
    "Create a new play-once source for the given profile or description+filename and start playback of the source.\n"
    "@hide" )
 {
    SFXDescription* description = NULL;
-   SFXTrack* track = dynamic_cast< SFXTrack* >( Sim::findObject( sfxType ) );
-   if( !track )
+   if (assetId == StringTable->EmptyString())
    {
-      description = dynamic_cast< SFXDescription* >( Sim::findObject( sfxType ) );
-      if( !description )
-      {
-         Con::errorf( "sfxPlayOnce - Unable to locate sound track/description '%s'", sfxType );
-         return 0;
-      }
+      Con::errorf( "sfxPlayOnce - Must Define a sound asset");
+      return 0;
    }
 
    SFXSource* source = NULL;
-   if( track )
+
+   if (AssetDatabase.isDeclaredAsset(assetId))
    {
-      // In this overloaded use, arg0..arg2 are x, y, z, and arg3 is the fadeInTime.
-      if (dStrIsEmpty(arg0))
+
+      AssetPtr<SoundAsset> tempSoundAsset;
+      tempSoundAsset = assetId;
+
+      if (String::isEmpty(arg0) || !tempSoundAsset->is3D())
       {
-         source = SFX->playOnce( track );
+         source = SFX->playOnce(tempSoundAsset->getSfxProfile());
       }
       else
       {
          MatrixF transform;
-         transform.set( EulerF( 0, 0, 0 ), Point3F( dAtof( arg0 ), dAtof( arg1 ),dAtof( arg2 ) ) );
-         source = SFX->playOnce( track, &transform, NULL, dAtof( arg3 ) );
+         transform.set(EulerF(0, 0, 0), Point3F(dAtof(arg0), dAtof(arg1), dAtof(arg2)));
+         source = SFX->playOnce(tempSoundAsset->getSfxProfile(), &transform, NULL, dAtof(arg3));
       }
    }
-   else if( description )
+   else
    {
-      // In this overload, arg0 is the filename, arg1..arg3 are x, y, z, and arg4 is fadeInTime.
-      SFXProfile* tempProfile = new SFXProfile( description, StringTable->insert( arg0 ), true );
-      if( !tempProfile->registerObject() )
-      {
-         Con::errorf( "sfxPlayOnce - unable to create profile" );
-         delete tempProfile;
-      }
-      else
-      {
-         if (dStrIsEmpty(arg1))
-            source = SFX->playOnce( tempProfile );
-         else
-         {
-            MatrixF transform;
-            transform.set( EulerF( 0, 0, 0 ), Point3F( dAtof( arg1 ), dAtof( arg2 ),dAtof( arg3 ) ) );
-            source = SFX->playOnce( tempProfile, &transform, NULL, dAtof( arg4 ) );
-         }
-         
-         // Set profile to auto-delete when SFXSource releases its reference.
-         // Also add to root group so the profile will get deleted when the
-         // Sim system is shut down before the SFXSource has played out.
-
-         tempProfile->setAutoDelete( true );
-         Sim::getRootGroup()->addObject( tempProfile );
-      }
+      Con::errorf("sfxPlayOnce - Could not locate assetId '%s'", assetId);
+      return 0;
    }
 
    if( !source )

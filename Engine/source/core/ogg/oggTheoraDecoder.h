@@ -48,9 +48,9 @@ class OggTheoraFrame : public RawData
    
       typedef RawData Parent;
       
-      OggTheoraFrame() {}
+      OggTheoraFrame() :mFrameNumber(0), mFrameTime(0), mFrameDuration(0) {}
       OggTheoraFrame( S8* data, U32 size, bool ownMemory = false )
-         : Parent( data, size, ownMemory ) {}
+         : Parent( data, size, ownMemory ), mFrameNumber(0), mFrameTime(0), mFrameDuration(0) {}
          
       /// Serial number of this frame in the stream.
       U32 mFrameNumber;
@@ -172,10 +172,10 @@ class OggTheoraDecoder : public OggDecoder,
       /// Generic transcoder going from any of the Y'CbCr pixel formats to
       /// any RGB format (that is supported by GFXFormatUtils).
       void _transcode( th_ycbcr_buffer ycbcr, U8* buffer, U32 width, U32 height );
-      
-      /// Transcoder with fixed 4:2:0 to RGBA conversion using SSE2 assembly.
+#if defined( TORQUE_CPU_X86 )
+      /// Transcoder with fixed 4:2:0 to RGBA conversion using SSE2 assembly. Unused on 64 bit archetecture.
       void _transcode420toRGBA_SSE2( th_ycbcr_buffer ycbcr, U8* buffer, U32 width, U32 height, U32 pitch );
-      
+#endif
       // OggDecoder.
       virtual bool _detect( ogg_page* startPage );
       virtual bool _init();

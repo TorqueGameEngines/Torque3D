@@ -1,0 +1,133 @@
+//-----------------------------------------------------------------------------
+// Copyright (c) 2012 GarageGames, LLC
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+// IN THE SOFTWARE.
+//-----------------------------------------------------------------------------
+
+$PostFX::VignettePostFX::VMax = 0.6;
+$PostFX::VignettePostFX::VMin = 0.2;
+$PostFX::VignettePostFX::Color = "0 0 0 1";
+
+singleton ShaderData( VignettePostFX_Shader )
+{
+   DXVertexShaderFile 	= $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
+   DXPixelShaderFile 	= "./VignettePostFXP.hlsl";   
+   OGLVertexShaderFile  = $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";
+   OGLPixelShaderFile   = "./VignettePostFXP.glsl";
+   
+   samplerNames[0] = "$backBuffer";
+   
+   pixVersion = 3.0;
+};
+
+singleton GFXStateBlockData( VignettePostFX_StateBlock )
+{
+   zDefined = true;
+   zEnable = false;
+   zWriteEnable = false;
+      
+   samplersDefined = true;
+   samplerStates[0] = SamplerClampLinear;
+};
+
+
+function VignettePostFX::setShaderConsts( %this )
+{
+   %this.setShaderConst("$Vmax", $PostFX::VignettePostFX::VMax);
+   %this.setShaderConst("$Vmin", $PostFX::VignettePostFX::VMin);
+   %this.setShaderConst("$Color", $PostFX::VignettePostFX::Color);
+}
+
+function VignettePostFX::preProcess( %this )
+{
+}
+
+function VignettePostFX::onAdd(%this)
+{
+   //Register the postFX with the manager
+   PostFXManager.registerPostEffect(%this);
+}
+
+function VignettePostFX::onEnabled( %this )
+{
+   return true;
+}
+
+function VignettePostFX::onDisabled( %this )
+{
+   return true;
+}
+
+//This is used to populate the PostFXEditor's settings so the post FX can be edited
+//This is automatically polled for any postFX that has been registered(in our onAdd) and the settings
+//are thus exposed for editing
+function VignettePostFX::populatePostFXSettings(%this)
+{
+   PostEffectEditorInspector.startGroup("VignettePostFX - General");
+   PostEffectEditorInspector.addCallbackField("$PostFX::VignettePostFX::Enabled", "Enabled", "bool", "", $PostFX::VignettePostFX::Enabled, "", "toggleVignettePostFX");
+   PostEffectEditorInspector.addField("$PostFX::VignettePostFX::VMin", "Min", "range", "", $PostFX::VignettePostFX::VMin, "0 1 10");
+   PostEffectEditorInspector.addField("$PostFX::VignettePostFX::VMax", "Max", "range", "", $PostFX::VignettePostFX::VMax, "0 1 10");
+   PostEffectEditorInspector.addField("$PostFX::VignettePostFX::Color", "Color", "colorF", "", $PostFX::VignettePostFX::Color, "");
+   PostEffectEditorInspector.endGroup();
+}
+
+//This is called back from our callbackField defined in populatePostFXSettings to
+//Allow us to easily toggle the postFX and have it respond immediately
+function PostEffectEditorInspector::toggleVignettePostFX(%this)
+{
+   if($PostFX::VignettePostFX::Enabled && $pref::PostFX::EnableVignette)
+      VignettePostFX.enable();
+   else
+      VignettePostFX.disable();
+}
+
+//This function pair(applyFromPreset and settingsApply) are done the way they are, with the separated variables
+//so that we can effectively store the 'settings' away from the live variables that the postFX's actually utilize
+//when rendering. This allows us to modify things but still leave room for reverting or temporarily applying them
+function VignettePostFX::applyFromPreset(%this)
+{
+   if($PostFX::VignettePostFX::Enabled && $pref::PostFX::EnableVignette)
+      %this.enable();
+   else
+      %this.disable();
+}
+
+function VignettePostFX::savePresetSettings(%this)
+{
+   PostFXManager::savePresetSetting("$PostFX::VignettePostFX::Enabled");
+   PostFXManager::savePresetSetting("$PostFX::VignettePostFX::VMin");
+   PostFXManager::savePresetSetting("$PostFX::VignettePostFX::VMax");
+   PostFXManager::savePresetSetting("$PostFX::VignettePostFX::Color");
+}
+
+//Our actual postFX
+singleton PostEffect( VignettePostFX )
+{
+   enabled = false;
+   
+   renderTime = "PFXBeforeBin";
+   renderBin = "EditorBin";
+   renderPriority = 9999; 
+
+   shader = VignettePostFX_Shader;
+   stateBlock = VignettePostFX_StateBlock;
+   texture[0]        = "$backBuffer";
+   renderPriority    = 10;
+   target = "$backBuffer";
+};

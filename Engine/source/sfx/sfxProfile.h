@@ -20,6 +20,11 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+// Arcane-FX for MIT Licensed Open Source version of Torque 3D from GarageGames
+// Copyright (C) 2015 Faust Logic, Inc.
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+
 #ifndef _SFXPROFILE_H_
 #define _SFXPROFILE_H_
 
@@ -88,7 +93,7 @@ class SFXProfile : public SFXTrack
       
       /// The sound filename.  If no extension is specified
       /// the system will try .wav first then other formats.
-      String mFilename;
+      StringTableEntry mFilename;
 
       /// If true the sound data will be loaded from
       /// disk and possibly cached with the active 
@@ -149,7 +154,11 @@ class SFXProfile : public SFXTrack
       void unpackData( BitStream* stream );
 
       /// Returns the sound filename.
-      const String& getSoundFileName() const { return mFilename; }
+      const String getSoundFileName() const { return mFilename; }
+      void setSoundFileName(StringTableEntry filename) { mFilename = filename; }
+
+      bool getPreload() const { return mPreload; }
+      void setPreload(bool preload) { mPreload = preload; }
 
       /// @note This has nothing to do with mPreload.
       /// @see SimDataBlock::preload
@@ -175,6 +184,11 @@ class SFXProfile : public SFXTrack
       
       ///
       ChangedSignal& getChangedSignal() { return mChangedSignal; }
+   public:
+      /*C*/          SFXProfile(const SFXProfile&, bool = false);
+      SFXProfile*    cloneAndPerformSubstitutions(const SimObject*, S32 index=0);
+      virtual void   onPerformSubstitutions();
+      virtual bool   allowSubstitutions() const { return true; }
 };
 
 

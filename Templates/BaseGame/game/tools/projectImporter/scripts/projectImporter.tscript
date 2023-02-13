@@ -1,0 +1,2216 @@
+$ProjectImporter::rootDir = "tools";
+
+$ProjectImporter::writeToConsole = false;
+
+function ProjectImporter::beginProjectImport()
+{
+   Canvas.pushDialog(ProjectImportCtrl);
+}
+
+//==============================================================================
+// Wake-up and initial setup
+//==============================================================================
+function ProjectImportWindow::onWake(%this)
+{
+   if(isObject($ProjectImporter::assetQuery))
+      $ProjectImporter::assetQuery.delete();
+   $ProjectImporter::assetQuery = new AssetQuery();
+      
+   if(isObject($ProjectImporter::importer))
+      $ProjectImporter::importer.delete();
+   $ProjectImporter::importer = new AssetImporter();
+   $ProjectImporter::importer.dumpLogs = false; //we handle the log dump outselves here
+   
+   if(isObject($ProjectImporter::persistMgr))
+      $ProjectImporter::persistMgr.delete();
+   $ProjectImporter::persistMgr = new PersistenceManager();
+   
+   if(!isObject($ProjectImporter::fileObject))
+      $ProjectImporter::fileObject = new FileObject();
+      
+   if(!isObject($ProjectImporter::log))
+      $ProjectImporter::log = new ArrayObject();
+   else
+      $ProjectImporter::log.empty();
+      
+   if(!isObject($ProjectImporter::importerList))
+      $ProjectImporter::importerList = new ArrayObject();
+   else
+      $ProjectImporter::importerList.empty();
+      
+   //This array is for containing the importer pages for the wizard
+   if(!isObject($ProjectImporter::importerPageList))
+      $ProjectImporter::importerPageList = new ArrayObject();
+   else
+      $ProjectImporter::importerPageList.empty();
+      
+   %this.importStepNumber = 0;
+   
+   ProejctImportPageContainer.callOnChildren("setHidden", true);
+   
+   $ProjectImporter::importerPageList.add(ProjectImportWizardPage0);
+   $ProjectImporter::importerPageList.add(ProjectImportWizardPage1);
+   $ProjectImporter::importerPageList.add(ProjectImportWizardPage2);
+   $ProjectImporter::importerPageList.add(ProjectImportWizardPage3);
+   $ProjectImporter::importerPageList.add(ProjectImportWizardPage4);
+   
+   %this.setStep(0);
+   
+   //now we iterate over our importers to get them registered and set up
+   for( %file = findFirstFile( "tools/projectImporter/importers/*." @ $TorqueScriptFileExtension );
+           %file !$= "";
+           %file = findNextFile( "tools/projectImporter/importers/*." @ $TorqueScriptFileExtension ))
+   {
+      exec( %file );
+   }
+}
+
+//==============================================================================
+// Page Navigation
+//==============================================================================
+function ProjectImportWindow::previousStep(%this)
+{
+   if(%this.importStepNumber == 0)
+      return;
+      
+   %this.importStepNumber--;
+   
+   %this.pageChanged = true;
+   
+   %this.showPage(%this.importStepNumber);
+}
+
+function ProjectImportWindow::nextStep(%this)
+{
+   if(%this.importStepNumber == $ProjectImporter::importerPageList.count()-1)
+   {
+      Canvas.popDialog(ProjectImportCtrl);
+      return;  
+   }
+   
+   %this.importStepNumber++;
+   
+   %this.pageChanged = true;
+   
+   %this.showPage(%this.importStepNumber);
+}
+
+function ProjectImportWindow::setStep(%this, %stepNum)
+{
+   if(%stepNum >= $ProjectImporter::importerPageList.count())
+   {
+      Canvas.popDialog(ProjectImportCtrl);
+      return;  
+   }
+   
+   if(%stepNum < 0)
+      return;  
+   
+   %this.importStepNumber = %stepNum;
+   
+   %this.pageChanged = true;
+   
+   %this.showPage(%this.importStepNumber);
+}
+
+function ProjectImportWindow::selectOGFolder(%this)
+{
+   %dlg = new OpenFolderDialog()
+   {
+      Title = "Select Export Folder";
+      Filters = "";
+      DefaultFile = "data/";
+      ChangePath = false;
+      MustExist = true;
+      MultipleFiles = false;
+   };
+
+   //if(filePath( %currentFile ) !$= "")
+      %dlg.DefaultPath = "data/";
+
+   if(%dlg.Execute())
+   {
+      %path = makeFullPath(%dlg.FileName);
+      %this-->targetImportingPath.setText("Folder: " @ %path);
+      $ProjectImporter::sourceContentFolder = %path;
+   }
+
+   %dlg.delete();
+}
+
+function ProjectImportWindow::refreshPage(%this)
+{
+   for(%i=0; %i < $ProjectImporter::importerPageList.count(); %i++)
+   {
+      %page = $ProjectImporter::importerPageList.getKey(%i); 
+      %page.setHidden(true);
+      %page.callOnChildren("setHidden", true);
+   }  
+   
+   %page = $ProjectImporter::importerPageList.getKey(%this.importStepNumber);
+   %page.setHidden(false);
+   %page.callOnChildren("setHidden", false);
+}
+
+function ProjectImportWindow::showPage(%this, %pageIndex)
+{
+   if(%pageIndex < 0 || %pageIndex > $ProjectImporter::importerPageList.count())
+      return;
+      
+   %this.importStepNumber = %pageIndex;
+   
+   %this.refreshPage();
+   
+   if(%this.pageChanged)
+   {
+      //run page logic
+      %page = $ProjectImporter::importerPageList.getKey(%this.importStepNumber);
+      %page.openPage();
+   }
+   
+   %this.pageChanged = false;
+}
+
+function ProjectImportWindow::getCurrentPage(%this)
+{
+   return $ProjectImporter::importerPageList.getKey(%this.importStepNumber);
+}
+
+//==============================================================================
+// Welcome page
+//==============================================================================
+function ProjectImportWizardPage0::openPage(%this)
+{
+   ProjectImportWindow-->backButton.setHidden(true);
+}
+
+//==============================================================================
+// Select the specific version importer
+//==============================================================================
+function ProjectImportWizardPage1::openPage(%this)
+{
+   ProjectImportWindow-->backButton.setHidden(false);
+   
+   %this-->previousContentVersionPopup.clear();
+   
+   for(%i=0; %i < $ProjectImporter::importerList.count(); %i++)
+   {
+      %this-->previousContentVersionPopup.add($ProjectImporter::importerList.getKey(%i));
+   }
+}
+
+//==============================================================================
+// Set Source Folder
+//==============================================================================
+function ProjectImportWizardPage2::openPage(%this)
+{
+   %version = ProjectImportWizardPage1-->previousContentVersionPopup.getSelected();
+   if(ProjectImportWizardPage1-->previousContentVersionPopup.getText() $= "")
+   {
+      ProjectImportWindow.previousStep();
+      toolsMessageBoxOK("Version Required", "You must select a project version to continue.");
+      return;
+   }
+   
+   $ProjectImporter::sourceContentFolder = "";
+   %this-->targetImportingPath.setText("");
+   
+   Canvas.repaint(); //force it to refresh the page so we're up to date.
+   
+   $ProjectImporter::versionMode = $ProjectImporter::importerList.getKey(%version);
+   
+   if(isObject($ProjectImporter::importTool))
+      $ProjectImporter::importTool.delete();
+      
+   $ProjectImporter::importTool = $ProjectImporter::importerList.getValue(%version);
+   
+   $ProjectImporter::importTool.setupPages(); //Have the importer register it's pages
+   
+   //And then add our final page 
+   $ProjectImporter::importerPageList.add(ProjectImportWizardFinalPage);
+}
+
+//==============================================================================
+// Prepwork for import and getting the target module name
+//==============================================================================
+function ProjectImportWizardPage3::openPage(%this)
+{
+   projectImporterLog("===========================================");
+   projectImporterLog("Beginning Project Import");
+   projectImporterLog("===========================================");
+   
+   %dataFullPath = makeFullPath("data/");
+   %coreFullPath = makeFullPath("core/");
+   %toolsFullPath = makeFullPath("tools/");
+   if(startsWith($ProjectImporter::sourceContentFolder, makeFullPath("data/")))
+   {
+      %moduleDef = AssetBrowser.dirHandler.getModuleFromAddress(makeRelativePath($ProjectImporter::sourceContentFolder));
+      if(isObject(%moduleDef))
+      {
+         //already a valid module in place so just skip this step  
+         $ProjectImporter::useExistingModule = true;
+         $ProjectImporter::moduleName = %moduleDef.moduleId;
+         $ProjectImporter::modulePath = "data/" @ $ProjectImporter::moduleName;
+         ProjectImportWindow.setStep(4);
+      }
+   }
+   else if(startsWith($ProjectImporter::sourceContentFolder, makeFullPath("core/")) ||
+            startsWith($ProjectImporter::sourceContentFolder, makeFullPath("tools/")))
+   {
+      ProjectImportWindow.setStep(5);
+   }
+   else
+   {
+      %slashCount = getTokenCount($ProjectImporter::sourceContentFolder, "/");
+      %topFolder = getToken($ProjectImporter::sourceContentFolder, "/", %slashCount-1);
+      if(%topFolder $= "")
+         %topFolder = getToken($ProjectImporter::sourceContentFolder, "/", %slashCount-2);
+         
+      //clean up invalid characters and stuff
+      %topFolder = sanitizeString(%topFolder);
+     
+      $ProjectImporter::useExistingModule = false;
+      $ProjectImporter::moduleName = %topFolder; //preseed the module name
+      $ProjectImporter::modulePath = "data/" @ $ProjectImporter::moduleName;
+      
+      ProjectImportWizardPage3-->newModuleName.setText($ProjectImporter::moduleName);
+   }
+}
+
+//==============================================================================
+// Run the preprocessing of all incoming files
+//==============================================================================
+function ProjectImportWizardPage4::openPage(%this)
+{
+   ProjectImportWindow-->preprocessCompleteText.setHidden(true);
+   
+   Canvas.repaint();
+   
+   ProjectImportWindow-->backButton.setHidden(true);
+   ProjectImportWindow-->nextButton.setActive(false);
+      
+   if(!$ProjectImporter::useExistingModule)
+      $ProjectImporter::moduleName = ProjectImportWizardPage3-->newModuleName.getText();
+      
+   $ProjectImporter::modulePath = "data/" @ $ProjectImporter::moduleName;
+      
+   if(!$ProjectImporter::useExistingModule)
+      $ProjectImporter::importTool.setupModule();
+      
+   //Do some sanity checking here to sidestep the copy if we're already in-place
+   %sourcePath = $ProjectImporter::sourceContentFolder;
+   %targetPath = makeFullPath($ProjectImporter::modulePath);
+   
+   preprocessImportingFiles();
+      
+   //if we gen'd a new module setup, double check we didn't copy over a module script file under a legacy extension
+   /*if(!$ProjectImporter::useExistingModule)
+   {
+      %newModuleName = $ProjectImporter::moduleName;
+      %moduleFilePath = "data/" @ %newModuleName;
+      
+      if($TorqueScriptFileExtension !$= "cs")
+   {
+         %moduleScriptFilePath = %moduleFilePath @ "/" @ %newModuleName @ ".cs";
+         if(isFile(%moduleScriptFilePath))
+   {
+            //yep, that exists, so we'll assume it was the file we wanted, so remove the generated one
+            fileDelete(%moduleFilePath @ "/" @ %newModuleName @ "." @ $TorqueScriptFileExtension);
+   }
+   }
+   }*/
+   
+   ProjectImportWindow-->nextButton.setActive(true);
+   ProjectImportWindow-->preprocessCompleteText.setHidden(false);
+   
+   Canvas.repaint();
+}
+
+//==============================================================================
+// Write out the logs and clean up
+//==============================================================================
+function ProjectImportWizardFinalPage::openPage(%this)
+{
+   projectImporterLog("===========================================");
+   projectImporterLog("Finished Project Import");
+   projectImporterLog("===========================================");
+   
+   //writing console log
+   %logFileObj = new FileObject();
+   
+   %logFileName = "tools/logs/LegacyProjectImport_" @ getTimestamp() @ ".log";
+      
+   if(%logFileObj.openForWrite(%logFileName))
+   {
+      for(%i=0; %i < $ProjectImporter::log.count(); %i++)
+      {
+         %logFileObj.writeLine($ProjectImporter::log.getKey(%i));
+      }
+      
+      %logFileObj.close();
+   }
+         
+   %logFileObj.delete();
+   
+   $ProjectImporter::assetQuery.delete();
+   $ProjectImporter::importer.delete();
+   $ProjectImporter::persistMgr.delete();
+     
+   AssetBrowser.refresh(); //update the AB just in case
+}
+      
+//==============================================================================
+// Registers a version importer's page for display in the wizard
+//==============================================================================
+function ProjectImportWindow::addImporterPage(%this, %page)
+{
+   ProejctImportPageContainer.add(%page);
+   $ProjectImporter::importerPageList.add(%page);
+}
+
+//==============================================================================
+// Utility functions needed for processing and importing files. These are common
+// functions that'll pretty much be used regardless of version being targeted
+//==============================================================================
+//==============================================================================
+// Takes a source file and attempts to copy it to the destination path.
+// If the paths are the same, we just exit out with a success indicator
+//==============================================================================
+function copyFileToDestination(%sourceFile, %destinationFile)
+{
+   %fullSourcePath = makeFullPath(%sourceFile); 
+   %fullDestPath = makeFullPath(%destinationFile); 
+   
+   if(!IsDirectory(filePath(%fullDestPath)))
+   {
+      DirectoryHandler::createFolder(0, filePath(%fullDestPath));  
+   }
+   
+   if(%fullSourcePath $= %fullDestPath)
+      return true; //no need to copy, we're already here!
+      
+   if(!pathCopy(%fullSourcePath, %fullDestPath, false))
+      return false;
+      
+   return true;
+}
+//==============================================================================
+// Runs through the files in the source directory and preprocessing them.
+// All valid files are added to a list, and script-based files are pre-parsed 
+// so the importer can easily process their contents later
+//==============================================================================
+function preprocessImportingFiles()
+{
+   //========================================================
+   //BEGIN THE PREPROCESS
+   if(isObject($ProjectImporter::FileList))
+      $ProjectImporter::FileList.delete();
+      
+   $ProjectImporter::FileList = new ArrayObject();
+   
+   %file = findFirstFileMultiExpr( $ProjectImporter::sourceContentFolder @ "/*.*", true);
+   
+   //First, we go through and tabulate all valid files we'll want to copy over into 
+   //our destination point. We're not copying them yet, but we're building the list
+   while( %file !$= "" )
+   {
+      %fileExt = fileExt(%file);
+      
+      if(%fileExt $= ".dll" || %fileExt $= ".log" || %fileExt $= ".exe" || %fileExt $= ".manifest"|| %fileExt $= ".h" ||
+         %fileExt $= ".cpp" || %fileExt $= ".so" || %fileExt $= ".do" || %fileExt $= ".lib" ||%fileExt $= ".exp")
+      {
+         %file = findNextFileMultiExpr( $ProjectImporter::sourceContentFolder @ "/*.*" );
+         continue;
+      }
+      
+      %fileArrayObj = new ArrayObject();
+      
+      %fileArrayObj.fileDestination = strreplace(%file, $ProjectImporter::sourceContentFolder, $ProjectImporter::modulePath);
+      %fileArrayObj.fileDestination = sanitizeFilename(%fileArrayObj.fileDestination);
+      
+      %fileArrayObj.imported = false;
+      
+      //if it was a cs file, we'll be changing the eventual destination extension to comply to 
+      //our set script extension
+      if(fileExt(%fileArrayObj.fileDestination) $= ".cs") 
+      {
+         %fileArrayObj.fileDestination = filePath(%fileArrayObj.fileDestination) @ "/" @ fileBase(%fileArrayObj.fileDestination) @ "." @ $TorqueScriptFileExtension;  
+      }
+      
+      $ProjectImporter::FileList.add(%file, %fileArrayObj);
+      
+      %file = findNextFileMultiExpr( $ProjectImporter::sourceContentFolder @ "/*.*" );
+   }
+   
+   $ProjectImporter::fileElementStack = new ArrayObject();
+   
+   //Now that we've got the list of files we consider to be valid to import,
+   //we'll preprocess them. This lets us 'understand' the contents and for 
+   //script-type files, we can parse them to figure out object defines and the like
+   //which will simplify things when we actually apply any changes to update it to
+   //the new project format later
+   for(%i=0; %i < $ProjectImporter::FileList.count(); %i++)
+   {
+      %file = $ProjectImporter::FileList.getKey(%i);
+      %rootFileSectionObject = $ProjectImporter::FileList.getValue(%i);
+      
+      %fileExt = fileExt(%file);
+      
+      %rootFileSectionObject.fileName = fileName(%file);
+      %rootFileSectionObject.fileBase = fileBase(%file);
+      %rootFileSectionObject.fileExt = %fileExt;
+      
+      if(endsWith(%file, ".asset.taml"))
+      {
+         %rootFileSectionObject.fileExt = ".asset.taml";
+         %rootFileSectionObject.isAssetFile = true;
+      }
+      else if(%fileExt !$= ".cs" && %fileExt !$= ".tscript" && %fileExt !$= ".gui" &&
+         %fileExt !$= ".mis" && %fileExt !$= ".prefab" && %fileExt !$= ".module")
+      {
+         //we don't do this for binary files, for...obvious reasons
+         
+         %rootFileSectionObject.binaryFile = true;
+         
+         if(isImageFormat(%fileExt))
+            %rootFileSectionObject.isImageFile = true;
+         else if(isShapeFormat(%fileExt))
+            %rootFileSectionObject.isShapeFile = true;
+         else if(isSoundFormat(%fileExt))
+            %rootFileSectionObject.isSoundFile = true;
+         else if(%fileExt $= ".ter")
+            %rootFileSectionObject.isTerrainFile = true;
+         continue;
+      }
+         
+      %rootFileSectionObject.binaryFile = false;
+      %currentFileSectionObject = %rootFileSectionObject;
+      %insideFunction = false;
+      %insideObjectBlock = false;
+      %insideCommentBlock = false;
+      
+      if ( $ProjectImporter::fileObject.openForRead( %file ) ) 
+      {
+         echo("Processing File: " @ %file);
+         echo("-------------------------------------");
+         
+         while ( !$ProjectImporter::fileObject.isEOF() ) 
+         {
+            %line = $ProjectImporter::fileObject.readLine();
+            
+            if(strIsMatchExpr("*new *(*)*", %line))
+            {
+               %start = strpos(%line, "new ");
+               %end = strpos(%line, "(", %start);
+
+               if(%start != -1 && %end != -1)
+               {
+                  %className = getSubStr(%line, %start + 4, %end-%start-4);
+               }
+               
+               if(%className $= "")
+               {
+                  //we clearly have some unusual formatting, potentially a programmatic 
+                  //object block creation going on here. so we'll just skip it and move on  
+                  %currentFileSectionObject.add(%line);
+                  continue;
+               }
+               
+               %nameEnd = strpos(%line, ")", %end);
+               
+               %objectName = getSubStr(%line, %end+1, %nameEnd-%end-1);
+               
+               %parentName = "";
+               %inheritanceSplit = strpos(%objectName, ":");
+               if(%inheritanceSplit != -1)
+               {
+                  %parentName = getSubStr(%objectName, %inheritanceSplit + 1);
+                  %objectName = getSubStr(%objectName, 0, %inheritanceSplit);
+               }
+               
+               %objectName = trim(%objectName);
+               
+               %parentFileSectionObject = %currentFileSectionObject;
+               
+               %currentFileSectionObject = new ArrayObject();
+               %currentFileSectionObject.elementType = "object";
+               %currentFileSectionObject.classType = %className;
+               %currentFileSectionObject.objectName = %objectName;
+               %currentFileSectionObject.parentName = %parentName;
+               %currentFileSectionObject.fileName = %file;
+               %currentFileSectionObject.skip = false;
+               %currentFileSectionObject.fileDestination = %rootFileSectionObject.fileDestination;
+               %insideObjectBlock = true;
+               
+               %currentFileSectionObject.add(%line);
+
+               %parentFileSectionObject.add(%currentFileSectionObject);
+               %currentFileSectionObject.parentElement = %parentFileSectionObject;
+               
+               //Now for a sanity check, see if we kill the object on the same line as we make it
+               //sometimes people try and be 'efficient' with their code linecount wise
+               if(strIsMatchExpr("*};*", %line))
+               {
+                  %currentFileSectionObject = %parentFileSectionObject;
+                  
+                  %insideFunction = false;
+                  %insideObjectBlock = false;
+                  
+                  if(%currentFileSectionObject.elementType $= "function")
+                     %insideFunction = true;
+                  if(%currentFileSectionObject.elementType $= "object")
+                     %insideObjectBlock = true;
+               }
+            }
+            else if(strIsMatchExpr("*datablock *(*)*", %line))
+            {
+               %start = strpos(%line, "datablock ");
+               %end = strpos(%line, "(", %start);
+
+               if(%start != -1 && %end != -1)
+               {
+                  %className = getSubStr(%line, %start + 10, %end-%start-10);
+               }
+               
+               if(%className $= "")
+               {
+                  //we clearly have some unusual formatting, potentially a programmatic 
+                  //object block creation going on here. so we'll just skip it and move on  
+                  %currentFileSectionObject.add(%line);
+                  continue;
+               }
+               
+               %nameEnd = strpos(%line, ")", %end);
+               
+               %objectName = getSubStr(%line, %end+1, %nameEnd-%end-1);
+               
+               %parentName = "";
+               %inheritanceSplit = strpos(%objectName, ":");
+               if(%inheritanceSplit != -1)
+               {
+                  %parentName = getSubStr(%objectName, %inheritanceSplit + 1);
+                  %objectName = getSubStr(%objectName, 0, %inheritanceSplit);
+               }
+               
+               %objectName = trim(%objectName);
+               
+               %parentFileSectionObject = %currentFileSectionObject;
+               
+               %currentFileSectionObject = new ArrayObject();
+               %currentFileSectionObject.elementType = "object";
+               %currentFileSectionObject.classType = %className;
+               %currentFileSectionObject.objectName = %objectName;
+               %currentFileSectionObject.parentName = %parentName;
+               %currentFileSectionObject.fileName = %file;
+               %currentFileSectionObject.skip = false;
+               %currentFileSectionObject.fileDestination = %rootFileSectionObject.fileDestination;
+               %insideObjectBlock = true;
+               
+               %currentFileSectionObject.add(%line);
+
+               %parentFileSectionObject.add(%currentFileSectionObject);
+               %currentFileSectionObject.parentElement = %parentFileSectionObject;
+               
+               //Now for a sanity check, see if we kill the object on the same line as we make it
+               //sometimes people try and be 'efficient' with their code linecount wise
+               if(strIsMatchExpr("*};*", %line))
+               {
+                  %currentFileSectionObject = %parentFileSectionObject;
+                  
+                  %insideFunction = false;
+                  %insideObjectBlock = false;
+                  
+                  if(%currentFileSectionObject.elementType $= "function")
+                     %insideFunction = true;
+                  if(%currentFileSectionObject.elementType $= "object")
+                     %insideObjectBlock = true;
+               }
+            }
+            else if(strIsMatchExpr("*singleton *(*)*", %line))
+            {
+               %start = strpos(%line, "singleton ");
+               %end = strpos(%line, "(", %start);
+
+               if(%start != -1 && %end != -1)
+               {
+                  %className = getSubStr(%line, %start + 10, %end-%start-10);
+               }
+               
+               if(%className $= "")
+               {
+                  //we clearly have some unusual formatting, potentially a programmatic 
+                  //object block creation going on here. so we'll just skip it and move on  
+                  %currentFileSectionObject.add(%line);
+                  continue;
+               }
+               
+               %nameEnd = strpos(%line, ")", %end);
+               
+               %objectName = getSubStr(%line, %end+1, %nameEnd-%end-1);
+               
+               %parentName = "";
+               %inheritanceSplit = strpos(%objectName, ":");
+               if(%inheritanceSplit != -1)
+               {
+                  %parentName = getSubStr(%objectName, %inheritanceSplit + 1);
+                  %objectName = getSubStr(%objectName, 0, %inheritanceSplit);
+               }
+
+               %objectName = trim(%objectName);
+
+               %parentFileSectionObject = %currentFileSectionObject;
+               
+               %currentFileSectionObject = new ArrayObject();
+               %currentFileSectionObject.elementType = "object";
+               %currentFileSectionObject.classType = %className;
+               %currentFileSectionObject.objectName = %objectName;
+               %currentFileSectionObject.parentName = %parentName;
+               %currentFileSectionObject.fileName = %file;
+               %currentFileSectionObject.skip = false;
+               %currentFileSectionObject.fileDestination = %rootFileSectionObject.fileDestination;
+               %insideObjectBlock = true;
+               
+               %currentFileSectionObject.add(%line);
+
+               %parentFileSectionObject.add(%currentFileSectionObject);
+               %currentFileSectionObject.parentElement = %parentFileSectionObject;
+               
+               //Now for a sanity check, see if we kill the object on the same line as we make it
+               //sometimes people try and be 'efficient' with their code linecount wise
+               if(strIsMatchExpr("*};*", %line))
+               {
+                  %currentFileSectionObject = %parentFileSectionObject;
+                  
+                  %insideFunction = false;
+                  %insideObjectBlock = false;
+                  
+                  if(%currentFileSectionObject.elementType $= "function")
+                     %insideFunction = true;
+                  if(%currentFileSectionObject.elementType $= "object")
+                     %insideObjectBlock = true;
+               }
+            }
+            else if(strIsMatchExpr("*function *(*)*", %line))
+            {
+               %start = strpos(%line, "function ");
+               %end = strpos(%line, "(", %start);
+
+               if(%start != -1 && %end != -1)
+               {
+                  %functionName = getSubStr(%line, %start + 9, %end-%start-9);
+               }
+               
+               %parentFileSectionObject = %currentFileSectionObject;
+               
+               %currentFileSectionObject = new ArrayObject();
+               %currentFileSectionObject.elementType = "function";
+               %currentFileSectionObject.functionName = %functionName;
+               %currentFileSectionObject.fileDestination = %rootFileSectionObject.fileDestination;
+               %currentFileSectionObject.scopeDepth = 0;
+               
+               %insideFunction = true;
+               %insideObjectBlock = false;
+               
+               %currentFileSectionObject.add(%line);
+               
+               %parentFileSectionObject.add(%currentFileSectionObject);
+               %currentFileSectionObject.parentElement = %parentFileSectionObject;
+               
+               if(strIsMatchExpr("*{*", %line))
+               {
+                  %currentFileSectionObject.scopeDepth++;
+               }
+               if(strIsMatchExpr("*}*", %line))
+               {
+                  %currentFileSectionObject.scopeDepth--;
+                  
+                  if(%currentFileSectionObject.scopeDepth == 0) //we've fully backed out of the function scope, so resolve back to the parent
+                  {
+                     %currentFileSectionObject = %parentFileSectionObject;
+                  
+                     %insideFunction = false;
+                     %insideObjectBlock = false;
+                     
+                     if(%currentFileSectionObject.elementType $= "function")
+                        %insideFunction = true;
+                     if(%currentFileSectionObject.elementType $= "object")
+                        %insideObjectBlock = true;
+                  }
+               }
+            }
+            else
+            {
+               %currentFileSectionObject.add(%line);
+               
+               if(%insideFunction && strIsMatchExpr("*{*", %line))
+               {
+                  %currentFileSectionObject.scopeDepth++;
+               }
+               if(%insideFunction && strIsMatchExpr("*}*", %line))
+               {
+                  %currentFileSectionObject.scopeDepth--;
+                  
+                  if(%currentFileSectionObject.scopeDepth == 0) //we've fully backed out of the function scope, so resolve back to the parent
+                  {
+                     %currentFileSectionObject = %parentFileSectionObject;
+                  
+                     %insideFunction = false;
+                     %insideObjectBlock = false;
+                     
+                     if(%currentFileSectionObject.elementType $= "function")
+                        %insideFunction = true;
+                     if(%currentFileSectionObject.elementType $= "object")
+                        %insideObjectBlock = true;
+                  }
+               }
+               else if(%insideObjectBlock && strIsMatchExpr("*};*", %line) && !strIsMatchExpr("*\"*};*\";*", %line))
+               {
+                  %currentFileSectionObject = %parentFileSectionObject;
+                  
+                  %insideFunction = false;
+                  %insideObjectBlock = false;
+                  
+                  if(%currentFileSectionObject.elementType $= "function")
+                     %insideFunction = true;
+                  if(%currentFileSectionObject.elementType $= "object")
+                     %insideObjectBlock = true;
+               }
+               else if(!%insideFunction && !%insideObjectBlock)
+               {
+                  if(strIsMatchExpr("*/\**", %line))
+                  {
+                     %insideCommentBlock = true;
+                  }
+                  else if(%insideCommentBlock && strIsMatchExpr("*\*/*", %line))
+                  {
+                     %insideCommentBlock = false;
+                  }
+                  else if(!%insideCommentBlock && !strIsMatchExpr("*//*", %line))
+                  {
+                     %rootFileSectionObject.hasNonCommentFloatingCode = true;
+                  }
+               }
+            }
+         }
+      }
+      
+      $ProjectImporter::fileObject.close();
+   }
+}
+   
+
+//==============================================================================
+// Sanitized a filename so that it doesn't contain any invalid formatting/characters
+//==============================================================================
+function sanitizeFilename(%file)
+{
+   if(startsWith(%file, "./"))
+   {
+      %targetFilename = strReplace(%file, "./", $ProjectImporter::currentFilePath @ "/");
+   }
+   else if(startsWith(%file, "../"))
+   {
+      %slashPos = strposr($ProjectImporter::currentFilePath, "/");
+      if(%slashPos == strlen($ProjectImporter::currentFilePath)-1) //if it's right at the end, we'll get the next one up
+      {
+         %slashPos = strposr($ProjectImporter::currentFilePath, "/", 2);
+      }
+      
+      %parentPath = getSubStr($ProjectImporter::currentFilePath, 0, %slashPos);
+      %targetFilename = strReplace(%file, "../", %parentPath @ "/");
+   }
+   else if(startsWith(%file, "~"))
+   {
+      %targetFilename = strReplace(%file, "~", $ProjectImporter::modulePath @ "/");
+      if(!isFile(%targetFilename))
+      {
+         %targetFilename = strReplace(%file, "~", $ProjectImporter::modulePath @ "/main/");
+      }
+   }
+   else if ((strpos(%file,"/") == -1)&&(strpos(%file,"\\") == -1))
+   {
+      %targetFilename = $ProjectImporter::currentFilePath @ %file;
+   }
+   else if(!startsWith(%file, $ProjectImporter::modulePath @ "/"))
+   {
+      %targetFilename = $ProjectImporter::modulePath @ "/" @ %file;
+   }
+   else
+   {
+      %targetFilename = %file;
+   }
+   
+   //Now we test for a suffix
+   %flName = fileName(%targetFilename);
+   %targetPath = filePath(%targetFilename);
+   %targetName = fileBase(%targetFilename);
+   %targetExt = fileExt(%targetFilename);
+   
+   if(endsWith(%flName, ".asset.taml"))
+   {
+      %targetName = strreplace(%targetName, ".asset", "");
+      %targetExt = ".asset.taml";
+   }
+   
+   %sanitizedName = sanitizeString(%targetName);
+   if(startsWith(%sanitizedName, "_"))
+   {
+      %sanitizedName = getSubStr(%sanitizedName, 1, -1);
+   }
+   if(%sanitizedName !$= %targetName)
+   {
+      %targetName = %sanitizedName;
+      %targetFilename = %targetPath @ "/" @ %targetName @ %targetExt;
+   }
+   
+   /*if(!isFile(%targetFilename))
+   {
+      %bitmapFile = %targetPath @ "/" @ %targetName @ "_n" @ %targetExt;
+      if(isFile(%bitmapFile))
+         %targetFilename = %bitmapFile;
+   }
+   
+   if(!isFile(%targetFilename))
+   {
+      %targetFilename = testFilenameExtensions(%targetFilename);
+   }
+   
+   %targetFilename = strReplace(%targetFilename, "//", "/");
+   
+   if(!isFile(%targetFilename)) //if our presumed file target is bad, just bail out
+   {
+      return %file;
+   }
+   else
+   {*/
+      return %targetFilename;
+   //}
+}
+
+//==============================================================================
+// Checks if the file in question is part of our pre-scanned list of importing files
+//==============================================================================
+function isImportingFile(%checkFile)
+{
+   for(%i=0; %i < $ProjectImporter::FileList.count(); %i++)
+   {
+      %file = $ProjectImporter::FileList.getKey(%i);
+      
+      if(%file $= %checkFile)
+         return true;
+   }
+   
+   return false;
+}
+
+//==============================================================================
+// Returns the file object of the file in question is part of our pre-scanned list of importing files
+//==============================================================================
+function findFileInImporting(%checkFile)
+{
+   for(%i=0; %i < $ProjectImporter::FileList.count(); %i++)
+   {
+      %file = $ProjectImporter::FileList.getKey(%i);
+      
+      if(%file $= %checkFile)
+         return $ProjectImporter::FileList.getValue(%i);
+   }
+   
+   return "";
+}
+
+//==============================================================================
+// Checks if the object in question is defined in any of our pre-scanned list of importing files
+//==============================================================================
+function findObjectInFilesRecurse(%objectName, %arrayObj)
+{
+   for(%i=0; %i < %arrayObj.count(); %i++)
+   {
+      %objectLine = %arrayObj.getKey(%i);
+      if(isObject(%objectLine))
+      {
+         if(%objectLine.objectName $= %objectName)
+            return %objectLine;
+            
+         //If this object isn't it, try recursing any children
+         %result = findObjectInFilesRecurse(%objectName, %objectLine);
+         if(%result !$= "")
+            return %result;
+      }
+   }
+   
+   return "";
+}
+
+function findObjectInFiles(%objectName)
+{
+   for(%i=0; %i < $ProjectImporter::FileList.count(); %i++)
+   {
+      %objectLine = $ProjectImporter::FileList.getValue(%i);
+      if(isObject(%objectLine))
+      {
+         if(%objectLine.objectName $= %objectName)
+            return %objectLine;
+            
+         //If this object isn't it, try recursing any children
+         %result = findObjectInFilesRecurse(%objectName, %objectLine);
+         if(%result !$= "")
+            return %result;
+      }
+   }
+   
+   return "";
+}
+
+//==============================================================================
+// Checks if the object in question is defined in any of our pre-scanned list of importing files
+//==============================================================================
+function getObjectsInFilesByClassRecurse(%className, %arrayObj)
+{
+   for(%i=0; %i < %arrayObj.count(); %i++)
+   {
+      %objectLine = %arrayObj.getKey(%i);
+      if(isObject(%objectLine))
+      {
+         if(%objectLine.classType $= %className)
+            $ProjectImporter::queryList = $ProjectImporter::queryList TAB %objectLine;
+            
+         //If this object isn't it, try recursing any children
+         getObjectsInFilesByClassRecurse(%className, %objectLine);
+      }
+   }
+}
+
+function getObjectsInFilesByClass(%className)
+{
+   $ProjectImporter::queryList = "";
+      
+   for(%i=0; %i < $ProjectImporter::FileList.count(); %i++)
+   {
+      %objectLine = $ProjectImporter::FileList.getValue(%i);
+      if(isObject(%objectLine))
+      {
+         if(%objectLine.classType $= %className)
+            $ProjectImporter::queryList = $ProjectImporter::queryList TAB %objectLine;
+            
+         //If this object isn't it, try recursing any children
+         getObjectsInFilesByClassRecurse(%className, %objectLine);
+      }
+   }
+   
+   return ltrim($ProjectImporter::queryList);
+}
+
+//==============================================================================
+// Takes a filename lacking an extension and then checks common file extensions
+// to see if we can find the actual file in question
+//==============================================================================
+function testFilenameExtensions(%filename)
+{
+   %ext = fileExt(%filename);  
+   if(%ext !$= "")
+      return %filename;
+      
+   if(isFile(%filename @ ".png"))
+      return %filename @ ".png";
+   else if(isFile(%filename @ ".jpg"))
+      return %filename @ ".jpg";
+   else if(isFile(%filename @ ".jpeg"))
+      return %filename @ ".jpeg";
+   else if(isFile(%filename @ ".dds"))
+      return %filename @ ".dds";
+   else if(isFile(%filename @ ".bmp"))
+      return %filename @ ".bmp";
+   else if(isFile(%filename @ ".cached.dts"))
+      return %filename @ ".cached.dts";
+   else if(isFile(%filename @ ".dts"))
+      return %filename @ ".dts";
+   else if(isFile(%filename @ ".dae"))
+      return %filename @ ".dae";
+   else if(isFile(%filename @ ".dds"))
+      return %filename @ ".dds";
+   else if(isFile(%filename @ ".dsq"))
+      return %filename @ ".dsq";
+   else if(isFile(%filename @ ".ogg"))
+      return %filename @ ".ogg";
+   else if(isFile(%filename @ ".wav"))
+      return %filename @ ".wav";
+   else if(isFile(%filename @ ".mp3"))
+      return %filename @ ".dds";
+      
+   return %filename;
+}
+
+//==============================================================================
+// Parses a line from a script to replace the original field name with the new one
+//==============================================================================
+function processLegacyField(%line, %originalFieldName, %newFieldName)
+{ 
+   if(!strIsMatchExpr("*"@%originalFieldName@"=*;*", %line) && 
+      !strIsMatchExpr("*"@%originalFieldName@"[*=*;*", %line) &&
+      !strIsMatchExpr("*"@%originalFieldName@" *=*;*", %line))
+      return %line;
+      
+   %outLine = strreplace(%line, %originalFieldName, %newFieldName);
+   
+   //get the value
+   %value = "";
+   %pos = strpos(%outLine, "=");
+   if(%pos != -1)
+   {
+     %endPos = strpos(%outLine, ";", %pos); 
+     %value = getSubStr(%outLine, %pos+1, %endPos-%pos-1);
+     
+     %originalValue = %value;
+     %value = trim(%value);
+     %value = strreplace(%value, "\"", "");
+   }
+   
+   if(%outLine !$= %line && %pos != -1 && %endPos != -1 && %value !$= "")
+   {
+      projectImporterLog("Legacy Project Importer - processing legacy field line: " @ %line);
+      
+      if(startsWith(%value, "$") || startsWith(%value, "#"))
+      {
+         //These are going to be texture/render targets, and we can leave them alone
+         return %line;
+      }
+         
+      %targetFilename = sanitizeFilename(%value);
+      
+      %fileExt = fileExt(%targetFilename);
+      if(%fileExt $= "")
+      {
+         %targetFilename = testFilenameExtensions(%targetFilename);
+      }
+      
+      if(isObject(%targetFilename))
+      {
+         //likely a material name, so handle it that way
+         %assetId = MaterialAsset::getAssetIdByMaterialName(%targetFilename);
+           
+         if(%assetId $= "" || %assetId $= "Core_Rendering:NoMaterial")
+         {
+            //if not, just do a lookup directly to see if it was another asset by that name
+            //e.g. sound profiles when converted will match names
+            $ProjectImporter::assetQuery.clear();
+            %foundAssets = AssetDatabase.findAssetName($ProjectImporter::assetQuery, %targetFilename);
+            if(%foundAssets != 0)
+            {
+               %assetId = $ProjectImporter::assetQuery.getAsset(0);  
+            }
+         }
+      }
+      else
+      {
+         if(!isFile(%targetFilename))
+         {
+            //We may just have a discrete name we need to look up instead
+            $ProjectImporter::assetQuery.clear();
+            %foundAssets = AssetDatabase.findAssetName($ProjectImporter::assetQuery, %targetFilename);
+            if(%foundAssets != 0)
+            {
+               %assetId = $ProjectImporter::assetQuery.getAsset(0);  
+            }
+            else
+            {
+               //Ultimately, we didn't find it and need to cut our losses
+               projectImporterLog("Legacy Project Importer - file described in line could not be found/is not valid");
+               return %line;
+            }
+         }
+         else
+         {
+            $ProjectImporter::assetQuery.clear();
+            %foundAssets = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %targetFilename);
+            if(%foundAssets != 0)
+            {
+               %assetId = $ProjectImporter::assetQuery.getAsset(0);
+            }
+         }
+      }
+     
+      if(%assetId !$= "" && AssetDatabase.isDeclaredAsset(%assetId))
+      {
+         projectImporterLog("Legacy Project Importer - processing of legacy field line's value: " @ %value @ " has found a matching AssetId: " @ %assetId);
+         
+         //double check if this already had the quotes around the value or not
+         if(!strIsMatchExpr("*\"*\"*", %originalValue))
+            %assetId = "\"" @ %assetId @ "\"";
+         
+         %firstPart = getToken(%outLine, "=", 0);
+         %secondPart = getToken(%outLine, "=", 1);
+         %secondPart = strReplace(%secondPart, %value, %assetId);
+         %outLine = %firstPart @ "=" @ %secondPart;
+      }
+   }
+   
+   if(%outLine !$= %line)
+   {
+      projectImporterLog("Legacy Project Importer - processing of legacy line: " @ %line @ " has been updated to: " @ %outLine);
+      return %outLine;  
+   }
+   else
+   {
+      return %line;  
+   }
+}
+
+//==============================================================================
+// Parses a line from a shape constructor file to asset-ify addSequence() calls
+//==============================================================================
+function processLegacyShapeConstructorField(%line)
+{
+   if(!strIsMatchExpr("*%this.addSequence(\"*);", %line))
+      return %line;
+      
+   %outLine = %line;
+      
+   %animSourceStart = strPos(%line, "%this.addSequence(\"") + 19;
+   %animSourceEnd = strPos(%line, "\",", %animSourceStart);
+   %animationSource = getSubstr(%line, %animSourceStart, %animSourceEnd-%animSourceStart);
+   %animSourcePath = getWord(%animationSource, 0);
+   %animSourceName = getWord(%animationSource, 1);
+   
+   //already uses an asset, so we'll skip
+   if(strPos(%animSourcePath, ":") != -1)
+      return %line;
+               
+   %targetFilename = sanitizeFilename(%animSourcePath);
+   
+   if(!isFile(%targetFilename))
+   {
+      return %line;
+   }
+   
+   $ProjectImporter::assetQuery.clear();
+   %foundAssets = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %targetFilename);
+   if(%foundAssets != 0)
+   {
+      %assetId = $ProjectImporter::assetQuery.getAsset(0);
+      projectImporterLog("Legacy Project Importer - processing of legacy shape constructor addSequence line's value: " @ %animSourcePath @ " has found a matching AssetId: " @ %assetId);
+   }
+  
+   if(%assetId !$= "" && AssetDatabase.isDeclaredAsset(%assetId))
+   {
+      //if (%assetId.getStatusString() $= "Ok")
+      %outLine = strReplace(%line, %animSourcePath, %assetId);
+      //else
+      //   error("Asset assignment failure:", %assetId, getStatusString());
+   }
+   
+   if(%outLine !$= %line)
+   {
+      projectImporterLog("Legacy Project Importer - processing of legacy shape constructor addSequence line: " @ %line @ " has been updated to: " @ %outLine);
+      return %outLine;  
+   }
+   else
+   {
+      return %line;  
+   }
+}
+
+//==============================================================================
+// Replaces the name of the object in the declaration line
+//==============================================================================
+function renameObjectName(%object, %newName)
+{
+   for(%e=0; %e < %object.count(); %e++)
+   {
+      %objectLine = %object.getKey(%e);
+      if(!isObject(%objectLine))
+      {
+         if(strIsMatchExpr("*singleton*(*)*", %objectLine) || 
+            strIsMatchExpr("*new*(*)*", %objectLine) || 
+            strIsMatchExpr("*datablock*(*)*", %objectLine))
+         {
+            if(%object.objectName $= "")
+            {
+               %start = strpos(%objectLine, "(");
+               %end = strpos(%objectLine, ")", %start);
+               
+               %preString = getSubStr(%objectLine, 0, %start+1);
+               %postString = getSubStr(%objectLine, %end);
+               
+               %renamedString = %preString @ %newName @ %postString;
+               
+               %newLine = %renamedString;
+            }
+            else
+            {
+               %newLine = strreplace(%objectLine, %object.objectName, %newName);
+            }
+            
+            %object.setKey(%newLine, %e);
+            
+            %object.objectName = %newName;
+         }  
+      }
+   }
+}
+
+//==============================================================================
+// Find the value of an object's field
+//==============================================================================
+function findObjectField(%object, %fieldName)
+{
+   %return = "";
+   for(%e=0; %e < %object.count(); %e++)
+   {
+      %objectLine = %object.getKey(%e);
+      if(!isObject(%objectLine))
+      {
+         if(!strIsMatchExpr("*};*", %objectLine) && 
+            !strIsMatchExpr("*singleton*(*)*", %objectLine) && 
+            !strIsMatchExpr("*new*(*)*", %objectLine) && 
+            !strIsMatchExpr("*datablock*(*)*", %objectLine)&& 
+            !strIsMatchExpr("\n", %objectLine) && 
+            !strIsMatchExpr("\r", %objectLine))
+         {
+            if(strpos(strlwr(%objectLine), strlwr(%fieldName)) != -1)
+            {
+               %pos = strpos(%objectLine, "= \"");
+               if(%pos != -1)
+               {
+                 %endPos = strpos(%objectLine, "\";", %pos); 
+                 
+                 %return = getSubStr(%objectLine, %pos+3, %endPos-%pos-3);
+                 break;
+               }
+               
+               %pos = strpos(%objectLine, "=\"");
+               if(%pos != -1)
+               {
+                 %endPos = strpos(%objectLine, "\";", %pos); 
+                 
+                 %return = getSubStr(%objectLine, %pos+2, %endPos-%pos-2);
+                 break;
+               }
+               
+               %pos = strpos(%objectLine, "= ");
+               if(%pos != -1)
+               {
+                 %endPos = strpos(%objectLine, ";", %pos); 
+                 
+                 %return = getSubStr(%objectLine, %pos+2, %endPos-%pos-2);
+                 break;
+               }
+
+               %pos = strpos(%objectLine, "=");
+               if(%pos != -1)
+               {
+                 %endPos = strpos(%objectLine, ";", %pos); 
+                 
+                 %return = getSubStr(%objectLine, %pos+2, %endPos-%pos-2);
+                 break;
+               }  
+            }
+         }  
+      }
+   }
+   
+   return %return;
+}
+
+//==============================================================================
+// Sets the value of an object's field
+//==============================================================================
+function setObjectField(%object, %fieldName, %newValue)
+{
+   for(%e=0; %e < %object.count(); %e++)
+   {
+      %objectLine = %object.getKey(%e);
+      if(!isObject(%objectLine))
+      {
+         if(!strIsMatchExpr("*};*", %objectLine) && 
+            !strIsMatchExpr("*singleton*(*)*", %objectLine) && 
+            !strIsMatchExpr("*new*(*)*", %objectLine) && 
+            !strIsMatchExpr("*datablock*(*)*", %objectLine)&& 
+            !strIsMatchExpr("\n", %objectLine) && 
+            !strIsMatchExpr("\r", %objectLine))
+         {
+            if(strpos(strlwr(%objectLine), strlwr(%fieldName)) != -1)
+            {
+               %pos = strpos(%objectLine, "= \"");
+               if(%pos != -1)
+               {
+                 %endPos = strpos(%objectLine, "\";", %pos); 
+                 
+                 %value = getSubStr(%objectLine, %pos+3, %endPos-%pos-3);
+                 %editedLine = strreplace(%objectLine, %value, %newValue);
+                 %object.setKey(%editedLine, %e);
+                 break;
+               }
+               
+               %pos = strpos(%objectLine, "=\"");
+               if(%pos != -1)
+               {
+                 %endPos = strpos(%objectLine, "\";", %pos); 
+                 
+                 %value = getSubStr(%objectLine, %pos+2, %endPos-%pos-2);
+                 %editedLine = strreplace(%objectLine, %value, %newValue);
+                 %object.setKey(%editedLine, %e);
+                 break;
+               }
+               
+               %pos = strpos(%objectLine, "= ");
+               if(%pos != -1)
+               {
+                 %endPos = strpos(%objectLine, ";", %pos); 
+                 
+                 %value = getSubStr(%objectLine, %pos+2, %endPos-%pos-2);
+                 %editedLine = strreplace(%objectLine, %value, %newValue);
+                 %object.setKey(%editedLine, %e);
+                 break;
+               }
+
+               %pos = strpos(%objectLine, "=");
+               if(%pos != -1)
+               {
+                 %endPos = strpos(%objectLine, ";", %pos); 
+                 
+                 %value = getSubStr(%objectLine, %pos+2, %endPos-%pos-2);
+                 %editedLine = strreplace(%objectLine, %value, %newValue);
+                 %object.setKey(%editedLine, %e);
+                 break;
+               }  
+            }
+         }  
+      }
+   }
+}
+
+//==============================================================================
+// Inserts a new field to an object's block in the preprocessed data
+//==============================================================================
+function insertObjectLine(%object, %newLine)
+{
+   for(%e=0; %e < %object.count(); %e++)
+   {
+      %objectLine = %object.getKey(%e);
+      
+      if(strIsMatchExpr("*{*", %objectLine) || 
+            strIsMatchExpr("*singleton*(*)*", %objectLine) || 
+            strIsMatchExpr("*new*(*)*", %objectLine) || 
+            strIsMatchExpr("*datablock*(*)*", %objectLine))
+      {
+         continue;
+      }
+      
+      %object.insert(%newLine, "", %e);
+      return;
+   }
+}
+
+//==============================================================================
+// Takes a string and adds it to the importer's log. Optionally can print the line
+// directly to console for debugging purposes
+//==============================================================================
+function projectImporterLog(%line)
+{
+   if($ProjectImporter::writeToConsole)
+      echo(%line);
+      
+   $ProjectImporter::log.add(%line);
+}
+
+//==============================================================================
+// Traverses the object delcaration stack backwards to find the root file object
+//==============================================================================
+function getParentFileObjectFromObject(%object)
+{
+   while(%object.parentElement !$= "")
+   {
+      %object = %object.parentElement;
+   }
+   
+   return %object;
+}
+
+//==============================================================================
+// Traverses the object delcaration stack backwards to find the root file object
+//==============================================================================
+function getParentFileObjectFromObject(%object)
+{
+   while(%object.parentElement !$= "")
+   {
+      %object = %object.parentElement;
+   }
+   
+   return %object;
+}
+
+//==============================================================================
+//Shape Importing
+//==============================================================================
+function beginShapeImport()
+{
+   projectImporterLog("===========================================");
+   projectImporterLog("Importing 3D Shape files");
+   projectImporterLog("===========================================");
+   
+   //First, we need to go through and process all loose image files. This will
+   //get us shape assets, and if the import config deigns, material assets.
+   %currentAddress = $ProjectImporter::modulePath;
+   
+   for(%i=0; %i < $ProjectImporter::FileList.count(); %i++)
+   {
+      %file = $ProjectImporter::FileList.getKey(%i);
+      %rootFileSectionObject = $ProjectImporter::FileList.getValue(%i);
+      %destinationPath = %rootFileSectionObject.fileDestination;
+      if(isFile(%file) && %rootFileSectionObject.isShapeFile == true && %rootFileSectionObject.imported == false)
+      {    
+         if(!copyFileToDestination(%file, %destinationPath))
+         {
+            projectImporterLog("ProjectImporter::beginShapeImport() - failed to copy shape: " @ %file @
+                                    " to destination: " @ %destinationPath);
+            continue;
+         }
+           
+         if(endsWith(%destinationPath, "cached.dts"))
+         {
+            continue;
+         }
+         
+         $ProjectImporter::assetQuery.clear();
+         %assetsFound = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %destinationPath);
+         if(%assetsFound == 0)
+         {
+            //ProjectImportWizardPage5-->processingText.setText("Processing Shape Asset file: " @ %file);
+            Canvas.repaint();
+            
+            //No asset found associated to this fileas far as we can determine, so time to import it
+            projectImporterLog("Importing 3D Shape file: " @ %destinationPath);
+            %assetId = $ProjectImporter::importer.autoImportFile(%destinationPath);  
+            getImporterLogs();
+            
+            if(%assetId !$= "")
+            {
+               projectImporterLog("Finished importing 3D Shape file, resulting in asset with an id of: " @ %assetId);
+               projectImporterLog("");
+               
+               %rootFileSectionObject.imported = true;
+            }
+         }
+      }
+   }
+   
+   projectImporterLog("===========================================");
+   projectImporterLog("Finished Importing 3D Shape files");
+   projectImporterLog("===========================================");
+}
+//==============================================================================
+
+//==============================================================================
+//Image Importing
+//==============================================================================
+function beginImageImport()
+{
+   projectImporterLog("===========================================");
+   projectImporterLog("Importing Image files");
+   projectImporterLog("===========================================");
+   
+   //First, we need to go through and process all loose image files. This will
+   //get us image assets, and if the import config deigns, material assets.
+   %currentAddress = $ProjectImporter::modulePath;
+   
+   for(%i=0; %i < $ProjectImporter::FileList.count(); %i++)
+   {
+      %file = $ProjectImporter::FileList.getKey(%i);
+      %rootFileSectionObject = $ProjectImporter::FileList.getValue(%i);
+      %destinationPath = %rootFileSectionObject.fileDestination;
+      if(isFile(%file) && %rootFileSectionObject.isImageFile == true && %rootFileSectionObject.imported == false)
+      {    
+         if(!copyFileToDestination(%file, %destinationPath))
+         {
+            projectImporterLog("ProjectImporter::beginImageImport() - failed to copy image: " @ %file @
+                                    " to destination: " @ %destinationPath);
+            continue;
+         }
+         
+         projectImporterLog("Beginning of Import of Image file: " @ %file);
+         
+         $ProjectImporter::assetQuery.clear();
+         %assetsFound = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %destinationPath);
+         if(%assetsFound == 0)
+         {
+            //ProjectImportWizardPage5-->processingText.setText("Processing Image Asset file: " @ %file);
+            Canvas.repaint();
+      
+            //No asset found associated to this fileas far as we can determine, so time to import it
+            
+            projectImporterLog("  No Existing ImageAsset found. Continuing Import.");
+            %assetId = $ProjectImporter::importer.autoImportFile(%destinationPath);  
+            getImporterLogs();
+            
+            if(%assetId !$= "")
+            {
+               projectImporterLog("Finished importing Image file, resulting in asset with an id of: " @ %assetId);
+               projectImporterLog("");
+               
+               %rootFileSectionObject.imported = true;
+            }
+         }
+      }
+   }
+   
+   projectImporterLog("===========================================");
+   projectImporterLog("Finished Importing Image files");
+   projectImporterLog("===========================================");
+}
+//==============================================================================
+
+//==============================================================================
+//Terrain Importing
+//==============================================================================
+function beginTerrainImport()
+{
+   projectImporterLog("===========================================");
+   projectImporterLog("Importing Terrain files");
+   projectImporterLog("===========================================");
+
+   //First, we need to go through and process all loose image files. This will
+   //get us shape assets, and if the import config deigns, material assets.
+   %currentAddress = $ProjectImporter::modulePath;
+   
+   for(%i=0; %i < $ProjectImporter::FileList.count(); %i++)
+   {
+      %file = $ProjectImporter::FileList.getKey(%i);
+      %rootFileSectionObject = $ProjectImporter::FileList.getValue(%i);
+      %destinationPath = %rootFileSectionObject.fileDestination;
+      if(isFile(%file) && %rootFileSectionObject.isTerrainFile == true && %rootFileSectionObject.imported == false)
+      {    
+         /*%filename = %rootFileSectionObject.fileName;
+         %fileExt = %rootFileSectionObject.fileExt;
+         %filePath = filePath(%file);
+         
+         %sanitizedFile = sanitizeFilename(%file);
+         if(%sanitizedFile !$= %file)
+         {
+            %file = %sanitizedFile;
+            %fileName = fileName(%file); 
+            %filePath = filePath(%file);
+         }*/
+         
+         if(!copyFileToDestination(%file, %destinationPath))
+         {
+            projectImporterLog("ProjectImporter::beginTerrainImport() - failed to copy terrain: " @ %file @
+                                    " to destination: " @ %destinationPath);
+            continue;
+         }
+            
+         $ProjectImporter::assetQuery.clear();
+         %assetsFound = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %destinationPath);
+         if(%assetsFound == 0)
+         {
+            //ProjectImportWizardPage5-->processingText.setText("Processing Terrain Asset file: " @ %file);
+            Canvas.repaint();
+            
+            projectImporterLog("Importing Terrain file: " @ %destinationPath);
+            
+            %moduleDef = AssetBrowser.dirHandler.getModuleFromAddress(%destinationPath);
+            %moduleName = %moduleDef.ModuleID;
+            %modulePath = %moduleDef.ModulePath;
+               
+            //test import config here for forcing type suffixes
+            %assetName = fileBase(%destinationPath);
+            
+            if(AssetDatabase.isDeclaredAsset(%moduleName @ ":" @ %assetName))
+            {
+               //Attempt to rename it to avoid collisions
+               if(!endsWith(%assetName, "Terrain") && !AssetDatabase.isDeclaredAsset(%moduleName @ ":" @ %assetName @ "Terrain"))
+               {
+                  %assetName = %assetName @ "Terrain";
+               }
+               else
+               {
+                  //Nope, there's already a matching one for that too, so just bail
+                  projectImporterLog("Legacy Project Importer - Error - trying to process a Terrain into an asset that already exists");
+                  return false;  
+               }
+            }
+            
+            %assetPath = filePath(%destinationPath) @ "/";
+            
+            %tamlpath = %assetPath @ %assetName @ ".asset.taml";
+            
+            %asset = new TerrainAsset()
+            {
+               AssetName = %assetName;
+               versionId = 1;
+               terrainFile = fileName(%destinationPath);
+            };
+            
+            if(TamlWrite(%asset, %tamlpath))
+            {
+               AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
+               
+               //we probably need to update the terrainMaterial references if any of them got renamed, so lets do that now
+               %terrBlock = new TerrainBlock(tmp) {
+                  terrainAsset = %moduleName @ ":" @ %assetName;
+               };
+               
+               %matNamesChanged = false;
+               %terrMatCount = %terrBlock.getTerrainMaterialCount();
+               for(%tm = 0; %tm < %terrMatCount; %tm++)
+               {
+                  %terrMatName = %terrBlock.getTerrainMaterialName(%tm);
+                  %terrMatAssetId = TerrainMaterialAsset::getAssetIdByMaterialName(%terrMatName);
+                  if(%terrMatAssetId $= "")
+                  {
+                     //k, one didn't map right, lets try and fix it
+                     %terrMatAssetId = TerrainMaterialAsset::getAssetIdByMaterialName(%terrMatName @ "_terrainMat");
+                     if(%terrMatAssetId !$= "")
+                     {
+                        //Ok, success, lets run the rename
+                        if(%terrBlock.renameTerrainMaterial(%terrMatName, %terrMatAssetId))
+                           %matNamesChanged = true;
+                     }
+                  }
+               }
+               
+               if(%matNamesChanged)
+               {
+                  %terrBlock.saveAsset();
+                  %terrBlock.delete();
+               }
+               
+               projectImporterLog("Finished importing Terrain file, resulting in asset with an id of: " @ %moduleName @ ":" @ %assetName);
+               projectImporterLog("");
+               
+               %rootFileSectionObject.imported = true;
+            }
+         }
+      }
+   }
+   
+   projectImporterLog("===========================================");
+   projectImporterLog("Finished Importing Terrain files");
+   projectImporterLog("===========================================");
+}
+//==============================================================================
+
+//==============================================================================
+//Sound Importing
+//==============================================================================
+function beginSoundImport()
+{
+   projectImporterLog("===========================================");
+   projectImporterLog("Importing Sound files");
+   projectImporterLog("===========================================");
+
+   //First, we need to go through and process all loose image files. This will
+   //get us shape assets, and if the import config deigns, material assets.
+   %currentAddress = $ProjectImporter::modulePath;
+   
+   for(%i=0; %i < $ProjectImporter::FileList.count(); %i++)
+   {
+      %file = $ProjectImporter::FileList.getKey(%i);
+      %rootFileSectionObject = $ProjectImporter::FileList.getValue(%i);
+      %destinationPath = %rootFileSectionObject.fileDestination;
+      if(isFile(%file) && %rootFileSectionObject.isSoundFile == true && %rootFileSectionObject.imported == false)
+      {    
+         /*%filename = %rootFileSectionObject.fileName;
+         %fileExt = %rootFileSectionObject.fileExt;
+         %filePath = filePath(%file);
+         
+         %sanitizedFile = sanitizeFilename(%file);
+         if(%sanitizedFile !$= %file)
+         {
+            %file = %sanitizedFile;
+            %fileName = fileName(%file); 
+            %filePath = filePath(%file);
+         }*/
+         
+         if(!copyFileToDestination(%file, %destinationPath))
+         {
+            projectImporterLog("ProjectImporter::beginSoundImport() - failed to copy sound: " @ %file @
+                                    " to destination: " @ %destinationPath);
+            continue;
+         }
+            
+         $ProjectImporter::assetQuery.clear();
+         %assetsFound = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %destinationPath);
+         if(%assetsFound == 0)
+         {
+            //ProjectImportWizardPage5-->processingText.setText("Processing Image Asset file: " @ %file);
+            Canvas.repaint();
+      
+            //No asset found associated to this fileas far as we can determine, so time to import it
+            
+            projectImporterLog("  No Existing SoundAsset found. Continuing Import.");
+            %assetId = $ProjectImporter::importer.autoImportFile(%destinationPath);  
+            getImporterLogs();
+            
+            if(%assetId !$= "")
+            {
+               projectImporterLog("Finished importing Sound file, resulting in asset with an id of: " @ %assetId);
+               projectImporterLog("");
+               
+                %rootFileSectionObject.imported = true;
+            }
+         }
+      }
+      
+      %file = findNextFileMultiExpr( %currentAddress @ "/*.*" );
+   }
+   
+   projectImporterLog("===========================================");
+   projectImporterLog("Finished Importing Sound files");
+   projectImporterLog("===========================================");
+}
+//==============================================================================
+
+//==============================================================================
+//Gui Importing
+//==============================================================================
+function beginGUIImport()
+{
+   projectImporterLog("===========================================");
+   projectImporterLog("Importing GUIs");
+   projectImporterLog("===========================================");
+   
+   //First, we need to go through and process all loose image files. This will
+   //get us shape assets, and if the import config deigns, material assets.
+   %currentAddress = $ProjectImporter::modulePath;
+   
+   for(%i=0; %i < $ProjectImporter::FileList.count(); %i++)
+   {
+      %file = $ProjectImporter::FileList.getKey(%i);
+      %rootFileSectionObject = $ProjectImporter::FileList.getValue(%i);
+      %destinationPath = %rootFileSectionObject.fileDestination;
+      if(isFile(%file) && %rootFileSectionObject.fileExt $= ".gui" && %rootFileSectionObject.imported == false)
+      {   
+         $ProjectImporter::assetQuery.clear();
+         %assetsFound = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %destinationPath);
+         if(%assetsFound == 0)
+         {
+            //ProjectImportWizardPage5-->processingText.setText("Processing GUI Asset file: " @ %file);
+            Canvas.repaint();
+            
+            %guiObjectName = "";
+            
+            //find our root GUI item
+            for(%g = 0; %g < %rootFileSectionObject.count(); %g++)
+            {
+               %fileElement = %rootFileSectionObject.getKey(%g);
+               if(%fileElement.elementType $= "Object")
+               {
+                  %guiObjectName = %fileElement.objectName;
+                  %delcareLine = %fileElement.getKey(0);
+                  if(startsWith(%delcareLine, "%guiContent"))
+                  {
+                     %equalPos = strPos(%delcareLine, "=");
+                     if(%equalPos != -1)
+                     {
+                          %declareSubStr = getSubStr(%delcareLine, %equalPos + 1);
+                          
+                          //update the line to remove the unneeded local var
+                          %fileElement.setKey(%declareSubStr, 0);
+                     }
+                  }
+                  break;
+               }
+            }
+            
+            if(%guiObjectName $= "")
+            {
+               projectImporterLog("ProjectImporter::beginGUIImport() - failed to find root GUI control in file: " @ %file);
+               continue;
+            }
+
+            if(!IsDirectory(filePath(%destinationPath)))
+            {
+               DirectoryHandler::createFolder(0, filePath(%destinationPath));  
+            }
+
+            //Check if we need to even copy in the first place. If we do, ensure
+            //the copy actually worked
+            if(!copyFileToDestination(%file, %destinationPath))
+            {
+               projectImporterLog("ProjectImporter::beginGUIImport() - failed to copy GUI: " @ %file @
+                  " to destination: " @ %destinationPath);
+               continue;
+            }
+
+            processGUIntoAsset(%guiObjectName, %destinationPath);
+            
+            %rootFileSectionObject.imported = true;
+         }
+      }
+   }
+
+   projectImporterLog("===========================================");
+   projectImporterLog("Finished Importing GUIs");
+   projectImporterLog("===========================================");
+}
+
+function processGUIntoAsset(%guiName, %file)
+{
+   projectImporterLog("Processing GUI into asset: " @ %guiName @ ", file: " @ %file);
+   
+   %filePath = filePath(%file);
+   %fileName = fileBase(%file);
+   %moduleDef = AssetBrowser.dirHandler.getModuleFromAddress(%file);
+   %moduleName = %moduleDef.ModuleId;
+   %modulePath = %moduleDef.ModulePath;
+      
+   %assetName = %guiName;
+   
+   %assetPath = %filePath @ "/";
+   
+   %tamlpath = %assetPath @ %assetName @ ".asset.taml";
+   
+   %scriptFile = "";
+   if(isImportingFile(makeFullPath(%filePath @ "/" @ %fileName @ "." @ $TorqueScriptFileExtension)))
+   {
+      %scriptFile = %fileName;
+   }
+   
+   %asset = new GUIAsset()
+   {
+      AssetName = %assetName;
+      versionId = 1;
+      scriptFile = %scriptFile;
+      guiFile = fileName(%file);
+   };
+   
+   if(TamlWrite(%asset, %tamlpath))
+   {
+      AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
+   }
+	
+	return %tamlpath;    
+}
+//==============================================================================
+
+//==============================================================================
+//PostFX conversion
+//==============================================================================
+function beginPostFXImport()
+{
+   projectImporterLog("===========================================");
+   projectImporterLog("Importing PostFXs");
+   projectImporterLog("===========================================");
+   
+   %count = PostFXManager.Count();
+   for(%i=0; %i < %count; %i++)
+   {
+      %postEffect = PostFXManager.getKey(%i);  
+      
+      if(isObject(%postEffect))
+      {     
+         projectImporterLog("Processing import of PostFX: " @ %postEffect.getName());
+         
+         //$ProjectImporter::persistMgr.setDirty(%gui);
+      }
+   }
+   
+   //$ProjectImporter::persistMgr.saveDirty();
+
+   projectImporterLog("===========================================");
+   projectImporterLog("Finished Importing PostFXs");
+   projectImporterLog("===========================================");
+}
+//==============================================================================
+
+//==============================================================================
+//Level Importing
+//==============================================================================
+function beginLevelImport()
+{
+   projectImporterLog("===========================================");
+   projectImporterLog("Importing Level files");
+   projectImporterLog("===========================================");
+
+   //First, we need to go through and process all loose image files. This will
+   //get us shape assets, and if the import config deigns, material assets.
+   %currentAddress = $ProjectImporter::modulePath;
+   
+   for(%i=0; %i < $ProjectImporter::FileList.count(); %i++)
+   {
+      %file = $ProjectImporter::FileList.getKey(%i);
+      %rootFileSectionObject = $ProjectImporter::FileList.getValue(%i);
+      %destinationPath = %rootFileSectionObject.fileDestination;
+      if(isFile(%file) && %rootFileSectionObject.fileExt $= ".mis" && %rootFileSectionObject.imported == false)
+      {    
+         %fileName = fileName(%destinationPath);
+         %fileExt = fileExt(%destinationPath);
+         %fileBase = fileBase(%destinationPath);
+         %filePath = filePath(%destinationPath);
+         
+         if(!copyFileToDestination(%file, %destinationPath))
+         {
+            projectImporterLog("ProjectImporter::beginLevelImport() - failed to copy level: " @ %file @
+                                    " to destination: " @ %destinationPath);
+            continue;
+         }
+         
+         %newAsset = false;
+         
+         $ProjectImporter::assetQuery.clear();
+         %assetsFound = AssetDatabase.findAssetLooseFile($ProjectImporter::assetQuery, %destinationPath);
+         if(%assetsFound == 0)
+         {
+            //ProjectImportWizardPage5-->processingText.setText("Processing Level Asset file: " @ %file);
+            Canvas.repaint();
+            
+            projectImporterLog("Importing Level file: " @ %file);
+            
+            %moduleName = AssetBrowser.dirHandler.getModuleFromAddress(%destinationPath).ModuleId;
+
+            %assetName = %fileBase;
+            
+            %assetName = strreplace(%assetName, " ", "");
+            
+            if(AssetDatabase.isDeclaredAsset(%moduleName @ ":" @ %assetName))
+            {
+               //Attempt to rename it to avoid collisions
+               if(!endsWith(%assetName, "Level") && !AssetDatabase.isDeclaredAsset(%moduleName @ ":" @ %assetName @ "Level"))
+               {
+                  %assetName = %assetName @ "Level";
+               }
+               else
+               {
+                  //Nope, there's already a matching one for that too, so just bail
+                  projectImporterLog("Legacy Project Importer - Error - trying to process a level into an asset that already exists");
+               return false;  
+            }
+            }
+            
+            %assetPath = %filePath @ "/";
+            %tamlpath = %assetPath @ %assetName @ ".asset.taml";
+            
+            %asset = new LevelAsset()
+            {
+               AssetName = %assetName;
+               versionId = 1;
+               levelFile = %fileName;
+               levelName = %assetName;
+            };
+            
+            %newAsset = true;
+         }
+         else
+         {
+            %assetId = $ProjectImporter::assetQuery.getAsset(0);
+            %asset = AssetDatabase.acquireAsset(%assetId);
+            %tamlpath = AssetDatabase.getAssetFilePath(%assetId);
+         }
+
+         //Time to process the associated files 
+         if(isFile(%filePath @ "/" @ %fileBase @ ".decal"))
+         {
+            %asset.decalsFile = %fileBase @ ".decal";
+         }
+         else if(isFile(%filePath @ "/" @ %fileBase @ "mis.decal"))
+         {
+            %asset.decalsFile = %fileBase @ "mis.decal";
+         }
+         if(isFile(%filePath @ "/" @ %fileBase @ ".forest"))
+         {
+            %asset.forestFile = %fileBase @ ".forest";
+         }
+         if(isFile(%filePath @ "/" @ %fileBase @ ".nav"))
+         {
+            %asset.decalsFile = %fileBase @ ".nav";
+         }
+         if(isFile(%filePath @ "/" @ %fileBase @ ".postfx.preset"))
+         {
+            %asset.postFXPresetFile = %fileBase @ ".postfx.preset";
+         }
+         
+         if(isFile(%filePath @ "/" @ %fileBase @ ".png"))
+               %previewImageAsset = ImageAsset::getAssetIdByFilename(%filePath @ "/" @ %fileBase @ ".png");
+         else if(isFile(%filePath @ "/" @ %fileBase @ "_preview.png"))
+            %previewImageAsset = ImageAsset::getAssetIdByFilename(%filePath @ "/" @ %fileBase @ "_preview.png");
+            else if(isFile(%filePath @ "/" @ %fileBase @ ".dds"))
+               %previewImageAsset = ImageAsset::getAssetIdByFilename(%filePath @ "/" @ %fileBase @ ".dds");
+         else if(isFile(%filePath @ "/" @ %fileBase @ "_preview.dds"))
+            %previewImageAsset = ImageAsset::getAssetIdByFilename(%filePath @ "/" @ %fileBase @ "_preview.dds");
+            else if(isFile(%filePath @ "/" @ %fileBase @ ".jpg"))
+               %previewImageAsset = ImageAsset::getAssetIdByFilename(%filePath @ "/" @ %fileBase @ ".jpg");
+         else if(isFile(%filePath @ "/" @ %fileBase @ "_preview.jpg"))
+            %previewImageAsset = ImageAsset::getAssetIdByFilename(%filePath @ "/" @ %fileBase @ "_preview.jpg");
+            else if(isFile(%filePath @ "/" @ %fileBase @ ".jpeg"))
+               %previewImageAsset = ImageAsset::getAssetIdByFilename(%filePath @ "/" @ %fileBase @ ".jpeg");
+         else if(isFile(%filePath @ "/" @ %fileBase @ "_preview.jpeg"))
+            %previewImageAsset = ImageAsset::getAssetIdByFilename(%filePath @ "/" @ %fileBase @ "_preview.jpeg");
+         
+         if(%previewImageAsset !$= "")
+         {
+            %asset.addAssetDependencyField(previewImageAsset, %previewImageAsset);
+         }
+         
+         if(TamlWrite(%asset, %tamlpath))
+         {
+            if(%newAsset)
+            {
+               %moduleDef = ModuleDatabase.findModule(%moduleName, 1);
+            
+               %success = AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
+            }
+            else
+            {
+               %asset.refreshAsset();
+            }
+         }
+         
+         %rootFileSectionObject.imported = true;
+      }
+   }
+   
+   projectImporterLog("===========================================");
+   projectImporterLog("Finished Importing Level files");
+   projectImporterLog("===========================================");
+}
+//==============================================================================
+
+//==============================================================================
+// Cleas out existing *.asset.taml files from a target. Only really used for
+// testing purposes currently.
+//==============================================================================
+function deleteAssetDefinitions()
+{
+   %dlg = new OpenFolderDialog()
+   {
+      Title = "Select Folder";
+      Filters = "";
+      DefaultFile = "data/";
+      ChangePath = false;
+      MustExist = true;
+      MultipleFiles = false;
+   };
+
+   if(%dlg.Execute())
+   {
+      %path = makeFullPath(%dlg.FileName);
+      ProjectImporter::deleteAssetDefinitions(%path);
+   }
+
+   %dlg.delete();
+}
+
+function ProjectImporter::deleteAssetDefinitions(%targetFolder)
+{
+   if(%targetFolder $= "")
+   {
+      toolsMessageBoxOK("Must select valid folder", "You must select a valid project folder.", "");
+      return;
+   }
+      
+   $deleteAssetDefsTargetFolder = %targetFolder;
+   toolsMessageBoxOKCancel("Delete Asset Definitions", "This will delete all asset definitions in the folder " @ %targetFolder @ ". Do you wish to continue?", "doDeleteAssetDefinitions();", "");
+}
+
+function doDeleteAssetDefinitions()
+{
+   projectImporterLog("===========================================");
+   projectImporterLog("Deleting Asset Definitions");
+   projectImporterLog("===========================================");
+   
+   %currentAddress = $deleteAssetDefsTargetFolder;
+   
+   //First, wipe out any files inside the folder first
+   %file = findFirstFileMultiExpr( %currentAddress @ "/*.asset.taml", true);
+   
+   while( %file !$= "" )
+   {      
+      %fileName = fileName(%file);
+      %fileExt = fileExt(%file);
+      %filePath = filePath(%file);
+      if(endsWith(%file, ".asset.taml"))
+      {
+         if(fileDelete(%file))
+         {
+            projectImporterLog("File: " @ %file @ " deleted successfully.");  
+         }
+         else
+         {
+            projectImporterLog("File: " @ %file @ " failed to delete.");  
+         }
+      }
+      
+      %file = findNextFileMultiExpr( %currentAddress @ "/*.asset.taml" );
+   }
+
+   projectImporterLog("===========================================");
+   projectImporterLog("Finished Deleting Asset Definitions");
+   projectImporterLog("===========================================");
+}
+
+//==============================================================================
+// Tests a file in the game dir to see if there's a possible duplicate file that
+// may cause an asset collision
+//==============================================================================
+function scanForDuplicateFiles(%toTestFile)
+{
+   projectImporterLog("===========================================");
+   projectImporterLog("Scanning for duplicate files!");
+   projectImporterLog("===========================================");
+   
+   //First, wipe out any files inside the folder first
+   %file = findFirstFileMultiExpr( "*/*.*", true);
+   
+   while( %file !$= "" )
+   {      
+      //We only really care about content files for this
+      if(!endsWith(%file, "dts") &&
+         !endsWith(%file, "dae") && 
+         !endsWith(%file, "dsq") && 
+         !endsWith(%file, "fbx") &&
+         !endsWith(%file, "ter") &&
+         !endsWith(%file, "png") &&
+         !endsWith(%file, "jpg") &&
+         !endsWith(%file, "jpeg") &&
+         !endsWith(%file, "dds"))
+      {
+         %file = findNextFileMultiExpr( "*/*.*" );
+         continue;
+      }
+      
+      %filename = fileName(%file);
+      %fileExt = fileExt(%file);
+      %filePath = filePath(%file);
+      
+      if(%toTestFile $= "")
+      {
+         scanForDuplicateFiles(%file);
+      }
+      else
+      {
+         %testFilename = fileName(%toTestFile);
+         %testFileExt = fileExt(%toTestFile);
+         %testFilePath = filePath(%toTestFile);
+         
+         if(%testFilename $= %filename && %testFileExt $= %fileExt)
+         {
+            //name matches, lets double check it'd actually cause a collision via the module it'd be in 
+            %moduleName = AssetBrowser.dirHandler.getModuleFromAddress(%file).ModuleId; 
+            %testModuleName = AssetBrowser.dirHandler.getModuleFromAddress(%testFilename).ModuleId;  
+            
+            if(%moduleName !$= "" && %testModuleName !$= "" && %moduleName $= %testModuleName)
+            {
+               //report the probable duplicate
+               projectImporterLog("Probable duplicate asset detected!");
+               projectImporterLog("Files: " @ %file @ " and " @ %toTestFile @ " have matching names and exist within the same module!");
+            }
+         }
+      }
+      
+      %file = findNextFileMultiExpr( "*/*.*" );
+   }
+}
+
+//==============================================================================
+// Pulls the logs from the asset importer and adds it to the project importer's 
+// logs
+//==============================================================================
+function getImporterLogs()
+{
+   %lineCount = $ProjectImporter::importer.getActivityLogLineCount();
+   for(%i=0; %i < %lineCount; %i++)
+   {
+      projectImporterLog($ProjectImporter::importer.getActivityLogLine(%i));
+   }
+}

@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="LockedHandle_image"
+    imageFile="@assetFile=LockedHandle.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

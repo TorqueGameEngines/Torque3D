@@ -1,0 +1,370 @@
+//-----------------------------------------------------------------------------
+// Copyright (c) 2012 GarageGames, LLC
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+// IN THE SOFTWARE.
+//-----------------------------------------------------------------------------
+
+function ObjectCreator::onWake( %this )
+{
+}
+
+function ObjectCreator::beginGroup( %this, %group )
+{
+   %this.currentGroup = %group;   
+}
+
+function ObjectCreator::endGroup( %this, %group )
+{
+   %this.currentGroup = "";
+}
+
+function ObjectCreator::getCreateObjectPosition()
+{
+   %focusPoint = LocalClientConnection.getControlObject().getLookAtPoint();
+   if( %focusPoint $= "" )
+      return "0 0 0";
+   else
+      return getWord( %focusPoint, 1 ) SPC getWord( %focusPoint, 2 ) SPC getWord( %focusPoint, 3 );
+}
+
+function ObjectCreator::registerMissionObject( %this, %class, %name, %buildfunc, %group )
+{
+   if( !isClass(%class) )
+      return;
+      
+   if ( %name $= "" )
+      %name = %class;
+   if ( %this.currentGroup !$= "" && %group $= "" )
+      %group = %this.currentGroup;
+   
+   if ( %class $= "" || %group $= "" )
+   {
+      warn( "ObjectCreator::registerMissionObject, invalid parameters!" );
+      return;  
+   }
+
+   %args = new ScriptObject();
+   %args.val[0] = %class;
+   %args.val[1] = %name;
+   %args.val[2] = %buildfunc;
+}
+
+function ObjectCreator::getNewObjectGroup( %this )
+{
+   return %this.objectGroup;
+}
+
+function ObjectCreator::setNewObjectGroup( %this, %group )
+{
+   if( %this.objectGroup )
+   {
+      %oldItemId = EditorTree.findItemByObjectId( %this.objectGroup );
+      if( %oldItemId > 0 )
+         EditorTree.markItem( %oldItemId, false );
+   }
+
+   %group = %group.getID();
+   %this.objectGroup = %group;
+   %itemId = EditorTree.findItemByObjectId( %group );
+   if(%itemId != -1)
+   EditorTree.markItem( %itemId );
+}
+
+function ObjectCreator::createStatic( %this, %file )
+{
+   if ( !$missionRunning )
+      return;
+
+   if( !isObject(%this.objectGroup) )
+      %this.setNewObjectGroup( getScene(0) );
+
+   %objId = new TSStatic()
+   {
+      shapeName = %file;
+      position = %this.getCreateObjectPosition();
+      parentGroup = %this.objectGroup;
+   };
+   
+   %this.onObjectCreated( %objId );
+}
+
+function ObjectCreator::createPrefab( %this, %file )
+{
+   if ( !$missionRunning )
+      return;
+
+   if( !isObject(%this.objectGroup) )
+      %this.setNewObjectGroup( getScene(0) );
+
+   %objId = new Prefab()
+   {
+      filename = %file;
+      position = %this.getCreateObjectPosition();
+      parentGroup = %this.objectGroup;
+   };
+   
+   %this.onObjectCreated( %objId );
+}
+
+function ObjectCreator::createObject( %this, %cmd )
+{
+   if ( !$missionRunning )
+      return;
+
+   if( !isObject(%this.objectGroup) )
+      %this.setNewObjectGroup( getScene(0) );
+
+   pushInstantGroup();
+   
+   if(startsWith(%cmd, "return "))
+      %objId = eval(%cmd);
+   else
+   %objId = eval("return " @ %cmd);
+   popInstantGroup();
+   
+   if( isObject( %objId ) )
+      %this.onFinishCreateObject( %objId );
+      
+   return %objId;
+}
+
+function ObjectCreator::onFinishCreateObject( %this, %objId )
+{
+   %this.objectGroup.add( %objId );
+
+   if( %objId.isMemberOfClass( "SceneObject" ) )
+   {
+      %objId.position = %this.getCreateObjectPosition();
+
+      //flush new position
+      %objId.setTransform( %objId.getTransform() );
+   }
+
+   %this.onObjectCreated( %objId );
+}
+
+function ObjectCreator::onObjectCreated( %this, %objId )
+{
+   // Can we submit an undo action?
+   if ( isObject( %objId ) )
+      MECreateUndoAction::submit( %objId );
+            
+   EditorTree.clearSelection();
+   EWorldEditor.clearSelection();      
+   EWorldEditor.selectObject( %objId );
+   
+   // When we drop the selection don't store undo
+   // state for it... the creation deals with it.
+   EWorldEditor.dropSelection( true );
+}
+
+function ObjectCreator::findIconCtrl( %this, %name )
+{
+   for ( %i = 0; %i < %this.contentCtrl.getCount(); %i++ )
+   {
+      %ctrl = %this.contentCtrl.getObject( %i );
+      if ( %ctrl.text $= %name )
+         return %ctrl;
+   }
+   
+   return -1;
+}
+
+function ObjectCreator::createIcon( %this )
+{
+   %ctrl = new GuiIconButtonCtrl()
+   {            
+      profile = "GuiCreatorIconButtonProfile";     
+      buttonType = "radioButton";
+      groupNum = "-1";    
+   };
+      
+   if ( %this.isList )
+   {
+      %ctrl.iconLocation = "Left";
+      %ctrl.textLocation = "Right";
+      %ctrl.extent = "348 19";
+      %ctrl.textMargin = 8;
+      %ctrl.buttonMargin = "2 2";
+      %ctrl.autoSize = true;
+   }
+   else
+   {
+      %ctrl.iconLocation = "Center";         
+      %ctrl.textLocation = "Bottom";
+      %ctrl.extent = "40 40";    
+   }
+         
+   return %ctrl;
+}
+
+function ObjectCreator::addFolderIcon( %this, %text )
+{
+   %ctrl = %this.createIcon();
+      
+   %ctrl.altCommand = "ObjectCreator.navigateDown(\"" @ %text @ "\");";
+   %ctrl.iconBitmap = "tools/gui/images/folder.png";   
+   %ctrl.text = %text;
+   %ctrl.tooltip = %text;     
+   %ctrl.class = "CreatorFolderIconBtn";
+   
+   %ctrl.buttonType = "radioButton";
+   %ctrl.groupNum = "-1";   
+   
+   %this.contentCtrl.addGuiControl( %ctrl );   
+}
+
+function ObjectCreator::addMissionObjectIcon( %this, %class, %name, %buildfunc )
+{
+   %ctrl = %this.createIcon();      
+
+   // If we don't find a specific function for building an
+   // object then fall back to the stock one
+   %method = "build" @ %buildfunc;
+   if( !ObjectBuilderGui.isMethod( %method ) )
+      %method = "build" @ %class;
+
+   if( !ObjectBuilderGui.isMethod( %method ) )
+      %cmd = "return new " @ %class @ "();";
+   else
+      %cmd = "ObjectBuilderGui." @ %method @ "();";
+
+   %ctrl.altCommand = "ObjectBuilderGui.newObjectCallback = \"ObjectCreator.onFinishCreateObject\"; ObjectCreator.createObject( \"" @ %cmd @ "\" );";
+   %ctrl.iconBitmap = EditorIconRegistry::findIconByClassName( %class );
+   %ctrl.text = %name;
+   %ctrl.class = "CreatorMissionObjectIconBtn";   
+   %ctrl.tooltip = %class; 
+   
+   %ctrl.buttonType = "radioButton";
+   %ctrl.groupNum = "-1";   
+   
+   %this.contentCtrl.addGuiControl( %ctrl );
+}
+
+function ObjectCreator::addShapeIcon( %this, %datablock )
+{
+   %ctrl = %this.createIcon();
+   
+   %name = %datablock.getName();
+   %class = %datablock.getClassName();
+   %cmd = %class @ "::create(" @ %name @ ");";
+      
+   %shapePath = ( %datablock.shapeFile !$= "" ) ? %datablock.shapeFile : %datablock.shapeName;
+   
+   %createCmd = "ObjectCreator.createObject( \\\"" @ %cmd @ "\\\" );";
+   %ctrl.altCommand = "showImportDialog( \"" @ %shapePath @ "\", \"" @ %createCmd @ "\" );";
+
+   %ctrl.iconBitmap = EditorIconRegistry::findIconByClassName( %class );
+   %ctrl.text = %name;
+   %ctrl.class = "CreatorShapeIconBtn";
+   %ctrl.tooltip = %name;
+   
+   %ctrl.buttonType = "radioButton";
+   %ctrl.groupNum = "-1";   
+   
+   %this.contentCtrl.addGuiControl( %ctrl );   
+}
+
+function ObjectCreator::addStaticIcon( %this, %fullPath )
+{
+   %ctrl = %this.createIcon();
+   
+   %ext = fileExt( %fullPath );
+   %file = fileBase( %fullPath );
+   %fileLong = %file @ %ext;
+   %tip = %fileLong NL
+          "Size: " @ fileSize( %fullPath ) / 1000.0 SPC "KB" NL
+          "Date Created: " @ fileCreatedTime( %fullPath ) NL
+          "Last Modified: " @ fileModifiedTime( %fullPath );
+
+   %createCmd = "ObjectCreator.createStatic( \\\"" @ %fullPath @ "\\\" );";
+   %ctrl.altCommand = "showImportDialog( \"" @ %fullPath @ "\", \"" @ %createCmd @ "\" );";
+
+   %ctrl.iconBitmap = ( ( %ext $= ".dts" ) ? EditorIconRegistry::findIconByClassName( "TSStatic" ) : "tools/gui/images/iconCollada" );
+   %ctrl.text = %file;
+   %ctrl.class = "CreatorStaticIconBtn";
+   %ctrl.tooltip = %tip;
+   
+   %ctrl.buttonType = "radioButton";
+   %ctrl.groupNum = "-1";   
+   
+   %this.contentCtrl.addGuiControl( %ctrl );   
+}
+
+function ObjectCreator::addPrefabIcon( %this, %fullPath )
+{
+   %ctrl = %this.createIcon();
+   
+   %ext = fileExt( %fullPath );
+   %file = fileBase( %fullPath );
+   %fileLong = %file @ %ext;
+   %tip = %fileLong NL
+          "Size: " @ fileSize( %fullPath ) / 1000.0 SPC "KB" NL
+          "Date Created: " @ fileCreatedTime( %fullPath ) NL
+          "Last Modified: " @ fileModifiedTime( %fullPath );
+
+   %ctrl.altCommand = "ObjectCreator.createPrefab( \"" @ %fullPath @ "\" );";
+   %ctrl.iconBitmap = EditorIconRegistry::findIconByClassName( "Prefab" );
+   %ctrl.text = %file;
+   %ctrl.class = "CreatorPrefabIconBtn";
+   %ctrl.tooltip = %tip;
+   
+   %ctrl.buttonType = "radioButton";
+   %ctrl.groupNum = "-1";   
+   
+   %this.contentCtrl.addGuiControl( %ctrl );   
+}
+
+function CreatorPopupMenu::onSelect( %this, %id, %text )
+{   
+   %split = strreplace( %text, "/", " " );
+   ObjectCreator.navigate( %split );  
+}
+
+function alphaIconCompare( %a, %b )
+{
+   if ( %a.class $= "CreatorFolderIconBtn" )   
+      if ( %b.class !$= "CreatorFolderIconBtn" )
+         return -1;
+   
+   if ( %b.class $= "CreatorFolderIconBtn" )
+      if ( %a.class !$= "CreatorFolderIconBtn" )
+         return 1;         
+   
+   %result = stricmp( %a.text, %b.text );
+   return %result;
+}
+
+// Generic create object helper for use from the console.
+
+function genericCreateObject( %class )
+{
+   if ( !isClass( %class ) )
+   {
+      warn( "createObject( " @ %class @ " ) - Was not a valid class." );
+      return;
+   }
+   
+   %cmd = "return new " @ %class @ "();";
+   
+   %obj = ObjectCreator.createObject( %cmd );   
+   
+   // In case the caller wants it.
+   return %obj;   
+}

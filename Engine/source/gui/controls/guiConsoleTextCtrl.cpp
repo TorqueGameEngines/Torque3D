@@ -46,6 +46,7 @@ GuiConsoleTextCtrl::~GuiConsoleTextCtrl()
 
 void GuiConsoleTextCtrl::initPersistFields()
 {
+   docsURL;
    addGroup("GuiConsoleTextCtrl");		
    addField("expression",  TypeRealString,  Offset(mConsoleExpression, GuiConsoleTextCtrl));
    endGroup("GuiConsoleTextCtrl");
@@ -113,7 +114,10 @@ void GuiConsoleTextCtrl::onPreRender()
 {   
    if ( mConsoleExpression.isNotEmpty() )
    {
-      mResult = Con::evaluatef( "$guiConsoleTextCtrlTemp = %s;", mConsoleExpression.c_str() );
+      Con::evaluatef( "$guiConsoleTextCtrlTemp = %s;", mConsoleExpression.c_str() );
+      
+      //Fixes a bug with the above not always grabbing the console text.
+      mResult = Con::getVariable("$guiConsoleTextCtrlTemp");
       
       // Of the resulting string we will be printing,
       // Find the number of lines and length of each.      

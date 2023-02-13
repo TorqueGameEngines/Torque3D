@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="MeshRoadEditorToolbar,EditorGuiGroup"
+    scriptFile="@assetFile=meshRoadEditorToolbar.gui"
+    GUIFile="@assetFile=meshRoadEditorToolbar.gui"
+    VersionId="1" />

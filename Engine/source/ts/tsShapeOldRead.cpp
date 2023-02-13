@@ -647,27 +647,27 @@ bool TSShape::importSequences(Stream * s, const String& sequencePath)
          nodeUniformScales.increment(newScaleMembership.count() * seq.numKeyframes);
 
       // remap node transforms from temporary arrays
-      for (S32 j = 0; j < nodeMap.size(); j++)
+      for (S32 nodeID = 0; nodeID < nodeMap.size(); nodeID++)
       {
-         if (nodeMap[j] < 0)
+         if (nodeMap[nodeID] < 0)
             continue;
 
-         if (newTransMembership.test(nodeMap[j]))
+         if (newTransMembership.test(nodeMap[nodeID]))
          {
-            S32 src = seq.numKeyframes * seq.translationMatters.count(j);
-            S32 dest = seq.baseTranslation + seq.numKeyframes * newTransMembership.count(nodeMap[j]);
+            S32 src = seq.numKeyframes * seq.translationMatters.count(nodeID);
+            S32 dest = seq.baseTranslation + seq.numKeyframes * newTransMembership.count(nodeMap[nodeID]);
             dCopyArray(&nodeTranslations[dest], &seqTranslations[src], seq.numKeyframes);
          }
-         if (newRotMembership.test(nodeMap[j]))
+         if (newRotMembership.test(nodeMap[nodeID]))
          {
-            S32 src = seq.numKeyframes * seq.rotationMatters.count(j);
-            S32 dest = seq.baseRotation + seq.numKeyframes * newRotMembership.count(nodeMap[j]);
+            S32 src = seq.numKeyframes * seq.rotationMatters.count(nodeID);
+            S32 dest = seq.baseRotation + seq.numKeyframes * newRotMembership.count(nodeMap[nodeID]);
             dCopyArray(&nodeRotations[dest], &seqRotations[src], seq.numKeyframes);
          }
-         if (newScaleMembership.test(nodeMap[j]))
+         if (newScaleMembership.test(nodeMap[nodeID]))
          {
-            S32 src = seq.numKeyframes * seq.scaleMatters.count(j);
-            S32 dest = seq.baseScale + seq.numKeyframes * newScaleMembership.count(nodeMap[j]);
+            S32 src = seq.numKeyframes * seq.scaleMatters.count(nodeID);
+            S32 dest = seq.baseScale + seq.numKeyframes * newScaleMembership.count(nodeMap[nodeID]);
             if (seq.flags & TSShape::ArbitraryScale)
             {
                dCopyArray(&nodeArbitraryScaleRots[dest], &seqArbitraryScaleRots[src], seq.numKeyframes);
@@ -713,10 +713,10 @@ bool TSShape::importSequences(Stream * s, const String& sequencePath)
    S32 oldSz = triggers.size();
    s->read(&sz);
    triggers.setSize(oldSz+sz);
-   for (S32 i=0; i<sz;i++)
+   for (S32 triggerID=0; triggerID<sz; triggerID++)
    {
-      s->read(&triggers[i+oldSz].state);
-      s->read(&triggers[i+oldSz].pos);
+      s->read(&triggers[triggerID +oldSz].state);
+      s->read(&triggers[triggerID +oldSz].pos);
    }
 
    if (smInitOnRead)
@@ -856,12 +856,12 @@ void TSShape::writeName(Stream * s, S32 nameIndex)
 S32 TSShape::readName(Stream * s, bool addName)
 {
    static char buffer[256];
-   S32 sz;
+   U32 sz;
    S32 nameIndex = -1;
    s->read(&sz);
-   if (sz)
+   if (sz>0 && sz<255)
    {
-      s->read(sz*sizeof(char),buffer);
+      s->read(sz,buffer);
       buffer[sz] = '\0';
       nameIndex = findName(buffer);
 
@@ -881,6 +881,8 @@ S32 TSShape::readName(Stream * s, bool addName)
          names.last() = buffer;
       }
    }
+   else
+      Con::errorf("invalid TSShape::readName length!");
 
    return nameIndex;
 }

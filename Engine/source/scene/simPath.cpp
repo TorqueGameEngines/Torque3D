@@ -34,6 +34,9 @@
 #include "core/stream/bitStream.h"
 #include "renderInstance/renderPassManager.h"
 #include "console/engineAPI.h"
+#include "T3D/pathShape.h"
+
+#include "T3D/Scene.h"
 
 extern bool gEditingMission;
 
@@ -59,13 +62,13 @@ DefineEngineFunction(pathOnMissionLoadDone, void, (),,
    "@ingroup Networking")
 {
    // Need to load subobjects for all loaded interiors...
-   SimGroup* pMissionGroup = dynamic_cast<SimGroup*>(Sim::findObject("MissionGroup"));
-   AssertFatal(pMissionGroup != NULL, "Error, mission done loading and no mission group?");
+   Scene* scene = Scene::getRootScene();
+   AssertFatal(scene != NULL, "Error, mission done loading and no scene?");
 
    U32 currStart = 0;
    U32 currEnd   = 1;
    Vector<SimGroup*> groups;
-   groups.push_back(pMissionGroup);
+   groups.push_back(scene);
 
    while (true) {
       for (U32 i = currStart; i < currEnd; i++) {
@@ -153,6 +156,11 @@ Path::Path()
 {
    mPathIndex = NoPathIndex;
    mIsLooping = true;
+   mPathSpeed = 1.0f;
+   mDataBlock = NULL;
+   mSpawnCount = 1;
+   mMinDelay = 0;
+   mMaxDelay = 0;
 }
 
 Path::~Path()
@@ -163,7 +171,15 @@ Path::~Path()
 //--------------------------------------------------------------------------
 void Path::initPersistFields()
 {
+   docsURL;
    addField("isLooping",   TypeBool, Offset(mIsLooping, Path), "If this is true, the loop is closed, otherwise it is open.\n");
+   addField("Speed",   TypeF32, Offset(mPathSpeed, Path), "Speed.\n");
+   addProtectedField("mPathShape", TYPEID< PathShapeData >(), Offset(mDataBlock, Path),
+	   &setDataBlockProperty, &defaultProtectedGetFn,
+	   "@brief Spawned PathShape.\n\n");
+   addField("spawnCount", TypeS32, Offset(mSpawnCount, Path), "Spawn Count.\n");
+   addField("minDelay", TypeS32, Offset(mMinDelay, Path), "Spawn Delay (min).\n");
+   addField("maxDelay", TypeS32, Offset(mMaxDelay, Path), "Spawn Delay (max).\n");
 
    Parent::initPersistFields();
    //
@@ -177,9 +193,14 @@ bool Path::onAdd()
    if(!Parent::onAdd())
       return false;
 
+   onAdd_callback(getId());
    return true;
 }
 
+IMPLEMENT_CALLBACK(Path, onAdd, void, (SimObjectId ID), (ID),
+	"Called when this ScriptGroup is added to the system.\n"
+	"@param ID Unique object ID assigned when created (%this in script).\n"
+);
 
 void Path::onRemove()
 {
@@ -194,7 +215,7 @@ void Path::onRemove()
 /// Sort the markers objects into sequence order
 void Path::sortMarkers()
 {
-   dQsort(objectList.address(), objectList.size(), sizeof(SimObject*), cmpPathObject);
+   dQsort(mObjectList.address(), mObjectList.size(), sizeof(SimObject*), cmpPathObject);
 }
 
 void Path::updatePath()
@@ -228,8 +249,7 @@ void Path::updatePath()
       }
    }
 
-   // DMMTODO: Looping paths.
-   gServerPathManager->updatePath(mPathIndex, positions, rotations, times, smoothingTypes);
+   gServerPathManager->updatePath(mPathIndex, positions, rotations, times, smoothingTypes, mIsLooping);
 }
 
 void Path::addObject(SimObject* obj)
@@ -273,7 +293,7 @@ DefineEngineMethod( Path, getPathId, S32, (),,
 //--------------------------------------------------------------------------
 
 GFXStateBlockRef Marker::smStateBlock;
-GFXVertexBufferHandle<GFXVertexPC> Marker::smVertexBuffer;
+GFXVertexBufferHandle<GFXVertexPCT> Marker::smVertexBuffer;
 GFXPrimitiveBufferHandle Marker::smPrimitiveBuffer;
 
 static Point3F wedgePoints[4] = {
@@ -295,12 +315,13 @@ void Marker::initGFXResources()
    smStateBlock = GFX->createStateBlock(d);
    
    smVertexBuffer.set(GFX, 4, GFXBufferTypeStatic);
-   GFXVertexPC* verts = smVertexBuffer.lock();
-   verts[0].point = wedgePoints[0] * 0.25f;
-   verts[1].point = wedgePoints[1] * 0.25f;
-   verts[2].point = wedgePoints[2] * 0.25f;
-   verts[3].point = wedgePoints[3] * 0.25f;
-   verts[0].color = verts[1].color = verts[2].color = verts[3].color = GFXVertexColor(ColorI(0, 255, 0, 255));
+   GFXVertexPCT* verts = smVertexBuffer.lock();
+   verts[0].point = wedgePoints[0] * 1.25f;
+   verts[1].point = wedgePoints[1] * 1.25f;
+   verts[2].point = wedgePoints[2] * 1.25f;
+   verts[3].point = wedgePoints[3] * 1.25f;
+   verts[1].color = GFXVertexColor(ColorI(255, 0, 0, 255));
+   verts[0].color = verts[2].color = verts[3].color = GFXVertexColor(ColorI(0, 0, 255, 255));
    smVertexBuffer.unlock();
    
    smPrimitiveBuffer.set(GFX, 24, 12, GFXBufferTypeStatic);
@@ -369,7 +390,7 @@ Marker::Marker()
    mNetFlags.clear(Ghostable);
 
    mTypeMask |= MarkerObjectType;
-
+   mHitCommand = String::EmptyString;
    mSeqNum   = 0;
    mMSToNext = 1000;
    mSmoothingType = SmoothingTypeSpline;
@@ -401,11 +422,13 @@ EndImplementEnumType;
 
 void Marker::initPersistFields()
 {
+   docsURL;
    addGroup( "Misc" );
    addField("seqNum",   TypeS32, Offset(mSeqNum,   Marker), "Marker position in sequence of markers on this path.\n");
-   addField("type", TYPEID< KnotType >(), Offset(mKnotType, Marker), "Type of this marker/knot. A \"normal\" knot will have a smooth camera translation/rotation effect.\n\"Position Only\"ùwill do the same for translations, leaving rotation un-touched.\nLastly, a \"Kink\" means the rotation will take effect immediately for an abrupt rotation change.\n");
+   addField("hitCommand", TypeCommand, Offset(mHitCommand, Marker), "The command to execute when a path follower reaches this marker.");
+   addField("type", TYPEID< KnotType >(), Offset(mKnotType, Marker), "Type of this marker/knot. A \"normal\" knot will have a smooth camera translation/rotation effect.\n\"Position Only\" will do the same for translations, leaving rotation un-touched.\nLastly, a \"Kink\" means the rotation will take effect immediately for an abrupt rotation change.\n");
    addField("msToNext", TypeS32, Offset(mMSToNext, Marker), "Milliseconds to next marker in sequence.\n");
-   addField("smoothingType", TYPEID< SmoothingType >(), Offset(mSmoothingType, Marker), "Path smoothing at this marker/knot. \"Linear\"ùmeans no smoothing, while \"Spline\" means to smooth.\n");
+   addField("smoothingType", TYPEID< SmoothingType >(), Offset(mSmoothingType, Marker), "Path smoothing at this marker/knot. \"Linear\" means no smoothing, while \"Spline\" means to smooth.\n");
    endGroup("Misc");
 
    Parent::initPersistFields();
@@ -417,7 +440,7 @@ bool Marker::onAdd()
    if(!Parent::onAdd())
       return false;
 
-   mObjBox = Box3F(Point3F(-.25, -.25, -.25), Point3F(.25, .25, .25));
+   mObjBox = Box3F(Point3F(-1.25, -1.25, -1.25), Point3F(1.25, 1.25, 1.25));
    resetWorldBox();
 
    if(gEditingMission)

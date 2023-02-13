@@ -20,6 +20,10 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+// Arcane-FX for MIT Licensed Open Source version of Torque 3D from GarageGames
+// Copyright (C) 2015 Faust Logic, Inc.
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
 #include "platform/platform.h"
 #include "console/consoleObject.h"
 
@@ -33,6 +37,7 @@
 #include "console/engineTypes.h"
 #include "console/engineAPI.h"
 
+#include "sim/netObject.h"
 
 IMPLEMENT_SCOPE( ConsoleAPI, Console,,
    "Functionality related to the legacy TorqueScript console system." );
@@ -55,7 +60,25 @@ bool                               AbstractClassRep::initialized = false;
 
 
 //-----------------------------------------------------------------------------
+AbstractClassRep* AbstractClassRep::findFieldRoot(StringTableEntry fieldName)
+{
+   // Find the field.
+   const Field* pField = findField(fieldName);
 
+   // Finish if not found.
+   if (pField == NULL)
+      return NULL;
+
+   // We're the root if we have no parent.
+   if (getParentClass() == NULL)
+      return this;
+
+   // Find the field root via the parent.
+   AbstractClassRep* pFieldRoot = getParentClass()->findFieldRoot(fieldName);
+
+   // We're the root if the parent does not have it else return the field root.
+   return pFieldRoot == NULL ? this : pFieldRoot;
+}
 
 void AbstractClassRep::init()
 {
@@ -117,7 +140,7 @@ void AbstractClassRep::registerClassRep(AbstractClassRep* in_pRep)
 #ifdef TORQUE_DEBUG  // assert if this class is already registered.
    for(AbstractClassRep *walk = classLinkList; walk; walk = walk->nextClass)
    {
-      AssertFatal(dStrcmp(in_pRep->mClassName, walk->mClassName),
+      AssertFatal(String::compare(in_pRep->mClassName, walk->mClassName),
          "Duplicate class name registered in AbstractClassRep::registerClassRep()");
    }
 #endif
@@ -316,15 +339,15 @@ AbstractClassRep *AbstractClassRep::getCommonParent( const AbstractClassRep *oth
 static char replacebuf[1024];
 static char* suppressSpaces(const char* in_pname)
 {
-	U32 i = 0;
-	char chr;
-	do
-	{
-		chr = in_pname[i];
-		replacebuf[i++] = (chr != 32) ? chr : '_';
-	} while(chr);
+   U32 i = 0;
+   char chr;
+   do
+   {
+      chr = in_pname[i];
+      replacebuf[i++] = (chr != 32) ? chr : '_';
+   } while(chr);
 
-	return replacebuf;
+   return replacebuf;
 }
 
 void ConsoleObject::addGroup(const char* in_pGroupname, const char* in_pGroupDocs)
@@ -333,7 +356,7 @@ void ConsoleObject::addGroup(const char* in_pGroupname, const char* in_pGroupDoc
    char* pFieldNameBuf = suppressSpaces(in_pGroupname);
 
    // Append group type to fieldname.
-   dStrcat(pFieldNameBuf, "_begingroup");
+   dStrcat(pFieldNameBuf, "_begingroup", 1024);
 
    // Create Field.
    AbstractClassRep::Field f;
@@ -349,6 +372,8 @@ void ConsoleObject::addGroup(const char* in_pGroupname, const char* in_pGroupDoc
    f.validator    = NULL;
    f.setDataFn    = &defaultProtectedSetFn;
    f.getDataFn    = &defaultProtectedGetFn;
+   f.writeDataFn = &defaultProtectedWriteFn;
+   f.networkMask  = 0;
 
    // Add to field list.
    sg_tempFieldList.push_back(f);
@@ -360,7 +385,7 @@ void ConsoleObject::endGroup(const char*  in_pGroupname)
    char* pFieldNameBuf = suppressSpaces(in_pGroupname);
 
    // Append group type to fieldname.
-   dStrcat(pFieldNameBuf, "_endgroup");
+   dStrcat(pFieldNameBuf, "_endgroup", 1024);
 
    // Create Field.
    AbstractClassRep::Field f;
@@ -371,7 +396,9 @@ void ConsoleObject::endGroup(const char*  in_pGroupname)
    f.validator    = NULL;
    f.setDataFn    = &defaultProtectedSetFn;
    f.getDataFn    = &defaultProtectedGetFn;
+   f.writeDataFn = &defaultProtectedWriteFn;
    f.elementCount = 0;
+   f.networkMask  = 0;
 
    // Add to field list.
    sg_tempFieldList.push_back(f);
@@ -380,7 +407,7 @@ void ConsoleObject::endGroup(const char*  in_pGroupname)
 void ConsoleObject::addArray( const char *arrayName, S32 count )
 {
    char *nameBuff = suppressSpaces(arrayName);
-   dStrcat(nameBuff, "_beginarray");
+   dStrcat(nameBuff, "_beginarray", 1024);
 
    // Create Field.
    AbstractClassRep::Field f;
@@ -393,6 +420,8 @@ void ConsoleObject::addArray( const char *arrayName, S32 count )
    f.validator    = NULL;
    f.setDataFn    = &defaultProtectedSetFn;
    f.getDataFn    = &defaultProtectedGetFn;
+   f.writeDataFn = &defaultProtectedWriteFn;
+   f.networkMask = 0;
 
    // Add to field list.
    sg_tempFieldList.push_back(f);
@@ -401,7 +430,7 @@ void ConsoleObject::addArray( const char *arrayName, S32 count )
 void ConsoleObject::endArray( const char *arrayName )
 {
    char *nameBuff = suppressSpaces(arrayName);
-   dStrcat(nameBuff, "_endarray");
+   dStrcat(nameBuff, "_endarray", 1024);
 
    // Create Field.
    AbstractClassRep::Field f;
@@ -412,7 +441,9 @@ void ConsoleObject::endArray( const char *arrayName )
    f.validator    = NULL;
    f.setDataFn    = &defaultProtectedSetFn;
    f.getDataFn    = &defaultProtectedGetFn;
+   f.writeDataFn = &defaultProtectedWriteFn;
    f.elementCount = 0;
+   f.networkMask = 0;
 
    // Add to field list.
    sg_tempFieldList.push_back(f);
@@ -433,13 +464,78 @@ void ConsoleObject::addField(const char*  in_pFieldname,
       flags );
 }
 
+void ConsoleObject::addField(const char*  in_pFieldname,
+   const U32 in_fieldType,
+   const dsize_t in_fieldOffset,
+   AbstractClassRep::WriteDataNotify in_writeDataFn,
+   const char* in_pFieldDocs,
+   U32 flags)
+{
+   addField(
+      in_pFieldname,
+      in_fieldType,
+      in_fieldOffset,
+      in_writeDataFn,
+      1,
+      in_pFieldDocs,
+      flags);
+}
+
+void ConsoleObject::addField(const char*  in_pFieldname,
+   const U32 in_fieldType,
+   const dsize_t in_fieldOffset,
+   const U32 in_elementCount,
+   const char* in_pFieldDocs,
+   U32 flags)
+{
+   addField(in_pFieldname,
+      in_fieldType,
+      in_fieldOffset,
+      &defaultProtectedWriteFn,
+      in_elementCount,
+      in_pFieldDocs,
+      flags);
+}
+
+void ConsoleObject::addField(const char*  in_pFieldname,
+   const U32 in_fieldType,
+   const dsize_t in_fieldOffset,
+   AbstractClassRep::WriteDataNotify in_writeDataFn,
+   const U32 in_elementCount,
+   const char* in_pFieldDocs,
+   U32 flags)
+{
+   AbstractClassRep::Field f;
+   f.pFieldname = StringTable->insert(in_pFieldname);
+
+   if (in_pFieldDocs)
+      f.pFieldDocs = in_pFieldDocs;
+
+   f.type = in_fieldType;
+   f.offset = in_fieldOffset;
+   f.elementCount = in_elementCount;
+   f.validator = NULL;
+   f.flag = flags;
+
+   f.setDataFn = &defaultProtectedSetFn;
+   f.getDataFn = &defaultProtectedGetFn;
+   f.writeDataFn = in_writeDataFn;
+   f.networkMask = 0;
+
+   ConsoleBaseType* conType = ConsoleBaseType::getType(in_fieldType);
+   AssertFatal(conType, "ConsoleObject::addField - invalid console type");
+   f.table = conType->getEnumTable();
+
+   sg_tempFieldList.push_back(f);
+}
+
 void ConsoleObject::addProtectedField(const char*  in_pFieldname,
-                       const U32 in_fieldType,
-                       const dsize_t in_fieldOffset,
-                       AbstractClassRep::SetDataNotify in_setDataFn,
-                       AbstractClassRep::GetDataNotify in_getDataFn,
-                       const char* in_pFieldDocs,
-                       U32 flags )
+   const U32 in_fieldType,
+   const dsize_t in_fieldOffset,
+   AbstractClassRep::SetDataNotify in_setDataFn,
+   AbstractClassRep::GetDataNotify in_getDataFn,
+   const char* in_pFieldDocs,
+   U32 flags)
 {
    addProtectedField(
       in_pFieldname,
@@ -447,67 +543,82 @@ void ConsoleObject::addProtectedField(const char*  in_pFieldname,
       in_fieldOffset,
       in_setDataFn,
       in_getDataFn,
+      &defaultProtectedWriteFn,
       1,
       in_pFieldDocs,
-      flags );
-}
-
-
-void ConsoleObject::addField(const char*  in_pFieldname,
-                       const U32 in_fieldType,
-                       const dsize_t in_fieldOffset,
-                       const U32 in_elementCount,
-                       const char* in_pFieldDocs,
-                       U32 flags )
-{
-   AbstractClassRep::Field f;
-   f.pFieldname   = StringTable->insert(in_pFieldname);
-
-   if(in_pFieldDocs)
-      f.pFieldDocs   = in_pFieldDocs;
-
-   f.type         = in_fieldType;
-   f.offset       = in_fieldOffset;
-   f.elementCount = in_elementCount;
-   f.validator    = NULL;
-   f.flag         = flags;
-
-   f.setDataFn = &defaultProtectedSetFn;
-   f.getDataFn    = &defaultProtectedGetFn;
-
-   ConsoleBaseType* conType = ConsoleBaseType::getType( in_fieldType );
-   AssertFatal( conType, "ConsoleObject::addField - invalid console type" );
-   f.table = conType->getEnumTable();
-
-   sg_tempFieldList.push_back(f);
+      flags);
 }
 
 void ConsoleObject::addProtectedField(const char*  in_pFieldname,
-                       const U32 in_fieldType,
-                       const dsize_t in_fieldOffset,
-                       AbstractClassRep::SetDataNotify in_setDataFn,
-                       AbstractClassRep::GetDataNotify in_getDataFn,
-                       const U32 in_elementCount,
-                       const char* in_pFieldDocs,
-                       U32 flags )
+   const U32 in_fieldType,
+   const dsize_t in_fieldOffset,
+   AbstractClassRep::SetDataNotify in_setDataFn,
+   AbstractClassRep::GetDataNotify in_getDataFn,
+   AbstractClassRep::WriteDataNotify in_writeDataFn,
+   const char* in_pFieldDocs,
+   U32 flags)
+{
+   addProtectedField(
+      in_pFieldname,
+      in_fieldType,
+      in_fieldOffset,
+      in_setDataFn,
+      in_getDataFn,
+      in_writeDataFn,
+      1,
+      in_pFieldDocs,
+      flags);
+}
+
+void ConsoleObject::addProtectedField(const char*  in_pFieldname,
+   const U32 in_fieldType,
+   const dsize_t in_fieldOffset,
+   AbstractClassRep::SetDataNotify in_setDataFn,
+   AbstractClassRep::GetDataNotify in_getDataFn,
+   const U32 in_elementCount,
+   const char* in_pFieldDocs,
+   U32 flags)
+{
+   addProtectedField(
+      in_pFieldname,
+      in_fieldType,
+      in_fieldOffset,
+      in_setDataFn,
+      in_getDataFn,
+      &defaultProtectedWriteFn,
+      in_elementCount,
+      in_pFieldDocs,
+      flags);
+}
+void ConsoleObject::addProtectedField(const char*  in_pFieldname,
+   const U32 in_fieldType,
+   const dsize_t in_fieldOffset,
+   AbstractClassRep::SetDataNotify in_setDataFn,
+   AbstractClassRep::GetDataNotify in_getDataFn,
+   AbstractClassRep::WriteDataNotify in_writeDataFn,
+   const U32 in_elementCount,
+   const char* in_pFieldDocs,
+   U32 flags)
 {
    AbstractClassRep::Field f;
-   f.pFieldname   = StringTable->insert(in_pFieldname);
+   f.pFieldname = StringTable->insert(in_pFieldname);
 
-   if(in_pFieldDocs)
-      f.pFieldDocs   = in_pFieldDocs;
+   if (in_pFieldDocs)
+      f.pFieldDocs = in_pFieldDocs;
 
-   f.type         = in_fieldType;
-   f.offset       = in_fieldOffset;
+   f.type = in_fieldType;
+   f.offset = in_fieldOffset;
    f.elementCount = in_elementCount;
-   f.validator    = NULL;
-   f.flag         = flags;
+   f.validator = NULL;
+   f.flag = flags;
 
    f.setDataFn = in_setDataFn;
    f.getDataFn = in_getDataFn;
+   f.writeDataFn = in_writeDataFn;
+   f.networkMask = 0;
 
-   ConsoleBaseType* conType = ConsoleBaseType::getType( in_fieldType );
-   AssertFatal( conType, "ConsoleObject::addProtectedField - invalid console type" );
+   ConsoleBaseType* conType = ConsoleBaseType::getType(in_fieldType);
+   AssertFatal(conType, "ConsoleObject::addProtectedField - invalid console type");
    f.table = conType->getEnumTable();
 
    sg_tempFieldList.push_back(f);
@@ -529,7 +640,9 @@ void ConsoleObject::addFieldV(const char*  in_pFieldname,
    f.table        = NULL;
    f.setDataFn    = &defaultProtectedSetFn;
    f.getDataFn    = &defaultProtectedGetFn;
+   f.writeDataFn = &defaultProtectedWriteFn;
    f.validator    = v;
+   f.networkMask = 0;
    v->fieldIndex  = sg_tempFieldList.size();
 
    sg_tempFieldList.push_back(f);
@@ -546,11 +659,13 @@ void ConsoleObject::addDeprecatedField(const char *fieldName)
    f.validator    = NULL;
    f.setDataFn    = &defaultProtectedSetFn;
    f.getDataFn    = &defaultProtectedGetFn;
+   f.writeDataFn = &defaultProtectedWriteFn;
+   f.networkMask = 0;
 
    sg_tempFieldList.push_back(f);
 }
 
-
+//------------------------------------------------------------------
 bool ConsoleObject::removeField(const char* in_pFieldname)
 {
    for (U32 i = 0; i < sg_tempFieldList.size(); i++) {
@@ -566,6 +681,7 @@ bool ConsoleObject::removeField(const char* in_pFieldname)
 //--------------------------------------
 void ConsoleObject::initPersistFields()
 {
+   docsURL;
 }
 
 //--------------------------------------
@@ -579,6 +695,39 @@ AbstractClassRep* ConsoleObject::getClassRep() const
    return NULL;
 }
 
+bool ConsoleObject::disableFieldSubstitutions(const char* fieldname)
+{
+   StringTableEntry slotname = StringTable->insert(fieldname);
+
+   for (U32 i = 0; i < sg_tempFieldList.size(); i++)
+   {
+      if (sg_tempFieldList[i].pFieldname == slotname)
+      {
+         sg_tempFieldList[i].doNotSubstitute = true;
+         sg_tempFieldList[i].keepClearSubsOnly = false;
+         return true;
+      }
+   }
+
+   return false;
+}
+
+bool ConsoleObject::onlyKeepClearSubstitutions(const char* fieldname)
+{
+   StringTableEntry slotname = StringTable->insert(fieldname);
+
+   for (U32 i = 0; i < sg_tempFieldList.size(); i++)
+   {
+      if (sg_tempFieldList[i].pFieldname == slotname)
+      {
+         sg_tempFieldList[i].doNotSubstitute = false;
+         sg_tempFieldList[i].keepClearSubsOnly = true;
+         return true;
+      }
+   }
+
+   return false;
+}
 String ConsoleObject::_getLogMessage(const char* fmt, va_list args) const
 {
    String objClass = "UnknownClass";
@@ -625,11 +774,11 @@ static const char* returnClassList( Vector< AbstractClassRep* >& classes, U32 bu
    dQsort( classes.address(), classes.size(), sizeof( AbstractClassRep* ), ACRCompare );
 
    char* ret = Con::getReturnBuffer( bufSize );
-   dStrcpy( ret, classes[ 0 ]->getClassName() );
+   dStrcpy( ret, classes[ 0 ]->getClassName(), bufSize );
    for( U32 i = 1; i < classes.size(); i ++ )
    {
-      dStrcat( ret, "\t" );
-      dStrcat( ret, classes[ i ]->getClassName() );
+      dStrcat( ret, "\t", bufSize );
+      dStrcat( ret, classes[ i ]->getClassName(), bufSize );
    }
    
    return ret;
@@ -638,8 +787,8 @@ static const char* returnClassList( Vector< AbstractClassRep* >& classes, U32 bu
 //------------------------------------------------------------------------------
 
 DefineEngineFunction( isClass, bool,  ( const char* identifier ),,
-				"@brief Returns true if the passed identifier is the name of a declared class.\n\n"
-				"@ingroup Console")
+            "@brief Returns true if the passed identifier is the name of a declared class.\n\n"
+            "@ingroup Console")
 {
    AbstractClassRep* rep = AbstractClassRep::findClassRep( identifier );
    return rep != NULL;
@@ -663,10 +812,10 @@ DefineEngineFunction( isMemberOfClass, bool, ( const char* className, const char
 }
 
 DefineEngineFunction( getDescriptionOfClass, const char*, ( const char* className ),,
-				"@brief Returns the description string for the named class.\n\n"
-				"@param className The name of the class.\n"
-				"@return The class description in string format.\n"
-				"@ingroup Console")
+            "@brief Returns the description string for the named class.\n\n"
+            "@param className The name of the class.\n"
+            "@return The class description in string format.\n"
+            "@ingroup Console")
 {
    AbstractClassRep* rep = AbstractClassRep::findClassRep( className );
    if( rep )
@@ -677,9 +826,9 @@ DefineEngineFunction( getDescriptionOfClass, const char*, ( const char* classNam
 }
 
 DefineEngineFunction( getCategoryOfClass, const char*,  ( const char* className ),,
-				"@brief Returns the category of the given class.\n\n"
-				"@param className The name of the class.\n"
-				"@ingroup Console")
+            "@brief Returns the category of the given class.\n\n"
+            "@param className The name of the class.\n"
+            "@ingroup Console")
 {
    AbstractClassRep* rep = AbstractClassRep::findClassRep( className );
    if( rep )
@@ -690,12 +839,12 @@ DefineEngineFunction( getCategoryOfClass, const char*,  ( const char* className 
 }
 
 DefineEngineFunction( enumerateConsoleClasses, const char*, ( const char* className ), ( "" ),
-				"@brief Returns a list of classes that derive from the named class.\n\n"
+            "@brief Returns a list of classes that derive from the named class.\n\n"
             "If the named class is omitted this dumps all the classes.\n"
             "@param className The optional base class name.\n"
-				"@return A tab delimited list of classes.\n"
+            "@return A tab delimited list of classes.\n"
             "@ingroup Editors\n"
-				"@internal")
+            "@internal")
 {
    AbstractClassRep *base = NULL;    
    if(className && *className)
@@ -720,11 +869,11 @@ DefineEngineFunction( enumerateConsoleClasses, const char*, ( const char* classN
 }
 
 DefineEngineFunction( enumerateConsoleClassesByCategory, const char*, ( String category ),,
-				"@brief Provide a list of classes that belong to the given category.\n\n"
-				"@param category The category name.\n"
-				"@return A tab delimited list of classes.\n"
-				"@ingroup Editors\n"
-				"@internal")
+            "@brief Provide a list of classes that belong to the given category.\n\n"
+            "@param category The category name.\n"
+            "@return A tab delimited list of classes.\n"
+            "@ingroup Editors\n"
+            "@internal")
 {
    U32 categoryLength = category.length();
    
@@ -740,7 +889,7 @@ DefineEngineFunction( enumerateConsoleClassesByCategory, const char*, ( String c
           && ( repCategory[ categoryLength ] == ' ' || repCategory[ categoryLength ] == '\0' ) )
       {
          classes.push_back( rep );
-         bufSize += dStrlen( rep->getClassName() + 1 );
+         bufSize += dStrlen( rep->getClassName() ) + 1;
       }
    }
 
@@ -812,10 +961,10 @@ DefineEngineFunction( dumpNetStats, void, (),,
 }
 
 DefineEngineFunction( sizeof, S32, ( const char *objectOrClass ),,
-				"@brief Determines the memory consumption of a class or object.\n\n"
-				"@param objectOrClass The object or class being measured.\n"
-				"@return Returns the total size of an object in bytes.\n"
-				"@ingroup Debugging\n")
+            "@brief Determines the memory consumption of a class or object.\n\n"
+            "@param objectOrClass The object or class being measured.\n"
+            "@return Returns the total size of an object in bytes.\n"
+            "@ingroup Debugging\n")
 {
    AbstractClassRep *acr = NULL;
    SimObject *obj = Sim::findObject(objectOrClass);
@@ -847,12 +996,13 @@ DefineEngineFunction(linkNamespaces, bool, ( String childNSName, String parentNS
    
    Namespace *childNS = Namespace::find(childNSSTE);
    Namespace *parentNS = Namespace::find(parentNSSTE);
-   Namespace *currentParent = childNS->getParent();
    
    if (!childNS)
    {
       return false;
    }
+
+   Namespace *currentParent = childNS->getParent();
    
    // Link to new NS if applicable
    

@@ -46,17 +46,17 @@ ConsoleDocClass( GuiTextEditCtrl,
 
    "@tsexample\n"
    "   new GuiTextEditCtrl(MessageHud_Edit)\n"
-   "	{\n"
-   "		 text = \"Hello World\";\n"
-   "		 validate = \"validateCommand();\"\n"
-   "		 escapeCommand = \"escapeCommand();\";\n"
-   "		 historySize = \"5\";\n"
-   "		 tabComplete = \"true\";\n"
-   "		 deniedSound = \"DeniedSoundProfile\";\n"
-   "		 sinkAllKeyEvents = \"true\";\n"
-   "		 password = \"true\";\n"
-   "		 passwordMask = \"*\";\n"
-   "	     //Properties not specific to this control have been omitted from this example.\n"
+   "  {\n"
+   "      text = \"Hello World\";\n"
+   "      validate = \"validateCommand();\"\n"
+   "      escapeCommand = \"escapeCommand();\";\n"
+   "      historySize = \"5\";\n"
+   "      tabComplete = \"true\";\n"
+   "      deniedSound = \"DeniedSoundProfile\";\n"
+   "      sinkAllKeyEvents = \"true\";\n"
+   "      password = \"true\";\n"
+   "      passwordMask = \"*\";\n"
+   "       //Properties not specific to this control have been omitted from this example.\n"
    "   };\n"
    "@endtsexample\n\n"
 
@@ -72,9 +72,9 @@ IMPLEMENT_CALLBACK( GuiTextEditCtrl, onTabComplete, void, (const char* val),( va
    "@tsexample\n"
    "// Tab key has been pressed, causing the callback to occur.\n"
    "GuiTextEditCtrl::onTabComplete(%this,%val)\n"
-   "	{\n"
-   "		//Code to run when the onTabComplete callback occurs\n"
-   "	}\n"
+   "  {\n"
+   "     //Code to run when the onTabComplete callback occurs\n"
+   "  }\n"
    "@endtsexample\n\n"
    "@see GuiTextCtrl\n"
    "@see GuiControl\n\n"
@@ -85,9 +85,9 @@ IMPLEMENT_CALLBACK( GuiTextEditCtrl, onReturn, void, (),(),
    "@tsexample\n"
    "// Return or Enter key was pressed, causing the callback to occur.\n"
    "GuiTextEditCtrl::onReturn(%this)\n"
-   "	{\n"
-   "		// Code to run when the onReturn callback occurs\n"
-   "	}\n"
+   "  {\n"
+   "     // Code to run when the onReturn callback occurs\n"
+   "  }\n"
    "@endtsexample\n\n"
    "@see GuiTextCtrl\n"
    "@see GuiControl\n\n"
@@ -98,9 +98,9 @@ IMPLEMENT_CALLBACK( GuiTextEditCtrl, onValidate, void, (),(),
    "@tsexample\n"
    "// The control gets validated, causing the callback to occur\n"
    "GuiTextEditCtrl::onValidated(%this)\n"
-   "	{\n"
-   "		// Code to run when the control is validated\n"
-   "	}\n"
+   "  {\n"
+   "     // Code to run when the control is validated\n"
+   "  }\n"
    "@endtsexample\n\n"
    "@see GuiTextCtrl\n"
    "@see GuiControl\n\n"
@@ -128,6 +128,8 @@ GuiTextEditCtrl::GuiTextEditCtrl()
 
    mActive = true;
 
+   mTextValid = true;
+
    mTextOffsetReset = true;
 
    mHistoryDirty = false;
@@ -136,14 +138,21 @@ GuiTextEditCtrl::GuiTextEditCtrl()
    mHistoryIndex = 0;
    mHistoryBuf = NULL;
 
+   mDoubleClickTimeMS = 50;
+   mMouseUpTime = 0;
+
+   mPlaceholderText = StringTable->EmptyString();
+
 #if defined(__MACOSX__)
-   UTF8	bullet[4] = { 0xE2, 0x80, 0xA2, 0 };
+   UTF8  bullet[4] = { UTF8(0xE2), UTF8(0x80), UTF8(0xA2), 0 };
    
    mPasswordMask = StringTable->insert( bullet );
 #else
    mPasswordMask = StringTable->insert( "*" );
 #endif
    Sim::findObject( "InputDeniedSound", mDeniedSound );
+
+   mValidateCommand = "";
 }
 
 GuiTextEditCtrl::~GuiTextEditCtrl()
@@ -160,6 +169,10 @@ GuiTextEditCtrl::~GuiTextEditCtrl()
 
 void GuiTextEditCtrl::initPersistFields()
 {
+   docsURL;
+   addProtectedField("placeholderText", TypeCaseString, Offset(mPlaceholderText, GuiTextEditCtrl), setPlaceholderText, getPlaceholderText,
+      "The text to show on the control.");
+
    addGroup( "Text Input" );
    
       addField("validate",          TypeRealString,Offset(mValidateCommand,   GuiTextEditCtrl), "Script command to be called when the first validater is lost.\n");
@@ -213,7 +226,7 @@ void GuiTextEditCtrl::execConsoleCallback()
 
    // Update the console variable:
    if ( mConsoleVariable[0] )
-      Con::setVariable( mConsoleVariable, mTextBuffer.getPtr8() );
+      Con::setVariable(mConsoleVariable, mTextBuffer.getPtr8());
 }
 
 void GuiTextEditCtrl::updateHistory( StringBuffer *inTxt, bool moveIndex )
@@ -229,7 +242,7 @@ void GuiTextEditCtrl::updateHistory( StringBuffer *inTxt, bool moveIndex )
       return;
 
    // see if it's already in
-   if(mHistoryLast == -1 || dStrcmp(txt, mHistoryBuf[mHistoryLast]))
+   if(mHistoryLast == -1 || String::compare(txt, mHistoryBuf[mHistoryLast]))
    {
       if(mHistoryLast == mHistorySize-1) // we're at the history limit... shuffle the pointers around:
       {
@@ -374,11 +387,13 @@ S32 GuiTextEditCtrl::calculateCursorPos( const Point2I &globalPos )
 
 void GuiTextEditCtrl::onMouseDown( const GuiEvent &event )
 {
+   if(!isActive())
+      return;
    mDragHit = false;
 
    // If we have a double click, select all text.  Otherwise
    // act as before by clearing any selection.
-   bool doubleClick = (event.mouseClickCount > 1);
+   bool doubleClick = (event.mouseClickCount > 1 && Platform::getRealMilliseconds() - mMouseUpTime > mDoubleClickTimeMS);
    if(doubleClick)
    {
       selectAllText();
@@ -447,6 +462,8 @@ void GuiTextEditCtrl::onMouseUp(const GuiEvent &event)
    TORQUE_UNUSED(event);
    mDragHit = false;
    mScrollDir = 0;
+
+   mMouseUpTime = Platform::getRealMilliseconds();
    mouseUnlock();
 }
 
@@ -706,10 +723,10 @@ bool GuiTextEditCtrl::onKeyDown(const GuiEvent &event)
             case KEY_TAB:
                if ( mTabComplete )
                {
-				  onTabComplete_callback("1");
+              onTabComplete_callback("1");
                   return true;
                }
-			   break; // We don't want to fall through if we don't handle the TAB here.
+            break; // We don't want to fall through if we don't handle the TAB here.
 
             case KEY_HOME:
                mBlockStart = 0;
@@ -775,10 +792,10 @@ bool GuiTextEditCtrl::onKeyDown(const GuiEvent &event)
                 }
                 return true;
 
-				case KEY_RETURN:
-				case KEY_NUMPADENTER:
+            case KEY_RETURN:
+            case KEY_NUMPADENTER:
            
-					return dealWithEnter(false);
+               return dealWithEnter(false);
 
             default:
                break;
@@ -788,85 +805,7 @@ bool GuiTextEditCtrl::onKeyDown(const GuiEvent &event)
    {
       switch(event.keyCode)
       {
-#if defined(TORQUE_OS_MAC)
-         // Added UNIX emacs key bindings - just a little hack here...
-
-         // Ctrl-B - move one character back
-         case KEY_B:
-         { 
-            GuiEvent new_event;
-            new_event.modifier = 0;
-            new_event.keyCode = KEY_LEFT;
-            return(onKeyDown(new_event));
-         }
-
-         // Ctrl-F - move one character forward
-         case KEY_F:
-         { 
-            GuiEvent new_event;
-            new_event.modifier = 0;
-            new_event.keyCode = KEY_RIGHT;
-            return(onKeyDown(new_event));
-         }
-
-         // Ctrl-A - move to the beginning of the line
-         case KEY_A:
-         { 
-            GuiEvent new_event;
-            new_event.modifier = 0;
-            new_event.keyCode = KEY_HOME;
-            return(onKeyDown(new_event));
-         }
-
-         // Ctrl-E - move to the end of the line
-         case KEY_E:
-         { 
-            GuiEvent new_event;
-            new_event.modifier = 0;
-            new_event.keyCode = KEY_END;
-            return(onKeyDown(new_event));
-         }
-
-         // Ctrl-P - move backward in history
-         case KEY_P:
-         { 
-            GuiEvent new_event;
-            new_event.modifier = 0;
-            new_event.keyCode = KEY_UP;
-            return(onKeyDown(new_event));
-         }
-
-         // Ctrl-N - move forward in history
-         case KEY_N:
-         { 
-            GuiEvent new_event;
-            new_event.modifier = 0;
-            new_event.keyCode = KEY_DOWN;
-            return(onKeyDown(new_event));
-         }
-
-         // Ctrl-D - delete under cursor
-         case KEY_D:
-         { 
-            GuiEvent new_event;
-            new_event.modifier = 0;
-            new_event.keyCode = KEY_DELETE;
-            return(onKeyDown(new_event));
-         }
-
-         case KEY_U:
-         { 
-            GuiEvent new_event;
-            new_event.modifier = SI_CTRL;
-            new_event.keyCode = KEY_DELETE;
-            return(onKeyDown(new_event));
-         }
-
-         // End added UNIX emacs key bindings
-#endif
-
          // Adding word jump navigation.
-
          case KEY_LEFT:
          {
 
@@ -884,7 +823,6 @@ bool GuiTextEditCtrl::onKeyDown(const GuiEvent &event)
             return true;
          }         
          
-#if !defined(TORQUE_OS_MAC)
          // Select all
          case KEY_A:
          {
@@ -915,7 +853,6 @@ bool GuiTextEditCtrl::onKeyDown(const GuiEvent &event)
                onUndo();
                return true;
             }
-#endif
 
          case KEY_DELETE:
          case KEY_BACKSPACE:
@@ -994,7 +931,7 @@ bool GuiTextEditCtrl::onKeyDown(const GuiEvent &event)
          case KEY_RETURN:
          case KEY_NUMPADENTER:
            
-				return dealWithEnter(true);
+            return dealWithEnter(true);
 
          case KEY_UP:
          {
@@ -1151,7 +1088,7 @@ dealWithBackspace:
       case KEY_TAB:
          if ( mTabComplete )
          {
-			onTabComplete_callback("0");
+         onTabComplete_callback("0");
             return( true );
          }
       case KEY_UP:
@@ -1204,9 +1141,9 @@ bool GuiTextEditCtrl::dealWithEnter( bool clearResponder )
          return true;
       }
    }
-	
-	if( clearResponder )
-		clearFirstResponder();
+   
+   if( clearResponder )
+      clearFirstResponder();
 
    return true;
 }
@@ -1218,13 +1155,13 @@ void GuiTextEditCtrl::setFirstResponder()
    GuiCanvas *root = getRoot();
    if (root != NULL)
    {
-		root->enableKeyboardTranslation();
+      root->enableKeyboardTranslation();
   
 
-	   // If the native OS accelerator keys are not disabled
-		// then some key events like Delete, ctrl+V, etc may
-		// not make it down to us.
-		root->setNativeAcceleratorsEnabled( false );
+      // If the native OS accelerator keys are not disabled
+      // then some key events like Delete, ctrl+V, etc may
+      // not make it down to us.
+      root->setNativeAcceleratorsEnabled( false );
    }
 }
 
@@ -1233,13 +1170,16 @@ void GuiTextEditCtrl::onLoseFirstResponder()
    GuiCanvas *root = getRoot();
    if( root )
    {
-	 root->setNativeAcceleratorsEnabled( true );
-	 root->disableKeyboardTranslation();
+    root->setNativeAcceleratorsEnabled( true );
+    root->disableKeyboardTranslation();
    }
+
+   updateHistory(&mTextBuffer, true);
+   mHistoryDirty = false;
 
    //execute the validate command
    if( mValidateCommand.isNotEmpty() )
-      evaluate( mValidateCommand );
+      evaluate( mValidateCommand.c_str() );
 
    onValidate_callback();
 
@@ -1250,14 +1190,16 @@ void GuiTextEditCtrl::onLoseFirstResponder()
    Parent::onLoseFirstResponder();
 }
 
-void GuiTextEditCtrl::onRender(Point2I offset, const RectI &updateRect)
+void GuiTextEditCtrl::onRender( Point2I offset, const RectI &updateRect )
 {
    RectI ctrlRect( offset, getExtent() );
 
    //if opaque, fill the update rect with the fill color
    if ( mProfile->mOpaque )
    {
-      if(isFirstResponder())
+      if ( !mTextValid )
+         GFX->getDrawUtil()->drawRectFill( ctrlRect, mProfile->mFillColorERR );
+      else if ( isFirstResponder() )
          GFX->getDrawUtil()->drawRectFill( ctrlRect, mProfile->mFillColorHL );
       else
          GFX->getDrawUtil()->drawRectFill( ctrlRect, mProfile->mFillColor );
@@ -1265,7 +1207,11 @@ void GuiTextEditCtrl::onRender(Point2I offset, const RectI &updateRect)
 
    //if there's a border, draw the border
    if ( mProfile->mBorder )
+   {
       renderBorder( ctrlRect, mProfile );
+      if ( !mTextValid )
+         GFX->getDrawUtil()->drawRectFill( ctrlRect, mProfile->mFillColorERR );
+   }
 
    drawText( ctrlRect, isFirstResponder() );
 }
@@ -1317,6 +1263,13 @@ void GuiTextEditCtrl::drawText( const RectI &drawRect, bool isFocused )
        textBuffer.set( renderText );
    }
 
+   bool usePlaceholder = false;
+   if (textBuffer.length() == 0 && !isFocused)
+   {
+      textBuffer.set(mPlaceholderText);
+      usePlaceholder = true;
+   }
+
    // Just a little sanity.
    if(mCursorPos > textBuffer.length()) 
       mCursorPos = textBuffer.length();
@@ -1346,6 +1299,9 @@ void GuiTextEditCtrl::drawText( const RectI &drawRect, bool isFocused )
    }
 
    ColorI fontColor = mActive ? mProfile->mFontColor : mProfile->mFontColorNA;
+
+   if (usePlaceholder)
+      fontColor = mProfile->mFontColorNA;
 
    // now draw the text
    Point2I cursorStart, cursorEnd;
@@ -1488,7 +1444,25 @@ void GuiTextEditCtrl::drawText( const RectI &drawRect, bool isFocused )
 
 bool GuiTextEditCtrl::hasText()
 {
-   return (mTextBuffer.length());
+   return ( mTextBuffer.length() );
+}
+
+void GuiTextEditCtrl::invalidText(bool playSound)
+{
+   mTextValid = false;
+
+   if ( playSound )
+      playDeniedSound();
+}
+
+void GuiTextEditCtrl::validText()
+{
+   mTextValid = true;
+}
+
+bool GuiTextEditCtrl::isValidText()
+{
+   return mTextValid;
 }
 
 void GuiTextEditCtrl::playDeniedSound()
@@ -1518,27 +1492,29 @@ void GuiTextEditCtrl::handleCharInput( U16 ascii )
    //see if it's a number field
    if ( mProfile->mNumbersOnly )
    {
-      if ( ascii == '-')
+      if (ascii == '-')
       {
          //a minus sign only exists at the beginning, and only a single minus sign
-         if ( mCursorPos != 0 && !isAllTextSelected() )
+         if (mCursorPos != 0 && !isAllTextSelected())
          {
-            playDeniedSound();
+            invalidText();
             return;
          }
 
-         if ( mInsertOn && ( mTextBuffer.getChar(0) == '-' ) ) 
+         if (mInsertOn && (mTextBuffer.getChar(0) == '-'))
          {
-            playDeniedSound();
+            invalidText();
             return;
          }
       }
       // BJTODO: This is probably not unicode safe.
-      else if (  ascii != '.' && (ascii < '0' || ascii > '9')  )
+      else if (ascii != '.' && (ascii < '0' || ascii > '9'))
       {
-         playDeniedSound();
+         invalidText();
          return;
       }
+      else
+         validText();
    }
 
    //save the current state
@@ -1654,7 +1630,7 @@ DefineEngineMethod( GuiTextEditCtrl, getText, const char*, (),,
    "@see GuiControl")
 {
    if( !object->hasText() )
-      return StringTable->insert("");
+      return StringTable->EmptyString();
 
    char *retBuffer = Con::getReturnBuffer( GuiTextEditCtrl::MAX_STRING_LENGTH );
    object->getText( retBuffer );
@@ -1745,4 +1721,25 @@ DefineEngineMethod( GuiTextEditCtrl, forceValidateText, void, (),,
    "@see GuiControl")
 {
    object->forceValidateText();
+}
+
+DefineEngineMethod(GuiTextEditCtrl, invalidText, void, (bool playSound), (true),
+   "@brief Trigger the invalid sound and make the box red.nn"
+   "@param playSound Play the invalid text sound or not.n")
+{
+   object->invalidText(playSound);
+}
+
+
+DefineEngineMethod(GuiTextEditCtrl, validText, void, (), ,
+   "@brief Restores the box to normal color.nn")
+{
+   object->validText();
+}
+
+DefineEngineMethod(GuiTextEditCtrl, isValidText, bool, (), ,
+   "@brief Returns if the text is set to valid or not.n"
+   "@Return true if text is set to valid, false if not.nn")
+{
+   return object->isValidText();
 }

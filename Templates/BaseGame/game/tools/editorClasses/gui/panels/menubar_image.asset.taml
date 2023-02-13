@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="menubar_image"
+    imageFile="@assetFile=menubar.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

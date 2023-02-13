@@ -36,13 +36,18 @@
 class TerrainFeatGLSL : public ShaderFeatureGLSL
 {
 protected:
+   ShaderIncludeDependency mTorqueDep;
    
+public:
+   TerrainFeatGLSL();
    Var* _getInDetailCoord(Vector<ShaderComponent*> &componentList );
    
    Var* _getInMacroCoord(Vector<ShaderComponent*> &componentList );
 
-   Var* _getNormalMapTex();
-   
+   Var* _getDetailMapSampler();
+   Var* _getNormalMapSampler();
+   Var* _getOrmMapSampler();
+
    static Var* _getUniformVar( const char *name, const char *type, ConstantSortPosition csp );
    
    Var* _getDetailIdStrengthParallax();
@@ -64,6 +69,8 @@ public:
    virtual Resources getResources( const MaterialFeatureData &fd );
 
    virtual String getName() { return "Terrain Base Texture"; }
+
+   virtual U32 getOutputTargets( const MaterialFeatureData &fd ) const;
 };
 
 
@@ -87,6 +94,8 @@ public:
    virtual Resources getResources( const MaterialFeatureData &fd );
 
    virtual String getName() { return "Terrain Detail Texture"; }
+
+   virtual U32 getOutputTargets( const MaterialFeatureData &fd ) const;
 };
 
 
@@ -110,6 +119,8 @@ public:
    virtual Resources getResources( const MaterialFeatureData &fd );
 
    virtual String getName() { return "Terrain Macro Texture"; }
+
+   virtual U32 getOutputTargets( const MaterialFeatureData &fd ) const;
 };
 
 
@@ -140,15 +151,43 @@ public:
    virtual String getName() { return "Terrain Lightmap Texture"; }
 };
 
-
-class TerrainAdditiveFeatGLSL : public TerrainFeatGLSL
+class TerrainORMMapFeatGLSL : public TerrainFeatGLSL
 {
 public:
 
-   virtual void processPix( Vector<ShaderComponent*> &componentList, 
-                            const MaterialFeatureData &fd );
+	virtual void processVert(Vector<ShaderComponent*> &componentList,
+		const MaterialFeatureData &fd);
 
-   virtual String getName() { return "Terrain Additive"; }
+	virtual void processPix(Vector<ShaderComponent*> &componentList,
+		const MaterialFeatureData &fd);
+
+	virtual Resources getResources(const MaterialFeatureData &fd);
+
+	virtual U32 getOutputTargets(const MaterialFeatureData &fd) const;
+	virtual String getName() { return "Composite Matinfo map"; }
+};
+
+class TerrainBlankInfoMapFeatGLSL : public ShaderFeatureGLSL
+{
+public:
+
+   virtual void processPix(Vector<ShaderComponent*> &componentList,
+      const MaterialFeatureData &fd);
+
+   virtual String getName() { return "Blank Matinfo map"; }
+};
+
+class TerrainHeightMapBlendGLSL : public TerrainFeatGLSL
+{
+public:
+
+   virtual void processVert(Vector<ShaderComponent*>& componentList,
+      const MaterialFeatureData& fd);
+
+   virtual void processPix(Vector<ShaderComponent*>& componentList,
+      const MaterialFeatureData& fd);
+
+   virtual String getName() { return "Terrain Heightmap Blend"; }
 };
 
 #endif // _TERRFEATUREGLSL_H_

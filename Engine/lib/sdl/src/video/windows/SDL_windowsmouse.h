@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2014 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -20,14 +20,16 @@
 */
 #include "../../SDL_internal.h"
 
-#ifndef _SDL_windowsmouse_h
-#define _SDL_windowsmouse_h
+#ifndef SDL_windowsmouse_h_
+#define SDL_windowsmouse_h_
 
+extern DWORD SDL_last_warp_time;
 extern HCURSOR SDL_cursor;
 
 extern void WIN_InitMouse(_THIS);
 extern void WIN_QuitMouse(_THIS);
+extern void WIN_SetCursorPos(int x, int y);
 
-#endif /* _SDL_windowsmouse_h */
+#endif /* SDL_windowsmouse_h_ */
 
 /* vi: set ts=4 sw=4 expandtab: */

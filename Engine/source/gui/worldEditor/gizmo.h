@@ -108,6 +108,7 @@ public:
    bool allowSnapScale;
    F32 rotationSnap;
    bool allowSnapRotations;
+   bool forceSnapRotations;
 
    bool renderWhenUsed;
    bool renderInfoText;
@@ -390,9 +391,9 @@ protected:
    /// Spacing between grid lines on the move grid.
    U32 mMoveGridSpacing;
 
-   bool mAxisEnabled[3];
    bool mUniformHandleEnabled;
    bool mScreenRotateHandleEnabled;
+   bool mAxisEnabled[3];
       
    // Used to override rendering of handles.
    bool mHighlightCentroidHandle;   

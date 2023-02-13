@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2014 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -18,10 +18,19 @@
      misrepresented as being the original software.
   3. This notice may not be removed or altered from any source distribution.
 */
+
+#if defined(__clang_analyzer__) && !defined(SDL_DISABLE_ANALYZE_MACROS)
+#define SDL_DISABLE_ANALYZE_MACROS 1
+#endif
+
 #include "../SDL_internal.h"
 
 #if defined(__WIN32__)
 #include "../core/windows/SDL_windows.h"
+#endif
+
+#if defined(__ANDROID__)
+#include "../core/android/SDL_android.h"
 #endif
 
 #include "SDL_stdinc.h"
@@ -33,20 +42,29 @@ static size_t SDL_envmemlen = 0;
 #endif
 
 /* Put a variable into the environment */
+/* Note: Name may not contain a '=' character. (Reference: http://www.unix.com/man-page/Linux/3/setenv/) */
 #if defined(HAVE_SETENV)
 int
 SDL_setenv(const char *name, const char *value, int overwrite)
 {
+    /* Input validation */
+    if (!name || *name == '\0' || SDL_strchr(name, '=') != NULL || !value) {
+        return (-1);
+    }
+    
     return setenv(name, value, overwrite);
 }
 #elif defined(__WIN32__)
 int
 SDL_setenv(const char *name, const char *value, int overwrite)
 {
+    /* Input validation */
+    if (!name || *name == '\0' || SDL_strchr(name, '=') != NULL || !value) {
+        return (-1);
+    }
+    
     if (!overwrite) {
-        char ch = 0;
-        const size_t len = GetEnvironmentVariableA(name, &ch, sizeof (ch));
-        if (len > 0) {
+        if (GetEnvironmentVariableA(name, NULL, 0) > 0) {
             return 0;  /* asked not to overwrite existing value. */
         }
     }
@@ -63,6 +81,11 @@ SDL_setenv(const char *name, const char *value, int overwrite)
     size_t len;
     char *new_variable;
 
+    /* Input validation */
+    if (!name || *name == '\0' || SDL_strchr(name, '=') != NULL || !value) {
+        return (-1);
+    }
+    
     if (getenv(name) != NULL) {
         if (overwrite) {
             unsetenv(name);
@@ -87,12 +110,12 @@ int
 SDL_setenv(const char *name, const char *value, int overwrite)
 {
     int added;
-    int len, i;
+    size_t len, i;
     char **new_env;
     char *new_variable;
 
-    /* A little error checking */
-    if (!name || !value) {
+    /* Input validation */
+    if (!name || *name == '\0' || SDL_strchr(name, '=') != NULL || !value) {
         return (-1);
     }
 
@@ -152,6 +175,16 @@ SDL_setenv(const char *name, const char *value, int overwrite)
 char *
 SDL_getenv(const char *name)
 {
+#if defined(__ANDROID__)
+    /* Make sure variables from the application manifest are available */
+    Android_JNI_GetManifestEnvironmentVariables();
+#endif
+
+    /* Input validation */
+    if (!name || *name == '\0') {
+        return NULL;
+    }
+
     return getenv(name);
 }
 #elif defined(__WIN32__)
@@ -160,6 +193,11 @@ SDL_getenv(const char *name)
 {
     size_t bufferlen;
 
+    /* Input validation */
+    if (!name || *name == '\0') {
+        return NULL;
+    }
+    
     bufferlen =
         GetEnvironmentVariableA(name, SDL_envmem, (DWORD) SDL_envmemlen);
     if (bufferlen == 0) {
@@ -180,9 +218,14 @@ SDL_getenv(const char *name)
 char *
 SDL_getenv(const char *name)
 {
-    int len, i;
+    size_t len, i;
     char *value;
 
+    /* Input validation */
+    if (!name || *name == '\0') {
+        return NULL;
+    }
+    
     value = (char *) 0;
     if (SDL_env) {
         len = SDL_strlen(name);

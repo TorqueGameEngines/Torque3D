@@ -92,9 +92,9 @@ const UTF8 *Settings::value(const UTF8 *settingName, const UTF8 *defaultValue)
    const UTF8 *storedDefaultValue = getDataField(defaultNameEntry, NULL);
    setModStaticFields(true);
 
-   if(dStrcmp(value, "") != 0)
+   if(String::compare(value, "") != 0)
       return value;
-   else if(dStrcmp(storedDefaultValue, "") != 0)
+   else if(String::compare(storedDefaultValue, "") != 0)
       return storedDefaultValue;
    else
 	  return defaultValue;
@@ -124,9 +124,9 @@ void Settings::remove(const UTF8 *settingName, bool includeDefaults)
         SimFieldDictionary::Entry* fieldEntry = *itr;
 
         // is this a field of our current group
-        if ( (dStrcmp(nameEntry, "") == 0) || 
-					dStrcmp( nameEntry, fieldEntry->slotName ) == 0 ||
-					(includeDefaults && dStrcmp( nameEntryDefault, fieldEntry->slotName ) == 0) )
+        if ( (String::compare(nameEntry, "") == 0) || 
+					String::compare( nameEntry, fieldEntry->slotName ) == 0 ||
+					(includeDefaults && String::compare( nameEntryDefault, fieldEntry->slotName ) == 0) )
         {
             // Yes, so remove it.
             pFieldDictionary->setFieldValue( fieldEntry->slotName, "" );
@@ -142,28 +142,32 @@ void Settings::buildGroupString(String &name, const UTF8 *settingName)
    if(mGroupStack.size() > 0)
    {
       for(S32 i=0; i < mGroupStack.size(); i++)
-	  {
-		 S32 pos = 0;
-		 if(name.size() > 0)
-			pos = name.size()-1;
+      {
+         S32 pos = 0;
+         if(name.size() > 0)
+            pos = name.size()-1;
 
          // tack on the "/" in front if this isn't the first
-		 if(i == 0)
-		 {
-	        name.insert(pos, mGroupStack[i]);
-		 } else
-		 {
-			name.insert(pos, "/");
+         if(i == 0)
+         {
+            name.insert(pos, mGroupStack[i]);
+         }
+         else
+         {
+            name.insert(pos, "/");
             name.insert(pos+1, mGroupStack[i]);
-		 }
-	  }
+         }
+      }
 
 	  // tack on a final "/"
 	  name.insert(name.size()-1, "/");
 	  if(dStrlen(settingName) > 0)
 	     name.insert(name.size()-1, settingName);
-   } else
-	  name = settingName;
+   }
+   else
+   {
+      name = settingName;
+   }
 }
 
 void Settings::clearAllFields()
@@ -238,8 +242,8 @@ bool Settings::write()
       SimFieldDictionary::Entry* fieldEntry = *itr;
 
       String check(fieldEntry->slotName);
-	  if(check.find("_default") != String::NPos || check.find("_type") != String::NPos)
-		 continue;
+	   if(check.find("_default") != String::NPos || check.find("_type") != String::NPos)
+		  continue;
 
 	  node->addValue(fieldEntry->slotName, fieldEntry->value);
    }
@@ -248,7 +252,7 @@ bool Settings::write()
    node->clear();
    delete node;
 
-   bool saved = document->saveFile(mFile.c_str());
+   bool saved = document->saveFile(mFile);
    document->deleteObject();
 
    if(saved)
@@ -263,7 +267,7 @@ bool Settings::read()
    document->registerObject();
 
    bool success = true;
-   if(document->loadFile(mFile.c_str()))
+   if(document->loadFile(mFile))
    {
       clearAllFields();
 
@@ -293,7 +297,7 @@ void Settings::readLayer(SimXMLDocument *document, String groupStack)
 	  const UTF8 *name = document->attribute("name");
 	  const UTF8 *value = document->getText();
 	  
-	  if(dStrcmp(type, "Group") == 0)
+	  if(String::compare(type, "Group") == 0)
 	  {
 		 String newStack = groupStack;
 
@@ -302,7 +306,7 @@ void Settings::readLayer(SimXMLDocument *document, String groupStack)
 
 		 newStack += name;
          readLayer(document, newStack);
-	  } else if(dStrcmp(type, "Setting") == 0)
+	  } else if(String::compare(type, "Setting") == 0)
 	  {
 		 String nameString = groupStack;
          
@@ -482,12 +486,12 @@ const char* Settings::findNextValue()
 }
 
 // make sure to replace the strings
-DefineConsoleMethod(Settings, findFirstValue, const char*, ( const char* pattern, bool deepSearch, bool includeDefaults ), ("", false, false), "settingObj.findFirstValue();")
+DefineEngineMethod(Settings, findFirstValue, const char*, ( const char* pattern, bool deepSearch, bool includeDefaults ), ("", false, false), "settingObj.findFirstValue();")
 {
    return object->findFirstValue( pattern, deepSearch, includeDefaults );
 }
 
-DefineConsoleMethod(Settings, findNextValue, const char*, (), , "settingObj.findNextValue();")
+DefineEngineMethod(Settings, findNextValue, const char*, (), , "settingObj.findNextValue();")
 {
 	return object->findNextValue();
 }
@@ -622,11 +626,15 @@ void SettingSaveNode::buildDocument(SimXMLDocument *document, bool skipWrite)
 
    if(!mIsGroup && !skipWrite)
    {
-	  document->pushNewElement("Setting");
-	  document->setAttribute("name", mName);
+      document->pushNewElement("Setting");
+      document->setAttribute("name", mName);
       document->addText(mValue);
-   } else
+   }
+   else
    {
+      mSettingNodes.sort(_NodeCompare);
+      mGroupNodes.sort(_NodeCompare);
+
 	  for(S32 i=0; i<mSettingNodes.size(); i++)
 	  {
          SettingSaveNode *node = mSettingNodes[i];
@@ -644,35 +652,41 @@ void SettingSaveNode::buildDocument(SimXMLDocument *document, bool skipWrite)
       document->popElement();
 }
 
-DefineConsoleMethod(Settings, setValue, void, (const char * settingName, const char * value), (""), "settingObj.setValue(settingName, value);")
+S32 QSORT_CALLBACK SettingSaveNode::_NodeCompare(SettingSaveNode* const* a, SettingSaveNode* const* b)
+{
+   S32 result = dStrnatcasecmp((*a)->mName.c_str(), (*b)->mName.c_str());
+   return result;
+}
+
+DefineEngineMethod(Settings, setValue, void, (const char * settingName, const char * value), (""), "settingObj.setValue(settingName, value);")
 {
    StringTableEntry fieldName = StringTable->insert( settingName );
    
-   if (!dStrIsEmpty(value))
+   if (!String::isEmpty(value))
       object->setValue( fieldName, value );
    else
       object->setValue( fieldName );
 }
 
-DefineConsoleMethod(Settings, setDefaultValue, void, (const char * settingName, const char * value), , "settingObj.setDefaultValue(settingName, value);")
+DefineEngineMethod(Settings, setDefaultValue, void, (const char * settingName, const char * value), , "settingObj.setDefaultValue(settingName, value);")
 {
    StringTableEntry fieldName = StringTable->insert( settingName );
    object->setDefaultValue( fieldName, value );
 }
 
-DefineConsoleMethod(Settings, value, const char*, (const char * settingName, const char * defaultValue), (""), "settingObj.value(settingName, defaultValue);")
+DefineEngineMethod(Settings, value, const char*, (const char * settingName, const char * defaultValue), (""), "settingObj.value(settingName, defaultValue);")
 {
    StringTableEntry fieldName = StringTable->insert( settingName );
    
-   if (dStrcmp(defaultValue, "") != 0)
+   if (String::compare(defaultValue, "") != 0)
       return object->value( fieldName, defaultValue );
-   else if (dStrcmp(settingName, "") != 0)
+   else if (String::compare(settingName, "") != 0)
       return object->value( fieldName );
 
    return "";
 }
 
-DefineConsoleMethod(Settings, remove, void, (const char * settingName, bool includeDefaults), (false), "settingObj.remove(settingName, includeDefaults = false);")
+DefineEngineMethod(Settings, remove, void, (const char * settingName, bool includeDefaults), (false), "settingObj.remove(settingName, includeDefaults = false);")
 {
    // there's a problem with some fields not being removed properly, but works if you run it twice,
    // a temporary solution for now is simply to call the remove twice
@@ -681,33 +695,32 @@ DefineConsoleMethod(Settings, remove, void, (const char * settingName, bool incl
 	object->remove( settingName, includeDefaults );
 }
 
-ConsoleMethod(Settings, write, bool, 2, 2, "%success = settingObj.write();")
+DefineEngineMethod(Settings, write, bool, (),, "%success = settingObj.write();")
 {
-   TORQUE_UNUSED(argc); TORQUE_UNUSED(argv);
    return object->write();
 }
 
-DefineConsoleMethod(Settings, read, bool, (), , "%success = settingObj.read();")
+DefineEngineMethod(Settings, read, bool, (), , "%success = settingObj.read();")
 {
    return object->read();
 }
 
-DefineConsoleMethod(Settings, beginGroup, void, (const char * groupName, bool includeDefaults), (false), "settingObj.beginGroup(groupName, fromStart = false);")
+DefineEngineMethod(Settings, beginGroup, void, (const char * groupName, bool includeDefaults), (false), "settingObj.beginGroup(groupName, fromStart = false);")
 {
 	object->beginGroup( groupName, includeDefaults );
 }
 
-DefineConsoleMethod(Settings, endGroup, void, (), , "settingObj.endGroup();")
+DefineEngineMethod(Settings, endGroup, void, (), , "settingObj.endGroup();")
 {
    object->endGroup();
 }
 
-DefineConsoleMethod(Settings, clearGroups, void, (), , "settingObj.clearGroups();")
+DefineEngineMethod(Settings, clearGroups, void, (), , "settingObj.clearGroups();")
 {
    object->clearGroups();
 }
 
-DefineConsoleMethod(Settings, getCurrentGroups, const char*, (), , "settingObj.getCurrentGroups();")
+DefineEngineMethod(Settings, getCurrentGroups, const char*, (), , "settingObj.getCurrentGroups();")
 {
    return object->getCurrentGroups();
 }

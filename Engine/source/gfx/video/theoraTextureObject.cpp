@@ -77,6 +77,7 @@ TheoraTextureObject::TheoraTextureObject()
 
 void TheoraTextureObject::initPersistFields()
 {
+   docsURL;
    addGroup( "Theora" );
 
       addField( "theoraFile", TypeStringFilename,  Offset( mFilename, TheoraTextureObject ),
@@ -133,7 +134,7 @@ bool TheoraTextureObject::onAdd()
    if( !Parent::onAdd() )
       return false;
 
-   if( mFilename.isEmpty() )
+   if( mFilename == StringTable->EmptyString())
    {
       Con::errorf( "TheoraTextureObject::onAdd - 'filename' must be set" );
       return false;
@@ -171,11 +172,11 @@ void TheoraTextureObject::onRemove()
 
 void TheoraTextureObject::play()
 {
-   if( mTheoraTexture.getFilename().isEmpty() || mTheoraTexture.getFilename() != mFilename )
+   if( mTheoraTexture.getFilename().isEmpty() || mTheoraTexture.getFilename() != String(mFilename) )
    {
       if( !mTheoraTexture.setFile( mFilename, mSFXDescription ) )
       {
-         Con::errorf( "TheoraTextureObject::play - Could not load video '%s'", mFilename.c_str() );
+         Con::errorf( "TheoraTextureObject::play - Could not load video '%s'", mFilename );
          return;
       }
    }
@@ -191,7 +192,7 @@ void TheoraTextureObject::play()
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( TheoraTextureObject, play, void, (),,
+DefineEngineMethod( TheoraTextureObject, play, void, (),,
    "Start playback of the video." )
 {
    object->play();
@@ -199,7 +200,7 @@ DefineConsoleMethod( TheoraTextureObject, play, void, (),,
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( TheoraTextureObject, stop, void, (),,
+DefineEngineMethod( TheoraTextureObject, stop, void, (),,
    "Stop playback of the video." )
 {
    object->stop();
@@ -207,7 +208,7 @@ DefineConsoleMethod( TheoraTextureObject, stop, void, (),,
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleMethod( TheoraTextureObject, pause, void, (),,
+DefineEngineMethod( TheoraTextureObject, pause, void, (),,
    "Pause playback of the video." )
 {
    object->pause();

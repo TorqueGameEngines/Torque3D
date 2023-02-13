@@ -26,7 +26,7 @@ extern int serrors;
 #define YY_ARGS(x)   x
 
 int CMDlex();
-void CMDerror(char *, ...);
+void CMDerror(const char *, ...);
 
 #ifdef alloca
 #undef alloca
@@ -456,6 +456,8 @@ expr
       { $$ = (ExprNode*)VarNode::alloc( $1.lineNumber, $1.value, NULL); }
    | VAR '[' aidx_expr ']'
       { $$ = (ExprNode*)VarNode::alloc( $1.lineNumber, $1.value, $3 ); }
+   ;
+/*
    | rwDEFINE '(' var_list_decl ')' '{' statement_list '}'
       {
          const U32 bufLen = 64;
@@ -471,7 +473,7 @@ expr
 
          $$ = StrConstNode::alloc( $1.lineNumber, (UTF8*)fName, false );
       }
-   ;
+*/
 
 slot_acc
    : expr '.' IDENT
@@ -496,9 +498,9 @@ class_name_expr
 
 assign_op_struct
    : opPLUSPLUS
-      { $$.lineNumber = $1.lineNumber; $$.token = '+'; $$.expr = FloatNode::alloc( $1.lineNumber, 1 ); }
+      { $$.lineNumber = $1.lineNumber; $$.token = opPLUSPLUS; $$.expr = FloatNode::alloc( $1.lineNumber, 1 ); }
    | opMINUSMINUS
-      { $$.lineNumber = $1.lineNumber; $$.token = '-'; $$.expr = FloatNode::alloc( $1.lineNumber, 1 ); }
+      { $$.lineNumber = $1.lineNumber; $$.token = opMINUSMINUS; $$.expr = FloatNode::alloc( $1.lineNumber, 1 ); }
    | opPLASN expr
       { $$.lineNumber = $1.lineNumber; $$.token = '+'; $$.expr = $2; }
    | opMIASN expr
@@ -552,6 +554,11 @@ funcall_expr
    | expr '.' IDENT '(' expr_list_decl ')'
       { $1->append($5); $$ = FuncCallExprNode::alloc( $1->dbgLineNumber, $3.value, NULL, $1, true); }
    ;
+/*
+   | expr '(' expr_list_decl ')'
+      { $$ = FuncPointerCallExprNode::alloc( $1->dbgLineNumber, $1, $3); }
+   ;
+*/
 
 assert_expr
    : rwASSERT '(' expr ')'

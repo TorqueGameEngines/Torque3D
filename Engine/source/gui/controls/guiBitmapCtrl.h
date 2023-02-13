@@ -27,6 +27,7 @@
 #include "gui/core/guiControl.h"
 #endif
 
+#include "T3D/assets/ImageAsset.h"
 /// Renders a bitmap.
 class GuiBitmapCtrl : public GuiControl
 {
@@ -38,18 +39,20 @@ class GuiBitmapCtrl : public GuiControl
    
       /// Name of the bitmap file.  If this is 'texhandle' the bitmap is not loaded
       /// from a file but rather set explicitly on the control.
-      String mBitmapName;
-      
-      /// Loaded texture.
-      GFXTexHandle mTextureObject;
-      
+      DECLARE_IMAGEASSET(GuiBitmapCtrl, Bitmap, onImageChanged, GFXDefaultGUIProfile);
+      DECLARE_ASSET_SETGET(GuiBitmapCtrl, Bitmap);
+            
       Point2I mStartPoint;
-      
+      ColorI   mColor;
+      F32     mAngle;
+
       /// If true, bitmap tiles inside control.  Otherwise stretches.
       bool mWrap;
 
       static bool setBitmapName( void *object, const char *index, const char *data );
       static const char *getBitmapName( void *obj, const char *data );
+
+      void onImageChanged() {}
 
    public:
       
@@ -71,7 +74,7 @@ class GuiBitmapCtrl : public GuiControl
 
       DECLARE_CONOBJECT( GuiBitmapCtrl );
       DECLARE_CATEGORY( "Gui Images" );
-      DECLARE_DESCRIPTION( "A control that displays a single, static image from a file.\n"
+      DECLARE_DESCRIPTION( "A control that displays a single, static image from a file.n"
                            "The bitmap can either be tiled or stretched inside the control." );
 };
 

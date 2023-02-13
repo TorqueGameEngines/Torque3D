@@ -35,6 +35,8 @@ struct AppMaterial
    virtual String getName() const { return "unnamed"; }
    virtual U32 getFlags() { return flags; }
    virtual F32 getReflectance() { return reflectance; }
+
+   static String cleanString(const String& str);
 };
 
 #endif // _APPMATERIAL_H_

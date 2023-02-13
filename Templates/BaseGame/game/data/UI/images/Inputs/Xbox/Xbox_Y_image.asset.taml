@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="Xbox_Y_image"
+    imageFile="@assetFile=Xbox_Y.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

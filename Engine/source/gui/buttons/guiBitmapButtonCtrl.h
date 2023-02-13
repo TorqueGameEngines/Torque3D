@@ -84,15 +84,23 @@ class GuiBitmapButtonCtrl : public GuiButtonCtrl
       struct Textures
       {
          /// Texture for normal state.
+         StringTableEntry mTextureNormalAssetId;
+         AssetPtr<ImageAsset> mTextureNormalAsset;
          GFXTexHandle mTextureNormal;
          
          /// Texture for highlight state.
+         StringTableEntry mTextureHilightAssetId;
+         AssetPtr<ImageAsset> mTextureHilightAsset;
          GFXTexHandle mTextureHilight;
          
          /// Texture for depressed state.
+         StringTableEntry mTextureDepressedAssetId;
+         AssetPtr<ImageAsset> mTextureDepressedAsset;
          GFXTexHandle mTextureDepressed;
          
          /// Texture for inactive state.
+         StringTableEntry mTextureInactiveAssetId;
+         AssetPtr<ImageAsset> mTextureInactiveAsset;
          GFXTexHandle mTextureInactive;
       };
 
@@ -110,23 +118,27 @@ class GuiBitmapButtonCtrl : public GuiButtonCtrl
       ///
       BitmapMode mBitmapMode;
 
-      /// File name for bitmap.
-      String mBitmapName;
+      DECLARE_IMAGEASSET(GuiBitmapButtonCtrl, Bitmap, onBitmapChange, GFXDefaultGUIProfile);
+      DECLARE_ASSET_SETGET(GuiBitmapButtonCtrl, Bitmap);
+      
+      /// alpha masking
+      bool mMasked;
       
       ///
       Textures mTextures[ NumModifiers ];
+      ColorI   mColor;
       
       virtual void renderButton( GFXTexHandle &texture, const Point2I& offset, const RectI& updateRect );
       
       static bool _setAutoFitExtents( void *object, const char *index, const char *data );
-      static bool _setBitmap( void *object, const char *index, const char *data );
+      //static bool _setBitmap( void *object, const char *index, const char *data );
       
       State getState() const
       {
          if( mActive )
          {
 				if( mDepressed || mStateOn ) return DEPRESSED;
-            if( mMouseOver ) return HILIGHT;
+            if( mHighlighted ) return HILIGHT;
             return NORMAL;
          }
          else
@@ -146,12 +158,17 @@ class GuiBitmapButtonCtrl : public GuiButtonCtrl
       
       /// @}
 
+      void onBitmapChange()
+      {
+         setBitmap(getBitmap());
+      }
+
    public:
                            
       GuiBitmapButtonCtrl();
 
       void setAutoFitExtents( bool state );
-      void setBitmap( const String& name );
+      void setBitmap( StringTableEntry name );
       void setBitmapHandles( GFXTexHandle normal, GFXTexHandle highlighted, GFXTexHandle depressed, GFXTexHandle inactive );
 
       //Parent methods
@@ -163,10 +180,19 @@ class GuiBitmapButtonCtrl : public GuiButtonCtrl
       virtual void onRender(Point2I offset, const RectI &updateRect);
 
       static void initPersistFields();
+      bool pointInControl(const Point2I& parentCoordPoint);
 
       DECLARE_CONOBJECT(GuiBitmapButtonCtrl);
       DECLARE_DESCRIPTION( "A button control rendered entirely from bitmaps.\n"
                            "The individual button states are represented with separate bitmaps." );
+
+      //Basically a wrapper function to do our special state handling setup when the fields change
+      static bool _setBitmapFieldData(void* obj, const char* index, const char* data)
+      {
+         GuiBitmapButtonCtrl* object = static_cast<GuiBitmapButtonCtrl*>(obj); 
+         object->setBitmap(StringTable->insert(data)); 
+         return false; 
+      }
 };
 
 typedef GuiBitmapButtonCtrl::BitmapMode GuiBitmapMode;

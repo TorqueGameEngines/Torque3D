@@ -258,7 +258,7 @@ static ConsoleDocFragment _MessageVectordump2(
    "MessageVector",
    "void dump( string filename, string header);");
 
-DefineConsoleMethod( MessageVector, dump, void, (const char * filename, const char * header), (""), "(string filename, string header=NULL)"
+DefineEngineMethod( MessageVector, dump, void, (const char * filename, const char * header), (""), "(string filename, string header=NULL)"
               "Dump the message vector to a file, optionally prefixing a header."
 			  "@hide")
 {
@@ -425,6 +425,7 @@ MessageVector::~MessageVector()
 //--------------------------------------------------------------------------
 void MessageVector::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 
@@ -500,7 +501,7 @@ void MessageVector::insertLine(const U32   position,
 
    U32 len = dStrlen(newMessage) + 1;
    char* copy = new char[len];
-   dStrcpy(copy, newMessage);
+   dStrcpy(copy, newMessage, len);
 
    mMessageLines.insert(position);
    mMessageLines[position].message    = copy;
@@ -575,12 +576,13 @@ void MessageVector::registerSpectator(SpectatorCallback callBack, void *spectato
    }
 
    mSpectators.increment();
-   mSpectators.last().callback = callBack;
-   mSpectators.last().key      = spectatorKey;
+   SpectatorRef& lastSpectatorRef = mSpectators.last();
+   lastSpectatorRef.callback = callBack;
+   lastSpectatorRef.key = spectatorKey;
 
    // Need to message this spectator of all the lines currently inserted...
    for (i = 0; i < mMessageLines.size(); i++) {
-      (*mSpectators.last().callback)(mSpectators.last().key,
+      (*lastSpectatorRef.callback)(lastSpectatorRef.key,
                                      LineInserted, i);
    }
 }

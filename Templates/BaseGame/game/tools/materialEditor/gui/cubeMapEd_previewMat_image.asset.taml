@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="cubeMapEd_previewMat_image"
+    imageFile="@assetFile=cubeMapEd_previewMat.jpg"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

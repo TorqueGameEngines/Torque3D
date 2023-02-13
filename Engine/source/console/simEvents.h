@@ -62,7 +62,7 @@ public:
    ///  of addition to the list.
    SimObject *destObject;   ///< Object on which this event will be applied.
 
-   SimEvent() { destObject = NULL; }
+   SimEvent() { nextEvent = NULL; startTime = 0; time = 0; sequenceCount = 0; destObject = NULL; }
    virtual ~SimEvent() {}   ///< Destructor
    ///
    /// A dummy virtual destructor is required
@@ -83,8 +83,6 @@ public:
    virtual void process(SimObject *object)=0;
 };
 
-class ConsoleValueRef;
-
 /// Implementation of schedule() function.
 ///
 /// This allows you to set a console function to be
@@ -93,7 +91,7 @@ class SimConsoleEvent : public SimEvent
 {
 protected:
    S32 mArgc;
-   ConsoleValueRef *mArgv;
+   ConsoleValue *mArgv;
    bool mOnObject;
 public:
 
@@ -110,23 +108,28 @@ public:
    ///
    /// @see Con::execute(S32 argc, const char *argv[])
    /// @see Con::execute(SimObject *object, S32 argc, const char *argv[])
-   SimConsoleEvent(S32 argc, ConsoleValueRef *argv, bool onObject);
+   SimConsoleEvent(S32 argc, ConsoleValue *argv, bool onObject);
 
    ~SimConsoleEvent();
    virtual void process(SimObject *object);
+
+   /// Creates a reference to our internal args list in argv
+   void populateArgs(ConsoleValue *argv);
 };
 
+
+// NOTE: SimConsoleThreadExecCallback & SimConsoleThreadExecEvent moved to engineAPI.h
 /// Used by Con::threadSafeExecute()
 struct SimConsoleThreadExecCallback
 {
    Semaphore   *sem;
-   const char  *retVal;
+   ConsoleValue retVal;
 
    SimConsoleThreadExecCallback();
    ~SimConsoleThreadExecCallback();
 
-   void handleCallback(const char *ret);
-   const char *waitForResult();
+   void handleCallback(ConsoleValue ret);
+   ConsoleValue waitForResult();
 };
 
 class SimConsoleThreadExecEvent : public SimConsoleEvent
@@ -134,8 +137,9 @@ class SimConsoleThreadExecEvent : public SimConsoleEvent
    SimConsoleThreadExecCallback *cb;
 
 public:
-   SimConsoleThreadExecEvent(S32 argc, ConsoleValueRef *argv, bool onObject, SimConsoleThreadExecCallback *callback);
+   SimConsoleThreadExecEvent(S32 argc, ConsoleValue *argv, bool onObject, SimConsoleThreadExecCallback *callback);
 
+   SimConsoleThreadExecCallback& getCB() { return *cb; }
    virtual void process(SimObject *object);
 };
 

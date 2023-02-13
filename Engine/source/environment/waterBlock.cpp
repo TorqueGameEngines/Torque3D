@@ -56,7 +56,8 @@ WaterBlock::WaterBlock()
 {
    mGridElementSize = 5.0f;
    mObjScale.set( 100.0f, 100.0f, 10.0f );
-
+   mWidth = 2;
+   mHeight = 2;
    mNetFlags.set(Ghostable | ScopeAlways);
 
    mObjBox.minExtents.set( -0.5f, -0.5f, -0.5f );
@@ -189,7 +190,6 @@ void WaterBlock::setupVBIB()
 //-----------------------------------------------------------------------------
 void WaterBlock::setupVertexBlock( U32 width, U32 height, U32 rowOffset )
 {
-   Point3F pos = getPosition();
    RayInfo rInfo;
    VectorF sunVector(-0.61f, 0.354f, 0.707f);
 
@@ -205,8 +205,6 @@ void WaterBlock::setupVertexBlock( U32 width, U32 height, U32 rowOffset )
    U32 numVerts = width * height;
 
    GFXWaterVertex *verts = new GFXWaterVertex[ numVerts ];
-   ColorI waterColor(31, 56, 64, 127);
-   GFXVertexColor vertCol(waterColor);
 
    U32 index = 0;
    for( U32 i=0; i<height; i++ )
@@ -219,7 +217,6 @@ void WaterBlock::setupVertexBlock( U32 width, U32 height, U32 rowOffset )
          vert->point.x = vertX;
          vert->point.y = vertY;
          vert->point.z = 0.0;
-         vert->color = vertCol;
          vert->normal.set(0,0,1);
          vert->undulateData.set( vertX, vertY );
          vert->horizonFactor.set( 0, 0, 0, 0 );
@@ -428,7 +425,7 @@ void WaterBlock::setShaderParams( SceneRenderState *state, BaseMatInstance *mat,
    // set pixel shader constants
    //-----------------------------------
 
-   ColorF c( mWaterFogData.color );
+   LinearColorF c( mWaterFogData.color );
    matParams->setSafe( paramHandles.mBaseColorSC, c );
       
    // By default we need to show a true reflection is fullReflect is enabled and
@@ -530,6 +527,7 @@ bool WaterBlock::setGridSizeProperty( void *obj, const char *index, const char *
 //-----------------------------------------------------------------------------
 void WaterBlock::initPersistFields()
 {
+   docsURL;
    addGroup( "WaterBlock" );
       addProtectedField( "gridElementSize", TypeF32,  Offset( mGridElementSize, WaterBlock ), 
          &setGridSizeProperty, &defaultProtectedGetFn, "Spacing between vertices in the WaterBlock mesh" );
@@ -595,9 +593,6 @@ void WaterBlock::setTransform( const MatrixF &mat )
    // If our transform changes we need to recalculate the 
    // per vertex depth/shadow info.  Would be nice if this could
    // be done independently of generating the whole VBIB...   
-   
-   MatrixF oldMat = mObjToWorld;
-
    Parent::setTransform( mat );
 
    // We don't need to regen our vb anymore since we aren't calculating

@@ -56,7 +56,7 @@ SkyBox::SkyBox()
    mTypeMask |= EnvironmentObjectType | StaticObjectType;
    mNetFlags.set(Ghostable | ScopeAlways);
 
-   mMatName = "";
+   INIT_ASSET(Material);
    mMatInstance = NULL;
 
    mIsVBDirty = false;
@@ -114,10 +114,10 @@ void SkyBox::onRemove()
 
 void SkyBox::initPersistFields()
 {
+   docsURL;
    addGroup( "Sky Box" );	
 
-   addField( "material", TypeMaterialName, Offset( mMatName, SkyBox ), 
-      "The name of a cubemap material for the sky box." );
+   INITPERSISTFIELD_MATERIALASSET(Material, SkyBox, "The name of a cubemap material for the sky box.");
 
    addField( "drawBottom", TypeBool, Offset( mDrawBottom, SkyBox ),
       "If false the bottom of the skybox is not rendered." );
@@ -139,8 +139,9 @@ void SkyBox::inspectPostApply()
 U32 SkyBox::packUpdate( NetConnection *conn, U32 mask, BitStream *stream )
 {
    U32 retMask = Parent::packUpdate( conn, mask, stream );
-   
-   stream->write( mMatName );
+
+   PACK_ASSET(conn, Material);
+
    stream->writeFlag( mDrawBottom );
    stream->write( mFogBandHeight );
 
@@ -151,11 +152,10 @@ void SkyBox::unpackUpdate( NetConnection *conn, BitStream *stream )
 {
    Parent::unpackUpdate( conn, stream );
 
-   String tmpString( "" );
-   stream->read( &tmpString );
-   if ( !tmpString.equal( mMatName, String::NoCase ) )
+   StringTableEntry oldMatName = getMaterial();
+   UNPACK_ASSET(conn, Material);
+   if (oldMatName != getMaterial())
    {
-      mMatName = tmpString;
       _updateMaterial();
    }
 
@@ -198,7 +198,7 @@ void SkyBox::prepRenderImage( SceneRenderState *state )
 
 void SkyBox::_renderObject( ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *mi )
 {
-   GFXDEBUGEVENT_SCOPE( SkyBox_RenderObject, ColorF::WHITE );
+   GFXDEBUGEVENT_SCOPE( SkyBox_RenderObject, ColorI::WHITE );
 
    GFXTransformSaver saver;  
    GFX->setVertexBuffer( mVB );         
@@ -252,7 +252,7 @@ void SkyBox::_renderObject( ObjectRenderInst *ri, SceneRenderState *state, BaseM
 
 void SkyBox::_initRender()
 {
-   GFXVertexPNTT *tmpVerts = NULL;
+   GFXVertexPNT *tmpVerts = NULL;
 
    U32 vertCount = 36;
 
@@ -264,7 +264,7 @@ void SkyBox::_initRender()
    // Create temp vertex pointer
    // so we can read from it
    // for generating the normals below.
-   tmpVerts = new GFXVertexPNTT[vertCount];
+   tmpVerts = new GFXVertexPNT[vertCount];
 
    // We don't bother sharing
    // vertices here, in order to
@@ -400,14 +400,14 @@ void SkyBox::_initRender()
       mIsVBDirty = false;
    }
 
-   GFXVertexPNTT *vertPtr = mVB.lock();
+   GFXVertexPNT *vertPtr = mVB.lock();
    if (!vertPtr)
    {
       delete[] tmpVerts;
       return;
    }
 
-   dMemcpy( vertPtr, tmpVerts, sizeof ( GFXVertexPNTT ) * vertCount );
+   dMemcpy(vertPtr, tmpVerts, sizeof( GFXVertexPNT) * vertCount);
 
    mVB.unlock();
 
@@ -573,10 +573,12 @@ void SkyBox::_initRender()
    mFogBandMat->mTranslucent = true;   
    mFogBandMat->mVertColor[0] = true;
    mFogBandMat->mDoubleSided = true;
-   mFogBandMat->mEmissive[0] = true;
+   mFogBandMat->mReceiveShadows[0] = false;
 
+   FeatureSet features = MATMGR->getDefaultFeatures();
+   features.addFeature(MFT_isBackground);
    mFogBandMatInst = mFogBandMat->createMatInstance();
-   mFogBandMatInst->init( MATMGR->getDefaultFeatures(), getGFXVertexFormat<GFXVertexPC>() );
+   mFogBandMatInst->init(features, getGFXVertexFormat<GFXVertexPC>() );
 }
 
 void SkyBox::onStaticModified( const char *slotName, const char *newValue )
@@ -599,31 +601,35 @@ void SkyBox::_initMaterial()
 
    // We want to disable culling and z write.
    GFXStateBlockDesc desc;
-   desc.setCullMode( GFXCullCW );
+   desc.setCullMode( GFXCullNone );
+   desc.setBlend( true );
    desc.setZReadWrite( true, false );
+   desc.zFunc = GFXCmpLessEqual;
    mMatInstance->addStateBlockDesc( desc );
 
    // Also disable lighting on the skybox material by default.
    FeatureSet features = MATMGR->getDefaultFeatures();
    features.removeFeature( MFT_RTLighting );
    features.removeFeature( MFT_Visibility );
+   features.removeFeature(MFT_ReflectionProbes);
+   features.addFeature(MFT_isBackground);   
+   features.addFeature(MFT_SkyBox);
 
    // Now initialize the material.
-   mMatInstance->init( features, getGFXVertexFormat<GFXVertexPNTT>() );
+   mMatInstance->init(features, getGFXVertexFormat<GFXVertexPNT>());
 }
 
 void SkyBox::_updateMaterial()
 {
-   if ( mMatName.isEmpty() )
-      return;
-
-   Material *pMat = NULL;
-   if ( !Sim::findObject( mMatName, pMat ) )
-      Con::printf( "SkyBox::_updateMaterial, failed to find Material of name %s!", mMatName.c_str() );
-   else if ( isProperlyAdded() )
+   if (!getMaterialResource().isValid())
    {
-      mMaterial = pMat;
-      _initMaterial(); 
+      //If our materialDef isn't valid, try setting it
+      _setMaterial(getMaterial());
+   }
+
+   if (getMaterialResource().isValid())
+   {
+      _initMaterial();
    }
 }
 
@@ -638,7 +644,7 @@ BaseMatInstance* SkyBox::_getMaterialInstance()
    return mMatInstance;
 }
 
-DefineConsoleMethod( SkyBox, postApply, void, (), , "")
+DefineEngineMethod( SkyBox, postApply, void, (), , "")
 {
 	object->inspectPostApply();
 }

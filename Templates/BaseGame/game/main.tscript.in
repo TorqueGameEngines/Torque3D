@@ -1,0 +1,57 @@
+$Core::windowIcon = "data/icon.png";
+$Core::splashWindowImage = "data/splash.png";
+
+// Console does something.
+setLogMode(6);
+
+// Disable script trace.
+trace(false);
+
+// Set the name of our application
+$appName = "@TORQUE_APP_NAME@";
+
+//-----------------------------------------------------------------------------
+// Load up scripts to initialise subsystems.
+ModuleDatabase.setModuleExtension("module");
+ModuleDatabase.scanModules( "core", false );
+if (!ModuleDatabase.LoadExplicit( "CoreModule" ))
+    quit();
+
+// Display a splash window immediately to improve app responsiveness before
+// engine is initialized and main window created.
+if ($Server::Dedicated == false)
+{
+    if ($platform $= "windows")
+       displaySplashWindow($Core::splashWindowImage);
+}
+else
+{
+    $Video::forceDisplayAdapter = -1;
+}
+    
+//-----------------------------------------------------------------------------
+// Load any gameplay modules
+ModuleDatabase.scanModules( "data", false );
+ModuleDatabase.LoadGroup( "Game" );
+
+//Finally, initialize the client/server structure
+ModuleDatabase.LoadExplicit( "Core_ClientServer" );
+
+if(isFunction("loadStartup"))
+{
+   loadStartup();
+}
+else
+{
+   //If nothing else set a main menu, try to do so now
+   if(isObject(Canvas) && !isObject(Canvas.getContent()))
+   {
+      if (isObject( ProjectSettings.value("UI/mainMenuName") ))
+         Canvas.setContent( ProjectSettings.value("UI/mainMenuName") );
+   }
+}
+
+if ( ($Server::Dedicated == false) && ($platform $= "windows") )
+    closeSplashWindow();
+
+echo("Engine initialized...");

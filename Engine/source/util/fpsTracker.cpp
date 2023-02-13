@@ -76,6 +76,8 @@ void FPSTracker::update()
    F32 update = fpsRealLast - fpsNext;
    if (update > 0.5f)
    {
+      F32 delta = realSeconds - fpsNext;
+      Con::setVariable( "fps::frameDelta",avar("%g", delta));
       Con::setVariable( "fps::real",      avar( "%4.1f", 1.0f / fpsReal ) );
       Con::setVariable( "fps::realMin",   avar( "%4.1f", 1.0f / fpsRealMin ) );
       Con::setVariable( "fps::realMax",   avar( "%4.1f", 1.0f / fpsRealMax ) );
@@ -88,7 +90,7 @@ void FPSTracker::update()
    }
 }
 
-DefineConsoleFunction( resetFPSTracker, void, (), , "()"
+DefineEngineFunction( resetFPSTracker, void, (), , "()"
    "@brief Reset FPS stats (fps::)\n\n"
    "@ingroup Game")
 {

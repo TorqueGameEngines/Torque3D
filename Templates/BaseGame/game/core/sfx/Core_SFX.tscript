@@ -1,0 +1,15 @@
+
+function Core_SFX::onCreate(%this)
+{
+   exec("./scripts/audio." @ $TorqueScriptFileExtension);
+   exec("./scripts/audioData." @ $TorqueScriptFileExtension);
+   exec("./scripts/audioAmbience." @ $TorqueScriptFileExtension);
+   exec("./scripts/audioDescriptions." @ $TorqueScriptFileExtension);
+   exec("./scripts/audioEnvironments." @ $TorqueScriptFileExtension);
+   exec("./scripts/audioStates." @ $TorqueScriptFileExtension);
+
+}
+
+function Core_SFX::onDestroy(%this)
+{
+}

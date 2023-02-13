@@ -1,0 +1,15 @@
+singleton CubemapData( NightCubemap )
+{
+   cubeMapFaceAsset[0] = "Core_Rendering:NightSkybox_1";
+   cubeMapFaceAsset[1] = "Core_Rendering:NightSkybox_2";
+   cubeMapFaceAsset[2] = "Core_Rendering:NightSkybox_3";
+   cubeMapFaceAsset[3] = "Core_Rendering:NightSkybox_4";
+   cubeMapFaceAsset[4] = "Core_Rendering:NightSkybox_5";
+   cubeMapFaceAsset[5] = "Core_Rendering:NightSkybox_6";
+};
+
+singleton Material( NightSkyMat )
+{
+   cubemap = NightCubemap;
+   materialTag0 = "Skies";
+};

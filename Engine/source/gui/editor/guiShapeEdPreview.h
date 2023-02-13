@@ -114,6 +114,7 @@ protected:
    bool        mRenderColMeshes;
    bool        mRenderMounts;
    TSShapeInstance*  mModel;
+   StringTableEntry mModelName;
 
    LightInfo*  mFakeSun;
    EulerF      mSunRot;
@@ -164,8 +165,8 @@ protected:
    // Rendering
    void renderGrid();
    void renderNodes() const;
-   void renderNodeAxes(S32 index, const ColorF& nodeColor) const;
-   void renderNodeName(S32 index, const ColorF& textColor) const;
+   void renderNodeAxes(S32 index, const LinearColorF& nodeColor) const;
+   void renderNodeName(S32 index, const LinearColorF& textColor) const;
    void renderSunDirection() const;
    void renderCollisionMeshes() const;
 
@@ -198,6 +199,9 @@ public:
 
    void setCurrentDetail(S32 dl);
    bool setObjectModel(const char * modelName);
+   bool setObjectShapeAsset(const char* assetId);
+
+   void _onResourceChanged(const Torque::Path& path);
 
    /// @name Threads
    ///@{

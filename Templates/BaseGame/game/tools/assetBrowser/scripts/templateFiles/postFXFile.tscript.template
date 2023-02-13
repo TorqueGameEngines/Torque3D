@@ -1,0 +1,147 @@
+//-----------------------------------------------------------------------------
+// Copyright (c) 2012 GarageGames, LLC
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+// IN THE SOFTWARE.
+//-----------------------------------------------------------------------------
+
+$PostFX::@@::modColor = "1 1 1 1";
+
+singleton ShaderData( @@_Shader )
+{
+   DXVertexShaderFile 	= $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
+   DXPixelShaderFile 	= "./@@P.hlsl";   
+   OGLVertexShaderFile  = $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";
+   OGLPixelShaderFile   = "./@@P.glsl";
+   
+   samplerNames[0] = "$inputTex";
+   
+   pixVersion = 3.0;
+};
+
+singleton GFXStateBlockData( @@_StateBlock )
+{
+   samplersDefined = true;
+   samplerStates[0] = SamplerClampLinear;
+   samplerStates[1] = SamplerClampLinear;
+   samplerStates[2] = SamplerClampLinear;
+   samplerStates[3] = SamplerClampLinear;
+   
+   blendDefined = true;
+   blendDest = GFXBlendOne;
+   blendSrc = GFXBlendZero;
+   
+   zDefined = true;
+   zEnable = false;
+   zWriteEnable = false;
+   
+   cullDefined = true;
+   cullMode = GFXCullNone;
+};
+
+
+function @@::setShaderConsts( %this )
+{
+   %this.setShaderConst( "$modColor", $PostFX::@@::modColor );
+}
+
+function @@::preProcess( %this )
+{
+}
+
+function @@::onAdd(%this)
+{
+   //Register the postFX with the manager
+   PostFXManager.registerPostEffect(%this);
+}
+
+function @@::onEnabled( %this )
+{
+   $PostFX::@@::Enabled = true;
+   return true;
+}
+
+function @@::onDisabled( %this )
+{
+   $PostFX::@@::Enabled = false;
+   return true;
+}
+
+//This is used to populate the PostFXEditor's settings so the post FX can be edited
+//This is automatically polled for any postFX that has been registered(in our onAdd) and the settings
+//are thus exposed for editing
+function @@::populatePostFXSettings(%this)
+{
+   PostEffectEditorInspector.startGroup("@@ - General");
+   PostEffectEditorInspector.addCallbackField("$PostFX::@@::Enabled", "Enabled", "bool", "", $PostFX::@@::Enabled, "", "toggle@@");
+   PostEffectEditorInspector.addField("$PostFX::@@::modColor", "Modifier Color", "colorI", "", $PostFX::@@::modColor, "");
+   PostEffectEditorInspector.endGroup();
+}
+
+//This is called back from our callbackField defined in populatePostFXSettings to
+//Allow us to easily toggle the postFX and have it respond immediately
+function PostEffectEditorInspector::toggle@@(%this)
+{
+   if($PostFX::@@::Enabled)
+      @@.enable();
+   else
+      @@.disable();
+}
+
+//This function is called when the post FX is loaded via a postFX preset file. It's used to do any special-case onload work
+//At minimum, it ensures that if the preset indicates it should be enabled, it actually enables the postFX object itself
+function @@::applyFromPreset(%this)
+{
+   if($PostFX::@@::Enabled)
+      %this.enable();
+   else
+      %this.disable();
+}
+
+//This function writes out the postFX's settings to the edited preset file
+function @@::savePresetSettings(%this)
+{
+   PostFXManager::savePresetSetting("$PostFX::@@::Enabled");
+   PostFXManager::savePresetSetting("$PostFX::@@::modColor");
+}
+
+//Our actual postFX
+singleton PostEffect( @@ )
+{
+   isEnabled = false;
+   allowReflectPass = false;
+
+   // Resolve the HDR before we render any editor stuff
+   // and before we resolve the scene to the backbuffer.
+   renderTime = "PFXBeforeBin";
+   renderBin = "EditorBin";
+   renderPriority = 9999;
+      
+   // The bright pass generates a bloomed version of 
+   // the scene for pixels which are brighter than a 
+   // fixed threshold value.
+   //
+   // This is then used in the final HDR combine pass
+   // at the end of this post effect chain.
+   shader = @@_Shader;
+   stateBlock = @@_StateBlock;
+   texture[0] = "$backBuffer";
+   target = "$backBuffer";
+   targetFormat = "GFXFormatR16G16B16A16F"; 
+   targetScale = "1 1";
+};

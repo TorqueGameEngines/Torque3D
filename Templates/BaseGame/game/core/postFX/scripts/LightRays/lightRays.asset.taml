@@ -1,0 +1,8 @@
+<PostEffectAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="LightRayPostFX"
+    scriptFile="@assetFile=lightRays.cs"
+    glslShader="NewPostEffectP.glsl"
+    hlslShader="NewPostEffectP.hlsl"
+    VersionId="1" />

@@ -46,6 +46,10 @@ public:
    GFXTexHandle( const String &texName, GFXTextureProfile *profile, const String &desc );
    bool set( const String &texName, GFXTextureProfile *profile, const String &desc );
 
+   // load composite
+   GFXTexHandle(const String &texNameR, const String &texNameG, const String &texNameB, const String &texNameA, U32 inputKey[4], GFXTextureProfile *profile, const String &desc);
+   bool set( const String &texNameR, const String &texNameG, const String &texNameB, const String &texNameA, U32 inputKey[4], GFXTextureProfile *profile, const String &desc );
+
    // register texture
    GFXTexHandle( GBitmap *bmp, GFXTextureProfile *profile, bool deleteBmp, const String &desc );
    bool set( GBitmap *bmp, GFXTextureProfile *profile, bool deleteBmp, const String &desc );
@@ -56,7 +60,7 @@ public:
    // Sized bitmap
    GFXTexHandle( U32 width, U32 height, GFXFormat format, GFXTextureProfile *profile, const String &desc, U32 numMipLevels = 1, S32 antialiasLevel = 0);
    bool set( U32 width, U32 height, GFXFormat format, GFXTextureProfile *profile, const String &desc, U32 numMipLevels = 1, S32 antialiasLevel = 0);
-   bool set( U32 width, U32 height, U32 depth, void *pixels, GFXFormat format, GFXTextureProfile *profile, const String &desc, U32 numMipLevels = 1 );
+   bool set( U32 width, U32 height, U32 depth, GFXFormat format, GFXTextureProfile* profile, const String& desc, U32 numMipLevels = 1);
 
    /// Returns the width and height as a point.
    Point2I getWidthHeight() const { return getPointer() ? Point2I( getPointer()->getWidth(), getPointer()->getHeight() ) : Point2I::Zero; }

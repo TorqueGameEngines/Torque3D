@@ -74,26 +74,30 @@ IMPLEMENT_CALLBACK( ProximityMineData, onExplode, void, ( ProximityMine* obj, Po
 ProximityMineData::ProximityMineData()
  : armingDelay( 0 ),
    armingSequence( -1 ),
-   armingSound( NULL ),
    triggerRadius( 5.0f ),
    triggerSpeed( 1.0f ),
    autoTriggerDelay( 0 ),
    triggerOnOwner( false ),
    triggerDelay( 0 ),
    triggerSequence( -1 ),
-   triggerSound( NULL ),
    explosionOffset( 0.05f )
 {
+   INIT_ASSET(ArmSound);
+   INIT_ASSET(TriggerSound);
 }
 
 void ProximityMineData::initPersistFields()
 {
+   docsURL;
+   Parent::initPersistFields();
+   addGroup("Sounds");
+      INITPERSISTFIELD_SOUNDASSET(ArmSound, ProximityMineData, "Arming sound for this proximity mine.");
+      INITPERSISTFIELD_SOUNDASSET(TriggerSound, ProximityMineData, "Arming sound for this proximity mine.");
+   endGroup("Sounds");
+
    addGroup( "Arming" );
    addField( "armingDelay", TypeF32, Offset(armingDelay, ProximityMineData), 
       "Delay (in seconds) from when the mine is placed to when it becomes active." );
-   addField( "armingSound", TypeSFXTrackName, Offset(armingSound, ProximityMineData),
-      "Sound to play when the mine is armed (starts at the same time as "
-      "the <i>armed</i> sequence if defined)." );
    endGroup( "Arming" );
 
    addGroup( "Triggering" );
@@ -111,9 +115,6 @@ void ProximityMineData::initPersistFields()
       "Speed above which moving objects within the trigger radius will trigger the mine" );
    addField( "triggerDelay", TypeF32, Offset(triggerDelay, ProximityMineData),
       "Delay (in seconds) from when the mine is triggered until it explodes." );
-   addField( "triggerSound", TypeSFXTrackName, Offset(triggerSound, ProximityMineData),
-      "Sound to play when the mine is triggered (starts at the same time as "
-      "the <i>triggered</i> sequence if defined)." );
    endGroup( "Triggering" );
 
    addGroup( "Explosion" );
@@ -124,8 +125,6 @@ void ProximityMineData::initPersistFields()
       "ground, which can end up blocking the explosion.  This offset along the mine's "
       "'up' normal allows you to raise the explosion origin to a better height.");
    endGroup( "Explosion" );
-
-   Parent::initPersistFields();
 }
 
 bool ProximityMineData::preload( bool server, String& errorStr )
@@ -135,12 +134,10 @@ bool ProximityMineData::preload( bool server, String& errorStr )
 
    if ( !server )
    {
-      // Resolve sounds
-      String sfxErrorStr;
-      if( !sfxResolve( &armingSound, sfxErrorStr ) )
-         Con::errorf( ConsoleLogEntry::General, "ProximityMineData::preload: Invalid packet: %s", sfxErrorStr.c_str() );
-      if( !sfxResolve( &triggerSound, sfxErrorStr ) )
-         Con::errorf( ConsoleLogEntry::General, "ProximityMineData::preload: Invalid packet: %s", sfxErrorStr.c_str() );
+      if( !getArmSound() )
+         Con::errorf( ConsoleLogEntry::General, "ProximityMineData::preload: Invalid arming sound." );
+      if( !getTriggerSound() )
+         Con::errorf( ConsoleLogEntry::General, "ProximityMineData::preload: Invalid trigger sound." );
    }
 
    if ( mShape )
@@ -158,14 +155,14 @@ void ProximityMineData::packData( BitStream* stream )
    Parent::packData( stream );
 
    stream->write( armingDelay );
-   sfxWrite( stream, armingSound );
+   PACKDATA_ASSET(ArmSound);
 
    stream->write( autoTriggerDelay );
    stream->writeFlag( triggerOnOwner );
    stream->write( triggerRadius );
    stream->write( triggerSpeed );
    stream->write( triggerDelay );
-   sfxWrite( stream, triggerSound );
+   PACKDATA_ASSET(TriggerSound);
 }
 
 void ProximityMineData::unpackData( BitStream* stream )
@@ -173,14 +170,14 @@ void ProximityMineData::unpackData( BitStream* stream )
    Parent::unpackData(stream);
 
    stream->read( &armingDelay );
-   sfxRead( stream, &armingSound );
+   UNPACKDATA_ASSET(ArmSound);
 
    stream->read( &autoTriggerDelay );
    triggerOnOwner = stream->readFlag();
    stream->read( &triggerRadius );
    stream->read( &triggerSpeed );
    stream->read( &triggerDelay );
-   sfxRead( stream, &triggerSound );
+   UNPACKDATA_ASSET(TriggerSound);
 }
 
 //----------------------------------------------------------------------------
@@ -386,8 +383,8 @@ void ProximityMine::setDeployedPos( const Point3F& pos, const Point3F& normal )
    MathUtils::getMatrixFromUpVector( normal, &mat );
    mat.setPosition( pos + normal * mObjBox.minExtents.z );
 
-   delta.pos = pos;
-   delta.posVec.set(0, 0, 0);
+   mDelta.pos = pos;
+   mDelta.posVec.set(0, 0, 0);
 
    ShapeBase::setTransform( mat );
    if ( mPhysicsRep )
@@ -428,8 +425,8 @@ void ProximityMine::processTick( const Move* move )
                   mAnimThread = mShapeInstance->addThread();
                   mShapeInstance->setSequence( mAnimThread, mDataBlock->armingSequence, 0.0f );
                }
-               if ( mDataBlock->armingSound )
-                  SFX->playOnce( mDataBlock->armingSound, &getRenderTransform() );
+               if ( mDataBlock->getArmSoundProfile() )
+                  SFX->playOnce( mDataBlock->getArmSoundProfile(), &getRenderTransform() );
             }
             break;
 
@@ -474,8 +471,8 @@ void ProximityMine::processTick( const Move* move )
                   mAnimThread = mShapeInstance->addThread();
                   mShapeInstance->setSequence( mAnimThread, mDataBlock->triggerSequence, 0.0f );
                }
-               if ( mDataBlock->triggerSound )
-                  SFX->playOnce( mDataBlock->triggerSound, &getRenderTransform() );
+               if ( mDataBlock->getTriggerSoundProfile() )
+                  SFX->playOnce( mDataBlock->getTriggerSoundProfile(), &getRenderTransform() );
 
                if ( isServerObject() )
                   mDataBlock->onTriggered_callback( this, sql.mList[0] );
@@ -659,7 +656,7 @@ void ProximityMine::renderObject( ObjectRenderInst* ri,
    // Render the trigger area
    if ( mState == Armed || mState == Triggered )
    {
-      const ColorF drawColor(1, 0, 0, 0.05f);
+      const LinearColorF drawColor(1, 0, 0, 0.05f);
       if ( drawColor.alpha > 0 )
       {
          GFXStateBlockDesc desc;

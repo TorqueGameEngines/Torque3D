@@ -22,7 +22,7 @@
 
 #ifndef _MMATRIX_H_
 #define _MMATRIX_H_
-
+#include <algorithm>
 #ifndef _MPLANE_H_
 #include "math/mPlane.h"
 #endif
@@ -35,12 +35,18 @@
 #include "math/mPoint4.h"
 #endif
 
+#ifndef _ENGINETYPEINFO_H_
+#include "console/engineTypeInfo.h"
+#endif
+
+
 /// 4x4 Matrix Class
 ///
 /// This runs at F32 precision.
 
 class MatrixF
 {
+   friend class MatrixFEngineExport;
 private:
    F32 m[16];     ///< Note: Torque uses row-major matrices
 
@@ -224,6 +230,12 @@ public:
    const static MatrixF Identity;
 };
 
+class MatrixFEngineExport
+{
+public:
+   static EngineFieldTable::Field getMatrixField();
+};
+
 
 //--------------------------------------
 // Inline Functions
@@ -232,6 +244,8 @@ inline MatrixF::MatrixF(bool _identity)
 {
    if (_identity)
       identity();
+   else
+      std::fill_n(m, 16, 0);
 }
 
 inline MatrixF::MatrixF( const EulerF &e )
@@ -572,10 +586,10 @@ inline MatrixF operator * ( const MatrixF &m1, const MatrixF &m2 )
    return temp;
 }
 
-inline MatrixF& MatrixF::operator *= ( const MatrixF &m )
+inline MatrixF& MatrixF::operator *= ( const MatrixF &m1 )
 {
    MatrixF tempThis(*this);
-   m_matF_x_matF(tempThis, m, *this);
+   m_matF_x_matF(tempThis, m1, *this);
    return (*this);
 }
 

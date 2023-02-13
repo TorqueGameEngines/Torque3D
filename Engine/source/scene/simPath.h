@@ -36,28 +36,37 @@
 #include "gfx/gfxPrimitiveBuffer.h"
 #endif
 
-class BaseMatInstance;
+#ifndef _STATICSHAPE_H_
+#include "T3D/staticShape.h"
+#endif
 
+class BaseMatInstance;
+struct PathShapeData;
 
 namespace SimPath
 {
 
 //--------------------------------------------------------------------------
 /// A path!
-class Path : public SimGroup
+class Path : public GameBase
 {
-   typedef SimGroup Parent;
+   typedef GameBase Parent;
 
   public:
-   enum {
+   enum : U32
+   {
       NoPathIndex = 0xFFFFFFFF
    };
 
 
   private:
    U32 mPathIndex;
+   F32 mPathSpeed;
    bool mIsLooping;
-
+   PathShapeData* mDataBlock;
+   S32 mSpawnCount;
+   S32 mMinDelay;
+   S32 mMaxDelay;
   protected:
    bool onAdd();
    void onRemove();
@@ -76,6 +85,7 @@ class Path : public SimGroup
 
    DECLARE_CONOBJECT(Path);
    static void initPersistFields();
+   DECLARE_CALLBACK(void, onAdd, (SimObjectId ID));
 };
 
 //--------------------------------------------------------------------------
@@ -111,6 +121,7 @@ class Marker : public SceneObject
 
 
    U32   mSeqNum;
+   String mHitCommand;
    U32   mSmoothingType;
    U32   mKnotType;
 
@@ -132,7 +143,7 @@ class Marker : public SceneObject
    static void initGFXResources();
 
    static GFXStateBlockRef smStateBlock;
-   static GFXVertexBufferHandle<GFXVertexPC> smVertexBuffer;
+   static GFXVertexBufferHandle<GFXVertexPCT> smVertexBuffer;
    static GFXPrimitiveBufferHandle smPrimitiveBuffer;
 
   public:

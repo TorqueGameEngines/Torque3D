@@ -30,22 +30,28 @@
 #include "gfx/gfxTextureManager.h"
 #endif
 
+#include "T3D/assets/ImageAsset.h"
+
 class GuiToolboxButtonCtrl : public GuiButtonCtrl
 {
 private:
    typedef GuiButtonCtrl Parent;
 
 protected:
-   StringTableEntry mNormalBitmapName;
-   StringTableEntry mLoweredBitmapName;
-   StringTableEntry mHoverBitmapName;
 
-   GFXTexHandle mTextureNormal;
-   GFXTexHandle mTextureLowered;
-   GFXTexHandle mTextureHover;
+   DECLARE_IMAGEASSET(GuiToolboxButtonCtrl, NormalBitmap, onNormalImageChanged, GFXDefaultGUIProfile);
+   DECLARE_ASSET_SETGET(GuiToolboxButtonCtrl, NormalBitmap);
+   DECLARE_IMAGEASSET(GuiToolboxButtonCtrl, LoweredBitmap, onLoweredImageChanged, GFXDefaultGUIProfile);
+   DECLARE_ASSET_SETGET(GuiToolboxButtonCtrl, LoweredBitmap);
+   DECLARE_IMAGEASSET(GuiToolboxButtonCtrl, HoverBitmap, onHoverImageChanged, GFXDefaultGUIProfile);
+   DECLARE_ASSET_SETGET(GuiToolboxButtonCtrl, HoverBitmap);
 
    void renderButton(GFXTexHandle &texture, Point2I &offset, const RectI& updateRect);
    void renderStateRect( GFXTexHandle &texture, const RectI& rect );
+
+   void onNormalImageChanged() {}
+   void onLoweredImageChanged() {}
+   void onHoverImageChanged() {}
 
 public:   
    DECLARE_CONOBJECT(GuiToolboxButtonCtrl);

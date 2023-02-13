@@ -1,0 +1,308 @@
+//==============================================================================
+/// Summary:
+/// This function sets the root page for the navigation stack. The root page is 'below'
+/// all other normal pages and cannot be popped like a normal page.
+/// When we set a new root page, we first check if we have an existing root page.
+/// If we do, we run the usual canClose() then onClose() function pair, then we 
+/// set it and call the onOpen() for the new root page.
+/// 
+/// \param %rootPage (guiControl) The new guiControl that is being set as the root page of the navigation stack
+function UINavigation::setRootPage(%this, %rootPage)
+{
+   if(!isObject(%this.pageStack))
+   {
+      %this.pageStack = new ArrayObject();  
+   }
+   
+   if(%this.rootPage $= %rootPage)
+      return;
+   
+   if(isObject(%this.rootPage))
+   {
+      %canClose = true;
+      if(%this.rootPage.isMethod("canClose"))
+         %canClose = %this.rootPage.call("canClose");
+         
+      if(!%canClose)
+         return; //if we're not allowed to close, just bail out wholesale because clearly 
+                  //something is blocking changes to pages
+         
+      %this.remove(%this.rootPage);
+      if(%this.rootPage.isMethod("onClose"))
+         %this.rootPage.call("onClose");
+         
+      %this.rootPage.navigation = "";
+   }
+      
+   %this.rootPage = %rootPage;
+   
+   %this.add(%rootPage);
+   if(%this.resizePages)
+   {
+      %rootPage.resize(%this.position.x, %this.position.y, 
+         %this.extent.x, %this.extent.y);
+   }
+   %rootPage.navigation = %this;
+   
+   if(%rootPage.isMethod("onOpen"))
+      %rootPage.call("onOpen");
+}
+
+//==============================================================================
+/// Summary:
+/// This function pushes a page onto the given UINavigation-classed GUIContainer's stack
+/// The order of operations is thus:
+/// 1) check to see if the new page being pushed says it can open via the canOpen() function. 
+///    If this method is not defined, it defaults to true, as there's no impediment to continuing
+///    If this check returns false, the pushPage event cancels.
+/// 2) check to see if the current page on the stack says it can close. Similar to 
+///    the canOpen() check on the new page, we default to true
+///    If this check returns false, the pushPage event cancels.
+/// 3) Call - if defined - onClose() on the current top page of the stack
+/// 4) Add the new page onto the stack
+/// 5) Call - if defined - onOpen() on the new page
+/// 6) Finally, if we defined a callback, call that.
+/// With this all run, the previous top page has done any cleanup work it needed to
+/// and the new top page has been opened successfully.
+/// 
+/// \param %newPage (guiControl) The new guiControl that is being added onto the page stack
+/// \param %callback[optional]: (Evaluable string) A evalable statement to invoke when the push has been completed
+function UINavigation::pushPage(%this, %newPage, %callback)
+{
+   if(!isObject(%this.pageStack))
+   {
+      %this.pageStack = new ArrayObject();
+   }
+   
+   //don't re-add pages
+   if(%this.getPageCount() != 0 && 
+      %this.pageStack.getIndexFromKey(%newPage) != -1)
+      return;
+   
+   %canChange = true;
+   if(%newPage.isMethod("canOpen"))
+      %canChange = %newPage.call("canOpen");
+      
+   if(!%canChange)
+      return;
+      
+   %currentPage = %this.getCurrentPage();
+   if(isObject(%currentPage))
+   {
+      if(%currentPage.isMethod("canClose"))
+         %canChange = %currentPage.call("canClose");
+         
+      if(!%canChange)
+         return;
+         
+      if(%currentPage.isMethod("onClose"))
+         %currentPage.call("onClose");
+   }
+   
+   %this.pageStack.push_back(%newPage);
+   %this.add(%newPage);
+   if(%this.resizePages)
+   {
+      %newPage.resize(%this.position.x, %this.position.y, 
+         %this.extent.x, %this.extent.y);
+   }
+   
+   if(%newPage.isMethod("onOpen"))
+      %newPage.call("onOpen");
+   
+   %newPage.navigation = %this;
+   
+   if(%callback !$= "")
+   eval(%callback);
+}
+
+//==============================================================================
+/// Summary:
+/// This function pops the topmost page off the given UINavigation-classed GUIContainer's stack
+/// The order of operations is thus:
+/// 1) check to see if the top page being popped says it can close via the canClose() function. 
+///    If this method is not defined, it defaults to true, as there's no impediment to continuing
+///    If this check returns false, the popPage event cancels.
+/// 2) check to see if the previous page on the stack says it can open. Similar to 
+///    the canClose() check on the new page, we default to true
+///    If this check returns false, the popPage event cancels.
+/// 3) Call - if defined - onClose() on the current top page of the stack
+/// 4) Remove the top page
+/// 5) Call - if defined - onOpen() on the now topmost page
+/// 6) Finally, if we defined a callback, call that.
+/// With this all run, the previous top page has done any cleanup work it needed to
+/// and the new top page has been opened successfully.
+/// 
+/// \param %callback[optional] (Evaluable string) A evalable statement to invoke when the pop has been completed
+function UINavigation::popPage(%this, %callback)
+{
+   if(%this.pageStack.count() == 0)
+      return;
+      
+   %currentPage = %this.getCurrentPage();
+   if(isObject(%currentPage))
+   {
+      %canChange = true;
+      if(%currentPage.isMethod("canClose"))
+         %canChange = %currentPage.call("canClose");
+         
+      if(!%canChange)
+         return;
+   }
+   
+   %prevPage = %this.getPreviousPage();
+   if(isObject(%prevPage))
+   {
+      %canChange = true;
+      if(%prevPage.isMethod("canOpen"))
+         %canChange = %prevPage.call("canOpen");
+         
+      if(!%canChange)
+         return;
+   }
+      
+   if(isObject(%currentPage))
+   {
+      if(%currentPage.isMethod("onClose"))
+      {
+         %currentPage.call("onClose");
+      }    
+      
+      %this.pageStack.pop_back();
+      %this.remove(%currentPage);
+      
+      %currentPage.navigation = "";
+   }
+   
+   %newTopPage = %this.getCurrentPage();
+   if(isObject(%newTopPage))
+   {
+   	  if(%newTopPage.isMethod("onOpen"))
+         %newTopPage.call("onOpen");
+   }
+   
+   if(%callback !$= "")
+   eval(%callback);
+}
+
+//==============================================================================
+/// Summary:
+/// In order tops the topmost page in a loop until it has closed the entire stack,
+/// leaving only the root page
+/// 
+/// \param %callback[optional] (Evaluable String) A evalable statement to invoke when the pop has been completed
+function UINavigation::popToRoot(%this, %callback)
+{
+   %pageChanged = false;
+   while(%this.getPageCount() != 0)
+   {
+      %currentPage = %this.getCurrentPage();
+      if(isObject(%currentPage))
+      {
+         if(%currentPage.isMethod("canClose"))
+            %canChange = %currentPage.call("canClose");
+            
+         if(!%canChange)
+            return;
+      }
+      
+      %prevPage = %this.getPreviousPage();
+      if(isObject(%prevPage))
+      {
+         if(%prevPage.isMethod("canOpen"))
+            %canChange = %prevPage.call("canOpen");
+            
+         if(!%canChange)
+            return;
+      }
+         
+      if(isObject(%currentPage))
+      {
+         if(%currentPage.isMethod("onClose"))
+         {
+            %currentPage.call("onClose");
+         }    
+
+         %this.pageStack.pop_back();
+         %this.remove(%currentPage);
+         
+         %currentPage.navigation = "";
+      }
+      
+      %newTopPage = %this.getCurrentPage();
+      if(%newTopPage.isMethod("onOpen"))
+         %newTopPage.call("onOpen");
+         
+      %pageChanged = true;
+   }
+   
+   if(%pageChanged && %callback !$= "")
+      eval(%callback);
+}
+
+//==============================================================================
+/// Summary:
+/// Gets the current, topmost page on the stack. If no non-root pages are on the stack
+/// the root page is returned
+function UINavigation::getCurrentPage(%this)
+{
+   if(isObject(%this.pageStack) && %this.pageStack.count() != 0)
+   {
+      return %this.pageStack.getKey(%this.pageStack.count()-1);
+   }
+   else
+   {
+      if(isObject(%this.rootPage))
+         return %this.rootPage;
+   }
+   
+   return 0;
+}
+
+//==============================================================================
+/// Summary:
+/// Gets the page just under the topmost page in the stack. If there is no previous page
+/// then the root page is returned
+function UINavigation::getPreviousPage(%this)
+{
+   if(isObject(%this.pageStack) && %this.pageStack.count() > 1)
+   {
+      return %this.pageStack.getKey(%this.pageStack.count()-2);
+   }
+   else
+   {
+      if(isObject(%this.rootPage))
+         return %this.rootPage;
+   }
+   
+   return 0;
+}   
+
+//==============================================================================
+/// Summary:
+/// Gets the number of pages on the stack.
+function UINavigation::getPageCount(%this)
+{
+   %count = 0;
+   if(isObject(%this.pageStack))
+      %count = %this.pageStack.count();
+      
+   if(isObject(%this.rootPage))
+      %count++;
+      
+   return %count;
+}
+
+//==============================================================================
+/// Summary:
+/// Force the page to reprocess to ensure it's status is up to date
+function UINavigation::refreshPage(%this)
+{
+   %page = %this.getCurrentPage();
+   if(!isObject(%page))
+      return;
+      
+   if(%page.isMethod("onOpen"))
+      %page.call("onOpen");
+}
+

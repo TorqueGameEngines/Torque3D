@@ -26,6 +26,7 @@
 
 MoveList::MoveList()
 {
+   mConnection = NULL;
    mControlMismatch = false;
    reset();
 }

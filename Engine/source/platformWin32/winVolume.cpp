@@ -89,7 +89,10 @@ static String _BuildFileName(const String& prefix,const Path& path)
    // internal path name.
    String file = prefix;
    file = Path::Join(file, '/', path.getPath());
-   file = Path::Join(file, '/', path.getFileName());
+   if (path.getFileName().isEmpty() && path.getExtension().isNotEmpty()) //weird, filename-less file, so handle it slightly special-case
+      file += String("/");
+   else
+      file = Path::Join(file, '/', path.getFileName());
    file = Path::Join(file, '.', path.getExtension());
    return file;
 }
@@ -143,6 +146,10 @@ static void _CopyStatAttributes(const WIN32_FIND_DATAW& info, FileNode::Attribut
    attr->atime = Win32FileTimeToTime(
       info.ftLastAccessTime.dwLowDateTime,
       info.ftLastAccessTime.dwHighDateTime);
+
+   attr->ctime = Win32FileTimeToTime(
+      info.ftCreationTime.dwLowDateTime,
+      info.ftCreationTime.dwHighDateTime);
 }
 
 
@@ -236,6 +243,16 @@ Win32FileSystem::~Win32FileSystem()
 {
 }
 
+void Win32FileSystem::verifyCompatibility(const Path& _path, WIN32_FIND_DATAW _info)
+{
+#ifndef TORQUE_POSIX_PATH_CASE_INSENSITIVE
+   if (_path.getFullFileName().isNotEmpty() && _path.getFullFileName().compare(String(_info.cFileName)) != 0)
+   {
+      Con::warnf("Linux Compatibility Warning: %s != %s", String(_info.cFileName).c_str(), _path.getFullFileName().c_str());
+   }
+#endif
+}
+
 FileNodeRef Win32FileSystem::resolve(const Path& path)
 {
    String file = _BuildFileName(mVolume,path);
@@ -245,6 +262,9 @@ FileNodeRef Win32FileSystem::resolve(const Path& path)
    ::FindClose(handle);
    if (handle != INVALID_HANDLE_VALUE)
    {
+#ifdef TORQUE_DEBUG
+      verifyCompatibility(path, info);
+#endif
       if (S_ISREG(info.dwFileAttributes))
          return new Win32File(path,file);
       if (S_ISDIR(info.dwFileAttributes))
@@ -745,6 +765,7 @@ String   Platform::FS::getAssetDir()
 /// file systems.
 bool Platform::FS::InstallFileSystems()
 {
+#ifndef TORQUE_SECURE_VFS
    WCHAR buffer[1024];
 
    // [8/24/2009 tomb] This stops Windows from complaining about drives that have no disks in
@@ -779,6 +800,7 @@ bool Platform::FS::InstallFileSystems()
    wd += '/';
 
    Platform::FS::SetCwd(wd);
+#endif
 
    return true;
 }

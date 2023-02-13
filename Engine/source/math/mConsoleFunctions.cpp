@@ -25,11 +25,13 @@
 #include "console/console.h"
 #include "math/mMathFn.h"
 #include "math/mRandom.h"
+#include "math/mMath.h"
+#include "math/mathUtils.h"
 
 #include "console/engineAPI.h"
 
 
-DefineConsoleFunction( mSolveQuadratic, const char*, ( F32 a, F32 b, F32 c ),,
+DefineEngineFunction( mSolveQuadratic, const char*, ( F32 a, F32 b, F32 c ),,
     "Solve a quadratic equation (2nd degree polynomial) of form a*x^2 + b*x + c = 0.\n"
     "@param a First Coefficient."
     "@param b Second Coefficient."
@@ -47,7 +49,7 @@ DefineConsoleFunction( mSolveQuadratic, const char*, ( F32 a, F32 b, F32 c ),,
    return retBuffer;
 }
 
-DefineConsoleFunction( mSolveCubic, const char*, ( F32 a, F32 b, F32 c, F32 d ),,
+DefineEngineFunction( mSolveCubic, const char*, ( F32 a, F32 b, F32 c, F32 d ),,
     "Solve a cubic equation (3rd degree polynomial) of form a*x^3 + b*x^2 + c*x + d = 0.\n"
     "@param a First Coefficient."
     "@param b Second Coefficient."
@@ -66,7 +68,7 @@ DefineConsoleFunction( mSolveCubic, const char*, ( F32 a, F32 b, F32 c, F32 d ),
    return retBuffer;
 }
 
-DefineConsoleFunction( mSolveQuartic, const char*, ( F32 a, F32 b, F32 c, F32 d, F32 e ),,
+DefineEngineFunction( mSolveQuartic, const char*, ( F32 a, F32 b, F32 c, F32 d, F32 e ),,
     "Solve a quartic equation (4th degree polynomial) of form a*x^4 + b*x^3 + c*x^2 + d*x + e = 0.\n"
     "@param a First Coefficient."
     "@param b Second Coefficient."
@@ -85,7 +87,7 @@ DefineConsoleFunction( mSolveQuartic, const char*, ( F32 a, F32 b, F32 c, F32 d,
    return retBuffer;
 }
 
-DefineConsoleFunction( mFloor, S32, ( F32 v ),,
+DefineEngineFunction( mFloor, S32, ( F32 v ),,
     "Round v down to the nearest integer.\n"
     "@param v Number to convert to integer."
     "@returns Number converted to integer."
@@ -94,7 +96,7 @@ DefineConsoleFunction( mFloor, S32, ( F32 v ),,
    return (S32)mFloor( v );
 }
 
-DefineConsoleFunction( mRound, S32, ( F32 v  ),,
+DefineEngineFunction( mRound, S32, ( F32 v  ),,
     "Round v to the nth decimal place or the nearest whole number by default."
     "@param v Value to roundn"
     "@return The rounded value as a S32."  
@@ -103,7 +105,31 @@ DefineConsoleFunction( mRound, S32, ( F32 v  ),,
    return mRound(v);
 }
 
-DefineConsoleFunction( mCeil, S32, ( F32 v ),,
+DefineEngineFunction(mRoundDelta, S32, (F32 v, S32 d), (0.0, 1),
+   "Round v to the nearest number based on the delta"
+   "@param v Value to round"
+   "@param d Delta use when rounding"
+   "@return The rounded value as a S32."
+   "@ingroup Math")
+{
+   return (mFloor(v / d + 0.5) * d);
+}
+
+
+DefineEngineFunction( mRoundColour, F32, ( F32 v, S32 n ), (0),
+   "Round v to the nth decimal place or the nearest whole number by default."
+   "@param v Value to roundn"
+   "@param n Number of decimal places to round to, 0 by defaultn"
+   "@return The rounded value as a S32."
+   "@ingroup Math")
+{
+   if (n <= 0)
+      return mRound(v);
+   else
+      return mRound(v, n);
+}
+
+DefineEngineFunction( mCeil, S32, ( F32 v ),,
     "Round v up to the nearest integer.\n"
     "@param v Number to convert to integer."
     "@returns Number converted to integer."
@@ -112,7 +138,7 @@ DefineConsoleFunction( mCeil, S32, ( F32 v ),,
    return (S32)mCeil( v );
 }
 
-DefineConsoleFunction( mFloatLength, const char*, ( F32 v, U32 precision ),,
+DefineEngineFunction( mFloatLength, const char*, ( F32 v, U32 precision ),,
     "Formats the specified number to the given number of decimal places.\n"
     "@param v Number to format."
     "@param precision Number of decimal places to format to (1-9)."
@@ -133,7 +159,7 @@ DefineConsoleFunction( mFloatLength, const char*, ( F32 v, U32 precision ),,
 
 //------------------------------------------------------------------------------
 
-DefineConsoleFunction( mAbs, F32, ( F32 v ),,
+DefineEngineFunction( mAbs, F32, ( F32 v ),,
     "Calculate absolute value of specified value.\n"
     "@param v Input Value."
     "@returns Absolute value of specified value."
@@ -142,7 +168,7 @@ DefineConsoleFunction( mAbs, F32, ( F32 v ),,
    return mFabs( v );
 }
 
-DefineConsoleFunction( mFMod, F32, ( F32 v, F32 d ),,
+DefineEngineFunction( mFMod, F32, ( F32 v, F32 d ),,
     "Calculate the remainder of v/d.\n"
     "@param v Input Value."
     "@param d Divisor Value."
@@ -152,7 +178,7 @@ DefineConsoleFunction( mFMod, F32, ( F32 v, F32 d ),,
    return mFmod( v, d );
 }
 
-DefineConsoleFunction( mSqrt, F32, ( F32 v ),,
+DefineEngineFunction( mSqrt, F32, ( F32 v ),,
     "Calculate the square-root of v.\n"
     "@param v Input Value."
     "@returns The square-root of the input value."
@@ -161,7 +187,7 @@ DefineConsoleFunction( mSqrt, F32, ( F32 v ),,
    return mSqrt (v );
 }
 
-DefineConsoleFunction( mPow, F32, ( F32 v, F32 p ),,
+DefineEngineFunction( mPow, F32, ( F32 v, F32 p ),,
     "Calculate b raised to the p-th power.\n"
     "@param v Input Value."
     "@param p Power to raise value by."
@@ -171,7 +197,7 @@ DefineConsoleFunction( mPow, F32, ( F32 v, F32 p ),,
    return mPow( v, p );
 }
 
-DefineConsoleFunction( mLog, F32, ( F32 v ),,
+DefineEngineFunction( mLog, F32, ( F32 v ),,
     "Calculate the natural logarithm of v.\n"
     "@param v Input Value."
     "@returns The natural logarithm of the input value."
@@ -180,7 +206,7 @@ DefineConsoleFunction( mLog, F32, ( F32 v ),,
    return mLog( v );
 }
 
-DefineConsoleFunction( mSin, F32, ( F32 v ),,
+DefineEngineFunction( mSin, F32, ( F32 v ),,
     "Calculate the sine of v.\n"
     "@param v Input Value (in radians)."
     "@returns The sine of the input value."
@@ -189,7 +215,7 @@ DefineConsoleFunction( mSin, F32, ( F32 v ),,
    return mSin( v );
 }
 
-DefineConsoleFunction( mCos, F32, ( F32 v ),,
+DefineEngineFunction( mCos, F32, ( F32 v ),,
     "Calculate the cosine of v.\n"
     "@param v Input Value (in radians)."
     "@returns The cosine of the input value."
@@ -198,7 +224,7 @@ DefineConsoleFunction( mCos, F32, ( F32 v ),,
    return mCos( v );
 }
 
-DefineConsoleFunction( mTan, F32, ( F32 v ),,
+DefineEngineFunction( mTan, F32, ( F32 v ),,
     "Calculate the tangent of v.\n"
     "@param v Input Value (in radians)."
     "@returns The tangent of the input value."
@@ -207,7 +233,7 @@ DefineConsoleFunction( mTan, F32, ( F32 v ),,
    return mTan( v );
 }
 
-DefineConsoleFunction( mAsin, F32, ( F32 v ),,
+DefineEngineFunction( mAsin, F32, ( F32 v ),,
     "Calculate the arc-sine of v.\n"
     "@param v Input Value (in radians)."
     "@returns The arc-sine of the input value."
@@ -216,7 +242,7 @@ DefineConsoleFunction( mAsin, F32, ( F32 v ),,
    return mAsin( v );
 }
 
-DefineConsoleFunction( mAcos, F32, ( F32 v ),,
+DefineEngineFunction( mAcos, F32, ( F32 v ),,
     "Calculate the arc-cosine of v.\n"
     "@param v Input Value (in radians)."
     "@returns The arc-cosine of the input value."
@@ -225,7 +251,7 @@ DefineConsoleFunction( mAcos, F32, ( F32 v ),,
    return mAcos( v );
 }
 
-DefineConsoleFunction( mAtan, F32, ( F32 rise, F32 run ),,
+DefineEngineFunction( mAtan, F32, ( F32 rise, F32 run ),,
     "Calculate the arc-tangent (slope) of a line defined by rise and run.\n"
     "@param rise of line."
     "@param run of line."
@@ -235,7 +261,7 @@ DefineConsoleFunction( mAtan, F32, ( F32 rise, F32 run ),,
    return mAtan2( rise, run );
 }
 
-DefineConsoleFunction( mRadToDeg, F32, ( F32 radians ),,
+DefineEngineFunction( mRadToDeg, F32, ( F32 radians ),,
     "Convert specified radians into degrees.\n"
     "@param radians Input Value (in radians)."
     "@returns The specified radians value converted to degrees."
@@ -244,7 +270,7 @@ DefineConsoleFunction( mRadToDeg, F32, ( F32 radians ),,
    return mRadToDeg( radians );
 }
 
-DefineConsoleFunction( mDegToRad, F32, ( F32 degrees ),,
+DefineEngineFunction( mDegToRad, F32, ( F32 degrees ),,
     "Convert specified degrees into radians.\n"
     "@param degrees Input Value (in degrees)."
     "@returns The specified degrees value converted to radians."
@@ -253,7 +279,7 @@ DefineConsoleFunction( mDegToRad, F32, ( F32 degrees ),,
    return mDegToRad( degrees );
 }
 
-DefineConsoleFunction( mClamp, F32, ( F32 v, F32 min, F32 max ),,
+DefineEngineFunction( mClamp, F32, ( F32 v, F32 min, F32 max ),,
     "Clamp the specified value between two bounds.\n"
     "@param v Input value."
     "@param min Minimum Bound."
@@ -264,7 +290,7 @@ DefineConsoleFunction( mClamp, F32, ( F32 v, F32 min, F32 max ),,
    return mClampF( v, min, max );
 }
 
-DefineConsoleFunction( mSaturate, F32, ( F32 v ),,
+DefineEngineFunction( mSaturate, F32, ( F32 v ),,
     "Clamp the specified value between 0 and 1 (inclusive).\n"
     "@param v Input value."
     "@returns The specified value clamped between 0 and 1 (inclusive)."
@@ -273,7 +299,30 @@ DefineConsoleFunction( mSaturate, F32, ( F32 v ),,
    return mClampF( v, 0.0f, 1.0f );
 }
 
-DefineConsoleFunction( getMax, F32, ( F32 v1, F32 v2 ),,
+DefineEngineFunction(mWrapF, F32, (F32 v, F32 min, F32 max), ,
+	"Wrap the specified value between two bounds.\n"
+	"@param v Input value."
+	"@param min Minimum Bound."
+	"@param max Maximum Bound."
+	"@returns The specified value wrapped to the specified bounds."
+	"@ingroup Math")
+{
+	return mWrapF(v, min, max);
+}
+
+DefineEngineFunction(mWrap, S32, (S32 v, S32 min, S32 max), ,
+	"Wrap the specified value between two bounds.\n"
+	"@param v Input value."
+	"@param min Minimum Bound."
+	"@param max Maximum Bound."
+	"@returns The specified value wrapped to the specified bounds."
+	"@ingroup Math")
+{
+	return mWrap(v, min, max);
+}
+
+
+DefineEngineFunction( getMax, F32, ( F32 v1, F32 v2 ),,
     "Calculate the greater of two specified numbers.\n"
     "@param v1 Input value."
     "@param v2 Input value."
@@ -283,7 +332,7 @@ DefineConsoleFunction( getMax, F32, ( F32 v1, F32 v2 ),,
    return getMax( v1, v2 );
 }
 
-DefineConsoleFunction( getMin, F32, ( F32 v1, F32 v2 ),,
+DefineEngineFunction( getMin, F32, ( F32 v1, F32 v2 ),,
     "Calculate the lesser of two specified numbers.\n"
     "@param v1 Input value."
     "@param v2 Input value."
@@ -293,7 +342,7 @@ DefineConsoleFunction( getMin, F32, ( F32 v1, F32 v2 ),,
    return getMin( v1, v2 );
 }
 
-DefineConsoleFunction( mLerp, F32, ( F32 v1, F32 v2, F32 time ),,
+DefineEngineFunction( mLerp, F32, ( F32 v1, F32 v2, F32 time ),,
     "Calculate linearly interpolated value between two specified numbers using specified normalized time.\n"
     "@param v1 Interpolate From Input value."
     "@param v2 Interpolate To Input value."
@@ -304,7 +353,7 @@ DefineConsoleFunction( mLerp, F32, ( F32 v1, F32 v2, F32 time ),,
    return mLerp( v1, v2, time );
 }
 
-DefineConsoleFunction( mPi, F32, (),,
+DefineEngineFunction( mPi, F32, (),,
     "Return the value of PI (half-circle in radians).\n"
     "@returns The value of PI."
     "@ingroup Math" )
@@ -312,7 +361,7 @@ DefineConsoleFunction( mPi, F32, (),,
    return M_PI_F;
 }
 
-DefineConsoleFunction( m2Pi, F32, (),,
+DefineEngineFunction( m2Pi, F32, (),,
     "Return the value of 2*PI (full-circle in radians).\n"
     "@returns The value of 2*PI."
     "@ingroup Math" )
@@ -320,11 +369,87 @@ DefineConsoleFunction( m2Pi, F32, (),,
    return M_2PI_F;
 }
 
-DefineConsoleFunction( mIsPow2, bool, ( S32 v ),,
+DefineEngineFunction( mIsPow2, bool, ( S32 v ),,
     "Returns whether the value is an exact power of two.\n"
     "@param v Input value."
     "@returns Whether the specified value is an exact power of two."
     "@ingroup Math" )
 {
    return isPow2( v );
+}
+
+DefineEngineFunction( mRandomDir, Point3F, (Point3F axis, F32 angleMin, F32 angleMax),,
+   "Returns a randomized direction based on a starting axis and the min/max angles.\n"
+   "@param axis Main axis to deviate the direction from."
+   "@param angleMin minimum amount of deviation from the axis."
+   "@param angleMax maximum amount of deviation from the axis."
+   "@returns Randomized direction vector."
+   "@ingroup Math")
+{
+   return MathUtils::randomDir(axis, angleMin, angleMax);
+}
+
+DefineEngineFunction( mRandomPointInSphere, Point3F, (F32 radius), ,
+   "Returns a randomized point inside a sphere of a given radius.\n"
+   "@param radius The radius of the sphere to find a point in."
+   "@returns Randomized point inside a sphere."
+   "@ingroup Math")
+{
+   return MathUtils::randomPointInSphere(radius);
+}
+
+DefineEngineFunction( mGetAngleBetweenVectors, F32, (VectorF vecA, VectorF vecB), ,
+   "Returns angle between two vectors.\n"
+   "@param vecA First input vector."
+   "@param vecB Second input vector."
+   "@returns Angle between both vectors in radians."
+   "@ingroup Math")
+{
+   return MathUtils::getAngleBetweenVectors(vecA, vecB);
+}
+
+DefineEngineFunction(mGetSignedAngleBetweenVectors, F32, (VectorF vecA, VectorF vecB, VectorF norm), (VectorF::Zero, VectorF::Zero, VectorF::Zero),
+   "Returns signed angle between two vectors, using a normal for orientation.\n"
+   "@param vecA First input vector."
+   "@param vecB Second input vector."
+   "@param norm Normal/Cross Product vector."
+   "@returns Angle between both vectors in radians."
+   "@ingroup Math")
+{
+   if (vecA.isZero() || vecB.isZero() || norm.isZero())
+   {
+      Con::errorf("mGetSignedAngleBetweenVectors - Error! Requires all 3 vectors used to be non-zero!");
+      return 0;
+   }
+
+   return MathUtils::getSignedAngleBetweenVectors(vecA, vecB, norm);
+}
+
+DefineEngineFunction(mBinToDec, S32, (String n),,"convert a binary to decimal")
+{
+   String num = n;
+   int dec_value = 0;
+
+   // Initializing base value to 1, i.e 2^0
+   int base = 1;
+
+   int len = num.length();
+   for (int i = len - 1; i >= 0; i--) {
+      if (num[i] == '1')//pick out our 1s and concatenate
+         dec_value += base;
+      base = base * 2;//next power of 2
+   }
+
+   return dec_value;
+}
+
+DefineEngineFunction(mDecToBin, const char*, (S32 n), , "convert decimal to a binary")
+{
+   String ret;
+   while (n > 0) {
+      int r = n % 2;//modulus aka remainder of 2. nets you a 0 or a 1
+      n /= 2;//next power of 2
+      ret = String::ToString("%i",r) + ret;//add to the front of the stack
+   }
+   return ret.c_str();
 }

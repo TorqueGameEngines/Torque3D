@@ -36,15 +36,6 @@
 //----------------------------------------------------------------------------
 
 // Client prediction
-static F32 sMinWarpTicks = 0.5 ;        // Fraction of tick at which instant warp occures
-static S32 sMaxWarpTicks = 3;           // Max warp duration in ticks
-
-const U32 sClientCollisionMask = (TerrainObjectType     |
-                                  StaticShapeObjectType |
-                                  VehicleObjectType);
-
-const U32 sServerCollisionMask = (sClientCollisionMask);
-
 // Trigger objects that are not normally collided with.
 static U32 sTriggerMask = ItemObjectType     |
                           TriggerObjectType  |
@@ -69,7 +60,7 @@ ConsoleDocClass( TurretShapeData,
    "@ingroup gameObjects\n"
 );
 
-IMPLEMENT_CALLBACK( TurretShapeData, onMountObject, void, ( TurretShape* turret, SceneObject* obj, S32 node ),( turret, obj, node ),
+IMPLEMENT_CALLBACK( TurretShapeData, onMountObject, void, ( SceneObject* turret, SceneObject* obj, S32 node ),( turret, obj, node ),
    "@brief Informs the TurretShapeData object that a player is mounting it.\n\n"
    "@param turret The TurretShape object.\n"
    "@param obj The player that is mounting.\n"
@@ -77,7 +68,7 @@ IMPLEMENT_CALLBACK( TurretShapeData, onMountObject, void, ( TurretShape* turret,
    "@note Server side only.\n"
 );
 
-IMPLEMENT_CALLBACK( TurretShapeData, onUnmountObject, void, ( TurretShape* turret, SceneObject* obj ),( turret, obj ),
+IMPLEMENT_CALLBACK( TurretShapeData, onUnmountObject, void, ( SceneObject* turret, SceneObject* obj ),( turret, obj ),
    "@brief Informs the TurretShapeData object that a player is unmounting it.\n\n"
    "@param turret The TurretShape object.\n"
    "@param obj The player that is unmounting.\n"
@@ -95,8 +86,6 @@ IMPLEMENT_CALLBACK( TurretShapeData, onStickyCollision, void, ( TurretShape* obj
 TurretShapeData::TurretShapeData()
 {
    weaponLinkType = FireTogether;
-
-   shadowEnable = true;
 
    zRotOnly = false;
 
@@ -123,57 +112,64 @@ TurretShapeData::TurretShapeData()
 
    headingNode = -1;
    pitchNode = -1;
-
-   for (U32 i=0; i<NumMirrorDirectionNodes; ++i)
+   U32 i = 0;
+   for (i=0; i<NumMirrorDirectionNodes; ++i)
    {
       pitchNodes[i] = -1;
       headingNodes[i] = -1;
    }
 
-   for (U32 i=0; i<ShapeBase::MaxMountedImages; ++i)
+   for (i=0; i<ShapeBase::MaxMountedImages; ++i)
    {
       weaponMountNode[i] = -1;
    }
+   for (i = 0; i < NumRecoilSequences;i++)
+      recoilSequence[i] = -1;
+   pitchSequence = -1;
+   headingSequence = -1;
 }
 
 void TurretShapeData::initPersistFields()
 {
-   addField("zRotOnly",       TypeBool,         Offset(zRotOnly,       TurretShapeData),
-      "@brief Should the turret allow only z rotations.\n\n"
-      "True indicates that the turret may only be rotated on its z axis, just like the Item class.  "
-      "This keeps the turret always upright regardless of the surface it lands on.\n");
+   docsURL;
+   Parent::initPersistFields();
+   addGroup("Steering");
+      addField("zRotOnly",       TypeBool,         Offset(zRotOnly,       TurretShapeData),
+         "@brief Should the turret allow only z rotations.\n\n"
+         "True indicates that the turret may only be rotated on its z axis, just like the Item class.  "
+         "This keeps the turret always upright regardless of the surface it lands on.\n");
+      addField("maxHeading",        TypeF32,       Offset(maxHeading,         TurretShapeData),
+         "@brief Maximum number of degrees to rotate from center.\n\n"
+         "A value of 180 or more degrees indicates the turret may rotate completely around.\n");
+      addField("minPitch",          TypeF32,       Offset(minPitch,           TurretShapeData),
+         "@brief Minimum number of degrees to rotate down from straight ahead.\n\n");
+      addField("maxPitch",          TypeF32,       Offset(maxPitch,           TurretShapeData),
+         "@brief Maximum number of degrees to rotate up from straight ahead.\n\n");
+      addField("headingRate",       TypeF32,       Offset(headingRate,        TurretShapeData),
+         "@brief Degrees per second rotation.\n\n"
+         "A value of 0 means no rotation is allowed.  A value less than 0 means the rotation is instantaneous.\n");
+      addField("pitchRate",         TypeF32,       Offset(pitchRate,          TurretShapeData),
+         "@brief Degrees per second rotation.\n\n"
+         "A value of 0 means no rotation is allowed.  A value less than 0 means the rotation is instantaneous.\n");
+   endGroup("Steering");
 
+   addGroup("Weapon State");
    addField( "weaponLinkType", TYPEID< TurretShapeData::FireLinkType >(), Offset(weaponLinkType, TurretShapeData),
       "@brief Set how the mounted weapons are linked and triggered.\n\n"
       "<ul><li>FireTogether: All weapons fire under trigger 0.</li>"
       "<li>GroupedFire: Weapon mounts 0,2 fire under trigger 0, mounts 1,3 fire under trigger 1.</li>"
       "<li>IndividualFire: Each weapon mount fires under its own trigger 0-3.</li></ul>\n"
       "@see TurretShapeFireLinkType");
-
    addField("startLoaded",       TypeBool,       Offset(startLoaded,       TurretShapeData),
       "@brief Does the turret's mounted weapon(s) start in a loaded state.\n\n"
       "True indicates that all mounted weapons start in a loaded state.\n"
       "@see ShapeBase::setImageLoaded()");
+   endGroup("Weapon State");
 
+   addGroup("Camera", "The settings used by the shape when it is the camera.");
    addField("cameraOffset",      TypeF32,       Offset(cameraOffset,       TurretShapeData),
       "Vertical (Z axis) height of the camera above the turret." );
-
-   addField("maxHeading",        TypeF32,       Offset(maxHeading,         TurretShapeData),
-      "@brief Maximum number of degrees to rotate from center.\n\n"
-      "A value of 180 or more degrees indicates the turret may rotate completely around.\n");
-   addField("minPitch",          TypeF32,       Offset(minPitch,           TurretShapeData),
-      "@brief Minimum number of degrees to rotate down from straight ahead.\n\n");
-   addField("maxPitch",          TypeF32,       Offset(maxPitch,           TurretShapeData),
-      "@brief Maximum number of degrees to rotate up from straight ahead.\n\n");
-
-   addField("headingRate",       TypeF32,       Offset(headingRate,        TurretShapeData),
-      "@brief Degrees per second rotation.\n\n"
-      "A value of 0 means no rotation is allowed.  A value less than 0 means the rotation is instantaneous.\n");
-   addField("pitchRate",         TypeF32,       Offset(pitchRate,          TurretShapeData),
-      "@brief Degrees per second rotation.\n\n"
-      "A value of 0 means no rotation is allowed.  A value less than 0 means the rotation is instantaneous.\n");
-
-   Parent::initPersistFields();
+   endGroup("Camera");
 }
 
 void TurretShapeData::packData(BitStream* stream)
@@ -262,7 +258,7 @@ ConsoleDocClass( TurretShape,
 
 TurretShape::TurretShape()
 {
-   mTypeMask |= VehicleObjectType | DynamicShapeObjectType;
+   mTypeMask |= VehicleObjectType | DynamicShapeObjectType | TurretObjectType;
    mDataBlock = 0;
 
    allowManualRotation = true;
@@ -293,6 +289,8 @@ TurretShape::TurretShape()
 
    // For the Item class
    mSubclassItemHandlesScene = true;
+   mRecoilThread = NULL;
+   mImageStateThread = NULL;
 }
 
 TurretShape::~TurretShape()
@@ -303,6 +301,7 @@ TurretShape::~TurretShape()
 
 void TurretShape::initPersistFields()
 {
+   docsURL;
    addField("respawn",        TypeBool,      Offset(mRespawn,      TurretShape),
       "@brief Respawn the turret after it has been destroyed.\n\n"
       "If true, the turret will respawn after it is destroyed.\n");
@@ -632,13 +631,6 @@ void TurretShape::processTick(const Move* move)
    if (!isGhost())
       updateAnimation(TickSec);
 
-   if (isMounted()) {
-      MatrixF mat;
-      mMount.object->getMountTransform( mMount.node, mMount.xfm, &mat );
-      ShapeBase::setTransform(mat);
-      ShapeBase::setRenderTransform(mat);
-   }
-
    updateMove(move);
 }
 
@@ -679,19 +671,11 @@ void TurretShape::advanceTime(F32 dt)
       }
    }
 
-   // If there is a recoil or image-based thread then
-   // we also need to update the nodes.
-   if (mRecoilThread || mImageStateThread)
-      updateNodes = true;
-
    Parent::advanceTime(dt);
 
    updateAnimation(dt);
 
-   if (updateNodes)
-   {
-      _updateNodes(mRot);
-   }
+   _setRotation(mRot);
 }
 
 void TurretShape::setTransform( const MatrixF& mat )
@@ -948,7 +932,7 @@ void TurretShape::unmountObject( SceneObject *obj )
    }
 }
 
-void TurretShape::onUnmount(ShapeBase*,S32)
+void TurretShape::onUnmount(SceneObject*,S32)
 {
    // Make sure the client get's the final server pos of this turret.
    setMaskBits(PositionMask);
@@ -1059,9 +1043,9 @@ void TurretShape::writePacketData(GameConnection *connection, BitStream *stream)
 {
    // Update client regardless of status flags.
    Parent::writePacketData(connection, stream);
-
-   stream->write(mRot.x);
-   stream->write(mRot.z);
+   
+   stream->writeSignedFloat(mRot.x / M_2PI_F, 7);
+   stream->writeSignedFloat(mRot.z / M_2PI_F, 7);
 }
 
 void TurretShape::readPacketData(GameConnection *connection, BitStream *stream)
@@ -1069,9 +1053,8 @@ void TurretShape::readPacketData(GameConnection *connection, BitStream *stream)
    Parent::readPacketData(connection, stream);
 
    Point3F rot(0.0f, 0.0f, 0.0f);
-   stream->read(&rot.x);
-   stream->read(&rot.z);
-
+   rot.x = stream->readSignedFloat(7) * M_2PI_F;
+   rot.z = stream->readSignedFloat(7) * M_2PI_F;
    _setRotation(rot);
 
    mTurretDelta.rot = rot;
@@ -1100,8 +1083,8 @@ U32 TurretShape::packUpdate(NetConnection *connection, U32 mask, BitStream *stre
 
    if (stream->writeFlag(mask & TurretUpdateMask))
    {
-      stream->write(mRot.x);
-      stream->write(mRot.z);
+      stream->writeSignedFloat(mRot.x / M_2PI_F, 7);
+      stream->writeSignedFloat(mRot.z / M_2PI_F, 7);
       stream->write(allowManualRotation);
       stream->write(allowManualFire);
    }
@@ -1137,8 +1120,8 @@ void TurretShape::unpackUpdate(NetConnection *connection, BitStream *stream)
    if (stream->readFlag())
    {
       Point3F rot(0.0f, 0.0f, 0.0f);
-      stream->read(&rot.x);
-      stream->read(&rot.z);
+      rot.x = stream->readSignedFloat(7) * M_2PI_F;
+      rot.z = stream->readSignedFloat(7) * M_2PI_F;
       _setRotation(rot);
 
       // New delta for client side interpolation

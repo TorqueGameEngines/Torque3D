@@ -1,0 +1,4 @@
+<GUIAsset
+    AssetName="RemapDlg"
+    GUIFile="@assetFile=remapDlg.gui"
+    VersionId="1"/>

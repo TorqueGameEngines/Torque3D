@@ -32,9 +32,9 @@
 IMPLEMENT_CONOBJECT( MECreateUndoAction );
 
 ConsoleDocClass( MECreateUndoAction,
-				"@brief Material Editor create undo instance\n\n"
-				"Not intended for game development, for editors or internal use only.\n\n "
-				"@internal");
+            "@brief Material Editor create undo instance\n\n"
+            "Not intended for game development, for editors or internal use only.\n\n "
+            "@internal");
 
 MECreateUndoAction::MECreateUndoAction( const UTF8* actionName )
    :  UndoAction( actionName )
@@ -47,6 +47,7 @@ MECreateUndoAction::~MECreateUndoAction()
 
 void MECreateUndoAction::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 
@@ -62,7 +63,7 @@ DefineEngineMethod( MECreateUndoAction, addObject, void, ( SimObject* obj),,
    "Add the object being created to an undo action.\n"
    "@param obj Object being created you want to create the undo for.")
 {
-	if (obj)
+   if (obj)
       object->addObject( obj );
 }
 
@@ -117,9 +118,9 @@ void MECreateUndoAction::redo()
 IMPLEMENT_CONOBJECT( MEDeleteUndoAction );
 
 ConsoleDocClass( MEDeleteUndoAction,
-				"@brief Material Editor delete undo instance\n\n"
-				"Not intended for game development, for editors or internal use only.\n\n "
-				"@internal");
+            "@brief Material Editor delete undo instance\n\n"
+            "Not intended for game development, for editors or internal use only.\n\n "
+            "@internal");
 
 MEDeleteUndoAction::MEDeleteUndoAction( const UTF8 *actionName )
    :  UndoAction( actionName )
@@ -132,6 +133,7 @@ MEDeleteUndoAction::~MEDeleteUndoAction()
 
 void MEDeleteUndoAction::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 
@@ -155,6 +157,9 @@ void MEDeleteUndoAction::deleteObject( SimObject *object )
    if ( group )
       state.groupId = group->getId();
 
+   //Do any special handling of delete actions the object may do
+   object->handleDeleteAction();
+
    // Now delete the object.
    object->deleteObject();
 }
@@ -169,7 +174,7 @@ DefineEngineMethod( MEDeleteUndoAction, deleteObject, void, ( SimObject* obj),,
    "Delete the object and add it to the undo action.\n"
    "@param obj Object to delete and add to the undo action.")
 {
-	if (obj)
+   if (obj)
       object->deleteObject( obj );
 }
 
@@ -210,16 +215,17 @@ void MEDeleteUndoAction::redo()
 IMPLEMENT_CONOBJECT( InspectorFieldUndoAction );
 
 ConsoleDocClass( InspectorFieldUndoAction,
-				"@brief Inspector Field undo action instance\n\n"
-				"Not intended for game development, for editors or internal use only.\n\n "
-				"@internal");
+            "@brief Inspector Field undo action instance\n\n"
+            "Not intended for game development, for editors or internal use only.\n\n "
+            "@internal");
 
 InspectorFieldUndoAction::InspectorFieldUndoAction()
 {
+   mInspector = NULL;
    mObjId = 0;
    mField = NULL; 
-   mSlotName = StringTable->insert("");
-   mArrayIdx = StringTable->insert("");
+   mSlotName = StringTable->EmptyString();
+   mArrayIdx = StringTable->EmptyString();
 }
 
 InspectorFieldUndoAction::InspectorFieldUndoAction( const UTF8 *actionName )
@@ -228,12 +234,13 @@ InspectorFieldUndoAction::InspectorFieldUndoAction( const UTF8 *actionName )
    mInspector = NULL;
    mObjId = 0;
    mField = NULL; 
-   mSlotName = StringTable->insert("");
-   mArrayIdx = StringTable->insert("");
+   mSlotName = StringTable->EmptyString();
+   mArrayIdx = StringTable->EmptyString();
 }
 
 void InspectorFieldUndoAction::initPersistFields()
 {
+   docsURL;
    addField( "inspectorGui", TYPEID< GuiInspector >(), Offset( mInspector, InspectorFieldUndoAction ) );
    addField( "objectId", TypeS32, Offset( mObjId, InspectorFieldUndoAction ) );
    addField( "fieldName", TypeString, Offset( mSlotName, InspectorFieldUndoAction ) );

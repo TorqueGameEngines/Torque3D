@@ -119,38 +119,39 @@ AITurretShapeData::AITurretShapeData()
    }
    isAnimated = false;
    statesLoaded = false;
+   fireState = -1;
 }
 
 void AITurretShapeData::initPersistFields()
 {
-   addField("maxScanHeading",       TypeF32,       Offset(maxScanHeading,        AITurretShapeData),
-      "@brief Maximum number of degrees to scan left and right.\n\n"
-      "@note Maximum scan heading is 90 degrees.\n");
-   addField("maxScanPitch",         TypeF32,       Offset(maxScanPitch,          AITurretShapeData),
-      "@brief Maximum number of degrees to scan up and down.\n\n"
-      "@note Maximum scan pitch is 90 degrees.\n");
-   addField("maxScanDistance",      TypeF32,       Offset(maxScanDistance,       AITurretShapeData),
-      "@brief Maximum distance to scan.\n\n"
-      "When combined with maxScanHeading and maxScanPitch this forms a 3D scanning wedge used to initially "
-      "locate a target.\n");
-
-   addField("scanTickFrequency",          TypeS32,       Offset(scanTickFrequency,       AITurretShapeData),
-      "@brief How often should we perform a full scan when looking for a target.\n\n"
-      "Expressed as the number of ticks between full scans, but no less than 1.\n");
-   addField("scanTickFrequencyVariance",  TypeS32,       Offset(scanTickFrequencyVariance,       AITurretShapeData),
-      "@brief Random amount that should be added to the scan tick frequency each scan period.\n\n"
-      "Expressed as the number of ticks to randomly add, but no less than zero.\n");
-
-   addField("trackLostTargetTime",  TypeF32,       Offset(trackLostTargetTime,       AITurretShapeData),
-      "@brief How long after the turret has lost the target should it still track it.\n\n"
-      "Expressed in seconds.\n");
-
+   docsURL;
+   Parent::initPersistFields();
+   addGroup("AI Steering");
+      addField("maxScanHeading",       TypeF32,       Offset(maxScanHeading,        AITurretShapeData),
+         "@brief Maximum number of degrees to scan left and right.\n\n"
+         "@note Maximum scan heading is 90 degrees.\n");
+      addField("maxScanPitch",         TypeF32,       Offset(maxScanPitch,          AITurretShapeData),
+         "@brief Maximum number of degrees to scan up and down.\n\n"
+         "@note Maximum scan pitch is 90 degrees.\n");
+      addField("maxScanDistance",      TypeF32,       Offset(maxScanDistance,       AITurretShapeData),
+         "@brief Maximum distance to scan.\n\n"
+         "When combined with maxScanHeading and maxScanPitch this forms a 3D scanning wedge used to initially "
+         "locate a target.\n");
+      addField("scanTickFrequency",          TypeS32,       Offset(scanTickFrequency,       AITurretShapeData),
+         "@brief How often should we perform a full scan when looking for a target.\n\n"
+         "Expressed as the number of ticks between full scans, but no less than 1.\n");
+      addField("scanTickFrequencyVariance",  TypeS32,       Offset(scanTickFrequencyVariance,       AITurretShapeData),
+         "@brief Random amount that should be added to the scan tick frequency each scan period.\n\n"
+         "Expressed as the number of ticks to randomly add, but no less than zero.\n");
+      addField("trackLostTargetTime",  TypeF32,       Offset(trackLostTargetTime,       AITurretShapeData),
+         "@brief How long after the turret has lost the target should it still track it.\n\n"
+         "Expressed in seconds.\n");
    addField("maxWeaponRange",       TypeF32,       Offset(maxWeaponRange,       AITurretShapeData),
       "@brief Maximum distance that the weapon will fire upon a target.\n\n");
-
    addField("weaponLeadVelocity",   TypeF32,       Offset(weaponLeadVelocity,   AITurretShapeData),
       "@brief Velocity used to lead target.\n\n"
       "If value <= 0, don't lead target.\n");
+   endGroup("AI Steering");
 
    // State arrays
    addArray( "States", MaxStates );
@@ -195,8 +196,6 @@ void AITurretShapeData::initPersistFields()
          "Scoped to AITurretShapeData.");
 
    endArray( "States" );
-
-   Parent::initPersistFields();
 }
 
 bool AITurretShapeData::onAdd()
@@ -249,14 +248,11 @@ bool AITurretShapeData::preload(bool server, String &errorStr)
    // We have mShape at this point.  Resolve nodes.
    scanNode = mShape->findNode("scanPoint");
    aimNode = mShape->findNode("aimPoint");
-   if (aimNode == -1)
-   {
-      aimNode = pitchNode;
-   }
-   if (aimNode == -1)
-   {
-      aimNode = headingNode;
-   }
+
+   if (scanNode == -1) scanNode = pitchNode;
+   if (scanNode == -1) scanNode = headingNode;
+   if (aimNode == -1) aimNode = pitchNode;
+   if (aimNode == -1) aimNode = headingNode;
 
    // Resolve state sequence names & emitter nodes
    isAnimated = false;
@@ -470,6 +466,7 @@ AITurretShape::~AITurretShape()
 
 void AITurretShape::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 
@@ -563,6 +560,21 @@ void AITurretShape::addToIgnoreList(ShapeBase* obj)
 void AITurretShape::removeFromIgnoreList(ShapeBase* obj)
 {
    mIgnoreObjects.removeObject(obj);
+}
+
+void AITurretShape::clearIgnoreList()
+{
+   mIgnoreObjects.clear();
+}
+
+S32 AITurretShape::ignoreListCount()
+{
+   return mIgnoreObjects.size();
+}
+
+SimObject* AITurretShape::getIgnoreListObject(S32 index)
+{
+   return mIgnoreObjects.at(index);
 }
 
 //----------------------------------------------------------------------------
@@ -1158,7 +1170,7 @@ U32 AITurretShape::packUpdate(NetConnection *connection, U32 mask, BitStream *bs
    U32 retMask = Parent::packUpdate(connection,mask,bstream);
 
    // Indicate that the transform has changed to update the scan box
-   bstream->writeFlag(mask & PositionMask | ExtendedInfoMask);
+   bstream->writeFlag(mask & (PositionMask | ExtendedInfoMask));
 
    // Handle any state changes that need to be passed along
    if (bstream->writeFlag(mask & TurretStateMask))
@@ -1243,6 +1255,28 @@ DefineEngineMethod( AITurretShape, removeFromIgnoreList, void, (ShapeBase* obj),
    "@param obj The ShapeBase object to once again allow for targeting.\n")
 {
    object->removeFromIgnoreList(obj);
+}
+
+DefineEngineMethod( AITurretShape, clearIgnoreList, void, (),,
+   "@brief Removes all objects from the turret's ignore list.\n\n"
+   "All objects in this list will be ignored by the turret's targeting.\n")
+{
+   object->clearIgnoreList();
+}
+
+DefineEngineMethod( AITurretShape, ignoreListCount, S32, (),,
+   "@brief Returns the number of objects in the turrets ignore list.\n\n"
+   "All objects in this list will be ignored by the turret's targeting.\n")
+{
+   return object->ignoreListCount();
+}
+
+DefineEngineMethod( AITurretShape, getIgnoreListObject, SimObject*, (S32 index),,
+   "@brief Returns the object in the ignore list at index.\n\n"
+   "All objects in this list will be ignored by the turret's targeting.\n"
+   "@param index The index of the object in the ignore list being retrieved.\n")
+{
+   return object->getIgnoreListObject(index);
 }
 
 DefineEngineMethod( AITurretShape, setTurretState, void, (const char* newState, bool force), (false),

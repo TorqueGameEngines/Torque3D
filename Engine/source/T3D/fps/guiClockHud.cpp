@@ -42,9 +42,9 @@ class GuiClockHud : public GuiControl
    bool     mShowFill;
    bool     mTimeReversed;
 
-   ColorF   mFillColor;
-   ColorF   mFrameColor;
-   ColorF   mTextColor;
+   LinearColorF   mFillColor;
+   LinearColorF   mFrameColor;
+   LinearColorF   mTextColor;
 
    S32      mTimeOffset;
 
@@ -87,6 +87,7 @@ ConsoleDocClass( GuiClockHud,
 GuiClockHud::GuiClockHud()
 {
    mShowFrame = mShowFill = true;
+   mTimeReversed = false;
    mFillColor.set(0, 0, 0, 0.5);
    mFrameColor.set(0, 1, 0, 1);
    mTextColor.set( 0, 1, 0, 1 );
@@ -96,6 +97,7 @@ GuiClockHud::GuiClockHud()
 
 void GuiClockHud::initPersistFields()
 {
+   docsURL;
    addGroup("Misc");		
    addField( "showFill", TypeBool, Offset( mShowFill, GuiClockHud ), "If true, draws a background color behind the control.");
    addField( "showFrame", TypeBool, Offset( mShowFrame, GuiClockHud ), "If true, draws a frame around the control." );
@@ -112,9 +114,11 @@ void GuiClockHud::initPersistFields()
 
 void GuiClockHud::onRender(Point2I offset, const RectI &updateRect)
 {
+   GFXDrawUtil* drawUtil = GFX->getDrawUtil();
+
    // Background first
    if (mShowFill)
-      GFX->getDrawUtil()->drawRectFill(updateRect, mFillColor);
+      drawUtil->drawRectFill(updateRect, mFillColor.toColorI());
 
    // Convert ms time into hours, minutes and seconds.
    S32 time = S32(getTime());
@@ -128,13 +132,13 @@ void GuiClockHud::onRender(Point2I offset, const RectI &updateRect)
    // Center the text
    offset.x += (getWidth() - mProfile->mFont->getStrWidth((const UTF8 *)buf)) / 2;
    offset.y += (getHeight() - mProfile->mFont->getHeight()) / 2;
-   GFX->getDrawUtil()->setBitmapModulation(mTextColor);
-   GFX->getDrawUtil()->drawText(mProfile->mFont, offset, buf);
-   GFX->getDrawUtil()->clearBitmapModulation();
+   drawUtil->setBitmapModulation(mTextColor.toColorI());
+   drawUtil->drawText(mProfile->mFont, offset, buf);
+   drawUtil->clearBitmapModulation();
 
    // Border last
    if (mShowFrame)
-      GFX->getDrawUtil()->drawRect(updateRect, mFrameColor);
+      drawUtil->drawRect(updateRect, mFrameColor.toColorI());
 }
 
 

@@ -1,0 +1,5 @@
+<GUIAsset
+    AssetName="JoinServerMenu"
+    scriptFile="@assetFile=joinServerMenu"
+    GUIFile="@assetFile=joinServerMenu.gui"
+    VersionId="1"/>

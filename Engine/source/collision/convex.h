@@ -56,10 +56,10 @@ public:
    Vector<Edge> mEdgeList;
    Vector<Face> mFaceList;
    BaseMatInstance* material;
-   SceneObject* object;
+   SceneObject* mObject;
 
    ConvexFeature()
-      : mVertexList(64), mEdgeList(128), mFaceList(64), material( 0 )
+      : mVertexList(64), mEdgeList(128), mFaceList(64), material( 0 ), mObject(NULL)
    {
       VECTOR_SET_ASSOCIATION(mVertexList);
       VECTOR_SET_ASSOCIATION(mEdgeList);
@@ -100,11 +100,11 @@ struct CollisionState
 {
    CollisionStateList* mLista;
    CollisionStateList* mListb;
-   Convex* a;
-   Convex* b;
+   Convex* mA;
+   Convex* mB;
 
-   F32 dist;            // Current estimated distance
-   VectorF v;           // Vector between closest points
+   F32 mDist;            // Current estimated distance
+   VectorF mDistvec;     // Vector between closest points
 
    //
    CollisionState();

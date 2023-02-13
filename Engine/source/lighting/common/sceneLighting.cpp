@@ -24,6 +24,7 @@
 #include "lighting/common/sceneLighting.h"
 
 #include "T3D/gameBase/gameConnection.h"
+#include "console/engineAPI.h"
 #include "console/consoleTypes.h"
 #include "scene/sceneManager.h"
 #include "lighting/common/shadowVolumeBSP.h"
@@ -439,7 +440,8 @@ SceneLighting::SceneLighting(AvailableSLInterfaces* lightingInterfaces)
    mStartTime = 0;
    mFileName[0] = '\0';
    mSceneManager = NULL;
-
+   sgTimeTemp = 0;
+   sgTimeTemp2 = 0;
    // Registering vars more than once doesn't hurt anything.
    Con::addVariable("$sceneLighting::terminateLighting", TypeBool, &gTerminateLighting);
    Con::addVariable("$sceneLighting::lightingProgress", TypeF32, &gLightingProgress);
@@ -605,7 +607,7 @@ void SceneLighting::completed(bool success)
    }
 
    if(gCompleteCallback && gCompleteCallback[0])
-      Con::executef(gCompleteCallback);
+      Con::executef((const char*)gCompleteCallback);
 
    dFree(gCompleteCallback);
    gCompleteCallback = NULL;
@@ -1011,13 +1013,14 @@ void SceneLighting::processCache()
 	// go through and remove the best candidate first (sorted reverse)
 	while(((curCacheSize >> 10) > quota) && files.size())
 	{
-		curCacheSize -= files.last().mFileObject->getSize();
+      CacheEntry& lastFile = files.last();
+      curCacheSize -= lastFile.mFileObject->getSize();
 
 		// no sneaky names
-		if(!dStrstr(files.last().mFileName, ".."))
+      if (!dStrstr(lastFile.mFileName, ".."))
 		{
-			Con::warnf("Removing lighting file '%s'.", files.last().mFileName);
-			dFileDelete(files.last().mFileName);
+         Con::warnf("Removing lighting file '%s'.", lastFile.mFileName);
+         dFileDelete(lastFile.mFileName);
 		}
 
 		files.pop_back();

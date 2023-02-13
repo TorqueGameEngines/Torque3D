@@ -41,6 +41,7 @@
 #include "materials/baseMatInstance.h"
 #include "materials/sceneData.h"
 #include "environment/timeOfDay.h"
+#include "materials/materialFeatureTypes.h"
 
 
 ConsoleDocClass( ScatterSky,
@@ -82,13 +83,6 @@ const F32 ScatterSky::smEarthRadius = (6378.0f * 1000.0f);
 const F32 ScatterSky::smAtmosphereRadius = 200000.0f;
 const F32 ScatterSky::smViewerHeight = 1.0f;
 
-GFXImplementVertexFormat( ScatterSkyVertex )
-{
-   addElement( "POSITION", GFXDeclType_Float3 );
-   addElement( "NORMAL", GFXDeclType_Float3 );
-   addElement( "COLOR", GFXDeclType_Color );
-}
-
 ScatterSky::ScatterSky()
 {
    mPrimCount = 0;
@@ -129,10 +123,10 @@ ScatterSky::ScatterSky()
    mAmbientScale.set( 1.0f, 1.0f, 1.0f, 1.0f );
 
    mSunColor.set( 0, 0, 0, 1.0f );
-   mSunScale = ColorF::WHITE;
+   mSunScale = LinearColorF::WHITE;
 
    mFogColor.set( 0, 0, 0, 1.0f );
-   mFogScale = ColorF::WHITE;
+   mFogScale = LinearColorF::WHITE;
 
    mExposure = 1.0f;
    mNightInterpolant = 0;
@@ -151,6 +145,8 @@ ScatterSky::ScatterSky()
    mBrightness = 1.0f;
 
    mCastShadows = true;
+   mStaticRefreshFreq = 8;
+   mDynamicRefreshFreq = 8;
    mDirty = true;
 
    mLight = LightManager::createLightInfo();
@@ -170,7 +166,10 @@ ScatterSky::ScatterSky()
    mNightColor.set( 0.0196078f, 0.0117647f, 0.109804f, 1.0f );
    mNightFogColor = mNightColor;
    mUseNightCubemap = false;
+   mNightCubemapName = StringTable->EmptyString();
    mSunSize = 1.0f;
+
+   INIT_ASSET(MoonMat);
 
    mMoonMatInst = NULL;
 
@@ -271,6 +270,8 @@ void ScatterSky::_conformLights()
    mLight->setAmbient( mAmbientColor );
    mLight->setColor( mSunColor );
    mLight->setCastShadows( mCastShadows );
+   mLight->setStaticRefreshFreq(mStaticRefreshFreq);
+   mLight->setDynamicRefreshFreq(mDynamicRefreshFreq);
 
    FogData fog = getSceneManager()->getFogData();
    fog.color = mFogColor;
@@ -319,6 +320,7 @@ void ScatterSky::inspectPostApply()
 
 void ScatterSky::initPersistFields()
 {
+   docsURL;
    addGroup( "ScatterSky",
       "Only azimuth and elevation are networked fields. To trigger a full update of all other fields use the applyChanges ConsoleMethod." );
 
@@ -381,6 +383,9 @@ void ScatterSky::initPersistFields()
       addField( "castShadows", TypeBool, Offset( mCastShadows, ScatterSky ),
          "Enables/disables shadows cast by objects due to ScatterSky light." );
 
+      addField("staticRefreshFreq", TypeS32, Offset(mStaticRefreshFreq, ScatterSky), "static shadow refresh rate (milliseconds)");
+      addField("dynamicRefreshFreq", TypeS32, Offset(mDynamicRefreshFreq, ScatterSky), "dynamic shadow refresh rate (milliseconds)");
+
       addField( "brightness", TypeF32, Offset( mBrightness, ScatterSky ),
          "The brightness of the ScatterSky's light object." );
 
@@ -407,8 +412,7 @@ void ScatterSky::initPersistFields()
       addField( "moonEnabled", TypeBool, Offset( mMoonEnabled, ScatterSky ),
          "Enable or disable rendering of the moon sprite during night." );
 
-      addField( "moonMat", TypeMaterialName, Offset( mMoonMatName, ScatterSky ),
-         "Material for the moon sprite." );
+      INITPERSISTFIELD_MATERIALASSET(MoonMat, ScatterSky, "Material for the moon sprite.");
 
       addField( "moonScale", TypeF32, Offset( mMoonScale, ScatterSky ),
          "Controls size the moon sprite renders, specified as a fractional amount of the screen height." );
@@ -487,6 +491,8 @@ U32 ScatterSky::packUpdate(NetConnection *con, U32 mask, BitStream *stream)
       stream->write( mBrightness );
 
       stream->writeFlag( mCastShadows );
+      stream->write(mStaticRefreshFreq);
+      stream->write(mDynamicRefreshFreq);
 
       stream->write( mFlareScale );
 
@@ -498,11 +504,13 @@ U32 ScatterSky::packUpdate(NetConnection *con, U32 mask, BitStream *stream)
       }
 
       stream->writeFlag( mMoonEnabled );
-      stream->write( mMoonMatName );
+
+      PACK_ASSET(con, MoonMat);
+      
       stream->write( mMoonScale );
       stream->write( mMoonTint );
       stream->writeFlag( mUseNightCubemap );
-      stream->write( mNightCubemapName );
+      stream->writeString( mNightCubemapName );
 
       stream->write( mMoonAzimuth );
       stream->write( mMoonElevation );
@@ -546,7 +554,7 @@ void ScatterSky::unpackUpdate(NetConnection *con, BitStream *stream)
 
       stream->read( &mScale );
 
-      ColorF tmpColor( 0, 0, 0 );
+      LinearColorF tmpColor( 0, 0, 0 );
 
       stream->read( &tmpColor );
 
@@ -588,6 +596,8 @@ void ScatterSky::unpackUpdate(NetConnection *con, BitStream *stream)
       stream->read( &mBrightness );
 
       mCastShadows = stream->readFlag();
+      stream->read(&mStaticRefreshFreq);
+      stream->read(&mDynamicRefreshFreq);
 
       stream->read( &mFlareScale );
 
@@ -608,11 +618,13 @@ void ScatterSky::unpackUpdate(NetConnection *con, BitStream *stream)
          mFlareData = NULL;
 
       mMoonEnabled = stream->readFlag();
-      stream->read( &mMoonMatName );
+
+      UNPACK_ASSET(con, MoonMat);
+
       stream->read( &mMoonScale );
       stream->read( &mMoonTint );
       mUseNightCubemap = stream->readFlag();
-      stream->read( &mNightCubemapName );
+      mNightCubemapName = stream->readSTString();
 
       stream->read( &mMoonAzimuth );
       stream->read( &mMoonElevation );
@@ -637,12 +649,13 @@ void ScatterSky::prepRenderImage( SceneRenderState *state )
       return;
 
    // Regular sky render instance.
-   ObjectRenderInst *ri = state->getRenderPass()->allocInst<ObjectRenderInst>();
+   RenderPassManager* renderPass = state->getRenderPass();
+   ObjectRenderInst *ri = renderPass->allocInst<ObjectRenderInst>();
    ri->renderDelegate.bind( this, &ScatterSky::_render );
    ri->type = RenderPassManager::RIT_Sky;
-   ri->defaultKey = 10;
+   ri->defaultKey = 15;
    ri->defaultKey2 = 0;
-   state->getRenderPass()->addInst( ri );
+   renderPass->addInst(ri);
 
    // Debug render instance.
    /*
@@ -662,11 +675,11 @@ void ScatterSky::prepRenderImage( SceneRenderState *state )
       mFlareState.scale = mFlareScale;
       mFlareState.lightInfo = mLight;
 
-      Point3F lightPos = state->getCameraPosition() - state->getFarPlane() * mLight->getDirection() * 0.9f;
+      Point3F lightPos = state->getDiffuseCameraPosition() - state->getFarPlane() * mLight->getDirection() * 0.9f;
       mFlareState.lightMat.identity();
       mFlareState.lightMat.setPosition( lightPos );
 
-      F32 dist = ( lightPos - state->getCameraPosition( ) ).len( );
+      F32 dist = ( lightPos - state->getDiffuseCameraPosition( ) ).len( );
       F32 coronaScale = 0.5f;
       F32 screenRadius = GFX->getViewport( ).extent.y * coronaScale * 0.5f;
       mFlareState.worldRadius = screenRadius * dist / state->getWorldToScreenScale( ).y;
@@ -685,13 +698,13 @@ void ScatterSky::prepRenderImage( SceneRenderState *state )
       mMatrixSet->setSceneProjection(GFX->getProjectionMatrix());
       mMatrixSet->setWorld(GFX->getWorldMatrix());
 
-      ObjectRenderInst *ri = state->getRenderPass()->allocInst<ObjectRenderInst>();
-      ri->renderDelegate.bind( this, &ScatterSky::_renderMoon );
-      ri->type = RenderPassManager::RIT_Sky;
+      ObjectRenderInst *moonRI = renderPass->allocInst<ObjectRenderInst>();
+	  moonRI->renderDelegate.bind( this, &ScatterSky::_renderMoon );
+	  moonRI->type = RenderPassManager::RIT_Sky;
       // Render after sky objects and before CloudLayer!
-      ri->defaultKey = 5;
-      ri->defaultKey2 = 0;
-      state->getRenderPass()->addInst( ri );
+	  moonRI->defaultKey = 10;
+	  moonRI->defaultKey2 = 0;
+      renderPass->addInst(moonRI);
    }
 }
 
@@ -747,73 +760,146 @@ bool ScatterSky::_initShader()
    return true;
 }
 
+void ScatterSky::clearVectors()
+{
+   tmpVertices.clear();
+   vertsVec.clear();
+}
+
+void ScatterSky::addVertex(Point3F vert)
+{
+   vertsVec.push_back(vert.x);
+   vertsVec.push_back(vert.y);
+   vertsVec.push_back(vert.z);
+}
+
+void ScatterSky::BuildFinalVert()
+{
+   U32 count = vertsVec.size();
+   U32 i, j;
+   for (i = 0, j = 0; i < count; i += 3, j += 2)
+   {
+      FinalVertexData temp;
+      temp.pos.set(Point3F(vertsVec[i], vertsVec[i + 1], vertsVec[i + 2]));
+
+      finalVertData.push_back(temp);
+   }
+}
+
 void ScatterSky::_initVBIB()
 {
+   U32 rings = 18;
+   U32 height = 9;
+   U32 radius = 10;
+
+   F32 x, y, z, xy;                     // vertex position
+
+   F32 ringStep = M_2PI / rings;
+   F32 heightStep = M_HALFPI / height; // M_PI for full sphere.
+   F32 ringAng, heightAng;
+
+   //clear vecs
+   clearVectors();
+
+   for (U32 i = 0; i <= height; ++i)
+   {
+      heightAng = M_PI / 2 - (F32)i * heightStep;
+      xy = radius * mCos(heightAng);
+      z = radius * mSin(heightAng);
+
+      for (U32 j = 0; j <= rings; ++j)
+      {
+         SphereVertex vert;
+         ringAng = j * ringStep;
+         x = xy * mCos(ringAng);
+         y = xy * mSin(ringAng);
+         vert.pos.set(Point3F(x, y, z));
+
+         tmpVertices.push_back(vert);
+      }
+   }
+
+   SphereVertex v1, v2, v3, v4;
+   U32 vi1, vi2 = 0;
+
+   for (U32 i = 0; i < height; ++i)
+   {
+      vi1 = i * (rings + 1);
+      vi2 = (i + 1) * (rings + 1);
+
+      for (U32 j = 0; j < rings; ++j, ++vi1, ++vi2)
+      {
+         v1 = tmpVertices[vi1];
+         v2 = tmpVertices[vi2];
+         v3 = tmpVertices[vi1 + 1];
+         v4 = tmpVertices[vi2 + 1];
+
+         // 1st = triangle.
+         if (i == 0)
+         {
+            // verts for tri.
+            addVertex(v1.pos);
+            addVertex(v2.pos);
+            addVertex(v4.pos);
+         }
+         /* UNCOMMENT WHEN FULL SPHERE
+         else if (i == (height - 1))
+         {
+            // verts for tri.
+            addVertex(v1.pos);
+            addVertex(v2.pos);
+            addVertex(v3.pos);
+         }*/
+         else
+         {
+            // verts for quad.
+            addVertex(v1.pos);
+            addVertex(v2.pos);
+            addVertex(v3.pos);
+
+            addVertex(v3.pos);
+            addVertex(v4.pos);
+            addVertex(v2.pos);
+         }
+      }
+   }
+
+   BuildFinalVert();
+
    // Vertex Buffer...
-   U32 vertStride = 50;
-   U32 strideMinusOne = vertStride - 1;
-   mVertCount = vertStride * vertStride;
-   mPrimCount = strideMinusOne * strideMinusOne * 2;
-
-   Point3F vertScale( 16.0f, 16.0f, 4.0f );
-
-   F32 zOffset = -( mCos( mSqrt( 1.0f ) ) + 0.01f );
+   mVertCount = finalVertData.size();
+   mPrimCount = mVertCount / 3;
 
    mVB.set( GFX, mVertCount, GFXBufferTypeStatic );
-   ScatterSkyVertex *pVert = mVB.lock();
+   GFXVertexP *pVert = mVB.lock();
    if(!pVert) return;
 
-   for ( U32 y = 0; y < vertStride; y++ )
+   for ( U32 i = 0; i < mVertCount; i++ )
    {
-      F32 v = ( (F32)y / (F32)strideMinusOne - 0.5f ) * 2.0f;
-
-      for ( U32 x = 0; x < vertStride; x++ )
-      {
-         F32 u = ( (F32)x / (F32)strideMinusOne - 0.5f ) * 2.0f;
-
-         F32 sx = u;
-         F32 sy = v;
-         F32 sz = (mCos( mSqrt( sx*sx + sy*sy ) ) * 1.0f) + zOffset;
-         //F32 sz = 1.0f;
-         pVert->point.set( sx, sy, sz );
-         pVert->point *= vertScale;
+         pVert->point.set(finalVertData[i].pos);
 
          pVert->point.normalize();
          pVert->point *= 200000.0f;
-
          pVert++;
-      }
    }
 
    mVB.unlock();
 
    // Primitive Buffer...
-   mPrimBuffer.set( GFX, mPrimCount * 3, mPrimCount, GFXBufferTypeStatic );
+   mPrimBuffer.set( GFX, mVertCount, mPrimCount, GFXBufferTypeStatic );
 
    U16 *pIdx = NULL;
    mPrimBuffer.lock(&pIdx);
    U32 curIdx = 0;
 
-   for ( U32 y = 0; y < strideMinusOne; y++ )
+   for ( U32 i = 0, k = 0; i < mPrimCount; i++, k+=3 )
    {
-      for ( U32 x = 0; x < strideMinusOne; x++ )
-      {
-         U32 offset = x + y * vertStride;
-
-         pIdx[curIdx] = offset;
+         pIdx[curIdx] = k;
          curIdx++;
-         pIdx[curIdx] = offset + 1;
+         pIdx[curIdx] = k + 1;
          curIdx++;
-         pIdx[curIdx] = offset + vertStride + 1;
+         pIdx[curIdx] = k + 2;
          curIdx++;
-
-         pIdx[curIdx] = offset;
-         curIdx++;
-         pIdx[curIdx] = offset + vertStride + 1;
-         curIdx++;
-         pIdx[curIdx] = offset + vertStride;
-         curIdx++;
-      }
    }
 
    mPrimBuffer.unlock();
@@ -827,8 +913,15 @@ void ScatterSky::_initMoon()
    if ( mMoonMatInst )
       SAFE_DELETE( mMoonMatInst );
 
-   if ( mMoonMatName.isNotEmpty() )
-      mMoonMatInst = MATMGR->createMatInstance( mMoonMatName, MATMGR->getDefaultFeatures(), getGFXVertexFormat<GFXVertexPCT>() );
+   if (mMoonMatAsset.notNull())
+   {
+      FeatureSet features = MATMGR->getDefaultFeatures();
+      features.removeFeature(MFT_RTLighting);
+      features.removeFeature(MFT_Visibility);
+      features.removeFeature(MFT_ReflectionProbes);      
+      features.addFeature(MFT_isBackground);
+      mMoonMatInst = MATMGR->createMatInstance(mMoonMatAsset->getMaterialDefinitionName(), features, getGFXVertexFormat<GFXVertexPCT>());
+   }
 }
 
 void ScatterSky::_initCurves()
@@ -950,8 +1043,13 @@ void ScatterSky::_render( ObjectRenderInst *ri, SceneRenderState *state, BaseMat
 
    Point3F camPos2 = state->getCameraPosition();
    MatrixF xfm(true);
-   xfm.setPosition(camPos2 - Point3F( 0, 0, mZOffset));
+   xfm.setPosition(Point3F(
+      camPos2.x,
+      camPos2.y,
+      mZOffset) );
+
    GFX->multWorld(xfm);
+
    MatrixF xform(proj);//GFX->getProjectionMatrix());
    xform *= GFX->getViewMatrix();
    xform *=  GFX->getWorldMatrix();
@@ -1053,17 +1151,17 @@ void ScatterSky::_renderMoon( ObjectRenderInst *ri, SceneRenderState *state, Bas
 
    // Initialize points with basic info
    Point3F points[4];
-   points[0] = Point3F(-BBRadius, 0.0, -BBRadius);
+   points[0] = Point3F( -BBRadius, 0.0, -BBRadius);
    points[1] = Point3F( -BBRadius, 0.0, BBRadius);
-   points[2] = Point3F( BBRadius, 0.0,  BBRadius);
-   points[3] = Point3F( BBRadius, 0.0,  -BBRadius);
+   points[2] = Point3F( BBRadius, 0.0, -BBRadius);
+   points[3] = Point3F( BBRadius, 0.0, BBRadius);
 
    static const Point2F sCoords[4] =
    {
       Point2F( 0.0f, 0.0f ),
       Point2F( 0.0f, 1.0f ),
-      Point2F( 1.0f, 1.0f ),
-      Point2F( 1.0f, 0.0f )
+      Point2F( 1.0f, 0.0f ),
+      Point2F( 1.0f, 1.0f )
    };
 
    // Get info we need to adjust points
@@ -1079,7 +1177,7 @@ void ScatterSky::_renderMoon( ObjectRenderInst *ri, SceneRenderState *state, Bas
    }
 
    // Vertex color.
-   ColorF moonVertColor( 1.0f, 1.0f, 1.0f, mNightInterpolant );
+   LinearColorF moonVertColor( 1.0f, 1.0f, 1.0f, mNightInterpolant );
 
    // Copy points to buffer.
 
@@ -1090,7 +1188,7 @@ void ScatterSky::_renderMoon( ObjectRenderInst *ri, SceneRenderState *state, Bas
 
    for ( S32 i = 0; i < 4; i++ )
    {
-      pVert->color.set( moonVertColor );
+      pVert->color.set( moonVertColor.toColorI());
       pVert->point.set( points[i] );
       pVert->texCoord.set( sCoords[i].x, sCoords[i].y );
       pVert++;
@@ -1112,7 +1210,7 @@ void ScatterSky::_renderMoon( ObjectRenderInst *ri, SceneRenderState *state, Bas
       mMoonMatInst->setSceneInfo( state, sgData );
 
       GFX->setVertexBuffer( vb );
-      GFX->drawPrimitive( GFXTriangleFan, 0, 2 );
+      GFX->drawPrimitive( GFXTriangleStrip, 0, 2 );
    }
 }
 
@@ -1168,8 +1266,8 @@ void ScatterSky::_interpolateColors()
 
    mMieScattering = (mCurves[1].getVal( mTimeOfDay) * mSunSize ); //Scale the size of the sun's disk
 
-   ColorF moonTemp = mMoonTint;
-   ColorF nightTemp = mNightColor;
+   LinearColorF moonTemp = mMoonTint;
+   LinearColorF nightTemp = mNightColor;
 
    moonTemp.interpolate( mNightColor, mMoonTint, mCurves[4].getVal( mTimeOfDay ) );
    nightTemp.interpolate( mMoonTint, mNightColor, mCurves[4].getVal( mTimeOfDay ) );
@@ -1181,12 +1279,12 @@ void ScatterSky::_interpolateColors()
    mSunColor.interpolate( mSunColor, mMoonTint, mCurves[3].getVal( mTimeOfDay ) );//mNightInterpolant );
 }
 
-void ScatterSky::_getSunColor( ColorF *outColor )
+void ScatterSky::_getSunColor( LinearColorF *outColor )
 {
    PROFILE_SCOPE( ScatterSky_GetSunColor );
 
    U32 count = 0;
-   ColorF tmpColor( 0, 0, 0 );
+   LinearColorF tmpColor( 0, 0, 0 );
    VectorF tmpVec( 0, 0, 0 );
 
    tmpVec = mLightDir;
@@ -1207,11 +1305,11 @@ void ScatterSky::_getSunColor( ColorF *outColor )
       (*outColor) /= count;
 }
 
-void ScatterSky::_getAmbientColor( ColorF *outColor )
+void ScatterSky::_getAmbientColor( LinearColorF *outColor )
 {
    PROFILE_SCOPE( ScatterSky_GetAmbientColor );
 
-   ColorF tmpColor( 0, 0, 0, 0 );
+   LinearColorF tmpColor( 0, 0, 0, 0 );
    U32 count = 0;
 
    // Disable mieScattering for purposes of calculating the ambient color.
@@ -1232,7 +1330,7 @@ void ScatterSky::_getAmbientColor( ColorF *outColor )
    mMieScattering = oldMieScattering;
 }
 
-void ScatterSky::_getFogColor( ColorF *outColor )
+void ScatterSky::_getFogColor( LinearColorF *outColor )
 {
    PROFILE_SCOPE( ScatterSky_GetFogColor );
 
@@ -1247,7 +1345,7 @@ void ScatterSky::_getFogColor( ColorF *outColor )
    originalYaw = yaw;
    pitch = mDegToRad( 10.0f );
 
-   ColorF tmpColor( 0, 0, 0 );
+   LinearColorF tmpColor( 0, 0, 0 );
 
    U32 i = 0;
    for ( i = 0; i < 10; i++ )
@@ -1295,7 +1393,7 @@ F32 ScatterSky::_getRayleighPhase( F32 fCos2 )
    return 0.75 + 0.75 * fCos2;
 }
 
-void ScatterSky::_getColor( const Point3F &pos, ColorF *outColor )
+void ScatterSky::_getColor( const Point3F &pos, LinearColorF *outColor )
 {
    PROFILE_SCOPE( ScatterSky_GetColor );
 
@@ -1332,7 +1430,7 @@ void ScatterSky::_getColor( const Point3F &pos, ColorF *outColor )
    for ( U32 i = 0; i < 2; i++ )
    {
       F32 fHeight = v3SamplePoint.len();
-      F32 fDepth = mExp( scaleOverScaleDepth * (mSphereInnerRadius - smViewerHeight) );
+      fDepth = mExp( scaleOverScaleDepth * (mSphereInnerRadius - smViewerHeight) );
       F32 fLightAngle = mDot( mLightDir, v3SamplePoint ) / fHeight;
       F32 fCameraAngle = mDot( v3Ray, v3SamplePoint ) / fHeight;
 
@@ -1365,7 +1463,7 @@ void ScatterSky::_getColor( const Point3F &pos, ColorF *outColor )
    F32 miePhase = _getMiePhase( fCos, fCos2, g, g2 );
 
    Point3F color = rayleighColor + (miePhase * mieColor);
-   ColorF tmp( color.x, color.y, color.z, color.y );
+   LinearColorF tmp( color.x, color.y, color.z, color.y );
 
    Point3F expColor( 0, 0, 0 );
    expColor.x = 1.0f - exp(-mExposure * color.x);
@@ -1374,7 +1472,7 @@ void ScatterSky::_getColor( const Point3F &pos, ColorF *outColor )
 
    tmp.set( expColor.x, expColor.y, expColor.z, 1.0f );
 
-   if ( !tmp.isValidColor() )
+   if ( !tmp.isClamped() )
    {
       F32 len = expColor.len();
       if ( len > 0 )

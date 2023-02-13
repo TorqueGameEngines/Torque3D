@@ -27,8 +27,6 @@
 
 #if defined(TORQUE_OS_WIN)
 #  include <winsock.h>
-#elif defined(TORQUE_OS_XENON)
-#  include <Xtl.h>
 #else
 #  include <netdb.h>
 #  include <unistd.h>
@@ -53,7 +51,7 @@ struct NetAsync::NameLookupRequest
 
       NameLookupRequest()
       {
-         sock = InvalidSocket;
+         sock = NetSocket::INVALID;
          remoteAddr[0] = 0;
          out_h_addr[0] = 0;
          out_h_length = -1;
@@ -80,10 +78,11 @@ struct NetAsync::NameLookupWorkItem : public ThreadPool::WorkItem
 protected:
    virtual void execute()
    {
-#ifndef TORQUE_OS_XENON
+	  NetAddress address;
+	  Net::Error error = Net::stringToAddress(mRequest.remoteAddr, &address, true);
+
       // do it
-      struct hostent* hostent = gethostbyname(mRequest.remoteAddr);
-      if (hostent == NULL)
+      if (error != Net::NoError)
       {
          // oh well!  leave the lookup data unmodified (h_length) should
          // still be -1 from initialization
@@ -94,33 +93,11 @@ protected:
          // copy the stuff we need from the hostent 
          dMemset(mRequest.out_h_addr, 0, 
             sizeof(mRequest.out_h_addr));
-         dMemcpy(mRequest.out_h_addr, hostent->h_addr, hostent->h_length);
+         dMemcpy(mRequest.out_h_addr, &address, sizeof(address));
 
-         mRequest.out_h_length = hostent->h_length;
+		 mRequest.out_h_length = sizeof(address);
          mRequest.complete = true;
       }
-#else
-      XNDNS *pxndns = NULL;
-      HANDLE hEvent = CreateEvent(NULL, false, false, NULL);
-      XNetDnsLookup(mRequest.remoteAddr, hEvent, &pxndns);
-
-      while(pxndns->iStatus == WSAEINPROGRESS) 
-         WaitForSingleObject(hEvent, INFINITE);
-
-      if(pxndns->iStatus == 0 && pxndns->cina > 0)
-      {
-         dMemset(mRequest.out_h_addr, 0, sizeof(mRequest.out_h_addr));
-
-         // This is a suspect section. I need to revisit. [2/22/2010 Pat]
-         dMemcpy(mRequest.out_h_addr, pxndns->aina, sizeof(IN_ADDR)); 
-         mRequest.out_h_length = sizeof(IN_ADDR);
-      }
-
-      mRequest.complete = true;
-
-      XNetDnsRelease(pxndns);
-      CloseHandle(hEvent);
-#endif
    }
 
 private:
@@ -159,7 +136,7 @@ void NetAsync::queueLookup(const char* remoteAddr, NetSocket socket)
    ThreadPool::GLOBAL().queueWorkItem( workItem );
 }
 
-bool NetAsync::checkLookup(NetSocket socket, char* out_h_addr, 
+bool NetAsync::checkLookup(NetSocket socket, void* out_h_addr, 
                            S32* out_h_length, S32 out_h_addr_size)
 {
    bool found = false;

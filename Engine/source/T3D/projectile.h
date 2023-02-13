@@ -20,6 +20,11 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+// Arcane-FX for MIT Licensed Open Source version of Torque 3D from GarageGames
+// Copyright (C) 2015 Faust Logic, Inc.
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+
 #ifndef _PROJECTILE_H_
 #define _PROJECTILE_H_
 
@@ -39,6 +44,8 @@
 #include "lighting/lightInfo.h"
 #endif
 
+#include "T3D/assets/SoundAsset.h"
+#include "T3D/assets/ShapeAsset.h"
 
 class ExplosionData;
 class SplashData;
@@ -64,9 +71,8 @@ protected:
    bool onAdd();
 
 public:
-   // variables set in datablock definition:
-   // Shape related
-   const char* projectileShapeName;
+   DECLARE_SHAPEASSET(ProjectileData, ProjectileShape, onShapeChanged);
+   DECLARE_ASSET_SETGET(ProjectileData, ProjectileShape);
 
    /// Set to true if it is a billboard and want it to always face the viewer, false otherwise
    bool faceViewer;
@@ -110,13 +116,13 @@ public:
    DecalData *decal;                   // (impact) Decal Datablock
    S32 decalId;                        // (impact) Decal ID
 
-   SFXTrack* sound;                    // Projectile Sound
+   DECLARE_SOUNDASSET(ProjectileData, ProjectileSound);
+   DECLARE_ASSET_SETGET(ProjectileData, ProjectileSound);
    
    LightDescription *lightDesc;
    S32 lightDescId;   
 
    // variables set on preload:
-   Resource<TSShape> projectileShape;
    S32 activateSeq;
    S32 maintainSeq;
 
@@ -144,6 +150,11 @@ public:
    
    DECLARE_CALLBACK( void, onExplode, ( Projectile* proj, Point3F pos, F32 fade ) );
    DECLARE_CALLBACK( void, onCollision, ( Projectile* proj, SceneObject* col, F32 fade, Point3F pos, Point3F normal ) );
+public:
+   ProjectileData(const ProjectileData&, bool = false);
+   virtual bool allowSubstitutions() const { return true; }
+
+   void onShapeChanged() {}
 };
 
 
@@ -279,6 +290,10 @@ protected:
    Point3F mExplosionPosition;
    Point3F mExplosionNormal;
    U32     mCollideHitType;   
+public:
+   bool   ignoreSourceTimeout;
+   U32    dynamicCollisionMask;
+   U32    staticCollisionMask;
 };
 
 #endif // _PROJECTILE_H_

@@ -27,6 +27,8 @@ class btCollisionObject;
 #include "BulletCollision/NarrowPhaseCollision/btManifoldPoint.h"
 #include "BulletDynamics/ConstraintSolver/btConstraintSolver.h"
 
+typedef btSimdScalar(*btSingleConstraintRowSolver)(btSolverBody&, btSolverBody&, const btSolverConstraint&);
+
 ///The btSequentialImpulseConstraintSolver is a fast SIMD implementation of the Projected Gauss Seidel (iterative LCP) method.
 ATTRIBUTE_ALIGNED16(class) btSequentialImpulseConstraintSolver : public btConstraintSolver
 {
@@ -43,18 +45,36 @@ protected:
 	btAlignedObjectArray<btTypedConstraint::btConstraintInfo1> m_tmpConstraintSizesPool;
 	int							m_maxOverrideNumSolverIterations;
 	int m_fixedBodyId;
+    // When running solvers on multiple threads, a race condition exists for Kinematic objects that
+    // participate in more than one solver.
+    // The getOrInitSolverBody() function writes the companionId of each body (storing the index of the solver body
+    // for the current solver). For normal dynamic bodies it isn't an issue because they can only be in one island
+    // (and therefore one thread) at a time. But kinematic bodies can be in multiple islands at once.
+    // To avoid this race condition, this solver does not write the companionId, instead it stores the solver body
+    // index in this solver-local table, indexed by the uniqueId of the body.
+    btAlignedObjectArray<int>	m_kinematicBodyUniqueIdToSolverBodyTable;  // only used for multithreading
+
+	btSingleConstraintRowSolver m_resolveSingleConstraintRowGeneric;
+	btSingleConstraintRowSolver m_resolveSingleConstraintRowLowerLimit;
+    btSingleConstraintRowSolver m_resolveSplitPenetrationImpulse;
+    int m_cachedSolverMode;  // used to check if SOLVER_SIMD flag has been changed
+    void setupSolverFunctions( bool useSimd );
+
+	btScalar	m_leastSquaresResidual;
+
 	void setupFrictionConstraint(	btSolverConstraint& solverConstraint, const btVector3& normalAxis,int solverBodyIdA,int  solverBodyIdB,
 									btManifoldPoint& cp,const btVector3& rel_pos1,const btVector3& rel_pos2,
 									btCollisionObject* colObj0,btCollisionObject* colObj1, btScalar relaxation, 
+									const btContactSolverInfo& infoGlobal,
 									btScalar desiredVelocity=0., btScalar cfmSlip=0.);
 
-	void setupRollingFrictionConstraint(	btSolverConstraint& solverConstraint, const btVector3& normalAxis,int solverBodyIdA,int  solverBodyIdB,
-									btManifoldPoint& cp,const btVector3& rel_pos1,const btVector3& rel_pos2,
+	void setupTorsionalFrictionConstraint(	btSolverConstraint& solverConstraint, const btVector3& normalAxis,int solverBodyIdA,int  solverBodyIdB,
+									btManifoldPoint& cp,btScalar combinedTorsionalFriction, const btVector3& rel_pos1,const btVector3& rel_pos2,
 									btCollisionObject* colObj0,btCollisionObject* colObj1, btScalar relaxation, 
 									btScalar desiredVelocity=0., btScalar cfmSlip=0.);
 
-	btSolverConstraint&	addFrictionConstraint(const btVector3& normalAxis,int solverBodyIdA,int solverBodyIdB,int frictionIndex,btManifoldPoint& cp,const btVector3& rel_pos1,const btVector3& rel_pos2,btCollisionObject* colObj0,btCollisionObject* colObj1, btScalar relaxation, btScalar desiredVelocity=0., btScalar cfmSlip=0.);
-	btSolverConstraint&	addRollingFrictionConstraint(const btVector3& normalAxis,int solverBodyIdA,int solverBodyIdB,int frictionIndex,btManifoldPoint& cp,const btVector3& rel_pos1,const btVector3& rel_pos2,btCollisionObject* colObj0,btCollisionObject* colObj1, btScalar relaxation, btScalar desiredVelocity=0, btScalar cfmSlip=0.f);
+	btSolverConstraint&	addFrictionConstraint(const btVector3& normalAxis,int solverBodyIdA,int solverBodyIdB,int frictionIndex,btManifoldPoint& cp,const btVector3& rel_pos1,const btVector3& rel_pos2,btCollisionObject* colObj0,btCollisionObject* colObj1, btScalar relaxation, const btContactSolverInfo& infoGlobal, btScalar desiredVelocity=0., btScalar cfmSlip=0.);
+	btSolverConstraint&	addTorsionalFrictionConstraint(const btVector3& normalAxis,int solverBodyIdA,int solverBodyIdB,int frictionIndex,btManifoldPoint& cp,btScalar torsionalFriction, const btVector3& rel_pos1,const btVector3& rel_pos2,btCollisionObject* colObj0,btCollisionObject* colObj1, btScalar relaxation, btScalar desiredVelocity=0, btScalar cfmSlip=0.f);
 
 	
 	void setupContactConstraint(btSolverConstraint& solverConstraint, int solverBodyIdA, int solverBodyIdB, btManifoldPoint& cp, 
@@ -69,32 +89,35 @@ protected:
 	unsigned long	m_btSeed2;
 
 	
-	btScalar restitutionCurve(btScalar rel_vel, btScalar restitution);
+	btScalar restitutionCurve(btScalar rel_vel, btScalar restitution, btScalar velocityThreshold);
 
 	virtual void convertContacts(btPersistentManifold** manifoldPtr, int numManifolds, const btContactSolverInfo& infoGlobal);
 
 	void	convertContact(btPersistentManifold* manifold,const btContactSolverInfo& infoGlobal);
 
 
-	void	resolveSplitPenetrationSIMD(
-     btSolverBody& bodyA,btSolverBody& bodyB,
-        const btSolverConstraint& contactConstraint);
+	btSimdScalar	resolveSplitPenetrationSIMD(btSolverBody& bodyA,btSolverBody& bodyB, const btSolverConstraint& contactConstraint)
+    {
+        return m_resolveSplitPenetrationImpulse( bodyA, bodyB, contactConstraint );
+    }
 
-	void	resolveSplitPenetrationImpulseCacheFriendly(
-       btSolverBody& bodyA,btSolverBody& bodyB,
-        const btSolverConstraint& contactConstraint);
+	btSimdScalar	resolveSplitPenetrationImpulseCacheFriendly(btSolverBody& bodyA,btSolverBody& bodyB, const btSolverConstraint& contactConstraint)
+    {
+        return m_resolveSplitPenetrationImpulse( bodyA, bodyB, contactConstraint );
+    }
 
 	//internal method
 	int		getOrInitSolverBody(btCollisionObject& body,btScalar timeStep);
 	void	initSolverBody(btSolverBody* solverBody, btCollisionObject* collisionObject, btScalar timeStep);
 
-	void	resolveSingleConstraintRowGeneric(btSolverBody& bodyA,btSolverBody& bodyB,const btSolverConstraint& contactConstraint);
-
-	void	resolveSingleConstraintRowGenericSIMD(btSolverBody& bodyA,btSolverBody& bodyB,const btSolverConstraint& contactConstraint);
-	
-	void	resolveSingleConstraintRowLowerLimit(btSolverBody& bodyA,btSolverBody& bodyB,const btSolverConstraint& contactConstraint);
-	
-	void	resolveSingleConstraintRowLowerLimitSIMD(btSolverBody& bodyA,btSolverBody& bodyB,const btSolverConstraint& contactConstraint);
+	btSimdScalar	resolveSingleConstraintRowGeneric(btSolverBody& bodyA,btSolverBody& bodyB,const btSolverConstraint& contactConstraint);
+	btSimdScalar	resolveSingleConstraintRowGenericSIMD(btSolverBody& bodyA,btSolverBody& bodyB,const btSolverConstraint& contactConstraint);
+	btSimdScalar	resolveSingleConstraintRowLowerLimit(btSolverBody& bodyA,btSolverBody& bodyB,const btSolverConstraint& contactConstraint);
+	btSimdScalar	resolveSingleConstraintRowLowerLimitSIMD(btSolverBody& bodyA,btSolverBody& bodyB,const btSolverConstraint& contactConstraint);
+	btSimdScalar	resolveSplitPenetrationImpulse(btSolverBody& bodyA,btSolverBody& bodyB, const btSolverConstraint& contactConstraint)
+    {
+        return m_resolveSplitPenetrationImpulse( bodyA, bodyB, contactConstraint );
+    }
 		
 protected:
 	
@@ -115,9 +138,7 @@ public:
 	virtual ~btSequentialImpulseConstraintSolver();
 
 	virtual btScalar solveGroup(btCollisionObject** bodies,int numBodies,btPersistentManifold** manifold,int numManifolds,btTypedConstraint** constraints,int numConstraints,const btContactSolverInfo& info, btIDebugDraw* debugDrawer,btDispatcher* dispatcher);
-	
-
-	
+		
 	///clear internal cached data and reset random seed
 	virtual	void	reset();
 	
@@ -139,6 +160,33 @@ public:
 	{
 		return BT_SEQUENTIAL_IMPULSE_SOLVER;
 	}
+
+	btSingleConstraintRowSolver	getActiveConstraintRowSolverGeneric()
+	{
+		return m_resolveSingleConstraintRowGeneric;
+	}
+	void setConstraintRowSolverGeneric(btSingleConstraintRowSolver rowSolver)
+	{
+		m_resolveSingleConstraintRowGeneric = rowSolver;
+	}
+	btSingleConstraintRowSolver	getActiveConstraintRowSolverLowerLimit()
+	{
+		return m_resolveSingleConstraintRowLowerLimit;
+	}
+	void setConstraintRowSolverLowerLimit(btSingleConstraintRowSolver rowSolver)
+	{
+		m_resolveSingleConstraintRowLowerLimit = rowSolver;
+	}
+
+	///Various implementations of solving a single constraint row using a generic equality constraint, using scalar reference, SSE2 or SSE4
+	btSingleConstraintRowSolver	getScalarConstraintRowSolverGeneric();
+	btSingleConstraintRowSolver	getSSE2ConstraintRowSolverGeneric();
+	btSingleConstraintRowSolver	getSSE4_1ConstraintRowSolverGeneric();
+
+	///Various implementations of solving a single constraint row using an inequality (lower limit) constraint, using scalar reference, SSE2 or SSE4
+	btSingleConstraintRowSolver	getScalarConstraintRowSolverLowerLimit();
+	btSingleConstraintRowSolver	getSSE2ConstraintRowSolverLowerLimit();
+	btSingleConstraintRowSolver	getSSE4_1ConstraintRowSolverLowerLimit();
 };
 
 

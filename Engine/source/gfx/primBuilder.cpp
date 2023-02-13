@@ -117,7 +117,6 @@ GFXVertexBuffer * endToBuffer( U32 &numPrims )
       }
 
       case GFXTriangleStrip:
-      case GFXTriangleFan:
       {
          numPrims = mCurVertIndex - 2;
          break;
@@ -171,7 +170,6 @@ void end( bool useGenericShaders )
       }
 
       case GFXTriangleStrip:
-      case GFXTriangleFan:
       {
          stripStart = 2;
          vertStride = 1;
@@ -201,9 +199,9 @@ void end( bool useGenericShaders )
 
    if ( stripStart > 0 )
    {
-      // TODO: Fix this to allow > MAX_DYNAMIC_VERTS!
+      // TODO: Fix this to allow > GFX_MAX_DYNAMIC_VERTS!
 
-      U32 copyVerts = getMin( (U32)MAX_DYNAMIC_VERTS, numVerts );
+      U32 copyVerts = getMin( (U32)GFX_MAX_DYNAMIC_VERTS, numVerts );
       mVertBuff.set( GFX, copyVerts, GFXBufferTypeVolatile );
 
       GFXVertexPCT *verts = mVertBuff.lock();
@@ -218,7 +216,7 @@ void end( bool useGenericShaders )
    {
       while ( numVerts > 0 )
       {
-         U32 copyVerts = getMin( (U32)MAX_DYNAMIC_VERTS, numVerts );
+         U32 copyVerts = getMin( (U32)GFX_MAX_DYNAMIC_VERTS, numVerts );
          copyVerts -= copyVerts % vertStride;
 
          mVertBuff.set( GFX, copyVerts, GFXBufferTypeVolatile );
@@ -303,9 +301,9 @@ void color( const ColorI &inColor )
    mCurColor = inColor;
 }
 
-void color( const ColorF &inColor )
+void color( const LinearColorF &inColor )
 {
-   mCurColor = inColor;
+   mCurColor = LinearColorF(inColor).toColorI();
 }
 
 void color3i( U8 red, U8 green, U8 blue )

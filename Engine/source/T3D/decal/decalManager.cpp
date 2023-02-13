@@ -186,7 +186,7 @@ S32 QSORT_CALLBACK cmpDecalRenderOrder( const void *p1, const void *p2 )
 
       if ( (*pd2)->mFlags & SaveDecal )
       {
-         S32 id = ( (*pd1)->mDataBlock->getMaterial()->getId() - (*pd2)->mDataBlock->getMaterial()->getId() );      
+         S32 id = ( (*pd1)->mDataBlock->getMaterialDefinition()->getId() - (*pd2)->mDataBlock->getMaterialDefinition()->getId() );
          if ( id != 0 )
             return id;
 
@@ -546,7 +546,7 @@ void DecalManager::removeDecal( DecalInstance *inst )
 
    // Remove the decal from the instance vector.
    
-	if( inst->mId != -1 && inst->mId < mDecalInstanceVec.size() )
+   if( inst->mId != -1 && inst->mId < mDecalInstanceVec.size() )
       mDecalInstanceVec[ inst->mId ] = NULL;
    
    // Release its geometry (if it has any).
@@ -632,9 +632,9 @@ DecalInstance* DecalManager::getClosestDecal( const Point3F &pos )
       }
    }
 
-   if (  !collectedInsts.empty() && 
+   if (  (!collectedInsts.empty() && 
          collectedInsts[closestIndex] && 
-         closestDistance < 1.0f || 
+         closestDistance < 1.0f) ||
          worldInstSphere.isContained( pos ) )
       return collectedInsts[closestIndex];
    else
@@ -674,23 +674,23 @@ DecalInstance* DecalManager::raycast( const Point3F &start, const Point3F &end, 
 
          if ( !worldSphere.intersectsRay( start, end ) )
             continue;
-			
-			RayInfo ri;
-			bool containsPoint = false;
-			if ( gServerContainer.castRayRendered( start, end, STATIC_COLLISION_TYPEMASK, &ri ) )
-			{        
-				Point2F poly[4];
-				poly[0].set( inst->mPosition.x - (inst->mSize / 2), inst->mPosition.y + (inst->mSize / 2));
-				poly[1].set( inst->mPosition.x - (inst->mSize / 2), inst->mPosition.y - (inst->mSize / 2));
-				poly[2].set( inst->mPosition.x + (inst->mSize / 2), inst->mPosition.y - (inst->mSize / 2));
-				poly[3].set( inst->mPosition.x + (inst->mSize / 2), inst->mPosition.y + (inst->mSize / 2));
-				
-				if ( MathUtils::pointInPolygon( poly, 4, Point2F(ri.point.x, ri.point.y) ) )
-					containsPoint = true;
-			}
+         
+         RayInfo ri;
+         bool containsPoint = false;
+         if ( gServerContainer.castRayRendered( start, end, STATIC_COLLISION_TYPEMASK, &ri ) )
+         {        
+            Point2F poly[4];
+            poly[0].set( inst->mPosition.x - (inst->mSize / 2), inst->mPosition.y + (inst->mSize / 2));
+            poly[1].set( inst->mPosition.x - (inst->mSize / 2), inst->mPosition.y - (inst->mSize / 2));
+            poly[2].set( inst->mPosition.x + (inst->mSize / 2), inst->mPosition.y - (inst->mSize / 2));
+            poly[3].set( inst->mPosition.x + (inst->mSize / 2), inst->mPosition.y + (inst->mSize / 2));
+            
+            if ( MathUtils::pointInPolygon( poly, 4, Point2F(ri.point.x, ri.point.y) ) )
+               containsPoint = true;
+         }
 
-			if( !containsPoint )
-				continue;
+         if( !containsPoint )
+            continue;
 
          hitDecals.push_back( inst );
       }
@@ -783,7 +783,7 @@ U32 DecalManager::_generateConvexHull( const Vector<Point3F> &points, Vector<Poi
    while ( ++i <= maxmin )
    {
       // the lower line joins P[minmin] with P[maxmin]
-      if ( isLeft( points[minmin], points[maxmin], points[i]) >= 0 && i < maxmin )
+      if (i < maxmin && isLeft(points[minmin], points[maxmin], points[i]) >= 0)
          continue;          // ignore P[i] above or on the lower line
 
       while (top > 0)        // there are at least 2 points on the stack
@@ -1214,7 +1214,7 @@ void DecalManager::prepRenderImage( SceneRenderState* state )
 
    // Make it the sort distance the max distance so that 
    // it renders after all the other opaque geometry in 
-   // the prepass bin.
+   // the deferred bin.
    baseRenderInst.sortDistSq = F32_MAX;
 
    Vector<DecalBatch> batches;
@@ -1225,7 +1225,7 @@ void DecalManager::prepRenderImage( SceneRenderState* state )
    {
       DecalInstance *decal = mDecalQueue[i];      
       DecalData *data = decal->mDataBlock;
-      Material *mat = data->getMaterial();
+      Material *mat = data->getMaterialDefinition();
 
       if ( currentBatch == NULL )
       {
@@ -1235,8 +1235,30 @@ void DecalManager::prepRenderImage( SceneRenderState* state )
          currentBatch = &batches.last();
          currentBatch->startDecal = i;
          currentBatch->decalCount = 1;
-         currentBatch->iCount = decal->mIndxCount;
-         currentBatch->vCount = decal->mVertCount;
+
+         // Shrink and warning: preventing a potential crash.
+         currentBatch->iCount =
+             (decal->mIndxCount > smMaxIndices) ? smMaxIndices : decal->mIndxCount;
+         currentBatch->vCount =
+             (decal->mVertCount > smMaxVerts) ? smMaxVerts : decal->mVertCount;
+#ifdef TORQUE_DEBUG
+         // we didn't mean send a spam to the console
+         static U32 countMsgIndx = 0;
+         if ( (decal->mIndxCount > smMaxIndices) && ((countMsgIndx++ % 1024) == 0) ) {
+            Con::warnf(
+               "DecalManager::prepRenderImage() - Shrinked indices of decal."
+               " Lost %u.",  (decal->mIndxCount - smMaxIndices)
+            );
+         }
+         static U32 countMsgVert = 0;
+         if ( (decal->mVertCount > smMaxVerts) && ((countMsgVert++ % 1024) == 0) ) {
+            Con::warnf(
+               "DecalManager::prepRenderImage() - Shrinked vertices of decal."
+               " Lost %u.",  (decal->mVertCount - smMaxVerts)
+            );
+         }
+#endif
+
          currentBatch->mat = mat;
          currentBatch->matInst = decal->mDataBlock->getMaterialInstance();
          currentBatch->priority = decal->getRenderPriority();         
@@ -1280,14 +1302,14 @@ void DecalManager::prepRenderImage( SceneRenderState* state )
    // Loop through batches allocating buffers and submitting render instances.
    for ( U32 i = 0; i < batches.size(); i++ )
    {
-      DecalBatch &currentBatch = batches[i];      
+      currentBatch = &batches[i];      
 
       // Copy data into the system memory arrays, from all decals in this batch...
 
       DecalVertex *vpPtr = vertData;
       U16 *pbPtr = indexData;            
 
-      U32 lastDecal = currentBatch.startDecal + currentBatch.decalCount;
+      U32 lastDecal = currentBatch->startDecal + currentBatch->decalCount;
 
       U32 voffset = 0;
       U32 ioffset = 0;
@@ -1295,27 +1317,33 @@ void DecalManager::prepRenderImage( SceneRenderState* state )
       // This is an ugly hack for ProjectedShadow!
       GFXTextureObject *customTex = NULL;
 
-      for ( U32 j = currentBatch.startDecal; j < lastDecal; j++ )
+      for ( U32 j = currentBatch->startDecal; j < lastDecal; j++ )
       {
-         DecalInstance *dinst = mDecalQueue[j];
+         dinst = mDecalQueue[j];
 
-         for ( U32 k = 0; k < dinst->mIndxCount; k++ )
+         const U32 indxCount =
+             (dinst->mIndxCount > currentBatch->iCount) ?
+             currentBatch->iCount : dinst->mIndxCount;
+         for ( U32 k = 0; k < indxCount; k++ )
          {
             *( pbPtr + ioffset + k ) = dinst->mIndices[k] + voffset;            
          }
 
-         ioffset += dinst->mIndxCount;
+         ioffset += indxCount;
 
-         dMemcpy( vpPtr + voffset, dinst->mVerts, sizeof( DecalVertex ) * dinst->mVertCount );
-         voffset += dinst->mVertCount;
+         const U32 vertCount =
+             (dinst->mVertCount > currentBatch->vCount) ?
+             currentBatch->vCount : dinst->mVertCount;
+         dMemcpy( vpPtr + voffset, dinst->mVerts, sizeof( DecalVertex ) * vertCount );
+         voffset += vertCount;
 
          // Ugly hack for ProjectedShadow!
          if ( (dinst->mFlags & CustomDecal) && dinst->mCustomTex != NULL )
             customTex = *dinst->mCustomTex;
       }
 
-      AssertFatal( ioffset == currentBatch.iCount, "bad" );
-      AssertFatal( voffset == currentBatch.vCount, "bad" );
+      AssertFatal( ioffset == currentBatch->iCount, "bad" );
+      AssertFatal( voffset == currentBatch->vCount, "bad" );
         
       // Get handles to video memory buffers we will be filling...
 
@@ -1357,8 +1385,10 @@ void DecalManager::prepRenderImage( SceneRenderState* state )
       pb->lock( &pbPtr );
 
       // Memcpy from system to video memory.
-      dMemcpy( vpPtr, vertData, sizeof( DecalVertex ) * currentBatch.vCount );
-      dMemcpy( pbPtr, indexData, sizeof( U16 ) * currentBatch.iCount );
+      const U32 vpCount = sizeof( DecalVertex ) * currentBatch->vCount;
+      dMemcpy( vpPtr, vertData, vpCount );
+      const U32 pbCount = sizeof( U16 ) * currentBatch->iCount;
+      dMemcpy( pbPtr, indexData, pbCount );
 
       pb->unlock();
       vb->unlock();
@@ -1370,13 +1400,13 @@ void DecalManager::prepRenderImage( SceneRenderState* state )
 
       // Get the best lights for the current camera position
       // if the materail is forward lit and we haven't got them yet.
-      if ( currentBatch.matInst->isForwardLit() && !baseRenderInst.lights[0] )
+      if ( currentBatch->matInst->isForwardLit() && !baseRenderInst.lights[0] )
       {
          LightQuery query;
          query.init( rootFrustum.getPosition(),
                      rootFrustum.getTransform().getForwardVector(),
                      rootFrustum.getFarDist() );
-		   query.getLights( baseRenderInst.lights, 8 );
+         query.getLights( baseRenderInst.lights, 8 );
       }
 
       // Submit render inst...
@@ -1386,15 +1416,16 @@ void DecalManager::prepRenderImage( SceneRenderState* state )
       ri->primBuff = pb;
       ri->vertBuff = vb;
 
-      ri->matInst = currentBatch.matInst;
+      ri->matInst = currentBatch->matInst;
 
       ri->prim = renderPass->allocPrim();
       ri->prim->type = GFXTriangleList;
       ri->prim->minIndex = 0;
       ri->prim->startIndex = 0;
-      ri->prim->numPrimitives = currentBatch.iCount / 3;
+      ri->prim->numPrimitives = currentBatch->iCount / 3;
       ri->prim->startVertex = 0;
-      ri->prim->numVertices = currentBatch.vCount;
+      ri->prim->numVertices = currentBatch->vCount;
+      ri->translucentSort = !currentBatch->matInst->getMaterial()->isTranslucent();
 
       // Ugly hack for ProjectedShadow!
       if ( customTex )
@@ -1403,7 +1434,7 @@ void DecalManager::prepRenderImage( SceneRenderState* state )
       // The decal bin will contain render instances for both decals and decalRoad's.
       // Dynamic decals render last, then editor decals and roads in priority order.
       // DefaultKey is sorted in descending order.
-      ri->defaultKey = currentBatch.dynamic ? 0xFFFFFFFF : (U32)currentBatch.priority;
+      ri->defaultKey = currentBatch->dynamic ? 0xFFFFFFFF : (U32)currentBatch->priority;
       ri->defaultKey2 = 1;//(U32)lastDecal->mDataBlock;
 
       renderPass->addInst( ri );
@@ -1465,7 +1496,7 @@ bool DecalManager::_createDataFile()
 
    // See if we know our current mission name
    char missionName[1024];
-   dStrcpy( missionName, Con::getVariable( "$Client::MissionFile" ) );
+   dStrcpy( missionName, Con::getVariable( "$Client::MissionFile" ), 1024 );
    char *dot = dStrstr((const char*)missionName, ".mis");
    if(dot)
       *dot = '\0';
@@ -1545,7 +1576,7 @@ void DecalManager::clearData()
    }
    
    mData = NULL;
-	mDecalInstanceVec.clear();
+   mDecalInstanceVec.clear();
 
    _freePools();   
 }
@@ -1712,5 +1743,50 @@ DefineEngineFunction( decalManagerRemoveDecal, bool, ( S32 decalID ),,
       return false;
 
    gDecalManager->removeDecal(inst);
+   return true;
+}
+
+DefineEngineFunction( decalManagerEditDecal, bool, ( S32 decalID, Point3F pos, Point3F normal, F32 rotAroundNormal, F32 decalScale ),,
+   "Edit specified decal of the decal manager.\n"
+   "@param decalID ID of the decal to edit.\n"
+   "@param pos World position for the decal.\n"
+   "@param normal Decal normal vector (if the decal was a tire lying flat on a "
+   "surface, this is the vector pointing in the direction of the axle).\n"
+   "@param rotAroundNormal Angle (in radians) to rotate this decal around its normal vector.\n"
+   "@param decalScale Scale factor applied to the decal.\n"
+   "@return Returns true if successful, false if decalID not found.\n"
+   "" )
+{
+   DecalInstance *decalInstance = gDecalManager->getDecal( decalID );
+   if( !decalInstance )
+      return false;
+
+   //Internally we need Point3F tangent instead of the user friendly F32 rotAroundNormal
+   MatrixF mat( true );
+   MathUtils::getMatrixFromUpVector( normal, &mat );
+
+   AngAxisF rot( normal, rotAroundNormal );
+   MatrixF rotmat;
+   rot.setMatrix( &rotmat );
+   mat.mul( rotmat );
+
+   Point3F tangent;
+   mat.getColumn( 1, &tangent );
+   
+   //if everything is unchanged just do nothing and  return "everything is ok"
+   if ( pos.equal(decalInstance->mPosition) &&
+        normal.equal(decalInstance->mNormal) &&
+        tangent.equal(decalInstance->mTangent) &&
+        mFabs( decalInstance->mSize - (decalInstance->mDataBlock->size * decalScale) ) < POINT_EPSILON )
+           return true;
+
+   decalInstance->mPosition = pos;
+   decalInstance->mNormal = normal;
+   decalInstance->mTangent = tangent;
+   decalInstance->mSize = decalInstance->mDataBlock->size * decalScale;
+
+   gDecalManager->clipDecal( decalInstance, NULL, NULL);
+   
+   gDecalManager->notifyDecalModified( decalInstance );
    return true;
 }

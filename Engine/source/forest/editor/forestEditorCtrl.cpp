@@ -59,6 +59,7 @@ bool ForestEditorCtrl::onAdd()
 
 void ForestEditorCtrl::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 
@@ -97,7 +98,6 @@ void ForestEditorCtrl::onSleep()
 
 bool ForestEditorCtrl::updateActiveForest( bool createNew )
 {
-   mForest = dynamic_cast<Forest*>( Sim::findObject( "theForest" ) );
    Con::executef( this, "onActiveForestUpdated", mForest ? mForest->getIdString() : "", createNew ? "1" : "0" );  
 
    if ( mTool )
@@ -329,10 +329,16 @@ void ForestEditorCtrl::deleteMeshSafe( ForestItemData *mesh )
    }
 
    // Find ForestBrushElement(s) referencing this datablock.
-   SimGroup *brushGroup = ForestBrush::getGroup();
+   SimSet* brushSet;
+   if (!Sim::findObject("ForestBrushSet", brushSet))
+   {
+      Con::errorf("ForestBrushTool::_collectElements() - could not find ForestBrushSet!");
+      return;
+   }
+
    sKey = mesh;
    Vector<SimObject*> foundElements;   
-   brushGroup->findObjectByCallback( &findMeshReferences, foundElements );   
+   brushSet->findObjectByCallback( &findMeshReferences, foundElements );
 
    // Add UndoAction to delete the ForestBrushElement(s) and the ForestItemData.
    MEDeleteUndoAction *elementAction = new MEDeleteUndoAction();
@@ -371,24 +377,24 @@ bool ForestEditorCtrl::isDirty()
    return foundDirty;   
 }
 
-DefineConsoleMethod( ForestEditorCtrl, updateActiveForest, void, (), , "()" )
+DefineEngineMethod( ForestEditorCtrl, updateActiveForest, void, (), , "()" )
 {
    object->updateActiveForest( true );
 }
 
-DefineConsoleMethod( ForestEditorCtrl, setActiveTool, void, ( const char * toolName ), , "( ForestTool tool )" )
+DefineEngineMethod( ForestEditorCtrl, setActiveTool, void, ( const char * toolName ), , "( ForestTool tool )" )
 {
    ForestTool *tool = dynamic_cast<ForestTool*>( Sim::findObject( toolName ) );
    object->setActiveTool( tool );
 }
 
-DefineConsoleMethod( ForestEditorCtrl, getActiveTool, S32, (), , "()" )
+DefineEngineMethod( ForestEditorCtrl, getActiveTool, S32, (), , "()" )
 {
    ForestTool *tool = object->getActiveTool();
    return tool ? tool->getId() : 0;
 }
 
-DefineConsoleMethod( ForestEditorCtrl, deleteMeshSafe, void, ( const char * obj ), , "( ForestItemData obj )" )
+DefineEngineMethod( ForestEditorCtrl, deleteMeshSafe, void, ( const char * obj ), , "( ForestItemData obj )" )
 {
    ForestItemData *db;
    if ( !Sim::findObject( obj, db ) )
@@ -397,7 +403,16 @@ DefineConsoleMethod( ForestEditorCtrl, deleteMeshSafe, void, ( const char * obj 
    object->deleteMeshSafe( db );   
 }
 
-DefineConsoleMethod( ForestEditorCtrl, isDirty, bool, (), , "" )
+DefineEngineMethod( ForestEditorCtrl, isDirty, bool, (), , "" )
 {
    return object->isDirty();
+}
+
+DefineEngineMethod(ForestEditorCtrl, setActiveForest, void, (const char * obj), , "( Forest obj )")
+{
+   Forest *forestObject;
+   if (!Sim::findObject(obj, forestObject))
+      return;
+
+   object->setActiveForest(forestObject);
 }

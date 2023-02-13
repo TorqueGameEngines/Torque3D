@@ -52,8 +52,8 @@ MODULE_END;
 bool PostEffectManager::smRenderEffects = true;
 
 PostEffectManager::PostEffectManager() : 
-      mFrameStateSwitch( false ),
-      mLastBackBufferTarget( NULL )
+      mLastBackBufferTarget( NULL ),
+      mFrameStateSwitch( false )
 {
    GFXDevice::getDeviceEventSignal().notify( this, &PostEffectManager::_handleDeviceEvent );
    RenderPassManager::getRenderBinSignal().notify( this, &PostEffectManager::_handleBinEvent );
@@ -141,7 +141,7 @@ GFXTextureObject* PostEffectManager::getBackBufferTex()
 
       mBackBufferCopyTex.set( targetSize.x, targetSize.y, 
                               targetFormat, 
-                              &PostFxTargetProfile, "mBackBufferCopyTex" );
+                              &PostFxTextureSRGBProfile, "mBackBufferCopyTex" );
 
       target->resolveTo( mBackBufferCopyTex );
       mLastBackBufferTarget = target;
@@ -198,7 +198,7 @@ bool PostEffectManager::_addEffect( PostEffect *effect )
 bool PostEffectManager::_removeEffect( PostEffect *effect )
 {
    // Check the end of frame list.
-   EffectVector::iterator iter = find( mEndOfFrameList.begin(), mEndOfFrameList.end(), effect );
+   EffectVector::iterator iter = T3D::find( mEndOfFrameList.begin(), mEndOfFrameList.end(), effect );
    if ( iter != mEndOfFrameList.end() )
    {
       mEndOfFrameList.erase( iter );
@@ -206,7 +206,7 @@ bool PostEffectManager::_removeEffect( PostEffect *effect )
    }
 
    // Check the diffuse list.
-   iter = find( mAfterDiffuseList.begin(), mAfterDiffuseList.end(), effect );
+   iter = T3D::find( mAfterDiffuseList.begin(), mAfterDiffuseList.end(), effect );
    if ( iter != mAfterDiffuseList.end() )
    {
       mAfterDiffuseList.erase( iter );
@@ -218,7 +218,7 @@ bool PostEffectManager::_removeEffect( PostEffect *effect )
    for( ; mapIter != mAfterBinMap.end(); mapIter++ )
    {
       EffectVector &effects = mapIter->value;
-      iter = find( effects.begin(), effects.end(), effect );
+      iter = T3D::find( effects.begin(), effects.end(), effect );
       if ( iter != effects.end() )
       {
          effects.erase( iter );
@@ -230,7 +230,7 @@ bool PostEffectManager::_removeEffect( PostEffect *effect )
    for( ; mapIter != mBeforeBinMap.end(); mapIter++ )
    {
       EffectVector &effects = mapIter->value;
-      iter = find( effects.begin(), effects.end(), effect );
+      iter = T3D::find( effects.begin(), effects.end(), effect );
       if ( iter != effects.end() )
       {
          effects.erase( iter );
@@ -245,11 +245,6 @@ void PostEffectManager::renderEffects( const SceneRenderState *state,
                                        const PFXRenderTime effectTiming, 
                                        const String &binName )
 {
-   // MACHAX - The proper fix is to ensure that PostFX do not get rendered if 
-   // their shader failed to load.
-#ifdef TORQUE_OS_MAC
-   return;
-#endif
 
    // Check the global render effect state as 
    // well as the 
@@ -318,4 +313,77 @@ S32 PostEffectManager::_effectPrioritySort( PostEffect* const *e1, PostEffect* c
 		return 1;
 
    return 0;
+}
+
+void PostEffectManager::dumpActivePostFX()
+{
+   EffectVector effects;
+
+   for (U32 i = 0; i < mEndOfFrameList.size(); i++)
+   {
+      PostEffect* effect = mEndOfFrameList[i];
+
+      if(effect->isEnabled())
+         effects.push_back(effect);
+   }
+
+   for (U32 i = 0; i < mAfterDiffuseList.size(); i++)
+   {
+      PostEffect* effect = mAfterDiffuseList[i];
+
+      if (effect->isEnabled())
+         effects.push_back(effect);
+   }
+
+
+   // Now check the bin maps.
+   EffectMap::Iterator mapIter = mAfterBinMap.begin();
+   for (; mapIter != mAfterBinMap.end(); mapIter++)
+   {
+      EffectVector& ef = mapIter->value;
+
+      for (U32 i = 0; i < ef.size(); i++)
+      {
+         PostEffect* effect = ef[i];
+
+         if (effect->isEnabled())
+            effects.push_back(effect);
+      }
+   }
+
+   mapIter = mBeforeBinMap.begin();
+   for (; mapIter != mBeforeBinMap.end(); mapIter++)
+   {
+      EffectVector& ef = mapIter->value;
+
+      for (U32 i = 0; i < ef.size(); i++)
+      {
+         PostEffect* effect = ef[i];
+
+         if (effect->isEnabled())
+            effects.push_back(effect);
+      }
+   }
+
+   // Resort the effects by priority.
+   effects.sort(&_effectPrioritySort);
+
+   Con::printf("PostEffectManager::dumpActivePostFX() - Beginning Dump");
+
+   for (U32 i = 0; i < effects.size(); i++)
+   {
+      PostEffect* effect = effects[i];
+
+      if (effect->isEnabled())
+      {
+         Con::printf("%s", effect->getName());
+      }
+   }
+
+   Con::printf("PostEffectManager::dumpActivePostFX() - Ending Dump");
+}
+
+DefineEngineFunction(dumpActivePostFX, void, (),, "")
+{
+   PFXMGR->dumpActivePostFX();
 }

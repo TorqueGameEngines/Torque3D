@@ -14,11 +14,14 @@ public:
 
    ~GLFenceRange()
    {
-      AssertFatal( mSync == 0, "");
+      //the order of creation/destruction of static variables is indetermined... depends on detail of the build
+      //looks like for some reason on windows + sdl + opengl the order make invalid / wrong the process TODO: Refactor -LAR
+      //AssertFatal( mSync == 0, "");
    }
 
    void init(U32 start, U32 end)
-   {         
+   {  
+      PROFILE_SCOPE(GFXGLQueryFence_issue);
       mStart = start;
       mEnd = end;
       mSync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
@@ -33,7 +36,8 @@ public:
    }
 
    void wait()
-   {      
+   {   
+      PROFILE_SCOPE(GFXGLQueryFence_block);
       GLbitfield waitFlags = 0;
       GLuint64 waitDuration = 0;
       while( 1 ) 
@@ -87,7 +91,9 @@ public:
 
    ~GLOrderedFenceRangeManager( )
    {
-      waitAllRanges( );
+      //the order of creation/destruction of static variables is indetermined... depends on detail of the build
+      //looks like for some reason on windows + sdl + opengl the order make invalid / wrong the process TODO: Refactor -LAR
+      //waitAllRanges( );
    }
 
    void protectOrderedRange( U32 start, U32 end )
@@ -139,6 +145,11 @@ public:
       init();
    }
 
+   ~GLCircularVolatileBuffer()
+   {
+      glDeleteBuffers(1, &mBufferName);
+   }
+
    void init()
    {
       glGenBuffers(1, &mBufferName);
@@ -149,7 +160,7 @@ public:
       const U32 cSizeInMB = 10;
       mBufferSize = (cSizeInMB << 20);
 
-      if( gglHasExtension(ARB_buffer_storage) )
+      if( GFXGL->mCapabilities.bufferStorage )
       {      
          const GLbitfield flags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
          glBufferStorage(mBinding, mBufferSize, NULL, flags);
@@ -163,7 +174,8 @@ public:
 
    struct 
    {
-      U32 mOffset, mSize;
+      U32 mOffset = 0;
+      U32 mSize = 0;
    }_getBufferData;
 
    void lock(const U32 size, U32 offsetAlign, U32 &outOffset, void* &outPtr)
@@ -189,7 +201,7 @@ public:
 
       outOffset = mBufferFreePos;
 
-      if( gglHasExtension(ARB_buffer_storage) )
+      if( GFXGL->mCapabilities.bufferStorage )
       {         
          outPtr = (U8*)(mBufferPtr) + mBufferFreePos; 
       }
@@ -218,7 +230,7 @@ public:
 
    void unlock()
    {
-      if( gglHasExtension(ARB_buffer_storage) )
+      if( GFXGL->mCapabilities.bufferStorage )
       {
          return;
       }

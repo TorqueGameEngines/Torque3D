@@ -52,7 +52,9 @@ F32 sqrDistanceEdges(const Point3F& start0,
 
 CollisionState::CollisionState()
 {
-   mLista = mListb = 0;
+   mB = mA = NULL;
+   mDist = 0.0f;
+   mListb = mLista = 0;
 }
 
 CollisionState::~CollisionState()
@@ -85,7 +87,7 @@ F32 CollisionState::distance(const MatrixF& a2w, const MatrixF& b2w, const F32 d
 void ConvexFeature::reset()
 {
    material = NULL;
-   object = NULL;
+   mObject = NULL;
    mVertexList.clear();
    mEdgeList.clear();
    mFaceList.clear();
@@ -114,7 +116,7 @@ bool ConvexFeature::collide(ConvexFeature& cf,CollisionList* cList, F32 tol)
       {
          Collision &col = (*cList)[cList->getCount() - 1];
          col.material = cf.material;
-         col.object   = cf.object;
+         col.object   = cf.mObject;
       }
       vert++;
    }
@@ -167,7 +169,7 @@ void ConvexFeature::testVertex(const Point3F& v,CollisionList* cList,bool flip, 
          if (flip)
             info.normal.neg();
          info.material = material;
-         info.object = object;
+         info.object = mObject;
          info.distance = distance;
       }
    }
@@ -213,7 +215,7 @@ void ConvexFeature::testEdge(ConvexFeature* cf,const Point3F& s1, const Point3F&
       info.normal   = normal;
       info.distance = distance;
       info.material = material;
-      info.object   = object;
+      info.object   = mObject;
    }
 }
 
@@ -282,6 +284,7 @@ CollisionWorkingList::CollisionWorkingList()
 {
    wLink.mPrev = wLink.mNext = this;
    rLink.mPrev = rLink.mNext = this;
+   mConvex = NULL;
 }
 
 void CollisionWorkingList::wLinkAfter(CollisionWorkingList* ptr)
@@ -340,6 +343,8 @@ Convex::Convex()
 {
    mNext = mPrev = this;
    mTag = 0;
+   mObject = NULL;
+   mType = ConvexType::BoxConvexType;
 }
 
 Convex::~Convex()
@@ -418,7 +423,7 @@ Point3F Convex::support(const VectorF&) const
 
 void Convex::getFeatures(const MatrixF&,const VectorF&,ConvexFeature* f)
 {
-   f->object = NULL;
+   f->mObject = NULL;
 }
 
 const MatrixF& Convex::getTransform() const
@@ -520,7 +525,7 @@ void Convex::updateStateList(const MatrixF& mat, const Point3F& scale, const Poi
 
    // Destroy states which are no longer intersecting
    for (CollisionStateList* itr = mList.mNext; itr != &mList; itr = itr->mNext) {
-      Convex* cv = (itr->mState->a == this)? itr->mState->b: itr->mState->a;
+      Convex* cv = (itr->mState->mA == this)? itr->mState->mB: itr->mState->mA;
       cv->mTag = sTag;
       if (!box1.isOverlapped(cv->getBoundingBox())) {
          CollisionState* cs = itr->mState;
@@ -531,7 +536,7 @@ void Convex::updateStateList(const MatrixF& mat, const Point3F& scale, const Poi
 
    // Add collision states for new overlapping objects
    for (CollisionWorkingList* itr0 = mWorking.wLink.mNext; itr0 != &mWorking; itr0 = itr0->wLink.mNext) {
-      register Convex* cv = itr0->mConvex;
+      Convex* cv = itr0->mConvex;
       if (cv->mTag != sTag && box1.isOverlapped(cv->getBoundingBox())) {
          CollisionState* state = new GjkCollisionState;
          state->set(this,cv,mat,cv->getTransform());
@@ -568,9 +573,9 @@ CollisionState* Convex::findClosestState(const MatrixF& mat, const Point3F& scal
          state->swap();
 
       // Prepare scaled version of transform
-      MatrixF bxform = state->b->getTransform();
+      MatrixF bxform = state->mB->getTransform();
       temp = bxform;
-      Point3F bscale = state->b->getScale();
+      Point3F bscale = state->mB->getScale();
       bxform.scale(bscale);
       MatrixF bxforminv(true);
       bxforminv.scale(Point3F(1.0f/bscale.x, 1.0f/bscale.y, 1.0f/bscale.z));
@@ -613,7 +618,7 @@ bool Convex::getCollisionInfo(const MatrixF& mat, const Point3F& scale, Collisio
       if (state->mLista != itr)
          state->swap();
 
-      if (state->dist <= tol) 
+      if (state->mDist <= tol) 
       {
          fa.reset();
          fb.reset();
@@ -628,18 +633,18 @@ bool Convex::getCollisionInfo(const MatrixF& mat, const Point3F& scale, Collisio
 
          MatrixF imat = omat;
          imat.inverse();
-         imat.mulV(-state->v,&v);
+         imat.mulV(-state->mDistvec,&v);
 
          getFeatures(omat,v,&fa);
 
-         imat = state->b->getTransform();
-         imat.scale(state->b->getScale());
+         imat = state->mB->getTransform();
+         imat.scale(state->mB->getScale());
 
          MatrixF bxform = imat;
          imat.inverse();
-         imat.mulV(state->v,&v);
+         imat.mulV(state->mDistvec,&v);
 
-         state->b->getFeatures(bxform,v,&fb);
+         state->mB->getFeatures(bxform,v,&fb);
 
          fa.collide(fb,cList,tol);
       }

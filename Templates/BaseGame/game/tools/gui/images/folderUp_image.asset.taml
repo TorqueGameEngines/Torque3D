@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="folderUp_image"
+    imageFile="@assetFile=folderUp.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

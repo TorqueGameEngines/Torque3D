@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2014 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -19,8 +19,8 @@
   3. This notice may not be removed or altered from any source distribution.
 */
 
-#ifndef __SDL_PANDORA_H__
-#define __SDL_PANDORA_H__
+#ifndef SDL_pspvideo_h_
+#define SDL_pspvideo_h_
 
 #include <GLES/egl.h>
 
@@ -73,7 +73,6 @@ void PSP_RaiseWindow(_THIS, SDL_Window * window);
 void PSP_MaximizeWindow(_THIS, SDL_Window * window);
 void PSP_MinimizeWindow(_THIS, SDL_Window * window);
 void PSP_RestoreWindow(_THIS, SDL_Window * window);
-void PSP_SetWindowGrab(_THIS, SDL_Window * window, SDL_bool grabbed);
 void PSP_DestroyWindow(_THIS, SDL_Window * window);
 
 /* Window manager function */
@@ -88,7 +87,7 @@ SDL_GLContext PSP_GL_CreateContext(_THIS, SDL_Window * window);
 int PSP_GL_MakeCurrent(_THIS, SDL_Window * window, SDL_GLContext context);
 int PSP_GL_SetSwapInterval(_THIS, int interval);
 int PSP_GL_GetSwapInterval(_THIS);
-void PSP_GL_SwapWindow(_THIS, SDL_Window * window);
+int PSP_GL_SwapWindow(_THIS, SDL_Window * window);
 void PSP_GL_DeleteContext(_THIS, SDL_GLContext context);
 
 /* PSP on screen keyboard */
@@ -97,6 +96,6 @@ void PSP_ShowScreenKeyboard(_THIS, SDL_Window *window);
 void PSP_HideScreenKeyboard(_THIS, SDL_Window *window);
 SDL_bool PSP_IsScreenKeyboardShown(_THIS, SDL_Window *window);
 
-#endif /* __SDL_PANDORA_H__ */
+#endif /* SDL_pspvideo_h_ */
 
 /* vi: set ts=4 sw=4 expandtab: */

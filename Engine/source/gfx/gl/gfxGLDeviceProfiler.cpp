@@ -53,12 +53,12 @@ public:
 
    typedef Data DataType;
 
-    GLTimer(GFXDevice *device, Data &data) : mData(&data)
+    GLTimer(GFXDevice *device, Data &data) : mName(NULL), mData(&data)
    {
       glGenQueries(1, &mQueryId);
    }
 
-    GLTimer() : mName(NULL), mQueryId(0), mData(NULL)
+    GLTimer() : mName(NULL), mData(NULL), mQueryId(0)
     {
 
     }
@@ -86,7 +86,7 @@ protected:
 
 GFXProfiler<GLTimer> gfxProfiler;
 
-DefineConsoleFunction(printGFXGLTimers, void,(), ,"")
+DefineEngineFunction(printGFXGLTimers, void,(), ,"")
 {
    gfxProfiler.printTimes();
 }
@@ -107,6 +107,15 @@ void GFXGLDevice::enterDebugEvent(ColorI color, const char *name)
 #ifdef TORQUE_BASIC_GPU_PROFILER
    gfxProfiler.enterDebugEvent(color, name);
 #endif
+
+   if (mCapabilities.khrDebug)
+   {
+      glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, name);
+   }
+   else if(mCapabilities.extDebugMarker)
+   {
+      glPushGroupMarkerEXT(0, name);
+   }
 }
 
 void GFXGLDevice::leaveDebugEvent()
@@ -114,11 +123,28 @@ void GFXGLDevice::leaveDebugEvent()
 #ifdef TORQUE_BASIC_GPU_PROFILER
    gfxProfiler.leaveDebugEvent();
 #endif
+
+   if (mCapabilities.khrDebug)
+   {
+      glPopDebugGroup();
+   }
+   else if(mCapabilities.extDebugMarker)
+   {
+      glPopGroupMarkerEXT();
+   }
 }
 
 void GFXGLDevice::setDebugMarker(ColorI color, const char *name)
 {
-
+   if (mCapabilities.khrDebug)
+   {
+      glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_MARKER, 0,
+         GL_DEBUG_SEVERITY_NOTIFICATION, -1, name);
+   }
+   else if(mCapabilities.extDebugMarker)
+   {
+      glInsertEventMarkerEXT(0, name);
+   }
 }
 
 #ifdef TORQUE_BASIC_GPU_PROFILER

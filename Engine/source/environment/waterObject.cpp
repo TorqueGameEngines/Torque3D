@@ -50,7 +50,6 @@ GFXImplementVertexFormat( GFXWaterVertex )
 {
    addElement( "POSITION", GFXDeclType_Float3 );
    addElement( "NORMAL", GFXDeclType_Float3 );
-   addElement( "COLOR", GFXDeclType_Color );   
    addElement( "TEXCOORD", GFXDeclType_Float2, 0 );
    addElement( "TEXCOORD", GFXDeclType_Float4, 1 );   
 }
@@ -138,7 +137,7 @@ void WaterMatParams::init( BaseMatInstance* matInst )
 
 
 bool WaterObject::smWireframe = false;
-bool WaterObject::smDisableTrueReflections = false;
+bool WaterObject::smEnableTrueReflections = true;
 
 //-------------------------------------------------------------------------
 // WaterObject Class
@@ -162,7 +161,7 @@ ConsoleDocClass( WaterObject,
    "\t- Paramable water fog and color shift.\n\n"
 
    "It will, however, look significantly different depending on the LightingManager "
-   "that is active. With Basic Lighting, we do not have a prepass texture to "
+   "that is active. With Basic Lighting, we do not have a deferred texture to "
    "lookup per-pixel depth and therefore cannot use our rendering techniques that depend on it.\n\n"   
 
    "In particular, the following field groups are not used under Basic Lighting:\n"
@@ -180,34 +179,35 @@ ConsoleDocClass( WaterObject,
 WaterObject::WaterObject()
  : mViscosity( 1.0f ),
    mDensity( 1.0f ),
-   mReflectivity( 0.5f ),
-   mReflectNormalUp( true ),   
+   mLiquidType( "Water" ),
+   mFresnelBias( 0.3f ),
+   mFresnelPower( 6.0f ),
+   mReflectNormalUp( true ),
+   mReflectivity( 0.5f ),   
    mDistortStartDist( 0.1f ),
    mDistortEndDist( 20.0f ),
    mDistortFullDepth( 3.5f ),
-   mUndulateMaxDist(50.0f),
    mOverallFoamOpacity( 1.0f ),
    mFoamMaxDepth( 2.0f ),
    mFoamAmbientLerp( 0.5f ),
    mFoamRippleInfluence( 0.05f ),
-   mUnderwaterPostFx( NULL ),
-   mLiquidType( "Water" ),
-   mFresnelBias( 0.3f ),
-   mFresnelPower( 6.0f ),
    mClarity( 0.5f ),
-   mBasicLighting( false ),
+   mUnderwaterColor(9, 6, 5, 240),
+   mUndulateMaxDist(50.0f),
    mMiscParamW( 0.0f ),
-   mOverallWaveMagnitude( 1.0f ),
+   mUnderwaterPostFx( NULL ),
    mOverallRippleMagnitude( 0.1f ),
-   mCubemap( NULL ),
-   mSoundAmbience( NULL ),
+   mOverallWaveMagnitude( 1.0f ),
+   mBasicLighting( false ),
    mSpecularPower( 48.0f ),
+   mSoundAmbience( NULL ),
+   mCubemap( NULL ),
    mSpecularColor( 1.0f, 1.0f, 1.0f, 1.0f ),
-   mDepthGradientMax( 50.0f ),
    mEmissive( false ),
-   mUnderwaterColor(9, 6, 5, 240)
+   mFullReflect(true),
+   mDepthGradientMax( 50.0f )
 {
-   mTypeMask = WaterObjectType | StaticObjectType;
+   mTypeMask = WaterObjectType;
 
    for( U32 i=0; i < MAX_WAVES; i++ )
    {
@@ -249,6 +249,8 @@ WaterObject::WaterObject()
    mSurfMatName[BasicUnderWaterMat] = "UnderWaterBasicMat";
 
    dMemset( mMatInstances, 0, sizeof(mMatInstances) );
+   dMemset(mMatParamHandles, 0, sizeof(mMatParamHandles));
+   mUnderwater = false;
 
    mWaterPos.set( 0,0,0 );
    mWaterPlane.set( mWaterPos, Point3F(0,0,1) );
@@ -257,6 +259,12 @@ WaterObject::WaterObject()
 
    mMatrixSet = reinterpret_cast<MatrixSet *>(dMalloc_aligned(sizeof(MatrixSet), 16));
    constructInPlace(mMatrixSet);
+
+   INIT_ASSET(RippleTex);
+   INIT_ASSET(FoamTex);
+   INIT_ASSET(DepthGradientTex);
+
+   mCubemapName = StringTable->EmptyString();
 }
 
 WaterObject::~WaterObject()
@@ -267,6 +275,7 @@ WaterObject::~WaterObject()
 
 void WaterObject::initPersistFields()
 {
+   docsURL;
    addGroup( "WaterObject" );
 
       addProtectedField( "density", TypeF32, Offset( mDensity, WaterObject ), &WaterObject::_checkDensity, &defaultProtectedGetFn, "Affects buoyancy of an object, thus affecting the Z velocity of a player (jumping, falling, etc.");
@@ -290,8 +299,8 @@ void WaterObject::initPersistFields()
 
       addField( "overallWaveMagnitude", TypeF32, Offset( mOverallWaveMagnitude, WaterObject ), "Master variable affecting entire body" 
 		  " of water's undulation" );  
-      
-      addField( "rippleTex", TypeImageFilename, Offset( mRippleTexName, WaterObject ), "Normal map used to simulate small surface ripples" );
+
+      INITPERSISTFIELD_IMAGEASSET(RippleTex, WaterObject, "Normal map used to simulate small surface ripples");
 
       addArray( "Ripples (texture animation)", MAX_WAVES );
 
@@ -305,7 +314,7 @@ void WaterObject::initPersistFields()
 
       addField( "overallRippleMagnitude", TypeF32, Offset( mOverallRippleMagnitude, WaterObject ), "Master variable affecting entire surface");
 
-      addField( "foamTex", TypeImageFilename, Offset( mFoamTexName, WaterObject ), "Diffuse texture for foam in shallow water (advanced lighting only)" );
+      INITPERSISTFIELD_IMAGEASSET(FoamTex, WaterObject, "Diffuse texture for foam in shallow water (advanced lighting only)");
 
       addArray( "Foam", MAX_FOAM );
 
@@ -356,8 +365,9 @@ void WaterObject::initPersistFields()
    endGroup( "Underwater Fogging" );
 
    addGroup( "Misc" );
-      
-      addField( "depthGradientTex", TypeImageFilename, Offset( mDepthGradientTexName, WaterObject ), "1D texture defining the base water color by depth" );
+
+      INITPERSISTFIELD_IMAGEASSET(DepthGradientTex, WaterObject, "1D texture defining the base water color by depth");
+
       addField( "depthGradientMax", TypeF32, Offset( mDepthGradientMax, WaterObject ), "Depth in world units, the max range of the color gradient texture." );      
 
    endGroup( "Misc" );
@@ -397,7 +407,7 @@ void WaterObject::consoleInit()
 {
    Parent::consoleInit();
 
-   Con::addVariable( "$pref::Water::disableTrueReflections", TypeBool, &WaterObject::smDisableTrueReflections, 
+   Con::addVariable( "$pref::Water::EnableTrueReflections", TypeBool, &WaterObject::smEnableTrueReflections, 
       "Force all water objects to use static cubemap reflections.\n"
 	  "@ingroup Water");     
 }
@@ -409,7 +419,7 @@ void WaterObject::inspectPostApply()
    setMaskBits( UpdateMask | WaveMask | TextureMask | SoundMask );
 }
 
-bool WaterObject::processArguments( S32 argc, ConsoleValueRef *argv )
+bool WaterObject::processArguments( S32 argc, ConsoleValue *argv )
 {
    if( typeid( *this ) == typeid( WaterObject ) )
    {
@@ -429,7 +439,7 @@ bool WaterObject::_setFullReflect( void *object, const char *index, const char *
    {
       bool isEnabled = water->mPlaneReflector.isEnabled();
 
-      bool enable = water->mFullReflect && !smDisableTrueReflections;
+      bool enable = water->mFullReflect && smEnableTrueReflections;
 
       if ( enable && !isEnabled )
          water->mPlaneReflector.registerReflector( water, &water->mReflectorDesc );
@@ -537,10 +547,11 @@ U32 WaterObject::packUpdate( NetConnection * conn, U32 mask, BitStream *stream )
 
    if ( stream->writeFlag( mask & TextureMask ) )
    {
-      stream->write( mRippleTexName );
-      stream->write( mDepthGradientTexName );
-      stream->write( mFoamTexName );
-      stream->write( mCubemapName );      
+      PACK_ASSET(conn, RippleTex);
+      PACK_ASSET(conn, DepthGradientTex);
+      PACK_ASSET(conn, FoamTex);
+
+      stream->writeString( mCubemapName );      
    }
 
    if( stream->writeFlag( mask & SoundMask ) )
@@ -572,7 +583,7 @@ void WaterObject::unpackUpdate( NetConnection * conn, BitStream *stream )
          mReflectorDesc.useOcclusionQuery = stream->readFlag();
          mReflectorDesc.texSize = stream->readInt( 32 );
 
-         if ( isProperlyAdded() && !mPlaneReflector.isEnabled() && !smDisableTrueReflections )
+         if ( isProperlyAdded() && !mPlaneReflector.isEnabled() && smEnableTrueReflections )
             mPlaneReflector.registerReflector( this, &mReflectorDesc );
       }
       else
@@ -658,10 +669,11 @@ void WaterObject::unpackUpdate( NetConnection * conn, BitStream *stream )
    // TextureMask
    if ( stream->readFlag() )
    {
-      stream->read( &mRippleTexName );
-      stream->read( &mDepthGradientTexName );
-      stream->read( &mFoamTexName );
-      stream->read( &mCubemapName );
+      UNPACK_ASSET(conn, RippleTex);
+      UNPACK_ASSET(conn, DepthGradientTex);
+      UNPACK_ASSET(conn, FoamTex);
+
+      mCubemapName = stream->readSTString();
 
       if ( isProperlyAdded() )
          initTextures();
@@ -827,25 +839,25 @@ void WaterObject::drawUnderwaterFilter( SceneRenderState *state )
    // draw quad
    
 
-   GFXVertexBufferHandle<GFXVertexPC> verts( GFX, 4, GFXBufferTypeVolatile );
+   GFXVertexBufferHandle<GFXVertexPCT> verts( GFX, 4, GFXBufferTypeVolatile );
    verts.lock();
 
-   verts[0].point.set( -1.0 - copyOffsetX, -1.0 + copyOffsetY, 0.0 );
+   verts[0].point.set(1.0 - copyOffsetX, -1.0 + copyOffsetY, 0.0);
    verts[0].color = mUnderwaterColor;
 
-   verts[1].point.set( -1.0 - copyOffsetX, 1.0 + copyOffsetY, 0.0 );
+   verts[1].point.set(1.0 - copyOffsetX, 1.0 + copyOffsetY, 0.0);
    verts[1].color = mUnderwaterColor;
 
-   verts[2].point.set( 1.0 - copyOffsetX, 1.0 + copyOffsetY, 0.0 );
+   verts[2].point.set(-1.0 - copyOffsetX, -1.0 + copyOffsetY, 0.0);
    verts[2].color = mUnderwaterColor;
 
-   verts[3].point.set( 1.0 - copyOffsetX, -1.0 + copyOffsetY, 0.0 );
+   verts[3].point.set(-1.0 - copyOffsetX, 1.0 + copyOffsetY, 0.0);
    verts[3].color = mUnderwaterColor;
 
    verts.unlock();
 
    GFX->setVertexBuffer( verts );
-   GFX->drawPrimitive( GFXTriangleFan, 0, 2 );
+   GFX->drawPrimitive( GFXTriangleStrip, 0, 2 );
 
    // reset states / transforms
    GFX->setProjectionMatrix( proj );
@@ -857,8 +869,8 @@ bool WaterObject::onAdd()
    if ( !Parent::onAdd() )
       return false;
 
-   Con::NotifyDelegate clbk( this, &WaterObject::_onDisableTrueRelfections );   
-   Con::addVariableNotify( "$pref::Water::disableTrueReflections", clbk );
+   Con::NotifyDelegate clbk( this, &WaterObject::_onEnableTrueReflections );   
+   Con::addVariableNotify( "$pref::Water::EnableTrueReflections", clbk );
 
    if ( isClientObject() )
    {
@@ -875,7 +887,7 @@ bool WaterObject::onAdd()
 
       initTextures();
       
-      if ( mFullReflect && !smDisableTrueReflections )
+      if ( mFullReflect && smEnableTrueReflections )
          mPlaneReflector.registerReflector( this, &mReflectorDesc );
    }
 
@@ -884,8 +896,8 @@ bool WaterObject::onAdd()
 
 void WaterObject::onRemove()
 {
-   Con::NotifyDelegate clbk( this, &WaterObject::_onDisableTrueRelfections ); 
-   Con::removeVariableNotify( "$pref::Water::disableTrueReflections", clbk );
+   Con::NotifyDelegate clbk( this, &WaterObject::_onEnableTrueReflections ); 
+   Con::removeVariableNotify( "$pref::Water::EnableTrueReflections", clbk );
 
    if ( isClientObject() )
    {
@@ -900,14 +912,14 @@ void WaterObject::onRemove()
    Parent::onRemove();
 }
 
-void WaterObject::_onDisableTrueRelfections()
+void WaterObject::_onEnableTrueReflections()
 {
    // Same code as _setFullReflect
    if ( isProperlyAdded() && isClientObject() )
    {
       bool isEnabled = mPlaneReflector.isEnabled();
 
-      bool enable = mFullReflect && !smDisableTrueReflections;
+      bool enable = mFullReflect && smEnableTrueReflections;
 
       if ( enable && !isEnabled )
          mPlaneReflector.registerReflector( this, &mReflectorDesc );
@@ -1023,7 +1035,7 @@ void WaterObject::setShaderParams( SceneRenderState *state, BaseMatInstance *mat
    matParams->setSafe(paramHandles.mDistortionParamsSC, distortionParams );
 
    LightInfo *sun = LIGHTMGR->getSpecialLight(LightManager::slSunLightType);
-   const ColorF &sunlight = state->getAmbientLightColor();
+   const LinearColorF &sunlight = state->getAmbientLightColor();
    Point3F ambientColor = mEmissive ? Point3F::One : sunlight;
    matParams->setSafe(paramHandles.mAmbientColorSC, ambientColor );
    matParams->setSafe(paramHandles.mLightDirSC, sun->getDirection() );
@@ -1037,7 +1049,7 @@ void WaterObject::setShaderParams( SceneRenderState *state, BaseMatInstance *mat
    Point4F specularParams( mSpecularColor.red, mSpecularColor.green, mSpecularColor.blue, mSpecularPower );   
    if ( !mEmissive )
    {
-      const ColorF &sunColor = sun->getColor();
+      const LinearColorF &sunColor = sun->getColor();
       F32 brightness = sun->getBrightness();
       specularParams.x *= sunColor.red * brightness;
       specularParams.y *= sunColor.green * brightness;
@@ -1118,7 +1130,7 @@ bool WaterObject::initMaterial( S32 idx )
    // We must return false for any case which it is NOT safe for the caller
    // to use the indexed material.
    
-   if ( idx < 0 || idx > NumMatTypes )
+   if ( idx < 0 || idx >= NumMatTypes )
       return false;
 
    BaseMatInstance *mat = mMatInstances[idx];
@@ -1142,7 +1154,7 @@ bool WaterObject::initMaterial( S32 idx )
       else
          mat = MATMGR->createMatInstance( mSurfMatName[idx] );
 
-      const GFXVertexFormat *flags = getGFXVertexFormat<GFXVertexPC>();
+      const GFXVertexFormat *flags = getGFXVertexFormat<GFXVertexPCT>();
 
       if ( mat && mat->init( MATMGR->getDefaultFeatures(), flags ) )
       {      
@@ -1159,25 +1171,10 @@ bool WaterObject::initMaterial( S32 idx )
 
 void WaterObject::initTextures()
 {
-   if ( mRippleTexName.isNotEmpty() )
-      mRippleTex.set( mRippleTexName, &GFXDefaultStaticDiffuseProfile, "WaterObject::mRippleTex" );
-   if ( mRippleTex.isNull() )
-      mRippleTex.set( GFXTextureManager::getWarningTexturePath(), &GFXDefaultStaticDiffuseProfile, "WaterObject::mRippleTex" );
-
-   if ( mDepthGradientTexName.isNotEmpty() )
-      mDepthGradientTex.set( mDepthGradientTexName, &GFXDefaultStaticDiffuseProfile, "WaterObject::mDepthGradientTex" );
-   if ( mDepthGradientTex.isNull() )
-      mDepthGradientTex.set( GFXTextureManager::getWarningTexturePath(), &GFXDefaultStaticDiffuseProfile, "WaterObject::mDepthGradientTex" );
-   
    if ( mNamedDepthGradTex.isRegistered() )
       mNamedDepthGradTex.setTexture( mDepthGradientTex );
 
-   if ( mFoamTexName.isNotEmpty() )
-      mFoamTex.set( mFoamTexName, &GFXDefaultStaticDiffuseProfile, "WaterObject::mFoamTex" );
-   if ( mFoamTex.isNull() )
-      mFoamTex.set( GFXTextureManager::getWarningTexturePath(), &GFXDefaultStaticDiffuseProfile, "WaterObject::mFoamTex" );
-
-   if ( mCubemapName.isNotEmpty() )
+   if ( mCubemapName != StringTable->EmptyString() )
       Sim::findObject( mCubemapName, mCubemap );   
    if ( mCubemap )
       mCubemap->createMap();

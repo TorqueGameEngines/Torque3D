@@ -78,7 +78,7 @@ ResizeBitStream::ResizeBitStream(U32 minSpace, U32 initialSize) : BitStream(NULL
 
 ResizeBitStream::~ResizeBitStream()
 {
-   dFree(dataPtr);
+   dFree(mDataPtr);
 }
 
 void ResizeBitStream::validate()
@@ -86,7 +86,7 @@ void ResizeBitStream::validate()
    if(getPosition() + mMinSpace > bufSize)
    {
       bufSize = getPosition() + mMinSpace * 2;
-      dataPtr = (U8 *) dRealloc(dataPtr, bufSize);
+	  mDataPtr = (U8 *) dRealloc(mDataPtr, bufSize);
 
       maxReadBitNum = bufSize << 3;
       maxWriteBitNum = bufSize << 3;
@@ -140,7 +140,7 @@ class HuffmanProcessor
 
    static HuffmanProcessor g_huffProcessor;
 
-   bool readHuffBuffer(BitStream* pStream, char* out_pBuffer);
+   bool readHuffBuffer(BitStream* pStream, char* out_pBuffer, S32 maxLen);
    bool writeHuffBuffer(BitStream* pStream, const char* out_pBuffer, S32 maxLen);
 };
 
@@ -148,7 +148,7 @@ HuffmanProcessor HuffmanProcessor::g_huffProcessor;
 
 void BitStream::setBuffer(void *bufPtr, S32 size, S32 maxSize)
 {
-   dataPtr = (U8 *) bufPtr;
+   mDataPtr = (U8 *) bufPtr;
    bitNum = 0;
    bufSize = size;
    maxReadBitNum = size << 3;
@@ -178,7 +178,7 @@ U32 BitStream::getStreamSize()
 
 U8 *BitStream::getBytePtr()
 {
-   return dataPtr + getPosition();
+   return mDataPtr + getPosition();
 }
 
 
@@ -194,7 +194,7 @@ U32 BitStream::getWriteByteSize()
 
 void BitStream::clear()
 {
-   dMemset(dataPtr, 0, bufSize);
+   dMemset(mDataPtr, 0, bufSize);
 }
 
 void BitStream::writeClassId(U32 classId, U32 classType, U32 classGroup)
@@ -228,10 +228,10 @@ void BitStream::writeBits(S32 bitCount, const void *bitPtr)
    if(!bitCount)
       return;
 
-   if(bitCount + bitNum > maxWriteBitNum)
+   if((bitCount + bitNum) > maxWriteBitNum)
    {
       error = true;
-      AssertFatal(false, "Out of range write");
+      AssertFatal(false, avar("BitStream::writeBits - Out of range write [(%i+%i)/%i]", bitCount, bitNum, maxWriteBitNum));
       return;
    }
 
@@ -242,9 +242,9 @@ void BitStream::writeBits(S32 bitCount, const void *bitPtr)
    for(S32 srcBitNum = 0;srcBitNum < bitCount;srcBitNum++)
    {
       if((*(ptr + (srcBitNum >> 3)) & (1 << (srcBitNum & 0x7))) != 0)
-         *(dataPtr + (bitNum >> 3)) |= (1 << (bitNum & 0x7));
+         *(mDataPtr + (bitNum >> 3)) |= (1 << (bitNum & 0x7));
       else
-         *(dataPtr + (bitNum >> 3)) &= ~(1 << (bitNum & 0x7));
+         *(mDataPtr + (bitNum >> 3)) &= ~(1 << (bitNum & 0x7));
       bitNum++;
    }
 }
@@ -252,28 +252,28 @@ void BitStream::writeBits(S32 bitCount, const void *bitPtr)
 void BitStream::setBit(S32 bitCount, bool set)
 {
    if(set)
-      *(dataPtr + (bitCount >> 3)) |= (1 << (bitCount & 0x7));
+      *(mDataPtr + (bitCount >> 3)) |= (1 << (bitCount & 0x7));
    else
-      *(dataPtr + (bitCount >> 3)) &= ~(1 << (bitCount & 0x7));
+      *(mDataPtr + (bitCount >> 3)) &= ~(1 << (bitCount & 0x7));
 }
 
 bool BitStream::testBit(S32 bitCount)
 {
-   return (*(dataPtr + (bitCount >> 3)) & (1 << (bitCount & 0x7))) != 0;
+   return (*(mDataPtr + (bitCount >> 3)) & (1 << (bitCount & 0x7))) != 0;
 }
 
 bool BitStream::writeFlag(bool val)
 {
-   if(bitNum + 1 > maxWriteBitNum)
+   if((bitNum + 1) > maxWriteBitNum)
    {
       error = true;
-      AssertFatal(false, "Out of range write");
+      AssertFatal(false, avar("BitStream::writeFlag - Out of range write [%i/%i]", bitNum+1, maxWriteBitNum));
       return false;
    }
    if(val)
-      *(dataPtr + (bitNum >> 3)) |= (1 << (bitNum & 0x7));
+      *(mDataPtr + (bitNum >> 3)) |= (1 << (bitNum & 0x7));
    else
-      *(dataPtr + (bitNum >> 3)) &= ~(1 << (bitNum & 0x7));
+      *(mDataPtr + (bitNum >> 3)) &= ~(1 << (bitNum & 0x7));
    bitNum++;
    return (val);
 }
@@ -289,7 +289,7 @@ void BitStream::readBits(S32 bitCount, void *bitPtr)
       AssertWarn(false, "Out of range read");
       return;
    }
-   U8 *stPtr = dataPtr + (bitNum >> 3);
+   U8 *stPtr = mDataPtr + (bitNum >> 3);
    S32 byteCount = (bitCount + 7) >> 3;
 
    U8 *ptr = (U8 *) bitPtr;
@@ -298,7 +298,7 @@ void BitStream::readBits(S32 bitCount, void *bitPtr)
    S32 upShift = 8 - downShift;
 
    U8 curB = *stPtr;
-   const U8 *stEnd = dataPtr + bufSize;
+   const U8 *stEnd = mDataPtr + bufSize;
    while(byteCount--)
    {
       stPtr++;
@@ -336,7 +336,7 @@ S32 BitStream::readInt(S32 bitCount)
 
 void BitStream::writeInt(S32 val, S32 bitCount)
 {
-   AssertWarn((bitCount == 32) || ((val >> bitCount) == 0), "BitStream::writeInt: value out of range");
+   AssertFatal((bitCount == 32) || ((val >> bitCount) == 0), avar("BitStream::writeInt: value out of range: %i/%i (%i bits)", val, 1 << bitCount, bitCount));
 
    val = convertHostToLEndian(val);
    writeBits(bitCount, &val);
@@ -344,22 +344,52 @@ void BitStream::writeInt(S32 val, S32 bitCount)
 
 void BitStream::writeFloat(F32 f, S32 bitCount)
 {
-   writeInt((S32)(f * ((1 << bitCount) - 1)), bitCount);
+   auto maxInt = (1U << bitCount) - 1;
+   U32 i;
+   if (f < POINT_EPSILON)
+   {
+      // Special case: <= 0 serializes to 0
+      i = 0.0f;
+   }
+   else if (f == 0.5)
+   {
+      // Special case: 0.5 serializes to maxInt / 2 + 1
+      i = maxInt / 2 + 1;
+   }
+   else if (f > (1.0f- POINT_EPSILON))
+   {
+      // Special case: >= 1 serializes to maxInt
+      i = maxInt;
+   }
+   else
+   {
+      // Serialize normally but round the number
+      i = static_cast<U32>(roundf(f * maxInt));
+   }
+   writeInt(i, bitCount);
 }
 
 F32 BitStream::readFloat(S32 bitCount)
 {
-   return readInt(bitCount) / F32((1 << bitCount) - 1);
+   auto maxInt = (1U << bitCount) - 1;
+   auto i = static_cast<U32>(readInt(bitCount));
+   if (i == 0)
+      return 0;
+   if (i == maxInt / 2 + 1)
+      return 0.5;
+   if (i == maxInt)
+      return 1;
+   return i / static_cast<F32>(maxInt);
 }
 
 void BitStream::writeSignedFloat(F32 f, S32 bitCount)
 {
-   writeInt((S32)(((f + 1) * .5) * ((1 << bitCount) - 1)), bitCount);
+   writeFloat((f + 1) / 2, bitCount);
 }
 
 F32 BitStream::readSignedFloat(S32 bitCount)
 {
-   return readInt(bitCount) * 2 / F32((1 << bitCount) - 1) - 1.0f;
+   return readFloat(bitCount) * 2 - 1;
 }
 
 void BitStream::writeSignedInt(S32 value, S32 bitCount)
@@ -488,24 +518,51 @@ void BitStream::readAffineTransform(MatrixF* matrix)
 
 void BitStream::writeQuat( const QuatF& quat, U32 bitCount )
 {
-   writeSignedFloat( quat.x, bitCount );
-   writeSignedFloat( quat.y, bitCount );
-   writeSignedFloat( quat.z, bitCount );
-   writeFlag( quat.w < 0.0f );
+   F32 quatVals[4] = { quat.x, quat.y, quat.z, quat.w };
+   bool flipQuat = (quatVals[0] < 0);
+   F32 maxVal = mFabs(quatVals[0]);
+   S32 idxMax = 0;
+
+   for (S32 i = 1; i < 4; ++i)
+   {
+      if (mFabs(quatVals[i]) > maxVal)
+      {
+         idxMax = i;
+         maxVal = mFabs(quatVals[i]);
+         flipQuat = (quatVals[i] < 0);
+      }
+   }
+   writeInt(idxMax, 2);
+
+   for (S32 i = 0; i < 4; ++i)
+   {
+      if (i == idxMax)
+         continue;
+      F32 curValue = (flipQuat ? -quatVals[i] : quatVals[i]) * (F32) M_SQRT2;
+      writeSignedFloat( curValue, bitCount );
+   }
 }
 
 void BitStream::readQuat( QuatF *outQuat, U32 bitCount )
 {
-   outQuat->x = readSignedFloat( bitCount );
-   outQuat->y = readSignedFloat( bitCount );
-   outQuat->z = readSignedFloat( bitCount );
+   F32 quatVals[4];
+   F32 sum = 0.0f;
 
-   outQuat->w = mSqrt( 1.0 - getMin(   mSquared( outQuat->x ) + 
-                                       mSquared( outQuat->y ) + 
-                                       mSquared( outQuat->z ),
-                                       1.0f ) );
-   if ( readFlag() )
-      outQuat->w = -outQuat->w;
+   S32 idxMax = readInt( 2 );
+   for (S32 i = 0; i < 4; ++i)
+   {
+      if (i == idxMax)
+         continue;
+      quatVals[i] = readSignedFloat( bitCount ) * M_SQRTHALF_F;
+      sum += quatVals[i] * quatVals[i];
+   }
+
+   if (sum > 1.0f)
+      quatVals[idxMax] = 1.0f;
+   else
+      quatVals[idxMax] = mSqrt(1.0f - sum);
+
+   outQuat->set(quatVals[0], quatVals[1], quatVals[2], quatVals[3]);
 }
 
 void BitStream::writeBits( const BitVector &bitvec )
@@ -628,7 +685,7 @@ void InfiniteBitStream::validate(U32 upcomingBytes)
    if(getPosition() + upcomingBytes + mMinSpace > bufSize)
    {
       bufSize = getPosition() + upcomingBytes + mMinSpace;
-      dataPtr = (U8 *) dRealloc(dataPtr, bufSize);
+	  mDataPtr = (U8 *) dRealloc(mDataPtr, bufSize);
 
       maxReadBitNum = bufSize << 3;
       maxWriteBitNum = bufSize << 3;
@@ -643,11 +700,11 @@ void InfiniteBitStream::compact()
 
    // Copy things...
    bufSize = getPosition() + mMinSpace * 2;
-   dMemcpy(tmp, dataPtr, oldSize);
+   dMemcpy(tmp, mDataPtr, oldSize);
 
    // And clean up.
-   dFree(dataPtr);
-   dataPtr = tmp;
+   dFree(mDataPtr);
+   mDataPtr = tmp;
 
    maxReadBitNum = bufSize << 3;
    maxWriteBitNum = bufSize << 3;
@@ -655,7 +712,7 @@ void InfiniteBitStream::compact()
 
 void InfiniteBitStream::writeToStream(Stream &s)
 {
-   s.write(getPosition(), dataPtr);
+   s.write(getPosition(), mDataPtr);
 }
 
 //------------------------------------------------------------------------------
@@ -667,14 +724,14 @@ void BitStream::readString(char buf[256])
       if(readFlag())
       {
          S32 offset = readInt(8);
-         HuffmanProcessor::g_huffProcessor.readHuffBuffer(this, stringBuffer + offset);
-         dStrcpy(buf, stringBuffer);
+         HuffmanProcessor::g_huffProcessor.readHuffBuffer(this, stringBuffer + offset, 256 - offset);
+         dStrcpy(buf, stringBuffer, 256);
          return;
       }
    }
-   HuffmanProcessor::g_huffProcessor.readHuffBuffer(this, buf);
+   HuffmanProcessor::g_huffProcessor.readHuffBuffer(this, buf, 256);
    if(stringBuffer)
-      dStrcpy(stringBuffer, buf);
+      dStrcpy(stringBuffer, buf, 256);
 }
 
 void BitStream::writeString(const char *string, S32 maxLen)
@@ -781,7 +838,7 @@ void HuffmanProcessor::generateCodes(BitStream& rBS, S32 index, S32 depth)
       // leaf node, copy the code in, and back out...
       HuffLeaf& rLeaf = m_huffLeaves[-(index + 1)];
 
-      dMemcpy(&rLeaf.code, rBS.dataPtr, sizeof(rLeaf.code));
+      dMemcpy(&rLeaf.code, rBS.mDataPtr, sizeof(rLeaf.code));
       rLeaf.numBits = depth;
    } else {
       HuffNode& rNode = m_huffNodes[index];
@@ -812,13 +869,16 @@ S16 HuffmanProcessor::determineIndex(HuffWrap& rWrap)
    }
 }
 
-bool HuffmanProcessor::readHuffBuffer(BitStream* pStream, char* out_pBuffer)
+bool HuffmanProcessor::readHuffBuffer(BitStream* pStream, char* out_pBuffer, S32 maxLen=256)
 {
    if (m_tablesBuilt == false)
       buildTables();
 
    if (pStream->readFlag()) {
       S32 len = pStream->readInt(8);
+      if (len >= maxLen) {
+         len = maxLen;
+      }
       for (S32 i = 0; i < len; i++) {
          S32 index = 0;
          while (true) {
@@ -839,6 +899,9 @@ bool HuffmanProcessor::readHuffBuffer(BitStream* pStream, char* out_pBuffer)
    } else {
       // Uncompressed string...
       U32 len = pStream->readInt(8);
+      if (len >= maxLen) {
+         len = maxLen;
+      }
       pStream->read(len, out_pBuffer);
       out_pBuffer[len] = '\0';
       return true;

@@ -1,0 +1,4 @@
+<GUIAsset
+    AssetName="recordingsDlg"
+    GUIFile="@assetFile=RecordingsDlg.gui"
+    VersionId="1"/>

@@ -99,9 +99,6 @@ protected:
 
    virtual void setTextureInternal(U32 textureUnit, const GFXTextureObject*texture) { };
 
-   virtual void setLightInternal(U32 lightStage, const GFXLightInfo light, bool lightEnable);
-   virtual void setLightMaterialInternal(const GFXLightMaterial mat) { };
-   virtual void setGlobalAmbientInternal(ColorF color) { };
 
    /// @name State Initalization.
    /// @{
@@ -110,15 +107,15 @@ protected:
    /// is created.
    virtual void initStates() { };
 
-   virtual void setMatrix( GFXMatrixType mtype, const MatrixF &mat ) { };
-
    virtual GFXVertexBuffer *allocVertexBuffer(  U32 numVerts, 
                                                 const GFXVertexFormat *vertexFormat, 
                                                 U32 vertSize, 
-                                                GFXBufferType bufferType );
+                                                GFXBufferType bufferType,
+                                                void* data = NULL );
    virtual GFXPrimitiveBuffer *allocPrimitiveBuffer(  U32 numIndices, 
                                                       U32 numPrimitives, 
-                                                      GFXBufferType bufferType );
+                                                      GFXBufferType bufferType,
+                                                      void* data = NULL );
 
    virtual GFXVertexDecl* allocVertexDecl( const GFXVertexFormat *vertexFormat ) { return NULL; }
    virtual void setVertexDecl( const GFXVertexDecl *decl ) {  }
@@ -127,12 +124,14 @@ protected:
 
 public:
    virtual GFXCubemap * createCubemap();
+   virtual GFXCubemapArray *createCubemapArray();
+   virtual GFXTextureArray *createTextureArray();
 
    virtual F32 getFillConventionOffset() const { return 0.0f; };
 
    ///@}
 
-   virtual GFXTextureTarget *allocRenderToTextureTarget(){return NULL;};
+   virtual GFXTextureTarget *allocRenderToTextureTarget(bool genMips=true){return NULL;};
    virtual GFXWindowTarget *allocWindowTarget(PlatformWindow *window)
    {
       return new GFXNullWindowTarget();
@@ -147,8 +146,9 @@ public:
 
    virtual GFXShader* createShader() { return NULL; };
 
-
-   virtual void clear( U32 flags, ColorI color, F32 z, U32 stencil ) { };
+   virtual void copyResource(GFXTextureObject *pDst, GFXCubemap *pSrc, const U32 face) { };
+   virtual void clear( U32 flags, const LinearColorF& color, F32 z, U32 stencil ) { };
+   virtual void clearColorAttachment(const U32 attachment, const LinearColorF& color) { };
    virtual bool beginSceneInternal() { return true; };
    virtual void endSceneInternal() { };
 

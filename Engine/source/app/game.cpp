@@ -20,6 +20,11 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+// Arcane-FX for MIT Licensed Open Source version of Torque 3D from GarageGames
+// Copyright (C) 2015 Faust Logic, Inc.
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+
 #include "platform/platform.h"
 #include "platform/platformInput.h"
 
@@ -49,7 +54,11 @@
 #include "gfx/gfxTextureManager.h"
 #include "sfx/sfxSystem.h"
 
-#ifdef TORQUE_PLAYER
+#ifdef TORQUE_AFX_ENABLED
+#include "afx/arcaneFX.h"
+#endif
+
+#if defined(TORQUE_PLAYER) || !defined(TORQUE_TOOLS)
 // See matching #ifdef in editor/editor.cpp
 bool gEditingMission = false;
 #endif
@@ -58,7 +67,7 @@ bool gEditingMission = false;
 
 ConsoleFunctionGroupBegin( InputManagement, "Functions that let you deal with input from scripts" );
 
-DefineConsoleFunction( deactivateDirectInput, void, (), ,
+DefineEngineFunction( deactivateDirectInput, void, (), ,
          "()"
             "@brief Disables DirectInput.\n\n"
             "Also deactivates any connected joysticks.\n\n"
@@ -68,7 +77,7 @@ DefineConsoleFunction( deactivateDirectInput, void, (), ,
       Input::deactivate();
 }
 
-DefineConsoleFunction( activateDirectInput, void, (), ,
+DefineEngineFunction( activateDirectInput, void, (), ,
             "()"
             "@brief Activates DirectInput.\n\n"
             "Also activates any connected joysticks."
@@ -82,7 +91,7 @@ ConsoleFunctionGroupEnd( InputManagement );
 //--------------------------------------------------------------------------
 
 static const U32 MaxPlayerNameLength = 16;
-DefineConsoleFunction( strToPlayerName, const char*, (const char* ptr ), , "strToPlayerName(string);" )
+DefineEngineFunction( strToPlayerName, const char*, (const char* ptr ), , "strToPlayerName(string);" )
 {
 
 	// Strip leading spaces and underscores:
@@ -138,7 +147,7 @@ DefineConsoleFunction( strToPlayerName, const char*, (const char* ptr ), , "strT
 
 ConsoleFunctionGroupBegin( Platform , "General platform functions.");
 
-DefineConsoleFunction( lockMouse, void, (bool isLocked ), , "(bool isLocked)" 
+DefineEngineFunction( lockMouse, void, (bool isLocked ), , "(bool isLocked)"
             "@brief Lock or unlock the mouse to the window.\n\n"
             "When true, prevents the mouse from leaving the bounds of the game window.\n\n"
             "@ingroup Input")
@@ -147,7 +156,7 @@ DefineConsoleFunction( lockMouse, void, (bool isLocked ), , "(bool isLocked)"
 }
 
 
-DefineConsoleFunction( setNetPort, bool, (int port, bool bind), (true), "(int port, bool bind=true)" 
+DefineEngineFunction( setNetPort, bool, (int port, bool bind), (true), "(int port, bool bind=true)" 
    "@brief Set the network port for the game to use.\n\n"
 
    "@param port The port to use.\n"
@@ -162,21 +171,28 @@ DefineConsoleFunction( setNetPort, bool, (int port, bool bind), (true), "(int po
    return Net::openPort((S32)port, bind);
 }
 
-DefineConsoleFunction( closeNetPort, void, (), , "()" 
+DefineEngineFunction(isAddressTypeAvailable, bool, (int addressType), , "(protocol id)"
+	"@brief Determines if a specified address type can be reached.\n\n"
+	"@ingroup Networking")
+{
+	return Net::isAddressTypeAvailable((NetAddress::Type)addressType);
+}
+
+DefineEngineFunction( closeNetPort, void, (), , "()" 
    "@brief Closes the current network port\n\n"
    "@ingroup Networking")
 {
    Net::closePort();
 }
 
-DefineConsoleFunction( saveJournal, void, (const char * filename), , "(string filename)" 
+DefineEngineFunction( saveJournal, void, (const char * filename), , "(string filename)" 
                 "Save the journal to the specified file.\n\n"
 				"@ingroup Platform")
 {
    Journal::Record(filename);
 }
 
-DefineConsoleFunction( playJournal, void, (const char * filename), , "(string filename)" 
+DefineEngineFunction( playJournal, void, (const char * filename), , "(string filename)" 
                 "@brief Begin playback of a journal from a specified field.\n\n"
 				"@param filename Name and path of file journal file\n"
 				"@ingroup Platform")
@@ -186,7 +202,7 @@ DefineConsoleFunction( playJournal, void, (const char * filename), , "(string fi
    Journal::Play(filename);
 }
 
-DefineConsoleFunction( getSimTime, S32, (), , "()" 
+DefineEngineFunction( getSimTime, S32, (), , "()" 
 				"Return the current sim time in milliseconds.\n\n"
                 "@brief Sim time is time since the game started.\n\n"
 				"@ingroup Platform")
@@ -194,12 +210,34 @@ DefineConsoleFunction( getSimTime, S32, (), , "()"
    return Sim::getCurrentTime();
 }
 
-DefineConsoleFunction( getRealTime, S32, (), , "()" 
+DefineEngineFunction( getRealTime, S32, (), , "()" 
 				"@brief Return the current real time in milliseconds.\n\n"
                 "Real time is platform defined; typically time since the computer booted.\n\n"
 				"@ingroup Platform")
 {
    return Platform::getRealMilliseconds();
+}
+
+DefineEngineFunction(getLocalTime, const char*, (),,
+   "@brief Return the current local time as: weekday month day year hour min sec.\n\n"
+   "Local time is platform defined."
+   "@ingroup Platform")
+{
+   Platform::LocalTime lt;
+   Platform::getLocalTime(lt);
+
+   static const U32 bufSize = 128;
+   char *retBuffer = Con::getReturnBuffer(bufSize);
+   dSprintf(retBuffer, bufSize, "%d %d %d %d %02d %02d %02d",
+      lt.weekday,
+      lt.month + 1,
+      lt.monthday,
+      lt.year + 1900,
+      lt.hour,
+      lt.min,
+      lt.sec);
+
+   return retBuffer;
 }
 
 ConsoleFunctionGroupEnd(Platform);
@@ -208,6 +246,11 @@ ConsoleFunctionGroupEnd(Platform);
 
 bool clientProcess(U32 timeDelta)
 {
+#ifdef TORQUE_AFX_ENABLED
+   // Required heartbeat call on the client side which must come
+   // before the advanceTime() calls are made to the scene objects.
+   arcaneFX::advanceTime(timeDelta);
+#endif
    bool ret = true;
 
 #ifndef TORQUE_TGB_ONLY

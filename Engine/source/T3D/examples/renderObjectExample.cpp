@@ -68,6 +68,7 @@ RenderObjectExample::~RenderObjectExample()
 //-----------------------------------------------------------------------------
 void RenderObjectExample::initPersistFields()
 {
+   docsURL;
    // SceneObject already handles exposing the transform
    Parent::initPersistFields();
 }

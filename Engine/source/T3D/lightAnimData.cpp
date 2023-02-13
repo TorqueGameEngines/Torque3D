@@ -62,6 +62,7 @@ ConsoleDocClass( LightAnimData,
 
 void LightAnimData::initPersistFields()
 {
+   docsURL;
    addGroup( "Offset",
       "The XYZ translation animation state relative to the light position." );
 
@@ -190,12 +191,15 @@ void LightAnimData::AnimValue<COUNT>::updateKey()
 }
 
 template<U32 COUNT>
-bool LightAnimData::AnimValue<COUNT>::animate( F32 time, F32 *output )
+bool LightAnimData::AnimValue<COUNT>::animate(F32 time, F32 *output, bool multiply)
 {
    F32 scaledTime, lerpFactor, valueRange, keyFrameLerp;
    U32 posFrom, posTo;
    S32 keyFrameFrom, keyFrameTo;
-   
+   F32 initialValue = *output;
+   if (!multiply)
+      initialValue = 1;
+
    bool wasAnimated = false;
 
    for ( U32 i=0; i < COUNT; i++ )
@@ -215,13 +219,13 @@ bool LightAnimData::AnimValue<COUNT>::animate( F32 time, F32 *output )
 	   valueRange = ( value2[i] - value1[i] ) / 25.0f;
 
       if ( !smooth[i] )
-   	   output[i] = value1[i] + ( keyFrameFrom * valueRange );
+         output[i] = (value1[i] + (keyFrameFrom * valueRange)) * initialValue;
       else
       {
          lerpFactor = scaledTime - posFrom;
    	   keyFrameLerp = ( keyFrameTo - keyFrameFrom ) * lerpFactor;
 
-         output[i] = value1[i] + ( ( keyFrameFrom + keyFrameLerp ) * valueRange );
+         output[i] = (value1[i] + ((keyFrameFrom + keyFrameLerp) * valueRange)) * initialValue;
       }
    }
 
@@ -299,11 +303,11 @@ void LightAnimData::animate( LightInfo *lightInfo, LightAnimState *state )
 
    lightInfo->setTransform( transform );
 
-   ColorF color = state->color;
+   LinearColorF color = state->color;
    mColor.animate( time, color );
    lightInfo->setColor( color );
 
    F32 brightness = state->brightness;
-   mBrightness.animate( time, &brightness );
+   mBrightness.animate( time, &brightness, true );
    lightInfo->setBrightness( brightness );
 }

@@ -1,0 +1,287 @@
+//-----------------------------------------------------------------------------
+// Copyright (c) 2012 GarageGames, LLC
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+// IN THE SOFTWARE.
+//-----------------------------------------------------------------------------
+
+function createCanvas(%windowTitle)
+{
+   if ($isDedicated)
+   {
+      GFXInit::createNullDevice();
+      return true;
+   }
+   
+   // Create the Canvas
+   $GameCanvas = new GuiCanvas(Canvas)
+   {
+      displayWindow = $platform !$= "windows";
+   };
+
+   // Set the window title
+   if (isObject(Canvas)) 
+   {
+      Canvas.setWindowTitle(%windowTitle @ " - " @ getDisplayDeviceType());
+      configureCanvas();
+   } 
+   else 
+   {
+      error("Canvas creation failed. Shutting down.");
+      quit();
+   }
+}
+
+// Constants for referencing video resolution preferences
+$WORD::RES_X = 0;
+$WORD::RES_Y = 1;
+$WORD::FULLSCREEN = 2;
+$WORD::BITDEPTH = 3;
+$WORD::REFRESH = 4;
+$WORD::AA = 5;
+if($platform $= "windows")
+   $Video::ModeTags = "Windowed\tBorderless";
+else
+   $Video::ModeTags = "Windowed\tBorderless\tFullscreen";
+$Video::ModeWindowed = 0;
+$Video::ModeBorderless = 1;
+$Video::ModeFullscreen = 2;
+$Video::minimumXResolution = 1024;
+$Video::minimumYResolution = 720;
+
+function configureCanvas()
+{
+   // Setup a good default if we don't have one already.
+   if (($pref::Video::deviceId $= "") || ($pref::Video::deviceId < 0) ||
+         ($pref::Video::deviceId >= Canvas.getMonitorCount()))
+      $pref::Video::deviceId = 0;  // Monitor 0
+
+   if (($pref::Video::deviceMode $= "") || ($pref::Video::deviceMode < 0) ||
+      ($pref::Video::deviceMode >= getFieldCount($Video::ModeTags)))
+   {
+      $pref::Video::deviceMode = $Video::ModeBorderless;
+      $pref::Video::mode = Canvas.getBestCanvasRes($pref::Video::deviceId, $pref::Video::deviceMode);
+      Canvas.modeStrToPrefs($pref::Video::mode);
+   }
+
+   if($cliFullscreen !$= "")
+      $pref::Video::deviceMode = $cliFullscreen ? 2 : 0;
+
+   // Default to borderless at desktop resolution if there is no saved pref or
+   // command line arg
+   if (($pref::Video::Resolution $= "") || ($pref::Video::Resolution.x < $Video::minimumXResolution) ||
+      ($pref::Video::Resolution.y < $Video::minimumYResolution))
+   {
+      $pref::Video::mode = Canvas.getBestCanvasRes($pref::Video::deviceId, $pref::Video::deviceMode);
+      Canvas.modeStrToPrefs($pref::Video::mode);
+   }
+
+   if ($pref::Video::deviceMode != $Video::ModeFullscreen)
+      $pref::Video::FullScreen = false;
+   %modeStr = Canvas.prefsToModeStr();
+
+   echo("--------------");
+   echo("Attempting to set resolution to \"" @ %modeStr @ "\"");
+
+   // Make sure we are running at a valid resolution
+   if (!Canvas.checkCanvasRes(%modeStr, $pref::Video::deviceId, $pref::Video::deviceMode, true))
+   {
+      %modeStr = Canvas.getBestCanvasRes($pref::Video::deviceId, $pref::Video::deviceMode);
+      Canvas.modeStrToPrefs(%modeStr);
+   }
+   
+   %fsLabel = getField($Video::ModeTags, $pref::Video::deviceMode);
+   %resX = $pref::Video::Resolution.x;
+   %resY = $pref::Video::Resolution.y;
+   %bpp  = $pref::Video::BitDepth;
+   %rate = $pref::Video::RefreshRate;
+   %aaMode = $pref::video::AAMode;
+   %aa = $pref::Video::AA;
+   %fs = ($pref::Video::deviceMode == 2);
+
+   echo("Accepted Mode: " NL
+      "--Resolution     : " @  %resX SPC %resY NL
+      "--Screen Mode    : " @ %fsLabel NL
+      "--Bits Per Pixel : " @ %bpp NL
+      "--Refresh Rate   : " @ %rate NL
+      "--Anit-Aliasing Type     : " @ %aaMode NL
+      "--------------");
+
+   // Actually set the new video mode
+   Canvas.setVideoMode(%resX, %resY, %fs, %bpp, %rate, %aa);
+
+   // For borderless on non-windows OS, move the window into position.
+   if (($pref::Video::deviceMode == $Video::ModeBorderless) && ($platform !$= "windows"))
+   {
+      %borderlessPos = getWords(Canvas.getMonitorUsableRect($pref::Video::deviceId), 0, 1);
+      Canvas.setWindowPosition(%borderlessPos);
+   }
+   Canvas.setFocus();
+
+   // Lock and unlock the mouse to force the position to sync with the platform window
+   lockMouse(true);
+   lockMouse(false);
+
+   commandToServer('setClientAspectRatio', %resX, %resY);
+
+   // AA piggybacks on the AA setting in $pref::Video::mode.
+   // We need to parse the setting between AA modes, and then it's level
+   
+   if(isObject( FXAAPostFX ))
+   {
+      if ( startsWith(%aaMode, "FXAA") )
+      {
+         FXAAPostFX.Enabled = true; 
+      }
+      else
+      {
+         FXAAPostFX.Enabled = false;  
+      }
+   }
+   
+   if(isObject( SMAAPostFX ))
+   {
+      if ( startsWith(%aaMode, "SMAA") )
+      {
+         SMAAPostFX.Enabled = true; 
+      }
+      else
+      {
+         SMAAPostFX.Enabled = false;  
+      }
+   }
+}
+
+function GuiCanvas::modeStrToPrefs(%this, %modeStr)
+{
+   $pref::Video::Resolution = %modeStr.x SPC %modeStr.y;
+   $pref::Video::FullScreen = getWord(%modeStr, $WORD::FULLSCREEN);
+   $pref::Video::BitDepth = getWord(%modeStr, $WORD::BITDEPTH);
+   $pref::Video::RefreshRate = getWord(%modeStr, $WORD::REFRESH);
+   $pref::Video::AA = getWord(%modeStr, $WORD::AA);
+}
+
+function GuiCanvas::prefsToModeStr(%this)
+{
+   %modeStr = $pref::Video::Resolution SPC $pref::Video::FullScreen SPC
+      $pref::Video::BitDepth SPC $pref::Video::RefreshRate SPC $pref::Video::AA;
+
+   return %modeStr;
+}
+
+function GuiCanvas::checkCanvasRes(%this, %mode, %deviceId, %deviceMode, %startup)
+{
+   // Toggle for selecting the borderless window allowed sizes. Set true to allow
+   // borderless windows to be less than the device res.
+   %allowSmallBorderless = false;
+
+   %resX = getWord(%mode, $WORD::RES_X);
+   %resY = getWord(%mode, $WORD::RES_Y);
+
+   // Make sure it meets the minimum resolution requirement
+   if ((%resX < $Video::minimumXResolution) || (%resY < $Video::minimumYResolution))
+      return false;
+
+   if (%deviceMode == $Video::ModeWindowed)
+   {  // Windowed must be smaller than the device usable area
+      %deviceRect = getWords(%this.getMonitorUsableRect(%deviceId), 2);
+      if ((%resY > %deviceRect.y) || (%resX > (%deviceRect.x - 2)))
+         return false;
+      return true;
+   }
+   else if (%deviceMode == $Video::ModeBorderless)
+   {  // Borderless must be at or less than the device res
+      %deviceRect = getWords(%this.getMonitorRect(%deviceId), 2);
+      if ((%resX > %deviceRect.x) || (%resY > %deviceRect.y))
+         return false;
+
+      if (!%allowSmallBorderless && ((%resX != %deviceRect.x) || (%resY != %deviceRect.y)))
+         return false;
+
+      return true;
+   }
+   else if (%deviceMode == $Video::ModeFullscreen)
+   {  // Fullscreen must match the aspect ratio of the monitor
+      %deviceRes = getWords(%this.getMonitorRect(%deviceId), 2);
+      if (mRoundColour(%resX / %resY, 2) != mRoundColour(%deviceRes.x / %deviceRes.y, 2))
+         return false;
+   }
+
+   if (!%startup)
+      return true;
+
+   // Checking saved prefs, make sure the mode still exists
+   %bpp = getWord(%mode, $WORD::BITDEPTH);
+   %rate = getWord(%mode, $WORD::REFRESH);
+
+   %resCount = %this.getMonitorModeCount(%deviceId);
+   for (%i = (%resCount - 1); %i >= 0; %i--)
+   {
+      %testRes = %this.getMonitorMode(%deviceId, %i);
+      %testResX = getWord(%testRes, $WORD::RES_X);
+      %testResY = getWord(%testRes, $WORD::RES_Y);
+      %testBPP  = getWord(%testRes, $WORD::BITDEPTH);
+      %testRate = getWord(%testRes, $WORD::REFRESH);
+
+      if ((%testResX == %resX) && (%testResY == %resY) &&
+            (%testBPP == %bpp) && (%testRate == %rate))
+         return true;
+   }
+
+   return false;
+}
+
+// Find the best video mode setting for the device and display mode.
+// "Best" is the largest resolution that will fit at highest refresh rate.
+function GuiCanvas::getBestCanvasRes(%this, %deviceId, %deviceMode)
+{
+   if (%deviceMode == $Video::ModeWindowed)
+      %deviceRect = getWords(%this.getMonitorUsableRect(%deviceId), 2);
+   else
+      %deviceRect = getWords(%this.getMonitorRect(%deviceId), 2);
+
+   %bestRes = "";
+   %resCount = %this.getModeCount();
+   for (%i = %resCount - 1; %i >= 0; %i--)
+   {
+      %testRes = %this.getMode(%i);
+      %resX = getWord(%testRes, $WORD::RES_X);
+      %resY = getWord(%testRes, $WORD::RES_Y);
+      %rate = getWord(%testRes, $WORD::REFRESH);
+
+      if ((%resX > %deviceRect.x) || (%resY > %deviceRect.y) ||
+         (%resX < $Video::minimumXResolution) || (%resY < $Video::minimumYResolution))
+         continue;
+
+      if (((%bestRes $= "") || (%resX > getWord(%bestRes, $WORD::RES_X)) ||
+            (%resY > getWord(%bestRes, $WORD::RES_Y))) ||
+         ((%resX == getWord(%bestRes, $WORD::RES_X)) && (%resY == getWord(%bestRes, $WORD::RES_Y)) &&
+            (%rate > getWord(%bestRes, $WORD::REFRESH))))
+         %bestRes = %testRes;
+   }
+
+   // Borderless on non-windows OS should be the usable screen area.
+   if ((%deviceMode == $Video::ModeBorderless) && ($platform !$= "windows"))
+   {
+      %deviceRect = getWords(%this.getMonitorUsableRect(%deviceId), 2);
+      %bestRes = setWord(%bestRes, $WORD::RES_X, %deviceRect.x);
+      %bestRes = setWord(%bestRes, $WORD::RES_Y, %deviceRect.y);
+   }
+
+   return %bestRes;
+}

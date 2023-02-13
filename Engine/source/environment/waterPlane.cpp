@@ -118,6 +118,7 @@ void WaterPlane::onRemove()
 
 void WaterPlane::initPersistFields()
 {
+   docsURL;
    addGroup( "WaterPlane" );     
 
       addProtectedField( "gridSize", TypeS32, Offset( mGridSize, WaterPlane ), &protectedSetGridSize, &defaultProtectedGetFn,
@@ -175,9 +176,6 @@ void WaterPlane::setupVBIB( SceneRenderState *state )
 {
    const Frustum &frustum = state->getCullingFrustum();
    
-   // Water base-color, assigned as color for all verts.
-   const GFXVertexColor vertCol(mWaterFogData.color);
-
    // World-Up vector, assigned as normal for all verts.
    const Point3F worldUp( 0.0f, 0.0f, 1.0f );
 
@@ -250,7 +248,6 @@ void WaterPlane::setupVBIB( SceneRenderState *state )
          xVal = cornerPosition.x + (F32)( j * squareSize );
 
          vertPtr->point.set( xVal, yVal, 0.0f );
-         vertPtr->color = vertCol;
          vertPtr->normal = worldUp;
          vertPtr->undulateData.set( xVal, yVal );
          vertPtr->horizonFactor.set( 0, 0, 0, 0 );
@@ -404,7 +401,6 @@ void WaterPlane::setupVBIB( SceneRenderState *state )
          vertPtr->point.set( pos.x, pos.y, 0.0f );
          vertPtr->undulateData.set( pos.x, pos.y );
          vertPtr->horizonFactor.set( 0, 0, 0, 0 );
-         vertPtr->color = vertCol;
          vertPtr->normal = worldUp;         
          vertPtr++;
       }
@@ -427,7 +423,6 @@ void WaterPlane::setupVBIB( SceneRenderState *state )
       vertPtr->point.set( pos.x, pos.y, 50.0f );
       vertPtr->undulateData.set( pos.x, pos.y );
       vertPtr->horizonFactor.set( 1, 0, 0, 0 );
-      vertPtr->color = vertCol;
       vertPtr->normal = worldUp;
       vertPtr++;
    }
@@ -539,7 +534,7 @@ void WaterPlane::setupVBIB( SceneRenderState *state )
       1,             // Top
       -(S32)gridStride,   // Right
       -1,             // Bottom
-      gridStride,    // Left
+      (S32)gridStride,    // Left
    };
 
    const U32 firstBorderVert = gridStride * gridSize + gridStride;
@@ -670,7 +665,7 @@ void WaterPlane::setShaderParams( SceneRenderState *state, BaseMatInstance* mat,
    // set pixel shader constants
    //-----------------------------------
 
-   ColorF c( mWaterFogData.color );
+   LinearColorF c( mWaterFogData.color );
    matParams->setSafe( paramHandles.mBaseColorSC, c );   
    
    // By default we need to show a true reflection is fullReflect is enabled and

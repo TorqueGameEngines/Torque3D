@@ -1,0 +1,7 @@
+<MaterialAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="WarningMaterial"
+    scriptFile="@assetFile=materials.tscript"
+    materialDefinitionName="WarningMaterial"
+    VersionId="1" />

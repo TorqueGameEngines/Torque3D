@@ -68,17 +68,14 @@ inline static void _GFXInitReportAdapters(Vector<GFXAdapter*> &adapters)
    {
       switch (adapters[i]->mType)
       {
-      case Direct3D9:
-         Con::printf("   Direct 3D (version 9.x) device found");
-         break;
       case OpenGL:
          Con::printf("   OpenGL device found");
          break;
       case NullDevice:
          Con::printf("   Null device found");
          break;
-      case Direct3D8:
-         Con::printf("   Direct 3D (version 8.1) device found");
+      case Direct3D11:
+         Con::printf("   Direct 3D (version 11.x) device found");
          break;
       default :
          Con::printf("   Unknown device found");
@@ -87,28 +84,15 @@ inline static void _GFXInitReportAdapters(Vector<GFXAdapter*> &adapters)
    }
 }
 
-inline static void _GFXInitGetInitialRes(GFXVideoMode &vm, const Point2I &initialSize)
+inline static void _GFXInitGetInitialRes(GFXVideoMode &vm)
 {
-   const U32 kDefaultWindowSizeX = 800;
-   const U32 kDefaultWindowSizeY = 600;
-   const bool kDefaultFullscreen = false;
-   const U32 kDefaultBitDepth = 32;
-   const U32 kDefaultRefreshRate = 60;
-
    // cache the desktop size of the main screen
    GFXVideoMode desktopVm = GFXInit::getDesktopResolution();
 
    // load pref variables, properly choose windowed / fullscreen  
    const String resString = Con::getVariable("$pref::Video::mode");
 
-   // Set defaults into the video mode, then have it parse the user string.
-   vm.resolution.x = kDefaultWindowSizeX;
-   vm.resolution.y = kDefaultWindowSizeY;
-   vm.fullScreen   = kDefaultFullscreen;
-   vm.bitDepth     = kDefaultBitDepth;
-   vm.refreshRate  = kDefaultRefreshRate;
-   vm.wideScreen = false;
-
+   // Parse video mode settings from pref string
    vm.parseFromString(resString);
 }
 
@@ -198,6 +182,22 @@ GFXAdapter* GFXInit::getAdapterOfType( GFXAdapterType type, const char* outputDe
    return NULL;
 }
 
+GFXAdapter* GFXInit::getAdapterOfType(GFXAdapterType type, S32 outputDeviceIndex)
+{
+   for (U32 i = 0; i < smAdapters.size(); i++)
+   {
+      if (smAdapters[i]->mType == type)
+      {
+         if (smAdapters[i]->mIndex == outputDeviceIndex)
+         {
+            return smAdapters[i];
+         }
+      }
+   }
+
+   return NULL;
+}
+
 GFXAdapter* GFXInit::chooseAdapter( GFXAdapterType type, const char* outputDevice)
 {
    GFXAdapter* adapter = GFXInit::getAdapterOfType(type, outputDevice);
@@ -219,9 +219,31 @@ GFXAdapter* GFXInit::chooseAdapter( GFXAdapterType type, const char* outputDevic
    return adapter;
 }
 
+GFXAdapter* GFXInit::chooseAdapter(GFXAdapterType type, S32 outputDeviceIndex)
+{
+   GFXAdapter* adapter = GFXInit::getAdapterOfType(type, outputDeviceIndex);
+
+   if (!adapter && type != OpenGL)
+   {
+      Con::errorf("The requested renderer, %s, doesn't seem to be available."
+         " Trying the default, OpenGL.", getAdapterNameFromType(type));
+      adapter = GFXInit::getAdapterOfType(OpenGL, outputDeviceIndex);
+   }
+
+   if (!adapter)
+   {
+      Con::errorf("The OpenGL renderer doesn't seem to be available. Trying the GFXNulDevice.");
+      adapter = GFXInit::getAdapterOfType(NullDevice, 0);
+   }
+
+   AssertFatal(adapter, "There is no rendering device available whatsoever.");
+   return adapter;
+}
+
 const char* GFXInit::getAdapterNameFromType(GFXAdapterType type)
 {
-   static const char* _names[] = { "OpenGL", "D3D9", "D3D8", "NullDevice", "Xenon" };
+   // must match GFXAdapterType order
+   static const char* _names[] = { "OpenGL", "D3D11", "NullDevice" };
    
    if( type < 0 || type >= GFXAdapterType_Count )
    {
@@ -243,8 +265,8 @@ GFXAdapterType GFXInit::getAdapterTypeFromName(const char* name)
    
    if( ret == -1 )
    {
-      Con::errorf( "GFXInit::getAdapterTypeFromName - Invalid renderer name, defaulting to D3D9" );
-      ret = Direct3D9;
+      Con::errorf( "GFXInit::getAdapterTypeFromName - Invalid renderer name, defaulting to D3D11" );
+      ret = Direct3D11;
    }
    
    return (GFXAdapterType)ret;
@@ -255,8 +277,23 @@ GFXAdapter *GFXInit::getBestAdapterChoice()
    // Get the user's preference for device...
    const String   renderer   = Con::getVariable("$pref::Video::displayDevice");
    const String   outputDevice = Con::getVariable("$pref::Video::displayOutputDevice");
-   GFXAdapterType adapterType = getAdapterTypeFromName(renderer.c_str());
-   GFXAdapter     *adapter    = chooseAdapter(adapterType, outputDevice.c_str());
+   const String   adapterDevice = Con::getVariable("$Video::forceDisplayAdapter");
+
+   GFXAdapterType adapterType = getAdapterTypeFromName(renderer.c_str());;
+   GFXAdapter     *adapter = NULL;
+
+   if (adapterDevice.isEmpty())
+   {
+      adapter = chooseAdapter(adapterType, outputDevice.c_str());
+   }
+   else
+   {
+     S32 adapterIdx = dAtoi(adapterDevice.c_str());
+     if (adapterIdx == -1)
+        adapter = chooseAdapter(NullDevice, outputDevice.c_str());
+     else
+        adapter = chooseAdapter(adapterType, adapterIdx);
+   }
 
    // Did they have one? Return it.
    if(adapter)
@@ -268,34 +305,27 @@ GFXAdapter *GFXInit::getBestAdapterChoice()
    //
    // If D3D is unavailable, we're not on windows, so GL is de facto the
    // best choice!
-   F32 highestSM9 = 0.f, highestSMGL = 0.f;
-   GFXAdapter  *foundAdapter8 = NULL, *foundAdapter9 = NULL, 
-               *foundAdapterGL = NULL;
+   F32 highestSMDX = 0.f, highestSMGL = 0.f;
+   GFXAdapter *foundAdapterGL = NULL, *foundAdapter11 = NULL;
 
-   for(S32 i=0; i<smAdapters.size(); i++)
+   for (S32 i = 0; i<smAdapters.size(); i++)
    {
       GFXAdapter *currAdapter = smAdapters[i];
-      switch(currAdapter->mType)
+      switch (currAdapter->mType)
       {
-      case Direct3D9:
-         if(currAdapter->mShaderModel > highestSM9)
+      case Direct3D11:
+         if (currAdapter->mShaderModel > highestSMDX)
          {
-            highestSM9 = currAdapter->mShaderModel;
-            foundAdapter9 = currAdapter;
+            highestSMDX = currAdapter->mShaderModel;
+            foundAdapter11 = currAdapter;
          }
          break;
-
       case OpenGL:
-         if(currAdapter->mShaderModel > highestSMGL)
+         if (currAdapter->mShaderModel > highestSMGL)
          {
             highestSMGL = currAdapter->mShaderModel;
             foundAdapterGL = currAdapter;
          }
-         break;
-
-      case Direct3D8:
-         if(!foundAdapter8)
-            foundAdapter8 = currAdapter;
          break;
 
       default:
@@ -303,15 +333,12 @@ GFXAdapter *GFXInit::getBestAdapterChoice()
       }
    }
 
-   // Return best found in order DX9, GL, DX8.
-   if(foundAdapter9)
-      return foundAdapter9;
+   // Return best found in order DX11, GL
+   if (foundAdapter11)
+      return foundAdapter11;
 
-   if(foundAdapterGL)
+   if (foundAdapterGL)
       return foundAdapterGL;
-
-   if(foundAdapter8)
-      return foundAdapter8;
 
    // Uh oh - we didn't find anything. Grab whatever we can that's not Null...
    for(S32 i=0; i<smAdapters.size(); i++)
@@ -325,7 +352,7 @@ GFXAdapter *GFXInit::getBestAdapterChoice()
 GFXVideoMode GFXInit::getInitialVideoMode()
 {
    GFXVideoMode vm;
-   _GFXInitGetInitialRes(vm, Point2I(800,600));
+   _GFXInitGetInitialRes(vm);
    return vm;
 }
 
@@ -431,7 +458,7 @@ DefineEngineStaticMethod( GFXInit, getAdapterOutputName, String, ( S32 index ),,
 }
 
 DefineEngineStaticMethod( GFXInit, getAdapterType, GFXAdapterType, ( S32 index ),,
-   "Returns the type (D3D9, D3D8, GL, Null) of a graphics adapter.\n"
+   "Returns the type (D3D11, GL, Null) of a graphics adapter.\n"
    "@param index The index of the adapter." )
 {
    Vector<GFXAdapter*> adapters( __FILE__, __LINE__ );
@@ -496,7 +523,7 @@ DefineEngineStaticMethod( GFXInit, getAdapterModeCount, S32, ( S32 index ),,
    return adapters[index]->mAvailableModes.size();
 }
 
-DefineConsoleStaticMethod( GFXInit, getAdapterMode, String, ( S32 index, S32 modeIndex ),,
+DefineEngineStaticMethod( GFXInit, getAdapterMode, String, ( S32 index, S32 modeIndex ),,
    "Gets the details of the specified adapter mode.\n\n"
    "@param index Index of the adapter to query.\n"
    "@param modeIndex Index of the mode to get data from.\n"

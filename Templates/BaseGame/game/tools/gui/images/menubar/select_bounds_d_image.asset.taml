@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="select_bounds_d_image"
+    imageFile="@assetFile=select-bounds_d.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

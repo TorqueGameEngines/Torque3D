@@ -20,6 +20,11 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+// Arcane-FX for MIT Licensed Open Source version of Torque 3D from GarageGames
+// Copyright (C) 2015 Faust Logic, Inc.
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+
 #include "platform/platform.h"
 #include "T3D/projectile.h"
 
@@ -139,9 +144,9 @@ U32 Projectile::smProjectileWarpTicks = 5;
 //
 ProjectileData::ProjectileData()
 {
-   projectileShapeName = NULL;
+   INIT_ASSET(ProjectileShape);
 
-   sound = NULL;
+   INIT_ASSET(ProjectileSound);
 
    explosion = NULL;
    explosionId = 0;
@@ -190,92 +195,135 @@ ProjectileData::ProjectileData()
    lightDescId = 0;
 }
 
+ProjectileData::ProjectileData(const ProjectileData& other, bool temp_clone) : GameBaseData(other, temp_clone)
+{
+   faceViewer = other.faceViewer; // -- always set to false
+   scale = other.scale;
+   velInheritFactor = other.velInheritFactor;
+   muzzleVelocity = other.muzzleVelocity;
+   impactForce = other.impactForce;
+   isBallistic = other.isBallistic;
+   bounceElasticity = other.bounceElasticity;
+   bounceFriction = other.bounceFriction;
+   gravityMod = other.gravityMod;
+   lifetime = other.lifetime;
+   armingDelay = other.armingDelay;
+   fadeDelay = other.fadeDelay;
+   explosion = other.explosion;
+   explosionId = other.explosionId; // -- for pack/unpack of explosion ptr
+   waterExplosion = other.waterExplosion;
+   waterExplosionId = other.waterExplosionId; // -- for pack/unpack of waterExplosion ptr
+   splash = other.splash;
+   splashId = other.splashId; // -- for pack/unpack of splash ptr
+   decal = other.decal;
+   decalId = other.decalId; // -- for pack/unpack of decal ptr
+   CLONE_ASSET(ProjectileSound);
+   lightDesc = other.lightDesc;
+   lightDescId = other.lightDescId; // -- for pack/unpack of lightDesc ptr
+   CLONE_ASSET(ProjectileShape);// -- TSShape loads using mProjectileShapeName
+   activateSeq = other.activateSeq; // -- from projectileShape sequence "activate"
+   maintainSeq = other.maintainSeq; // -- from projectileShape sequence "maintain"
+   particleEmitter = other.particleEmitter;
+   particleEmitterId = other.particleEmitterId; // -- for pack/unpack of particleEmitter ptr
+   particleWaterEmitter = other.particleWaterEmitter;
+   particleWaterEmitterId = other.particleWaterEmitterId; // -- for pack/unpack of particleWaterEmitter ptr
+}
 //--------------------------------------------------------------------------
 
 void ProjectileData::initPersistFields()
 {
-   addField("particleEmitter", TYPEID< ParticleEmitterData >(), Offset(particleEmitter, ProjectileData),
-      "@brief Particle emitter datablock used to generate particles while the projectile is outside of water.\n\n"
-      "@note If datablocks are defined for both particleEmitter and particleWaterEmitter, both effects will play "
-      "as the projectile enters or leaves water.\n\n"
-      "@see particleWaterEmitter\n");
-   addField("particleWaterEmitter", TYPEID< ParticleEmitterData >(), Offset(particleWaterEmitter, ProjectileData),
-      "@brief Particle emitter datablock used to generate particles while the projectile is submerged in water.\n\n"
-      "@note If datablocks are defined for both particleWaterEmitter and particleEmitter , both effects will play "
-      "as the projectile enters or leaves water.\n\n"
-      "@see particleEmitter\n");
+   docsURL;
+   addGroup("Shapes");
+      addProtectedField("projectileShapeName", TypeShapeFilename, Offset(mProjectileShapeName, ProjectileData), &_setProjectileShapeData, &defaultProtectedGetFn,
+         "@brief File path to the model of the projectile.\n\n", AbstractClassRep::FIELD_HideInInspectors);
+      INITPERSISTFIELD_SHAPEASSET(ProjectileShape, ProjectileData, "@brief The model of the projectile.\n\n");
+      addField("scale", TypePoint3F, Offset(scale, ProjectileData),
+         "@brief Scale to apply to the projectile's size.\n\n"
+         "@note This is applied after SceneObject::scale\n");
+   endGroup("Shapes");
 
-   addField("projectileShapeName", TypeShapeFilename, Offset(projectileShapeName, ProjectileData),
-      "@brief File path to the model of the projectile.\n\n");
-   addField("scale", TypePoint3F, Offset(scale, ProjectileData),
-      "@brief Scale to apply to the projectile's size.\n\n"
-      "@note This is applied after SceneObject::scale\n");
+   addGroup("Particle Effects");
+      addField("particleEmitter", TYPEID< ParticleEmitterData >(), Offset(particleEmitter, ProjectileData),
+         "@brief Particle emitter datablock used to generate particles while the projectile is outside of water.\n\n"
+         "@note If datablocks are defined for both particleEmitter and particleWaterEmitter, both effects will play "
+         "as the projectile enters or leaves water.\n\n"
+         "@see particleWaterEmitter\n");
+      addField("particleWaterEmitter", TYPEID< ParticleEmitterData >(), Offset(particleWaterEmitter, ProjectileData),
+         "@brief Particle emitter datablock used to generate particles while the projectile is submerged in water.\n\n"
+         "@note If datablocks are defined for both particleWaterEmitter and particleEmitter , both effects will play "
+         "as the projectile enters or leaves water.\n\n"
+         "@see particleEmitter\n");
+      addField("explosion", TYPEID< ExplosionData >(), Offset(explosion, ProjectileData),
+         "@brief Explosion datablock used when the projectile explodes outside of water.\n\n");
+      addField("waterExplosion", TYPEID< ExplosionData >(), Offset(waterExplosion, ProjectileData),
+         "@brief Explosion datablock used when the projectile explodes underwater.\n\n");
+      addField("splash", TYPEID< SplashData >(), Offset(splash, ProjectileData),
+         "@brief Splash datablock used to create splash effects as the projectile enters or leaves water\n\n");
+      addField("decal", TYPEID< DecalData >(), Offset(decal, ProjectileData),
+         "@brief Decal datablock used for decals placed at projectile explosion points.\n\n");
+   endGroup("Particle Effects");
 
-   addField("sound", TypeSFXTrackName, Offset(sound, ProjectileData),
-      "@brief SFXTrack datablock used to play sounds while in flight.\n\n");
+   addGroup("Sounds");
+      INITPERSISTFIELD_SOUNDASSET(ProjectileSound, ProjectileData, "The sound for the projectile.");
+   endGroup("Sounds");
 
-   addField("explosion", TYPEID< ExplosionData >(), Offset(explosion, ProjectileData),
-      "@brief Explosion datablock used when the projectile explodes outside of water.\n\n");
-   addField("waterExplosion", TYPEID< ExplosionData >(), Offset(waterExplosion, ProjectileData),
-      "@brief Explosion datablock used when the projectile explodes underwater.\n\n");
+   addGroup("Light Emitter");
+      addField("lightDesc", TYPEID< LightDescription >(), Offset(lightDesc, ProjectileData),
+         "@brief LightDescription datablock used for lights attached to the projectile.\n\n");
+   endGroup("Light Emitter");   
 
-   addField("splash", TYPEID< SplashData >(), Offset(splash, ProjectileData),
-      "@brief Splash datablock used to create splash effects as the projectile enters or leaves water\n\n");
-
-   addField("decal", TYPEID< DecalData >(), Offset(decal, ProjectileData),
-      "@brief Decal datablock used for decals placed at projectile explosion points.\n\n");
-
-   addField("lightDesc", TYPEID< LightDescription >(), Offset(lightDesc, ProjectileData),
-      "@brief LightDescription datablock used for lights attached to the projectile.\n\n");
-
-   addField("isBallistic", TypeBool, Offset(isBallistic, ProjectileData),
-      "@brief Detetmines if the projectile should be affected by gravity and whether or not "
-      "it bounces before exploding.\n\n");
-
-   addField("velInheritFactor", TypeF32, Offset(velInheritFactor, ProjectileData),
-      "@brief Amount of velocity the projectile recieves from the source that created it.\n\n"
-      "Use an amount between 0 and 1 for the best effect. "
-      "This value is never modified by the engine.\n"
-      "@note This value by default is not transmitted between the server and the client.");
-   addField("muzzleVelocity", TypeF32, Offset(muzzleVelocity, ProjectileData),
-      "@brief Amount of velocity the projectile recieves from the \"muzzle\" of the gun.\n\n"
-      "Used with velInheritFactor to determine the initial velocity of the projectile. "
-      "This value is never modified by the engine.\n\n"
-      "@note This value by default is not transmitted between the server and the client.\n\n"
-      "@see velInheritFactor");
-   
-   addField("impactForce", TypeF32, Offset(impactForce, ProjectileData));
-
-   addProtectedField("lifetime", TypeS32, Offset(lifetime, ProjectileData), &setLifetime, &getScaledValue, 
-      "@brief Amount of time, in milliseconds, before the projectile is removed from the simulation.\n\n"
-      "Used with fadeDelay to determine the transparency of the projectile at a given time. "
-      "A projectile may exist up to a maximum of 131040ms (or 4095 ticks) as defined by Projectile::MaxLivingTicks in the source code."
-      "@see fadeDelay");
-
-   addProtectedField("armingDelay", TypeS32, Offset(armingDelay, ProjectileData), &setArmingDelay, &getScaledValue, 
-      "@brief Amount of time, in milliseconds, before the projectile will cause damage or explode on impact.\n\n"
-      "This value must be equal to or less than the projectile's lifetime.\n\n"
-      "@see lifetime");
-   addProtectedField("fadeDelay", TypeS32, Offset(fadeDelay, ProjectileData), &setFadeDelay, &getScaledValue,
-      "@brief Amount of time, in milliseconds, before the projectile begins to fade out.\n\n"
-      "This value must be smaller than the projectile's lifetime to have an affect.");
-
-   addField("bounceElasticity", TypeF32, Offset(bounceElasticity, ProjectileData), 
-      "@brief Influences post-bounce velocity of a projectile that does not explode on contact.\n\n"
-      "Scales the velocity from a bounce after friction is taken into account. "
-      "A value of 1.0 will leave it's velocity unchanged while values greater than 1.0 will increase it.\n");
-   addField("bounceFriction", TypeF32, Offset(bounceFriction, ProjectileData),
-      "@brief Factor to reduce post-bounce velocity of a projectile that does not explode on contact.\n\n"
-      "Reduces bounce velocity by this factor and a multiple of the tangent to impact. "
-      "Used to simulate surface friction.\n");
-   addField("gravityMod", TypeF32, Offset(gravityMod, ProjectileData ),
-      "@brief Scales the influence of gravity on the projectile.\n\n"
-      "The larger this value is, the more that gravity will affect the projectile. "
-      "A value of 1.0 will assume \"normal\" influence upon it.\n"
-      "The magnitude of gravity is assumed to be 9.81 m/s/s\n\n"
-      "@note ProjectileData::isBallistic must be true for this to have any affect.");
+   addGroup("Physics");
+      addProtectedField("lifetime", TypeS32, Offset(lifetime, ProjectileData), &setLifetime, &getScaledValue,
+         "@brief Amount of time, in milliseconds, before the projectile is removed from the simulation.\n\n"
+         "Used with fadeDelay to determine the transparency of the projectile at a given time. "
+         "A projectile may exist up to a maximum of 131040ms (or 4095 ticks) as defined by Projectile::MaxLivingTicks in the source code."
+         "@see fadeDelay");
+      addProtectedField("armingDelay", TypeS32, Offset(armingDelay, ProjectileData), &setArmingDelay, &getScaledValue,
+         "@brief Amount of time, in milliseconds, before the projectile will cause damage or explode on impact.\n\n"
+         "This value must be equal to or less than the projectile's lifetime.\n\n"
+         "@see lifetime");
+      addProtectedField("fadeDelay", TypeS32, Offset(fadeDelay, ProjectileData), &setFadeDelay, &getScaledValue,
+         "@brief Amount of time, in milliseconds, before the projectile begins to fade out.\n\n"
+         "This value must be smaller than the projectile's lifetime to have an affect.");
+      addField("isBallistic", TypeBool, Offset(isBallistic, ProjectileData),
+         "@brief Detetmines if the projectile should be affected by gravity and whether or not "
+         "it bounces before exploding.\n\n");
+      addField("velInheritFactor", TypeF32, Offset(velInheritFactor, ProjectileData),
+         "@brief Amount of velocity the projectile recieves from the source that created it.\n\n"
+         "Use an amount between 0 and 1 for the best effect. "
+         "This value is never modified by the engine.\n"
+         "@note This value by default is not transmitted between the server and the client.");
+      addField("muzzleVelocity", TypeF32, Offset(muzzleVelocity, ProjectileData),
+         "@brief Amount of velocity the projectile recieves from the \"muzzle\" of the gun.\n\n"
+         "Used with velInheritFactor to determine the initial velocity of the projectile. "
+         "This value is never modified by the engine.\n\n"
+         "@note This value by default is not transmitted between the server and the client.\n\n"
+         "@see velInheritFactor");
+      addField("impactForce", TypeF32, Offset(impactForce, ProjectileData));
+      addField("bounceElasticity", TypeF32, Offset(bounceElasticity, ProjectileData),
+         "@brief Influences post-bounce velocity of a projectile that does not explode on contact.\n\n"
+         "Scales the velocity from a bounce after friction is taken into account. "
+         "A value of 1.0 will leave it's velocity unchanged while values greater than 1.0 will increase it.\n");
+      addField("bounceFriction", TypeF32, Offset(bounceFriction, ProjectileData),
+         "@brief Factor to reduce post-bounce velocity of a projectile that does not explode on contact.\n\n"
+         "Reduces bounce velocity by this factor and a multiple of the tangent to impact. "
+         "Used to simulate surface friction.\n");
+      addField("gravityMod", TypeF32, Offset(gravityMod, ProjectileData),
+         "@brief Scales the influence of gravity on the projectile.\n\n"
+         "The larger this value is, the more that gravity will affect the projectile. "
+         "A value of 1.0 will assume \"normal\" influence upon it.\n"
+         "The magnitude of gravity is assumed to be 9.81 m/s/s\n\n"
+         "@note ProjectileData::isBallistic must be true for this to have any affect.");
+   endGroup("Physics");
 
    Parent::initPersistFields();
+   // disallow some field substitutions
+   onlyKeepClearSubstitutions("explosion");
+   onlyKeepClearSubstitutions("particleEmitter");
+   onlyKeepClearSubstitutions("particleWaterEmitter");
+   onlyKeepClearSubstitutions("sound");
+   onlyKeepClearSubstitutions("splash");
+   onlyKeepClearSubstitutions("waterExplosion");
 }
 
 
@@ -320,31 +368,34 @@ bool ProjectileData::preload(bool server, String &errorStr)
          if (Sim::findObject(decalId, decal) == false)
             Con::errorf(ConsoleLogEntry::General, "ProjectileData::preload: Invalid packet, bad datablockId(decal): %d", decalId);
 
-      String sfxErrorStr;
-      if( !sfxResolve( &sound, sfxErrorStr ) )
-         Con::errorf(ConsoleLogEntry::General, "ProjectileData::preload: Invalid packet: %s", sfxErrorStr.c_str());
+      _setProjectileSound(getProjectileSound());
+      if (getProjectileSound() != StringTable->EmptyString())
+      {
+         if (!getProjectileSoundProfile())
+            Con::errorf(ConsoleLogEntry::General, "SplashData::preload: Cant get an sfxProfile for splash.");
+      }
 
       if (!lightDesc && lightDescId != 0)
          if (Sim::findObject(lightDescId, lightDesc) == false)
             Con::errorf(ConsoleLogEntry::General, "ProjectileData::preload: Invalid packet, bad datablockid(lightDesc): %d", lightDescId);   
    }
 
-   if (projectileShapeName && projectileShapeName[0] != '\0')
+   if (mProjectileShapeAssetId != StringTable->EmptyString())
    {
-      projectileShape = ResourceManager::get().load(projectileShapeName);
-      if (bool(projectileShape) == false)
+      //If we've got a shapeAsset assigned for our projectile, but we failed to load the shape data itself, report the error
+      if (!mProjectileShape)
       {
-         errorStr = String::ToString("ProjectileData::load: Couldn't load shape \"%s\"", projectileShapeName);
+         errorStr = String::ToString("ProjectileData::load: Couldn't load shape \"%s\"", mProjectileShapeAssetId);
          return false;
       }
-      activateSeq = projectileShape->findSequence("activate");
-      maintainSeq = projectileShape->findSequence("maintain");
-   }
+      else
+      {
+         activateSeq = mProjectileShape->findSequence("activate");
+         maintainSeq = mProjectileShape->findSequence("maintain");
 
-   if (bool(projectileShape)) // create an instance to preload shape data
-   {
-      TSShapeInstance* pDummy = new TSShapeInstance(projectileShape, !server);
-      delete pDummy;
+         TSShapeInstance* pDummy = new TSShapeInstance(mProjectileShape, !server);
+         delete pDummy;
+      }
    }
 
    return true;
@@ -355,7 +406,8 @@ void ProjectileData::packData(BitStream* stream)
 {
    Parent::packData(stream);
 
-   stream->writeString(projectileShapeName);
+   PACKDATA_ASSET(ProjectileShape);
+
    stream->writeFlag(faceViewer);
    if(stream->writeFlag(scale.x != 1 || scale.y != 1 || scale.z != 1))
    {
@@ -387,8 +439,7 @@ void ProjectileData::packData(BitStream* stream)
    if (stream->writeFlag(decal != NULL))
       stream->writeRangedU32(decal->getId(), DataBlockObjectIdFirst,
                                               DataBlockObjectIdLast);
-
-   sfxWrite( stream, sound );
+   PACKDATA_ASSET(ProjectileSound);
 
    if ( stream->writeFlag(lightDesc != NULL))
       stream->writeRangedU32(lightDesc->getId(), DataBlockObjectIdFirst,
@@ -419,7 +470,7 @@ void ProjectileData::unpackData(BitStream* stream)
 {
    Parent::unpackData(stream);
 
-   projectileShapeName = stream->readSTString();
+   UNPACKDATA_ASSET(ProjectileShape);
 
    faceViewer = stream->readFlag();
    if(stream->readFlag())
@@ -448,8 +499,8 @@ void ProjectileData::unpackData(BitStream* stream)
 
    if (stream->readFlag())
       decalId = stream->readRangedU32(DataBlockObjectIdFirst, DataBlockObjectIdLast);
-   
-   sfxRead( stream, &sound );
+
+   UNPACKDATA_ASSET(ProjectileSound);
 
    if (stream->readFlag())
       lightDescId = stream->readRangedU32(DataBlockObjectIdFirst, DataBlockObjectIdLast);
@@ -551,14 +602,14 @@ S32 ProjectileData::scaleValue( S32 value, bool down )
 Projectile::Projectile()
  : mPhysicsWorld( NULL ),
    mDataBlock( NULL ),
+   mParticleEmitter( NULL ),
+   mParticleWaterEmitter( NULL ),
+   mSound( NULL ),
    mCurrPosition( 0, 0, 0 ),
    mCurrVelocity( 0, 0, 1 ),
    mSourceObjectId( -1 ),
    mSourceObjectSlot( -1 ),
    mCurrTick( 0 ),
-   mParticleEmitter( NULL ),
-   mParticleWaterEmitter( NULL ),
-   mSound( NULL ),
    mProjectileShape( NULL ),
    mActivateThread( NULL ),
    mMaintainThread( NULL ),
@@ -574,6 +625,11 @@ Projectile::Projectile()
 
    mLightState.clear();
    mLightState.setLightInfo( mLight );
+
+   mDataBlock = 0;
+   ignoreSourceTimeout = false;
+   dynamicCollisionMask = csmDynamicCollisionMask;
+   staticCollisionMask = csmStaticCollisionMask;
 }
 
 Projectile::~Projectile()
@@ -582,11 +638,17 @@ Projectile::~Projectile()
 
    delete mProjectileShape;
    mProjectileShape = NULL;
+   if (mDataBlock && mDataBlock->isTempClone())
+   {
+      delete mDataBlock;
+      mDataBlock = 0;
+   }
 }
 
 //--------------------------------------------------------------------------
 void Projectile::initPersistFields()
 {
+   docsURL;
    addGroup("Physics");
 
    addProtectedField("initialPosition",  TypePoint3F, Offset(mInitialPosition, Projectile), &_setInitialPosition, &defaultProtectedGetFn,
@@ -609,6 +671,7 @@ void Projectile::initPersistFields()
    addField("sourceSlot",       TypeS32,     Offset(mSourceObjectSlot, Projectile),
       "@brief The sourceObject's weapon slot that the projectile originates from.\n\n");
 
+   addField("ignoreSourceTimeout",  TypeBool,   Offset(ignoreSourceTimeout, Projectile));
    endGroup("Source");
 
 
@@ -726,12 +789,14 @@ bool Projectile::onAdd()
       // If we're on the server, we need to inherit some of our parent's velocity
       //
       mCurrTick = 0;
+
+      scriptOnAdd();
    }
    else
    {
-      if (bool(mDataBlock->projectileShape))
+      if (bool(mDataBlock->mProjectileShape))
       {
-         mProjectileShape = new TSShapeInstance(mDataBlock->projectileShape, isClientObject());
+         mProjectileShape = new TSShapeInstance(mDataBlock->mProjectileShape, isClientObject());
 
          if (mDataBlock->activateSeq != -1)
          {
@@ -770,8 +835,8 @@ bool Projectile::onAdd()
       processAfter(mSourceObject);
 
    // Setup our bounding box
-   if (bool(mDataBlock->projectileShape) == true)
-      mObjBox = mDataBlock->projectileShape->bounds;
+   if (bool(mDataBlock->mProjectileShape) == true)
+      mObjBox = mDataBlock->mProjectileShape->mBounds;
    else
       mObjBox = Box3F(Point3F(0, 0, 0), Point3F(0, 0, 0));
 
@@ -822,8 +887,8 @@ bool Projectile::onNewDataBlock( GameBaseData *dptr, bool reload )
 
       SFX_DELETE( mSound );
 
-      if ( mDataBlock->sound )
-         mSound = SFX->createSource( mDataBlock->sound );
+      if ( mDataBlock->getProjectileSound() )
+         mSound = SFX->createSource( mDataBlock->getProjectileSoundProfile() );
    }
 
    return true;
@@ -1018,7 +1083,7 @@ void Projectile::explode( const Point3F &p, const Point3F &n, const U32 collideT
 
       // Client (impact) decal.
       if ( mDataBlock->decal )     
-         gDecalManager->addDecal(p, n, mRandF(0.0f, M_2PI_F), mDataBlock->decal);
+         gDecalManager->addDecal(p, n, 0.0f, mDataBlock->decal);
 
       // Client object
       updateSound();
@@ -1037,7 +1102,7 @@ void Projectile::explode( const Point3F &p, const Point3F &n, const U32 collideT
 
 void Projectile::updateSound()
 {
-   if (!mDataBlock->sound)
+   if (!mDataBlock->isProjectileSoundValid())
       return;
 
    if ( mSound )
@@ -1088,7 +1153,7 @@ void Projectile::simulate( F32 dt )
    // disable the source objects collision reponse for a short time while we
    // determine if the projectile is capable of moving from the old position
    // to the new position, otherwise we'll hit ourself
-   bool disableSourceObjCollision = (mSourceObject.isValid() && mCurrTick <= SourceIdTimeoutTicks);
+   bool disableSourceObjCollision = (mSourceObject.isValid() && (ignoreSourceTimeout || mCurrTick <= SourceIdTimeoutTicks));
    if ( disableSourceObjCollision )
       mSourceObject->disableCollision();
    disableCollision();
@@ -1105,12 +1170,12 @@ void Projectile::simulate( F32 dt )
    if ( mPhysicsWorld )
       hit = mPhysicsWorld->castRay( oldPosition, newPosition, &rInfo, Point3F( newPosition - oldPosition) * mDataBlock->impactForce );            
    else 
-      hit = getContainer()->castRay(oldPosition, newPosition, csmDynamicCollisionMask | csmStaticCollisionMask, &rInfo);
+      hit = getContainer()->castRay(oldPosition, newPosition, dynamicCollisionMask | staticCollisionMask, &rInfo);
 
    if ( hit )
    {
       // make sure the client knows to bounce
-      if ( isServerObject() && ( rInfo.object->getTypeMask() & csmStaticCollisionMask ) == 0 )
+      if(isServerObject() && (rInfo.object->getTypeMask() & staticCollisionMask) == 0)
          setMaskBits( BounceMask );
 
       MatrixF xform( true );
@@ -1301,6 +1366,7 @@ U32 Projectile::packUpdate( NetConnection *con, U32 mask, BitStream *stream )
             stream->writeRangedU32( U32(mSourceObjectSlot),
                                     0, 
                                     ShapeBase::MaxMountedImages - 1 );
+            stream->writeFlag(ignoreSourceTimeout);
          }
          else 
             // have not recieved the ghost for the source object yet, try again later
@@ -1344,6 +1410,7 @@ void Projectile::unpackUpdate(NetConnection* con, BitStream* stream)
          mSourceObjectId   = stream->readRangedU32( 0, NetConnection::MaxGhostCount );
          mSourceObjectSlot = stream->readRangedU32( 0, ShapeBase::MaxMountedImages - 1 );
 
+         ignoreSourceTimeout = stream->readFlag();
          NetObject* pObject = con->resolveGhost( mSourceObjectId );
          if ( pObject != NULL )
             mSourceObject = dynamic_cast<ShapeBase*>( pObject );

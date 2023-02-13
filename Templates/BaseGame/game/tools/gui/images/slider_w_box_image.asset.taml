@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="slider_w_box_image"
+    imageFile="@assetFile=slider-w-box.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

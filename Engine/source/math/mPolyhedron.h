@@ -98,7 +98,7 @@ struct PolyhedronData
          ///   it defines a *clockwise* orientation for face[ 0 ].  This is important!
          U32 vertex[ 2 ];
 
-         Edge() {}
+         Edge() { std::fill_n(face, 2, 0), std::fill_n(vertex, 2, 0); }
          Edge( U32 face1, U32 face2, U32 vertex1, U32 vertex2 )
          {
             face[ 0 ] = face1;
@@ -124,42 +124,42 @@ struct PolyhedronVectorData : public PolyhedronData
       typedef Vector< Edge > EdgeListType;
 
       /// List of planes.  Note that by default, the normals facing *inwards*.
-      PlaneListType planeList;
+      PlaneListType mPlaneList;
 
       /// List of vertices.
-      PointListType pointList;
+      PointListType mPointList;
 
       /// List of edges.
-      EdgeListType edgeList;
+      EdgeListType mEdgeList;
 
       PolyhedronVectorData()
       {
-         VECTOR_SET_ASSOCIATION( pointList );
-         VECTOR_SET_ASSOCIATION( planeList );
-         VECTOR_SET_ASSOCIATION( edgeList );
+         VECTOR_SET_ASSOCIATION(mPointList);
+         VECTOR_SET_ASSOCIATION(mPlaneList);
+         VECTOR_SET_ASSOCIATION(mEdgeList);
       }
 
       /// @name Accessors
       /// @{
 
       /// Return the number of planes that make up this polyhedron.
-      U32 getNumPlanes() const { return planeList.size(); }
+      U32 getNumPlanes() const { return mPlaneList.size(); }
 
       /// Return the planes that make up the polyhedron.
       /// @note The normals of these planes are facing *inwards*.
-      PlaneF* getPlanes() const { return planeList.address(); }
+      PlaneF* getPlanes() const { return mPlaneList.address(); }
 
       /// Return the number of points that this polyhedron has.
-      U32 getNumPoints() const { return pointList.size(); }
+      U32 getNumPoints() const { return mPointList.size(); }
 
       /// 
-      Point3F* getPoints() const { return pointList.address(); }
+      Point3F* getPoints() const { return mPointList.address(); }
 
       /// Return the number of edges that this polyhedron has.
-      U32 getNumEdges() const { return edgeList.size(); }
+      U32 getNumEdges() const { return mEdgeList.size(); }
 
       ///
-      Edge* getEdges() const { return edgeList.address(); }
+      Edge* getEdges() const { return mEdgeList.address(); }
 
       /// @}
 
@@ -168,9 +168,9 @@ struct PolyhedronVectorData : public PolyhedronData
 
       void buildBox( const MatrixF& mat, const Box3F& box, bool invertNormals = false )
       {
-         pointList.setSize( 8 );
-         planeList.setSize( 6 );
-         edgeList.setSize( 12 );
+		 mPointList.setSize( 8 );
+		 mPlaneList.setSize( 6 );
+		 mEdgeList.setSize( 12 );
 
          buildBoxData( *this, mat, box, invertNormals );
       }
@@ -190,13 +190,13 @@ struct PolyhedronUnmanagedVectorData : public PolyhedronData
    protected:
 
       /// List of planes.  Note that by default, the normals facing *inwards*.
-      PlaneListType planeList;
+      PlaneListType mPlaneList;
 
       /// List of vertices.
-      PointListType pointList;
+      PointListType mPointList;
 
       /// List of edges.
-      EdgeListType edgeList;
+      EdgeListType mEdgeList;
 
    public:
 
@@ -204,26 +204,26 @@ struct PolyhedronUnmanagedVectorData : public PolyhedronData
       /// @{
 
       /// Return the number of planes that make up this polyhedron.
-      U32 getNumPlanes() const { return planeList.size(); }
+      U32 getNumPlanes() const { return mPlaneList.size(); }
 
       /// Return the planes that make up the polyhedron.
       /// @note The normals of these planes are facing *inwards*.
-      const PlaneF* getPlanes() const { return planeList.address(); }
-      PlaneF* getPlanes() { return planeList.address(); }
+      const PlaneF* getPlanes() const { return mPlaneList.address(); }
+      PlaneF* getPlanes() { return mPlaneList.address(); }
 
       /// Return the number of points that this polyhedron has.
-      U32 getNumPoints() const { return pointList.size(); }
+      U32 getNumPoints() const { return mPointList.size(); }
 
       /// 
-      const Point3F* getPoints() const { return pointList.address(); }
-      Point3F* getPoints() { return pointList.address(); }
+      const Point3F* getPoints() const { return mPointList.address(); }
+      Point3F* getPoints() { return mPointList.address(); }
 
       /// Return the number of edges that this polyhedron has.
-      U32 getNumEdges() const { return edgeList.size(); }
+      U32 getNumEdges() const { return mEdgeList.size(); }
 
       ///
-      const Edge* getEdges() const { return edgeList.address(); }
-      Edge* getEdges() { return edgeList.address(); }
+      const Edge* getEdges() const { return mEdgeList.address(); }
+      Edge* getEdges() { return mEdgeList.address(); }
 
       /// @}
 };
@@ -239,13 +239,13 @@ struct PolyhedronFixedVectorData : public PolyhedronData
    protected:
 
       /// List of planes.  Note that by default, the normals facing *inwards*.
-      PlaneListType planeList;
+      PlaneListType mPlaneList;
 
       /// List of vertices.
-      PointListType pointList;
+      PointListType mPointList;
 
       /// List of edges.
-      EdgeListType edgeList;
+      EdgeListType mEdgeList;
 
    public:
 
@@ -254,23 +254,23 @@ struct PolyhedronFixedVectorData : public PolyhedronData
       /// @{
 
       /// Return the number of planes that make up this polyhedron.
-      U32 getNumPlanes() const { return planeList.size(); }
+      U32 getNumPlanes() const { return mPlaneList.size(); }
 
       /// Return the planes that make up the polyhedron.
       /// @note The normals of these planes are facing *inwards*.
-      PlaneF* getPlanes() const { return planeList.address(); }
+      PlaneF* getPlanes() const { return mPlaneList.address(); }
 
       /// Return the number of points that this polyhedron has.
-      U32 getNumPoints() const { return pointList.size(); }
+      U32 getNumPoints() const { return mPointList.size(); }
 
       /// 
-      Point3F* getPoints() const { return pointList.address(); }
+      Point3F* getPoints() const { return mPointList.address(); }
 
       /// Return the number of edges that this polyhedron has.
-      U32 getNumEdges() const { return edgeList.size(); }
+      U32 getNumEdges() const { return mEdgeList.size(); }
 
       ///
-      Edge* getEdges() const { return edgeList.address(); }
+      Edge* getEdges() const { return mEdgeList.address(); }
 
       /// @}
 
@@ -302,9 +302,56 @@ struct PolyhedronImpl : public Base
       /// Construct a polyhedron described by the given planes and edges.
       PolyhedronImpl( PlaneListType planes, PointListType points, EdgeListType edges )
       {
-         this->planeList = planes;
-         this->pointList = points;
-         this->edgeList = edges;
+         this->mPlaneList = planes;
+         this->mPointList = points;
+         this->mEdgeList = edges;
+      }
+
+      PolyhedronImpl(Point3F origin, Point3F vecs[3])
+      {
+         // This setup goes against conventions for Polyhedrons in that it a) sets up
+         // edges with CCW instead of CW order for face[0] and that it b) lets plane
+         // normals face outwards rather than inwards.
+
+         this->mPointList.setSize(8);
+         this->mPointList[0] = origin;
+         this->mPointList[1] = origin + vecs[0];
+         this->mPointList[2] = origin + vecs[1];
+         this->mPointList[3] = origin + vecs[2];
+         this->mPointList[4] = origin + vecs[0] + vecs[1];
+         this->mPointList[5] = origin + vecs[0] + vecs[2];
+         this->mPointList[6] = origin + vecs[1] + vecs[2];
+         this->mPointList[7] = origin + vecs[0] + vecs[1] + vecs[2];
+
+         Point3F normal;
+         this->mPlaneList.setSize(6);
+
+         mCross(vecs[2], vecs[0], &normal);
+         this->mPlaneList[0].set(origin, normal);
+         mCross(vecs[0], vecs[1], &normal);
+         this->mPlaneList[1].set(origin, normal);
+         mCross(vecs[1], vecs[2], &normal);
+         this->mPlaneList[2].set(origin, normal);
+         mCross(vecs[1], vecs[0], &normal);
+         this->mPlaneList[3].set(this->mPointList[7], normal);
+         mCross(vecs[2], vecs[1], &normal);
+         this->mPlaneList[4].set(this->mPointList[7], normal);
+         mCross(vecs[0], vecs[2], &normal);
+         this->mPlaneList[5].set(this->mPointList[7], normal);
+
+         this->mEdgeList.setSize(12);
+         this->mEdgeList[0].vertex[0] = 0;  this->mEdgeList[0].vertex[1] = 1;  this->mEdgeList[0].face[0] = 0;  this->mEdgeList[0].face[1] = 1;
+         this->mEdgeList[1].vertex[0] = 1;  this->mEdgeList[1].vertex[1] = 5;  this->mEdgeList[1].face[0] = 0;  this->mEdgeList[1].face[1] = 4;
+         this->mEdgeList[2].vertex[0] = 5;  this->mEdgeList[2].vertex[1] = 3;  this->mEdgeList[2].face[0] = 0;  this->mEdgeList[2].face[1] = 3;
+         this->mEdgeList[3].vertex[0] = 3;  this->mEdgeList[3].vertex[1] = 0;  this->mEdgeList[3].face[0] = 0;  this->mEdgeList[3].face[1] = 2;
+         this->mEdgeList[4].vertex[0] = 3;  this->mEdgeList[4].vertex[1] = 6;  this->mEdgeList[4].face[0] = 3;  this->mEdgeList[4].face[1] = 2;
+         this->mEdgeList[5].vertex[0] = 6;  this->mEdgeList[5].vertex[1] = 2;  this->mEdgeList[5].face[0] = 2;  this->mEdgeList[5].face[1] = 5;
+         this->mEdgeList[6].vertex[0] = 2;  this->mEdgeList[6].vertex[1] = 0;  this->mEdgeList[6].face[0] = 2;  this->mEdgeList[6].face[1] = 1;
+         this->mEdgeList[7].vertex[0] = 1;  this->mEdgeList[7].vertex[1] = 4;  this->mEdgeList[7].face[0] = 4;  this->mEdgeList[7].face[1] = 1;
+         this->mEdgeList[8].vertex[0] = 4;  this->mEdgeList[8].vertex[1] = 2;  this->mEdgeList[8].face[0] = 1;  this->mEdgeList[8].face[1] = 5;
+         this->mEdgeList[9].vertex[0] = 4;  this->mEdgeList[9].vertex[1] = 7;  this->mEdgeList[9].face[0] = 4;  this->mEdgeList[9].face[1] = 5;
+         this->mEdgeList[10].vertex[0] = 5; this->mEdgeList[10].vertex[1] = 7; this->mEdgeList[10].face[0] = 3; this->mEdgeList[10].face[1] = 4;
+         this->mEdgeList[11].vertex[0] = 7; this->mEdgeList[11].vertex[1] = 6; this->mEdgeList[11].face[0] = 3; this->mEdgeList[11].face[1] = 5;
       }
 
       /// Return the AABB around the polyhedron.

@@ -62,6 +62,7 @@ GuiConsoleEditCtrl::GuiConsoleEditCtrl()
 
 void GuiConsoleEditCtrl::initPersistFields()
 {
+   docsURL;
    addGroup("GuiConsoleEditCtrl");
    addField("useSiblingScroller", TypeBool, Offset(mUseSiblingScroller, GuiConsoleEditCtrl));
    endGroup("GuiConsoleEditCtrl");
@@ -134,7 +135,7 @@ bool GuiConsoleEditCtrl::onKeyDown(const GuiEvent &event)
 
          text = String::ToString( "echo(%s);", text.c_str() );
 
-         setText( text );
+         setText( text.utf8() );
       }
 
 		return Parent::dealWithEnter(false);

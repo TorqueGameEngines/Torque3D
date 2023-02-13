@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="MessagePopupDlg"
+    scriptFile="@assetFile=messagePopup.ed.gui"
+    GUIFile="@assetFile=messagePopup.ed.gui"
+    VersionId="1" />

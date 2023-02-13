@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="object_center_h_image"
+    imageFile="@assetFile=object-center_h.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

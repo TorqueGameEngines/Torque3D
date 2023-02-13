@@ -20,6 +20,11 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+// Arcane-FX for MIT Licensed Open Source version of Torque 3D from GarageGames
+// Copyright (C) 2015 Faust Logic, Inc.
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+
 #ifndef _GAMECONNECTION_H_
 #define _GAMECONNECTION_H_
 
@@ -55,8 +60,14 @@ class MoveList;
 struct Move;
 struct AuthInfo;
 
-#define GameString TORQUE_APP_NAME
-
+// To disable datablock caching, remove or comment out the AFX_CAP_DATABLOCK_CACHE define below.
+// Also, at a minimum, the following script preferences should be set to false:
+//   $pref::Client::EnableDatablockCache = false; (in arcane.fx/client/defaults.tscript)
+//   $Pref::Server::EnableDatablockCache = false; (in arcane.fx/server/defaults.tscript)
+// Alternatively, all script code marked with "DATABLOCK CACHE CODE" can be removed or
+// commented out.
+//
+#define AFX_CAP_DATABLOCK_CACHE
 const F32 MinCameraFov              = 1.f;      ///< min camera FOV
 const F32 MaxCameraFov              = 179.f;    ///< max camera FOV
 
@@ -269,6 +280,14 @@ public:
    bool getControlCameraTransform(F32 dt,MatrixF* mat);
    bool getControlCameraVelocity(Point3F *vel);
 
+   /// Returns the head transform for the control object, using supplemental information
+   /// from the provided IDisplayDevice
+   bool getControlCameraHeadTransform(IDisplayDevice *display, MatrixF *transform);
+
+   /// Returns the eye transforms for the control object, using supplemental information 
+   /// from the provided IDisplayDevice.
+   bool getControlCameraEyeTransforms(IDisplayDevice *display, MatrixF *transforms);
+   
    bool getControlCameraDefaultFov(F32 *fov);
    bool getControlCameraFov(F32 *fov);
    bool setControlCameraFov(F32 fov);
@@ -280,8 +299,8 @@ public:
    void setFirstPerson(bool firstPerson);
    
    bool hasDisplayDevice() const { return mDisplayDevice != NULL; }
-   const IDisplayDevice* getDisplayDevice() const { return mDisplayDevice; }
-   void setDisplayDevice(IDisplayDevice* display) { mDisplayDevice = display; }
+   IDisplayDevice* getDisplayDevice() const { return mDisplayDevice; }
+   void setDisplayDevice(IDisplayDevice* display) { if (mDisplayDevice) mDisplayDevice->setDrawCanvas(NULL); mDisplayDevice = display; }
    void clearDisplayDevice() { mDisplayDevice = NULL; }
 
    void setControlSchemeParameters(bool absoluteRotation, bool addYawToAbsRot, bool addPitchToAbsRot);
@@ -333,8 +352,8 @@ public:
    /// @name Sound
    /// @{
 
-   void play2D(SFXProfile *profile);
-   void play3D(SFXProfile *profile, const MatrixF *transform);
+   void play2D(StringTableEntry assetId);
+   void play3D(StringTableEntry assetId, const MatrixF *transform);
    /// @}
 
    /// @name Misc.
@@ -366,6 +385,62 @@ protected:
    DECLARE_CALLBACK( void, setLagIcon, (bool state) );
    DECLARE_CALLBACK( void, onDataBlocksDone, (U32 sequence) );
    DECLARE_CALLBACK( void, onFlash, (bool state) );
+
+#ifdef TORQUE_AFX_ENABLED
+   // GameConnection is modified to keep track of object selections which are used in
+   // spell targeting. This code stores the current object selection as well as the
+   // current rollover object beneath the cursor. The rollover object is treated as a
+   // pending object selection and actual object selection is usually made by promoting
+   // the rollover object to the current object selection.
+private:   
+   SimObjectPtr<SceneObject> mRolloverObj;  
+   SimObjectPtr<SceneObject> mPreSelectedObj;  
+   SimObjectPtr<SceneObject> mSelectedObj;  
+   bool          mChangedSelectedObj;
+   U32           mPreSelectTimestamp;
+protected:
+   virtual void  onDeleteNotify(SimObject*);
+public:   
+   void          setRolloverObj(SceneObject*);   
+   SceneObject*  getRolloverObj() { return  mRolloverObj; }   
+   void          setSelectedObj(SceneObject*, bool propagate_to_client=false);
+   SceneObject*  getSelectedObj() { return  mSelectedObj; }  
+   void          setPreSelectedObjFromRollover();
+   void          clearPreSelectedObj();
+   void          setSelectedObjFromPreSelected();
+   // Flag is added to indicate when a client is fully connected or "zoned-in". 
+   // This information determines when AFX will startup active effects on a newly
+   // added client. 
+private:
+   bool          zoned_in;
+public:
+   bool          isZonedIn() const { return zoned_in; }
+   void          setZonedIn() { zoned_in = true; }
+#endif
+#ifdef AFX_CAP_DATABLOCK_CACHE
+private:
+   static StringTableEntry  server_cache_filename;
+   static StringTableEntry  client_cache_filename;
+   static bool   server_cache_on;
+   static bool   client_cache_on;
+   BitStream*    client_db_stream;
+   U32           server_cache_CRC;
+public:
+   void          repackClientDatablock(BitStream*, S32 start_pos);
+   void          saveDatablockCache(bool on_server);
+   void          loadDatablockCache();
+   bool          loadDatablockCache_Begin();
+   bool          loadDatablockCache_Continue();
+   void          tempDisableStringBuffering(BitStream* bs) const;
+   void          restoreStringBuffering(BitStream* bs) const;
+   void          setServerCacheCRC(U32 crc) { server_cache_CRC = crc; }
+
+   static void   resetDatablockCache();
+   static bool   serverCacheEnabled() { return server_cache_on; }
+   static bool   clientCacheEnabled() { return client_cache_on; }
+   static const char* serverCacheFilename() { return server_cache_filename; }
+   static const char* clientCacheFilename() { return client_cache_filename; }
+#endif
 };
 
 #endif

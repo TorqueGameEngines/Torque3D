@@ -25,18 +25,17 @@
 
 #include "shaderGen/GLSL/shaderFeatureGLSL.h"
 #include "shaderGen/GLSL/bumpGLSL.h"
-#include "shaderGen/GLSL/pixSpecularGLSL.h"
 
 class ConditionerMethodDependency;
 
 
-/// Lights the pixel by sampling from the light prepass 
+/// Lights the pixel by sampling from the light deferred 
 /// buffer.  It will fall back to forward lighting 
 /// functionality for non-deferred rendered surfaces.
 ///
 /// Also note that this feature is only used in the
 /// forward rendering pass.  It is not used during the
-/// prepass step.
+/// deferred step.
 ///
 class DeferredRTLightingFeatGLSL : public RTLightingFeatGLSL
 {
@@ -100,29 +99,6 @@ public:
       return "Bumpmap [Deferred]";
    }
 };
-
-
-/// Generates specular highlights in the forward pass 
-/// from the light prepass buffer.
-class DeferredPixelSpecularGLSL : public PixelSpecularGLSL
-{
-   typedef PixelSpecularGLSL Parent;
-
-public:
-   virtual void processVert(  Vector<ShaderComponent*> &componentList,
-                              const MaterialFeatureData &fd );
-
-   virtual void processPix(   Vector<ShaderComponent*> &componentList, 
-                              const MaterialFeatureData &fd );
-
-   virtual Resources getResources( const MaterialFeatureData &fd );
-
-   virtual String getName()
-   {
-      return "Pixel Specular [Deferred]";
-   }
-};
-
 
 ///
 class DeferredMinnaertGLSL : public ShaderFeatureGLSL

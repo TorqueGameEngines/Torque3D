@@ -113,10 +113,10 @@ MODULE_END;
 // BRKCLR file line - sent when a breakpoint cannot be moved to a breakable line on the client.
 //
 
-DefineConsoleFunction( dbgSetParameters, void, (S32 port, const char * password, bool waitForClient ), (false), "( int port, string password, bool waitForClient )"
+DefineEngineFunction( dbgSetParameters, void, (S32 port, const char * password, bool waitForClient ), (false), "( int port, string password, bool waitForClient )"
                 "Open a debug server port on the specified port, requiring the specified password, "
-				"and optionally waiting for the debug client to connect.\n"
-				"@internal Primarily used for Torsion and other debugging tools")
+            "and optionally waiting for the debug client to connect.\n"
+            "@internal Primarily used for Torsion and other debugging tools")
 {
    if (TelDebugger)
    {
@@ -124,19 +124,19 @@ DefineConsoleFunction( dbgSetParameters, void, (S32 port, const char * password,
    }
 }
 
-DefineConsoleFunction( dbgIsConnected, bool, (), , "()"
+DefineEngineFunction( dbgIsConnected, bool, (), , "()"
                 "Returns true if a script debugging client is connected else return false.\n"
-				"@internal Primarily used for Torsion and other debugging tools")
+            "@internal Primarily used for Torsion and other debugging tools")
 {
    return TelDebugger && TelDebugger->isConnected();
 }
 
-DefineConsoleFunction( dbgDisconnect, void, (), , "()"
+DefineEngineFunction( dbgDisconnect, void, (), , "()"
                 "Forcibly disconnects any attached script debugging client.\n"
-				"@internal Primarily used for Torsion and other debugging tools")
+            "@internal Primarily used for Torsion and other debugging tools")
 {
    if (TelDebugger)
-	   TelDebugger->disconnect();
+      TelDebugger->disconnect();
 }
 
 static void debuggerConsumer(U32 level, const char *line)
@@ -151,8 +151,8 @@ TelnetDebugger::TelnetDebugger()
    Con::addConsumer(debuggerConsumer);
 
    mAcceptPort = -1;
-   mAcceptSocket = InvalidSocket;
-   mDebugSocket = InvalidSocket;
+   mAcceptSocket = NetSocket::INVALID;
+   mDebugSocket = NetSocket::INVALID;
 
    mState = NotConnected;
    mCurPos = 0;
@@ -163,6 +163,9 @@ TelnetDebugger::TelnetDebugger()
    mProgramPaused = false;
    mWaitForClient = false;
 
+   dStrncpy(mDebuggerPassword, "", PasswordMaxLength);
+   dStrncpy(mLineBuffer, "", sizeof(mLineBuffer));
+   
    // Add the version number in a global so that
    // scripts can detect the presence of the
    // "enhanced" debugger features.
@@ -189,9 +192,9 @@ TelnetDebugger::~TelnetDebugger()
 {
    Con::removeConsumer(debuggerConsumer);
 
-   if(mAcceptSocket != InvalidSocket)
+   if(mAcceptSocket != NetSocket::INVALID)
       Net::closeSocket(mAcceptSocket);
-   if(mDebugSocket != InvalidSocket)
+   if(mDebugSocket != NetSocket::INVALID)
       Net::closeSocket(mDebugSocket);
 }
 
@@ -217,10 +220,10 @@ void TelnetDebugger::send(const char *str)
 
 void TelnetDebugger::disconnect()
 {
-   if ( mDebugSocket != InvalidSocket )
+   if ( mDebugSocket != NetSocket::INVALID )
    {
       Net::closeSocket(mDebugSocket);
-      mDebugSocket = InvalidSocket;
+      mDebugSocket = NetSocket::INVALID;
    }
 
    removeAllBreakpoints();
@@ -236,16 +239,20 @@ void TelnetDebugger::setDebugParameters(S32 port, const char *password, bool wai
 //   if(port == mAcceptPort)
 //      return;
 
-   if(mAcceptSocket != InvalidSocket)
+   if(mAcceptSocket != NetSocket::INVALID)
    {
       Net::closeSocket(mAcceptSocket);
-      mAcceptSocket = InvalidSocket;
+      mAcceptSocket = NetSocket::INVALID;
    }
    mAcceptPort = port;
    if(mAcceptPort != -1 && mAcceptPort != 0)
    {
+     NetAddress address;
+     Net::getIdealListenAddress(&address);
+     address.port = mAcceptPort;
+
       mAcceptSocket = Net::openSocket();
-      Net::bind(mAcceptSocket, mAcceptPort);
+      Net::bindAddress(address, mAcceptSocket);
       Net::listen(mAcceptSocket, 4);
 
       Net::setBlocking(mAcceptSocket, false);
@@ -279,32 +286,33 @@ void TelnetDebugger::process()
 {
    NetAddress address;
 
-   if(mAcceptSocket != InvalidSocket)
+   if(mAcceptSocket != NetSocket::INVALID)
    {
       // ok, see if we have any new connections:
       NetSocket newConnection;
       newConnection = Net::accept(mAcceptSocket, &address);
 
-      if(newConnection != InvalidSocket && mDebugSocket == InvalidSocket)
+      if(newConnection != NetSocket::INVALID && mDebugSocket == NetSocket::INVALID)
       {
-   		Con::printf ("Debugger connection from %i.%i.%i.%i",
-   				address.netNum[0], address.netNum[1], address.netNum[2], address.netNum[3]);
+         char buffer[256];
+         Net::addressToString(&address, buffer);
+         Con::printf("Debugger connection from %s", buffer);
 
          mState = PasswordTry;
          mDebugSocket = newConnection;
 
          Net::setBlocking(newConnection, false);
       }
-      else if(newConnection != InvalidSocket)
+      else if(newConnection != NetSocket::INVALID)
          Net::closeSocket(newConnection);
    }
    // see if we have any input to process...
 
-   if(mDebugSocket == InvalidSocket)
+   if(mDebugSocket == NetSocket::INVALID)
       return;
 
    checkDebugRecv();
-   if(mDebugSocket == InvalidSocket)
+   if(mDebugSocket == NetSocket::INVALID)
       removeAllBreakpoints();
 }
 
@@ -434,7 +442,7 @@ void TelnetDebugger::breakProcess()
    {
       Platform::sleep(10);
       checkDebugRecv();
-      if(mDebugSocket == InvalidSocket)
+      if(mDebugSocket == NetSocket::INVALID)
       {
          mProgramPaused = false;
          removeAllBreakpoints();
@@ -465,19 +473,19 @@ void TelnetDebugger::sendBreak()
       if ( ns ) {
 
          if ( ns->mParent && ns->mParent->mPackage && ns->mParent->mPackage[0] ) {
-            dStrcat( scope, ns->mParent->mPackage );
-            dStrcat( scope, "::" );
+            dStrcat( scope, ns->mParent->mPackage, MaxCommandSize );
+            dStrcat( scope, "::", MaxCommandSize );
          }
          if ( ns->mName && ns->mName[0] ) {
-            dStrcat( scope, ns->mName );
-            dStrcat( scope, "::" );
+            dStrcat( scope, ns->mName, MaxCommandSize );
+            dStrcat( scope, "::", MaxCommandSize );
          }
       }
 
       const char *function = gEvalState.stack[i]->scopeName;
       if ((!function) || (!function[0]))
          function = "<none>";
-      dStrcat( scope, function );
+      dStrcat( scope, function, MaxCommandSize );
 
       U32 line=0, inst;
       U32 ip = gEvalState.stack[i]->ip;
@@ -583,7 +591,7 @@ void TelnetDebugger::addAllBreakpoints(CodeBlock *code)
       // TODO: This assumes that the OS file names are case 
       // insensitive... Torque needs a dFilenameCmp() function.
       if( dStricmp( cur->fileName, code->name ) == 0 )
-	   {
+      {
          cur->code = code;
 
          // Find the fist breakline starting from and
@@ -736,7 +744,7 @@ void TelnetDebugger::removeBreakpoint(const char *fileName, S32 line)
    {
       Breakpoint *brk = *bp;
       *bp = brk->next;
-	  if ( brk->code )
+     if ( brk->code )
           brk->code->clearBreakpoint(brk->lineNumber);
       dFree(brk->testExpression);
       delete brk;
@@ -749,7 +757,7 @@ void TelnetDebugger::removeAllBreakpoints()
    while(walk)
    {
       Breakpoint *temp = walk->next;
-	  if ( walk->code )
+     if ( walk->code )
           walk->code->clearBreakpoint(walk->lineNumber);
       dFree(walk->testExpression);
       delete walk;
@@ -787,10 +795,10 @@ void TelnetDebugger::setBreakOnNextStatement( bool enabled )
       for(CodeBlock *walk = CodeBlock::getCodeBlockList(); walk; walk = walk->nextFile)
          walk->clearAllBreaks();
       for(Breakpoint *w = mBreakpoints; w; w = w->next)
-	  {
-		  if ( w->code )
+     {
+        if ( w->code )
               w->code->setBreakpoint(w->lineNumber);
-	  }
+     }
       mBreakOnNextStatement = false;
    }
 }
@@ -843,7 +851,7 @@ void TelnetDebugger::debugStepOut()
    setBreakOnNextStatement( false );
    mStackPopBreakIndex = gEvalState.getStackDepth() - 1;
    if ( mStackPopBreakIndex == 0 )
-	   mStackPopBreakIndex = -1;
+      mStackPopBreakIndex = -1;
    mProgramPaused = false;
    send("RUNNING\r\n");
 }
@@ -856,6 +864,49 @@ void TelnetDebugger::evaluateExpression(const char *tag, S32 frame, const char *
    if ( frame < 0 )
       frame = 0;
 
+   // Local variables use their own memory management and can't be queried by just executing
+   // TorqueScript, we have to go digging into the interpreter.
+   S32 evalBufferLen = dStrlen(evalBuffer);
+   bool isEvaluatingLocalVariable = evalBufferLen > 0 && evalBuffer[0] == '%';
+   if (isEvaluatingLocalVariable)
+   {
+      // See calculation of current frame in pushing a reference frame for console exec, we need access
+      // to the proper scope.
+      //frame = gEvalState.getTopOfStack() - frame - 1;
+      S32 stackIndex = gEvalState.getTopOfStack() - frame - 1;
+
+      const char* format = "EVALOUT %s %s\r\n";
+
+      gEvalState.pushDebugFrame(stackIndex);
+
+      Dictionary& stackFrame = gEvalState.getCurrentFrame();
+      StringTableEntry functionName = stackFrame.scopeName;
+      StringTableEntry namespaceName = stackFrame.scopeNamespace->mName;
+      StringTableEntry varToLookup = StringTable->insert(evalBuffer);
+
+      S32 registerId = stackFrame.code->variableRegisterTable.lookup(namespaceName, functionName, varToLookup);
+
+      if (registerId == -1)
+      {
+         // ERROR, can't read the variable!
+         send("EVALOUT \"\" \"\"");
+         return;
+      }
+
+      const char* varResult = gEvalState.getLocalStringVariable(registerId);
+
+      gEvalState.popFrame();
+
+      S32 len = dStrlen(format) + dStrlen(tag) + dStrlen(varResult);
+      char* buffer = new char[len];
+      dSprintf(buffer, len, format, tag, varResult[0] ? varResult : "\"\"");
+
+      send(buffer);
+      delete[] buffer;
+
+      return;
+   }
+
    // Build a buffer just big enough for this eval.
    const char* format = "return %s;";
    dsize_t len = dStrlen( format ) + dStrlen( evalBuffer );
@@ -864,14 +915,14 @@ void TelnetDebugger::evaluateExpression(const char *tag, S32 frame, const char *
 
    // Execute the eval.
    CodeBlock *newCodeBlock = new CodeBlock();
-   const char* result = newCodeBlock->compileExec( NULL, buffer, false, frame );
+   ConsoleValue result = newCodeBlock->compileExec( NULL, buffer, false, frame );
    delete [] buffer;
    
    // Create a new buffer that fits the result.
    format = "EVALOUT %s %s\r\n";
-   len = dStrlen( format ) + dStrlen( tag ) + dStrlen( result );
+   len = dStrlen( format ) + dStrlen( tag ) + dStrlen( result.getString() );
    buffer = new char[ len ];
-   dSprintf( buffer, len, format, tag, result[0] ? result : "\"\"" );
+   dSprintf( buffer, len, format, tag, result.getString()[0] ? result.getString() : "\"\"" );
 
    send( buffer );
    delete [] buffer;

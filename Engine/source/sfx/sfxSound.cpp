@@ -68,7 +68,7 @@ ConsoleDocClass( SFXSound,
 //-----------------------------------------------------------------------------
 
 SFXSound::SFXSound()
-   : mVoice( NULL )
+   : mVoice( NULL ), mDuration(0), mSetPositionValue(0)
 {
    // NOTE: This should never be used directly 
    // and is only here to satisfy satisfy the
@@ -79,8 +79,9 @@ SFXSound::SFXSound()
 
 SFXSound::SFXSound( SFXProfile *profile, SFXDescription* desc )
    :  Parent( profile, desc ),
-      mVoice( NULL )
+      mVoice( NULL ), mDuration(0)
 {
+   mSetPositionValue = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -148,7 +149,7 @@ SFXSound* SFXSound::_create(   SFXDevice* device,
    SFXBuffer* buffer = SFX->_createBuffer( stream, description );
    if( !buffer )
    {
-      source->deleteObject();
+      SAFE_DELETE_OBJECT(source);
 
       Con::errorf( "SFXSound::_create() - Could not create device buffer!" );
       return NULL;
@@ -411,6 +412,9 @@ void SFXSound::_play()
          Platform::outputDebugString( "[SFXSound] virtualizing playback of source '%i'", getId() );
       #endif
    }
+   if(getPosition() != mSetPositionValue)
+      setPosition(mSetPositionValue);
+   mSetPositionValue = 0; //Non looping sounds need this to reset.
 }
 
 //-----------------------------------------------------------------------------
@@ -421,6 +425,7 @@ void SFXSound::_stop()
    
    if( mVoice )
       mVoice->stop();
+   mSetPositionValue = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -431,6 +436,7 @@ void SFXSound::_pause()
    
    if( mVoice )
       mVoice->pause();
+   mSetPositionValue = getPosition();
 }
 
 //-----------------------------------------------------------------------------
@@ -511,6 +517,8 @@ void SFXSound::_updatePriority()
 
 U32 SFXSound::getPosition() const
 {
+   if( getLastStatus() == SFXStatusStopped)
+      return mSetPositionValue;
    if( mVoice )
       return mVoice->getFormat().getDuration( mVoice->getPosition() );
    else
@@ -522,6 +530,8 @@ U32 SFXSound::getPosition() const
 void SFXSound::setPosition( U32 ms )
 {
    AssertFatal( ms < getDuration(), "SFXSound::setPosition() - position out of range" );
+   mSetPositionValue = ms;
+
    if( mVoice )
       mVoice->setPosition( mVoice->getFormat().getSampleCount( ms ) );
    else
@@ -544,7 +554,7 @@ void SFXSound::setTransform( const MatrixF& transform )
 {
    Parent::setTransform( transform );
 
-   if( mVoice && is3d() )
+   if( mVoice && mDescription && is3d() )
       mVoice->setTransform( mTransform );      
 }
 
@@ -627,7 +637,7 @@ S32 QSORT_CALLBACK SFXSound::qsortCompare( const void* item1, const void* item2 
    
    if( !source1IsPlaying && !source2IsPlaying )
       return 0;
-	else if( !source1IsPlaying && source1IsPlaying )
+	else if( !source1IsPlaying && source2IsPlaying )
 		return 1;
 	else if( source1IsPlaying && !source2IsPlaying )
 		return -1;
@@ -693,8 +703,9 @@ DefineEngineMethod( SFXSound, setPosition, void, ( F32 position ),,
    "playback will resume at the given position when play() is called.\n\n"
    "@param position The new position of the play cursor (in seconds).\n" )
 {
-   if( position >= 0 && position <= object->getDuration() )
-      object->setPosition( position * 1000.0f );
+   position *= 1000.0f;
+   if( position >= 0 && position < object->getDuration() )
+      object->setPosition( position );
 }
 
 //-----------------------------------------------------------------------------

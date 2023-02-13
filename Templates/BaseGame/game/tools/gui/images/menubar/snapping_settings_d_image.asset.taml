@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="snapping_settings_d_image"
+    imageFile="@assetFile=snapping-settings_d.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

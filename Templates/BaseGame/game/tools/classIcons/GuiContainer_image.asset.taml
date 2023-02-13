@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="GuiContainer_image"
+    imageFile="@assetFile=GuiContainer.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

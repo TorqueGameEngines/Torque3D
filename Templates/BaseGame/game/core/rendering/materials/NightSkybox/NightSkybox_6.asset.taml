@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="NightSkybox_6"
+    imageFile="@assetFile=NightSkybox_6.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

@@ -45,11 +45,12 @@
 #include "materials/matTextureTarget.h"
 #endif
 
+#include "T3D/assets/ImageAsset.h"
+
 GFXDeclareVertexFormat( GFXWaterVertex )
 {
    Point3F point;
    Point3F normal;
-   GFXVertexColor color;
    Point2F undulateData;
    Point4F horizonFactor;
 };
@@ -157,7 +158,7 @@ public:
    virtual bool onAdd();
    virtual void onRemove();
    virtual void inspectPostApply();
-   virtual bool processArguments(S32 argc, ConsoleValueRef *argv);
+   virtual bool processArguments(S32 argc, ConsoleValue *argv);
 
    // NetObject
    virtual U32  packUpdate( NetConnection * conn, U32 mask, BitStream *stream );
@@ -198,8 +199,12 @@ protected:
 
    virtual void _getWaterPlane( const Point3F &camPos, PlaneF &outPlane, Point3F &outPos ) {}
 
-   /// Callback used internally when smDisableTrueReflections changes.
-   void _onDisableTrueRelfections();
+   /// Callback used internally when smEnableTrueReflections changes.
+   void _onEnableTrueReflections();
+
+   void onRippleTexChanged() {}
+   void onFoamTexChanged() {}
+   void onDepthGradientTexChanged() {}
 
 protected:
 
@@ -213,7 +218,7 @@ protected:
    F32 mFresnelBias;
    F32 mFresnelPower;
    F32 mSpecularPower;
-   ColorF mSpecularColor;
+   LinearColorF mSpecularColor;
    bool mEmissive;
 
    // Reflection
@@ -267,10 +272,14 @@ protected:
    F32 mDepthGradientMax;
 
    // Other textures
-   String mRippleTexName;
-   String mFoamTexName;
-   String mCubemapName;
-   String mDepthGradientTexName;
+   DECLARE_IMAGEASSET(WaterObject, RippleTex, onRippleTexChanged, GFXStaticTextureProfile);
+   DECLARE_ASSET_NET_SETGET(WaterObject, RippleTex, TextureMask);
+   DECLARE_IMAGEASSET(WaterObject, FoamTex, onFoamTexChanged, GFXStaticTextureSRGBProfile);
+   DECLARE_ASSET_NET_SETGET(WaterObject, FoamTex, TextureMask);
+   DECLARE_IMAGEASSET(WaterObject, DepthGradientTex, onDepthGradientTexChanged, GFXStaticTextureSRGBProfile);
+   DECLARE_ASSET_NET_SETGET(WaterObject, DepthGradientTex, TextureMask);
+
+   StringTableEntry mCubemapName;
 
    // Sound
    SFXAmbience* mSoundAmbience;
@@ -298,7 +307,7 @@ protected:
    static bool smWireframe;
 
    /// Force all water objects to use static cubemap reflections
-   static bool smDisableTrueReflections;
+   static bool smEnableTrueReflections;
 
    // Rendering   
    bool mBasicLighting;
@@ -310,9 +319,6 @@ protected:
    WaterMatParams mMatParamHandles[NumMatTypes];   
    bool mUnderwater;
    GFXStateBlockRef mUnderwaterSB;
-   GFXTexHandle mRippleTex;
-   GFXTexHandle mDepthGradientTex;
-   GFXTexHandle mFoamTex;   
    CubemapData *mCubemap;
    MatrixSet *mMatrixSet;
    NamedTexTarget mNamedDepthGradTex;

@@ -37,6 +37,15 @@
 #ifndef _SCENEMANAGER_H_
 #include "scene/sceneManager.h"
 #endif
+#ifndef _SCENEMANAGER_H_
+#include "scene/sceneManager.h"
+#endif
+#ifndef _CUBEMAPDATA_H_
+#include "gfx/sim/cubemapData.h"
+#endif
+#ifndef _GFXPRIMITIVEBUFFER_H_
+#include "gfx/gfxPrimitiveBuffer.h"
+#endif
 
 class SceneRenderState;
 class ISceneObject;
@@ -48,6 +57,7 @@ class LightInfo;
 struct RenderInst;
 class MatrixSet;
 class GFXPrimitiveBufferHandle;
+class CustomShaderBindingData;
 
 /// A RenderInstType hash value.
 typedef U32 RenderInstTypeHash;
@@ -108,14 +118,17 @@ public:
    static const RenderInstType RIT_Object;   // objects that do their own rendering
    static const RenderInstType RIT_ObjectTranslucent;// self rendering; but sorted with static const RenderInstType RIT_Translucent
    static const RenderInstType RIT_Decal;
+   static const RenderInstType RIT_DecalRoad;
    static const RenderInstType RIT_Water;
    static const RenderInstType RIT_Foliage;
+   static const RenderInstType RIT_VolumetricFog;
    static const RenderInstType RIT_Translucent;
    static const RenderInstType RIT_Begin;
    static const RenderInstType RIT_Custom;
    static const RenderInstType RIT_Particle;
    static const RenderInstType RIT_Occluder;
    static const RenderInstType RIT_Editor;
+   static const RenderInstType RIT_Probes;
 
 public:
 
@@ -369,6 +382,20 @@ struct MeshRenderInst : public RenderInst
    GFXTextureObject *accuTex;
    GFXCubemap   *cubemap;
 
+   /// @name Hardware Skinning
+   /// {
+   MatrixF *mNodeTransforms;
+   U32 mNodeTransformCount;
+   /// }
+
+#ifdef TORQUE_ENABLE_GFXDEBUGEVENTS
+   const char *meshName;
+   const char *objectName;
+#endif
+
+   //Custom Shader data
+   Vector<CustomShaderBindingData> mCustomShaderData;
+
    void clear();
 };
 
@@ -421,6 +448,8 @@ struct ParticleRenderInst : public RenderInst
 
    /// Bounding box render transform
    const MatrixF *bbModelViewProj;
+
+   Point3F wsPosition;
 
    /// The particle texture.
    GFXTextureObject *diffuseTex;

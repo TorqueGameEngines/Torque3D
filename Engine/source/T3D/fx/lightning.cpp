@@ -156,6 +156,7 @@ LightningStrikeEvent::LightningStrikeEvent()
 {
    mLightning = NULL;
    mTarget = NULL;
+   mClientId = 0;
 }
 
 LightningStrikeEvent::~LightningStrikeEvent()
@@ -199,7 +200,7 @@ void LightningStrikeEvent::unpack(NetConnection* con, BitStream* stream)
 {
    if(!stream->readFlag())
       return;
-   S32 mClientId = stream->readRangedU32(0, NetConnection::MaxGhostCount);
+   mClientId = stream->readRangedU32(0, NetConnection::MaxGhostCount);
    mLightning = NULL;
    NetObject* pObject = con->resolveGhost(mClientId);
    if (pObject)
@@ -213,10 +214,10 @@ void LightningStrikeEvent::unpack(NetConnection* con, BitStream* stream)
       // target id
       S32 mTargetID    = stream->readRangedU32(0, NetConnection::MaxGhostCount);
 
-      NetObject* pObject = con->resolveGhost(mTargetID);
-      if( pObject != NULL )
+      NetObject* tObject = con->resolveGhost(mTargetID);
+      if(tObject != NULL )
       {
-         mTarget = dynamic_cast<SceneObject*>(pObject);
+         mTarget = dynamic_cast<SceneObject*>(tObject);
       }
       if( bool(mTarget) == false )
       {
@@ -237,11 +238,20 @@ void LightningStrikeEvent::process(NetConnection*)
 //
 LightningData::LightningData()
 {
-   strikeSound = NULL;
+   INIT_ASSET(StrikeSound);
 
-   dMemset( strikeTextureNames, 0, sizeof( strikeTextureNames ) );
-   dMemset( strikeTextures, 0, sizeof( strikeTextures ) );
-   dMemset( thunderSounds, 0, sizeof( thunderSounds ) );
+   for (S32 i = 0; i < MaxThunders; i++)
+   {
+      INIT_SOUNDASSET_ARRAY(ThunderSound, i);
+   }
+
+   for (S32 i = 0; i < MaxTextures; i++)
+   {
+      strikeTextureNames[i] = NULL;
+      strikeTextures[i] = NULL;
+   }
+   numThunders = 0;
+   mNumStrikeTextures = 0;
 }
 
 LightningData::~LightningData()
@@ -252,12 +262,12 @@ LightningData::~LightningData()
 //--------------------------------------------------------------------------
 void LightningData::initPersistFields()
 {
-   addField( "strikeSound", TYPEID< SFXTrack >(), Offset(strikeSound, LightningData),
-      "Sound profile to play when a lightning strike occurs." );
-   addField( "thunderSounds", TYPEID< SFXTrack >(), Offset(thunderSounds, LightningData), MaxThunders,
-      "@brief List of thunder sound effects to play.\n\n"
-      "A random one of these sounds will be played shortly after each strike "
-      "occurs." );
+   docsURL;
+
+   INITPERSISTFIELD_SOUNDASSET(StrikeSound, LightningData, "Sound to play when lightning STRIKES!");
+
+   INITPERSISTFIELD_SOUNDASSET_ARRAY(ThunderSound, MaxThunders, LightningData, "Sounds for thunder.");
+
    addField( "strikeTextures", TypeString, Offset(strikeTextureNames, LightningData), MaxTextures,
       "List of textures to use to render lightning strikes." );
 
@@ -280,26 +290,36 @@ bool LightningData::preload(bool server, String &errorStr)
    if (Parent::preload(server, errorStr) == false)
       return false;
 
-   dQsort(thunderSounds, MaxThunders, sizeof(SFXTrack*), cmpSounds);
-   for (numThunders = 0; numThunders < MaxThunders && thunderSounds[numThunders] != NULL; numThunders++) {
-      //
-   }
+   //dQsort(thunderSounds, MaxThunders, sizeof(SFXTrack*), cmpSounds);
 
+   
    if (server == false) 
    {
-      String sfxErrorStr;
-      for (U32 i = 0; i < MaxThunders; i++) {
-         if( !sfxResolve( &thunderSounds[ i ], sfxErrorStr ) )
-            Con::errorf(ConsoleLogEntry::General, "LightningData::preload: Invalid packet: %s", sfxErrorStr.c_str());
+      for (S32 i = 0; i < MaxThunders; i++)
+      {
+         _setThunderSound(getThunderSound(i), i);
+         if (isThunderSoundValid(i) && !getThunderSoundProfile(i))
+         {
+               Con::errorf(ConsoleLogEntry::General, "LightningData::preload: Cant get an sfxProfile for thunder.");
+
+         }
+
       }
 
-      if( !sfxResolve( &strikeSound, sfxErrorStr ) )
-         Con::errorf(ConsoleLogEntry::General, "LightningData::preload: Invalid packet: %s", sfxErrorStr.c_str());
-
-      for (U32 i = 0; i < MaxTextures; i++) 
+      _setStrikeSound(getStrikeSound());
+      if (isStrikeSoundValid() && !getStrikeSoundProfile())
       {
-         if (strikeTextureNames[i][0])
-            strikeTextures[i] = GFXTexHandle(strikeTextureNames[i], &GFXDefaultStaticDiffuseProfile, avar("%s() - strikeTextures[%d] (line %d)", __FUNCTION__, i, __LINE__));
+            Con::errorf(ConsoleLogEntry::General, "LightningData::preload: can't get sfxProfile from strike sound.");
+      }
+
+      mNumStrikeTextures = 0;
+      for (U32 k = 0; k < MaxTextures; k++) 
+      {
+         if (strikeTextureNames[k][0])
+         {
+            strikeTextures[k] = GFXTexHandle(strikeTextureNames[k], &GFXStaticTextureProfile, avar("%s() - strikeTextures[%d] (line %d)", __FUNCTION__, k, __LINE__));
+            mNumStrikeTextures++;
+         }
       }
    }
 
@@ -315,12 +335,16 @@ void LightningData::packData(BitStream* stream)
 
    U32 i;
    for (i = 0; i < MaxThunders; i++)
-      sfxWrite( stream, thunderSounds[ i ] );
-   for (i = 0; i < MaxTextures; i++) {
-      stream->writeString(strikeTextureNames[i]);
+   {
+      PACKDATA_SOUNDASSET_ARRAY(ThunderSound, i);
    }
 
-   sfxWrite( stream, strikeSound );
+   stream->writeInt(mNumStrikeTextures, 4);
+
+   for (i = 0; i < MaxTextures; i++)
+      stream->writeString(strikeTextureNames[i]);
+
+   PACKDATA_ASSET(StrikeSound);
 }
 
 void LightningData::unpackData(BitStream* stream)
@@ -329,12 +353,16 @@ void LightningData::unpackData(BitStream* stream)
 
    U32 i;
    for (i = 0; i < MaxThunders; i++)
-      sfxRead( stream, &thunderSounds[ i ] );
-   for (i = 0; i < MaxTextures; i++) {
-      strikeTextureNames[i] = stream->readSTString();
+   {
+      UNPACKDATA_SOUNDASSET_ARRAY(ThunderSound, i);
    }
 
-   sfxRead( stream, &strikeSound );
+   mNumStrikeTextures = stream->readInt(4);
+
+   for (i = 0; i < MaxTextures; i++)
+      strikeTextureNames[i] = stream->readSTString();
+
+   UNPACKDATA_ASSET(StrikeSound);
 }
 
 
@@ -346,6 +374,7 @@ Lightning::Lightning()
    mNetFlags.set(Ghostable|ScopeAlways);
    mTypeMask |= StaticObjectType|EnvironmentObjectType;
 
+   mDataBlock = NULL;
    mLastThink = 0;
 
    mStrikeListHead  = NULL;
@@ -367,22 +396,23 @@ Lightning::~Lightning()
 {
    while( mThunderListHead )
    {
-      Thunder* next = mThunderListHead->next;
+      Thunder* nextThunder = mThunderListHead->next;
       delete mThunderListHead;
-      mThunderListHead = next;
+      mThunderListHead = nextThunder;
    }
 
    while( mStrikeListHead )
    {
-      Strike* next = mStrikeListHead->next;
+      Strike* nextStrike = mStrikeListHead->next;
       delete mStrikeListHead;
-      mStrikeListHead = next;
+      mStrikeListHead = nextStrike;
    }
 }
 
 //--------------------------------------------------------------------------
 void Lightning::initPersistFields()
 {
+   docsURL;
    addGroup( "Strikes" );
    addField( "strikesPerMinute", TypeS32, Offset(strikesPerMinute, Lightning),
       "@brief Number of lightning strikes to perform per minute.\n\n"
@@ -477,11 +507,16 @@ void Lightning::renderObject(ObjectRenderInst *ri, SceneRenderState *state, Base
       desc.setBlend( true, GFXBlendSrcAlpha, GFXBlendOne);
       desc.setCullMode(GFXCullNone);
       desc.zWriteEnable = false;
-      desc.samplersDefined = true;
-      desc.samplers[0].magFilter = GFXTextureFilterLinear;
-      desc.samplers[0].minFilter = GFXTextureFilterLinear;
-      desc.samplers[0].addressModeU = GFXAddressWrap;
-      desc.samplers[0].addressModeV = GFXAddressWrap;
+      desc.vertexColorEnable = true;
+
+      if (mDataBlock->mNumStrikeTextures != 0)
+      {
+         desc.samplersDefined = true;
+         desc.samplers[0].magFilter = GFXTextureFilterLinear;
+         desc.samplers[0].minFilter = GFXTextureFilterLinear;
+         desc.samplers[0].addressModeU = GFXAddressWrap;
+         desc.samplers[0].addressModeV = GFXAddressWrap;
+      }
 
       mLightningSB = GFX->createStateBlock(desc);
 
@@ -493,9 +528,16 @@ void Lightning::renderObject(ObjectRenderInst *ri, SceneRenderState *state, Base
    Strike* walk = mStrikeListHead;
    while (walk != NULL)
    {
-      GFX->setTexture(0, mDataBlock->strikeTextures[0]);
+      if (mDataBlock->mNumStrikeTextures > 1)
+      {
+         GFX->setTexture(0, mDataBlock->strikeTextures[sgLightningRand.randI(0, mDataBlock->mNumStrikeTextures - 1)]);
+      }
+      else if (mDataBlock->mNumStrikeTextures > 0)
+      {
+         GFX->setTexture(0, mDataBlock->strikeTextures[0]);
+      }
 
-      for( U32 i=0; i<3; i++ )
+      for( U32 i=0; i<MAX_LIGHTNING; i++ )
       {
          if( walk->bolt[i].isFading )
          {
@@ -514,8 +556,8 @@ void Lightning::renderObject(ObjectRenderInst *ri, SceneRenderState *state, Base
    }
 
    //GFX->setZWriteEnable(true);
-	//GFX->setAlphaTestEnable(false);
-	//GFX->setAlphaBlendEnable(false);
+   //GFX->setAlphaTestEnable(false);
+   //GFX->setAlphaBlendEnable(false);
 }
 
 void Lightning::scheduleThunder(Strike* newStrike)
@@ -546,7 +588,7 @@ void Lightning::scheduleThunder(Strike* newStrike)
          if (t <= 0.03f) {
             // If it's really close, just play it...
             U32 thunder = sgLightningRand.randI(0, mDataBlock->numThunders - 1);
-            SFX->playOnce(mDataBlock->thunderSounds[thunder]);
+            SFX->playOnce(mDataBlock->getThunderSoundProfile(thunder));
          } else {
             Thunder* pThunder = new Thunder;
             pThunder->tRemaining = t;
@@ -588,7 +630,7 @@ void Lightning::advanceTime(F32 dt)
    while (*pWalker != NULL) {
       Strike* pStrike = *pWalker;
 
-      for( U32 i=0; i<3; i++ )
+      for( U32 i=0; i<MAX_LIGHTNING; i++ )
       {
          pStrike->bolt[i].update( dt );
       }
@@ -613,7 +655,7 @@ void Lightning::advanceTime(F32 dt)
 
          // Play the sound...
          U32 thunder = sgLightningRand.randI(0, mDataBlock->numThunders - 1);
-         SFX->playOnce(mDataBlock->thunderSounds[thunder]);
+         SFX->playOnce(mDataBlock->getThunderSoundProfile(thunder));
       } else {
          pThunderWalker = &((*pThunderWalker)->next);
       }
@@ -672,7 +714,7 @@ void Lightning::processEvent(LightningStrikeEvent* pEvent)
       pStrike->currentAge = 0.0f;
       pStrike->next       = mStrikeListHead;
 
-      for( U32 i=0; i<3; i++ )
+      for( U32 i=0; i<MAX_LIGHTNING; i++ )
       {
          F32 randStart = boltStartRadius;
          F32 height = mObjScale.z * 0.5f + getPosition().z;
@@ -697,9 +739,9 @@ void Lightning::processEvent(LightningStrikeEvent* pEvent)
       MatrixF trans(true);
       trans.setPosition( strikePoint );
 
-      if (mDataBlock->strikeSound)
+      if (mDataBlock->getStrikeSoundProfile())
       {
-         SFX->playOnce(mDataBlock->strikeSound, &trans );
+         SFX->playOnce(mDataBlock->getStrikeSoundProfile(), &trans );
       }
 
 }
@@ -708,6 +750,7 @@ void Lightning::warningFlashes()
 {
    AssertFatal(isServerObject(), "Error, client objects may not initiate lightning!");
 
+   Point3F strikePoint( gRandGen.randF( 0.0f, 1.0f ), gRandGen.randF( 0.0f, 1.0f ), 0.0f );
 
    SimGroup* pClientGroup = Sim::getClientGroup();
    for (SimGroup::iterator itr = pClientGroup->begin(); itr != pClientGroup->end(); itr++) {
@@ -716,6 +759,9 @@ void Lightning::warningFlashes()
       {
          LightningStrikeEvent* pEvent = new LightningStrikeEvent;
          pEvent->mLightning = this;
+       
+       pEvent->mStart.x = strikePoint.x;
+       pEvent->mStart.y = strikePoint.y;
 
          nc->postNetEvent(pEvent);
       }
@@ -730,18 +776,19 @@ void Lightning::strikeRandomPoint()
    Point3F strikePoint( gRandGen.randF( 0.0f, 1.0f ), gRandGen.randF( 0.0f, 1.0f ), 0.0f );
 
    // check if an object is within target range
+   Point3F worldPosStrikePoint = strikePoint;
 
-   strikePoint *= mObjScale;
-   strikePoint += getPosition();
-   strikePoint += Point3F( -mObjScale.x * 0.5f, -mObjScale.y * 0.5f, 0.0f );
+   worldPosStrikePoint *= mObjScale;
+   worldPosStrikePoint += getPosition();
+   worldPosStrikePoint += Point3F( -mObjScale.x * 0.5f, -mObjScale.y * 0.5f, 0.0f );
 
    Box3F queryBox;
    F32 boxWidth = strikeRadius * 2.0f;
 
    queryBox.minExtents.set( -boxWidth * 0.5f, -boxWidth * 0.5f, -mObjScale.z * 0.5f );
    queryBox.maxExtents.set(  boxWidth * 0.5f,  boxWidth * 0.5f,  mObjScale.z * 0.5f );
-   queryBox.minExtents += strikePoint;
-   queryBox.maxExtents += strikePoint;
+   queryBox.minExtents += worldPosStrikePoint;
+   queryBox.maxExtents += worldPosStrikePoint;
 
    SimpleQueryList sql;
    getContainer()->findObjects(queryBox, DAMAGEABLE_TYPEMASK,
@@ -836,13 +883,53 @@ void Lightning::strikeRandomPoint()
 }
 
 //--------------------------------------------------------------------------
-void Lightning::strikeObject(ShapeBase*)
+void Lightning::strikeObject(ShapeBase* targetObj)
 {
    AssertFatal(isServerObject(), "Error, client objects may not initiate lightning!");
 
-   AssertFatal(false, "Lightning::strikeObject is not implemented.");
-}
+   Point3F strikePoint = targetObj->getPosition();
+   Point3F objectCenter;
 
+   Box3F wb = getWorldBox();
+   if (!wb.isContained(strikePoint))
+        return;
+
+   Point3F targetRel = strikePoint - getPosition();
+   Point3F length(wb.len_x() / 2.0f, wb.len_y() / 2.0f, wb.len_z() / 2.0f);
+
+   Point3F strikePos = targetRel / length;
+
+   bool playerInWarmup = false;
+   Player *playerObj = dynamic_cast< Player * >(targetObj);
+   if (playerObj)
+   {
+       if (!playerObj->getControllingClient())
+       {
+           playerInWarmup = true;
+       }
+   }
+
+   if (!playerInWarmup)
+   {
+       applyDamage_callback(targetObj->getWorldSphere().center, VectorF(0.0, 0.0, 1.0), targetObj);
+   }
+ 
+   SimGroup* pClientGroup = Sim::getClientGroup();
+   for (SimGroup::iterator itr = pClientGroup->begin(); itr != pClientGroup->end(); itr++) {
+      NetConnection* nc = static_cast<NetConnection*>(*itr);
+      if (nc != NULL)
+      {
+         LightningStrikeEvent* pEvent = new LightningStrikeEvent;
+         pEvent->mLightning = this;
+       
+         pEvent->mStart.x = strikePoint.x;
+         pEvent->mStart.y = strikePoint.y;
+         pEvent->mTarget = targetObj;
+
+         nc->postNetEvent(pEvent);
+      }
+   }
+}
 
 //--------------------------------------------------------------------------
 U32 Lightning::packUpdate(NetConnection* con, U32 mask, BitStream* stream)
@@ -863,6 +950,7 @@ U32 Lightning::packUpdate(NetConnection* con, U32 mask, BitStream* stream)
       stream->write(color.red);
       stream->write(color.green);
       stream->write(color.blue);
+      stream->write(color.alpha);
       stream->write(fadeColor.red);
       stream->write(fadeColor.green);
       stream->write(fadeColor.blue);
@@ -894,6 +982,7 @@ void Lightning::unpackUpdate(NetConnection* con, BitStream* stream)
       stream->read(&color.red);
       stream->read(&color.green);
       stream->read(&color.blue);
+      stream->read(&color.alpha);
       stream->read(&fadeColor.red);
       stream->read(&fadeColor.green);
       stream->read(&fadeColor.blue);
@@ -929,7 +1018,7 @@ DefineEngineMethod(Lightning, strikeRandomPoint, void, (),,
       object->strikeRandomPoint();
 }
 
-DefineEngineMethod(Lightning, strikeObject, void, (ShapeBase* pSB),,
+DefineEngineMethod(Lightning, strikeObject, void, (ShapeBase* pSB), (nullAsType<ShapeBase*>()),
    "Creates a LightningStrikeEvent which strikes a specific object.\n"
    "@note This method is currently unimplemented.\n" )
 {
@@ -949,6 +1038,16 @@ LightningBolt::LightningBolt()
    elapsedTime = 0.0f;
    lifetime = 1.0f;
    startRender = false;
+   endPoint.zero();
+   width = 1;
+   numMajorNodes = 10;
+   maxMajorAngle = 30.0f;
+   numMinorNodes = 4;
+   maxMinorAngle = 15.0f;
+   fadeTime = 0.2f;
+   renderTime = 0.125;
+   dMemset(&mMajorNodes, 0, sizeof(mMajorNodes));
+   percentFade = 0.0f;
 }
 
 //--------------------------------------------------------------------------
@@ -1027,7 +1126,7 @@ void LightningBolt::render( const Point3F &camPos )
          renderSegment(mMinorNodes[i], camPos, false);
    }
 
-	PrimBuild::end();
+   PrimBuild::end();
 
    for(LightingBoltList::Iterator i = splitList.begin(); i != splitList.end(); ++i)
    {
@@ -1153,26 +1252,26 @@ void LightningBolt::generateMinorNodes()
 //----------------------------------------------------------------------------
 // Recursive algo to create bolts that split off from main bolt
 //----------------------------------------------------------------------------
-void LightningBolt::createSplit( const Point3F &startPoint, const Point3F &endPoint, U32 depth, F32 width )
+void LightningBolt::createSplit( const Point3F &startingPoint, const Point3F &endingPoint, U32 depth, F32 splitWidth )
 {
    if( depth == 0 )
       return;
-	  
+     
    F32 chanceToEnd = gRandGen.randF();
    if( chanceToEnd > 0.70f )
       return;
 
-   if( width < 0.75f )
-      width = 0.75f;
+   if(splitWidth < 0.75f )
+      splitWidth = 0.75f;
 
-   VectorF diff = endPoint - startPoint;
+   VectorF diff = endingPoint - startingPoint;
    F32 length = diff.len();
    diff.normalizeSafe();
 
    LightningBolt newBolt;
-   newBolt.startPoint = startPoint;
-   newBolt.endPoint = endPoint;
-   newBolt.width = width;
+   newBolt.startPoint = startingPoint;
+   newBolt.endPoint = endingPoint;
+   newBolt.width = splitWidth;
    newBolt.numMajorNodes = 3;
    newBolt.maxMajorAngle = 30.0f;
    newBolt.numMinorNodes = 3;
@@ -1183,13 +1282,13 @@ void LightningBolt::createSplit( const Point3F &startPoint, const Point3F &endPo
    splitList.pushBack( newBolt );
 
    VectorF newDir1 = MathUtils::randomDir( diff, 10.0f, 45.0f );
-   Point3F newEndPoint1 = endPoint + newDir1 * gRandGen.randF( 0.5f, 1.5f ) * length;
+   Point3F newEndPoint1 = endingPoint + newDir1 * gRandGen.randF( 0.5f, 1.5f ) * length;
 
    VectorF newDir2 = MathUtils::randomDir( diff, 10.0f, 45.0f );
-   Point3F newEndPoint2 = endPoint + newDir2 * gRandGen.randF( 0.5f, 1.5f ) * length;
+   Point3F newEndPoint2 = endingPoint + newDir2 * gRandGen.randF( 0.5f, 1.5f ) * length;
 
-   createSplit( endPoint, newEndPoint1, depth - 1, width * 0.30f );
-   createSplit( endPoint, newEndPoint2, depth - 1, width * 0.30f );
+   createSplit(endingPoint, newEndPoint1, depth - 1, splitWidth * 0.30f );
+   createSplit(endingPoint, newEndPoint2, depth - 1, splitWidth * 0.30f );
 
 }
 
@@ -1202,7 +1301,7 @@ void LightningBolt::startSplits()
    for( U32 i=0; i<mMajorNodes.numNodes-1; i++ )
    {
       if( gRandGen.randF() > 0.3f )
-	     continue;
+        continue;
 
       Node node = mMajorNodes.nodeList[i];
       Node node2 = mMajorNodes.nodeList[i+1];

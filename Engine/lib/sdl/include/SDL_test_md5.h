@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2014 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -53,8 +53,8 @@
  ***********************************************************************
 */
 
-#ifndef _SDL_test_md5_h
-#define _SDL_test_md5_h
+#ifndef SDL_test_md5_h_
+#define SDL_test_md5_h_
 
 #include "begin_code.h"
 /* Set up for C function definitions, even when using C++ */
@@ -78,9 +78,9 @@ extern "C" {
 /* ---------- Function Prototypes ------------- */
 
 /**
- * /brief initialize the context
+ * \brief initialize the context
  *
- * /param  mdContext        pointer to context variable
+ * \param  mdContext        pointer to context variable
  *
  * Note: The function initializes the message-digest context
  *       mdContext. Call before each new use of the context -
@@ -90,11 +90,11 @@ extern "C" {
 
 
 /**
- * /brief update digest from variable length data
+ * \brief update digest from variable length data
  *
- * /param  mdContext       pointer to context variable
- * /param  inBuf           pointer to data array/string
- * /param  inLen           length of data array/string
+ * \param  mdContext       pointer to context variable
+ * \param  inBuf           pointer to data array/string
+ * \param  inLen           length of data array/string
  *
  * Note: The function updates the message-digest context to account
  *       for the presence of each of the characters inBuf[0..inLen-1]
@@ -105,10 +105,10 @@ extern "C" {
                  unsigned int inLen);
 
 
-/*
- * /brief complete digest computation
+/**
+ * \brief complete digest computation
  *
- * /param mdContext     pointer to context variable
+ * \param mdContext     pointer to context variable
  *
  * Note: The function terminates the message-digest computation and
  *       ends with the desired message digest in mdContext.digest[0..15].
@@ -124,6 +124,6 @@ extern "C" {
 #endif
 #include "close_code.h"
 
-#endif /* _SDL_test_md5_h */
+#endif /* SDL_test_md5_h_ */
 
 /* vi: set ts=4 sw=4 expandtab: */

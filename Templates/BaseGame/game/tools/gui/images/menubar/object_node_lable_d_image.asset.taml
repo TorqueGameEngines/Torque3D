@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="object_node_lable_d_image"
+    imageFile="@assetFile=object-node-lable_d.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

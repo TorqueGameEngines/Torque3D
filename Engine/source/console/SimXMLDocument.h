@@ -35,17 +35,16 @@
 #include "core/util/tVector.h"
 #endif // _TVECTOR_H_
 
-
-class TiXmlDocument;
-class TiXmlElement;
-class TiXmlAttribute;
-
+#ifndef TINYXML2_INCLUDED
+#include <tinyxml2.h>
+#endif // TINYXML2_INCLUDED
+#include "persistence/taml/fsTinyXml.h"
 
 class SimXMLDocument: public SimObject
 {
    // This typedef is required for tie ins with the script language.
    // --------------------------------------------------------------------------
-	protected:
+   protected:
       typedef SimObject Parent;
    // --------------------------------------------------------------------------
 
@@ -57,7 +56,7 @@ class SimXMLDocument: public SimObject
       // tie in to the script language.  The .cc file has more in depth
       // comments on these.
       //-----------------------------------------------------------------------
-      bool processArguments(S32 argc, ConsoleValueRef *argv);
+      bool processArguments(S32 argc, ConsoleValue *argv);
       bool onAdd();
       void onRemove();
       static void initPersistFields();
@@ -85,8 +84,8 @@ class SimXMLDocument: public SimObject
       bool nextSiblingElement(const char* rName);
       // push child element at index onto stack.
       bool pushChildElement(S32 index);
-	  // Get element value
-	  const char* elementValue();
+     // Get element value
+     const char* elementValue();
       
       // Pop last element off of stack.
       void popElement(void);
@@ -94,16 +93,16 @@ class SimXMLDocument: public SimObject
       // Get attribute from top element on element stack.
       const char* attribute(const char* rAttribute);
 
-	  // Does the attribute exist in the current element
+     // Does the attribute exist in the current element
       bool attributeExists(const char* rAttribute);
 
-	  // Obtain the name of the current element's first or last attribute
-	  const char* firstAttribute();
-	  const char* lastAttribute();
+     // Obtain the name of the current element's first or last attribute
+     const char* firstAttribute();
+     const char* lastAttribute();
 
-	  // Move through the current element's attributes to obtain their names
-	  const char* nextAttribute();
-	  const char* prevAttribute();
+     // Move through the current element's attributes to obtain their names
+     const char* nextAttribute();
+     const char* prevAttribute();
 
       // Set attribute of top element on element stack.
       void setAttribute(const char* rAttribute, const char* rVal);
@@ -136,11 +135,11 @@ class SimXMLDocument: public SimObject
       
    private:
       // Document.
-      TiXmlDocument* m_qDocument;
+      VfsXMLDocument* m_qDocument;
       // Stack of nodes.
-      Vector<TiXmlElement*> m_paNode;
-	  // The current attribute
-	  TiXmlAttribute* m_CurrentAttribute;
+      Vector<tinyxml2::XMLNode*> m_paNode;
+     // The current attribute
+      const tinyxml2::XMLAttribute* m_CurrentAttribute;
 
    public:
       DECLARE_CONOBJECT(SimXMLDocument);

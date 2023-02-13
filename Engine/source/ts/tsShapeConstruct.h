@@ -42,6 +42,9 @@
 #include "console/engineAPI.h"
 #endif
 
+#include "T3D/assets/ShapeAsset.h"
+#include "T3D/assets/ShapeAnimationAsset.h"
+
 /// This class allows an artist to export their animations for the model
 /// into the .dsq format.  This class in particular matches up the model
 /// with the .dsqs to create a nice animated model.
@@ -97,75 +100,20 @@ public:
       {
          eCommandType      type;       // Command type
          StringTableEntry  name;       // Command name
-         String            argv[10];   // Command arguments
+         static const U32 MAX_ARGS = 10;
+         String            argv[MAX_ARGS];   // Command arguments
          S32               argc;       // Number of arguments
          Command() : type(CmdInvalid), name(0), argc(0) { }
-         Command( const char* _name )
+         Command(const char* _name)
             : type(CmdInvalid), argc(0)
          {
-            name = StringTable->insert( _name );
+            name = StringTable->insert(_name);
          }
 
          // Helper functions to fill in the command arguments
-         inline void addArgs() { }
-
-         template< typename A >
-            inline void addArgs( A a )
-         {
-            argv[argc++] = EngineMarshallData( a );
-         }
-         template< typename A, typename B > void addArgs( A a, B b )
-         {
-            addArgs( a );
-            addArgs( b );
-         } 
-         template< typename A, typename B, typename C >
-            inline void addArgs( A a, B b, C c )
-         {
-            addArgs( a );
-            addArgs( b, c );
-         }
-         template< typename A, typename B, typename C, typename D >
-            inline void addArgs( A a, B b, C c, D d )
-         {
-            addArgs( a );
-            addArgs( b, c, d );
-         }
-         template< typename A, typename B, typename C, typename D, typename E >
-            inline void addArgs( A a, B b, C c, D d, E e )
-         {
-            addArgs( a );
-            addArgs( b, c, d, e );
-         }
-         template< typename A, typename B, typename C, typename D, typename E, typename F >
-            inline void addArgs( A a, B b, C c, D d, E e, F f )
-         {
-            addArgs( a );
-            addArgs( b, c, d, e, f );
-         }
-         template< typename A, typename B, typename C, typename D, typename E, typename F, typename G >
-            inline void addArgs( A a, B b, C c, D d, E e, F f, G g )
-         {
-            addArgs( a );
-            addArgs( b, c, d, e, f, g );
-         }
-         template< typename A, typename B, typename C, typename D, typename E, typename F, typename G, typename H >
-            inline void addArgs( A a, B b, C c, D d, E e, F f, G g, H h )
-         {
-            addArgs( a );
-            addArgs( b, c, d, e, f, g, h );
-         }
-         template< typename A, typename B, typename C, typename D, typename E, typename F, typename G, typename H, typename I >
-            inline void addArgs( A a, B b, C c, D d, E e, F f, G g, H h, I i )
-         {
-            addArgs( a );
-            addArgs( b, c, d, e, f, g, h, i );
-         }
-         template< typename A, typename B, typename C, typename D, typename E, typename F, typename G, typename H, typename I, typename J >
-            inline void addArgs( A a, B b, C c, D d, E e, F f, G g, H h, I i, J j )
-         {
-            addArgs( a );
-            addArgs( b, c, d, e, f, g, h, i, j );
+         template<typename ...ArgTs> inline void addArgs(ArgTs ...args) {
+            using Helper = engineAPI::detail::MarshallHelpers<String>;
+            Helper::marshallEach(argc, argv, args...);
          }
       };
 
@@ -175,40 +123,40 @@ public:
       void clear() { mCommands.clear(); }
       bool empty() { return mCommands.empty(); }
 
-      void add( Command& cmd );
+      void add(Command& cmd);
 
       // These methods handle change set optimisation based on the newly added command
-      bool addCmd_setNodeParent( const Command& newCmd );
-      bool addCmd_setNodeTransform( const Command& newCmd );
-      bool addCmd_renameNode( const Command& newCmd );
-      bool addCmd_removeNode( const Command& newCmd );
+      bool addCmd_setNodeParent(const Command& newCmd);
+      bool addCmd_setNodeTransform(const Command& newCmd);
+      bool addCmd_renameNode(const Command& newCmd);
+      bool addCmd_removeNode(const Command& newCmd);
 
-      bool addCmd_setMeshSize( const Command& newCmd );
-      bool addCmd_setMeshType( const Command& newCmd );
-      bool addCmd_setMeshMaterial( const Command& newCmd );
-      bool addCmd_removeMesh( const Command& newCmd );
+      bool addCmd_setMeshSize(const Command& newCmd);
+      bool addCmd_setMeshType(const Command& newCmd);
+      bool addCmd_setMeshMaterial(const Command& newCmd);
+      bool addCmd_removeMesh(const Command& newCmd);
 
-      bool addCmd_setObjectNode( const Command& newCmd );
-      bool addCmd_renameObject( const Command& newCmd );
-      bool addCmd_removeObject( const Command& newCmd );
-      bool addCmd_setBounds( const Command& newCmd );
+      bool addCmd_setObjectNode(const Command& newCmd);
+      bool addCmd_renameObject(const Command& newCmd);
+      bool addCmd_removeObject(const Command& newCmd);
+      bool addCmd_setBounds(const Command& newCmd);
 
-      bool addCmd_renameDetailLevel( const Command& newCmd );
-      bool addCmd_removeDetailLevel( const Command& newCmd );
-      bool addCmd_setDetailSize( const Command& newCmd );
-      bool addCmd_addImposter( const Command& newCmd );
-      bool addCmd_removeImposter( const Command& newCmd );
+      bool addCmd_renameDetailLevel(const Command& newCmd);
+      bool addCmd_removeDetailLevel(const Command& newCmd);
+      bool addCmd_setDetailSize(const Command& newCmd);
+      bool addCmd_addImposter(const Command& newCmd);
+      bool addCmd_removeImposter(const Command& newCmd);
 
-      bool addCmd_addSequence( Command& newCmd );
-      bool addCmd_setSequencePriority( const Command& newCmd );
-      bool addCmd_setSequenceGroundSpeed( const Command& newCmd );
-      bool addCmd_setSequenceCyclic( const Command& newCmd );
-      bool addCmd_setSequenceBlend( const Command& newCmd );
-      bool addCmd_renameSequence( const Command& newCmd );
-      bool addCmd_removeSequence( const Command& newCmd );
+      bool addCmd_addSequence(Command& newCmd);
+      bool addCmd_setSequencePriority(const Command& newCmd);
+      bool addCmd_setSequenceGroundSpeed(const Command& newCmd);
+      bool addCmd_setSequenceCyclic(const Command& newCmd);
+      bool addCmd_setSequenceBlend(const Command& newCmd);
+      bool addCmd_renameSequence(const Command& newCmd);
+      bool addCmd_removeSequence(const Command& newCmd);
 
-      bool addCmd_addTrigger( const Command& newCmd );
-      bool addCmd_removeTrigger( const Command& newCmd );
+      bool addCmd_addTrigger(const Command& newCmd);
+      bool addCmd_removeTrigger(const Command& newCmd);
 
       void write(TSShape* shape, Stream& stream, const String& savePath);
    };
@@ -216,8 +164,12 @@ public:
    static const S32 MaxLegacySequences = 127;
 
 protected:
-   FileName          mShapePath;
-   Vector<FileName>  mSequences;
+   StringTableEntry     mShapeAssetId;
+   AssetPtr<ShapeAsset> mShapeAsset;
+
+   Vector<StringTableEntry>  mSequenceAssetIds;
+   Vector<AssetPtr<ShapeAnimationAsset>> mSequencesAssets;
+
    ChangeSet         mChangeSet;
 
    // Paths to shapes used by MeshFit
@@ -225,47 +177,52 @@ protected:
    static String smCubeShapePath;
    static String smSphereShapePath;
 
-   static bool addSequenceFromField( void *obj, const char *index, const char *data );
-   
-   static void       _onTSShapeLoaded( Resource< TSShape >& shape );
-   static void       _onTSShapeUnloaded( const Torque::Path& path, TSShape* shape );
-   
+   static bool addSequenceFromField(void* obj, const char* index, const char* data);
+
+   static void       _onTSShapeLoaded(Resource< TSShape >& shape);
+   static void       _onTSShapeUnloaded(const Torque::Path& path, TSShape* shape);
+
    static ResourceRegisterPostLoadSignal< TSShape > _smAutoLoad;
    static ResourceRegisterUnloadSignal< TSShape > _smAutoUnload;
-   
+
    /// @name Callbacks
    ///@{
-   DECLARE_CALLBACK( void, onLoad, () );
-   DECLARE_CALLBACK( void, onUnload, () );
+   DECLARE_CALLBACK(void, onLoad, ());
+   DECLARE_CALLBACK(void, onUnload, ());
    ///@}
 
-   virtual void      _onLoad( TSShape* shape );
+   virtual void      _onLoad(TSShape* shape);
    virtual void      _onUnload();
 
 public:
 
-   TSShape*                mShape;        // Edited shape; NULL while not loaded; not a Resource<TSShape> as we don't want it to prevent from unloading.
+   TSShape* mShape;        // Edited shape; NULL while not loaded; not a Resource<TSShape> as we don't want it to prevent from unloading.
    ColladaUtils::ImportOptions   mOptions;
+   bool mLoadingShape;
 
 public:
 
    TSShapeConstructor();
-   TSShapeConstructor(const String& path) : mShapePath(path) { }
+   TSShapeConstructor(StringTableEntry path) : mShapeAssetId(path), mShape(NULL), mLoadingShape(false) { }
    ~TSShapeConstructor();
 
    DECLARE_CONOBJECT(TSShapeConstructor);
    static void initPersistFields();
    static void consoleInit();
-   static TSShapeConstructor* findShapeConstructor(const FileName& path);
+   static TSShapeConstructor* findShapeConstructorByAssetId(StringTableEntry path);
+   static TSShapeConstructor* findShapeConstructorByFilename(const FileName& path);
 
    bool onAdd();
 
    void onScriptChanged(const Torque::Path& path);
+   void onActionPerformed();
 
-   bool writeField(StringTableEntry fieldname, const char *value);
+   bool writeField(StringTableEntry fieldname, const char* value);
    void writeChangeSet();
 
    void notifyShapeChanged();
+
+   void setShapeAssetId(StringTableEntry assetId);
 
    /// @name Shape paths for MeshFit
    ///@{
@@ -275,116 +232,137 @@ public:
    ///@}
 
    TSShape* getShape() const { return mShape; }
-   const String& getShapePath() const { return mShapePath; }
+   StringTableEntry getShapePath() const
+   {
+      if (mShapeAsset.notNull())
+         return mShapeAsset->getShapeFilePath();
+      else
+         return StringTable->EmptyString();
+   }
+
+   StringTableEntry getShapeAssetId() const
+   {
+      return mShapeAssetId;
+   }
 
    /// @name Dumping
    ///@{
-   void dumpShape( const char* filename );
-   void saveShape( const char* filename );
+   void dumpShape(const char* filename);
+   void saveShape(const char* filename);
    ///@}
 
    /// @name Nodes
    ///@{
    S32 getNodeCount();
-   S32 getNodeIndex( const char* name );
-   const char* getNodeName( S32 index );
-   const char* getNodeParentName( const char* name );
-   bool setNodeParent( const char* name, const char* parentName );
-   S32 getNodeChildCount( const char* name );
-   const char* getNodeChildName( const char* name, S32 index );
-   S32 getNodeObjectCount( const char* name );
-   const char* getNodeObjectName( const char* name, S32 index );
-   TransformF getNodeTransform( const char* name, bool isWorld=false );
-   bool setNodeTransform( const char* name, TransformF txfm, bool isWorld=false );
-   bool renameNode( const char* oldName, const char* newName );
-   bool addNode( const char* name, const char* parentName, TransformF txfm=TransformF::Identity, bool isWorld=false);
-   bool removeNode( const char* name );
+   S32 getNodeIndex(const char* name);
+   const char* getNodeName(S32 index);
+   const char* getNodeParentName(const char* name);
+   bool setNodeParent(const char* name, const char* parentName);
+   S32 getNodeChildCount(const char* name);
+   const char* getNodeChildName(const char* name, S32 index);
+   S32 getNodeObjectCount(const char* name);
+   const char* getNodeObjectName(const char* name, S32 index);
+   TransformF getNodeTransform(const char* name, bool isWorld = false);
+   bool setNodeTransform(const char* name, TransformF txfm, bool isWorld = false);
+   bool renameNode(const char* oldName, const char* newName);
+   bool addNode(const char* name, const char* parentName, TransformF txfm = TransformF::Identity, bool isWorld = false);
+   bool removeNode(const char* name);
    ///@}
 
    /// @name Materials
    ///@{
    S32 getTargetCount();
-   const char* getTargetName( S32 index );
+   const char* getTargetName(S32 index);
    ///@}
 
    ///@{
    S32 getObjectCount();
-   const char* getObjectName( S32 index );
-   S32 getObjectIndex( const char* name );
-   const char* getObjectNode( const char* name );
-   bool setObjectNode( const char* objName, const char* nodeName );
-   bool renameObject( const char* oldName, const char* newName );
-   bool removeObject( const char* name );
+   const char* getObjectName(S32 index);
+   S32 getObjectIndex(const char* name);
+   const char* getObjectNode(const char* name);
+   bool setObjectNode(const char* objName, const char* nodeName);
+   bool renameObject(const char* oldName, const char* newName);
+   bool removeObject(const char* name);
    ///@}
 
    /// @name Meshes
    ///@{
-   S32 getMeshCount( const char* name );
-   const char* getMeshName( const char* name, S32 index );
-   S32 getMeshSize( const char* name, S32 index );
-   bool setMeshSize( const char* name, S32 size );
-   const char* getMeshType( const char* name );
-   bool setMeshType( const char* name, const char* type );
-   const char* getMeshMaterial( const char* name );
-   bool setMeshMaterial( const char* meshName, const char* matName );
-   bool addMesh( const char* meshName, const char* srcShape, const char* srcMesh );
-   bool addPrimitive( const char* meshName, const char* type, const char* params, TransformF txfm, const char* nodeName );
-   bool removeMesh( const char* name );
+   S32 getMeshCount(const char* name);
+   const char* getMeshName(const char* name, S32 index);
+   S32 getMeshSize(const char* name, S32 index);
+   bool setMeshSize(const char* name, S32 size);
+   const char* getMeshType(const char* name);
+   bool setMeshType(const char* name, const char* type);
+   const char* getMeshMaterial(const char* name);
+   bool setMeshMaterial(const char* meshName, const char* matName);
+   bool addMesh(const char* meshName, const char* srcShape, const char* srcMesh);
+   bool addPrimitive(const char* meshName, const char* type, const char* params, TransformF txfm, const char* nodeName);
+   bool removeMesh(const char* name);
    ///@}
 
    /// @name Detail Levels
    ///@{
    Box3F getBounds();
-   bool setBounds( Box3F bbox );
+   bool setBounds(Box3F bbox);
    S32 getDetailLevelCount();
-   const char* getDetailLevelName( S32 index );
-   S32 getDetailLevelSize( S32 index);
-   S32 getDetailLevelIndex( S32 size );
-   bool renameDetailLevel( const char* oldName, const char* newName );
-   bool removeDetailLevel( S32 index );
-   S32 setDetailLevelSize( S32 index, S32 newSize );
+   const char* getDetailLevelName(S32 index);
+   S32 getDetailLevelSize(S32 index);
+   S32 getDetailLevelIndex(S32 size);
+   bool renameDetailLevel(const char* oldName, const char* newName);
+   bool removeDetailLevel(S32 index);
+   S32 setDetailLevelSize(S32 index, S32 newSize);
    S32 getImposterDetailLevel();
-   const char* getImposterSettings( S32 index );
-   S32 addImposter( S32 size, S32 equatorSteps, S32 polarSteps, S32 dl, S32 dim, bool includePoles, F32 polarAngle );
+   const char* getImposterSettings(S32 index);
+   S32 addImposter(S32 size, S32 equatorSteps, S32 polarSteps, S32 dl, S32 dim, bool includePoles, F32 polarAngle);
    bool removeImposter();
-   bool addCollisionDetail( S32 size, const char* type, const char* target, S32 depth=4, F32 merge=30.0f, F32 concavity=30.0f, S32 maxVerts=32, F32 boxMaxError=0, F32 sphereMaxError=0, F32 capsuleMaxError=0 );
+   bool addCollisionDetail(S32 size, const char* type, const char* target, S32 depth = 4, F32 merge = 30.0f, F32 concavity = 30.0f, S32 maxVerts = 32, F32 boxMaxError = 0, F32 sphereMaxError = 0, F32 capsuleMaxError = 0);
    ///@}
 
    /// @name Sequences
    ///@{
    S32 getSequenceCount();
-   S32 getSequenceIndex( const char* name);
-   const char* getSequenceName( S32 index );
-   const char* getSequenceSource( const char* name );
-   S32 getSequenceFrameCount( const char* name );
-   F32 getSequencePriority( const char* name );
-   bool setSequencePriority( const char* name, F32 priority );
-   const char* getSequenceGroundSpeed( const char* name );
-   bool setSequenceGroundSpeed( const char* name, Point3F transSpeed, Point3F rotSpeed=Point3F::Zero );
-   bool getSequenceCyclic( const char* name );
-   bool setSequenceCyclic( const char* name, bool cyclic );
-   const char* getSequenceBlend( const char* name );
-   bool setSequenceBlend( const char* name, bool blend, const char* blendSeq, S32 blendFrame );
-   bool renameSequence( const char* oldName, const char* newName );
-   bool addSequence( const char* source, const char* name, S32 start=0, S32 end=-1, bool padRot=true, bool padTrans=false );
-   bool removeSequence( const char* name );
+   S32 getSequenceIndex(const char* name);
+   const char* getSequenceName(S32 index);
+   const char* getSequenceSource(const char* name);
+   S32 getSequenceFrameCount(const char* name);
+   F32 getSequencePriority(const char* name);
+   bool setSequencePriority(const char* name, F32 priority);
+   const char* getSequenceGroundSpeed(const char* name);
+   bool setSequenceGroundSpeed(const char* name, Point3F transSpeed, Point3F rotSpeed = Point3F::Zero);
+   bool getSequenceCyclic(const char* name);
+   bool setSequenceCyclic(const char* name, bool cyclic);
+   const char* getSequenceBlend(const char* name);
+   bool setSequenceBlend(const char* name, bool blend, const char* blendSeq, S32 blendFrame);
+   bool renameSequence(const char* oldName, const char* newName);
+   bool addSequence(const char* source, const char* name, S32 start = 0, S32 end = -1, bool padRot = true, bool padTrans = false);
+   bool removeSequence(const char* name);
    ///@}
 
    /// @name Triggers
    ///@{
-   S32 getTriggerCount( const char* name );
-   const char* getTrigger( const char* name, S32 index );
-   bool addTrigger( const char* name, S32 keyframe, S32 state );
-   bool removeTrigger( const char* name, S32 keyframe, S32 state );
+   S32 getTriggerCount(const char* name);
+   const char* getTrigger(const char* name, S32 index);
+   bool addTrigger(const char* name, S32 keyframe, S32 state);
+   bool removeTrigger(const char* name, S32 keyframe, S32 state);
    ///@}
 };
 
 typedef domUpAxisType TSShapeConstructorUpAxis;
 typedef ColladaUtils::ImportOptions::eLodType TSShapeConstructorLodType;
+typedef ColladaUtils::ImportOptions::eAnimTimingType TSShapeConstructorAnimType;
 
-DefineEnumType( TSShapeConstructorUpAxis );
-DefineEnumType( TSShapeConstructorLodType );
+DefineEnumType(TSShapeConstructorUpAxis);
+DefineEnumType(TSShapeConstructorLodType);
+DefineEnumType(TSShapeConstructorAnimType);
 
+class TSShapeConstructorMethodActionCallback
+{
+   TSShapeConstructor* mObject;
+
+public:
+   TSShapeConstructorMethodActionCallback(TSShapeConstructor* object) : mObject(object) { ; }
+   ~TSShapeConstructorMethodActionCallback() { mObject->onActionPerformed(); }
+};
 
 /* This macro simplifies the definition of a TSShapeConstructor API method. It
    wraps the actual EngineMethod definition and automatically calls the real
@@ -403,6 +381,7 @@ DefineEnumType( TSShapeConstructorLodType );
          Con::errorf( "TSShapeConstructor::" #name " - shape not loaded" );                     \
          return defRet;                                                                         \
       }                                                                                         \
+      TSShapeConstructorMethodActionCallback actionCallback(object);                            \
       return object->name rawArgs ;                                                             \
    }                                                                                            \
    /* Define the real TSShapeConstructor method */                                              \
@@ -414,8 +393,8 @@ DefineEnumType( TSShapeConstructorLodType );
       TORQUE_UNUSED(newCmd);
 
 
-/* This macro just hides the name of the auto-created ChangeSet::Command from
-   above, so we are free to change the implementation later if needed */
+   /* This macro just hides the name of the auto-created ChangeSet::Command from
+      above, so we are free to change the implementation later if needed */
 #define ADD_TO_CHANGE_SET()   mChangeSet.add( newCmd );
 
 

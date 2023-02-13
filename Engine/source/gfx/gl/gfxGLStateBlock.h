@@ -63,7 +63,7 @@ public:
 private:
    GFXStateBlockDesc mDesc;
    U32 mCachedHashValue;
-   U32 mSamplerObjects[TEXTURE_STAGE_COUNT];
+   U32 mSamplerObjects[GFX_TEXTURE_STAGE_COUNT];
 };
 
 typedef StrongRefPtr<GFXGLStateBlock> GFXGLStateBlockRef;

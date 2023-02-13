@@ -185,7 +185,7 @@ public:
 /// the FrameAllocator. For example:
 /// @code
 /// FrameTemp<char> tempStr(32); // NOTE! This parameter is NOT THE SIZE IN BYTES. See constructor docs.
-/// dStrcat( tempStr, SomeOtherString );
+/// dStrcat( tempStr, SomeOtherString, 32 * sizeof(char) );
 /// tempStr[2] = 'l';
 /// Con::printf( tempStr );
 /// Con::printf( "Foo: %s", ~tempStr );
@@ -295,6 +295,7 @@ public:
       AssertFatal( count > 0, "Allocating a FrameTemp with less than one instance" ); \
       mWaterMark = FrameAllocator::getWaterMark(); \
       mMemory = reinterpret_cast<type *>( FrameAllocator::alloc( sizeof( type ) * count ) ); \
+      mNumObjectsInMemory = 0; \
    } \
    template<>\
    inline FrameTemp<type>::~FrameTemp() \

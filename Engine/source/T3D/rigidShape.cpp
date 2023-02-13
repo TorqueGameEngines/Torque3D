@@ -47,7 +47,8 @@
 #include "sfx/sfxSystem.h"
 #include "T3D/fx/particleEmitter.h"
 #include "console/engineAPI.h"
-
+#include "T3D/physics/physicsPlugin.h"
+#include "T3D/physics/physicsCollision.h"
 
 IMPLEMENT_CO_DATABLOCK_V1(RigidShapeData);
 
@@ -60,7 +61,6 @@ ConsoleDocClass( RigidShapeData,
 	"	   category = \"RigidShape\";\n"
 	"\n"		
 	"	   shapeFile = \"~/data/shapes/boulder/boulder.dts\";\n"
-	"	   emap = true;\n"
 	"\n"
 	"	   // Rigid Body\n"
 	"	   mass = 500;\n"
@@ -111,7 +111,6 @@ ConsoleDocClass( RigidShape,
 	"	   category = \"RigidShape\";\n"
 	"\n"		
 	"	   shapeFile = \"~/data/shapes/boulder/boulder.dts\";\n"
-	"	   emap = true;\n"
 	"\n"
 	"	   // Rigid Body\n"
 	"	   mass = 500;\n"
@@ -152,47 +151,33 @@ ConsoleDocClass( RigidShape,
    "@ingroup Physics\n"
 );
 
+IMPLEMENT_CALLBACK(RigidShapeData, onEnterLiquid, void, (RigidShape* obj, F32 coverage, const char* type), (obj, coverage, type),
+   "Called when the vehicle enters liquid.\n"
+   "@param obj the Vehicle object\n"
+   "@param coverage percentage of the vehicle's bounding box covered by the liquid\n"
+   "@param type type of liquid the vehicle has entered\n");
 
-IMPLEMENT_CALLBACK( RigidShape, onEnterLiquid, void, ( const char* objId, const char* waterCoverage, const char* liquidType ),
-													 ( objId, waterCoverage, liquidType ),
-   "@brief Called whenever this RigidShape object enters liquid.\n\n"
-   "@param objId The ID of the rigidShape object.\n"
-   "@param waterCoverage Amount of water coverage the RigidShape has.\n"
-   "@param liquidType Type of liquid that was entered.\n\n"
-   "@tsexample\n"
-   "// The RigidShape object falls in a body of liquid, causing the callback to occur.\n"
-   "RigidShape::onEnterLiquid(%this,%objId,%waterCoverage,%liquidType)\n"
-   "	{\n"
-   "		// Code to run whenever this callback occurs.\n"
-   "	}\n"
-   "@endtsexample\n\n"
-   "@see ShapeBase\n\n"
-);
-
-IMPLEMENT_CALLBACK( RigidShape, onLeaveLiquid, void, ( const char* objId, const char* liquidType ),( objId, liquidType ),
-   "@brief Called whenever the RigidShape object exits liquid.\n\n"
-   "@param objId The ID of the RigidShape object.\n"
-   "@param liquidType Type if liquid that was exited.\n\n"
-   "@tsexample\n"
-   "// The RigidShape object exits in a body of liquid, causing the callback to occur.\n"
-   "RigidShape::onLeaveLiquid(%this,%objId,%liquidType)\n"
-   "	{\n"
-   "		// Code to run whenever this callback occurs.\n"
-   "	}\n"
-   "@endtsexample\n\n"
-   "@see ShapeBase\n\n"
-);
+IMPLEMENT_CALLBACK(RigidShapeData, onLeaveLiquid, void, (RigidShape* obj, const char* type), (obj, type),
+   "Called when the vehicle leaves liquid.\n"
+   "@param obj the Vehicle object\n"
+   "@param type type of liquid the vehicle has left\n");
 
 //----------------------------------------------------------------------------
 
 namespace {
 
-   const U32 sMoveRetryCount = 3;
+   static U32 sWorkingQueryBoxStaleThreshold = 10;    // The maximum number of ticks that go by before
+                                                      // the mWorkingQueryBox is considered stale and
+                                                      // needs updating.  Set to -1 to disable.
 
+   static F32 sWorkingQueryBoxSizeMultiplier = 2.0f;  // How much larger should the mWorkingQueryBox be
+                                                      // made when updating the working collision list.
+                                                      // The larger this number the less often the working list
+                                                      // will be updated due to motion, but any non-static shape
+                                                      // that moves into the query box will not be noticed.
    // Client prediction
    const S32 sMaxWarpTicks = 3;           // Max warp duration in ticks
    const S32 sMaxPredictionTicks = 30;    // Number of ticks to predict
-   const F32 sRigidShapeGravity = -20;
 
    // Physics and collision constants
    static F32 sRestTol = 0.5;             // % of gravity energy to be at rest
@@ -220,12 +205,31 @@ TriggerObjectType  |
 CorpseObjectType;
 
 
+typedef RigidShapeData::Body::Sounds bodySounds;
+DefineEnumType(bodySounds);
+
+ImplementEnumType(bodySounds, "enum types.\n"
+   "@ingroup VehicleData\n\n")
+   { bodySounds::SoftImpactSound, "SoftImpactSound", "..." },
+   { bodySounds::HardImpactSound,  "HardImpactSound", "..." },
+EndImplementEnumType;
+
+typedef RigidShapeData::Sounds waterSounds;
+DefineEnumType(waterSounds);
+
+ImplementEnumType(waterSounds, "enum types.\n"
+   "@ingroup RigidShapeData\n\n")
+   { waterSounds::ExitWater, "ExitWater", "..." },
+   { waterSounds::ImpactSoft,    "ImpactSoft", "..." },
+   { waterSounds::ImpactMedium,  "ImpactMedium", "..." },
+   { waterSounds::ImpactHard,    "ImpactHard", "..." },
+   { waterSounds::Wake,          "Wake", "..." },
+EndImplementEnumType;
+
 //----------------------------------------------------------------------------
 
 RigidShapeData::RigidShapeData()
 {
-   shadowEnable = true;
-
    body.friction = 0;
    body.restitution = 1;
 
@@ -251,10 +255,11 @@ RigidShapeData::RigidShapeData()
    density = 4;
 
    for (S32 i = 0; i < Body::MaxSounds; i++)
-      body.sound[i] = 0;
+      INIT_SOUNDASSET_ARRAY(BodySounds, i);
 
    dustEmitter = NULL;
    dustID = 0;
+   triggerDustHeight = 3.0;
    dustHeight = 1.0;
 
    dMemset( splashEmitterList, 0, sizeof( splashEmitterList ) );
@@ -266,14 +271,17 @@ RigidShapeData::RigidShapeData()
    softSplashSoundVel = 1.0;
    medSplashSoundVel = 2.0;
    hardSplashSoundVel = 3.0;
+   enablePhysicsRep = true;
 
-   dMemset(waterSound, 0, sizeof(waterSound));
+   for (S32 i = 0; i < Sounds::MaxSounds; i++)
+      INIT_SOUNDASSET_ARRAY(WaterSounds, i);
 
    dragForce            = 0;
    vertFactor           = 0.25;
 
    dustTrailEmitter = NULL;
    dustTrailID = 0;
+   _setShape(ShapeAsset::smNoShapeAssetFallback);
 }
 
 RigidShapeData::~RigidShapeData()
@@ -302,14 +310,28 @@ bool RigidShapeData::preload(bool server, String &errorStr)
    if (!collisionDetails.size() || collisionDetails[0] == -1)
    {
       Con::errorf("RigidShapeData::preload failed: Rigid shapes must define a collision-1 detail");
-      errorStr = String::ToString("RigidShapeData: Couldn't load shape \"%s\"",shapeName);
+      errorStr = String::ToString("RigidShapeData: Couldn't load shape asset \"%s\"", mShapeAsset.getAssetId());
       return false;
    }
 
    // Resolve objects transmitted from server
    if (!server) {
       for (S32 i = 0; i < Body::MaxSounds; i++)
-         sfxResolve( &body.sound[ i ], errorStr );
+      {
+         if (getBodySounds(i) != StringTable->EmptyString())
+         {
+            _setBodySounds(getBodySounds(i), i);
+         }
+      }
+
+      for (S32 j = 0; j < Sounds::MaxSounds; j++)
+      {
+         if (getWaterSounds(j) != StringTable->EmptyString())
+         {
+            _setWaterSounds(getWaterSounds(j), j);
+         }
+      }
+
    }
 
    if( !dustEmitter && dustID != 0 )
@@ -364,8 +386,10 @@ void RigidShapeData::packData(BitStream* stream)
 
    stream->write(body.restitution);
    stream->write(body.friction);
-   for( U32 i = 0; i < Body::MaxSounds; ++ i )
-      sfxWrite( stream, body.sound[ i ] );
+   for (U32 i = 0; i < Body::MaxSounds; ++i)
+   {
+      PACKDATA_SOUNDASSET_ARRAY(BodySounds, i);
+   }
 
    stream->write(minImpactSpeed);
    stream->write(softImpactSpeed);
@@ -384,17 +408,21 @@ void RigidShapeData::packData(BitStream* stream)
    stream->write(cameraLag);
    stream->write(cameraDecay);
    stream->write(cameraOffset);
-
-   stream->write( dustHeight );
+   
+   stream->write(triggerDustHeight);
+   stream->write(dustHeight);
 
    stream->write(exitSplashSoundVel);
    stream->write(softSplashSoundVel);
    stream->write(medSplashSoundVel);
    stream->write(hardSplashSoundVel);
+   stream->write(enablePhysicsRep);
 
    // write the water sound profiles
-   for( U32 i = 0; i < MaxSounds; ++ i )
-      sfxWrite( stream, waterSound[ i ] );
+   for (U32 i = 0; i < Sounds::MaxSounds; ++i)
+   {
+      PACKDATA_SOUNDASSET_ARRAY(WaterSounds, i);
+   }
 
    if (stream->writeFlag( dustEmitter ))
       stream->writeRangedU32( dustEmitter->getId(), DataBlockObjectIdFirst,  DataBlockObjectIdLast );
@@ -422,8 +450,10 @@ void RigidShapeData::unpackData(BitStream* stream)
    stream->read(&body.restitution);
    stream->read(&body.friction);
 
-   for( U32 i = 0; i < Body::MaxSounds; i++)
-      sfxRead( stream, &body.sound[ i ] );
+   for (U32 i = 0; i < Body::Sounds::MaxSounds; i++)
+   {
+      UNPACKDATA_SOUNDASSET_ARRAY(BodySounds, i);
+   }
 
    stream->read(&minImpactSpeed);
    stream->read(&softImpactSpeed);
@@ -443,16 +473,20 @@ void RigidShapeData::unpackData(BitStream* stream)
    stream->read(&cameraDecay);
    stream->read(&cameraOffset);
 
+   stream->read(&triggerDustHeight);
    stream->read( &dustHeight );
 
    stream->read(&exitSplashSoundVel);
    stream->read(&softSplashSoundVel);
    stream->read(&medSplashSoundVel);
    stream->read(&hardSplashSoundVel);
+   stream->read(&enablePhysicsRep);
 
    // write the water sound profiles
-   for( U32 i = 0; i < MaxSounds; ++ i )
-      sfxRead( stream, &waterSound[ i ] );
+   for (U32 i = 0; i < Sounds::MaxSounds; ++i)
+   {
+      UNPACKDATA_SOUNDASSET_ARRAY(WaterSounds, i);
+   }
 
    if( stream->readFlag() )
       dustID = (S32) stream->readRangedU32(DataBlockObjectIdFirst, DataBlockObjectIdLast);
@@ -478,74 +512,57 @@ void RigidShapeData::unpackData(BitStream* stream)
 
 void RigidShapeData::initPersistFields()
 {
-   addField("massCenter", TypePoint3F, Offset(massCenter, RigidShapeData), "Center of mass for rigid body.");
-   addField("massBox", TypePoint3F, Offset(massBox, RigidShapeData), "Size of inertial box.");
-   addField("bodyRestitution", TypeF32, Offset(body.restitution, RigidShapeData), "The percentage of kinetic energy kept by this object in a collision.");
-   addField("bodyFriction", TypeF32, Offset(body.friction, RigidShapeData), "How much friction this object has. Lower values will cause the object to appear to be more slippery.");
+   docsURL;
+   Parent::initPersistFields();
 
-   addField("minImpactSpeed", TypeF32, Offset(minImpactSpeed, RigidShapeData),
-      "Minimum collision speed to classify collision as impact (triggers onImpact on server object)." );
-   addField("softImpactSpeed", TypeF32, Offset(softImpactSpeed, RigidShapeData), "Minimum speed at which this object must be travelling for the soft impact sound to be played.");
-   addField("hardImpactSpeed", TypeF32, Offset(hardImpactSpeed, RigidShapeData), "Minimum speed at which the object must be travelling for the hard impact sound to be played.");
-   addField("minRollSpeed", TypeF32, Offset(minRollSpeed, RigidShapeData));
-
-   addField("maxDrag", TypeF32, Offset(maxDrag, RigidShapeData), "Maximum drag available to this object.");
-   addField("minDrag", TypeF32, Offset(minDrag, RigidShapeData), "Minimum drag available to this object.");
-   addField("integration", TypeS32, Offset(integration, RigidShapeData), "Number of physics steps to process per tick.");
-   addField("collisionTol", TypeF32, Offset(collisionTol, RigidShapeData), "Collision distance tolerance.");
-   addField("contactTol", TypeF32, Offset(contactTol, RigidShapeData), "Contact velocity tolerance.");
-   
-   addGroup( "Forces" );
-
-      addField("dragForce",            TypeF32, Offset(dragForce,            RigidShapeData), "Used to simulate the constant drag acting on the object");
-      addField("vertFactor",           TypeF32, Offset(vertFactor,           RigidShapeData), "The scalar applied to the vertical portion of the velocity drag acting on a object.");
-   
-   endGroup( "Forces" );
-   
    addGroup( "Particle Effects" );
-
       addField("dustEmitter",       TYPEID< ParticleEmitterData >(),   Offset(dustEmitter,        RigidShapeData), "Array of pointers to ParticleEmitterData datablocks which will be used to emit particles at object/terrain contact point.\n");
       addField("triggerDustHeight", TypeF32,                      Offset(triggerDustHeight,  RigidShapeData), "Maximum height from the ground at which the object will generate dust.\n");
       addField("dustHeight",        TypeF32,                      Offset(dustHeight,         RigidShapeData), "Height of dust effects.\n");
-
       addField("dustTrailEmitter",     TYPEID< ParticleEmitterData >(),   Offset(dustTrailEmitter,   RigidShapeData), "Particle emitter used to create a dust trail for the moving object.\n");
-
       addField("splashEmitter",        TYPEID< ParticleEmitterData >(),   Offset(splashEmitterList,     RigidShapeData), VC_NUM_SPLASH_EMITTERS, "Array of pointers to ParticleEmitterData datablocks which will generate splash effects.\n");
-
       addField("splashFreqMod",  TypeF32,                Offset(splashFreqMod,   RigidShapeData), "The simulated frequency modulation of a splash generated by this object. Multiplied along with speed and time elapsed when determining splash emition rate.\n");
-      addField("splashVelEpsilon", TypeF32,              Offset(splashVelEpsilon, RigidShapeData), "The threshold speed at which we consider the object's movement to have stopped when updating splash effects.\n");
-      
+      addField("splashVelEpsilon", TypeF32,              Offset(splashVelEpsilon, RigidShapeData), "The threshold speed at which we consider the object's movement to have stopped when updating splash effects.\n");  
    endGroup( "Particle Effects" );
    
    addGroup( "Sounds" );
+      INITPERSISTFIELD_SOUNDASSET_ENUMED(BodySounds, bodySounds, Body::Sounds::MaxSounds, RigidShapeData, "Sounds for body.");      INITPERSISTFIELD_SOUNDASSET_ENUMED(WaterSounds, waterSounds, Sounds::MaxSounds, RigidShapeData, "Sounds for interacting with water.");
+   endGroup( "Sounds" );
 
-      addField("softImpactSound", TypeSFXTrackName, Offset(body.sound[Body::SoftImpactSound], RigidShapeData),
-         "Sound to play when body impacts with at least softImageSpeed but less than hardImpactSpeed." );
-      addField("hardImpactSound", TypeSFXTrackName, Offset(body.sound[Body::HardImpactSound], RigidShapeData),
-         "Sound to play when body impacts with at least hardImpactSpeed." );
+   addGroup("Physics");
+      addField("enablePhysicsRep", TypeBool, Offset(enablePhysicsRep, RigidShapeData),
+         "@brief Creates a representation of the object in the physics plugin.\n");
+         ("massCenter", TypePoint3F, Offset(massCenter, RigidShapeData), "Center of mass for rigid body.");
+      addField("massBox", TypePoint3F, Offset(massBox, RigidShapeData), "Size of inertial box.");
+      addField("bodyRestitution", TypeF32, Offset(body.restitution, RigidShapeData), "The percentage of kinetic energy kept by this object in a collision.");
+      addField("bodyFriction", TypeF32, Offset(body.friction, RigidShapeData), "How much friction this object has. Lower values will cause the object to appear to be more slippery.");
+      addField("maxDrag", TypeF32, Offset(maxDrag, RigidShapeData), "Maximum drag available to this object.");
+      addField("minDrag", TypeF32, Offset(minDrag, RigidShapeData), "Minimum drag available to this object.");
+      addField("integration", TypeS32, Offset(integration, RigidShapeData), "Number of physics steps to process per tick.");
+      addField("collisionTol", TypeF32, Offset(collisionTol, RigidShapeData), "Collision distance tolerance.");
+      addField("contactTol", TypeF32, Offset(contactTol, RigidShapeData), "Contact velocity tolerance.");
+      addField("dragForce",            TypeF32, Offset(dragForce,            RigidShapeData), "Used to simulate the constant drag acting on the object");
+      addField("vertFactor",           TypeF32, Offset(vertFactor,           RigidShapeData), "The scalar applied to the vertical portion of the velocity drag acting on a object.");
+   endGroup("Physics");
 
+   addGroup("Collision");
+      addField("minImpactSpeed", TypeF32, Offset(minImpactSpeed, RigidShapeData),
+      "Minimum collision speed to classify collision as impact (triggers onImpact on server object)." );
+      addField("softImpactSpeed", TypeF32, Offset(softImpactSpeed, RigidShapeData), "Minimum speed at which this object must be travelling for the soft impact sound to be played.");
+      addField("hardImpactSpeed", TypeF32, Offset(hardImpactSpeed, RigidShapeData), "Minimum speed at which the object must be travelling for the hard impact sound to be played.");
+      addField("minRollSpeed", TypeF32, Offset(minRollSpeed, RigidShapeData));
       addField("exitSplashSoundVelocity", TypeF32,       Offset(exitSplashSoundVel, RigidShapeData), "The minimum velocity at which the exit splash sound will be played when emerging from water.\n");
       addField("softSplashSoundVelocity", TypeF32,       Offset(softSplashSoundVel, RigidShapeData),"The minimum velocity at which the soft splash sound will be played when impacting water.\n");
       addField("mediumSplashSoundVelocity", TypeF32,     Offset(medSplashSoundVel, RigidShapeData), "The minimum velocity at which the medium splash sound will be played when impacting water.\n");
       addField("hardSplashSoundVelocity", TypeF32,       Offset(hardSplashSoundVel, RigidShapeData), "The minimum velocity at which the hard splash sound will be played when impacting water.\n");
-      addField("exitingWater",      TypeSFXTrackName,   Offset(waterSound[ExitWater],   RigidShapeData), "The AudioProfile will be used to produce sounds when emerging from water.\n");
-      addField("impactWaterEasy",   TypeSFXTrackName,   Offset(waterSound[ImpactSoft],   RigidShapeData), "The AudioProfile will be used to produce sounds when a soft impact with water occurs.\n");
-      addField("impactWaterMedium", TypeSFXTrackName,   Offset(waterSound[ImpactMedium],   RigidShapeData), "The AudioProfile will be used to produce sounds when a medium impact with water occurs.\n");
-      addField("impactWaterHard",   TypeSFXTrackName,   Offset(waterSound[ImpactHard],   RigidShapeData), "The AudioProfile will be used to produce sounds when a hard impact with water occurs.\n");
-      addField("waterWakeSound",    TypeSFXTrackName,   Offset(waterSound[Wake],   RigidShapeData), "The AudioProfile will be used to produce sounds when a water wake is displayed.\n");
-      
-   endGroup( "Sounds" );
+   endGroup("Collision");   
    
    addGroup( "Camera" );
-
       addField("cameraRoll",     TypeBool,       Offset(cameraRoll,     RigidShapeData), "Specifies whether the camera's rotation matrix, and the render eye transform are multiplied during camera updates.\n");
       addField("cameraLag",      TypeF32,        Offset(cameraLag,      RigidShapeData), "Scalar amount by which the third person camera lags the object, relative to the object's linear velocity.\n");
       addField("cameraDecay",  TypeF32,        Offset(cameraDecay,  RigidShapeData), "Scalar rate at which the third person camera offset decays, per tick.\n");
       addField("cameraOffset",   TypeF32,        Offset(cameraOffset,   RigidShapeData), "The vertical offset of the object's camera.\n");
-      
    endGroup( "Camera" );
-
-   Parent::initPersistFields();
 }   
 
 
@@ -593,6 +610,12 @@ RigidShape::RigidShape()
    restCount = 0;
 
    inLiquid = false;
+
+   mWorkingQueryBox.minExtents.set(-1e9f, -1e9f, -1e9f);
+   mWorkingQueryBox.maxExtents.set(-1e9f, -1e9f, -1e9f);
+   mWorkingQueryBoxCountDown = sWorkingQueryBoxStaleThreshold;
+
+   mPhysicsRep = NULL;
 }   
 
 RigidShape::~RigidShape()
@@ -619,6 +642,9 @@ bool RigidShape::onAdd()
 {
    if (!Parent::onAdd())
       return false;
+
+   mWorkingQueryBox.minExtents.set(-1e9f, -1e9f, -1e9f);
+   mWorkingQueryBox.maxExtents.set(-1e9f, -1e9f, -1e9f);
 
    // When loading from a mission script, the base SceneObject's transform
    // will have been set and needs to be transfered to the rigid body.
@@ -673,6 +699,7 @@ bool RigidShape::onAdd()
    mConvex.box.minExtents.convolve(mObjScale);
    mConvex.box.maxExtents.convolve(mObjScale);
    mConvex.findNodeTransform();
+   _createPhysics();
 
    addToScene();
 
@@ -723,15 +750,39 @@ void RigidShape::onRemove()
       }
    }
 
+   mWorkingQueryBox.minExtents.set(-1e9f, -1e9f, -1e9f);
+   mWorkingQueryBox.maxExtents.set(-1e9f, -1e9f, -1e9f);
    Parent::onRemove();
 }
 
+void RigidShape::_createPhysics()
+{
+   SAFE_DELETE(mPhysicsRep);
+
+   if (!PHYSICSMGR || !mDataBlock->enablePhysicsRep)
+      return;
+
+   TSShape* shape = mShapeInstance->getShape();
+   PhysicsCollision* colShape = NULL;
+   colShape = shape->buildColShape(false, getScale());
+
+   if (colShape)
+   {
+      PhysicsWorld* world = PHYSICSMGR->getWorld(isServerObject() ? "server" : "client");
+      mPhysicsRep = PHYSICSMGR->createBody();
+      mPhysicsRep->init(colShape, 0, PhysicsBody::BF_KINEMATIC, this, world);
+      mPhysicsRep->setTransform(getTransform());
+   }
+}
 
 //----------------------------------------------------------------------------
-
 void RigidShape::processTick(const Move* move)
 {     
+   PROFILE_SCOPE(RigidShape_ProcessTick);
+
    Parent::processTick(move);
+   if ( isMounted() )
+      return;
 
    // Warp to catch up to server
    if (mDelta.warpCount < mDelta.warpTicks) 
@@ -775,6 +826,8 @@ void RigidShape::processTick(const Move* move)
 
       // Update the physics based on the integration rate
       S32 count = mDataBlock->integration;
+      --mWorkingQueryBoxCountDown;
+
       if (!mDisableMove)
          updateWorkingCollisionSet(getCollisionMask());
       for (U32 i = 0; i < count; i++)
@@ -789,12 +842,19 @@ void RigidShape::processTick(const Move* move)
       setPosition(mRigid.linPosition, mRigid.angPosition);
       setMaskBits(PositionMask);
       updateContainer();
+
+      //TODO: Only update when position has actually changed
+      //no need to check if mDataBlock->enablePhysicsRep is false as mPhysicsRep will be NULL if it is
+      if (mPhysicsRep)
+         mPhysicsRep->moveKinematicTo(getTransform());
    }
 }
 
 void RigidShape::interpolateTick(F32 dt)
 {     
    Parent::interpolateTick(dt);
+   if ( isMounted() )
+      return;
 
    if(dt == 0.0f)
       setRenderPosition(mDelta.pos, mDelta.rot[1]);
@@ -813,6 +873,9 @@ void RigidShape::advanceTime(F32 dt)
    Parent::advanceTime(dt);
 
    updateFroth(dt);
+
+   if ( isMounted() )
+      return;
 
    // Update 3rd person camera offset.  Camera update is done
    // here as it's a client side only animation.
@@ -1030,6 +1093,8 @@ void RigidShape::enableCollision()
 
 void RigidShape::updatePos(F32 dt)
 {
+   PROFILE_SCOPE(RigidShape_UpdatePos);
+
    Point3F origVelocity = mRigid.linVelocity;
 
    // Update internal forces acting on the body.
@@ -1038,19 +1103,19 @@ void RigidShape::updatePos(F32 dt)
 
    // Update collision information based on our current pos.
    bool collided = false;
-   if (!mRigid.atRest && !mDisableMove) 
+   if (!mRigid.atRest && !mDisableMove)
    {
       collided = updateCollision(dt);
 
-      // Now that all the forces have been processed, lets       
+      // Now that all the forces have been processed, lets
       // see if we're at rest.  Basically, if the kinetic energy of
-      // the shape is less than some percentage of the energy added
+      // the rigid body is less than some percentage of the energy added
       // by gravity for a short period, we're considered at rest.
       // This should really be part of the rigid class...
-      if (mCollisionList.getCount()) 
+      if (mCollisionList.getCount())
       {
          F32 k = mRigid.getKineticEnergy();
-         F32 G = sRigidShapeGravity * dt;
+         F32 G = mNetGravity * dt;
          F32 Kg = 0.5 * mRigid.mass * G * G;
          if (k < sRestTol * Kg && ++restCount > sRestCount)
             mRigid.setAtRest();
@@ -1064,7 +1129,7 @@ void RigidShape::updatePos(F32 dt)
       mRigid.integrate(dt);
 
    // Deal with client and server scripting, sounds, etc.
-   if (isServerObject()) 
+   if (isServerObject())
    {
 
       // Check triggers and other objects that we normally don't
@@ -1077,7 +1142,7 @@ void RigidShape::updatePos(F32 dt)
       notifyCollision();
 
       // Server side impact script callback
-      if (collided) 
+      if (collided)
       {
          VectorF collVec = mRigid.linVelocity - origVelocity;
          F32 collSpeed = collVec.len();
@@ -1085,15 +1150,15 @@ void RigidShape::updatePos(F32 dt)
             onImpact(collVec);
       }
 
-      // Water script callbacks      
-      if (!inLiquid && mWaterCoverage != 0.0f) 
+      // Water script callbacks
+      if (!inLiquid && mWaterCoverage != 0.0f)
       {
-         onEnterLiquid_callback(getIdString(), Con::getFloatArg(mWaterCoverage), mLiquidType.c_str() );
+         mDataBlock->onEnterLiquid_callback(this, mWaterCoverage, mLiquidType.c_str());
          inLiquid = true;
       }
-      else if (inLiquid && mWaterCoverage == 0.0f) 
+      else if (inLiquid && mWaterCoverage == 0.0f)
       {
-		 onLeaveLiquid_callback(getIdString(), mLiquidType.c_str() );
+         mDataBlock->onLeaveLiquid_callback(this, mLiquidType.c_str());
          inLiquid = false;
       }
 
@@ -1110,66 +1175,57 @@ void RigidShape::updatePos(F32 dt)
             if (collSpeed >= mDataBlock->softImpactSpeed)
                impactSound = RigidShapeData::Body::SoftImpactSound;
 
-         if (impactSound != -1 && mDataBlock->body.sound[impactSound] != NULL)
-            SFX->playOnce(mDataBlock->body.sound[impactSound], &getTransform());
+         if (impactSound != -1 && mDataBlock->getBodySoundsProfile(impactSound))
+            SFX->playOnce(mDataBlock->getBodySoundsProfile(impactSound), &getTransform());
       }
 
       // Water volume sounds
       F32 vSpeed = getVelocity().len();
       if (!inLiquid && mWaterCoverage >= 0.8f) {
-         if (vSpeed >= mDataBlock->hardSplashSoundVel) 
-            SFX->playOnce(mDataBlock->waterSound[RigidShapeData::ImpactHard], &getTransform());
+         if (vSpeed >= mDataBlock->hardSplashSoundVel)
+            SFX->playOnce(mDataBlock->getWaterSoundsProfile(RigidShapeData::ImpactHard), &getTransform());
          else
             if (vSpeed >= mDataBlock->medSplashSoundVel)
-               SFX->playOnce(mDataBlock->waterSound[RigidShapeData::ImpactMedium], &getTransform());
+               SFX->playOnce(mDataBlock->getWaterSoundsProfile(RigidShapeData::ImpactMedium), &getTransform());
             else
                if (vSpeed >= mDataBlock->softSplashSoundVel)
-                  SFX->playOnce(mDataBlock->waterSound[RigidShapeData::ImpactSoft], &getTransform());
+                  SFX->playOnce(mDataBlock->getWaterSoundsProfile(RigidShapeData::ImpactSoft), &getTransform());
          inLiquid = true;
-      }   
+      }
       else
-         if(inLiquid && mWaterCoverage < 0.8f) {
+         if (inLiquid && mWaterCoverage < 0.8f) {
             if (vSpeed >= mDataBlock->exitSplashSoundVel)
-               SFX->playOnce(mDataBlock->waterSound[RigidShapeData::ExitWater], &getTransform());
+               SFX->playOnce(mDataBlock->getWaterSoundsProfile(RigidShapeData::ExitWater), &getTransform());
             inLiquid = false;
          }
    }
 }
 
-
 //----------------------------------------------------------------------------
 
-void RigidShape::updateForces(F32 /*dt*/)
+void RigidShape::updateForces(F32 dt)
 {
    if (mDisableMove) return;
-   Point3F gravForce(0, 0, sRigidShapeGravity * mRigid.mass * mGravityMod);
-
-   MatrixF currTransform;
-   mRigid.getTransform(&currTransform);
 
    Point3F torque(0, 0, 0);
-   Point3F force(0, 0, 0);
-
-   Point3F vel = mRigid.linVelocity;
-
-   // Gravity
-   force += gravForce;
+   Point3F force(0, 0, mRigid.mass * mNetGravity);
 
    // Apply drag
-   Point3F vDrag = mRigid.linVelocity;
-   vDrag.convolve(Point3F(1, 1, mDataBlock->vertFactor));
-   force -= vDrag * mDataBlock->dragForce;
+   Point3F vertDrag = mRigid.linVelocity*Point3F(1, 1, mDataBlock->vertFactor);
+   force -= vertDrag * mDataBlock->dragForce;
 
    // Add in physical zone force
    force += mAppliedForce;
 
-   // Container buoyancy & drag
-   force  += Point3F(0, 0,-mBuoyancy * sRigidShapeGravity * mRigid.mass * mGravityMod);
    force  -= mRigid.linVelocity * mDrag;
    torque -= mRigid.angMomentum * mDrag;
 
    mRigid.force  = force;
    mRigid.torque = torque;
+
+   // If we're still atRest, make sure we're not accumulating anything
+   if (mRigid.atRest)
+      mRigid.setAtRest();
 }
 
 
@@ -1181,6 +1237,10 @@ collision, impact and contact forces are generated.
 
 bool RigidShape::updateCollision(F32 dt)
 {
+   PROFILE_SCOPE(RigidShape_updateCollision);
+
+   if (mRigid.atRest || mDisableMove || (getVelocity().lenSquared() < mDataBlock->contactTol * mDataBlock->contactTol)) return false;
+
    // Update collision information
    MatrixF mat,cmat;
    mConvex.transform = &mat;
@@ -1189,7 +1249,7 @@ bool RigidShape::updateCollision(F32 dt)
 
    mCollisionList.clear();
    CollisionState *state = mConvex.findClosestState(cmat, getScale(), mDataBlock->collisionTol);
-   if (state && state->dist <= mDataBlock->collisionTol) 
+   if (state && state->mDist <= mDataBlock->collisionTol) 
    {
       //resolveDisplacement(ns,state,dt);
       mConvex.getCollisionInfo(cmat, getScale(), &mCollisionList, mDataBlock->collisionTol);
@@ -1209,45 +1269,48 @@ on standard collision resolution formulas.
 */
 bool RigidShape::resolveCollision(Rigid&  ns,CollisionList& cList)
 {
+   PROFILE_SCOPE(RigidShape_resolveCollision);
    // Apply impulses to resolve collision
-   bool colliding, collided = false;
-
-   do 
+   bool collided = false;
+   for (S32 i = 0; i < cList.getCount(); i++)
    {
-      colliding = false;
-      for (S32 i = 0; i < cList.getCount(); i++) 
+      Collision& c = cList[i];
+      if (c.distance < mDataBlock->collisionTol)
       {
-         Collision& c = cList[i];
-         if (c.distance < mDataBlock->collisionTol) 
+         // Velocity into surface
+         Point3F v, r;
+         ns.getOriginVector(c.point, &r);
+         ns.getVelocity(r, &v);
+         F32 vn = mDot(v, c.normal);
+
+         // Only interested in velocities greater than sContactTol,
+         // velocities less than that will be dealt with as contacts
+         // "constraints".
+         if (vn < -mDataBlock->contactTol)
          {
-            // Velocity into surface
-            Point3F v,r;
-            ns.getOriginVector(c.point,&r);
-            ns.getVelocity(r,&v);
-            F32 vn = mDot(v,c.normal);
 
-            // Only interested in velocities greater than sContactTol,
-            // velocities less than that will be dealt with as contacts
-            // "constraints".
-            if (vn < -mDataBlock->contactTol) 
+            // Apply impulses to the rigid body to keep it from
+            // penetrating the surface.
+            if (c.object->getTypeMask() & VehicleObjectType)
             {
+                  RigidShape* otherRigid = dynamic_cast<RigidShape*>(c.object);
+                  if (otherRigid)
+                     ns.resolveCollision(cList[i].point, cList[i].normal, &otherRigid->mRigid);
+                  else
+                     ns.resolveCollision(cList[i].point, cList[i].normal);
+            }
+            else ns.resolveCollision(cList[i].point, cList[i].normal);
+            collided = true;
 
-               // Apply impulses to the rigid body to keep it from
-               // penetrating the surface.
-               ns.resolveCollision(cList[i].point,
-                  cList[i].normal);
-               colliding = collided  = true;
-
-               // Keep track of objects we collide with
-               if (!isGhost() && c.object->getTypeMask() & ShapeBaseObjectType) 
-               {
-                  ShapeBase* col = static_cast<ShapeBase*>(c.object);
-                  queueCollision(col,v - col->getVelocity());
-               }
+            // Keep track of objects we collide with
+            if (!isGhost() && c.object->getTypeMask() & ShapeBaseObjectType)
+            {
+               ShapeBase* col = static_cast<ShapeBase*>(c.object);
+               queueCollision(col, v - col->getVelocity());
             }
          }
       }
-   } while (colliding);
+   }
 
    return collided;
 }
@@ -1259,12 +1322,13 @@ on the depth of penetration and the moment of inertia at the point of contact.
 */
 bool RigidShape::resolveContacts(Rigid& ns,CollisionList& cList,F32 dt)
 {
+   PROFILE_SCOPE(RigidShape_resolveContacts);
    // Use spring forces to manage contact constraints.
    bool collided = false;
    Point3F t,p(0,0,0),l(0,0,0);
    for (S32 i = 0; i < cList.getCount(); i++) 
    {
-      Collision& c = cList[i];
+      const Collision& c = cList[i];
       if (c.distance < mDataBlock->collisionTol) 
       {
 
@@ -1321,8 +1385,8 @@ bool RigidShape::resolveContacts(Rigid& ns,CollisionList& cList,F32 dt)
 
 bool RigidShape::resolveDisplacement(Rigid& ns,CollisionState *state, F32 dt)
 {
-   SceneObject* obj = (state->a->getObject() == this)?
-      state->b->getObject(): state->a->getObject();
+   SceneObject* obj = (state->mA->getObject() == this)?
+      state->mB->getObject(): state->mA->getObject();
 
    if (obj->isDisplacable() && ((obj->getTypeMask() & ShapeBaseObjectType) != 0))
    {
@@ -1361,17 +1425,53 @@ bool RigidShape::resolveDisplacement(Rigid& ns,CollisionState *state, F32 dt)
 
 void RigidShape::updateWorkingCollisionSet(const U32 mask)
 {
+   PROFILE_SCOPE( Vehicle_UpdateWorkingCollisionSet );
+
+   // First, we need to adjust our velocity for possible acceleration.  It is assumed
+   // that we will never accelerate more than 20 m/s for gravity, plus 30 m/s for
+   // jetting, and an equivalent 10 m/s for vehicle accel.  We also assume that our
+   // working list is updated on a Tick basis, which means we only expand our box by
+   // the possible movement in that tick, plus some extra for caching purposes
    Box3F convexBox = mConvex.getBoundingBox(getTransform(), getScale());
    F32 len = (mRigid.linVelocity.len() + 50) * TickSec;
    F32 l = (len * 1.1) + 0.1;  // fudge factor
    convexBox.minExtents -= Point3F(l, l, l);
    convexBox.maxExtents += Point3F(l, l, l);
 
-   disableCollision();
-   mConvex.updateWorkingList(convexBox, mask);
-   enableCollision();
-}
+   // Check to see if it is actually necessary to construct the new working list,
+   // or if we can use the cached version from the last query.  We use the x
+   // component of the min member of the mWorkingQueryBox, which is lame, but
+   // it works ok.
+   bool updateSet = false;
 
+   // Check containment
+   if ((sWorkingQueryBoxStaleThreshold == -1 || mWorkingQueryBoxCountDown > 0) && mWorkingQueryBox.minExtents.x != -1e9f)
+   {
+      if (mWorkingQueryBox.isContained(convexBox) == false)
+         // Needed region is outside the cached region.  Update it.
+         updateSet = true;
+   }
+   else
+   {
+      // Must update
+      updateSet = true;
+   }
+
+   // Actually perform the query, if necessary
+   if (updateSet == true)
+   {
+      mWorkingQueryBoxCountDown = sWorkingQueryBoxStaleThreshold;
+
+      const Point3F  lPoint( sWorkingQueryBoxSizeMultiplier * l );
+      mWorkingQueryBox = convexBox;
+      mWorkingQueryBox.minExtents -= lPoint;
+      mWorkingQueryBox.maxExtents += lPoint;
+
+      disableCollision();
+      mConvex.updateWorkingList(mWorkingQueryBox, mask);
+      enableCollision();
+   }
+}
 
 //----------------------------------------------------------------------------
 /** Check collisions with trigger and items
@@ -1565,8 +1665,28 @@ void RigidShape::unpackUpdate(NetConnection *con, BitStream *stream)
 
 //----------------------------------------------------------------------------
 
+//----------------------------------------------------------------------------
+
+void RigidShape::consoleInit()
+{
+   Con::addVariable("$rigidPhysics::workingQueryBoxStaleThreshold", TypeS32, &sWorkingQueryBoxStaleThreshold,
+      "@brief The maximum number of ticks that go by before the mWorkingQueryBox is considered stale and needs updating.\n\n"
+      "Other factors can cause the collision working query box to become invalidated, such as the rigid body moving far "
+      "enough outside of this cached box.  The smaller this number, the more times the working list of triangles that are "
+      "considered for collision is refreshed.  This has the greatest impact with colliding with high triangle count meshes.\n\n"
+      "@note Set to -1 to disable any time-based forced check.\n\n"
+      "@ingroup GameObjects\n");
+
+   Con::addVariable("$rigidPhysics::workingQueryBoxSizeMultiplier", TypeF32, &sWorkingQueryBoxSizeMultiplier,
+      "@brief How much larger the mWorkingQueryBox should be made when updating the working collision list.\n\n"
+      "The larger this number the less often the working list will be updated due to motion, but any non-static shape that "
+      "moves into the query box will not be noticed.\n\n"
+      "@ingroup GameObjects\n");
+}
+
 void RigidShape::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 

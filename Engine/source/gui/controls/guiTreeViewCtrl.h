@@ -75,7 +75,10 @@ class GuiTreeViewCtrl : public GuiArrayCtrl
                ShowClassName     = BIT( 11 ),
                ShowObjectName    = BIT( 12 ),
                ShowInternalName  = BIT( 13 ),
-               ShowClassNameForUnnamed = BIT( 14 )
+               ShowClassNameForUnnamed = BIT( 14 ),
+               ForceItemName = BIT(15),
+               ForceDragTarget = BIT(16),
+               DenyDrag = BIT(17),
             };
 
             GuiTreeViewCtrl* mParentControl;
@@ -168,6 +171,14 @@ class GuiTreeViewCtrl : public GuiArrayCtrl
             /// Returns true if an item is inspector data
             /// or false if it's just an item.
             bool isInspectorData() const { return mState.test(InspectorData); };
+
+            /// Returns true if we've been manually set to allow dragging overrides.
+            /// As it's a manually set flag, by default it is false.
+            bool isDragTargetAllowed() const { return mState.test(ForceDragTarget); };
+
+            /// Returns true if we've been manually set to allow dragging overrides.
+            /// As it's a manually set flag, by default it is false.
+            bool isDragAllowed() const { return !mState.test(DenyDrag); };
 
             /// Returns true if we should show the expand art
             /// and make the item interact with the mouse as if
@@ -345,6 +356,12 @@ class GuiTreeViewCtrl : public GuiArrayCtrl
       /// Current filter that determines which items in the tree are displayed and which are hidden.
       String mFilterText;
 
+      /// If true, all items are filtered. If false, then children of items that successfully pass filter are not filtered
+      bool mDoFilterChildren;
+
+      Vector<U32> mItemFilterExceptionList;
+      Vector<U32> mHiddenItemsList;
+
       /// If true, a trace of actions taken by the control is logged to the console.  Can
       /// be turned on with the setDebug() script method.
       bool mDebug;
@@ -420,7 +437,7 @@ class GuiTreeViewCtrl : public GuiArrayCtrl
 
       void _deleteItem(Item* item);
 
-      void _buildItem(Item* item, U32 tabLevel, bool bForceFullUpdate = false);
+      void _buildItem(Item* item, U32 tabLevel, bool bForceFullUpdate = false, bool skipFlter = false);
 
       Item* _findItemByAmbiguousId( S32 itemOrObjectId, bool buildVirtual = true );
 
@@ -469,6 +486,8 @@ class GuiTreeViewCtrl : public GuiArrayCtrl
       const Vector< Item* >& getSelectedItems() const { return mSelectedItems; }
       const Vector< S32 >& getSelected() const { return mSelected; }
 
+      const Vector< Item* >& getItems() const { return mItems; }
+
       bool isSelected(S32 itemId)
       {
          return isSelected( getItem( itemId ) );
@@ -502,6 +521,8 @@ class GuiTreeViewCtrl : public GuiArrayCtrl
       bool editItem( S32 itemId, const char* newText, const char* newValue );
 
       bool markItem( S32 itemId, bool mark );
+
+      S32 getItemAtPosition(Point2I position);
       
       bool isItemSelected( S32 itemId );
 
@@ -541,6 +562,7 @@ class GuiTreeViewCtrl : public GuiArrayCtrl
       S32 findItemByName(const char *name);
       S32 findItemByValue(const char *name);
       S32 findItemByObjectId(S32 iObjId);
+      S32 getItemObject(S32 itemId);
 
       void sortTree( bool caseSensitive, bool traverseHierarchy, bool parentsFirst );
 
@@ -555,8 +577,17 @@ class GuiTreeViewCtrl : public GuiArrayCtrl
       /// matches this pattern are displayed.
       void setFilterText( const String& text );
 
+      void setFilterChildren(bool doFilter) { mDoFilterChildren = doFilter; }
+      void setItemFilterException(U32 item, bool isExempt);
+      void setItemHidden(U32 item, bool isHidden);
+      void clearHiddenItems() { mHiddenItemsList.clear(); }
+
       /// Clear the current item filtering pattern.
       void clearFilterText() { setFilterText( String::EmptyString ); }
+
+      void reparentItems(Vector<Item*> selectedItems, Item* newParent);
+
+      S32 getTabLevel(S32 itemId);
 
       /// @}
 

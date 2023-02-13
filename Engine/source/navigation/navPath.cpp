@@ -70,6 +70,7 @@ NavPath::NavPath() :
    mRenderSearch = false;
 
    mQuery = NULL;
+   mStatus = DT_FAILURE;
 }
 
 NavPath::~NavPath()
@@ -135,7 +136,7 @@ bool NavPath::setProtectedFrom(void *obj, const char *index, const char *data)
 {
    NavPath *object = static_cast<NavPath*>(obj);
 
-   if(dStrcmp(data, ""))
+   if(String::compare(data, ""))
    {
       object->mFromSet = true;
       return true;
@@ -151,7 +152,7 @@ bool NavPath::setProtectedTo(void *obj, const char *index, const char *data)
 {
    NavPath *object = static_cast<NavPath*>(obj);
 
-   if(dStrcmp(data, ""))
+   if(String::compare(data, ""))
    {
       object->mToSet = true;
       return true;
@@ -170,7 +171,7 @@ const char *NavPath::getProtectedFrom(void *obj, const char *data)
    if(object->mFromSet)
       return data;
    else
-      return StringTable->insert("");
+      return StringTable->EmptyString();
 }
 
 const char *NavPath::getProtectedTo(void *obj, const char *data)
@@ -180,13 +181,14 @@ const char *NavPath::getProtectedTo(void *obj, const char *data)
    if(object->mToSet)
       return data;
    else
-      return StringTable->insert("");
+      return StringTable->EmptyString();
 }
 
 IRangeValidator ValidIterations(1, S32_MAX);
 
 void NavPath::initPersistFields()
 {
+   docsURL;
    addGroup("NavPath");
 
    addProtectedField("from", TypePoint3F, Offset(mFrom, NavPath),
@@ -224,7 +226,7 @@ void NavPath::initPersistFields()
    addField("allowDrop", TypeBool, Offset(mLinkTypes.drop, NavPath),
       "Allow the path to use drop links.");
    addField("allowSwim", TypeBool, Offset(mLinkTypes.swim, NavPath),
-      "Allow the path tomove in water.");
+      "Allow the path to move in water.");
    addField("allowLedge", TypeBool, Offset(mLinkTypes.ledge, NavPath),
       "Allow the path to jump ledges.");
    addField("allowClimb", TypeBool, Offset(mLinkTypes.climb, NavPath),
@@ -369,6 +371,7 @@ void NavPath::resize()
 
 bool NavPath::plan()
 {
+   PROFILE_SCOPE(NavPath_plan);
    // Initialise filter.
    mFilter.setIncludeFlags(mLinkTypes.getFlags());
 
@@ -430,15 +433,15 @@ bool NavPath::visitNext()
 
    if(dtStatusFailed(mQuery->findNearestPoly(from, extents, &mFilter, &startRef, NULL)) || !startRef)
    {
-      Con::errorf("No NavMesh polygon near visit point (%g, %g, %g) of NavPath %s",
-         start.x, start.y, start.z, getIdString());
+      //Con::errorf("No NavMesh polygon near visit point (%g, %g, %g) of NavPath %s",
+         //start.x, start.y, start.z, getIdString());
       return false;
    }
 
    if(dtStatusFailed(mQuery->findNearestPoly(to, extents, &mFilter, &endRef, NULL)) || !endRef)
    {
-      Con::errorf("No NavMesh polygon near visit point (%g, %g, %g) of NavPath %s",
-         end.x, end.y, end.z, getIdString());
+      //Con::errorf("No NavMesh polygon near visit point (%g, %g, %g) of NavPath %s",
+         //end.x, end.y, end.z, getIdString());
       return false;
    }
 
@@ -452,6 +455,7 @@ bool NavPath::visitNext()
 
 bool NavPath::update()
 {
+   PROFILE_SCOPE(NavPath_update);
    if(dtStatusInProgress(mStatus))
       mStatus = mQuery->updateSlicedFindPath(mMaxIterations, NULL);
    if(dtStatusSucceed(mStatus))
@@ -527,6 +531,7 @@ bool NavPath::finalise()
 
 void NavPath::processTick(const Move *move)
 {
+   PROFILE_SCOPE(NavPath_processTick);
    if(!mMesh)
       if(Sim::findObject(mMeshName.c_str(), mMesh))
          plan();
@@ -709,7 +714,7 @@ DefineEngineMethod(NavPath, plan, bool, (),,
 DefineEngineMethod(NavPath, onNavMeshUpdate, void, (const char *data),,
    "@brief Callback when this path's NavMesh is loaded or rebuilt.")
 {
-   if(object->mMesh && !dStrcmp(data, object->mMesh->getIdString()))
+   if(object->mMesh && !String::compare(data, object->mMesh->getIdString()))
       object->plan();
 }
 

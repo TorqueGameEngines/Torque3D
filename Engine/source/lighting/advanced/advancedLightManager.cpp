@@ -30,7 +30,7 @@
 #include "lighting/common/sceneLighting.h"
 #include "lighting/common/lightMapParams.h"
 #include "core/util/safeDelete.h"
-#include "renderInstance/renderPrePassMgr.h"
+#include "renderInstance/renderDeferredMgr.h"
 #include "materials/materialManager.h"
 #include "math/util/sphereMesh.h"
 #include "console/consoleTypes.h"
@@ -39,13 +39,15 @@
 #include "gfx/gfxCardProfile.h"
 #include "gfx/gfxTextureProfile.h"
 
+#ifndef TORQUE_BASIC_LIGHTING
+F32 AdvancedLightManager::smProjectedShadowFilterDistance = 40.0f;
+#endif
 
 ImplementEnumType( ShadowType,
    "\n\n"
    "@ingroup AdvancedLighting" )
    { ShadowType_Spot,                     "Spot" },
    { ShadowType_PSSM,                     "PSSM" },
-   { ShadowType_Paraboloid,               "Paraboloid" },
    { ShadowType_DualParaboloidSinglePass, "DualParaboloidSinglePass" },
    { ShadowType_DualParaboloid,           "DualParaboloid" },
    { ShadowType_CubeMap,                  "CubeMap" },
@@ -60,6 +62,9 @@ AdvancedLightManager::AdvancedLightManager()
 {
    mLightBinManager = NULL;
    mLastShader = NULL;
+   mLastConstants = NULL;
+   mSpherePrimitiveCount = 0;
+   mConePrimitiveCount = 0;
    mAvailableSLInterfaces = NULL;
 }
 
@@ -85,7 +90,7 @@ bool AdvancedLightManager::isCompatible() const
 
    // TODO: Test for the necessary texture formats!
    bool autoMips;
-   if(!GFX->getCardProfiler()->checkFormat(GFXFormatR16F, &GFXDefaultRenderTargetProfile, autoMips))
+   if(!GFX->getCardProfiler()->checkFormat(GFXFormatR16F, &GFXRenderTargetProfile, autoMips))
       return false;
 
    return true;
@@ -105,37 +110,37 @@ void AdvancedLightManager::activate( SceneManager *sceneManager )
    // we prefer the floating point format if it works.
    Vector<GFXFormat> formats;
    formats.push_back( GFXFormatR16G16B16A16F );
-   formats.push_back( GFXFormatR16G16B16A16 );
-   GFXFormat blendTargetFormat = GFX->selectSupportedFormat( &GFXDefaultRenderTargetProfile,
+   //formats.push_back( GFXFormatR16G16B16A16 );
+   GFXFormat blendTargetFormat = GFX->selectSupportedFormat( &GFXRenderTargetProfile,
                                                          formats,
                                                          true,
                                                          true,
                                                          false );
 
+   // First look for the deferred bin...
+   RenderDeferredMgr *deferredBin = _findDeferredRenderBin();
+
+   // If we didn't find the deferred bin then add one.
+   if (!deferredBin)
+   {
+      deferredBin = new RenderDeferredMgr(true, blendTargetFormat);
+      deferredBin->assignName("AL_DeferredBin");
+      deferredBin->registerObject();
+      getSceneManager()->getDefaultRenderPass()->addManager(deferredBin);
+      mDeferredRenderBin = deferredBin;
+   }
+
    mLightBinManager = new AdvancedLightBinManager( this, SHADOWMGR, blendTargetFormat );
    mLightBinManager->assignName( "AL_LightBinMgr" );
 
-   // First look for the prepass bin...
-   RenderPrePassMgr *prePassBin = _findPrePassRenderBin();
-
-   // If we didn't find the prepass bin then add one.
-   if ( !prePassBin )
-   {
-      prePassBin = new RenderPrePassMgr( true, blendTargetFormat );
-      prePassBin->assignName( "AL_PrePassBin" );
-      prePassBin->registerObject();
-      getSceneManager()->getDefaultRenderPass()->addManager( prePassBin );
-      mPrePassRenderBin = prePassBin;
-   }
-
-   // Tell the material manager that prepass is enabled.
-   MATMGR->setPrePassEnabled( true );
+   // Tell the material manager that deferred is enabled.
+   MATMGR->setDeferredEnabled( true );
 
    // Insert our light bin manager.
-   mLightBinManager->setRenderOrder( prePassBin->getRenderOrder() + 0.01f );
+   mLightBinManager->setRenderOrder( deferredBin->getRenderOrder() + 0.01f );
    getSceneManager()->getDefaultRenderPass()->addManager( mLightBinManager );
 
-   AdvancedLightingFeatures::registerFeatures(mPrePassRenderBin->getTargetFormat(), mLightBinManager->getTargetFormat());
+   AdvancedLightingFeatures::registerFeatures(mDeferredRenderBin->getTargetFormat(), blendTargetFormat);
 
    // Last thing... let everyone know we're active.
    smActivateSignal.trigger( getId(), true );
@@ -151,14 +156,14 @@ void AdvancedLightManager::deactivate()
    // removing itself from the render passes.
    if( mLightBinManager )
    {
-      mLightBinManager->MRTLightmapsDuringPrePass(false);
+      mLightBinManager->MRTLightmapsDuringDeferred(false);
       mLightBinManager->deleteObject();
    }
    mLightBinManager = NULL;
 
-   if ( mPrePassRenderBin )
-      mPrePassRenderBin->deleteObject();
-   mPrePassRenderBin = NULL;
+   if ( mDeferredRenderBin )
+      mDeferredRenderBin->deleteObject();
+   mDeferredRenderBin = NULL;
 
    SHADOWMGR->deactivate();
 
@@ -348,8 +353,8 @@ void AdvancedLightManager::setLightInfo(  ProcessedMaterial *pmat,
                                           U32 pass, 
                                           GFXShaderConstBuffer *shaderConsts)
 {
-   // Skip this if we're rendering from the prepass bin.
-   if ( sgData.binType == SceneData::PrePassBin )
+   // Skip this if we're rendering from the deferred bin.
+   if ( sgData.binType == SceneData::DeferredBin )
       return;
 
    PROFILE_SCOPE(AdvancedLightManager_setLightInfo);
@@ -359,7 +364,7 @@ void AdvancedLightManager::setLightInfo(  ProcessedMaterial *pmat,
    LightShadowMap *lsm = SHADOWMGR->getCurrentShadowMap();
 
    LightInfo *light;
-   if ( lsm )
+   if (lsm)
       light = lsm->getLightInfo();
    else
    {
@@ -382,13 +387,17 @@ void AdvancedLightManager::setLightInfo(  ProcessedMaterial *pmat,
                         lsc->mLightPositionSC,
                         lsc->mLightDiffuseSC,
                         lsc->mLightAmbientSC,
-                        lsc->mLightInvRadiusSqSC,
+                        lsc->mLightConfigDataSC,
                         lsc->mLightSpotDirSC,
-                        lsc->mLightSpotAngleSC,
-						lsc->mLightSpotFalloffSC,
+                        lsc->mLightSpotParamsSC,
+                        lsc->mHasVectorLightSC,
+                        lsc->mVectorLightDirectionSC,
+                        lsc->mVectorLightColorSC,
+                        lsc->mVectorLightBrightnessSC,
                         shaderConsts );
 
-   if ( lsm && light->getCastShadows() )
+   // Static
+   if (lsm && light->getCastShadows())
    {
       if (  lsc->mWorldToLightProjSC->isValid() )
          shaderConsts->set(   lsc->mWorldToLightProjSC, 
@@ -460,18 +469,18 @@ bool AdvancedLightManager::setTextureStage(  const SceneData &sgData,
    if ( !lsc )
       return false;
 
-   if ( lsm && lsm->getLightInfo()->getCastShadows() )
-      return lsm->setTextureStage( currTexFlag, lsc );
-
-
    if ( currTexFlag == Material::DynamicLight )
    {
+      // Static
+      if ( lsm && lsm->getLightInfo()->getCastShadows() )
+         return lsm->setTextureStage( currTexFlag, lsc );
+
       S32 reg = lsc->mShadowMapSC->getSamplerRegister();
    	if ( reg != -1 )
       	GFX->setTexture( reg, GFXTexHandle::ONE );
 
       return true;
-   }
+   } 
    else if ( currTexFlag == Material::DynamicLightMask )
    {
       S32 reg = lsc->mCookieMapSC->getSamplerRegister();
@@ -598,7 +607,7 @@ GFXVertexBufferHandle<AdvancedLightManager::LightVertex> AdvancedLightManager::g
       for (S32 i=1; i<numPoints + 1; i++)
       {
          S32 imod = (i - 1) % numPoints;
-         mConeGeometry[i].point = Point3F(circlePoints[imod].x,circlePoints[imod].y, -1.0f);
+         mConeGeometry[i].point = Point3F(circlePoints[imod].x*1.1,circlePoints[imod].y*1.1, -1.0f);
          mConeGeometry[i].color = ColorI::WHITE;
       }
       mConeGeometry.unlock();
@@ -646,7 +655,7 @@ LightShadowMap* AdvancedLightManager::findShadowMapForObject( SimObject *object 
    return sceneLight->getLight()->getExtended<ShadowMapParams>()->getShadowMap();
 }
 
-DefineConsoleFunction( setShadowVizLight, const char*, (const char* name), (""), "")
+DefineEngineFunction( setShadowVizLight, const char*, (const char* name), (""), "")
 {
    static const String DebugTargetName( "AL_ShadowVizTexture" );
 

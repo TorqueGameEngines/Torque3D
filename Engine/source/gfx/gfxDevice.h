@@ -19,7 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
-
+#pragma once
 #ifndef _GFXDEVICE_H_
 #define _GFXDEVICE_H_
 
@@ -57,6 +57,7 @@
 #ifndef _PLATFORM_PLATFORMTIMER_H_
 #include "platform/platformTimer.h"
 #endif
+#include "gfxTextureArray.h"
 
 class FontRenderBatcher;
 class GFont;
@@ -71,9 +72,7 @@ class GFXShaderConstBuffer;
 class GFXTextureManager;
 
 // Global macro
-#define GFX GFXDevice::get()
-
-#define MAX_MRT_TARGETS 4 
+#define GFX GFXDevice::get() 
 
 //-----------------------------------------------------------------------------
 
@@ -184,10 +183,6 @@ private:
    friend class GFXTextureObject;
    friend class GFXTexHandle;
    friend class GFXVertexFormat;
-   friend class GFXTestFullscreenToggle;
-   friend class TestGFXTextureCube;
-   friend class TestGFXRenderTargetCube;
-   friend class TestGFXRenderTargetStack;
    friend class GFXResource;
    friend class LightMatInstance; // For stencil interface
 
@@ -213,8 +208,17 @@ public:
       /// The device is about to finish rendering a frame
       deEndOfFrame,
 
+      /// The device has rendered a frame and ended the scene
+      dePostFrame,
+
       /// The device has started rendering a frame's field (such as for side-by-side rendering)
       deStartOfField,
+
+      /// left stereo frame has been rendered
+      deLeftStereoFrameRendered,
+
+      /// right stereo frame has been rendered
+      deRightStereoFrameRendered,
 
       /// The device is about to finish rendering a frame's field
       deEndOfField,
@@ -244,7 +248,13 @@ public:
    enum GFXDeviceRenderStyles
    {
       RS_Standard          = 0,
-      RS_StereoSideBySide  = (1<<0),
+      RS_StereoSideBySide  = (1<<0),     // Render into current Render Target side-by-side
+      RS_StereoSeparate    = (1<<1)      // Render in two separate passes (then combined by vr compositor)
+   };
+
+   enum GFXDeviceLimits
+   {
+      NumStereoPorts = 2
    };
 
 private:
@@ -273,15 +283,34 @@ protected:
    /// The style of rendering that is to be performed, based on GFXDeviceRenderStyles
    U32 mCurrentRenderStyle;
 
-   /// The current projection offset.  May be used during side-by-side rendering, for example.
-   Point2F mCurrentProjectionOffset;
+   /// Current stereo target being rendered to
+   S32 mCurrentStereoTarget;
 
    /// Eye offset used when using a stereo rendering style
-   Point3F mStereoEyeOffset;
+   Point3F mStereoEyeOffset[NumStereoPorts];
+
+   /// Center matrix for head
+   MatrixF mStereoHeadTransform;
+
+   /// Left and right matrix for eyes
+   MatrixF mStereoEyeTransforms[NumStereoPorts];
+
+   /// Inverse of mStereoEyeTransforms
+   MatrixF mInverseStereoEyeTransforms[NumStereoPorts];
+
+   /// Fov port settings
+   FovPort mFovPorts[NumStereoPorts];
+
+   /// Destination viewports for stereo rendering
+   RectI mStereoViewports[NumStereoPorts];
+
+   /// Destination targets for stereo rendering
+   GFXTextureTarget* mStereoTargets[NumStereoPorts];
 
    /// This will allow querying to see if a device is initialized and ready to
    /// have operations performed on it.
    bool mInitialized;
+   bool mReset;
 
    /// This is called before this, or any other device, is deleted in the global destroy()
    /// method. It allows the device to clean up anything while everything is still valid.
@@ -306,6 +335,10 @@ public:
    /// @see endScene
    bool canCurrentlyRender() const { return mCanCurrentlyRender; }
 
+   bool recentlyReset(){ return mReset; }
+   void beginReset(){ mReset = true; }
+   void finalizeReset(){ mReset = false; }
+
    void setAllowRender( bool render ) { mAllowRender = render; }
 
    inline bool allowRender() const { return mAllowRender; }
@@ -313,20 +346,66 @@ public:
    /// Retrieve the current rendering style based on GFXDeviceRenderStyles
    U32 getCurrentRenderStyle() const { return mCurrentRenderStyle; }
 
+   /// Retrieve the current stereo target being rendered to
+   S32 getCurrentStereoTarget() const { return mCurrentStereoTarget; }
+
    /// Set the current rendering style, based on GFXDeviceRenderStyles
    void setCurrentRenderStyle(U32 style) { mCurrentRenderStyle = style; }
 
-   /// Set the current projection offset used during stereo rendering
-   const Point2F& getCurrentProjectionOffset() { return mCurrentProjectionOffset; }
-
-   /// Get the current projection offset used during stereo rendering
-   void setCurrentProjectionOffset(const Point2F& offset) { mCurrentProjectionOffset = offset; }
+   /// Set the current stereo target being rendered to (in case we're doing anything with postfx)
+   void setCurrentStereoTarget(const F32 targetId) { mCurrentStereoTarget = targetId; }
 
    /// Get the current eye offset used during stereo rendering
-   const Point3F& getStereoEyeOffset() { return mStereoEyeOffset; }
+   const Point3F* getStereoEyeOffsets() { return mStereoEyeOffset; }
+
+   const MatrixF& getStereoHeadTransform() { return mStereoHeadTransform;  }
+   const MatrixF* getStereoEyeTransforms() { return mStereoEyeTransforms; }
+   const MatrixF* getInverseStereoEyeTransforms() { return mInverseStereoEyeTransforms; }
+
+   /// Sets the head matrix for stereo rendering
+   void setStereoHeadTransform(const MatrixF &mat) { mStereoHeadTransform = mat; }
 
    /// Set the current eye offset used during stereo rendering
-   void setStereoEyeOffset(const Point3F& offset) { mStereoEyeOffset = offset; }
+   void setStereoEyeOffsets(Point3F *offsets) { dMemcpy(mStereoEyeOffset, offsets, sizeof(Point3F) * NumStereoPorts); }
+
+   void setStereoEyeTransforms(MatrixF *transforms) { dMemcpy(mStereoEyeTransforms, transforms, sizeof(mStereoEyeTransforms)); dMemcpy(mInverseStereoEyeTransforms, transforms, sizeof(mInverseStereoEyeTransforms)); mInverseStereoEyeTransforms[0].inverse(); mInverseStereoEyeTransforms[1].inverse();  }
+
+   /// Set the current eye offset used during stereo rendering. Assumes NumStereoPorts are available.
+   void setStereoFovPort(const FovPort *ports) { dMemcpy(mFovPorts, ports, sizeof(mFovPorts)); }
+
+   /// Get the current eye offset used during stereo rendering
+   const FovPort* getStereoFovPort() { return mFovPorts; }
+
+   /// Sets stereo viewports
+   void setSteroViewports(const RectI *ports) { dMemcpy(mStereoViewports, ports, sizeof(RectI) * NumStereoPorts); }
+
+   /// Sets stereo render targets
+   void setStereoTargets(GFXTextureTarget **targets) { mStereoTargets[0] = targets[0]; mStereoTargets[1] = targets[1]; }
+
+   RectI* getStereoViewports() { return mStereoViewports; }
+
+   /// Activates a stereo render target, setting the correct viewport to render eye contents.
+   /// If eyeId is -1, set a viewport encompassing the entire size of the render targets.
+   void activateStereoTarget(S32 eyeId)
+   {
+      if (eyeId == -1)
+      {
+         if (mStereoTargets[0])
+         {
+            setActiveRenderTarget(mStereoTargets[0], true);
+         }
+      }
+      else
+      {
+         if (mStereoTargets[eyeId])
+         {
+            setActiveRenderTarget(mStereoTargets[eyeId], false);
+         }
+         setViewport(mStereoViewports[eyeId]);
+      }
+
+      mCurrentStereoTarget = eyeId;
+   }
 
    GFXCardProfiler* getCardProfiler() const { return mCardProfiler; }
 
@@ -344,7 +423,7 @@ public:
    virtual void enterDebugEvent(ColorI color, const char *name) = 0;
    virtual void leaveDebugEvent() = 0;
    virtual void setDebugMarker(ColorI color, const char *name) = 0;
-
+   virtual const char* interpretDebugResult(long result) { return "Not Implemented"; };
    /// @}
 
    /// @name Resource debug methods
@@ -397,7 +476,7 @@ public:
    /// Returns the first format from the list which meets all 
    /// the criteria of the texture profile and query options.      
    virtual GFXFormat selectSupportedFormat(GFXTextureProfile *profile,
-	   const Vector<GFXFormat> &formats, bool texture, bool mustblend, bool mustfilter) = 0;
+      const Vector<GFXFormat> &formats, bool texture, bool mustblend, bool mustfilter) = 0;
 
    /// @}
 
@@ -413,16 +492,22 @@ protected:
    enum TexDirtyType
    {
       GFXTDT_Normal,
-      GFXTDT_Cube
+      GFXTDT_Cube,
+      GFXTDT_CubeArray,
+      GFXTDT_TextureArray
    };
    
-   GFXTexHandle mCurrentTexture[TEXTURE_STAGE_COUNT];
-   GFXTexHandle mNewTexture[TEXTURE_STAGE_COUNT];
-   GFXCubemapHandle mCurrentCubemap[TEXTURE_STAGE_COUNT];
-   GFXCubemapHandle mNewCubemap[TEXTURE_STAGE_COUNT];
+   GFXTexHandle mCurrentTexture[GFX_TEXTURE_STAGE_COUNT];
+   GFXTexHandle mNewTexture[GFX_TEXTURE_STAGE_COUNT];
+   GFXCubemapHandle mCurrentCubemap[GFX_TEXTURE_STAGE_COUNT];
+   GFXCubemapHandle mNewCubemap[GFX_TEXTURE_STAGE_COUNT];
+   GFXCubemapArrayHandle mCurrentCubemapArray[GFX_TEXTURE_STAGE_COUNT];
+   GFXCubemapArrayHandle mNewCubemapArray[GFX_TEXTURE_STAGE_COUNT];
+   GFXTextureArrayHandle mCurrentTextureArray[GFX_TEXTURE_STAGE_COUNT];
+   GFXTextureArrayHandle mNewTextureArray[GFX_TEXTURE_STAGE_COUNT];
 
-   TexDirtyType   mTexType[TEXTURE_STAGE_COUNT];
-   bool           mTextureDirty[TEXTURE_STAGE_COUNT];
+   TexDirtyType   mTexType[GFX_TEXTURE_STAGE_COUNT];
+   bool           mTextureDirty[GFX_TEXTURE_STAGE_COUNT];
    bool           mTexturesDirty;
 
    // This maps a GFXStateBlockDesc hash value to a GFXStateBlockRef
@@ -440,7 +525,7 @@ protected:
    static bool smWireframe;
 
    /// The global vsync state.
-   static bool smDisableVSync;
+   static bool smEnableVSync;
 
    /// The forced shader model version if non-zero.
    static F32 smForcedPixVersion;
@@ -451,40 +536,11 @@ protected:
 
    /// @}
 
-   /// @name Light Tracking
-   /// @{
-
-   GFXLightInfo  mCurrentLight[LIGHT_STAGE_COUNT]; 
-   bool          mCurrentLightEnable[LIGHT_STAGE_COUNT];
-   bool          mLightDirty[LIGHT_STAGE_COUNT];
-   bool          mLightsDirty;
-
-   ColorF        mGlobalAmbientColor;
-   bool          mGlobalAmbientColorDirty;
-
-   /// @}
-
-   /// @name Fixed function material tracking
-   /// @{
-
-   GFXLightMaterial mCurrentLightMaterial;
-   bool mLightMaterialDirty;
-
-   /// @}
-
-   /// @name Bitmap modulation and color stack
-   /// @{
-
-   ///
-
-   /// @}
-
    /// @see getDeviceSwizzle32
    Swizzle<U8, 4> *mDeviceSwizzle32;
 
    /// @see getDeviceSwizzle24
    Swizzle<U8, 3> *mDeviceSwizzle24;
-
 
    //-----------------------------------------------------------------------------
 
@@ -492,19 +548,14 @@ protected:
    /// @{
 
    ///
-   MatrixF mWorldMatrix[WORLD_STACK_MAX];
-   bool    mWorldMatrixDirty;
+   MatrixF mWorldMatrix[GFX_WORLD_STACK_MAX];
+
    S32     mWorldStackSize;
 
    MatrixF mProjectionMatrix;
-   bool    mProjectionMatrixDirty;
 
    MatrixF mViewMatrix;
-   bool    mViewMatrixDirty;
 
-   MatrixF mTextureMatrix[TEXTURE_STAGE_COUNT];
-   bool    mTextureMatrixDirty[TEXTURE_STAGE_COUNT];
-   bool    mTextureMatrixCheckDirty;
    /// @}
 
    /// @name Current frustum planes
@@ -530,10 +581,6 @@ protected:
 
    virtual void setTextureInternal(U32 textureUnit, const GFXTextureObject*texture) = 0;
 
-   virtual void setLightInternal(U32 lightStage, const GFXLightInfo light, bool lightEnable) = 0;
-   virtual void setGlobalAmbientInternal(ColorF color) = 0;
-   virtual void setLightMaterialInternal(const GFXLightMaterial mat) = 0;
-
    virtual bool beginSceneInternal() = 0;
    virtual void endSceneInternal() = 0;
 
@@ -544,21 +591,6 @@ protected:
    /// is created.
    virtual void initStates() = 0;
    /// @}
-
-   //-----------------------------------------------------------------------------
-
-   /// This function must be implemented differently per
-   /// API and it should set ONLY the current matrix.
-   /// For example, in OpenGL, there should be NO matrix stack
-   /// activity, all the stack stuff is managed in the GFX layer.
-   ///
-   /// OpenGL does not have separate world and
-   /// view matrices. It has ModelView which is world * view.
-   /// You must take this into consideration.
-   ///
-   /// @param   mtype   Which matrix to set, world/view/projection
-   /// @param   mat   Matrix to assign
-   virtual void setMatrix( GFXMatrixType mtype, const MatrixF &mat ) = 0;
 
    //-----------------------------------------------------------------------------
 protected:
@@ -577,7 +609,8 @@ protected:
    virtual GFXVertexBuffer *allocVertexBuffer(  U32 numVerts, 
                                                 const GFXVertexFormat *vertexFormat, 
                                                 U32 vertSize, 
-                                                GFXBufferType bufferType ) = 0;
+                                                GFXBufferType bufferType,
+                                                void* data = NULL ) = 0;
 
    /// Called from GFXVertexFormat to allocate the hardware 
    /// specific vertex declaration for rendering.
@@ -614,17 +647,12 @@ protected:
    /// @note All index buffers use unsigned 16-bit indices.
    virtual GFXPrimitiveBuffer *allocPrimitiveBuffer(  U32 numIndices, 
                                                       U32 numPrimitives, 
-                                                      GFXBufferType bufferType ) = 0;
+                                                      GFXBufferType bufferType,
+                                                      void* data = NULL ) = 0;
 
    /// @}
 
-   //---------------------------------------
-   // SFX buffer
-   //---------------------------------------
 protected:
-
-   GFXTexHandle mFrontBuffer[2];
-   U32 mCurrentFrontBufferIdx;
 
    //---------------------------------------
    // Render target related
@@ -667,6 +695,8 @@ protected:
 
 public:   
    virtual GFXCubemap * createCubemap() = 0;
+   virtual GFXCubemapArray *createCubemapArray() = 0;
+   virtual GFXTextureArray *createTextureArray() = 0;
 
    inline GFXTextureManager *getTextureManager()
    {
@@ -692,7 +722,7 @@ public:
 
    /// Allocate a target for doing render to texture operations, with no
    /// depth/stencil buffer.
-   virtual GFXTextureTarget *allocRenderToTextureTarget()=0;
+   virtual GFXTextureTarget *allocRenderToTextureTarget(bool genMips = true) = 0;
 
    /// Allocate a target for a given window.
    virtual GFXWindowTarget *allocWindowTarget(PlatformWindow *window)=0;
@@ -722,8 +752,7 @@ public:
    /// Returns the number of simultaneous render targets supported by the device.
    virtual U32 getNumRenderTargets() const = 0;
 
-   virtual void setShader( GFXShader *shader ) {}
-   virtual void disableShaders() {} // TODO Remove when T3D 4.0
+   virtual void setShader( GFXShader *shader, bool force = false ) {}
 
    /// Set the buffer! (Actual set happens on the next draw call, just like textures, state blocks, etc)
    void setShaderConstBuffer(GFXShaderConstBuffer* buffer);
@@ -737,18 +766,24 @@ public:
  
    //-----------------------------------------------------------------------------
 
+   /// @name Copying methods
+   /// @{
+
+   virtual void copyResource(GFXTextureObject *pDst, GFXCubemap *pSrc, const U32 face) = 0;
+
+   /// @}
+
    /// @name Rendering methods
    /// @{
 
    ///
-   virtual void clear( U32 flags, ColorI color, F32 z, U32 stencil ) = 0;
+   virtual void clear( U32 flags, const LinearColorF& color, F32 z, U32 stencil ) = 0;
+   virtual void clearColorAttachment(const U32 attachment, const LinearColorF& color) = 0;
    virtual bool beginScene();
    virtual void endScene();
    virtual void beginField();
    virtual void endField();
    PlatformTimer *mFrameTime;
-
-   virtual GFXTexHandle & getFrontBuffer(){ return mFrontBuffer[mCurrentFrontBufferIdx]; }
 
    void setPrimitiveBuffer( GFXPrimitiveBuffer *buffer );
 
@@ -822,7 +857,6 @@ public:
    void drawPrimitive( const GFXPrimitive &prim );
    void drawPrimitive( U32 primitiveIndex );
    void drawPrimitives();
-   void drawPrimitiveBuffer( GFXPrimitiveBuffer *buffer );
    /// @}
 
    //-----------------------------------------------------------------------------
@@ -834,26 +868,18 @@ public:
 
    /// Returns a hardware occlusion query object or NULL
    /// if this device does not support them.   
-   virtual GFXOcclusionQuery* createOcclusionQuery() { return NULL; }
-   
-   /// @name Light Settings
-   /// NONE of these should be overridden by API implementations
-   /// because of the state caching stuff.
-   /// @{
-   void setLight(U32 stage, GFXLightInfo* light);
-   void setLightMaterial(GFXLightMaterial mat);
-   void setGlobalAmbientColor(ColorF color);
-
-   /// @}
-   
+   virtual GFXOcclusionQuery* createOcclusionQuery() { return NULL; }   
+  
    /// @name Texture State Settings
    /// NONE of these should be overridden by API implementations
    /// because of the state caching stuff.
    /// @{
 
    ///
-   void setTexture(U32 stage, GFXTextureObject*texture);
+   void setTexture(U32 stage, GFXTextureObject *texture);
    void setCubeTexture( U32 stage, GFXCubemap *cubemap );
+   void setCubeArrayTexture( U32 stage, GFXCubemapArray *cubemapArray);
+   void setTextureArray( U32 stage, GFXTextureArray *textureArray);
    inline GFXTextureObject* getCurrentTexture( U32 stage ) { return mCurrentTexture[stage]; }
 
    /// @}
@@ -881,6 +907,7 @@ public:
    /// @{
    /// Sets the dirty Render/Texture/Sampler states from the caching system
    void updateStates(bool forceSetAll = false);
+   void clearTextureStateImmediate(U32 stage);
 
    /// Returns the forced global wireframe state.
    static bool getWireframe() { return smWireframe; }
@@ -1031,23 +1058,20 @@ public:
 
 inline void GFXDevice::setWorldMatrix( const MatrixF &newWorld )
 {
-   mWorldMatrixDirty = true;
    mStateDirty = true;
    mWorldMatrix[mWorldStackSize] = newWorld;
 }
 
 inline void GFXDevice::pushWorldMatrix()
 {
-   mWorldMatrixDirty = true;
    mStateDirty = true;
    mWorldStackSize++;
-   AssertFatal( mWorldStackSize < WORLD_STACK_MAX, "GFX: Exceeded world matrix stack size" );
+   AssertFatal( mWorldStackSize < GFX_WORLD_STACK_MAX, "GFX: Exceeded world matrix stack size" );
    mWorldMatrix[mWorldStackSize] = mWorldMatrix[mWorldStackSize - 1];
 }
 
 inline void GFXDevice::popWorldMatrix()
 {
-   mWorldMatrixDirty = true;
    mStateDirty = true;
    mWorldStackSize--;
    AssertFatal( mWorldStackSize >= 0, "GFX: Negative WorldStackSize!" );
@@ -1055,14 +1079,12 @@ inline void GFXDevice::popWorldMatrix()
 
 inline void GFXDevice::multWorld( const MatrixF &mat )
 {
-   mWorldMatrixDirty = true;
    mStateDirty = true;
    mWorldMatrix[mWorldStackSize].mul(mat);
 }
 
 inline void GFXDevice::setProjectionMatrix( const MatrixF &newProj )
 {
-   mProjectionMatrixDirty = true;
    mStateDirty = true;
    mProjectionMatrix = newProj;
 }
@@ -1070,17 +1092,7 @@ inline void GFXDevice::setProjectionMatrix( const MatrixF &newProj )
 inline void GFXDevice::setViewMatrix( const MatrixF &newView )
 {
    mStateDirty = true;
-   mViewMatrixDirty = true;
    mViewMatrix = newView;
-}
-
-inline void GFXDevice::setTextureMatrix( const U32 stage, const MatrixF &texMat )
-{
-   AssertFatal( stage < TEXTURE_STAGE_COUNT, "Out of range texture sampler" );
-   mStateDirty = true;
-   mTextureMatrixDirty[stage] = true;
-   mTextureMatrix[stage] = texMat;
-   mTextureMatrixCheckDirty = true;
 }
 
 //-----------------------------------------------------------------------------

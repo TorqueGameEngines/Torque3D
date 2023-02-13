@@ -34,7 +34,7 @@
 //-----------------------------------------------------------------------------
 // TypeString
 //-----------------------------------------------------------------------------
-ConsoleType( string, TypeString, const char* )
+ConsoleType( string, TypeString, const char*, "" )
 ImplementConsoleTypeCasters( TypeString, const char* );
 
 ConsoleGetType( TypeString )
@@ -53,7 +53,7 @@ ConsoleSetType( TypeString )
 //-----------------------------------------------------------------------------
 // TypeCaseString
 //-----------------------------------------------------------------------------
-ConsoleType( caseString, TypeCaseString, const char* )
+ConsoleType(caseString, TypeCaseString, const char*, "")
 
 ConsoleSetType( TypeCaseString )
 {
@@ -71,7 +71,7 @@ ConsoleGetType( TypeCaseString )
 //-----------------------------------------------------------------------------
 // TypeRealString
 //-----------------------------------------------------------------------------
-ConsoleType( string, TypeRealString, String )
+ConsoleType(string, TypeRealString, String, "")
 ImplementConsoleTypeCasters( TypeRealString, String )
 
 ConsoleGetType( TypeRealString )
@@ -94,7 +94,7 @@ ConsoleSetType( TypeRealString )
 //-----------------------------------------------------------------------------
 // TypeCommand
 //-----------------------------------------------------------------------------
-ConsoleType( string, TypeCommand, String )
+ConsoleType(string, TypeCommand, String, "")
 
 ConsoleGetType( TypeCommand )
 {
@@ -159,7 +159,7 @@ ConsoleProcessData( TypeFilename )
 //-----------------------------------------------------------------------------
 // TypeStringFilename
 //-----------------------------------------------------------------------------
-ConsolePrepType( filename, TypeStringFilename, String )
+ConsolePrepType( filename, TypeStringFilename, const char* )
 
 ConsoleSetType( TypeStringFilename )
 {
@@ -177,7 +177,7 @@ ConsoleSetType( TypeStringFilename )
          return;
       }
 
-      *((String*)dptr) = String(buffer);
+      *((const char**)dptr) = StringTable->insert(buffer);
    }
    else
       Con::printf("(TypeStringFilename) Cannot set multiple args to a single filename.");
@@ -185,7 +185,7 @@ ConsoleSetType( TypeStringFilename )
 
 ConsoleGetType( TypeStringFilename )
 {
-   return *((String*)dptr);
+   return *((const char**)(dptr));
 }
 
 ConsoleProcessData( TypeStringFilename )
@@ -204,7 +204,7 @@ ConsoleProcessData( TypeStringFilename )
 //-----------------------------------------------------------------------------
 // TypePrefabFilename
 //-----------------------------------------------------------------------------
-ConsolePrepType( filename, TypePrefabFilename, String )
+ConsolePrepType( filename, TypePrefabFilename, const char* )
 
 ConsoleSetType( TypePrefabFilename )
 {
@@ -213,7 +213,7 @@ ConsoleSetType( TypePrefabFilename )
 
 ConsoleGetType( TypePrefabFilename )
 {
-   return *((String*)dptr);
+   return *((const char**)(dptr));
 }
 
 ConsoleProcessData( TypePrefabFilename )
@@ -232,16 +232,16 @@ ConsoleProcessData( TypePrefabFilename )
 //-----------------------------------------------------------------------------
 // TypeImageFilename
 //-----------------------------------------------------------------------------
-ConsolePrepType( filename, TypeImageFilename, String )
+ConsolePrepType( filename, TypeImageFilename, const char* )
 
 ConsoleSetType( TypeImageFilename )
 {
-   Con::setData(TypeStringFilename, dptr, 0, argc, argv, tbl, flag);
+   Con::setData(TypeFilename, dptr, 0, argc, argv, tbl, flag);
 }
 
 ConsoleGetType( TypeImageFilename )
 {
-   return *((String*)dptr);
+   return *((const char**)(dptr));
 }
 
 ConsoleProcessData( TypeImageFilename )
@@ -282,9 +282,36 @@ ConsoleProcessData( TypeShapeFilename )
 }
 
 //-----------------------------------------------------------------------------
+// TypeSoundFilename
+//-----------------------------------------------------------------------------
+ConsolePrepType(filename, TypeSoundFilename, const char*)
+
+ConsoleSetType(TypeSoundFilename)
+{
+   Con::setData(TypeFilename, dptr, 0, argc, argv, tbl, flag);
+}
+
+ConsoleGetType(TypeSoundFilename)
+{
+   return *((const char **)(dptr));
+}
+
+ConsoleProcessData(TypeSoundFilename)
+{
+   if (Con::expandScriptFilename(buffer, bufferSz, data))
+      return buffer;
+   else
+   {
+      Con::warnf("(TypeSoundFilename) illegal filename detected: %s", data);
+      return data;
+   }
+}
+
+
+//-----------------------------------------------------------------------------
 // TypeS8
 //-----------------------------------------------------------------------------
-ConsoleType( char, TypeS8, S8 )
+ConsoleType(char, TypeS8, S8, "")
 ImplementConsoleTypeCasters( TypeS8, S8 )
 
 ConsoleGetType( TypeS8 )
@@ -306,7 +333,7 @@ ConsoleSetType( TypeS8 )
 //-----------------------------------------------------------------------------
 // TypeS32
 //-----------------------------------------------------------------------------
-ConsoleType( int, TypeS32, S32 )
+ConsoleType(int, TypeS32, S32, "")
 ImplementConsoleTypeCasters(TypeS32, S32)
 
 ConsoleGetType( TypeS32 )
@@ -329,7 +356,7 @@ ConsoleSetType( TypeS32 )
 //-----------------------------------------------------------------------------
 // TypeS32Vector
 //-----------------------------------------------------------------------------
-ConsoleType( intList, TypeS32Vector, Vector<S32> )
+ConsoleType(intList, TypeS32Vector, Vector<S32>, "")
 ImplementConsoleTypeCasters( TypeS32Vector, Vector< S32 > )
 
 ConsoleGetType( TypeS32Vector )
@@ -386,7 +413,7 @@ ConsoleSetType( TypeS32Vector )
 //-----------------------------------------------------------------------------
 // TypeF32
 //-----------------------------------------------------------------------------
-ConsoleType( float, TypeF32, F32 )
+ConsoleType(float, TypeF32, F32, "")
 ImplementConsoleTypeCasters(TypeF32, F32)
 
 ConsoleGetType( TypeF32 )
@@ -407,7 +434,7 @@ ConsoleSetType( TypeF32 )
 //-----------------------------------------------------------------------------
 // TypeF32Vector
 //-----------------------------------------------------------------------------
-ConsoleType( floatList, TypeF32Vector, Vector<F32> )
+ConsoleType(floatList, TypeF32Vector, Vector<F32>, "")
 ImplementConsoleTypeCasters( TypeF32Vector, Vector< F32 > )
 
 ConsoleGetType( TypeF32Vector )
@@ -464,7 +491,7 @@ ConsoleSetType( TypeF32Vector )
 //-----------------------------------------------------------------------------
 // TypeBool
 //-----------------------------------------------------------------------------
-ConsoleType( bool, TypeBool, bool )
+ConsoleType(bool, TypeBool, bool, "")
 ImplementConsoleTypeCasters( TypeBool, bool )
 
 ConsoleGetType( TypeBool )
@@ -484,7 +511,7 @@ ConsoleSetType( TypeBool )
 //-----------------------------------------------------------------------------
 // TypeBoolVector
 //-----------------------------------------------------------------------------
-ConsoleType( boolList, TypeBoolVector, Vector<bool> )
+ConsoleType(boolList, TypeBoolVector, Vector<bool>, "")
 ImplementConsoleTypeCasters( TypeBoolVector, Vector< bool > )
 
 ConsoleGetType( TypeBoolVector )
@@ -541,7 +568,7 @@ ConsoleSetType( TypeBoolVector )
 //-----------------------------------------------------------------------------
 // TypeFlag
 //-----------------------------------------------------------------------------
-ConsoleType( flag, TypeFlag, S32 )
+ConsoleType(flag, TypeFlag, S32, "")
 
 ConsoleGetType( TypeFlag )
 {
@@ -567,13 +594,13 @@ ConsoleSetType( TypeFlag )
 //-----------------------------------------------------------------------------
 // TypeColorF
 //-----------------------------------------------------------------------------
-ConsoleType( ColorF, TypeColorF, ColorF )
-ImplementConsoleTypeCasters( TypeColorF, ColorF )
+ConsoleType(LinearColorF, TypeColorF, LinearColorF, "")
+ImplementConsoleTypeCasters( TypeColorF, LinearColorF )
 
 ConsoleGetType( TypeColorF )
 {
    // Fetch color.
-   const ColorF* color = (ColorF*)dptr;
+   const LinearColorF* color = (LinearColorF*)dptr;
 
    // Fetch stock color name.
    StringTableEntry colorName = StockColor::name( *color );
@@ -591,7 +618,7 @@ ConsoleGetType( TypeColorF )
 
 ConsoleSetType( TypeColorF )
 {
-   ColorF *tmpColor = (ColorF *) dptr;
+   LinearColorF *tmpColor = (LinearColorF *) dptr;
    if(argc == 1)
    {
       // Is only a single argument passed?
@@ -640,7 +667,7 @@ ConsoleSetType( TypeColorF )
 //-----------------------------------------------------------------------------
 // TypeColorI
 //-----------------------------------------------------------------------------
-ConsoleType( ColorI, TypeColorI, ColorI )
+ConsoleType(ColorI, TypeColorI, ColorI, "")
 ImplementConsoleTypeCasters( TypeColorI, ColorI )
 
 ConsoleGetType( TypeColorI )
@@ -711,9 +738,34 @@ ConsoleSetType( TypeColorI )
 }
 
 //-----------------------------------------------------------------------------
+// TypeSimObjectPtr
+//-----------------------------------------------------------------------------
+ConsoleType(SimObject, TypeSimObjectPtr, SimObject*, "")
+
+ConsoleSetType(TypeSimObjectPtr)
+{
+   if (argc == 1)
+   {
+      SimObject **obj = (SimObject **)dptr;
+      *obj = Sim::findObject(argv[0]);
+   }
+   else
+      Con::printf("(TypeSimObjectPtr) Cannot set multiple args to a single S32.");
+}
+
+ConsoleGetType(TypeSimObjectPtr)
+{
+   SimObject **obj = (SimObject**)dptr;
+   static const U32 bufSize = 128;
+   char* returnBuffer = Con::getReturnBuffer(bufSize);
+   dSprintf(returnBuffer, bufSize, "%s", *obj ? (*obj)->getName() ? (*obj)->getName() : (*obj)->getIdString() : "");
+   return returnBuffer;
+}
+
+//-----------------------------------------------------------------------------
 // TypeSimObjectName
 //-----------------------------------------------------------------------------
-ConsoleType( SimObject, TypeSimObjectName, SimObject* )
+ConsoleType(SimObject, TypeSimObjectName, SimObject*, "")
 
 ConsoleSetType( TypeSimObjectName )
 {
@@ -738,7 +790,7 @@ ConsoleGetType( TypeSimObjectName )
 //-----------------------------------------------------------------------------
 // TypeName
 //-----------------------------------------------------------------------------
-ConsoleType( string, TypeName, const char* )
+ConsoleType(string, TypeName, const char*, "")
 
 ConsoleGetType( TypeName )
 {
@@ -753,7 +805,7 @@ ConsoleSetType( TypeName )
 //------------------------------------------------------------------------------
 // TypeParticleParameterString
 //------------------------------------------------------------------------------
-ConsoleType( string, TypeParticleParameterString, const char* )
+ConsoleType(string, TypeParticleParameterString, const char*, "")
 
 ConsoleGetType( TypeParticleParameterString )
 {
@@ -772,20 +824,17 @@ ConsoleSetType( TypeParticleParameterString )
 // TypeMaterialName
 //-----------------------------------------------------------------------------
 
-ConsoleType( string, TypeMaterialName, String )
+ConsoleType(string, TypeMaterialName, const char*, "")
 
 ConsoleGetType( TypeMaterialName )
 {
-   const String *theString = static_cast<const String*>(dptr);
-   return theString->c_str();
+   return* ((const char**)(dptr));
 }
 
 ConsoleSetType( TypeMaterialName )
 {
-   String *theString = static_cast<String*>(dptr);
-
    if(argc == 1)
-      *theString = argv[0];
+      *((const char**)dptr) = StringTable->insert(argv[0]);
    else
       Con::printf("(TypeMaterialName) Cannot set multiple args to a single string.");
 }
@@ -794,7 +843,7 @@ ConsoleSetType( TypeMaterialName )
 // TypeTerrainMaterialIndex
 //-----------------------------------------------------------------------------
 
-ConsoleType( int, TypeTerrainMaterialIndex, S32 )
+ConsoleType(int, TypeTerrainMaterialIndex, S32, "")
 
 ConsoleGetType( TypeTerrainMaterialIndex )
 {
@@ -816,7 +865,7 @@ ConsoleSetType( TypeTerrainMaterialIndex )
 // TypeTerrainMaterialName
 //-----------------------------------------------------------------------------
 
-ConsoleType( string, TypeTerrainMaterialName, const char* )
+ConsoleType(string, TypeTerrainMaterialName, const char*, "")
 
 ConsoleGetType( TypeTerrainMaterialName )
 {
@@ -835,20 +884,17 @@ ConsoleSetType( TypeTerrainMaterialName )
 // TypeCubemapName
 //-----------------------------------------------------------------------------
 
-ConsoleType( string, TypeCubemapName, String )
+ConsoleType(string, TypeCubemapName, const char*, "")
 
 ConsoleGetType( TypeCubemapName )
 {
-   const String *theString = static_cast<const String*>(dptr);
-   return theString->c_str();
+   return*((const char**)(dptr));
 }
 
 ConsoleSetType( TypeCubemapName )
 {
-   String *theString = static_cast<String*>(dptr);
-
    if(argc == 1)
-      *theString = argv[0];
+      *((const char**)dptr) = StringTable->insert(argv[0]);
    else
       Con::printf("(TypeCubemapName) Cannot set multiple args to a single string.");
 }
@@ -856,7 +902,7 @@ ConsoleSetType( TypeCubemapName )
 //-----------------------------------------------------------------------------
 // TypeRectUV
 //-----------------------------------------------------------------------------
-ConsoleType( RectF, TypeRectUV, RectF )
+ConsoleType(RectF, TypeRectUV, RectF, "")
 
 ConsoleGetType( TypeRectUV )
 {
@@ -882,7 +928,7 @@ ConsoleSetType( TypeRectUV )
 //-----------------------------------------------------------------------------
 // TypeUUID
 //-----------------------------------------------------------------------------
-ConsoleType( uuid, TypeUUID, Torque::UUID )
+ConsoleType(uuid, TypeUUID, Torque::UUID, "")
 ImplementConsoleTypeCasters( TypeUUID, Torque::UUID )
 
 ConsoleGetType( TypeUUID )
@@ -906,7 +952,7 @@ ConsoleSetType( TypeUUID )
 //-----------------------------------------------------------------------------
 // TypePID
 //-----------------------------------------------------------------------------
-ConsoleType( pid, TypePID, SimPersistID* )
+ConsoleType(pid, TypePID, SimPersistID*, "")
 ImplementConsoleTypeCasters( TypePID, SimPersistID* )
 
 ConsoleGetType( TypePID )
@@ -929,13 +975,16 @@ ConsoleSetType( TypePID )
       else
       {
          Torque::UUID uuid;
-         if( !uuid.fromString( argv[ 0 ] ) )
-         {
+
+        if( !uuid.fromString( argv[ 0 ] ) )
+        {
             Con::errorf( "Error parsing UUID in PID: '%s'", argv[ 0 ] );
             *pid = NULL;
-         }
-         else
-            *pid = SimPersistID::findOrCreate( uuid );
+        }
+        else
+        {
+            *pid = SimPersistID::findOrCreate(uuid);
+        }
       }
    }
    else
@@ -945,7 +994,7 @@ ConsoleSetType( TypePID )
 //-----------------------------------------------------------------------------
 // TypeSimPersistId
 //-----------------------------------------------------------------------------
-ConsoleType( SimPersistId, TypeSimPersistId, SimPersistID* )
+ConsoleType(SimPersistId, TypeSimPersistId, SimPersistID*, "")
 
 ConsoleGetType( TypeSimPersistId )
 {

@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="CUR_3darrow_image"
+    imageFile="@assetFile=CUR_3darrow.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

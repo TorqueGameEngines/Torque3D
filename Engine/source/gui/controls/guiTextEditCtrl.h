@@ -85,6 +85,11 @@ protected:
    bool                 mPasswordText;
    StringTableEntry     mPasswordMask;
 
+   S32                  mDoubleClickTimeMS;
+   S32                  mMouseUpTime;
+
+   StringTableEntry     mPlaceholderText;
+
    /// If set, any non-ESC key is handled here or not at all
    bool    mSinkAllKeyEvents;   
    UTF16   **mHistoryBuf;
@@ -92,6 +97,8 @@ protected:
 
    void playDeniedSound();
    void execConsoleCallback();
+
+   bool mTextValid;
 
    virtual void handleCharInput( U16 ascii );
 
@@ -119,6 +126,11 @@ public:
    S32   getCursorPos()   { return( mCursorPos ); }
    void  setCursorPos( const S32 newPos );
    
+   void invalidText(bool playSound = true);
+   void validText();
+   bool isValidText();
+	inline bool isPasswordText() { return mPasswordText; }
+
    bool isAllTextSelected();
    void selectAllText();
    void clearSelectedText();
@@ -150,7 +162,23 @@ public:
    void onRender(Point2I offset, const RectI &updateRect);
    virtual void drawText( const RectI &drawRect, bool isFocused );
 
-	bool dealWithEnter( bool clearResponder ); 
+   bool dealWithEnter( bool clearResponder );
+
+   static bool setPlaceholderText(void* object, const char* index, const char* data)
+   {
+      static_cast<GuiTextEditCtrl*>(object)->setPlaceholderText(data); return true;
+   }
+   static const char* getPlaceholderText(void* obj, const char* data)
+   {
+      return static_cast<GuiTextEditCtrl*>(obj)->getPlaceholderText();
+   }
+
+   virtual void setPlaceholderText(const char* txt = NULL)
+   {
+      mPlaceholderText = StringTable->insert(txt, true);
+   }
+
+   const char* getPlaceholderText() { return (const char*)mPlaceholderText; }
 };
 
 #endif //_GUI_TEXTEDIT_CTRL_H

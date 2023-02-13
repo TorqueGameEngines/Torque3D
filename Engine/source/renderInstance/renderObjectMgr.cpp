@@ -22,6 +22,8 @@
 #include "renderObjectMgr.h"
 #include "console/consoleTypes.h"
 #include "scene/sceneObject.h"
+#include "materials/materialManager.h"
+#include "scene/sceneRenderState.h"
 
 IMPLEMENT_CONOBJECT(RenderObjectMgr);
 
@@ -47,6 +49,7 @@ RenderObjectMgr::RenderObjectMgr(RenderInstType riType, F32 renderOrder, F32 pro
 
 void RenderObjectMgr::initPersistFields()
 {
+   docsURL;
    Parent::initPersistFields();
 }
 
@@ -64,6 +67,10 @@ void RenderObjectMgr::render( SceneRenderState *state )
 
    // Early out if nothing to draw.
    if(!mElementList.size())
+      return;
+
+   // Check if bin is disabled in advanced lighting.
+   if ( MATMGR->getDeferredEnabled() && mBasicOnly )
       return;
 
    for( U32 i=0; i<mElementList.size(); i++ )

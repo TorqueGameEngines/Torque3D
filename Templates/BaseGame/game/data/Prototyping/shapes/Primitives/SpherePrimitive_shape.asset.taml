@@ -1,0 +1,6 @@
+<ShapeAsset
+    AssetName="SpherePrimitive_shape"
+    fileName="@assetFile=SpherePrimitive.fbx"
+    constuctorFileName="@assetFile=SpherePrimitive.tscript"
+    materialSlot0="@asset=Prototyping:DetailBlue"
+    originalFilePath="C:/dev/T3D/PRs/MiscFixes20220525/Templates/BaseGame/game/data/Prototyping/shapes/Primitives/SpherePrimitive.fbx"/>

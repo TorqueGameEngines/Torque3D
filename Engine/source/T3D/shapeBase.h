@@ -20,6 +20,10 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+// Arcane-FX for MIT Licensed Open Source version of Torque 3D from GarageGames
+// Copyright (C) 2015 Faust Logic, Inc.
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
 #ifndef _SHAPEBASE_H_
 #define _SHAPEBASE_H_
 
@@ -63,6 +67,13 @@
    #include "console/dynamicTypes.h"
 #endif
 
+#ifndef SHAPEASSET_H
+#include "T3D/assets/ShapeAsset.h"
+#endif 
+
+// Need full definition visible for SimObjectPtr<ParticleEmitter>
+#include "T3D/fx/particleEmitter.h"
+#include "T3D/assets/SoundAsset.h"
 
 class GFXCubemap;
 class TSShapeInstance;
@@ -70,8 +81,6 @@ class SceneRenderState;
 class TSThread;
 class GameConnection;
 struct CameraScopeQuery;
-class ParticleEmitter;
-class ParticleEmitterData;
 class ProjectileData;
 class ExplosionData;
 struct DebrisData;
@@ -82,6 +91,7 @@ class SFXProfile;
 
 typedef void* Light;
 
+const F32 gGravity = -20;
 
 //--------------------------------------------------------------------------
 
@@ -107,7 +117,7 @@ class ShapeBaseConvex : public Convex
    Box3F       box;
 
   public:
-   ShapeBaseConvex() { mType = ShapeBaseConvexType; nodeTransform = 0; }
+   ShapeBaseConvex() :pShapeBase(NULL), transform(NULL), hullId(0), nodeTransform(0) { mType = ShapeBaseConvexType; }
    ShapeBaseConvex(const ShapeBaseConvex& cv) {
       mObject    = cv.mObject;
       pShapeBase = cv.pShapeBase;
@@ -250,11 +260,13 @@ struct ShapeBaseImageData: public GameBaseData {
                                     ///  the imageSlot.
       ParticleEmitterData* emitter; ///< A particle emitter; this emitter will emit as long as the gun is in this
                                     ///  this state.
-      SFXTrack* sound;
+      
+      //SFXTrack* sound;
       F32 emitterTime;              ///<
       S32 emitterNode[MaxShapes];   ///< Node ID on the shape to emit from
+      SoundAsset* sound;
+      SFXTrack* soundTrack;         ///<Holdover for special, non-asset cases like SFXPlaylists
    };
-
    /// @name State Data
    /// Individual state data used to initialize struct array
    /// @{
@@ -312,7 +324,10 @@ struct ShapeBaseImageData: public GameBaseData {
 
    bool                    stateIgnoreLoadedForReady  [MaxStates];
 
-   SFXTrack*               stateSound                 [MaxStates];
+   DECLARE_SOUNDASSET_ARRAY(ShapeBaseImageData, stateSound, MaxStates);
+   DECLARE_ASSET_ARRAY_SETGET(ShapeBaseImageData, stateSound);
+
+   //SFXTrack*               stateSound                 [MaxStates];
    const char*             stateScript                [MaxStates];
 
    ParticleEmitterData*    stateEmitter               [MaxStates];
@@ -339,7 +354,6 @@ struct ShapeBaseImageData: public GameBaseData {
    bool useRemainderDT;
 
    //
-   bool emap;                       ///< Environment mapping on?
    bool correctMuzzleVector;        ///< Adjust 1st person firing vector to eye's LOS point?
    bool correctMuzzleVectorTP;      ///< Adjust 3rd person firing vector to camera's LOS point?
    bool firstPerson;                ///< Render the image when in first person?
@@ -364,8 +378,11 @@ struct ShapeBaseImageData: public GameBaseData {
    F32 scriptAnimTransitionTime;    ///< The amount of time to transition between the previous sequence and new sequence
                                     ///< when the script prefix has changed.
 
-   StringTableEntry  shapeName;     ///< Name of shape to render.
-   StringTableEntry  shapeNameFP;   ///< Name of shape to render in first person (optional).
+   DECLARE_SHAPEASSET_ARRAY(ShapeBaseImageData, Shape, MaxShapes);  ///< Name of shape to render.
+   DECLARE_ASSET_ARRAY_SETGET(ShapeBaseImageData, Shape);
+
+   //DECLARE_SHAPEASSET(ShapeBaseImageData, ShapeFP);  ///< Name of shape to render in first person (optional).
+   //DECLARE_ASSET_SETGET(ShapeBaseImageData, ShapeFP);
 
    StringTableEntry  imageAnimPrefix;     ///< Passed along to the mounting shape to modify
                                           ///  animation sequences played in 3rd person. [optional]
@@ -390,7 +407,7 @@ struct ShapeBaseImageData: public GameBaseData {
    S32         lightType;           ///< Indicates the type of the light.
                                     ///
                                     ///  One of: ConstantLight, PulsingLight, WeaponFireLight.
-   ColorF      lightColor;
+   LinearColorF      lightColor;
    S32         lightDuration;       ///< The duration in SimTime of Pulsing or WeaponFire type lights.
    F32         lightRadius;         ///< Extent of light.
    F32         lightBrightness;     ///< Brightness of the light ( if it is WeaponFireLight ).
@@ -398,7 +415,6 @@ struct ShapeBaseImageData: public GameBaseData {
 
    /// @name Shape Data
    /// @{
-   Resource<TSShape> shape[MaxShapes]; ///< Shape handle
    bool shapeIsValid[MaxShapes];       ///< Indicates that the shape has been loaded and is valid
 
    U32 mCRC[MaxShapes];                ///< Checksum of shape.
@@ -487,12 +503,14 @@ struct ShapeBaseImageData: public GameBaseData {
    
    void inspectPostApply();
 
+   void handleStateSoundTrack(const U32& stateId);
+
    /// @}
 
    /// @name Callbacks
    /// @{
-   DECLARE_CALLBACK( void, onMount, ( ShapeBase* obj, S32 slot, F32 dt ) );
-   DECLARE_CALLBACK( void, onUnmount, ( ShapeBase* obj, S32 slot, F32 dt ) );
+   DECLARE_CALLBACK( void, onMount, ( SceneObject* obj, S32 slot, F32 dt ) );
+   DECLARE_CALLBACK( void, onUnmount, ( SceneObject* obj, S32 slot, F32 dt ) );
    /// @}
 };
 
@@ -523,14 +541,14 @@ public:
 
    // TODO: These are only really used in Basic Lighting
    // mode... we should probably move them somewhere else.
-   bool shadowEnable;
    U32 shadowSize;
    F32 shadowMaxVisibleDistance;
    F32 shadowProjectionDistance;
    F32 shadowSphereAdjust;
 
+   DECLARE_SHAPEASSET(ShapeBaseData, Shape, onShapeChanged);
+   DECLARE_ASSET_SETGET(ShapeBaseData, Shape);
 
-   StringTableEntry  shapeName;
    StringTableEntry  cloakTexName;
 
    String cubeDescName;
@@ -543,8 +561,9 @@ public:
    /// @{
    DebrisData *      debris;
    S32               debrisID;
-   StringTableEntry  debrisShapeName;
-   Resource<TSShape> debrisShape;
+
+   DECLARE_SHAPEASSET(ShapeBaseData, DebrisShape, onDebrisChanged);
+   DECLARE_ASSET_SETGET(ShapeBaseData, DebrisShape);
 
    ExplosionData*    explosion;
    S32               explosionID;
@@ -589,8 +608,6 @@ public:
 
    /// @name Data initialized on preload
    /// @{
-
-   Resource<TSShape> mShape;         ///< Shape handle
    U32 mCRC;
    bool computeCRC;
 
@@ -651,9 +668,23 @@ public:
    DECLARE_CALLBACK( void, onCollision, ( ShapeBase* obj, SceneObject* collObj, VectorF vec, F32 len ) );
    DECLARE_CALLBACK( void, onDamage, ( ShapeBase* obj, F32 delta ) );
    DECLARE_CALLBACK( void, onTrigger, ( ShapeBase* obj, S32 index, bool state ) );
-   DECLARE_CALLBACK(void, onEndSequence, (ShapeBase* obj, S32 slot, const char* name));
+   DECLARE_CALLBACK( void, onEndSequence, (ShapeBase* obj, S32 slot, const char* name));
    DECLARE_CALLBACK( void, onForceUncloak, ( ShapeBase* obj, const char* reason ) );
    /// @}
+   struct TextureTagRemapping
+   {
+      char* old_tag;
+      char* new_tag;
+   };
+   StringTableEntry remap_txr_tags;
+   char* remap_buffer;
+   Vector<TextureTagRemapping> txr_tag_remappings;
+   bool silent_bbox_check;
+
+   void onShapeChanged() {}
+   void onDebrisChanged() {}
+public:
+   ShapeBaseData(const ShapeBaseData&, bool = false);
 };
 
 
@@ -714,13 +745,13 @@ protected:
 
    /// @name Scripted Sound
    /// @{
-   struct Sound {
+   struct SoundThread {
       bool play;                    ///< Are we playing this sound?
       SimTime timeout;              ///< Time until we stop playing this sound.
-      SFXTrack* profile;            ///< Profile on server
+      AssetPtr<SoundAsset> asset; ///< Asset on server
       SFXSource* sound;             ///< Sound on client
    };
-   Sound mSoundThread[MaxSoundThreads];
+   SoundThread mSoundThread[MaxSoundThreads];
    /// @}
 
    /// @name Scripted Animation Threads
@@ -874,10 +905,10 @@ protected:
    /// @name Physical Properties
    /// @{
 
-
    public:
    F32 mTeamId;
    protected:
+   S32 mAiPose;                     ///< Current pose.
    F32 mEnergy;                     ///< Current enery level.
    F32 mRechargeRate;               ///< Energy recharge rate (in units/tick).
 
@@ -902,7 +933,7 @@ protected:
    F32 mWaterCoverage;              ///< Percent of this object covered by water
 
    Point3F mAppliedForce;
-   F32 mGravityMod;
+   F32 mNetGravity;
    /// @}
 
    F32 mDamageFlash;
@@ -1087,7 +1118,7 @@ protected:
 
    /// Updates the audio state of the supplied sound
    /// @param   st   Sound
-   void updateAudioState(Sound& st);
+   void updateAudioState(SoundThread& st);
 
    /// Recalculates the spacial sound based on the current position of the object
    /// emitting the sound.
@@ -1108,8 +1139,8 @@ protected:
    virtual void shakeCamera( U32 imageSlot );
    virtual void updateDamageLevel();
    virtual void updateDamageState();
-   virtual void onImpact(SceneObject* obj, VectorF vec);
-   virtual void onImpact(VectorF vec);
+   virtual void onImpact(SceneObject* obj, const VectorF& vec);
+   virtual void onImpact(const VectorF& vec);
    /// @}
 
    /// The inner prep render function that does the 
@@ -1301,9 +1332,7 @@ public:
 
    /// Plays an audio sound from a mounted object
    /// @param   slot    Mount slot ID
-   /// @param   track   Audio track to play
-   void playAudio(U32 slot,SFXTrack* track);
-   void playAudio( U32 slot, SFXProfile* profile ) { playAudio( slot, ( SFXTrack* ) profile ); }
+   void playAudio(U32 slot, StringTableEntry assetId);
 
    /// Stops audio from a mounted object
    /// @param   slot   Mount slot ID
@@ -1587,6 +1616,10 @@ public:
    /// @param   mat   Camera transform (out)
    virtual void getCameraTransform(F32* pos,MatrixF* mat);
 
+   /// Gets the view transform for a particular eye, taking into account the current absolute 
+   /// orient and position values of the display device.
+   virtual void getEyeCameraTransform( IDisplayDevice *display, U32 eyeId, MatrixF *outMat );
+
    /// Gets the index of a node inside a mounted image given the name
    /// @param   imageSlot   Image slot
    /// @param   nodeName    Node name
@@ -1826,7 +1859,7 @@ public:
    virtual WaterObject* getCurrentWaterObject();
 
    void setCurrentWaterObject( WaterObject *obj );
-
+   void setTransform(const MatrixF & mat);
    virtual F32 getMass() const { return mMass; }
 
    /// @name Network
@@ -1844,7 +1877,58 @@ public:
 
 protected:
    DECLARE_CALLBACK( F32, validateCameraFov, (F32 fov) );
+public:
+   class CollisionEventCallback
+   {
+   public:
+      virtual void collisionNotify(SceneObject* shape0, SceneObject* shape1, const VectorF& vel)=0;
+   };
+private:
+   Vector<CollisionEventCallback*>  collision_callbacks;
+   void   notifyCollisionCallbacks(SceneObject*, const VectorF& vel);
+public:
+   void   registerCollisionCallback(CollisionEventCallback*);
+   void   unregisterCollisionCallback(CollisionEventCallback*);
 
+protected:
+   enum { 
+      ANIM_OVERRIDDEN     = BIT(0),
+      BLOCK_USER_CONTROL  = BIT(1),
+      IS_DEATH_ANIM       = BIT(2),
+      BAD_ANIM_ID         = 999999999,
+      BLENDED_CLIP        = 0x80000000,
+   };
+   struct BlendThread
+   {
+      TSThread* thread;
+      U32       tag;
+   };
+   Vector<BlendThread> blend_clips;
+   static U32 unique_anim_tag_counter;
+   U8 anim_clip_flags;
+   S32 last_anim_id;
+   U32 last_anim_tag;
+   U32 last_anim_lock_tag;
+   S32 saved_seq_id;
+   F32 saved_pos;
+   F32 saved_rate;
+   U32 playBlendAnimation(S32 seq_id, F32 pos, F32 rate);
+   void restoreBlendAnimation(U32 tag);
+public:
+   U32 playAnimation(const char* name, F32 pos, F32 rate, F32 trans, bool hold, bool wait, bool is_death_anim);
+   F32 getAnimationDuration(const char* name);
+
+   virtual void restoreAnimation(U32 tag);
+   virtual U32 getAnimationID(const char* name);
+   virtual U32 playAnimationByID(U32 anim_id, F32 pos, F32 rate, F32 trans, bool hold, bool wait, bool is_death_anim);
+   virtual F32 getAnimationDurationByID(U32 anim_id);
+   virtual bool isBlendAnimation(const char* name);
+   virtual const char* getLastClipName(U32 clip_tag);
+   virtual void unlockAnimation(U32 tag, bool force=false) { }
+   virtual U32 lockAnimation() { return 0; }
+   virtual bool isAnimationLocked() const { return false; }
+
+   virtual void setSelectionFlags(U8 flags);
 };
 
 

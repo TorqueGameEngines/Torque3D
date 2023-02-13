@@ -76,7 +76,7 @@ class PlaneSet
 
       /// Create an uninitialized set.
       /// @warn None of the members will be initialized.
-      PlaneSet() {}
+      PlaneSet() :mNumPlanes(0), mPlanes(NULL) {}
       
       /// Use the given set of planes to initialize the set.
       ///
@@ -441,7 +441,7 @@ U32 PlaneSet< T >::clipPolygon( const Point3F* inVertices, U32 inNumVertices, Po
       // Make the output of the last iteration the
       // input of this iteration.
 
-      swap( tempPolygon, clippedPolygon );
+	  T3D::swap( tempPolygon, clippedPolygon );
       numTempPolygonVertices = numClippedPolygonVertices;
 
       if( maxOutVertices < numTempPolygonVertices + 1 )

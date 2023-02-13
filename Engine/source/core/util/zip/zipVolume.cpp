@@ -86,6 +86,7 @@ public:
       // use the mod time for both mod and access time, since we only have mod time in the CD
       attr->mtime = ZipArchive::DOSTimeToTime(mZipEntry->mCD.mModTime, mZipEntry->mCD.mModDate);
       attr->atime = ZipArchive::DOSTimeToTime(mZipEntry->mCD.mModTime, mZipEntry->mCD.mModDate);
+      attr->ctime = ZipArchive::DOSTimeToTime(mZipEntry->mCD.mModTime, mZipEntry->mCD.mModDate);
       attr->size = mZipEntry->mCD.mUncompressedSize;
 
       return true; 
@@ -197,6 +198,7 @@ public:
       // use the mod time for both mod and access time, since we only have mod time in the CD
       attr->mtime = ZipArchive::DOSTimeToTime(mZipEntry->mCD.mModTime, mZipEntry->mCD.mModDate);
       attr->atime = ZipArchive::DOSTimeToTime(mZipEntry->mCD.mModTime, mZipEntry->mCD.mModDate);
+      attr->ctime = ZipArchive::DOSTimeToTime(mZipEntry->mCD.mModTime, mZipEntry->mCD.mModDate);
       attr->size = mZipEntry->mCD.mUncompressedSize;
 
       return true; 
@@ -291,6 +293,7 @@ public:
       ZipArchive::ZipEntry* zipEntry = mArchive->getRoot();
       attr->mtime = ZipArchive::DOSTimeToTime(zipEntry->mCD.mModTime, zipEntry->mCD.mModDate);
       attr->atime = ZipArchive::DOSTimeToTime(zipEntry->mCD.mModTime, zipEntry->mCD.mModDate);
+      attr->ctime = ZipArchive::DOSTimeToTime(zipEntry->mCD.mModTime, zipEntry->mCD.mModDate);
       attr->size = zipEntry->mCD.mUncompressedSize;
 
       return true; 
@@ -357,6 +360,10 @@ ZipFileSystem::ZipFileSystem(String& zipFilename, bool zipNameIsDir /* = false *
    if(mZipNameIsDir)
    {
       Path path(zipFilename);
+#ifdef TORQUE_DISABLE_FIND_ROOT_WITHIN_ZIP
+      if (path.getFileName().equal(path.getRoot()))
+         mZipNameIsDir = false;
+#endif
       mFakeRoot = Path::Join(path.getPath(), '/', path.getFileName());
    }
 
@@ -397,12 +404,21 @@ FileNodeRef ZipFileSystem::resolve(const Path& path)
 
    if(name.isEmpty() && mZipNameIsDir)
       return new ZipFakeRootNode(mZipArchive, path, mFakeRoot);
-
+#ifdef TORQUE_LOWER_ZIPCASE
+   name = String::ToLower(name);
+#endif
    if(mZipNameIsDir)
    {
       // Remove the fake root from the name so things can be found
+#ifdef TORQUE_ZIP_PATH_CASE_INSENSITIVE
+      String lowerFakeRoot = String::ToLower(mFakeRoot);
+      String lowerName = String::ToLower(name);
+      if(lowerName.find(lowerFakeRoot) == 0)
+          name = name.substr(mFakeRoot.length());
+#else
       if(name.find(mFakeRoot) == 0)
-         name = name.substr(mFakeRoot.length());
+          name = name.substr(mFakeRoot.length());
+#endif
 
 #ifdef TORQUE_DISABLE_FIND_ROOT_WITHIN_ZIP
       else
@@ -410,6 +426,86 @@ FileNodeRef ZipFileSystem::resolve(const Path& path)
          // then do not continue.  Otherwise, we'll continue to look for the
          // path's root within the zip file itself.  i.e. we're looking for the
          // path "scripts/test.cs".  If the zip file itself isn't called scripts.zip
+         // then we won't look within the archive for a "scripts" directory.
+         return NULL;
+#endif
+
+      if (name.find("/") == 0)
+         name = name.substr(1, name.length() - 1);
+   }
+
+   // first check to see if input path is a directory
+   // check for request of root directory
+   if (name.isEmpty())
+   {
+      ZipDirectoryNode* zdn = new ZipDirectoryNode(mZipArchive, path, mZipArchive->getRoot());
+      return zdn;
+   }
+
+   ZipArchive::ZipEntry* ze = mZipArchive->findZipEntry(name);
+   if (ze == NULL)
+      return NULL;
+
+   if (ze->mIsDirectory)
+   {
+      ZipDirectoryNode* zdn = new ZipDirectoryNode(mZipArchive, path, ze);
+      return zdn;
+   }
+
+   // pass in the zip entry so that openFile() doesn't need to look it up again.
+   Stream* stream = mZipArchive->openFile(name, ze, ZipArchive::Read);
+   if (stream == NULL)
+      return NULL;
+
+   ZipFileNode* zfn = new ZipFileNode(mZipArchive, name, stream, ze);
+   return zfn;
+}
+
+FileNodeRef ZipFileSystem::resolveLoose(const Path& path)
+{
+   if (!mInitted)
+      _init();
+
+   if (mZipArchive.isNull())
+      return NULL;
+
+   // eat leading "/"
+   String name = path.getFullPathWithoutRoot();
+   if (name.find("/") == 0)
+      name = name.substr(1, name.length() - 1);
+
+   if(name.isEmpty() && mZipNameIsDir)
+      return new ZipFakeRootNode(mZipArchive, path, mFakeRoot);
+
+#ifdef TORQUE_LOWER_ZIPCASE
+   name = String::ToLower(name);
+#endif
+
+   if ((mFakeRoot.find(name) == 0) && (mFakeRoot.length() > name.length()))
+   {  // This file system is mounted as a sub-directory of the path being searched.
+      String tmpRoot = mFakeRoot.substr(name.length());
+      return new ZipFakeRootNode(mZipArchive, path, tmpRoot);
+   }
+
+   if(mZipNameIsDir)
+   {
+      // Remove the fake root from the name so things can be found
+#ifdef TORQUE_ZIP_PATH_CASE_INSENSITIVE
+      String lowerFakeRoot = String::ToLower(mFakeRoot);
+      String lowerName = String::ToLower(name);
+      if(lowerName.find(lowerFakeRoot) == 0)
+          name = name.substr(mFakeRoot.length());
+#else
+      if(name.find(mFakeRoot) == 0)
+          name = name.substr(mFakeRoot.length());
+#endif
+
+#ifdef TORQUE_DISABLE_FIND_ROOT_WITHIN_ZIP
+      else
+         // If a zip file's name isn't the root of the path we're looking for
+         // then do not continue.  Otherwise, we'll continue to look for the
+         // path's root within the zip file itself.  i.e. we're looking for the
+         // path "scripts/test.tscript".  If the zip file itself isn't called scripts.zip
          // then we won't look within the archive for a "scripts" directory.
          return NULL;
 #endif

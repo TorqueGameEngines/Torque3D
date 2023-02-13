@@ -385,6 +385,8 @@ U32 PolyhedronImpl< Base >::extractFace( U32 plane, IndexType* outIndices, U32 m
    // so it should be sufficiently fast to just loop over the original
    // set.
 
+   U32 indexItr = 0;
+
    do 
    {
       // Add the vertex for the current edge.
@@ -392,7 +394,15 @@ U32 PolyhedronImpl< Base >::extractFace( U32 plane, IndexType* outIndices, U32 m
       if( idx >= maxOutIndices )
          return 0;
 
-      outIndices[ idx ++ ] = currentVertex;
+      ++indexItr;
+
+      if (indexItr >= 3)
+      {
+         outIndices[idx++] = firstEdge->vertex[0];
+         indexItr = 0;
+      }
+
+      outIndices[idx++] = currentVertex;
 
       // Look for next edge.
 
@@ -452,7 +462,7 @@ void PolyhedronData::buildBoxData( Polyhedron& poly, const MatrixF& mat, const B
 
    // Corner points.
 
-   typename Polyhedron::PointListType& pointList = poly.pointList;
+   typename Polyhedron::PointListType& pointList = poly.mPointList;
 
    pointList[ 0 ] = min; // near left bottom
    pointList[ 1 ] = min + yvec; // far left bottom
@@ -465,7 +475,7 @@ void PolyhedronData::buildBoxData( Polyhedron& poly, const MatrixF& mat, const B
 
    // Side planes.
 
-   typename Polyhedron::PlaneListType& planeList = poly.planeList;
+   typename Polyhedron::PlaneListType& planeList = poly.mPlaneList;
 
    const F32 pos = invertNormals ? -1.f : 1.f;
    const F32 neg = - pos;
@@ -480,7 +490,7 @@ void PolyhedronData::buildBoxData( Polyhedron& poly, const MatrixF& mat, const B
    // The edges are constructed so that the vertices
    // are oriented clockwise for face[0].
 
-   typename Polyhedron::EdgeType* edge = &poly.edgeList[ 0 ];
+   typename Polyhedron::EdgeType* edge = &poly.mEdgeList[ 0 ];
 
    for( U32 i = 0; i < 4; ++ i )
    {

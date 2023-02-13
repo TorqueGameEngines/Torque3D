@@ -42,7 +42,7 @@ public:
   public:
    F32  x,y,z,w;
 
-   QuatF() {} // no init constructor
+   QuatF() :x(0.0f), y(0.0f), z(0.0f), w(1.0f) {} //identity constructor
    QuatF( F32 _x, F32 _y, F32 _z, F32 w );
    QuatF( const Point3F &axis, F32 angle );
    QuatF( const MatrixF & m );
@@ -81,7 +81,7 @@ public:
    QuatF& interpolate( const QuatF & q1, const QuatF & q2, F32 t );
    F32  angleBetween( const QuatF & q );
 
-   Point3F& mulP(const Point3F& a, Point3F* b);   // r = p * this
+   Point3F& mulP(const Point3F& a, Point3F* r) const;   // r = p * this
    QuatF& mul(const QuatF& a, const QuatF& b);    // This = a * b
 
    // Vectors passed in must be normalized
@@ -222,13 +222,13 @@ inline QuatF& QuatF::neg()
 
 inline F32 QuatF::dot( const QuatF &q ) const
 {
-   return (w*q.w + x*q.x + y*q.y + z*q.z);
+   return mClampF(w*q.w + x*q.x + y*q.y + z*q.z, -1.0f, 1.0f);
 }
 
 inline F32 QuatF::angleBetween( const QuatF & q )
 {
-   // angle between to quaternions
-   return mAcos(x * q.x + y * q.y + z * q.z + w * q.w);
+   // angle between two normalized quaternions.
+   return mAcos(q.dot(*this)) * 2.0f;
 }
 
 #endif // _MQUAT_H_

@@ -22,9 +22,11 @@
 
 #ifndef T_GL_H
 #define T_GL_H
-#include "GL/glew.h"
 
-#define gglHasExtension(EXTENSION) GLEW_##EXTENSION
+#include <glad/glad.h>
+
+// JTH: When we use glad, extensions are chached into simple booleans (ints)
+#define gglHasExtension(EXTENSION) GLAD_GL_##EXTENSION
 
 #endif
 

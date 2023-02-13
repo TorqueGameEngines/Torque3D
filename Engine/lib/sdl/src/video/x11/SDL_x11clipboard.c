@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2014 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -27,33 +27,102 @@
 #include "SDL_events.h"
 #include "SDL_x11video.h"
 #include "SDL_timer.h"
-
-
-/* If you don't support UTF-8, you might use XA_STRING here */
-#ifdef X_HAVE_UTF8_STRING
-#define TEXT_FORMAT X11_XInternAtom(display, "UTF8_STRING", False)
-#else
-#define TEXT_FORMAT XA_STRING
-#endif
+#include "SDL_x11clipboard.h"
 
 /* Get any application owned window handle for clipboard association */
 static Window
 GetWindow(_THIS)
 {
-    SDL_Window *window;
+    SDL_VideoData *data = (SDL_VideoData *) _this->driverdata;
 
-    window = _this->windows;
-    if (window) {
-        return ((SDL_WindowData *) window->driverdata)->xwindow;
+    /* We create an unmapped window that exists just to manage the clipboard,
+       since X11 selection data is tied to a specific window and dies with it.
+       We create the window on demand, so apps that don't use the clipboard
+       don't have to keep an unnecessary resource around. */
+    if (data->clipboard_window == None) {
+        Display *dpy = data->display;
+        Window parent = RootWindow(dpy, DefaultScreen(dpy));
+        XSetWindowAttributes xattr;
+        data->clipboard_window = X11_XCreateWindow(dpy, parent, -10, -10, 1, 1, 0,
+                                                   CopyFromParent, InputOnly,
+                                                   CopyFromParent, 0, &xattr);
+        X11_XFlush(data->display);
     }
-    return None;
+
+    return data->clipboard_window;
 }
+
+
+/* We use our own cut-buffer for intermediate storage instead of  
+   XA_CUT_BUFFER0 because their use isn't really defined for holding UTF8. */ 
+Atom
+X11_GetSDLCutBufferClipboardType(Display *display, enum ESDLX11ClipboardMimeType mime_type)
+{
+    switch (mime_type) {
+        case SDL_X11_CLIPBOARD_MIME_TYPE_STRING:
+        case SDL_X11_CLIPBOARD_MIME_TYPE_TEXT_PLAIN:
+        #ifdef X_HAVE_UTF8_STRING
+        case SDL_X11_CLIPBOARD_MIME_TYPE_TEXT_PLAIN_UTF8:
+        #endif
+        case SDL_X11_CLIPBOARD_MIME_TYPE_TEXT:
+            return X11_XInternAtom(display, "SDL_CUTBUFFER", False);
+        default:
+            SDL_SetError("Can't find mime_type.");
+            return XA_STRING;
+    }
+}
+
+Atom
+X11_GetSDLCutBufferClipboardExternalFormat(Display *display, enum ESDLX11ClipboardMimeType mime_type)
+{
+    switch (mime_type) {
+        case SDL_X11_CLIPBOARD_MIME_TYPE_STRING:
+            /* If you don't support UTF-8, you might use XA_STRING here */
+            #ifdef X_HAVE_UTF8_STRING
+            return X11_XInternAtom(display, "UTF8_STRING", False);
+            #else
+            return  XA_STRING;
+            #endif
+        case SDL_X11_CLIPBOARD_MIME_TYPE_TEXT_PLAIN:
+            return X11_XInternAtom(display, "text/plain", False);
+        #ifdef X_HAVE_UTF8_STRING
+        case SDL_X11_CLIPBOARD_MIME_TYPE_TEXT_PLAIN_UTF8:
+            return X11_XInternAtom(display, "text/plain;charset=utf-8", False);
+        #endif
+        case SDL_X11_CLIPBOARD_MIME_TYPE_TEXT:
+            return X11_XInternAtom(display, "TEXT", False);
+        default:
+            SDL_SetError("Can't find mime_type.");
+            return XA_STRING;
+    }
+}
+Atom
+X11_GetSDLCutBufferClipboardInternalFormat(Display *display, enum ESDLX11ClipboardMimeType mime_type)
+{
+    switch (mime_type) {
+        case SDL_X11_CLIPBOARD_MIME_TYPE_STRING:
+        case SDL_X11_CLIPBOARD_MIME_TYPE_TEXT_PLAIN:
+        #ifdef X_HAVE_UTF8_STRING
+        case SDL_X11_CLIPBOARD_MIME_TYPE_TEXT_PLAIN_UTF8:
+        #endif
+        case SDL_X11_CLIPBOARD_MIME_TYPE_TEXT:
+            /* If you don't support UTF-8, you might use XA_STRING here */
+            #ifdef X_HAVE_UTF8_STRING
+            return X11_XInternAtom(display, "UTF8_STRING", False);
+            #else
+            return  XA_STRING;
+            #endif
+        default:
+            SDL_SetError("Can't find mime_type.");
+            return XA_STRING;
+    }
+}
+
 
 int
 X11_SetClipboardText(_THIS, const char *text)
 {
     Display *display = ((SDL_VideoData *) _this->driverdata)->display;
-    Atom format;
     Window window;
     Atom XA_CLIPBOARD = X11_XInternAtom(display, "CLIPBOARD", 0);
 
@@ -64,9 +133,8 @@ X11_SetClipboardText(_THIS, const char *text)
     }
 
     /* Save the selection on the root window */
-    format = TEXT_FORMAT;
     X11_XChangeProperty(display, DefaultRootWindow(display),
-        XA_CUT_BUFFER0, format, 8, PropModeReplace,
+        X11_GetSDLCutBufferClipboardType(display, SDL_X11_CLIPBOARD_MIME_TYPE_STRING), X11_GetSDLCutBufferClipboardInternalFormat(display, SDL_X11_CLIPBOARD_MIME_TYPE_STRING), 8, PropModeReplace,
         (const unsigned char *)text, SDL_strlen(text));
 
     if (XA_CLIPBOARD != None &&
@@ -107,11 +175,16 @@ X11_GetClipboardText(_THIS)
 
     /* Get the window that holds the selection */
     window = GetWindow(_this);
-    format = TEXT_FORMAT;
+    format = X11_GetSDLCutBufferClipboardInternalFormat(display, SDL_X11_CLIPBOARD_MIME_TYPE_STRING);
     owner = X11_XGetSelectionOwner(display, XA_CLIPBOARD);
-    if ((owner == None) || (owner == window)) {
+    if (owner == None) {
+        /* Fall back to ancient X10 cut-buffers which do not support UTF8 strings*/
         owner = DefaultRootWindow(display);
         selection = XA_CUT_BUFFER0;
+        format = XA_STRING;
+    } else if (owner == window) {
+        owner = DefaultRootWindow(display);
+        selection = X11_GetSDLCutBufferClipboardType(display, SDL_X11_CLIPBOARD_MIME_TYPE_STRING);
     } else {
         /* Request that the selection owner copy the data to our window */
         owner = window;

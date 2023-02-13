@@ -12,7 +12,7 @@ Assumptions:
 * The libpng source files are in ..\..
 * The zlib source files are in ..\..\..\zlib
 * The zlib project file is in . /* Warning: This is until the zlib project
-  files get intergrated into the next zlib release. The final zlib project
+  files get integrated into the next zlib release. The final zlib project
   directory will then be ..\..\..\zlib\projects\visualc71. */
 
 To use:
@@ -37,9 +37,9 @@ To use:
 
 This project builds the libpng binaries as follows:
 
-* Win32_DLL_Release\libpng15.dll      DLL build
-* Win32_DLL_Debug\libpng15d.dll       DLL build (debug version)
-* Win32_DLL_VB\libpng15vb.dll         DLL build for Visual Basic, using stdcall
+* Win32_DLL_Release\libpng16.dll      DLL build
+* Win32_DLL_Debug\libpng16d.dll       DLL build (debug version)
+* Win32_DLL_VB\libpng16vb.dll         DLL build for Visual Basic, using stdcall
 * Win32_LIB_Release\libpng.lib        static build
 * Win32_LIB_Debug\libpngd.lib         static build (debug version)
 

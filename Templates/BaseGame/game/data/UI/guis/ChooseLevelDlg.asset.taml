@@ -1,0 +1,5 @@
+<GUIAsset
+    AssetName="ChooseLevelDlg"
+    scriptFile="@assetFile=chooseLevelDlg"
+    GUIFile="@assetFile=chooseLevelDlg.gui"
+    VersionId="1"/>

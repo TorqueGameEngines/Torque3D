@@ -68,6 +68,8 @@ namespace Sim
    ImplementNamedSet(SFXAmbienceSet)
    ImplementNamedSet(TerrainMaterialSet)
    ImplementNamedSet(DataBlockSet);
+   ImplementNamedSet(ForestBrushSet);
+   ImplementNamedSet(ForestItemDataSet);
    ImplementNamedGroup(ActionMapGroup)
    ImplementNamedGroup(ClientGroup)
    ImplementNamedGroup(GuiGroup)
@@ -86,7 +88,7 @@ namespace Sim
 
 ConsoleFunctionGroupBegin ( SimFunctions, "Functions relating to Sim.");
 
-DefineConsoleFunction( nameToID, S32, (const char * objectName), ,"nameToID(object)")
+DefineEngineFunction( nameToID, S32, (const char * objectName), ,"nameToID(object)")
 {
    SimObject *obj = Sim::findObject(objectName);
    if(obj)
@@ -95,9 +97,9 @@ DefineConsoleFunction( nameToID, S32, (const char * objectName), ,"nameToID(obje
       return -1;
 }
 
-DefineConsoleFunction( isObject, bool, (const char * objectName), ,"isObject(object)")
+DefineEngineFunction( isObject, bool, (const char * objectName), ,"isObject(object)")
 {
-   if (!dStrcmp(objectName, "0") || !dStrcmp(objectName, ""))
+   if (!String::compare(objectName, "0") || !String::compare(objectName, ""))
       return false;
    else
       return (Sim::findObject(objectName) != NULL);
@@ -133,13 +135,13 @@ ConsoleDocFragment _spawnObject1(
    "bool spawnObject(class [, dataBlock, name, properties, script]);"
 );
 
-DefineConsoleFunction( spawnObject, S32, (   const char * spawnClass
+DefineEngineFunction( spawnObject, S32, (   const char * spawnClass
                                          ,   const char * spawnDataBlock
                                          ,   const char * spawnName
                                          ,   const char * spawnProperties
                                          ,   const char * spawnScript 
                                          ),("","","","") ,"spawnObject(class [, dataBlock, name, properties, script])"
-				"@hide")
+            "@hide")
 {
    SimObject* spawnObject = Sim::spawnObject(spawnClass, spawnDataBlock, spawnName, spawnProperties, spawnScript);
 
@@ -149,39 +151,39 @@ DefineConsoleFunction( spawnObject, S32, (   const char * spawnClass
       return -1;
 }
 
-DefineConsoleFunction( cancel, void, (S32 eventId), ,"cancel(eventId)")
+DefineEngineFunction( cancel, void, (S32 eventId), ,"cancel(eventId)")
 {
    Sim::cancelEvent(eventId);
 }
 
-DefineConsoleFunction( cancelAll, void, (const char * objectId), ,"cancelAll(objectId): cancel pending events on the specified object.  Events will be automatically cancelled if object is deleted.")
+DefineEngineFunction( cancelAll, void, (const char * objectId), ,"cancelAll(objectId): cancel pending events on the specified object.  Events will be automatically cancelled if object is deleted.")
 {
    Sim::cancelPendingEvents(Sim::findObject(objectId));
 }
 
-DefineConsoleFunction( isEventPending, bool, (S32 scheduleId), ,"isEventPending(%scheduleId);")
+DefineEngineFunction( isEventPending, bool, (S32 scheduleId), ,"isEventPending(%scheduleId);")
 {
    return Sim::isEventPending(scheduleId);
 }
 
-DefineConsoleFunction( getEventTimeLeft, S32, (S32 scheduleId), ,"getEventTimeLeft(scheduleId) Get the time left in ms until this event will trigger.")
+DefineEngineFunction( getEventTimeLeft, S32, (S32 scheduleId), ,"getEventTimeLeft(scheduleId) Get the time left in ms until this event will trigger.")
 {
    return Sim::getEventTimeLeft(scheduleId);
 }
 
-DefineConsoleFunction( getScheduleDuration, S32, (S32 scheduleId), ,"getScheduleDuration(%scheduleId);" )
+DefineEngineFunction( getScheduleDuration, S32, (S32 scheduleId), ,"getScheduleDuration(%scheduleId);" )
 {
    S32 ret = Sim::getScheduleDuration(scheduleId);
    return ret;
 }
 
-DefineConsoleFunction( getTimeSinceStart, S32, (S32 scheduleId), ,"getTimeSinceStart(%scheduleId);" )
+DefineEngineFunction( getTimeSinceStart, S32, (S32 scheduleId), ,"getTimeSinceStart(%scheduleId);" )
 {
    S32 ret = Sim::getTimeSinceStart(scheduleId);
    return ret;
 }
 
-ConsoleFunction(schedule, S32, 4, 0, "schedule(time, refobject|0, command, <arg1...argN>)")
+DefineEngineStringlyVariadicFunction(schedule, S32, 4, 0, "schedule(time, refobject|0, command, <arg1...argN>)")
 {
    U32 timeDelta = U32(dAtof(argv[1]));
    SimObject *refObject = Sim::findObject(argv[2]);
@@ -202,13 +204,13 @@ ConsoleFunction(schedule, S32, 4, 0, "schedule(time, refobject|0, command, <arg1
    return ret;
 }
 
-DefineConsoleFunction( getUniqueName, const char*, (const char * baseName), ,
-	"( String baseName )\n"
-	"@brief Returns a unique unused SimObject name based on a given base name.\n\n"
-	"@baseName Name to conver to a unique string if another instance exists\n"
-	"@note Currently only used by editors\n"
-	"@ingroup Editors\n"
-	"@internal")
+DefineEngineFunction( getUniqueName, const char*, (const char * baseName), ,
+   "( String baseName )\n"
+   "@brief Returns a unique unused SimObject name based on a given base name.\n\n"
+   "@baseName Name to conver to a unique string if another instance exists\n"
+   "@note Currently only used by editors\n"
+   "@ingroup Editors\n"
+   "@internal")
 {
    String outName = Sim::getUniqueName( baseName );
    
@@ -216,12 +218,12 @@ DefineConsoleFunction( getUniqueName, const char*, (const char * baseName), ,
       return NULL;
 
    char *buffer = Con::getReturnBuffer( outName.size() );
-   dStrcpy( buffer, outName );
+   dStrcpy( buffer, outName, outName.size() );
 
    return buffer;
 }
 
-DefineConsoleFunction( getUniqueInternalName, const char*, (const char * baseName, const char * setString, bool searchChildren), ,
+DefineEngineFunction( getUniqueInternalName, const char*, (const char * baseName, const char * setString, bool searchChildren), ,
    "( String baseName, SimSet set, bool searchChildren )\n"
    "@brief Returns a unique unused internal name within the SimSet/Group based on a given base name.\n\n"
    "@note Currently only used by editors\n"
@@ -241,16 +243,16 @@ DefineConsoleFunction( getUniqueInternalName, const char*, (const char * baseNam
       return NULL;
 
    char *buffer = Con::getReturnBuffer( outName.size() );
-   dStrcpy( buffer, outName );
+   dStrcpy( buffer, outName, outName.size() );
 
    return buffer;
 }
 
-DefineConsoleFunction( isValidObjectName, bool, (const char * name), , "( string name )"
-				"@brief Return true if the given name makes for a valid object name.\n\n"
-				"@param name Name of object\n"
-				"@return True if name is allowed, false if denied (usually because it starts with a number, _, or invalid character"
-				"@ingroup Console")
+DefineEngineFunction( isValidObjectName, bool, (const char * name), , "( string name )"
+            "@brief Return true if the given name makes for a valid object name.\n\n"
+            "@param name Name of object\n"
+            "@return True if name is allowed, false if denied (usually because it starts with a number, _, or invalid character"
+            "@ingroup Console")
 {
    return Sim::isValidObjectName( name );
 }

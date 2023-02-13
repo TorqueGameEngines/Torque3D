@@ -50,8 +50,8 @@ GuiFormCtrl::GuiFormCtrl()
    mCaption       = "[none]";
    mUseSmallCaption = false;
 
-   mContentLibrary = StringTable->insert("");
-   mContent = StringTable->insert("");
+   mContentLibrary = StringTable->EmptyString();
+   mContent = StringTable->EmptyString();
 
    mCanSaveFieldDictionary = true;
    mIsContainer = true;
@@ -59,6 +59,7 @@ GuiFormCtrl::GuiFormCtrl()
    // The attached menu bar
    mHasMenu = false;
    mMenuBar = NULL;
+   mMouseMovingWin = false;
 }
 
 GuiFormCtrl::~GuiFormCtrl()
@@ -78,6 +79,7 @@ bool GuiFormCtrl::_setHasMenu( void *object, const char *index, const char *data
 
 void GuiFormCtrl::initPersistFields()
 {
+   docsURL;
    addField("caption",        TypeRealString, Offset(mCaption,        GuiFormCtrl));
    addField("contentLibrary",TypeString,     Offset(mContentLibrary, GuiFormCtrl));
    addField("content",       TypeString,     Offset(mContent,        GuiFormCtrl));
@@ -158,7 +160,7 @@ void GuiFormCtrl::addObject(SimObject *newObj )
       
       GuiControl* parent = getParent();
       if ( parent )
-   	   parent->addObject( newObj );
+         parent->addObject( newObj );
 
       return;
    }
@@ -213,14 +215,14 @@ bool GuiFormCtrl::resize(const Point2I &newPosition, const Point2I &newExtent)
       static char buf[256];
 
       mUseSmallCaption = true;
-      mSmallCaption = StringTable->insert("");
+      mSmallCaption = StringTable->EmptyString();
 
       S32 strlen = dStrlen((const char*)mCaption);
       for(S32 i=strlen; i>=0; --i)
       {
-         dStrcpy(buf, "");
-         dStrncat(buf, (const char*)mCaption, i);
-         dStrcat(buf, "...");
+         dStrcpy(buf, "", i);
+         dStrcat(buf, (const char*)mCaption, i);
+         dStrcat(buf, "...", i);
 
          textWidth = mProfile->mFont->getStrWidth(buf);
 
@@ -275,7 +277,7 @@ void GuiFormCtrl::onRender(Point2I offset, const RectI &updateRect)
       Point2I barOffset(barStart, barTop);
 
       // Draw the start of the bar...
-      GFX->getDrawUtil()->drawBitmapStretchSR(mProfile->mTextureObject ,RectI(barOffset, mProfile->mBitmapArrayRects[2].extent), mProfile->mBitmapArrayRects[2] );
+      GFX->getDrawUtil()->drawBitmapStretchSR(mProfile->getBitmapResource(),RectI(barOffset, mProfile->mBitmapArrayRects[2].extent), mProfile->mBitmapArrayRects[2] );
 
       // Now draw the middle...
       barOffset.x += mProfile->mBitmapArrayRects[2].extent.x;
@@ -289,7 +291,7 @@ void GuiFormCtrl::onRender(Point2I offset, const RectI &updateRect)
          foo.inset(1,0);
 
          GFX->getDrawUtil()->drawBitmapStretchSR(
-            mProfile->mTextureObject,
+            mProfile->getBitmapResource(),
             RectI(barOffset, Point2I(barMiddleSize, mProfile->mBitmapArrayRects[3].extent.y)),
             foo
             );
@@ -298,7 +300,7 @@ void GuiFormCtrl::onRender(Point2I offset, const RectI &updateRect)
       // And the end
       barOffset.x += barMiddleSize;
 
-      GFX->getDrawUtil()->drawBitmapStretchSR( mProfile->mTextureObject, RectI(barOffset, mProfile->mBitmapArrayRects[4].extent),
+      GFX->getDrawUtil()->drawBitmapStretchSR( mProfile->getBitmapResource(), RectI(barOffset, mProfile->mBitmapArrayRects[4].extent),
          mProfile->mBitmapArrayRects[4]);
 
       GFX->getDrawUtil()->setBitmapModulation((mMouseOver ? mProfile->mFontColorHL : mProfile->mFontColor));
@@ -383,8 +385,6 @@ void GuiFormCtrl::onMouseUp(const GuiEvent &event)
 
    mouseUnlock();
    setUpdate();
-
-   Point2I localClick = globalToLocalCoord(event.mousePoint);
 
    // If we're clicking in the header then resize
    //if(localClick.y < mThumbSize.y && mDepressed)

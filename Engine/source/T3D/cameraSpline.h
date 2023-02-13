@@ -37,6 +37,7 @@ public:
       Point3F mPosition;
       QuatF   mRotation;
       F32     mSpeed;    /// in meters per second
+      String mHitCommand;
       enum Type {
          NORMAL,
          POSITION_ONLY,
@@ -54,9 +55,9 @@ public:
       Knot *prev;
       Knot *next;
 
-      Knot() {};
+      Knot();
       Knot(const Knot &k);
-      Knot(const Point3F &p, const QuatF &r, F32 s, Knot::Type type = NORMAL, Knot::Path path = SPLINE);
+      Knot(const Point3F &p, const QuatF &r, F32 s, Knot::Type type = NORMAL, Knot::Path path = SPLINE, String hitCommand = String::EmptyString);
    };
 
 
@@ -75,8 +76,8 @@ public:
    void push_front(Knot *w) { push_back(w); mFront = w; mIsMapDirty = true; }
 
    Knot* getKnot(S32 i);
-   Knot* next(Knot *k) { return (k->next == mFront) ? k : k->next; }
-   Knot* prev(Knot *k) { return (k == mFront) ? k : k->prev; }
+   Knot* next(Knot *k) { return (k && k->next == mFront) ? k : k->next; }
+   Knot* prev(Knot *k) { return (k && k == mFront) ? k : k->prev; }
 
    F32 advanceTime(F32 t, S32 delta_ms);
    F32 advanceDist(F32 t, F32 meters);

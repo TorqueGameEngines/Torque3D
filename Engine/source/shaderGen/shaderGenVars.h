@@ -35,9 +35,14 @@ struct ShaderGenVars
    const static String modelview;
    const static String worldViewOnly;
    const static String worldToCamera;
+   const static String cameraToWorld;
    const static String worldToObj;
    const static String viewToObj;
+   const static String invCameraTrans;
+   const static String cameraToScreen;
+   const static String screenToCamera;
    const static String cubeTrans;
+   const static String cubeMips;
    const static String objTrans;
    const static String cubeEyePos;
    const static String eyePos;
@@ -54,6 +59,7 @@ struct ShaderGenVars
    const static String alphaTestValue;
    const static String texMat;
    const static String accumTime;
+   const static String dampness;   
    const static String minnaertConstant;
    const static String subSurfaceParams;
 
@@ -72,13 +78,36 @@ struct ShaderGenVars
    const static String lightPosition;
    const static String lightDiffuse;
    const static String lightAmbient;
-   const static String lightInvRadiusSq;
+   const static String lightConfigData;
    const static String lightSpotDir;
-   const static String lightSpotAngle;
-   const static String lightSpotFalloff;
-   const static String specularColor;
-   const static String specularPower;
-   const static String specularStrength;
+   const static String lightSpotParams;
+   const static String hasVectorLight;
+   const static String vectorLightDirection;
+   const static String vectorLightColor;
+   const static String vectorLightBrightness;
+
+   const static String ormConfig;
+   const static String roughness;
+   const static String metalness;
+   const static String glowMul;
+
+   //Reflection Probes
+   const static String probePositionArray;
+   const static String probeRefPosArray;
+   const static String refScaleArray;
+   const static String worldToObjArray;
+   const static String probeConfigDataArray;
+   const static String specularCubemapAR;
+   const static String irradianceCubemapAR;
+   const static String probeCount;
+
+   const static String BRDFTextureMap;
+   const static String WetnessTextureMap;   
+   const static String maxProbeDrawDistance;
+
+   //Skylight
+   const static String skylightCubemapIdx;
+   const static String skylightDamp;
    
    // Textures
    const static String fogMap;
@@ -94,6 +123,9 @@ struct ShaderGenVars
    const static String dLightMapSec;
    const static String dLightMask;
    const static String toneMap;
+
+   // Deferred Shading
+   const static String matInfoFlags;
 };
 
 #endif

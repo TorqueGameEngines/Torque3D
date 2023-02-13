@@ -1,0 +1,216 @@
+//-----------------------------------------------------------------------------
+// Copyright (c) 2012 GarageGames, LLC
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+// IN THE SOFTWARE.
+//-----------------------------------------------------------------------------
+
+// "Jorge Jimenez, Subpixel Morphological Antialiasing | SMAA"
+//  http://www.iryoku.com/smaa/
+
+
+singleton GFXStateBlockData( SMAA_Edge_D_StateBlock : PFX_DefaultStateBlock )
+{     
+   stencilDefined = true;
+   stencilEnable = true;
+   stencilPassOp = GFXStencilOpReplace;
+   stencilFunc = GFXCmpAlways;
+   stencilRef = 1;
+
+   samplersDefined = true;   
+   samplerStates[0] = SamplerClampLinear;
+};
+
+singleton ShaderData( SMAA_Edge_D_Shader )
+{   
+   DXVertexShaderFile 	= "./SMAA_Edge_V.hlsl";
+   DXPixelShaderFile 	= "./SMAA_Edge_P.hlsl";
+   
+   OGLVertexShaderFile  = "./gl/SMAA_Edge_V.glsl";
+   OGLPixelShaderFile   = "./gl/SMAA_Edge_P.glsl";
+   
+   samplerNames[0] = "$sceneTex";
+   samplerNames[1] =  "$depthTex";
+  
+   pixVersion = 3.0;
+};
+
+singleton GFXStateBlockData( SMAA_Blend_W_StateBlock : PFX_DefaultStateBlock )
+{   
+   stencilDefined = true;
+   stencilEnable = true;
+   stencilPassOp = GFXStencilOpKeep;
+   stencilFunc = GFXCmpEqual;
+   stencilRef = 1;
+
+   samplersDefined = true;   
+   samplerStates[0] = SamplerClampLinear; 
+   samplerStates[1] = SamplerClampLinear; 
+   samplerStates[2] = SamplerClampLinear;
+};
+
+singleton ShaderData( SMAA_Blend_W_Shader )
+{    
+   DXVertexShaderFile 	= "./SMAA_BlendWeight_V.hlsl";
+   DXPixelShaderFile 	= "./SMAA_BlendWeight_P.hlsl";
+   
+   OGLVertexShaderFile  = "./gl/SMAA_BlendWeight_V.glsl";
+   OGLPixelShaderFile   = "./gl/SMAA_BlendWeight_P.glsl";
+   
+   samplerNames[0] = "$edgesTex";
+   samplerNames[1] = "$areaTex";
+   samplerNames[2] = "$searchTex"; 
+
+   pixVersion = 3.0;
+};
+
+singleton GFXStateBlockData( SMAA_Neighbor_H_StateBlock : PFX_DefaultStateBlock )
+{   
+   stencilEnable = false;
+     
+   samplersDefined = true;   
+   samplerStates[0] = SamplerClampLinear;
+   samplerStates[1] = SamplerClampLinear;
+   
+};
+
+singleton ShaderData( SMAA_Neighbor_H_Shader )
+{      
+   DXVertexShaderFile 	= "./SMAA_Neighbor_H_Blending_V.hlsl";
+   DXPixelShaderFile 	= "./SMAA_Neighbor_H_Blending_P.hlsl";
+   
+   OGLVertexShaderFile  = "./gl/SMAA_Neighbor_H_Blending_V.glsl";
+   OGLPixelShaderFile   = "./gl/SMAA_Neighbor_H_Blending_P.glsl";
+   
+   samplerNames[0] = "$sceneTex";
+   samplerNames[1] = "$blendTex";
+  
+   pixVersion = 3.0;
+};
+
+singleton GFXStateBlockData( BBtoGamma_StateBlock )
+{
+   zDefined = true;
+   zEnable = false;
+   zWriteEnable = false;
+      
+   samplersDefined = true;
+   samplerStates[0] = SamplerClampLinear;
+};
+
+singleton ShaderData( BBtoGammaShader )
+{
+   DXVertexShaderFile 	= $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";
+   DXPixelShaderFile 	= "./BBtoGamma.hlsl";   
+   OGLVertexShaderFile  = $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";
+   OGLPixelShaderFile   = "./gl/BBtoGamma.glsl";
+   
+   samplerNames[0] = "$backBuffer";
+   
+   pixVersion = 3.0;
+};
+
+singleton PostEffect( SMAAPostFX )
+{
+   enabled = false;   
+   allowReflectPass = false;
+   renderTime = "PFXBeforeBin";
+   renderBin = "EditorBin";
+   texture[0] = "$backBuffer";
+   target = "#BBtoGamma";
+   renderPriority = 1; 
+   targetClear = PFXTargetClear_OnDraw;
+   targetClearColor = "0 0 0 0";
+   shader = BBtoGammaShader;
+   stateBlock = BBtoGamma_StateBlock;
+   
+   singleton PostEffect()
+   {
+      enabled = false;
+   
+      allowReflectPass = false;
+      renderTime = "PFXAfterDiffuse";
+   
+      texture[0] = "#BBtoGamma";
+      texture[1] = "#deferred";
+
+      target = "#edgesPass";
+      targetClear = PFXTargetClear_OnDraw;
+      targetClearColor = "0 0 0 0";
+   
+      shader = SMAA_Edge_D_Shader;
+      stateBlock = SMAA_Edge_D_StateBlock;
+   }; 
+   singleton PostEffect()
+   {
+      internalName = "Edge Pass";
+	       	    	  
+	  texture[0] = "#edgesPass";
+  
+	  textureAsset[1] = "Core_PostFX:AreaTexDX9_image";
+      textureAsset[2] = "Core_PostFX:SearchTex_image";
+	  
+	  target = "#blendPass";
+      targetClear = PFXTargetClear_OnDraw;
+      targetClearColor = "0 0 0 0";
+	  
+	  shader = SMAA_Blend_W_Shader;
+      stateBlock = SMAA_Blend_W_StateBlock;  	  
+   };
+    
+   singleton PostEffect()
+   {
+      internalName = "BlendPass";
+	  
+      texture[0] = "#BBtoGamma";
+	  texture[1] = "#blendPass";
+	  
+	  target = "$backBuffer";
+		
+	  shader = SMAA_Neighbor_H_Shader;
+      stateBlock = SMAA_Neighbor_H_StateBlock;  	     
+   }; 
+   
+};
+
+function SMAAPostFX::preProcess( %this )
+{   
+   if ( $pref::video::AAMode !$= %this.quality )
+   {
+      %this.quality = $pref::video::AAMode;
+      if(%this.quality $= "")
+         %this.quality = "SMAA";
+         
+      if(%this.quality $= "SMAA")
+      {
+         %this.setShaderMacro( "SMAA_PRESET_LOW", 0 );
+         %this.setShaderMacro( "SMAA_PRESET_MEDIUM", 0 );
+         %this.setShaderMacro( "SMAA_PRESET_HIGH", 1 );
+         %this.setShaderMacro( "SMAA_PRESET_ULTRA", 0 );
+      }
+      else if(%this.quality $= "SMAA High")
+      {
+         %this.setShaderMacro( "SMAA_PRESET_LOW", 0 );
+         %this.setShaderMacro( "SMAA_PRESET_MEDIUM", 0 );
+         %this.setShaderMacro( "SMAA_PRESET_HIGH", 0 );
+         %this.setShaderMacro( "SMAA_PRESET_ULTRA", 1 );  
+      }
+   }      
+}
+
+

@@ -82,7 +82,7 @@ ConsoleDocClass( MissionMarker,
 
 MissionMarker::MissionMarker()
 {
-   mTypeMask |= StaticObjectType;
+   mTypeMask |= StaticObjectType | MarkerObjectType;
    mDataBlock = 0;
    mAddedToScene = false;
    mNetFlags.set(Ghostable | ScopeAlways);
@@ -179,7 +179,9 @@ void MissionMarker::unpackUpdate(NetConnection * con, BitStream * stream)
    }
 }
 
-void MissionMarker::initPersistFields() {
+void MissionMarker::initPersistFields()
+{
+   docsURL;
    Parent::initPersistFields();
 }
 
@@ -225,7 +227,7 @@ ConsoleDocClass( WayPoint,
 
 WayPoint::WayPoint()
 {
-   mName = StringTable->insert("");
+   mName = StringTable->EmptyString();
 }
 
 void WayPoint::setHidden(bool hidden)
@@ -256,7 +258,7 @@ void WayPoint::inspectPostApply()
 {
    Parent::inspectPostApply();
    if(!mName || !mName[0])
-      mName = StringTable->insert("");
+      mName = StringTable->EmptyString();
    setMaskBits(UpdateNameMask|UpdateTeamMask);
 }
 
@@ -281,7 +283,8 @@ void WayPoint::unpackUpdate(NetConnection * con, BitStream * stream)
 
 void WayPoint::initPersistFields()
 {
-   addGroup("Misc");	
+   docsURL;
+   addGroup("Misc"); 
    addField("markerName", TypeCaseString, Offset(mName, WayPoint), "Unique name representing this waypoint");
    endGroup("Misc");
    Parent::initPersistFields();
@@ -363,7 +366,7 @@ bool SpawnSphere::onAdd()
 
    if (!isGhost())
    {
-	   onAdd_callback( getId());
+      onAdd_callback( getId());
 
       if (mAutoSpawn)
          spawnObject();
@@ -433,7 +436,23 @@ void SpawnSphere::unpackUpdate(NetConnection * con, BitStream * stream)
       mSpawnTransform = stream->readFlag();
 
       stream->read(&mSpawnClass);
+
+      String oldSDB = mSpawnDataBlock;
       stream->read(&mSpawnDataBlock);
+      if (oldSDB != mSpawnDataBlock)
+      {
+         delete mShapeInstance;
+         ShapeBaseData *spawnedDatablock = dynamic_cast<ShapeBaseData *>(Sim::findObject(mSpawnDataBlock.c_str()));
+         if (spawnedDatablock && spawnedDatablock->mShape)
+         {
+               mShapeInstance = new TSShapeInstance(spawnedDatablock->mShape);
+         }
+         else if (mDataBlock)
+         {
+            if (mDataBlock->mShape)
+               mShapeInstance = new TSShapeInstance(mDataBlock->mShape);
+         }
+      }
       stream->read(&mSpawnName);
       stream->read(&mSpawnProperties);
       stream->read(&mSpawnScript);
@@ -442,26 +461,17 @@ void SpawnSphere::unpackUpdate(NetConnection * con, BitStream * stream)
 
 void SpawnSphere::processTick( const Move *move )
 {
-   if ( isServerObject() && isMounted() )
-   {
-      MatrixF mat( true );
-      mMount.object->getRenderMountTransform( 0.f, mMount.node, mMount.xfm, &mat );
-      setTransform( mat );
-   }
+   Parent::processTick( move );
 }
 
 void SpawnSphere::advanceTime( F32 timeDelta )
 {
-   if ( isMounted() )
-   {
-      MatrixF mat( true );
-      mMount.object->getRenderMountTransform( 0.f, mMount.node, mMount.xfm, &mat );
-      setTransform( mat );
-   }
+   Parent::advanceTime( timeDelta );
 }
 
 void SpawnSphere::initPersistFields()
 {
+   docsURL;
    addGroup( "Spawn" );
    addField( "spawnClass", TypeRealString, Offset(mSpawnClass, SpawnSphere),
       "Object class to create (eg. Player, AIPlayer, Debris etc)" );
@@ -504,7 +514,7 @@ ConsoleDocFragment _SpawnSpherespawnObject1(
    "bool spawnObject(string additionalProps);"
 );
 
-DefineConsoleMethod(SpawnSphere, spawnObject, S32, (String additionalProps), ,
+DefineEngineMethod(SpawnSphere, spawnObject, S32, (String additionalProps), ,
    "([string additionalProps]) Spawns the object based on the SpawnSphere's "
    "class, datablock, properties, and script settings. Allows you to pass in "
    "extra properties."
@@ -537,7 +547,7 @@ ConsoleDocClass( CameraBookmark,
 
 CameraBookmark::CameraBookmark()
 {
-   mName = StringTable->insert("");
+   mName = StringTable->EmptyString();
 }
 
 bool CameraBookmark::onAdd()
@@ -581,7 +591,7 @@ void CameraBookmark::inspectPostApply()
 {
    Parent::inspectPostApply();
    if(!mName || !mName[0])
-      mName = StringTable->insert("");
+      mName = StringTable->EmptyString();
    setMaskBits(UpdateNameMask);
 
    if( isMethod("onInspectPostApply") )
@@ -605,7 +615,8 @@ void CameraBookmark::unpackUpdate(NetConnection * con, BitStream * stream)
 
 void CameraBookmark::initPersistFields()
 {
-   //addGroup("Misc");	
+   docsURL;
+   //addGroup("Misc");  
    //addField("name", TypeCaseString, Offset(mName, CameraBookmark));
    //endGroup("Misc");
 

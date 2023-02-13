@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2014 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -19,6 +19,15 @@
   3. This notice may not be removed or altered from any source distribution.
 */
 
+/*
+ * !!! FIXME: streamline this a little by removing all the
+ * !!! FIXME:  if (capture) {} else {} sections that are identical
+ * !!! FIXME:  except for one flag.
+ */
+
+/* !!! FIXME: can this target support hotplugging? */
+/* !!! FIXME: ...does SDL2 even support QNX? */
+
 #include "../../SDL_internal.h"
 
 #if SDL_AUDIO_DRIVER_QSA
@@ -36,7 +45,7 @@
 
 #include "SDL_timer.h"
 #include "SDL_audio.h"
-#include "../SDL_audiomem.h"
+#include "../../core/unix/SDL_poll.h"
 #include "../SDL_audio_c.h"
 #include "SDL_qsa_audio.h"
 
@@ -47,24 +56,6 @@
 #define DEFAULT_CPARAMS_FRAG_SIZE 4096
 #define DEFAULT_CPARAMS_FRAGS_MIN 1
 #define DEFAULT_CPARAMS_FRAGS_MAX 1
-
-#define QSA_NO_WORKAROUNDS  0x00000000
-#define QSA_MMAP_WORKAROUND 0x00000001
-
-struct BuggyCards
-{
-    char *cardname;
-    unsigned long bugtype;
-};
-
-#define QSA_WA_CARDS             3
-#define QSA_MAX_CARD_NAME_LENGTH 33
-
-struct BuggyCards buggycards[QSA_WA_CARDS] = {
-    {"Sound Blaster Live!", QSA_MMAP_WORKAROUND},
-    {"Vortex 8820", QSA_MMAP_WORKAROUND},
-    {"Vortex 8830", QSA_MMAP_WORKAROUND},
-};
 
 /* List of found devices */
 #define QSA_MAX_DEVICES       32
@@ -89,48 +80,23 @@ QSA_SetError(const char *fn, int status)
     return SDL_SetError("QSA: %s() failed: %s", fn, snd_strerror(status));
 }
 
-/* card names check to apply the workarounds */
-static int
-QSA_CheckBuggyCards(_THIS, unsigned long checkfor)
-{
-    char scardname[QSA_MAX_CARD_NAME_LENGTH];
-    int it;
-
-    if (snd_card_get_name
-        (this->hidden->cardno, scardname, QSA_MAX_CARD_NAME_LENGTH - 1) < 0) {
-        return 0;
-    }
-
-    for (it = 0; it < QSA_WA_CARDS; it++) {
-        if (SDL_strcmp(buggycards[it].cardname, scardname) == 0) {
-            if (buggycards[it].bugtype == checkfor) {
-                return 1;
-            }
-        }
-    }
-
-    return 0;
-}
-
 /* !!! FIXME: does this need to be here? Does the SDL version not work? */
 static void
 QSA_ThreadInit(_THIS)
 {
-    struct sched_param param;
-    int status;
-
     /* Increase default 10 priority to 25 to avoid jerky sound */
-    status = SchedGet(0, 0, &param);
-    param.sched_priority = param.sched_curpriority + 15;
-    status = SchedSet(0, 0, SCHED_NOCHANGE, &param);
+    struct sched_param param;
+    if (SchedGet(0, 0, &param) != -1) {
+        param.sched_priority = param.sched_curpriority + 15;
+        SchedSet(0, 0, SCHED_NOCHANGE, &param);
+    }
 }
 
 /* PCM channel parameters initialize function */
 static void
 QSA_InitAudioParams(snd_pcm_channel_params_t * cpars)
 {
-    SDL_memset(cpars, 0, sizeof(snd_pcm_channel_params_t));
-
+    SDL_zerop(cpars);
     cpars->channel = SND_PCM_CHANNEL_PLAYBACK;
     cpars->mode = SND_PCM_MODE_BLOCK;
     cpars->start_mode = SND_PCM_START_DATA;
@@ -148,67 +114,27 @@ QSA_InitAudioParams(snd_pcm_channel_params_t * cpars)
 static void
 QSA_WaitDevice(_THIS)
 {
-    fd_set wfds;
-    fd_set rfds;
-    int selectret;
-    struct timeval timeout;
+    int result;
 
-    if (!this->hidden->iscapture) {
-        FD_ZERO(&wfds);
-        FD_SET(this->hidden->audio_fd, &wfds);
-    } else {
-        FD_ZERO(&rfds);
-        FD_SET(this->hidden->audio_fd, &rfds);
-    }
-
-    do {
-        /* Setup timeout for playing one fragment equal to 2 seconds          */
-        /* If timeout occured than something wrong with hardware or driver    */
-        /* For example, Vortex 8820 audio driver stucks on second DAC because */
-        /* it doesn't exist !                                                 */
-        timeout.tv_sec = 2;
-        timeout.tv_usec = 0;
+    /* Setup timeout for playing one fragment equal to 2 seconds          */
+    /* If timeout occured than something wrong with hardware or driver    */
+    /* For example, Vortex 8820 audio driver stucks on second DAC because */
+    /* it doesn't exist !                                                 */
+    result = SDL_IOReady(this->hidden->audio_fd,
+                         this->iscapture ? SDL_IOR_READ : SDL_IOR_WRITE,
+                         2 * 1000);
+    switch (result) {
+    case -1:
+        SDL_SetError("QSA: SDL_IOReady() failed: %s", strerror(errno));
+        break;
+    case 0:
+        SDL_SetError("QSA: timeout on buffer waiting occured");
+        this->hidden->timeout_on_wait = 1;
+        break;
+    default:
         this->hidden->timeout_on_wait = 0;
-
-        if (!this->hidden->iscapture) {
-            selectret =
-                select(this->hidden->audio_fd + 1, NULL, &wfds, NULL,
-                       &timeout);
-        } else {
-            selectret =
-                select(this->hidden->audio_fd + 1, &rfds, NULL, NULL,
-                       &timeout);
-        }
-
-        switch (selectret) {
-        case -1:
-            {
-                SDL_SetError("QSA: select() failed: %s", strerror(errno));
-                return;
-            }
-            break;
-        case 0:
-            {
-                SDL_SetError("QSA: timeout on buffer waiting occured");
-                this->hidden->timeout_on_wait = 1;
-                return;
-            }
-            break;
-        default:
-            {
-                if (!this->hidden->iscapture) {
-                    if (FD_ISSET(this->hidden->audio_fd, &wfds)) {
-                        return;
-                    }
-                } else {
-                    if (FD_ISSET(this->hidden->audio_fd, &rfds)) {
-                        return;
-                    }
-                }
-            }
-            break;
-        }
-    } while (1);
+        break;
+    }
 }
 
 static void
@@ -220,7 +146,7 @@ QSA_PlayDevice(_THIS)
     int towrite;
     void *pcmbuffer;
 
-    if ((!this->enabled) || (!this->hidden)) {
+    if (!SDL_AtomicGet(&this->enabled) || !this->hidden) {
         return;
     }
 
@@ -253,8 +179,8 @@ QSA_PlayDevice(_THIS)
                 continue;
             } else {
                 if ((errno == EINVAL) || (errno == EIO)) {
-                    SDL_memset(&cstatus, 0, sizeof(cstatus));
-                    if (!this->hidden->iscapture) {
+                    SDL_zero(cstatus);
+                    if (!this->iscapture) {
                         cstatus.channel = SND_PCM_CHANNEL_PLAYBACK;
                     } else {
                         cstatus.channel = SND_PCM_CHANNEL_CAPTURE;
@@ -270,7 +196,7 @@ QSA_PlayDevice(_THIS)
 
                     if ((cstatus.status == SND_PCM_STATUS_UNDERRUN) ||
                         (cstatus.status == SND_PCM_STATUS_READY)) {
-                        if (!this->hidden->iscapture) {
+                        if (!this->iscapture) {
                             status =
                                 snd_pcm_plugin_prepare(this->hidden->
                                                        audio_handle,
@@ -296,11 +222,11 @@ QSA_PlayDevice(_THIS)
             towrite -= written;
             pcmbuffer += written * this->spec.channels;
         }
-    } while ((towrite > 0) && (this->enabled));
+    } while ((towrite > 0) && SDL_AtomicGet(&this->enabled));
 
     /* If we couldn't write, assume fatal error for now */
     if (towrite != 0) {
-        this->enabled = 0;
+        SDL_OpenedAudioDeviceDisconnected(this);
     }
 }
 
@@ -313,36 +239,31 @@ QSA_GetDeviceBuf(_THIS)
 static void
 QSA_CloseDevice(_THIS)
 {
-    if (this->hidden != NULL) {
-        if (this->hidden->audio_handle != NULL) {
-            if (!this->hidden->iscapture) {
-                /* Finish playing available samples */
-                snd_pcm_plugin_flush(this->hidden->audio_handle,
-                                     SND_PCM_CHANNEL_PLAYBACK);
-            } else {
-                /* Cancel unread samples during capture */
-                snd_pcm_plugin_flush(this->hidden->audio_handle,
-                                     SND_PCM_CHANNEL_CAPTURE);
-            }
-            snd_pcm_close(this->hidden->audio_handle);
-            this->hidden->audio_handle = NULL;
+    if (this->hidden->audio_handle != NULL) {
+        if (!this->iscapture) {
+            /* Finish playing available samples */
+            snd_pcm_plugin_flush(this->hidden->audio_handle,
+                                 SND_PCM_CHANNEL_PLAYBACK);
+        } else {
+            /* Cancel unread samples during capture */
+            snd_pcm_plugin_flush(this->hidden->audio_handle,
+                                 SND_PCM_CHANNEL_CAPTURE);
         }
-
-        SDL_FreeAudioMem(this->hidden->pcm_buf);
-        this->hidden->pcm_buf = NULL;
-
-        SDL_free(this->hidden);
-        this->hidden = NULL;
+        snd_pcm_close(this->hidden->audio_handle);
     }
+
+    SDL_free(this->hidden->pcm_buf);
+    SDL_free(this->hidden);
 }
 
 static int
-QSA_OpenDevice(_THIS, const char *devname, int iscapture)
+QSA_OpenDevice(_THIS, const char *devname)
 {
+    const QSA_Device *device = (const QSA_Device *) this->handle;
+    SDL_Bool iscapture = this->iscapture;
     int status = 0;
     int format = 0;
-    SDL_AudioFormat test_format = 0;
-    int found = 0;
+    SDL_AudioFormat test_format;
     snd_pcm_channel_setup_t csetup;
     snd_pcm_channel_params_t cparams;
 
@@ -355,193 +276,75 @@ QSA_OpenDevice(_THIS, const char *devname, int iscapture)
     if (this->hidden == NULL) {
         return SDL_OutOfMemory();
     }
-    SDL_memset(this->hidden, 0, sizeof(struct SDL_PrivateAudioData));
 
     /* Initialize channel transfer parameters to default */
     QSA_InitAudioParams(&cparams);
 
-    /* Initialize channel direction: capture or playback */
-    this->hidden->iscapture = iscapture;
-
-    /* Find deviceid and cardid by device name for playback */
-    if ((!this->hidden->iscapture) && (devname != NULL)) {
-        uint32_t device;
-        int32_t status;
-
-        /* Search in the playback devices */
-        device = 0;
-        do {
-            status = SDL_strcmp(qsa_playback_device[device].name, devname);
-            if (status == 0) {
-                /* Found requested device */
-                this->hidden->deviceno = qsa_playback_device[device].deviceno;
-                this->hidden->cardno = qsa_playback_device[device].cardno;
-                break;
-            }
-            device++;
-            if (device >= qsa_playback_devices) {
-                QSA_CloseDevice(this);
-                return SDL_SetError("No such playback device");
-            }
-        } while (1);
-    }
-
-    /* Find deviceid and cardid by device name for capture */
-    if ((this->hidden->iscapture) && (devname != NULL)) {
-        /* Search in the capture devices */
-        uint32_t device;
-        int32_t status;
-
-        /* Searching in the playback devices */
-        device = 0;
-        do {
-            status = SDL_strcmp(qsa_capture_device[device].name, devname);
-            if (status == 0) {
-                /* Found requested device */
-                this->hidden->deviceno = qsa_capture_device[device].deviceno;
-                this->hidden->cardno = qsa_capture_device[device].cardno;
-                break;
-            }
-            device++;
-            if (device >= qsa_capture_devices) {
-                QSA_CloseDevice(this);
-                return SDL_SetError("No such capture device");
-            }
-        } while (1);
-    }
-
-    /* Check if SDL requested default audio device */
-    if (devname == NULL) {
-        /* Open system default audio device */
-        if (!this->hidden->iscapture) {
-            status = snd_pcm_open_preferred(&this->hidden->audio_handle,
-                                            &this->hidden->cardno,
-                                            &this->hidden->deviceno,
-                                            SND_PCM_OPEN_PLAYBACK);
-        } else {
-            status = snd_pcm_open_preferred(&this->hidden->audio_handle,
-                                            &this->hidden->cardno,
-                                            &this->hidden->deviceno,
-                                            SND_PCM_OPEN_CAPTURE);
-        }
-    } else {
+    if (device != NULL) {
         /* Open requested audio device */
-        if (!this->hidden->iscapture) {
-            status =
-                snd_pcm_open(&this->hidden->audio_handle,
-                             this->hidden->cardno, this->hidden->deviceno,
-                             SND_PCM_OPEN_PLAYBACK);
-        } else {
-            status =
-                snd_pcm_open(&this->hidden->audio_handle,
-                             this->hidden->cardno, this->hidden->deviceno,
-                             SND_PCM_OPEN_CAPTURE);
-        }
+        this->hidden->deviceno = device->deviceno;
+        this->hidden->cardno = device->cardno;
+        status = snd_pcm_open(&this->hidden->audio_handle,
+                              device->cardno, device->deviceno,
+                              iscapture ? SND_PCM_OPEN_CAPTURE : SND_PCM_OPEN_PLAYBACK);
+    } else {
+        /* Open system default audio device */
+        status = snd_pcm_open_preferred(&this->hidden->audio_handle,
+                                        &this->hidden->cardno,
+                                        &this->hidden->deviceno,
+                                        iscapture ? SND_PCM_OPEN_CAPTURE : SND_PCM_OPEN_PLAYBACK);
     }
 
     /* Check if requested device is opened */
     if (status < 0) {
         this->hidden->audio_handle = NULL;
-        QSA_CloseDevice(this);
         return QSA_SetError("snd_pcm_open", status);
     }
 
-    if (!QSA_CheckBuggyCards(this, QSA_MMAP_WORKAROUND)) {
-        /* Disable QSA MMAP plugin for buggy audio drivers */
-        status =
-            snd_pcm_plugin_set_disable(this->hidden->audio_handle,
-                                       PLUGIN_DISABLE_MMAP);
-        if (status < 0) {
-            QSA_CloseDevice(this);
-            return QSA_SetError("snd_pcm_plugin_set_disable", status);
-        }
-    }
-
     /* Try for a closest match on audio format */
-    format = 0;
-    /* can't use format as SND_PCM_SFMT_U8 = 0 in qsa */
-    found = 0;
-
-    for (test_format = SDL_FirstAudioFormat(this->spec.format); !found;) {
+    for (test_format = SDL_FirstAudioFormat(this->spec.format); test_format; test_format = SDL_NextAudioFormat()) {
         /* if match found set format to equivalent QSA format */
         switch (test_format) {
         case AUDIO_U8:
-            {
-                format = SND_PCM_SFMT_U8;
-                found = 1;
-            }
+            format = SND_PCM_SFMT_U8;
             break;
         case AUDIO_S8:
-            {
-                format = SND_PCM_SFMT_S8;
-                found = 1;
-            }
+            format = SND_PCM_SFMT_S8;
             break;
         case AUDIO_S16LSB:
-            {
-                format = SND_PCM_SFMT_S16_LE;
-                found = 1;
-            }
+            format = SND_PCM_SFMT_S16_LE;
             break;
         case AUDIO_S16MSB:
-            {
-                format = SND_PCM_SFMT_S16_BE;
-                found = 1;
-            }
+            format = SND_PCM_SFMT_S16_BE;
             break;
         case AUDIO_U16LSB:
-            {
-                format = SND_PCM_SFMT_U16_LE;
-                found = 1;
-            }
+            format = SND_PCM_SFMT_U16_LE;
             break;
         case AUDIO_U16MSB:
-            {
-                format = SND_PCM_SFMT_U16_BE;
-                found = 1;
-            }
+            format = SND_PCM_SFMT_U16_BE;
             break;
         case AUDIO_S32LSB:
-            {
-                format = SND_PCM_SFMT_S32_LE;
-                found = 1;
-            }
+            format = SND_PCM_SFMT_S32_LE;
             break;
         case AUDIO_S32MSB:
-            {
-                format = SND_PCM_SFMT_S32_BE;
-                found = 1;
-            }
+            format = SND_PCM_SFMT_S32_BE;
             break;
         case AUDIO_F32LSB:
-            {
-                format = SND_PCM_SFMT_FLOAT_LE;
-                found = 1;
-            }
+            format = SND_PCM_SFMT_FLOAT_LE;
             break;
         case AUDIO_F32MSB:
-            {
-                format = SND_PCM_SFMT_FLOAT_BE;
-                found = 1;
-            }
+            format = SND_PCM_SFMT_FLOAT_BE;
             break;
         default:
-            {
-                break;
-            }
+            continue;
         }
-
-        if (!found) {
-            test_format = SDL_NextAudioFormat();
-        }
+        break;
     }
-
     /* assumes test_format not 0 on success */
-    if (test_format == 0) {
-        QSA_CloseDevice(this);
-        return SDL_SetError("QSA: Couldn't find any hardware audio formats");
+    /* can't use format as SND_PCM_SFMT_U8 = 0 in qsa */
+    if (!test_format) {
+        return SDL_SetError("%s: Unsupported audio format", "qsa");
     }
-
     this->spec.format = test_format;
 
     /* Set the audio format */
@@ -556,13 +359,12 @@ QSA_OpenDevice(_THIS, const char *devname, int iscapture)
     /* Setup the transfer parameters according to cparams */
     status = snd_pcm_plugin_params(this->hidden->audio_handle, &cparams);
     if (status < 0) {
-        QSA_CloseDevice(this);
-        return QSA_SetError("snd_pcm_channel_params", status);
+        return QSA_SetError("snd_pcm_plugin_params", status);
     }
 
     /* Make sure channel is setup right one last time */
-    SDL_memset(&csetup, 0, sizeof(csetup));
-    if (!this->hidden->iscapture) {
+    SDL_zero(csetup);
+    if (!this->iscapture) {
         csetup.channel = SND_PCM_CHANNEL_PLAYBACK;
     } else {
         csetup.channel = SND_PCM_CHANNEL_CAPTURE;
@@ -570,7 +372,6 @@ QSA_OpenDevice(_THIS, const char *devname, int iscapture)
 
     /* Setup an audio channel */
     if (snd_pcm_plugin_setup(this->hidden->audio_handle, &csetup) < 0) {
-        QSA_CloseDevice(this);
         return SDL_SetError("QSA: Unable to setup channel");
     }
 
@@ -591,16 +392,15 @@ QSA_OpenDevice(_THIS, const char *devname, int iscapture)
      *  closest multiple)
      */
     this->hidden->pcm_buf =
-        (Uint8 *) SDL_AllocAudioMem(this->hidden->pcm_len);
+        (Uint8 *) SDL_malloc(this->hidden->pcm_len);
     if (this->hidden->pcm_buf == NULL) {
-        QSA_CloseDevice(this);
         return SDL_OutOfMemory();
     }
     SDL_memset(this->hidden->pcm_buf, this->spec.silence,
                this->hidden->pcm_len);
 
     /* get the file descriptor */
-    if (!this->hidden->iscapture) {
+    if (!this->iscapture) {
         this->hidden->audio_fd =
             snd_pcm_file_descriptor(this->hidden->audio_handle,
                                     SND_PCM_CHANNEL_PLAYBACK);
@@ -611,12 +411,11 @@ QSA_OpenDevice(_THIS, const char *devname, int iscapture)
     }
 
     if (this->hidden->audio_fd < 0) {
-        QSA_CloseDevice(this);
         return QSA_SetError("snd_pcm_file_descriptor", status);
     }
 
     /* Prepare an audio channel */
-    if (!this->hidden->iscapture) {
+    if (!this->iscapture) {
         /* Prepare audio playback */
         status =
             snd_pcm_plugin_prepare(this->hidden->audio_handle,
@@ -629,7 +428,6 @@ QSA_OpenDevice(_THIS, const char *devname, int iscapture)
     }
 
     if (status < 0) {
-        QSA_CloseDevice(this);
         return QSA_SetError("snd_pcm_plugin_prepare", status);
     }
 
@@ -638,7 +436,7 @@ QSA_OpenDevice(_THIS, const char *devname, int iscapture)
 }
 
 static void
-QSA_DetectDevices(int iscapture, SDL_AddAudioDevice addfn)
+QSA_DetectDevices(void)
 {
     uint32_t it;
     uint32_t cards;
@@ -656,8 +454,9 @@ QSA_DetectDevices(int iscapture, SDL_AddAudioDevice addfn)
         return;
     }
 
+    /* !!! FIXME: code duplication */
     /* Find requested devices by type */
-    if (!iscapture) {
+    {  /* output devices */
         /* Playback devices enumeration requested */
         for (it = 0; it < cards; it++) {
             devices = 0;
@@ -688,7 +487,11 @@ QSA_DetectDevices(int iscapture, SDL_AddAudioDevice addfn)
                             devices;
                         status = snd_pcm_close(handle);
                         if (status == EOK) {
-                            addfn(qsa_playback_device[qsa_playback_devices].name);
+                            /* Note that spec is NULL, because we are required to open the device before
+                             * acquiring the mix format, making this information inaccessible at
+                             * enumeration time
+                             */
+                            SDL_AddAudioDevice(SDL_FALSE, qsa_playback_device[qsa_playback_devices].name, NULL, &qsa_playback_device[qsa_playback_devices]);
                             qsa_playback_devices++;
                         }
                     } else {
@@ -713,7 +516,9 @@ QSA_DetectDevices(int iscapture, SDL_AddAudioDevice addfn)
                 break;
             }
         }
-    } else {
+    }
+
+    {  /* capture devices */
         /* Capture devices enumeration requested */
         for (it = 0; it < cards; it++) {
             devices = 0;
@@ -744,7 +549,11 @@ QSA_DetectDevices(int iscapture, SDL_AddAudioDevice addfn)
                             devices;
                         status = snd_pcm_close(handle);
                         if (status == EOK) {
-                            addfn(qsa_capture_device[qsa_capture_devices].name);
+                            /* Note that spec is NULL, because we are required to open the device before
+                             * acquiring the mix format, making this information inaccessible at
+                             * enumeration time
+                             */
+                            SDL_AddAudioDevice(SDL_TRUE, qsa_capture_device[qsa_capture_devices].name, NULL, &qsa_capture_device[qsa_capture_devices]);
                             qsa_capture_devices++;
                         }
                     } else {
@@ -773,46 +582,22 @@ QSA_DetectDevices(int iscapture, SDL_AddAudioDevice addfn)
 }
 
 static void
-QSA_WaitDone(_THIS)
-{
-    if (!this->hidden->iscapture) {
-        if (this->hidden->audio_handle != NULL) {
-            /* Wait till last fragment is played and stop channel */
-            snd_pcm_plugin_flush(this->hidden->audio_handle,
-                                 SND_PCM_CHANNEL_PLAYBACK);
-        }
-    } else {
-        if (this->hidden->audio_handle != NULL) {
-            /* Discard all unread data and stop channel */
-            snd_pcm_plugin_flush(this->hidden->audio_handle,
-                                 SND_PCM_CHANNEL_CAPTURE);
-        }
-    }
-}
-
-static void
 QSA_Deinitialize(void)
 {
     /* Clear devices array on shutdown */
-    SDL_memset(qsa_playback_device, 0x00,
-               sizeof(QSA_Device) * QSA_MAX_DEVICES);
-    SDL_memset(qsa_capture_device, 0x00,
-               sizeof(QSA_Device) * QSA_MAX_DEVICES);
+    /* !!! FIXME: we zero these on init...any reason to do it here? */
+    SDL_zeroa(qsa_playback_device);
+    SDL_zeroa(qsa_capture_device);
     qsa_playback_devices = 0;
     qsa_capture_devices = 0;
 }
 
-static int
+static SDL_bool
 QSA_Init(SDL_AudioDriverImpl * impl)
 {
-    snd_pcm_t *handle = NULL;
-    int32_t status = 0;
-
     /* Clear devices array */
-    SDL_memset(qsa_playback_device, 0x00,
-               sizeof(QSA_Device) * QSA_MAX_DEVICES);
-    SDL_memset(qsa_capture_device, 0x00,
-               sizeof(QSA_Device) * QSA_MAX_DEVICES);
+    SDL_zeroa(qsa_playback_device);
+    SDL_zeroa(qsa_capture_device);
     qsa_playback_devices = 0;
     qsa_capture_devices = 0;
 
@@ -826,30 +611,15 @@ QSA_Init(SDL_AudioDriverImpl * impl)
     impl->PlayDevice = QSA_PlayDevice;
     impl->GetDeviceBuf = QSA_GetDeviceBuf;
     impl->CloseDevice = QSA_CloseDevice;
-    impl->WaitDone = QSA_WaitDone;
     impl->Deinitialize = QSA_Deinitialize;
-    impl->LockDevice = NULL;
-    impl->UnlockDevice = NULL;
 
-    impl->OnlyHasDefaultOutputDevice = 0;
-    impl->ProvidesOwnCallbackThread = 0;
-    impl->SkipMixerLock = 0;
-    impl->HasCaptureSupport = 1;
-    impl->OnlyHasDefaultOutputDevice = 0;
-    impl->OnlyHasDefaultInputDevice = 0;
+    impl->HasCaptureSupport = SDL_TRUE;
 
-    /* Check if io-audio manager is running or not */
-    status = snd_cards();
-    if (status == 0) {
-        /* if no, return immediately */
-        return 1;
-    }
-
-    return 1;   /* this audio target is available. */
+    return SDL_TRUE;   /* this audio target is available. */
 }
 
 AudioBootStrap QSAAUDIO_bootstrap = {
-    "qsa", "QNX QSA Audio", QSA_Init, 0
+    "qsa", "QNX QSA Audio", QSA_Init, SDL_FALSE
 };
 
 #endif /* SDL_AUDIO_DRIVER_QSA */

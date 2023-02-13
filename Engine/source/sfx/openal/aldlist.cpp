@@ -44,7 +44,6 @@ ALDeviceList::ALDeviceList( const OPENALFNTABLE &oalft )
 	char *devices;
 	int index;
 	const char *defaultDeviceName;
-   const char *actualDeviceName;
 
    dMemcpy( &ALFunction, &oalft, sizeof( OPENALFNTABLE ) );
 
@@ -55,77 +54,58 @@ ALDeviceList::ALDeviceList( const OPENALFNTABLE &oalft )
    defaultDeviceIndex = 0;
 
    // grab function pointers for 1.0-API functions, and if successful proceed to enumerate all devices
-   if (ALFunction.alcIsExtensionPresent(NULL, "ALC_ENUMERATION_EXT")) {
-      devices = (char *)ALFunction.alcGetString(NULL, ALC_DEVICE_SPECIFIER);
-      defaultDeviceName = (char *)ALFunction.alcGetString(NULL, ALC_DEFAULT_DEVICE_SPECIFIER);
-      index = 0;
+   if (ALFunction.alcIsExtensionPresent(NULL, "ALC_ENUMERATE_ALL_EXT")) {
+          devices = (char *)ALFunction.alcGetString(NULL, ALC_ALL_DEVICES_SPECIFIER);
+          defaultDeviceName = (char *)ALFunction.alcGetString(NULL, ALC_DEFAULT_ALL_DEVICES_SPECIFIER);
+   }
+   else
+   {
+       devices = (char *)ALFunction.alcGetString(NULL, ALC_DEVICE_SPECIFIER);
+       defaultDeviceName = (char *)ALFunction.alcGetString(NULL, ALC_DEFAULT_DEVICE_SPECIFIER);
+   }
+
+   index = 0;
       // go through device list (each device terminated with a single NULL, list terminated with double NULL)
-      while (*devices != 0) {
-         if (dStrcmp(defaultDeviceName, devices) == 0) {
-            defaultDeviceIndex = index;
-         }
-         ALCdevice *device = ALFunction.alcOpenDevice(devices);
-         if (device) {
-            ALCcontext *context = ALFunction.alcCreateContext(device, NULL);
-            if (context) {
-               ALFunction.alcMakeContextCurrent(context);
-               // if new actual device name isn't already in the list, then add it...
-               actualDeviceName = ALFunction.alcGetString(device, ALC_DEVICE_SPECIFIER);
-               bool bNewName = true;
-               for (int i = 0; i < GetNumDevices(); i++) {
-                  if (dStrcmp(GetDeviceName(i), actualDeviceName) == 0) {
-                     bNewName = false;
-                  }
-               }
-               if ((bNewName) && (actualDeviceName != NULL) && (dStrlen(actualDeviceName) > 0)) {
-                  dMemset(&ALDeviceInfo, 0, sizeof(ALDEVICEINFO));
-                  ALDeviceInfo.bSelected = true;
-                  dStrncpy(ALDeviceInfo.strDeviceName, actualDeviceName, sizeof(ALDeviceInfo.strDeviceName));
-                  ALFunction.alcGetIntegerv(device, ALC_MAJOR_VERSION, sizeof(int), &ALDeviceInfo.iMajorVersion);
-                  ALFunction.alcGetIntegerv(device, ALC_MINOR_VERSION, sizeof(int), &ALDeviceInfo.iMinorVersion);
-
-                  ALDeviceInfo.iCapsFlags = 0;
-
-                  // Check for ALC Extensions
-                  if (ALFunction.alcIsExtensionPresent(device, "ALC_EXT_CAPTURE") == AL_TRUE)
-                     ALDeviceInfo.iCapsFlags |= SFXALCapture;
-                  if (ALFunction.alcIsExtensionPresent(device, "ALC_EXT_EFX") == AL_TRUE)
-                     ALDeviceInfo.iCapsFlags |= SFXALEFX;
-
-                  // Check for AL Extensions
-                  if (ALFunction.alIsExtensionPresent("AL_EXT_OFFSET") == AL_TRUE)
-                     ALDeviceInfo.iCapsFlags |= SFXALOffset;
-
-                  if (ALFunction.alIsExtensionPresent("AL_EXT_LINEAR_DISTANCE") == AL_TRUE)
-                     ALDeviceInfo.iCapsFlags |= SFXALLinearDistance;
-                  if (ALFunction.alIsExtensionPresent("AL_EXT_EXPONENT_DISTANCE") == AL_TRUE)
-                     ALDeviceInfo.iCapsFlags |= SFXALExponentDistance;
-
-                  if (ALFunction.alIsExtensionPresent("EAX2.0") == AL_TRUE)
-                     ALDeviceInfo.iCapsFlags |= SFXALEAX2;
-                  if (ALFunction.alIsExtensionPresent("EAX3.0") == AL_TRUE)
-                     ALDeviceInfo.iCapsFlags |= SFXALEAX3;
-                  if (ALFunction.alIsExtensionPresent("EAX4.0") == AL_TRUE)
-                     ALDeviceInfo.iCapsFlags |= SFXALEAX4;
-                  if (ALFunction.alIsExtensionPresent("EAX5.0") == AL_TRUE)
-                     ALDeviceInfo.iCapsFlags |= SFXALEAX5;
-
-                  if (ALFunction.alIsExtensionPresent("EAX-RAM") == AL_TRUE)
-                     ALDeviceInfo.iCapsFlags |= SFXALEAXRAM;
-
-                  // Get Source Count
-                  ALDeviceInfo.uiSourceCount = GetMaxNumSources();
-
-                  vDeviceInfo.push_back(ALDeviceInfo);
-               }
-               ALFunction.alcMakeContextCurrent(NULL);
-               ALFunction.alcDestroyContext(context);
-            }
-            ALFunction.alcCloseDevice(device);
-         }
-         devices += dStrlen(devices) + 1;
-         index += 1;
+   while (*devices != 0) {
+      if (String::compare(defaultDeviceName, devices) == 0) {
+         defaultDeviceIndex = index;
       }
+
+      bool bNewName = true;
+      for (int i = 0; i < GetNumDevices(); i++) {
+         if (String::compare(GetDeviceName(i), devices) == 0) {
+            bNewName = false;
+         }
+      }
+
+      if ((bNewName) && (devices != NULL) && (dStrlen(devices) > 0))
+      {
+         dMemset(&ALDeviceInfo, 0, sizeof(ALDEVICEINFO));
+         ALDeviceInfo.bSelected = true;
+         dStrncpy(ALDeviceInfo.strInternalDeviceName, devices, sizeof(ALDeviceInfo.strInternalDeviceName));
+         char deviceExternal[256];
+         dStrcpy(deviceExternal, devices, 256);
+         char* openFind = dStrchr(deviceExternal, '(');
+         if (openFind)
+         {
+            char* deviceName = openFind + 1;
+            char* closeFind = dStrchr(deviceName, ')');
+            if (closeFind)
+               (*closeFind) = '\0';
+
+            dStrncpy(ALDeviceInfo.strDeviceName, deviceName, sizeof(ALDeviceInfo.strDeviceName));
+
+         }
+         else
+         {
+            dStrncpy(ALDeviceInfo.strDeviceName, devices, sizeof(ALDeviceInfo.strDeviceName));
+         }
+
+         vDeviceInfo.push_back(ALDeviceInfo);
+      }
+
+      devices += dStrlen(devices) + 1;
+      index += 1;
    }
 
 	ResetFilters();
@@ -149,13 +129,22 @@ int ALDeviceList::GetNumDevices()
 /* 
  * Returns the device name at an index in the complete device list
  */
-const char *ALDeviceList::GetDeviceName(int index)
+const char *ALDeviceList::GetInternalDeviceName(int index)
 {
 	if (index < GetNumDevices())
-		return vDeviceInfo[index].strDeviceName;
+		return vDeviceInfo[index].strInternalDeviceName;
 	else
 		return NULL;
 }
+
+const char* ALDeviceList::GetDeviceName(int index)
+{
+   if (index < GetNumDevices())
+      return vDeviceInfo[index].strDeviceName;
+   else
+      return NULL;
+}
+
 
 /*
  * Returns the major and minor version numbers for a device at a specified index in the complete list

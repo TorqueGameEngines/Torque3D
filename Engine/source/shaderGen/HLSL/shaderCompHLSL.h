@@ -30,6 +30,8 @@
 
 class ShaderConnectorHLSL : public ShaderConnector
 {
+private:
+   static S32 QSORT_CALLBACK _hlsl4VarSort(const void* e1, const void* e2);
 public:
 
    // ShaderConnector
@@ -41,7 +43,7 @@ public:
                                     U32 numElements = 1, 
                                     U32 numRegisters = -1 );
        
-   virtual void setName( char *newName );
+   virtual void setName( const char *newName );
    virtual void reset();
    virtual void sortVars();
 

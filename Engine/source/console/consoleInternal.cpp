@@ -20,6 +20,8 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+#include <unordered_map>
+
 #include "platform/platform.h"
 #include "console/console.h"
 
@@ -43,28 +45,42 @@ DataChunker Namespace::mAllocator;
 Namespace *Namespace::mNamespaceList = NULL;
 Namespace *Namespace::mGlobalNamespace = NULL;
 
+namespace std
+{
+   template<> struct hash<std::pair<StringTableEntry, StringTableEntry>>
+   {
+      typedef std::pair<StringTableEntry, StringTableEntry> argument_type;
+      typedef size_t result_type;
+      result_type operator()(argument_type const& s) const
+      {
+         return HashPointer(s.first) ^ (HashPointer(s.second) << 1);
+      }
+   };
+};
+
+std::unordered_map<std::pair<StringTableEntry, StringTableEntry>, Namespace*> gNamespaceCache;
 
 bool canTabComplete(const char *prevText, const char *bestMatch,
-               const char *newText, S32 baseLen, bool fForward)
+   const char *newText, S32 baseLen, bool fForward)
 {
    // test if it matches the first baseLen chars:
-   if(dStrnicmp(newText, prevText, baseLen))
+   if (dStrnicmp(newText, prevText, baseLen))
       return false;
 
    if (fForward)
    {
-      if(!bestMatch)
+      if (!bestMatch)
          return dStricmp(newText, prevText) > 0;
       else
          return (dStricmp(newText, prevText) > 0) &&
-                (dStricmp(newText, bestMatch) < 0);
+         (dStricmp(newText, bestMatch) < 0);
    }
    else
    {
-      if (dStrlen(prevText) == (U32) baseLen)
+      if (dStrlen(prevText) == (U32)baseLen)
       {
          // look for the 'worst match'
-         if(!bestMatch)
+         if (!bestMatch)
             return dStricmp(newText, prevText) > 0;
          else
             return dStricmp(newText, bestMatch) > 0;
@@ -75,7 +91,7 @@ bool canTabComplete(const char *prevText, const char *bestMatch,
             return (dStricmp(newText, prevText)  < 0);
          else
             return (dStricmp(newText, prevText)  < 0) &&
-                   (dStricmp(newText, bestMatch) > 0);
+            (dStricmp(newText, bestMatch) > 0);
       }
    }
 }
@@ -100,7 +116,7 @@ struct StringValue
 
 StringValue & StringValue::operator=(const char *string)
 {
-   if(!val)
+   if (!val)
    {
       val = dStrdup(string);
       size = dStrlen(val);
@@ -108,8 +124,8 @@ StringValue & StringValue::operator=(const char *string)
    else
    {
       S32 len = dStrlen(string);
-      if(len < size)
-         dStrcpy(val, string);
+      if (len < size)
+         dStrcpy(val, string, size);
       else
       {
          size = len;
@@ -120,9 +136,9 @@ StringValue & StringValue::operator=(const char *string)
    return *this;
 }
 
-static S32 QSORT_CALLBACK varCompare(const void* a,const void* b)
+static S32 QSORT_CALLBACK varCompare(const void* a, const void* b)
 {
-   return dStricmp( (*((Dictionary::Entry **) a))->name, (*((Dictionary::Entry **) b))->name );
+   return dStricmp((*((Dictionary::Entry **) a))->name, (*((Dictionary::Entry **) b))->name);
 }
 
 void Dictionary::exportVariables(const char *varString, const char *fileName, bool append)
@@ -130,115 +146,113 @@ void Dictionary::exportVariables(const char *varString, const char *fileName, bo
    const char *searchStr = varString;
    Vector<Entry *> sortList(__FILE__, __LINE__);
 
-   for(S32 i = 0; i < hashTable->size;i ++)
+   for (S32 i = 0; i < hashTable->size; i++)
    {
       Entry *walk = hashTable->data[i];
-      while(walk)
+      while (walk)
       {
-         if(FindMatch::isMatch((char *) searchStr, (char *) walk->name))
+         if (FindMatch::isMatch((char *)searchStr, (char *)walk->name))
             sortList.push_back(walk);
 
          walk = walk->nextEntry;
       }
    }
 
-   if(!sortList.size())
+   if (!sortList.size())
       return;
 
-   dQsort((void *) &sortList[0], sortList.size(), sizeof(Entry *), varCompare);
+   dQsort((void *)&sortList[0], sortList.size(), sizeof(Entry *), varCompare);
 
    Vector<Entry *>::iterator s;
    char expandBuffer[1024];
    FileStream *strm = NULL;
 
-   if(fileName)
+   if (fileName)
    {
-      if((strm = FileStream::createAndOpen( fileName, append ? Torque::FS::File::ReadWrite : Torque::FS::File::Write )) == NULL)
+      if ((strm = FileStream::createAndOpen(fileName, append ? Torque::FS::File::ReadWrite : Torque::FS::File::Write)) == NULL)
       {
          Con::errorf(ConsoleLogEntry::General, "Unable to open file '%s for writing.", fileName);
          return;
       }
-      if(append)
+      if (append)
          strm->setPosition(strm->getStreamSize());
    }
 
    char buffer[1024];
    const char *cat = fileName ? "\r\n" : "";
 
-   for(s = sortList.begin(); s != sortList.end(); s++)
+   for (s = sortList.begin(); s != sortList.end(); s++)
    {
-      switch((*s)->value.type)
+      switch ((*s)->type)
       {
-         case ConsoleValue::TypeInternalInt:
-            dSprintf(buffer, sizeof(buffer), "%s = %d;%s", (*s)->name, (*s)->value.ival, cat);
+         case Entry::TypeInternalInt:
+            dSprintf(buffer, sizeof(buffer), "%s = %d;%s", (*s)->name, (*s)->ival, cat);
             break;
-         case ConsoleValue::TypeInternalFloat:
-            dSprintf(buffer, sizeof(buffer), "%s = %g;%s", (*s)->name, (*s)->value.fval, cat);
+         case Entry::TypeInternalFloat:
+            dSprintf(buffer, sizeof(buffer), "%s = %g;%s", (*s)->name, (*s)->fval, cat);
             break;
          default:
             expandEscape(expandBuffer, (*s)->getStringValue());
             dSprintf(buffer, sizeof(buffer), "%s = \"%s\";%s", (*s)->name, expandBuffer, cat);
             break;
       }
-      if(strm)
+      if (strm)
          strm->write(dStrlen(buffer), buffer);
       else
          Con::printf("%s", buffer);
    }
-   if(strm)
+   if (strm)
       delete strm;
 }
 
-void Dictionary::exportVariables( const char *varString, Vector<String> *names, Vector<String> *values )
+void Dictionary::exportVariables(const char *varString, Vector<String> *names, Vector<String> *values)
 {
    const char *searchStr = varString;
    Vector<Entry *> sortList(__FILE__, __LINE__);
 
-   for ( S32 i = 0; i < hashTable->size; i++ )
+   for (S32 i = 0; i < hashTable->size; i++)
    {
       Entry *walk = hashTable->data[i];
-      while ( walk )
+      while (walk)
       {
-         if ( FindMatch::isMatch( (char*)searchStr, (char*)walk->name ) )
-            sortList.push_back( walk );
+         if (FindMatch::isMatch((char*)searchStr, (char*)walk->name))
+            sortList.push_back(walk);
 
          walk = walk->nextEntry;
       }
    }
 
-   if ( !sortList.size() )
+   if (!sortList.size())
       return;
 
-   dQsort((void *) &sortList[0], sortList.size(), sizeof(Entry *), varCompare);
+   dQsort((void *)&sortList[0], sortList.size(), sizeof(Entry *), varCompare);
 
-   if ( names )
-      names->reserve( sortList.size() );
-   if ( values )
-      values->reserve( sortList.size() );
+   if (names)
+      names->reserve(sortList.size());
+   if (values)
+      values->reserve(sortList.size());
 
    char expandBuffer[1024];
 
    Vector<Entry *>::iterator s;
 
-   for ( s = sortList.begin(); s != sortList.end(); s++ )
+   for (s = sortList.begin(); s != sortList.end(); s++)
    {
-      if ( names )
-         names->push_back( String( (*s)->name ) );
+      if (names)
+         names->push_back(String((*s)->name));
 
-      if ( values )
+      if (values)
       {
-         switch ( (*s)->value.type )
+         switch ((*s)->type)
          {
-         case ConsoleValue::TypeInternalInt:
-            values->push_back( String::ToString( (*s)->value.ival ) );         
-            break;
-         case ConsoleValue::TypeInternalFloat:
-            values->push_back( String::ToString( (*s)->value.fval ) );         
-            break;
-         default:         
-            expandEscape( expandBuffer, (*s)->getStringValue() );
-            values->push_back( expandBuffer );  
-            break;
+            case ConsoleValueType::cvInteger:
+            case ConsoleValueType::cvFloat:
+               values->push_back(String((*s)->getStringValue()));
+               break;
+            default:
+               expandEscape(expandBuffer, (*s)->getStringValue());
+               values->push_back(expandBuffer);
+               break;
          }
       }
    }
@@ -248,12 +262,12 @@ void Dictionary::deleteVariables(const char *varString)
 {
    const char *searchStr = varString;
 
-   for(S32 i = 0; i < hashTable->size; i++)
+   for (S32 i = 0; i < hashTable->size; i++)
    {
       Entry *walk = hashTable->data[i];
-      while(walk)
+      while (walk)
       {
-         Entry *matchedEntry = (FindMatch::isMatch((char *) searchStr, (char *) walk->name)) ? walk : NULL;
+         Entry *matchedEntry = (FindMatch::isMatch((char *)searchStr, (char *)walk->name)) ? walk : NULL;
          walk = walk->nextEntry;
          if (matchedEntry)
             remove(matchedEntry); // assumes remove() is a stable remove (will not reorder entries on remove)
@@ -269,9 +283,9 @@ U32 HashPointer(StringTableEntry ptr)
 Dictionary::Entry *Dictionary::lookup(StringTableEntry name)
 {
    Entry *walk = hashTable->data[HashPointer(name) % hashTable->size];
-   while(walk)
+   while (walk)
    {
-      if(walk->name == name)
+      if (walk->name == name)
          return walk;
       else
          walk = walk->nextEntry;
@@ -284,56 +298,56 @@ Dictionary::Entry *Dictionary::add(StringTableEntry name)
 {
    // Try to find an existing match.
    //printf("Add Variable %s\n", name);
-   
-   Entry* ret = lookup( name );
-   if( ret )
+
+   Entry* ret = lookup(name);
+   if (ret)
       return ret;
-   
+
    // Rehash if the table get's too crowded.  Be aware that this might
    // modify a table that we don't own.
 
-   hashTable->count ++;
-   if( hashTable->count > hashTable->size * 2 )
+   hashTable->count++;
+   if (hashTable->count > hashTable->size * 2)
    {
       // Allocate a new table.
-      
+
       const U32 newTableSize = hashTable->size * 4 - 1;
-      Entry** newTableData = new Entry*[ newTableSize ];
-      dMemset( newTableData, 0, newTableSize * sizeof( Entry* ) );
-      
+      Entry** newTableData = new Entry*[newTableSize];
+      dMemset(newTableData, 0, newTableSize * sizeof(Entry*));
+
       // Move the entries over.
-      
-      for( U32 i = 0; i < hashTable->size; ++ i )
-         for( Entry* entry = hashTable->data[ i ]; entry != NULL; )
+
+      for (U32 i = 0; i < hashTable->size; ++i)
+         for (Entry* entry = hashTable->data[i]; entry != NULL; )
          {
             Entry* next = entry->nextEntry;
-            U32 index = HashPointer( entry->name ) % newTableSize;
-            
-            entry->nextEntry = newTableData[ index ];
-            newTableData[ index ] = entry;
-            
+            U32 index = HashPointer(entry->name) % newTableSize;
+
+            entry->nextEntry = newTableData[index];
+            newTableData[index] = entry;
+
             entry = next;
          }
-         
+
       // Switch the tables.
-      
+
       delete[] hashTable->data;
       hashTable->data = newTableData;
       hashTable->size = newTableSize;
    }
-   
-   #ifdef DEBUG_SPEW
-   Platform::outputDebugString( "[ConsoleInternal] Adding entry '%s'", name );
-   #endif
-   
+
+#ifdef DEBUG_SPEW
+   Platform::outputDebugString("[ConsoleInternal] Adding entry '%s'", name);
+#endif
+
    // Add the new entry.
 
    ret = hashTable->mChunker.alloc();
-   constructInPlace( ret, name );
+   constructInPlace(ret, name);
    U32 idx = HashPointer(name) % hashTable->size;
    ret->nextEntry = hashTable->data[idx];
    hashTable->data[idx] = ret;
-   
+
    return ret;
 }
 
@@ -341,88 +355,88 @@ Dictionary::Entry *Dictionary::add(StringTableEntry name)
 void Dictionary::remove(Dictionary::Entry *ent)
 {
    Entry **walk = &hashTable->data[HashPointer(ent->name) % hashTable->size];
-   while(*walk != ent)
+   while (*walk != ent)
       walk = &((*walk)->nextEntry);
-      
-   #ifdef DEBUG_SPEW
-   Platform::outputDebugString( "[ConsoleInternal] Removing entry '%s'", ent->name );
-   #endif
+
+#ifdef DEBUG_SPEW
+   Platform::outputDebugString("[ConsoleInternal] Removing entry '%s'", ent->name);
+#endif
 
    *walk = (ent->nextEntry);
 
-   destructInPlace( ent );
-   hashTable->mChunker.free( ent );
+   destructInPlace(ent);
+   hashTable->mChunker.free(ent);
 
    hashTable->count--;
 }
 
 Dictionary::Dictionary()
-   :  hashTable( NULL ),
+   : hashTable(NULL),
 #pragma warning( disable : 4355 )
-      ownHashTable( this ), // Warning with VC++ but this is safe.
+   ownHashTable(this), // Warning with VC++ but this is safe.
 #pragma warning( default : 4355 )
-      exprState( NULL ),
-      scopeName( NULL ),
-      scopeNamespace( NULL ),
-      code( NULL ),
-      ip( 0 )
+   exprState(NULL),
+   scopeName(NULL),
+   scopeNamespace(NULL),
+   code(NULL),
+   ip(0)
 {
 }
 
 void Dictionary::setState(ExprEvalState *state, Dictionary* ref)
 {
    exprState = state;
-   
-   if( ref )
+
+   if (ref)
    {
       hashTable = ref->hashTable;
       return;
    }
 
-   if( !ownHashTable.data )
+   if (!ownHashTable.data)
    {
       ownHashTable.count = 0;
       ownHashTable.size = ST_INIT_SIZE;
-      ownHashTable.data = new Entry *[ ownHashTable.size ];
-      
-      dMemset( ownHashTable.data, 0, ownHashTable.size * sizeof( Entry* ) );
+      ownHashTable.data = new Entry *[ownHashTable.size];
+
+      dMemset(ownHashTable.data, 0, ownHashTable.size * sizeof(Entry*));
    }
-   
+
    hashTable = &ownHashTable;
 }
 
 Dictionary::~Dictionary()
 {
    reset();
-   if( ownHashTable.data )
-      delete [] ownHashTable.data;
+   if (ownHashTable.data)
+      delete[] ownHashTable.data;
 }
 
 void Dictionary::reset()
 {
-   if( hashTable && hashTable->owner != this )
+   if (hashTable && hashTable->owner != this)
    {
       hashTable = NULL;
       return;
    }
-      
-   for( U32 i = 0; i < ownHashTable.size; ++ i )
+
+   for (U32 i = 0; i < ownHashTable.size; ++i)
    {
       Entry* walk = ownHashTable.data[i];
-      while( walk )
+      while (walk)
       {
          Entry* temp = walk->nextEntry;
-         destructInPlace( walk );
+         destructInPlace(walk);
          walk = temp;
       }
    }
 
-   dMemset( ownHashTable.data, 0, ownHashTable.size * sizeof( Entry* ) );
-   ownHashTable.mChunker.freeBlocks( true );
-   
+   dMemset(ownHashTable.data, 0, ownHashTable.size * sizeof(Entry*));
+   ownHashTable.mChunker.freeBlocks(true);
+
    ownHashTable.count = 0;
    hashTable = NULL;
-   
+
    scopeName = NULL;
    scopeNamespace = NULL;
    code = NULL;
@@ -435,12 +449,12 @@ const char *Dictionary::tabComplete(const char *prevText, S32 baseLen, bool fFor
    S32 i;
 
    const char *bestMatch = NULL;
-   for(i = 0; i < hashTable->size; i++)
+   for (i = 0; i < hashTable->size; i++)
    {
       Entry *walk = hashTable->data[i];
-      while(walk)
+      while (walk)
       {
-         if(canTabComplete(prevText, bestMatch, walk->name, baseLen, fForward))
+         if (canTabComplete(prevText, bestMatch, walk->name, baseLen, fForward))
             bestMatch = walk->name;
          walk = walk->nextEntry;
       }
@@ -448,78 +462,58 @@ const char *Dictionary::tabComplete(const char *prevText, S32 baseLen, bool fFor
    return bestMatch;
 }
 
-
-char *typeValueEmpty = "";
-
 Dictionary::Entry::Entry(StringTableEntry in_name)
 {
    name = in_name;
-   value.type = ConsoleValue::TypeInternalString;
+   type = TypeInternalString;
    notify = NULL;
    nextEntry = NULL;
    mUsage = NULL;
    mIsConstant = false;
+   mNext = NULL;
 
-   // NOTE: This is data inside a nameless
-   // union, so we don't need to init the rest.
-   value.init();
+   ival = 0;
+   fval = 0;
+   sval = NULL;
+   bufferLen = 0;
 }
 
 Dictionary::Entry::~Entry()
 {
-   value.cleanup();
+   reset();
+}
 
-   if ( notify )
+void Dictionary::Entry::reset()
+{
+   name = NULL;
+   if (type <= TypeInternalString && sval != NULL)
+      dFree(sval);
+   if (notify)
       delete notify;
 }
 
-const char *Dictionary::getVariable(StringTableEntry name, bool *entValid)
+void Dictionary::Entry::setStringValue(const char* value)
 {
-   Entry *ent = lookup(name);
-   if(ent)
+   if (mIsConstant)
    {
-      if(entValid)
-         *entValid = true;
-      return ent->getStringValue();
+      Con::errorf("Cannot assign value to constant '%s'.", name);
+      return;
    }
-   if(entValid)
-      *entValid = false;
 
-   // Warn users when they access a variable that isn't defined.
-   if(gWarnUndefinedScriptVariables)
-      Con::warnf(" *** Accessed undefined variable '%s'", name);
-
-   return "";
-}
-
-void ConsoleValue::setStringValue(const char * value)
-{
-   if (value == NULL) value = typeValueEmpty;
-
-   if(type <= ConsoleValue::TypeInternalString)
+   if (type <= TypeInternalString)
    {
       // Let's not remove empty-string-valued global vars from the dict.
       // If we remove them, then they won't be exported, and sometimes
       // it could be necessary to export such a global.  There are very
       // few empty-string global vars so there's no performance-related
       // need to remove them from the dict.
-/*
-      if(!value[0] && name[0] == '$')
-      {
-         gEvalState.globalVars.remove(this);
-         return;
-      }
-*/
-	   if (value == typeValueEmpty)
-      {
-            if (sval && sval != typeValueEmpty && type != TypeInternalStackString) dFree(sval);
-            sval = typeValueEmpty;
-            bufferLen = 0;
-            fval = 0.f;
-            ival = 0;
-            type = TypeInternalString;
-            return;
-      }
+      /*
+       if(!value[0] && name[0] == '$')
+       {
+       gEvalState.globalVars.remove(this);
+       return;
+       }
+       */
 
       U32 stringLen = dStrlen(value);
 
@@ -527,7 +521,7 @@ void ConsoleValue::setStringValue(const char * value)
       //
       // (This decision may come back to haunt you. Shame on you if it
       // does.)
-      if(stringLen < 256)
+      if (stringLen < 256)
       {
          fval = dAtof(value);
          ival = dAtoi(value);
@@ -537,90 +531,74 @@ void ConsoleValue::setStringValue(const char * value)
          fval = 0.f;
          ival = 0;
       }
-
-      // may as well pad to the next cache line
-      U32 newLen = ((stringLen + 1) + 15) & ~15;
-	  
-      if(sval == typeValueEmpty || type == TypeInternalStackString)
-         sval = (char *) dMalloc(newLen);
-      else if(newLen > bufferLen)
-         sval = (char *) dRealloc(sval, newLen);
 
       type = TypeInternalString;
 
+      // may as well pad to the next cache line
+      U32 newLen = ((stringLen + 1) + 15) & ~15;
+
+      if (sval == NULL)
+         sval = (char*)dMalloc(newLen);
+      else if (newLen > bufferLen)
+         sval = (char*)dRealloc(sval, newLen);
+
       bufferLen = newLen;
-      dStrcpy(sval, value);
+      dStrcpy(sval, value, newLen);
    }
    else
-      Con::setData(type, dataPtr, 0, 1, &value, enumTable);      
+      Con::setData(type, dataPtr, 0, 1, &value, enumTable);
+
+   // Fire off the notification if we have one.
+   if (notify)
+      notify->trigger();
 }
 
-
-void ConsoleValue::setStackStringValue(const char * value)
+const char *Dictionary::getVariable(StringTableEntry name, bool *entValid)
 {
-   if (value == NULL) value = typeValueEmpty;
-
-   if(type <= ConsoleValue::TypeInternalString)
+   Entry *ent = lookup(name);
+   if (ent)
    {
-	   if (value == typeValueEmpty)
-      {
-         if (sval && sval != typeValueEmpty && type != ConsoleValue::TypeInternalStackString) dFree(sval);
-         sval = typeValueEmpty;
-         bufferLen = 0;
-         fval = 0.f;
-         ival = 0;
-         type = TypeInternalString;
-         return;
-      }
-
-      U32 stringLen = dStrlen(value);
-      if(stringLen < 256)
-      {
-         fval = dAtof(value);
-         ival = dAtoi(value);
-      }
-      else
-      {
-         fval = 0.f;
-         ival = 0;
-      }
-
-      type = TypeInternalStackString;
-	  sval = (char*)value;
-      bufferLen = stringLen;
+      if (entValid)
+         *entValid = true;
+      return ent->getStringValue();
    }
-   else
-      Con::setData(type, dataPtr, 0, 1, &value, enumTable);      
-}
+   if (entValid)
+      *entValid = false;
 
+   // Warn users when they access a variable that isn't defined.
+   if (gWarnUndefinedScriptVariables)
+      Con::warnf(" *** Accessed undefined variable '%s'", name);
+
+   return "";
+}
 
 S32 Dictionary::getIntVariable(StringTableEntry name, bool *entValid)
 {
    Entry *ent = lookup(name);
-   if(ent)
+   if (ent)
    {
-      if(entValid)
+      if (entValid)
          *entValid = true;
       return ent->getIntValue();
    }
 
-   if(entValid)
+   if (entValid)
       *entValid = false;
 
-    return 0;
+   return 0;
 }
 
 F32 Dictionary::getFloatVariable(StringTableEntry name, bool *entValid)
 {
    Entry *ent = lookup(name);
-   if(ent)
+   if (ent)
    {
-      if(entValid)
+      if (entValid)
          *entValid = true;
       return ent->getFloatValue();
    }
 
-   if(entValid)
+   if (entValid)
       *entValid = false;
 
    return 0;
@@ -629,162 +607,194 @@ F32 Dictionary::getFloatVariable(StringTableEntry name, bool *entValid)
 void Dictionary::setVariable(StringTableEntry name, const char *value)
 {
    Entry *ent = add(name);
-   if(!value)
+   if (!value)
       value = "";
    ent->setStringValue(value);
 }
 
-Dictionary::Entry* Dictionary::addVariable(  const char *name, 
-                                             S32 type, 
-                                             void *dataPtr, 
-                                             const char* usage )
+Dictionary::Entry* Dictionary::addVariable(const char *name,
+   S32 type,
+   void *dataPtr,
+   const char* usage)
 {
-   AssertFatal( type >= 0, "Dictionary::addVariable - Got bad type!" );
+   AssertFatal(type >= 0, "Dictionary::addVariable - Got bad type!");
 
-   if(name[0] != '$')
+   if (name[0] != '$')
    {
       scratchBuffer[0] = '$';
-      dStrcpy(scratchBuffer + 1, name);
+      dStrcpy(scratchBuffer + 1, name, 1023);
       name = scratchBuffer;
    }
 
    Entry *ent = add(StringTable->insert(name));
-   
-   if (  ent->value.type <= ConsoleValue::TypeInternalString &&
-         ent->value.sval != typeValueEmpty && ent->value.type != ConsoleValue::TypeInternalStackString )
-      dFree(ent->value.sval);
 
-   ent->value.type = type;
-   ent->value.dataPtr = dataPtr;
+   if (ent->type <= Entry::TypeInternalString && ent->sval != NULL)
+      dFree(ent->sval);
+
    ent->mUsage = usage;
-   
+   ent->type = type;
+   ent->dataPtr = dataPtr;
+
    // Fetch enum table, if any.
-   
-   ConsoleBaseType* conType = ConsoleBaseType::getType( type );
-   AssertFatal( conType, "Dictionary::addVariable - invalid console type" );
-   ent->value.enumTable = conType->getEnumTable();
-   
+   ConsoleBaseType* conType = ConsoleBaseType::getType(type);
+   AssertFatal(conType, "Dictionary::addVariable - invalid console type");
+   ent->enumTable = conType->getEnumTable();
+
    return ent;
 }
 
 bool Dictionary::removeVariable(StringTableEntry name)
 {
-   if( Entry *ent = lookup(name) )
+   if (Entry *ent = lookup(name))
    {
-      remove( ent );
+      remove(ent);
       return true;
    }
    return false;
 }
 
-void Dictionary::addVariableNotify( const char *name, const Con::NotifyDelegate &callback )
+void Dictionary::addVariableNotify(const char *name, const Con::NotifyDelegate &callback)
 {
    Entry *ent = lookup(StringTable->insert(name));
-   if ( !ent )
-    return;
+   if (!ent)
+      return;
 
-   if ( !ent->notify )
+   if (!ent->notify)
       ent->notify = new Entry::NotifySignal();
 
-   ent->notify->notify( callback );
+   ent->notify->notify(callback);
 }
 
-void Dictionary::removeVariableNotify( const char *name, const Con::NotifyDelegate &callback )
+void Dictionary::removeVariableNotify(const char *name, const Con::NotifyDelegate &callback)
 {
    Entry *ent = lookup(StringTable->insert(name));
-   if ( ent && ent->notify )
-      ent->notify->remove( callback );
+   if (ent && ent->notify)
+      ent->notify->remove(callback);
 }
 
 void Dictionary::validate()
 {
-   AssertFatal( ownHashTable.owner == this,
-      "Dictionary::validate() - Dictionary not owner of own hashtable!" );
+   AssertFatal(ownHashTable.owner == this,
+      "Dictionary::validate() - Dictionary not owner of own hashtable!");
 }
 
-void ExprEvalState::pushFrame(StringTableEntry frameName, Namespace *ns)
-{   
-   #ifdef DEBUG_SPEW
+void ExprEvalState::pushFrame(StringTableEntry frameName, Namespace *ns, S32 registerCount)
+{
+#ifdef DEBUG_SPEW
    validate();
 
-   Platform::outputDebugString( "[ConsoleInternal] Pushing new frame for '%s' at %i",
-      frameName, mStackDepth );
-   #endif
-   
-   if( mStackDepth + 1 > stack.size() )
+   Platform::outputDebugString("[ConsoleInternal] Pushing new frame for '%s' at %i",
+      frameName, mStackDepth);
+#endif
+
+   if (mStackDepth + 1 > stack.size())
    {
-      #ifdef DEBUG_SPEW
-      Platform::outputDebugString( "[ConsoleInternal] Growing stack by one frame" );
-      #endif
-      
-      stack.push_back( new Dictionary );
+#ifdef DEBUG_SPEW
+      Platform::outputDebugString("[ConsoleInternal] Growing stack by one frame");
+#endif
+
+      stack.push_back(new Dictionary);
    }
-      
-   Dictionary& newFrame = *( stack[ mStackDepth ] );
-   newFrame.setState( this );
-      
+
+   Dictionary& newFrame = *(stack[mStackDepth]);
+   newFrame.setState(this);
+
    newFrame.scopeName = frameName;
    newFrame.scopeNamespace = ns;
 
-   mStackDepth ++;
+   mStackDepth++;
    currentVariable = NULL;
-   
-   AssertFatal( !newFrame.getCount(), "ExprEvalState::pushFrame - Dictionary not empty!" );
-   
-   #ifdef DEBUG_SPEW
+
+   AssertFatal(!newFrame.getCount(), "ExprEvalState::pushFrame - Dictionary not empty!");
+
+   ConsoleValue* consoleValArray = new ConsoleValue[registerCount]();
+   localStack.push_back(ConsoleValueFrame(consoleValArray, false));
+   currentRegisterArray = &localStack.last();
+
+   AssertFatal(mStackDepth == localStack.size(), avar("Stack sizes do not match. mStackDepth = %d, localStack = %d", mStackDepth, localStack.size()));
+
+#ifdef DEBUG_SPEW
    validate();
-   #endif
+#endif
 }
 
 void ExprEvalState::popFrame()
 {
-   AssertFatal( mStackDepth > 0, "ExprEvalState::popFrame - Stack Underflow!" );
-   
-   #ifdef DEBUG_SPEW
-   validate();
-   
-   Platform::outputDebugString( "[ConsoleInternal] Popping %sframe at %i",
-      getCurrentFrame().isOwner() ? "" : "shared ", mStackDepth - 1 );
-   #endif
+   AssertFatal(mStackDepth > 0, "ExprEvalState::popFrame - Stack Underflow!");
 
-   mStackDepth --;
-   stack[ mStackDepth ]->reset();
+#ifdef DEBUG_SPEW
+   validate();
+
+   Platform::outputDebugString("[ConsoleInternal] Popping %sframe at %i",
+      getCurrentFrame().isOwner() ? "" : "shared ", mStackDepth - 1);
+#endif
+
+   mStackDepth--;
+   stack[mStackDepth]->reset();
    currentVariable = NULL;
 
-   #ifdef DEBUG_SPEW
+   const ConsoleValueFrame& frame = localStack.last();
+   localStack.pop_back();
+   if (!frame.isReference)
+      delete[] frame.values;
+
+   currentRegisterArray = localStack.size() ? &localStack.last() : NULL;
+
+   AssertFatal(mStackDepth == localStack.size(), avar("Stack sizes do not match. mStackDepth = %d, localStack = %d", mStackDepth, localStack.size()));
+
+#ifdef DEBUG_SPEW
    validate();
-   #endif
+#endif
 }
 
 void ExprEvalState::pushFrameRef(S32 stackIndex)
 {
-   AssertFatal( stackIndex >= 0 && stackIndex < stack.size(), "You must be asking for a valid frame!" );
+   AssertFatal(stackIndex >= 0 && stackIndex < mStackDepth, "You must be asking for a valid frame!");
 
-   #ifdef DEBUG_SPEW
+#ifdef DEBUG_SPEW
    validate();
-   
-   Platform::outputDebugString( "[ConsoleInternal] Cloning frame from %i to %i",
-      stackIndex, mStackDepth );
-   #endif
 
-   if( mStackDepth + 1 > stack.size() )
+   Platform::outputDebugString("[ConsoleInternal] Cloning frame from %i to %i",
+      stackIndex, mStackDepth);
+#endif
+
+   if (mStackDepth + 1 > stack.size())
    {
-      #ifdef DEBUG_SPEW
-      Platform::outputDebugString( "[ConsoleInternal] Growing stack by one frame" );
-      #endif
-      
-      stack.push_back( new Dictionary );
+#ifdef DEBUG_SPEW
+      Platform::outputDebugString("[ConsoleInternal] Growing stack by one frame");
+#endif
+
+      stack.push_back(new Dictionary);
    }
 
-   Dictionary& newFrame = *( stack[ mStackDepth ] );
-   newFrame.setState( this, stack[ stackIndex ] );
-   
-   mStackDepth ++;
+   Dictionary& newFrame = *(stack[mStackDepth]);
+   newFrame.setState(this, stack[stackIndex]);
+
+   mStackDepth++;
    currentVariable = NULL;
-   
-   #ifdef DEBUG_SPEW
+
+   ConsoleValue* values = localStack[stackIndex].values;
+   localStack.push_back(ConsoleValueFrame(values, true));
+   currentRegisterArray = &localStack.last();
+
+   AssertFatal(mStackDepth == localStack.size(), avar("Stack sizes do not match. mStackDepth = %d, localStack = %d", mStackDepth, localStack.size()));
+
+#ifdef DEBUG_SPEW
    validate();
-   #endif
+#endif
+}
+
+void ExprEvalState::pushDebugFrame(S32 stackIndex)
+{
+   pushFrameRef(stackIndex);
+
+   Dictionary& newFrame = *(stack[mStackDepth - 1]);
+
+   // debugger needs to know this info...
+   newFrame.scopeName = stack[stackIndex]->scopeName;
+   newFrame.scopeNamespace = stack[stackIndex]->scopeNamespace;
+   newFrame.code = stack[stackIndex]->code;
+   newFrame.ip = stack[stackIndex]->ip;
 }
 
 ExprEvalState::ExprEvalState()
@@ -795,16 +805,17 @@ ExprEvalState::ExprEvalState()
    traceOn = false;
    currentVariable = NULL;
    mStackDepth = 0;
-   stack.reserve( 64 );
+   stack.reserve(64);
    mShouldReset = false;
    mResetLocked = false;
+   copyVariable = NULL;
 }
 
 ExprEvalState::~ExprEvalState()
 {
    // Delete callframes.
-   
-   while( !stack.empty() )
+
+   while (!stack.empty())
    {
       delete stack.last();
       stack.decrement();
@@ -813,14 +824,14 @@ ExprEvalState::~ExprEvalState()
 
 void ExprEvalState::validate()
 {
-   AssertFatal( mStackDepth <= stack.size(),
-      "ExprEvalState::validate() - Stack depth pointing beyond last stack frame!" );
-      
-   for( U32 i = 0; i < stack.size(); ++ i )
-      stack[ i ]->validate();
+   AssertFatal(mStackDepth <= stack.size(),
+      "ExprEvalState::validate() - Stack depth pointing beyond last stack frame!");
+
+   for (U32 i = 0; i < stack.size(); ++i)
+      stack[i]->validate();
 }
 
-DefineEngineFunction(backtrace, void, ( ),,
+DefineEngineFunction(backtrace, void, (), ,
    "@brief Prints the scripting call stack to the console log.\n\n"
    "Used to trace functions called from within functions. Can help discover what functions were called "
    "(and not yet exited) before the current point in scripts.\n\n"
@@ -828,35 +839,35 @@ DefineEngineFunction(backtrace, void, ( ),,
 {
    U32 totalSize = 1;
 
-   for(U32 i = 0; i < gEvalState.getStackDepth(); i++)
+   for (U32 i = 0; i < gEvalState.getStackDepth(); i++)
    {
-      if(gEvalState.stack[i]->scopeNamespace && gEvalState.stack[i]->scopeNamespace->mEntryList->mPackage)  
-         totalSize += dStrlen(gEvalState.stack[i]->scopeNamespace->mEntryList->mPackage) + 2;  
-      if(gEvalState.stack[i]->scopeName)  
-      totalSize += dStrlen(gEvalState.stack[i]->scopeName) + 3;
-      if(gEvalState.stack[i]->scopeNamespace && gEvalState.stack[i]->scopeNamespace->mName)
+      if (gEvalState.stack[i]->scopeNamespace && gEvalState.stack[i]->scopeNamespace->mEntryList->mPackage)
+         totalSize += dStrlen(gEvalState.stack[i]->scopeNamespace->mEntryList->mPackage) + 2;
+      if (gEvalState.stack[i]->scopeName)
+         totalSize += dStrlen(gEvalState.stack[i]->scopeName) + 3;
+      if (gEvalState.stack[i]->scopeNamespace && gEvalState.stack[i]->scopeNamespace->mName)
          totalSize += dStrlen(gEvalState.stack[i]->scopeNamespace->mName) + 2;
    }
 
    char *buf = Con::getReturnBuffer(totalSize);
    buf[0] = 0;
-   for(U32 i = 0; i < gEvalState.getStackDepth(); i++)
+   for (U32 i = 0; i < gEvalState.getStackDepth(); i++)
    {
-      dStrcat(buf, "->");
-      
-      if(gEvalState.stack[i]->scopeNamespace && gEvalState.stack[i]->scopeNamespace->mEntryList->mPackage)  
-      {  
-         dStrcat(buf, "[");  
-         dStrcat(buf, gEvalState.stack[i]->scopeNamespace->mEntryList->mPackage);  
-         dStrcat(buf, "]");  
-      }  
-      if(gEvalState.stack[i]->scopeNamespace && gEvalState.stack[i]->scopeNamespace->mName)
+      dStrcat(buf, "->", totalSize);
+
+      if (gEvalState.stack[i]->scopeNamespace && gEvalState.stack[i]->scopeNamespace->mEntryList->mPackage)
       {
-         dStrcat(buf, gEvalState.stack[i]->scopeNamespace->mName);
-         dStrcat(buf, "::");
+         dStrcat(buf, "[", totalSize);
+         dStrcat(buf, gEvalState.stack[i]->scopeNamespace->mEntryList->mPackage, totalSize);
+         dStrcat(buf, "]", totalSize);
       }
-      if(gEvalState.stack[i]->scopeName)  
-         dStrcat(buf, gEvalState.stack[i]->scopeName);
+      if (gEvalState.stack[i]->scopeNamespace && gEvalState.stack[i]->scopeNamespace->mName)
+      {
+         dStrcat(buf, gEvalState.stack[i]->scopeNamespace->mName, totalSize);
+         dStrcat(buf, "::", totalSize);
+      }
+      if (gEvalState.stack[i]->scopeName)
+         dStrcat(buf, gEvalState.stack[i]->scopeName, totalSize);
    }
 
    Con::printf("BackTrace: %s", buf);
@@ -869,18 +880,27 @@ Namespace::Entry::Entry()
    mUsage = NULL;
    mHeader = NULL;
    mNamespace = NULL;
+   cb.mStringCallbackFunc = NULL;
+   mFunctionLineNumber = 0;
+   mFunctionName = StringTable->EmptyString();
+   mFunctionOffset = 0;
+   mMinArgs = 0;
+   mMaxArgs = 0;
+   mNext = NULL;
+   mPackage = StringTable->EmptyString();
+   mToolOnly = false;
 }
 
 void Namespace::Entry::clear()
 {
-   if(mCode)
+   if (mCode)
    {
       mCode->decRefCount();
       mCode = NULL;
    }
 
    // Clean up usage strings generated for script functions.
-   if( ( mType == Namespace::Entry::ConsoleFunctionType ) && mUsage )
+   if ((mType == Namespace::Entry::ConsoleFunctionType) && mUsage)
    {
       dFree(mUsage);
       mUsage = NULL;
@@ -901,12 +921,13 @@ Namespace::Namespace()
    mHashSequence = 0;
    mRefCountToParent = 0;
    mClassRep = 0;
+   lastUsage = NULL;
 }
 
 Namespace::~Namespace()
 {
    clearEntries();
-   if( mUsage && mCleanUpUsage )
+   if (mUsage && mCleanUpUsage)
    {
       dFree(mUsage);
       mUsage = NULL;
@@ -916,33 +937,36 @@ Namespace::~Namespace()
 
 void Namespace::clearEntries()
 {
-   for(Entry *walk = mEntryList; walk; walk = walk->mNext)
+   for (Entry *walk = mEntryList; walk; walk = walk->mNext)
       walk->clear();
 }
 
 Namespace *Namespace::find(StringTableEntry name, StringTableEntry package)
 {
-   if ( name == NULL && package == NULL )
+   if (name == NULL && package == NULL)
       return mGlobalNamespace;
 
-   for(Namespace *walk = mNamespaceList; walk; walk = walk->mNext)
-   {
-      if(walk->mName == name && walk->mPackage == package)
-         return walk;
-   }
+   auto pair = std::make_pair(name, package);
+   auto pos = gNamespaceCache.find(pair);
+   if (pos != gNamespaceCache.end())
+      return pos->second;
 
-   Namespace *ret = (Namespace *) mAllocator.alloc(sizeof(Namespace));
+   Namespace *ret = (Namespace *)mAllocator.alloc(sizeof(Namespace));
    constructInPlace(ret);
    ret->mPackage = package;
    ret->mName = name;
    ret->mNext = mNamespaceList;
    mNamespaceList = ret;
+
+   // insert into namespace cache.
+   gNamespaceCache[pair] = ret;
+
    return ret;
 }
 
-bool Namespace::unlinkClass( Namespace *parent )
+bool Namespace::unlinkClass(Namespace *parent)
 {
-   AssertFatal( mPackage == NULL, "Namespace::unlinkClass - Must not be called on a namespace coming from a package!" );
+   AssertFatal(mPackage == NULL, "Namespace::unlinkClass - Must not be called on a namespace coming from a package!");
 
    // Skip additions to this namespace coming from packages.
 
@@ -950,7 +974,7 @@ bool Namespace::unlinkClass( Namespace *parent )
 
    // Make sure "parent" is the direct parent namespace.
 
-   if( parent != NULL && walk->mParent && walk->mParent != parent )
+   if (parent != NULL && walk->mParent && walk->mParent != parent)
    {
       Con::errorf(ConsoleLogEntry::General, "Namespace::unlinkClass - cannot unlink namespace parent linkage for %s for %s.",
          walk->mName, walk->mParent->mName);
@@ -961,12 +985,12 @@ bool Namespace::unlinkClass( Namespace *parent )
    // the bottom-most namespace, i.e. the one guaranteed not 
    // to come from a package.
 
-   mRefCountToParent --;
-   AssertFatal( mRefCountToParent >= 0, "Namespace::unlinkClass - reference count to parent is less than 0" );
+   mRefCountToParent--;
+   AssertFatal(mRefCountToParent >= 0, "Namespace::unlinkClass - reference count to parent is less than 0");
 
    // Unlink if the count dropped to zero.
 
-   if( mRefCountToParent == 0 )
+   if (mRefCountToParent == 0)
    {
       walk->mParent = NULL;
       trashCache();
@@ -980,7 +1004,7 @@ bool Namespace::classLinkTo(Namespace *parent)
 {
    Namespace* walk = getPackageRoot();
 
-   if(walk->mParent && walk->mParent != parent)
+   if (walk->mParent && walk->mParent != parent)
    {
       Con::errorf(ConsoleLogEntry::General, "Error: cannot change namespace parent linkage of %s from %s to %s.",
          walk->mName, walk->mParent->mName, parent->mName);
@@ -997,10 +1021,10 @@ bool Namespace::classLinkTo(Namespace *parent)
 
 void Namespace::buildHashTable()
 {
-   if(mHashSequence == mCacheSequence)
+   if (mHashSequence == mCacheSequence)
       return;
 
-   if(!mEntryList && mParent)
+   if (!mEntryList && mParent)
    {
       mParent->buildHashTable();
       mHashTable = mParent->mHashTable;
@@ -1011,33 +1035,33 @@ void Namespace::buildHashTable()
 
    U32 entryCount = 0;
    Namespace * ns;
-   for(ns = this; ns; ns = ns->mParent)
-      for(Entry *walk = ns->mEntryList; walk; walk = walk->mNext)
-         if(lookupRecursive(walk->mFunctionName) == walk)
+   for (ns = this; ns; ns = ns->mParent)
+      for (Entry *walk = ns->mEntryList; walk; walk = walk->mNext)
+         if (lookupRecursive(walk->mFunctionName) == walk)
             entryCount++;
 
    mHashSize = entryCount + (entryCount >> 1) + 1;
 
-   if(!(mHashSize & 1))
+   if (!(mHashSize & 1))
       mHashSize++;
 
-   mHashTable = (Entry **) mCacheAllocator.alloc(sizeof(Entry *) * mHashSize);
-   for(U32 i = 0; i < mHashSize; i++)
+   mHashTable = (Entry **)mCacheAllocator.alloc(sizeof(Entry *) * mHashSize);
+   for (U32 i = 0; i < mHashSize; i++)
       mHashTable[i] = NULL;
 
-   for(ns = this; ns; ns = ns->mParent)
+   for (ns = this; ns; ns = ns->mParent)
    {
-      for(Entry *walk = ns->mEntryList; walk; walk = walk->mNext)
+      for (Entry *walk = ns->mEntryList; walk; walk = walk->mNext)
       {
          U32 index = HashPointer(walk->mFunctionName) % mHashSize;
-         while(mHashTable[index] && mHashTable[index]->mFunctionName != walk->mFunctionName)
+         while (mHashTable[index] && mHashTable[index]->mFunctionName != walk->mFunctionName)
          {
             index++;
-            if(index >= mHashSize)
+            if (index >= mHashSize)
                index = 0;
          }
 
-         if(!mHashTable[index])
+         if (!mHashTable[index])
             mHashTable[index] = walk;
       }
    }
@@ -1045,15 +1069,15 @@ void Namespace::buildHashTable()
    mHashSequence = mCacheSequence;
 }
 
-void Namespace::getUniqueEntryLists( Namespace *other, VectorPtr<Entry *> *outThisList, VectorPtr<Entry *> *outOtherList )
+void Namespace::getUniqueEntryLists(Namespace *other, VectorPtr<Entry *> *outThisList, VectorPtr<Entry *> *outOtherList)
 {
    // All namespace entries in the common ACR should be
    // ignored when checking for duplicate entry names.
    static VectorPtr<Namespace::Entry *> commonEntries;
    commonEntries.clear();
 
-   AbstractClassRep *commonACR = mClassRep->getCommonParent( other->mClassRep );
-   commonACR->getNameSpace()->getEntryList( &commonEntries );
+   AbstractClassRep *commonACR = mClassRep->getCommonParent(other->mClassRep);
+   commonACR->getNameSpace()->getEntryList(&commonEntries);
 
    // Make life easier
    VectorPtr<Namespace::Entry *> &thisEntries = *outThisList;
@@ -1063,29 +1087,29 @@ void Namespace::getUniqueEntryLists( Namespace *other, VectorPtr<Entry *> *outTh
    thisEntries.clear();
    compEntries.clear();
 
-   getEntryList( &thisEntries );
-   other->getEntryList( &compEntries );
+   getEntryList(&thisEntries);
+   other->getEntryList(&compEntries);
 
    // Run through all of the entries in the common ACR, and remove them from
    // the other two entry lists
-   for( NamespaceEntryListIterator itr = commonEntries.begin(); itr != commonEntries.end(); itr++ )
+   for (NamespaceEntryListIterator itr = commonEntries.begin(); itr != commonEntries.end(); itr++)
    {
       // Check this entry list
-      for( NamespaceEntryListIterator thisItr = thisEntries.begin(); thisItr != thisEntries.end(); thisItr++ )
+      for (NamespaceEntryListIterator thisItr = thisEntries.begin(); thisItr != thisEntries.end(); thisItr++)
       {
-         if( *thisItr == *itr )
+         if (*thisItr == *itr)
          {
-            thisEntries.erase( thisItr );
+            thisEntries.erase(thisItr);
             break;
          }
       }
 
       // Same check for component entry list
-      for( NamespaceEntryListIterator compItr = compEntries.begin(); compItr != compEntries.end(); compItr++ )
+      for (NamespaceEntryListIterator compItr = compEntries.begin(); compItr != compEntries.end(); compItr++)
       {
-         if( *compItr == *itr )
+         if (*compItr == *itr)
          {
-            compEntries.erase( compItr );
+            compEntries.erase(compItr);
             break;
          }
       }
@@ -1095,12 +1119,15 @@ void Namespace::getUniqueEntryLists( Namespace *other, VectorPtr<Entry *> *outTh
 void Namespace::init()
 {
    // create the global namespace
-   mGlobalNamespace = (Namespace *) mAllocator.alloc(sizeof(Namespace));
+   mGlobalNamespace = (Namespace *)mAllocator.alloc(sizeof(Namespace));
    constructInPlace(mGlobalNamespace);
    mGlobalNamespace->mPackage = NULL;
    mGlobalNamespace->mName = NULL;
    mGlobalNamespace->mNext = NULL;
    mNamespaceList = mGlobalNamespace;
+
+   // Insert into namespace cache.
+   gNamespaceCache[std::make_pair(mGlobalNamespace->mName, mGlobalNamespace->mPackage)] = mGlobalNamespace;
 }
 
 Namespace *Namespace::global()
@@ -1113,7 +1140,7 @@ void Namespace::shutdown()
    // The data chunker will release all memory in one go
    // without calling destructors, so we do this manually here.
 
-   for(Namespace *walk = mNamespaceList; walk; walk = walk->mNext)
+   for (Namespace *walk = mNamespaceList; walk; walk = walk->mNext)
       walk->~Namespace();
 }
 
@@ -1125,21 +1152,21 @@ void Namespace::trashCache()
 
 const char *Namespace::tabComplete(const char *prevText, S32 baseLen, bool fForward)
 {
-   if(mHashSequence != mCacheSequence)
+   if (mHashSequence != mCacheSequence)
       buildHashTable();
 
    const char *bestMatch = NULL;
-   for(U32 i = 0; i < mHashSize; i++)
-      if(mHashTable[i] && canTabComplete(prevText, bestMatch, mHashTable[i]->mFunctionName, baseLen, fForward))
+   for (U32 i = 0; i < mHashSize; i++)
+      if (mHashTable[i] && canTabComplete(prevText, bestMatch, mHashTable[i]->mFunctionName, baseLen, fForward))
          bestMatch = mHashTable[i]->mFunctionName;
    return bestMatch;
 }
 
 Namespace::Entry *Namespace::lookupRecursive(StringTableEntry name)
 {
-   for(Namespace *ns = this; ns; ns = ns->mParent)
-      for(Entry *walk = ns->mEntryList; walk; walk = walk->mNext)
-         if(walk->mFunctionName == name)
+   for (Namespace *ns = this; ns; ns = ns->mParent)
+      for (Entry *walk = ns->mEntryList; walk; walk = walk->mNext)
+         if (walk->mFunctionName == name)
             return walk;
 
    return NULL;
@@ -1147,20 +1174,20 @@ Namespace::Entry *Namespace::lookupRecursive(StringTableEntry name)
 
 Namespace::Entry *Namespace::lookup(StringTableEntry name)
 {
-   if(mHashSequence != mCacheSequence)
+   if (mHashSequence != mCacheSequence)
       buildHashTable();
 
    U32 index = HashPointer(name) % mHashSize;
-   while(mHashTable[index] && mHashTable[index]->mFunctionName != name)
+   while (mHashTable[index] && mHashTable[index]->mFunctionName != name)
    {
       index++;
-      if(index >= mHashSize)
+      if (index >= mHashSize)
          index = 0;
    }
    return mHashTable[index];
 }
 
-static S32 QSORT_CALLBACK compareEntries(const void* a,const void* b)
+static S32 QSORT_CALLBACK compareEntries(const void* a, const void* b)
 {
    const Namespace::Entry* fa = *((Namespace::Entry**)a);
    const Namespace::Entry* fb = *((Namespace::Entry**)b);
@@ -1170,28 +1197,28 @@ static S32 QSORT_CALLBACK compareEntries(const void* a,const void* b)
 
 void Namespace::getEntryList(VectorPtr<Entry *> *vec)
 {
-   if(mHashSequence != mCacheSequence)
+   if (mHashSequence != mCacheSequence)
       buildHashTable();
 
-   for(U32 i = 0; i < mHashSize; i++)
-      if(mHashTable[i])
+   for (U32 i = 0; i < mHashSize; i++)
+      if (mHashTable[i])
          vec->push_back(mHashTable[i]);
 
-   dQsort(vec->address(),vec->size(),sizeof(Namespace::Entry *),compareEntries);
+   dQsort(vec->address(), vec->size(), sizeof(Namespace::Entry *), compareEntries);
 }
 
 Namespace::Entry *Namespace::createLocalEntry(StringTableEntry name)
 {
-   for(Entry *walk = mEntryList; walk; walk = walk->mNext)
+   for (Entry *walk = mEntryList; walk; walk = walk->mNext)
    {
-      if(walk->mFunctionName == name)
+      if (walk->mFunctionName == name)
       {
          walk->clear();
          return walk;
       }
    }
 
-   Entry *ent = (Entry *) mAllocator.alloc(sizeof(Entry));
+   Entry *ent = (Entry *)mAllocator.alloc(sizeof(Entry));
    constructInPlace(ent);
 
    ent->mNamespace = this;
@@ -1203,7 +1230,7 @@ Namespace::Entry *Namespace::createLocalEntry(StringTableEntry name)
    return ent;
 }
 
-void Namespace::addFunction( StringTableEntry name, CodeBlock *cb, U32 functionOffset, const char* usage, U32 lineNumber )
+void Namespace::addFunction(StringTableEntry name, CodeBlock *cb, U32 functionOffset, const char* usage, U32 lineNumber)
 {
    Entry *ent = createLocalEntry(name);
    trashCache();
@@ -1213,10 +1240,10 @@ void Namespace::addFunction( StringTableEntry name, CodeBlock *cb, U32 functionO
    ent->mFunctionOffset = functionOffset;
    ent->mCode->incRefCount();
    ent->mType = Entry::ConsoleFunctionType;
-   ent->mFunctionLineNumber = lineNumber;   
+   ent->mFunctionLineNumber = lineNumber;
 }
 
-void Namespace::addCommand( StringTableEntry name, StringCallback cb, const char *usage, S32 minArgs, S32 maxArgs, bool isToolOnly, ConsoleFunctionHeader* header )
+void Namespace::addCommand(StringTableEntry name, StringCallback cb, const char *usage, S32 minArgs, S32 maxArgs, bool isToolOnly, ConsoleFunctionHeader* header)
 {
    Entry *ent = createLocalEntry(name);
    trashCache();
@@ -1231,7 +1258,7 @@ void Namespace::addCommand( StringTableEntry name, StringCallback cb, const char
    ent->cb.mStringCallbackFunc = cb;
 }
 
-void Namespace::addCommand( StringTableEntry name, IntCallback cb, const char *usage, S32 minArgs, S32 maxArgs, bool isToolOnly, ConsoleFunctionHeader* header )
+void Namespace::addCommand(StringTableEntry name, IntCallback cb, const char *usage, S32 minArgs, S32 maxArgs, bool isToolOnly, ConsoleFunctionHeader* header)
 {
    Entry *ent = createLocalEntry(name);
    trashCache();
@@ -1246,7 +1273,7 @@ void Namespace::addCommand( StringTableEntry name, IntCallback cb, const char *u
    ent->cb.mIntCallbackFunc = cb;
 }
 
-void Namespace::addCommand( StringTableEntry name, VoidCallback cb, const char *usage, S32 minArgs, S32 maxArgs, bool isToolOnly, ConsoleFunctionHeader* header )
+void Namespace::addCommand(StringTableEntry name, VoidCallback cb, const char *usage, S32 minArgs, S32 maxArgs, bool isToolOnly, ConsoleFunctionHeader* header)
 {
    Entry *ent = createLocalEntry(name);
    trashCache();
@@ -1261,7 +1288,7 @@ void Namespace::addCommand( StringTableEntry name, VoidCallback cb, const char *
    ent->cb.mVoidCallbackFunc = cb;
 }
 
-void Namespace::addCommand( StringTableEntry name, FloatCallback cb, const char *usage, S32 minArgs, S32 maxArgs, bool isToolOnly, ConsoleFunctionHeader* header )
+void Namespace::addCommand(StringTableEntry name, FloatCallback cb, const char *usage, S32 minArgs, S32 maxArgs, bool isToolOnly, ConsoleFunctionHeader* header)
 {
    Entry *ent = createLocalEntry(name);
    trashCache();
@@ -1276,7 +1303,7 @@ void Namespace::addCommand( StringTableEntry name, FloatCallback cb, const char 
    ent->cb.mFloatCallbackFunc = cb;
 }
 
-void Namespace::addCommand( StringTableEntry name, BoolCallback cb, const char *usage, S32 minArgs, S32 maxArgs, bool isToolOnly, ConsoleFunctionHeader* header )
+void Namespace::addCommand(StringTableEntry name, BoolCallback cb, const char *usage, S32 minArgs, S32 maxArgs, bool isToolOnly, ConsoleFunctionHeader* header)
 {
    Entry *ent = createLocalEntry(name);
    trashCache();
@@ -1291,16 +1318,16 @@ void Namespace::addCommand( StringTableEntry name, BoolCallback cb, const char *
    ent->cb.mBoolCallbackFunc = cb;
 }
 
-void Namespace::addScriptCallback( const char *funcName, const char *usage, ConsoleFunctionHeader* header )
+void Namespace::addScriptCallback(const char *funcName, const char *usage, ConsoleFunctionHeader* header)
 {
-   static U32 uid=0;
+   static U32 uid = 0;
    char buffer[1024];
    char lilBuffer[32];
-   dStrcpy(buffer, funcName);
+   dStrcpy(buffer, funcName, 1024);
    dSprintf(lilBuffer, 32, "_%d_cb", uid++);
-   dStrcat(buffer, lilBuffer);
+   dStrcat(buffer, lilBuffer, 1024);
 
-   Entry *ent = createLocalEntry(StringTable->insert( buffer ));
+   Entry *ent = createLocalEntry(StringTable->insert(buffer));
    trashCache();
 
    ent->mUsage = usage;
@@ -1314,17 +1341,17 @@ void Namespace::addScriptCallback( const char *funcName, const char *usage, Cons
 
 void Namespace::markGroup(const char* name, const char* usage)
 {
-   static U32 uid=0;
+   static U32 uid = 0;
    char buffer[1024];
    char lilBuffer[32];
-   dStrcpy(buffer, name);
+   dStrcpy(buffer, name, 1024);
    dSprintf(lilBuffer, 32, "_%d", uid++);
-   dStrcat(buffer, lilBuffer);
+   dStrcat(buffer, lilBuffer, 1024);
 
-   Entry *ent = createLocalEntry(StringTable->insert( buffer ));
+   Entry *ent = createLocalEntry(StringTable->insert(buffer));
    trashCache();
 
-   if(usage != NULL)
+   if (usage != NULL)
       lastUsage = (char*)(ent->mUsage = usage);
    else
       ent->mUsage = lastUsage;
@@ -1338,56 +1365,63 @@ void Namespace::markGroup(const char* name, const char* usage)
 
 extern S32 executeBlock(StmtNode *block, ExprEvalState *state);
 
-const char *Namespace::Entry::execute(S32 argc, ConsoleValueRef *argv, ExprEvalState *state)
+ConsoleValue Namespace::Entry::execute(S32 argc, ConsoleValue *argv, ExprEvalState *state)
 {
-   if(mType == ConsoleFunctionType)
+   STR.clearFunctionOffset();
+
+   if (mType == ConsoleFunctionType)
    {
-      if(mFunctionOffset)
-         return mCode->exec(mFunctionOffset, argv[0], mNamespace, argc, argv, false, mPackage);
+      if (mFunctionOffset)
+      {
+         return std::move(mCode->exec(mFunctionOffset, argv[0].getString(), mNamespace, argc, argv, false, mPackage));
+      }
       else
-         return "";
+      {
+         return std::move(ConsoleValue());
+      }
    }
 
 #ifndef TORQUE_DEBUG
    // [tom, 12/13/2006] This stops tools functions from working in the console,
    // which is useful behavior when debugging so I'm ifdefing this out for debug builds.
-   if(mToolOnly && ! Con::isCurrentScriptToolScript())
+   if (mToolOnly && !Con::isCurrentScriptToolScript())
    {
       Con::errorf(ConsoleLogEntry::Script, "%s::%s - attempting to call tools only function from outside of tools", mNamespace->mName, mFunctionName);
-      return "";
+      return std::move(ConsoleValue());
    }
 #endif
 
-   if((mMinArgs && argc < mMinArgs) || (mMaxArgs && argc > mMaxArgs))
+   if ((mMinArgs && argc < mMinArgs) || (mMaxArgs && argc > mMaxArgs))
    {
       Con::warnf(ConsoleLogEntry::Script, "%s::%s - wrong number of arguments.", mNamespace->mName, mFunctionName);
       Con::warnf(ConsoleLogEntry::Script, "usage: %s", mUsage);
-      return "";
+      return std::move(ConsoleValue());
    }
 
-   static char returnBuffer[32];
-   switch(mType)
+   ConsoleValue result;
+   switch (mType)
    {
       case StringCallbackType:
-         return cb.mStringCallbackFunc(state->thisObject, argc, argv);
+      {
+         const char* str = cb.mStringCallbackFunc(state->thisObject, argc, argv);
+         result.setString(str);
+         break;
+      }
       case IntCallbackType:
-         dSprintf(returnBuffer, sizeof(returnBuffer), "%d",
-            cb.mIntCallbackFunc(state->thisObject, argc, argv));
-         return returnBuffer;
+         result.setInt(cb.mIntCallbackFunc(state->thisObject, argc, argv));
+         break;
       case FloatCallbackType:
-         dSprintf(returnBuffer, sizeof(returnBuffer), "%g",
-            cb.mFloatCallbackFunc(state->thisObject, argc, argv));
-         return returnBuffer;
+         result.setFloat(cb.mFloatCallbackFunc(state->thisObject, argc, argv));
+         break;
       case VoidCallbackType:
          cb.mVoidCallbackFunc(state->thisObject, argc, argv);
-         return "";
+         break;
       case BoolCallbackType:
-         dSprintf(returnBuffer, sizeof(returnBuffer), "%d",
-            (U32)cb.mBoolCallbackFunc(state->thisObject, argc, argv));
-         return returnBuffer;
+         result.setBool(cb.mBoolCallbackFunc(state->thisObject, argc, argv));
+         break;
    }
 
-   return "";
+   return std::move(result);
 }
 
 //-----------------------------------------------------------------------------
@@ -1398,181 +1432,183 @@ namespace {
    /// Scan the given usage string for an argument list description.  With the
    /// old console macros, these were usually included as the first part of the
    /// usage string.
-   bool sFindArgumentListSubstring( const char* usage, const char*& start, const char*& end )
+   bool sFindArgumentListSubstring(const char* usage, const char*& start, const char*& end)
    {
-      if( !usage )
+      if (!usage)
          return false;
-         
+
       const char* ptr = usage;
-      while( *ptr && *ptr != '(' && *ptr != '\n' ) // Only scan first line of usage string.
+      while (*ptr && *ptr != '(' && *ptr != '\n') // Only scan first line of usage string.
       {
          // Stop on the first alphanumeric character as we expect
          // argument lists to precede descriptions.
-         if( dIsalnum( *ptr ) )
+         if (dIsalnum(*ptr))
             return false;
-            
-         ptr ++;
+
+         ptr++;
       }
-         
-      if( *ptr != '(' )
+
+      if (*ptr != '(')
          return false;
 
       start = ptr;
-      ptr ++;
-      
+      ptr++;
+
       bool inString = false;
       U32 nestingCount = 0;
-      
-      while( *ptr && ( *ptr != ')' || nestingCount > 0 || inString ) )
+
+      while (*ptr && (*ptr != ')' || nestingCount > 0 || inString))
       {
-         if( *ptr == '(' )
-            nestingCount ++;
-         else if( *ptr == ')' )
-            nestingCount --;
-         else if( *ptr == '"' )
+         if (*ptr == '(')
+            nestingCount++;
+         else if (*ptr == ')')
+            nestingCount--;
+         else if (*ptr == '"')
             inString = !inString;
-         else if( *ptr == '\\' && ptr[ 1 ] == '"' )
-            ptr ++;
-         ptr ++;
+         else if (*ptr == '\\' && ptr[1] == '"')
+            ptr++;
+         ptr++;
       }
-      
-      if( *ptr )
-         ptr ++;
+
+      if (*ptr)
+         ptr++;
       end = ptr;
-      
+
       return true;
    }
-   
+
    ///
-   void sParseList( const char* str, Vector< String >& outList )
+   void sParseList(const char* str, Vector< String >& outList)
    {
       // Skip the initial '( '.
-      
+
       const char* ptr = str;
-      while( *ptr && dIsspace( *ptr ) )
-         ptr ++;
-      
-      if( *ptr == '(' )
+      while (*ptr && dIsspace(*ptr))
+         ptr++;
+
+      if (*ptr == '(')
       {
-         ptr ++;
-         while( *ptr && dIsspace( *ptr ) )
-            ptr ++;
+         ptr++;
+         while (*ptr && dIsspace(*ptr))
+            ptr++;
       }
-      
+
       // Parse out list items.
-      
-      while( *ptr && *ptr != ')' )
+
+      while (*ptr && *ptr != ')')
       {
          // Find end of element.
-         
+
          const char* start = ptr;
 
          bool inString = false;
          U32 nestingCount = 0;
 
-         while( *ptr && ( ( *ptr != ')' && *ptr != ',' ) || nestingCount > 0 || inString ) )
+         while (*ptr && ((*ptr != ')' && *ptr != ',') || nestingCount > 0 || inString))
          {
-            if( *ptr == '(' )
-               nestingCount ++;
-            else if( *ptr == ')' )
-               nestingCount --;
-            else if( *ptr == '"' )
+            if (*ptr == '(')
+               nestingCount++;
+            else if (*ptr == ')')
+               nestingCount--;
+            else if (*ptr == '"')
                inString = !inString;
-            else if( *ptr == '\\' && ptr[ 1 ] == '"' )
-               ptr ++;
-            ptr ++;
+            else if (*ptr == '\\' && ptr[1] == '"')
+               ptr++;
+            ptr++;
          }
-            
+
          // Backtrack to remove trailing whitespace.
-            
+
          const char* end = ptr;
-         if( *end == ',' || *end == ')' )
-            end --;
-         while( end > start && dIsspace( *end ) )
-            end --;
-         if( *end )
-            end ++;
-            
+         if (*end == ',' || *end == ')')
+            end--;
+         while (end > start && dIsspace(*end))
+            end--;
+         if (*end)
+            end++;
+
          // Add to list.
-            
-         if( start != end )
-            outList.push_back( String( start, end - start ) );
-            
+
+         if (start != end)
+            outList.push_back(String(start, end - start));
+
          // Skip comma and whitespace.
-         
-         if( *ptr == ',' )
-            ptr ++;
-         while( *ptr && dIsspace( *ptr ) )
-            ptr ++;
+
+         if (*ptr == ',')
+            ptr++;
+         while (*ptr && dIsspace(*ptr))
+            ptr++;
       }
    }
-   
+
    ///
-   void sGetArgNameAndType( const String& str, String& outType, String& outName )
+   void sGetArgNameAndType(const String& str, String& outType, String& outName)
    {
-      if( !str.length() )
+      if (!str.length())
       {
          outType = String::EmptyString;
          outName = String::EmptyString;
          return;
       }
-      
+
       // Find first non-ID character from right.
-      
+
       S32 index = str.length() - 1;
-      while( index >= 0 && ( dIsalnum( str[ index ] ) || str[ index ] == '_' ) )
-         index --;
-         
+      while (index >= 0 && (dIsalnum(str[index]) || str[index] == '_'))
+         index--;
+
       const U32 nameStartIndex = index + 1;
-      
+
       // Find end of type name by skipping rightmost whitespace inwards.
-      
-      while( index >= 0 && dIsspace( str[ index ] ) )
-         index --;
-         
+
+      while (index >= 0 && dIsspace(str[index]))
+         index--;
+
       //
-      
-      outName = String( &( ( const char* ) str )[ nameStartIndex ] );
-      outType = String( str, index + 1 );
+
+      outName = String(&((const char*)str)[nameStartIndex]);
+      outType = String(str, index + 1);
    }
-   
+
    /// Return the type name to show in documentation for the given C++ type.
-   const char* sGetDocTypeString( const char* nativeType )
+   const char* sGetDocTypeString(const char* nativeType)
    {
-      if( dStrncmp( nativeType, "const ", 6 ) == 0 )
+      if (dStrncmp(nativeType, "const ", 6) == 0)
          nativeType += 6;
 
-      if( dStrcmp( nativeType, "char*" ) == 0 || dStrcmp( nativeType, "char *" ) == 0 )
+      if (String::compare(nativeType, "char*") == 0 || String::compare(nativeType, "char *") == 0)
          return "string";
-      else if( dStrcmp( nativeType, "S32" ) == 0 || dStrcmp( nativeType, "U32" ) == 0 )
+      else if (String::compare(nativeType, "S32") == 0)
          return "int";
-      else if( dStrcmp( nativeType, "F32" ) == 0 )
+      else if (String::compare(nativeType, "U32") == 0)
+         return "uint";
+      else if (String::compare(nativeType, "F32") == 0)
          return "float";
-         
-      const U32 length = dStrlen( nativeType );
-      if( nativeType[ length - 1 ] == '&' || nativeType[ length - 1 ] == '*' )
-         return StringTable->insertn( nativeType, length - 1 );
-         
+
+      const U32 length = dStrlen(nativeType);
+      if (nativeType[length - 1] == '&' || nativeType[length - 1] == '*')
+         return StringTable->insertn(nativeType, length - 1);
+
       return nativeType;
    }
 }
 
-String Namespace::Entry::getBriefDescription( String* outRemainingDocText ) const
+String Namespace::Entry::getBriefDescription(String* outRemainingDocText) const
 {
    String docString = getDocString();
-   
-   S32 newline = docString.find( '\n' );
-   if( newline == -1 )
+
+   S32 newline = docString.find('\n');
+   if (newline == -1)
    {
-      if( outRemainingDocText )
+      if (outRemainingDocText)
          *outRemainingDocText = String();
       return docString;
    }
-      
-   String brief = docString.substr( 0, newline );
-   if( outRemainingDocText )
-      *outRemainingDocText = docString.substr( newline + 1 );
-      
+
+   String brief = docString.substr(0, newline);
+   if (outRemainingDocText)
+      *outRemainingDocText = docString.substr(newline + 1);
+
    return brief;
 }
 
@@ -1580,92 +1616,92 @@ String Namespace::Entry::getDocString() const
 {
    const char* argListStart;
    const char* argListEnd;
-   
-   if( sFindArgumentListSubstring( mUsage, argListStart, argListEnd ) )
+
+   if (sFindArgumentListSubstring(mUsage, argListStart, argListEnd))
    {
       // Skip the " - " part present in some old doc strings.
-      
+
       const char* ptr = argListEnd;
-      while( *ptr && dIsspace( *ptr ) )
-         ptr ++;
-         
-      if( *ptr == '-' )
+      while (*ptr && dIsspace(*ptr))
+         ptr++;
+
+      if (*ptr == '-')
       {
-         ptr ++;
-         while( *ptr && dIsspace( *ptr ) )
-            ptr ++;
+         ptr++;
+         while (*ptr && dIsspace(*ptr))
+            ptr++;
       }
-      
+
       return ptr;
    }
-   
+
    return mUsage;
 }
 
 String Namespace::Entry::getArgumentsString() const
 {
    StringBuilder str;
-   
-   if( mHeader )
+
+   if (mHeader)
    {
       // Parse out the argument list string supplied with the extended
       // function header and add default arguments as we go.
-      
+
       Vector< String > argList;
       Vector< String > defaultArgList;
-      
-      sParseList( mHeader->mArgString, argList );
-      sParseList( mHeader->mDefaultArgString, defaultArgList );
-      
-      str.append( '(' );
-      
+
+      sParseList(mHeader->mArgString, argList);
+      sParseList(mHeader->mDefaultArgString, defaultArgList);
+
+      str.append('(');
+
       const U32 numArgs = argList.size();
       const U32 numDefaultArgs = defaultArgList.size();
       const U32 firstDefaultArgIndex = numArgs - numDefaultArgs;
-      
-      for( U32 i = 0; i < numArgs; ++ i )
+
+      for (U32 i = 0; i < numArgs; ++i)
       {
          // Add separator if not first arg.
-         
-         if( i > 0 )
-            str.append( ',' );
-                     
+
+         if (i > 0)
+            str.append(',');
+
          // Add type and name.
-         
+
          String name;
          String type;
-         
-         sGetArgNameAndType( argList[ i ], type, name );
-         
-         str.append( ' ' );
-         str.append( sGetDocTypeString( type ) );
-         str.append( ' ' );
-         str.append( name );
-         
+
+         sGetArgNameAndType(argList[i], type, name);
+
+         str.append(' ');
+         str.append(sGetDocTypeString(type));
+         str.append(' ');
+         str.append(name);
+
          // Add default value, if any.
-         
-         if( i >= firstDefaultArgIndex )
+
+         if (i >= firstDefaultArgIndex)
          {
-            str.append( '=' );
-            str.append( defaultArgList[ i - firstDefaultArgIndex ] );
+            str.append('=');
+            str.append(defaultArgList[i - firstDefaultArgIndex]);
          }
       }
-      
-      if( numArgs > 0 )
-         str.append( ' ' );
-      str.append( ')' );
+
+      if (numArgs > 0)
+         str.append(' ');
+      str.append(')');
    }
    else
    {
       // No extended function header.  Try to parse out the argument
       // list from the usage string.
-      
+
       const char* argListStart;
       const char* argListEnd;
-      
-      if( sFindArgumentListSubstring( mUsage, argListStart, argListEnd ) )
-         str.append( argListStart, argListEnd - argListStart );
-      else if( mType == ConsoleFunctionType && mCode )
+
+      if (sFindArgumentListSubstring(mUsage, argListStart, argListEnd))
+         str.append(argListStart, argListEnd - argListStart);
+      else if (mType == ConsoleFunctionType && mCode)
       {
          // This isn't correct but the nonsense console stuff is set up such that all
          // functions that have no function bodies are keyed to offset 0 to indicate "no code."
@@ -1673,70 +1709,70 @@ String Namespace::Entry::getArgumentsString() const
          // tell here what the actual prototype is except if we searched though the entire opcode
          // stream for the corresponding OP_FUNC_DECL (which would require dealing with the
          // variable-size instructions).
-         
-         if( !mFunctionOffset )
+
+         if (!mFunctionOffset)
             return "()";
-            
-         String args = mCode->getFunctionArgs( mFunctionOffset );
-         if( args.isEmpty() )
+
+         String args = mCode->getFunctionArgs(mFunctionOffset);
+         if (args.isEmpty())
             return "()";
-            
-         str.append( "( " );
-         str.append( args );
-         str.append( " )" );
+
+         str.append("( ");
+         str.append(args);
+         str.append(" )");
       }
    }
-   
+
    return str.end();
 }
 
 String Namespace::Entry::getPrototypeString() const
 {
    StringBuilder str;
-   
+
    // Start with return type.
-   
-   if( mHeader && mHeader->mReturnString )
+
+   if (mHeader && mHeader->mReturnString)
    {
-      str.append( sGetDocTypeString( mHeader->mReturnString ) );
-      str.append( ' ' );
+      str.append(sGetDocTypeString(mHeader->mReturnString));
+      str.append(' ');
    }
    else
-      switch( mType )
+      switch (mType)
       {
          case StringCallbackType:
-            str.append( "string " );
+            str.append("string ");
             break;
-            
+
          case IntCallbackType:
-            str.append( "int " );
+            str.append("int ");
             break;
 
          case FloatCallbackType:
-            str.append( "float " );
+            str.append("float ");
             break;
 
          case VoidCallbackType:
-            str.append( "void " );
+            str.append("void ");
             break;
 
          case BoolCallbackType:
-            str.append( "bool " );
+            str.append("bool ");
             break;
-            
+
          case ScriptCallbackType:
             break;
       }
-   
+
    // Add function name and arguments.
 
-   if( mType == ScriptCallbackType )
-      str.append( cb.mCallbackName );
+   if (mType == ScriptCallbackType)
+      str.append(cb.mCallbackName);
    else
-      str.append( mFunctionName );
-      
-   str.append( getArgumentsString() );
-      
+      str.append(mFunctionName);
+
+   str.append(getArgumentsString());
+
    return str.end();
 }
 
@@ -1748,8 +1784,8 @@ U32 Namespace::mOldNumActivePackages = 0;
 
 bool Namespace::isPackage(StringTableEntry name)
 {
-   for(Namespace *walk = mNamespaceList; walk; walk = walk->mNext)
-      if(walk->mPackage == name)
+   for (Namespace *walk = mNamespaceList; walk; walk = walk->mNext)
+      if (walk->mPackage == name)
          return true;
    return false;
 }
@@ -1761,7 +1797,7 @@ U32 Namespace::getActivePackagesCount()
 
 StringTableEntry Namespace::getActivePackage(U32 index)
 {
-   if( index >= mNumActivePackages )
+   if (index >= mNumActivePackages)
       return StringTable->EmptyString();
 
    return mActivePackages[index];
@@ -1769,26 +1805,26 @@ StringTableEntry Namespace::getActivePackage(U32 index)
 
 void Namespace::activatePackage(StringTableEntry name)
 {
-   if(mNumActivePackages == MaxActivePackages)
+   if (mNumActivePackages == MaxActivePackages)
    {
       Con::printf("ActivatePackage(%s) failed - Max package limit reached: %d", name, MaxActivePackages);
       return;
    }
-   if(!name)
+   if (!name)
       return;
 
    // see if this one's already active
-   for(U32 i = 0; i < mNumActivePackages; i++)
-      if(mActivePackages[i] == name)
+   for (U32 i = 0; i < mNumActivePackages; i++)
+      if (mActivePackages[i] == name)
          return;
 
    // kill the cache
    trashCache();
 
    // find all the package namespaces...
-   for(Namespace *walk = mNamespaceList; walk; walk = walk->mNext)
+   for (Namespace *walk = mNamespaceList; walk; walk = walk->mNext)
    {
-      if(walk->mPackage == name)
+      if (walk->mPackage == name)
       {
          Namespace *parent = Namespace::find(walk->mName);
          // hook the parent
@@ -1797,10 +1833,10 @@ void Namespace::activatePackage(StringTableEntry name)
 
          // now swap the entries:
          Entry *ew;
-         for(ew = parent->mEntryList; ew; ew = ew->mNext)
+         for (ew = parent->mEntryList; ew; ew = ew->mNext)
             ew->mNamespace = walk;
 
-         for(ew = walk->mEntryList; ew; ew = ew->mNext)
+         for (ew = walk->mEntryList; ew; ew = ew->mNext)
             ew->mNamespace = parent;
 
          ew = walk->mEntryList;
@@ -1816,33 +1852,33 @@ void Namespace::deactivatePackage(StringTableEntry name)
    U32 oldNumActivePackages = mNumActivePackages;
 
    // Remove all packages down to the given one
-   deactivatePackageStack( name );
+   deactivatePackageStack(name);
 
    // Now add back all packages that followed the given one
-   if(!oldNumActivePackages)
+   if (!oldNumActivePackages)
       return;
-   for(U32 i = mNumActivePackages+1; i < oldNumActivePackages; i++)
+   for (U32 i = mNumActivePackages + 1; i < oldNumActivePackages; i++)
       activatePackage(mActivePackages[i]);
 }
 
 void Namespace::deactivatePackageStack(StringTableEntry name)
 {
    S32 i, j;
-   for(i = 0; i < mNumActivePackages; i++)
-      if(mActivePackages[i] == name)
+   for (i = 0; i < mNumActivePackages; i++)
+      if (mActivePackages[i] == name)
          break;
-   if(i == mNumActivePackages)
+   if (i == mNumActivePackages)
       return;
 
    trashCache();
 
    // Remove all packages down to the given one
-   for(j = mNumActivePackages - 1; j >= i; j--)
+   for (j = mNumActivePackages - 1; j >= i; j--)
    {
       // gotta unlink em in reverse order...
-      for(Namespace *walk = mNamespaceList; walk; walk = walk->mNext)
+      for (Namespace *walk = mNamespaceList; walk; walk = walk->mNext)
       {
-         if(walk->mPackage == mActivePackages[j])
+         if (walk->mPackage == mActivePackages[j])
          {
             Namespace *parent = Namespace::find(walk->mName);
             // hook the parent
@@ -1851,10 +1887,10 @@ void Namespace::deactivatePackageStack(StringTableEntry name)
 
             // now swap the entries:
             Entry *ew;
-            for(ew = parent->mEntryList; ew; ew = ew->mNext)
+            for (ew = parent->mEntryList; ew; ew = ew->mNext)
                ew->mNamespace = walk;
 
-            for(ew = walk->mEntryList; ew; ew = ew->mNext)
+            for (ew = walk->mEntryList; ew; ew = ew->mNext)
                ew->mNamespace = parent;
 
             ew = walk->mEntryList;
@@ -1869,21 +1905,21 @@ void Namespace::deactivatePackageStack(StringTableEntry name)
 void Namespace::unlinkPackages()
 {
    mOldNumActivePackages = mNumActivePackages;
-   if(!mNumActivePackages)
+   if (!mNumActivePackages)
       return;
    deactivatePackageStack(mActivePackages[0]);
 }
 
 void Namespace::relinkPackages()
 {
-   if(!mOldNumActivePackages)
+   if (!mOldNumActivePackages)
       return;
-   for(U32 i = 0; i < mOldNumActivePackages; i++)
+   for (U32 i = 0; i < mOldNumActivePackages; i++)
       activatePackage(mActivePackages[i]);
 }
 
 
-DefineEngineFunction(isPackage, bool, ( String identifier ),,
+DefineEngineFunction(isPackage, bool, (String identifier), ,
    "@brief Returns true if the identifier is the name of a declared package.\n\n"
    "@ingroup Packages\n")
 {
@@ -1891,7 +1927,7 @@ DefineEngineFunction(isPackage, bool, ( String identifier ),,
    return Namespace::isPackage(name);
 }
 
-DefineEngineFunction(activatePackage, void, ( String packageName ),,
+DefineEngineFunction(activatePackage, void, (String packageName), ,
    "@brief Activates an existing package.\n\n"
    "The activation occurs by updating the namespace linkage of existing functions and methods. "
    "If the package is already activated the function does nothing.\n"
@@ -1901,7 +1937,7 @@ DefineEngineFunction(activatePackage, void, ( String packageName ),,
    Namespace::activatePackage(name);
 }
 
-DefineEngineFunction(deactivatePackage, void, ( String packageName ),,
+DefineEngineFunction(deactivatePackage, void, (String packageName), ,
    "@brief Deactivates a previously activated package.\n\n"
    "The package is deactivated by removing its namespace linkages to any function or method. "
    "If there are any packages above this one in the stack they are deactivated as well. "
@@ -1912,16 +1948,16 @@ DefineEngineFunction(deactivatePackage, void, ( String packageName ),,
    Namespace::deactivatePackage(name);
 }
 
-DefineEngineFunction(getPackageList, const char*, (),,
+DefineEngineFunction(getPackageList, const char*, (), ,
    "@brief Returns a space delimited list of the active packages in stack order.\n\n"
    "@ingroup Packages\n")
 {
-   if( Namespace::getActivePackagesCount() == 0 )
+   if (Namespace::getActivePackagesCount() == 0)
       return "";
 
    // Determine size of return buffer
    dsize_t buffersize = 0;
-   for( U32 i = 0; i < Namespace::getActivePackagesCount(); ++i )
+   for (U32 i = 0; i < Namespace::getActivePackagesCount(); ++i)
    {
       buffersize += dStrlen(Namespace::getActivePackage(i)) + 1;
    }
@@ -1929,7 +1965,7 @@ DefineEngineFunction(getPackageList, const char*, (),,
    U32 maxBufferSize = buffersize + 1;
    char* returnBuffer = Con::getReturnBuffer(maxBufferSize);
    U32 returnLen = 0;
-   for( U32 i = 0; i < Namespace::getActivePackagesCount(); ++i )
+   for (U32 i = 0; i < Namespace::getActivePackagesCount(); ++i)
    {
       dSprintf(returnBuffer + returnLen, maxBufferSize - returnLen, "%s ", Namespace::getActivePackage(i));
       returnLen = dStrlen(returnBuffer);

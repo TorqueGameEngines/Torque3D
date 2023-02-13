@@ -98,6 +98,7 @@ bool TriggerData::onAdd()
 
 void TriggerData::initPersistFields()
 {
+   docsURL;
    addGroup("Callbacks");
 
       addField( "tickPeriodMS",  TypeS32,    Offset( tickPeriodMS, TriggerData ),
@@ -170,6 +171,16 @@ Trigger::Trigger()
    mConvexList = new Convex;
 
    mPhysicsRep = NULL;
+   mTripOnce = false;
+   mTrippedBy = 0xFFFFFFFF;
+   mTripCondition = "";
+
+   //Default up a basic square
+   Point3F vecs[3] = { Point3F(1.0, 0.0, 0.0),
+      Point3F(0.0, -1.0, 0.0),
+      Point3F(0.0, 0.0, 1.0) };
+
+   mTriggerPolyhedron = Polyhedron(Point3F(-0.5, 0.5, 0.0), vecs);
 }
 
 Trigger::~Trigger()
@@ -235,8 +246,13 @@ bool Trigger::castRay(const Point3F &start, const Point3F &end, RayInfo* info)
 DECLARE_STRUCT( Polyhedron );
 IMPLEMENT_STRUCT( Polyhedron, Polyhedron,,
    "" )
+
+   FIELD(mPointList, pointList, 1, "")
+   FIELD(mPlaneList, planeList, 1, "")
+   FIELD(mEdgeList, edgeList, 1, "")
+
 END_IMPLEMENT_STRUCT;
-ConsoleType( floatList, TypeTriggerPolyhedron, Polyhedron )
+ConsoleType(floatList, TypeTriggerPolyhedron, Polyhedron, "")
 
 
 ConsoleGetType( TypeTriggerPolyhedron )
@@ -245,16 +261,16 @@ ConsoleGetType( TypeTriggerPolyhedron )
    Polyhedron* pPoly = reinterpret_cast<Polyhedron*>(dptr);
 
    // First point is corner, need to find the three vectors...`
-   Point3F origin = pPoly->pointList[0];
+   Point3F origin = pPoly->mPointList[0];
    U32 currVec = 0;
    Point3F vecs[3];
-   for (i = 0; i < pPoly->edgeList.size(); i++) {
-      const U32 *vertex = pPoly->edgeList[i].vertex;
+   for (i = 0; i < pPoly->mEdgeList.size(); i++) {
+      const U32 *vertex = pPoly->mEdgeList[i].vertex;
       if (vertex[0] == 0)
-         vecs[currVec++] = pPoly->pointList[vertex[1]] - origin;
+         vecs[currVec++] = pPoly->mPointList[vertex[1]] - origin;
       else
          if (vertex[1] == 0)
-            vecs[currVec++] = pPoly->pointList[vertex[0]] - origin;
+            vecs[currVec++] = pPoly->mPointList[vertex[0]] - origin;
    }
    AssertFatal(currVec == 3, "Internal error: Bad trigger polyhedron");
 
@@ -302,45 +318,45 @@ ConsoleSetType( TypeTriggerPolyhedron )
    // edges with CCW instead of CW order for face[0] and that it b) lets plane
    // normals face outwards rather than inwards.
 
-   pPoly->pointList.setSize(8);
-   pPoly->pointList[0] = origin;
-   pPoly->pointList[1] = origin + vecs[0];
-   pPoly->pointList[2] = origin + vecs[1];
-   pPoly->pointList[3] = origin + vecs[2];
-   pPoly->pointList[4] = origin + vecs[0] + vecs[1];
-   pPoly->pointList[5] = origin + vecs[0] + vecs[2];
-   pPoly->pointList[6] = origin + vecs[1] + vecs[2];
-   pPoly->pointList[7] = origin + vecs[0] + vecs[1] + vecs[2];
+   pPoly->mPointList.setSize(8);
+   pPoly->mPointList[0] = origin;
+   pPoly->mPointList[1] = origin + vecs[0];
+   pPoly->mPointList[2] = origin + vecs[1];
+   pPoly->mPointList[3] = origin + vecs[2];
+   pPoly->mPointList[4] = origin + vecs[0] + vecs[1];
+   pPoly->mPointList[5] = origin + vecs[0] + vecs[2];
+   pPoly->mPointList[6] = origin + vecs[1] + vecs[2];
+   pPoly->mPointList[7] = origin + vecs[0] + vecs[1] + vecs[2];
 
    Point3F normal;
-   pPoly->planeList.setSize(6);
+   pPoly->mPlaneList.setSize(6);
 
    mCross(vecs[2], vecs[0], &normal);
-   pPoly->planeList[0].set(origin, normal);
+   pPoly->mPlaneList[0].set(origin, normal);
    mCross(vecs[0], vecs[1], &normal);
-   pPoly->planeList[1].set(origin, normal);
+   pPoly->mPlaneList[1].set(origin, normal);
    mCross(vecs[1], vecs[2], &normal);
-   pPoly->planeList[2].set(origin, normal);
+   pPoly->mPlaneList[2].set(origin, normal);
    mCross(vecs[1], vecs[0], &normal);
-   pPoly->planeList[3].set(pPoly->pointList[7], normal);
+   pPoly->mPlaneList[3].set(pPoly->mPointList[7], normal);
    mCross(vecs[2], vecs[1], &normal);
-   pPoly->planeList[4].set(pPoly->pointList[7], normal);
+   pPoly->mPlaneList[4].set(pPoly->mPointList[7], normal);
    mCross(vecs[0], vecs[2], &normal);
-   pPoly->planeList[5].set(pPoly->pointList[7], normal);
+   pPoly->mPlaneList[5].set(pPoly->mPointList[7], normal);
 
-   pPoly->edgeList.setSize(12);
-   pPoly->edgeList[0].vertex[0]  = 0; pPoly->edgeList[0].vertex[1]  = 1; pPoly->edgeList[0].face[0]  = 0; pPoly->edgeList[0].face[1]  = 1;
-   pPoly->edgeList[1].vertex[0]  = 1; pPoly->edgeList[1].vertex[1]  = 5; pPoly->edgeList[1].face[0]  = 0; pPoly->edgeList[1].face[1]  = 4;
-   pPoly->edgeList[2].vertex[0]  = 5; pPoly->edgeList[2].vertex[1]  = 3; pPoly->edgeList[2].face[0]  = 0; pPoly->edgeList[2].face[1]  = 3;
-   pPoly->edgeList[3].vertex[0]  = 3; pPoly->edgeList[3].vertex[1]  = 0; pPoly->edgeList[3].face[0]  = 0; pPoly->edgeList[3].face[1]  = 2;
-   pPoly->edgeList[4].vertex[0]  = 3; pPoly->edgeList[4].vertex[1]  = 6; pPoly->edgeList[4].face[0]  = 3; pPoly->edgeList[4].face[1]  = 2;
-   pPoly->edgeList[5].vertex[0]  = 6; pPoly->edgeList[5].vertex[1]  = 2; pPoly->edgeList[5].face[0]  = 2; pPoly->edgeList[5].face[1]  = 5;
-   pPoly->edgeList[6].vertex[0]  = 2; pPoly->edgeList[6].vertex[1]  = 0; pPoly->edgeList[6].face[0]  = 2; pPoly->edgeList[6].face[1]  = 1;
-   pPoly->edgeList[7].vertex[0]  = 1; pPoly->edgeList[7].vertex[1]  = 4; pPoly->edgeList[7].face[0]  = 4; pPoly->edgeList[7].face[1]  = 1;
-   pPoly->edgeList[8].vertex[0]  = 4; pPoly->edgeList[8].vertex[1]  = 2; pPoly->edgeList[8].face[0]  = 1; pPoly->edgeList[8].face[1]  = 5;
-   pPoly->edgeList[9].vertex[0]  = 4; pPoly->edgeList[9].vertex[1]  = 7; pPoly->edgeList[9].face[0]  = 4; pPoly->edgeList[9].face[1]  = 5;
-   pPoly->edgeList[10].vertex[0] = 5; pPoly->edgeList[10].vertex[1] = 7; pPoly->edgeList[10].face[0] = 3; pPoly->edgeList[10].face[1] = 4;
-   pPoly->edgeList[11].vertex[0] = 7; pPoly->edgeList[11].vertex[1] = 6; pPoly->edgeList[11].face[0] = 3; pPoly->edgeList[11].face[1] = 5;
+   pPoly->mEdgeList.setSize(12);
+   pPoly->mEdgeList[0].vertex[0]  = 0; pPoly->mEdgeList[0].vertex[1]  = 1; pPoly->mEdgeList[0].face[0]  = 0; pPoly->mEdgeList[0].face[1]  = 1;
+   pPoly->mEdgeList[1].vertex[0]  = 1; pPoly->mEdgeList[1].vertex[1]  = 5; pPoly->mEdgeList[1].face[0]  = 0; pPoly->mEdgeList[1].face[1]  = 4;
+   pPoly->mEdgeList[2].vertex[0]  = 5; pPoly->mEdgeList[2].vertex[1]  = 3; pPoly->mEdgeList[2].face[0]  = 0; pPoly->mEdgeList[2].face[1]  = 3;
+   pPoly->mEdgeList[3].vertex[0]  = 3; pPoly->mEdgeList[3].vertex[1]  = 0; pPoly->mEdgeList[3].face[0]  = 0; pPoly->mEdgeList[3].face[1]  = 2;
+   pPoly->mEdgeList[4].vertex[0]  = 3; pPoly->mEdgeList[4].vertex[1]  = 6; pPoly->mEdgeList[4].face[0]  = 3; pPoly->mEdgeList[4].face[1]  = 2;
+   pPoly->mEdgeList[5].vertex[0]  = 6; pPoly->mEdgeList[5].vertex[1]  = 2; pPoly->mEdgeList[5].face[0]  = 2; pPoly->mEdgeList[5].face[1]  = 5;
+   pPoly->mEdgeList[6].vertex[0]  = 2; pPoly->mEdgeList[6].vertex[1]  = 0; pPoly->mEdgeList[6].face[0]  = 2; pPoly->mEdgeList[6].face[1]  = 1;
+   pPoly->mEdgeList[7].vertex[0]  = 1; pPoly->mEdgeList[7].vertex[1]  = 4; pPoly->mEdgeList[7].face[0]  = 4; pPoly->mEdgeList[7].face[1]  = 1;
+   pPoly->mEdgeList[8].vertex[0]  = 4; pPoly->mEdgeList[8].vertex[1]  = 2; pPoly->mEdgeList[8].face[0]  = 1; pPoly->mEdgeList[8].face[1]  = 5;
+   pPoly->mEdgeList[9].vertex[0]  = 4; pPoly->mEdgeList[9].vertex[1]  = 7; pPoly->mEdgeList[9].face[0]  = 4; pPoly->mEdgeList[9].face[1]  = 5;
+   pPoly->mEdgeList[10].vertex[0] = 5; pPoly->mEdgeList[10].vertex[1] = 7; pPoly->mEdgeList[10].face[0] = 3; pPoly->mEdgeList[10].face[1] = 4;
+   pPoly->mEdgeList[11].vertex[0] = 7; pPoly->mEdgeList[11].vertex[1] = 6; pPoly->mEdgeList[11].face[0] = 3; pPoly->mEdgeList[11].face[1] = 5;
 }
 
 
@@ -355,12 +371,16 @@ void Trigger::consoleInit()
 
 void Trigger::initPersistFields()
 {
+   docsURL;
    addField("polyhedron", TypeTriggerPolyhedron, Offset(mTriggerPolyhedron, Trigger),
       "@brief Defines a non-rectangular area for the trigger.\n\n"
       "Rather than the standard rectangular bounds, this optional parameter defines a quadrilateral "
       "trigger area.  The quadrilateral is defined as a corner point followed by three vectors "
       "representing the edges extending from the corner.\n");
 
+   addField("TripOnce", TypeBool, Offset(mTripOnce, Trigger),"Do we trigger callacks just the once?");
+   addField("TripCondition", TypeRealString, Offset(mTripCondition, Trigger),"evaluation condition to trip callbacks (true/false)");
+   addField("TrippedBy", TypeS32, Offset(mTrippedBy, Trigger), "typemask filter");
    addProtectedField("enterCommand", TypeCommand, Offset(mEnterCommand, Trigger), &setEnterCmd, &defaultProtectedGetFn,
       "The command to execute when an object enters this trigger. Object id stored in %%obj. Maximum 1023 characters." );
    addProtectedField("leaveCommand", TypeCommand, Offset(mLeaveCommand, Trigger), &setLeaveCmd, &defaultProtectedGetFn,
@@ -389,6 +409,24 @@ bool Trigger::setTickCmd(void *object, const char *index, const char *data)
    return true; // to update the actual field
 }
 
+//------------------------------------------------------------------------------
+
+void Trigger::testObjects()
+{
+   Vector<SceneObject*> foundobjs;
+   foundobjs.clear();
+   if (getSceneManager() && getSceneManager()->getContainer() && getSceneManager()->getZoneManager())
+      getSceneManager()->getContainer()->findObjectList(getWorldBox(), mTrippedBy, &foundobjs);
+   else return;
+
+   for (S32 i = 0; i < foundobjs.size(); i++)
+   {
+      GameBase* so = dynamic_cast<GameBase*>(foundobjs[i]);
+      if (so)
+         potentialEnterObject(so);
+   }
+}
+
 //--------------------------------------------------------------------------
 
 bool Trigger::onAdd()
@@ -400,12 +438,14 @@ bool Trigger::onAdd()
 
    Polyhedron temp = mTriggerPolyhedron;
    setTriggerPolyhedron(temp);
-
+   mTripped = false;
    addToScene();
 
    if (isServerObject())
       scriptOnAdd();
-      
+
+   testObjects();
+
    return true;
 }
 
@@ -441,7 +481,7 @@ void Trigger::onDeleteNotify( SimObject *obj )
          {
             mObjects.erase(i);
             if (mDataBlock)
-               mDataBlock->onLeaveTrigger_callback( this, pScene );
+               mDataBlock->onLeaveTrigger_callback( this, NULL );
             break;
          }
       }
@@ -497,7 +537,6 @@ void Trigger::buildConvex(const Box3F& box, Convex* convex)
    cp->mSize.z = mObjBox.len_z() / 2.0f;
 }
 
-
 //------------------------------------------------------------------------------
 
 void Trigger::setTransform(const MatrixF & mat)
@@ -517,6 +556,15 @@ void Trigger::setTransform(const MatrixF & mat)
 
       setMaskBits(TransformMask | ScaleMask);
    }
+
+   testObjects();
+}
+
+void Trigger::onUnmount( SceneObject *obj, S32 node )
+{
+    Parent::onUnmount( obj, node );
+   // Make sure the client get's the final server pos.
+   setMaskBits(TransformMask | ScaleMask);
 }
 
 void Trigger::prepRenderImage( SceneRenderState *state )
@@ -569,12 +617,12 @@ void Trigger::setTriggerPolyhedron(const Polyhedron& rPolyhedron)
 {
    mTriggerPolyhedron = rPolyhedron;
 
-   if (mTriggerPolyhedron.pointList.size() != 0) {
+   if (mTriggerPolyhedron.mPointList.size() != 0) {
       mObjBox.minExtents.set(1e10, 1e10, 1e10);
       mObjBox.maxExtents.set(-1e10, -1e10, -1e10);
-      for (U32 i = 0; i < mTriggerPolyhedron.pointList.size(); i++) {
-         mObjBox.minExtents.setMin(mTriggerPolyhedron.pointList[i]);
-         mObjBox.maxExtents.setMax(mTriggerPolyhedron.pointList[i]);
+      for (U32 i = 0; i < mTriggerPolyhedron.mPointList.size(); i++) {
+         mObjBox.minExtents.setMin(mTriggerPolyhedron.mPointList[i]);
+         mObjBox.maxExtents.setMax(mTriggerPolyhedron.mPointList[i]);
       }
    } else {
       mObjBox.minExtents.set(-0.5, -0.5, -0.5);
@@ -585,7 +633,7 @@ void Trigger::setTriggerPolyhedron(const Polyhedron& rPolyhedron)
    setTransform(xform);
 
    mClippedList.clear();
-   mClippedList.mPlaneList = mTriggerPolyhedron.planeList;
+   mClippedList.mPlaneList = mTriggerPolyhedron.mPlaneList;
 //   for (U32 i = 0; i < mClippedList.mPlaneList.size(); i++)
 //      mClippedList.mPlaneList[i].neg();
 
@@ -623,9 +671,12 @@ void Trigger::setTriggerPolyhedron(const Polyhedron& rPolyhedron)
 
 bool Trigger::testObject(GameBase* enter)
 {
-   if (mTriggerPolyhedron.pointList.size() == 0)
+   if (mTriggerPolyhedron.mPointList.size() == 0)
       return false;
 
+   if (!(enter->getTypeMask() & mTrippedBy))
+      return false; //not the right type of object
+   
    mClippedList.clear();
 
    SphereF sphere;
@@ -637,6 +688,39 @@ bool Trigger::testObject(GameBase* enter)
    return mClippedList.isEmpty() == false;
 }
 
+bool Trigger::testTrippable()
+{
+   if ((mTripOnce == true) && (mTripped == true))
+      return false; // we've already fired the once
+   return true;
+}
+
+bool Trigger::testCondition()
+{
+   if (mTripCondition.isEmpty())
+      return true; //we've got no tests to run so just do it
+
+   //test the mapper plugged in condition line
+   String resVar = getIdString() + String(".result");
+   Con::setBoolVariable(resVar.c_str(), false);
+   String command = resVar + "=" + mTripCondition + ";";
+   Con::evaluatef(command.c_str());
+   if (Con::getBoolVariable(resVar.c_str()) == 1)
+   {
+      return true;
+   }
+   return false;
+}
+
+bool Trigger::evalCmD(String* cmd)
+{
+   if (!testTrippable()) return false;
+   if (cmd && cmd->isNotEmpty())//do we have a callback?
+   {
+      return testCondition();
+   }
+   return false;
+}
 
 void Trigger::potentialEnterObject(GameBase* enter)
 {
@@ -654,14 +738,16 @@ void Trigger::potentialEnterObject(GameBase* enter)
       mObjects.push_back(enter);
       deleteNotify(enter);
 
-      if(!mEnterCommand.isEmpty())
+      if(evalCmD(&mEnterCommand))
       {
-         String command = String("%obj = ") + enter->getIdString() + ";" + mEnterCommand;
+         String command = String("%obj = ") + enter->getIdString() + ";";
+         command = command + String("%this = ") + getIdString() + ";" + mEnterCommand;
          Con::evaluate(command.c_str());
       }
 
-      if( mDataBlock )
+      if( mDataBlock && testTrippable() && testCondition())
          mDataBlock->onEnterTrigger_callback( this, enter );
+      mTripped = true;
    }
 }
 
@@ -676,6 +762,13 @@ void Trigger::processTick(const Move* move)
       return;
    if (!mDataBlock->isClientSide && isClientObject())
       return;
+
+   if (isMounted()) {
+         MatrixF mat;
+         mMount.object->getMountTransform( mMount.node, mMount.xfm, &mat );
+         setTransform(mat);
+         setRenderTransform(mat);
+    }
 
    //
    if (mObjects.size() == 0)
@@ -694,25 +787,36 @@ void Trigger::processTick(const Move* move)
             mObjects.erase(i);
             clearNotify(remove);
             
-            if (!mLeaveCommand.isEmpty())
+            if (evalCmD(&mLeaveCommand))
             {
-               String command = String("%obj = ") + remove->getIdString() + ";" + mLeaveCommand;
+               String command = String("%obj = ") + remove->getIdString() + ";";
+               command = command + String("%this = ") + getIdString() + ";" + mLeaveCommand;
                Con::evaluate(command.c_str());
             }
-
-            mDataBlock->onLeaveTrigger_callback( this, remove );
+            if (testTrippable() && testCondition())
+               mDataBlock->onLeaveTrigger_callback( this, remove );
+            mTripped = true;
          }
       }
 
-      if (!mTickCommand.isEmpty())
+      if (evalCmD(&mTickCommand))
          Con::evaluate(mTickCommand.c_str());
 
-      if (mObjects.size() != 0)
+      if (mObjects.size() != 0 && testTrippable() && testCondition())
          mDataBlock->onTickTrigger_callback( this );
    }
    else
    {
       mCurrTick += TickMs;
+   }
+}
+
+void Trigger::interpolateTick(F32 delta)
+{
+   if (isMounted()) {
+      MatrixF mat;
+      mMount.object->getRenderMountTransform( delta, mMount.node, mMount.xfm, &mat );
+      setRenderTransform(mat);
    }
 }
 
@@ -731,17 +835,17 @@ U32 Trigger::packUpdate(NetConnection* con, U32 mask, BitStream* stream)
    // Write the polyhedron
    if( stream->writeFlag( mask & PolyMask ) )
    {
-      stream->write(mTriggerPolyhedron.pointList.size());
-      for (i = 0; i < mTriggerPolyhedron.pointList.size(); i++)
-         mathWrite(*stream, mTriggerPolyhedron.pointList[i]);
+      stream->write(mTriggerPolyhedron.mPointList.size());
+      for (i = 0; i < mTriggerPolyhedron.mPointList.size(); i++)
+         mathWrite(*stream, mTriggerPolyhedron.mPointList[i]);
 
-      stream->write(mTriggerPolyhedron.planeList.size());
-      for (i = 0; i < mTriggerPolyhedron.planeList.size(); i++)
-         mathWrite(*stream, mTriggerPolyhedron.planeList[i]);
+      stream->write(mTriggerPolyhedron.mPlaneList.size());
+      for (i = 0; i < mTriggerPolyhedron.mPlaneList.size(); i++)
+         mathWrite(*stream, mTriggerPolyhedron.mPlaneList[i]);
 
-      stream->write(mTriggerPolyhedron.edgeList.size());
-      for (i = 0; i < mTriggerPolyhedron.edgeList.size(); i++) {
-         const Polyhedron::Edge& rEdge = mTriggerPolyhedron.edgeList[i];
+      stream->write(mTriggerPolyhedron.mEdgeList.size());
+      for (i = 0; i < mTriggerPolyhedron.mEdgeList.size(); i++) {
+         const Polyhedron::Edge& rEdge = mTriggerPolyhedron.mEdgeList[i];
 
          stream->write(rEdge.face[0]);
          stream->write(rEdge.face[1]);
@@ -779,19 +883,19 @@ void Trigger::unpackUpdate(NetConnection* con, BitStream* stream)
    {
       Polyhedron tempPH;
       stream->read(&size);
-      tempPH.pointList.setSize(size);
-      for (i = 0; i < tempPH.pointList.size(); i++)
-         mathRead(*stream, &tempPH.pointList[i]);
+      tempPH.mPointList.setSize(size);
+      for (i = 0; i < tempPH.mPointList.size(); i++)
+         mathRead(*stream, &tempPH.mPointList[i]);
 
       stream->read(&size);
-      tempPH.planeList.setSize(size);
-      for (i = 0; i < tempPH.planeList.size(); i++)
-         mathRead(*stream, &tempPH.planeList[i]);
+      tempPH.mPlaneList.setSize(size);
+      for (i = 0; i < tempPH.mPlaneList.size(); i++)
+         mathRead(*stream, &tempPH.mPlaneList[i]);
 
       stream->read(&size);
-      tempPH.edgeList.setSize(size);
-      for (i = 0; i < tempPH.edgeList.size(); i++) {
-         Polyhedron::Edge& rEdge = tempPH.edgeList[i];
+      tempPH.mEdgeList.setSize(size);
+      for (i = 0; i < tempPH.mEdgeList.size(); i++) {
+         Polyhedron::Edge& rEdge = tempPH.mEdgeList[i];
 
          stream->read(&rEdge.face[0]);
          stream->read(&rEdge.face[1]);

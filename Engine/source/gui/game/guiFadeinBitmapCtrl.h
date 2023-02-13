@@ -41,7 +41,7 @@ class GuiFadeinBitmapCtrl : public GuiBitmapCtrl
    protected:
    
       /// Color we fade in from and fade out to.
-      ColorF mFadeColor;
+      LinearColorF mFadeColor;
       
       /// Reference time on which to base all fade timings.
       U32 mStartTime;
@@ -72,6 +72,7 @@ class GuiFadeinBitmapCtrl : public GuiBitmapCtrl
       virtual void onPreRender();
       virtual void onMouseDown(const GuiEvent &);
       virtual bool onKeyDown(const GuiEvent &);
+      virtual bool onGamepadButtonDown(const GuiEvent& event);
       virtual bool onWake();
       virtual void onRender(Point2I offset, const RectI &updateRect);
       

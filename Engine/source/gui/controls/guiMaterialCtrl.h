@@ -27,6 +27,8 @@
 #include "gui/containers/guiContainer.h"
 #endif
 
+#include "T3D/assets/MaterialAsset.h"
+
 class BaseMatInstance;
 
 
@@ -38,7 +40,8 @@ private:
 
 protected:
 
-   String mMaterialName;
+   DECLARE_MATERIALASSET(GuiMaterialCtrl, Material);
+   DECLARE_ASSET_SETGET(GuiMaterialCtrl, Material);
 
    BaseMatInstance *mMaterialInst;
 

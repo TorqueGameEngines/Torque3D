@@ -38,6 +38,8 @@
 
          StringBufferManager()
          {
+            request8 = 0.0;
+            request16 = 0.0;
             VECTOR_SET_ASSOCIATION( strings );
          }
          
@@ -48,12 +50,12 @@
          void dumpAllStrings();
    };
 
-   DefineConsoleFunction( sbmDumpStats, void, (), , "()")
+   DefineEngineFunction( sbmDumpStats, void, (), , "()")
    {
       StringBufferManager::getManager().dumpStats();
    }
 
-   DefineConsoleFunction( sbmDumpStrings, void, (), , "()")
+   DefineEngineFunction( sbmDumpStrings, void, (), , "()")
    {
       StringBufferManager::getManager().dumpAllStrings();
    }
@@ -369,7 +371,7 @@ void StringBuffer::getCopy(UTF16 *buff, const U32 buffSize) const
    AssertFatal(mBuffer.last() == 0, "StringBuffer::get UTF8 - not a null terminated string!");
    dMemcpy(buff, mBuffer.address(), sizeof(UTF16) * getMin(buffSize, (U32)mBuffer.size()));
    // ensure null termination.
-   buff[buffSize-1] = NULL;
+   buff[buffSize-1] = 0;
 }
 
 UTF8* StringBuffer::createCopy8() const

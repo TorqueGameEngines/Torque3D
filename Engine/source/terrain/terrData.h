@@ -20,6 +20,11 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+// Arcane-FX for MIT Licensed Open Source version of Torque 3D from GarageGames
+// Copyright (C) 2015 Faust Logic, Inc.
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+
 #ifndef _TERRDATA_H_
 #define _TERRDATA_H_
 
@@ -45,7 +50,15 @@
 #include "gfx/gfxPrimitiveBuffer.h"
 #endif
 
-
+#ifndef _ASSET_PTR_H_
+#include "assets/assetPtr.h"
+#endif 
+#ifndef TERRAINASSET_H
+#include "T3D/assets/TerrainAsset.h"
+#endif
+#ifndef _CONVEX_H_
+#include "collision/convex.h"
+#endif
 
 class GBitmap;
 class TerrainBlock;
@@ -78,7 +91,7 @@ public:
 
    enum BaseTexFormat
    {
-      NONE, DDS, PNG, JPG
+      NONE, DDS, PNG
    };
 
    static const char* formatToExtension(BaseTexFormat format)
@@ -89,8 +102,6 @@ public:
          return "dds";
       case PNG:
          return "png";
-      case JPG:
-         return "jpg";
       default:
          return "";
       }
@@ -116,13 +127,21 @@ protected:
    U32 mCRC;
 
    ///
-   FileName mTerrFileName;
+   StringTableEntry mTerrFileName;
+
+   AssetPtr<TerrainAsset> mTerrainAsset;
+   StringTableEntry mTerrainAssetId;
    
    /// The maximum detail distance found in the material list.
    F32 mMaxDetailDistance;
 
    ///
    Vector<GFXTexHandle> mBaseTextures;
+
+   GFXTextureArrayHandle mDetailTextureArray;
+   GFXTextureArrayHandle mMacroTextureArray;
+   GFXTextureArrayHandle mNormalTextureArray;
+   GFXTextureArrayHandle mOrmTextureArray;
 
    /// 
    GFXTexHandle mLayerTex;
@@ -201,6 +220,9 @@ protected:
    /// True if the zoning needs to be recalculated for the terrain.
    bool mZoningDirty;
 
+   /// Holds the generated convex list stuff for this terrain
+   Convex mTerrainConvexList;
+
    String _getBaseTexCacheFileName() const;
 
    void _rebuildQuadtree();
@@ -238,6 +260,7 @@ protected:
 
    // Protected fields
    static bool _setTerrainFile( void *obj, const char *index, const char *data );
+   static bool _setTerrainAsset(void* obj, const char* index, const char* data);
    static bool _setSquareSize( void *obj, const char *index, const char *data );
    static bool _setBaseTexSize(void *obj, const char *index, const char *data);
    static bool _setBaseTexFormat(void *obj, const char *index, const char *data);
@@ -296,6 +319,8 @@ public:
    /// Deletes all the materials on the terrain.
    void deleteAllMaterials();
 
+   void setMaterialsDirty() { mDetailsDirty = true; };
+
    //void setMaterialName( U32 index, const String &name );
 
    /// Accessors and mutators for TerrainMaterialUndoAction.
@@ -311,6 +336,11 @@ public:
    const char* getMaterialName( U32 index ) const;
 
    U32 getMaterialCount() const;
+
+   GFXTextureArrayHandle getDetailTextureArray() const { return mDetailTextureArray; }
+   GFXTextureArrayHandle getMacroTextureArray() const { return mMacroTextureArray; }
+   GFXTextureArrayHandle getNormalTextureArray() const { return mNormalTextureArray; }
+   GFXTextureArrayHandle getOrmTextureArray() const { return mOrmTextureArray; }
 
    //BaseMatInstance* getMaterialInst( U32 x, U32 y );
 
@@ -413,9 +443,12 @@ public:
 
    bool setFile( const FileName& terrFileName );
 
-   void setFile( Resource<TerrainFile> file );
+   void setFile(const Resource<TerrainFile>& file);
+
+   bool setTerrainAsset(const StringTableEntry terrainAssetId);
 
    bool save(const char* filename);
+   bool saveAsset();
 
    F32 getSquareSize() const { return mSquareSize; }
 
@@ -449,7 +482,7 @@ public:
                         RayInfo *info, 
                         bool collideEmpty );
 
-   const FileName& getTerrainFile() const { return mTerrFileName; }
+   const StringTableEntry getTerrainFile() const { return mTerrFileName; }
 
    void postLight(Vector<TerrainBlock *> &terrBlocks) {};
 
@@ -459,6 +492,62 @@ public:
    U32 packUpdate   (NetConnection *conn, U32 mask, BitStream *stream);
    void unpackUpdate(NetConnection *conn,           BitStream *stream);
    void inspectPostApply();
+
+   virtual void getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList);
+
+   const StringTableEntry getTerrain() const
+   {
+      if (mTerrainAsset && (mTerrainAsset->getTerrainFilePath() != StringTable->EmptyString()))
+         return mTerrainAsset->getTerrainFilePath(); 
+      else if (mTerrainAssetId != StringTable->EmptyString())
+         return mTerrainAssetId; 
+      else if (mTerrFileName != StringTable->EmptyString())
+         return mTerrFileName; 
+      else
+         return StringTable->EmptyString(); 
+   }
+
+   const StringTableEntry getTerrainAssetId() const
+   {
+      if (mTerrainAssetId != StringTable->EmptyString())
+         return mTerrainAssetId;
+      else
+         return StringTable->EmptyString();
+   }
+
+   bool _setTerrain(StringTableEntry terrain)
+   {
+      if (terrain == StringTable->EmptyString())
+         return false;
+
+      if (AssetDatabase.isDeclaredAsset(terrain))
+         setTerrainAsset(terrain);
+      else
+         mTerrFileName = terrain;
+
+      return true;
+   }
+ 
+   bool renameTerrainMaterial(StringTableEntry oldMatName, StringTableEntry newMatName);
+   S32 getTerrainMaterialCount() {
+      if (mFile)
+         return mFile->mMaterials.size();
+      return 0;
+   }
+
+   StringTableEntry getTerrainMaterialName(S32 index) {
+      if (mFile)
+         return mFile->mMaterials[index]->getInternalName();
+
+      return StringTable->EmptyString();
+   }
+protected:
+   bool mUpdateBasetex;
+   bool mIgnoreZodiacs;
+   U16* zode_primBuffer;
+   void deleteZodiacPrimitiveBuffer();
+public:
+   const U16* getZodiacPrimitiveBuffer();
 };
 
 #endif // _TERRDATA_H_

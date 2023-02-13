@@ -1,0 +1,309 @@
+//--- OBJECT WRITE BEGIN ---
+$guiContent = new GuiControl(TerrainTextureSettingsDlg, EditorGuiGroup) {
+   position = "0 0";
+   extent = "1024 768";
+   minExtent = "8 2";
+   horizSizing = "right";
+   vertSizing = "bottom";
+   profile = "ToolsGuiDefaultProfile";
+   visible = "1";
+   active = "1";
+   tooltipProfile = "ToolsGuiToolTipProfile";
+   hovertime = "1000";
+   isContainer = "1";
+   canSave = "1";
+   canSaveDynamicFields = "1";
+
+   new GuiWindowCtrl() {
+      canSaveDynamicFields = "0";
+      internalName = "TerrainTextureSettings";
+      Enabled = "1";
+      isContainer = "1";
+      Profile = "ToolsGuiWindowProfile";
+      position = "342 184";
+      extent = "340 400";
+      minExtent = "340 400";
+      horizSizing = "center";
+      vertSizing = "center";
+      canSave = "1";
+      isDecoy = "0";
+      Visible = "1";
+      tooltipprofile = "ToolsGuiToolTipProfile";
+      hovertime = "1000";
+      Margin = "0 0 0 0";
+      Padding = "0 0 0 0";
+      AnchorTop = "1";
+      AnchorBottom = "1";
+      AnchorLeft = "1";
+      AnchorRight = "1";
+      resizeWidth = "1";
+      resizeHeight = "0";
+      canMove = "1";
+      canClose = "1";
+      canMinimize = "0";
+      canMaximize = "0";
+      minSize = "4 4";
+      closeCommand = "TerrainTextureSettingsDlg.cancel();";
+      EdgeSnap = "0";
+      text = "Global Terrain Texture Settings";
+
+      new GuiCheckBoxCtrl() {
+         internalName = "lerpBlendCheckBox";
+         text = "LerpBlend";
+         profile = "ToolsGuiCheckBoxProfile";
+         tooltipProfile = "ToolsGuiToolTipProfile";
+         tooltip = "If enabled, terrain textures will use a simple linear interpolation blending method.";
+         
+         command = "TerrainTextureSettingsDlg.apply();";
+         
+         position = "20 40";
+         extent = "300 20";
+      };
+      
+      new GuiControl() {
+         position = "20 70";
+         profile = "ToolsGuiDefaultProfile";
+         extent = "300 20";
+         
+         new GuiTextCtrl() {
+            text = "Global Blend Depth:";
+            profile = "ToolsGuiTextProfile";
+            tooltipProfile = "ToolsGuiToolTipProfile";
+            tooltip = "Controls the general level of bleding across all textures, has no effect if Lerp Blend is enabled.";
+            
+            position = "0 0";
+            extent = "120 20";
+         };
+      
+         new GuiSliderCtrl() {
+            internalName = "blendDepthSlider";
+            profile = "ToolsGuiSliderProfile";
+         
+            command = "TerrainTextureSettingsDlg.apply();";
+            altCommand = "TerrainTextureSettingsDlg.updateBlendDepth();";
+            
+            position = "130 0";
+            extent = "170 20";
+            
+            range = "0.01 1.0";
+         };
+      };
+      
+      new GuiControl() {
+         position = "20 100";
+         profile = "ToolsGuiDefaultProfile";
+         extent = "300 20";
+         
+         new GuiTextCtrl() {
+            text = "Detail Texture Size:";
+            profile = "ToolsGuiTextProfile";
+         
+            command = "TerrainTextureSettingsDlg.apply();";
+            
+            position = "0 0";
+            extent = "120 20";
+         };
+         
+         new GuiTextEditCtrl() {
+            internalName = "detailTextureSizeTextEdit";
+            profile = "ToolsGuiTextEditProfile";
+         
+            command = "TerrainTextureSettingsDlg.apply();";
+            
+            position = "130 0";
+            extent = "170 20";
+         };
+      };
+      
+      new GuiControl() {
+         position = "20 130";
+         profile = "ToolsGuiDefaultProfile";
+         extent = "300 20";
+         
+         new GuiTextCtrl() {
+            text = "Detail Texture Format:";
+            profile = "ToolsGuiTextProfile";
+            
+            position = "0 0";
+            extent = "120 20";
+         };
+         
+         new GuiPopUpMenuCtrl() {
+            internalName = "detailTextureFormatPopUpMenu";
+            profile = "ToolsGuiPopUpMenuProfile";
+         
+            command = "TerrainTextureSettingsDlg.apply();";
+            
+            position = "130 0";
+            extent = "170 20";
+         };
+      };
+      
+      new GuiControl() {
+         position = "20 160";
+         profile = "ToolsGuiDefaultProfile";
+         extent = "300 20";
+         
+         new GuiTextCtrl() {
+            text = "Macro Texture Size:";
+            profile = "ToolsGuiTextProfile";
+            
+            position = "0 0";
+            extent = "120 20";
+         };
+         
+         new GuiTextEditCtrl() {
+            internalName = "macroTextureSizeTextEdit";
+            profile = "ToolsGuiTextEditProfile";
+         
+            command = "TerrainTextureSettingsDlg.apply();";
+            
+            position = "130 0";
+            extent = "170 20";
+         };
+      };
+      
+      new GuiControl() {
+         position = "20 190";
+         profile = "ToolsGuiDefaultProfile";
+         extent = "300 20";
+         
+         new GuiTextCtrl() {
+            text = "Macro Texture Format:";
+            profile = "ToolsGuiTextProfile";
+            
+            position = "0 0";
+            extent = "120 20";
+         };
+         
+         new GuiPopUpMenuCtrl() {
+            internalName = "macroTextureFormatPopUpMenu";
+            profile = "ToolsGuiPopUpMenuProfile";
+         
+            command = "TerrainTextureSettingsDlg.apply();";
+            
+            position = "130 0";
+            extent = "170 20";
+         };
+      };
+      
+      new GuiControl() {
+         position = "20 220";
+         profile = "ToolsGuiDefaultProfile";
+         extent = "300 20";
+         
+         new GuiTextCtrl() {
+            text = "Normal Texture Size:";
+            profile = "ToolsGuiTextProfile";
+            
+            position = "0 0";
+            extent = "120 20";
+         };
+         
+         new GuiTextEditCtrl() {
+            internalName = "normalTextureSizeTextEdit";
+            profile = "ToolsGuiTextEditProfile";
+         
+            command = "TerrainTextureSettingsDlg.apply();";
+            
+            position = "130 0";
+            extent = "170 20";
+         };
+      };
+      
+      new GuiControl() {
+         position = "20 250";
+         profile = "ToolsGuiDefaultProfile";
+         extent = "300 20";
+         
+         new GuiTextCtrl() {
+            text = "Normal Texture Format:";
+            profile = "ToolsGuiTextProfile";
+            
+            position = "0 0";
+            extent = "120 20";
+         };
+         
+         new GuiPopUpMenuCtrl() {
+            internalName = "normalTextureFormatPopUpMenu";
+            profile = "ToolsGuiPopUpMenuProfile";
+         
+            command = "TerrainTextureSettingsDlg.apply();";
+            
+            position = "130 0";
+            extent = "170 20";
+         };
+      };
+      
+      new GuiControl() {
+         position = "20 280";
+         profile = "ToolsGuiDefaultProfile";
+         extent = "300 20";
+         
+         new GuiTextCtrl() {
+            text = "ORM Texture Size:";
+            profile = "ToolsGuiTextProfile";
+            
+            position = "0 0";
+            extent = "120 20";
+         };
+         
+         new GuiTextEditCtrl() {
+            internalName = "ormTextureSizeTextEdit";
+            profile = "ToolsGuiTextEditProfile";
+            
+            position = "130 0";
+            extent = "170 20";
+         };
+      };
+      
+      new GuiControl() {
+         position = "20 310";
+         profile = "ToolsGuiDefaultProfile";
+         extent = "300 20";
+         
+         new GuiTextCtrl() {
+            text = "ORM Texture Format:";
+            profile = "ToolsGuiTextProfile";
+            
+            position = "0 0";
+            extent = "120 20";
+         };
+         
+         new GuiPopUpMenuCtrl() {
+            internalName = "ormTextureFormatPopUpMenu";
+            profile = "ToolsGuiPopUpMenuProfile";
+            
+            position = "130 0";
+            extent = "170 20";
+         };
+      };
+      
+      new GuiControl() {
+         position = "20 350";
+         profile = "ToolsGuiDefaultProfile";
+         extent = "300 30";
+      
+         new GuiButtonCtrl() {
+            text = "Apply & Save";
+            profile = "ToolsGuiButtonProfile";
+            position = "0 0";
+            
+            command = "TerrainTextureSettingsDlg.applyAndSave();";
+            
+            extent = "145 30";
+         };
+      
+         new GuiButtonCtrl() {
+            text = "Cancel";
+            profile = "ToolsGuiButtonProfile";
+            position = "155 0";
+            
+            command = "TerrainTextureSettingsDlg.cancel();";
+            
+            extent = "145 30";
+         };
+      };
+   };
+};
+//--- OBJECT WRITE END ---

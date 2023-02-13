@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="GuiBitmapButtonCtrl_image"
+    imageFile="@assetFile=GuiBitmapButtonCtrl.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

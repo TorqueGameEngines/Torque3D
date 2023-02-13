@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2014 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -21,11 +21,26 @@
 
 #import <UIKit/UIKit.h>
 
-@interface SDLUIKitDelegate : NSObject<UIApplicationDelegate> {
-}
+@interface SDLLaunchScreenController : UIViewController
 
-+ (id) sharedAppDelegate;
+- (instancetype)init;
+- (instancetype)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil;
+- (void)loadView;
+
+@end
+
+@interface SDLUIKitDelegate : NSObject<UIApplicationDelegate>
+
++ (id)sharedAppDelegate;
 + (NSString *)getAppDelegateClassName;
+
+- (void)hideLaunchScreen;
+
+/* This property is marked as optional, and is only intended to be used when
+ * the app's UI is storyboard-based. SDL is not storyboard-based, however
+ * several major third-party ad APIs (e.g. Google admob) incorrectly assume this
+ * property always exists, and will crash if it doesn't. */
+@property (nonatomic) UIWindow *window;
 
 @end
 

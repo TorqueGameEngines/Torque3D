@@ -39,7 +39,6 @@ public:
    ///
    Var* getOutTexCoord( const char *name,
                         const char *type,
-                        bool mapsToSampler,
                         bool useTexAnim,
                         MultiLine *meta,
                         Vector<ShaderComponent*> &componentList );
@@ -48,7 +47,6 @@ public:
    /// to the input connector if it doesn't exist.
    static Var* getInTexCoord( const char *name,
                               const char *type,
-                              bool mapsToSampler,
                               Vector<ShaderComponent*> &componentList );
 
    static Var* getInColor( const char *name,
@@ -115,7 +113,8 @@ public:
    ///
    Var* addOutDetailTexCoord( Vector<ShaderComponent*> &componentList, 
                               MultiLine *meta,
-                              bool useTexAnim );
+                              bool useTexAnim,
+                              bool useFoliageTexCoord);
 
    ///
    Var* getObjTrans( Vector<ShaderComponent*> &componentList,                                       
@@ -136,6 +135,10 @@ public:
    Var* getInvWorldView(   Vector<ShaderComponent*> &componentList,                                       
                            bool useInstancing,
                            MultiLine *meta );
+
+   Var* getSurface(Vector<ShaderComponent*>& componentList, MultiLine* meta, const MaterialFeatureData& fd);
+
+   Var* getInWorldNormal(Vector<ShaderComponent*>& componentList);
 
    // ShaderFeature
    Var* getVertTexCoord( const String &name );
@@ -188,6 +191,9 @@ class VertPositionHLSL : public ShaderFeatureHLSL
 public:
    virtual void processVert( Vector<ShaderComponent*> &componentList,
                              const MaterialFeatureData &fd );
+
+   virtual void processPix( Vector<ShaderComponent*> &componentList,
+                            const MaterialFeatureData &fd);
                              
    virtual String getName()
    {
@@ -236,12 +242,19 @@ public:
 /// Base texture
 class DiffuseMapFeatHLSL : public ShaderFeatureHLSL
 {
+protected:
+
+   ShaderIncludeDependency mTorqueDep;
+
 public:
+   DiffuseMapFeatHLSL();
    virtual void processVert( Vector<ShaderComponent*> &componentList,
                              const MaterialFeatureData &fd );
 
    virtual void processPix( Vector<ShaderComponent*> &componentList, 
                             const MaterialFeatureData &fd );
+
+   virtual U32 getOutputTargets(const MaterialFeatureData &fd) const;
 
    virtual Material::BlendOp getBlendOp(){ return Material::LerpAlpha; }
 
@@ -296,6 +309,7 @@ public:
 
    virtual Material::BlendOp getBlendOp(){ return Material::None; }
 
+   virtual U32 getOutputTargets(const MaterialFeatureData &fd) const;
    virtual String getName()
    {
       return "Diffuse Color";
@@ -650,5 +664,46 @@ public:
                                   MaterialFeatureData *outFeatureData );
 };
 
+/// Hardware Skinning
+class HardwareSkinningFeatureHLSL : public ShaderFeatureHLSL
+{
+protected:
+
+public:
+
+   virtual void processVert(  Vector<ShaderComponent*> &componentList,
+                              const MaterialFeatureData &fd );
+
+   virtual String getName() { return "Hardware Skinning"; }
+};
+
+/// Reflection Probes
+class ReflectionProbeFeatHLSL : public ShaderFeatureHLSL
+{
+protected:
+   ShaderIncludeDependency mDep;
+
+public:
+   ReflectionProbeFeatHLSL();
+
+   virtual void processVert(Vector<ShaderComponent*>& componentList,
+      const MaterialFeatureData& fd);
+
+   virtual void processPix(Vector<ShaderComponent*> &componentList,
+      const MaterialFeatureData &fd);
+
+   virtual Resources getResources(const MaterialFeatureData &fd);
+
+   // Sets textures and texture flags for current pass
+   virtual void setTexData(Material::StageData &stageDat,
+      const MaterialFeatureData &fd,
+      RenderPassData &passData,
+      U32 &texIndex);
+
+   virtual String getName()
+   {
+      return "Reflection Probes";
+   }
+};
 
 #endif // _SHADERGEN_HLSL_SHADERFEATUREHLSL_H_

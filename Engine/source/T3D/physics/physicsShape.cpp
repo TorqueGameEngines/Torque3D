@@ -31,6 +31,7 @@
 #include "T3D/physics/physicsBody.h"
 #include "T3D/physics/physicsWorld.h"
 #include "T3D/physics/physicsCollision.h"
+#include "T3D/gameBase/gameConnection.h"
 #include "collision/concretePolyList.h"
 #include "ts/tsShapeInstance.h"
 #include "scene/sceneRenderState.h"
@@ -65,8 +66,7 @@ ConsoleDocClass( PhysicsShapeData,
 );
 
 PhysicsShapeData::PhysicsShapeData()
-   :  shapeName( NULL ),
-      mass( 1.0f ),
+   :  mass( 1.0f ),
       dynamicFriction( 0.0f ),
       staticFriction( 0.0f ),
       restitution( 0.0f ),
@@ -78,6 +78,7 @@ PhysicsShapeData::PhysicsShapeData()
       buoyancyDensity( 0.0f ),
       simType( SimType_ClientServer )      
 {
+   INIT_ASSET(Shape);
 }
 
 PhysicsShapeData::~PhysicsShapeData()
@@ -86,13 +87,11 @@ PhysicsShapeData::~PhysicsShapeData()
 
 void PhysicsShapeData::initPersistFields()
 {
-   Parent::initPersistFields();
+   docsURL;
+   addGroup("Shapes");
 
-   addGroup("Media");
-
-      addField( "shapeName", TypeShapeFilename, Offset( shapeName, PhysicsShapeData ),
-         "@brief Path to the .DAE or .DTS file to use for this shape.\n\n"
-         "Compatable with Live-Asset Reloading. ");
+      INITPERSISTFIELD_SHAPEASSET(Shape, PhysicsShapeData, "@brief Shape asset to be used with this physics object.\n\n"
+         "Compatable with Live-Asset Reloading. ")
 
       addField( "debris", TYPEID< SimObjectRef<PhysicsDebrisData> >(), Offset( debris, PhysicsShapeData ),
          "@brief Name of a PhysicsDebrisData to spawn when this shape is destroyed (optional)." );
@@ -103,7 +102,7 @@ void PhysicsShapeData::initPersistFields()
       addField( "destroyedShape", TYPEID< SimObjectRef<PhysicsShapeData> >(), Offset( destroyedShape, PhysicsShapeData ),
          "@brief Name of a PhysicsShapeData to spawn when this shape is destroyed (optional)." );
 
-   endGroup("Media");
+   endGroup("Shapes");
 
    addGroup( "Physics" );
       
@@ -173,14 +172,15 @@ void PhysicsShapeData::initPersistFields()
       addField( "simType", TYPEID< PhysicsShapeData::SimType >(), Offset( simType, PhysicsShapeData ),
          "@brief Controls whether this shape is simulated on the server, client, or both physics simulations.\n\n" );
 
-   endGroup( "Networking" );   
+   endGroup( "Networking" );
+   Parent::initPersistFields();
 }
 
 void PhysicsShapeData::packData( BitStream *stream )
 { 
    Parent::packData( stream );
 
-   stream->writeString( shapeName );
+   PACKDATA_ASSET(Shape);
 
    stream->write( mass );
    stream->write( dynamicFriction );
@@ -204,7 +204,7 @@ void PhysicsShapeData::unpackData( BitStream *stream )
 {
    Parent::unpackData(stream);
 
-   shapeName = stream->readSTString();
+   UNPACKDATA_ASSET(Shape);
 
    stream->read( &mass );
    stream->read( &dynamicFriction );
@@ -241,28 +241,28 @@ void PhysicsShapeData::onRemove()
 
 void PhysicsShapeData::_onResourceChanged( const Torque::Path &path )
 {
-	if ( path != Path( shapeName ) )
+   if (mShapeAsset.isNull())
       return;
 
+   if ( path != Path(mShapeAsset->getShapeFilePath()) )
+      return;
+
+   _setShape(getShape());
+
    // Reload the changed shape.
-   Resource<TSShape> reloadShape;
    PhysicsCollisionRef reloadcolShape;
 
-   reloadShape = ResourceManager::get().load( shapeName );
-   if ( !bool(reloadShape) )
+   if ( !mShape )
    {
       Con::warnf( ConsoleLogEntry::General, "PhysicsShapeData::_onResourceChanged: Could not reload %s.", path.getFileName().c_str() );
       return;
    }
 
    // Reload the collision shape.
-   reloadcolShape = shape->buildColShape( false, Point3F::One );
+   reloadcolShape = mShape->buildColShape( false, Point3F::One );
 
-   if ( bool(reloadShape) &&  bool(colShape))
-   {
-      shape = reloadShape;
+   if (  bool(reloadcolShape))
       colShape = reloadcolShape;
-   }
 
    mReloadSignal.trigger();
 }
@@ -271,7 +271,7 @@ bool PhysicsShapeData::preload( bool server, String &errorBuffer )
 {
    if ( !Parent::preload( server, errorBuffer ) )
       return false;
-
+      
    // If we don't have a physics plugin active then
    // we have to fail completely.
    if ( !PHYSICSMGR )
@@ -280,31 +280,37 @@ bool PhysicsShapeData::preload( bool server, String &errorBuffer )
       return false;
    }
 
-   if ( !shapeName || !shapeName[0] ) 
-   {
-      errorBuffer = "PhysicsShapeData::preload - No shape name defined.";
-      return false;
-   }
+   bool shapeError = false;
 
-   // Load the shape.
-   shape = ResourceManager::get().load( shapeName );
-   if ( bool(shape) == false )
+   if (mShapeAsset.notNull())
    {
-      errorBuffer = String::ToString( "PhysicsShapeData::preload - Unable to load shape '%s'.", shapeName );
-      return false;
+      if (bool(mShape) == false)
+      {
+         errorBuffer = String::ToString("PhysicsShapeData: Couldn't load shape \"%s\"", mShapeAssetId);
+         return false;
+      }
+      if (!server && !mShape->preloadMaterialList(mShape.getPath()) && NetConnection::filesWereDownloaded())
+         shapeError = true;
+
    }
 
    // Prepare the shared physics collision shape.
-   if ( !colShape )
+   if ( !colShape && mShape)
    {
-      colShape = shape->buildColShape( false, Point3F::One );
+      colShape = mShape->buildColShape( false, Point3F::One );
 
       // If we got here and didn't get a collision shape then
       // we need to fail... can't have a shape without collision.
       if ( !colShape )
       {
-         errorBuffer = String::ToString( "PhysicsShapeData::preload - No collision found for shape '%s'.", shapeName );
-         return false;
+         //no collision so we create a simple box collision shape from the shapes bounds and alert the user
+         Con::warnf( "PhysicsShapeData::preload - No collision found for shape '%s', auto-creating one", mShapeAssetId);
+         Point3F halfWidth = mShape->mBounds.getExtents() * 0.5f;
+         colShape = PHYSICSMGR->createCollision();
+         MatrixF centerXfm(true);
+         centerXfm.setPosition(mShape->mBounds.getCenter());
+         colShape->addBox(halfWidth, centerXfm);
+         return true;
       }
    }   
 
@@ -351,8 +357,8 @@ bool PhysicsShapeData::preload( bool server, String &errorBuffer )
       Vector<FConvexResult*> mHulls;
    };
 
- 	DecompDesc d;
-   d.mVcount       =	polyList.mVertexList.size();
+   DecompDesc d;
+   d.mVcount       = polyList.mVertexList.size();
    d.mVertices     = doubleVerts.address();
    d.mTcount       = polyList.mIndexList.size() / 3;
    d.mIndices      = polyList.mIndexList.address();
@@ -376,7 +382,7 @@ bool PhysicsShapeData::preload( bool server, String &errorBuffer )
                            MatrixF::Identity );
    */
 
-   return true;
+   return !shapeError;
 }
 
 
@@ -392,12 +398,12 @@ ConsoleDocClass( PhysicsShape,
 PhysicsShape::PhysicsShape()
    :  mPhysicsRep( NULL ),
       mWorld( NULL ),
-      mShapeInst( NULL ),
       mResetPos( MatrixF::Identity ),
+      mShapeInst( NULL ),
       mDestroyed( false ),
       mPlayAmbient( false ),
-      mAmbientThread( NULL ),
-      mAmbientSeq( -1 )
+      mAmbientSeq( -1 ),
+      mAmbientThread( NULL )
 {
    mNetFlags.set( Ghostable | ScopeAlways );
    mTypeMask |= DynamicShapeObjectType;
@@ -425,7 +431,8 @@ void PhysicsShape::consoleInit()
 }
 
 void PhysicsShape::initPersistFields()
-{   
+{
+   docsURL;
    addGroup( "PhysicsShape" );
 
       addField( "playAmbient", TypeBool, Offset( mPlayAmbient, PhysicsShape ),
@@ -650,7 +657,7 @@ void PhysicsShape::onRemove()
       PhysicsPlugin::getPhysicsResetSignal().remove( this, &PhysicsShape::_onPhysicsReset );
 
       if ( mDestroyedShape )
-		  mDestroyedShape->deleteObject();
+        mDestroyedShape->deleteObject();
    }
 
    // Remove the resource change signal.
@@ -694,11 +701,11 @@ bool PhysicsShape::_createShape()
    mAmbientSeq = -1;
 
    PhysicsShapeData *db = getDataBlock();
-   if ( !db )
+   if ( !db || !db->mShape)
       return false;
 
    // Set the world box.
-   mObjBox = db->shape->bounds;
+   mObjBox = db->mShape->mBounds;
    resetWorldBox();
 
    // If this is the server and its a client only simulation
@@ -712,11 +719,11 @@ bool PhysicsShape::_createShape()
    }
 
    // Create the shape instance.
-   mShapeInst = new TSShapeInstance( db->shape, isClientObject() );
+   mShapeInst = new TSShapeInstance( db->mShape, isClientObject() );
 
    if ( isClientObject() )
    {
-      mAmbientSeq = db->shape->findSequence( "ambient" );
+      mAmbientSeq = db->mShape->findSequence( "ambient" );
       _initAmbient();   
    }
 
@@ -846,6 +853,18 @@ void PhysicsShape::applyImpulse( const Point3F &pos, const VectorF &vec )
 {
    if ( mPhysicsRep && mPhysicsRep->isDynamic() )
       mPhysicsRep->applyImpulse( pos, vec );
+}
+
+void PhysicsShape::applyTorque( const Point3F &torque )
+{
+   if (mPhysicsRep && mPhysicsRep->isDynamic())
+      mPhysicsRep->applyTorque( torque );
+}
+
+void PhysicsShape::applyForce( const Point3F &force )
+{
+   if (mPhysicsRep && mPhysicsRep->isDynamic())
+      mPhysicsRep->applyForce( force );
 }
 
 void PhysicsShape::applyRadialImpulse( const Point3F &origin, F32 radius, F32 magnitude )
@@ -1170,4 +1189,20 @@ DefineEngineMethod( PhysicsShape, restore, void, (),,
    "Has no effect if the shape is not destroyed.\n\n")
 {
    object->restore();
+}
+
+DefineEngineMethod( PhysicsShape, applyTorque, void, (Point3F torque), ,
+   "@brief Add a torque to a dynamic physics shape.\n\n"
+   "@param torque to apply to the dynamic physics shape\n"
+   "@note This value is ignored on physics shapes that are not dynamic. Wakes up the dynamic physics shape if it is sleeping.\n")
+{
+   object->applyTorque( torque );
+}
+
+DefineEngineMethod(PhysicsShape, applyForce, void, (Point3F force), ,
+   "@brief Add a force to a dynamic physics shape.\n\n"
+   "@param force to apply to the dynamic physics shape\n"
+   "@note This value is ignored on physics shapes that are not dynamic. Wakes up the dynamic physics shape if it is sleeping.\n")
+{
+   object->applyForce( force );
 }

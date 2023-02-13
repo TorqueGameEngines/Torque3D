@@ -27,6 +27,7 @@
 #include "gui/editor/guiInspector.h"
 #include "core/util/safeDelete.h"
 #include "gfx/gfxDrawUtil.h"
+#include "util/settings.h"
 
 //-----------------------------------------------------------------------------
 // GuiInspectorVariableField
@@ -40,7 +41,10 @@ ConsoleDocClass( GuiInspectorVariableField,
    "@internal"
 );
 
-GuiInspectorVariableField::GuiInspectorVariableField() 
+GuiInspectorVariableField::GuiInspectorVariableField()
+   : mVariableName(StringTable->EmptyString()),
+   mSetCallbackName(StringTable->EmptyString()),
+   mOwnerObject(NULL)
 {
 }
 
@@ -93,10 +97,35 @@ bool GuiInspectorVariableField::onAdd()
 
 void GuiInspectorVariableField::setData( const char* data, bool callbacks )
 {   
-   if ( !mCaption || mCaption[0] == 0 )
-      return;
+   if (mOwnerObject == nullptr && mVariableName == StringTable->EmptyString())
+   {
+      if (!mCaption || mCaption[0] == 0)
+         return;
 
-   Con::setVariable( mCaption, data );   
+      Con::setVariable(mCaption, data);
+   }
+   else
+   {
+      if (mOwnerObject != nullptr)
+      {
+         //Special case: if our object is a Settings class, we'll assume that we're trying to get/set the fields via the Setting class's normal behavior
+         //otherwise, use fields as normal
+         Settings* setting = dynamic_cast<Settings*>(mOwnerObject);
+         if (setting)
+         {
+            setting->setValue(mVariableName, data);
+         }
+         else
+         {
+            mOwnerObject->setDataField(mVariableName, NULL, data);
+         }
+      }
+      else
+      {
+         //probably a global var if we have no object attached, so just let it set
+         Con::setVariable(mVariableName, data);
+      }
+   }
 
    // Force our edit to update
    updateValue();
@@ -106,8 +135,16 @@ const char* GuiInspectorVariableField::getData( U32 inspectObjectIndex )
 {
    if ( !mCaption || mCaption[0] == 0 )
       return "";
-      
-   return Con::getVariable( mCaption );
+
+   Settings* setting = dynamic_cast<Settings*>(mOwnerObject);
+   if (setting)
+   {
+      return setting->value(mVariableName);
+   }
+   else
+   {
+      return Con::getVariable(mCaption);
+   }
 }
 
 void GuiInspectorVariableField::setValue( const char* newValue )

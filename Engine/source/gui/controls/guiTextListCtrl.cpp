@@ -52,7 +52,7 @@ ConsoleDocClass( GuiTextListCtrl,
 );
 
 
-IMPLEMENT_CALLBACK( GuiTextListCtrl, onSelect, void, (const char* cellid, const char* text),( cellid , text ),
+IMPLEMENT_CALLBACK( GuiTextListCtrl, onSelect, void, (S32 cellid, const char* text),( cellid , text ),
    "@brief Called whenever an item in the list is selected.\n\n"
    "@param cellid The ID of the cell that was selected\n"
    "@param text The text in the selected cel\n\n"
@@ -66,7 +66,7 @@ IMPLEMENT_CALLBACK( GuiTextListCtrl, onSelect, void, (const char* cellid, const 
    "@see GuiControl\n\n"
 );
 
-IMPLEMENT_CALLBACK( GuiTextListCtrl, onDeleteKey, void, ( const char* id ),( id ),
+IMPLEMENT_CALLBACK( GuiTextListCtrl, onDeleteKey, void, ( S32 id ),( id ),
    "@brief Called when the delete key has been pressed.\n\n"
    "@param id Id of the selected item in the list\n"
    "@tsexample\n"
@@ -125,13 +125,16 @@ GuiTextListCtrl::GuiTextListCtrl()
    mColumnOffsets.push_back(0);
    mFitParentWidth = true;
    mClipColumnText = false;
+   mRowHeightPadding = 2;
 }
 
 void GuiTextListCtrl::initPersistFields()
 {
+   docsURL;
    addField("columns",                 TypeS32Vector, Offset(mColumnOffsets, GuiTextListCtrl), "A vector of column offsets.  The number of values determines the number of columns in the table.\n" );
    addField("fitParentWidth",          TypeBool, Offset(mFitParentWidth, GuiTextListCtrl), "If true, the width of this control will match the width of its parent.\n");
    addField("clipColumnText",          TypeBool, Offset(mClipColumnText, GuiTextListCtrl), "If true, text exceeding a column's given width will get clipped.\n" );
+   addField("rowHeightPadding", TypeS32, Offset(mRowHeightPadding, GuiTextListCtrl), "Sets how much padding to add to the row heights on top of the font height");
    Parent::initPersistFields();
 }
 
@@ -172,7 +175,7 @@ bool GuiTextListCtrl::cellSelected(Point2I cell)
 
 void GuiTextListCtrl::onCellSelected(Point2I cell)
 {
-   onSelect_callback(Con::getIntArg(mList[cell.y].id), mList[cell.y].text);
+   onSelect_callback(mList[cell.y].id, mList[cell.y].text);
    execConsoleCallback();
 }
 
@@ -205,7 +208,7 @@ void GuiTextListCtrl::onRenderCell(Point2I offset, Point2I cell, bool selected, 
          else
             slen = dStrlen(text);
 
-         Point2I pos(offset.x + 4 + mColumnOffsets[index], offset.y);
+         Point2I pos(offset.x + 4 + mColumnOffsets[index], offset.y + mRowHeightPadding / 2);
 
          RectI saveClipRect;
          bool clipped = false;
@@ -368,7 +371,7 @@ void GuiTextListCtrl::setSize(Point2I newSize)
          mCellSize.x = maxWidth + 8;
       }
 
-      mCellSize.y = mFont->getHeight() + 2;
+      mCellSize.y = mFont->getHeight() + mRowHeightPadding;
    }
 
    Point2I newExtent( newSize.x * mCellSize.x + mHeaderDim.x, newSize.y * mCellSize.y + mHeaderDim.y );
@@ -497,7 +500,7 @@ bool GuiTextListCtrl::onKeyDown( const GuiEvent &event )
       break;
    case KEY_DELETE:
       if ( mSelectedCell.y >= 0 && mSelectedCell.y < mList.size() )
-      onDeleteKey_callback(Con::getIntArg( mList[mSelectedCell.y].id ) );
+      onDeleteKey_callback( mList[mSelectedCell.y].id );
       break;
    default:
    return( Parent::onKeyDown( event ) );
@@ -512,6 +515,39 @@ bool GuiTextListCtrl::onKeyDown( const GuiEvent &event )
 
 
 
+}
+
+bool GuiTextListCtrl::onGamepadAxisUp(const GuiEvent& event)
+{
+   if (mSelectedCell.y < (mList.size() - 1))
+   {
+      S32 yDelta = 0;
+
+      mSelectedCell.y++;
+      yDelta = mCellSize.y;
+
+      GuiScrollCtrl* parent = dynamic_cast<GuiScrollCtrl*>(getParent());
+      if (parent)
+         parent->scrollDelta(0, yDelta);
+   }
+   return true;
+}
+
+bool GuiTextListCtrl::onGamepadAxisDown(const GuiEvent& event)
+{
+   if (mSelectedCell.y > 0)
+   {
+      S32 yDelta = 0;
+
+      mSelectedCell.y--;
+      yDelta = -mCellSize.y;
+
+      GuiScrollCtrl* parent = dynamic_cast<GuiScrollCtrl*>(getParent());
+      if (parent)
+         parent->scrollDelta(0, yDelta);
+   }
+
+   return true;
 }
 
 //-----------------------------------------------------------------------------

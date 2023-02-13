@@ -34,9 +34,6 @@ static const U32 MaxExtent = 256;
 
 
 //----------------------------------------------------------------------------
-
-Convex sTerrainConvexList;
-
 // Number of vertices followed by point index
 S32 sVertexList[5][5] = {
    { 3, 1,2,3 },  // 135 B
@@ -167,13 +164,20 @@ S32 sFaceList135[16][9] = {
 
 TerrainConvex::TerrainConvex() 
 {
+   halfA = true;
+   square = NULL;
+   squareId = 0;
+   material = 0;
+   split45 = false;
+
    mType = TerrainConvexType; 
 }
 
 TerrainConvex::TerrainConvex( const TerrainConvex &cv ) 
 {
    mType = TerrainConvexType;
-
+   halfA = false;
+   square = NULL;
    // Only a partial copy...
    mObject = cv.mObject;
    split45 = cv.split45;
@@ -231,7 +235,7 @@ void TerrainConvex::getFeatures(const MatrixF& mat,const VectorF& n, ConvexFeatu
 {
    U32 i;
    cf->material = 0;
-   cf->object = mObject;
+   cf->mObject = mObject;
 
    // Plane is normal n + support point
    PlaneF plane;
@@ -279,10 +283,11 @@ void TerrainConvex::getFeatures(const MatrixF& mat,const VectorF& n, ConvexFeatu
    cf->mFaceList.increment(numFaces);
    for (i = 0; i < numFaces; i++)
    {
-      cf->mFaceList[faceListStart + i].normal    = normal[fp[i * 4 + 0]];
-      cf->mFaceList[faceListStart + i].vertex[0] = vertexCount + fp[i * 4 + 1];
-      cf->mFaceList[faceListStart + i].vertex[1] = vertexCount + fp[i * 4 + 2];
-      cf->mFaceList[faceListStart + i].vertex[2] = vertexCount + fp[i * 4 + 3];
+      ConvexFeature::Face& face = cf->mFaceList[faceListStart + i];
+      face.normal = normal[fp[i * 4 + 0]];
+      face.vertex[0] = vertexCount + fp[i * 4 + 1];
+      face.vertex[1] = vertexCount + fp[i * 4 + 2];
+      face.vertex[2] = vertexCount + fp[i * 4 + 3];
    }
 }
 
@@ -342,7 +347,7 @@ void TerrainBlock::buildConvex(const Box3F& box,Convex* convex)
 {
    PROFILE_SCOPE( TerrainBlock_buildConvex );
    
-   sTerrainConvexList.collectGarbage();
+   mTerrainConvexList.collectGarbage();
 
    // First check to see if the query misses the 
    // terrain elevation range.
@@ -407,7 +412,7 @@ void TerrainBlock::buildConvex(const Box3F& box,Convex* convex)
 
          // Create a new convex.
          TerrainConvex* cp = new TerrainConvex;
-         sTerrainConvexList.registerObject(cp);
+         mTerrainConvexList.registerObject(cp);
          convex->addToWorkingList(cp);
          cp->halfA = true;
          cp->square = 0;
@@ -440,7 +445,7 @@ void TerrainBlock::buildConvex(const Box3F& box,Convex* convex)
             cp->normal[1].normalize();
             if (mDot(vp[3] - vp[1],cp->normal[0]) > 0) {
                TerrainConvex* nc = new TerrainConvex(*cp);
-               sTerrainConvexList.registerObject(nc);
+               mTerrainConvexList.registerObject(nc);
                convex->addToWorkingList(nc);
                nc->halfA = false;
                nc->square = cp;
@@ -455,7 +460,7 @@ void TerrainBlock::buildConvex(const Box3F& box,Convex* convex)
             cp->normal[1].normalize();
             if (mDot(vp[2] - vp[0],cp->normal[0]) > 0) {
                TerrainConvex* nc = new TerrainConvex(*cp);
-               sTerrainConvexList.registerObject(nc);
+               mTerrainConvexList.registerObject(nc);
                convex->addToWorkingList(nc);
                nc->halfA = false;
                nc->square = cp;

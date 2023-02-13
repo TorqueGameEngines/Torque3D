@@ -41,10 +41,11 @@ GFXGLVertexBuffer::GFXGLVertexBuffer(  GFXDevice *device,
                                        const GFXVertexFormat *vertexFormat, 
                                        U32 vertexSize, 
                                        GFXBufferType bufferType )
-   :  GFXVertexBuffer( device, numVerts, vertexFormat, vertexSize, bufferType ), 
-      mZombieCache(NULL),
+   :  GFXVertexBuffer( device, numVerts, vertexFormat, vertexSize, bufferType ),
       mBufferOffset(0),
-      mBufferVertexOffset(0)
+      mBufferVertexOffset(0),
+      mZombieCache(NULL)
+
 {
    if( mBufferType == GFXBufferTypeVolatile )
    {
@@ -78,7 +79,7 @@ void GFXGLVertexBuffer::lock( U32 vertexStart, U32 vertexEnd, void **vertexPtr )
    if( mBufferType == GFXBufferTypeVolatile )
    {
       AssertFatal(vertexStart == 0, "");
-      if( gglHasExtension(ARB_vertex_attrib_binding) )
+      if( GFXGL->mCapabilities.vertexAttributeBinding )
       {
          getCircularVolatileVertexBuffer()->lock( mNumVerts * mVertexSize, 0, mBufferOffset, *vertexPtr );
       }
@@ -136,7 +137,7 @@ void GFXGLVertexBuffer::prepare()
 
 void GFXGLVertexBuffer::prepare(U32 stream, U32 divisor)
 {
-   if( gglHasExtension(ARB_vertex_attrib_binding) )
+   if( GFXGL->mCapabilities.vertexAttributeBinding )
    {      
       glBindVertexBuffer( stream, mBuffer, mBufferOffset, mVertexSize );
       glVertexBindingDivisor( stream, divisor );

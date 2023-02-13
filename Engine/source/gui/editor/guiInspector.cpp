@@ -29,7 +29,6 @@
 #include "gui/containers/guiScrollCtrl.h"
 #include "gui/editor/inspector/customField.h"
 
-
 IMPLEMENT_CONOBJECT(GuiInspector);
 
 ConsoleDocClass( GuiInspector,
@@ -50,7 +49,8 @@ GuiInspector::GuiInspector()
    mOverDivider( false ),
    mMovingDivider( false ),
    mHLField( NULL ),
-   mShowCustomFields( true )
+   mShowCustomFields( true ),
+   mComponentGroupTargetId(-1)
 {
    mPadding = 1;
 }
@@ -66,6 +66,7 @@ GuiInspector::~GuiInspector()
 
 void GuiInspector::initPersistFields()
 {
+   docsURL;
    addGroup( "Inspector" );
    
       addField( "dividerMargin", TypeS32, Offset( mDividerMargin, GuiInspector ) );
@@ -230,6 +231,27 @@ GuiInspectorGroup* GuiInspector::findExistentGroup( StringTableEntry groupName )
    }
 
    return NULL;
+}
+
+S32 GuiInspector::findExistentGroupIndex(StringTableEntry groupName)
+{
+   // If we have no groups, it couldn't possibly exist
+   if (mGroups.empty())
+      return -1;
+
+   // Attempt to find it in the group list
+   Vector<GuiInspectorGroup*>::iterator i = mGroups.begin();
+
+   S32 index = 0;
+   for (; i != mGroups.end(); i++)
+   {
+      if (dStricmp((*i)->getGroupName(), groupName) == 0)
+         return index;
+
+      index++;
+   }
+
+   return -1;
 }
 
 //-----------------------------------------------------------------------------
@@ -564,31 +586,25 @@ void GuiInspector::refresh()
       ungroup = new GuiInspectorGroup( "Ungrouped", this );
       ungroup->setHeaderHidden( true );
       ungroup->setCanCollapse( false );
-      if( ungroup != NULL )
-      {
-         ungroup->registerObject();
-         mGroups.push_back( ungroup );
-         addObject( ungroup );
-      }   
+
+      ungroup->registerObject();
+      mGroups.push_back( ungroup );
+      addObject( ungroup );
    }
 
    // Put the 'transform' group first
    GuiInspectorGroup *transform = new GuiInspectorGroup( "Transform", this );
-   if( transform != NULL )
-   {
-      transform->registerObject();
-      mGroups.push_back( transform );
-      addObject( transform );
-   }
+
+   transform->registerObject();
+   mGroups.push_back(transform);
+   addObject(transform);
 
    // Always create the 'general' group (for fields without a group)      
    GuiInspectorGroup *general = new GuiInspectorGroup( "General", this );
-   if( general != NULL )
-   {
-      general->registerObject();
-      mGroups.push_back( general );
-      addObject( general );
-   }
+
+   general->registerObject();
+   mGroups.push_back(general);
+   addObject(general);
 
    // Create the inspector groups for static fields.
 
@@ -605,41 +621,39 @@ void GuiInspector::refresh()
             
             if( !group && !isGroupFiltered( itr->pGroupname ) )
             {
-               GuiInspectorGroup *group = new GuiInspectorGroup( itr->pGroupname, this );
-               if( group != NULL )
+               GuiInspectorGroup *newGroup = new GuiInspectorGroup( itr->pGroupname, this );
+
+			   newGroup->registerObject();
+               if( !newGroup->getNumFields() )
                {
-                  group->registerObject();
-                  if( !group->getNumFields() )
-                  {
-                     #ifdef DEBUG_SPEW
-                     Platform::outputDebugString( "[GuiInspector] Removing empty group '%s'",
-                        group->getCaption().c_str() );
-                     #endif
+                  #ifdef DEBUG_SPEW
+                  Platform::outputDebugString( "[GuiInspector] Removing empty group '%s'",
+					  newGroup->getCaption().c_str() );
+                  #endif
                      
-                     // The group ended up having no fields.  Remove it.
-                     group->deleteObject();
-                  }
-                  else
-                  {
-                     mGroups.push_back( group );
-                     addObject( group );
-                  }
-               }            
+                  // The group ended up having no fields.  Remove it.
+				      newGroup->deleteObject();
+               }
+               else
+               {
+                  mGroups.push_back(newGroup);
+                  addObject(newGroup);
+               }
             }
          }
       }
    }
 
+   mTargets.first()->onInspect(this);
+
    // Deal with dynamic fields
    if ( !isGroupFiltered( "Dynamic Fields" ) )
    {
       GuiInspectorGroup *dynGroup = new GuiInspectorDynamicGroup( "Dynamic Fields", this);
-      if( dynGroup != NULL )
-      {
-         dynGroup->registerObject();
-         mGroups.push_back( dynGroup );
-         addObject( dynGroup );
-      }
+
+      dynGroup->registerObject();
+      mGroups.push_back( dynGroup );
+      addObject( dynGroup );
    }
 
    if( mShowCustomFields && mTargets.size() == 1 )
@@ -889,18 +903,18 @@ DefineEngineMethod( GuiInspector, setObjectField, void, (const char* fieldname, 
 
 //-----------------------------------------------------------------------------
 
-DefineEngineMethod( GuiInspector, findByObject, S32, (SimObject* object), ,
+DefineEngineMethod( GuiInspector, findByObject, S32, (SimObject* obj), ,
 	"Returns the id of an awake inspector that is inspecting the passed object if one exists\n"
 	"@param object Object to find away inspector for."
 	"@return id of an awake inspector that is inspecting the passed object if one exists, else NULL or 0.")
 {
-   if ( !object )
-      return NULL;
+   if ( !obj)
+      return 0;
 
-   SimObject *inspector = GuiInspector::findByObject( object );
+   SimObject *inspector = GuiInspector::findByObject(obj);
 
    if ( !inspector )
-      return NULL;
+      return 0;
 
    return inspector->getId();
 }

@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="GuiColorPickerCtrl_image"
+    imageFile="@assetFile=GuiColorPickerCtrl.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

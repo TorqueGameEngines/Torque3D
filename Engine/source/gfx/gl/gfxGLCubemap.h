@@ -30,6 +30,9 @@
 #include "core/resource.h"
 #endif
 
+const U32 CubeFaces = 6;
+const U32 MaxMipMaps = 13; //todo this needs a proper static value somewhere to sync up with other classes like GBitmap
+
 
 class GFXGLCubemap : public GFXCubemap
 {
@@ -39,14 +42,15 @@ public:
 
    virtual void initStatic( GFXTexHandle *faces );
    virtual void initStatic( DDSFile *dds );
-   virtual void initDynamic( U32 texSize, GFXFormat faceFormat = GFXFormatR8G8B8A8 );
+   virtual void initDynamic( U32 texSize, GFXFormat faceFormat = GFXFormatR8G8B8A8, U32 mipLevels = 0);
    virtual U32 getSize() const { return mWidth; }
    virtual GFXFormat getFormat() const { return mFaceFormat; }
+
+   virtual bool isInitialized() { return mCubemap != 0 ? true : false; }
 
    // Convenience methods for GFXGLTextureTarget
    U32 getWidth() { return mWidth; }
    U32 getHeight() { return mHeight; }
-   U32 getNumMipLevels() { return mMipLevels; }
    U32 getHandle() { return mCubemap; }
    
    // GFXResource interface
@@ -56,7 +60,11 @@ public:
    /// Called by texCB; this is to ensure that all textures have been resurrected before we attempt to res the cubemap.
    void tmResurrect();
    
-   static GLenum getEnumForFaceNumber(U32 face) { return faceList[face]; } ///< Performs lookup to get a GLenum for the given face number
+   static GLenum getEnumForFaceNumber(U32 face);///< Performs lookup to get a GLenum for the given face number
+
+   /// @return An array containing the texture data
+   /// @note You are responsible for deleting the returned data! (Use delete[])
+   U8* getTextureData(U32 face, U32 mip = 0);
 
 protected:
 
@@ -73,7 +81,6 @@ protected:
    // Self explanatory
    U32 mWidth;
    U32 mHeight;
-   U32 mMipLevels;
    GFXFormat mFaceFormat;
       
    GFXTexHandle mTextures[6]; ///< Keep refs to our textures for resurrection of static cubemaps
@@ -87,7 +94,29 @@ protected:
    virtual void bind(U32 textureUnit) const; ///< Notifies our owning device that we want to be set to the given texture unit (used for GL internal state tracking)
    void fillCubeTextures(GFXTexHandle* faces); ///< Copies the textures in faces into the cubemap
    
-   static GLenum faceList[6]; ///< Lookup table
+};
+
+class GFXGLCubemapArray : public GFXCubemapArray
+{
+public:
+   GFXGLCubemapArray();
+   virtual ~GFXGLCubemapArray();
+   //virtual void initStatic(GFXCubemapHandle *cubemaps, const U32 cubemapCount);
+   virtual void init(GFXCubemapHandle *cubemaps, const U32 cubemapCount);
+   virtual void init(const U32 cubemapCount, const U32 cubemapFaceSize, const GFXFormat format);
+   virtual void updateTexture(const GFXCubemapHandle &cubemap, const U32 slot);
+   virtual void copyTo(GFXCubemapArray *pDstCubemap);
+   virtual void setToTexUnit(U32 tuNum);
+
+   // GFXResource interface
+   virtual void zombify() {}
+   virtual void resurrect() {}
+
+protected:
+   friend class GFXGLDevice;
+   void bind(U32 textureUnit) const;
+   GLuint mCubemap; ///< Internal GL handle
+
 };
 
 #endif

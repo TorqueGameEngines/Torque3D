@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="depthcolor_ramp_image"
+    imageFile="@assetFile=depthcolor_ramp.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

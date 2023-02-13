@@ -52,8 +52,6 @@ class GFXTextureObject;
 /// tied to a window, or a set of surfaces or textures.
 class GFXTarget : public StrongRefBase, public GFXResource
 {
-   friend class GFXD3D9Device;
-   friend class GFX360Device;
 
 private:
    S32 mChangeToken;
@@ -163,7 +161,7 @@ public:
    enum RenderSlot
    {
       DepthStencil,
-      Color0, Color1, Color2, Color3, Color4,
+      Color0, Color1, Color2, Color3, Color4, Color5,
       MaxRenderSlotId,
    };
 
@@ -198,6 +196,12 @@ public:
    /// 
    /// By default, this method will resolve all color targets.
    virtual void resolve()=0;
+
+   /// Returns true if the automatic generation of mip maps is enabled
+   inline bool isGenMipsEnabled() const { return mGenMips; }
+
+protected:
+   bool mGenMips;
 };
 
 typedef StrongRefPtr<GFXTarget> GFXTargetRef;

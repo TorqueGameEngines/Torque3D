@@ -98,6 +98,7 @@ GuiTabBookCtrl::GuiTabBookCtrl()
 
 void GuiTabBookCtrl::initPersistFields()
 {
+   docsURL;
    addGroup( "TabBook" );
    
       addField( "tabPosition",     TYPEID< TabPosition >(), Offset( mTabPosition,    GuiTabBookCtrl ),
@@ -548,7 +549,7 @@ void GuiTabBookCtrl::renderTabs( const Point2I &offset, const RectI &tabRect )
 
 //-----------------------------------------------------------------------------
 
-void GuiTabBookCtrl::renderTab( RectI tabRect, GuiTabPageCtrl *tab )
+void GuiTabBookCtrl::renderTab(const RectI& tabRect, GuiTabPageCtrl *tab)
 {
    StringTableEntry text = tab->getText();
    ColorI oldColor;
@@ -622,7 +623,7 @@ S32 GuiTabBookCtrl::calculatePageTabWidth( GuiTabPageCtrl *page )
 
    const char* text = page->getText();
 
-   if( !text || dStrlen(text) == 0 || mProfile->mFont == NULL )
+   if( !text || dStrlen(text) == 0 || mProfile == NULL || mProfile->mFont == NULL )
       return mMinTabWidth;
 
    GFont *font = mProfile->mFont;

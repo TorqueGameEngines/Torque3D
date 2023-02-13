@@ -41,7 +41,16 @@ protected:
       S32                        mSelectedOption;  ///< Index into mOptions pointing at the selected option
       bool                       mWrapOptions;     ///< Determines if options should "wrap around" at the ends
 
-      Row()
+      enum Mode
+      {
+         Default = 0,
+         OptionsList,
+         Keybind
+      };
+
+      Mode mMode;
+
+      Row() : mSelectedOption(0), mWrapOptions(false), mMode(Mode::Default)
       {
          VECTOR_SET_ASSOCIATION( mOptions );
       }
@@ -110,6 +119,8 @@ public:
    ///
    /// \param event A reference to the event that triggered the callback.
    virtual bool onGamepadAxisRight(const GuiEvent &event);
+
+   virtual void clearRows();
 
    GuiGameListOptionsCtrl();
    ~GuiGameListOptionsCtrl();

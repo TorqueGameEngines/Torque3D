@@ -1,0 +1,6 @@
+<PostEffectAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="SSAOPostFx"
+    scriptFile="@assetFile=SSAOPostFx.cs"
+    VersionId="1" />

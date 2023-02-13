@@ -1,6 +1,6 @@
  /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2014 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -24,439 +24,490 @@
 
 #include "SDL_uikitview.h"
 
-#include "../../events/SDL_keyboard_c.h"
+#include "SDL_hints.h"
 #include "../../events/SDL_mouse_c.h"
 #include "../../events/SDL_touch_c.h"
+#include "../../events/SDL_events_c.h"
 
-#if SDL_IPHONE_KEYBOARD
-#include "keyinfotable.h"
-#endif
 #include "SDL_uikitappdelegate.h"
+#include "SDL_uikitevents.h"
 #include "SDL_uikitmodes.h"
 #include "SDL_uikitwindow.h"
 
-void _uikit_keyboard_init() ;
+/* The maximum number of mouse buttons we support */
+#define MAX_MOUSE_BUTTONS    5
 
-@implementation SDL_uikitview
-
-- (void)dealloc
-{
-    [super dealloc];
-}
-
-- (id)initWithFrame:(CGRect)frame
-{
-    self = [super initWithFrame: frame];
-
-#if SDL_IPHONE_KEYBOARD
-    [self initializeKeyboard];
+/* This is defined in SDL_sysjoystick.m */
+#if !SDL_JOYSTICK_DISABLED
+extern int SDL_AppleTVRemoteOpenedAsJoystick;
 #endif
 
-    self.multipleTouchEnabled = YES;
+@implementation SDL_uikitview {
+    SDL_Window *sdlwindow;
 
-    touchId = 1;
-    SDL_AddTouch(touchId, "");
+    SDL_TouchID directTouchId;
+    SDL_TouchID indirectTouchId;
+}
+
+- (instancetype)initWithFrame:(CGRect)frame
+{
+    if ((self = [super initWithFrame:frame])) {
+#if TARGET_OS_TV
+        /* Apple TV Remote touchpad swipe gestures. */
+        UISwipeGestureRecognizer *swipeUp = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeGesture:)];
+        swipeUp.direction = UISwipeGestureRecognizerDirectionUp;
+        [self addGestureRecognizer:swipeUp];
+
+        UISwipeGestureRecognizer *swipeDown = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeGesture:)];
+        swipeDown.direction = UISwipeGestureRecognizerDirectionDown;
+        [self addGestureRecognizer:swipeDown];
+
+        UISwipeGestureRecognizer *swipeLeft = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeGesture:)];
+        swipeLeft.direction = UISwipeGestureRecognizerDirectionLeft;
+        [self addGestureRecognizer:swipeLeft];
+
+        UISwipeGestureRecognizer *swipeRight = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeGesture:)];
+        swipeRight.direction = UISwipeGestureRecognizerDirectionRight;
+        [self addGestureRecognizer:swipeRight];
+#elif defined(__IPHONE_13_4)
+        if (@available(iOS 13.4, *)) {
+            UIPanGestureRecognizer *mouseWheelRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(mouseWheelGesture:)];
+            mouseWheelRecognizer.allowedScrollTypesMask = UIScrollTypeMaskDiscrete;
+            mouseWheelRecognizer.allowedTouchTypes = @[ @(UITouchTypeIndirectPointer) ];
+            mouseWheelRecognizer.cancelsTouchesInView = NO;
+            mouseWheelRecognizer.delaysTouchesBegan = NO;
+            mouseWheelRecognizer.delaysTouchesEnded = NO;
+            [self addGestureRecognizer:mouseWheelRecognizer];
+        }
+#endif
+
+        self.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+        self.autoresizesSubviews = YES;
+
+        directTouchId = 1;
+        indirectTouchId = 2;
+
+#if !TARGET_OS_TV
+        self.multipleTouchEnabled = YES;
+        SDL_AddTouch(directTouchId, SDL_TOUCH_DEVICE_DIRECT, "");
+#endif
+
+#if !TARGET_OS_TV && defined(__IPHONE_13_4)
+        if (@available(iOS 13.4, *)) {
+            [self addInteraction:[[UIPointerInteraction alloc] initWithDelegate:self]];
+        }
+#endif
+    }
 
     return self;
+}
 
+- (void)setSDLWindow:(SDL_Window *)window
+{
+    SDL_WindowData *data = nil;
+
+    if (window == sdlwindow) {
+        return;
+    }
+
+    /* Remove ourself from the old window. */
+    if (sdlwindow) {
+        SDL_uikitview *view = nil;
+        data = (__bridge SDL_WindowData *) sdlwindow->driverdata;
+
+        [data.views removeObject:self];
+
+        [self removeFromSuperview];
+
+        /* Restore the next-oldest view in the old window. */
+        view = data.views.lastObject;
+
+        data.viewcontroller.view = view;
+
+        data.uiwindow.rootViewController = nil;
+        data.uiwindow.rootViewController = data.viewcontroller;
+
+        [data.uiwindow layoutIfNeeded];
+    }
+
+    /* Add ourself to the new window. */
+    if (window) {
+        data = (__bridge SDL_WindowData *) window->driverdata;
+
+        /* Make sure the SDL window has a strong reference to this view. */
+        [data.views addObject:self];
+
+        /* Replace the view controller's old view with this one. */
+        [data.viewcontroller.view removeFromSuperview];
+        data.viewcontroller.view = self;
+
+        /* The root view controller handles rotation and the status bar.
+         * Assigning it also adds the controller's view to the window. We
+         * explicitly re-set it to make sure the view is properly attached to
+         * the window. Just adding the sub-view if the root view controller is
+         * already correct causes orientation issues on iOS 7 and below. */
+        data.uiwindow.rootViewController = nil;
+        data.uiwindow.rootViewController = data.viewcontroller;
+
+        /* The view's bounds may not be correct until the next event cycle. That
+         * might happen after the current dimensions are queried, so we force a
+         * layout now to immediately update the bounds. */
+        [data.uiwindow layoutIfNeeded];
+    }
+
+    sdlwindow = window;
+}
+
+#if !TARGET_OS_TV && defined(__IPHONE_13_4)
+- (UIPointerRegion *)pointerInteraction:(UIPointerInteraction *)interaction regionForRequest:(UIPointerRegionRequest *)request defaultRegion:(UIPointerRegion *)defaultRegion API_AVAILABLE(ios(13.4)){
+    if (request != nil && !SDL_GCMouseRelativeMode()) {
+        CGPoint origin = self.bounds.origin;
+        CGPoint point = request.location;
+
+        point.x -= origin.x;
+        point.y -= origin.y;
+
+        SDL_SendMouseMotion(sdlwindow, 0, 0, (int)point.x, (int)point.y);
+    }
+    return [UIPointerRegion regionWithRect:self.bounds identifier:nil];
+}
+
+- (UIPointerStyle *)pointerInteraction:(UIPointerInteraction *)interaction styleForRegion:(UIPointerRegion *)region  API_AVAILABLE(ios(13.4)){
+    if (SDL_ShowCursor(-1)) {
+        return nil;
+    } else {
+        return [UIPointerStyle hiddenPointerStyle];
+    }
+}
+#endif /* !TARGET_OS_TV && __IPHONE_13_4 */
+
+- (SDL_TouchDeviceType)touchTypeForTouch:(UITouch *)touch
+{
+#ifdef __IPHONE_9_0
+    if ([touch respondsToSelector:@selector((type))]) {
+        if (touch.type == UITouchTypeIndirect) {
+            return SDL_TOUCH_DEVICE_INDIRECT_RELATIVE;
+        }
+    }
+#endif
+
+    return SDL_TOUCH_DEVICE_DIRECT;
+}
+
+- (SDL_TouchID)touchIdForType:(SDL_TouchDeviceType)type
+{
+    switch (type) {
+        case SDL_TOUCH_DEVICE_DIRECT:
+        default:
+            return directTouchId;
+        case SDL_TOUCH_DEVICE_INDIRECT_RELATIVE:
+            return indirectTouchId;
+    }
 }
 
 - (CGPoint)touchLocation:(UITouch *)touch shouldNormalize:(BOOL)normalize
 {
-    CGPoint point = [touch locationInView: self];
-
-    /* Get the display scale and apply that to the input coordinates */
-    SDL_Window *window = self->viewcontroller.window;
-    SDL_VideoDisplay *display = SDL_GetDisplayForWindow(window);
-    SDL_DisplayModeData *displaymodedata = (SDL_DisplayModeData *) display->current_mode.driverdata;
+    CGPoint point = [touch locationInView:self];
 
     if (normalize) {
-        CGRect bounds = [self bounds];
+        CGRect bounds = self.bounds;
         point.x /= bounds.size.width;
         point.y /= bounds.size.height;
-    } else {
-        point.x *= displaymodedata->scale;
-        point.y *= displaymodedata->scale;
     }
+
     return point;
+}
+
+- (float)pressureForTouch:(UITouch *)touch
+{
+#ifdef __IPHONE_9_0
+    if ([touch respondsToSelector:@selector(force)]) {
+        return (float) touch.force;
+    }
+#endif
+
+    return 1.0f;
 }
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
 {
-    NSEnumerator *enumerator = [touches objectEnumerator];
-    UITouch *touch = (UITouch*)[enumerator nextObject];
+    for (UITouch *touch in touches) {
+        BOOL handled = NO;
 
-    while (touch) {
-        if (!leftFingerDown) {
-            CGPoint locationInView = [self touchLocation:touch shouldNormalize:NO];
+#if !TARGET_OS_TV && defined(__IPHONE_13_4)
+        if (@available(iOS 13.4, *)) {
+            if (touch.type == UITouchTypeIndirectPointer) {
+                if (!SDL_HasGCMouse()) {
+                    int i;
 
-            /* send moved event */
-            SDL_SendMouseMotion(NULL, SDL_TOUCH_MOUSEID, 0, locationInView.x, locationInView.y);
+                    for (i = 1; i <= MAX_MOUSE_BUTTONS; ++i) {
+                        if ((event.buttonMask & SDL_BUTTON(i)) != 0) {
+                            Uint8 button;
 
-            /* send mouse down event */
-            SDL_SendMouseButton(NULL, SDL_TOUCH_MOUSEID, SDL_PRESSED, SDL_BUTTON_LEFT);
-
-            leftFingerDown = touch;
-        }
-
-        CGPoint locationInView = [self touchLocation:touch shouldNormalize:YES];
-#ifdef IPHONE_TOUCH_EFFICIENT_DANGEROUS
-        /* FIXME: TODO: Using touch as the fingerId is potentially dangerous
-         * It is also much more efficient than storing the UITouch pointer
-         * and comparing it to the incoming event.
-         */
-        SDL_SendTouch(touchId, (SDL_FingerID)((size_t)touch),
-                      SDL_TRUE, locationInView.x, locationInView.y, 1.0f);
-#else
-        int i;
-        for(i = 0; i < MAX_SIMULTANEOUS_TOUCHES; i++) {
-            if (finger[i] == NULL) {
-                finger[i] = touch;
-                SDL_SendTouch(touchId, i,
-                              SDL_TRUE, locationInView.x, locationInView.y, 1.0f);
-                break;
+                            switch (i) {
+                            case 1:
+                                button = SDL_BUTTON_LEFT;
+                                break;
+                            case 2:
+                                button = SDL_BUTTON_RIGHT;
+                                break;
+                            case 3:
+                                button = SDL_BUTTON_MIDDLE;
+                                break;
+                            default:
+                                button = (Uint8)i;
+                                break;
+                            }
+                            SDL_SendMouseButton(sdlwindow, 0, SDL_PRESSED, button);
+                        }
+                    }
+                }
+                handled = YES;
             }
         }
 #endif
-        touch = (UITouch*)[enumerator nextObject];
+        if (!handled) {
+            SDL_TouchDeviceType touchType = [self touchTypeForTouch:touch];
+            SDL_TouchID touchId = [self touchIdForType:touchType];
+            float pressure = [self pressureForTouch:touch];
+
+            if (SDL_AddTouch(touchId, touchType, "") < 0) {
+                continue;
+            }
+
+            /* FIXME, need to send: int clicks = (int) touch.tapCount; ? */
+
+            CGPoint locationInView = [self touchLocation:touch shouldNormalize:YES];
+            SDL_SendTouch(touchId, (SDL_FingerID)((size_t)touch), sdlwindow,
+                          SDL_TRUE, locationInView.x, locationInView.y, pressure);
+        }
     }
 }
 
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
 {
-    NSEnumerator *enumerator = [touches objectEnumerator];
-    UITouch *touch = (UITouch*)[enumerator nextObject];
+    for (UITouch *touch in touches) {
+        BOOL handled = NO;
 
-    while(touch) {
-        if (touch == leftFingerDown) {
-            /* send mouse up */
-            SDL_SendMouseButton(NULL, SDL_TOUCH_MOUSEID, SDL_RELEASED, SDL_BUTTON_LEFT);
-            leftFingerDown = nil;
-        }
+#if !TARGET_OS_TV && defined(__IPHONE_13_4)
+        if (@available(iOS 13.4, *)) {
+            if (touch.type == UITouchTypeIndirectPointer) {
+                if (!SDL_HasGCMouse()) {
+                    int i;
 
-        CGPoint locationInView = [self touchLocation:touch shouldNormalize:YES];
-#ifdef IPHONE_TOUCH_EFFICIENT_DANGEROUS
-        SDL_SendTouch(touchId, (long)touch,
-                      SDL_FALSE, locationInView.x, locationInView.y, 1.0f);
-#else
-        int i;
-        for (i = 0; i < MAX_SIMULTANEOUS_TOUCHES; i++) {
-            if (finger[i] == touch) {
-                SDL_SendTouch(touchId, i,
-                              SDL_FALSE, locationInView.x, locationInView.y, 1.0f);
-                finger[i] = NULL;
-                break;
+                    for (i = 1; i <= MAX_MOUSE_BUTTONS; ++i) {
+                        if ((event.buttonMask & SDL_BUTTON(i)) != 0) {
+                            Uint8 button;
+
+                            switch (i) {
+                            case 1:
+                                button = SDL_BUTTON_LEFT;
+                                break;
+                            case 2:
+                                button = SDL_BUTTON_RIGHT;
+                                break;
+                            case 3:
+                                button = SDL_BUTTON_MIDDLE;
+                                break;
+                            default:
+                                button = (Uint8)i;
+                                break;
+                            }
+                            SDL_SendMouseButton(sdlwindow, 0, SDL_RELEASED, button);
+                        }
+                    }
+                }
+                handled = YES;
             }
         }
 #endif
-        touch = (UITouch*)[enumerator nextObject];
+        if (!handled) {
+            SDL_TouchDeviceType touchType = [self touchTypeForTouch:touch];
+            SDL_TouchID touchId = [self touchIdForType:touchType];
+            float pressure = [self pressureForTouch:touch];
+
+            if (SDL_AddTouch(touchId, touchType, "") < 0) {
+                continue;
+            }
+
+            /* FIXME, need to send: int clicks = (int) touch.tapCount; ? */
+
+            CGPoint locationInView = [self touchLocation:touch shouldNormalize:YES];
+            SDL_SendTouch(touchId, (SDL_FingerID)((size_t)touch), sdlwindow,
+                          SDL_FALSE, locationInView.x, locationInView.y, pressure);
+        }
     }
 }
 
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event
 {
-    /*
-        this can happen if the user puts more than 5 touches on the screen
-        at once, or perhaps in other circumstances.  Usually (it seems)
-        all active touches are canceled.
-    */
-    [self touchesEnded: touches withEvent: event];
+    [self touchesEnded:touches withEvent:event];
 }
 
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event
 {
-    NSEnumerator *enumerator = [touches objectEnumerator];
-    UITouch *touch = (UITouch*)[enumerator nextObject];
+    for (UITouch *touch in touches) {
+        BOOL handled = NO;
 
-    while (touch) {
-        if (touch == leftFingerDown) {
-            CGPoint locationInView = [self touchLocation:touch shouldNormalize:NO];
-
-            /* send moved event */
-            SDL_SendMouseMotion(NULL, SDL_TOUCH_MOUSEID, 0, locationInView.x, locationInView.y);
+#if !TARGET_OS_TV && defined(__IPHONE_13_4)
+        if (@available(iOS 13.4, *)) {
+            if (touch.type == UITouchTypeIndirectPointer) {
+                /* Already handled in pointerInteraction callback */
+                handled = YES;
+            }
         }
+#endif
+        if (!handled) {
+            SDL_TouchDeviceType touchType = [self touchTypeForTouch:touch];
+            SDL_TouchID touchId = [self touchIdForType:touchType];
+            float pressure = [self pressureForTouch:touch];
 
-        CGPoint locationInView = [self touchLocation:touch shouldNormalize:YES];
-#ifdef IPHONE_TOUCH_EFFICIENT_DANGEROUS
-        SDL_SendTouchMotion(touchId, (long)touch,
-                            locationInView.x, locationInView.y, 1.0f);
-#else
-        int i;
-        for (i = 0; i < MAX_SIMULTANEOUS_TOUCHES; i++) {
-            if (finger[i] == touch) {
-                SDL_SendTouchMotion(touchId, i,
-                                    locationInView.x, locationInView.y, 1.0f);
+            if (SDL_AddTouch(touchId, touchType, "") < 0) {
+                continue;
+            }
+
+            CGPoint locationInView = [self touchLocation:touch shouldNormalize:YES];
+            SDL_SendTouchMotion(touchId, (SDL_FingerID)((size_t)touch), sdlwindow,
+                                locationInView.x, locationInView.y, pressure);
+        }
+    }
+}
+
+#if TARGET_OS_TV || defined(__IPHONE_9_1)
+- (SDL_Scancode)scancodeFromPress:(UIPress*)press
+{
+#ifdef __IPHONE_13_4
+    if ([press respondsToSelector:@selector((key))]) {
+        if (press.key != nil) {
+            return (SDL_Scancode)press.key.keyCode;
+        }
+    }
+#endif
+
+#if !SDL_JOYSTICK_DISABLED
+    /* Presses from Apple TV remote */
+    if (!SDL_AppleTVRemoteOpenedAsJoystick) {
+        switch (press.type) {
+        case UIPressTypeUpArrow:
+            return SDL_SCANCODE_UP;
+        case UIPressTypeDownArrow:
+            return SDL_SCANCODE_DOWN;
+        case UIPressTypeLeftArrow:
+            return SDL_SCANCODE_LEFT;
+        case UIPressTypeRightArrow:
+            return SDL_SCANCODE_RIGHT;
+        case UIPressTypeSelect:
+            /* HIG says: "primary button behavior" */
+            return SDL_SCANCODE_RETURN;
+        case UIPressTypeMenu:
+            /* HIG says: "returns to previous screen" */
+            return SDL_SCANCODE_ESCAPE;
+        case UIPressTypePlayPause:
+            /* HIG says: "secondary button behavior" */
+            return SDL_SCANCODE_PAUSE;
+        default:
+            break;
+        }
+    }
+#endif /* !SDL_JOYSTICK_DISABLED */
+
+    return SDL_SCANCODE_UNKNOWN;
+}
+
+- (void)pressesBegan:(NSSet<UIPress *> *)presses withEvent:(UIPressesEvent *)event
+{
+    if (!SDL_HasGCKeyboard()) {
+        for (UIPress *press in presses) {
+            SDL_Scancode scancode = [self scancodeFromPress:press];
+            SDL_SendKeyboardKey(SDL_PRESSED, scancode);
+        }
+    }
+    [super pressesBegan:presses withEvent:event];
+}
+
+- (void)pressesEnded:(NSSet<UIPress *> *)presses withEvent:(UIPressesEvent *)event
+{
+    if (!SDL_HasGCKeyboard()) {
+        for (UIPress *press in presses) {
+            SDL_Scancode scancode = [self scancodeFromPress:press];
+            SDL_SendKeyboardKey(SDL_RELEASED, scancode);
+        }
+    }
+    [super pressesEnded:presses withEvent:event];
+}
+
+- (void)pressesCancelled:(NSSet<UIPress *> *)presses withEvent:(UIPressesEvent *)event
+{
+    if (!SDL_HasGCKeyboard()) {
+        for (UIPress *press in presses) {
+            SDL_Scancode scancode = [self scancodeFromPress:press];
+            SDL_SendKeyboardKey(SDL_RELEASED, scancode);
+        }
+    }
+    [super pressesCancelled:presses withEvent:event];
+}
+
+- (void)pressesChanged:(NSSet<UIPress *> *)presses withEvent:(UIPressesEvent *)event
+{
+    /* This is only called when the force of a press changes. */
+    [super pressesChanged:presses withEvent:event];
+}
+
+#endif /* TARGET_OS_TV || defined(__IPHONE_9_1) */
+
+-(void)mouseWheelGesture:(UIPanGestureRecognizer *)gesture
+{
+    if (gesture.state == UIGestureRecognizerStateBegan ||
+        gesture.state == UIGestureRecognizerStateChanged ||
+        gesture.state == UIGestureRecognizerStateEnded) {
+        CGPoint velocity = [gesture velocityInView:self];
+
+        if (velocity.x > 0.0f) {
+            velocity.x = -1.0;
+        } else if (velocity.x < 0.0f) {
+            velocity.x = 1.0f;
+        }
+        if (velocity.y > 0.0f) {
+            velocity.y = -1.0;
+        } else if (velocity.y < 0.0f) {
+            velocity.y = 1.0f;
+        }
+        if (velocity.x != 0.0f || velocity.y != 0.0f) {
+            SDL_SendMouseWheel(sdlwindow, 0, velocity.x, velocity.y, SDL_MOUSEWHEEL_NORMAL);
+        }
+    }
+}
+
+#if TARGET_OS_TV
+-(void)swipeGesture:(UISwipeGestureRecognizer *)gesture
+{
+    /* Swipe gestures don't trigger begin states. */
+    if (gesture.state == UIGestureRecognizerStateEnded) {
+#if !SDL_JOYSTICK_DISABLED
+        if (!SDL_AppleTVRemoteOpenedAsJoystick) {
+            /* Send arrow key presses for now, as we don't have an external API
+             * which better maps to swipe gestures. */
+            switch (gesture.direction) {
+            case UISwipeGestureRecognizerDirectionUp:
+                SDL_SendKeyboardKeyAutoRelease(SDL_SCANCODE_UP);
+                break;
+            case UISwipeGestureRecognizerDirectionDown:
+                SDL_SendKeyboardKeyAutoRelease(SDL_SCANCODE_DOWN);
+                break;
+            case UISwipeGestureRecognizerDirectionLeft:
+                SDL_SendKeyboardKeyAutoRelease(SDL_SCANCODE_LEFT);
+                break;
+            case UISwipeGestureRecognizerDirectionRight:
+                SDL_SendKeyboardKeyAutoRelease(SDL_SCANCODE_RIGHT);
                 break;
             }
         }
-#endif
-        touch = (UITouch*)[enumerator nextObject];
+#endif /* !SDL_JOYSTICK_DISABLED */
     }
 }
-
-/*
-    ---- Keyboard related functionality below this line ----
-*/
-#if SDL_IPHONE_KEYBOARD
-
-@synthesize textInputRect = textInputRect;
-@synthesize keyboardHeight = keyboardHeight;
-
-/* Is the iPhone virtual keyboard visible onscreen? */
-- (BOOL)keyboardVisible
-{
-    return keyboardVisible;
-}
-
-/* Set ourselves up as a UITextFieldDelegate */
-- (void)initializeKeyboard
-{
-    textField = [[UITextField alloc] initWithFrame: CGRectZero];
-    textField.delegate = self;
-    /* placeholder so there is something to delete! */
-    textField.text = @" ";
-
-    /* set UITextInputTrait properties, mostly to defaults */
-    textField.autocapitalizationType = UITextAutocapitalizationTypeNone;
-    textField.autocorrectionType = UITextAutocorrectionTypeNo;
-    textField.enablesReturnKeyAutomatically = NO;
-    textField.keyboardAppearance = UIKeyboardAppearanceDefault;
-    textField.keyboardType = UIKeyboardTypeDefault;
-    textField.returnKeyType = UIReturnKeyDefault;
-    textField.secureTextEntry = NO;
-
-    textField.hidden = YES;
-    keyboardVisible = NO;
-    /* add the UITextField (hidden) to our view */
-    [self addSubview: textField];
-    [textField release];
-    
-    _uikit_keyboard_init();
-}
-
-/* reveal onscreen virtual keyboard */
-- (void)showKeyboard
-{
-    keyboardVisible = YES;
-    [textField becomeFirstResponder];
-}
-
-/* hide onscreen virtual keyboard */
-- (void)hideKeyboard
-{
-    keyboardVisible = NO;
-    [textField resignFirstResponder];
-}
-
-/* UITextFieldDelegate method.  Invoked when user types something. */
-- (BOOL)textField:(UITextField *)_textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string
-{
-    if ([string length] == 0) {
-        /* it wants to replace text with nothing, ie a delete */
-        SDL_SendKeyboardKey(SDL_PRESSED, SDL_SCANCODE_BACKSPACE);
-        SDL_SendKeyboardKey(SDL_RELEASED, SDL_SCANCODE_BACKSPACE);
-    }
-    else {
-        /* go through all the characters in the string we've been sent
-           and convert them to key presses */
-        int i;
-        for (i = 0; i < [string length]; i++) {
-
-            unichar c = [string characterAtIndex: i];
-
-            Uint16 mod = 0;
-            SDL_Scancode code;
-
-            if (c < 127) {
-                /* figure out the SDL_Scancode and SDL_keymod for this unichar */
-                code = unicharToUIKeyInfoTable[c].code;
-                mod  = unicharToUIKeyInfoTable[c].mod;
-            }
-            else {
-                /* we only deal with ASCII right now */
-                code = SDL_SCANCODE_UNKNOWN;
-                mod = 0;
-            }
-
-            if (mod & KMOD_SHIFT) {
-                /* If character uses shift, press shift down */
-                SDL_SendKeyboardKey(SDL_PRESSED, SDL_SCANCODE_LSHIFT);
-            }
-            /* send a keydown and keyup even for the character */
-            SDL_SendKeyboardKey(SDL_PRESSED, code);
-            SDL_SendKeyboardKey(SDL_RELEASED, code);
-            if (mod & KMOD_SHIFT) {
-                /* If character uses shift, press shift back up */
-                SDL_SendKeyboardKey(SDL_RELEASED, SDL_SCANCODE_LSHIFT);
-            }
-        }
-        SDL_SendKeyboardText([string UTF8String]);
-    }
-    return NO; /* don't allow the edit! (keep placeholder text there) */
-}
-
-/* Terminates the editing session */
-- (BOOL)textFieldShouldReturn:(UITextField*)_textField
-{
-    SDL_SendKeyboardKey(SDL_PRESSED, SDL_SCANCODE_RETURN);
-    SDL_SendKeyboardKey(SDL_RELEASED, SDL_SCANCODE_RETURN);
-    SDL_StopTextInput();
-    return YES;
-}
-
-#endif
+#endif /* TARGET_OS_TV */
 
 @end
-
-/* iPhone keyboard addition functions */
-#if SDL_IPHONE_KEYBOARD
-
-static SDL_uikitview * getWindowView(SDL_Window * window)
-{
-    if (window == NULL) {
-        SDL_SetError("Window does not exist");
-        return nil;
-    }
-
-    SDL_WindowData *data = (SDL_WindowData *)window->driverdata;
-    SDL_uikitview *view = data != NULL ? data->view : nil;
-
-    if (view == nil) {
-        SDL_SetError("Window has no view");
-    }
-
-    return view;
-}
-
-SDL_bool UIKit_HasScreenKeyboardSupport(_THIS)
-{
-    return SDL_TRUE;
-}
-
-void UIKit_ShowScreenKeyboard(_THIS, SDL_Window *window)
-{
-    SDL_uikitview *view = getWindowView(window);
-    if (view != nil) {
-        [view showKeyboard];
-    }
-}
-
-void UIKit_HideScreenKeyboard(_THIS, SDL_Window *window)
-{
-    SDL_uikitview *view = getWindowView(window);
-    if (view != nil) {
-        [view hideKeyboard];
-    }
-}
-
-SDL_bool UIKit_IsScreenKeyboardShown(_THIS, SDL_Window *window)
-{
-    SDL_uikitview *view = getWindowView(window);
-    if (view == nil) {
-        return 0;
-    }
-
-    return view.keyboardVisible;
-}
-
-
-void _uikit_keyboard_update() {
-    SDL_Window *window = SDL_GetFocusWindow();
-    if (!window) { return; }
-    SDL_WindowData *data = (SDL_WindowData *)window->driverdata;
-    if (!data) { return; }
-    SDL_uikitview *view = data->view;
-    if (!view) { return; }
-    
-    SDL_Rect r = view.textInputRect;
-    int height = view.keyboardHeight;
-    int offsetx = 0;
-    int offsety = 0;
-    if (height) {
-        int sw,sh;
-        SDL_GetWindowSize(window,&sw,&sh);
-        int bottom = (r.y + r.h);
-        int kbottom = sh - height;
-        if (kbottom < bottom) {
-            offsety = kbottom-bottom;
-        }
-    }
-    UIInterfaceOrientation ui_orient = [[UIApplication sharedApplication] statusBarOrientation];
-    if (ui_orient == UIInterfaceOrientationLandscapeLeft) {
-        int tmp = offsetx; offsetx = offsety; offsety = tmp;
-    }
-    if (ui_orient == UIInterfaceOrientationLandscapeRight) {
-        offsety = -offsety;
-        int tmp = offsetx; offsetx = offsety; offsety = tmp;
-    }
-    if (ui_orient == UIInterfaceOrientationPortraitUpsideDown) {
-        offsety = -offsety;
-    }
-    if ([[UIScreen mainScreen] respondsToSelector:@selector(displayLinkWithTarget:selector:)]) {
-        float scale = [UIScreen mainScreen].scale;
-        offsetx /= scale;
-        offsety /= scale;
-    }
-    view.frame = CGRectMake(offsetx,offsety,view.frame.size.width,view.frame.size.height);
-}
-
-void _uikit_keyboard_set_height(int height) {
-    SDL_uikitview *view = getWindowView(SDL_GetFocusWindow());
-    if (view == nil) {
-        return ;
-    }
-    
-    view.keyboardHeight = height;
-    _uikit_keyboard_update();
-}
-
-void _uikit_keyboard_init() {
-    NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
-    NSOperationQueue *queue = [NSOperationQueue mainQueue];
-    [center addObserverForName:UIKeyboardWillShowNotification
-                        object:nil
-                         queue:queue
-                    usingBlock:^(NSNotification *notification) {
-                        int height = 0;
-                        CGSize keyboardSize = [[[notification userInfo] objectForKey:UIKeyboardFrameBeginUserInfoKey] CGRectValue].size;
-                        height = keyboardSize.height;
-                        UIInterfaceOrientation ui_orient = [[UIApplication sharedApplication] statusBarOrientation];
-                        if (ui_orient == UIInterfaceOrientationLandscapeRight || ui_orient == UIInterfaceOrientationLandscapeLeft) {
-                            height = keyboardSize.width;
-                        }
-                        if ([[UIScreen mainScreen] respondsToSelector:@selector(displayLinkWithTarget:selector:)]) {
-                            height *= [UIScreen mainScreen].scale;
-                        }
-                        _uikit_keyboard_set_height(height);
-                    }
-     ];
-    [center addObserverForName:UIKeyboardDidHideNotification
-                        object:nil
-                         queue:queue
-                    usingBlock:^(NSNotification *notification) {
-                        _uikit_keyboard_set_height(0);
-                    }
-     ];
-}
-
-void
-UIKit_SetTextInputRect(_THIS, SDL_Rect *rect)
-{
-    if (!rect) {
-        SDL_InvalidParamError("rect");
-        return;
-    }
-    
-    SDL_uikitview *view = getWindowView(SDL_GetFocusWindow());
-    if (view == nil) {
-        return ;
-    }
-
-    view.textInputRect = *rect;
-}
-
-
-#endif /* SDL_IPHONE_KEYBOARD */
 
 #endif /* SDL_VIDEO_DRIVER_UIKIT */
 

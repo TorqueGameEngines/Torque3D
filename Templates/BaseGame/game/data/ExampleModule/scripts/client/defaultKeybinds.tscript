@@ -1,0 +1,71 @@
+if(!isObject( ExampleMoveMap ) )
+{
+   new ActionMap(ExampleMoveMap)
+   {
+      humanReadableName = "Example Movement";
+   };
+}
+
+//------------------------------------------------------------------------------
+// Set up remappable entries
+//------------------------------------------------------------------------------
+addKeyRemap("Forward", "ExampleMoveMap", "keyboard", "moveForward", "Forward Movement");
+addKeyRemap("Backward", "ExampleMoveMap", "keyboard", "movebackward", "Backward Movement");
+addKeyRemap("Strafe Left", "ExampleMoveMap", "keyboard", "moveleft", "Left Strafing Movement");
+addKeyRemap("Strafe Right", "ExampleMoveMap", "keyboard", "moveright", "Right Strafing Movement");
+addKeyRemap("Ascend", "ExampleMoveMap", "keyboard", "moveup", "Makes the camera ascend");
+addKeyRemap("Descend", "ExampleMoveMap", "keyboard", "movedown", "Makes the camera descend");
+addKeyRemap("Jump", "ExampleMoveMap", "keyboard", "jump", "Jump");
+
+//------------------------------------------------------------------------------
+// Non-remapable binds
+//------------------------------------------------------------------------------
+ExampleMoveMap.bind( keyboard, F2, showPlayerList );
+ExampleMoveMap.bind(keyboard, "ctrl h", hideHUDs);
+ExampleMoveMap.bind(keyboard, "alt p", doScreenShotHudless);
+ExampleMoveMap.bindCmd(keyboard, "escape", "", "Canvas.pushDialog(PauseMenu);");
+
+//------------------------------------------------------------------------------
+// Movement Keys
+//------------------------------------------------------------------------------
+ExampleMoveMap.bind( keyboard, a, moveleft );
+ExampleMoveMap.bind( keyboard, d, moveright );
+ExampleMoveMap.bind( keyboard, left, moveleft );
+ExampleMoveMap.bind( keyboard, right, moveright );
+
+ExampleMoveMap.bind( keyboard, w, moveforward );
+ExampleMoveMap.bind( keyboard, s, movebackward );
+ExampleMoveMap.bind( keyboard, up, moveforward );
+ExampleMoveMap.bind( keyboard, down, movebackward );
+
+ExampleMoveMap.bind( keyboard, e, moveup );
+ExampleMoveMap.bind( keyboard, c, movedown );
+
+ExampleMoveMap.bind( keyboard, space, jump );
+ExampleMoveMap.bind( mouse, xaxis, yaw );
+ExampleMoveMap.bind( mouse, yaxis, pitch );
+
+ExampleMoveMap.bind( gamepad, thumbrx, "D", "-0.23 0.23", gamepadYaw );
+ExampleMoveMap.bind( gamepad, thumbry, "D", "-0.23 0.23", gamepadPitch );
+ExampleMoveMap.bind( gamepad, thumblx, "D", "-0.23 0.23", gamePadMoveX );
+ExampleMoveMap.bind( gamepad, thumbly, "D", "-0.23 0.23", gamePadMoveY );
+
+ExampleMoveMap.bind( gamepad, btn_a, jump );
+ExampleMoveMap.bindCmd( gamepad, btn_back, "disconnect();", "" );
+
+//------------------------------------------------------------------------------
+// Demo recording functions
+//------------------------------------------------------------------------------
+ExampleMoveMap.bind( keyboard, F3, startRecordingDemo );
+ExampleMoveMap.bind( keyboard, F4, stopRecordingDemo );
+
+//------------------------------------------------------------------------------
+// Helper Functions
+//------------------------------------------------------------------------------
+GlobalActionMap.bind(keyboard, "ctrl F3", doProfile);
+
+//------------------------------------------------------------------------------
+// Misc.
+//------------------------------------------------------------------------------
+GlobalActionMap.bind(keyboard, "tilde", toggleConsole);
+ExampleMoveMap.bindCmd(keyboard, "n", "toggleNetGraph();", "");

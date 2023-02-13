@@ -97,13 +97,15 @@ class GuiRoadEditorCtrl : public EditTSCtrl
       void setNodeWidth( F32 width );
 
 		Point3F getNodePosition();
-		void setNodePosition( Point3F pos );
+      void setNodePosition(const Point3F& pos);
 
       void setTextureFile( StringTableEntry file );
 	
 	public:
 
-		StringTableEntry mMaterialName;
+      DECLARE_MATERIALASSET(GuiRoadEditorCtrl, Material);
+      DECLARE_ASSET_SETGET(GuiRoadEditorCtrl, Material);
+
    protected:
 
       void _drawRoadSpline( DecalRoad *road, const ColorI &color );
@@ -146,6 +148,11 @@ class GuiRoadEditorUndoAction : public UndoAction
 
       GuiRoadEditorUndoAction( const UTF8* actionName ) : UndoAction( actionName )
       {
+         mRoadEditor = NULL;
+         mObjId = 0;
+         mBreakAngle = 3.0f;
+         mSegmentsPerBatch = 0;
+         mTextureLength = 0.0f;
       }
 
       GuiRoadEditorCtrl *mRoadEditor;
@@ -153,7 +160,7 @@ class GuiRoadEditorUndoAction : public UndoAction
       Vector<RoadNode> mNodes;
 
       SimObjectId mObjId;
-      String mMaterialName;
+      StringTableEntry mMaterialAssetId;
       F32 mBreakAngle;
       U32 mSegmentsPerBatch;
       F32 mTextureLength;

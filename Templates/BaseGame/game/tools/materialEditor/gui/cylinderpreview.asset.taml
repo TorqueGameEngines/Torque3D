@@ -1,0 +1,6 @@
+<ShapeAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="cylinderpreview"
+    fileName="@assetFile=cylinderpreview.dts"
+    constuctorFileName="@assetFile=cylinderpreview.tscript" />

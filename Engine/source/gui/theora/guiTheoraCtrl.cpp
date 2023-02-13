@@ -73,6 +73,7 @@ GuiTheoraCtrl::GuiTheoraCtrl()
    mPlayOnWake       = true;
    mRenderDebugInfo  = false;
    mTranscoder       = OggTheoraDecoder::TRANSCODER_Auto;
+   mLoop             = false;
    
    mBackgroundColor.set( 0, 0, 0, 255);
 }
@@ -81,6 +82,7 @@ GuiTheoraCtrl::GuiTheoraCtrl()
 
 void GuiTheoraCtrl::initPersistFields()
 {
+   docsURL;
    addGroup( "Playback");
 
       addField( "theoraFile",       TypeStringFilename,  Offset( mFilename,         GuiTheoraCtrl ),
@@ -89,6 +91,8 @@ void GuiTheoraCtrl::initPersistFields()
          "Fill color when video is not playing." );
       addField( "playOnWake",       TypeBool,            Offset( mPlayOnWake,       GuiTheoraCtrl ),
          "Whether to start playing video when control is woken up." );
+      addField( "loop",             TypeBool,            Offset( mLoop,            GuiTheoraCtrl ),
+         "Loop playback." );
       addField( "stopOnSleep",      TypeBool,            Offset( mStopOnSleep,      GuiTheoraCtrl ),
          "Whether to stop video when control is set to sleep.\n\n"
          "If this is not set to true, the video will be paused when the control is put to sleep.  This is because there is no support "
@@ -126,7 +130,7 @@ void GuiTheoraCtrl::setFile( const String& filename )
 
 void GuiTheoraCtrl::play()
 {
-   if( mFilename.isEmpty() )
+   if( mFilename == StringTable->EmptyString() )
       return;
    
    if( !mTheoraTexture.isPlaying() )
@@ -221,7 +225,14 @@ void GuiTheoraCtrl::onRender(Point2I offset, const RectI &updateRect)
          }
       }
       else
-         mDone = true;
+      {
+         if(mLoop)
+         {
+            play();
+         } else {
+            mDone = true;
+         }
+      }
 	}
 	else
  		GFX->getDrawUtil()->drawRectFill(rect, mBackgroundColor); // black rect

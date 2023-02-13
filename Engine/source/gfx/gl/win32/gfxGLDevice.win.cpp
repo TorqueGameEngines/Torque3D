@@ -129,11 +129,11 @@ void GFXGLDevice::enumerateAdapters( Vector<GFXAdapter*> &adapterList )
 
    if (renderer)
    {
-      dStrcpy(toAdd->mName, renderer);
+      dStrcpy(toAdd->mName, renderer, GFXAdapter::MaxAdapterNameLen);
       dStrncat(toAdd->mName, " OpenGL", GFXAdapter::MaxAdapterNameLen);
    }
    else
-      dStrcpy(toAdd->mName, "OpenGL");
+      dStrcpy(toAdd->mName, "OpenGL", GFXAdapter::MaxAdapterNameLen);
 
    toAdd->mType = OpenGL;
    toAdd->mShaderModel = 0.f;
@@ -272,7 +272,12 @@ void GFXGLDevice::init( const GFXVideoMode &mode, PlatformWindow *window )
    int debugFlag = 0;
 #endif
 
-   if( gglHasWExtension(ARB_create_context) )
+   // Create a temp rendering context, needed a current context to use wglCreateContextAttribsARB
+   HGLRC tempGLRC = wglCreateContext(hdcGL);
+   if (!wglMakeCurrent(hdcGL, tempGLRC))
+      AssertFatal(false, "Couldn't make temp GL context.");
+
+   if( gglHasWExtension(hdcGL, ARB_create_context) )
    {
       int const create_attribs[] = {
                WGL_CONTEXT_MAJOR_VERSION_ARB, OGL_MAJOR,
@@ -291,6 +296,10 @@ void GFXGLDevice::init( const GFXVideoMode &mode, PlatformWindow *window )
    } 
    else
       mContext = wglCreateContext( hdcGL );
+
+   // Delete temp rendering context
+   wglMakeCurrent(NULL, NULL);
+   wglDeleteContext(tempGLRC);
 
    if( !wglMakeCurrent( hdcGL, (HGLRC)mContext ) )
       AssertFatal( false , "GFXGLDevice::init - cannot make our context current. Or maybe we can't create it." );
@@ -353,4 +362,18 @@ void GFXGLWindowTarget::_teardownCurrentMode()
 
 void GFXGLWindowTarget::_setupNewMode()
 {
+}
+
+void GFXGLWindowTarget::_makeContextCurrent()
+{
+   HWND hwnd = GETHWND(getWindow());
+   HDC hdc = GetDC(hwnd);
+
+   if (!wglMakeCurrent(hdc, (HGLRC)mContext))
+   {
+      //HRESULT if needed for debug
+      //HRESULT hr = HRESULT_FROM_WIN32(GetLastError());
+      AssertFatal(false, "GFXGLWindowTarget::_makeContextCurrent() - cannot make our context current.");
+   }
+
 }

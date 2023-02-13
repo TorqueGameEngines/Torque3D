@@ -41,6 +41,8 @@ ConsoleDoc(
    "@ingroup GFX\n"
 );
 
+IMPLEMENT_STATIC_CLASS(PfxVis, , "")
+
 MODULE_BEGIN( PostEffectVis )
 
    MODULE_INIT
@@ -99,7 +101,7 @@ void PostEffectVis::open( PostEffect *pfx )
       // Only allocate window/bitmaps for input textures that are actually used.
       if ( i > Target )
       {
-         if ( pfx->mTexFilename[i-1].isEmpty() )
+         if ( pfx->mTextureName[i-1] == StringTable->EmptyString())
          {
             window.window[i] = NULL;
             window.bmp[i] = NULL;
@@ -127,7 +129,7 @@ void PostEffectVis::open( PostEffect *pfx )
       bmpCtrl->setSizing( GuiControl::horizResizeWidth, GuiControl::vertResizeHeight );
       bmpCtrl->setExtent( 341, 181 );
       bmpCtrl->setDataField( StringTable->insert( "wrap" ), NULL, "1" );
-      bmpCtrl->setBitmap( "tools/gui/images/transp_grid" );
+      bmpCtrl->setBitmap( "ToolsModule:transp_grid_image" );
       bmpCtrl->registerObject();      
       winCtrl->addObject( bmpCtrl );
 
@@ -271,9 +273,9 @@ void PostEffectVis::onPFXProcessed( PostEffect *pfx )
 
 
             if ( tex )
-               dSprintf( caption, 256, "%s[%i] input%i - %s [ %ix%i ]", name, pfx->getId(), i-1, pfx->mTexFilename[i-1].c_str(), tex->getWidth(), tex->getHeight() );               
+               dSprintf( caption, 256, "%s[%i] input%i - %s [ %ix%i ]", name, pfx->getId(), i-1, pfx->mTextureName[i-1], tex->getWidth(), tex->getHeight() );               
             else
-               dSprintf( caption, 256, "%s[%i] input%i - %s", name, pfx->getId(), i-1, pfx->mTexFilename[i-1].c_str() );
+               dSprintf( caption, 256, "%s[%i] input%i - %s", name, pfx->getId(), i-1, pfx->mTextureName[i-1] );
 
             pWinCtrl->setDataField( StringTable->insert("text"), NULL, caption );
          }
@@ -360,7 +362,7 @@ void PostEffectVis::_setDefaultCaption( VisWindow &vis, U32 texIndex )
       else
          dSprintf( name, 256, "%s", pfx->getName() );
 
-      dSprintf( caption, 256, "%s[%i] input%i - %s [NOT ENABLED]", name, pfx->getId(), texIndex-1, pfx->mTexFilename[texIndex-1].c_str() );
+      dSprintf( caption, 256, "%s[%i] input%i - %s [NOT ENABLED]", name, pfx->getId(), texIndex-1, pfx->mTextureName[texIndex-1] );
 
       winCtrl->setDataField( StringTable->insert("text"), NULL, caption );
    }
@@ -374,7 +376,8 @@ static ConsoleDocFragment _PfxVisclear(
    "PfxVis",
    "void clear();" );
 
-ConsoleStaticMethod( PfxVis, clear, void, 1, 1, "()"
+
+DefineEngineStaticMethod( PfxVis, clear, void, (),,
 					"@hide")
 {
    PFXVIS->clear();
@@ -391,16 +394,15 @@ static ConsoleDocFragment _PfxVisopen(
    "PfxVis",
    "void open(PostEffect effect, bool clear);" );
 
-ConsoleStaticMethod( PfxVis, open, void, 2, 3, "( PostEffect, [bool clear = false] )"
+DefineEngineStaticMethod( PfxVis, open, void, (PostEffect* pfx, bool clear), (false), "( PostEffect, [bool clear = false] )"
 					"@hide")
 {
-   if ( argc == 3 && dAtob( argv[2] ) )
+   if ( clear )
       PFXVIS->clear();
    
-   PostEffect *pfx;
-   if ( !Sim::findObject( argv[1], pfx ) )
+   if ( !pfx )
    {
-      Con::errorf( "PfxVis::add, argument %s was not a PostEffect", (const char*)argv[1] );
+      Con::errorf( "PfxVis::add, argument was not a PostEffect");
       return;
    }
 
@@ -415,7 +417,7 @@ static ConsoleDocFragment _PfxVishide(
    "PfxVis",
    "void hide();" );
 
-ConsoleStaticMethod( PfxVis, hide, void, 1, 1, "()"
+DefineEngineStaticMethod( PfxVis, hide, void, (),,
 					"@hide")
 {
    PFXVIS->setVisible( false );
@@ -429,7 +431,7 @@ static ConsoleDocFragment _PfxVisshow(
    "PfxVis",
    "void show();" );
 
-ConsoleStaticMethod( PfxVis, show, void, 1, 1, "()"
+DefineEngineStaticMethod( PfxVis, show, void, (),,
 					"@hide")
 {
    PFXVIS->setVisible( true );
@@ -444,13 +446,12 @@ static ConsoleDocFragment _PfxVisonWindowClosed(
    "PfxVis",
    "void onWindowClosed(GuiWindowCtrl *ctrl);" );
 
-ConsoleStaticMethod( PfxVis, onWindowClosed, void, 2, 2, "( GuiWindowCtrl )"
+DefineEngineStaticMethod( PfxVis, onWindowClosed, void, (GuiWindowCtrl* ctrl),,
 					"@hide")
 {
-   GuiWindowCtrl *ctrl;
-   if ( !Sim::findObject( argv[1], ctrl ) )
+   if ( !ctrl )
    {
-      Con::errorf( "PfxVis::onWindowClosed, argument %s was not a GuiWindowCtrl", (const char*)argv[1] );
+      Con::errorf( "PfxVis::onWindowClosed, argument was not a GuiWindowCtrl");
       return;
    }
 

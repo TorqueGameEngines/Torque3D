@@ -217,15 +217,18 @@ EndImplementEnumType;
 SFXPlayList::SFXPlayList()
    : mRandomMode( RANDOM_NotRandom ),
      mLoopMode( LOOP_All ),
-     mNumSlotsToPlay( NUM_SLOTS ),
-     mTrace( false )
+     mTrace( false ),
+     mNumSlotsToPlay( NUM_SLOTS )
 {
+   for (U32 i=0;i<NUM_SLOTS;i++)
+      INIT_SOUNDASSET_ARRAY(Track, i);
 }
 
 //-----------------------------------------------------------------------------
 
 void SFXPlayList::initPersistFields()
 {
+   docsURL;
    addGroup( "Sound" );
    
       addField( "random",           TYPEID< ERandomMode >(), Offset( mRandomMode, SFXPlayList ),
@@ -247,7 +250,7 @@ void SFXPlayList::initPersistFields()
    
       addArray( "slots", NUM_SLOTS );
       
-         addField( "track",                  TypeSFXTrackName, Offset( mSlots.mTrack, SFXPlayList ), NUM_SLOTS,
+         INITPERSISTFIELD_SOUNDASSET_ARRAY( Track, NUM_SLOTS, SFXPlayList,
             "Track to play in this slot.\n"
             "This must be set for the slot to be considered for playback.  Other settings for a slot "
             "will not take effect except this field is set." );
@@ -350,11 +353,19 @@ bool SFXPlayList::preload( bool server, String& errorStr )
    {
       for( U32 i = 0; i < NUM_SLOTS; ++ i )
       {
-         if( !sfxResolve( &mSlots.mTrack[ i ], errorStr ) )
+         StringTableEntry track = getTrack(i);
+         if (track != StringTable->EmptyString())
+         {
+            _setTrack(getTrack(i), i);
+         if (!getTrackProfile(i))
+         {
+            Con::errorf("SFXPlayList::Preload() - unable to find sfxProfile for asset %s", mTrackAssetId[i]);
             return false;
+         }
             
-         if( !sfxResolve( &mSlots.mState[ i ], errorStr ) )
+            if (!sfxResolve(&mSlots.mState[i], errorStr))
             return false;
+         }
       }
    }
       
@@ -379,28 +390,47 @@ void SFXPlayList::packData( BitStream* stream )
    FOR_EACH_SLOT stream->writeInt( mSlots.mTransitionOut[ i ], NUM_TRANSITION_MODE_BITS );
    FOR_EACH_SLOT stream->writeInt( mSlots.mStateMode[ i ], NUM_STATE_MODE_BITS );
       
-   FOR_EACH_SLOT stream->write( mSlots.mFadeTimeIn.mValue[ i ] );
-   FOR_EACH_SLOT stream->write( mSlots.mFadeTimeIn.mVariance[ i ][ 0 ] );
-   FOR_EACH_SLOT stream->write( mSlots.mFadeTimeIn.mVariance[ i ][ 1 ] );
-   FOR_EACH_SLOT stream->write( mSlots.mFadeTimeOut.mValue[ i ] );
-   FOR_EACH_SLOT stream->write( mSlots.mFadeTimeOut.mVariance[ i ][ 0 ] );
-   FOR_EACH_SLOT stream->write( mSlots.mFadeTimeOut.mVariance[ i ][ 1 ] );
-   FOR_EACH_SLOT stream->write( mSlots.mDelayTimeIn.mValue[ i ] );
-   FOR_EACH_SLOT stream->write( mSlots.mDelayTimeIn.mVariance[ i ][ 0 ] );
-   FOR_EACH_SLOT stream->write( mSlots.mDelayTimeIn.mVariance[ i ][ 1 ] );
-   FOR_EACH_SLOT stream->write( mSlots.mDelayTimeOut.mValue[ i ] );
-   FOR_EACH_SLOT stream->write( mSlots.mDelayTimeOut.mVariance[ i ][ 0 ] );
-   FOR_EACH_SLOT stream->write( mSlots.mDelayTimeOut.mVariance[ i ][ 1 ] );
-   FOR_EACH_SLOT stream->write( mSlots.mVolumeScale.mValue[ i ] );
-   FOR_EACH_SLOT stream->write( mSlots.mVolumeScale.mVariance[ i ][ 0 ] );
-   FOR_EACH_SLOT stream->write( mSlots.mVolumeScale.mVariance[ i ][ 1 ] );
-   FOR_EACH_SLOT stream->write( mSlots.mPitchScale.mValue[ i ] );
-   FOR_EACH_SLOT stream->write( mSlots.mPitchScale.mVariance[ i ][ 0 ] );
-   FOR_EACH_SLOT stream->write( mSlots.mPitchScale.mVariance[ i ][ 1 ] );
-   FOR_EACH_SLOT stream->write( mSlots.mRepeatCount[ i ] );
+   FOR_EACH_SLOT if (stream->writeFlag(mSlots.mFadeTimeIn.mValue[ i ] != -1 ))
+      stream->write( mSlots.mFadeTimeIn.mValue[ i ] );
+   FOR_EACH_SLOT if (stream->writeFlag( mSlots.mFadeTimeIn.mVariance[ i ][ 0 ] > 0))
+      stream->write(mSlots.mFadeTimeIn.mVariance[ i ][ 0 ] );
+   FOR_EACH_SLOT if (stream->writeFlag( mSlots.mFadeTimeIn.mVariance[ i ][ 1 ] > 0))
+      stream->write(mSlots.mFadeTimeIn.mVariance[ i ][ 1 ] );
+   FOR_EACH_SLOT if (stream->writeFlag(mSlots.mFadeTimeOut.mValue[ i ] != -1 ))
+      stream->write( mSlots.mFadeTimeOut.mValue[ i ] );
+   FOR_EACH_SLOT if (stream->writeFlag(mSlots.mFadeTimeOut.mVariance[i][0] > 0))
+      stream->write(mSlots.mFadeTimeOut.mVariance[i][0]);
+   FOR_EACH_SLOT if (stream->writeFlag(mSlots.mFadeTimeOut.mVariance[i][1] > 0))
+      stream->write(mSlots.mFadeTimeOut.mVariance[i][1]);
+   FOR_EACH_SLOT if (stream->writeFlag(mSlots.mDelayTimeIn.mValue[ i ] > 0))
+      stream->write(mSlots.mDelayTimeIn.mValue[ i ] );
+   FOR_EACH_SLOT if (stream->writeFlag(mSlots.mDelayTimeIn.mVariance[ i ][ 0 ] > 0))
+      stream->write(mSlots.mDelayTimeIn.mVariance[ i ][ 0 ] );
+   FOR_EACH_SLOT if (stream->writeFlag(mSlots.mDelayTimeIn.mVariance[ i ][ 1 ] > 0))
+      stream->write(mSlots.mDelayTimeIn.mVariance[ i ][ 1 ] );
+   FOR_EACH_SLOT if (stream->writeFlag(mSlots.mDelayTimeOut.mValue[ i ] > 0))
+      stream->write(mSlots.mDelayTimeOut.mValue[ i ] );
+   FOR_EACH_SLOT if (stream->writeFlag(mSlots.mDelayTimeOut.mVariance[ i ][ 0 ] > 0))
+      stream->write(mSlots.mDelayTimeOut.mVariance[ i ][ 0 ] );
+   FOR_EACH_SLOT if (stream->writeFlag(mSlots.mDelayTimeOut.mVariance[ i ][ 1 ] > 0))
+      stream->write(mSlots.mDelayTimeOut.mVariance[ i ][ 1 ] );
+   FOR_EACH_SLOT if (stream->writeFlag(mSlots.mVolumeScale.mValue[ i ] != 1))
+      stream->write(mSlots.mVolumeScale.mValue[ i ] );
+   FOR_EACH_SLOT if (stream->writeFlag(mSlots.mVolumeScale.mVariance[ i ][ 0 ] > 0))
+      stream->write(mSlots.mVolumeScale.mVariance[ i ][ 0 ] );
+   FOR_EACH_SLOT if (stream->writeFlag(mSlots.mVolumeScale.mVariance[ i ][ 1 ] > 0))
+      stream->write(mSlots.mVolumeScale.mVariance[ i ][ 1 ] );
+   FOR_EACH_SLOT if (stream->writeFlag(mSlots.mPitchScale.mValue[ i ] != 1))
+      stream->write(mSlots.mPitchScale.mValue[ i ] );
+   FOR_EACH_SLOT if (stream->writeFlag(mSlots.mPitchScale.mVariance[ i ][ 0 ] > 0))
+      stream->write(mSlots.mPitchScale.mVariance[ i ][ 0 ] );
+   FOR_EACH_SLOT if (stream->writeFlag(mSlots.mPitchScale.mVariance[ i ][ 1 ] > 0))
+      stream->write(mSlots.mPitchScale.mVariance[ i ][ 1 ] );
+   FOR_EACH_SLOT if (stream->writeFlag( mSlots.mRepeatCount[ i ] > 0))
+      stream->write( mSlots.mRepeatCount[ i ] );
       
    FOR_EACH_SLOT sfxWrite( stream, mSlots.mState[ i ] );
-   FOR_EACH_SLOT sfxWrite( stream, mSlots.mTrack[ i ] );
+   FOR_EACH_SLOT PACKDATA_SOUNDASSET_ARRAY(Track, i);
 }
 
 //-----------------------------------------------------------------------------
@@ -418,28 +448,28 @@ void SFXPlayList::unpackData( BitStream* stream )
    FOR_EACH_SLOT mSlots.mTransitionOut[ i ]  = ( ETransitionMode ) stream->readInt( NUM_TRANSITION_MODE_BITS );
    FOR_EACH_SLOT mSlots.mStateMode[ i ]      = ( EStateMode ) stream->readInt( NUM_STATE_MODE_BITS );
       
-   FOR_EACH_SLOT stream->read( &mSlots.mFadeTimeIn.mValue[ i ] );
-   FOR_EACH_SLOT stream->read( &mSlots.mFadeTimeIn.mVariance[ i ][ 0 ] );
-   FOR_EACH_SLOT stream->read( &mSlots.mFadeTimeIn.mVariance[ i ][ 1 ] );
-   FOR_EACH_SLOT stream->read( &mSlots.mFadeTimeOut.mValue[ i ] );
-   FOR_EACH_SLOT stream->read( &mSlots.mFadeTimeOut.mVariance[ i ][ 0 ] );
-   FOR_EACH_SLOT stream->read( &mSlots.mFadeTimeOut.mVariance[ i ][ 1 ] );
-   FOR_EACH_SLOT stream->read( &mSlots.mDelayTimeIn.mValue[ i ] );
-   FOR_EACH_SLOT stream->read( &mSlots.mDelayTimeIn.mVariance[ i ][ 0 ] );
-   FOR_EACH_SLOT stream->read( &mSlots.mDelayTimeIn.mVariance[ i ][ 1 ] );
-   FOR_EACH_SLOT stream->read( &mSlots.mDelayTimeOut.mValue[ i ] );
-   FOR_EACH_SLOT stream->read( &mSlots.mDelayTimeOut.mVariance[ i ][ 0 ] );
-   FOR_EACH_SLOT stream->read( &mSlots.mDelayTimeOut.mVariance[ i ][ 1 ] );
-   FOR_EACH_SLOT stream->read( &mSlots.mVolumeScale.mValue[ i ] );
-   FOR_EACH_SLOT stream->read( &mSlots.mVolumeScale.mVariance[ i ][ 0 ] );
-   FOR_EACH_SLOT stream->read( &mSlots.mVolumeScale.mVariance[ i ][ 1 ] );
-   FOR_EACH_SLOT stream->read( &mSlots.mPitchScale.mValue[ i ] );
-   FOR_EACH_SLOT stream->read( &mSlots.mPitchScale.mVariance[ i ][ 0 ] );
-   FOR_EACH_SLOT stream->read( &mSlots.mPitchScale.mVariance[ i ][ 1 ] );
-   FOR_EACH_SLOT stream->read( &mSlots.mRepeatCount[ i ] );
+   FOR_EACH_SLOT if(stream->readFlag()){ stream->read( &mSlots.mFadeTimeIn.mValue[ i ] );}
+   FOR_EACH_SLOT if(stream->readFlag()){ stream->read( &mSlots.mFadeTimeIn.mVariance[ i ][ 0 ] );}
+   FOR_EACH_SLOT if(stream->readFlag()){ stream->read( &mSlots.mFadeTimeIn.mVariance[ i ][ 1 ] );}
+   FOR_EACH_SLOT if(stream->readFlag()){ stream->read( &mSlots.mFadeTimeOut.mValue[ i ] );}
+   FOR_EACH_SLOT if(stream->readFlag()){ stream->read( &mSlots.mFadeTimeOut.mVariance[ i ][ 0 ] );}
+   FOR_EACH_SLOT if(stream->readFlag()){ stream->read( &mSlots.mFadeTimeOut.mVariance[ i ][ 1 ] );}
+   FOR_EACH_SLOT if(stream->readFlag()){ stream->read( &mSlots.mDelayTimeIn.mValue[ i ] );}
+   FOR_EACH_SLOT if(stream->readFlag()){ stream->read( &mSlots.mDelayTimeIn.mVariance[ i ][ 0 ] );}
+   FOR_EACH_SLOT if(stream->readFlag()){ stream->read( &mSlots.mDelayTimeIn.mVariance[ i ][ 1 ] );}
+   FOR_EACH_SLOT if(stream->readFlag()){ stream->read( &mSlots.mDelayTimeOut.mValue[ i ] );}
+   FOR_EACH_SLOT if(stream->readFlag()){ stream->read( &mSlots.mDelayTimeOut.mVariance[ i ][ 0 ] );}
+   FOR_EACH_SLOT if(stream->readFlag()){ stream->read( &mSlots.mDelayTimeOut.mVariance[ i ][ 1 ] );}
+   FOR_EACH_SLOT if(stream->readFlag()){ stream->read( &mSlots.mVolumeScale.mValue[ i ] );}
+   FOR_EACH_SLOT if(stream->readFlag()){ stream->read( &mSlots.mVolumeScale.mVariance[ i ][ 0 ] );}
+   FOR_EACH_SLOT if(stream->readFlag()){ stream->read( &mSlots.mVolumeScale.mVariance[ i ][ 1 ] );}
+   FOR_EACH_SLOT if(stream->readFlag()){ stream->read( &mSlots.mPitchScale.mValue[ i ] );}
+   FOR_EACH_SLOT if(stream->readFlag()){ stream->read( &mSlots.mPitchScale.mVariance[ i ][ 0 ] );}
+   FOR_EACH_SLOT if(stream->readFlag()){ stream->read( &mSlots.mPitchScale.mVariance[ i ][ 1 ] );}
+   FOR_EACH_SLOT if(stream->readFlag()){ stream->read( &mSlots.mRepeatCount[ i ] );}
       
    FOR_EACH_SLOT sfxRead( stream, &mSlots.mState[ i ] );
-   FOR_EACH_SLOT sfxRead( stream, &mSlots.mTrack[ i ] );
+   FOR_EACH_SLOT UNPACKDATA_SOUNDASSET_ARRAY(Track, i);
    
    #undef FOR_EACH_SLOT
 }

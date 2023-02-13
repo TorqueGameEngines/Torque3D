@@ -51,19 +51,13 @@
 #include "math/util/tResponseCurve.h"
 #endif
 
+#include "T3D/assets/MaterialAsset.h"
+
 class LightInfo;
 class SphereMesh;
 class TimeOfDay;
 class CubemapData;
 class MatrixSet;
-
-
-GFXDeclareVertexFormat( ScatterSkyVertex )
-{
-   Point3F point;
-   VectorF normal;
-   GFXVertexColor color;
-};
 
 class ScatterSky : public SceneObject, public ISceneLight
 {
@@ -110,6 +104,27 @@ public:
    ///
    F32 getElevation() const { return mSunElevation; }
 
+   struct SphereVertex
+   {
+      Point3F pos;
+   };
+
+   Vector<SphereVertex> tmpVertices;
+   Vector<F32> vertsVec;
+
+   struct FinalVertexData
+   {
+      Point3F pos;
+   };
+
+   Vector<FinalVertexData> finalVertData;
+
+   void addVertex(Point3F vert);
+
+   void BuildFinalVert();
+
+   void clearVectors();
+
 protected:
 
    void _render( ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *overrideMat );
@@ -127,10 +142,10 @@ protected:
 
    void _generateSkyPoints();
 
-   void _getColor( const Point3F &pos, ColorF *outColor );
-   void _getFogColor( ColorF *outColor );
-   void _getAmbientColor( ColorF *outColor );
-   void _getSunColor( ColorF *outColor );
+   void _getColor( const Point3F &pos, LinearColorF *outColor );
+   void _getFogColor( LinearColorF *outColor );
+   void _getAmbientColor( LinearColorF *outColor );
+   void _getSunColor( LinearColorF *outColor );
    void _interpolateColors();
 
    void _conformLights();
@@ -169,7 +184,7 @@ protected:
 
    F32 mOuterRadius;
    F32 mScale;
-   ColorF mWavelength;
+   LinearColorF mWavelength;
    F32 mWavelength4[3];
    F32 mRayleighScaleDepth;
    F32 mMieScaleDepth;
@@ -193,20 +208,22 @@ protected:
 
    F32 mBrightness;
 
-   ColorF mNightColor;
-   ColorF mNightFogColor;
+   LinearColorF mNightColor;
+   LinearColorF mNightFogColor;
 
-   ColorF mAmbientColor;   ///< Not a field
-   ColorF mSunColor;       ///< Not a field
-   ColorF mFogColor;       ///< Not a field
+   LinearColorF mAmbientColor;   ///< Not a field
+   LinearColorF mSunColor;       ///< Not a field
+   LinearColorF mFogColor;       ///< Not a field
 
-   ColorF mAmbientScale;
-   ColorF mSunScale;
-   ColorF mFogScale;
+   LinearColorF mAmbientScale;
+   LinearColorF mSunScale;
+   LinearColorF mFogScale;
 
    LightInfo *mLight;
 
    bool mCastShadows;
+   S32 mStaticRefreshFreq;
+   S32 mDynamicRefreshFreq;
    bool mDirty;
 
    LightFlareData *mFlareData;
@@ -214,13 +231,16 @@ protected:
    F32 mFlareScale;
 
    bool mMoonEnabled;
-   String mMoonMatName;
+
+   DECLARE_MATERIALASSET(ScatterSky, MoonMat);
+   DECLARE_ASSET_NET_SETGET(ScatterSky, MoonMat, UpdateMask);
+
    BaseMatInstance *mMoonMatInst;
    F32 mMoonScale;
-   ColorF mMoonTint;
+   LinearColorF mMoonTint;
    VectorF mMoonLightDir;
    CubemapData *mNightCubemap;
-   String mNightCubemapName;
+   StringTableEntry mNightCubemapName;
    bool mUseNightCubemap;
    MatrixSet *mMatrixSet;
 
@@ -228,7 +248,7 @@ protected:
 
    // Prim buffer, vertex buffer and shader for rendering.
    GFXPrimitiveBufferHandle mPrimBuffer;
-   GFXVertexBufferHandle<ScatterSkyVertex> mVB;
+   GFXVertexBufferHandle<GFXVertexP> mVB;
    GFXShaderRef mShader;
 
    GFXStateBlockRef mStateBlock;
@@ -247,7 +267,7 @@ protected:
    GFXShaderConstHandle *mNightInterpolantAndExposureSC;
    GFXShaderConstHandle *mUseCubemapSC;
    F32 mColorizeAmt;
-   ColorF mColorize;
+   LinearColorF mColorize;
    GFXShaderConstHandle *mColorizeSC;
 
 };

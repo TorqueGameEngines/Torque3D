@@ -83,30 +83,24 @@ GFX_ImplementTextureProfile( ShadowMapZProfile,
 
 LightShadowMap::LightShadowMap( LightInfo *light )
    :  mWorldToLightProj( true ),
-      mLight( light ),
       mTexSize( 0 ),
+      mLight( light ),
       mLastShader( NULL ),
-      mLastUpdate( 0 ),
-      mLastCull( 0 ),
       mIsViewDependent( false ),
-      mVizQuery( NULL ),
-      mWasOccluded( false ),
+      mLastCull( 0 ),
       mLastScreenSize( 0.0f ),
       mLastPriority( 0.0f )
 {
    GFXTextureManager::addEventDelegate( this, &LightShadowMap::_onTextureEvent );
 
    mTarget = GFX->allocRenderToTextureTarget();
-   mVizQuery = GFX->createOcclusionQuery();
-
    smShadowMaps.push_back( this );
 }
 
 LightShadowMap::~LightShadowMap()
 {
    mTarget = NULL;
-   SAFE_DELETE( mVizQuery );   
-   
+
    releaseTextures();
 
    smShadowMaps.remove( this );
@@ -210,18 +204,18 @@ void LightShadowMap::calcLightMatrices( MatrixF &outLightMatrix, const Frustum &
          //SceneManager::setVisibleDistance(width * 2.0f);
 
 #if 0
-         DebugDrawer::get()->drawFrustum(viewFrustum, ColorF(1.0f, 0.0f, 0.0f));
-         DebugDrawer::get()->drawBox(viewBB.minExtents, viewBB.maxExtents, ColorF(0.0f, 1.0f, 0.0f));
-         DebugDrawer::get()->drawBox(lightViewBB.minExtents, lightViewBB.maxExtents, ColorF(0.0f, 0.0f, 1.0f));
-         DebugDrawer::get()->drawBox(newLightPos - Point3F(1,1,1), newLightPos + Point3F(1,1,1), ColorF(1,1,0));
-         DebugDrawer::get()->drawLine(newLightPos, newLightPos + mLight.mDirection*3.0f, ColorF(0,1,1));
+         DebugDrawer::get()->drawFrustum(viewFrustum, LinearColorF(1.0f, 0.0f, 0.0f));
+         DebugDrawer::get()->drawBox(viewBB.minExtents, viewBB.maxExtents, LinearColorF(0.0f, 1.0f, 0.0f));
+         DebugDrawer::get()->drawBox(lightViewBB.minExtents, lightViewBB.maxExtents, LinearColorF(0.0f, 0.0f, 1.0f));
+         DebugDrawer::get()->drawBox(newLightPos - Point3F(1,1,1), newLightPos + Point3F(1,1,1), LinearColorF(1,1,0));
+         DebugDrawer::get()->drawLine(newLightPos, newLightPos + mLight.mDirection*3.0f, LinearColorF(0,1,1));
 
          Point3F a(newLightPos);
          Point3F b(newLightPos);
          Point3F offset(width, height,0.0f);
          a -= offset;
          b += offset;
-         DebugDrawer::get()->drawBox(a, b, ColorF(0.5f, 0.5f, 0.5f));
+         DebugDrawer::get()->drawBox(a, b, LinearColorF(0.5f, 0.5f, 0.5f));
 #endif
       }
       break;
@@ -246,7 +240,6 @@ void LightShadowMap::releaseTextures()
 {
    mShadowMapTex = NULL;
    mDebugTarget.setTexture( NULL );
-   mLastUpdate = 0;
    smUsedShadowMaps.remove( this );
 }
 
@@ -271,12 +264,12 @@ bool LightShadowMap::setTextureStage( U32 currTexFlag, LightingShaderConstants* 
    if ( currTexFlag == Material::DynamicLight )
    {
       S32 reg = lsc->mShadowMapSC->getSamplerRegister();
-   	if ( reg != -1 )
-      	GFX->setTexture( reg, mShadowMapTex);
+
+      if ( reg != -1 )
+         GFX->setTexture( reg, mShadowMapTex);
 
       return true;
-   }
-   else if ( currTexFlag == Material::DynamicLightMask )
+   } else if ( currTexFlag == Material::DynamicLightMask )
    {
       S32 reg = lsc->mCookieMapSC->getSamplerRegister();
    	if ( reg != -1 )
@@ -295,38 +288,16 @@ bool LightShadowMap::setTextureStage( U32 currTexFlag, LightingShaderConstants* 
    return false;
 }
 
-void LightShadowMap::render(  RenderPassManager* renderPass,
-                              const SceneRenderState *diffuseState )
+void LightShadowMap::render(RenderPassManager* renderPass, const SceneRenderState *diffuseState)
 {
    mDebugTarget.setTexture( NULL );
    _render( renderPass, diffuseState );
    mDebugTarget.setTexture( mShadowMapTex );
 
    // Add it to the used list unless we're been updated.
-   if ( !mLastUpdate )
-   {
-      AssertFatal( !smUsedShadowMaps.contains( this ), "LightShadowMap::render - Used shadow map inserted twice!" );
+   //AssertFatal( !smUsedShadowMaps.contains( this ), "LightShadowMap::render - Used shadow map inserted twice!" );
+   if(!smUsedShadowMaps.contains(this))
       smUsedShadowMaps.push_back( this );
-   }
-
-   mLastUpdate = Sim::getCurrentTime();
-}
-
-void LightShadowMap::preLightRender()
-{
-   PROFILE_SCOPE( LightShadowMap_prepLightRender );
-
-   if ( mVizQuery )
-   {
-      mWasOccluded = mVizQuery->getStatus( true ) == GFXOcclusionQuery::Occluded;
-      mVizQuery->begin();
-   }
-}
-
-void LightShadowMap::postLightRender()
-{
-   if ( mVizQuery )
-      mVizQuery->end();
 }
 
 BaseMatInstance* LightShadowMap::getShadowMaterial( BaseMatInstance *inMat ) const
@@ -389,8 +360,6 @@ void LightShadowMap::updatePriority( const SceneRenderState *state, U32 currTime
       return;
    }
 
-   U32 timeSinceLastUpdate = currTimeMs - mLastUpdate;
-
    const Point3F &camPt = state->getCameraPosition();
    F32 range = mLight->getRange().x;
    F32 dist;
@@ -416,7 +385,6 @@ void LightShadowMap::updatePriority( const SceneRenderState *state, U32 currTime
 
    // Update the priority.
    mLastPriority = mPow( mLastScreenSize * 50.0f, 2.0f );   
-   mLastPriority += timeSinceLastUpdate;
    mLastPriority *= mLight->getPriority();
 }
 
@@ -453,28 +421,31 @@ LightingShaderConstants::LightingShaderConstants()
       mLightPositionSC(NULL),
       mLightDiffuseSC(NULL), 
       mLightAmbientSC(NULL), 
-      mLightInvRadiusSqSC(NULL),
+      mLightConfigDataSC(NULL),
       mLightSpotDirSC(NULL),
-      mLightSpotAngleSC(NULL),
-	  mLightSpotFalloffSC(NULL),
+      mHasVectorLightSC(NULL),
+      mVectorLightDirectionSC(NULL),
+      mVectorLightColorSC(NULL),
+      mVectorLightBrightnessSC(NULL),
       mShadowMapSC(NULL), 
       mShadowMapSizeSC(NULL), 
       mCookieMapSC(NULL),
       mRandomDirsConst(NULL),
       mShadowSoftnessConst(NULL), 
+      mAtlasXOffsetSC(NULL), 
+      mAtlasYOffsetSC(NULL),
+      mAtlasScaleSC(NULL), 
+      mFadeStartLength(NULL), 
+      mOverDarkFactorPSSM(NULL), 
+      mTapRotationTexSC(NULL),
+
       mWorldToLightProjSC(NULL), 
       mViewToLightProjSC(NULL),
       mScaleXSC(NULL), 
       mScaleYSC(NULL),
       mOffsetXSC(NULL), 
       mOffsetYSC(NULL), 
-      mAtlasXOffsetSC(NULL), 
-      mAtlasYOffsetSC(NULL),
-      mAtlasScaleSC(NULL), 
-      mFadeStartLength(NULL), 
-      mFarPlaneScalePSSM(NULL),
-      mOverDarkFactorPSSM(NULL), 
-      mTapRotationTexSC(NULL)
+      mFarPlaneScalePSSM(NULL)
 {
 }
 
@@ -499,18 +470,21 @@ void LightingShaderConstants::init(GFXShader* shader)
    }
 
    mLightParamsSC = shader->getShaderConstHandle("$lightParams");
-   mLightSpotParamsSC = shader->getShaderConstHandle("$lightSpotParams");
 
    // NOTE: These are the shader constants used for doing lighting 
-   // during the forward pass.  Do not confuse these for the prepass
+   // during the forward pass.  Do not confuse these for the deferred
    // lighting constants which are used from AdvancedLightBinManager.
    mLightPositionSC = shader->getShaderConstHandle( ShaderGenVars::lightPosition );
    mLightDiffuseSC = shader->getShaderConstHandle( ShaderGenVars::lightDiffuse );
    mLightAmbientSC = shader->getShaderConstHandle( ShaderGenVars::lightAmbient );
-   mLightInvRadiusSqSC = shader->getShaderConstHandle( ShaderGenVars::lightInvRadiusSq );
+   mLightConfigDataSC = shader->getShaderConstHandle( ShaderGenVars::lightConfigData);
    mLightSpotDirSC = shader->getShaderConstHandle( ShaderGenVars::lightSpotDir );
-   mLightSpotAngleSC = shader->getShaderConstHandle( ShaderGenVars::lightSpotAngle );
-   mLightSpotFalloffSC = shader->getShaderConstHandle( ShaderGenVars::lightSpotFalloff );
+   mLightSpotParamsSC = shader->getShaderConstHandle(ShaderGenVars::lightSpotParams);
+
+   mHasVectorLightSC = shader->getShaderConstHandle(ShaderGenVars::hasVectorLight);
+   mVectorLightDirectionSC = shader->getShaderConstHandle(ShaderGenVars::vectorLightDirection);
+   mVectorLightColorSC = shader->getShaderConstHandle(ShaderGenVars::vectorLightColor);
+   mVectorLightBrightnessSC = shader->getShaderConstHandle(ShaderGenVars::vectorLightBrightness);
 
    mShadowMapSC = shader->getShaderConstHandle("$shadowMap");
    mShadowMapSizeSC = shader->getShaderConstHandle("$shadowMapSize");
@@ -518,24 +492,21 @@ void LightingShaderConstants::init(GFXShader* shader)
    mCookieMapSC = shader->getShaderConstHandle("$cookieMap");
 
    mShadowSoftnessConst = shader->getShaderConstHandle("$shadowSoftness");
-
-   mWorldToLightProjSC = shader->getShaderConstHandle("$worldToLightProj");
-   mViewToLightProjSC = shader->getShaderConstHandle("$viewToLightProj");
-
-   mScaleXSC = shader->getShaderConstHandle("$scaleX");
-   mScaleYSC = shader->getShaderConstHandle("$scaleY");
-   mOffsetXSC = shader->getShaderConstHandle("$offsetX");
-   mOffsetYSC = shader->getShaderConstHandle("$offsetY");
    mAtlasXOffsetSC = shader->getShaderConstHandle("$atlasXOffset");
    mAtlasYOffsetSC = shader->getShaderConstHandle("$atlasYOffset");
    mAtlasScaleSC = shader->getShaderConstHandle("$atlasScale");
 
    mFadeStartLength = shader->getShaderConstHandle("$fadeStartLength");
-   mFarPlaneScalePSSM = shader->getShaderConstHandle("$farPlaneScalePSSM");
-
    mOverDarkFactorPSSM = shader->getShaderConstHandle("$overDarkPSSM");
-
    mTapRotationTexSC = shader->getShaderConstHandle( "$gTapRotationTex" );
+
+   mWorldToLightProjSC = shader->getShaderConstHandle("$worldToLightProj");
+   mViewToLightProjSC = shader->getShaderConstHandle("$viewToLightProj");
+   mScaleXSC = shader->getShaderConstHandle("$scaleX");
+   mScaleYSC = shader->getShaderConstHandle("$scaleY");
+   mOffsetXSC = shader->getShaderConstHandle("$offsetX");
+   mOffsetYSC = shader->getShaderConstHandle("$offsetY");
+   mFarPlaneScalePSSM = shader->getShaderConstHandle("$farPlaneScalePSSM");
 
    mInit = true;
 }
@@ -557,24 +528,28 @@ MODULE_END;
 LightInfoExType ShadowMapParams::Type( "" );
 
 ShadowMapParams::ShadowMapParams( LightInfo *light ) 
-   :  mLight( light ),
-      mShadowMap( NULL )
+   :  mShadowMap( NULL ),
+      mLight( light )
 {
    attenuationRatio.set( 0.0f, 1.0f, 1.0f );
    shadowType = ShadowType_Spot;
    overDarkFactor.set(2000.0f, 1000.0f, 500.0f, 100.0f);
    numSplits = 4;
    logWeight = 0.91f;
-   texSize = 512;
-   shadowDistance = 400.0f;
-   shadowSoftness = 0.15f;
-   fadeStartDist = 0.0f;
+   texSize = 1024;
+   shadowDistance = 100.0f;
+   shadowSoftness = 0.2f;
+   fadeStartDist = 75.0f;
    lastSplitTerrainOnly = false;
+   mQuery = GFX->createOcclusionQuery();
+   cookie = StringTable->EmptyString();;
+
    _validate();
 }
 
 ShadowMapParams::~ShadowMapParams()
 {
+   SAFE_DELETE( mQuery );
    SAFE_DELETE( mShadowMap );
 }
 
@@ -611,7 +586,7 @@ void ShadowMapParams::_validate()
    // We apply the hardware specific limits during 
    // shadow rendering.
    //
-   U32 maxTexSize = 4096;
+   U32 maxTexSize = 8192;
 
    if ( mLight->getType() == LightInfo::Vector )
    {
@@ -621,63 +596,67 @@ void ShadowMapParams::_validate()
       // based on the split count to keep the total
       // shadow texture size within 4096.
       if ( numSplits == 2 || numSplits == 4 )
-         maxTexSize = 2048;
+         maxTexSize = 8192;
       if ( numSplits == 3 )
-         maxTexSize = 1024;
+         maxTexSize = 4096;
    }
    else
       numSplits = 1;
 
    // Keep it in a valid range... less than 32 is dumb.
    texSize = mClamp( texSize, 32, maxTexSize );
+   shadowDistance = mClamp(shadowDistance, 25.0f, 10000.0f);
 }
 
 LightShadowMap* ShadowMapParams::getOrCreateShadowMap()
 {
-   if ( mShadowMap )
+	if (mShadowMap)
       return mShadowMap;
 
    if ( !mLight->getCastShadows() )
       return NULL;
 
+   LightShadowMap* newShadowMap = NULL;
+
    switch ( mLight->getType() )
    {
       case LightInfo::Spot:
-         mShadowMap = new SingleLightShadowMap( mLight );
+         newShadowMap = new SingleLightShadowMap( mLight );
          break;
 
       case LightInfo::Vector:
-         mShadowMap = new PSSMLightShadowMap( mLight );
+         newShadowMap = new PSSMLightShadowMap( mLight );
          break;
 
       case LightInfo::Point:
 
          if ( shadowType == ShadowType_CubeMap )
-            mShadowMap = new CubeLightShadowMap( mLight );
+            newShadowMap = new CubeLightShadowMap( mLight );
          else if ( shadowType == ShadowType_Paraboloid )
-            mShadowMap = new ParaboloidLightShadowMap( mLight );
+            newShadowMap = new ParaboloidLightShadowMap( mLight );
          else
-            mShadowMap = new DualParaboloidLightShadowMap( mLight );
+            newShadowMap = new DualParaboloidLightShadowMap( mLight );
          break;
    
       default:
          break;
    }
 
+   mShadowMap = newShadowMap;
    return mShadowMap;
 }
 
 GFXTextureObject* ShadowMapParams::getCookieTex()
 {
-   if (  cookie.isNotEmpty() &&
+   if ( hasCookieTex() &&
          (  mCookieTex.isNull() || 
-            cookie != mCookieTex->getPath() ) )
+            cookie != StringTable->insert(mCookieTex->getPath().c_str()) ) )
    {
       mCookieTex.set(   cookie, 
-                        &GFXDefaultStaticDiffuseProfile, 
+                        &GFXStaticTextureSRGBProfile, 
                         "ShadowMapParams::getCookieTex()" );
    }
-   else if ( cookie.isEmpty() )
+   else if (!hasCookieTex())
       mCookieTex = NULL;
 
    return mCookieTex.getPointer();
@@ -685,13 +664,13 @@ GFXTextureObject* ShadowMapParams::getCookieTex()
 
 GFXCubemap* ShadowMapParams::getCookieCubeTex()
 {
-   if (  cookie.isNotEmpty() &&
+   if (  hasCookieTex() &&
          (  mCookieCubeTex.isNull() || 
-            cookie != mCookieCubeTex->getPath() ) )
+            cookie != StringTable->insert(mCookieTex->getPath().c_str())) )
    {
       mCookieCubeTex.set( cookie );
    }
-   else if ( cookie.isEmpty() )
+   else if (!hasCookieTex())
       mCookieCubeTex = NULL;
 
    return mCookieCubeTex.getPointer();
@@ -715,7 +694,7 @@ void ShadowMapParams::packUpdate( BitStream *stream ) const
    
    stream->write( texSize );
 
-   stream->write( cookie );
+   stream->writeString( cookie );
 
    stream->write( numSplits );
    stream->write( logWeight );
@@ -745,7 +724,7 @@ void ShadowMapParams::unpackUpdate( BitStream *stream )
 
    stream->read( &texSize );
 
-   stream->read( &cookie );
+   cookie = stream->readSTString();
 
    stream->read( &numSplits );
    stream->read( &logWeight );

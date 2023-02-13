@@ -127,12 +127,15 @@ ConsoleDocClass( PrecipitationData,
 //----------------------------------------------------------
 PrecipitationData::PrecipitationData()
 {
-   soundProfile      = NULL;
+   INIT_ASSET(Sound);
 
-   mDropName         = StringTable->insert("");
-   mDropShaderName   = StringTable->insert("");
-   mSplashName       = StringTable->insert("");
-   mSplashShaderName = StringTable->insert("");
+   INIT_ASSET(Drop);
+
+   mDropShaderName   = StringTable->EmptyString();
+
+   INIT_ASSET(Splash);
+
+   mSplashShaderName = StringTable->EmptyString();
 
    mDropsPerSide     = 4;
    mSplashesPerSide  = 2;
@@ -140,20 +143,34 @@ PrecipitationData::PrecipitationData()
 
 void PrecipitationData::initPersistFields()
 {
-   addField( "soundProfile", TYPEID< SFXTrack >(), Offset(soundProfile, PrecipitationData),
-      "Looping SFXProfile effect to play while Precipitation is active." );
-   addField( "dropTexture", TypeFilename, Offset(mDropName, PrecipitationData),
+   docsURL;
+   INITPERSISTFIELD_SOUNDASSET(Sound, PrecipitationData, "Looping SFXProfile effect to play while Precipitation is active.");
+
+   addProtectedField( "dropTexture", TypeFilename, Offset(mDropName, PrecipitationData), &_setDropData, &defaultProtectedGetFn,
       "@brief Texture filename for drop particles.\n\n"
       "The drop texture can contain several different drop sub-textures "
       "arranged in a grid. There must be the same number of rows as columns. A "
-      "random frame will be chosen for each drop." );
+      "random frame will be chosen for each drop.", AbstractClassRep::FIELD_HideInInspectors );
+      
+   INITPERSISTFIELD_IMAGEASSET(Drop, PrecipitationData, "@brief Texture for drop particles.\n\n"
+      "The drop texture can contain several different drop sub-textures "
+      "arranged in a grid. There must be the same number of rows as columns. A "
+      "random frame will be chosen for each drop.");
+
    addField( "dropShader", TypeString, Offset(mDropShaderName, PrecipitationData),
       "The name of the shader used for raindrops." );
-   addField( "splashTexture", TypeFilename, Offset(mSplashName, PrecipitationData),
+      
+   addProtectedField("splashTexture", TypeFilename, Offset(mSplashName, PrecipitationData), &_setSplashData, &defaultProtectedGetFn,
       "@brief Texture filename for splash particles.\n\n"
       "The splash texture can contain several different splash sub-textures "
       "arranged in a grid. There must be the same number of rows as columns. A "
-      "random frame will be chosen for each splash." );
+      "random frame will be chosen for each splash.", AbstractClassRep::FIELD_HideInInspectors);
+
+   INITPERSISTFIELD_IMAGEASSET(Splash, PrecipitationData, "@brief Texture for splash particles.\n\n"
+      "The splash texture can contain several different splash sub-textures "
+      "arranged in a grid. There must be the same number of rows as columns. A "
+      "random frame will be chosen for each splash.");
+
    addField( "splashShader", TypeString, Offset(mSplashShaderName, PrecipitationData),
       "The name of the shader used for splashes." );
    addField( "dropsPerSide", TypeS32, Offset(mDropsPerSide, PrecipitationData),
@@ -172,9 +189,16 @@ bool PrecipitationData::preload( bool server, String &errorStr )
 {
    if( Parent::preload( server, errorStr) == false)
       return false;
+   if (!server)
+   {
+      if (getSound() != StringTable->EmptyString())
+      {
+         _setSound(getSound());
 
-   if( !server && !sfxResolve( &soundProfile, errorStr ) )
-      return false;
+         if (!getSoundProfile())
+            Con::errorf(ConsoleLogEntry::General, "SplashData::preload: Cant get an sfxProfile for splash.");
+      }
+   }
 
    return true;
 }
@@ -183,11 +207,14 @@ void PrecipitationData::packData(BitStream* stream)
 {
    Parent::packData(stream);
 
-   sfxWrite( stream, soundProfile );
+   PACKDATA_ASSET(Sound);
 
-   stream->writeString(mDropName);
+   PACKDATA_ASSET(Drop);
+
    stream->writeString(mDropShaderName);
-   stream->writeString(mSplashName);
+
+   PACKDATA_ASSET(Splash);
+
    stream->writeString(mSplashShaderName);
    stream->write(mDropsPerSide);
    stream->write(mSplashesPerSide);
@@ -197,11 +224,14 @@ void PrecipitationData::unpackData(BitStream* stream)
 {
    Parent::unpackData(stream);
 
-   sfxRead( stream, &soundProfile );
+   UNPACKDATA_ASSET(Sound);
 
-   mDropName = stream->readSTString();
+   UNPACKDATA_ASSET(Drop);
+
    mDropShaderName = stream->readSTString();
-   mSplashName = stream->readSTString();
+
+   UNPACKDATA_ASSET(Splash);
+
    mSplashShaderName = stream->readSTString();
    stream->read(&mDropsPerSide);
    stream->read(&mSplashesPerSide);
@@ -248,7 +278,7 @@ Precipitation::Precipitation()
    mDropAnimateMS    = 0;
 
    mUseLighting = false;
-   mGlowIntensity = ColorF( 0,0,0,0 );
+   mGlowIntensity = LinearColorF( 0,0,0,0 );
 
    mReflect = false;
 
@@ -298,6 +328,7 @@ Precipitation::Precipitation()
    mSplashShaderCameraPosSC = NULL;
    mSplashShaderAmbientSC = NULL;
 
+   mMaxVBDrops = 5000;
 }
 
 Precipitation::~Precipitation()
@@ -337,6 +368,7 @@ IRangeValidator ValidNumDropsRange(1, 100000);
 
 void Precipitation::initPersistFields()
 {
+   docsURL;
    addGroup("Precipitation");
 
       addFieldV( "numDrops", TypeS32, Offset(mNumDrops, Precipitation), &ValidNumDropsRange,
@@ -574,9 +606,9 @@ bool Precipitation::onNewDataBlock( GameBaseData *dptr, bool reload )
    {
       SFX_DELETE( mAmbientSound );
 
-      if ( mDataBlock->soundProfile )
+      if ( mDataBlock->getSoundProfile())
       {
-         mAmbientSound = SFX->createSource( mDataBlock->soundProfile, &getTransform() );
+         mAmbientSound = SFX->createSource(mDataBlock->getSoundProfile(), &getTransform() );
          if ( mAmbientSound )
             mAmbientSound->play();
       }
@@ -603,8 +635,10 @@ void Precipitation::initMaterials()
    mDropShader = NULL;
    mSplashShader = NULL;
 
-   if( dStrlen(pd->mDropName) > 0 && !mDropHandle.set(pd->mDropName, &GFXDefaultStaticDiffuseProfile, avar("%s() - mDropHandle (line %d)", __FUNCTION__, __LINE__)) )
-      Con::warnf("Precipitation::initMaterials - failed to locate texture '%s'!", pd->mDropName);
+   if(pd->mDrop.isNull())
+      Con::warnf("Precipitation::initMaterials - failed to locate texture '%s'!", pd->getDrop());
+   else
+      mDropHandle = pd->mDrop;
 
    if ( dStrlen(pd->mDropShaderName) > 0 )
    {
@@ -624,8 +658,10 @@ void Precipitation::initMaterials()
       }
    }
 
-   if( dStrlen(pd->mSplashName) > 0 && !mSplashHandle.set(pd->mSplashName, &GFXDefaultStaticDiffuseProfile, avar("%s() - mSplashHandle (line %d)", __FUNCTION__, __LINE__)) )
-      Con::warnf("Precipitation::initMaterials - failed to locate texture '%s'!", pd->mSplashName);
+   if (pd->mSplash.isNull())
+      Con::warnf("Precipitation::initMaterials - failed to locate texture '%s'!", pd->getSplash());
+   else
+      mSplashHandle = pd->mSplash;
 
    if ( dStrlen(pd->mSplashShaderName) > 0 )
    {
@@ -752,7 +788,6 @@ void Precipitation::unpackUpdate(NetConnection* con, BitStream* stream)
       mUseWind = stream->readFlag();
       mFollowCam = stream->readFlag();
       mAnimateSplashes = stream->readFlag();
-
       mDropHitMask = dropHitMask | 
          ( mDropHitPlayers ? PlayerObjectType : 0 ) | 
          ( mDropHitVehicles ? VehicleObjectType : 0 );
@@ -963,13 +998,13 @@ void Precipitation::initRenderObjects()
 
    // Create a volitile vertex buffer which
    // we'll lock and fill every frame.
-   mRainVB.set(GFX, mMaxVBDrops * 4, GFXBufferTypeVolatile);
+   mRainVB.set(GFX, mMaxVBDrops * 4, GFXBufferTypeDynamic);
 
    // Init the index buffer for rendering the
    // entire or a partially filled vb.
    mRainIB.set(GFX, mMaxVBDrops * 6, 0, GFXBufferTypeStatic);
    U16 *idxBuff;
-   mRainIB.lock(&idxBuff, NULL, NULL, NULL);
+   mRainIB.lock(&idxBuff, NULL, 0, 0);
    for( U32 i=0; i < mMaxVBDrops; i++ )
    {
       //
@@ -1293,7 +1328,7 @@ void Precipitation::interpolateTick(F32 delta)
 void Precipitation::processTick(const Move *)
 {
    //nothing to do on the server
-   if (isServerObject() || mDataBlock == NULL)
+   if (isServerObject() || mDataBlock == NULL || isHidden())
       return;
 
    const U32 currTime = Platform::getVirtualMilliseconds();
@@ -1514,10 +1549,6 @@ void Precipitation::renderObject(ObjectRenderInst *ri, SceneRenderState *state, 
    if (overrideMat)
       return;
 
-#ifdef TORQUE_OS_XENON
-   return;
-#endif
-
    GameConnection* conn = GameConnection::getConnectionToServer();
    if (!conn)
       return; //need connection to server
@@ -1557,7 +1588,7 @@ void Precipitation::renderObject(ObjectRenderInst *ri, SceneRenderState *state, 
    Point3F pos;
    VectorF orthoDir, velocity, right, up, rightUp(0.0f, 0.0f, 0.0f), leftUp(0.0f, 0.0f, 0.0f);
    F32 distance = 0;
-   GFXVertexPT* vertPtr = NULL;
+   GFXVertexPCT* vertPtr = NULL;
    const Point2F *tc;
 
    // Do this here and we won't have to in the loop!
@@ -1584,7 +1615,7 @@ void Precipitation::renderObject(ObjectRenderInst *ri, SceneRenderState *state, 
    // shader.  Once the lighting and shadow systems
    // are added into TSE we can expand this to include
    // the N nearest lights to the camera + the ambient.
-   ColorF ambient( 1, 1, 1 );
+   LinearColorF ambient( 1, 1, 1 );
    if ( mUseLighting )
    {
       const LightInfo *sunlight = LIGHTMGR->getSpecialLight(LightManager::slSunLightType);
@@ -1611,14 +1642,6 @@ void Precipitation::renderObject(ObjectRenderInst *ri, SceneRenderState *state, 
       mDefaultSB = GFX->createStateBlock(desc);
 
       desc.samplersDefined = true;
-      desc.samplers[0].textureColorOp =  GFXTOPModulate;
-      desc.samplers[0].colorArg1 = GFXTATexture;
-      desc.samplers[0].colorArg2 = GFXTADiffuse;
-      desc.samplers[0].alphaOp = GFXTOPSelectARG1;
-      desc.samplers[0].alphaArg1 = GFXTATexture;
-
-      desc.samplers[1].textureColorOp = GFXTOPDisable;
-      desc.samplers[1].alphaOp = GFXTOPDisable;
 
       mDistantSB = GFX->createStateBlock(desc);
    }

@@ -20,6 +20,11 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+// Arcane-FX for MIT Licensed Open Source version of Torque 3D from GarageGames
+// Copyright (C) 2015 Faust Logic, Inc.
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+
 #include "platform/platform.h"
 #include "T3D/lightBase.h"
 
@@ -57,20 +62,23 @@ ConsoleDocClass( LightBase,
 
 LightBase::LightBase()
    :  mIsEnabled( true ),
-      mColor( ColorF::WHITE ),
+      mColor( LinearColorF::WHITE ),
       mBrightness( 1.0f ),
       mCastShadows( false ),
+      mStaticRefreshFreq( 250 ),
+      mDynamicRefreshFreq( 8 ),
       mPriority( 1.0f ),
       mAnimationData( NULL ),      
       mFlareData( NULL ),
       mFlareScale( 1.0f )
 {
    mNetFlags.set( Ghostable | ScopeAlways );
-   mTypeMask = EnvironmentObjectType | LightObjectType;
+   mTypeMask = LightObjectType;
 
    mLight = LightManager::createLightInfo();
 
    mFlareState.clear();
+   mLocalRenderViz = false;
 }
 
 LightBase::~LightBase()
@@ -80,6 +88,7 @@ LightBase::~LightBase()
 
 void LightBase::initPersistFields()
 {
+   docsURL;
    // We only add the basic lighting options that all lighting
    // systems would use... the specific lighting system options
    // are injected at runtime by the lighting system itself.
@@ -90,6 +99,8 @@ void LightBase::initPersistFields()
       addField( "color", TypeColorF, Offset( mColor, LightBase ), "Changes the base color hue of the light." );
       addField( "brightness", TypeF32, Offset( mBrightness, LightBase ), "Adjusts the lights power, 0 being off completely." );      
       addField( "castShadows", TypeBool, Offset( mCastShadows, LightBase ), "Enables/disabled shadow casts by this light." );
+      //addField( "staticRefreshFreq", TypeS32, Offset( mStaticRefreshFreq, LightBase ), "static shadow refresh rate (milliseconds)" );
+      //addField( "dynamicRefreshFreq", TypeS32, Offset( mDynamicRefreshFreq, LightBase ), "dynamic shadow refresh rate (milliseconds)");
       addField( "priority", TypeF32, Offset( mPriority, LightBase ), "Used for sorting of lights by the light manager. "
 		  "Priority determines if a light has a stronger effect than, those with a lower value" );
 
@@ -202,7 +213,7 @@ void LightBase::prepRenderImage( SceneRenderState *state )
 
    // If the light is selected or light visualization
    // is enabled then register the callback.
-   if ( smRenderViz || isSelectedInEditor )
+   if ( mLocalRenderViz || smRenderViz || isSelectedInEditor )
    {
       ObjectRenderInst *ri = state->getRenderPass()->allocInst<ObjectRenderInst>();
       ri->renderDelegate.bind( this, &LightBase::_onRenderViz );
@@ -277,6 +288,8 @@ U32 LightBase::packUpdate( NetConnection *conn, U32 mask, BitStream *stream )
       stream->write( mBrightness );
 
       stream->writeFlag( mCastShadows );
+      stream->write(mStaticRefreshFreq);
+      stream->write(mDynamicRefreshFreq);
 
       stream->write( mPriority );      
 
@@ -322,6 +335,8 @@ void LightBase::unpackUpdate( NetConnection *conn, BitStream *stream )
       stream->read( &mColor );
       stream->read( &mBrightness );      
       mCastShadows = stream->readFlag();
+      stream->read(&mStaticRefreshFreq);
+      stream->read(&mDynamicRefreshFreq);
 
       stream->read( &mPriority );      
       
@@ -426,12 +441,12 @@ static ConsoleDocFragment _lbplayAnimation2(
    "void playAnimation(LightAnimData anim);"
 );
 
-DefineConsoleMethod( LightBase, playAnimation, void, (const char * anim), (""), "( [LightAnimData anim] )\t"
+DefineEngineMethod( LightBase, playAnimation, void, (const char * anim), (""), "( [LightAnimData anim] )\t"
    "Plays a light animation on the light.  If no LightAnimData is passed the "
    "existing one is played."
    "@hide")
 {
-	if ( dStrIsEmpty(anim) )
+	if ( String::isEmpty(anim) )
     {
         object->playAnimation();
         return;
@@ -470,7 +485,7 @@ void LightBase::playAnimation( LightAnimData *animData )
     }
 }
 
-DefineConsoleMethod( LightBase, pauseAnimation, void, (), , "Stops the light animation." )
+DefineEngineMethod( LightBase, pauseAnimation, void, (), , "Stops the light animation." )
 {
     object->pauseAnimation();
 }

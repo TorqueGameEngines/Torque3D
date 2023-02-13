@@ -36,10 +36,7 @@ class GFXGLDevice;
 class Win32Window : public PlatformWindow
 {
    friend class Win32WindowManager;
-   friend class GFXPCD3D9Device;
    friend class GFXGLDevice;
-   friend class GFXPCD3D9WindowTarget;
-   friend class GFXD3D8WindowTarget;
 
 public:
    struct Accelerator
@@ -167,7 +164,7 @@ public:
    virtual GFXDevice *getGFXDevice();
    virtual GFXWindowTarget *getGFXTarget();
    
-   virtual void setVideoMode(const GFXVideoMode &mode);
+   virtual void _setVideoMode(const GFXVideoMode &mode);
    virtual const GFXVideoMode &getVideoMode();
    virtual bool clearFullscreen();
    virtual bool isFullscreen();

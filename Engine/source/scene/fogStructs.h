@@ -29,7 +29,7 @@ struct FogData
    F32 density;
    F32 densityOffset;
    F32 atmosphereHeight;
-   ColorF color;
+   LinearColorF color;
 
    FogData()
    {
@@ -58,7 +58,7 @@ struct WaterFogData
       densityOffset = 0.0f;     
       wetDepth = 0.0f;
       wetDarkening = 0.0f;
-      color.set( 0.5f, 0.5f, 0.5f, 1.0f );
+      color = ColorI(128, 128, 128, 128);
       plane.set( 0.0f, 0.0f, 1.0f, 1e10 ); // Default to global bounds distance
       depthGradMax = 0.0f;
    }

@@ -1,0 +1,24 @@
+
+singleton TSShapeConstructor(Playerbotdae)
+{
+   baseShapeAsset = "Prototyping:Playerbot_shape";
+   singleDetailSize = "0";
+   neverImportMat = "DefaultMaterial	ColorEffect*";
+   flipUVCoords = "0";
+   JoinIdenticalVerts = "0";
+   reverseWindingOrder = "0";
+   removeRedundantMats = "0";
+   animFPS = "2";
+};
+
+function Playerbotdae::onLoad(%this)
+{
+   %this.addSequence("ambient", "Root", "0", "30", "1", "0");
+   %this.addSequence("ambient", "Run", "31", "50", "1", "0");
+   %this.addSequence("ambient", "Back", "51", "70", "1", "0");
+   %this.addSequence("ambient", "Side", "71", "90", "1", "0");
+   %this.addSequence("ambient", "Crouch_Root", "91", "120", "1", "0");
+   %this.addSequence("ambient", "Look", "121", "127", "1", "0");
+   %this.setSequenceBlend("Look", "1", "ambient", "0");
+   %this.setSequenceCyclic("Look", "0");
+}

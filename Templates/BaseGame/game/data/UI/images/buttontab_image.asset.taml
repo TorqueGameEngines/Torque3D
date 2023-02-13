@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="buttontab_image"
+    imageFile="@assetFile=buttontab.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

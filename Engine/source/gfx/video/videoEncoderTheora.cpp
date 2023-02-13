@@ -193,8 +193,13 @@ class VideoEncoderTheora : public VideoEncoder, public Thread
    
 public:
    VideoEncoderTheora() :
-      mLastFrame(NULL)      
+      mCurrentFrame(0), td(NULL), mLastFrame(NULL)
    {
+      dMemset(&to, 0, sizeof(to));
+      dMemset(&ti, 0, sizeof(ti));
+      dMemset(&tc, 0, sizeof(tc));
+      dMemset(&mBuffer, 0, sizeof(mBuffer));
+
       setStatus(false);      
    }
       
@@ -221,7 +226,7 @@ public:
          return setStatus(false);
       }
 
-      ogg_stream_init(&to, Platform::getRandom() * S32_MAX);
+      ogg_stream_init(&to, Platform::getRandom() * double(S32_MAX));
 
       ogg_packet op;
 

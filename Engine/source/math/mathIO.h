@@ -142,10 +142,24 @@ inline bool mathRead(Stream& stream, QuatF* q)
 
 inline bool mathRead(Stream& stream, EaseF* e)
 {
-   bool success = stream.read( &e->dir );
-   success     &= stream.read( &e->type );
-   success     &= stream.read( &e->param[ 0 ] );
-   success     &= stream.read( &e->param[ 1 ] );
+   bool success = stream.read( &e->mDir );
+   success     &= stream.read( &e->mType );
+   success     &= stream.read( &e->mParam[ 0 ] );
+   success     &= stream.read( &e->mParam[ 1 ] );
+   return success;
+}
+
+inline bool mathRead(Stream& stream, RotationF* e)
+{
+   bool success = stream.read(&e->x);
+   success &= stream.read(&e->y);
+   success &= stream.read(&e->z);
+   success &= stream.read(&e->w);
+
+   U32 rotType;
+   success &= stream.read(&rotType);
+   e->mRotationType = (RotationF::RotationTypes)rotType;
+
    return success;
 }
 
@@ -256,11 +270,21 @@ inline bool mathWrite(Stream& stream, const QuatF& q)
 
 inline bool mathWrite(Stream& stream, const EaseF& e)
 {
-   bool success = stream.write(e.dir);
-   success     &= stream.write(e.type);
-   success     &= stream.write(e.param[0]);
-   success     &= stream.write(e.param[1]);
+   bool success = stream.write(e.mDir);
+   success     &= stream.write(e.mType);
+   success     &= stream.write(e.mParam[0]);
+   success     &= stream.write(e.mParam[1]);
    return success;
+}
+
+inline bool mathWrite(Stream& stream, const RotationF& e)
+{
+   bool success = stream.write(e.x);
+   success &= stream.write(e.y);
+   success &= stream.write(e.z);
+   success &= stream.write(e.w);
+   success &= stream.write(e.mRotationType);
+   return success;;
 }
 
 #endif //_MATHIO_H_

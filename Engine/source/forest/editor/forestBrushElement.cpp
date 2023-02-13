@@ -49,8 +49,8 @@ ForestBrushElement::ForestBrushElement()
   mSinkMin( 0.0f ),
   mSinkMax( 0.0f ),
   mSinkRadius( 1 ),
-  mSlopeMax( 90.0f ),
   mSlopeMin( 0.0f ),
+  mSlopeMax( 90.0f ),
   mElevationMin( -10000.0f ),
   mElevationMax( 10000.0f ) 
 {
@@ -58,7 +58,8 @@ ForestBrushElement::ForestBrushElement()
 
 
 void ForestBrushElement::initPersistFields()
-{   
+{
+   docsURL;
    Parent::initPersistFields();
 
    addGroup( "ForestBrushElement" );
@@ -172,8 +173,8 @@ SimGroup* ForestBrush::getGroup()
 
 bool ForestBrush::containsItemData( const ForestItemData *inData )
 {
-   SimObjectList::iterator iter = objectList.begin();
-   for ( ; iter != objectList.end(); iter++ )
+   SimObjectList::iterator iter = mObjectList.begin();
+   for ( ; iter != mObjectList.end(); iter++ )
    {
       ForestBrushElement *pElement = dynamic_cast<ForestBrushElement*>(*iter);
 
@@ -187,7 +188,7 @@ bool ForestBrush::containsItemData( const ForestItemData *inData )
    return false;
 }
 
-DefineConsoleMethod( ForestBrush, containsItemData, bool, ( const char * obj ), , "( ForestItemData obj )" )
+DefineEngineMethod( ForestBrush, containsItemData, bool, ( const char * obj ), , "( ForestItemData obj )" )
 {
    ForestItemData *data = NULL;
    if ( !Sim::findObject( obj, data ) )
@@ -197,4 +198,78 @@ DefineConsoleMethod( ForestBrush, containsItemData, bool, ( const char * obj ), 
    }
 
    return object->containsItemData( data );
+}
+
+//-------------------------------------------------------------------------
+// ForestBrushGroupSet
+//-------------------------------------------------------------------------
+
+IMPLEMENT_CONOBJECT(ForestBrushGroup);
+
+ConsoleDocClass(ForestBrushGroup,
+   "@brief Container class for ForestBrushes\n\n"
+   "Editor use only.\n\n"
+   "@internal"
+);
+
+ForestBrushGroup::ForestBrushGroup()
+{
+
+}
+
+bool ForestBrushGroup::onAdd()
+{
+   if (!Parent::onAdd())
+      return false;
+
+   SimSet* forestBrushSet;
+   if (!Sim::findObject("ForestBrushSet", forestBrushSet))
+   {
+      Con::errorf("ForestBrushGroup::onAdd() - failed to find ForestBrushSet to add new ForestBrushGroup to!");
+   }
+
+   forestBrushSet->addObject(this);
+
+   return true;
+}
+
+void ForestBrushGroup::addObject(SimObject* inObj)
+{
+   ForestBrush* ele = dynamic_cast<ForestBrush*>(inObj);
+   if (!ele)
+      return;
+
+   //if ( containsItemData( ele->mData ) )
+   //   return;
+
+   Parent::addObject(inObj);
+}
+
+bool ForestBrushGroup::containsBrushData(const ForestBrush* inData)
+{
+   SimObjectList::iterator iter = mObjectList.begin();
+   for (; iter != mObjectList.end(); iter++)
+   {
+      ForestBrush* pElement = dynamic_cast<ForestBrush*>(*iter);
+
+      if (!pElement)
+         continue;
+
+      if (pElement == inData)
+         return true;
+   }
+
+   return false;
+}
+
+DefineEngineMethod(ForestBrushGroup, containsBrushData, bool, (const char* obj), , "( ForestBrush obj )")
+{
+   ForestBrush* data = NULL;
+   if (!Sim::findObject(obj, data))
+   {
+      Con::warnf("ForestBrush::containsBrushData - invalid object passed");
+      return false;
+   }
+
+   return object->containsBrushData(data);
 }

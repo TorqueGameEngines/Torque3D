@@ -453,7 +453,7 @@ void copySketchupTexture(const Torque::Path &path, String &textureFilename)
 }
 
 //-----------------------------------------------------------------------------
-/// Add collada materials to materials.cs
+/// Add collada materials to materials.tscript
 void updateMaterialsScript(const Torque::Path &path, bool copyTextures = false)
 {
 #ifdef DAE2DTS_TOOL
@@ -461,9 +461,11 @@ void updateMaterialsScript(const Torque::Path &path, bool copyTextures = false)
       return;
 #endif
 
+   return;
+
    Torque::Path scriptPath(path);
    scriptPath.setFileName("materials");
-   scriptPath.setExtension("cs");
+   scriptPath.setExtension(TORQUE_SCRIPT_EXTENSION);
 
    // First see what materials we need to update
    PersistenceManager persistMgr;
@@ -497,9 +499,13 @@ void updateMaterialsScript(const Torque::Path &path, bool copyTextures = false)
       {
          Material *mat = dynamic_cast<Material*>( persistMgr.getDirtyList()[iMat].getObject() );
 
-         copySketchupTexture(path, mat->mDiffuseMapFilename[0]);
-         copySketchupTexture(path, mat->mNormalMapFilename[0]);
-         copySketchupTexture(path, mat->mSpecularMapFilename[0]);
+         String difMapName;
+         copySketchupTexture(path, difMapName);
+         mat->mDiffuseMapName[0] = difMapName;
+
+         String normMapName;
+         copySketchupTexture(path, normMapName);
+         mat->mNormalMapName[0] = normMapName;
       }
    }
 
@@ -529,6 +535,16 @@ bool ColladaShapeLoader::canLoadCachedDTS(const Torque::Path& path)
       }
    }
 
+   //assume the dts is good since it was zipped on purpose
+   Torque::FS::FileSystemRef ref = Torque::FS::GetFileSystem(cachedPath);
+   if (ref && !String::compare("Zip", ref->getTypeStr().c_str()))
+   {
+      bool forceLoadDAE = Con::getBoolVariable("$collada::forceLoadDAE", false);
+
+      if (!forceLoadDAE && Torque::FS::IsFile(cachedPath))
+          return true;
+   }
+     
    return false;
 }
 
@@ -679,7 +695,7 @@ TSShape* loadColladaShape(const Torque::Path &path)
 
    // Allow TSShapeConstructor object to override properties
    ColladaUtils::getOptions().reset();
-   TSShapeConstructor* tscon = TSShapeConstructor::findShapeConstructor(path.getFullPath());
+   TSShapeConstructor* tscon = TSShapeConstructor::findShapeConstructorByFilename(path.getFullPath());
    if (tscon)
    {
       ColladaUtils::getOptions() = tscon->mOptions;
@@ -709,14 +725,20 @@ TSShape* loadColladaShape(const Torque::Path &path)
 #ifndef DAE2DTS_TOOL
          // Cache the Collada model to a DTS file for faster loading next time.
          FileStream dtsStream;
+         
          if (dtsStream.open(cachedPath.getFullPath(), Torque::FS::File::Write))
          {
+            Torque::FS::FileSystemRef ref = Torque::FS::GetFileSystem(daePath);
+            if (ref && !String::compare("Zip", ref->getTypeStr().c_str()))
+               Con::errorf("No cached dts file found in archive for %s. Forcing cache to disk.", daePath.getFullFileName().c_str());
+
             Con::printf("Writing cached COLLADA shape to %s", cachedPath.getFullPath().c_str());
             tss->write(&dtsStream);
          }
+
 #endif // DAE2DTS_TOOL
 
-         // Add collada materials to materials.cs
+         // Add collada materials to materials.tscript
          updateMaterialsScript(path, isSketchup);
       }
    }

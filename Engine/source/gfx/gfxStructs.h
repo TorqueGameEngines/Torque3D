@@ -48,53 +48,6 @@
 #include "gfx/gfxVertexTypes.h"
 #endif
 
-
-//-----------------------------------------------------------------------------
-// This class is used to interact with an API's fixed function lights.  See GFX->setLight
-class GFXLightInfo 
-{
-public:
-   enum Type {
-      Point    = 0,
-      Spot     = 1,
-      Vector   = 2,
-      Ambient  = 3,
-   };
-   Type        mType;
-
-   Point3F     mPos;
-   VectorF     mDirection;
-   ColorF      mColor;
-   ColorF      mAmbient;
-   F32         mRadius;
-   F32         mInnerConeAngle;
-   F32         mOuterConeAngle;
-
-   /// @todo Revisit below (currently unused by fixed function lights)
-	Point3F position;
-	ColorF ambient;
-	ColorF diffuse;
-	ColorF specular;
-	VectorF spotDirection;
-	F32 spotExponent;
-	F32 spotCutoff;
-	F32 constantAttenuation;
-	F32 linearAttenuation;
-	F32 quadraticAttenuation;
-};
-
-//-----------------------------------------------------------------------------
-
-// Material definition for FF lighting
-struct GFXLightMaterial
-{
-   ColorF ambient;
-   ColorF diffuse;
-   ColorF specular;
-   ColorF emissive;
-   F32 shininess;
-};
-
 //-----------------------------------------------------------------------------
 
 struct GFXVideoMode 
@@ -144,7 +97,6 @@ struct GFXVideoMode
    const String toString() const;
 };
 
-
 //-----------------------------------------------------------------------------
 
 struct GFXPrimitive
@@ -159,7 +111,12 @@ struct GFXPrimitive
 
    GFXPrimitive()
    {
-      dMemset( this, 0, sizeof( GFXPrimitive ) );
+      type = GFXPT_FIRST;
+      startVertex = 0;
+      minIndex = 0;
+      startIndex = 0;
+      numPrimitives = 0;
+      numVertices = 0;
    }
 };
 
@@ -189,6 +146,5 @@ struct GFXShaderMacro
 
    static void stringize( const Vector<GFXShaderMacro> &macros, String *outString );
 };
-
 
 #endif // _GFXSTRUCTS_H_

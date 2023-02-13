@@ -52,9 +52,10 @@ ConsoleDocClass( GuiDecoyCtrl,
 				"Currently editor use only, no real application without extension.\n\n "
 				"@internal");
 
-GuiDecoyCtrl::GuiDecoyCtrl() : mIsDecoy(true),
-							   mMouseOver(false),
-							   mDecoyReference(NULL)
+GuiDecoyCtrl::GuiDecoyCtrl() : mMouseOver(false),
+							   mIsDecoy(true),
+							   mDecoyReference(NULL),
+                        mMouseOverDecoy(false)
 {
 }
 
@@ -64,6 +65,7 @@ GuiDecoyCtrl::~GuiDecoyCtrl()
 
 void GuiDecoyCtrl::initPersistFields()
 {
+   docsURL;
    addField("isDecoy",       TypeBool,         Offset(mIsDecoy, GuiDecoyCtrl), "Sets this control to decoy mode");
 
    Parent::initPersistFields();
@@ -142,16 +144,17 @@ void GuiDecoyCtrl::onMouseMove(const GuiEvent &event)
    if(mIsDecoy == true)
    {
 	    mVisible = false;
-		GuiControl *parent = getParent();
 		GuiControl *tempControl = parent->findHitControl(localPoint);
 
 		//the decoy control has the responsibility of keeping track of the decoyed controls status
-		if(mMouseOverDecoy == false && mDecoyReference != NULL)
+		if(mMouseOverDecoy == false && mDecoyReference != NULL &&
+               !mDecoyReference->isDeleted() && !mDecoyReference->isRemoved())
 		{
 			tempControl->onMouseEnter(event);
 			mMouseOverDecoy = true;
 		}
-		else if(tempControl != mDecoyReference && mDecoyReference != NULL)
+		else if(tempControl != mDecoyReference && mDecoyReference != NULL &&
+               !mDecoyReference->isDeleted() && !mDecoyReference->isRemoved())
 		{
 			mDecoyReference->onMouseLeave(event);
 			mMouseOverDecoy = false;

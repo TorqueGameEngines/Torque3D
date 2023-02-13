@@ -127,7 +127,6 @@ public:
    bool   isExcludedObject(SceneObject*) const;
    void   registerExcludedObject(SceneObject*);
    void   unregisterExcludedObject(SceneObject*);
->>>>>>> development
 };
 
 typedef PhysicalZone::ForceType PhysicalZone_ForceType;

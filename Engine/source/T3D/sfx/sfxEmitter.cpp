@@ -689,9 +689,8 @@ void SFXEmitter::_update()
    // we can restore it.
    SFXStatus prevState = mSource ? mSource->getStatus() : SFXStatusNull;
 
-   if (mSoundAsset.notNull() )
+   if (mSoundAsset.notNull() && mDirty.test(Track | Filename))
    {
-      //mLocalProfile = *mSoundAsset->getSfxProfile();
       mDescription = *mSoundAsset->getSfxDescription();
    }
 

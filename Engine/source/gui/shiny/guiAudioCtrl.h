@@ -66,16 +66,8 @@ protected:
    enum Dirty
    {
       Track = BIT(0),
-      Filename = BIT(2),
-      Volume = BIT(4),
-      IsLooping = BIT(5),
-      SourceGroup = BIT(13),
-      IsStreaming = BIT(15),
-      FadeInTime = BIT(16),
-      FadeOutTime = BIT(17),
-      Pitch = BIT(18),
-      TrackOnly = BIT(20),
-
+      Filename = BIT(1),
+      TrackOnly = BIT(2),
       AllDirtyMask = 0xFFFFFFFF,
    };
 
@@ -109,7 +101,6 @@ public:
    void setActive(bool value) {};
    bool testCondition();
    static void initPersistFields();
-   void onStaticModified(const char* slotName, const char* newValue = NULL);
    DECLARE_CONOBJECT(GuiAudioCtrl);
    DECLARE_CATEGORY( "Gui Other" );
 };

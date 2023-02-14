@@ -57,6 +57,8 @@ GuiAudioCtrl::GuiAudioCtrl()
 
 GuiAudioCtrl::~GuiAudioCtrl()
 {
+   if (mSoundPlaying)
+      mSoundPlaying->stop();
    SFX_DELETE(mSoundPlaying);
 }
 
@@ -67,6 +69,8 @@ bool GuiAudioCtrl::onWake()
 
 void GuiAudioCtrl::onSleep()
 {
+   if (mSoundPlaying)
+      mSoundPlaying->stop();
    SFX_DELETE(mSoundPlaying);
    Parent::onSleep();
 }
@@ -109,7 +113,7 @@ bool GuiAudioCtrl::testCondition()
 void GuiAudioCtrl::initPersistFields()
 {
    addGroup("Sounds");
-      INITPERSISTFIELD_SOUNDASSET(Sound, GuiAudioCtrl, "Looping SFXProfile effect to play while GuiAudioCtrl is active.");
+      INITPERSISTFIELD_SOUNDASSET(Sound, GuiAudioCtrl, "Looping SoundAsset to play while GuiAudioCtrl is active.");
       addField("tickPeriodMS", TypeS32, Offset(mTickPeriodMS, GuiAudioCtrl),
          "@brief Time in milliseconds between calls to onTick().\n\n"
          "@see onTickTrigger()\n");
@@ -151,61 +155,9 @@ void GuiAudioCtrl::initPersistFields()
    Parent::initPersistFields();
 }
 
-void GuiAudioCtrl::onStaticModified(const char* slotName, const char* newValue)
-{
-   // Lookup and store the property names once here
-   // and we can then just do pointer compares. 
-   static StringTableEntry slotTrack = StringTable->lookup("track");
-   static StringTableEntry slotFilename = StringTable->lookup("fileName");
-   static StringTableEntry slotVolume = StringTable->lookup("volume");
-   static StringTableEntry slotPitch = StringTable->lookup("pitch");
-   static StringTableEntry slotIsLooping = StringTable->lookup("isLooping");
-   static StringTableEntry slotIsStreaming = StringTable->lookup("isStreaming");
-   static StringTableEntry slotFadeInTime = StringTable->lookup("fadeInTime");
-   static StringTableEntry slotFadeOutTime = StringTable->lookup("fadeOutTime");
-   static StringTableEntry slotSourceGroup = StringTable->lookup("sourceGroup");
-   static StringTableEntry slotUseTrackDescriptionOnly = StringTable->lookup("useTrackDescriptionOnly");
-
-   // Set the dirty flags.
-   mDirty.clear();
-   if (slotName == slotTrack)
-      mDirty.set(Track);
-
-   else if (slotName == slotFilename)
-      mDirty.set(Filename);
-
-   else if (slotName == slotVolume)
-      mDirty.set(Volume);
-
-   else if (slotName == slotPitch)
-      mDirty.set(Pitch);
-
-   else if (slotName == slotIsLooping)
-      mDirty.set(IsLooping);
-
-   else if (slotName == slotIsStreaming)
-      mDirty.set(IsStreaming);
-
-   else if (slotName == slotFadeInTime)
-      mDirty.set(FadeInTime);
-
-   else if (slotName == slotFadeOutTime)
-      mDirty.set(FadeOutTime);
-
-   else if (slotName == slotSourceGroup)
-      mDirty.set(SourceGroup);
-
-   else if (slotName == slotUseTrackDescriptionOnly)
-      mDirty.set(TrackOnly);
-}
-
 void GuiAudioCtrl::_update()
 {
-   // Store the playback status so we
-   // we can restore it.
-   SFXStatus prevState = mSoundPlaying ? mSoundPlaying->getStatus() : SFXStatusNull;
-
-   if (mSoundAsset.notNull() && mDirty.test(Track | Filename))
+   if (isSoundValid() && mDirty.test(Track | Filename))
    {
       //mLocalProfile = *mSoundAsset->getSfxProfile();
       mDescription = *mSoundAsset->getSfxDescription();
@@ -214,52 +166,33 @@ void GuiAudioCtrl::_update()
    // Make sure all the settings are valid.
    mDescription.validate();
 
-   // Did we change the source?
-   if (mDirty.test(Track | Filename | IsLooping | IsStreaming | TrackOnly))
-   {
-      SFX_DELETE(mSoundPlaying);
+   bool useTrackDescriptionOnly = (mUseTrackDescriptionOnly && getSoundProfile());
 
-      // Do we have a track?
-      if (mSoundAsset && mSoundAsset->getSfxProfile())
+   if (getSoundProfile())
+   {
+      if (mSoundPlaying == NULL)
       {
          mSoundPlaying = SFX->createSource(getSoundProfile());
-         if (!mSoundPlaying)
-            Con::errorf("SFXEmitter::_update() - failed to create sound for track %i (%s)",
-               mSoundAsset->getSfxProfile()->getId(), mSoundAsset->getSfxProfile()->getName());
-
-         // If we're supposed to play when the emitter is 
-         // added to the scene then also restart playback 
-         // when the profile changes.
-         prevState = testCondition() ? SFXStatusPlaying : prevState;
-
-         // Force an update of properties set on the local description.
-
-         mDirty.set(AllDirtyMask);
       }
-
-      mDirty.clear(Track | Filename | IsLooping | IsStreaming | TrackOnly);
    }
 
-   // Cheat if the editor is open and the looping state
-   // is toggled on a local profile sound.  It makes the
-   // editor feel responsive and that things are working.
-   if ((mSoundAsset.isNull() || !mSoundAsset->getSfxProfile()) && testCondition() && mDirty.test(IsLooping))
-      prevState = SFXStatusPlaying;
-
-   bool useTrackDescriptionOnly = (mUseTrackDescriptionOnly && mSoundAsset.notNull() && mSoundAsset->getSfxProfile());
-
-   if (testCondition())
+   // The rest only applies if we have a source.
+   if (mSoundPlaying && !useTrackDescriptionOnly)
    {
-      if (getSoundProfile())
+      // Set the volume irrespective of the profile.
+      mSoundPlaying->setVolume(mDescription.mVolume);
+      mSoundPlaying->setPitch(mDescription.mPitch);
+      mSoundPlaying->setFadeTimes(mDescription.mFadeInTime, mDescription.mFadeOutTime);
+
+      if (mDescription.mSourceGroup)
+         mDescription.mSourceGroup->addObject(mSoundPlaying);
+   }
+
+   if (testCondition() && isActive() && isAwake())
+   {
+      if (mSoundPlaying && !mSoundPlaying->isPlaying())
       {
-         if (mSoundPlaying == NULL)
-         {
-            mSoundPlaying = SFX->createSource(getSoundProfile());
-         }
-         if (mSoundPlaying && !mSoundPlaying->isPlaying())
-         {
-            mSoundPlaying->play();
-         }
+         mSoundPlaying->play();
       }
    }
    else
@@ -268,28 +201,5 @@ void GuiAudioCtrl::_update()
       {
          mSoundPlaying->stop();
       }
-   }
-
-   // The rest only applies if we have a source.
-   if (mSoundPlaying)
-   {
-      // Set the volume irrespective of the profile.
-      if (mDirty.test(Volume) && !useTrackDescriptionOnly)
-         mSoundPlaying->setVolume(mDescription.mVolume);
-
-      if (mDirty.test(Pitch) && !useTrackDescriptionOnly)
-         mSoundPlaying->setPitch(mDescription.mPitch);
-
-      if (mDirty.test(FadeInTime | FadeOutTime) && !useTrackDescriptionOnly)
-         mSoundPlaying->setFadeTimes(mDescription.mFadeInTime, mDescription.mFadeOutTime);
-
-      if (mDirty.test(SourceGroup) && mDescription.mSourceGroup && !useTrackDescriptionOnly)
-         mDescription.mSourceGroup->addObject(mSoundPlaying);
-
-      // Restore the pre-update playback state.
-      if (prevState == SFXStatusPlaying)
-         mSoundPlaying->play();
-
-      mDirty.clear(Volume | Pitch | FadeInTime | FadeOutTime | SourceGroup);
    }
 }

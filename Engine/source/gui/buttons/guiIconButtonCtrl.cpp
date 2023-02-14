@@ -247,8 +247,10 @@ void GuiIconButtonCtrl::renderButton( Point2I &offset, const RectI& updateRect )
       }
       else
       {
-         drawer->drawRectFill(boundsRect, mProfile->mFillColorHL);
-         drawer->drawRect(boundsRect, mProfile->mBorderColorHL);
+         if (mProfile->mBorder != 0)
+            renderFilledBorder(boundsRect, mProfile->mBorderColorHL, mProfile->mFillColorHL, mProfile->mBorderThickness);
+         else
+            GFX->getDrawUtil()->drawRectFill(boundsRect, mProfile->mFillColorHL);
       }
    }
    else
@@ -266,13 +268,17 @@ void GuiIconButtonCtrl::renderButton( Point2I &offset, const RectI& updateRect )
       {
          if (mActive)
          {
-            drawer->drawRectFill(boundsRect, mProfile->mFillColor);
-            drawer->drawRect(boundsRect, mProfile->mBorderColor);
+            if (mProfile->mBorder != 0)
+               renderFilledBorder(boundsRect, mProfile->mBorderColor, mProfile->mFillColor, mProfile->mBorderThickness);
+            else
+               GFX->getDrawUtil()->drawRectFill(boundsRect, mProfile->mFillColor);
          }
          else
          {
-            drawer->drawRectFill(boundsRect, mProfile->mFillColorNA);
-            drawer->drawRect(boundsRect, mProfile->mBorderColorNA);
+            if (mProfile->mBorder != 0)
+               renderFilledBorder(boundsRect, mProfile->mBorderColorNA, mProfile->mFillColorNA, mProfile->mBorderThickness);
+            else
+               GFX->getDrawUtil()->drawRectFill(boundsRect, mProfile->mFillColor);
          }
       }
    }

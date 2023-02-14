@@ -6,6 +6,7 @@ singleton GuiControlProfile(AssetBrowserPreviewImageAsset : ToolsGuiDefaultProfi
    border = true;
    borderColor   = "230 126 0 255";
    borderColorNA = "230 126 0 255";
+   borderThickness = 5;
 };
 
 singleton GuiControlProfile(AssetBrowserPreviewMaterialAsset : ToolsGuiDefaultProfile)
@@ -16,6 +17,7 @@ singleton GuiControlProfile(AssetBrowserPreviewMaterialAsset : ToolsGuiDefaultPr
    border = true;
    borderColor   = "0 100 0 255";
    borderColorNA = "0 100 0 255";
+   borderThickness = 5;
 };
 
 singleton GuiControlProfile(AssetBrowserPreviewShapeAsset : ToolsGuiDefaultProfile)
@@ -26,6 +28,7 @@ singleton GuiControlProfile(AssetBrowserPreviewShapeAsset : ToolsGuiDefaultProfi
    border = true;
    borderColor   = "0 0 200 255";
    borderColorNA = "0 0 200 255";
+   borderThickness = 5;
 };
 
 singleton GuiControlProfile(AssetBrowserPreviewShapeAnimationAsset : ToolsGuiDefaultProfile)
@@ -36,6 +39,7 @@ singleton GuiControlProfile(AssetBrowserPreviewShapeAnimationAsset : ToolsGuiDef
    border = true;
    borderColor   = "0 0 200 255";
    borderColorNA = "0 0 200 255";
+   borderThickness = 5;
 };
 
 singleton GuiControlProfile(AssetBrowserPreviewSoundAsset : ToolsGuiDefaultProfile)
@@ -46,6 +50,7 @@ singleton GuiControlProfile(AssetBrowserPreviewSoundAsset : ToolsGuiDefaultProfi
    border = true;
    borderColor   = "75 101 135 255";
    borderColorNA = "75 101 135 255";
+   borderThickness = 5;
 };
 
 singleton GuiControlProfile(AssetBrowserPreviewTerrainAsset : ToolsGuiDefaultProfile)
@@ -56,6 +61,7 @@ singleton GuiControlProfile(AssetBrowserPreviewTerrainAsset : ToolsGuiDefaultPro
    border = true;
    borderColor   = "200 198 198 255";
    borderColorNA = "200 198 198 255";
+   borderThickness = 5;
 };
 
 singleton GuiControlProfile(AssetBrowserPreviewTerrainMaterialAsset : ToolsGuiDefaultProfile)
@@ -66,6 +72,7 @@ singleton GuiControlProfile(AssetBrowserPreviewTerrainMaterialAsset : ToolsGuiDe
    border = true;
    borderColor   = "200 198 198 255";
    borderColorNA = "200 198 198 255";
+   borderThickness = 5;
 };
 
 singleton GuiControlProfile(AssetBrowserPreviewStateMachineAsset : ToolsGuiDefaultProfile)
@@ -76,6 +83,7 @@ singleton GuiControlProfile(AssetBrowserPreviewStateMachineAsset : ToolsGuiDefau
    border = true;
    borderColor   = "0 76 135 255";
    borderColorNA = "0 76 135 255";
+   borderThickness = 5;
 };
 
 singleton GuiControlProfile(AssetBrowserPreviewGUIAsset : ToolsGuiDefaultProfile)
@@ -86,6 +94,7 @@ singleton GuiControlProfile(AssetBrowserPreviewGUIAsset : ToolsGuiDefaultProfile
    border = true;
    borderColor   = "17 5 44 255";
    borderColorNA = "17 5 44 255";
+   borderThickness = 5;
 };
 
 singleton GuiControlProfile(AssetBrowserPreviewLevelAsset : ToolsGuiDefaultProfile)
@@ -96,4 +105,5 @@ singleton GuiControlProfile(AssetBrowserPreviewLevelAsset : ToolsGuiDefaultProfi
    border = true;
    borderColor   = "0 208 186 255";
    borderColorNA = "0 208 186 255";
+   borderThickness = 5;
 };

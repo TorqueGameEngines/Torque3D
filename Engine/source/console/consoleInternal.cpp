@@ -1776,6 +1776,45 @@ String Namespace::Entry::getPrototypeString() const
    return str.end();
 }
 
+String Namespace::Entry::getPrototypeSig() const
+{
+   StringBuilder str;
+
+   // Add function name and arguments.
+
+   if (mType == ScriptCallbackType)
+      str.append(cb.mCallbackName);
+   else
+      str.append(mFunctionName);
+   if (mHeader)
+   {
+      Vector< String > argList;
+      sParseList(mHeader->mArgString, argList);
+
+      const U32 numArgs = argList.size();
+
+      str.append("(%this");
+
+      if (numArgs > 0)
+         str.append(',');
+      for (U32 i = 0; i < numArgs; ++i)
+      {
+         // Add separator if not first arg.
+
+         String name;
+         String type;
+
+         if (i > 0)
+            str.append(',');
+         str.append('%');
+         sGetArgNameAndType(argList[i], type, name);
+         str.append(name);
+      }
+      str.append(')');
+   }
+
+   return str.end();
+}
 //-----------------------------------------------------------------------------
 
 StringTableEntry Namespace::mActivePackages[Namespace::MaxActivePackages];

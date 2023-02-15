@@ -164,6 +164,10 @@ public:
       /// Return a full prototype string for the function including return type, function name,
       /// and arguments.
       String getPrototypeString() const;
+
+      /// Return a minimalized prototype string for the function including return type, function name,
+      /// and arguments.
+      String getPrototypeSig() const;
    };
 
    Entry* mEntryList;

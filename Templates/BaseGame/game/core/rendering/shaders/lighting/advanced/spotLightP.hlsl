@@ -85,7 +85,10 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
    //create surface
    Surface surface = createSurface( normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
                                     uvScene, eyePosWorld, wsEyeRay, cameraToWorld);
-
+   if (getFlag(surface.matFlag, 2))
+   {
+      return surface.baseColor;
+   } 
    float3 L = lightPosition - surface.P;
    float dist = length(L);
    float3 lighting = 0.0.xxx;

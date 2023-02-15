@@ -176,7 +176,10 @@ float4 main(FarFrustumQuadConnectP IN) : SV_TARGET
    //create surface
    Surface surface = createSurface( normDepth, TORQUE_SAMPLER2D_MAKEARG(colorBuffer),TORQUE_SAMPLER2D_MAKEARG(matInfoBuffer),
                                     IN.uv0, eyePosWorld, IN.wsEyeRay, cameraToWorld);
-                                      
+   if (getFlag(surface.matFlag, 2))
+   {
+      return surface.baseColor;
+   }                        
    //create surface to light                           
    SurfaceToLight surfaceToLight = createSurfaceToLight(surface, -lightDirection);
 

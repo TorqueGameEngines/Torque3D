@@ -306,6 +306,7 @@ public:
 
    bool mGlow[MAX_STAGES];          // entire stage glows
    bool mReceiveShadows[MAX_STAGES];
+   bool mIgnoreLighting[MAX_STAGES];
 
    Point2I mCellIndex[MAX_STAGES];
    Point2I mCellLayout[MAX_STAGES];

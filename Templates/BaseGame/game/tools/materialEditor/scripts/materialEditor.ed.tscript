@@ -936,6 +936,7 @@ function MaterialEditorGui::guiSync( %this, %material )
    MaterialEditorPropertiesWindow-->glowMulSlider.setValue((%material).glowMul[%layer]);
    MaterialEditorPropertiesWindow-->glowCheckbox.setValue((%material).glow[%layer]);
    MaterialEditorPropertiesWindow-->receiveShadowsCheckbox.setValue((%material).receiveShadows[%layer]);
+   MaterialEditorPropertiesWindow-->ignoreLightingCheckbox.setValue((%material).ignoreLighting[%layer]);   
    MaterialEditorPropertiesWindow-->parallaxTextEdit.setText((%material).parallaxScale[%layer]);
    MaterialEditorPropertiesWindow-->parallaxSlider.setValue((%material).parallaxScale[%layer]);
 

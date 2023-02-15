@@ -3177,6 +3177,29 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                            useMouseEvents = "0";
                            useInactiveState = "0";
                         };
+                        new GuiCheckBoxCtrl() {
+                           canSaveDynamicFields = "0";
+                           internalName = "ignoreLightingCheckbox";
+                           Enabled = "1";
+                           isContainer = "0";
+                           Profile = "ToolsGuiCheckBoxProfile";
+                           HorizSizing = "right";
+                           VertSizing = "bottom";
+                           position = "116 4";
+                           Extent = "60 16";
+                           MinExtent = "8 2";
+                           canSave = "1";
+                           Visible = "1";
+                           Command = "MaterialEditorGui.updateActiveMaterial(\"ignoreLighting[\" @ MaterialEditorGui.currentLayer @ \"]\",$ThisControl.getValue());";
+                           tooltipprofile = "ToolsGuiDefaultProfile";
+                           ToolTip = "Are we at all influenced by light?";
+                           hovertime = "1000";
+                           text = "ignoreLight";
+                           groupNum = "-1";
+                           buttonType = "ToggleButton";
+                           useMouseEvents = "0";
+                           useInactiveState = "0";
+                        };
                      };
                      new GuiContainer(){ // parallax
                         profile = "ToolsGuiTransparentProfile";

@@ -162,6 +162,7 @@ Material::Material()
 
       mGlow[i] = false;
       mReceiveShadows[i] = true;
+      mIgnoreLighting[i] = false;
 
       mDetailScale[i].set(2.0f, 2.0f);
 
@@ -347,6 +348,9 @@ void Material::initPersistFields()
       "The 0 to 1 rolloff factor used in the subsurface scattering approximation.");
 
    addField("receiveShadows", TypeBool, Offset(mReceiveShadows, Material), MAX_STAGES,
+      "Shadows being cast onto the material.");
+
+   addField("ignoreLighting", TypeBool, Offset(mIgnoreLighting, Material), MAX_STAGES,
       "Enables emissive lighting for the material.");
 
    addField("doubleSided", TypeBool, Offset(mDoubleSided, Material),

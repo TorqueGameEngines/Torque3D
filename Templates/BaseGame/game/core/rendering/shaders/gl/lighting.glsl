@@ -276,6 +276,10 @@ vec4 compute4Lights( Surface surface,
                      vec4 vectorLightingColor,
                      float  vectorLightBrightness )
 {
+   if (getFlag(surface.matFlag, 2))
+   {
+      return surface.baseColor;
+   } 
    vec3 finalLighting = vec3(0.0f);
 
    int i;

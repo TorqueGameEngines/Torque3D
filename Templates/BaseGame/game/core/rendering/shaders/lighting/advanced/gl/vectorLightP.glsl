@@ -186,7 +186,11 @@ void main()
    //create surface
    Surface surface = createSurface( normDepth, colorBuffer, matInfoBuffer,
                                     uv0, eyePosWorld, wsEyeRay, cameraToWorld);
-   	
+   if (getFlag(surface.matFlag, 2))
+   { 
+      OUT_col = surface.baseColor;
+      return;
+   } 
    //create surface to light                           
    SurfaceToLight surfaceToLight = createSurfaceToLight(surface, -lightDirection);
 

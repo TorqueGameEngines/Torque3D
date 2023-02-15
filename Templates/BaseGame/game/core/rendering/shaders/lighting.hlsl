@@ -277,8 +277,11 @@ float4 compute4Lights( Surface surface,
                      float4 vectorLightingColor,
                      float  vectorLightBrightness )
 {
+   if (getFlag(surface.matFlag, 2))
+   {
+      return surface.baseColor;
+   } 
    float3 finalLighting = 0.0.xxx;
-
    int i;
    for(i = 0; i < MAX_FORWARD_LIGHT; i++)
    {

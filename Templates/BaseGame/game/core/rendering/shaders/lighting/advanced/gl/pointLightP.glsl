@@ -147,6 +147,11 @@ void main()
    Surface surface = createSurface( normDepth, colorBuffer, matInfoBuffer,
                                     uvScene, eyePosWorld, wsEyeRay, cameraToWorld);
 
+   if (getFlag(surface.matFlag, 2))
+   { 
+      OUT_col = surface.baseColor;
+      return;
+   } 
    vec3 L = lightPosition - surface.P;
    float dist = length(L);
    vec3 lighting = vec3(0.0);

@@ -305,7 +305,7 @@ void TerrainBaseMapFeatHLSL::processVert(Vector<ShaderComponent*>& componentList
    {
       Var* inNormal = (Var*)LangElement::find("normal");
       meta->addStatement( 
-         new GenOp("   @.z = dot( normalize( float3( @.x, @.y, 0 ) ), float3( 0, 1, 0 ) );\r\n",
+         new GenOp("   @.z = abs(dot( normalize( float3( @.x, @.y, 0.0001 ) ), float3( 0, 1, 0 ) ));\r\n",
             outTex, inNormal, inNormal));
       meta->addStatement(
          new GenOp("   @.w = 1.0 - dot( normalize( @.xyz ), float3( 0, 0, 1 ) );\r\n",
@@ -1381,7 +1381,7 @@ void TerrainHeightMapBlendHLSL::processPix(Vector<ShaderComponent*>& componentLi
       {
          Var* detailBlend = (Var*)LangElement::find(String::ToString("detailBlend%d", idx));
          Var* detailH = (Var*)LangElement::find(String::ToString("detailH%d", idx));
-         meta->addStatement(new GenOp("   @ = (@-@.x)/(@.y-@.x);\r\n", detailH, detailH, heightRange, heightRange, heightRange));
+         meta->addStatement(new GenOp("   @ = (@-@.x)/(@.y-@.x)-@.x;\r\n", detailH, detailH, heightRange, heightRange, heightRange, heightRange));
       }
       meta->addStatement(new GenOp("\r\n"));
    }

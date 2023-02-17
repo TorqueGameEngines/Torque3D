@@ -32,7 +32,7 @@ function GameConnection::onConnectionAccepted(%this)
    // datablocks and objects are ghosted over.
    physicsInitWorld( "client" ); 
    
-   callOnModules("onCreateClientConnection", "Game");
+   moduleExec("onCreateClientConnection", "Game");
 }
 
 function GameConnection::initialControlSet(%this)
@@ -156,5 +156,5 @@ function disconnectedCleanup()
    // We can now delete the client physics simulation.
    physicsDestroyWorld( "client" );    
    
-   callOnModules("onDestroyClientConnection", "Game");
+   moduleExec("onDestroyClientConnection", "Game");
 }

@@ -80,8 +80,10 @@ function spawnGameObject(%name, %addToScene)
 
 function GameBaseData::onNewDataBlock(%this, %obj)
 {
-    %this.onRemove(%obj);
-    %this.onAdd(%obj);
+   if(%this.isMethod("onRemove"))
+      %this.onRemove(%obj);
+   if(%this.isMethod("onAdd"))
+      %this.onAdd(%obj);
 }
 
 function saveGameObject(%name, %tamlPath, %scriptPath)

@@ -47,6 +47,15 @@ function serverCmdToggleCamera(%client)
 {
    if (%client.getControlObject() == %client.player)
    {
+      if (!isObject(%client.camera))
+      {
+         %client.camera = spawnObject("Camera", Observer);
+         MissionCleanup.add( %client.camera );
+         %client.camera.scopeToClient(%client);
+         
+         %client.camera.setPosition(%client.player.getPosition());
+      }
+      
       %client.camera.setVelocity("0 0 0");
       %control = %client.camera;
    }

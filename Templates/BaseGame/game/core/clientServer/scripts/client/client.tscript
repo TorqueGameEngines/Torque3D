@@ -20,7 +20,7 @@ function initClient()
    if ( isFile( %prefPath @ "/clientPrefs." @ $TorqueScriptFileExtension ) )
       exec( %prefPath @ "/clientPrefs." @ $TorqueScriptFileExtension );
       
-   callOnModules("initClient");
+   moduleExec("initClient");
 
    // Copy saved script prefs into C++ code.
    setDefaultFov( $pref::Player::defaultFov );

@@ -53,7 +53,7 @@ function initServer()
    // Specify where the mission files are.
    $Server::MissionFileSpec = "data/levels/*.mis";
    
-   callOnModules("initServer");
+   moduleExec("initServer");
    
    //Maybe this should be a pref for better per-project control
    //But many physically based/gameplay things utilize materials being detected
@@ -169,8 +169,8 @@ function createServer(%serverType, %levelAsset)
          schedule(0,0,startHeartbeat);
    }
    
-   callOnModules("onCreateGameServer", "Core");
-   callOnModules("onCreateGameServer", "Game");
+   moduleExec("onCreateGameServer", "Core");
+   moduleExec("onCreateGameServer", "Game");
    
    // Let the game initialize some things now that the
    // the server has been created
@@ -204,8 +204,8 @@ function onServerCreated()
    physicsStartSimulation("server");
    loadDatablockFiles( DatablockFilesList, true );
    
-   callOnModules("onServerScriptExec", "Core");
-   callOnModules("onServerScriptExec", "Game");   
+   moduleExec("onServerScriptExec", "Core");
+   moduleExec("onServerScriptExec", "Game");   
    
    // Keep track of when the game started
    $Game::StartTime = $Sim::Time;
@@ -244,8 +244,8 @@ function destroyServer()
    deleteDataBlocks();
    
    //Get our modules so we can exec any specific server-side loading/handling
-   callOnModules("onDestroyGameServer", "Game");
-   callOnModules("onDestroyGameServer", "Core");
+   moduleExec("onDestroyGameServer", "Game");
+   moduleExec("onDestroyGameServer", "Core");
    
    // Save any server settings
    %prefPath = getPrefpath();

@@ -42,8 +42,8 @@ class GuiCrossHairHud : public GuiBitmapCtrl
 {
    typedef GuiBitmapCtrl Parent;
 
-   LinearColorF   mDamageFillColor;
-   LinearColorF   mDamageFrameColor;
+   ColorI   mDamageFillColor;
+   ColorI   mDamageFrameColor;
    Point2I  mDamageRectSize;
    Point2I  mDamageOffset;
 
@@ -118,7 +118,7 @@ void GuiCrossHairHud::onRender(Point2I offset, const RectI &updateRect)
    GameConnection* conn = GameConnection::getConnectionToServer();
    if (!conn)
       return;
-   GameBase* control = dynamic_cast<GameBase*>(conn->getCameraObject());
+   ShapeBase* control = dynamic_cast<ShapeBase*>(conn->getCameraObject());
    if (!control || !(control->getTypeMask() & ObjectMask) || !conn->isFirstPerson())
       return;
 
@@ -139,25 +139,36 @@ void GuiCrossHairHud::onRender(Point2I offset, const RectI &updateRect)
 
    // Collision info. We're going to be running LOS tests and we
    // don't want to collide with the control object.
-   static U32 losMask = TerrainObjectType | ShapeBaseObjectType;
+   static U32 losMask = TerrainObjectType | ShapeBaseObjectType | StaticShapeObjectType;
    control->disableCollision();
 
+   ColorI tColor = mColor;
    RayInfo info;
-   if (gClientContainer.castRay(camPos, endPos, losMask, &info)) {
+   if (gClientContainer.castRay(camPos, endPos, losMask, &info))
+   {
       // Hit something... but we'll only display health for named
       // ShapeBase objects.  Could mask against the object type here
       // and do a static cast if it's a ShapeBaseObjectType, but this
       // isn't a performance situation, so I'll just use dynamic_cast.
       if (ShapeBase* obj = dynamic_cast<ShapeBase*>(info.object))
+      {
          if (obj->getShapeName()) {
-            offset.x = updateRect.point.x + updateRect.extent.x / 2;
-            offset.y = updateRect.point.y + updateRect.extent.y / 2;
-            drawDamage(offset + mDamageOffset, obj->getDamageValue(), 1);
+            Point2I barOffset;
+            barOffset.x = updateRect.point.x + updateRect.extent.x / 2;
+            barOffset.y = updateRect.point.y + updateRect.extent.y / 2;
+            drawDamage(barOffset + mDamageOffset, obj->getDamageValue(), 1);
          }
+         if (obj->mTeamId != control->mTeamId)
+            mColor = mDamageFillColor;
+         
+      }
    }
 
    // Restore control object collision
    control->enableCollision();
+   // Parent render.
+   Parent::onRender(offset, updateRect);
+   mColor = tColor;
 }
 
 
@@ -168,7 +179,7 @@ void GuiCrossHairHud::onRender(Point2I offset, const RectI &updateRect)
 */
 void GuiCrossHairHud::drawDamage(Point2I offset, F32 damage, F32 opacity)
 {
-   mDamageFillColor.alpha = mDamageFrameColor.alpha = opacity;
+   //mDamageFillColor.alpha = mDamageFrameColor.alpha = opacity;
 
    // Damage should be 0->1 (0 being no damage,or healthy), but
    // we'll just make sure here as we flip it.
@@ -179,7 +190,7 @@ void GuiCrossHairHud::drawDamage(Point2I offset, F32 damage, F32 opacity)
    rect.point.x -= mDamageRectSize.x / 2;
 
    // Draw the border
-   GFX->getDrawUtil()->drawRect(rect, mDamageFrameColor.toColorI());
+   GFX->getDrawUtil()->drawRect(rect, mDamageFrameColor);
 
    // Draw the damage % fill
    rect.point += Point2I(1, 1);
@@ -188,5 +199,5 @@ void GuiCrossHairHud::drawDamage(Point2I offset, F32 damage, F32 opacity)
    if (rect.extent.x == 1)
       rect.extent.x = 2;
    if (rect.extent.x > 0)
-      GFX->getDrawUtil()->drawRectFill(rect, mDamageFillColor.toColorI());
+      GFX->getDrawUtil()->drawRectFill(rect, mDamageFillColor);
 }

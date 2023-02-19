@@ -3195,6 +3195,7 @@ U32 ShapeBase::packUpdate(NetConnection *con, U32 mask, BitStream *stream)
          con->packNetStringHandleU(stream, mSkinNameHandle);
    }
 
+   stream->writeInt(mTeamId, 8);
    return retMask;
 }
 
@@ -3420,6 +3421,7 @@ void ShapeBase::unpackUpdate(NetConnection *con, BitStream *stream)
          }
       }
    }
+   mTeamId = stream->readInt(8);
 }
 
 

@@ -368,11 +368,10 @@ bool ProjectileData::preload(bool server, String &errorStr)
          if (Sim::findObject(decalId, decal) == false)
             Con::errorf(ConsoleLogEntry::General, "ProjectileData::preload: Invalid packet, bad datablockId(decal): %d", decalId);
 
-      _setProjectileSound(getProjectileSound());
-      if (getProjectileSound() != StringTable->EmptyString())
+      if (getProjectileSound() != StringTable->EmptyString() && !isProjectileSoundValid())
       {
-         if (!getProjectileSoundProfile())
-            Con::errorf(ConsoleLogEntry::General, "SplashData::preload: Cant get an sfxProfile for splash.");
+         Con::errorf(ConsoleLogEntry::General, "ProjectileData::preload: Invalid ProjectileSound asset.");
+         return false;
       }
 
       if (!lightDesc && lightDescId != 0)

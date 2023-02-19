@@ -877,15 +877,10 @@ bool ExplosionData::preload(bool server, String &errorStr)
    if( !server )
    {
 
-      if (getSound() != StringTable->EmptyString())
+      if (getSound() != StringTable->EmptyString() && !isSoundValid())
       {
-         _setSound(getSound());
-
-         if (!getSoundProfile())
-         {
-            Con::errorf(ConsoleLogEntry::General, "SplashData::preload: Cant get an sfxProfile for splash.");
-            return false;
-         }
+         Con::errorf(ConsoleLogEntry::General, "ExplosionData::preload: Invalid Sound asset.");
+         return false;
       }
 
       if (!particleEmitter && particleEmitterId != 0)

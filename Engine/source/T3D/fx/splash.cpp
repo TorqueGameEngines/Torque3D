@@ -279,13 +279,10 @@ bool SplashData::preload(bool server, String &errorStr)
 
    if (!server)
    {
-
-      if (getSound() != StringTable->EmptyString())
+      if (getSound() != StringTable->EmptyString() && !isSoundValid())
       {
-         _setSound(getSound());
-
-         if(!getSoundProfile())
-            Con::errorf(ConsoleLogEntry::General, "SplashData::preload: Cant get an sfxProfile for splash.");
+         Con::errorf(ConsoleLogEntry::General, "SplashData::preload: Invalid Sound asset.");
+         return false;
       }
 
       S32 i;

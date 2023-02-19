@@ -422,13 +422,11 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
             if (!Sim::findObject(SimObjectId((uintptr_t)state[i].emitter), state[i].emitter))
                Con::errorf(ConsoleLogEntry::General, "Error, unable to load emitter for image datablock");
 
-         if (getstateSound(i) != StringTable->EmptyString())
+         if (getstateSound(i) != StringTable->EmptyString() && !isstateSoundValid(i))
          {
-            _setstateSound(getstateSound(i), i);
-            if (!getstateSoundProfile(i))
-               Con::errorf("ShapeBaseImageData::preload() - Could not find profile for asset %s on state %d", getstateSound(i), i);
+            Con::errorf(ConsoleLogEntry::General, "ShapeBaseImageData::preload: Invalid stateSound asset %s on state %d", getstateSound(i), i);
+            return false;
          }
-
       }
    }
 

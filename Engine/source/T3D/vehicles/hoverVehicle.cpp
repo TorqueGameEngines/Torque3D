@@ -314,11 +314,13 @@ bool HoverVehicleData::preload(bool server, String &errorStr)
    if (!server) {
 
       for (S32 i = 0; i < MaxSounds; i++)
-         if (getHoverSounds(i) != StringTable->EmptyString())
+      {
+         if (getHoverSounds(i) != StringTable->EmptyString() && !isHoverSoundsValid(i))
          {
-            _setHoverSounds(getHoverSounds(i), i);
+            Con::errorf(ConsoleLogEntry::General, "HoverVehicleData::preload: Invalid HoverSounds asset.");
+            return false;
          }
-
+      }
       for (S32 j = 0; j < MaxJetEmitters; j++)
          if (jetEmitter[j])
             Sim::findObject(SimObjectId((uintptr_t)jetEmitter[j]),jetEmitter[j]);

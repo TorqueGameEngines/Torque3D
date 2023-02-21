@@ -477,6 +477,10 @@ function TerrainMaterialDlg::setActiveMaterial( %this, %mat )
       %this-->blendHeightContrastTextEditCtrl.setText( %blendHeightContrast );
       %this-->blendHeightContrastSliderCtrl.setValue( %mat.blendHeightContrast );
 
+		%blendHeightHardness = mFloor(%mat.blendHeightHardness * 1000)/1000;
+		%this-->blendHeightHardnessTextEditCtrl.setText( %blendHeightHardness );
+		%this-->blendHeightHardnessSliderCtrl.setValue( %mat.blendHeightHardness );
+
       %this-->macroSizeCtrl.setText( %mat.macroSize );
       %this-->macroStrengthCtrl.setText( %mat.macroStrength );
       %this-->macroDistanceCtrl.setText( %mat.macroDistance );      
@@ -686,6 +690,7 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %materialAssetId )
    %parallaxScale = %this-->parallaxScaleCtrl.getText();
    %blendHeightBase = %this-->blendHeightBaseTextEditCtrl.getText();
    %blendHeightContrast = %this-->blendHeightContrastTextEditCtrl.getText();
+	%blendHeightHardness = %this-->blendHeightHardnessTextEditCtrl.getText();
 
    %macroSize = %this-->macroSizeCtrl.getText();      
    %macroStrength = %this-->macroStrengthCtrl.getText();
@@ -725,6 +730,7 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %materialAssetId )
          %mat.parallaxScale == %parallaxScale &&
          %mat.blendHeightBase == %blendHeightBase &&
          %mat.blendHeightContrast == %blendHeightContrast &&
+			%mat.blendHeightHardness == %blendHeightHardness &&
          %mat.isSRGB == %isSRGB &&         
          %mat.invertRoughness == %invertRoughness &&
          %fxMat.effectColor[0] == %effectColor0 &&
@@ -772,6 +778,7 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %materialAssetId )
    %mat.parallaxScale = %parallaxScale;
    %mat.blendHeightBase = %blendHeightBase;
    %mat.blendHeightContrast = %blendHeightContrast;
+	%mat.blendHeightHardness = %blendHeightHardness;
    %mat.isSRGB = %isSRGB;
    %mat.invertRoughness = %invertRoughness;
    
@@ -861,6 +868,7 @@ function TerrainMaterialDlg::snapshotMaterials( %this )
          parallaxScale = %mat.parallaxScale;
          blendHeightBase = %mat.blendHeightBase;
          blendHeightContrast = %mat.blendHeightContrast;
+			blendHeightHardness = %mat.blendHeightHardness;
          isSRGB = %mat.isSRGB;
          invertRoughness = %mat.invertRoughness;
       };
@@ -901,6 +909,7 @@ function TerrainMaterialDlg::restoreMaterials( %this )
       %mat.parallaxScale = %obj.parallaxScale;
       %mat.blendHeightBase = %obj.blendHeightBase;
       %mat.blendHeightContrast = %obj.blendHeightContrast;
+		%mat.blendHeightHardness = %obj.blendHeightHardness;
       %mat.isSRGB = %obj.isSRGB;
       %mat.invertRoughness = %obj.invertRoughness;
    }
@@ -968,6 +977,25 @@ function TerrainMaterialDlgBlendHeightContrastTextEdit::onValidate(%this)
 {
    TerrainMaterialDlgBlendHeightContrastSlider.setValue(%this.getText());
    TerrainMaterialDlg.activeMat.blendHeightContrast = %this.getText();
+   TerrainMaterialDlg.matDirty = true;
+}
+
+function TerrainMaterialDlgBlendHeightHardnessSlider::onMouseDragged(%this)
+{
+   %value = mClamp(%this.value, 0.0, 0.999);
+	%value = mFloor(%value * 1000)/1000;
+   TerrainMaterialDlgBlendHeightHardnessTextEdit.setText(%value);
+   TerrainMaterialDlg.activeMat.blendHeightHardness = %value;
+   TerrainMaterialDlg.matDirty = true;
+}
+
+function TerrainMaterialDlgBlendHeightHardnessTextEdit::onValidate(%this)
+{
+	%value = mClamp(%this.getText(), 0.0, 0.999);
+	%value = mFloor(%value * 1000)/1000;
+	%this.setText(%value);
+   TerrainMaterialDlgBlendHeightHardnessSlider.setValue(%value);
+   TerrainMaterialDlg.activeMat.blendHeightHardness = %value;
    TerrainMaterialDlg.matDirty = true;
 }
 

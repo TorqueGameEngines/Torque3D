@@ -59,7 +59,7 @@ protected:
    public:
 
       MaterialInfo()
-         :mat(NULL), layerId(0), mBlendDepthConst(NULL), mBlendContrastConst(NULL)
+         :mat(NULL), layerId(0), mBlendDepthConst(NULL), mBlendContrastConst(NULL), mBlendHardnessConst(NULL)
       {
       }
 
@@ -71,6 +71,7 @@ protected:
       U32 layerId;
       GFXShaderConstHandle *mBlendDepthConst;
       GFXShaderConstHandle *mBlendContrastConst;
+      GFXShaderConstHandle* mBlendHardnessConst;
    };
 
    ///
@@ -119,6 +120,7 @@ protected:
    GFXShaderConstHandle *mOrmTexArrayConst;
 
    GFXShaderConstHandle* mBlendDepthConst;
+   GFXShaderConstHandle* mBlendHeightFloorConst;
 
    TerrainBlock *mTerrain;
 

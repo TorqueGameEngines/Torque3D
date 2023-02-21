@@ -47,6 +47,8 @@ public:
 
    Var* _getDetailMapSampler();
    Var* _getDetailMapArray();
+   Var* _getMacroMapSampler();
+   Var* _getMacroMapArray();
    Var* _getNormalMapSampler();
    Var* _getNormalMapArray();
    Var* _getOrmMapSampler();

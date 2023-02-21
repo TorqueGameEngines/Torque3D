@@ -45,6 +45,7 @@ public:
    Var* _getInMacroCoord(Vector<ShaderComponent*> &componentList );
 
    Var* _getDetailMapSampler();
+   Var* _getMacroMapSampler();
    Var* _getNormalMapSampler();
    Var* _getOrmMapSampler();
 

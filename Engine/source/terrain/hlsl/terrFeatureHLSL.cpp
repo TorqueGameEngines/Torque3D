@@ -46,7 +46,7 @@ namespace
       FEATUREMGR->registerFeature( MFT_TerrainParallaxMap, new NamedFeatureHLSL( "Terrain Parallax Texture" ) );   
       FEATUREMGR->registerFeature( MFT_TerrainDetailMap, new TerrainDetailMapFeatHLSL );
       FEATUREMGR->registerFeature( MFT_TerrainNormalMap, new TerrainNormalMapFeatHLSL );
-      FEATUREMGR->registerFeature( MFT_TerrainMacroMap, new NamedFeatureHLSL("TerrainMacroMap Deprecated")); // new TerrainMacroMapFeatHLSL);
+      FEATUREMGR->registerFeature( MFT_TerrainMacroMap, new TerrainMacroMapFeatHLSL);
       FEATUREMGR->registerFeature( MFT_TerrainLightMap, new TerrainLightMapFeatHLSL );
       FEATUREMGR->registerFeature( MFT_TerrainSideProject, new NamedFeatureHLSL( "Terrain Side Projection" ) );
       FEATUREMGR->registerFeature( MFT_TerrainHeightBlend, new TerrainHeightMapBlendHLSL );
@@ -160,6 +160,42 @@ Var* TerrainFeatHLSL::_getDetailMapArray()
    return detailMapArray;
 }
 
+Var* TerrainFeatHLSL::_getMacroMapSampler()
+{
+   String name("macroMapSampler");
+   Var* detailMapSampler = (Var*)LangElement::find(name);
+
+   if (!detailMapSampler)
+   {
+      detailMapSampler = new Var;
+      detailMapSampler->setName(name);
+      detailMapSampler->setType("SamplerState");
+      detailMapSampler->uniform = true;
+      detailMapSampler->sampler = true;
+      detailMapSampler->constNum = Var::getTexUnitNum();
+   }
+
+   return detailMapSampler;
+}
+
+Var* TerrainFeatHLSL::_getMacroMapArray()
+{
+   String name("macroMapArray");
+   Var* detailMapArray = (Var*)LangElement::find(name);
+
+   if (!detailMapArray)
+   {
+      detailMapArray = new Var;
+      detailMapArray->setName(name);
+      detailMapArray->setType("Texture2DArray");
+      detailMapArray->uniform = true;
+      detailMapArray->texture = true;
+      detailMapArray->constNum = _getMacroMapSampler()->constNum;
+   }
+
+   return detailMapArray;
+}
+
 Var* TerrainFeatHLSL::_getNormalMapSampler()
 {
    String name("normalMapSampler");
@@ -254,17 +290,19 @@ Var* TerrainFeatHLSL::_getDetailIdStrengthParallax()
 
 Var* TerrainFeatHLSL::_getMacroIdStrengthParallax()
 {
-   String name( String::ToString( "macroIdStrengthParallax%d", getProcessIndex() ) );
+   String name( String::ToString( "macroIdStrengthParallax", getProcessIndex() ) );
 
    Var *detailInfo = (Var*)LangElement::find( name );
    if ( !detailInfo )
    {
       detailInfo = new Var;
-      detailInfo->setType( "float3" );
+      detailInfo->setType( "float4" );
       detailInfo->setName( name );
       detailInfo->uniform = true;
       detailInfo->constSortPos = cspPotentialPrimitive;
    }
+
+   detailInfo->arraySize = mMax(detailInfo->arraySize, getProcessIndex() + 1);
 
    return detailInfo;
 }
@@ -483,6 +521,19 @@ void TerrainDetailMapFeatHLSL::processVert(  Vector<ShaderComponent*> &component
 
    detScaleAndFade->arraySize = mMax(detScaleAndFade->arraySize, detailIndex + 1);
 
+   // Done here to keep array indexes aligned
+   Var* macroScaleAndFade = (Var*)LangElement::find("macroScaleAndFade");
+   if (macroScaleAndFade == NULL)
+   {
+      macroScaleAndFade = new Var;
+      macroScaleAndFade->setType("float4");
+      macroScaleAndFade->setName("macroScaleAndFade");
+      macroScaleAndFade->uniform = true;
+      macroScaleAndFade->constSortPos = cspPotentialPrimitive;
+   }
+
+   macroScaleAndFade->arraySize = mMax(macroScaleAndFade->arraySize, detailIndex + 1);
+
    // Setup the detail coord.
    //
    // NOTE: You see here we scale the texture coord by 'xyx'
@@ -572,6 +623,9 @@ void TerrainDetailMapFeatHLSL::processPix(   Vector<ShaderComponent*> &component
    // Get the detail id.
    Var *detailInfo = _getDetailIdStrengthParallax();
 
+   // Done here to keep array indexes aligned
+   Var* macroInfo = _getMacroIdStrengthParallax();
+
    // Create the detail blend var.
    Var *detailBlend = new Var;
    detailBlend->setType( "float" );
@@ -630,7 +684,8 @@ void TerrainDetailMapFeatHLSL::processPix(   Vector<ShaderComponent*> &component
          detailColor, detailMapArray, detailMapSampler, detCoord, new IndexOp(detailInfo, detailIndex)));
    }
 
-   meta->addStatement(new GenOp("   @ *= @.y * @;\r\n", detailColor, new IndexOp(detailInfo, detailIndex), detailBlend));
+   meta->addStatement(new GenOp("   @ *= @.y;\r\n",
+      detailColor, new IndexOp(detailInfo, detailIndex)));
 
    if (!fd.features.hasFeature(MFT_TerrainNormalMap))
    {
@@ -853,24 +908,13 @@ void TerrainMacroMapFeatHLSL::processPix(   Vector<ShaderComponent*> &componentL
          gbNormal, gbNormal, viewToTangent, detailBlend, inDet ) );
    }
    
-   Var *detailColor = (Var*)LangElement::find("macroColor");
-   if (!detailColor)
-   {
-      detailColor = new Var;
+   Var* detailColor = new Var;
       detailColor->setType( "float4" );
-      detailColor->setName( "macroColor" );
-      meta->addStatement( new GenOp( "   @;\r\n", new DecOp( detailColor ) ) );
-   }
+   detailColor->setName( String::ToString("macroColor%d", detailIndex) );
+   meta->addStatement( new GenOp( "   @ = float4(0.5f, 0.5f, 0.5f, 1.0f);\r\n", new DecOp( detailColor ) ) );
 
-   // If we're using SM 3.0 then take advantage of 
-   // dynamic branching to skip layers per-pixel.
-   if ( GFX->getPixelShaderVersion() >= 3.0f )
-      meta->addStatement( new GenOp( "   if ( @ > 0.0f )\r\n", detailBlend ) );
-
-   meta->addStatement( new GenOp( "   {\r\n" ) );
-
-   Var* detailMapArray = _getDetailMapArray();
-   Var* detailMapSampler = _getDetailMapSampler();
+   Var* detailMapArray = _getMacroMapArray();
+   Var* detailMapSampler = _getMacroMapSampler();
 
    // Note that we're doing the standard greyscale detail 
    // map technique here which can darken and lighten the 
@@ -894,17 +938,8 @@ void TerrainMacroMapFeatHLSL::processPix(   Vector<ShaderComponent*> &componentL
          detailColor, detailMapArray, detailMapSampler, inDet, new IndexOp(detailInfo, detailIndex)));
    }
 
-   meta->addStatement( new GenOp( "   @ *= @.y * @.w;\r\n",
-                                    detailColor, new IndexOp(detailInfo, detailIndex), inDet ) );
-
-   ShaderFeature::OutputTarget target = (fd.features[MFT_isDeferred]) ? RenderTarget1 : DefaultTarget;
-
-   Var *outColor = (Var*)LangElement::find( getOutputTargetVarName(target) );
-
-   meta->addStatement(new GenOp("      @ += @ * @;\r\n",
-                                    outColor, detailColor, detailBlend));
-
-   meta->addStatement( new GenOp( "   }\r\n" ) );
+   meta->addStatement(new GenOp("   @ *= @.y;\r\n",
+      detailColor, new IndexOp(detailInfo, detailIndex)));
 
    output = meta;
 }
@@ -918,13 +953,12 @@ ShaderFeature::Resources TerrainMacroMapFeatHLSL::getResources( const MaterialFe
       // If this is the first detail pass then we 
       // samples from the layer tex.
       res.numTex += 1;
-   }
+      res.numTexReg += 1;
 
+      // Add Detail TextureArray
       res.numTex += 1;
-
-   // Finally we always send the detail texture 
-   // coord to the pixel shader.
-   res.numTexReg += 1;
+      res.numTexReg += 1;
+   }
 
    return res;
 }
@@ -1332,7 +1366,7 @@ void TerrainHeightMapBlendHLSL::processPix(Vector<ShaderComponent*>& componentLi
    }
 
    Var* heightRange = new Var("heightRange", "float2");
-   meta->addStatement(new GenOp("   @ = float2(2.0f,0);//x=min, y=max\r\n", new DecOp(heightRange)));
+   meta->addStatement(new GenOp("   @ = float2(0,0);//x=min, y=max\r\n", new DecOp(heightRange)));
    // Compute blend factors
    for (S32 idx = 0; idx < detailCount; ++idx)
    {
@@ -1381,7 +1415,20 @@ void TerrainHeightMapBlendHLSL::processPix(Vector<ShaderComponent*>& componentLi
       {
          Var* detailBlend = (Var*)LangElement::find(String::ToString("detailBlend%d", idx));
          Var* detailH = (Var*)LangElement::find(String::ToString("detailH%d", idx));
+         Var* blendHardness = (Var*)LangElement::find(String::ToString("blendHardness%d", idx));
+         if (!blendHardness)
+         {
+            blendHardness = new Var;
+            blendHardness->setType("float");
+            blendHardness->setName(String::ToString("blendHardness%d", idx));
+            blendHardness->uniform = true;
+            blendHardness->constSortPos = cspPrimitive;
+         }
          meta->addStatement(new GenOp("   @ = (@-@.x)/(@.y-@.x)-@.x;\r\n", detailH, detailH, heightRange, heightRange, heightRange, heightRange));
+         // Note that blendHardness is clamped between 0-0.99 at the terrain material level to avoid a divide by zero
+         meta->addStatement(new GenOp("   @ = 1.0f / (1.0f - @) * (@ - @);\r\n", detailH, blendHardness, detailH, blendHardness));
+         // This line equation will go out of our 0-1 range, clamp it
+         meta->addStatement(new GenOp("   @ = clamp(@, 0.0f, 1.0f);\r\n", detailH, detailH));
       }
       meta->addStatement(new GenOp("\r\n"));
    }
@@ -1411,6 +1458,31 @@ void TerrainHeightMapBlendHLSL::processPix(Vector<ShaderComponent*>& componentLi
    }
 
    meta->addStatement(new GenOp(");\r\n"));
+
+   // Macro textures, if they exist
+   bool didMacro = false;
+   for (S32 idx = 0; idx < detailCount; ++idx)
+   {
+      Var* detailColor = (Var*)LangElement::find(String::ToString("macroColor%d", idx));
+      if (detailColor) // only do this if the macro map exists for this layer
+      {
+         if (!didMacro)
+            meta->addStatement(new GenOp("   @.rgb += (", outColor));
+
+         Var* detailH = (Var*)LangElement::find(String::ToString("detailH%d", idx));
+         Var* detCoord = (Var*)LangElement::find(String::ToString("macroCoord%d", idx));
+
+         if (idx > 0 && didMacro)
+         {
+            meta->addStatement(new GenOp(" + "));
+         }
+
+         meta->addStatement(new GenOp("((@.rgb * @)*max(@.w,0))", detailColor, detailH, detCoord));
+         didMacro = true;
+      }
+   }
+   if (didMacro)
+      meta->addStatement(new GenOp(");\r\n"));
 
    // Compute ORM
    Var* ormOutput;

@@ -548,7 +548,7 @@ bool TerrainCellMaterial::_initShader(bool deferredMat,
 
    mDetailInfoVArrayConst = mShader->getShaderConstHandle("$detailScaleAndFade");
    mDetailInfoPArrayConst = mShader->getShaderConstHandle("$detailIdStrengthParallax");
-   mMacroInfoVArrayConst = mShader->getShaderConstHandle("$macroIdStrengthParallax");
+   mMacroInfoVArrayConst = mShader->getShaderConstHandle("$macroScaleAndFade");
    mMacroInfoPArrayConst = mShader->getShaderConstHandle("$macroIdStrengthParallax");
 
    mDetailTexArrayConst = mShader->getShaderConstHandle("$detailMapSampler");
@@ -637,6 +637,7 @@ bool TerrainCellMaterial::_initShader(bool deferredMat,
 
       mMaterialInfos[i]->mBlendDepthConst = mShader->getShaderConstHandle(avar("$blendDepth%d", i));
       mMaterialInfos[i]->mBlendContrastConst = mShader->getShaderConstHandle(avar("$blendContrast%d", i));
+      mMaterialInfos[i]->mBlendHardnessConst = mShader->getShaderConstHandle(avar("$blendHardness%d", i));
    }
 
    // If we're doing deferred it requires some 
@@ -688,6 +689,9 @@ void TerrainCellMaterial::_updateMaterialConsts( )
 
    AlignedArray<Point4F> detailInfoArray(detailMatCount, sizeof(Point4F));
    AlignedArray<Point4F> detailScaleAndFadeArray(detailMatCount, sizeof(Point4F));
+
+   AlignedArray<Point4F> macroInfoArray(detailMatCount, sizeof(Point4F));
+   AlignedArray<Point4F> macroScaleAndFadeArray(detailMatCount, sizeof(Point4F));
 
    int detailIndex = 0;
    for (MaterialInfo* matInfo : mMaterialInfos)
@@ -745,12 +749,45 @@ void TerrainCellMaterial::_updateMaterialConsts( )
       {
          mConsts->setSafe(matInfo->mBlendContrastConst, matInfo->mat->getBlendContrast());
       }
+
+      if (matInfo->mBlendHardnessConst != NULL)
+      {
+         mConsts->setSafe(matInfo->mBlendHardnessConst, matInfo->mat->getBlendHardness());
+      }
+
+      // macro texture info
+
+      F32 macroSize = matInfo->mat->getMacroSize();
+      F32 macroScale = 1.0f;
+      if (!mIsZero(macroSize))
+         macroScale = mTerrain->getWorldBlockSize() / macroSize;
+
+      // Scale the distance by the global scalar.
+      const F32 macroDistance = mTerrain->smDetailScale * matInfo->mat->getMacroDistance();
+
+      Point4F macroScaleAndFade(macroScale,
+         -macroScale,
+         macroDistance,
+         0);
+
+      if (!mIsZero(macroDistance))
+         macroScaleAndFade.w = 1.0f / macroDistance;
+
+      Point4F macroIdStrengthParallax(matInfo->layerId,
+         matInfo->mat->getMacroStrength(),
+         0, 0);
+
+      macroScaleAndFadeArray[detailIndex] = macroScaleAndFade;
+      macroInfoArray[detailIndex] = macroIdStrengthParallax;
+
       detailIndex++;
    }
 
    mConsts->setSafe(mDetailInfoVArrayConst, detailScaleAndFadeArray);
    mConsts->setSafe(mDetailInfoPArrayConst, detailInfoArray);
 
+   mConsts->setSafe(mMacroInfoVArrayConst, macroScaleAndFadeArray);
+   mConsts->setSafe(mMacroInfoPArrayConst, macroInfoArray);
 }
 
 bool TerrainCellMaterial::setupPass(   const SceneRenderState *state, 

@@ -25,6 +25,7 @@
 #include "console/consoleTypes.h"
 #include "gfx/gfxTextureManager.h"
 #include "gfx/bitmap/gBitmap.h"
+#include "console/typeValidators.h"
 
 #ifdef TORQUE_TOOLS
 #include "console/persistenceManager.h"
@@ -76,6 +77,7 @@ TerrainMaterial::TerrainMaterial()
       mParallaxScale( 0.0f ),
       mBlendDepth( 0.0f ),
       mBlendContrast( 1.0f ),
+      mBlendHardness( 0.0f ),
       mIsSRGB(false),
       mInvertRoughness(false)
 {
@@ -89,6 +91,8 @@ TerrainMaterial::TerrainMaterial()
 TerrainMaterial::~TerrainMaterial()
 {
 }
+
+FRangeValidator hardnessValidator(0.0f, 0.999f);
 
 void TerrainMaterial::initPersistFields()
 {
@@ -105,6 +109,9 @@ void TerrainMaterial::initPersistFields()
 
    addField("blendHeightContrast", TypeF32, Offset(mBlendContrast, TerrainMaterial), "A fixed value to add while blending using heightmap-based blending."
       "Higher numbers = larger blend radius.");
+
+   addFieldV("blendHeightHardness", TypeF32, Offset(mBlendHardness, TerrainMaterial), &hardnessValidator, "How sharply this layer blends with other textures."
+      "0->1, soft->hard.");
 
    INITPERSISTFIELD_IMAGEASSET(DetailMap, TerrainMaterial, "Raises and lowers the RGB result of the Base Albedo up close.");
    addField( "detailSize", TypeF32, Offset( mDetailSize, TerrainMaterial ), "Used to scale the detail map to the material square" );

@@ -394,7 +394,7 @@ $guiContent = new GuiControl(TerrainMaterialDlg,EditorGuiGroup) {
          };
          new GuiContainer(NormalMapContainer) {
             position = "6 205";
-                  extent = "261 100";
+                  extent = "261 120";
             horizSizing = "width";
             profile = "ToolsGuiDefaultProfile";
             tooltipProfile = "ToolsGuiToolTipProfile";
@@ -527,17 +527,45 @@ $guiContent = new GuiControl(TerrainMaterialDlg,EditorGuiGroup) {
                isContainer = "0";
                internalName = "blendHeightContrastTextEditCtrl";
             };
+            new GuiTextEditCtrl(TerrainMaterialDlgBlendHeightHardnessTextEdit) {
+               text = "0";
+               anchorTop = "0";
+               anchorLeft = "0";
+               position = "1 99";
+               extent = "35 18";
+               profile = "ToolsGuiTextEditProfile";
+               tooltipProfile = "ToolsGuiToolTipProfile";
+               isContainer = "0";
+               internalName = "blendHeightHardnessTextEditCtrl";
+            };
+            new GuiTextCtrl() {
+               text = "Blend Hardness";
+               position = "115 101";
+               extent = "76 15";
+               profile = "ToolsGuiTextProfile";
+               tooltipProfile = "ToolsGuiToolTipProfile";
+            };
+            new GuiSliderCtrl(TerrainMaterialDlgBlendHeightHardnessSlider) {
+               range = "0 0.999";
+               ticks = "0";
+               value = "0";
+               position = "39 101";
+               extent = "70 14";
+               profile = "ToolsGuiSliderProfile";
+               tooltipProfile = "ToolsGuiToolTipProfile";
+               internalName = "blendHeightHardnessSliderCtrl";
+            };
          };
          new GuiBitmapCtrl() {
-                  BitmapAsset = "ToolsModule:separator_v_image";
-            position = "6 307";
-                  extent = "266 2";
+            BitmapAsset = "ToolsModule:separator_v_image";
+            position = "6 323";
+            extent = "266 2";
             horizSizing = "width";
             profile = "ToolsGuiDefaultProfile";
                tooltipProfile = "ToolsGuiToolTipProfile";
             };
          new GuiContainer(ORMConfigMapContainer) {
-            position = "6 314";
+                  position = "6 330";
                   extent = "261 64";
                horizSizing = "width";
                profile = "ToolsGuiDefaultProfile";
@@ -615,14 +643,14 @@ $guiContent = new GuiControl(TerrainMaterialDlg,EditorGuiGroup) {
          };
          new GuiBitmapCtrl() {
                   BitmapAsset = "ToolsModule:separator_v_image";
-            position = "6 381";
+                  position = "6 397";
                   extent = "266 2";
             horizSizing = "width";
             profile = "ToolsGuiDefaultProfile";
             tooltipProfile = "ToolsGuiToolTipProfile";
          };
          new GuiContainer(MacroMapContainer) {
-            position = "6 388";
+                  position = "6 404";
                   extent = "261 72";
             horizSizing = "width";
             profile = "ToolsGuiDefaultProfile";
@@ -746,7 +774,7 @@ $guiContent = new GuiControl(TerrainMaterialDlg,EditorGuiGroup) {
             };
          };
                new GuiContainer(TerrainEffectsContainer) {
-                  position = "6 460";
+                  position = "6 476";
                   extent = "265 97";
                   horizSizing = "width";
                   profile = "ToolsGuiDefaultProfile";

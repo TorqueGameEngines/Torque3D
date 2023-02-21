@@ -97,6 +97,8 @@ protected:
 
    F32 mBlendContrast;
 
+   F32 mBlendHardness;
+
 public:
 
    TerrainMaterial();
@@ -137,6 +139,8 @@ public:
    F32 getBlendDepth() const { return mBlendDepth; }
 
    F32 getBlendContrast() const { return mBlendContrast; }
+
+   F32 getBlendHardness() const { return mBlendHardness; }
 
    bool getIsSRGB() const { return mIsSRGB; }
 

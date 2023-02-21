@@ -649,11 +649,12 @@ void TerrainDetailMapFeatHLSL::processPix(   Vector<ShaderComponent*> &component
          meta->addStatement(new GenOp("   @ = lerp( @, @[2], @ );\r\n", gbNormal, gbNormal, viewToTangent, detailBlend));
       }
 
-      ShaderFeature::OutputTarget target = (fd.features[MFT_isDeferred]) ? RenderTarget1 : DefaultTarget;
-
-      Var* outColor = (Var*)LangElement::find(getOutputTargetVarName(target));
-
-      meta->addStatement(new GenOp("      @ += @ * @;\r\n", outColor, detailColor, detailBlend));
+      if (!fd.features.hasFeature(MFT_TerrainHeightBlend))
+      {
+         ShaderFeature::OutputTarget target = (fd.features[MFT_isDeferred]) ? RenderTarget1 : DefaultTarget;
+         Var* outColor = (Var*)LangElement::find(getOutputTargetVarName(target));
+         meta->addStatement(new GenOp("      @ += @ * @;\r\n", outColor, detailColor, detailBlend));
+      }
    }
 
    output = meta;

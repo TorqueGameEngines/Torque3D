@@ -587,11 +587,12 @@ void TerrainDetailMapFeatGLSL::processPix(   Vector<ShaderComponent*> &component
          meta->addStatement(new GenOp("   @ = lerp( @, tGetMatrix3Row(@, 2), @ ) );\r\n", gbNormal, gbNormal, viewToTangent, detailBlend));
       }
 
-      ShaderFeature::OutputTarget target = (fd.features[MFT_isDeferred]) ? RenderTarget1 : DefaultTarget;
-
-      Var* outColor = (Var*)LangElement::find(getOutputTargetVarName(target));
-
-      meta->addStatement(new GenOp("      @ += @ * @;\r\n", outColor, detailColor, detailBlend));
+      if (!fd.features.hasFeature(MFT_TerrainHeightBlend)) // this is only for lerp blending
+      {
+         ShaderFeature::OutputTarget target = (fd.features[MFT_isDeferred]) ? RenderTarget1 : DefaultTarget;
+         Var* outColor = (Var*)LangElement::find(getOutputTargetVarName(target));
+         meta->addStatement(new GenOp("      @ += @ * @;\r\n", outColor, detailColor, detailBlend));
+      }
    }
 
    output = meta;

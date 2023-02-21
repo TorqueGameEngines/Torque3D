@@ -141,9 +141,10 @@ bool FlyingVehicleData::preload(bool server, String &errorStr)
    if (!server) {
       for (S32 i = 0; i < MaxSounds; i++)
       {
-         if (mFlyingSounds[i])
+         if (getFlyingSounds(i) != StringTable->EmptyString() && !isFlyingSoundsValid(i))
          {
-            _setFlyingSounds(getFlyingSounds(i), i);
+            Con::errorf(ConsoleLogEntry::General, "FlyingVehicleData::preload: Invalid FlyingSounds asset.");
+            return false;
          }
       }
       for (S32 j = 0; j < MaxJetEmitters; j++)

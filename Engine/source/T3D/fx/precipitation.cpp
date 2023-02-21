@@ -191,12 +191,10 @@ bool PrecipitationData::preload( bool server, String &errorStr )
       return false;
    if (!server)
    {
-      if (getSound() != StringTable->EmptyString())
+      if (getSound() != StringTable->EmptyString() && !isSoundValid())
       {
-         _setSound(getSound());
-
-         if (!getSoundProfile())
-            Con::errorf(ConsoleLogEntry::General, "SplashData::preload: Cant get an sfxProfile for splash.");
+         Con::errorf(ConsoleLogEntry::General, "PrecipitationData::preload: Invalid Sound asset.");
+         return false;
       }
    }
 

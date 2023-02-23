@@ -2988,6 +2988,8 @@ void AssetManager::unloadAsset( AssetDefinition* pAssetDefinition )
     // Debug Profiling.
     PROFILE_SCOPE(AssetManager_UnloadAsset);
 
+    pAssetDefinition->mpAssetBase->unloadAsset();
+
     // Destroy the asset.
     if(pAssetDefinition->mpAssetBase->isProperlyAdded())
       pAssetDefinition->mpAssetBase->deleteObject();

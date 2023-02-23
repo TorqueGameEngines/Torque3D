@@ -50,6 +50,7 @@ StringTableEntry assetCategoryField = StringTable->insert("AssetCategory");
 StringTableEntry assetAutoUnloadField = StringTable->insert("AssetAutoUnload");
 StringTableEntry assetInternalField = StringTable->insert("AssetInternal");
 StringTableEntry assetPrivateField = StringTable->insert("AssetPrivate");
+StringTableEntry assetTypeField = StringTable->insert("AssetType");
 
 //-----------------------------------------------------------------------------
 const String AssetBase::mErrCodeStrings[] =

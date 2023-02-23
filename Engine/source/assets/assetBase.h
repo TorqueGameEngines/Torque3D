@@ -46,6 +46,7 @@ extern StringTableEntry assetCategoryField;
 extern StringTableEntry assetInternalField;
 extern StringTableEntry assetPrivateField;
 extern StringTableEntry assetAutoUnloadField;
+extern StringTableEntry assetTypeField;
 
 //#define ASSET_BASE_ASSETNAME_FIELD         "AssetName"
 //#define ASSET_BASE_ASSETDESCRIPTION_FIELD  "AssetDescription"
@@ -137,6 +138,7 @@ public:
 protected:
    virtual void            initializeAsset(void) {}
    virtual void            onAssetRefresh(void) {}
+   virtual void            unloadAsset(void) {}
 
 protected:
    static bool             setAssetName(void *obj, const char *array, const char *data)           { static_cast<AssetBase*>(obj)->setAssetName(data); return false; }

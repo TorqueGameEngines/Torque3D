@@ -89,6 +89,15 @@ ConsoleSetType(TypeScriptAssetPtr)
 
 //-----------------------------------------------------------------------------
 
+IMPLEMENT_CALLBACK(ScriptAsset, onInitializeAsset, void, (), (),
+   "@brief When the ScriptAsset is initialized(loaded) by the AssetManager.\n\n");
+
+IMPLEMENT_CALLBACK(ScriptAsset, onRefreshAsset, void, (), (),
+   "@brief When the ScriptAsset is refreshed by the AssetManager.\n\n");
+
+IMPLEMENT_CALLBACK(ScriptAsset, onUnloadAsset, void, (), (),
+   "@brief When the ScriptAsset is unloaded by the AssetManager.\n\n");
+
 ScriptAsset::ScriptAsset() : AssetBase(), mIsServerSide(true)
 {
    mScriptFile = StringTable->EmptyString();
@@ -123,6 +132,12 @@ void ScriptAsset::copyTo(SimObject* object)
 
 void ScriptAsset::initializeAsset()
 {
+   if (mpAssetDefinition->mAssetType != StringTable->insert("ScriptAsset"))
+   {
+      //if we've got a custom type, treat it as our namespace, too
+      setClassNamespace(mpAssetDefinition->mAssetType);
+   }
+
    mScriptPath = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptPath;
 
    if (Torque::FS::IsScriptFile(mScriptPath))
@@ -138,7 +153,7 @@ void ScriptAsset::initializeAsset()
          {
             AssetPtr<ScriptAsset> scriptAsset = assetDependenciesItr->value;
 
-            mScriptAssets.push_front(scriptAsset);
+            mScriptAssetDependencies.push_front(scriptAsset);
 
             // Next dependency.
             assetDependenciesItr++;
@@ -147,6 +162,8 @@ void ScriptAsset::initializeAsset()
 
       Con::executeFile(mScriptPath, false, false);
    }
+
+   onInitializeAsset_callback();
 }
 
 void ScriptAsset::onAssetRefresh()
@@ -156,13 +173,20 @@ void ScriptAsset::onAssetRefresh()
    if (Torque::FS::IsScriptFile(mScriptPath))
    {
       //Refresh any dependencies we may have
-      for (U32 i = 0; i < mScriptAssets.size(); i++)
+      for (U32 i = 0; i < mScriptAssetDependencies.size(); i++)
       {
-         mScriptAssets[i]->onAssetRefresh();
+         mScriptAssetDependencies[i]->onAssetRefresh();
       }
 
       Con::executeFile(mScriptPath, false, false);
    }
+
+   onRefreshAsset_callback();
+}
+
+void ScriptAsset::unloadAsset()
+{
+   onUnloadAsset_callback();
 }
 
 void ScriptAsset::setScriptFile(const char* pScriptFile)
@@ -205,3 +229,4 @@ DefineEngineMethod(ScriptAsset, execScript, bool, (), ,
 {
    return object->execScript();
 }
+

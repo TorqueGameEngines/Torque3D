@@ -52,7 +52,7 @@ class ScriptAsset : public AssetBase
    StringTableEntry        mScriptPath;
    bool                    mIsServerSide;
 
-   Vector<AssetPtr<ScriptAsset>> mScriptAssets;
+   Vector<AssetPtr<ScriptAsset>> mScriptAssetDependencies;
 
 public:
    ScriptAsset();
@@ -72,9 +72,14 @@ public:
 
    bool execScript();
 
+   DECLARE_CALLBACK(void, onInitializeAsset, ());
+   DECLARE_CALLBACK(void, onRefreshAsset, ());
+   DECLARE_CALLBACK(void, onUnloadAsset, ());
+
 protected:
    virtual void            initializeAsset(void);
    virtual void            onAssetRefresh(void);
+   virtual void            unloadAsset(void);
 
    static bool setScriptFile(void *obj, const char *index, const char *data) { static_cast<ScriptAsset*>(obj)->setScriptFile(data); return false; }
    static const char* getScriptFile(void* obj, const char* data) { return static_cast<ScriptAsset*>(obj)->getScriptFile(); }

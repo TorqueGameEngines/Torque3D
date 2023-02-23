@@ -129,6 +129,17 @@ public:
                 mAssetDefinition.mAssetInternal = dAtob( pPropertyValue );
                 return true;
             }
+            else if (propertyName == assetTypeField)
+            {
+               if (mAssetDefinition.mAssetType == StringTable->insert("ScriptAsset"))
+               {
+                  //We're gunna special-casehere.
+                  //If it's a ScriptAsset and it defines an AssetType property, we presume
+                  //that's the ScriptAsset's special asset type, so we set it here
+                  mAssetDefinition.mAssetType = StringTable->insert(pPropertyValue);
+                  return true;
+               }
+            }
         }
 
         // Fetch property word count.

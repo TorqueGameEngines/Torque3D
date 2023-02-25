@@ -193,7 +193,7 @@ function OptionsMenu::apply(%this)
          if(%actionMap == GlobalActionMap.getId())
             continue;
          
-         %actionMapName = %actionMap.humanReadableName $= "" ? %actionMap.getName() : %actionMap.humanReadableName;
+         %actionMapName = %actionMap.getName();
          if(%actionMapName $= %targetVar)
          {
             %hasKeybindChanges = true;
@@ -959,7 +959,7 @@ function OptionsMenuSettingsList::addSliderRow(%this, %label, %targetPrefVar, %i
    %this.add(%option);
 }
 
-function OptionsMenuSettingsList::addKeybindRow(%this, %label, %bitmapName, %callback, %enabled, %description)
+function OptionsMenuSettingsList::addKeybindRow(%this, %label, %bitmapName, %callback, %enabled, %description, %remapIndex)
 {
    if(%enabled $= "")
       %enabled = true;
@@ -977,6 +977,8 @@ function OptionsMenuSettingsList::addKeybindRow(%this, %label, %bitmapName, %cal
       columnSplit = %optionColumnWidth;
       useMouseEvents = true;
    };
+   
+   %option.remapIndex = %remapIndex;
    
    %option.setKeybindSetting(%label, %bitmapName, %callback, %enabled, %description);
 

@@ -192,7 +192,7 @@ function fillRemapList()
       
       %buttonImageAsset = getButtonBitmap(%device, getField(%keyMap, 1));
       
-      OptionsMenuSettingsList.addKeybindRow(getField(%keyMap, 0), %buttonImageAsset, "doKeyRemap", true, %description);
+      OptionsMenuSettingsList.addKeybindRow(getField(%keyMap, 0), %buttonImageAsset, "doKeyRemap", true, %description, %i);
    }
 
    //OptionsMenuSettingsList.refresh();
@@ -207,8 +207,7 @@ function controlSetChanged()
 
 function doKeyRemap( %row )
 {
-   %rowIndex = %row.getParent().getObjectIndex(%row);
-   %rowIndex--; //Offset the rowIndex to account for controlset option
+   %rowIndex = %row.remapIndex;
    %name = $RemapName[%rowIndex];
 
 	RemapDlg-->OptRemapText.text = "Re-bind \"" @ %name @ "\" to..." ;

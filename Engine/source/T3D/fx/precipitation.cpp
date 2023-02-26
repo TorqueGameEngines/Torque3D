@@ -191,7 +191,7 @@ bool PrecipitationData::preload( bool server, String &errorStr )
       return false;
    if (!server)
    {
-      if (getSound() != StringTable->EmptyString() && !isSoundValid())
+      if (!isSoundValid())
       {
          Con::errorf(ConsoleLogEntry::General, "PrecipitationData::preload: Invalid Sound asset.");
          return false;

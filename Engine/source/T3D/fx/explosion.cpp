@@ -877,7 +877,7 @@ bool ExplosionData::preload(bool server, String &errorStr)
    if( !server )
    {
 
-      if (getSound() != StringTable->EmptyString() && !isSoundValid())
+      if (!isSoundValid())
       {
          Con::errorf(ConsoleLogEntry::General, "ExplosionData::preload: Invalid Sound asset.");
          return false;

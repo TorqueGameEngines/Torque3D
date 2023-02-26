@@ -368,7 +368,7 @@ bool ProjectileData::preload(bool server, String &errorStr)
          if (Sim::findObject(decalId, decal) == false)
             Con::errorf(ConsoleLogEntry::General, "ProjectileData::preload: Invalid packet, bad datablockId(decal): %d", decalId);
 
-      if (getProjectileSound() != StringTable->EmptyString() && !isProjectileSoundValid())
+      if (!isProjectileSoundValid())
       {
          Con::errorf(ConsoleLogEntry::General, "ProjectileData::preload: Invalid ProjectileSound asset.");
          return false;

@@ -153,7 +153,7 @@ bool SFXAmbience::preload( bool server, String& errorStr )
       if( !sfxResolve( &mEnvironment, errorStr ) )
          return false;
 
-      if (getSoundTrack() != StringTable->EmptyString() && !isSoundTrackValid())
+      if (!isSoundTrackValid())
       {
          Con::errorf(ConsoleLogEntry::General, "SFXAmbience::preload: Invalid SoundTrack asset.");
          return false;

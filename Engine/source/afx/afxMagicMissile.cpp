@@ -517,7 +517,7 @@ bool afxMagicMissileData::preload(bool server, String &errorStr)
             Con::errorf(ConsoleLogEntry::General, "ProjectileData::preload: Invalid packet, bad datablockId(decal): %d", decalId);
       */
 
-      if (getProjectileSound() != StringTable->EmptyString() && !isProjectileSoundValid())
+      if (!isProjectileSoundValid())
       {
          Con::errorf(ConsoleLogEntry::General, "afxMagicMissileData::preload: Invalid ProjectileSound asset.");
          return false;

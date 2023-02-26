@@ -297,14 +297,14 @@ bool LightningData::preload(bool server, String &errorStr)
    {
       for (S32 i = 0; i < MaxThunders; i++)
       {
-         if (getThunderSound(i) != StringTable->EmptyString() && !isThunderSoundValid(i))
+         if (!isThunderSoundValid(i))
          {
             Con::errorf(ConsoleLogEntry::General, "LightningData::preload: Invalid ThunderSound asset.");
             return false;
          }
 
       }
-      if (getStrikeSound() != StringTable->EmptyString() && !isStrikeSoundValid())
+      if (!isStrikeSoundValid())
       {
          Con::errorf(ConsoleLogEntry::General, "LightningData::preload: Invalid StrikeSound asset.");
          return false;

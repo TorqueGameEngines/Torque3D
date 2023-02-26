@@ -315,7 +315,7 @@ bool HoverVehicleData::preload(bool server, String &errorStr)
 
       for (S32 i = 0; i < MaxSounds; i++)
       {
-         if (getHoverSounds(i) != StringTable->EmptyString() && !isHoverSoundsValid(i))
+         if (!isHoverSoundsValid(i))
          {
             Con::errorf(ConsoleLogEntry::General, "HoverVehicleData::preload: Invalid HoverSounds asset.");
             return false;

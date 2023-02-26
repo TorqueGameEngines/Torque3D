@@ -348,7 +348,7 @@ bool WheeledVehicleData::preload(bool server, String &errorStr)
    if (!server) {
       for (S32 i = 0; i < MaxSounds; i++)
       {
-         if (getWheeledVehicleSounds(i) != StringTable->EmptyString() && !isWheeledVehicleSoundsValid(i))
+         if (!isWheeledVehicleSoundsValid(i))
          {
             Con::errorf(ConsoleLogEntry::General, "HoverVehicleData::preload: Invalid WheeledVehicleSounds asset.");
             return false;

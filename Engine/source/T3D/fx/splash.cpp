@@ -279,10 +279,10 @@ bool SplashData::preload(bool server, String &errorStr)
 
    if (!server)
    {
-      if (getSound() != StringTable->EmptyString() && !isSoundValid())
+      if (!isSoundValid())
       {
          Con::errorf(ConsoleLogEntry::General, "SplashData::preload: Invalid Sound asset.");
-         return false;
+         //return false;
       }
 
       S32 i;

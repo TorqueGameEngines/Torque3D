@@ -471,10 +471,9 @@ bool PlayerData::preload(bool server, String &errorStr)
    if (!server) {
       for (U32 i = 0; i < MaxSounds; ++i)
       {
-         if (getPlayerSound(i) != StringTable->EmptyString() && !isPlayerSoundValid(i))
+         if (!isPlayerSoundValid(i))
          {
-            Con::errorf(ConsoleLogEntry::General, "ExplosionData::preload: Invalid PlayerSound asset.");
-            return false;
+            //return false; -TODO: trigger asset download
          }
       }
    }

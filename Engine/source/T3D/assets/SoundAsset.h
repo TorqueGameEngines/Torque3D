@@ -264,7 +264,7 @@ public: \
          return m##name##Desc;}\
       return NULL;\
    }\
-   bool is##name##Valid() { return (get##name() != StringTable->EmptyString() && m##name##Asset->getStatus() == AssetBase::Ok); }
+   bool is##name##Valid() { return (get##name() != StringTable->EmptyString() && m##name##Asset && m##name##Asset->getStatus() == AssetBase::Ok); }
 
 #ifdef TORQUE_SHOW_LEGACY_FILE_FIELDS
 
@@ -449,7 +449,7 @@ public: \
          return m##name##Asset[id]->getSfxProfile();\
       return NULL;\
    }\
-   bool is##name##Valid(const U32& id) {return (get##name(id) != StringTable->EmptyString() && m##name##Asset[id]->getStatus() == AssetBase::Ok); }
+   bool is##name##Valid(const U32& id) {return (get##name(id) != StringTable->EmptyString() && m##name##Asset[id] && m##name##Asset[id]->getStatus() == AssetBase::Ok); }
 
 
 #ifdef TORQUE_SHOW_LEGACY_FILE_FIELDS

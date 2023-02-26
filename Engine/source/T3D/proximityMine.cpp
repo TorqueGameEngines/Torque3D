@@ -134,10 +134,14 @@ bool ProximityMineData::preload( bool server, String& errorStr )
 
    if ( !server )
    {
-      if( !getArmSound() )
-         Con::errorf( ConsoleLogEntry::General, "ProximityMineData::preload: Invalid arming sound." );
-      if( !getTriggerSound() )
-         Con::errorf( ConsoleLogEntry::General, "ProximityMineData::preload: Invalid trigger sound." );
+      if(!isArmSoundValid() )
+      {
+         //return false; -TODO: trigger asset download
+      }
+      if(!isTriggerSoundValid() )
+      {
+         //return false; -TODO: trigger asset download
+      }
    }
 
    if ( mShape )

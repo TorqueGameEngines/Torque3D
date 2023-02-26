@@ -422,10 +422,9 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
             if (!Sim::findObject(SimObjectId((uintptr_t)state[i].emitter), state[i].emitter))
                Con::errorf(ConsoleLogEntry::General, "Error, unable to load emitter for image datablock");
 
-         if (getstateSound(i) != StringTable->EmptyString() && !isstateSoundValid(i))
+         if (!isstateSoundValid(i))
          {
-            Con::errorf(ConsoleLogEntry::General, "ShapeBaseImageData::preload: Invalid stateSound asset %s on state %d", getstateSound(i), i);
-            return false;
+            //return false; -TODO: trigger asset download
          }
       }
    }

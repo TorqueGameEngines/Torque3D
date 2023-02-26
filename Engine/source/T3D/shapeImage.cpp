@@ -425,7 +425,7 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
          if (!isstateSoundValid(i))
          {
             Con::errorf(ConsoleLogEntry::General, "ShapeBaseImageData::preload: Invalid stateSound asset %s on state %d", getstateSound(i), i);
-            return false;
+            //return false;
          }
       }
    }

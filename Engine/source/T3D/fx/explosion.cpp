@@ -880,7 +880,7 @@ bool ExplosionData::preload(bool server, String &errorStr)
       if (!isSoundValid())
       {
          Con::errorf(ConsoleLogEntry::General, "ExplosionData::preload: Invalid Sound asset.");
-         return false;
+         //return false;
       }
 
       if (!particleEmitter && particleEmitterId != 0)

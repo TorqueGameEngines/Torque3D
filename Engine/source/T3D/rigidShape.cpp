@@ -321,7 +321,7 @@ bool RigidShapeData::preload(bool server, String &errorStr)
          if (!isBodySoundsValid(i))
          {
             Con::errorf(ConsoleLogEntry::General, "RigidShapeData::preload: Invalid BodySound asset.");
-            return false;
+            //return false;
          }
       }
 
@@ -330,7 +330,7 @@ bool RigidShapeData::preload(bool server, String &errorStr)
          if (!isWaterSoundsValid(j))
          {
             Con::errorf(ConsoleLogEntry::General, "RigidShapeData::preload: Invalid WaterSound asset.");
-            return false;
+            //return false;
          }
       }
 

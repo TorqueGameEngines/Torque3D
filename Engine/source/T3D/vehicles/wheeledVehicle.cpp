@@ -351,7 +351,7 @@ bool WheeledVehicleData::preload(bool server, String &errorStr)
          if (!isWheeledVehicleSoundsValid(i))
          {
             Con::errorf(ConsoleLogEntry::General, "HoverVehicleData::preload: Invalid WheeledVehicleSounds asset.");
-            return false;
+            //return false;
          }
       }
 

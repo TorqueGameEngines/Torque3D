@@ -282,7 +282,7 @@ bool SplashData::preload(bool server, String &errorStr)
       if (!isSoundValid())
       {
          Con::errorf(ConsoleLogEntry::General, "SplashData::preload: Invalid Sound asset.");
-         return false;
+         //return false;
       }
 
       S32 i;

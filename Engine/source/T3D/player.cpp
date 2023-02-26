@@ -474,7 +474,7 @@ bool PlayerData::preload(bool server, String &errorStr)
          if (!isPlayerSoundValid(i))
          {
             Con::errorf(ConsoleLogEntry::General, "ExplosionData::preload: Invalid PlayerSound asset.");
-            return false;
+            //return false;
          }
       }
    }

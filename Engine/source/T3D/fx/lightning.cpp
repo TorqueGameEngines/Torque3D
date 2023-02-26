@@ -300,14 +300,14 @@ bool LightningData::preload(bool server, String &errorStr)
          if (!isThunderSoundValid(i))
          {
             Con::errorf(ConsoleLogEntry::General, "LightningData::preload: Invalid ThunderSound asset.");
-            return false;
+            //return false;
          }
 
       }
       if (!isStrikeSoundValid())
       {
          Con::errorf(ConsoleLogEntry::General, "LightningData::preload: Invalid StrikeSound asset.");
-         return false;
+         //return false;
       }
 
       mNumStrikeTextures = 0;

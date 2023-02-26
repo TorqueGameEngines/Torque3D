@@ -318,7 +318,7 @@ bool HoverVehicleData::preload(bool server, String &errorStr)
          if (!isHoverSoundsValid(i))
          {
             Con::errorf(ConsoleLogEntry::General, "HoverVehicleData::preload: Invalid HoverSounds asset.");
-            return false;
+            //return false;
          }
       }
       for (S32 j = 0; j < MaxJetEmitters; j++)

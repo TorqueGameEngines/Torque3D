@@ -156,7 +156,7 @@ bool SFXAmbience::preload( bool server, String& errorStr )
       if (!isSoundTrackValid())
       {
          Con::errorf(ConsoleLogEntry::General, "SFXAmbience::preload: Invalid SoundTrack asset.");
-         return false;
+         //return false;
       }
          
       for( U32 i = 0; i < MaxStates; ++ i )

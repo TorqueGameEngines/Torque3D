@@ -371,7 +371,7 @@ bool ProjectileData::preload(bool server, String &errorStr)
       if (!isProjectileSoundValid())
       {
          Con::errorf(ConsoleLogEntry::General, "ProjectileData::preload: Invalid ProjectileSound asset.");
-         return false;
+         //return false;
       }
 
       if (!lightDesc && lightDescId != 0)

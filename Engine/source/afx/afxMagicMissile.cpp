@@ -520,7 +520,7 @@ bool afxMagicMissileData::preload(bool server, String &errorStr)
       if (!isProjectileSoundValid())
       {
          Con::errorf(ConsoleLogEntry::General, "afxMagicMissileData::preload: Invalid ProjectileSound asset.");
-         return false;
+         //return false;
       }
 
       if (!lightDesc && lightDescId != 0)

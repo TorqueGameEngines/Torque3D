@@ -70,7 +70,7 @@ $PostFX::HDRPostFX::dirtIntensity = 2.0;
 $PostFX::HDRPostFX::dirtEdgeMinDist = 0.125;
 $PostFX::HDRPostFX::dirtEdgeMaxDist = 0.75;
 $PostFX::HDRPostFX::dirtEdgeMinVal = 0.05;
-$PostFX::HDRPostFX::dirtImage = "core/postFX/images/lensDirt.png";
+$PostFX::HDRPostFX::dirtImage = "Core_PostFX:lensDirt_image";
 
 // The tonemapping algo to use
 $PostFX::HDRPostFX::tonemapMode = "ACES";
@@ -347,7 +347,7 @@ function HDRPostFX::preProcess( %this )
    if(%bloomFinal.texture[1] !$= $PostFX::HDRPostFX::dirtImage)
    {
       if ($PostFX::HDRPostFX::dirtImage $= "")
-        $PostFX::HDRPostFX::dirtImage = "core/postFX/images/lensDirt.png";
+        $PostFX::HDRPostFX::dirtImage = "Core_PostFX:lensDirt_image";
       
       %bloomFinal.setTexture(1, $PostFX::HDRPostFX::dirtImage);
    }

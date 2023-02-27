@@ -318,19 +318,17 @@ bool RigidShapeData::preload(bool server, String &errorStr)
    if (!server) {
       for (S32 i = 0; i < Body::MaxSounds; i++)
       {
-         if (getBodySounds(i) != StringTable->EmptyString() && !isBodySoundsValid(i))
+         if (!isBodySoundsValid(i))
          {
-            Con::errorf(ConsoleLogEntry::General, "RigidShapeData::preload: Invalid BodySound asset.");
-            return false;
+            //return false; -TODO: trigger asset download
          }
       }
 
       for (S32 j = 0; j < Sounds::MaxSounds; j++)
       {
-         if (getWaterSounds(j) != StringTable->EmptyString() && !isWaterSoundsValid(j))
+         if (!isWaterSoundsValid(j))
          {
-            Con::errorf(ConsoleLogEntry::General, "RigidShapeData::preload: Invalid WaterSound asset.");
-            return false;
+            //return false; -TODO: trigger asset download
          }
       }
 

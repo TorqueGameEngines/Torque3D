@@ -377,8 +377,9 @@ bool SpawnSphere::onAdd()
 
 SimObject* SpawnSphere::spawnObject(String additionalProps)
 {
+   String command = String("%this = ") + getIdString() + ";" + mSpawnScript;
    SimObject* spawnObject = Sim::spawnObject(mSpawnClass, mSpawnDataBlock, mSpawnName,
-                                             mSpawnProperties + " " + additionalProps, mSpawnScript);
+                                             mSpawnProperties + " " + additionalProps, command);
 
    // If we have a spawnObject add it to the MissionCleanup group
    if (spawnObject)

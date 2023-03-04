@@ -709,7 +709,7 @@ void ReflectionProbe::processStaticCubemap()
       IBLUtilities::SaveCubeMap(prefilterFileName, mPrefilterMap->mCubemap);
    }
 
-   if ((mIrridianceMap != nullptr || !mIrridianceMap->mCubemap.isNull()) && (mPrefilterMap != nullptr || !mPrefilterMap->mCubemap.isNull()))
+   if ((mIrridianceMap != nullptr && !mIrridianceMap->mCubemap.isNull()) && (mPrefilterMap != nullptr && !mPrefilterMap->mCubemap.isNull()))
    {
       mProbeInfo.mPrefilterCubemap = mPrefilterMap->mCubemap;
       mProbeInfo.mIrradianceCubemap = mIrridianceMap->mCubemap;

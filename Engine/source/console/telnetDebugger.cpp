@@ -925,6 +925,7 @@ void TelnetDebugger::evaluateExpression(const char *tag, S32 frame, const char *
    dSprintf( buffer, len, format, tag, result.getString()[0] ? result.getString() : "\"\"" );
 
    send( buffer );
+   delete newCodeBlock;
    delete [] buffer;
 }
 

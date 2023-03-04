@@ -280,7 +280,7 @@ void GFXD3D11Device::enumerateAdapters(Vector<GFXAdapter*> &adapterList)
       SAFE_DELETE_ARRAY(str);
 
       dStrncpy(toAdd->mName, Description.c_str(), GFXAdapter::MaxAdapterNameLen);
-      dStrncat(toAdd->mName, " (D3D11)", GFXAdapter::MaxAdapterNameLen);
+      dStrncat(toAdd->mName, " (D3D11)", 8);
 
       IDXGIOutput* pOutput = NULL; 
       HRESULT hr;

@@ -123,7 +123,7 @@ U32 DDSFile::getSurfaceSize( U32 height, U32 width, U32 mipLevel ) const
    if(mFlags.test(CompressedData))
    {
       // From the directX docs:
-      // max(1, width ÷ 4) x max(1, height ÷ 4) x 8(DXT1) or 16(DXT2-5)
+      // max(1, width Ã· 4) x max(1, height Ã· 4) x 8(DXT1) or 16(DXT2-5)
 
       U32 sizeMultiple = 0;
 
@@ -178,7 +178,7 @@ U32 DDSFile::getSizeInBytes( GFXFormat format, U32 height, U32 width, U32 mipLev
       "DDSFile::getSizeInBytes - Must be a Block Compression format!" );
 
    // From the directX docs:
-   // max(1, width ÷ 4) x max(1, height ÷ 4) x 8(DXT1) or 16(DXT2-5)
+   // max(1, width Ã· 4) x max(1, height Ã· 4) x 8(DXT1) or 16(DXT2-5)
 
    U32 sizeMultiple = 0;
    if ( format == GFXFormatBC1 || format == GFXFormatBC1_SRGB || format == GFXFormatBC4)
@@ -744,6 +744,7 @@ DDSFile *DDSFile::createDDSCubemapFileFromGBitmaps(GBitmap **gbmps)
    GFXFormat fmt = pBitmap->getFormat();
    if (fmt != GFXFormatR8G8B8A8 && fmt != GFXFormatR16G16B16A16F)
    {
+      delete ret;
       Con::errorf("createDDSCubemapFileFromGBitmaps: unsupported format");
       return NULL;
    }

@@ -576,7 +576,7 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
 
 void ShapeBaseImageData::handleStateSoundTrack(const U32& stateId)
 {
-   if (stateId > MaxStates)
+   if (stateId >= MaxStates)
       return;
 
    StateData& s = state[stateId];

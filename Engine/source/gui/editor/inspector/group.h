@@ -76,6 +76,8 @@ public:
    
    U32 getNumFields() const { return mChildren.size(); }
 
+   void addInspectorField(StringTableEntry name, StringTableEntry typeName, const char* description, const char* callbackName);
+
 protected:
    // overridable method that creates our inner controls.
    virtual bool createContent();

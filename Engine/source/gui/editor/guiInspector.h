@@ -165,6 +165,8 @@ public:
 
    void refresh();
 
+   S32 createInspectorGroup(StringTableEntry groupName, S32 index);
+
 protected:
       
    typedef Vector< SimObjectPtr< SimObject > > TargetVector;

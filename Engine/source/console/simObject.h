@@ -653,7 +653,7 @@ class SimObject: public ConsoleObject, public TamlCallbacks
       virtual void onEditorDisable(){};
 
       /// Called when the object is inspected via a GuiInspector control
-      virtual void onInspect(GuiInspector*) {};
+      virtual void onInspect(GuiInspector*);
 
       /// @}
 

@@ -40,6 +40,7 @@
 #include "core/stream/fileStream.h"
 #include "core/fileObject.h"
 #include "persistence/taml/tamlCustom.h"
+#include "gui/editor/guiInspector.h"
 
 #include "sim/netObject.h"
 #include "cinterface/cinterface.h"
@@ -2334,7 +2335,13 @@ String SimObject::_getLogMessage(const char* fmt, va_list args) const
 // MARK: ---- API ----
 
 //-----------------------------------------------------------------------------
+void SimObject::onInspect(GuiInspector* inspector)
+{
+   if (isMethod("onInspect"))
+      Con::executef(this, "onInspect", inspector);
+}
 
+//-----------------------------------------------------------------------------
 DefineEngineMethod( SimObject, dumpGroupHierarchy, void, (),,
    "Dump the hierarchy of this object up to RootGroup to the console." )
 {

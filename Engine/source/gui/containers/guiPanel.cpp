@@ -33,9 +33,7 @@
 //-----------------------------------------------------------------------------
 
 ConsoleDocClass( GuiPanel,
-	"@brief The GuiPanel panel is a container that when opaque will "
-	"draw a left to right gradient using its profile fill and "
-	"fill highlight colors.\n\n"
+	"@brief The GuiPanel panel is a container that when rendered will fill with the gui profile's fill color.\n\n"
 
 	"@tsexample\n"
 	"// Mandatory GuiDefaultProfile\n"
@@ -44,7 +42,6 @@ ConsoleDocClass( GuiPanel,
 	"new GuiControlProfile (GuiDefaultProfile)\n"
 	"{\n"
 	"	// fill color\n"
-	"	opaque = false;\n"
 	"	fillColor = \"242 241 240\";\n"
 	"	fillColorHL =\"228 228 235\";\n"
 	"	fillColorSEL = \"98 100 137\";\n"
@@ -99,7 +96,7 @@ void GuiPanel::onRender(Point2I offset, const RectI &updateRect)
       // Draw a gradient left to right.
 
       PrimBuild::begin( GFXTriangleStrip, 4 );
-         PrimBuild::color( mProfile->mFillColorHL );
+         PrimBuild::color( mProfile->mFillColor);
          PrimBuild::vertex2i( ctrlRect.point.x, ctrlRect.point.y );
          PrimBuild::vertex2i( ctrlRect.point.x, ctrlRect.point.y + ctrlRect.extent.y );
 

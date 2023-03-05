@@ -779,6 +779,32 @@ void GuiInspector::sendInspectPostApply()
       getInspectObject( i )->inspectPostApply();
 }
 
+S32 GuiInspector::createInspectorGroup(StringTableEntry groupName, S32 index)
+{
+   GuiInspectorGroup* newGroup = nullptr;
+   newGroup = findExistentGroup(groupName);
+   if (newGroup)
+      return newGroup->getId();  //if we already have a group under this name, just return it
+
+   newGroup = new GuiInspectorGroup(groupName, this);
+   newGroup->registerObject();
+
+   if (index == -1)
+   {
+      //if index is -1, we just throw the group onto the stack at the end
+      mGroups.push_back(newGroup);
+   }
+   else
+   {
+      //if we have an explicit index, insert it specifically
+      mGroups.insert(index, newGroup);
+   }
+
+   addObject(newGroup);
+
+   return newGroup->getId();
+}
+
 //=============================================================================
 //    Console Methods.
 //=============================================================================
@@ -917,4 +943,22 @@ DefineEngineMethod( GuiInspector, findByObject, S32, (SimObject* obj), ,
       return 0;
 
    return inspector->getId();
+}
+
+DefineEngineMethod(GuiInspector, createGroup, S32, (const char* groupName, S32 index), (-1),
+   "Creates a new GuiInspectorGroup for this inspector and returns it's Id. If one already exists, then the Id of the existing one is returned.\n"
+   "@param groupName Name of the new GuiInspectorGroup to add to this Inspector."
+   "@param index(Optional) The index where to add the new group to in this Inspector's group stack."
+   "@return id of the named GuiInspectorGroup")
+{
+   return object->createInspectorGroup(StringTable->insert(groupName), index);
+}
+
+DefineEngineMethod(GuiInspector, findExistentGroup, S32, (const char* groupName), ,
+   "Finds an existing GuiInspectorGroup if it exists and returns it's Id.\n"
+   "@param groupName Name of the new GuiInspectorGroup to find in this Inspector."
+   "@return id of the named GuiInspectorGroup")
+{
+   GuiInspectorGroup* group = object->findExistentGroup(StringTable->insert(groupName));
+   return group ? group->getId() : 0;
 }

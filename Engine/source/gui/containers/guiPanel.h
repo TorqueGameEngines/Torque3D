@@ -33,9 +33,7 @@
 #endif
 
 
-/// The GuiPanel panel is a container that when opaque will
-/// draw a left to right gradient using its profile fill and
-/// fill highlight colors.
+/// The GuiPanel panel is a container that when rendered will render with the profile's fill colors
 ///
 /// @addtogroup gui_container_group Containers
 ///

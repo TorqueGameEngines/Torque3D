@@ -456,7 +456,7 @@ F32 GameBase::getUpdatePriority(CameraScopeQuery *camInfo, U32 updateMask, S32 u
 
    // Weight by interest.
    F32 wInterest;
-   if (getTypeMask() & (PlayerObjectType || VehicleObjectType ))
+   if (getTypeMask() & (PlayerObjectType | VehicleObjectType ))
       wInterest = 0.75f;
    else if (getTypeMask() & ProjectileObjectType)
    {

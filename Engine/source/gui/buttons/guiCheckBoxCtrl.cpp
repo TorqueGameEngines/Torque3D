@@ -82,7 +82,7 @@ bool GuiCheckBoxCtrl::onWake()
 
    // make sure there is a bitmap array for this control type
    // if it is declared as such in the control
-   if( !mProfile->mBitmapArrayRects.size() && !mProfile->constructBitmapArray() )
+   if(mProfile->mBitmapArrayRects.empty() && !mProfile->constructBitmapArray() )
    {
       Con::errorf( "GuiCheckBoxCtrl::onWake - failed to create bitmap array from profile '%s'", mProfile->getName() );
       return false;
@@ -159,9 +159,9 @@ void GuiCheckBoxCtrl::autoSize()
    {
       mProfile->incLoadCount();
             
-      if( !mProfile->mBitmapArrayRects.size() )
+      if(mProfile->mBitmapArrayRects.empty())
          mProfile->constructBitmapArray();
-      if( mProfile->mBitmapArrayRects.size() )
+      if(!mProfile->mBitmapArrayRects.empty())
          bmpArrayRect0Width = mProfile->mBitmapArrayRects[ 0 ].extent.x;
    }
 

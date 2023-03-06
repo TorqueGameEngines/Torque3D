@@ -879,7 +879,7 @@ void GuiPopUpMenuCtrl::onRender( Point2I offset, const RectI &updateRect )
       S32 top = baseRect.point.y, bottom = baseRect.point.y + baseRect.extent.y - 1;
 
       // Do we render a bitmap border or lines?
-      if ( mProfile->getChildrenProfile() && mProfile->mBitmapArrayRects.size() )
+      if ( mProfile->getChildrenProfile() && !mProfile->mBitmapArrayRects.empty())
       {
          if (mProfile->mBitmapArrayRects[0].extent.y < baseRect.extent.y)
          {
@@ -912,7 +912,7 @@ void GuiPopUpMenuCtrl::onRender( Point2I offset, const RectI &updateRect )
       }
 
       // Do we render a bitmap border or lines?
-      if ( !( mProfile->getChildrenProfile() && mProfile->mBitmapArrayRects.size() ) )
+      if (!mProfile->getChildrenProfile() && !mProfile->mBitmapArrayRects.empty())
       {
          drawUtil->drawLine(left, top, left, bottom, colorWhite );
          drawUtil->drawLine(left, top, right, top, colorWhite );
@@ -930,7 +930,7 @@ void GuiPopUpMenuCtrl::onRender( Point2I offset, const RectI &updateRect )
          S32 top = baseRect.point.y, bottom = baseRect.point.y + baseRect.extent.y - 1;
 
          // Do we render a bitmap border or lines?
-         if ( mProfile->getChildrenProfile() && mProfile->mBitmapArrayRects.size() )
+         if ( mProfile->getChildrenProfile() && !mProfile->mBitmapArrayRects.empty())
          {
             if (mProfile->mBitmapArrayRects[0].extent.y < baseRect.extent.y)
             {
@@ -956,7 +956,7 @@ void GuiPopUpMenuCtrl::onRender( Point2I offset, const RectI &updateRect )
          }
 
          // Do we render a bitmap border or lines?
-         if ( !( mProfile->getChildrenProfile() && mProfile->mBitmapArrayRects.size() ) )
+         if (!mProfile->getChildrenProfile() && !mProfile->mBitmapArrayRects.empty())
          {
 			 drawUtil->drawLine(left, top, left, bottom, colorWhite);
 			 drawUtil->drawLine(left, top, right, top, colorWhite);
@@ -967,7 +967,7 @@ void GuiPopUpMenuCtrl::onRender( Point2I offset, const RectI &updateRect )
       else
       {
          // Do we render a bitmap border or lines?
-         if ( mProfile->getChildrenProfile() && mProfile->mBitmapArrayRects.size() )
+         if ( mProfile->getChildrenProfile() && !mProfile->mBitmapArrayRects.empty())
          {
             if (mProfile->mBitmapArrayRects[0].extent.y < baseRect.extent.y)
             {
@@ -992,7 +992,7 @@ void GuiPopUpMenuCtrl::onRender( Point2I offset, const RectI &updateRect )
          }
 
          // Do we render a bitmap border or lines?
-         if ( !( mProfile->getChildrenProfile() && mProfile->mBitmapArrayRects.size() ) )
+         if (!mProfile->getChildrenProfile() && !mProfile->mBitmapArrayRects.empty())
          {
             if (mProfile->mBitmapArrayRects[0].extent.y < baseRect.extent.y)
             {
@@ -1013,7 +1013,7 @@ void GuiPopUpMenuCtrl::onRender( Point2I offset, const RectI &updateRect )
       switch (mProfile->mAlignment)
       {
       case GuiControlProfile::RightJustify:
-         if ( mProfile->getChildrenProfile() && mProfile->mBitmapArrayRects.size() )
+         if ( mProfile->getChildrenProfile() && !mProfile->mBitmapArrayRects.empty())
          {
             // We're making use of a bitmap border, so take into account the
             // right cap of the border.
@@ -1026,7 +1026,7 @@ void GuiPopUpMenuCtrl::onRender( Point2I offset, const RectI &updateRect )
          }
          break;
       case GuiControlProfile::CenterJustify:
-         if ( mProfile->getChildrenProfile() && mProfile->mBitmapArrayRects.size() )
+         if ( mProfile->getChildrenProfile() && !mProfile->mBitmapArrayRects.empty())
          {
             // We're making use of a bitmap border, so take into account the
             // right cap of the border.
@@ -1045,7 +1045,7 @@ void GuiPopUpMenuCtrl::onRender( Point2I offset, const RectI &updateRect )
             //  The width of the text is greater than the width of the control.
             // In this case we will right justify the text and leave some space
             // for the down arrow.
-            if ( mProfile->getChildrenProfile() && mProfile->mBitmapArrayRects.size() )
+            if ( mProfile->getChildrenProfile() && !mProfile->mBitmapArrayRects.empty())
             {
                // We're making use of a bitmap border, so take into account the
                // right cap of the border.
@@ -1097,7 +1097,7 @@ void GuiPopUpMenuCtrl::onRender( Point2I offset, const RectI &updateRect )
          // Draw the second column to the right
          getColumn( mText, buff, 1, "\t" );
          S32 colTxt_w = mProfile->mFont->getStrWidth( buff );
-         if ( mProfile->getChildrenProfile() && mProfile->mBitmapArrayRects.size() )
+         if ( mProfile->getChildrenProfile() && !mProfile->mBitmapArrayRects.empty())
          {
             // We're making use of a bitmap border, so take into account the
             // right cap of the border.
@@ -1117,7 +1117,7 @@ void GuiPopUpMenuCtrl::onRender( Point2I offset, const RectI &updateRect )
       }
 
       // If we're rendering a bitmap border, then it will take care of the arrow.
-      if ( !(mProfile->getChildrenProfile() && mProfile->mBitmapArrayRects.size()) )
+      if (!mProfile->getChildrenProfile() && !mProfile->mBitmapArrayRects.empty())
       {
          if (mProfile->mBitmapArrayRects[0].extent.y < baseRect.extent.y)
          {

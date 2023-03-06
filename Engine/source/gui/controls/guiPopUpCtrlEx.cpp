@@ -1088,7 +1088,7 @@ void GuiPopUpMenuCtrlEx::onRender(Point2I offset, const RectI &updateRect)
       }
 
       // Do we render a bitmap border or lines?
-      if ( !( mProfile->getChildrenProfile() && mProfile->mBitmapArrayRects.size() ) )
+      if (!mProfile->getChildrenProfile() && !mProfile->mBitmapArrayRects.empty())
       {
          drawUtil->drawLine( l, t, l, b, colorWhite );
          drawUtil->drawLine( l, t, r2, t, colorWhite );
@@ -1126,7 +1126,7 @@ void GuiPopUpMenuCtrlEx::onRender(Point2I offset, const RectI &updateRect)
          }
 
          // Do we render a bitmap border or lines?
-         if ( !( mProfile->getChildrenProfile() && mProfile->mBitmapArrayRects.size() ) )
+         if (!mProfile->getChildrenProfile() && !mProfile->mBitmapArrayRects.empty())
          {
             drawUtil->drawLine( l, t, l, b, colorWhite );
             drawUtil->drawLine( l, t, r2, t, colorWhite );
@@ -1156,7 +1156,7 @@ void GuiPopUpMenuCtrlEx::onRender(Point2I offset, const RectI &updateRect)
          }
 
          // Do we render a bitmap border or lines?
-         if ( !( mProfile->getChildrenProfile() && mProfile->mBitmapArrayRects.size() ) )
+         if (!mProfile->getChildrenProfile() && !mProfile->mBitmapArrayRects.empty())
          {
             drawUtil->drawRect( r, mProfile->mBorderColorNA );
          }
@@ -1275,7 +1275,7 @@ void GuiPopUpMenuCtrlEx::onRender(Point2I offset, const RectI &updateRect)
       }
 
       // If we're rendering a bitmap border, then it will take care of the arrow.
-      if ( !(mProfile->getChildrenProfile() && mProfile->mBitmapArrayRects.size()) )
+      if (!mProfile->getChildrenProfile() && !mProfile->mBitmapArrayRects.empty())
       {
          //  Draw a triangle (down arrow)
          S32 left = r.point.x + r.extent.x - 12;

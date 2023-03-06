@@ -524,7 +524,7 @@ void GuiControlProfile::setChildrenProfile(GuiControlProfile *prof)
 
 RectI GuiControlProfile::getBitmapArrayRect(U32 i)
 {
-   if(!mBitmapArrayRects.size())
+   if(mBitmapArrayRects.empty())
       constructBitmapArray();
    
    if( i >= mBitmapArrayRects.size())
@@ -535,7 +535,7 @@ RectI GuiControlProfile::getBitmapArrayRect(U32 i)
 
 S32 GuiControlProfile::constructBitmapArray()
 {
-   if(mBitmapArrayRects.size())
+   if(!mBitmapArrayRects.empty())
       return mBitmapArrayRects.size();
 
    if( mBitmap.isNull() )

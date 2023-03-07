@@ -1321,7 +1321,7 @@ U32 GBitmap::getSurfaceSize(const U32 mipLevel) const
    if (mInternalFormat >= GFXFormatBC1 && mInternalFormat <= GFXFormatBC3)
    {
       // From the directX docs:
-      // max(1, width ÷ 4) x max(1, height ÷ 4) x 8(DXT1) or 16(DXT2-5)
+      // max(1, width / 4) x max(1, height / 4) x 8(DXT1) or 16(DXT2-5)
 
       U32 sizeMultiple = 0;
 

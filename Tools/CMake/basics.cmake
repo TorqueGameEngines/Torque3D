@@ -348,7 +348,7 @@ macro(finishLibrary)
         add_library("${PROJECT_NAME}" SHARED ${${PROJECT_NAME}_files})
     endif()
 
-    target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_11)
+    target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
     # omg - only use the first folder ... otherwise we get lots of header name collisions
     #foreach(dir ${${PROJECT_NAME}_paths})

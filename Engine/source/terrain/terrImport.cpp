@@ -60,6 +60,7 @@ DefineEngineStaticMethod( TerrainBlock, createNew, S32, (String terrainName, U32
    if( !terrain->setFile( terrFileName ) )
    {
       Con::errorf( "TerrainBlock::createNew - error creating '%s'", terrFileName.c_str() );
+      delete terrain;
       return 0;
    }
    

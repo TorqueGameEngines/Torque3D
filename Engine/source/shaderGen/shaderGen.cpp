@@ -200,6 +200,7 @@ void ShaderGen::generateShader( const MaterialFeatureData &featureData,
    if(!s->open(pixShaderName, Torque::FS::File::Write ))
    {
       AssertFatal(false, "Failed to open Shader Stream" );
+      delete s;
       return;
    }   
 

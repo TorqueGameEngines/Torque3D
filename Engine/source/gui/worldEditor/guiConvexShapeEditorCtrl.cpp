@@ -2704,7 +2704,7 @@ SceneObject* GuiConvexEditorCtrl::createPolyhedralObject(const char* className, 
    // Create the object.
 
    SceneObject* object = dynamic_cast< SceneObject* >(classRep->create());
-   if (!Object)
+   if (!object)
    {
       Con::errorf("WorldEditor::createPolyhedralObject - Could not create SceneObject with class '%s'", className);
       return NULL;

@@ -1302,7 +1302,8 @@ bool executeFile(const char* fileName, bool noCalls, bool journalScript)
       CodeBlock *newCodeBlock = new CodeBlock();
       newCodeBlock->compileExec(scriptFileName, script, noCalls, 0);
       delete[] script;
-
+      delete newCodeBlock;
+      
       execDepth--;
       return true;
    }
@@ -1476,6 +1477,7 @@ bool executeFile(const char* fileName, bool noCalls, bool journalScript)
       code->read(scriptFileName, *compiledStream);
       delete compiledStream;
       code->exec(0, scriptFileName, NULL, 0, NULL, noCalls, NULL, 0);
+      delete code;
       ret = true;
    }
    else

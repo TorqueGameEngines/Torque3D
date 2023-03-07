@@ -744,6 +744,7 @@ DDSFile *DDSFile::createDDSCubemapFileFromGBitmaps(GBitmap **gbmps)
    GFXFormat fmt = pBitmap->getFormat();
    if (fmt != GFXFormatR8G8B8A8 && fmt != GFXFormatR16G16B16A16F)
    {
+      delete ret;
       Con::errorf("createDDSCubemapFileFromGBitmaps: unsupported format");
       return NULL;
    }

@@ -1436,6 +1436,7 @@ DefineEngineFunction(saveScaledImage, bool, (const char* bitmapSource, const cha
    if (!fs.open(destinationPath.getFullPath(), Torque::FS::File::Write))
    {
       Con::errorf("saveScaledImage() - Failed to open output file '%s'!", bitmapDest);
+      delete image;
       return false;
    }
    else
@@ -1443,6 +1444,7 @@ DefineEngineFunction(saveScaledImage, bool, (const char* bitmapSource, const cha
       image->writeBitmap("png", fs);
 
       fs.close();
+      delete image;
    }
 
    return true;

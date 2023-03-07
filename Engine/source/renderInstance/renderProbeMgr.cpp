@@ -798,7 +798,7 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData& sgData,
          shaderConsts->setSafe(probeShaderConsts->mProbeConfigDataArraySC, probeConfigAlignedArray);
       }
 
-      if (mBRDFTexture.isValid(), probeShaderConsts->mBRDFTextureMap->getSamplerRegister() != -1)
+      if (mBRDFTexture.isValid() && probeShaderConsts->mBRDFTextureMap->getSamplerRegister() != -1)
          GFX->setTexture(probeShaderConsts->mBRDFTextureMap->getSamplerRegister(), mBRDFTexture);
 
       if (mWetnessTexture.isValid() && probeShaderConsts->mWetnessTextureMap->getSamplerRegister() != -1)

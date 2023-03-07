@@ -490,8 +490,8 @@ DefineEngineFunction(getDirectoryList, String, ( const char* path, S32 depth ), 
    if (fullpath[dStrlen(fullpath) - 1] != '/')
    {
       S32 pos = dStrlen(fullpath);
-      fullpath[pos] = '/';
-      fullpath[pos + 1] = '\0';
+      fullpath[pos - 1] = '/';
+      fullpath[pos] = '\0';
    }
 
    // Dump the directories.

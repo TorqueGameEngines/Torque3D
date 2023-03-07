@@ -980,7 +980,7 @@ bool NetConnection::readDemoStartBlock(BitStream* stream)
 
 bool NetConnection::startDemoRecord(const char *fileName)
 {
-   FileStream *fs = new FileStream;
+   FileStream *fs = NULL;
 
    if((fs = FileStream::createAndOpen( fileName, Torque::FS::File::Write )) == NULL)
       return false;

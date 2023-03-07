@@ -195,7 +195,7 @@ $guiContent = new GuiControl(TerrainMaterialDlg,EditorGuiGroup) {
                tooltip = "Change the Active Diffuse Map for this layer";
             };
             new GuiTextCtrl() {
-               text = "Diffuse";
+               text = "Diffuse (Overlay)";
                position = "56 -3";
                extent = "39 18";
                profile = "EditorTextProfile";

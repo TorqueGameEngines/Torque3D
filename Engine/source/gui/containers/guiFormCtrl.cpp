@@ -135,7 +135,7 @@ bool GuiFormCtrl::onWake()
 
    mProfile->constructBitmapArray();
 
-   if(mProfile->mUseBitmapArray && mProfile->mBitmapArrayRects.size())
+   if(mProfile->mUseBitmapArray && !mProfile->mBitmapArrayRects.empty())
    {
       mThumbSize.set(   mProfile->mBitmapArrayRects[0].extent.x, mProfile->mBitmapArrayRects[0].extent.y );
       mThumbSize.setMax( mProfile->mBitmapArrayRects[1].extent );
@@ -204,7 +204,7 @@ bool GuiFormCtrl::resize(const Point2I &newPosition, const Point2I &newExtent)
    if( !Parent::resize(newPosition, newExtent) ) 
       return false;
 
-   if( !mAwake || !mProfile->mBitmapArrayRects.size() )
+   if( !mAwake || mProfile->mBitmapArrayRects.empty())
       return false;
 
    // Should the caption be modified because the title bar is too small?

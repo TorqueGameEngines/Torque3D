@@ -112,7 +112,7 @@ bool GuiPaneControl::onWake()
       setCaptionID(mCaptionID);
 
    mProfile->constructBitmapArray();
-   if(mProfile->mUseBitmapArray && mProfile->mBitmapArrayRects.size())
+   if(mProfile->mUseBitmapArray && !mProfile->mBitmapArrayRects.empty())
    {
       mThumbSize.set(   mProfile->mBitmapArrayRects[0].extent.x, mProfile->mBitmapArrayRects[0].extent.y );
       mThumbSize.setMax( mProfile->mBitmapArrayRects[1].extent );

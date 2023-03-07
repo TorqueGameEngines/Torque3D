@@ -232,7 +232,7 @@ void GuiIconButtonCtrl::renderButton( Point2I &offset, const RectI& updateRect )
    {
       // If there is a bitmap array then render using it.  
       // Otherwise use a standard fill.
-      if(mProfile->mUseBitmapArray && mProfile->mBitmapArrayRects.size())
+      if(mProfile->mUseBitmapArray && !mProfile->mBitmapArrayRects.empty())
          renderBitmapArray(boundsRect, statePressed);
       else
          renderSlightlyLoweredBox(boundsRect, mProfile);
@@ -241,7 +241,7 @@ void GuiIconButtonCtrl::renderButton( Point2I &offset, const RectI& updateRect )
    {
       // If there is a bitmap array then render using it.  
       // Otherwise use a standard fill.
-      if (mProfile->mUseBitmapArray && mProfile->mBitmapArrayRects.size())
+      if (mProfile->mUseBitmapArray && !mProfile->mBitmapArrayRects.empty())
       {
          renderBitmapArray(boundsRect, stateMouseOver);
       }
@@ -257,7 +257,7 @@ void GuiIconButtonCtrl::renderButton( Point2I &offset, const RectI& updateRect )
    {
       // If there is a bitmap array then render using it.  
       // Otherwise use a standard fill.
-      if(mProfile->mUseBitmapArray && mProfile->mBitmapArrayRects.size())
+      if(mProfile->mUseBitmapArray && !mProfile->mBitmapArrayRects.empty())
       {
          if(mActive)
             renderBitmapArray(boundsRect, stateNormal);

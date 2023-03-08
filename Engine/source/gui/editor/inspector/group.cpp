@@ -607,7 +607,16 @@ void GuiInspectorGroup::addInspectorField(StringTableEntry name, StringTableEntr
    else
       fieldType = -1;
 
-   GuiInspectorField* fieldGui = constructField(fieldType);
+   GuiInspectorField* fieldGui;
+
+   //Currently the default GuiInspectorField IS the string type, so we'll control
+   //for that type here. If it's not TypeString, we allow the normal creation process
+   //to continue
+   if (fieldType == TypeString)
+      fieldGui = new GuiInspectorField();
+   else
+      fieldGui = constructField(fieldType);
+
    if (fieldGui == nullptr)
    {
       //call down into script and see if there's special handling for that type of field

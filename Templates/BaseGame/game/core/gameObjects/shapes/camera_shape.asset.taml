@@ -1,5 +1,4 @@
 <ShapeAsset
     AssetName="camera_shape"
     fileName="@assetFile=camera.fbx"
-    constuctorFileName="@assetFile=camera_shape.tscript"
-    materialSlot0="@asset=Core_GameObjects:CameraMat"/>
+    constuctorFileName="@assetFile=camera_shape.tscript"/>

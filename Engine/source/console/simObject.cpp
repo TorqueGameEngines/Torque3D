@@ -567,7 +567,7 @@ void SimObject::onTamlCustomRead(TamlCustomNodes const& customNodes)
                   else
                   {
                      // Unknown name so warn.
-                     Con::warnf("SimObject::onTamlCustomRead() - Encountered an unknown custom field name of '%s'.", fieldName);
+                     //Con::warnf("SimObject::onTamlCustomRead() - Encountered an unknown custom field name of '%s'.", fieldName);
                      continue;
                   }
                }

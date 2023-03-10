@@ -1,5 +1,4 @@
-
-singleton TSShapeConstructor(cameradts2)
+singleton TSShapeConstructor(camerafbx)
 {
    baseShapeAsset = "Core_GameObjects:Camera_shape";
    singleDetailSize = "0";

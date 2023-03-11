@@ -489,9 +489,7 @@ DefineEngineFunction(getDirectoryList, String, ( const char* path, S32 depth ), 
    // Append a trailing backslash if it's not present already.
    if (fullpath[dStrlen(fullpath) - 1] != '/')
    {
-      S32 pos = dStrlen(fullpath);
-      fullpath[pos - 1] = '/';
-      fullpath[pos] = '\0';
+      dStrcat(fullpath, "/\0", 1024);
    }
 
    // Dump the directories.

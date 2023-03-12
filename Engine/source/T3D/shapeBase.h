@@ -1627,6 +1627,12 @@ public:
    /// @name Object Transforms
    /// @{
 
+   /// Returns a named node transform for a given shape
+   virtual void getNodeTransform(const char* nodeName, MatrixF* mat);
+   /// Returns a named node forwad vector for a given shape
+   virtual void getNodeVector(const char* nodeName, VectorF* vec);
+   /// Returns a named node position for a given shape
+   void getNodePoint(const char* nodeName, Point3F* pos);
    /// Returns the eye transform of this shape, IE the eyes of a player
    /// @param   mat   Eye transform (out)
    virtual void getEyeTransform(MatrixF* mat);

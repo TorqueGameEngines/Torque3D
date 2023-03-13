@@ -554,7 +554,7 @@ function AssetBrowser::onMaterialAssetEditorDropped(%this, %assetDef, %position)
    //first, see if we hit a static shape
    %mask = $TypeMasks::StaticObjectType | $TypeMasks::StaticShapeObjectType | $TypeMasks::TerrainObjectType;
    
-   %targetPosition = EWorldEditor.unproject(%position SPC 1000);
+   %targetPosition = EWorldEditor.unproject(%position SPC 1);
    %camPos = LocalClientConnection.camera.getPosition();
    %rayResult = materialRayCast(%camPos, %targetPosition, -1, 0, false);
    

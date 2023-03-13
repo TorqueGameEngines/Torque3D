@@ -33,7 +33,7 @@ function AssetBrowser::onCreatorEditorDropped(%this, %assetDef, %position)
 {
    if(EditorIsActive())
    {
-   %targetPosition = EWorldEditor.unproject(%position SPC 1000);
+   %targetPosition = EWorldEditor.unproject(%position SPC 1);
    %camPos = LocalClientConnection.camera.getPosition();
    %rayResult = containerRayCast(%camPos, %targetPosition, -1);
    

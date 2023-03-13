@@ -167,7 +167,7 @@ function AssetBrowser::deleteDatablock(%this, %folderPath)
 
 function AssetBrowser::onDatablockEditorDropped(%this, %assetDef, %position)
 {
-   %targetPosition = EWorldEditor.unproject(%position SPC 1000);
+   %targetPosition = EWorldEditor.unproject(%position SPC 1);
    %camPos = LocalClientConnection.camera.getPosition();
    %rayResult = containerRayCast(%camPos, %targetPosition, -1);
    

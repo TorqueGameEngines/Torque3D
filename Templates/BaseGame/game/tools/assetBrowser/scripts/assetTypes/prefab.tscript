@@ -34,7 +34,7 @@ function AssetBrowser::onPrefabEditorDropped(%this, %assetDef, %position)
 {
    //echo("DROPPED A SHAPE ON THE EDITOR WINDOW!"); 
 
-   %targetPosition = EWorldEditor.unproject(%position SPC 1000);
+   %targetPosition = EWorldEditor.unproject(%position SPC 1);
    %camPos = LocalClientConnection.camera.getPosition();
    %rayResult = containerRayCast(%camPos, %targetPosition, -1);
    

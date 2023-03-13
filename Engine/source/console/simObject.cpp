@@ -2662,7 +2662,8 @@ DefineEngineMethod( SimObject, dumpMethods, ArrayObject*, (),,
    return dictionary;
 }
 
-DefineEngineMethod(SimObject, getMethodSigs, ArrayObject*, (), ,
+
+DefineEngineMethod(SimObject, getMethodSigs, ArrayObject*, (bool activeMethods), (false),
    "List the methods defined on this object.\n\n"
    "Each description is a newline-separated vector with the following elements:\n"
    "- method prototype string.\n"
@@ -2681,9 +2682,21 @@ DefineEngineMethod(SimObject, getMethodSigs, ArrayObject*, (), ,
    for (Vector< Namespace::Entry* >::iterator j = vec.begin(); j != vec.end(); j++)
    {
       Namespace::Entry* e = *j;
+      //do we want the list of callbacks or the list of commands
 
-      if (e->mType != Namespace::Entry::ScriptCallbackType)
-         continue;
+      const char* methodName = (e->mType == Namespace::Entry::ScriptCallbackType)? e->cb.mCallbackName: e->mFunctionName;
+
+      if (activeMethods)
+      {
+         if (String(methodName).startsWith("on"))
+            continue;
+      }
+      else
+      {
+         if (!String(methodName).startsWith("on"))
+            continue;
+      }
+
 
       StringBuilder str;
       str.append("function ");

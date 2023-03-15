@@ -641,15 +641,27 @@ function switchControlObject(%client, %newControlEntity)
    %control.setConnectionControlObject(%client);
 }
 
-function populateAllFonts(%font)
+function populateAllFonts()
 {
-   populateFontCacheRange(%font,14,0,65535);
-   populateFontCacheRange(%font,18,0,65535);
-   populateFontCacheRange(%font,24,0,65535);
-   populateFontCacheRange(%font,32,0,65535);
-   populateFontCacheRange(%font,36,0,65535);
+   %fontarray = new ArrayObject();
+   foreach( %obj in GuiDataGroup )
+   {
+      if( !%obj.isMemberOfClass( "GuiControlProfile" ) )
+         continue;
+      %fontarray.push_back(%obj.fontType,%obj.fontSize);
+   }
+   %fontarray.uniqueKey();
+   
+   %fontarrayCount = %fontarray.count(); 
+   
+   for (%i=0;%i<%fontarrayCount;%i++)
+   {
+      %font = %fontarray.getKey(%i);
+      %hieght =  %fontarray.getValue(%i);
+      populateFontCacheRange(%font,%hieght,0,65535);
+   }
+   %fontarray.delete();
 }
-
 //------------------------------------------------------------------------------
 function clientCMDPlaySound(%soundAssetId,%pos)
 {

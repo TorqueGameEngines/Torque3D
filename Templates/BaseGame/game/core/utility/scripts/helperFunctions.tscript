@@ -654,14 +654,21 @@ function populateAllFonts()
    
    %fontarrayCount = %fontarray.count(); 
    
+   echo("Generating "@ %fontarrayCount @" fonts");
    for (%i=0;%i<%fontarrayCount;%i++)
    {
       %font = %fontarray.getKey(%i);
       %hieght =  %fontarray.getValue(%i);
-      populateFontCacheRange(%font,%hieght,0,65535);
+      schedule(1000*%i,0,"delayedFontsPopulation",%font, %hieght, %i+1);
    }
    %fontarray.delete();
 }
+function delayedFontsPopulation(%font, %hieght, %fontNum)
+{
+    echo("Font ["@ %fontNum @"] Generating "@ %font SPC %hieght);
+    populateFontCacheRange(%font,%hieght,1,65535);
+}
+
 //------------------------------------------------------------------------------
 function clientCMDPlaySound(%soundAssetId,%pos)
 {

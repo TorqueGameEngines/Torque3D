@@ -1,109 +1,64 @@
-singleton GuiControlProfile(AssetBrowserPreviewImageAsset : ToolsGuiDefaultProfile)
+singleton GuiControlProfile(AssetBrowserProtoProfile : ToolsGuiDefaultProfile)
 {
    fillcolor = EditorSettings.value("Theme/windowBackgroundColor");
    fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
-   
+   fillColorSEL = EditorSettings.value("Theme/fieldBGSELColor");
+   fillColorERR = "128 0 0 255";
    border = true;
    borderColor   = "230 126 0 255";
+   borderColorHL   = "128 128 128 255";
+   borderColorSEL   = "230 230 230 255";
+   borderColorERR   = "255 0 0 255";
    borderColorNA = "230 126 0 255";
-   borderThickness = 5;
+   borderThickness = 3;
 };
 
-singleton GuiControlProfile(AssetBrowserPreviewMaterialAsset : ToolsGuiDefaultProfile)
+singleton GuiControlProfile(AssetBrowserPreviewImageAsset : AssetBrowserProtoProfile)
 {
-   fillcolor = EditorSettings.value("Theme/windowBackgroundColor");
-   fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
-   
-   border = true;
+   borderColor   = "230 126 0 255";
+};
+
+singleton GuiControlProfile(AssetBrowserPreviewMaterialAsset : AssetBrowserProtoProfile)
+{
    borderColor   = "0 100 0 255";
-   borderColorNA = "0 100 0 255";
-   borderThickness = 5;
 };
 
-singleton GuiControlProfile(AssetBrowserPreviewShapeAsset : ToolsGuiDefaultProfile)
+singleton GuiControlProfile(AssetBrowserPreviewShapeAsset : AssetBrowserProtoProfile)
 {
-   fillcolor = EditorSettings.value("Theme/windowBackgroundColor");
-   fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
-   
-   border = true;
    borderColor   = "0 0 200 255";
-   borderColorNA = "0 0 200 255";
-   borderThickness = 5;
 };
 
-singleton GuiControlProfile(AssetBrowserPreviewShapeAnimationAsset : ToolsGuiDefaultProfile)
+singleton GuiControlProfile(AssetBrowserPreviewShapeAnimationAsset : AssetBrowserProtoProfile)
 {
-   fillcolor = EditorSettings.value("Theme/windowBackgroundColor");
-   fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
-   
-   border = true;
    borderColor   = "0 0 200 255";
-   borderColorNA = "0 0 200 255";
-   borderThickness = 5;
 };
 
-singleton GuiControlProfile(AssetBrowserPreviewSoundAsset : ToolsGuiDefaultProfile)
+singleton GuiControlProfile(AssetBrowserPreviewSoundAsset : AssetBrowserProtoProfile)
 {
-   fillcolor = EditorSettings.value("Theme/windowBackgroundColor");
-   fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
-   
-   border = true;
    borderColor   = "75 101 135 255";
-   borderColorNA = "75 101 135 255";
-   borderThickness = 5;
 };
 
-singleton GuiControlProfile(AssetBrowserPreviewTerrainAsset : ToolsGuiDefaultProfile)
+singleton GuiControlProfile(AssetBrowserPreviewTerrainAsset : AssetBrowserProtoProfile)
 {
-   fillcolor = EditorSettings.value("Theme/windowBackgroundColor");
-   fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
-   
-   border = true;
    borderColor   = "200 198 198 255";
-   borderColorNA = "200 198 198 255";
-   borderThickness = 5;
 };
 
-singleton GuiControlProfile(AssetBrowserPreviewTerrainMaterialAsset : ToolsGuiDefaultProfile)
+singleton GuiControlProfile(AssetBrowserPreviewTerrainMaterialAsset : AssetBrowserProtoProfile)
 {
-   fillcolor = EditorSettings.value("Theme/windowBackgroundColor");
-   fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
-   
-   border = true;
    borderColor   = "200 198 198 255";
-   borderColorNA = "200 198 198 255";
-   borderThickness = 5;
 };
 
-singleton GuiControlProfile(AssetBrowserPreviewStateMachineAsset : ToolsGuiDefaultProfile)
+singleton GuiControlProfile(AssetBrowserPreviewStateMachineAsset : AssetBrowserProtoProfile)
 {
-   fillcolor = EditorSettings.value("Theme/windowBackgroundColor");
-   fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
-   
-   border = true;
    borderColor   = "0 76 135 255";
-   borderColorNA = "0 76 135 255";
-   borderThickness = 5;
 };
 
-singleton GuiControlProfile(AssetBrowserPreviewGUIAsset : ToolsGuiDefaultProfile)
+singleton GuiControlProfile(AssetBrowserPreviewGUIAsset : AssetBrowserProtoProfile)
 {
-   fillcolor = EditorSettings.value("Theme/windowBackgroundColor");
-   fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
-   
-   border = true;
    borderColor   = "17 5 44 255";
-   borderColorNA = "17 5 44 255";
-   borderThickness = 5;
 };
 
-singleton GuiControlProfile(AssetBrowserPreviewLevelAsset : ToolsGuiDefaultProfile)
+singleton GuiControlProfile(AssetBrowserPreviewLevelAsset : AssetBrowserProtoProfile)
 {
-   fillcolor = EditorSettings.value("Theme/windowBackgroundColor");
-   fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");
-   
-   border = true;
    borderColor   = "0 208 186 255";
-   borderColorNA = "0 208 186 255";
-   borderThickness = 5;
 };

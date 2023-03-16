@@ -404,6 +404,8 @@ public:
    ColorI mBorderColor;                            ///< Border color, used to draw a border around the bounds if border is enabled
    ColorI mBorderColorHL;                          ///< Used instead of mBorderColor when the object is highlighted
    ColorI mBorderColorNA;                          ///< Used instead of mBorderColor when the object is not active or disabled
+   ColorI mBorderColorERR;                         ///< Used instead of mBorderColor if the object has an error or is invalid
+   ColorI mBorderColorSEL;                         ///< Used instead of mBorderColor if the object is selected
 
    ColorI mBevelColorHL;                          ///< Used for the high-light part of the bevel
    ColorI mBevelColorLL;                          ///< Used for the low-light part of the bevel
@@ -422,11 +424,14 @@ public:
       ColorUser3,
       ColorUser4,
       ColorUser5,
+      ColorERR,
+      ColorMax
    };
-   ColorI  mFontColors[10];                        ///< Array of font colors used for drawText with escape characters for changing color mid-string
+   ColorI  mFontColors[ColorMax];                        ///< Array of font colors used for drawText with escape characters for changing color mid-string
    ColorI& mFontColor;                             ///< Main font color
    ColorI& mFontColorHL;                           ///< Highlighted font color
    ColorI& mFontColorNA;                           ///< Font color when object is not active/disabled
+   ColorI& mFontColorERR;                          ///< Font color when object is in error
    ColorI& mFontColorSEL;                          ///< Font color when object/text is selected
    FontCharset mFontCharset;                       ///< Font character set
 

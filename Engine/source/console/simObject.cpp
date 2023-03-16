@@ -2662,7 +2662,7 @@ DefineEngineMethod( SimObject, dumpMethods, ArrayObject*, (),,
    return dictionary;
 }
 
-DefineEngineMethod(SimObject, getMethodSigs, ArrayObject*, (), ,
+DefineEngineMethod(SimObject, getMethodSigs, ArrayObject*, (bool commands), (false),
    "List the methods defined on this object.\n\n"
    "Each description is a newline-separated vector with the following elements:\n"
    "- method prototype string.\n"
@@ -2682,9 +2682,16 @@ DefineEngineMethod(SimObject, getMethodSigs, ArrayObject*, (), ,
    {
       Namespace::Entry* e = *j;
 
-      if (e->mType != Namespace::Entry::ScriptCallbackType)
-         continue;
-
+      if (commands)
+      {
+         if ((e->mType < Namespace::Entry::ConsoleFunctionType))
+            continue;
+      }
+      else
+      {
+         if ((e->mType > Namespace::Entry::ScriptCallbackType))
+            continue;
+      }
       StringBuilder str;
       str.append("function ");
       str.append(ns->getName());

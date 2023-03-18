@@ -100,12 +100,12 @@ function onStart()
       $editors[%i] = getWord( $Tools::loadFirst, %i );
    }
    
-   %pattern = $Tools::resourcePath @ "/*/main." @ $TorqueScriptFileExtension;
+   %pattern = $Tools::resourcePath @ "/*/main." @ $TorqueScriptFileExtension @ ".dso";
    %folder = findFirstFile( %pattern );
    if ( %folder $= "")
    {
       // if we have absolutely no matches for main.tscript, we look for main.tscript.dso
-      %pattern = $Tools::resourcePath @ "/*/main." @ $TorqueScriptFileExtension @ ".dso";
+      %pattern = $Tools::resourcePath @ "/*/main." @ $TorqueScriptFileExtension;
       %folder = findFirstFile( %pattern );
    }
    while ( %folder !$= "" )
@@ -128,12 +128,12 @@ function onStart()
    }
    
    //Next, scrape through modules and scan for tools subfolders there
-   %pattern = "data/*/editor." @ $TorqueScriptFileExtension;
+   %pattern = "data/*/editor." @ $TorqueScriptFileExtension @ ".dso";
    %folder = findFirstFile( %pattern );
    if ( %folder $= "")
    {
       // if we have absolutely no matches for main.tscript, we look for main.tscript.dso
-      %pattern = "data/*/editor." @ $TorqueScriptFileExtension @ ".dso";
+      %pattern = "data/*/editor." @ $TorqueScriptFileExtension;
       %folder = findFirstFile( %pattern );
    }
    while ( %folder !$= "" )

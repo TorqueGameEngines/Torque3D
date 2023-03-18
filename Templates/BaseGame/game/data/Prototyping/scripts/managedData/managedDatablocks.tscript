@@ -1,0 +1,6 @@
+
+datablock ItemData(PrototypeItemData)
+{
+   ShapeAsset = "Prototyping:TorusPrimitive_shape";
+   cameraMaxDist = "0.75";
+};

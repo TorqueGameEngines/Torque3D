@@ -125,7 +125,7 @@ Resource<GFont> GFont::create(const String &faceName, U32 size, const char *cach
    Resource<GFont> ret;
 
    // If the file already exists attempt to load it
-   if (Platform::isFile(path.getFullPath().c_str()))
+   if (Torque::FS::IsFile(path.getFullPath().c_str()))
    {
       ret = ResourceManager::get().load(path);
 

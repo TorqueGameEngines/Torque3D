@@ -666,7 +666,8 @@ function populateAllFonts()
 function delayedFontsPopulation(%font, %hieght, %fontNum)
 {
     echo("Font ["@ %fontNum @"] Generating "@ %font SPC %hieght);
-    populateFontCacheRange(%font,%hieght,1,65535);
+    populateFontCacheRange(%font,%hieght,32, 126);
+    populateFontCacheRange(%font,%hieght,160, 65535);
 }
 
 //------------------------------------------------------------------------------

@@ -223,7 +223,16 @@ void GuiIconButtonCtrl::renderButton( Point2I &offset, const RectI& updateRect )
    bool depressed = mDepressed;
    
    ColorI fontColor   = mActive ? (highlight ? mProfile->mFontColorHL : mProfile->mFontColor) : mProfile->mFontColorNA;
-   
+   ColorI borderColor = mActive ? (highlight ? mProfile->mBorderColorHL : mProfile->mBorderColor) : mProfile->mBorderColorNA;
+   ColorI fillColor = mActive ? (highlight ? mProfile->mFillColorHL : mProfile->mFillColor) : mProfile->mFillColorNA;
+
+   if (mActive && (depressed || mStateOn))
+   {
+      fontColor = mProfile->mFontColorSEL;
+      fillColor = mProfile->mFillColorSEL;
+      borderColor = mProfile->mBorderColorSEL;
+   }
+
    RectI boundsRect(offset, getExtent());
 
    GFXDrawUtil *drawer = GFX->getDrawUtil();
@@ -235,7 +244,12 @@ void GuiIconButtonCtrl::renderButton( Point2I &offset, const RectI& updateRect )
       if(mProfile->mUseBitmapArray && !mProfile->mBitmapArrayRects.empty())
          renderBitmapArray(boundsRect, statePressed);
       else
-         renderSlightlyLoweredBox(boundsRect, mProfile);
+      {
+         if (mProfile->mBorder != 0)
+            renderFilledBorder(boundsRect, borderColor, fillColor, mProfile->mBorderThickness);
+         else
+            GFX->getDrawUtil()->drawRectFill(boundsRect, mProfile->mFillColor);
+      }
    }
    else if(mHighlighted && mActive)
    {
@@ -248,9 +262,9 @@ void GuiIconButtonCtrl::renderButton( Point2I &offset, const RectI& updateRect )
       else
       {
          if (mProfile->mBorder != 0)
-            renderFilledBorder(boundsRect, mProfile->mBorderColorHL, mProfile->mFillColorHL, mProfile->mBorderThickness);
+            renderFilledBorder(boundsRect, borderColor, fillColor, mProfile->mBorderThickness);
          else
-            GFX->getDrawUtil()->drawRectFill(boundsRect, mProfile->mFillColorHL);
+            GFX->getDrawUtil()->drawRectFill(boundsRect, mProfile->mFillColor);
       }
    }
    else
@@ -266,20 +280,10 @@ void GuiIconButtonCtrl::renderButton( Point2I &offset, const RectI& updateRect )
       }
       else
       {
-         if (mActive)
-         {
-            if (mProfile->mBorder != 0)
-               renderFilledBorder(boundsRect, mProfile->mBorderColor, mProfile->mFillColor, mProfile->mBorderThickness);
-            else
-               GFX->getDrawUtil()->drawRectFill(boundsRect, mProfile->mFillColor);
-         }
+         if (mProfile->mBorder != 0)
+            renderFilledBorder(boundsRect, borderColor, fillColor, mProfile->mBorderThickness);
          else
-         {
-            if (mProfile->mBorder != 0)
-               renderFilledBorder(boundsRect, mProfile->mBorderColorNA, mProfile->mFillColorNA, mProfile->mBorderThickness);
-            else
-               GFX->getDrawUtil()->drawRectFill(boundsRect, mProfile->mFillColor);
-         }
+            GFX->getDrawUtil()->drawRectFill(boundsRect, mProfile->mFillColor);
       }
    }
 

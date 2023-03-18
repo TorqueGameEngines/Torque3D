@@ -210,8 +210,11 @@ class GuiInspectorField : public GuiControl
       void setTargetObject(SimObject* obj) { mTargetObject = obj; }
       SimObject* getTargetObject() { return mTargetObject; }
       void setSpecialEditField(bool isSpecialEditField) { mSpecialEditField = isSpecialEditField; }
-      void setSpecialEditVariableName(String varName) { mVariableName = StringTable->insert(varName); }
-      void setSpecialEditCallbackName(String callName) { mCallbackName = StringTable->insert(callName); }
+
+      void setSpecialEditVariableName(StringTableEntry varName) { mVariableName = varName; }
+      StringTableEntry getSpecialEditVariableName() { return mVariableName; }
+
+      void setSpecialEditCallbackName(StringTableEntry callName) { mCallbackName = callName; }
 
       DECLARE_CONOBJECT( GuiInspectorField );
       DECLARE_CATEGORY( "Gui Editor" );

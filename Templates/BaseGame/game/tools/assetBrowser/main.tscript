@@ -184,6 +184,10 @@ function AssetBrowserPlugin::initSettings( %this )
 
    EditorSettings.setDefaultValue( "AssetImporDefaultConfig",    "DefaultConfig" );
    EditorSettings.setDefaultValue( "AutoImport", 1 );
+
+   EditorSettings.beginGroup( "New" );
+   EditorSettings.setDefaultValue( "alwaysPromptModuleTarget", 0 );
+   EditorSettings.endGroup();
    
    EditorSettings.beginGroup( "Browser" );
    

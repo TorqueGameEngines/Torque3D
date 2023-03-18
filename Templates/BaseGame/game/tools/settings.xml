@@ -50,6 +50,8 @@
         <Group
             name="New">
             <Setting
+                name="alwaysPromptModuleTarget">1</Setting>
+            <Setting
                 name="defaultModule">ExampleModule</Setting>
         </Group>
     </Group>

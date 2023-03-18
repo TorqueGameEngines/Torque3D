@@ -100,12 +100,12 @@ function onStart()
       $editors[%i] = getWord( $Tools::loadFirst, %i );
    }
    
-   %pattern = $Tools::resourcePath @ "/*/main." @ $TorqueScriptFileExtension;
+   %pattern = $Tools::resourcePath @ "/*/main." @ $TorqueScriptFileExtension @ ".dso";
    %folder = findFirstFile( %pattern );
    if ( %folder $= "")
    {
       // if we have absolutely no matches for main.tscript, we look for main.tscript.dso
-      %pattern = $Tools::resourcePath @ "/*/main." @ $TorqueScriptFileExtension @ ".dso";
+      %pattern = $Tools::resourcePath @ "/*/main." @ $TorqueScriptFileExtension;
       %folder = findFirstFile( %pattern );
    }
    while ( %folder !$= "" )
@@ -126,13 +126,49 @@ function onStart()
       }
       %folder = findNextFile( %pattern );
    }
+   
+   //Next, scrape through modules and scan for tools subfolders there
+   %pattern = "data/*/editor." @ $TorqueScriptFileExtension @ ".dso";
+   %folder = findFirstFile( %pattern );
+   if ( %folder $= "")
+   {
+      // if we have absolutely no matches for main.tscript, we look for main.tscript.dso
+      %pattern = "data/*/editor." @ $TorqueScriptFileExtension;
+      %folder = findFirstFile( %pattern );
+   }
+   while ( %folder !$= "" )
+   {
+      if( filePath( %folder ) !$= "tools" ) // Skip the actual 'tools' folder...we want the children
+      {
+         %folder = filePath( %folder );
+         %editor = fileName( %folder );
+         if ( IsDirectory( %folder ) )
+         {
+            // Yes, this sucks and should be done better
+            if ( strstr( $Tools::loadFirst, %editor ) == -1 )
+            {
+               $editors[$editors[count]] = %editor;
+               $editorsPath[$editors[count]] = %folder;
+               $editors[count]++;
+            }
+         }
+      }
+      %folder = findNextFile( %pattern );
+   }
 
    // initialize every editor
    new SimSet( EditorPluginSet );      
    %count = $editors[count];
    for ( %i = 0; %i < %count; %i++ )
    {
-      exec( "./" @ $editors[%i] @ "/main." @ $TorqueScriptFileExtension );
+      %editorFilename = "./" @ $editors[%i] @ "/main." @ $TorqueScriptFileExtension;
+      if(isFile(%editorFilename))
+         exec( "./" @ $editors[%i] @ "/main." @ $TorqueScriptFileExtension );
+      else
+      {
+         if($editorsPath[%i] !$= "")
+            exec( $editorsPath[%i] @ "/editor." @ $TorqueScriptFileExtension );
+      }
       
       %initializeFunction = "initialize" @ $editors[%i];
       if( isFunction( %initializeFunction ) )

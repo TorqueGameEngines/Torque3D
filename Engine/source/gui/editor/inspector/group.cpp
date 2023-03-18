@@ -568,6 +568,22 @@ AbstractClassRep* GuiInspectorGroup::findCommonAncestorClass()
    return classRep;
 }
 
+GuiInspectorField* GuiInspectorGroup::createInspectorField()
+{
+   GuiInspectorField* newField = new GuiInspectorField();
+
+   newField->init(mParent, this);
+
+   newField->setSpecialEditField(true);
+
+   if (newField->registerObject())
+   {
+      return newField;
+   }
+
+   return NULL;
+}
+
 void GuiInspectorGroup::addInspectorField(StringTableEntry name, StringTableEntry typeName, const char* description, const char* callbackName)
 {
    S32 fieldType = -1;
@@ -626,7 +642,7 @@ void GuiInspectorGroup::addInspectorField(StringTableEntry name, StringTableEntr
          //ensure our stack variable is bound if we need it
          Con::evaluatef("%d.stack = %d;", this->getId(), mStack->getId());
 
-         Con::executef(this, "onConstructField", name, name, typeName, description, StringTable->EmptyString(), StringTable->EmptyString(), callbackName);
+         Con::executef(this, "onConstructField", name, name, typeName, description, StringTable->EmptyString(), StringTable->EmptyString(), callbackName, mParent->getInspectObject(0)->getId());
       }
    }
    else
@@ -639,7 +655,7 @@ void GuiInspectorGroup::addInspectorField(StringTableEntry name, StringTableEntr
       StringTableEntry fieldName = StringTable->insert(name);
 
       fieldGui->setSpecialEditVariableName(fieldName);
-      fieldGui->setSpecialEditCallbackName(callbackName);
+      fieldGui->setSpecialEditCallbackName(StringTable->insert(callbackName));
 
       fieldGui->setInspectorField(NULL, fieldName);
       fieldGui->setDocs(description);
@@ -657,6 +673,35 @@ void GuiInspectorGroup::addInspectorField(StringTableEntry name, StringTableEntr
    }
 }
 
+void GuiInspectorGroup::addInspectorField(GuiInspectorField* field)
+{
+   mStack->addObject(field);
+   mChildren.push_back(field);
+   mStack->updatePanes();
+}
+
+void GuiInspectorGroup::removeInspectorField(StringTableEntry name)
+{
+   for (U32 i = 0; i < mStack->size(); i++)
+   {
+      GuiInspectorField* field = dynamic_cast<GuiInspectorField*>(mStack->getObject(i));
+
+      if (field == nullptr)
+         continue;
+
+      if (field->getFieldName() == name || field->getSpecialEditVariableName() == name)
+      {
+         mStack->removeObject(field);
+         return;
+      }
+   }
+}
+
+DefineEngineMethod(GuiInspectorGroup, createInspectorField, GuiInspectorField*, (), , "createInspectorField()")
+{
+   return object->createInspectorField();
+}
+
 DefineEngineMethod(GuiInspectorGroup, addField, void, (const char* fieldName, const char* fieldTypeName, const char* description, const char* callbackName),
    ("", "", "", ""),
    "Adds a new Inspector field to this group.\n"
@@ -669,4 +714,22 @@ DefineEngineMethod(GuiInspectorGroup, addField, void, (const char* fieldName, co
       return;
 
    object->addInspectorField(StringTable->insert(fieldName), StringTable->insert(fieldTypeName), description, callbackName);
+}
+
+
+DefineEngineMethod(GuiInspectorGroup, addInspectorField, void, (GuiInspectorField* field), (nullAsType<GuiInspectorField*>()), "addInspectorField( GuiInspectorFieldObject )")
+{
+   if(field)
+      object->addInspectorField(field);
+}
+
+DefineEngineMethod(GuiInspectorGroup, removeField, void, (const char* fieldName),
+   (""),
+   "Removes a Inspector field to this group of a given name.\n"
+   "@param fieldName The name of the field to be removed.")
+{
+   if (dStrEqual(fieldName, ""))
+      return;
+
+   object->removeInspectorField(StringTable->insert(fieldName));
 }

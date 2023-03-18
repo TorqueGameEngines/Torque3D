@@ -805,6 +805,16 @@ S32 GuiInspector::createInspectorGroup(StringTableEntry groupName, S32 index)
    return newGroup->getId();
 }
 
+void GuiInspector::removeInspectorGroup(StringTableEntry groupName)
+{
+   GuiInspectorGroup* group = findExistentGroup(groupName);
+   if (group == nullptr)
+      return;
+
+   mGroups.remove(group);
+   removeObject(group);
+}
+
 //=============================================================================
 //    Console Methods.
 //=============================================================================
@@ -961,4 +971,11 @@ DefineEngineMethod(GuiInspector, findExistentGroup, S32, (const char* groupName)
 {
    GuiInspectorGroup* group = object->findExistentGroup(StringTable->insert(groupName));
    return group ? group->getId() : 0;
+}
+
+DefineEngineMethod(GuiInspector, removeGroup, void, (const char* groupName), ,
+   "Finds an existing GuiInspectorGroup if it exists removes it.\n"
+   "@param groupName Name of the new GuiInspectorGroup to find in this Inspector.")
+{
+   object->removeInspectorGroup(StringTable->insert(groupName));
 }

@@ -97,6 +97,8 @@ class GuiInspectorField : public GuiControl
       StringTableEntry mVariableName;
       //Special edit field, callback name - if defined, we'll do a callback to the function listed here when editing the field
       StringTableEntry mCallbackName;
+      //Special edit field, variable type
+      StringTableEntry mVariableType;
 
       virtual void _registerEditControl( GuiControl *ctrl );
       virtual void _executeSelectedCallback();
@@ -213,6 +215,9 @@ class GuiInspectorField : public GuiControl
 
       void setSpecialEditVariableName(StringTableEntry varName) { mVariableName = varName; }
       StringTableEntry getSpecialEditVariableName() { return mVariableName; }
+
+      void setSpecialEditVariableType(StringTableEntry varType) { mVariableType = varType; }
+      StringTableEntry getSpecialEditVariableType() { return mVariableType; }
 
       void setSpecialEditCallbackName(StringTableEntry callName) { mCallbackName = callName; }
 

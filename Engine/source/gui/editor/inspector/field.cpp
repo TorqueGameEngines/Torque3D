@@ -56,7 +56,8 @@ GuiInspectorField::GuiInspectorField( GuiInspector* inspector,
    mHeightOverride(18),
    mSpecialEditField(false),
    mVariableName(StringTable->EmptyString()),
-   mCallbackName(StringTable->EmptyString())
+   mCallbackName(StringTable->EmptyString()),
+   mVariableType(StringTable->EmptyString())
 {
    if( field != NULL )
       mCaption    = field->pFieldname;
@@ -665,6 +666,8 @@ void GuiInspectorField::_executeSelectedCallback()
 {
    if( mField )
       Con::executef( mInspector, "onFieldSelected", mField->pFieldname, ConsoleBaseType::getType(mField->type)->getTypeName(), mFieldDocs.c_str() );
+   else if(mSpecialEditField)
+      Con::executef(mInspector, "onFieldSelected", mVariableName, mVariableType, mFieldDocs.c_str());
 }
 
 //-----------------------------------------------------------------------------

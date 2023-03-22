@@ -655,6 +655,7 @@ void GuiInspectorGroup::addInspectorField(StringTableEntry name, StringTableEntr
       StringTableEntry fieldName = StringTable->insert(name);
 
       fieldGui->setSpecialEditVariableName(fieldName);
+      fieldGui->setSpecialEditVariableType(typeName);
       fieldGui->setSpecialEditCallbackName(StringTable->insert(callbackName));
 
       fieldGui->setInspectorField(NULL, fieldName);

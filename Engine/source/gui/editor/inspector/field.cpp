@@ -83,6 +83,7 @@ GuiInspectorField::GuiInspectorField()
    mHighlighted( false ),
    mTargetObject(NULL),
    mVariableName(StringTable->EmptyString()),
+   mVariableType(StringTable->EmptyString()),
    mCallbackName(StringTable->EmptyString()),
    mSpecialEditField(false),
    mUseHeightOverride(false),
@@ -777,9 +778,29 @@ DefineEngineMethod( GuiInspectorField, reset, void, (), , "() - Reset to default
    object->resetData();
 }
 
-DefineEngineMethod(GuiInspectorField, setCaption, void, (String newCaption),, "() - Reset to default value.")
+DefineEngineMethod(GuiInspectorField, setCaption, void, (String newCaption),, "() - Sets the caption of the field.")
 {
    object->setCaption(StringTable->insert(newCaption.c_str()));
+}
+
+DefineEngineMethod(GuiInspectorField, setSpecialEditVariableName, void, (String newCaption), , "() - Sets the variable name for special edit fields.")
+{
+   object->setSpecialEditVariableName(StringTable->insert(newCaption.c_str()));
+}
+
+DefineEngineMethod(GuiInspectorField, setSpecialEditVariableType, void, (String newVariableType), , "() - Sets the variable type for special edit fields.")
+{
+   object->setSpecialEditVariableType(StringTable->insert(newVariableType.c_str()));
+}
+
+DefineEngineMethod(GuiInspectorField, setSpecialEditCallbackName, void, (String callbackName), , "() - Sets the callback name for special edit fields.")
+{
+   object->setSpecialEditCallbackName(StringTable->insert(callbackName.c_str()));
+}
+
+DefineEngineMethod(GuiInspectorField, setFieldDocs, void, (String documentation), , "() - Sets the field's documentation string.")
+{
+   object->setDocs(documentation);
 }
 
 DefineEngineMethod(GuiInspectorField, setHeightOverride, void, (bool useOverride, U32 heightOverride), , "")

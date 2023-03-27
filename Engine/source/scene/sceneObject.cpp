@@ -1994,7 +1994,7 @@ IMPLEMENT_CALLBACK(SceneObject, onNewParent, void, (SceneObject *newParent), (ne
 IMPLEMENT_CALLBACK(SceneObject, onLostParent, void, (SceneObject *oldParent), (oldParent), "");
 IMPLEMENT_CALLBACK(SceneObject, onNewChild, void, (SceneObject *newKid), (newKid), "");
 IMPLEMENT_CALLBACK(SceneObject, onLostChild, void, (SceneObject *lostKid), (lostKid), "");
-void SceneObject::onNewParent(SceneObject *newParent) { onNewParent_callback(newParent); }
-void SceneObject::onLostParent(SceneObject *oldParent) { onLostParent_callback(oldParent); }
-void SceneObject::onNewChild(SceneObject *newKid) { onNewChild_callback(newKid); }
-void SceneObject::onLostChild(SceneObject *lostKid) { onLostChild_callback(lostKid); }
+void SceneObject::onNewParent(SceneObject *newParent) { if (isServerObject()) onNewParent_callback(newParent); }
+void SceneObject::onLostParent(SceneObject *oldParent) { if (isServerObject()) onLostParent_callback(oldParent); }
+void SceneObject::onNewChild(SceneObject *newKid) { if (isServerObject()) onNewChild_callback(newKid); }
+void SceneObject::onLostChild(SceneObject *lostKid) { if (isServerObject()) onLostChild_callback(lostKid); }

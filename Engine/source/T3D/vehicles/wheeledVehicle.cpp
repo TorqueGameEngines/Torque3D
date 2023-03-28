@@ -1624,7 +1624,7 @@ DefineEngineMethod( WheeledVehicle, setWheelPowered, bool, ( S32 wheel, bool pow
    return false;
 }
 
-DefineEngineMethod( WheeledVehicle, setWheelTire, bool, ( S32 wheel, WheeledVehicleTire* tire ),,
+DefineEngineMethod( WheeledVehicle, setWheelTire, bool, ( S32 wheel, const char* tire ),,
    "@brief Set the WheeledVehicleTire datablock for this wheel.\n"
    "@param wheel index of the wheel to set (hub node #)\n"
    "@param tire WheeledVehicleTire datablock\n"
@@ -1633,18 +1633,22 @@ DefineEngineMethod( WheeledVehicle, setWheelTire, bool, ( S32 wheel, WheeledVehi
    "%obj.setWheelTire( 0, FrontTire );\n"
    "@endtsexample\n" )
 {
-   if (wheel >= 0 && wheel < object->getWheelCount()) {
-      object->setWheelTire(wheel,tire);
-      return true;
-   }
-   else {
-      Con::warnf("setWheelTire: invalid tire datablock or wheel index, vehicle has %d hubs",
-         object->getWheelCount());
+   WheeledVehicleTire* tireObj = NULL;
+   if (wheel < 0 || wheel > object->getWheelCount())
+   {
+      Con::warnf("setWheelTire: invalid wheel index %d, vehicle has %d hubs", wheel, object->getWheelCount());
       return false;
    }
+   else if (!Sim::findObject(tire, tireObj))
+   {
+      Con::warnf("setWheelSpring: invalid spring %s", tire);
+      return false;
+   }
+   object->setWheelTire(wheel, tireObj);
+   return true;
 }
 
-DefineEngineMethod( WheeledVehicle, setWheelSpring, bool, ( S32 wheel, WheeledVehicleSpring* spring ),,
+DefineEngineMethod( WheeledVehicle, setWheelSpring, bool, ( S32 wheel, const char* spring ),,
    "@brief Set the WheeledVehicleSpring datablock for this wheel.\n"
    "@param wheel index of the wheel to set (hub node #)\n"
    "@param spring WheeledVehicleSpring datablock\n"
@@ -1653,15 +1657,19 @@ DefineEngineMethod( WheeledVehicle, setWheelSpring, bool, ( S32 wheel, WheeledVe
    "%obj.setWheelSpring( 0, FrontSpring );\n"
    "@endtsexample\n" )
 {
-   if (spring && wheel >= 0 && wheel < object->getWheelCount()) {
-      object->setWheelSpring(wheel,spring);
-      return true;
-   }
-   else {
-      Con::warnf("setWheelSpring: invalid spring datablock or wheel index, vehicle has %d hubs",
-         object->getWheelCount());
+   WheeledVehicleSpring* springObj = NULL;
+   if (wheel < 0 || wheel > object->getWheelCount())
+   {
+      Con::warnf("setWheelSpring: invalid wheel index %d, vehicle has %d hubs", wheel, object->getWheelCount());
       return false;
    }
+   else if (!Sim::findObject(spring, springObj))
+   {
+      Con::warnf("setWheelSpring: invalid spring %s", spring);
+      return false;
+   }
+   object->setWheelSpring(wheel, springObj);
+   return true;
 }
 
 DefineEngineMethod( WheeledVehicle, getWheelCount, S32, (),,

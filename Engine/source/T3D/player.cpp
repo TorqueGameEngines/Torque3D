@@ -2269,10 +2269,14 @@ void Player::setState(ActionState state, U32 recoverTicks)
             case RecoverState: {
                if (mDataBlock->landSequenceTime > 0.0f)
                {
-                  // Use the land sequence as the basis for the recovery
-                  setActionThread(PlayerData::LandAnim, true, false, true, true);
-                  F32 timeScale = mShapeInstance->getDuration(mActionAnimation.thread) / mDataBlock->landSequenceTime;
-                  mShapeInstance->setTimeScale(mActionAnimation.thread,timeScale);
+                  PlayerData::ActionAnimation& anim = mDataBlock->actionList[PlayerData::LandAnim];
+                  if (anim.sequence != -1)
+                  {
+                     // Use the land sequence as the basis for the recovery
+                     setActionThread(PlayerData::LandAnim, true, false, true, true);
+                     F32 timeScale = mShapeInstance->getDuration(mActionAnimation.thread) / mDataBlock->landSequenceTime;
+                     mShapeInstance->setTimeScale(mActionAnimation.thread, timeScale);
+                  }
                   mRecoverDelay =  mDataBlock->landSequenceTime;
                }
                else

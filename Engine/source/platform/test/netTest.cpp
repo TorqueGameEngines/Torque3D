@@ -30,7 +30,7 @@ struct TcpHandle
    NetSocket mSocket;
    S32 mDataReceived;
 
-   void notify(NetSocket sock, U32 state) 
+   void notify(NetSocket sock, U32 state)
    {
       // Only consider our own socket.
       if(mSocket != sock)
@@ -79,8 +79,8 @@ TEST(Net, TCPRequest)
    Net::smConnectionNotify ->notify(&handler, &TcpHandle::notify);
    Net::smConnectionReceive->notify(&handler, &TcpHandle::receive);
 
-   // Open a TCP connection to garagegames.com
-   handler.mSocket = Net::openConnectTo("72.246.107.193:80");
+   // Open a TCP connection to torque3d.org
+   handler.mSocket = Net::openConnectTo("108.61.193.195:80");
    const U32 limit = Platform::getRealMilliseconds() + (5*1000);
    while(Process::processEvents() && (Platform::getRealMilliseconds() < limit) ) {}
 
@@ -142,8 +142,8 @@ struct JournalHandle
       Net::smConnectionNotify ->notify(this, &JournalHandle::notify);
       Net::smConnectionReceive->notify(this, &JournalHandle::receive);
 
-      // Open a TCP connection to garagegames.com
-      mSocket = Net::openConnectTo("72.246.107.193:80");
+      // Open a TCP connection to torque3d.org
+      mSocket = Net::openConnectTo("108.61.193.195:80");
 
       // Let the callbacks enable things to process.
       while(Process::processEvents()) {}

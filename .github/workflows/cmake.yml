@@ -54,7 +54,7 @@ jobs:
 
     - name: Build
       # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --target install
 
     - name: Test
       run: |
@@ -64,6 +64,8 @@ jobs:
          else
             ./Torque3D runTests.tscript
          fi
+      shell: bash
+
 
     - name: Publish Test Report
       uses: mikepenz/action-junit-report@v3

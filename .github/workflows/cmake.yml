@@ -59,10 +59,14 @@ jobs:
     - name: Test
       run: |
          cd "${{github.workspace}}/My Projects/Torque3D/game"
-         ./Torque3D runTests.tscript
+         if [ "$RUNNER_OS" == "macOS" ]; then
+            ./Torque3D.app/Contents/MacOS/Torque3D runTests.tscript
+         else
+            ./Torque3D runTests.tscript
+         fi
 
     - name: Publish Test Report
       uses: mikepenz/action-junit-report@v3
       if: success() || failure() # always run even if the previous step fails
       with:
-         report_paths: '${{github.workspace}}/My Projects/Torque3D/game/TEST-*.xml'
+         report_paths: '${{github.workspace}}/My Projects/Torque3D/game/test_detail.xml'

@@ -1001,10 +1001,6 @@ TEST(Script, MiscRegressions)
    ASSERT_EQ(regression2.getInt(), 400);
 
    ConsoleValue regression3 = RunScript(R"(
-      if(!isObject(GuiDefaultProfile))
-         new GuiControlProfile (GuiDefaultProfile) {};
-      if(!isObject(GuiTooltipProfile))
-         new GuiControlProfile (GuiTooltipProfile) {};
       function doTest()
       {
           %button = new GuiIconButtonCtrl()

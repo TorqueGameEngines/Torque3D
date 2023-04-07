@@ -91,6 +91,18 @@ public:
             ValueRef val = new Value(i, tick);
             mDeque.pushBack(val);
          }
+
+         // WORKAROUND: due to a bug in the Deque, we lose an item, and thus the test will loop forever. We currently
+         //             don't have a timeout solution, so instead push som extra elements just to make sure Consumer
+         //             doesn't get stuck.
+         for(U32 i = mValues.size(); i < mValues.size() + 5; i++)
+         {
+            U32 tick = Platform::getRealMilliseconds();
+
+            ValueRef val = new Value(i, tick);
+
+            mDeque.pushBack(val);
+         }
       }
    };
 
@@ -107,7 +119,6 @@ public:
          {
             ValueRef value;
             while(!mDeque.tryPopFront(value));
-
             EXPECT_EQ(i, value->mIndex);
             EXPECT_EQ(value->mTick, mValues[i]);
          }
@@ -162,6 +173,8 @@ TEST_FIX(ThreadSafeDeque, PopBack)
 }
 
 // Test deque in a concurrent setting.
+
+// Test many items in a row
 TEST_FIX(ThreadSafeDeque, Concurrent1)
 {
    const U32 NumValues = 100;
@@ -181,6 +194,30 @@ TEST_FIX(ThreadSafeDeque, Concurrent1)
    cThread.join();
 
    mValues.clear();
+};
+
+// Test a few items many times to catch any race-condition in start-up
+TEST_FIX(ThreadSafeDeque, Concurrent2)
+{
+   for (int i = 0; i < 10000; ++i)
+   {
+      Deque mDeque;
+      Vector<U32> mValues;
+
+      mValues.setSize(5);
+
+      ProducerThread pThread(mValues, mDeque);
+      ConsumerThread cThread(mValues, mDeque);
+
+      cThread.start();
+      pThread.start();
+
+      pThread.join();
+      cThread.join();
+
+      mValues.clear();
+      if (::testing::Test::HasFailure()) break;
+   }
 };
 
 #endif

@@ -618,13 +618,13 @@ bool MountSystem::_dumpDirectories(DirectoryRef directory, Vector<StringTableEnt
          // So if we queried for data/ and are currently processing data/ExampleModule/datablocks we want to output
          // ExampleModule/datablocks
          Path newDirectoryPath;
-         for (U32 iteration = basePathDirectoryCount; iteration < directoryPath.getDirectoryCount(); ++iteration)
+         for (U32 subIteration = basePathDirectoryCount; subIteration < directoryPath.getDirectoryCount(); ++subIteration)
          {
-            if (iteration > basePathDirectoryCount)
+            if (subIteration > basePathDirectoryCount)
             {
                newDirectoryPath.setPath(newDirectoryPath.getPath() + "/");
             }
-            newDirectoryPath.setPath(newDirectoryPath.getPath() + directoryPath.getDirectory(iteration));
+            newDirectoryPath.setPath(newDirectoryPath.getPath() + directoryPath.getDirectory(subIteration));
          }
 
          newDirectoryPath.setFileName(directoryPath.getFileName());

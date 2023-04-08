@@ -16,6 +16,7 @@ jobs:
       - name: Download Windows Test Report
         uses: dawidd6/action-download-artifact@v2
         with:
+          path: Windows
           name: junit-test-results-Windows
           workflow: ${{ github.event.workflow.id }}
           run_id: ${{ github.event.workflow_run.id }}
@@ -23,6 +24,7 @@ jobs:
       - name: Download Linux Test Report
         uses: dawidd6/action-download-artifact@v2
         with:
+          path: Linux
           name: junit-test-results-Linux
           workflow: ${{ github.event.workflow.id }}
           run_id: ${{ github.event.workflow_run.id }}
@@ -30,6 +32,7 @@ jobs:
       - name: Download Mac Test Report
         uses: dawidd6/action-download-artifact@v2
         with:
+          path: macOS
           name: junit-test-results-macOS
           workflow: ${{ github.event.workflow.id }}
           run_id: ${{ github.event.workflow_run.id }}

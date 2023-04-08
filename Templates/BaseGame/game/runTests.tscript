@@ -1,5 +1,13 @@
+// Placeholder initialisation that the tests expect
+GFXInit::createNullDevice();
+
+if(!isObject(GuiDefaultProfile))
+    new GuiControlProfile (GuiDefaultProfile) {};
+if(!isObject(GuiTooltipProfile))
+    new GuiControlProfile (GuiTooltipProfile) {};
+
 setLogMode(2);
 $Con::LogBufferEnabled = false;
 $Testing::CheckMemoryLeaks = false;
-runAllUnitTests("-*.Stress*");
+runAllUnitTests("-*.Stress*", "xml");
 quit();

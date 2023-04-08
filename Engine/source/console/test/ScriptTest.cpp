@@ -177,7 +177,7 @@ TEST(Script, Basic_Global_Variable_Tests)
 TEST(Script, Variable_Chaining_And_Usage)
 {
    ConsoleValue value = RunScript(R"(
-         function t() 
+         function t()
          {
             %a = %b = 2;
             return %a;
@@ -188,7 +188,7 @@ TEST(Script, Variable_Chaining_And_Usage)
    ASSERT_EQ(value.getInt(), 2);
 
    ConsoleValue valueGlobal = RunScript(R"(
-         function t() 
+         function t()
          {
             $a = %b = 2;
          }
@@ -199,7 +199,7 @@ TEST(Script, Variable_Chaining_And_Usage)
    ASSERT_EQ(valueGlobal.getInt(), 2);
 
    ConsoleValue value2 = RunScript(R"(
-         function t(%a) 
+         function t(%a)
          {
             if ((%b = 2 * %a) != 5)
                return %b;
@@ -281,8 +281,8 @@ TEST(Script, Basic_Loop_Statements)
    ASSERT_EQ(whileValue.getInt(), 5);
 
    ConsoleValue forValue = RunScript(R"(
-         function t(%times) 
-         { 
+         function t(%times)
+         {
             %result = "";
             for (%i = 0; %i < %times; %i++)
                %result = %result @ "a";
@@ -295,8 +295,8 @@ TEST(Script, Basic_Loop_Statements)
    ASSERT_STREQ(forValue.getString(), "aaa");
 
    ConsoleValue forReverseLoop = RunScript(R"(
-         function t(%times) 
-         { 
+         function t(%times)
+         {
             %result = "";
             for (%i = %times - 1; %i >= 0; %i--)
                %result = %result @ "b";
@@ -317,9 +317,9 @@ TEST(Script, Basic_Loop_Statements)
 
                %loopValue = %i;
 
-               if (%str $= "") 
+               if (%str $= "")
                   %str = %loopValue;
-               else 
+               else
                   %str = %str @ "," SPC %loopValue;
             }
             return %str;
@@ -547,7 +547,7 @@ TEST(Script, SimObject_Tests)
    ConsoleValue object = RunScript(R"(
          return new SimObject(FudgeCollector)
          {
-            fudge = "Chocolate"; 
+            fudge = "Chocolate";
          };
    )");
 
@@ -688,7 +688,7 @@ TEST(Script, SimObject_Tests)
 
       function Bar::doTheAddition(%this)
       {
-         return %this.testClass() + %this.test() + %this.doSuperTest(); 
+         return %this.testClass() + %this.test() + %this.doSuperTest();
       }
 
       return Bar.doTheAddition();
@@ -757,7 +757,7 @@ TEST(Script, Internal_Name)
 
             return %val;
          }
-         return a();      
+         return a();
    )");
 
    ASSERT_EQ(recursiveValue.getInt(), 12);
@@ -983,7 +983,7 @@ TEST(Script, MiscRegressions)
    ASSERT_EQ(regression1.getInt(), 200);
 
    ConsoleValue regression2 = RunScript(R"(
-      new SimObject(TheRegressionObject2) 
+      new SimObject(TheRegressionObject2)
       {
          extent = "100 200";
       };
@@ -1022,7 +1022,7 @@ TEST(Script, MiscRegressions)
    )");
 
    ASSERT_STREQ(regression3.getString(), "120 20");
-   
+
    ConsoleValue regression4 = RunScript(R"(
     function doTest()
     {
@@ -1038,7 +1038,7 @@ TEST(Script, MiscRegressions)
     }
     return doTest();
    )");
-   
+
    ASSERT_EQ(regression4.getFloat(), 0.5);
 
    ConsoleValue regression5 = RunScript(R"(
@@ -1068,7 +1068,7 @@ TEST(Script, MiscRegressions)
             if (%obj.isMethod(%function))
             {
                %line = "abcdefg";
-               %output = %obj.call(%function, %line); 
+               %output = %obj.call(%function, %line);
             }
          }
 

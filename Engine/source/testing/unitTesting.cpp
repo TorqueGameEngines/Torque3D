@@ -22,12 +22,14 @@
 
 #ifdef TORQUE_TESTS_ENABLED
 
+#include "console/console.h"
+#include "console/codeBlock.h"
 #include "console/engineAPI.h"
 #include "console/consoleInternal.h"
 #include "unitTesting.h"
 #include "memoryTester.h"
 
-#include <gtest/gtest-all.cc>
+#include <gtest/src/gtest-all.cc>
 
 //-----------------------------------------------------------------------------
 
@@ -76,7 +78,67 @@ public:
    TorqueUnitTestListener( bool verbose ) : mVerbose( verbose ) {}
 };
 
-DefineEngineFunction( runAllUnitTests, int, (const char* testSpecs), (""),
+class TorqueScriptFixture : public testing::Test {};
+
+class TorqueScriptTest : public TorqueScriptFixture {
+public:
+   explicit TorqueScriptTest(const char* pFunctionName) : mFunctionName(pFunctionName) {}
+   void TestBody() override
+   {
+      Con::executef(mFunctionName);
+   }
+
+private:
+   const char* mFunctionName;
+};
+
+DefineEngineFunction( addUnitTest, void, (const char* function),,
+   "Add a TorqueScript function as a GTest unit test.\n"
+   "@note This is only implemented rudimentarily to open the door for future development in unit-testing the engine.\n"
+   "@tsexample\n"
+   "function MyTest() {\n"
+   "   expectTrue(2+2 == 4, \"basic math should work\");\n"
+   "}\n"
+   "addUnitTest(MyTest);\n"
+   "@endtsexample\n"
+   "@see expectTrue")
+{
+   Namespace::Entry* entry = Namespace::global()->lookup(StringTable->insert(function));
+   const char* file = __FILE__;
+   U32 ln = __LINE__;
+   if (entry != NULL)
+   {
+      file = entry->mCode->name;
+      U32 inst;
+      entry->mCode->findBreakLine(entry->mFunctionOffset, ln, inst);
+   }
+   else
+   {
+      Con::warnf("failed to register unit test %s, could not find the function", function);
+   }
+
+   testing::RegisterTest("TorqueScriptFixture", function, NULL, NULL, file, ln,
+      [=]() -> TorqueScriptFixture* { return new TorqueScriptTest(function); });
+}
+
+String scriptFileMessage(const char* message)
+{
+   Dictionary* frame = &gEvalState.getCurrentFrame();
+   CodeBlock* code = frame->code;
+   const char* scriptLine = code->getFileLine(frame->ip);
+   return  String::ToString("at %s: %s", scriptLine, message);
+}
+
+DefineEngineFunction( expectTrue, void, (bool test, const char* message),(""),
+   "TorqueScript wrapper around the EXPECT_TRUE assertion in GTest.\n"
+   "@tsexample\n"
+   "expectTrue(2+2 == 4, \"basic math should work\");\n"
+   "@endtsexample")
+{
+   EXPECT_TRUE(test) << scriptFileMessage(message).c_str();
+}
+
+DefineEngineFunction( runAllUnitTests, int, (const char* testSpecs, const char* reportFormat), (""),
    "Runs engine unit tests. Some tests are marked as 'stress' tests which do not "
    "necessarily check correctness, just performance or possible nondeterministic "
    "glitches. There may also be interactive or networking tests which may be "
@@ -89,22 +151,27 @@ DefineEngineFunction( runAllUnitTests, int, (const char* testSpecs), (""),
    "and http://stackoverflow.com/a/14021997/945863 "
    "for a description of the flag format.")
 {
-   S32 testArgc = 0;
-   char** testArgv = NULL;
+   Vector<char*> args;
+   args.push_back(NULL); // Program name is unused by googletest.
+   String specsArg;
    if ( dStrlen( testSpecs ) > 0 )
    {
-      String specs(testSpecs);
-      specs.replace(' ', ':');
-      specs.insert(0, "--gtest_filter=");
-      testArgc = 2;
-      testArgv = new char*[2];
-      testArgv[0] = NULL; // Program name is unused by googletest.
-      testArgv[1] = new char[specs.size()];
-      dStrcpy(testArgv[1], specs, specs.size());
+      specsArg = testSpecs;
+      specsArg.replace(' ', ':');
+      specsArg.insert(0, "--gtest_filter=");
+      args.push_back(const_cast<char*>(specsArg.c_str()));
    }
 
+   String reportFormatArg;
+   if ( dStrlen(reportFormat) > 0 )
+   {
+      reportFormatArg = String::ToString("--gtest_output=%s", reportFormat);
+      args.push_back(const_cast<char*>(reportFormatArg.c_str()));
+   }
+   S32 argc = args.size();
+
    // Initialize Google Test.
-   testing::InitGoogleTest( &testArgc, testArgv );
+   testing::InitGoogleTest( &argc, args.address() );
 
    // Fetch the unit test instance.
    testing::UnitTest& unitTest = *testing::UnitTest::GetInstance();

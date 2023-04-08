@@ -33,6 +33,6 @@ if(TORQUE_TESTING)
     addPathRec( "${srcDir}/testing" )
 
     # Add include paths
-    addInclude( "${libDir}/gtest/fused-src/" )
+    addInclude( "${libDir}/gtest/" )
 
 endif()

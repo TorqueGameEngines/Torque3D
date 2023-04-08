@@ -70,6 +70,6 @@ jobs:
         uses: actions/upload-artifact@v3
         if: always() # always run even if the previous step fails
         with:
-          name: junit-test-results
-          path: '${{github.workspace}}/My Projects/Torque3D/game/test_detail.xml'
+          name: junit-test-results-${{ runner.os }}
+          path: '**/My Projects/Torque3D/game/test_detail.xml'
           retention-days: 1

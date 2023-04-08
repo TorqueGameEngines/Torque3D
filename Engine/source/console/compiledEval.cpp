@@ -564,9 +564,9 @@ TORQUE_NOINLINE void doSlowIntegerOp()
 
    // Logical Op
    if constexpr (Op == IntegerOperation::LogicalAnd)
-      stack[_STK - 1].setInt(a.getInt() && b.getInt());
+      stack[_STK - 1].setBool(a.getInt() && b.getInt());
    if constexpr (Op == IntegerOperation::LogicalOr)
-      stack[_STK - 1].setInt(a.getInt() || b.getInt());
+      stack[_STK - 1].setBool(a.getInt() || b.getInt());
 
    _STK--;
 }
@@ -593,9 +593,9 @@ TORQUE_FORCEINLINE void doIntOperation()
 
       // Logical Op
       if constexpr (Op == IntegerOperation::LogicalAnd)
-         stack[_STK - 1].setFastInt(a.getFastInt() && b.getFastInt());
+         stack[_STK - 1].setBool(a.getFastInt() && b.getFastInt());
       if constexpr (Op == IntegerOperation::LogicalOr)
-         stack[_STK - 1].setFastInt(a.getFastInt() || b.getFastInt());
+         stack[_STK - 1].setBool(a.getFastInt() || b.getFastInt());
 
       _STK--;
    }
@@ -1344,7 +1344,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          break;
 
       case OP_NOT:
-         stack[_STK].setInt(!stack[_STK].getInt());
+         stack[_STK].setBool(!stack[_STK].getInt());
          break;
 
       case OP_NOTF:

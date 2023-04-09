@@ -93,7 +93,7 @@ String Platform::localTimeToString( const LocalTime &lt )
    outStr += "\t";
 
    result = GetTimeFormat( LOCALE_USER_DEFAULT,
-                           0,
+                           TIME_FORCE24HOURFORMAT,
                            &st,
                            NULL,
                            (LPTSTR)buffer,

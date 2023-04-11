@@ -66,6 +66,25 @@ jobs:
           fi
         shell: bash
 
+      # Make all paths conform to the Unix runner setup:
+      - name: Replace Absolute Paths In Test Report
+        run: |
+          import os
+          dir = os.environ["WorkspaceDirectory"]
+          filePath = dir + "/My Projects/Torque3D/game/test_detail.xml"
+          f = open(filePath, 'r')
+          filedata = f.read()
+          f.close()
+
+          filedata = filedata.replace(dir, "/home/runner/work/Torque3D/Torque3D").replace("\\", "/")
+
+          f = open(filePath, 'w')
+          f.write(filedata)
+          f.close()
+        shell: python
+        env:
+          WorkspaceDirectory: ${{github.workspace}}
+
       - name: Upload Test Report
         uses: actions/upload-artifact@v3
         if: always() # always run even if the previous step fails

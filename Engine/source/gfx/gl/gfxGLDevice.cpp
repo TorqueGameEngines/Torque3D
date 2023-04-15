@@ -191,7 +191,12 @@ void GFXGLDevice::initGLState()
    glGenVertexArrays(1, &vao);
    glBindVertexArray(vao);
 
+   // MacOS uses OGL 4.1. This workaround is functional, but will not provide the improvied depth performance.
+#if defined(__MACOSX__)
+   glDepthRangef(0.0, 1.0);
+#else
    glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
+#endif
    //enable sRGB
    glEnable(GL_FRAMEBUFFER_SRGB);
 

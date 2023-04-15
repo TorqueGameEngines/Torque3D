@@ -1735,7 +1735,7 @@ void VertPositionGLSL::processVert( Vector<ShaderComponent*> &componentList,
        outPosition, modelview, inPosition ) );   
    if (fd.materialFeatures[MFT_isBackground])
    {
-	   meta->addStatement(new GenOp("   @ = @.xyww;\r\n", outPosition, outPosition));
+	   meta->addStatement(new GenOp("   @.z = 0.0f;\r\n", outPosition));
    }
 	output = meta;
 }

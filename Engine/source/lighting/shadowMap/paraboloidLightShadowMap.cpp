@@ -113,7 +113,7 @@ void ParaboloidLightShadowMap::_render(   RenderPassManager* renderPass,
    mTarget->attachTexture( GFXTextureTarget::DepthStencil, 
       _getDepthTarget( mShadowMapTex->getWidth(), mShadowMapTex->getHeight() ) );
    GFX->setActiveRenderTarget(mTarget);
-   GFX->clear(GFXClearTarget | GFXClearStencil | GFXClearZBuffer, ColorI(255,255,255,255), 1.0f, 0);
+   GFX->clear(GFXClearTarget | GFXClearStencil | GFXClearZBuffer, ColorI(255,255,255,255), 0.0f, 0);
 
    // Create scene state, prep it
    SceneManager* sceneManager = diffuseState->getSceneManager();

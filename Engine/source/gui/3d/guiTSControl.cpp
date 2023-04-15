@@ -387,7 +387,7 @@ void GuiTSCtrl::_internalRender(RectI guiViewport, RectI renderViewport, Frustum
    GFX->setViewport(renderViewport);
 
    // Clear the zBuffer so GUI doesn't hose object rendering accidentally
-   GFX->clear(GFXClearZBuffer, ColorI(20, 20, 20), 1.0f, 0);
+   GFX->clear(GFXClearZBuffer, ColorI(20, 20, 20), 0.0f, 0);
 
    GFX->setFrustum(frustum);
    mSaveProjection = GFX->getProjectionMatrix();

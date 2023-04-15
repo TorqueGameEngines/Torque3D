@@ -123,6 +123,9 @@ public:
    ///       be used if the matrix has something other than (0,0,0,1) in the bottom row.
    bool fullInverse();
 
+   /// Reverse depth for projection matrix
+   /// Simplifies reversal matrix mult to 4 subtractions
+   void reverseProjection();
    /// Swaps rows and columns into matrix.
    void transposeTo(F32 *matrix) const;
 

@@ -714,7 +714,7 @@ void WaterPlane::prepRenderImage( SceneRenderState *state )
       mGenerateVB = false;
 
       MatrixF proj( true );
-      MathUtils::getZBiasProjectionMatrix( 0.0001f, mFrustum, &proj );
+      MathUtils::getZBiasProjectionMatrix( 0.0f, mFrustum, &proj );
       mMatrixSet->setSceneProjection(proj);
    }
 

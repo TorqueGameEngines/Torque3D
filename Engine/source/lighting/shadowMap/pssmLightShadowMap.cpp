@@ -168,6 +168,7 @@ void PSSMLightShadowMap::_roundProjection(const MatrixF& lightMat, const MatrixF
 {
    // Round to the nearest shadowmap texel, this helps reduce shimmering
    MatrixF currentProj = GFX->getProjectionMatrix();
+   currentProj.reverseProjection();
    currentProj = cropMatrix * currentProj * lightMat;
 
    // Project origin to screen.
@@ -226,13 +227,15 @@ void PSSMLightShadowMap::_render(   RenderPassManager* renderPass,
    mTarget->attachTexture( GFXTextureTarget::Color0, mShadowMapTex );
    mTarget->attachTexture( GFXTextureTarget::DepthStencil, mShadowMapDepth );
    GFX->setActiveRenderTarget( mTarget );
-   GFX->clear( GFXClearStencil | GFXClearZBuffer | GFXClearTarget, ColorI(255,255,255), 1.0f, 0 );
+   GFX->clear( GFXClearStencil | GFXClearZBuffer | GFXClearTarget, ColorI(255,255,255), 0.0f, 0 );
 
    // Calculate our standard light matrices
    MatrixF lightMatrix;
    calcLightMatrices( lightMatrix, diffuseState->getCameraFrustum() );
    lightMatrix.inverse();
-   MatrixF lightViewProj = GFX->getProjectionMatrix() * lightMatrix;
+   MatrixF tempProjMat = GFX->getProjectionMatrix();
+   tempProjMat.reverseProjection();
+   MatrixF lightViewProj = tempProjMat * lightMatrix;
 
    // TODO: This is just retrieving the near and far calculated
    // in calcLightMatrices... we should make that clear.
@@ -245,7 +248,7 @@ void PSSMLightShadowMap::_render(   RenderPassManager* renderPass,
 
    _calcSplitPos(fullFrustum);
    
-   mWorldToLightProj = GFX->getProjectionMatrix() * toLightSpace;
+   mWorldToLightProj = tempProjMat * toLightSpace;
 
    // Apply the PSSM 
    const F32 savedSmallestVisible = TSShapeInstance::smSmallestVisiblePixelSize;
@@ -320,7 +323,9 @@ void PSSMLightShadowMap::_render(   RenderPassManager* renderPass,
 
       // Crop matrix multiply needs to be post-projection.
       MatrixF alightProj = GFX->getProjectionMatrix();
+      alightProj.reverseProjection();
       alightProj = cropMatrix * alightProj;
+      alightProj.reverseProjection();
 
       // Set our new projection
       GFX->setProjectionMatrix(alightProj);

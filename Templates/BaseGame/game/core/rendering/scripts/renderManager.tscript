@@ -35,7 +35,7 @@ function initRenderManager()
       
       //When hdr is enabled this will be changed to the appropriate format
       format = "GFXFormatR16G16B16A16F";
-      depthFormat = "GFXFormatD24S8";
+      depthFormat = "GFXFormatD32FS8X24"; // 64-bit depth format. Old 32-bit format was "GFXFormatD24S8"
       aaLevel = 0; // -1 = match backbuffer
       
       // The contents of the back buffer before this format token is executed

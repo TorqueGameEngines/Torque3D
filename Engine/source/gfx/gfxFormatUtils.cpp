@@ -39,6 +39,7 @@ GFXFormatInfo::Data GFXFormatInfo::smFormatInfos[ GFXFormat_COUNT ] =
    // 16 bit texture formats...
    GFXFormatInfo::Data( 2,    false, false, false ),   // GFXFormatR5G6B5
    GFXFormatInfo::Data( 2,    true,  false, false ),   // GFXFormatR5G5B5A1
+   GFXFormatInfo::Data( 2,    false, false, false ),   // GFXFormatR5G5B5X1
    GFXFormatInfo::Data( 2,    true,  false, false ),   // GFXFormatA8L8
    GFXFormatInfo::Data( 2,    false, false, false ),   // GFXFormatL16
    GFXFormatInfo::Data( 2,    false, false, false ),   // GFXFormatR16F
@@ -46,22 +47,28 @@ GFXFormatInfo::Data GFXFormatInfo::smFormatInfos[ GFXFormat_COUNT ] =
 
    // 24 bit texture formats...
    GFXFormatInfo::Data( 3,    false, false, false ),   // GFXFormatR8G8B8
+   GFXFormatInfo::Data( 3,    false, false, false ),   // GFXFormatR8G8B8_SRGB
 
    // 32 bit texture formats...
    GFXFormatInfo::Data( 4,    true,  false, false ),   // GFXFormatR8G8B8A8
    GFXFormatInfo::Data( 4,    false, false, false ),   // GFXFormatR8G8B8X8
+   GFXFormatInfo::Data( 4,    true,  false, false ),   // GFXFormatB8G8R8A8
+   GFXFormatInfo::Data( 4,    true,  false, false ),   // GFXFormatR8G8B8A8_SRGB
    GFXFormatInfo::Data( 4,    false, false, false ),   // GFXFormatR32F
    GFXFormatInfo::Data( 4,    false, false, false ),   // GFXFormatR16G16
    GFXFormatInfo::Data( 4,    false, false, true  ),   // GFXFormatR16G16F
    GFXFormatInfo::Data( 4,    true,  false, false ),   // GFXFormatR10G10B10A2
+   GFXFormatInfo::Data( 4,    false, false, false ),   // GFXFormatR11G11B10
    GFXFormatInfo::Data( 4,    false, false, false ),   // GFXFormatD32
    GFXFormatInfo::Data( 4,    false, false, false ),   // GFXFormatD24X8
    GFXFormatInfo::Data( 4,    false, false, false ),   // GFXFormatD24S8
    GFXFormatInfo::Data( 4,    false, false, false ),   // GFXFormatD24FS8
+   GFXFormatInfo::Data( 4,    true,  false, false ),   // GFXFormatR8G8B8A8_LINEAR_FORCE
 
    // 64 bit texture formats...
    GFXFormatInfo::Data( 8,    true,  false, false ),   // GFXFormatR16G16B16A16
    GFXFormatInfo::Data( 8,    true,  false, true  ),   // GFXFormatR16G16B16A16F
+   GFXFormatInfo::Data( 8,    false, false, false ),   // GFXFormatD32FS8X24
 
    // 128 bit texture formats...
    GFXFormatInfo::Data( 16,   true,  false, true  ),  // GFXFormatR32G32B32A32F
@@ -72,6 +79,9 @@ GFXFormatInfo::Data GFXFormatInfo::smFormatInfos[ GFXFormat_COUNT ] =
    GFXFormatInfo::Data( 0,    true,  true,  false ),   // GFXFormatBC3
    GFXFormatInfo::Data( 0,    false, true,  false ),   // GFXFormatBC4
    GFXFormatInfo::Data( 0,    false, true,  false ),   // GFXFormatBC5
+   GFXFormatInfo::Data( 0,    false, true,  false ),   // GFXFormatBC1_SRGB
+   GFXFormatInfo::Data( 0,    false, true,  false ),   // GFXFormatBC2_SRGB
+   GFXFormatInfo::Data( 0,    false, true,  false ),   // GFXFormatBC3_SRGB
 };
 
 //-----------------------------------------------------------------------------

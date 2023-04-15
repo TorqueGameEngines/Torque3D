@@ -455,7 +455,7 @@ void LightFlareData::prepRender(SceneRenderState *state, LightFlareState *flareS
    lightPosSS *= oneOverViewportExtent;
    lightPosSS = (lightPosSS * 2.0f) - Point3F::One;
    lightPosSS.y = -lightPosSS.y;
-   lightPosSS.z = 0.0f;
+   lightPosSS.z = 1.0f;
 
    // Determine the center of the current projection so we can converge there
    Point3F centerProj(0);

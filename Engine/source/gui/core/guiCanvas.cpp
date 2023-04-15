@@ -1915,7 +1915,7 @@ void GuiCanvas::renderFrame(bool preRenderOnly, bool bufferSwap /* = true */)
 
    // Clear the current viewport area
    GFX->setViewport( screenRect );
-   GFX->clear( GFXClearZBuffer | GFXClearStencil | GFXClearTarget, gCanvasClearColor, 1.0f, 0 );
+   GFX->clear( GFXClearZBuffer | GFXClearStencil | GFXClearTarget, gCanvasClearColor, 0.0f, 0 );
 
    resetUpdateRegions();
 

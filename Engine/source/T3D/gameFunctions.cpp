@@ -531,7 +531,7 @@ void renderFrame(GFXTextureTargetRef* target, MatrixF transform, Frustum frustum
 
    // Clear the current viewport area
    GFX->setViewport(targetRect);
-   GFX->clear(GFXClearZBuffer | GFXClearStencil | GFXClearTarget, canvasClearColor, 1.0f, 0);
+   GFX->clear(GFXClearZBuffer | GFXClearStencil | GFXClearTarget, canvasClearColor, 0.0f, 0);
 
    // Make sure we have a clean matrix state 
    // before we start rendering anything!   
@@ -555,7 +555,7 @@ void renderFrame(GFXTextureTargetRef* target, MatrixF transform, Frustum frustum
       GFXTargetRef origTarget = GFX->getActiveRenderTarget();
 
       // Clear the zBuffer so GUI doesn't hose object rendering accidentally
-      GFX->clear(GFXClearZBuffer, ColorI(20, 20, 20), 1.0f, 0);
+      GFX->clear(GFXClearZBuffer, ColorI(20, 20, 20), 0.0f, 0);
 
       GFX->setFrustum(frustum);
       MatrixF mSaveProjection = GFX->getProjectionMatrix();

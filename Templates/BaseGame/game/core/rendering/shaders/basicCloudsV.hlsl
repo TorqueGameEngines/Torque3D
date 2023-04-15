@@ -46,7 +46,7 @@ ConnectData main( CloudVert IN )
    ConnectData OUT;
 
    OUT.hpos = mul(modelview, float4(IN.pos,1.0));
-   OUT.hpos.z = OUT.hpos.w;
+   OUT.hpos.z = 0.0f; // OUT.hpos.w; // reverse depth -- put cloud layer in the far dist and let render order hints sort it out?
    float2 uv = IN.uv0;
    uv += texOffset;
    uv *= texScale;

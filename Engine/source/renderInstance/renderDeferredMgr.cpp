@@ -321,7 +321,7 @@ void RenderDeferredMgr::render( SceneRenderState *state )
    const bool isRenderingToTarget = _onPreRender(state);
 
    // Clear z-buffer and g-buffer.
-   GFX->clear(GFXClearZBuffer | GFXClearStencil, LinearColorF::ZERO, 1.0f, 0);
+   GFX->clear(GFXClearZBuffer | GFXClearStencil, LinearColorF::ZERO, 0.0f, 0);
    GFX->clearColorAttachment(0, LinearColorF::ONE);//normdepth
    GFX->clearColorAttachment(1, LinearColorF::ZERO);//albedo
    GFX->clearColorAttachment(2, LinearColorF::ZERO);//matinfo

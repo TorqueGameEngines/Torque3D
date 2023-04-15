@@ -418,7 +418,7 @@ void CubeReflector::updateFace( const ReflectParams &params, U32 faceidx, Point3
    GFX->clearTextureStateImmediate(0);
    mRenderTarget->attachTexture( GFXTextureTarget::Color0, mCubemap, faceidx );
    GFX->setActiveRenderTarget(mRenderTarget);
-   GFX->clear( GFXClearStencil | GFXClearTarget | GFXClearZBuffer, gCanvasClearColor, 1.0f, 0 );
+   GFX->clear( GFXClearStencil | GFXClearTarget | GFXClearZBuffer, gCanvasClearColor, 0.0f, 0 );
 
    SceneRenderState reflectRenderState
    (
@@ -624,7 +624,7 @@ void PlaneReflector::updateReflection( const ReflectParams &params )
    // render a skirt or something in its lower half.
    //
    LinearColorF clearColor = gClientSceneGraph->getAmbientLightColor();
-   GFX->clear( GFXClearZBuffer | GFXClearStencil | GFXClearTarget, clearColor, 1.0f, 0 );
+   GFX->clear( GFXClearZBuffer | GFXClearStencil | GFXClearTarget, clearColor, 0.0f, 0 );
 
    if(GFX->getCurrentRenderStyle() == GFXDevice::RS_StereoSideBySide)
    {
@@ -845,6 +845,7 @@ MatrixF PlaneReflector::getFrustumClipProj( MatrixF &modelview )
    // Manipulate projection matrix
    //------------------------------------------------------------------------
    MatrixF proj = GFX->getProjectionMatrix();
+   proj.reverseProjection(); // convert back into normal depth space from reversed, otherwise we have to figure out how to convert this modification into inverted depth space
    proj.mul( invRotMat );  // reverse rotation imposed by Torque
    proj.transpose();       // switch to row-major order
 
@@ -862,14 +863,16 @@ MatrixF PlaneReflector::getFrustumClipProj( MatrixF &modelview )
 
    Vector4F c = clipPlane * a;
 
+   // [ZREV] This was a hack to handle OGL using -1 to 1 as its Z range
    // CodeReview [ags 1/23/08] Come up with a better way to deal with this.
-   if(GFX->getAdapterType() == OpenGL)
-      c.z += 1.0f;
+   //if(GFX->getAdapterType() == OpenGL)
+   //   c.z += 1.0f;
 
    // Replace the third column of the projection matrix
    proj.setColumn( 2, c );
    proj.transpose(); // convert back to column major order
    proj.mul( rotMat );  // restore Torque rotation
 
+   proj.reverseProjection(); // convert back to reversed depth space
    return proj;
 }

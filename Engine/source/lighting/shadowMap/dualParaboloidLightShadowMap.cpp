@@ -71,7 +71,7 @@ void DualParaboloidLightShadowMap::_render(  RenderPassManager* renderPass,
    mTarget->attachTexture(GFXTextureTarget::Color0, mShadowMapTex);
    mTarget->attachTexture( GFXTextureTarget::DepthStencil, mShadowMapDepth );
    GFX->setActiveRenderTarget(mTarget);
-   GFX->clear(GFXClearTarget | GFXClearStencil | GFXClearZBuffer, ColorI::WHITE, 1.0f, 0);
+   GFX->clear(GFXClearTarget | GFXClearStencil | GFXClearZBuffer, ColorI::WHITE, 0.0f, 0);
 
    const bool bUseSinglePassDPM = (p->shadowType == ShadowType_DualParaboloidSinglePass);
 

@@ -439,6 +439,7 @@ bool mProjectWorldToScreen(   const Point3F &in,
                               const MatrixF &projection )
 {
    MatrixF worldProjection = projection;
+   worldProjection.reverseProjection();
    worldProjection.mul(world);
 
    return mProjectWorldToScreen( in, out, view, worldProjection );
@@ -487,6 +488,7 @@ void mProjectScreenToWorld(   const Point3F &in,
                               F32 znear )
 {
    MatrixF invWorldProjection = projection;
+   invWorldProjection.reverseProjection();
    invWorldProjection.mul(world);
    invWorldProjection.inverse();
 
@@ -1472,7 +1474,7 @@ void makeProjection( MatrixF *outMatrix,
                      F32 farPlane,
                      bool gfxRotate)
 {
-   const bool isGL = GFX->getAdapterType() == OpenGL;
+   const bool isGL = false; // No longer need special OGL case w/ reversed depth
    Point4F row;
    row.x = 2.0f * nearPlane / (right - left);
    row.y = 0.0f;
@@ -1502,6 +1504,7 @@ void makeProjection( MatrixF *outMatrix,
 
    if (gfxRotate)
       outMatrix->mul(sGFXProjRotMatrix);
+   outMatrix->reverseProjection();
 }
 
 //-----------------------------------------------------------------------------
@@ -1545,6 +1548,7 @@ void makeOrthoProjection(  MatrixF *outMatrix,
 
    if ( gfxRotate )
       outMatrix->mul( sGFXProjRotMatrix );
+   outMatrix->reverseProjection();
 }
 
 //-----------------------------------------------------------------------------

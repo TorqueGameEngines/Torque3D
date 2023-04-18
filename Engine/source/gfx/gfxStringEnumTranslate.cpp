@@ -122,6 +122,7 @@ void GFXStringEnumTranslate::init()
    GFX_STRING_ASSIGN_MACRO( GFXStringTextureFormat, GFXFormatD24S8 );
    GFX_STRING_ASSIGN_MACRO( GFXStringTextureFormat, GFXFormatD24FS8 );
    GFX_STRING_ASSIGN_MACRO( GFXStringTextureFormat, GFXFormatD16 );
+   GFX_STRING_ASSIGN_MACRO( GFXStringTextureFormat, GFXFormatD32FS8X24 );
 
    GFX_STRING_ASSIGN_MACRO( GFXStringTextureFormat, GFXFormatR32G32B32A32F );
    GFX_STRING_ASSIGN_MACRO( GFXStringTextureFormat, GFXFormatR16G16B16A16F );

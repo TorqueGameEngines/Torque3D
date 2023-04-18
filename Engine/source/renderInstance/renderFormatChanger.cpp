@@ -129,7 +129,7 @@ void RenderFormatToken::process(SceneRenderState *state, RenderPassStateBin *cal
          GFX->setViewport( mTarget.getViewport() );
 
          // Clear
-         GFX->clear(GFXClearTarget | GFXClearZBuffer | GFXClearStencil, gCanvasClearColor, 1.0f, 0);
+         GFX->clear(GFXClearTarget | GFXClearZBuffer | GFXClearStencil, gCanvasClearColor, 0.0f, 0);
 
          // Set active z target on render pass
          if(mTargetDepthStencilTexture[mTargetChainIdx].isValid())

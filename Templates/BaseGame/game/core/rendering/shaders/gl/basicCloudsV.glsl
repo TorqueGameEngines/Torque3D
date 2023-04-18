@@ -41,7 +41,7 @@ out vec2 texCoord;
 void main()
 {  
    gl_Position = tMul(modelview, IN_pos);
-   gl_Position.z = gl_Position.w;
+   gl_Position.z = 0.0; // gl_Position.w; // reverse depth -- put cloud layer in the far dist and let render order hints sort it out?
    
    vec2 uv = IN_uv0;
    uv += texOffset;

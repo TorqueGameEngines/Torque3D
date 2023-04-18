@@ -149,7 +149,7 @@ ConnectData main( VertData IN )
    // }
    
    // Save world space camera dist/depth of the outgoing pixel
-   OUT.rippleTexCoord2.z = OUT.hpos.z;              
+   OUT.rippleTexCoord2.z = OUT.hpos.w; // use the world-coordinate version of depth, this will work with either projection model
 
    // Convert to reflection texture space   
    OUT.posPostWave = mul( texGen, OUT.posPostWave );

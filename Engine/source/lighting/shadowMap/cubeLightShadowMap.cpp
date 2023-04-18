@@ -170,7 +170,7 @@ void CubeLightShadowMap::_render(   RenderPassManager* renderPass,
       mTarget->attachTexture(GFXTextureTarget::Color0, mCubemap, i);
       mTarget->attachTexture(GFXTextureTarget::DepthStencil, _getDepthTarget( mTexSize, mTexSize ));
       GFX->setActiveRenderTarget(mTarget);
-      GFX->clear( GFXClearTarget | GFXClearStencil | GFXClearZBuffer, ColorI(255,255,255,255), 1.0f, 0 );
+      GFX->clear( GFXClearTarget | GFXClearStencil | GFXClearZBuffer, ColorI(255,255,255,255), 0.0f, 0 );
 
       // Create scene state, prep it
       SceneManager* sceneManager = diffuseState->getSceneManager();

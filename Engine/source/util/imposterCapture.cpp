@@ -234,7 +234,7 @@ void ImposterCapture::_renderToTexture( GFXTexHandle texHandle, GBitmap *outBitm
    mRenderTarget->attachTexture( GFXTextureTarget::DepthStencil, mDepthBuffer );
    GFX->setActiveRenderTarget( mRenderTarget );
 
-   GFX->clear( GFXClearZBuffer | GFXClearStencil | GFXClearTarget, color, 1.0f, 0 );
+   GFX->clear( GFXClearZBuffer | GFXClearStencil | GFXClearTarget, color, 0.0f, 0 );
 
    mShapeInstance->render( mRData, mDl, 1.0f );
 

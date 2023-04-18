@@ -128,6 +128,7 @@ ImplementEnumType( GFXFormat,
    { GFXFormatD24S8, "GFXFormatD24S8" },
    { GFXFormatD24FS8, "GFXFormatD24FS8" },
    { GFXFormatD16, "GFXFormatD16" }, 
+   { GFXFormatD32FS8X24, "GFXFormatD32FS8X24" },
 
    { GFXFormatR32G32B32A32F, "GFXFormatR32G32B32A32F" }, 
    { GFXFormatR16G16B16A16F, "GFXFormatR16G16B16A16F" }, 

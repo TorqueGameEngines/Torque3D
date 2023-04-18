@@ -191,6 +191,12 @@ void GFXGLDevice::initGLState()
    glGenVertexArrays(1, &vao);
    glBindVertexArray(vao);
 
+   // MacOS uses OGL 4.1. This workaround is functional, but will not provide the improvied depth performance.
+#if defined(__MACOSX__)
+   glDepthRangef(0.0, 1.0);
+#else
+   glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
+#endif
    //enable sRGB
    glEnable(GL_FRAMEBUFFER_SRGB);
 
@@ -794,37 +800,25 @@ void GFXGLDevice::setClipRect( const RectI &inRect )
    mClip = inRect;
    mClip.intersect(maxRect);
 
-   // Create projection matrix.  See http://www.opengl.org/documentation/specs/man_pages/hardcopy/GL/html/gl/ortho.html
-   const F32 left = mClip.point.x;
-   const F32 right = mClip.point.x + mClip.extent.x;
-   const F32 bottom = mClip.extent.y;
-   const F32 top = 0.0f;
-   const F32 nearPlane = 0.0f;
-   const F32 farPlane = 1.0f;
-   
-   const F32 tx = -(right + left)/(right - left);
-   const F32 ty = -(top + bottom)/(top - bottom);
-   const F32 tz = -(farPlane + nearPlane)/(farPlane - nearPlane);
-   
    static Point4F pt;
-   pt.set(2.0f / (right - left), 0.0f, 0.0f, 0.0f);
+   F32 l = F32(mClip.point.x);
+   F32 r = F32(mClip.point.x + mClip.extent.x);
+   F32 b = F32(mClip.point.y + mClip.extent.y);
+   F32 t = F32(mClip.point.y);
+   
+   // Set up projection matrix, 
+   //static Point4F pt;
+   pt.set(2.0f / (r - l), 0.0f, 0.0f, 0.0f);
    mProjectionMatrix.setColumn(0, pt);
    
-   pt.set(0.0f, 2.0f/(top - bottom), 0.0f, 0.0f);
+   pt.set(0.0f, 2.0f / (t - b), 0.0f, 0.0f);
    mProjectionMatrix.setColumn(1, pt);
    
-   pt.set(0.0f, 0.0f, -2.0f/(farPlane - nearPlane), 0.0f);
+   pt.set(0.0f, 0.0f, 1.0f, 0.0f);
    mProjectionMatrix.setColumn(2, pt);
    
-   pt.set(tx, ty, tz, 1.0f);
+   pt.set((l + r) / (l - r), (t + b) / (b - t), 1.0f, 1.0f);
    mProjectionMatrix.setColumn(3, pt);
-   
-   // Translate projection matrix.
-   static MatrixF translate(true);
-   pt.set(0.0f, -mClip.point.y, 0.0f, 1.0f);
-   translate.setColumn(3, pt);
-   
-   mProjectionMatrix *= translate;
    
    MatrixF mTempMatrix(true);
    setViewMatrix( mTempMatrix );

@@ -73,7 +73,7 @@ GFXStateBlockDesc::GFXStateBlockDesc()
    zDefined = false;
    zEnable = true;
    zWriteEnable = true;
-   zFunc = GFXCmpLessEqual;
+   zFunc = GFXCmpGreaterEqual;
    zBias = 0;
    zSlopeBias = 0;
 

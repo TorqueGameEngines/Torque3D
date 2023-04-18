@@ -1104,7 +1104,7 @@ void VolumetricFog::render(ObjectRenderInst *ri, SceneRenderState *state, BaseMa
    z_buf->attachTexture(GFXTextureTarget::Color0, mDepthBuffer);
 
    GFX->setActiveRenderTarget(z_buf);
-   GFX->clear(GFXClearStencil | GFXClearTarget , ColorI(0,0,0,0), 1.0f, 0);
+   GFX->clear(GFXClearStencil | GFXClearTarget , ColorI(0,0,0,0), 0.0f, 0);
 
    GFX->drawPrimitive(0);
    z_buf->resolve();
@@ -1112,7 +1112,7 @@ void VolumetricFog::render(ObjectRenderInst *ri, SceneRenderState *state, BaseMa
    //render frontside to target mFrontBuffer
    z_buf->attachTexture(GFXTextureTarget::DepthStencil, GFXTextureTarget::sDefaultDepthStencil);
    z_buf->attachTexture(GFXTextureTarget::Color0, mFrontBuffer);
-   GFX->clear(GFXClearStencil | GFXClearTarget, ColorI(0, 0, 0, 0), 1.0f, 0);
+   GFX->clear(GFXClearStencil | GFXClearTarget, ColorI(0, 0, 0, 0), 0.0f, 0);
 
    GFX->setStateBlock(mStateblock_preF);
 

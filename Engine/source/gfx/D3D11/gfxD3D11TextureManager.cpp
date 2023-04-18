@@ -173,7 +173,12 @@ void GFXD3D11TextureManager::_innerCreateTexture( GFXD3D11TextureObject *retTex,
 			desc.CPUAccessFlags = cpuFlags;
 			//depth stencil must be a typeless format if it is bound on render target and shader resource simultaneously
 			// we'll send the real format for the creation of the views
+			if (format == GFXFormatD24S8)
+         {
 			desc.Format =  DXGI_FORMAT_R24G8_TYPELESS; 
+         }
+         else // Note: right now only GFXFormatD24S8 and GFXFormatD32FS8U24 are supported. Additional cases required to support 16-bit depth for mobile.
+			   desc.Format = DXGI_FORMAT_R32G8X24_TYPELESS;
 			desc.MipLevels = numMipLevels;
 			desc.SampleDesc.Count = antialiasLevel;
 			desc.SampleDesc.Quality = numQualityLevels;

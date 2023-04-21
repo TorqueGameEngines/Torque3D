@@ -34,13 +34,13 @@ function EditorInspectorBase::onAdd( %this )
          superClass = "MenuBuilder";
          isPopup = true;
          
-         item[ 0 ] = "Edit Datablock" TAB "" TAB "DatablockEditorPlugin.openDatablock( %this.inspectorField.getData() );";
-         Item[ 1 ] = "Jump to Definition in Torsion" TAB "" TAB "EditorOpenDeclarationInTorsion( %this.inspectorField.getData() );";
-         item[ 2 ] = "Inspect Object" TAB "" TAB "inspectObject( %this.inspectorField.getData() );";
+         item[ 0 ] = "Edit Datablock" TAB "" TAB "DatablockEditorPlugin.openDatablock( EditorInspectorBaseDatablockFieldPopup.inspectorField.getData() );";
+         Item[ 1 ] = "Jump to Definition in Torsion" TAB "" TAB "EditorOpenDeclarationInTorsion( EditorInspectorBaseDatablockFieldPopup.inspectorField.getData() );";
+         item[ 2 ] = "Inspect Object" TAB "" TAB "inspectObject( EditorInspectorBaseDatablockFieldPopup.inspectorField.getData() );";
          item[ 3 ] = "-";
-         item[ 4 ] = "Copy Value" TAB "" TAB "setClipboard( %this.inspectorField.getData() );";
-         item[ 5 ] = "Paste Value" TAB "" TAB "%this.inspectorField.apply( getClipboard() );";
-         item[ 6 ] = "Reset to Default" TAB "" TAB "%this.inspectorField.reset();";
+         item[ 4 ] = "Copy Value" TAB "" TAB "setClipboard( EditorInspectorBaseDatablockFieldPopup.inspectorField.getData() );";
+         item[ 5 ] = "Paste Value" TAB "" TAB "EditorInspectorBaseDatablockFieldPopup.inspectorField.apply( getClipboard() );";
+         item[ 6 ] = "Reset to Default" TAB "" TAB "EditorInspectorBaseDatablockFieldPopup.inspectorField.reset();";
          
          inspectorField = -1;
       };
@@ -51,12 +51,12 @@ function EditorInspectorBase::onAdd( %this )
          superClass = "MenuBuilder";
          isPopup = true;
 
-         item[ 0 ] = "Inspect Object" TAB "" TAB "inspectObject( %this.inspectorField.getData() );";
-         Item[ 1 ] = "Jump to Definition in Torsion" TAB "" TAB "EditorOpenDeclarationInTorsion( %this.inspectorField.getData() );";
+         item[ 0 ] = "Inspect Object" TAB "" TAB "inspectObject( EditorInspectorBaseFieldPopup.inspectorField.getData() );";
+         Item[ 1 ] = "Jump to Definition in Torsion" TAB "" TAB "EditorOpenDeclarationInTorsion( EditorInspectorBaseFieldPopup.inspectorField.getData() );";
          item[ 2 ] = "-";
-         item[ 3 ] = "Copy Value" TAB "" TAB "setClipboard( %this.inspectorField.getData() );";
-         item[ 4 ] = "Paste Value" TAB "" TAB "%this.inspectorField.apply( getClipboard() );";
-         item[ 5 ] = "Reset to Default" TAB "" TAB "%this.inspectorField.reset();";
+         item[ 3 ] = "Copy Value" TAB "" TAB "setClipboard( EditorInspectorBaseFieldPopup.inspectorField.getData() );";
+         item[ 4 ] = "Paste Value" TAB "" TAB "EditorInspectorBaseFieldPopup.inspectorField.apply( getClipboard() );";
+         item[ 5 ] = "Reset to Default" TAB "" TAB "EditorInspectorBaseFieldPopup.inspectorField.reset();";
 
          inspectorField = -1;
       };
@@ -67,12 +67,12 @@ function EditorInspectorBase::onAdd( %this )
          superClass = "MenuBuilder";
          isPopup = true;
 
-         item[ 0 ] = "Open File" TAB "" TAB "openFile( %this.filePath );";
-         item[ 1 ] = "Open Folder" TAB "" TAB "openFolder( %this.folderPath );";
+         item[ 0 ] = "Open File" TAB "" TAB "openFile( EditorInspectorBaseFileFieldPopup.filePath );";
+         item[ 1 ] = "Open Folder" TAB "" TAB "openFolder( EditorInspectorBaseFileFieldPopup.folderPath );";
          item[ 2 ] = "-";
-         item[ 3 ] = "Copy Value" TAB "" TAB "setClipboard( %this.inspectorField.getData() );";
-         item[ 4 ] = "Paste Value" TAB "" TAB "%this.inspectorField.apply( getClipboard() );";
-         item[ 5 ] = "Reset to Default" TAB "" TAB "%this.inspectorField.reset();";
+         item[ 3 ] = "Copy Value" TAB "" TAB "setClipboard( EditorInspectorBaseFileFieldPopup.inspectorField.getData() );";
+         item[ 4 ] = "Paste Value" TAB "" TAB "EditorInspectorBaseFileFieldPopup.inspectorField.apply( getClipboard() );";
+         item[ 5 ] = "Reset to Default" TAB "" TAB "EditorInspectorBaseFileFieldPopup.inspectorField.reset();";
 
          inspectorField = -1;
          folderPath = "";
@@ -85,14 +85,14 @@ function EditorInspectorBase::onAdd( %this )
          superClass = "MenuBuilder";
          isPopup = true;
 
-         item[ 0 ] = "Edit Shape" TAB "" TAB "ShapeEditorPlugin.openShape( %this.inspectorField.getData() );";
+         item[ 0 ] = "Edit Shape" TAB "" TAB "ShapeEditorPlugin.openShape( EditorInspectorBaseShapeFieldPopup.inspectorField.getData() );";
          item[ 1 ] = "-";
-         item[ 2 ] = "Open File" TAB "" TAB "openFile( %this.filePath );";
-         item[ 3 ] = "Open Folder" TAB "" TAB "openFolder( %this.folderPath );";
+         item[ 2 ] = "Open File" TAB "" TAB "openFile( EditorInspectorBaseShapeFieldPopup.filePath );";
+         item[ 3 ] = "Open Folder" TAB "" TAB "openFolder( EditorInspectorBaseShapeFieldPopup.folderPath );";
          item[ 4 ] = "-";
-         item[ 5 ] = "Copy Value" TAB "" TAB "setClipboard( %this.inspectorField.getData() );";
-         item[ 6 ] = "Paste Value" TAB "" TAB "%this.inspectorField.apply( getClipboard() );";
-         item[ 7 ] = "Reset to Default" TAB "" TAB "%this.inspectorField.reset();";
+         item[ 5 ] = "Copy Value" TAB "" TAB "setClipboard( EditorInspectorBaseShapeFieldPopup.inspectorField.getData() );";
+         item[ 6 ] = "Paste Value" TAB "" TAB "EditorInspectorBaseShapeFieldPopup.inspectorField.apply( getClipboard() );";
+         item[ 7 ] = "Reset to Default" TAB "" TAB "EditorInspectorBaseShapeFieldPopup.inspectorField.reset();";
 
          inspectorField = -1;
          folderPath = "";
@@ -105,13 +105,13 @@ function EditorInspectorBase::onAdd( %this )
          superClass = "MenuBuilder";
          isPopup = true;
 
-         item[ 0 ] = "Edit Profile" TAB "" TAB "if( !GuiEditorIsActive() ) toggleGuiEditor( true ); GuiEditor.editProfile( %this.inspectorField.getData() );";
-         item[ 1 ] = "Jump to Definition in Torsion" TAB "" TAB "EditorOpenDeclarationInTorsion( %this.inspectorField.getData() );";
-         item[ 2 ] = "Inspect Object" TAB "" TAB "inspectObject( %this.inspectorField.getData() );";
+         item[ 0 ] = "Edit Profile" TAB "" TAB "if( !GuiEditorIsActive() ) toggleGuiEditor( true ); GuiEditor.editProfile( EditorInspectorBaseProfileFieldPopup.inspectorField.getData() );";
+         item[ 1 ] = "Jump to Definition in Torsion" TAB "" TAB "EditorOpenDeclarationInTorsion( EditorInspectorBaseProfileFieldPopup.inspectorField.getData() );";
+         item[ 2 ] = "Inspect Object" TAB "" TAB "inspectObject( EditorInspectorBaseProfileFieldPopup.inspectorField.getData() );";
          item[ 3 ] = "-";
-         item[ 4 ] = "Copy Value" TAB "" TAB "setClipboard( %this.inspectorField.getData() );";
-         item[ 5 ] = "Paste Value" TAB "" TAB "%this.inspectorField.apply( getClipboard() );";
-         item[ 6 ] = "Reset to Default" TAB "" TAB "%this.inspectorField.reset();";
+         item[ 4 ] = "Copy Value" TAB "" TAB "setClipboard( EditorInspectorBaseProfileFieldPopup.inspectorField.getData() );";
+         item[ 5 ] = "Paste Value" TAB "" TAB "EditorInspectorBaseProfileFieldPopup.inspectorField.apply( getClipboard() );";
+         item[ 6 ] = "Reset to Default" TAB "" TAB "EditorInspectorBaseProfileFieldPopup.inspectorField.reset();";
 
          inspectorField = -1;
          folderPath = "";

@@ -2332,8 +2332,8 @@ function MaterialEditorMapThumbnail::onRightClick( %this )
          superClass = "MenuBuilder";
          isPopup = true;
          
-         item[ 0 ] = "Open File" TAB "" TAB "openFile( %this.filePath );";
-         item[ 1 ] = "Open Folder" TAB "" TAB "openFolder( filePath( %this.filePath ) );";
+         item[ 0 ] = "Open File" TAB "" TAB "openFile( MaterialEditorMapThumbnailPopup.filePath );";
+         item[ 1 ] = "Open Folder" TAB "" TAB "openFolder( filePath( MaterialEditorMapThumbnailPopup.filePath ) );";
          
          filePath = "";
       };

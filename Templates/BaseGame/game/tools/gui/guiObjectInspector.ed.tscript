@@ -121,7 +121,7 @@ function GuiObjectInspectorTree::onRightMouseUp( %this, %itemId, %mousePos, %obj
          superClass = "MenuBuilder";
          isPopup = true;
 
-         item[ 0 ] = "Jump to Definition in Torsion" TAB "" TAB "EditorOpenDeclarationInTorsion( %this.object );";
+         item[ 0 ] = "Jump to Definition in Torsion" TAB "" TAB "EditorOpenDeclarationInTorsion( GuiObjectInspectorTreePopup.object );";
 
          object = "";
       };
@@ -206,7 +206,7 @@ function GuiObjectInspectorMethodList::onRightMouseUp( %this, %item, %mousePos )
             superClass = "MenuBuilder";
             isPopup = true;
 
-            item[ 0 ] = "Jump to Definition in Torsion" TAB "" TAB "EditorOpenFileInTorsion( %this.jumpFileName, %this.jumpLineNumber );";
+            item[ 0 ] = "Jump to Definition in Torsion" TAB "" TAB "EditorOpenFileInTorsion( GuiInspectorMethodListPopup.jumpFileName, GuiInspectorMethodListPopup.jumpLineNumber );";
 
             jumpFileName = "";
             jumpLineNumber = "";

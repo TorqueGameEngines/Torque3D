@@ -875,8 +875,8 @@ function DatablockEditorTree::onRightMouseUp( %this, %id, %mousePos )
          superClass = "MenuBuilder";
          isPopup = true;
          
-         item[ 0 ] = "Delete" TAB "" TAB "DatablockEditorPlugin.selectDatablock( %this.datablockObject ); DatablockEditorPlugin.deleteDatablock( %this.datablockObject );";
-         item[ 1 ] = "Jump to Definition in Torsion" TAB "" TAB "EditorOpenDeclarationInTorsion( %this.datablockObject );";
+         item[ 0 ] = "Delete" TAB "" TAB "DatablockEditorPlugin.selectDatablock( DatablockEditorTreePopup.datablockObject ); DatablockEditorPlugin.deleteDatablock( DatablockEditorTreePopup.datablockObject );";
+         item[ 1 ] = "Jump to Definition in Torsion" TAB "" TAB "EditorOpenDeclarationInTorsion( DatablockEditorTreePopup.datablockObject );";
          
          datablockObject = "";
       };

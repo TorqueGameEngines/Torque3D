@@ -128,6 +128,7 @@ enum ConsoleValueType
 
 struct ConsoleValueConsoleType
 {
+   S32 consoleType;
    void* dataPtr;
    EnumTable* enumTable;
 };
@@ -340,8 +341,8 @@ public:
    TORQUE_FORCEINLINE void setConsoleData(S32 consoleType, void* dataPtr, const EnumTable* enumTable)
    {
       cleanupData();
-      type = ConsoleValueType::cvSTEntry;
-      ct = new ConsoleValueConsoleType{ dataPtr, const_cast<EnumTable*>(enumTable) };
+      type = ConsoleValueType::cvConsoleValueType;
+      ct = new ConsoleValueConsoleType{ consoleType, dataPtr, const_cast<EnumTable*>(enumTable) };
    }
 
    TORQUE_FORCEINLINE S32 getType() const

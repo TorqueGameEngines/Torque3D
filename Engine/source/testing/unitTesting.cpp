@@ -23,7 +23,7 @@
 
 #include "app/mainLoop.h"
 #include "console/console.h"
-#include "console/codeBlock.h"
+#include "console/script.h"
 #include "console/engineAPI.h"
 #include "console/consoleInternal.h"
 #include "gfx/gfxInit.h"
@@ -32,6 +32,8 @@
 #define _CRTDBG_MAP_ALLOC
 #include <crtdbg.h>
 #endif
+
+
 //-----------------------------------------------------------------------------
 
 class TorqueUnitTestListener : public ::testing::EmptyTestEventListener
@@ -195,9 +197,9 @@ DefineEngineFunction(addUnitTest, void, (const char* function), ,
    U32 ln = __LINE__;
    if (entry != NULL)
    {
-      file = entry->mCode->name;
+      file = entry->mModule->getName();
       U32 inst;
-      entry->mCode->findBreakLine(entry->mFunctionOffset, ln, inst);
+      entry->mModule->findBreakLine(entry->mFunctionOffset, ln, inst);
    }
    else
    {
@@ -210,9 +212,9 @@ DefineEngineFunction(addUnitTest, void, (const char* function), ,
 
 String scriptFileMessage(const char* message)
 {
-   Dictionary* frame = &gEvalState.getCurrentFrame();
-   CodeBlock* code = frame->code;
-   const char* scriptLine = code->getFileLine(frame->ip);
+   Dictionary* frame = Con::getCurrentStackFrame();
+   Con::Module* module = frame->module;
+   const char* scriptLine = module->getFileLine(frame->ip);
    return  String::ToString("at %s: %s", scriptLine, message);
 }
 

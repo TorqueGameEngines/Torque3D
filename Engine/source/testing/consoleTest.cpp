@@ -7,11 +7,9 @@
 #include "console/simBase.h"
 #include "console/engineAPI.h"
 #include "math/mMath.h"
+#include "console/script.h"
 #include "console/stringStack.h"
 #include "console/consoleInternal.h"
-
-// Stupid globals not declared in a header
-extern ExprEvalState gEvalState;
 
 using ::testing::Matcher;
 using ::testing::TypedEq;
@@ -25,10 +23,10 @@ protected:
 
    void SetUp() override
    {
-      
+
    }
-   
-   
+
+
 };
 
 TEST_F(ConsoleTest, executef)
@@ -176,7 +174,7 @@ TEST_F(ConsoleTest, execute)
 {
 	Con::evaluate("function testScriptExecuteFunction(%a,%b) {return %a SPC %b;}\nfunction testScriptExecuteFunction(%a,%b,%this) {return %a SPC %b;}\r\n", false, "testExecute");
 
-	U32 startStackPos = gEvalState.getStackDepth();
+	U32 startStackPos = Con::getFrameStack().size();
 	U32 startStringStackPos = STR.mStart;
 
 	// const char* versions of execute should maintain stack
@@ -187,7 +185,7 @@ TEST_F(ConsoleTest, execute)
 	EXPECT_STREQ(returnValue, "1 2") <<
 		"execute should return 1 2";
 
-	EXPECT_EQ(gEvalState.getStackDepth(), startStackPos) <<
+	EXPECT_EQ(Con::getFrameStack().size(), startStackPos) <<
 		"execute should restore stack";
 
 	returnValue = Con::execute(4, argvObject);
@@ -195,6 +193,6 @@ TEST_F(ConsoleTest, execute)
 	EXPECT_STREQ(returnValue, "1 2") <<
 		"execute should return 1 2";
 
-	EXPECT_EQ(gEvalState.getStackDepth(), startStackPos) <<
+	EXPECT_EQ(Con::getFrameStack().size(), startStackPos) <<
 		"execute should restore stack";
 }

@@ -31,6 +31,7 @@
 #include "console/consoleTypes.h"
 #include "core/volume.h"
 #include "console/engineAPI.h"
+#include "console/script.h"
 #include "T3D/physics/physicsShape.h"
 #include "core/util/path.h"
 
@@ -344,7 +345,7 @@ void Prefab::_loadFile( bool addFileNotify )
    if ( mFilename == StringTable->EmptyString())
       return;
 
-   if ( !Torque::FS::IsScriptFile( mFilename ) )
+   if ( !Con::isScriptFile( mFilename ) )
    {
       Con::errorf( "Prefab::_loadFile() - file %s was not found.", mFilename );
       return;

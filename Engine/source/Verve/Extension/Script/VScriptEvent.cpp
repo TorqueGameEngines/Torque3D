@@ -26,6 +26,7 @@
 #include "Verve/Extension/Script/VScriptEvent.h"
 
 #include "console/consoleTypes.h"
+#include "console/script.h"
 
 //-----------------------------------------------------------------------------
 IMPLEMENT_CONOBJECT( VScriptEvent );

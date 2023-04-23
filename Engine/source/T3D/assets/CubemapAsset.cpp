@@ -41,6 +41,7 @@
 #endif
 
 // Debug Profiling.
+#include "console/script.h"
 #include "platform/profiler.h"
 
 //-----------------------------------------------------------------------------
@@ -140,7 +141,7 @@ void CubemapAsset::initializeAsset()
 
    mScriptPath = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptPath;
 
-   if (Torque::FS::IsScriptFile(mScriptPath))
+   if (Con::isScriptFile(mScriptPath))
       Con::executeFile(mScriptPath, false, false);
 }
 
@@ -148,7 +149,7 @@ void CubemapAsset::onAssetRefresh()
 {
    mScriptPath = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptPath;
 
-   if (Torque::FS::IsScriptFile(mScriptPath))
+   if (Con::isScriptFile(mScriptPath))
       Con::executeFile(mScriptPath, false, false);
 }
 

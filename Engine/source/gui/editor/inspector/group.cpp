@@ -22,6 +22,8 @@
 
 #include "gui/editor/guiInspector.h"
 #include "gui/editor/inspector/group.h"
+
+#include "console/script.h"
 #include "gui/editor/inspector/dynamicField.h"
 #include "gui/editor/inspector/datablockField.h"
 #include "gui/buttons/guiIconButtonCtrl.h"

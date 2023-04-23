@@ -23,31 +23,25 @@
 //-----------------------------------------------------------------------------
 
 #include "platform/platform.h"
-#include "console/console.h"
 
-#include "console/ast.h"
-#include "core/tAlgorithm.h"
+#include "ast.h"
+#include "compiler.h"
 
-#include "core/strings/findMatch.h"
 #include "core/strings/stringUnit.h"
 #include "console/consoleInternal.h"
-#include "core/stream/fileStream.h"
-#include "console/compiler.h"
 
 #include "console/simBase.h"
-#include "console/telnetDebugger.h"
 #include "sim/netStringTable.h"
-#include "console/ICallMethod.h"
 #include "console/stringStack.h"
 #include "util/messaging/message.h"
 #include "core/frameAllocator.h"
 
 #include "console/returnBuffer.h"
 #include "console/consoleValueStack.h"
+#include "console/telnetDebugger.h"
 
 #ifndef TORQUE_TGB_ONLY
 #include "materials/materialDefinition.h"
-#include "materials/materialManager.h"
 #endif
 
 using namespace Compiler;
@@ -116,6 +110,13 @@ U32 _ITER = 0;    ///< Stack pointer for iterStack.
 ConsoleValue stack[MaxStackSize];
 S32 _STK = 0;
 
+ReturnBuffer retBuffer;
+
+char *getReturnBuffer(U32 bufferSize)
+{
+   return retBuffer.getBuffer(bufferSize);
+}
+
 const char* tsconcat(const char* strA, const char* strB, S32& outputLen)
 {
    S32 lenA = dStrlen(strA);
@@ -150,7 +151,7 @@ namespace Con
       Namespace * walk;
       for (walk = ns; walk; walk = walk->mParent)
          size += dStrlen(walk->mName) + 4;
-      char *ret = Con::getReturnBuffer(size);
+      char *ret = getReturnBuffer(size);
       ret[0] = 0;
       for (walk = ns; walk; walk = walk->mParent)
       {
@@ -169,9 +170,9 @@ static void getFieldComponent(SimObject* object, StringTableEntry field, const c
    if (object && field)
       prevVal = object->getDataField(field, array);
    else if (currentLocalRegister != -1)
-      prevVal = gEvalState.getLocalStringVariable(currentLocalRegister);
-   else if (gEvalState.currentVariable)
-      prevVal = gEvalState.getStringVariable();
+      prevVal = Script::gEvalState.getLocalStringVariable(currentLocalRegister);
+   else if (Script::gEvalState.currentVariable)
+      prevVal = Script::gEvalState.getStringVariable();
 
    // Make sure we got a value.
    if (prevVal && *prevVal)
@@ -192,7 +193,7 @@ static void getFieldComponent(SimObject* object, StringTableEntry field, const c
          StringTable->insert("a")
       };
 
-      // Translate xyzw and rgba into the indexed component 
+      // Translate xyzw and rgba into the indexed component
       // of the variable or field.
       if (subField == xyzw[0] || subField == rgba[0])
          dStrcpy(val, StringUnit::getUnit(prevVal, 0, " \t\n"), 128);
@@ -225,10 +226,10 @@ static void setFieldComponent(SimObject* object, StringTableEntry field, const c
    if (object && field)
       prevVal = object->getDataField(field, array);
    else if (currentLocalRegister != -1)
-      prevVal = gEvalState.getLocalStringVariable(currentLocalRegister);
+      prevVal = Script::gEvalState.getLocalStringVariable(currentLocalRegister);
    // Set the value on a variable.
-   else if (gEvalState.currentVariable)
-      prevVal = gEvalState.getStringVariable();
+   else if (Script::gEvalState.currentVariable)
+      prevVal = Script::gEvalState.getStringVariable();
 
    // Ensure that the variable has a value
    if (!prevVal)
@@ -250,7 +251,7 @@ static void setFieldComponent(SimObject* object, StringTableEntry field, const c
       StringTable->insert("a")
    };
 
-   // Insert the value into the specified 
+   // Insert the value into the specified
    // component of the string.
    if (subField == xyzw[0] || subField == rgba[0])
       dStrcpy(val, StringUnit::setUnit(prevVal, 0, strValue, " \t\n"), 128);
@@ -270,9 +271,9 @@ static void setFieldComponent(SimObject* object, StringTableEntry field, const c
       if (object && field)
          object->setDataField(field, 0, val);
       else if (currentLocalRegister != -1)
-         gEvalState.setLocalStringVariable(currentLocalRegister, val, dStrlen(val));
-      else if (gEvalState.currentVariable)
-         gEvalState.setStringVariable(val);
+         Script::gEvalState.setLocalStringVariable(currentLocalRegister, val, dStrlen(val));
+      else if (Script::gEvalState.currentVariable)
+         Script::gEvalState.setStringVariable(val);
    }
 }
 
@@ -295,83 +296,26 @@ F64 consoleStringToNumber(const char *str, StringTableEntry file, U32 line)
    return 0;
 }
 
-//------------------------------------------------------------
-
-namespace Con
+SimObject* getThisObject(ConsoleValue& simObjectLookupValue)
 {
-   ReturnBuffer retBuffer;
+   SimObject* thisObject = NULL;
 
-   char *getReturnBuffer(U32 bufferSize)
+   // Optimization: If we're an integer, we can lookup the value by SimObjectId
+   if (simObjectLookupValue.getType() == ConsoleValueType::cvInteger)
+      thisObject = Sim::findObject(static_cast<SimObjectId>(simObjectLookupValue.getFastInt()));
+   else
    {
-      return retBuffer.getBuffer(bufferSize);
+      SimObject *foundObject = Sim::findObject(simObjectLookupValue.getString());
+
+      // Optimization: If we're not an integer, let's make it so that the fast path exists
+      // on the first argument of the method call (speeds up future usage of %this, for example)
+      if (foundObject != NULL)
+         simObjectLookupValue.setInt(static_cast<S64>(foundObject->getId()));
+
+      thisObject = foundObject;
    }
 
-   char *getReturnBuffer(const char *stringToCopy)
-   {
-      U32 len = dStrlen(stringToCopy) + 1;
-      char *ret = retBuffer.getBuffer(len);
-      dMemcpy(ret, stringToCopy, len);
-      return ret;
-   }
-
-   char* getReturnBuffer(const String& str)
-   {
-      const U32 size = str.size();
-      char* ret = retBuffer.getBuffer(size);
-      dMemcpy(ret, str.c_str(), size);
-      return ret;
-   }
-
-   char* getReturnBuffer(const StringBuilder& str)
-   {
-      char* buffer = Con::getReturnBuffer(str.length() + 1);
-      str.copy(buffer);
-      buffer[str.length()] = '\0';
-
-      return buffer;
-   }
-
-   char *getArgBuffer(U32 bufferSize)
-   {
-      return STR.getArgBuffer(bufferSize);
-   }
-
-   char *getFloatArg(F64 arg)
-   {
-      char *ret = STR.getArgBuffer(32);
-      dSprintf(ret, 32, "%g", arg);
-      return ret;
-   }
-
-   char *getIntArg(S32 arg)
-   {
-      char *ret = STR.getArgBuffer(32);
-      dSprintf(ret, 32, "%d", arg);
-      return ret;
-   }
-
-   char* getBoolArg(bool arg)
-   {
-      char *ret = STR.getArgBuffer(32);
-      dSprintf(ret, 32, "%d", arg);
-      return ret;
-   }
-
-   char *getStringArg(const char *arg)
-   {
-      U32 len = dStrlen(arg) + 1;
-      char *ret = STR.getArgBuffer(len);
-      dMemcpy(ret, arg, len);
-      return ret;
-   }
-
-   char* getStringArg(const String& arg)
-   {
-      const U32 size = arg.size();
-      char* ret = STR.getArgBuffer(size);
-      dMemcpy(ret, arg.c_str(), size);
-      return ret;
-   }
+   return thisObject;
 }
 
 //------------------------------------------------------------
@@ -379,7 +323,7 @@ namespace Con
 void ExprEvalState::setCurVarName(StringTableEntry name)
 {
    if (name[0] == '$')
-      currentVariable = globalVars.lookup(name);
+      currentVariable = Con::gGlobalVars.lookup(name);
    else if (getStackDepth() > 0)
       currentVariable = getCurrentFrame().lookup(name);
    if (!currentVariable && gWarnUndefinedScriptVariables)
@@ -389,7 +333,7 @@ void ExprEvalState::setCurVarName(StringTableEntry name)
 void ExprEvalState::setCurVarNameCreate(StringTableEntry name)
 {
    if (name[0] == '$')
-      currentVariable = globalVars.add(name);
+      currentVariable = Con::gGlobalVars.add(name);
    else if (getStackDepth() > 0)
       currentVariable = getCurrentFrame().add(name);
    else
@@ -605,7 +549,7 @@ TORQUE_FORCEINLINE void doIntOperation()
 //-----------------------------------------------------------------------------
 
 U32 gExecCount = 0;
-ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNamespace, U32 argc, ConsoleValue* argv, bool noCalls, StringTableEntry packageName, S32 setFrame)
+Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNamespace, U32 argc, ConsoleValue* argv, bool noCalls, StringTableEntry packageName, S32 setFrame)
 {
 #ifdef TORQUE_DEBUG
    U32 stackStart = _STK;
@@ -633,7 +577,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
       U32 regCount = code[ip + 2 + 7];
       thisFunctionName = CodeToSTE(code, ip);
       S32 wantedArgc = getMin(argc - 1, fnArgc); // argv[0] is func name
-      if (gEvalState.traceOn)
+      if (Con::gTraceOn)
       {
          traceBuffer[0] = 0;
          dStrcat(traceBuffer, "Entering ", TRACE_BUFFER_SIZE);
@@ -662,13 +606,13 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          dStrcat(traceBuffer, ")", TRACE_BUFFER_SIZE);
          Con::printf("%s", traceBuffer);
       }
-      gEvalState.pushFrame(thisFunctionName, thisNamespace, regCount);
+      Script::gEvalState.pushFrame(thisFunctionName, thisNamespace, regCount);
       popFrame = true;
       for (i = 0; i < wantedArgc; i++)
       {
          S32 reg = code[ip + (2 + 6 + 1 + 1) + i];
          ConsoleValue& value = argv[i + 1];
-         gEvalState.moveConsoleValue(reg, std::move(value));
+         Script::gEvalState.moveConsoleValue(reg, std::move(value));
       }
       ip = ip + fnArgc + (2 + 6 + 1 + 1);
       curFloatTable = functionFloats;
@@ -684,7 +628,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
       // If requested stack frame isn't available, request a new one
       // (this prevents assert failures when creating local
       //  variables without a stack frame)
-      if (gEvalState.getStackDepth() <= setFrame)
+      if (Script::gEvalState.getStackDepth() <= setFrame)
          setFrame = -1;
 
       // Do we want this code to execute using a new stack frame?
@@ -692,8 +636,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
       if (setFrame <= 0)
       {
          // argc is the local count for eval
-         gEvalState.pushFrame(NULL, NULL, argc);
-         popFrame = true;
+         Script::gEvalState.pushFrame(NULL, NULL, argc);
       }
       else
       {
@@ -701,11 +644,15 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          // on to the top of the stack.  Any change that occurs to
          // the locals during this new frame will also occur in the
          // original frame.
-         S32 stackIndex = gEvalState.getTopOfStack() - setFrame - 1;
-         gEvalState.pushFrameRef(stackIndex);
-         popFrame = true;
+         S32 stackIndex = Script::gEvalState.getTopOfStack() - setFrame - 1;
+         Script::gEvalState.pushFrameRef(stackIndex);
       }
+
+      popFrame = true;
    }
+
+   Script::gEvalState.getCurrentFrame().module = this;
+   Script::gEvalState.getCurrentFrame().ip = ip;
 
    // Grab the state of the telenet debugger here once
    // so that the push and pop frames are always balanced.
@@ -730,7 +677,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
    StringTableEntry curField = NULL;
    SimObject* prevObject = NULL;
    SimObject* curObject = NULL;
-   SimObject* saveObject = NULL;
+   SimObject* thisObject = NULL;
    Namespace::Entry* nsEntry;
    Namespace* ns = NULL;
    const char* curFNDocBlock = NULL;
@@ -744,8 +691,6 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
    static char curFieldArray[256];
    static char prevFieldArray[256];
 
-   CodeBlock* saveCodeBlock = smCurrentCodeBlock;
-   smCurrentCodeBlock = this;
    if (this->name)
    {
       Con::gCurrentFile = this->name;
@@ -1402,7 +1347,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
       case OP_INC:
          reg = code[ip++];
          currentRegister = reg;
-         gEvalState.setLocalFloatVariable(reg, gEvalState.getLocalFloatVariable(reg) + 1.0);
+         Script::gEvalState.setLocalFloatVariable(reg, Script::gEvalState.getLocalFloatVariable(reg) + 1.0);
          break;
 
       case OP_SETCURVAR:
@@ -1420,7 +1365,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          // set a global, we aren't active
          currentRegister = -1;
 
-         gEvalState.setCurVarName(var);
+         Script::gEvalState.setCurVarName(var);
 
          // In order to let docblocks work properly with variables, we have
          // clear the current docblock when we do an assign. This way it
@@ -1442,7 +1387,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          // set a global, we aren't active
          currentRegister = -1;
 
-         gEvalState.setCurVarNameCreate(var);
+         Script::gEvalState.setCurVarNameCreate(var);
 
          // See OP_SETCURVAR for why we do this.
          curFNDocBlock = NULL;
@@ -1461,7 +1406,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          // set a global, we aren't active
          currentRegister = -1;
 
-         gEvalState.setCurVarName(var);
+         Script::gEvalState.setCurVarName(var);
 
          // See OP_SETCURVAR for why we do this.
          curFNDocBlock = NULL;
@@ -1480,7 +1425,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          // set a global, we aren't active
          currentRegister = -1;
 
-         gEvalState.setCurVarNameCreate(var);
+         Script::gEvalState.setCurVarNameCreate(var);
 
          // See OP_SETCURVAR for why we do this.
          curFNDocBlock = NULL;
@@ -1489,32 +1434,32 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
 
       case OP_LOADVAR_UINT:
          currentRegister = -1;
-         stack[_STK + 1].setInt(gEvalState.getIntVariable());
+         stack[_STK + 1].setInt(Script::gEvalState.getIntVariable());
          _STK++;
          break;
 
       case OP_LOADVAR_FLT:
          currentRegister = -1;
-         stack[_STK + 1].setFloat(gEvalState.getFloatVariable());
+         stack[_STK + 1].setFloat(Script::gEvalState.getFloatVariable());
          _STK++;
          break;
 
       case OP_LOADVAR_STR:
          currentRegister = -1;
-         stack[_STK + 1].setString(gEvalState.getStringVariable());
+         stack[_STK + 1].setString(Script::gEvalState.getStringVariable());
          _STK++;
          break;
 
       case OP_SAVEVAR_UINT:
-         gEvalState.setIntVariable(stack[_STK].getInt());
+         Script::gEvalState.setIntVariable(stack[_STK].getInt());
          break;
 
       case OP_SAVEVAR_FLT:
-         gEvalState.setFloatVariable(stack[_STK].getFloat());
+         Script::gEvalState.setFloatVariable(stack[_STK].getFloat());
          break;
 
       case OP_SAVEVAR_STR:
-         gEvalState.setStringVariable(stack[_STK].getString());
+         Script::gEvalState.setStringVariable(stack[_STK].getString());
          break;
 
       case OP_LOAD_LOCAL_VAR_UINT:
@@ -1526,7 +1471,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          prevObject = NULL;
          curObject = NULL;
 
-         stack[_STK + 1].setInt(gEvalState.getLocalIntVariable(reg));
+         stack[_STK + 1].setInt(Script::gEvalState.getLocalIntVariable(reg));
          _STK++;
          break;
 
@@ -1539,7 +1484,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          prevObject = NULL;
          curObject = NULL;
 
-         stack[_STK + 1].setFloat(gEvalState.getLocalFloatVariable(reg));
+         stack[_STK + 1].setFloat(Script::gEvalState.getLocalFloatVariable(reg));
          _STK++;
          break;
 
@@ -1552,7 +1497,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          prevObject = NULL;
          curObject = NULL;
 
-         val = gEvalState.getLocalStringVariable(reg);
+         val = Script::gEvalState.getLocalStringVariable(reg);
          stack[_STK + 1].setString(val);
          _STK++;
          break;
@@ -1566,7 +1511,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          prevObject = NULL;
          curObject = NULL;
 
-         gEvalState.setLocalIntVariable(reg, stack[_STK].getInt());
+         Script::gEvalState.setLocalIntVariable(reg, stack[_STK].getInt());
          break;
 
       case OP_SAVE_LOCAL_VAR_FLT:
@@ -1578,7 +1523,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          prevObject = NULL;
          curObject = NULL;
 
-         gEvalState.setLocalFloatVariable(reg, stack[_STK].getFloat());
+         Script::gEvalState.setLocalFloatVariable(reg, stack[_STK].getFloat());
          break;
 
       case OP_SAVE_LOCAL_VAR_STR:
@@ -1591,7 +1536,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          prevObject = NULL;
          curObject = NULL;
 
-         gEvalState.setLocalStringVariable(reg, val, (S32)dStrlen(val));
+         Script::gEvalState.setLocalStringVariable(reg, val, (S32)dStrlen(val));
          break;
 
       case OP_SETCUROBJECT:
@@ -1820,10 +1765,10 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          U32 callType = code[ip + 4];
 
          //if this is called from inside a function, append the ip and codeptr
-         if (!gEvalState.stack.empty())
+         if (!Script::gEvalState.stack.empty())
          {
-            gEvalState.getCurrentFrame().code = this;
-            gEvalState.getCurrentFrame().ip = ip - 1;
+            Script::gEvalState.getCurrentFrame().module = this;
+            Script::gEvalState.getCurrentFrame().ip = ip - 1;
          }
 
          ip += 5;
@@ -1868,25 +1813,10 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          }
          else if (callType == FuncCallExprNode::MethodCall)
          {
-            saveObject = gEvalState.thisObject;
+            ConsoleValue& simObjectLookupValue = callArgv[1];
+            thisObject = getThisObject(simObjectLookupValue);
 
-            // Optimization: If we're an integer, we can lookup the value by SimObjectId
-            const ConsoleValue& simObjectLookupValue = callArgv[1];
-            if (simObjectLookupValue.getType() == ConsoleValueType::cvInteger)
-               gEvalState.thisObject = Sim::findObject(static_cast<SimObjectId>(simObjectLookupValue.getFastInt()));
-            else
-            {
-               SimObject *foundObject = Sim::findObject(simObjectLookupValue.getString());
-
-               // Optimization: If we're not an integer, let's make it so that the fast path exists
-               // on the first argument of the method call (speeds up future usage of %this, for example)
-               if (foundObject != NULL)
-                  callArgv[1].setInt(static_cast<S64>(foundObject->getId()));
-
-               gEvalState.thisObject = foundObject;
-            }
-
-            if (gEvalState.thisObject == NULL)
+            if (thisObject == NULL)
             {
                Con::warnf(
                   ConsoleLogEntry::General,
@@ -1902,7 +1832,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
                break;
             }
 
-            ns = gEvalState.thisObject->getNamespace();
+            ns = thisObject->getNamespace();
             if (ns)
                nsEntry = ns->lookup(fnName);
             else
@@ -1910,6 +1840,25 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          }
          else // it's a ParentCall
          {
+            ConsoleValue& simObjectLookupValue = callArgv[1];
+            thisObject = getThisObject(simObjectLookupValue);
+
+            if (thisObject == NULL)
+            {
+               Con::warnf(
+                  ConsoleLogEntry::General,
+                  "%s: Unable to find object: '%s' attempting to call function '%s'",
+                  getFileLine(ip - 6),
+                  simObjectLookupValue.getString(),
+                  fnName
+               );
+
+               gCallStack.popFrame();
+               stack[_STK + 1].setEmptyString();
+               _STK++;
+               break;
+            }
+
             if (thisNamespace)
             {
                ns = thisNamespace->mParent;
@@ -1933,8 +1882,8 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
                if (callType == FuncCallExprNode::MethodCall)
                {
                   Con::warnf(ConsoleLogEntry::General, "  Object %s(%d) %s",
-                     gEvalState.thisObject->getName() ? gEvalState.thisObject->getName() : "",
-                     gEvalState.thisObject->getId(), Con::getNamespaceList(ns));
+                     thisObject->getName() ? thisObject->getName() : "",
+                     thisObject->getId(), Con::getNamespaceList(ns));
                }
             }
             gCallStack.popFrame();
@@ -1946,7 +1895,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          {
             if (nsEntry->mFunctionOffset)
             {
-               ConsoleValue returnFromFn = nsEntry->mCode->exec(nsEntry->mFunctionOffset, fnName, nsEntry->mNamespace, callArgc, callArgv, false, nsEntry->mPackage);
+               ConsoleValue returnFromFn = nsEntry->mModule->exec(nsEntry->mFunctionOffset, fnName, nsEntry->mNamespace, callArgc, callArgv, false, nsEntry->mPackage).value;
                stack[_STK + 1] = std::move(returnFromFn);
             }
             else // no body
@@ -1972,7 +1921,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
                {
                case Namespace::Entry::StringCallbackType:
                {
-                  const char* result = nsEntry->cb.mStringCallbackFunc(gEvalState.thisObject, callArgc, callArgv);
+                  const char* result = nsEntry->cb.mStringCallbackFunc(thisObject, callArgc, callArgv);
                   gCallStack.popFrame();
                   stack[_STK + 1].setString(result);
                   _STK++;
@@ -1980,7 +1929,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
                }
                case Namespace::Entry::IntCallbackType:
                {
-                  S64 result = nsEntry->cb.mIntCallbackFunc(gEvalState.thisObject, callArgc, callArgv);
+                  S64 result = nsEntry->cb.mIntCallbackFunc(thisObject, callArgc, callArgv);
                   gCallStack.popFrame();
 
                   if (code[ip] == OP_POP_STK)
@@ -1995,7 +1944,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
                }
                case Namespace::Entry::FloatCallbackType:
                {
-                  F64 result = nsEntry->cb.mFloatCallbackFunc(gEvalState.thisObject, callArgc, callArgv);
+                  F64 result = nsEntry->cb.mFloatCallbackFunc(thisObject, callArgc, callArgv);
                   gCallStack.popFrame();
 
                   if (code[ip] == OP_POP_STK)
@@ -2010,7 +1959,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
                }
                case Namespace::Entry::VoidCallbackType:
                {
-                  nsEntry->cb.mVoidCallbackFunc(gEvalState.thisObject, callArgc, callArgv);
+                  nsEntry->cb.mVoidCallbackFunc(thisObject, callArgc, callArgv);
                   gCallStack.popFrame();
 
                   if (code[ip] == OP_POP_STK)
@@ -2023,7 +1972,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
                   {
                      Con::warnf(ConsoleLogEntry::General, "%s: Call to %s in %s uses result of void function call.", getFileLine(ip - 4), fnName, functionName);
                   }
-                  
+
                   stack[_STK + 1].setEmptyString();
                   _STK++;
 
@@ -2031,7 +1980,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
                }
                case Namespace::Entry::BoolCallbackType:
                {
-                  bool result = nsEntry->cb.mBoolCallbackFunc(gEvalState.thisObject, callArgc, callArgv);
+                  bool result = nsEntry->cb.mBoolCallbackFunc(thisObject, callArgc, callArgv);
                   gCallStack.popFrame();
 
                   if (code[ip] == OP_POP_STK)
@@ -2048,9 +1997,6 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
                }
             }
          }
-
-         if (callType == FuncCallExprNode::MethodCall)
-            gEvalState.thisObject = saveObject;
          break;
       }
 
@@ -2122,9 +2068,9 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
       case OP_BREAK:
       {
          //append the ip and codeptr before managing the breakpoint!
-         AssertFatal(!gEvalState.stack.empty(), "Empty eval stack on break!");
-         gEvalState.getCurrentFrame().code = this;
-         gEvalState.getCurrentFrame().ip = ip - 1;
+         AssertFatal(!Script::gEvalState.stack.empty(), "Empty eval stack on break!");
+         Script::gEvalState.getCurrentFrame().module = this;
+         Script::gEvalState.getCurrentFrame().ip = ip - 1;
 
          U32 breakLine;
          findBreakLine(ip - 1, breakLine, instruction);
@@ -2153,7 +2099,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          if (isGlobal)
          {
             StringTableEntry varName = CodeToSTE(code, ip + 1);
-            iter.mVar.mVariable = gEvalState.globalVars.add(varName);
+            iter.mVar.mVariable = Con::gGlobalVars.add(varName);
          }
          else
          {
@@ -2227,7 +2173,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
                if (iter.mIsGlobalVariable)
                   iter.mVar.mVariable->setStringValue(&str[startIndex]);
                else
-                  gEvalState.setLocalStringVariable(iter.mVar.mRegister, &str[startIndex], endIndex - startIndex);
+                  Script::gEvalState.setLocalStringVariable(iter.mVar.mRegister, &str[startIndex], endIndex - startIndex);
 
                const_cast<char*>(str)[endIndex] = savedChar;
             }
@@ -2236,7 +2182,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
                if (iter.mIsGlobalVariable)
                   iter.mVar.mVariable->setStringValue("");
                else
-                  gEvalState.setLocalStringVariable(iter.mVar.mRegister, "", 0);
+                  Script::gEvalState.setLocalStringVariable(iter.mVar.mRegister, "", 0);
             }
 
             // Skip separator.
@@ -2261,7 +2207,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
             if (iter.mIsGlobalVariable)
                iter.mVar.mVariable->setIntValue(id);
             else
-               gEvalState.setLocalIntVariable(iter.mVar.mRegister, id);
+               Script::gEvalState.setLocalIntVariable(iter.mVar.mRegister, id);
 
             iter.mData.mObj.mIndex = index + 1;
          }
@@ -2296,12 +2242,12 @@ execFinished:
 
    if (popFrame)
    {
-      gEvalState.popFrame();
+      Script::gEvalState.popFrame();
    }
 
    if (argv)
    {
-      if (gEvalState.traceOn)
+      if (Con::gTraceOn)
       {
          traceBuffer[0] = 0;
          dStrcat(traceBuffer, "Leaving ", TRACE_BUFFER_SIZE);
@@ -2332,11 +2278,11 @@ execFinished:
       globalStrings = NULL;
       globalFloats = NULL;
    }
-   smCurrentCodeBlock = saveCodeBlock;
-   if (saveCodeBlock && saveCodeBlock->name)
+
+   if (Con::getCurrentScriptModuleName())
    {
-      Con::gCurrentFile = saveCodeBlock->name;
-      Con::gCurrentRoot = saveCodeBlock->modPath;
+      Con::gCurrentFile = Con::getCurrentScriptModuleName();
+      Con::gCurrentRoot = Con::getModNameFromPath(Con::getCurrentScriptModulePath());
    }
 
    decRefCount();
@@ -2346,7 +2292,7 @@ execFinished:
    AssertFatal(!(_STK < stackStart), "String stack popped too much in script exec");
 #endif
 
-   return returnValue;
+   return Con::EvalResult(std::move(returnValue));
 }
 
 //------------------------------------------------------------

@@ -35,8 +35,6 @@
 // Property system includes:
 #include "console/propertyParsing.h"
 
-extern ExprEvalState gEvalState;
-
 namespace PropertyInfo
 {
    //-----------------------------------------------------------------------------

@@ -24,9 +24,7 @@
 #include "console/console.h"
 #include "console/consoleInternal.h"
 #include "console/engineAPI.h"
-#include "console/ast.h"
 #include "core/stream/fileStream.h"
-#include "console/compiler.h"
 #include "platform/platformInput.h"
 #include "torqueConfig.h"
 #include "core/frameAllocator.h"
@@ -420,7 +418,7 @@ DefineEngineFunction(isScriptFile, bool, (const char* fileName), ,
 
    "@ingroup FileSystem")
 {
-   return Torque::FS::IsScriptFile(fileName);
+   return Con::isScriptFile(fileName);
 }
 
 DefineEngineFunction( IsDirectory, bool, ( const char* directory ),,

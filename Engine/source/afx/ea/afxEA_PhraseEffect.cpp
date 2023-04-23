@@ -26,8 +26,8 @@
 #include <typeinfo>
 #include "afx/arcaneFX.h"
 
-#include "console/compiler.h"
 #include "T3D/player.h"
+#include "console/script.h"
 
 #include "afx/afxEffectDefs.h"
 #include "afx/afxPhrase.h"
@@ -314,13 +314,10 @@ void afxEA_PhraseEffect::trigger_new_phrase()
     }
     b[0] = '\0';
 
-    Compiler::gSyntaxError = false;
-    //Con::errorf("EVAL [%s]", avar("%s;", buffer));
-    Con::evaluate(avar("%s;", buffer), false, 0);
-    if (Compiler::gSyntaxError)
+    Con::EvalResult result = Con::evaluate(avar("%s;", buffer), false, 0);
+    if (!result.valid)
     {
       Con::errorf("onTriggerCommand \"%s\" -- syntax error", phrase_fx_data->on_trig_cmd);
-      Compiler::gSyntaxError = false;
     }
   }
 

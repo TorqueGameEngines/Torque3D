@@ -567,7 +567,6 @@ bool CreatePath(const Path &path);
 bool IsReadOnly(const Path &path);
 bool IsDirectory(const Path &path);
 bool IsFile(const Path &path);
-bool IsScriptFile(const char* pFilePath);
 bool VerifyWriteAccess(const Path &path);
 
 /// This returns a unique file path from the components 

@@ -28,6 +28,7 @@
 #include "core/stream/fileStream.h"
 #include "math/mMathFn.h"
 #include "console/engineAPI.h"
+#include "console/script.h"
 #include "math/mQuat.h"
 #include "math/mAngAxis.h"
 

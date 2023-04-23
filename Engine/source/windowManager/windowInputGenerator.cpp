@@ -21,6 +21,8 @@
 //-----------------------------------------------------------------------------
 
 #include "windowManager/windowInputGenerator.h"
+
+#include "console/script.h"
 #include "windowManager/platformWindow.h"
 #include "sim/actionMap.h"
 #include "platform/input/IProcessInput.h"

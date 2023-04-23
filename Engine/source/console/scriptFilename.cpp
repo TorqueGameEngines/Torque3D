@@ -23,12 +23,12 @@
 #include "platform/platform.h"
 #include "console/scriptFilename.h"
 
+#include "consoleInternal.h"
 #include "core/frameAllocator.h"
 #include "core/tSimpleHashTable.h"
 #include "core/strings/stringFunctions.h"
 #include "core/stringTable.h"
 #include "console/engineAPI.h"
-#include "console/compiler.h"
 
 
 namespace Con
@@ -88,8 +88,8 @@ bool expandToolScriptFilename(char *filename, U32 size, const char *src)
    // same way the old code did as it is now possible that something could
    // be expanded if the name or mod is NULL. This was previously not the case.
 
-   const StringTableEntry cbMod = CodeBlock::getCurrentCodeBlockModName();
-   const StringTableEntry cbFullPath = CodeBlock::getCurrentCodeBlockFullPath();
+   const StringTableEntry cbMod = Con::getCurrentScriptModuleName();
+   const StringTableEntry cbFullPath = Con::getCurrentScriptModulePath();
 
    char varBuf[1024], modBuf[1024];
    const char *ptr = src;
@@ -216,7 +216,8 @@ bool expandToolScriptFilename(char *filename, U32 size, const char *src)
 
 bool expandOldScriptFilename(char *filename, U32 size, const char *src)
 {
-   const StringTableEntry cbName = CodeBlock::getCurrentCodeBlockName();
+   const StringTableEntry cbName = Con::getCurrentScriptModuleName();
+
    if (!cbName)
    {
       dStrcpy(filename, src, size);

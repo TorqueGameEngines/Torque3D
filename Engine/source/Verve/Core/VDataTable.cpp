@@ -22,6 +22,7 @@
 //-----------------------------------------------------------------------------
 #include "Verve/Core/VDataTable.h"
 
+#include "console/script.h"
 #include "console/simObject.h"
 
 //-----------------------------------------------------------------------------
@@ -228,7 +229,7 @@ bool VDataTable::getValue( SimObject *pObject, const String &pFieldName, String 
         case VDataTable::k_TypeExpression :
             {
                 // Evaluate.
-                pValue = Con::evaluate( fieldValue, false ).getString();
+                pValue = Con::evaluate( fieldValue, false ).value.getString();
 
             } break;
 

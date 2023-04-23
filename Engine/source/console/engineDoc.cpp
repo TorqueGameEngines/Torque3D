@@ -26,7 +26,6 @@
 #include "console/engineAPI.h"
 #include "core/stream/fileStream.h"
 #include "console/consoleInternal.h"
-#include "console/compiler.h"
 
 #define USE_UNDOCUMENTED_GROUP
 
@@ -204,9 +203,9 @@ static void dumpVariable(  Stream& stream,
 
 static void dumpVariables( Stream& stream, const char* inClass = NULL )
 {
-   const U32 hashTableSize = gEvalState.globalVars.hashTable->size;
+   const U32 hashTableSize = Con::gGlobalVars.hashTable->size;
    for( U32 i = 0; i < hashTableSize; ++ i )
-      for( Dictionary::Entry* entry = gEvalState.globalVars.hashTable->data[ i ]; entry != NULL; entry = entry->nextEntry )
+      for( Dictionary::Entry* entry = Con::gGlobalVars.hashTable->data[ i ]; entry != NULL; entry = entry->nextEntry )
          dumpVariable( stream, entry, inClass );
 }
 

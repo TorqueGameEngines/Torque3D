@@ -23,8 +23,9 @@
 #ifndef _AST_H_
 #define _AST_H_
 
-class ExprEvalState;
-class Namespace;
+#include "evalState.h"
+#include "platform/types.h"
+
 class SimObject;
 class SimGroup;
 class CodeStream;
@@ -101,7 +102,7 @@ struct StmtNode
 #ifndef DEBUG_AST_NODES
 #  define DBG_STMT_TYPE(s) virtual const char* dbgStmtType() const { return "#s"; }
 #else
-#  define DBG_STMT_TYPE(s) 
+#  define DBG_STMT_TYPE(s)
 #endif
 
 struct BreakStmtNode : StmtNode
@@ -592,7 +593,14 @@ struct FunctionDeclStmtNode : StmtNode
    DBG_STMT_TYPE(FunctionDeclStmtNode);
 };
 
-extern StmtNode* gStatementList;
-extern ExprEvalState gEvalState;
+namespace Script
+{
+   inline ExprEvalState gEvalState;
+
+   inline StmtNode *gStatementList;
+   inline StmtNode *gAnonFunctionList;
+   inline U32 gAnonFunctionID = 0;
+}
+
 
 #endif

@@ -22,6 +22,8 @@
 
 #include "platform/platform.h"
 #include "postFx/postEffectVis.h"
+
+#include "console/script.h"
 #include "gui/containers/guiWindowCtrl.h"
 #include "gui/controls/guiBitmapCtrl.h"
 #include "gui/core/guiCanvas.h"

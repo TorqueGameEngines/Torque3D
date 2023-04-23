@@ -31,8 +31,9 @@
 #include "T3D/gameBase/gameProcess.h"
 #include "T3D/player.h"
 #include "math/mathUtils.h"
-#include "console/compiler.h"
+
 #include "console/engineAPI.h"
+#include "console/script.h"
 
 #include "afx/afxChoreographer.h"
 #include "afx/afxSelectron.h"
@@ -672,7 +673,7 @@ DefineEngineFunction(wasSyntaxError, bool, (),,
                      "for detecting syntax errors after reloading a script.\n\n"
                      "@ingroup AFX")
 {
-  return Compiler::gSyntaxError;
+   return Con::getLastEvalResult().valid == false;
 }
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//

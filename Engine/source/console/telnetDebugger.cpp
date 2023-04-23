@@ -28,10 +28,9 @@
 #include "console/engineAPI.h"
 #include "core/stringTable.h"
 #include "console/consoleInternal.h"
-#include "console/ast.h"
-#include "console/compiler.h"
 #include "core/util/journal/process.h"
 #include "core/module.h"
+#include "script.h"
 
 
 MODULE_BEGIN( TelnetDebugger )
@@ -169,7 +168,7 @@ TelnetDebugger::TelnetDebugger()
    // Add the version number in a global so that
    // scripts can detect the presence of the
    // "enhanced" debugger features.
-   Con::evaluatef( "$dbgVersion = %d;", Version );
+   Con::setIntVariable("dbgVersion", Version);
 }
 
 TelnetDebugger::Breakpoint **TelnetDebugger::findBreakpoint(StringTableEntry fileName, S32 lineNumber)
@@ -380,7 +379,7 @@ void TelnetDebugger::checkDebugRecv()
    }
 }
 
-void TelnetDebugger::executionStopped(CodeBlock *code, U32 lineNumber)
+void TelnetDebugger::executionStopped(Con::Module *module, U32 lineNumber)
 {
    if(mProgramPaused)
       return;
@@ -392,13 +391,13 @@ void TelnetDebugger::executionStopped(CodeBlock *code, U32 lineNumber)
       return;
    }
 
-   Breakpoint **bp = findBreakpoint(code->name, lineNumber);
+   Breakpoint **bp = findBreakpoint(module->getName(), lineNumber);
    if(!bp)
       return;
    
    Breakpoint *brk = *bp;
    mProgramPaused = true;
-   Con::evaluatef("$Debug::result = %s;", brk->testExpression);
+   Con::setVariable("$Debug::result", brk->testExpression);
    if(Con::getBoolVariable("$Debug::result"))
    {
       brk->curCount++;
@@ -406,7 +405,7 @@ void TelnetDebugger::executionStopped(CodeBlock *code, U32 lineNumber)
       {
          brk->curCount = 0;
          if(brk->clearOnHit)
-            removeBreakpoint(code->name, lineNumber);
+            removeBreakpoint(module->getName(), lineNumber);
          breakProcess();
       }
    }
@@ -418,8 +417,8 @@ void TelnetDebugger::pushStackFrame()
    if(mState == NotConnected)
       return;
 
-   if(mBreakOnNextStatement && mStackPopBreakIndex > -1 && 
-      gEvalState.getStackDepth() > mStackPopBreakIndex)
+   if(mBreakOnNextStatement && mStackPopBreakIndex > -1 &&
+      Con::getFrameStack().size() > mStackPopBreakIndex)
       setBreakOnNextStatement( false );
 }
 
@@ -428,7 +427,7 @@ void TelnetDebugger::popStackFrame()
    if(mState == NotConnected)
       return;
 
-   if(mStackPopBreakIndex > -1 && gEvalState.getStackDepth()-1 <= mStackPopBreakIndex)
+   if(mStackPopBreakIndex > -1 && Con::getFrameStack().size()-1 <= mStackPopBreakIndex)
       setBreakOnNextStatement( true );
 }
 
@@ -461,14 +460,14 @@ void TelnetDebugger::sendBreak()
 
    S32 last = 0;
 
-   for(S32 i = (S32) gEvalState.getStackDepth() - 1; i >= last; i--)
+   for(S32 i = (S32) Con::getFrameStack().size() - 1; i >= last; i--)
    {
-      CodeBlock *code = gEvalState.stack[i]->code;
+      Con::Module *module = Con::getStackFrame(i)->module;
       const char *file = "<none>";
-      if (code && code->name && code->name[0])
-         file = code->name;
+      if (module && module->getName() && module->getName()[0])
+         file = module->getName();
 
-      Namespace *ns = gEvalState.stack[i]->scopeNamespace;
+      Namespace *ns = Con::getStackFrame(i)->scopeNamespace;
       scope[0] = 0;
       if ( ns ) {
 
@@ -482,15 +481,15 @@ void TelnetDebugger::sendBreak()
          }
       }
 
-      const char *function = gEvalState.stack[i]->scopeName;
+      const char *function = Con::getStackFrame(i)->scopeName;
       if ((!function) || (!function[0]))
          function = "<none>";
       dStrcat( scope, function, MaxCommandSize );
 
       U32 line=0, inst;
-      U32 ip = gEvalState.stack[i]->ip;
-      if (code)
-         code->findBreakLine(ip, line, inst);
+      U32 ip = Con::getStackFrame(i)->ip;
+      if (module)
+         module->findBreakLine(ip, line, inst);
       dSprintf(buffer, MaxCommandSize, " %s %d %s", file, line, scope);
       send(buffer);
    }
@@ -579,7 +578,7 @@ void TelnetDebugger::removeVariableBreakpoint(const char*)
    send("removeVariableBreakpoint\r\n");
 }
 
-void TelnetDebugger::addAllBreakpoints(CodeBlock *code)
+void TelnetDebugger::addAllBreakpoints(Con::Module *module)
 {
    if(mState == NotConnected)
       return;
@@ -590,14 +589,14 @@ void TelnetDebugger::addAllBreakpoints(CodeBlock *code)
    {
       // TODO: This assumes that the OS file names are case 
       // insensitive... Torque needs a dFilenameCmp() function.
-      if( dStricmp( cur->fileName, code->name ) == 0 )
+      if( dStricmp( cur->fileName, module->getName() ) == 0 )
       {
-         cur->code = code;
+         cur->module = module;
 
          // Find the fist breakline starting from and
          // including the requested breakline.
-         S32 newLine = code->findFirstBreakLine(cur->lineNumber);
-         if (newLine <= 0) 
+         S32 newLine = module->findFirstBreakLine(cur->lineNumber);
+         if (newLine <= 0)
          {
             char buffer[MaxCommandSize];
             dSprintf(buffer, MaxCommandSize, "BRKCLR %s %d\r\n", cur->fileName, cur->lineNumber);
@@ -638,7 +637,7 @@ void TelnetDebugger::addAllBreakpoints(CodeBlock *code)
             cur->lineNumber = newLine;
          }
 
-         code->setBreakpoint(cur->lineNumber);
+         module->setBreakpoint(cur->lineNumber);
       }
 
       cur = cur->next;
@@ -646,7 +645,7 @@ void TelnetDebugger::addAllBreakpoints(CodeBlock *code)
 
    // Enable all breaks if a break next was set.
    if (mBreakOnNextStatement)
-       code->setAllBreaks();
+       module->setAllBreaks();
 }
 
 void TelnetDebugger::addBreakpoint(const char *fileName, S32 line, bool clear, S32 passCount, const char *evalString)
@@ -668,12 +667,12 @@ void TelnetDebugger::addBreakpoint(const char *fileName, S32 line, bool clear, S
    {
       // Note that if the code block is not already 
       // loaded it is handled by addAllBreakpoints.
-      CodeBlock* code = CodeBlock::find(fileName);
-      if (code)
+      Con::Module* module = Con::findScriptModuleForFile(fileName);
+      if (module)
       {
          // Find the fist breakline starting from and
          // including the requested breakline.
-         S32 newLine = code->findFirstBreakLine(line);
+         S32 newLine = module->findFirstBreakLine(line);
          if (newLine <= 0) 
          {
             char buffer[MaxCommandSize];
@@ -703,11 +702,11 @@ void TelnetDebugger::addBreakpoint(const char *fileName, S32 line, bool clear, S
             line = newLine;
          }
 
-         code->setBreakpoint(line);
+         module->setBreakpoint(line);
       }
 
       Breakpoint *brk = new Breakpoint;
-      brk->code = code;
+      brk->module = module;
       brk->fileName = fileName;
       brk->lineNumber = line;
       brk->passCount = passCount;
@@ -719,13 +718,13 @@ void TelnetDebugger::addBreakpoint(const char *fileName, S32 line, bool clear, S
    }
 }
 
-void TelnetDebugger::removeBreakpointsFromCode(CodeBlock *code)
+void TelnetDebugger::removeBreakpointsFromCode(Con::Module *code)
 {
    Breakpoint **walk = &mBreakpoints;
    Breakpoint *cur;
    while((cur = *walk) != NULL)
    {
-      if(cur->code == code)
+      if(cur->module == code)
       {
          dFree(cur->testExpression);
          *walk = cur->next;
@@ -744,8 +743,8 @@ void TelnetDebugger::removeBreakpoint(const char *fileName, S32 line)
    {
       Breakpoint *brk = *bp;
       *bp = brk->next;
-     if ( brk->code )
-          brk->code->clearBreakpoint(brk->lineNumber);
+     if ( brk->module )
+          brk->module->clearBreakpoint(brk->lineNumber);
       dFree(brk->testExpression);
       delete brk;
    }
@@ -757,8 +756,8 @@ void TelnetDebugger::removeAllBreakpoints()
    while(walk)
    {
       Breakpoint *temp = walk->next;
-     if ( walk->code )
-          walk->code->clearBreakpoint(walk->lineNumber);
+     if ( walk->module )
+          walk->module->clearBreakpoint(walk->lineNumber);
       dFree(walk->testExpression);
       delete walk;
       walk = temp;
@@ -781,23 +780,24 @@ void TelnetDebugger::debugContinue()
 
 void TelnetDebugger::setBreakOnNextStatement( bool enabled )
 {
+   Vector<Con::Module*> modules = Con::getAllScriptModules();
    if ( enabled )
    {
       // Apply breaks on all the code blocks.
-      for(CodeBlock *walk = CodeBlock::getCodeBlockList(); walk; walk = walk->nextFile)
-         walk->setAllBreaks();
+      for(Con::Module** walk = modules.begin(); walk != modules.end(); walk++)
+         (*walk)->setAllBreaks();
       mBreakOnNextStatement = true;
    } 
    else if ( !enabled )
    {
       // Clear all the breaks on the codeblocks 
       // then go reapply the breakpoints.
-      for(CodeBlock *walk = CodeBlock::getCodeBlockList(); walk; walk = walk->nextFile)
-         walk->clearAllBreaks();
+      for(Con::Module** walk = modules.begin(); walk != modules.end(); walk++)
+         (*walk)->clearAllBreaks();
       for(Breakpoint *w = mBreakpoints; w; w = w->next)
      {
-        if ( w->code )
-              w->code->setBreakpoint(w->lineNumber);
+        if ( w->module )
+              w->module->setBreakpoint(w->lineNumber);
      }
       mBreakOnNextStatement = false;
    }
@@ -838,7 +838,7 @@ void TelnetDebugger::debugStepOver()
       return;
 
    setBreakOnNextStatement( true );
-   mStackPopBreakIndex = gEvalState.getStackDepth();
+   mStackPopBreakIndex = Con::getFrameStack().size();
    mProgramPaused = false;
    send("RUNNING\r\n");
 }
@@ -849,7 +849,7 @@ void TelnetDebugger::debugStepOut()
       return;
 
    setBreakOnNextStatement( false );
-   mStackPopBreakIndex = gEvalState.getStackDepth() - 1;
+   mStackPopBreakIndex = Con::getFrameStack().size() - 1;
    if ( mStackPopBreakIndex == 0 )
       mStackPopBreakIndex = -1;
    mProgramPaused = false;
@@ -858,84 +858,39 @@ void TelnetDebugger::debugStepOut()
 
 void TelnetDebugger::evaluateExpression(const char *tag, S32 frame, const char *evalBuffer)
 {
-   // Make sure we're passing a valid frame to the eval.
-   if ( frame > gEvalState.getStackDepth() )
-      frame = gEvalState.getStackDepth() - 1;
-   if ( frame < 0 )
-      frame = 0;
+   // Build a buffer just big enough for this eval.
+   const char* format = "return %s;";
+   S32 len = dStrlen( format ) + dStrlen( evalBuffer );
+   char* buffer = new char[ len ];
+   dSprintf( buffer, len, format, evalBuffer );
+   Con::EvalResult evalResult = Con::evaluate(buffer, frame);
+   delete buffer;
 
-   // Local variables use their own memory management and can't be queried by just executing
-   // TorqueScript, we have to go digging into the interpreter.
-   S32 evalBufferLen = dStrlen(evalBuffer);
-   bool isEvaluatingLocalVariable = evalBufferLen > 0 && evalBuffer[0] == '%';
-   if (isEvaluatingLocalVariable)
+   if (!evalResult.valid)
    {
-      // See calculation of current frame in pushing a reference frame for console exec, we need access
-      // to the proper scope.
-      //frame = gEvalState.getTopOfStack() - frame - 1;
-      S32 stackIndex = gEvalState.getTopOfStack() - frame - 1;
-
-      const char* format = "EVALOUT %s %s\r\n";
-
-      gEvalState.pushDebugFrame(stackIndex);
-
-      Dictionary& stackFrame = gEvalState.getCurrentFrame();
-      StringTableEntry functionName = stackFrame.scopeName;
-      StringTableEntry namespaceName = stackFrame.scopeNamespace->mName;
-      StringTableEntry varToLookup = StringTable->insert(evalBuffer);
-
-      S32 registerId = stackFrame.code->variableRegisterTable.lookup(namespaceName, functionName, varToLookup);
-
-      if (registerId == -1)
-      {
-         // ERROR, can't read the variable!
-         send("EVALOUT \"\" \"\"");
-         return;
-      }
-
-      const char* varResult = gEvalState.getLocalStringVariable(registerId);
-
-      gEvalState.popFrame();
-
-      S32 len = dStrlen(format) + dStrlen(tag) + dStrlen(varResult);
-      char* buffer = new char[len];
-      dSprintf(buffer, len, format, tag, varResult[0] ? varResult : "\"\"");
-
-      send(buffer);
-      delete[] buffer;
-
+      // ERROR, can't read the variable!
+      send("EVALOUT \"\" \"\"");
       return;
    }
 
-   // Build a buffer just big enough for this eval.
-   const char* format = "return %s;";
-   dsize_t len = dStrlen( format ) + dStrlen( evalBuffer );
-   char* buffer = new char[ len ];
-   dSprintf( buffer, len, format, evalBuffer );
-
-   // Execute the eval.
-   CodeBlock *newCodeBlock = new CodeBlock();
-   ConsoleValue result = newCodeBlock->compileExec( NULL, buffer, false, frame );
-   delete [] buffer;
-   
-   // Create a new buffer that fits the result.
    format = "EVALOUT %s %s\r\n";
-   len = dStrlen( format ) + dStrlen( tag ) + dStrlen( result.getString() );
-   buffer = new char[ len ];
-   dSprintf( buffer, len, format, tag, result.getString()[0] ? result.getString() : "\"\"" );
 
-   send( buffer );
-   delete newCodeBlock;
-   delete [] buffer;
+   len = dStrlen(format) + dStrlen(tag) + dStrlen(evalResult.value);
+   buffer = new char[len];
+   dSprintf(buffer, len, format, tag, evalResult.value[0] ? evalResult.value : "\"\"");
+
+   send(buffer);
+   delete[] buffer;
 }
 
 void TelnetDebugger::dumpFileList()
 {
    send("FILELISTOUT ");
-   for(CodeBlock *walk = CodeBlock::getCodeBlockList(); walk; walk = walk->nextFile)
+   Vector<Con::Module*> modules = Con::getAllScriptModules();
+   for(Con::Module** walk = modules.begin(); walk != modules.end(); walk++)
    {
-      send(walk->name);
-      if(walk->nextFile)
+      send((*walk)->getName());
+      if((walk + 1) != modules.end())
          send(" ");
    }
    send("\r\n");
@@ -944,15 +899,15 @@ void TelnetDebugger::dumpFileList()
 void TelnetDebugger::dumpBreakableList(const char *fileName)
 {
    fileName = StringTable->insert(fileName);
-   CodeBlock *file = CodeBlock::find(fileName);
+   Con::Module *file = Con::findScriptModuleForFile(fileName);
    char buffer[MaxCommandSize];
    if(file)
    {
-      dSprintf(buffer, MaxCommandSize, "BREAKLISTOUT %s %d", fileName, file->breakListSize >> 1);
+      dSprintf(buffer, MaxCommandSize, "BREAKLISTOUT %s %d", fileName, file->getBreakableLines().size() >> 1);
       send(buffer);
-      for(U32 i = 0; i < file->breakListSize; i += 2)
+      for(U32 i = 0; i < file->getBreakableLines().size(); i += 2)
       {
-         dSprintf(buffer, MaxCommandSize, " %d %d", file->breakList[i], file->breakList[i+1]);
+         dSprintf(buffer, MaxCommandSize, " %d %d", file->getBreakableLines()[i], file->getBreakableLines()[i+1]);
          send(buffer);
       }
       send("\r\n");
@@ -962,14 +917,14 @@ void TelnetDebugger::dumpBreakableList(const char *fileName)
 }
 
 
-void TelnetDebugger::clearCodeBlockPointers(CodeBlock *code)
+void TelnetDebugger::clearCodeBlockPointers(Con::Module *code)
 {
    Breakpoint **walk = &mBreakpoints;
    Breakpoint *cur;
    while((cur = *walk) != NULL)
    {
-      if(cur->code == code)
-         cur->code = NULL;
+      if(cur->module == code)
+         cur->module = NULL;
 
       walk = &cur->next;
    }

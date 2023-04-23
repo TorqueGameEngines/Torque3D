@@ -37,6 +37,8 @@
 #include "core/module.h"
 #include "math/mathIO.h"
 #include "math/mathTypes.h"
+#include "console/simBase.h"
+#include "console/engineAPI.h"
 
 
 IMPLEMENT_CO_DATABLOCK_V1( SFXDescription );
@@ -455,7 +457,7 @@ bool SFXDescription::onAdd()
    const char* channelValue = getDataField( sChannel, NULL );
    if( channelValue && channelValue[ 0 ] )
    {
-      ConsoleValue result = Con::evaluatef( "return sfxOldChannelToGroup( %s );", channelValue );
+      ConsoleValue result = Con::executef("sfxOldChannelToGroup", channelValue);
       const char* group = result.getString();
       if( !Sim::findObject( group, mSourceGroup ) )
          Con::errorf( "SFXDescription::onAdd - could not resolve channel '%s' to SFXSource", channelValue );

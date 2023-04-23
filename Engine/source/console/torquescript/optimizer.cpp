@@ -21,8 +21,7 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#include "console/console.h"
-#include "console/codeBlock.h"
+#include "codeBlock.h"
 
 static bool isLiteralNumber(ExprNode* node)
 {
@@ -85,7 +84,7 @@ bool IntBinaryExprNode::optimize()
       S32 val = getIntValue(right);
       switch (val)
       {
-      case 2: 
+      case 2:
          op = '&';
          optimizedNode = IntNode::alloc(dbgLineNumber, 1);
          return true;

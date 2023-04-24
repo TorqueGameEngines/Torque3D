@@ -466,6 +466,10 @@ U32 GuiTreeViewCtrl::Item::getDisplayTextLength()
          if( internalName && internalName[ 0 ] )
             len += dStrlen( internalName ) + 3; // ' [<internalname>]'
       }
+      if( mState.test( Marked ) )
+      {
+         len += 1; // '*<name>'
+      }
 
       return len;
    }

@@ -427,6 +427,7 @@ bool AssimpShapeLoader::fillGuiTreeView(const char* sourceShapePath, GuiTreeView
 void AssimpShapeLoader::updateMaterialsScript(const Torque::Path &path)
 {
    return;
+   /*
    Torque::Path scriptPath(path);
    scriptPath.setFileName("materials");
    scriptPath.setExtension(TORQUE_SCRIPT_EXTENSION);
@@ -460,6 +461,7 @@ void AssimpShapeLoader::updateMaterialsScript(const Torque::Path &path)
       return;
 
    persistMgr.saveDirty();
+   */
 }
 
 /// Check if an up-to-date cached DTS is available for this DAE file

@@ -902,7 +902,7 @@ void GuiInspectorTypeCommand::_setCommand( GuiButtonCtrl *ctrl, StringTableEntry
 
 	   S32 written = dSprintf( szBuffer, len, "%s(\"", mTextEditorCommand );
       expandEscape(szBuffer.address() + written, command);
-      written = strlen(szBuffer);
+      written = (S32)strlen(szBuffer);
       dSprintf( szBuffer.address() + written, len - written, "\", \"%d.apply\", %d.getRoot());", getId(), getId() );
 
 	   ctrl->setField( "Command", szBuffer );

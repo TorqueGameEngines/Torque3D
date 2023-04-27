@@ -582,7 +582,7 @@ char* dStristr( char* str1, const char* str2 )
 
    // Slow but at least we have it.
 
-   U32 str2len = strlen( str2 );
+   U64 str2len = (U64)strlen( str2 );
    while( *str1 )
    {
       if( strncasecmp( str1, str2, str2len ) == 0 )

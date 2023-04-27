@@ -1556,7 +1556,7 @@ U32 FunctionDeclStmtNode::compileStmt(CodeStream& codeStream, U32 ip)
    // map local variables to registers for this function.
    // Note we have to map these in order because the table itself is ordered by the register id.
    CompilerLocalVariableToRegisterMappingTable* tbl = &getFunctionVariableMappingTable();
-   for (size_t i = 0; i < gFuncVars->variableNameMap.size(); ++i)
+   for (S32 i = 0; i < gFuncVars->variableNameMap.size(); ++i)
    {
       StringTableEntry varName = gFuncVars->variableNameMap[i];
       tbl->add(fnName, nameSpace, varName);

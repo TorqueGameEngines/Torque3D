@@ -615,7 +615,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
    gExecCount++;
 #endif
 
-   const dsize_t TRACE_BUFFER_SIZE = 1024;
+   const U32 TRACE_BUFFER_SIZE = 1024;
    static char traceBuffer[TRACE_BUFFER_SIZE];
    U32 i;
 
@@ -648,12 +648,12 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
          }
          if (thisNamespace && thisNamespace->mName)
          {
-            dSprintf(traceBuffer + dStrlen(traceBuffer), sizeof(traceBuffer) - dStrlen(traceBuffer),
+            dSprintf(traceBuffer + (U32)dStrlen(traceBuffer), sizeof(traceBuffer) - (U32)dStrlen(traceBuffer),
                "%s::%s(", thisNamespace->mName, thisFunctionName);
          }
          else
          {
-            dSprintf(traceBuffer + dStrlen(traceBuffer), sizeof(traceBuffer) - dStrlen(traceBuffer),
+            dSprintf(traceBuffer + (U32)dStrlen(traceBuffer), sizeof(traceBuffer) - (U32)dStrlen(traceBuffer),
                "%s(", thisFunctionName);
          }
          for (i = 0; i < wantedArgc; i++)
@@ -2317,12 +2317,12 @@ execFinished:
          }
          if (thisNamespace && thisNamespace->mName)
          {
-            dSprintf(traceBuffer + dStrlen(traceBuffer), sizeof(traceBuffer) - dStrlen(traceBuffer),
+            dSprintf(traceBuffer + (U32)dStrlen(traceBuffer), sizeof(traceBuffer) - (U32)dStrlen(traceBuffer),
                "%s::%s() - return %s", thisNamespace->mName, thisFunctionName, returnValue.getString());
          }
          else
          {
-            dSprintf(traceBuffer + dStrlen(traceBuffer), sizeof(traceBuffer) - dStrlen(traceBuffer),
+            dSprintf(traceBuffer + (U32)dStrlen(traceBuffer), sizeof(traceBuffer) - (U32)dStrlen(traceBuffer),
                "%s() - return %s", thisFunctionName, returnValue.getString());
          }
          Con::printf("%s", traceBuffer);

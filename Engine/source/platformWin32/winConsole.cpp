@@ -147,7 +147,7 @@ void WinConsole::printf(const char *s, ...)
    // Axe the color characters.
    Con::stripColorChars(buffer);
    // Print it.
-   WriteFile(stdOut, buffer, strlen(buffer), &bytes, NULL);
+   WriteFile(stdOut, buffer, (U32)strlen(buffer), &bytes, NULL);
    FlushFileBuffers( stdOut );
 }
 

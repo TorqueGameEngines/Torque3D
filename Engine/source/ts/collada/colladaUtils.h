@@ -831,7 +831,7 @@ template<> inline const domListOfUInts *ColladaPrimitive<domPolylist>::getTriang
          pSrcData += stride;
          for (S32 iTri = 0; iTri < vcount[iPoly]-2; iTri++) {
             pTriangleData->appendArray(stride, v0);
-            pTriangleData->appendArray(stride*2, pSrcData);
+            pTriangleData->appendArray((U64)(stride*2), pSrcData);
             pSrcData += stride;
          }
          pSrcData += stride;

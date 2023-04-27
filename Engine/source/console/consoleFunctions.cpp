@@ -146,7 +146,7 @@ bool isFloat(const char* str, bool sciOk = false)
             }
             break;
          case '.':
-            if(seenDot | (sciOk && eLoc != -1))
+            if(seenDot || (sciOk && eLoc != -1))
                return false;
             seenDot = true;
             break;

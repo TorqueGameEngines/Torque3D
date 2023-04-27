@@ -352,8 +352,8 @@ class Journal
 
    template<typename T>
    struct MethodRep: public FuncDecl {
-      typename T::ObjPtr obj;
-      typename T::MethodPtr method;
+      typename T::ObjPtr obj = NULL;
+      typename T::MethodPtr method = NULL;
       virtual bool match(VoidPtr ptr,VoidMethod func) const {
          return obj == (typename T::ObjPtr)ptr && method == (typename T::MethodPtr)func;
       }

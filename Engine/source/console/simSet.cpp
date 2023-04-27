@@ -890,6 +890,7 @@ DefineEngineMethod( SimSet, listObjects, void, (),,
    for(itr = object->begin(); itr != object->end(); itr++)
    {
       SimObject *obj = *itr;
+      if (obj == nullptr) continue;
       bool isSet = dynamic_cast<SimSet *>(obj) != 0;
       const char *name = obj->getName();
       if(name)

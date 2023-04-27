@@ -863,7 +863,7 @@ public:
 public:
 
    /// Get the classname from a class tag.
-   static const char* lookupClassName(const U32 in_classTag) {};
+   static const char* lookupClassName(const U32 in_classTag) { return ""; };
 
    /// @name Fields
    /// @{

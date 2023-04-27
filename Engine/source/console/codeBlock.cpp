@@ -309,7 +309,7 @@ void CodeBlock::calcBreakList()
    if (seqCount)
       size++;
 
-   breakList = new U32[size+3];
+   breakList = new U32[size+3]; //lineBreakPairs plus pad
    breakListSize = size;
    line = -1;
    seqCount = 0;

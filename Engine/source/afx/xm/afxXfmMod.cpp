@@ -204,7 +204,7 @@ afxXM_WeightedBaseData::afxXM_WeightedBaseData(const afxXM_WeightedBaseData& oth
 
 bool afxXM_WeightedBaseData::hasFixedWeight() const
 {
-  return (delay == 0.0f && lifetime == afxEffectDefs::INFINITE_LIFETIME && fade_in_time == 0.0f && fade_out_time == 0.0f);
+  return (delay == 0.0f && lifetime == (F32)afxEffectDefs::INFINITE_LIFETIME && fade_in_time == 0.0f && fade_out_time == 0.0f);
 }
 
 F32 afxXM_WeightedBaseData::getWeightFactor() const

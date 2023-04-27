@@ -89,7 +89,7 @@ bool afxEA_AnimClip::ea_start()
   do_runtime_substitutions();
 
   afxConstraint* pos_constraint = getPosConstraint();
-  if (mFull_lifetime == INFINITE_LIFETIME && pos_constraint != 0)
+  if (mFull_lifetime == (F32)INFINITE_LIFETIME && pos_constraint != 0)
     anim_lifetime = pos_constraint->getAnimClipDuration(clip_data->clip_name);
   else 
     anim_lifetime = mFull_lifetime;

@@ -116,12 +116,12 @@ void TSShapeLoader::generateNodeTransform(AppNode* node, F32 t, bool blend, F32 
 void TSShapeLoader::updateProgress(S32 major, const char* msg, S32 numMinor, S32 minor)
 {
    // Calculate progress value
-   F32 progress = (F32)major / NumLoadPhases;
+   F32 progress = (F32)major / (F32)NumLoadPhases;
    const char *progressMsg = msg;
 
    if (numMinor)
    {
-      progress += (minor * (1.0f / NumLoadPhases) / numMinor);
+      progress += (minor * (1.0f / (F32)NumLoadPhases) / numMinor);
       progressMsg = avar("%s (%d of %d)", msg, minor + 1, numMinor);
    }
 

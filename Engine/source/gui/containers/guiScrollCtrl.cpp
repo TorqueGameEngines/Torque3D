@@ -149,15 +149,15 @@ bool GuiScrollCtrl::onWake()
       return false;
 
    mTextureObject = mProfile->getBitmapResource();
-   if (mTextureObject && (mProfile->constructBitmapArray() >= BmpStates * BmpCount))
+   if (mTextureObject && (mProfile->constructBitmapArray() >= (U32)BmpStates * (U32)BmpCount))
    {
       mBitmapBounds = mProfile->mBitmapArrayRects.address();
 
       //init
-      mBaseThumbSize = mBitmapBounds[BmpStates * BmpVThumbTopCap].extent.y +
-         mBitmapBounds[BmpStates * BmpVThumbBottomCap].extent.y;
-      mScrollBarThickness      = mBitmapBounds[BmpStates * BmpVPage].extent.x;
-      mScrollBarArrowBtnLength = mBitmapBounds[BmpStates * BmpUp].extent.y;
+      mBaseThumbSize = mBitmapBounds[(U32)BmpStates * (U32)BmpVThumbTopCap].extent.y +
+         mBitmapBounds[(U32)BmpStates * (U32)BmpVThumbBottomCap].extent.y;
+      mScrollBarThickness      = mBitmapBounds[(U32)BmpStates * (U32)BmpVPage].extent.x;
+      mScrollBarArrowBtnLength = mBitmapBounds[(U32)BmpStates * (U32)BmpUp].extent.y;
       computeSizes();
    } 
    else
@@ -1095,7 +1095,7 @@ void GuiScrollCtrl::drawVScrollBar(const Point2I &offset)
     Point2I pos = ( offset + mUpArrowRect.point );
 
     // Up Arrow.
-    S32 upArrowBitmap = ( BmpStates * BmpUp );
+    S32 upArrowBitmap = ((U32)BmpStates * (U32)BmpUp );
     if ( !mVBarEnabled )
     {
         upArrowBitmap += BmpDisabled;
@@ -1114,7 +1114,7 @@ void GuiScrollCtrl::drawVScrollBar(const Point2I &offset)
     pos.y += mBitmapBounds[upArrowBitmap].extent.y;
 
     // Track.
-    S32 trackBitmap = ( BmpStates * BmpVPage );
+    S32 trackBitmap = ((U32)BmpStates * (U32)BmpVPage );
     if ( !mVBarEnabled )
     {
         trackBitmap += BmpDisabled;
@@ -1142,7 +1142,7 @@ void GuiScrollCtrl::drawVScrollBar(const Point2I &offset)
     pos.y += trackRect.extent.y;
 
     // Down Arrow.
-    S32 downArrowBitmap = ( BmpStates * BmpDown );
+    S32 downArrowBitmap = ((U32)BmpStates * (U32)BmpDown );
     if ( !mVBarEnabled )
     {
         downArrowBitmap += BmpDisabled;
@@ -1167,9 +1167,9 @@ void GuiScrollCtrl::drawVScrollBar(const Point2I &offset)
     pos.y = ( offset.y + mVThumbPos );
 
     // Determine the Bitmaps.
-    S32 thumbBitmapTop    = ( BmpStates * BmpVThumbTopCap );
-    S32 thumbBitmapMiddle = ( BmpStates * BmpVThumb );
-    S32 thumbBitmapBottom = ( BmpStates * BmpVThumbBottomCap );
+    S32 thumbBitmapTop    = ((U32)BmpStates * (U32)BmpVThumbTopCap );
+    S32 thumbBitmapMiddle = ((U32)BmpStates * (U32)BmpVThumb );
+    S32 thumbBitmapBottom = ((U32)BmpStates * (U32)BmpVThumbBottomCap );
 
     if ( mHitRegion == VertThumb && mStateDepressed )
     {
@@ -1220,7 +1220,7 @@ void GuiScrollCtrl::drawHScrollBar(const Point2I &offset)
     Point2I pos = ( offset + mLeftArrowRect.point );
 
     // Left Arrow.
-    S32 leftArrowBitmap = ( BmpStates * BmpLeft );
+    S32 leftArrowBitmap = ((U32)BmpStates * (U32)BmpLeft );
     if ( !mHBarEnabled )
     {
         leftArrowBitmap += BmpDisabled;
@@ -1239,7 +1239,7 @@ void GuiScrollCtrl::drawHScrollBar(const Point2I &offset)
     pos.x += mBitmapBounds[leftArrowBitmap].extent.x;
 
     // Track.
-    S32 trackBitmap = ( BmpStates * BmpHPage );
+    S32 trackBitmap = ((U32)BmpStates * (U32)BmpHPage );
     if ( !mHBarEnabled )
     {
         trackBitmap += BmpDisabled;
@@ -1267,7 +1267,7 @@ void GuiScrollCtrl::drawHScrollBar(const Point2I &offset)
     pos.x += trackRect.extent.x;
 
     // Right Arrow.
-    S32 rightArrowBitmap = ( BmpStates * BmpRight );
+    S32 rightArrowBitmap = ((U32)BmpStates * (U32)BmpRight );
     if ( !mHBarEnabled )
     {
         rightArrowBitmap += BmpDisabled;
@@ -1292,9 +1292,9 @@ void GuiScrollCtrl::drawHScrollBar(const Point2I &offset)
     pos.x = ( offset.x + mHThumbPos );
 
     // Determine the Bitmaps.
-    S32 thumbBitmapLeft   = ( BmpStates * BmpHThumbLeftCap );
-    S32 thumbBitmapMiddle = ( BmpStates * BmpHThumb );
-    S32 thumbBitmapRight  = ( BmpStates * BmpHThumbRightCap );
+    S32 thumbBitmapLeft   = ((U32)BmpStates * (U32)BmpHThumbLeftCap );
+    S32 thumbBitmapMiddle = ((U32)BmpStates * (U32)BmpHThumb );
+    S32 thumbBitmapRight  = ((U32)BmpStates * (U32)BmpHThumbRightCap );
 
     if ( mHitRegion == HorizThumb && mStateDepressed )
     {
@@ -1340,7 +1340,7 @@ void GuiScrollCtrl::drawScrollCorner(const Point2I &offset)
    pos.x += mRightArrowRect.point.x + mRightArrowRect.extent.x - 1;
    pos.y += mRightArrowRect.point.y;
    GFX->getDrawUtil()->clearBitmapModulation();
-   GFX->getDrawUtil()->drawBitmapSR(mTextureObject, pos, mBitmapBounds[BmpStates * BmpResize]);
+   GFX->getDrawUtil()->drawBitmapSR(mTextureObject, pos, mBitmapBounds[(U32)BmpStates * (U32)BmpResize]);
 }
 
 //-----------------------------------------------------------------------------

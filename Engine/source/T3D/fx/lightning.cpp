@@ -691,7 +691,7 @@ void Lightning::processEvent(LightningStrikeEvent* pEvent)
          start.z = mObjScale.z * 0.5f + getPosition().z;
          strikePoint.z += -mObjScale.z * 0.5f;
          bool rayHit = gClientContainer.castRay( start, strikePoint,
-                                      (STATIC_COLLISION_TYPEMASK | WaterObjectType),
+                                      ((U32)STATIC_COLLISION_TYPEMASK | (U32)WaterObjectType),
                                       &rayInfo);
          if( rayHit )
          {
@@ -933,7 +933,7 @@ U32 Lightning::packUpdate(NetConnection* con, U32 mask, BitStream* stream)
    U32 retMask = Parent::packUpdate(con, mask, stream);
 
    // Only write data if this is the initial packet or we've been inspected.
-   if (stream->writeFlag(mask & (InitialUpdateMask | ExtendedInfoMask)))
+   if (stream->writeFlag(mask & ((U32)InitialUpdateMask | (U32)ExtendedInfoMask)))
    {
       // Initial update
       mathWrite(*stream, getPosition());

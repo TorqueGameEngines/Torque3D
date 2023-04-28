@@ -644,18 +644,20 @@ ImplementEnumType(_TamlFormatMode,
       // Fetch field count.
       const U32 fieldCount = fieldList.size();
 
-      ConsoleObject* defaultConObject;
-      SimObject* defaultObject;
+      ConsoleObject* defaultConObject = NULL;
+      SimObject* defaultObject = NULL;
       if (!getWriteDefaults())
       {
          // Create a default object of the same type
          defaultConObject = ConsoleObject::create(pSimObject->getClassName());
+         if (!defaultConObject)
+            return;
          defaultObject = dynamic_cast<SimObject*>(defaultConObject);
       
-         // ***Really*** shouldn't happen
-         if (!defaultObject)
-            return;
       }
+      // ***Really*** shouldn't happen
+      if (!defaultConObject || !defaultObject)
+         return;
 
       // Iterate fields.
       U8 arrayDepth = 0;
@@ -754,7 +756,7 @@ ImplementEnumType(_TamlFormatMode,
             }
 
             // Save field/value.
-            if (arrayDepth > 0 || pField->elementCount > 1)
+            if (currentArrayNode && (arrayDepth > 0 || pField->elementCount > 1))
                currentArrayNode->getChildren()[elementIndex]->addField(fieldName, pFieldValue);
             else
             {

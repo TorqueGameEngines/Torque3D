@@ -116,9 +116,6 @@ U32 _ITER = 0;    ///< Stack pointer for iterStack.
 ConsoleValue stack[MaxStackSize];
 S32 _STK = 0;
 
-char curFieldArray[256];
-char prevFieldArray[256];
-
 const char* tsconcat(const char* strA, const char* strB, S32& outputLen)
 {
    S32 lenA = dStrlen(strA);

@@ -1549,22 +1549,23 @@ ConsoleValue evaluatef(const char* string, ...)
 ConsoleValue _internalExecute(S32 argc, ConsoleValue argv[])
 {
    StringTableEntry funcName = StringTable->insert(argv[0].getString());
-
-   const char** argv_str = static_cast<const char**>(malloc((argc - 1) * sizeof(char *)));
-   for (int i = 0; i < argc - 1; i++)
+   if (argc > 1)
    {
-      argv_str[i] = argv[i + 1].getString();
+      const char** argv_str = static_cast<const char**>(malloc((argc - 1) * sizeof(char*)));
+      for (int i = 0; i < argc - 1; i++)
+      {
+         argv_str[i] = argv[i + 1].getString();
+      }
+      bool result;
+      const char* methodRes = CInterface::CallFunction(NULL, funcName, argv_str, argc - 1, &result);
+      free(argv_str);
+      if (result)
+      {
+         ConsoleValue ret;
+         ret.setString(methodRes);
+         return std::move(ret);
+      }
    }
-   bool result;
-   const char* methodRes = CInterface::CallFunction(NULL, funcName, argv_str, argc - 1, &result);
-   free(argv_str);
-   if (result)
-   {
-      ConsoleValue ret;
-      ret.setString(methodRes);
-      return std::move(ret);
-   }
-   
    Namespace::Entry *ent;
    
    ent = Namespace::global()->lookup(funcName);
@@ -1636,22 +1637,24 @@ static ConsoleValue _internalExecute(SimObject *object, S32 argc, ConsoleValue a
    }
 
    StringTableEntry funcName = StringTable->insert(argv[0].getString());
-
-   const char** argv_str = static_cast<const char**>(malloc((argc - 2) * sizeof(char *)));
-   for (int i = 0; i < argc - 2; i++)
+   if (argc > 2)
    {
-      argv_str[i] = argv[i + 2].getString();
-   }
-   bool result;
-   const char* methodRes = CInterface::CallMethod(object, funcName, argv_str, argc - 2, &result);
+      const char** argv_str = static_cast<const char**>(malloc((argc - 2) * sizeof(char*)));
+      for (int i = 0; i < argc - 2; i++)
+      {
+         argv_str[i] = argv[i + 2].getString();
+      }
+      bool result;
+      const char* methodRes = CInterface::CallMethod(object, funcName, argv_str, argc - 2, &result);
 
-   free(argv_str);
+      free(argv_str);
 
-   if (result)
-   {
-      ConsoleValue val;
-      val.setString(methodRes);
-      return val;
+      if (result)
+      {
+         ConsoleValue val;
+         val.setString(methodRes);
+         return val;
+      }
    }
 
    if(object->getNamespace())

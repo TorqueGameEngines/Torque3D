@@ -91,7 +91,7 @@ static const char * prependDollar ( const char * name )
 {
    if(name[0] != '$')
    {
-      S32   len = dStrlen(name);
+      U64   len = dStrlen(name);
       AssertFatal(len < sizeof(scratchBuffer)-2, "CONSOLE: name too long");
       scratchBuffer[0] = '$';
       dMemcpy(scratchBuffer + 1, name, len + 1);
@@ -104,7 +104,7 @@ static const char * prependPercent ( const char * name )
 {
    if(name[0] != '%')
    {
-      S32   len = dStrlen(name);
+      U64   len = dStrlen(name);
       AssertFatal(len < sizeof(scratchBuffer)-2, "CONSOLE: name too long");
       scratchBuffer[0] = '%';
       dMemcpy(scratchBuffer + 1, name, len + 1);
@@ -504,7 +504,7 @@ U32 tabComplete(char* inputBuffer, U32 cursorPos, U32 maxResultLength, bool forw
          }
 
          // Find the object identifier.
-         S32 objLast = --p;
+         U64 objLast = --p;
          while ((p > 0) && (inputBuffer[p - 1] != ' ') && (inputBuffer[p - 1] != '(')) 
          {
             p--;
@@ -646,7 +646,7 @@ static void _printf(ConsoleLogEntry::Level level, ConsoleLogEntry::Type type, co
       return;
    Con::active = false; 
 
-   char buffer[8192];
+   char buffer[8192] = {};
    U32 offset = 0;
    if( gEvalState.traceOn && gEvalState.getStackDepth() > 0 )
    {
@@ -703,7 +703,7 @@ static void _printf(ConsoleLogEntry::Level level, ConsoleLogEntry::Type type, co
             entry.mLevel  = level;
             entry.mType   = type;
 #ifndef TORQUE_SHIPPING // this is equivalent to a memory leak, turn it off in ship build            
-            dsize_t logStringLen = dStrlen(pos) + 1;
+            U64 logStringLen = dStrlen(pos) + 1;
             entry.mString = (const char *)consoleLogChunker.alloc(logStringLen);
             dStrcpy(const_cast<char*>(entry.mString), pos, logStringLen);
             
@@ -776,7 +776,7 @@ bool getVariableObjectField(const char *name, SimObject **object, const char **f
    const char *dot = dStrchr(name, '.');
    if(name[0] != '$' && dot)
    {
-      S32 len = dStrlen(name);
+      U64 len = dStrlen(name);
       AssertFatal(len < sizeof(scratchBuffer)-1, "Sim::getVariable - name too long");
       dMemcpy(scratchBuffer, name, len+1);
 
@@ -978,7 +978,7 @@ const char *getObjectTokenField(const char *name)
    const char *dot = dStrchr(name, '.');
    if(name[0] != '$' && dot)
    {
-      S32 len = dStrlen(name);
+      U64 len = dStrlen(name);
       AssertFatal(len < sizeof(scratchBuffer)-1, "Sim::getVariable - object name too long");
       dMemcpy(scratchBuffer, name, len+1);
 
@@ -1551,19 +1551,23 @@ ConsoleValue _internalExecute(S32 argc, ConsoleValue argv[])
    StringTableEntry funcName = StringTable->insert(argv[0].getString());
    if (argc > 1)
    {
-      const char** argv_str = static_cast<const char**>(malloc((argc - 1) * sizeof(char*)));
-      for (int i = 0; i < argc - 1; i++)
+      const char** argv_str = static_cast<const char**>(malloc(size_t(argc) * sizeof(char*)));
+      if (argv_str)
       {
-         argv_str[i] = argv[i + 1].getString();
+         for (int i = 0; i < argc - 1; i++)
+         {
+            argv_str[i] = argv[i + 1].getString();
+         }
       }
       bool result;
       const char* methodRes = CInterface::CallFunction(NULL, funcName, argv_str, argc - 1, &result);
+
       free(argv_str);
       if (result)
       {
          ConsoleValue ret;
          ret.setString(methodRes);
-         return std::move(ret);
+         return ret;
       }
    }
    Namespace::Entry *ent;
@@ -1616,6 +1620,9 @@ ConsoleValue execute(S32 argc, const char *argv[])
 // Internal execute for object method which does not save the stack
 static ConsoleValue _internalExecute(SimObject *object, S32 argc, ConsoleValue argv[], bool thisCallOnly)
 {
+   if (object == NULL)
+      return std::move(ConsoleValue());
+
    if(argc < 2)
    {
       STR.clearFunctionOffset();
@@ -1639,10 +1646,13 @@ static ConsoleValue _internalExecute(SimObject *object, S32 argc, ConsoleValue a
    StringTableEntry funcName = StringTable->insert(argv[0].getString());
    if (argc > 2)
    {
-      const char** argv_str = static_cast<const char**>(malloc((argc - 2) * sizeof(char*)));
-      for (int i = 0; i < argc - 2; i++)
+      const char** argv_str = static_cast<const char**>(malloc(size_t(argc - 1) * sizeof(char*)));
+      if (argv_str)
       {
-         argv_str[i] = argv[i + 2].getString();
+         for (int i = 0; i < argc - 2; i++)
+         {
+            argv_str[i] = argv[i + 2].getString();
+         }
       }
       bool result;
       const char* methodRes = CInterface::CallMethod(object, funcName, argv_str, argc - 2, &result);
@@ -1901,7 +1911,7 @@ StringTableEntry getModNameFromPath(const char *path)
    if(path == NULL || *path == 0)
       return NULL;
 
-   char buf[1024];
+   char buf[1024] = {};
    buf[0] = 0;
 
    if(path[0] == '/' || path[1] == ':')
@@ -2148,7 +2158,7 @@ StringTableEntry getPathExpandoValue(U32 expandoIndex)
 
 bool expandPath(char* pDstPath, U32 size, const char* pSrcPath, const char* pWorkingDirectoryHint, const bool ensureTrailingSlash)
 {
-   char pathBuffer[2048];
+   char pathBuffer[2048] = {};
    const char* pSrc = pSrcPath;
    char* pSlash;
 
@@ -2607,7 +2617,7 @@ ConsoleValue _BaseEngineConsoleCallbackHelper::_exec()
       {
          ConsoleValue returnValue = Con::_internalExecute( mThis, mArgc, mArgv, false );
          mArgc = mInitialArgc; // reset
-         return std::move(returnValue);
+         return returnValue;
       }
 
       STR.clearFunctionOffset();
@@ -2617,7 +2627,7 @@ ConsoleValue _BaseEngineConsoleCallbackHelper::_exec()
 
    ConsoleValue returnValue = std::move(Con::_internalExecute( mArgc, mArgv ));
    mArgc = mInitialArgc; // reset args
-   return std::move(returnValue);
+   return returnValue;
 }
 
 ConsoleValue _BaseEngineConsoleCallbackHelper::_execLater(SimConsoleThreadExecEvent *evt)

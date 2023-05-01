@@ -476,6 +476,8 @@ Dictionary::Entry::Entry(StringTableEntry in_name)
    fval = 0;
    sval = NULL;
    bufferLen = 0;
+   dataPtr = NULL;
+   enumTable = NULL;
 }
 
 Dictionary::Entry::~Entry()
@@ -809,6 +811,7 @@ ExprEvalState::ExprEvalState()
    mShouldReset = false;
    mResetLocked = false;
    copyVariable = NULL;
+   currentRegisterArray = NULL;
 }
 
 ExprEvalState::~ExprEvalState()

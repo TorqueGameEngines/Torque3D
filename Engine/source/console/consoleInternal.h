@@ -359,6 +359,8 @@ public:
          fval = 0;
          sval = NULL;
          bufferLen = 0;
+         dataPtr = NULL;
+         enumTable = NULL;
       }
 
       Entry(StringTableEntry name);

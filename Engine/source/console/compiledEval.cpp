@@ -723,7 +723,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
    struct {
       SimObject* newObject;
       U32 failJump;
-   } objectCreationStack[objectCreationStackSize];
+   } objectCreationStack[objectCreationStackSize] = {};
 
    SimObject* currentNewObject = 0;
    StringTableEntry prevField = NULL;
@@ -2346,7 +2346,7 @@ execFinished:
    AssertFatal(!(_STK < stackStart), "String stack popped too much in script exec");
 #endif
 
-   return std::move(returnValue);
+   return returnValue;
 }
 
 //------------------------------------------------------------

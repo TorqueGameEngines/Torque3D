@@ -209,7 +209,7 @@ inline F32 mFmod(const F32 val, const F32 mod)
 
 inline S32 mRound(const F32 val)  
 {  
-   return (S32)floor(F64(val + 0.5f));  
+   return (S32)floor(val + 0.5f);  
 }  
       
 inline F32 mRound(const F32 val, const S32 n)  

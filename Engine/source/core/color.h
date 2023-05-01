@@ -873,10 +873,10 @@ inline ColorI LinearColorF::toColorI(const bool keepAsLinear)
          float b = mPow(blue, gOneOverGamma);
          return ColorI(U8(r * 255.0f + 0.5), U8(g * 255.0f + 0.5), U8(b * 255.0f + 0.5), U8(alpha * 255.0f + 0.5));
    #else
-         float r = red < 0.0031308f ? 12.92f * red : 1.055 * mPow(red, 1.0f / 2.4f) - 0.055f;
-         float g = green < 0.0031308f ? 12.92f * green : 1.055 * mPow(green, 1.0f / 2.4f) - 0.055f;
-         float b = blue < 0.0031308f ? 12.92f * blue : 1.055 * mPow(blue, 1.0f / 2.4f) - 0.055f;
-         return ColorI(U8(r * 255.0f + 0.5), U8(g * 255.0f + 0.5), U8(b * 255.0f + 0.5), U8(alpha * 255.0f + 0.5));
+         float r = red < 0.0031308f ? 12.92f * red : 1.055f * mPow(red, 1.0f / 2.4f) - 0.055f;
+         float g = green < 0.0031308f ? 12.92f * green : 1.055f * mPow(green, 1.0f / 2.4f) - 0.055f;
+         float b = blue < 0.0031308f ? 12.92f * blue : 1.055f * mPow(blue, 1.0f / 2.4f) - 0.055f;
+         return ColorI(U8(r * 255.0f + 0.5f), U8(g * 255.0f + 0.5f), U8(b * 255.0f + 0.5f), U8(alpha * 255.0f + 0.5f));
    #endif
       }
    }

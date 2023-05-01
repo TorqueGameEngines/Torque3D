@@ -201,7 +201,7 @@ inline TerrainSquare* TerrainFile::findSquare( U32 level, U32 x, U32 y ) const
    x >>= level;
    y >>= level;
 
-   return mGridMap[level] + x + ( y << ( mGridLevels - level ) );
+   return mGridMap[level] + x + U64( y << U32( mGridLevels - level ) );
 }
 
 inline void TerrainFile::setHeight( U32 x, U32 y, U16 height )

@@ -66,10 +66,10 @@ class WindowInputGenerator
       /// Accelerator key map
        struct AccKeyMap
        {
-          void *hnd;
+          void *hnd = NULL;
           String cmd;
-          U32 keyCode;
-          U32 modifier;
+          U32 keyCode = 0x000;
+          U32 modifier = 0x000;
        };
        Vector <AccKeyMap> mAcceleratorMap;
       

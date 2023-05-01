@@ -109,7 +109,7 @@ protected:
       mSuppressReset = false;
       mOffscreenRender = false;
       mDisplayWindow = false;
-
+      mWindowId = 0;
       // This controller maps window input (Mouse/Keyboard) to a generic input consumer
       mWindowInputGenerator = new WindowInputGenerator( this );
    }

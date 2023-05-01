@@ -150,7 +150,7 @@ static bool sReadJPG(Stream &stream, GBitmap *bitmap)
    U8* pBase = (U8*)bitmap->getBits();
    for (U32 i = 0; i < bitmap->getHeight(); i++)
    {
-      JSAMPROW rowPointer = pBase + (i * rowBytes);
+      JSAMPROW rowPointer = pBase + (U64)(i * rowBytes);
       jpeg_read_scanlines(&cinfo, &rowPointer, 1);
    }
 

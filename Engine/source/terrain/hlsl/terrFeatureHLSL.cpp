@@ -624,7 +624,7 @@ void TerrainDetailMapFeatHLSL::processPix(   Vector<ShaderComponent*> &component
    Var *detailInfo = _getDetailIdStrengthParallax();
 
    // Done here to keep array indexes aligned
-   Var* macroInfo = _getMacroIdStrengthParallax();
+   _getMacroIdStrengthParallax();
 
    // Create the detail blend var.
    Var *detailBlend = new Var;
@@ -1414,7 +1414,6 @@ void TerrainHeightMapBlendHLSL::processPix(Vector<ShaderComponent*>& componentLi
    {
       for (S32 idx = 0; idx < detailCount; ++idx)
       {
-         Var* detailBlend = (Var*)LangElement::find(String::ToString("detailBlend%d", idx));
          Var* detailH = (Var*)LangElement::find(String::ToString("detailH%d", idx));
          Var* blendHardness = (Var*)LangElement::find(String::ToString("blendHardness%d", idx));
          if (!blendHardness)

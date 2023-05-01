@@ -122,19 +122,6 @@ void DebugVizHLSL::processPix(Vector<ShaderComponent*>& componentList,
       if (fd.features[MFT_LightMap] || fd.features[MFT_ToneMap] || fd.features[MFT_VertLit])
          return;
 
-      ShaderConnector* connectComp = dynamic_cast<ShaderConnector*>(componentList[C_CONNECTOR]);
-
-      MultiLine* meta = new MultiLine;
-
-      // Now the wsPosition and wsView.
-      Var* worldToTangent = getInWorldToTangent(componentList);
-      Var* wsNormal = getInWorldNormal(componentList);
-      Var* wsPosition = getInWsPosition(componentList);
-      Var* wsView = getWsView(wsPosition, meta);
-
-      //Reflection Probe WIP
-      U32 MAX_FORWARD_PROBES = 4;
-
       Var* numProbes = (Var*)LangElement::find("inNumProbes");
       Var* cubeMips = (Var*)LangElement::find("cubeMips");
       Var* skylightCubemapIdx = (Var*)LangElement::find("inSkylightCubemapIdx");
@@ -146,21 +133,10 @@ void DebugVizHLSL::processPix(Vector<ShaderComponent*>& componentList,
       Var* worldToObjArray = (Var*)LangElement::find("inWorldToObjArray");
 
       Var* BRDFTexture = (Var*)LangElement::find("BRDFTexture");
-      Var* BRDFTextureTex = (Var*)LangElement::find("texture_BRDFTexture");
 
       Var* specularCubemapAR = (Var*)LangElement::find("SpecularCubemapAR");
-      Var* specularCubemapARTex = (Var*)LangElement::find("texture_SpecularCubemapAR");
 
       Var* irradianceCubemapAR = (Var*)LangElement::find("IrradianceCubemapAR");
-      Var* irradianceCubemapARTex = (Var*)LangElement::find("texture_IrradianceCubemapAR");
-
-      Var* matinfo = (Var*)LangElement::find("ORMConfig");
-      Var* metalness = (Var*)LangElement::find("metalness");
-      Var* roughness = (Var*)LangElement::find("roughness");
-
-      Var* wsEyePos = (Var*)LangElement::find("eyePosWorld");
-
-      Var* ibl = (Var*)LangElement::find("ibl");
 
       //Reflection vec
       Var* showAttenVar = new Var("showAttenVar", "int");

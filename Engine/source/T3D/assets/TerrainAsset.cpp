@@ -104,9 +104,6 @@ ConsoleSetType(TypeTerrainAssetId)
    // Was a single argument specified?
    if (argc == 1)
    {
-      // Yes, so fetch field value.
-      const char* pFieldValue = argv[0];
-
       *((const char**)dptr) = StringTable->insert(argv[0]);
 
       return;

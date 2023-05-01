@@ -224,8 +224,7 @@ void TSLastDetail::update( bool forceUpdate )
    // Do we need to update the imposter?
    const String diffuseMapPath = _getDiffuseMapPath();
    bool isFile = Platform::isFile(diffuseMapPath.c_str());
-   if (  forceUpdate || !Platform::isFile(diffuseMapPath.c_str()) ||
-         Platform::compareModifiedTimes( diffuseMapPath, shapeFile ) <= 0 )
+   if (  forceUpdate || !isFile || Platform::compareModifiedTimes( diffuseMapPath, shapeFile ) <= 0 )
       _update();
 
    // If the time check fails now then the update must have not worked.

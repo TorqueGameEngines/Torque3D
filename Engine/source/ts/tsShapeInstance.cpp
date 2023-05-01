@@ -294,8 +294,6 @@ void TSShapeInstance::reSkin( String newBaseName, String oldBaseName )
    if ( newBaseName.equal( oldBaseName, String::NoCase ) )
       return;
 
-   const U32 oldBaseNameLength = oldBaseName.length();
-
    // Make our own copy of the materials list from the resource if necessary
    if (ownMaterialList() == false)
       cloneMaterialList();

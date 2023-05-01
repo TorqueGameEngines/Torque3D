@@ -56,7 +56,10 @@ struct SceneData
       /// @afxRenderHighlightMgr  
       HighlightBin,
    };
-
+   enum
+   {
+      MAX_LIGHTS = 8
+   };
    /// This defines when we're rendering a special bin 
    /// type that the material or lighting system needs
    /// to know about.
@@ -71,7 +74,7 @@ struct SceneData
    
    /// The current lights to use in rendering
    /// in order of the light importance.
-   LightInfo* lights[8];
+   LightInfo* lights[MAX_LIGHTS];
 
    ///
    LinearColorF ambientLightColor;
@@ -98,9 +101,24 @@ struct SceneData
    Vector<CustomShaderBindingData*> customShaderData;
 
    /// Constructor.
-   SceneData() 
-   { 
-      dMemset( this, 0, sizeof( SceneData ) );
+   SceneData()
+   {
+      accuTex = NULL;
+      backBuffTex = NULL;
+      binType = RegularBin;
+      cubemap = NULL;
+      fogDensity = 0.0f;
+      fogDensityOffset = 0.0f;
+      fogHeightFalloff = 0.0f;
+      lightmap = NULL;
+      for (U32 i = 0; i < MAX_LIGHTS; i++)
+      {
+         lights[i] = NULL;
+      }
+      materialHint = NULL;
+      miscTex = NULL;
+      reflectTex = NULL;
+      wireframe = false;
       objTrans = &MatrixF::Identity;
       visibility = 1.0f;
    }

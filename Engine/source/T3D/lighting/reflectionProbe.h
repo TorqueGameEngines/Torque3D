@@ -112,7 +112,18 @@ public:
       bool mCanDamp;
    public:
 
-      ProbeInfo() : mScore(0) {}
+      ProbeInfo()
+      {
+         mScore = 0;
+         mAtten = 0.0f;
+         mCanDamp = false;
+         mDirty = false;
+         mIsEnabled = true;
+         mObject = NULL;
+         mPriority = 0;
+         mProbeShapeType = Box;
+         mRadius = 10.0f;
+      }
       ~ProbeInfo() {}
 
       // Copies data passed in from light

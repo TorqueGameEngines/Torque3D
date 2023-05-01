@@ -61,7 +61,7 @@ class ThreadSafeRefCount
 
       ThreadSafeRefCount()
          : mRefCount( 0 ) {}
-      ThreadSafeRefCount( bool noSet ) {}
+      ThreadSafeRefCount( bool noSet ) : mRefCount(0) {}
 
       bool           isShared() const;
       U32            getRefCount() const;

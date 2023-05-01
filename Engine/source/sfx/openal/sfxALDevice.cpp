@@ -77,7 +77,7 @@ S32 SFXALDevice::getMaxSources()
 
 S32 SFXALDevice::getMaxSourcesOld()
 {
-   ALuint uiSource[256];
+   ALuint uiSource[256] = {};
    S32 sourceCount = 0;
    
    // clear errors.
@@ -148,7 +148,7 @@ SFXALDevice::SFXALDevice(  SFXProvider *provider,
 #if defined(AL_ALEXT_PROTOTYPES)
        mOpenAL.alcGetIntegerv(mDevice, ALC_MAX_AUXILIARY_SENDS, 1, &iSends);
 #endif
-       U32 err = mOpenAL.alcGetError( mDevice );
+       err = mOpenAL.alcGetError( mDevice );
       
       if( err != ALC_NO_ERROR )
          Con::errorf( "SFXALDevice - Context Initialization Error: %s", mOpenAL.alcGetString( mDevice, err ) );

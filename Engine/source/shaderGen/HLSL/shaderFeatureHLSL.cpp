@@ -2217,16 +2217,10 @@ void RTLightingFeatHLSL::processPix(   Vector<ShaderComponent*> &componentList,
    if ( fd.features[MFT_LightMap] || fd.features[MFT_ToneMap] || fd.features[MFT_VertLit] )
       return;
   
-   ShaderConnector *connectComp = dynamic_cast<ShaderConnector *>( componentList[C_CONNECTOR] );
+   //ShaderConnector *connectComp = dynamic_cast<ShaderConnector *>( componentList[C_CONNECTOR] );
 
    MultiLine *meta = new MultiLine;
-
-   // Now the wsPosition and wsView.
-   Var *wsPosition = getInWsPosition( componentList );
-   Var* worldToTangent = getInWorldToTangent(componentList);
-   Var* wsNormal = getInWorldNormal(componentList);   
-   Var *wsView = getWsView( wsPosition, meta );
-   
+      
    // Look for a light mask generated from a previous
    // feature (this is done for BL terrain lightmaps).
    LangElement *lightMask = LangElement::find( "lightMask" );
@@ -2280,10 +2274,7 @@ void RTLightingFeatHLSL::processPix(   Vector<ShaderComponent*> &componentList,
    {
       Con::errorf("ShaderGen::RTLightingFeatHLSL()  - failed to generate surface!");
       return;
-   }   
-   Var *roughness = (Var*)LangElement::find("roughness");
-
-   Var *metalness = (Var*)LangElement::find("metalness");
+   }
 
    Var *curColor = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
 
@@ -3035,16 +3026,10 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    if (fd.features[MFT_LightMap] || fd.features[MFT_ToneMap] || fd.features[MFT_VertLit])
       return;
 
-   ShaderConnector *connectComp = dynamic_cast<ShaderConnector *>(componentList[C_CONNECTOR]);
+   //ShaderConnector *connectComp = dynamic_cast<ShaderConnector *>(componentList[C_CONNECTOR]);
 
    MultiLine *meta = new MultiLine;
-   
-   // Now the wsPosition and wsView.
-   Var* wsPosition = getInWsPosition(componentList);
-   Var* worldToTangent = getInWorldToTangent(componentList);
-   Var *wsNormal = getInWorldNormal(componentList);
-   Var *wsView = getWsView(wsPosition, meta);
-   
+      
    //Reflection Probe WIP
    U32 MAX_FORWARD_PROBES = 4;
 

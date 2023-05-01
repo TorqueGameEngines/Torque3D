@@ -78,7 +78,7 @@ static void detectCpuFeatures(Platform::SystemInfo_struct::Processor &processor)
 {
    S32 cpuInfo[4];
    __cpuid(cpuInfo, 1);
-   U32 eax = cpuInfo[0];   // eax
+   //U32 eax = cpuInfo[0];   // eax
    U32 edx = cpuInfo[3];  // edx
    U32 ecx = cpuInfo[2]; // ecx
 

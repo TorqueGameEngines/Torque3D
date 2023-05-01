@@ -56,7 +56,7 @@
 extern bool gEditingMission;
 extern ColorI gCanvasClearColor;
 bool ReflectionProbe::smRenderPreviewProbes = true;
-
+static MatrixF sEditingTransformMat;
 IMPLEMENT_CO_NETOBJECT_V1(ReflectionProbe);
 
 ConsoleDocClass(ReflectionProbe,
@@ -371,10 +371,10 @@ const MatrixF& ReflectionProbe::getTransform() const
       return mObjToWorld; 
    else
    {
-      MatrixF transformMat = MatrixF::Identity;
-      transformMat.setPosition(mProbeRefOffset);
+      sEditingTransformMat = MatrixF::Identity;
+      sEditingTransformMat.setPosition(mProbeRefOffset);
 
-      return transformMat;
+      return sEditingTransformMat;
    }
 }
 

@@ -107,7 +107,8 @@ public:
    {
       Point3F pos;
       Point3F nor;
-      F32 s, t;
+      F32 s = 0.0f;
+      F32 t = 0.0f;
    };
 
    Vector<SphereVertex> tmpVertices;
@@ -119,8 +120,8 @@ public:
    {
       Point3F pos;
       Point3F nor;
-      F32 s;
-      F32 t;
+      F32 s = 0.0f;
+      F32 t = 0.0f;
    };
 
    Vector<FinalVertexData> finalVertData;

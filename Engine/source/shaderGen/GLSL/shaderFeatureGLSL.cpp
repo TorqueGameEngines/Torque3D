@@ -2141,6 +2141,12 @@ void RTLightingFeatGLSL::processPix(   Vector<ShaderComponent*> &componentList,
   
    MultiLine *meta = new MultiLine;
 
+	// Now the wsPosition and wsView.
+   Var *wsPosition = getInWsPosition( componentList );
+   Var* worldToTangent = getInWorldToTangent(componentList);
+   Var* wsNormal = getInWorldNormal(componentList);
+   Var *wsView = getWsView( wsPosition, meta );
+
    // Look for a light mask generated from a previous
    // feature (this is done for BL terrain lightmaps).
    LangElement *lightMask = LangElement::find( "lightMask" );
@@ -2948,6 +2954,12 @@ void ReflectionProbeFeatGLSL::processPix(Vector<ShaderComponent*>& componentList
 
    MultiLine * meta = new MultiLine;
       
+   // Now the wsPosition and wsView.
+   Var *wsPosition = getInWsPosition(componentList);
+   Var *worldToTangent = getInWorldToTangent(componentList);
+   Var *wsNormal = getInWorldNormal(componentList);
+   Var *wsView = getWsView(wsPosition, meta);
+   
    //Reflection Probe WIP
    U32 MAX_FORWARD_PROBES = 4;
 

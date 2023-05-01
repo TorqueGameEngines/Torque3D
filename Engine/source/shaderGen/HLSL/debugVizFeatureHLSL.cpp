@@ -122,6 +122,17 @@ void DebugVizHLSL::processPix(Vector<ShaderComponent*>& componentList,
       if (fd.features[MFT_LightMap] || fd.features[MFT_ToneMap] || fd.features[MFT_VertLit])
          return;
 
+      MultiLine* meta = new MultiLine;
+
+      // Now the wsPosition and wsView.
+      Var* worldToTangent = getInWorldToTangent(componentList);
+      Var* wsNormal = getInWorldNormal(componentList);
+      Var* wsPosition = getInWsPosition(componentList);
+      Var* wsView = getWsView(wsPosition, meta);
+
+      //Reflection Probe WIP
+      U32 MAX_FORWARD_PROBES = 4;
+
       Var* numProbes = (Var*)LangElement::find("inNumProbes");
       Var* cubeMips = (Var*)LangElement::find("cubeMips");
       Var* skylightCubemapIdx = (Var*)LangElement::find("inSkylightCubemapIdx");

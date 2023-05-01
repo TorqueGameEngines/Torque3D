@@ -347,6 +347,8 @@ void TerrainBaseMapFeatGLSL::processPix(  Vector<ShaderComponent*> &componentLis
    meta->addStatement(new GenOp("   @ = float4(1.0f/255.0f, 1.0, 1.0, 0.0);\r\n", ormConfig));
 
    output = meta;
+
+   Var* viewToTangent = getInViewToTangent(componentList);
 }
 
 ShaderFeature::Resources TerrainBaseMapFeatGLSL::getResources( const MaterialFeatureData &fd )
@@ -541,6 +543,9 @@ void TerrainDetailMapFeatGLSL::processPix(   Vector<ShaderComponent*> &component
 
    // Get the detail id.
    Var *detailInfo = _getDetailIdStrengthParallax();
+
+   // This is done here to make sure the macro arrays are the correct size
+   Var* macroInfo = _getMacroIdStrengthParallax();
 
    // Create the detail blend var.
    Var *detailBlend = new Var;
@@ -1319,6 +1324,7 @@ void TerrainHeightMapBlendGLSL::processPix(Vector<ShaderComponent*>& componentLi
    {
       for (S32 idx = 0; idx < detailCount; ++idx)
       {
+         Var* detailBlend = (Var*)LangElement::find(String::ToString("detailBlend%d", idx));
          Var* detailH = (Var*)LangElement::find(String::ToString("detailH%d", idx));
          Var* blendHardness = (Var*)LangElement::find(String::ToString("blendHardness%d", idx));
          if (!blendHardness)

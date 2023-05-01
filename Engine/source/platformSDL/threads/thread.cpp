@@ -30,13 +30,13 @@
 class PlatformThreadData
 {
 public:
-   ThreadRunFunction       mRunFunc;
-   void*                   mRunArg;
-   Thread*                 mThread;
+   ThreadRunFunction       mRunFunc = NULL;
+   void*                   mRunArg = NULL;
+   Thread*                 mThread = NULL;
    Semaphore               mGateway; // default count is 1
-   SDL_threadID            mThreadID;
-   SDL_Thread*             mSdlThread;
-   bool                    mDead;
+   SDL_threadID            mThreadID = 0;
+   SDL_Thread*             mSdlThread = NULL;
+   bool                    mDead = true;
 };
 
 ThreadManager::MainThreadId ThreadManager::smMainThreadId;

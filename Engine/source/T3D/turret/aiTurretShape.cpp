@@ -1169,7 +1169,7 @@ U32 AITurretShape::packUpdate(NetConnection *connection, U32 mask, BitStream *bs
    U32 retMask = Parent::packUpdate(connection,mask,bstream);
 
    // Indicate that the transform has changed to update the scan box
-   bstream->writeFlag(mask & (PositionMask | ExtendedInfoMask));
+   bstream->writeFlag(mask & ((U32)PositionMask | (U32)ExtendedInfoMask));
 
    // Handle any state changes that need to be passed along
    if (bstream->writeFlag(mask & TurretStateMask))

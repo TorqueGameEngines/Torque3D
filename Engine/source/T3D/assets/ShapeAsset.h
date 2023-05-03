@@ -104,7 +104,7 @@ public:
 
    static StringTableEntry smNoShapeAssetFallback;
 
-   static const String mShapeErrCodeStrings[ShapeAssetErrCode::Extended - Parent::Extended + 1];
+   static const String mShapeErrCodeStrings[U32(ShapeAssetErrCode::Extended) - U32(Parent::Extended) + 1];
 
    static U32 getAssetErrCode(AssetPtr<ShapeAsset> shapeAsset) { if (shapeAsset) return shapeAsset->mLoadedState; else return 0; }
 

@@ -1682,7 +1682,7 @@ bool clipFrustumByPolygon( const Point3F* points, U32 numPoints, const RectI& vi
    enum
    {
       MAX_RESULT_VERTICES = 64,
-      MAX_INPUT_VERTICES = MAX_RESULT_VERTICES - Frustum::PlaneCount // Clipping against each plane may add a vertex.
+      MAX_INPUT_VERTICES = (U32)MAX_RESULT_VERTICES - (U32)Frustum::PlaneCount // Clipping against each plane may add a vertex.
    };
 
    AssertFatal( numPoints <= MAX_INPUT_VERTICES, "MathUtils::clipFrustumByPolygon - Too many vertices!" );

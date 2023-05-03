@@ -1289,14 +1289,14 @@ bool Item::_setStatic(void *object, const char *index, const char *data)
 {
    Item *i = static_cast<Item*>(object);
    i->mAtRest = dAtob(data);
-   i->setMaskBits(InitialUpdateMask | PositionMask);
+   i->setMaskBits((U32)InitialUpdateMask | (U32)PositionMask);
    return true;
 }
 
 bool Item::_setRotate(void *object, const char *index, const char *data)
 {
    Item *i = static_cast<Item*>(object);
-   i->setMaskBits(InitialUpdateMask | RotationMask);
+   i->setMaskBits((U32)InitialUpdateMask | (U32)RotationMask);
    return true;
 }
 

@@ -692,7 +692,7 @@ bool GuiWindowCtrl::onWake()
    mTextureObject = mProfile->getBitmapResource();
 
    mBitmapBounds = mProfile->mBitmapArrayRects.address();
-   S32 buttonHeight = mBitmapBounds[BmpStates * BmpClose].extent.y;
+   S32 buttonHeight = mBitmapBounds[(U32)BmpStates * (U32)BmpClose].extent.y;
 
    mTitleHeight = buttonHeight + 4;
 
@@ -1397,7 +1397,7 @@ void GuiWindowCtrl::onRender(Point2I offset, const RectI &updateRect)
    // Draw the close button
    Point2I tempUL;
    Point2I tempLR;
-   S32 bmp = BmpStates * BmpClose;
+   S32 bmp = (U32)BmpStates * (U32)BmpClose;
 
    if( mCanClose ) {
       if( mCloseButton.pointInRect( mMousePosition ) )
@@ -1414,9 +1414,9 @@ void GuiWindowCtrl::onRender(Point2I offset, const RectI &updateRect)
 
    // Draw the maximize button
    if( mMaximized )
-      bmp = BmpStates * BmpNormal;
+      bmp = (U32)BmpStates * (U32)BmpNormal;
    else
-      bmp = BmpStates * BmpMaximize;
+      bmp = (U32)BmpStates * (U32)BmpMaximize;
 
    if( mCanMaximize ) {
       if( mMaximizeButton.pointInRect( mMousePosition ) )
@@ -1433,9 +1433,9 @@ void GuiWindowCtrl::onRender(Point2I offset, const RectI &updateRect)
 
    // Draw the minimize button
    if( mMinimized )
-      bmp = BmpStates * BmpNormal;
+      bmp = (U32)BmpStates * (U32)BmpNormal;
    else
-      bmp = BmpStates * BmpMinimize;
+      bmp = (U32)BmpStates * (U32)BmpMinimize;
 
    if( mCanMinimize ) {
       if( mMinimizeButton.pointInRect( mMousePosition ) )
@@ -1502,8 +1502,8 @@ void GuiWindowCtrl::positionButtons(void)
    if( !mBitmapBounds || !mAwake )
       return;
 
-   S32 buttonWidth = mBitmapBounds[BmpStates * BmpClose].extent.x;
-   S32 buttonHeight = mBitmapBounds[BmpStates * BmpClose].extent.y;
+   S32 buttonWidth = mBitmapBounds[(U32)BmpStates * (U32)BmpClose].extent.x;
+   S32 buttonHeight = mBitmapBounds[(U32)BmpStates * (U32)BmpClose].extent.y;
    Point2I mainOff = mProfile->mTextOffset;
 
    // Until a pref, if alignment is LEFT, put buttons RIGHT justified.

@@ -91,7 +91,7 @@ bool afxEA_CameraShake::ea_start()
 
   if (aim_constraint && pos_constraint)
   {
-    if (mFull_lifetime <= 0 || mFull_lifetime == INFINITE_LIFETIME)
+    if (mFull_lifetime <= 0 || mFull_lifetime == (F32)INFINITE_LIFETIME)
     {
       Con::errorf("afxEA_CameraShake::ea_start() --  effect requires a finite lifetime.");
       return false;

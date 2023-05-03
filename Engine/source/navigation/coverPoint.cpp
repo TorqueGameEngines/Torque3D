@@ -326,7 +326,7 @@ void CoverPoint::render(ObjectRenderInst *ri, SceneRenderState *state, BaseMatIn
 
    // Data for decorations.
    GFXStateBlockDesc desc;
-   F32 height = (float)(mSize + 1) / NumSizes * 2.0f;
+   F32 height = (float)(mSize + 1) / (F32)NumSizes * 2.0f;
 
    // Draw an X if we're occupied.
    if(isOccupied())

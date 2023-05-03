@@ -1293,7 +1293,7 @@ bool NavMesh::testEdgeCover(const Point3F &pos, const VectorF &dir, CoverPointDa
    U32 hits = 0;
    for(U32 j = 0; j < CoverPoint::NumSizes; j++)
    {
-      Point3F test = pos + Point3F(0.0f, 0.0f, mWalkableHeight * j / CoverPoint::NumSizes);
+      Point3F test = pos + Point3F(0.0f, 0.0f, mWalkableHeight * j / (F32)CoverPoint::NumSizes);
       if(getContainer()->castRay(test, test + norm * mCoverDist, StaticObjectType, &ray))
       {
          // Test peeking.

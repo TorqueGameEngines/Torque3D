@@ -592,9 +592,6 @@ const char* ShapeAsset::generateCachedPreviewImage(S32 resolution, String overri
    // Animate the shape once.
    shape->animate(0);
 
-   // So we don't have to change it everywhere.
-   const GFXFormat format = GFXFormatR8G8B8A8;
-
    GBitmap* imposter = NULL;
    GBitmap* imposterNrml = NULL;
 
@@ -604,8 +601,6 @@ const char* ShapeAsset::generateCachedPreviewImage(S32 resolution, String overri
    static const MatrixF bottomXfm(EulerF(M_PI_F / 2.0f, 0, 0));
 
    MatrixF angMat;
-
-   S32 mip = 0;
 
    PROFILE_START(ShapeAsset_generateCachedPreviewImage);
 

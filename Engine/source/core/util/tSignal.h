@@ -202,7 +202,7 @@ public:
 
    void remove( DelegateSig dlg )
    {
-      for( DelegateLink* ptr = mList.next;ptr != &mList; ptr = ptr->next )
+      for( DelegateLink* ptr = mList.next;(ptr != &mList)&& (ptr!= NULL); ptr = ptr->next )
       {
          if( DelegateLinkImpl* del = static_cast< DelegateLinkImpl* >( ptr ) )
          {

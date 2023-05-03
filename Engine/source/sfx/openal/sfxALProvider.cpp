@@ -60,7 +60,7 @@ MODULE_BEGIN( OpenAL )
    MODULE_INIT_BEFORE( SFX )
    MODULE_SHUTDOWN_AFTER( SFX )
    
-   SFXALProvider* mProvider;
+   SFXALProvider* mProvider = NULL;
    
    MODULE_INIT
    {
@@ -91,9 +91,8 @@ void SFXALProvider::init()
    }
 
    // Cool, loop through them, and caps em
-   const char *deviceFormat = "OpenAL v%d.%d %s";
+   //const char *deviceFormat = "OpenAL v%d.%d %s";
 
-   char temp[256];
    for( S32 i = 0; i < mALDL->GetNumDevices(); i++ )
    {
       ALDeviceInfo* info = new ALDeviceInfo;

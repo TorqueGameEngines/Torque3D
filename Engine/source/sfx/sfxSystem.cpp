@@ -1620,7 +1620,6 @@ DefineEngineFunction( sfxPlayOnce, S32, (StringTableEntry assetId, const char* a
    "Create a new play-once source for the given profile or description+filename and start playback of the source.\n"
    "@hide" )
 {
-   SFXDescription* description = NULL;
    if (assetId == StringTable->EmptyString())
    {
       Con::errorf( "sfxPlayOnce - Must Define a sound asset");

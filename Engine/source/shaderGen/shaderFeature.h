@@ -130,8 +130,8 @@ public:
    //**************************************************************************
    struct Resources
    {
-      U32 numTex;
-      U32 numTexReg;
+      U32 numTex = 0;
+      U32 numTexReg = 0;
 
       Resources()
       {

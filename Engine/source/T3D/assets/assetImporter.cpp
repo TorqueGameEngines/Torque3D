@@ -638,7 +638,7 @@ AssetImportObject* AssetImporter::addImportingAsset(String assetType, Torque::Pa
    U32 pos = dStrcspn(sanitizedStr, "-+*/%$&�=()[].?\\\"#,;!~<>|�^{}");
    while (pos < dStrlen(sanitizedStr))
    {
-      dStrcpy(sanitizedStr + pos, sanitizedStr + pos + 1, len - pos);
+      dStrcpy(sanitizedStr + pos, sanitizedStr + pos + 1, (dsize_t)(len - pos));
       pos = dStrcspn(sanitizedStr, "-+*/%$&�=()[].?\\\"#,;!~<>|�^{}");
    }
 
@@ -1903,7 +1903,7 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
 
                         //Check to see if our target module has a matching assetId for this slot already based on our trimmed mat name
                         testAssetId = targetModuleId + ":" + materialImageNoSuffix + StringUnit::getUnit(suffixList.c_str(), i, ",;\t");
-                        bool localAssetFound = false;
+                        localAssetFound = false;
 
                         if (AssetDatabase.isDeclaredAsset(testAssetId.c_str()))
                            localAssetFound = true;
@@ -2792,7 +2792,7 @@ void AssetImporter::acquireAssets(AssetImportObject* assetItem)
 
       if (AssetDatabase.isDeclaredAsset(assetId))
       {
-         AssetBase* assetDef = AssetDatabase.acquireAsset<AssetBase>(assetId);
+         AssetDatabase.acquireAsset<AssetBase>(assetId);
          AssetDatabase.releaseAsset(assetId);
       }
    }

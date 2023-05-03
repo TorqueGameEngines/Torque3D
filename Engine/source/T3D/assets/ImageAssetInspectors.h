@@ -13,10 +13,10 @@ class GuiInspectorTypeImageAssetPtr : public GuiInspectorTypeFileName
    typedef GuiInspectorTypeFileName Parent;
 public:
 
-   GuiTextCtrl* mLabel;
-   GuiBitmapButtonCtrl* mPreviewBorderButton;
-   GuiBitmapCtrl* mPreviewImage;
-   GuiButtonCtrl* mEditButton;
+   GuiTextCtrl* mLabel = NULL;
+   GuiBitmapButtonCtrl* mPreviewBorderButton = NULL;
+   GuiBitmapCtrl* mPreviewImage = NULL;
+   GuiButtonCtrl* mEditButton = NULL;
 
    DECLARE_CONOBJECT(GuiInspectorTypeImageAssetPtr);
    static void consoleInit();

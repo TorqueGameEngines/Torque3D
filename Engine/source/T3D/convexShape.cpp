@@ -1370,48 +1370,6 @@ void ConvexShape::_updateGeometry( bool updateCollision )
 	}
 
    //Build the buffer for our default material
-   /*if (mVertCount > 0)
-   {
-      mVertexBuffer.set(GFX, mVertCount, GFXBufferTypeStatic);
-      VertexType *pVert = mVertexBuffer.lock();
-
-      for (S32 i = 0; i < faceList.size(); i++)
-      {
-         if (mSurfaceUVs[i].matID == -1)
-         {
-            const ConvexShape::Face &face = faceList[i];
-            const Vector< U32 > &facePntMap = face.points;
-            const Vector< ConvexShape::Triangle > &triangles = face.triangles;
-            const ColorI &faceColor = sgConvexFaceColors[i % sgConvexFaceColorCount];
-
-            const Point3F binormal = mCross(face.normal, face.tangent);
-
-                  pVert++;
-               }
-            }
-         }
-      }
-
-      mVertexBuffer.unlock();
-
-      // Allocate PB
-
-      mPrimitiveBuffer.set(GFX, mPrimCount * 3, mPrimCount, GFXBufferTypeStatic);
-
-      U16 *pIndex;
-      mPrimitiveBuffer.lock(&pIndex);
-
-      for (U16 i = 0; i < mPrimCount * 3; i++)
-      {
-         *pIndex = i;
-         pIndex++;
-      }
-
-      mPrimitiveBuffer.unlock();
-   }*/
-
-   //
-   //
    for (U32 i = 0; i < mSurfaceBuffers.size(); i++)
    {
       if (mSurfaceBuffers[i].mVertCount > 0)
@@ -1428,7 +1386,6 @@ void ConvexShape::_updateGeometry( bool updateCollision )
                const ConvexShape::Face &face = faceList[f];
                const Vector< U32 > &facePntMap = face.points;
                const Vector< ConvexShape::Triangle > &triangles = face.triangles;
-               const ColorI &faceColor = sgConvexFaceColors[f % sgConvexFaceColorCount];
 
                const Point3F binormal = mCross(face.normal, face.tangent);
 
@@ -1439,7 +1396,6 @@ void ConvexShape::_updateGeometry( bool updateCollision )
                      pVert->normal = face.normal;
                      pVert->T = face.tangent;
                      pVert->B = mCross(face.normal,face.tangent);
-                     //pVert->color = faceColor;
                      pVert->point = pointList[facePntMap[triangles[j][k]]];
                      pVert->texCoord = face.texcoords[triangles[j][k]];
                      pVert->texCoord2 = pVert->texCoord;
@@ -1469,56 +1425,6 @@ void ConvexShape::_updateGeometry( bool updateCollision )
          mSurfaceBuffers[i].mPrimitiveBuffer.unlock();
       }
    }
-   //
-   //
-
-   /*// Allocate VB and copy in data.
-   for (S32 i = 0; i < faceList.size(); i++)
-   {
-      mVertexBuffer.set(GFX, mVertCount, GFXBufferTypeStatic);
-      VertexType *pVert = mVertexBuffer.lock();
-
-      for (S32 i = 0; i < faceList.size(); i++)
-      {
-         const ConvexShape::Face &face = faceList[i];
-         const Vector< U32 > &facePntMap = face.points;
-         const Vector< ConvexShape::Triangle > &triangles = face.triangles;
-         const ColorI &faceColor = sgConvexFaceColors[i % sgConvexFaceColorCount];
-
-         const Point3F binormal = mCross(face.normal, face.tangent);
-
-         for (S32 j = 0; j < triangles.size(); j++)
-         {
-            for (S32 k = 0; k < 3; k++)
-            {
-               pVert->normal = face.normal;
-               pVert->tangent = face.tangent;
-               pVert->color = faceColor;
-               pVert->point = pointList[facePntMap[triangles[j][k]]];
-               pVert->texCoord = face.texcoords[triangles[j][k]];
-
-               pVert++;
-            }
-         }
-      }
-
-      mVertexBuffer.unlock();
-
-      // Allocate PB
-
-      mPrimitiveBuffer.set(GFX, mPrimCount * 3, mPrimCount, GFXBufferTypeStatic);
-
-      U16 *pIndex;
-      mPrimitiveBuffer.lock(&pIndex);
-
-      for (U16 i = 0; i < mPrimCount * 3; i++)
-      {
-         *pIndex = i;
-         pIndex++;
-      }
-
-      mPrimitiveBuffer.unlock();
-   }*/
 }
 
 void ConvexShape::_updateCollision()

@@ -357,7 +357,6 @@ void GFXGLCubemapArray::init(GFXCubemapHandle *cubemaps, const U32 cubemapCount)
             const U32 mipSize = getMax(U32(1), mSize >> currentMip);
             if (isCompressed)
             {
-               const U32 mipDataSize = getCompressedSurfaceSize(mFormat, mSize, mSize, currentMip);
                glCompressedTexSubImage3D(GL_TEXTURE_CUBE_MAP_ARRAY, currentMip, 0, 0, i * 6 + face, mipSize, mipSize, 1, GFXGLTextureFormat[mFormat], GFXGLTextureType[mFormat], pixelData);
             }
             else
@@ -378,7 +377,6 @@ void GFXGLCubemapArray::init(const U32 cubemapCount, const U32 cubemapFaceSize, 
    setCubeTexSize(cubemapFaceSize);
    mFormat = format;
    mNumCubemaps = cubemapCount;
-   const bool isCompressed = ImageUtil::isCompressedFormat(mFormat);
 
    glGenTextures(1, &mCubemap);
    PRESERVE_CUBEMAP_ARRAY_TEXTURE();
@@ -416,7 +414,6 @@ void GFXGLCubemapArray::updateTexture(const GFXCubemapHandle &cubemap, const U32
          const U32 mipSize = getMax(U32(1), mSize >> currentMip);
          if (isCompressed)
          {
-            const U32 mipDataSize = getCompressedSurfaceSize(mFormat, mSize, mSize, currentMip);
             glCompressedTexSubImage3D(GL_TEXTURE_CUBE_MAP_ARRAY, currentMip, 0, 0, slot * 6 + face, mipSize, mipSize, 1, GFXGLTextureFormat[mFormat], GFXGLTextureType[mFormat], pixelData);
          }
          else

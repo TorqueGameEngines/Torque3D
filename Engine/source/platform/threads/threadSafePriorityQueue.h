@@ -389,7 +389,7 @@ inline ThreadSafePriorityQueue< T, K, SORT_MIN_TO_MAX, MAX_LEVEL, PROBABILISTIC_
      mPriority( priority ),
      mValue( value )
 {
-   dMemset( mNext, 0, sizeof( Node* ) * ( getLevel() + 1 ) );
+   dMemset( mNext, 0, sizeof( Node* ) * (U32)( getLevel() + 1 ) );
 
    // Level is already set by the allocation routines.
 }

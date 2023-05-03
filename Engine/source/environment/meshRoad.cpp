@@ -2452,9 +2452,9 @@ void MeshRoad::_generateSlices()
       profileMat2.setRow(1, slicePtr->uvec);
       profileMat2.setRow(2, slicePtr->fvec);
 
-      for(U32 i = 0; i < 2; i++)
+      for(U32 profile = 0; profile < 2; profile++)
       {
-         if(i)
+         if(profile)
             mSideProfile.setTransform(profileMat2, slicePtr->p0);
          else
             mSideProfile.setTransform(profileMat1, slicePtr->p2);
@@ -2470,7 +2470,7 @@ void MeshRoad::_generateSlices()
             slicePtr->verts.push_back(pos);
             box.extend( pos );
 
-            if(i)
+            if(profile)
                slicePtr->pb0 = pos;
             else
                slicePtr->pb2 = pos;

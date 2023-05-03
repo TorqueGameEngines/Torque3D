@@ -201,7 +201,7 @@ void CustomFeatureHLSL::addVariable(String name, String type, String defaultValu
 void CustomFeatureHLSL::addConnector(String name, String type, String elementName)
 {
    // grab connector texcoord register
-   ShaderConnector* connectComp = dynamic_cast<ShaderConnector*>(mComponentList[C_CONNECTOR]);
+   //ShaderConnector* connectComp = dynamic_cast<ShaderConnector*>(mComponentList[C_CONNECTOR]);
 
    //Get element
    S32 element = -1;

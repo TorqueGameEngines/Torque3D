@@ -319,7 +319,7 @@ void SkySphere::_initRender()
    U32 height = 16;
    U32 radius = 1;
 
-   F32 x, y, z, xy;                              // vertex position
+   F32 x, y;                              // vertex position
    F32 nx, ny, nz, lengthInv = 1.0f / radius;       // normal
    F32 s, t;                                     // texCoord
 

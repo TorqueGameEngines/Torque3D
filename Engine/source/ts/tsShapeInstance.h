@@ -740,25 +740,25 @@ class TSThread
    /// if in transition...
    struct TransitionData
    {
-      bool inTransition;
+      bool inTransition = false;
 
-      F32 duration;
-      F32 pos;
-      F32 direction;
-      F32 targetScale; ///< time scale for sequence we are transitioning to (during transition only)
+      F32 duration = 0.0f;
+      F32 pos = 0.0f;
+      F32 direction = 1.0f;
+      F32 targetScale = 1.0f; ///< time scale for sequence we are transitioning to (during transition only)
                        ///< this is either 1 or 0 (if 1 target sequence plays as we transition, if 0 it doesn't)
       TSIntegerSet oldRotationNodes;    ///< nodes controlled by this thread pre-transition
       TSIntegerSet oldTranslationNodes; ///< nodes controlled by this thread pre-transition
       TSIntegerSet oldScaleNodes;       ///< nodes controlled by this thread pre-transition
-      U32 oldSequence; ///< sequence that was set before transition began
-      F32 oldPos;      ///< position of sequence before transition began
+      U32 oldSequence = 0; ///< sequence that was set before transition began
+      F32 oldPos = 0.0f;      ///< position of sequence before transition began
    } transitionData;
 
    struct
    {
-      F32 start;
-      F32 end;
-      S32 loop;
+      F32 start = 0.0f;
+      F32 end = 0.0f;
+      S32 loop = 0.0f;
    } path;
    bool makePath;
 
@@ -781,7 +781,18 @@ class TSThread
    /// @}
 
    TSThread(TSShapeInstance*);
-   TSThread() {}
+   TSThread() {
+      blendDisabled = true;
+      keyNum1 = 0;
+      keyNum2 = 0;
+      keyPos = 0;
+      mSeqPos = 0;
+      mShapeInstance = NULL;
+      makePath = NULL;
+      priority = 0;
+      sequence = 0;
+      timeScale = 1.0f;
+   }
 
    void setSequence(S32 seq, F32 pos);
    void transitionToSequence(S32 seq, F32 pos, F32 duration, bool continuePlay);

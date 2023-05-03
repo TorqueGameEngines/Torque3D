@@ -1172,7 +1172,7 @@ void TerrainBlock::_updatePhysics()
 
    SAFE_DELETE( mPhysicsRep );
 
-   PhysicsCollision *colShape;
+   PhysicsCollision *colShape = NULL;
 
    // If we can steal the collision shape from the local server
    // object then do so as it saves us alot of cpu time and memory.
@@ -1187,22 +1187,31 @@ void TerrainBlock::_updatePhysics()
    }
    else
    {
-      // Get empty state of each vert
-      bool *holes = new bool[ getBlockSize() * getBlockSize() ];
-      for ( U32 row = 0; row < getBlockSize(); row++ )
-         for ( U32 column = 0; column < getBlockSize(); column++ )
-            holes[ row + (column * getBlockSize()) ] = mFile->isEmptyAt( row, column );
+      if (getBlockSize() > 0)
+      {
+         // Get empty state of each vert
+         bool* holes = new bool[getBlockSize() * getBlockSize()];
+         for (U32 row = 0; row < getBlockSize(); row++)
+            for (U32 column = 0; column < getBlockSize(); column++)
+               holes[row + (column * getBlockSize())] = mFile->isEmptyAt(row, column);
 
-      colShape = PHYSICSMGR->createCollision();
-      colShape->addHeightfield( mFile->getHeightMap().address(), holes, getBlockSize(), mSquareSize, MatrixF::Identity );
+         colShape = PHYSICSMGR->createCollision();
+         colShape->addHeightfield(mFile->getHeightMap().address(), holes, getBlockSize(), mSquareSize, MatrixF::Identity);
 
-      delete [] holes;
+         delete[] holes;
+      }
    }
-
-   PhysicsWorld *world = PHYSICSMGR->getWorld( isServerObject() ? "server" : "client" );
-   mPhysicsRep = PHYSICSMGR->createBody();
-   mPhysicsRep->init( colShape, 0, 0, this, world );
-   mPhysicsRep->setTransform( getTransform() );
+   if (getBlockSize() > 0)
+   {
+      PhysicsWorld* world = PHYSICSMGR->getWorld(isServerObject() ? "server" : "client");
+      mPhysicsRep = PHYSICSMGR->createBody();
+      mPhysicsRep->init(colShape, 0, 0, this, world);
+      mPhysicsRep->setTransform(getTransform());
+   }
+   else
+   {
+      SAFE_DELETE(mPhysicsRep);
+   }
 }
 
 void TerrainBlock::onRemove()
@@ -1470,7 +1479,6 @@ bool TerrainBlock::renameTerrainMaterial(StringTableEntry oldMatName, StringTabl
    {
       if (mFile->mMaterials[i]->getInternalName() == oldMatName)
       {
-         TerrainMaterial* oldMat = mFile->mMaterials[i];
          mFile->mMaterials[i] = newMat;
       }
    }

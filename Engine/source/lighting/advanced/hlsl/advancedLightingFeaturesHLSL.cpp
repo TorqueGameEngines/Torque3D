@@ -613,8 +613,8 @@ void DeferredSubSurfaceHLSL::processPix(  Vector<ShaderComponent*> &componentLis
    subSurfaceParams->uniform = true;
    subSurfaceParams->constSortPos = cspPotentialPrimitive;
 
-   Var *d_lightcolor = (Var*)LangElement::find( "d_lightcolor" );
-   Var *d_NL_Att = (Var*)LangElement::find( "d_NL_Att" );
+   //Var *d_lightcolor = (Var*)LangElement::find( "d_lightcolor" );
+   //Var *d_NL_Att = (Var*)LangElement::find( "d_NL_Att" );
 
    MultiLine *meta = new MultiLine;
    Var* targ = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));

@@ -118,7 +118,6 @@ void GuiGameSettingsCtrl::onRender(Point2I offset, const RectI &updateRect)
    Point2I iconExtent, iconOffset(0.0f, 0.0f);
 
    bool highlight = mHighlighted;
-   bool depressed = mDepressed;
 
    ColorI fontColor = mActive ? (highlight ? mProfile->mFontColorHL : mProfile->mFontColor) : mProfile->mFontColorNA;
    ColorI fillColor = mActive ? (highlight ? mProfile->mFillColorHL : mProfile->mFillColor) : mProfile->mFillColorNA;
@@ -182,52 +181,51 @@ void GuiGameSettingsCtrl::onRenderListOption(Point2I currentOffset)
    bool hasOptions = (mOptions.size() > 0) && mSelectedOption > -1;
    if (hasOptions)
    {
-      if (mPreviousBitmapAsset.notNull())
+      // do we render the left or right arrows?
+      bool arrowOnL = (isSelected() || isHighlighted()) && (mWrapOptions || (mSelectedOption > 0));
+      bool arrowOnR = (isSelected() || isHighlighted()) && (mWrapOptions || (mSelectedOption < mOptions.size() - 1));
+      if (arrowOnL)
       {
-         // render the left arrow
-         bool arrowOnL = (isSelected() || isHighlighted()) && (mWrapOptions || (mSelectedOption > 0));
-         arrowOffset.x = currentOffset.x + mColumnSplit;
-         arrowOffset.y = currentOffset.y + arrowOffsetY;
+         if (mPreviousBitmapAsset.notNull())
+         {
+            arrowOffset.x = currentOffset.x + mColumnSplit;
+            arrowOffset.y = currentOffset.y + arrowOffsetY;
 
-         drawer->clearBitmapModulation();
-         drawer->drawBitmapStretch(mPreviousBitmap, RectI(arrowOffset, Point2I(mArrowSize, mArrowSize)), GFXBitmapFlip_None, GFXTextureFilterLinear, false);
+            drawer->clearBitmapModulation();
+            drawer->drawBitmapStretch(mPreviousBitmap, RectI(arrowOffset, Point2I(mArrowSize, mArrowSize)), GFXBitmapFlip_None, GFXTextureFilterLinear, false);
+         }
+         else
+         {
+            arrowOffset.x = currentOffset.x + mColumnSplit;
+            arrowOffset.y = currentOffset.y + height / 2;
+
+            drawer->clearBitmapModulation();
+
+            drawer->drawLine(arrowOffset, Point2I(arrowOffset.x + mArrowSize, currentOffset.y), ColorI::WHITE);
+            drawer->drawLine(arrowOffset, Point2I(arrowOffset.x + mArrowSize, currentOffset.y + height), ColorI::WHITE);
+         }
       }
-      else
+      if (arrowOnR)
       {
-         // render the left arrow
-         bool arrowOnL = (isSelected() || isHighlighted()) && (mWrapOptions || (mSelectedOption > 0));
-         arrowOffset.x = currentOffset.x + mColumnSplit;
-         arrowOffset.y = currentOffset.y + height/2;
+         if (mNextBitmapAsset.notNull())
+         {
+            arrowOffset.x = currentOffset.x + getWidth() - mRightPad - mArrowSize;
+            arrowOffset.y = currentOffset.y + arrowOffsetY;
 
-         drawer->clearBitmapModulation();
+            drawer->clearBitmapModulation();
+            drawer->drawBitmapStretch(mNextBitmap, RectI(arrowOffset, Point2I(mArrowSize, mArrowSize)), GFXBitmapFlip_None, GFXTextureFilterLinear, false);
+         }
+         else
+         {
+            arrowOffset.x = currentOffset.x + getWidth() - mRightPad;
+            arrowOffset.y = currentOffset.y + height / 2;
 
-         drawer->drawLine(arrowOffset, Point2I(arrowOffset.x + mArrowSize, currentOffset.y), ColorI::WHITE);
-         drawer->drawLine(arrowOffset, Point2I(arrowOffset.x + mArrowSize, currentOffset.y + height), ColorI::WHITE);
+            drawer->clearBitmapModulation();
+
+            drawer->drawLine(arrowOffset, Point2I(arrowOffset.x - mArrowSize, currentOffset.y), ColorI::WHITE);
+            drawer->drawLine(arrowOffset, Point2I(arrowOffset.x - mArrowSize, currentOffset.y + height), ColorI::WHITE);
+         }
       }
-
-      if (mNextBitmapAsset.notNull())
-      {
-         // render the right arrow
-         bool arrowOnR = (isSelected() || isHighlighted()) && (mWrapOptions || (mSelectedOption < mOptions.size() - 1));
-         arrowOffset.x = currentOffset.x + getWidth() - mRightPad - mArrowSize;
-         arrowOffset.y = currentOffset.y + arrowOffsetY;
-
-         drawer->clearBitmapModulation();
-         drawer->drawBitmapStretch(mNextBitmap, RectI(arrowOffset, Point2I(mArrowSize, mArrowSize)), GFXBitmapFlip_None, GFXTextureFilterLinear, false);
-      }
-      else
-      {
-         // render the left arrow
-         bool arrowOnL = (isSelected() || isHighlighted()) && (mWrapOptions || (mSelectedOption > 0));
-         arrowOffset.x = currentOffset.x + getWidth() - mRightPad;
-         arrowOffset.y = currentOffset.y + height / 2;
-
-         drawer->clearBitmapModulation();
-
-         drawer->drawLine(arrowOffset, Point2I(arrowOffset.x - mArrowSize, currentOffset.y), ColorI::WHITE);
-         drawer->drawLine(arrowOffset, Point2I(arrowOffset.x - mArrowSize, currentOffset.y + height), ColorI::WHITE);
-      }
-
       // get the appropriate font color
       ColorI fontColor;
       if (!mEnabled)
@@ -265,64 +263,12 @@ void GuiGameSettingsCtrl::onRenderListOption(Point2I currentOffset)
 
 void GuiGameSettingsCtrl::onRenderSliderOption(Point2I currentOffset)
 {
-   F32 xScale = (float)getWidth();
-
    S32 height = getHeight();
-
-   S32 arrowOffsetY = 0;
 
    GFXDrawUtil* drawer = GFX->getDrawUtil();
 
-   Point2I arrowOffset;
+   //Point2I arrowOffset;
    S32 columnSplit = mColumnSplit;
-
-   
-
-   /*if (mPreviousBitmapAsset.notNull())
-   {
-      // render the left arrow
-      bool arrowOnL = (isSelected() || isHighlighted()) && (mWrapOptions || (mSelectedOption > 0));
-      arrowOffset.x = currentOffset.x + columnSplit;
-      arrowOffset.y = currentOffset.y + arrowOffsetY;
-
-      drawer->clearBitmapModulation();
-      drawer->drawBitmapStretch(mPreviousBitmap, RectI(arrowOffset, Point2I(mArrowSize, mArrowSize)), GFXBitmapFlip_None, GFXTextureFilterLinear, false);
-   }
-   else
-   {
-      // render the left arrow
-      bool arrowOnL = (isSelected() || isHighlighted()) && (mWrapOptions || (mSelectedOption > 0));
-      arrowOffset.x = currentOffset.x + mColumnSplit;
-      arrowOffset.y = currentOffset.y + height / 2;
-
-      drawer->clearBitmapModulation();
-
-      drawer->drawLine(arrowOffset, Point2I(arrowOffset.x + mArrowSize, currentOffset.y), ColorI::WHITE);
-      drawer->drawLine(arrowOffset, Point2I(arrowOffset.x + mArrowSize, currentOffset.y + height), ColorI::WHITE);
-   }
-
-   if (mNextBitmapAsset.notNull())
-   {
-      // render the right arrow
-      bool arrowOnR = (isSelected() || isHighlighted()) && (mWrapOptions || (mSelectedOption < mOptions.size() - 1));
-      arrowOffset.x = currentOffset.x + mRightPad * xScale - mArrowSize;
-      arrowOffset.y = currentOffset.y + arrowOffsetY;
-
-      drawer->clearBitmapModulation();
-      drawer->drawBitmapStretch(mNextBitmap, RectI(arrowOffset, Point2I(mArrowSize, mArrowSize)), GFXBitmapFlip_None, GFXTextureFilterLinear, false);
-   }
-   else
-   {
-      // render the left arrow
-      bool arrowOnL = (isSelected() || isHighlighted()) && (mWrapOptions || (mSelectedOption > 0));
-      arrowOffset.x = currentOffset.x + getWidth() - mRightPad;
-      arrowOffset.y = currentOffset.y + height / 2;
-
-      drawer->clearBitmapModulation();
-
-      drawer->drawLine(arrowOffset, Point2I(arrowOffset.x - mArrowSize, currentOffset.y), ColorI::WHITE);
-      drawer->drawLine(arrowOffset, Point2I(arrowOffset.x - mArrowSize, currentOffset.y + height), ColorI::WHITE);
-   }*/
 
    //Draw the slider bar
 
@@ -389,13 +335,10 @@ void GuiGameSettingsCtrl::onRenderSliderOption(Point2I currentOffset)
       fontColor = mProfile->mFontColor;
    }
 
-   // calculate text to be at the center between the arrows
-   GFont* font = mProfile->mFont;
-
    char stringVal[32];
    dSprintf(stringVal, 32, "%.1f", mValue);
 
-   S32 stringWidth = font->getStrWidth(stringVal);
+   //S32 stringWidth = font->getStrWidth(stringVal); //adaptive width
    Point2I textOffset(sliderRect.point.x + sliderRect.extent.x, 0);
 
    // render the option text itself
@@ -413,7 +356,6 @@ void GuiGameSettingsCtrl::onRenderSliderOption(Point2I currentOffset)
 
 void GuiGameSettingsCtrl::onRenderKeybindOption(Point2I currentOffset)
 {
-   F32 xScale = (float)getWidth();
    S32 columnSplit = mColumnSplit;
 
    S32 height = getHeight();
@@ -696,8 +638,6 @@ void GuiGameSettingsCtrl::addOption(const char* displayText, const char* keyText
 
 void GuiGameSettingsCtrl::clickOption(S32 xPos)
 {
-   F32 xScale = (float)getWidth();
-
    S32 leftArrowX1 = mColumnSplit;
    S32 leftArrowX2 = leftArrowX1 + mArrowSize;
 
@@ -814,8 +754,6 @@ void GuiGameSettingsCtrl::clickSlider(S32 xPos)
 
 void GuiGameSettingsCtrl::clickKeybind(S32 xPos)
 {
-   S32 columnSplit = mColumnSplit;
-
    S32 height = getHeight();
    S32 width = getWidth();
 

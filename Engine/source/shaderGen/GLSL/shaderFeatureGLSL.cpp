@@ -2139,8 +2139,6 @@ void RTLightingFeatGLSL::processPix(   Vector<ShaderComponent*> &componentList,
    if ( fd.features[MFT_LightMap] || fd.features[MFT_ToneMap] || fd.features[MFT_VertLit] )
       return;
   
-   ShaderConnector *connectComp = dynamic_cast<ShaderConnector *>( componentList[C_CONNECTOR] );
-
    MultiLine *meta = new MultiLine;
 
 	// Now the wsPosition and wsView.
@@ -2202,10 +2200,7 @@ void RTLightingFeatGLSL::processPix(   Vector<ShaderComponent*> &componentList,
    {
       Con::errorf("ShaderGen::RTLightingFeatGLSL()  - failed to generate surface!");
       return;
-   }   
-   Var *roughness = (Var*)LangElement::find("roughness");
-
-   Var *metalness = (Var*)LangElement::find("metalness");
+   }
 
    Var *curColor = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
 
@@ -2957,10 +2952,8 @@ void ReflectionProbeFeatGLSL::processPix(Vector<ShaderComponent*>& componentList
    if (fd.features[MFT_LightMap] || fd.features[MFT_ToneMap] || fd.features[MFT_VertLit])
       return;
 
-   ShaderConnector * connectComp = dynamic_cast<ShaderConnector*>(componentList[C_CONNECTOR]);
-
    MultiLine * meta = new MultiLine;
-
+      
    // Now the wsPosition and wsView.
    Var *wsPosition = getInWsPosition(componentList);
    Var *worldToTangent = getInWorldToTangent(componentList);

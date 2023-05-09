@@ -378,16 +378,16 @@ StringTableEntry TerrainMaterialAsset::getAssetIdByMaterialName(StringTableEntry
    U32 foundCount = AssetDatabase.findAssetType(&query, "TerrainMaterialAsset");
    if (foundCount != 0)
    {
-      for (U32 i = 0; i < foundCount; i++)
+      for (U32 i = 0; i < foundCount && materialAssetId == StringTable->EmptyString(); i++)
       {
          TerrainMaterialAsset* matAsset = AssetDatabase.acquireAsset<TerrainMaterialAsset>(query.mAssetList[i]);
-         if (matAsset && matAsset->getMaterialDefinitionName() == matName)
+         if (matAsset)
          {
-            materialAssetId = matAsset->getAssetId();
+            if (matAsset->getMaterialDefinitionName() == matName)
+               materialAssetId = matAsset->getAssetId();
+
             AssetDatabase.releaseAsset(query.mAssetList[i]);
-            break;
          }
-         AssetDatabase.releaseAsset(query.mAssetList[i]);
       }
    }
 

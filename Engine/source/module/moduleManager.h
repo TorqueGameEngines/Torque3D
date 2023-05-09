@@ -117,6 +117,7 @@ private:
     /// Miscellaneous.
     bool                        mEnforceDependencies;
     bool                        mEchoInfo;
+    bool                        mFailGroupIfModuleFail;
     S32                         mDatabaseLocks;
     char                        mModuleExtension[256];
     Taml                        mTaml;

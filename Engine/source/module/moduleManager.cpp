@@ -104,6 +104,7 @@ S32 ModuleManager::moduleDependencySort(ModuleDefinition* const* a, ModuleDefini
 ModuleManager::ModuleManager() :
     mEnforceDependencies(true),
     mEchoInfo(false),
+    mFailGroupIfModuleFail(false),
     mDatabaseLocks( 0 ),
     mIgnoreLoadedGroups(false)
 {
@@ -148,6 +149,7 @@ void ModuleManager::initPersistFields()
 
     addField( "EnforceDependencies", TypeBool, Offset(mEnforceDependencies, ModuleManager), "Whether the module manager enforces any dependencies on module definitions it discovers or not." );
     addField( "EchoInfo", TypeBool, Offset(mEchoInfo, ModuleManager), "Whether the module manager echos extra information to the console or not." );
+    addField( "FailGroupIfModuleFail", TypeBool, Offset(mFailGroupIfModuleFail, ModuleManager), "Whether the module manager will fail to load an entire module group if a single module fails to load.");
 }
 
 //-----------------------------------------------------------------------------
@@ -292,8 +294,8 @@ bool ModuleManager::loadModuleGroup( const char* pModuleGroup )
         StringTableEntry moduleId = *moduleIdItr;
 
         // Finish if we could not resolve the dependencies for module Id (of any version Id).
-        if ( !resolveModuleDependencies( moduleId, 0, moduleGroup, false, moduleResolvingQueue, moduleReadyQueue ) )
-            return false;
+        if (!resolveModuleDependencies(moduleId, 0, moduleGroup, false, moduleResolvingQueue, moduleReadyQueue) && mFailGroupIfModuleFail)
+           return false;
     }
 
     // Check the modules we want to load to ensure that we do not have incompatible modules loaded already.
@@ -524,8 +526,8 @@ bool ModuleManager::unloadModuleGroup( const char* pModuleGroup )
         StringTableEntry moduleId = *moduleIdItr;
 
         // Finish if we could not resolve the dependencies for module Id (of any version Id).
-        if ( !resolveModuleDependencies( moduleId, 0, moduleGroup, false, moduleResolvingQueue, moduleReadyQueue ) )
-            return false;
+        if (!resolveModuleDependencies(moduleId, 0, moduleGroup, false, moduleResolvingQueue, moduleReadyQueue) && mFailGroupIfModuleFail)
+           return false;
     }
 
     // Check the modules we want to load to ensure that we do not have incompatible modules loaded already.

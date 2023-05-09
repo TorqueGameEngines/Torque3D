@@ -274,16 +274,16 @@ StringTableEntry SoundAsset::getAssetIdByFileName(StringTableEntry fileName)
    U32 foundCount = AssetDatabase.findAssetType(&query, "SoundAsset");
    if (foundCount != 0)
    {
-      for (U32 i = 0; i < foundCount; i++)
+      for (U32 i = 0; i < foundCount && soundAssetId == StringTable->EmptyString(); i++)
       {
          SoundAsset* soundAsset = AssetDatabase.acquireAsset<SoundAsset>(query.mAssetList[i]);
-         if (soundAsset && soundAsset->getSoundPath() == fileName)
+         if (soundAsset)
          {
-            soundAssetId = soundAsset->getAssetId();
+            if (soundAsset->getSoundPath() == fileName)
+               soundAssetId = soundAsset->getAssetId();
+
             AssetDatabase.releaseAsset(query.mAssetList[i]);
-            break;
          }
-         AssetDatabase.releaseAsset(query.mAssetList[i]);
       }
    }
 

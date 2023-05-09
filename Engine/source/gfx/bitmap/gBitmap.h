@@ -323,7 +323,7 @@ inline U8* GBitmap::getWritableBits(const U32 in_mipLevel)
 
 inline U8* GBitmap::getAddress(const S32 in_x, const S32 in_y, const U32 mipLevel)
 {
-   return (getWritableBits(mipLevel) + ((in_y * getWidth(mipLevel)) + in_x) * mBytesPerPixel);
+   return (getWritableBits(mipLevel) + (U64)(((in_y * getWidth(mipLevel)) + in_x) * mBytesPerPixel));
 }
 
 inline const U8* GBitmap::getAddress(const S32 in_x, const S32 in_y, const U32 mipLevel) const

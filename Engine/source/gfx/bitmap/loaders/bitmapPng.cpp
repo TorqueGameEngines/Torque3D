@@ -75,7 +75,7 @@ static void pngReadDataFn(png_structp png_ptr,
    AssertFatal(png_get_io_ptr(png_ptr) != NULL, "No stream?");
 
    Stream *strm = (Stream*)png_get_io_ptr(png_ptr);
-   bool success = strm->read(length, data);
+   bool success = strm->read((U32)length, data);
    AssertFatal(success, "pngReadDataFn - failed to read from stream!");
 }
 
@@ -88,7 +88,7 @@ static void pngWriteDataFn(png_structp png_ptr,
    AssertFatal(png_get_io_ptr(png_ptr) != NULL, "No stream?");
 
    Stream *strm = (Stream*)png_get_io_ptr(png_ptr);
-   bool success = strm->write(length, data);
+   bool success = strm->write((U32)length, data);
    AssertFatal(success, "pngWriteDataFn - failed to write to stream!");
 }
 
@@ -101,7 +101,7 @@ static void pngFlushDataFn(png_structp /*png_ptr*/)
 
 static png_voidp pngMallocFn(png_structp /*png_ptr*/, png_size_t size)
 {
-   return FrameAllocator::alloc(size);
+   return FrameAllocator::alloc((U32)size);
 }
 
 static void pngFreeFn(png_structp /*png_ptr*/, png_voidp /*mem*/)
@@ -265,7 +265,7 @@ static bool sReadPNG(Stream &stream, GBitmap *bitmap)
    //  above...
    png_read_update_info(png_ptr, info_ptr);
 
-   png_uint_32 rowBytes = png_get_rowbytes(png_ptr, info_ptr);
+   png_uint_32 rowBytes = (png_uint_32)png_get_rowbytes(png_ptr, info_ptr);
    if (format == GFXFormatR8G8B8) 
    {
       AssertFatal(rowBytes == width * 3,

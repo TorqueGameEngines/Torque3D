@@ -37,6 +37,7 @@ struct _FlagMap
    U32 flag;
 };
 
+#ifndef TORQUE_SDL
 static _FlagMap sgButtonMap[] =
 {
    { MBOk,                 MB_OK },
@@ -65,7 +66,7 @@ static _FlagMap sgMsgBoxRetMap[] =
    { IDYES,                MROk },
    { 0xffffffff,           0xffffffff }
 };
-
+#endif
 //-----------------------------------------------------------------------------
 
 static U32 getMaskFromID(_FlagMap *map, S32 id)

@@ -195,8 +195,8 @@ DefineEngineFunction( enumColladaForImport, bool, (const char * shapePath, const
    for (S32 i = 0; i < root->getLibrary_materials_array().getCount(); i++)
    {
       const domLibrary_materials* libraryMats = root->getLibrary_materials_array()[i];
-      stats.numMaterials += libraryMats->getMaterial_array().getCount();
-      for (S32 j = 0; j < libraryMats->getMaterial_array().getCount(); j++)
+      stats.numMaterials += (S32)libraryMats->getMaterial_array().getCount();
+      for (S32 j = 0; j < (S32)libraryMats->getMaterial_array().getCount(); j++)
       {
          domMaterial* mat = libraryMats->getMaterial_array()[j];
          tree->insertItem(matsID, _GetNameOrId(mat), "", "", 0, 0);
@@ -225,7 +225,7 @@ DefineEngineFunction( enumColladaForImport, bool, (const char * shapePath, const
    for (S32 i = 0; i < root->getLibrary_animation_clips_array().getCount(); i++)
    {
       const domLibrary_animation_clips* libraryClips = root->getLibrary_animation_clips_array()[i];
-      stats.numClips += libraryClips->getAnimation_clip_array().getCount();
+      stats.numClips += (S32)libraryClips->getAnimation_clip_array().getCount();
       for (S32 j = 0; j < libraryClips->getAnimation_clip_array().getCount(); j++)
       {
          domAnimation_clip* clip = libraryClips->getAnimation_clip_array()[j];

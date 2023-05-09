@@ -31,7 +31,7 @@
 		/* Data access */																					\
 		inline_			const base_class*	GetPos()		const	{ return (base_class*)mData;		}	\
 		inline_			const base_class*	GetNeg()		const	{ return ((base_class*)mData)+1;	}	\
-		inline_			udword				GetPrimitive()	const	{ return (mData>>1);				}	\
+		inline_			udword				GetPrimitive()	const	{ return (udword(mData>>1));				}	\
 		/* Stats */																							\
 		inline_			udword				GetNodeSize()	const	{ return SIZEOFOBJECT;				}	\
 																											\
@@ -50,8 +50,8 @@
 		/* Data access */																					\
 		inline_			const base_class*	GetPos()			const	{ return (base_class*)mPosData;	}	\
 		inline_			const base_class*	GetNeg()			const	{ return (base_class*)mNegData;	}	\
-		inline_			udword				GetPosPrimitive()	const	{ return (mPosData>>1);			}	\
-		inline_			udword				GetNegPrimitive()	const	{ return (mNegData>>1);			}	\
+		inline_			udword				GetPosPrimitive()	const	{ return (udword(mPosData>>1));			}	\
+		inline_			udword				GetNegPrimitive()	const	{ return (udword(mNegData>>1));			}	\
 		/* Stats */																							\
 		inline_			udword				GetNodeSize()		const	{ return SIZEOFOBJECT;			}	\
 																											\

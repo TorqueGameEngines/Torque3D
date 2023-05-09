@@ -1641,7 +1641,7 @@ void TSStatic::onInspect(GuiInspector* inspector)
 {
    //if (mShapeAsset == nullptr)
       return;
-
+/*
    //Put the GameObject group before everything that'd be gameobject-effecting, for orginazational purposes
    GuiInspectorGroup* materialGroup = inspector->findExistentGroup(StringTable->insert("Materials"));
    if (!materialGroup)
@@ -1709,6 +1709,7 @@ void TSStatic::onInspect(GuiInspector* inspector)
          }
       }
    }
+   */
 }
 #endif
 DefineEngineMethod(TSStatic, getTargetName, const char*, (S32 index), (0),

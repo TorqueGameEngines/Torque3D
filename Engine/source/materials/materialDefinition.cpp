@@ -661,7 +661,7 @@ void Material::_mapMaterial()
                mMapTo = mDiffuseMapName[0];
             else
                // use everything after the last slash
-               mMapTo = String(mDiffuseMapName[0]).substr(slashPos + 1, strlen(mDiffuseMapName[0]) - slashPos - 1);
+               mMapTo = String(mDiffuseMapName[0]).substr(slashPos + 1, (U32)strlen(mDiffuseMapName[0]) - slashPos - 1);
          }
          else if (!mDiffuseMapAsset->isNull())
          {

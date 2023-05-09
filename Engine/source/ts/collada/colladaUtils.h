@@ -527,7 +527,7 @@ public:
    {
       if ((index >= 0) && (index < size())) {
          if (source->getFloat_array())
-            return &source->getFloat_array()->getValue()[index*stride()];
+            return &source->getFloat_array()->getValue()[(U64)(index*stride())];
       }
       return 0;
    }
@@ -541,9 +541,9 @@ public:
       if ((index >= 0) && (index < size())) {
          // could be plain strings or IDREFs
          if (source->getName_array())
-            return source->getName_array()->getValue()[index*stride()];
+            return source->getName_array()->getValue()[(U64)(index*stride())];
          else if (source->getIDREF_array())
-            return source->getIDREF_array()->getValue()[index*stride()].getID();
+            return source->getIDREF_array()->getValue()[(U64)(index*stride())].getID();
       }
       return "";
    }
@@ -708,7 +708,7 @@ template<> inline const domListOfUInts *ColladaPrimitive<domTristrips>::getTrian
             continue;
 
          domUint* pSrcData = &(P->getValue()[0]);
-         size_t numTriangles = (P->getValue().getCount() / stride) - 2;
+         U64 numTriangles = (P->getValue().getCount() / stride) - 2;
 
          // Convert the strip back to a triangle list
          domUint* v0 = pSrcData;
@@ -723,7 +723,7 @@ template<> inline const domListOfUInts *ColladaPrimitive<domTristrips>::getTrian
             else
             {
                // CCW triangle
-               pTriangleData->appendArray(stride*3, v0);
+               pTriangleData->appendArray((U64)(stride*3), v0);
             }
          }
       }
@@ -749,7 +749,7 @@ template<> inline const domListOfUInts *ColladaPrimitive<domTrifans>::getTriangl
             continue;
 
          domUint* pSrcData = &(P->getValue()[0]);
-         size_t numTriangles = (P->getValue().getCount() / stride) - 2;
+         U64 numTriangles = (P->getValue().getCount() / stride) - 2;
 
          // Convert the fan back to a triangle list
          domUint* v0 = pSrcData + stride;
@@ -781,7 +781,7 @@ template<> inline const domListOfUInts *ColladaPrimitive<domPolygons>::getTriang
             continue;
 
          domUint* pSrcData = &(P->getValue()[0]);
-         size_t numPoints = P->getValue().getCount() / stride;
+         U64 numPoints = P->getValue().getCount() / stride;
 
          // Use a simple tri-fan (centered at the first point) method of
          // converting the polygon to triangles.
@@ -789,7 +789,7 @@ template<> inline const domListOfUInts *ColladaPrimitive<domPolygons>::getTriang
          pSrcData += stride;
          for (S32 iTri = 0; iTri < numPoints-2; iTri++) {
             pTriangleData->appendArray(stride, v0);
-            pTriangleData->appendArray(stride*2, pSrcData);
+            pTriangleData->appendArray((U64)(stride*2), pSrcData);
             pSrcData += stride;
          }
       }
@@ -831,7 +831,7 @@ template<> inline const domListOfUInts *ColladaPrimitive<domPolylist>::getTriang
          pSrcData += stride;
          for (S32 iTri = 0; iTri < vcount[iPoly]-2; iTri++) {
             pTriangleData->appendArray(stride, v0);
-            pTriangleData->appendArray(stride*2, pSrcData);
+            pTriangleData->appendArray((U64)(stride*2), pSrcData);
             pSrcData += stride;
          }
          pSrcData += stride;

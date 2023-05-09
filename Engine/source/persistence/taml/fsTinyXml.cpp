@@ -53,7 +53,7 @@ void VfsXMLPrinter::Print(const char* format, ...)
 
 void VfsXMLPrinter::Write(const char* data, size_t size)
 {
-   m_Stream.write(size, data);
+   m_Stream.write((U32)size, data);
 }
 
 void VfsXMLPrinter::Putc(char ch)
@@ -250,12 +250,12 @@ void VfsXMLDocument::SetError(tinyxml2::XMLError error, int lineNum, const char*
 
    if (format) {
       size_t len = strlen(buffer);
-      dSprintf(buffer + len, BUFFER_SIZE - len, ": ");
+      dSprintf(buffer + len, (U32)(BUFFER_SIZE - len), ": ");
       len = strlen(buffer);
 
       va_list va;
       va_start(va, format);
-      dSprintf(buffer + len, BUFFER_SIZE - len, format, va);
+      dSprintf(buffer + len, (U32)(BUFFER_SIZE - len), format, va);
       va_end(va);
    }
    _errorStr.SetStr(buffer);

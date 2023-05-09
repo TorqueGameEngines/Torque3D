@@ -915,7 +915,7 @@ inline bool mIsNaN( const Point2F &p )
 /// Return negative if p0p1p2 are clockwise 
 inline F64 mCross(const Point2F &p0, const Point2F &p1, const Point2F &pt2)
 {
-   return (p1.x - p0.x) * (pt2.y - p0.y) - (p1.y - p0.y) * (pt2.x - p0.x);
+   return F64((p1.x - p0.x) * (pt2.y - p0.y) - (p1.y - p0.y) * (pt2.x - p0.x));
 }
 
 

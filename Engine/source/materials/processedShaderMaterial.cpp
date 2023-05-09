@@ -230,7 +230,7 @@ bool ProcessedShaderMaterial::init( const FeatureSet &features,
    }
    if (mMaterial && mMaterial->mDiffuseMapName[0] != StringTable->EmptyString() && String(mMaterial->mDiffuseMapName[0]).startsWith("#"))
    {
-      String texTargetBufferName = String(mMaterial->mDiffuseMapName[0]).substr(1, strlen(mMaterial->mDiffuseMapName[0]) - 1);
+      String texTargetBufferName = String(mMaterial->mDiffuseMapName[0]).substr(1, (U32)strlen(mMaterial->mDiffuseMapName[0]) - 1);
       NamedTexTarget *texTarget = NamedTexTarget::find(texTargetBufferName);
       RenderPassData* rpd = getPass(0);
 

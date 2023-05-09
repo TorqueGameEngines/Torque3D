@@ -512,7 +512,7 @@ void ColladaAppMesh::getPrimitives(const domGeometry* geometry)
       if (!pTriData)
          continue;
 
-      U32 numTriangles = pTriData->getCount() / meshPrims[iPrim]->getStride() / 3;
+      U32 numTriangles = (U32)(pTriData->getCount() / meshPrims[iPrim]->getStride() / 3);
       if (!numTriangles)
          continue;
 

@@ -648,17 +648,17 @@ void GuiConvexEditorCtrl::on3DMouseDragged(const Gui3DMouseEvent & event)
 	     F32 scalar = 1;
 		  mConvexSEL->mSurfaceUVs[mFaceSEL].scale += (Point2F(scale.x, scale.y) * scalar);
 
-        if (mConvexSEL->mSurfaceUVs[mFaceSEL].scale.x < 0.01)
-           mConvexSEL->mSurfaceUVs[mFaceSEL].scale.x = 0.01;
+        if (mConvexSEL->mSurfaceUVs[mFaceSEL].scale.x < 0.01f)
+           mConvexSEL->mSurfaceUVs[mFaceSEL].scale.x = 0.01f;
 
-        if (mConvexSEL->mSurfaceUVs[mFaceSEL].scale.y < 0.01)
-           mConvexSEL->mSurfaceUVs[mFaceSEL].scale.y = 0.01;
+        if (mConvexSEL->mSurfaceUVs[mFaceSEL].scale.y < 0.01f)
+           mConvexSEL->mSurfaceUVs[mFaceSEL].scale.y = 0.01f;
 
-        if (mConvexSEL->mSurfaceUVs[mFaceSEL].scale.x > 100)
-           mConvexSEL->mSurfaceUVs[mFaceSEL].scale.x = 100;
+        if (mConvexSEL->mSurfaceUVs[mFaceSEL].scale.x > 100.0f)
+           mConvexSEL->mSurfaceUVs[mFaceSEL].scale.x = 100.0f;
 
-        if (mConvexSEL->mSurfaceUVs[mFaceSEL].scale.y > 100)
-           mConvexSEL->mSurfaceUVs[mFaceSEL].scale.y = 100;
+        if (mConvexSEL->mSurfaceUVs[mFaceSEL].scale.y > 100.0f)
+           mConvexSEL->mSurfaceUVs[mFaceSEL].scale.y = 100.0f;
 
         Point2F test = mConvexSEL->mSurfaceUVs[mFaceSEL].scale;
 		  mConvexSEL->setMaskBits( ConvexShape::UpdateMask );

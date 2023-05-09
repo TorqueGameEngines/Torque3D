@@ -462,7 +462,7 @@ void updateMaterialsScript(const Torque::Path &path, bool copyTextures = false)
 #endif
 
    return;
-
+   /*
    Torque::Path scriptPath(path);
    scriptPath.setFileName("materials");
    scriptPath.setExtension(TORQUE_SCRIPT_EXTENSION);
@@ -510,6 +510,7 @@ void updateMaterialsScript(const Torque::Path &path, bool copyTextures = false)
    }
 
    persistMgr.saveDirty();
+   */
 }
 
 //-----------------------------------------------------------------------------

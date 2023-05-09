@@ -532,7 +532,7 @@ void RigidShapeData::initPersistFields()
    addGroup("Physics");
       addField("enablePhysicsRep", TypeBool, Offset(enablePhysicsRep, RigidShapeData),
          "@brief Creates a representation of the object in the physics plugin.\n");
-         ("massCenter", TypePoint3F, Offset(massCenter, RigidShapeData), "Center of mass for rigid body.");
+      addField("massCenter", TypePoint3F, Offset(massCenter, RigidShapeData), "Center of mass for rigid body.");
       addField("massBox", TypePoint3F, Offset(massBox, RigidShapeData), "Size of inertial box.");
       addField("bodyRestitution", TypeF32, Offset(body.restitution, RigidShapeData), "The percentage of kinetic energy kept by this object in a collision.");
       addField("bodyFriction", TypeF32, Offset(body.friction, RigidShapeData), "How much friction this object has. Lower values will cause the object to appear to be more slippery.");

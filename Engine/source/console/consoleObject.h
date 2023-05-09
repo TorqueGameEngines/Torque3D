@@ -682,7 +682,7 @@ public:
       T::initPersistFields();
       T::consoleInit();
 
-      EnginePropertyTable::Property* props = new EnginePropertyTable::Property[sg_tempFieldList.size()];
+      EnginePropertyTable::Property* props = new EnginePropertyTable::Property[sg_tempFieldList.size() + 1];
 
       for (int i = 0; i < sg_tempFieldList.size(); ++i)
       {
@@ -825,7 +825,7 @@ class ConsoleObject : public EngineObject
 protected:
 
    /// @deprecated This is disallowed.
-   ConsoleObject(const ConsoleObject&);
+   ConsoleObject(const ConsoleObject&) { mDocsClick = false; };
 
 public:
    /// <summary>
@@ -863,7 +863,7 @@ public:
 public:
 
    /// Get the classname from a class tag.
-   static const char* lookupClassName(const U32 in_classTag);
+   static const char* lookupClassName(const U32 in_classTag) { return ""; };
 
    /// @name Fields
    /// @{

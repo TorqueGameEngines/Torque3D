@@ -309,7 +309,7 @@ void CodeBlock::calcBreakList()
    if (seqCount)
       size++;
 
-   breakList = new U32[size];
+   breakList = new U32[size+3]; //lineBreakPairs plus pad
    breakListSize = size;
    line = -1;
    seqCount = 0;
@@ -434,7 +434,7 @@ bool CodeBlock::read(StringTableEntry fileName, Stream &st)
    st.read(&lineBreakPairCount);
 
    U32 totSize = codeLength + lineBreakPairCount * 2;
-   code = new U32[totSize];
+   code = new U32[totSize+1];
 
    // 0xFF is used as a flag to help compress the bytecode.
    // If detected, the bytecode is only a U8.
@@ -1301,6 +1301,7 @@ void CodeBlock::dumpInstructions(U32 startIp, bool upToReturn)
          case FuncCallExprNode::MethodCall:   callTypeName = "MethodCall"; break;
          case FuncCallExprNode::ParentCall:   callTypeName = "ParentCall"; break;
          case FuncCallExprNode::StaticCall:   callTypeName = "StaticCall"; break;
+         default:                             callTypeName = "INVALID"; break;
          }
 
          Con::printf("%i: OP_CALLFUNC stk=+1 name=%s nspace=%s callType=%s", ip - 1, fnName, fnNamespace, callTypeName);

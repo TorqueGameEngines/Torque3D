@@ -116,9 +116,6 @@ U32 _ITER = 0;    ///< Stack pointer for iterStack.
 ConsoleValue stack[MaxStackSize];
 S32 _STK = 0;
 
-char curFieldArray[256];
-char prevFieldArray[256];
-
 const char* tsconcat(const char* strA, const char* strB, S32& outputLen)
 {
    S32 lenA = dStrlen(strA);
@@ -726,7 +723,7 @@ ConsoleValue CodeBlock::exec(U32 ip, const char* functionName, Namespace* thisNa
    struct {
       SimObject* newObject;
       U32 failJump;
-   } objectCreationStack[objectCreationStackSize];
+   } objectCreationStack[objectCreationStackSize] = {};
 
    SimObject* currentNewObject = 0;
    StringTableEntry prevField = NULL;
@@ -2349,7 +2346,7 @@ execFinished:
    AssertFatal(!(_STK < stackStart), "String stack popped too much in script exec");
 #endif
 
-   return std::move(returnValue);
+   return returnValue;
 }
 
 //------------------------------------------------------------

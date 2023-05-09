@@ -891,7 +891,7 @@ bool TSShapeInstance::hasAccumulation()
    for ( U32 i = 0; i < mMaterialList->size(); ++i )
    {
       BaseMatInstance* mat = mMaterialList->getMaterialInst(i);
-      if ( mat->hasAccumulation() )
+      if (mat != nullptr && mat->hasAccumulation() )
          result = true;
    }
    return result;

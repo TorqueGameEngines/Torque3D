@@ -883,6 +883,9 @@ void ReflectionProbe::prepRenderImage(SceneRenderState *state)
 
       BaseMatInstance* probePrevMat = mEditorShapeInst->getMaterialList()->getMaterialInst(0);
 
+      if (probePrevMat == nullptr)
+         return;
+
       setPreviewMatParameters(state, probePrevMat);
 
       // GFXTransformSaver is a handy helper class that restores

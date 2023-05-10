@@ -33,7 +33,7 @@ bool PopupMenu::smSelectionEventHandled = false;
 
 /// Event class used to remove popup menus from the event notification in a safe way
 class PopUpNotifyRemoveEvent : public SimEvent
-{   
+{
 public:
    void process(SimObject *object)
    {
@@ -46,7 +46,8 @@ public:
 //-----------------------------------------------------------------------------
 PopupMenu::PopupMenu()
 {
-	mMenuItems = NULL;
+	//XXTH orig mMenuItems = NULL;
+   mMenuItems = 0;
 	mMenuBarCtrl = nullptr;
 
 	mBarTitle = StringTable->EmptyString();
@@ -115,7 +116,7 @@ void PopupMenu::onMenuSelect()
 
 //-----------------------------------------------------------------------------
 void PopupMenu::handleSelectEvent(U32 popID, U32 command)
-{  
+{
 }
 
 //-----------------------------------------------------------------------------
@@ -199,7 +200,7 @@ bool PopupMenu::setItem(S32 pos, const char *title, const char* accelerator, con
       {
          mMenuItems[i].mID = pos;
          mMenuItems[i].mCMD = cmd;
-         
+
          if (accelerator && accelerator[0])
             mMenuItems[i].mAccelerator = dStrdup(accelerator);
          else
@@ -207,7 +208,7 @@ bool PopupMenu::setItem(S32 pos, const char *title, const char* accelerator, con
          return true;
       }
    }
-   
+
    return false;
 }
 

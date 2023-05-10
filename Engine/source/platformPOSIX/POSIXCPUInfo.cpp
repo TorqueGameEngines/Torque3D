@@ -20,7 +20,8 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#ifndef __APPLE__
+//XXTH orig #ifndef __APPLE__
+#if not defined (__APPLE__) //and not defined (__FreeBSD__)
 
 #include <fstream>
 #include <iostream>
@@ -40,12 +41,15 @@ Platform::SystemInfo_struct Platform::SystemInfo;
 
 static inline void rtrim(std::string &s)
 {
-    s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+   //XXTH deprecated!  s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+   //FIXME !!!!  s.erase(std::find_if(s.rbegin(), s.rend(), static_cast<int(*)(int)>(std::isspace).base(), s.end());
 }
 
 static inline void ltrim(std::string &s)
 {
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
+    //XXTH deprecated!  s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
+   //using lambada
+   s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int c) {return !std::isspace(c);}));
 }
 
 static void getCPUInformation()
@@ -183,7 +187,7 @@ static void getCPUInformation()
     SetProcessorInfo(Platform::SystemInfo.processor, vendorString.c_str(), brandString.c_str());
 }
 
-void Processor::init() 
+void Processor::init()
 {
     getCPUInformation();
 
@@ -244,7 +248,7 @@ namespace CPUInfo
         }
         else if (!Platform::SystemInfo.processor.isHyperThreaded && Platform::SystemInfo.processor.numPhysicalProcessors == 1)
         {
-            return CONFIG_SingleCoreAndHTNotCapable;   
+            return CONFIG_SingleCoreAndHTNotCapable;
         }
 
         return CONFIG_MultiCoreAndHTEnabled;

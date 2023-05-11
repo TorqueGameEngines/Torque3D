@@ -34,6 +34,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include "console/engineAPI.h"
+#include "core/util/journal/process.h"
 #ifndef TORQUE_DEDICATED
 #include <SDL.h>
 #endif
@@ -147,6 +148,11 @@ void ProcessControlInit()
 //-----------------------------------------------------------------------------
 void Platform::postQuitMessage(const S32 in_quitVal)
 {
+
+   Process::requestShutdown();
+   return;
+
+
    // if we have a window send a quit event, otherwise just force shutdown
 #if 0
    if (x86UNIXState->windowCreated())

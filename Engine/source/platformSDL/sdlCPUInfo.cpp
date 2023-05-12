@@ -19,7 +19,10 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
-// XXTH used for FreeBSD, SDL_cpuinfo dont tell me the cpu name
+// XXTH used for FreeBSD
+// Note: SDL_cpuinfo have not all information, but better than using
+//       "sysctl hw"
+//
 //-----------------------------------------------------------------------------
 #if defined( __FreeBSD__ )
 #include "SDL.h"
@@ -35,13 +38,12 @@ Platform::SystemInfo_struct Platform::SystemInfo;
 void Processor::init()
 {
 
-   //sdl dont have logical/physical CPU count so ... time to guess
-   //modern CPU usually should have isHyperThreaded
    S32 lCpuCount = SDL_GetCPUCount();
    Platform::SystemInfo.processor.numLogicalProcessors    = lCpuCount;
+   //sdl dont have logical/physical CPU count so ... time to guess
    Platform::SystemInfo.processor.numPhysicalProcessors   = 1; // :/ lCpuCount;
    Platform::SystemInfo.processor.isMultiCore = lCpuCount > 1;
-   //since logical and physical is equal set to false mhh better true
+   //modern CPU should have isHyperThreaded
    Platform::SystemInfo.processor.isHyperThreaded = true;
 
    //hackfest

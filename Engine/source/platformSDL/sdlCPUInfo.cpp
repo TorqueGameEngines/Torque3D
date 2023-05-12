@@ -29,11 +29,9 @@
 
 #include "platform/platformCPUCount.h"
 #include "console/console.h"
+#include <math/mMathFn.h>
 
 Platform::SystemInfo_struct Platform::SystemInfo;
-
-
-
 
 void Processor::init()
 {
@@ -41,10 +39,18 @@ void Processor::init()
    S32 lCpuCount = SDL_GetCPUCount();
    Platform::SystemInfo.processor.numLogicalProcessors    = lCpuCount;
    //sdl dont have logical/physical CPU count so ... time to guess
-   Platform::SystemInfo.processor.numPhysicalProcessors   = 1; // :/ lCpuCount;
-   Platform::SystemInfo.processor.isMultiCore = lCpuCount > 1;
-   //modern CPU should have isHyperThreaded
-   Platform::SystemInfo.processor.isHyperThreaded = true;
+   if (lCpuCount > 1)
+   {
+      Platform::SystemInfo.processor.numPhysicalProcessors = mFloor(lCpuCount / 2); // guessing ;
+      Platform::SystemInfo.processor.isMultiCore = true;
+      //modern CPU should have isHyperThreaded
+      Platform::SystemInfo.processor.isHyperThreaded = true;
+   }
+   else {
+      Platform::SystemInfo.processor.numPhysicalProcessors = lCpuCount; // guessing ;
+      Platform::SystemInfo.processor.isMultiCore = false;
+      Platform::SystemInfo.processor.isHyperThreaded = false;
+   }
 
    //hackfest
    Platform::SystemInfo.processor.mhz   = 2666;
@@ -139,5 +145,4 @@ namespace CPUInfo
     }
 }; // namespace CPUInfo
 
-
-#endif
+#endif // defined( __FreeBSD__ )

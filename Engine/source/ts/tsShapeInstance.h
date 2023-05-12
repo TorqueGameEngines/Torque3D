@@ -788,7 +788,7 @@ class TSThread
       keyPos = 0;
       mSeqPos = 0;
       mShapeInstance = NULL;
-      makePath = false; //XXTH NULL;
+      makePath = false;
       priority = 0;
       sequence = 0;
       timeScale = 1.0f;

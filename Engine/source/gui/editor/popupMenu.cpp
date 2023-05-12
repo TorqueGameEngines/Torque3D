@@ -46,7 +46,6 @@ public:
 //-----------------------------------------------------------------------------
 PopupMenu::PopupMenu()
 {
-	//XXTH orig mMenuItems = NULL;
    mMenuItems = 0;
 	mMenuBarCtrl = nullptr;
 

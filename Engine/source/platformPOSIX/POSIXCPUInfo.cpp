@@ -20,8 +20,7 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-//XXTH orig #ifndef __APPLE__
-#if not defined (__APPLE__) //and not defined (__FreeBSD__)
+#ifndef __APPLE__
 
 #include <fstream>
 #include <iostream>

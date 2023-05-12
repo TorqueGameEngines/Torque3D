@@ -204,7 +204,6 @@ bool GFXGLTextureObject::copyToBmp(GBitmap * bmp)
          }
       }
    }
-   //XXTH orig: glBindTexture(mBinding, NULL);
    glBindTexture(mBinding, 0);
 
    return true;

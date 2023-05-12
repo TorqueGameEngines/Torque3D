@@ -58,12 +58,12 @@ NvSimpleTypes.h : Defines basic data types for integers and floats.
 */
 
 
-#ifdef __APPLE__
+#if defined(__APPLE__)
    #include <sys/malloc.h>
 #else
 #if defined( __FreeBSD__)
    #include <stdlib.h>
-#else 
+#else
    #include <malloc.h>
 #endif
 #endif
@@ -78,7 +78,7 @@ NvSimpleTypes.h : Defines basic data types for integers and floats.
 
 #endif
 
-#ifdef WIN32
+#if defined(WIN32)
 	typedef __int64				NxI64;
 	typedef signed int			NxI32;
 	typedef signed short		NxI16;
@@ -91,8 +91,8 @@ NvSimpleTypes.h : Defines basic data types for integers and floats.
 
 	typedef float				NxF32;
 	typedef double				NxF64;
-		
-#elif LINUX
+
+#elif defined(LINUX)
 	typedef long long			NxI64;
 	typedef signed int			NxI32;
 	typedef signed short		NxI16;
@@ -106,7 +106,7 @@ NvSimpleTypes.h : Defines basic data types for integers and floats.
 	typedef float				NxF32;
 	typedef double				NxF64;
 
-#elif __APPLE__
+#elif defined(__APPLE__)
 	typedef long long			NxI64;
 	typedef signed int			NxI32;
 	typedef signed short		NxI16;
@@ -120,7 +120,7 @@ NvSimpleTypes.h : Defines basic data types for integers and floats.
 	typedef float				NxF32;
 	typedef double				NxF64;
 
-#elif __CELLOS_LV2__
+#elif defined(__FreeBSD__)
 	typedef long long			NxI64;
 	typedef signed int			NxI32;
 	typedef signed short		NxI16;
@@ -134,7 +134,21 @@ NvSimpleTypes.h : Defines basic data types for integers and floats.
 	typedef float				NxF32;
 	typedef double				NxF64;
 
-#elif _XBOX
+#elif defined(__CELLOS_LV2__)
+	typedef long long			NxI64;
+	typedef signed int			NxI32;
+	typedef signed short		NxI16;
+	typedef signed char			NxI8;
+
+	typedef unsigned long long	NxU64;
+	typedef unsigned int		NxU32;
+	typedef unsigned short		NxU16;
+	typedef unsigned char		NxU8;
+
+	typedef float				NxF32;
+	typedef double				NxF64;
+
+#elif defined(_XBOX)
 	typedef __int64				NxI64;
 	typedef signed int			NxI32;
 	typedef signed short		NxI16;

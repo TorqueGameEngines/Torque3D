@@ -133,14 +133,20 @@ void   tc_sleep(NxU32 ms)
 
 void tc_spinloop()
 {
-   #if defined(__linux__) || defined( __APPLE__ ) ||  defined( __FreeBSD__)
 
-      asm ( "pause" );
-   #elif defined( _XBOX )
+   #if defined( _XBOX )
       // Pause would do nothing on the Xbox. Threads are not scheduled.
    #elif defined( _WIN64 )
       YieldProcessor( );
-   #else
+   #elif defined( __APPLE__ )
+      pthread_yield_np();
+   #elif defined(__linux__)  || defined(__FreeBSD__)
+      #if defined(_POSIX_PRIORITY_SCHEDULING)
+         sched_yield();
+      #else
+         asm("pause");
+      #endif
+   #elif
       __asm { pause };
    #endif
 }

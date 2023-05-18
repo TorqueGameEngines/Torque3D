@@ -191,7 +191,7 @@ EulerF MatrixF::toEuler() const
 
 void MatrixF::dumpMatrix(const char *caption /* =NULL */) const
 {
-   U32 size = dStrlen(caption);
+   U32 size = (caption == NULL)? 0 : dStrlen(caption);
    FrameTemp<char> spacer(size+1);
    char *spacerRef = spacer;
 

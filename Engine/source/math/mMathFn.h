@@ -265,6 +265,14 @@ inline T mLerp( const T &v1, const T &v2, F32 factor )
    return ( v1 * ( 1.0f - factor ) ) + ( v2 * factor );
 }
 
+/// Template function for determining a percentage of interpolation between any two
+/// types which implement operators for scalar multiply and addition.
+template <typename T>
+inline T mInvLerp(const T& v1, const T& v2, F32 point)
+{
+   return (point - v1) / (v2 - v1);
+}
+
 inline S32 mMulDiv(S32 a, S32 b, S32 c)
 {
    return m_mulDivS32(a, b, c);

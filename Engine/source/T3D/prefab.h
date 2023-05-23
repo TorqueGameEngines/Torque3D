@@ -60,6 +60,9 @@ public:
   
    static void initPersistFields();
 
+   /// returns the filename for this object
+   StringTableEntry getTypeHint() const override;
+   
    // SimObject
    virtual bool onAdd();
    virtual void onRemove();

@@ -738,7 +738,7 @@ DefineEngineFunction( strrepeat, const char*, ( const char* str, S32 numTimes, c
 {
    StringBuilder result;
    bool isFirst = false;
-   for( U32 i = 0; i < numTimes; ++ i )
+   for( S32 i = 0; i < numTimes; ++ i )
    {
       if( !isFirst )
          result.append( delimiter );

@@ -166,6 +166,8 @@ class SpawnSphere : public MissionMarker
       bool     mAutoSpawn;
       bool     mSpawnTransform;
 
+      /// returns the datablock spawned for this object
+      StringTableEntry getTypeHint() const override { return (mSpawnDataBlock.isNotEmpty()) ? mSpawnDataBlock.c_str() : StringTable->EmptyString(); };
       // Radius/weight info
       F32      mRadius;
       F32      mSphereWeight;

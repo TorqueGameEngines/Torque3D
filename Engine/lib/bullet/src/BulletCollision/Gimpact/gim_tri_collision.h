@@ -38,9 +38,8 @@ email: projectileman@yahoo.com
 
 
 
-#ifndef MAX_TRI_CLIPPING
+
 #define MAX_TRI_CLIPPING 16
-#endif
 
 //! Structure for collision
 struct GIM_TRIANGLE_CONTACT_DATA

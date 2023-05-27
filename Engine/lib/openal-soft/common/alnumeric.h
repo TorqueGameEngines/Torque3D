@@ -1,6 +1,8 @@
 #ifndef AL_NUMERIC_H
 #define AL_NUMERIC_H
 
+#include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #ifdef HAVE_INTRIN_H
@@ -67,7 +69,7 @@ constexpr inline size_t clampz(size_t val, size_t min, size_t max) noexcept
 { return minz(max, maxz(min, val)); }
 
 
-constexpr inline float lerp(float val1, float val2, float mu) noexcept
+constexpr inline float lerpf(float val1, float val2, float mu) noexcept
 { return val1 + (val2-val1)*mu; }
 constexpr inline float cubic(float val1, float val2, float val3, float val4, float mu) noexcept
 {
@@ -269,6 +271,29 @@ inline float fast_roundf(float f) noexcept
     f += ilim[sign];
     return f - ilim[sign];
 #endif
+}
+
+
+template<typename T>
+constexpr const T& clamp(const T& value, const T& min_value, const T& max_value) noexcept
+{
+    return std::min(std::max(value, min_value), max_value);
+}
+
+// Converts level (mB) to gain.
+inline float level_mb_to_gain(float x)
+{
+    if(x <= -10'000.0f)
+        return 0.0f;
+    return std::pow(10.0f, x / 2'000.0f);
+}
+
+// Converts gain to level (mB).
+inline float gain_to_level_mb(float x)
+{
+    if (x <= 0.0f)
+        return -10'000.0f;
+    return maxf(std::log10(x) * 2'000.0f, -10'000.0f);
 }
 
 #endif /* AL_NUMERIC_H */

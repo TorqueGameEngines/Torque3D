@@ -100,121 +100,44 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 }
 #endif // WIN32
 
-
 #ifdef __MACOSX__
 
 #include <dlfcn.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <libgen.h> // for dirname
+#include <filesystem>
+#include <mach-o/dyld.h> // for _NSGetExecutablePath
 #include <Carbon/Carbon.h>
 
 extern "C" {
 
    int (*torque_macmain)(int argc, const char **argv) = 0;
 
-}
-
-void GetBasePath(const char** cpath, const char** cname)
-{
-   static char path[2049];
-   static char name[2049];
-
-   ProcessSerialNumber PSN;
-   ProcessInfoRec pinfo;
-   FSSpec pspec;
-   FSRef fsr;
-   OSStatus err;
-
-   path[0] = 0;
-   name[0] = 0;
-
-   *cpath = path;
-   *cname = name;
-
-   // set up process serial number
-   PSN.highLongOfPSN = 0;
-   PSN.lowLongOfPSN = kCurrentProcess;
-
-   // set up info block
-   pinfo.processInfoLength = sizeof(pinfo);
-   pinfo.processName = NULL;
-   pinfo.processAppSpec = &pspec;
-
-   // grab the vrefnum and directory
-   err = GetProcessInformation(&PSN, &pinfo);
-   if (! err ) {
-
-      FSSpec fss2;
-
-      strcpy(name, &pspec.name[1]);
-
-      err = FSMakeFSSpec(pspec.vRefNum, pspec.parID, 0, &fss2);
-
-      if ( ! err ) {
-         err = FSpMakeFSRef(&fss2, &fsr);
-         if ( ! err ) {
-            err = (OSErr)FSRefMakePath(&fsr, (UInt8*)path, 2048);
-         }
-      }
-   }
-}
+}  
 
 int main(int argc, const char **argv)
 {
-   void *gameBundle = 0;
-   char gameBundleFilename[2049];
+   char path[PATH_MAX];
+   uint32_t pathLen = sizeof(path);
+   int err = _NSGetExecutablePath(path, &pathLen);
 
-   const char* basePath;
-   const char* appName;
+   char* executableDirectory = dirname(path);
 
-   // Get the path to our app binary and the app name
+   // Once the executable directory is determined, we search two possibilities: The frameworks and next to the app bundle
+   chdir(executableDirectory);
+   chdir("../Frameworks");
 
-   GetBasePath(&basePath, &appName);
-
-   if (!basePath[0] || !appName[0])
-      return;
-
-   char appNameNoDebug[2049];
-
-   strcpy(appNameNoDebug, appName);
-
-   int i = strlen(appName);
-   while (i > 0)
+   void *gameLib = dlopen("libTorqueEngine.dylib", RTLD_LAZY | RTLD_LOCAL);
+   if (!gameLib)
    {
-      if (!strcmp(&appName[i], "_DEBUG"))
-      {
-         appNameNoDebug[i] = 0;
-         break;
-      }
-
-      i--;
-   }
-
-   sprintf(gameBundleFilename, "%s.app/Contents/Frameworks/%s Bundle.bundle/Contents/MacOS/%s Bundle", appName, appNameNoDebug, appNameNoDebug);
-
-   // first see if the current directory is set properly
-   gameBundle = dlopen(gameBundleFilename, RTLD_LAZY | RTLD_LOCAL);
-
-   if (!gameBundle)
-   {
-      // Couldn't load the game bundle... so, using the path to the bundle binary fix up the cwd
-
-      if (basePath[0]) {
-         chdir( basePath );
-         chdir( "../../../" );
-      }
-
-      // and try again
-      gameBundle = dlopen( gameBundleFilename, RTLD_LAZY | RTLD_LOCAL);
-   }
-
-   if (!gameBundle)
       return -1;
+   }
 
-   torque_macmain = (int (*)(int argc, const char **argv)) dlsym(gameBundle, "torque_macmain");
+   torque_macmain = (int (*)(int argc, const char **argv)) dlsym(gameLib, "torque_macmain");
 
    if (!torque_macmain)
-      return -1;
+      return -2;
 
    return torque_macmain(argc, argv);
 }
@@ -283,12 +206,12 @@ int main(int argc, const char **argv)
 #include "app/mainLoop.h"
 #include "T3D/gameFunctions.h"
 
-#if defined(WIN32) || defined(_WIN32) 
+#if defined(WIN32) || defined(_WIN32)
 //tell switchable graphics supported systems that they need to use the beefier GPU
 #include <windows.h>
 extern "C" { __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001; }
 extern "C" { __declspec(dllexport) DWORD AmdPowerXpressRequestHighPerformance = 0x00000001; }
-#else 
+#else
 extern "C" { int NvOptimusEnablement = 1; }
 extern "C" { int AmdPowerXpressRequestHighPerformance = 1; }
 #endif

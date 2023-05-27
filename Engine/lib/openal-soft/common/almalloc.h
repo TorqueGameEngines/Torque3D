@@ -13,9 +13,11 @@
 #include "pragmadefs.h"
 
 
-[[gnu::alloc_align(1), gnu::alloc_size(2)]] void *al_malloc(size_t alignment, size_t size);
-[[gnu::alloc_align(1), gnu::alloc_size(2)]] void *al_calloc(size_t alignment, size_t size);
 void al_free(void *ptr) noexcept;
+[[gnu::alloc_align(1), gnu::alloc_size(2), gnu::malloc]]
+void *al_malloc(size_t alignment, size_t size);
+[[gnu::alloc_align(1), gnu::alloc_size(2), gnu::malloc]]
+void *al_calloc(size_t alignment, size_t size);
 
 
 #define DISABLE_ALLOC()                                                       \
@@ -48,8 +50,8 @@ enum FamCount : size_t { };
 #define DEF_FAM_NEWDEL(T, FamMem)                                             \
     static constexpr size_t Sizeof(size_t count) noexcept                     \
     {                                                                         \
-        return std::max<size_t>(sizeof(T),                                    \
-            decltype(FamMem)::Sizeof(count, offsetof(T, FamMem)));            \
+        return std::max(decltype(FamMem)::Sizeof(count, offsetof(T, FamMem)), \
+            sizeof(T));                                                       \
     }                                                                         \
                                                                               \
     void *operator new(size_t /*size*/, FamCount count)                       \
@@ -95,12 +97,15 @@ struct allocator {
     void deallocate(T *p, std::size_t) noexcept { al_free(p); }
 };
 template<typename T, std::size_t N, typename U, std::size_t M>
-bool operator==(const allocator<T,N>&, const allocator<U,M>&) noexcept { return true; }
+constexpr bool operator==(const allocator<T,N>&, const allocator<U,M>&) noexcept { return true; }
 template<typename T, std::size_t N, typename U, std::size_t M>
-bool operator!=(const allocator<T,N>&, const allocator<U,M>&) noexcept { return false; }
+constexpr bool operator!=(const allocator<T,N>&, const allocator<U,M>&) noexcept { return false; }
 
-template<size_t alignment, typename T>
-[[gnu::assume_aligned(alignment)]] inline T* assume_aligned(T *ptr) noexcept { return ptr; }
+
+template<typename T, typename ...Args>
+constexpr T* construct_at(T *ptr, Args&& ...args)
+    noexcept(std::is_nothrow_constructible<T, Args...>::value)
+{ return ::new(static_cast<void*>(ptr)) T{std::forward<Args>(args)...}; }
 
 /* At least VS 2015 complains that 'ptr' is unused when the given type's
  * destructor is trivial (a no-op). So disable that warning for this call.
@@ -114,14 +119,14 @@ destroy_at(T *ptr) noexcept(std::is_nothrow_destructible<T>::value)
 DIAGNOSTIC_POP
 template<typename T>
 constexpr std::enable_if_t<std::is_array<T>::value>
-destroy_at(T *ptr) noexcept(std::is_nothrow_destructible<T>::value)
+destroy_at(T *ptr) noexcept(std::is_nothrow_destructible<std::remove_all_extents_t<T>>::value)
 {
     for(auto &elem : *ptr)
         al::destroy_at(std::addressof(elem));
 }
 
 template<typename T>
-constexpr void destroy(T first, T end)
+constexpr void destroy(T first, T end) noexcept(noexcept(al::destroy_at(std::addressof(*first))))
 {
     while(first != end)
     {
@@ -132,7 +137,7 @@ constexpr void destroy(T first, T end)
 
 template<typename T, typename N>
 constexpr std::enable_if_t<std::is_integral<N>::value,T>
-destroy_n(T first, N count)
+destroy_n(T first, N count) noexcept(noexcept(al::destroy_at(std::addressof(*first))))
 {
     if(count != 0)
     {
@@ -146,8 +151,8 @@ destroy_n(T first, N count)
 
 
 template<typename T, typename N>
-inline std::enable_if_t<std::is_integral<N>::value,T>
-uninitialized_default_construct_n(T first, N count)
+inline std::enable_if_t<std::is_integral<N>::value,
+T> uninitialized_default_construct_n(T first, N count)
 {
     using ValueT = typename std::iterator_traits<T>::value_type;
     T current{first};
@@ -172,10 +177,7 @@ uninitialized_default_construct_n(T first, N count)
  * trivially destructible.
  */
 template<typename T, size_t alignment, bool = std::is_trivially_destructible<T>::value>
-struct FlexArrayStorage;
-
-template<typename T, size_t alignment>
-struct FlexArrayStorage<T,alignment,true> {
+struct FlexArrayStorage {
     const size_t mSize;
     union {
         char mDummy;
@@ -184,8 +186,8 @@ struct FlexArrayStorage<T,alignment,true> {
 
     static constexpr size_t Sizeof(size_t count, size_t base=0u) noexcept
     {
-        return std::max<size_t>(offsetof(FlexArrayStorage, mArray) + sizeof(T)*count,
-            sizeof(FlexArrayStorage)) + base;
+        const size_t len{sizeof(T)*count};
+        return std::max(offsetof(FlexArrayStorage,mArray)+len, sizeof(FlexArrayStorage)) + base;
     }
 
     FlexArrayStorage(size_t size) : mSize{size}
@@ -206,8 +208,8 @@ struct FlexArrayStorage<T,alignment,false> {
 
     static constexpr size_t Sizeof(size_t count, size_t base) noexcept
     {
-        return std::max<size_t>(offsetof(FlexArrayStorage, mArray) + sizeof(T)*count,
-            sizeof(FlexArrayStorage)) + base;
+        const size_t len{sizeof(T)*count};
+        return std::max(offsetof(FlexArrayStorage,mArray)+len, sizeof(FlexArrayStorage)) + base;
     }
 
     FlexArrayStorage(size_t size) : mSize{size}
@@ -248,7 +250,7 @@ struct FlexArray {
     static std::unique_ptr<FlexArray> Create(index_type count)
     {
         void *ptr{al_calloc(alignof(FlexArray), Sizeof(count))};
-        return std::unique_ptr<FlexArray>{new(ptr) FlexArray{count}};
+        return std::unique_ptr<FlexArray>{al::construct_at(static_cast<FlexArray*>(ptr), count)};
     }
 
     FlexArray(index_type size) : mStore{size} { }

@@ -1,0 +1,6 @@
+Name: bullet
+Description: Bullet Continuous Collision Detection and Physics Library
+Requires:
+Version: 2.85
+Libs: -L/Users/ragora/Documents/Test/lib -lBulletSoftBody -lBulletDynamics -lBulletCollision -lLinearMath
+Cflags:  -I/Users/ragora/Documents/Test/include/bullet -I/Users/ragora/Documents/Test/include

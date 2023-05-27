@@ -52,7 +52,7 @@ struct btHashString
 	{
 			int ret = 0 ;
 
-			while( ! (ret = *(const unsigned char *)src - *(const unsigned char *)dst) && *dst)
+			while( ! (ret = *(unsigned char *)src - *(unsigned char *)dst) && *dst)
 					++src, ++dst;
 
 			if ( ret < 0 )
@@ -79,11 +79,6 @@ class btHashInt
 {
 	int	m_uid;
 public:
-
-	btHashInt()
-	{
-	}
-
 	btHashInt(int uid)	:m_uid(uid)
 	{
 	}
@@ -105,10 +100,9 @@ public:
 	//to our success
 	SIMD_FORCE_INLINE	unsigned int getHash()const
 	{
-		unsigned int key = m_uid;
+		int key = m_uid;
 		// Thomas Wang's hash
 		key += ~(key << 15);	key ^=  (key >> 10);	key +=  (key << 3);	key ^=  (key >> 6);	key += ~(key << 11);	key ^=  (key >> 16);
-		
 		return key;
 	}
 };
@@ -121,7 +115,7 @@ class btHashPtr
 	union
 	{
 		const void*	m_pointer;
-		unsigned int	m_hashValues[2];
+		int	m_hashValues[2];
 	};
 
 public:
@@ -146,7 +140,8 @@ public:
 	{
 		const bool VOID_IS_8 = ((sizeof(void*)==8));
 		
-		unsigned int key = VOID_IS_8? m_hashValues[0]+m_hashValues[1] : m_hashValues[0];
+		int key = VOID_IS_8? m_hashValues[0]+m_hashValues[1] : m_hashValues[0];
+	
 		// Thomas Wang's hash
 		key += ~(key << 15);	key ^=  (key >> 10);	key +=  (key << 3);	key ^=  (key >> 6);	key += ~(key << 11);	key ^=  (key >> 16);
 		return key;
@@ -179,7 +174,7 @@ public:
         //to our success
         SIMD_FORCE_INLINE       unsigned int getHash()const
         {
-                unsigned int key = m_uid;
+                int key = m_uid;
                 // Thomas Wang's hash
                 key += ~(key << 15);	key ^=  (key >> 10);	key +=  (key << 3);	key ^=  (key >> 6);	key += ~(key << 11);	key ^=  (key >> 16);
                 return key;
@@ -211,7 +206,7 @@ public:
 	//to our success
 	SIMD_FORCE_INLINE	unsigned int getHash()const
 	{
-		unsigned int key = m_uid;
+		int key = m_uid;
 		// Thomas Wang's hash
 		key += ~(key << 15);	key ^=  (key >> 10);	key +=  (key << 3);	key ^=  (key >> 6);	key += ~(key << 11);	key ^=  (key >> 16);
 		return key;
@@ -389,38 +384,28 @@ protected:
 	const Value* getAtIndex(int index) const
 	{
 		btAssert(index < m_valueArray.size());
-		btAssert(index>=0);
-		if (index>=0 && index < m_valueArray.size())
-		{
-			return &m_valueArray[index];
-		}
-		return 0;
+
+		return &m_valueArray[index];
 	}
 
 	Value* getAtIndex(int index)
 	{
 		btAssert(index < m_valueArray.size());
-		btAssert(index>=0);
-		if (index>=0 && index < m_valueArray.size())
-		{
-			return &m_valueArray[index];
-		}
-		return 0;
+
+		return &m_valueArray[index];
 	}
 
     Key getKeyAtIndex(int index)
     {
         btAssert(index < m_keyArray.size());
-		btAssert(index>=0);
-		return m_keyArray[index];
+        return m_keyArray[index];
     }
     
     const Key getKeyAtIndex(int index) const
     {
         btAssert(index < m_keyArray.size());
-		btAssert(index>=0);
-		return m_keyArray[index];
-   }
+        return m_keyArray[index];
+    }
 
 
 	Value* operator[](const Key& key) {

@@ -17,10 +17,10 @@ enum Channel : unsigned char {
     SideLeft,
     SideRight,
 
+    TopCenter,
     TopFrontLeft,
     TopFrontCenter,
     TopFrontRight,
-    TopCenter,
     TopBackLeft,
     TopBackCenter,
     TopBackRight,
@@ -49,9 +49,6 @@ enum DevFmtChannels : unsigned char {
     DevFmtX61,
     DevFmtX71,
     DevFmtAmbi3D,
-
-    /* Similar to 5.1, except using rear channels instead of sides */
-    DevFmtX51Rear,
 
     DevFmtChannelsDefault = DevFmtStereo
 };

@@ -260,7 +260,7 @@ public:
 
 	inline int getSolveSwingLimit()
 	{
-		return m_solveSwingLimit;
+		return m_solveTwistLimit;
 	}
 
 	inline btScalar getTwistLimitSign()

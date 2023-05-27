@@ -39,17 +39,23 @@
 #include "AL/efx.h"
 
 #include "albit.h"
-#include "alcmain.h"
-#include "alcontext.h"
+#include "alc/context.h"
+#include "alc/device.h"
+#include "alc/effects/base.h"
+#include "alc/inprogext.h"
 #include "almalloc.h"
 #include "alnumeric.h"
 #include "alstring.h"
 #include "core/except.h"
 #include "core/logging.h"
-#include "effects/base.h"
 #include "opthelpers.h"
 #include "vector.h"
 
+#ifdef ALSOFT_EAX
+#include <cassert>
+
+#include "eax_exception.h"
+#endif // ALSOFT_EAX
 
 const EffectList gEffectList[16]{
     { "eaxreverb",   EAXREVERB_EFFECT,   AL_EFFECT_EAXREVERB },
@@ -181,12 +187,12 @@ ALeffect *AllocEffect(ALCdevice *device)
 {
     auto sublist = std::find_if(device->EffectList.begin(), device->EffectList.end(),
         [](const EffectSubList &entry) noexcept -> bool
-        { return entry.FreeMask != 0; }
-    );
+        { return entry.FreeMask != 0; });
     auto lidx = static_cast<ALuint>(std::distance(device->EffectList.begin(), sublist));
     auto slidx = static_cast<ALuint>(al::countr_zero(sublist->FreeMask));
+    ASSUME(slidx < 64);
 
-    ALeffect *effect{::new (sublist->Effects + slidx) ALeffect{}};
+    ALeffect *effect{al::construct_at(sublist->Effects + slidx)};
     InitEffectParams(effect, AL_EFFECT_NULL);
 
     /* Add 1 to avoid effect ID 0. */
@@ -233,7 +239,7 @@ START_API_FUNC
         context->setError(AL_INVALID_VALUE, "Generating %d effects", n);
     if UNLIKELY(n <= 0) return;
 
-    ALCdevice *device{context->mDevice.get()};
+    ALCdevice *device{context->mALDevice.get()};
     std::lock_guard<std::mutex> _{device->EffectLock};
     if(!EnsureEffects(device, static_cast<ALuint>(n)))
     {
@@ -273,7 +279,7 @@ START_API_FUNC
         context->setError(AL_INVALID_VALUE, "Deleting %d effects", n);
     if UNLIKELY(n <= 0) return;
 
-    ALCdevice *device{context->mDevice.get()};
+    ALCdevice *device{context->mALDevice.get()};
     std::lock_guard<std::mutex> _{device->EffectLock};
 
     /* First try to find any effects that are invalid. */
@@ -304,7 +310,7 @@ START_API_FUNC
     ContextRef context{GetContextRef()};
     if LIKELY(context)
     {
-        ALCdevice *device{context->mDevice.get()};
+        ALCdevice *device{context->mALDevice.get()};
         std::lock_guard<std::mutex> _{device->EffectLock};
         if(!effect || LookupEffect(device, effect))
             return AL_TRUE;
@@ -319,7 +325,7 @@ START_API_FUNC
     ContextRef context{GetContextRef()};
     if UNLIKELY(!context) return;
 
-    ALCdevice *device{context->mDevice.get()};
+    ALCdevice *device{context->mALDevice.get()};
     std::lock_guard<std::mutex> _{device->EffectLock};
 
     ALeffect *aleffect{LookupEffect(device, effect)};
@@ -369,7 +375,7 @@ START_API_FUNC
     ContextRef context{GetContextRef()};
     if UNLIKELY(!context) return;
 
-    ALCdevice *device{context->mDevice.get()};
+    ALCdevice *device{context->mALDevice.get()};
     std::lock_guard<std::mutex> _{device->EffectLock};
 
     ALeffect *aleffect{LookupEffect(device, effect)};
@@ -392,7 +398,7 @@ START_API_FUNC
     ContextRef context{GetContextRef()};
     if UNLIKELY(!context) return;
 
-    ALCdevice *device{context->mDevice.get()};
+    ALCdevice *device{context->mALDevice.get()};
     std::lock_guard<std::mutex> _{device->EffectLock};
 
     ALeffect *aleffect{LookupEffect(device, effect)};
@@ -415,7 +421,7 @@ START_API_FUNC
     ContextRef context{GetContextRef()};
     if UNLIKELY(!context) return;
 
-    ALCdevice *device{context->mDevice.get()};
+    ALCdevice *device{context->mALDevice.get()};
     std::lock_guard<std::mutex> _{device->EffectLock};
 
     ALeffect *aleffect{LookupEffect(device, effect)};
@@ -438,7 +444,7 @@ START_API_FUNC
     ContextRef context{GetContextRef()};
     if UNLIKELY(!context) return;
 
-    ALCdevice *device{context->mDevice.get()};
+    ALCdevice *device{context->mALDevice.get()};
     std::lock_guard<std::mutex> _{device->EffectLock};
 
     const ALeffect *aleffect{LookupEffect(device, effect)};
@@ -470,7 +476,7 @@ START_API_FUNC
     ContextRef context{GetContextRef()};
     if UNLIKELY(!context) return;
 
-    ALCdevice *device{context->mDevice.get()};
+    ALCdevice *device{context->mALDevice.get()};
     std::lock_guard<std::mutex> _{device->EffectLock};
 
     const ALeffect *aleffect{LookupEffect(device, effect)};
@@ -493,7 +499,7 @@ START_API_FUNC
     ContextRef context{GetContextRef()};
     if UNLIKELY(!context) return;
 
-    ALCdevice *device{context->mDevice.get()};
+    ALCdevice *device{context->mALDevice.get()};
     std::lock_guard<std::mutex> _{device->EffectLock};
 
     const ALeffect *aleffect{LookupEffect(device, effect)};
@@ -516,7 +522,7 @@ START_API_FUNC
     ContextRef context{GetContextRef()};
     if UNLIKELY(!context) return;
 
-    ALCdevice *device{context->mDevice.get()};
+    ALCdevice *device{context->mALDevice.get()};
     std::lock_guard<std::mutex> _{device->EffectLock};
 
     const ALeffect *aleffect{LookupEffect(device, effect)};
@@ -743,4 +749,17 @@ void LoadReverbPreset(const char *name, ALeffect *effect)
     }
 
     WARN("Reverb preset '%s' not found\n", name);
+}
+
+bool IsValidEffectType(ALenum type) noexcept
+{
+    if(type == AL_EFFECT_NULL)
+        return true;
+
+    for(const auto &effect_item : gEffectList)
+    {
+        if(type == effect_item.val && !DisabledEffects[effect_item.type])
+            return true;
+    }
+    return false;
 }

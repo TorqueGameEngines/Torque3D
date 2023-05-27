@@ -1,0 +1,12 @@
+# AFX Module
+option(TORQUE_AFX_ENABLED "Enable AFX module" ON)
+
+if(TORQUE_AFX_ENABLED)
+  message("Enabling AFX Module")
+
+  file(GLOB_RECURSE TORQUE_AFX_SOURCES "${CMAKE_SOURCE_DIR}/Engine/source/afx/*.cpp" "${CMAKE_SOURCE_DIR}/Engine/source/afx/*.h" )
+  set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_AFX_SOURCES})
+  set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} TORQUE_AFX_ENABLED)
+
+  source_group("Modules/AFX" ${TORQUE_AFX_SOURCES})
+endif()

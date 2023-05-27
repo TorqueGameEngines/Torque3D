@@ -1,0 +1,9 @@
+libdir=/Users/ragora/Documents/Test/lib
+includedir=/Users/ragora/Documents/Test/include
+
+Name: Torque3D
+Description: Import various well-known 3D model formats in an uniform manner.
+Version: 5.2.0
+Libs: -L${libdir} -lassimp
+Libs.private:  -lz
+Cflags: -I${includedir}

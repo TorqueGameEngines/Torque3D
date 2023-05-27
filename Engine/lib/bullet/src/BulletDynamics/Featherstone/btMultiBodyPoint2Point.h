@@ -22,7 +22,7 @@ subject to the following restrictions:
 
 //#define BTMBP2PCONSTRAINT_BLOCK_ANGULAR_MOTION_TEST
 
-ATTRIBUTE_ALIGNED16(class) btMultiBodyPoint2Point : public btMultiBodyConstraint
+class btMultiBodyPoint2Point : public btMultiBodyConstraint
 {
 protected:
 
@@ -33,8 +33,6 @@ protected:
 
 
 public:
-
-	BT_DECLARE_ALIGNED_ALLOCATOR();
 
 	btMultiBodyPoint2Point(btMultiBody* body, int link, btRigidBody* bodyB, const btVector3& pivotInA, const btVector3& pivotInB);
 	btMultiBodyPoint2Point(btMultiBody* bodyA, int linkA, btMultiBody* bodyB, int linkB, const btVector3& pivotInA, const btVector3& pivotInB);
@@ -55,11 +53,10 @@ public:
 		return m_pivotInB;
 	}
 
-	virtual void setPivotInB(const btVector3& pivotInB)
+	void setPivotInB(const btVector3& pivotInB)
 	{
 		m_pivotInB = pivotInB;
 	}
-
 
 	virtual void debugDraw(class btIDebugDraw* drawer);
 

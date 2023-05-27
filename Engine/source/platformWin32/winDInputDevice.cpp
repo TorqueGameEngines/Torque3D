@@ -143,7 +143,7 @@ bool DInputDevice::create()
 			
             result = mDevice->SetDataFormat( &dataFormat );
             if ( FAILED( result ) )
-            {				
+            {				 
                Con::errorf( "  Failed to set the data format for the %s input device.", mName );
 #ifdef LOG_INPUT
                Input::log( "Failed to set the data format for %s!\n", mName );

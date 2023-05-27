@@ -228,7 +228,7 @@ public:
 	inline void push_back_memcpy(const T & obj)
 	{
 	    this->growingCheck();
-	    gim_simd_memcpy(&m_data[m_size],&obj,sizeof(T));
+	    irr_simd_memcpy(&m_data[m_size],&obj,sizeof(T));
 	    m_size++;
 	}
 

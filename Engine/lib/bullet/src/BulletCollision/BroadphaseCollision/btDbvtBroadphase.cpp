@@ -16,7 +16,6 @@ subject to the following restrictions:
 ///btDbvtBroadphase implementation by Nathanael Presson
 
 #include "btDbvtBroadphase.h"
-#include "LinearMath/btThreads.h"
 
 //
 // Profiling
@@ -143,11 +142,6 @@ btDbvtBroadphase::btDbvtBroadphase(btOverlappingPairCache* paircache)
 	{
 		m_stageRoots[i]=0;
 	}
-#if BT_THREADSAFE
-    m_rayTestStacks.resize(BT_MAX_THREAD_COUNT);
-#else
-    m_rayTestStacks.resize(1);
-#endif
 #if DBVT_BP_PROFILE
 	clear(m_profiling);
 #endif
@@ -168,9 +162,10 @@ btBroadphaseProxy*				btDbvtBroadphase::createProxy(	const btVector3& aabbMin,
 															  const btVector3& aabbMax,
 															  int /*shapeType*/,
 															  void* userPtr,
-															  int collisionFilterGroup,
-															  int collisionFilterMask,
-															  btDispatcher* /*dispatcher*/)
+															  short int collisionFilterGroup,
+															  short int collisionFilterMask,
+															  btDispatcher* /*dispatcher*/,
+															  void* /*multiSapProxy*/)
 {
 	btDbvtProxy*		proxy=new(btAlignedAlloc(sizeof(btDbvtProxy),16)) btDbvtProxy(	aabbMin,aabbMax,userPtr,
 		collisionFilterGroup,
@@ -232,23 +227,6 @@ struct	BroadphaseRayTester : btDbvt::ICollide
 void	btDbvtBroadphase::rayTest(const btVector3& rayFrom,const btVector3& rayTo, btBroadphaseRayCallback& rayCallback,const btVector3& aabbMin,const btVector3& aabbMax)
 {
 	BroadphaseRayTester callback(rayCallback);
-    btAlignedObjectArray<const btDbvtNode*>* stack = &m_rayTestStacks[0];
-#if BT_THREADSAFE
-    // for this function to be threadsafe, each thread must have a separate copy
-    // of this stack.  This could be thread-local static to avoid dynamic allocations,
-    // instead of just a local.
-    int threadIndex = btGetCurrentThreadIndex();
-    btAlignedObjectArray<const btDbvtNode*> localStack;
-    if (threadIndex < m_rayTestStacks.size())
-    {
-        // use per-thread preallocated stack if possible to avoid dynamic allocations
-        stack = &m_rayTestStacks[threadIndex];
-    }
-    else
-    {
-        stack = &localStack;
-    }
-#endif
 
 	m_sets[0].rayTestInternal(	m_sets[0].m_root,
 		rayFrom,
@@ -258,7 +236,6 @@ void	btDbvtBroadphase::rayTest(const btVector3& rayFrom,const btVector3& rayTo, 
 		rayCallback.m_lambda_max,
 		aabbMin,
 		aabbMax,
-        *stack,
 		callback);
 
 	m_sets[1].rayTestInternal(	m_sets[1].m_root,
@@ -269,7 +246,6 @@ void	btDbvtBroadphase::rayTest(const btVector3& rayFrom,const btVector3& rayTo, 
 		rayCallback.m_lambda_max,
 		aabbMin,
 		aabbMax,
-        *stack,
 		callback);
 
 }
@@ -544,9 +520,7 @@ void							btDbvtBroadphase::collide(btDispatcher* dispatcher)
 	btDbvtProxy*	current=m_stageRoots[m_stageCurrent];
 	if(current)
 	{
-#if DBVT_BP_ACCURATESLEEPING
 		btDbvtTreeCollider	collider(this);
-#endif
 		do	{
 			btDbvtProxy*	next=current->links[1];
 			listremove(current,m_stageRoots[current->stage]);

@@ -172,9 +172,6 @@ SIMD_FORCE_INLINE	const char*	btConvexInternalShape::serialize(void* dataBuffer,
 	m_localScaling.serializeFloat(shapeData->m_localScaling);
 	shapeData->m_collisionMargin = float(m_collisionMargin);
 
-	// Fill padding with zeros to appease msan.
-	shapeData->m_padding = 0;
-
 	return "btConvexInternalShapeData";
 }
 

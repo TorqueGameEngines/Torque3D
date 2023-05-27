@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -290,6 +290,48 @@ static SDL_bool yuv_rgb_sse(
     return SDL_FALSE;
 }
 
+static SDL_bool yuv_rgb_lsx(
+    Uint32 src_format, Uint32 dst_format,
+    Uint32 width, Uint32 height,
+    const Uint8 *y, const Uint8 *u, const Uint8 *v, Uint32 y_stride, Uint32 uv_stride,
+    Uint8 *rgb, Uint32 rgb_stride,
+    YCbCrType yuv_type)
+{
+#ifdef __loongarch_sx
+    if (!SDL_HasLSX()) {
+        return SDL_FALSE;
+    }
+    if (src_format == SDL_PIXELFORMAT_YV12 ||
+        src_format == SDL_PIXELFORMAT_IYUV) {
+
+        switch (dst_format) {
+        case SDL_PIXELFORMAT_RGB24:
+            yuv420_rgb24_lsx(width, height, y, u, v, y_stride, uv_stride, rgb, rgb_stride, yuv_type);
+            return SDL_TRUE;
+        case SDL_PIXELFORMAT_RGBX8888:
+        case SDL_PIXELFORMAT_RGBA8888:
+            yuv420_rgba_lsx(width, height, y, u, v, y_stride, uv_stride, rgb, rgb_stride, yuv_type);
+            return SDL_TRUE;
+        case SDL_PIXELFORMAT_BGRX8888:
+        case SDL_PIXELFORMAT_BGRA8888:
+            yuv420_bgra_lsx(width, height, y, u, v, y_stride, uv_stride, rgb, rgb_stride, yuv_type);
+            return SDL_TRUE;
+        case SDL_PIXELFORMAT_RGB888:
+        case SDL_PIXELFORMAT_ARGB8888:
+            yuv420_argb_lsx(width, height, y, u, v, y_stride, uv_stride, rgb, rgb_stride, yuv_type);
+            return SDL_TRUE;
+        case SDL_PIXELFORMAT_BGR888:
+        case SDL_PIXELFORMAT_ABGR8888:
+            yuv420_abgr_lsx(width, height, y, u, v, y_stride, uv_stride, rgb, rgb_stride, yuv_type);
+            return SDL_TRUE;
+        default:
+            break;
+        }
+    }
+#endif
+    return SDL_FALSE;
+}
+
 static SDL_bool yuv_rgb_std(
     Uint32 src_format, Uint32 dst_format,
     Uint32 width, Uint32 height, 
@@ -414,6 +456,10 @@ SDL_ConvertPixels_YUV_to_RGB(int width, int height,
     }
 
     if (yuv_rgb_sse(src_format, dst_format, width, height, y, u, v, y_stride, uv_stride, (Uint8*)dst, dst_pitch, yuv_type)) {
+        return 0;
+    }
+
+    if (yuv_rgb_lsx(src_format, dst_format, width, height, y, u, v, y_stride, uv_stride, (Uint8*)dst, dst_pitch, yuv_type)) {
         return 0;
     }
 
@@ -555,9 +601,12 @@ SDL_ConvertPixels_ARGB8888_to_YUV(int width, int height, const void *src, int sr
             Uint8 *plane_interleaved_uv;
             Uint32 y_stride, uv_stride, y_skip, uv_skip;
 
-            GetYUVPlanes(width, height, dst_format, dst, dst_pitch,
-                         (const Uint8 **)&plane_y, (const Uint8 **)&plane_u, (const Uint8 **)&plane_v,
-                         &y_stride, &uv_stride);
+            if (GetYUVPlanes(width, height, dst_format, dst, dst_pitch,
+                             (const Uint8 **)&plane_y, (const Uint8 **)&plane_u, (const Uint8 **)&plane_v,
+                             &y_stride, &uv_stride) != 0) {
+                return -1;
+            }
+
             plane_interleaved_uv = (plane_y + height * y_stride);
             y_skip = (y_stride - width);
 

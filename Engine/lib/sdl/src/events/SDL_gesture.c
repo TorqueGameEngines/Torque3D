@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -488,7 +488,7 @@ int SDL_GestureDelTouch(SDL_TouchID touchId)
 
     SDL_numGestureTouches--;
     if (i != SDL_numGestureTouches) {
-        SDL_memcpy(&SDL_gestureTouch[i], &SDL_gestureTouch[SDL_numGestureTouches], sizeof(SDL_gestureTouch[i]));
+        SDL_copyp(&SDL_gestureTouch[i], &SDL_gestureTouch[SDL_numGestureTouches]);
     }
     return 0;
 }

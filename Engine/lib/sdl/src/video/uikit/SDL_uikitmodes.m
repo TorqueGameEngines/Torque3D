@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -150,11 +150,7 @@
              * Estimate the DPI based on the screen scale multiplied by the base DPI for the device
              * type (e.g. based on iPhone 1 and iPad 1)
              */
-    #if __IPHONE_OS_VERSION_MIN_REQUIRED >= 80000
             float scale = (float)screen.nativeScale;
-    #else
-            float scale = (float)screen.scale;
-    #endif
             float defaultDPI;
             if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
                 defaultDPI = 132.0f;
@@ -502,12 +498,6 @@ UIKit_GetDisplayUsableBounds(_THIS, SDL_VideoDisplay * display, SDL_Rect * rect)
         if (SDL_GetDisplayBounds(displayIndex, rect) < 0) {
             return -1;
         }
-
-#if !TARGET_OS_TV && __IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_7_0
-        if (!UIKit_IsSystemVersionAtLeast(7.0)) {
-            frame = [data.uiscreen applicationFrame];
-        }
-#endif
 
         rect->x += frame.origin.x;
         rect->y += frame.origin.y;

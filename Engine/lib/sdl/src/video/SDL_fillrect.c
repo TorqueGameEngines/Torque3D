@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -329,7 +329,7 @@ SDL_FillRects(SDL_Surface * dst, const SDL_Rect * rects, int count,
     if (dst->format->BitsPerPixel < 8) {
         if (count == 1) {
             const SDL_Rect *r = &rects[0];
-            if (r->x == 0 && r->y == 0 && r->w == dst->w && r->w == dst->h) {
+            if (r->x == 0 && r->y == 0 && r->w == dst->w && r->h == dst->h) {
                 if (dst->format->BitsPerPixel == 4) {
                     Uint8 b = (((Uint8) color << 4) | (Uint8) color);
                     SDL_memset(dst->pixels, b, dst->h * dst->pitch);

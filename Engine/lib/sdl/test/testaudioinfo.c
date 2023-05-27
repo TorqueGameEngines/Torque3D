@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -15,6 +15,7 @@
 static void
 print_devices(int iscapture)
 {
+    SDL_AudioSpec spec;
     const char *typestr = ((iscapture) ? "capture" : "output");
     int n = SDL_GetNumAudioDevices(iscapture);
 
@@ -32,6 +33,12 @@ print_devices(int iscapture)
                 SDL_Log("  %d: %s\n", i, name);
             else
                 SDL_Log("  %d Error: %s\n", i, SDL_GetError());
+
+            if (SDL_GetAudioDeviceSpec(i, iscapture, &spec) == 0) {
+                SDL_Log("     Sample Rate: %d\n", spec.freq);
+                SDL_Log("     Channels: %d\n", spec.channels);
+                SDL_Log("     SDL_AudioFormat: %X\n", spec.format);
+            }
         }
         SDL_Log("\n");
     }
@@ -40,6 +47,8 @@ print_devices(int iscapture)
 int
 main(int argc, char **argv)
 {
+    char *deviceName = NULL;
+    SDL_AudioSpec spec;
     int n;
 
     /* Enable standard application logging */
@@ -68,6 +77,27 @@ main(int argc, char **argv)
 
     print_devices(0);
     print_devices(1);
+
+    if (SDL_GetDefaultAudioInfo(&deviceName, &spec, 0) < 0) {
+        SDL_Log("Error when calling SDL_GetDefaultAudioInfo: %s\n", SDL_GetError());
+    } else {
+        SDL_Log("Default Output Name: %s\n", deviceName != NULL ? deviceName : "unknown");
+        SDL_free(deviceName);
+        SDL_Log("Sample Rate: %d\n", spec.freq);
+        SDL_Log("Channels: %d\n", spec.channels);
+        SDL_Log("SDL_AudioFormat: %X\n", spec.format);
+    }
+
+    if (SDL_GetDefaultAudioInfo(&deviceName, &spec, 1) < 0) {
+        SDL_Log("Error when calling SDL_GetDefaultAudioInfo: %s\n", SDL_GetError());
+    } else {
+        SDL_Log("Default Capture Name: %s\n", deviceName != NULL ? deviceName : "unknown");
+        SDL_free(deviceName);
+        SDL_Log("Sample Rate: %d\n", spec.freq);
+        SDL_Log("Channels: %d\n", spec.channels);
+        SDL_Log("SDL_AudioFormat: %X\n", spec.format);
+    }
+
 
     SDL_Quit();
     return 0;

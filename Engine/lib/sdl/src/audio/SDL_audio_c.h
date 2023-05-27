@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -29,7 +29,7 @@
 #endif
 
 #if DEBUG_CONVERT
-#define LOG_DEBUG_CONVERT(from, to) fprintf(stderr, "Converting %s to %s.\n", from, to);
+#define LOG_DEBUG_CONVERT(from, to) SDL_Log("SDL_AUDIO_CONVERT: Converting %s to %s.\n", from, to);
 #else
 #define LOG_DEBUG_CONVERT(from, to)
 #endif
@@ -45,6 +45,7 @@ extern int (*SRC_src_process)(SRC_STATE *state, SRC_DATA *data);
 extern int (*SRC_src_reset)(SRC_STATE *state);
 extern SRC_STATE* (*SRC_src_delete)(SRC_STATE *state);
 extern const char* (*SRC_src_strerror)(int error);
+extern int (*SRC_src_simple)(SRC_DATA *data, int converter_type, int channels);
 #endif
 
 /* Functions to get a list of "close" audio formats */

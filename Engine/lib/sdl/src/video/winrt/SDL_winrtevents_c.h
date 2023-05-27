@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -68,6 +68,7 @@ extern void WINRT_ProcessKeyUpEvent(Windows::UI::Core::KeyEventArgs ^args);
 extern void WINRT_ProcessCharacterReceivedEvent(Windows::UI::Core::CharacterReceivedEventArgs ^args);
 
 #if NTDDI_VERSION >= NTDDI_WIN10
+extern void WINTRT_InitialiseInputPaneEvents(_THIS);
 extern SDL_bool WINRT_HasScreenKeyboardSupport(_THIS);
 extern void WINRT_ShowScreenKeyboard(_THIS, SDL_Window *window);
 extern void WINRT_HideScreenKeyboard(_THIS, SDL_Window *window);

@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -318,7 +318,7 @@ ARTS_Init(SDL_AudioDriverImpl * impl)
     if (LoadARTSLibrary() < 0) {
         return SDL_FALSE;
     } else {
-        if (SDL_NAME(arts_init) () != 0) {
+        if (SDL_NAME(arts_init) () != NULL) {
             UnloadARTSLibrary();
             SDL_SetError("ARTS: arts_init failed (no audio server?)");
             return SDL_FALSE;

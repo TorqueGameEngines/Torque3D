@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -69,13 +69,24 @@ static const struct { int x; int y; double angle; } axis_positions[] = {
 };
 SDL_COMPILE_TIME_ASSERT(axis_positions, SDL_arraysize(axis_positions) == SDL_CONTROLLER_AXIS_MAX);
 
+/* This is indexed by SDL_JoystickPowerLevel + 1. */
+static const char* power_level_strings[] = {
+    "unknown", /* SDL_JOYSTICK_POWER_UNKNOWN */
+    "empty",   /* SDL_JOYSTICK_POWER_EMPTY */
+    "low",     /* SDL_JOYSTICK_POWER_LOW */
+    "medium",  /* SDL_JOYSTICK_POWER_MEDIUM */
+    "full",    /* SDL_JOYSTICK_POWER_FULL */
+    "wired",   /* SDL_JOYSTICK_POWER_WIRED */
+};
+SDL_COMPILE_TIME_ASSERT(power_level_strings, SDL_arraysize(power_level_strings) == SDL_JOYSTICK_POWER_MAX + 1);
+
 static SDL_Window *window = NULL;
 static SDL_Renderer *screen = NULL;
 static SDL_bool retval = SDL_FALSE;
 static SDL_bool done = SDL_FALSE;
 static SDL_bool set_LED = SDL_FALSE;
 static int trigger_effect = 0;
-static SDL_Texture *background_front, *background_back, *button, *axis;
+static SDL_Texture *background_front, *background_back, *button_texture, *axis_texture;
 static SDL_GameController *gamecontroller;
 static SDL_GameController **gamecontrollers;
 static int num_controllers = 0;
@@ -95,14 +106,17 @@ static void UpdateWindowTitle()
         const char *name = SDL_GameControllerName(gamecontroller);
         const char *serial = SDL_GameControllerGetSerial(gamecontroller);
         const char *basetitle = "Game Controller Test: ";
-        const size_t titlelen = SDL_strlen(basetitle) + SDL_strlen(name) + (serial ? 3 + SDL_strlen(serial) : 0) + 1;
+        const size_t titlelen = SDL_strlen(basetitle) + (name ? SDL_strlen(name) : 0) + (serial ? 3 + SDL_strlen(serial) : 0) + 1;
         char *title = (char *)SDL_malloc(titlelen);
 
         retval = SDL_FALSE;
         done = SDL_FALSE;
 
         if (title) {
-            SDL_snprintf(title, titlelen, "%s%s", basetitle, name);
+            SDL_strlcpy(title, basetitle, titlelen);
+            if (name) {
+                SDL_strlcat(title, name, titlelen);
+            }
             if (serial) {
                 SDL_strlcat(title, " (", titlelen);
                 SDL_strlcat(title, serial, titlelen);
@@ -113,6 +127,26 @@ static void UpdateWindowTitle()
         }
     } else {
         SDL_SetWindowTitle(window, "Waiting for controller...");
+    }
+}
+
+static const char *GetSensorName(SDL_SensorType sensor)
+{
+    switch (sensor) {
+    case SDL_SENSOR_ACCEL:
+        return "accelerometer";
+    case SDL_SENSOR_GYRO:
+        return "gyro";
+    case SDL_SENSOR_ACCEL_L:
+        return "accelerometer (L)";
+    case SDL_SENSOR_GYRO_L:
+        return "gyro (L)";
+    case SDL_SENSOR_ACCEL_R:
+        return "accelerometer (R)";
+    case SDL_SENSOR_GYRO_R:
+        return "gyro (R)";
+    default:
+        return "UNKNOWN";
     }
 }
 
@@ -133,6 +167,16 @@ static void AddController(int device_index, SDL_bool verbose)
     SDL_JoystickID controller_id = SDL_JoystickGetDeviceInstanceID(device_index);
     SDL_GameController *controller;
     SDL_GameController **controllers;
+    Uint16 firmware_version;
+    SDL_SensorType sensors[] = {
+        SDL_SENSOR_ACCEL,
+        SDL_SENSOR_GYRO,
+        SDL_SENSOR_ACCEL_L,
+        SDL_SENSOR_GYRO_L,
+        SDL_SENSOR_ACCEL_R,
+        SDL_SENSOR_GYRO_R
+    };
+    unsigned int i;
 
     controller_id = SDL_JoystickGetDeviceInstanceID(device_index);
     if (controller_id < 0) {
@@ -168,18 +212,22 @@ static void AddController(int device_index, SDL_bool verbose)
         SDL_Log("Opened game controller %s%s%s\n", name, path ? ", " : "", path ? path : "");
     }
 
-    if (SDL_GameControllerHasSensor(gamecontroller, SDL_SENSOR_ACCEL)) {
+    firmware_version = SDL_GameControllerGetFirmwareVersion(gamecontroller);
+    if (firmware_version) {
         if (verbose) {
-            SDL_Log("Enabling accelerometer at %.2f Hz\n", SDL_GameControllerGetSensorDataRate(gamecontroller, SDL_SENSOR_ACCEL));
+            SDL_Log("Firmware version: 0x%x (%d)\n", firmware_version, firmware_version);
         }
-        SDL_GameControllerSetSensorEnabled(gamecontroller, SDL_SENSOR_ACCEL, SDL_TRUE);
     }
 
-    if (SDL_GameControllerHasSensor(gamecontroller, SDL_SENSOR_GYRO)) {
-        if (verbose) {
-            SDL_Log("Enabling gyro at %.2f Hz\n", SDL_GameControllerGetSensorDataRate(gamecontroller, SDL_SENSOR_GYRO));
+    for (i = 0; i < SDL_arraysize(sensors); ++i) {
+        SDL_SensorType sensor = sensors[i];
+
+        if (SDL_GameControllerHasSensor(gamecontroller, sensor)) {
+            if (verbose) {
+                SDL_Log("Enabling %s at %.2f Hz\n", GetSensorName(sensor), SDL_GameControllerGetSensorDataRate(gamecontroller, sensor));
+            }
+            SDL_GameControllerSetSensorEnabled(gamecontroller, sensor, SDL_TRUE);
         }
-        SDL_GameControllerSetSensorEnabled(gamecontroller, SDL_SENSOR_GYRO, SDL_TRUE);
     }
 
     if (SDL_GameControllerHasRumble(gamecontroller)) {
@@ -529,28 +577,26 @@ loop(void *arg)
         case SDL_CONTROLLERTOUCHPADDOWN:
         case SDL_CONTROLLERTOUCHPADMOTION:
         case SDL_CONTROLLERTOUCHPADUP:
-            SDL_Log("Controller %d touchpad %d finger %d %s %.2f, %.2f, %.2f\n",
-                event.ctouchpad.which,
-                event.ctouchpad.touchpad,
-                event.ctouchpad.finger,
-                (event.type == SDL_CONTROLLERTOUCHPADDOWN ? "pressed at" :
-                (event.type == SDL_CONTROLLERTOUCHPADUP ? "released at" :
-                "moved to")),
-                event.ctouchpad.x,
-                event.ctouchpad.y,
-                event.ctouchpad.pressure);
+            SDL_Log("Controller %" SDL_PRIs32 " touchpad %" SDL_PRIs32 " finger %" SDL_PRIs32 " %s %.2f, %.2f, %.2f\n",
+                    event.ctouchpad.which,
+                    event.ctouchpad.touchpad,
+                    event.ctouchpad.finger,
+                    (event.type == SDL_CONTROLLERTOUCHPADDOWN ? "pressed at" : (event.type == SDL_CONTROLLERTOUCHPADUP ? "released at" : "moved to")),
+                    event.ctouchpad.x,
+                    event.ctouchpad.y,
+                    event.ctouchpad.pressure);
             break;
 
 #define VERBOSE_SENSORS
 #ifdef VERBOSE_SENSORS
         case SDL_CONTROLLERSENSORUPDATE:
-            SDL_Log("Controller %d sensor %s: %.2f, %.2f, %.2f\n",
-                event.csensor.which,
-                event.csensor.sensor == SDL_SENSOR_ACCEL ? "accelerometer" :
-                event.csensor.sensor == SDL_SENSOR_GYRO ? "gyro" : "unknown",
-                event.csensor.data[0],
-                event.csensor.data[1],
-                event.csensor.data[2]);
+            SDL_Log("Controller %" SDL_PRIs32 " sensor %s: %.2f, %.2f, %.2f (%" SDL_PRIu64 ")\n",
+                    event.csensor.which,
+                    GetSensorName((SDL_SensorType) event.csensor.sensor),
+                    event.csensor.data[0],
+                    event.csensor.data[1],
+                    event.csensor.data[2],
+                    event.csensor.timestamp_us);
             break;
 #endif /* VERBOSE_SENSORS */
 
@@ -560,7 +606,7 @@ loop(void *arg)
             if (event.caxis.value <= (-SDL_JOYSTICK_AXIS_MAX / 2) || event.caxis.value >= (SDL_JOYSTICK_AXIS_MAX / 2)) {
                 SetController(event.caxis.which);
             }
-            SDL_Log("Controller %d axis %s changed to %d\n", event.caxis.which, SDL_GameControllerGetStringForAxis((SDL_GameControllerAxis)event.caxis.axis), event.caxis.value);
+            SDL_Log("Controller %" SDL_PRIs32 " axis %s changed to %d\n", event.caxis.which, SDL_GameControllerGetStringForAxis((SDL_GameControllerAxis) event.caxis.axis), event.caxis.value);
             break;
 #endif /* VERBOSE_AXES */
 
@@ -569,7 +615,7 @@ loop(void *arg)
             if (event.type == SDL_CONTROLLERBUTTONDOWN) {
                 SetController(event.cbutton.which);
             }
-            SDL_Log("Controller %d button %s %s\n", event.cbutton.which, SDL_GameControllerGetStringForButton((SDL_GameControllerButton)event.cbutton.button), event.cbutton.state ? "pressed" : "released");
+            SDL_Log("Controller %" SDL_PRIs32 " button %s %s\n", event.cbutton.which, SDL_GameControllerGetStringForButton((SDL_GameControllerButton) event.cbutton.button), event.cbutton.state ? "pressed" : "released");
 
             /* Cycle PS5 trigger effects when the microphone button is pressed */
             if (event.type == SDL_CONTROLLERBUTTONDOWN &&
@@ -577,6 +623,10 @@ loop(void *arg)
                 SDL_GameControllerGetType(gamecontroller) == SDL_CONTROLLER_TYPE_PS5) {
                 CyclePS5TriggerEffect();
             }
+            break;
+
+        case SDL_JOYBATTERYUPDATED:
+            SDL_Log("Controller %" SDL_PRIs32 " battery state changed to %s\n", event.jbattery.which, power_level_strings[event.jbattery.level + 1]);
             break;
 
         case SDL_MOUSEBUTTONDOWN:
@@ -644,7 +694,7 @@ loop(void *arg)
                     dst.y = button_positions[i].y;
                     dst.w = BUTTON_SIZE;
                     dst.h = BUTTON_SIZE;
-                    SDL_RenderCopyEx(screen, button, NULL, &dst, 0, NULL, SDL_FLIP_NONE);
+                    SDL_RenderCopyEx(screen, button_texture, NULL, &dst, 0, NULL, SDL_FLIP_NONE);
                 }
             }
         }
@@ -660,7 +710,7 @@ loop(void *arg)
                     dst.y = axis_positions[i].y;
                     dst.w = AXIS_SIZE;
                     dst.h = AXIS_SIZE;
-                    SDL_RenderCopyEx(screen, axis, NULL, &dst, angle, NULL, SDL_FLIP_NONE);
+                    SDL_RenderCopyEx(screen, axis_texture, NULL, &dst, angle, NULL, SDL_FLIP_NONE);
                 } else if (value > deadzone) {
                     const double angle = axis_positions[i].angle + 180.0;
                     SDL_Rect dst;
@@ -668,7 +718,7 @@ loop(void *arg)
                     dst.y = axis_positions[i].y;
                     dst.w = AXIS_SIZE;
                     dst.h = AXIS_SIZE;
-                    SDL_RenderCopyEx(screen, axis, NULL, &dst, angle, NULL, SDL_FLIP_NONE);
+                    SDL_RenderCopyEx(screen, axis_texture, NULL, &dst, angle, NULL, SDL_FLIP_NONE);
                 }
             }
         }
@@ -741,9 +791,9 @@ main(int argc, char *argv[])
     char guid[64];
 
     SDL_SetHint(SDL_HINT_ACCELEROMETER_AS_JOYSTICK, "0");
-    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_JOY_CONS, "1");
     SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS4_RUMBLE, "1");
     SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS5_RUMBLE, "1");
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_STEAM, "1");
     SDL_SetHint(SDL_HINT_JOYSTICK_ROG_CHAKRAM, "1");
     SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
     SDL_SetHint(SDL_HINT_LINUX_JOYSTICK_DEADZONES, "1");
@@ -791,6 +841,11 @@ main(int argc, char *argv[])
                 break;
             case SDL_CONTROLLER_TYPE_GOOGLE_STADIA:
                 description = "Google Stadia Controller";
+                break;
+            case SDL_CONTROLLER_TYPE_NINTENDO_SWITCH_JOYCON_LEFT:
+            case SDL_CONTROLLER_TYPE_NINTENDO_SWITCH_JOYCON_RIGHT:
+            case SDL_CONTROLLER_TYPE_NINTENDO_SWITCH_JOYCON_PAIR:
+                description = "Nintendo Switch Joy-Con";
                 break;
             case SDL_CONTROLLER_TYPE_NINTENDO_SWITCH_PRO:
                 description = "Nintendo Switch Pro Controller";
@@ -854,16 +909,16 @@ main(int argc, char *argv[])
 
     background_front = LoadTexture(screen, "controllermap.bmp", SDL_FALSE, NULL, NULL);
     background_back = LoadTexture(screen, "controllermap_back.bmp", SDL_FALSE, NULL, NULL);
-    button = LoadTexture(screen, "button.bmp", SDL_TRUE, NULL, NULL);
-    axis = LoadTexture(screen, "axis.bmp", SDL_TRUE, NULL, NULL);
+    button_texture = LoadTexture(screen, "button.bmp", SDL_TRUE, NULL, NULL);
+    axis_texture = LoadTexture(screen, "axis.bmp", SDL_TRUE, NULL, NULL);
 
-    if (!background_front || !background_back || !button || !axis) {
+    if (!background_front || !background_back || !button_texture || !axis_texture) {
         SDL_DestroyRenderer(screen);
         SDL_DestroyWindow(window);
         return 2;
     }
-    SDL_SetTextureColorMod(button, 10, 255, 21);
-    SDL_SetTextureColorMod(axis, 10, 255, 21);
+    SDL_SetTextureColorMod(button_texture, 10, 255, 21);
+    SDL_SetTextureColorMod(axis_texture, 10, 255, 21);
 
     /* !!! FIXME: */
     /*SDL_RenderSetLogicalSize(screen, background->w, background->h);*/

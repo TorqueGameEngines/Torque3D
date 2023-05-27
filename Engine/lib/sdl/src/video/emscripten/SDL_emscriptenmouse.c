@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -63,10 +63,20 @@ Emscripten_CreateDefaultCursor()
     return Emscripten_CreateCursorFromString("default", SDL_FALSE);
 }
 
-static const char*
-Emscripten_GetCursorUrl(int w, int h, int hot_x, int hot_y, void* pixels)
+
+static SDL_Cursor*
+Emscripten_CreateCursor(SDL_Surface* surface, int hot_x, int hot_y)
 {
-    return (const char *)EM_ASM_INT({
+    const char *cursor_url = NULL;
+    SDL_Surface *conv_surf;
+
+    conv_surf = SDL_ConvertSurfaceFormat(surface, SDL_PIXELFORMAT_ABGR8888, 0);
+
+    if (!conv_surf) {
+        return NULL;
+    }
+
+    cursor_url = (const char *)MAIN_THREAD_EM_ASM_INT({
         var w = $0;
         var h = $1;
         var hot_x = $2;
@@ -114,40 +124,7 @@ Emscripten_GetCursorUrl(int w, int h, int hot_x, int hot_y, void* pixels)
         stringToUTF8(url, urlBuf, url.length + 1);
 
         return urlBuf;
-    }, w, h, hot_x, hot_y, pixels);
-}
-
-static SDL_Cursor*
-Emscripten_CreateCursor(SDL_Surface* surface, int hot_x, int hot_y)
-{
-    const char *cursor_url = NULL;
-    SDL_Surface *conv_surf;
-
-    conv_surf = SDL_ConvertSurfaceFormat(surface, SDL_PIXELFORMAT_ABGR8888, 0);
-
-    if (!conv_surf) {
-        return NULL;
-    }
-
-    if (emscripten_is_main_runtime_thread()) {
-        cursor_url = Emscripten_GetCursorUrl(
-            surface->w,
-            surface->h,
-            hot_x,
-            hot_y,
-            conv_surf->pixels
-        );
-    } else {
-        cursor_url = (const char *)emscripten_sync_run_in_main_runtime_thread(
-            EM_FUNC_SIG_IIIIIII,
-            Emscripten_GetCursorUrl,
-            surface->w,
-            surface->h,
-            hot_x,
-            hot_y,
-            conv_surf->pixels
-        );
-    }
+    }, surface->w, surface->h, hot_x, hot_y, conv_surf->pixels);
 
     SDL_FreeSurface(conv_surf);
 

@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -30,7 +30,7 @@
 #include <e32svr.h>
 #include <bitdev.h>
 #include <w32std.h>
-#include <bitdraw.h> // CFbsDrawDevice
+#include "bitdraw.h" // CFbsDrawDevice
 
 #define _THIS SDL_VideoDevice *_this
 
@@ -46,10 +46,7 @@ typedef struct SDL_VideoData
     TRequestStatus   NGAGE_WsEventStatus;
     TRequestStatus   NGAGE_RedrawEventStatus;
     TWsEvent         NGAGE_WsEvent;
-    //TWsRedrawEvent   NGAGE_RedrawEvent;
-
     CFbsDrawDevice*  NGAGE_DrawDevice;
-
     TBool            NGAGE_IsWindowFocused; /* Not used yet */
 
     /* Screen hardware frame buffer info */
@@ -63,10 +60,6 @@ typedef struct SDL_VideoData
     TPoint           NGAGE_ScreenOffset;
 
     CFbsBitGc::TGraphicsOrientation NGAGE_ScreenOrientation;
-
-    /* Simulate double screen height */
-    //TInt             NGAGE_ScreenXScaleValue;
-    //TInt             NGAGE_ScreenYScaleValue;
 
 } SDL_VideoData;
 

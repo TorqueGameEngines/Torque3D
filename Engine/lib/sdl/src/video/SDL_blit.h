@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -90,7 +90,8 @@ typedef struct
 } SDL_BlitFuncEntry;
 
 /* Blit mapping definition */
-typedef struct SDL_BlitMap
+/* typedef'ed in SDL_surface.h */
+struct SDL_BlitMap
 {
     SDL_Surface *dst;
     int identity;
@@ -102,7 +103,7 @@ typedef struct SDL_BlitMap
        an invalid mapping */
     Uint32 dst_palette_version;
     Uint32 src_palette_version;
-} SDL_BlitMap;
+};
 
 /* Functions found in SDL_blit.c */
 extern int SDL_CalculateBlit(SDL_Surface * surface);

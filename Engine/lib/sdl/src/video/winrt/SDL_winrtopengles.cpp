@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -63,7 +63,7 @@ WINRT_GLES_LoadLibrary(_THIS, const char *path)
     }
 
     /* Load ANGLE/WinRT-specific functions */
-    CreateWinrtEglWindow_Old_Function CreateWinrtEglWindow = (CreateWinrtEglWindow_Old_Function) SDL_LoadFunction(_this->egl_data->egl_dll_handle, "CreateWinrtEglWindow");
+    CreateWinrtEglWindow_Old_Function CreateWinrtEglWindow = (CreateWinrtEglWindow_Old_Function) SDL_LoadFunction(_this->egl_data->opengl_dll_handle, "CreateWinrtEglWindow");
     if (CreateWinrtEglWindow) {
         /* 'CreateWinrtEglWindow' was found, which means that an an older
          * version of ANGLE/WinRT is being used.  Continue setting up EGL,

@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -477,7 +477,7 @@ PAUDIO_Init(SDL_AudioDriverImpl * impl)
     /* Set the function pointers */
     impl->OpenDevice = PAUDIO_OpenDevice;
     impl->PlayDevice = PAUDIO_PlayDevice;
-    impl->PlayDevice = PAUDIO_WaitDevice;
+    impl->WaitDevice = PAUDIO_WaitDevice;
     impl->GetDeviceBuf = PAUDIO_GetDeviceBuf;
     impl->CloseDevice = PAUDIO_CloseDevice;
     impl->OnlyHasDefaultOutputDevice = SDL_TRUE;       /* !!! FIXME: add device enum! */

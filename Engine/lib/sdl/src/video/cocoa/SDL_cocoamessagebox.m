@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -92,9 +92,14 @@
 static void
 Cocoa_ShowMessageBoxImpl(const SDL_MessageBoxData *messageboxdata, int *buttonid, int *returnValue)
 {
+    NSAlert* alert;
+    const SDL_MessageBoxButtonData *buttons = messageboxdata->buttons;
+    SDLMessageBoxPresenter* presenter;
+    NSInteger clicked;
+    int i;
     Cocoa_RegisterApp();
 
-    NSAlert* alert = [[NSAlert alloc] init];
+    alert = [[NSAlert alloc] init];
 
     if (messageboxdata->flags & SDL_MESSAGEBOX_ERROR) {
         [alert setAlertStyle:NSAlertStyleCritical];
@@ -107,8 +112,6 @@ Cocoa_ShowMessageBoxImpl(const SDL_MessageBoxData *messageboxdata, int *buttonid
     [alert setMessageText:[NSString stringWithUTF8String:messageboxdata->title]];
     [alert setInformativeText:[NSString stringWithUTF8String:messageboxdata->message]];
 
-    const SDL_MessageBoxButtonData *buttons = messageboxdata->buttons;
-    int i;
     for (i = 0; i < messageboxdata->numbuttons; ++i) {
         const SDL_MessageBoxButtonData *sdlButton;
         NSButton *button;
@@ -129,11 +132,11 @@ Cocoa_ShowMessageBoxImpl(const SDL_MessageBoxData *messageboxdata, int *buttonid
         }
     }
 
-    SDLMessageBoxPresenter* presenter = [[SDLMessageBoxPresenter alloc] initWithParentWindow:messageboxdata->window];
+    presenter = [[SDLMessageBoxPresenter alloc] initWithParentWindow:messageboxdata->window];
 
     [presenter showAlert:alert];
 
-    NSInteger clicked = presenter->clicked;
+    clicked = presenter->clicked;
     if (clicked >= NSAlertFirstButtonReturn) {
         clicked -= NSAlertFirstButtonReturn;
         if (messageboxdata->flags & SDL_MESSAGEBOX_BUTTONS_RIGHT_TO_LEFT) {

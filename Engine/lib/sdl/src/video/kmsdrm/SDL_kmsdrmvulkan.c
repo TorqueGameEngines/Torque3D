@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -476,9 +476,9 @@ SDL_bool KMSDRM_Vulkan_CreateSurface(_THIS,
         }
     }
 
-    /* If we couldn't find an appropiate plane, error out. */
+    /* If we couldn't find an appropriate plane, error out. */
     if (plane == UINT32_MAX) {
-        SDL_SetError("Vulkan couldn't find an appropiate plane.");
+        SDL_SetError("Vulkan couldn't find an appropriate plane.");
         goto clean;
     }
 

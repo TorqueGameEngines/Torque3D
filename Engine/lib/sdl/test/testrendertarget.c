@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -72,7 +72,7 @@ DrawComposite(DrawState *s)
         SDL_RenderCopy(s->renderer, A, NULL, NULL);
         SDL_RenderReadPixels(s->renderer, NULL, SDL_PIXELFORMAT_ARGB8888, &P, sizeof(P));
 
-        SDL_Log("Blended pixel: 0x%8.8X\n", P);
+        SDL_Log("Blended pixel: 0x%8.8" SDL_PRIX32 "\n", P);
 
         SDL_DestroyTexture(A);
         SDL_DestroyTexture(B);

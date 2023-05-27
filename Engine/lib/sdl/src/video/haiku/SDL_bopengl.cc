@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -94,8 +94,7 @@ int HAIKU_GL_MakeCurrent(_THIS, SDL_Window * window, SDL_GLContext context) {
     // printf("HAIKU_GL_MakeCurrent(%llx), win = %llx, thread = %d\n", (uint64)context, (uint64)window, find_thread(NULL));
     if (glView != NULL) {
         if ((glView->Window() == NULL) || (window == NULL) || (_ToBeWin(window)->GetGLView() != glView)) {
-            SDL_SetError("MakeCurrent failed");
-            return -1;
+            return SDL_SetError("MakeCurrent failed");
         }
     }
     _GetBeApp()->SetCurrentContext(glView);

@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -74,11 +74,12 @@ kaiser_and_sinc(float *table, float *diffs, const int tablelen, const double bet
 {
     const int lenm1 = tablelen - 1;
     const int lenm1div2 = lenm1 / 2;
+    const double bessel_beta = bessel(beta);
     int i;
 
     table[0] = 1.0f;
     for (i = 1; i < tablelen; i++) {
-        const double kaiser = bessel(beta * sqrt(1.0 - pow(((i - lenm1) / 2.0) / lenm1div2, 2.0))) / bessel(beta);
+        const double kaiser = bessel(beta * sqrt(1.0 - pow(((i - lenm1) / 2.0) / lenm1div2, 2.0))) / bessel_beta;
         table[tablelen - i] = (float) kaiser;
     }
 
@@ -112,7 +113,7 @@ int main(void)
     printf(
         "/*\n"
         "  Simple DirectMedia Layer\n"
-        "  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>\n"
+        "  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>\n"
         "\n"
         "  This software is provided 'as-is', without any express or implied\n"
         "  warranty.  In no event will the authors be held liable for any damages\n"

@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -226,13 +226,12 @@ void HAIKU_DestroyWindow(_THIS, SDL_Window * window) {
 SDL_bool HAIKU_GetWindowWMInfo(_THIS, SDL_Window * window,
                                     struct SDL_SysWMinfo *info) {
     /* FIXME: What is the point of this? What information should be included? */
-	if (info->version.major == SDL_MAJOR_VERSION &&
-	    info->version.minor == SDL_MINOR_VERSION) {
+	if (info->version.major == SDL_MAJOR_VERSION) {
 	    info->subsystem = SDL_SYSWM_HAIKU;
 	    return SDL_TRUE;
 	} else {
-	    SDL_SetError("Application not compiled with SDL %d.%d",
-	                 SDL_MAJOR_VERSION, SDL_MINOR_VERSION);
+	    SDL_SetError("Application not compiled with SDL %d",
+	                 SDL_MAJOR_VERSION);
 	    return SDL_FALSE;
 	}
 }

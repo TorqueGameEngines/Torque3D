@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -64,6 +64,10 @@ extern Uint32 X11_GetPixelFormatFromVisualInfo(Display * display,
 extern int X11_GetDisplayBounds(_THIS, SDL_VideoDisplay * sdl_display, SDL_Rect * rect);
 extern int X11_GetDisplayUsableBounds(_THIS, SDL_VideoDisplay * sdl_display, SDL_Rect * rect);
 extern int X11_GetDisplayDPI(_THIS, SDL_VideoDisplay * sdl_display, float * ddpi, float * hdpi, float * vdpi);
+
+#if SDL_VIDEO_DRIVER_X11_XRANDR
+extern void X11_HandleXRandREvent(_THIS, const XEvent *xevent);
+#endif
 
 #endif /* SDL_x11modes_h_ */
 

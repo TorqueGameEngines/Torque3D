@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -20,7 +20,7 @@
 */
 #include "./SDL_internal.h"
 
-#if defined(__WIN32__) || defined(__WINRT__)
+#if defined(__WIN32__) || defined(__WINRT__) || defined(__GDK__)
 #include "core/windows/SDL_windows.h"
 #endif
 
@@ -80,15 +80,19 @@ static const char *SDL_priority_prefixes[SDL_NUM_LOG_PRIORITIES] = {
 };
 
 #ifdef __ANDROID__
-static const char *SDL_category_prefixes[SDL_LOG_CATEGORY_RESERVED1] = {
+static const char *SDL_category_prefixes[] = {
     "APP",
     "ERROR",
+    "ASSERT",
     "SYSTEM",
     "AUDIO",
     "VIDEO",
     "RENDER",
-    "INPUT"
+    "INPUT",
+    "TEST"
 };
+
+SDL_COMPILE_TIME_ASSERT(category_prefixes_enum, SDL_TABLESIZE(SDL_category_prefixes) == SDL_LOG_CATEGORY_RESERVED1);
 
 static int SDL_android_priority[SDL_NUM_LOG_PRIORITIES] = {
     ANDROID_LOG_UNKNOWN,
@@ -362,7 +366,7 @@ SDL_LogMessageV(int category, SDL_LogPriority priority, const char *fmt, va_list
     }
 }
 
-#if defined(__WIN32__) && !defined(HAVE_STDIO_H) && !defined(__WINRT__)
+#if defined(__WIN32__) && !defined(HAVE_STDIO_H) && !defined(__WINRT__) && !defined(__GDK__)
 /* Flag tracking the attachment of the console: 0=unattached, 1=attached to a console, 2=attached to a file, -1=error */
 static int consoleAttached = 0;
 
@@ -374,7 +378,7 @@ static void SDLCALL
 SDL_LogOutput(void *userdata, int category, SDL_LogPriority priority,
               const char *message)
 {
-#if defined(__WIN32__) || defined(__WINRT__)
+#if defined(__WIN32__) || defined(__WINRT__) || defined(__GDK__)
     /* Way too many allocations here, urgh */
     /* Note: One can't call SDL_SetError here, since that function itself logs. */
     {
@@ -383,7 +387,7 @@ SDL_LogOutput(void *userdata, int category, SDL_LogPriority priority,
         LPTSTR tstr;
         SDL_bool isstack;
 
-#if !defined(HAVE_STDIO_H) && !defined(__WINRT__)
+#if !defined(HAVE_STDIO_H) && !defined(__WINRT__) && !defined(__GDK__)
         BOOL attachResult;
         DWORD attachError;
         DWORD charsWritten;
@@ -422,7 +426,7 @@ SDL_LogOutput(void *userdata, int category, SDL_LogPriority priority,
                         }
                 }
         }
-#endif /* !defined(HAVE_STDIO_H) && !defined(__WINRT__) */
+#endif /* !defined(HAVE_STDIO_H) && !defined(__WINRT__) && !defined(__GDK__) */
 
         length = SDL_strlen(SDL_priority_prefixes[priority]) + 2 + SDL_strlen(message) + 1 + 1 + 1;
         output = SDL_small_alloc(char, length, &isstack);
@@ -432,7 +436,7 @@ SDL_LogOutput(void *userdata, int category, SDL_LogPriority priority,
         /* Output to debugger */
         OutputDebugString(tstr);
        
-#if !defined(HAVE_STDIO_H) && !defined(__WINRT__)
+#if !defined(HAVE_STDIO_H) && !defined(__WINRT__) && !defined(__GDK__)
         /* Screen output to stderr, if console was attached. */
         if (consoleAttached == 1) {
                 if (!WriteConsole(stderrHandle, tstr, (DWORD) SDL_tcslen(tstr), &charsWritten, NULL)) {
@@ -447,7 +451,7 @@ SDL_LogOutput(void *userdata, int category, SDL_LogPriority priority,
                 OutputDebugString(TEXT("Error calling WriteFile\r\n"));
             }
         }
-#endif /* !defined(HAVE_STDIO_H) && !defined(__WINRT__) */
+#endif /* !defined(HAVE_STDIO_H) && !defined(__WINRT__) && !defined(__GDK__) */
 
         SDL_free(tstr);
         SDL_small_free(output, isstack);
@@ -467,7 +471,7 @@ SDL_LogOutput(void *userdata, int category, SDL_LogPriority priority,
         SDL_NSLog(SDL_priority_prefixes[priority], message);
         return;
     }
-#elif defined(__PSP__)
+#elif defined(__PSP__) || defined(__PS2__)
     {
         FILE*        pFile;
         pFile = fopen ("SDL_Log.txt", "a");
@@ -481,8 +485,16 @@ SDL_LogOutput(void *userdata, int category, SDL_LogPriority priority,
         fprintf(pFile, "%s: %s\n", SDL_priority_prefixes[priority], message);
         fclose (pFile);
     }
+#elif defined(__3DS__)
+    {
+        FILE *pFile;
+        pFile = fopen("sdmc:/3ds/SDL_Log.txt", "a");
+        fprintf(pFile, "%s: %s\n", SDL_priority_prefixes[priority], message);
+        fclose(pFile);
+    }
 #endif
-#if HAVE_STDIO_H
+#if HAVE_STDIO_H && \
+    !(defined(__APPLE__) && (defined(SDL_VIDEO_DRIVER_COCOA) || defined(SDL_VIDEO_DRIVER_UIKIT)))
     fprintf(stderr, "%s: %s\n", SDL_priority_prefixes[priority], message);
 #if __NACL__
     fflush(stderr);

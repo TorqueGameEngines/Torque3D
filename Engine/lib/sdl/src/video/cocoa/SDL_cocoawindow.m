@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -123,13 +123,14 @@
 
 - (void)sendEvent:(NSEvent *)event
 {
+    id delegate;
     [super sendEvent:event];
 
     if ([event type] != NSEventTypeLeftMouseUp) {
         return;
     }
 
-    id delegate = [self delegate];
+    delegate = [self delegate];
     if (![delegate isKindOfClass:[Cocoa_WindowListener class]]) {
         return;
     }
@@ -163,24 +164,29 @@
     NSArray *types = [NSArray arrayWithObject:NSFilenamesPboardType];
     NSString *desiredType = [pasteboard availableTypeFromArray:types];
     SDL_Window *sdlwindow = [self findSDLWindow];
+    NSData *data;
+    NSArray *array;
+    NSPoint point;
+    SDL_Mouse *mouse;
+    int x, y;
 
     if (desiredType == nil) {
         return NO;  /* can't accept anything that's being dropped here. */
     }
 
-    NSData *data = [pasteboard dataForType:desiredType];
+    data = [pasteboard dataForType:desiredType];
     if (data == nil) {
         return NO;
     }
 
     SDL_assert([desiredType isEqualToString:NSFilenamesPboardType]);
-    NSArray *array = [pasteboard propertyListForType:@"NSFilenamesPboardType"];
+    array = [pasteboard propertyListForType:@"NSFilenamesPboardType"];
 
     /* Code addon to update the mouse location */
-    NSPoint point = [sender draggingLocation];
-    SDL_Mouse *mouse = SDL_GetMouse();
-    int x = (int)point.x;
-    int y = (int)(sdlwindow->h - point.y);
+    point = [sender draggingLocation];
+    mouse = SDL_GetMouse();
+    x = (int)point.x;
+    y = (int)(sdlwindow->h - point.y);
     if (x >= 0 && x < sdlwindow->w && y >= 0 && y < sdlwindow->h) {
         SDL_SendMouseMotion(sdlwindow, mouse->mouseID, 0, x, y);
     }
@@ -254,18 +260,22 @@ static void ConvertNSRect(NSScreen *screen, BOOL fullscreen, NSRect *r)
 static void
 ScheduleContextUpdates(SDL_WindowData *data)
 {
-    if (!data || !data.nscontexts) {
-        return;
-    }
-
     /* We still support OpenGL as long as Apple offers it, deprecated or not, so disable deprecation warnings about it. */
+    #if SDL_VIDEO_OPENGL
+
     #ifdef __clang__
     #pragma clang diagnostic push
     #pragma clang diagnostic ignored "-Wdeprecated-declarations"
     #endif
 
-    NSOpenGLContext *currentContext = [NSOpenGLContext currentContext];
-    NSMutableArray *contexts = data.nscontexts;
+    NSOpenGLContext *currentContext;
+    NSMutableArray *contexts;
+    if (!data || !data.nscontexts) {
+        return;
+    }
+
+    currentContext = [NSOpenGLContext currentContext];
+    contexts = data.nscontexts;
     @synchronized (contexts) {
         for (SDLOpenGLContext *context in contexts) {
             if (context == currentContext) {
@@ -279,6 +289,8 @@ ScheduleContextUpdates(SDL_WindowData *data)
     #ifdef __clang__
     #pragma clang diagnostic pop
     #endif
+
+    #endif /* SDL_VIDEO_OPENGL */
 }
 
 /* !!! FIXME: this should use a hint callback. */
@@ -291,12 +303,17 @@ GetHintCtrlClickEmulateRightClick()
 static NSUInteger
 GetWindowWindowedStyle(SDL_Window * window)
 {
-    NSUInteger style = 0;
+    /* IF YOU CHANGE ANY FLAGS IN HERE, PLEASE READ
+       the NSWindowStyleMaskBorderless comments in SetupWindowData()! */
+
+    /* always allow miniaturization, otherwise you can't programatically
+       minimize the window, whether there's a title bar or not */
+    NSUInteger style = NSWindowStyleMaskMiniaturizable;
 
     if (window->flags & SDL_WINDOW_BORDERLESS) {
-        style = NSWindowStyleMaskBorderless;
+        style |= NSWindowStyleMaskBorderless;
     } else {
-        style = (NSWindowStyleMaskTitled|NSWindowStyleMaskClosable|NSWindowStyleMaskMiniaturizable);
+        style |= (NSWindowStyleMaskTitled|NSWindowStyleMaskClosable);
     }
     if (window->flags & SDL_WINDOW_RESIZABLE) {
         style |= NSWindowStyleMaskResizable;
@@ -483,6 +500,7 @@ Cocoa_UpdateClipCursor(SDL_Window * window)
         [center addObserver:self selector:@selector(windowDidResignKey:) name:NSWindowDidResignKeyNotification object:window];
         [center addObserver:self selector:@selector(windowDidChangeBackingProperties:) name:NSWindowDidChangeBackingPropertiesNotification object:window];
         [center addObserver:self selector:@selector(windowDidChangeScreenProfile:) name:NSWindowDidChangeScreenProfileNotification object:window];
+        [center addObserver:self selector:@selector(windowDidChangeScreen:) name:NSWindowDidChangeScreenNotification object:window];
         [center addObserver:self selector:@selector(windowWillEnterFullScreen:) name:NSWindowWillEnterFullScreenNotification object:window];
         [center addObserver:self selector:@selector(windowDidEnterFullScreen:) name:NSWindowDidEnterFullScreenNotification object:window];
         [center addObserver:self selector:@selector(windowWillExitFullScreen:) name:NSWindowWillExitFullScreenNotification object:window];
@@ -615,6 +633,7 @@ Cocoa_UpdateClipCursor(SDL_Window * window)
         [center removeObserver:self name:NSWindowDidResignKeyNotification object:window];
         [center removeObserver:self name:NSWindowDidChangeBackingPropertiesNotification object:window];
         [center removeObserver:self name:NSWindowDidChangeScreenProfileNotification object:window];
+        [center removeObserver:self name:NSWindowDidChangeScreenNotification object:window];
         [center removeObserver:self name:NSWindowWillEnterFullScreenNotification object:window];
         [center removeObserver:self name:NSWindowDidEnterFullScreenNotification object:window];
         [center removeObserver:self name:NSWindowWillExitFullScreenNotification object:window];
@@ -763,15 +782,24 @@ Cocoa_UpdateClipCursor(SDL_Window * window)
 
 - (void)windowDidResize:(NSNotification *)aNotification
 {
+    SDL_Window *window;
+    NSWindow *nswindow;
+    NSRect rect;
+    int x, y, w, h;
+    BOOL zoomed;
     if (inFullscreenTransition) {
         /* We'll take care of this at the end of the transition */
         return;
     }
 
-    SDL_Window *window = _data.window;
-    NSWindow *nswindow = _data.nswindow;
-    int x, y, w, h;
-    NSRect rect = [nswindow contentRectForFrameRect:[nswindow frame]];
+    if (focusClickPending) {
+        focusClickPending = 0;
+        [self onMovingOrFocusClickPendingStateCleared];
+    }
+
+    window = _data.window;
+    nswindow = _data.nswindow;
+    rect = [nswindow contentRectForFrameRect:[nswindow frame]];
     ConvertNSRect([nswindow screen], (window->flags & FULLSCREEN_MASK), &rect);
     x = (int)rect.origin.x;
     y = (int)rect.origin.y;
@@ -789,7 +817,7 @@ Cocoa_UpdateClipCursor(SDL_Window * window)
     SDL_SendWindowEvent(window, SDL_WINDOWEVENT_MOVED, x, y);
     SDL_SendWindowEvent(window, SDL_WINDOWEVENT_RESIZED, w, h);
 
-    const BOOL zoomed = [nswindow isZoomed];
+    zoomed = [nswindow isZoomed];
     if (!zoomed) {
         SDL_SendWindowEvent(window, SDL_WINDOWEVENT_RESTORED, 0, 0);
     } else if (zoomed) {
@@ -844,10 +872,11 @@ Cocoa_UpdateClipCursor(SDL_Window * window)
     if ((isFullscreenSpace) && ((window->flags & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN_DESKTOP)) {
         [NSMenu setMenuBarVisible:NO];
     }
-
-    const unsigned int newflags = [NSEvent modifierFlags] & NSEventModifierFlagCapsLock;
-    _data.videodata.modifierFlags = (_data.videodata.modifierFlags & ~NSEventModifierFlagCapsLock) | newflags;
-    SDL_ToggleModState(KMOD_CAPS, newflags != 0);
+    {
+        const unsigned int newflags = [NSEvent modifierFlags] & NSEventModifierFlagCapsLock;
+        _data.videodata.modifierFlags = (_data.videodata.modifierFlags & ~NSEventModifierFlagCapsLock) | newflags;
+        SDL_ToggleModState(KMOD_CAPS, newflags != 0);
+    }
 }
 
 - (void)windowDidResignKey:(NSNotification *)aNotification
@@ -893,6 +922,16 @@ Cocoa_UpdateClipCursor(SDL_Window * window)
     SDL_SendWindowEvent(_data.window, SDL_WINDOWEVENT_ICCPROF_CHANGED, 0, 0);
 }
 
+- (void)windowDidChangeScreen:(NSNotification *)aNotification
+{
+    /*printf("WINDOWDIDCHANGESCREEN\n");*/
+    if (_data && _data.nscontexts) {
+        for (SDLOpenGLContext *context in _data.nscontexts) {
+            [context movedToNewScreen];
+        }
+    }
+}
+
 - (void)windowWillEnterFullScreen:(NSNotification *)aNotification
 {
     SDL_Window *window = _data.window;
@@ -922,8 +961,6 @@ Cocoa_UpdateClipCursor(SDL_Window * window)
 - (void)windowDidEnterFullScreen:(NSNotification *)aNotification
 {
     SDL_Window *window = _data.window;
-    SDL_WindowData *data = (__bridge SDL_WindowData *) window->driverdata;
-    NSWindow *nswindow = data.nswindow;
 
     inFullscreenTransition = NO;
 
@@ -931,11 +968,6 @@ Cocoa_UpdateClipCursor(SDL_Window * window)
         pendingWindowOperation = PENDING_OPERATION_NONE;
         [self setFullscreenSpace:NO];
     } else {
-        /* Unset the resizable flag. 
-           This is a workaround for https://bugzilla.libsdl.org/show_bug.cgi?id=3697
-         */
-        SetWindowStyle(window, [nswindow styleMask] & (~NSWindowStyleMaskResizable));
-
         if ((window->flags & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN_DESKTOP) {
             [NSMenu setMenuBarVisible:NO];
         }
@@ -1187,11 +1219,11 @@ Cocoa_SendMouseButtonClicks(SDL_Mouse * mouse, NSEvent *theEvent, SDL_Window * w
 - (void)mouseDown:(NSEvent *)theEvent
 {
     SDL_Mouse *mouse = SDL_GetMouse();
+    int button;
+
     if (!mouse) {
         return;
     }
-
-    int button;
 
     /* Ignore events that aren't inside the client area (i.e. title bar.) */
     if ([theEvent window]) {
@@ -1244,11 +1276,11 @@ Cocoa_SendMouseButtonClicks(SDL_Mouse * mouse, NSEvent *theEvent, SDL_Window * w
 - (void)mouseUp:(NSEvent *)theEvent
 {
     SDL_Mouse *mouse = SDL_GetMouse();
+    int button;
+
     if (!mouse) {
         return;
     }
-
-    int button;
 
     if ([self processHitTest:theEvent]) {
         SDL_SendWindowEvent(_data.window, SDL_WINDOWEVENT_HIT_TEST, 0, 0);
@@ -1291,14 +1323,17 @@ Cocoa_SendMouseButtonClicks(SDL_Mouse * mouse, NSEvent *theEvent, SDL_Window * w
 - (void)mouseMoved:(NSEvent *)theEvent
 {
     SDL_Mouse *mouse = SDL_GetMouse();
+    SDL_MouseID mouseID;
+    NSPoint point;
+    int x, y;
+    SDL_Window *window;
+
     if (!mouse) {
         return;
     }
 
-    const SDL_MouseID mouseID = mouse->mouseID;
-    SDL_Window *window = _data.window;
-    NSPoint point;
-    int x, y;
+    mouseID = mouse->mouseID;
+    window = _data.window;
 
     if ([self processHitTest:theEvent]) {
         SDL_SendWindowEvent(window, SDL_WINDOWEVENT_HIT_TEST, 0, 0);
@@ -1348,26 +1383,43 @@ Cocoa_SendMouseButtonClicks(SDL_Mouse * mouse, NSEvent *theEvent, SDL_Window * w
     Cocoa_HandleMouseWheel(_data.window, theEvent);
 }
 
+
+- (BOOL)isTouchFromTrackpad:(NSEvent *)theEvent
+{
+    SDL_Window *window = _data.window;
+    SDL_VideoData *videodata = ((__bridge SDL_WindowData *) window->driverdata).videodata;
+
+    /* if this a MacBook trackpad, we'll make input look like a synthesized
+       event. This is backwards from reality, but better matches user
+       expectations. You can make it look like a generic touch device instead
+       with the SDL_HINT_TRACKPAD_IS_TOUCH_ONLY hint. */
+    BOOL istrackpad = NO;
+    if (!videodata.trackpad_is_touch_only) {
+        @try {
+            istrackpad = ([theEvent subtype] == NSEventSubtypeMouseEvent);
+        }
+        @catch (NSException *e) {
+            /* if NSEvent type doesn't have subtype, such as NSEventTypeBeginGesture on
+             * macOS 10.5 to 10.10, then NSInternalInconsistencyException is thrown.
+             * This still prints a message to terminal so catching it's not an ideal solution.
+             *
+             * *** Assertion failure in -[NSEvent subtype]
+             */
+        }
+    }
+    return istrackpad;
+}
+
 - (void)touchesBeganWithEvent:(NSEvent *) theEvent
 {
-    /* probably a MacBook trackpad; make this look like a synthesized event.
-       This is backwards from reality, but better matches user expectations. */
-    BOOL istrackpad = NO;
-    @try {
-        istrackpad = ([theEvent subtype] == NSEventSubtypeMouseEvent);
-    }
-    @catch (NSException *e) {
-        /* if NSEvent type doesn't have subtype, such as NSEventTypeBeginGesture on
-         * macOS 10.5 to 10.10, then NSInternalInconsistencyException is thrown.
-         * This still prints a message to terminal so catching it's not an ideal solution.
-         *
-         * *** Assertion failure in -[NSEvent subtype]
-         */
-    }
+    NSSet *touches;
+    SDL_TouchID touchID;
+    int existingTouchCount;
+    const BOOL istrackpad = [self isTouchFromTrackpad:theEvent];
 
-    NSSet *touches = [theEvent touchesMatchingPhase:NSTouchPhaseAny inView:nil];
-    const SDL_TouchID touchID = istrackpad ? SDL_MOUSE_TOUCHID : (SDL_TouchID)(intptr_t)[[touches anyObject] device];
-    int existingTouchCount = 0;
+    touches = [theEvent touchesMatchingPhase:NSTouchPhaseAny inView:nil];
+    touchID = istrackpad ? SDL_MOUSE_TOUCHID : (SDL_TouchID)(intptr_t)[[touches anyObject] device];
+    existingTouchCount = 0;
 
     for (NSTouch* touch in touches) {
         if ([touch phase] != NSTouchPhaseBegan) {
@@ -1411,21 +1463,9 @@ Cocoa_SendMouseButtonClicks(SDL_Mouse * mouse, NSEvent *theEvent, SDL_Window * w
 - (void)handleTouches:(NSTouchPhase) phase withEvent:(NSEvent *) theEvent
 {
     NSSet *touches = [theEvent touchesMatchingPhase:phase inView:nil];
-
-    /* probably a MacBook trackpad; make this look like a synthesized event.
-       This is backwards from reality, but better matches user expectations. */
-    BOOL istrackpad = NO;
-    @try {
-        istrackpad = ([theEvent subtype] == NSEventSubtypeMouseEvent);
-    }
-    @catch (NSException *e) {
-        /* if NSEvent type doesn't have subtype, such as NSEventTypeBeginGesture on
-         * macOS 10.5 to 10.10, then NSInternalInconsistencyException is thrown.
-         * This still prints a message to terminal so catching it's not an ideal solution.
-         *
-         * *** Assertion failure in -[NSEvent subtype]
-         */
-    }
+    const BOOL istrackpad = [self isTouchFromTrackpad:theEvent];
+    SDL_FingerID fingerId;
+    float x, y;
 
     for (NSTouch *touch in touches) {
         const SDL_TouchID touchId = istrackpad ? SDL_MOUSE_TOUCHID : (SDL_TouchID)(intptr_t)[touch device];
@@ -1457,9 +1497,9 @@ Cocoa_SendMouseButtonClicks(SDL_Mouse * mouse, NSEvent *theEvent, SDL_Window * w
             return;
         }
 
-        const SDL_FingerID fingerId = (SDL_FingerID)(intptr_t)[touch identity];
-        float x = [touch normalizedPosition].x;
-        float y = [touch normalizedPosition].y;
+        fingerId = (SDL_FingerID)(intptr_t)[touch identity];
+        x = [touch normalizedPosition].x;
+        y = [touch normalizedPosition].y;
         /* Make the origin the upper left instead of the lower left */
         y = 1.0f - y;
 
@@ -1554,8 +1594,9 @@ Cocoa_SendMouseButtonClicks(SDL_Mouse * mouse, NSEvent *theEvent, SDL_Window * w
 
 - (void)resetCursorRects
 {
+    SDL_Mouse *mouse;
     [super resetCursorRects];
-    SDL_Mouse *mouse = SDL_GetMouse();
+    mouse = SDL_GetMouse();
 
     if (mouse->cursor_shown && mouse->cur_cursor && !mouse->relative_mode) {
         [self addCursorRect:[self bounds]
@@ -1592,6 +1633,7 @@ SetupWindowData(_THIS, SDL_Window * window, NSWindow *nswindow, NSView *nsview, 
     data.nswindow = nswindow;
     data.created = created;
     data.videodata = videodata;
+    data.window_number = nswindow.windowNumber;
     data.nscontexts = [[NSMutableArray alloc] init];
     data.sdlContentView = nsview;
 
@@ -1623,7 +1665,7 @@ SetupWindowData(_THIS, SDL_Window * window, NSWindow *nswindow, NSView *nsview, 
         /* NSWindowStyleMaskBorderless is zero, and it's possible to be
             Resizeable _and_ borderless, so we can't do a simple bitwise AND
             of NSWindowStyleMaskBorderless here. */
-        if ((style & ~NSWindowStyleMaskResizable) == NSWindowStyleMaskBorderless) {
+        if ((style & ~(NSWindowStyleMaskResizable|NSWindowStyleMaskMiniaturizable)) == NSWindowStyleMaskBorderless) {
             window->flags |= SDL_WINDOW_BORDERLESS;
         } else {
             window->flags &= ~SDL_WINDOW_BORDERLESS;
@@ -1680,6 +1722,9 @@ Cocoa_CreateWindow(_THIS, SDL_Window * window)
     SDL_Rect bounds;
     NSUInteger style;
     NSArray *screens = [NSScreen screens];
+    NSScreen *screen = nil;
+    SDLView *contentView;
+    BOOL highdpi;
 
     Cocoa_GetDisplayBounds(_this, display, &bounds);
     rect.origin.x = window->x;
@@ -1691,7 +1736,6 @@ Cocoa_CreateWindow(_THIS, SDL_Window * window)
     style = GetWindowStyle(window);
 
     /* Figure out which screen to place this window */
-    NSScreen *screen = nil;
     for (NSScreen *candidate in screens) {
         NSRect screenRect = [candidate frame];
         if (rect.origin.x >= screenRect.origin.x &&
@@ -1710,6 +1754,8 @@ Cocoa_CreateWindow(_THIS, SDL_Window * window)
     @catch (NSException *e) {
         return SDL_SetError("%s", [[e reason] UTF8String]);
     }
+
+    [nswindow setColorSpace:[NSColorSpace sRGBColorSpace]];
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101200 /* Added in the 10.12.0 SDK. */
     /* By default, don't allow users to make our window tabbed in 10.12 or later */
@@ -1732,7 +1778,7 @@ Cocoa_CreateWindow(_THIS, SDL_Window * window)
 
     /* Create a default view for this window */
     rect = [nswindow contentRectForFrameRect:[nswindow frame]];
-    SDLView *contentView = [[SDLView alloc] initWithFrame:rect];
+    contentView = [[SDLView alloc] initWithFrame:rect];
     [contentView setSDLWindow:window];
 
     /* We still support OpenGL as long as Apple offers it, deprecated or not, so disable deprecation warnings about it. */
@@ -1742,7 +1788,7 @@ Cocoa_CreateWindow(_THIS, SDL_Window * window)
     #endif
     /* Note: as of the macOS 10.15 SDK, this defaults to YES instead of NO when
      * the NSHighResolutionCapable boolean is set in Info.plist. */
-    BOOL highdpi = (window->flags & SDL_WINDOW_ALLOW_HIGHDPI) != 0;
+    highdpi = (window->flags & SDL_WINDOW_ALLOW_HIGHDPI) != 0;
     [contentView setWantsBestResolutionOpenGLSurface:highdpi];
     #ifdef __clang__
     #pragma clang diagnostic pop
@@ -1789,6 +1835,8 @@ Cocoa_CreateWindowFrom(_THIS, SDL_Window * window, const void *data)
 {
     NSView* nsview = nil;
     NSWindow *nswindow = nil;
+    NSString *title;
+    BOOL highdpi;
 
     if ([(__bridge id)data isKindOfClass:[NSWindow class]]) {
       nswindow = (__bridge NSWindow*)data;
@@ -1799,8 +1847,6 @@ Cocoa_CreateWindowFrom(_THIS, SDL_Window * window, const void *data)
     } else {
       SDL_assert(false);
     }
-
-    NSString *title;
 
     /* Query the title from the existing window */
     title = [nswindow title];
@@ -1815,7 +1861,7 @@ Cocoa_CreateWindowFrom(_THIS, SDL_Window * window, const void *data)
     #endif
     /* Note: as of the macOS 10.15 SDK, this defaults to YES instead of NO when
      * the NSHighResolutionCapable boolean is set in Info.plist. */
-    BOOL highdpi = (window->flags & SDL_WINDOW_ALLOW_HIGHDPI) != 0;
+    highdpi = (window->flags & SDL_WINDOW_ALLOW_HIGHDPI) != 0;
     [nsview setWantsBestResolutionOpenGLSurface:highdpi];
     #ifdef __clang__
     #pragma clang diagnostic pop
@@ -1920,6 +1966,24 @@ Cocoa_SetWindowMaximumSize(_THIS, SDL_Window * window)
 
     [windata.nswindow setContentMaxSize:maxSize];
 }}
+
+void
+Cocoa_GetWindowSizeInPixels(_THIS, SDL_Window * window, int *w, int *h)
+{ @autoreleasepool
+{
+    SDL_WindowData *windata = (__bridge SDL_WindowData *) window->driverdata;
+    NSView *contentView = windata.sdlContentView;
+    NSRect viewport = [contentView bounds];
+
+    if (window->flags & SDL_WINDOW_ALLOW_HIGHDPI) {
+        /* This gives us the correct viewport for a Retina-enabled view. */
+        viewport = [contentView convertRectToBacking:viewport];
+    }
+
+    *w = viewport.size.width;
+    *h = viewport.size.height;
+}}
+
 
 void
 Cocoa_ShowWindow(_THIS, SDL_Window * window)
@@ -2083,6 +2147,7 @@ Cocoa_SetWindowFullscreen(_THIS, SDL_Window * window, SDL_VideoDisplay * display
 
         [nswindow setStyleMask:NSWindowStyleMaskBorderless];
     } else {
+        NSRect frameRect;
         rect.origin.x = window->windowed.x;
         rect.origin.y = window->windowed.y;
         rect.size.width = window->windowed.w;
@@ -2098,7 +2163,7 @@ Cocoa_SetWindowFullscreen(_THIS, SDL_Window * window, SDL_VideoDisplay * display
         [nswindow setStyleMask:GetWindowWindowedStyle(window)];
 
         /* Hack to restore window decorations on Mac OS X 10.10 */
-        NSRect frameRect = [nswindow frame];
+        frameRect = [nswindow frame];
         [nswindow setFrame:NSMakeRect(frameRect.origin.x, frameRect.origin.y, frameRect.size.width + 1, frameRect.size.height) display:NO];
         [nswindow setFrame:frameRect display:NO];
     }
@@ -2204,33 +2269,39 @@ int
 Cocoa_GetWindowDisplayIndex(_THIS, SDL_Window * window)
 { @autoreleasepool
 {
+    NSScreen *screen;
     SDL_WindowData *data = (__bridge SDL_WindowData *) window->driverdata;
 
     /* Not recognized via CHECK_WINDOW_MAGIC */
-    if (data == NULL){
-        return 0;
+    if (data == nil) {
+        /* Don't set the error here, it hides other errors and is ignored anyway */
+        /*return SDL_SetError("Window data not set");*/
+        return -1;
     }
 
-    /*
-     Considering that we already have the display coordinates in which the window is placed (described via displayframe)
-     instead of checking in which display the window is placed, we should check which SDL display matches the display described
-     via displayframe.
-    */
-    NSRect displayframe = data.nswindow.screen.frame;
-    SDL_Point display_center;
-    SDL_Rect sdl_display_rect;
-    
-    display_center.x = displayframe.origin.x + displayframe.size.width / 2;
-    display_center.y = displayframe.origin.y + displayframe.size.height / 2;
-    
-    for (int i = 0; i < SDL_GetNumVideoDisplays(); i++){
-        SDL_GetDisplayBounds(i, &sdl_display_rect);
-        if (SDL_EnclosePoints(&display_center, 1, &sdl_display_rect, NULL)) {
-            return i;
+    /* NSWindow.screen may be nil when the window is off-screen. */
+    screen = data.nswindow.screen;
+
+    if (screen != nil) {
+        CGDirectDisplayID displayid;
+        int i;
+
+        /* https://developer.apple.com/documentation/appkit/nsscreen/1388360-devicedescription?language=objc */
+        displayid = [[screen.deviceDescription objectForKey:@"NSScreenNumber"] unsignedIntValue];
+
+        for (i = 0; i < _this->num_displays; i++) {
+            SDL_DisplayData *displaydata = (SDL_DisplayData *)_this->displays[i].driverdata;
+            if (displaydata != NULL && displaydata->display == displayid) {
+                return i;
+            }
         }
     }
-    SDL_SetError("Couldn't find the display where the window is attached to.");
-    return -1;
+
+    /* Other code may expect SDL_GetWindowDisplayIndex to always return a valid
+     * index for a window. The higher level GetWindowDisplayIndex code will fall
+     * back to a generic position-based query if the backend implementation
+     * fails. */
+    return SDL_SetError("Couldn't find the display where the window is located.");
 }}
 
 int
@@ -2292,6 +2363,7 @@ Cocoa_DestroyWindow(_THIS, SDL_Window * window)
     SDL_WindowData *data = (SDL_WindowData *) CFBridgingRelease(window->driverdata);
 
     if (data) {
+        NSArray *contexts;
         if ([data.listener isInFullscreenSpace]) {
             [NSMenu setMenuBarVisible:YES];
         }
@@ -2303,10 +2375,20 @@ Cocoa_DestroyWindow(_THIS, SDL_Window * window)
             [data.nswindow close];
         }
 
-        NSArray *contexts = [data.nscontexts copy];
+        #if SDL_VIDEO_OPENGL
+
+        contexts = [data.nscontexts copy];
         for (SDLOpenGLContext *context in contexts) {
             /* Calling setWindow:NULL causes the context to remove itself from the context list. */            
             [context setWindow:NULL];
+        }
+
+        #endif /* SDL_VIDEO_OPENGL */
+
+        if (window->shaper) {
+            CFBridgingRelease(window->shaper->driverdata);
+            SDL_free(window->shaper);
+            window->shaper = NULL;
         }
     }
     window->driverdata = NULL;
@@ -2323,8 +2405,8 @@ Cocoa_GetWindowWMInfo(_THIS, SDL_Window * window, SDL_SysWMinfo * info)
         info->info.cocoa.window = nswindow;
         return SDL_TRUE;
     } else {
-        SDL_SetError("Application not compiled with SDL %d.%d",
-                     SDL_MAJOR_VERSION, SDL_MINOR_VERSION);
+        SDL_SetError("Application not compiled with SDL %d",
+                     SDL_MAJOR_VERSION);
         return SDL_FALSE;
     }
 }}

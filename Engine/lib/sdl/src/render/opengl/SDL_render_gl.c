@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -22,9 +22,11 @@
 
 #if SDL_VIDEO_RENDER_OGL && !SDL_RENDER_DISABLED
 #include "SDL_hints.h"
+#include "../../video/SDL_sysvideo.h" /* For SDL_GL_SwapWindowWithResult */
 #include "SDL_opengl.h"
 #include "../SDL_sysrender.h"
 #include "SDL_shaders_gl.h"
+#include "../../SDL_utils_c.h"
 
 #ifdef __MACOSX__
 #include <OpenGL/OpenGL.h>
@@ -411,17 +413,6 @@ GL_SupportsBlendMode(SDL_Renderer * renderer, SDL_BlendMode blendMode)
     return SDL_TRUE;
 }
 
-SDL_FORCE_INLINE int
-power_of_2(int input)
-{
-    int value = 1;
-
-    while (value < input) {
-        value <<= 1;
-    }
-    return value;
-}
-
 SDL_FORCE_INLINE SDL_bool
 convert_format(GL_RenderData *renderdata, Uint32 pixel_format,
                GLint* internalFormat, GLenum* format, GLenum* type)
@@ -540,8 +531,8 @@ GL_CreateTexture(SDL_Renderer * renderer, SDL_Texture * texture)
         data->texw = (GLfloat) texture_w;
         data->texh = (GLfloat) texture_h;
     } else {
-        texture_w = power_of_2(texture->w);
-        texture_h = power_of_2(texture->h);
+        texture_w = SDL_powerof2(texture->w);
+        texture_h = SDL_powerof2(texture->h);
         data->texw = (GLfloat) (texture->w) / texture_w;
         data->texh = (GLfloat) texture->h / texture_h;
     }
@@ -1254,8 +1245,8 @@ GL_RunCommandQueue(SDL_Renderer * renderer, SDL_RenderCommand *cmd, void *vertic
 
             case SDL_RENDERCMD_SETVIEWPORT: {
                 SDL_Rect *viewport = &data->drawstate.viewport;
-                if (SDL_memcmp(viewport, &cmd->data.viewport.rect, sizeof (SDL_Rect)) != 0) {
-                    SDL_memcpy(viewport, &cmd->data.viewport.rect, sizeof (SDL_Rect));
+                if (SDL_memcmp(viewport, &cmd->data.viewport.rect, sizeof(cmd->data.viewport.rect)) != 0) {
+                    SDL_copyp(viewport, &cmd->data.viewport.rect);
                     data->drawstate.viewport_dirty = SDL_TRUE;
                 }
                 break;
@@ -1268,8 +1259,8 @@ GL_RunCommandQueue(SDL_Renderer * renderer, SDL_RenderCommand *cmd, void *vertic
                     data->drawstate.cliprect_enabled_dirty = SDL_TRUE;
                 }
 
-                if (SDL_memcmp(&data->drawstate.cliprect, rect, sizeof (SDL_Rect)) != 0) {
-                    SDL_memcpy(&data->drawstate.cliprect, rect, sizeof (SDL_Rect));
+                if (SDL_memcmp(&data->drawstate.cliprect, rect, sizeof(*rect)) != 0) {
+                    SDL_copyp(&data->drawstate.cliprect, rect);
                     data->drawstate.cliprect_dirty = SDL_TRUE;
                 }
                 break;
@@ -1512,12 +1503,12 @@ GL_RenderReadPixels(SDL_Renderer * renderer, const SDL_Rect * rect,
     return status;
 }
 
-static void
+static int
 GL_RenderPresent(SDL_Renderer * renderer)
 {
     GL_ActivateRenderer(renderer);
 
-    SDL_GL_SwapWindow(renderer->window);
+    return SDL_GL_SwapWindowWithResult(renderer->window);
 }
 
 static void
@@ -1715,7 +1706,7 @@ GL_IsProbablyAccelerated(const GL_RenderData *data)
     /*const char *vendor = (const char *) data->glGetString(GL_VENDOR);*/
     const char *renderer = (const char *) data->glGetString(GL_RENDERER);
 
-#ifdef __WINDOWS__
+#if defined(__WINDOWS__) || defined(__WINGDK__)
     if (SDL_strcmp(renderer, "GDI Generic") == 0) {
         return SDL_FALSE;  /* Microsoft's fallback software renderer. Fix your system! */
     }
@@ -1929,6 +1920,10 @@ GL_CreateRenderer(SDL_Window * window, Uint32 flags)
     if (data->shaders && data->num_texture_units >= 3) {
         renderer->info.texture_formats[renderer->info.num_texture_formats++] = SDL_PIXELFORMAT_YV12;
         renderer->info.texture_formats[renderer->info.num_texture_formats++] = SDL_PIXELFORMAT_IYUV;
+    }
+
+    /* We support NV12 textures using 2 textures and a shader */
+    if (data->shaders && data->num_texture_units >= 2) {
         renderer->info.texture_formats[renderer->info.num_texture_formats++] = SDL_PIXELFORMAT_NV12;
         renderer->info.texture_formats[renderer->info.num_texture_formats++] = SDL_PIXELFORMAT_NV21;
     }
@@ -1936,6 +1931,13 @@ GL_CreateRenderer(SDL_Window * window, Uint32 flags)
 #ifdef __MACOSX__
     renderer->info.texture_formats[renderer->info.num_texture_formats++] = SDL_PIXELFORMAT_UYVY;
 #endif
+
+    renderer->rect_index_order[0] = 0;
+    renderer->rect_index_order[1] = 1;
+    renderer->rect_index_order[2] = 3;
+    renderer->rect_index_order[3] = 1;
+    renderer->rect_index_order[4] = 3;
+    renderer->rect_index_order[5] = 2;
 
     if (SDL_GL_ExtensionSupported("GL_EXT_framebuffer_object")) {
         data->GL_EXT_framebuffer_object_supported = SDL_TRUE;

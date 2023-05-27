@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
   Copyright (C) 2020 Collabora Ltd.
 
   This software is provided 'as-is', without any express or implied
@@ -19,10 +19,12 @@
      misrepresented as being the original software.
   3. This notice may not be removed or altered from any source distribution.
 */
+#include "../../SDL_internal.h"
 
 #include "SDL_evdev_capabilities.h"
 
-#if HAVE_LIBUDEV_H || defined(SDL_JOYSTICK_LINUX)
+
+#if HAVE_LINUX_INPUT_H
 
 /* missing defines in older Linux kernel headers */
 #ifndef BTN_TRIGGER_HAPPY
@@ -142,4 +144,6 @@ SDL_EVDEV_GuessDeviceClass(unsigned long bitmask_ev[NBITS(EV_MAX)],
     return devclass;
 }
 
-#endif
+#endif /* HAVE_LINUX_INPUT_H */
+
+/* vi: set ts=4 sw=4 expandtab: */

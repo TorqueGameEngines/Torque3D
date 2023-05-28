@@ -47,15 +47,19 @@ int main( void )
 }
 ```
 
-See [NFD.h](src/include/nfd.h) for more options.
+See self-documenting API [NFD.h](src/include/nfd.h) for more options.
 
 # Screenshots #
 
-![Windows 8 rendering an IFileOpenDialog](screens/open_win.png?raw=true)
-![GTK3 on Linux](screens/open_gtk3.png?raw=true)
-![Cocoa on Yosemite](screens/open_cocoa.png?raw=true)
+![Windows rendering a dialog](screens/open_win.png?raw=true)
+![GTK3 on Linux rendering a dialog](screens/open_gtk3.png?raw=true)
+![Cocoa on MacOS rendering a dialog](screens/open_cocoa.png?raw=true)
 
 ## Changelog ##
+
+ - **Major** version increments denote API or ABI departure.
+ - **Minor** version increments denote build or trivial departures.
+ - **Micro** version increments just recompile and drop-in.
 
 release | what's new                  | date
 --------|-----------------------------|---------
@@ -64,11 +68,15 @@ release | what's new                  | date
 1.1.1   | mingw support, build fixes  | aug 2016
 1.1.2   | test_pickfolder() added     | aug 2016
 1.1.3   | zenity linux backend added  | nov 2017
-1.1.3   | fix char type in decls      | nov 2017
+<i></i> | fix char type in decls      | nov 2017
 1.1.4   | fix win32 memleaks          | dec 2018
-1.1.4   | improve win32 errorhandling | dec 2018
-1.1.4   | macos fix focus bug         | dec 2018
-   
+<i></i> | improve win32 errorhandling | dec 2018
+<i></i> | macos fix focus bug         | dec 2018
+1.1.5   | win32 fix com reinitialize  | aug 2019
+1.1.6   | fix osx filter bug          | aug 2019
+<i></i> | remove deprecated scons     | aug 2019
+<i></i> | fix mingw compilation       | aug 2019
+<i></i> | -Wextra warning cleanup     | aug 2019
 
 ## Building ##
 
@@ -76,13 +84,13 @@ NFD uses [Premake5](https://premake.github.io/download.html) generated Makefiles
 
 If you need to run Premake5 directly, further [build documentation](docs/build.md) is available.
 
-Previously, NFD used SCons to build.  It still works, but is now deprecated; updates to it are discouraged.  Opt to use the native build system where possible.
+Previously, NFD used SCons to build.  As of 1.1.6, SCons support has been removed entirely.
 
 `nfd.a` will be built for release builds, and `nfd_d.a` will be built for debug builds.
 
 ### Makefiles ###
 
-The makefile offers five options, with `release_x64` as the default.
+The makefile offers up to four options, with `release_x64` as the default.
 
     make config=release_x86
     make config=release_x64
@@ -96,6 +104,7 @@ The makefile offers five options, with `release_x64` as the default.
  3. Add `build/<debug|release>/<arch>` to the library search path.
 
 #### Linux GTK ####
+
 `apt-get libgtk-3-dev` installs the gtk dependency for library compilation.
 
 On Linux, you have the option of compiling and linking against GTK.  If you use it, the recommended way to compile is to include the arguments of `pkg-config --cflags --libs gtk+-3.0`.
@@ -105,16 +114,18 @@ On Linux, you have the option of compiling and linking against GTK.  If you use 
 Alternatively, you can use the Zenity backend by running the Makefile in `build/gmake_linux_zenity`.  Zenity runs the dialog in its own address space, but requires the user to have Zenity correctly installed and configured on their system.
 
 #### MacOS ####
+
 On Mac OS, add `AppKit` to the list of frameworks.
 
 #### Windows ####
-On Windows, ensure you are building against `comctl32.lib`.
+
+On Windows, ensure you are linking against `comctl32.lib`.
 
 ## Usage ##
 
 See `NFD.h` for API calls.  See `tests/*.c` for example code.
 
-After compiling, `build/bin` contains compiled test programs.
+After compiling, `build/bin` contains compiled test programs.  The appropriate subdirectory under `build/lib` contains the built library.
 
 ## File Filter Syntax ##
 
@@ -141,14 +152,16 @@ See [test_opendialogmultiple.c](test/test_opendialogmultiple.c).
 
 # Known Limitations #
 
-I accept quality code patches, or will resolve these and other matters through support.  See [submitting pull requests](docs/submitting_pull_requests.md) for details.
+I accept quality code patches, or will resolve these and other matters through support.  See [contributing](docs/contributing.md) for details.
 
  - No support for Windows XP's legacy dialogs such as `GetOpenFileName`.
  - No support for file filter names -- ex: "Image Files" (*.png, *.jpg).  Nameless filters are supported, however.
+ - GTK Zenity implementation's process exec error handling does not gracefully handle numerous error cases, choosing to abort rather than cleanup and return.
+ - GTK 3 spams one warning per dialog created.
 
 # Copyright and Credit #
 
-Copyright &copy; 2014-2017 [Frogtoss Games](http://www.frogtoss.com), Inc.
+Copyright &copy; 2014-2019 [Frogtoss Games](http://www.frogtoss.com), Inc.
 File [LICENSE](LICENSE) covers all files in this repo.
 
 Native File Dialog by Michael Labbe

@@ -69,7 +69,7 @@ namespace XFile {
 class XFileImporter : public BaseImporter {
 public:
     XFileImporter();
-    ~XFileImporter() override = default;
+    ~XFileImporter() override;
 
     // -------------------------------------------------------------------
     /** Returns whether the class can handle the format of the given file.

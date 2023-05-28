@@ -41,7 +41,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <assimp/ai_assert.h>
-#include <utility>
 
 namespace Assimp {
 
@@ -49,14 +48,13 @@ namespace Assimp {
 /// @tparam T   The type to store.
 template <typename T>
 struct Maybe {
-    /// @brief
+    /// @brief 
     Maybe() = default;
 
-    /// @brief
-    /// @param val
-    template <typename U>
-    explicit Maybe(U &&val) :
-            _val(std::forward<U>(val)), _valid(true) {}
+    /// @brief 
+    /// @param val 
+    explicit Maybe(const T &val) :
+            _val(val), _valid(true) {}
 
     /// @brief Validate the value
     /// @return true if valid.
@@ -66,12 +64,11 @@ struct Maybe {
 
     /// @brief Will assign a value.
     /// @param v The new valid value.
-    template <typename U>
-    void Set(U &&v) {
+    void Set(T &v) {
         ai_assert(!_valid);
 
         _valid = true;
-        _val = std::forward<U>(v);
+        _val = v;
     }
 
     /// @brief  Will return the value when it is valid.

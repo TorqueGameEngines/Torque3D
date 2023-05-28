@@ -27,6 +27,7 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+
 // This sample teaches how to reuse a test fixture in multiple test
 // cases by deriving sub-fixtures from it.
 //
@@ -44,10 +45,9 @@
 
 #include <limits.h>
 #include <time.h>
-
+#include "gtest/gtest.h"
 #include "sample1.h"
 #include "sample3-inl.h"
-#include "gtest/gtest.h"
 namespace {
 // In this sample, we want to ensure that every test finishes within
 // ~5 seconds.  If a test takes longer to run, we consider it a
@@ -81,6 +81,7 @@ class QuickTest : public testing::Test {
   time_t start_time_;
 };
 
+
 // We derive a fixture named IntegerFunctionTest from the QuickTest
 // fixture.  All tests using this fixture will be automatically
 // required to be quick.
@@ -88,6 +89,7 @@ class IntegerFunctionTest : public QuickTest {
   // We don't need any more logic than already in the QuickTest fixture.
   // Therefore the body is empty.
 };
+
 
 // Now we can write tests in the IntegerFunctionTest test case.
 
@@ -108,6 +110,7 @@ TEST_F(IntegerFunctionTest, Factorial) {
   EXPECT_EQ(40320, Factorial(8));
 }
 
+
 // Tests IsPrime()
 TEST_F(IntegerFunctionTest, IsPrime) {
   // Tests negative input.
@@ -127,6 +130,7 @@ TEST_F(IntegerFunctionTest, IsPrime) {
   EXPECT_FALSE(IsPrime(6));
   EXPECT_TRUE(IsPrime(23));
 }
+
 
 // The next test case (named "QueueTest") also needs to be quick, so
 // we derive another fixture from QuickTest.
@@ -159,10 +163,13 @@ class QueueTest : public QuickTest {
   Queue<int> q2_;
 };
 
+
 // Now, let's write tests using the QueueTest fixture.
 
 // Tests the default constructor.
-TEST_F(QueueTest, DefaultConstructor) { EXPECT_EQ(0u, q0_.Size()); }
+TEST_F(QueueTest, DefaultConstructor) {
+  EXPECT_EQ(0u, q0_.Size());
+}
 
 // Tests Dequeue().
 TEST_F(QueueTest, Dequeue) {

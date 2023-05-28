@@ -576,12 +576,7 @@ DefineEngineFunction( fileCreatedTime, String, ( const char* fileName ),,
    {
       Platform::LocalTime lt = node->getCreatedTime().toLocalTime();
 
-<<<<<<< HEAD
       String fileStr = Platform::localTimeToString(lt);
-=======
-   Platform::LocalTime lt = {0};
-   Platform::fileToLocalTime( ft, &lt );
->>>>>>> 2f1d21eea6a3a78b6e91144149879893b4156723
 
       char *buffer = Con::getReturnBuffer(fileStr.size());
       dStrcpy(buffer, fileStr, fileStr.size());
@@ -851,17 +846,7 @@ DefineEngineFunction( pathCopy, bool, ( const char* fromFile, const char* toFile
    "@note Only present in a Tools build of Torque.\n"
    "@ingroup FileSystem")
 {
-<<<<<<< HEAD
    return Torque::FS::CopyFile(fromFile, toFile, noOverwrite);
-=======
-   char qualifiedFromFile[ 2048 ];
-   char qualifiedToFile[ 2048 ];
-
-   Platform::makeFullPathName( fromFile, qualifiedFromFile, sizeof( qualifiedFromFile ) );
-   Platform::makeFullPathName( toFile, qualifiedToFile, sizeof( qualifiedToFile ) );
-
-   return dPathCopy( qualifiedFromFile, qualifiedToFile, noOverwrite );
->>>>>>> 2f1d21eea6a3a78b6e91144149879893b4156723
 }
 
 //-----------------------------------------------------------------------------

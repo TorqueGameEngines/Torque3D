@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -28,6 +28,10 @@
 #include "SDL_mutex.h"
 #include "SDL_yuv_sw_c.h"
 
+/* Set up for C function definitions, even when using C++ */
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * A rectangle, with the origin at the upper left (double precision).
@@ -184,7 +188,7 @@ struct SDL_Renderer
     int (*SetRenderTarget) (SDL_Renderer * renderer, SDL_Texture * texture);
     int (*RenderReadPixels) (SDL_Renderer * renderer, const SDL_Rect * rect,
                              Uint32 format, void * pixels, int pitch);
-    void (*RenderPresent) (SDL_Renderer * renderer);
+    int (*RenderPresent) (SDL_Renderer * renderer);
     void (*DestroyTexture) (SDL_Renderer * renderer, SDL_Texture * texture);
 
     void (*DestroyRenderer) (SDL_Renderer * renderer);
@@ -204,6 +208,12 @@ struct SDL_Renderer
     SDL_Window *window;
     SDL_bool hidden;
 
+    /* Whether we should simulate vsync */
+    SDL_bool wanted_vsync;
+    SDL_bool simulate_vsync;
+    Uint32 simulate_vsync_interval;
+    Uint32 last_present;
+
     /* The logical resolution for rendering */
     int logical_w;
     int logical_h;
@@ -221,7 +231,7 @@ struct SDL_Renderer
     SDL_DRect clip_rect;
     SDL_DRect clip_rect_backup;
 
-    /* Wether or not the clipping rectangle is used. */
+    /* Whether or not the clipping rectangle is used. */
     SDL_bool clipping_enabled;
     SDL_bool clipping_enabled_backup;
 
@@ -237,6 +247,9 @@ struct SDL_Renderer
 
     /* The method of drawing lines */
     SDL_RenderLineMethod line_method;
+
+    /* List of triangle indices to draw rects */
+    int rect_index_order[6];
 
     /* Remainder from scaled relative motion */
     float xrel;
@@ -283,11 +296,13 @@ struct SDL_RenderDriver
 /* Not all of these are available in a given build. Use #ifdefs, etc. */
 extern SDL_RenderDriver D3D_RenderDriver;
 extern SDL_RenderDriver D3D11_RenderDriver;
+extern SDL_RenderDriver D3D12_RenderDriver;
 extern SDL_RenderDriver GL_RenderDriver;
 extern SDL_RenderDriver GLES2_RenderDriver;
 extern SDL_RenderDriver GLES_RenderDriver;
 extern SDL_RenderDriver DirectFB_RenderDriver;
 extern SDL_RenderDriver METAL_RenderDriver;
+extern SDL_RenderDriver PS2_RenderDriver;
 extern SDL_RenderDriver PSP_RenderDriver;
 extern SDL_RenderDriver SW_RenderDriver;
 extern SDL_RenderDriver VITA_GXM_RenderDriver;
@@ -307,6 +322,11 @@ extern void *SDL_AllocateRenderVertices(SDL_Renderer *renderer, const size_t num
 
 extern int SDL_PrivateLowerBlitScaled(SDL_Surface * src, SDL_Rect * srcrect, SDL_Surface * dst, SDL_Rect * dstrect, SDL_ScaleMode scaleMode);
 extern int SDL_PrivateUpperBlitScaled(SDL_Surface * src, const SDL_Rect * srcrect, SDL_Surface * dst, SDL_Rect * dstrect, SDL_ScaleMode scaleMode);
+
+/* Ends C function definitions when using C++ */
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SDL_sysrender_h_ */
 

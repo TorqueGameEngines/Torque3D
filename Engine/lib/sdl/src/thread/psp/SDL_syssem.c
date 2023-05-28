@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -101,7 +101,7 @@ int SDL_SemWaitTimeout(SDL_sem *sem, Uint32 timeout)
         pTimeout = &timeout;
     }
 
-    res = sceKernelWaitSema(sem->semid, 1, pTimeout);
+    res = sceKernelWaitSema(sem->semid, 1, (SceUInt *) pTimeout);
        switch (res) {
                case SCE_KERNEL_ERROR_OK:
                        return 0;

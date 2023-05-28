@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -33,7 +33,7 @@ ticktock(Uint32 interval, void *param)
 static Uint32 SDLCALL
 callback(Uint32 interval, void *param)
 {
-    SDL_Log("Timer %d : param = %d\n", interval, (int) (uintptr_t) param);
+    SDL_Log("Timer %" SDL_PRIu32 " : param = %d\n", interval, (int) (uintptr_t) param);
     return interval;
 }
 

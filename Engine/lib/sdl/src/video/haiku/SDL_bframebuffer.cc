@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -60,8 +60,7 @@ int HAIKU_CreateWindowFramebuffer(_THIS, SDL_Window * window,
     /* format */
     display_mode bmode;
     bscreen.GetMode(&bmode);
-    int32 bpp = HAIKU_ColorSpaceToBitsPerPixel(bmode.space);
-    *format = HAIKU_BPPToSDLPxFormat(bpp);
+    *format = HAIKU_ColorSpaceToSDLPxFormat(bmode.space);
 
     /* Create the new bitmap object */
     BBitmap *bitmap = bwin->GetBitmap();

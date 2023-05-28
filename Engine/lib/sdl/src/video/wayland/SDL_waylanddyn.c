@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -84,6 +84,10 @@ WAYLAND_GetSym(const char *fnname, int *pHasModule)
 
     return fn;
 }
+
+#else
+
+#include <wayland-egl.h>
 
 #endif /* SDL_VIDEO_DRIVER_WAYLAND_DYNAMIC */
 

@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -61,7 +61,7 @@
 static int DirectFB_VideoInit(_THIS);
 static void DirectFB_VideoQuit(_THIS);
 
-static SDL_VideoDevice *DirectFB_CreateDevice(int devindex);
+static SDL_VideoDevice *DirectFB_CreateDevice(void);
 
 VideoBootStrap DirectFB_bootstrap = {
     "directfb", "DirectFB",
@@ -83,7 +83,7 @@ DirectFB_DeleteDevice(SDL_VideoDevice * device)
 }
 
 static SDL_VideoDevice *
-DirectFB_CreateDevice(int devindex)
+DirectFB_CreateDevice(void)
 {
     SDL_VideoDevice *device;
 

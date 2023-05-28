@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -195,6 +195,7 @@ DISKAUDIO_Init(SDL_AudioDriverImpl * impl)
 
     impl->AllowsArbitraryDeviceNames = SDL_TRUE;
     impl->HasCaptureSupport = SDL_TRUE;
+    impl->SupportsNonPow2Samples = SDL_TRUE;
 
     return SDL_TRUE;   /* this audio target is available. */
 }

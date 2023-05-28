@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -400,9 +400,11 @@ SDL_INTERSECTRECTANDLINE(const RECTTYPE * rect, SCALARTYPE *X1, SCALARTYPE *Y1, 
             outcode1 = COMPUTEOUTCODE(rect, x, y);
         } else {
             if (outcode2 & CODE_TOP) {
+                SDL_assert(y2 != y1);  /* if equal: division by zero. */
                 y = recty1;
                 x = x1 + ((x2 - x1) * (y - y1)) / (y2 - y1);
             } else if (outcode2 & CODE_BOTTOM) {
+                SDL_assert(y2 != y1);  /* if equal: division by zero. */
                 y = recty2;
                 x = x1 + ((x2 - x1) * (y - y1)) / (y2 - y1);
             } else if (outcode2 & CODE_LEFT) {

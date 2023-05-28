@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -40,7 +40,9 @@ SDL_CreateMutex(void)
     SDL_mutex *mutex;
 
     /* Allocate mutex memory */
-    mutex = (SDL_mutex *) SDL_malloc(sizeof(*mutex));
+    mutex = (SDL_mutex *) SDL_calloc(1, sizeof(*mutex));
+
+#if !SDL_THREADS_DISABLED
     if (mutex) {
         /* Create the mutex semaphore, with initial value 1 */
         mutex->sem = SDL_CreateSemaphore(1);
@@ -53,6 +55,8 @@ SDL_CreateMutex(void)
     } else {
         SDL_OutOfMemory();
     }
+#endif /* !SDL_THREADS_DISABLED */
+
     return mutex;
 }
 

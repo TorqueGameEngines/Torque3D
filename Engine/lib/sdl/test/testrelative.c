@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -104,7 +104,7 @@ main(int argc, char *argv[])
     srand((unsigned int)time(NULL));
     if(SDL_SetRelativeMouseMode(SDL_TRUE) < 0) {
         return 3;
-    };
+    }
 
     rect.x = DEFAULT_WINDOW_WIDTH / 2;
     rect.y = DEFAULT_WINDOW_HEIGHT / 2;

@@ -1,6 +1,6 @@
 /*
  *  Simple DirectMedia Layer
- *  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+ *  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
  * 
  *  This software is provided 'as-is', without any express or implied
  *  warranty.  In no event will the authors be held liable for any damages
@@ -44,6 +44,13 @@
 #define EGL_OPENGL_ES3_BIT_KHR 0x00000040
 #endif
 #endif /* EGL_KHR_create_context */
+
+#ifndef EGL_EXT_pixel_format_float
+#define EGL_EXT_pixel_format_float
+#define EGL_COLOR_COMPONENT_TYPE_EXT 0x3339
+#define EGL_COLOR_COMPONENT_TYPE_FIXED_EXT 0x333A
+#define EGL_COLOR_COMPONENT_TYPE_FLOAT_EXT 0x333B
+#endif
 
 #ifndef EGL_EXT_present_opaque
 #define EGL_EXT_present_opaque 1
@@ -114,7 +121,7 @@
 _this->egl_data->NAME = (void *)NAME;
 #else
 #define LOAD_FUNC(NAME) \
-_this->egl_data->NAME = SDL_LoadFunction(_this->egl_data->dll_handle, #NAME); \
+_this->egl_data->NAME = SDL_LoadFunction(_this->egl_data->egl_dll_handle, #NAME); \
 if (!_this->egl_data->NAME) \
 { \
     return SDL_SetError("Could not retrieve EGL function " #NAME); \
@@ -237,37 +244,28 @@ SDL_bool SDL_EGL_HasExtension(_THIS, SDL_EGL_ExtensionType type, const char *ext
 void *
 SDL_EGL_GetProcAddress(_THIS, const char *proc)
 {
-    const Uint32 eglver = (((Uint32) _this->egl_data->egl_version_major) << 16) | ((Uint32) _this->egl_data->egl_version_minor);
-    const SDL_bool is_egl_15_or_later = eglver >= ((((Uint32) 1) << 16) | 5);
     void *retval = NULL;
+    if (_this->egl_data != NULL) {
+        const Uint32 eglver = (((Uint32) _this->egl_data->egl_version_major) << 16) | ((Uint32) _this->egl_data->egl_version_minor);
+        const SDL_bool is_egl_15_or_later = eglver >= ((((Uint32) 1) << 16) | 5);
 
-    /* EGL 1.5 can use eglGetProcAddress() for any symbol. 1.4 and earlier can't use it for core entry points. */
-    if (!retval && is_egl_15_or_later && _this->egl_data->eglGetProcAddress) {
-        retval = _this->egl_data->eglGetProcAddress(proc);
-    }
+        /* EGL 1.5 can use eglGetProcAddress() for any symbol. 1.4 and earlier can't use it for core entry points. */
+        if (!retval && is_egl_15_or_later && _this->egl_data->eglGetProcAddress) {
+            retval = _this->egl_data->eglGetProcAddress(proc);
+        }
 
-    #if !defined(__EMSCRIPTEN__) && !defined(SDL_VIDEO_DRIVER_VITA)  /* LoadFunction isn't needed on Emscripten and will call dlsym(), causing other problems. */
-    /* Try SDL_LoadFunction() first for EGL <= 1.4, or as a fallback for >= 1.5. */
-    if (!retval) {
-        static char procname[64];
-        retval = SDL_LoadFunction(_this->egl_data->egl_dll_handle, proc);
-        /* just in case you need an underscore prepended... */
-        if (!retval && (SDL_strlen(proc) < (sizeof (procname) - 1))) {
-            procname[0] = '_';
-            SDL_strlcpy(procname + 1, proc, sizeof (procname) - 1);
-            retval = SDL_LoadFunction(_this->egl_data->egl_dll_handle, procname);
+        #if !defined(__EMSCRIPTEN__) && !defined(SDL_VIDEO_DRIVER_VITA)  /* LoadFunction isn't needed on Emscripten and will call dlsym(), causing other problems. */
+        /* Try SDL_LoadFunction() first for EGL <= 1.4, or as a fallback for >= 1.5. */
+        if (!retval) {
+            retval = SDL_LoadFunction(_this->egl_data->opengl_dll_handle, proc);
+        }
+        #endif
+
+        /* Try eglGetProcAddress if we're on <= 1.4 and still searching... */
+        if (!retval && !is_egl_15_or_later && _this->egl_data->eglGetProcAddress) {
+            retval = _this->egl_data->eglGetProcAddress(proc);
         }
     }
-    #endif
-
-    /* Try eglGetProcAddress if we're on <= 1.4 and still searching... */
-    if (!retval && !is_egl_15_or_later && _this->egl_data->eglGetProcAddress) {
-        retval = _this->egl_data->eglGetProcAddress(proc);
-        if (retval) {
-            return retval;
-        }
-    }
-
     return retval;
 }
 
@@ -280,13 +278,13 @@ SDL_EGL_UnloadLibrary(_THIS)
             _this->egl_data->egl_display = NULL;
         }
 
-        if (_this->egl_data->dll_handle) {
-            SDL_UnloadObject(_this->egl_data->dll_handle);
-            _this->egl_data->dll_handle = NULL;
-        }
         if (_this->egl_data->egl_dll_handle) {
             SDL_UnloadObject(_this->egl_data->egl_dll_handle);
             _this->egl_data->egl_dll_handle = NULL;
+        }
+        if (_this->egl_data->opengl_dll_handle) {
+            SDL_UnloadObject(_this->egl_data->opengl_dll_handle);
+            _this->egl_data->opengl_dll_handle = NULL;
         }
         
         SDL_free(_this->egl_data);
@@ -294,10 +292,10 @@ SDL_EGL_UnloadLibrary(_THIS)
     }
 }
 
-int
-SDL_EGL_LoadLibraryOnly(_THIS, const char *egl_path)
+static int
+SDL_EGL_LoadLibraryInternal(_THIS, const char *egl_path)
 {
-    void *dll_handle = NULL, *egl_dll_handle = NULL; /* The naming is counter intuitive, but hey, I just work here -- Gabriel */
+    void *egl_dll_handle = NULL, *opengl_dll_handle = NULL;
     const char *path = NULL;
 #if SDL_VIDEO_DRIVER_WINDOWS || SDL_VIDEO_DRIVER_WINRT
     const char *d3dcompiler;
@@ -305,15 +303,6 @@ SDL_EGL_LoadLibraryOnly(_THIS, const char *egl_path)
 #if SDL_VIDEO_DRIVER_RPI
     SDL_bool vc4 = (0 == access("/sys/module/vc4/", F_OK));
 #endif
-
-    if (_this->egl_data) {
-        return SDL_SetError("EGL context already created");
-    }
-
-    _this->egl_data = (struct SDL_EGL_VideoData *) SDL_calloc(1, sizeof(SDL_EGL_VideoData));
-    if (!_this->egl_data) {
-        return SDL_OutOfMemory();
-    }
 
 #if SDL_VIDEO_DRIVER_WINDOWS || SDL_VIDEO_DRIVER_WINRT
     d3dcompiler = SDL_GetHint(SDL_HINT_VIDEO_WIN_D3DCOMPILER);
@@ -349,32 +338,32 @@ SDL_EGL_LoadLibraryOnly(_THIS, const char *egl_path)
     /* A funny thing, loading EGL.so first does not work on the Raspberry, so we load libGL* first */
     path = SDL_getenv("SDL_VIDEO_GL_DRIVER");
     if (path != NULL) {
-        egl_dll_handle = SDL_LoadObject(path);
+        opengl_dll_handle = SDL_LoadObject(path);
     }
 
-    if (egl_dll_handle == NULL) {
+    if (opengl_dll_handle == NULL) {
         if (_this->gl_config.profile_mask == SDL_GL_CONTEXT_PROFILE_ES) {
             if (_this->gl_config.major_version > 1) {
                 path = DEFAULT_OGL_ES2;
-                egl_dll_handle = SDL_LoadObject(path);
+                opengl_dll_handle = SDL_LoadObject(path);
 #ifdef ALT_OGL_ES2
-                if (egl_dll_handle == NULL && !vc4) {
+                if (opengl_dll_handle == NULL && !vc4) {
                     path = ALT_OGL_ES2;
-                    egl_dll_handle = SDL_LoadObject(path);
+                    opengl_dll_handle = SDL_LoadObject(path);
                 }
 #endif
 
             } else {
                 path = DEFAULT_OGL_ES;
-                egl_dll_handle = SDL_LoadObject(path);
-                if (egl_dll_handle == NULL) {
+                opengl_dll_handle = SDL_LoadObject(path);
+                if (opengl_dll_handle == NULL) {
                     path = DEFAULT_OGL_ES_PVR;
-                    egl_dll_handle = SDL_LoadObject(path);
+                    opengl_dll_handle = SDL_LoadObject(path);
                 }
 #ifdef ALT_OGL_ES2
-                if (egl_dll_handle == NULL && !vc4) {
+                if (opengl_dll_handle == NULL && !vc4) {
                     path = ALT_OGL_ES2;
-                    egl_dll_handle = SDL_LoadObject(path);
+                    opengl_dll_handle = SDL_LoadObject(path);
                 }
 #endif
             }
@@ -382,47 +371,47 @@ SDL_EGL_LoadLibraryOnly(_THIS, const char *egl_path)
 #ifdef DEFAULT_OGL         
         else {
             path = DEFAULT_OGL;
-            egl_dll_handle = SDL_LoadObject(path);
+            opengl_dll_handle = SDL_LoadObject(path);
 #ifdef ALT_OGL
-            if (egl_dll_handle == NULL) {
+            if (opengl_dll_handle == NULL) {
                 path = ALT_OGL;
-                egl_dll_handle = SDL_LoadObject(path);
+                opengl_dll_handle = SDL_LoadObject(path);
             }
 #endif
         }
 #endif        
     }
-    _this->egl_data->egl_dll_handle = egl_dll_handle;
+    _this->egl_data->opengl_dll_handle = opengl_dll_handle;
 
-    if (egl_dll_handle == NULL) {
+    if (opengl_dll_handle == NULL) {
         return SDL_SetError("Could not initialize OpenGL / GLES library");
     }
 
     /* Loading libGL* in the previous step took care of loading libEGL.so, but we future proof by double checking */
     if (egl_path != NULL) {
-        dll_handle = SDL_LoadObject(egl_path);
+        egl_dll_handle = SDL_LoadObject(egl_path);
     }   
     /* Try loading a EGL symbol, if it does not work try the default library paths */
-    if (dll_handle == NULL || SDL_LoadFunction(dll_handle, "eglChooseConfig") == NULL) {
-        if (dll_handle != NULL) {
-            SDL_UnloadObject(dll_handle);
+    if (egl_dll_handle == NULL || SDL_LoadFunction(egl_dll_handle, "eglChooseConfig") == NULL) {
+        if (egl_dll_handle != NULL) {
+            SDL_UnloadObject(egl_dll_handle);
         }
         path = SDL_getenv("SDL_VIDEO_EGL_DRIVER");
         if (path == NULL) {
             path = DEFAULT_EGL;
         }
-        dll_handle = SDL_LoadObject(path);
+        egl_dll_handle = SDL_LoadObject(path);
 
 #ifdef ALT_EGL
-        if (dll_handle == NULL && !vc4) {
+        if (egl_dll_handle == NULL && !vc4) {
             path = ALT_EGL;
-            dll_handle = SDL_LoadObject(path);
+            egl_dll_handle = SDL_LoadObject(path);
         }
 #endif
 
-        if (dll_handle == NULL || SDL_LoadFunction(dll_handle, "eglChooseConfig") == NULL) {
-            if (dll_handle != NULL) {
-                SDL_UnloadObject(dll_handle);
+        if (egl_dll_handle == NULL || SDL_LoadFunction(egl_dll_handle, "eglChooseConfig") == NULL) {
+            if (egl_dll_handle != NULL) {
+                SDL_UnloadObject(egl_dll_handle);
             }
             return SDL_SetError("Could not load EGL library");
         }
@@ -430,9 +419,9 @@ SDL_EGL_LoadLibraryOnly(_THIS, const char *egl_path)
     }
 #endif
 
-    _this->egl_data->dll_handle = dll_handle;
-#if SDL_VIDEO_DRIVER_VITA
     _this->egl_data->egl_dll_handle = egl_dll_handle;
+#if SDL_VIDEO_DRIVER_VITA
+    _this->egl_data->opengl_dll_handle = opengl_dll_handle;
 #endif
 
     /* Load new function pointers */
@@ -472,6 +461,26 @@ SDL_EGL_LoadLibraryOnly(_THIS, const char *egl_path)
         *_this->gl_config.driver_path = '\0';
     }
 
+    return 0;
+}
+
+int
+SDL_EGL_LoadLibraryOnly(_THIS, const char *egl_path)
+{
+    if (_this->egl_data) {
+        return SDL_SetError("EGL context already created");
+    }
+
+    _this->egl_data = (struct SDL_EGL_VideoData *) SDL_calloc(1, sizeof(SDL_EGL_VideoData));
+    if (!_this->egl_data) {
+        return SDL_OutOfMemory();
+    }
+
+    if (SDL_EGL_LoadLibraryInternal(_this, egl_path) < 0) {
+        SDL_free(_this->egl_data);
+        _this->egl_data = NULL;
+        return -1;
+    }
     return 0;
 }
 
@@ -760,6 +769,11 @@ SDL_EGL_PrivateChooseConfig(_THIS, SDL_bool set_config_caveat_none)
     if (_this->gl_config.multisamplesamples) {
         attribs[i++] = EGL_SAMPLES;
         attribs[i++] = _this->gl_config.multisamplesamples;
+    }
+
+    if (_this->gl_config.floatbuffers) {
+        attribs[i++] = EGL_COLOR_COMPONENT_TYPE_EXT;
+        attribs[i++] = EGL_COLOR_COMPONENT_TYPE_FLOAT_EXT;
     }
 
     if (_this->egl_data->is_offscreen) {

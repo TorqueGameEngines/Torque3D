@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -533,7 +533,7 @@ int SDL_SW_BlitTriangle(
 
     if (is_uniform) {
         // SDL_GetSurfaceColorMod(src, &r, &g, &b);
-        has_modulation = c0.r != 255 || c0.g != 255 || c0.b != 255 || c0.a != 255;;
+        has_modulation = c0.r != 255 || c0.g != 255 || c0.b != 255 || c0.a != 255;
     } else {
         has_modulation = SDL_TRUE;
     }
@@ -759,7 +759,7 @@ SDL_BlitTriangle_Slow(SDL_BlitInfo *info,
     Uint32 ckey = info->colorkey & rgbmask;
 
     Uint8 *dst_ptr = info->dst;
-    int dst_pitch = info->dst_pitch;;
+    int dst_pitch = info->dst_pitch;
 
     srcfmt_val = detect_format(src_fmt);
     dstfmt_val = detect_format(dst_fmt);

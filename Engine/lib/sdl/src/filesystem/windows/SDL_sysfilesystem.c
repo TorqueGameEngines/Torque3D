@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -171,5 +171,24 @@ SDL_GetPrefPath(const char *org, const char *app)
 }
 
 #endif /* SDL_FILESYSTEM_WINDOWS */
+
+#ifdef SDL_FILESYSTEM_XBOX
+#include "SDL_filesystem.h"
+#include "SDL_error.h"
+char *
+SDL_GetBasePath(void)
+{
+    SDL_Unsupported();
+    return NULL;
+}
+
+char *
+SDL_GetPrefPath(const char *org, const char *app)
+{
+    SDL_Unsupported();
+    return NULL;
+}
+#endif /* SDL_FILESYSTEM_XBOX */
+
 
 /* vi: set ts=4 sw=4 expandtab: */

@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -229,6 +229,7 @@ static void Cocoa_DispatchEvent(NSEvent *theEvent)
 
 - (void)focusSomeWindow:(NSNotification *)aNotification
 {
+    SDL_VideoDevice *device;
     /* HACK: Ignore the first call. The application gets a
      * applicationDidBecomeActive: a little bit after the first window is
      * created, and if we don't ignore it, a window that has been created with
@@ -246,7 +247,7 @@ static void Cocoa_DispatchEvent(NSEvent *theEvent)
         return;
     }
 
-    SDL_VideoDevice *device = SDL_GetVideoDevice();
+    device = SDL_GetVideoDevice();
     if (device && device->windows) {
         SDL_Window *window = device->windows;
         int i;
@@ -332,6 +333,7 @@ GetApplicationName(void)
 static bool
 LoadMainMenuNibIfAvailable(void)
 {
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1080
     NSDictionary *infoDict;
     NSString *mainNibFileName;
     bool success = false;
@@ -349,6 +351,9 @@ LoadMainMenuNibIfAvailable(void)
     }
     
     return success;
+#else
+    return false;
+#endif
 }
 
 static void
@@ -548,13 +553,11 @@ Cocoa_PumpEvents(_THIS)
 void Cocoa_SendWakeupEvent(_THIS, SDL_Window *window)
 { @autoreleasepool
 {
-    NSWindow *nswindow = ((__bridge SDL_WindowData *) window->driverdata).nswindow;
-
     NSEvent* event = [NSEvent otherEventWithType: NSEventTypeApplicationDefined
                                     location: NSMakePoint(0,0)
                                modifierFlags: 0
                                    timestamp: 0.0
-                                windowNumber: nswindow.windowNumber
+                                windowNumber: ((__bridge SDL_WindowData *) window->driverdata).window_number
                                      context: nil
                                      subtype: 0
                                        data1: 0

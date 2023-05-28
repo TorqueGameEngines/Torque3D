@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -1004,7 +1004,7 @@ extern DECLSPEC void SDLCALL SDL_RenderGetScale(SDL_Renderer * renderer,
  * and logical renderer size set
  *
  * \param renderer the renderer from which the logical coordinates should be
- *                 calcualted
+ *                 calculated
  * \param windowX the real X coordinate in the window
  * \param windowY the real Y coordinate in the window
  * \param logicalX the pointer filled with the logical x coordinate
@@ -1021,19 +1021,23 @@ extern DECLSPEC void SDLCALL SDL_RenderWindowToLogical(SDL_Renderer * renderer,
                                                             int windowX, int windowY, 
                                                             float *logicalX, float *logicalY);
                                                   
-                                                  /**
- * Get real coordinates of point in window when given logical coordinates of point in renderer.
- * Logical coordinates will differ from real coordinates when render is scaled and logical renderer size set
- * 
- * \param renderer the renderer from which the window coordinates should be calculated
+
+/**
+ * Get real coordinates of point in window when given logical coordinates of
+ * point in renderer.
+ *
+ * Logical coordinates will differ from real coordinates when render is scaled
+ * and logical renderer size set
+ *
+ * \param renderer the renderer from which the window coordinates should be
+ *                 calculated
  * \param logicalX the logical x coordinate
  * \param logicalY the logical y coordinate
  * \param windowX the pointer filled with the real X coordinate in the window
  * \param windowY the pointer filled with the real Y coordinate in the window
- 
- *  
+ *
  * \since This function is available since SDL 2.0.18.
- * 
+ *
  * \sa SDL_RenderGetScale
  * \sa SDL_RenderSetScale
  * \sa SDL_RenderGetLogicalSize
@@ -1760,6 +1764,9 @@ extern DECLSPEC void SDLCALL SDL_DestroyTexture(SDL_Texture * texture);
 
 /**
  * Destroy the rendering context for a window and free associated textures.
+ *
+ * If `renderer` is NULL, this function will return immediately after setting
+ * the SDL error message to "Invalid renderer". See SDL_GetError().
  *
  * \param renderer the rendering context
  *

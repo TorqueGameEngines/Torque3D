@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -213,7 +213,7 @@ static int unifont_init(const char *fontname)
         if (codepoint <= UNIFONT_MAX_CODEPOINT)
         {
             if (unifontGlyph[codepoint].width > 0)
-                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "unifont: Ignoring duplicate codepoint 0x%08x in hex file on line %d.\n", codepoint, lineNumber);
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "unifont: Ignoring duplicate codepoint 0x%08" SDL_PRIx32 " in hex file on line %d.\n", codepoint, lineNumber);
             else
             {
                 unifontGlyph[codepoint].width = glyphWidth;
@@ -228,7 +228,7 @@ static int unifont_init(const char *fontname)
     } while (bytesRead > 0);
 
     SDL_RWclose(hexFile);
-    SDL_Log("unifont: Loaded %u glyphs.\n", numGlyphs);
+    SDL_Log("unifont: Loaded %" SDL_PRIu32 " glyphs.\n", numGlyphs);
     return 0;
 }
 
@@ -275,7 +275,7 @@ static int unifont_load_texture(Uint32 textureID)
 
     if (textureID >= UNIFONT_NUM_TEXTURES)
     {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "unifont: Tried to load out of range texture %u.\n", textureID);
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "unifont: Tried to load out of range texture %" SDL_PRIu32 "\n", textureID);
         return -1;
     }
 
@@ -309,14 +309,14 @@ static int unifont_load_texture(Uint32 textureID)
         tex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, UNIFONT_TEXTURE_WIDTH, UNIFONT_TEXTURE_WIDTH);
         if (tex == NULL)
         {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "unifont: Failed to create texture %u for renderer %d.\n", textureID, i);
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "unifont: Failed to create texture %" SDL_PRIu32 " for renderer %d.\n", textureID, i);
             return -1;
         }
         unifontTexture[UNIFONT_NUM_TEXTURES * i + textureID] = tex;
         SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
         if (SDL_UpdateTexture(tex, NULL, textureRGBA, UNIFONT_TEXTURE_PITCH) != 0)
         {
-            SDL_Log("unifont error: Failed to update texture %u data for renderer %d.\n", textureID, i);
+            SDL_Log("unifont error: Failed to update texture %" SDL_PRIu32 " data for renderer %d.\n", textureID, i);
         }
     }
 
@@ -679,7 +679,6 @@ int main(int argc, char *argv[])
         return 2;
     }
 
-
 #ifdef HAVE_SDL_TTF
     /* Initialize fonts */
     TTF_Init();
@@ -714,58 +713,52 @@ int main(int argc, char *argv[])
         while (SDL_PollEvent(&event)) {
             SDLTest_CommonEvent(state, &event, &done);
             switch(event.type) {
-                case SDL_KEYDOWN: {
-                    switch (event.key.keysym.sym)
-                    {
-                        case SDLK_RETURN:
-                             text[0]=0x00;
-                             Redraw();
-                             break;
-                        case SDLK_BACKSPACE:
-                            /* Only delete text if not in editing mode. */
-                             if (!markedText[0])
-                             {
-                                 size_t textlen = SDL_strlen(text);
+                case SDL_KEYDOWN:
+                    switch (event.key.keysym.sym) {
+                    case SDLK_RETURN:
+                        text[0] = 0x00;
+                        Redraw();
+                        break;
+                    case SDLK_BACKSPACE:
+                        /* Only delete text if not in editing mode. */
+                        if (!markedText[0]) {
+                            size_t textlen = SDL_strlen(text);
 
-                                 do {
-                                     if (textlen==0)
-                                     {
-                                         break;
-                                     }
-                                     if ((text[textlen-1] & 0x80) == 0x00)
-                                     {
-                                         /* One byte */
-                                         text[textlen-1]=0x00;
-                                         break;
-                                     }
-                                     if ((text[textlen-1] & 0xC0) == 0x80)
-                                     {
-                                         /* Byte from the multibyte sequence */
-                                         text[textlen-1]=0x00;
-                                         textlen--;
-                                     }
-                                     if ((text[textlen-1] & 0xC0) == 0xC0)
-                                     {
-                                         /* First byte of multibyte sequence */
-                                         text[textlen-1]=0x00;
-                                         break;
-                                     }
-                                 } while(1);
+                            do {
+                                if (textlen == 0) {
+                                    break;
+                                }
+                                if ((text[textlen - 1] & 0x80) == 0x00) {
+                                    /* One byte */
+                                    text[textlen - 1] = 0x00;
+                                    break;
+                                }
+                                if ((text[textlen - 1] & 0xC0) == 0x80) {
+                                    /* Byte from the multibyte sequence */
+                                    text[textlen - 1] = 0x00;
+                                    textlen--;
+                                }
+                                if ((text[textlen - 1] & 0xC0) == 0xC0) {
+                                    /* First byte of multibyte sequence */
+                                    text[textlen - 1] = 0x00;
+                                    break;
+                                }
+                            } while(1);
 
-                                 Redraw();
-                             }
-                             break;
-                    }
-
-                    if (done)
-                    {
+                            Redraw();
+                        }
                         break;
                     }
 
-                    SDL_Log("Keyboard: scancode 0x%08X = %s, keycode 0x%08X = %s\n",
+                    if (done) {
+                        break;
+                    }
+
+                    SDL_Log("Keyboard: scancode 0x%08X = %s, keycode 0x%08" SDL_PRIX32 " = %s\n",
                             event.key.keysym.scancode,
                             SDL_GetScancodeName(event.key.keysym.scancode),
-                            event.key.keysym.sym, SDL_GetKeyName(event.key.keysym.sym));
+                            SDL_static_cast(Uint32, event.key.keysym.sym),
+                            SDL_GetKeyName(event.key.keysym.sym));
                     break;
 
                 case SDL_TEXTINPUT:
@@ -787,7 +780,7 @@ int main(int argc, char *argv[])
                     break;
 
                 case SDL_TEXTEDITING:
-                    SDL_Log("text editing \"%s\", selected range (%d, %d)\n",
+                    SDL_Log("text editing \"%s\", selected range (%" SDL_PRIs32 ", %" SDL_PRIs32 ")\n",
                             event.edit.text, event.edit.start, event.edit.length);
 
                     SDL_strlcpy(markedText, event.edit.text, SDL_TEXTEDITINGEVENT_TEXT_SIZE);
@@ -795,15 +788,11 @@ int main(int argc, char *argv[])
                     Redraw();
                     break;
                 }
-                break;
-
-            }
         }
     }
     CleanupVideo();
     SDLTest_CommonQuit(state);
     return 0;
 }
-
 
 /* vi: set ts=4 sw=4 expandtab: */

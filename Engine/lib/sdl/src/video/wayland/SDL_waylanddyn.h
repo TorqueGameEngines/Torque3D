@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -102,6 +102,7 @@ void SDL_WAYLAND_UnloadSymbols(void);
 #define wl_proxy_get_tag (*WAYLAND_wl_proxy_get_tag)
 #define wl_proxy_marshal_flags (*WAYLAND_wl_proxy_marshal_flags)
 #define wl_proxy_marshal_array_flags (*WAYLAND_wl_proxy_marshal_array_flags)
+#define wl_display_reconnect (*WAYLAND_wl_display_reconnect)
 
 #define wl_seat_interface (*WAYLAND_wl_seat_interface)
 #define wl_surface_interface (*WAYLAND_wl_surface_interface)
@@ -118,6 +119,13 @@ void SDL_WAYLAND_UnloadSymbols(void);
 #define wl_data_offer_interface (*WAYLAND_wl_data_offer_interface)
 #define wl_data_source_interface (*WAYLAND_wl_data_source_interface)
 #define wl_data_device_manager_interface (*WAYLAND_wl_data_device_manager_interface)
+
+/*
+ * These must be included before libdecor.h, otherwise the libdecor header
+ * pulls in the system Wayland protocol headers instead of ours.
+ */
+#include "wayland-client-protocol.h"
+#include "wayland-egl.h"
 
 #ifdef HAVE_LIBDECOR_H
 /* Must be included before our defines */
@@ -158,14 +166,18 @@ void SDL_WAYLAND_UnloadSymbols(void);
 
 #else /* SDL_VIDEO_DRIVER_WAYLAND_DYNAMIC */
 
+/*
+ * These must be included before libdecor.h, otherwise the libdecor header
+ * pulls in the system Wayland protocol headers instead of ours.
+ */
+#include "wayland-client-protocol.h"
+#include "wayland-egl.h"
+
 #ifdef HAVE_LIBDECOR_H
 #include <libdecor.h>
 #endif
 
 #endif /* SDL_VIDEO_DRIVER_WAYLAND_DYNAMIC */
-
-#include "wayland-client-protocol.h"
-#include "wayland-egl.h"
 
 #endif /* SDL_waylanddyn_h_ */
 

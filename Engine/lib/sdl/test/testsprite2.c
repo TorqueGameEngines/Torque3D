@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -56,7 +56,12 @@ quit(int rc)
     SDL_free(positions);
     SDL_free(velocities);
     SDLTest_CommonQuit(state);
-    exit(rc);
+    /* If rc is 0, just let main return normally rather than calling exit.
+     * This allows testing of platforms where SDL_main is required and does meaningful cleanup.
+     */
+    if (rc != 0) {
+        exit(rc);
+    }
 }
 
 int

@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -61,7 +61,7 @@ static void UIKit_DeleteDevice(SDL_VideoDevice * device)
 }
 
 static SDL_VideoDevice *
-UIKit_CreateDevice(int devindex)
+UIKit_CreateDevice(void)
 {
     @autoreleasepool {
         SDL_VideoDevice *device;
@@ -98,6 +98,7 @@ UIKit_CreateDevice(int devindex)
         device->GetWindowWMInfo = UIKit_GetWindowWMInfo;
         device->GetDisplayUsableBounds = UIKit_GetDisplayUsableBounds;
         device->GetDisplayDPI = UIKit_GetDisplayDPI;
+        device->GetWindowSizeInPixels = UIKit_GetWindowSizeInPixels;
 
 #if SDL_IPHONE_KEYBOARD
         device->HasScreenKeyboardSupport = UIKit_HasScreenKeyboardSupport;
@@ -209,15 +210,6 @@ UIKit_ComputeViewFrame(SDL_Window *window, UIScreen *screen)
         frame = data.uiwindow.bounds;
     }
 
-#if !TARGET_OS_TV && (__IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_7_0)
-    BOOL hasiOS7 = UIKit_IsSystemVersionAtLeast(7.0);
-
-    /* The view should always show behind the status bar in iOS 7+. */
-    if (!hasiOS7 && !(window->flags & (SDL_WINDOW_BORDERLESS|SDL_WINDOW_FULLSCREEN))) {
-        frame = screen.applicationFrame;
-    }
-#endif
-
 #if !TARGET_OS_TV
     /* iOS 10 seems to have a bug where, in certain conditions, putting the
      * device to sleep with the a landscape-only app open, re-orienting the
@@ -227,18 +219,16 @@ UIKit_ComputeViewFrame(SDL_Window *window, UIScreen *screen)
      * https://bugzilla.libsdl.org/show_bug.cgi?id=3505
      * https://bugzilla.libsdl.org/show_bug.cgi?id=3465
      * https://forums.developer.apple.com/thread/65337 */
-    if (UIKit_IsSystemVersionAtLeast(8.0)) {
-        UIInterfaceOrientation orient = [UIApplication sharedApplication].statusBarOrientation;
-        BOOL landscape = UIInterfaceOrientationIsLandscape(orient);
-        BOOL fullscreen = CGRectEqualToRect(screen.bounds, frame);
+    UIInterfaceOrientation orient = [UIApplication sharedApplication].statusBarOrientation;
+    BOOL landscape = UIInterfaceOrientationIsLandscape(orient);
+    BOOL fullscreen = CGRectEqualToRect(screen.bounds, frame);
 
-        /* The orientation flip doesn't make sense when the window is smaller
-         * than the screen (iPad Split View, for example). */
-        if (fullscreen && (landscape != (frame.size.width > frame.size.height))) {
-            float height = frame.size.width;
-            frame.size.width = frame.size.height;
-            frame.size.height = height;
-        }
+    /* The orientation flip doesn't make sense when the window is smaller
+     * than the screen (iPad Split View, for example). */
+    if (fullscreen && (landscape != (frame.size.width > frame.size.height))) {
+        float height = frame.size.width;
+        frame.size.width = frame.size.height;
+        frame.size.height = height;
     }
 #endif
 

@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -32,19 +32,14 @@
 
 struct SDL_WaylandInput;
 
-/* TODO: Remove these helpers, they're from before we had shell_surface_type */
-#define WINDOW_IS_XDG_POPUP(window) \
-    (((SDL_WindowData*) window->driverdata)->shell_surface_type == WAYLAND_SURFACE_XDG_POPUP)
-#define WINDOW_IS_LIBDECOR(ignoreme, window) \
-    (((SDL_WindowData*) window->driverdata)->shell_surface_type == WAYLAND_SURFACE_LIBDECOR)
-
 typedef struct {
     SDL_Window *sdlwindow;
     SDL_VideoData *waylandData;
     struct wl_surface *surface;
-    struct wl_callback *frame_callback;
-    struct wl_event_queue *frame_event_queue;
-    struct wl_surface *frame_surface_wrapper;
+    struct wl_callback *gles_swap_frame_callback;
+    struct wl_event_queue *gles_swap_frame_event_queue;
+    struct wl_surface *gles_swap_frame_surface_wrapper;
+    struct wl_callback *surface_damage_frame_callback;
 
     union {
 #ifdef HAVE_LIBDECOR_H
@@ -85,7 +80,7 @@ typedef struct {
     struct zwp_keyboard_shortcuts_inhibitor_v1 *key_inhibitor;
     struct zwp_idle_inhibitor_v1 *idle_inhibitor;
     struct xdg_activation_token_v1 *activation_token;
-    struct wp_viewport *viewport;
+    struct wp_viewport *draw_viewport;
 
     /* floating dimensions for restoring from maximized and fullscreen */
     int floating_width, floating_height;
@@ -103,9 +98,14 @@ typedef struct {
     float pointer_scale_x;
     float pointer_scale_y;
     int drawable_width, drawable_height;
-    SDL_Rect damage_region;
+    int fs_output_width, fs_output_height;
+    int window_width, window_height;
     SDL_bool needs_resize_event;
     SDL_bool floating_resize_pending;
+    SDL_bool was_floating;
+    SDL_bool is_fullscreen;
+    SDL_bool in_fullscreen_transition;
+    Uint32 fullscreen_flags;
 } SDL_WindowData;
 
 extern void Wayland_ShowWindow(_THIS, SDL_Window *window);
@@ -126,6 +126,7 @@ extern int Wayland_CreateWindow(_THIS, SDL_Window *window);
 extern void Wayland_SetWindowSize(_THIS, SDL_Window * window);
 extern void Wayland_SetWindowMinimumSize(_THIS, SDL_Window * window);
 extern void Wayland_SetWindowMaximumSize(_THIS, SDL_Window * window);
+extern void Wayland_GetWindowSizeInPixels(_THIS, SDL_Window * window, int *w, int *h);
 extern int Wayland_SetWindowModalFor(_THIS, SDL_Window * modal_window, SDL_Window * parent_window);
 extern void Wayland_SetWindowTitle(_THIS, SDL_Window * window);
 extern void Wayland_DestroyWindow(_THIS, SDL_Window *window);
@@ -135,6 +136,9 @@ extern SDL_bool
 Wayland_GetWindowWMInfo(_THIS, SDL_Window * window, SDL_SysWMinfo * info);
 extern int Wayland_SetWindowHitTest(SDL_Window *window, SDL_bool enabled);
 extern int Wayland_FlashWindow(_THIS, SDL_Window * window, SDL_FlashOperation operation);
+
+extern void Wayland_InitWin(SDL_VideoData *data);
+extern void Wayland_QuitWin(SDL_VideoData *data);
 
 #endif /* SDL_waylandwindow_h_ */
 

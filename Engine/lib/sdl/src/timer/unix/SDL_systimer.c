@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -87,8 +87,7 @@ SDL_TicksInit(void)
         has_monotonic_time = SDL_TRUE;
     } else
 #elif defined(__APPLE__)
-    kern_return_t ret = mach_timebase_info(&mach_base_info);
-    if (ret == 0) {
+    if (mach_timebase_info(&mach_base_info) == 0) {
         has_monotonic_time = SDL_TRUE;
         start_mach = mach_absolute_time();
     } else

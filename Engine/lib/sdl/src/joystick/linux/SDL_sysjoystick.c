@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -77,6 +77,7 @@
 
 #include "../../core/linux/SDL_evdev_capabilities.h"
 #include "../../core/linux/SDL_udev.h"
+#include "../../core/linux/SDL_sandbox.h"
 
 #if 0
 #define DEBUG_INPUT_EVENTS 1
@@ -102,7 +103,7 @@ static int MaybeRemoveDevice(const char *path);
 /* A linked list of available joysticks */
 typedef struct SDL_joylist_item
 {
-    int device_instance;
+    SDL_JoystickID device_instance;
     char *path;   /* "/dev/input/event2" or whatever */
     char *name;   /* "SideWinder 3D Pro" or whatever */
     SDL_JoystickGUID guid;
@@ -192,7 +193,6 @@ static int
 IsJoystick(const char *path, int fd, char **name_return, SDL_JoystickGUID *guid)
 {
     struct input_id inpid;
-    Uint16 *guid16 = (Uint16 *)guid->data;
     char *name;
     char product_string[128];
 
@@ -236,23 +236,7 @@ IsJoystick(const char *path, int fd, char **name_return, SDL_JoystickGUID *guid)
     SDL_Log("Joystick: %s, bustype = %d, vendor = 0x%.4x, product = 0x%.4x, version = %d\n", name, inpid.bustype, inpid.vendor, inpid.product, inpid.version);
 #endif
 
-    SDL_memset(guid->data, 0, sizeof(guid->data));
-
-    /* We only need 16 bits for each of these; space them out to fill 128. */
-    /* Byteswap so devices get same GUID on little/big endian platforms. */
-    *guid16++ = SDL_SwapLE16(inpid.bustype);
-    *guid16++ = 0;
-
-    if (inpid.vendor && inpid.product) {
-        *guid16++ = SDL_SwapLE16(inpid.vendor);
-        *guid16++ = 0;
-        *guid16++ = SDL_SwapLE16(inpid.product);
-        *guid16++ = 0;
-        *guid16++ = SDL_SwapLE16(inpid.version);
-        *guid16++ = 0;
-    } else {
-        SDL_strlcpy((char*)guid16, name, sizeof(guid->data) - 4);
-    }
+    *guid = SDL_CreateJoystickGUID(inpid.bustype, inpid.vendor, inpid.product, inpid.version, name, 0, 0);
 
     if (SDL_ShouldIgnoreJoystick(name, *guid)) {
         SDL_free(name);
@@ -283,6 +267,10 @@ static void joystick_udev_callback(SDL_UDEV_deviceevent udev_type, int udev_clas
                     return;
                 }
             }
+
+            /* Wait a bit for the hidraw udev node to initialize */
+            SDL_Delay(10);
+
             MaybeAddDevice(devpath);
             break;
             
@@ -348,6 +336,7 @@ MaybeAddDevice(const char *path)
 
     item = (SDL_joylist_item *) SDL_calloc(1, sizeof (SDL_joylist_item));
     if (item == NULL) {
+        SDL_free(name);
         return -1;
     }
 
@@ -772,12 +761,7 @@ LINUX_JoystickInit(void)
             SDL_LogDebug(SDL_LOG_CATEGORY_INPUT,
                          "udev disabled by SDL_JOYSTICK_DISABLE_UDEV");
             enumeration_method = ENUMERATION_FALLBACK;
-
-        } else if (access("/.flatpak-info", F_OK) == 0
-                 || access("/run/host/container-manager", F_OK) == 0) {
-            /* Explicitly check `/.flatpak-info` because, for old versions of
-             * Flatpak, this was the only available way to tell if we were in
-             * a Flatpak container. */
+        } else if (SDL_DetectSandbox() != SDL_SANDBOX_NONE) {
             SDL_LogDebug(SDL_LOG_CATEGORY_INPUT,
                          "Container detected, disabling udev integration");
             enumeration_method = ENUMERATION_FALLBACK;

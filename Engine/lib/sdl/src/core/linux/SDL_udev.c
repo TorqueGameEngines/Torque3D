@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -18,6 +18,7 @@
      misrepresented as being the original software.
   3. This notice may not be removed or altered from any source distribution.
 */
+#include "../../SDL_internal.h"
 
 /*
  * To list the properties of a device, try something like:
@@ -543,6 +544,10 @@ SDL_UDEV_DelCallback(SDL_UDEV_Callback cb)
 {
     SDL_UDEV_CallbackList *item;
     SDL_UDEV_CallbackList *prev = NULL;
+
+    if (_this == NULL) {
+        return;
+    }
 
     for (item = _this->first; item != NULL; item = item->next) {
         /* found it, remove it. */

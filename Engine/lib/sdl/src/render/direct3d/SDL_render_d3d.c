@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -40,13 +40,6 @@
 #endif
 
 #include "SDL_shaders_d3d.h"
-
-#ifdef __WATCOMC__
-/* FIXME: Remove this once https://github.com/open-watcom/open-watcom-v2/pull/868 is merged */
-#define D3DBLENDOP_REVSUBTRACT 3
-/* FIXME: Remove this once https://github.com/open-watcom/open-watcom-v2/pull/869 is merged */
-#define D3DERR_UNSUPPORTEDCOLOROPERATION MAKE_D3DHRESULT( 2073 )
-#endif
 
 typedef struct
 {
@@ -308,7 +301,7 @@ D3D_ActivateRenderer(SDL_Renderer * renderer)
         int w, h;
         Uint32 window_flags = SDL_GetWindowFlags(window);
 
-        SDL_GetWindowSize(window, &w, &h);
+        SDL_GetWindowSizeInPixels(window, &w, &h);
         data->pparams.BackBufferWidth = w;
         data->pparams.BackBufferHeight = h;
         if (window_flags & SDL_WINDOW_FULLSCREEN && (window_flags & SDL_WINDOW_FULLSCREEN_DESKTOP) != SDL_WINDOW_FULLSCREEN_DESKTOP) {
@@ -352,6 +345,13 @@ D3D_WindowEvent(SDL_Renderer * renderer, const SDL_WindowEvent *event)
     if (event->event == SDL_WINDOWEVENT_SIZE_CHANGED) {
         data->updateSize = SDL_TRUE;
     }
+}
+
+static int
+D3D_GetOutputSize(SDL_Renderer * renderer, int *w, int *h)
+{
+    SDL_GetWindowSizeInPixels(renderer->window, w, h);
+    return 0;
 }
 
 static D3DBLEND
@@ -1200,8 +1200,8 @@ D3D_RunCommandQueue(SDL_Renderer * renderer, SDL_RenderCommand *cmd, void *verti
 
             case SDL_RENDERCMD_SETVIEWPORT: {
                 SDL_Rect *viewport = &data->drawstate.viewport;
-                if (SDL_memcmp(viewport, &cmd->data.viewport.rect, sizeof (SDL_Rect)) != 0) {
-                    SDL_memcpy(viewport, &cmd->data.viewport.rect, sizeof (SDL_Rect));
+                if (SDL_memcmp(viewport, &cmd->data.viewport.rect, sizeof(cmd->data.viewport.rect)) != 0) {
+                    SDL_copyp(viewport, &cmd->data.viewport.rect);
                     data->drawstate.viewport_dirty = SDL_TRUE;
                 }
                 break;
@@ -1214,8 +1214,8 @@ D3D_RunCommandQueue(SDL_Renderer * renderer, SDL_RenderCommand *cmd, void *verti
                     data->drawstate.cliprect_enabled_dirty = SDL_TRUE;
                 }
 
-                if (SDL_memcmp(&data->drawstate.cliprect, rect, sizeof (SDL_Rect)) != 0) {
-                    SDL_memcpy(&data->drawstate.cliprect, rect, sizeof (SDL_Rect));
+                if (SDL_memcmp(&data->drawstate.cliprect, rect, sizeof(*rect)) != 0) {
+                    SDL_copyp(&data->drawstate.cliprect, rect);
                     data->drawstate.cliprect_dirty = SDL_TRUE;
                 }
                 break;
@@ -1377,7 +1377,7 @@ D3D_RenderReadPixels(SDL_Renderer * renderer, const SDL_Rect * rect,
     return status;
 }
 
-static void
+static int
 D3D_RenderPresent(SDL_Renderer * renderer)
 {
     D3D_RenderData *data = (D3D_RenderData *) renderer->driverdata;
@@ -1391,15 +1391,16 @@ D3D_RenderPresent(SDL_Renderer * renderer)
     result = IDirect3DDevice9_TestCooperativeLevel(data->device);
     if (result == D3DERR_DEVICELOST) {
         /* We'll reset later */
-        return;
+        return -1;
     }
     if (result == D3DERR_DEVICENOTRESET) {
         D3D_Reset(renderer);
     }
     result = IDirect3DDevice9_Present(data->device, NULL, NULL, NULL, NULL);
     if (FAILED(result)) {
-        D3D_SetError("Present()", result);
+        return D3D_SetError("Present()", result);
     }
+    return 0;
 }
 
 static void
@@ -1616,6 +1617,7 @@ D3D_CreateRenderer(SDL_Window * window, Uint32 flags)
     }
 
     renderer->WindowEvent = D3D_WindowEvent;
+    renderer->GetOutputSize = D3D_GetOutputSize;
     renderer->SupportsBlendMode = D3D_SupportsBlendMode;
     renderer->CreateTexture = D3D_CreateTexture;
     renderer->UpdateTexture = D3D_UpdateTexture;
@@ -1645,7 +1647,7 @@ D3D_CreateRenderer(SDL_Window * window, Uint32 flags)
     SDL_GetWindowWMInfo(window, &windowinfo);
 
     window_flags = SDL_GetWindowFlags(window);
-    SDL_GetWindowSize(window, &w, &h);
+    SDL_GetWindowSizeInPixels(window, &w, &h);
     SDL_GetWindowDisplayMode(window, &fullscreen_mode);
 
     SDL_zero(pparams);
@@ -1747,6 +1749,9 @@ D3D_CreateRenderer(SDL_Window * window, Uint32 flags)
         }
     }
 #endif
+    data->drawstate.viewport_dirty = SDL_TRUE;
+    data->drawstate.cliprect_dirty = SDL_TRUE;
+    data->drawstate.cliprect_enabled_dirty = SDL_TRUE;
     data->drawstate.blend = SDL_BLENDMODE_INVALID;
 
     return renderer;
@@ -1764,7 +1769,7 @@ SDL_RenderDriver D3D_RenderDriver = {
 };
 #endif /* SDL_VIDEO_RENDER_D3D && !SDL_RENDER_DISABLED */
 
-#ifdef __WIN32__
+#if defined(__WIN32__) || defined(__WINGDK__)
 /* This function needs to always exist on Windows, for the Dynamic API. */
 IDirect3DDevice9 *
 SDL_RenderGetD3D9Device(SDL_Renderer * renderer)
@@ -1788,6 +1793,6 @@ SDL_RenderGetD3D9Device(SDL_Renderer * renderer)
 
     return device;
 }
-#endif /* __WIN32__ */
+#endif /* defined(__WIN32__) || defined(__WINGDK__) */
 
 /* vi: set ts=4 sw=4 expandtab: */

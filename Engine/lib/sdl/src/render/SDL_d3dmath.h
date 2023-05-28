@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -20,7 +20,12 @@
 */
 #include "../SDL_internal.h"
 
-#if (SDL_VIDEO_RENDER_D3D || SDL_VIDEO_RENDER_D3D11) && !SDL_RENDER_DISABLED
+#if (SDL_VIDEO_RENDER_D3D || SDL_VIDEO_RENDER_D3D11 || SDL_VIDEO_RENDER_D3D12) && !SDL_RENDER_DISABLED
+
+/* Set up for C function definitions, even when using C++ */
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Direct3D matrix math functions */
 
@@ -67,6 +72,11 @@ Float4X4 MatrixRotationX(float r);
 Float4X4 MatrixRotationY(float r);
 Float4X4 MatrixRotationZ(float r);
 
-#endif /* (SDL_VIDEO_RENDER_D3D || SDL_VIDEO_RENDER_D3D11) && !SDL_RENDER_DISABLED */
+/* Ends C function definitions when using C++ */
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* (SDL_VIDEO_RENDER_D3D || SDL_VIDEO_RENDER_D3D11 || SDL_VIDEO_RENDER_D3D12) && !SDL_RENDER_DISABLED */
 
 /* vi: set ts=4 sw=4 expandtab: */

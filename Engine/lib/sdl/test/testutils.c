@@ -1,5 +1,5 @@
 /*
-Copyright 1997-2022 Sam Lantinga
+Copyright 1997-2023 Sam Lantinga
 Copyright 2022 Collabora Ltd.
 SPDX-License-Identifier: Zlib
 */
@@ -143,9 +143,7 @@ LoadTexture(SDL_Renderer *renderer, const char *file, SDL_bool transparent,
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create texture: %s\n", SDL_GetError());
         }
     }
-    if (temp) {
-        SDL_FreeSurface(temp);
-    }
+    SDL_FreeSurface(temp);
     if (path) {
         SDL_free(path);
     }

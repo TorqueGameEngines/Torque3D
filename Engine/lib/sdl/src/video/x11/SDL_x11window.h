@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -59,6 +59,7 @@ typedef struct
     int border_right;
     int border_top;
     int border_bottom;
+    SDL_bool mouse_grabbed;
     Uint32 last_focus_event_time;
     PendingFocusEnum pending_focus;
     Uint32 pending_focus_time;
@@ -80,7 +81,7 @@ typedef struct
 } SDL_WindowData;
 
 extern void X11_SetNetWMState(_THIS, Window xwindow, Uint32 flags);
-extern Uint32 X11_GetNetWMState(_THIS, Window xwindow);
+extern Uint32 X11_GetNetWMState(_THIS, SDL_Window *window, Window xwindow);
 
 extern int X11_CreateWindow(_THIS, SDL_Window * window);
 extern int X11_CreateWindowFrom(_THIS, SDL_Window * window, const void *data);

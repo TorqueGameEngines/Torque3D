@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -27,12 +27,13 @@
 #ifndef SDL_error_c_h_
 #define SDL_error_c_h_
 
-#define ERR_MAX_STRLEN  128
-
 typedef struct SDL_error
 {
     int error; /* This is a numeric value corresponding to the current error */
-    char str[ERR_MAX_STRLEN];
+    char *str;
+    size_t len;
+    SDL_realloc_func realloc_func;
+    SDL_free_func free_func;
 } SDL_error;
 
 /* Defined in SDL_thread.c */

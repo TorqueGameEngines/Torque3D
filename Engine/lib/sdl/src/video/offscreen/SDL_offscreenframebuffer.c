@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -18,7 +18,6 @@
      misrepresented as being the original software.
   3. This notice may not be removed or altered from any source distribution.
 */
-
 #include "../../SDL_internal.h"
 
 #if SDL_VIDEO_DRIVER_OFFSCREEN
@@ -67,7 +66,7 @@ int SDL_OFFSCREEN_UpdateWindowFramebuffer(_THIS, SDL_Window * window, const SDL_
     if (SDL_getenv("SDL_VIDEO_OFFSCREEN_SAVE_FRAMES")) {
         char file[128];
         SDL_snprintf(file, sizeof(file), "SDL_window%d-%8.8d.bmp",
-                     SDL_GetWindowID(window), ++frame_number);
+                     (int)SDL_GetWindowID(window), ++frame_number);
         SDL_SaveBMP(surface, file);
     }
     return 0;

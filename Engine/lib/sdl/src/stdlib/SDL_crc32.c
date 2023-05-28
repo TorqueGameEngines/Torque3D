@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -25,6 +25,9 @@
 
 /* Public domain CRC implementation adapted from:
    http://home.thep.lu.se/~bjorn/crc/crc32_simple.c
+
+   This algorithm is compatible with the 32-bit CRC described here:
+   https://www.lammertbies.nl/comm/info/crc-calculation
 */
 /* NOTE: DO NOT CHANGE THIS ALGORITHM
    There is code that relies on this in the joystick code
@@ -33,7 +36,7 @@
 static Uint32 crc32_for_byte(Uint32 r)
 {
     int i;
-    for(i = 0; i < 8; ++i) {
+    for (i = 0; i < 8; ++i) {
         r = (r & 1? 0: (Uint32)0xEDB88320L) ^ r >> 1;
     }
     return r ^ (Uint32)0xFF000000L;

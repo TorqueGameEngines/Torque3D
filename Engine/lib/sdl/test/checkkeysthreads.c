@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -162,7 +162,8 @@ loop()
     fprintf(stderr, "starting loop\n"); fflush(stderr);
     // while (SDL_PollEvent(&event)) {
     while (!done && SDL_WaitEvent(&event)) {
-        fprintf(stderr, "got event type: %d\n", event.type); fflush(stderr);
+        fprintf(stderr, "got event type: %" SDL_PRIu32 "\n", event.type);
+        fflush(stderr);
         switch (event.type) {
         case SDL_KEYDOWN:
         case SDL_KEYUP:

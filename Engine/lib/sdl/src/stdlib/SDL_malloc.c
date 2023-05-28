@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -487,7 +487,9 @@ DEFAULT_MMAP_THRESHOLD       default: 256K
 #endif /* WIN32 */
 
 #ifdef WIN32
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
+#endif
 #include <windows.h>
 #define HAVE_MMAP 1
 #define HAVE_MORECORE 0
@@ -1247,7 +1249,7 @@ extern "C"
 #ifndef LACKS_UNISTD_H
 #include <unistd.h>             /* for sbrk */
 #else /* LACKS_UNISTD_H */
-#if !defined(__FreeBSD__) && !defined(__OpenBSD__) && !defined(__NetBSD__)
+#if !defined(__FreeBSD__) && !defined(__OpenBSD__) && !defined(__NetBSD__) && !defined(__DragonFly__)
 extern void *sbrk(ptrdiff_t);
 #endif /* FreeBSD etc */
 #endif /* LACKS_UNISTD_H */
@@ -2578,7 +2580,7 @@ init_mparams(void)
 #else /* (FOOTERS && !INSECURE) */
         s = (size_t) 0x58585858U;
 #endif /* (FOOTERS && !INSECURE) */
-        ACQUIRE_MAGIC_INIT_LOCK();
+        (void)ACQUIRE_MAGIC_INIT_LOCK();
         if (mparams.magic == 0) {
             mparams.magic = s;
             /* Set up lock for main malloc area */
@@ -3015,6 +3017,8 @@ internal_malloc_stats(mstate m)
                 (unsigned long) (maxfp));
         fprintf(stderr, "system bytes     = %10lu\n", (unsigned long) (fp));
         fprintf(stderr, "in use bytes     = %10lu\n", (unsigned long) (used));
+#else
+        (void)used;
 #endif
 
         POSTACTION(m);
@@ -3459,7 +3463,9 @@ add_segment(mstate m, char *tbase, size_t tsize, flag_t mmapped)
     msegmentptr ss = (msegmentptr) (chunk2mem(sp));
     mchunkptr tnext = chunk_plus_offset(sp, ssize);
     mchunkptr p = tnext;
+#ifdef DEBUG
     int nfences = 0;
+#endif
 
     /* reset top to new space */
     init_top(m, (mchunkptr) tbase, tsize - TOP_FOOT_SIZE);
@@ -3477,13 +3483,17 @@ add_segment(mstate m, char *tbase, size_t tsize, flag_t mmapped)
     for (;;) {
         mchunkptr nextp = chunk_plus_offset(p, SIZE_T_SIZE);
         p->head = FENCEPOST_HEAD;
+#ifdef DEBUG
         ++nfences;
+#endif
         if ((char *) (&(nextp->head)) < old_end)
             p = nextp;
         else
             break;
     }
+#ifdef DEBUG
     assert(nfences >= 2);
+#endif
 
     /* Insert the rest of old top into a bin as an ordinary free chunk */
     if (csp != old_top) {
@@ -5327,6 +5337,25 @@ static struct
 } s_mem = {
     real_malloc, real_calloc, real_realloc, real_free, { 0 }
 };
+
+void SDL_GetOriginalMemoryFunctions(SDL_malloc_func *malloc_func,
+                                    SDL_calloc_func *calloc_func,
+                                    SDL_realloc_func *realloc_func,
+                                    SDL_free_func *free_func)
+{
+    if (malloc_func) {
+        *malloc_func = real_malloc;
+    }
+    if (calloc_func) {
+        *calloc_func = real_calloc;
+    }
+    if (realloc_func) {
+        *realloc_func = real_realloc;
+    }
+    if (free_func) {
+        *free_func = real_free;
+    }
+}
 
 void SDL_GetMemoryFunctions(SDL_malloc_func *malloc_func,
                             SDL_calloc_func *calloc_func,

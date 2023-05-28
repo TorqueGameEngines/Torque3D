@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -9,6 +9,11 @@
   including commercial applications, and to alter it and redistribute it
   freely.
 */
+
+/* quiet windows compiler warnings */
+#if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_WARNINGS)
+# define _CRT_SECURE_NO_WARNINGS
+#endif
 
 #include <stdio.h>
 
@@ -86,5 +91,7 @@ main(int argc, char *argv[])
         SDL_free(test[0]);
     }
     fclose(file);
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Total errors: %d\n", errors);
     return (errors ? errors + 1 : 0);
 }

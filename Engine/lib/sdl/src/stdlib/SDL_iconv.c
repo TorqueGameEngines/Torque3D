@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -131,7 +131,7 @@ static struct
     { "US-ASCII", ENCODING_ASCII },
     { "8859-1", ENCODING_LATIN1 },
     { "ISO-8859-1", ENCODING_LATIN1 },
-#if defined(__WIN32__) || defined(__OS2__)
+#if defined(__WIN32__) || defined(__OS2__) || defined(__GDK__)
     { "WCHAR_T", ENCODING_UTF16LE },
 #else
     { "WCHAR_T", ENCODING_UCS4NATIVE },

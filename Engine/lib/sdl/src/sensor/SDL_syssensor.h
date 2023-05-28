@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -37,6 +37,7 @@ struct _SDL_Sensor
     SDL_SensorType type;            /* Type of the sensor */
     int non_portable_type;          /* Platform dependent type of the sensor */
 
+    Uint64 timestamp_us;            /* The timestamp of the last sensor update */
     float data[16];                 /* The current state of the sensor */
 
     struct _SDL_SensorDriver *driver;
@@ -101,6 +102,7 @@ extern SDL_SensorDriver SDL_COREMOTION_SensorDriver;
 extern SDL_SensorDriver SDL_WINDOWS_SensorDriver;
 extern SDL_SensorDriver SDL_DUMMY_SensorDriver;
 extern SDL_SensorDriver SDL_VITA_SensorDriver;
+extern SDL_SensorDriver SDL_N3DS_SensorDriver;
 
 #endif /* SDL_syssensor_h_ */
 

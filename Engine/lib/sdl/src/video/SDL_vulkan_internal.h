@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -34,12 +34,14 @@
 #define VK_USE_PLATFORM_ANDROID_KHR
 #endif
 #if SDL_VIDEO_DRIVER_COCOA
+#define VK_USE_PLATFORM_METAL_EXT
 #define VK_USE_PLATFORM_MACOS_MVK
 #endif
 #if SDL_VIDEO_DRIVER_DIRECTFB
 #define VK_USE_PLATFORM_DIRECTFB_EXT
 #endif
 #if SDL_VIDEO_DRIVER_UIKIT
+#define VK_USE_PLATFORM_METAL_EXT
 #define VK_USE_PLATFORM_IOS_MVK
 #endif
 #if SDL_VIDEO_DRIVER_WAYLAND

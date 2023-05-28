@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -24,6 +24,7 @@
 
 #include "SDL_hints.h"
 #include "SDL_render.h"
+#include "SDL_timer.h"
 #include "SDL_sysrender.h"
 #include "software/SDL_render_sw_c.h"
 #include "../video/SDL_pixels_c.h"
@@ -96,6 +97,9 @@ static const SDL_RenderDriver *render_drivers[] = {
 #if SDL_VIDEO_RENDER_D3D11
     &D3D11_RenderDriver,
 #endif
+#if SDL_VIDEO_RENDER_D3D12
+    &D3D12_RenderDriver,
+#endif
 #if SDL_VIDEO_RENDER_METAL
     &METAL_RenderDriver,
 #endif
@@ -110,6 +114,9 @@ static const SDL_RenderDriver *render_drivers[] = {
 #endif
 #if SDL_VIDEO_RENDER_DIRECTFB
     &DirectFB_RenderDriver,
+#endif
+#if SDL_VIDEO_RENDER_PS2 && !SDL_RENDER_DISABLED
+    &PS2_RenderDriver,
 #endif
 #if SDL_VIDEO_RENDER_PSP
     &PSP_RenderDriver,
@@ -350,7 +357,7 @@ static int
 QueueCmdSetViewport(SDL_Renderer *renderer)
 {
     int retval = 0;
-    if (!renderer->viewport_queued || (SDL_memcmp(&renderer->viewport, &renderer->last_queued_viewport, sizeof (SDL_Rect)) != 0)) {
+    if (!renderer->viewport_queued || (SDL_memcmp(&renderer->viewport, &renderer->last_queued_viewport, sizeof (SDL_DRect)) != 0)) {
         SDL_RenderCommand *cmd = AllocateRenderCommand(renderer);
         retval = -1;
         if (cmd != NULL) {
@@ -365,7 +372,7 @@ QueueCmdSetViewport(SDL_Renderer *renderer)
             if (retval < 0) {
                 cmd->command = SDL_RENDERCMD_NO_OP;
             } else {
-                SDL_memcpy(&renderer->last_queued_viewport, &renderer->viewport, sizeof (SDL_Rect));
+                SDL_copyp(&renderer->last_queued_viewport, &renderer->viewport);
                 renderer->viewport_queued = SDL_TRUE;
             }
         }
@@ -379,7 +386,7 @@ QueueCmdSetClipRect(SDL_Renderer *renderer)
     int retval = 0;
     if ((!renderer->cliprect_queued) ||
          (renderer->clipping_enabled != renderer->last_queued_cliprect_enabled) ||
-         (SDL_memcmp(&renderer->clip_rect, &renderer->last_queued_cliprect, sizeof (SDL_Rect)) != 0)) {
+         (SDL_memcmp(&renderer->clip_rect, &renderer->last_queued_cliprect, sizeof (SDL_DRect)) != 0)) {
         SDL_RenderCommand *cmd = AllocateRenderCommand(renderer);
         if (cmd == NULL) {
             retval = -1;
@@ -391,7 +398,7 @@ QueueCmdSetClipRect(SDL_Renderer *renderer)
             cmd->data.cliprect.rect.y = (int)SDL_floor(renderer->clip_rect.y);
             cmd->data.cliprect.rect.w = (int)SDL_floor(renderer->clip_rect.w);
             cmd->data.cliprect.rect.h = (int)SDL_floor(renderer->clip_rect.h);
-            SDL_memcpy(&renderer->last_queued_cliprect, &renderer->clip_rect, sizeof (SDL_Rect));
+            SDL_copyp(&renderer->last_queued_cliprect, &renderer->clip_rect);
             renderer->last_queued_cliprect_enabled = renderer->clipping_enabled;
             renderer->cliprect_queued = SDL_TRUE;
         }
@@ -544,7 +551,8 @@ QueueCmdFillRects(SDL_Renderer *renderer, const SDL_FRect * rects, const int cou
                 const int num_vertices = 4 * count;
                 const int num_indices = 6 * count;
                 const int size_indices = 4;
-                int cur_indice = 0;
+                int cur_index = 0;
+                const int *rect_index_order = renderer->rect_index_order;
 
                 for (i = 0; i < count; ++i) {
                     float minx, miny, maxx, maxy;
@@ -563,13 +571,13 @@ QueueCmdFillRects(SDL_Renderer *renderer, const SDL_FRect * rects, const int cou
                     *ptr_xy++ = minx;
                     *ptr_xy++ = maxy;
 
-                    *ptr_indices++ = cur_indice + 0;
-                    *ptr_indices++ = cur_indice + 1;
-                    *ptr_indices++ = cur_indice + 2;
-                    *ptr_indices++ = cur_indice + 0;
-                    *ptr_indices++ = cur_indice + 2;
-                    *ptr_indices++ = cur_indice + 3;
-                    cur_indice += 4;
+                    *ptr_indices++ = cur_index + rect_index_order[0];
+                    *ptr_indices++ = cur_index + rect_index_order[1];
+                    *ptr_indices++ = cur_index + rect_index_order[2];
+                    *ptr_indices++ = cur_index + rect_index_order[3];
+                    *ptr_indices++ = cur_index + rect_index_order[4];
+                    *ptr_indices++ = cur_index + rect_index_order[5];
+                    cur_index += 4;
                 }
 
                 retval = renderer->QueueGeometry(renderer, cmd, NULL,
@@ -649,7 +657,7 @@ QueueCmdGeometry(SDL_Renderer *renderer, SDL_Texture *texture,
     return retval;
 }
 
-static int UpdateLogicalSize(SDL_Renderer *renderer);
+static int UpdateLogicalSize(SDL_Renderer *renderer, SDL_bool flush_viewport_cmd);
 
 int
 SDL_GetNumRenderDrivers(void)
@@ -699,16 +707,11 @@ SDL_RendererEventWatch(void *userdata, SDL_Event *event)
             }
 
             /* In addition to size changes, we also want to do this block for
-             * moves as well, for two reasons:
-             *
-             * 1. The window could be moved to a new display, which has a new
-             *    DPI and therefore a new window/drawable ratio
-             * 2. For whatever reason, the viewport can get messed up during
-             *    window movement (this has been observed on macOS), so this is
-             *    also a good opportunity to force viewport updates
+             * window display changes as well! If the new display has a new DPI,
+             * we need to update the viewport for the new window/drawable ratio.
              */
             if (event->window.event == SDL_WINDOWEVENT_SIZE_CHANGED ||
-                event->window.event == SDL_WINDOWEVENT_MOVED) {
+                event->window.event == SDL_WINDOWEVENT_DISPLAY_CHANGED) {
                 /* Make sure we're operating on the default render target */
                 SDL_Texture *saved_target = SDL_GetRenderTarget(renderer);
                 if (saved_target) {
@@ -727,7 +730,14 @@ SDL_RendererEventWatch(void *userdata, SDL_Event *event)
                 }
 
                 if (renderer->logical_w) {
-                    UpdateLogicalSize(renderer);
+#if defined(__ANDROID__)
+                    /* Don't immediatly flush because the app may be in
+                     * background, and the egl context shouldn't be used. */
+                    SDL_bool flush_viewport_cmd = SDL_FALSE;
+#else
+                    SDL_bool flush_viewport_cmd = SDL_TRUE;
+#endif
+                    UpdateLogicalSize(renderer, flush_viewport_cmd);
                 } else {
                     /* Window was resized, reset viewport */
                     int w, h;
@@ -743,7 +753,12 @@ SDL_RendererEventWatch(void *userdata, SDL_Event *event)
                     renderer->viewport.w = (double)w;
                     renderer->viewport.h = (double)h;
                     QueueCmdSetViewport(renderer);
+#if defined(__ANDROID__)
+                    /* Don't immediatly flush because the app may be in
+                     * background, and the egl context shouldn't be used. */
+#else
                     FlushRenderCommandsIfNotBatching(renderer);
+#endif
                 }
 
                 if (saved_target) {
@@ -885,6 +900,7 @@ SDL_CreateWindowAndRenderer(int width, int height, Uint32 window_flags,
     return 0;
 }
 
+#if !SDL_RENDER_DISABLED
 static SDL_INLINE
 void VerifyDrawQueueFunctions(const SDL_Renderer *renderer)
 {
@@ -918,6 +934,27 @@ static SDL_RenderLineMethod SDL_GetRenderLineMethod()
         return SDL_RENDERLINEMETHOD_POINTS;
     }
 }
+
+static void SDL_CalculateSimulatedVSyncInterval(SDL_Renderer *renderer, SDL_Window *window)
+{
+    /* FIXME: SDL refresh rate API should return numerator/denominator */
+    int refresh_rate = 0;
+    int display_index = SDL_GetWindowDisplayIndex(window);
+    SDL_DisplayMode mode;
+
+    if (display_index < 0) {
+        display_index = 0;
+    }
+    if (SDL_GetDesktopDisplayMode(display_index, &mode) == 0) {
+        refresh_rate = mode.refresh_rate;
+    }
+    if (!refresh_rate) {
+        /* Pick a good default refresh rate */
+        refresh_rate = 60;
+    }
+    renderer->simulate_vsync_interval = (1000 / refresh_rate);
+}
+#endif /* !SDL_RENDER_DISABLED */
 
 SDL_Renderer *
 SDL_CreateRenderer(SDL_Window * window, int index, Uint32 flags)
@@ -1000,6 +1037,15 @@ SDL_CreateRenderer(SDL_Window * window, int index, Uint32 flags)
         }
     }
 
+    if ((flags & SDL_RENDERER_PRESENTVSYNC) != 0) {
+        renderer->wanted_vsync = SDL_TRUE;
+
+        if ((renderer->info.flags & SDL_RENDERER_PRESENTVSYNC) == 0) {
+            renderer->simulate_vsync = SDL_TRUE;
+            renderer->info.flags |= SDL_RENDERER_PRESENTVSYNC;
+        }
+    }
+    SDL_CalculateSimulatedVSyncInterval(renderer, window);
 
     VerifyDrawQueueFunctions(renderer);
 
@@ -1019,10 +1065,20 @@ SDL_CreateRenderer(SDL_Window * window, int index, Uint32 flags)
     renderer->dpi_scale.x = 1.0f;
     renderer->dpi_scale.y = 1.0f;
 
+    /* Default value, if not specified by the renderer back-end */
+    if (renderer->rect_index_order[0] == 0 && renderer->rect_index_order[1] == 0) {
+        renderer->rect_index_order[0] = 0;
+        renderer->rect_index_order[1] = 1;
+        renderer->rect_index_order[2] = 2;
+        renderer->rect_index_order[3] = 0;
+        renderer->rect_index_order[4] = 2;
+        renderer->rect_index_order[5] = 3;
+    }
+
     /* new textures start at zero, so we start at 1 so first render doesn't flush by accident. */
     renderer->render_command_generation = 1;
 
-    if (window && renderer->GetOutputSize) {
+    if (renderer->GetOutputSize) {
         int window_w, window_h;
         int output_w, output_h;
         if (renderer->GetOutputSize(renderer, &output_w, &output_h) == 0) {
@@ -2269,7 +2325,7 @@ SDL_GetRenderTarget(SDL_Renderer *renderer)
 }
 
 static int
-UpdateLogicalSize(SDL_Renderer *renderer)
+UpdateLogicalSize(SDL_Renderer *renderer, SDL_bool flush_viewport_cmd)
 {
     int w = 1, h = 1;
     float want_aspect;
@@ -2326,12 +2382,12 @@ UpdateLogicalSize(SDL_Renderer *renderer)
         viewport.x = (w - viewport.w) / 2;
         viewport.h = (int)SDL_floor(renderer->logical_h * scale);
         viewport.y = (h - viewport.h) / 2;
-
-        SDL_RenderSetViewport(renderer, &viewport);
     } else if (SDL_fabs(want_aspect-real_aspect) < 0.0001) {
         /* The aspect ratios are the same, just scale appropriately */
         scale = (float)w / renderer->logical_w;
-        SDL_RenderSetViewport(renderer, NULL);
+
+        SDL_zero(viewport);
+        SDL_GetRendererOutputSize(renderer, &viewport.w, &viewport.h);
     } else if (want_aspect > real_aspect) {
         if (scale_policy == 1) {
             /* We want a wider aspect ratio than is available - 
@@ -2343,7 +2399,6 @@ UpdateLogicalSize(SDL_Renderer *renderer)
             viewport.h = h;
             viewport.w = (int)SDL_floor(renderer->logical_w * scale);
             viewport.x = (w - viewport.w) / 2;
-            SDL_RenderSetViewport(renderer, &viewport);
         } else {
             /* We want a wider aspect ratio than is available - letterbox it */
             scale = (float)w / renderer->logical_w;
@@ -2351,7 +2406,6 @@ UpdateLogicalSize(SDL_Renderer *renderer)
             viewport.w = w;
             viewport.h = (int)SDL_floor(renderer->logical_h * scale);
             viewport.y = (h - viewport.h) / 2;
-            SDL_RenderSetViewport(renderer, &viewport);
         }
     } else {
         if (scale_policy == 1) {
@@ -2364,7 +2418,6 @@ UpdateLogicalSize(SDL_Renderer *renderer)
             viewport.w = w;
             viewport.h = (int)SDL_floor(renderer->logical_h * scale);
             viewport.y = (h - viewport.h) / 2;
-            SDL_RenderSetViewport(renderer, &viewport);
         } else {
             /* We want a narrower aspect ratio than is available - use side-bars */
              scale = (float)h / renderer->logical_h;
@@ -2372,8 +2425,17 @@ UpdateLogicalSize(SDL_Renderer *renderer)
              viewport.h = h;
              viewport.w = (int)SDL_floor(renderer->logical_w * scale);
              viewport.x = (w - viewport.w) / 2;
-             SDL_RenderSetViewport(renderer, &viewport);
         }
+    }
+
+    /* Set the new viewport */
+    renderer->viewport.x = (double)viewport.x * renderer->scale.x;
+    renderer->viewport.y = (double)viewport.y * renderer->scale.y;
+    renderer->viewport.w = (double)viewport.w * renderer->scale.x;
+    renderer->viewport.h = (double)viewport.h * renderer->scale.y;
+    QueueCmdSetViewport(renderer);
+    if (flush_viewport_cmd) {
+        FlushRenderCommandsIfNotBatching(renderer);
     }
 
     /* Set the new scale */
@@ -2399,7 +2461,7 @@ SDL_RenderSetLogicalSize(SDL_Renderer * renderer, int w, int h)
     renderer->logical_w = w;
     renderer->logical_h = h;
 
-    return UpdateLogicalSize(renderer);
+    return UpdateLogicalSize(renderer, SDL_TRUE);
 }
 
 void
@@ -2422,7 +2484,7 @@ SDL_RenderSetIntegerScale(SDL_Renderer * renderer, SDL_bool enable)
 
     renderer->integer_scale = enable;
 
-    return UpdateLogicalSize(renderer);
+    return UpdateLogicalSize(renderer, SDL_TRUE);
 }
 
 SDL_bool
@@ -2962,8 +3024,8 @@ RenderDrawLinesWithRectsF(SDL_Renderer * renderer,
                 frect->x += scale_x;
             }
         } else {
-            retval += RenderDrawLineBresenham(renderer, (int)points[i].x, (int)points[i].y,
-                                                        (int)points[i+1].x, (int)points[i+1].y, draw_last);
+            retval += RenderDrawLineBresenham(renderer, (int)SDL_roundf(points[i].x), (int)SDL_roundf(points[i].y),
+                                                        (int)SDL_roundf(points[i+1].x), (int)SDL_roundf(points[i+1].y), draw_last);
         }
         drew_line = SDL_TRUE;
     }
@@ -3065,7 +3127,7 @@ SDL_RenderDrawLinesF(SDL_Renderer * renderer,
             int num_vertices = 4 * count;
             int num_indices = 0;
             const int size_indices = 4;
-            int cur_indice = -4;
+            int cur_index = -4;
             const int is_looping = (points[0].x == points[count - 1].x && points[0].y == points[count - 1].y);
             SDL_FPoint p; /* previous point */
             p.x = p.y = 0.0f;
@@ -3092,9 +3154,9 @@ SDL_RenderDrawLinesF(SDL_Renderer * renderer,
                 *ptr_xy++ = q.y + scale_y;
 
 #define ADD_TRIANGLE(i1, i2, i3)                    \
-                *ptr_indices++ = cur_indice + i1;   \
-                *ptr_indices++ = cur_indice + i2;   \
-                *ptr_indices++ = cur_indice + i3;   \
+                *ptr_indices++ = cur_index + i1;    \
+                *ptr_indices++ = cur_index + i2;    \
+                *ptr_indices++ = cur_index + i3;    \
                 num_indices += 3;                   \
 
                 /* closed polyline, don´t draw twice the point */
@@ -3106,7 +3168,7 @@ SDL_RenderDrawLinesF(SDL_Renderer * renderer,
                 /* first point only, no segment */
                 if (i == 0) {
                     p = q;
-                    cur_indice += 4;
+                    cur_index += 4;
                     continue;
                 }
 
@@ -3156,7 +3218,7 @@ SDL_RenderDrawLinesF(SDL_Renderer * renderer,
                 }
 
                 p = q;
-                cur_indice += 4;
+                cur_index += 4;
             }
 
             retval = QueueCmdGeometry(renderer, NULL,
@@ -3474,7 +3536,7 @@ SDL_RenderCopyF(SDL_Renderer * renderer, SDL_Texture * texture,
         float uv[8];
         const int uv_stride = 2 * sizeof (float);
         const int num_vertices = 4;
-        const int indices[6] = {0, 1, 2, 0, 2, 3};
+        const int *indices = renderer->rect_index_order;
         const int num_indices = 6;
         const int size_indices = 4;
         float minu, minv, maxu, maxv;
@@ -3622,7 +3684,7 @@ SDL_RenderCopyExF(SDL_Renderer * renderer, SDL_Texture * texture,
         float uv[8];
         const int uv_stride = 2 * sizeof (float);
         const int num_vertices = 4;
-        const int indices[6] = {0, 1, 2, 0, 2, 3};
+        const int *indices = renderer->rect_index_order;
         const int num_indices = 6;
         const int size_indices = 4;
         float minu, minv, maxu, maxv;
@@ -4004,7 +4066,23 @@ SDL_SW_RenderGeometryRaw(SDL_Renderer *renderer,
             if (texture && s.w != 0 && s.h != 0) {
                 SDL_SetTextureAlphaMod(texture, col0_.a);
                 SDL_SetTextureColorMod(texture, col0_.r, col0_.g, col0_.b);
-                SDL_RenderCopyF(renderer, texture, &s, &d);
+                if (s.w > 0 && s.h > 0) {
+                    SDL_RenderCopyF(renderer, texture, &s, &d);
+                } else {
+                    int flags = 0;
+                    if (s.w < 0) {
+                        flags |= SDL_FLIP_HORIZONTAL;
+                        s.w *= -1;
+                        s.x -= s.w;
+                    }
+                    if (s.h < 0) {
+                        flags |= SDL_FLIP_VERTICAL;
+                        s.h *= -1;
+                        s.y -= s.h;
+                    }
+                    SDL_RenderCopyExF(renderer, texture, &s, &d, 0, NULL, flags);
+                }
+
 #if DEBUG_SW_RENDER_GEOMETRY
                 SDL_Log("Rect-COPY: RGB %d %d %d - Alpha:%d - texture=%p: src=(%d,%d, %d x %d) dst (%f, %f, %f x %f)", col0_.r, col0_.g, col0_.b, col0_.a,
                         (void *)texture, s.x, s.y, s.w, s.h, d.x, d.y, d.w, d.h);
@@ -4014,8 +4092,8 @@ SDL_SW_RenderGeometryRaw(SDL_Renderer *renderer,
                 SDL_SetRenderDrawColor(renderer, col0_.r, col0_.g, col0_.b, col0_.a);
                 SDL_RenderFillRectF(renderer, &d);
 #if DEBUG_SW_RENDER_GEOMETRY
-                SDL_Log("Rect-FILL: RGB %d %d %d - Alpha:%d - texture=%p: src=(%d,%d, %d x %d) dst (%f, %f, %f x %f)", col0_.r, col0_.g, col0_.b, col0_.a,
-                        (void *)texture, s.x, s.y, s.w, s.h, d.x, d.y, d.w, d.h);
+                SDL_Log("Rect-FILL: RGB %d %d %d - Alpha:%d - texture=%p: dst (%f, %f, %f x %f)", col0_.r, col0_.g, col0_.b, col0_.a,
+                        (void *)texture, d.x, d.y, d.w, d.h);
             } else {
                 SDL_Log("Rect-DISMISS: RGB %d %d %d - Alpha:%d - texture=%p: src=(%d,%d, %d x %d) dst (%f, %f, %f x %f)", col0_.r, col0_.g, col0_.b, col0_.a,
                         (void *)texture, s.x, s.y, s.w, s.h, d.x, d.y, d.w, d.h);
@@ -4225,9 +4303,39 @@ SDL_RenderReadPixels(SDL_Renderer * renderer, const SDL_Rect * rect,
                                       format, pixels, pitch);
 }
 
+static void
+SDL_RenderSimulateVSync(SDL_Renderer * renderer)
+{
+    Uint32 now, elapsed;
+    const Uint32 interval = renderer->simulate_vsync_interval;
+
+    if (!interval) {
+        /* We can't do sub-ms delay, so just return here */
+        return;
+    }
+
+    now = SDL_GetTicks();
+    elapsed = (now - renderer->last_present);
+    if (elapsed < interval) {
+        Uint32 duration = (interval - elapsed);
+        SDL_Delay(duration);
+        now = SDL_GetTicks();
+    }
+
+    elapsed = (now - renderer->last_present);
+    if (!renderer->last_present || elapsed > 1000) {
+        /* It's been too long, reset the presentation timeline */
+        renderer->last_present = now;
+    } else {
+        renderer->last_present += (elapsed / interval) * interval;
+    }
+}
+
 void
 SDL_RenderPresent(SDL_Renderer * renderer)
 {
+    SDL_bool presented = SDL_TRUE;
+
     CHECK_RENDERER_MAGIC(renderer, );
 
     FlushRenderCommands(renderer);  /* time to send everything to the GPU! */
@@ -4235,11 +4343,17 @@ SDL_RenderPresent(SDL_Renderer * renderer)
 #if DONT_DRAW_WHILE_HIDDEN
     /* Don't present while we're hidden */
     if (renderer->hidden) {
-        return;
-    }
+        presented = SDL_FALSE;
+    } else
 #endif
+    if (renderer->RenderPresent(renderer) < 0) {
+        presented = SDL_FALSE;
+    }
 
-    renderer->RenderPresent(renderer);
+    if (renderer->simulate_vsync || 
+        (!presented && renderer->wanted_vsync)) {
+        SDL_RenderSimulateVSync(renderer);
+    }
 }
 
 void
@@ -4495,10 +4609,20 @@ SDL_RenderSetVSync(SDL_Renderer * renderer, int vsync)
         return SDL_Unsupported();
     }
 
-    if (renderer->SetVSync) {
-        return renderer->SetVSync(renderer, vsync);
+    renderer->wanted_vsync = vsync ? SDL_TRUE : SDL_FALSE;
+
+    if (!renderer->SetVSync ||
+        renderer->SetVSync(renderer, vsync) != 0) {
+        renderer->simulate_vsync = vsync ? SDL_TRUE : SDL_FALSE;
+        if (renderer->simulate_vsync) {
+            renderer->info.flags |= SDL_RENDERER_PRESENTVSYNC;
+        } else {
+            renderer->info.flags &= ~SDL_RENDERER_PRESENTVSYNC;
+        }
+    } else {
+        renderer->simulate_vsync = SDL_FALSE;
     }
-    return SDL_Unsupported();
+    return 0;
 }
 
 /* vi: set ts=4 sw=4 expandtab: */

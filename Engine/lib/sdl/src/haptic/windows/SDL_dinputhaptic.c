@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -27,6 +27,7 @@
 
 #if SDL_HAPTIC_DINPUT
 
+#include "SDL_hints.h"
 #include "SDL_stdinc.h"
 #include "SDL_timer.h"
 #include "SDL_windowshaptic_c.h"
@@ -75,6 +76,11 @@ SDL_DINPUT_HapticInit(void)
 
     if (dinput != NULL) {       /* Already open. */
         return SDL_SetError("Haptic: SubSystem already open.");
+    }
+
+    if (!SDL_GetHintBoolean(SDL_HINT_DIRECTINPUT_ENABLED, SDL_TRUE)) {
+        /* In some environments, IDirectInput8_Initialize / _EnumDevices can take a minute even with no controllers. */
+        return 0;
     }
 
     ret = WIN_CoInitialize();

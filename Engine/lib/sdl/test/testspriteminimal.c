@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -117,7 +117,7 @@ main(int argc, char *argv[])
     }
 
     /* Initialize the sprite positions */
-    srand(time(NULL));
+    srand((unsigned int)time(NULL));
     for (i = 0; i < NUM_SPRITES; ++i) {
         positions[i].x = rand() % (WINDOW_WIDTH - sprite_w);
         positions[i].y = rand() % (WINDOW_HEIGHT - sprite_h);

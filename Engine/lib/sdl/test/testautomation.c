@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -101,7 +101,7 @@ main(int argc, char *argv[])
     }
 
     /* Call Harness */
-    result = SDLTest_RunSuites(testSuites, (const char *)userRunSeed, userExecKey, (const char *)filter, testIterations);
+    result = SDLTest_RunSuites(testSuites, userRunSeed, userExecKey, filter, testIterations);
 
     /* Empty event queue */
     done = 0;

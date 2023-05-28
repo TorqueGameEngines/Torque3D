@@ -330,6 +330,21 @@ if (APPLE)
 	configure_file("${CMAKE_SOURCE_DIR}/Tools/CMake/Info.plist.in" "${CMAKE_BINARY_DIR}/temp/Info.plist" COPYONLY)
 endif (APPLE)
 
+macro (filterOut)
+  foreach(ARGUMENT ${ARGV})
+    list(REMOVE_ITEM TORQUE_SOURCE_FILES "${CMAKE_SOURCE_DIR}/Engine/source/${ARGUMENT}")
+  endforeach()
+endmacro (filterOut)
+
+if(NOT TORQUE_SDL)
+   filterOut("platform/nativeDialogs/fileDialog.cpp" )
+endif()
+if(NOT TORQUE_OPENGL)
+  filterOut("platformSDL/sdlPlatformGL.cpp")
+endif()
+if (NOT TORQUE_NET_CURL)
+  filterOut("app/net/httpObject.h" "app/net/httpObject.cpp")
+endif()
 ################# Executable Generation ###################
 
 if (TORQUE_DYNAMIC_LIBRARY)
@@ -340,7 +355,7 @@ if (TORQUE_DYNAMIC_LIBRARY)
   target_compile_definitions(TorqueEngine PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
   target_link_libraries(TorqueEngine ${TORQUE_LINK_LIBRARIES})
   target_include_directories(TorqueEngine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp" ${TORQUE_INCLUDE_DIRECTORIES})
-  target_compile_features(TorqueEngine PRIVATE cxx_std_17)
+  target_compile_features(TorqueEngine PRIVATE cxx_std_20)
 
   set(TORQUE_SOURCE_FILES "main/main.cpp")
   set(TORQUE_LINK_LIBRARIES TorqueEngine)
@@ -369,7 +384,7 @@ endif()
 target_compile_definitions(${TORQUE_APP_NAME} PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
 target_link_libraries(${TORQUE_APP_NAME} ${TORQUE_LINK_LIBRARIES})
 target_include_directories(${TORQUE_APP_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp" ${TORQUE_INCLUDE_DIRECTORIES})
-target_compile_features(${TORQUE_APP_NAME} PRIVATE cxx_std_17)
+target_compile_features(${TORQUE_APP_NAME} PRIVATE cxx_std_20)
 
 # Process library binaries - these are coming from modules that are providing links to external, precompiled code that should be included
 # with the executable. This is done because on Windows, the .lib is separate from the .dll so we can't automatically scan for shared

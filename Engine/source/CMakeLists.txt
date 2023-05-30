@@ -330,6 +330,56 @@ if (APPLE)
 	configure_file("${CMAKE_SOURCE_DIR}/Tools/CMake/Info.plist.in" "${CMAKE_BINARY_DIR}/temp/Info.plist" COPYONLY)
 endif (APPLE)
 
+################# additional preprocessor defines ###################
+macro(__addDef def config)
+    # two possibilities: a) target already known, so add it directly, or b) target not yet known, so add it to its cache
+    if(TARGET ${TORQUE_APP_NAME})
+        #message(STATUS "directly applying defs: ${TORQUE_APP_NAME} with config ${config}: ${def}")
+        if("${config}" STREQUAL "")
+            set_property(TARGET ${TORQUE_APP_NAME} APPEND PROPERTY ${TORQUE_COMPILE_DEFINITIONS} ${def})
+        else()
+            set_property(TARGET ${TORQUE_APP_NAME} APPEND PROPERTY ${TORQUE_COMPILE_DEFINITIONS} $<$<CONFIG:${config}>:${def}>)
+        endif()
+    else()
+        if("${config}" STREQUAL "")
+            list(APPEND ${TORQUE_COMPILE_DEFINITIONS}_defs_ ${def})
+        else()
+            list(APPEND ${TORQUE_COMPILE_DEFINITIONS}_defs_ $<$<CONFIG:${config}>:${def}>)
+        endif()
+        #message(STATUS "added definition to cache: ${TORQUE_APP_NAME}_defs_: ${${TORQUE_APP_NAME}_defs_}")
+    endif()
+endmacro()
+
+# adds a definition: argument 1: Nothing(for all), _DEBUG, _RELEASE, <more build configurations>
+macro(addDef def)
+    if(NOT DEFINED ${${TORQUE_COMPILE_DEFINITIONS}_defs_})
+        set(${TORQUE_COMPILE_DEFINITIONS}_defs_ "")
+    endif()
+    set(def_configs "")
+    if(${ARGC} GREATER 1)
+        foreach(config ${ARGN})
+            __addDef(${def} ${config})
+        endforeach()
+    else()
+        __addDef(${def} "")
+    endif()
+endmacro()
+
+# this applies cached definitions onto the target
+macro(append_defs)
+    if(NOT DEFINED ${${TORQUE_COMPILE_DEFINITIONS}_defs_})
+        set(${TORQUE_COMPILE_DEFINITIONS}_defs_ "")
+    endif()
+    set_property(TARGET ${TORQUE_APP_NAME} APPEND PROPERTY ${TORQUE_COMPILE_DEFINITIONS} ${${TORQUE_COMPILE_DEFINITIONS}_defs_})
+    #message(STATUS "applying defs to project ${TORQUE_APP_NAME}: ${${TORQUE_APP_NAME}_defs_}")
+endmacro()
+
+addDef(TORQUE_DEBUG Debug)
+addDef(TORQUE_RELEASE "RelWithDebInfo;Release")
+addDef(TORQUE_ENABLE_ASSERTS "Debug;RelWithDebInfo")
+addDef(TORQUE_DEBUG_GFX_MODE "RelWithDebInfo")
+
+################# file filtering ###################
 macro (filterOut)
   foreach(ARGUMENT ${ARGV})
     list(REMOVE_ITEM TORQUE_SOURCE_FILES "${CMAKE_SOURCE_DIR}/Engine/source/${ARGUMENT}")
@@ -379,6 +429,20 @@ else()
 	
 	# NOTE: On Linux, we set the rpath to ./ so that shared objects next to the executable are used
 	set_target_properties(${TORQUE_APP_NAME} PROPERTIES LINK_FLAGS "-Wl,-rpath,./")
+endif()
+
+
+if(MSVC)
+    # Match projectGenerator naming for executables
+    set(OUTPUT_CONFIG DEBUG MINSIZEREL RELWITHDEBINFO)
+    set(OUTPUT_SUFFIX DEBUG MINSIZE    OPTIMIZEDDEBUG)
+    foreach(INDEX RANGE 2)
+        list(GET OUTPUT_CONFIG ${INDEX} CONF)
+        list(GET OUTPUT_SUFFIX ${INDEX} SUFFIX)
+        set_property(TARGET ${TORQUE_APP_NAME} PROPERTY OUTPUT_NAME_${CONF} ${TORQUE_APP_NAME}_${SUFFIX})
+    endforeach()
+    # Set Visual Studio startup project
+    set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${TORQUE_APP_NAME})
 endif()
 
 target_compile_definitions(${TORQUE_APP_NAME} PUBLIC ${TORQUE_COMPILE_DEFINITIONS})

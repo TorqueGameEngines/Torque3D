@@ -11,6 +11,7 @@ add_subdirectory(zlib ${CMAKE_BINARY_DIR}/temp/zlib EXCLUDE_FROM_ALL)
 # Assimp depends on zlib
 set(BUILD_SHARED_LIBS off CACHE BOOL "" FORCE)
 set(ASSIMP_BUILD_ZLIB off CACHE BOOL "" FORCE)
+set(ASSIMP_WARNINGS_AS_ERRORS off CACHE BOOL "" FORCE)
 set(ASSIMP_HUNTER_ENABLED off CACHE BOOL "" FORCE)
 add_subdirectory(assimp ${CMAKE_BINARY_DIR}/temp/assimp EXCLUDE_FROM_ALL)
 

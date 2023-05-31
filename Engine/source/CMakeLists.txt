@@ -55,7 +55,7 @@ forwardDef(TORQUE_D3D11)
 forwardDef(TORQUE_ADVANCED_LIGHTING)
 forwardDef(TORQUE_BASIC_LIGHTING)
 set(TORQUE_SDL ON) # we need sdl to do our platform interop
-forwardCompileDef(TORQUE_SDL)
+forwardDef(TORQUE_SDL)
 
 # On Windows we disable CRT Security warnings - this comes from recommendations to use non-portable functions.
 if (WIN32)
@@ -389,8 +389,8 @@ endif()
 if (NOT TORQUE_NET_CURL)
   filterOut("app/net/httpObject.h" "app/net/httpObject.cpp")
 endif()
-################# Executable Generation ###################
 
+################# Executable Generation ###################
 if (TORQUE_DYNAMIC_LIBRARY)
   set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} TORQUE_SHARED)
 

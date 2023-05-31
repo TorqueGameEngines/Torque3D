@@ -416,21 +416,21 @@ if (APPLE)
 elseif (WIN32)
 	add_executable(${TORQUE_APP_NAME} WIN32 ${TORQUE_SOURCE_FILES})
     
-    set(TORQUE_CXX_FLAGS_COMMON_DEFAULT "-DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS /MP /O2 /Ob2 /Oi /Ot /Oy /GT /Zi /W4 /nologo /GF /EHsc /GS- /Gy- /Qpar- /fp:precise /fp:except- /GR /Zc:wchar_t-" )
+    set(TORQUE_CXX_FLAGS_COMMON_DEFAULT "-DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS /MP /Ob2 /Oi /Ot /Oy /GT /Zi /W4 /nologo /GF /EHsc /GS- /Gy- /Qpar- /fp:precise /fp:except- /GR /Zc:wchar_t-" )
     if( TORQUE_CPU_X32 )
        set(TORQUE_CXX_FLAGS_COMMON_DEFAULT "${TORQUE_CXX_FLAGS_COMMON_DEFAULT} /arch:SSE2")
     endif()
     set(TORQUE_CXX_FLAGS_COMMON ${TORQUE_CXX_FLAGS_COMMON_DEFAULT} CACHE STRING "")
     mark_as_advanced(TORQUE_CXX_FLAGS_COMMON)
 	
-    set(TORQUE_CXX_FLAGS_EXECUTABLES "/wd4018 /wd4100 /wd4121 /wd4127 /wd4130 /wd4244 /wd4245 /wd4389 /wd4511 /wd4512 /wd4800 /wd4995 " CACHE STRING "")
+    set(TORQUE_CXX_FLAGS_EXECUTABLES "/wd4018 /wd4100 /wd4121 /wd4127 /wd4130 /wd4244 /wd4245 /wd4389 /wd4511 /wd4512 /wd4800 /wd4995" CACHE STRING "")
     mark_as_advanced(TORQUE_CXX_FLAGS_EXECUTABLES)
     
     set(TORQUE_CXX_FLAGS "${TORQUE_CXX_FLAGS_COMMON_DEFAULT} ${TORQUE_CXX_FLAGS_EXECUTABLES}" CACHE STRING "")
     mark_as_advanced(TORQUE_CXX_FLAGS)
     
 	# NOTE: On Windows, /Zc:wchar_t- is necessary otherwise you get unicode errors
-	set_target_properties(${TORQUE_APP_NAME} PROPERTIES COMPILE_FLAGS ${TORQUE_CXX_FLAGS})
+	set_target_properties(${TORQUE_APP_NAME} PROPERTIES COMPILE_FLAGS "${TORQUE_CXX_FLAGS}")
 else()
 	add_executable(${TORQUE_APP_NAME} ${TORQUE_SOURCE_FILES})
 	

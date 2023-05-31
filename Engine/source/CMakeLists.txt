@@ -44,22 +44,18 @@ macro (torqueAddSourceDirectories)
 endmacro (torqueAddSourceDirectories)
 
 ################# Set Conditional Engine Defines ###################
+macro (forwardDef flag)
+    if (${flag})
+        set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} ${flag})
+    endif()
+endmacro(forwardDef)
 
-if (TORQUE_OPENGL)
-	set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} TORQUE_OPENGL)
-endif (TORQUE_OPENGL)
-
-if (TORQUE_D3D11)
-	set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} TORQUE_D3D11)
-endif (TORQUE_D3D11)
-
-if (TORQUE_ADVANCED_LIGHTING)
-	set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} TORQUE_ADVANCED_LIGHTING)
-endif (TORQUE_ADVANCED_LIGHTING)
-
-if (TORQUE_BASIC_LIGHTING)
-	set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} TORQUE_BASIC_LIGHTING)
-endif (TORQUE_BASIC_LIGHTING)
+forwardDef(TORQUE_OPENGL)
+forwardDef(TORQUE_D3D11)
+forwardDef(TORQUE_ADVANCED_LIGHTING)
+forwardDef(TORQUE_BASIC_LIGHTING)
+set(TORQUE_SDL ON) # we need sdl to do our platform interop
+forwardCompileDef(TORQUE_SDL)
 
 # On Windows we disable CRT Security warnings - this comes from recommendations to use non-portable functions.
 if (WIN32)
@@ -333,28 +329,25 @@ endif (APPLE)
 ################# additional preprocessor defines ###################
 macro(__addDef def config)
     # two possibilities: a) target already known, so add it directly, or b) target not yet known, so add it to its cache
-    if(TARGET ${TORQUE_APP_NAME})
-        #message(STATUS "directly applying defs: ${TORQUE_APP_NAME} with config ${config}: ${def}")
+    if(TARGET ${PROJECT_NAME})
+        #message(STATUS "directly applying defs: ${PROJECT_NAME} with config ${config}: ${def}")
         if("${config}" STREQUAL "")
-            set_property(TARGET ${TORQUE_APP_NAME} APPEND PROPERTY ${TORQUE_COMPILE_DEFINITIONS} ${def})
+            set_property(TARGET ${PROJECT_NAME} APPEND PROPERTY COMPILE_DEFINITIONS ${def})
         else()
-            set_property(TARGET ${TORQUE_APP_NAME} APPEND PROPERTY ${TORQUE_COMPILE_DEFINITIONS} $<$<CONFIG:${config}>:${def}>)
+            set_property(TARGET ${PROJECT_NAME} APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:${config}>:${def}>)
         endif()
     else()
         if("${config}" STREQUAL "")
-            list(APPEND ${TORQUE_COMPILE_DEFINITIONS}_defs_ ${def})
+            list(APPEND ${PROJECT_NAME}_defs_ ${def})
         else()
-            list(APPEND ${TORQUE_COMPILE_DEFINITIONS}_defs_ $<$<CONFIG:${config}>:${def}>)
+            list(APPEND ${PROJECT_NAME}_defs_ $<$<CONFIG:${config}>:${def}>)
         endif()
-        #message(STATUS "added definition to cache: ${TORQUE_APP_NAME}_defs_: ${${TORQUE_APP_NAME}_defs_}")
+        #message(STATUS "added definition to cache: ${PROJECT_NAME}_defs_: ${${PROJECT_NAME}_defs_}")
     endif()
 endmacro()
 
 # adds a definition: argument 1: Nothing(for all), _DEBUG, _RELEASE, <more build configurations>
 macro(addDef def)
-    if(NOT DEFINED ${${TORQUE_COMPILE_DEFINITIONS}_defs_})
-        set(${TORQUE_COMPILE_DEFINITIONS}_defs_ "")
-    endif()
     set(def_configs "")
     if(${ARGC} GREATER 1)
         foreach(config ${ARGN})
@@ -365,13 +358,14 @@ macro(addDef def)
     endif()
 endmacro()
 
-# this applies cached definitions onto the target
+# this applies cached definitions onto the target must come *after* target_compile_definitions
 macro(append_defs)
-    if(NOT DEFINED ${${TORQUE_COMPILE_DEFINITIONS}_defs_})
-        set(${TORQUE_COMPILE_DEFINITIONS}_defs_ "")
-    endif()
-    set_property(TARGET ${TORQUE_APP_NAME} APPEND PROPERTY ${TORQUE_COMPILE_DEFINITIONS} ${${TORQUE_COMPILE_DEFINITIONS}_defs_})
-    #message(STATUS "applying defs to project ${TORQUE_APP_NAME}: ${${TORQUE_APP_NAME}_defs_}")
+    if(DEFINED ${PROJECT_NAME}_defs_)
+        set_property(TARGET ${PROJECT_NAME} APPEND PROPERTY COMPILE_DEFINITIONS ${${PROJECT_NAME}_defs_})
+        #message(STATUS "applying defs to project ${PROJECT_NAME}: ${${PROJECT_NAME}_defs_}")
+    else()
+        #message(STATUS "NO ${PROJECT_NAME}_defs_ defined!")
+    endif()    
 endmacro()
 
 addDef(TORQUE_DEBUG Debug)
@@ -421,9 +415,22 @@ if (APPLE)
 	add_custom_command(TARGET ${TORQUE_APP_NAME} POST_BUILD COMMAND install_name_tool -add_rpath "@executable_path/../Frameworks" ${TORQUE_APP_GAME_DIRECTORY}/${TORQUE_APP_NAME}.app/Contents/MacOS/${TORQUE_APP_NAME})
 elseif (WIN32)
 	add_executable(${TORQUE_APP_NAME} WIN32 ${TORQUE_SOURCE_FILES})
+    
+    set(TORQUE_CXX_FLAGS_COMMON_DEFAULT "-DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS /MP /O2 /Ob2 /Oi /Ot /Oy /GT /Zi /W4 /nologo /GF /EHsc /GS- /Gy- /Qpar- /fp:precise /fp:except- /GR /Zc:wchar_t-" )
+    if( TORQUE_CPU_X32 )
+       set(TORQUE_CXX_FLAGS_COMMON_DEFAULT "${TORQUE_CXX_FLAGS_COMMON_DEFAULT} /arch:SSE2")
+    endif()
+    set(TORQUE_CXX_FLAGS_COMMON ${TORQUE_CXX_FLAGS_COMMON_DEFAULT} CACHE STRING "")
+    mark_as_advanced(TORQUE_CXX_FLAGS_COMMON)
 	
+    set(TORQUE_CXX_FLAGS_EXECUTABLES "/wd4018 /wd4100 /wd4121 /wd4127 /wd4130 /wd4244 /wd4245 /wd4389 /wd4511 /wd4512 /wd4800 /wd4995 " CACHE STRING "")
+    mark_as_advanced(TORQUE_CXX_FLAGS_EXECUTABLES)
+    
+    set(TORQUE_CXX_FLAGS "${TORQUE_CXX_FLAGS_COMMON_DEFAULT} ${TORQUE_CXX_FLAGS_EXECUTABLES}" CACHE STRING "")
+    mark_as_advanced(TORQUE_CXX_FLAGS)
+    
 	# NOTE: On Windows, /Zc:wchar_t- is necessary otherwise you get unicode errors
-	set_target_properties(${TORQUE_APP_NAME} PROPERTIES COMPILE_FLAGS "/Zc:wchar_t-")
+	set_target_properties(${TORQUE_APP_NAME} PROPERTIES COMPILE_FLAGS ${TORQUE_CXX_FLAGS})
 else()
 	add_executable(${TORQUE_APP_NAME} ${TORQUE_SOURCE_FILES})
 	
@@ -449,6 +456,7 @@ target_compile_definitions(${TORQUE_APP_NAME} PUBLIC ${TORQUE_COMPILE_DEFINITION
 target_link_libraries(${TORQUE_APP_NAME} ${TORQUE_LINK_LIBRARIES})
 target_include_directories(${TORQUE_APP_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp" ${TORQUE_INCLUDE_DIRECTORIES})
 target_compile_features(${TORQUE_APP_NAME} PRIVATE cxx_std_20)
+append_defs()
 
 # Process library binaries - these are coming from modules that are providing links to external, precompiled code that should be included
 # with the executable. This is done because on Windows, the .lib is separate from the .dll so we can't automatically scan for shared

@@ -181,13 +181,13 @@ void Dictionary::exportVariables(const char *varString, const char *fileName, bo
 
    for (s = sortList.begin(); s != sortList.end(); s++)
    {
-      switch ((*s)->type)
+      switch ((*s)->value.getType())
       {
-         case Entry::TypeInternalInt:
-            dSprintf(buffer, sizeof(buffer), "%s = %d;%s", (*s)->name, (*s)->ival, cat);
+         case ConsoleValueType::cvInteger:
+            dSprintf(buffer, sizeof(buffer), "%s = %d;%s", (*s)->name, (*s)->getIntValue(), cat);
             break;
-         case Entry::TypeInternalFloat:
-            dSprintf(buffer, sizeof(buffer), "%s = %g;%s", (*s)->name, (*s)->fval, cat);
+         case ConsoleValueType::cvFloat:
+            dSprintf(buffer, sizeof(buffer), "%s = %g;%s", (*s)->name, (*s)->getFloatValue(), cat);
             break;
          default:
             expandEscape(expandBuffer, (*s)->getStringValue());
@@ -241,7 +241,7 @@ void Dictionary::exportVariables(const char *varString, Vector<String> *names, V
 
       if (values)
       {
-         switch ((*s)->type)
+         switch ((*s)->value.getType())
          {
             case ConsoleValueType::cvInteger:
             case ConsoleValueType::cvFloat:
@@ -461,19 +461,11 @@ const char *Dictionary::tabComplete(const char *prevText, S32 baseLen, bool fFor
 Dictionary::Entry::Entry(StringTableEntry in_name)
 {
    name = in_name;
-   type = TypeInternalString;
    notify = NULL;
    nextEntry = NULL;
    mUsage = NULL;
    mIsConstant = false;
    mNext = NULL;
-
-   ival = 0;
-   fval = 0;
-   sval = NULL;
-   bufferLen = 0;
-   dataPtr = NULL;
-   enumTable = NULL;
 }
 
 Dictionary::Entry::~Entry()
@@ -484,71 +476,9 @@ Dictionary::Entry::~Entry()
 void Dictionary::Entry::reset()
 {
    name = NULL;
-   if (type <= TypeInternalString && sval != NULL)
-      dFree(sval);
+   value.reset();
    if (notify)
       delete notify;
-}
-
-void Dictionary::Entry::setStringValue(const char* value)
-{
-   if (mIsConstant)
-   {
-      Con::errorf("Cannot assign value to constant '%s'.", name);
-      return;
-   }
-
-   if (type <= TypeInternalString)
-   {
-      // Let's not remove empty-string-valued global vars from the dict.
-      // If we remove them, then they won't be exported, and sometimes
-      // it could be necessary to export such a global.  There are very
-      // few empty-string global vars so there's no performance-related
-      // need to remove them from the dict.
-      /*
-       if(!value[0] && name[0] == '$')
-       {
-       gEvalState.globalVars.remove(this);
-       return;
-       }
-       */
-
-      U32 stringLen = dStrlen(value);
-
-      // If it's longer than 256 bytes, it's certainly not a number.
-      //
-      // (This decision may come back to haunt you. Shame on you if it
-      // does.)
-      if (stringLen < 256)
-      {
-         fval = dAtof(value);
-         ival = dAtoi(value);
-      }
-      else
-      {
-         fval = 0.f;
-         ival = 0;
-      }
-
-      type = TypeInternalString;
-
-      // may as well pad to the next cache line
-      U32 newLen = ((stringLen + 1) + 15) & ~15;
-
-      if (sval == NULL)
-         sval = (char*)dMalloc(newLen);
-      else if (newLen > bufferLen)
-         sval = (char*)dRealloc(sval, newLen);
-
-      bufferLen = newLen;
-      dStrcpy(sval, value, newLen);
-   }
-   else
-      Con::setData(type, dataPtr, 0, 1, &value, enumTable);
-
-   // Fire off the notification if we have one.
-   if (notify)
-      notify->trigger();
 }
 
 const char *Dictionary::getVariable(StringTableEntry name, bool *entValid)
@@ -626,17 +556,12 @@ Dictionary::Entry* Dictionary::addVariable(const char *name,
 
    Entry *ent = add(StringTable->insert(name));
 
-   if (ent->type <= Entry::TypeInternalString && ent->sval != NULL)
-      dFree(ent->sval);
-
    ent->mUsage = usage;
-   ent->type = type;
-   ent->dataPtr = dataPtr;
 
    // Fetch enum table, if any.
    ConsoleBaseType* conType = ConsoleBaseType::getType(type);
    AssertFatal(conType, "Dictionary::addVariable - invalid console type");
-   ent->enumTable = conType->getEnumTable();
+   ent->value.setConsoleData(type, dataPtr, conType->getEnumTable());
 
    return ent;
 }

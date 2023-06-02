@@ -112,10 +112,10 @@ static void dumpVariable(  Stream& stream,
                            const char* inClass = NULL )
 {
    // Skip variables defined in script.
-   
-   if( entry->type <= Dictionary::Entry::TypeInternalString )
+
+   if( entry->value.getType() <= ConsoleValueType::cvString )
       return;
-         
+
    // Skip internals... don't export them.
    if (  entry->mUsage &&
          ( dStrstr( entry->mUsage, "@hide" ) || dStrstr( entry->mUsage, "@internal" ) ) )
@@ -145,10 +145,10 @@ static void dumpVariable(  Stream& stream,
       if( nameComponents.size() > 1 && Con::lookupNamespace( nameComponents.first().c_str() + 1 )->mClassRep )
          return;
    }
-            
+
    // Skip variables for which we can't decipher their type.
 
-   ConsoleBaseType* type = ConsoleBaseType::getType( entry->type );
+   ConsoleBaseType* type = ConsoleBaseType::getType( entry->value.getConsoleType()->consoleType );
    if( !type )
    {
       Con::errorf( "Can't find type for variable '%s'", entry->name );

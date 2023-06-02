@@ -286,16 +286,8 @@ public:
    {
       friend class Dictionary;
 
-      enum
-      {
-         TypeInternalInt = -3,
-         TypeInternalFloat = -2,
-         TypeInternalString = -1,
-      };
-
       StringTableEntry name;
       Entry *nextEntry;
-      S32 type;
 
       typedef Signal<void()> NotifySignal;
 
@@ -309,58 +301,17 @@ public:
       /// Whether this is a constant that cannot be assigned to.
       bool mIsConstant;
 
-   protected:
-
-      // NOTE: This is protected to ensure no one outside
-      // of this structure is messing with it.
-
-#pragma warning( push )
-#pragma warning( disable : 4201 ) // warning C4201: nonstandard extension used : nameless struct/union
-
-      // An variable is either a real dynamic type or
-      // its one exposed from C++ using a data pointer.
-      //
-      // We use this nameless union and struct setup
-      // to optimize the memory usage.
-      union
-      {
-         struct
-         {
-            char* sval;
-            U32 ival;  // doubles as strlen when type is TypeInternalString
-            F32 fval;
-            U32 bufferLen;
-         };
-
-         struct
-         {
-            /// The real data pointer.
-            void* dataPtr;
-
-            /// The enum lookup table for enumerated types.
-            const EnumTable* enumTable;
-         };
-      };
-
-#pragma warning( pop ) // C4201
+      ConsoleValue value;
 
    public:
 
       Entry() {
          name = NULL;
-         type = TypeInternalString;
          notify = NULL;
          nextEntry = NULL;
          mUsage = NULL;
          mIsConstant = false;
          mNext = NULL;
-
-         ival = 0;
-         fval = 0;
-         sval = NULL;
-         bufferLen = 0;
-         dataPtr = NULL;
-         enumTable = NULL;
       }
 
       Entry(StringTableEntry name);
@@ -370,32 +321,21 @@ public:
 
       void reset();
 
+      inline ConsoleValue getValue() { return std::move(value); }
+
       inline U32 getIntValue()
       {
-         if (type <= TypeInternalString)
-            return ival;
-         else
-            return dAtoi(Con::getData(type, dataPtr, 0, enumTable));
+         return value.getInt();
       }
 
       inline F32 getFloatValue()
       {
-         if (type <= TypeInternalString)
-            return fval;
-         else
-            return dAtof(Con::getData(type, dataPtr, 0, enumTable));
+         return value.getFloat();
       }
 
       inline const char *getStringValue()
       {
-         if (type == TypeInternalString)
-            return sval;
-         if (type == TypeInternalFloat)
-            return Con::getData(TypeF32, &fval, 0);
-         else if (type == TypeInternalInt)
-            return Con::getData(TypeS32, &ival, 0);
-         else
-            return Con::getData(type, dataPtr, 0, enumTable);
+         return value.getString();
       }
 
       void setIntValue(U32 val)
@@ -406,21 +346,15 @@ public:
             return;
          }
 
-         if (type <= TypeInternalString)
+         if (value.isConsoleType())
          {
-            fval = (F32)val;
-            ival = val;
-            if (sval != NULL)
-            {
-               dFree(sval);
-               sval = NULL;
-            }
-            type = TypeInternalInt;
+            const char* dptr = Con::getData(TypeS32, &val, 0);
+            ConsoleValueConsoleType* cvt = value.getConsoleType();
+            Con::setData(cvt->consoleType, cvt->dataPtr, 0, 1, &dptr, cvt->enumTable);
          }
          else
          {
-            const char* dptr = Con::getData(TypeS32, &val, 0);
-            Con::setData(type, dataPtr, 0, 1, &dptr, enumTable);
+            value.setInt(val);
          }
 
          // Fire off the notification if we have one.
@@ -436,21 +370,15 @@ public:
             return;
          }
 
-         if (type <= TypeInternalString)
+         if (value.isConsoleType())
          {
-            fval = val;
-            ival = static_cast<U32>(val);
-            if (sval != NULL)
-            {
-               dFree(sval);
-               sval = NULL;
-            }
-            type = TypeInternalFloat;
+            const char* dptr = Con::getData(TypeF32, &val, 0);
+            ConsoleValueConsoleType* cvt = value.getConsoleType();
+            Con::setData(cvt->consoleType, cvt->dataPtr, 0, 1, &dptr, cvt->enumTable);
          }
          else
          {
-            const char* dptr = Con::getData(TypeF32, &val, 0);
-            Con::setData(type, dataPtr, 0, 1, &dptr, enumTable);
+            value.setFloat(val);
          }
 
          // Fire off the notification if we have one.
@@ -458,7 +386,29 @@ public:
             notify->trigger();
       }
 
-      void setStringValue(const char* value);
+
+      void setStringValue(const char* val)
+      {
+         if (mIsConstant)
+         {
+            Con::errorf("Cannot assign value to constant '%s'.", name);
+            return;
+         }
+
+         if (value.isConsoleType())
+         {
+            ConsoleValueConsoleType* cvt = value.getConsoleType();
+            Con::setData(cvt->consoleType, cvt->dataPtr, 0, 1, &val, cvt->enumTable);
+         }
+         else
+         {
+            value.setString(val);
+         }
+
+         // Fire off the notification if we have one.
+         if (notify)
+            notify->trigger();
+      }
    };
 
    struct HashTableData

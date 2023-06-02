@@ -365,6 +365,18 @@ public:
       return type >= ConsoleValueType::cvConsoleValueType;
    }
 
+   TORQUE_FORCEINLINE ConsoleValueConsoleType* getConsoleType() const
+   {
+      if(type >= ConsoleValueType::cvConsoleValueType)
+      {
+         return ct;
+      }
+      else
+      {
+         return NULL;
+      }
+   }
+
    TORQUE_FORCEINLINE void setFastFloat(F64 flt)
    {
       type = ConsoleValueType::cvFloat;

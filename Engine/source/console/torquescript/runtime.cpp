@@ -95,16 +95,12 @@ namespace TorqueScript
    //------------------------------------------------------------------------------
    Con::EvalResult TorqueScriptRuntime::evaluatef(const char* string, ...)
    {
-      ConsoleStackFrameSaver stackSaver;
-      stackSaver.save();
-
       char buffer[4096];
       va_list args;
       va_start(args, string);
       dVsprintf(buffer, sizeof(buffer), string, args);
       va_end(args);
-      CodeBlock* newCodeBlock = new CodeBlock();
-      return newCodeBlock->compileExec(NULL, buffer, false, 0);
+      return evaluate(buffer);
    }
 
    bool TorqueScriptRuntime::executeFile(const char* fileName, bool noCalls, bool journalScript)

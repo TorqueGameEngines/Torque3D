@@ -4,6 +4,7 @@
 #include "runtime.h"
 #include "core/stream/stream.h"
 #include "module.h"
+#include "core/util/tDictionary.h"
 
 namespace Con
 {
@@ -24,15 +25,10 @@ namespace Con
 
    Module* getCurrentModule();
 
-   inline Vector<Runtime*> gRuntimes(32);
+   inline HashMap<S32, Runtime*> gRuntimes;
    inline Runtime* getRuntime(S32 pRuntimeId = 0) { return gRuntimes[pRuntimeId]; }
    inline void registerRuntime(S32 pRuntimeId, Runtime* pRuntime)
    {
-      if (gRuntimes.size() == 0)
-      {
-         gRuntimes.setSize(pRuntimeId + 1);
-         gRuntimes.fill(NULL);
-      }
       AssertFatal(gRuntimes[pRuntimeId] == NULL, "A runtime with that ID already exists");
       gRuntimes[pRuntimeId] = pRuntime;
    }

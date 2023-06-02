@@ -71,7 +71,7 @@ NvThreadConfig.cpp : A simple wrapper class to define threading and mutex locks.
 	#include <xtl.h>
 #endif
 
-#if defined(__linux__) || defined( __APPLE__ )
+#if defined(__linux__) || defined( __APPLE__ ) || defined( __FreeBSD__)
 	//#include <sys/time.h>
 	#include <time.h>
 	#include <unistd.h>
@@ -79,15 +79,18 @@ NvThreadConfig.cpp : A simple wrapper class to define threading and mutex locks.
 	#define __stdcall
 #endif
 
-#if defined( __APPLE__ )
+#if defined( __APPLE__ ) || defined( __FreeBSD__)
+
    #include <sys/time.h>
 #endif
 
-#if defined(__APPLE__) || defined(__linux__)
+#if defined(__APPLE__) || defined(__linux__) || defined( __FreeBSD__)
+
 	#include <pthread.h>
 #endif
 
-#if defined( __APPLE__ )
+#if defined( __APPLE__ ) || defined( __FreeBSD__)
+
    #define PTHREAD_MUTEX_RECURSIVE_NP PTHREAD_MUTEX_RECURSIVE
 #endif
 
@@ -107,7 +110,8 @@ NxU32 tc_timeGetTime(void)
       struct timespec ts;
       clock_gettime(CLOCK_REALTIME, &ts);
       return ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
-   #elif defined( __APPLE__ )
+    #elif defined( __APPLE__ ) || defined( __FreeBSD__)
+
       struct timeval tp;
       gettimeofday(&tp, (struct timezone *)0);
       return tp.tv_sec * 1000 + tp.tv_usec / 1000;
@@ -120,7 +124,7 @@ NxU32 tc_timeGetTime(void)
 
 void   tc_sleep(NxU32 ms)
 {
-   #if defined(__linux__) || defined( __APPLE__ )
+   #if defined(__linux__) || defined( __APPLE__ ) ||  defined( __FreeBSD__)
       usleep(ms * 1000);
    #else
       Sleep(ms);
@@ -129,26 +133,28 @@ void   tc_sleep(NxU32 ms)
 
 void tc_spinloop()
 {
-#if defined( _XBOX )
-   // Pause would do nothing on the Xbox. Threads are not scheduled.
-#elif defined( _WIN64 )
-   YieldProcessor( );
-#elif defined( __APPLE__ )
-   pthread_yield_np();
-#elif defined(__linux__)
-   #if defined(_POSIX_PRIORITY_SCHEDULING)
-      sched_yield();
-   #else
-      asm("pause");
+
+   #if defined( _XBOX )
+      // Pause would do nothing on the Xbox. Threads are not scheduled.
+   #elif defined( _WIN64 )
+      YieldProcessor( );
+   #elif defined( __APPLE__ )
+      pthread_yield_np();
+   #elif defined(__linux__)  || defined(__FreeBSD__)
+      #if defined(_POSIX_PRIORITY_SCHEDULING)
+         sched_yield();
+      #else
+         asm("pause");
+      #endif
+   #elif
+      __asm { pause };
    #endif
-#elif
-   __asm { pause };
-#endif
 }
 
 void tc_interlockedExchange(void *dest, const int64_t exchange)
 {
-   #if defined( __linux__ ) || defined( __APPLE__ )
+   #if defined( __linux__ ) || defined( __APPLE__ ) ||  defined( __FreeBSD__)
+
 	  // not working
 	  assert(false);
 	  //__sync_lock_test_and_set((int64_t*)dest, exchange);
@@ -174,7 +180,8 @@ void tc_interlockedExchange(void *dest, const int64_t exchange)
 
 NxI32 tc_interlockedCompareExchange(void *dest, NxI32 exchange, NxI32 compare)
 {
-   #if defined( __linux__ ) || defined( __APPLE__ )
+   #if defined( __linux__ ) || defined( __APPLE__ ) ||  defined( __FreeBSD__)
+
 	  // not working
 	  assert(false);
 	  return 0;
@@ -203,7 +210,7 @@ NxI32 tc_interlockedCompareExchange(void *dest, NxI32 exchange, NxI32 compare)
 
 NxI32 tc_interlockedCompareExchange(void *dest, const NxI32 exchange1, const NxI32 exchange2, const NxI32 compare1, const NxI32 compare2)
 {
-   #if defined( __linux__ ) || defined( __APPLE__ )
+   #if defined( __linux__ ) || defined( __APPLE__ ) || defined( __FreeBSD__)
 	  // not working
       assert(false);
 	  return 0;
@@ -239,7 +246,8 @@ public:
   {
     #if defined(WIN32) || defined(_XBOX)
   	InitializeCriticalSection(&m_Mutex);
-    #elif defined(__APPLE__) || defined(__linux__)
+    #elif defined(__APPLE__) || defined(__linux__) ||  defined( __FreeBSD__)
+
   	pthread_mutexattr_t mutexAttr;  // Mutex Attribute
   	VERIFY( pthread_mutexattr_init(&mutexAttr) == 0 );
   	VERIFY( pthread_mutexattr_settype(&mutexAttr, PTHREAD_MUTEX_RECURSIVE_NP) == 0 );
@@ -252,7 +260,8 @@ public:
   {
     #if defined(WIN32) || defined(_XBOX)
   	DeleteCriticalSection(&m_Mutex);
-    #elif defined(__APPLE__) || defined(__linux__)
+    #elif defined(__APPLE__) || defined(__linux__) ||  defined( __FreeBSD__)
+
   	VERIFY( pthread_mutex_destroy(&m_Mutex) == 0 );
     #endif
   }
@@ -261,7 +270,8 @@ public:
   {
     #if defined(WIN32) || defined(_XBOX)
   	EnterCriticalSection(&m_Mutex);
-    #elif defined(__APPLE__) || defined(__linux__)
+    #elif defined(__APPLE__) || defined(__linux__) ||  defined( __FreeBSD__)
+
   	VERIFY( pthread_mutex_lock(&m_Mutex) == 0 );
     #endif
   }
@@ -273,7 +283,8 @@ public:
   	//assert(("TryEnterCriticalSection seems to not work on XP???", 0));
   	bRet = TryEnterCriticalSection(&m_Mutex) ? true : false;
   	return bRet;
-    #elif defined(__APPLE__) || defined(__linux__)
+    #elif defined(__APPLE__) || defined(__linux__) ||  defined( __FreeBSD__)
+
   	NxI32 result = pthread_mutex_trylock(&m_Mutex);
   	return (result == 0);
     #endif
@@ -283,7 +294,8 @@ public:
   {
     #if defined(WIN32) || defined(_XBOX)
   	LeaveCriticalSection(&m_Mutex);
-    #elif defined(__APPLE__) || defined(__linux__)
+    #elif defined(__APPLE__) || defined(__linux__) ||  defined( __FreeBSD__)
+
   	VERIFY( pthread_mutex_unlock(&m_Mutex) == 0 );
     #endif
   }
@@ -291,7 +303,8 @@ public:
 private:
   #if defined(WIN32) || defined(_XBOX)
 	CRITICAL_SECTION m_Mutex;
-	#elif defined(__APPLE__) || defined(__linux__)
+	#elif defined(__APPLE__) || defined(__linux__) ||  defined( __FreeBSD__)
+
 	pthread_mutex_t  m_Mutex;
 	#endif
 };
@@ -310,7 +323,8 @@ void          tc_releaseThreadMutex(ThreadMutex *tm)
 
 #if defined(WIN32) || defined(_XBOX)
 static unsigned long __stdcall _ThreadWorkerFunc(LPVOID arg);
-#elif defined(__APPLE__) || defined(__linux__)
+#elif defined(__APPLE__) || defined(__linux__) ||  defined( __FreeBSD__)
+
 static void* _ThreadWorkerFunc(void* arg);
 #endif
 
@@ -322,7 +336,8 @@ public:
     mInterface = iface;
 	#if defined(WIN32) || defined(_XBOX)
    	  mThread     = CreateThread(0, 0, _ThreadWorkerFunc, this, 0, 0);
-    #elif defined(__APPLE__) || defined(__linux__)
+    #elif defined(__APPLE__) || defined(__linux__) ||  defined( __FreeBSD__)
+
 	  VERIFY( pthread_create(&mThread, NULL, _ThreadWorkerFunc, this) == 0 );
 	#endif
   }
@@ -347,7 +362,8 @@ private:
   ThreadInterface *mInterface;
   #if defined(WIN32) || defined(_XBOX)
     HANDLE           mThread;
-  #elif defined(__APPLE__) || defined(__linux__)
+  #elif defined(__APPLE__) || defined(__linux__) ||  defined( __FreeBSD__)
+
     pthread_t mThread;
   #endif
 };
@@ -367,7 +383,8 @@ void          tc_releaseThread(Thread *t)
 
 #if defined(WIN32) || defined(_XBOX)
 static unsigned long __stdcall _ThreadWorkerFunc(LPVOID arg)
-#elif defined(__APPLE__) || defined(__linux__)
+#elif defined(__APPLE__) || defined(__linux__) ||  defined( __FreeBSD__)
+
 static void* _ThreadWorkerFunc(void* arg)
 #endif
 {
@@ -384,7 +401,8 @@ public:
   {
 	#if defined(WIN32) || defined(_XBOX)
       mEvent = ::CreateEventA(NULL,TRUE,TRUE,"ThreadEvent");
-	#elif defined(__APPLE__) || defined(__linux__)
+	#elif defined(__APPLE__) || defined(__linux__) ||  defined( __FreeBSD__)
+
 	  pthread_mutexattr_t mutexAttr;  // Mutex Attribute
 	  VERIFY( pthread_mutexattr_init(&mutexAttr) == 0 );
 	  VERIFY( pthread_mutexattr_settype(&mutexAttr, PTHREAD_MUTEX_RECURSIVE_NP) == 0 );
@@ -401,7 +419,8 @@ public:
     {
       ::CloseHandle(mEvent);
     }
-	#elif defined(__APPLE__) || defined(__linux__)
+	#elif defined(__APPLE__) || defined(__linux__) ||  defined( __FreeBSD__)
+
 	  VERIFY( pthread_cond_destroy(&mEvent) == 0 );
 	  VERIFY( pthread_mutex_destroy(&mEventMutex) == 0 );
 	#endif
@@ -414,7 +433,8 @@ public:
     {
       ::SetEvent(mEvent);
     }
-	#elif defined(__APPLE__) || defined(__linux__)
+	#elif defined(__APPLE__) || defined(__linux__) ||  defined( __FreeBSD__)
+
 	  VERIFY( pthread_mutex_lock(&mEventMutex) == 0 );
 	  VERIFY( pthread_cond_signal(&mEvent) == 0 );
 	  VERIFY( pthread_mutex_unlock(&mEventMutex) == 0 );
@@ -438,7 +458,8 @@ public:
     {
       ::WaitForSingleObject(mEvent,ms);
     }
-	#elif defined(__APPLE__) || defined(__linux__)
+	#elif defined(__APPLE__) || defined(__linux__) ||  defined( __FreeBSD__)
+
       VERIFY( pthread_mutex_lock(&mEventMutex) == 0 );
 	  if (ms == 0xffffffff)
 	  {
@@ -468,7 +489,8 @@ public:
 private:
   #if defined(WIN32) || defined(_XBOX)
     HANDLE mEvent;
-  #elif defined(__APPLE__) || defined(__linux__)
+  #elif defined(__APPLE__) || defined(__linux__) ||  defined( __FreeBSD__)
+
     pthread_mutex_t mEventMutex;
     pthread_cond_t mEvent;
   #endif

@@ -20,7 +20,7 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#ifndef __APPLE__
+#if !defined( __APPLE__ ) && !defined( __FreeBSD__ )
 
 #include <fstream>
 #include <iostream>
@@ -38,14 +38,18 @@
 
 Platform::SystemInfo_struct Platform::SystemInfo;
 
-static inline void rtrim(std::string &s)
-{
-    s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+// trim from start (in place)
+static inline void ltrim(std::string &s) {
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
+        return !std::isspace(ch);
+    }));
 }
 
-static inline void ltrim(std::string &s)
-{
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
+// trim from end (in place)
+static inline void rtrim(std::string &s) {
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
+        return !std::isspace(ch);
+    }).base(), s.end());
 }
 
 static void getCPUInformation()
@@ -183,7 +187,7 @@ static void getCPUInformation()
     SetProcessorInfo(Platform::SystemInfo.processor, vendorString.c_str(), brandString.c_str());
 }
 
-void Processor::init() 
+void Processor::init()
 {
     getCPUInformation();
 
@@ -244,7 +248,7 @@ namespace CPUInfo
         }
         else if (!Platform::SystemInfo.processor.isHyperThreaded && Platform::SystemInfo.processor.numPhysicalProcessors == 1)
         {
-            return CONFIG_SingleCoreAndHTNotCapable;   
+            return CONFIG_SingleCoreAndHTNotCapable;
         }
 
         return CONFIG_MultiCoreAndHTEnabled;

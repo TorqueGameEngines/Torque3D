@@ -425,6 +425,7 @@ U32 GuiTreeViewCtrl::Item::getDisplayTextLength()
 
       StringTableEntry name = obj->getName();
       StringTableEntry internalName = obj->getInternalName();
+      StringTableEntry typeHint = obj->getTypeHint();
       StringTableEntry className = obj->getClassName();      
 
       if( showInternalNameOnly() )
@@ -466,6 +467,11 @@ U32 GuiTreeViewCtrl::Item::getDisplayTextLength()
          if( internalName && internalName[ 0 ] )
             len += dStrlen( internalName ) + 3; // ' [<internalname>]'
       }
+      if ( mState.test(ShowTypeHint) )
+      {
+         if (typeHint && typeHint[0])
+            len += dStrlen(typeHint) + 3;
+      }
       if( mState.test( Marked ) )
       {
          len += 1; // '*<name>'
@@ -502,8 +508,10 @@ void GuiTreeViewCtrl::Item::getDisplayText(U32 bufLen, char *buf)
       {
          const char* pObjName = pObject->getName();
          const char* pInternalName = pObject->getInternalName();
+         const char* pTypeHint = pObject->getTypeHint();
 
          bool hasInternalName = pInternalName && pInternalName[0];
+         bool hasTypeHint = pTypeHint && pTypeHint[0];
          bool hasObjectName = pObjName && pObjName[0];
 
          const char* pClassName = pObject->getClassName();
@@ -565,6 +573,14 @@ void GuiTreeViewCtrl::Item::getDisplayText(U32 bufLen, char *buf)
                   dSprintf(ptr, len, " *[%s]", pInternalName);
                else
                   dSprintf(ptr, len, " [%s]", pInternalName);
+            }
+            if (hasTypeHint && mState.test(ShowTypeHint))
+            {
+               if (mState.test(Item::Marked))
+                  dSprintf(ptr, len, " *<%s>", pTypeHint);
+               else
+                  dSprintf(ptr, len, " <%s>", pTypeHint);
+
             }
          }
       }
@@ -835,6 +851,7 @@ GuiTreeViewCtrl::GuiTreeViewCtrl()
    mShowClassNames = true;
    mShowObjectNames = true;
    mShowInternalNames = true;
+   mShowTypeHints = false;
    mShowClassNameForUnnamedObjects = false;
    mFlags.set(RebuildVisible);
 
@@ -894,7 +911,10 @@ void GuiTreeViewCtrl::initPersistFields()
       addField( "showObjectNames", TypeBool, Offset( mShowObjectNames, GuiTreeViewCtrl ),
          "If true, item text labels for objects will include object names." );
       addField( "showInternalNames", TypeBool, Offset( mShowInternalNames, GuiTreeViewCtrl ),
-         "If true, item text labels for obje ts will include internal names." );
+         "If true, item text labels for objets will include internal names." );
+      addField("showTypeHints", TypeBool, Offset(mShowTypeHints, GuiTreeViewCtrl),
+         "If true, item text labels for objets will include TypeHints.");
+      
       addField( "showClassNameForUnnamedObjects", TypeBool, Offset( mShowClassNameForUnnamedObjects, GuiTreeViewCtrl ),
          "If true, class names will be used as object names for unnamed objects." );
       addField( "compareToObjectID",    TypeBool,   Offset(mCompareToObjectID,    GuiTreeViewCtrl));
@@ -1794,6 +1814,7 @@ bool GuiTreeViewCtrl::onAdd()
          mShowClassNames = false;
          mShowObjectNames = false;
          mShowInternalNames = true;
+         mShowTypeHints = false;
       }
 
       const char* objectNamesOnly = getDataField( sObjectNamesOnly, NULL );
@@ -1803,6 +1824,7 @@ bool GuiTreeViewCtrl::onAdd()
          mShowClassNames = false;
          mShowObjectNames = true;
          mShowInternalNames = false;
+         mShowTypeHints = false;
       }
    }
       
@@ -4109,6 +4131,10 @@ GuiTreeViewCtrl::Item* GuiTreeViewCtrl::addInspectorDataItem(Item *parent, SimOb
       item->mState.clear( Item::ShowInternalName );
    else
       item->mState.set( Item::ShowInternalName );
+   if (!mShowTypeHints)
+      item->mState.clear(Item::ShowTypeHint);
+   else
+      item->mState.set(Item::ShowTypeHint);
    if( mShowClassNameForUnnamedObjects )
       item->mState.set( Item::ShowClassNameForUnnamed );
 

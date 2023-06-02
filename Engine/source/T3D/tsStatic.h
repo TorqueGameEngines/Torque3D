@@ -237,6 +237,8 @@ public:
 
    DECLARE_CONOBJECT(TSStatic);
    static void initPersistFields();
+   /// returns the shape asset used for this object
+   StringTableEntry getTypeHint() const override { return (getShapeAsset()) ? getShapeAsset()->getAssetName(): StringTable->EmptyString(); }
    static void consoleInit();
    static bool _setFieldSkin(void* object, const char* index, const char* data);
    static const char* _getFieldSkin(void* object, const char* data);

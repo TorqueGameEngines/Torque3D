@@ -172,6 +172,7 @@ $guiContent = new GuiControl() {
                   showClassNames = "0";
                   showObjectNames = "1";
                   showInternalNames = "1";
+                  showTypeHints = "1";
                   showClassNameForUnnamedObjects = "1";
                };
             };

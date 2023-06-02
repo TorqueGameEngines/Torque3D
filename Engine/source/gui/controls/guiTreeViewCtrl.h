@@ -79,6 +79,7 @@ class GuiTreeViewCtrl : public GuiArrayCtrl
                ForceItemName = BIT(15),
                ForceDragTarget = BIT(16),
                DenyDrag = BIT(17),
+               ShowTypeHint = BIT(18),
             };
 
             GuiTreeViewCtrl* mParentControl;
@@ -394,6 +395,9 @@ class GuiTreeViewCtrl : public GuiArrayCtrl
       
       /// If true, internal names will be included in inspector tree item labels.
       bool mShowInternalNames;
+
+      /// If true, TypeHints will be included in inspector tree item labels.
+      bool mShowTypeHints;
 
       /// If true, class names will be used as object names for unnamed objects.
       bool mShowClassNameForUnnamedObjects;

@@ -20,6 +20,7 @@ if(TORQUE_SFX_OPENAL)
 
   # Since OpenAL lives elsewhere we need to ensure it is known to Torque when providing a link to it
   set(ALSOFT_EXAMPLES OFF CACHE BOOL "OpenAL Examples" FORCE)
+  set(ALSOFT_UTILS OFF CACHE BOOL "OpenAL Utilities" FORCE)
   set(ALSOFT_UPDATE_BUILD_VERSION OFF CACHE BOOL "Update build Version" UPDATE)
   
   add_subdirectory("${CMAKE_SOURCE_DIR}/Engine/lib/openal-soft" ${CMAKE_BINARY_DIR}/temp/openal-soft EXCLUDE_FROM_ALL)

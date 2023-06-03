@@ -1,10 +1,12 @@
+include("${CMAKE_SOURCE_DIR}/Tools/CMake/torque_macros.cmake")
+include("${CMAKE_SOURCE_DIR}/Tools/CMake/torque_configs.cmake")
 cmake_minimum_required (VERSION 3.10.2)
 set (CMAKE_CXX_STANDARD 17)
 
 # Ensure multi-core compilation is enabled for everything
 add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/MP>)
 
-project(Torque3D)
+project(${TORQUE_APP_NAME})
 
 # An application name must be set first
 set(TORQUE_APP_NAME "" CACHE STRING "the app name")
@@ -39,56 +41,6 @@ else()
     endif()
 endif()
 
-option(TORQUE_MULTITHREAD "Multi Threading" ON)
-mark_as_advanced(TORQUE_MULTITHREAD)
-
-option(TORQUE_POSIX_PATH_CASE_INSENSITIVE "POSIX Pathing Case Insensitivity" ON)
-mark_as_advanced(TORQUE_POSIX_PATH_CASE_INSENSITIVE)
-
-option(TORQUE_ZIP_PATH_CASE_INSENSITIVE "ZIP Pathing Case Insensitivity" ON)
-mark_as_advanced(TORQUE_ZIP_PATH_CASE_INSENSITIVE)
-
-option(TORQUE_DISABLE_MEMORY_MANAGER "Disable memory manager" ON)
-mark_as_advanced(TORQUE_DISABLE_MEMORY_MANAGER)
-
-option(TORQUE_DISABLE_VIRTUAL_MOUNT_SYSTEM "Disable virtual mount system" OFF)
-mark_as_advanced(TORQUE_DISABLE_VIRTUAL_MOUNT_SYSTEM)
-
-option(TORQUE_DISABLE_FIND_ROOT_WITHIN_ZIP "Disable reading root path from zip. Zips will be mounted in-place with file name as directory name." ON)
-mark_as_advanced(TORQUE_DISABLE_FIND_ROOT_WITHIN_ZIP)
-
-option(TORQUE_ZIP_DISK_LAYOUT "All zips must be placed in the executable directory and contain full paths to the files." OFF)
-mark_as_advanced(TORQUE_ZIP_DISK_LAYOUT)
-
-option(TORQUE_PLAYER "Playback only?" OFF)
-mark_as_advanced(TORQUE_PLAYER)
-
-option(TORQUE_TOOLS "Enable or disable the tools" ON)
-mark_as_advanced(TORQUE_TOOLS)
-
-option(TORQUE_ENABLE_PROFILER "Enable or disable the profiler" OFF)
-mark_as_advanced(TORQUE_ENABLE_PROFILER)
-
-option(TORQUE_DEBUG "T3D Debug mode" OFF)
-mark_as_advanced(TORQUE_DEBUG)
-
-option(TORQUE_SHIPPING "T3D Shipping build?" OFF)
-mark_as_advanced(TORQUE_SHIPPING)
-
-option(TORQUE_DEBUG_NET "debug network" OFF)
-mark_as_advanced(TORQUE_DEBUG_NET)
-
-option(TORQUE_DEBUG_NET_MOVES "debug network moves" OFF)
-mark_as_advanced(TORQUE_DEBUG_NET_MOVES)
-
-option(TORQUE_ENABLE_ASSERTS "enables or disable asserts" OFF)
-mark_as_advanced(TORQUE_ENABLE_ASSERTS)
-
-option(TORQUE_DEBUG_GFX_MODE "triggers graphics debug mode" OFF)
-mark_as_advanced(TORQUE_DEBUG_GFX_MODE)
-
-#option(DEBUG_SPEW "more debug" OFF)
-set(TORQUE_NO_DSO_GENERATION ON)
 
 if(NOT TORQUE_SCRIPT_EXTENSION)
     set(TORQUE_SCRIPT_EXTENSION "tscript" CACHE STRING "The default script extension to use for TorqueScript files")
@@ -97,29 +49,6 @@ mark_as_advanced(TORQUE_SCRIPT_EXTENSION)
 
 set(TORQUE_MODULE_USER_PATH "" CACHE PATH "Additional search path for modules aside from the default Tools/CMake/modules.")
 mark_as_advanced(TORQUE_MODULE_USER_PATH)
-
-option(TORQUE_USE_ZENITY "use the Zenity backend for NFD" OFF)
-mark_as_advanced(TORQUE_USE_ZENITY)
-
-option(TORQUE_SHOW_LEGACY_FILE_FIELDS "If on, shows legacy direct file path fields in the inspector." OFF)
-mark_as_advanced(TORQUE_SHOW_LEGACY_FILE_FIELDS)
-
-option(TORQUE_SFX_VORBIS "Vorbis Sound" ON)
-mark_as_advanced(TORQUE_SFX_VORBIS)
-
-option(TORQUE_THEORA "Theora Video Support" ON)
-mark_as_advanced(TORQUE_THEORA)
-
-option(TORQUE_ADVANCED_LIGHTING "Advanced Lighting" ON)
-mark_as_advanced(TORQUE_ADVANCED_LIGHTING)
-
-option(TORQUE_BASIC_LIGHTING "Basic Lighting" ON)
-mark_as_advanced(TORQUE_APP_PASSWORD)
-
-option(TORQUE_DYNAMIC_LIBRARY "Whether or not to build Torque as a dynamic library." OFF)
-mark_as_advanced(TORQUE_DYNAMIC_LIBRARY)
-
-set(TORQUE_APP_PASSWORD "changeme" CACHE STRING "zip file password")
 
 if(WIN32)
 	option(TORQUE_OPENGL "Allow OpenGL render" ON)
@@ -130,9 +59,6 @@ endif()
 if(WIN32)
 	option(TORQUE_D3D11 "Allow Direct3D 11 render" ON)
 endif()
-
-include("${CMAKE_SOURCE_DIR}/Tools/CMake/basics.cmake")
-setupVersionNumbers()
 
 # Install Torque template
 if(NOT TORQUE_TEMPLATE)

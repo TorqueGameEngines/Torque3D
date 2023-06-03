@@ -1,6 +1,7 @@
 #general
 advanced_option(TORQUE_MULTITHREAD "Multi Threading" ON)
 advanced_option(TORQUE_DISABLE_MEMORY_MANAGER "Disable memory manager" ON)
+
 #fileIO
 set(TORQUE_APP_PASSWORD "changeme" CACHE STRING "zip file password")
 advanced_option(TORQUE_DISABLE_VIRTUAL_MOUNT_SYSTEM "Disable virtual mount system" OFF)
@@ -9,14 +10,23 @@ advanced_option(TORQUE_ZIP_DISK_LAYOUT "All zips must be placed in the executabl
 advanced_option(TORQUE_POSIX_PATH_CASE_INSENSITIVE "POSIX Pathing Case Insensitivity" ON)
 advanced_option(TORQUE_ZIP_PATH_CASE_INSENSITIVE "ZIP Pathing Case Insensitivity" ON)
 advanced_option(TORQUE_USE_ZENITY "use the Zenity backend for NFD" OFF)
-#sound
+advanced_option(TORQUE_SECURE_VFS "Secure VFS configuration. Arbitrary script access to file system will be heavily restricted." OFF)
+
+#sfx
 advanced_option(TORQUE_SFX_VORBIS "Vorbis Sound" ON)
 advanced_option(TORQUE_THEORA "Theora Video Support" ON)
 advanced_option(TORQUE_SFX_OPENAL "OpenAL Sound" ON)
+
 #gfx
 advanced_option(TORQUE_DEBUG_GFX_MODE "triggers graphics debug mode" OFF)
 advanced_option(TORQUE_ADVANCED_LIGHTING "Advanced Lighting" ON)
 advanced_option(TORQUE_BASIC_LIGHTING "Basic Lighting" ON)
+advanced_option(TORQUE_OPENGL "Allow OpenGL render" ON) # we need OpenGL to render on Linux/Mac
+if(WIN32)
+	advanced_option(TORQUE_D3D11 "Allow Direct3D 11 render" ON)
+	addDef(TORQUE_D3D11)
+endif()
+
 #mode
 advanced_option(TORQUE_NO_DSO_GENERATION "skip storing compiled scripts" ON)
 advanced_option(TORQUE_DYNAMIC_LIBRARY "Whether or not to build Torque as a dynamic library." OFF)
@@ -24,6 +34,8 @@ advanced_option(TORQUE_PLAYER "Playback only?" OFF)
 advanced_option(TORQUE_DEBUG "T3D Debug mode" OFF)
 #option(DEBUG_SPEW "more debug" OFF)
 advanced_option(TORQUE_SHIPPING "T3D Shipping build?" OFF)
+advanced_option(TORQUE_DEDICATED "Torque dedicated" OFF) # disables compiling in gfx and sfx frontend functionality
+
 #tools
 advanced_option(TORQUE_DEBUG_NET "debug network" OFF)
 advanced_option(TORQUE_DEBUG_NET_MOVES "debug network moves" OFF)
@@ -33,6 +45,18 @@ advanced_option(TORQUE_ENABLE_PROFILER "Enable or disable the profiler" OFF)
 advanced_option(TORQUE_SHOW_LEGACY_FILE_FIELDS "If on, shows legacy direct file path fields in the inspector." OFF)
 
 setupVersionNumbers()
+
+if(APPLE)
+    advanced_option(AL_ALEXT_PROTOTYPES "Use Extended OpenAL options" OFF)
+else()
+    advanced_option(AL_ALEXT_PROTOTYPES "Use Extended OpenAL options" ON)
+endif(APPLE)
+
+if(AL_ALEXT_PROTOTYPES)
+	addDef( "AL_ALEXT_PROTOTYPES" )
+endif()
+
+#hidden options
 
 if(TORQUE_SFX_OPENAL)
     advanced_option(ALSOFT_EAX "Enable legacy EAX extensions" ${WIN32})

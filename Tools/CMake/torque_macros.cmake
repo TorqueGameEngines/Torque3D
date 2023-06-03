@@ -124,3 +124,10 @@ macro (filterOut)
     list(REMOVE_ITEM TORQUE_SOURCE_FILES "${CMAKE_SOURCE_DIR}/Engine/source/${ARGUMENT}")
   endforeach()
 endmacro (filterOut)
+
+################# apple frameworks ###################
+macro(addFramework framework)
+	if (APPLE)
+		set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES}"-framework ${framework}")
+	endif()
+endmacro()

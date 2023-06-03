@@ -25,31 +25,6 @@ set(TORQUE_LINK_LIBRARIES tinyxml collada ljpeg squish png_static opcode assimp
                           SDL2 glad pcre convexDecomp zlib)
 
 ################# Helper Functions ###################
-
-# Helper function to add a directory to the TORQUE_SOURCE_FILES variable. It automatically searches for .cpp and .h files in the
-# specified directory then adds them to the TORQUE_SOURCE_FILES variable.
-macro (torqueAddSourceDirectories)
-  foreach(ARGUMENT ${ARGV})
-    file(GLOB SCANNED_SOURCE_FILES "${ARGUMENT}/*.cpp")
-    file(GLOB SCANNED_INCLUDE_FILES "${ARGUMENT}/*.h")
-
-    if (APPLE)
-      file(GLOB SCANNED_MAC_FILES "${ARGUMENT}/*.mm")
-    endif (APPLE)
-
-    # Set in both current and parent scope so this macro can be used from loaded modules
-    set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${SCANNED_SOURCE_FILES} ${SCANNED_INCLUDE_FILES} ${SCANNED_MAC_FILES})
-    set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} PARENT_SCOPE)
-  endforeach()
-endmacro (torqueAddSourceDirectories)
-
-################# Set Conditional Engine Defines ###################
-macro (forwardDef flag)
-    if (${flag})
-        set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} ${flag})
-    endif()
-endmacro(forwardDef)
-
 forwardDef(TORQUE_OPENGL)
 forwardDef(TORQUE_D3D11)
 forwardDef(TORQUE_ADVANCED_LIGHTING)
@@ -82,7 +57,26 @@ endif (WIN32)
 
 # Only link Apple frameworks when on an Apple platform
 if (APPLE)
-	set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} "-framework Cocoa" "-framework AppKit" "-framework CoreData" "-framework Foundation")
+    addFramework("Cocoa")
+    addFramework("AppKit")
+    addFramework("CoreData")
+    addFramework("Foundation")
+    #These are needed by sdl2 static lib
+    addFramework("ForceFeedback")
+    addFramework("IOKit")
+    #grrr damn you sdl!
+    addFramework("Carbon")
+    addLib("iconv")
+    if(NOT TORQUE_DEDICATED)
+        addFramework("OpenGL")
+        addFramework("CoreVideo")
+        if(TORQUE_SFX_OPENAL)
+            addFramework("OpenAL")
+            addFramework("CoreAudio")
+            addFramework("AudioUnit")
+            addFramework("AudioToolbox")
+        endif(TORQUE_SFX_OPENAL)
+    endif()
 endif (APPLE)
 
 # Linux requires X11 & freetype
@@ -122,6 +116,16 @@ torqueAddSourceDirectories("ts" "ts/collada" "ts/assimp" "ts/loader" "ts/arch")
 
 # Handle SFX - OpenAL is handled as a module later on
 torqueAddSourceDirectories("sfx" "sfx/media" "sfx/null")
+if(TORQUE_SFX_OPENAL AND NOT TORQUE_DEDICATED)
+    torqueAddSourceDirectories("sfx/openal")
+    if(WIN32)
+      torqueAddSourceDirectories("sfx/openal/win32")
+    elseif(UNIX AND NOT APPLE)
+        torqueAddSourceDirectories("sfx/openal/linux")
+    elseif(APPLE)
+        torqueAddSourceDirectories("sfx/openal/mac")
+    endif()
+endif()
 
 # Handle GFX
 torqueAddSourceDirectories("gfx" "gfx/Null" "gfx/test" "gfx/bitmap" "gfx/bitmap/loaders"
@@ -326,59 +330,10 @@ if (APPLE)
 	configure_file("${CMAKE_SOURCE_DIR}/Tools/CMake/Info.plist.in" "${CMAKE_BINARY_DIR}/temp/Info.plist" COPYONLY)
 endif (APPLE)
 
-################# additional preprocessor defines ###################
-macro(__addDef def config)
-    # two possibilities: a) target already known, so add it directly, or b) target not yet known, so add it to its cache
-    if(TARGET ${PROJECT_NAME})
-        #message(STATUS "directly applying defs: ${PROJECT_NAME} with config ${config}: ${def}")
-        if("${config}" STREQUAL "")
-            set_property(TARGET ${PROJECT_NAME} APPEND PROPERTY COMPILE_DEFINITIONS ${def})
-        else()
-            set_property(TARGET ${PROJECT_NAME} APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:${config}>:${def}>)
-        endif()
-    else()
-        if("${config}" STREQUAL "")
-            list(APPEND ${PROJECT_NAME}_defs_ ${def})
-        else()
-            list(APPEND ${PROJECT_NAME}_defs_ $<$<CONFIG:${config}>:${def}>)
-        endif()
-        #message(STATUS "added definition to cache: ${PROJECT_NAME}_defs_: ${${PROJECT_NAME}_defs_}")
-    endif()
-endmacro()
-
-# adds a definition: argument 1: Nothing(for all), _DEBUG, _RELEASE, <more build configurations>
-macro(addDef def)
-    set(def_configs "")
-    if(${ARGC} GREATER 1)
-        foreach(config ${ARGN})
-            __addDef(${def} ${config})
-        endforeach()
-    else()
-        __addDef(${def} "")
-    endif()
-endmacro()
-
-# this applies cached definitions onto the target must come *after* target_compile_definitions
-macro(append_defs)
-    if(DEFINED ${PROJECT_NAME}_defs_)
-        set_property(TARGET ${PROJECT_NAME} APPEND PROPERTY COMPILE_DEFINITIONS ${${PROJECT_NAME}_defs_})
-        #message(STATUS "applying defs to project ${PROJECT_NAME}: ${${PROJECT_NAME}_defs_}")
-    else()
-        #message(STATUS "NO ${PROJECT_NAME}_defs_ defined!")
-    endif()    
-endmacro()
-
 addDef(TORQUE_DEBUG Debug)
 addDef(TORQUE_RELEASE "RelWithDebInfo;Release")
 addDef(TORQUE_ENABLE_ASSERTS "Debug;RelWithDebInfo")
 addDef(TORQUE_DEBUG_GFX_MODE "RelWithDebInfo")
-
-################# file filtering ###################
-macro (filterOut)
-  foreach(ARGUMENT ${ARGV})
-    list(REMOVE_ITEM TORQUE_SOURCE_FILES "${CMAKE_SOURCE_DIR}/Engine/source/${ARGUMENT}")
-  endforeach()
-endmacro (filterOut)
 
 if(NOT TORQUE_SDL)
    filterOut("platform/nativeDialogs/fileDialog.cpp" )

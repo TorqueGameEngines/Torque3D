@@ -17,6 +17,11 @@ set(TORQUE_COMPILE_DEFINITIONS ICE_NO_DLL PCRE_STATIC TORQUE_ADVANCED_LIGHTING T
 set(TORQUE_LINK_LIBRARIES tinyxml collada ljpeg squish png_static opcode assimp
                           SDL2 glad pcre convexDecomp zlib)
 
+if(NOT WIN32)
+   set(WIN32 OFF CACHE Bool "" FORCE)
+endif()
+mark_as_advanced(WIN32)
+
 #general
 advanced_option(TORQUE_MULTITHREAD "Multi Threading" ON)
 advanced_option(TORQUE_DISABLE_MEMORY_MANAGER "Disable memory manager" ON)

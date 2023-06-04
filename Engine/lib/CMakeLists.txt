@@ -1,5 +1,11 @@
 # Ask CMake to perform builds in a temporary directory for all of these.
 # We also use EXCLUDE_FROM_ALL to ensure we only build and install what we want
+#ZLIB
+get_filename_component(ZLIB_ROOT "zlib" REALPATH BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+set(ZLIB_ROOT "${ZLIB_ROOT}" CACHE STRING "ZLib root location" FORCE)
+mark_as_advanced(ZLIB_ROOT)
+# Png depends on zlib
+add_subdirectory(zlib ${CMAKE_BINARY_DIR}/temp/zlib EXCLUDE_FROM_ALL)
 
 #SDL
 set(SDL_SHARED ON CACHE BOOL "Build a shared version of the library" FORCE)
@@ -96,8 +102,7 @@ add_subdirectory(sdl ${CMAKE_BINARY_DIR}/temp/sdl2 EXCLUDE_FROM_ALL)
 add_subdirectory(nativeFileDialogs ${CMAKE_BINARY_DIR}/temp/nfd EXCLUDE_FROM_ALL)
 
 # Assimp
-set(ASSIMP_HUNTER_ENABLED off CACHE BOOL "" FORCE)
-mark_as_advanced(ASSIMP_HUNTER_ENABLED)
+advanced_option(ASSIMP_HUNTER_ENABLED "Enable Hunter package manager support" OFF)
 advanced_option(BUILD_SHARED_LIBS "Build package with shared libraries." OFF )
 advanced_option(ASSIMP_BUILD_FRAMEWORK "Build package as Mac OS X Framework bundle." OFF )
 advanced_option(ASSIMP_DOUBLE_PRECISION "Set to ON to enable double precision processing" OFF )
@@ -159,12 +164,6 @@ mark_as_advanced(PNG_FRAMEWORK)
 mark_as_advanced(PNG_PREFIX)
 add_subdirectory(lpng ${CMAKE_BINARY_DIR}/temp/lpng EXCLUDE_FROM_ALL)
 
-#ZLIB
-get_filename_component(ZLIB_ROOT "zlib" REALPATH BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-set(ZLIB_ROOT "${ZLIB_ROOT}" CACHE STRING "ZLib root location" FORCE)
-mark_as_advanced(ZLIB_ROOT)
-# Png depends on zlib
-add_subdirectory(zlib ${CMAKE_BINARY_DIR}/temp/zlib EXCLUDE_FROM_ALL)
 
 add_subdirectory(ljpeg ${CMAKE_BINARY_DIR}/temp/ljpeg EXCLUDE_FROM_ALL)
 add_subdirectory(tinyxml ${CMAKE_BINARY_DIR}/temp/tinyxml EXCLUDE_FROM_ALL)

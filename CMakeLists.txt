@@ -41,7 +41,6 @@ else()
     endif()
 endif()
 
-
 if(NOT TORQUE_SCRIPT_EXTENSION)
     set(TORQUE_SCRIPT_EXTENSION "tscript" CACHE STRING "The default script extension to use for TorqueScript files")
 endif()
@@ -50,15 +49,6 @@ mark_as_advanced(TORQUE_SCRIPT_EXTENSION)
 set(TORQUE_MODULE_USER_PATH "" CACHE PATH "Additional search path for modules aside from the default Tools/CMake/modules.")
 mark_as_advanced(TORQUE_MODULE_USER_PATH)
 
-if(WIN32)
-	option(TORQUE_OPENGL "Allow OpenGL render" ON)
-else()
-	set(TORQUE_OPENGL ON) # we need OpenGL to render on Linux/Mac
-endif()
-
-if(WIN32)
-	option(TORQUE_D3D11 "Allow Direct3D 11 render" ON)
-endif()
 
 # Install Torque template
 if(NOT TORQUE_TEMPLATE)

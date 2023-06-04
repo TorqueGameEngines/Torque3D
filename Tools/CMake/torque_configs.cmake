@@ -1,3 +1,22 @@
+################# Initialize Common Variables ###################
+
+# All include directories to search. Modules should append to this when they want includes to point
+# into themselves.
+set(TORQUE_INCLUDE_DIRECTORIES "")
+
+# All library binaries to install. Modules should append to this the path of any library binaries (.so, .dylib, .dll)
+# that should be installed next to the executable.
+set(TORQUE_ADDITIONAL_LIBRARY_BINARIES "")
+
+# All compile definitions. Modules should append to this if there is any special defines needed.
+set(TORQUE_COMPILE_DEFINITIONS ICE_NO_DLL PCRE_STATIC TORQUE_ADVANCED_LIGHTING TORQUE_SHADERGEN
+							   TORQUE_OPCODE TORQUE_ASSIMP TORQUE_SDL TORQUE_COLLADA
+							   TORQUE_UNICODE UNICODE _UNICODE)
+
+# All link libraries. Modules should append to this the path to specify additional link libraries (.a, .lib, .dylib, .so)
+set(TORQUE_LINK_LIBRARIES tinyxml collada ljpeg squish png_static opcode assimp
+                          SDL2 glad pcre convexDecomp zlib)
+
 #general
 advanced_option(TORQUE_MULTITHREAD "Multi Threading" ON)
 advanced_option(TORQUE_DISABLE_MEMORY_MANAGER "Disable memory manager" ON)
@@ -57,8 +76,8 @@ if(AL_ALEXT_PROTOTYPES)
 endif()
 
 #hidden options
-
 if(TORQUE_SFX_OPENAL)
+    advanced_option(TORQUE_OGGVORBIS "Enable OGG Vorbis" ON)
     advanced_option(ALSOFT_EAX "Enable legacy EAX extensions" ${WIN32})
     advanced_option(ALSOFT_INSTALL_EXAMPLES "Install example programs (alplay, alstream, ...)" ON)
     advanced_option(ALSOFT_INSTALL_UTILS "Install utility programs (openal-info, alsoft-config, ...)" ON)
@@ -115,6 +134,5 @@ if(TORQUE_SFX_OPENAL)
     #the following is from openal-soft
     mark_as_advanced(SDL2MAIN_LIBRARY)
     mark_as_advanced(SDL2_CORE_LIBRARY)
-    mark_as_advanced(SDL2_INCLUDE_DIR)
-    
+    mark_as_advanced(SDL2_INCLUDE_DIR)    
 endif()

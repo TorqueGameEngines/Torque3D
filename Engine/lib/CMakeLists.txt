@@ -103,6 +103,8 @@ add_subdirectory(nativeFileDialogs ${CMAKE_BINARY_DIR}/temp/nfd EXCLUDE_FROM_ALL
 
 # Assimp
 advanced_option(ASSIMP_HUNTER_ENABLED "Enable Hunter package manager support" OFF)
+set(ASSIMP_BUILD_NO_OWN_ZLIB ON CACHE Bool "" FORCE)
+mark_as_advanced(ASSIMP_BUILD_NO_OWN_ZLIB)
 advanced_option(BUILD_SHARED_LIBS "Build package with shared libraries." OFF )
 advanced_option(ASSIMP_BUILD_FRAMEWORK "Build package as Mac OS X Framework bundle." OFF )
 advanced_option(ASSIMP_DOUBLE_PRECISION "Set to ON to enable double precision processing" OFF )
@@ -139,7 +141,8 @@ mark_as_advanced(ASSIMP_LIBRARY_SUFFIX)
 mark_as_advanced(ASSIMP_PACKAGE_VERSION)
 mark_as_advanced(ASSIMP_RUNTIME_OUTPUT_DIRECTORY)
 add_subdirectory(assimp ${CMAKE_BINARY_DIR}/temp/assimp EXCLUDE_FROM_ALL)
-
+target_compile_definitions(assimp PUBLIC ASSIMP_BUILD_NO_OWN_ZLIB)
+target_link_libraries(assimp PUBLIC zlib)
 if (TORQUE_CPU_ARM32 OR TORQUE_CPU_ARM64)
 	set(PNG_ARM_NEON on CACHE BOOL "" FORCE)
 endif (TORQUE_CPU_ARM32 OR TORQUE_CPU_ARM64)

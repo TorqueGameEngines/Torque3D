@@ -351,7 +351,7 @@ if (APPLE)
 	set_target_properties(${TORQUE_APP_NAME} PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_BINARY_DIR}/temp/Info.plist")
 
 	# Ensure the shared libraries are actually referenced at the correct path
-	add_custom_command(TARGET ${TORQUE_APP_NAME} POST_BUILD COMMAND install_name_tool -add_rpath "@executable_path/../Frameworks" ${TORQUE_APP_GAME_DIRECTORY}/${TORQUE_APP_NAME}.app/Contents/MacOS/${TORQUE_APP_NAME})
+	set(CMAKE_XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/../Frameworks")
 elseif (WIN32)
 	add_executable(${TORQUE_APP_NAME} WIN32 ${TORQUE_SOURCE_FILES})
     

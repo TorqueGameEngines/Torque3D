@@ -6,6 +6,4 @@
     add_library(libogg ${LIBOGG_FILES})
     set_target_properties(libogg PROPERTIES LINKER_LANGUAGE CXX)
     target_include_directories(libogg PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
-    set(TORQUE_INCLUDE_DIRECTORIES ${TORQUE_INCLUDE_DIRECTORIES} "${CMAKE_CURRENT_SOURCE_DIR}/include")
-    #set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} libogg)
 #endif()

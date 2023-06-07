@@ -28,46 +28,14 @@ endif (APPLE)
 
 # When on Windows, we need to link against winsock and windows codecs
 if (WIN32)
-	set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} WS2_32.LIB windowscodecs.lib)
-	set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_PLATFORM_WIN_SOURCES})
-	
-	if (TORQUE_D3D11)
-		set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} dxguid.lib)
-	endif (TORQUE_D3D11)
+	set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_PLATFORM_WIN_SOURCES})	
 endif (WIN32)
-
-# Only link Apple frameworks when on an Apple platform
-if (APPLE)
-    addFramework("Cocoa")
-    addFramework("AppKit")
-    addFramework("CoreData")
-    addFramework("Foundation")
-    #These are needed by sdl2 static lib
-    addFramework("ForceFeedback")
-    addFramework("IOKit")
-    #grrr damn you sdl!
-    addFramework("Carbon")
-    set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} iconv)
-    if(NOT TORQUE_DEDICATED)
-        addFramework("OpenGL")
-        addFramework("CoreVideo")
-        if(TORQUE_SFX_OPENAL)
-            addFramework("OpenAL")
-            addFramework("CoreAudio")
-            addFramework("AudioUnit")
-            addFramework("AudioToolbox")
-        endif(TORQUE_SFX_OPENAL)
-    endif()
-endif (APPLE)
 
 # Linux requires X11 & freetype
 if (UNIX AND NOT APPLE)
-	set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} "X11" "Xft" "dl" "pthread")
-	set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_PLATFORM_X11_SOURCES})
-  
+	set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_PLATFORM_X11_SOURCES})  
 	find_package(Freetype REQUIRED)
 	set(TORQUE_INCLUDE_DIRECTORIES ${TORQUE_INCLUDE_DIRECTORIES} ${FREETYPE_INCLUDE_DIRS})
-	set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} ${FREETYPE_LIBRARIES})
 endif (UNIX AND NOT APPLE)
 
 ################# Collect Source Files ###################
@@ -83,8 +51,6 @@ torqueAddSourceDirectories("platform" "platform/threads" "platform/async"
                                   "platform/input" "platform/output")
 								  
 torqueAddSourceDirectories("platform/nativeDialogs")
-
-set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} nativeFileDialogs)
 
 # Handle T3D
 torqueAddSourceDirectories("T3D/fps" "T3D/fx" "T3D/vehicles" "T3D/physics"
@@ -107,9 +73,6 @@ if(TORQUE_SFX_OPENAL AND NOT TORQUE_DEDICATED)
         torqueAddSourceDirectories("sfx/openal/mac")
     endif()
 endif()
-set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} libogg)
-set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} libvorbis)
-set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} libtheora)
 # Handle GFX
 torqueAddSourceDirectories("gfx" "gfx/Null" "gfx/test" "gfx/bitmap" "gfx/bitmap/loaders"
                              "gfx/util" "gfx/video" "gfx/sim" )
@@ -268,11 +231,11 @@ foreach (TORQUE_MODULE_PATH ${TORQUE_MODULE_PATHS})
 	foreach (TORQUE_MODULE_SCRIPT ${MODULE_SCRIPTS})
 		include(${TORQUE_MODULE_SCRIPT})
 
-    # Add this script's collected files to our Engine group
-    source_group(TREE "${CMAKE_SOURCE_DIR}/Engine" PREFIX "Engine" FILES ${TORQUE_SOURCE_FILES})
+        # Add this script's collected files to our Engine group
+        source_group(TREE "${CMAKE_SOURCE_DIR}/Engine" PREFIX "Engine" FILES ${TORQUE_SOURCE_FILES})
 
-    set(TORQUE_SOURCE_FILES_TEMPORARY ${TORQUE_SOURCE_FILES_TEMPORARY} ${TORQUE_SOURCE_FILES})
-    set(TORQUE_SOURCE_FILES "")
+        set(TORQUE_SOURCE_FILES_TEMPORARY ${TORQUE_SOURCE_FILES_TEMPORARY} ${TORQUE_SOURCE_FILES})
+        set(TORQUE_SOURCE_FILES "")
 	endforeach()
 
 	# Next find sub projects, these can introduce new source files
@@ -294,6 +257,20 @@ endforeach()
 
 set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES_TEMPORARY})
 
+################# Library Post-build Handling ###################
+set(TORQUE_LIBRARY_PATHS "${CMAKE_SOURCE_DIR}/Engine/lib" "${TORQUE_APP_GAME_DIRECTORY}/data")
+if (NOT "${TORQUE_LIBRARY_USER_PATH}" STREQUAL "")
+	list(APPEND TORQUE_LIBRARY_PATHS "${TORQUE_LIBRARY_USER_PATH}")
+endif()
+
+foreach (TORQUE_LIBRARY_PATH ${TORQUE_LIBRARY_PATHS})
+	# First find simple cmake scripts, mostly used for in-engine libraries
+	file(GLOB_RECURSE LIBRARY_SCRIPTS "${TORQUE_LIBRARY_PATH}/*Torque_postBuild.cmake")
+    #message(STATUS "LIBRARY_SCRIPTS:${LIBRARY_SCRIPTS}")
+	foreach (TORQUE_LIBRARY_SCRIPT ${LIBRARY_SCRIPTS})
+		include(${TORQUE_LIBRARY_SCRIPT})
+	endforeach()
+endforeach()
 ################# Dynamic File Configuration ###################
 
 # Prepare Windows RC file

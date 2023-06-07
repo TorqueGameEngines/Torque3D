@@ -19,5 +19,5 @@
     target_link_libraries(libtheora PUBLIC libogg)
     target_compile_definitions(libtheora PUBLIC ${LIBTHEORA_COMPILE_DEFINES})
     set(TORQUE_INCLUDE_DIRECTORIES ${TORQUE_INCLUDE_DIRECTORIES} "${CMAKE_CURRENT_SOURCE_DIR}/include/theora")
-    #set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} libtheora)
+    #set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} libtheora PARENT_SCOPE)
 #endif()

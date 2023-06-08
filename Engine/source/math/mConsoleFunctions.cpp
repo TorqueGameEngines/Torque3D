@@ -353,6 +353,17 @@ DefineEngineFunction( mLerp, F32, ( F32 v1, F32 v2, F32 time ),,
    return mLerp( v1, v2, time );
 }
 
+DefineEngineFunction(mInvLerp, F32, (F32 v1, F32 v2, F32 point), ,
+   "Calculate the percentage of a point along a line.\n"
+   "@param v1 Interpolate From Input value."
+   "@param v2 Interpolate To Input value."
+   "@param point Point along range."
+   "@returns normalized time used to interpolate values"
+   "@ingroup Math")
+{
+   return mInvLerp(v1, v2, point);
+}
+
 DefineEngineFunction( mPi, F32, (),,
     "Return the value of PI (half-circle in radians).\n"
     "@returns The value of PI."

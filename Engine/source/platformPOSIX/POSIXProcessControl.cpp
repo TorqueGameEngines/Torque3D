@@ -34,6 +34,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include "console/engineAPI.h"
+#include "core/util/journal/process.h"
 #ifndef TORQUE_DEDICATED
 #include <SDL.h>
 #endif
@@ -48,7 +49,7 @@ static void CheckExitCode(S64 exitCode)
 {
    if (exitCode != 0)
    {
-      Con::errorf(ConsoleLogEntry::General, 
+      Con::errorf(ConsoleLogEntry::General,
          "Nonzero exit code: %d, triggering SIGSEGV for core dump",
          exitCode);
       kill(getpid(), SIGSEGV);
@@ -62,7 +63,7 @@ static void SignalHandler(int sigtype)
    {
       signal(SIGSEGV, SIG_DFL);
       signal(SIGTRAP, SIG_DFL);
-      // restore the signal handling to default so that we don't get into 
+      // restore the signal handling to default so that we don't get into
       // a crash loop with ImmediateShutdown
       ImmediateShutdown(-sigtype, sigtype);
    }
@@ -85,7 +86,7 @@ void Cleanup(bool minimal)
 
    StdConsole::destroy();
 
-#ifndef TORQUE_DEDICATED   
+#ifndef TORQUE_DEDICATED
    SDL_Quit();
 #endif
 }
@@ -105,7 +106,7 @@ void ImmediateShutdown(S32 exitCode, S32 signalNum)
    }
    else
    {
-// there is a problem in kernel 2.4.17 which causes a hang when a segfault 
+// there is a problem in kernel 2.4.17 which causes a hang when a segfault
 // occurs.  also subsequent runs of "ps" will hang and the machine has to be
 // hard reset to clear up the problem
 // JMQ: this bug appears to be fixed in 2.4.18
@@ -130,7 +131,7 @@ void ProcessControlInit()
    signal(SIGTTIN, SIG_IGN);
    signal(SIGTTOU, SIG_IGN);
 
-   // we're not interested in the exit status of child processes, so this 
+   // we're not interested in the exit status of child processes, so this
    // prevents zombies from accumulating.
 #if defined(__FreeBSD__) || defined(__APPLE__)
    signal(SIGCHLD, SIG_IGN);
@@ -147,6 +148,7 @@ void ProcessControlInit()
 //-----------------------------------------------------------------------------
 void Platform::postQuitMessage(const S32 in_quitVal)
 {
+
    // if we have a window send a quit event, otherwise just force shutdown
 #if 0
    if (x86UNIXState->windowCreated())
@@ -155,18 +157,19 @@ void Platform::postQuitMessage(const S32 in_quitVal)
       SendQuitEvent();
    }
    else
-#endif
    {
       forceShutdown(in_quitVal);
    }
+#endif
+   Process::requestShutdown();
 }
 
 //-----------------------------------------------------------------------------
 void Platform::debugBreak()
 {
-   // in windows, "Calling DebugBreak causes the program to display 
+   // in windows, "Calling DebugBreak causes the program to display
    // a dialog box as if it had crashed."  So we segfault.
-   Con::errorf(ConsoleLogEntry::General, 
+   Con::errorf(ConsoleLogEntry::General,
       "Platform::debugBreak: triggering SIGSEGV for core dump");
    //kill(getpid(), SIGSEGV);
 
@@ -197,20 +200,20 @@ void Platform::forceShutdown(S32 returnValue)
 void Platform::outputDebugString(const char *string, ...)
 {
    char buffer[2048];
-   
+
    va_list args;
    va_start( args, string );
-   
+
    dVsprintf( buffer, sizeof(buffer), string, args );
    va_end( args );
-   
+
    U32 length = dStrlen(buffer);
    if( length == (sizeof(buffer) - 1 ) )
       length--;
-   
+
    buffer[length++]  = '\n';
    buffer[length]    = '\0';
-   
+
    fwrite(buffer, sizeof(char), length, stderr);
 }
 

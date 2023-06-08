@@ -93,6 +93,10 @@ void Prefab::initPersistFields()
    Parent::initPersistFields();
 }
 
+StringTableEntry Prefab::getTypeHint() const
+{
+   return (mFilename != StringTable->EmptyString()) ? StringTable->insert(Torque::Path(mFilename).getFileName().c_str()) : StringTable->EmptyString();
+}
 extern bool gEditingMission;
 
 bool Prefab::onAdd()

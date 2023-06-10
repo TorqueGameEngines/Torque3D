@@ -1726,22 +1726,38 @@ void GuiInspectorTypeSFXSourceName::consoleInit()
 
 void GuiInspectorType2DValue::constructEditControlChildren(GuiControl* retCtrl, S32 width)
 {
-   mCtrlX = new GuiTextEditCtrl();
+   mCtrlX = new GuiTextEditSliderCtrl();
    GuiControl* mLabelX = new GuiControl();
 
-   mCtrlY = new GuiTextEditCtrl();
+   mCtrlY = new GuiTextEditSliderCtrl();
    GuiControl* mLabelY = new GuiControl();
 
    mScriptValue = new GuiTextCtrl();
+
+
+   mCopyButton = new GuiBitmapButtonCtrl();
+   mCopyButton->setExtent(Point2I(15, 15));
+   mCopyButton->setBitmap(StringTable->insert("ToolsModule:copy_btn_n_image"));
+   mCopyButton->setDataField(StringTable->insert("Profile"), NULL, "GuiButtonProfile");
+   mCopyButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
+   mCopyButton->setDataField(StringTable->insert("hovertime"), NULL, "1000");
+   mCopyButton->setDataField(StringTable->insert("tooltip"), NULL, "Copy all values for script.");
+   mCopyButton->registerObject();
 
    _registerEditControl(mCtrlX);
    _registerEditControl(mCtrlY);
 
    mCtrlX->setDataField(StringTable->insert("profile"), NULL, "GuiInspectorTextEditProfile");
    mCtrlX->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
+   mCtrlX->setDataField(StringTable->insert("format"), NULL, "%.4f");
+   mCtrlX->setDataField(StringTable->insert("range"), NULL, "-1e+03 1e+03");
+   mCtrlX->setDataField(StringTable->insert("increment"), NULL, "0.0001");
 
    mCtrlY->setDataField(StringTable->insert("profile"), NULL, "GuiInspectorTextEditProfile");
    mCtrlY->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
+   mCtrlY->setDataField(StringTable->insert("format"), NULL, "%.4f");
+   mCtrlY->setDataField(StringTable->insert("range"), NULL, "-1e+03 1e+03");
+   mCtrlY->setDataField(StringTable->insert("increment"), NULL, "0.0001");
 
    mLabelX->setDataField(StringTable->insert("profile"), NULL, "ToolsGuiXDimensionText");
    mLabelY->setDataField(StringTable->insert("profile"), NULL, "ToolsGuiYDimensionText");
@@ -1799,12 +1815,18 @@ void GuiInspectorType2DValue::updateValue()
 
       if (elementCount > 0)
       {
-         mCtrlX->setText(StringUnit::getUnit(data, 0, " \t\n"));
+         F32 value = dAtof(StringUnit::getUnit(data, 0, " \t\n"));
+         char szBuffer[64];
+         dSprintf(szBuffer, 64, "%.4f", value);
+         mCtrlX->setText(szBuffer);
       }
 
       if (elementCount > 1)
       {
-         mCtrlY->setText(StringUnit::getUnit(data, 1, " \t\n"));
+         F32 value = dAtof(StringUnit::getUnit(data, 1, " \t\n"));
+         char szBuffer[64];
+         dSprintf(szBuffer, 64, "%.4f", value);
+         mCtrlY->setText(szBuffer);
       }
 
       mScriptValue->setText(data);
@@ -1846,6 +1868,8 @@ bool GuiInspectorType2DValue::updateRects()
    mDimensionLabelX->resize(Point2I(fieldExtent.x - dividerPos - dimX, 0), Point2I(dimX, rowSize));
    mDimensionLabelY->resize(Point2I(fieldExtent.x - dividerPos - dimX, rowSize + 3), Point2I(dimX, rowSize));
 
+   mCopyButton->resize(Point2I(mProfile->mTextOffset.x, rowSize + 3), Point2I(15, 15));
+
    mEdit->resize(mEditCtrlRect.point, mEditCtrlRect.extent);
 
    return true;
@@ -1859,13 +1883,16 @@ void GuiInspectorType3DValue::constructEditControlChildren(GuiControl* retCtrl, 
 {
    Parent::constructEditControlChildren(retCtrl, width);
 
-   mCtrlZ = new GuiTextEditCtrl();
+   mCtrlZ = new GuiTextEditSliderCtrl();
    GuiControl* mLabelZ = new GuiControl();
 
    _registerEditControl(mCtrlZ);
 
    mCtrlZ->setDataField(StringTable->insert("profile"), NULL, "GuiInspectorTextEditProfile");
    mCtrlZ->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
+   mCtrlZ->setDataField(StringTable->insert("format"), NULL, "%.4f");
+   mCtrlZ->setDataField(StringTable->insert("range"), NULL, "-1e+03 1e+03");
+   mCtrlZ->setDataField(StringTable->insert("increment"), NULL, "0.0001");
 
    mLabelZ->setDataField(StringTable->insert("profile"), NULL, "ToolsGuiZDimensionText");
 
@@ -1913,7 +1940,10 @@ void GuiInspectorType3DValue::updateValue()
 
       if (elementCount > 2)
       {
-         mCtrlZ->setText(StringUnit::getUnit(data, 2, " \t\n"));
+         F32 value = dAtof(StringUnit::getUnit(data, 2, " \t\n"));
+         char szBuffer[64];
+         dSprintf(szBuffer, 64, "%.4f", value);
+         mCtrlZ->setText(szBuffer);
       }
    }
 }
@@ -2114,6 +2144,12 @@ GuiControl* GuiInspectorTypePoint3F::constructEditControl()
    _registerEditControl(retCtrl);
 
    constructEditControlChildren(retCtrl, getWidth());
+
+   addObject(mCopyButton);
+
+   char szBuffer[512];
+   dSprintf(szBuffer, 512, "setClipboard(%d.getText() SPC %d.getText() SPC %d.getText());", mCtrlX->getId(), mCtrlY->getId(), mCtrlZ->getId());
+   mCopyButton->setField("Command", szBuffer);
 
    mUseHeightOverride = true;
    mHeightOverride = retCtrl->getHeight();

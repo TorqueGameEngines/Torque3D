@@ -331,12 +331,12 @@ void GuiInspectorField::setData( const char* data, bool callbacks )
                   || type == TypeColorF
                   || type == TypePoint2I
                   || type == TypePoint2F
-                  //|| type == TypePoint3F
+                  || type == TypePoint3F
                   || type == TypePoint4F
                   || type == TypeRectI
                   || type == TypeRectF
-                  //|| type == TypeMatrixPosition
-                  //|| type == TypeMatrixRotation
+                  || type == TypeMatrixPosition
+                  || type == TypeMatrixRotation
                   || type == TypeBox3F
                   || type == TypeRectUV
                   || type == TypeRotationF)

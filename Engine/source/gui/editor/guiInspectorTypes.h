@@ -42,6 +42,10 @@
 #include "gui/buttons/guiBitmapButtonCtrl.h"
 #endif
 
+#ifndef _GUITEXTEDITSLIDERCTRL_H_
+#include "gui/controls/guiTextEditSliderCtrl.h"
+#endif
+
 class GuiPopUpMenuCtrl;
 
 /// A base class for other inspector field types which
@@ -585,14 +589,15 @@ class GuiInspectorType2DValue : public GuiInspectorField
 private:
    typedef GuiInspectorField Parent;
 protected:
-   GuiTextEditCtrl* mCtrlX;
-   GuiTextEditCtrl* mCtrlY;
+   GuiTextEditSliderCtrl* mCtrlX;
+   GuiTextEditSliderCtrl* mCtrlY;
    GuiTextCtrl* mScriptValue;
 
 public:
    GuiTextCtrl* mCaptionLabel;
    GuiTextCtrl* mDimensionLabelX;
    GuiTextCtrl* mDimensionLabelY;
+   GuiBitmapButtonCtrl* mCopyButton;
 
    virtual void constructEditControlChildren(GuiControl* retCtrl, S32 width);
    virtual void updateValue();
@@ -609,7 +614,7 @@ class GuiInspectorType3DValue : public GuiInspectorType2DValue
 private:
    typedef GuiInspectorType2DValue Parent;
 protected:
-   GuiTextEditCtrl* mCtrlZ;
+   GuiTextEditSliderCtrl* mCtrlZ;
 
 public:
    GuiTextCtrl* mDimensionLabelZ;

@@ -31,6 +31,8 @@ TEST(WinMgr, BasicAPI)
 
    // Check out the primary desktop area...
    RectI primary = pwm->getPrimaryDesktopArea();
+   EXPECT_TRUE(pwm)
+      << "no monitor to test against!";
 
    EXPECT_TRUE(primary.isValidRect())
       << "Got some sort of invalid rect from the window manager!";

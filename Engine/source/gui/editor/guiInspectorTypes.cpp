@@ -2154,19 +2154,19 @@ GuiControl* GuiInspectorTypeMatrixRotation::constructEditControl()
    mDimensionLabelX = new GuiTextCtrl();
    mDimensionLabelX->registerObject();
    mDimensionLabelX->setControlProfile(mProfile);
-   mDimensionLabelX->setText("Yaw");
+   mDimensionLabelX->setText("Ptich");
    addObject(mDimensionLabelX);
 
    mDimensionLabelY = new GuiTextCtrl();
    mDimensionLabelY->registerObject();
    mDimensionLabelY->setControlProfile(mProfile);
-   mDimensionLabelY->setText("Pitch");
+   mDimensionLabelY->setText("Roll");
    addObject(mDimensionLabelY);
 
    mDimensionLabelZ = new GuiTextCtrl();
    mDimensionLabelZ->registerObject();
    mDimensionLabelZ->setControlProfile(mProfile);
-   mDimensionLabelZ->setText("Roll");
+   mDimensionLabelZ->setText("Yaw");
    addObject(mDimensionLabelZ);
 
    retCtrl->setDataField(StringTable->insert("profile"), NULL, "ToolsGuiDefaultProfile");
@@ -2219,8 +2219,8 @@ void GuiInspectorTypeMatrixRotation::updateValue()
       if (elementCount > 1)
       {
          F32 pitch = dAtof(StringUnit::getUnit(data, 1, " \t\n")) * dAtof(StringUnit::getUnit(data, 3, " \t\n"));
-         char szBuffer[128];
-         dSprintf(szBuffer, 128, "%.2f", pitch);
+         char szBuffer[64];
+         dSprintf(szBuffer, 64, "%.2f", pitch);
          mCtrlY->setText(szBuffer);
       }
 
@@ -2268,7 +2268,7 @@ bool GuiInspectorTypeMatrixRotation::updateRects()
    mCaptionLabel->resize(Point2I(mProfile->mTextOffset.x, 0), Point2I(fieldExtent.x, rowSize));
    mDimensionLabelX->resize(Point2I(fieldExtent.x - dividerPos - 30, 0), Point2I(30, rowSize));
    mDimensionLabelY->resize(Point2I(fieldExtent.x - dividerPos - 30, rowSize + 3), Point2I(50, rowSize));
-   mDimensionLabelZ->resize(Point2I(fieldExtent.x - dividerPos - 20, rowSize + rowSize + 6), Point2I(40, rowSize));
+   mDimensionLabelZ->resize(Point2I(fieldExtent.x - dividerPos - 30, rowSize + rowSize + 6), Point2I(40, rowSize));
 
    mEdit->resize(mEditCtrlRect.point, mEditCtrlRect.extent);
 

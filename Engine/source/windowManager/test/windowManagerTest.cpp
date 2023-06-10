@@ -29,6 +29,9 @@ TEST(WinMgr, BasicAPI)
 {
    PlatformWindowManager *pwm = CreatePlatformWindowManager();
 
+   EXPECT_TRUE(pwm)
+      << "no monitor to test against!";
+
    // Check out the primary desktop area...
    RectI primary = pwm->getPrimaryDesktopArea();
 

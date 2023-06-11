@@ -24,15 +24,14 @@ option(TORQUE_TESTING "Enable unit test module" OFF)
 mark_as_advanced(TORQUE_TESTING)
 
 if(TORQUE_TESTING)
-
+    message("Enabling Unit Testing")
     # Project defines
-    addDef( "TORQUE_TESTS_ENABLED" )
-    addDef( "_VARIADIC_MAX" 10 )
-
-    # Add source files
-    addPathRec( "${srcDir}/testing" )
-
-    # Add include paths
-    addInclude( "${libDir}/gtest/" )
-
+    set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} TORQUE_TESTS_ENABLED)
+    set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} "_VARIADIC_MAX=10")
+    
+    file(GLOB_RECURSE TORQUE_TESTS_SOURCES "${CMAKE_SOURCE_DIR}/Engine/source/testing/*.cpp" "${CMAKE_SOURCE_DIR}/Engine/source/testing/*.h" )
+    set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_TESTS_SOURCES})
+    
+    file(GLOB_RECURSE TORQUE_GTESTS_SOURCES "${CMAKE_SOURCE_DIR}/Engine/lib/gtest/*.cpp" "${CMAKE_SOURCE_DIR}/Engine/lib/gtest/*.h" )
+    set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_GTESTS_SOURCES})
 endif()

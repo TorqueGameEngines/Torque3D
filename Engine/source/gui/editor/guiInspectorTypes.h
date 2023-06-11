@@ -686,6 +686,7 @@ public:
    virtual bool updateRects();
 
    void updateAng(AngAxisF newAngAx);
+   void updateEul(EulerF newEul);
 
    virtual void updateData();
    virtual StringTableEntry getValue();

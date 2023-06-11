@@ -2247,15 +2247,15 @@ void GuiInspectorTypeMatrixRotation::constructEditControlChildren(GuiControl* re
 
    mCtrlX->setField("AltCommand", angleInput.c_str());
    mCtrlX->setField("Validate", angleInput.c_str());
-   mCtrlX->setDataField(StringTable->insert("format"), NULL, "%g");
+   mCtrlX->setDataField(StringTable->insert("format"), NULL, "%.6f");
 
    mCtrlY->setField("AltCommand", angleInput.c_str());
    mCtrlY->setField("Validate", angleInput.c_str());
-   mCtrlY->setDataField(StringTable->insert("format"), NULL, "%g");
+   mCtrlY->setDataField(StringTable->insert("format"), NULL, "%.6f");
 
    mCtrlZ->setField("AltCommand", angleInput.c_str());
    mCtrlZ->setField("Validate", angleInput.c_str());
-   mCtrlZ->setDataField(StringTable->insert("format"), NULL, "%g");
+   mCtrlZ->setDataField(StringTable->insert("format"), NULL, "%.6f");
 }
 
 void GuiInspectorTypeMatrixRotation::updateValue()
@@ -2268,28 +2268,28 @@ void GuiInspectorTypeMatrixRotation::updateValue()
       angAx.set(Point3F(dAtof(StringUnit::getUnit(data, 0, " \t\n")),
          dAtof(StringUnit::getUnit(data, 1, " \t\n")),
          dAtof(StringUnit::getUnit(data, 2, " \t\n"))),
-         dAtof(StringUnit::getUnit(data, 3, " \t\n")));
+         mDegToRad(dAtof(StringUnit::getUnit(data, 3, " \t\n"))));
 
-      EulerF euler = mAngToEul(angAx);
+      eulAng = mAngToEul(angAx);
 
       U32 elementCount = StringUnit::getUnitCount(data, " ");
 
       if (elementCount > 0)
       {
          char szBuffer[64];
-         dSprintf(szBuffer, 64, "%g", euler.x);
+         dSprintf(szBuffer, 64, "%.6f", eulAng.x);
          mCtrlX->setText(szBuffer);
       }
       if (elementCount > 1)
       {
          char szBuffer[64];
-         dSprintf(szBuffer, 64, "%g", euler.y);
+         dSprintf(szBuffer, 64, "%.6f", eulAng.y);
          mCtrlY->setText(szBuffer);
       }
       if (elementCount > 2)
       {
          char szBuffer[64];
-         dSprintf(szBuffer, 64, "%g", euler.z);
+         dSprintf(szBuffer, 64, "%.6f", eulAng.z);
          mCtrlZ->setText(szBuffer);
       }
 
@@ -2339,7 +2339,13 @@ bool GuiInspectorTypeMatrixRotation::updateRects()
 
 void GuiInspectorTypeMatrixRotation::updateAng(AngAxisF newAngAx)
 {
-   angAx = newAngAx;
+   angAx.axis = newAngAx.axis;
+   angAx.angle = mRadToDeg(newAngAx.angle);
+}
+
+void GuiInspectorTypeMatrixRotation::updateEul(EulerF newEul)
+{
+   eulAng = newEul;
 }
 
 void GuiInspectorTypeMatrixRotation::updateData()
@@ -2350,13 +2356,14 @@ void GuiInspectorTypeMatrixRotation::updateData()
 
 StringTableEntry GuiInspectorTypeMatrixRotation::getValue()
 {
-   String angBuffer = String::ToString("%g %g %g %g", angAx.axis.x, angAx.axis.y, angAx.axis.z, angAx.angle);
+   String angBuffer = String::ToString("%.6f %.6f %.6f %.6f", angAx.axis.x, angAx.axis.y, angAx.axis.z, angAx.angle);
    return StringTable->insert(angBuffer.c_str());
 }
 
 DefineEngineMethod(GuiInspectorTypeMatrixRotation, applyRotation, void, (AngAxisF angAx), , "")
 {
    object->updateAng(angAx);
+   object->updateEul(mAngToEul(angAx));
    object->updateData();
 }
 

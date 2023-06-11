@@ -1727,13 +1727,17 @@ void GuiInspectorTypeSFXSourceName::consoleInit()
 void GuiInspectorType2DValue::constructEditControlChildren(GuiControl* retCtrl, S32 width)
 {
    mCtrlX = new GuiTextEditSliderCtrl();
-   GuiControl* mLabelX = new GuiControl();
+   _registerEditControl(mCtrlX, "x");
+   mLabelX = new GuiControl();
+   _registerEditControl(mLabelX, "lx");
 
    mCtrlY = new GuiTextEditSliderCtrl();
-   GuiControl* mLabelY = new GuiControl();
+   _registerEditControl(mCtrlY, "y");
+   mLabelY = new GuiControl();
+   _registerEditControl(mLabelY, "ly");
 
    mScriptValue = new GuiTextCtrl();
-
+   _registerEditControl(mScriptValue, "val");
 
    mCopyButton = new GuiBitmapButtonCtrl();
    mCopyButton->setExtent(Point2I(15, 15));
@@ -1742,22 +1746,19 @@ void GuiInspectorType2DValue::constructEditControlChildren(GuiControl* retCtrl, 
    mCopyButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
    mCopyButton->setDataField(StringTable->insert("hovertime"), NULL, "1000");
    mCopyButton->setDataField(StringTable->insert("tooltip"), NULL, "Copy all values for script.");
-   mCopyButton->registerObject();
-
-   _registerEditControl(mCtrlX);
-   _registerEditControl(mCtrlY);
+   _registerEditControl(mCopyButton, "cpy");
 
    mCtrlX->setDataField(StringTable->insert("profile"), NULL, "GuiInspectorTextEditProfile");
    mCtrlX->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
    mCtrlX->setDataField(StringTable->insert("format"), NULL, "%.4f");
    mCtrlX->setDataField(StringTable->insert("range"), NULL, "-1e+03 1e+03");
-   mCtrlX->setDataField(StringTable->insert("increment"), NULL, "0.0001");
+   mCtrlX->setDataField(StringTable->insert("increment"), NULL, "0.1");
 
    mCtrlY->setDataField(StringTable->insert("profile"), NULL, "GuiInspectorTextEditProfile");
    mCtrlY->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
    mCtrlY->setDataField(StringTable->insert("format"), NULL, "%.4f");
    mCtrlY->setDataField(StringTable->insert("range"), NULL, "-1e+03 1e+03");
-   mCtrlY->setDataField(StringTable->insert("increment"), NULL, "0.0001");
+   mCtrlY->setDataField(StringTable->insert("increment"), NULL, "0.1");
 
    mLabelX->setDataField(StringTable->insert("profile"), NULL, "ToolsGuiXDimensionText");
    mLabelY->setDataField(StringTable->insert("profile"), NULL, "ToolsGuiYDimensionText");
@@ -1784,19 +1785,19 @@ void GuiInspectorType2DValue::constructEditControlChildren(GuiControl* retCtrl, 
    mCtrlX->setField("Validate", szBuffer);
    mCtrlY->setField("Validate", szBuffer);
 
-   GuiControl* mContainerX = new GuiControl();
+   mContainerX = new GuiControl();
    mContainerX->setDataField(StringTable->insert("profile"), NULL, "GuiInspectorTextEditProfile");
    mContainerX->setExtent(Point2I(width, 18));
    mContainerX->addObject(mLabelX);
    mContainerX->addObject(mCtrlX);
-   _registerEditControl(mContainerX);
+   _registerEditControl(mContainerX, "cx");
 
-   GuiControl* mContainerY = new GuiControl();
+   mContainerY = new GuiControl();
    mContainerY->setDataField(StringTable->insert("profile"), NULL, "GuiInspectorTextEditProfile");
    mContainerY->setExtent(Point2I(width, 18));
    mContainerY->addObject(mLabelY);
    mContainerY->addObject(mCtrlY);
-   _registerEditControl(mContainerY);
+   _registerEditControl(mContainerY, "cy");
 
    retCtrl->addObject(mContainerX);
    retCtrl->addObject(mContainerY);
@@ -1884,15 +1885,15 @@ void GuiInspectorType3DValue::constructEditControlChildren(GuiControl* retCtrl, 
    Parent::constructEditControlChildren(retCtrl, width);
 
    mCtrlZ = new GuiTextEditSliderCtrl();
-   GuiControl* mLabelZ = new GuiControl();
-
-   _registerEditControl(mCtrlZ);
+   _registerEditControl(mCtrlZ, "z");
+   mLabelZ = new GuiControl();
+   _registerEditControl(mLabelZ, "lz");
 
    mCtrlZ->setDataField(StringTable->insert("profile"), NULL, "GuiInspectorTextEditProfile");
    mCtrlZ->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
    mCtrlZ->setDataField(StringTable->insert("format"), NULL, "%.4f");
    mCtrlZ->setDataField(StringTable->insert("range"), NULL, "-1e+03 1e+03");
-   mCtrlZ->setDataField(StringTable->insert("increment"), NULL, "0.0001");
+   mCtrlZ->setDataField(StringTable->insert("increment"), NULL, "0.1");
 
    mLabelZ->setDataField(StringTable->insert("profile"), NULL, "ToolsGuiZDimensionText");
 
@@ -1916,12 +1917,12 @@ void GuiInspectorType3DValue::constructEditControlChildren(GuiControl* retCtrl, 
    mCtrlY->setField("Validate", szBuffer);
    mCtrlZ->setField("Validate", szBuffer);
 
-   GuiControl* mContainerZ = new GuiControl();
+   mContainerZ = new GuiControl();
    mContainerZ->setDataField(StringTable->insert("profile"), NULL, "GuiInspectorTextEditProfile");
    mContainerZ->setExtent(Point2I(width, 18));
    mContainerZ->addObject(mLabelZ);
    mContainerZ->addObject(mCtrlZ);
-   _registerEditControl(mContainerZ);
+   _registerEditControl(mContainerZ, "cz");
 
    retCtrl->addObject(mContainerZ);
    //retCtrl->addObject(mScriptValue);
@@ -2185,24 +2186,28 @@ GuiControl* GuiInspectorTypeMatrixRotation::constructEditControl()
    mCaptionLabel->registerObject();
    mCaptionLabel->setControlProfile(mProfile);
    mCaptionLabel->setText(mCaption);
+   _registerEditControl(mCaptionLabel, "cl");
    addObject(mCaptionLabel);
 
    mDimensionLabelX = new GuiTextCtrl();
    mDimensionLabelX->registerObject();
    mDimensionLabelX->setControlProfile(mProfile);
-   mDimensionLabelX->setText("Ptich");
+   mDimensionLabelX->setText("Pitch");
+   _registerEditControl(mDimensionLabelX, "pl");
    addObject(mDimensionLabelX);
 
    mDimensionLabelY = new GuiTextCtrl();
    mDimensionLabelY->registerObject();
    mDimensionLabelY->setControlProfile(mProfile);
    mDimensionLabelY->setText("Roll");
+   _registerEditControl(mDimensionLabelY, "rl");
    addObject(mDimensionLabelY);
 
    mDimensionLabelZ = new GuiTextCtrl();
    mDimensionLabelZ->registerObject();
    mDimensionLabelZ->setControlProfile(mProfile);
    mDimensionLabelZ->setText("Yaw");
+   _registerEditControl(mDimensionLabelZ, "yl");
    addObject(mDimensionLabelZ);
 
    retCtrl->setDataField(StringTable->insert("profile"), NULL, "ToolsGuiDefaultProfile");
@@ -2215,18 +2220,7 @@ GuiControl* GuiInspectorTypeMatrixRotation::constructEditControl()
 
    constructEditControlChildren(retCtrl, getWidth());
 
-   retCtrl->addObject(mScriptValue);
-
-   char szBuffer[512];
-   dSprintf(szBuffer, 512, "%d.apply(%d.getText());", getId(), mScriptValue->getId());
-
-   mCtrlX->setField("AltCommand", szBuffer);
-   mCtrlY->setField("AltCommand", szBuffer);
-   mCtrlZ->setField("AltCommand", szBuffer);
-
-   mCtrlX->setField("Validate", szBuffer);
-   mCtrlY->setField("Validate", szBuffer);
-   mCtrlZ->setField("Validate", szBuffer);
+   //retCtrl->addObject(mScriptValue);
 
    mUseHeightOverride = true;
    mHeightOverride = retCtrl->getHeight();
@@ -2234,37 +2228,68 @@ GuiControl* GuiInspectorTypeMatrixRotation::constructEditControl()
    return retCtrl;
 }
 
+void GuiInspectorTypeMatrixRotation::constructEditControlChildren(GuiControl* retCtrl, S32 width)
+{
+   Parent::constructEditControlChildren(retCtrl, width);
+
+   if (!mScriptValue)
+   {
+      mScriptValue = new GuiTextEditCtrl();
+      // Don't forget to register ourselves
+      _registerEditControl(mScriptValue, "value");
+   }
+   U32 svID = mScriptValue->getId();
+   retCtrl->addObject(mScriptValue);
+
+   String angleInput = String::ToString("%d.applyRotation(mEulDegToAng(%d.getText() SPC %d.getText() SPC %d.getText()));", getId(), mCtrlX->getId(), mCtrlY->getId(), mCtrlZ->getId());
+   mScriptValue->setField("AltCommand", angleInput.c_str());
+   mScriptValue->setField("Validate", angleInput.c_str());
+
+   mCtrlX->setField("AltCommand", angleInput.c_str());
+   mCtrlX->setField("Validate", angleInput.c_str());
+   mCtrlX->setDataField(StringTable->insert("format"), NULL, "%g");
+
+   mCtrlY->setField("AltCommand", angleInput.c_str());
+   mCtrlY->setField("Validate", angleInput.c_str());
+   mCtrlY->setDataField(StringTable->insert("format"), NULL, "%g");
+
+   mCtrlZ->setField("AltCommand", angleInput.c_str());
+   mCtrlZ->setField("Validate", angleInput.c_str());
+   mCtrlZ->setDataField(StringTable->insert("format"), NULL, "%g");
+}
+
 void GuiInspectorTypeMatrixRotation::updateValue()
 {
    if (mField)
    {
-      Parent::updateValue();
+      Update::updateValue();
       const char* data = getData();
-      if (!data)
-         data = "";
+
+      angAx.set(Point3F(dAtof(StringUnit::getUnit(data, 0, " \t\n")),
+         dAtof(StringUnit::getUnit(data, 1, " \t\n")),
+         dAtof(StringUnit::getUnit(data, 2, " \t\n"))),
+         dAtof(StringUnit::getUnit(data, 3, " \t\n")));
+
+      EulerF euler = mAngToEul(angAx);
+
       U32 elementCount = StringUnit::getUnitCount(data, " ");
 
       if (elementCount > 0)
       {
-         F32 yaw = dAtof(StringUnit::getUnit(data, 0, " \t\n")) * dAtof(StringUnit::getUnit(data, 3, " \t\n"));
          char szBuffer[64];
-         dSprintf(szBuffer, 64, "%.2f", yaw);
+         dSprintf(szBuffer, 64, "%g", euler.x);
          mCtrlX->setText(szBuffer);
       }
-
       if (elementCount > 1)
       {
-         F32 pitch = dAtof(StringUnit::getUnit(data, 1, " \t\n")) * dAtof(StringUnit::getUnit(data, 3, " \t\n"));
          char szBuffer[64];
-         dSprintf(szBuffer, 64, "%.2f", pitch);
+         dSprintf(szBuffer, 64, "%g", euler.y);
          mCtrlY->setText(szBuffer);
       }
-
       if (elementCount > 2)
       {
-         F32 roll = dAtof(StringUnit::getUnit(data, 2, " \t\n")) * dAtof(StringUnit::getUnit(data, 3, " \t\n"));
          char szBuffer[64];
-         dSprintf(szBuffer, 64, "%.2f", roll);
+         dSprintf(szBuffer, 64, "%g", euler.z);
          mCtrlZ->setText(szBuffer);
       }
 
@@ -2284,6 +2309,7 @@ bool GuiInspectorTypeMatrixRotation::resize(const Point2I& newPosition, const Po
    {
       return updateRects();
    }
+   return false;
 }
 
 bool GuiInspectorTypeMatrixRotation::updateRects()
@@ -2310,3 +2336,27 @@ bool GuiInspectorTypeMatrixRotation::updateRects()
 
    return true;
 }
+
+void GuiInspectorTypeMatrixRotation::updateAng(AngAxisF newAngAx)
+{
+   angAx = newAngAx;
+}
+
+void GuiInspectorTypeMatrixRotation::updateData()
+{
+   StringTableEntry data = getValue();
+   setData(data);
+}
+
+StringTableEntry GuiInspectorTypeMatrixRotation::getValue()
+{
+   String angBuffer = String::ToString("%g %g %g %g", angAx.axis.x, angAx.axis.y, angAx.axis.z, angAx.angle);
+   return StringTable->insert(angBuffer.c_str());
+}
+
+DefineEngineMethod(GuiInspectorTypeMatrixRotation, applyRotation, void, (AngAxisF angAx), , "")
+{
+   object->updateAng(angAx);
+   object->updateData();
+}
+

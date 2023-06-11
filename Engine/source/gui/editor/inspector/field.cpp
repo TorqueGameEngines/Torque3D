@@ -673,13 +673,16 @@ void GuiInspectorField::_executeSelectedCallback()
 
 //-----------------------------------------------------------------------------
 
-void GuiInspectorField::_registerEditControl( GuiControl *ctrl )
+void GuiInspectorField::_registerEditControl(GuiControl* ctrl, StringTableEntry suffix)
 {
+   if (ctrl->isProperlyAdded()) return;
+   ctrl->setInternalName(suffix);
+
    char szName[512];
-   if(mInspector->getInspectObject() != nullptr)
-      dSprintf( szName, 512, "IE_%s_%d_%s_Field", ctrl->getClassName(), mInspector->getInspectObject()->getId(), mCaption);
+   if (mInspector->getInspectObject() != nullptr)
+      dSprintf(szName, 512, "IE_%s_%d_%s_%s_Field", ctrl->getClassName(), mInspector->getInspectObject()->getId(), suffix, mCaption);
    else
-      dSprintf(szName, 512, "IE_%s_%s_Field", ctrl->getClassName(), mCaption);
+      dSprintf(szName, 512, "IE_%s_%s_%s_Field", ctrl->getClassName(), suffix, mCaption);
 
    // Register the object
    ctrl->registerObject( szName );

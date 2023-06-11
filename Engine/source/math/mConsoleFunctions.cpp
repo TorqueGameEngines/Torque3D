@@ -464,3 +464,13 @@ DefineEngineFunction(mDecToBin, const char*, (S32 n), , "convert decimal to a bi
    }
    return ret.c_str();
 }
+
+DefineEngineFunction(mEulDegToAng, AngAxisF, (EulerF euler), , "convert euler to degrees")
+{
+   return mEulDegToAng(euler);
+}
+
+DefineEngineFunction(mAngToEul, EulerF, (AngAxisF angAx), , "convert degrees to euler")
+{
+   return mAngToEul(angAx);
+}

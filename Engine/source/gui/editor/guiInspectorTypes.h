@@ -590,7 +590,11 @@ private:
    typedef GuiInspectorField Parent;
 protected:
    GuiTextEditSliderCtrl* mCtrlX;
+   GuiControl* mLabelX;
+   GuiControl* mContainerX;
    GuiTextEditSliderCtrl* mCtrlY;
+   GuiControl* mLabelY;
+   GuiControl* mContainerY;
    GuiTextCtrl* mScriptValue;
 
 public:
@@ -615,6 +619,8 @@ private:
    typedef GuiInspectorType2DValue Parent;
 protected:
    GuiTextEditSliderCtrl* mCtrlZ;
+   GuiControl* mLabelZ;
+   GuiControl* mContainerZ;
 
 public:
    GuiTextCtrl* mDimensionLabelZ;
@@ -652,7 +658,7 @@ public:
 class GuiInspectorTypePoint3F : public GuiInspectorType3DValue
 {
 private:
-   typedef GuiInspectorField Parent;
+   typedef GuiInspectorType3DValue Parent;
 public:
    DECLARE_CONOBJECT(GuiInspectorTypePoint3F);
    static void consoleInit();
@@ -666,14 +672,22 @@ public:
 class GuiInspectorTypeMatrixRotation : public GuiInspectorType3DValue
 {
 private:
-   typedef GuiInspectorField Parent;
+   typedef GuiInspectorType3DValue Parent;
+   typedef GuiInspectorField Update;
 public:
+   AngAxisF angAx;
+   EulerF eulAng;
    DECLARE_CONOBJECT(GuiInspectorTypeMatrixRotation);
    static void consoleInit();
    virtual GuiControl* constructEditControl();
+   virtual void constructEditControlChildren(GuiControl* retCtrl, S32 width);
    virtual void updateValue();
    virtual bool resize(const Point2I& newPosition, const Point2I& newExtent);
    virtual bool updateRects();
-};
 
+   void updateAng(AngAxisF newAngAx);
+
+   virtual void updateData();
+   virtual StringTableEntry getValue();
+};
 #endif // _GUI_INSPECTOR_TYPES_H_

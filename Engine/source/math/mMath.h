@@ -52,4 +52,20 @@
 #include "math/mRotation.h"
 #endif
 
+inline AngAxisF mEulDegToAng(EulerF euler)
+{
+   MatrixF tempMat = MatrixF(euler * M_PI_F / 180.0f, Point3F::Zero);
+   AngAxisF angAx = AngAxisF(tempMat);
+   return angAx;
+}
+
+inline EulerF mAngToEul(AngAxisF angAx)
+{
+   MatrixF tempMat;
+   angAx.setMatrix(&tempMat);
+   EulerF euler = tempMat.toEuler();
+   euler *= 180.0f / M_PI_F;
+   return euler;
+}
+
 #endif //_MMATH_H_

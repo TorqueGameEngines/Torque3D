@@ -24,18 +24,16 @@ option(TORQUE_TESTING "Enable unit test module" OFF)
 mark_as_advanced(TORQUE_TESTING)
 
 if(TORQUE_TESTING)
-    message("Enabling Unit Testing")
+
     # Project defines
     set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} TORQUE_TESTS_ENABLED)
     set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} "_VARIADIC_MAX=10")
 
     # Add source files
-    file(GLOB_RECURSE TORQUE_TESTING_SOURCES "testing/*.cpp" "testing/*.h")
+    file(GLOB_RECURSE TORQUE_TESTING_SOURCES "testing/*.cpp" "testing/*.h" "*/test/*.cpp" "*/test/*.h")
     set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_TESTING_SOURCES})
 project(gtest)
     # Add include paths
-    set(LIBOGG_FILES ${LIBOGG_SOURCE_FILES} ${LIBOGG_HEADER_FILES}) 
-    set_target_properties(libogg PROPERTIES LINKER_LANGUAGE CXX)
     file(GLOB_RECURSE TORQUE_GTEST_SOURCES "${CMAKE_SOURCE_DIR}/Engine/lib/gtest/*.c*" "${CMAKE_SOURCE_DIR}/Engine/lib/gtest/*.h")
     add_library(gtest ${TORQUE_GTEST_SOURCES})
     set_target_properties(gtest PROPERTIES LINKER_LANGUAGE CXX)

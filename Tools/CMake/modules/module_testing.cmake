@@ -28,10 +28,17 @@ if(TORQUE_TESTING)
     # Project defines
     set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} TORQUE_TESTS_ENABLED)
     set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} "_VARIADIC_MAX=10")
-    
-    file(GLOB_RECURSE TORQUE_TESTS_SOURCES "${CMAKE_SOURCE_DIR}/Engine/source/testing/*.cpp" "${CMAKE_SOURCE_DIR}/Engine/source/testing/*.h" )
-    set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_TESTS_SOURCES})
-    
-    file(GLOB_RECURSE TORQUE_GTESTS_SOURCES "${CMAKE_SOURCE_DIR}/Engine/lib/gtest/*.cpp" "${CMAKE_SOURCE_DIR}/Engine/lib/gtest/*.h" )
-    set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_GTESTS_SOURCES})
+
+    # Add source files
+    file(GLOB_RECURSE TORQUE_TESTING_SOURCES "testing/*.cpp" "testing/*.h")
+    set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_TESTING_SOURCES})
+project(gtest)
+    # Add include paths
+    set(LIBOGG_FILES ${LIBOGG_SOURCE_FILES} ${LIBOGG_HEADER_FILES}) 
+    set_target_properties(libogg PROPERTIES LINKER_LANGUAGE CXX)
+    file(GLOB_RECURSE TORQUE_GTEST_SOURCES "${CMAKE_SOURCE_DIR}/Engine/lib/gtest/*.c*" "${CMAKE_SOURCE_DIR}/Engine/lib/gtest/*.h")
+    add_library(gtest ${TORQUE_GTEST_SOURCES})
+    set_target_properties(gtest PROPERTIES LINKER_LANGUAGE CXX)
+    target_include_directories(gtest PUBLIC "${CMAKE_SOURCE_DIR}/Engine/lib/gtest/")
+    set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} gtest)
 endif()

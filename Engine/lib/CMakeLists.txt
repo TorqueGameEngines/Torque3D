@@ -7,6 +7,17 @@ mark_as_advanced(ZLIB_ROOT)
 # Png depends on zlib
 add_subdirectory(zlib ${CMAKE_BINARY_DIR}/temp/zlib EXCLUDE_FROM_ALL)
 
+if(APPLE)
+    enable_language(OBJC)
+    advanced_option(AL_ALEXT_PROTOTYPES "Use Extended OpenAL options" OFF)
+else()
+    advanced_option(AL_ALEXT_PROTOTYPES "Use Extended OpenAL options" ON)
+endif()
+
+if(AL_ALEXT_PROTOTYPES)
+	addDef( "AL_ALEXT_PROTOTYPES" )
+endif()
+
 #SDL
 set(SDL_SHARED ON CACHE BOOL "Build a shared version of the library" FORCE)
 set(SDL_STATIC OFF CACHE BOOL "Build a static version of the library" FORCE)
@@ -175,17 +186,6 @@ add_subdirectory(convexDecomp ${CMAKE_BINARY_DIR}/temp/convexDecomp EXCLUDE_FROM
 add_subdirectory(squish ${CMAKE_BINARY_DIR}/temp/squish EXCLUDE_FROM_ALL)
 add_subdirectory(collada ${CMAKE_BINARY_DIR}/temp/collada EXCLUDE_FROM_ALL)
 add_subdirectory(glad ${CMAKE_BINARY_DIR}/temp/glad EXCLUDE_FROM_ALL)
-
-#if(TORQUE_SFX_OPENAL AND NOT TORQUE_DEDICATED)
-if(APPLE)
-    advanced_option(AL_ALEXT_PROTOTYPES "Use Extended OpenAL options" OFF)
-else()
-    advanced_option(AL_ALEXT_PROTOTYPES "Use Extended OpenAL options" ON)
-endif(APPLE)
-
-if(AL_ALEXT_PROTOTYPES)
-	addDef( "AL_ALEXT_PROTOTYPES" )
-endif()
 
 #hidden options
 if(TORQUE_SFX_OPENAL)

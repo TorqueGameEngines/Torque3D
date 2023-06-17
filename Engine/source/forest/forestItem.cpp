@@ -65,7 +65,7 @@ void ForestItemData::initPersistFields()
       
       addProtectedField( "shapeFile",  TypeShapeFilename, Offset( mShapeName, ForestItemData ), &_setShapeData, &defaultProtectedGetFn,
          "Shape file for this item type", AbstractClassRep::FIELD_HideInInspectors );
-   endGroup( "Shape(s)" );
+   endGroup( "Shapes" );
 
    addGroup("Physics");
       addField( "collidable",   TypeBool, Offset( mCollidable, ForestItemData ),

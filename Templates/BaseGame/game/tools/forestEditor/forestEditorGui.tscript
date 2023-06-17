@@ -482,7 +482,7 @@ function ForestEditorInspector::inspect( %this, %obj )
          %this.groupFilters = "+ForestBrushElement,-Ungrouped";
 
       case "TSForestItemData":   
-         %this.groupFilters = "+Media,+Wind";
+         %this.groupFilters = "+Shapes,+Physics,+Wind,";
 
       default:
          %this.groupFilters = "";

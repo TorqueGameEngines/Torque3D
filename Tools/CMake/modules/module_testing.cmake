@@ -30,7 +30,7 @@ if(TORQUE_TESTING)
     set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} "_VARIADIC_MAX=10")
 
     # Add source files
-    file(GLOB_RECURSE TORQUE_TESTING_SOURCES "testing/*.cpp" "testing/*.h" "*/test/*.cpp" "*/test/*.h")
+    file(GLOB_RECURSE TORQUE_TESTING_SOURCES "testing/*.cpp" "testing/*.h" "*/test/*.cpp" "*/test/*.h" "*/*/test/*.cpp" "*/*/test/*.h")
     set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_TESTING_SOURCES})
 project(gtest)
     # Add include paths

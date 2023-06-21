@@ -29,7 +29,7 @@ TEST(WinMgr, BasicAPI)
 {
    PlatformWindowManager *pwm = CreatePlatformWindowManager();
 
-   EXPECT_TRUE(pwm)
+   ASSERT_TRUE(pwm)
       << "no monitor to test against!";
 
    // Check out the primary desktop area...

@@ -601,7 +601,8 @@ public:
    GuiTextCtrl* mCaptionLabel;
    GuiTextCtrl* mDimensionLabelX;
    GuiTextCtrl* mDimensionLabelY;
-   GuiBitmapButtonCtrl* mCopyButton;
+   GuiButtonCtrl* mCopyButton;
+   GuiButtonCtrl* mPasteButton;
 
    virtual void constructEditControlChildren(GuiControl* retCtrl, S32 width);
    virtual void updateValue();

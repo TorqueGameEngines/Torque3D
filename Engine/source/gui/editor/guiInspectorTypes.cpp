@@ -2094,6 +2094,100 @@ bool GuiInspectorType4DValue::updateRects()
 }
 
 //-----------------------------------------------------------------------------
+// TypePoint2F GuiInspectorField Class
+//-----------------------------------------------------------------------------
+IMPLEMENT_CONOBJECT(GuiInspectorTypePoint2F);
+
+ConsoleDocClass(GuiInspectorTypePoint2F,
+   "@brief Inspector field type for Point2F\n\n"
+   "Editor use only.\n\n"
+   "@internal"
+);
+void GuiInspectorTypePoint2F::consoleInit()
+{
+   Parent::consoleInit();
+
+   ConsoleBaseType::getType(TypePoint2F)->setInspectorFieldType("GuiInspectorTypePoint2F");
+}
+
+GuiControl* GuiInspectorTypePoint2F::constructEditControl()
+{
+   GuiStackControl* retCtrl = new GuiStackControl();
+
+   if (retCtrl == NULL)
+      return retCtrl;
+
+   mCaptionLabel = new GuiTextCtrl();
+   mCaptionLabel->registerObject();
+   mCaptionLabel->setControlProfile(mProfile);
+   mCaptionLabel->setText(mCaption);
+   addObject(mCaptionLabel);
+
+   mDimensionLabelX = new GuiTextCtrl();
+   mDimensionLabelX->registerObject();
+   mDimensionLabelX->setControlProfile(mProfile);
+   mDimensionLabelX->setText("X");
+   addObject(mDimensionLabelX);
+
+   mDimensionLabelY = new GuiTextCtrl();
+   mDimensionLabelY->registerObject();
+   mDimensionLabelY->setControlProfile(mProfile);
+   mDimensionLabelY->setText("Y");
+   addObject(mDimensionLabelY);
+
+   retCtrl->setDataField(StringTable->insert("profile"), NULL, "ToolsGuiDefaultProfile");
+   retCtrl->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
+   retCtrl->setDataField(StringTable->insert("stackingType"), NULL, "Vertical");
+   retCtrl->setDataField(StringTable->insert("dynamicSize"), NULL, "1");
+   retCtrl->setDataField(StringTable->insert("padding"), NULL, "3");
+
+   _registerEditControl(retCtrl);
+
+   constructEditControlChildren(retCtrl, getWidth());
+
+   char szBuffer[512];
+   dSprintf(szBuffer, 512, "setClipboard(%d.getText() SPC %d.getText());", mCtrlX->getId(), mCtrlY->getId());
+   mCopyButton->setField("Command", szBuffer);
+   addObject(mCopyButton);
+
+   dSprintf(szBuffer, 512, "%d.apply(getWords(getClipboard(), 0, 1));", getId());
+   mPasteButton->setField("Command", szBuffer);
+   addObject(mPasteButton);
+
+   mUseHeightOverride = true;
+   mHeightOverride = retCtrl->getHeight() + 16 + 6;
+
+   return retCtrl;
+}
+
+//-----------------------------------------------------------------------------
+// TypePoint2I GuiInspectorField Class
+//-----------------------------------------------------------------------------
+IMPLEMENT_CONOBJECT(GuiInspectorTypePoint2I);
+
+ConsoleDocClass(GuiInspectorTypePoint2I,
+   "@brief Inspector field type for Point2I\n\n"
+   "Editor use only.\n\n"
+   "@internal"
+);
+void GuiInspectorTypePoint2I::consoleInit()
+{
+   Parent::consoleInit();
+
+   ConsoleBaseType::getType(TypePoint2I)->setInspectorFieldType("GuiInspectorTypePoint2I");
+}
+
+GuiControl* GuiInspectorTypePoint2I::constructEditControl()
+{
+   GuiControl* retCtrl = Parent::constructEditControl();
+
+   mCtrlX->setDataField(StringTable->insert("format"), NULL, "%d");
+   mCtrlY->setDataField(StringTable->insert("format"), NULL, "%d");
+
+   return retCtrl;
+}
+
+//-----------------------------------------------------------------------------
 // TypePoint3F GuiInspectorField Class
 //-----------------------------------------------------------------------------
 IMPLEMENT_CONOBJECT(GuiInspectorTypePoint3F);
@@ -2162,7 +2256,7 @@ GuiControl* GuiInspectorTypePoint3F::constructEditControl()
    addObject(mPasteButton);
 
    mUseHeightOverride = true;
-   mHeightOverride = retCtrl->getHeight();
+   mHeightOverride = retCtrl->getHeight() + 6;
 
    return retCtrl;
 }
@@ -2237,7 +2331,7 @@ GuiControl* GuiInspectorTypeMatrixRotation::constructEditControl()
    addObject(mPasteButton);
 
    mUseHeightOverride = true;
-   mHeightOverride = retCtrl->getHeight();
+   mHeightOverride = retCtrl->getHeight() + 6;
 
    return retCtrl;
 }

@@ -653,6 +653,32 @@ public:
 };
 
 //-----------------------------------------------------------------------------
+// TypePoint2F GuiInspectorField Class
+//-----------------------------------------------------------------------------
+
+class GuiInspectorTypePoint2F : public GuiInspectorType2DValue
+{
+private:
+   typedef GuiInspectorType2DValue Parent;
+public:
+   DECLARE_CONOBJECT(GuiInspectorTypePoint2F);
+   static void consoleInit();
+   virtual GuiControl* constructEditControl();
+};
+
+class GuiInspectorTypePoint2I : public GuiInspectorTypePoint2F
+{
+private:
+   typedef GuiInspectorTypePoint2F Parent;
+public:
+   DECLARE_CONOBJECT(GuiInspectorTypePoint2I);
+   static void consoleInit();
+   virtual GuiControl* constructEditControl();
+};
+
+
+
+//-----------------------------------------------------------------------------
 // TypePoint3F GuiInspectorField Class
 //-----------------------------------------------------------------------------
 

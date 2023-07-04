@@ -14,6 +14,14 @@
 
 function UI::onCreate( %this )
 {
+   exec("./scripts/utility");
+   // create and set as core a defaultTable LanguageTable for localization purposes
+   // example usage for quick language appending
+   // addLanguage("defaultTable","check","ch");
+   // addLanguage("defaultTable","try","tr");
+   createLangTable("defaultTable");
+   setCoreLangTable("defaultTable");
+   exec("./langs/languageMap");
 }
 
 function UI::onDestroy( %this )
@@ -81,7 +89,6 @@ function UI::initClient(%this)
    %this.queueExec("./scripts/messageBoxes");
    %this.queueExec("./scripts/help");
    %this.queueExec("./scripts/cursors");
-   %this.queueExec("./scripts/utility");
    
    if(isToolBuild())
       %this.queueExec("./tools/creator.tscript");

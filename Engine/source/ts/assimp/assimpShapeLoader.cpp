@@ -243,8 +243,15 @@ void AssimpShapeLoader::enumerateScene()
 
 void AssimpShapeLoader::processAnimations()
 {
-   for(U32 n = 0; n < mScene->mNumAnimations; ++n)
+   for (U32 n = 0; n < mScene->mNumAnimations; ++n)
    {
+      if (n == 0)
+      {
+         //first animation name empty? set it to ambient.
+         if(mScene->mAnimations[n]->mName.length == 0)
+            mScene->mAnimations[n]->mName = "ambient";
+      }
+
       Con::printf("[ASSIMP] Animation Found: %s", mScene->mAnimations[n]->mName.C_Str());
 
       AssimpAppSequence* newAssimpSeq = new AssimpAppSequence(mScene->mAnimations[n]);

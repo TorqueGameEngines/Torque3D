@@ -32,7 +32,6 @@ if(TORQUE_TESTING)
     # Add source files
     file(GLOB_RECURSE TORQUE_TESTING_SOURCES "testing/*.cpp" "testing/*.h" "*/test/*.cpp" "*/test/*.h" "*/*/test/*.cpp" "*/*/test/*.h")
     set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_TESTING_SOURCES})
-project(gtest)
     # Add include paths
     file(GLOB_RECURSE TORQUE_GTEST_SOURCES "${CMAKE_SOURCE_DIR}/Engine/lib/gtest/*.c*" "${CMAKE_SOURCE_DIR}/Engine/lib/gtest/*.h")
     add_library(gtest ${TORQUE_GTEST_SOURCES})

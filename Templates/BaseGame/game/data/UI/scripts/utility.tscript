@@ -130,3 +130,33 @@ function getButtonBitmap(%device, %button)
    
    return %assetId;
 }
+
+function createLangTable(%name)
+{
+    // create a langtable, and global variable to be referenced by GUI elements 
+    // opeates as follows:
+    // root gui element contains langTableMod = mylang;
+    // subelements inherit or override
+    // langTableMod then informs the underlying system to look for a $I18N::mylang
+    // this holds a reference to a table defined in .lso files, using data/UI/langs/languageMap global defines as a key
+    new LangTable(%name){};
+    eval("$I18N::"@ %name @"="@ %name @".getId();");
+}
+
+function addLanguage(%langTable, %filename, %alias)
+{
+    // generate an .lso file and if a languageMap file does not exist, it as well
+    %needLangMap = true;
+    if(isFile("data/UI/langs/languageMap"))
+        %needLangMap = false;        
+        
+    CompileLanguage("data/UI/langs/"@ %filename @".txt", %needLangMap);    
+    %langTable.addLanguage("data/UI/langs/"@ %filename @".lso", %alias);
+}
+
+function switchLanguage(%language) //use here the #n as it's the order of inclusion
+{
+    // swap existing language from the current core langtable and refresh the gui contents
+	getCoreLangTable().setCurrentLanguage(%language);
+	Canvas.setContent(Canvas.getContent());
+}

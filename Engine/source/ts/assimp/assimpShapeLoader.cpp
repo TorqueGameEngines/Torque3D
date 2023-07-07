@@ -247,9 +247,7 @@ void AssimpShapeLoader::processAnimations()
    {
       if (n == 0)
       {
-         //first animation name empty? set it to ambient.
-         if(mScene->mAnimations[n]->mName.length == 0)
-            mScene->mAnimations[n]->mName = "ambient";
+         mScene->mAnimations[n]->mName = "ambient";
       }
 
       Con::printf("[ASSIMP] Animation Found: %s", mScene->mAnimations[n]->mName.C_Str());

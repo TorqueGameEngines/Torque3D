@@ -59,11 +59,11 @@ void main()
   switch (mipId)
   {
 	case 0:
-		group[0] = (a+b+d+e) * (0.125f/4.0f);
-		group[1] = (b+c+e+f) * (0.125f/4.0f);
-		group[2] = (d+e+g+h) * (0.125f/4.0f);
-		group[3] = (e+f+h+i) * (0.125f/4.0f);
-		group[4] = (j+k+l+m) * (0.5f/4.0f);
+		group[0] = (a+b+d+e) * (0.125/4.0);
+		group[1] = (b+c+e+f) * (0.125/4.0);
+		group[2] = (d+e+g+h) * (0.125/4.0);
+		group[3] = (e+f+h+i) * (0.125/4.0);
+		group[4] = (j+k+l+m) * (0.5/4.0);
 		group[0] *= KarisAverage(group[0]);
 		group[1] *= KarisAverage(group[1]);
 		group[2] *= KarisAverage(group[2]);

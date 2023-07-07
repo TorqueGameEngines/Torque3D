@@ -552,10 +552,10 @@ function HDRPostFX::SetupBloomFX( %this )
      %textureName = "#" @ %mipName;
    }
    
-   for (%idx = %this.mipsCount; %idx > 0; %idx--)
+   for (%idx = %this.mipsCount - 1; %idx >= 0; %idx--)
    {
-     %nxt = "#hdrbloom_" @ (%idx - 1);
-     %mipName = "hdrbloom_up_" @ (%idx - 1);
+     %nxt = "#hdrbloom_" @ %idx;
+     %mipName = "hdrbloom_up_" @ %idx;
      
      %mipFX = new PostEffect()
      {

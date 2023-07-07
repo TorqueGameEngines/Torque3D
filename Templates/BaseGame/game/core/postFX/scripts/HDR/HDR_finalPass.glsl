@@ -61,12 +61,12 @@ out vec4 OUT_col;
 vec3 Tonemap(vec3 x)
 {     
     //ACES      
-    if(g_fTonemapMode == 1.0f)    
+    if(g_fTonemapMode == 1.0)    
    {
 	  x = ACESFitted(x, whitePoint);  //ACES is crushing our blacks, need to pre-expose!    	  
    }             
    //Filmic Helji	       
-   if(g_fTonemapMode == 2.0f) 
+   if(g_fTonemapMode == 2.0) 
    {             
       x = TO_Hejl(x, whitePoint);
    }   
@@ -96,7 +96,7 @@ vec3 Tonemap(vec3 x)
 void main()
 {
    vec4 _sample = hdrDecode( texture( sceneTex, IN_uv0 ) );
-   float adaptedLum = texture( luminanceTex, vec2( 0.5f, 0.5f ) ).r;
+   float adaptedLum = texture( luminanceTex, vec2( 0.5, 0.5 ) ).r;
    vec4 bloom = texture( bloomTex, IN_uv2 );
 
    // Add the bloom effect.     
@@ -109,7 +109,7 @@ void main()
    _sample.rgb = TO_Saturation(_sample.rgb, saturationValue);
 
    // Apply contrast
-   _sample.rgb = ((_sample.rgb - 0.5f) * Contrast) + 0.5f;
+   _sample.rgb = ((_sample.rgb - 0.5) * Contrast) + 0.5;
 
    // Apply brightness
    //_sample.rgb += Brightness;
@@ -120,15 +120,15 @@ void main()
    _sample.b = TO_LogContrast(_sample.b, logContrast);
 
    //tonemapping - TODO fix up eye adaptation
-   if ( g_fEnableToneMapping > 0.0f )  
+   if ( g_fEnableToneMapping > 0.0 )  
    {    
       float adapation = 1.0;  
 	   
-      if( g_fEnableAutoExposure > 0.0f )  
+      if( g_fEnableAutoExposure > 0.0 )  
 	   {  	     		 
          adaptedLum = saturate(adaptedLum); 
          float linearExposure = (g_fMiddleGray / adaptedLum);
-         adapation = log2(max(linearExposure, 0.0001f));     
+         adapation = log2(max(linearExposure, 0.0001));     
 		          
          _sample.rgb = Tonemap(exposureValue * _sample.rgb *exp2(adapation)); 
 	   }   

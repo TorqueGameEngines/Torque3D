@@ -42,6 +42,10 @@
 #include "gui/buttons/guiBitmapButtonCtrl.h"
 #endif
 
+#ifndef _GUITEXTEDITSLIDERCTRL_H_
+#include "gui/controls/guiTextEditSliderCtrl.h"
+#endif
+
 class GuiPopUpMenuCtrl;
 
 /// A base class for other inspector field types which
@@ -576,5 +580,142 @@ public:
    virtual void _populateMenu( GuiPopUpMenuCtrl *menu );
 };
 
+//-----------------------------------------------------------------------------
+// Two Dimensional Field base GuiInspectorField Class
+//-----------------------------------------------------------------------------
 
+class GuiInspectorType2DValue : public GuiInspectorField
+{
+private:
+   typedef GuiInspectorField Parent;
+protected:
+   GuiTextEditSliderCtrl* mCtrlX;
+   GuiControl* mLabelX;
+   GuiControl* mContainerX;
+   GuiTextEditSliderCtrl* mCtrlY;
+   GuiControl* mLabelY;
+   GuiControl* mContainerY;
+   GuiTextCtrl* mScriptValue;
+
+public:
+   GuiTextCtrl* mCaptionLabel;
+   GuiTextCtrl* mDimensionLabelX;
+   GuiTextCtrl* mDimensionLabelY;
+   GuiButtonCtrl* mCopyButton;
+   GuiButtonCtrl* mPasteButton;
+
+   virtual void constructEditControlChildren(GuiControl* retCtrl, S32 width);
+   virtual void updateValue();
+   virtual bool resize(const Point2I& newPosition, const Point2I& newExtent);
+   virtual bool updateRects();
+};
+
+//-----------------------------------------------------------------------------
+// Three Dimensional Field base GuiInspectorField Class
+//-----------------------------------------------------------------------------
+
+class GuiInspectorType3DValue : public GuiInspectorType2DValue
+{
+private:
+   typedef GuiInspectorType2DValue Parent;
+protected:
+   GuiTextEditSliderCtrl* mCtrlZ;
+   GuiControl* mLabelZ;
+   GuiControl* mContainerZ;
+
+public:
+   GuiTextCtrl* mDimensionLabelZ;
+
+   virtual void constructEditControlChildren(GuiControl* retCtrl, S32 width);
+   virtual void updateValue();
+   virtual bool resize(const Point2I& newPosition, const Point2I& newExtent);
+   virtual bool updateRects();
+};
+
+//-----------------------------------------------------------------------------
+// Four Dimensional Field base GuiInspectorField Class
+//-----------------------------------------------------------------------------
+
+class GuiInspectorType4DValue : public GuiInspectorType3DValue
+{
+private:
+   typedef GuiInspectorType3DValue Parent;
+protected:
+   GuiTextEditCtrl* mCtrlW;
+
+public:
+   GuiTextCtrl* mDimensionLabelW;
+
+   virtual void constructEditControlChildren(GuiControl* retCtrl, S32 width);
+   virtual void updateValue();
+   virtual bool resize(const Point2I& newPosition, const Point2I& newExtent);
+   virtual bool updateRects();
+};
+
+//-----------------------------------------------------------------------------
+// TypePoint2F GuiInspectorField Class
+//-----------------------------------------------------------------------------
+
+class GuiInspectorTypePoint2F : public GuiInspectorType2DValue
+{
+private:
+   typedef GuiInspectorType2DValue Parent;
+public:
+   DECLARE_CONOBJECT(GuiInspectorTypePoint2F);
+   static void consoleInit();
+   virtual GuiControl* constructEditControl();
+};
+
+class GuiInspectorTypePoint2I : public GuiInspectorTypePoint2F
+{
+private:
+   typedef GuiInspectorTypePoint2F Parent;
+public:
+   DECLARE_CONOBJECT(GuiInspectorTypePoint2I);
+   static void consoleInit();
+   virtual GuiControl* constructEditControl();
+};
+
+
+
+//-----------------------------------------------------------------------------
+// TypePoint3F GuiInspectorField Class
+//-----------------------------------------------------------------------------
+
+class GuiInspectorTypePoint3F : public GuiInspectorType3DValue
+{
+private:
+   typedef GuiInspectorType3DValue Parent;
+public:
+   DECLARE_CONOBJECT(GuiInspectorTypePoint3F);
+   static void consoleInit();
+   virtual GuiControl* constructEditControl();
+};
+
+//-----------------------------------------------------------------------------
+// TypeMatrixRotation GuiInspectorField Class
+//-----------------------------------------------------------------------------
+
+class GuiInspectorTypeMatrixRotation : public GuiInspectorType3DValue
+{
+private:
+   typedef GuiInspectorType3DValue Parent;
+   typedef GuiInspectorField Update;
+public:
+   AngAxisF angAx;
+   EulerF eulAng;
+   DECLARE_CONOBJECT(GuiInspectorTypeMatrixRotation);
+   static void consoleInit();
+   virtual GuiControl* constructEditControl();
+   virtual void constructEditControlChildren(GuiControl* retCtrl, S32 width);
+   virtual void updateValue();
+   virtual bool resize(const Point2I& newPosition, const Point2I& newExtent);
+   virtual bool updateRects();
+
+   void updateAng(AngAxisF newAngAx);
+   void updateEul(EulerF newEul);
+
+   virtual void updateData();
+   virtual StringTableEntry getValue();
+};
 #endif // _GUI_INSPECTOR_TYPES_H_

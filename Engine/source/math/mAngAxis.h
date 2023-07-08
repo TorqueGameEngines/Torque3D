@@ -45,6 +45,7 @@ class AngAxisF
    explicit AngAxisF( const QuatF &q );
 
    AngAxisF& set( const Point3F & _axis, F32 _angle );
+   AngAxisF& set( const EulerF & _axis);
    AngAxisF& set( const MatrixF & m );
    AngAxisF& set( const QuatF & q );
 
@@ -60,6 +61,7 @@ class AngAxisF
    static void RotateX(F32 angle, const Point3F & from, Point3F * to);
    static void RotateY(F32 angle, const Point3F & from, Point3F * to);
    static void RotateZ(F32 angle, const Point3F & from, Point3F * to);
+   EulerF toEuler() const;
 };
 
 //----------------------------------------------------------------------------

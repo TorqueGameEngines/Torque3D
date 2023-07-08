@@ -100,7 +100,7 @@ class GuiInspectorField : public GuiControl
       //Special edit field, variable type
       StringTableEntry mVariableType;
 
-      virtual void _registerEditControl( GuiControl *ctrl );
+      virtual void _registerEditControl(GuiControl* ctrl, StringTableEntry suffix = "");
       virtual void _executeSelectedCallback();
       
       void _setFieldDocs( StringTableEntry docs );

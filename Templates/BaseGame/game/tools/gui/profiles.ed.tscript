@@ -207,6 +207,26 @@ new GuiControlProfile (ToolsGuiTextBoldProfile : ToolsGuiTextProfile)
    fontType = "Arial Bold";
 };
 
+if( !isObject( ToolsGuiXDimensionText ) )
+new GuiControlProfile (ToolsGuiXDimensionText : ToolsGuiTextBoldProfile)
+{
+   fillColor = "255 129 123 120";
+};
+
+if( !isObject( ToolsGuiYDimensionText ) )
+new GuiControlProfile (ToolsGuiYDimensionText : ToolsGuiTextBoldProfile)
+{
+   fillColor = "129 255 123 120";
+};
+
+
+if( !isObject( ToolsGuiZDimensionText ) )
+new GuiControlProfile (ToolsGuiZDimensionText : ToolsGuiTextBoldProfile)
+{
+   fillColor = "123 129 255 120";
+};
+
+
 if( !isObject( ToolsGuiTextBoldCenterProfile ) )
 new GuiControlProfile (ToolsGuiTextBoldCenterProfile : ToolsGuiTextProfile)
 {

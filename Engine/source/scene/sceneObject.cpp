@@ -1531,6 +1531,19 @@ DefineEngineMethod( SceneObject, getEulerRotation, Point3F, (),,
    return euler;
 }
 
+DefineEngineMethod(SceneObject, setEulerRotation, void, (Point3F inRot), ,
+   "set Euler rotation of this object.\n"
+   "@set the orientation of the object in the form of rotations around the "
+   "X, Y and Z axes in degrees.\n")
+{
+   MatrixF curMat = object->getTransform();
+   Point3F curPos = curMat.getPosition();
+   Point3F curScale = curMat.getScale();
+   EulerF inRotRad = inRot * M_PI_F / 180.0;
+   curMat.set(inRotRad, curPos);
+   curMat.scale(curScale);
+   object->setTransform(curMat);
+}
 //-----------------------------------------------------------------------------
 
 DefineEngineMethod( SceneObject, getForwardVector, VectorF, (),,

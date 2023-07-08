@@ -45,9 +45,9 @@ void main()
   vec3 e = texture(mipTex, vec2(IN_uv1.x,     IN_uv1.y)).rgb;
   vec3 f = texture(mipTex, vec2(IN_uv1.x + x, IN_uv1.y)).rgb;
 
-  vec3 g = texture(mipTex, vec2(IN_uv1.x - x, IN_uv1 - y)).rgb;
-  vec3 h = texture(mipTex, vec2(IN_uv1.x,     IN_uv1 - y)).rgb;
-  vec3 i = texture(mipTex, vec2(IN_uv1.x + x, IN_uv1 - y)).rgb;
+  vec3 g = texture(mipTex, vec2(IN_uv1.x - x, IN_uv1.y - y)).rgb;
+  vec3 h = texture(mipTex, vec2(IN_uv1.x,     IN_uv1.y - y)).rgb;
+  vec3 i = texture(mipTex, vec2(IN_uv1.x + x, IN_uv1.y - y)).rgb;
 
   upSample.rgb = e*4.0;
   upSample.rgb += (b+d+f+h)*2.0;

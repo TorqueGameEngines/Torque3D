@@ -110,7 +110,7 @@ void EditManager::editorDisabled()
    for(SimGroupIterator itr(Sim::getRootGroup());  *itr; ++itr)
    {
       SimObject *so = *itr;
-      AssertFatal(so->isProperlyAdded() && !so->isRemoved(), "bad");
+      AssertFatal(so->isProperlyAdded() && !so->isRemoved(), avar("%s added but not removed!", so->getName()));
       so->onEditorDisable();
    }
 

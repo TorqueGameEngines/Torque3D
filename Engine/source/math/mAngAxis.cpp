@@ -34,6 +34,42 @@ AngAxisF & AngAxisF::set( const QuatF & q )
       axis.set(1.0f,0.0f,0.0f);
    return *this;
 }
+AngAxisF& AngAxisF::set(const EulerF& eul)
+{
+   F32 c1 = mCos(eul.y / 2);
+   F32 s1 = mSin(eul.y / 2);
+   F32 c2 = mCos(eul.z / 2);
+   F32 s2 = mSin(eul.z / 2);
+   F32 c3 = mCos(eul.x / 2);
+   F32 s3 = mSin(eul.x / 2);
+
+   F32 c1c2 = c1 * c2;
+   F32 s1s2 = s1 * s2;
+
+   F32 w = c1c2 * c3 - s1s2 * s3;
+   F32 x = c1c2 * s3 + s1s2 * c3;
+   F32 y = s1 * c2 * c3 + c1 * s2 * s3;
+   F32 z = c1 * s2 * c3 - s1 * c2 * s3;
+
+   angle = 2.0f * mAcos(w);
+
+   F32 norm = x * x + y * y + z * z;
+   if (norm < POINT_EPSILON)
+   {
+      axis.set(1.0f, 0.0f, 0.0f);
+   }
+   else
+   {
+      norm = mSqrt(norm);
+      x /= norm;
+      y /= norm;
+      z /= norm;
+   }
+
+   axis.set(x, y, z);
+
+   return *this;
+}
 
 AngAxisF & AngAxisF::set( const MatrixF & mat )
 {
@@ -93,3 +129,34 @@ void AngAxisF::RotateZ(F32 angle, const Point3F & from, Point3F * to)
    mat.mulV(from,to);
 }
 
+EulerF AngAxisF::toEuler() const
+{
+   EulerF r;
+
+   F32 s = mSin(angle);
+   F32 c = mCos(angle);
+   F32 invc = 1 - c;
+
+   if ((axis.x * axis.y * invc + axis.z * s) > (1 - POINT_EPSILON))
+   {
+      r.y = 2.0f * mAtan2(axis.x * mSin(angle / 2), mCos(angle / 2));
+      r.z = -M_HALFPI_F;
+      r.x = 0.f;
+      return r;
+   }
+
+   if ((axis.x * axis.y * invc + axis.z * s) < -(1 - POINT_EPSILON))
+   {
+      r.y = -2.0f * mAtan2(axis.x * mSin(angle / 2), mCos(angle / 2));
+      r.z = -M_HALFPI_F;
+      r.x = 0.f;
+      return r;
+   }
+
+   r.x = mAtan2(axis.x * s - axis.y * axis.z * invc, 1.0f - (axis.x * axis.x + axis.z * axis.z) * invc);
+   r.y = mAtan2(axis.y * s - axis.x * axis.z * invc, 1.0f - (axis.y * axis.y + axis.z * axis.z) * invc);
+   r.z = mAsin(axis.x * axis.y * invc + axis.z * s);
+
+   return r;
+
+}

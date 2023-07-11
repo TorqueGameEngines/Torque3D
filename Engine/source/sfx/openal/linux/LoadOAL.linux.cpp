@@ -43,6 +43,15 @@ ALboolean LoadOAL10Library(char *szOALFullPathName, LPOPENALFNTABLE lpOALFnTable
 		openal_library = dlopen(szOALFullPathName, RTLD_NOW);
 	else
 	{
+#ifdef TORQUE_DEBUG
+       openal_library = dlopen("libopenald.so.1", RTLD_NOW);
+
+       // If the .1 library is not found, try the normal filename
+       if (openal_library == NULL)
+       {
+          openal_library = dlopen("libopenald.so", RTLD_NOW);
+       }
+#else
 		openal_library = dlopen("libopenal.so.1", RTLD_NOW);
 		
 		// If the .1 library is not found, try the normal filename
@@ -50,6 +59,7 @@ ALboolean LoadOAL10Library(char *szOALFullPathName, LPOPENALFNTABLE lpOALFnTable
 		{
 			openal_library = dlopen("libopenal.so", RTLD_NOW);
 		}
+#endif
 	}
 
     if (openal_library == NULL) {

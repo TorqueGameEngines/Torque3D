@@ -443,7 +443,7 @@ TEST(Script, ForEachLoop)
          %count = 0;
          foreach (%obj in %this)
          {
-            if (%obj.getName() $= "A")
+            if (%obj.getName() $= "A_FEC")
                continue;
 
              %count++;
@@ -454,7 +454,7 @@ TEST(Script, ForEachLoop)
       function a()
       {
          %set = new SimSet();
-         %set.add(new SimObject(A));
+         %set.add(new SimObject(A_FEC));
          %set.add(new SimObject());
          %set.add(new SimObject());
 
@@ -471,7 +471,7 @@ TEST(Script, ForEachLoop)
       {
          foreach (%obj in %this)
          {
-            if (%obj.getName() $= "A")
+            if (%obj.getName() $= "A_FER")
                return 76;
          }
          return 0;
@@ -480,7 +480,7 @@ TEST(Script, ForEachLoop)
       function a()
       {
          %set = new SimSet();
-         %set.add(new SimObject(A));
+         %set.add(new SimObject(A_FER));
          %set.add(new SimObject());
          %set.add(new SimObject());
 
@@ -499,7 +499,7 @@ TEST(Script, ForEachLoop)
          {
             foreach (%innerObj in %this)
             {
-               if (%innerObj.getName() $= "A")
+               if (%innerObj.getName() $= "A_FENR")
                   return 42;
             }
          }
@@ -509,7 +509,7 @@ TEST(Script, ForEachLoop)
       function a()
       {
          %set = new SimSet();
-         %set.add(new SimObject(A));
+         %set.add(new SimObject(A_FENR));
          %set.add(new SimObject());
          %set.add(new SimObject());
 

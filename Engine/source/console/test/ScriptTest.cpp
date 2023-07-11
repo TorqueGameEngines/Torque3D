@@ -454,7 +454,7 @@ TEST(Script, ForEachLoop)
       function a()
       {
          %set = new SimSet();
-         %set.add(new SimObject(A));
+         %set.add(new SimObject(A_FEC));
          %set.add(new SimObject());
          %set.add(new SimObject());
 
@@ -480,7 +480,7 @@ TEST(Script, ForEachLoop)
       function a()
       {
          %set = new SimSet();
-         %set.add(new SimObject(A));
+         %set.add(new SimObject(A_FER));
          %set.add(new SimObject());
          %set.add(new SimObject());
 
@@ -509,7 +509,7 @@ TEST(Script, ForEachLoop)
       function a()
       {
          %set = new SimSet();
-         %set.add(new SimObject(A));
+         %set.add(new SimObject(A_FENR));
          %set.add(new SimObject());
          %set.add(new SimObject());
 

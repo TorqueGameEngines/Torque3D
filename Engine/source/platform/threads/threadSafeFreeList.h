@@ -85,7 +85,7 @@ class ThreadSafeFreeList
       {
          #ifdef TORQUE_DEBUG
          AssertWarn( mNumNodesTotal == mNumNodesFree,
-            "ThreadSafeFreeList::~ThreadSafeFreeList() - still got live instances" );
+            avar("ThreadSafeFreeList::~ThreadSafeFreeList() - still got live instances:[%i/%i]", mNumNodesTotal,mNumNodesFree) );
          #endif
 
          // Destroy remaining nodes.  Not synchronized.  We assume all

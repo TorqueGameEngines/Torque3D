@@ -91,18 +91,6 @@ public:
             ValueRef val = new Value(i, tick);
             mDeque.pushBack(val);
          }
-
-         // WORKAROUND: due to a bug in the Deque, we lose an item, and thus the test will loop forever. We currently
-         //             don't have a timeout solution, so instead push som extra elements just to make sure Consumer
-         //             doesn't get stuck.
-         for(U32 i = mValues.size(); i < mValues.size() + 5; i++)
-         {
-            U32 tick = Platform::getRealMilliseconds();
-
-            ValueRef val = new Value(i, tick);
-
-            mDeque.pushBack(val);
-         }
       }
    };
 
@@ -115,10 +103,27 @@ public:
 
       virtual void run(void*)
       {
-         for(U32 i = 0; i < mValues.size(); i++)
+         S32 timeOut = mValues.size() * 32;
+         U32 endTime = Platform::getRealMilliseconds() + timeOut;
+
+         for (U32 i = 0; i < mValues.size(); i++)
          {
             ValueRef value;
-            while(!mDeque.tryPopFront(value));
+            bool timedOut = false;
+            while (!mDeque.tryPopFront(value))
+            {
+               if (timeOut && Platform::getRealMilliseconds() >= endTime)
+               {
+                  timedOut = true;
+                  break;
+               }
+            };
+
+            ASSERT_FALSE(timedOut)
+               << "consumer thread timed out!";
+
+            if (timedOut) return;
+
             EXPECT_EQ(i, value->mIndex);
             EXPECT_EQ(value->mTick, mValues[i]);
          }

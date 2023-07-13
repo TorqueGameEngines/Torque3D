@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -150,8 +150,9 @@ UIKit_GL_CreateContext(_THIS, SDL_Window * window)
          * versions. */
         EAGLRenderingAPI api = major;
 
-        /* iOS currently doesn't support GLES >3.0. */
-        if (major > 3 || (major == 3 && minor > 0)) {
+        /* iOS currently doesn't support GLES >3.0. iOS 6 also only supports up
+         * to GLES 2.0. */
+        if (major > 3 || (major == 3 && (minor > 0 || !UIKit_IsSystemVersionAtLeast(7.0)))) {
             SDL_SetError("OpenGL ES %d.%d context could not be created", major, minor);
             return NULL;
         }
@@ -169,7 +170,11 @@ UIKit_GL_CreateContext(_THIS, SDL_Window * window)
             /* Set the scale to the natural scale factor of the screen - the
              * backing dimensions of the OpenGL view will match the pixel
              * dimensions of the screen rather than the dimensions in points. */
-            scale = data.uiwindow.screen.nativeScale;
+            if ([data.uiwindow.screen respondsToSelector:@selector(nativeScale)]) {
+                scale = data.uiwindow.screen.nativeScale;
+            } else {
+                scale = data.uiwindow.screen.scale;
+            }
         }
 
         context = [[SDLEAGLContext alloc] initWithAPI:api sharegroup:sharegroup];

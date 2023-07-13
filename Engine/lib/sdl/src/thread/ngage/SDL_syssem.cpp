@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -119,7 +119,8 @@ SDL_SemWaitTimeout(SDL_sem * sem, Uint32 timeout)
 {
     if (! sem)
     {
-        return SDL_SetError("Passed a NULL sem");
+        SDL_SetError("Passed a NULL sem");
+        return -1;
     }
 
     if (timeout == SDL_MUTEX_MAXWAIT)
@@ -181,7 +182,8 @@ SDL_SemPost(SDL_sem * sem)
 {
     if (! sem)
     {
-        return SDL_SetError("Passed a NULL sem.");
+        SDL_SetError("Passed a NULL sem.");
+        return -1;
     }
     sem->count++;
     RSemaphore sema;

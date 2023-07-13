@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -23,7 +23,6 @@
 #if SDL_VIDEO_DRIVER_RISCOS
 
 #include "../SDL_sysvideo.h"
-#include "../../events/SDL_mouse_c.h"
 
 #include "SDL_riscosvideo.h"
 #include "SDL_riscosmodes.h"
@@ -305,8 +304,8 @@ RISCOS_SetDisplayMode(_THIS, SDL_VideoDisplay * display, SDL_DisplayMode * mode)
         _kernel_oswrch(disable_cursor[i]);
     }
 
-    /* Update cursor visibility, since it may have been disabled by the mode change. */
-    SDL_SetCursor(NULL);
+    /* Turn the mouse pointer on */
+    /* _kernel_osbyte(106, 1, 0); */
 
     return 0;
 }

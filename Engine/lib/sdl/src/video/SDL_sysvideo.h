@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -149,12 +149,6 @@ struct SDL_SysWMinfo;
 /* Define the SDL video driver structure */
 #define _THIS   SDL_VideoDevice *_this
 
-/* Video device flags */
-typedef enum {
-    VIDEO_DEVICE_QUIRK_DISABLE_DISPLAY_MODE_SWITCHING       = 0x01,
-    VIDEO_DEVICE_QUIRK_DISABLE_UNSET_FULLSCREEN_ON_MINIMIZE = 0x02,
-} DeviceQuirkFlags;
-
 struct SDL_VideoDevice
 {
     /* * * */
@@ -227,7 +221,6 @@ struct SDL_VideoDevice
     void (*SetWindowMinimumSize) (_THIS, SDL_Window * window);
     void (*SetWindowMaximumSize) (_THIS, SDL_Window * window);
     int (*GetWindowBordersSize) (_THIS, SDL_Window * window, int *top, int *left, int *bottom, int *right);
-    void (*GetWindowSizeInPixels)(_THIS, SDL_Window *window, int *w, int *h);
     int (*SetWindowOpacity) (_THIS, SDL_Window * window, float opacity);
     int (*SetWindowModalFor) (_THIS, SDL_Window * modal_window, SDL_Window * parent_window);
     int (*SetWindowInputFocus) (_THIS, SDL_Window * window);
@@ -314,7 +307,7 @@ struct SDL_VideoDevice
     /* Text input */
     void (*StartTextInput) (_THIS);
     void (*StopTextInput) (_THIS);
-    void (*SetTextInputRect) (_THIS, const SDL_Rect *rect);
+    void (*SetTextInputRect) (_THIS, SDL_Rect *rect);
     void (*ClearComposition) (_THIS);
     SDL_bool (*IsTextInputShown) (_THIS);
 
@@ -328,9 +321,6 @@ struct SDL_VideoDevice
     int (*SetClipboardText) (_THIS, const char *text);
     char * (*GetClipboardText) (_THIS);
     SDL_bool (*HasClipboardText) (_THIS);
-    int (*SetPrimarySelectionText) (_THIS, const char *text);
-    char * (*GetPrimarySelectionText) (_THIS);
-    SDL_bool (*HasPrimarySelectionText) (_THIS);
 
     /* MessageBox */
     int (*ShowMessageBox) (_THIS, const SDL_MessageBoxData *messageboxdata, int *buttonid);
@@ -356,9 +346,8 @@ struct SDL_VideoDevice
     Uint8 window_magic;
     Uint32 next_object_id;
     char *clipboard_text;
-    char *primary_selection_text;
     SDL_bool setting_display_mode;
-    Uint32 quirk_flags;
+    SDL_bool disable_display_mode_switching;
 
     /* * * */
     /* Data used by the GL drivers */
@@ -379,7 +368,6 @@ struct SDL_VideoDevice
         int stereo;
         int multisamplebuffers;
         int multisamplesamples;
-        int floatbuffers;
         int accelerated;
         int major_version;
         int minor_version;
@@ -426,11 +414,11 @@ struct SDL_VideoDevice
     /* Data private to this driver */
     void *driverdata;
     struct SDL_GLDriverData *gl_data;
-
+    
 #if SDL_VIDEO_OPENGL_EGL
     struct SDL_EGL_VideoData *egl_data;
 #endif
-
+    
 #if SDL_VIDEO_OPENGL_ES || SDL_VIDEO_OPENGL_ES2
     struct SDL_PrivateGLESData *gles_data;
 #endif
@@ -444,7 +432,7 @@ typedef struct VideoBootStrap
 {
     const char *name;
     const char *desc;
-    SDL_VideoDevice *(*create) (void);
+    SDL_VideoDevice *(*create) (int devindex);
 } VideoBootStrap;
 
 /* Not all of these are available in a given build. Use #ifdefs, etc. */
@@ -457,16 +445,13 @@ extern VideoBootStrap HAIKU_bootstrap;
 extern VideoBootStrap PND_bootstrap;
 extern VideoBootStrap UIKIT_bootstrap;
 extern VideoBootStrap Android_bootstrap;
-extern VideoBootStrap PS2_bootstrap;
 extern VideoBootStrap PSP_bootstrap;
 extern VideoBootStrap VITA_bootstrap;
 extern VideoBootStrap RISCOS_bootstrap;
-extern VideoBootStrap N3DS_bootstrap;
 extern VideoBootStrap RPI_bootstrap;
 extern VideoBootStrap KMSDRM_bootstrap;
 extern VideoBootStrap KMSDRM_LEGACY_bootstrap;
 extern VideoBootStrap DUMMY_bootstrap;
-extern VideoBootStrap DUMMY_evdev_bootstrap;
 extern VideoBootStrap Wayland_bootstrap;
 extern VideoBootStrap NACL_bootstrap;
 extern VideoBootStrap VIVANTE_bootstrap;
@@ -517,10 +502,6 @@ extern SDL_bool SDL_ShouldAllowTopmost(void);
 extern float SDL_ComputeDiagonalDPI(int hpix, int vpix, float hinches, float vinches);
 
 extern void SDL_ToggleDragAndDropSupport(void);
-
-extern int SDL_GetPointDisplayIndex(const SDL_Point * point);
-
-extern int SDL_GL_SwapWindowWithResult(SDL_Window * window);
 
 #endif /* SDL_sysvideo_h_ */
 

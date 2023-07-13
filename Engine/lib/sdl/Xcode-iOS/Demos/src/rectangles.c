@@ -58,7 +58,7 @@ main(int argc, char *argv[])
 
     /* create window and renderer */
     window = SDL_CreateWindow(NULL, 0, 0, 320, 480, SDL_WINDOW_ALLOW_HIGHDPI);
-    if (!window) {
+    if (window == 0) {
         fatalError("Could not initialize Window");
     }
     renderer = SDL_CreateRenderer(window, -1, 0);

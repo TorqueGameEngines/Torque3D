@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -30,12 +30,11 @@
 
 #include <pipewire/extensions/metadata.h>
 #include <spa/param/audio/format-utils.h>
-#include <spa/utils/json.h>
 
 /*
  * The following keys are defined for compatability when building against older versions of Pipewire
- * prior to their introduction and can be removed if the minimum required Pipewire build version is
- * increased to or beyond their point of introduction.
+ * prior to their introduction and can be removed if the minimum required Pipewire version is increased
+ * to or beyond their point of introduction.
  */
 
 /*
@@ -55,14 +54,6 @@
 #endif
 
 /*
- * Introduced in 0.3.44
- * Taken from src/pipewire/keys.h
- */
-#ifndef PW_KEY_TARGET_OBJECT
-#define PW_KEY_TARGET_OBJECT "target.object"
-#endif
-
-/*
  * This seems to be a sane lower limit as Pipewire
  * uses it in several of it's own modules.
  */
@@ -71,7 +62,6 @@
 
 #define PW_POD_BUFFER_LENGTH         1024
 #define PW_THREAD_NAME_BUFFER_LENGTH 128
-#define PW_MAX_IDENTIFIER_LENGTH     256
 
 enum PW_READY_FLAGS
 {
@@ -86,8 +76,7 @@ enum PW_READY_FLAGS
 static SDL_bool pipewire_initialized = SDL_FALSE;
 
 /* Pipewire entry points */
-static const char *(*PIPEWIRE_pw_get_library_version)(void);
-static void (*PIPEWIRE_pw_init)(int *, char ***);
+static void (*PIPEWIRE_pw_init)(int *, char **);
 static void (*PIPEWIRE_pw_deinit)(void);
 static struct pw_thread_loop *(*PIPEWIRE_pw_thread_loop_new)(const char *, const struct spa_dict *);
 static void (*PIPEWIRE_pw_thread_loop_destroy)(struct pw_thread_loop *);
@@ -116,10 +105,6 @@ static int (*PIPEWIRE_pw_stream_queue_buffer)(struct pw_stream *, struct pw_buff
 static struct pw_properties *(*PIPEWIRE_pw_properties_new)(const char *, ...)SPA_SENTINEL;
 static int (*PIPEWIRE_pw_properties_set)(struct pw_properties *, const char *, const char *);
 static int (*PIPEWIRE_pw_properties_setf)(struct pw_properties *, const char *, const char *, ...) SPA_PRINTF_FUNC(3, 4);
-
-static int         pipewire_version_major;
-static int         pipewire_version_minor;
-static int         pipewire_version_patch;
 
 #ifdef SDL_AUDIO_DRIVER_PIPEWIRE_DYNAMIC
 
@@ -182,7 +167,6 @@ unload_pipewire_library()
 static int
 load_pipewire_syms()
 {
-    SDL_PIPEWIRE_SYM(pw_get_library_version);
     SDL_PIPEWIRE_SYM(pw_init);
     SDL_PIPEWIRE_SYM(pw_deinit);
     SDL_PIPEWIRE_SYM(pw_thread_loop_new);
@@ -214,31 +198,13 @@ load_pipewire_syms()
     return 0;
 }
 
-SDL_FORCE_INLINE SDL_bool
-pipewire_version_at_least(int major, int minor, int patch)
-{
-    return (pipewire_version_major >= major) &&
-           (pipewire_version_major > major || pipewire_version_minor >= minor) &&
-           (pipewire_version_major > major || pipewire_version_minor > minor || pipewire_version_patch >= patch);
-}
-
 static int
 init_pipewire_library()
 {
     if (!load_pipewire_library()) {
         if (!load_pipewire_syms()) {
-            int nargs;
-            const char *version = PIPEWIRE_pw_get_library_version();
-            nargs = SDL_sscanf(version, "%d.%d.%d", &pipewire_version_major, &pipewire_version_minor, &pipewire_version_patch);
-            if (nargs < 3) {
-                return -1;
-            }
-
-            /* SDL can build against 0.3.20, but requires 0.3.24 */
-            if (pipewire_version_at_least(0, 3, 24)) {
-                PIPEWIRE_pw_init(NULL, NULL);
-                return 0;
-            }
+            PIPEWIRE_pw_init(NULL, NULL);
+            return 0;
         }
     }
 
@@ -257,9 +223,8 @@ struct node_object
 {
     struct spa_list link;
 
-    Uint32   id;
-    int      seq;
-    SDL_bool persist;
+    Uint32 id;
+    int    seq;
 
     /*
      * NOTE: If used, this is *must* be allocated with SDL_malloc() or similar
@@ -284,10 +249,7 @@ struct io_node
     SDL_bool      is_capture;
     SDL_AudioSpec spec;
 
-    const char *name; /* Friendly name */
-    const char *path; /* OS identifier (i.e. ALSA endpoint) */
-
-    char buf[]; /* Buffer to hold the name and path strings. */
+    char name[];
 };
 
 /* The global hotplug thread and associated objects. */
@@ -303,8 +265,8 @@ static int                    hotplug_init_seq_val;
 static SDL_bool               hotplug_init_complete;
 static SDL_bool               hotplug_events_enabled;
 
-static char *pipewire_default_sink_id   = NULL;
-static char *pipewire_default_source_id = NULL;
+static Uint32 pipewire_default_sink_id   = SPA_ID_INVALID;
+static Uint32 pipewire_default_source_id = SPA_ID_INVALID;
 
 /* The active node list */
 static SDL_bool
@@ -362,10 +324,10 @@ io_list_sort()
 
     /* Find and move the default nodes to the beginning of the list */
     spa_list_for_each_safe (n, temp, &hotplug_io_list, link) {
-        if (pipewire_default_sink_id != NULL && SDL_strcmp(n->path, pipewire_default_sink_id) == 0) {
+        if (n->id == pipewire_default_sink_id) {
             default_sink = n;
             spa_list_remove(&n->link);
-        } else if (pipewire_default_source_id != NULL && SDL_strcmp(n->path, pipewire_default_source_id) == 0) {
+        } else if (n->id == pipewire_default_source_id) {
             default_source = n;
             spa_list_remove(&n->link);
         }
@@ -389,30 +351,6 @@ io_list_clear()
         spa_list_remove(&n->link);
         SDL_free(n);
     }
-}
-
-static struct io_node*
-io_list_get_by_id(Uint32 id)
-{
-    struct io_node *n, *temp;
-    spa_list_for_each_safe (n, temp, &hotplug_io_list, link) {
-        if (n->id == id) {
-            return n;
-        }
-    }
-    return NULL;
-}
-
-static struct io_node*
-io_list_get_by_path(char *path)
-{
-    struct io_node *n, *temp;
-    spa_list_for_each_safe (n, temp, &hotplug_io_list, link) {
-        if (SDL_strcmp(n->path, path) == 0) {
-            return n;
-        }
-    }
-    return NULL;
 }
 
 static void
@@ -524,7 +462,7 @@ core_events_metadata_callback(void *object, uint32_t id, int seq)
 {
     struct node_object *node = object;
 
-    if (id == PW_ID_CORE && seq == node->seq && !node->persist) {
+    if (id == PW_ID_CORE && seq == node->seq) {
         node_object_destroy(node);
     }
 }
@@ -653,47 +591,17 @@ node_event_param(void *object, int seq, uint32_t id, uint32_t index, uint32_t ne
 static const struct pw_node_events interface_node_events = { PW_VERSION_NODE_EVENTS, .info = node_event_info,
                                                              .param = node_event_param };
 
-static char*
-get_name_from_json(const char *json)
-{
-    struct spa_json parser[2];
-    char key[7]; /* "name" */
-    char value[PW_MAX_IDENTIFIER_LENGTH];
-    spa_json_init(&parser[0], json, SDL_strlen(json));
-    if (spa_json_enter_object(&parser[0], &parser[1]) <= 0) {
-        /* Not actually JSON */
-        return NULL;
-    }
-    if (spa_json_get_string(&parser[1], key, sizeof(key)) <= 0) {
-        /* Not actually a key/value pair */
-        return NULL;
-    }
-    if (spa_json_get_string(&parser[1], value, sizeof(value)) <= 0) {
-        /* Somehow had a key with no value? */
-        return NULL;
-    }
-    return SDL_strdup(value);
-}
-
 /* Metadata node callback */
 static int
 metadata_property(void *object, Uint32 subject, const char *key, const char *type, const char *value)
 {
-    struct node_object *node = object;
-
     if (subject == PW_ID_CORE && key != NULL && value != NULL) {
+        Uint32 val = SDL_atoi(value);
+
         if (!SDL_strcmp(key, "default.audio.sink")) {
-            if (pipewire_default_sink_id != NULL) {
-                SDL_free(pipewire_default_sink_id);
-            }
-            pipewire_default_sink_id = get_name_from_json(value);
-            node->persist = SDL_TRUE;
+            pipewire_default_sink_id = val;
         } else if (!SDL_strcmp(key, "default.audio.source")) {
-            if (pipewire_default_source_id != NULL) {
-                SDL_free(pipewire_default_source_id);
-            }
-            pipewire_default_source_id = get_name_from_json(value);
-            node->persist = SDL_TRUE;
+            pipewire_default_source_id = val;
         }
     }
 
@@ -715,11 +623,9 @@ registry_event_global_callback(void *object, uint32_t id, uint32_t permissions, 
 
         if (media_class) {
             const char     *node_desc;
-            const char     *node_path;
             struct io_node *io;
             SDL_bool        is_capture;
-            int             desc_buffer_len;
-            int             path_buffer_len;
+            int             str_buffer_len;
 
             /* Just want sink and capture */
             if (!SDL_strcasecmp(media_class, "Audio/Sink")) {
@@ -731,9 +637,8 @@ registry_event_global_callback(void *object, uint32_t id, uint32_t permissions, 
             }
 
             node_desc = spa_dict_lookup(props, PW_KEY_NODE_DESCRIPTION);
-            node_path = spa_dict_lookup(props, PW_KEY_NODE_NAME);
 
-            if (node_desc && node_path) {
+            if (node_desc) {
                 node = node_object_new(id, type, version, &interface_node_events, &interface_core_events);
                 if (node == NULL) {
                     SDL_SetError("Pipewire: Failed to allocate interface node");
@@ -741,9 +646,8 @@ registry_event_global_callback(void *object, uint32_t id, uint32_t permissions, 
                 }
 
                 /* Allocate and initialize the I/O node information struct */
-                desc_buffer_len = SDL_strlen(node_desc) + 1;
-                path_buffer_len = SDL_strlen(node_path) + 1;
-                node->userdata = io = SDL_calloc(1, sizeof(struct io_node) + desc_buffer_len + path_buffer_len);
+                str_buffer_len = SDL_strlen(node_desc) + 1;
+                node->userdata = io = SDL_calloc(1, sizeof(struct io_node) + str_buffer_len);
                 if (io == NULL) {
                     node_object_destroy(node);
                     SDL_OutOfMemory();
@@ -754,10 +658,7 @@ registry_event_global_callback(void *object, uint32_t id, uint32_t permissions, 
                 io->id          = id;
                 io->is_capture  = is_capture;
                 io->spec.format = AUDIO_F32; /* Pipewire uses floats internally, other formats require conversion. */
-                io->name        = io->buf;
-                io->path        = io->buf + desc_buffer_len;
-                SDL_strlcpy(io->buf, node_desc, desc_buffer_len);
-                SDL_strlcpy(io->buf + desc_buffer_len, node_path, path_buffer_len);
+                SDL_strlcpy(io->name, node_desc, str_buffer_len);
 
                 /* Update sync points */
                 hotplug_core_sync(node);
@@ -843,14 +744,8 @@ hotplug_loop_destroy()
     hotplug_init_complete  = SDL_FALSE;
     hotplug_events_enabled = SDL_FALSE;
 
-    if (pipewire_default_sink_id != NULL) {
-        SDL_free(pipewire_default_sink_id);
-        pipewire_default_sink_id = NULL;
-    }
-    if (pipewire_default_source_id != NULL) {
-        SDL_free(pipewire_default_source_id);
-        pipewire_default_source_id = NULL;
-    }
+    pipewire_default_sink_id   = SPA_ID_INVALID;
+    pipewire_default_source_id = SPA_ID_INVALID;
 
     if (hotplug_registry) {
         PIPEWIRE_pw_proxy_destroy((struct pw_proxy *)hotplug_registry);
@@ -1180,7 +1075,7 @@ PIPEWIRE_OpenDevice(_THIS, const char *devname)
     struct SDL_PrivateAudioData *priv;
     struct pw_properties        *props;
     const char                  *app_name, *stream_name, *stream_role, *error;
-    Uint32                       node_id   = this->handle == NULL ? PW_ID_ANY : PW_HANDLE_TO_ID(this->handle);
+    const Uint32                 node_id   = this->handle == NULL ? PW_ID_ANY : PW_HANDLE_TO_ID(this->handle);
     SDL_bool                     iscapture = this->iscapture;
     int                          res;
 
@@ -1235,8 +1130,17 @@ PIPEWIRE_OpenDevice(_THIS, const char *devname)
         return SDL_SetError("Pipewire: Failed to create stream loop (%i)", errno);
     }
 
-    /* Load the realtime module so Pipewire can set the loop thread to the appropriate priority. */
-    props = PIPEWIRE_pw_properties_new(PW_KEY_CONFIG_NAME, "client-rt.conf", NULL);
+    /*
+     * Load the realtime module so Pipewire can set the loop thread to the appropriate priority.
+     *
+     * NOTE: Pipewire versions 0.3.22 or higher require the PW_KEY_CONFIG_NAME property (with client-rt.conf),
+     *       lower versions require explicitly specifying the 'rtkit' module.
+     *
+     *       PW_KEY_CONTEXT_PROFILE_MODULES is deprecated and can be safely removed if the minimum required
+     *       Pipewire version is increased to 0.3.22 or higher at some point.
+     */
+    props = PIPEWIRE_pw_properties_new(PW_KEY_CONFIG_NAME, "client-rt.conf",
+                                       PW_KEY_CONTEXT_PROFILE_MODULES, "default,rtkit", NULL);
     if (props == NULL) {
         return SDL_SetError("Pipewire: Failed to create stream context properties (%i)", errno);
     }
@@ -1260,26 +1164,6 @@ PIPEWIRE_OpenDevice(_THIS, const char *devname)
     PIPEWIRE_pw_properties_setf(props, PW_KEY_NODE_LATENCY, "%u/%i", this->spec.samples, this->spec.freq);
     PIPEWIRE_pw_properties_setf(props, PW_KEY_NODE_RATE, "1/%u", this->spec.freq);
     PIPEWIRE_pw_properties_set(props, PW_KEY_NODE_ALWAYS_PROCESS, "true");
-
-    /*
-     * Pipewire 0.3.44 introduced PW_KEY_TARGET_OBJECT that takes either a path
-     * (PW_KEY_NODE_NAME) or node serial number (PE_KEY_OBJECT_SERIAL) to connect
-     * the stream to its target. The target_id parameter in pw_stream_connect() is
-     * now deprecated and should always be PW_ID_ANY.
-     */
-    if (pipewire_version_at_least(0, 3, 44)) {
-        if (node_id != PW_ID_ANY) {
-            const struct io_node *node;
-
-            PIPEWIRE_pw_thread_loop_lock(hotplug_loop);
-            if ((node = io_list_get_by_id(node_id))) {
-                PIPEWIRE_pw_properties_set(props, PW_KEY_TARGET_OBJECT, node->path);
-            }
-            PIPEWIRE_pw_thread_loop_unlock(hotplug_loop);
-
-            node_id = PW_ID_ANY;
-        }
-    }
 
     /* Create the new stream */
     priv->stream = PIPEWIRE_pw_stream_new_simple(PIPEWIRE_pw_thread_loop_get_loop(priv->loop), stream_name, props,
@@ -1344,45 +1228,6 @@ static void PIPEWIRE_CloseDevice(_THIS)
     SDL_free(this->hidden);
 }
 
-static int
-PIPEWIRE_GetDefaultAudioInfo(char **name, SDL_AudioSpec *spec, int iscapture)
-{
-    struct io_node *node;
-    char *target;
-    int ret = 0;
-
-    PIPEWIRE_pw_thread_loop_lock(hotplug_loop);
-
-    if (iscapture) {
-        if (pipewire_default_source_id == NULL) {
-            ret = SDL_SetError("PipeWire could not find a default source");
-            goto failed;
-        }
-        target = pipewire_default_source_id;
-    } else {
-        if (pipewire_default_sink_id == NULL) {
-            ret = SDL_SetError("PipeWire could not find a default sink");
-            goto failed;
-        }
-        target = pipewire_default_sink_id;
-    }
-
-    node = io_list_get_by_path(target);
-    if (node == NULL) {
-        ret = SDL_SetError("PipeWire device list is out of sync with defaults");
-        goto failed;
-    }
-
-    if (name != NULL) {
-        *name = SDL_strdup(node->name);
-    }
-    SDL_copyp(spec, &node->spec);
-
-failed:
-    PIPEWIRE_pw_thread_loop_unlock(hotplug_loop);
-    return ret;
-}
-
 static void
 PIPEWIRE_Deinitialize()
 {
@@ -1410,15 +1255,13 @@ PIPEWIRE_Init(SDL_AudioDriverImpl *impl)
     }
 
     /* Set the function pointers */
-    impl->DetectDevices       = PIPEWIRE_DetectDevices;
-    impl->OpenDevice          = PIPEWIRE_OpenDevice;
-    impl->CloseDevice         = PIPEWIRE_CloseDevice;
-    impl->Deinitialize        = PIPEWIRE_Deinitialize;
-    impl->GetDefaultAudioInfo = PIPEWIRE_GetDefaultAudioInfo;
+    impl->DetectDevices = PIPEWIRE_DetectDevices;
+    impl->OpenDevice    = PIPEWIRE_OpenDevice;
+    impl->CloseDevice   = PIPEWIRE_CloseDevice;
+    impl->Deinitialize  = PIPEWIRE_Deinitialize;
 
     impl->HasCaptureSupport         = SDL_TRUE;
     impl->ProvidesOwnCallbackThread = SDL_TRUE;
-    impl->SupportsNonPow2Samples    = SDL_TRUE;
 
     return SDL_TRUE;
 }

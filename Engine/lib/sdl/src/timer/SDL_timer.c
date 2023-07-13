@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -375,15 +375,11 @@ SDL_RemoveTimer(SDL_TimerID id)
 #else
 
 #include <emscripten/emscripten.h>
-#include <emscripten/eventloop.h>
 
 typedef struct _SDL_TimerMap
 {
     int timerID;
     int timeoutID;
-    Uint32 interval;
-    SDL_TimerCallback callback;
-    void *param;
     struct _SDL_TimerMap *next;
 } SDL_TimerMap;
 
@@ -395,14 +391,18 @@ typedef struct {
 static SDL_TimerData SDL_timer_data;
 
 static void
-SDL_Emscripten_TimerHelper(void *userdata)
+SDL_Emscripten_TimerHelper(SDL_TimerMap *entry, Uint32 interval, SDL_TimerCallback callback, void *param)
 {
-    SDL_TimerMap *entry = (SDL_TimerMap*)userdata;
-    entry->interval = entry->callback(entry->interval, entry->param);
-    if (entry->interval > 0) {
-        entry->timeoutID = emscripten_set_timeout(&SDL_Emscripten_TimerHelper,
-                                                  entry->interval,
-                                                  entry);
+    Uint32 new_timeout;
+
+    new_timeout = callback(interval, param);
+
+    if (new_timeout != 0) {
+        entry->timeoutID = EM_ASM_INT({
+            return Browser.safeSetTimeout(function() {
+                dynCall('viiii', $0, [$1, $2, $3, $4]);
+            }, $2);
+        }, &SDL_Emscripten_TimerHelper, entry, interval, callback, param);
     }
 }
 
@@ -437,13 +437,12 @@ SDL_AddTimer(Uint32 interval, SDL_TimerCallback callback, void *param)
         return 0;
     }
     entry->timerID = ++data->nextID;
-    entry->callback = callback;
-    entry->param = param;
-    entry->interval = interval;
 
-    entry->timeoutID = emscripten_set_timeout(&SDL_Emscripten_TimerHelper,
-                                              entry->interval,
-                                              entry);
+    entry->timeoutID = EM_ASM_INT({
+        return Browser.safeSetTimeout(function() {
+            dynCall('viiii', $0, [$1, $2, $3, $4]);
+        }, $2);
+    }, &SDL_Emscripten_TimerHelper, entry, interval, callback, param);
 
     entry->next = data->timermap;
     data->timermap = entry;
@@ -471,7 +470,9 @@ SDL_RemoveTimer(SDL_TimerID id)
     }
 
     if (entry) {
-        emscripten_clear_timeout(entry->timeoutID);
+        EM_ASM_({
+            window.clearTimeout($0);
+        }, entry->timeoutID);
         SDL_free(entry);
 
         return SDL_TRUE;

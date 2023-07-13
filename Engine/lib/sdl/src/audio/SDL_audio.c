@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -27,7 +27,6 @@
 #include "SDL_audio_c.h"
 #include "SDL_sysaudio.h"
 #include "../thread/SDL_systhread.h"
-#include "../SDL_utils_c.h"
 
 #define _THIS SDL_AudioDevice *_this
 
@@ -96,17 +95,11 @@ static const AudioBootStrap *const bootstrap[] = {
 #if SDL_AUDIO_DRIVER_ANDROID
     &ANDROIDAUDIO_bootstrap,
 #endif
-#if SDL_AUDIO_DRIVER_PS2
-    &PS2AUDIO_bootstrap,
-#endif
 #if SDL_AUDIO_DRIVER_PSP
     &PSPAUDIO_bootstrap,
 #endif
 #if SDL_AUDIO_DRIVER_VITA
     &VITAAUD_bootstrap,
-#endif
-#if SDL_AUDIO_DRIVER_N3DS
-    &N3DSAUDIO_bootstrap,
 #endif
 #if SDL_AUDIO_DRIVER_EMSCRIPTEN
     &EMSCRIPTENAUDIO_bootstrap,
@@ -144,7 +137,6 @@ int (*SRC_src_process)(SRC_STATE *state, SRC_DATA *data) = NULL;
 int (*SRC_src_reset)(SRC_STATE *state) = NULL;
 SRC_STATE* (*SRC_src_delete)(SRC_STATE *state) = NULL;
 const char* (*SRC_src_strerror)(int error) = NULL;
-int (*SRC_src_simple)(SRC_DATA *data, int converter_type, int channels) = NULL;
 
 static SDL_bool
 LoadLibSampleRate(void)
@@ -179,9 +171,8 @@ LoadLibSampleRate(void)
     SRC_src_reset = (int(*)(SRC_STATE *state))SDL_LoadFunction(SRC_lib, "src_reset");
     SRC_src_delete = (SRC_STATE* (*)(SRC_STATE *state))SDL_LoadFunction(SRC_lib, "src_delete");
     SRC_src_strerror = (const char* (*)(int error))SDL_LoadFunction(SRC_lib, "src_strerror");
-    SRC_src_simple = (int(*)(SRC_DATA *data, int converter_type, int channels))SDL_LoadFunction(SRC_lib, "src_simple");
 
-    if (!SRC_src_new || !SRC_src_process || !SRC_src_reset || !SRC_src_delete || !SRC_src_strerror || !SRC_src_simple) {
+    if (!SRC_src_new || !SRC_src_process || !SRC_src_reset || !SRC_src_delete || !SRC_src_strerror) {
         SDL_UnloadObject(SRC_lib);
         SRC_lib = NULL;
         return SDL_FALSE;
@@ -192,7 +183,6 @@ LoadLibSampleRate(void)
     SRC_src_reset = src_reset;
     SRC_src_delete = src_delete;
     SRC_src_strerror = src_strerror;
-    SRC_src_simple = src_simple;
 #endif
 
     SRC_available = SDL_TRUE;
@@ -392,7 +382,7 @@ add_audio_device(const char *name, SDL_AudioSpec *spec, void *handle, SDL_AudioD
     item->dupenum = 0;
     item->name = item->original_name;
     if (spec != NULL) {
-        SDL_copyp(&item->spec, spec);
+        SDL_memcpy(&item->spec, spec, sizeof(SDL_AudioSpec));
     } else {
         SDL_zero(item->spec);
     }
@@ -533,7 +523,6 @@ SDL_RemoveAudioDevice(const SDL_bool iscapture, void *handle)
 {
     int device_index;
     SDL_AudioDevice *device = NULL;
-    SDL_bool device_was_opened = SDL_FALSE;
 
     SDL_LockMutex(current_audio.detectionLock);
     if (iscapture) {
@@ -546,29 +535,10 @@ SDL_RemoveAudioDevice(const SDL_bool iscapture, void *handle)
         device = open_devices[device_index];
         if (device != NULL && device->handle == handle)
         {
-            device_was_opened = SDL_TRUE;
             SDL_OpenedAudioDeviceDisconnected(device);
             break;
         }
     }
-
-    /* Devices that aren't opened, as of 2.24.0, will post an
-       SDL_AUDIODEVICEREMOVED event with the `which` field set to zero.
-       Apps can use this to decide if they need to refresh a list of
-       available devices instead of closing an opened one.
-       Note that opened devices will send the non-zero event in
-       SDL_OpenedAudioDeviceDisconnected(). */
-    if (!device_was_opened) {
-        if (SDL_GetEventState(SDL_AUDIODEVICEREMOVED) == SDL_ENABLE) {
-            SDL_Event event;
-            SDL_zero(event);
-            event.adevice.type = SDL_AUDIODEVICEREMOVED;
-            event.adevice.which = 0;
-            event.adevice.iscapture = iscapture ? 1 : 0;
-            SDL_PushEvent(&event);
-        }
-    }
-
     SDL_UnlockMutex(current_audio.detectionLock);
 
     current_audio.impl.FreeDeviceHandle(handle);
@@ -975,15 +945,6 @@ SDL_AudioInit(const char *driver_name)
             const char *driver_attempt_end = SDL_strchr(driver_attempt, ',');
             size_t driver_attempt_len = (driver_attempt_end != NULL) ? (driver_attempt_end - driver_attempt)
                                                                      : SDL_strlen(driver_attempt);
-#if SDL_AUDIO_DRIVER_DSOUND
-            /* SDL 1.2 uses the name "dsound", so we'll support both. */
-            if (driver_attempt_len == SDL_strlen("dsound") &&
-                (SDL_strncasecmp(driver_attempt, "dsound", driver_attempt_len) == 0)) {
-                driver_attempt = "directsound";
-                driver_attempt_len = SDL_strlen("directsound");
-            }
-#endif
-
 #if SDL_AUDIO_DRIVER_PULSEAUDIO
             /* SDL 1.2 uses the name "pulse", so we'll support both. */
             if (driver_attempt_len == SDL_strlen("pulse") &&
@@ -1170,7 +1131,7 @@ SDL_GetAudioDeviceSpec(int index, int iscapture, SDL_AudioSpec *spec)
             SDL_assert(item != NULL);
         }
         SDL_assert(item != NULL);
-        SDL_copyp(spec, &item->spec);
+        SDL_memcpy(spec, &item->spec, sizeof(SDL_AudioSpec));
         retval = 0;
     } else {
         retval = SDL_InvalidParamError("index");
@@ -1178,24 +1139,6 @@ SDL_GetAudioDeviceSpec(int index, int iscapture, SDL_AudioSpec *spec)
     SDL_UnlockMutex(current_audio.detectionLock);
 
     return retval;
-}
-
-
-int
-SDL_GetDefaultAudioInfo(char **name, SDL_AudioSpec *spec, int iscapture)
-{
-    if (spec == NULL) {
-        return SDL_InvalidParamError("spec");
-    }
-
-    if (!SDL_GetCurrentAudioDriver()) {
-        return SDL_SetError("Audio subsystem is not initialized");
-    }
-
-    if (current_audio.impl.GetDefaultAudioInfo == NULL) {
-        return SDL_Unsupported();
-    }
-    return current_audio.impl.GetDefaultAudioInfo(name, spec, iscapture);
 }
 
 
@@ -1250,7 +1193,7 @@ close_audio_device(SDL_AudioDevice * device)
 static int
 prepare_audiospec(const SDL_AudioSpec * orig, SDL_AudioSpec * prepared)
 {
-    SDL_copyp(prepared, orig);
+    SDL_memcpy(prepared, orig, sizeof(SDL_AudioSpec));
 
     if (orig->freq == 0) {
         const char *env = SDL_getenv("SDL_AUDIO_FREQUENCY");
@@ -1266,12 +1209,22 @@ prepare_audiospec(const SDL_AudioSpec * orig, SDL_AudioSpec * prepared)
         }
     }
 
-    if (orig->channels == 0) {
-        const char *env = SDL_getenv("SDL_AUDIO_CHANNELS");
-        if ((!env) || ((prepared->channels = (Uint8) SDL_atoi(env)) == 0)) {
-            prepared->channels = 2; /* a reasonable default */
+    switch (orig->channels) {
+    case 0:{
+            const char *env = SDL_getenv("SDL_AUDIO_CHANNELS");
+            if ((!env) || ((prepared->channels = (Uint8) SDL_atoi(env)) == 0)) {
+                prepared->channels = 2; /* a reasonable default */
+                break;
+            }
         }
-    } else if (orig->channels > 8) {
+    case 1:                    /* Mono */
+    case 2:                    /* Stereo */
+    case 4:                    /* Quadrophonic */
+    case 6:                    /* 5.1 surround */
+    case 7:                    /* 6.1 surround */
+    case 8:                    /* 7.1 surround */
+        break;
+    default:
         SDL_SetError("Unsupported number of audio channels.");
         return 0;
     }
@@ -1319,7 +1272,7 @@ open_audio_device(const char *devname, int iscapture,
         return 0;
     }
 
-    SDL_LockMutex(current_audio.detectionLock);
+    /* !!! FIXME: there is a race condition here if two devices open from two threads at once. */
     /* Find an available device ID... */
     for (id = min_id - 1; id < SDL_arraysize(open_devices); id++) {
         if (open_devices[id] == NULL) {
@@ -1329,7 +1282,6 @@ open_audio_device(const char *devname, int iscapture,
 
     if (id == SDL_arraysize(open_devices)) {
         SDL_SetError("Too many open audio devices");
-        SDL_UnlockMutex(current_audio.detectionLock);
         return 0;
     }
 
@@ -1337,7 +1289,6 @@ open_audio_device(const char *devname, int iscapture,
         obtained = &_obtained;
     }
     if (!prepare_audiospec(desired, obtained)) {
-        SDL_UnlockMutex(current_audio.detectionLock);
         return 0;
     }
 
@@ -1359,7 +1310,6 @@ open_audio_device(const char *devname, int iscapture,
     if ((iscapture) && (current_audio.impl.OnlyHasDefaultCaptureDevice)) {
         if ((devname) && (SDL_strcmp(devname, DEFAULT_INPUT_DEVNAME) != 0)) {
             SDL_SetError("No such device");
-            SDL_UnlockMutex(current_audio.detectionLock);
             return 0;
         }
         devname = NULL;
@@ -1367,13 +1317,11 @@ open_audio_device(const char *devname, int iscapture,
         for (i = 0; i < SDL_arraysize(open_devices); i++) {
             if ((open_devices[i]) && (open_devices[i]->iscapture)) {
                 SDL_SetError("Audio device already open");
-                SDL_UnlockMutex(current_audio.detectionLock);
                 return 0;
             }
         }
     } else if ((!iscapture) && (current_audio.impl.OnlyHasDefaultOutputDevice)) {
         if ((devname) && (SDL_strcmp(devname, DEFAULT_OUTPUT_DEVNAME) != 0)) {
-            SDL_UnlockMutex(current_audio.detectionLock);
             SDL_SetError("No such device");
             return 0;
         }
@@ -1381,7 +1329,6 @@ open_audio_device(const char *devname, int iscapture,
 
         for (i = 0; i < SDL_arraysize(open_devices); i++) {
             if ((open_devices[i]) && (!open_devices[i]->iscapture)) {
-                SDL_UnlockMutex(current_audio.detectionLock);
                 SDL_SetError("Audio device already open");
                 return 0;
             }
@@ -1394,19 +1341,20 @@ open_audio_device(const char *devname, int iscapture,
            It might still need to open a device based on the string for,
            say, a network audio server, but this optimizes some cases. */
         SDL_AudioDeviceItem *item;
+        SDL_LockMutex(current_audio.detectionLock);
         for (item = iscapture ? current_audio.inputDevices : current_audio.outputDevices; item; item = item->next) {
             if ((item->handle != NULL) && (SDL_strcmp(item->name, devname) == 0)) {
                 handle = item->handle;
                 break;
             }
         }
+        SDL_UnlockMutex(current_audio.detectionLock);
     }
 
     if (!current_audio.impl.AllowsArbitraryDeviceNames) {
         /* has to be in our device list, or the default device. */
         if ((handle == NULL) && (devname != NULL)) {
             SDL_SetError("No such device.");
-            SDL_UnlockMutex(current_audio.detectionLock);
             return 0;
         }
     }
@@ -1414,7 +1362,6 @@ open_audio_device(const char *devname, int iscapture,
     device = (SDL_AudioDevice *) SDL_calloc(1, sizeof (SDL_AudioDevice));
     if (device == NULL) {
         SDL_OutOfMemory();
-        SDL_UnlockMutex(current_audio.detectionLock);
         return 0;
     }
     device->id = id + 1;
@@ -1431,22 +1378,13 @@ open_audio_device(const char *devname, int iscapture,
         device->mixer_lock = SDL_CreateMutex();
         if (device->mixer_lock == NULL) {
             close_audio_device(device);
-            SDL_UnlockMutex(current_audio.detectionLock);
             SDL_SetError("Couldn't create mixer lock");
             return 0;
         }
     }
 
-    /* For backends that require a power-of-two value for spec.samples, take the
-     * value we got from 'desired' and round up to the nearest value
-     */
-    if (!current_audio.impl.SupportsNonPow2Samples && device->spec.samples > 0) {
-        device->spec.samples = SDL_powerof2(device->spec.samples);
-    }
-
     if (current_audio.impl.OpenDevice(device, devname) < 0) {
         close_audio_device(device);
-        SDL_UnlockMutex(current_audio.detectionLock);
         return 0;
     }
 
@@ -1502,7 +1440,6 @@ open_audio_device(const char *devname, int iscapture,
 
         if (!device->stream) {
             close_audio_device(device);
-            SDL_UnlockMutex(current_audio.detectionLock);
             return 0;
         }
     }
@@ -1512,7 +1449,6 @@ open_audio_device(const char *devname, int iscapture,
         device->buffer_queue = SDL_NewDataQueue(SDL_AUDIOBUFFERQUEUE_PACKETLEN, obtained->size * 2);
         if (!device->buffer_queue) {
             close_audio_device(device);
-            SDL_UnlockMutex(current_audio.detectionLock);
             SDL_SetError("Couldn't create audio buffer queue");
             return 0;
         }
@@ -1530,7 +1466,6 @@ open_audio_device(const char *devname, int iscapture,
     device->work_buffer = (Uint8 *) SDL_malloc(device->work_buffer_len);
     if (device->work_buffer == NULL) {
         close_audio_device(device);
-        SDL_UnlockMutex(current_audio.detectionLock);
         SDL_OutOfMemory();
         return 0;
     }
@@ -1551,11 +1486,9 @@ open_audio_device(const char *devname, int iscapture,
         if (device->thread == NULL) {
             close_audio_device(device);
             SDL_SetError("Couldn't create audio thread");
-            SDL_UnlockMutex(current_audio.detectionLock);
             return 0;
         }
     }
-    SDL_UnlockMutex(current_audio.detectionLock);
 
     return device->id;
 }

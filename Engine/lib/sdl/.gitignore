@@ -15,7 +15,6 @@ build
 gen
 Build
 buildbot
-/VERSION.txt
 
 *.so
 *.so.*
@@ -23,7 +22,6 @@ buildbot
 *.exe
 *.o
 *.obj
-*.res
 *.lib
 *.a
 *.la
@@ -97,11 +95,9 @@ VisualC/visualtest/testsprite2.exe
 VisualC/visualtest/testsprite2_sample.actions
 VisualC/visualtest/testsprite2_sample.config
 VisualC/visualtest/testsprite2_sample.parameters
-VisualC-GDK/**/Layout
 
 # for Android
 android-project/local.properties
-android-project/.gradle/
 
 test/checkkeys
 test/checkkeysthreads

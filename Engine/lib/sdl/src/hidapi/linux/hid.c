@@ -22,8 +22,6 @@
 ********************************************************/
 #include "../../SDL_internal.h"
 
-#include "SDL_hints.h"
-
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE /* needed for wcsdup() before glibc 2.10 */
 #endif
@@ -200,7 +198,7 @@ static int uses_numbered_reports(__u8 *report_descriptor, __u32 size) {
 				/* Can't ever happen since size_code is & 0x3 */
 				data_len = 0;
 				break;
-			}
+			};
 			key_size = 1;
 		}
 
@@ -221,7 +219,7 @@ parse_uevent_info(const char *uevent, unsigned *bus_type,
 	unsigned short *vendor_id, unsigned short *product_id,
 	char **serial_number_utf8, char **product_name_utf8)
 {
-	char *tmp;
+	char *tmp = strdup(uevent);
 	char *saveptr = NULL;
 	char *line;
 	char *key;
@@ -230,15 +228,6 @@ parse_uevent_info(const char *uevent, unsigned *bus_type,
 	int found_id = 0;
 	int found_serial = 0;
 	int found_name = 0;
-
-	if (!uevent) {
-		return 0;
-	}
-
-	tmp = strdup(uevent);
-	if (!tmp) {
-		return 0;
-	}
 
 	line = strtok_r(tmp, "\n", &saveptr);
 	while (line != NULL) {
@@ -483,7 +472,6 @@ struct hid_device_info  HID_API_EXPORT *hid_enumerate(unsigned short vendor_id, 
 	struct hid_device_info *root = NULL; /* return object */
 	struct hid_device_info *cur_dev = NULL;
 	struct hid_device_info *prev_dev = NULL; /* previous device */
-	const char *hint = SDL_GetHint(SDL_HINT_HIDAPI_IGNORE_DEVICES);
 
 	hid_init();
 
@@ -553,16 +541,6 @@ struct hid_device_info  HID_API_EXPORT *hid_enumerate(unsigned short vendor_id, 
 		if (access(dev_path, R_OK|W_OK) != 0) {
 			/* We can't open this device, ignore it */
 			goto next;
-		}
-
-		/* See if there are any devices we should skip in enumeration */
-		if (hint) {
-			char vendor_match[16], product_match[16];
-			SDL_snprintf(vendor_match, sizeof(vendor_match), "0x%.4x/0x0000", dev_vid);
-			SDL_snprintf(product_match, sizeof(product_match), "0x%.4x/0x%.4x", dev_vid, dev_pid);
-			if (SDL_strcasestr(hint, vendor_match) || SDL_strcasestr(hint, product_match)) {
-				continue;
-			}
 		}
 
 		/* Check the VID/PID against the arguments */

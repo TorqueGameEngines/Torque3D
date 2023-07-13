@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -31,7 +31,6 @@
 #include "SDL_riscosvideo.h"
 #include "SDL_riscosevents_c.h"
 #include "SDL_riscosframebuffer_c.h"
-#include "SDL_riscosmouse.h"
 #include "SDL_riscosmodes.h"
 #include "SDL_riscoswindow.h"
 
@@ -51,7 +50,7 @@ RISCOS_DeleteDevice(SDL_VideoDevice * device)
 }
 
 static SDL_VideoDevice *
-RISCOS_CreateDevice(void)
+RISCOS_CreateDevice(int devindex)
 {
     SDL_VideoDevice *device;
     SDL_VideoData *phdata;
@@ -103,10 +102,6 @@ static int
 RISCOS_VideoInit(_THIS)
 {
     if (RISCOS_InitEvents(_this) < 0) {
-        return -1;
-    }
-
-    if (RISCOS_InitMouse(_this) < 0) {
         return -1;
     }
 

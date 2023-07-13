@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -20,7 +20,7 @@
 */
 #include "./SDL_internal.h"
 
-#if defined(__WIN32__) || defined(__GDK__)
+#if defined(__WIN32__)
 #include "core/windows/SDL_windows.h"
 #elif defined(__OS2__)
 #include <stdlib.h> /* _exit() */
@@ -89,7 +89,7 @@ SDL_COMPILE_TIME_ASSERT(SDL_PATCHLEVEL_max, SDL_PATCHLEVEL <= 99);
 extern SDL_NORETURN void SDL_ExitProcess(int exitcode);
 SDL_NORETURN void SDL_ExitProcess(int exitcode)
 {
-#if defined(__WIN32__) || defined(__GDK__)
+#ifdef __WIN32__
     /* "if you do not know the state of all threads in your process, it is
        better to call TerminateProcess than ExitProcess"
        https://msdn.microsoft.com/en-us/library/windows/desktop/ms682658(v=vs.85).aspx */
@@ -124,19 +124,17 @@ static Uint8 SDL_SubsystemRefCount[ 32 ];
 static void
 SDL_PrivateSubsystemRefCountIncr(Uint32 subsystem)
 {
-    const int subsystem_index = SDL_MostSignificantBitIndex32(subsystem);
-    SDL_assert((subsystem_index < 0) || (SDL_SubsystemRefCount[subsystem_index] < 255));
-    if (subsystem_index >= 0) {
-        ++SDL_SubsystemRefCount[subsystem_index];
-    }
+    int subsystem_index = SDL_MostSignificantBitIndex32(subsystem);
+    SDL_assert(SDL_SubsystemRefCount[subsystem_index] < 255);
+    ++SDL_SubsystemRefCount[subsystem_index];
 }
 
 /* Private helper to decrement a subsystem's ref counter. */
 static void
 SDL_PrivateSubsystemRefCountDecr(Uint32 subsystem)
 {
-    const int subsystem_index = SDL_MostSignificantBitIndex32(subsystem);
-    if ((subsystem_index >= 0) && (SDL_SubsystemRefCount[subsystem_index] > 0)) {
+    int subsystem_index = SDL_MostSignificantBitIndex32(subsystem);
+    if (SDL_SubsystemRefCount[subsystem_index] > 0) {
         --SDL_SubsystemRefCount[subsystem_index];
     }
 }
@@ -145,23 +143,23 @@ SDL_PrivateSubsystemRefCountDecr(Uint32 subsystem)
 static SDL_bool
 SDL_PrivateShouldInitSubsystem(Uint32 subsystem)
 {
-    const int subsystem_index = SDL_MostSignificantBitIndex32(subsystem);
-    SDL_assert((subsystem_index < 0) || (SDL_SubsystemRefCount[subsystem_index] < 255));
-    return ((subsystem_index >= 0) && (SDL_SubsystemRefCount[subsystem_index] == 0)) ? SDL_TRUE : SDL_FALSE;
+    int subsystem_index = SDL_MostSignificantBitIndex32(subsystem);
+    SDL_assert(SDL_SubsystemRefCount[subsystem_index] < 255);
+    return (SDL_SubsystemRefCount[subsystem_index] == 0) ? SDL_TRUE : SDL_FALSE;
 }
 
 /* Private helper to check if a system needs to be quit. */
 static SDL_bool
 SDL_PrivateShouldQuitSubsystem(Uint32 subsystem) {
-    const int subsystem_index = SDL_MostSignificantBitIndex32(subsystem);
-    if ((subsystem_index >= 0) && (SDL_SubsystemRefCount[subsystem_index] == 0)) {
-        return SDL_FALSE;
+    int subsystem_index = SDL_MostSignificantBitIndex32(subsystem);
+    if (SDL_SubsystemRefCount[subsystem_index] == 0) {
+      return SDL_FALSE;
     }
 
     /* If we're in SDL_Quit, we shut down every subsystem, even if refcount
      * isn't zero.
      */
-    return (((subsystem_index >= 0) && (SDL_SubsystemRefCount[subsystem_index] == 1)) || SDL_bInMainQuit) ? SDL_TRUE : SDL_FALSE;
+    return (SDL_SubsystemRefCount[subsystem_index] == 1 || SDL_bInMainQuit) ? SDL_TRUE : SDL_FALSE;
 }
 
 void
@@ -409,9 +407,6 @@ SDL_QuitSubSystem(Uint32 flags)
 
 #if !SDL_AUDIO_DISABLED
     if ((flags & SDL_INIT_AUDIO)) {
-        /* audio implies events */
-        flags |= SDL_INIT_EVENTS;
-
         if (SDL_PrivateShouldQuitSubsystem(SDL_INIT_AUDIO)) {
             SDL_AudioQuit();
         }
@@ -510,8 +505,6 @@ SDL_Quit(void)
      */
     SDL_memset( SDL_SubsystemRefCount, 0x0, sizeof(SDL_SubsystemRefCount) );
 
-    SDL_TLSCleanup();
-
     SDL_bInMainQuit = SDL_FALSE;
 }
 
@@ -519,25 +512,7 @@ SDL_Quit(void)
 void
 SDL_GetVersion(SDL_version * ver)
 {
-    static SDL_bool check_hint = SDL_TRUE;
-    static SDL_bool legacy_version = SDL_FALSE;
-
-    if (!ver) {
-        return;
-    }
-
     SDL_VERSION(ver);
-
-    if (check_hint) {
-        check_hint = SDL_FALSE;
-        legacy_version = SDL_GetHintBoolean("SDL_LEGACY_VERSION", SDL_FALSE);
-    }
-
-    if (legacy_version) {
-        /* Prior to SDL 2.24.0, the patch version was incremented with every release */
-        ver->patch = ver->minor;
-        ver->minor = 0;
-    }
 }
 
 /* Get the library source revision */
@@ -604,26 +579,16 @@ SDL_GetPlatform(void)
     return "Windows";
 #elif __WINRT__
     return "WinRT";
-#elif __WINGDK__
-    return "WinGDK";
-#elif __XBOXONE__
-    return "Xbox One";
-#elif __XBOXSERIES__
-    return "Xbox Series X|S";
 #elif __TVOS__
     return "tvOS";
 #elif __IPHONEOS__
     return "iOS";
-#elif __PS2__
-    return "PlayStation 2";
 #elif __PSP__
     return "PlayStation Portable";
 #elif __VITA__
     return "PlayStation Vita";
 #elif __NGAGE__
     return "Nokia N-Gage";
-#elif __3DS__
-    return "Nintendo 3DS";
 #else
     return "Unknown (see SDL_platform.h)";
 #endif
@@ -663,6 +628,6 @@ _DllMainCRTStartup(HANDLE hModule,
 }
 #endif /* Building DLL */
 
-#endif /* defined(__WIN32__) || defined(__GDK__) */
+#endif /* __WIN32__ */
 
 /* vi: set sts=4 ts=4 sw=4 expandtab: */

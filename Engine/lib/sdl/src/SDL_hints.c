@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -52,7 +52,7 @@ SDL_SetHintWithPriority(const char *name, const char *value,
     SDL_Hint *hint;
     SDL_HintWatch *entry;
 
-    if (!name) {
+    if (!name || !value) {
         return SDL_FALSE;
     }
 
@@ -66,8 +66,7 @@ SDL_SetHintWithPriority(const char *name, const char *value,
             if (priority < hint->priority) {
                 return SDL_FALSE;
             }
-            if (hint->value != value &&
-                (!value || !hint->value || SDL_strcmp(hint->value, value) != 0)) {
+            if (!hint->value || !value || SDL_strcmp(hint->value, value) != 0) {
                 for (entry = hint->callbacks; entry; ) {
                     /* Save the next entry in case this one is deleted */
                     SDL_HintWatch *next = entry->next;
@@ -97,64 +96,6 @@ SDL_SetHintWithPriority(const char *name, const char *value,
 }
 
 SDL_bool
-SDL_ResetHint(const char *name)
-{
-    const char *env;
-    SDL_Hint *hint;
-    SDL_HintWatch *entry;
-
-    if (!name) {
-        return SDL_FALSE;
-    }
-
-    env = SDL_getenv(name);
-    for (hint = SDL_hints; hint; hint = hint->next) {
-        if (SDL_strcmp(name, hint->name) == 0) {
-            if ((env == NULL && hint->value != NULL) ||
-                (env != NULL && hint->value == NULL) ||
-                (env != NULL && SDL_strcmp(env, hint->value) != 0)) {
-                for (entry = hint->callbacks; entry; ) {
-                    /* Save the next entry in case this one is deleted */
-                    SDL_HintWatch *next = entry->next;
-                    entry->callback(entry->userdata, name, hint->value, env);
-                    entry = next;
-                }
-            }
-            SDL_free(hint->value);
-            hint->value = NULL;
-            hint->priority = SDL_HINT_DEFAULT;
-            return SDL_TRUE;
-        }
-    }
-    return SDL_FALSE;
-}
-
-void
-SDL_ResetHints(void)
-{
-    const char *env;
-    SDL_Hint *hint;
-    SDL_HintWatch *entry;
-
-    for (hint = SDL_hints; hint; hint = hint->next) {
-        env = SDL_getenv(hint->name);
-        if ((env == NULL && hint->value != NULL) ||
-            (env != NULL && hint->value == NULL) ||
-            (env != NULL && SDL_strcmp(env, hint->value) != 0)) {
-            for (entry = hint->callbacks; entry; ) {
-                /* Save the next entry in case this one is deleted */
-                SDL_HintWatch *next = entry->next;
-                entry->callback(entry->userdata, hint->name, hint->value, env);
-                entry = next;
-            }
-        }
-        SDL_free(hint->value);
-        hint->value = NULL;
-        hint->priority = SDL_HINT_DEFAULT;
-    }
-}
-
-SDL_bool
 SDL_SetHint(const char *name, const char *value)
 {
     return SDL_SetHintWithPriority(name, value, SDL_HINT_NORMAL);
@@ -169,7 +110,7 @@ SDL_GetHint(const char *name)
     env = SDL_getenv(name);
     for (hint = SDL_hints; hint; hint = hint->next) {
         if (SDL_strcmp(name, hint->name) == 0) {
-            if (env == NULL || hint->priority == SDL_HINT_OVERRIDE) {
+            if (!env || hint->priority == SDL_HINT_OVERRIDE) {
                 return hint->value;
             }
             break;

@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -84,7 +84,7 @@ Android_DeleteDevice(SDL_VideoDevice *device)
 }
 
 static SDL_VideoDevice *
-Android_CreateDevice(void)
+Android_CreateDevice(int devindex)
 {
     SDL_VideoDevice *device;
     SDL_VideoData *data;
@@ -201,6 +201,8 @@ Android_VideoInit(_THIS)
 
     SDL_AddDisplayMode(&_this->displays[0], &mode);
 
+    Android_InitKeyboard();
+
     Android_InitTouch();
 
     Android_InitMouse();
@@ -249,9 +251,6 @@ Uint32 format_to_pixelFormat(int format) {
         pf = SDL_PIXELFORMAT_RGBA5551;
     } else if (format == 7) {
         pf = SDL_PIXELFORMAT_RGBA4444;
-    } else if (format == 0x115) {
-        /* HAL_PIXEL_FORMAT_BGR_565 */
-        pf = SDL_PIXELFORMAT_RGB565;
     } else {
         pf = SDL_PIXELFORMAT_UNKNOWN;
     }

@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -60,10 +60,6 @@ extern "C" {
  * - `parent`: the containing directory of the bundle. For example:
  *   `/Applications/SDLApp/`
  *
- * **Nintendo 3DS Specific Functionality**: This function returns "romfs"
- * directory of the application as it is uncommon to store resources outside
- * the executable. As such it is not a writable directory.
- *
  * The returned path is guaranteed to end with a path separator ('\' on
  * Windows, '/' on most other platforms).
  *
@@ -96,7 +92,7 @@ extern DECLSPEC char *SDLCALL SDL_GetBasePath(void);
  *
  * `C:\\Users\\bob\\AppData\\Roaming\\My Company\\My Program Name\\`
  *
- * On Linux, the string might look like:
+ * On Linux, the string might look like"
  *
  * `/home/bob/.local/share/My Program Name/`
  *

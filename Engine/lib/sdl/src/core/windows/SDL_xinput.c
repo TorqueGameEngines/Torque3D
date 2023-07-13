@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -22,10 +22,6 @@
 
 #include "SDL_xinput.h"
 
-/* Set up for C function definitions, even when using C++ */
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 XInputGetState_t SDL_XInputGetState = NULL;
 XInputSetState_t SDL_XInputSetState = NULL;
@@ -37,7 +33,7 @@ static HANDLE s_pXInputDLL = 0;
 static int s_XInputDLLRefCount = 0;
 
 
-#if defined(__WINRT__) || defined(__XBOXONE__) || defined(__XBOXSERIES__)
+#ifdef __WINRT__
 
 int
 WIN_LoadXInputDLL(void)
@@ -70,7 +66,7 @@ WIN_UnloadXInputDLL(void)
 {
 }
 
-#else /* !(defined(__WINRT__) || defined(__XBOXONE__) || defined(__XBOXSERIES__)) */
+#else /* !__WINRT__ */
 
 int
 WIN_LoadXInputDLL(void)
@@ -139,10 +135,5 @@ WIN_UnloadXInputDLL(void)
 }
 
 #endif /* __WINRT__ */
-
-/* Ends C function definitions when using C++ */
-#ifdef __cplusplus
-}
-#endif
 
 /* vi: set ts=4 sw=4 expandtab: */

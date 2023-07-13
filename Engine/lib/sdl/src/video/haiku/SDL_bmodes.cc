@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -132,36 +132,62 @@ void _SpoutModeData(display_mode *bmode) {
 
 
 
-int32 HAIKU_ColorSpaceToSDLPxFormat(uint32 colorspace)
+int32 HAIKU_ColorSpaceToBitsPerPixel(uint32 colorspace)
 {
+    int bitsperpixel;
+
+    bitsperpixel = 0;
     switch (colorspace) {
-    case B_CMAP8:
-        return SDL_PIXELFORMAT_INDEX8;
+        case B_CMAP8:
+        bitsperpixel = 8;
         break;
-    case B_RGB15:
-    case B_RGBA15:
-    case B_RGB15_BIG:
-    case B_RGBA15_BIG:
-        return SDL_PIXELFORMAT_RGB555;
+        case B_RGB15:
+        case B_RGBA15:
+        case B_RGB15_BIG:
+        case B_RGBA15_BIG:
+        bitsperpixel = 15;
         break;
-    case B_RGB16:
-    case B_RGB16_BIG:
+        case B_RGB16:
+        case B_RGB16_BIG:
+        bitsperpixel = 16;
+        break;
+        case B_RGB32:
+        case B_RGBA32:
+        case B_RGB32_BIG:
+        case B_RGBA32_BIG:
+        bitsperpixel = 32;
+        break;
+        default:
+        break;
+    }
+    return(bitsperpixel);
+}
+
+int32 HAIKU_BPPToSDLPxFormat(int32 bpp) {
+    /* Translation taken from SDL_windowsmodes.c */
+    switch (bpp) {
+    case 32:
+        return SDL_PIXELFORMAT_RGB888;
+        break;
+    case 24:    /* May not be supported by Haiku */
+        return SDL_PIXELFORMAT_RGB24;
+        break;
+    case 16:
         return SDL_PIXELFORMAT_RGB565;
         break;
-    case B_RGB24:
-    case B_RGB24_BIG:
-        return SDL_PIXELFORMAT_BGR24;
+    case 15:
+        return SDL_PIXELFORMAT_RGB555;
         break;
-    case B_RGB32:
-    case B_RGBA32:
-    case B_RGB32_BIG:
-    case B_RGBA32_BIG:
-        return SDL_PIXELFORMAT_RGB888;
+    case 8:
+        return SDL_PIXELFORMAT_INDEX8;
+        break;
+    case 4:        /* May not be supported by Haiku */
+        return SDL_PIXELFORMAT_INDEX4LSB;
         break;
     }
 
     /* May never get here, but safer and needed to shut up compiler */
-    SDL_SetError("Invalid color space");
+    SDL_SetError("Invalid bpp value");
     return 0;       
 }
 
@@ -184,7 +210,8 @@ static void _BDisplayModeToSdlDisplayMode(display_mode *bmode,
 #endif
 
     /* Set the format */
-    mode->format = HAIKU_ColorSpaceToSDLPxFormat(bmode->space);
+    int32 bpp = HAIKU_ColorSpaceToBitsPerPixel(bmode->space);
+    mode->format = HAIKU_BPPToSDLPxFormat(bpp);
 }
 
 /* Later, there may be more than one monitor available */

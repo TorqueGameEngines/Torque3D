@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -28,19 +28,16 @@
 
 static SDL_Window *window;
 
-typedef struct _Object {
-    struct _Object *next;
+typedef struct _Line {
+    struct _Line *next;
 
     int x1, y1, x2, y2;
     Uint8 r, g, b;
+} Line;
 
-    SDL_bool isRect;
-} Object;
-
-static Object *active = NULL;
-static Object *objects = NULL;
+static Line *active = NULL;
+static Line *lines = NULL;
 static int buttons = 0;
-static SDL_bool isRect = SDL_FALSE;
 
 static SDL_bool wheel_x_active = SDL_FALSE;
 static SDL_bool wheel_y_active = SDL_FALSE;
@@ -50,57 +47,33 @@ static float wheel_y = SCREEN_HEIGHT * 0.5f;
 static SDL_bool done = SDL_FALSE;
 
 void
-DrawObject(SDL_Renderer * renderer, Object * object)
+DrawLine(SDL_Renderer * renderer, Line * line)
 {
-    SDL_SetRenderDrawColor(renderer, object->r, object->g, object->b, 255);
-
-    if (object->isRect) {
-        SDL_Rect rect;
-
-        if (object->x1 > object->x2) {
-            rect.x = object->x2;
-            rect.w = object->x1 - object->x2;
-        } else {
-            rect.x = object->x1;
-            rect.w = object->x2 - object->x1;
-        }
-
-        if (object->y1 > object->y2) {
-            rect.y = object->y2;
-            rect.h = object->y1 - object->y2;
-        } else {
-            rect.y = object->y1;
-            rect.h = object->y2 - object->y1;
-        }
-
-        /* SDL_RenderDrawRect(renderer, &rect); */
-        SDL_RenderFillRect(renderer, &rect);
-    } else {
-        SDL_RenderDrawLine(renderer, object->x1, object->y1, object->x2, object->y2);
-    }
+    SDL_SetRenderDrawColor(renderer, line->r, line->g, line->b, 255);
+    SDL_RenderDrawLine(renderer, line->x1, line->y1, line->x2, line->y2);
 }
 
 void
-DrawObjects(SDL_Renderer * renderer)
+DrawLines(SDL_Renderer * renderer)
 {
-    Object *next = objects;
+    Line *next = lines;
     while (next != NULL) {
-        DrawObject(renderer, next);
+        DrawLine(renderer, next);
         next = next->next;
     }
 }
 
 void
-AppendObject(Object *object)
+AppendLine(Line *line)
 {
-    if (objects) {
-        Object *next = objects;
+    if (lines) {
+        Line *next = lines;
         while (next->next != NULL) {
             next = next->next;
         }
-        next->next = object;
+        next->next = line;
     } else {
-        objects = object;
+        lines = line;
     }
 }
 
@@ -145,7 +118,6 @@ loop(void *arg)
                 active = SDL_calloc(1, sizeof(*active));
                 active->x1 = active->x2 = event.button.x;
                 active->y1 = active->y2 = event.button.y;
-                active->isRect = isRect;
             }
 
             switch (event.button.button) {
@@ -156,7 +128,6 @@ loop(void *arg)
             case SDL_BUTTON_X2:     active->g = 255; active->b = 255; buttons |= SDL_BUTTON_X2MASK; break;
             }
             break;
-
         case SDL_MOUSEBUTTONUP:
             if (!active)
                 break;
@@ -170,20 +141,8 @@ loop(void *arg)
             }
 
             if (buttons == 0) {
-                AppendObject(active);
+                AppendLine(active);
                 active = NULL;
-            }
-            break;
-
-        case SDL_KEYDOWN:
-        case SDL_KEYUP:
-            switch (event.key.keysym.sym) {
-            case SDLK_LSHIFT:
-                isRect = (event.key.state == SDL_PRESSED);
-                if (active) {
-                    active->isRect = isRect;
-                }
-                break;
             }
             break;
 
@@ -202,16 +161,16 @@ loop(void *arg)
     /* Mouse wheel */
     SDL_SetRenderDrawColor(renderer, 0, 255, 128, 255);
     if (wheel_x_active) {
-        SDL_RenderDrawLine(renderer, (int)wheel_x, 0, (int)wheel_x, SCREEN_HEIGHT);
+            SDL_RenderDrawLine(renderer, wheel_x, 0, wheel_x, SCREEN_HEIGHT);
     }
     if (wheel_y_active) {
-        SDL_RenderDrawLine(renderer, 0, (int)wheel_y, SCREEN_WIDTH, (int)wheel_y);
+            SDL_RenderDrawLine(renderer, 0, wheel_y, SCREEN_WIDTH, wheel_y);
     }
 
-    /* Objects from mouse clicks */
-    DrawObjects(renderer);
+    /* Lines from mouse clicks */
+    DrawLines(renderer);
     if (active)
-        DrawObject(renderer, active);
+        DrawLine(renderer, active);
 
     SDL_RenderPresent(renderer);
 

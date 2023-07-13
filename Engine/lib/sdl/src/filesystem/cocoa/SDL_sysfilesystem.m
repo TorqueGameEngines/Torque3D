@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -71,9 +71,6 @@ char *
 SDL_GetPrefPath(const char *org, const char *app)
 { @autoreleasepool
 {
-    char *retval = NULL;
-    NSArray *array;
-
     if (!app) {
         SDL_InvalidParamError("app");
         return NULL;
@@ -82,8 +79,9 @@ SDL_GetPrefPath(const char *org, const char *app)
         org = "";
     }
 
+    char *retval = NULL;
 #if !TARGET_OS_TV
-    array = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES);
+    NSArray *array = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES);
 #else
     /* tvOS does not have persistent local storage!
      * The only place on-device where we can store data is
@@ -93,16 +91,15 @@ SDL_GetPrefPath(const char *org, const char *app)
      * between sessions. If you want your app's save data to
      * actually stick around, you'll need to use iCloud storage.
      */
+
+    static SDL_bool shown = SDL_FALSE;
+    if (!shown)
     {
-        static SDL_bool shown = SDL_FALSE;
-        if (!shown)
-        {
-            shown = SDL_TRUE;
-            SDL_LogCritical(SDL_LOG_CATEGORY_SYSTEM, "tvOS does not have persistent local storage! Use iCloud storage if you want your data to persist between sessions.\n");
-        }
+        shown = SDL_TRUE;
+        SDL_LogCritical(SDL_LOG_CATEGORY_SYSTEM, "tvOS does not have persistent local storage! Use iCloud storage if you want your data to persist between sessions.\n");
     }
 
-    array = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+    NSArray *array = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
 #endif /* !TARGET_OS_TV */
 
     if ([array count] > 0) {  /* we only want the first item in the list. */

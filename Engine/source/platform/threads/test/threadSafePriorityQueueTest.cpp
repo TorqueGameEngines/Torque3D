@@ -35,7 +35,7 @@ TEST(ThreadSafePriorityQueue, Serial)
    const U32 len = 11;
 
    U32 indices[len]    = {  2,   7,   4,   6,   1,   5,   3,   8,   6,   9, 0};
-   F32 priorities[len] = {0.2, 0.7, 0.4, 0.6, 0.1, 0.5, 0.3, 0.8, 0.6, 0.9, 0};
+   F32 priorities[len] = {0.2f, 0.7f, 0.4f, 0.6f, 0.1f, 0.5f, 0.3f, 0.8f, 0.6f, 0.9f, 0.0f};
    
    ThreadSafePriorityQueue<U32, F32, true>  minQueue;
    ThreadSafePriorityQueue<U32, F32, false> maxQueue;
@@ -92,7 +92,7 @@ TEST(ThreadSafePriorityQueue, Concurrent)
       virtual void run(void*)
       {
          U32 indices[LEN]    = {  2,   7,   4,   6,   1,   5,   3,   8,   6,   9, 0};
-         F32 priorities[LEN] = {0.2, 0.7, 0.4, 0.6, 0.1, 0.5, 0.3, 0.8, 0.6, 0.9, 0};
+         F32 priorities[LEN] = {0.2f, 0.7f, 0.4f, 0.6f, 0.1f, 0.5f, 0.3f, 0.8f, 0.6f, 0.9f, 0.0f};
 
          for(U32 i = 0; i < LEN; i++)
          {

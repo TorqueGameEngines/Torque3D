@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -50,6 +50,7 @@
 #define VERBOSE_RENDER  0x00000004
 #define VERBOSE_EVENT   0x00000008
 #define VERBOSE_AUDIO   0x00000010
+#define VERBOSE_MOTION  0x00000020
 
 typedef struct
 {

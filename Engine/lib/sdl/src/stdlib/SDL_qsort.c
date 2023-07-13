@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -28,8 +28,7 @@
 #include "SDL_stdinc.h"
 
 #if defined(HAVE_QSORT)
-void
-SDL_qsort(void *base, size_t nmemb, size_t size, int (*compare) (const void *, const void *))
+void SDL_qsort(void *base, size_t nmemb, size_t size, int (*compare) (const void *, const void *))
 {
     qsort(base, nmemb, size, compare);
 }
@@ -414,7 +413,7 @@ static void qsort_nonaligned(void *base, size_t nmemb, size_t size,
   char *first,*last;
   char *pivot=malloc(size);
   size_t trunc=TRUNC_nonaligned*size;
-  assert(pivot!=0);
+  assert(pivot != NULL);
 
   first=(char*)base; last=first+(nmemb-1)*size;
 
@@ -445,7 +444,7 @@ static void qsort_aligned(void *base, size_t nmemb, size_t size,
   char *first,*last;
   char *pivot=malloc(size);
   size_t trunc=TRUNC_aligned*size;
-  assert(pivot!=0);
+  assert(pivot != NULL);
 
   first=(char*)base; last=first+(nmemb-1)*size;
 
@@ -475,7 +474,7 @@ static void qsort_words(void *base, size_t nmemb,
   int stacktop=0;
   char *first,*last;
   char *pivot=malloc(WORD_BYTES);
-  assert(pivot!=0);
+  assert(pivot != NULL);
 
   first=(char*)base; last=first+(nmemb-1)*WORD_BYTES;
 
@@ -534,8 +533,7 @@ extern void qsortG(void *base, size_t nmemb, size_t size,
 
 #endif /* HAVE_QSORT */
 
-void *
-SDL_bsearch(const void *key, const void *base, size_t nmemb, size_t size, int (*compare)(const void *, const void *))
+void *SDL_bsearch(const void *key, const void *base, size_t nmemb, size_t size, int (*compare)(const void *, const void *))
 {
 #if defined(HAVE_BSEARCH)
     return bsearch(key, base, nmemb, size, compare);

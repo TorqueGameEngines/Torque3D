@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -25,21 +25,31 @@
 #include "SDL_error.h"
 #include "SDL_error_c.h"
 
-#define SDL_ERRBUFIZE   1024
-
-int
-SDL_SetError(SDL_PRINTF_FORMAT_STRING const char *fmt, ...)
+int SDL_SetError(SDL_PRINTF_FORMAT_STRING const char *fmt, ...)
 {
     /* Ignore call if invalid format pointer was passed */
     if (fmt != NULL) {
         va_list ap;
+        int result;
         SDL_error *error = SDL_GetErrBuf();
 
-        error->error = 1;  /* mark error as valid */
+        error->error = 1; /* mark error as valid */
 
         va_start(ap, fmt);
-        SDL_vsnprintf(error->str, ERR_MAX_STRLEN, fmt, ap);
+        result = SDL_vsnprintf(error->str, error->len, fmt, ap);
         va_end(ap);
+
+        if (result >= 0 && (size_t)result >= error->len && error->realloc_func) {
+            size_t len = (size_t)result + 1;
+            char *str = (char *)error->realloc_func(error->str, len);
+            if (str) {
+                error->str = str;
+                error->len = len;
+                va_start(ap, fmt);
+                (void)SDL_vsnprintf(error->str, error->len, fmt, ap);
+                va_end(ap);
+            }
+        }
 
         if (SDL_LogGetPriority(SDL_LOG_CATEGORY_ERROR) <= SDL_LOG_PRIORITY_DEBUG) {
             /* If we are in debug mode, print out the error message */
@@ -51,22 +61,19 @@ SDL_SetError(SDL_PRINTF_FORMAT_STRING const char *fmt, ...)
 }
 
 /* Available for backwards compatibility */
-const char *
-SDL_GetError(void)
+const char *SDL_GetError(void)
 {
     const SDL_error *error = SDL_GetErrBuf();
     return error->error ? error->str : "";
 }
 
-void
-SDL_ClearError(void)
+void SDL_ClearError(void)
 {
     SDL_GetErrBuf()->error = 0;
 }
 
 /* Very common errors go here */
-int
-SDL_Error(SDL_errorcode code)
+int SDL_Error(SDL_errorcode code)
 {
     switch (code) {
     case SDL_ENOMEM:
@@ -85,8 +92,7 @@ SDL_Error(SDL_errorcode code)
 }
 
 #ifdef TEST_ERROR
-int
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     char buffer[BUFSIZ + 1];
 
@@ -101,9 +107,7 @@ main(int argc, char *argv[])
 }
 #endif
 
-
-char *
-SDL_GetErrorMsg(char *errstr, int maxlen)
+char *SDL_GetErrorMsg(char *errstr, int maxlen)
 {
     const SDL_error *error = SDL_GetErrBuf();
 

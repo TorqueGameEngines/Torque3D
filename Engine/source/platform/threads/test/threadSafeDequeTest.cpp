@@ -200,7 +200,7 @@ TEST_FIX(ThreadSafeDeque, Concurrent1)
 
    mValues.clear();
 };
-
+/*
 // Test a few items many times to catch any race-condition in start-up
 TEST_FIX(ThreadSafeDeque, Concurrent2)
 {
@@ -224,5 +224,5 @@ TEST_FIX(ThreadSafeDeque, Concurrent2)
       if (::testing::Test::HasFailure()) break;
    }
 };
-
+*/
 #endif

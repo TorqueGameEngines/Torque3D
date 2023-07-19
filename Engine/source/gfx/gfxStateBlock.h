@@ -49,6 +49,8 @@ struct GFXSamplerStateDesc
 
    GFXCmpFunc samplerFunc;
 
+   ColorI borderColor;
+
    /// The maximum anisotropy used when one of the filter types
    /// is set to anisotropic.
    ///

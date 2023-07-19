@@ -315,6 +315,8 @@ void GFXSamplerStateData::initPersistFields()
 
    endGroup( "Filter State" );
 
+   addField("borderColor", TypeColorI, Offset(mState.borderColor, GFXSamplerStateData), "");
+
    addField("samplerFunc", TypeGFXCmpFunc, Offset(mState.samplerFunc, GFXSamplerStateData),
       "Compares sampled data against existing sampled data.  The default is GFXCmpNever.");
 }

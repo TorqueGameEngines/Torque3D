@@ -219,7 +219,7 @@ void GFXGLTextureObject::initSamplerState(const GFXSamplerStateDesc &ssd)
       glTexParameteri(mBinding, GL_TEXTURE_WRAP_R, GFXGLTextureAddress[ssd.addressModeW]);
    if(static_cast< GFXGLDevice* >( GFX )->supportsAnisotropic() )
       glTexParameterf(mBinding, GL_TEXTURE_MAX_ANISOTROPY_EXT, ssd.maxAnisotropy);
-
+  
    mNeedInitSamplerState = false;
    mSampler = ssd;
 }

@@ -55,7 +55,16 @@ GFXGLStateBlock::GFXGLStateBlock(const GFXStateBlockDesc& desc) :
          glSamplerParameteri(id, GL_TEXTURE_WRAP_S, GFXGLTextureAddress[ssd.addressModeU]);
          glSamplerParameteri(id, GL_TEXTURE_WRAP_T, GFXGLTextureAddress[ssd.addressModeV]);
          glSamplerParameteri(id, GL_TEXTURE_WRAP_R, GFXGLTextureAddress[ssd.addressModeW]);
-         
+
+         if (ssd.addressModeU == GFXAddressBorder ||
+             ssd.addressModeV == GFXAddressBorder ||
+             ssd.addressModeW == GFXAddressBorder)
+         {
+            LinearColorF bc = LinearColorF(ssd.borderColor);
+            GLfloat color[4] = { bc.red, bc.green, bc.blue, bc.alpha };
+            glSamplerParameterfv(id, GL_TEXTURE_BORDER_COLOR, color);
+         }
+
          //compare modes
          const bool comparison = ssd.samplerFunc != GFXCmpNever;
          glSamplerParameteri(id, GL_TEXTURE_COMPARE_MODE, comparison ? GL_COMPARE_R_TO_TEXTURE_ARB : GL_NONE );

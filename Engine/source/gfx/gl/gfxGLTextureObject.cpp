@@ -220,7 +220,9 @@ void GFXGLTextureObject::initSamplerState(const GFXSamplerStateDesc &ssd)
    if(static_cast< GFXGLDevice* >( GFX )->supportsAnisotropic() )
       glTexParameterf(mBinding, GL_TEXTURE_MAX_ANISOTROPY_EXT, ssd.maxAnisotropy);
 
-   glTexParameterfv(mBinding, GL_TEXTURE_BORDER_COLOR, ssd.borderColor);
+   LinearColorF bc = LinearColorF(ssd.borderColor);
+   GLfloat color[4]={bc.red, bc.green, bc.blue, bc.alpha};
+   glTexParameterfv(mBinding, GL_TEXTURE_BORDER_COLOR, color);
    mNeedInitSamplerState = false;
    mSampler = ssd;
 }

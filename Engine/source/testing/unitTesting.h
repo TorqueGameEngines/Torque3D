@@ -23,8 +23,6 @@
 #ifndef _UNIT_TESTING_H_
 #define _UNIT_TESTING_H_
 
-#ifdef TORQUE_TESTS_ENABLED
-
 #include <gtest/gtest.h>
 
 /// Convenience to define a test fixture with a Fixture suffix for use with
@@ -37,7 +35,5 @@
 #define TEST_FIX(test_fixture, test_name)\
    GTEST_TEST_(test_fixture, test_name, test_fixture##Fixture, \
    ::testing::internal::GetTypeId<test_fixture##Fixture>())
-
-#endif // TORQUE_TESTS_ENABLED
 
 #endif // _UNIT_TESTING_H_

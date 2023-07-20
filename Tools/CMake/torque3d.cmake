@@ -55,6 +55,8 @@ endif()
 ###############################################################################
 option(TORQUE_SFX_VORBIS "Vorbis Sound" ON)
 mark_as_advanced(TORQUE_SFX_VORBIS)
+option(TORQUE_TESTING "Enable unit test module" ON)
+mark_as_advanced(TORQUE_TESTING)
 option(TORQUE_THEORA "Theora Video Support" ON)
 mark_as_advanced(TORQUE_THEORA)
 option(TORQUE_ADVANCED_LIGHTING "Advanced Lighting" ON)
@@ -268,7 +270,6 @@ addPath("${srcDir}/sim")
 addPath("${srcDir}/util")
 addPath("${srcDir}/windowManager")
 addPath("${srcDir}/windowManager/torque")
-addPath("${srcDir}/windowManager/test")
 addPath("${srcDir}/math")
 addPath("${srcDir}/math/util")
 addPath("${srcDir}/math/test")
@@ -1012,4 +1013,16 @@ if(TORQUE_SDL)
     else()
         set_target_properties(SDL2 PROPERTIES FOLDER ${TORQUE_LIBS_FOLDER_NAME})
     endif()
+endif()
+
+if(TORQUE_TESTING)
+    set_property(TARGET ${TORQUE_APP_NAME} PROPERTY ENABLE_EXPORTS 1)
+    
+    add_custom_command(TARGET ${TORQUE_APP_NAME} 
+    POST_BUILD
+    COMMAND lib /NOLOGO /OUT:\"${projectOutDir}/Testing.lib\" \"$(ProjectDir)$(IntDir)*.obj\"
+    )
+
+    add_subdirectory(${libDir}/googletest ${CMAKE_CURRENT_BINARY_DIR}/googletest)
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/test ${CMAKE_CURRENT_BINARY_DIR}/test)
 endif()

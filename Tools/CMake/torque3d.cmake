@@ -587,7 +587,9 @@ if(WIN32)
     addPath("${srcDir}/terrain/hlsl")
     addPath("${srcDir}/forest/hlsl")
     # add windows rc file for the icon
-    addFile("${projectSrcDir}/torque.rc")
+    if(NOT TORQUE_TESTING)
+        addFile("${projectSrcDir}/torque.rc")
+    endif()
 endif()
 
 if(APPLE)
@@ -640,13 +642,21 @@ endif()
 
 ###############################################################################
 ###############################################################################
+if(TORQUE_TESTING)
+addDef( "TORQUE_TESTS" )
+finishLibrary()
+else()
 finishExecutable()
+endif()
+
 ###############################################################################
 ###############################################################################
 
 # Set Visual Studio startup project
-if(MSVC)
-set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${TORQUE_APP_NAME})
+if(NOT TORQUE_TESTING)
+    if(MSVC)
+        set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${TORQUE_APP_NAME})
+    endif()
 endif()
 
 message(STATUS "writing ${projectSrcDir}/torqueConfig.h")
@@ -1016,13 +1026,6 @@ if(TORQUE_SDL)
 endif()
 
 if(TORQUE_TESTING)
-    set_property(TARGET ${TORQUE_APP_NAME} PROPERTY ENABLE_EXPORTS 1)
-    
-    add_custom_command(TARGET ${TORQUE_APP_NAME} 
-    POST_BUILD
-    COMMAND lib /NOLOGO /OUT:\"${projectOutDir}/Testing.lib\" \"$(ProjectDir)$(IntDir)*.obj\"
-    )
-    addDef( "TORQUE_TESTS" )
     add_subdirectory(${libDir}/googletest ${CMAKE_CURRENT_BINARY_DIR}/googletest)
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/test ${CMAKE_CURRENT_BINARY_DIR}/test)
 endif()

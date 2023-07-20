@@ -28,18 +28,19 @@ enable_testing()
 
 include(GoogleTest)
 
-add_executable(test_me ${srcDir}/windowManager/test/windowManagerTest.cpp)
+add_executable(test_me ${srcDir}/testing/windowManagerTest.cpp
+                        ${srcDir}/testing/unitTesting.cpp 
+                        ${srcDir}/testing/unitTesting.h)
 #not sure if these includes are needed??
 addInclude(${libDir}/) # for tinyxml
 addInclude(${libDir}/tinyxml)
 addInclude("${srcDir}/")
 addInclude("${projectSrcDir}")
+addInclude(${srcDir}/testing)       
 addLib(gtest)
-addLib(gtest_main)
 addLib(gmock)
 addLib(gmock_main)
 addLib(${TORQUE_APP_NAME})
-gtest_discover_tests(test_me)
 addDef( "_VARIADIC_MAX" 10 )
 if(MSVC)
 set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT test_me)

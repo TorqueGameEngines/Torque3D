@@ -19,9 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
-#ifdef _DEBUG
-#define TORQUE_DEBUG
-#endif
+#include "unitTesting.h"
 
 #include "torqueConfig.h"
 #include "windowManager/platformWindow.h"
@@ -30,9 +28,6 @@
 #include "platform/input/IProcessInput.h"
 #include "windowManager/sdl/sdlWindowMgr.h"
 #include "core/util/tVector.h"
-
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
 
 #include "SDL.h"
 

@@ -19,51 +19,59 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
-
+#include "unitTesting.h"
+#include "platform/platformRedBook.h"
+#include "platform/platformVolume.h"
 #include "console/console.h"
 #include "console/codeBlock.h"
 #include "console/engineAPI.h"
 #include "console/consoleInternal.h"
-#include "unitTesting.h"
 #include "memoryTester.h"
+#include "core/stream/fileStream.h"
 
+#include "gfx/bitmap/gBitmap.h"
+#include "gfx/gFont.h"
+#include "gfx/video/videoCapture.h"
+#include "gfx/gfxTextureManager.h"
+#include "platform/nativeDialogs/fileDialog.h"
+#include "cinterface/cinterface.h"
 //-----------------------------------------------------------------------------
 
 class TorqueUnitTestListener : public ::testing::EmptyTestEventListener
 {
    // Called before a test starts.
-   virtual void OnTestStart( const ::testing::TestInfo& testInfo )
+   virtual void OnTestStart(const ::testing::TestInfo& testInfo)
    {
-      if( mVerbose )
+      if (mVerbose)
          Con::printf("> Starting Test '%s.%s'",
             testInfo.test_case_name(), testInfo.name());
    }
 
    // Called after a failed assertion or a SUCCEED() invocation.
-   virtual void OnTestPartResult( const ::testing::TestPartResult& testPartResult )
+   virtual void OnTestPartResult(const ::testing::TestPartResult& testPartResult)
    {
-      if ( testPartResult.failed() )
+      if (testPartResult.failed())
       {
          Con::warnf(">> Failed with '%s' in '%s' at (line:%d)\n",
             testPartResult.summary(),
             testPartResult.file_name(),
             testPartResult.line_number()
-            );
+         );
       }
-      else if( mVerbose )
+      else if (mVerbose)
       {
          Con::printf(">> Passed with '%s' in '%s' at (line:%d)",
             testPartResult.summary(),
             testPartResult.file_name(),
             testPartResult.line_number()
-            );
+         );
       }
    }
 
    // Called after a test ends.
-   virtual void OnTestEnd( const ::testing::TestInfo& testInfo )
+   virtual void OnTestEnd(const ::testing::TestInfo& testInfo)
    {
-      if( mVerbose )
+      if (mVerbose)
          Con::printf("> Ending Test '%s.%s'\n",
             testInfo.test_case_name(), testInfo.name());
    }
@@ -71,7 +79,7 @@ class TorqueUnitTestListener : public ::testing::EmptyTestEventListener
    bool mVerbose;
 
 public:
-   TorqueUnitTestListener( bool verbose ) : mVerbose( verbose ) {}
+   TorqueUnitTestListener(bool verbose) : mVerbose(verbose) {}
 };
 
 class TorqueScriptFixture : public testing::Test {};
@@ -88,10 +96,199 @@ private:
    const char* mFunctionName;
 };
 
+int main(int argc, char** argv) {
+  
+   FrameAllocator::init(TORQUE_FRAME_SIZE);      // See comments in torqueConfig.h
+
+   _StringTable::create();
+
+   // Set up the resource manager and get some basic file types in it.
+   Con::init();
+   Platform::initConsole();
+
+   // init Filesystem first, so we can actually log errors for all components that follow
+   Platform::FS::InstallFileSystems(); // install all drives for now until we have everything using the volume stuff
+   Platform::FS::MountDefaults();
+
+   // Set our working directory.
+   Torque::FS::SetCwd("game:/");
+
+   // Set our working directory.
+   Platform::setCurrentDirectory(Platform::getMainDotCsDir());
+
+   Con::setIntVariable("Game::argc", argc);
+   U32 i;
+   for (i = 0; i < argc; i++)
+      Con::setVariable(avar("Game::argv%d", i), argv[i]);
+
+   bool foundExternalMain = false;
+   CInterface::CallMain(&foundExternalMain);
+   if (foundExternalMain)
+      return true;
+
+   Stream* mainCsStream = NULL;
+   // The working filestream.
+   FileStream str;
+
+   // Check if any command-line parameters were passed (the first is just the app name).
+   if (argc > 1)
+   {
+      // If so, check if the first parameter is a file to open.
+      if ((String::compare(argv[1], "") != 0) && (str.open(argv[1], Torque::FS::File::Read)))
+      {
+#ifdef TORQUE_ENABLE_VFS
+         useVFS = false;
+#endif
+         mainCsStream = &str;
+      }
+   }
+   else
+   {
+      // if we are not given a script just do it with the console window from google.
+      printf("Running main() from %s\n", __FILE__);
+      testing::InitGoogleTest(&argc, argv);
+      return RUN_ALL_TESTS();
+   }
+
+   // This should rarely happen, but lets deal with
+// it gracefully if it does.
+   if (mainCsStream == NULL)
+      return false;
+
+   U32 size = mainCsStream->getStreamSize();
+   char* script = new char[size + 1];
+   mainCsStream->read(size, script);
+
+#ifdef TORQUE_ENABLE_VFS
+   if (useVFS)
+      vfs->closeFile(mainCsStream);
+   else
+#endif
+      str.close();
+
+   script[size] = 0;
+
+   char buffer[1024], * ptr;
+   Platform::makeFullPathName(argv[1], buffer, sizeof(buffer), Platform::getCurrentDirectory());
+   ptr = dStrrchr(buffer, '/');
+   if (ptr != NULL)
+      *ptr = 0;
+   Platform::setMainDotCsDir(buffer);
+   Platform::setCurrentDirectory(buffer);
+
+   Con::setVariable("TorqueScriptFileExtension", TORQUE_SCRIPT_EXTENSION);
+   Con::evaluate(script, false, argv[1]);
+   delete[] script;
+
+#ifdef TORQUE_ENABLE_VFS
+   closeEmbeddedVFSArchive();
+#endif
+
+   return true;
+}
+
+DefineEngineFunction(addUnitTest, void, (const char* function), ,
+   "Add a TorqueScript function as a GTest unit test.\n"
+   "@note This is only implemented rudimentarily to open the door for future development in unit-testing the engine.\n"
+   "@tsexample\n"
+   "function MyTest() {\n"
+   "   expectTrue(2+2 == 4, \"basic math should work\");\n"
+   "}\n"
+   "addUnitTest(MyTest);\n"
+   "@endtsexample\n"
+   "@see expectTrue")
+{
+   Namespace::Entry* entry = Namespace::global()->lookup(StringTable->insert(function));
+   const char* file = __FILE__;
+   U32 ln = __LINE__;
+   if (entry != NULL)
+   {
+      file = entry->mCode->name;
+      U32 inst;
+      entry->mCode->findBreakLine(entry->mFunctionOffset, ln, inst);
+   }
+   else
+   {
+      Con::warnf("failed to register unit test %s, could not find the function", function);
+   }
+
+   testing::RegisterTest("TorqueScriptFixture", function, NULL, NULL, file, ln,
+      [=]() -> TorqueScriptFixture* { return new TorqueScriptTest(function); });
+}
+
 String scriptFileMessage(const char* message)
 {
    Dictionary* frame = &gEvalState.getCurrentFrame();
    CodeBlock* code = frame->code;
    const char* scriptLine = code->getFileLine(frame->ip);
    return  String::ToString("at %s: %s", scriptLine, message);
+}
+
+DefineEngineFunction(expectTrue, void, (bool test, const char* message), (""),
+   "TorqueScript wrapper around the EXPECT_TRUE assertion in GTest.\n"
+   "@tsexample\n"
+   "expectTrue(2+2 == 4, \"basic math should work\");\n"
+   "@endtsexample")
+{
+   EXPECT_TRUE(test) << scriptFileMessage(message).c_str();
+}
+
+DefineEngineFunction(runAllUnitTests, int, (const char* testSpecs, const char* reportFormat), (""),
+   "Runs engine unit tests. Some tests are marked as 'stress' tests which do not "
+   "necessarily check correctness, just performance or possible nondeterministic "
+   "glitches. There may also be interactive or networking tests which may be "
+   "excluded by using the testSpecs argument.\n"
+   "This function should only be called once per executable run, because of "
+   "googletest's design.\n\n"
+
+   "@param testSpecs A space-sepatated list of filters for test cases. "
+   "See https://code.google.com/p/googletest/wiki/AdvancedGuide#Running_a_Subset_of_the_Tests "
+   "and http://stackoverflow.com/a/14021997/945863 "
+   "for a description of the flag format.")
+{
+   Vector<char*> args;
+   args.push_back(NULL); // Program name is unused by googletest.
+   String specsArg;
+   if (dStrlen(testSpecs) > 0)
+   {
+      specsArg = testSpecs;
+      specsArg.replace(' ', ':');
+      specsArg.insert(0, "--gtest_filter=");
+      args.push_back(const_cast<char*>(specsArg.c_str()));
+   }
+
+   String reportFormatArg;
+   if (dStrlen(reportFormat) > 0)
+   {
+      reportFormatArg = String::ToString("--gtest_output=%s", reportFormat);
+      args.push_back(const_cast<char*>(reportFormatArg.c_str()));
+   }
+   S32 argc = args.size();
+
+   // Initialize Google Test.
+   testing::InitGoogleTest(&argc, args.address());
+
+   // Fetch the unit test instance.
+   testing::UnitTest& unitTest = *testing::UnitTest::GetInstance();
+
+   // Fetch the unit test event listeners.
+   testing::TestEventListeners& listeners = unitTest.listeners();
+
+   // Release the default listener.
+   delete listeners.Release(listeners.default_result_printer());
+
+   if (Con::getBoolVariable("$Testing::CheckMemoryLeaks", false)) {
+      // Add the memory leak tester.
+      listeners.Append(new testing::MemoryLeakDetector);
+   }
+
+   // Add the Torque unit test listener.
+   listeners.Append(new TorqueUnitTestListener(false));
+
+   // Perform googletest run.
+   Con::printf("\nUnit Tests Starting...\n");
+   const S32 result = RUN_ALL_TESTS();
+   Con::printf("... Unit Tests Ended.\n");
+
+   return result;
 }

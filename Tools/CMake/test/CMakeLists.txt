@@ -38,7 +38,7 @@ addLib(gtest)
 addLib(gtest_main)
 addLib(gmock)
 addLib(gmock_main)
-
+addDef( "TORQUE_TESTS" )
 addLib(${TORQUE_APP_NAME})
 addLib(${projectOutDir}/Testing.lib)
 gtest_discover_tests(test_me)

@@ -22,7 +22,6 @@
 #ifdef _DEBUG
 #define TORQUE_DEBUG
 #endif
-#define SDL_VIDEODRIVER dummy
 
 #include "torqueConfig.h"
 #include "windowManager/platformWindow.h"
@@ -50,7 +49,9 @@ class PlatformWindowManagerSDLTest : public ::testing::Test
 protected:
    PlatformWindowManagerSDLTest()
    {
+      putenv("SDL_VIDEODRIVER=dummy");
       SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC | SDL_INIT_GAMECONTROLLER | SDL_INIT_EVENTS | SDL_INIT_NOPARACHUTE);
+      String driver = SDL_GetVideoDriver(0);
    }
 
    void SetUp() override

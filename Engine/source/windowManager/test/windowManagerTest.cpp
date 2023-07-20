@@ -19,7 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#ifdef _DEBUG
+#define TORQUE_DEBUG
+#endif
+#define SDL_VIDEODRIVER dummy
 
+#include "torqueConfig.h"
 #include "windowManager/platformWindow.h"
 #include "windowManager/platformWindowMgr.h"
 #include "platform/platformInput.h"
@@ -30,82 +35,83 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include "SDL.h"
+
 using ::testing::_;
 using ::testing::An;
 using ::testing::Matcher;
 using ::testing::TypedEq;
 using ::testing::Return;
 using ::testing::AtLeast;
+using ::testing::Invoke;
 
-class MockProcessInput : public IProcessInput
+class PlatformWindowManagerSDLTest : public ::testing::Test
 {
-public:
-   MOCK_METHOD(bool, processInputEvent, (InputEventInfo&), ());
-};
-class MockWindow : public PlatformWindow
-{
-public:
-   MOCK_METHOD(void, setInputController, (MockProcessInput*), ());
-   MOCK_METHOD(WindowId, getWindowId, (), ());
-   MOCK_METHOD(void*, getSystemWindow, (const WindowSystem), ());
-   MOCK_METHOD(GFXDevice*, getGFXDevice, (), ());
-   MOCK_METHOD(GFXWindowTarget*, getGFXTarget, (), ());
-   MOCK_METHOD(void, setVideoMode, (const GFXVideoMode&), ());
-   MOCK_METHOD(GFXVideoMode&, getVideoMode, (), (const));
-   MOCK_METHOD(bool, clearFullscreen, (), ());
-   MOCK_METHOD(bool, isFullscreen, (), ());
-   
-   MOCK_METHOD(void, setBackground, (bool), ());
-   MOCK_METHOD(bool, getBackground, (), ());
+protected:
+   PlatformWindowManagerSDLTest()
+   {
+      SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC | SDL_INIT_GAMECONTROLLER | SDL_INIT_EVENTS | SDL_INIT_NOPARACHUTE);
+   }
+
+   void SetUp() override
+   {
+   }
 };
 
-class MockWindowManager : public PlatformWindowManagerSDL
+TEST_F(PlatformWindowManagerSDLTest, Constructor)
 {
-public:
-   MOCK_METHOD(RectI, getPrimaryDesktopArea, (), ());
-   MOCK_METHOD(S32, getDesktopBitDepth, (), ());
-   MOCK_METHOD(Point2I, getDesktopResolution, (), ());
+   PlatformWindowManagerSDL* pwm = static_cast<PlatformWindowManagerSDL*>(CreatePlatformWindowManager());
 
-   MOCK_METHOD(S32, findFirstMatchingMonitor, (const char*), ());
-   MOCK_METHOD(U32, getMonitorCount, (), ());
-   MOCK_METHOD(RectI, getMonitorRect, (U32), ());
-   MOCK_METHOD(RectI, getMonitorUsableRect, (U32), ());
-   MOCK_METHOD(U32, getMonitorModeCount, (U32), ());
-
-   MOCK_METHOD(const String, getMonitorMode, (U32, U32), (const));
-
-   MOCK_METHOD(const String, getMonitorDesktopMode, (U32), (const));
-
-   MOCK_METHOD(void, getMonitorRegions, (Vector<RectI>&), ());
-   MOCK_METHOD(PlatformWindow*, createWindow, (GFXDevice*, const GFXVideoMode&), ());
-   MOCK_METHOD(void, getWindows, (VectorPtr<PlatformWindow*>&), ());
-   MOCK_METHOD(PlatformWindow*, getFocusedWindow, (), ());
-   MOCK_METHOD(PlatformWindow*, getWindowById, (WindowId), ());
-   MOCK_METHOD(PlatformWindow*, getFirstWindow, (), ());
-   MOCK_METHOD(void, setParentWindow, (void*), ());
-   MOCK_METHOD(void*, getParentWindow, (), ());
-   MOCK_METHOD(void, lowerCurtain, (), ());
-   MOCK_METHOD(void, raiseCurtain, (), ());
-   MOCK_METHOD(void, setDisplayWindow, (bool), ());
-   MOCK_METHOD(void, _processCmdLineArgs, (const S32, const char**), ());
-
-};
-
-MockWindowManager* CreateMockPlatformWindowManager()
-{
-   return new MockWindowManager();
-}
-// Mysteriously, TEST(WindowManager, BasicAPI) gives an error. Huh.
-TEST(WinMgr, CreateTest) {
-   MockWindowManager* pwm = CreateMockPlatformWindowManager();
    ASSERT_TRUE(pwm) << "no monitor to test against!";
-};
+}
 
-TEST(WinMgr, PrimaryDesktopAreaTest)
+TEST_F(PlatformWindowManagerSDLTest, PrimaryRectTest)
 {
-   MockWindowManager pwm;
+   PlatformWindowManagerSDL* pwm = static_cast<PlatformWindowManagerSDL*>(CreatePlatformWindowManager());
 
-   EXPECT_CALL(pwm, getPrimaryDesktopArea()).WillOnce(Return(RectI(0, 0, 5, 5)));
-   RectI rect = pwm.getPrimaryDesktopArea();
-   EXPECT_TRUE(rect.isValidRect()) << "Got some sort of invalid rect from the window manager!";
+   // Check out the primary desktop area...
+   RectI primary = pwm->getPrimaryDesktopArea();
+
+   EXPECT_TRUE(primary.isValidRect())
+      << "Got some sort of invalid rect from the window manager!";
+}
+
+TEST_F(PlatformWindowManagerSDLTest, MonitorRectsValid)
+{
+   PlatformWindowManagerSDL* pwm = static_cast<PlatformWindowManagerSDL*>(CreatePlatformWindowManager());
+
+   // Now try to get info about all the monitors.
+   Vector<RectI> monitorRects;
+   pwm->getMonitorRegions(monitorRects);
+
+   // should override the function above to test this with multiple setups.
+   for (S32 i = 0; i < monitorRects.size(); i++)
+   {
+      EXPECT_TRUE(monitorRects[i].isValidRect())
+         << "Got an invalid rect for this monitor - no good.";
+   }
+}
+TEST_F(PlatformWindowManagerSDLTest, MonitorRectsAtLeastOne)
+{
+   PlatformWindowManagerSDL* pwm = static_cast<PlatformWindowManagerSDL*>(CreatePlatformWindowManager());
+
+   // Now try to get info about all the monitors.
+   Vector<RectI> monitorRects;
+   pwm->getMonitorRegions(monitorRects);
+
+   EXPECT_GT(monitorRects.size(), 0)
+      << "Should get at least one monitor rect back from getMonitorRegions!";
+}
+
+TEST_F(PlatformWindowManagerSDLTest, MonitorRectsOverflow)
+{
+   PlatformWindowManagerSDL* pwm = static_cast<PlatformWindowManagerSDL*>(CreatePlatformWindowManager());
+
+   // Now try to get info about all the monitors.
+   Vector<RectI> monitorRects;
+   pwm->getMonitorRegions(monitorRects);
+
+   // This test is here just to detect overflow/runaway situations. -- BJG
+   EXPECT_LT(monitorRects.size(), 64)
+      << "Either something's wrong, or you have a lot of monitors...";
 }

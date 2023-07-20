@@ -55,7 +55,7 @@ endif()
 ###############################################################################
 option(TORQUE_SFX_VORBIS "Vorbis Sound" ON)
 mark_as_advanced(TORQUE_SFX_VORBIS)
-option(TORQUE_TESTING "Enable unit test module" ON)
+option(TORQUE_TESTING "Enable unit test module" OFF)
 mark_as_advanced(TORQUE_TESTING)
 option(TORQUE_THEORA "Theora Video Support" OFF)
 mark_as_advanced(TORQUE_THEORA)
@@ -357,7 +357,10 @@ addPath("${srcDir}/T3D/gameObjects")
 addPathRec("${srcDir}/T3D/components/")
 addPathRec("${srcDir}/T3D/systems")
 
-addPath("${srcDir}/main/")
+if(NOT TORQUE_TESTING)
+    # only need main when we are not testing.
+    addPath("${srcDir}/main/")
+endif()
 addPath("${srcDir}/assets")
 addPath("${srcDir}/module")
 addPathRec("${srcDir}/T3D/assets")
@@ -643,7 +646,6 @@ endif()
 ###############################################################################
 ###############################################################################
 if(TORQUE_TESTING)
-addDef( "TORQUE_TESTS" )
 finishLibrary()
 else()
 finishExecutable()
@@ -790,7 +792,9 @@ addDef(NTORQUE_SHARED)
 addDef(UNICODE)
 addDef(_UNICODE) # for VS
 addDef(TORQUE_UNICODE)
-#addDef(TORQUE_SHARED) # not used anymore as the game is the executable directly
+if(TORQUE_TESTING)
+    addDef(TORQUE_SHARED) # hack to put all the main entrys into 1 location for easy removal.
+endif()
 addDef(LTC_NO_PROTOTYPES) # for libTomCrypt
 addDef(BAN_OPCODE_AUTOLINK)
 addDef(ICE_NO_DLL)

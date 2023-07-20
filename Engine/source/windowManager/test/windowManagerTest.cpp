@@ -50,8 +50,10 @@ protected:
    PlatformWindowManagerSDLTest()
    {
       putenv("SDL_VIDEODRIVER=dummy");
+      putenv("SDL_AUDIODRIVER=dummy");
+
+      // for tests in this class we probably only need the init_video an nothing else.
       SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC | SDL_INIT_GAMECONTROLLER | SDL_INIT_EVENTS | SDL_INIT_NOPARACHUTE);
-      String driver = SDL_GetVideoDriver(0);
    }
 
    void SetUp() override
@@ -92,6 +94,7 @@ TEST_F(PlatformWindowManagerSDLTest, MonitorRectsValid)
          << "Got an invalid rect for this monitor - no good.";
    }
 }
+
 TEST_F(PlatformWindowManagerSDLTest, MonitorRectsAtLeastOne)
 {
    PlatformWindowManagerSDL* pwm = static_cast<PlatformWindowManagerSDL*>(CreatePlatformWindowManager());

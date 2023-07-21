@@ -36,10 +36,6 @@ addInclude("${srcDir}/")
 addInclude("${projectSrcDir}")
 addInclude(${srcDir}/testing)
 
-if(MSVC)
-set(CMAKE_EXE_LINKER_FLAGS "/SUBSYSTEM:CONSOLE")
-endif()
-
 finishExecutable()
 if(APPLE)
   #icon
@@ -104,6 +100,8 @@ if(UNIX AND NOT APPLE)
     string(REPLACE " " ";" TORQUE_EXTERNAL_LIBS_LIST ${TORQUE_EXTERNAL_LIBS})
     addLib( "${TORQUE_EXTERNAL_LIBS_LIST}" )
 endif()
+
+target_link_options(${TORQUE_APP_NAME}_TEST PRIVATE "/SUBSYSTEM:CONSOLE")
 
 addLib(gtest)
 addLib(${TORQUE_APP_NAME})

@@ -20,6 +20,8 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 #include "unitTesting.h"
+#include "torqueConfig.h"
+
 #include "platform/platformRedBook.h"
 #include "platform/platformVolume.h"
 #include "console/console.h"
@@ -124,7 +126,7 @@ int main(int argc, char** argv) {
    bool foundExternalMain = false;
    CInterface::CallMain(&foundExternalMain);
    if (foundExternalMain)
-      return true;
+      return 0;
 
    Stream* mainCsStream = NULL;
    // The working filestream.
@@ -153,7 +155,7 @@ int main(int argc, char** argv) {
    // This should rarely happen, but lets deal with
 // it gracefully if it does.
    if (mainCsStream == NULL)
-      return false;
+      return 0;
 
    U32 size = mainCsStream->getStreamSize();
    char* script = new char[size + 1];
@@ -184,7 +186,7 @@ int main(int argc, char** argv) {
    closeEmbeddedVFSArchive();
 #endif
 
-   return true;
+   return 1;
 }
 
 DefineEngineFunction(addUnitTest, void, (const char* function), ,

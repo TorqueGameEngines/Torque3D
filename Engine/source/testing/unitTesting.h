@@ -28,7 +28,6 @@
 #endif
 
 #include <gtest/gtest.h>
-#include <gmock/gmock.h>
 
 /// Convenience to define a test fixture with a Fixture suffix for use with
 /// TEST_FIX.

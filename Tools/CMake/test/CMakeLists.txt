@@ -106,7 +106,6 @@ if(UNIX AND NOT APPLE)
 endif()
 
 addLib(gtest)
-addLib(gmock)
 addLib(${TORQUE_APP_NAME})
 addDef( "_VARIADIC_MAX" 10 )
 addDef(TORQUE_DEBUG Debug)

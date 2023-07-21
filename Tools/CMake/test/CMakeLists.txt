@@ -101,7 +101,9 @@ if(UNIX AND NOT APPLE)
     addLib( "${TORQUE_EXTERNAL_LIBS_LIST}" )
 endif()
 
+if(WIN32)
 target_link_options(${TORQUE_APP_NAME}_TEST PRIVATE "/SUBSYSTEM:CONSOLE")
+endif()
 
 addLib(gtest)
 addLib(${TORQUE_APP_NAME})

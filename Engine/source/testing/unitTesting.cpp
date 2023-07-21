@@ -22,21 +22,13 @@
 #include "unitTesting.h"
 #include "torqueConfig.h"
 
-#include "platform/platformRedBook.h"
-#include "platform/platformVolume.h"
+#include "app/mainLoop.h"
 #include "console/console.h"
 #include "console/codeBlock.h"
 #include "console/engineAPI.h"
 #include "console/consoleInternal.h"
 #include "memoryTester.h"
-#include "core/stream/fileStream.h"
 
-#include "gfx/bitmap/gBitmap.h"
-#include "gfx/gFont.h"
-#include "gfx/video/videoCapture.h"
-#include "gfx/gfxTextureManager.h"
-#include "platform/nativeDialogs/fileDialog.h"
-#include "cinterface/cinterface.h"
 //-----------------------------------------------------------------------------
 
 class TorqueUnitTestListener : public ::testing::EmptyTestEventListener
@@ -98,95 +90,25 @@ private:
    const char* mFunctionName;
 };
 
-int main(int argc, char** argv) {
-  
-   FrameAllocator::init(TORQUE_FRAME_SIZE);      // See comments in torqueConfig.h
-
-   _StringTable::create();
-
-   // Set up the resource manager and get some basic file types in it.
-   Con::init();
-   Platform::initConsole();
-
-   // init Filesystem first, so we can actually log errors for all components that follow
-   Platform::FS::InstallFileSystems(); // install all drives for now until we have everything using the volume stuff
-   Platform::FS::MountDefaults();
-
-   // Set our working directory.
-   Torque::FS::SetCwd("game:/");
-
-   // Set our working directory.
-   Platform::setCurrentDirectory(Platform::getMainDotCsDir());
-
-   Con::setIntVariable("Game::argc", argc);
-   U32 i;
-   for (i = 0; i < argc; i++)
-      Con::setVariable(avar("Game::argv%d", i), argv[i]);
-
-   bool foundExternalMain = false;
-   CInterface::CallMain(&foundExternalMain);
-   if (foundExternalMain)
-      return 0;
-
-   Stream* mainCsStream = NULL;
-   // The working filestream.
-   FileStream str;
-
+int main(int argc, char** argv)
+{
    // Check if any command-line parameters were passed (the first is just the app name).
    if (argc > 1)
    {
-      // If so, check if the first parameter is a file to open.
-      if ((String::compare(argv[1], "") != 0) && (str.open(argv[1], Torque::FS::File::Read)))
-      {
-#ifdef TORQUE_ENABLE_VFS
-         useVFS = false;
-#endif
-         mainCsStream = &str;
-      }
+      StandardMainLoop::init();
+      StandardMainLoop::handleCommandLine(argc, (const char**)argv);
+      StandardMainLoop::shutdown();
+      return StandardMainLoop::getReturnStatus();
    }
    else
    {
+      
       // if we are not given a script just do it with the console window from google.
       printf("Running main() from %s\n", __FILE__);
       testing::InitGoogleTest(&argc, argv);
       return RUN_ALL_TESTS();
    }
-
-   // This should rarely happen, but lets deal with
-// it gracefully if it does.
-   if (mainCsStream == NULL)
-      return 0;
-
-   U32 size = mainCsStream->getStreamSize();
-   char* script = new char[size + 1];
-   mainCsStream->read(size, script);
-
-#ifdef TORQUE_ENABLE_VFS
-   if (useVFS)
-      vfs->closeFile(mainCsStream);
-   else
-#endif
-      str.close();
-
-   script[size] = 0;
-
-   char buffer[1024], * ptr;
-   Platform::makeFullPathName(argv[1], buffer, sizeof(buffer), Platform::getCurrentDirectory());
-   ptr = dStrrchr(buffer, '/');
-   if (ptr != NULL)
-      *ptr = 0;
-   Platform::setMainDotCsDir(buffer);
-   Platform::setCurrentDirectory(buffer);
-
-   Con::setVariable("TorqueScriptFileExtension", TORQUE_SCRIPT_EXTENSION);
-   Con::evaluate(script, false, argv[1]);
-   delete[] script;
-
-#ifdef TORQUE_ENABLE_VFS
-   closeEmbeddedVFSArchive();
-#endif
-
-   return 1;
+   
 }
 
 DefineEngineFunction(addUnitTest, void, (const char* function), ,

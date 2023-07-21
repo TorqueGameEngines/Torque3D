@@ -22,26 +22,29 @@
 
 cmake_minimum_required(VERSION 3.10)
 
-project(test_me)
+project(${TORQUE_APP_NAME}_TEST)
 
 enable_testing()
 
 include(GoogleTest)
 
-add_executable(test_me ${srcDir}/testing/windowManagerTest.cpp
-                        ${srcDir}/testing/unitTesting.cpp 
-                        ${srcDir}/testing/unitTesting.h)
+addPath(${srcDir}/testing/)
 #not sure if these includes are needed??
 addInclude(${libDir}/) # for tinyxml
 addInclude(${libDir}/tinyxml)
 addInclude("${srcDir}/")
 addInclude("${projectSrcDir}")
-addInclude(${srcDir}/testing)       
+addInclude(${srcDir}/testing)
+
+set(CMAKE_EXE_LINKER_FLAGS "/SUBSYSTEM:CONSOLE")
+
+finishExecutable()
+
 addLib(gtest)
 addLib(gmock)
 addLib(gmock_main)
 addLib(${TORQUE_APP_NAME})
 addDef( "_VARIADIC_MAX" 10 )
 if(MSVC)
-set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT test_me)
+set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${TORQUE_APP_NAME}_TEST)
 endif()

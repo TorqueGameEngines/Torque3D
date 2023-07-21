@@ -68,13 +68,17 @@ TEST(File, TouchAndTime)
 
    // Touch a file and note its last-modified.
    dFileTouch("testTouch.file");
+
+   // Sleep for a tick
+   Platform::sleep(32);
+
    EXPECT_TRUE(Platform::isFile("testTouch.file"))
       << "We just touched this file - it should exist.";
    EXPECT_TRUE(Platform::getFileTimes("testTouch.file", &create[0], &modify[0]))
       << "Failed to get filetimes for a file we just created.";
 
    // Sleep for a tick
-   Platform::sleep(10);
+   Platform::sleep(32);
 
    // Touch it again, and compare the last-modifieds.
    EXPECT_TRUE(Platform::isFile("testTouch.file"))

@@ -333,17 +333,26 @@ GFXAdapter *GFXInit::getBestAdapterChoice()
       }
    }
 
-   // Return best found in order DX11, GL
-   if (foundAdapter11)
-      return foundAdapter11;
+   if (renderer.equal("NullDevice", String::NoCase) == false)
+   {
+      // Return best found in order DX11, GL
+      if (foundAdapter11)
+         return foundAdapter11;
 
-   if (foundAdapterGL)
-      return foundAdapterGL;
+      if (foundAdapterGL)
+         return foundAdapterGL;
 
-   // Uh oh - we didn't find anything. Grab whatever we can that's not Null...
-   for(S32 i=0; i<smAdapters.size(); i++)
-      if(smAdapters[i]->mType != NullDevice)
-         return smAdapters[i];
+      // Uh oh - we didn't find anything. Grab whatever we can that's not Null...
+      for (S32 i = 0; i < smAdapters.size(); i++)
+         if (smAdapters[i]->mType != NullDevice)
+            return smAdapters[i];
+   }
+   else
+   {
+      for (S32 i = 0; i < smAdapters.size(); i++)
+         if (smAdapters[i]->mType == NullDevice)
+            return smAdapters[i];
+   }
 
    // Dare we return a null device? No. Just return NULL.
    return NULL;

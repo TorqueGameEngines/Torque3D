@@ -278,6 +278,7 @@ GFXSamplerStateDesc::GFXSamplerStateDesc()
    samplerFunc = GFXCmpNever;
    maxAnisotropy = 1;
    mipLODBias = 0.0f;
+   borderColor = ColorI::WHITE;
 }
 
 GFXSamplerStateDesc GFXSamplerStateDesc::getWrapLinear()

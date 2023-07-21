@@ -93,7 +93,7 @@ void GFXGLEnumTranslate::init()
    GFXGLTextureAddress[GFXAddressWrap] = GL_REPEAT;
    GFXGLTextureAddress[GFXAddressMirror] = GL_REPEAT;
    GFXGLTextureAddress[GFXAddressClamp] = GL_CLAMP_TO_EDGE;
-   GFXGLTextureAddress[GFXAddressBorder] = GL_REPEAT;
+   GFXGLTextureAddress[GFXAddressBorder] = GL_CLAMP_TO_BORDER;
    GFXGLTextureAddress[GFXAddressMirrorOnce] = GL_REPEAT;
    
    // Stencil ops

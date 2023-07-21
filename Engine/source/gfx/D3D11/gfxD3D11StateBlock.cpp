@@ -186,10 +186,11 @@ GFXD3D11StateBlock::GFXD3D11StateBlock(const GFXStateBlockDesc& desc)
          else
             mSamplerDesc[i].Filter = comparison ? D3D11_FILTER_COMPARISON_ANISOTROPIC : D3D11_FILTER_ANISOTROPIC;
 
-         mSamplerDesc[i].BorderColor[0] = 1.0f;
-         mSamplerDesc[i].BorderColor[1] = 1.0f;
-         mSamplerDesc[i].BorderColor[2] = 1.0f;
-         mSamplerDesc[i].BorderColor[3] = 1.0f;
+         LinearColorF bc = LinearColorF(gfxSamplerState.borderColor);
+         mSamplerDesc[i].BorderColor[0] = bc.red;
+         mSamplerDesc[i].BorderColor[1] = bc.green;
+         mSamplerDesc[i].BorderColor[2] = bc.blue;
+         mSamplerDesc[i].BorderColor[3] = bc.alpha;
          mSamplerDesc[i].ComparisonFunc = GFXD3D11CmpFunc[gfxSamplerState.samplerFunc];
 
          hr = D3D11DEVICE->CreateSamplerState(&mSamplerDesc[i], &mSamplerStates[i]);

@@ -36,7 +36,9 @@ addInclude("${srcDir}/")
 addInclude("${projectSrcDir}")
 addInclude(${srcDir}/testing)
 
+if(MSVC)
 set(CMAKE_EXE_LINKER_FLAGS "/SUBSYSTEM:CONSOLE")
+endif()
 
 finishExecutable()
 

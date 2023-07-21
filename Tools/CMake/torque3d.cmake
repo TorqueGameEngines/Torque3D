@@ -23,10 +23,7 @@
 project(${TORQUE_APP_NAME})
 
 if ( CMAKE_COMPILER_IS_GNUCC )
-    set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wextra")
-endif()
-if ( MSVC )
-    set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} /W4")
+    set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -w")
 endif()
 
 if(UNIX)

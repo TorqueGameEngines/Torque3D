@@ -44,8 +44,8 @@ class PlatformWindowManagerSDLTest : public ::testing::Test
 protected:
    PlatformWindowManagerSDLTest()
    {
-      putenv("SDL_VIDEODRIVER=dummy");
-      putenv("SDL_AUDIODRIVER=dummy");
+      _putenv("SDL_VIDEODRIVER=dummy");
+      _putenv("SDL_AUDIODRIVER=dummy");
 
       // for tests in this class we probably only need the init_video an nothing else.
       SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC | SDL_INIT_GAMECONTROLLER | SDL_INIT_EVENTS | SDL_INIT_NOPARACHUTE);

@@ -107,7 +107,6 @@ endif()
 
 addLib(gtest)
 addLib(gmock)
-addLib(gmock_main)
 addLib(${TORQUE_APP_NAME})
 addDef( "_VARIADIC_MAX" 10 )
 addDef(TORQUE_DEBUG Debug)

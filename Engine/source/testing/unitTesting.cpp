@@ -102,7 +102,6 @@ int main(int argc, char** argv)
    }
    else
    {
-      
       // if we are not given a script just do it with the console window from google.
       printf("Running main() from %s\n", __FILE__);
       testing::InitGoogleTest(&argc, argv);

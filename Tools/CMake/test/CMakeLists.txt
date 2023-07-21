@@ -24,32 +24,11 @@ cmake_minimum_required(VERSION 3.10)
 
 project(${TORQUE_APP_NAME}_TEST)
 
-if(UNIX)
-    if(NOT CXX_FLAG32)
-        set(CXX_FLAG32 "")
-    endif()
-    #set(CXX_FLAG32 "-m32") #uncomment for build x32 on OSx64
-
-    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX_FLAG32} -Wundef -pipe -Wfatal-errors -Wno-return-type-c-linkage -Wno-unused-local-typedef ${TORQUE_ADDITIONAL_LINKER_FLAGS}")
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CXX_FLAG32} -Wundef -pipe -Wfatal-errors -Wno-return-type-c-linkage -Wno-unused-local-typedef ${TORQUE_ADDITIONAL_LINKER_FLAGS}")
-
-        # Only use SSE on x86 devices
-        if (TORQUE_CPU_X32 OR TORQUE_CPU_X64)
-            set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse")
-            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse")
-        endif()
-    else()
-        # default compiler flags
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX_FLAG32} -Wundef -pipe -Wfatal-errors -no-pie ${TORQUE_ADDITIONAL_LINKER_FLAGS} -Wl,-rpath,'$ORIGIN'")
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CXX_FLAG32} -Wundef -pipe -Wfatal-errors ${TORQUE_ADDITIONAL_LINKER_FLAGS} -Wl,-rpath,'$ORIGIN'")
-
-        # Only use SSE on x86 devices
-        if (TORQUE_CPU_X32 OR TORQUE_CPU_X64)
-            set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse")
-            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse")
-        endif()
-    endif()
+if ( CMAKE_COMPILER_IS_GNUCC )
+    set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wextra")
+endif()
+if ( MSVC )
+    set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} /W4")
 endif()
 
 enable_testing()

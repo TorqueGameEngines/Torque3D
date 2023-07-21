@@ -31,13 +31,8 @@
 
 #include "SDL.h"
 
-using ::testing::_;
-using ::testing::An;
 using ::testing::Matcher;
 using ::testing::TypedEq;
-using ::testing::Return;
-using ::testing::AtLeast;
-using ::testing::Invoke;
 
 class PlatformWindowManagerSDLTest : public ::testing::Test
 {

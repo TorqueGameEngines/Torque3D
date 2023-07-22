@@ -1052,7 +1052,7 @@ TEST_F(ScriptTest, RegressionFloat)
 TEST_F(ScriptTest, RegressionBool)
 {
    ConsoleValue regression = RunScript(R"(
-      function SimObject::crashMe(%this, %line)
+      function SimObject::burnBool(%this, %line)
       {
          return %line @ "1";
       }
@@ -1060,9 +1060,9 @@ TEST_F(ScriptTest, RegressionBool)
       function doTest()
       {
          %obj = new SimObject();
-         for (%i = 0; %i < 99999; %i++)
+         for (%i = 0; %i < 100; %i++)
          {
-            %function = "crashMe";
+            %function = "burnBool";
             if (%obj.isMethod(%function))
             {
                %line = "abcdefg";

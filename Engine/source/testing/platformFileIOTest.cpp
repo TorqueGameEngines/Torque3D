@@ -26,7 +26,32 @@
 #include "core/util/tVector.h"
 #include "console/console.h"
 
-TEST(PlatformFileIOTest, ExcludedDirectories)
+class PlatformFileIOTest : public ::testing::Test
+{
+protected:
+   PlatformFileIOTest()
+   {
+      // create a file for tests.
+      f.open("testTouch.file", File::WriteAppend);
+      f.close();
+      Platform::getFileTimes("testTouch.file", &initCreate, NULL);
+   }
+
+   void SetUp() override
+   {
+   }
+   File f;
+   FileTime initCreate;
+
+   void TearDown() override
+   {
+      // Clean up..
+      dFileDelete("testTouch.file");
+   }
+
+};
+
+TEST_F(PlatformFileIOTest, ExcludedDirectories)
 {
    // Just dump everything under the current directory. We should
    // find at least one file.
@@ -56,53 +81,53 @@ TEST(PlatformFileIOTest, ExcludedDirectories)
    Platform::clearExcludedDirectories();
 };
 
-TEST(PlatformFileIOTest, TouchAndTime)
+TEST_F(PlatformFileIOTest, CreateTest)
 {
-   FileTime create[2], modify[2];
+   EXPECT_TRUE(Platform::isFile("testTouch.file"))
+      << "Class should have created this file.";
+}
 
-   // Create a file and sleep for a second.
-   File f;
-   f.open("testTouch.file", File::WriteAppend);
-   f.close();
+TEST_F(PlatformFileIOTest, CreateTimeTest)
+{
+   FileTime testCreate;
+
+   Platform::getFileTimes("testTouch.file", &testCreate, NULL);
+
+   EXPECT_EQ(Platform::compareFileTimes(testCreate, initCreate), 0)
+      << "Create timestamps should match.";
+}
+
+TEST_F(PlatformFileIOTest, ModifyTimesTest)
+{
+   FileTime modify[2];
 
    // Touch a file and note its last-modified.
    dFileTouch("testTouch.file");
 
-   // Sleep for a tick
-   Platform::sleep(32);
+   Platform::getFileTimes("testTouch.file", NULL, &modify[0]);
 
-   EXPECT_TRUE(Platform::isFile("testTouch.file"))
-      << "We just touched this file - it should exist.";
-   EXPECT_TRUE(Platform::getFileTimes("testTouch.file", &create[0], &modify[0]))
-      << "Failed to get filetimes for a file we just created.";
+   // Sleep for a second
+   Platform::sleep(1000);
 
-   // Sleep for a tick
-   Platform::sleep(32);
-
-   // Touch it again, and compare the last-modifieds.
-   EXPECT_TRUE(Platform::isFile("testTouch.file"))
-      << "We just touched this file - it should exist.";
    dFileTouch("testTouch.file");
-   EXPECT_TRUE(Platform::isFile("testTouch.file"))
-      << "We just touched this file - it should exist.";
-   EXPECT_TRUE(Platform::getFileTimes("testTouch.file", &create[1], &modify[1]))
-      << "Failed to get filetimes for a file we just created.";
+   Platform::getFileTimes("testTouch.file", NULL, &modify[1]);
 
    // Now compare the times...
    EXPECT_LT(Platform::compareFileTimes(modify[0], modify[1]), 0)
       << "Timestamps are wrong - modify[0] should be before modify[1]!";
-   EXPECT_EQ(Platform::compareFileTimes(create[0], create[1]), 0)
-      << "Create timestamps should match - we didn't delete the file during this test.";
+};
 
+TEST_F(PlatformFileIOTest, DeleteFileTest)
+{
    // Clean up..
    dFileDelete("testTouch.file");
    EXPECT_FALSE(Platform::isFile("testTouch.file"))
       << "Somehow failed to delete our test file.";
-};
+}
 
 // Mac/Linux have no implementations for these functions, so we 'def it out for now.
 #ifdef WIN32
-TEST(PlatformFileIOTest, Volumes)
+TEST_F(PlatformFileIOTest, Volumes)
 {
    Vector<const char*> names;
    Platform::getVolumeNamesList(names);

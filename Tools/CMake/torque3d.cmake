@@ -55,6 +55,8 @@ endif()
 ###############################################################################
 option(TORQUE_SFX_VORBIS "Vorbis Sound" ON)
 mark_as_advanced(TORQUE_SFX_VORBIS)
+option(TORQUE_TESTING "Enable unit test module" OFF)
+mark_as_advanced(TORQUE_TESTING)
 option(TORQUE_THEORA "Theora Video Support" ON)
 mark_as_advanced(TORQUE_THEORA)
 option(TORQUE_ADVANCED_LIGHTING "Advanced Lighting" ON)
@@ -80,6 +82,10 @@ if(WIN32)
     set(ALSOFT_EMBED_HRTF_DATA OFF CACHE BOOL "Embed the HRTF data (increases library footprint)" FORCE)
     
     add_subdirectory( ${libDir}/openal-soft ${CMAKE_CURRENT_BINARY_DIR}/openal-soft)
+endif()
+
+if(TORQUE_TESTING)
+    add_subdirectory(${libDir}/gtest ${CMAKE_CURRENT_BINARY_DIR}/gtest)
 endif()
 
 if(TORQUE_SFX_OPENAL)
@@ -339,6 +345,10 @@ addPath("${srcDir}/physics")
 addPath("${srcDir}/gui/3d")
 addPath("${srcDir}/postFx")
 
+if(TORQUE_TESTING)
+addPath("${srcDir}/testing/")
+endif()
+
 addPath("${srcDir}/T3D")
 set(BLACKLIST "" )
 
@@ -356,7 +366,9 @@ addPath("${srcDir}/T3D/gameObjects")
 addPathRec("${srcDir}/T3D/components/")
 addPathRec("${srcDir}/T3D/systems")
 
-addPath("${srcDir}/main/")
+if(NOT TORQUE_TESTING)
+    addPath("${srcDir}/main/")
+endif()
 addPath("${srcDir}/assets")
 addPath("${srcDir}/module")
 addPathRec("${srcDir}/T3D/assets")
@@ -779,7 +791,11 @@ addDef(NTORQUE_SHARED)
 addDef(UNICODE)
 addDef(_UNICODE) # for VS
 addDef(TORQUE_UNICODE)
-#addDef(TORQUE_SHARED) # not used anymore as the game is the executable directly
+if(TORQUE_TESTING)
+    addDef(TORQUE_SHARED) # hack to get all mains in 1 place.
+    addLib(gtest)
+    addDef(SDL_MAIN_HANDLED)
+endif()
 addDef(LTC_NO_PROTOTYPES) # for libTomCrypt
 addDef(BAN_OPCODE_AUTOLINK)
 addDef(ICE_NO_DLL)
@@ -1012,4 +1028,12 @@ if(TORQUE_SDL)
     else()
         set_target_properties(SDL2 PROPERTIES FOLDER ${TORQUE_LIBS_FOLDER_NAME})
     endif()
+endif()
+
+if(TORQUE_TESTING)
+    if(WIN32)
+        target_link_options(${TORQUE_APP_NAME} PRIVATE "/SUBSYSTEM:CONSOLE")
+    endif()
+
+    set_target_properties(gtest PROPERTIES FOLDER ${TORQUE_LIBS_FOLDER_NAME})
 endif()

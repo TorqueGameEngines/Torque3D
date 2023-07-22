@@ -23,7 +23,9 @@
 #ifndef _UNIT_TESTING_H_
 #define _UNIT_TESTING_H_
 
-#ifdef TORQUE_TESTS_ENABLED
+#if defined(SDL_MAIN_AVAILABLE)
+#undef SDL_MAIN_AVAILABLE
+#endif
 
 #include <gtest/gtest.h>
 
@@ -37,7 +39,5 @@
 #define TEST_FIX(test_fixture, test_name)\
    GTEST_TEST_(test_fixture, test_name, test_fixture##Fixture, \
    ::testing::internal::GetTypeId<test_fixture##Fixture>())
-
-#endif // TORQUE_TESTS_ENABLED
 
 #endif // _UNIT_TESTING_H_

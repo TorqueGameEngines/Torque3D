@@ -65,9 +65,24 @@ class TorqueUnitTestListener : public ::testing::EmptyTestEventListener
    // Called after a test ends.
    virtual void OnTestEnd(const ::testing::TestInfo& testInfo)
    {
-      if (mVerbose)
-         Con::printf("> Ending Test '%s.%s'\n",
+      if (testInfo.result()->Failed())
+      {
+         Con::printf("TestClass:%s Test:%s Failed!",
             testInfo.test_case_name(), testInfo.name());
+      }
+      else if(testInfo.result()->Passed())
+      {
+         Con::printf("TestClass:%s Test:%s Succeeded!",
+            testInfo.test_case_name(), testInfo.name());
+      }
+      else
+      {
+         Con::printf("TestClass:%s Test:%s Skipped!",
+            testInfo.test_case_name(), testInfo.name());
+      }
+
+      Con::printf("> Ending Test\n");
+
    }
 
    bool mVerbose;
@@ -187,10 +202,10 @@ DefineEngineFunction(runAllUnitTests, int, (const char* testSpecs, const char* r
       args.push_back(const_cast<char*>(reportFormatArg.c_str()));
    }
    S32 argc = args.size();
-
+   
    // Initialize Google Test.
    testing::InitGoogleTest(&argc, args.address());
-
+   
    // Fetch the unit test instance.
    testing::UnitTest& unitTest = *testing::UnitTest::GetInstance();
 
@@ -206,7 +221,7 @@ DefineEngineFunction(runAllUnitTests, int, (const char* testSpecs, const char* r
    }
 
    // Add the Torque unit test listener.
-   listeners.Append(new TorqueUnitTestListener(false));
+   listeners.Append(new TorqueUnitTestListener(true));
 
    // Perform googletest run.
    Con::printf("\nUnit Tests Starting...\n");

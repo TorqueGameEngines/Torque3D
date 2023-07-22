@@ -26,7 +26,7 @@
 
 #include <windows.h>
 #include <string>
-
+#include <locale.h>
 extern "C"
 {
    int (*torque_winmain)( HINSTANCE hInstance, HINSTANCE h, LPSTR lpszCmdLine, int nShow) = NULL;

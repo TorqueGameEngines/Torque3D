@@ -1,14 +1,33 @@
-#ifdef TORQUE_TESTS_ENABLED
+
 #include "testing/unitTesting.h"
 #include "platform/platform.h"
 #include "console/simBase.h"
 #include "console/consoleTypes.h"
+#include "console/scriptObjects.h"
 #include "console/simBase.h"
 #include "console/engineAPI.h"
 #include "math/mMath.h"
 
+using ::testing::Matcher;
+using ::testing::TypedEq;
 
-TEST(EngineAPI, EngineMarshallData)
+class EngineAPITest : public ::testing::Test
+{
+protected:
+   EngineAPITest()
+   {
+   }
+
+   void SetUp() override
+   {
+      ScriptObject* test = new ScriptObject();
+      test->assignName("TestConExec");
+   }
+
+
+};
+
+TEST_F(EngineAPITest, EngineMarshallData)
 {
 	// Reserve some values
 	ConsoleValue values[16];
@@ -97,7 +116,7 @@ TEST(EngineAPI, EngineMarshallData)
 	foo->deleteObject();
 }
 
-TEST(EngineAPI, EngineUnMarshallData)
+TEST_F(EngineAPITest, EngineUnMarshallData)
 {
 	SimObject *foo = new SimObject();
 	foo->registerObject();
@@ -114,7 +133,7 @@ TEST(EngineAPI, EngineUnMarshallData)
 	foo->deleteObject();
 }
 
-TEST(EngineAPI, _EngineConsoleCallbackHelper)
+TEST_F(EngineAPITest, _EngineConsoleCallbackHelper)
 {
 	Con::evaluate("if (isObject(TestConExec)) {\r\nTestConExec.delete();\r\n}\r\nfunction testExecutef(%a,%b,%c,%d,%e,%f,%g,%h,%i,%j,%k){return %a SPC %b SPC %c SPC %d SPC %e SPC %f SPC %g SPC %h SPC %i SPC %j SPC %k;}\r\nfunction TestConExec::testThisFunction(%this,%a,%b,%c,%d,%e,%f,%g,%h,%i,%j){ return %a SPC %b SPC %c SPC %d SPC %e SPC %f SPC %g SPC %h SPC %i SPC %j;}\r\nnew ScriptObject(TestConExec);\r\n", false, "test");
 
@@ -135,7 +154,7 @@ TEST(EngineAPI, _EngineConsoleCallbackHelper)
 }
 
 // NOTE: this is also indirectly tested by the executef tests
-TEST(EngineAPI, _EngineConsoleExecCallbackHelper)
+TEST_F(EngineAPITest, _EngineConsoleExecCallbackHelper)
 {
 	Con::evaluate("if (isObject(TestConExec)) {\r\nTestConExec.delete();\r\n}\r\nfunction testExecutef(%a,%b,%c,%d,%e,%f,%g,%h,%i,%j,%k){return %a SPC %b SPC %c SPC %d SPC %e SPC %f SPC %g SPC %h SPC %i SPC %j SPC %k;}\r\nfunction TestConExec::testThisFunction(%this,%a,%b,%c,%d,%e,%f,%g,%h,%i,%j){ return %a SPC %b SPC %c SPC %d SPC %e SPC %f SPC %g SPC %h SPC %i SPC %j;}\r\nnew ScriptObject(TestConExec);\r\n", false, "test");
 
@@ -155,4 +174,3 @@ TEST(EngineAPI, _EngineConsoleExecCallbackHelper)
 		"All values should be printed in the correct order";
 }
 
-#endif

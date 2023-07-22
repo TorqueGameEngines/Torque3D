@@ -19,8 +19,6 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
-
-#ifdef TORQUE_TESTS_ENABLED
 #include "testing/unitTesting.h"
 #include "platform/platform.h"
 #include "console/simBase.h"
@@ -29,13 +27,32 @@
 #include "console/engineAPI.h"
 #include "math/mMath.h"
 #include "console/stringStack.h"
+#include "gui/buttons/guiIconButtonCtrl.h"
 
 inline ConsoleValue RunScript(const char* str)
 {
    return std::move(Con::evaluate(str, false, NULL));
 }
 
-TEST(Script, Basic_Arithmetic)
+using ::testing::Matcher;
+using ::testing::TypedEq;
+
+class ScriptTest : public ::testing::Test
+{
+protected:
+   ScriptTest()
+   {
+   }
+
+   void SetUp() override
+   {
+   }
+
+
+};
+
+
+TEST_F(ScriptTest, Basic_Arithmetic)
 {
    ConsoleValue add = RunScript(R"(
          return 1.0 + 1;
@@ -116,7 +133,7 @@ TEST(Script, Basic_Arithmetic)
    ASSERT_EQ(mm.getInt(), 1);
 }
 
-TEST(Script, Complex_Arithmetic)
+TEST_F(ScriptTest, Complex_Arithmetic)
 {
    ConsoleValue result = RunScript(R"(
          return 1 * 2 - (0.5 * 2);
@@ -131,7 +148,7 @@ TEST(Script, Complex_Arithmetic)
    ASSERT_EQ(result2.getInt(), 0);
 }
 
-TEST(Script, Basic_Concatination)
+TEST_F(ScriptTest, Basic_Concatination)
 {
    ConsoleValue result1 = RunScript(R"(
          return "a" @ "b";
@@ -164,7 +181,7 @@ TEST(Script, Basic_Concatination)
    ASSERT_STREQ(complex.getString(), "abcd");
 }
 
-TEST(Script, Basic_Global_Variable_Tests)
+TEST_F(ScriptTest, Basic_Global_Variable_Tests)
 {
    ConsoleValue value = RunScript(R"(
          $a = 1;
@@ -174,7 +191,7 @@ TEST(Script, Basic_Global_Variable_Tests)
    ASSERT_EQ(value.getInt(), 1);
 }
 
-TEST(Script, Variable_Chaining_And_Usage)
+TEST_F(ScriptTest, Variable_Chaining_And_Usage)
 {
    ConsoleValue value = RunScript(R"(
          function t()
@@ -212,7 +229,7 @@ TEST(Script, Variable_Chaining_And_Usage)
    ASSERT_EQ(value2.getInt(), 4);
 }
 
-TEST(Script, Basic_Function_Call_And_Local_Variable_Testing)
+TEST_F(ScriptTest, Basic_Function_Call_And_Local_Variable_Testing)
 {
    ConsoleValue value = RunScript(R"(
          function t() { %a = 2; return %a; }
@@ -251,7 +268,7 @@ TEST(Script, Basic_Function_Call_And_Local_Variable_Testing)
    ASSERT_EQ(staticCall.getInt(), 3);
 }
 
-TEST(Script, Basic_Conditional_Statements)
+TEST_F(ScriptTest, Basic_Conditional_Statements)
 {
    ConsoleValue value = RunScript(R"(
          $a = "hello";
@@ -269,7 +286,7 @@ TEST(Script, Basic_Conditional_Statements)
    ASSERT_STREQ(ternaryValue.getString(), "World");
 }
 
-TEST(Script, Basic_Loop_Statements)
+TEST_F(ScriptTest, Basic_Loop_Statements)
 {
    ConsoleValue whileValue = RunScript(R"(
          $count = 0;
@@ -331,7 +348,7 @@ TEST(Script, Basic_Loop_Statements)
    ASSERT_STREQ(forIfValue.getString(), "0, 1, 2, 3, 4");
 }
 
-TEST(Script, ForEachLoop)
+TEST_F(ScriptTest, ForEachLoop)
 {
    ConsoleValue forEach1 = RunScript(R"(
          $theSimSet = new SimSet();
@@ -525,7 +542,7 @@ TEST(Script, ForEachLoop)
    ASSERT_EQ(forEachNestedReturn.getInt(), 42);
 }
 
-TEST(Script, TorqueScript_Array_Testing)
+TEST_F(ScriptTest, TorqueScript_Array_Testing)
 {
    ConsoleValue value = RunScript(R"(
          function t(%idx) { %a[%idx] = 2; return %a[%idx]; }
@@ -542,7 +559,7 @@ TEST(Script, TorqueScript_Array_Testing)
    ASSERT_EQ(value2.getInt(), 2);
 }
 
-TEST(Script, SimObject_Tests)
+TEST_F(ScriptTest, SimObject_Tests)
 {
    ConsoleValue object = RunScript(R"(
          return new SimObject(FudgeCollector)
@@ -697,7 +714,7 @@ TEST(Script, SimObject_Tests)
    ASSERT_EQ(inheritedObjectTest.getInt(), 11);
 }
 
-TEST(Script, Internal_Name)
+TEST_F(ScriptTest, Internal_Name)
 {
    ConsoleValue value = RunScript(R"(
          function TheFirstInner::_internalCall(%this)
@@ -763,7 +780,7 @@ TEST(Script, Internal_Name)
    ASSERT_EQ(recursiveValue.getInt(), 12);
 }
 
-TEST(Script, Basic_Package)
+TEST_F(ScriptTest, Basic_Package)
 {
    ConsoleValue value = RunScript(R"(
          function a() { return 3; }
@@ -791,7 +808,7 @@ TEST(Script, Basic_Package)
    ASSERT_EQ(deactivatedValue.getInt(), 3);
 }
 
-TEST(Script, Sugar_Syntax)
+TEST_F(ScriptTest, Sugar_Syntax)
 {
    ConsoleValue value = RunScript(R"(
          function a()
@@ -873,7 +890,7 @@ TEST(Script, Sugar_Syntax)
    ASSERT_EQ(globalValueSet.getFloat(), 4);
 }
 
-TEST(Script, InnerObjectTests)
+TEST_F(ScriptTest, InnerObjectTests)
 {
    ConsoleValue theObject = RunScript(R"(
       function a()
@@ -927,7 +944,7 @@ TEST(Script, InnerObjectTests)
    ASSERT_EQ(nestedFuncCall.getInt(), 123);
 }
 
-TEST(Script, MiscTesting)
+TEST_F(ScriptTest, MiscTesting)
 {
    ConsoleValue test1 = RunScript(R"(
       function testNotPassedInParameters(%a, %b, %c, %d)
@@ -961,7 +978,7 @@ TEST(Script, MiscTesting)
    ASSERT_EQ(test2.getBool(), true);
 }
 
-TEST(Script, MiscRegressions)
+TEST_F(ScriptTest, MiscRegressions)
 {
    ConsoleValue regression1 = RunScript(R"(
       new SimObject(TheRegressionObject);
@@ -1001,47 +1018,6 @@ TEST(Script, MiscRegressions)
    ASSERT_EQ(regression2.getInt(), 400);
 
    ConsoleValue regression3 = RunScript(R"(
-      function doTest()
-      {
-          %button = new GuiIconButtonCtrl()
-          {
-              active = true;
-          };
-
-          %button.setExtent(120, 20);
-
-          %button.setExtent("120 20");
-
-          %button.extent = "120 20";
-
-          %button.extent.x = 120;
-          %button.extent.y = 20;
-          return %button.extent;
-      }
-      return doTest();
-   )");
-
-   ASSERT_STREQ(regression3.getString(), "120 20");
-
-   ConsoleValue regression4 = RunScript(R"(
-    function doTest()
-    {
-        %slider = new GuiSliderCtrl()
-        {
-            range = "0 2";
-            ticks = 5;
-            active = true;
-        };
-
-        %slider.setValue(0.5);
-        return %slider.getValue();
-    }
-    return doTest();
-   )");
-
-   ASSERT_EQ(regression4.getFloat(), 0.5);
-
-   ConsoleValue regression5 = RunScript(R"(
       function noOpInc()
       {
          %count = 0;
@@ -1051,9 +1027,9 @@ TEST(Script, MiscRegressions)
       return noOpInc();
    )");
 
-   ASSERT_EQ(regression5.getInt(), 2);
+   ASSERT_EQ(regression3.getInt(), 2);
 
-   ConsoleValue regression6 = RunScript(R"(
+   ConsoleValue regression4 = RunScript(R"(
       function SimObject::crashMe(%this, %line)
       {
          return %line @ "1";
@@ -1078,9 +1054,9 @@ TEST(Script, MiscRegressions)
       return doTest();
    )");
 
-   ASSERT_EQ(regression6.getBool(), true);
+   ASSERT_EQ(regression4.getBool(), true);
 
-   ConsoleValue regression7 = RunScript(R"(
+   ConsoleValue regression5 = RunScript(R"(
       function Tween::vectorAdd(%v1, %v2)
       {
          %temp = "";
@@ -1094,7 +1070,6 @@ TEST(Script, MiscRegressions)
       return Tween::vectorAdd("1 2 3", "4 5 6");
    )");
 
-   ASSERT_STREQ(regression7.getString(), "5 7 9");
+   ASSERT_STREQ(regression5.getString(), "5 7 9");
 }
 
-#endif

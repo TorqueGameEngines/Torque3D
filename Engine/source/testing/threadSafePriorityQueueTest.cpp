@@ -20,7 +20,6 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#ifdef TORQUE_TESTS_ENABLED
 #include "testing/unitTesting.h"
 #include "platform/threads/threadSafePriorityQueue.h"
 #include "platform/threads/thread.h"
@@ -142,5 +141,3 @@ TEST(ThreadSafePriorityQueue, Concurrent)
 #undef MAX
 #undef LEN
 }
-
-#endif

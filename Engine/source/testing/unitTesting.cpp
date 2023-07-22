@@ -105,7 +105,7 @@ private:
 };
 
 // uncomment to debug tests and use the test explorer.
-#define TEST_EXPLORER
+//#define TEST_EXPLORER
 #if !defined(TEST_EXPLORER)
 int main(int argc, char** argv)
 {

@@ -19,13 +19,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
-
-#ifdef TORQUE_TESTS_ENABLED
 #include "testing/unitTesting.h"
 #include "platform/platform.h"
 #include "core/util/endian.h"
 
-TEST(PlatformTypes, Sizes)
+TEST(PlatformTypesTest, Sizes)
 {
    // Run through all the types and ensure they're the right size.
 #define CheckType(typeName, expectedSize) \
@@ -58,7 +56,7 @@ TEST(PlatformTypes, Sizes)
 #undef CheckType
 };
 
-TEST(PlatformTypes, EndianConversion)
+TEST(PlatformTypesTest, EndianConversion)
 {
    // Convenient and non-palindrome byte patterns to test with.
    const U16 U16Test = 0xA1B2;
@@ -104,7 +102,7 @@ TEST(PlatformTypes, EndianConversion)
 #undef CheckEndianRoundTrip
 };
 
-TEST(PlatformTypes, EndianSwap)
+TEST(PlatformTypesTest, EndianSwap)
 {
    U32 swap32 = 0xABCDEF12;
    U16 swap16 = 0xABCD;
@@ -114,5 +112,3 @@ TEST(PlatformTypes, EndianSwap)
    EXPECT_EQ(endianSwap(swap16), 0xCDAB)
       << "16 bit endianSwap should reverse byte order, but didn't.";
 };
-
-#endif

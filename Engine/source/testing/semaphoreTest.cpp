@@ -20,7 +20,6 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#ifdef TORQUE_TESTS_ENABLED
 #include "testing/unitTesting.h"
 #include "platform/threads/semaphore.h"
 #include "platform/threads/thread.h"
@@ -86,5 +85,3 @@ TEST(Semaphore, MultiThreadSynchronization)
    thread2.start();
    thread2.join();
 }
-
-#endif

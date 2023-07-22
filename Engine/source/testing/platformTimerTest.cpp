@@ -19,14 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
-
-#ifdef TORQUE_TESTS_ENABLED
 #include "testing/unitTesting.h"
 #include "platform/platformTimer.h"
 #include "core/util/journal/process.h"
 #include "math/mMath.h"
 
-TEST(Platform, AdvanceTime)
+TEST(PlatformTimerTest, AdvanceTime)
 {
    U32 time = Platform::getVirtualMilliseconds();
    Platform::advanceTime(10);
@@ -35,7 +33,7 @@ TEST(Platform, AdvanceTime)
       << "We advanced 10ms but didn't get a 10ms delta!";
 }
 
-TEST(Platform, Sleep)
+TEST(PlatformTimerTest, Sleep)
 {
    U32 start = Platform::getRealMilliseconds();
    Platform::sleep(500);
@@ -61,7 +59,7 @@ struct handle
    }
 };
 
-TEST(TimeManager, BasicAPI)
+TEST(PlatformTimerTest, BasicAPI)
 {
    handle handler;
 
@@ -91,5 +89,3 @@ TEST(TimeManager, BasicAPI)
    EXPECT_GT(handler.mNumberCalls, 0)
       << "Somehow got no event callbacks from TimeManager?";
 };
-
-#endif

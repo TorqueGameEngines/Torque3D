@@ -20,11 +20,10 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#ifdef TORQUE_TESTS_ENABLED
 #include "testing/unitTesting.h"
 #include "platform/threads/thread.h"
 
-TEST(Thread, CallbackAPI)
+TEST(ThreadTest, CallbackAPI)
 {
 #define VALUE_TO_SET 10
 
@@ -53,7 +52,7 @@ TEST(Thread, CallbackAPI)
 #undef VALUE_TO_SET
 }
 
-TEST(Thread, InheritanceAPI)
+TEST(ThreadTest, InheritanceAPI)
 {
 #define VALUE_TO_SET 10
 
@@ -83,5 +82,3 @@ TEST(Thread, InheritanceAPI)
 
 #undef VALUE_TO_SET
 }
-
-#endif

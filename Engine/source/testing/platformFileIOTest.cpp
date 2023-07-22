@@ -20,14 +20,13 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#ifdef TORQUE_TESTS_ENABLED
 #include "testing/unitTesting.h"
 #include "platform/platform.h"
 #include "core/fileio.h"
 #include "core/util/tVector.h"
 #include "console/console.h"
 
-TEST(Platform, ExcludedDirectories)
+TEST(PlatformFileIOTest, ExcludedDirectories)
 {
    // Just dump everything under the current directory. We should
    // find at least one file.
@@ -57,7 +56,7 @@ TEST(Platform, ExcludedDirectories)
    Platform::clearExcludedDirectories();
 };
 
-TEST(File, TouchAndTime)
+TEST(PlatformFileIOTest, TouchAndTime)
 {
    FileTime create[2], modify[2];
 
@@ -103,7 +102,7 @@ TEST(File, TouchAndTime)
 
 // Mac/Linux have no implementations for these functions, so we 'def it out for now.
 #ifdef WIN32
-TEST(Platform, Volumes)
+TEST(PlatformFileIOTest, Volumes)
 {
    Vector<const char*> names;
    Platform::getVolumeNamesList(names);
@@ -119,4 +118,3 @@ TEST(Platform, Volumes)
 };
 #endif
 
-#endif

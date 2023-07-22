@@ -20,7 +20,6 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#ifdef TORQUE_TESTS_ENABLED
 #include "testing/unitTesting.h"
 
 // This unit test will blow up without thread static support
@@ -31,7 +30,7 @@
 DITTS(U32, gUnitTestFoo, 42);
 DITTS(F32, gUnitTestF32, 1.0);
 
-TEST(ThreadStatic, BasicAPI)
+TEST(ThreadStaticTest, BasicAPI)
 {
    // ThreadStatic list should be initialized right now, so lets see if it has
    // any entries.
@@ -95,7 +94,7 @@ TEST(ThreadStatic, BasicAPI)
 DITTS(U32, gInstancedStaticFoo, 42);
 static U32 gTrueStaticFoo = 42;
 
-TEST(ThreadStatic, StressThreadStatic)
+TEST(ThreadStaticTest, StressThreadStatic)
 {
    ASSERT_FALSE(gProfiler->isEnabled())
       << "Profiler is currently enabled, test cannot continue";
@@ -135,5 +134,4 @@ TEST(ThreadStatic, StressThreadStatic)
 }
 #endif
 
-#endif
 #endif

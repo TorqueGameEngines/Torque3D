@@ -20,7 +20,6 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#ifdef TORQUE_TESTS_ENABLED
 #include "platform/platform.h" // Allows us to see TORQUE_ENABLE_PROFILER
 
 #ifdef TORQUE_ENABLE_PROFILER
@@ -45,5 +44,4 @@ TEST(Profiler, ProfileScope)
    // Do work and return whenever you want.
 }
 
-#endif
 #endif

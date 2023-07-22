@@ -20,7 +20,6 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#ifdef TORQUE_TESTS_ENABLED
 #include "testing/unitTesting.h"
 #include "platform/threads/threadPool.h"
 #include "console/console.h"
@@ -117,5 +116,3 @@ TEST_FIX(ThreadPool, Synchronous)
 
    EXPECT_EQ(true, item->hasExecuted());
 }
-
-#endif

@@ -105,7 +105,7 @@ private:
 };
 
 // uncomment to debug tests and use the test explorer.
-//#define TEST_EXPLORER
+#define TEST_EXPLORER
 #if !defined(TEST_EXPLORER)
 int main(int argc, char** argv)
 {
@@ -119,7 +119,9 @@ int main(int argc, char** argv)
 {
    StandardMainLoop::init();
    printf("Running main() from %s\n", __FILE__);
+   // setup simular to runTests
    Con::evaluate("GFXInit::createNullDevice();");
+   Con::evaluate("if (!isObject(GuiDefaultProfile)) new GuiControlProfile(GuiDefaultProfile){}; if (!isObject(GuiTooltipProfile)) new GuiControlProfile(GuiTooltipProfile){};");
    testing::InitGoogleTest(&argc, argv);
    int res = RUN_ALL_TESTS();
 

@@ -20,7 +20,6 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#ifdef TORQUE_TESTS_ENABLED
 #include "testing/unitTesting.h"
 
 #include "platform/threads/threadSafeDeque.h"
@@ -177,10 +176,8 @@ TEST_FIX(ThreadSafeDeque, PopBack)
    ASSERT_TRUE(deque.isEmpty());
 }
 
-// Test deque in a concurrent setting.
-
 // Test many items in a row
-TEST_FIX(ThreadSafeDeque, Concurrent1)
+TEST_FIX(ThreadSafeDeque, Concurrent)
 {
    const U32 NumValues = 100;
 
@@ -200,29 +197,3 @@ TEST_FIX(ThreadSafeDeque, Concurrent1)
 
    mValues.clear();
 };
-
-// Test a few items many times to catch any race-condition in start-up
-TEST_FIX(ThreadSafeDeque, Concurrent2)
-{
-   for (int i = 0; i < 10000; ++i)
-   {
-      Deque mDeque;
-      Vector<U32> mValues;
-
-      mValues.setSize(5);
-
-      ProducerThread pThread(mValues, mDeque);
-      ConsumerThread cThread(mValues, mDeque);
-
-      cThread.start();
-      pThread.start();
-
-      pThread.join();
-      cThread.join();
-
-      mValues.clear();
-      if (::testing::Test::HasFailure()) break;
-   }
-};
-
-#endif

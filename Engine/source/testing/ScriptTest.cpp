@@ -977,7 +977,7 @@ TEST_F(ScriptTest, MiscTesting)
    ASSERT_EQ(test2.getBool(), true);
 }
 
-TEST_F(ScriptTest, MiscRegressions)
+TEST_F(ScriptTest, RegressionInt)
 {
    ConsoleValue regression1 = RunScript(R"(
       new SimObject(TheRegressionObject);
@@ -1027,8 +1027,31 @@ TEST_F(ScriptTest, MiscRegressions)
    )");
 
    ASSERT_EQ(regression3.getInt(), 2);
+}
 
-   ConsoleValue regression4 = RunScript(R"(
+TEST_F(ScriptTest, RegressionFloat)
+{
+   ConsoleValue regression = RunScript(R"(
+    function doTest()
+    {
+        %slider = new GuiSliderCtrl()
+        {
+            range = "0 2";
+            ticks = 5;
+            active = true;
+        };
+
+        %slider.setValue(0.5);
+        return %slider.getValue();
+    }
+    return doTest();
+   )");
+
+   ASSERT_EQ(regression.getFloat(), 0.5);
+}
+TEST_F(ScriptTest, RegressionBool)
+{
+   ConsoleValue regression = RunScript(R"(
       function SimObject::crashMe(%this, %line)
       {
          return %line @ "1";
@@ -1053,9 +1076,12 @@ TEST_F(ScriptTest, MiscRegressions)
       return doTest();
    )");
 
-   ASSERT_EQ(regression4.getBool(), true);
+   ASSERT_EQ(regression.getBool(), true);
+}
 
-   ConsoleValue regression5 = RunScript(R"(
+TEST_F(ScriptTest, RegressionString)
+{
+   ConsoleValue regression = RunScript(R"(
       function Tween::vectorAdd(%v1, %v2)
       {
          %temp = "";
@@ -1069,6 +1095,28 @@ TEST_F(ScriptTest, MiscRegressions)
       return Tween::vectorAdd("1 2 3", "4 5 6");
    )");
 
-   ASSERT_STREQ(regression5.getString(), "5 7 9");
-}
+   ASSERT_STREQ(regression.getString(), "5 7 9");
 
+   ConsoleValue regression2 = RunScript(R"(
+      function doTest()
+      {
+          %button = new GuiIconButtonCtrl()
+          {
+              active = true;
+          };
+
+          %button.setExtent(120, 20);
+
+          %button.setExtent("120 20");
+
+          %button.extent = "120 20";
+
+          %button.extent.x = 120;
+          %button.extent.y = 20;
+          return %button.extent;
+      }
+      return doTest();
+   )");
+
+   ASSERT_STREQ(regression2.getString(), "120 20");
+}

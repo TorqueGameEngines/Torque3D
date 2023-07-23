@@ -28,7 +28,7 @@
 TEST(WinMgr, BasicAPI)
 {
    PlatformWindowManager *pwm = CreatePlatformWindowManager();
-   ASSERT_TRUE(pwm)
+   EXPECT_TRUE(pwm)
       << "CreatePlatformWindowManager creation Failed!";
    if (!pwm)
       return;

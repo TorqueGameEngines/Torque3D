@@ -17,8 +17,8 @@ macro(SET_OPTION _NAME _DESC)
 endmacro()
 
 macro(DEP_OPTION _NAME _DESC _DEFLT _DEPTEST _FAILDFLT)
-  add_to_alloptions(${_NAME})
-  cmake_dependent_option(${_NAME} ${_DESC} ${_DEFLT} ${_DEPTEST} ${_FAILDFLT})
+  add_to_alloptions("${_NAME}")
+  cmake_dependent_option("${_NAME}" "${_DESC}" "${_DEFLT}" "${_DEPTEST}" "${_FAILDFLT}")
 endmacro()
 
 macro(OPTION_STRING _NAME _DESC _VALUE)
@@ -29,7 +29,7 @@ ENDMACRO()
 
 # Message Output
 macro(MESSAGE_WARN _TEXT)
-  message(STATUS "*** WARNING: ${_TEXT}")
+  message(WARNING "${_TEXT}")
 endmacro()
 
 macro(MESSAGE_ERROR _TEXT)
@@ -64,7 +64,23 @@ macro(MESSAGE_TESTED_OPTION _NAME)
   message(STATUS "  ${_NAME}${_PAD}(Wanted: ${_REQVALUE}): ${HAVE_${_STRIPPEDNAME}}")
 endmacro()
 
-macro(LISTTOSTR _LIST _OUTPUT)
+function(LISTTOSTR _LIST _OUTPUT)
+  if(${ARGC} EQUAL 3)
+    # prefix for each element
+    set(_LPREFIX ${ARGV2})
+  else()
+    set(_LPREFIX "")
+  endif()
+  # Do not use string(REPLACE ";" " ") here to avoid messing up list
+  # entries
+  set(res)
+  foreach(_ITEM ${${_LIST}})
+    set(res "${res} ${_LPREFIX}${_ITEM}")
+  endforeach()
+  set(${_OUTPUT} "${res}" PARENT_SCOPE)
+endfunction()
+
+macro(LISTTOSTRREV _LIST _OUTPUT)
   if(${ARGC} EQUAL 3)
     # prefix for each element
     set(_LPREFIX ${ARGV2})
@@ -78,31 +94,28 @@ macro(LISTTOSTR _LIST _OUTPUT)
   endforeach()
 endmacro()
 
-macro(LISTTOSTRREV _LIST _OUTPUT)
-  if(${ARGC} EQUAL 3)
-    # prefix for each element
-    set(_LPREFIX ${ARGV2})
-  else()
-    set(_LPREFIX "")
-  endif()
-  # Do not use string(REPLACE ";" " ") here to avoid messing up list
-  # entries
-  foreach(_ITEM ${${_LIST}})
-    set(${_OUTPUT} "${${_OUTPUT}} ${_LPREFIX}${_ITEM}")
-  endforeach()
-endmacro()
-
-if(${CMAKE_VERSION} VERSION_LESS "3.16.0")
+if(CMAKE_VERSION VERSION_LESS 3.16.0 OR SDL2_SUBPROJECT)
+  # - CMake versions <3.16 do not support the OBJC language
+  # - When SDL is built as a subproject and when the main project does not enable OBJC,
+  #   CMake fails due to missing internal CMake variables (CMAKE_OBJC_COMPILE_OBJECT)
+  #   (reproduced with CMake 3.24.2)
   macro(CHECK_OBJC_SOURCE_COMPILES SOURCE VAR)
     set(PREV_REQUIRED_DEFS "${CMAKE_REQUIRED_DEFINITIONS}")
     set(CMAKE_REQUIRED_DEFINITIONS "-x objective-c ${PREV_REQUIRED_DEFS}")
-    CHECK_C_SOURCE_COMPILES(${SOURCE} ${VAR})
+    CHECK_C_SOURCE_COMPILES("${SOURCE}" ${VAR})
     set(CMAKE_REQUIRED_DEFINITIONS "${PREV_REQUIRED_DEFS}")
   endmacro()
 else()
   include(CheckOBJCSourceCompiles)
   if (APPLE)
       enable_language(OBJC)
+  endif()
+endif()
+
+if(APPLE)
+  check_language(OBJC)
+  if(NOT CMAKE_OBJC_COMPILER)
+    message(WARNING "Cannot find working OBJC compiler.")
   endif()
 endif()
 

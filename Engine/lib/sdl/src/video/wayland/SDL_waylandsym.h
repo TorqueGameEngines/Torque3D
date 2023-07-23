@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -27,6 +27,10 @@
 
 #ifndef SDL_WAYLAND_SYM
 #define SDL_WAYLAND_SYM(rc,fn,params)
+#endif
+
+#ifndef SDL_WAYLAND_SYM_OPT
+#define SDL_WAYLAND_SYM_OPT(rc,fn,params)
 #endif
 
 #ifndef SDL_WAYLAND_INTERFACE
@@ -85,6 +89,12 @@ SDL_WAYLAND_SYM(const char * const *, wl_proxy_get_tag, (struct wl_proxy *))
 SDL_WAYLAND_SYM(struct wl_proxy*, wl_proxy_marshal_flags, (struct wl_proxy *proxy, uint32_t opcode, const struct wl_interface *interfac, uint32_t version, uint32_t flags, ...))
 SDL_WAYLAND_SYM(struct wl_proxy*, wl_proxy_marshal_array_flags, (struct wl_proxy *proxy, uint32_t opcode, const struct wl_interface *interface, uint32_t version,  uint32_t flags, union wl_argument *args))
 #endif
+
+#if 0 /* TODO RECONNECT: See waylandvideo.c for more information! */
+#if SDL_WAYLAND_CHECK_VERSION(broken, on, purpose)
+SDL_WAYLAND_SYM(int, wl_display_reconnect, (struct wl_display*));
+#endif
+#endif /* 0 */
 
 SDL_WAYLAND_INTERFACE(wl_seat_interface)
 SDL_WAYLAND_INTERFACE(wl_surface_interface)
@@ -149,6 +159,7 @@ SDL_WAYLAND_SYM(int, xkb_keymap_key_get_syms_by_level, (struct xkb_keymap *,
 SDL_WAYLAND_SYM(uint32_t, xkb_keysym_to_utf32, (xkb_keysym_t) )
 SDL_WAYLAND_SYM(uint32_t, xkb_keymap_mod_get_index, (struct xkb_keymap *,
                                                       const char *) )
+SDL_WAYLAND_SYM(const char *, xkb_keymap_layout_get_name, (struct xkb_keymap*, xkb_layout_index_t))
 
 #ifdef HAVE_LIBDECOR_H
 SDL_WAYLAND_MODULE(WAYLAND_LIBDECOR)
@@ -204,11 +215,23 @@ SDL_WAYLAND_SYM(bool, libdecor_configuration_get_content_size, (struct libdecor_
                                                                 int *))
 SDL_WAYLAND_SYM(bool, libdecor_configuration_get_window_state, (struct libdecor_configuration *,\
                                                                 enum libdecor_window_state *))
-SDL_WAYLAND_SYM(bool, libdecor_dispatch, (struct libdecor *, int))
+SDL_WAYLAND_SYM(int, libdecor_dispatch, (struct libdecor *, int))
+
+#if defined(SDL_VIDEO_DRIVER_WAYLAND_DYNAMIC_LIBDECOR) || defined(SDL_HAVE_LIBDECOR_GET_MIN_MAX)
+/* Only found in libdecor 0.1.1 or higher, so failure to load them is not fatal. */
+SDL_WAYLAND_SYM_OPT(void, libdecor_frame_get_min_content_size, (struct libdecor_frame *,\
+                                                            int *,\
+                                                            int *))
+SDL_WAYLAND_SYM_OPT(void, libdecor_frame_get_max_content_size, (struct libdecor_frame *,\
+                                                            int *,\
+                                                            int *))
+#endif
+
 #endif
 
 #undef SDL_WAYLAND_MODULE
 #undef SDL_WAYLAND_SYM
+#undef SDL_WAYLAND_SYM_OPT
 #undef SDL_WAYLAND_INTERFACE
 
 /* *INDENT-ON* */ /* clang-format on */

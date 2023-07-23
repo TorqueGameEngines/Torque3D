@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -27,9 +27,9 @@
    video mode changes and we can respond to them by triggering more mode
    changes.
 */
-#define PENDING_FOCUS_TIME   200
+#define PENDING_FOCUS_TIME 200
 
-#if SDL_VIDEO_OPENGL_EGL   
+#if SDL_VIDEO_OPENGL_EGL
 #include <EGL/egl.h>
 #endif
 
@@ -59,6 +59,7 @@ typedef struct
     int border_right;
     int border_top;
     int border_bottom;
+    SDL_bool mouse_grabbed;
     Uint32 last_focus_event_time;
     PendingFocusEnum pending_focus;
     Uint32 pending_focus_time;
@@ -69,7 +70,7 @@ typedef struct
     Window xdnd_source;
     SDL_bool flashing_window;
     Uint32 flash_cancel_time;
-#if SDL_VIDEO_OPENGL_EGL  
+#if SDL_VIDEO_OPENGL_EGL
     EGLSurface egl_surface;
 #endif
 #if SDL_VIDEO_DRIVER_X11_XFIXES
@@ -80,10 +81,10 @@ typedef struct
 } SDL_WindowData;
 
 extern void X11_SetNetWMState(_THIS, Window xwindow, Uint32 flags);
-extern Uint32 X11_GetNetWMState(_THIS, Window xwindow);
+extern Uint32 X11_GetNetWMState(_THIS, SDL_Window *window, Window xwindow);
 
-extern int X11_CreateWindow(_THIS, SDL_Window * window);
-extern int X11_CreateWindowFrom(_THIS, SDL_Window * window, const void *data);
+extern int X11_CreateWindow(_THIS, SDL_Window *window);
+extern int X11_CreateWindowFrom(_THIS, SDL_Window *window, const void *data);
 extern char *X11_GetWindowTitle(_THIS, Window xwindow);
 extern void X11_SetWindowTitle(_THIS, SDL_Window * window);
 extern void X11_SetWindowIcon(_THIS, SDL_Window * window, SDL_Surface * icon);
@@ -113,10 +114,10 @@ extern void X11_DestroyWindow(_THIS, SDL_Window * window);
 extern SDL_bool X11_GetWindowWMInfo(_THIS, SDL_Window * window,
                                     struct SDL_SysWMinfo *info);
 extern int X11_SetWindowHitTest(SDL_Window *window, SDL_bool enabled);
-extern void X11_AcceptDragAndDrop(SDL_Window * window, SDL_bool accept);
-extern int X11_FlashWindow(_THIS, SDL_Window * window, SDL_FlashOperation operation);
+extern void X11_AcceptDragAndDrop(SDL_Window *window, SDL_bool accept);
+extern int X11_FlashWindow(_THIS, SDL_Window *window, SDL_FlashOperation operation);
 
-int SDL_X11_SetWindowTitle(Display* display, Window xwindow, char* string);
+int SDL_X11_SetWindowTitle(Display *display, Window xwindow, char *title);
 
 #endif /* SDL_x11window_h_ */
 

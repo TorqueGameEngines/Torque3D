@@ -1,6 +1,6 @@
  /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -69,16 +69,6 @@ extern int SDL_AppleTVRemoteOpenedAsJoystick;
         UISwipeGestureRecognizer *swipeRight = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeGesture:)];
         swipeRight.direction = UISwipeGestureRecognizerDirectionRight;
         [self addGestureRecognizer:swipeRight];
-#elif defined(__IPHONE_13_4)
-        if (@available(iOS 13.4, *)) {
-            UIPanGestureRecognizer *mouseWheelRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(mouseWheelGesture:)];
-            mouseWheelRecognizer.allowedScrollTypesMask = UIScrollTypeMaskDiscrete;
-            mouseWheelRecognizer.allowedTouchTypes = @[ @(UITouchTypeIndirectPointer) ];
-            mouseWheelRecognizer.cancelsTouchesInView = NO;
-            mouseWheelRecognizer.delaysTouchesBegan = NO;
-            mouseWheelRecognizer.delaysTouchesEnded = NO;
-            [self addGestureRecognizer:mouseWheelRecognizer];
-        }
 #endif
 
         self.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
@@ -241,7 +231,7 @@ extern int SDL_AppleTVRemoteOpenedAsJoystick;
                     int i;
 
                     for (i = 1; i <= MAX_MOUSE_BUTTONS; ++i) {
-                        if ((event.buttonMask & SDL_BUTTON(i)) != 0) {
+                        if (event.buttonMask & SDL_BUTTON(i)) {
                             Uint8 button;
 
                             switch (i) {
@@ -296,7 +286,7 @@ extern int SDL_AppleTVRemoteOpenedAsJoystick;
                     int i;
 
                     for (i = 1; i <= MAX_MOUSE_BUTTONS; ++i) {
-                        if ((event.buttonMask & SDL_BUTTON(i)) != 0) {
+                        if (event.buttonMask & SDL_BUTTON(i)) {
                             Uint8 button;
 
                             switch (i) {
@@ -422,7 +412,6 @@ extern int SDL_AppleTVRemoteOpenedAsJoystick;
             SDL_SendKeyboardKey(SDL_PRESSED, scancode);
         }
     }
-    [super pressesBegan:presses withEvent:event];
 }
 
 - (void)pressesEnded:(NSSet<UIPress *> *)presses withEvent:(UIPressesEvent *)event
@@ -433,7 +422,6 @@ extern int SDL_AppleTVRemoteOpenedAsJoystick;
             SDL_SendKeyboardKey(SDL_RELEASED, scancode);
         }
     }
-    [super pressesEnded:presses withEvent:event];
 }
 
 - (void)pressesCancelled:(NSSet<UIPress *> *)presses withEvent:(UIPressesEvent *)event
@@ -444,39 +432,14 @@ extern int SDL_AppleTVRemoteOpenedAsJoystick;
             SDL_SendKeyboardKey(SDL_RELEASED, scancode);
         }
     }
-    [super pressesCancelled:presses withEvent:event];
 }
 
 - (void)pressesChanged:(NSSet<UIPress *> *)presses withEvent:(UIPressesEvent *)event
 {
     /* This is only called when the force of a press changes. */
-    [super pressesChanged:presses withEvent:event];
 }
 
 #endif /* TARGET_OS_TV || defined(__IPHONE_9_1) */
-
--(void)mouseWheelGesture:(UIPanGestureRecognizer *)gesture
-{
-    if (gesture.state == UIGestureRecognizerStateBegan ||
-        gesture.state == UIGestureRecognizerStateChanged ||
-        gesture.state == UIGestureRecognizerStateEnded) {
-        CGPoint velocity = [gesture velocityInView:self];
-
-        if (velocity.x > 0.0f) {
-            velocity.x = -1.0;
-        } else if (velocity.x < 0.0f) {
-            velocity.x = 1.0f;
-        }
-        if (velocity.y > 0.0f) {
-            velocity.y = -1.0;
-        } else if (velocity.y < 0.0f) {
-            velocity.y = 1.0f;
-        }
-        if (velocity.x != 0.0f || velocity.y != 0.0f) {
-            SDL_SendMouseWheel(sdlwindow, 0, velocity.x, velocity.y, SDL_MOUSEWHEEL_NORMAL);
-        }
-    }
-}
 
 #if TARGET_OS_TV
 -(void)swipeGesture:(UISwipeGestureRecognizer *)gesture

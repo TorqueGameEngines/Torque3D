@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -52,7 +52,7 @@ typedef enum
                                               dstA = dstA */
     SDL_BLENDMODE_MUL = 0x00000008,      /**< color multiply
                                               dstRGB = (srcRGB * dstRGB) + (dstRGB * (1-srcA))
-                                              dstA = (srcA * dstA) + (dstA * (1-srcA)) */
+                                              dstA = dstA */
     SDL_BLENDMODE_INVALID = 0x7FFFFFFF
 
     /* Additional custom blend modes can be returned by SDL_ComposeCustomBlendMode() */

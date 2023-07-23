@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -74,15 +74,13 @@ uint32_t qsa_playback_devices;
 QSA_Device qsa_capture_device[QSA_MAX_DEVICES];
 uint32_t qsa_capture_devices;
 
-static SDL_INLINE int
-QSA_SetError(const char *fn, int status)
+static int QSA_SetError(const char *fn, int status)
 {
     return SDL_SetError("QSA: %s() failed: %s", fn, snd_strerror(status));
 }
 
 /* !!! FIXME: does this need to be here? Does the SDL version not work? */
-static void
-QSA_ThreadInit(_THIS)
+static void QSA_ThreadInit(_THIS)
 {
     /* Increase default 10 priority to 25 to avoid jerky sound */
     struct sched_param param;
@@ -93,8 +91,7 @@ QSA_ThreadInit(_THIS)
 }
 
 /* PCM channel parameters initialize function */
-static void
-QSA_InitAudioParams(snd_pcm_channel_params_t * cpars)
+static void QSA_InitAudioParams(snd_pcm_channel_params_t * cpars)
 {
     SDL_zerop(cpars);
     cpars->channel = SND_PCM_CHANNEL_PLAYBACK;
@@ -111,13 +108,12 @@ QSA_InitAudioParams(snd_pcm_channel_params_t * cpars)
 }
 
 /* This function waits until it is possible to write a full sound buffer */
-static void
-QSA_WaitDevice(_THIS)
+static void QSA_WaitDevice(_THIS)
 {
     int result;
 
     /* Setup timeout for playing one fragment equal to 2 seconds          */
-    /* If timeout occured than something wrong with hardware or driver    */
+    /* If timeout occurred than something wrong with hardware or driver    */
     /* For example, Vortex 8820 audio driver stucks on second DAC because */
     /* it doesn't exist !                                                 */
     result = SDL_IOReady(this->hidden->audio_fd,
@@ -128,7 +124,7 @@ QSA_WaitDevice(_THIS)
         SDL_SetError("QSA: SDL_IOReady() failed: %s", strerror(errno));
         break;
     case 0:
-        SDL_SetError("QSA: timeout on buffer waiting occured");
+        SDL_SetError("QSA: timeout on buffer waiting occurred");
         this->hidden->timeout_on_wait = 1;
         break;
     default:
@@ -137,8 +133,7 @@ QSA_WaitDevice(_THIS)
     }
 }
 
-static void
-QSA_PlayDevice(_THIS)
+static void QSA_PlayDevice(_THIS)
 {
     snd_pcm_channel_status_t cstatus;
     int written;
@@ -230,14 +225,12 @@ QSA_PlayDevice(_THIS)
     }
 }
 
-static Uint8 *
-QSA_GetDeviceBuf(_THIS)
+static Uint8 *QSA_GetDeviceBuf(_THIS)
 {
     return this->hidden->pcm_buf;
 }
 
-static void
-QSA_CloseDevice(_THIS)
+static void QSA_CloseDevice(_THIS)
 {
     if (this->hidden->audio_handle != NULL) {
         if (!this->iscapture) {
@@ -256,11 +249,10 @@ QSA_CloseDevice(_THIS)
     SDL_free(this->hidden);
 }
 
-static int
-QSA_OpenDevice(_THIS, const char *devname)
+static int QSA_OpenDevice(_THIS, const char *devname)
 {
     const QSA_Device *device = (const QSA_Device *) this->handle;
-    SDL_Bool iscapture = this->iscapture;
+    SDL_bool iscapture = this->iscapture;
     int status = 0;
     int format = 0;
     SDL_AudioFormat test_format;
@@ -435,8 +427,7 @@ QSA_OpenDevice(_THIS, const char *devname)
     return 0;
 }
 
-static void
-QSA_DetectDevices(void)
+static void QSA_DetectDevices(void)
 {
     uint32_t it;
     uint32_t cards;
@@ -581,8 +572,7 @@ QSA_DetectDevices(void)
     }
 }
 
-static void
-QSA_Deinitialize(void)
+static void QSA_Deinitialize(void)
 {
     /* Clear devices array on shutdown */
     /* !!! FIXME: we zero these on init...any reason to do it here? */
@@ -592,8 +582,7 @@ QSA_Deinitialize(void)
     qsa_capture_devices = 0;
 }
 
-static SDL_bool
-QSA_Init(SDL_AudioDriverImpl * impl)
+static SDL_bool QSA_Init(SDL_AudioDriverImpl * impl)
 {
     /* Clear devices array */
     SDL_zeroa(qsa_playback_device);

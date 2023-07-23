@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -28,8 +28,7 @@
 
 /* EGL implementation of SDL OpenGL support */
 
-int
-Cocoa_GLES_LoadLibrary(_THIS, const char *path)
+int Cocoa_GLES_LoadLibrary(_THIS, const char *path)
 {
     /* If the profile requested is not GL ES, switch over to WIN_GL functions  */
     if (_this->gl_config.profile_mask != SDL_GL_CONTEXT_PROFILE_ES) {
@@ -49,7 +48,7 @@ Cocoa_GLES_LoadLibrary(_THIS, const char *path)
         return SDL_SetError("SDL not configured with OpenGL/CGL support");
 #endif
     }
-    
+
     if (_this->egl_data == NULL) {
         return SDL_EGL_LoadLibrary(_this, NULL, EGL_DEFAULT_DISPLAY, 0);
     }
@@ -57,8 +56,7 @@ Cocoa_GLES_LoadLibrary(_THIS, const char *path)
     return 0;
 }
 
-SDL_GLContext
-Cocoa_GLES_CreateContext(_THIS, SDL_Window * window)
+SDL_GLContext Cocoa_GLES_CreateContext(_THIS, SDL_Window * window)
 { @autoreleasepool
 {
     SDL_GLContext context;
@@ -90,31 +88,27 @@ Cocoa_GLES_CreateContext(_THIS, SDL_Window * window)
     return context;
 }}
 
-void
-Cocoa_GLES_DeleteContext(_THIS, SDL_GLContext context)
+void Cocoa_GLES_DeleteContext(_THIS, SDL_GLContext context)
 { @autoreleasepool
 {
     SDL_EGL_DeleteContext(_this, context);
-    Cocoa_GLES_UnloadLibrary(_this);
 }}
 
-int
-Cocoa_GLES_SwapWindow(_THIS, SDL_Window * window)
+int Cocoa_GLES_SwapWindow(_THIS, SDL_Window * window)
 { @autoreleasepool
 {
     return SDL_EGL_SwapBuffers(_this, ((__bridge SDL_WindowData *) window->driverdata).egl_surface);
 }}
 
-int
-Cocoa_GLES_MakeCurrent(_THIS, SDL_Window * window, SDL_GLContext context)
+int Cocoa_GLES_MakeCurrent(_THIS, SDL_Window * window, SDL_GLContext context)
 { @autoreleasepool
 {
     return SDL_EGL_MakeCurrent(_this, window ? ((__bridge SDL_WindowData *) window->driverdata).egl_surface : EGL_NO_SURFACE, context);
 }}
 
-int
-Cocoa_GLES_SetupWindow(_THIS, SDL_Window * window)
+int Cocoa_GLES_SetupWindow(_THIS, SDL_Window * window)
 {
+    NSView* v;
     /* The current context is lost in here; save it and reset it. */
     SDL_WindowData *windowdata = (__bridge SDL_WindowData *) window->driverdata;
     SDL_Window *current_win = SDL_GL_GetCurrentWindow();
@@ -132,9 +126,9 @@ Cocoa_GLES_SetupWindow(_THIS, SDL_Window * window)
         }
         _this->gl_config.driver_loaded = 1;
     }
-  
+
     /* Create the GLES window surface */
-    NSView* v = windowdata.nswindow.contentView;
+    v = windowdata.nswindow.contentView;
     windowdata.egl_surface = SDL_EGL_CreateSurface(_this, (__bridge NativeWindowType)[v layer]);
 
     if (windowdata.egl_surface == EGL_NO_SURFACE) {

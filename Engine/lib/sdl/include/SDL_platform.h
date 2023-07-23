@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -144,7 +144,7 @@
 #endif
 
 #if defined(WIN32) || defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
-/* Try to find out if we're compiling for WinRT or non-WinRT */
+/* Try to find out if we're compiling for WinRT, GDK or non-WinRT/GDK */
 #if defined(_MSC_VER) && defined(__has_include)
 #if __has_include(<winapifamily.h>)
 #define HAVE_WINAPIFAMILY_H 1
@@ -169,6 +169,15 @@
 #if WINAPI_FAMILY_WINRT
 #undef __WINRT__
 #define __WINRT__ 1
+#elif defined(_GAMING_DESKTOP) /* GDK project configuration always defines _GAMING_XXX */
+#undef __WINGDK__
+#define __WINGDK__ 1
+#elif defined(_GAMING_XBOX_XBOXONE)
+#undef __XBOXONE__
+#define __XBOXONE__ 1
+#elif defined(_GAMING_XBOX_SCARLETT)
+#undef __XBOXSERIES__
+#define __XBOXSERIES__ 1
 #else
 #undef __WINDOWS__
 #define __WINDOWS__ 1
@@ -179,9 +188,17 @@
 #undef __WIN32__
 #define __WIN32__ 1
 #endif
+/* This is to support generic "any GDK" separate from a platform-specific GDK */
+#if defined(__WINGDK__) || defined(__XBOXONE__) || defined(__XBOXSERIES__)
+#undef __GDK__
+#define __GDK__ 1
+#endif
 #if defined(__PSP__)
 #undef __PSP__
 #define __PSP__ 1
+#endif
+#if defined(PS2)
+#define __PS2__ 1
 #endif
 
 /* The NACL compiler defines __native_client__ and __pnacl__
@@ -202,6 +219,11 @@
 
 #if defined(__vita__)
 #define __VITA__ 1
+#endif
+
+#if defined(__3DS__)
+#undef __3DS__
+#define __3DS__ 1
 #endif
 
 #include "begin_code.h"

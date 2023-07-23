@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -32,6 +32,7 @@
 #include "SDL_cocoashape.h"
 #include "SDL_cocoavulkan.h"
 #include "SDL_cocoametalview.h"
+#include "SDL_cocoaopengles.h"
 
 @implementation SDL_VideoData
 
@@ -43,8 +44,7 @@ static void Cocoa_VideoQuit(_THIS);
 
 /* Cocoa driver bootstrap functions */
 
-static void
-Cocoa_DeleteDevice(SDL_VideoDevice * device)
+static void Cocoa_DeleteDevice(SDL_VideoDevice * device)
 { @autoreleasepool
 {
     if (device->wakeup_lock) {
@@ -54,8 +54,7 @@ Cocoa_DeleteDevice(SDL_VideoDevice * device)
     SDL_free(device);
 }}
 
-static SDL_VideoDevice *
-Cocoa_CreateDevice(int devindex)
+static SDL_VideoDevice *Cocoa_CreateDevice(void)
 { @autoreleasepool
 {
     SDL_VideoDevice *device;
@@ -100,6 +99,7 @@ Cocoa_CreateDevice(int devindex)
     device->SetWindowMinimumSize = Cocoa_SetWindowMinimumSize;
     device->SetWindowMaximumSize = Cocoa_SetWindowMaximumSize;
     device->SetWindowOpacity = Cocoa_SetWindowOpacity;
+    device->GetWindowSizeInPixels = Cocoa_GetWindowSizeInPixels;
     device->ShowWindow = Cocoa_ShowWindow;
     device->HideWindow = Cocoa_HideWindow;
     device->RaiseWindow = Cocoa_RaiseWindow;
@@ -133,7 +133,6 @@ Cocoa_CreateDevice(int devindex)
     device->GL_UnloadLibrary = Cocoa_GL_UnloadLibrary;
     device->GL_CreateContext = Cocoa_GL_CreateContext;
     device->GL_MakeCurrent = Cocoa_GL_MakeCurrent;
-    device->GL_GetDrawableSize = Cocoa_GL_GetDrawableSize;
     device->GL_SetSwapInterval = Cocoa_GL_SetSwapInterval;
     device->GL_GetSwapInterval = Cocoa_GL_GetSwapInterval;
     device->GL_SwapWindow = Cocoa_GL_SwapWindow;
@@ -184,8 +183,7 @@ VideoBootStrap COCOA_bootstrap = {
 };
 
 
-int
-Cocoa_VideoInit(_THIS)
+int Cocoa_VideoInit(_THIS)
 { @autoreleasepool
 {
     SDL_VideoData *data = (__bridge SDL_VideoData *) _this->driverdata;
@@ -197,6 +195,7 @@ Cocoa_VideoInit(_THIS)
     }
 
     data.allow_spaces = SDL_GetHintBoolean(SDL_HINT_VIDEO_MAC_FULLSCREEN_SPACES, SDL_TRUE);
+    data.trackpad_is_touch_only = SDL_GetHintBoolean(SDL_HINT_TRACKPAD_IS_TOUCH_ONLY, SDL_FALSE);
 
     data.swaplock = SDL_CreateMutex();
     if (!data.swaplock) {
@@ -206,8 +205,7 @@ Cocoa_VideoInit(_THIS)
     return 0;
 }}
 
-void
-Cocoa_VideoQuit(_THIS)
+void Cocoa_VideoQuit(_THIS)
 { @autoreleasepool
 {
     SDL_VideoData *data = (__bridge SDL_VideoData *) _this->driverdata;
@@ -219,8 +217,7 @@ Cocoa_VideoQuit(_THIS)
 }}
 
 /* This function assumes that it's called from within an autorelease pool */
-NSImage *
-Cocoa_CreateImage(SDL_Surface * surface)
+NSImage *Cocoa_CreateImage(SDL_Surface * surface)
 {
     SDL_Surface *converted;
     NSBitmapImageRep *imgrep;

@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -34,17 +34,17 @@
 #include <psp2/kernel/error.h>
 #include <psp2/kernel/threadmgr.h>
 
-struct SDL_semaphore {
-    SceUID  semid;
+struct SDL_semaphore
+{
+    SceUID semid;
 };
-
 
 /* Create a semaphore */
 SDL_sem *SDL_CreateSemaphore(Uint32 initial_value)
 {
     SDL_sem *sem;
 
-    sem = (SDL_sem *) SDL_malloc(sizeof(*sem));
+    sem = (SDL_sem *)SDL_malloc(sizeof(*sem));
     if (sem != NULL) {
         /* TODO: Figure out the limit on the maximum value. */
         sem->semid = sceKernelCreateSema("SDL sema", 0, initial_value, 255, NULL);
@@ -80,11 +80,10 @@ void SDL_DestroySemaphore(SDL_sem *sem)
 int SDL_SemWaitTimeout(SDL_sem *sem, Uint32 timeout)
 {
     Uint32 *pTimeout;
-       unsigned int res;
+    int res;
 
     if (sem == NULL) {
-        SDL_InvalidParamError("sem");
-        return 0;
+        return SDL_InvalidParamError("sem");
     }
 
     if (timeout == 0) {
@@ -98,18 +97,18 @@ int SDL_SemWaitTimeout(SDL_sem *sem, Uint32 timeout)
     if (timeout == SDL_MUTEX_MAXWAIT) {
         pTimeout = NULL;
     } else {
-        timeout *= 1000;  /* Convert to microseconds. */
+        timeout *= 1000; /* Convert to microseconds. */
         pTimeout = &timeout;
     }
 
     res = sceKernelWaitSema(sem->semid, 1, pTimeout);
-       switch (res) {
-               case SCE_KERNEL_OK:
-                       return 0;
-               case SCE_KERNEL_ERROR_WAIT_TIMEOUT:
-                       return SDL_MUTEX_TIMEDOUT;
-               default:
-                       return SDL_SetError("WaitForSingleObject() failed");
+    switch (res) {
+    case SCE_KERNEL_OK:
+        return 0;
+    case SCE_KERNEL_ERROR_WAIT_TIMEOUT:
+        return SDL_MUTEX_TIMEDOUT;
+    default:
+        return SDL_SetError("WaitForSingleObject() failed");
     }
 }
 

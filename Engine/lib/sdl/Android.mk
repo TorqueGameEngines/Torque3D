@@ -63,7 +63,6 @@ LOCAL_CFLAGS += -DGL_GLEXT_PROTOTYPES
 LOCAL_CFLAGS += \
 	-Wall -Wextra \
 	-Wdocumentation \
-	-Wdocumentation-unknown-command \
 	-Wmissing-prototypes \
 	-Wunreachable-code-break \
 	-Wunneeded-internal-declaration \
@@ -75,11 +74,14 @@ LOCAL_CFLAGS += \
 	-Wstrict-prototypes \
 	-Wkeyword-macro \
 
-
 # Warnings we haven't fixed (yet)
 LOCAL_CFLAGS += -Wno-unused-parameter -Wno-sign-compare
 
+LOCAL_CXXFLAGS += -std=gnu++11
+
 LOCAL_LDLIBS := -ldl -lGLESv1_CM -lGLESv2 -lOpenSLES -llog -landroid
+
+LOCAL_LDFLAGS := -Wl,--no-undefined
 
 ifeq ($(NDK_DEBUG),1)
     cmd-strip :=
@@ -88,6 +90,7 @@ endif
 LOCAL_STATIC_LIBRARIES := cpufeatures
 
 include $(BUILD_SHARED_LIBRARY)
+
 
 ###########################
 #
@@ -99,10 +102,14 @@ LOCAL_MODULE := SDL2_static
 
 LOCAL_MODULE_FILENAME := libSDL2
 
-LOCAL_LDLIBS := 
+LOCAL_LDLIBS :=
+
+LOCAL_LDFLAGS :=
+
 LOCAL_EXPORT_LDLIBS := -ldl -lGLESv1_CM -lGLESv2 -llog -landroid
 
 include $(BUILD_STATIC_LIBRARY)
+
 
 ###########################
 #

@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -11,6 +11,16 @@
 */
 #include "SDL.h"
 
+static void tryOpenURL(const char *url)
+{
+    SDL_Log("Opening '%s' ...", url);
+    if (SDL_OpenURL(url) == 0) {
+        SDL_Log("  success!");
+    } else {
+        SDL_Log("  failed! %s", SDL_GetError());
+    }
+}
+
 int main(int argc, char **argv)
 {
     int i;
@@ -19,14 +29,12 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    for (i = 1; i < argc; i++) {
-        const char *url = argv[i];
-        SDL_Log("Opening '%s' ...", url);
-        if (SDL_OpenURL(url) == 0) {
-            SDL_Log("  success!");
-        } else {
-            SDL_Log("  failed! %s", SDL_GetError());
+    if (argc > 1) {
+        for (i = 1; i < argc; i++) {
+            tryOpenURL(argv[i]);
         }
+    } else {
+        tryOpenURL("https://libsdl.org/");
     }
 
     SDL_Quit();

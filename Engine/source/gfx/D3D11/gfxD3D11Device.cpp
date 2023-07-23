@@ -252,6 +252,10 @@ DXGI_SWAP_CHAIN_DESC GFXD3D11Device::setupPresentParams(const GFXVideoMode &mode
 
 void GFXD3D11Device::enumerateAdapters(Vector<GFXAdapter*> &adapterList)
 {
+   S32 monitorCount = PlatformWindowManager::get()->getMonitorCount();
+   if (monitorCount < 1)
+      return;
+
    IDXGIAdapter1* EnumAdapter;
    IDXGIFactory1* DXGIFactory;
 

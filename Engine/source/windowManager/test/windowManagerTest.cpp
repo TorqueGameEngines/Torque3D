@@ -28,9 +28,16 @@
 TEST(WinMgr, BasicAPI)
 {
    PlatformWindowManager *pwm = CreatePlatformWindowManager();
+   EXPECT_TRUE(pwm)
+      << "CreatePlatformWindowManager creation Failed!";
+   if (!pwm)
+      return;
 
-   ASSERT_TRUE(pwm)
+   S32 monitorCount = PlatformWindowManager::get()->getMonitorCount();
+   EXPECT_GT(monitorCount, 0)
       << "no monitor to test against!";
+   if (monitorCount == 0)
+      return;
 
    // Check out the primary desktop area...
    RectI primary = pwm->getPrimaryDesktopArea();

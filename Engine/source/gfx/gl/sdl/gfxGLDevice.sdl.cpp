@@ -77,6 +77,10 @@ void EnumerateVideoModes(Vector<GFXVideoMode>& outModes)
 
 void GFXGLDevice::enumerateAdapters( Vector<GFXAdapter*> &adapterList )
 {
+   S32 monitorCount = PlatformWindowManager::get()->getMonitorCount();
+   if (monitorCount < 1)
+      return;
+
    AssertFatal( SDL_WasInit(SDL_INIT_VIDEO), "");
 
    PlatformGL::init(); // for hints about context creation

@@ -77,9 +77,9 @@ void EnumerateVideoModes(Vector<GFXVideoMode>& outModes)
 
 void GFXGLDevice::enumerateAdapters( Vector<GFXAdapter*> &adapterList )
 {
-   S32 monitorCount = PlatformWindowManager::get()->getMonitorCount();
-   if (monitorCount < 1)
+#ifdef TORQUE_TESTS_ENABLED
       return;
+#endif
 
    AssertFatal( SDL_WasInit(SDL_INIT_VIDEO), "");
 

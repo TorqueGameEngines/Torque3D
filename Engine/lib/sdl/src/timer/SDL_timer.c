@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -49,7 +49,8 @@ typedef struct _SDL_TimerMap
 } SDL_TimerMap;
 
 /* The timers are kept in a sorted list */
-typedef struct {
+typedef struct
+{
     /* Data used by the main thread */
     SDL_Thread *thread;
     SDL_atomic_t nextID;
@@ -78,14 +79,13 @@ static SDL_TimerData SDL_timer_data;
  * Timers are removed by simply setting a canceled flag
  */
 
-static void
-SDL_AddTimerInternal(SDL_TimerData *data, SDL_Timer *timer)
+static void SDL_AddTimerInternal(SDL_TimerData *data, SDL_Timer *timer)
 {
     SDL_Timer *prev, *curr;
 
     prev = NULL;
     for (curr = data->timers; curr; prev = curr, curr = curr->next) {
-        if ((Sint32)(timer->scheduled-curr->scheduled) < 0) {
+        if ((Sint32)(timer->scheduled - curr->scheduled) < 0) {
             break;
         }
     }
@@ -99,8 +99,7 @@ SDL_AddTimerInternal(SDL_TimerData *data, SDL_Timer *timer)
     timer->next = curr;
 }
 
-static int SDLCALL
-SDL_TimerThread(void *_data)
+static int SDLCALL SDL_TimerThread(void *_data)
 {
     SDL_TimerData *data = (SDL_TimerData *)_data;
     SDL_Timer *pending;
@@ -114,7 +113,7 @@ SDL_TimerThread(void *_data)
      *  2. Handle any timers that should dispatch this cycle
      *  3. Wait until next dispatch time or new timer arrives
      */
-    for ( ; ; ) {
+    for (;;) {
         /* Pending and freelist maintenance */
         SDL_AtomicLock(&data->lock);
         {
@@ -153,7 +152,7 @@ SDL_TimerThread(void *_data)
         while (data->timers) {
             current = data->timers;
 
-            if ((Sint32)(tick-current->scheduled) < 0) {
+            if ((Sint32)(tick - current->scheduled) < 0) {
                 /* Scheduled for the future, wait a bit */
                 delay = (current->scheduled - tick);
                 break;
@@ -174,7 +173,7 @@ SDL_TimerThread(void *_data)
                 current->scheduled = tick + interval;
                 SDL_AddTimerInternal(data, current);
             } else {
-                if (!freelist_head) {
+                if (freelist_head == NULL) {
                     freelist_head = current;
                 }
                 if (freelist_tail) {
@@ -205,8 +204,7 @@ SDL_TimerThread(void *_data)
     return 0;
 }
 
-int
-SDL_TimerInit(void)
+int SDL_TimerInit(void)
 {
     SDL_TimerData *data = &SDL_timer_data;
 
@@ -237,14 +235,13 @@ SDL_TimerInit(void)
     return 0;
 }
 
-void
-SDL_TimerQuit(void)
+void SDL_TimerQuit(void)
 {
     SDL_TimerData *data = &SDL_timer_data;
     SDL_Timer *timer;
     SDL_TimerMap *entry;
 
-    if (SDL_AtomicCAS(&data->active, 1, 0)) {  /* active? Move to inactive. */
+    if (SDL_AtomicCAS(&data->active, 1, 0)) { /* active? Move to inactive. */
         /* Shutdown the timer thread */
         if (data->thread) {
             SDL_SemPost(data->sem);
@@ -277,8 +274,7 @@ SDL_TimerQuit(void)
     }
 }
 
-SDL_TimerID
-SDL_AddTimer(Uint32 interval, SDL_TimerCallback callback, void *param)
+SDL_TimerID SDL_AddTimer(Uint32 interval, SDL_TimerCallback callback, void *param)
 {
     SDL_TimerData *data = &SDL_timer_data;
     SDL_Timer *timer;
@@ -302,7 +298,7 @@ SDL_AddTimer(Uint32 interval, SDL_TimerCallback callback, void *param)
         SDL_RemoveTimer(timer->timerID);
     } else {
         timer = (SDL_Timer *)SDL_malloc(sizeof(*timer));
-        if (!timer) {
+        if (timer == NULL) {
             SDL_OutOfMemory();
             return 0;
         }
@@ -315,7 +311,7 @@ SDL_AddTimer(Uint32 interval, SDL_TimerCallback callback, void *param)
     SDL_AtomicSet(&timer->canceled, 0);
 
     entry = (SDL_TimerMap *)SDL_malloc(sizeof(*entry));
-    if (!entry) {
+    if (entry == NULL) {
         SDL_free(timer);
         SDL_OutOfMemory();
         return 0;
@@ -340,8 +336,7 @@ SDL_AddTimer(Uint32 interval, SDL_TimerCallback callback, void *param)
     return entry->timerID;
 }
 
-SDL_bool
-SDL_RemoveTimer(SDL_TimerID id)
+SDL_bool SDL_RemoveTimer(SDL_TimerID id)
 {
     SDL_TimerData *data = &SDL_timer_data;
     SDL_TimerMap *prev, *entry;
@@ -375,45 +370,43 @@ SDL_RemoveTimer(SDL_TimerID id)
 #else
 
 #include <emscripten/emscripten.h>
+#include <emscripten/eventloop.h>
 
 typedef struct _SDL_TimerMap
 {
     int timerID;
     int timeoutID;
+    Uint32 interval;
+    SDL_TimerCallback callback;
+    void *param;
     struct _SDL_TimerMap *next;
 } SDL_TimerMap;
 
-typedef struct {
+typedef struct
+{
     int nextID;
     SDL_TimerMap *timermap;
 } SDL_TimerData;
 
 static SDL_TimerData SDL_timer_data;
 
-static void
-SDL_Emscripten_TimerHelper(SDL_TimerMap *entry, Uint32 interval, SDL_TimerCallback callback, void *param)
+static void SDL_Emscripten_TimerHelper(void *userdata)
 {
-    Uint32 new_timeout;
-
-    new_timeout = callback(interval, param);
-
-    if (new_timeout != 0) {
-        entry->timeoutID = EM_ASM_INT({
-            return Browser.safeSetTimeout(function() {
-                dynCall('viiii', $0, [$1, $2, $3, $4]);
-            }, $2);
-        }, &SDL_Emscripten_TimerHelper, entry, interval, callback, param);
+    SDL_TimerMap *entry = (SDL_TimerMap *)userdata;
+    entry->interval = entry->callback(entry->interval, entry->param);
+    if (entry->interval > 0) {
+        entry->timeoutID = emscripten_set_timeout(&SDL_Emscripten_TimerHelper,
+                                                  entry->interval,
+                                                  entry);
     }
 }
 
-int
-SDL_TimerInit(void)
+int SDL_TimerInit(void)
 {
     return 0;
 }
 
-void
-SDL_TimerQuit(void)
+void SDL_TimerQuit(void)
 {
     SDL_TimerData *data = &SDL_timer_data;
     SDL_TimerMap *entry;
@@ -425,24 +418,24 @@ SDL_TimerQuit(void)
     }
 }
 
-SDL_TimerID
-SDL_AddTimer(Uint32 interval, SDL_TimerCallback callback, void *param)
+SDL_TimerID SDL_AddTimer(Uint32 interval, SDL_TimerCallback callback, void *param)
 {
     SDL_TimerData *data = &SDL_timer_data;
     SDL_TimerMap *entry;
 
     entry = (SDL_TimerMap *)SDL_malloc(sizeof(*entry));
-    if (!entry) {
+    if (entry == NULL) {
         SDL_OutOfMemory();
         return 0;
     }
     entry->timerID = ++data->nextID;
+    entry->callback = callback;
+    entry->param = param;
+    entry->interval = interval;
 
-    entry->timeoutID = EM_ASM_INT({
-        return Browser.safeSetTimeout(function() {
-            dynCall('viiii', $0, [$1, $2, $3, $4]);
-        }, $2);
-    }, &SDL_Emscripten_TimerHelper, entry, interval, callback, param);
+    entry->timeoutID = emscripten_set_timeout(&SDL_Emscripten_TimerHelper,
+                                              entry->interval,
+                                              entry);
 
     entry->next = data->timermap;
     data->timermap = entry;
@@ -450,8 +443,7 @@ SDL_AddTimer(Uint32 interval, SDL_TimerCallback callback, void *param)
     return entry->timerID;
 }
 
-SDL_bool
-SDL_RemoveTimer(SDL_TimerID id)
+SDL_bool SDL_RemoveTimer(SDL_TimerID id)
 {
     SDL_TimerData *data = &SDL_timer_data;
     SDL_TimerMap *prev, *entry;
@@ -470,9 +462,7 @@ SDL_RemoveTimer(SDL_TimerID id)
     }
 
     if (entry) {
-        EM_ASM_({
-            window.clearTimeout($0);
-        }, entry->timeoutID);
+        emscripten_clear_timeout(entry->timeoutID);
         SDL_free(entry);
 
         return SDL_TRUE;
@@ -486,10 +476,9 @@ SDL_RemoveTimer(SDL_TimerID id)
    which wraps back to zero every ~49 days. The newer SDL_GetTicks64()
    doesn't have this problem, so we just wrap that function and clamp to
    the low 32-bits for binary compatibility. */
-Uint32
-SDL_GetTicks(void)
+Uint32 SDL_GetTicks(void)
 {
-    return (Uint32) (SDL_GetTicks64() & 0xFFFFFFFF);
+    return (Uint32)(SDL_GetTicks64() & 0xFFFFFFFF);
 }
 
 /* vi: set ts=4 sw=4 expandtab: */

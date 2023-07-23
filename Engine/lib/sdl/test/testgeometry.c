@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -27,7 +27,7 @@ static SDLTest_CommonState *state;
 static SDL_bool use_texture = SDL_FALSE;
 static SDL_Texture **sprites;
 static SDL_BlendMode blendMode = SDL_BLENDMODE_NONE;
-static double angle = 0.0;
+static float angle = 0.0f;
 static int sprite_w, sprite_h;
 
 int done;
@@ -41,8 +41,7 @@ quit(int rc)
     exit(rc);
 }
 
-int
-LoadSprite(const char *file)
+int LoadSprite(const char *file)
 {
     int i;
 
@@ -50,22 +49,20 @@ LoadSprite(const char *file)
         /* This does the SDL_LoadBMP step repeatedly, but that's OK for test code. */
         sprites[i] = LoadTexture(state->renderers[i], file, SDL_TRUE, &sprite_w, &sprite_h);
         if (!sprites[i]) {
-            return (-1);
+            return -1;
         }
         if (SDL_SetTextureBlendMode(sprites[i], blendMode) < 0) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't set blend mode: %s\n", SDL_GetError());
             SDL_DestroyTexture(sprites[i]);
-            return (-1);
+            return -1;
         }
     }
 
     /* We're ready to roll. :) */
-    return (0);
+    return 0;
 }
 
-
-void
-loop()
+void loop()
 {
     int i;
     SDL_Event event;
@@ -99,16 +96,17 @@ loop()
 
     for (i = 0; i < state->num_windows; ++i) {
         SDL_Renderer *renderer = state->renderers[i];
-        if (state->windows[i] == NULL)
+        if (state->windows[i] == NULL) {
             continue;
+        }
         SDL_SetRenderDrawColor(renderer, 0xA0, 0xA0, 0xA0, 0xFF);
         SDL_RenderClear(renderer);
 
         {
             SDL_Rect viewport;
             SDL_Vertex verts[3];
-            double a;
-            double d;
+            float a;
+            float d;
             int cx, cy;
 
             /* Query the sizes */
@@ -116,39 +114,39 @@ loop()
             SDL_zeroa(verts);
             cx = viewport.x + viewport.w / 2;
             cy = viewport.y + viewport.h / 2;
-            d = (viewport.w + viewport.h) / 5;
+            d = (viewport.w + viewport.h) / 5.f;
 
-            a = (angle * 3.1415) / 180.0; 
-            verts[0].position.x = cx + d * SDL_cos(a);
-            verts[0].position.y = cy + d * SDL_sin(a);
+            a = (angle * 3.1415f) / 180.0f;
+            verts[0].position.x = cx + d * SDL_cosf(a);
+            verts[0].position.y = cy + d * SDL_sinf(a);
             verts[0].color.r = 0xFF;
             verts[0].color.g = 0;
             verts[0].color.b = 0;
             verts[0].color.a = 0xFF;
 
-            a = ((angle + 120) * 3.1415) / 180.0; 
-            verts[1].position.x = cx + d * SDL_cos(a);
-            verts[1].position.y = cy + d * SDL_sin(a);
+            a = ((angle + 120) * 3.1415f) / 180.0f;
+            verts[1].position.x = cx + d * SDL_cosf(a);
+            verts[1].position.y = cy + d * SDL_sinf(a);
             verts[1].color.r = 0;
             verts[1].color.g = 0xFF;
             verts[1].color.b = 0;
             verts[1].color.a = 0xFF;
 
-            a = ((angle + 240) * 3.1415) / 180.0; 
-            verts[2].position.x = cx + d * SDL_cos(a);
-            verts[2].position.y = cy + d * SDL_sin(a);
+            a = ((angle + 240) * 3.1415f) / 180.0f;
+            verts[2].position.x = cx + d * SDL_cosf(a);
+            verts[2].position.y = cy + d * SDL_sinf(a);
             verts[2].color.r = 0;
             verts[2].color.g = 0;
             verts[2].color.b = 0xFF;
             verts[2].color.a = 0xFF;
 
             if (use_texture) {
-                verts[0].tex_coord.x = 0.5;
-                verts[0].tex_coord.y = 0.0;
-                verts[1].tex_coord.x = 1.0;
-                verts[1].tex_coord.y = 1.0;
-                verts[2].tex_coord.x = 0.0;
-                verts[2].tex_coord.y = 1.0;
+                verts[0].tex_coord.x = 0.5f;
+                verts[0].tex_coord.y = 0.0f;
+                verts[1].tex_coord.x = 1.0f;
+                verts[1].tex_coord.y = 1.0f;
+                verts[2].tex_coord.x = 0.0f;
+                verts[2].tex_coord.y = 1.0f;
             }
 
             SDL_RenderGeometry(renderer, sprites[i], verts, 3, NULL, 0);
@@ -163,8 +161,7 @@ loop()
 #endif
 }
 
-int
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     int i;
     const char *icon = "icon.bmp";
@@ -175,7 +172,7 @@ main(int argc, char *argv[])
 
     /* Initialize test framework */
     state = SDLTest_CommonCreateState(argv, SDL_INIT_VIDEO);
-    if (!state) {
+    if (state == NULL) {
         return 1;
     }
     for (i = 1; i < argc;) {
@@ -218,8 +215,8 @@ main(int argc, char *argv[])
 
     /* Create the windows, initialize the renderers, and load the textures */
     sprites =
-        (SDL_Texture **) SDL_malloc(state->num_windows * sizeof(*sprites));
-    if (!sprites) {
+        (SDL_Texture **)SDL_malloc(state->num_windows * sizeof(*sprites));
+    if (sprites == NULL) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Out of memory!\n");
         quit(2);
     }
@@ -237,7 +234,6 @@ main(int argc, char *argv[])
         }
     }
 
-
     srand((unsigned int)time(NULL));
 
     /* Main render loop */
@@ -251,16 +247,16 @@ main(int argc, char *argv[])
     while (!done) {
         ++frames;
         loop();
-        }
+    }
 #endif
 
     /* Print out some timing information */
     now = SDL_GetTicks();
     if (now > then) {
-        double fps = ((double) frames * 1000) / (now - then);
+        double fps = ((double)frames * 1000) / (now - then);
         SDL_Log("%2.2f frames per second\n", fps);
     }
-    
+
     quit(0);
 
     return 0;

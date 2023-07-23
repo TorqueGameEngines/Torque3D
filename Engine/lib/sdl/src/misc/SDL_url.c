@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -21,12 +21,9 @@
 
 #include "SDL_sysurl.h"
 
-extern int SDL_SYS_OpenURL(const char *url);
-
-int
-SDL_OpenURL(const char *url)
+int SDL_OpenURL(const char *url)
 {
-    if (!url) {
+    if (url == NULL) {
         return SDL_InvalidParamError("url");
     }
     return SDL_SYS_OpenURL(url);

@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -38,12 +38,23 @@
 #include <winsdkver.h>
 #endif
 
+/* sdkddkver.h defines more specific SDK version numbers. This is needed because older versions of the
+ * Windows 10 SDK have broken declarations for the C API for DirectX 12. */
+#if !defined(HAVE_SDKDDKVER_H) && defined(__has_include)
+#if __has_include(<sdkddkver.h>)
+#define HAVE_SDKDDKVER_H 1
+#endif
+#endif
+
+#ifdef HAVE_SDKDDKVER_H
+#include <sdkddkver.h>
+#endif
+
 /* This is a set of defines to configure the SDL features */
 
-#if !defined(_STDINT_H_) && (!defined(HAVE_STDINT_H) || !_HAVE_STDINT_H)
-#if defined(__GNUC__) || defined(__DMC__) || defined(__WATCOMC__) || defined(__clang__) || defined(__BORLANDC__) || defined(__CODEGEARC__)
-#define HAVE_STDINT_H   1
-#elif defined(_MSC_VER)
+#if !defined(HAVE_STDINT_H) && !defined(_STDINT_H_)
+/* Most everything except Visual Studio 2008 and earlier has stdint.h now */
+#if defined(_MSC_VER) && (_MSC_VER < 1600)
 typedef signed __int8 int8_t;
 typedef unsigned __int8 uint8_t;
 typedef signed __int16 int16_t;
@@ -60,28 +71,9 @@ typedef unsigned int uintptr_t;
 #endif
 #define _UINTPTR_T_DEFINED
 #endif
-/* Older Visual C++ headers don't have the Win64-compatible typedefs... */
-#if ((_MSC_VER <= 1200) && (!defined(DWORD_PTR)))
-#define DWORD_PTR DWORD
-#endif
-#if ((_MSC_VER <= 1200) && (!defined(LONG_PTR)))
-#define LONG_PTR LONG
-#endif
-#else /* !__GNUC__ && !_MSC_VER */
-typedef signed char int8_t;
-typedef unsigned char uint8_t;
-typedef signed short int16_t;
-typedef unsigned short uint16_t;
-typedef signed int int32_t;
-typedef unsigned int uint32_t;
-typedef signed long long int64_t;
-typedef unsigned long long uint64_t;
-#ifndef _SIZE_T_DEFINED_
-#define _SIZE_T_DEFINED_
-typedef unsigned int size_t;
-#endif
-typedef unsigned int uintptr_t;
-#endif /* __GNUC__ || _MSC_VER */
+#else
+#define HAVE_STDINT_H 1
+#endif /* Visual Studio 2008 */
 #endif /* !_STDINT_H_ && !HAVE_STDINT_H */
 
 #ifdef _WIN64
@@ -106,6 +98,12 @@ typedef unsigned int uintptr_t;
 #if defined(_WIN32_MAXVER) && _WIN32_MAXVER >= 0x0602  /* Windows 8 SDK */
 #define HAVE_D3D11_H 1
 #define HAVE_ROAPI_H 1
+#endif
+#if defined(WDK_NTDDI_VERSION) && WDK_NTDDI_VERSION > 0x0A000008 /* 10.0.19041.0 */
+#define HAVE_D3D12_H 1
+#endif
+#if defined(_WIN32_MAXVER) && _WIN32_MAXVER >= 0x0603  /* Windows 8.1 SDK */
+#define HAVE_SHELLSCALINGAPI_H 1
 #endif
 #define HAVE_MMDEVICEAPI_H 1
 #define HAVE_AUDIOCLIENT_H 1
@@ -294,6 +292,9 @@ typedef unsigned int uintptr_t;
 #endif
 #if !defined(SDL_VIDEO_RENDER_D3D11) && defined(HAVE_D3D11_H)
 #define SDL_VIDEO_RENDER_D3D11  1
+#endif
+#if !defined(SDL_VIDEO_RENDER_D3D12) && defined(HAVE_D3D12_H)
+#define SDL_VIDEO_RENDER_D3D12  1
 #endif
 
 /* Enable OpenGL support */

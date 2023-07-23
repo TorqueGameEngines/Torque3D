@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -32,8 +32,7 @@
 #define INCL_DOSERRORS
 #include <os2.h>
 
-void *
-SDL_LoadObject(const char *sofile)
+void *SDL_LoadObject(const char *sofile)
 {
     ULONG   ulRC;
     HMODULE hModule;
@@ -47,22 +46,40 @@ SDL_LoadObject(const char *sofile)
 
     pszModName = OS2_UTF8ToSys(sofile);
     ulRC = DosLoadModule(acError, sizeof(acError), pszModName, &hModule);
-    SDL_free(pszModName);
-    if (ulRC != NO_ERROR) {
-        SDL_SetError("Failed loading %s (E%u)", acError, ulRC);
-        return NULL;
+
+    if (ulRC != NO_ERROR && !SDL_strrchr(pszModName, '\\') && !SDL_strrchr(pszModName, '/')) {
+        /* strip .dll extension and retry only if name has no path. */
+        size_t len = SDL_strlen(pszModName);
+        if (len > 4 && SDL_strcasecmp(&pszModName[len - 4], ".dll") == 0) {
+            pszModName[len - 4] = '\0';
+            ulRC = DosLoadModule(acError, sizeof(acError), pszModName, &hModule);
+        }
     }
+    if (ulRC != NO_ERROR) {
+        SDL_SetError("Failed loading %s: %s (E%u)", sofile, acError, ulRC);
+        hModule = NULLHANDLE;
+    }
+    SDL_free(pszModName);
 
     return (void *)hModule;
 }
 
-void *
-SDL_LoadFunction(void *handle, const char *name)
+void *SDL_LoadFunction(void *handle, const char *name)
 {
     ULONG   ulRC;
     PFN     pFN;
 
     ulRC = DosQueryProcAddr((HMODULE)handle, 0, name, &pFN);
+    if (ulRC != NO_ERROR) {
+        /* retry with an underscore prepended, e.g. for gcc-built dlls. */
+        SDL_bool isstack;
+        size_t len = SDL_strlen(name) + 1;
+        char *_name = SDL_small_alloc(char, len + 1, &isstack);
+        _name[0] = '_';
+        SDL_memcpy(&_name[1], name, len);
+        ulRC = DosQueryProcAddr((HMODULE)handle, 0, _name, &pFN);
+        SDL_small_free(_name, isstack);
+    }
     if (ulRC != NO_ERROR) {
         SDL_SetError("Failed loading procedure %s (E%u)", name, ulRC);
         return NULL;
@@ -71,8 +88,7 @@ SDL_LoadFunction(void *handle, const char *name)
     return (void *)pFN;
 }
 
-void
-SDL_UnloadObject(void *handle)
+void SDL_UnloadObject(void *handle)
 {
     if (handle != NULL) {
         DosFreeModule((HMODULE)handle);

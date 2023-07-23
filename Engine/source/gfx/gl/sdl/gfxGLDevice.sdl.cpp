@@ -77,6 +77,10 @@ void EnumerateVideoModes(Vector<GFXVideoMode>& outModes)
 
 void GFXGLDevice::enumerateAdapters( Vector<GFXAdapter*> &adapterList )
 {
+#ifdef TORQUE_TESTS_ENABLED
+      return;
+#endif
+
    AssertFatal( SDL_WasInit(SDL_INIT_VIDEO), "");
 
    PlatformGL::init(); // for hints about context creation

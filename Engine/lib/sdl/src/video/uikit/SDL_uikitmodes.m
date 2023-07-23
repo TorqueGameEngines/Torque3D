@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -150,11 +150,7 @@
              * Estimate the DPI based on the screen scale multiplied by the base DPI for the device
              * type (e.g. based on iPhone 1 and iPad 1)
              */
-    #if __IPHONE_OS_VERSION_MIN_REQUIRED >= 80000
             float scale = (float)screen.nativeScale;
-    #else
-            float scale = (float)screen.scale;
-    #endif
             float defaultDPI;
             if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
                 defaultDPI = 132.0f;
@@ -219,9 +215,7 @@
 
 @end
 
-static int
-UIKit_AllocateDisplayModeData(SDL_DisplayMode * mode,
-    UIScreenMode * uiscreenmode)
+static int UIKit_AllocateDisplayModeData(SDL_DisplayMode * mode, UIScreenMode * uiscreenmode)
 {
     SDL_DisplayModeData *data = nil;
 
@@ -240,8 +234,7 @@ UIKit_AllocateDisplayModeData(SDL_DisplayMode * mode,
     return 0;
 }
 
-static void
-UIKit_FreeDisplayModeData(SDL_DisplayMode * mode)
+static void UIKit_FreeDisplayModeData(SDL_DisplayMode * mode)
 {
     if (mode->driverdata != NULL) {
         CFRelease(mode->driverdata);
@@ -249,8 +242,7 @@ UIKit_FreeDisplayModeData(SDL_DisplayMode * mode)
     }
 }
 
-static NSUInteger
-UIKit_GetDisplayModeRefreshRate(UIScreen *uiscreen)
+static NSUInteger UIKit_GetDisplayModeRefreshRate(UIScreen *uiscreen)
 {
 #ifdef __IPHONE_10_3
     if ([uiscreen respondsToSelector:@selector(maximumFramesPerSecond)]) {
@@ -260,9 +252,7 @@ UIKit_GetDisplayModeRefreshRate(UIScreen *uiscreen)
     return 0;
 }
 
-static int
-UIKit_AddSingleDisplayMode(SDL_VideoDisplay * display, int w, int h,
-    UIScreen * uiscreen, UIScreenMode * uiscreenmode)
+static int UIKit_AddSingleDisplayMode(SDL_VideoDisplay * display, int w, int h, UIScreen * uiscreen, UIScreenMode * uiscreenmode)
 {
     SDL_DisplayMode mode;
     SDL_zero(mode);
@@ -284,9 +274,7 @@ UIKit_AddSingleDisplayMode(SDL_VideoDisplay * display, int w, int h,
     }
 }
 
-static int
-UIKit_AddDisplayMode(SDL_VideoDisplay * display, int w, int h, UIScreen * uiscreen,
-                     UIScreenMode * uiscreenmode, SDL_bool addRotation)
+static int UIKit_AddDisplayMode(SDL_VideoDisplay * display, int w, int h, UIScreen * uiscreen, UIScreenMode * uiscreenmode, SDL_bool addRotation)
 {
     if (UIKit_AddSingleDisplayMode(display, w, h, uiscreen, uiscreenmode) < 0) {
         return -1;
@@ -302,8 +290,7 @@ UIKit_AddDisplayMode(SDL_VideoDisplay * display, int w, int h, UIScreen * uiscre
     return 0;
 }
 
-int
-UIKit_AddDisplay(UIScreen *uiscreen, SDL_bool send_event)
+int UIKit_AddDisplay(UIScreen *uiscreen, SDL_bool send_event)
 {
     UIScreenMode *uiscreenmode = uiscreen.currentMode;
     CGSize size = uiscreen.bounds.size;
@@ -344,8 +331,7 @@ UIKit_AddDisplay(UIScreen *uiscreen, SDL_bool send_event)
     return 0;
 }
 
-void
-UIKit_DelDisplay(UIScreen *uiscreen)
+void UIKit_DelDisplay(UIScreen *uiscreen)
 {
     int i;
 
@@ -360,8 +346,7 @@ UIKit_DelDisplay(UIScreen *uiscreen)
     }
 }
 
-SDL_bool
-UIKit_IsDisplayLandscape(UIScreen *uiscreen)
+SDL_bool UIKit_IsDisplayLandscape(UIScreen *uiscreen)
 {
 #if !TARGET_OS_TV
     if (uiscreen == [UIScreen mainScreen]) {
@@ -374,8 +359,7 @@ UIKit_IsDisplayLandscape(UIScreen *uiscreen)
     }
 }
 
-int
-UIKit_InitModes(_THIS)
+int UIKit_InitModes(_THIS)
 {
     @autoreleasepool {
         for (UIScreen *uiscreen in [UIScreen screens]) {
@@ -393,8 +377,7 @@ UIKit_InitModes(_THIS)
     return 0;
 }
 
-void
-UIKit_GetDisplayModes(_THIS, SDL_VideoDisplay * display)
+void UIKit_GetDisplayModes(_THIS, SDL_VideoDisplay * display)
 {
     @autoreleasepool {
         SDL_DisplayData *data = (__bridge SDL_DisplayData *) display->driverdata;
@@ -438,8 +421,7 @@ UIKit_GetDisplayModes(_THIS, SDL_VideoDisplay * display)
     }
 }
 
-int
-UIKit_GetDisplayDPI(_THIS, SDL_VideoDisplay * display, float * ddpi, float * hdpi, float * vdpi)
+int UIKit_GetDisplayDPI(_THIS, SDL_VideoDisplay * display, float * ddpi, float * hdpi, float * vdpi)
 {
     @autoreleasepool {
         SDL_DisplayData *data = (__bridge SDL_DisplayData *) display->driverdata;
@@ -459,8 +441,7 @@ UIKit_GetDisplayDPI(_THIS, SDL_VideoDisplay * display, float * ddpi, float * hdp
     return 0;
 }
 
-int
-UIKit_SetDisplayMode(_THIS, SDL_VideoDisplay * display, SDL_DisplayMode * mode)
+int UIKit_SetDisplayMode(_THIS, SDL_VideoDisplay * display, SDL_DisplayMode * mode)
 {
     @autoreleasepool {
         SDL_DisplayData *data = (__bridge SDL_DisplayData *) display->driverdata;
@@ -489,8 +470,7 @@ UIKit_SetDisplayMode(_THIS, SDL_VideoDisplay * display, SDL_DisplayMode * mode)
     return 0;
 }
 
-int
-UIKit_GetDisplayUsableBounds(_THIS, SDL_VideoDisplay * display, SDL_Rect * rect)
+int UIKit_GetDisplayUsableBounds(_THIS, SDL_VideoDisplay * display, SDL_Rect * rect)
 {
     @autoreleasepool {
         int displayIndex = (int) (display - _this->displays);
@@ -503,12 +483,6 @@ UIKit_GetDisplayUsableBounds(_THIS, SDL_VideoDisplay * display, SDL_Rect * rect)
             return -1;
         }
 
-#if !TARGET_OS_TV && __IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_7_0
-        if (!UIKit_IsSystemVersionAtLeast(7.0)) {
-            frame = [data.uiscreen applicationFrame];
-        }
-#endif
-
         rect->x += frame.origin.x;
         rect->y += frame.origin.y;
         rect->w = frame.size.width;
@@ -518,8 +492,7 @@ UIKit_GetDisplayUsableBounds(_THIS, SDL_VideoDisplay * display, SDL_Rect * rect)
     return 0;
 }
 
-void
-UIKit_QuitModes(_THIS)
+void UIKit_QuitModes(_THIS)
 {
     [SDL_DisplayWatch stop];
 

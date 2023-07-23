@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -122,10 +122,10 @@ static void OS2_WarpMouse(SDL_Window * window, int x, int y)
     POINTL      pointl;
 
     pointl.x = x;
-    pointl.y = window->h - y;
+    pointl.y = window->h - y - 1;
     WinMapWindowPoints(pWinData->hwnd, HWND_DESKTOP, &pointl, 1);
-/*  pWinData->lSkipWMMouseMove++; ???*/
     WinSetPointerPos(HWND_DESKTOP, pointl.x, pointl.y);
+    SDL_SendMouseMotion(window, SDL_GetMouse()->mouseID, 0, x, y);
 }
 
 static int OS2_WarpMouseGlobal(int x, int y)

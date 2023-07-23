@@ -4,10 +4,31 @@ use warnings;
 use strict;
 use Text::Wrap;
 
+$Text::Wrap::huge = 'overflow';
+
+my $projectfullname = 'Simple Directmedia Layer';
+my $projectshortname = 'SDL';
+my $wikisubdir = '';
+my $incsubdir = 'include';
+my $readmesubdir = undef;
+my $apiprefixregex = undef;
+my $versionfname = 'include/SDL_version.h';
+my $versionmajorregex = '\A\#define\s+SDL_MAJOR_VERSION\s+(\d+)\Z';
+my $versionminorregex = '\A\#define\s+SDL_MINOR_VERSION\s+(\d+)\Z';
+my $versionpatchregex = '\A\#define\s+SDL_PATCHLEVEL\s+(\d+)\Z';
+my $mainincludefname = 'SDL.h';
+my $selectheaderregex = '\ASDL.*?\.h\Z';
+my $projecturl = 'https://libsdl.org/';
+my $wikiurl = 'https://wiki.libsdl.org';
+my $bugreporturl = 'https://github.com/libsdl-org/sdlwiki/issues/new';
 my $srcpath = undef;
 my $wikipath = undef;
+my $wikireadmesubdir = 'README';
 my $warn_about_missing = 0;
 my $copy_direction = 0;
+my $optionsfname = undef;
+my $wikipreamble = undef;
+my $changeformat = undef;
 
 foreach (@ARGV) {
     $warn_about_missing = 1, next if $_ eq '--warn-about-missing';
@@ -15,14 +36,78 @@ foreach (@ARGV) {
     $copy_direction = 1, next if $_ eq '--copy-to-header';
     $copy_direction = -1, next if $_ eq '--copy-to-wiki';
     $copy_direction = -2, next if $_ eq '--copy-to-manpages';
+    if (/\A--options=(.*)\Z/) {
+        $optionsfname = $1;
+        next;
+    } elsif (/\A--changeformat=(.*)\Z/) {
+        $changeformat = $1;
+        next;
+    }
     $srcpath = $_, next if not defined $srcpath;
     $wikipath = $_, next if not defined $wikipath;
+}
+
+my $default_optionsfname = '.wikiheaders-options';
+$default_optionsfname = "$srcpath/$default_optionsfname" if defined $srcpath;
+
+if ((not defined $optionsfname) && (-f $default_optionsfname)) {
+    $optionsfname = $default_optionsfname;
+}
+
+if (defined $optionsfname) {
+    open OPTIONS, '<', $optionsfname or die("Failed to open options file '$optionsfname': $!\n");
+    while (<OPTIONS>) {
+        chomp;
+        if (/\A(.*?)\=(.*)\Z/) {
+            my $key = $1;
+            my $val = $2;
+            $key =~ s/\A\s+//;
+            $key =~ s/\s+\Z//;
+            $val =~ s/\A\s+//;
+            $val =~ s/\s+\Z//;
+            $warn_about_missing = int($val), next if $key eq 'warn_about_missing';
+            $srcpath = $val, next if $key eq 'srcpath';
+            $wikipath = $val, next if $key eq 'wikipath';
+            $apiprefixregex = $val, next if $key eq 'apiprefixregex';
+            $projectfullname = $val, next if $key eq 'projectfullname';
+            $projectshortname = $val, next if $key eq 'projectshortname';
+            $wikisubdir = $val, next if $key eq 'wikisubdir';
+            $incsubdir = $val, next if $key eq 'incsubdir';
+            $readmesubdir = $val, next if $key eq 'readmesubdir';
+            $versionmajorregex = $val, next if $key eq 'versionmajorregex';
+            $versionminorregex = $val, next if $key eq 'versionminorregex';
+            $versionpatchregex = $val, next if $key eq 'versionpatchregex';
+            $versionfname = $val, next if $key eq 'versionfname';
+            $mainincludefname = $val, next if $key eq 'mainincludefname';
+            $selectheaderregex = $val, next if $key eq 'selectheaderregex';
+            $projecturl = $val, next if $key eq 'projecturl';
+            $wikiurl = $val, next if $key eq 'wikiurl';
+            $bugreporturl = $val, next if $key eq 'bugreporturl';
+            $wikipreamble = $val, next if $key eq 'wikipreamble';
+        }
+    }
+    close(OPTIONS);
 }
 
 my $wordwrap_mode = 'mediawiki';
 sub wordwrap_atom {   # don't call this directly.
     my $str = shift;
-    return fill('', '', $str);
+    my $retval = '';
+
+    # wordwrap but leave links intact, even if they overflow.
+    if ($wordwrap_mode eq 'mediawiki') {
+        while ($str =~ s/(.*?)\s*(\[https?\:\/\/.*?\s+.*?\])\s*//ms) {
+            $retval .= fill('', '', $1); # wrap it.
+            $retval .= "\n$2\n";  # don't wrap it.
+        }
+    } elsif ($wordwrap_mode eq 'md') {
+        while ($str =~ s/(.*?)\s*(\[.*?\]\(https?\:\/\/.*?\))\s*//ms) {
+            $retval .= fill('', '', $1); # wrap it.
+            $retval .= "\n$2\n";  # don't wrap it.
+        }
+    }
+
+    return $retval . fill('', '', $str);
 }
 
 sub wordwrap_with_bullet_indent {  # don't call this directly.
@@ -53,6 +138,7 @@ sub wordwrap_with_bullet_indent {  # don't call this directly.
     my $usual_prefix = ' ' x $bulletlen;
 
     foreach (@wrappedlines) {
+        s/\s*\Z//;
         $retval .= "$prefix$_\n";
         $prefix = $usual_prefix;
     }
@@ -142,15 +228,22 @@ sub wikify_chunk {
         while ($str =~ s/\A(.*?)\`(.*?)\`//ms) {
             my $codeblock = $2;
             $codedstr .= wikify_chunk($wikitype, $1, undef, undef);
-            # Convert obvious SDL things to wikilinks, even inside `code` blocks.
-            $codeblock =~ s/\b(SDL_[a-zA-Z0-9_]+)/[[$1]]/gms;
+            if (defined $apiprefixregex) {
+                # Convert obvious API things to wikilinks, even inside `code` blocks.
+                $codeblock =~ s/\b($apiprefixregex[a-zA-Z0-9_]+)/[[$1]]/gms;
+            }
             $codedstr .= "<code>$codeblock</code>";
         }
 
-        # Convert obvious SDL things to wikilinks.
-        $str =~ s/\b(SDL_[a-zA-Z0-9_]+)/[[$1]]/gms;
+        # Convert obvious API things to wikilinks.
+        if (defined $apiprefixregex) {
+            $str =~ s/\b($apiprefixregex[a-zA-Z0-9_]+)/[[$1]]/gms;
+        }
 
         # Make some Markdown things into MediaWiki...
+
+        # links
+        $str =~ s/\[(.*?)\]\((https?\:\/\/.*?)\)/\[$2 $1\]/g;
 
         # bold+italic
         $str =~ s/\*\*\*(.*?)\*\*\*/'''''$1'''''/gms;
@@ -170,8 +263,30 @@ sub wikify_chunk {
             $str .= "<syntaxhighlight lang='$codelang'>$code<\/syntaxhighlight>";
         }
     } elsif ($wikitype eq 'md') {
-        # Convert obvious SDL things to wikilinks.
-        $str =~ s/\b(SDL_[a-zA-Z0-9_]+)/[$1]($1)/gms;
+        # convert `code` things first, so they aren't mistaken for other markdown items.
+        my $codedstr = '';
+        while ($str =~ s/\A(.*?)(\`.*?\`)//ms) {
+            my $codeblock = $2;
+            $codedstr .= wikify_chunk($wikitype, $1, undef, undef);
+            if (defined $apiprefixregex) {
+                # Convert obvious API things to wikilinks, even inside `code` blocks,
+                # BUT ONLY IF the entire code block is the API thing,
+                # So something like "just call `SDL_Whatever`" will become
+                # "just call [`SDL_Whatever`](SDL_Whatever)", but
+                # "just call `SDL_Whatever(7)`" will not. It's just the safest
+                # way to do this without resorting to wrapping things in html <code> tags.
+                $codeblock =~ s/\A\`($apiprefixregex[a-zA-Z0-9_]+)\`\Z/[`$1`]($1)/gms;
+            }
+            $codedstr .= $codeblock;
+        }
+
+        # Convert obvious API things to wikilinks.
+        if (defined $apiprefixregex) {
+            $str =~ s/\b($apiprefixregex[a-zA-Z0-9_]+)/[$1]($1)/gms;
+        }
+
+        $str = $codedstr . $str;
+
         if (defined $code) {
             $str .= "```$codelang$code```";
         }
@@ -216,7 +331,13 @@ sub dewikify_chunk {
             # Doxygen supports Markdown (and it just simply looks better than MediaWiki
             # when looking at the raw headers), so do some conversions here as necessary.
 
-            $str =~ s/\[\[(SDL_[a-zA-Z0-9_]+)\]\]/$1/gms;  # Dump obvious wikilinks.
+            # Dump obvious wikilinks.
+            if (defined $apiprefixregex) {
+                $str =~ s/\[\[($apiprefixregex[a-zA-Z0-9_]+)\]\]/$1/gms;
+            }
+
+            # links
+            $str =~ s/\[(https?\:\/\/.*?)\s+(.*?)\]/\[$2\]\($1\)/g;
 
             # <code></code> is also popular.  :/
             $str =~ s/\<code>(.*?)<\/code>/`$1`/gms;
@@ -232,6 +353,11 @@ sub dewikify_chunk {
 
             # bullets
             $str =~ s/^\* /- /gm;
+        } elsif ($wikitype eq 'md') {
+            # Dump obvious wikilinks. The rest can just passthrough.
+            if (defined $apiprefixregex) {
+                $str =~ s/\[(\`?$apiprefixregex[a-zA-Z0-9_]+\`?)\]\($apiprefixregex[a-zA-Z0-9_]+\)/$1/gms;
+            }
         }
 
         if (defined $code) {
@@ -240,7 +366,13 @@ sub dewikify_chunk {
     } elsif ($dewikify_mode eq 'manpage') {
         $str =~ s/\./\\[char46]/gms;  # make sure these can't become control codes.
         if ($wikitype eq 'mediawiki') {
-            $str =~ s/\s*\[\[(SDL_[a-zA-Z0-9_]+)\]\]\s*/\n.BR $1\n/gms;  # Dump obvious wikilinks.
+            # Dump obvious wikilinks.
+            if (defined $apiprefixregex) {
+                $str =~ s/\s*\[\[($apiprefixregex[a-zA-Z0-9_]+)\]\]\s*/\n.BR $1\n/gms;
+            }
+
+            # links
+            $str =~ s/\[(https?\:\/\/.*?)\s+(.*?)\]/\n.URL "$1" "$2"\n/g;
 
             # <code></code> is also popular.  :/
             $str =~ s/\s*\<code>(.*?)<\/code>\s*/\n.BR $1\n/gms;
@@ -256,6 +388,30 @@ sub dewikify_chunk {
 
             # bullets
             $str =~ s/^\* /\n\\\(bu /gm;
+        } elsif ($wikitype eq 'md') {
+            # Dump obvious wikilinks.
+            if (defined $apiprefixregex) {
+                $str =~ s/\[(\`?$apiprefixregex[a-zA-Z0-9_]+\`?)\]\($apiprefixregex[a-zA-Z0-9_]+\)/\n.BR $1\n/gms;
+            }
+
+            # links
+            $str =~ s/\[(.*?)]\((https?\:\/\/.*?)\)/\n.URL "$2" "$1"\n/g;
+
+            # <code></code> is also popular.  :/
+            $str =~ s/\s*\`(.*?)\`\s*/\n.BR $1\n/gms;
+
+            # bold+italic
+            $str =~ s/\s*\*\*\*(.*?)\*\*\*\s*/\n.BI $1\n/gms;
+
+            # bold
+            $str =~ s/\s*\*\*(.*?)\*\*\s*/\n.B $1\n/gms;
+
+            # italic
+            $str =~ s/\s*\*(.*?)\*\s*/\n.I $1\n/gms;
+
+            # bullets
+            $str =~ s/^\- /\n\\\(bu /gm;
+
         } else {
             die("Unexpected wikitype when converting to manpages\n");   # !!! FIXME: need to handle Markdown wiki pages.
         }
@@ -300,6 +456,23 @@ sub dewikify {
     return $retval;
 }
 
+sub filecopy {
+    my $src = shift;
+    my $dst = shift;
+    my $endline = shift;
+    $endline = "\n" if not defined $endline;
+
+    open(COPYIN, '<', $src) or die("Failed to open '$src' for reading: $!\n");
+    open(COPYOUT, '>', $dst) or die("Failed to open '$dst' for writing: $!\n");
+    while (<COPYIN>) {
+        chomp;
+        s/[ \t\r\n]*\Z//;
+        print COPYOUT "$_$endline";
+    }
+    close(COPYOUT);
+    close(COPYIN);
+}
+
 sub usage {
     die("USAGE: $0 <source code git clone path> <wiki git clone path> [--copy-to-headers|--copy-to-wiki|--copy-to-manpages] [--warn-about-missing]\n\n");
 }
@@ -316,6 +489,7 @@ my @standard_wiki_sections = (
     'Function Parameters',
     'Return Value',
     'Remarks',
+    'Thread Safety',
     'Version',
     'Code Examples',
     'Related Functions'
@@ -336,11 +510,19 @@ my %headerfuncslocation = ();   # $headerfuncslocation{"SDL_OpenAudio"} -> name 
 my %headerfuncschunk = ();   # $headerfuncschunk{"SDL_OpenAudio"} -> offset in array in %headers that should be replaced for this function.
 my %headerfuncshasdoxygen = ();   # $headerfuncschunk{"SDL_OpenAudio"} -> 1 if there was no existing doxygen for this function.
 
-my $incpath = "$srcpath/include";
+my $incpath = "$srcpath";
+$incpath .= "/$incsubdir" if $incsubdir ne '';
+
+my $wikireadmepath = "$wikipath/$wikireadmesubdir";
+my $readmepath = undef;
+if (defined $readmesubdir) {
+    $readmepath = "$srcpath/$readmesubdir";
+}
+
 opendir(DH, $incpath) or die("Can't opendir '$incpath': $!\n");
-while (readdir(DH)) {
-    my $dent = $_;
-    next if not $dent =~ /\ASDL.*?\.h\Z/;  # just SDL*.h headers.
+while (my $d = readdir(DH)) {
+    my $dent = $d;
+    next if not $dent =~ /$selectheaderregex/;  # just selected headers.
     open(FH, '<', "$incpath/$dent") or die("Can't open '$incpath/$dent': $!\n");
 
     my @contents = ();
@@ -487,23 +669,32 @@ my %wikitypes = ();  # contains string of wiki page extension, like $wikitypes{"
 my %wikifuncs = ();  # contains references to hash of strings, each string being the full contents of a section of a wiki page, like $wikifuncs{"SDL_OpenAudio"}{"Remarks"}.
 my %wikisectionorder = ();   # contains references to array, each array item being a key to a wikipage section in the correct order, like $wikisectionorder{"SDL_OpenAudio"}[2] == 'Remarks'
 opendir(DH, $wikipath) or die("Can't opendir '$wikipath': $!\n");
-while (readdir(DH)) {
-    my $dent = $_;
+while (my $d = readdir(DH)) {
+    my $dent = $d;
     my $type = '';
-    if ($dent =~ /\ASDL.*?\.(md|mediawiki)\Z/) {
+    if ($dent =~ /\.(md|mediawiki)\Z/) {
         $type = $1;
     } else {
         next;  # only dealing with wiki pages.
     }
 
+    my $fn = $dent;
+    $fn =~ s/\..*\Z//;
+
+    # Ignore FrontPage.
+    next if $fn eq 'FrontPage';
+
+    # Ignore "Category*" pages.
+    next if ($fn =~ /\ACategory/);
+
     open(FH, '<', "$wikipath/$dent") or die("Can't open '$wikipath/$dent': $!\n");
 
     my $current_section = '[start]';
     my @section_order = ( $current_section );
-    my $fn = $dent;
-    $fn =~ s/\..*\Z//;
     my %sections = ();
     $sections{$current_section} = '';
+
+    my $firstline = 1;
 
     while (<FH>) {
         chomp;
@@ -512,18 +703,24 @@ while (readdir(DH)) {
         s/\s*\Z//;
 
         if ($type eq 'mediawiki') {
-            if (/\A\= (.*?) \=\Z/) {
+            if (defined($wikipreamble) && $firstline && /\A\=\=\=\=\=\= (.*?) \=\=\=\=\=\=\Z/ && ($1 eq $wikipreamble)) {
+                $firstline = 0;  # skip this.
+                next;
+            } elsif (/\A\= (.*?) \=\Z/) {
+                $firstline = 0;
                 $current_section = ($1 eq $fn) ? '[Brief]' : $1;
                 die("Doubly-defined section '$current_section' in '$dent'!\n") if defined $sections{$current_section};
                 push @section_order, $current_section;
                 $sections{$current_section} = '';
             } elsif (/\A\=\= (.*?) \=\=\Z/) {
+                $firstline = 0;
                 $current_section = ($1 eq $fn) ? '[Brief]' : $1;
                 die("Doubly-defined section '$current_section' in '$dent'!\n") if defined $sections{$current_section};
                 push @section_order, $current_section;
                 $sections{$current_section} = '';
                 next;
             } elsif (/\A\-\-\-\-\Z/) {
+                $firstline = 0;
                 $current_section = '[footer]';
                 die("Doubly-defined section '$current_section' in '$dent'!\n") if defined $sections{$current_section};
                 push @section_order, $current_section;
@@ -531,13 +728,18 @@ while (readdir(DH)) {
                 next;
             }
         } elsif ($type eq 'md') {
-            if (/\A\#+ (.*?)\Z/) {
+            if (defined($wikipreamble) && $firstline && /\A\#\#\#\#\#\# (.*?)\Z/ && ($1 eq $wikipreamble)) {
+                $firstline = 0;  # skip this.
+                next;
+            } elsif (/\A\#+ (.*?)\Z/) {
+                $firstline = 0;
                 $current_section = ($1 eq $fn) ? '[Brief]' : $1;
                 die("Doubly-defined section '$current_section' in '$dent'!\n") if defined $sections{$current_section};
                 push @section_order, $current_section;
                 $sections{$current_section} = '';
                 next;
             } elsif (/\A\-\-\-\-\Z/) {
+                $firstline = 0;
                 $current_section = '[footer]';
                 die("Doubly-defined section '$current_section' in '$dent'!\n") if defined $sections{$current_section};
                 push @section_order, $current_section;
@@ -548,7 +750,12 @@ while (readdir(DH)) {
             die("Unexpected wiki file type. Fixme!\n");
         }
 
-        $sections{$current_section} .= "$orig\n";
+        if ($firstline) {
+            $firstline = ($_ ne '');
+        }
+        if (!$firstline) {
+            $sections{$current_section} .= "$orig\n";
+        }
     }
     close(FH);
 
@@ -600,13 +807,14 @@ if ($copy_direction == 1) {  # --copy-to-headers
         next if not defined $wikifuncs{$fn};  # don't have a page for that function, skip it.
         my $wikitype = $wikitypes{$fn};
         my $sectionsref = $wikifuncs{$fn};
-        my $remarks = %$sectionsref{'Remarks'};
-        my $params = %$sectionsref{'Function Parameters'};
-        my $returns = %$sectionsref{'Return Value'};
-        my $version = %$sectionsref{'Version'};
-        my $related = %$sectionsref{'Related Functions'};
-        my $deprecated = %$sectionsref{'Deprecated'};
-        my $brief = %$sectionsref{'[Brief]'};
+        my $remarks = $sectionsref->{'Remarks'};
+        my $params = $sectionsref->{'Function Parameters'};
+        my $returns = $sectionsref->{'Return Value'};
+        my $threadsafety = $sectionsref->{'Thread Safety'};
+        my $version = $sectionsref->{'Version'};
+        my $related = $sectionsref->{'Related Functions'};
+        my $deprecated = $sectionsref->{'Deprecated'};
+        my $brief = $sectionsref->{'[Brief]'};
         my $addblank = 0;
         my $str = '';
 
@@ -671,6 +879,33 @@ if ($copy_direction == 1) {  # --copy-to-headers
                         $str .= "${whitespace}$_\n";
                     }
                 }
+            } elsif ($wikitype eq 'md') {
+                my $l;
+                $l = shift @lines;
+                die("Unexpected data parsing Markdown table") if (not $l =~ /\A\s*\|\s*\|\s*\|\s*\Z/);
+                $l = shift @lines;
+                die("Unexpected data parsing Markdown table") if (not $l =~ /\A\s*\|\s*\-*\s*\|\s*\-*\s*\|\s*\Z/);
+                while (scalar(@lines) >= 1) {
+                    $l = shift @lines;
+                    if ($l =~ /\A\s*\|\s*(.*?)\s*\|\s*(.*?)\s*\|\s*\Z/) {
+                        my $name = $1;
+                        my $desc = $2;
+                        $name =~ s/\A\*\*(.*?)\*\*/$1/;
+                        $name =~ s/\A\'\'\'(.*?)\'\'\'/$1/;
+                        #print STDERR "FN: $fn   NAME: $name   DESC: $desc\n";
+                        my $whitespacelen = length($name) + 8;
+                        my $whitespace = ' ' x $whitespacelen;
+                        $desc = wordwrap($desc, -$whitespacelen);
+                        my @desclines = split /\n/, $desc;
+                        my $firstline = shift @desclines;
+                        $str .= "\\param $name $firstline\n";
+                        foreach (@desclines) {
+                            $str .= "${whitespace}$_\n";
+                        }
+                    } else {
+                        last;  # we seem to have run out of table.
+                    }
+                }
             } else {
                 die("write me");
             }
@@ -690,6 +925,21 @@ if ($copy_direction == 1) {  # --copy-to-headers
             my @desclines = split /\n/, $r;
             my $firstline = shift @desclines;
             $str .= "$retstr $firstline\n";
+            foreach (@desclines) {
+                $str .= "${whitespace}$_\n";
+            }
+        }
+
+        if (defined $threadsafety) {
+            # !!! FIXME: lots of code duplication in all of these.
+            $str .= "\n" if $addblank; $addblank = 1;
+            my $v = dewikify($wikitype, $threadsafety);
+            my $whitespacelen = length("\\threadsafety") + 1;
+            my $whitespace = ' ' x $whitespacelen;
+            $v = wordwrap($v, -$whitespacelen);
+            my @desclines = split /\n/, $v;
+            my $firstline = shift @desclines;
+            $str .= "\\threadsafety $firstline\n";
             foreach (@desclines) {
                 $str .= "${whitespace}$_\n";
             }
@@ -718,6 +968,9 @@ if ($copy_direction == 1) {  # --copy-to-headers
             foreach (@desclines) {
                 s/\A(\:|\* )//;
                 s/\(\)\Z//;  # Convert "SDL_Func()" to "SDL_Func"
+                s/\[\[(.*?)\]\]/$1/;  # in case some wikilinks remain.
+                s/\[(.*?)\]\(.*?\)/$1/;  # in case some wikilinks remain.
+                s/\A\/*//;
                 $str .= "\\sa $_\n";
             }
         }
@@ -777,11 +1030,32 @@ if ($copy_direction == 1) {  # --copy-to-headers
         rename($path, "$incpath/$header") or die("Can't rename '$path' to '$incpath/$header': $!\n");
     }
 
+    if (defined $readmepath) {
+        if ( -d $wikireadmepath ) {
+            mkdir($readmepath);  # just in case
+            opendir(DH, $wikireadmepath) or die("Can't opendir '$wikireadmepath': $!\n");
+            while (readdir(DH)) {
+                my $dent = $_;
+                if ($dent =~ /\A(.*?)\.md\Z/) {  # we only bridge Markdown files here.
+                    next if $1 eq 'FrontPage';
+                    filecopy("$wikireadmepath/$dent", "$readmepath/README-$dent", "\r\n");
+                }
+            }
+            closedir(DH);
+        }
+    }
 } elsif ($copy_direction == -1) { # --copy-to-wiki
+
+    if (defined $changeformat) {
+        $dewikify_mode = $changeformat;
+        $wordwrap_mode = $changeformat;
+    }
+
     foreach (keys %headerfuncs) {
         my $fn = $_;
         next if not $headerfuncshasdoxygen{$fn};
-        my $wikitype = defined $wikitypes{$fn} ? $wikitypes{$fn} : 'mediawiki';  # default to MediaWiki for new stuff FOR NOW.
+        my $origwikitype = defined $wikitypes{$fn} ? $wikitypes{$fn} : 'md';  # default to MarkDown for new stuff.
+        my $wikitype = (defined $changeformat) ? $changeformat : $origwikitype;
         die("Unexpected wikitype '$wikitype'\n") if (($wikitype ne 'mediawiki') and ($wikitype ne 'md') and ($wikitype ne 'manpage'));
 
         #print("$fn\n"); next;
@@ -919,6 +1193,21 @@ if ($copy_direction == 1) {  # --copy-to-headers
                 }
                 $desc =~ s/[\s\n]+\Z//ms;
                 $sections{'Version'} = wordwrap(wikify($wikitype, $desc)) . "\n";
+            } elsif ($l =~ /\A\\threadsafety\s+(.*)\Z/) {
+                my $desc = $1;
+                while (@doxygenlines) {
+                    my $subline = $doxygenlines[0];
+                    $subline =~ s/\A\s*//;
+                    last if $subline =~ /\A\\/;  # some sort of doxygen command, assume we're past this thing.
+                    shift @doxygenlines;  # dump this line from the array; we're using it.
+                    if ($subline eq '') {  # empty line, make sure it keeps the newline char.
+                        $desc .= "\n";
+                    } else {
+                        $desc .= " $subline";
+                    }
+                }
+                $desc =~ s/[\s\n]+\Z//ms;
+                $sections{'Thread Safety'} = wordwrap(wikify($wikitype, $desc)) . "\n";
             } elsif ($l =~ /\A\\sa\s+(.*)\Z/) {
                 my $sa = $1;
                 $sa =~ s/\(\)\Z//;  # Convert "SDL_Func()" to "SDL_Func"
@@ -926,7 +1215,7 @@ if ($copy_direction == 1) {  # --copy-to-headers
                 if ($wikitype eq 'mediawiki') {
                     $sections{'Related Functions'} .= ":[[$sa]]\n";
                 } elsif ($wikitype eq 'md') {
-                    $sections{'Related Functions'} .= "* [$sa](/$sa)\n";
+                    $sections{'Related Functions'} .= "* [$sa]($sa)\n";
                 } else { die("Expected wikitype '$wikitype'\n"); }
             }
         }
@@ -997,8 +1286,25 @@ if ($copy_direction == 1) {  # --copy-to-headers
             push @$wikisectionorderref, '[footer]';
         }
 
+        # If changing format, convert things that otherwise are passed through unmolested.
+        if (defined $changeformat) {
+            if (($dewikify_mode eq 'md') and ($origwikitype eq 'mediawiki')) {
+                $$sectionsref{'[footer]'} =~ s/\[\[(Category[a-zA-Z0-9_]+)\]\]/[$1]($1)/g;
+            } elsif (($dewikify_mode eq 'mediawiki') and ($origwikitype eq 'md')) {
+                $$sectionsref{'[footer]'} =~ s/\[(Category[a-zA-Z0-9_]+)\]\(.*?\)/[[$1]]/g;
+            }
+
+            foreach (keys %only_wiki_sections) {
+                my $sect = $_;
+                if (defined $$sectionsref{$sect}) {
+                    $$sectionsref{$sect} = wikify($wikitype, dewikify($origwikitype, $$sectionsref{$sect}));
+                }
+            }
+        }
+
         # !!! FIXME: This won't be CategoryAPI if we eventually handle things other than functions.
         my $footer = $$sectionsref{'[footer]'};
+
         if ($wikitype eq 'mediawiki') {
             $footer =~ s/\[\[CategoryAPI\]\],?\s*//g;
             $footer = '[[CategoryAPI]]' . (($footer eq '') ? "\n" : ", $footer");
@@ -1007,6 +1313,15 @@ if ($copy_direction == 1) {  # --copy-to-headers
             $footer = '[CategoryAPI](CategoryAPI)' . (($footer eq '') ? '' : ', ') . $footer;
         } else { die("Unexpected wikitype '$wikitype'\n"); }
         $$sectionsref{'[footer]'} = $footer;
+
+        if (defined $wikipreamble) {
+            my $wikified_preamble = wikify($wikitype, $wikipreamble);
+            if ($wikitype eq 'mediawiki') {
+                print FH "====== $wikified_preamble ======\n";
+            } elsif ($wikitype eq 'md') {
+                print FH "###### $wikified_preamble\n";
+            } else { die("Unexpected wikitype '$wikitype'\n"); }
+        }
 
         my $prevsectstr = '';
         my @ordered_sections = (@standard_wiki_sections, defined $wikisectionorderref ? @$wikisectionorderref : ());  # this copies the arrays into one.
@@ -1049,7 +1364,49 @@ if ($copy_direction == 1) {  # --copy-to-headers
 
         print FH "\n\n";
         close(FH);
+
+        if (defined $changeformat and ($origwikitype ne $wikitype)) {
+            system("cd '$wikipath' ; git mv '$_.${origwikitype}' '$_.${wikitype}'");
+            unlink("$wikipath/$_.${origwikitype}");
+        }
+
         rename($path, "$wikipath/$_.${wikitype}") or die("Can't rename '$path' to '$wikipath/$_.${wikitype}': $!\n");
+    }
+
+    if (defined $readmepath) {
+        if ( -d $readmepath ) {
+            mkdir($wikireadmepath);  # just in case
+            opendir(DH, $readmepath) or die("Can't opendir '$readmepath': $!\n");
+            while (my $d = readdir(DH)) {
+                my $dent = $d;
+                if ($dent =~ /\AREADME\-(.*?\.md)\Z/) {  # we only bridge Markdown files here.
+                    my $wikifname = $1;
+                    next if $wikifname eq 'FrontPage.md';
+                    filecopy("$readmepath/$dent", "$wikireadmepath/$wikifname", "\n");
+                }
+            }
+            closedir(DH);
+
+            my @pages = ();
+            opendir(DH, $wikireadmepath) or die("Can't opendir '$wikireadmepath': $!\n");
+            while (my $d = readdir(DH)) {
+                my $dent = $d;
+                if ($dent =~ /\A(.*?)\.(mediawiki|md)\Z/) {
+                    my $wikiname = $1;
+                    next if $wikiname eq 'FrontPage';
+                    push @pages, $wikiname;
+                }
+            }
+            closedir(DH);
+
+            open(FH, '>', "$wikireadmepath/FrontPage.md") or die("Can't open '$wikireadmepath/FrontPage.md': $!\n");
+            print FH "# All READMEs available here\n\n";
+            foreach (sort @pages) {
+                my $wikiname = $_;
+                print FH "- [$wikiname]($wikiname)\n";
+            }
+            close(FH);
+        }
     }
 
 } elsif ($copy_direction == -2) { # --copy-to-manpages
@@ -1076,36 +1433,38 @@ if ($copy_direction == 1) {  # --copy-to-headers
     my $gitrev = `cd "$srcpath" ; git rev-list HEAD~..`;
     chomp($gitrev);
 
-    open(FH, '<', "$srcpath/include/SDL_version.h") or die("Can't open '$srcpath/include/SDL_version.h': $!\n");
+    # !!! FIXME
+    open(FH, '<', "$srcpath/$versionfname") or die("Can't open '$srcpath/$versionfname': $!\n");
     my $majorver = 0;
     my $minorver = 0;
     my $patchver = 0;
     while (<FH>) {
         chomp;
-        if (/\A\#define SDL_MAJOR_VERSION\s+(\d+)\Z/) {
+        if (/$versionmajorregex/) {
             $majorver = int($1);
-        } elsif (/\A\#define SDL_MINOR_VERSION\s+(\d+)\Z/) {
+        } elsif (/$versionminorregex/) {
             $minorver = int($1);
-        } elsif (/\A\#define SDL_PATCHLEVEL\s+(\d+)\Z/) {
+        } elsif (/$versionpatchregex/) {
             $patchver = int($1);
         }
     }
     close(FH);
-    my $sdlversion = "$majorver.$minorver.$patchver";
+    my $fullversion = "$majorver.$minorver.$patchver";
 
     foreach (keys %headerfuncs) {
         my $fn = $_;
         next if not defined $wikifuncs{$fn};  # don't have a page for that function, skip it.
         my $wikitype = $wikitypes{$fn};
         my $sectionsref = $wikifuncs{$fn};
-        my $remarks = %$sectionsref{'Remarks'};
-        my $params = %$sectionsref{'Function Parameters'};
-        my $returns = %$sectionsref{'Return Value'};
-        my $version = %$sectionsref{'Version'};
-        my $related = %$sectionsref{'Related Functions'};
-        my $examples = %$sectionsref{'Code Examples'};
-        my $deprecated = %$sectionsref{'Deprecated'};
-        my $brief = %$sectionsref{'[Brief]'};
+        my $remarks = $sectionsref->{'Remarks'};
+        my $params = $sectionsref->{'Function Parameters'};
+        my $returns = $sectionsref->{'Return Value'};
+        my $version = $sectionsref->{'Version'};
+        my $threadsafety = $sectionsref->{'Thread Safety'};
+        my $related = $sectionsref->{'Related Functions'};
+        my $examples = $sectionsref->{'Code Examples'};
+        my $deprecated = $sectionsref->{'Deprecated'};
+        my $brief = $sectionsref->{'[Brief]'};
         my $decl = $headerdecls{$fn};
         my $str = '';
 
@@ -1126,17 +1485,24 @@ if ($copy_direction == 1) {  # --copy-to-headers
         $str .= ".\\\" This manpage content is licensed under Creative Commons\n";
         $str .= ".\\\"  Attribution 4.0 International (CC BY 4.0)\n";
         $str .= ".\\\"   https://creativecommons.org/licenses/by/4.0/\n";
-        $str .= ".\\\" This manpage was generated from SDL's wiki page for $fn:\n";
-        $str .= ".\\\"   https://wiki.libsdl.org/$fn\n";
+        $str .= ".\\\" This manpage was generated from ${projectshortname}'s wiki page for $fn:\n";
+        $str .= ".\\\"   $wikiurl/$fn\n";
         $str .= ".\\\" Generated with SDL/build-scripts/wikiheaders.pl\n";
         $str .= ".\\\"  revision $gitrev\n" if $gitrev ne '';
         $str .= ".\\\" Please report issues in this manpage's content at:\n";
-        $str .= ".\\\"   https://github.com/libsdl-org/sdlwiki/issues/new?title=Feedback%20on%20page%20$fn\n";
+        $str .= ".\\\"   $bugreporturl\n";
         $str .= ".\\\" Please report issues in the generation of this manpage from the wiki at:\n";
         $str .= ".\\\"   https://github.com/libsdl-org/SDL/issues/new?title=Misgenerated%20manpage%20for%20$fn\n";
-        $str .= ".\\\" SDL can be found at https://libsdl.org/\n";
+        $str .= ".\\\" $projectshortname can be found at $projecturl\n";
 
-        $str .= ".TH $fn 3 \"SDL $sdlversion\" \"Simple Directmedia Layer\" \"SDL$majorver FUNCTIONS\"\n";
+        # Define a .URL macro. The "www.tmac" thing decides if we're using GNU roff (which has a .URL macro already), and if so, overrides the macro we just created.
+        # This wizadry is from https://web.archive.org/web/20060102165607/http://people.debian.org/~branden/talks/wtfm/wtfm.pdf
+        $str .= ".de URL\n";
+        $str .= '\\$2 \(laURL: \\$1 \(ra\\$3' . "\n";
+        $str .= "..\n";
+        $str .= '.if \n[.g] .mso www.tmac' . "\n";
+
+        $str .= ".TH $fn 3 \"$projectshortname $fullversion\" \"$projectfullname\" \"$projectshortname$majorver FUNCTIONS\"\n";
         $str .= ".SH NAME\n";
 
         $str .= "$fn";
@@ -1145,7 +1511,7 @@ if ($copy_direction == 1) {  # --copy-to-headers
 
         $str .= ".SH SYNOPSIS\n";
         $str .= ".nf\n";
-        $str .= ".B #include \\(dqSDL.h\\(dq\n";
+        $str .= ".B #include \\(dq$mainincludefname\\(dq\n";
         $str .= ".PP\n";
 
         my @decllines = split /\n/, $decl;
@@ -1185,6 +1551,28 @@ if ($copy_direction == 1) {  # --copy-to-headers
                     $str .= ".I $name\n";
                     $str .= "$desc\n";
                 }
+            } elsif ($wikitype eq 'md') {
+                my $l;
+                $l = shift @lines;
+                die("Unexpected data parsing Markdown table") if (not $l =~ /\A\s*\|\s*\|\s*\|\s*\Z/);
+                $l = shift @lines;
+                die("Unexpected data parsing Markdown table") if (not $l =~ /\A\s*\|\s*\-*\s*\|\s*\-*\s*\|\s*\Z/);
+                while (scalar(@lines) >= 1) {
+                    $l = shift @lines;
+                    if ($l =~ /\A\s*\|\s*(.*?)\s*\|\s*(.*?)\s*\|\s*\Z/) {
+                        my $name = $1;
+                        my $desc = $2;
+                        $name =~ s/\A\*\*(.*?)\*\*/$1/;
+                        $name =~ s/\A\'\'\'(.*?)\'\'\'/$1/;
+                        $desc = dewikify($wikitype, $desc);
+
+                        $str .= ".TP\n";
+                        $str .= ".I $name\n";
+                        $str .= "$desc\n";
+                    } else {
+                        last;  # we seem to have run out of table.
+                    }
+                }
             } else {
                 die("write me");
             }
@@ -1202,6 +1590,11 @@ if ($copy_direction == 1) {  # --copy-to-headers
             $dewikify_manpage_code_indent = 1;
         }
 
+        if (defined $threadsafety) {
+            $str .= ".SH THREAD SAFETY\n";
+            $str .= dewikify($wikitype, $threadsafety) . "\n";
+        }
+
         if (defined $version) {
             $str .= ".SH AVAILABILITY\n";
             $str .= dewikify($wikitype, $version) . "\n";
@@ -1216,7 +1609,12 @@ if ($copy_direction == 1) {  # --copy-to-headers
             foreach (@desclines) {
                 s/\A(\:|\* )//;
                 s/\(\)\Z//;  # Convert "SDL_Func()" to "SDL_Func"
+                s/\[\[(.*?)\]\]/$1/;  # in case some wikilinks remain.
+                s/\[(.*?)\]\(.*?\)/$1/;  # in case some wikilinks remain.
+                s/\A\*\s*\Z//;
+                s/\A\/*//;
                 s/\A\.BR\s+//;  # dewikify added this, but we want to handle it.
+                s/\A\.I\s+//;  # dewikify added this, but we want to handle it.
                 s/\A\s+//;
                 s/\s+\Z//;
                 next if $_ eq '';
@@ -1234,14 +1632,14 @@ if ($copy_direction == 1) {  # --copy-to-headers
         $str .= ".UE\n";
         $str .= ".PP\n";
         $str .= "This manpage was generated from\n";
-        $str .= ".UR https://wiki.libsdl.org/$fn\n";
-        $str .= "SDL's wiki\n";
+        $str .= ".UR $wikiurl/$fn\n";
+        $str .= "${projectshortname}'s wiki\n";
         $str .= ".UE\n";
         $str .= "using SDL/build-scripts/wikiheaders.pl";
         $str .= " revision $gitrev" if $gitrev ne '';
         $str .= ".\n";
         $str .= "Please report issues in this manpage at\n";
-        $str .= ".UR https://github.com/libsdl-org/sdlwiki/issues/new\n";
+        $str .= ".UR $bugreporturl\n";
         $str .= "our bugtracker!\n";
         $str .= ".UE\n";
         }

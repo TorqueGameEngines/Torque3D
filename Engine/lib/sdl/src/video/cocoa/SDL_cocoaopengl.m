@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -31,8 +31,10 @@
 #include <OpenGL/OpenGL.h>
 #include <OpenGL/CGLRenderers.h>
 
+#include "SDL_hints.h"
 #include "SDL_loadso.h"
 #include "SDL_opengl.h"
+#include "../../SDL_hints_c.h"
 
 #define DEFAULT_OPENGL  "/System/Library/Frameworks/OpenGL.framework/Libraries/libGL.dylib"
 
@@ -42,6 +44,40 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #endif
 
+/* _Nullable is available starting Xcode 7 */
+#ifdef __has_feature
+#if __has_feature(nullability)
+#define HAS_FEATURE_NULLABLE
+#endif
+#endif
+#ifndef HAS_FEATURE_NULLABLE
+#define _Nullable
+#endif
+
+static SDL_bool SDL_opengl_async_dispatch = SDL_FALSE;
+
+static void SDLCALL
+SDL_OpenGLAsyncDispatchChanged(void *userdata, const char *name, const char *oldValue, const char *hint)
+{
+    SDL_opengl_async_dispatch = SDL_GetStringBoolean(hint, SDL_FALSE);
+}
+
+static CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTimeStamp* now, const CVTimeStamp* outputTime, CVOptionFlags flagsIn, CVOptionFlags* flagsOut, void* displayLinkContext)
+{
+    SDLOpenGLContext *nscontext = (__bridge SDLOpenGLContext *) displayLinkContext;
+
+    /*printf("DISPLAY LINK! %u\n", (unsigned int) SDL_GetTicks()); */
+    const int setting = SDL_AtomicGet(&nscontext->swapIntervalSetting);
+    if (setting != 0) { /* nothing to do if vsync is disabled, don't even lock */
+        SDL_LockMutex(nscontext->swapIntervalMutex);
+        SDL_AtomicAdd(&nscontext->swapIntervalsPassed, 1);
+        SDL_CondSignal(nscontext->swapIntervalCond);
+        SDL_UnlockMutex(nscontext->swapIntervalMutex);
+    }
+
+    return kCVReturnSuccess;
+}
+
 @implementation SDLOpenGLContext : NSOpenGLContext
 
 - (id)initWithFormat:(NSOpenGLPixelFormat *)format
@@ -49,10 +85,33 @@
 {
     self = [super initWithFormat:format shareContext:share];
     if (self) {
+        self.openglPixelFormat = format;
         SDL_AtomicSet(&self->dirty, 0);
         self->window = NULL;
+        SDL_AtomicSet(&self->swapIntervalSetting, 0);
+        SDL_AtomicSet(&self->swapIntervalsPassed, 0);
+        self->swapIntervalCond = SDL_CreateCond();
+        self->swapIntervalMutex = SDL_CreateMutex();
+        if (!self->swapIntervalCond || !self->swapIntervalMutex) {
+            return nil;
+        }
+
+        /* !!! FIXME: check return values. */
+        CVDisplayLinkCreateWithActiveCGDisplays(&self->displayLink);
+        CVDisplayLinkSetOutputCallback(self->displayLink, &DisplayLinkCallback, (__bridge void * _Nullable) self);
+        CVDisplayLinkSetCurrentCGDisplayFromOpenGLContext(self->displayLink, [self CGLContextObj], [format CGLPixelFormatObj]);
+        CVDisplayLinkStart(displayLink);
     }
+
+    SDL_AddHintCallback(SDL_HINT_MAC_OPENGL_ASYNC_DISPATCH, SDL_OpenGLAsyncDispatchChanged, NULL);
     return self;
+}
+
+- (void)movedToNewScreen
+{
+    if (self->displayLink) {
+        CVDisplayLinkSetCurrentCGDisplayFromOpenGLContext(self->displayLink, [self CGLContextObj], [[self openglPixelFormat] CGLPixelFormatObj]);
+    }
 }
 
 - (void)scheduleUpdate
@@ -116,11 +175,10 @@
             }
         }
     } else {
-        [self clearDrawable];
-        if (self == [NSOpenGLContext currentContext]) {
-            [self explicitUpdate];
+        if ([NSThread isMainThread]) {
+            [self setView:nil];
         } else {
-            [self scheduleUpdate];
+            dispatch_sync(dispatch_get_main_queue(), ^{ [self setView:nil]; });
         }
     }
 }
@@ -135,15 +193,37 @@
     if ([NSThread isMainThread]) {
         [super update];
     } else {
-        dispatch_async(dispatch_get_main_queue(), ^{ [super update]; });
+        if (SDL_opengl_async_dispatch) {
+            dispatch_async(dispatch_get_main_queue(), ^{ [super update]; });
+        } else {
+            dispatch_sync(dispatch_get_main_queue(), ^{ [super update]; });
+        }
+    }
+}
+
+- (void)cleanup
+{
+    [self setWindow:NULL];
+
+    SDL_DelHintCallback(SDL_HINT_MAC_OPENGL_ASYNC_DISPATCH, SDL_OpenGLAsyncDispatchChanged, NULL);
+    if (self->displayLink) {
+        CVDisplayLinkRelease(self->displayLink);
+        self->displayLink = nil;
+    }
+    if (self->swapIntervalCond) {
+        SDL_DestroyCond(self->swapIntervalCond);
+        self->swapIntervalCond = NULL;
+    }
+    if (self->swapIntervalMutex) {
+        SDL_DestroyMutex(self->swapIntervalMutex);
+        self->swapIntervalMutex = NULL;
     }
 }
 
 @end
 
 
-int
-Cocoa_GL_LoadLibrary(_THIS, const char *path)
+int Cocoa_GL_LoadLibrary(_THIS, const char *path)
 {
     /* Load the OpenGL library */
     if (path == NULL) {
@@ -161,21 +241,18 @@ Cocoa_GL_LoadLibrary(_THIS, const char *path)
     return 0;
 }
 
-void *
-Cocoa_GL_GetProcAddress(_THIS, const char *proc)
+void *Cocoa_GL_GetProcAddress(_THIS, const char *proc)
 {
     return SDL_LoadFunction(_this->gl_config.dll_handle, proc);
 }
 
-void
-Cocoa_GL_UnloadLibrary(_THIS)
+void Cocoa_GL_UnloadLibrary(_THIS)
 {
     SDL_UnloadObject(_this->gl_config.dll_handle);
     _this->gl_config.dll_handle = NULL;
 }
 
-SDL_GLContext
-Cocoa_GL_CreateContext(_THIS, SDL_Window * window)
+SDL_GLContext Cocoa_GL_CreateContext(_THIS, SDL_Window * window)
 { @autoreleasepool
 {
     SDL_VideoDisplay *display = SDL_GetDisplayForWindow(window);
@@ -189,6 +266,8 @@ Cocoa_GL_CreateContext(_THIS, SDL_Window * window)
     const char *glversion;
     int glversion_major;
     int glversion_minor;
+    NSOpenGLPixelFormatAttribute profile;
+    int interval;
 
     if (_this->gl_config.profile_mask == SDL_GL_CONTEXT_PROFILE_ES) {
 #if SDL_VIDEO_OPENGL_EGL
@@ -203,7 +282,7 @@ Cocoa_GL_CreateContext(_THIS, SDL_Window * window)
         _this->GL_GetSwapInterval = Cocoa_GLES_GetSwapInterval;
         _this->GL_SwapWindow = Cocoa_GLES_SwapWindow;
         _this->GL_DeleteContext = Cocoa_GLES_DeleteContext;
-        
+
         if (Cocoa_GLES_LoadLibrary(_this, NULL) != 0) {
             return NULL;
         }
@@ -216,7 +295,7 @@ Cocoa_GL_CreateContext(_THIS, SDL_Window * window)
 
     attr[i++] = NSOpenGLPFAAllowOfflineRenderers;
 
-    NSOpenGLPixelFormatAttribute profile = NSOpenGLProfileVersionLegacy;
+    profile = NSOpenGLProfileVersionLegacy;
     if (_this->gl_config.profile_mask == SDL_GL_CONTEXT_PROFILE_CORE) {
         profile = NSOpenGLProfileVersion3_2Core;
     }
@@ -260,6 +339,9 @@ Cocoa_GL_CreateContext(_THIS, SDL_Window * window)
         attr[i++] = _this->gl_config.multisamplesamples;
         attr[i++] = NSOpenGLPFANoRecovery;
     }
+    if (_this->gl_config.floatbuffers) {
+        attr[i++] = NSOpenGLPFAColorFloat;
+    }
 
     if (_this->gl_config.accelerated >= 0) {
         if (_this->gl_config.accelerated) {
@@ -293,8 +375,12 @@ Cocoa_GL_CreateContext(_THIS, SDL_Window * window)
 
     sdlcontext = (SDL_GLContext)CFBridgingRetain(context);
 
-    if ( Cocoa_GL_MakeCurrent(_this, window, (__bridge SDL_GLContext)context) < 0 ) {
-        Cocoa_GL_DeleteContext(_this, (__bridge SDL_GLContext)context);
+    /* vsync is handled separately by synchronizing with a display link. */
+    interval = 0;
+    [context setValues:&interval forParameter:NSOpenGLCPSwapInterval];
+
+    if (Cocoa_GL_MakeCurrent(_this, window, sdlcontext) < 0) {
+        SDL_GL_DeleteContext(sdlcontext);
         SDL_SetError("Failed making OpenGL context current");
         return NULL;
     }
@@ -308,27 +394,27 @@ Cocoa_GL_CreateContext(_THIS, SDL_Window * window)
 
         glGetStringFunc = (const GLubyte *(APIENTRY *)(GLenum)) SDL_GL_GetProcAddress("glGetString");
         if (!glGetStringFunc) {
-            Cocoa_GL_DeleteContext(_this, (__bridge SDL_GLContext)context);
+            SDL_GL_DeleteContext(sdlcontext);
             SDL_SetError ("Failed getting OpenGL glGetString entry point");
             return NULL;
         }
 
         glversion = (const char *)glGetStringFunc(GL_VERSION);
         if (glversion == NULL) {
-            Cocoa_GL_DeleteContext(_this, (__bridge SDL_GLContext)context);
+            SDL_GL_DeleteContext(sdlcontext);
             SDL_SetError ("Failed getting OpenGL context version");
             return NULL;
         }
 
         if (SDL_sscanf(glversion, "%d.%d", &glversion_major, &glversion_minor) != 2) {
-            Cocoa_GL_DeleteContext(_this, (__bridge SDL_GLContext)context);
+            SDL_GL_DeleteContext(sdlcontext);
             SDL_SetError ("Failed parsing OpenGL context version");
             return NULL;
         }
 
         if ((glversion_major < _this->gl_config.major_version) ||
            ((glversion_major == _this->gl_config.major_version) && (glversion_minor < _this->gl_config.minor_version))) {
-            Cocoa_GL_DeleteContext(_this, (__bridge SDL_GLContext)context);
+            SDL_GL_DeleteContext(sdlcontext);
             SDL_SetError ("Failed creating OpenGL context at version requested");
             return NULL;
         }
@@ -342,8 +428,7 @@ Cocoa_GL_CreateContext(_THIS, SDL_Window * window)
     return sdlcontext;
 }}
 
-int
-Cocoa_GL_MakeCurrent(_THIS, SDL_Window * window, SDL_GLContext context)
+int Cocoa_GL_MakeCurrent(_THIS, SDL_Window * window, SDL_GLContext context)
 { @autoreleasepool
 {
     if (context) {
@@ -360,75 +445,58 @@ Cocoa_GL_MakeCurrent(_THIS, SDL_Window * window, SDL_GLContext context)
     return 0;
 }}
 
-void
-Cocoa_GL_GetDrawableSize(_THIS, SDL_Window * window, int * w, int * h)
+int Cocoa_GL_SetSwapInterval(_THIS, int interval)
 { @autoreleasepool
 {
-    SDL_WindowData *windata = (__bridge SDL_WindowData *) window->driverdata;
-    NSView *contentView = windata.sdlContentView;
-    NSRect viewport = [contentView bounds];
-
-    if (window->flags & SDL_WINDOW_ALLOW_HIGHDPI) {
-        /* This gives us the correct viewport for a Retina-enabled view. */
-        viewport = [contentView convertRectToBacking:viewport];
-    }
-
-    if (w) {
-        *w = viewport.size.width;
-    }
-
-    if (h) {
-        *h = viewport.size.height;
-    }
-}}
-
-int
-Cocoa_GL_SetSwapInterval(_THIS, int interval)
-{ @autoreleasepool
-{
-    NSOpenGLContext *nscontext;
-    GLint value;
+    SDLOpenGLContext *nscontext = (__bridge SDLOpenGLContext *) SDL_GL_GetCurrentContext();
     int status;
 
-    if (interval < 0) {  /* no extension for this on Mac OS X at the moment. */
-        return SDL_SetError("Late swap tearing currently unsupported");
-    }
-
-    nscontext = (__bridge NSOpenGLContext*)SDL_GL_GetCurrentContext();
-    if (nscontext != nil) {
-        value = interval;
-        [nscontext setValues:&value forParameter:NSOpenGLCPSwapInterval];
-        status = 0;
-    } else {
+    if (nscontext == nil) {
         status = SDL_SetError("No current OpenGL context");
+    } else {
+        SDL_LockMutex(nscontext->swapIntervalMutex);
+        SDL_AtomicSet(&nscontext->swapIntervalsPassed, 0);
+        SDL_AtomicSet(&nscontext->swapIntervalSetting, interval);
+        SDL_UnlockMutex(nscontext->swapIntervalMutex);
+        status = 0;
     }
 
     return status;
 }}
 
-int
-Cocoa_GL_GetSwapInterval(_THIS)
+int Cocoa_GL_GetSwapInterval(_THIS)
 { @autoreleasepool
 {
-    NSOpenGLContext *nscontext;
-    GLint value;
-    int status = 0;
-
-    nscontext = (__bridge NSOpenGLContext*)SDL_GL_GetCurrentContext();
-    if (nscontext != nil) {
-        [nscontext getValues:&value forParameter:NSOpenGLCPSwapInterval];
-        status = (int)value;
-    }
-
-    return status;
+    SDLOpenGLContext* nscontext = (__bridge SDLOpenGLContext*)SDL_GL_GetCurrentContext();
+    return nscontext ? SDL_AtomicGet(&nscontext->swapIntervalSetting) : 0;
 }}
 
-int
-Cocoa_GL_SwapWindow(_THIS, SDL_Window * window)
+int Cocoa_GL_SwapWindow(_THIS, SDL_Window * window)
 { @autoreleasepool
 {
     SDLOpenGLContext* nscontext = (__bridge SDLOpenGLContext*)SDL_GL_GetCurrentContext();
     SDL_VideoData *videodata = (__bridge SDL_VideoData *) _this->driverdata;
+    const int setting = SDL_AtomicGet(&nscontext->swapIntervalSetting);
+
+    if (setting == 0) {
+        /* nothing to do if vsync is disabled, don't even lock */
+    } else if (setting < 0) {  /* late swap tearing */
+        SDL_LockMutex(nscontext->swapIntervalMutex);
+        while (SDL_AtomicGet(&nscontext->swapIntervalsPassed) == 0) {
+            SDL_CondWait(nscontext->swapIntervalCond, nscontext->swapIntervalMutex);
+        }
+        SDL_AtomicSet(&nscontext->swapIntervalsPassed, 0);
+        SDL_UnlockMutex(nscontext->swapIntervalMutex);
+    } else {
+        SDL_LockMutex(nscontext->swapIntervalMutex);
+        do {  /* always wait here so we know we just hit a swap interval. */
+            SDL_CondWait(nscontext->swapIntervalCond, nscontext->swapIntervalMutex);
+        } while ((SDL_AtomicGet(&nscontext->swapIntervalsPassed) % setting) != 0);
+        SDL_AtomicSet(&nscontext->swapIntervalsPassed, 0);
+        SDL_UnlockMutex(nscontext->swapIntervalMutex);
+    }
+
+    /*{ static Uint64 prev = 0; const Uint64 now = SDL_GetTicks64(); const unsigned int diff = (unsigned int) (now - prev); prev = now; printf("GLSWAPBUFFERS TICKS %u\n", diff); }*/
 
     /* on 10.14 ("Mojave") and later, this deadlocks if two contexts in two
        threads try to swap at the same time, so put a mutex around it. */
@@ -439,12 +507,12 @@ Cocoa_GL_SwapWindow(_THIS, SDL_Window * window)
     return 0;
 }}
 
-void
-Cocoa_GL_DeleteContext(_THIS, SDL_GLContext context)
+void Cocoa_GL_DeleteContext(_THIS, SDL_GLContext context)
 { @autoreleasepool
 {
-    SDLOpenGLContext *nscontext = (SDLOpenGLContext *)CFBridgingRelease(context);
-    [nscontext setWindow:NULL];
+    SDLOpenGLContext *nscontext = (__bridge SDLOpenGLContext *)context;
+    [nscontext cleanup];
+    CFRelease(context);
 }}
 
 /* We still support OpenGL as long as Apple offers it, deprecated or not, so disable deprecation warnings about it. */

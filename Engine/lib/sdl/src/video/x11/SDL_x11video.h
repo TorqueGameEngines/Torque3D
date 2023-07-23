@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -126,7 +126,7 @@ typedef struct SDL_VideoData
     SDL_Scancode key_layout[256];
     SDL_bool selection_waiting;
 
-    SDL_bool broken_pointer_grab;  /* true if XGrabPointer seems unreliable. */
+    SDL_bool broken_pointer_grab; /* true if XGrabPointer seems unreliable. */
 
     Uint32 last_mode_change_deadline;
 
@@ -134,19 +134,27 @@ typedef struct SDL_VideoData
     SDL_Point global_mouse_position;
     Uint32 global_mouse_buttons;
 
+    SDL_XInput2DeviceInfo *mouse_device_info;
+
+    int xrandr_event_base;
+
 #if SDL_VIDEO_DRIVER_X11_HAS_XKBKEYCODETOKEYSYM
     XkbDescPtr xkb;
 #endif
     int xkb_event;
 
     KeyCode filter_code;
-    Time    filter_time;
+    Time filter_time;
 
 #if SDL_VIDEO_VULKAN
     /* Vulkan variables only valid if _this->vulkan_config.loader_handle is not NULL */
     void *vulkan_xlib_xcb_library;
     PFN_XGetXCBConnection vulkan_XGetXCBConnection;
 #endif
+
+    /* Used to interact with the on-screen keyboard */
+    SDL_bool is_steam_deck;
+    SDL_bool steam_keyboard_open;
 
 } SDL_VideoData;
 

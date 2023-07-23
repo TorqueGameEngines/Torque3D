@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -867,3 +867,32 @@
 #define SDL_JoystickPathForIndex SDL_JoystickPathForIndex_REAL
 #define SDL_JoystickPath SDL_JoystickPath_REAL
 #define SDL_JoystickAttachVirtualEx SDL_JoystickAttachVirtualEx_REAL
+#define SDL_GameControllerGetFirmwareVersion SDL_GameControllerGetFirmwareVersion_REAL
+#define SDL_JoystickGetFirmwareVersion SDL_JoystickGetFirmwareVersion_REAL
+#define SDL_GUIDToString SDL_GUIDToString_REAL
+#define SDL_GUIDFromString SDL_GUIDFromString_REAL
+#define SDL_HasLSX SDL_HasLSX_REAL
+#define SDL_HasLASX SDL_HasLASX_REAL
+#define SDL_RenderGetD3D12Device SDL_RenderGetD3D12Device_REAL
+#define SDL_utf8strnlen SDL_utf8strnlen_REAL
+#define SDL_GDKGetTaskQueue SDL_GDKGetTaskQueue_REAL
+#define SDL_GDKRunApp SDL_GDKRunApp_REAL
+#define SDL_GetOriginalMemoryFunctions SDL_GetOriginalMemoryFunctions_REAL
+#define SDL_ResetKeyboard SDL_ResetKeyboard_REAL
+#define SDL_GetDefaultAudioInfo SDL_GetDefaultAudioInfo_REAL
+#define SDL_GetPointDisplayIndex SDL_GetPointDisplayIndex_REAL
+#define SDL_GetRectDisplayIndex SDL_GetRectDisplayIndex_REAL
+#define SDL_ResetHint SDL_ResetHint_REAL
+#define SDL_crc16 SDL_crc16_REAL
+#define SDL_GetWindowSizeInPixels SDL_GetWindowSizeInPixels_REAL
+#define SDL_GetJoystickGUIDInfo SDL_GetJoystickGUIDInfo_REAL
+#define SDL_SetPrimarySelectionText SDL_SetPrimarySelectionText_REAL
+#define SDL_GetPrimarySelectionText SDL_GetPrimarySelectionText_REAL
+#define SDL_HasPrimarySelectionText SDL_HasPrimarySelectionText_REAL
+#define SDL_GameControllerGetSensorDataWithTimestamp SDL_GameControllerGetSensorDataWithTimestamp_REAL
+#define SDL_SensorGetDataWithTimestamp SDL_SensorGetDataWithTimestamp_REAL
+#define SDL_ResetHints SDL_ResetHints_REAL
+#define SDL_strcasestr SDL_strcasestr_REAL
+#define SDL_GDKSuspendComplete SDL_GDKSuspendComplete_REAL
+#define SDL_HasWindowSurface SDL_HasWindowSurface_REAL
+#define SDL_DestroyWindowSurface SDL_DestroyWindowSurface_REAL

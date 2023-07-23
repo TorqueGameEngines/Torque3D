@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -48,7 +48,7 @@ SDL_DYNAPI_PROC(int,SDL_snprintf,(SDL_OUT_Z_CAP(b) char *a, size_t b, SDL_PRINTF
 #undef SDL_CreateThread
 #endif
 
-#if defined(__WIN32__)
+#if defined(__WIN32__) || defined(__GDK__)
 SDL_DYNAPI_PROC(SDL_Thread*,SDL_CreateThread,(SDL_ThreadFunction a, const char *b, void *c, pfnSDL_CurrentBeginThread d, pfnSDL_CurrentEndThread e),(a,b,c,d,e),return)
 #elif defined(__OS2__)
 SDL_DYNAPI_PROC(SDL_Thread*,SDL_CreateThread,(SDL_ThreadFunction a, const char *b, void *c, pfnSDL_CurrentBeginThread d, pfnSDL_CurrentEndThread e),(a,b,c,d,e),return)
@@ -62,9 +62,12 @@ SDL_DYNAPI_PROC(SDL_RWops*,SDL_RWFromFP,(FILE *a, SDL_bool b),(a,b),return)
 SDL_DYNAPI_PROC(SDL_RWops*,SDL_RWFromFP,(void *a, SDL_bool b),(a,b),return)
 #endif
 
-#ifdef __WIN32__
+#if defined(__WIN32__) || defined(__GDK__)
 SDL_DYNAPI_PROC(int,SDL_RegisterApp,(const char *a, Uint32 b, void *c),(a,b,c),return)
 SDL_DYNAPI_PROC(void,SDL_UnregisterApp,(void),(),)
+#endif
+
+#if defined(__WIN32__) || defined(__WINGDK__)
 SDL_DYNAPI_PROC(int,SDL_Direct3D9GetAdapterIndex,(int a),(a),return)
 SDL_DYNAPI_PROC(IDirect3DDevice9*,SDL_RenderGetD3D9Device,(SDL_Renderer *a),(a),return)
 #endif
@@ -87,9 +90,9 @@ SDL_DYNAPI_PROC(int,SDL_InitSubSystem,(Uint32 a),(a),return)
 SDL_DYNAPI_PROC(void,SDL_QuitSubSystem,(Uint32 a),(a),)
 SDL_DYNAPI_PROC(Uint32,SDL_WasInit,(Uint32 a),(a),return)
 SDL_DYNAPI_PROC(void,SDL_Quit,(void),(),)
-SDL_DYNAPI_PROC(SDL_assert_state,SDL_ReportAssertion,(SDL_assert_data *a, const char *b, const char *c, int d),(a,b,c,d),return)
+SDL_DYNAPI_PROC(SDL_AssertState,SDL_ReportAssertion,(SDL_AssertData *a, const char *b, const char *c, int d),(a,b,c,d),return)
 SDL_DYNAPI_PROC(void,SDL_SetAssertionHandler,(SDL_AssertionHandler a, void *b),(a,b),)
-SDL_DYNAPI_PROC(const SDL_assert_data*,SDL_GetAssertionReport,(void),(),return)
+SDL_DYNAPI_PROC(const SDL_AssertData*,SDL_GetAssertionReport,(void),(),return)
 SDL_DYNAPI_PROC(void,SDL_ResetAssertionReport,(void),(),)
 SDL_DYNAPI_PROC(SDL_bool,SDL_AtomicTryLock,(SDL_SpinLock *a),(a),return)
 SDL_DYNAPI_PROC(void,SDL_AtomicLock,(SDL_SpinLock *a),(a),)
@@ -257,7 +260,7 @@ SDL_DYNAPI_PROC(SDL_Keycode,SDL_GetKeyFromName,(const char *a),(a),return)
 SDL_DYNAPI_PROC(void,SDL_StartTextInput,(void),(),)
 SDL_DYNAPI_PROC(SDL_bool,SDL_IsTextInputActive,(void),(),return)
 SDL_DYNAPI_PROC(void,SDL_StopTextInput,(void),(),)
-SDL_DYNAPI_PROC(void,SDL_SetTextInputRect,(SDL_Rect *a),(a),)
+SDL_DYNAPI_PROC(void,SDL_SetTextInputRect,(const SDL_Rect *a),(a),)
 SDL_DYNAPI_PROC(SDL_bool,SDL_HasScreenKeyboardSupport,(void),(),return)
 SDL_DYNAPI_PROC(SDL_bool,SDL_IsScreenKeyboardShown,(SDL_Window *a),(a),return)
 SDL_DYNAPI_PROC(void*,SDL_LoadObject,(const char *a),(a),return)
@@ -599,12 +602,12 @@ SDL_DYNAPI_PROC(void,SDL_GL_ResetAttributes,(void),(),)
 SDL_DYNAPI_PROC(SDL_bool,SDL_HasAVX,(void),(),return)
 SDL_DYNAPI_PROC(SDL_AssertionHandler,SDL_GetDefaultAssertionHandler,(void),(),return)
 SDL_DYNAPI_PROC(SDL_AssertionHandler,SDL_GetAssertionHandler,(void **a),(a),return)
-#ifdef __WIN32__
+#if defined(__WIN32__) || defined(__WINGDK__)
 SDL_DYNAPI_PROC(SDL_bool,SDL_DXGIGetOutputInfo,(int a,int *b, int *c),(a,b,c),return)
 #endif
 SDL_DYNAPI_PROC(SDL_bool,SDL_RenderIsClipEnabled,(SDL_Renderer *a),(a),return)
 #ifdef __WINRT__
-SDL_DYNAPI_PROC(int,SDL_WinRTRunApp,(int a, char **b, void *c),(a,b,c),return)
+SDL_DYNAPI_PROC(int,SDL_WinRTRunApp,(SDL_main_func a, void *b),(a,b),return)
 SDL_DYNAPI_PROC(const wchar_t*,SDL_WinRTGetFSPathUNICODE,(SDL_WinRT_Path a),(a),return)
 SDL_DYNAPI_PROC(const char*,SDL_WinRTGetFSPathUTF8,(SDL_WinRT_Path a),(a),return)
 #endif
@@ -620,7 +623,7 @@ SDL_DYNAPI_PROC(int,SDL_QueueAudio,(SDL_AudioDeviceID a, const void *b, Uint32 c
 SDL_DYNAPI_PROC(Uint32,SDL_GetQueuedAudioSize,(SDL_AudioDeviceID a),(a),return)
 SDL_DYNAPI_PROC(void,SDL_ClearQueuedAudio,(SDL_AudioDeviceID a),(a),)
 SDL_DYNAPI_PROC(SDL_Window*,SDL_GetGrabbedWindow,(void),(),return)
-#ifdef __WIN32__
+#if defined(__WIN32__) || defined(__GDK__)
 SDL_DYNAPI_PROC(void,SDL_SetWindowsMessageHook,(SDL_WindowsMessageHook a, void *b),(a,b),)
 #endif
 SDL_DYNAPI_PROC(int,SDL_GetDisplayDPI,(int a, float *b, float *c, float *d),(a,b,c,d),return)
@@ -744,7 +747,7 @@ SDL_DYNAPI_PROC(SDL_bool,SDL_HasColorKey,(SDL_Surface *a),(a),return)
 #undef SDL_CreateThreadWithStackSize
 #endif
 
-#if defined(__WIN32__)
+#if defined(__WIN32__) || defined(__GDK__)
 SDL_DYNAPI_PROC(SDL_Thread*,SDL_CreateThreadWithStackSize,(SDL_ThreadFunction a, const char *b, const size_t c, void *d, pfnSDL_CurrentBeginThread e, pfnSDL_CurrentEndThread f),(a,b,c,d,e,f),return)
 #elif defined(__OS2__)
 SDL_DYNAPI_PROC(SDL_Thread*,SDL_CreateThreadWithStackSize,(SDL_ThreadFunction a, const char *b, const size_t c, void *d, pfnSDL_CurrentBeginThread e, pfnSDL_CurrentEndThread f),(a,b,c,d,e,f),return)
@@ -768,7 +771,7 @@ SDL_DYNAPI_PROC(int,SDL_RenderCopyF,(SDL_Renderer *a, SDL_Texture *b, const SDL_
 SDL_DYNAPI_PROC(int,SDL_RenderCopyExF,(SDL_Renderer *a, SDL_Texture *b, const SDL_Rect *c, const SDL_FRect *d, const double e, const SDL_FPoint *f, const SDL_RendererFlip g),(a,b,c,d,e,f,g),return)
 SDL_DYNAPI_PROC(SDL_TouchDeviceType,SDL_GetTouchDeviceType,(SDL_TouchID a),(a),return)
 #ifdef __IPHONEOS__
-SDL_DYNAPI_PROC(int,SDL_UIKitRunApp,(int a, char *b, SDL_main_func c),(a,b,c),return)
+SDL_DYNAPI_PROC(int,SDL_UIKitRunApp,(int a, char *b[], SDL_main_func c),(a,b,c),return)
 #endif
 SDL_DYNAPI_PROC(size_t,SDL_SIMDGetAlignment,(void),(),return)
 SDL_DYNAPI_PROC(void*,SDL_SIMDAlloc,(const size_t a),(a),return)
@@ -854,7 +857,7 @@ SDL_DYNAPI_PROC(float,SDL_roundf,(float a),(a),return)
 SDL_DYNAPI_PROC(long,SDL_lround,(double a),(a),return)
 SDL_DYNAPI_PROC(long,SDL_lroundf,(float a),(a),return)
 SDL_DYNAPI_PROC(int,SDL_SoftStretchLinear,(SDL_Surface *a, const SDL_Rect *b, SDL_Surface *c, const SDL_Rect *d),(a,b,c,d),return)
-#ifdef __WIN32__
+#if defined(__WIN32__) || defined(__WINGDK__)
 SDL_DYNAPI_PROC(ID3D11Device*,SDL_RenderGetD3D11Device,(SDL_Renderer *a),(a),return)
 #endif
 SDL_DYNAPI_PROC(int,SDL_UpdateNVTexture,(SDL_Texture *a, const SDL_Rect *b, const Uint8 *c, int d, const Uint8 *e, int f),(a,b,c,d,e,f),return)
@@ -942,3 +945,39 @@ SDL_DYNAPI_PROC(const char*,SDL_GameControllerPath,(SDL_GameController *a),(a),r
 SDL_DYNAPI_PROC(const char*,SDL_JoystickPathForIndex,(int a),(a),return)
 SDL_DYNAPI_PROC(const char*,SDL_JoystickPath,(SDL_Joystick *a),(a),return)
 SDL_DYNAPI_PROC(int,SDL_JoystickAttachVirtualEx,(const SDL_VirtualJoystickDesc *a),(a),return)
+SDL_DYNAPI_PROC(Uint16,SDL_GameControllerGetFirmwareVersion,(SDL_GameController *a),(a),return)
+SDL_DYNAPI_PROC(Uint16,SDL_JoystickGetFirmwareVersion,(SDL_Joystick *a),(a),return)
+SDL_DYNAPI_PROC(void,SDL_GUIDToString,(SDL_GUID a, char *b, int c),(a,b,c),)
+SDL_DYNAPI_PROC(SDL_GUID,SDL_GUIDFromString,(const char *a),(a),return)
+SDL_DYNAPI_PROC(SDL_bool,SDL_HasLSX,(void),(),return)
+SDL_DYNAPI_PROC(SDL_bool,SDL_HasLASX,(void),(),return)
+#if defined(__WIN32__) || defined(__GDK__)
+SDL_DYNAPI_PROC(ID3D12Device*,SDL_RenderGetD3D12Device,(SDL_Renderer *a),(a),return)
+#endif
+SDL_DYNAPI_PROC(size_t,SDL_utf8strnlen,(const char *a, size_t b),(a,b),return)
+
+#if defined(__GDK__)
+SDL_DYNAPI_PROC(int,SDL_GDKGetTaskQueue,(XTaskQueueHandle *a),(a),return)
+SDL_DYNAPI_PROC(int,SDL_GDKRunApp,(SDL_main_func a, void *b),(a,b),return)
+#endif
+SDL_DYNAPI_PROC(void,SDL_GetOriginalMemoryFunctions,(SDL_malloc_func *a, SDL_calloc_func *b, SDL_realloc_func *c, SDL_free_func *d),(a,b,c,d),)
+SDL_DYNAPI_PROC(void,SDL_ResetKeyboard,(void),(),)
+SDL_DYNAPI_PROC(int,SDL_GetDefaultAudioInfo,(char **a, SDL_AudioSpec *b, int c),(a,b,c),return)
+SDL_DYNAPI_PROC(int,SDL_GetPointDisplayIndex,(const SDL_Point *a),(a),return)
+SDL_DYNAPI_PROC(int,SDL_GetRectDisplayIndex,(const SDL_Rect *a),(a),return)
+SDL_DYNAPI_PROC(SDL_bool,SDL_ResetHint,(const char *a),(a),return)
+SDL_DYNAPI_PROC(Uint16,SDL_crc16,(Uint16 a, const void *b, size_t c),(a,b,c),return)
+SDL_DYNAPI_PROC(void,SDL_GetWindowSizeInPixels,(SDL_Window *a, int *b, int *c),(a,b,c),)
+SDL_DYNAPI_PROC(void,SDL_GetJoystickGUIDInfo,(SDL_JoystickGUID a, Uint16 *b, Uint16 *c, Uint16 *d, Uint16 *e),(a,b,c,d,e),)
+SDL_DYNAPI_PROC(int,SDL_SetPrimarySelectionText,(const char *a),(a),return)
+SDL_DYNAPI_PROC(char*,SDL_GetPrimarySelectionText,(void),(),return)
+SDL_DYNAPI_PROC(SDL_bool,SDL_HasPrimarySelectionText,(void),(),return)
+SDL_DYNAPI_PROC(int,SDL_GameControllerGetSensorDataWithTimestamp,(SDL_GameController *a, SDL_SensorType b, Uint64 *c, float *d, int e),(a,b,c,d,e),return)
+SDL_DYNAPI_PROC(int,SDL_SensorGetDataWithTimestamp,(SDL_Sensor *a, Uint64 *b, float *c, int d),(a,b,c,d),return)
+SDL_DYNAPI_PROC(void,SDL_ResetHints,(void),(),)
+SDL_DYNAPI_PROC(char*,SDL_strcasestr,(const char *a, const char *b),(a,b),return)
+#if defined(__GDK__)
+SDL_DYNAPI_PROC(void,SDL_GDKSuspendComplete,(void),(),)
+#endif
+SDL_DYNAPI_PROC(SDL_bool,SDL_HasWindowSurface,(SDL_Window *a),(a),return)
+SDL_DYNAPI_PROC(int,SDL_DestroyWindowSurface,(SDL_Window *a),(a),return)

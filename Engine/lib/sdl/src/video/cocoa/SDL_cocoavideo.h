@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -99,6 +99,7 @@ DECLARE_ALERT_STYLE(Critical);
 
 @interface SDL_VideoData : NSObject
     @property (nonatomic) int allow_spaces;
+    @property (nonatomic) int trackpad_is_touch_only;
     @property (nonatomic) unsigned int modifierFlags;
     @property (nonatomic) void *key_layout;
     @property (nonatomic) SDLTranslatorResponder *fieldEdit;

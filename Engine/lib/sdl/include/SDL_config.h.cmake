@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -64,6 +64,7 @@
 #cmakedefine HAVE_MEMORY_H 1
 #cmakedefine HAVE_SIGNAL_H 1
 #cmakedefine HAVE_STDARG_H 1
+#cmakedefine HAVE_STDDEF_H 1
 #cmakedefine HAVE_STDINT_H 1
 #cmakedefine HAVE_STDIO_H 1
 #cmakedefine HAVE_STDLIB_H 1
@@ -71,6 +72,7 @@
 #cmakedefine HAVE_STRING_H 1
 #cmakedefine HAVE_SYS_TYPES_H 1
 #cmakedefine HAVE_WCHAR_H 1
+#cmakedefine HAVE_LINUX_INPUT_H 1
 #cmakedefine HAVE_PTHREAD_NP_H 1
 #cmakedefine HAVE_LIBUNWIND_H 1
 
@@ -138,6 +140,7 @@
 #cmakedefine HAVE_STRCASECMP 1
 #cmakedefine HAVE__STRNICMP 1
 #cmakedefine HAVE_STRNCASECMP 1
+#cmakedefine HAVE_STRCASESTR 1
 #cmakedefine HAVE_SSCANF 1
 #cmakedefine HAVE_VSSCANF 1
 #cmakedefine HAVE_VSNPRINTF 1
@@ -205,14 +208,11 @@
 #cmakedefine HAVE_POLL 1
 #cmakedefine HAVE__EXIT 1
 
-#elif defined(__WIN32__)
+#else
 #cmakedefine HAVE_STDARG_H 1
 #cmakedefine HAVE_STDDEF_H 1
+#cmakedefine HAVE_STDINT_H 1
 #cmakedefine HAVE_FLOAT_H 1
-
-#else
-/* We may need some replacement for stdarg.h here */
-#include <stdarg.h>
 #endif /* HAVE_LIBC */
 
 #cmakedefine HAVE_ALTIVEC_H 1
@@ -223,6 +223,7 @@
 #cmakedefine HAVE_INOTIFY_INIT 1
 #cmakedefine HAVE_INOTIFY_INIT1 1
 #cmakedefine HAVE_INOTIFY 1
+#cmakedefine HAVE_LIBUSB 1
 #cmakedefine HAVE_O_CLOEXEC 1
 
 /* Apple platforms might be building universal binaries, where Intel builds
@@ -243,6 +244,7 @@
 
 #cmakedefine HAVE_D3D_H @HAVE_D3D_H@
 #cmakedefine HAVE_D3D11_H @HAVE_D3D11_H@
+#cmakedefine HAVE_D3D12_H @HAVE_D3D12_H@
 #cmakedefine HAVE_DDRAW_H @HAVE_DDRAW_H@
 #cmakedefine HAVE_DSOUND_H @HAVE_DSOUND_H@
 #cmakedefine HAVE_DINPUT_H @HAVE_DINPUT_H@
@@ -255,12 +257,15 @@
 #cmakedefine HAVE_TPCSHRD_H @HAVE_TPCSHRD_H@
 #cmakedefine HAVE_SENSORSAPI_H @HAVE_SENSORSAPI_H@
 #cmakedefine HAVE_ROAPI_H @HAVE_ROAPI_H@
+#cmakedefine HAVE_SHELLSCALINGAPI_H @HAVE_SHELLSCALINGAPI_H@
 
 #cmakedefine HAVE_XINPUT_GAMEPAD_EX @HAVE_XINPUT_GAMEPAD_EX@
 #cmakedefine HAVE_XINPUT_STATE_EX @HAVE_XINPUT_STATE_EX@
 
 /* SDL internal assertion support */
+#if @SDL_DEFAULT_ASSERT_LEVEL_CONFIGURED@
 #cmakedefine SDL_DEFAULT_ASSERT_LEVEL @SDL_DEFAULT_ASSERT_LEVEL@
+#endif
 
 /* Allow disabling of core subsystems */
 #cmakedefine SDL_ATOMIC_DISABLED @SDL_ATOMIC_DISABLED@
@@ -306,7 +311,6 @@
 #cmakedefine SDL_AUDIO_DRIVER_NAS_DYNAMIC @SDL_AUDIO_DRIVER_NAS_DYNAMIC@
 #cmakedefine SDL_AUDIO_DRIVER_NETBSD @SDL_AUDIO_DRIVER_NETBSD@
 #cmakedefine SDL_AUDIO_DRIVER_OSS @SDL_AUDIO_DRIVER_OSS@
-#cmakedefine SDL_AUDIO_DRIVER_OSS_SOUNDCARD_H @SDL_AUDIO_DRIVER_OSS_SOUNDCARD_H@
 #cmakedefine SDL_AUDIO_DRIVER_PAUDIO @SDL_AUDIO_DRIVER_PAUDIO@
 #cmakedefine SDL_AUDIO_DRIVER_PIPEWIRE @SDL_AUDIO_DRIVER_PIPEWIRE@
 #cmakedefine SDL_AUDIO_DRIVER_PIPEWIRE_DYNAMIC @SDL_AUDIO_DRIVER_PIPEWIRE_DYNAMIC@
@@ -321,11 +325,14 @@
 #cmakedefine SDL_AUDIO_DRIVER_OS2 @SDL_AUDIO_DRIVER_OS2@
 #cmakedefine SDL_AUDIO_DRIVER_VITA @SDL_AUDIO_DRIVER_VITA@
 #cmakedefine SDL_AUDIO_DRIVER_PSP @SDL_AUDIO_DRIVER_PSP@
+#cmakedefine SDL_AUDIO_DRIVER_PS2 @SDL_AUDIO_DRIVER_PS2@
+#cmakedefine SDL_AUDIO_DRIVER_N3DS @SDL_AUDIO_DRIVER_N3DS@
 
 /* Enable various input drivers */
 #cmakedefine SDL_INPUT_LINUXEV @SDL_INPUT_LINUXEV@
 #cmakedefine SDL_INPUT_LINUXKD @SDL_INPUT_LINUXKD@
 #cmakedefine SDL_INPUT_FBSDKBIO @SDL_INPUT_FBSDKBIO@
+#cmakedefine SDL_INPUT_WSCONS @SDL_INPUT_WSCONS@
 #cmakedefine SDL_JOYSTICK_ANDROID @SDL_JOYSTICK_ANDROID@
 #cmakedefine SDL_JOYSTICK_HAIKU @SDL_JOYSTICK_HAIKU@
 #cmakedefine SDL_JOYSTICK_WGI @SDL_JOYSTICK_WGI@
@@ -344,6 +351,8 @@
 #cmakedefine SDL_JOYSTICK_VIRTUAL @SDL_JOYSTICK_VIRTUAL@
 #cmakedefine SDL_JOYSTICK_VITA @SDL_JOYSTICK_VITA@
 #cmakedefine SDL_JOYSTICK_PSP @SDL_JOYSTICK_PSP@
+#cmakedefine SDL_JOYSTICK_PS2 @SDL_JOYSTICK_PS2@
+#cmakedefine SDL_JOYSTICK_N3DS @SDL_JOYSTICK_N3DS@
 #cmakedefine SDL_HAPTIC_DUMMY @SDL_HAPTIC_DUMMY@
 #cmakedefine SDL_HAPTIC_LINUX @SDL_HAPTIC_LINUX@
 #cmakedefine SDL_HAPTIC_IOKIT @SDL_HAPTIC_IOKIT@
@@ -351,6 +360,7 @@
 #cmakedefine SDL_HAPTIC_XINPUT @SDL_HAPTIC_XINPUT@
 #cmakedefine SDL_HAPTIC_ANDROID @SDL_HAPTIC_ANDROID@
 #cmakedefine SDL_LIBUSB_DYNAMIC @SDL_LIBUSB_DYNAMIC@
+#cmakedefine SDL_UDEV_DYNAMIC @SDL_UDEV_DYNAMIC@
 
 /* Enable various sensor drivers */
 #cmakedefine SDL_SENSOR_ANDROID @SDL_SENSOR_ANDROID@
@@ -358,6 +368,7 @@
 #cmakedefine SDL_SENSOR_WINDOWS @SDL_SENSOR_WINDOWS@
 #cmakedefine SDL_SENSOR_DUMMY @SDL_SENSOR_DUMMY@
 #cmakedefine SDL_SENSOR_VITA @SDL_SENSOR_VITA@
+#cmakedefine SDL_SENSOR_N3DS @SDL_SENSOR_N3DS@
 
 /* Enable various shared object loading systems */
 #cmakedefine SDL_LOADSO_DLOPEN @SDL_LOADSO_DLOPEN@
@@ -375,6 +386,8 @@
 #cmakedefine SDL_THREAD_OS2 @SDL_THREAD_OS2@
 #cmakedefine SDL_THREAD_VITA @SDL_THREAD_VITA@
 #cmakedefine SDL_THREAD_PSP @SDL_THREAD_PSP@
+#cmakedefine SDL_THREAD_PS2 @SDL_THREAD_PS2@
+#cmakedefine SDL_THREAD_N3DS @SDL_THREAD_N3DS@
 
 /* Enable various timer systems */
 #cmakedefine SDL_TIMER_HAIKU @SDL_TIMER_HAIKU@
@@ -384,6 +397,8 @@
 #cmakedefine SDL_TIMER_OS2 @SDL_TIMER_OS2@
 #cmakedefine SDL_TIMER_VITA @SDL_TIMER_VITA@
 #cmakedefine SDL_TIMER_PSP @SDL_TIMER_PSP@
+#cmakedefine SDL_TIMER_PS2 @SDL_TIMER_PS2@
+#cmakedefine SDL_TIMER_N3DS @SDL_TIMER_N3DS@
 
 /* Enable various video drivers */
 #cmakedefine SDL_VIDEO_DRIVER_ANDROID @SDL_VIDEO_DRIVER_ANDROID@
@@ -405,6 +420,7 @@
 #cmakedefine SDL_VIDEO_DRIVER_QNX @SDL_VIDEO_DRIVER_QNX@
 #cmakedefine SDL_VIDEO_DRIVER_RISCOS @SDL_VIDEO_DRIVER_RISCOS@
 #cmakedefine SDL_VIDEO_DRIVER_PSP @SDL_VIDEO_DRIVER_PSP@
+#cmakedefine SDL_VIDEO_DRIVER_PS2 @SDL_VIDEO_DRIVER_PS2@
 
 #cmakedefine SDL_VIDEO_DRIVER_KMSDRM @SDL_VIDEO_DRIVER_KMSDRM@
 #cmakedefine SDL_VIDEO_DRIVER_KMSDRM_DYNAMIC @SDL_VIDEO_DRIVER_KMSDRM_DYNAMIC@
@@ -436,15 +452,18 @@
 #cmakedefine SDL_VIDEO_DRIVER_X11_SUPPORTS_GENERIC_EVENTS @SDL_VIDEO_DRIVER_X11_SUPPORTS_GENERIC_EVENTS@
 #cmakedefine SDL_VIDEO_DRIVER_X11_HAS_XKBKEYCODETOKEYSYM @SDL_VIDEO_DRIVER_X11_HAS_XKBKEYCODETOKEYSYM@
 #cmakedefine SDL_VIDEO_DRIVER_VITA @SDL_VIDEO_DRIVER_VITA@
+#cmakedefine SDL_VIDEO_DRIVER_N3DS @SDL_VIDEO_DRIVER_N3DS@
 
 #cmakedefine SDL_VIDEO_RENDER_D3D @SDL_VIDEO_RENDER_D3D@
 #cmakedefine SDL_VIDEO_RENDER_D3D11 @SDL_VIDEO_RENDER_D3D11@
+#cmakedefine SDL_VIDEO_RENDER_D3D12 @SDL_VIDEO_RENDER_D3D12@
 #cmakedefine SDL_VIDEO_RENDER_OGL @SDL_VIDEO_RENDER_OGL@
 #cmakedefine SDL_VIDEO_RENDER_OGL_ES @SDL_VIDEO_RENDER_OGL_ES@
 #cmakedefine SDL_VIDEO_RENDER_OGL_ES2 @SDL_VIDEO_RENDER_OGL_ES2@
 #cmakedefine SDL_VIDEO_RENDER_DIRECTFB @SDL_VIDEO_RENDER_DIRECTFB@
 #cmakedefine SDL_VIDEO_RENDER_METAL @SDL_VIDEO_RENDER_METAL@
 #cmakedefine SDL_VIDEO_RENDER_VITA_GXM @SDL_VIDEO_RENDER_VITA_GXM@
+#cmakedefine SDL_VIDEO_RENDER_PS2 @SDL_VIDEO_RENDER_PS2@
 #cmakedefine SDL_VIDEO_RENDER_PSP @SDL_VIDEO_RENDER_PSP@
 
 /* Enable OpenGL support */
@@ -477,6 +496,7 @@
 #cmakedefine SDL_POWER_HARDWIRED @SDL_POWER_HARDWIRED@
 #cmakedefine SDL_POWER_VITA @SDL_POWER_VITA@
 #cmakedefine SDL_POWER_PSP @SDL_POWER_PSP@
+#cmakedefine SDL_POWER_N3DS @SDL_POWER_N3DS@
 
 /* Enable system filesystem support */
 #cmakedefine SDL_FILESYSTEM_ANDROID @SDL_FILESYSTEM_ANDROID@
@@ -490,6 +510,8 @@
 #cmakedefine SDL_FILESYSTEM_OS2 @SDL_FILESYSTEM_OS2@
 #cmakedefine SDL_FILESYSTEM_VITA @SDL_FILESYSTEM_VITA@
 #cmakedefine SDL_FILESYSTEM_PSP @SDL_FILESYSTEM_PSP@
+#cmakedefine SDL_FILESYSTEM_PS2 @SDL_FILESYSTEM_PS2@
+#cmakedefine SDL_FILESYSTEM_N3DS @SDL_FILESYSTEM_N3DS@
 
 /* Enable misc subsystem */
 #cmakedefine SDL_MISC_DUMMY @SDL_MISC_DUMMY@
@@ -519,24 +541,11 @@
 #cmakedefine SDL_VIDEO_VITA_PVR @SDL_VIDEO_VITA_PVR@
 #cmakedefine SDL_VIDEO_VITA_PVR_OGL @SDL_VIDEO_VITA_PVR_OGL@
 
-#if !defined(__WIN32__) && !defined(__WINRT__)
-#  if !defined(_STDINT_H_) && !defined(_STDINT_H) && !defined(HAVE_STDINT_H) && !defined(_HAVE_STDINT_H)
-typedef unsigned int size_t;
-typedef signed char int8_t;
-typedef unsigned char uint8_t;
-typedef signed short int16_t;
-typedef unsigned short uint16_t;
-typedef signed int int32_t;
-typedef unsigned int uint32_t;
-typedef signed long long int64_t;
-typedef unsigned long long uint64_t;
-typedef unsigned long uintptr_t;
-#  endif /* if (stdint.h isn't available) */
-#else /* __WIN32__ */
-#  if !defined(_STDINT_H_) && !defined(HAVE_STDINT_H) && !defined(_HAVE_STDINT_H)
-#    if defined(__GNUC__) || defined(__DMC__) || defined(__WATCOMC__) || defined(__BORLANDC__) || defined(__CODEGEARC__)
-#define HAVE_STDINT_H	1
-#    elif defined(_MSC_VER)
+#cmakedefine SDL_HAVE_LIBDECOR_GET_MIN_MAX @SDL_HAVE_LIBDECOR_GET_MIN_MAX@
+
+#if !defined(HAVE_STDINT_H) && !defined(_STDINT_H_)
+/* Most everything except Visual Studio 2008 and earlier has stdint.h now */
+#if defined(_MSC_VER) && (_MSC_VER < 1600)
 typedef signed __int8 int8_t;
 typedef unsigned __int8 uint8_t;
 typedef signed __int16 int16_t;
@@ -545,37 +554,15 @@ typedef signed __int32 int32_t;
 typedef unsigned __int32 uint32_t;
 typedef signed __int64 int64_t;
 typedef unsigned __int64 uint64_t;
-#      ifndef _UINTPTR_T_DEFINED
-#        ifdef  _WIN64
+#ifndef _UINTPTR_T_DEFINED
+#ifdef  _WIN64
 typedef unsigned __int64 uintptr_t;
-#          else
+#else
 typedef unsigned int uintptr_t;
-#        endif
+#endif
 #define _UINTPTR_T_DEFINED
-#      endif
-/* Older Visual C++ headers don't have the Win64-compatible typedefs... */
-#      if ((_MSC_VER <= 1200) && (!defined(DWORD_PTR)))
-#define DWORD_PTR DWORD
-#      endif
-#      if ((_MSC_VER <= 1200) && (!defined(LONG_PTR)))
-#define LONG_PTR LONG
-#      endif
-#    else /* !__GNUC__ && !_MSC_VER */
-typedef signed char int8_t;
-typedef unsigned char uint8_t;
-typedef signed short int16_t;
-typedef unsigned short uint16_t;
-typedef signed int int32_t;
-typedef unsigned int uint32_t;
-typedef signed long long int64_t;
-typedef unsigned long long uint64_t;
-#      ifndef _SIZE_T_DEFINED_
-#define _SIZE_T_DEFINED_
-typedef unsigned int size_t;
-#      endif
-typedef unsigned int uintptr_t;
-#    endif /* __GNUC__ || _MSC_VER */
-#  endif /* !_STDINT_H_ && !HAVE_STDINT_H */
-#endif /* __WIN32__ */
+#endif
+#endif /* Visual Studio 2008 */
+#endif /* !_STDINT_H_ && !HAVE_STDINT_H */
 
 #endif /* SDL_config_h_ */

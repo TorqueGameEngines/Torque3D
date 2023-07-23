@@ -43,13 +43,13 @@ make
 sudo make install
 ```
 
-This script builds SDL with 10.7 ABI compatibility on 64-bit Intel and 11.0
+This script builds SDL with 10.9 ABI compatibility on 64-bit Intel and 11.0
 ABI compatibility on ARM64 architectures.  For best compatibility you
 should compile your application the same way.
 
-Please note that building SDL requires at least Xcode 4.6 and the 10.7 SDK.
+Please note that building SDL requires at least Xcode 6 and the 10.9 SDK.
 PowerPC support for macOS has been officially dropped as of SDL 2.0.2.
-32-bit Intel and macOS 10.6 runtime support has been officially dropped as
+32-bit Intel and macOS 10.8 runtime support has been officially dropped as
 of SDL 2.24.0.
 
 To use the library once it's built, you essential have two possibilities:
@@ -74,10 +74,10 @@ NSApplicationDelegate implementation:
         event.type = SDL_QUIT;
         SDL_PushEvent(&event);
     }
-    
+
     return NSTerminateCancel;
 }
-    
+
 - (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename
 {
     if (SDL_GetEventState(SDL_DROPFILE) == SDL_ENABLE) {
@@ -86,7 +86,7 @@ NSApplicationDelegate implementation:
         event.drop.file = SDL_strdup([filename UTF8String]);
         return (SDL_PushEvent(&event) > 0);
     }
-    
+
     return NO;
 }
 ```
@@ -196,12 +196,12 @@ normally from the Finder.
 
 The SDL Library is packaged as a framework bundle, an organized
 relocatable folder hierarchy of executable code, interface headers,
-and additional resources. For practical purposes, you can think of a 
+and additional resources. For practical purposes, you can think of a
 framework as a more user and system-friendly shared library, whose library
 file behaves more or less like a standard UNIX shared library.
 
-To build the framework, simply open the framework project and build it. 
-By default, the framework bundle "SDL.framework" is installed in 
+To build the framework, simply open the framework project and build it.
+By default, the framework bundle "SDL.framework" is installed in
 /Library/Frameworks. Therefore, the testers and project stationary expect
 it to be located there. However, it will function the same in any of the
 following locations:
@@ -253,7 +253,7 @@ Use `xcode-build` in the same directory as your .pbxproj file
 You can send command line args to your app by either invoking it from
 the command line (in *.app/Contents/MacOS) or by entering them in the
 Executables" panel of the target settings.
-    
+
 # Implementation Notes
 
 Some things that may be of interest about how it all works...

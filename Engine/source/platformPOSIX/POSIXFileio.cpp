@@ -1003,6 +1003,11 @@ bool Platform::isFile(const char *pFilePath)
     // if the file is a "regular file" then true
     if ( (fStat.st_mode & S_IFMT) == S_IFREG)
         return true;
+
+    //stat failed try access
+    if (access(pFilePath, F_OK) != -1)
+       return true;
+
     // must be some other file (directory, device, etc.)
     return false;
 }

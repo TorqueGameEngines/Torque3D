@@ -50,7 +50,6 @@ protected:
 
    void TearDown() override
    {
-      SDL_Quit();
    }
 };
 

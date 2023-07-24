@@ -79,11 +79,13 @@ static void SignalHandler(int sigtype)
 //-----------------------------------------------------------------------------
 void Cleanup(bool minimal)
 {
+   Con::printf("Cleanup - input destroy");
    if (!minimal)
    {
       Input::destroy();
    }
 
+   Con::printf("StdConsole::destroy()! SdlQuit called after this.");
    StdConsole::destroy();
 
 #ifndef TORQUE_DEDICATED

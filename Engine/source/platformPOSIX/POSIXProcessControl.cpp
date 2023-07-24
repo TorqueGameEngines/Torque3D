@@ -62,6 +62,8 @@ static void SignalHandler(int sigtype)
 {
    void* array[10];
    size_t size;
+   
+   signal(sigtype, SIG_DFL);
 
    size = backtrace(array, 10);
 
@@ -82,7 +84,7 @@ void Cleanup(bool minimal)
    StdConsole::destroy();
 
 #ifndef TORQUE_DEDICATED
-   SDL_Quit();
+   //SDL_Quit();
 #endif
 }
 

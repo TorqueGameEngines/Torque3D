@@ -28,6 +28,8 @@
 #include "platform/platformInput.h"
 #include "windowManager/platformWindow.h"
 #include "windowManager/platformWindowMgr.h"
+#include "gfx/gfxInit.h"
+#include "gfx/gfxDevice.h"
 #include "console/console.h"
 
 #include <stdlib.h>
@@ -85,9 +87,10 @@ void Cleanup(bool minimal)
       Input::destroy();
    }
 
+   GFXDevice::destroy();
+
    Con::printf("StdConsole::destroy()! SdlQuit called after this.");
    StdConsole::destroy();
-
 #ifndef TORQUE_DEDICATED
    SDL_Quit();
 #endif

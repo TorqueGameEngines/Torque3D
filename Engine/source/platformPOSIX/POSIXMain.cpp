@@ -66,7 +66,6 @@ void Platform::init()
 //------------------------------------------------------------------------------
 void Platform::shutdown()
 {
-   Con::printf("Platform::shutdown-Posixmain - cleanup!");
    Cleanup();
 }
 

@@ -115,7 +115,7 @@ void ImmediateShutdown(S32 exitCode, S32 signalNum)
 // occurs.  also subsequent runs of "ps" will hang and the machine has to be
 // hard reset to clear up the problem
 // JMQ: this bug appears to be fixed in 2.4.18
-//#define KERNEL_2_4_WORKAROUND
+#define KERNEL_2_4_WORKAROUND
 #ifdef KERNEL_2_4_WORKAROUND
       dPrintf("Segmentation Fault (Exiting without core dump due to #define KERNEL_2_4_WORKAROUND)\n");
       dFflushStdout();

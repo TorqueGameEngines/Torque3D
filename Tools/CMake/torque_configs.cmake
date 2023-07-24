@@ -17,6 +17,10 @@ set(TORQUE_COMPILE_DEFINITIONS ICE_NO_DLL PCRE_STATIC TORQUE_ADVANCED_LIGHTING T
 set(TORQUE_LINK_LIBRARIES tinyxml collada ljpeg squish png_static opcode assimp
                           SDL2 glad pcre convexDecomp zlib)
 
+if(TORQUE_TESTING)
+set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} gtest gmock)
+endif()
+
 if(NOT WIN32)
    set(WIN32 OFF CACHE Bool "" FORCE)
 endif()
@@ -67,5 +71,8 @@ advanced_option(TORQUE_ENABLE_ASSERTS "enables or disable asserts" OFF)
 advanced_option(TORQUE_TOOLS "Enable or disable the tools" ON)
 advanced_option(TORQUE_ENABLE_PROFILER "Enable or disable the profiler" OFF)
 advanced_option(TORQUE_SHOW_LEGACY_FILE_FIELDS "If on, shows legacy direct file path fields in the inspector." OFF)
+
+#testing
+advanced_option(TORQUE_TESTING "Unit test build" OFF)
 
 setupVersionNumbers()

@@ -114,7 +114,7 @@ add_subdirectory(nativeFileDialogs ${CMAKE_BINARY_DIR}/temp/nfd EXCLUDE_FROM_ALL
 
 # Assimp
 advanced_option(ASSIMP_HUNTER_ENABLED "Enable Hunter package manager support" OFF)
-set(ASSIMP_BUILD_NO_OWN_ZLIB ON CACHE Bool "" FORCE)
+set(ASSIMP_BUILD_NO_OWN_ZLIB ON CACHE BOOL "" FORCE)
 mark_as_advanced(ASSIMP_BUILD_NO_OWN_ZLIB)
 advanced_option(BUILD_SHARED_LIBS "Build package with shared libraries." OFF )
 advanced_option(ASSIMP_BUILD_FRAMEWORK "Build package as Mac OS X Framework bundle." OFF )
@@ -250,7 +250,12 @@ if(TORQUE_SFX_OPENAL)
     mark_as_advanced(AUDIOTOOLBOX_LIBRARY)
     mark_as_advanced(AUDIOUNIT_INCLUDE_DIR)
 endif()
-    add_subdirectory(libvorbis ${CMAKE_BINARY_DIR}/temp/libvorbis EXCLUDE_FROM_ALL)
-    add_subdirectory(libogg ${CMAKE_BINARY_DIR}/temp/libogg EXCLUDE_FROM_ALL)
-    add_subdirectory(libtheora ${CMAKE_BINARY_DIR}/temp/libtheora EXCLUDE_FROM_ALL)
+
+add_subdirectory(libvorbis ${CMAKE_BINARY_DIR}/temp/libvorbis EXCLUDE_FROM_ALL)
+add_subdirectory(libogg ${CMAKE_BINARY_DIR}/temp/libogg EXCLUDE_FROM_ALL)
+add_subdirectory(libtheora ${CMAKE_BINARY_DIR}/temp/libtheora EXCLUDE_FROM_ALL)
+
+if(TORQUE_TESTING)
+    add_subdirectory(gtest ${CMAKE_BINARY_DIR}/temp/gtest EXCLUDE_FROM_ALL)
+endif()
 #endif()

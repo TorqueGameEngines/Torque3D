@@ -19,23 +19,3 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 # -----------------------------------------------------------------------------
-
-option(TORQUE_TESTING "Enable unit test module" OFF)
-mark_as_advanced(TORQUE_TESTING)
-
-if(TORQUE_TESTING)
-
-    # Project defines
-    set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} TORQUE_TESTS_ENABLED)
-    set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} "_VARIADIC_MAX=10")
-
-    # Add source files
-    file(GLOB_RECURSE TORQUE_TESTING_SOURCES "testing/*.cpp" "testing/*.h" "*/test/*.cpp" "*/test/*.h" "*/*/test/*.cpp" "*/*/test/*.h")
-    set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_TESTING_SOURCES})
-    # Add include paths
-    file(GLOB_RECURSE TORQUE_GTEST_SOURCES "${CMAKE_SOURCE_DIR}/Engine/lib/gtest/*.c*" "${CMAKE_SOURCE_DIR}/Engine/lib/gtest/*.h")
-    add_library(gtest ${TORQUE_GTEST_SOURCES})
-    set_target_properties(gtest PROPERTIES LINKER_LANGUAGE CXX)
-    target_include_directories(gtest PUBLIC "${CMAKE_SOURCE_DIR}/Engine/lib/gtest/")
-    set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} gtest)
-endif()

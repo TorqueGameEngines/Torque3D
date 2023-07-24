@@ -210,6 +210,11 @@ if (UNIX AND NOT APPLE)
   torqueAddSourceDirectories("platformX11")
 endif (UNIX AND NOT APPLE)
 
+if(TORQUE_TESTING)
+  torqueAddSourceDirectories("testing")
+  set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} TORQUE_SHARED SDL_MAIN_HANDLED)
+endif(TORQUE_TESTING)
+
 # Add the collected files to our engine group
 source_group(TREE "${CMAKE_SOURCE_DIR}/Engine/source" PREFIX "Engine" FILES ${TORQUE_SOURCE_FILES})
 
@@ -312,7 +317,7 @@ if (NOT TORQUE_NET_CURL)
 endif()
 
 ################# Executable Generation ###################
-if (TORQUE_DYNAMIC_LIBRARY)
+if (TORQUE_DYNAMIC_LIBRARY AND NOT TORQUE_TESTING)
   set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} TORQUE_SHARED)
 
   # Build the main engine library
@@ -325,8 +330,10 @@ if (TORQUE_DYNAMIC_LIBRARY)
   set(TORQUE_SOURCE_FILES "main/main.cpp")
   set(TORQUE_LINK_LIBRARIES TorqueEngine)
 else()
-  set(TORQUE_SOURCE_FILES "main/main.cpp" ${TORQUE_SOURCE_FILES})
-endif (TORQUE_DYNAMIC_LIBRARY)
+  if(NOT TORQUE_TESTING)
+    set(TORQUE_SOURCE_FILES "main/main.cpp" ${TORQUE_SOURCE_FILES})
+  endif()
+endif (TORQUE_DYNAMIC_LIBRARY AND NOT TORQUE_TESTING)
 
 if (APPLE)
 	add_executable(${TORQUE_APP_NAME} MACOSX_BUNDLE ${TORQUE_SOURCE_FILES})
@@ -377,6 +384,15 @@ target_compile_definitions(${TORQUE_APP_NAME} PUBLIC ${TORQUE_COMPILE_DEFINITION
 target_link_libraries(${TORQUE_APP_NAME} ${TORQUE_LINK_LIBRARIES})
 target_include_directories(${TORQUE_APP_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp" ${TORQUE_INCLUDE_DIRECTORIES})
 target_compile_features(${TORQUE_APP_NAME} PRIVATE cxx_std_20)
+
+if(TORQUE_TESTING)
+  if(WIN32)
+        target_link_options(${TORQUE_APP_NAME} PRIVATE "/SUBSYSTEM:CONSOLE")
+        set_target_properties(gtest PROPERTIES COMPILE_FLAGS "/Zc:wchar_t-")
+        set_target_properties(gmock PROPERTIES COMPILE_FLAGS "/Zc:wchar_t-")
+    endif()
+endif(TORQUE_TESTING)
+
 append_defs()
 
 # Process library binaries - these are coming from modules that are providing links to external, precompiled code that should be included

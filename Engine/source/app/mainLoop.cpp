@@ -334,36 +334,47 @@ void StandardMainLoop::init()
 void StandardMainLoop::shutdown()
 {
    // Stop the Input Event Manager
+   Con::printf("Start shutdown!");
+   Con::printf("Input mgr shutdown!");
    INPUTMGR->stop();
 
    delete tm;
+   Con::printf("Pre shutdown!");
    preShutdown();
 
+   Con::printf("unregister module database!");
    // Unregister the module database.
    ModuleDatabase.unregisterObject();
 
+   Con::printf("unregister asset database!");
    // Unregister the asset database.
    AssetDatabase.unregisterObject();
    
    // Shut down modules.
-   
+   Con::printf("Shutdown module manager!");
    EngineModuleManager::shutdownSystem();
-   
+
+   Con::printf("Delete threadpool singleton!");
    ThreadPool::GlobalThreadPool::deleteSingleton();
 
 #ifdef TORQUE_ENABLE_VFS
    closeEmbeddedVFSArchive();
 #endif
 
+   Con::printf("RedBook destroy!");
    RedBook::destroy();
 
+   Con::printf("Platform shutdown!");
    Platform::shutdown();
    
 #if defined( _XBOX ) || defined( TORQUE_OS_MAC )
    DebugOutputConsumer::destroy();
 #endif
 
+   Con::printf("Net string table shutdown!");
    NetStringTable::destroy();
+
+   Con::printf("Console shutdown!");
    Con::shutdown();
 
    _StringTable::destroy();

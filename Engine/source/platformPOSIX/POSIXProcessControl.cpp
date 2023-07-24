@@ -96,6 +96,11 @@ void Cleanup(bool minimal)
 #endif
 }
 
+int dFflushStdout()
+{
+   return fflush(stdout);
+}
+
 //-----------------------------------------------------------------------------
 void ImmediateShutdown(S32 exitCode, S32 signalNum)
 {

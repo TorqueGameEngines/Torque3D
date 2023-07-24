@@ -22,7 +22,7 @@ set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} gtest gmock)
 endif()
 
 if(NOT WIN32)
-   set(WIN32 OFF CACHE Bool "" FORCE)
+   set(WIN32 OFF CACHE BOOL "" FORCE)
 endif()
 mark_as_advanced(WIN32)
 

@@ -33,7 +33,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
-#include <execinfo.h>
 #include "console/engineAPI.h"
 #include "core/util/journal/process.h"
 #ifndef TORQUE_DEDICATED
@@ -60,17 +59,21 @@ static void CheckExitCode(S64 exitCode)
 //-----------------------------------------------------------------------------
 static void SignalHandler(int sigtype)
 {
-   void* array[10];
-   size_t size;
-   
-   signal(sigtype, SIG_DFL);
-
-   size = backtrace(array, 10);
-
-   dPrintf("Error: signal: % d\n", sigtype);
-   backtrace_symbols_fd(array, size, STDERR_FILENO);
-   // exit to be safe
-   ImmediateShutdown(1);
+   if (sigtype == SIGSEGV || sigtype == SIGTRAP)
+   {
+      signal(SIGSEGV, SIG_DFL);
+      signal(SIGTRAP, SIG_DFL);
+      // restore the signal handling to default so that we don't get into
+      // a crash loop with ImmediateShutdown
+      ImmediateShutdown(-sigtype, sigtype);
+   }
+   else
+   {
+      signal(sigtype, SIG_DFL);
+      dPrintf("Unknown signal caught by SignalHandler: %d\n", sigtype);
+      // exit to be safe
+      ImmediateShutdown(1);
+   }
 }
 
 //-----------------------------------------------------------------------------

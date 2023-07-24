@@ -13,6 +13,10 @@ forwardDef(TORQUE_BASIC_LIGHTING)
 set(TORQUE_SDL ON) # we need sdl to do our platform interop
 forwardDef(TORQUE_SDL)
 
+if(TORQUE_TESTING)
+forwardDef(TORQUE_TESTS_ENABLED)
+endif()
+
 # On Windows we disable CRT Security warnings - this comes from recommendations to use non-portable functions.
 if (WIN32)
 	set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} _CRT_SECURE_NO_WARNINGS WIN32)
@@ -212,7 +216,7 @@ endif (UNIX AND NOT APPLE)
 
 if(TORQUE_TESTING)
   torqueAddSourceDirectories("testing")
-  set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} TORQUE_SHARED SDL_MAIN_HANDLED TORQUE_TESTS_ENABLED)
+  set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} TORQUE_SHARED SDL_MAIN_HANDLED)
 endif(TORQUE_TESTING)
 
 # Add the collected files to our engine group

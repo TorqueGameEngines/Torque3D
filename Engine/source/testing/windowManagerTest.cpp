@@ -47,6 +47,11 @@ protected:
    void SetUp() override
    {
    }
+
+   void TearDown() override
+   {
+      SDL_Quit();
+   }
 };
 
 TEST_F(PlatformWindowManagerSDLTest, Constructor)

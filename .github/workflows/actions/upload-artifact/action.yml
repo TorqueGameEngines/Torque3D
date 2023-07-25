@@ -11,7 +11,7 @@ inputs:
 runs:
     using: "composite"
     steps:
-        name: Upload Torque Test Report
+      - name: Upload Torque Test Report
         uses: actions/upload-artifact@v3
         with:
             name: ${{inputs.name}}

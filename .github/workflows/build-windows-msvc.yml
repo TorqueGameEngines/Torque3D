@@ -15,6 +15,7 @@ on:
             strategy:
                 fail-fast: false
                 matrix:
+                    include:
                     - name: "TorqueWindows"
                         tests: true
                         build_type: "Release"

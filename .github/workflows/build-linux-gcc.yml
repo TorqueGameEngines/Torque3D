@@ -12,7 +12,7 @@ env:
     run_tests: true
 
 concurrency:
-    group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-windows
+    group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-linux
     cancel-in-progress: true
 jobs:
     build-linux:

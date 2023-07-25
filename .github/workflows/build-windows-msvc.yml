@@ -15,19 +15,19 @@ on:
             strategy:
                 fail-falst: false
                 matrix:
-                    name: "TorqueWindows"
-                    tests: true
-                    build_type: "Release"
-                    cc: "cl"
-                    cxx: "cl"
-                    bin: "./Torque3D.exe"
-                    environment_script: "C:/Program Files (x86)/Microsoft Visual Studio/2022/Enterprise/VC/Auxiliary/Build/vcvars64.bat",
-                    generators: "Visual Studio 17 2022"
+                    - name: "TorqueWindows"
+                        tests: true
+                        build_type: "Release"
+                        cc: "cl"
+                        cxx: "cl"
+                        bin: "./Torque3D.exe"
+                        environment_script: "C:/Program Files (x86)/Microsoft Visual Studio/2022/Enterprise/VC/Auxiliary/Build/vcvars64.bat",
+                        generators: "Visual Studio 17 2022"
                 steps:
                 - uses: actions/checkout@v3
 
                 - name: Print env
-                run: |
+                    run: |
                     echo github.event.action: ${{ github.event.action }}
                     echo github.event_name: ${{ github.event_name }}
 

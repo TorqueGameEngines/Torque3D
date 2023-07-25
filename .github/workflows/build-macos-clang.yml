@@ -1,4 +1,4 @@
-name: Windows Build MSVC
+name: MacOSX Build CLANG
 on:
     push:
         branches: [development]
@@ -6,35 +6,29 @@ on:
         branches: [development]
 env:
     build_type: "Release"
-    cc: "cl"
-    cxx: "cl"
-    environment_script: "C:/Program Files (x86)/Microsoft Visual Studio/2022/Enterprise/VC/Auxiliary/Build/vcvars64.bat"
+    cc: "clang"
+    cxx: "clang++"
 
 concurrency:
-    group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-windows
+    group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-macosx
     cancel-in-progress: true
 jobs:
-    build-windows:
+    build-linux:
         if: github.repository == 'TorqueGameEngines/Torque3D'
-        name: Windows Latest MSVC
-        runs-on: windows-latest
+        name: MacOSX Latest CLANG
+        runs-on: macos-latest
         strategy:
             fail-fast: false
         steps:
             - uses: actions/checkout@v3
-            - uses: ilammy/msvc-dev-cmd@v1
             - name: Print env
               run: |
                 echo github.event.action: ${{ github.event.action }}
                 echo github.event_name: ${{ github.event_name }}
 
-            - name: Setup MSVC problem matcher
-              uses: ammaraskar/msvc-problem-matcher@master
-
-            - name: Install Windows MSVC Dependencies
+            - name: Install MacOSX Dependencies
               run: |
                 cmake --version
-                cmd "${{env.environment_script}}"
 
             - name: Configure Build & Install
               uses: ashutoshvarma/action-cmake-build@v1
@@ -55,9 +49,9 @@ jobs:
               shell: bash
               run: |
                 cd "${{github.workspace}}/My Projects/Torque3D/game"
-                ./Torque3D.exe runTests.tscript
+                ./Torque3D.app/Contents/MacOS/Torque3D runTests.tscript
 
             - name: Upload Artifact
               uses: ./.github/actions/upload-artifact
               with:
-                name: torque3dWindowsMSVCUnitTest
+                name: torque3dMacOSXCLANGUnitTest

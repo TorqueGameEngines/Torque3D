@@ -23,7 +23,7 @@ jobs:
             fail-fast: false
         steps:
             - uses: actions/checkout@v3
-
+            - uses: ilammy/msvc-dev-cmd@v1
             - name: Print env
               run: |
                 echo github.event.action: ${{ github.event.action }}

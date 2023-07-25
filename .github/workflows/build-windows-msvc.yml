@@ -4,12 +4,7 @@ on:
         branches: [development]
     pull_request:
         branches: [development]
-env:
-    build_type: "Release"
-    cc: "cl"
-    cxx: "cl"
-    environment_script: "C:/Program Files (x86)/Microsoft Visual Studio/2022/Enterprise/VC/Auxiliary/Build/vcvars64.bat"
-
+        
 concurrency:
     group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-windows
     cancel-in-progress: true
@@ -20,6 +15,11 @@ jobs:
         runs-on: windows-latest
         strategy:
             fail-fast: false
+            matrix:
+               build_type: "Release"
+               cc: "cl"
+               cxx: "cl"
+               environment_script: "C:/Program Files (x86)/Microsoft Visual Studio/2022/Enterprise/VC/Auxiliary/Build/vcvars64.bat"
         steps:
             - uses: actions/checkout@v3
             - uses: ilammy/msvc-dev-cmd@v1
@@ -34,16 +34,16 @@ jobs:
             - name: Install Windows MSVC Dependencies
               run: |
                 cmake --version
-                cmd "${{env.environment_script}}"
+                cmd "${{matrix.environment_script}}"
 
             - name: Configure Build & Install
               uses: ashutoshvarma/action-cmake-build@v1
               with:
                 build-dir: ${{github.workspace}}/build
                 # will set the CC & CXX for cmake
-                cc: ${{env.cc}}
-                cxx: ${{env.cxx}}
-                build-type: ${{env.build_type}} 
+                cc: ${{matrix.cc}}
+                cxx: ${{matrix.cxx}}
+                build-type: ${{matrix.build_type}}
                 # Extra options pass to cmake while configuring project
                 configure-options: -DTORQUE_APP_NAME=Torque3D -DTORQUE_TESTING=ON
                 # install the build using cmake --install

@@ -60,9 +60,9 @@ jobs:
         run: |
           cd "${{github.workspace}}/My Projects/Torque3D/game"
           if [ "$RUNNER_OS" == "macOS" ]; then
-             ./Torque3D.app/Contents/MacOS/Torque3D runTests.tscript
+             ./Torque3D_OPTIMIZEDDEBUG.app/Contents/MacOS/Torque3D_OPTIMIZEDDEBUG runTests.tscript
           else
-             ./Torque3D runTests.tscript
+             ./Torque3D_OPTIMIZEDDEBUG runTests.tscript
           fi
         shell: bash
 

@@ -22,8 +22,8 @@
 
 #include "platform/platformAssert.h"
 #include "platform/threads/semaphore.h"
-#include <sdl/include/SDL.h>
-#include <sdl/include/SDL_thread.h>
+#include <SDL.h>
+#include <SDL_thread.h>
 
 class PlatformSemaphore
 {

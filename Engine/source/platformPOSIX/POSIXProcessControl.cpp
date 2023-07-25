@@ -36,7 +36,7 @@
 #include "console/engineAPI.h"
 #include "core/util/journal/process.h"
 #ifndef TORQUE_DEDICATED
-#include <sdl/include/SDL.h>
+#include <SDL.h>
 #endif
 
 //-----------------------------------------------------------------------------

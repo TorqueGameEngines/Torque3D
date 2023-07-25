@@ -24,8 +24,8 @@
 #include "platform/threads/semaphore.h"
 #include "platform/threads/mutex.h"
 #include <stdlib.h>
-#include <sdl/include/SDL.h>
-#include <sdl/include/SDL_thread.h>
+#include <SDL.h>
+#include <SDL_thread.h>
 
 class PlatformThreadData
 {

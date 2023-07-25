@@ -34,7 +34,6 @@ jobs:
 
             - name: Install Windows MSVC Dependencies
               run: |
-                choco install cmake
                 cmake --version
                 cmd "${{env.environment_script}}"
 

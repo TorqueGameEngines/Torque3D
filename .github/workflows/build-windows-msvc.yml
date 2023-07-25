@@ -5,48 +5,47 @@ on:
     pull_request:
         branches: [development]
 
-    concurrency:
-        group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-windows
-        cancel-in-progress: true
-    jobs:
-        build-windows:
-            runs-on: "windows-latest"
-            name: ${{matrix.name}}
-            strategy:
-                fail-fast: false
-                matrix:
-                    include:
-                        - name: "TorqueWindows"
-                            tests: true
-                            build_type: "Release"
-                            cc: "cl"
-                            cxx: "cl"
-                            bin: "./Torque3D.exe"
-                            environment_script: "C:/Program Files (x86)/Microsoft Visual Studio/2022/Enterprise/VC/Auxiliary/Build/vcvars64.bat",
-                            generators: "Visual Studio 17 2022"
-                steps:
-                - uses: actions/checkout@v3
+concurrency:
+    group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-windows
+    cancel-in-progress: true
+jobs:
+    build-windows:
+        name: ${{ matrix.name }}
+        runs-on: ${{ matrix.os }}
+        strategy:
+            fail-fast: false
+            matrix:
+                name: Windows Latest MSVC
+                os: windows-latest
+                build_type: "Release"
+                cc: "cl"
+                cxx: "cl"
+                environment_script: "C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/Build/vcvars64.bat"
+                generators: "Visual Studio 16 2019"
+                    
+            steps:
+              - uses: actions/checkout@v3
 
-                - name: Print env
-                    run: |
-                    echo github.event.action: ${{ github.event.action }}
-                    echo github.event_name: ${{ github.event_name }}
+              - name: Print env
+                run: |
+                  echo github.event.action: ${{ github.event.action }}
+                  echo github.event_name: ${{ github.event_name }}
 
-                - name: Setup MSVC problem matcher
-                    uses: ammaraskar/msvc-problem-matcher@master
+              - name: Setup MSVC problem matcher
+                uses: ammaraskar/msvc-problem-matcher@master
 
-                - name: Install Windows MSVC Dependencies
-                    run: |
-                     choco install cmake
-                     cmake --version
+              - name: Install Windows MSVC Dependencies
+                run: |
+                  choco install cmake
+                  cmake --version
 
-                - name: Configure
-                    shell: bash
-                    run: cmake \
-                    -B ${{github.workspace}}/build  \
-                    -G "${{matrix.generators}}" \ 
-                    -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
-                    -DTORQUE_APP_NAME=Torque3D \ 
-                    -DTORQUE_TESTING=ON
-                
+              - name: Configure
+                shell: bash
+                run: cmake \
+                  -B ${{ github.workspace }}/build  \
+                  -G "${{ matrix.generators }}" \ 
+                  -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+                  -DTORQUE_APP_NAME=Torque3D \ 
+                  -DTORQUE_TESTING=ON
+            
                 

@@ -1,4 +1,4 @@
-#include <SDL.h>
+#include <sdl/include/SDL.h>
 #include "windowManager/sdl/sdlWindow.h"
 #include "console/console.h"
 

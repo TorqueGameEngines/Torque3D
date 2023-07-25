@@ -24,8 +24,8 @@
 #include "platform/threads/mutex.h"
 #include "core/util/safeDelete.h"
 
-#include <SDL.h>
-#include <SDL_thread.h>
+#include <sdl/include/SDL.h>
+#include <sdl/include/SDL_thread.h>
 
 struct PlatformMutexData
 {

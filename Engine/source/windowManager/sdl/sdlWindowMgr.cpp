@@ -68,6 +68,8 @@ PlatformWindowManagerSDL::PlatformWindowManagerSDL()
 
 PlatformWindowManagerSDL::~PlatformWindowManagerSDL()
 {
+   if (mWindowListHead == NULL)
+      return;
    // Kill all our windows first.
    while(mWindowListHead)
       // The destructors update the list, so this works just fine.

@@ -26,8 +26,11 @@
 #include "console/codeBlock.h"
 #include "console/engineAPI.h"
 #include "console/consoleInternal.h"
-#include "memoryTester.h"
 
+#if defined(TORQUE_OS_WIN)
+#define _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
+#endif
 //-----------------------------------------------------------------------------
 
 class TorqueUnitTestListener : public ::testing::EmptyTestEventListener
@@ -90,6 +93,40 @@ public:
    TorqueUnitTestListener(bool verbose) : mVerbose(verbose) {}
 };
 
+class MemoryLeakDetector : public ::testing::EmptyTestEventListener
+{
+public:
+   virtual void OnTestStart(const ::testing::TestInfo& testInfo)
+   {
+#if defined(TORQUE_OS_WIN)
+      _CrtMemCheckpoint(&memState_);
+#endif
+   }
+
+   virtual void OnTestEnd(const ::testing::TestInfo& testInfo)
+   {
+      if (testInfo.result()->Passed())
+      {
+#if defined(TORQUE_OS_WIN)
+         _CrtMemState stateNow, stateDiff;
+         _CrtMemCheckpoint(&stateNow);
+         int diffResult = _CrtMemDifference(&stateDiff, &memState_, &stateNow);
+         if (diffResult)
+         {
+            FAIL() << "Memory leak of " << stateDiff.lSizes[1] << " byte(s) detected.";
+         }
+#endif
+      }
+   }
+
+private:
+#if defined(TORQUE_OS_WIN)
+   _CrtMemState memState_;
+#endif
+public:
+   MemoryLeakDetector() {}
+};
+
 class TorqueScriptFixture : public testing::Test {};
 
 class TorqueScriptTest : public TorqueScriptFixture {
@@ -105,7 +142,7 @@ private:
 };
 
 // uncomment to debug tests and use the test explorer.
-//#define TEST_EXPLORER
+#define TEST_EXPLORER
 #if !defined(TEST_EXPLORER)
 int main(int argc, char** argv)
 {
@@ -123,6 +160,17 @@ int main(int argc, char** argv)
    Con::evaluate("GFXInit::createNullDevice();");
    Con::evaluate("if (!isObject(GuiDefaultProfile)) new GuiControlProfile(GuiDefaultProfile){}; if (!isObject(GuiTooltipProfile)) new GuiControlProfile(GuiTooltipProfile){};");
    testing::InitGoogleTest(&argc, argv);
+
+   // Fetch the unit test instance.
+   testing::UnitTest& unitTest = *testing::UnitTest::GetInstance();
+   // Fetch the unit test event listeners.
+   testing::TestEventListeners& listeners = unitTest.listeners();
+
+   listeners.Append(new MemoryLeakDetector());
+
+   // Add the Torque unit test listener.
+   listeners.Append(new TorqueUnitTestListener(true));
+
    int res = RUN_ALL_TESTS();
 
    StandardMainLoop::shutdown();
@@ -219,11 +267,6 @@ DefineEngineFunction(runAllUnitTests, int, (const char* testSpecs, const char* r
 
    // Release the default listener.
    delete listeners.Release(listeners.default_result_printer());
-
-   if (Con::getBoolVariable("$Testing::CheckMemoryLeaks", false)) {
-      // Add the memory leak tester.
-      listeners.Append(new testing::MemoryLeakDetector);
-   }
 
    // Add the Torque unit test listener.
    listeners.Append(new TorqueUnitTestListener(true));

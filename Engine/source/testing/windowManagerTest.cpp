@@ -42,29 +42,26 @@ protected:
 
       // for tests in this class we probably only need the init_video an nothing else.
       SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC | SDL_INIT_GAMECONTROLLER | SDL_INIT_EVENTS | SDL_INIT_NOPARACHUTE);
-
-      pwm = static_cast<PlatformWindowManagerSDL*>(CreatePlatformWindowManager());
    }
 
    void SetUp() override
    {
    }
 
-   PlatformWindowManagerSDL* pwm;
-
    void TearDown() override
    {
-      delete pwm;
    }
 };
 
 TEST_F(PlatformWindowManagerSDLTest, Constructor)
 {
+   PlatformWindowManagerSDL* pwm = static_cast<PlatformWindowManagerSDL*>(CreatePlatformWindowManager());
    ASSERT_TRUE(pwm) << "no monitor to test against!";
 }
 
 TEST_F(PlatformWindowManagerSDLTest, PrimaryRectTest)
 {
+   PlatformWindowManagerSDL* pwm = static_cast<PlatformWindowManagerSDL*>(CreatePlatformWindowManager());
    // Check out the primary desktop area...
    RectI primary = pwm->getPrimaryDesktopArea();
 
@@ -74,6 +71,7 @@ TEST_F(PlatformWindowManagerSDLTest, PrimaryRectTest)
 
 TEST_F(PlatformWindowManagerSDLTest, MonitorRectsValid)
 {
+   PlatformWindowManagerSDL* pwm = static_cast<PlatformWindowManagerSDL*>(CreatePlatformWindowManager());
    // Now try to get info about all the monitors.
    Vector<RectI> monitorRects;
    pwm->getMonitorRegions(monitorRects);
@@ -88,6 +86,7 @@ TEST_F(PlatformWindowManagerSDLTest, MonitorRectsValid)
 
 TEST_F(PlatformWindowManagerSDLTest, MonitorRectsAtLeastOne)
 {
+   PlatformWindowManagerSDL* pwm = static_cast<PlatformWindowManagerSDL*>(CreatePlatformWindowManager());
    // Now try to get info about all the monitors.
    Vector<RectI> monitorRects;
    pwm->getMonitorRegions(monitorRects);
@@ -98,6 +97,7 @@ TEST_F(PlatformWindowManagerSDLTest, MonitorRectsAtLeastOne)
 
 TEST_F(PlatformWindowManagerSDLTest, MonitorRectsOverflow)
 {
+   PlatformWindowManagerSDL* pwm = static_cast<PlatformWindowManagerSDL*>(CreatePlatformWindowManager());
    // Now try to get info about all the monitors.
    Vector<RectI> monitorRects;
    pwm->getMonitorRegions(monitorRects);

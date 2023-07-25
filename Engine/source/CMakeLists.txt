@@ -14,7 +14,8 @@ set(TORQUE_SDL ON) # we need sdl to do our platform interop
 forwardDef(TORQUE_SDL)
 
 if(TORQUE_TESTING)
-forwardDef(TORQUE_TESTS_ENABLED)
+set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} TORQUE_TESTS_ENABLED)
+set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} "_VARIADIC_MAX=10")
 endif()
 
 # On Windows we disable CRT Security warnings - this comes from recommendations to use non-portable functions.

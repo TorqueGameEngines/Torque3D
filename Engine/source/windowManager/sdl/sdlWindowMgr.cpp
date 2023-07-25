@@ -29,7 +29,7 @@
 #include "core/strings/unicode.h"
 #include "gfx/bitmap/gBitmap.h"
 
-#include <sdl/include/SDL.h>
+#include "SDL.h"
 
 // ------------------------------------------------------------------------
 

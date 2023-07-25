@@ -35,8 +35,8 @@
 #define SDL_VIDEO_DRIVER_X11  // TODO SDL
 #endif
 
-#include <sdl/include/SDL.h>
-#include <sdl/include/SDL_syswm.h>
+#include "SDL.h"
+#include "SDL_syswm.h"
 
 #define SCREENSAVER_QUERY_DENY 0 // Disable screensaver
 

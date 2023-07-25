@@ -26,7 +26,7 @@
 #ifndef _PLATFORMINPUT_H_
 #include "platform/platformInput.h"
 #endif
-#include <sdl/include/SDL.h>
+#include "SDL.h"
 
 //------------------------------------------------------------------------------
 class SDLInputManager : public InputManager

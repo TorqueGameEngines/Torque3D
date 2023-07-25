@@ -23,7 +23,7 @@
 #include "platform/platform.h"
 #include "console/console.h"
 #include "gfx/bitmap/gBitmap.h"
-#include <sdl/include/SDL.h>
+#include "SDL.h"
 #include "windowManager/sdl/sdlWindow.h"
 
 static SDL_Window* gSplashWindow = nullptr;

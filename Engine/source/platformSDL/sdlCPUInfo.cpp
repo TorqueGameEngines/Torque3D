@@ -25,7 +25,7 @@
 //
 //-----------------------------------------------------------------------------
 #if defined( __FreeBSD__ )
-#include <sdl/include/SDL.h>
+#include "SDL.h"
 
 #include "platform/platformCPUCount.h"
 #include "console/console.h"

@@ -16,6 +16,7 @@ concurrency:
     cancel-in-progress: true
 jobs:
     build-windows:
+        if: github.repository == 'TorqueGameEngines/Torque3D'
         name: Windows Latest MSVC
         runs-on: windows-latest
         strategy:
@@ -34,11 +35,11 @@ jobs:
             - name: Install Windows MSVC Dependencies
               run: |
                 cmake --version
-                cmd "${{ env.environment_script }}"
+                cmd "${{env.environment_script}}"
 
             - name: Configure
               shell: bash
-              run: cmake -B ${{ github.workspace }}/build -G "${{ env.generators }}" -DCMAKE_BUILD_TYPE=${{ env.build_type }} -DTORQUE_APP_NAME=Torque3D \ -DTORQUE_TESTING=ON
+              run: cmake -B ${{github.workspace}}/build -G "${{env.generators}}" -DCMAKE_BUILD_TYPE=${{env.build_type}} -DTORQUE_APP_NAME=Torque3D -DTORQUE_TESTING=ON
             
             - name: Build
               shell: bash

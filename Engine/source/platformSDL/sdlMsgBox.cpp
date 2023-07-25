@@ -1,7 +1,7 @@
 #include "windowManager/platformWindowMgr.h"
 #include "windowManager/sdl/sdlWindow.h"
 
-#include "SDL.h"
+#include <sdl/include/SDL.h>
 
 namespace
 {   

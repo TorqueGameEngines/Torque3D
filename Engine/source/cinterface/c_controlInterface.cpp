@@ -36,7 +36,7 @@ extern void createFontShutdown(void);
 #endif
 
 #if defined(TORQUE_SDL)
-#include "SDL.h"
+#include <sdl/include/SDL.h>
 #endif
 
 #if defined( TORQUE_MINIDUMP ) && defined( TORQUE_RELEASE )

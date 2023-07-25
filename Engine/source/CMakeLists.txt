@@ -16,8 +16,6 @@ forwardDef(TORQUE_SDL)
 if(TORQUE_TESTING)
 set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} TORQUE_TESTS_ENABLED)
 set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} "_VARIADIC_MAX=10")
-# this is not efficient, do not let this define go out in production code.
-set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} "MALLOC_CHECK_=1")
 endif()
 
 # On Windows we disable CRT Security warnings - this comes from recommendations to use non-portable functions.

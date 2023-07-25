@@ -4,25 +4,22 @@ on:
         branches: [development]
     pull_request:
         branches: [development]
+env:
+    build_type: "Release"
+    cc: "cl"
+    cxx: "cl"
+    environment_script: "C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/Build/vcvars64.bat"
+    generators: "Visual Studio 16 2019"
 
 concurrency:
     group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-windows
     cancel-in-progress: true
 jobs:
     build-windows:
-        name: ${{ matrix.name }}
-        runs-on: ${{ matrix.os }}
+        name: Windows Latest MSVC
+        runs-on: windows-latest
         strategy:
             fail-fast: false
-            matrix:
-                name: Windows Latest MSVC
-                os: windows-latest
-                build_type: "Release"
-                cc: "cl"
-                cxx: "cl"
-                environment_script: "C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/Build/vcvars64.bat"
-                generators: "Visual Studio 16 2019"
-                    
         steps:
             - uses: actions/checkout@v3
 
@@ -43,9 +40,16 @@ jobs:
               shell: bash
               run: cmake \
                 -B ${{ github.workspace }}/build  \
-                -G "${{ matrix.generators }}" \ 
-                -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+                -G "${{ env.generators }}" \ 
+                -DCMAKE_BUILD_TYPE=${{ env.build_type }} \
                 -DTORQUE_APP_NAME=Torque3D \ 
                 -DTORQUE_TESTING=ON
             
+            - name: Build
+              shell: bash
+              run: cmake --build . --config ${{ env.build_type}}
+
+            - name: Install
+              shell: bash
+              run: cmake --install
                 

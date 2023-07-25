@@ -23,29 +23,29 @@ jobs:
                 environment_script: "C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/Build/vcvars64.bat"
                 generators: "Visual Studio 16 2019"
                     
-            steps:
-              - uses: actions/checkout@v3
+        steps:
+            - uses: actions/checkout@v3
 
-              - name: Print env
-                run: |
-                  echo github.event.action: ${{ github.event.action }}
-                  echo github.event_name: ${{ github.event_name }}
+            - name: Print env
+              run: |
+                echo github.event.action: ${{ github.event.action }}
+                echo github.event_name: ${{ github.event_name }}
 
-              - name: Setup MSVC problem matcher
-                uses: ammaraskar/msvc-problem-matcher@master
+            - name: Setup MSVC problem matcher
+              uses: ammaraskar/msvc-problem-matcher@master
 
-              - name: Install Windows MSVC Dependencies
-                run: |
-                  choco install cmake
-                  cmake --version
+            - name: Install Windows MSVC Dependencies
+              run: |
+                choco install cmake
+                cmake --version
 
-              - name: Configure
-                shell: bash
-                run: cmake \
-                  -B ${{ github.workspace }}/build  \
-                  -G "${{ matrix.generators }}" \ 
-                  -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-                  -DTORQUE_APP_NAME=Torque3D \ 
-                  -DTORQUE_TESTING=ON
+            - name: Configure
+              shell: bash
+              run: cmake \
+                -B ${{ github.workspace }}/build  \
+                -G "${{ matrix.generators }}" \ 
+                -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+                -DTORQUE_APP_NAME=Torque3D \ 
+                -DTORQUE_TESTING=ON
             
                 

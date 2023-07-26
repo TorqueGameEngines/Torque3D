@@ -55,7 +55,7 @@ jobs:
                 c-compiler: ${{matrix.config.cc}}
                 cxx-compiler: ${{matrix.config.cxx}}
                 generator: ${{matrix.config.generator}}
-                options: -DCMAKE_BUILD_TYPE=${{matrix.config.build_type}} -DTORQUE_APP_NAME=Torque3D -DTORQUE_TESTING=ON
+                options: CMAKE_BUILD_TYPE=${{matrix.config.build_type}} TORQUE_APP_NAME=Torque3D TORQUE_TESTING=ON
                 run-build: true
 
             - name: Install

@@ -1,4 +1,4 @@
-name: MacOSX Build 🍎
+name: MacOSX Build
 on:
     push:
         branches: [development]

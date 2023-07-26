@@ -1,4 +1,4 @@
-name: Linux Build 🐧
+name: Linux Build
 on:
     push:
         branches: [development]

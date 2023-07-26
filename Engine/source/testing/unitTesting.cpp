@@ -72,6 +72,9 @@ class TorqueUnitTestListener : public ::testing::EmptyTestEventListener
          Con::printf("TestClass:%s Test:%s Failed!",
             testInfo.test_case_name(), testInfo.name());
       }
+      if (!mVerbose)
+         return;
+
       else if(testInfo.result()->Passed())
       {
          Con::printf("TestClass:%s Test:%s Succeeded!",
@@ -269,7 +272,7 @@ DefineEngineFunction(runAllUnitTests, int, (const char* testSpecs, const char* r
    delete listeners.Release(listeners.default_result_printer());
 
    // Add the Torque unit test listener.
-   listeners.Append(new TorqueUnitTestListener(true));
+   listeners.Append(new TorqueUnitTestListener(false));
 
    // Perform googletest run.
    Con::printf("\nUnit Tests Starting...\n");

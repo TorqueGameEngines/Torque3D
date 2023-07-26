@@ -1,4 +1,4 @@
-name: Windows Build 🟥🟩🟦🟨
+name: Windows Build
 on:
     push:
         branches: [development]

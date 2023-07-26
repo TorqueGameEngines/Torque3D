@@ -38,6 +38,7 @@ jobs:
 
             - name: Install MacOSX Dependencies
               run: |
+                brew install ninja
                 ninja --version
                 cmake --version
 

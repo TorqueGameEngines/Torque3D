@@ -41,6 +41,7 @@ jobs:
 
             - name: Install Linux Dependencies
               run: |
+                sudo apt-get install ninja-build
                 ninja --version
                 cmake --version
                 gcc --version

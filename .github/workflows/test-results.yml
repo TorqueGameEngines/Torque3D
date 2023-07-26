@@ -30,7 +30,7 @@ jobs:
             }
     steps:
       - name: Upload Artifact
-        uses: ./.github/actions/upload-artifact
+        uses: ./.github/actions/test-results
         with:
           artifact-name: ${{matrix.config.artifact-name}}
           name: ${{matrix.config.name}}

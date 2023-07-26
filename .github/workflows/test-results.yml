@@ -1,7 +1,7 @@
 name: Report Test Results
 on:
   workflow_run:
-    workflows: [Windows Build, Linux Build, MacOSX Build]
+    workflows: ["Windows Build", "Linux Build", "MacOSX Build"]
     types:
       - completed
 

@@ -1,0 +1,29 @@
+name: Windows Test Results
+on:
+  workflow_run:
+    workflows: [Windows Build 🟥🟩🟦🟨]
+    types: [ completed ]
+
+permissions:
+    checks: write
+
+jobs:
+  checks:
+    runs-on: windows-latest
+    steps:
+      - name: Download Windows
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          path: Windows
+          name: torque3dWindowsMSVCUnitTest
+          workflow: ${{ github.event.workflow.id }}
+          run_id: ${{ github.event.workflow_run.id }}
+
+      - name: Test Reporter
+        uses: phoenix-actions/test-reporting@v12
+        if: success() || failure()    # run this step even if previous step failed
+        with:
+          name: Build Tests
+          path: My Projects/Torque3D/game/test_*.xml
+          reporter: java-junit 
+

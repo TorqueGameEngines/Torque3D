@@ -85,12 +85,3 @@ jobs:
               uses: ./.github/actions/upload-artifact
               with:
                 name: torque3dLinuxGCCUnitTest
-
-            - name: Test Reporter
-              uses: phoenix-actions/test-reporting@v12
-              if: success() || failure()    # run this step even if previous step failed
-              with:
-                artifact: torque3dLinuxGCCUnitTest
-                name: Build Tests
-                path: My Projects/Torque3D/game/test_*.xml
-                reporter: java-junit 

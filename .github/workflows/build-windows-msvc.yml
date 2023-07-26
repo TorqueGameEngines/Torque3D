@@ -10,7 +10,7 @@ concurrency:
 jobs:
     build-windows:
         if: github.repository == 'TorqueGameEngines/Torque3D'
-        name: Windows Latest MSVC
+        name: ${{matrix.config.name}}
         runs-on: windows-latest
         strategy:
             fail-fast: false
@@ -18,7 +18,6 @@ jobs:
               config: 
               - {
                   name: "Windows Latest MSVC",
-                  os: windows-latest,
                   build_type: "Release",
                   cc: "cl",
                   cxx: "cl",
@@ -27,7 +26,6 @@ jobs:
                 }
               - {
                   name: "Windows Latest MinGW",
-                  os: windows-latest,
                   build_type: "Release",
                   cc: "gcc",
                   cxx: "g++",

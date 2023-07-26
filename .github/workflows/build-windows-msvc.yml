@@ -4,12 +4,6 @@ on:
         branches: [development]
     pull_request:
         branches: [development]
-env:
-    build_type: "Release"
-    cc: "cl"
-    cxx: "cl"
-    environment_script: "C:/Program Files (x86)/Microsoft Visual Studio/2022/Enterprise/VC/Auxiliary/Build/vcvars64.bat"
-
 concurrency:
     group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-windows
     cancel-in-progress: true
@@ -20,6 +14,25 @@ jobs:
         runs-on: windows-latest
         strategy:
             fail-fast: false
+            matrix:
+              config: 
+              - {
+                  name: "Windows Latest MSVC",
+                  os: windows-latest,
+                  build_type: "Release",
+                  cc: "cl",
+                  cxx: "cl",
+                  environment_script: "C:/Program Files (x86)/Microsoft Visual Studio/2022/Enterprise/VC/Auxiliary/Build/vcvars64.bat",
+                  generator: "Visual Studio 17 2022"
+                }
+              - {
+                  name: "Windows Latest MinGW",
+                  os: windows-latest,
+                  build_type: "Release",
+                  cc: "gcc",
+                  cxx: "g++",
+                  generator: "Ninja"
+                }
         steps:
             - uses: actions/checkout@v3
             - uses: ilammy/msvc-dev-cmd@v1
@@ -31,31 +44,31 @@ jobs:
             - name: Setup MSVC problem matcher
               uses: ammaraskar/msvc-problem-matcher@master
 
-            - name: Install Windows MSVC Dependencies
+            - name: Install Dependencies For ${{matrix.config.name}}
               run: |
                 cmake --version
-                cmd "${{env.environment_script}}"
+                cmd "${{matrix.config.environment_script}}"
 
-            - name: Configure Build & Install
+            - name: Configure Build
               uses: ashutoshvarma/action-cmake-build@v1
               with:
                 build-dir: ${{github.workspace}}/build
                 # will set the CC & CXX for cmake
-                cc: ${{env.cc}}
-                cxx: ${{env.cxx}}
-                build-type: ${{env.build_type}} 
+                cc: ${{matrix.config.cc}}
+                cxx: ${{matrix.config.cxx}}
+                build-type: ${{matrix.config.build_type}} 
                 # Extra options pass to cmake while configuring project
                 configure-options: -DTORQUE_APP_NAME=Torque3D -DTORQUE_TESTING=ON
                 # install the build using cmake --install
-                install-build: true
+                install-build: false
                 # run build using '-j [parallel]' to use multiple threads to build
                 parallel: 14
 
+            - name: Install
+              run: cmake --install
+
             - name: Unit Tests
-              shell: bash
-              run: |
-                cd "${{github.workspace}}/My Projects/Torque3D/game"
-                ./Torque3D.exe runTests.tscript
+              run: ${{github.workspace}}/My Projects/Torque3D/game/Torque3D.exe runTests.tscript
 
             - name: Upload Artifact
               uses: ./.github/actions/upload-artifact

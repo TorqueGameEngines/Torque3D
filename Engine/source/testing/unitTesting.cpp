@@ -72,6 +72,7 @@ class TorqueUnitTestListener : public ::testing::EmptyTestEventListener
          Con::printf("TestClass:%s Test:%s Failed!",
             testInfo.test_case_name(), testInfo.name());
       }
+
       if (!mVerbose)
          return;
 

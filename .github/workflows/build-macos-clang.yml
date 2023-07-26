@@ -1,45 +1,45 @@
-name: Windows Build 🟥🟩🟦🟨
+name: MacOSX Build 🍎
 on:
     push:
         branches: [development]
     pull_request:
         branches: [development]
+env:
+    build_type: "Release"
+    cc: "clang"
+    cxx: "clang++"
+
 concurrency:
-    group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-windows
+    group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-macosx
     cancel-in-progress: true
 jobs:
-    build-windows:
+    build-linux:
         if: github.repository == 'TorqueGameEngines/Torque3D'
         name: ${{matrix.config.name}}
-        runs-on: windows-latest
+        runs-on: macosx-latest
         strategy:
             fail-fast: false
             matrix:
               config: 
               - {
-                  name: "Windows Latest MSVC",
+                  name: "MacOSX Latest Clang",
                   build_type: "Release",
-                  cc: "cl",
-                  cxx: "cl",
-                  environment_script: "C:/Program Files (x86)/Microsoft Visual Studio/2022/Enterprise/VC/Auxiliary/Build/vcvars64.bat",
-                  generator: "Visual Studio 17 2022"
+                  cc: "clang",
+                  cxx: "clang++",
+                  generator: "Ninja"
                 }
-                
+
         steps:
             - uses: actions/checkout@v3
-            - uses: ilammy/msvc-dev-cmd@v1
             - name: Print env
               run: |
                 echo github.event.action: ${{ github.event.action }}
                 echo github.event_name: ${{ github.event_name }}
 
-            - name: Setup MSVC problem matcher
-              uses: ammaraskar/msvc-problem-matcher@master
-
-            - name: Install Dependencies For ${{matrix.config.name}}
+            - name: Install MacOSX Dependencies
               run: |
+                ninja --version
                 cmake --version
-                cmd "${{matrix.config.environment_script}}"
 
             - name: Configure, Build & Install
               uses: threeal/cmake-action@v1.2.0
@@ -56,9 +56,9 @@ jobs:
             - name: Unit Tests
               run: |
                 cd "${{github.workspace}}/My Projects/Torque3D/game"
-                ./Torque3D.exe runTests.tscript
+                ./Torque3D.app/Contents/MacOS/Torque3D runTests.tscript
 
             - name: Upload Artifact
               uses: ./.github/actions/upload-artifact
               with:
-                name: torque3dWindowsMSVCUnitTest
+                name: torque3dMacOSXCLANGUnitTest

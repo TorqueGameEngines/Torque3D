@@ -1,7 +1,7 @@
 name: Windows Test Results
 on:
   workflow_run:
-    workflows: [Windows Build 🟥🟩🟦🟨]
+    workflows: [Windows Build 🟥🟩🟦🟨, Linux Build 🐧, MacOSX Build 🍎]
     types: [ completed ]
 
 permissions:
@@ -9,21 +9,28 @@ permissions:
 
 jobs:
   checks:
-    runs-on: windows-latest
+    runs-on: ${{matrix.config.runos}}
+    strategy:
+        fail-fast: false
+        matrix:
+          config:
+          - {
+                name: "Windows Test Results",
+                runos: windows-latest,
+                artifact-name: "torque3dLinuxGCCUnitTest"
+            }
+          - {
+              name: "Ubuntu Test Results",
+              artifact-name: "torque3dLinuxGCCUnitTest"
+            }
+          - {
+                name: "Mac Test Results",
+                artifact-name: "torque3dMacOSXCLANGUnitTest"
+            }
     steps:
-      - name: Download Windows
-        uses: dawidd6/action-download-artifact@v2
+      - name: Upload Artifact
+        uses: ./.github/actions/upload-artifact
         with:
-          path: Windows
-          name: torque3dWindowsMSVCUnitTest
-          workflow: ${{ github.event.workflow.id }}
-          run_id: ${{ github.event.workflow_run.id }}
-
-      - name: Test Reporter
-        uses: phoenix-actions/test-reporting@v12
-        if: success() || failure()    # run this step even if previous step failed
-        with:
-          name: Build Tests
-          path: My Projects/Torque3D/game/test_*.xml
-          reporter: java-junit 
+          artifact-name: ${{matrix.config.artifact-name}}
+          name: ${{matrix.config.name}}
 

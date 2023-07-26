@@ -1,0 +1,19 @@
+name: Windows Test Results
+on:
+  workflow_run:
+    workflows: [Windows Build 🟥🟩🟦🟨]
+    types: [ completed ]
+
+permissions:
+    checks: write
+
+jobs:
+  checks:
+    runs-on: windows-latest
+    steps:
+      - name: Upload Artifact
+        uses: ./.github/actions/upload-artifact
+        with:
+          artifact-name: torque3dWindowsMSVCUnitTest
+          name: Windows Test Results
+

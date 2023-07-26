@@ -16,7 +16,7 @@ jobs:
     build-linux:
         if: github.repository == 'TorqueGameEngines/Torque3D'
         name: ${{matrix.config.name}}
-        runs-on: macosx-latest
+        runs-on: macos-latest
         strategy:
             fail-fast: false
             matrix:

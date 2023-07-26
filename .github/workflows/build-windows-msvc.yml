@@ -24,13 +24,6 @@ jobs:
                   environment_script: "C:/Program Files (x86)/Microsoft Visual Studio/2022/Enterprise/VC/Auxiliary/Build/vcvars64.bat",
                   generator: "Visual Studio 17 2022"
                 }
-              - {
-                  name: "Windows Latest MinGW",
-                  build_type: "Release",
-                  cc: "gcc",
-                  cxx: "g++",
-                  generator: "Ninja"
-                }
         steps:
             - uses: actions/checkout@v3
             - uses: ilammy/msvc-dev-cmd@v1
@@ -47,7 +40,7 @@ jobs:
                 cmake --version
                 cmd "${{matrix.config.environment_script}}"
 
-            - name: Configure & Build
+            - name: Configure, Build & Install
               uses: threeal/cmake-action@v1.2.0
               with:
                 source-dir: ${{github.workspace}}
@@ -57,9 +50,7 @@ jobs:
                 generator: ${{matrix.config.generator}}
                 options: CMAKE_BUILD_TYPE=${{matrix.config.build_type}} TORQUE_APP_NAME=Torque3D TORQUE_TESTING=ON
                 run-build: true
-
-            - name: Install
-              run: cmake --install
+                build-args: --config ${{matrix.config.build_type}} --target install
 
             - name: Unit Tests
               run: ${{github.workspace}}/My Projects/Torque3D/game/Torque3D.exe runTests.tscript

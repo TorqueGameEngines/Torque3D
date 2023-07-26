@@ -35,6 +35,9 @@ jobs:
               run: |
                 echo github.event.action: ${{ github.event.action }}
                 echo github.event_name: ${{ github.event_name }}
+                
+            - name: Setup GCC problem matcher
+              uses: ammaraskar/gcc-problem-matcher@master
 
             - name: Install MacOSX Dependencies
               run: |
@@ -63,3 +66,11 @@ jobs:
               uses: ./.github/actions/upload-artifact
               with:
                 name: torque3dMacOSXCLANGUnitTest
+
+            - name: Test Reporter
+              uses: dorny/test-reporter@v1.6.0
+              if: success() || failure()    # run this step even if previous step failed
+              with:
+                name: JEST Tests
+                path: test_detail.xml
+                reporter: jest-junit 

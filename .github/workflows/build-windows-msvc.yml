@@ -62,3 +62,11 @@ jobs:
               uses: ./.github/actions/upload-artifact
               with:
                 name: torque3dWindowsMSVCUnitTest
+
+            - name: Test Reporter
+              uses: dorny/test-reporter@v1.6.0
+              if: success() || failure()    # run this step even if previous step failed
+              with:
+                name: JEST Tests
+                path: test_detail.xml
+                reporter: jest-junit 

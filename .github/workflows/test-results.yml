@@ -1,4 +1,4 @@
-name: Windows Test Results
+name: Report Test Results
 on:
   workflow_run:
     workflows: [Windows Build 🟥🟩🟦🟨, Linux Build 🐧, MacOSX Build 🍎]

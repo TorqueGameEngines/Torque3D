@@ -55,14 +55,14 @@ jobs:
                     -S ${{github.workspace}} \
                     -B  ${{github.workspace}}/build \
                     -DCMAKE_BUILD_TYPE=${{ matrix.config.build_type }} \
-                    -G "${{ matrix.config.generators }}" \
+                    -G "${{ matrix.config.generator }}" \
                     -DTORQUE_APP_NAME=Torque3D -DTORQUE_TESTING=ON
 
             - name: Build
               shell: bash
               run: cmake --build . --config ${{ matrix.config.build_type }}
         
-            - name: Install Strip
+            - name: Install
               shell: bash
               run: cmake --install
 

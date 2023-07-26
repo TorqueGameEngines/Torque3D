@@ -2,7 +2,8 @@ name: Windows Test Results
 on:
   workflow_run:
     workflows: [Windows Build 🟥🟩🟦🟨, Linux Build 🐧, MacOSX Build 🍎]
-    types: [ completed ]
+    types:
+      - completed
 
 permissions:
     checks: write

@@ -21,7 +21,7 @@ jobs:
                 artifact-name: "torque3dLinuxGCCUnitTest"
             }
           - {
-              name: "Ubuntu Test Results",
+              name: "Linux Test Results",
               artifact-name: "torque3dLinuxGCCUnitTest"
             }
           - {
@@ -29,7 +29,7 @@ jobs:
                 artifact-name: "torque3dMacOSXCLANGUnitTest"
             }
     steps:
-      - name: Upload Artifact
+      - name: Publish ${{matrix.config.name}}
         uses: ./.github/actions/test-results
         with:
           artifact-name: ${{matrix.config.artifact-name}}

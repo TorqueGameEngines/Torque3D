@@ -68,9 +68,9 @@ jobs:
                 name: torque3dMacOSXCLANGUnitTest
 
             - name: Test Reporter
-              uses: dorny/test-reporter@v1.6.0
+              uses: phoenix-actions/test-reporting@v12
               if: success() || failure()    # run this step even if previous step failed
               with:
-                name: JEST Tests
+                name: Build Tests
                 path: ${{github.workspace}}/My Projects/Torque3D/game/test_detail.xml
-                reporter: jest-junit 
+                reporter: java-junit 

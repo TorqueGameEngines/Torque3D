@@ -17,7 +17,7 @@ runs:
     - name: Test Reporter
       uses: phoenix-actions/test-reporting@v12
       with:
-        artifact: torque3dWindowsMSVCUnitTest
+        artifact: ${{inputs.artifact-name}}
         name: ${{inputs.name}}
         path: ${{inputs.path}}
         reporter: java-junit 

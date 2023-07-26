@@ -28,6 +28,7 @@
 #include "windowManager/sdl/sdlWindowMgr.h"
 #include "core/util/tVector.h"
 
+#include <SDL.h>
 
 using ::testing::Matcher;
 using ::testing::TypedEq;

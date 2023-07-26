@@ -91,5 +91,5 @@ jobs:
               if: success() || failure()    # run this step even if previous step failed
               with:
                 name: JEST Tests
-                path: test_detail.xml
+                path: ${{github.workspace}}/My Projects/Torque3D/game/test_detail.xml
                 reporter: jest-junit 

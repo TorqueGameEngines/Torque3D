@@ -92,5 +92,5 @@ jobs:
               with:
                 artifact: torque3dLinuxGCCUnitTest
                 name: Build Tests
-                path: "My Projects/Torque3D/game/test_detail.xml"
+                path: My Projects/Torque3D/game/test_*.xml
                 reporter: java-junit 

@@ -72,5 +72,5 @@ jobs:
               if: success() || failure()    # run this step even if previous step failed
               with:
                 name: Build Tests
-                path: "My Projects/Torque3D/game/test_detail.xml"
+                path: My Projects/Torque3D/game/test_*.xml
                 reporter: java-junit 

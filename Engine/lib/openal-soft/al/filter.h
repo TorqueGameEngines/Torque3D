@@ -1,12 +1,12 @@
 #ifndef AL_FILTER_H
 #define AL_FILTER_H
 
+
 #include "AL/al.h"
 #include "AL/alc.h"
 #include "AL/alext.h"
 
 #include "almalloc.h"
-
 
 #define LOWPASSFREQREF  5000.0f
 #define HIGHPASSFREQREF  250.0f

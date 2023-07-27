@@ -93,11 +93,9 @@ protected:
 		aabbMax = m_localAabbMax;
 	}
 
-protected:
+public:
 
 	btPolyhedralConvexAabbCachingShape();
-	
-public:
 	
 	inline void getNonvirtualAabb(const btTransform& trans,btVector3& aabbMin,btVector3& aabbMax, btScalar margin) const
 	{

@@ -24,9 +24,9 @@
 #include "console/engineAPI.h"
 #include "math/mathUtils.h"
 
-#ifdef TORQUE_TESTS_ENABLED
-#include "testing/unitTesting.h"
-#endif
+//#ifdef TORQUE_TESTS_ENABLED
+//#include "testing/unitTesting.h"
+//#endif
 
 //====================================================================
 //Eulers setup
@@ -316,14 +316,6 @@ void RotationF::normalize()
       set(quat);
    }
 }
-
-//Testing
-#ifdef TORQUE_TESTS_ENABLED
-TEST(Maths, RotationF_Calculations)
-{
-   //TODO: implement unit test
-};
-#endif
 
 DefineEngineFunction(AddRotation, RotationF, (RotationF a, RotationF b, const char* returnType), ("Euler"),
    "Adds two rotations together.\n"

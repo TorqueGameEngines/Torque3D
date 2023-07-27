@@ -57,9 +57,7 @@ protected:
 
 	btPoolAllocator*	m_persistentManifoldPoolAllocator;
 
-	btCollisionAlgorithmCreateFunc* m_doubleDispatchContactPoints[MAX_BROADPHASE_COLLISION_TYPES][MAX_BROADPHASE_COLLISION_TYPES];
-
-	btCollisionAlgorithmCreateFunc* m_doubleDispatchClosestPoints[MAX_BROADPHASE_COLLISION_TYPES][MAX_BROADPHASE_COLLISION_TYPES];
+	btCollisionAlgorithmCreateFunc* m_doubleDispatch[MAX_BROADPHASE_COLLISION_TYPES][MAX_BROADPHASE_COLLISION_TYPES];
 
 	btCollisionConfiguration*	m_collisionConfiguration;
 
@@ -85,8 +83,6 @@ public:
 
 	///registerCollisionCreateFunc allows registration of custom/alternative collision create functions
 	void	registerCollisionCreateFunc(int proxyType0,int proxyType1, btCollisionAlgorithmCreateFunc* createFunc);
-
-	void	registerClosestPointsCreateFunc(int proxyType0, int proxyType1, btCollisionAlgorithmCreateFunc *createFunc);
 
 	int	getNumManifolds() const
 	{ 
@@ -119,7 +115,7 @@ public:
 
 	virtual void clearManifold(btPersistentManifold* manifold);
 
-	btCollisionAlgorithm* findAlgorithm(const btCollisionObjectWrapper* body0Wrap,const btCollisionObjectWrapper* body1Wrap,btPersistentManifold* sharedManifold, ebtDispatcherQueryType queryType);
+	btCollisionAlgorithm* findAlgorithm(const btCollisionObjectWrapper* body0Wrap,const btCollisionObjectWrapper* body1Wrap,btPersistentManifold* sharedManifold = 0);
 		
 	virtual bool	needsCollision(const btCollisionObject* body0,const btCollisionObject* body1);
 	

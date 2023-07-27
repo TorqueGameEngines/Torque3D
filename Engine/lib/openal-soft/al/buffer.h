@@ -6,12 +6,15 @@
 #include "AL/al.h"
 
 #include "albyte.h"
+#include "alc/inprogext.h"
 #include "almalloc.h"
 #include "atomic.h"
-#include "buffer_storage.h"
-#include "inprogext.h"
+#include "core/buffer_storage.h"
 #include "vector.h"
 
+#ifdef ALSOFT_EAX
+#include "eax_x_ram.h"
+#endif // ALSOFT_EAX
 
 /* User formats */
 enum UserFmtType : unsigned char {
@@ -35,6 +38,9 @@ enum UserFmtChannels : unsigned char {
     UserFmtX71 = FmtX71,
     UserFmtBFormat2D = FmtBFormat2D,
     UserFmtBFormat3D = FmtBFormat3D,
+    UserFmtUHJ2 = FmtUHJ2,
+    UserFmtUHJ3 = FmtUHJ3,
+    UserFmtUHJ4 = FmtUHJ4,
 };
 
 
@@ -65,6 +71,11 @@ struct ALbuffer : public BufferStorage {
     ALuint id{0};
 
     DISABLE_ALLOC()
+
+#ifdef ALSOFT_EAX
+    ALenum eax_x_ram_mode{AL_STORAGE_AUTOMATIC};
+    bool eax_x_ram_is_hardware{};
+#endif // ALSOFT_EAX
 };
 
 #endif

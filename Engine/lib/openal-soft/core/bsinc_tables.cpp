@@ -9,7 +9,8 @@
 #include <memory>
 #include <stdexcept>
 
-#include "math_defs.h"
+#include "alnumbers.h"
+#include "core/mixer/defs.h"
 
 
 namespace {
@@ -24,9 +25,10 @@ using uint = unsigned int;
  */
 constexpr double Sinc(const double x)
 {
-    if(!(x > 1e-15 || x < -1e-15))
+    constexpr double epsilon{std::numeric_limits<double>::epsilon()};
+    if(!(x > epsilon || x < -epsilon))
         return 1.0;
-    return std::sin(al::MathDefs<double>::Pi()*x) / (al::MathDefs<double>::Pi()*x);
+    return std::sin(al::numbers::pi*x) / (al::numbers::pi*x);
 }
 
 /* The zero-order modified Bessel function of the first kind, used for the
@@ -35,7 +37,7 @@ constexpr double Sinc(const double x)
  *   I_0(x) = sum_{k=0}^inf (1 / k!)^2 (x / 2)^(2 k)
  *          = sum_{k=0}^inf ((x / 2)^k / k!)^2
  */
-constexpr double BesselI_0(const double x)
+constexpr double BesselI_0(const double x) noexcept
 {
     /* Start at k=1 since k=0 is trivial. */
     const double x2{x / 2.0};
@@ -82,12 +84,12 @@ constexpr double Kaiser(const double beta, const double k, const double besseli_
 /* Calculates the (normalized frequency) transition width of the Kaiser window.
  * Rejection is in dB.
  */
-constexpr double CalcKaiserWidth(const double rejection, const uint order)
+constexpr double CalcKaiserWidth(const double rejection, const uint order) noexcept
 {
     if(rejection > 21.19)
-        return (rejection - 7.95) / (order * 2.285 * al::MathDefs<double>::Tau());
+        return (rejection - 7.95) / (2.285 * al::numbers::pi*2.0 * order);
     /* This enforces a minimum rejection of just above 21.18dB */
-    return 5.79 / (order * al::MathDefs<double>::Tau());
+    return 5.79 / (al::numbers::pi*2.0 * order);
 }
 
 /* Calculates the beta value of the Kaiser window. Rejection is in dB. */
@@ -122,7 +124,7 @@ struct BSincHeader {
         uint num_points{Order+1};
         for(uint si{0};si < BSincScaleCount;++si)
         {
-            const double scale{scaleBase + (scaleRange * si / (BSincScaleCount-1))};
+            const double scale{scaleBase + (scaleRange * (si+1) / BSincScaleCount)};
             const uint a_{std::min(static_cast<uint>(num_points / 2.0 / scale), num_points)};
             const uint m{2 * a_};
 
@@ -144,21 +146,33 @@ constexpr BSincHeader bsinc24_hdr{60, 23};
  * namespace while also being used as non-type template parameters.
  */
 #if !defined(__clang__) && defined(__GNUC__) && __GNUC__ < 6
+
+/* The number of sample points is double the a value (rounded up to a multiple
+ * of 4), and scale index 0 includes the doubling for downsampling. bsinc24 is
+ * currently the highest quality filter, and will use the most sample points.
+ */
+constexpr uint BSincPointsMax{(bsinc24_hdr.a[0]*2 + 3) & ~3u};
+static_assert(BSincPointsMax <= MaxResamplerPadding, "MaxResamplerPadding is too small");
+
 template<size_t total_size>
 struct BSincFilterArray {
     alignas(16) std::array<float, total_size> mTable;
+    const BSincHeader &hdr;
 
-    BSincFilterArray(const BSincHeader &hdr)
+    BSincFilterArray(const BSincHeader &hdr_) : hdr{hdr_}
+    {
 #else
 template<const BSincHeader &hdr>
 struct BSincFilterArray {
-    alignas(16) std::array<float, hdr.total_size> mTable;
+    alignas(16) std::array<float, hdr.total_size> mTable{};
 
     BSincFilterArray()
-#endif
     {
-        using filter_type = double[][BSincPhaseCount+1][BSincPointsMax];
-        auto filter = std::make_unique<filter_type>(BSincScaleCount);
+        constexpr uint BSincPointsMax{(hdr.a[0]*2 + 3) & ~3u};
+        static_assert(BSincPointsMax <= MaxResamplerPadding, "MaxResamplerPadding is too small");
+#endif
+        using filter_type = double[BSincPhaseCount+1][BSincPointsMax];
+        auto filter = std::make_unique<filter_type[]>(BSincScaleCount);
 
         /* Calculate the Kaiser-windowed Sinc filter coefficients for each
          * scale and phase index.
@@ -167,38 +181,38 @@ struct BSincFilterArray {
         {
             const uint m{hdr.a[si] * 2};
             const size_t o{(BSincPointsMax-m) / 2};
-            const double scale{hdr.scaleBase + (hdr.scaleRange * si / (BSincScaleCount-1))};
-            const double cutoff{scale - (hdr.scaleBase * std::max(0.5, scale) * 2.0)};
+            const double scale{hdr.scaleBase + (hdr.scaleRange * (si+1) / BSincScaleCount)};
+            const double cutoff{scale - (hdr.scaleBase * std::max(1.0, scale*2.0))};
             const auto a = static_cast<double>(hdr.a[si]);
-            const double l{a - 1.0};
+            const double l{a - 1.0/BSincPhaseCount};
 
             /* Do one extra phase index so that the phase delta has a proper
              * target for its last index.
              */
             for(uint pi{0};pi <= BSincPhaseCount;++pi)
             {
-                const double phase{l + (pi/double{BSincPhaseCount})};
+                const double phase{std::floor(l) + (pi/double{BSincPhaseCount})};
 
                 for(uint i{0};i < m;++i)
                 {
                     const double x{i - phase};
-                    filter[si][pi][o+i] = Kaiser(hdr.beta, x/a, hdr.besseli_0_beta) * cutoff *
+                    filter[si][pi][o+i] = Kaiser(hdr.beta, x/l, hdr.besseli_0_beta) * cutoff *
                         Sinc(cutoff*x);
                 }
             }
         }
 
         size_t idx{0};
-        for(size_t si{0};si < BSincScaleCount-1;++si)
+        for(size_t si{0};si < BSincScaleCount;++si)
         {
             const size_t m{((hdr.a[si]*2) + 3) & ~3u};
             const size_t o{(BSincPointsMax-m) / 2};
 
+            /* Write out each phase index's filter and phase delta for this
+             * quality scale.
+             */
             for(size_t pi{0};pi < BSincPhaseCount;++pi)
             {
-                /* Write out the filter. Also calculate and write out the phase
-                 * and scale deltas.
-                 */
                 for(size_t i{0};i < m;++i)
                     mTable[idx++] = static_cast<float>(filter[si][pi][o+i]);
 
@@ -210,11 +224,22 @@ struct BSincFilterArray {
                     const double phDelta{filter[si][pi+1][o+i] - filter[si][pi][o+i]};
                     mTable[idx++] = static_cast<float>(phDelta);
                 }
-
+            }
+            /* Calculate and write out each phase index's filter quality scale
+             * deltas. The last scale index doesn't have any scale or scale-
+             * phase deltas.
+             */
+            if(si == BSincScaleCount-1)
+            {
+                for(size_t i{0};i < BSincPhaseCount*m*2;++i)
+                    mTable[idx++] = 0.0f;
+            }
+            else for(size_t pi{0};pi < BSincPhaseCount;++pi)
+            {
                 /* Linear interpolation between scales is also simplified.
                  *
-                 * Given a difference in points between scales, the destination
-                 * points will be 0, thus: x = a + f (-a)
+                 * Given a difference in the number of points between scales,
+                 * the destination points will be 0, thus: x = a + f (-a)
                  */
                 for(size_t i{0};i < m;++i)
                 {
@@ -233,31 +258,11 @@ struct BSincFilterArray {
                 }
             }
         }
-        {
-            /* The last scale index doesn't have any scale or scale-phase
-             * deltas.
-             */
-            constexpr size_t si{BSincScaleCount-1};
-            const size_t m{((hdr.a[si]*2) + 3) & ~3u};
-            const size_t o{(BSincPointsMax-m) / 2};
-
-            for(size_t pi{0};pi < BSincPhaseCount;++pi)
-            {
-                for(size_t i{0};i < m;++i)
-                    mTable[idx++] = static_cast<float>(filter[si][pi][o+i]);
-                for(size_t i{0};i < m;++i)
-                {
-                    const double phDelta{filter[si][pi+1][o+i] - filter[si][pi][o+i]};
-                    mTable[idx++] = static_cast<float>(phDelta);
-                }
-                for(size_t i{0};i < m;++i)
-                    mTable[idx++] = 0.0f;
-                for(size_t i{0};i < m;++i)
-                    mTable[idx++] = 0.0f;
-            }
-        }
         assert(idx == hdr.total_size);
     }
+
+    constexpr const BSincHeader &getHeader() const noexcept { return hdr; }
+    constexpr const float *getTable() const noexcept { return &mTable.front(); }
 };
 
 #if !defined(__clang__) && defined(__GNUC__) && __GNUC__ < 6
@@ -268,9 +273,11 @@ const BSincFilterArray<bsinc12_hdr> bsinc12_filter{};
 const BSincFilterArray<bsinc24_hdr> bsinc24_filter{};
 #endif
 
-constexpr BSincTable GenerateBSincTable(const BSincHeader &hdr, const float *tab)
+template<typename T>
+constexpr BSincTable GenerateBSincTable(const T &filter)
 {
     BSincTable ret{};
+    const BSincHeader &hdr = filter.getHeader();
     ret.scaleBase = static_cast<float>(hdr.scaleBase);
     ret.scaleRange = static_cast<float>(1.0 / hdr.scaleRange);
     for(size_t i{0};i < BSincScaleCount;++i)
@@ -278,11 +285,11 @@ constexpr BSincTable GenerateBSincTable(const BSincHeader &hdr, const float *tab
     ret.filterOffset[0] = 0;
     for(size_t i{1};i < BSincScaleCount;++i)
         ret.filterOffset[i] = ret.filterOffset[i-1] + ret.m[i-1]*4*BSincPhaseCount;
-    ret.Tab = tab;
+    ret.Tab = filter.getTable();
     return ret;
 }
 
 } // namespace
 
-const BSincTable bsinc12{GenerateBSincTable(bsinc12_hdr, &bsinc12_filter.mTable.front())};
-const BSincTable bsinc24{GenerateBSincTable(bsinc24_hdr, &bsinc24_filter.mTable.front())};
+const BSincTable bsinc12{GenerateBSincTable(bsinc12_filter)};
+const BSincTable bsinc24{GenerateBSincTable(bsinc24_filter)};

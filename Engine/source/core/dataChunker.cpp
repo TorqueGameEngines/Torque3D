@@ -84,18 +84,14 @@ DataChunker::DataBlock::~DataBlock()
 
 void DataChunker::freeBlocks(bool keepOne)
 {
-   while(mCurBlock && mCurBlock->next)
+   while (mCurBlock && mCurBlock->next)
    {
-      DataBlock *temp = mCurBlock->next;
+      DataBlock* temp = mCurBlock->next;
       dFree(mCurBlock);
       mCurBlock = temp;
    }
-   if (!keepOne)
-   {
-      if (mCurBlock) dFree(mCurBlock);
-      mCurBlock = NULL;
-   }
-   else if (mCurBlock)
+
+   if (mCurBlock)
    {
       mCurBlock->curIndex = 0;
       mCurBlock->next = NULL;

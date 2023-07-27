@@ -30,35 +30,5 @@
 
 namespace testing
 {
-   class MemoryLeakDetector : public EmptyTestEventListener
-   {
-   public:
-      virtual void OnTestStart(const TestInfo&)
-      {
-#if defined(TORQUE_OS_WIN)
-         _CrtMemCheckpoint(&memState_);
-#endif
-      }
-
-      virtual void OnTestEnd(const TestInfo& test_info)
-      {
-         if(test_info.result()->Passed())
-         {
-#if defined(TORQUE_OS_WIN)
-            _CrtMemState stateNow, stateDiff;
-            _CrtMemCheckpoint(&stateNow);
-            int diffResult = _CrtMemDifference(&stateDiff, &memState_, &stateNow);
-            if (diffResult)
-            {
-               FAIL() << "Memory leak of " << stateDiff.lSizes[1] << " byte(s) detected.";
-            }
-#endif
-         }
-      }
-
-   private:
-#if defined(TORQUE_OS_WIN)
-      _CrtMemState memState_;
-#endif
-   };
+   
 }

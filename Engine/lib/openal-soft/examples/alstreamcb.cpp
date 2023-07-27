@@ -45,18 +45,6 @@
 #include "common/alhelpers.h"
 
 
-#ifndef AL_SOFT_callback_buffer
-#define AL_SOFT_callback_buffer
-typedef unsigned int ALbitfieldSOFT;
-#define AL_BUFFER_CALLBACK_FUNCTION_SOFT         0x19A0
-#define AL_BUFFER_CALLBACK_USER_PARAM_SOFT       0x19A1
-typedef ALsizei (AL_APIENTRY*LPALBUFFERCALLBACKTYPESOFT)(ALvoid *userptr, ALvoid *sampledata, ALsizei numsamples);
-typedef void (AL_APIENTRY*LPALBUFFERCALLBACKSOFT)(ALuint buffer, ALenum format, ALsizei freq, LPALBUFFERCALLBACKTYPESOFT callback, ALvoid *userptr, ALbitfieldSOFT flags);
-typedef void (AL_APIENTRY*LPALGETBUFFERPTRSOFT)(ALuint buffer, ALenum param, ALvoid **value);
-typedef void (AL_APIENTRY*LPALGETBUFFER3PTRSOFT)(ALuint buffer, ALenum param, ALvoid **value1, ALvoid **value2, ALvoid **value3);
-typedef void (AL_APIENTRY*LPALGETBUFFERPTRVSOFT)(ALuint buffer, ALenum param, ALvoid **values);
-#endif
-
 namespace {
 
 using std::chrono::seconds;
@@ -130,18 +118,18 @@ struct StreamPlayer {
 
         mFormat = AL_NONE;
         if(mSfInfo.channels == 1)
-            mFormat = AL_FORMAT_MONO16;
+            mFormat = AL_FORMAT_MONO_FLOAT32;
         else if(mSfInfo.channels == 2)
-            mFormat = AL_FORMAT_STEREO16;
+            mFormat = AL_FORMAT_STEREO_FLOAT32;
         else if(mSfInfo.channels == 3)
         {
             if(sf_command(mSndfile, SFC_WAVEX_GET_AMBISONIC, NULL, 0) == SF_AMBISONIC_B_FORMAT)
-                mFormat = AL_FORMAT_BFORMAT2D_16;
+                mFormat = AL_FORMAT_BFORMAT2D_FLOAT32;
         }
         else if(mSfInfo.channels == 4)
         {
             if(sf_command(mSndfile, SFC_WAVEX_GET_AMBISONIC, NULL, 0) == SF_AMBISONIC_B_FORMAT)
-                mFormat = AL_FORMAT_BFORMAT3D_16;
+                mFormat = AL_FORMAT_BFORMAT3D_FLOAT32;
         }
         if(!mFormat)
         {
@@ -153,7 +141,7 @@ struct StreamPlayer {
         }
 
         /* Set a 1s ring buffer size. */
-        mBufferDataSize = static_cast<ALuint>(mSfInfo.samplerate*mSfInfo.channels) * sizeof(short);
+        mBufferDataSize = static_cast<ALuint>(mSfInfo.samplerate*mSfInfo.channels) * sizeof(float);
         mBufferData.reset(new ALbyte[mBufferDataSize]);
         mReadPos.store(0, std::memory_order_relaxed);
         mWritePos.store(0, std::memory_order_relaxed);
@@ -219,7 +207,7 @@ struct StreamPlayer {
 
     bool prepare()
     {
-        alBufferCallbackSOFT(mBuffer, mFormat, mSfInfo.samplerate, bufferCallbackC, this, 0);
+        alBufferCallbackSOFT(mBuffer, mFormat, mSfInfo.samplerate, bufferCallbackC, this);
         alSourcei(mSource, AL_BUFFER, static_cast<ALint>(mBuffer));
         if(ALenum err{alGetError()})
         {
@@ -236,7 +224,7 @@ struct StreamPlayer {
         alGetSourcei(mSource, AL_SAMPLE_OFFSET, &pos);
         alGetSourcei(mSource, AL_SOURCE_STATE, &state);
 
-        const size_t frame_size{static_cast<ALuint>(mSfInfo.channels) * sizeof(short)};
+        const size_t frame_size{static_cast<ALuint>(mSfInfo.channels) * sizeof(float)};
         size_t woffset{mWritePos.load(std::memory_order_acquire)};
         if(state != AL_INITIAL)
         {
@@ -271,8 +259,8 @@ struct StreamPlayer {
                 const size_t writable{roffset-woffset-1};
                 if(writable < frame_size) break;
 
-                sf_count_t num_frames{sf_readf_short(mSndfile,
-                    reinterpret_cast<short*>(&mBufferData[woffset]),
+                sf_count_t num_frames{sf_readf_float(mSndfile,
+                    reinterpret_cast<float*>(&mBufferData[woffset]),
                     static_cast<sf_count_t>(writable/frame_size))};
                 if(num_frames < 1) break;
 
@@ -290,8 +278,8 @@ struct StreamPlayer {
                     (mBufferDataSize-woffset)};
                 if(writable < frame_size) break;
 
-                sf_count_t num_frames{sf_readf_short(mSndfile,
-                    reinterpret_cast<short*>(&mBufferData[woffset]),
+                sf_count_t num_frames{sf_readf_float(mSndfile,
+                    reinterpret_cast<float*>(&mBufferData[woffset]),
                     static_cast<sf_count_t>(writable/frame_size))};
                 if(num_frames < 1) break;
 
@@ -353,7 +341,7 @@ int main(int argc, char **argv)
     argv++; argc--;
     AudioManager almgr{&argv, &argc};
 
-    if(!alIsExtensionPresent("AL_SOFTX_callback_buffer"))
+    if(!alIsExtensionPresent("AL_SOFT_callback_buffer"))
     {
         fprintf(stderr, "AL_SOFT_callback_buffer extension not available\n");
         return 1;

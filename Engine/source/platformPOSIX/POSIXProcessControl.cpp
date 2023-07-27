@@ -87,7 +87,7 @@ void Cleanup(bool minimal)
    StdConsole::destroy();
 
 #ifndef TORQUE_DEDICATED
-   SDL_Quit();
+   //SDL_Quit();
 #endif
 }
 

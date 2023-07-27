@@ -24,26 +24,34 @@
 
 #include <atomic>
 #include <cmath>
-#include <cstdlib>
-#include <cstring>
 #include <mutex>
+#include <stdexcept>
+#include <string>
 
 #include "AL/al.h"
 #include "AL/alc.h"
 #include "AL/alext.h"
 
-#include "alcontext.h"
-#include "almalloc.h"
+#include "alc/alu.h"
+#include "alc/context.h"
+#include "alc/inprogext.h"
 #include "alnumeric.h"
-#include "alspan.h"
-#include "alu.h"
+#include "aloptional.h"
 #include "atomic.h"
+#include "core/context.h"
 #include "core/except.h"
-#include "event.h"
-#include "inprogext.h"
+#include "core/mixer/defs.h"
+#include "core/voice.h"
+#include "intrusive_ptr.h"
 #include "opthelpers.h"
 #include "strutils.h"
-#include "voice.h"
+
+#ifdef ALSOFT_EAX
+#include "alc/device.h"
+
+#include "eax_globals.h"
+#include "eax_x_ram.h"
+#endif // ALSOFT_EAX
 
 
 namespace {
@@ -129,7 +137,7 @@ ALenum ALenumFromDistanceModel(DistanceModel model)
 /* WARNING: Non-standard export! Not part of any extension, or exposed in the
  * alcFunctions list.
  */
-extern "C" AL_API const ALchar* AL_APIENTRY alsoft_get_version(void)
+AL_API const ALchar* AL_APIENTRY alsoft_get_version(void)
 START_API_FUNC
 {
     static const auto spoof = al::getenv("ALSOFT_SPOOF_VERSION");
@@ -139,10 +147,10 @@ START_API_FUNC
 END_API_FUNC
 
 #define DO_UPDATEPROPS() do {                                                 \
-    if(!context->mDeferUpdates.load(std::memory_order_acquire))               \
+    if(!context->mDeferUpdates)                                               \
         UpdateContextProps(context.get());                                    \
     else                                                                      \
-        context->mPropsClean.clear(std::memory_order_release);                \
+        context->mPropsDirty = true;                                          \
 } while(0)
 
 
@@ -152,12 +160,18 @@ START_API_FUNC
     ContextRef context{GetContextRef()};
     if UNLIKELY(!context) return;
 
-    std::lock_guard<std::mutex> _{context->mPropLock};
     switch(capability)
     {
     case AL_SOURCE_DISTANCE_MODEL:
-        context->mSourceDistanceModel = true;
-        DO_UPDATEPROPS();
+        {
+            std::lock_guard<std::mutex> _{context->mPropLock};
+            context->mSourceDistanceModel = true;
+            DO_UPDATEPROPS();
+        }
+        break;
+
+    case AL_STOP_SOURCES_ON_DISCONNECT_SOFT:
+        context->setError(AL_INVALID_OPERATION, "Re-enabling AL_STOP_SOURCES_ON_DISCONNECT_SOFT not yet supported");
         break;
 
     default:
@@ -172,12 +186,18 @@ START_API_FUNC
     ContextRef context{GetContextRef()};
     if UNLIKELY(!context) return;
 
-    std::lock_guard<std::mutex> _{context->mPropLock};
     switch(capability)
     {
     case AL_SOURCE_DISTANCE_MODEL:
-        context->mSourceDistanceModel = false;
-        DO_UPDATEPROPS();
+        {
+            std::lock_guard<std::mutex> _{context->mPropLock};
+            context->mSourceDistanceModel = false;
+            DO_UPDATEPROPS();
+        }
+        break;
+
+    case AL_STOP_SOURCES_ON_DISCONNECT_SOFT:
+        context->mStopVoicesOnDisconnect = false;
         break;
 
     default:
@@ -198,6 +218,10 @@ START_API_FUNC
     {
     case AL_SOURCE_DISTANCE_MODEL:
         value = context->mSourceDistanceModel ? AL_TRUE : AL_FALSE;
+        break;
+
+    case AL_STOP_SOURCES_ON_DISCONNECT_SOFT:
+        value = context->mStopVoicesOnDisconnect ? AL_TRUE : AL_FALSE;
         break;
 
     default:
@@ -239,7 +263,7 @@ START_API_FUNC
         break;
 
     case AL_DEFERRED_UPDATES_SOFT:
-        if(context->mDeferUpdates.load(std::memory_order_acquire))
+        if(context->mDeferUpdates)
             value = AL_TRUE;
         break;
 
@@ -292,7 +316,7 @@ START_API_FUNC
         break;
 
     case AL_DEFERRED_UPDATES_SOFT:
-        if(context->mDeferUpdates.load(std::memory_order_acquire))
+        if(context->mDeferUpdates)
             value = static_cast<ALdouble>(AL_TRUE);
         break;
 
@@ -343,7 +367,7 @@ START_API_FUNC
         break;
 
     case AL_DEFERRED_UPDATES_SOFT:
-        if(context->mDeferUpdates.load(std::memory_order_acquire))
+        if(context->mDeferUpdates)
             value = static_cast<ALfloat>(AL_TRUE);
         break;
 
@@ -394,7 +418,7 @@ START_API_FUNC
         break;
 
     case AL_DEFERRED_UPDATES_SOFT:
-        if(context->mDeferUpdates.load(std::memory_order_acquire))
+        if(context->mDeferUpdates)
             value = AL_TRUE;
         break;
 
@@ -410,6 +434,41 @@ START_API_FUNC
         value = static_cast<int>(ResamplerDefault);
         break;
 
+#ifdef ALSOFT_EAX
+
+#define EAX_ERROR "[alGetInteger] EAX not enabled."
+
+    case AL_EAX_RAM_SIZE:
+        if (eax_g_is_enabled)
+        {
+            value = eax_x_ram_max_size;
+        }
+        else
+        {
+            context->setError(AL_INVALID_VALUE, EAX_ERROR);
+        }
+
+        break;
+
+    case AL_EAX_RAM_FREE:
+        if (eax_g_is_enabled)
+        {
+            auto device = context->mALDevice.get();
+            std::lock_guard<std::mutex> device_lock{device->BufferLock};
+
+            value = static_cast<ALint>(device->eax_x_ram_free_size);
+        }
+        else
+        {
+            context->setError(AL_INVALID_VALUE, EAX_ERROR);
+        }
+
+        break;
+
+#undef EAX_ERROR
+
+#endif // ALSOFT_EAX
+
     default:
         context->setError(AL_INVALID_VALUE, "Invalid integer property 0x%04x", pname);
     }
@@ -418,7 +477,7 @@ START_API_FUNC
 }
 END_API_FUNC
 
-extern "C" AL_API ALint64SOFT AL_APIENTRY alGetInteger64SOFT(ALenum pname)
+AL_API ALint64SOFT AL_APIENTRY alGetInteger64SOFT(ALenum pname)
 START_API_FUNC
 {
     ContextRef context{GetContextRef()};
@@ -445,7 +504,7 @@ START_API_FUNC
         break;
 
     case AL_DEFERRED_UPDATES_SOFT:
-        if(context->mDeferUpdates.load(std::memory_order_acquire))
+        if(context->mDeferUpdates)
             value = AL_TRUE;
         break;
 
@@ -627,7 +686,7 @@ START_API_FUNC
 }
 END_API_FUNC
 
-extern "C" AL_API void AL_APIENTRY alGetInteger64vSOFT(ALenum pname, ALint64SOFT *values)
+AL_API void AL_APIENTRY alGetInteger64vSOFT(ALenum pname, ALint64SOFT *values)
 START_API_FUNC
 {
     if(values)
@@ -819,6 +878,7 @@ START_API_FUNC
     ContextRef context{GetContextRef()};
     if UNLIKELY(!context) return;
 
+    std::lock_guard<std::mutex> _{context->mPropLock};
     context->deferUpdates();
 }
 END_API_FUNC
@@ -829,6 +889,7 @@ START_API_FUNC
     ContextRef context{GetContextRef()};
     if UNLIKELY(!context) return;
 
+    std::lock_guard<std::mutex> _{context->mPropLock};
     context->processUpdates();
 }
 END_API_FUNC
@@ -874,6 +935,14 @@ void UpdateContextProps(ALCcontext *context)
     }
 
     /* Copy in current property values. */
+    ALlistener &listener = context->mListener;
+    props->Position = listener.Position;
+    props->Velocity = listener.Velocity;
+    props->OrientAt = listener.OrientAt;
+    props->OrientUp = listener.OrientUp;
+    props->Gain = listener.Gain;
+    props->MetersPerUnit = listener.mMetersPerUnit;
+
     props->DopplerFactor = context->mDopplerFactor;
     props->DopplerVelocity = context->mDopplerVelocity;
     props->SpeedOfSound = context->mSpeedOfSound;

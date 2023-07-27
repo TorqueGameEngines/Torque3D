@@ -2,11 +2,10 @@
 [![Travis Build Status](https://api.travis-ci.org/bulletphysics/bullet3.png?branch=master)](https://travis-ci.org/bulletphysics/bullet3)
 [![Appveyor Build status](https://ci.appveyor.com/api/projects/status/6sly9uxajr6xsstq)](https://ci.appveyor.com/project/erwincoumans/bullet3)
 
-# Bullet Physics SDK
+# Bullet 2.x including pybullet, Virtual Reality support
 
-This is the official C++ source code repository of the Bullet Physics SDK: real-time collision detection and multi-physics simulation for VR, games, visual effects, robotics, machine learning etc.
-
-New in Bullet 2.85: pybullet Python bindings, improved support for robotics and VR
+This is the official repository of Bullet 2.x, moved from http://bullet.googlecode.com
+It includes the optional experimental Bullet 3 GPU pipeline.
 
 The Bullet 2 API will stay default and up-to-date while slowly moving to a new API.
 The steps towards a new API is in a nutshell:
@@ -29,9 +28,9 @@ Some optional demos require OpenGL 2 or OpenGL 3, there are some non-graphical d
 
 https://docs.google.com/document/d/1u9vyzPtrVoVhYqQOGNWUgjRbfwfCdIts_NzmvgiJ144/edit
 
-## Requirements for experimental OpenCL GPGPU support
+## Requirements for Bullet 3
 
-The entire collision detection and rigid body dynamics can be executed on the GPU.
+The entire collision detection and rigid body dynamics is executed on the GPU.
 
 A high-end desktop GPU, such as an AMD Radeon 7970 or NVIDIA GTX 680 or better.
 We succesfully tested the software under Windows, Linux and Mac OSX.
@@ -49,48 +48,36 @@ All source code files are licensed under the permissive zlib license
 
 **Windows**
 
-Click on build_visual_studio_vr_pybullet_double.bat and open build3/vs2010/0MySolution.sln
-When asked, convert the projects to a newer version of Visual Studio.
-If you installed Python in the C:\ root directory, the batch file should find it automatically.
-Otherwise, edit this batch file to choose where Python include/lib directories are located.
+Click on build_visual_studio.bat and open build3/vs2010/0MySolution.sln
 
 **Windows Virtual Reality sandbox for HTC Vive and Oculus Rift**
 
+Click on build_visual_studio_vr_pybullet_double.bat and open build3/vs2010/0MySolution.sln
+Edit this batch file to choose where Python include/lib directories are located.
 Build and run the App_SharedMemoryPhysics_VR project, preferably in Release/optimized build.
 You can connect from Python pybullet to the sandbox using:
 
 ```
 import pybullet as p
-p.connect(p.SHARED_MEMORY) #or (p.TCP, "localhost", 6667) or (p.UDP, "192.168.86.10",1234)
+p.connect(p.SHARED_MEMORY)
 ```
 
 **Linux and Mac OSX gnu make**
 
-Make sure cmake is installed (sudo apt-get install cmake, brew install cmake, or https://cmake.org)
-
 In a terminal type:
 
-	./build_cmake_pybullet_double.sh
-
-This script will invoke cmake and build in the build_cmake directory. You can find pybullet in Bullet/examples/pybullet.
-The BulletExampleBrowser binary will be in Bullet/examples/ExampleBrowser.
-
-You can also build Bullet using premake. There are premake executables in the build3 folder.
-Depending on your system (Linux 32bit, 64bit or Mac OSX) use one of the following lines
-Using premake:
-```
 	cd build3
-	./premake4_linux gmake --double
-	./premake4_linux64 gmake --double
-	./premake4_osx gmake --double --enable_pybullet
-```
+
+Depending on your system (Linux 32bit, 64bit or Mac OSX) use one of the following lines
+
+	./premake4_linux gmake
+	./premake4_linux64 gmake
+	./premake4_osx gmake
+
 Then
-```
+
 	cd gmake
 	make
-```
-
-Note that on Linux, you need to use cmake to build pybullet, since the compiler has issues of mixing shared and static libraries.
 
 **Mac OSX Xcode**
 	
@@ -116,4 +103,4 @@ You can just run it though a terminal/command prompt, or by clicking it.
 You can use mouse picking to grab objects. When holding the ALT or CONTROL key, you have Maya style camera mouse controls.
 Press F1 to create a series of screenshots. Hit ESCAPE to exit the demo app.
 
-Check out the docs folder and the Bullet physics forums for further information.
+See docs folder for further information.

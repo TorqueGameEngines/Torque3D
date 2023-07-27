@@ -96,7 +96,6 @@ btManifoldResult::btManifoldResult(const btCollisionObjectWrapper* body0Wrap,con
 	m_index0(-1),
 	m_index1(-1)
 #endif //DEBUG_PART_INDEX
-	, m_closestPointDistanceThreshold(0)
 {
 }
 
@@ -111,7 +110,6 @@ void btManifoldResult::addContactPoint(const btVector3& normalOnBInWorld,const b
 		return;
 
 	bool isSwapped = m_manifoldPtr->getBody0() != m_body0Wrap->getCollisionObject();
-	bool isNewCollision = m_manifoldPtr->getNumContacts() == 0;
 
 	btVector3 pointA = pointInWorld + normalOnBInWorld * depth;
 
@@ -146,13 +144,7 @@ void btManifoldResult::addContactPoint(const btVector3& normalOnBInWorld,const b
         newPt.m_combinedContactStiffness1 = calculateCombinedContactStiffness(m_body0Wrap->getCollisionObject(),m_body1Wrap->getCollisionObject());
         newPt.m_contactPointFlags |= BT_CONTACT_FLAG_CONTACT_STIFFNESS_DAMPING;
     }
-
-	if (    (m_body0Wrap->getCollisionObject()->getCollisionFlags()& btCollisionObject::CF_HAS_FRICTION_ANCHOR) ||
-            (m_body1Wrap->getCollisionObject()->getCollisionFlags()& btCollisionObject::CF_HAS_FRICTION_ANCHOR))
-    {
-        newPt.m_contactPointFlags |= BT_CONTACT_FLAG_FRICTION_ANCHOR;
-    }
-
+	
 	btPlaneSpace1(newPt.m_normalWorldOnB,newPt.m_lateralFrictionDir1,newPt.m_lateralFrictionDir2);
 	
 
@@ -194,9 +186,5 @@ void btManifoldResult::addContactPoint(const btVector3& normalOnBInWorld,const b
 		(*gContactAddedCallback)(m_manifoldPtr->getContactPoint(insertIndex),obj0Wrap,newPt.m_partId0,newPt.m_index0,obj1Wrap,newPt.m_partId1,newPt.m_index1);
 	}
 
-	if (gContactStartedCallback && isNewCollision)
-	{
-		gContactStartedCallback(m_manifoldPtr);
-	}
 }
 

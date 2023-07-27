@@ -1,0 +1,64 @@
+name: Windows Build
+on:
+    push:
+        branches: [development]
+    pull_request:
+        branches: [development]
+concurrency:
+    group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-windows
+    cancel-in-progress: true
+jobs:
+    build-windows:
+        if: github.repository == 'TorqueGameEngines/Torque3D'
+        name: ${{matrix.config.name}}
+        runs-on: windows-latest
+        strategy:
+            fail-fast: false
+            matrix:
+              config: 
+              - {
+                  name: "Windows Latest MSVC",
+                  build_type: "Release",
+                  cc: "cl",
+                  cxx: "cl",
+                  environment_script: "C:/Program Files (x86)/Microsoft Visual Studio/2022/Enterprise/VC/Auxiliary/Build/vcvars64.bat",
+                  generator: "Visual Studio 17 2022"
+                }
+                
+        steps:
+            - uses: actions/checkout@v3
+            - uses: ilammy/msvc-dev-cmd@v1
+            - name: Print env
+              run: |
+                echo github.event.action: ${{ github.event.action }}
+                echo github.event_name: ${{ github.event_name }}
+
+            - name: Setup MSVC problem matcher
+              uses: ammaraskar/msvc-problem-matcher@master
+
+            - name: Install Dependencies For ${{matrix.config.name}}
+              run: |
+                cmake --version
+                cmd "${{matrix.config.environment_script}}"
+
+            - name: Configure, Build & Install
+              uses: threeal/cmake-action@v1.2.0
+              with:
+                source-dir: ${{github.workspace}}
+                build-dir: ${{github.workspace}}/build
+                c-compiler: ${{matrix.config.cc}}
+                cxx-compiler: ${{matrix.config.cxx}}
+                generator: ${{matrix.config.generator}}
+                options: CMAKE_BUILD_TYPE=${{matrix.config.build_type}} TORQUE_APP_NAME=Torque3D TORQUE_TESTING=ON
+                run-build: true
+                build-args: --config ${{matrix.config.build_type}} --target install
+
+            - name: Unit Tests
+              run: |
+                cd "${{github.workspace}}/My Projects/Torque3D/game"
+                ./Torque3D.exe runTests.tscript
+
+            - name: Upload Artifact
+              uses: ./.github/actions/upload-artifact
+              with:
+                name: torque3dWindowsMSVCUnitTest

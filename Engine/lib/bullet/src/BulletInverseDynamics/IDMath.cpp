@@ -33,22 +33,10 @@ void setZero(mat33 &m) {
 	m(2, 2) = 0;
 }
 
-void skew(vec3& v, mat33* result) {
-	(*result)(0, 0) = 0.0;
-	(*result)(0, 1) = -v(2);
-	(*result)(0, 2) = v(1);
-	(*result)(1, 0) = v(2);
-	(*result)(1, 1) = 0.0;
-	(*result)(1, 2) = -v(0);
-	(*result)(2, 0) = -v(1);
-	(*result)(2, 1) = v(0);
-	(*result)(2, 2) = 0.0;
-}
-
 idScalar maxAbs(const vecx &v) {
 	idScalar result = 0.0;
 	for (int i = 0; i < v.size(); i++) {
-		const idScalar tmp = BT_ID_FABS(v(i));
+		const idScalar tmp = std::fabs(v(i));
 		if (tmp > result) {
 			result = tmp;
 		}
@@ -59,7 +47,7 @@ idScalar maxAbs(const vecx &v) {
 idScalar maxAbs(const vec3 &v) {
 	idScalar result = 0.0;
 	for (int i = 0; i < 3; i++) {
-		const idScalar tmp = BT_ID_FABS(v(i));
+		const idScalar tmp = std::fabs(v(i));
 		if (tmp > result) {
 			result = tmp;
 		}
@@ -81,7 +69,7 @@ idScalar maxAbsMat3x(const mat3x &m) {
 
 void mul(const mat33 &a, const mat3x &b, mat3x *result) {
     if (b.cols() != result->cols()) {
-        error_message("size missmatch. b.cols()= %d, result->cols()= %d\n",
+        error_message("size missmatch. a.cols()= %d, b.cols()= %d\n",
                       static_cast<int>(b.cols()), static_cast<int>(result->cols()));
         abort();
     }
@@ -123,8 +111,8 @@ void sub(const mat3x &a, const mat3x &b, mat3x *result) {
 
 mat33 transformX(const idScalar &alpha) {
 	mat33 T;
-	const idScalar cos_alpha = BT_ID_COS(alpha);
-	const idScalar sin_alpha = BT_ID_SIN(alpha);
+	const idScalar cos_alpha = std::cos(alpha);
+	const idScalar sin_alpha = std::sin(alpha);
 	// [1  0 0]
 	// [0  c s]
 	// [0 -s c]
@@ -145,8 +133,8 @@ mat33 transformX(const idScalar &alpha) {
 
 mat33 transformY(const idScalar &beta) {
 	mat33 T;
-	const idScalar cos_beta = BT_ID_COS(beta);
-	const idScalar sin_beta = BT_ID_SIN(beta);
+	const idScalar cos_beta = std::cos(beta);
+	const idScalar sin_beta = std::sin(beta);
 	// [c 0 -s]
 	// [0 1  0]
 	// [s 0  c]
@@ -167,8 +155,8 @@ mat33 transformY(const idScalar &beta) {
 
 mat33 transformZ(const idScalar &gamma) {
 	mat33 T;
-	const idScalar cos_gamma = BT_ID_COS(gamma);
-	const idScalar sin_gamma = BT_ID_SIN(gamma);
+	const idScalar cos_gamma = std::cos(gamma);
+	const idScalar sin_gamma = std::sin(gamma);
 	// [ c s 0]
 	// [-s c 0]
 	// [ 0 0 1]
@@ -202,10 +190,10 @@ mat33 tildeOperator(const vec3 &v) {
 }
 
 void getVecMatFromDH(idScalar theta, idScalar d, idScalar a, idScalar alpha, vec3 *r, mat33 *T) {
-	const idScalar sa = BT_ID_SIN(alpha);
-	const idScalar ca = BT_ID_COS(alpha);
-	const idScalar st = BT_ID_SIN(theta);
-	const idScalar ct = BT_ID_COS(theta);
+	const idScalar sa = std::sin(alpha);
+	const idScalar ca = std::cos(alpha);
+	const idScalar st = std::sin(theta);
+	const idScalar ct = std::cos(theta);
 
 	(*r)(0) = a;
 	(*r)(1) = -sa * d;
@@ -225,8 +213,8 @@ void getVecMatFromDH(idScalar theta, idScalar d, idScalar a, idScalar alpha, vec
 }
 
 void bodyTParentFromAxisAngle(const vec3 &axis, const idScalar &angle, mat33 *T) {
-	const idScalar c = BT_ID_COS(angle);
-	const idScalar s = -BT_ID_SIN(angle);
+	const idScalar c = cos(angle);
+	const idScalar s = -sin(angle);
 	const idScalar one_m_c = 1.0 - c;
 
 	const idScalar &x = axis(0);
@@ -359,19 +347,19 @@ bool isValidInertiaMatrix(const mat33 &I, const int index, bool has_fixed_joint)
 		}
 	}
 	// check symmetry
-	if (BT_ID_FABS(I(1, 0) - I(0, 1)) > kIsZero) {
+	if (std::fabs(I(1, 0) - I(0, 1)) > kIsZero) {
 		error_message("invalid inertia tensor for body %d I(1,0)!=I(0,1). I(1,0)-I(0,1)= "
 					  "%e\n",
 					  index, I(1, 0) - I(0, 1));
 		return false;
 	}
-	if (BT_ID_FABS(I(2, 0) - I(0, 2)) > kIsZero) {
+	if (std::fabs(I(2, 0) - I(0, 2)) > kIsZero) {
 		error_message("invalid inertia tensor for body %d I(2,0)!=I(0,2). I(2,0)-I(0,2)= "
 					  "%e\n",
 					  index, I(2, 0) - I(0, 2));
 		return false;
 	}
-	if (BT_ID_FABS(I(1, 2) - I(2, 1)) > kIsZero) {
+	if (std::fabs(I(1, 2) - I(2, 1)) > kIsZero) {
 		error_message("invalid inertia tensor body %d I(1,2)!=I(2,1). I(1,2)-I(2,1)= %e\n", index,
 					  I(1, 2) - I(2, 1));
 		return false;
@@ -387,7 +375,7 @@ bool isValidTransformMatrix(const mat33 &m) {
 	// check for unit length column vectors
 	for (int i = 0; i < 3; i++) {
 		const idScalar length_minus_1 =
-			BT_ID_FABS(m(0, i) * m(0, i) + m(1, i) * m(1, i) + m(2, i) * m(2, i) - 1.0);
+			std::fabs(m(0, i) * m(0, i) + m(1, i) * m(1, i) + m(2, i) * m(2, i) - 1.0);
 		if (length_minus_1 > kAxisLengthEpsilon) {
 			error_message("Not a valid rotation matrix (column %d not unit length)\n"
 						  "column = [%.18e %.18e %.18e]\n"
@@ -398,17 +386,17 @@ bool isValidTransformMatrix(const mat33 &m) {
 		}
 	}
 	// check for orthogonal column vectors
-	if (BT_ID_FABS(m(0, 0) * m(0, 1) + m(1, 0) * m(1, 1) + m(2, 0) * m(2, 1)) > kAxisLengthEpsilon) {
+	if (std::fabs(m(0, 0) * m(0, 1) + m(1, 0) * m(1, 1) + m(2, 0) * m(2, 1)) > kAxisLengthEpsilon) {
 		error_message("Not a valid rotation matrix (columns 0 and 1 not orthogonal)\n");
 		print_mat(m);
 		return false;
 	}
-	if (BT_ID_FABS(m(0, 0) * m(0, 2) + m(1, 0) * m(1, 2) + m(2, 0) * m(2, 2)) > kAxisLengthEpsilon) {
+	if (std::fabs(m(0, 0) * m(0, 2) + m(1, 0) * m(1, 2) + m(2, 0) * m(2, 2)) > kAxisLengthEpsilon) {
 		error_message("Not a valid rotation matrix (columns 0 and 2 not orthogonal)\n");
 		print_mat(m);
 		return false;
 	}
-	if (BT_ID_FABS(m(0, 1) * m(0, 2) + m(1, 1) * m(1, 2) + m(2, 1) * m(2, 2)) > kAxisLengthEpsilon) {
+	if (std::fabs(m(0, 1) * m(0, 2) + m(1, 1) * m(1, 2) + m(2, 1) * m(2, 2)) > kAxisLengthEpsilon) {
 		error_message("Not a valid rotation matrix (columns 0 and 2 not orthogonal)\n");
 		print_mat(m);
 		return false;
@@ -423,15 +411,15 @@ bool isValidTransformMatrix(const mat33 &m) {
 }
 
 bool isUnitVector(const vec3 &vector) {
-	return BT_ID_FABS(vector(0) * vector(0) + vector(1) * vector(1) + vector(2) * vector(2) - 1.0) <
+	return std::fabs(vector(0) * vector(0) + vector(1) * vector(1) + vector(2) * vector(2) - 1.0) <
 		   kIsZero;
 }
 
 vec3 rpyFromMatrix(const mat33 &rot) {
 	vec3 rpy;
-	rpy(2) = BT_ID_ATAN2(-rot(1, 0), rot(0, 0));
-	rpy(1) = BT_ID_ATAN2(rot(2, 0), BT_ID_COS(rpy(2)) * rot(0, 0) - BT_ID_SIN(rpy(0)) * rot(1, 0));
-	rpy(0) = BT_ID_ATAN2(-rot(2, 0), rot(2, 2));
+	rpy(2) = std::atan2(-rot(1, 0), rot(0, 0));
+	rpy(1) = std::atan2(rot(2, 0), std::cos(rpy(2)) * rot(0, 0) - std::sin(rpy(0)) * rot(1, 0));
+	rpy(0) = std::atan2(-rot(2, 0), rot(2, 2));
 	return rpy;
 }
 }

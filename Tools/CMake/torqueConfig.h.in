@@ -41,9 +41,6 @@
 /// Human readable application version string.
 #define TORQUE_APP_VERSION_STRING  "@TORQUE_APP_VERSION_STRING@"
 
-/// Define me if you want to enable Arcane FX support.
-#cmakedefine TORQUE_AFX_ENABLED
-
 /// Define me if you want path case insensitivity support on POSIX systems. Does nothing on Windows.
 #cmakedefine TORQUE_POSIX_PATH_CASE_INSENSITIVE
 
@@ -92,7 +89,6 @@
 
 // Define me if this build is a tools build
 #cmakedefine TORQUE_PLAYER
-#cmakedefine TORQUE_TOOLS
 
 /// Define me if you want to enable the profiler.
 ///    See also the TORQUE_SHIPPING block below

@@ -97,11 +97,11 @@ static S32 buildFileList(const char* pattern, bool recurse, bool multiMatch)
    Torque::FS::FileSystemRef fs = Torque::FS::GetFileSystem(givenPath);
    //Torque::Path path = fs->mapTo(givenPath);
    Torque::Path path = givenPath;
-   
+
    // Make sure that we have a root so the correct file system can be determined when using zips
    if(givenPath.isRelative())
       path = Torque::Path::Join(Torque::FS::GetCwd(), '/', givenPath);
-   
+
    path.setFileName(String::EmptyString);
    path.setExtension(String::EmptyString);
    if(!Torque::FS::IsDirectory(path))
@@ -361,11 +361,11 @@ DefineEngineFunction(getFileCountMultiExpr, S32, ( const char* pattern, bool rec
 
 DefineEngineFunction(getFileCRC, S32, ( const char* fileName ),,
    "@brief Provides the CRC checksum of the given file.\n\n"
-   
+
    "@param fileName The path to the file.\n"
    "@return The calculated CRC checksum of the file, or -1 if the file "
    "could not be found.\n"
-   
+
    "@ingroup FileSystem")
 {
    Torque::FS::FileNodeRef fileRef = Torque::FS::GetFileNode( fileName );
@@ -381,10 +381,10 @@ DefineEngineFunction(getFileCRC, S32, ( const char* fileName ),,
 
 DefineEngineFunction(isFile, bool, ( const char* fileName ),,
    "@brief Determines if the specified file exists or not\n\n"
-   
+
    "@param fileName The path to the file.\n"
    "@return Returns true if the file was found.\n"
-   
+
    "@ingroup FileSystem")
 {
    String cleanfilename(Torque::Path::CleanSeparators(fileName));

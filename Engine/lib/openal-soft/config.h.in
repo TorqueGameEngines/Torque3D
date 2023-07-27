@@ -1,6 +1,5 @@
-/* API declaration export attribute */
-#define AL_API  ${EXPORT_DECL}
-#define ALC_API ${EXPORT_DECL}
+/* Define if deprecated EAX extensions are enabled */
+#cmakedefine ALSOFT_EAX
 
 /* Define if HRTF data is embedded in the library */
 #cmakedefine ALSOFT_EMBED_HRTF_DATA
@@ -17,6 +16,9 @@
 /* Define if we have the getopt function */
 #cmakedefine HAVE_GETOPT
 
+/* Define if we have DBus/RTKit */
+#cmakedefine HAVE_RTKIT
+
 /* Define if we have SSE CPU extensions */
 #cmakedefine HAVE_SSE
 #cmakedefine HAVE_SSE2
@@ -31,6 +33,9 @@
 
 /* Define if we have the OSS backend */
 #cmakedefine HAVE_OSS
+
+/* Define if we have the PipeWire backend */
+#cmakedefine HAVE_PIPEWIRE
 
 /* Define if we have the Solaris backend */
 #cmakedefine HAVE_SOLARIS
@@ -106,12 +111,6 @@
 
 /* Define if we have pthread_setname_np() */
 #cmakedefine HAVE_PTHREAD_SETNAME_NP
-
-/* Define if pthread_setname_np() only accepts one parameter */
-#cmakedefine PTHREAD_SETNAME_NP_ONE_PARAM
-
-/* Define if pthread_setname_np() accepts three parameters */
-#cmakedefine PTHREAD_SETNAME_NP_THREE_PARAMS
 
 /* Define if we have pthread_set_name_np() */
 #cmakedefine HAVE_PTHREAD_SET_NAME_NP

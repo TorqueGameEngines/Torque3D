@@ -469,10 +469,6 @@ class	btIDebugDraw
 		drawLine(transform*pt2,transform*pt3,color);
 	}
 
-	virtual void clearLines()
-	{
-	}
-
 	virtual void flushLines()
 	{
 	}

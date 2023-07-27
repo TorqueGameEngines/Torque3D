@@ -1,0 +1,87 @@
+name: Linux Build
+on:
+    push:
+        branches: [development]
+    pull_request:
+        branches: [development]
+env:
+    build_type: "Release"
+    cc: "gcc"
+    cxx: "g++"
+
+concurrency:
+    group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-linux
+    cancel-in-progress: true
+jobs:
+    build-linux:
+        if: github.repository == 'TorqueGameEngines/Torque3D'
+        name: ${{matrix.config.name}}
+        runs-on: ubuntu-latest
+        strategy:
+            fail-fast: false
+            matrix:
+              config: 
+              - {
+                  name: "Ubuntu Latest GCC",
+                  build_type: "Release",
+                  cc: "gcc",
+                  cxx: "g++",
+                  generator: "Ninja"
+                }
+
+        steps:
+            - uses: actions/checkout@v3
+            - name: Print env
+              run: |
+                echo github.event.action: ${{ github.event.action }}
+                echo github.event_name: ${{ github.event_name }}
+
+            - name: Setup GCC problem matcher
+              uses: ammaraskar/gcc-problem-matcher@master
+
+            - name: Install Linux Dependencies
+              run: |
+                sudo apt-get install ninja-build
+                ninja --version
+                cmake --version
+                gcc --version
+                sudo apt-get update && \
+                sudo apt-get install -y \
+                    build-essential \
+                    nasm \
+                    libogg-dev \
+                    libxft-dev \
+                    libx11-dev \
+                    libxxf86vm-dev \
+                    libopenal-dev \
+                    libfreetype6-dev \
+                    libxcursor-dev \
+                    libxinerama-dev \
+                    libxi-dev \
+                    libxrandr-dev \
+                    libxss-dev \
+                    libglu1-mesa-dev \
+                    libgtk-3-dev
+                
+
+            - name: Configure, Build & Install
+              uses: threeal/cmake-action@v1.2.0
+              with:
+                source-dir: ${{github.workspace}}
+                build-dir: ${{github.workspace}}/build
+                c-compiler: ${{matrix.config.cc}}
+                cxx-compiler: ${{matrix.config.cxx}}
+                generator: ${{matrix.config.generator}}
+                options: CMAKE_BUILD_TYPE=${{matrix.config.build_type}} TORQUE_APP_NAME=Torque3D TORQUE_TESTING=ON
+                run-build: true
+                build-args: --config ${{matrix.config.build_type}} --target install
+
+            - name: Unit Tests
+              run: |
+                cd "${{github.workspace}}/My Projects/Torque3D/game"
+                ./Torque3D runTests.tscript
+
+            - name: Upload Artifact
+              uses: ./.github/actions/upload-artifact
+              with:
+                name: torque3dLinuxGCCUnitTest

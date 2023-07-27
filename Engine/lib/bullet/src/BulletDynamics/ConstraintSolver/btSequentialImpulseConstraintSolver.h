@@ -45,27 +45,13 @@ protected:
 	btAlignedObjectArray<btTypedConstraint::btConstraintInfo1> m_tmpConstraintSizesPool;
 	int							m_maxOverrideNumSolverIterations;
 	int m_fixedBodyId;
-    // When running solvers on multiple threads, a race condition exists for Kinematic objects that
-    // participate in more than one solver.
-    // The getOrInitSolverBody() function writes the companionId of each body (storing the index of the solver body
-    // for the current solver). For normal dynamic bodies it isn't an issue because they can only be in one island
-    // (and therefore one thread) at a time. But kinematic bodies can be in multiple islands at once.
-    // To avoid this race condition, this solver does not write the companionId, instead it stores the solver body
-    // index in this solver-local table, indexed by the uniqueId of the body.
-    btAlignedObjectArray<int>	m_kinematicBodyUniqueIdToSolverBodyTable;  // only used for multithreading
 
 	btSingleConstraintRowSolver m_resolveSingleConstraintRowGeneric;
 	btSingleConstraintRowSolver m_resolveSingleConstraintRowLowerLimit;
-    btSingleConstraintRowSolver m_resolveSplitPenetrationImpulse;
-    int m_cachedSolverMode;  // used to check if SOLVER_SIMD flag has been changed
-    void setupSolverFunctions( bool useSimd );
-
-	btScalar	m_leastSquaresResidual;
 
 	void setupFrictionConstraint(	btSolverConstraint& solverConstraint, const btVector3& normalAxis,int solverBodyIdA,int  solverBodyIdB,
 									btManifoldPoint& cp,const btVector3& rel_pos1,const btVector3& rel_pos2,
 									btCollisionObject* colObj0,btCollisionObject* colObj1, btScalar relaxation, 
-									const btContactSolverInfo& infoGlobal,
 									btScalar desiredVelocity=0., btScalar cfmSlip=0.);
 
 	void setupTorsionalFrictionConstraint(	btSolverConstraint& solverConstraint, const btVector3& normalAxis,int solverBodyIdA,int  solverBodyIdB,
@@ -73,7 +59,7 @@ protected:
 									btCollisionObject* colObj0,btCollisionObject* colObj1, btScalar relaxation, 
 									btScalar desiredVelocity=0., btScalar cfmSlip=0.);
 
-	btSolverConstraint&	addFrictionConstraint(const btVector3& normalAxis,int solverBodyIdA,int solverBodyIdB,int frictionIndex,btManifoldPoint& cp,const btVector3& rel_pos1,const btVector3& rel_pos2,btCollisionObject* colObj0,btCollisionObject* colObj1, btScalar relaxation, const btContactSolverInfo& infoGlobal, btScalar desiredVelocity=0., btScalar cfmSlip=0.);
+	btSolverConstraint&	addFrictionConstraint(const btVector3& normalAxis,int solverBodyIdA,int solverBodyIdB,int frictionIndex,btManifoldPoint& cp,const btVector3& rel_pos1,const btVector3& rel_pos2,btCollisionObject* colObj0,btCollisionObject* colObj1, btScalar relaxation, btScalar desiredVelocity=0., btScalar cfmSlip=0.);
 	btSolverConstraint&	addTorsionalFrictionConstraint(const btVector3& normalAxis,int solverBodyIdA,int solverBodyIdB,int frictionIndex,btManifoldPoint& cp,btScalar torsionalFriction, const btVector3& rel_pos1,const btVector3& rel_pos2,btCollisionObject* colObj0,btCollisionObject* colObj1, btScalar relaxation, btScalar desiredVelocity=0, btScalar cfmSlip=0.f);
 
 	
@@ -89,22 +75,20 @@ protected:
 	unsigned long	m_btSeed2;
 
 	
-	btScalar restitutionCurve(btScalar rel_vel, btScalar restitution, btScalar velocityThreshold);
+	btScalar restitutionCurve(btScalar rel_vel, btScalar restitution);
 
 	virtual void convertContacts(btPersistentManifold** manifoldPtr, int numManifolds, const btContactSolverInfo& infoGlobal);
 
 	void	convertContact(btPersistentManifold* manifold,const btContactSolverInfo& infoGlobal);
 
 
-	btSimdScalar	resolveSplitPenetrationSIMD(btSolverBody& bodyA,btSolverBody& bodyB, const btSolverConstraint& contactConstraint)
-    {
-        return m_resolveSplitPenetrationImpulse( bodyA, bodyB, contactConstraint );
-    }
+	void	resolveSplitPenetrationSIMD(
+     btSolverBody& bodyA,btSolverBody& bodyB,
+        const btSolverConstraint& contactConstraint);
 
-	btSimdScalar	resolveSplitPenetrationImpulseCacheFriendly(btSolverBody& bodyA,btSolverBody& bodyB, const btSolverConstraint& contactConstraint)
-    {
-        return m_resolveSplitPenetrationImpulse( bodyA, bodyB, contactConstraint );
-    }
+	void	resolveSplitPenetrationImpulseCacheFriendly(
+       btSolverBody& bodyA,btSolverBody& bodyB,
+        const btSolverConstraint& contactConstraint);
 
 	//internal method
 	int		getOrInitSolverBody(btCollisionObject& body,btScalar timeStep);
@@ -114,10 +98,6 @@ protected:
 	btSimdScalar	resolveSingleConstraintRowGenericSIMD(btSolverBody& bodyA,btSolverBody& bodyB,const btSolverConstraint& contactConstraint);
 	btSimdScalar	resolveSingleConstraintRowLowerLimit(btSolverBody& bodyA,btSolverBody& bodyB,const btSolverConstraint& contactConstraint);
 	btSimdScalar	resolveSingleConstraintRowLowerLimitSIMD(btSolverBody& bodyA,btSolverBody& bodyB,const btSolverConstraint& contactConstraint);
-	btSimdScalar	resolveSplitPenetrationImpulse(btSolverBody& bodyA,btSolverBody& bodyB, const btSolverConstraint& contactConstraint)
-    {
-        return m_resolveSplitPenetrationImpulse( bodyA, bodyB, contactConstraint );
-    }
 		
 protected:
 	

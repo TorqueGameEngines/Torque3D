@@ -1,4 +1,4 @@
-name: Report Test Results
+name: Windows Test Results
 on:
   workflow_run:
     workflows: ["Windows Build"]

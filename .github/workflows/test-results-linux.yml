@@ -1,4 +1,4 @@
-name: Report Test Results
+name: Linux Test Results
 on:
   workflow_run:
     workflows: ["Linux Build"]

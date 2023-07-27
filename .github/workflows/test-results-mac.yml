@@ -1,4 +1,4 @@
-name: Report Test Results
+name: Mac Test Results
 on:
   workflow_run:
     workflows: ["MacOSX Build"]

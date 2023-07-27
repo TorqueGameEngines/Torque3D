@@ -1016,18 +1016,15 @@ bool Platform::isFile(const char *pFilePath)
 
     // Get file info
     struct stat fStat;
-    if (stat(pFilePath, &fStat) == 0)
+    if (stat(pathName, &fStat) == 0)
        return true;
 
     if ((fStat.st_mode & S_IFMT) == S_IFREG)
        return true;
    
     // Since stat failed see if it exists in a zip file loaded
-    if (Torque::FS::IsFile(pFilePath))
+    if (Torque::FS::IsFile(pathName))
        return true;
-
-    // if the file is a "regular file" then true
-    
 
     // must be some other file (directory, device, etc.)
     return false;

@@ -1,7 +1,7 @@
 name: Report Test Results
 on:
   workflow_run:
-    workflows: ["Windows Build", "Linux Build", "MacOSX Build"]
+    workflows: ["MacOSX Build"]
     types:
       - completed
 
@@ -15,17 +15,7 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-              config: 
-              - {
-                  name: "Windows Test Results",
-                  runos: windows-latest,
-                  artifact-name: "torque3dLinuxGCCUnitTest"
-                }
-              - {
-                  name: "Linux Test Results",
-                  runos: ubuntu-latest,
-                  artifact-name: "torque3dLinuxGCCUnitTest"
-                }
+              config:
               - {
                   name: "Mac Test Results",
                   runos: macos-latest,

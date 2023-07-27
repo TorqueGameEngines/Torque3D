@@ -23,10 +23,12 @@ jobs:
                 }
               - {
                   name: "Linux Test Results",
+                  runos: ubuntu-latest,
                   artifact-name: "torque3dLinuxGCCUnitTest"
                 }
               - {
                   name: "Mac Test Results",
+                  runos: macos-latest,
                   artifact-name: "torque3dMacOSXCLANGUnitTest"
                 }
               

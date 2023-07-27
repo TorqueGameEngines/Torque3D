@@ -1017,8 +1017,10 @@ bool Platform::isFile(const char *pFilePath)
     // Get file info
     struct stat fStat;
     if (stat(pFilePath, &fStat) == 0)
-       if ((fStat.st_mode & S_IFMT) == S_IFREG)
-          return true;
+       return true;
+
+    if ((fStat.st_mode & S_IFMT) == S_IFREG)
+       return true;
    
     // Since stat failed see if it exists in a zip file loaded
     if (Torque::FS::IsFile(pFilePath))

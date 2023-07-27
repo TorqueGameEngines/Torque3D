@@ -38,3 +38,4 @@ jobs:
                 name: ${{matrix.config.name}}
                 path: "**/My Projects/Torque3D/game/test_detail.xml"
                 reporter: java-junit
+                output-to: 'checks'

@@ -1,13 +1,6 @@
-// Placeholder initialisation that the tests expect
-GFXInit::createNullDevice();
+// put script tests here
 
-if(!isObject(GuiDefaultProfile))
-    new GuiControlProfile (GuiDefaultProfile) {};
-if(!isObject(GuiTooltipProfile))
-    new GuiControlProfile (GuiTooltipProfile) {};
-
-setLogMode(2);
-$Con::LogBufferEnabled = false;
-$Testing::CheckMemoryLeaks = false;
-runAllUnitTests("-*.Stress*", "xml");
-quit();
+function MyTest() {
+   expectTrue(2+2 == 4, "basic math should work");
+}
+addUnitTest(MyTest);

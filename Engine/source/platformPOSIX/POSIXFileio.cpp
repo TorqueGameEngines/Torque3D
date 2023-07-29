@@ -990,19 +990,42 @@ StringTableEntry Platform::getExecutablePath()
 //-----------------------------------------------------------------------------
 bool Platform::isFile(const char *pFilePath)
 {
-    if (!pFilePath || !*pFilePath)
-        return false;
+   if (!pFilePath || !*pFilePath)
+      return false;
+
+   char pathName[MaxPath];
+
+   // if it starts with cwd, we need to strip that off so that we can look for
+   // the file in the pref dir
+   char cwd[MaxPath];
+   getcwd(cwd, MaxPath);
+
+   if (dStrstr(pFilePath, cwd) == pFilePath)
+      pFilePath = pFilePath + dStrlen(cwd) + 1;
+
+   // if its relative, first look in the pref dir
+   if (pFilePath[0] != '/' && pFilePath[0] != '\\')
+   {
+      MungePath(pathName, MaxPath, pFilePath, GetPrefDir());
+   }
+   else
+   {
+      // here if the path is absolute or not in the pref dir
+      MungePath(pathName, MaxPath, pFilePath, cwd);
+   }
+
     // Get file info
     struct stat fStat;
-    if (stat(pFilePath, &fStat) < 0)
-    {
-        // Since file does not exist on disk see if it exists in a zip file loaded
-        return Torque::FS::IsFile(pFilePath);
-    }
+    if (stat(pathName, &fStat) == 0)
+       return true;
 
-    // if the file is a "regular file" then true
-    if ( (fStat.st_mode & S_IFMT) == S_IFREG)
-        return true;
+    if ((fStat.st_mode & S_IFMT) == S_IFREG)
+       return true;
+   
+    // Since stat failed see if it exists in a zip file loaded
+    if (Torque::FS::IsFile(pathName))
+       return true;
+
     // must be some other file (directory, device, etc.)
     return false;
 }

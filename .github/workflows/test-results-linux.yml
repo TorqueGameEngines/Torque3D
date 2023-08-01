@@ -21,15 +21,6 @@ jobs:
                   runos: ubuntu-latest,
                   artifact-name: "torque3dLinuxGCCUnitTest"
                 }
-<<<<<<<< HEAD:.github/workflows/test-results.yml
-              - {
-                  name: "Mac Test Results",
-                  runos: macos-latest,
-                  artifact-name: "torque3dMacOSXCLANGUnitTest"
-                }
-========
->>>>>>>> upstream/development:.github/workflows/test-results-linux.yml
-              
         steps:
             - name: Download Linux Test Report
               uses: dawidd6/action-download-artifact@v2

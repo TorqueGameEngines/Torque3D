@@ -11,11 +11,11 @@ MIT Licensed Open Source version of [Torque3D](https://torque3d.org) from [Garag
 
 **Build Status:**
 
-[![Windows Build 🟥🟩🟦🟨](https://github.com/TorqueGameEngines/Torque3D/actions/workflows/build-windows-msvc.yml/badge.svg)](https://github.com/TorqueGameEngines/Torque3D/actions/workflows/build-windows-msvc.yml)
+[![Windows Build](https://github.com/TorqueGameEngines/Torque3D/actions/workflows/build-windows-msvc.yml/badge.svg)](https://github.com/TorqueGameEngines/Torque3D/actions/workflows/build-windows-msvc.yml)
 
-[![Linux Build 🐧](https://github.com/TorqueGameEngines/Torque3D/actions/workflows/build-linux-gcc.yml/badge.svg)](https://github.com/TorqueGameEngines/Torque3D/actions/workflows/build-linux-gcc.yml)
+[![Linux Build](https://github.com/TorqueGameEngines/Torque3D/actions/workflows/build-linux-gcc.yml/badge.svg)](https://github.com/TorqueGameEngines/Torque3D/actions/workflows/build-linux-gcc.yml)
 
-[![MacOSX Build 🍎](https://github.com/TorqueGameEngines/Torque3D/actions/workflows/build-macos-clang.yml/badge.svg)](https://github.com/TorqueGameEngines/Torque3D/actions/workflows/build-macos-clang.yml)
+[![MacOSX Build](https://github.com/TorqueGameEngines/Torque3D/actions/workflows/build-macos-clang.yml/badge.svg)](https://github.com/TorqueGameEngines/Torque3D/actions/workflows/build-macos-clang.yml)
 
 
 

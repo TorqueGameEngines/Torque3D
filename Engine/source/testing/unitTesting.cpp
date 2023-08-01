@@ -26,6 +26,7 @@
 #include "console/codeBlock.h"
 #include "console/engineAPI.h"
 #include "console/consoleInternal.h"
+#include "gfx/gfxInit.h"
 
 #if defined(TORQUE_OS_WIN)
 #define _CRTDBG_MAP_ALLOC
@@ -145,42 +146,38 @@ private:
    const char* mFunctionName;
 };
 
-// uncomment to debug tests and use the test explorer.
-//#define TEST_EXPLORER
-#if !defined(TEST_EXPLORER)
 int main(int argc, char** argv)
 {
-      StandardMainLoop::init();
-      StandardMainLoop::handleCommandLine(argc, (const char**)argv);
-      StandardMainLoop::shutdown();
-      return StandardMainLoop::getReturnStatus();
-}
-#else
-int main(int argc, char** argv)
-{
-   StandardMainLoop::init();
+   testing::GTEST_FLAG(output) = "xml:test_detail.xml";
+   testing::GTEST_FLAG(stack_trace_depth) = 10;
+
    printf("Running main() from %s\n", __FILE__);
-   // setup simular to runTests
-   Con::evaluate("GFXInit::createNullDevice();");
-   Con::evaluate("if (!isObject(GuiDefaultProfile)) new GuiControlProfile(GuiDefaultProfile){}; if (!isObject(GuiTooltipProfile)) new GuiControlProfile(GuiTooltipProfile){};");
+   // Initialize Google Test.
    testing::InitGoogleTest(&argc, argv);
 
-   // Fetch the unit test instance.
-   testing::UnitTest& unitTest = *testing::UnitTest::GetInstance();
-   // Fetch the unit test event listeners.
-   testing::TestEventListeners& listeners = unitTest.listeners();
+   // torques handle command.
+   StandardMainLoop::init();
+   // setup torque for testing.
+   GFXInit::enumerateAdapters();
+   GFXAdapter* a = GFXInit::chooseAdapter(NullDevice, "");
+   GFXDevice* newDevice = GFX;
+   if (newDevice == NULL)
+      newDevice = GFXInit::createDevice(a);
+   newDevice->setAllowRender(false);
 
-   listeners.Append(new MemoryLeakDetector());
+   // required for tests that add gui elements.
+   Con::evaluate("if (!isObject(GuiDefaultProfile)) new GuiControlProfile(GuiDefaultProfile){}; if (!isObject(GuiTooltipProfile)) new GuiControlProfile(GuiTooltipProfile){};");
 
-   // Add the Torque unit test listener.
-   listeners.Append(new TorqueUnitTestListener(true));
+   // this call is to add the tests that exist in runTests.tscript
+   // note these tests will not appear in the test explorer.
+   if(argc > 1)
+      StandardMainLoop::handleCommandLine(argc, (const char**)argv);
 
+   // run tests.
    int res = RUN_ALL_TESTS();
-
    StandardMainLoop::shutdown();
-   return res;
+   return 0;
 }
-#endif
 
 DefineEngineFunction(addUnitTest, void, (const char* function), ,
    "Add a TorqueScript function as a GTest unit test.\n"
@@ -226,59 +223,4 @@ DefineEngineFunction(expectTrue, void, (bool test, const char* message), (""),
    "@endtsexample")
 {
    EXPECT_TRUE(test) << scriptFileMessage(message).c_str();
-}
-
-DefineEngineFunction(runAllUnitTests, int, (const char* testSpecs, const char* reportFormat), (""),
-   "Runs engine unit tests. Some tests are marked as 'stress' tests which do not "
-   "necessarily check correctness, just performance or possible nondeterministic "
-   "glitches. There may also be interactive or networking tests which may be "
-   "excluded by using the testSpecs argument.\n"
-   "This function should only be called once per executable run, because of "
-   "googletest's design.\n\n"
-
-   "@param testSpecs A space-sepatated list of filters for test cases. "
-   "See https://code.google.com/p/googletest/wiki/AdvancedGuide#Running_a_Subset_of_the_Tests "
-   "and http://stackoverflow.com/a/14021997/945863 "
-   "for a description of the flag format.")
-{
-   Vector<char*> args;
-   args.push_back(NULL); // Program name is unused by googletest.
-   String specsArg;
-   if (dStrlen(testSpecs) > 0)
-   {
-      specsArg = testSpecs;
-      specsArg.replace(' ', ':');
-      specsArg.insert(0, "--gtest_filter=");
-      args.push_back(const_cast<char*>(specsArg.c_str()));
-   }
-
-   String reportFormatArg;
-   if (dStrlen(reportFormat) > 0)
-   {
-      reportFormatArg = String::ToString("--gtest_output=%s", reportFormat);
-      args.push_back(const_cast<char*>(reportFormatArg.c_str()));
-   }
-   S32 argc = args.size();
-   
-   // Initialize Google Test.
-   testing::InitGoogleTest(&argc, args.address());
-   
-   // Fetch the unit test instance.
-   testing::UnitTest& unitTest = *testing::UnitTest::GetInstance();
-
-   // Fetch the unit test event listeners.
-   testing::TestEventListeners& listeners = unitTest.listeners();
-
-   // Release the default listener.
-   delete listeners.Release(listeners.default_result_printer());
-
-   // Add the Torque unit test listener.
-   listeners.Append(new TorqueUnitTestListener(false));
-
-   // Perform googletest run.
-   Con::printf("\nUnit Tests Starting...\n");
-   const S32 result = RUN_ALL_TESTS();
-   Con::printf("... Unit Tests Ended.\n");
-
-   return result;
 }

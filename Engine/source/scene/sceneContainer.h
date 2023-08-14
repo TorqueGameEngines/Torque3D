@@ -88,7 +88,7 @@ public:
    ~LazyItemAllocator()
    {
       if (mItems)
-         delete mItems;
+         dFree(mItems);
    }
 
    inline bool isNull() const
@@ -103,7 +103,12 @@ public:
 
    inline bool canFit(U32 count) const
    {
-      return count < mSize;
+      return count <= mSize;
+   }
+
+   inline U32 getCapacity() const
+   {
+      return mSize;
    }
 
    void realloc(U32 requiredItems, bool force)
@@ -114,7 +119,7 @@ public:
          if (mItems == NULL)
             mItems = (T*)dMalloc(sizeof(T) * requiredSize);
          else
-            dRealloc(mItems, sizeof(T) * requiredSize);
+            mItems = (T*)dRealloc(mItems, sizeof(T) * requiredSize);
 
          mSize = requiredSize;
       }
@@ -161,26 +166,41 @@ public:
       {
       }
 
-      inline T operator*()
+      T& operator* () const
       {
          return binList[currentElement];
       }
 
       inline bool isValid() const
       {
-         return currentElement < numElements;
+         return currentElement < numElements && binList != NULL;
       }
 
-      inline ValueIterator& operator++()
+      inline T* getPtr() const
+      {
+         return &binList[currentElement];
+      }
+
+      inline BinCount getIndex() const
+      {
+         return currentElement;
+      }
+
+      inline BinCount getCount() const
+      {
+         return numElements;
+      }
+
+      ValueIterator& operator++()
       {
          if (currentElement < numElements)
             currentElement++;
          return *this;
       }
 
-      inline ValueIterator& operator++(int other)
+      ValueIterator& operator++(int other)
       {
-         currentElement += other;
+         currentElement++;
          currentElement = mMin(currentElement, numElements);
          return *this;
       }
@@ -211,7 +231,7 @@ public:
       }
    };
 
-protected:
+public:
 
 #pragma pack(2)
    struct BinList
@@ -223,6 +243,8 @@ protected:
       BinCount numValues;
    };
 #pragma pack()
+
+protected:
 
    /// List of bin lists
    Vector<BinList> mBinLists;
@@ -276,7 +298,8 @@ public:
    /// Gets a BinValue list based on a ListHandle.
    BinValue* getValues(ListHandle handle, U32& numValues)
    {
-      if (handle == 0)
+      if (handle == 0 ||
+         handle > mBinLists.size())
       {
          numValues = 0;
          return NULL;
@@ -291,7 +314,8 @@ public:
 
    void getValueIterators(ListHandle handle, ValueIterator& start, ValueIterator& end)
    {
-      if (handle == 0)
+      if (handle == 0 ||
+         handle > mBinLists.size())
       {
          start = ValueIterator(NULL, 0);
          end = ValueIterator(NULL, 0);
@@ -307,7 +331,8 @@ public:
 
    ValueIterator getValueIterator(ListHandle handle)
    {
-      if (handle == 0)
+      if (handle == 0 ||
+         handle > mBinLists.size())
       {
          return ValueIterator(NULL, 0);
       }
@@ -316,6 +341,26 @@ public:
       BinList& list = mBinLists[realIDX];
 
       return ValueIterator(mBinValues.getPtr() + list.startValue, list.numValues);
+   }
+
+   inline U32 getNextFreeListIndex() const
+   {
+      return mFreeListStart;
+   }
+
+   inline const Vector<BinList>& getBinLists() const
+   {
+      return mBinLists;
+   }
+
+   inline const BinValue* getBin() const
+   {
+      return mBinValues.getPtr();
+   }
+
+   inline const U32 getBinCapacity() const
+   {
+      return mBinValues.getCapacity();
    }
 
 protected:
@@ -372,7 +417,8 @@ public:
    /// otherwise new list memory will be allocated.
    void reallocList(ListHandle handle, BinCount numValues, BinValue* values)
    {
-      if (handle == 0)
+      if (handle == 0 ||
+         handle > mBinLists.size())
          return;
 
       U32 realIDX = handle - 1;
@@ -397,7 +443,8 @@ public:
    /// Frees an existing ListHandle
    void freeList(ListHandle handle)
    {
-      if (handle == 0)
+      if (handle == 0 ||
+         handle > mBinLists.size())
          return;
 
       U32 realIDX = handle - 1;
@@ -422,7 +469,8 @@ public:
 
    void replaceListBin(ListHandle handle, BinValue oldValue, BinValue newValue)
    {
-      if (handle == 0)
+      if (handle == 0 ||
+         handle > mBinLists.size())
          return;
 
       U32 realIDX = handle - 1;
@@ -432,14 +480,17 @@ public:
       for (U32 i = 0; i < list.numValues; i++)
       {
          if (values[i] == oldValue)
+         {
             values[i] = newValue;
-         break;
+            break;
+         }
       }
    }
 
    bool containsBinItem(ListHandle handle, BinValue value) const
    {
-      if (handle == 0)
+      if (handle == 0 ||
+         handle > mBinLists.size())
          return false;
 
       U32 realIDX = handle - 1;

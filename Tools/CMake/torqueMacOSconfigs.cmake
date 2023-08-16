@@ -1,0 +1,23 @@
+#detect Architecture
+if (APPLE AND NOT IOS)
+  option(TORQUE_MACOS_UNIVERSAL_BINARY OFF)
+
+  # Detect architecture if not using universal
+  if (TORQUE_MACOS_UNIVERSAL_BINARY)
+    set(ARCHITECTURE_STRING_APPLE "x86_64;arm64")
+    set(DEPLOYMENT_TARGET_APPLE "10.13")
+  else()
+    if (CMAKE_SYSTEM_PROCESSOR MATCHES "arm64")
+      set(ARCHITECTURE_STRING_APPLE "arm64")
+      set(DEPLOYMENT_TARGET_APPLE "11.0")
+    else()
+      set(ARCHITECTURE_STRING_APPLE "x86_64")
+      set(DEPLOYMENT_TARGET_APPLE "10.13")
+    endif()
+  endif()
+
+  set(CMAKE_OSX_ARCHITECTURES ${ARCHITECTURE_STRING_APPLE} CACHE STRING "OSX Architecture" FORCE)
+  set(CMAKE_OSX_DEPLOYMENT_TARGET ${DEPLOYMENT_TARGET_APPLE} CACHE STRING "OSX Deployment target" FORCE)
+  mark_as_advanced(CMAKE_OSX_ARCHITECTURES)
+  mark_as_advanced(CMAKE_OSX_DEPLOYMENT_TARGET)
+endif()

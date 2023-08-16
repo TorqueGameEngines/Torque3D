@@ -1,7 +1,13 @@
-include("${CMAKE_SOURCE_DIR}/Tools/CMake/torque_macros.cmake")
-include("${CMAKE_SOURCE_DIR}/Tools/CMake/torque_configs.cmake")
 cmake_minimum_required (VERSION 3.21.0)
 set (CMAKE_CXX_STANDARD 17)
+set(CMAKE_CONFIGURATION_TYPES "Debug;RelWithDebInfo;Release" CACHE STRING "" FORCE)
+
+include("${CMAKE_SOURCE_DIR}/Tools/CMake/torque_macros.cmake")
+include("${CMAKE_SOURCE_DIR}/Tools/CMake/torque_configs.cmake")
+file(GLOB OS_SCRIPTS "${CMAKE_SOURCE_DIR}/Tools/CMake/torque*configs.cmake")
+foreach (TORQUE_OS_SCRIPT ${OS_SCRIPTS})
+    include(${TORQUE_OS_SCRIPT})
+endforeach() 
 
 # Ensure multi-core compilation is enabled for everything
 add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/MP>)

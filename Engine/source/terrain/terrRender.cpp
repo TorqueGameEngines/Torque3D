@@ -224,12 +224,12 @@ void TerrainBlock::_updateMaterials()
 
    if (!mDetailTextureArray->fromTextureArray(detailTexArray, detailTexArraySize))
    {
-      Con::errorf("TerrainBlock::_updateMaterials - an issue with the diffuse terrain materials was detected. Please ensure they are all of the same size and format!");
+      Con::errorf("TerrainBlock::_updateMaterials - an issue with the detail terrain materials was detected. Please ensure they are all of the same size and format!");
    }
 
    if (!mMacroTextureArray->fromTextureArray(macroTexArray, macroTexArraySize))
    {
-      Con::errorf("TerrainBlock::_updateMaterials - an issue with the detail terrain materials was detected. Please ensure they are all of the same size and format!");
+      Con::errorf("TerrainBlock::_updateMaterials - an issue with the macro terrain materials was detected. Please ensure they are all of the same size and format!");
    }
 
    if (!mNormalTextureArray->fromTextureArray(normalTexArray, normalTexArraySize))

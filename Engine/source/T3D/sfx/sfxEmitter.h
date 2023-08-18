@@ -79,24 +79,23 @@ class SFXEmitter : public SceneObject
       enum Dirty
       {
          Track                      = BIT(  0 ),
-         Filename                   = BIT(  2 ),
-         Volume                     = BIT(  4 ),
-         IsLooping                  = BIT(  5 ),
-         Is3D                       = BIT(  6 ),
-         MinDistance                = BIT(  7 ),
-         MaxDistance                = BIT(  8 ),
-         ConeInsideAngle            = BIT(  9 ),
-         ConeOutsideAngle           = BIT( 10 ),
-         ConeOutsideVolume          = BIT( 11 ),
-         Transform                  = BIT( 12 ),
-         SourceGroup                = BIT( 13 ),
-         OutsideAmbient             = BIT( 14 ),
-         IsStreaming                = BIT( 15 ),
-         FadeInTime                 = BIT( 16 ),
-         FadeOutTime                = BIT( 17 ),
-         Pitch                      = BIT( 18 ),
-         ScatterDistance            = BIT( 19 ),
-         TrackOnly                  = BIT( 20 ),
+         Volume                     = BIT(  1 ),
+         IsLooping                  = BIT(  3 ),
+         Is3D                       = BIT(  4 ),
+         MinDistance                = BIT(  5 ),
+         MaxDistance                = BIT(  6 ),
+         ConeInsideAngle            = BIT(  7 ),
+         ConeOutsideAngle           = BIT( 8 ),
+         ConeOutsideVolume          = BIT( 9 ),
+         Transform                  = BIT( 10 ),
+         SourceGroup                = BIT( 11 ),
+         OutsideAmbient             = BIT( 12 ),
+         IsStreaming                = BIT( 13 ),
+         FadeInTime                 = BIT( 14 ),
+         FadeOutTime                = BIT( 15 ),
+         Pitch                      = BIT( 16 ),
+         ScatterDistance            = BIT( 17 ),
+         TrackOnly                  = BIT( 18 ),
 
          AllDirtyMask               = 0xFFFFFFFF,
       };
@@ -121,6 +120,9 @@ class SFXEmitter : public SceneObject
 
       /// The description used by the local profile.
       SFXDescription mDescription;
+
+      /// The description used by the local profile.
+      SFXDescription *mInstanceDescription;
 
       /// If true playback starts when the emitter
       /// is added to the scene.

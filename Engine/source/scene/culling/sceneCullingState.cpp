@@ -160,7 +160,6 @@ void SceneCullingState::addOccluder( SceneObject* object )
 
    U32 numZones = 0;
    U32* zones = NULL;
-   //object->getSceneManager()->getZoneManager()
 
    SceneManager* sm = object->getSceneManager();
    SceneZoneSpaceManager* zm = sm->getZoneManager();

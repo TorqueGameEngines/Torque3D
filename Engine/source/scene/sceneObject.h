@@ -883,7 +883,9 @@ class SceneObject : public NetObject, public ProcessObject
    //const MatrixF& getLocalTransform() const;
    /// returns the position within parent SceneObject space (or world space if no parent)
    //Point3F getLocalPosition() const;
-   
+
+   inline U32 getRootContainerIndex() { return mContainerIndex;  }
+   inline const SceneBinListLookup getContainerLookupInfo() { return mContainerLookup; }
    
 //   virtual void onParentScaleChanged();   
 //   virtual void onParentTransformChanged();

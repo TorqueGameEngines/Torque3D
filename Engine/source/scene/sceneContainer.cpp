@@ -417,13 +417,13 @@ bool SceneContainer::addObject(SceneObject* obj)
 
 bool SceneContainer::removeObject(SceneObject* obj)
 {
+   U32 existingIndex = obj->mContainerIndex;
    AssertFatal(obj->mContainer == this, "Trying to remove from wrong container.");
    obj->mContainerIndex = 0;
    obj->mContainer = NULL;
 
    removeFromBins(obj);
 
-   U32 existingIndex = obj->mContainerIndex;
    Vector<SceneObject*>::iterator iter = mGlobalList.begin() + existingIndex;
    mGlobalList.erase_fast(iter);
    if (existingIndex < mGlobalList.size())
@@ -1453,9 +1453,10 @@ void SceneContainer::getBinRange( const F32 min, const F32 max, U32& minBin, U32
       AssertFatal(maxCoord >= 0.0 && maxCoord < SceneContainer::csmTotalAxisBinSize, "Bad maxCoord");
 
       minBin = U32(minCoord / SceneContainer::csmBinSize);
-      maxBin = U32(maxCoord / SceneContainer::csmBinSize);
+      maxBin = (U32)mCeil(maxCoord / SceneContainer::csmBinSize);
+      maxBin = maxBin >= SceneContainer::csmNumAxisBins ? SceneContainer::csmNumAxisBins-1 : maxBin;
       AssertFatal(minBin < SceneContainer::csmNumAxisBins, avar("Error, bad clipping(min)! (%g, %d)", maxCoord, minBin));
-      AssertFatal(minBin < SceneContainer::csmNumAxisBins, avar("Error, bad clipping(max)! (%g, %d)", maxCoord, maxBin));
+      AssertFatal(maxBin < SceneContainer::csmNumAxisBins, avar("Error, bad clipping(max)! (%g, %d)", maxCoord, maxBin));
 
       // MSVC6 seems to be generating some bad floating point code around
       // here when full optimizations are on.  The min != max test should

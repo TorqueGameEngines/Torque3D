@@ -160,6 +160,9 @@ SceneObject::SceneObject()
    mGameObjectAssetId = StringTable->insert("");
 
    mDirtyGameObject = false;
+
+   mContainer = NULL;
+   mContainerIndex = 0;
 }
 
 //-----------------------------------------------------------------------------

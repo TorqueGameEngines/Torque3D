@@ -745,6 +745,22 @@ public:
          outRange.maxCoord[1] = outMax;
       }
 
+      inline void dumpBin(U32 x, U32 y, Vector<SceneObject*> &list)
+      {
+         U32 insertX = x % csmNumAxisBins;
+         U32 insertY = y * csmNumAxisBins;
+         U32 binIDX = insertY + insertX;
+
+         list.clear();
+         if (binIDX < csmTotalNumBins)
+         {
+            for (SceneObject* obj : mBinArray[binIDX])
+            {
+               list.push_back(obj);
+            }
+         }
+      }
+
       static void getBinRange( const F32 min, const F32 max, U32& minBin, U32& maxBin );
 public:
       Vector<SimObjectPtr<SceneObject>*>& getRadiusSearchList() { return mSearchList; }

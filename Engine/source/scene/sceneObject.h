@@ -85,6 +85,7 @@ class SceneObjectLightingPlugin;
 class Convex;
 class LightInfo;
 class SFXAmbience;
+class SceneContainer;
 
 struct ObjectRenderInst;
 struct Move;

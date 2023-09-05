@@ -196,6 +196,8 @@ public:
    static const ColorI RED;
    static const ColorI GREEN;
    static const ColorI BLUE;
+   static const ColorI LIGHT;
+   static const ColorI DARK;
 };
 
 //-----------------------------------------------------------------------------

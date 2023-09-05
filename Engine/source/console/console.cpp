@@ -682,7 +682,7 @@ static void _printf(ConsoleLogEntry::Level level, ConsoleLogEntry::Type type, co
    if (useTimestamp)
    {
       U32 curTime = Platform::getRealMilliseconds() - startTime;
-      offset += dSprintf(buffer + offset, sizeof(buffer) - offset, "[ms %4d %03d]", U32(curTime * 0.001), curTime % 1000);
+      offset += dSprintf(buffer + offset, sizeof(buffer) - offset, "[+%4d.%03d]", U32(curTime * 0.001), curTime % 1000);
    }
 
    if (useTimestamp || useRealTimestamp)

@@ -10,11 +10,30 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
    isContainer = "1";
    superClass = "UINavigation";
    canSaveDynamicFields = "0";
+   
+   new GuiBitmapCtrl(SideBackgroundImage) {
+      bitmapAsset = "UI:menu_side_background_image";
+      color = "255 255 255 255";
+      wrap = "0";
+      position = "0 0";
+      extent = "900 600";
+      minExtent = "8 2";
+      horizSizing = "right";
+      vertSizing = "top";
+      profile = "GuiDefaultProfile";
+      visible = "1";
+      active = "1";
+      tooltipProfile = "GuiToolTipProfile";
+      hovertime = "1000";
+      isContainer = "0";
+      canSave = "1";
+      canSaveDynamicFields = "0";
+   };
 
    new GuiBitmapCtrl(MainMenuAppLogo) {
-      BitmapAsset = "UI:Torque_3D_logo_alt_image";
+      BitmapAsset = "UI:Torque_3D_logo_image";
       position = "550 30";
-      extent = "443 139";
+      extent = "360 100";
       horizSizing = "left";
       profile = "GuiDefaultProfile";
       tooltipProfile = "GuiToolTipProfile";

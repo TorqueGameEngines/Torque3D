@@ -165,6 +165,7 @@ new GuiControlProfile(GuiMenuScrollProfile)
    bitmapAsset = "Core_GUI:scrollBar_image";
    hasBitmapArray = true;
    category = "Core";
+   fontSize = 15;
 };
 
 if(!isObject(GuiOverlayProfile))

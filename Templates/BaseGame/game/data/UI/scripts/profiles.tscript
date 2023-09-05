@@ -95,11 +95,11 @@ new GuiControlProfile( GuiMenuButtonProfile )
    fontColorNA = $TextDisabledColor;
    fontColorSEL = $TextMediumEmphasisColor;
    fillColor = "40 40 40";
-   fillColorHL = "56 56 56";
+   fillColorHL = "49 34 37";
    fillColorNA = "40 40 40";
    borderColor = "87 87 87";
    borderColorNA = "0 0 0";
-   borderColorHL = "255 255 255";
+   borderColorHL = "194 64 64";
    fixedExtent = false;
    justify = "center";
    canKeyFocus = false;
@@ -366,16 +366,17 @@ new GuiControlProfile( GuiPopUpMenuDefault : GuiDefaultProfile )
    border = 0;
    borderThickness = 0;
    fixedExtent = true;
-   bitmapAsset = "UI:scrollBar_image";
    hasBitmapArray = true;
+   
+   fillColor = EditorSettings.value("Theme/fieldBGColor");//"255 255 255";//100
+   fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");//"91 101 116";
+   fillColorSEL = EditorSettings.value("Theme/fieldBGSELColor");//"91 101 116";
+   fontColor = EditorSettings.value("Theme/fieldTextColor");//"215 215 215";
+   fontColorHL = EditorSettings.value("Theme/fieldTextHLColor");//"215 215 215";
+   fontColorSEL = EditorSettings.value("Theme/fieldTextSELColor");//"215 215 215";
+   fontColorNA = EditorSettings.value("Theme/fieldTextColor");//"215 215 215";
+   borderColor = EditorSettings.value("Theme/dividerDarkColor");
    profileForChildren = GuiPopupMenuItemBorder;
-   fillColor = "242 241 240 ";//"255 255 255";//100
-   fillColorHL = "228 228 235 ";//"204 203 202";
-   fillColorSEL = "98 100 137 ";//"204 203 202";
-   // font color is black
-   fontColorHL = "0 0 0 ";//"0 0 0";
-   fontColorSEL = "255 255 255";//"0 0 0";
-   borderColor = "100 100 100";
    category = "Core";
 };
 
@@ -552,4 +553,5 @@ singleton GuiControlProfile(SliderBitmapGUIProfile)
    bitmapAsset = "UI:optionsMenuSliderBitmapArray_image";
    hasBitmapArray = true;
    opaque = false;
+   borderColor = "0 0 0 255";
 };

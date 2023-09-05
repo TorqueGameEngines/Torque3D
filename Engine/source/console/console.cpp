@@ -307,6 +307,9 @@ bool alwaysUseDebugOutput = true;
 bool useTimestamp = false;
 bool useRealTimestamp = false;
 
+static U32 initTime = Platform::getRealMilliseconds();
+U32 startTime = initTime;
+
 ConsoleFunctionGroupBegin( Clipboard, "Miscellaneous functions to control the clipboard and clear the console.");
 
 DefineEngineFunction( cls, void, (), , "()"
@@ -327,13 +330,27 @@ DefineEngineFunction( getClipboard, const char*, (), , "()"
 };
 
 DefineEngineFunction( setClipboard, bool, (const char* text), , "(string text)"
-               "@brief Set the system clipboard.\n\n"
+            "@brief Set the system clipboard.\n\n"
             "@internal")
 {
    return Platform::setClipboard(text);
 };
 
 ConsoleFunctionGroupEnd( Clipboard );
+
+DefineEngineFunction( resetTimeStamp, void, (), , "()"
+            "@brief Reset the timestamp to 0 ms.\n\n"
+            "@ingroup Console")
+{
+   startTime = Platform::getRealMilliseconds();
+};
+
+DefineEngineFunction( getInitTime, int, (), , "()"
+            "@brief Get the initialization time in miliseconds.\n\n"
+            "@internal")
+{
+   return initTime;
+};
 
 
 void postConsoleInput( RawData data );
@@ -644,7 +661,7 @@ static void _printf(ConsoleLogEntry::Level level, ConsoleLogEntry::Type type, co
 {
    if (!active)
       return;
-   Con::active = false; 
+   Con::active = false;
 
    char buffer[8192] = {};
    U32 offset = 0;
@@ -664,15 +681,14 @@ static void _printf(ConsoleLogEntry::Level level, ConsoleLogEntry::Type type, co
 
    if (useTimestamp)
    {
-      static U32 startTime = Platform::getRealMilliseconds();
       U32 curTime = Platform::getRealMilliseconds() - startTime;
       offset += dSprintf(buffer + offset, sizeof(buffer) - offset, "[+%4d.%03d]", U32(curTime * 0.001), curTime % 1000);
    }
 
-   if (useTimestamp || useRealTimestamp) {
+   if (useTimestamp || useRealTimestamp)
+   {
       offset += dSprintf(buffer + offset, sizeof(buffer) - offset, " ");
    }
-
 
    dVsprintf(buffer + offset, sizeof(buffer) - offset, fmt, argptr);
 
@@ -2652,3 +2668,5 @@ void ConsoleStackFrameSaver::restore()
       gCallStack.popFrame();
    }
 }
+
+//------------------------------------------------------------------------------

@@ -412,7 +412,7 @@ void GuiSliderCtrl::onRender(Point2I offset, const RectI &updateRect)
          PrimBuild::end();
          // TODO: it would be nice, if the primitive builder were a little smarter,
          // so that we could change colors midstream.
-         PrimBuild::color4f(0.9f, 0.9f, 0.9f, 1.0f);
+         PrimBuild::color4f(0.6f, 0.6f, 0.6f, 1.0f);
          PrimBuild::begin( GFXLineList, ( mTicks + 2 ) * 2 );
          // tick marks
          for (U32 t = 0; t <= (mTicks+1); t++)

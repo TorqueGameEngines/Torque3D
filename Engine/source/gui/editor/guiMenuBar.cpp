@@ -1100,8 +1100,8 @@ GuiMenuBar::GuiMenuBar()
    mHorizontalMargin = 6; // Default number of pixels on the left and right side of a manu's text
    mVerticalMargin = 1;   // Default number of pixels on the top and bottom of a menu's text
    mBitmapMargin = 2;     // Default number of pixels between a menu's bitmap and text
-
-   mMenubarHeight = 20;
+   
+   mMenubarHeight = 24;
 
    //  Added:
    mouseDownSubmenu = NULL;

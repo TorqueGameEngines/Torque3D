@@ -360,12 +360,12 @@ void GuiTextEditSliderCtrl::onRender(Point2I offset, const RectI &updateRect)
    GFXVertexBufferHandle<GFXVertexPCT> verts(GFX, 6, GFXBufferTypeVolatile);
    verts.lock();
 
-   verts[0].color.set( 0, 0, 0 );
-	verts[1].color.set( 0, 0, 0 );
-	verts[2].color.set( 0, 0, 0 );
-	verts[3].color.set( 0, 0, 0 );
-	verts[4].color.set( 0, 0, 0 );
-	verts[5].color.set( 0, 0, 0 );
+    verts[0].color.set(128, 128, 128);
+	verts[1].color.set(128, 128, 128);
+	verts[2].color.set(128, 128, 128);
+	verts[3].color.set(128, 128, 128);
+	verts[4].color.set(128, 128, 128);
+	verts[5].color.set(128, 128, 128);
 
    if(mTextAreaHit == ArrowUp)
    {

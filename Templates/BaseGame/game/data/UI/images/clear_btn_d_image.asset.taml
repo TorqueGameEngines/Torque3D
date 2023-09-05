@@ -1,8 +1,3 @@
 <ImageAsset
-    canSave="true"
-    canSaveDynamicFields="true"
-    AssetName="clear_btn_d_image"
-    imageFile="@assetFile=clear-btn_d.png"
-    UseMips="true"
-    isHDRImage="false"
-    imageType="Albedo" />
+    AssetName="clearbtn_d_image"
+    imageFile="@assetFile=clear_btn_d.png"/>

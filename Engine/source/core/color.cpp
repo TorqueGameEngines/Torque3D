@@ -38,6 +38,8 @@ const ColorI ColorI::BLACK( 0, 0, 0 );
 const ColorI ColorI::RED( 255, 0, 0 );
 const ColorI ColorI::GREEN( 0, 255, 0 );
 const ColorI ColorI::BLUE( 0, 0, 255 );
+const ColorI ColorI::DARK(24, 24, 24);
+const ColorI ColorI::LIGHT(120, 120, 120);
 
 #include "console/console.h"
 #include "console/consoleTypes.h"

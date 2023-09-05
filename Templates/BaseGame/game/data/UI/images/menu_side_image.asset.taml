@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="menu_side_background_image"
+    imageFile="@assetFile=menu_side_background.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

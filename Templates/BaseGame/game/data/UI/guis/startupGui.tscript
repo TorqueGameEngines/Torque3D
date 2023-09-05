@@ -34,8 +34,8 @@ function loadStartup()
    // be in consecutive numerical order
    StartupGui.bitmap[0]     = "UI:backgrounddark_image";
    StartupGui.logo[0]       = "UI:Torque_3D_logo_alt_image";
-   StartupGui.logoPos[0]    = "178 251";
-   StartupGui.logoExtent[0] = "443 139";
+   StartupGui.logoPos[0]    = "220 120";
+   StartupGui.logoExtent[0] = "360 360";
 
    // Call the next() function to set our firt
    // splash screen

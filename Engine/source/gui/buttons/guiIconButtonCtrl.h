@@ -49,6 +49,9 @@ protected:
    S32               mTextLocation;
    S32               mTextMargin;
    Point2I           mButtonMargin;
+
+   /// Margin between the icon and the button border
+   S32               mBitmapMargin;
    
    /// Make the bitmap fill the button extent.
    bool mFitBitmapToButton;

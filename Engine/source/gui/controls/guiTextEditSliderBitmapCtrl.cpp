@@ -415,7 +415,7 @@ void GuiTextEditSliderBitmapCtrl::onRender(Point2I offset, const RectI &updateRe
 	
 	// Draw the line that splits the number and bitmaps
 	GFX->getDrawUtil()->drawLine(Point2I(offset.x + getWidth() - 14 -2, offset.y + 1 ),
-		Point2I(arrowUpStart.x -2, arrowUpStart.y + getExtent().y),
+		Point2I(arrowUpStart.x -2, arrowUpStart.y + getExtent().y + 2),
 		mProfile->mBorderColor);
 
 	GFX->getDrawUtil()->clearBitmapModulation();

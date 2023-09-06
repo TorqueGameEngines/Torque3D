@@ -1758,14 +1758,14 @@ void GuiInspectorType2DValue::constructEditControlChildren(GuiControl* retCtrl, 
 
    mCtrlX->setDataField(StringTable->insert("profile"), NULL, "GuiInspectorTextEditProfile");
    mCtrlX->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
-   mCtrlX->setDataField(StringTable->insert("format"), NULL, "%.4f");
-   mCtrlX->setDataField(StringTable->insert("range"), NULL, "-1e+03 1e+03");
+   mCtrlX->setDataField(StringTable->insert("format"), NULL, "%.7f");
+   mCtrlX->setDataField(StringTable->insert("range"), NULL, "-1e+32 1e+32");
    mCtrlX->setDataField(StringTable->insert("increment"), NULL, "0.1");
 
    mCtrlY->setDataField(StringTable->insert("profile"), NULL, "GuiInspectorTextEditProfile");
    mCtrlY->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
-   mCtrlY->setDataField(StringTable->insert("format"), NULL, "%.4f");
-   mCtrlY->setDataField(StringTable->insert("range"), NULL, "-1e+03 1e+03");
+   mCtrlY->setDataField(StringTable->insert("format"), NULL, "%.7f");
+   mCtrlY->setDataField(StringTable->insert("range"), NULL, "-1e+32 1e+32");
    mCtrlY->setDataField(StringTable->insert("increment"), NULL, "0.1");
 
    mLabelX->setDataField(StringTable->insert("profile"), NULL, "ToolsGuiXDimensionText");
@@ -1901,8 +1901,8 @@ void GuiInspectorType3DValue::constructEditControlChildren(GuiControl* retCtrl, 
 
    mCtrlZ->setDataField(StringTable->insert("profile"), NULL, "GuiInspectorTextEditProfile");
    mCtrlZ->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
-   mCtrlZ->setDataField(StringTable->insert("format"), NULL, "%.4f");
-   mCtrlZ->setDataField(StringTable->insert("range"), NULL, "-1e+03 1e+03");
+   mCtrlZ->setDataField(StringTable->insert("format"), NULL, "%.7f");
+   mCtrlZ->setDataField(StringTable->insert("range"), NULL, "-1e+32 1e+32");
    mCtrlZ->setDataField(StringTable->insert("increment"), NULL, "0.1");
 
    mLabelZ->setDataField(StringTable->insert("profile"), NULL, "ToolsGuiZDimensionText");

@@ -21,3 +21,4 @@ endforeach()
 
 # Once the full tree is installed, perform configurations
 CONFIGURE_FILE("game/main.tscript.in" "${TORQUE_APP_GAME_DIRECTORY}/main.${TORQUE_SCRIPT_EXTENSION}")
+CONFIGURE_FILE("${CMAKE_SOURCE_DIR}/Tools/CMake/template.torsion.in" "${TORQUE_APP_GAME_DIRECTORY}/${PROJECT_NAME}.torsion")

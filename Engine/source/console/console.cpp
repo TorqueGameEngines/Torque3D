@@ -308,7 +308,7 @@ bool useTimestamp = false;
 bool useRealTimestamp = false;
 
 static U32 initTime = Platform::getRealMilliseconds();
-U32 startTime = initTime;
+static U32 startTime = initTime;
 
 ConsoleFunctionGroupBegin( Clipboard, "Miscellaneous functions to control the clipboard and clear the console.");
 

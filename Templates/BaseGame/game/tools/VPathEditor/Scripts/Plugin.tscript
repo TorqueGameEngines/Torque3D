@@ -36,18 +36,18 @@ function VPathEditorPlugin::onWorldEditorStartup( %this )
     //----------------------------------------------------------------------
     
     // Add ourselves to the window menu.
-    %accel = EditorGui.addToEditorsMenu( "Path Editor", "", VPathEditorPlugin );
+    %accel = EditorGui.addToEditorsMenu( "Verve Path Editor", "", VPathEditorPlugin );
 
     // Add ourselves to the ToolsToolbar
-    %tooltip = "Path Editor (" @ %accel @ ")";
-    EditorGui.addToToolsToolbar( "VPathEditorPlugin", "VPathEditorPalette", "ToolsModule:btn_Palette_n_image", %tooltip );
+    %tooltip = "Verve Path Editor (" @ %accel @ ")";
+    EditorGui.addToToolsToolbar( "VPathEditorPlugin", "VPathEditorPalette", "ToolsModule:btn_VMovie_n_image", %tooltip );
 
     // Find and Store the Button.
     %this.ToolbarButton = ToolsToolbarArray.findObjectByInternalName( "VPathEditorPalette", false );
     
     // Extend Width.
     %extent = EWToolsToolbar.getExtent();
-    EWToolsToolbar.setExtent( ( getWord( %extent, 0 ) + 33 ) SPC getWord( %extent, 1 ) );
+    EWToolsToolbar.setExtent( ( getWord( %extent, 0 ) + 32 ) SPC getWord( %extent, 1 ) );
     
     //----------------------------------------------------------------------
     //

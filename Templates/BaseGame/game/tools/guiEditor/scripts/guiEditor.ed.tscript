@@ -768,22 +768,22 @@ function GuiEditorResList::init( %this )
    
    // Non-widescreen formats.
    
-   %this.add( "640x480 (VGA, 4:3)", 640 );
-   %this.add( "800x600 (SVGA, 4:3)", 800 );
-   %this.add( "1024x768 (XGA, 4:3)", 1024 );
-   %this.add( "1280x1024 (SXGA, 4:3)", 1280 );
-   %this.add( "1600x1200 (UXGA, 4:3)", 1600 );
+   %this.add( "  640 x 480  ( VGA,  4:3 ) ", 640 );
+   %this.add( "  800 x 600  ( SVGA, 4:3 ) ", 800 );
+   %this.add( " 1024 x 768  ( XGA,  4:3 ) ", 1024 );
+   %this.add( " 1280 x 1024 ( SXGA, 4:3 ) ", 1280 );
+   %this.add( " 1600 x 1200 ( UXGA, 4:3 ) ", 1600 );
    
    // Widescreen formats.
    
-   %this.add( "1280x720 (WXGA, 16:9)", 720 );
-   %this.add( "1600x900 (HD+, 16:9)", 900 );
-   %this.add( "1920x1080 (FHD, 16:9)", 1080 );
-   %this.add( "2560x1440 (QHD, 16:9)", 1440 );
-   %this.add( "3840x2160 (4K UHD, 16:9)", 2160 );
-   %this.add( "1440x900 (WXGA+, 16:10)", 900 );
-   %this.add( "1680x1050 (WSXGA+, 16:10)", 1050 );
-   %this.add( "1920x1200 (WUXGA, 16:10)", 1200 );
+   %this.add( " 1280 x 720  ( WXGA, 16:9 ) ", 720 );
+   %this.add( " 1600 x 900  ( HD+,  16:9 ) ", 900 );
+   %this.add( " 1920 x 1080 ( FHD,  16:9 ) ", 1080 );
+   %this.add( " 2560 x 1440 ( QHD,  16:9 ) ", 1440 );
+   %this.add( " 3840 x 2160 ( 4K UHD, 16:9 ) ", 2160 );
+   %this.add( " 1440 x 900  ( WXGA+,  16:10 ) ", 900 );
+   %this.add( " 1680 x 1050 ( WSXGA+, 16:10 ) ", 1050 );
+   %this.add( " 1920 x 1200 ( WUXGA,  16:10 ) ", 1200 );
 }
 
 //---------------------------------------------------------------------------------------------
@@ -913,7 +913,7 @@ function GuiEditorTabBook::onTabSelected( %this, %text, %index )
          %sidebar-->button3.setVisible( true );
          %sidebar-->button4.setVisible( true );
          
-         %sidebar-->button4.setBitmap( "ToolsModule:iconDelete_image" );
+         %sidebar-->button4.setBitmap( "ToolsModule:delete_n_image" );
          %sidebar-->button4.command = "GuiEditor.deleteSelection();";
          %sidebar-->button4.tooltip = "Delete Selected Control(s)";
          
@@ -928,11 +928,11 @@ function GuiEditorTabBook::onTabSelected( %this, %text, %index )
          %sidebar-->button3.setVisible( true );
          %sidebar-->button4.setVisible( true );
       
-         %sidebar-->button4.setBitmap( "ToolsModule:iconDelete_image" );
+         %sidebar-->button4.setBitmap( "ToolsModule:delete_n_image" );
          %sidebar-->button4.command = "GuiEditor.showDeleteProfileDialog( GuiEditorProfilesTree.getSelectedProfile() );";
          %sidebar-->button4.tooltip = "Delete Selected Profile";
       
-         %sidebar-->button3.setBitmap( "ToolsModule:new_n_image" );
+         %sidebar-->button3.setBitmap( "ToolsModule:iconNew_image" );
          %sidebar-->button3.command = "GuiEditor.createNewProfile( \"Unnamed\" );";
          %sidebar-->button3.tooltip = "Create New Profile with Default Values";
          
@@ -1113,7 +1113,7 @@ function GuiEditorGui::initSettings( %this )
       EditorSettings.endGroup();
 
       EditorSettings.beginGroup( "Help" );
-      EditorSettings.setDefaultValue( "documentationURL", "http://www.garagegames.com/products/torque-3d/documentation/user" ); //RDTODO: make this point to Gui Editor docs when available
+      EditorSettings.setDefaultValue( "documentationURL", "https://docs.torque3d.org" ); //RDTODO: make this point to Gui Editor docs when available
 
       // Create a path to the local documentation.  This is a bit of guesswork here.
       // It assumes that the project is located in a folder of the SDK root directory

@@ -34,7 +34,7 @@ function VerveEditorPlugin::onWorldEditorStartup( %this )
     
     // Extend Width.
     %extent = EWToolsToolbar.getExtent();
-    EWToolsToolbar.setExtent( ( getWord( %extent, 0 ) + 33 ) SPC getWord( %extent, 1 ) );
+    EWToolsToolbar.setExtent( ( getWord( %extent, 0 ) + 32 ) SPC getWord( %extent, 1 ) );
 }
 
 function VerveEditorPlugin::setEditorFunction( %this )

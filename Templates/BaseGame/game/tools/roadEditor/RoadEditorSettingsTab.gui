@@ -15,7 +15,7 @@ $guiContent = new GuiControl(RoadEditorSettingsTab,EditorGuiGroup) {
 
    new GuiTabPageCtrl(ERoadEditorSettingsPage) {
       fitBook = "1";
-      text = "Road Editor";
+      text = "Decal Road Editor";
       maxLength = "1024";
       Margin = "0 0 0 0";
       Padding = "0 0 0 0";

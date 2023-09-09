@@ -1,307 +1,274 @@
 //--- OBJECT WRITE BEGIN ---
-$guiContent = new GuiControl(TerrainTextureSettingsDlg, EditorGuiGroup) {
-   position = "0 0";
+$guiContent = new GuiControl(TerrainTextureSettingsDlg,EditorGuiGroup) {
    extent = "1024 768";
-   minExtent = "8 2";
-   horizSizing = "right";
-   vertSizing = "bottom";
    profile = "ToolsGuiDefaultProfile";
-   visible = "1";
-   active = "1";
    tooltipProfile = "ToolsGuiToolTipProfile";
-   hovertime = "1000";
    isContainer = "1";
-   canSave = "1";
    canSaveDynamicFields = "1";
 
    new GuiWindowCtrl() {
-      canSaveDynamicFields = "0";
-      internalName = "TerrainTextureSettings";
-      Enabled = "1";
-      isContainer = "1";
-      Profile = "ToolsGuiWindowProfile";
+      text = "Global Terrain Texture Settings";
+      resizeHeight = "0";
+      canMinimize = "0";
+      canMaximize = "0";
+      closeCommand = "TerrainTextureSettingsDlg.cancel();";
+      edgeSnap = "0";
+      anchorBottom = "1";
+      anchorRight = "1";
       position = "342 184";
       extent = "340 400";
       minExtent = "340 400";
       horizSizing = "center";
       vertSizing = "center";
-      canSave = "1";
-      isDecoy = "0";
-      Visible = "1";
-      tooltipprofile = "ToolsGuiToolTipProfile";
-      hovertime = "1000";
-      Margin = "0 0 0 0";
-      Padding = "0 0 0 0";
-      AnchorTop = "1";
-      AnchorBottom = "1";
-      AnchorLeft = "1";
-      AnchorRight = "1";
-      resizeWidth = "1";
-      resizeHeight = "0";
-      canMove = "1";
-      canClose = "1";
-      canMinimize = "0";
-      canMaximize = "0";
-      minSize = "4 4";
-      closeCommand = "TerrainTextureSettingsDlg.cancel();";
-      EdgeSnap = "0";
-      text = "Global Terrain Texture Settings";
+      profile = "ToolsGuiWindowProfile";
+      tooltipProfile = "ToolsGuiToolTipProfile";
+      internalName = "TerrainTextureSettings";
 
       new GuiCheckBoxCtrl() {
-         internalName = "lerpBlendCheckBox";
          text = "LerpBlend";
+         position = "21 35";
+         extent = "299 20";
          profile = "ToolsGuiCheckBoxProfile";
+         command = "TerrainTextureSettingsDlg.apply();";
          tooltipProfile = "ToolsGuiToolTipProfile";
          tooltip = "If enabled, terrain textures will use a simple linear interpolation blending method.";
-         
-         command = "TerrainTextureSettingsDlg.apply();";
-         
-         position = "20 40";
-         extent = "300 20";
+         internalName = "lerpBlendCheckBox";
       };
-      
       new GuiControl() {
-         position = "20 70";
-         profile = "ToolsGuiDefaultProfile";
+         position = "20 68";
          extent = "300 20";
-         
+         profile = "ToolsGuiDefaultProfile";
+         tooltipProfile = "GuiToolTipProfile";
+         isContainer = "1";
+
          new GuiTextCtrl() {
             text = "Global Blend Depth:";
-            profile = "ToolsGuiTextProfile";
+            position = "-1 -6";
+            extent = "120 20";
+            profile = "ToolsGuiTextRightProfile";
             tooltipProfile = "ToolsGuiToolTipProfile";
             tooltip = "Controls the general level of bleding across all textures, has no effect if Lerp Blend is enabled.";
-            
-            position = "0 0";
-            extent = "120 20";
          };
-      
          new GuiSliderCtrl() {
-            internalName = "blendDepthSlider";
+            range = "0.01 1";
+            value = "0.560687";
+            position = "130 -2";
+            extent = "170 20";
             profile = "ToolsGuiSliderProfile";
-         
             command = "TerrainTextureSettingsDlg.apply();";
             altCommand = "TerrainTextureSettingsDlg.updateBlendDepth();";
-            
-            position = "130 0";
-            extent = "170 20";
-            
-            range = "0.01 1.0";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "blendDepthSlider";
          };
       };
-      
       new GuiControl() {
-         position = "20 100";
-         profile = "ToolsGuiDefaultProfile";
+         position = "20 104";
          extent = "300 20";
-         
+         profile = "ToolsGuiDefaultProfile";
+         tooltipProfile = "GuiToolTipProfile";
+         isContainer = "1";
+
          new GuiTextCtrl() {
             text = "Detail Texture Size:";
-            profile = "ToolsGuiTextProfile";
-         
-            command = "TerrainTextureSettingsDlg.apply();";
-            
-            position = "0 0";
+            position = "-1 0";
             extent = "120 20";
-         };
-         
-         new GuiTextEditCtrl() {
-            internalName = "detailTextureSizeTextEdit";
-            profile = "ToolsGuiTextEditProfile";
-         
+            profile = "ToolsGuiTextRightProfile";
             command = "TerrainTextureSettingsDlg.apply();";
-            
+            tooltipProfile = "GuiToolTipProfile";
+         };
+         new GuiTextEditCtrl() {
             position = "130 0";
-            extent = "170 20";
+            extent = "81 18";
+            profile = "ToolsGuiTextEditProfile";
+            command = "TerrainTextureSettingsDlg.apply();";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "detailTextureSizeTextEdit";
          };
       };
-      
       new GuiControl() {
          position = "20 130";
-         profile = "ToolsGuiDefaultProfile";
          extent = "300 20";
-         
+         profile = "ToolsGuiDefaultProfile";
+         tooltipProfile = "GuiToolTipProfile";
+         isContainer = "1";
+
          new GuiTextCtrl() {
             text = "Detail Texture Format:";
-            profile = "ToolsGuiTextProfile";
-            
-            position = "0 0";
+            position = "-1 0";
             extent = "120 20";
+            profile = "ToolsGuiTextRightProfile";
+            tooltipProfile = "GuiToolTipProfile";
          };
-         
          new GuiPopUpMenuCtrl() {
-            internalName = "detailTextureFormatPopUpMenu";
-            profile = "ToolsGuiPopUpMenuProfile";
-         
-            command = "TerrainTextureSettingsDlg.apply();";
-            
+            text = "R8G8B8A8";
             position = "130 0";
             extent = "170 20";
+            profile = "ToolsGuiPopUpMenuProfile";
+            command = "TerrainTextureSettingsDlg.apply();";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "detailTextureFormatPopUpMenu";
          };
       };
-      
       new GuiControl() {
-         position = "20 160";
-         profile = "ToolsGuiDefaultProfile";
+         position = "20 168";
          extent = "300 20";
-         
+         profile = "ToolsGuiDefaultProfile";
+         tooltipProfile = "GuiToolTipProfile";
+         isContainer = "1";
+
          new GuiTextCtrl() {
             text = "Macro Texture Size:";
-            profile = "ToolsGuiTextProfile";
-            
-            position = "0 0";
+            position = "-1 0";
             extent = "120 20";
+            profile = "ToolsGuiTextRightProfile";
+            tooltipProfile = "GuiToolTipProfile";
          };
-         
          new GuiTextEditCtrl() {
-            internalName = "macroTextureSizeTextEdit";
-            profile = "ToolsGuiTextEditProfile";
-         
-            command = "TerrainTextureSettingsDlg.apply();";
-            
             position = "130 0";
-            extent = "170 20";
+            extent = "82 18";
+            profile = "ToolsGuiTextEditProfile";
+            command = "TerrainTextureSettingsDlg.apply();";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "macroTextureSizeTextEdit";
          };
       };
-      
       new GuiControl() {
-         position = "20 190";
-         profile = "ToolsGuiDefaultProfile";
+         position = "20 194";
          extent = "300 20";
-         
+         profile = "ToolsGuiDefaultProfile";
+         tooltipProfile = "GuiToolTipProfile";
+         isContainer = "1";
+
          new GuiTextCtrl() {
             text = "Macro Texture Format:";
-            profile = "ToolsGuiTextProfile";
-            
-            position = "0 0";
+            position = "-1 0";
             extent = "120 20";
+            profile = "ToolsGuiTextRightProfile";
+            tooltipProfile = "GuiToolTipProfile";
          };
-         
          new GuiPopUpMenuCtrl() {
-            internalName = "macroTextureFormatPopUpMenu";
-            profile = "ToolsGuiPopUpMenuProfile";
-         
-            command = "TerrainTextureSettingsDlg.apply();";
-            
+            text = "R8G8B8A8";
             position = "130 0";
             extent = "170 20";
+            profile = "ToolsGuiPopUpMenuProfile";
+            command = "TerrainTextureSettingsDlg.apply();";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "macroTextureFormatPopUpMenu";
          };
       };
-      
       new GuiControl() {
-         position = "20 220";
-         profile = "ToolsGuiDefaultProfile";
+         position = "20 232";
          extent = "300 20";
-         
+         profile = "ToolsGuiDefaultProfile";
+         tooltipProfile = "GuiToolTipProfile";
+         isContainer = "1";
+
          new GuiTextCtrl() {
             text = "Normal Texture Size:";
-            profile = "ToolsGuiTextProfile";
-            
-            position = "0 0";
+            position = "-1 0";
             extent = "120 20";
+            profile = "ToolsGuiTextRightProfile";
+            tooltipProfile = "GuiToolTipProfile";
          };
-         
          new GuiTextEditCtrl() {
-            internalName = "normalTextureSizeTextEdit";
-            profile = "ToolsGuiTextEditProfile";
-         
-            command = "TerrainTextureSettingsDlg.apply();";
-            
             position = "130 0";
-            extent = "170 20";
+            extent = "82 18";
+            profile = "ToolsGuiTextEditProfile";
+            command = "TerrainTextureSettingsDlg.apply();";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "normalTextureSizeTextEdit";
          };
       };
-      
       new GuiControl() {
-         position = "20 250";
-         profile = "ToolsGuiDefaultProfile";
+         position = "20 258";
          extent = "300 20";
-         
+         profile = "ToolsGuiDefaultProfile";
+         tooltipProfile = "GuiToolTipProfile";
+         isContainer = "1";
+
          new GuiTextCtrl() {
             text = "Normal Texture Format:";
-            profile = "ToolsGuiTextProfile";
-            
-            position = "0 0";
+            position = "-1 0";
             extent = "120 20";
+            profile = "ToolsGuiTextRightProfile";
+            tooltipProfile = "GuiToolTipProfile";
          };
-         
          new GuiPopUpMenuCtrl() {
-            internalName = "normalTextureFormatPopUpMenu";
-            profile = "ToolsGuiPopUpMenuProfile";
-         
-            command = "TerrainTextureSettingsDlg.apply();";
-            
+            text = "R8G8B8A8";
             position = "130 0";
             extent = "170 20";
+            profile = "ToolsGuiPopUpMenuProfile";
+            command = "TerrainTextureSettingsDlg.apply();";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "normalTextureFormatPopUpMenu";
          };
       };
-      
       new GuiControl() {
-         position = "20 280";
-         profile = "ToolsGuiDefaultProfile";
+         position = "20 296";
          extent = "300 20";
-         
+         profile = "ToolsGuiDefaultProfile";
+         tooltipProfile = "GuiToolTipProfile";
+         isContainer = "1";
+
          new GuiTextCtrl() {
             text = "ORM Texture Size:";
-            profile = "ToolsGuiTextProfile";
-            
-            position = "0 0";
+            position = "-1 0";
             extent = "120 20";
+            profile = "ToolsGuiTextRightProfile";
+            tooltipProfile = "GuiToolTipProfile";
          };
-         
          new GuiTextEditCtrl() {
-            internalName = "ormTextureSizeTextEdit";
-            profile = "ToolsGuiTextEditProfile";
-            
             position = "130 0";
-            extent = "170 20";
+            extent = "81 18";
+            profile = "ToolsGuiTextEditProfile";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "ormTextureSizeTextEdit";
          };
       };
-      
       new GuiControl() {
-         position = "20 310";
-         profile = "ToolsGuiDefaultProfile";
+         position = "20 322";
          extent = "300 20";
-         
+         profile = "ToolsGuiDefaultProfile";
+         tooltipProfile = "GuiToolTipProfile";
+         isContainer = "1";
+
          new GuiTextCtrl() {
             text = "ORM Texture Format:";
-            profile = "ToolsGuiTextProfile";
-            
-            position = "0 0";
+            position = "-1 0";
             extent = "120 20";
+            profile = "ToolsGuiTextRightProfile";
+            tooltipProfile = "GuiToolTipProfile";
          };
-         
          new GuiPopUpMenuCtrl() {
-            internalName = "ormTextureFormatPopUpMenu";
-            profile = "ToolsGuiPopUpMenuProfile";
-            
+            text = "R8G8B8A8";
             position = "130 0";
             extent = "170 20";
+            profile = "ToolsGuiPopUpMenuProfile";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "ormTextureFormatPopUpMenu";
          };
       };
-      
       new GuiControl() {
-         position = "20 350";
-         profile = "ToolsGuiDefaultProfile";
+         position = "20 361";
          extent = "300 30";
-      
+         profile = "ToolsGuiDefaultProfile";
+         tooltipProfile = "GuiToolTipProfile";
+         isContainer = "1";
+
          new GuiButtonCtrl() {
             text = "Apply & Save";
-            profile = "ToolsGuiButtonProfile";
-            position = "0 0";
-            
-            command = "TerrainTextureSettingsDlg.applyAndSave();";
-            
             extent = "145 30";
+            profile = "ToolsGuiButtonProfile";
+            command = "TerrainTextureSettingsDlg.applyAndSave();";
+            tooltipProfile = "GuiToolTipProfile";
          };
-      
          new GuiButtonCtrl() {
             text = "Cancel";
-            profile = "ToolsGuiButtonProfile";
             position = "155 0";
-            
-            command = "TerrainTextureSettingsDlg.cancel();";
-            
             extent = "145 30";
+            profile = "ToolsGuiButtonProfile";
+            command = "TerrainTextureSettingsDlg.cancel();";
+            tooltipProfile = "GuiToolTipProfile";
          };
       };
    };

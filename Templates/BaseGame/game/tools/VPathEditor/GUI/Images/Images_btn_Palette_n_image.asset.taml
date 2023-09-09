@@ -1,7 +1,7 @@
 <ImageAsset
     canSave="true"
     canSaveDynamicFields="true"
-    AssetName="Images_btn_Palette_n_image"
+    AssetName="Images_btn_Pallete_n_image"
     imageFile="@assetFile=btn_Palette_n.png"
     UseMips="true"
     isHDRImage="false"

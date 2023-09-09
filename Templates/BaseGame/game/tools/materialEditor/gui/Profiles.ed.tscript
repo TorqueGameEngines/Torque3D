@@ -31,8 +31,8 @@ singleton GuiControlProfile (GuiMatEdSliderProfile)
 singleton GuiControlProfile (GuiMatEdRightJustifyProfile)
 {
    // font
-   fontType = "Arial";
-   fontSize = 14;
+   fontType = $Gui::fontTypeRegular;
+   fontSize = 16;
    fontCharset = ANSI;
 
    fontColor = "0 0 0";

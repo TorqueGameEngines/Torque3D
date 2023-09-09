@@ -1,924 +1,924 @@
-//--- OBJECT WRITE BEGIN ---
-$guiContent = new GuiControl(TerrainMaterialDlg,EditorGuiGroup) {
-   extent = "1024 768";
-   profile = "ToolsGuiDefaultNonModalProfile";
-   tooltipProfile = "ToolsGuiToolTipProfile";
-   isContainer = "1";
-   canSaveDynamicFields = "1";
-
-   new GuiWindowCtrl() {
-      text = "Terrain Materials Editor";
-      canMinimize = "0";
-      canMaximize = "0";
-      closeCommand = "TerrainMaterialDlg.dialogCancel();";
-      edgeSnap = "0";
-      docking = "None";
-      margin = "4 4 4 4";
-      anchorTop = "0";
-      anchorLeft = "0";
-      position = "222 59";
-      extent = "457 639";
-      minExtent = "358 452";
-      horizSizing = "center";
-      vertSizing = "center";
-      profile = "ToolsGuiWindowProfile";
-      tooltipProfile = "ToolsGuiToolTipProfile";
-
-      new GuiSplitContainer() {
-         splitPoint = "182 100";
-         position = "3 27";
-         extent = "450 579";
-         horizSizing = "width";
-         profile = "ToolsGuiDefaultProfile";
-         tooltipProfile = "GuiToolTipProfile";
-
-         new GuiPanel() {
-            docking = "Client";
-            extent = "180 579";
-            profile = "ToolsGuiDefaultProfile";
-            tooltipProfile = "GuiToolTipProfile";
-            internalName = "Panel1";
-
-      new GuiContainer() {
-               position = "6 -2";
-               extent = "179 18";
-         horizSizing = "width";
-         profile = "inspectorStyleRolloutDarkProfile";
-         tooltipProfile = "GuiToolTipProfile";
-
-         new GuiTextCtrl() {
-            text = "Terrain Materials";
-            position = "5 0";
-            extent = "91 18";
-            profile = "ToolsGuiDefaultProfile";
-            tooltipProfile = "GuiToolTipProfile";
-         };
-         new GuiBitmapButtonCtrl() {
-                  BitmapAsset = "ToolsModule:new_n_image";
-                  position = "150 3";
-            extent = "15 15";
-            horizSizing = "left";
-            vertSizing = "top";
-            profile = "ToolsGuiButtonProfile";
-            command = "TerrainMaterialDlg.newMat();";
-            tooltipProfile = "ToolsGuiToolTipProfile";
-         };
-         new GuiBitmapButtonCtrl() {
-                  BitmapAsset = "ToolsModule:delete_n_image";
-                  position = "163 3";
-            extent = "15 15";
-            horizSizing = "left";
-            vertSizing = "top";
-            profile = "ToolsGuiButtonProfile";
-            command = "TerrainMaterialDlg.deleteMat();";
-            tooltipProfile = "ToolsGuiToolTipProfile";
-         };
-      };
-            new GuiControl() {
-               position = "6 26";
-               extent = "177 545";
-               horizSizing = "width";
-               vertSizing = "height";
-               profile = "ToolsGuiDefaultProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               isContainer = "1";
-
-               new GuiScrollCtrl() {
-                  hScrollBar = "dynamic";
-                  vScrollBar = "dynamic";
-                  extent = "174 549";
-                  horizSizing = "width";
-                  vertSizing = "height";
-                  profile = "ToolsGuiScrollProfile";
-                  tooltipProfile = "ToolsGuiToolTipProfile";
-
-                  new GuiTreeViewCtrl() {
-                     itemHeight = "21";
-                     mouseDragging = "0";
-                     multipleSelections = "0";
-                     deleteObjectAllowed = "0";
-                     dragToItemAllowed = "0";
-                     showRoot = "0";
-                     showObjectIds = "0";
-                     showClassNames = "0";
-                     showObjectNames = "0";
-                     position = "1 1";
-                     extent = "224 42";
-                     profile = "ToolsGuiTreeViewProfile";
-                     tooltipProfile = "ToolsGuiToolTipProfile";
-                     internalName = "matLibTree";
-                     class = "TerrainMaterialTreeCtrl";
+//--- OBJECT WRITE BEGIN --- 
+$guiContent = new GuiControl(TerrainMaterialDlg,EditorGuiGroup) { 
+   extent = "1024 768"; 
+   profile = "ToolsGuiDefaultProfile"; 
+   tooltipProfile = "ToolsGuiToolTipProfile"; 
+   isContainer = "1"; 
+   canSaveDynamicFields = "1"; 
+   
+   new GuiWindowCtrl() { 
+      text = "::  Terrain  Materials Editor"; 
+      resizeWidth = "0"; 
+      canMinimize = "0"; 
+      canMaximize = "0"; 
+      closeCommand = "TerrainMaterialDlg.dialogCancel(); "; 
+      edgeSnap = "0"; 
+      docking = "None"; 
+      margin = "4 4 4 4"; 
+      anchorTop = "0"; 
+      anchorLeft = "0"; 
+      position = "224 59"; 
+      extent = "466 700"; 
+      minExtent = "358 452"; 
+      horizSizing = "center"; 
+      vertSizing = "center"; 
+      profile = "ToolsGuiWindowProfile"; 
+      tooltipProfile = "ToolsGuiToolTipProfile"; 
+  
+      new GuiSplitContainer() { 
+         splitPoint = "182 80"; 
+         fixedSize = "80"; 
+         position = "3 27"; 
+         extent = "459 650"; 
+         horizSizing = "width"; 
+         profile = "ToolsGuiDefaultProfile"; 
+         tooltipProfile = "GuiToolTipProfile"; 
+  
+         new GuiPanel() { 
+            docking = "Client"; 
+            extent = "180 650"; 
+            profile = "ToolsGuiSolidDefaultProfile"; 
+            tooltipProfile = "GuiToolTipProfile"; 
+            internalName = "Panel1"; 
+ 
+            new GuiContainer() { 
+               position = "6 -2"; 
+               extent = "189 18"; 
+               horizSizing = "width"; 
+               profile = "inspectorStyleRolloutProfile"; 
+               tooltipProfile = "GuiToolTipProfile"; 
+ 
+               new GuiTextCtrl() { 
+                  text = "Terrain  Materials"; 
+                  position = "5 0"; 
+                  extent = "112 23"; 
+                  profile = "ToolsGuiInspectorTitleTextProfile"; 
+                  tooltipProfile = "GuiToolTipProfile"; 
+               }; 
+               new GuiBitmapButtonCtrl() { 
+                  BitmapAsset = "ToolsModule:new_n_image"; 
+                  position = "137 4"; 
+                  extent = "16 16"; 
+                  horizSizing = "left"; 
+                  vertSizing = "top"; 
+                  profile = "ToolsGuiButtonProfile"; 
+                  command = "TerrainMaterialDlg.newMat(); "; 
+                  tooltipProfile = "ToolsGuiToolTipProfile"; 
+               }; 
+               new GuiBitmapButtonCtrl() { 
+                  BitmapAsset = "ToolsModule:delete_n_image"; 
+                  position = "155 4"; 
+                  extent = "16 16"; 
+                  horizSizing = "left"; 
+                  vertSizing = "top"; 
+                  profile = "ToolsGuiButtonProfile"; 
+                  command = "TerrainMaterialDlg.deleteMat(); "; 
+                  tooltipProfile = "ToolsGuiToolTipProfile"; 
+               }; 
+            }; 
+            new GuiControl() { 
+               position = "6 26"; 
+               extent = "187 600"; 
+               horizSizing = "width"; 
+               vertSizing = "height"; 
+               profile = "ToolsGuiDefaultProfile"; 
+               tooltipProfile = "ToolsGuiToolTipProfile"; 
+               isContainer = "1"; 
+ 
+               new GuiScrollCtrl() { 
+                  hScrollBar = "dynamic"; 
+                  vScrollBar = "dynamic"; 
+                  extent = "171 600"; 
+                  horizSizing = "width"; 
+                  vertSizing = "height"; 
+                  profile = "ToolsGuiScrollProfile"; 
+                  tooltipProfile = "ToolsGuiToolTipProfile"; 
+  
+                  new GuiTreeViewCtrl() { 
+                     tabSize = "8"; 
+                     itemHeight = "21"; 
+                     mouseDragging = "0"; 
+                     multipleSelections = "0"; 
+                     deleteObjectAllowed = "0"; 
+                     dragToItemAllowed = "0"; 
+                     showRoot = "0"; 
+                     showObjectIds = "0"; 
+                     showClassNames = "0"; 
+                     showObjectNames = "0"; 
+                     position = "1 4"; 
+                     extent = "136 21"; 
+                     profile = "ToolsGuiTreeViewProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     internalName = "matLibTree"; 
+                     class = "TerrainMaterialTreeCtrl"; 
+                  }; 
+               }; 
+            }; 
+         }; 
+         new GuiPanel() { 
+            docking = "Client"; 
+            position = "184 0"; 
+            extent = "275 585"; 
+            profile = "ToolsGuiSolidDefaultProfile"; 
+            tooltipProfile = "GuiToolTipProfile"; 
+            internalName = "panel2"; 
+  
+            new GuiContainer() { 
+               position = "1 0"; 
+               extent = "274 585"; 
+               horizSizing = "width"; 
+               vertSizing = "height"; 
+               profile = "inspectorStyleRolloutProfile"; 
+               tooltipProfile = "ToolsGuiToolTipProfile"; 
+               internalName = "matSettingsParent"; 
+  
+               new GuiTextCtrl() { 
+                  text = "Material Properties"; 
+                  position = "8 1"; 
+                  extent = "117 16"; 
+                  profile = "ToolsGuiInspectorTitleTextProfile"; 
+                  tooltipProfile = "ToolsGuiToolTipProfile"; 
+                  isContainer = "0"; 
+               }; 
+               new GuiTextCtrl() { 
+                  text = "Name"; 
+                  position = "8 20"; 
+                  extent = "44 17"; 
+                  profile = "ToolsGuiTextBoldProfile"; 
+                  tooltipProfile = "ToolsGuiDefaultProfile"; 
+                  isContainer = "0"; 
+               }; 
+               new GuiTextCtrl() { 
+                  position = "47 19"; 
+                  extent = "223 18"; 
+                  profile = "ToolsGuiTextEditProfile"; 
+                  tooltipProfile = "ToolsGuiToolTipProfile"; 
+                  isContainer = "0"; 
+                  internalName = "matNameCtrl"; 
+               }; 
+               new GuiBitmapCtrl() { 
+                  BitmapAsset = "ToolsModule:separator_v_image"; 
+                  position = "1 42"; 
+                  extent = "271 2"; 
+                  horizSizing = "width"; 
+                  profile = "ToolsGuiDefaultProfile"; 
+                  tooltipProfile = "ToolsGuiToolTipProfile"; 
+               }; 
+               new GuiContainer(DiffuseMapContainer) { 
+                  position = "6 47"; 
+                  extent = "261 75"; 
+                  horizSizing = "width"; 
+                  profile = "ToolsGuiDefaultProfile"; 
+                  tooltipProfile = "ToolsGuiToolTipProfile"; 
+  
+                  new GuiCheckBoxCtrl() { 
+                     text = " Use Side Projection"; 
+                     position = "81 54"; 
+                     extent = "119 16"; 
+                     profile = "ToolsGuiCheckBoxProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     internalName = "sideProjectionCtrl"; 
+                  }; 
+                  new GuiBitmapCtrl() { 
+                     BitmapAsset = "ToolsModule:unknownImage_image"; 
+                     position = "1 1"; 
+                     extent = "47 47"; 
+                     profile = "ToolsGuiDefaultProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     internalName = "texDiffuseMap"; 
+                  }; 
+                  new GuiBitmapButtonCtrl() { 
+                     BitmapAsset = "ToolsModule:cubemapBtnBorder_n_image"; 
+                     position = "1 1"; 
+                     extent = "48 48"; 
+                     profile = "ToolsGuiDefaultProfile"; 
+                     command = "TerrainMaterialDlg.updateTextureMap(\"DiffuseMap\"); "; 
+                     tooltipProfile = "ToolsGuiDefaultProfile"; 
+                     tooltip = "Change the Active Diffuse Map for this layer"; 
+                  }; 
+                  new GuiTextCtrl() { 
+                     text = "Diffuse (Overlay)"; 
+                     position = "57 -2"; 
+                     extent = "39 18"; 
+                     profile = "EditorTextProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     isContainer = "0"; 
+                  }; 
+                  new GuiTextCtrl() { 
+                     text = "None"; 
+                     position = "57 16"; 
+                     extent = "144 17"; 
+                     horizSizing = "width"; 
+                     profile = "ToolsGuiTextProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     isContainer = "0"; 
+                     internalName = "diffuseMapAssetId"; 
+                  }; 
+                  new GuiButtonCtrl() { 
+                     text = "Edit"; 
+                     position = "200 0"; 
+                     extent = "40 16"; 
+                     horizSizing = "left"; 
+                     profile = "ToolsGuiButtonProfile"; 
+                     command = "TerrainMaterialDlg.updateTextureMap(\"DiffuseMap\"); "; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                  }; 
+                  new GuiBitmapButtonCtrl() { 
+                     BitmapAsset = "ToolsModule:delete_n_image"; 
+                     position = "248 0"; 
+                     extent = "16 16"; 
+                     horizSizing = "left"; 
+                     profile = "ToolsGuiDefaultProfile"; 
+                     command = "TerrainMaterialDlg.clearTextureMap(\"DiffuseMap\"); "; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                  }; 
+                  new GuiTextCtrl() { 
+                     text = "Size"; 
+                     anchorTop = "0"; 
+                     anchorLeft = "0"; 
+                     position = "152 35"; 
+                     extent = "39 16"; 
+                     profile = "ToolsGuiTextRightProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     isContainer = "0"; 
+                  }; 
+                  new GuiTextEditCtrl() { 
+                     text = "200"; 
+                     anchorTop = "0"; 
+                     anchorLeft = "0"; 
+                     position = "200 34"; 
+                     extent = "40 18"; 
+                     profile = "ToolsGuiTextEditProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     isContainer = "0"; 
+                     internalName = "baseSizeCtrl"; 
+                  }; 
+               }; 
+               new GuiBitmapCtrl() { 
+                  BitmapAsset = "ToolsModule:separator_v_image"; 
+                  position = "6 121"; 
+                  extent = "266 2"; 
+                  horizSizing = "width"; 
+                  profile = "ToolsGuiDefaultProfile"; 
+                  tooltipProfile = "ToolsGuiToolTipProfile"; 
+               }; 
+               new GuiContainer(DetailMapContainer) { 
+                  position = "6 127"; 
+                  extent = "261 75"; 
+                  horizSizing = "width"; 
+                  profile = "ToolsGuiDefaultProfile"; 
+                  tooltipProfile = "ToolsGuiToolTipProfile"; 
+ 
+                  new GuiBitmapCtrl() { 
+                     BitmapAsset = "ToolsModule:unknownImage_image"; 
+                     position = "1 1"; 
+                     extent = "47 47"; 
+                     profile = "ToolsGuiDefaultProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     internalName = "texDetailMap"; 
+                  }; 
+                  new GuiBitmapButtonCtrl() { 
+                     BitmapAsset = "ToolsModule:cubemapBtnBorder_n_image"; 
+                     position = "1 1"; 
+                     extent = "48 48"; 
+                     profile = "ToolsGuiDefaultProfile"; 
+                     command = "TerrainMaterialDlg.updateTextureMap(\"DetailMap\"); "; 
+                     tooltipProfile = "ToolsGuiDefaultProfile"; 
+                     tooltip = "Change the active Detail Map for this layer."; 
+                  }; 
+                  new GuiTextCtrl() { 
+                     text = "Detail"; 
+                     position = "57 -2"; 
+                     extent = "30 18"; 
+                     profile = "EditorTextProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     isContainer = "0"; 
+                  }; 
+                  new GuiTextCtrl() { 
+                     text = "None"; 
+                     position = "57 16"; 
+                     extent = "205 17"; 
+                     horizSizing = "width"; 
+                     profile = "ToolsGuiTextProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     isContainer = "0"; 
+                     internalName = "detailMapAssetId"; 
+                  }; 
+                  new GuiButtonCtrl() { 
+                     text = "Edit"; 
+                     position = "200 0"; 
+                     extent = "40 16"; 
+                     horizSizing = "left"; 
+                     profile = "ToolsGuiButtonProfile"; 
+                     command = "TerrainMaterialDlg.updateTextureMap(\"DetailMap\"); "; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                  }; 
+                  new GuiBitmapButtonCtrl() { 
+                     BitmapAsset = "ToolsModule:delete_n_image"; 
+                     position = "248 0"; 
+                     extent = "16 16"; 
+                     horizSizing = "left"; 
+                     profile = "ToolsGuiDefaultProfile"; 
+                     command = "TerrainMaterialDlg.clearTextureMap(\"DetailMap\"); "; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                  }; 
+                  new GuiTextCtrl() { 
+                     text = "Size"; 
+                     anchorTop = "0"; 
+                     anchorLeft = "0"; 
+                     position = "152 33"; 
+                     extent = "39 16"; 
+                     profile = "ToolsGuiTextRightProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     isContainer = "0"; 
+                  }; 
+                  new GuiTextEditCtrl() { 
+                     text = "2"; 
+                     anchorTop = "0"; 
+                     anchorLeft = "0"; 
+                     position = "200 32"; 
+                     extent = "40 18"; 
+                     profile = "ToolsGuiTextEditProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     isContainer = "0"; 
+                     internalName = "detSizeCtrl"; 
+                  }; 
+                  new GuiTextCtrl() { 
+                     text = "Strength"; 
+                     anchorTop = "0"; 
+                     anchorLeft = "0"; 
+                     position = "10 56"; 
+                     extent = "65 16"; 
+                     profile = "ToolsGuiTextRightProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     isContainer = "0"; 
+                  }; 
+                  new GuiTextEditCtrl() { 
+                     text = "1"; 
+                     anchorTop = "0"; 
+                     anchorLeft = "0"; 
+                     position = "82 56"; 
+                     extent = "40 18"; 
+                     profile = "ToolsGuiTextEditProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     isContainer = "0"; 
+                     internalName = "detStrengthCtrl"; 
+                  }; 
+                  new GuiTextCtrl() { 
+                     text = "Distance"; 
+                     anchorTop = "0"; 
+                     anchorLeft = "0"; 
+                     position = "144 56"; 
+                     extent = "45 16"; 
+                     profile = "ToolsGuiTextRightProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     isContainer = "0"; 
+                  }; 
+                  new GuiTextEditCtrl() { 
+                     text = "50"; 
+                     anchorTop = "0"; 
+                     anchorLeft = "0"; 
+                     position = "200 56"; 
+                     extent = "40 18"; 
+                     profile = "ToolsGuiTextEditProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     isContainer = "0"; 
+                     internalName = "detDistanceCtrl"; 
+                  }; 
+               }; 
+               new GuiBitmapCtrl() { 
+                  BitmapAsset = "ToolsModule:separator_v_image"; 
+                  position = "6 208"; 
+                  extent = "266 2"; 
+                  horizSizing = "width"; 
+                  profile = "ToolsGuiDefaultProfile"; 
+                  tooltipProfile = "ToolsGuiToolTipProfile"; 
+               }; 
+               new GuiContainer(NormalMapContainer) { 
+                  position = "6 213"; 
+                  extent = "261 120"; 
+                  horizSizing = "width"; 
+                  profile = "ToolsGuiDefaultProfile"; 
+                  tooltipProfile = "ToolsGuiToolTipProfile"; 
+  
+                  new GuiBitmapCtrl() { 
+                     BitmapAsset = "ToolsModule:unknownImage_image"; 
+                     position = "1 1"; 
+                     extent = "47 47"; 
+                     profile = "ToolsGuiDefaultProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     internalName = "texNormalMap"; 
+                  }; 
+                  new GuiTextCtrl() { 
+                     text = "Normal"; 
+                     position = "57 -2"; 
+                     extent = "39 18"; 
+                     profile = "EditorTextProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     isContainer = "0"; 
+                  }; 
+                  new GuiBitmapButtonCtrl() { 
+                     BitmapAsset = "ToolsModule:cubemapBtnBorder_n_image"; 
+                     position = "1 1"; 
+                     extent = "48 48"; 
+                     profile = "ToolsGuiDefaultProfile"; 
+                     command = "TerrainMaterialDlg.updateTextureMap(\"NormalMap\"); "; 
+                     tooltipProfile = "ToolsGuiDefaultProfile"; 
+                     tooltip = "Change the active Normal Map for this layer."; 
+                  }; 
+                  new GuiTextCtrl() { 
+                     text = "None"; 
+                     position = "57 15"; 
+                     extent = "145 17"; 
+                     horizSizing = "width"; 
+                     profile = "ToolsGuiTextProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     isContainer = "0"; 
+                     internalName = "normalMapAssetId"; 
+                  }; 
+                  new GuiButtonCtrl() { 
+                     text = "Edit"; 
+                     position = "200 0"; 
+                     extent = "40 16"; 
+                     horizSizing = "left"; 
+                     profile = "ToolsGuiButtonProfile"; 
+                     command = "TerrainMaterialDlg.updateTextureMap(\"NormalMap\"); "; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                  }; 
+                  new GuiBitmapButtonCtrl() { 
+                     BitmapAsset = "ToolsModule:delete_n_image"; 
+                     position = "248 0"; 
+                     extent = "16 16"; 
+                     horizSizing = "left"; 
+                     profile = "ToolsGuiDefaultProfile"; 
+                     command = "TerrainMaterialDlg.clearTextureMap(\"NormalMap\"); "; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                  }; 
+                  new GuiTextCtrl() { 
+                     text = "Parallax Scale"; 
+                     position = "112 32"; 
+                     extent = "77 16"; 
+                     profile = "ToolsGuiTextRightProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     isContainer = "0"; 
+                  }; 
+                  new GuiTextEditCtrl() { 
+                     text = "0"; 
+                     anchorTop = "0"; 
+                     anchorLeft = "0"; 
+                     position = "200 32"; 
+                     extent = "40 18"; 
+                     profile = "ToolsGuiTextEditProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     isContainer = "0"; 
+                     internalName = "parallaxScaleCtrl"; 
+                  }; 
+                  new GuiSliderCtrl(TerrainMaterialDlgBlendHeightBaseSlider) { 
+                     range = "-0.5 0.5"; 
+                     ticks = "0"; 
+                     value = "0"; 
+                     position = "92 59"; 
+                     extent = "98 14"; 
+                     profile = "ToolsGuiSliderProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     internalName = "blendHeightBaseSliderCtrl"; 
+                  }; 
+                  new GuiTextCtrl() { 
+                     text = "Blend Height"; 
+                     position = "16 58"; 
+                     extent = "68 15"; 
+                     profile = "ToolsGuiTextRightProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                  }; 
+                  new GuiTextEditCtrl(TerrainMaterialDlgBlendHeightBaseTextEdit) { 
+                     text = "0"; 
+                     anchorTop = "0"; 
+                     anchorLeft = "0"; 
+                     position = "200 56"; 
+                     extent = "40 18"; 
+                     profile = "ToolsGuiTextEditProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     isContainer = "0"; 
+                     internalName = "blendHeightBaseTextEditCtrl"; 
+                  }; 
+                  new GuiSliderCtrl(TerrainMaterialDlgBlendHeightContrastSlider) { 
+                     range = "0 5"; 
+                     ticks = "0"; 
+                     value = "1"; 
+                     position = "93 82"; 
+                     extent = "97 14"; 
+                     profile = "ToolsGuiSliderProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     internalName = "blendHeightContrastSliderCtrl"; 
+                  }; 
+                  new GuiTextCtrl() { 
+                     text = "Blend Contrast"; 
+                     position = "8 81"; 
+                     extent = "76 15"; 
+                     profile = "ToolsGuiTextRightProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                  }; 
+                  new GuiTextEditCtrl(TerrainMaterialDlgBlendHeightContrastTextEdit) { 
+                     text = "1"; 
+                     anchorTop = "0"; 
+                     anchorLeft = "0"; 
+                     position = "200 80"; 
+                     extent = "40 18"; 
+                     profile = "ToolsGuiTextEditProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     isContainer = "0"; 
+                     internalName = "blendHeightContrastTextEditCtrl"; 
                   };
-               };
-            };
-         };
-         new GuiPanel() {
-            docking = "Client";
-            position = "184 0";
-            extent = "266 579";
-            profile = "ToolsGuiDefaultProfile";
-            tooltipProfile = "GuiToolTipProfile";
-            internalName = "panel2";
-
-      new GuiContainer() {
-               position = "-7 0";
-               extent = "274 577";
-               horizSizing = "width";
-         vertSizing = "height";
-         profile = "inspectorStyleRolloutProfile";
-         tooltipProfile = "ToolsGuiToolTipProfile";
-         internalName = "matSettingsParent";
-
-         new GuiBitmapCtrl() {
-                  BitmapAsset = "ToolsModule:separator_v_image";
-            position = "1 0";
-                  extent = "271 2";
-            horizSizing = "width";
-            profile = "ToolsGuiDefaultProfile";
-            tooltipProfile = "ToolsGuiToolTipProfile";
-         };
-         new GuiTextCtrl() {
-            text = "Name";
-            position = "8 22";
-            extent = "44 17";
-            profile = "ToolsGuiTextProfile";
-            tooltipProfile = "ToolsGuiDefaultProfile";
-            isContainer = "0";
-         };
-         new GuiTextCtrl() {
-            position = "39 21";
-                  extent = "227 18";
-            profile = "ToolsGuiTextEditProfile";
-            //altCommand = "TerrainMaterialDlg.setMaterialName( $ThisControl.getText() );";
-            tooltipProfile = "ToolsGuiToolTipProfile";
-            isContainer = "0";
-            internalName = "matNameCtrl";
-         };
-         new GuiTextCtrl() {
-            text = "Material Properties";
-            position = "8 0";
-            extent = "117 16";
-            profile = "ToolsGuiInspectorTitleTextProfile";
-            tooltipProfile = "ToolsGuiToolTipProfile";
-            isContainer = "0";
-         };
-         new GuiContainer(DiffuseMapContainer) {
-            position = "6 43";
-                  extent = "261 75";
-            horizSizing = "width";
-            profile = "ToolsGuiDefaultProfile";
-            tooltipProfile = "ToolsGuiToolTipProfile";
-
-            new GuiCheckBoxCtrl() {
-               text = " Use Side Projection";
-               position = "55 54";
-               extent = "119 16";
-               profile = "ToolsGuiCheckBoxProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               internalName = "sideProjectionCtrl";
-            };
-            new GuiBitmapCtrl() {
-                     BitmapAsset = "ToolsModule:unknownImage_image";
-               position = "1 1";
-               extent = "47 47";
-               profile = "ToolsGuiDefaultProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               internalName = "texDiffuseMap";
-            };
-            new GuiBitmapButtonCtrl() {
-                     BitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
-               position = "1 1";
-               extent = "48 48";
-               profile = "ToolsGuiDefaultProfile";
-               command = "TerrainMaterialDlg.updateTextureMap(\"DiffuseMap\");";
-               tooltipProfile = "ToolsGuiDefaultProfile";
-               tooltip = "Change the Active Diffuse Map for this layer";
-            };
-            new GuiTextCtrl() {
-               text = "Diffuse (Overlay)";
-               position = "56 -3";
-               extent = "39 18";
-               profile = "EditorTextProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               isContainer = "0";
-            };
-            new GuiTextCtrl() {
-               text = "None";
-               position = "56 16";
-                     extent = "205 17";
-               horizSizing = "width";
-               profile = "ToolsGuiTextProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               isContainer = "0";
-               internalName = "diffuseMapAssetId";
-            };
-            new GuiButtonCtrl() {
-               text = "Edit";
-                     position = "204 0";
-               extent = "40 16";
-               horizSizing = "left";
-               profile = "ToolsGuiButtonProfile";
-               command = "TerrainMaterialDlg.updateTextureMap(\"DiffuseMap\");";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-            };
-            new GuiBitmapButtonCtrl() {
-                     BitmapAsset = "ToolsModule:delete_n_image";
-                     position = "247 0";
-               extent = "16 16";
-               horizSizing = "left";
-               profile = "ToolsGuiDefaultProfile";
-               command = "TerrainMaterialDlg.clearTextureMap(\"DiffuseMap\");";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-            };
-            new GuiTextCtrl() {
-               text = "Size";
-               anchorTop = "0";
-               anchorLeft = "0";
-               position = "132 35";
-               extent = "39 16";
-               profile = "ToolsGuiTextProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               isContainer = "0";
-            };
-            new GuiTextEditCtrl() {
-               text = "200";
-               anchorTop = "0";
-               anchorLeft = "0";
-               position = "94 34";
-               extent = "34 18";
-               profile = "ToolsGuiTextEditProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               isContainer = "0";
-               internalName = "baseSizeCtrl";
-            };
-         };
-         new GuiBitmapCtrl() {
-                  BitmapAsset = "ToolsModule:separator_v_image";
-            position = "6 116";
-                  extent = "266 2";
-            horizSizing = "width";
-            profile = "ToolsGuiDefaultProfile";
-            tooltipProfile = "ToolsGuiToolTipProfile";
-         };
-         new GuiContainer(DetailMapContainer) {
-            position = "6 122";
-                  extent = "261 75";
-            horizSizing = "width";
-            profile = "ToolsGuiDefaultProfile";
-            tooltipProfile = "ToolsGuiToolTipProfile";
-
-            new GuiBitmapCtrl() {
-                     BitmapAsset = "ToolsModule:unknownImage_image";
-               position = "1 1";
-               extent = "47 47";
-               profile = "ToolsGuiDefaultProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               internalName = "texDetailMap";
-            };
-            new GuiBitmapButtonCtrl() {
-                     BitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
-               position = "1 1";
-               extent = "48 48";
-               profile = "ToolsGuiDefaultProfile";
-               command = "TerrainMaterialDlg.updateTextureMap(\"DetailMap\");";
-               tooltipProfile = "ToolsGuiDefaultProfile";
-               tooltip = "Change the active Detail Map for this layer.";
-            };
-            new GuiTextCtrl() {
-               text = "Detail";
-               position = "56 -3";
-               extent = "30 18";
-               profile = "EditorTextProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               isContainer = "0";
-            };
-            new GuiTextCtrl() {
-               text = "None";
-               position = "56 16";
-                     extent = "205 17";
-               horizSizing = "width";
-               profile = "ToolsGuiTextProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               isContainer = "0";
-               internalName = "detailMapAssetId";
-            };
-            new GuiButtonCtrl() {
-               text = "Edit";
-                     position = "204 0";
-               extent = "40 16";
-               horizSizing = "left";
-               profile = "ToolsGuiButtonProfile";
-               command = "TerrainMaterialDlg.updateTextureMap(\"DetailMap\");";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-            };
-            new GuiBitmapButtonCtrl() {
-                     BitmapAsset = "ToolsModule:delete_n_image";
-                     position = "247 0";
-               extent = "16 16";
-               horizSizing = "left";
-               profile = "ToolsGuiDefaultProfile";
-               command = "TerrainMaterialDlg.clearTextureMap(\"DetailMap\");";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-            };
-            new GuiTextCtrl() {
-               text = "Size";
-               anchorTop = "0";
-               anchorLeft = "0";
-               position = "132 33";
-               extent = "39 16";
-               profile = "ToolsGuiTextProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               isContainer = "0";
-            };
-            new GuiTextEditCtrl() {
-               text = "2";
-               anchorTop = "0";
-               anchorLeft = "0";
-               position = "94 32";
-               extent = "34 18";
-               profile = "ToolsGuiTextEditProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               isContainer = "0";
-               internalName = "detSizeCtrl";
-            };
-            new GuiTextCtrl() {
-               text = "Strength";
-               anchorTop = "0";
-               anchorLeft = "0";
-               position = "39 54";
-               extent = "46 16";
-               profile = "ToolsGuiTextProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               isContainer = "0";
-            };
-            new GuiTextEditCtrl() {
-               text = "1";
-               anchorTop = "0";
-               anchorLeft = "0";
-               position = "1 53";
-               extent = "34 18";
-               profile = "ToolsGuiTextEditProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               isContainer = "0";
-               internalName = "detStrengthCtrl";
-            };
-            new GuiTextCtrl() {
-               text = "Distance";
-               anchorTop = "0";
-               anchorLeft = "0";
-               position = "132 54";
-               extent = "45 16";
-               profile = "ToolsGuiTextProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               isContainer = "0";
-            };
-            new GuiTextEditCtrl() {
-               text = "50";
-               anchorTop = "0";
-               anchorLeft = "0";
-               position = "94 53";
-               extent = "34 18";
-               profile = "ToolsGuiTextEditProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               isContainer = "0";
-               internalName = "detDistanceCtrl";
-            };
-         };
-         new GuiBitmapCtrl() {
-                  BitmapAsset = "ToolsModule:separator_v_image";
-            position = "6 198";
-                  extent = "266 2";
-            horizSizing = "width";
-            profile = "ToolsGuiDefaultProfile";
-            tooltipProfile = "ToolsGuiToolTipProfile";
-         };
-         new GuiContainer(NormalMapContainer) {
-            position = "6 205";
-                  extent = "261 120";
-            horizSizing = "width";
-            profile = "ToolsGuiDefaultProfile";
-            tooltipProfile = "ToolsGuiToolTipProfile";
-
-            new GuiBitmapCtrl() {
-                     BitmapAsset = "ToolsModule:unknownImage_image";
-               position = "1 1";
-               extent = "47 47";
-               profile = "ToolsGuiDefaultProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               internalName = "texNormalMap";
-            };
-            new GuiTextCtrl() {
-               text = "Normal";
-               position = "56 -3";
-               extent = "39 18";
-               profile = "EditorTextProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               isContainer = "0";
-            };
-            new GuiBitmapButtonCtrl() {
-                     BitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
-               position = "1 1";
-               extent = "48 48";
-               profile = "ToolsGuiDefaultProfile";
-               command = "TerrainMaterialDlg.updateTextureMap(\"NormalMap\");";
-               tooltipProfile = "ToolsGuiDefaultProfile";
-               tooltip = "Change the active Normal Map for this layer.";
-            };
-            new GuiTextCtrl() {
-               text = "None";
-               position = "56 15";
-                     extent = "205 17";
-               horizSizing = "width";
-               profile = "ToolsGuiTextProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               isContainer = "0";
-               internalName = "normalMapAssetId";
-            };
-            new GuiButtonCtrl() {
-               text = "Edit";
-                     position = "204 0";
-               extent = "40 16";
-               horizSizing = "left";
-               profile = "ToolsGuiButtonProfile";
-               command = "TerrainMaterialDlg.updateTextureMap(\"NormalMap\");";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-            };
-            new GuiBitmapButtonCtrl() {
-                     BitmapAsset = "ToolsModule:delete_n_image";
-                     position = "247 0";
-               extent = "16 16";
-               horizSizing = "left";
-               profile = "ToolsGuiDefaultProfile";
-               command = "TerrainMaterialDlg.clearTextureMap(\"NormalMap\");";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-            };
-            new GuiTextCtrl() {
-               text = "Parallax Scale";
-               position = "92 34";
-               extent = "77 16";
-               profile = "ToolsGuiTextProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               isContainer = "0";
-            };
-            new GuiTextEditCtrl() {
-               text = "0";
-               anchorTop = "0";
-               anchorLeft = "0";
-               position = "55 33";
-               extent = "34 18";
-               profile = "ToolsGuiTextEditProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               isContainer = "0";
-               internalName = "parallaxScaleCtrl";
-            };
-            new GuiSliderCtrl(TerrainMaterialDlgBlendHeightBaseSlider) {
-               range = "-0.5 0.5";
-               ticks = "0";
-               value = "0";
-               position = "39 61";
-               extent = "70 14";
-               profile = "ToolsGuiSliderProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               internalName = "blendHeightBaseSliderCtrl";
-            };
-            new GuiTextCtrl() {
-               text = "Blend Height";
-               position = "115 61";
-                     extent = "68 15";
-               profile = "ToolsGuiTextProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-            };
-            new GuiTextEditCtrl(TerrainMaterialDlgBlendHeightBaseTextEdit) {
-               text = "0";
-               anchorTop = "0";
-               anchorLeft = "0";
-               position = "1 59";
-               extent = "35 18";
-               profile = "ToolsGuiTextEditProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               isContainer = "0";
-               internalName = "blendHeightBaseTextEditCtrl";
-            };
-            new GuiSliderCtrl(TerrainMaterialDlgBlendHeightContrastSlider) {
-               range = "0 5";
-               ticks = "0";
-               value = "1";
-               position = "39 81";
-               extent = "70 14";
-               profile = "ToolsGuiSliderProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               internalName = "blendHeightContrastSliderCtrl";
-            };
-            new GuiTextCtrl() {
-               text = "Blend Contrast";
-               position = "115 81";
+                  new GuiTextEditCtrl(TerrainMaterialDlgBlendHeightHardnessTextEdit) {
+                     text = "0";
+                     anchorTop = "0";
+                     anchorLeft = "0";
+                     position = "1 99";
+                     extent = "35 18";
+                     profile = "ToolsGuiTextEditProfile";
+                     tooltipProfile = "ToolsGuiToolTipProfile";
+                     isContainer = "0";
+                     internalName = "blendHeightHardnessTextEditCtrl";
+                  };
+                  new GuiTextCtrl() {
+                     text = "Blend Hardness";
+                     position = "115 101";
                      extent = "76 15";
-               profile = "ToolsGuiTextProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-            };
-            new GuiTextEditCtrl(TerrainMaterialDlgBlendHeightContrastTextEdit) {
-               text = "1";
-               anchorTop = "0";
-               anchorLeft = "0";
-               position = "1 79";
-               extent = "35 18";
-               profile = "ToolsGuiTextEditProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               isContainer = "0";
-               internalName = "blendHeightContrastTextEditCtrl";
-            };
-            new GuiTextEditCtrl(TerrainMaterialDlgBlendHeightHardnessTextEdit) {
-               text = "0";
-               anchorTop = "0";
-               anchorLeft = "0";
-               position = "1 99";
-               extent = "35 18";
-               profile = "ToolsGuiTextEditProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               isContainer = "0";
-               internalName = "blendHeightHardnessTextEditCtrl";
-            };
-            new GuiTextCtrl() {
-               text = "Blend Hardness";
-               position = "115 101";
-               extent = "76 15";
-               profile = "ToolsGuiTextProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-            };
-            new GuiSliderCtrl(TerrainMaterialDlgBlendHeightHardnessSlider) {
-               range = "0 0.999";
-               ticks = "0";
-               value = "0";
-               position = "39 101";
-               extent = "70 14";
-               profile = "ToolsGuiSliderProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               internalName = "blendHeightHardnessSliderCtrl";
-            };
-         };
-         new GuiBitmapCtrl() {
-            BitmapAsset = "ToolsModule:separator_v_image";
-            position = "6 323";
-            extent = "266 2";
-            horizSizing = "width";
-            profile = "ToolsGuiDefaultProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-            };
-         new GuiContainer(ORMConfigMapContainer) {
-                  position = "6 330";
-                  extent = "261 64";
-               horizSizing = "width";
-               profile = "ToolsGuiDefaultProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-
-               new GuiBitmapCtrl() {
-                     BitmapAsset = "ToolsModule:unknownImage_image";
-                  position = "1 1";
-                  extent = "47 47";
-                  profile = "ToolsGuiDefaultProfile";
-                  tooltipProfile = "ToolsGuiToolTipProfile";
-               internalName = "texORMConfigMap";
-            };
-            new GuiTextCtrl() {
-               text = "ORM Config";
-               position = "56 -3";
-               extent = "64 18";
-               profile = "EditorTextProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               isContainer = "0";
-               };
-               new GuiBitmapButtonCtrl() {
-                     BitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
-                  position = "1 1";
-                  extent = "48 48";
-                  profile = "ToolsGuiDefaultProfile";
-               command = "TerrainMaterialDlg.updateTextureMap(\"ORMConfigMap\");";
-                  tooltipProfile = "ToolsGuiDefaultProfile";
-               tooltip = "Change the active ORM Config Map for this layer.";
-               };
-               new GuiTextCtrl() {
-                  text = "None";
-               position = "56 15";
-                     extent = "205 17";
-                  horizSizing = "width";
-                  profile = "ToolsGuiTextProfile";
-                  tooltipProfile = "ToolsGuiToolTipProfile";
-                  isContainer = "0";
-               internalName = "ORMConfigMapAssetId";
-               };
-               new GuiButtonCtrl() {
-                  text = "Edit";
-                     position = "205 0";
-                  extent = "40 16";
-                  horizSizing = "left";
-                  profile = "ToolsGuiButtonProfile";
-               command = "TerrainMaterialDlg.updateTextureMap(\"ORMConfigMap\");";
-                  tooltipProfile = "ToolsGuiToolTipProfile";
-               };
-               new GuiBitmapButtonCtrl() {
-                     BitmapAsset = "ToolsModule:delete_n_image";
-                     position = "248 0";
-                  extent = "16 16";
-                  horizSizing = "left";
-                  profile = "ToolsGuiDefaultProfile";
-               command = "TerrainMaterialDlg.clearTextureMap(\"ORMConfigMap\");";
-                  tooltipProfile = "ToolsGuiToolTipProfile";
-               };
-            new GuiCheckBoxCtrl() {
-               text = " Is sRGB";
-               position = "55 32";
-               extent = "119 16";
-               profile = "ToolsGuiCheckBoxProfile";
-                  tooltipProfile = "ToolsGuiToolTipProfile";
-                     internalName = "IsSRGB";
-               };
-            new GuiCheckBoxCtrl() {
-               text = " Invert Roughness";
-               position = "55 48";
-               extent = "119 16";
-               profile = "ToolsGuiCheckBoxProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-                     internalName = "InvertRoughness";
-            };
-         };
-         new GuiBitmapCtrl() {
-                  BitmapAsset = "ToolsModule:separator_v_image";
-                  position = "6 397";
-                  extent = "266 2";
-            horizSizing = "width";
-            profile = "ToolsGuiDefaultProfile";
-            tooltipProfile = "ToolsGuiToolTipProfile";
-         };
-         new GuiContainer(MacroMapContainer) {
-                  position = "6 404";
-                  extent = "261 72";
-            horizSizing = "width";
-            profile = "ToolsGuiDefaultProfile";
-            tooltipProfile = "ToolsGuiToolTipProfile";
-
-            new GuiBitmapCtrl() {
-                     BitmapAsset = "ToolsModule:unknownImage_image";
-               position = "1 1";
-               extent = "47 47";
-               profile = "ToolsGuiDefaultProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               internalName = "texMacroMap";
-            };
-            new GuiBitmapButtonCtrl() {
-                     BitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
-               position = "1 1";
-               extent = "48 48";
-               profile = "ToolsGuiDefaultProfile";
-               command = "TerrainMaterialDlg.updateTextureMap(\"MacroMap\");";
-               tooltipProfile = "ToolsGuiDefaultProfile";
-               tooltip = "Change the active Macro Map for this layer.";
-            };
-            new GuiTextCtrl() {
-               text = "Macro";
-               position = "56 -3";
-               extent = "34 18";
-               profile = "EditorTextProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               isContainer = "0";
-            };
-            new GuiTextCtrl() {
-               text = "None";
-               position = "56 17";
-                     extent = "192 17";
-               horizSizing = "width";
-               profile = "ToolsGuiTextProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               isContainer = "0";
-               internalName = "macroMapAssetId";
-            };
-            new GuiButtonCtrl() {
-               text = "Edit";
-                     position = "204 0";
-               extent = "40 16";
-               horizSizing = "left";
-               profile = "ToolsGuiButtonProfile";
-               command = "TerrainMaterialDlg.updateTextureMap(\"MacroMap\");";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-            };
-            new GuiBitmapButtonCtrl() {
-                     BitmapAsset = "ToolsModule:delete_n_image";
-                     position = "247 0";
-               extent = "16 16";
-               horizSizing = "left";
-               profile = "ToolsGuiDefaultProfile";
-               command = "TerrainMaterialDlg.clearTextureMap(\"MacroMap\");";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-            };
-            new GuiTextCtrl() {
-               text = "Size";
-               anchorTop = "0";
-               anchorLeft = "0";
-               position = "132 33";
-               extent = "39 16";
-               profile = "ToolsGuiTextProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               isContainer = "0";
-            };
-            new GuiTextEditCtrl() {
-               text = "200";
-               anchorTop = "0";
-               anchorLeft = "0";
-               position = "94 32";
-               extent = "34 18";
-               profile = "ToolsGuiTextEditProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               isContainer = "0";
-               internalName = "macroSizeCtrl";
-            };
-            new GuiTextCtrl() {
-               text = "Strength";
-               anchorTop = "0";
-               anchorLeft = "0";
-               position = "39 54";
-               extent = "46 16";
-               profile = "ToolsGuiTextProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               isContainer = "0";
-            };
-            new GuiTextEditCtrl() {
-               text = "0.7";
-               anchorTop = "0";
-               anchorLeft = "0";
-               position = "1 53";
-               extent = "34 18";
-               profile = "ToolsGuiTextEditProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               isContainer = "0";
-               internalName = "macroStrengthCtrl";
-            };
-            new GuiTextCtrl() {
-               text = "Distance";
-               anchorTop = "0";
-               anchorLeft = "0";
-               position = "132 54";
-               extent = "45 16";
-               profile = "ToolsGuiTextProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               isContainer = "0";
-            };
-            new GuiTextEditCtrl() {
-               text = "500";
-               anchorTop = "0";
-               anchorLeft = "0";
-               position = "94 53";
-               extent = "34 18";
-               profile = "ToolsGuiTextEditProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-               isContainer = "0";
-               internalName = "macroDistanceCtrl";
-            };
-         };
-               new GuiContainer(TerrainEffectsContainer) {
-                  position = "6 476";
-                  extent = "265 97";
-                  horizSizing = "width";
-                  profile = "ToolsGuiDefaultProfile";
-                  tooltipProfile = "GuiToolTipProfile";
-
-                  new GuiBitmapCtrl() {
-                     BitmapAsset = "ToolsModule:separator_v_image";
-                     position = "2 2";
-                     extent = "276 2";
-                     horizSizing = "width";
-                     profile = "GuiDefaultProfile";
-                     tooltipProfile = "GuiToolTipProfile";
-                  };
-                  new GuiTextCtrl() {
-                     text = "Effect Colors[0:1]";
-                     position = "1 22";
-                     extent = "86 15";
-                     profile = "ToolsGuiDefaultProfile";
-                     tooltipProfile = "GuiToolTipProfile";
-      };
-                  new GuiSwatchButtonCtrl() {
-                     position = "89 22";
-                     extent = "16 16";
+                     profile = "ToolsGuiTextProfile";
                      tooltipProfile = "ToolsGuiToolTipProfile";
-                     command = "getColorF($ThisControl.color, \"TerrainMaterialDlg.updateEffectColor0\");";
-                     internalName = "effectColor0Swatch";
                   };
-                  new GuiSwatchButtonCtrl() {
-                     position = "109 22";
-                     extent = "16 16";
+                  new GuiSliderCtrl(TerrainMaterialDlgBlendHeightHardnessSlider) {
+                     range = "0 0.999";
+                     ticks = "0";
+                     value = "0";
+                     position = "39 101";
+                     extent = "70 14";
+                     profile = "ToolsGuiSliderProfile";
                      tooltipProfile = "ToolsGuiToolTipProfile";
-                     command = "getColorF($ThisControl.color, \"TerrainMaterialDlg.updateEffectColor1\");";
-                     internalName = "effectColor1Swatch";
+                     internalName = "blendHeightHardnessSliderCtrl";
                   };
-                  new GuiCheckBoxCtrl() {
-                     text = "Show Footprints";
-                     position = "1 40";
-                     extent = "93 16";
-                     profile = "ToolsGuiCheckBoxProfile";
-                     tooltipProfile = "ToolsGuiDefaultProfile";
-                     tooltip = "Enables Player footprints on surfaces that use this Material.";
-                     internalName = "showFootprintsCheckbox";
-                  };
-                  new GuiCheckBoxCtrl() {
-                     text = "Show Dust";
-                     position = "110 40";
-                     extent = "68 16";
-                     profile = "ToolsGuiCheckBoxProfile";
-                     tooltipProfile = "ToolsGuiDefaultProfile";
-                     tooltip = "Enables dust particles on surfaces that use this Material.";
-                     internalName = "showDustCheckbox";
-                  };
-                  new GuiTextCtrl() {
-                     text = "Footstep sound";
-                     position = "1 59";
-                     extent = "77 15";
-                     profile = "ToolsGuiDefaultProfile";
-                     tooltipProfile = "GuiToolTipProfile";
-                  };
-                  new GuiPopUpMenuCtrl() {
-                     text = "None";
-                     position = "80 58";
-                     extent = "184 18";
-         horizSizing = "width";
-                     profile = "ToolsGuiPopUpMenuProfile";
-                     tooltipProfile = "ToolsGuiToolTipProfile";
-                     tooltip = "Determines the footstep sound to use when the Player walks on this Material.";
-                     isContainer = "0";
-                     internalName = "footstepSoundPopup";
-                  };
-                  new GuiTextCtrl() {
-                     text = "Impact sound";
-                     position = "1 79";
-                     extent = "64 15";
-         profile = "ToolsGuiDefaultProfile";
-                     tooltipProfile = "GuiToolTipProfile";
-                  };
-                  new GuiPopUpMenuCtrl() {
-                     text = "None";
-                     position = "80 78";
-                     extent = "184 18";
-            horizSizing = "width";
-                     profile = "ToolsGuiPopUpMenuProfile";
-            tooltipProfile = "ToolsGuiToolTipProfile";
-                     tooltip = "Determines the impact sound to use when an object collides with this Material.";
-                     isContainer = "0";
-                     internalName = "impactSoundPopup";
-                  };
-                  new GuiTextCtrl() {
-                     text = "Effects";
-                     position = "2 4";
-                     extent = "38 18";
-                     profile = "EditorTextProfile";
-               tooltipProfile = "ToolsGuiToolTipProfile";
-                     isContainer = "0";
-                  };
-               };
-            };
-         };
-      };
-      new GuiButtonCtrl() {
-         text = "Apply&Select";
-         position = "269 612";
-         extent = "98 22";
-         horizSizing = "left";
-         vertSizing = "top";
-         profile = "ToolsGuiButtonProfile";
-         command = "TerrainMaterialDlg.dialogApply();";
-         tooltipProfile = "ToolsGuiToolTipProfile";
-      };
-      new GuiButtonCtrl() {
-         text = "Cancel";
-         position = "374 612";
-         extent = "80 22";
-         horizSizing = "left";
-         vertSizing = "top";
-         profile = "ToolsGuiButtonProfile";
-         command = "TerrainMaterialDlg.dialogCancel();";
-         tooltipProfile = "ToolsGuiToolTipProfile";
-      };
-      new GuiBitmapCtrl() {
-         BitmapAsset = "ToolsModule:inactive_overlay_image";
-         position = "277 23";
-         extent = "190 474";
-         horizSizing = "left";
-         vertSizing = "height";
-         profile = "ToolsGuiDefaultProfile";
-         visible = "0";
-         tooltipProfile = "GuiToolTipProfile";
-         isContainer = "1";
-         internalName = "inactiveOverlay";
-         hidden = "1";
-
-         new GuiTextCtrl() {
-            text = "Inactive";
-            position = "0 205";
-            extent = "190 64";
-            horizSizing = "width";
-            vertSizing = "center";
-            profile = "ToolsGuiTextCenterProfile";
-            tooltipProfile = "GuiToolTipProfile";
-            internalName = "inactiveOverlayDlg";
-         };
-      };
-   };
-};
-//--- OBJECT WRITE END ---
+               };               
+               new GuiBitmapCtrl() { 
+                  BitmapAsset = "ToolsModule:separator_v_image"; 
+                  position = "6 340"; 
+                  extent = "266 2"; 
+                  horizSizing = "width"; 
+                  profile = "ToolsGuiDefaultProfile"; 
+                  tooltipProfile = "ToolsGuiToolTipProfile"; 
+               }; 
+               new GuiContainer(ORMConfigMapContainer) { 
+                  position = "6 345"; 
+                  extent = "261 64"; 
+                  horizSizing = "width"; 
+                  profile = "ToolsGuiDefaultProfile"; 
+                  tooltipProfile = "ToolsGuiToolTipProfile"; 
+  
+                  new GuiBitmapCtrl() { 
+                     BitmapAsset = "ToolsModule:unknownImage_image"; 
+                     position = "1 1"; 
+                     extent = "47 47"; 
+                     profile = "ToolsGuiDefaultProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     internalName = "texORMConfigMap"; 
+                  }; 
+                  new GuiTextCtrl() { 
+                     text = "ORM Config"; 
+                     position = "57 -2"; 
+                     extent = "64 18"; 
+                     profile = "EditorTextProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     isContainer = "0"; 
+                  }; 
+                  new GuiBitmapButtonCtrl() { 
+                     BitmapAsset = "ToolsModule:cubemapBtnBorder_n_image"; 
+                     position = "1 1"; 
+                     extent = "48 48"; 
+                     profile = "ToolsGuiDefaultProfile"; 
+                     command = "TerrainMaterialDlg.updateTextureMap(\"ORMConfigMap\"); "; 
+                     tooltipProfile = "ToolsGuiDefaultProfile"; 
+                     tooltip = "Change the active ORM Config Map for this layer."; 
+                  }; 
+                  new GuiTextCtrl() { 
+                     text = "None"; 
+                     position = "57 15"; 
+                     extent = "145 17"; 
+                     horizSizing = "width"; 
+                     profile = "ToolsGuiTextProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     isContainer = "0"; 
+                     internalName = "ORMConfigMapAssetId"; 
+                  }; 
+                  new GuiButtonCtrl() { 
+                     text = "Edit"; 
+                     position = "200 0"; 
+                     extent = "40 16"; 
+                     horizSizing = "left"; 
+                     profile = "ToolsGuiButtonProfile"; 
+                     command = "TerrainMaterialDlg.updateTextureMap(\"ORMConfigMap\"); "; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                  }; 
+                  new GuiBitmapButtonCtrl() { 
+                     BitmapAsset = "ToolsModule:delete_n_image"; 
+                     position = "248 0"; 
+                     extent = "16 16"; 
+                     horizSizing = "left"; 
+                     profile = "ToolsGuiDefaultProfile"; 
+                     command = "TerrainMaterialDlg.clearTextureMap(\"ORMConfigMap\"); "; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                  }; 
+                  new GuiCheckBoxCtrl() { 
+                     text = " Is sRGB"; 
+                     position = "80 32"; 
+                     extent = "119 16"; 
+                     profile = "ToolsGuiCheckBoxProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     internalName = "IsSRGB"; 
+                  }; 
+                  new GuiCheckBoxCtrl() { 
+                     text = " Invert Roughness"; 
+                     position = "80 48"; 
+                     extent = "119 16"; 
+                     profile = "ToolsGuiCheckBoxProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     internalName = "InvertRoughness"; 
+                  }; 
+               }; 
+               new GuiBitmapCtrl() { 
+                  BitmapAsset = "ToolsModule:separator_v_image"; 
+                  position = "6 420"; 
+                  extent = "266 2"; 
+                  horizSizing = "width"; 
+                  profile = "ToolsGuiDefaultProfile"; 
+                  tooltipProfile = "ToolsGuiToolTipProfile"; 
+               }; 
+               new GuiContainer(MacroMapContainer) { 
+                  position = "6 425"; 
+                  extent = "261 80"; 
+                  horizSizing = "width"; 
+                  profile = "ToolsGuiDefaultProfile"; 
+                  tooltipProfile = "ToolsGuiToolTipProfile"; 
+  
+                  new GuiBitmapCtrl() { 
+                     BitmapAsset = "ToolsModule:unknownImage_image"; 
+                     position = "1 1"; 
+                     extent = "47 47"; 
+                     profile = "ToolsGuiDefaultProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     internalName = "texMacroMap"; 
+                  }; 
+                  new GuiBitmapButtonCtrl() { 
+                     BitmapAsset = "ToolsModule:cubemapBtnBorder_n_image"; 
+                     position = "1 1"; 
+                     extent = "48 48"; 
+                     profile = "ToolsGuiDefaultProfile"; 
+                     command = "TerrainMaterialDlg.updateTextureMap(\"MacroMap\"); "; 
+                     tooltipProfile = "ToolsGuiDefaultProfile"; 
+                     tooltip = "Change the active Macro Map for this layer."; 
+                  }; 
+                  new GuiTextCtrl() { 
+                     text = "Macro"; 
+                     position = "57 -3"; 
+                     extent = "34 18"; 
+                     profile = "EditorTextProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     isContainer = "0"; 
+                  }; 
+                  new GuiTextCtrl() { 
+                     text = "None"; 
+                     position = "57 17"; 
+                     extent = "142 17"; 
+                     horizSizing = "width"; 
+                     profile = "ToolsGuiTextProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     isContainer = "0"; 
+                     internalName = "macroMapAssetId"; 
+                  }; 
+                  new GuiButtonCtrl() { 
+                     text = "Edit"; 
+                     position = "200 0"; 
+                     extent = "40 16"; 
+                     horizSizing = "left"; 
+                     profile = "ToolsGuiButtonProfile"; 
+                     command = "TerrainMaterialDlg.updateTextureMap(\"MacroMap\"); "; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                  }; 
+                  new GuiBitmapButtonCtrl() { 
+                     BitmapAsset = "ToolsModule:delete_n_image"; 
+                     position = "248 0"; 
+                     extent = "16 16"; 
+                     horizSizing = "left"; 
+                     profile = "ToolsGuiDefaultProfile"; 
+                     command = "TerrainMaterialDlg.clearTextureMap(\"MacroMap\"); "; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                  }; 
+                  new GuiTextCtrl() { 
+                     text = "Size"; 
+                     anchorTop = "0"; 
+                     anchorLeft = "0"; 
+                     position = "152 33"; 
+                     extent = "39 16"; 
+                     profile = "ToolsGuiTextRightProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     isContainer = "0"; 
+                  }; 
+                  new GuiTextEditCtrl() { 
+                     text = "200"; 
+                     anchorTop = "0"; 
+                     anchorLeft = "0"; 
+                     position = "200 32"; 
+                     extent = "40 18"; 
+                     profile = "ToolsGuiTextEditProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     isContainer = "0"; 
+                     internalName = "macroSizeCtrl"; 
+                  }; 
+                  new GuiTextCtrl() { 
+                     text = "Strength"; 
+                     anchorTop = "0"; 
+                     anchorLeft = "0"; 
+                     position = "30 54"; 
+                     extent = "46 16"; 
+                     profile = "ToolsGuiTextRightProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     isContainer = "0"; 
+                  }; 
+                  new GuiTextEditCtrl() { 
+                     text = "0.7"; 
+                     anchorTop = "0"; 
+                     anchorLeft = "0"; 
+                     position = "82 53"; 
+                     extent = "40 18"; 
+                     profile = "ToolsGuiTextEditProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     isContainer = "0"; 
+                     internalName = "macroStrengthCtrl"; 
+                  }; 
+                  new GuiTextCtrl() { 
+                     text = "Distance"; 
+                     anchorTop = "0"; 
+                     anchorLeft = "0"; 
+                     position = "144 54"; 
+                     extent = "45 16"; 
+                     profile = "ToolsGuiTextRightProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     isContainer = "0"; 
+                  }; 
+                  new GuiTextEditCtrl() { 
+                     text = "500"; 
+                     anchorTop = "0"; 
+                     anchorLeft = "0"; 
+                     position = "200 56"; 
+                     extent = "40 18"; 
+                     profile = "ToolsGuiTextEditProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     isContainer = "0"; 
+                     internalName = "macroDistanceCtrl"; 
+                  }; 
+               }; 
+               new GuiContainer(TerrainEffectsContainer) { 
+                  position = "6 510"; 
+                  extent = "265 97"; 
+                  horizSizing = "width"; 
+                  profile = "ToolsGuiDefaultProfile"; 
+                  tooltipProfile = "GuiToolTipProfile"; 
+ 
+                  new GuiBitmapCtrl() { 
+                     BitmapAsset = "ToolsModule:separator_v_image"; 
+                     position = "2 2"; 
+                     extent = "276 2"; 
+                     horizSizing = "width"; 
+                     profile = "GuiDefaultProfile"; 
+                     tooltipProfile = "GuiToolTipProfile"; 
+                  }; 
+                  new GuiTextCtrl() { 
+                     text = "Effects"; 
+                     position = "2 4"; 
+                     extent = "38 18"; 
+                     profile = "EditorTextProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     isContainer = "0"; 
+                  }; 
+                  new GuiTextCtrl() { 
+                     text = "Effect Colors [0:1]"; 
+                     position = "-1 22"; 
+                     extent = "92 15"; 
+                     profile = "ToolsGuiTextRightProfile"; 
+                     tooltipProfile = "GuiToolTipProfile"; 
+                  }; 
+                  new GuiSwatchButtonCtrl() { 
+                     position = "96 21"; 
+                     extent = "16 16"; 
+                     command = "getColorF($ThisControl.color, \"TerrainMaterialDlg.updateEffectColor0\"); "; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     internalName = "effectColor0Swatch"; 
+                  }; 
+                  new GuiSwatchButtonCtrl() { 
+                     position = "115 21"; 
+                     extent = "16 16"; 
+                     command = "getColorF($ThisControl.color, \"TerrainMaterialDlg.updateEffectColor1\"); "; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     internalName = "effectColor1Swatch"; 
+                  }; 
+                  new GuiCheckBoxCtrl() { 
+                     text = " Show Footprints"; 
+                     position = "0 39"; 
+                     extent = "104 16"; 
+                     profile = "ToolsGuiCheckBoxProfile"; 
+                     tooltipProfile = "ToolsGuiDefaultProfile"; 
+                     tooltip = "Enables Player footprints on surfaces that use this Material."; 
+                     internalName = "showFootprintsCheckbox"; 
+                  }; 
+                  new GuiCheckBoxCtrl() { 
+                     text = " Show Dust"; 
+                     position = "120 39"; 
+                     extent = "78 16"; 
+                     profile = "ToolsGuiCheckBoxProfile"; 
+                     tooltipProfile = "ToolsGuiDefaultProfile"; 
+                     tooltip = "Enables dust particles on surfaces that use this Material."; 
+                     internalName = "showDustCheckbox"; 
+                  }; 
+                  new GuiTextCtrl() { 
+                     text = "Footstep Sound "; 
+                     position = "-3 59"; 
+                     extent = "87 15"; 
+                     profile = "ToolsGuiTextRightProfile"; 
+                     tooltipProfile = "GuiToolTipProfile"; 
+                  }; 
+                  new GuiPopUpMenuCtrl() { 
+                     position = "93 58"; 
+                     extent = "170 18"; 
+                     horizSizing = "width"; 
+                     profile = "ToolsGuiPopUpMenuProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     tooltip = "Determines the footstep sound to use when the Player walks on this Material."; 
+                     isContainer = "0"; 
+                     internalName = "footstepSoundPopup"; 
+                  }; 
+                  new GuiTextCtrl() { 
+                     text = "Impact Sound ";
+                     position = "-3 79"; 
+                     extent = "87 15"; 
+                     profile = "ToolsGuiTextRightProfile"; 
+                     tooltipProfile = "GuiToolTipProfile"; 
+                  }; 
+                  new GuiPopUpMenuCtrl() { 
+                     position = "93 78"; 
+                     extent = "170 18"; 
+                     horizSizing = "width"; 
+                     profile = "ToolsGuiPopUpMenuProfile"; 
+                     tooltipProfile = "ToolsGuiToolTipProfile"; 
+                     tooltip = "Determines the impact sound to use when an object collides with this Material."; 
+                     isContainer = "0"; 
+                     internalName = "impactSoundPopup"; 
+                  }; 
+               }; 
+            }; 
+         }; 
+      }; 
+      new GuiButtonCtrl() { 
+         text = "Apply + Select"; 
+         position = "269 650"; 
+         extent = "105 22"; 
+         horizSizing = "left"; 
+         vertSizing = "top"; 
+         profile = "ToolsGuiButtonProfile"; 
+         command = "TerrainMaterialDlg.dialogApply(); "; 
+         tooltipProfile = "ToolsGuiToolTipProfile"; 
+      }; 
+      new GuiButtonCtrl() { 
+         text = "Cancel"; 
+         position = "384 650"; 
+         extent = "74 22"; 
+         horizSizing = "left"; 
+         vertSizing = "top"; 
+         profile = "ToolsGuiButtonProfile"; 
+         command = "TerrainMaterialDlg.dialogCancel(); "; 
+         tooltipProfile = "ToolsGuiToolTipProfile"; 
+      }; 
+      new GuiBitmapCtrl() { 
+         BitmapAsset = "ToolsModule:inactive_overlay_image"; 
+         position = "286 23"; 
+         extent = "190 474"; 
+         horizSizing = "left"; 
+         vertSizing = "height"; 
+         profile = "ToolsGuiDefaultProfile"; 
+         visible = "0"; 
+         tooltipProfile = "GuiToolTipProfile"; 
+         isContainer = "1"; 
+         internalName = "inactiveOverlay"; 
+         hidden = "1"; 
+  
+         new GuiTextCtrl() { 
+            text = "Inactive"; 
+            position = "0 205"; 
+            extent = "190 64"; 
+            horizSizing = "width"; 
+            vertSizing = "center"; 
+            profile = "ToolsGuiTextCenterProfile"; 
+            tooltipProfile = "GuiToolTipProfile"; 
+            internalName = "inactiveOverlayDlg"; 
+         }; 
+      }; 
+   }; 
+}; 
+//--- OBJECT WRITE END --- 

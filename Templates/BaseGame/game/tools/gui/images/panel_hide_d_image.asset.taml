@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="panel_hide_d_image"
+    imageFile="@assetFile=panel_hide_d.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

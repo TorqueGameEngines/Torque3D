@@ -5,7 +5,7 @@ $guiContent = new GuiWindowCtrl(ShapeEdAnimWindow) {
    Profile = "ToolsGuiToolbarWindowProfile";
    HorizSizing = "width";
    VertSizing = "top";
-   Position = -1 SPC getWord(ShapeEdPreviewGui.extent,0)-94;
+   Position = "1" SPC getWord($pref::Video::mode, 1) - 160;
    Extent = "817 53";
    MinExtent = "475 53";
    canSave = "1";
@@ -36,7 +36,7 @@ $guiContent = new GuiWindowCtrl(ShapeEdAnimWindow) {
       HorizSizing = "width";
       VertSizing = "top";
       Position = "5 10";
-      Extent = "809 ";
+      Extent = "809 53";
       MinExtent = "8 8";
       canSave = "1";
       Visible = "1";
@@ -435,5 +435,3 @@ $guiContent = new GuiWindowCtrl(ShapeEdAnimWindow) {
       };      
    };
 };
-
-//--- OBJECT WRITE END ---

@@ -1,0 +1,121 @@
+//-----------------------------------------------------------------------------
+// Copyright (c) 2012 GarageGames, LLC
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+// IN THE SOFTWARE.
+//-----------------------------------------------------------------------------
+
+function EVPathEditor::maxSize(%this, %window)
+{
+   // Resize the windows to the max height
+   // and force these to the right side if set
+   if(EditorSettings.value( "WorldEditor/forceSidebarToSide" ) == 1 && %this.resizing == true)
+   {  
+      // prevent onResize after a resize
+      %this.resizing = false;
+      
+      %fixedWindow = VPathEditorTreeWindow;
+      %fluidWindow = VPathEditorOptionsWindow;
+      %top = EditorGuiToolbar.extent.y + 6;
+      %bottom = %top + 65 - 6;
+      %maxHeight = Canvas.extent.y - %top - %bottom;
+      
+      // --- Fixed window (top) ------------------------------------------------
+      // put it back if it moved
+      %fixedWindow.position.x = Canvas.extent.x - %fixedWindow.extent.x;
+      %fixedWindow.position.y = %top;
+      
+      // don't go beyond the canvas
+      if(%fixedWindow.extent.y > %maxHeight)
+         %fixedWindow.extent.y = %maxHeight - %fluidWindow.extent.y;
+
+      %position = %fixedWindow.position.x SPC %fixedWindow.position.y;
+      %extent = %window.extent.x SPC %fixedWindow.extent.y;
+      %fixedWindow.resize(%position.x, %position.y, %extent.x, %extent.y);
+      
+      // --- Fluid window (bottom) ---------------------------------------------
+      // position is relative to the top window
+      %position = %fixedWindow.position.x SPC %fixedWindow.extent.y + %top;
+      %extent = %window.extent.x SPC Canvas.extent.y - %fixedWindow.extent.y - %bottom;
+      %fluidWindow.resize(%position.x, %position.y, %extent.x, %extent.y);
+      
+      // --- AssetBrowser window  ----------------------------------------------
+      if(isObject(AssetBrowserWindow))
+      {
+         // Only resize the AssetBrowser if it's docked
+         if(AssetBrowserWindow.docked == true)
+         {
+            // The width is relative to the sidepanel
+            %browserWidth = Canvas.extent.x - %extent.x;
+            %browserHeight = AssetBrowserWindow.extent.y;
+            %browserPosY = Canvas.extent.y - AssetBrowserWindow.extent.y - 33;
+            AssetBrowserWindow.resize(0, %browserPosY, %browserWidth, %browserHeight);
+         }
+      }
+      // --- Windowed Console --------------------------------------------------
+      if(isObject(windowConsoleControl))
+      {
+         // Only resize the AssetBrowser if it's docked
+         if(windowConsoleControl.docked == true)
+         {
+            // The width is relative to the sidepanel
+            %consoleWidth = Canvas.extent.x - %extent.x;
+            %consoleHeight = windowConsoleControl.extent.y;
+            %consolePosY = Canvas.extent.y - windowConsoleControl.extent.y - 33;
+            windowConsoleControl.resize(0, %consolePosY, %consoleWidth, %consoleHeight);
+         }
+      }
+   }
+}
+
+function VPathEditorTreeWindow::onMouseDragged(%this)
+{
+   %parent = EVPathEditor;
+   
+   if(%parent.resizing == false)
+   {
+      %parent.resizing = true;
+      %parent.maxSize(%this);
+   }
+}
+
+function VPathEditorOptionsWindow::onMouseDragged(%this)
+{
+   %parent = EVPathEditor;
+   
+   if(%parent.resizing == false)
+   {
+      %parent.resizing = true;
+      %parent.maxSize(%this);
+   }
+}
+
+function EVPathEditor::onResize(%this, %newPosition, %newExtent)
+{
+   // Window to focus on (mostly the fluid window)
+   %window = RoadEditorOptionsWindow;
+   
+   if(%this.resizing == false)
+   {  
+      // Only resize once
+      %this.resizing = true;
+      %this.maxSize(%window);
+   }
+   
+   FieldInfoControl.position = 5 SPC EWInspectorWindow.extent.y - 40;
+}

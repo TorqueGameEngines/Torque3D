@@ -35,6 +35,268 @@ function NavEditorGui::onEditorDeactivated(%this)
       %this.deselect();
 }
 
+//------------------------------------------------------------------------------
+
+function NavEditorGui::onWake(%this)
+{  
+   %fixedWindow = NavEditorTreeWindow;
+   %fluidWindow = NavEditorOptionsWindow;   
+   
+   if(EditorSettings.value( "WorldEditor/forceSidebarToSide" ) == 1)
+   {
+      // Let's dock the side panel to the right side
+      %this.docked = false;
+      %this.resizing = true;
+      %this.dockSidePanel();
+   }
+   else
+   {
+      // Let's release the side panel so it can be moved
+      %this.docked = true;
+      %this.resizing = false;
+      %this.releaseSidePanel();
+   }
+}
+
+function NavEditorGui::maxSize(%this, %window)
+{      
+   // Resize the windows to the max height
+   // and force these to the right side if set
+   if(EditorSettings.value( "WorldEditor/forceSidebarToSide" ) == 1 && %this.resizing == true)
+   {  
+      // prevent onResize after a resize
+      %this.resizing = false;
+      
+      %fixedWindow = NavEditorTreeWindow;
+      %fluidWindow = NavEditorOptionsWindow;
+      %top = EditorGuiToolbar.extent.y + 6;
+      %bottom = %top + 65 - 6;
+      %maxHeight = Canvas.extent.y - %top - %bottom;
+      
+      // --- Fixed window (top) ------------------------------------------------
+      // put it back if it moved
+      %fixedWindow.position.x = Canvas.extent.x - %fixedWindow.extent.x;
+      %fixedWindow.position.y = %top;
+      
+      // don't go beyond the canvas
+      if(%fixedWindow.extent.y > %maxHeight)
+         %fixedWindow.extent.y = %maxHeight - %fluidWindow.extent.y;
+
+      %position = %fixedWindow.position.x SPC %fixedWindow.position.y;
+      %extent = %window.extent.x SPC %fixedWindow.extent.y;
+      %fixedWindow.resize(%position.x, %position.y, %extent.x, %extent.y);
+      
+      // --- Fluid window (bottom) ---------------------------------------------
+      // position is relative to the top window
+      %position = %fixedWindow.position.x SPC %fixedWindow.extent.y + %top;
+      %extent = %window.extent.x SPC Canvas.extent.y - %fixedWindow.extent.y - %bottom;
+      %fluidWindow.resize(%position.x, %position.y, %extent.x, %extent.y);
+      
+      // --- AssetBrowser window  ----------------------------------------------
+      if(isObject(AssetBrowserWindow))
+      {
+         // Only resize the AssetBrowser if it's docked
+         if(AssetBrowserWindow.docked == true)
+         {
+            // The width is relative to the sidepanel
+            %browserWidth = Canvas.extent.x - %extent.x;
+            %browserHeight = AssetBrowserWindow.extent.y;
+            %browserPosY = Canvas.extent.y - AssetBrowserWindow.extent.y - 33;
+            AssetBrowserWindow.resize(0, %browserPosY, %browserWidth, %browserHeight);
+         }
+      }
+      // --- Windowed Console --------------------------------------------------
+      if(isObject(windowConsoleControl))
+      {
+         // Only resize the AssetBrowser if it's docked
+         if(windowConsoleControl.docked == true)
+         {
+            // The width is relative to the sidepanel
+            %consoleWidth = Canvas.extent.x - %extent.x;
+            %consoleHeight = windowConsoleControl.extent.y;
+            %consolePosY = Canvas.extent.y - windowConsoleControl.extent.y - 33;
+            windowConsoleControl.resize(0, %consolePosY, %consoleWidth, %consoleHeight);
+         }
+      }
+   }
+}
+
+function NavEditorTreeWindow::onMouseDragged(%this)
+{
+   %parent = NavEditorGui;
+   
+   if(%parent.panelHidden == true)
+   {
+      %parent.showSidePanel();
+   }
+   
+   if(%parent.resizing == false && %parent.docked == true)
+   {
+      %parent.resizing = true;
+      %parent.maxSize(%this);
+   }
+}
+
+function NavEditorOptionsWindow::onMouseDragged(%this)
+{
+   %parent = NavEditorGui;
+   
+   if(%parent.panelHidden == true)
+   {
+      %parent.showSidePanel();
+   }
+   
+   if(%parent.resizing == false && %parent.docked == true)
+   {
+      %parent.resizing = true;
+      %parent.maxSize(%this);
+   }
+}
+
+function NavEditorGui::onResize(%this, %newPosition, %newExtent)
+{
+   // Window to focus on (mostly the fluid window)
+   %window = NavEditorOptionsWindow;
+   
+   if(%window.panelHidden == true)
+   {
+      %window.showSidePanel();
+   }
+   
+   if(%this.resizing == false && %this.docked == true)
+   {  
+      // Only resize once
+      %this.resizing = true;
+      %this.maxSize(%window);
+   }
+}
+
+function NavEditorGui::dockSidePanel()
+{
+   %parent = NavEditorGui;
+   %fixedWindow = NavEditorTreeWindow;
+   %fluidWindow = NavEditorOptionsWindow;
+   
+   if(%parent.docked == true)
+      return;
+   
+   // Move and resize the window(s)
+   %parent.resizing = true;
+   %parent.maxSize(%fluidWindow);
+      
+   %parent.docked = true;
+   %fluidWindow.onMouseDragged();
+
+   // Lock the windows in place
+   %fixedWindow.canCollapse = "0";
+   %fixedWindow.canMove = "0";
+   
+   %fluidWindow.canCollapse = "0";
+   %fluidWindow.canMove = "0";
+   
+   NavEditorGui_UnDockBtn.Visible = "1";
+   NavEditorGui_DockBtn.Visible = "0";
+   
+   NavEditorGui_showBtn.Visible = "0";
+   NavEditorGui_hideBtn.Visible = "1";
+}
+
+function NavEditorGui::releaseSidePanel()
+{      
+   %parent = NavEditorGui;
+   %fixedWindow = NavEditorTreeWindow;
+   %fluidWindow = NavEditorOptionsWindow;
+   
+   if(%parent.docked == false)
+      return;
+   
+   // Unlock the windows so that be moved
+   %fixedWindow.canCollapse = "1";
+   %fixedWindow.canMove = "1";
+   
+   %fluidWindow.canCollapse = "1";
+   %fluidWindow.canMove = "1";
+   
+   NavEditorGui_UnDockBtn.Visible = "0";
+   NavEditorGui_DockBtn.Visible = "1";
+   
+   NavEditorGui_showBtn.Visible = "0";
+   NavEditorGui_hideBtn.Visible = "0";
+   
+   // Let's do a small resize so it's visually clear we're undocking
+   %position = %fixedWindow.position.x - 6 SPC %fixedWindow.position.y + 6;
+   %extent = %fixedWindow.extent.x SPC %fixedWindow.extent.y;
+   %fixedWindow.resize(%position.x, %position.y, %extent.x, %extent.y);
+
+   %position =  %fluidWindow.position.x - 6 SPC  %fluidWindow.position.y + 6;
+   %extent = %fluidWindow.extent.x SPC %fluidWindow.extent.y - 12;
+   %fluidWindow.resize(%position.x, %position.y, %extent.x, %extent.y);
+   
+   %parent.docked = false;
+   %parent.resizing = false;
+}
+
+function NavEditorGui::hideSidePanel()
+{
+   %parent = NavEditorGui;
+   %fixedWindow = NavEditorTreeWindow;
+   %fluidWindow = NavEditorOptionsWindow;
+   
+   NavEditorGui_showBtn.Visible = "1";
+   NavEditorGui_hideBtn.Visible = "0";
+   
+   // hide the content of the panels
+   %fixedWindow.titleText = %fixedWindow.text;
+   %fluidWindow.titleText = %fluidWindow.text;
+
+   %fixedWindow.text = "";
+   NavEditorTreePanel.Visible = "0";
+   
+   %fluidWindow.text = "";
+   NavEditorOptionsPanel.Visible = "0";
+   NavEditorInspector.Visible = "0";
+   NavEditorOptScroll.Visible = "0";
+   NavFieldInfoControl.Visible = "0";
+   
+   // Let's do a resize so that the panel is collapsed to the side
+   %position = Canvas.extent.x - 24 SPC %fixedWindow.position.y;
+   %extent = %fixedWindow.extent.x SPC %fixedWindow.extent.y;
+   %fixedWindow.resize(%position.x, %position.y, %extent.x, %extent.y);
+
+   %position =  Canvas.extent.x - 24 SPC %fluidWindow.position.y;
+   %extent = %fluidWindow.extent.x SPC %fluidWindow.extent.y;
+   %fluidWindow.resize(%position.x, %position.y, %extent.x, %extent.y);
+   
+   %parent.panelHidden = true;
+}
+
+function NavEditorGui::showSidePanel()
+{
+   %parent = NavEditorGui;
+   %fixedWindow = NavEditorTreeWindow;
+   %fluidWindow = NavEditorOptionsWindow;
+   
+   NavEditorGui_showBtn.Visible = "0";
+   NavEditorGui_hideBtn.Visible = "1";
+   
+   // showthe content of the panels
+   %fixedWindow.text = %fixedWindow.titleText;
+   NavEditorTreePanel.Visible = "1";
+   
+   %fluidWindow.text = %fluidWindow.titleText;
+   NavEditorOptionsPanel.Visible = "1";
+   NavEditorInspector.Visible = "1";
+   NavEditorOptScroll.Visible = "1";
+   NavFieldInfoControl.Visible = "1";
+   
+   %parent.resizing = true;
+   %parent.maxSize(%fluidWindow);
+   
+   %parent.panelHidden = false;
+}
+
+//------------------------------------------------------------------------------
+
 function NavEditorGui::onModeSet(%this, %mode)
 {
    // Callback when the nav editor changes mode. Set the appropriate dynamic
@@ -307,7 +569,7 @@ function NavInspector::onInspectorFieldModified(%this, %object, %fieldName, %arr
 
 function NavInspector::onFieldSelected(%this, %fieldName, %fieldTypeStr, %fieldDoc)
 {
-   NavFieldInfoControl.setText("<font:Arial Bold:14>" @ %fieldName @ "<font:Arial Italic:14> (" @ %fieldTypeStr @ ") " NL "<font:Arial:14>" @ %fieldDoc);
+   NavFieldInfoControl.setText( "<font:" @ $Gui::fontTypeBold @ ":16>" @ %fieldName @ "<font:" @ $Gui::fontTypeItalic @ ":16> (" @ %fieldTypeStr @ ") " NL "<font:" @ $Gui::fontTypeRegular @ ":16>" @ %fieldDoc );
 }
 
 function NavTreeView::onInspect(%this, %obj)

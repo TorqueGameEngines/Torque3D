@@ -41,6 +41,8 @@
             <Setting
                 name="doubleClickAction">Edit Asset</Setting>
             <Setting
+                name="LastPosExt">0 1047 2200 360</Setting>
+            <Setting
                 name="previewTileSize">1</Setting>
             <Setting
                 name="showCoreModule">1</Setting>
@@ -346,7 +348,7 @@
         <Setting
             name="tabsColor">40 40 40 255</Setting>
         <Setting
-            name="tabsHLColor">180 180 180 255</Setting>
+            name="tabsHLColor">100 100 100 255</Setting>
         <Setting
             name="tabsSELColor">100 110 120 255</Setting>
         <Setting

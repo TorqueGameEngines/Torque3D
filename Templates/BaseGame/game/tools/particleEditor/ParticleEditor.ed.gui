@@ -21,14 +21,15 @@ $PE_guielement_ext_colorpicker = "18 18";
 
 //--- OBJECT WRITE BEGIN ---
 $guiContent = new GuiWindowCollapseCtrl(PE_Window) {
+   canCollapse = "0";
    canSaveDynamicFields = "0";
    Enabled = "1";
    isContainer = "1";
    Profile = "ToolsGuiWindowProfile";
-   Position = firstWord($pref::Video::mode) - 209
-      SPC getWord(EditorGuiToolbar.extent, 1) -1;
-   Extent = "210 696";
-   MinExtent = "210 140";
+   Position = firstWord($pref::Video::mode) - 360
+      SPC getWord(EditorGuiToolbar.extent, 1) + 6;
+   Extent = "360" SPC getWord($pref::Video::mode, 1) - getWord(EditorGuiToolbar.extent, 1) - 65;
+   MinExtent = "300 140";
    HorizSizing = "windowRelative";
    VertSizing = "windowRelative";
    canSave = "1";
@@ -42,14 +43,14 @@ $guiContent = new GuiWindowCollapseCtrl(PE_Window) {
    AnchorRight = "0";
    resizeWidth = "1";
    resizeHeight = "1";
-   canMove = "1";
+   canMove = "0";
    canClose = "0";
    canMinimize = "0";
    canMaximize = "0";
    minSize = "50 50";
    closeCommand = "";
    EdgeSnap = "0";
-   text = "Particle Editor";
+   text = "::  Particle Editor";
       
    new GuiTabBookCtrl(PE_TabBook) {
       canSaveDynamicFields = "0";
@@ -1508,6 +1509,7 @@ $guiContent = new GuiWindowCollapseCtrl(PE_Window) {
                            text = "Blend Type";
                         };
                         new GuiPopUpMenuCtrl() {
+                           Profile = "ToolsGuiPopUpMenuProfile";
                            internalName = "PEE_blendType";
                            HorizSizing = "left";
                            VertSizing = "bottom";

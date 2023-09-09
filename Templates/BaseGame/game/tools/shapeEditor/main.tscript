@@ -30,12 +30,13 @@ function initializeShapeEditor()
 
    exec("./gui/Profiles.ed." @ $TorqueScriptFileExtension);
 
+   // Order of GUI loading is important
    exec("./gui/shapeEdPreviewWindow.ed.gui");
-   exec("./gui/shapeEdAnimWindow.ed.gui");
-   exec("./gui/shapeEdAdvancedWindow.ed.gui");
    exec("./gui/ShapeEditorToolbar.ed.gui");
    exec("./gui/shapeEdSelectWindow.ed.gui");
    exec("./gui/shapeEdPropWindow.ed.gui");
+   exec("./gui/shapeEdAdvancedWindow.ed.gui");
+   exec("./gui/shapeEdAnimWindow.ed.gui");
 
    exec("./scripts/shapeEditor.ed." @ $TorqueScriptFileExtension);
    exec("./scripts/shapeEditorHints.ed." @ $TorqueScriptFileExtension);

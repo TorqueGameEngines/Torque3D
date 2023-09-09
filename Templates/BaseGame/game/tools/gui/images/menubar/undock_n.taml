@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="undock_n_image"
+    imageFile="@assetFile=undock_n.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

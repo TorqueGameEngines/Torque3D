@@ -418,7 +418,7 @@ function GuiEditorProfilesTree::setSelectedProfile( %this, %profile )
 
 function GuiEditorProfileInspector::onFieldSelected( %this, %fieldName, %fieldTypeStr, %fieldDoc )
 {
-   GuiEditorProfileFieldInfo.setText( "<font:Arial:14>" @ %fieldName @ "<font:Arial Italic:14> (" @ %fieldTypeStr @ ") " NL "<font:Arial:14>" @ %fieldDoc );
+   GuiEditorProfileFieldInfo.setText( "<font:" @ $Gui::fontTypeBold @ ":16>" @ %fieldName @ "<font:" @ $Gui::fontTypeItalic @ ":16> (" @ %fieldTypeStr @ ") " NL "<font:" @ $Gui::fontTypeRegular @ ":16>" @ %fieldDoc );
 }
 
 //---------------------------------------------------------------------------------------------

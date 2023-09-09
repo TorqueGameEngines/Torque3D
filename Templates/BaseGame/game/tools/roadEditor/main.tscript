@@ -82,7 +82,7 @@ function RoadEditorPlugin::onWorldEditorStartup( %this )
    exec( "./RoadEditorSettingsTab.gui" );
    //ESettingsWindow.addTabPage( ERoadEditorSettingsPage );
    
-   ESettingsWindow.addEditorSettingsPage("RoadEditor", "Road Editor");
+   ESettingsWindow.addEditorSettingsPage("RoadEditor", "Decal Road Editor");
 }
 
 function RoadEditorPlugin::onActivated( %this )
@@ -105,7 +105,7 @@ function RoadEditorPlugin::onActivated( %this )
    %this.map.push();
 
    // Set the status bar here until all tool have been hooked up
-   EditorGuiStatusBar.setInfo("Road editor.");
+   EditorGuiStatusBar.setInfo("Decal Road Editor.");
    EditorGuiStatusBar.setSelection("");
    
    Parent::onActivated(%this);

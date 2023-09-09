@@ -58,32 +58,17 @@ function EditorGui::init(%this)
          %this.add( EWTreeWindow );
          EWTreeWindow-->EditorTree.selectPage( 0 );
          EWTreeWindow.setVisible( false );
-         
-         if(EditorSettings.value( "WorldEditor/forceSidebarToSide" ) == 1)
-         {
-            EWTreeWindow.position = %this.extent.x - EWTreeWindow.Extent.x SPC EditorGuiToolbar.extent.y;
-            EWTreeWindow.extent = EWTreeWindow.extent.x SPC %this.extent.y - EditorGuiToolbar.extent.y - EditorGuiStatusBar.extent.y - 25;
-            FieldInfoControl.position = 5 SPC EWInspectorWindow.extent.y - 40;
-         }
       }
    }
-   
+
    if( !isObject( %this-->InspectorWindow ) )
    {
       // Load Creator/Inspector GUI
       exec("~/worldEditor/gui/WorldEditorInspectorWindow.ed.gui");
-      //EWInspectorWindow.resize(getWord(EWInspectorWindow.Position, 0), getWord(EWInspectorWindow.Position, 1), getWord(EWInspectorWindow.extent, 0), getWord(EWInspectorWindow.extent, 1));
       if( isObject( EWInspectorWindow ) )
       {
          %this.add( EWInspectorWindow );
          EWInspectorWindow.setVisible( false );
-         
-         if(EditorSettings.value( "WorldEditor/forceSidebarToSide" ) == 1)
-         {
-            EWInspectorWindow.position = EWTreeWindow.position.x SPC EWTreeWindow.extent.y;
-            EWInspectorWindow.extent = EWTreeWindow.extent.x SPC EWTreeWindow.extent.y;
-            FieldInfoControl.position = 5 SPC EWInspectorWindow.extent.y - 40;
-         }
       }
    }   
    
@@ -213,6 +198,7 @@ function EditorGui::init(%this)
    }
 
    EWorldEditor.init();
+   
    ETerrainEditor.init();
 
    //Creator.init();
@@ -259,6 +245,13 @@ function EditorGui::init(%this)
    
    // Start up the settings window
    ESettingsWindow.startup();     
+   
+   if(EditorSettings.value( "WorldEditor/forceSidebarToSide" ) == 1)
+   {
+      // Resize windows by docking EWTreeWindow & EWInspectorWindow
+      EWorldEditor.dockSidePanel();
+      EWInspectorWindow.onMouseDragged();
+   }  
    
    // Call the startup callback on the editor plugins.   
    for ( %i = 0; %i < EditorPluginSet.getCount(); %i++ )
@@ -380,6 +373,28 @@ function EditorGui::addToToolsToolbar( %this, %pluginName, %internalName, %image
          break;
       }
    }
+   
+   // when the tooltip isn't defined let's use the internal name
+   if(%tooltip !$="")
+   {
+      // Don't show function keys markers if no key is set
+      %tooltipText = strreplace( %tooltip, "()", "" );
+      // Remove any trailing whitespace
+      %tooltipText = rtrim(%tooltipText);
+   }
+   else
+   {
+      // Remove some words from the internal name so we can use it for the tooltip
+      %tooltipText = strreplace( %internalName, "Palette", "" );
+      %tooltipText = strreplace( %tooltipText, "Inspector", "" );
+      
+      %tooltipText = strreplace( %tooltipText, "_", " " );
+      
+      // Remove any trailing whitespace
+      %tooltipText = rtrim(%tooltipText);
+   }
+   
+   %tooltip = %tooltipText;
       
    if(!%alreadyExists)
    {
@@ -398,7 +413,7 @@ function EditorGui::addToToolsToolbar( %this, %pluginName, %internalName, %image
          Visible = "1";
          Command = "EditorGui.setEditor(" @ %pluginName @ ");";
          tooltipprofile = "ToolsGuiToolTipProfile";
-         ToolTip = "";// %tooltip;
+         ToolTip = %tooltip;
          hovertime = "750";
          bitmapAsset = %imageAsset;
          buttonType = "RadioButton";
@@ -406,7 +421,7 @@ function EditorGui::addToToolsToolbar( %this, %pluginName, %internalName, %image
          useMouseEvents = "0";
       };
       ToolsToolbarArray.add(%button);
-      EWToolsToolbar.setExtent((25 + 8) * (%count + 1) + 12 SPC "33");
+      EWToolsToolbar.setExtent((29 + 4) * (%count + 1) + 4 SPC "32");
    }
 }
 
@@ -499,6 +514,8 @@ function EditorGui::setEditor( %this, %newEditor, %dontActivate )
       %gui.setOrthoFOV( %this.currentOrthoFOV );
       EditorGui.syncCameraGui();
    }
+   
+   EditorGui.updateSideBar();
 }
 
 function EditorGui::syncEditor( %this, %newEditor, %newEditorFailed )
@@ -605,6 +622,64 @@ function EditorGui::onSleep( %this )
             
    if(isObject($Server::CurrentScene))
       $Server::CurrentScene.open();
+}
+
+function EditorGui::updateSideBar(%this)
+{   
+   if(GuiEditorIsActive())
+   {
+      if(isObject(AssetBrowserWindow) && isObject(GuiEditorSidebar))
+      {
+         if(AssetBrowserWindow.docked == true)
+         {
+            // The width is relative to the sidepanel
+            %browserWidth = Canvas.extent.x - GuiEditorSidebar.extent.x;
+            %browserHeight = AssetBrowserWindow.extent.y;
+            %browserPosY = Canvas.extent.y - AssetBrowserWindow.extent.y - 33;
+            AssetBrowserWindow.resize(0, %browserPosY, %browserWidth, %browserHeight);
+         }
+      }
+      return;
+   }
+   
+   // Update the current sidebar with a mouse event
+   // Each editor script will do the rest of the work
+   if(isObject(EditorGui.currentEditor))
+   {
+      switch$(EditorGui.currentEditor)
+      {
+         case "ConvexEditorPlugin":
+            ConvexEditorOptionsWindow.onMouseDragged();
+         case "DatablockEditorPlugin":
+            DatablockEditorTreeWindow.onMouseDragged();
+         case "DecalEditorPlugin":
+            DecalEditorWindow.onMouseDragged();
+         case "ForestEditorPlugin ":
+            ForestEditorPalleteWindow.onMouseDragged();
+         case "MaterialEditorPlugin":
+            MaterialEditorPreviewWindow.onMouseDragged();
+         case "MeshRoadEditorPlugin":
+            MeshRoadEditorTreeWindow.onMouseDragged();
+         case "MissionAreaEditorPlugin":
+            MissionAreaEditorTerrainWindow.onMouseDragged();
+         case "NavEditorPlugin":
+            NavEditorTreeWindow.onMouseDragged();
+         case "ParticleEditorPlugin":
+            PE_Window.onMouseDragged();
+         case "RiverEditorPlugin":
+            RiverEditorTreeWindow.onMouseDragged();
+         case "RoadEditorPlugin":
+            RoadEditorTreeWindow.onMouseDragged();
+         case "ShapeEditorPlugin":
+            // Todo
+         case "VPathEditorPlugin":
+            VPathEditorTreeWindow.onMouseDragged();
+         case "WorldEditorInspectorPlugin":
+            EWTreeWindow.onMouseDragged();
+         case "TerrainEditorPlugin":
+            EPainterPreview.onMouseDragged();
+      }
+   }
 }
 
 function EditorGui::onNewLevelLoaded( %this, %levelName )
@@ -853,6 +928,56 @@ function EditorGui::syncCameraGui( %this )
       EditorGuiStatusBar.setCamera("1st Person Camera");
    }      
  }
+ 
+ //------------------------------------------------------------------------------
+ 
+ function EditorGui::addPointLight(%this)
+{
+   %obj = ObjectCreator.createObject( "ObjectBuilderGui.buildObject( \"PointLight\" );" );
+   
+   EWorldEditor.isDirty = true;
+   EditorTree.buildVisibleTree(true);
+}
+
+ function EditorGui::addSpotLight(%this)
+{
+   %obj = ObjectCreator.createObject( "ObjectBuilderGui.buildObject( \"SpotLight\" );" );
+   
+   EWorldEditor.isDirty = true;
+   EditorTree.buildVisibleTree(true);
+}
+
+ function EditorGui::addSound(%this)
+{
+   %obj = ObjectCreator.createObject( "ObjectBuilderGui.buildObject( \"SFXEmitter\" );" );
+   
+   EWorldEditor.isDirty = true;
+   EditorTree.buildVisibleTree(true);
+}
+
+ function EditorGui::addTrigger(%this)
+{
+   %obj = ObjectCreator.createObject( "ObjectBuilderGui.buildObject( \"Trigger\" );" );
+   
+   EWorldEditor.isDirty = true;
+   EditorTree.buildVisibleTree(true);
+}
+
+ function EditorGui::addParticle(%this)
+{
+   %obj = ObjectCreator.createObject( "ObjectBuilderGui.buildObject( \"ParticleEmitterNode\" );" );
+   
+   EWorldEditor.isDirty = true;
+   EditorTree.buildVisibleTree(true);
+}
+
+ function EditorGui::addWater(%this)
+{
+   %obj = ObjectCreator.createObject( "ObjectBuilderGui.buildObject( \"WaterBlock\" );" );
+
+   EWorldEditor.isDirty = true;
+   EditorTree.buildVisibleTree(true);
+}
   
 /// @name EditorPlugin Methods 
 /// @{
@@ -1455,26 +1580,260 @@ function EWorldEditorAlignPopup::onSelect(%this, %id, %text)
 
 //-----------------------------------------------------------------------------
 
+function EWorldEditor::onWake(%this)
+{   
+   %fixedWindow = EWTreeWindow;
+   %fluidWindow = EWInspectorWindow;
+   
+   if(EditorSettings.value( "WorldEditor/forceSidebarToSide" ) == 1)
+   {
+      // Let's dock the side panel to the right side
+      %this.docked = false;
+      %this.resizing = true;
+      %this.dockSidePanel();
+   }
+   else
+   {
+      // Let's release the side panel so it can be moved
+      %this.docked = true;
+      %this.resizing = false;
+      %this.releaseSidePanel();
+   }
+}
+
+function EWorldEditor::maxSize(%this, %window)
+{      
+   // Resize the windows to the max height
+   // and force these to the right side if set
+   if(EditorSettings.value( "WorldEditor/forceSidebarToSide" ) == 1 && %this.resizing == true)
+   {  
+      // prevent onResize after a resize
+      %this.resizing = false;
+      
+      %fixedWindow = EWTreeWindow;
+      %fluidWindow = EWInspectorWindow;
+      %top = EditorGuiToolbar.extent.y + 6;
+      %bottom = %top + 65 - 6;
+      %maxHeight = Canvas.extent.y - %top - %bottom;
+      
+      // --- Fixed window (top) ------------------------------------------------
+      // put it back if it moved
+      %fixedWindow.position.x = Canvas.extent.x - %fixedWindow.extent.x;
+      %fixedWindow.position.y = %top;
+      
+      // don't go beyond the canvas
+      if(%fixedWindow.extent.y > %maxHeight)
+         %fixedWindow.extent.y = %maxHeight - %fluidWindow.extent.y;
+
+      %position = %fixedWindow.position.x SPC %fixedWindow.position.y;
+      %extent = %window.extent.x SPC %fixedWindow.extent.y;
+      %fixedWindow.resize(%position.x, %position.y, %extent.x, %extent.y);
+      
+      // --- Fluid window (bottom) ---------------------------------------------
+      // position is relative to the top window
+      %position = %fixedWindow.position.x SPC %fixedWindow.extent.y + %top;
+      %extent = %window.extent.x SPC Canvas.extent.y - %fixedWindow.extent.y - %bottom;
+      %fluidWindow.resize(%position.x, %position.y, %extent.x, %extent.y);
+      
+      // --- AssetBrowser window  ----------------------------------------------
+      if(isObject(AssetBrowserWindow))
+      {
+         // Only resize the AssetBrowser if it's docked
+         if(AssetBrowserWindow.docked == true)
+         {
+            // The width is relative to the sidepanel
+            %browserWidth = Canvas.extent.x - %extent.x;
+            %browserHeight = AssetBrowserWindow.extent.y;
+            %browserPosY = Canvas.extent.y - AssetBrowserWindow.extent.y - 33;
+            AssetBrowserWindow.resize(0, %browserPosY, %browserWidth, %browserHeight);
+         }
+      }
+      // --- Windowed Console --------------------------------------------------
+      if(isObject(windowConsoleControl))
+      {
+         // Only resize the AssetBrowser if it's docked
+         if(windowConsoleControl.docked == true)
+         {
+            // The width is relative to the sidepanel
+            %consoleWidth = Canvas.extent.x - %extent.x;
+            %consoleHeight = windowConsoleControl.extent.y;
+            %consolePosY = Canvas.extent.y - windowConsoleControl.extent.y - 33;
+            windowConsoleControl.resize(0, %consolePosY, %consoleWidth, %consoleHeight);
+         }
+      }
+   }
+}
+
+function EWTreeWindow::onMouseDragged(%this)
+{
+   %parent = EWorldEditor;
+   
+   if(%parent.panelHidden == true)
+   {
+      %parent.showSidePanel();
+   }
+   
+   if(%parent.resizing == false && %parent.docked == true)
+   {
+      %parent.resizing = true;
+      %parent.maxSize(%this);
+   }
+}
+
+function EWInspectorWindow::onMouseDragged(%this)
+{
+   %parent = EWorldEditor;
+   
+   if(%parent.panelHidden == true)
+   {
+      %parent.showSidePanel();
+   }
+   
+   if(%parent.resizing == false && %parent.docked == true)
+   {
+      %parent.resizing = true;
+      %parent.maxSize(%this);
+   }
+}
+
 function EWorldEditor::onResize(%this, %newPosition, %newExtent)
 {
-   if(EditorSettings.value( "WorldEditor/forceSidebarToSide" ) == 1)
+   // Window to focus on (mostly the fluid window)
+   %window = EWInspectorWindow;
+   
+   if(%window.panelHidden == true)
    {
-      %treePos = %this.extent.x - (%this.extent.x * 0.2) SPC EditorGuiToolbar.extent.y;
-      %treeExt = %this.extent.x * 0.2 SPC (%this.extent.y * 0.5) - EditorGuiToolbar.extent.y - EditorGuiStatusBar.extent.y - 25;
-      
-      EWTreeWindow.resize(%treePos.x, %treePos.y, %treeExt.x, %treeExt.y);
+      %window.showSidePanel();
    }
-
-   if(EditorSettings.value( "WorldEditor/forceSidebarToSide" ) == 1)
-   {
-      %inspPos = EWTreeWindow.position.x SPC EWTreeWindow.position.y + EWTreeWindow.extent.y;
-      %inspExt = EWTreeWindow.extent.x SPC %this.extent.y - EWTreeWindow.extent.y - (EditorGuiStatusBar.extent.y * 2);
-      
-      EWInspectorWindow.resize(%inspPos.x, %inspPos.y, %inspExt.x, %inspExt.y);
+   
+   if(%this.resizing == false && %this.docked == true)
+   {  
+      // Only resize once
+      %this.resizing = true;
+      %this.maxSize(%window);
    }
    
    FieldInfoControl.position = 5 SPC EWInspectorWindow.extent.y - 40;
 }
+
+function EWorldEditor::dockSidePanel()
+{
+   %parent = EWorldEditor;
+   %fixedWindow = EWTreeWindow;
+   %fluidWindow = EWInspectorWindow;
+   
+   if(%parent.docked == true)
+      return;
+   
+   // Move and resize the window(s)
+   %parent.resizing = true;
+   %parent.maxSize(%fluidWindow);
+      
+   %parent.docked = true;
+   %fluidWindow.onMouseDragged();
+
+   // Lock the windows in place
+   %fixedWindow.canCollapse = "0";
+   %fixedWindow.canMove = "0";
+   
+   %fluidWindow.canCollapse = "0";
+   %fluidWindow.canMove = "0";
+   
+   EWorldEditor_UnDockBtn.Visible = "1";
+   EWorldEditor_DockBtn.Visible = "0";
+   
+   EWorldEditor_showBtn.Visible = "0";
+   EWorldEditor_hideBtn.Visible = "1";
+}
+
+function EWorldEditor::releaseSidePanel()
+{      
+   %parent = EWorldEditor;
+   %fixedWindow = EWTreeWindow;
+   %fluidWindow = EWInspectorWindow;
+   
+   if(%parent.docked == false)
+      return;
+   
+   // Unlock the windows so that be moved
+   %fixedWindow.canCollapse = "1";
+   %fixedWindow.canMove = "1";
+   
+   %fluidWindow.canCollapse = "1";
+   %fluidWindow.canMove = "1";
+   
+   EWorldEditor_UnDockBtn.Visible = "0";
+   EWorldEditor_DockBtn.Visible = "1";
+   
+   EWorldEditor_showBtn.Visible = "0";
+   EWorldEditor_hideBtn.Visible = "0";
+   
+   // Let's do a small resize so it's visually clear we're undocking
+   %position = %fixedWindow.position.x - 6 SPC %fixedWindow.position.y + 6;
+   %extent = %fixedWindow.extent.x SPC %fixedWindow.extent.y;
+   %fixedWindow.resize(%position.x, %position.y, %extent.x, %extent.y);
+
+   %position =  %fluidWindow.position.x - 6 SPC  %fluidWindow.position.y + 6;
+   %extent = %fluidWindow.extent.x SPC %fluidWindow.extent.y - 12;
+   %fluidWindow.resize(%position.x, %position.y, %extent.x, %extent.y);
+   
+   %parent.docked = false;
+   %parent.resizing = false;
+}
+
+function EWorldEditor::hideSidePanel()
+{
+   %parent = EWorldEditor;
+   %fixedWindow = EWTreeWindow;
+   %fluidWindow = EWInspectorWindow;
+   
+   EWorldEditor_showBtn.Visible = "1";
+   EWorldEditor_hideBtn.Visible = "0";
+   
+   // hide the content of the panels
+   %fixedWindow.titleText = %fixedWindow.text;
+   %fluidWindow.titleText = %fluidWindow.text;
+   
+   %fixedWindow.text = "";
+   EditorTreeTabBook.Visible = "0";
+   
+   %fluidWindow.text = "";
+   EWInspectorContainer.Visible = "0";
+   
+   // Let's do a resize so that the panel is collapsed to the side
+   %position = Canvas.extent.x - 24 SPC %fixedWindow.position.y;
+   %extent = %fixedWindow.extent.x SPC %fixedWindow.extent.y;
+   %fixedWindow.resize(%position.x, %position.y, %extent.x, %extent.y);
+
+   %position =  Canvas.extent.x - 24 SPC  %fluidWindow.position.y;
+   %extent = %fluidWindow.extent.x SPC %fluidWindow.extent.y;
+   %fluidWindow.resize(%position.x, %position.y, %extent.x, %extent.y);
+   
+   %parent.panelHidden = true;
+}
+
+function EWorldEditor::showSidePanel()
+{
+   %parent = EWorldEditor;
+   %fixedWindow = EWTreeWindow;
+   %fluidWindow = EWInspectorWindow;
+   
+   EWorldEditor_showBtn.Visible = "0";
+   EWorldEditor_hideBtn.Visible = "1";
+   
+   // show the content of the panels
+   %fixedWindow.text = %fixedWindow.titleText;
+   EditorTreeTabBook.Visible = "1";
+   
+   %fluidWindow.text = %fluidWindow.titleText;
+   EWInspectorContainer.Visible = "1";
+   
+   %parent.resizing = true;
+   %parent.maxSize(%fluidWindow);
+   
+   %parent.panelHidden = false;
+}
+
 
 //-----------------------------------------------------------------------------
 
@@ -1934,8 +2293,12 @@ function EditorTreeTabBook::onTabSelected( %this )
    }
    else
    {
-      AssetBrowser.showDialog("ShapeAsset Datablock");
-      EditorTreeTabBook.selectPage(0);
+      //AssetBrowser.showDialog("ShapeAsset Datablock");
+      //EditorTreeTabBook.selectPage(0);
+      
+      EWTreeWindow-->DeleteSelection.visible = false;
+      EWTreeWindow-->LockSelection.visible = false;
+      EWTreeWindow-->AddSimGroup.visible = false;
    }
 }
 
@@ -2052,6 +2415,26 @@ function EditTSCtrl::updateGizmoMode( %this, %mode )
       EditorGuiToolbar->RotateModeBtn.performClick();
    else if ( %mode $= "Scale" )
       EditorGuiToolbar->ScaleModeBtn.performClick();
+}
+
+//------------------------------------------------------------------------------
+
+function EditorGui::toggleDeviceMode( %this )
+{
+   // Check the current setting
+   %mode = getField($Video::ModeTags, $pref::Video::deviceMode);
+   
+   if(%mode !$= "Borderless")
+   {
+      %resolutionList = getScreenResolutionList($pref::Video::deviceId, $Video::Mode[%mode]);
+      %resolution = OptionsMenu.getOptionVariableValue("$pref::Video::Resolution");
+      if(%resolution $= "")
+         %resolution =  $pref::Video::mode;
+         
+      %resolution = _makePrettyResString(%resolution);
+   
+      OptionsMenuSettingsList.addOptionRow("Resolution", "$pref::Video::Resolution", %resolutionList, false, "",  true, "Resolution of the game window", %resolution);
+   }
 }
 
 //------------------------------------------------------------------------------
@@ -2473,7 +2856,7 @@ function EWToolsToolbar::reset( %this )
    EWToolsToolbar.isDynamic = 0;
       
    EWToolsToolbarDecoy.setVisible(false);
-   EWToolsToolbarDecoy.setExtent((29 + 4) * %count + 4, 31);
+   EWToolsToolbarDecoy.setExtent((29 + 4) * %count + 4, 32);
 
   %this-->resizeArrow.setBitmap( "ToolsModule:collapse_toolbar_n_image" );
 }
@@ -2503,7 +2886,7 @@ function EWToolsToolbar::toggleSize( %this, %useDynamics )
          EWToolsToolbar.isDynamic = 1;
       }
          
-      EWToolsToolbarDecoy.setExtent(35, 31);
+      EWToolsToolbarDecoy.setExtent(35, 32);
    }
    else
    {
@@ -2553,6 +2936,20 @@ function EditorGuiStatusBar::getInfo( %this )
 
 function EditorGuiStatusBar::setInfo( %this, %text )
 {
+   %slashPos = 0;
+   while( strpos( $Server::MissionFile, "/", %slashPos ) != -1 )
+   {
+      %slashPos = strpos( $Server::MissionFile, "/", %slashPos ) + 1;
+   }
+   %levelName = getSubStr( $Server::MissionFile , %slashPos , 99 );  
+   
+   %levelName = strreplace( %levelName, ".mis", "" );
+
+   if(%levelName !$="")
+      %text = "<font:" @ $Gui::fontTypeBold @ ":16><color:cc6666>" @ %levelName SPC "<font:" @ $Gui::fontTypeRegular @ ":16><color:B9B9B9>  -  " SPC %text;
+   else
+      %text = "<font:" @ $Gui::fontTypeBold @ ":16><color:cc6666>" @ "Untitled" SPC "<font:" @ $Gui::fontTypeRegular @ ":16><color:B9B9B9>  -  " SPC %text;
+      
    EWorldEditorStatusBarInfo.setText(%text);
 }
 

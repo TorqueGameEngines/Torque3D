@@ -46,7 +46,7 @@ $guiContent = new GuiControl(TerrainImportGui, EditorGuiGroup) {
       minSize = "4 4";
       closeCommand = "Canvas.popDialog( TerrainImportGui );";
       EdgeSnap = "0";
-      text = "Import Terrain Height Map";
+      text = "::  Import Terrain Height Map";
 
       new GuiTextEditCtrl() {
          canSaveDynamicFields = "0";
@@ -85,7 +85,7 @@ $guiContent = new GuiControl(TerrainImportGui, EditorGuiGroup) {
          Profile = "ToolsGuiTextProfile";
          HorizSizing = "right";
          VertSizing = "top";
-         Position = "11 66";
+         Position = "11 64";
          Extent = "120 20";
          MinExtent = "8 2";
          canSave = "1";
@@ -131,8 +131,8 @@ $guiContent = new GuiControl(TerrainImportGui, EditorGuiGroup) {
          Profile = "ToolsGuiTextEditProfile";
          HorizSizing = "left";
          VertSizing = "top";
-         Position = "226 44";
-         Extent = "82 18";
+         Position = "210 44";
+         Extent = "100 18";
          MinExtent = "8 2";
          canSave = "1";
          isDecoy = "0";
@@ -160,7 +160,7 @@ $guiContent = new GuiControl(TerrainImportGui, EditorGuiGroup) {
          Profile = "ToolsGuiTextProfile";
          HorizSizing = "left";
          VertSizing = "top";
-         Position = "226 26";
+         Position = "210 26";
          Extent = "88 18";
          MinExtent = "8 2";
          canSave = "1";
@@ -174,7 +174,7 @@ $guiContent = new GuiControl(TerrainImportGui, EditorGuiGroup) {
          AnchorBottom = "0";
          AnchorLeft = "1";
          AnchorRight = "0";
-         text = "Meters Per Pixel";
+         text = "Meters Per Pixel:";
          maxLength = "1024";
       };
       new GuiTextCtrl() {

@@ -43,10 +43,10 @@ $guiContent = new GuiNavEditorCtrl(NavEditorGui, EditorGuiGroup) {
       Profile = "ToolsGuiWindowProfile";
       HorizSizing = "windowRelative";
       VertSizing = "windowRelative";
-      Position = getWord($pref::Video::mode, 0) - 209
-         SPC getWord(EditorGuiToolbar.extent, 1) - 1;
-      Extent = "210 167";
-      MinExtent = "210 100";
+      Position = getWord($pref::Video::mode, 0) - 360
+         SPC getWord(EditorGuiToolbar.extent, 1) + 6;
+      Extent = "360 180";
+      MinExtent = "300 120";
       canSave = "1";
       isDecoy = "0";
       Visible = "1";
@@ -66,7 +66,7 @@ $guiContent = new GuiNavEditorCtrl(NavEditorGui, EditorGuiGroup) {
       canMaximize = "0";
       minSize = "50 50";
       EdgeSnap = "1";
-      text = "Navigation";
+      text = "::  Navigation Editor";
 
       new GuiButtonCtrl() {
          Profile = "ToolsGuiButtonProfile";
@@ -79,7 +79,7 @@ $guiContent = new GuiNavEditorCtrl(NavEditorGui, EditorGuiGroup) {
          command = "Canvas.pushDialog(CreateNewNavMeshDlg);";
       };
 
-      new GuiContainer(){
+      new GuiContainer(NavEditorTreePanel){
          profile = GuiDefaultProfile;
          Position = "5 25";
          Extent = "200 120";
@@ -147,6 +147,99 @@ $guiContent = new GuiNavEditorCtrl(NavEditorGui, EditorGuiGroup) {
             };
          };
       };
+      // window / panel buttons
+      new GuiBitmapButtonCtrl(NavEditorGui_UnDockBtn) {
+         canSaveDynamicFields = "0";
+         internalName = "";
+         Enabled = "1";
+         isContainer = "0";
+         Profile = "ToolsGuiButtonProfile";
+         HorizSizing = "left";
+         VertSizing = "bottom";
+         Position = "330 1";
+         Extent = "18 18";
+         MinExtent = "8 8";
+         canSave = "1";
+         Visible = "0";
+         Command = "NavEditorGui.releaseSidePanel();";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Detach Sidepanel";
+         hovertime = "1000";
+         bitmapAsset = "ToolsModule:panel_undock_n_image";
+         text = "";
+         groupNum = "-1";
+         buttonType = "PushButton";
+         useMouseEvents = "0";
+      };
+      new GuiBitmapButtonCtrl(NavEditorGui_DockBtn) {
+         canSaveDynamicFields = "0";
+         internalName = "";
+         Enabled = "1";
+         isContainer = "0";
+         Profile = "ToolsGuiButtonProfile";
+         HorizSizing = "left";
+         VertSizing = "bottom";
+         Position = "330 1";
+         Extent = "18 18";
+         MinExtent = "8 8";
+         canSave = "1";
+         Visible = "0";
+         Command = "NavEditorGui.dockSidePanel();";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Dock Sidepanel";
+         hovertime = "1000";
+         bitmapAsset = "ToolsModule:panel_dock_n_image";
+         text = "";
+         groupNum = "-1";
+         buttonType = "PushButton";
+         useMouseEvents = "0";
+      };
+      new GuiBitmapButtonCtrl(NavEditorGui_HideBtn) {
+         canSaveDynamicFields = "0";
+         internalName = "";
+         Enabled = "1";
+         isContainer = "0";
+         Profile = "ToolsGuiButtonProfile";
+         HorizSizing = "left";
+         VertSizing = "bottom";
+         Position = "312 1";
+         Extent = "18 18";
+         MinExtent = "8 8";
+         canSave = "1";
+         Visible = "1";
+         Command = "NavEditorGui.hideSidePanel();";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Hide Sidepanel";
+         hovertime = "1000";
+         bitmapAsset = "ToolsModule:panel_hide_n_image";
+         text = "";
+         groupNum = "-1";
+         buttonType = "PushButton";
+         useMouseEvents = "0";
+      };
+      new GuiBitmapButtonCtrl(NavEditorGui_ShowBtn) {
+         canSaveDynamicFields = "0";
+         internalName = "";
+         Enabled = "1";
+         isContainer = "0";
+         Profile = "ToolsGuiButtonProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         Position = "4 1";
+         Extent = "18 18";
+         MinExtent = "8 8";
+         canSave = "1";
+         Visible = "1";
+         Command = "NavEditorGui.showSidePanel();";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Show Sidepanel";
+         hovertime = "1000";
+         bitmapAsset = "ToolsModule:panel_show_n_image";
+         text = "";
+         groupNum = "-1";
+         buttonType = "PushButton";
+         useMouseEvents = "0";
+      };  
    };
    new GuiWindowCollapseCtrl(NavEditorOptionsWindow) {
       internalName = "Window";
@@ -156,10 +249,10 @@ $guiContent = new GuiNavEditorCtrl(NavEditorGui, EditorGuiGroup) {
       Profile = "ToolsGuiWindowProfile";
       HorizSizing = "windowRelative";
       VertSizing = "windowRelative";
-      Position = getWord($pref::Video::mode, 0) - 209 
-         SPC getWord(EditorGuiToolbar.extent, 1) + getWord(NavEditorTreeWindow.extent, 1) - 2;
-      Extent = "210 530";
-      MinExtent = "210 300";
+      Position = getWord($pref::Video::mode, 0) - 360
+         SPC getWord(EditorGuiToolbar.extent, 1) + getWord(NavEditorTreeWindow.extent, 1) + 6;
+      Extent = "360" SPC getWord($pref::Video::mode, 1) - getWord(NavEditorTreeWindow.extent, 1) - getWord(EditorGuiToolbar.extent, 1) - 65;
+      MinExtent = "300 300";
       canSave = "1";
       Visible = "1";
       tooltipprofile = "GuiToolTipProfile";
@@ -178,9 +271,9 @@ $guiContent = new GuiNavEditorCtrl(NavEditorGui, EditorGuiGroup) {
       canMaximize = "0";
       minSize = "50 50";
       EdgeSnap = "1";
-      text = "Properties";
+      text = "::  Navigation Editor - Properties";
       
-      new GuiContainer(){ //Actions
+      new GuiContainer(NavEditorOptionsPanel){ //Actions
          isContainer = "1";
          Profile = "inspectorStyleRolloutDarkProfile";
          HorizSizing = "width";
@@ -192,7 +285,7 @@ $guiContent = new GuiNavEditorCtrl(NavEditorGui, EditorGuiGroup) {
          internalName = "ActionsBox";
          
          new GuiTextCtrl(){
-            Profile = "ToolsGuiTextProfile";
+            Profile = "EditorTextProfile";
             HorizSizing = "right";
             VertSizing = "bottom";
             Position = "5 0";
@@ -397,7 +490,7 @@ $guiContent = new GuiNavEditorCtrl(NavEditorGui, EditorGuiGroup) {
             };
          };
       };
-      new GuiContainer(){
+      new GuiContainer(NavEditorInspector){
          isContainer = "1";
          Profile = "inspectorStyleRolloutDarkProfile";
          HorizSizing = "width";
@@ -408,17 +501,16 @@ $guiContent = new GuiNavEditorCtrl(NavEditorGui, EditorGuiGroup) {
          Margin = "0 0 3 3";
          
          new GuiTextCtrl(){
-            profile = "ToolsGuiTextProfile";
-            Profile = "GuiDefaultProfile";
+            profile = "EditorTextProfile";
             HorizSizing = "right";
             VertSizing = "bottom";
             Position = "5 0";
             Extent = "121 18";
-            text = "Properties";
+            text = "Inspector";
          };
       };
 
-      new GuiScrollCtrl() {
+      new GuiScrollCtrl(NavEditorOptScroll) {
          canSaveDynamicFields = "0";
          Enabled = "1";
          isContainer = "1";
@@ -836,8 +928,8 @@ $guiContent = new GuiNavEditorCtrl(NavEditorGui, EditorGuiGroup) {
          Profile = "GuiInspectorFieldInfoMLTextProfile";
          HorizSizing = "width";
          VertSizing = "top";
-         Position = "1 485";
-         Extent = "202 42";
+         position = "8" SPC getWord(NavEditorOptionsWindow.extent, 1) - 40;
+         Extent = "330 42";
          MinExtent = "8 2";
          canSave = "1";
          Visible = "1";

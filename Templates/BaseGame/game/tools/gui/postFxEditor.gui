@@ -15,7 +15,7 @@ $guiContent = new GuiControl(postFXEditor) {
    canSaveDynamicFields = "1";
 
    new GuiWindowCtrl(PostFXEditorWindow) {
-      text = "PostFX Editor - EditorTemplateLevel";
+      text = "::  PostFX Editor - EditorTemplateLevel";
       resizeWidth = "1";
       resizeHeight = "1";
       canMove = "1";

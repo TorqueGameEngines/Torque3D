@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="iconbuttonlarge_image"
+    imageFile="@assetFile=iconbuttonlarge.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

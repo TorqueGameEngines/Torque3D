@@ -302,7 +302,6 @@ function WorldEditor::resetTransforms(%this)
    }
 }
 
-
 function WorldEditorToolbarDlg::init(%this)
 {
    WorldEditorInspectorCheckBox.setValue( WorldEditorToolFrameSet.isMember( "EditorToolInspectorGui" ) );
@@ -377,7 +376,8 @@ function WorldEditor::doFileDropProcessing(%this)
    ImportAssetWindow.refresh();
 }
 
-//
+//------------------------------------------------------------------------------
+
 
 function Inspector::onInspectorFieldModified( %this, %object, %fieldName, %arrayIndex, %oldValue, %newValue )
 {
@@ -423,7 +423,7 @@ function Inspector::onInspectorFieldModified( %this, %object, %fieldName, %array
 
 function Inspector::onFieldSelected( %this, %fieldName, %fieldTypeStr, %fieldDoc )
 {
-   FieldInfoControl.setText( "<font:Arial Bold:14>" @ %fieldName @ "<font:Arial Italic:14> (" @ %fieldTypeStr @ ") " NL "<font:Arial:14>" @ %fieldDoc );
+   FieldInfoControl.setText( "<font:" @ $Gui::fontTypeBold @ ":16>" @ %fieldName @ "<font:" @ $Gui::fontTypeItalic @ ":16> (" @ %fieldTypeStr @ ") " NL "<font:" @ $Gui::fontTypeRegular @ ":16>" @ %fieldDoc );
 }
 
 // The following three methods are for fields that edit field value live and thus cannot record

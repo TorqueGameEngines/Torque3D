@@ -5,10 +5,10 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdPropWindow) {
    Profile = "ToolsGuiWindowProfile";
    HorizSizing = "windowRelative";
    VertSizing = "windowRelative";
-   Position = getWord($pref::Video::mode, 0) - 209
+   Position = getWord($pref::Video::mode, 0) - 360
       SPC getWord(EditorGuiToolbar.extent, 1) + getWord(ShapeEdSelectWindow.extent, 1) - 2;
-   Extent = "210 484";
-   MinExtent = "210 352";
+   Extent = "360 350";
+   MinExtent = "300 350";
    canSave = "1";
    Visible = "0";
    tooltipprofile = "ToolsGuiToolTipProfile";
@@ -27,7 +27,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdPropWindow) {
    canMaximize = "0";
    minSize = "50 50";
    EdgeSnap = "1";
-   text = "Properties";
+   text = "::  Shape Editor - Properties";
 
    //---------------------------------------------------------------------
    // Sequence and Node editors

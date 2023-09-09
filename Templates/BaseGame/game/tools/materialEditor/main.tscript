@@ -140,6 +140,9 @@ function MaterialEditorPlugin::onActivated( %this )
    MaterialEditorGui.open();
    %this.map.push();
    
+   // Do resize the windows at start
+   MaterialEditorGui.onWake();
+   
    Parent::onActivated(%this);
 }
 

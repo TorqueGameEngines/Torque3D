@@ -182,7 +182,7 @@ EditorSettings.setDefaultValue(  "headerColor",             "40 40 40 255");
 EditorSettings.setDefaultValue(  "windowBackgroundColor",   "35 35 35 255");
 
 EditorSettings.setDefaultValue(  "tabsColor",               "40 40 40 255" );
-EditorSettings.setDefaultValue(  "tabsHLColor",             "180 180 180 255" );
+EditorSettings.setDefaultValue(  "tabsHLColor",             "100 100 100 255" );
 EditorSettings.setDefaultValue(  "tabsSELColor",            "100 110 120 255" );
 
 EditorSettings.setDefaultValue(  "dividerDarkColor",        "30 30 30 255");

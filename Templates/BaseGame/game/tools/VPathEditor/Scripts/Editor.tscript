@@ -224,5 +224,5 @@ function VPathInspector::onInspectorFieldModified( %this, %object, %fieldName, %
 
 function VPathInspector::onFieldSelected( %this, %fieldName, %fieldTypeStr, %fieldDoc )
 {
-    VPathFieldInfoControl.setText( "<font:Arial Bold:14>" @ %fieldName @ "<font:Arial Italic:14> (" @ %fieldTypeStr @ ") " NL "<font:Arial:14>" @ %fieldDoc );
+    VPathFieldInfoControl.setText( "<font:Arial Bold:14>" @ %fieldName @ "<font:Arial Italic:14> (" @ %fieldTypeStr @ ") " @ " :   " @ "<font:Arial:14>" @ %fieldDoc );
 }

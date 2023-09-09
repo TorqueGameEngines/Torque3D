@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="separator_xt_v_image"
+    imageFile="@assetFile=separator-xt-v.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

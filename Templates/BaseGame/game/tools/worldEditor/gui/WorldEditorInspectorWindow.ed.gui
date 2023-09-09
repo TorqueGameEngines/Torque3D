@@ -4,8 +4,8 @@ $guiContent = new GuiControl() {
    Enabled = "1";
    isContainer = "1";
    Profile = "ToolsGuiDefaultProfile";
-   HorizSizing = "right";
-   VertSizing = "bottom";
+   HorizSizing = "width";
+   VertSizing = "height";
    Position = "0 0";
    Extent = "800 600";
    MinExtent = "8 2";
@@ -14,15 +14,17 @@ $guiContent = new GuiControl() {
    hovertime = "1000";
 
    new GuiWindowCollapseCtrl(EWInspectorWindow) {
+      canCollapse = "0";
+      canMove = "0";
       canSaveDynamicFields = "0";
       internalName = "InspectorWindow";
       Enabled = "1";
       isContainer = "1";
       Profile = "ToolsGuiWindowProfile";
-      Position = getWord($pref::Video::mode, 0) - 330 SPC 
-      getWord(EditorGuiToolbar.extent, 1) + getWord(EWTreeWindow.extent, 1) + 40;
-      Extent = "300 250";
-      MinExtent = "200 150";
+      Position = getWord($pref::Video::mode, 0) - 360
+         SPC getWord(EditorGuiToolbar.extent, 1) + getWord(EWTreeWindow.extent, 1) + 6;
+      Extent = "360" SPC getWord($pref::Video::mode, 1) - getWord(EWTreeWindow.extent, 1) - getWord(EditorGuiToolbar.extent, 1) + 66;
+      MinExtent = "300 150";
       HorizSizing = "windowRelative";
       VertSizing = "windowRelative";
       canSave = "1";
@@ -36,16 +38,15 @@ $guiContent = new GuiControl() {
       AnchorRight = "0";
       resizeWidth = "1";
       resizeHeight = "1";
-      canMove = "1";
       canClose = "0";
       canMinimize = "0";
       canMaximize = "0";
       closeCommand = "EWInspectorWindow.setVisible(false);";
       minSize = "50 50";
       EdgeSnap = "1";
-      text = "Inspector";
+      text = "::  World Editor - Inspector";
 
-      new GuiContainer() {
+      new GuiContainer(EWInspectorContainer) {
          canSaveDynamicFields = "0";
          Enabled = "1";
          isContainer = "0";
@@ -53,7 +54,7 @@ $guiContent = new GuiControl() {
          HorizSizing = "width";
          VertSizing = "height";
          Position = "5 24";
-         Extent = "202 304";
+         Extent = "360 304";
          MinExtent = "64 64";
          canSave = "1";
          Visible = "1";
@@ -126,8 +127,8 @@ $guiContent = new GuiControl() {
          Profile = "GuiInspectorFieldInfoMLTextProfile";
          HorizSizing = "width";
          VertSizing = "top";
-         Position = 5 SPC EWInspectorWindow.extent.y - 40;
-         Extent = "197 35";
+         Position = "8" SPC EWInspectorWindow.extent.y - 40;
+         Extent = "330 35";
          MinExtent = "8 2";
          canSave = "1";
          Visible = "1";

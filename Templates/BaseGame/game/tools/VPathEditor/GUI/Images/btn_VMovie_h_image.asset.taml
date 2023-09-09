@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="btn_VMovie_h_image"
+    imageFile="@assetFile=btn_VMovie_h.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

@@ -47,10 +47,10 @@ $guiContent = new GuiConvexEditorCtrl(ConvexEditorGui) {
       Profile = "ToolsGuiWindowProfile";
       HorizSizing = "windowRelative";
       VertSizing = "windowRelative";
-      Position = getWord($pref::Video::mode, 0) - 209
-         SPC getWord(EditorGuiToolbar.extent, 1) - 1;
-      Extent = "210 167";
-      MinExtent = "210 100";
+      Position = getWord($pref::Video::mode, 0) - 360
+         SPC getWord(EditorGuiToolbar.extent, 1) + 6;
+      Extent = "360 167";
+      MinExtent = "300 100";
       canSave = "1";
       Visible = "1";
       tooltipprofile = "ToolsGuiToolTipProfile";
@@ -70,12 +70,12 @@ $guiContent = new GuiConvexEditorCtrl(ConvexEditorGui) {
       minSize = "50 50";
       closeCommand = "EditorGui.setEditor( WorldEditorInspectorPlugin );";
       EdgeSnap = "1";
-      text = "ConvexShapes";
+      text = "::  Convex Shape Editor";
       
       new GuiContainer(){
          profile = "ToolsGuiDefaultProfile";
          Position = "5 25";
-         Extent = "200 120";
+         Extent = "290 120";
          Docking = "Client";
          Margin = "3 1 3 3 ";
          HorizSizing = "width";
@@ -90,7 +90,7 @@ $guiContent = new GuiConvexEditorCtrl(ConvexEditorGui) {
             HorizSizing = "width";
             VertSizing = "height";
             Position = "0 0";
-            Extent = "200 118";
+            Extent = "290 118";
             MinExtent = "8 8";
             canSave = "1";
             isDecoy = "0";
@@ -121,7 +121,7 @@ $guiContent = new GuiConvexEditorCtrl(ConvexEditorGui) {
                HorizSizing = "right";
                VertSizing = "bottom";
                Position = "1 1";
-               Extent = "193 21";
+               Extent = "283 21";
                MinExtent = "8 8";
                canSave = "1";
                Visible = "1";

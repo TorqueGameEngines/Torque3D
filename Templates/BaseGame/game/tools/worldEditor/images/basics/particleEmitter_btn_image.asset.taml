@@ -1,0 +1,4 @@
+<ImageAsset
+    AssetName="particleEmitter_btn_image"
+    imageFile="@assetFile=particleEmitter_btn.png"
+    imageType="GUI"/>

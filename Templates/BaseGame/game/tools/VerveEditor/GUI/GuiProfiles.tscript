@@ -15,7 +15,7 @@ singleton GuiControlProfile( VEditorDefaultProfile )
     borderColorHL = "100 100 100";
     borderColorNA = "240 240 240";
 
-    fontType      = "Arial";
+    fontType      = "Segoe UI Regular";
     fontSize      = 12;
     fontCharset   = ANSI;
 
@@ -56,7 +56,7 @@ singleton GuiControlProfile( VEditorTextProfile : VEditorDefaultProfile )
     border = false;
     opaque = false;
     
-    fontType = "Arial Bold";
+    fontType = "Segoe UI Bold";
 };
 
 singleton GuiControlProfile( VEditorTextEditProfile : VEditorDefaultProfile )
@@ -186,7 +186,7 @@ singleton GuiControlProfile( VEditorPropertyRolloutProfile : GuiRolloutProfile )
     hasBitmapArray = true;
     bitmapAsset = "ToolsModule:PropertyRollout_image";
 
-    fontType      = "Arial";
+    fontType      = "Segoe UI Regular";
     fontSize      = 12;
     fontCharset   = ANSI;
 

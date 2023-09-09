@@ -18,14 +18,14 @@ function AssetBrowser::addToolbarButton(%this)
 		tooltipprofile = "ToolsGuiToolTipProfile";
 		ToolTip = "Asset Browser";
 		hovertime = "750";
-		bitmapAsset = "ToolsModule:menuGrid_n_image";
+		bitmapAsset = "ToolsModule:assetBrowser_n_image";
 		bitmapMode = "Stretched";
-		buttonType = "PushButton";
+		buttonType = "ToggleButton";
 		groupNum = "0";
 		useMouseEvents = "0";
 	};
 	ToolsToolbarArray.add(%button);
-	EWToolsToolbar.setExtent((25 + 8) * (ToolsToolbarArray.getCount()) + 12 SPC "33");
+	EWToolsToolbar.setExtent((29 + 4) * (ToolsToolbarArray.getCount()) + 4 SPC "32");
 }
 //
 
@@ -73,12 +73,84 @@ function AssetBrowser::onAdd(%this)
 function AssetBrowser::onWake(%this)
 {
    %this.initialize();
+   
+   // Make the window fit next to the side panel
+   // We do a simple resize so that we don't have to redo the whole GUI layout
+   %newWidth = getWord($pref::Video::mode, 0) - 360;
+   %vertPos = getWord($pref::Video::mode, 1) - 360 - 35;
+   AssetBrowserWindow.resize("0", %vertPos, %newWidth, "360");
+   AssetBrowserWindow.dockPanel();
 }
 
 function AssetBrowser::onDialogPop(%this)
 {
+   $AssetBrowser::Open = false;
    %lastPosExt = AssetBrowserWindow.position SPC AssetBrowserWindow.extent;
-   EditorSettings.setValue("Assets/Browser/LastPosExt", %lastPosExt); 
+   EditorSettings.setValue("Assets/Browser/LastPosExt", %lastPosExt);
+}
+
+function AssetBrowser::onDialogPush(%this)
+{
+   $AssetBrowser::Open = true;
+   
+   // Add a tab to the windowed console
+   if($WindowConsole::Open)
+   {
+      %text = "Console Log";
+      %command = "windowConsoleControl.putToFront();";
+      
+      AssetBrowserWindow.text = ""; 
+      windowConsoleControl.text = ""; 
+      
+      AssetBrowser.setTab(assetBrowser_Tab1, "Asset Browser", "");
+      assetBrowser_Tab1.setHidden(false);
+      assetBrowser_Tab1.setActive(false);
+      
+      if(assetBrowser_Tab2.text $= %text || assetBrowser_Tab3.text $= %text || assetBrowser_Tab4.text $= %text)
+      {
+         // we have a tab, don't do anything
+      }
+      else if(assetBrowser_Tab2.hidden == true)
+      {
+         AssetBrowser.setTab(assetBrowser_Tab2, %text, %command);
+      }
+      else if(assetBrowser_Tab3.hidden == true)
+      {
+         AssetBrowser.setTab(assetBrowser_Tab3, %text, %command);
+      }
+      else if(assetBrowser_Tab4.hidden == true)
+      {
+         AssetBrowser.setTab(assetBrowser_Tab4, %text, %command);
+      }
+      else
+      {
+         warn("Ran out of tabs for AssetBrowserWindow - windowConsoleDlg::showWindow()");
+      }
+   }
+   
+   EditorGui.updateSideBar();
+}
+
+function AssetBrowser::setTab(%this, %tab, %text, %command)
+{
+   if(isObject(%tab))
+   {
+      %tab.setActive(true);
+      %tab.setHidden(false);
+      %tab.setText(%text);
+      %tab.command = %command;
+   }
+}
+
+function AssetBrowser::putToFront(%this)
+{
+   // Close the object
+   AssetBrowser.hideDialog();
+   // Create the object again so it will render on top
+   AssetBrowser.ShowDialog();
+   // Put the focus on this window
+   AssetBrowser.restoreLastPosExt();
+   AssetBrowserWindow.selectWindow();
 }
 
 function AssetBrowser::restoreLastPosExt(%this)
@@ -88,6 +160,7 @@ function AssetBrowser::restoreLastPosExt(%this)
    {
       AssetBrowserWindow.resize(getWord(%lastPosExt, 0), getWord(%lastPosExt, 1), getWord(%lastPosExt, 2), getWord(%lastPosExt, 3));
    }    
+   EditorGui.updateSideBar();
 }
 
 function contentTreeTabBook::onTabSelected(%this, %tabText, %tabIndex)
@@ -304,6 +377,11 @@ function AssetBrowser::showDialog( %this, %AssetTypeFilter, %selectCallback, %ta
    AssetBrowserWindow.setVisible(1);
    AssetBrowserWindow.selectWindow();
    
+   if(AssetBrowserWindow.docked)
+      AssetBrowserWindow.dockPanel();
+   else
+      AssetBrowserWindow.releasePanel();
+   
    //If we're special-case filtering(like for selecting a given type), then ignore our normal
    //visibility filter
    if(%AssetTypeFilter !$= "")
@@ -511,7 +589,7 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
       extent = %previewSize.x SPC %previewSize.y + %textBottomPad;
       buttonType = "RadioButton";
       buttonMargin = "0 -10";
-      profile = ToolsGuiDefaultProfile;
+      profile = ToolsGuiDefaultIconBtnProfile;
    };
    
    %previewScaleSize = AssetBrowser-->previewSlider.getValue();
@@ -526,8 +604,9 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
    {
       %previewButton.iconLocation = "Left";
       %previewButton.textLocation = "Right";
-      %previewButton.setextent(120,20);
-      %previewButton.buttonMargin = "0 0";
+      %previewButton.setextent(160,34);
+      %previewButton.buttonMargin = "8 8";
+      %previewButton.textMargin = "6";
       
       AssetBrowser.previewListMode = true;
    }
@@ -2710,7 +2789,8 @@ function AssetBrowser::importLooseFiles(%this)
    LooseFileAuditWindow.showDialog(%this.dirHandler.currentAddress);  
 }
 
-//
+// -----------------------------------------------------------------------------
+
 function getAssetPreviewImage(%asset)
 {
    if(isFile(%asset))
@@ -2755,4 +2835,48 @@ function getAssetPreviewImage(%asset)
       %previewPath = "ToolsModule:unknownImage_image";
    
    return %previewPath;
+}
+
+// -----------------------------------------------------------------------------
+
+function AssetBrowserWindow::dockPanel(%this)
+{
+   if(%this.docked == true)
+      return;
+   
+   %this.resizing = true;
+      
+   %this.docked = true;
+
+   %this.canCollapse = "0";
+   %this.canMove = "0";
+   %this.resizeWidth = "0";
+   
+   AssetBrowserWindow_UnDockBtn.Visible = "1";
+   AssetBrowserWindow_DockBtn.Visible = "0";
+   
+   EditorGui.updateSideBar();
+}
+
+function AssetBrowserWindow::releasePanel(%this)
+{
+   if(%this.docked == false)
+      return;
+
+   %this.canCollapse = "1";
+   %this.canMove = "1";
+   %this.resizeWidth = "1";
+   
+   AssetBrowserWindow_UnDockBtn.Visible = "0";
+   AssetBrowserWindow_DockBtn.Visible = "1";
+   
+   // Let's do a small resize so it's visually clear we're "undocking"
+   %position = %this.position.x + 6 SPC %this.position.y - 6;
+   %extent = %this.extent.x SPC %this.extent.y;
+   %this.resize(%position.x, %position.y, %extent.x, %extent.y);
+   
+   %this.docked = false;
+   %this.resizing = false;
+   
+   EditorGui.updateSideBar();
 }

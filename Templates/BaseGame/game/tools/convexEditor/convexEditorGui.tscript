@@ -42,6 +42,23 @@ function ConvexEditorGui::onWake( %this )
 		
 		ConvexEditorOptionsWindow.activeMaterial = %mat;
 	}
+
+   %fluidWindow = ConvexEditorOptionsWindow;
+   
+   if(EditorSettings.value( "WorldEditor/forceSidebarToSide" ) == 1)
+   {
+      // Let's dock the side panel to the right side
+      %this.docked = false;
+      %this.resizing = true;
+      %this.dockSidePanel();
+   }
+   else
+   {
+      // Let's release the side panel so it can be moved
+      %this.docked = true;
+      %this.resizing = false;
+      %this.releaseSidePanel();
+   }
 }
 
 function ConvexEditorGui::onSleep( %this )
@@ -246,3 +263,183 @@ function ESettingsWindow::getConvexEditorSettings(%this)
                            "The default material when creating a convexShape");
    SettingsInspector.endGroup();
 }
+
+//-----------------------------------------------------------------------------
+
+function ConvexEditorGui::maxSize(%this, %window)
+{      
+   // Resize the windows to the max height
+   // and force these to the right side if set
+   if(EditorSettings.value( "WorldEditor/forceSidebarToSide" ) == 1 && %this.resizing == true)
+   {  
+      // prevent onResize after a resize
+      %this.resizing = false;
+      
+      %fluidWindow = ConvexEditorOptionsWindow;
+      %top = EditorGuiToolbar.extent.y + 6;
+      %bottom = %top + 65 - 6;
+
+      %position = Canvas.extent.x - %fluidWindow.extent.x SPC %top;
+      %extent = %window.extent.x SPC Canvas.extent.y - %bottom;
+      %fluidWindow.resize(%position.x, %position.y, %extent.x, %extent.y);
+      
+      // --- AssetBrowser window  ----------------------------------------------
+      if(isObject(AssetBrowserWindow))
+      {
+         // Only resize the AssetBrowser if it's docked
+         if(AssetBrowserWindow.docked == true)
+         {
+            // The width is relative to the sidepanel
+            %browserWidth = Canvas.extent.x - %extent.x;
+            %browserHeight = AssetBrowserWindow.extent.y;
+            %browserPosY = Canvas.extent.y - AssetBrowserWindow.extent.y - 33;
+            AssetBrowserWindow.resize(0, %browserPosY, %browserWidth, %browserHeight);
+         }
+      }
+      // --- Windowed Console --------------------------------------------------
+      if(isObject(windowConsoleControl))
+      {
+         // Only resize the AssetBrowser if it's docked
+         if(windowConsoleControl.docked == true)
+         {
+            // The width is relative to the sidepanel
+            %consoleWidth = Canvas.extent.x - %extent.x;
+            %consoleHeight = windowConsoleControl.extent.y;
+            %consolePosY = Canvas.extent.y - windowConsoleControl.extent.y - 33;
+            windowConsoleControl.resize(0, %consolePosY, %consoleWidth, %consoleHeight);
+         }
+      }
+   }
+}
+
+function ConvexEditorOptionsWindow::onMouseDragged(%this)
+{
+   %parent = ConvexEditorGui;
+   
+   if(%parent.panelHidden == true)
+   {
+      %parent.showSidePanel();
+   }
+   
+   if(%parent.resizing == false && %parent.docked == true)
+   {
+      %parent.resizing = true;
+      %parent.maxSize(%this);
+   }
+}
+
+function ConvexEditorGui::onResize(%this, %newPosition, %newExtent)
+{
+   // Window to focus on (mostly the fluid window)
+   %window = ConvexEditorOptionsWindow;
+   
+   if(%window.panelHidden == true)
+   {
+      %window.showSidePanel();
+   }
+   
+   if(%this.resizing == false && %this.docked == true)
+   {  
+      // Only resize once
+      %this.resizing = true;
+      %this.maxSize(%window);
+   }
+}
+
+function ConvexEditorGui::dockSidePanel()
+{
+   %parent = ConvexEditorGui;
+   %fluidWindow = ConvexEditorOptionsWindow;
+   
+   if(%parent.docked == true)
+      return;
+   
+   // Move and resize the window(s)
+   %parent.resizing = true;
+   %parent.maxSize(%fluidWindow);
+      
+   %parent.docked = true;
+   %fluidWindow.onMouseDragged();
+
+   // Lock the windows in place
+   
+   %fluidWindow.canCollapse = "0";
+   %fluidWindow.canMove = "0";
+   
+   ConvexEditorGui_UnDockBtn.Visible = "1";
+   ConvexEditorGui_DockBtn.Visible = "0";
+   
+   ConvexEditorGui_showBtn.Visible = "0";
+   ConvexEditorGui_hideBtn.Visible = "1";
+}
+
+function ConvexEditorGui::releaseSidePanel()
+{      
+   %parent = ConvexEditorGui;
+   %fluidWindow = ConvexEditorOptionsWindow;
+   
+   if(%parent.docked == false)
+      return;
+   
+   %fluidWindow.canCollapse = "1";
+   %fluidWindow.canMove = "1";
+   
+   ConvexEditorGui_UnDockBtn.Visible = "0";
+   ConvexEditorGui_DockBtn.Visible = "1";
+   
+   ConvexEditorGui_showBtn.Visible = "0";
+   ConvexEditorGui_hideBtn.Visible = "0";
+   
+   // Let's do a small resize so it's visually clear we're undocking
+   %position =  %fluidWindow.position.x - 6 SPC  %fluidWindow.position.y + 6;
+   %extent = %fluidWindow.extent.x SPC %fluidWindow.extent.y - 12;
+   %fluidWindow.resize(%position.x, %position.y, %extent.x, %extent.y);
+   
+   %parent.docked = false;
+   %parent.resizing = false;
+}
+
+function ConvexEditorGui::hideSidePanel()
+{
+   %parent = ConvexEditorGui;
+   %fluidWindow = ConvexEditorOptionsWindow;
+   
+   ConvexEditorGui_showBtn.Visible = "1";
+   ConvexEditorGui_hideBtn.Visible = "0";
+   
+   // hide the content of the panels
+   %fluidWindow.titleText = %fluidWindow.text;
+   
+   %fluidWindow.text = "";
+   ConvexEditorOptionsPanel.Visible = "0";
+   ConvexEditorUVPanel.Visible = "0";
+   ConvexEditorAdvPanel.Visible = "0";
+   
+   // Let's do a resize so that the panel is collapsed to the side
+   %position =  Canvas.extent.x - 24 SPC  %fluidWindow.position.y;
+   %extent = %fluidWindow.extent.x SPC %fluidWindow.extent.y;
+   %fluidWindow.resize(%position.x, %position.y, %extent.x, %extent.y);
+   
+   %parent.panelHidden = true;
+}
+
+function ConvexEditorGui::showSidePanel()
+{
+   %parent = ConvexEditorGui;
+   %fluidWindow = ConvexEditorOptionsWindow;
+   
+   ConvexEditorGui_showBtn.Visible = "0";
+   ConvexEditorGui_hideBtn.Visible = "1";
+   
+   %fluidWindow.text = %fluidWindow.titleText;
+   ConvexEditorOptionsPanel.Visible = "1";
+   ConvexEditorUVPanel.Visible = "1";
+   ConvexEditorAdvPanel.Visible = "1";
+   
+   %parent.resizing = true;
+   %parent.maxSize(%fluidWindow);
+   
+   %parent.panelHidden = false;
+}
+
+//-----------------------------------------------------------------------------

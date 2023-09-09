@@ -108,7 +108,7 @@ function ESettingsWindow::toggleEditorSettings(%this)
    ESettingsWindowList.sort(0);
    
    %this.mode = "Editor";
-   ESettingsWindow.text = "Editor Settings";
+   ESettingsWindow.text = "::  Editor Settings";
    
    ESettingsWindowList.setSelectedById( 1 );
 }

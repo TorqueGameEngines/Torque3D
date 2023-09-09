@@ -18,7 +18,7 @@ $guiContent = new GuiControl(EWTerrainEditToolbar,EditorGuiGroup) {
       profile = "ToolsGuiTextProfile";
       horizSizing = "right";
       vertSizing = "bottom";
-      position = "6 7";
+      position = "6 4";
       extent = "70 16";
       minExtent = "8 8";
       visible = "1";
@@ -44,7 +44,7 @@ $guiContent = new GuiControl(EWTerrainEditToolbar,EditorGuiGroup) {
       new GuiControl(EWTerrainEditToolbarBrushType){
          isContainer = "1";
          profile = "ToolsGuiDefaultProfile";
-         Position = "83 2";
+         Position = "83 0";
          Extent = "94 27";
          
          new GuiBitmapButtonCtrl() {
@@ -117,15 +117,15 @@ $guiContent = new GuiControl(EWTerrainEditToolbar,EditorGuiGroup) {
          };
          */
       };
-      
-  new GuiBitmapCtrl() {
-      Enabled = "1";
-      Profile = "ToolsGuiDefaultProfile";
-      position = "152 3";
-      Extent = "2 26";
-      MinExtent = "1 1";
-      bitmapAsset = "ToolsModule:separator_h_image";
-   };
+            
+     new GuiBitmapCtrl() {
+         Enabled = "1";
+         Profile = "ToolsGuiDefaultProfile";
+         position = "152 0";
+         Extent = "2 26";
+         MinExtent = "1 1";
+         bitmapAsset = "ToolsModule:separator_h_image";
+      };
      
       new GuiControl(TerrainBrushSizeTextEditContainer) {
          canSaveDynamicFields = "0";
@@ -133,7 +133,7 @@ $guiContent = new GuiControl(EWTerrainEditToolbar,EditorGuiGroup) {
          Profile = "ToolsGuiTransparentProfile";
          HorizSizing = "right";
          VertSizing = "bottom";
-         position = "145 5";
+         position = "145 2";
          Extent = "120 50";
          MinExtent = "8 2";
          canSave = "1";
@@ -206,13 +206,14 @@ $guiContent = new GuiControl(EWTerrainEditToolbar,EditorGuiGroup) {
             bitmapAsset = "ToolsModule:dropslider_n_image";
          };
       };
+      
       new GuiBitmapCtrl() {
-      Enabled = "1";
-      Profile = "ToolsGuiDefaultProfile";
-      position = "272 3";
-      Extent = "2 26";
-      MinExtent = "1 1";
-      bitmapAsset = "ToolsModule:separator_h_image";
+         Enabled = "1";
+         Profile = "ToolsGuiDefaultProfile";
+         position = "272 0";
+         Extent = "2 26";
+         MinExtent = "1 1";
+         bitmapAsset = "ToolsModule:separator_h_image";
       };
             
       new GuiControl(TerrainBrushPressureTextEditContainer) {
@@ -221,7 +222,7 @@ $guiContent = new GuiControl(EWTerrainEditToolbar,EditorGuiGroup) {
          Profile = "ToolsGuiTransparentProfile";
          HorizSizing = "right";
          VertSizing = "bottom";
-         position = "287 5";
+         position = "287 2";
          Extent = "120 50";
          MinExtent = "8 2";
          canSave = "1";
@@ -293,10 +294,11 @@ $guiContent = new GuiControl(EWTerrainEditToolbar,EditorGuiGroup) {
             bitmapAsset = "ToolsModule:dropslider_n_image";
          };
       };
+      
       new GuiBitmapCtrl() {
          Enabled = "1";
          Profile = "ToolsGuiDefaultProfile";
-         position = "412 3";
+         position = "412 0";
          Extent = "2 26";
          MinExtent = "1 1";
          bitmapAsset = "ToolsModule:separator_h_image";
@@ -308,7 +310,7 @@ $guiContent = new GuiControl(EWTerrainEditToolbar,EditorGuiGroup) {
          Profile = "ToolsGuiTransparentProfile";
          HorizSizing = "right";
          VertSizing = "bottom";
-         position = "429 5";
+         position = "429 2";
          Extent = "120 50";
          MinExtent = "8 2";
          canSave = "1";
@@ -388,7 +390,7 @@ $guiContent = new GuiControl(EWTerrainEditToolbar,EditorGuiGroup) {
          Profile = "ToolsGuiDefaultProfile";
          HorizSizing = "right";
          VertSizing = "bottom";
-         Position = "547 3";
+         Position = "547 0";
          Extent = "29 27";
          MinExtent = "8 2";
          canSave = "1";
@@ -406,7 +408,7 @@ $guiContent = new GuiControl(EWTerrainEditToolbar,EditorGuiGroup) {
       new GuiBitmapCtrl() {
          Enabled = "1";
          Profile = "ToolsGuiDefaultProfile";
-         position = "589 3";
+         position = "589 0";
          Extent = "2 26";
          MinExtent = "1 1";
          bitmapAsset = "ToolsModule:separator_h_image";
@@ -418,7 +420,7 @@ $guiContent = new GuiControl(EWTerrainEditToolbar,EditorGuiGroup) {
          Profile = "ToolsGuiTransparentProfile";
          HorizSizing = "right";
          VertSizing = "bottom";
-         position = "605 5";
+         position = "605 2";
          Extent = "120 50";
          MinExtent = "8 2";
          canSave = "1";

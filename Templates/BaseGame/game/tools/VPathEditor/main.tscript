@@ -12,6 +12,7 @@ function InitializeVPathEditor()
     // Scripts.
     exec( "./Scripts/Plugin." @ $TorqueScriptFileExtension );
     exec( "./Scripts/Editor." @ $TorqueScriptFileExtension );
+    exec( "./Scripts/GuiScript." @ $TorqueScriptFileExtension );
 }
 
 function DestroyVPathEditor()

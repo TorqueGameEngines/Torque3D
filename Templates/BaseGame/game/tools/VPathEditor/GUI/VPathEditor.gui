@@ -40,17 +40,19 @@ new VPathEditor(EVPathEditor) {
     GizmoProfile = "GlobalGizmoProfile";
 
    new GuiWindowCollapseCtrl(VPathEditorTreeWindow) {
+      canCollapse = "0";
+      canMove = "0";
       internalName = "";
       canSaveDynamicFields = "0";
       Enabled = "1";
       isContainer = "1";
-      Profile = "GuiWindowProfile";
+      Profile = "ToolsGuiWindowProfile";
       HorizSizing = "windowRelative";
       VertSizing = "windowRelative";
-      Position = getWord($pref::Video::mode, 0) - 209
-         SPC getWord(EditorGuiToolbar.extent, 1) - 1;
-      Extent = "210 167";
-      MinExtent = "210 100";
+      Position = getWord($pref::Video::mode, 0) - 360
+         SPC getWord(EditorGuiToolbar.extent, 1) + 6;
+      Extent = "360 167";
+      MinExtent = "300 100";
       canSave = "1";
       Visible = "1";
       tooltipprofile = "GuiToolTipProfile";
@@ -63,14 +65,13 @@ new VPathEditor(EVPathEditor) {
       AnchorRight = "0";
       resizeWidth = "1";
       resizeHeight = "1";
-      canMove = "1";
       canClose = "0";
       canMinimize = "0";
       canMaximize = "0";
       minSize = "50 50";
       closeCommand = "EditorGui.setEditor( WorldEditorInspectorPlugin );";
       EdgeSnap = "1";
-      text = "Path Editor";
+      text = "::  Verve Path Editor";
       
       new GuiContainer(){
          profile = GuiDefaultProfile;
@@ -149,7 +150,7 @@ new VPathEditor(EVPathEditor) {
          Profile = "GuiButtonProfile";
          HorizSizing = "left";
          VertSizing = "bottom";
-         position = "193 4";
+         position = "339 4";
          Extent = "16 16";
          MinExtent = "8 2";
          canSave = "1";
@@ -162,7 +163,7 @@ new VPathEditor(EVPathEditor) {
          canSaveDynamicFields = "0";
       };
       new GuiBitmapButtonCtrl() {
-         bitmap = "core/gui/images/new";
+         bitmapAsset = "ToolsModule:new_n_image";
          groupNum = "-1";
          buttonType = "PushButton";
          useMouseEvents = "0";
@@ -170,7 +171,7 @@ new VPathEditor(EVPathEditor) {
          Profile = "GuiButtonProfile";
          HorizSizing = "left";
          VertSizing = "bottom";
-         position = "176 3";
+         position = "322 3";
          Extent = "17 17";
          MinExtent = "8 2";
          canSave = "1";
@@ -184,17 +185,21 @@ new VPathEditor(EVPathEditor) {
       };
    };
    new GuiWindowCollapseCtrl(VPathEditorOptionsWindow) {
+      canCollapse = "0";
+      canMove = "0";
+      canCollapse = "0";
+      canMove = "0";
       internalName = "Window";
       canSaveDynamicFields = "0";
       Enabled = "1";
       isContainer = "1";
-      Profile = "GuiWindowProfile";
+      Profile = "ToolsGuiWindowProfile";
       HorizSizing = "windowRelative";
       VertSizing = "windowRelative";
-      Position = getWord($pref::Video::mode, 0) - 209
-         SPC getWord(EditorGuiToolbar.extent, 1) + getWord(VPathEditorTreeWindow.extent, 1) - 2;
-      Extent = "210 530";
-      MinExtent = "210 298";
+      Position = getWord($pref::Video::mode, 0) - 360
+         SPC getWord(EditorGuiToolbar.extent, 1) + getWord(VPathEditorTreeWindow.extent, 1) + 6;
+      Extent = "360" SPC getWord($pref::Video::mode, 1) - getWord(VPathEditorTreeWindow.extent, 1) - getWord(EditorGuiToolbar.extent, 1) - 65;
+      MinExtent = "300 300";
       canSave = "1";
       Visible = "1";
       tooltipprofile = "GuiToolTipProfile";
@@ -207,14 +212,13 @@ new VPathEditor(EVPathEditor) {
       AnchorRight = "0";
       resizeWidth = "1";
       resizeHeight = "1";
-      canMove = "1";
       canClose = "0";
       canMinimize = "0";
       canMaximize = "0";
       minSize = "50 50";
       closeCommand = "EditorGui.setEditor( WorldEditorPlugin );";
       EdgeSnap = "1";
-      text = "Properties";
+      text = "::  Verve Path - Properties";
 
       new GuiContainer(){ //Node Properties
          isContainer = "1";
@@ -227,7 +231,7 @@ new VPathEditor(EVPathEditor) {
          Margin = "3 3 3 3";
          
          new GuiTextCtrl(){
-            Profile = "GuiDefaultProfile";
+            Profile = "EditorTextProfile";
             HorizSizing = "right";
             VertSizing = "bottom";
             Position = "5 0";
@@ -235,7 +239,7 @@ new VPathEditor(EVPathEditor) {
             text = "Node Properties";
          };
          new GuiTextCtrl(){
-            Profile = "GuiTextRightProfile";
+            Profile = "ToolsGuiTextRightProfile";
             HorizSizing = "right";
             VertSizing = "bottom";
             Position = "7 21";
@@ -253,7 +257,7 @@ new VPathEditor(EVPathEditor) {
             AltCommand = "EVPathEditor.setNodePosition( $ThisControl.getValue() );";
          };
          new GuiTextCtrl(){
-            Profile = "GuiTextRightProfile";
+            Profile = "ToolsGuiTextRightProfile";
             HorizSizing = "right";
             VertSizing = "bottom";
             Position = "7 42";
@@ -271,7 +275,7 @@ new VPathEditor(EVPathEditor) {
             AltCommand = "EVPathEditor.setNodeRotation( $ThisControl.getValue() );";
          };
          new GuiTextCtrl(){
-            Profile = "GuiTextRightProfile";
+            Profile = "ToolsGuiTextRightProfile";
             HorizSizing = "right";
             VertSizing = "bottom";
             Position = "7 63";
@@ -289,7 +293,7 @@ new VPathEditor(EVPathEditor) {
             AltCommand = "EVPathEditor.setNodeWeight( $ThisControl.getValue() );";
          };
          new GuiTextCtrl(){
-            Profile = "GuiTextRightProfile";
+            Profile = "ToolsGuiTextRightProfile";
             HorizSizing = "right";
             VertSizing = "bottom";
             Position = "7 84";
@@ -307,7 +311,7 @@ new VPathEditor(EVPathEditor) {
             Command = "OnOrientationChanged();";
          };
          new GuiTextCtrl(){
-            Profile = "GuiTextRightProfile";
+            Profile = "ToolsGuiTextRightProfile";
             HorizSizing = "right";
             VertSizing = "bottom";
             Position = "7 105";
@@ -336,7 +340,7 @@ new VPathEditor(EVPathEditor) {
          Margin = "0 0 3 3";
          
          new GuiTextCtrl(){
-            Profile = "GuiDefaultProfile";
+            Profile = "ToolsGuiTextProfile";
             HorizSizing = "right";
             VertSizing = "bottom";
             Position = "5 0";
@@ -401,8 +405,8 @@ new VPathEditor(EVPathEditor) {
          Profile = "GuiInspectorFieldInfoMLTextProfile";
          HorizSizing = "width";
          VertSizing = "top";
-         Position = "1 485";
-         Extent = "202 42";
+         position = "8" SPC getWord(VPathEditorOptionsWindow.extent, 1) - 40;
+         Extent = "330 42";
          MinExtent = "8 2";
          canSave = "1";
          Visible = "1";

@@ -40,6 +40,8 @@ $guiContent = new GuiRiverEditorCtrl(RiverEditorGui, EditorGuiGroup) {
    HoverNodeColor = "255 255 255 255";
 
    new GuiWindowCollapseCtrl(RiverEditorTreeWindow) {
+      canCollapse = "0";
+      canMove = "0";
       internalName = "";
       canSaveDynamicFields = "0";
       Enabled = "1";
@@ -47,10 +49,10 @@ $guiContent = new GuiRiverEditorCtrl(RiverEditorGui, EditorGuiGroup) {
       Profile = "ToolsGuiWindowProfile";
       HorizSizing = "windowRelative";
       VertSizing = "windowRelative";
-      Position = getWord($pref::Video::mode, 0) - 209
-         SPC getWord(EditorGuiToolbar.extent, 1) - 1;
-      Extent = "210 167";
-      MinExtent = "210 100";
+      Position = getWord($pref::Video::mode, 0) - 360
+         SPC getWord(EditorGuiToolbar.extent, 1) + 6;
+      Extent = "360 167";
+      MinExtent = "300 100";
       canSave = "1";
       isDecoy = "0";
       Visible = "1";
@@ -64,13 +66,12 @@ $guiContent = new GuiRiverEditorCtrl(RiverEditorGui, EditorGuiGroup) {
       AnchorRight = "0";
       resizeWidth = "1";
       resizeHeight = "1";
-      canMove = "1";
       canClose = "0";
       canMinimize = "0";
       canMaximize = "0";
       minSize = "50 50";
       EdgeSnap = "1";
-      text = "Rivers";
+      text = "::  River Editor - Rivers";
       
       /*
       new GuiBitmapButtonCtrl() {
@@ -122,7 +123,7 @@ $guiContent = new GuiRiverEditorCtrl(RiverEditorGui, EditorGuiGroup) {
       };
       
       */
-      new GuiContainer(){
+      new GuiContainer(RiverEditorTreeWPanel){
          profile = "ToolsGuiDefaultProfile";
          Position = "5 25";
          Extent = "200 120";
@@ -190,8 +191,103 @@ $guiContent = new GuiRiverEditorCtrl(RiverEditorGui, EditorGuiGroup) {
             };
          };
       };
+      // window / panel buttons
+      new GuiBitmapButtonCtrl(RiverEditorGui_UnDockBtn) {
+         canSaveDynamicFields = "0";
+         internalName = "";
+         Enabled = "1";
+         isContainer = "0";
+         Profile = "ToolsGuiButtonProfile";
+         HorizSizing = "left";
+         VertSizing = "bottom";
+         Position = "330 1";
+         Extent = "18 18";
+         MinExtent = "8 8";
+         canSave = "1";
+         Visible = "0";
+         Command = "RiverEditorGui.releaseSidePanel();";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Detach Sidepanel";
+         hovertime = "1000";
+         bitmapAsset = "ToolsModule:panel_undock_n_image";
+         text = "";
+         groupNum = "-1";
+         buttonType = "PushButton";
+         useMouseEvents = "0";
+      };
+      new GuiBitmapButtonCtrl(RiverEditorGui_DockBtn) {
+         canSaveDynamicFields = "0";
+         internalName = "";
+         Enabled = "1";
+         isContainer = "0";
+         Profile = "ToolsGuiButtonProfile";
+         HorizSizing = "left";
+         VertSizing = "bottom";
+         Position = "330 1";
+         Extent = "18 18";
+         MinExtent = "8 8";
+         canSave = "1";
+         Visible = "0";
+         Command = "RiverEditorGui.dockSidePanel();";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Dock Sidepanel";
+         hovertime = "1000";
+         bitmapAsset = "ToolsModule:panel_dock_n_image";
+         text = "";
+         groupNum = "-1";
+         buttonType = "PushButton";
+         useMouseEvents = "0";
+      };
+      new GuiBitmapButtonCtrl(RiverEditorGui_HideBtn) {
+         canSaveDynamicFields = "0";
+         internalName = "";
+         Enabled = "1";
+         isContainer = "0";
+         Profile = "ToolsGuiButtonProfile";
+         HorizSizing = "left";
+         VertSizing = "bottom";
+         Position = "312 1";
+         Extent = "18 18";
+         MinExtent = "8 8";
+         canSave = "1";
+         Visible = "1";
+         Command = "RiverEditorGui.hideSidePanel();";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Hide Sidepanel";
+         hovertime = "1000";
+         bitmapAsset = "ToolsModule:panel_hide_n_image";
+         text = "";
+         groupNum = "-1";
+         buttonType = "PushButton";
+         useMouseEvents = "0";
+      };
+      new GuiBitmapButtonCtrl(RiverEditorGui_ShowBtn) {
+         canSaveDynamicFields = "0";
+         internalName = "";
+         Enabled = "1";
+         isContainer = "0";
+         Profile = "ToolsGuiButtonProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         Position = "4 1";
+         Extent = "18 18";
+         MinExtent = "8 8";
+         canSave = "1";
+         Visible = "1";
+         Command = "RiverEditorGui.showSidePanel();";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Show Sidepanel";
+         hovertime = "1000";
+         bitmapAsset = "ToolsModule:panel_show_n_image";
+         text = "";
+         groupNum = "-1";
+         buttonType = "PushButton";
+         useMouseEvents = "0";
+      };  
    };
    new GuiWindowCollapseCtrl(RiverEditorOptionsWindow) {
+      canCollapse = "0";
+      canMove = "0";
       internalName = "Window";
       canSaveDynamicFields = "0";
       Enabled = "1";
@@ -199,10 +295,10 @@ $guiContent = new GuiRiverEditorCtrl(RiverEditorGui, EditorGuiGroup) {
       Profile = "ToolsGuiWindowProfile";
       HorizSizing = "windowRelative";
       VertSizing = "windowRelative";
-      Position = getWord($pref::Video::mode, 0) - 209 
-         SPC getWord(EditorGuiToolbar.extent, 1) + getWord(RiverEditorTreeWindow.extent, 1) - 2;
-      Extent = "210 530";
-      MinExtent = "210 300";
+      Position = getWord($pref::Video::mode, 0) - 360
+         SPC getWord(EditorGuiToolbar.extent, 1) + getWord(RiverEditorTreeWindow.extent, 1) + 6;
+      Extent = "360" SPC getWord($pref::Video::mode, 1) - getWord(RiverEditorTreeWindow.extent, 1) - getWord(EditorGuiToolbar.extent, 1) - 65;
+      MinExtent = "300 300";
       canSave = "1";
       Visible = "1";
       tooltipprofile = "ToolsGuiToolTipProfile";
@@ -215,15 +311,14 @@ $guiContent = new GuiRiverEditorCtrl(RiverEditorGui, EditorGuiGroup) {
       AnchorRight = "0";
       resizeWidth = "1";
       resizeHeight = "1";
-      canMove = "1";
       canClose = "0";
       canMinimize = "0";
       canMaximize = "0";
       minSize = "50 50";
       EdgeSnap = "1";
-      text = "Properties";
+      text = "::  River Editor - Properties";
       
-      new GuiContainer(){ //Node Properties
+      new GuiContainer(RiverEditorOptionsPanel){ //Node Properties
          isContainer = "1";
          Profile = "inspectorStyleRolloutDarkProfile";
          HorizSizing = "width";
@@ -234,7 +329,7 @@ $guiContent = new GuiRiverEditorCtrl(RiverEditorGui, EditorGuiGroup) {
          Margin = "3 3 3 3";
          
          new GuiTextCtrl(){
-            Profile = "ToolsGuiDefaultProfile";
+            Profile = "EditorTextProfile";
             HorizSizing = "right";
             VertSizing = "bottom";
             Position = "5 0";
@@ -315,7 +410,7 @@ $guiContent = new GuiRiverEditorCtrl(RiverEditorGui, EditorGuiGroup) {
             AltCommand = "RiverEditorGui.editNodeDetails();";
          };
       };
-      new GuiContainer(){ //River Properties
+      new GuiContainer(RiverEditorPropPanel){ //River Properties
          isContainer = "1";
          Profile = "inspectorStyleRolloutDarkProfile";
          HorizSizing = "width";
@@ -326,7 +421,7 @@ $guiContent = new GuiRiverEditorCtrl(RiverEditorGui, EditorGuiGroup) {
          Margin = "0 0 3 3";
          
          new GuiTextCtrl(){
-            Profile = "ToolsGuiDefaultProfile";
+            Profile = "EditorTextProfile";
             HorizSizing = "right";
             VertSizing = "bottom";
             Position = "5 0";
@@ -335,7 +430,7 @@ $guiContent = new GuiRiverEditorCtrl(RiverEditorGui, EditorGuiGroup) {
          };
       };
 
-      new GuiScrollCtrl() {
+      new GuiScrollCtrl(RiverEditorPropScroll) {
          canSaveDynamicFields = "0";
          Enabled = "1";
          isContainer = "1";
@@ -390,11 +485,11 @@ $guiContent = new GuiRiverEditorCtrl(RiverEditorGui, EditorGuiGroup) {
          canSaveDynamicFields = "0";
          Enabled = "1";
          isContainer = "0";
-         Profile = "GuiInspectorFieldInfoMLTextProfile";
+         position = "8" SPC getWord(RiverEditorOptionsWindow.extent, 1) - 40;
          HorizSizing = "width";
          VertSizing = "top";
          Position = "1 485";
-         Extent = "202 42";
+         Extent = "330 42";
          MinExtent = "8 2";
          canSave = "1";
          Visible = "1";

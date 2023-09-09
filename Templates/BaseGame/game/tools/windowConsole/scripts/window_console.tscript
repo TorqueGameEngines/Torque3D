@@ -1,0 +1,378 @@
+//-----------------------------------------------------------------------------
+// Copyright (c) 2012 GarageGames, LLC
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+// IN THE SOFTWARE.
+//-----------------------------------------------------------------------------
+
+// Start the timer when initializing the console
+$Con::useTimestamp = "1";
+// but hide the timestamp until requested
+$Con::useTimestamp = "0";
+
+function windowConsoleDlg::onWake(%this)
+{
+   windowConsoleDlgErrorFilterBtn.setStateOn(windowConsoleMessageLogView.getErrorFilter());
+   windowConsoleDlgWarnFilterBtn.setStateOn(windowConsoleMessageLogView.getWarnFilter());
+   windowConsoleDlgNormalFilterBtn.setStateOn(windowConsoleMessageLogView.getNormalFilter());
+   
+   windowConsoleMessageLogView.setProfile(ToolsGuiConsoleProfile);
+   $Con::font = 12;
+   
+   windowConsoleMessageLogView.refresh();
+   
+   // Make the window fit next to the side panel
+   // We do a simple resize so that we don't have to redo the whole GUI layout
+   %newWidth = getWord($pref::Video::mode, 0) - 360;
+   %vertPos = getWord($pref::Video::mode, 1) - 360 - 35;
+   windowConsoleControl.resize("0", %vertPos, %newWidth, "360");
+   windowConsoleControl.dockPanel();
+}
+
+//-----------------------------------------------------------------------------
+
+function windowConsoleEntry::eval()
+{
+   %text = trim(windowConsoleEntry.getValue());
+   if(%text $= "")
+      return;
+      
+   $Con::lastCommand = %text;
+
+   // If it's missing a trailing () and it's not a variable,
+   // append the parentheses.
+   if(strpos(%text, "(") == -1 && !isDefined(%text)) {
+      if(strpos(%text, "=") == -1 && strpos(%text, " ") == -1) {
+         if(strpos(%text, "{") == -1 && strpos(%text, "}") == -1) {
+            %text = %text @ "()";
+         }
+      }
+   }
+
+   // Append a semicolon if need be.
+   %pos = strlen(%text) - 1;
+   if(strpos(%text, ";", %pos) == -1 && strpos(%text, "}") == -1) {
+      %text = %text @ ";";
+   }
+
+   // Turn off warnings for assigning from void
+   // and evaluate the snippet.
+   if(!isDefined("$Con::warnVoidAssignment"))
+      %oldWarnVoidAssignment = true;
+   else
+      %oldWarnVoidAssignment = $Con::warnVoidAssignment;
+   $Con::warnVoidAssignment = false;
+
+   echo("==>" @ %text);
+   eval(%text);
+   $Con::warnVoidAssignment = %oldWarnVoidAssignment;
+
+   windowConsoleEntry.setValue("");
+}
+
+function windowConsoleEntry::repeatLast(%this)
+{
+   if($Con::lastCommand !$="")
+      windowConsoleEntry.setText($Con::lastCommand);
+}
+
+//-----------------------------------------------------------------------------
+
+function windowConsoleDlg::hideWindow(%this)
+{
+   $WindowConsole::Open = false;
+   Canvas.popDialog(%this);
+   %this-->Scroll.setVisible(false);
+}
+
+function windowConsoleDlg::showWindow(%this)
+{
+   $WindowConsole::Open = true;
+   Canvas.pushDialog(%this);
+   %this-->Scroll.setVisible(true);
+   
+   // Add a tab to the asset browser
+   if($AssetBrowser::Open)
+   {
+      %text = "Asset Browser";
+      %command = "AssetBrowser.putToFront();";
+      
+      AssetBrowserWindow.text = ""; 
+      windowConsoleControl.text = ""; 
+      
+      windowConsoleControl.setTab(windowConsole_Tab1, "Console Log", "");
+      windowConsole_Tab1.setHidden(false);
+      windowConsole_Tab1.setActive(false);
+      
+      if(windowConsole_Tab2.text $= %text || windowConsole_Tab3.text $= %text || windowConsole_Tab4.text $= %text)
+      {
+         // we have a tab, don't do anything
+      }
+      else if(windowConsole_Tab2.hidden == true)
+      {
+         windowConsoleControl.setTab(windowConsole_Tab2, %text, %command);
+      }
+      else if(windowConsole_Tab3.hidden == true)
+      {
+         windowConsoleControl.setTab(windowConsole_Tab3, %text, %command);
+      }
+      else if(windowConsole_Tab4.hidden == true)
+      {
+         windowConsoleControl.setTab(windowConsole_Tab4, %text, %command);
+      }
+      else
+      {
+         warn("Ran out of tabs for AssetBrowserWindow - windowConsoleDlg::showWindow()");
+      }
+   }
+}
+
+//-----------------------------------------------------------------------------
+
+function windowConsoleControl::setTab(%this, %tab, %text, %command)
+{
+   if(isObject(%tab))
+   {
+      %tab.setActive(true);
+      %tab.setHidden(false);
+      %tab.setText(%text);
+      %tab.command = %command;
+   }
+}
+
+function windowConsoleControl::putToFront(%this)
+{
+   // Close the object
+   windowConsoleDlg.hideWindow();
+   // Create the object again so it will render on top
+   windowConsoleDlg.showWindow();
+   // Put the focus on this window
+   %this.selectWindow();
+}
+
+//-----------------------------------------------------------------------------
+
+function windowConsoleDlgErrorFilterBtn::onClick(%this)
+{
+   windowConsoleMessageLogView.toggleErrorFilter();
+}
+
+function windowConsoleDlgWarnFilterBtn::onClick(%this)
+{
+   windowConsoleMessageLogView.toggleWarnFilter();
+}
+
+function windowConsoleDlgNormalFilterBtn::onClick(%this)
+{
+   windowConsoleMessageLogView.toggleNormalFilter();
+}
+
+function windowConsoleMessageLogView::onNewMessage(%this, %errorCount, %warnCount, %normalCount)
+{
+   windowConsoleDlgErrorFilterBtn.setText(" Errors  ( " @ %errorCount @ " )");
+   windowConsoleDlgWarnFilterBtn.setText(" Warnings  ( " @ %warnCount @ " )");
+   windowConsoleDlgNormalFilterBtn.setText(" Messages  ( " @ %normalCount @ " )");
+}
+
+//-----------------------------------------------------------------------------
+
+function windowConsoleDlg::timeStamp(%this)
+{
+   %state = windowConsoleTimestampBtn.getValue();
+   
+   if(%state)
+   {
+      %label = "Time: On";
+      %profile = "ToolsGuiButtonActiveProfile";
+      %toolTip = "Hide the time stamp to console messages";
+      $Con::useTimestamp = "1";
+   }
+   else
+   {
+      %label = "Time: Off";
+      %profile = "ToolsGuiButtonProfile";
+      %toolTip = "Show the time stamp to console messages";
+      $Con::useTimestamp = "0";
+   }
+   
+   windowConsoleTimestampBtn.setText(%label);
+   windowConsoleTimestampBtn.setProfile(%profile);
+   windowConsoleTimestampBtn.ToolTip = %toolTip;
+}
+
+function windowConsoleDlg::timeStampReset(%this)
+{
+   resetTimeStamp();
+   echo(">>>> Resetting timestamp");
+}
+
+function windowConsoleDlg::profilerDump(%this)
+{
+   %state = windowConsoleDumpBtn.getValue();
+   
+   if(%state)
+   {
+      echo(">>>> Start profiler ---------------------------------------------");
+      profilerEnable(true);
+      %label = "Profiler: On";
+      %toolTip = "Turn the profiler off and show the results";
+      %profile = "ToolsGuiButtonGreenProfile";
+   }
+   else
+   {
+      
+      profilerDump();
+      %label = "Profiler: Off";
+      %toolTip = "Turn the profiler on";
+      %profile = "ToolsGuiButtonProfile";
+      %this.schedule(1000, stopProfiler);
+   }
+   
+   windowConsoleDumpBtn.setProfile(%profile);
+   windowConsoleDumpBtn.setText(%label);
+   windowConsoleDumpBtn.ToolTip = %toolTip;
+}
+
+function windowConsoleDlg::stopProfiler(%this)
+{
+   profilerEnable(false);
+   echo(">>>> Stop profiler ----------------------------------------------");
+}
+
+function windowConsoleDlg::infoDump(%this)
+{
+      echo(">>>> ------------------------------------------------------------");
+      %EngineName = getEngineName();
+      %VersionString = getVersionString();
+      %AppVersionString = getAppVersionString();
+      %BuildString = getBuildString();
+      %CompileTimeString = getCompileTimeString();
+      echo(" o Engine         :" SPC %EngineName);
+      echo(" o Engine version :" SPC %VersionString);
+      echo(" o App version    :" SPC %AppVersionString);
+      echo(" o Build          :" SPC %BuildString);
+      echo(" o Compile time   :" SPC %CompileTimeString);
+      echo(">>>> ------------------------------------------------------------");
+}
+
+function windowConsoleDlg::incFont()
+{
+   switch ($Con::font)
+   {
+      case 14:
+         windowConsoleMessageLogView.setProfile(ToolsGuiConsoleLargeProfile);
+         $Con::font = 16;
+         windowConsoleMessageLogView.refresh();
+      case 12:
+         windowConsoleMessageLogView.setProfile(ToolsGuiConsoleMediumProfile);
+         $Con::font = 14;
+         windowConsoleMessageLogView.refresh();
+   }
+}
+
+function windowConsoleDlg::decFont()
+{
+   switch ($Con::font)
+   {
+      case 14:
+         windowConsoleMessageLogView.setProfile(ToolsGuiConsoleProfile);
+         $Con::font = 12;
+         windowConsoleMessageLogView.refresh();
+      case 16:
+         windowConsoleMessageLogView.setProfile(ToolsGuiConsoleMediumProfile);
+         $Con::font = 14;
+         windowConsoleMessageLogView.refresh();
+   }
+}
+
+//-----------------------------------------------------------------------------
+
+function windowConsoleControl::dockPanel(%this)
+{
+   if(%this.docked == true)
+      return;
+   
+   %this.resizing = true;
+      
+   %this.docked = true;
+
+   %this.canCollapse = "0";
+   %this.canMove = "0";
+   %this.resizeWidth = "0";
+   
+   windowConsole_UnDockBtn.Visible = "1";
+   windowConsole_DockBtn.Visible = "0";
+   
+   EditorGui.updateSideBar();
+}
+
+function windowConsoleControl::releasePanel(%this)
+{
+   if(%this.docked == false)
+      return;
+
+   %this.canCollapse = "1";
+   %this.canMove = "1";
+   %this.resizeWidth = "1";
+   
+   windowConsole_UnDockBtn.Visible = "0";
+   windowConsole_DockBtn.Visible = "1";
+   
+   // Let's do a small resize so it's visually clear we're "undocking"
+   %position = %this.position.x + 6 SPC %this.position.y - 6;
+   %extent = %this.extent.x SPC %this.extent.y;
+   %this.resize(%position.x, %position.y, %extent.x, %extent.y);
+   
+   %this.docked = false;
+   %this.resizing = false;
+   
+   EditorGui.updateSideBar();
+}
+
+//-----------------------------------------------------------------------------
+
+function windowConsoleDlg::addToolbarButton(%this)
+{
+	%button = new GuiBitmapButtonCtrl() {
+		canSaveDynamicFields = "0";
+		internalName = windowConsoleBtn;
+		Enabled = "1";
+		isContainer = "0";
+		Profile = "ToolsGuiButtonProfile";
+		HorizSizing = "right";
+		VertSizing = "bottom";
+		position = "180 0";
+		Extent = "25 19";
+		MinExtent = "8 2";
+		canSave = "1";
+		Visible = "1";
+		Command = "windowConsoleDlg.showWindow();";
+		tooltipprofile = "ToolsGuiToolTipProfile";
+		ToolTip = "Console (Windowed)";
+		hovertime = "750";
+		bitmapAsset = "ToolsModule:console_n_image";
+		bitmapMode = "Stretched";
+		buttonType = "PushButton";
+		groupNum = "0";
+		useMouseEvents = "0";
+	};
+	ToolsToolbarArray.add(%button);
+	EWToolsToolbar.setExtent((29 + 4) * (ToolsToolbarArray.getCount()) + 4 SPC "32");
+}
+
+// windowConsoleDlg.addToolbarButton();

@@ -154,7 +154,7 @@ function GuiEditorInspectFields::onInspectorDiscardFieldModification( %this )
 
 function GuiEditorInspectFields::onFieldSelected( %this, %fieldName, %fieldTypeStr, %fieldDoc )
 {
-   GuiEditorFieldInfo.setText( "<font:Arial Bold:14>" @ %fieldName @ "<font:Arial Italic:14> (" @ %fieldTypeStr @ ") " NL "<font:Arial:14>" @ %fieldDoc );
+   GuiEditorFieldInfo.setText( "<font:" @ $Gui::fontTypeBold @ ":16>" @ %fieldName @ "<font:Arial Italic:14> (" @ %fieldTypeStr @ ") " NL "<font:Arial:14>" @ %fieldDoc );
 }
 
 //---------------------------------------------------------------------------------------------

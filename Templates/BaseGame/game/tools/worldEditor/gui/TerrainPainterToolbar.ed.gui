@@ -7,7 +7,7 @@ $guiContent = new GuiControl(EWTerrainPainterToolbar,EditorGuiGroup) {
    Profile = "ToolsGuiDefaultProfile";
    HorizSizing = "right";
    VertSizing = "bottom";
-   Position = "306 0";
+   Position = "306 -3";
    Extent = "800 40";
    MinExtent = "8 2";
    canSave = "1";
@@ -18,7 +18,7 @@ $guiContent = new GuiControl(EWTerrainPainterToolbar,EditorGuiGroup) {
       profile = "ToolsGuiTextProfile";
       horizSizing = "right";
       vertSizing = "bottom";
-      position = "6 7";
+      position = "6 4";
       extent = "70 16";
       minExtent = "8 8";
       visible = "1";
@@ -44,7 +44,7 @@ $guiContent = new GuiControl(EWTerrainPainterToolbar,EditorGuiGroup) {
       new GuiControl(EWTerrainPainterToolbarBrushType){
          isContainer = "1";
          profile = "ToolsGuiDefaultProfile";
-         Position = "83 2";
+         Position = "83 0";
          Extent = "94 27";
          
          new GuiBitmapButtonCtrl() {
@@ -121,7 +121,7 @@ $guiContent = new GuiControl(EWTerrainPainterToolbar,EditorGuiGroup) {
   new GuiBitmapCtrl() {
       Enabled = "1";
       Profile = "ToolsGuiDefaultProfile";
-      position = "152 3";
+      position = "152 0";
       Extent = "2 26";
       MinExtent = "1 1";
       bitmapAsset = "ToolsModule:separator_h_image";
@@ -133,7 +133,7 @@ $guiContent = new GuiControl(EWTerrainPainterToolbar,EditorGuiGroup) {
          Profile = "ToolsGuiTransparentProfile";
          HorizSizing = "right";
          VertSizing = "bottom";
-         position = "145 5";
+         position = "145 2";
          Extent = "120 50";
          MinExtent = "8 2";
          canSave = "1";
@@ -210,7 +210,7 @@ $guiContent = new GuiControl(EWTerrainPainterToolbar,EditorGuiGroup) {
       new GuiBitmapCtrl() {
          Enabled = "1";
          Profile = "ToolsGuiDefaultProfile";
-         position = "230 3";
+         position = "255 0";
          Extent = "2 26";
          MinExtent = "1 1";
          bitmapAsset = "ToolsModule:separator_h_image";
@@ -222,7 +222,7 @@ $guiContent = new GuiControl(EWTerrainPainterToolbar,EditorGuiGroup) {
          Profile = "ToolsGuiDefaultProfile";
          HorizSizing = "right";
          VertSizing = "bottom";
-         Position = "245 5";
+         Position = "245 2";
          Extent = "256 50";
          MinExtent = "8 2";
          canSave = "1";
@@ -250,7 +250,7 @@ $guiContent = new GuiControl(EWTerrainPainterToolbar,EditorGuiGroup) {
             AnchorBottom = "0";
             AnchorLeft = "1";
             AnchorRight = "0";
-            text = "Slope Mask   Min";
+            text = "Slope Mask:  Min";
             maxLength = "1024";
          };
          new GuiTextEditCtrl() {
@@ -370,7 +370,7 @@ $guiContent = new GuiControl(EWTerrainPainterToolbar,EditorGuiGroup) {
       new GuiBitmapCtrl() {
          Enabled = "1";
          Profile = "ToolsGuiDefaultProfile";
-         position = "445 3";
+         position = "498 0";
          Extent = "2 26";
          MinExtent = "1 1";
          bitmapAsset = "ToolsModule:separator_h_image";
@@ -382,7 +382,7 @@ $guiContent = new GuiControl(EWTerrainPainterToolbar,EditorGuiGroup) {
          Profile = "ToolsGuiTransparentProfile";
          HorizSizing = "right";
          VertSizing = "bottom";
-         position = "490 5";
+         position = "510 2";
          Extent = "120 50";
          MinExtent = "8 2";
          canSave = "1";
@@ -458,14 +458,14 @@ $guiContent = new GuiControl(EWTerrainPainterToolbar,EditorGuiGroup) {
       new GuiBitmapCtrl() {
          Enabled = "1";
          Profile = "ToolsGuiDefaultProfile";
-         position = "618 3";
+         position = "618 0";
          Extent = "2 26";
          MinExtent = "1 1";
          bitmapAsset = "ToolsModule:separator_h_image";
       };
 
       new GuiControl(TerrainTextureSettingsButtonContainer,EditorGuiGroup) {
-         position = "628 5";
+         position = "628 4";
          extent = "90 18";
          minExtent = "8 2";
          horizSizing = "right";

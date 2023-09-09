@@ -57,8 +57,8 @@ $guiContent = new GuiControl(DebuggerEditWatchDlg, EditorGuiGroup) {
          altCommand = "DbgWatchDialogEdit();";
          helpTag = "0";
          historySize = "0";
-            fontHL = "14 253 Arial";
-            font = "14 244 Arial";
+         fontHL = "14 253 " @ $Gui::fontTypeRegular @ "";
+         font = "14 244 " @ $Gui::fontTypeRegular @ "";
       };
       new GuiButtonCtrl() {
          profile = "ToolsGuiButtonProfile";

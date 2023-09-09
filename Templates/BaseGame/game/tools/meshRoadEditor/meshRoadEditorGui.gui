@@ -40,6 +40,7 @@ $guiContent = new GuiMeshRoadEditorCtrl(MeshRoadEditorGui,EditorGuiGroup) {
    HoverNodeColor = "255 255 255 255";
 
    new GuiWindowCollapseCtrl(MeshRoadEditorTreeWindow) {
+      canCollapse = "0";
       internalName = "";
       canSaveDynamicFields = "0";
       Enabled = "1";
@@ -47,10 +48,10 @@ $guiContent = new GuiMeshRoadEditorCtrl(MeshRoadEditorGui,EditorGuiGroup) {
       Profile = "ToolsGuiWindowProfile";
       HorizSizing = "windowRelative";
       VertSizing = "windowRelative";
-      Position = getWord($pref::Video::mode, 0) - 209
-         SPC getWord(EditorGuiToolbar.extent, 1) - 1;
-      Extent = "210 167";
-      MinExtent = "210 100";
+      Position = getWord($pref::Video::mode, 0) - 360
+         SPC getWord(EditorGuiToolbar.extent, 1) + 6;
+      Extent = "360 300";
+      MinExtent = "300 100";
       canSave = "1";
       Visible = "1";
       tooltipprofile = "ToolsGuiToolTipProfile";
@@ -63,16 +64,16 @@ $guiContent = new GuiMeshRoadEditorCtrl(MeshRoadEditorGui,EditorGuiGroup) {
       AnchorRight = "0";
       resizeWidth = "1";
       resizeHeight = "1";
-      canMove = "1";
+      canMove = "0";
       canClose = "0";
       canMinimize = "0";
       canMaximize = "0";
       minSize = "50 50";
       closeCommand = "EditorGui.setEditor( WorldEditorInspectorPlugin );";
       EdgeSnap = "1";
-      text = "Mesh Roads";
+      text = "::  Mesh Road Editor - Roads";
       
-      new GuiContainer(){
+      new GuiContainer(MeshRoadEditorRoadsPanel){
          profile = "ToolsGuiDefaultProfile";
          Position = "5 25";
          Extent = "200 120";
@@ -140,8 +141,102 @@ $guiContent = new GuiMeshRoadEditorCtrl(MeshRoadEditorGui,EditorGuiGroup) {
             };
          };
       };
+      // window / panel buttons
+      new GuiBitmapButtonCtrl(MeshRoadEditorGui_UnDockBtn) {
+         canSaveDynamicFields = "0";
+         internalName = "";
+         Enabled = "1";
+         isContainer = "0";
+         Profile = "ToolsGuiButtonProfile";
+         HorizSizing = "left";
+         VertSizing = "bottom";
+         Position = "330 1";
+         Extent = "18 18";
+         MinExtent = "8 8";
+         canSave = "1";
+         Visible = "0";
+         Command = "MeshRoadEditorGui.releaseSidePanel();";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Detach Sidepanel";
+         hovertime = "1000";
+         bitmapAsset = "ToolsModule:panel_undock_n_image";
+         text = "";
+         groupNum = "-1";
+         buttonType = "PushButton";
+         useMouseEvents = "0";
+      };
+      new GuiBitmapButtonCtrl(MeshRoadEditorGui_DockBtn) {
+         canSaveDynamicFields = "0";
+         internalName = "";
+         Enabled = "1";
+         isContainer = "0";
+         Profile = "ToolsGuiButtonProfile";
+         HorizSizing = "left";
+         VertSizing = "bottom";
+         Position = "330 1";
+         Extent = "18 18";
+         MinExtent = "8 8";
+         canSave = "1";
+         Visible = "0";
+         Command = "MeshRoadEditorGui.dockSidePanel();";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Dock Sidepanel";
+         hovertime = "1000";
+         bitmapAsset = "ToolsModule:panel_dock_n_image";
+         text = "";
+         groupNum = "-1";
+         buttonType = "PushButton";
+         useMouseEvents = "0";
+      };
+      new GuiBitmapButtonCtrl(MeshRoadEditorGui_HideBtn) {
+         canSaveDynamicFields = "0";
+         internalName = "";
+         Enabled = "1";
+         isContainer = "0";
+         Profile = "ToolsGuiButtonProfile";
+         HorizSizing = "left";
+         VertSizing = "bottom";
+         Position = "312 1";
+         Extent = "18 18";
+         MinExtent = "8 8";
+         canSave = "1";
+         Visible = "1";
+         Command = "MeshRoadEditorGui.hideSidePanel();";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Hide Sidepanel";
+         hovertime = "1000";
+         bitmapAsset = "ToolsModule:panel_hide_n_image";
+         text = "";
+         groupNum = "-1";
+         buttonType = "PushButton";
+         useMouseEvents = "0";
+      };
+      new GuiBitmapButtonCtrl(MeshRoadEditorGui_ShowBtn) {
+         canSaveDynamicFields = "0";
+         internalName = "";
+         Enabled = "1";
+         isContainer = "0";
+         Profile = "ToolsGuiButtonProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         Position = "4 1";
+         Extent = "18 18";
+         MinExtent = "8 8";
+         canSave = "1";
+         Visible = "1";
+         Command = "MeshRoadEditorGui.showSidePanel();";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Show Sidepanel";
+         hovertime = "1000";
+         bitmapAsset = "ToolsModule:panel_show_n_image";
+         text = "";
+         groupNum = "-1";
+         buttonType = "PushButton";
+         useMouseEvents = "0";
+      };   
    };
    new GuiWindowCollapseCtrl(MeshRoadEditorOptionsWindow) {
+      canCollapse = "0";
       internalName = "Window";
       canSaveDynamicFields = "0";
       Enabled = "1";
@@ -149,10 +244,10 @@ $guiContent = new GuiMeshRoadEditorCtrl(MeshRoadEditorGui,EditorGuiGroup) {
       Profile = "ToolsGuiWindowProfile";
       HorizSizing = "windowRelative";
       VertSizing = "windowRelative";
-      Position = getWord($pref::Video::mode, 0) - 209
-         SPC getWord(EditorGuiToolbar.extent, 1) + getWord(MeshRoadEditorTreeWindow.extent, 1) - 2;
-      Extent = "210 530";
-      MinExtent = "210 298";
+      Position = getWord($pref::Video::mode, 0) - 360
+         SPC getWord(EditorGuiToolbar.extent, 1) + getWord(MeshRoadEditorTreeWindow.extent, 1) + 6;
+      Extent = "360" SPC getWord($pref::Video::mode, 1) - getWord(MeshRoadEditorTreeWindow.extent, 1) - getWord(EditorGuiToolbar.extent, 1) - 65;
+      MinExtent = "300 240";
       canSave = "1";
       Visible = "1";
       tooltipprofile = "ToolsGuiToolTipProfile";
@@ -165,16 +260,16 @@ $guiContent = new GuiMeshRoadEditorCtrl(MeshRoadEditorGui,EditorGuiGroup) {
       AnchorRight = "0";
       resizeWidth = "1";
       resizeHeight = "1";
-      canMove = "1";
+      canMove = "0";
       canClose = "0";
       canMinimize = "0";
       canMaximize = "0";
       minSize = "50 50";
       closeCommand = "EditorGui.setEditor( WorldEditorPlugin );";
       EdgeSnap = "1";
-      text = "Properties";
+      text = "::  Mesh Road Editor - Properties";
 
-      new GuiContainer(){ //Node Properties
+      new GuiContainer(MeshRoadNodesPanel){ //Node Properties
          isContainer = "1";
          Profile = "inspectorStyleRolloutDarkProfile";
          HorizSizing = "width";
@@ -185,7 +280,7 @@ $guiContent = new GuiMeshRoadEditorCtrl(MeshRoadEditorGui,EditorGuiGroup) {
          Margin = "3 3 3 3";
          
          new GuiTextCtrl(){
-            Profile = "ToolsGuiDefaultProfile";
+            Profile = "EditorTextProfile";
             HorizSizing = "right";
             VertSizing = "bottom";
             Position = "5 0";
@@ -266,7 +361,7 @@ $guiContent = new GuiMeshRoadEditorCtrl(MeshRoadEditorGui,EditorGuiGroup) {
             AltCommand = "MeshRoadEditorGui.editNodeDetails();";
          };
       };
-      new GuiContainer(){ //Mesh Road Properties
+      new GuiContainer(MeshRoadPropertiesPanel){ //Mesh Road Properties
          isContainer = "1";
          Profile = "inspectorStyleRolloutDarkProfile";
          HorizSizing = "width";
@@ -277,7 +372,7 @@ $guiContent = new GuiMeshRoadEditorCtrl(MeshRoadEditorGui,EditorGuiGroup) {
          Margin = "0 0 3 3";
          
          new GuiTextCtrl(){
-            Profile = "ToolsGuiDefaultProfile";
+            Profile = "EditorTextProfile";
             HorizSizing = "right";
             VertSizing = "bottom";
             Position = "5 0";
@@ -285,7 +380,7 @@ $guiContent = new GuiMeshRoadEditorCtrl(MeshRoadEditorGui,EditorGuiGroup) {
             text = "Mesh Road Properties";
          };
       };
-      new GuiScrollCtrl() {
+      new GuiScrollCtrl(MeshRoadInspectorPanel) {
          canSaveDynamicFields = "0";
          Enabled = "1";
          isContainer = "1";
@@ -336,21 +431,21 @@ $guiContent = new GuiMeshRoadEditorCtrl(MeshRoadEditorGui,EditorGuiGroup) {
             dividerMargin = "5";
          };
       };   
-      new GuiMLTextCtrl(MeshFieldInfoControl) {
+      new GuiMLTextCtrl(MeshRoadFieldInfoControl) {
          canSaveDynamicFields = "0";
          Enabled = "1";
          isContainer = "0";
          Profile = "GuiInspectorFieldInfoMLTextProfile";
          HorizSizing = "width";
          VertSizing = "top";
-         Position = "1 485";
-         Extent = "202 42";
+         position = "8" SPC getWord(MeshRoadEditorOptionsWindow.extent, 1) - 40;
+         Extent = "320 42";
          MinExtent = "8 2";
          canSave = "1";
          Visible = "1";
          tooltipprofile = "ToolsGuiToolTipProfile";
          hovertime = "1000";
-         lineSpacing = "2";
+         lineSpacing = "1";
          allowColorChars = "0";
          maxChars = "-1";
          useURLMouseCursor = "0";

@@ -80,9 +80,9 @@ function GuiInspectorEntityGroup::createAddComponentList(%this)
    if(!isObject("componentTooltipTheme"))
    {
       %theme = createsupertooltiptheme("componentTooltipTheme");
-      %theme.addstyle("headerstyle", "<just:left><font:arial bold:16><color:000000>");
-      %theme.addstyle("headertwostyle", "<font:arial bold:14><color:000000>");
-      %theme.addstyle("basictextstyle", "<font:arial:14><color:000000>");
+      %theme.addstyle("headerstyle", "<just:left><font:" @ $Gui::fontTypeRegular @ " bold:16><color:cccccc>");
+      %theme.addstyle("headertwostyle", "<font:" @ $Gui::fontTypeBold @ ":16><color:cccccc>");
+      %theme.addstyle("basictextstyle", "<font:" @ $Gui::fontTypeBold @ ":16><color:cccccc>");
       %theme.setdefaultstyle("title", "headerstyle");
       %theme.setdefaultstyle("paramtitle", "headertwostyle");
       %theme.setdefaultstyle("param", "basictextstyle");

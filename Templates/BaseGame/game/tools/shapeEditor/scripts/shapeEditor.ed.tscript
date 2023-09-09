@@ -1581,6 +1581,29 @@ function ShapeEdSeqFromMenu::onBrowseSelect( %this, %assetId )
 }
 
 //------------------------------------------------------------------------------
+
+function ShapeEdAnimWIndow::onWake(%this)
+{
+   %animWindow = ShapeEdAnimWIndow;
+   %position = "1" SPC Canvas.extent.y - 112;
+   
+   if(isObject(ShapeEdPropWindow))
+   {
+      // Fit the the whole window together with the prop and select windows
+      %extent = Canvas.extent.x - ShapeEdPropWindow.extent.x - 2 SPC %animWindow.extent.y;
+   }
+   else
+   {
+      // If we can't get the prop window then use a default width
+      // (when the order of GUI loading has changed for example)
+      %extent = Canvas.extent.x - 360 - 2 SPC %animWindow.extent.y;
+   }
+   
+   // resize and position accordingly
+   %animWindow.resize(%position.x, %position.y, %extent.x, %extent.y);
+}
+
+//------------------------------------------------------------------------------
 // Threads and Animation
 //------------------------------------------------------------------------------
 

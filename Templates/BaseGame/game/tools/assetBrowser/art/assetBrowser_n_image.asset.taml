@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="assetBrowser_n_image"
+    imageFile="@assetFile=assetBrowser_n.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

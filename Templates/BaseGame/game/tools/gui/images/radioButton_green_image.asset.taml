@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="radioButton_green_image"
+    imageFile="@assetFile=radioButton_green.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

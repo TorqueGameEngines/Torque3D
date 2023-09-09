@@ -21,10 +21,10 @@ $guiContent = new GuiControl() {
       Profile = "ToolsGuiWindowProfile";
       HorizSizing = "windowRelative";
       VertSizing = "windowRelative";
-      Position = getWord($pref::Video::mode, 0) - 209
-         SPC getWord(EditorGuiToolbar.extent, 1) - 1;
-      Extent = "210 213";
-      MinExtent = "210 114";
+      Position = getWord($pref::Video::mode, 0) - 360
+         SPC getWord(EditorGuiToolbar.extent, 1) + 6;
+      Extent = "360 165";
+      MinExtent = "300 165";
       canSave = "1";
       Visible = "0";
       tooltipprofile = "ToolsGuiToolTipProfile";
@@ -43,7 +43,7 @@ $guiContent = new GuiControl() {
       canMaximize = "0";
       minSize = "50 50";
       EdgeSnap = "1";
-      text = "Shapes";
+      text = "::  Shape Editor - Select";
 
       new GuiTabBookCtrl(ShapeEditorTabbook) {
          internalName = "tabBook";
@@ -53,7 +53,7 @@ $guiContent = new GuiControl() {
          HorizSizing = "width";
          VertSizing = "height";
          position = "4 24";
-         Extent = "202 165";
+         Extent = "202 150";
          MinExtent = "8 -500";
          canSave = "1";
          Visible = "1";

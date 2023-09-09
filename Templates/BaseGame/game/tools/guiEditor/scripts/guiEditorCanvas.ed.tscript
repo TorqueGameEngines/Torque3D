@@ -69,7 +69,7 @@ function GuiEditCanvas::onCreateMenu(%this)
    %this.menuBar = new GuiMenuBar(GuiEditorMenubar)
    {
       dynamicItemInsertPos = 3;
-      extent = "1024 20";
+      extent = getWord($pref::Video::mode, 0) SPC "29";
       minExtent = "320 20";
       horizSizing = "width";
       profile = "ToolsGuiMenuBarProfile";
@@ -207,10 +207,16 @@ function GuiEditCanvas::onCreateMenu(%this)
          item[1] = "Offline User Guid..." TAB "" TAB "gotoWebPage( GuiEditor.documentationLocal );";
          item[2] = "Offline Reference Guide..." TAB "" TAB "shellExecute( GuiEditor.documentationReference );";
          item[3] = "-";
-         item[4] = "Torque 3D Public Forums..." TAB "" TAB "gotoWebPage( \"http://www.garagegames.com/community/forums/73\" );";
-         item[5] = "Torque 3D Private Forums..." TAB "" TAB "gotoWebPage( \"http://www.garagegames.com/community/forums/63\" );";
+         item[4] = "Torque 3D Forums..." TAB "" TAB "gotoWebPage( \"https://torque3d.org/forums/\" );";
       };
    };
+   
+   // Workaround (for some reason it doesn't size to the width of the canvas)
+   // TODO: After a canvas resize it still messes up the width
+   %position = %this.menubar.position.x SPC %this.menubar.position.y;
+   %extent = getWord($pref::Video::mode, 0) SPC %this.menubar.extent.y;
+   %this.menubar.resize(%position.x, %position.y, %extent.x, %extent.y); 
+   
    %this.menuBar.attachToCanvas( Canvas, 0 );
 }
 

@@ -1,8 +1,8 @@
 <ImageAsset
     canSave="true"
     canSaveDynamicFields="true"
-    AssetName="Images_btn_Palette_h_image"
-    imageFile="@assetFile=btn_Palette_h.png"
+    AssetName="Images_btn_Palette_d_image"
+    imageFile="@assetFile=btn_Palette_d.png"
     UseMips="true"
     isHDRImage="false"
     imageType="Albedo" />

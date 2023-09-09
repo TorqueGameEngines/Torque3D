@@ -26,12 +26,36 @@ $guiContent = new GuiContainer(EditorGui,EditorGuiGroup) {
       Profile = "ToolsMenubarProfile";
       HorizSizing = "width";
       VertSizing = "bottom";
-      Position = "0 10";
-      Extent = "800 32";
+      Position = "0 6";
+      Extent = "800 37";
       MinExtent = "8 8";
+      Margin = "0 0 0 0";
+      Padding = "0 0 0 0";
       canSave = "1";
       Visible = "1";
       hovertime = "1000";
+      
+      new GuiBitmapButtonCtrl(EHLogo) {
+         canSaveDynamicFields = "0";
+         Enabled = "1";
+         isContainer = "0";
+         Profile = "ToolsGuiButtonProfile";
+         HorizSizing = "right";
+         VertSizing = "center";
+         Position = "8 0";
+         Extent = "24 24";
+         MinExtent = "24 24";
+         canSave = "1";
+         Visible = "1";
+         Command = "";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Torque3D";
+         hovertime = "1000";
+         bitmapAsset = "ToolsModule:menu_logo";
+         groupNum = "0";
+         buttonType = "PushButton";
+         useMouseEvents = "0";
+      };
       
       new GuiStackControl(EditorGuiToolbarStack) {
          stackingType = "Horizontal";
@@ -43,11 +67,11 @@ $guiContent = new GuiContainer(EditorGui,EditorGuiGroup) {
          dynamicPos = "0";
          changeChildSizeToFit = "0";
          changeChildPosition = "1";
-         position = "0 0";
-         extent = "885 32";
+         position = "36 4";
+         extent = "885 36";
          minExtent = "16 16";
          horizSizing = "right";
-         vertSizing = "bottom";
+         vertSizing = "top";
          profile = "GuiDefaultProfile";
          visible = "1";
          active = "1";
@@ -56,83 +80,188 @@ $guiContent = new GuiContainer(EditorGui,EditorGuiGroup) {
          isContainer = "1";
          canSave = "1";
          canSaveDynamicFields = "0";
+         
+         new GuiBitmapCtrl() {
+            Enabled = "1";
+            Profile = "ToolsGuiDefaultProfile";
+            position = "0 3";
+            Extent = "9 26";
+            MinExtent = "1 1";
+            bitmapAsset = "ToolsModule:separator_xt_h_image";
+            horizSizing = "right";
+            vertSizing = "bottom";
+         };         
+         
+         new GuiBitmapButtonCtrl(WorldSaveBtn) {
+            canSaveDynamicFields = "0";
+            Enabled = "1";
+            isContainer = "0";
+            Profile = "ToolsGuiButtonProfile";
+            HorizSizing = "right";
+            VertSizing = "bottom";
+            Position = "4 3";
+            Extent = "29 27";
+            MinExtent = "8 8";
+            canSave = "1";
+            Visible = "1";
+            Command = "EditorSaveMissionMenu();";
+            tooltipprofile = "ToolsGuiToolTipProfile";
+            ToolTip = "Save the Level";
+            hovertime = "1000";
+            bitmapAsset = "ToolsModule:save_n_image";
+            groupNum = "0";
+            buttonType = "PushButton";
+            useMouseEvents = "0";
+         };
+         
+         new GuiBitmapCtrl() {
+            Enabled = "1";
+            Profile = "ToolsGuiDefaultProfile";
+            position = "0 3";
+            Extent = "2 26";
+            MinExtent = "1 1";
+            bitmapAsset = "ToolsModule:separator_xt_h_image";
+            horizSizing = "right";
+            vertSizing = "bottom";
+         };
         
-      new GuiBitmapButtonCtrl(EHWorldEditor) {
-         canSaveDynamicFields = "0";
-         Enabled = "1";
-         isContainer = "0";
-         Profile = "ToolsGuiButtonProfile";
-         HorizSizing = "right";
-         VertSizing = "bottom";
-         Position = "4 3";
-         Extent = "29 27";
-         MinExtent = "8 8";
-         canSave = "1";
-         Visible = "1";
-         Command = "";
-         tooltipprofile = "ToolsGuiToolTipProfile";
-         ToolTip = "Open the WorldEditor";
-         hovertime = "1000";
-         bitmapAsset = "ToolsModule:world_image";
-         groupNum = "0";
-         buttonType = "RadioButton";
-         useMouseEvents = "0";
-      };
-      new GuiBitmapButtonCtrl(EHGuiEditor) {
-         canSaveDynamicFields = "0";
-         Enabled = "1";
-         isContainer = "0";
-         Profile = "ToolsGuiButtonProfile";
-         HorizSizing = "right";
-         VertSizing = "bottom";
-         Position = "34 3";
-         Extent = "29 27";
-         MinExtent = "8 8";
-         canSave = "1";
-         Visible = "1";
-         Command = "toggleGuiEditor(true); $GuiEditorBtnPressed = true;";
-         tooltipprofile = "ToolsGuiToolTipProfile";
-         ToolTip = "Open the GuiEditor";
-         hovertime = "1000";
-         bitmapAsset = "ToolsModule:gui_image";
-         groupNum = "0";
-         buttonType = "RadioButton";
-         useMouseEvents = "0";
-      };
-      new GuiBitmapButtonCtrl() {
-         canSaveDynamicFields = "0";
-         Enabled = "1";
-         isContainer = "0";
-         Profile = "ToolsGuiButtonProfile";
-         HorizSizing = "right";
-         VertSizing = "bottom";
-         Position = "64 3";
-         Extent = "29 27";
-         MinExtent = "8 8";
-         canSave = "1";
-         Visible = "1";
-         Command = "Editor.close(ProjectSettings.value(\"UI/playGUIName\"));";
-         tooltipprofile = "ToolsGuiToolTipProfile";
-         ToolTip = "Play Game";
-         hovertime = "1000";
-         bitmapAsset = "ToolsModule:playbutton_n_image";
-         groupNum = "0";
-         buttonType = "PushButton";
-         useMouseEvents = "0";
-      };
-     
-      new GuiBitmapCtrl() {
-      Enabled = "1";
-      Profile = "ToolsGuiDefaultProfile";
-      position = "98 3";
-      Extent = "2 26";
-      MinExtent = "1 1";
-      bitmapAsset = "ToolsModule:separator_h_image";
-      };
-      
+         new GuiBitmapButtonCtrl(EHWorldEditor) {
+            canSaveDynamicFields = "0";
+            Enabled = "1";
+            isContainer = "0";
+            Profile = "ToolsGuiButtonProfile";
+            HorizSizing = "right";
+            VertSizing = "bottom";
+            Position = "4 3";
+            Extent = "29 27";
+            MinExtent = "8 8";
+            canSave = "1";
+            Visible = "1";
+            Command = "";
+            tooltipprofile = "ToolsGuiToolTipProfile";
+            ToolTip = "Open the WorldEditor";
+            hovertime = "1000";
+            bitmapAsset = "ToolsModule:world_n_image";
+            groupNum = "0";
+            buttonType = "RadioButton";
+            useMouseEvents = "0";
+         };
+         
+         new GuiBitmapButtonCtrl(EHGuiEditor) {
+            canSaveDynamicFields = "0";
+            Enabled = "1";
+            isContainer = "0";
+            Profile = "ToolsGuiButtonProfile";
+            HorizSizing = "right";
+            VertSizing = "bottom";
+            Position = "34 3";
+            Extent = "29 27";
+            MinExtent = "8 8";
+            canSave = "1";
+            Visible = "1";
+            Command = "toggleGuiEditor(true); $GuiEditorBtnPressed = true;";
+            tooltipprofile = "ToolsGuiToolTipProfile";
+            ToolTip = "Open the GuiEditor";
+            hovertime = "1000";
+            bitmapAsset = "ToolsModule:gui_n_image";
+            groupNum = "0";
+            buttonType = "RadioButton";
+            useMouseEvents = "0";
+         };
+         
+         new GuiBitmapCtrl() {
+            Enabled = "1";
+            Profile = "ToolsGuiDefaultProfile";
+            position = "0 0";
+            Extent = "9 26";
+            MinExtent = "1 1";
+            bitmapAsset = "ToolsModule:separator_xt_h_image";
+            horizSizing = "right";
+            vertSizing = "bottom";
+         };
+         
+         new GuiBitmapButtonCtrl(AssetBrowserBtn) {
+            canSaveDynamicFields = "0";
+            Enabled = "1";
+            isContainer = "0";
+            Profile = "ToolsGuiButtonProfile";
+            HorizSizing = "right";
+            VertSizing = "bottom";
+            position = "0 0";
+            Extent = "29 27";
+            MinExtent = "8 2";
+            canSave = "1";
+            Visible = "1";
+            active = "1";
+            Command = "AssetBrowser.toggleDialog();";
+            tooltipprofile = "ToolsGuiToolTipProfile";
+            tooltip = "Open the Asset Browser";
+            hovertime = "750";
+            bitmapAsset = "ToolsModule:assetBrowser_n_image";
+            buttonType = "PushButton";
+            useStates = "1";
+            groupNum = "0";
+            useMouseEvents = "0";
+            internalName = "AssetBrowserBtn";
+         };
+         
+         new GuiBitmapCtrl() {
+            Enabled = "1";
+            Profile = "ToolsGuiDefaultProfile";
+            position = "0 3";
+            Extent = "9 26";
+            MinExtent = "1 1";
+            bitmapAsset = "ToolsModule:separator_xt_h_image";
+            horizSizing = "right";
+            vertSizing = "bottom";
+         };
+         
+         new GuiBitmapCtrl() {
+            Enabled = "1";
+            Profile = "ToolsGuiDefaultProfile";
+            position = "0 3";
+            Extent = "2 26";
+            MinExtent = "1 1";
+            bitmapAsset = "ToolsModule:separator_xt_h_image";
+            horizSizing = "right";
+            vertSizing = "bottom";
+         };
+         
+         new GuiBitmapButtonCtrl() {
+            canSaveDynamicFields = "0";
+            Enabled = "1";
+            isContainer = "0";
+            Profile = "ToolsGuiButtonProfile";
+            HorizSizing = "right";
+            VertSizing = "bottom";
+            Position = "0 3";
+            Extent = "29 27";
+            MinExtent = "8 8";
+            canSave = "1";
+            Visible = "1";
+            Command = "Editor.close(ProjectSettings.value(\"UI/playGUIName\"));";
+            tooltipprofile = "ToolsGuiToolTipProfile";
+            ToolTip = "Play Game";
+            hovertime = "1000";
+            bitmapAsset = "ToolsModule:playbutton_n_image";
+            groupNum = "0";
+            buttonType = "PushButton";
+            useMouseEvents = "0";
+         };
+         
+         new GuiBitmapCtrl() {
+            Enabled = "1";
+            Profile = "ToolsGuiDefaultProfile";
+            position = "0 3";
+            Extent = "9 26";
+            MinExtent = "1 1";
+            bitmapAsset = "ToolsModule:separator_xt_h_image";
+            horizSizing = "right";
+            vertSizing = "bottom";
+         }; 
+           
          new GuiBitmapButtonCtrl() {
             BitmapAsset = "ToolsModule:settings_n_image";
-            bitmapMode = "Stretched";
             autoFitExtents = "0";
             useModifiers = "0";
             useStates = "1";
@@ -140,11 +269,11 @@ $guiContent = new GuiContainer(EditorGui,EditorGuiGroup) {
             groupNum = "-1";
             buttonType = "PushButton";
             useMouseEvents = "0";
-            position = "572 0";
+            position = "574 0";
             extent = "29 27";
             minExtent = "8 8";
             horizSizing = "right";
-            vertSizing = "bottom";
+            VertSizing = "bottom";
             profile = "ToolsGuiButtonProfile";
             visible = "1";
             active = "1";
@@ -158,100 +287,164 @@ $guiContent = new GuiContainer(EditorGui,EditorGuiGroup) {
             canSaveDynamicFields = "0";
          };
          
-         new GuiBitmapCtrl() {
-            Enabled = "1";
-            Profile = "ToolsGuiDefaultProfile";
-            position = "98 3";
-            Extent = "2 26";
-            MinExtent = "1 1";
-            bitmapAsset = "ToolsModule:separator_h_image";
-         };
-         
-         new GuiBitmapButtonCtrl() {
+         new GuiBitmapButtonCtrl(windowConsoleBtn) {
             canSaveDynamicFields = "0";
-            internalName = AssetBrowserBtn;
             Enabled = "1";
             isContainer = "0";
             Profile = "ToolsGuiButtonProfile";
             HorizSizing = "right";
             VertSizing = "bottom";
-            position = "180 0";
+            position = "0 0";
             Extent = "29 27";
             MinExtent = "8 2";
             canSave = "1";
             Visible = "1";
-            Command = "AssetBrowser.toggleDialog();";
+            active = "1";
+            Command = "windowConsoleDlg.showWindow();";
             tooltipprofile = "ToolsGuiToolTipProfile";
-            ToolTip = "Asset Browser";
+            tooltip = "Open the Console in a window";
             hovertime = "750";
-            bitmapAsset = "ToolsModule:menuGrid_n_image";
-            bitmapMode = "Stretched";
+            bitmapAsset = "ToolsModule:console_n_image";
             buttonType = "PushButton";
+            useStates = "1";
             groupNum = "0";
             useMouseEvents = "0";
+            internalName = "windowConsoleBtn";
          };
          
          new GuiBitmapCtrl() {
             Enabled = "1";
             Profile = "ToolsGuiDefaultProfile";
-            position = "98 3";
-            Extent = "2 26";
+            position = "0 3";
+            Extent = "9 26";
             MinExtent = "1 1";
-            bitmapAsset = "ToolsModule:separator_h_image";
+            bitmapAsset = "ToolsModule:separator_xt_h_image";
+            horizSizing = "right";
+            vertSizing = "bottom";
          };
          
-      new GuiBitmapButtonCtrl(EWorldEditorToggleCamera) {
-         canSaveDynamicFields = "0";
-         Enabled = "1";
-         isContainer = "0";
-         Profile = "ToolsGuiButtonProfile";
-         HorizSizing = "right";
-         VertSizing = "bottom";
-         Position = "102 3";
-         Extent = "29 27";
-         MinExtent = "8 8";
-         canSave = "1";
-         Visible = "1";
-         Command = "CameraTypesDropdownToggle();";
-         tooltipprofile = "ToolsGuiToolTipProfile";
-         ToolTip = "Toggle Camera Modes";
-         hovertime = "1000";
-         bitmapAsset = "ToolsModule:player_n_image";
-         groupNum = "-1";
-         buttonType = "ToggleButton";
-         useMouseEvents = "0";
-         
-         new GuiBitmapCtrl(){
-            HorizSizing = "left";
-            VertSizing = "top";
-            Position = getWord(EWorldEditorToggleCamera.extent, 0)-6 SPC getWord(EWorldEditorToggleCamera.extent, 1)-6;
-            Extent = "4 4";
-            MinExtent = "4 4";
-            bitmapAsset = "ToolsModule:dropdown_button_arrow_image";
-         };
-      };
-      new GuiControl(CameraSpeedDropdownContainer, EditorGuiGroup) {
-         canSaveDynamicFields = "0";
-         isContainer = "1";
-         Profile = "ToolsGuiTransparentProfile";
-         HorizSizing = "right";
-         VertSizing = "bottom";
-         position = "136 5";
-         Extent = "136 27";
-         MinExtent = "8 2";
-         canSave = "1";
-         Visible = "1";
-         hovertime = "1000";
-
-         new GuiTextCtrl() {
+         new GuiBitmapButtonCtrl(EWorldEditorToggleCamera) {
             canSaveDynamicFields = "0";
             Enabled = "1";
             isContainer = "0";
-            Profile = "ToolsGuiTextProfile";
+            Profile = "ToolsGuiButtonProfile";
             HorizSizing = "right";
             VertSizing = "bottom";
-            position = "0 6";
-            Extent = "78 10";
+            Position = "102 3";
+            Extent = "29 27";
+            MinExtent = "8 8";
+            canSave = "1";
+            Visible = "1";
+            Command = "CameraTypesDropdownToggle();";
+            tooltipprofile = "ToolsGuiToolTipProfile";
+            ToolTip = "Toggle Camera Modes";
+            hovertime = "1000";
+            bitmapAsset = "ToolsModule:player_n_image";
+            groupNum = "-1";
+            buttonType = "ToggleButton";
+            useMouseEvents = "0";
+         
+            new GuiBitmapCtrl() {
+               HorizSizing = "left";
+               VertSizing = "top";
+               Position = getWord(EWorldEditorToggleCamera.extent, 0)-6 SPC getWord(EWorldEditorToggleCamera.extent, 1)-6;
+               Extent = "4 4";
+               MinExtent = "4 4";
+               bitmapAsset = "ToolsModule:dropdown_button_arrow_image";
+            };
+         };
+         
+         new GuiControl(CameraSpeedDropdownContainer, EditorGuiGroup) {
+            canSaveDynamicFields = "0";
+            isContainer = "1";
+            Profile = "ToolsGuiTransparentProfile";
+            HorizSizing = "right";
+            VertSizing = "bottom";
+            position = "136 5";
+            Extent = "136 27";
+            MinExtent = "8 2";
+            canSave = "1";
+            Visible = "1";
+            hovertime = "1000";
+
+            new GuiTextCtrl() {
+               canSaveDynamicFields = "0";
+               Enabled = "1";
+               isContainer = "0";
+               Profile = "ToolsGuiTextRightProfile";
+               HorizSizing = "right";
+               VertSizing = "bottom";
+               position = "0 6";
+               Extent = "72 10";
+               MinExtent = "8 2";
+               canSave = "1";
+               Visible = "1";
+               hovertime = "1000";
+               Margin = "0 0 0 0";
+               Padding = "0 0 0 0";
+               AnchorTop = "1";
+               AnchorBottom = "0";
+               AnchorLeft = "1";
+               AnchorRight = "0";
+               text = "Cam Speed:  ";
+               maxLength = "1024";
+            };
+            
+            new GuiTextEditCtrl(EWorldEditorCameraSpeed) {
+               canSaveDynamicFields = "0";
+               internalName = "textEdit";
+               isContainer = "0";
+               profile="ToolsGuiNumericDropSliderTextProfile";
+               HorizSizing = "right";
+               VertSizing = "bottom";
+               position = "78 2";
+               Extent = "42 16";
+               MinExtent = "8 16";
+               canSave = "1";
+               Visible = "1";
+               Command = "EWorldEditorCameraSpeed.updateMenuBar( $ThisControl );";
+               hovertime = "1000";
+               text = "100";
+               maxLength = "4";
+               historySize = "0";
+               password = "0";
+               tabComplete = "0";
+               sinkAllKeyEvents = "0";
+            };
+            
+            new GuiBitmapButtonCtrl() {
+               canSaveDynamicFields = "0";
+               Enabled = "1";
+               isContainer = "0";
+               Profile = "ToolsGuiDefaultProfile";
+               HorizSizing = "right";
+               VertSizing = "bottom";
+               Position = "112 2";
+               Extent = "18 18";
+               MinExtent = "8 2";
+               canSave = "1";
+               Visible = "1";
+               Command = "Canvas.pushDialog(CameraSpeedDropdownCtrlContainer);";
+               tooltipprofile = "ToolsGuiToolTipProfile";
+               ToolTip = "Changes the Camera Speed";
+               hovertime = "750";
+               groupNum = "-1";
+               buttonType = "PushButton";
+               useMouseEvents = "0";
+               bitmapAsset = "ToolsModule:dropslider_n_image";
+            };
+         };
+         
+         /*new GuiPopUpMenuCtrl(EWorldEditorCameraSpeed) {
+            canSaveDynamicFields = "0";
+            internalName = "CameraSpeedDropdown";
+            Enabled = "1";
+            isContainer = "0";
+            Profile = "ToolsGuiPopUpMenuProfile";
+            HorizSizing = "right";
+            VertSizing = "bottom";
+            Position = "136 7";
+            Extent = "130 18";
             MinExtent = "8 2";
             canSave = "1";
             Visible = "1";
@@ -262,78 +455,13 @@ $guiContent = new GuiContainer(EditorGui,EditorGuiGroup) {
             AnchorBottom = "0";
             AnchorLeft = "1";
             AnchorRight = "0";
-            text = "Camera Speed";
             maxLength = "1024";
-         };
-         new GuiTextEditCtrl(EWorldEditorCameraSpeed) {
-            canSaveDynamicFields = "0";
-            internalName = "textEdit";
-            isContainer = "0";
-            profile="ToolsGuiNumericDropSliderTextProfile";
-            HorizSizing = "right";
-            VertSizing = "bottom";
-            position = "78 2";
-            Extent = "42 16";
-            MinExtent = "8 16";
-            canSave = "1";
-            Visible = "1";
-            Command = "EWorldEditorCameraSpeed.updateMenuBar( $ThisControl );";
-            hovertime = "1000";
-            text = "100";
-            maxLength = "4";
-            historySize = "0";
-            password = "0";
-            tabComplete = "0";
-            sinkAllKeyEvents = "0";
-         };
-         new GuiBitmapButtonCtrl() {
-            canSaveDynamicFields = "0";
-            Enabled = "1";
-            isContainer = "0";
-            Profile = "ToolsGuiDefaultProfile";
-            HorizSizing = "right";
-            VertSizing = "bottom";
-            Position = "112 2";
-            Extent = "18 18";
-            MinExtent = "8 2";
-            canSave = "1";
-            Visible = "1";
-            Command = "Canvas.pushDialog(CameraSpeedDropdownCtrlContainer);";
-            tooltipprofile = "ToolsGuiToolTipProfile";
-            ToolTip = "Changes the Camera Speed";
-            hovertime = "750";
-            groupNum = "-1";
-            buttonType = "PushButton";
-            useMouseEvents = "0";
-            bitmapAsset = "ToolsModule:dropslider_n_image";
-         };
-      };
-      /*new GuiPopUpMenuCtrl(EWorldEditorCameraSpeed) {
-         canSaveDynamicFields = "0";
-         internalName = "CameraSpeedDropdown";
-         Enabled = "1";
-         isContainer = "0";
-         Profile = "ToolsGuiPopUpMenuProfile";
-         HorizSizing = "right";
-         VertSizing = "bottom";
-         Position = "136 7";
-         Extent = "130 18";
-         MinExtent = "8 2";
-         canSave = "1";
-         Visible = "1";
-         hovertime = "1000";
-         Margin = "0 0 0 0";
-         Padding = "0 0 0 0";
-         AnchorTop = "1";
-         AnchorBottom = "0";
-         AnchorLeft = "1";
-         AnchorRight = "0";
-         maxLength = "1024";
-         maxPopupHeight = "200";
-         sbUsesNAColor = "0";
-         reverseTextList = "0";
-         bitmapBounds = "16 16";
-      };*/
+            maxPopupHeight = "200";
+            sbUsesNAColor = "0";
+            reverseTextList = "0";
+            bitmapBounds = "16 16";
+         };*/
+      
       new GuiBitmapButtonCtrl(visibilityToggleBtn) {
          canSaveDynamicFields = "0";
          Enabled = "1";
@@ -352,7 +480,7 @@ $guiContent = new GuiContainer(EditorGui,EditorGuiGroup) {
          hovertime = "1000";
          bitmapAsset = "ToolsModule:visibility_toggle_n_image";
          groupNum = "-1";
-         buttonType = "ToggleButton";
+         buttonType = "PushButton";
          useMouseEvents = "0";
          
          new GuiBitmapCtrl(){
@@ -372,6 +500,7 @@ $guiContent = new GuiContainer(EditorGui,EditorGuiGroup) {
          Extent = "2 26";
          MinExtent = "1 1";
          bitmapAsset = "ToolsModule:separator_h_image";
+         VertSizing = "bottom";
       };
             
       new GuiPopUpMenuCtrl(EWorldEditorAlignPopup) {
@@ -418,14 +547,25 @@ $guiContent = new GuiContainer(EditorGui,EditorGuiGroup) {
       hovertime = "1000";
       Docking = "Bottom";
       
-      new GuiTextCtrl(EWorldEditorStatusBarInfo) {
+      new GuiBitmapCtrl() {
+         Enabled = "1";
+         Profile = "ToolsGuiDefaultProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         Position = "14 7";
+         Extent = "20 20";
+         MinExtent = "1 1";
+         bitmapAsset = "ToolsModule:mission_file_image";
+      };
+      
+      new GuiMLTextCtrl(EWorldEditorStatusBarInfo) {
          canSaveDynamicFields = "0";
          Enabled = "1";
          isContainer = "0";
-         Profile = "ToolsGuiTextProfile";
+         Profile = "ToolsGuiMLTextProfile";
          HorizSizing = "width";
          VertSizing = "bottom";
-         Position = "10 8";
+         Position = "40 10";
          Extent = "450 18";
          MinExtent = "8 8";
          canSave = "1";
@@ -437,6 +577,8 @@ $guiContent = new GuiContainer(EditorGui,EditorGuiGroup) {
          AnchorRight = "0";
          text = "Current Tool";
          maxLength = "255";
+         allowColorChars = "1";
+         
       };
       
       new GuiBitmapCtrl() {

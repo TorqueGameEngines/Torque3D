@@ -26,7 +26,7 @@
 $Tools::resourcePath = "tools/";
 
 // These must be loaded first, in this order, before anything else is loaded
-$Tools::loadFirst = "editorClasses base worldEditor assetBrowser";
+$Tools::loadFirst = "editorClasses base worldEditor assetBrowser windowConsole";
 
 //---------------------------------------------------------------------------------------------
 // Object that holds the simObject id that the materialEditor uses to interpret its material list

@@ -22,10 +22,10 @@ $guiContent = new GuiControl() {
       Profile = "ToolsGuiWindowProfile";
       HorizSizing = "windowRelative";
       VertSizing = "windowRelative";
-      Extent = "210 251 ";
-      MinExtent = "210 150";
-      Position = getWord($pref::Video::mode, 0) - 209 
-         SPC getWord(EditorGuiToolbar.extent, 1)-1;
+      Position = getWord($pref::Video::mode, 0) - 360
+         SPC getWord(EditorGuiToolbar.extent, 1) + 6;
+      Extent = "360 300";
+      MinExtent = "300 150";
       canSave = "1";
       Visible = "1";
       hovertime = "1000";
@@ -44,7 +44,7 @@ $guiContent = new GuiControl() {
       closeCommand = "MaterialEditorPreviewWindow.setVisible(false);";
       minSize = "50 50";
       EdgeSnap = "1";
-      text = "Material Preview";
+      text = "::  Material Editor - Preview";
       
       /*new GuiContainer(MaterialEditorPreviewPane) {
          canSaveDynamicFields = "0";
@@ -76,7 +76,7 @@ $guiContent = new GuiControl() {
             HorizSizing = "width";
             VertSizing = "height";
             position = "4 45";
-            Extent = "202 202";
+            Extent = "300 300";
             MinExtent = "8 2";
             canSave = "1";
             Visible = "1";
@@ -93,7 +93,7 @@ $guiContent = new GuiControl() {
                HorizSizing = "width";
                VertSizing = "height";
                position = "-1 -1";
-               Extent = "204 204";
+               Extent = "302 302";
                MinExtent = "8 2";
                canSave = "1";
                Visible = "1";
@@ -106,7 +106,7 @@ $guiContent = new GuiControl() {
                HorizSizing = "width";
                VertSizing = "height";
                Position = "-1 -1";
-               Extent = "204 204";
+               Extent = "302 302";
             };
             new GuiMaterialPreview(matEd_previewObjectView) {
                canSaveDynamicFields = "0";
@@ -116,7 +116,7 @@ $guiContent = new GuiControl() {
                HorizSizing = "width";
                VertSizing = "height";
                position = "1 1";
-               Extent = "199 199";
+               Extent = "299 299";
                MinExtent = "8 2";
                canSave = "1";
                Visible = "1";
@@ -168,17 +168,19 @@ $guiContent = new GuiControl() {
          Profile = "GuiInspectorSwatchButtonProfile";
          HorizSizing = "left";
          VertSizing = "top";
-         position = "189 229";
-         Extent = "14 14";
+         position = "330 270";
+         Extent = "20 20";
          MinExtent = "8 2";
          canSave = "1";
          Visible = "1";
          Command = "getColorF($thisControl.color, \"MaterialEditorGui.updatePreviewBackground\");"; 
-         color = "0 0 0 .8";
+         color = "0 0 0 .7";
          hovertime = "1000";
          groupNum = "-1";
          buttonType = "PushButton";
          useMouseEvents = "0";
+         ToolTip ="Change Background Color (preview)";
+         tooltipprofile = "ToolsGuiToolTipProfile";
       };
       
       // Ambient light color picker
@@ -199,6 +201,7 @@ $guiContent = new GuiControl() {
          hovertime = "1000";
          groupNum = "-1";
          ToolTip ="Change Ambient Light Color";
+         tooltipprofile = "ToolsGuiToolTipProfile";
          buttonType = "PushButton";
          useMouseEvents = "0";
       };
@@ -220,19 +223,115 @@ $guiContent = new GuiControl() {
          hovertime = "1000";
          groupNum = "-1";
          ToolTip ="Change Normal Light Color";
+         tooltipprofile = "ToolsGuiToolTipProfile";
          buttonType = "PushButton";
          useMouseEvents = "0";
       };
       
       new GuiCheckboxCtrl(){
-         position = "108 25";
+         position = "254 25";
          Extent = "98 18";
          HorizSizing = "left";
          profile = "ToolsGuiCheckBoxProfile";
          Variable = "MaterialEditorGui.livePreview";
          Command = "MaterialEditorGui.updateLivePreview($ThisControl.getValue());";
-         text ="Preview in World";
+         text = "Preview in World";
       };
+      // window / panel buttons
+      new GuiBitmapButtonCtrl(MaterialEditorGui_UnDockBtn) {
+         canSaveDynamicFields = "0";
+         internalName = "";
+         Enabled = "1";
+         isContainer = "0";
+         Profile = "ToolsGuiButtonProfile";
+         HorizSizing = "left";
+         VertSizing = "bottom";
+         Position = "330 1";
+         Extent = "18 18";
+         MinExtent = "8 8";
+         canSave = "1";
+         Visible = "0";
+         Command = "MaterialEditorGui.releaseSidePanel();";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Detach Sidepanel";
+         hovertime = "1000";
+         bitmapAsset = "ToolsModule:panel_undock_n_image";
+         text = "";
+         groupNum = "-1";
+         buttonType = "PushButton";
+         useMouseEvents = "0";
+      };
+      
+      new GuiBitmapButtonCtrl(MaterialEditorGui_DockBtn) {
+         canSaveDynamicFields = "0";
+         internalName = "";
+         Enabled = "1";
+         isContainer = "0";
+         Profile = "ToolsGuiButtonProfile";
+         HorizSizing = "left";
+         VertSizing = "bottom";
+         Position = "330 1";
+         Extent = "18 18";
+         MinExtent = "8 8";
+         canSave = "1";
+         Visible = "0";
+         Command = "MaterialEditorGui.dockSidePanel();";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Dock Sidepanel";
+         hovertime = "1000";
+         bitmapAsset = "ToolsModule:panel_dock_n_image";
+         text = "";
+         groupNum = "-1";
+         buttonType = "PushButton";
+         useMouseEvents = "0";
+      };
+      new GuiBitmapButtonCtrl(MaterialEditorGui_HideBtn) {
+         canSaveDynamicFields = "0";
+         internalName = "";
+         Enabled = "1";
+         isContainer = "0";
+         Profile = "ToolsGuiButtonProfile";
+         HorizSizing = "left";
+         VertSizing = "bottom";
+         Position = "312 1";
+         Extent = "18 18";
+         MinExtent = "8 8";
+         canSave = "1";
+         Visible = "1";
+         Command = "MaterialEditorGui.hideSidePanel();";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Hide Sidepanel";
+         hovertime = "1000";
+         bitmapAsset = "ToolsModule:panel_hide_n_image";
+         text = "";
+         groupNum = "-1";
+         buttonType = "PushButton";
+         useMouseEvents = "0";
+      };
+      new GuiBitmapButtonCtrl(MaterialEditorGui_ShowBtn) {
+         canSaveDynamicFields = "0";
+         internalName = "";
+         Enabled = "1";
+         isContainer = "0";
+         Profile = "ToolsGuiButtonProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         Position = "4 1";
+         Extent = "18 18";
+         MinExtent = "8 8";
+         canSave = "1";
+         Visible = "1";
+         Command = "MaterialEditorGui.showSidePanel();";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         ToolTip = "Show Sidepanel";
+         hovertime = "1000";
+         bitmapAsset = "ToolsModule:panel_show_n_image";
+         text = "";
+         groupNum = "-1";
+         buttonType = "PushButton";
+         useMouseEvents = "0";
+      };       
+      
    };
 
    new GuiWindowCtrl(matEd_addCubemapWindow) {

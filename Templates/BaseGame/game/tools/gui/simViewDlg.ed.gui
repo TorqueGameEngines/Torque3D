@@ -155,6 +155,7 @@ $guiContent = new GuiControl(simViewDlg, EditorGuiGroup) {
             text = "Sim ID:";
             maxLength = "1024";
          };
+         new GuiTextCtrl() {
             canSaveDynamicFields = "0";
             Profile = "EditorTextHLRight";
             HorizSizing = "right";
@@ -167,6 +168,8 @@ $guiContent = new GuiControl(simViewDlg, EditorGuiGroup) {
             hovertime = "1000";
             text = "Internal Name:";
             maxLength = "1024";
+         };
+         new GuiTextEditCtrl(InspectObjectInternalName) {
             canSaveDynamicFields = "0";
             Profile = "ToolsGuiTextEditProfile";
             HorizSizing = "right";
@@ -184,6 +187,8 @@ $guiContent = new GuiControl(simViewDlg, EditorGuiGroup) {
             password = "0";
             passwordMask = "*";
             canSaveDynamicFields = "0";
+         };
+         new GuiTextCtrl() {
             Profile = "EditorTextHLBoldRight";
             HorizSizing = "right";
             VertSizing = "bottom";
@@ -195,6 +200,8 @@ $guiContent = new GuiControl(simViewDlg, EditorGuiGroup) {
             hovertime = "1000";
             text = "Selected Object:";
             maxLength = "1024";
+         };
+         new GuiIconButtonCtrl() {
             canSaveDynamicFields = "0";
             Profile = "ToolsGuiButtonProfile";
             HorizSizing = "right";
@@ -213,6 +220,8 @@ $guiContent = new GuiControl(simViewDlg, EditorGuiGroup) {
             textLocation = "Right";
             textMargin = "4";
             buttonMargin = "4 4";
+         };
+         new GuiTextCtrl(InspectObjectSimID) {
             canSaveDynamicFields = "0";
             Profile = "EditorTextHLBoldCenter";
             HorizSizing = "right";
@@ -225,6 +234,8 @@ $guiContent = new GuiControl(simViewDlg, EditorGuiGroup) {
             hovertime = "1000";
             text = "0";
             maxLength = "1024";
+         };
+         new GuiIconButtonCtrl() {
             canSaveDynamicFields = "0";
             Profile = "ToolsGuiButtonProfile";
             HorizSizing = "right";

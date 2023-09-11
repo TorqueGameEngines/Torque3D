@@ -685,7 +685,7 @@ function populateAudioSettingsList()
       }
    }
    
-   OptionsMenuSettingsList.addOptionRow("Audio Provider", "$pref::SFX::AudioProvider", %audioProviderList, false, "audioProviderChanged", true, "");
+   OptionsMenuSettingsList.addOptionRow("Audio Provider", "$pref::SFX::provider", %audioProviderList, false, "audioProviderChanged", true, "");
    OptionsMenuSettingsList.addOptionRow("Audio Device", "$pref::SFX::device", %audioDeviceList, false, "", true);
    
    OptionsMenuSettingsList.addSliderRow("Master Volume", "$pref::SFX::masterVolume", 0.1, "0 1", "");

@@ -152,6 +152,12 @@ S32 FuncVars::assign(StringTableEntry var, TypeReq currentType, S32 lineNumber, 
    std::unordered_map<StringTableEntry, Var>::iterator found = vars.find(var);
    if (found != vars.end())
    {
+      // if we are calling assign more than once AND it changes type, we don't know what the variable type is as this is a
+      // dynamically typed language. So we will assign to None and bail. None will be taken care of by the code to always
+      // load what the default type is (What Globals and arrays use, type None).
+      if (currentType != found->second.currentType && found->second.currentType != TypeReqNone)
+         found->second.currentType = TypeReqNone;
+
       if (found->second.isConstant)
       {
          const char* str = avar("Script Warning: Reassigning variable %s when it is a constant. File: %s Line : %d", var, CodeBlock::smCurrentParser->getCurrentFile(), lineNumber);

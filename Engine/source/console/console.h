@@ -128,6 +128,7 @@ enum ConsoleValueType
 
 struct ConsoleValueConsoleType
 {
+   S32 consoleType;
    void* dataPtr;
    EnumTable* enumTable;
 };
@@ -340,8 +341,8 @@ public:
    TORQUE_FORCEINLINE void setConsoleData(S32 consoleType, void* dataPtr, const EnumTable* enumTable)
    {
       cleanupData();
-      type = ConsoleValueType::cvSTEntry;
-      ct = new ConsoleValueConsoleType{ dataPtr, const_cast<EnumTable*>(enumTable) };
+      type = ConsoleValueType::cvConsoleValueType;
+      ct = new ConsoleValueConsoleType{ consoleType, dataPtr, const_cast<EnumTable*>(enumTable) };
    }
 
    TORQUE_FORCEINLINE S32 getType() const
@@ -362,6 +363,18 @@ public:
    TORQUE_FORCEINLINE bool isConsoleType() const
    {
       return type >= ConsoleValueType::cvConsoleValueType;
+   }
+
+   TORQUE_FORCEINLINE ConsoleValueConsoleType* getConsoleType() const
+   {
+      if(type >= ConsoleValueType::cvConsoleValueType)
+      {
+         return ct;
+      }
+      else
+      {
+         return NULL;
+      }
    }
 
    TORQUE_FORCEINLINE void setFastFloat(F64 flt)
@@ -626,6 +639,7 @@ namespace Con
    StringTableEntry getPathExpandoValue(U32 expandoIndex);
 
    bool isCurrentScriptToolScript();
+   bool isScriptFile(const char* path);
 
    StringTableEntry getModNameFromPath(const char *path);
 
@@ -917,30 +931,6 @@ namespace Con
    /// NOTE: this function restores the console stack on return.
    ConsoleValue execute(SimObject *object, S32 argc, const char* argv[], bool thisCallOnly = false);
    ConsoleValue execute(SimObject *object, S32 argc, ConsoleValue argv[], bool thisCallOnly = false);
-
-   /// Executes a script file and compiles it for use in script.
-   ///
-   /// @param  string   File name that is the script to be executed and compiled.
-   /// @param fileName Path to the file to execute
-   /// @param noCalls Deprecated
-   /// @param journalScript Deprecated
-   ///
-   /// @return True if the script was successfully executed, false if not.
-   bool executeFile(const char* fileName, bool noCalls, bool journalScript);
-
-   /// Evaluate an arbitrary chunk of code.
-   ///
-   /// @param  string   Buffer containing code to execute.
-   /// @param  echo     Should we echo the string to the console?
-   /// @param  fileName Indicate what file this code is coming from; used in error reporting and such.
-   /// NOTE: This function restores the console stack on return.
-   ConsoleValue evaluate(const char* string, bool echo = false, const char *fileName = NULL);
-
-   /// Evaluate an arbitrary line of script.
-   ///
-   /// This wraps dVsprintf(), so you can substitute parameters into the code being executed.
-   /// NOTE: This function restores the console stack on return.
-   ConsoleValue evaluatef(const char* string, ...);
 
    /// @}
 

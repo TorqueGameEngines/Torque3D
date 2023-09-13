@@ -27,6 +27,7 @@
 #include "console/consoleTypes.h"
 #include "console/engineAPI.h"
 #include "collision/boxConvex.h"
+#include "console/script.h"
 
 #include "core/stream/bitStream.h"
 #include "math/mathIO.h"

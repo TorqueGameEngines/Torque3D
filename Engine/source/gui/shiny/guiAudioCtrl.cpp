@@ -21,6 +21,7 @@
 //-----------------------------------------------------------------------------
 #include "gui/shiny/guiAudioCtrl.h"
 #include "console/engineAPI.h"
+#include "console/script.h"
 #include "sfx/sfxSystem.h"
 #include "sfx/sfxTrack.h"
 #include "sfx/sfxSource.h"

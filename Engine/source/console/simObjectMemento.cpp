@@ -23,6 +23,7 @@
 #include "platform/platform.h"
 #include "console/simObjectMemento.h"
 
+#include "script.h"
 #include "console/simObject.h"
 #include "console/simDatablock.h"
 #include "core/stream/memStream.h"
@@ -95,7 +96,7 @@ SimObject *SimObjectMemento::restore() const
 
       // Read the object.
 
-      const UTF8* result = Con::evaluate( mState );
+      const UTF8* result = Con::evaluate( mState ).value;
 
       // Restore the redefine behavior.
 

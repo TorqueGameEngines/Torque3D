@@ -21,7 +21,7 @@
 //-----------------------------------------------------------------------------
 
 #include "console/console.h"
-#include "console/compiler.h"
+#include "compiler.h"
 #include "console/consoleInternal.h"
 
 using namespace Compiler;

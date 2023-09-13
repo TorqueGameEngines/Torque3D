@@ -23,6 +23,8 @@
 #include "console/engineAPI.h"
 #include "platform/platform.h"
 #include "gui/editor/inspector/field.h"
+
+#include "console/script.h"
 #include "gui/buttons/guiIconButtonCtrl.h"
 #include "gui/editor/guiInspector.h"
 #include "core/util/safeDelete.h"
@@ -321,7 +323,7 @@ void GuiInspectorField::setData( const char* data, bool callbacks )
          {
             char buffer[ 2048 ];
             expandEscape( buffer, newValue );
-            evaluationResult = Con::evaluatef("$f = \"%s\"; return ( %s );", oldValue.c_str(), buffer);
+            evaluationResult = Con::evaluatef("$f = \"%s\"; return ( %s );", oldValue.c_str(), buffer).value;
             newValue = evaluationResult.getString();
             Con::evaluatef("$f=0;");
          }
@@ -359,7 +361,7 @@ void GuiInspectorField::setData( const char* data, bool callbacks )
                expandEscape( buffer, newComponentExpr );
 
                evaluationResult = Con::evaluatef("$f = \"%s\"; $v = \"%s\"; return ( %s );",
-                  oldComponentVal, oldValue.c_str(), buffer);
+                  oldComponentVal, oldValue.c_str(), buffer).value;
                Con::evaluatef("$f=0;$v=0;");
 
                if( !isFirst )

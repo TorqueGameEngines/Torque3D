@@ -25,6 +25,7 @@
 
 #include "console/console.h"
 #include "console/engineAPI.h"
+#include "console/script.h"
 #include "core/volume.h"
 
 // NOTE: The script class docs are in 

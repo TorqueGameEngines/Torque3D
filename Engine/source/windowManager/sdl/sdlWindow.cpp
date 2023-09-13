@@ -650,7 +650,7 @@ void PlatformWindowSDL::_processSDLEvent(SDL_Event &evt)
                _updateMonitorFromMove(evt);
                // If display device has changed, make sure window params are compatible with the new device.
                if (oldDisplay != Con::getIntVariable("pref::Video::deviceId", 0))
-                  Con::evaluate("configureCanvas();");
+                  Con::executef("configureCanvas");
                break;
             }
             case SDL_WINDOWEVENT_RESIZED:

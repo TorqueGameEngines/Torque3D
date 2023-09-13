@@ -25,8 +25,7 @@
 #include "gui/editor/guiInspector.h"
 #include "gui/buttons/guiIconButtonCtrl.h"
 #include "console/consoleInternal.h"
-
-extern ExprEvalState gEvalState;
+#include "console/script.h"
 
 //-----------------------------------------------------------------------------
 // GuiInspectorVariableGroup
@@ -65,7 +64,7 @@ bool GuiInspectorVariableGroup::inspectGroup()
    {
       Vector<String> names;
 
-      gEvalState.globalVars.exportVariables(mSearchString, &names, NULL);
+      Con::gGlobalVars.exportVariables(mSearchString, &names, NULL);
 
       for (U32 i = 0; i < names.size(); i++)
       {

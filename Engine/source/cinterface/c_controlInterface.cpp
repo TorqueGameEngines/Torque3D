@@ -23,6 +23,7 @@
 #include "c_controlInterface.h"
 
 #include "console/consoleInternal.h"
+#include "console/engineAPI.h"
 #include "console/simSet.h"
 #include "app/mainLoop.h"
 #include "windowManager/platformWindow.h"
@@ -50,7 +51,7 @@ extern "C" {
    // reset the engine, unloading any current level and returning to the main menu
    void torque_reset()
    {
-      Con::evaluate("disconnect();");
+      Con::executef("disconnect");
    }
 
    // initialize Torque 3D including argument handling
@@ -119,7 +120,7 @@ extern "C" {
    // signal an engine shutdown (as with the quit(); console command)
    void torque_enginesignalshutdown()
    {
-      Con::evaluate("quit();");
+      Con::executef("quit");
    }
 
    // shutdown the engine

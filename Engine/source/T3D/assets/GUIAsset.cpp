@@ -41,6 +41,7 @@
 #endif
 
 // Debug Profiling.
+#include "console/script.h"
 #include "platform/profiler.h"
 
 //-----------------------------------------------------------------------------
@@ -118,12 +119,12 @@ void GUIAsset::initializeAsset()
 {
    mScriptPath = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptPath;
 
-   if (Torque::FS::IsScriptFile(mScriptPath))
+   if (Con::isScriptFile(mScriptPath))
       Con::executeFile(mScriptPath, false, false);
 
    mGUIPath = getOwned() ? expandAssetFilePath(mGUIFile) : mGUIPath;
 
-   if (Torque::FS::IsScriptFile(mGUIPath))
+   if (Con::isScriptFile(mGUIPath))
       Con::executeFile(mGUIPath, false, false);
 }
 
@@ -131,12 +132,12 @@ void GUIAsset::onAssetRefresh()
 {
    mScriptPath = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptPath;
 
-   if (Torque::FS::IsScriptFile(mScriptPath))
+   if (Con::isScriptFile(mScriptPath))
       Con::executeFile(mScriptPath, false, false);
 
    mGUIPath = getOwned() ? expandAssetFilePath(mGUIFile) : mGUIPath;
 
-   if (Torque::FS::IsScriptFile(mGUIPath))
+   if (Con::isScriptFile(mGUIPath))
       Con::executeFile(mGUIPath, false, false);
 }
 

@@ -40,6 +40,7 @@
 #endif
 
 // Debug Profiling.
+#include "console/script.h"
 #include "platform/profiler.h"
 
 //-----------------------------------------------------------------------------
@@ -140,7 +141,7 @@ void ScriptAsset::initializeAsset()
 
    mScriptPath = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptPath;
 
-   if (Torque::FS::IsScriptFile(mScriptPath))
+   if (Con::isScriptFile(mScriptPath))
    {
       //We're initialized properly, so we'll go ahead and kick along any dependencies we may have as well
       AssetManager::typeAssetDependsOnHash::Iterator assetDependenciesItr = mpOwningAssetManager->getDependedOnAssets()->find(mpAssetDefinition->mAssetId);
@@ -170,7 +171,7 @@ void ScriptAsset::onAssetRefresh()
 {
    mScriptPath = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptPath;
 
-   if (Torque::FS::IsScriptFile(mScriptPath))
+   if (Con::isScriptFile(mScriptPath))
    {
       //Refresh any dependencies we may have
       for (U32 i = 0; i < mScriptAssetDependencies.size(); i++)
@@ -215,7 +216,7 @@ bool ScriptAsset::execScript()
    if (handle)
       return true;
 
-   if (Torque::FS::IsScriptFile(mScriptPath))
+   if (Con::isScriptFile(mScriptPath))
    {
       return Con::executeFile(mScriptPath, false, false);
    }

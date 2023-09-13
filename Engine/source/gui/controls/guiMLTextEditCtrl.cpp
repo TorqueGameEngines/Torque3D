@@ -28,6 +28,7 @@
 #include "core/stringBuffer.h"
 #include "gfx/gfxDrawUtil.h"
 #include "console/engineAPI.h"
+#include "console/script.h"
 
 IMPLEMENT_CONOBJECT(GuiMLTextEditCtrl);
 

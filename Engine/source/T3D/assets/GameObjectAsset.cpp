@@ -41,6 +41,7 @@
 #endif
 
 // Debug Profiling.
+#include "console/script.h"
 #include "platform/profiler.h"
 
 //-----------------------------------------------------------------------------
@@ -134,7 +135,7 @@ void GameObjectAsset::initializeAsset()
    //Ensure we have an expanded filepath
    mScriptPath = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptPath;
 
-   if (Torque::FS::IsScriptFile(mScriptPath))
+   if (Con::isScriptFile(mScriptPath))
       Con::executeFile(mScriptPath, false, false);
 
    mTAMLPath = getOwned() ? expandAssetFilePath(mTAMLFile) : mTAMLPath;
@@ -145,7 +146,7 @@ void GameObjectAsset::onAssetRefresh()
    //Ensure we have an expanded filepath
    mScriptPath = getOwned() ? expandAssetFilePath(mScriptFile) : mScriptPath;
 
-   if (Torque::FS::IsScriptFile(mScriptPath))
+   if (Con::isScriptFile(mScriptPath))
       Con::executeFile(mScriptPath, false, false);
 
    mTAMLPath = getOwned() ? expandAssetFilePath(mTAMLFile) : mTAMLPath;

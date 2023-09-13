@@ -21,10 +21,11 @@
 //-----------------------------------------------------------------------------
 
 #include "console/console.h"
-#include "console/compiler.h"
-#include "console/codeBlock.h"
+#include "compiler.h"
+#include "codeBlock.h"
+#include "ast.h"
+
 #include "console/telnetDebugger.h"
-#include "console/ast.h"
 #include "core/strings/unicode.h"
 #include "core/strings/stringFunctions.h"
 #include "core/stringTable.h"
@@ -34,8 +35,7 @@ using namespace Compiler;
 
 bool           CodeBlock::smInFunction = false;
 CodeBlock *    CodeBlock::smCodeBlockList = NULL;
-CodeBlock *    CodeBlock::smCurrentCodeBlock = NULL;
-ConsoleParser *CodeBlock::smCurrentParser = NULL;
+TorqueScriptParser *CodeBlock::smCurrentParser = NULL;
 
 extern FuncVars gEvalFuncVars;
 extern FuncVars gGlobalScopeFuncVars;
@@ -52,8 +52,6 @@ CodeBlock::CodeBlock()
    globalFloats = NULL;
    functionFloats = NULL;
    lineBreakPairs = NULL;
-   breakList = NULL;
-   breakListSize = 0;
 
    refCount = 0;
    code = NULL;
@@ -68,7 +66,7 @@ CodeBlock::CodeBlock()
 CodeBlock::~CodeBlock()
 {
    // Make sure we aren't lingering in the current code block...
-   AssertFatal(smCurrentCodeBlock != this, "CodeBlock::~CodeBlock - Caught lingering in smCurrentCodeBlock!");
+   AssertFatal(Con::getCurrentScriptModule() != this, "CodeBlock::~CodeBlock - Caught lingering in smCurrentCodeBlock!");
 
    if (name)
       removeFromCodeList();
@@ -81,34 +79,9 @@ CodeBlock::~CodeBlock()
    delete[] globalFloats;
    delete[] functionFloats;
    delete[] code;
-   delete[] breakList;
 }
 
 //-------------------------------------------------------------------------
-
-StringTableEntry CodeBlock::getCurrentCodeBlockName()
-{
-   if (CodeBlock::getCurrentBlock())
-      return CodeBlock::getCurrentBlock()->name;
-   else
-      return NULL;
-}
-
-StringTableEntry CodeBlock::getCurrentCodeBlockFullPath()
-{
-   if (CodeBlock::getCurrentBlock())
-      return CodeBlock::getCurrentBlock()->fullPath;
-   else
-      return NULL;
-}
-
-StringTableEntry CodeBlock::getCurrentCodeBlockModName()
-{
-   if (CodeBlock::getCurrentBlock())
-      return CodeBlock::getCurrentBlock()->modPath;
-   else
-      return NULL;
-}
 
 CodeBlock *CodeBlock::find(StringTableEntry name)
 {
@@ -309,8 +282,7 @@ void CodeBlock::calcBreakList()
    if (seqCount)
       size++;
 
-   breakList = new U32[size+3]; //lineBreakPairs plus pad
-   breakListSize = size;
+   breakList.setSize(size+3); //lineBreakPairs plus pad
    line = -1;
    seqCount = 0;
    size = 0;
@@ -502,10 +474,10 @@ bool CodeBlock::compile(const char *codeFileName, StringTableEntry fileName, con
 
    STEtoCode = compileSTEtoCode;
 
-   gStatementList = NULL;
+   Script::gStatementList = NULL;
 
    // Set up the parser.
-   smCurrentParser = getParserForFile(fileName);
+   smCurrentParser = new TorqueScriptParser();
    AssertISV(smCurrentParser, avar("CodeBlock::compile - no parser available for '%s'!", fileName));
 
    // Now do some parsing.
@@ -536,9 +508,9 @@ bool CodeBlock::compile(const char *codeFileName, StringTableEntry fileName, con
 
    CodeStream codeStream;
    U32 lastIp;
-   if (gStatementList)
+   if (Script::gStatementList)
    {
-      lastIp = compileBlock(gStatementList, codeStream, 0) + 1;
+      lastIp = compileBlock(Script::gStatementList, codeStream, 0) + 1;
    }
    else
    {
@@ -594,7 +566,7 @@ bool CodeBlock::compile(const char *codeFileName, StringTableEntry fileName, con
    return true;
 }
 
-ConsoleValue CodeBlock::compileExec(StringTableEntry fileName, const char *inString, bool noCalls, S32 setFrame)
+Con::EvalResult CodeBlock::compileExec(StringTableEntry fileName, const char *inString, bool noCalls, S32 setFrame)
 {
    AssertFatal(Con::isMainThread(), "Compiling code on a secondary thread");
 
@@ -634,14 +606,14 @@ ConsoleValue CodeBlock::compileExec(StringTableEntry fileName, const char *inStr
    if (name)
       addToCodeList();
 
-   gStatementList = NULL;
-   
+   Script::gStatementList = NULL;
+
    // we are an eval compile if we don't have a file name associated (no exec)
    gIsEvalCompile = fileName == NULL;
    gFuncVars = gIsEvalCompile ? &gEvalFuncVars : &gGlobalScopeFuncVars;
 
    // Set up the parser.
-   smCurrentParser = getParserForFile(fileName);
+   smCurrentParser = new TorqueScriptParser();
    AssertISV(smCurrentParser, avar("CodeBlock::compile - no parser available for '%s'!", fileName));
 
    // Now do some parsing.
@@ -649,10 +621,10 @@ ConsoleValue CodeBlock::compileExec(StringTableEntry fileName, const char *inStr
    smCurrentParser->restart(NULL);
    smCurrentParser->parse();
 
-   if (!gStatementList)
+   if (!Script::gStatementList)
    {
       delete this;
-      return std::move(ConsoleValue());
+      return Con::EvalResult(Con::getVariable("$ScriptError"));
    }
 
    resetTables();
@@ -660,7 +632,7 @@ ConsoleValue CodeBlock::compileExec(StringTableEntry fileName, const char *inStr
    smInFunction = false;
 
    CodeStream codeStream;
-   U32 lastIp = compileBlock(gStatementList, codeStream, 0);
+   U32 lastIp = compileBlock(Script::gStatementList, codeStream, 0);
 
    lineBreakPairCount = codeStream.getNumLineBreaks();
 
@@ -677,7 +649,7 @@ ConsoleValue CodeBlock::compileExec(StringTableEntry fileName, const char *inStr
 
    codeStream.emit(OP_RETURN_VOID);
    codeStream.emitCodeStream(&codeSize, &code, &lineBreakPairs);
-   
+
    S32 localRegisterCount = gIsEvalCompile ? gEvalFuncVars.count() : gGlobalScopeFuncVars.count();
 
    consoleAllocReset();
@@ -697,20 +669,6 @@ ConsoleValue CodeBlock::compileExec(StringTableEntry fileName, const char *inStr
 
    // repurpose argc as local register counter for global state
    return std::move(exec(0, fileName, NULL, localRegisterCount, 0, noCalls, NULL, setFrame));
-}
-
-//-------------------------------------------------------------------------
-
-void CodeBlock::incRefCount()
-{
-   refCount++;
-}
-
-void CodeBlock::decRefCount()
-{
-   refCount--;
-   if (!refCount)
-      delete this;
 }
 
 //-------------------------------------------------------------------------

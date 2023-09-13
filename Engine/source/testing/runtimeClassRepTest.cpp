@@ -25,6 +25,7 @@
 #include "console/simBase.h"
 #include "console/consoleTypes.h"
 #include "console/runtimeClassRep.h"
+#include "console/script.h"
 
 class RuntimeRegisteredSimObject : public SimObject
 {

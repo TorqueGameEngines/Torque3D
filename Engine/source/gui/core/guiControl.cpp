@@ -32,7 +32,7 @@
 #include "console/console.h"
 #include "console/consoleInternal.h"
 #include "console/engineAPI.h"
-#include "console/codeBlock.h"
+#include "console/script.h"
 #include "gfx/bitmap/gBitmap.h"
 #include "sim/actionMap.h"
 #include "gui/core/guiCanvas.h"
@@ -2489,7 +2489,7 @@ void GuiControl::getCursor(GuiCursor *&cursor, bool &showCursor, const GuiEvent 
 const char* GuiControl::evaluate( const char* str )
 {
    smThisControl = this;
-   const char* result = Con::evaluate(str, false);
+   const char* result = Con::evaluate(str, false).value;
    smThisControl = NULL;
 
    return result;

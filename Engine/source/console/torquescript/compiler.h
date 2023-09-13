@@ -33,12 +33,14 @@
 #include <string>
 #include <unordered_map>
 
+class CodeStream;
+struct StmtNode;
 class Stream;
 class DataChunker;
 
 #include "platform/platform.h"
-#include "console/ast.h"
-#include "console/codeBlock.h"
+#include "ast.h"
+#include "codeBlock.h"
 
 #ifndef _TVECTOR_H_
 #include "core/util/tVector.h"
@@ -297,13 +299,13 @@ public:
    S32 lookup(StringTableEntry var, S32 lineNumber);
 
    TypeReq lookupType(StringTableEntry var, S32 lineNumber);
-   
+
    inline S32 count() { return counter; }
 
    std::unordered_map<S32, StringTableEntry> variableNameMap;
 
    void clear();
-   
+
 private:
    std::unordered_map<StringTableEntry, Var> vars;
    S32 counter = 0;

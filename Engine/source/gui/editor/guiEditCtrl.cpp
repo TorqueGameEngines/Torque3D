@@ -31,6 +31,7 @@
 #include "gui/containers/guiScrollCtrl.h"
 #include "core/strings/stringUnit.h"
 #include "console/engineAPI.h"
+#include "console/script.h"
 
 
 IMPLEMENT_CONOBJECT( GuiEditCtrl );

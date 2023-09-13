@@ -22,16 +22,8 @@
 
 #include "platform/platform.h"
 #include "console/console.h"
-#include "console/telnetDebugger.h"
 
-#include "console/ast.h"
-#include "core/tAlgorithm.h"
-
-#include "core/strings/findMatch.h"
-#include "console/consoleInternal.h"
-#include "core/stream/fileStream.h"
-#include "console/compiler.h"
-
+#include "compiler.h"
 #include "console/simBase.h"
 
 extern FuncVars gEvalFuncVars;
@@ -184,15 +176,15 @@ S32 FuncVars::assign(StringTableEntry var, TypeReq currentType, S32 lineNumber, 
 S32 FuncVars::lookup(StringTableEntry var, S32 lineNumber)
 {
    std::unordered_map<StringTableEntry, Var>::iterator found = vars.find(var);
-   
+
    if (found == vars.end())
    {
       const char* str = avar("Script Warning: Variable %s referenced before used when compiling script. File: %s Line: %d", var, CodeBlock::smCurrentParser->getCurrentFile(), lineNumber);
       scriptErrorHandler(str);
-      
+
       return assign(var, TypeReqString, lineNumber, false);
    }
-   
+
    return found->second.reg;
 }
 
@@ -204,11 +196,11 @@ TypeReq FuncVars::lookupType(StringTableEntry var, S32 lineNumber)
    {
       const char* str = avar("Script Warning: Variable %s referenced before used when compiling script. File: %s Line: %d", var, CodeBlock::smCurrentParser->getCurrentFile(), lineNumber);
       scriptErrorHandler(str);
-      
+
       assign(var, TypeReqString, lineNumber, false);
       return vars.find(var)->second.currentType;
    }
-   
+
    return found->second.currentType;
 }
 
@@ -567,4 +559,3 @@ void CodeStream::reset()
       mCodeHead = mCode;
    }
 }
-

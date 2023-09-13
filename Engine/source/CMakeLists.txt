@@ -33,12 +33,12 @@ endif (APPLE)
 
 # When on Windows, we need to link against winsock and windows codecs
 if (WIN32)
-	set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_PLATFORM_WIN_SOURCES})	
+	set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_PLATFORM_WIN_SOURCES})
 endif (WIN32)
 
 # Linux requires X11 & freetype
 if (UNIX AND NOT APPLE)
-	set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_PLATFORM_X11_SOURCES})  
+	set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_PLATFORM_X11_SOURCES})
 	find_package(Freetype REQUIRED)
 	set(TORQUE_INCLUDE_DIRECTORIES ${TORQUE_INCLUDE_DIRECTORIES} ${FREETYPE_INCLUDE_DIRS})
 endif (UNIX AND NOT APPLE)
@@ -50,11 +50,12 @@ torqueAddSourceDirectories("app" "app/net")
 
 # Handle console
 torqueAddSourceDirectories("console")
+torqueAddSourceDirectories("console/torquescript")
 
 # Handle Platform
 torqueAddSourceDirectories("platform" "platform/threads" "platform/async"
                                   "platform/input" "platform/output")
-								  
+
 torqueAddSourceDirectories("platform/nativeDialogs")
 
 # Handle T3D
@@ -291,7 +292,7 @@ endforeach()
 # Prepare Windows RC file
 if (WIN32)
 	set(APPLICATION_ICON_PATH "${CMAKE_SOURCE_DIR}/Tools/CMake/torque.ico")
-	
+
 	configure_file("${CMAKE_SOURCE_DIR}/Tools/CMake/torque-win.rc.in" "${CMAKE_BINARY_DIR}/temp/torque.rc")
 	set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} "${CMAKE_BINARY_DIR}/temp/torque.rc")
 endif (WIN32)
@@ -300,7 +301,7 @@ endif (WIN32)
 if (APPLE)
 	set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_PLATFORM_MAC_SOURCES} "${CMAKE_SOURCE_DIR}/Tools/CMake/torque.icns")
 	set_source_files_properties("${CMAKE_SOURCE_DIR}/Tools/CMake/torque.icns" PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
-	
+
 	set(EXECUTABLE_NAME "${TORQUE_APP_NAME}")
 	configure_file("${CMAKE_SOURCE_DIR}/Tools/CMake/Info.plist.in" "${CMAKE_BINARY_DIR}/temp/Info.plist" COPYONLY)
 endif (APPLE)
@@ -348,25 +349,25 @@ if (APPLE)
 	set(CMAKE_XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/../Frameworks")
 elseif (WIN32)
 	add_executable(${TORQUE_APP_NAME} WIN32 ${TORQUE_SOURCE_FILES})
-    
+
     set(TORQUE_CXX_FLAGS_COMMON_DEFAULT "-DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS /MP /Ob2 /Oi /Ot /Oy /GT /Zi /W4 /nologo /GF /EHsc /GS- /Gy- /Qpar- /fp:precise /fp:except- /GR /Zc:wchar_t-" )
     if( TORQUE_CPU_X32 )
        set(TORQUE_CXX_FLAGS_COMMON_DEFAULT "${TORQUE_CXX_FLAGS_COMMON_DEFAULT} /arch:SSE2")
     endif()
     set(TORQUE_CXX_FLAGS_COMMON ${TORQUE_CXX_FLAGS_COMMON_DEFAULT} CACHE STRING "")
     mark_as_advanced(TORQUE_CXX_FLAGS_COMMON)
-	
+
     set(TORQUE_CXX_FLAGS_EXECUTABLES "/wd4018 /wd4100 /wd4121 /wd4127 /wd4130 /wd4244 /wd4245 /wd4389 /wd4511 /wd4512 /wd4800 /wd4995" CACHE STRING "")
     mark_as_advanced(TORQUE_CXX_FLAGS_EXECUTABLES)
-    
+
     set(TORQUE_CXX_FLAGS "${TORQUE_CXX_FLAGS_COMMON_DEFAULT} ${TORQUE_CXX_FLAGS_EXECUTABLES}" CACHE STRING "")
     mark_as_advanced(TORQUE_CXX_FLAGS)
-    
+
 	# NOTE: On Windows, /Zc:wchar_t- is necessary otherwise you get unicode errors
 	set_target_properties(${TORQUE_APP_NAME} PROPERTIES COMPILE_FLAGS "${TORQUE_CXX_FLAGS}")
 else()
 	add_executable(${TORQUE_APP_NAME} ${TORQUE_SOURCE_FILES})
-	
+
 	# NOTE: On Linux, we set the rpath to ./ so that shared objects next to the executable are used
 	set_target_properties(${TORQUE_APP_NAME} PROPERTIES LINK_FLAGS "-Wl,-rpath,./")
 endif()
@@ -423,9 +424,9 @@ if (UNIX)
 	  # For eg. OSX some links are not valid targets - for example frameworks provided by OS
 	  if (TARGET ${GAME_LINK_LIBRARY})
 		  get_target_property(LINK_LIBRARY_TYPE ${GAME_LINK_LIBRARY} TYPE)
-			
+
 		  # Only pay attention to shared libraries and make them output to the app resources
-		  if ("${LINK_LIBRARY_TYPE}" STREQUAL "SHARED_LIBRARY")	 
+		  if ("${LINK_LIBRARY_TYPE}" STREQUAL "SHARED_LIBRARY")
         if (APPLE)
           set_target_properties(${GAME_LINK_LIBRARY} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${TORQUE_APP_GAME_DIRECTORY}/${TORQUE_APP_NAME}.app/Contents/Frameworks")
         else()

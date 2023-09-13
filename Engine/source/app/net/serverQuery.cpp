@@ -107,6 +107,7 @@
 #include "sim/netInterface.h"
 
 // cafTODO: breaks T2D
+#include "console/script.h"
 #include "T3D/gameBase/gameConnection.h"
 
 // This is basically the server query protocol version now:
@@ -2020,7 +2021,7 @@ static void handleGameInfoRequest( const NetAddress* address, U32 key, U8 flags 
          out->writeString( Con::getVariable( "pref::Server::Info" ) );
       else
          writeCString( out, Con::getVariable( "pref::Server::Info" ) );
-      writeLongCString( out, Con::evaluate( "onServerInfoQuery();" ) );
+      writeLongCString( out, Con::executef( "onServerInfoQuery" ) );
 
       BitStream::sendPacketStream(address);
    }

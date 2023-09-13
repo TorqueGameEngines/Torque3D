@@ -25,13 +25,11 @@
 #include "platform/platform.h"
 #include "console/console.h"
 
-#include "console/ast.h"
 #include "core/tAlgorithm.h"
 
 #include "core/strings/findMatch.h"
 #include "console/consoleInternal.h"
 #include "core/stream/fileStream.h"
-#include "console/compiler.h"
 #include "console/engineAPI.h"
 
 //#define DEBUG_SPEW
@@ -183,13 +181,13 @@ void Dictionary::exportVariables(const char *varString, const char *fileName, bo
 
    for (s = sortList.begin(); s != sortList.end(); s++)
    {
-      switch ((*s)->type)
+      switch ((*s)->value.getType())
       {
-         case Entry::TypeInternalInt:
-            dSprintf(buffer, sizeof(buffer), "%s = %d;%s", (*s)->name, (*s)->ival, cat);
+         case ConsoleValueType::cvInteger:
+            dSprintf(buffer, sizeof(buffer), "%s = %d;%s", (*s)->name, (*s)->getIntValue(), cat);
             break;
-         case Entry::TypeInternalFloat:
-            dSprintf(buffer, sizeof(buffer), "%s = %g;%s", (*s)->name, (*s)->fval, cat);
+         case ConsoleValueType::cvFloat:
+            dSprintf(buffer, sizeof(buffer), "%s = %g;%s", (*s)->name, (*s)->getFloatValue(), cat);
             break;
          default:
             expandEscape(expandBuffer, (*s)->getStringValue());
@@ -243,7 +241,7 @@ void Dictionary::exportVariables(const char *varString, Vector<String> *names, V
 
       if (values)
       {
-         switch ((*s)->type)
+         switch ((*s)->value.getType())
          {
             case ConsoleValueType::cvInteger:
             case ConsoleValueType::cvFloat:
@@ -375,18 +373,16 @@ Dictionary::Dictionary()
 #pragma warning( disable : 4355 )
    ownHashTable(this), // Warning with VC++ but this is safe.
 #pragma warning( default : 4355 )
-   exprState(NULL),
    scopeName(NULL),
    scopeNamespace(NULL),
-   code(NULL),
+   module(NULL),
    ip(0)
 {
+   setState(NULL);
 }
 
-void Dictionary::setState(ExprEvalState *state, Dictionary* ref)
+void Dictionary::setState(Dictionary* ref)
 {
-   exprState = state;
-
    if (ref)
    {
       hashTable = ref->hashTable;
@@ -439,7 +435,7 @@ void Dictionary::reset()
 
    scopeName = NULL;
    scopeNamespace = NULL;
-   code = NULL;
+   module = NULL;
    ip = 0;
 }
 
@@ -465,19 +461,11 @@ const char *Dictionary::tabComplete(const char *prevText, S32 baseLen, bool fFor
 Dictionary::Entry::Entry(StringTableEntry in_name)
 {
    name = in_name;
-   type = TypeInternalString;
    notify = NULL;
    nextEntry = NULL;
    mUsage = NULL;
    mIsConstant = false;
    mNext = NULL;
-
-   ival = 0;
-   fval = 0;
-   sval = NULL;
-   bufferLen = 0;
-   dataPtr = NULL;
-   enumTable = NULL;
 }
 
 Dictionary::Entry::~Entry()
@@ -488,71 +476,9 @@ Dictionary::Entry::~Entry()
 void Dictionary::Entry::reset()
 {
    name = NULL;
-   if (type <= TypeInternalString && sval != NULL)
-      dFree(sval);
+   value.reset();
    if (notify)
       delete notify;
-}
-
-void Dictionary::Entry::setStringValue(const char* value)
-{
-   if (mIsConstant)
-   {
-      Con::errorf("Cannot assign value to constant '%s'.", name);
-      return;
-   }
-
-   if (type <= TypeInternalString)
-   {
-      // Let's not remove empty-string-valued global vars from the dict.
-      // If we remove them, then they won't be exported, and sometimes
-      // it could be necessary to export such a global.  There are very
-      // few empty-string global vars so there's no performance-related
-      // need to remove them from the dict.
-      /*
-       if(!value[0] && name[0] == '$')
-       {
-       gEvalState.globalVars.remove(this);
-       return;
-       }
-       */
-
-      U32 stringLen = dStrlen(value);
-
-      // If it's longer than 256 bytes, it's certainly not a number.
-      //
-      // (This decision may come back to haunt you. Shame on you if it
-      // does.)
-      if (stringLen < 256)
-      {
-         fval = dAtof(value);
-         ival = dAtoi(value);
-      }
-      else
-      {
-         fval = 0.f;
-         ival = 0;
-      }
-
-      type = TypeInternalString;
-
-      // may as well pad to the next cache line
-      U32 newLen = ((stringLen + 1) + 15) & ~15;
-
-      if (sval == NULL)
-         sval = (char*)dMalloc(newLen);
-      else if (newLen > bufferLen)
-         sval = (char*)dRealloc(sval, newLen);
-
-      bufferLen = newLen;
-      dStrcpy(sval, value, newLen);
-   }
-   else
-      Con::setData(type, dataPtr, 0, 1, &value, enumTable);
-
-   // Fire off the notification if we have one.
-   if (notify)
-      notify->trigger();
 }
 
 const char *Dictionary::getVariable(StringTableEntry name, bool *entValid)
@@ -630,17 +556,12 @@ Dictionary::Entry* Dictionary::addVariable(const char *name,
 
    Entry *ent = add(StringTable->insert(name));
 
-   if (ent->type <= Entry::TypeInternalString && ent->sval != NULL)
-      dFree(ent->sval);
-
    ent->mUsage = usage;
-   ent->type = type;
-   ent->dataPtr = dataPtr;
 
    // Fetch enum table, if any.
    ConsoleBaseType* conType = ConsoleBaseType::getType(type);
    AssertFatal(conType, "Dictionary::addVariable - invalid console type");
-   ent->enumTable = conType->getEnumTable();
+   ent->value.setConsoleData(type, dataPtr, conType->getEnumTable());
 
    return ent;
 }
@@ -680,158 +601,15 @@ void Dictionary::validate()
       "Dictionary::validate() - Dictionary not owner of own hashtable!");
 }
 
-void ExprEvalState::pushFrame(StringTableEntry frameName, Namespace *ns, S32 registerCount)
+Con::Module* Con::findScriptModuleForFile(const char* fileName)
 {
-#ifdef DEBUG_SPEW
-   validate();
-
-   Platform::outputDebugString("[ConsoleInternal] Pushing new frame for '%s' at %i",
-      frameName, mStackDepth);
-#endif
-
-   if (mStackDepth + 1 > stack.size())
+   for (Con::Module* module : gScriptModules)
    {
-#ifdef DEBUG_SPEW
-      Platform::outputDebugString("[ConsoleInternal] Growing stack by one frame");
-#endif
-
-      stack.push_back(new Dictionary);
+      if (module->getName() == fileName) {
+         return module;
+      }
    }
-
-   Dictionary& newFrame = *(stack[mStackDepth]);
-   newFrame.setState(this);
-
-   newFrame.scopeName = frameName;
-   newFrame.scopeNamespace = ns;
-
-   mStackDepth++;
-   currentVariable = NULL;
-
-   AssertFatal(!newFrame.getCount(), "ExprEvalState::pushFrame - Dictionary not empty!");
-
-   ConsoleValue* consoleValArray = new ConsoleValue[registerCount]();
-   localStack.push_back(ConsoleValueFrame(consoleValArray, false));
-   currentRegisterArray = &localStack.last();
-
-   AssertFatal(mStackDepth == localStack.size(), avar("Stack sizes do not match. mStackDepth = %d, localStack = %d", mStackDepth, localStack.size()));
-
-#ifdef DEBUG_SPEW
-   validate();
-#endif
-}
-
-void ExprEvalState::popFrame()
-{
-   AssertFatal(mStackDepth > 0, "ExprEvalState::popFrame - Stack Underflow!");
-
-#ifdef DEBUG_SPEW
-   validate();
-
-   Platform::outputDebugString("[ConsoleInternal] Popping %sframe at %i",
-      getCurrentFrame().isOwner() ? "" : "shared ", mStackDepth - 1);
-#endif
-
-   mStackDepth--;
-   stack[mStackDepth]->reset();
-   currentVariable = NULL;
-
-   const ConsoleValueFrame& frame = localStack.last();
-   localStack.pop_back();
-   if (!frame.isReference)
-      delete[] frame.values;
-
-   currentRegisterArray = localStack.size() ? &localStack.last() : NULL;
-
-   AssertFatal(mStackDepth == localStack.size(), avar("Stack sizes do not match. mStackDepth = %d, localStack = %d", mStackDepth, localStack.size()));
-
-#ifdef DEBUG_SPEW
-   validate();
-#endif
-}
-
-void ExprEvalState::pushFrameRef(S32 stackIndex)
-{
-   AssertFatal(stackIndex >= 0 && stackIndex < mStackDepth, "You must be asking for a valid frame!");
-
-#ifdef DEBUG_SPEW
-   validate();
-
-   Platform::outputDebugString("[ConsoleInternal] Cloning frame from %i to %i",
-      stackIndex, mStackDepth);
-#endif
-
-   if (mStackDepth + 1 > stack.size())
-   {
-#ifdef DEBUG_SPEW
-      Platform::outputDebugString("[ConsoleInternal] Growing stack by one frame");
-#endif
-
-      stack.push_back(new Dictionary);
-   }
-
-   Dictionary& newFrame = *(stack[mStackDepth]);
-   newFrame.setState(this, stack[stackIndex]);
-
-   mStackDepth++;
-   currentVariable = NULL;
-
-   ConsoleValue* values = localStack[stackIndex].values;
-   localStack.push_back(ConsoleValueFrame(values, true));
-   currentRegisterArray = &localStack.last();
-
-   AssertFatal(mStackDepth == localStack.size(), avar("Stack sizes do not match. mStackDepth = %d, localStack = %d", mStackDepth, localStack.size()));
-
-#ifdef DEBUG_SPEW
-   validate();
-#endif
-}
-
-void ExprEvalState::pushDebugFrame(S32 stackIndex)
-{
-   pushFrameRef(stackIndex);
-
-   Dictionary& newFrame = *(stack[mStackDepth - 1]);
-
-   // debugger needs to know this info...
-   newFrame.scopeName = stack[stackIndex]->scopeName;
-   newFrame.scopeNamespace = stack[stackIndex]->scopeNamespace;
-   newFrame.code = stack[stackIndex]->code;
-   newFrame.ip = stack[stackIndex]->ip;
-}
-
-ExprEvalState::ExprEvalState()
-{
-   VECTOR_SET_ASSOCIATION(stack);
-   globalVars.setState(this);
-   thisObject = NULL;
-   traceOn = false;
-   currentVariable = NULL;
-   mStackDepth = 0;
-   stack.reserve(64);
-   mShouldReset = false;
-   mResetLocked = false;
-   copyVariable = NULL;
-   currentRegisterArray = NULL;
-}
-
-ExprEvalState::~ExprEvalState()
-{
-   // Delete callframes.
-
-   while (!stack.empty())
-   {
-      delete stack.last();
-      stack.decrement();
-   }
-}
-
-void ExprEvalState::validate()
-{
-   AssertFatal(mStackDepth <= stack.size(),
-      "ExprEvalState::validate() - Stack depth pointing beyond last stack frame!");
-
-   for (U32 i = 0; i < stack.size(); ++i)
-      stack[i]->validate();
+   return NULL;
 }
 
 DefineEngineFunction(backtrace, void, (), ,
@@ -842,35 +620,37 @@ DefineEngineFunction(backtrace, void, (), ,
 {
    U32 totalSize = 1;
 
-   for (U32 i = 0; i < gEvalState.getStackDepth(); i++)
+   for (U32 i = 0; i < Con::getFrameStack().size(); i++)
    {
-      if (gEvalState.stack[i]->scopeNamespace && gEvalState.stack[i]->scopeNamespace->mEntryList->mPackage)
-         totalSize += dStrlen(gEvalState.stack[i]->scopeNamespace->mEntryList->mPackage) + 2;
-      if (gEvalState.stack[i]->scopeName)
-         totalSize += dStrlen(gEvalState.stack[i]->scopeName) + 3;
-      if (gEvalState.stack[i]->scopeNamespace && gEvalState.stack[i]->scopeNamespace->mName)
-         totalSize += dStrlen(gEvalState.stack[i]->scopeNamespace->mName) + 2;
+      const Con::ConsoleFrame* frame = Con::getStackFrame(i);
+      if (frame->scopeNamespace && frame->scopeNamespace->mEntryList->mPackage)
+         totalSize += dStrlen(frame->scopeNamespace->mEntryList->mPackage) + 2;
+      if (frame->scopeName)
+         totalSize += dStrlen(frame->scopeName) + 3;
+      if (frame->scopeNamespace && frame->scopeNamespace->mName)
+         totalSize += dStrlen(frame->scopeNamespace->mName) + 2;
    }
 
    char *buf = Con::getReturnBuffer(totalSize);
    buf[0] = 0;
-   for (U32 i = 0; i < gEvalState.getStackDepth(); i++)
+   for (U32 i = 0; i < Con::getFrameStack().size(); i++)
    {
+      const Con::ConsoleFrame* frame = Con::getStackFrame(i);
       dStrcat(buf, "->", totalSize);
 
-      if (gEvalState.stack[i]->scopeNamespace && gEvalState.stack[i]->scopeNamespace->mEntryList->mPackage)
+      if (frame->scopeNamespace && frame->scopeNamespace->mEntryList->mPackage)
       {
          dStrcat(buf, "[", totalSize);
-         dStrcat(buf, gEvalState.stack[i]->scopeNamespace->mEntryList->mPackage, totalSize);
+         dStrcat(buf, frame->scopeNamespace->mEntryList->mPackage, totalSize);
          dStrcat(buf, "]", totalSize);
       }
-      if (gEvalState.stack[i]->scopeNamespace && gEvalState.stack[i]->scopeNamespace->mName)
+      if (frame->scopeNamespace && frame->scopeNamespace->mName)
       {
-         dStrcat(buf, gEvalState.stack[i]->scopeNamespace->mName, totalSize);
+         dStrcat(buf, frame->scopeNamespace->mName, totalSize);
          dStrcat(buf, "::", totalSize);
       }
-      if (gEvalState.stack[i]->scopeName)
-         dStrcat(buf, gEvalState.stack[i]->scopeName, totalSize);
+      if (frame->scopeName)
+         dStrcat(buf, frame->scopeName, totalSize);
    }
 
    Con::printf("BackTrace: %s", buf);
@@ -878,7 +658,7 @@ DefineEngineFunction(backtrace, void, (), ,
 
 Namespace::Entry::Entry()
 {
-   mCode = NULL;
+   mModule = NULL;
    mType = InvalidFunctionType;
    mUsage = NULL;
    mHeader = NULL;
@@ -896,10 +676,10 @@ Namespace::Entry::Entry()
 
 void Namespace::Entry::clear()
 {
-   if (mCode)
+   if (mModule)
    {
-      mCode->decRefCount();
-      mCode = NULL;
+      mModule->decRefCount();
+      mModule = NULL;
    }
 
    // Clean up usage strings generated for script functions.
@@ -1233,15 +1013,15 @@ Namespace::Entry *Namespace::createLocalEntry(StringTableEntry name)
    return ent;
 }
 
-void Namespace::addFunction(StringTableEntry name, CodeBlock *cb, U32 functionOffset, const char* usage, U32 lineNumber)
+void Namespace::addFunction(StringTableEntry name, Con::Module *cb, U32 functionOffset, const char* usage, U32 lineNumber)
 {
    Entry *ent = createLocalEntry(name);
    trashCache();
 
    ent->mUsage = usage;
-   ent->mCode = cb;
+   ent->mModule = cb;
    ent->mFunctionOffset = functionOffset;
-   ent->mCode->incRefCount();
+   ent->mModule->incRefCount();
    ent->mType = Entry::ConsoleFunctionType;
    ent->mFunctionLineNumber = lineNumber;
 }
@@ -1366,9 +1146,7 @@ void Namespace::markGroup(const char* name, const char* usage)
    ent->cb.mGroupName = name;
 }
 
-extern S32 executeBlock(StmtNode *block, ExprEvalState *state);
-
-ConsoleValue Namespace::Entry::execute(S32 argc, ConsoleValue *argv, ExprEvalState *state)
+ConsoleValue Namespace::Entry::execute(S32 argc, ConsoleValue *argv, SimObject *thisObj)
 {
    STR.clearFunctionOffset();
 
@@ -1376,7 +1154,7 @@ ConsoleValue Namespace::Entry::execute(S32 argc, ConsoleValue *argv, ExprEvalSta
    {
       if (mFunctionOffset)
       {
-         return std::move(mCode->exec(mFunctionOffset, argv[0].getString(), mNamespace, argc, argv, false, mPackage));
+         return std::move(mModule->exec(mFunctionOffset, argv[0].getString(), mNamespace, argc, argv, false, mPackage).value);
       }
       else
       {
@@ -1406,21 +1184,21 @@ ConsoleValue Namespace::Entry::execute(S32 argc, ConsoleValue *argv, ExprEvalSta
    {
       case StringCallbackType:
       {
-         const char* str = cb.mStringCallbackFunc(state->thisObject, argc, argv);
+         const char* str = cb.mStringCallbackFunc(thisObj, argc, argv);
          result.setString(str);
          break;
       }
       case IntCallbackType:
-         result.setInt(cb.mIntCallbackFunc(state->thisObject, argc, argv));
+         result.setInt(cb.mIntCallbackFunc(thisObj, argc, argv));
          break;
       case FloatCallbackType:
-         result.setFloat(cb.mFloatCallbackFunc(state->thisObject, argc, argv));
+         result.setFloat(cb.mFloatCallbackFunc(thisObj, argc, argv));
          break;
       case VoidCallbackType:
-         cb.mVoidCallbackFunc(state->thisObject, argc, argv);
+         cb.mVoidCallbackFunc(thisObj, argc, argv);
          break;
       case BoolCallbackType:
-         result.setBool(cb.mBoolCallbackFunc(state->thisObject, argc, argv));
+         result.setBool(cb.mBoolCallbackFunc(thisObj, argc, argv));
          break;
    }
 
@@ -1704,7 +1482,7 @@ String Namespace::Entry::getArgumentsString() const
 
       if (sFindArgumentListSubstring(mUsage, argListStart, argListEnd))
          str.append(argListStart, argListEnd - argListStart);
-      else if (mType == ConsoleFunctionType && mCode)
+      else if (mType == ConsoleFunctionType && mModule)
       {
          // This isn't correct but the nonsense console stuff is set up such that all
          // functions that have no function bodies are keyed to offset 0 to indicate "no code."
@@ -1716,7 +1494,7 @@ String Namespace::Entry::getArgumentsString() const
          if (!mFunctionOffset)
             return "()";
 
-         String args = mCode->getFunctionArgs(mFunctionOffset);
+         String args = mModule->getFunctionArgs(mFunctionName, mFunctionOffset);
          if (args.isEmpty())
             return "()";
 

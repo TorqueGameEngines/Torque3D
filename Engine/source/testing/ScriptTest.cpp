@@ -26,12 +26,13 @@
 #include "console/simBase.h"
 #include "console/engineAPI.h"
 #include "math/mMath.h"
+#include "console/script.h"
 #include "console/stringStack.h"
 #include "gui/buttons/guiIconButtonCtrl.h"
 
 inline ConsoleValue RunScript(const char* str)
 {
-   return std::move(Con::evaluate(str, false, NULL));
+   return std::move(Con::evaluate(str, false, NULL).value);
 }
 
 using ::testing::Matcher;

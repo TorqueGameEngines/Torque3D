@@ -21,7 +21,6 @@
 //-----------------------------------------------------------------------------
 #include "cinterface.h"
 
-#include "console/compiler.h"
 #include "windowManager/platformWindow.h"
 
 CInterface& CInterface::GetCInterface()

@@ -26,6 +26,9 @@
 #include <vector>
 #include <unordered_map>
 
+#include "parser.h"
+#include "console/runtime.h"
+
 struct CompilerLocalVariableToRegisterMappingTable
 {
    struct RemappingTable
@@ -42,8 +45,7 @@ struct CompilerLocalVariableToRegisterMappingTable
    void write(Stream& stream);
 };
 
-#include "console/compiler.h"
-#include "console/consoleParser.h"
+#include "compiler.h"
 
 class Stream;
 class ConsoleValue;
@@ -51,33 +53,24 @@ class ConsoleValue;
 /// Core TorqueScript code management class.
 ///
 /// This class represents a block of code, usually mapped directly to a file.
-class CodeBlock
+class CodeBlock : Con::Module
 {
 private:
    static CodeBlock* smCodeBlockList;
-   static CodeBlock* smCurrentCodeBlock;
 
 public:
    static bool                      smInFunction;
-   static Compiler::ConsoleParser * smCurrentParser;
-
-   static CodeBlock* getCurrentBlock()
-   {
-      return smCurrentCodeBlock;
-   }
+   static TorqueScriptParser * smCurrentParser;
 
    static CodeBlock *getCodeBlockList()
    {
       return smCodeBlockList;
    }
 
-   static StringTableEntry getCurrentCodeBlockName();
-   static StringTableEntry getCurrentCodeBlockFullPath();
-   static StringTableEntry getCurrentCodeBlockModName();
    static CodeBlock *find(StringTableEntry);
 
    CodeBlock();
-   ~CodeBlock();
+   ~CodeBlock() override;
 
    StringTableEntry name;
    StringTableEntry fullPath;
@@ -100,59 +93,55 @@ public:
    U32 refCount;
    U32 lineBreakPairCount;
    U32 *lineBreakPairs;
-   U32 breakListSize;
-   U32 *breakList;
+   Vector<U32> breakList;
    CodeBlock *nextFile;
 
    void addToCodeList();
    void removeFromCodeList();
    void calcBreakList();
-   void clearAllBreaks();
-   void setAllBreaks();
+   void clearAllBreaks() override;
+   void setAllBreaks() override;
    void dumpInstructions(U32 startIp = 0, bool upToReturn = false);
 
    /// Returns the first breakable line or 0 if none was found.
    /// @param lineNumber The one based line number.
-   U32 findFirstBreakLine(U32 lineNumber);
+   U32 findFirstBreakLine(U32 lineNumber) override;
 
-   void clearBreakpoint(U32 lineNumber);
+   void clearBreakpoint(U32 lineNumber) override;
 
-   /// Set a OP_BREAK instruction on a line. If a break 
+   /// Set a OP_BREAK instruction on a line. If a break
    /// is not possible on that line it returns false.
    /// @param lineNumber The one based line number.
-   bool setBreakpoint(U32 lineNumber);
+   bool setBreakpoint(U32 lineNumber) override;
 
-   void findBreakLine(U32 ip, U32 &line, U32 &instruction);
-   const char *getFileLine(U32 ip);
+   void findBreakLine(U32 ip, U32 &line, U32 &instruction) override;
+   const char *getFileLine(U32 ip) override;
 
-   /// 
+   ///
    String getFunctionArgs(U32 offset);
 
    bool read(StringTableEntry fileName, Stream &st);
    bool compile(const char *dsoName, StringTableEntry fileName, const char *script, bool overrideNoDso = false);
 
-   void incRefCount();
-   void decRefCount();
-
    /// Compiles and executes a block of script storing the compiled code in this
-   /// CodeBlock. If there is no filename breakpoints will not be generated and 
-   /// the CodeBlock will not be added to the linked list of loaded CodeBlocks. 
+   /// CodeBlock. If there is no filename breakpoints will not be generated and
+   /// the CodeBlock will not be added to the linked list of loaded CodeBlocks.
    /// Note that if the script contains no executable statements the CodeBlock
-   /// will delete itself on return an empty string. The return string is any 
+   /// will delete itself on return an empty string. The return string is any
    /// result of the code executed, if any, or an empty string.
    ///
-   /// @param fileName The file name, including path and extension, for the 
+   /// @param fileName The file name, including path and extension, for the
    /// block of code or an empty string.
    /// @param script The script code to compile and execute.
    /// @param noCalls Skips calling functions from the script.
-   /// @param setFrame A zero based index of the stack frame to execute the code 
+   /// @param setFrame A zero based index of the stack frame to execute the code
    /// with, zero being the top of the stack. If the the index is
    /// -1 a new frame is created. If the index is out of range the
    /// top stack frame is used.
-   ConsoleValue compileExec(StringTableEntry fileName, const char *script,
+   Con::EvalResult compileExec(StringTableEntry fileName, const char *script,
       bool noCalls, S32 setFrame = -1);
 
-   /// Executes the existing code in the CodeBlock. The return string is any 
+   /// Executes the existing code in the CodeBlock. The return string is any
    /// result of the code executed, if any, or an empty string.
    ///
    /// @param offset The instruction offset to start executing from.
@@ -162,14 +151,20 @@ public:
    /// zero to execute code outside of a function.
    /// @param argv The function parameter list.
    /// @param noCalls Skips calling functions from the script.
-   /// @param setFrame A zero based index of the stack frame to execute the code 
+   /// @param setFrame A zero based index of the stack frame to execute the code
    /// with, zero being the top of the stack. If the the index is
    /// -1 a new frame is created. If the index is out of range the
    /// top stack frame is used.
    /// @param packageName The code package name or null.
-   ConsoleValue exec(U32 offset, const char *fnName, Namespace *ns, U32 argc,
-      ConsoleValue *argv, bool noCalls, StringTableEntry packageName,
-      S32 setFrame = -1);
+   Con::EvalResult exec(U32 offset, const char* fnName, Namespace* ns, U32 argc,
+                           ConsoleValue* argv, bool noCalls, StringTableEntry packageName,
+                           S32 setFrame = -1) override;
+
+   const char* getFunctionArgs(StringTableEntry functionName, U32 functionOffset) override { return getFunctionArgs(functionOffset); }
+   const char* getPath() override { return fullPath; }
+   const char* getName() override { return name; }
+   Vector<U32> getBreakableLines() override { return breakList; }
+
 };
 
 #endif

@@ -25,8 +25,6 @@
 #include "core/stream/fileStream.h"
 #include "console/console.h"
 #include "console/consoleInternal.h"
-#include "console/ast.h"
-#include "console/compiler.h"
 #include "core/util/safeDelete.h"
 #include "console/engineAPI.h"
 
@@ -102,7 +100,7 @@ bool LangFile::load(Stream *s)
 bool LangFile::save(const UTF8 *filename)
 {
 	FileStream *fs;
-	
+
 	if(!isLoaded())
 		return false;
 
@@ -168,7 +166,7 @@ void LangFile::setLangName(const UTF8 *newName)
 {
 	if(mLangName)
 		delete [] mLangName;
-	
+
 	dsize_t langNameLen = dStrlen(newName) + 1;
 	mLangName = new UTF8 [langNameLen];
 	dStrcpy(mLangName, newName, langNameLen);
@@ -178,7 +176,7 @@ void LangFile::setLangFile(const UTF8 *langFile)
 {
 	if(mLangFile)
 		delete [] mLangFile;
-	
+
 	dsize_t langFileLen = dStrlen(langFile) + 1;
 	mLangFile = new UTF8 [langFileLen];
 	dStrcpy(mLangFile, langFile, langFileLen);
@@ -211,7 +209,7 @@ IMPLEMENT_CONOBJECT(LangTable);
 ConsoleDocClass( LangTable,
    "@brief Provides the code necessary to handle the low level management "
    "of the string tables for localization\n\n"
-   
+
    "One LangTable is created for each mod, as well as one for the C++ code. "
    "LangTable is responsible for obtaining the correct strings from each "
    "and relaying it to the appropriate controls.\n\n"
@@ -260,7 +258,7 @@ S32 LangTable::addLanguage(const UTF8 *filename, const UTF8 *name /* = NULL */)
    if(Torque::FS::IsFile(filename))
 	{
 		lang->setLangFile(filename);
-			
+
       S32 ret = addLanguage(lang);
 		if(ret >= 0)
 			return ret;
@@ -287,7 +285,7 @@ const U32 LangTable::getStringLength(const U32 id) const
 	const UTF8 *s = getString(id);
 	if(s)
 		return dStrlen(s);
-	
+
 	return 0;
 }
 
@@ -299,7 +297,7 @@ void LangTable::setDefaultLanguage(S32 langid)
 		{
 			if(mDefaultLang >= 0)
 				mLangTable[mDefaultLang]->deactivateLanguage();
-			
+
 			mDefaultLang = langid;
 		}
 	}
@@ -329,7 +327,7 @@ void LangTable::setCurrentLanguage(S32 langid)
 
 
 
-DefineEngineMethod(LangTable, addLanguage, S32, (String filename, String languageName), ("", ""), 
+DefineEngineMethod(LangTable, addLanguage, S32, (String filename, String languageName), ("", ""),
 			  "(string filename, [string languageName])"
 			  "@brief Adds a language to the table\n\n"
 			  "@param filename Name and path to the language file\n"
@@ -338,12 +336,12 @@ DefineEngineMethod(LangTable, addLanguage, S32, (String filename, String languag
 			  )
 {
 	UTF8 scriptFilenameBuffer[1024];
-	
+
 	Con::expandScriptFilename((char*)scriptFilenameBuffer, sizeof(scriptFilenameBuffer), filename);
 	return object->addLanguage(scriptFilenameBuffer, (const UTF8*)languageName);
 }
 
-DefineEngineMethod(LangTable, getString, const char *, (U32 id), , 
+DefineEngineMethod(LangTable, getString, const char *, (U32 id), ,
 			  "(string filename)"
 			  "@brief Grabs a string from the specified table\n\n"
 			  "If an invalid is passed, the function will attempt to "
@@ -359,7 +357,7 @@ DefineEngineMethod(LangTable, getString, const char *, (U32 id), ,
 		dStrcpy(ret, str, retLen);
 		return ret;
 	}
-	
+
 	return "";
 }
 
@@ -370,7 +368,7 @@ DefineEngineMethod(LangTable, setDefaultLanguage, void, (S32 langId), , "(int la
 	object->setDefaultLanguage(langId);
 }
 
-DefineEngineMethod(LangTable, setCurrentLanguage, void, (S32 langId), , 
+DefineEngineMethod(LangTable, setCurrentLanguage, void, (S32 langId), ,
 			  "(int language)"
 			  "@brief Sets the current language table for grabbing text\n\n"
 			  "@param language ID of the table\n")
@@ -398,7 +396,7 @@ DefineEngineMethod(LangTable, getLangName, const char *, (S32 langId), , "(int l
 		dStrcpy(ret, str, retLen);
 		return ret;
 	}
-	
+
 	return "";
 }
 
@@ -420,9 +418,9 @@ UTF8 *sanitiseVarName(const UTF8 *varName, UTF8 *buffer, U32 bufsize)
 		*buffer = 0;
 		return NULL;
 	}
-	
+
 	dStrcpy(buffer, (const UTF8*)"I18N::", bufsize);
-	
+
 	UTF8 *dptr = buffer + 6;
 	const UTF8 *sptr = varName;
 	while(*sptr)
@@ -435,27 +433,27 @@ UTF8 *sanitiseVarName(const UTF8 *varName, UTF8 *buffer, U32 bufsize)
 				*dptr++ = '_';
 			sptr++;
 		}
-		
+
 		if((dptr - buffer) >= (bufsize - 1))
 			break;
 	}
 	*dptr = 0;
-	
+
 	return buffer;
 }
 
 UTF8 *getCurrentModVarName(UTF8 *buffer, U32 bufsize)
 {
 	char varName[256];
-	StringTableEntry cbName = CodeBlock::getCurrentCodeBlockName();
-	
+	StringTableEntry cbName = Con::getCurrentScriptModuleName();
+
 	const UTF8 *slash = (const UTF8*)dStrchr(cbName, '/');
 	if (slash == NULL)
 	{
 		Con::errorf("Illegal CodeBlock path detected in sanitiseVarName() (no mod directory): %s", cbName);
 		return NULL;
 	}
-	
+
 	dStrncpy(varName, cbName, slash - (const UTF8*)cbName);
 	varName[slash - (const UTF8*)cbName] = 0;
 
@@ -465,7 +463,7 @@ UTF8 *getCurrentModVarName(UTF8 *buffer, U32 bufsize)
 const LangTable *getCurrentModLangTable()
 {
 	UTF8 saneVarName[256];
-	
+
 	if(getCurrentModVarName(saneVarName, sizeof(saneVarName)))
 	{
 		const LangTable *lt = dynamic_cast<LangTable *>(Sim::findObject(Con::getIntVariable((const char*)saneVarName)));
@@ -508,7 +506,7 @@ bool compiledFileNeedsUpdate(UTF8* filename)
    return false;
 }
 
-DefineEngineFunction(CompileLanguage, void, (const char* inputFile, bool createMap), (false), 
+DefineEngineFunction(CompileLanguage, void, (const char* inputFile, bool createMap), (false),
    "@brief Compiles a LSO language file."
    " if createIndex is true, will also create languageMap." TORQUE_SCRIPT_EXTENSION " with"
    " the global variables for each string index."

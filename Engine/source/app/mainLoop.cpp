@@ -61,6 +61,7 @@
 // For the TickMs define... fix this for T2D...
 #include "T3D/gameBase/processList.h"
 #include "cinterface/cinterface.h"
+#include "console/script.h"
 
 #ifdef TORQUE_ENABLE_VFS
 #include "platform/platformVFS.h"

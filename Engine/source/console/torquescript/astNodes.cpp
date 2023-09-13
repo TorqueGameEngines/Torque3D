@@ -22,15 +22,10 @@
 
 #include "platform/platform.h"
 #include "console/console.h"
-#include "console/telnetDebugger.h"
 
-#include "console/ast.h"
-#include "core/tAlgorithm.h"
+#include "ast.h"
 
-#include "core/strings/findMatch.h"
-#include "console/consoleInternal.h"
-#include "core/stream/fileStream.h"
-#include "console/compiler.h"
+#include "compiler.h"
 
 #include "console/simBase.h"
 
@@ -40,7 +35,7 @@ struct Token
    T value;
    S32 lineNumber;
 };
-#include "console/cmdgram.h"
+#include "cmdgram.h"
 
 namespace Compiler
 {

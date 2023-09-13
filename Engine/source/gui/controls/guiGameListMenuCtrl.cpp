@@ -24,6 +24,7 @@
 
 #include "console/consoleTypes.h"
 #include "console/engineAPI.h"
+#include "console/script.h"
 #include "gfx/gfxDrawUtil.h"
 #include "gui/containers/guiScrollCtrl.h"
 #include "sim/actionMap.h"

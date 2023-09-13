@@ -41,6 +41,7 @@
 #endif
 
 // Debug Profiling.
+#include "console/script.h"
 #include "platform/profiler.h"
 
 //-----------------------------------------------------------------------------
@@ -137,7 +138,7 @@ void PostEffectAsset::initializeAsset()
    mHLSLShaderPath = getOwned() ? expandAssetFilePath(mHLSLShaderFile) : mHLSLShaderPath;
    mGLSLShaderPath = getOwned() ? expandAssetFilePath(mGLSLShaderFile) : mGLSLShaderPath;
 
-   if (Torque::FS::IsScriptFile(mScriptPath))
+   if (Con::isScriptFile(mScriptPath))
       Con::executeFile(mScriptPath, false, false);
 }
 
@@ -147,7 +148,7 @@ void PostEffectAsset::onAssetRefresh()
    mHLSLShaderPath = getOwned() ? expandAssetFilePath(mHLSLShaderFile) : mHLSLShaderPath;
    mGLSLShaderPath = getOwned() ? expandAssetFilePath(mGLSLShaderFile) : mGLSLShaderPath;
 
-   if (Torque::FS::IsScriptFile(mScriptPath))
+   if (Con::isScriptFile(mScriptPath))
       Con::executeFile(mScriptPath, false, false);
 }
 

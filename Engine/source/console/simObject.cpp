@@ -35,7 +35,6 @@
 #include "console/simPersistID.h"
 #include "console/typeValidators.h"
 #include "console/arrayObject.h"
-#include "console/codeBlock.h"
 #include "core/frameAllocator.h"
 #include "core/stream/fileStream.h"
 #include "core/fileObject.h"
@@ -2479,7 +2478,7 @@ static void sEnumCallback( EngineObject* object )
    if( !simObject )
       return;
       
-   Con::evaluatef( "%s( %i );", sEnumCallbackFunction, simObject->getId() );
+   Con::executef(sEnumCallbackFunction, simObject->getId());
 }
 
 DefineEngineFunction( debugEnumInstances, void, ( const char* className, const char* functionName ),,
@@ -2645,10 +2644,10 @@ DefineEngineMethod( SimObject, dumpMethods, ArrayObject*, (),,
       str.append( e->getPrototypeString() );
 
       str.append( '\n' );
-      if( e->mCode && e->mCode->fullPath )
-         str.append( e->mCode->fullPath );
+      if( e->mModule && e->mModule->getPath() )
+         str.append( e->mModule->getPath() );
       str.append( '\n' );
-      if( e->mCode )
+      if( e->mModule )
          str.append( String::ToString( e->mFunctionLineNumber ) );
 
       str.append( '\n' );

@@ -1,5 +1,6 @@
 #include "gui/core/guiCanvas.h"
 #include "console/engineAPI.h"
+#include "console/script.h"
 #include "gfx/gfxDebugEvent.h"
 
 #include "gfx/gl/gfxGLDevice.h"

@@ -7,6 +7,7 @@
 #include "console/simBase.h"
 #include "console/engineAPI.h"
 #include "math/mMath.h"
+#include "console/script.h"
 
 using ::testing::Matcher;
 using ::testing::TypedEq;

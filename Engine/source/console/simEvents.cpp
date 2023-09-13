@@ -25,9 +25,6 @@
 #include "platform/threads/semaphore.h"
 #include "console/simEvents.h"
 
-// Stupid globals not declared in a header
-extern ExprEvalState gEvalState;
-
 SimConsoleEvent::SimConsoleEvent(S32 argc, ConsoleValue *argv, bool onObject)
 {
    mOnObject = onObject;
@@ -79,7 +76,7 @@ void SimConsoleEvent::process(SimObject* object)
             Namespace::Entry* nse = ns->lookup( StringTable->insert( func ) );
             if( nse )
                // Execute.
-               nse->execute( mArgc, mArgv, &gEvalState );
+               nse->execute( mArgc, mArgv, object );
          }
       }
 

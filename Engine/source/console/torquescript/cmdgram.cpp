@@ -95,7 +95,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "console/console.h"
-#include "console/compiler.h"
+#include "compiler.h"
 #include "console/consoleInternal.h"
 #include "core/strings/stringFunctions.h"
 
@@ -1581,7 +1581,7 @@ case 2:
     break;}
 case 3:
 #line 169 "cmdgram.y"
-{ if(!gStatementList) { gStatementList = yyvsp[0].stmt; } else { gStatementList->append(yyvsp[0].stmt); } ;
+{ if(!Script::gStatementList) { Script::gStatementList = yyvsp[0].stmt; } else { Script::gStatementList->append(yyvsp[0].stmt); } ;
     break;}
 case 4:
 #line 174 "cmdgram.y"
@@ -2390,5 +2390,3 @@ yyerrhandle:
   goto yynewstate;
 }
 #line 617 "cmdgram.y"
-
-

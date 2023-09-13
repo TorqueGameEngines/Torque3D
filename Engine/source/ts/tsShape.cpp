@@ -29,12 +29,13 @@
 #include "console/console.h"
 #include "ts/tsShapeInstance.h"
 #include "collision/convex.h"
+#include "console/consoleInternal.h"
+#include "console/script.h"
 #include "materials/matInstance.h"
 #include "materials/materialManager.h"
 #include "math/mathIO.h"
 #include "core/util/endian.h"
 #include "core/stream/fileStream.h"
-#include "console/compiler.h"
 #include "core/fileObject.h"
 
 #ifdef TORQUE_COLLADA
@@ -2144,7 +2145,7 @@ template<> void *Resource<TSShape>::create(const Torque::Path &path)
    scriptPath.setExtension(TORQUE_SCRIPT_EXTENSION);
 
    // Don't execute the script if we're already doing so!
-   StringTableEntry currentScript = Platform::stripBasePath(CodeBlock::getCurrentCodeBlockFullPath());
+   StringTableEntry currentScript = Platform::stripBasePath(Con::getCurrentScriptModulePath());
    if (!scriptPath.getFullPath().equal(currentScript))
    {
       Torque::Path scriptPathDSO(scriptPath);

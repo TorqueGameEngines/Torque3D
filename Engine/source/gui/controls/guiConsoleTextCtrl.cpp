@@ -25,6 +25,7 @@
 
 #include "console/consoleTypes.h"
 #include "console/console.h"
+#include "console/script.h"
 #include "core/color.h"
 #include "gfx/gfxDrawUtil.h"
 #include "gui/core/guiDefaultControlRender.h"

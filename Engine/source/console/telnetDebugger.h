@@ -26,8 +26,7 @@
 #ifndef _PLATFORM_PLATFORMNET_H_
 #include "platform/platformNet.h"
 #endif
-
-class CodeBlock;
+#include "module.h"
 
 /// Telnet debug service implementation.
 ///
@@ -75,7 +74,7 @@ class TelnetDebugger
    struct Breakpoint
    {
       StringTableEntry fileName;
-      CodeBlock *code;
+      Con::Module *module;
       U32 lineNumber;
       S32 passCount;
       S32 curCount;
@@ -105,7 +104,7 @@ class TelnetDebugger
    void evaluateExpression(const char *tag, S32 frame, const char *evalBuffer);
    void dumpFileList();
    void dumpBreakableList(const char *fileName);
-   void removeBreakpointsFromCode(CodeBlock *code);
+   void removeBreakpointsFromCode(Con::Module *code);
 
    void checkDebugRecv();
    void processLineBuffer(S32);
@@ -121,13 +120,13 @@ public:
    void process();
    void popStackFrame();
    void pushStackFrame();
-   void addAllBreakpoints(CodeBlock *code);
+   void addAllBreakpoints(Con::Module *module);
 
-   void clearCodeBlockPointers(CodeBlock *code);
+   void clearCodeBlockPointers(Con::Module *code);
 
    void breakProcess();
 
-   void executionStopped(CodeBlock *code, U32 lineNumber);
+   void executionStopped(Con::Module *module, U32 lineNumber);
    void send(const char *s);
    void setDebugParameters(S32 port, const char *password, bool waitForClient);
    void processConsoleLine(const char *consoleLine);

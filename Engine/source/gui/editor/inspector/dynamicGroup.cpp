@@ -25,6 +25,7 @@
 #include "gui/editor/inspector/dynamicGroup.h"
 #include "gui/editor/inspector/dynamicField.h"
 #include "console/engineAPI.h"
+#include "console/script.h"
 
 IMPLEMENT_CONOBJECT(GuiInspectorDynamicGroup);
 

@@ -379,6 +379,7 @@ $guiContent = new GuiControl() {
          ToolTip = "Forces loading of DAE files (ignores cached.dts if present)";
          hovertime = "1000";
          text = " Source Art";
+         visible = false;
       };
 
    };

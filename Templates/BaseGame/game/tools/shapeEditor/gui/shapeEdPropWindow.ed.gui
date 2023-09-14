@@ -201,7 +201,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdPropWindow) {
                   HorizSizing = "right";
                   VertSizing = "bottom";
                   position = "5 1";
-                  Extent = "104 16";
+                  Extent = "120 16";
                   text = "Sequence Properties";
                };
                new GuiTextCtrl() { // Name
@@ -209,7 +209,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdPropWindow) {
                   HorizSizing = "right";
                   VertSizing = "bottom";
                   position = "16 22";
-                  Extent = "27 16";
+                  Extent = "30 16";
                   text = "Name";
                };
                new GuiTextEditCtrl() {
@@ -219,7 +219,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdPropWindow) {
                   Profile = "ToolsGuiTextEditProfile";
                   HorizSizing = "width";
                   VertSizing = "bottom";
-                  Position = "46 21";
+                  Position = "55 21";
                   Extent = "152 18";
                   MinExtent = "8 2";
                   canSave = "1";
@@ -255,7 +255,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdPropWindow) {
                   Profile = "ToolsGuiPopUpMenuProfile";
                   HorizSizing = "width";
                   VertSizing = "bottom";
-                  Position = "46 41";
+                  Position = "55 41";
                   Extent = "91 18";
                };
                // Start Frame
@@ -303,7 +303,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdPropWindow) {
                   HorizSizing = "left";
                   VertSizing = "bottom";
                   Position = "143 43";
-                  Extent = "39 13";
+                  Extent = "45 13";
                   Command = "ShapeEdSequences.onToggleCyclic();";
                   tooltipprofile = "ToolsGuiToolTipProfile";
                   ToolTip = "Loop Animation. Toggles the cyclic flag.";
@@ -355,7 +355,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdPropWindow) {
                   HorizSizing = "right";
                   VertSizing = "bottom";
                   Position = "2 82";
-                  Extent = "45 16";
+                  Extent = "55 16";
                   Command = "ShapeEdSequences.onEditBlend();";
                   tooltipprofile = "ToolsGuiToolTipProfile";
                   ToolTip = "Toggle the blend flag for the selected sequence";
@@ -367,8 +367,8 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdPropWindow) {
                   Profile = "ToolsGuiPopUpMenuProfile";
                   HorizSizing = "width";
                   VertSizing = "bottom";
-                  Position = "46 81";
-                  Extent = "91 18";
+                  Position = "60 81";
+                  Extent = "75 18";
                   tooltip = "Blend reference sequence";
                   Command = "ShapeEdSequences.onEditBlend();";
                };
@@ -378,8 +378,8 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdPropWindow) {
                   Profile = "ToolsGuiTextRightProfile";
                   HorizSizing = "left";
                   VertSizing = "bottom";
-                  Position = "142 81";
-                  Extent = "29 18";
+                  Position = "135 81";
+                  Extent = "30 18";
                   text = "Frame";
                };
                new GuiTextEditCtrl() {
@@ -387,7 +387,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdPropWindow) {
                   Profile = "ToolsGuiTextEditProfile";
                   HorizSizing = "left";
                   VertSizing = "bottom";
-                  Position = "173 81";
+                  Position = "175 81";
                   Extent = "25 18";
                   text = "";
                   tooltip = "Blend reference frame";
@@ -525,6 +525,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdPropWindow) {
                   };
                };
                new GuiTextCtrl() {
+                  Profile = "ToolsGuiTextProfile";
                   HorizSizing = "right";
                   VertSizing = "bottom";
                   Position = "5 85";
@@ -542,6 +543,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdPropWindow) {
                   AltCommand = "ShapeEdTriggerList.onEditSelection();";
                };
                new GuiTextCtrl() {
+                  Profile = "ToolsGuiTextProfile";
                   HorizSizing = "right";
                   VertSizing = "bottom";
                   Position = "75 85";
@@ -563,7 +565,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdPropWindow) {
                   Profile = "ToolsGuiCheckBoxProfile";
                   HorizSizing = "left";
                   VertSizing = "bottom";
-                  Position = "152 87";
+                  Position = "150 87";
                   Extent = "47 13";
                   text = "On/off";
                   Command = "ShapeEdTriggerList.onEditSelection();";
@@ -1381,7 +1383,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdPropWindow) {
       Profile = "ToolsGuiButtonProfile";
       HorizSizing = "left";
       VertSizing = "bottom";
-      Position = "154 25";
+      Position = "300 25";
       Extent = "17 17";
       MinExtent = "8 2";
       canSave = "1";
@@ -1402,7 +1404,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdPropWindow) {
       Profile = "ToolsGuiButtonProfile";
       HorizSizing = "left";
       VertSizing = "bottom";
-      Position = "176 25";
+      Position = "320 25";
       Extent = "17 17";
       MinExtent = "8 2";
       canSave = "1";
@@ -1423,7 +1425,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdPropWindow) {
       Profile = "ToolsGuiButtonProfile";
       HorizSizing = "left";
       VertSizing = "bottom";
-      Position = "190 25";
+      Position = "340 25";
       Extent = "17 17";
       MinExtent = "8 2";
       canSave = "1";

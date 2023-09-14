@@ -229,7 +229,7 @@ $guiContent = new GuiControl() {
       };
       
       new GuiCheckboxCtrl(){
-         position = "254 25";
+         position = "245 25";
          Extent = "98 18";
          HorizSizing = "left";
          profile = "ToolsGuiCheckBoxProfile";

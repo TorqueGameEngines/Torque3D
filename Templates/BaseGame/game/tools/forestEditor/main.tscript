@@ -228,8 +228,7 @@ function ForestEditorPlugin::saveBrushSet(%this)
 
 function ForestEditorPlugin::isDirty( %this )
 {
-   %dirty = %this.dirty || ForestEditorGui.isDirty();
-   return %dirty;
+   return %this.dirty;
 }
 
 function ForestEditorPlugin::clearDirty( %this )

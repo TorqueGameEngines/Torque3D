@@ -1,9 +1,8 @@
 ﻿#include <gtest/gtest.h>
-#include <gui/editor/inspector/group.h>
 
+#include "gui/editor/inspector/group.h"
 #include "console/script.h"
 #include "T3D/fx/particle.h"
-#include "T3D/gameBase/gameBase.h"
 
 TEST(InspectorFieldTest, SetData_Should_Update_The_Field)
 {

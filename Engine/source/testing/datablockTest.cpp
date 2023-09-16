@@ -19,6 +19,14 @@ TEST(DatablockTest, Datablocks_Can_Be_Overridden)
    ASSERT_TRUE(result.valid);
    // Successfully overrode the datablock
    EXPECT_STREQ(result.value, "3");
+
+   // Cleanup
+   result = Con::evaluatef(R"(
+      testDb.delete();
+      return "done";
+   )", false, "datablockTest.cpp");
+   // Cleanup succesful
+   ASSERT_TRUE(result.valid);
 }
 
 TEST(DatablockTest, Datablocks_Must_Not_Change_Type)
@@ -37,6 +45,14 @@ TEST(DatablockTest, Datablocks_Must_Not_Change_Type)
    ASSERT_TRUE(result.valid);
    // Did not override the datablock
    EXPECT_STREQ(result.value, "2");
+
+   // Cleanup
+   result = Con::evaluatef(R"(
+      testDb.delete();
+      return "done";
+   )", false, "datablockTest.cpp");
+   // Cleanup succesful
+   ASSERT_TRUE(result.valid);
 }
 
 TEST(DatablockTest, Datablock_Can_Substitute_String)
@@ -64,4 +80,8 @@ TEST(DatablockTest, Datablock_Can_Substitute_String)
    testDb->performSubstitutions(testDb, testObj);
 
    EXPECT_EQ(testDb->lifetimeMS, 1234);
+
+   // Cleanup
+   testDb->deleteObject();
+   testObj->deleteObject();
 }

@@ -8,10 +8,10 @@
 TEST(InspectorFieldTest, SetData_Should_Update_The_Field)
 {
    GuiInspector* inspector = new GuiInspector();
-   inspector->registerObject();
+   ASSERT_TRUE(inspector->registerObject());
 
    ParticleData* exampleObj = new ParticleData();
-   exampleObj->registerObject();
+   ASSERT_TRUE(exampleObj->registerObject());
    // Add it to inspector so inspector field can find it
    inspector->addInspectObject(exampleObj);
 

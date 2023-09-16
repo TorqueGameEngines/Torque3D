@@ -50,10 +50,13 @@ namespace Con
    /// NOTE: This function restores the console stack on return.
    inline EvalResult evaluatef(const char* string, ...)
    {
+      char buffer[4096];
       va_list args;
-      va_start(args, string);
-      EvalResult result = setLastEvalResult(getRuntime()->evaluatef(string, args));
+      va_start(args, &string);
+      dVsprintf(buffer, sizeof(buffer), string, args);
       va_end(args);
+
+      EvalResult result = setLastEvalResult(getRuntime()->evaluate(buffer));
       return result;
    };
 

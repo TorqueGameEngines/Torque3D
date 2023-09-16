@@ -5,7 +5,7 @@
 #include "T3D/fx/particle.h"
 #include "T3D/gameBase/gameBase.h"
 
-TEST(InspectoreFieldTest, Datablocks_Can_Be_Overridden)
+TEST(InspectorFieldTest, SetData_Should_Update_The_Field)
 {
    GuiInspector* inspector = new GuiInspector();
    inspector->registerObject();

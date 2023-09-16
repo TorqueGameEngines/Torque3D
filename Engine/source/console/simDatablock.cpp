@@ -253,7 +253,7 @@ void SimDataBlock::performSubstitutions(SimDataBlock* dblock, const SimObject* o
          b[0] = '\0';
 
          Con::EvalResult evalResult = Con::evaluate(avar("return %s;", buffer), false, 0);
-         if (evalResult.valid)
+         if (!evalResult.valid)
          {
             Con::errorf("Field Substitution Failed: field=\"%s\" substitution=\"%s\" -- syntax error", 
                substitutions[i]->mSlot, substitutions[i]->mValue);

@@ -130,6 +130,12 @@ torqueAddSourceDirectories("module")
 
 # Handle forest
 torqueAddSourceDirectories("forest" "forest/ts")
+if(TORQUE_OPENGL)
+  torqueAddSourceDirectories("forest" "forest/glsl")
+endif(TORQUE_OPENGL)
+if(TORQUE_D3D11)
+  torqueAddSourceDirectories("forest" "forest/hlsl")
+endif(TORQUE_OPENGL)
 
 # Handle shadergen
 torqueAddSourceDirectories("shaderGen")

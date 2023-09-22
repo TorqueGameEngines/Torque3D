@@ -110,11 +110,10 @@ public:
 
 class ShaderFunctionArg : public ShaderDataType
 {
-protected:
+public:
    bool in;
    bool out;
    bool inout;
-public:
 
    ShaderFunctionArg()
       : ShaderDataType(),
@@ -192,7 +191,7 @@ public:
    }
 
    void printFunctionHLSL(String& inString);
-   void printFunctionGLSL(String& inString);
+   void printFunctionGLSL(String& inString, bool vert);
 };
 
 class FileShaderBlueprint

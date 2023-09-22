@@ -1,4 +1,26 @@
+//-----------------------------------------------------------------------------
+// Copyright (c) 2012 GarageGames, LLC
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+// IN THE SOFTWARE.
+//-----------------------------------------------------------------------------
 #include "platform/platform.h"
+
 #include "materials/shaderBlueprint.h"
 #include "core/volume.h"
 #include "core/stream/fileStream.h"
@@ -278,29 +300,29 @@ void UniformSamplerTypeToStringHLSL(GFXSamplerType inSamplerType, String inName,
    }
 }
 
-void UniformSamplerTypeToStringGLSL(GFXSamplerType inSamplerType, String inName, String& inString)
+void SamplerTypeToStringGLSL(GFXSamplerType inSamplerType, String inName, String& inString)
 {
    // hlsl in torque goes to texture2d for 1d?
    // have to add comparison states.
    switch (inSamplerType)
    {
    case GFXSamplerType::SAMP_Sampler1D:
-      inString += "uniform sampler2D " + inName + ";\n";
+      inString += "sampler2D " + inName;
       break;
    case GFXSamplerType::SAMP_Sampler2D:
-      inString += "uniform sampler2D " + inName + ";\n";
+      inString += "sampler2D " + inName;
       break;
    case GFXSamplerType::SAMP_Sampler2DArray:
-      inString += "uniform sampler2DArray " + inName + ";\n";
+      inString += "sampler2DArray " + inName;
       break;
    case GFXSamplerType::SAMP_Sampler3D:
-      inString += "uniform sampler3D " + inName + ";\n";
+      inString += "sampler3D " + inName;
       break;
    case GFXSamplerType::SAMP_SamplerCube:
-      inString += "uniform samplerCube " + inName + ";\n";
+      inString += "samplerCube " + inName;
       break;
    case GFXSamplerType::SAMP_SamplerCubeArray:
-      inString += "uniform samplerCubeArray " + inName + ";\n";
+      inString += "samplerCubeArray " + inName;
       break;
    default:
       // other types not supported for now ?
@@ -315,19 +337,19 @@ void ArgSamplerToStringHLSL(GFXSamplerType inSamplerType, String inName, String&
    switch (inSamplerType)
    {
    case GFXSamplerType::SAMP_Sampler1D:
-      inString += "Texture2D texture" + inName + ", SamplerState " + inName;
+      inString += "Texture2D texture" + inName + ",\nSamplerState " + inName;
       break;
    case GFXSamplerType::SAMP_Sampler2D:
-      inString += "Texture2D texture" + inName + ", SamplerState " + inName;
+      inString += "Texture2D texture" + inName + ",\nSamplerState " + inName;
       break;
    case GFXSamplerType::SAMP_Sampler3D:
-      inString += "Texture3D texture" + inName + ", SamplerState " + inName;
+      inString += "Texture3D texture" + inName + ",\nSamplerState " + inName;
       break;
    case GFXSamplerType::SAMP_SamplerCube:
-      inString += "TextureCube texture" + inName + ", SamplerState " + inName;
+      inString += "TextureCube texture" + inName + ",\nSamplerState " + inName;
       break;
    case GFXSamplerType::SAMP_SamplerCubeArray:
-      inString += "TextureCubeArray texture" + inName + ", SamplerState " + inName;
+      inString += "TextureCubeArray texture" + inName + ",\nSamplerState " + inName;
       break;
    default:
       // other types not supported for now ?
@@ -1562,7 +1584,9 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
             mVertexShader->mShaderUniforms[i]->dataConstType == GFXShaderConstType::GFXSCT_SamplerCubeArray ||
             mVertexShader->mShaderUniforms[i]->dataConstType == GFXShaderConstType::GFXSCT_SamplerTextureArray)
          {
-            UniformSamplerTypeToStringGLSL(mVertexShader->mShaderUniforms[i]->samplerType, mVertexShader->mShaderUniforms[i]->varName, vertexShader);
+            vertexShader += "uniform ";
+            SamplerTypeToStringGLSL(mVertexShader->mShaderUniforms[i]->samplerType, mVertexShader->mShaderUniforms[i]->varName, vertexShader);
+            vertexShader += ";\n";
          }
          else
          {
@@ -1585,7 +1609,7 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
       {
          for (U32 j = 0; j < mVertexShader->mShaderFunctions.size(); j++)
          {
-            mVertexShader->mShaderFunctions[j]->printFunctionHLSL(vertexShader);
+            mVertexShader->mShaderFunctions[j]->printFunctionGLSL(vertexShader, true);
          }
       }
 
@@ -1695,7 +1719,9 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
             mPixelShader->mShaderUniforms[i]->dataConstType == GFXShaderConstType::GFXSCT_SamplerCubeArray ||
             mPixelShader->mShaderUniforms[i]->dataConstType == GFXShaderConstType::GFXSCT_SamplerTextureArray)
          {
-            UniformSamplerTypeToStringGLSL(mPixelShader->mShaderUniforms[i]->samplerType, mPixelShader->mShaderUniforms[i]->varName, pixelShader);
+            pixelShader += "uniform ";
+            SamplerTypeToStringGLSL(mPixelShader->mShaderUniforms[i]->samplerType, mPixelShader->mShaderUniforms[i]->varName, pixelShader);
+            pixelShader += ";\n";
          }
          else
          {
@@ -1718,7 +1744,7 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
       {
          for (U32 j = 0; j < mPixelShader->mShaderFunctions.size(); j++)
          {
-            mPixelShader->mShaderFunctions[j]->printFunctionHLSL(pixelShader);
+            mPixelShader->mShaderFunctions[j]->printFunctionGLSL(pixelShader, false);
          }
       }
 
@@ -1793,8 +1819,102 @@ void ShaderStruct::printStructHLSL(String& inString)
 
 void ShaderFunction::printFunctionHLSL(String& inString)
 {
+   if (isInline)
+      inString += "inline ";
+
+   inString += ConstTypeToStringHLSL(returnType) + " ";
+   inString += name + "(";
+   for (U32 i = 0; i < arguments.size(); i++)
+   {
+
+      if (i > 0)
+      {
+         inString += ",\n";
+      }
+
+      if (arguments[i]->in)
+         inString += "in";
+      else if (arguments[i]->out)
+         inString += "out";
+      else if (arguments[i]->inout)
+         inString += "inout";
+
+      if (arguments[i]->dataConstType == GFXShaderConstType::GFXSCT_Sampler ||
+         arguments[i]->dataConstType == GFXShaderConstType::GFXSCT_SamplerCube ||
+         arguments[i]->dataConstType == GFXShaderConstType::GFXSCT_SamplerCubeArray ||
+         arguments[i]->dataConstType == GFXShaderConstType::GFXSCT_SamplerTextureArray)
+      {
+         ArgSamplerToStringHLSL(arguments[i]->samplerType, arguments[i]->varName, inString);
+      }
+      else
+      {
+         inString += ConstTypeToStringHLSL(arguments[i]->dataConstType) + " " + arguments[i]->varName;
+      }
+
+   }
+
+   inString += ")\n{";
+
+   Vector<String> funcLines;
+
+   functionBody.split("\n", funcLines);
+
+   for (U32 j = 0; j < funcLines.size(); j++)
+   {
+      ConvertHLSLLineKeywords(funcLines[j]);
+      inString += "\t" + funcLines[j] + ";\n";
+   }
+
+   inString += "}\n";
 }
 
-void ShaderFunction::printFunctionGLSL(String& inString)
+void ShaderFunction::printFunctionGLSL(String& inString, bool vert)
 {
+   if (isInline)
+      inString += "inline ";
+
+   inString += ConstTypeToStringHLSL(returnType) + " ";
+   inString += name + "(";
+   for (U32 i = 0; i < arguments.size(); i++)
+   {
+
+      if (i > 0)
+      {
+         inString += ",\n";
+      }
+
+      if (arguments[i]->in)
+         inString += "in";
+      else if (arguments[i]->out)
+         inString += "out";
+      else if (arguments[i]->inout)
+         inString += "inout";
+
+      if (arguments[i]->dataConstType == GFXShaderConstType::GFXSCT_Sampler ||
+         arguments[i]->dataConstType == GFXShaderConstType::GFXSCT_SamplerCube ||
+         arguments[i]->dataConstType == GFXShaderConstType::GFXSCT_SamplerCubeArray ||
+         arguments[i]->dataConstType == GFXShaderConstType::GFXSCT_SamplerTextureArray)
+      {
+         SamplerTypeToStringGLSL(arguments[i]->samplerType, arguments[i]->varName, inString);
+      }
+      else
+      {
+         inString += ConstTypeToStringGLSL(arguments[i]->dataConstType) + " " + arguments[i]->varName;
+      }
+
+   }
+
+   inString += ")\n{";
+
+   Vector<String> funcLines;
+
+   functionBody.split("\n", funcLines);
+
+   for (U32 j = 0; j < funcLines.size(); j++)
+   {
+      ConvertGLSLLineKeywords(funcLines[j], vert);
+      inString += "\t" + funcLines[j] + ";\n";
+   }
+
+   inString += "}\n";
 }

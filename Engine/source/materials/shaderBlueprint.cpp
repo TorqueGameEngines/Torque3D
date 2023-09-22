@@ -1683,7 +1683,7 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
                   continue;
                }
 
-               pixelShader += "in " + ConstTypeToStringGLSL(mShaderStructs[i]->structDataTypes[j]->dataConstType);
+               pixelShader += "in " + ConstTypeToStringGLSL(mShaderStructs[i]->structDataTypes[j]->dataConstType) + " ";
                pixelShader += mShaderStructs[i]->structDataTypes[j]->varName + "Conn;\n";
             }
          }
@@ -1704,7 +1704,7 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
                   continue;
                }
 
-               pixelShader += "out " + ConstTypeToStringGLSL(mShaderStructs[i]->structDataTypes[j]->dataConstType);
+               pixelShader += "out " + ConstTypeToStringGLSL(mShaderStructs[i]->structDataTypes[j]->dataConstType) + " ";
                pixelShader += mShaderStructs[i]->structDataTypes[j]->varName + ";\n";
             }
          }

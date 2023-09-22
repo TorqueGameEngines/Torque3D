@@ -312,6 +312,7 @@ enum GFXMatrixType
 
 enum GFXShaderConstType
 {
+   GFXSCT_Unknown,
    /// GFX"S"hader"C"onstant"T"ype
    // Scalar
    GFXSCT_Float, 
@@ -369,6 +370,28 @@ enum GFXDeclType
 
    /// The count of total GFXDeclTypes.
    GFXDeclType_COUNT,
+};
+
+enum GFXShaderStructType
+{
+   GFXSST_Unknown,
+   GFXSST_VertexData,
+   GFXSST_Connection,
+   GFXSST_PixelOut,
+};
+
+enum GFXShaderSemantic
+{
+   GFXSS_Unknown,
+   GFXSS_BINORMAL,
+   GFXSS_POSITION,
+   GFXSS_NORMAL,
+   GFXSS_COLOR,
+   GFXSS_TEXCOORD,
+   GFXSS_TANGENT,
+   GFXSS_SVPOSITION,
+   GFXSS_SVTARGET,
+   GFXSS_SVDEPTH,
 };
 
 #endif // _GFXENUMS_H_

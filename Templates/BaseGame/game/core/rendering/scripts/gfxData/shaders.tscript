@@ -23,6 +23,11 @@
 //-----------------------------------------------------------------------------
 //  This file contains shader data necessary for various engine utility functions
 //-----------------------------------------------------------------------------
+singleton ShaderBlueprint( DiffuseShader )
+{
+   BlueprintFile = $Core::CommonShaderPath @ "/ShaderBlueprint/basicDiffuse.blueprint";
+   exportFiles = true;
+};
 
 
 singleton ShaderData( ParticlesShaderData )

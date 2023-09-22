@@ -25,7 +25,7 @@
 //-----------------------------------------------------------------------------
 singleton ShaderBlueprint( DiffuseShader )
 {
-   BlueprintFile = $Core::CommonShaderPath @ "/ShaderBlueprint/basicDiffuse.blueprint";
+   BlueprintFile = $Core::CommonShaderPath @ "/ShaderBlueprint/basicDiffuse.tsl";
    exportFiles = true;
 };
 

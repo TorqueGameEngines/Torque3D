@@ -626,6 +626,7 @@ ShaderBlueprint::ShaderBlueprint()
    mPixelShaderConverted = String::EmptyString;
 
    mCompiledShader = GFX->createShader();
+   mCorrectSSP = false;
 }
 
 ShaderBlueprint::~ShaderBlueprint()
@@ -1038,6 +1039,16 @@ bool ShaderBlueprint::readFileShaderData(FileShaderBlueprint* inShader, FileObje
                S32 endPos = lineWords[2].find('"', startPos + 1) - 1;
                inShader->entryPoint = lineWords[2].substr(startPos + 1, endPos - startPos);
             }
+
+            return true;
+         }
+         else if (lineWords.size() > 1)
+         {
+            if (lineWords[1].equal("SCREENSPACEPOS", String::NoCase))
+            {
+               mCorrectSSP = true;
+            }
+
             return true;
          }
          else
@@ -1045,6 +1056,8 @@ bool ShaderBlueprint::readFileShaderData(FileShaderBlueprint* inShader, FileObje
             Con::printf("ShaderBlueprint - Error #pragma incomplete on line %d", lineNum);
             return false;
          }
+
+
       }
 
       // is this a uniform line.
@@ -1752,6 +1765,11 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
 
             mVertexShaderConverted += "\t" + entryFunctionLines[i] + ";\n";
          }
+      }
+
+      if (mCorrectSSP)
+      {
+         mVertexShaderConverted += "\tgl_Position.y *= -1;";
       }
 
       mVertexShaderConverted += "};";

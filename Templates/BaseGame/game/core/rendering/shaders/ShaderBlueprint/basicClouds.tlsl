@@ -18,6 +18,7 @@ Blueprint "basicClouds"
     VertexShader
     {
         #pragma entry "main"
+        #pragma SCREENSPACEPOS
         
         uniform float4x4 modelview;
         uniform float2 texDirection;

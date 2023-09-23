@@ -238,6 +238,8 @@ protected:
 
    GFXShader* mCompiledShader;
 
+   bool mCorrectSSP;
+
 public:
 
    Vector<ShaderStruct*> mShaderStructs;

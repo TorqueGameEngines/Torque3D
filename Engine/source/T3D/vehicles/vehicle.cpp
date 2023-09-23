@@ -931,36 +931,12 @@ void Vehicle::writePacketData(GameConnection *connection, BitStream *stream)
 {
    Parent::writePacketData(connection, stream);
    mathWrite(*stream, mSteering);
-
-   mathWrite(*stream, mRigid.linPosition);
-   mathWrite(*stream, mRigid.angPosition);
-   mathWrite(*stream, mRigid.linMomentum);
-   mathWrite(*stream, mRigid.angMomentum);
-   stream->writeFlag(mRigid.atRest);
-   stream->writeFlag(mContacts.getCount() == 0);
-
-   stream->writeFlag(mDisableMove);
-   stream->setCompressionPoint(mRigid.linPosition);
 }
 
 void Vehicle::readPacketData(GameConnection *connection, BitStream *stream)
 {
    Parent::readPacketData(connection, stream);
    mathRead(*stream, &mSteering);
-
-   mathRead(*stream, &mRigid.linPosition);
-   mathRead(*stream, &mRigid.angPosition);
-   mathRead(*stream, &mRigid.linMomentum);
-   mathRead(*stream, &mRigid.angMomentum);
-   mRigid.atRest = stream->readFlag();
-   if (stream->readFlag())
-      mContacts.clear();
-   mRigid.updateInertialTensor();
-   mRigid.updateVelocity();
-   mRigid.updateCenterOfMass();
-
-   mDisableMove = stream->readFlag();
-   stream->setCompressionPoint(mRigid.linPosition);
 }
 
 
@@ -1110,9 +1086,6 @@ void Vehicle::consoleInit()
 void Vehicle::initPersistFields()
 {
    docsURL;
-   addField( "disableMove", TypeBool, Offset(mDisableMove, Vehicle),
-      "When this flag is set, the vehicle will ignore throttle changes." );
-
    Parent::initPersistFields();
 }
 

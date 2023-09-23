@@ -83,6 +83,9 @@ GFXShaderSemantic ToSemantic(String inString)
    if (inString.equal("COLOR"))
       return GFXShaderSemantic::GFXSS_COLOR;
 
+   if (inString.equal("TANGENT"))
+      return GFXShaderSemantic::GFXSS_TANGENT;
+
    if (inString.equal("SV_POSITION", String::NoCase))
       return GFXShaderSemantic::GFXSS_SVPOSITION;
 
@@ -118,6 +121,8 @@ String SemanticToString(GFXShaderSemantic inSemantic)
          return "SV_Depth";
       case GFXShaderSemantic::GFXSS_TEXCOORD:
          return "TEXCOORD";
+      case GFXShaderSemantic::GFXSS_TANGENT:
+         return "TANGENT";
       default:
          return String::EmptyString;
    }
@@ -471,16 +476,6 @@ String ConstTypeToStringGLSL(GFXShaderConstType inConstType)
 
 void ConvertHLSLLineKeywords(String& inLine)
 {
-   if (inLine.find("Sample") != String::NPos)
-   {
-      // read until we get to the first , for our texture variable being sampled.
-      S32 start = inLine.find("(") + 1;
-      S32 end = inLine.find(",");
-      String tex = inLine.substr(start, end - start);
-
-      inLine.replace("Sample", "texture" + tex + ".Sample");
-   }
-
    // data types replacement.
    inLine.replace("mat4", "float4x4");
    inLine.replace("mat4x3", "float4x3");
@@ -494,13 +489,37 @@ void ConvertHLSLLineKeywords(String& inLine)
    // built in function replacement.
    inLine.replace("mix", "lerp");
    inLine.replace("fract", "frac");
+
+   if (inLine.find("Sample(") != String::NPos)
+   {
+      // read until we get to the first , for our texture variable being sampled.
+      S32 start = inLine.find("Sample(") + 7;
+      S32 end = inLine.find(",");
+      String tex = inLine.substr(start, end - start);
+
+      tex = TrimTabAndWhiteSpace(tex);
+
+      inLine.replace("Sample(", "texture" + tex + ".Sample(");
+
+   }
 }
 
 void ConvertGLSLLineKeywords(String& inLine, bool vert)
 {
-   if (inLine.find("Sample") != String::NPos)
+   inLine.replace("float4x4", "mat4");
+   inLine.replace("float4x3", "mat4x3");
+   inLine.replace("float3x4", "mat3x4");
+   inLine.replace("float2x2", "mat2");
+   inLine.replace("float3x3", "mat3");
+   inLine.replace("float4", "vec4");
+   inLine.replace("float3", "vec3");
+   inLine.replace("float2", "vec2");
+   inLine.replace("lerp", "mix");
+   inLine.replace("frac", "fract");
+
+   if (inLine.find("Sample(") != String::NPos)
    {
-      inLine.replace("Sample", "texture");
+      inLine.replace("Sample(", "texture(");
    }
 
    if (inLine.find("IN.") != String::NPos)
@@ -508,15 +527,21 @@ void ConvertGLSLLineKeywords(String& inLine, bool vert)
       S32 start = inLine.find("IN.") + 3;
       S32 end = inLine.find(",", start);
 
-      if(end == -1)
+      if (end == -1)
          end = inLine.find(")", start);
+
+      if (end > inLine.find(".", start))
+         end = inLine.find(".", start);
+
+      if (end > inLine.find(" ", start))
+         end = inLine.find(" ", start);
 
       if (end == -1)
          end = inLine.length();
 
       String var = inLine.substr(start, end - start);
 
-      if(vert)
+      if (vert)
          inLine.replace("IN." + var, var + "In");
       else
          inLine.replace("IN." + var, var + "Conn");
@@ -526,6 +551,19 @@ void ConvertGLSLLineKeywords(String& inLine, bool vert)
    {
       S32 start = inLine.find("OUT.") + 4;
       S32 end = inLine.find(" ", start);
+
+      if (end == -1)
+         end = inLine.find(")", start);
+
+      if (end > inLine.find(".", start))
+         end = inLine.find(".", start);
+
+      if (end > inLine.find(" ", start))
+         end = inLine.find(" ", start);
+
+      if (end == -1)
+         end = inLine.length();
+
       String var = inLine.substr(start, end - start);
 
       if (vert)
@@ -533,15 +571,6 @@ void ConvertGLSLLineKeywords(String& inLine, bool vert)
       else
          inLine.replace("OUT." + var, var);
    }
-
-   inLine.replace("float4x4", "mat4");
-   inLine.replace("float4x3", "mat4x3");
-   inLine.replace("float3x4", "mat3x4");
-   inLine.replace("float2x2", "mat2");
-   inLine.replace("float3x3", "mat3");
-   inLine.replace("float4", "vec4");
-   inLine.replace("float3", "vec3");
-   inLine.replace("float2", "vec2");
 
    // built in function replacement.
    if (inLine.find("mul") != String::NPos)
@@ -579,7 +608,8 @@ void ConvertGLSLLineKeywords(String& inLine, bool vert)
       inLine.replace(mulFunc, newMul);
    }
 
-   if (inLine.find("saturate") != String::NPos)
+   // needs to be while since more than 1 saturate function can exist on a line.
+   while (inLine.find("saturate") != String::NPos)
    {
       S32 start = inLine.find("saturate");
       S32 openBracket = 0;
@@ -602,13 +632,74 @@ void ConvertGLSLLineKeywords(String& inLine, bool vert)
 
       String clampFunc = saturateFunc;
       clampFunc.replace(lastBracket, 1, ", 0.0, 1.0)");
-      clampFunc.replace("saturate(", "clamp(");
+      clampFunc.replace(0, 9, "clamp(");
 
       inLine.replace(saturateFunc, clampFunc);
    }
+   
+}
 
-   inLine.replace("lerp", "mix");
-   inLine.replace("frac", "fract");
+bool ShaderBlueprint::_checkDefinition(GFXShader* shader)
+{
+   bool error = false;
+   Vector<String> samplers;
+   samplers.reserve(mShaderSamplers.size());
+   bool rtParams[16];
+   for (int i = 0; i < 16; ++i)
+      rtParams[i] = false;
+
+   const Vector<GFXShaderConstDesc>& shaderConstDesc = shader->getShaderConstDesc();
+
+   for (int i = 0; i < shaderConstDesc.size(); ++i)
+   {
+      const GFXShaderConstDesc& desc = shaderConstDesc[i];
+      if (desc.constType == GFXSCT_Sampler)
+      {
+         samplers.push_back(desc.name);
+      }
+   }
+
+   for (int i = 0; i < samplers.size(); ++i)
+   {
+      int pos;
+      bool find = hasSamplerDef(samplers[i], pos);
+
+      if (find && pos >= 0 && mRTParams[pos])
+      {
+         if (!shader->findShaderConstHandle(String::ToString("$rtParams%d", pos)))
+         {
+            String errStr = String::ToString("ShaderBlueprint(%s) sampler[%d] used but rtParams%d not used in shader compilation. Possible error", mShaderFileName.c_str(), pos, pos);
+            Con::errorf(errStr);
+            error = true;
+         }
+      }
+
+      if (!find)
+      {
+         String errStr = String::ToString("ShaderBlueprint(%s) sampler %s not defined", mShaderFileName.c_str(), samplers[i].c_str());
+         Con::errorf(errStr);
+         GFXAssertFatal(0, errStr);
+         error = true;
+      }
+   }
+
+   return !error;
+}
+
+bool ShaderBlueprint::hasSamplerDef(const String& _samplerName, int& pos) const
+{
+   String samplerName = _samplerName.startsWith("$") ? _samplerName : "$" + _samplerName;
+   for (int i = 0; i < mShaderSamplers.size(); ++i)
+   {
+      if (mShaderSamplers[i].equal(samplerName, String::NoCase))
+      {
+         pos = i;
+         return true;
+      }
+   }
+
+   pos = -1;
+   return false;
 }
 
 ShaderBlueprint::ShaderBlueprint()
@@ -618,6 +709,7 @@ ShaderBlueprint::ShaderBlueprint()
    //------------------------------------
    VECTOR_SET_ASSOCIATION(mShaderStructs);
    VECTOR_SET_ASSOCIATION(mShaderSamplers);
+   VECTOR_SET_ASSOCIATION(mShaderMacros);
 
    mVertexShader = new FileShaderBlueprint();
    mPixelShader = new FileShaderBlueprint();
@@ -625,8 +717,12 @@ ShaderBlueprint::ShaderBlueprint()
    mVertexShaderConverted = String::EmptyString;
    mPixelShaderConverted = String::EmptyString;
 
-   mCompiledShader = GFX->createShader();
    mCorrectSSP = false;
+
+   mCompiledShader = NULL;
+
+   for (int i = 0; i < 16; ++i)
+      mRTParams[i] = false;
 }
 
 ShaderBlueprint::~ShaderBlueprint()
@@ -647,18 +743,71 @@ void ShaderBlueprint::initPersistFields()
 
 }
 
-GFXShader* ShaderBlueprint::getShader()
+GFXShader* ShaderBlueprint::getShader(const Vector<GFXShaderMacro>& macros)
 {
-   convertShaders();
-   return mCompiledShader;
+   // Combine the dynamic macros with our script defined macros.
+   Vector<GFXShaderMacro> finalMacros;
+   finalMacros.merge(mShaderMacros);
+   finalMacros.merge(macros);
+
+   // Convert the final macro list to a string.
+   String cacheKey;
+   GFXShaderMacro::stringize(macros, &cacheKey);
+
+   GFXShader* shader = _createShader(finalMacros);
+   if (!shader)
+      return NULL;
+
+   _checkDefinition(shader);
+
+   mCompiledShader = shader;
+
+   return shader;
 }
 
 bool ShaderBlueprint::_reload()
 {
+   mShaderStructs.clear();
+
+   SAFE_DELETE(mVertexShader);
+   SAFE_DELETE(mPixelShader);
+
+   mVertexShader = new FileShaderBlueprint();
+   mPixelShader = new FileShaderBlueprint();
+
+   mVertexShaderConverted.clear();
+   mPixelShaderConverted.clear();
+
    if (!initParser(mBluePrintFile))
       return false;
 
-   convertShaders();
+   if (mExportFiles)
+   {
+      convertShaders();
+   }
+
+   if (mCompiledShader != NULL)
+   {
+      switch (GFX->getAdapterType())
+      {
+      case Direct3D11:
+      {
+         convertToHLSL(false);
+         break;
+      }
+
+      case OpenGL:
+      {
+         convertToGLSL(false);
+         break;
+      }
+
+      default:
+         break;
+      }
+
+      mCompiledShader->reloadStringShader(mVertexShaderConverted, mPixelShaderConverted);
+   }
 
    return true;
 }
@@ -667,6 +816,8 @@ bool ShaderBlueprint::onAdd()
 {
    if (!Parent::onAdd())
       return false;
+
+   mShaderMacros.clear();
 
    if (!initParser(mBluePrintFile))
       return false;
@@ -1044,9 +1195,38 @@ bool ShaderBlueprint::readFileShaderData(FileShaderBlueprint* inShader, FileObje
          }
          else if (lineWords.size() > 1)
          {
+            // do we require screenspace correction.
             if (lineWords[1].equal("SCREENSPACEPOS", String::NoCase))
             {
                mCorrectSSP = true;
+            }
+
+            // do we require hdrencode function?
+            if (lineWords[1].equal("HDRENCODE", String::NoCase))
+            {
+               // add our hdrEncode functions.
+               ShaderFunction* hdrEncode = new ShaderFunction(GFXShaderConstType::GFXSCT_Float3,
+                                                "hdrEncode",
+                                                false);
+
+               hdrEncode->arguments.push_back(new ShaderFunctionArg(GFXShaderConstType::GFXSCT_Float3, "inputSample", false, false, false));
+               hdrEncode->functionBody += "float HDR_RGB10_MAX = 4.0\n";
+               hdrEncode->functionBody += "#if defined( TORQUE_HDR_RGB10 )\n";
+               hdrEncode->functionBody += "\treturn inputSample / HDR_RGB10_MAX\n";
+               hdrEncode->functionBody += "#else\n";
+               hdrEncode->functionBody += "\treturn inputSample\n";
+               hdrEncode->functionBody += "#endif\n";
+
+               inShader->mShaderFunctions.push_back(hdrEncode);
+
+               hdrEncode = new ShaderFunction(GFXShaderConstType::GFXSCT_Float4,
+                  "hdrEncode",
+                  false);
+
+               hdrEncode->arguments.push_back(new ShaderFunctionArg(GFXShaderConstType::GFXSCT_Float4, "inputSample", false, false, false));
+               hdrEncode->functionBody += "return float4(hdrEncode(inputSample.rgb), inputSample.a)\n";
+
+               inShader->mShaderFunctions.push_back(hdrEncode);
             }
 
             return true;
@@ -1058,6 +1238,21 @@ bool ShaderBlueprint::readFileShaderData(FileShaderBlueprint* inShader, FileObje
          }
 
 
+      }
+
+      if (lineWords[0].equal("#define"))
+      {
+         if (lineWords.size() > 1)
+         {
+            GFXShaderMacro macro;
+            macro.name = lineWords[1];
+            macro.value = lineWords[2];
+         }
+         else
+         {
+            Con::printf("ShaderBlueprint - Error #define doesn't have a value on line %d", lineNum);
+            return false;
+         }
       }
 
       // is this a uniform line.
@@ -1106,7 +1301,7 @@ bool ShaderBlueprint::readFileShaderData(FileShaderBlueprint* inShader, FileObje
             {
                uniformType->setSamplerType(samplerType);
 
-               mShaderSamplers.push_back(uniformName);
+               mShaderSamplers.push_back("$" + uniformName);
             }
 
             inShader->mShaderUniforms.push_back(uniformType);
@@ -1237,7 +1432,12 @@ bool ShaderBlueprint::readFileShaderData(FileShaderBlueprint* inShader, FileObje
                }
 
                if (shaderFunction != NULL)
+               {
+                  if (line.find(";") != String::NPos)
+                     line = line.substr(0, line.find(";"));
+
                   shaderFunction->functionBody += line + "\n";
+               }
             }
          }
 
@@ -1281,13 +1481,15 @@ bool ShaderBlueprint::shaderFunctionArguments(String lineIn, ShaderFunction* fun
 {
    // split args by space.
    Vector<String> arguments;
-   lineIn.split(" ", arguments);
+   String argString = TrimTabAndWhiteSpace(lineIn);
+   argString.split(" ", arguments);
    bool readFunction = false;
+
    // arguments dont have spaces, bad programmer!.
-   if (lineIn.size() == 1)
+   if (arguments.size() == 1)
    {
       arguments.clear();
-      lineIn.split(",", arguments);
+      argString.split(",", arguments);
    }
 
    bool in = false;
@@ -1299,7 +1501,7 @@ bool ShaderBlueprint::shaderFunctionArguments(String lineIn, ShaderFunction* fun
 
    for (U32 j = 0; j < arguments.size(); j++)
    {
-      if (arguments[j].find(')') != String::NPos)
+      if (arguments[j].find(")") != String::NPos)
       {
          if (!arguments[j].equal(")"))
          {
@@ -1388,11 +1590,72 @@ bool ShaderBlueprint::shaderFunctionArguments(String lineIn, ShaderFunction* fun
    return readFunction;
 }
 
+GFXShader* ShaderBlueprint::_createShader(const Vector<GFXShaderMacro>& macros)
+{
+   Vector<String> samplers;
+   samplers.setSize(mShaderSamplers.size());
+   for (U32 i = 0; i < mShaderSamplers.size(); i++)
+   {
+      // we should be able to do this while finding the samplers?
+      samplers[i] = mShaderSamplers[i][0] == '$' ? mShaderSamplers[i] : "$" + mShaderSamplers[i];
+   }
+
+   // Enable shader error logging.
+   GFXShader::setLogging(true, true);
+
+   GFXShader* shader = GFX->createShader();
+   bool success = false;
+
+   F32 pixver = GFX->getPixelShaderVersion();
+
+   // eventually will want to split up vertex and pixel shader compile steps
+   // and add the extra shader types eg. compute, geometry, tess.
+   switch (GFX->getAdapterType())
+   {
+      case Direct3D11:
+      {
+         if(mVertexShaderConverted == String::EmptyString && mPixelShaderConverted == String::EmptyString)
+            convertToHLSL(false);
+
+         success = shader->initFromString(mVertexShaderConverted,
+                                          mPixelShaderConverted,
+                                          pixver,
+                                          macros,
+                                          samplers);
+
+         break;
+      }
+
+      case OpenGL:
+      {
+         if (mVertexShaderConverted == String::EmptyString && mPixelShaderConverted == String::EmptyString)
+            convertToGLSL(false);
+
+         success = shader->initFromString(mVertexShaderConverted,
+                                          mPixelShaderConverted,
+                                          pixver,
+                                          macros,
+                                          samplers);
+         break;
+      }
+
+      default:
+         success = false;
+         break;
+   }
+
+   // If we failed to load the shader then
+   // cleanup and return NULL.
+   if (!success)
+   {
+      SAFE_DELETE(shader);
+   }
+
+   return shader;
+}
+
 void ShaderBlueprint::convertShaders()
 {
-   if (mExportFiles)
-   {
-      // only when exporting files we clear the string holding the converted shader code.
       convertToHLSL(true);
       mPixelShaderConverted.clear();
       mVertexShaderConverted.clear();
@@ -1400,65 +1663,6 @@ void ShaderBlueprint::convertShaders()
       convertToGLSL(true);
       mPixelShaderConverted.clear();
       mVertexShaderConverted.clear();
-   }
-   else
-   {
-      Vector<String> samplers;
-      samplers.setSize(mShaderSamplers.size());
-      for (U32 i = 0; i < mShaderSamplers.size(); i++)
-      {
-         // we should be able to do this while finding the samplers?
-         samplers[i] = mShaderSamplers[i][0] == '$' ? mShaderSamplers[i] : "$" + mShaderSamplers[i];
-      }
-
-      // Enable shader error logging.
-      GFXShader::setLogging(true, true);
-
-      GFXShader* shader = GFX->createShader();
-      bool success = false;
-
-      F32 pixver = GFX->getPixelShaderVersion();
-
-      // eventually will want to split up vertex and pixel shader compile steps
-      // and add the extra shader types eg. compute, geometry, tess.
-      switch (GFX->getAdapterType())
-      {
-         case Direct3D11:
-         {
-            convertToHLSL(false);
-            success = shader->initFromString(mVertexShaderConverted,
-                                             mPixelShaderConverted,
-                                             samplers);
-
-            break;
-         }
-
-         case OpenGL:
-         {
-            convertToGLSL(false);
-            success = shader->initFromString(mVertexShaderConverted,
-                                             mPixelShaderConverted,
-                                             samplers);
-            break;
-         }
-
-         default:
-            break;
-      }
-
-      // If we failed to load the shader then
-      // cleanup and return NULL.
-      if (!success)
-      {
-         Con::printf("ShaderBlueprint - Shader failed to compile.");
-         SAFE_DELETE(shader);
-      }
-      else
-      {
-         mCompiledShader = shader;
-      }
-
-   }
 }
 
 void ShaderBlueprint::convertToHLSL(bool exportFile)
@@ -1661,6 +1865,11 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
    if (mVertexShader != NULL)
    {
       mVertexShaderConverted += "#version 330\n\n";
+
+      // add required extensions. these automatically got added in the shaderFRomStream in glsl
+      mVertexShaderConverted += "#extension GL_ARB_texture_cube_map_array : enable\n";
+      mVertexShaderConverted += "#extension GL_ARB_gpu_shader5 : enable\n\n";
+
       // print our VertexData struct (there has to be a better way)
       for (U32 i = 0; i < mShaderStructs.size(); i++)
       {
@@ -1769,7 +1978,7 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
 
       if (mCorrectSSP)
       {
-         mVertexShaderConverted += "\tgl_Position.y *= -1;";
+         mVertexShaderConverted += "\tgl_Position.y *= -1;\n";
       }
 
       mVertexShaderConverted += "};";
@@ -1796,6 +2005,11 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
    if (mPixelShader != NULL)
    {
       mPixelShaderConverted += "#version 330\n\n";
+
+      // add required extensions. these automatically got added in the shaderFRomStream in glsl
+      mPixelShaderConverted += "#extension GL_ARB_texture_cube_map_array : enable\n";
+      mPixelShaderConverted += "#extension GL_ARB_gpu_shader5 : enable\n\n";
+
       // print our ConnectionData struct (there has to be a better way)
       for (U32 i = 0; i < mShaderStructs.size(); i++)
       {
@@ -1974,12 +2188,15 @@ void ShaderFunction::printFunctionHLSL(String& inString)
       }
       else
       {
+         if (i > 0)
+            inString += "\t\t";
+
          inString += ConstTypeToStringHLSL(arguments[i]->dataConstType) + " " + arguments[i]->varName;
       }
 
    }
 
-   inString += ")\n{";
+   inString += ")\n{\n";
 
    Vector<String> funcLines;
 
@@ -1987,11 +2204,28 @@ void ShaderFunction::printFunctionHLSL(String& inString)
 
    for (U32 j = 0; j < funcLines.size(); j++)
    {
-      ConvertHLSLLineKeywords(funcLines[j]);
-      inString += "\t" + funcLines[j] + ";\n";
+      if (funcLines[j] == String::EmptyString)
+         inString += "\n";
+      else
+      {
+         bool addLineEnd = true;
+         if (funcLines[j].find("#if") != String::NPos ||
+            funcLines[j].find("#else") != String::NPos ||
+            funcLines[j].find("#endif") != String::NPos)
+         {
+            addLineEnd = false;
+         }
+
+         ConvertHLSLLineKeywords(funcLines[j]);
+         inString += "\t" + funcLines[j];
+         if (addLineEnd)
+            inString += ";\n";
+         else
+            inString += "\n";
+      }
    }
 
-   inString += "}\n";
+   inString += "}\n\n";
 }
 
 void ShaderFunction::printFunctionGLSL(String& inString, bool vert)
@@ -1999,7 +2233,7 @@ void ShaderFunction::printFunctionGLSL(String& inString, bool vert)
    if (isInline)
       inString += "inline ";
 
-   inString += ConstTypeToStringHLSL(returnType) + " ";
+   inString += ConstTypeToStringGLSL(returnType) + " ";
    inString += name + "(";
    for (U32 i = 0; i < arguments.size(); i++)
    {
@@ -2025,12 +2259,15 @@ void ShaderFunction::printFunctionGLSL(String& inString, bool vert)
       }
       else
       {
+         if (i > 0)
+            inString += "\t\t";
+
          inString += ConstTypeToStringGLSL(arguments[i]->dataConstType) + " " + arguments[i]->varName;
       }
 
    }
 
-   inString += ")\n{";
+   inString += ")\n{\n";
 
    Vector<String> funcLines;
 
@@ -2038,9 +2275,27 @@ void ShaderFunction::printFunctionGLSL(String& inString, bool vert)
 
    for (U32 j = 0; j < funcLines.size(); j++)
    {
-      ConvertGLSLLineKeywords(funcLines[j], vert);
-      inString += "\t" + funcLines[j] + ";\n";
+      if (funcLines[j] == String::EmptyString)
+         inString += "\n";
+      else
+      {
+         bool addLineEnd = true;
+         if (funcLines[j].find("#if") != String::NPos ||
+            funcLines[j].find("#else") != String::NPos ||
+            funcLines[j].find("#endif") != String::NPos)
+         {
+            addLineEnd = false;
+         }
+
+         ConvertGLSLLineKeywords(funcLines[j], vert);
+
+         inString += "\t" + funcLines[j];
+         if (addLineEnd)
+            inString += ";\n";
+         else
+            inString += "\n";
+      }
    }
 
-   inString += "}\n";
+   inString += "}\n\n";
 }

@@ -96,7 +96,7 @@ protected:
                                        const Vector<GFXShaderMacro>& macros );
 
    static bool _loadShaderFromString(  GLuint shader,
-                                       const String& shaderCode,
+                                       String& shaderCode,
                                        const Vector<GFXShaderMacro>& macros);
 
    /// @name Internal GL handles

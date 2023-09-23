@@ -570,7 +570,7 @@ bool GFXGLShader::_initFromString(const String& inVertex, const String& inPixel)
 
    macros.increment();
    macros.last().name = "TORQUE_SM";
-   macros.last().value = 40;
+   macros.last().value = "40";
    macros.increment();
    macros.last().name = "TORQUE_VERTEX_SHADER";
    macros.last().value = "";
@@ -1221,8 +1221,23 @@ bool GFXGLShader::_loadShaderFromStream(  GLuint shader,
    return true;
 }
 
-bool GFXGLShader::_loadShaderFromString(GLuint shader, const String& shaderCode, const Vector<GFXShaderMacro>& macros)
+bool GFXGLShader::_loadShaderFromString(GLuint shader, String& shaderCode, const Vector<GFXShaderMacro>& macros)
 {
+   // Now add all the macros.
+   String define;
+   for (U32 i = 0; i < macros.size(); i++)
+   {
+      if (macros[i].name.isEmpty())  // TODO OPENGL
+         continue;
+
+      define += String::ToString("#define %s %s\n", macros[i].name.c_str(), macros[i].value.c_str());
+   }
+
+   // find first double new line. this should be after version declaration.
+   S32 start = shaderCode.find("\n\n");
+
+   shaderCode.replace(start, 1,"\n\n" + define);
+
    const char* shaderC = shaderCode.c_str();
 
    glShaderSource(shader, 1, &shaderC, NULL);
@@ -1303,8 +1318,8 @@ bool GFXGLShader::initShaderFromString(const String& shaderCode, bool isVertex, 
       mPixelShader = activeShader;
    glAttachShader(mProgram, activeShader);
 
-
-   if (!_loadShaderFromString(activeShader, shaderCode, macros))
+   String modifiableShader = shaderCode;
+   if (!_loadShaderFromString(activeShader, modifiableShader, macros))
       return false;
 
    GLint compile;

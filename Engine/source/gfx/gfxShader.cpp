@@ -99,9 +99,13 @@ bool GFXShader::init(   const Torque::Path &vertFile,
 
 bool GFXShader::initFromString(  const String& vertexShader,
                                  const String& pixelShader,
+                                 F32 pixVersion,
+                                 const Vector<GFXShaderMacro>& macros,
                                  const Vector<String>& samplerNames)
 {
 
+   mPixVersion = pixVersion;
+   mMacros = macros;
    mSamplerNamesOrdered = samplerNames;
 
    // Before we compile the shader make sure the
@@ -116,6 +120,21 @@ bool GFXShader::initFromString(  const String& vertexShader,
    return true;
 }
 
+bool GFXShader::reloadStringShader(const String& vertexShader, const String& pixelShader)
+{
+   // Before we compile the shader make sure the
+   // conditioner features have been updated.
+   ConditionerFeature::updateConditioners();
+
+   mReloadKey++;
+
+   if (!_initFromString(vertexShader, pixelShader))
+      return false;
+
+   mReloadSignal.trigger();
+
+   return true;
+}
 
 bool GFXShader::reload()
 {

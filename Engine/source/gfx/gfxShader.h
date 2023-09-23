@@ -316,7 +316,11 @@ public:
 
    bool initFromString( const String& vertexShader,
                         const String& pixelShader,
+                        F32 pixVersion,
+                        const Vector<GFXShaderMacro>& macros,
                         const Vector<String>& samplerNames);
+
+   bool reloadStringShader(const String& vertexShader, const String& pixelShader);
 
    /// Reloads the shader from disk.
    bool reload();

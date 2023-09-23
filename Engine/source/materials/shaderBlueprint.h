@@ -237,9 +237,12 @@ protected:
    void _onFileChanged(const Torque::Path& path) { _reload(); }
 
    GFXShader* mCompiledShader;
+   Vector<GFXShaderMacro> mShaderMacros;
 
    bool mCorrectSSP;
+   bool mRTParams[16];
 
+   bool _checkDefinition(GFXShader* shader);
 public:
 
    Vector<ShaderStruct*> mShaderStructs;
@@ -250,6 +253,9 @@ public:
 
    String mVertexShaderConverted;
    String mPixelShaderConverted;
+
+   bool hasSamplerDef(const String& _samplerName, int& pos) const;
+   bool hasRTParamsDef(const int pos) const { return mRTParams[pos]; }
 
    ShaderBlueprint();
    virtual ~ShaderBlueprint();
@@ -265,6 +271,8 @@ public:
    bool readFileShaderData(FileShaderBlueprint* inShader, FileObject& file, U32& lineNum);
    bool shaderFunctionArguments(String lineIn, ShaderFunction* function);
 
+   GFXShader* _createShader(const Vector<GFXShaderMacro>& macros);
+
    // Conversion functions
    void convertShaders();
    void convertToHLSL(bool exportFile);
@@ -273,7 +281,7 @@ public:
    // ConsoleObject
    static void initPersistFields();
 
-   GFXShader* getShader();
+   GFXShader* getShader(const Vector<GFXShaderMacro>& macros = Vector<GFXShaderMacro>());
 
    bool _reload();
 

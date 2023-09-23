@@ -382,16 +382,31 @@ enum GFXShaderStructType
 
 enum GFXShaderSemantic
 {
-   GFXSS_Unknown,
-   GFXSS_BINORMAL,
-   GFXSS_POSITION,
+   GFXSS_POSITION = 0,
    GFXSS_NORMAL,
    GFXSS_COLOR,
-   GFXSS_TEXCOORD,
    GFXSS_TANGENT,
+   GFXSS_TANGENTW,
+   GFXSS_BINORMAL,
+   GFXSS_TEXCOORD,
    GFXSS_SVPOSITION,
    GFXSS_SVTARGET,
    GFXSS_SVDEPTH,
+   GFXSS_Unknown
+};
+
+enum class GFXSamplerType
+{
+   SAMP_Uknown,
+   SAMP_Sampler1D,
+   SAMP_Sampler2D,
+   SAMP_Sampler3D,
+   SAMP_SamplerCube,
+   SAMP_Sampler2DArray,
+   SAMP_SamplerCubeArray,
+   SAMP_Sampler1DShadow,
+   SAMP_Sampler2DShadow,
+
 };
 
 #endif // _GFXENUMS_H_

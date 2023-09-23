@@ -35,6 +35,8 @@
 #include "materials/materialManager.h"
 #include "materials/customMaterialDefinition.h"
 #include "materials/shaderData.h"
+#include "materials/shaderBlueprint.h"
+
 #include "lighting/lightInfo.h"
 #include "math/mathIO.h"
 
@@ -137,10 +139,18 @@ bool CloudLayer::onAdd()
    {
       _initBuffers();
 
-      // Find ShaderData
-      ShaderData *shaderData;
-      mShader = Sim::findObject( "CloudLayerShader", shaderData ) ? 
-                  shaderData->getShader() : NULL;
+      //// Find ShaderData
+      //ShaderData *shaderData;
+      //mShader = Sim::findObject( "CloudLayerShader", shaderData ) ? 
+      //            shaderData->getShader() : NULL;
+      //if ( !mShader )
+      //{
+      //   Con::errorf( "CloudLayer::onAdd - could not find CloudLayerShader" );
+      //   return false;
+      //}
+
+      ShaderBlueprint* shaderBlueprint;
+      mShader = Sim::findObject("CloudLayerBlueprint", shaderBlueprint) ? shaderBlueprint->getShader() : NULL;
       if ( !mShader )
       {
          Con::errorf( "CloudLayer::onAdd - could not find CloudLayerShader" );

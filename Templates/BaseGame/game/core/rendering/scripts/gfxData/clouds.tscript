@@ -59,3 +59,9 @@ singleton ShaderBlueprint( BasicCloudsBlueprint )
    BlueprintFile = $Core::CommonShaderPath @ "/ShaderBlueprint/basicClouds.tlsl";
    exportFiles = false;
 };
+
+singleton ShaderBlueprint( CloudLayerBlueprint )
+{
+   BlueprintFile = $Core::CommonShaderPath @ "/ShaderBlueprint/cloudLayer.tlsl";
+   exportFiles = false;
+};

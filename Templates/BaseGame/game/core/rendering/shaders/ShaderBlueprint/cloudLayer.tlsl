@@ -1,0 +1,191 @@
+Blueprint "cloudLayer"
+{
+
+    struct VertData{
+        float3 pos : POSITION;
+        float3 normal : NORMAL;
+        float3 binormal : BINORMAL;
+        float3 tangent : TANGENT;
+        float2 uv0 : TEXCOORD0;
+    };
+
+    struct ConnectData{
+        float4 hpos : SV_Position;
+        float4 texCoord12 : TEXCOORD0;
+        float4 texCoord34 : TEXCOORD1;
+        float3 vLightTS : TEXCOORD2;
+        float3 vViewTS : TEXCOORD3;
+        float worldDist : TEXCOORD4;
+    };
+
+    struct FragOut{
+        float4 col : SV_Target;
+    };
+
+    VertexShader
+    {
+        #pragma entry "main"
+        #pragma SCREENSPACEPOS
+        
+        uniform float4x4 modelview;
+        uniform float3 eyePosWorld;
+        uniform float3 sunVec;
+        uniform float2 texOffset0;
+        uniform float2 texOffset1;
+        uniform float2 texOffset2;
+        uniform float3 texScale;
+
+        ConnectData main(VertData IN)
+        {
+            ConnectData OUT;
+
+            OUT.hpos = mul(modelview, float4(IN.pos,1.0));
+
+            //OUT.hpos.w // for reversed depth
+            OUT.hpos.z = 0.0f; 
+
+            // Offset the uv so we don't have a seam directly over our head.
+            float2 uv = IN.uv0 + float2( 0.5, 0.5 );
+            
+            OUT.texCoord12.xy = uv * texScale.x;
+            OUT.texCoord12.xy += texOffset0;
+            
+            OUT.texCoord12.zw = uv * texScale.y;
+            OUT.texCoord12.zw += texOffset1;
+            
+            OUT.texCoord34.xy = uv * texScale.z;
+            OUT.texCoord34.xy += texOffset2;
+            
+            OUT.texCoord34.z = IN.pos.z;
+            OUT.texCoord34.w = 0.0;
+
+            // Transform the normal, tangent and binormal vectors from object space to 
+            // homogeneous projection space:
+            float3 vNormalWS   = -IN.normal; 
+            float3 vTangentWS  = -IN.tangent;
+            float3 vBinormalWS = -IN.binormal;
+
+            // Compute position in world space:
+            float4 vPositionWS = float4(IN.pos, 1.0) + float4(eyePosWorld, 1); //mul( IN.pos, objTrans );
+
+            // Compute and output the world view vector (unnormalized):
+            float3 vViewWS = eyePosWorld - vPositionWS.xyz;
+
+            // Compute denormalized light vector in world space:
+            float3 vLightWS = -sunVec;
+
+            // Normalize the light and view vectors and transform it to the tangent space:
+            float3x3 mWorldToTangent = float3x3( vTangentWS, vBinormalWS, vNormalWS );
+
+            // Propagate the view and the light vectors (in tangent space):
+            OUT.vLightTS = mul( vLightWS, mWorldToTangent );
+            OUT.vViewTS  = mul( mWorldToTangent, vViewWS  );
+            
+            OUT.worldDist = saturate( pow( max( IN.pos.z, 0 ), 2 ) );
+
+            return OUT;
+        };
+    };
+
+    PixelShader
+    {
+        #pragma entry "main"
+        #pragma HDRENCODE
+
+        uniform sampler2D normalHeightMap;
+        uniform float3 ambientColor;
+        uniform float3 sunColor;
+        uniform float cloudCoverage; 
+        uniform float3 cloudBaseColor;
+        uniform float cloudExposure;
+
+        // Calculates the Rayleigh phase function
+        float getRayleighPhase( float angle )
+        {
+            return 0.75 * ( 1.0 + pow( angle, 2 ) );	
+        }
+
+        // Returns the output rgb color given a texCoord and parameters it uses
+        // for lighting calculation.
+        float3 ComputeIllumination( float2 texCoord, 
+                                    float3 vLightTS, 
+                                    float3 vViewTS, 
+                                    float3 vNormalTS )
+        {   
+            //return noiseNormal;
+            //return vNormalTS;
+            
+            float3 vLightTSAdj = float3( -vLightTS.x, -vLightTS.y, vLightTS.z );
+            
+            float dp = dot( vNormalTS, vLightTSAdj );
+            
+            // Calculate the amount of illumination (lightTerm)...      
+            
+            // We do both a rim lighting effect and a halfLambertian lighting effect
+            // and combine the result.
+            float halfLambertTerm = saturate( pow( dp * 0.5 + 0.5, 1 ) );
+            float rimLightTerm = pow( ( 1.0 - dp ), 1.0 );   
+            float lightTerm = saturate( halfLambertTerm * 1.0 + rimLightTerm * dp );
+            lightTerm *= 0.5;
+            
+            // Use a simple RayleighPhase function to simulate single scattering towards
+            // the camera.
+            float angle = dot( vLightTS, vViewTS );
+            lightTerm *= getRayleighPhase( angle );
+            
+            // Combine terms and colors into the output color.   
+            //float3 lightColor = ( lightTerm * sunColor * fOcclusionShadow ) + ambientColor;   
+            float3 lightColor = lerp( ambientColor, sunColor, lightTerm );
+            //lightColor = lerp( lightColor, ambientColor, cloudCoverage );
+            float3 finalColor = cloudBaseColor * lightColor;
+            
+            return finalColor;
+        }   
+
+        FragOut main(ConnectData IN)
+        {
+            FragOut OUT;
+
+            //  Normalize the interpolated vectors:
+            float3 vViewTS   = normalize( IN.vViewTS  );
+            float3 vLightTS  = normalize( IN.vLightTS );
+
+            float4 cResultColor = float4( 0, 0, 0, 1 );
+
+            float2 texSample = IN.texCoord12.xy;
+
+            float4 noise1 = Sample( normalHeightMap, IN.texCoord12.zw );
+            noise1 = normalize( ( noise1 - 0.5 ) * 2.0 );
+
+            float4 noise2 = Sample( normalHeightMap, IN.texCoord34.xy );
+            noise2 = normalize( ( noise2 - 0.5 ) * 2.0 );
+
+            float3 noiseNormal = normalize( noise1 + noise2 ).xyz;
+
+            float noiseHeight = noise1.a * noise2.a * ( cloudCoverage / 2.0 + 0.5 );
+
+            float3 vNormalTS = normalize( Sample(normalHeightMap, texSample).xyz * 2.0 - 1.0);
+            vNormalTS += noiseNormal;
+            vNormalTS = normalize( vNormalTS );
+
+            // Compute resulting color for the pixel:
+            cResultColor.rgb = ComputeIllumination( texSample, vLightTS, vViewTS, vNormalTS );
+
+            float coverage = ( cloudCoverage - 0.5 ) * 2.0;
+            cResultColor.a = Sample(normalHeightMap, texSample).a + coverage + noiseHeight;
+
+            if ( cloudCoverage > -1.0 ) cResultColor.a /= 1.0 + coverage;
+                    
+            cResultColor.a = saturate( cResultColor.a * pow( saturate(cloudCoverage), 0.25 ) );
+
+            cResultColor.a = lerp( cResultColor.a, 0.0, 1.0 - pow(IN.worldDist,2.0) );
+            
+            cResultColor.rgb *= cloudExposure;
+
+            OUT.col = hdrEncode(cResultColor);
+            return OUT;
+        };
+
+    };
+
+};

@@ -42,20 +42,6 @@ class GFXShader;
 class ShaderData;
 struct GFXShaderMacro;
 
-enum class GFXSamplerType
-{
-   SAMP_Uknown,
-   SAMP_Sampler1D,
-   SAMP_Sampler2D,
-   SAMP_Sampler3D,
-   SAMP_SamplerCube,
-   SAMP_Sampler2DArray,
-   SAMP_SamplerCubeArray,
-   SAMP_Sampler1DShadow,
-   SAMP_Sampler2DShadow,
-
-};
-
 class ShaderDataType
 {
 public:

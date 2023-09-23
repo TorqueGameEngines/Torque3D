@@ -594,54 +594,9 @@ bool GFXGLShader::_initFromString(const String& inVertex, const String& inPixel)
    // Link it!
    glLinkProgram(mProgram);
 
-   GLint activeAttribs = 0;
-   glGetProgramiv(mProgram, GL_ACTIVE_ATTRIBUTES, &activeAttribs);
-
-   GLint maxLength;
-   glGetProgramiv(mProgram, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &maxLength);
-
-   FrameTemp<GLchar> tempData(maxLength + 1);
-   *tempData.address() = '\0';
-   // Check atributes
-   for (U32 i = 0; i < activeAttribs; i++)
-   {
-      GLint size;
-      GLenum type;
-
-      glGetActiveAttrib(mProgram, i, maxLength + 1, NULL, &size, &type, tempData.address());
-
-      StringTableEntry argName = StringTable->insert(tempData.address());
-
-      CHECK_AARG(Torque::GL_VertexAttrib_Position, vPosition);
-      CHECK_AARG(Torque::GL_VertexAttrib_Normal, vNormal);
-      CHECK_AARG(Torque::GL_VertexAttrib_Color, vColor);
-      CHECK_AARG(Torque::GL_VertexAttrib_Tangent, vTangent);
-      CHECK_AARG(Torque::GL_VertexAttrib_TangentW, vTangentW);
-      CHECK_AARG(Torque::GL_VertexAttrib_Binormal, vBinormal);
-      CHECK_AARG(Torque::GL_VertexAttrib_TexCoord0, vTexCoord0);
-      CHECK_AARG(Torque::GL_VertexAttrib_TexCoord1, vTexCoord1);
-      CHECK_AARG(Torque::GL_VertexAttrib_TexCoord2, vTexCoord2);
-      CHECK_AARG(Torque::GL_VertexAttrib_TexCoord3, vTexCoord3);
-      CHECK_AARG(Torque::GL_VertexAttrib_TexCoord4, vTexCoord4);
-      CHECK_AARG(Torque::GL_VertexAttrib_TexCoord5, vTexCoord5);
-      CHECK_AARG(Torque::GL_VertexAttrib_TexCoord6, vTexCoord6);
-      CHECK_AARG(Torque::GL_VertexAttrib_TexCoord7, vTexCoord7);
-      CHECK_AARG(Torque::GL_VertexAttrib_TexCoord8, vTexCoord8);
-      CHECK_AARG(Torque::GL_VertexAttrib_TexCoord9, vTexCoord9);
-   }
-
    //always have OUT_col
-   glBindFragDataLocation(mProgram, 0, "OUT_col");
+   //glBindFragDataLocation(mProgram, 0, "OUT_col");
    // Check OUT_colN
-   for (U32 i = 1; i < 4; i++)
-   {
-      char buffer[10];
-      dSprintf(buffer, sizeof(buffer), "OUT_col%u", i);
-      GLint location = glGetFragDataLocation(mProgram, buffer);
-      if (location > 0)
-         glBindFragDataLocation(mProgram, i, buffer);
-
-   }
 
    // Link it again!
    glLinkProgram(mProgram);

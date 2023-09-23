@@ -1605,7 +1605,6 @@ GFXShader* ShaderBlueprint::_createShader(const Vector<GFXShaderMacro>& macros)
 
    GFXShader* shader = GFX->createShader();
    bool success = false;
-
    F32 pixver = GFX->getPixelShaderVersion();
 
    // eventually will want to split up vertex and pixel shader compile steps
@@ -1877,6 +1876,12 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
          {
             for (U32 j = 0; j < mShaderStructs[i]->structDataTypes.size(); j++)
             {
+               S32 semanticBind = mShaderStructs[i]->structDataTypes[j]->dataSemantic;
+               // most of the time resource number will be 0 but for texcoords it can go up to 9
+               if(mShaderStructs[i]->structDataTypes[j]->dataResourceNumber > -1)
+                  semanticBind += mShaderStructs[i]->structDataTypes[j]->dataResourceNumber;
+
+               mVertexShaderConverted += "layout(location = " + String::ToString(semanticBind) + ") ";
                mVertexShaderConverted += "in " + ConstTypeToStringGLSL(mShaderStructs[i]->structDataTypes[j]->dataConstType) + " ";
                mVertexShaderConverted += mShaderStructs[i]->structDataTypes[j]->varName + "In;\n";
             }
@@ -2038,12 +2043,14 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
          {
             for (U32 j = 0; j < mShaderStructs[i]->structDataTypes.size(); j++)
             {
-               if (mShaderStructs[i]->structDataTypes[j]->dataSemantic == GFXShaderSemantic::GFXSS_SVPOSITION)
-               {
-                  svPos = mShaderStructs[i]->structDataTypes[j]->varName;
-                  continue;
-               }
 
+               // SV_Target can have up to 7 targets, this should happen automatically.
+               S32 semanticBind = 0;
+               // most of the time resource number will be 0 but for texcoords it can go up to 9
+               if (mShaderStructs[i]->structDataTypes[j]->dataResourceNumber > -1)
+                  semanticBind += mShaderStructs[i]->structDataTypes[j]->dataResourceNumber;
+
+               mPixelShaderConverted += "layout(location = " + String::ToString(semanticBind) + ") ";
                mPixelShaderConverted += "out " + ConstTypeToStringGLSL(mShaderStructs[i]->structDataTypes[j]->dataConstType) + " ";
                mPixelShaderConverted += mShaderStructs[i]->structDataTypes[j]->varName + ";\n";
             }

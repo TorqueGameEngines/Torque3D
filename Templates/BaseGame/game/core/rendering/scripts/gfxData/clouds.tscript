@@ -53,3 +53,9 @@ singleton ShaderData( BasicCloudsShader )
       
    pixVersion = 2.0;   
 };
+
+singleton ShaderBlueprint( BasicCloudsBlueprint )
+{
+   BlueprintFile = $Core::CommonShaderPath @ "/ShaderBlueprint/basicClouds.tlsl";
+   exportFiles = false;
+};

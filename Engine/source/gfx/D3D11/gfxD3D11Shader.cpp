@@ -836,6 +836,79 @@ bool GFXD3D11Shader::_init()
    return true;
 }
 
+bool GFXD3D11Shader::_initFromString(const String& inVertex, const String& inPixel)
+{
+   PROFILE_SCOPE(GFXD3D11Shader_InitFromString);
+
+   SAFE_RELEASE(mVertShader);
+   SAFE_RELEASE(mPixShader);
+
+   // Create the macro array including the system wide macros.
+   const U32 macroCount = smGlobalMacros.size() + mMacros.size() + 2;
+   FrameTemp<D3D_SHADER_MACRO> d3dMacros(macroCount);
+
+   for (U32 i = 0; i < smGlobalMacros.size(); i++)
+   {
+      d3dMacros[i].Name = smGlobalMacros[i].name.c_str();
+      d3dMacros[i].Definition = smGlobalMacros[i].value.c_str();
+   }
+
+   for (U32 i = 0; i < mMacros.size(); i++)
+   {
+      d3dMacros[i + smGlobalMacros.size()].Name = mMacros[i].name.c_str();
+      d3dMacros[i + smGlobalMacros.size()].Definition = mMacros[i].value.c_str();
+   }
+
+   d3dMacros[macroCount - 2].Name = "TORQUE_SM";
+   d3dMacros[macroCount - 2].Definition = D3D11->getShaderModel().c_str();
+
+   memset(&d3dMacros[macroCount - 1], 0, sizeof(D3D_SHADER_MACRO));
+
+   if (!mVertexConstBufferLayout)
+      mVertexConstBufferLayout = new GFXD3D11ConstBufferLayout();
+   else
+      mVertexConstBufferLayout->clear();
+
+   if (!mPixelConstBufferLayout)
+      mPixelConstBufferLayout = new GFXD3D11ConstBufferLayout();
+   else
+      mPixelConstBufferLayout->clear();
+
+
+   mSamplerDescriptions.clear();
+   mShaderConsts.clear();
+
+   String vertTarget = D3D11->getVertexShaderTarget();
+   String pixTarget = D3D11->getPixelShaderTarget();
+
+   if (!inVertex.isEmpty() && !_compileShaderFromString(inVertex, vertTarget, d3dMacros, mVertexConstBufferLayout, mSamplerDescriptions))
+      return false;
+
+   if (!inPixel.isEmpty() && !_compileShaderFromString(inPixel, pixTarget, d3dMacros, mPixelConstBufferLayout, mSamplerDescriptions))
+      return false;
+
+   // Existing handles are resored to an uninitialized state.
+   // Those that are found when parsing the layout parameters
+   // will then be re-initialized.
+   HandleMap::Iterator iter = mHandles.begin();
+   for (; iter != mHandles.end(); iter++)
+      (iter->value)->clear();
+
+   _buildShaderConstantHandles(mVertexConstBufferLayout, true);
+   _buildShaderConstantHandles(mPixelConstBufferLayout, false);
+
+   _buildSamplerShaderConstantHandles(mSamplerDescriptions);
+   _buildInstancingShaderConstantHandles();
+
+   // Notify any existing buffers that the buffer 
+   // layouts have changed and they need to update.
+   Vector<GFXShaderConstBuffer*>::iterator biter = mActiveBuffers.begin();
+   for (; biter != mActiveBuffers.end(); biter++)
+      ((GFXD3D11ShaderConstBuffer*)(*biter))->onShaderReload(this);
+
+   return true;
+}
+
 bool GFXD3D11Shader::_compileShader( const Torque::Path &filePath, 
                                     const String& target,                                  
                                     const D3D_SHADER_MACRO *defines, 
@@ -989,7 +1062,7 @@ bool GFXD3D11Shader::_compileShader( const Torque::Path &filePath,
 		      HRESULT reflectionResult = D3DReflect(code->GetBufferPointer(), code->GetBufferSize(), IID_ID3D11ShaderReflection, (void**)&reflectionTable);
 		   if(FAILED(reflectionResult))
 		      AssertFatal(false, "D3D11Shader::_compilershader - Failed to get shader reflection table interface");
-	  }
+	      }
 
 	  if(res == S_OK)
 		_getShaderConstants(reflectionTable, bufferLayout, samplerDescriptions);	  
@@ -1023,6 +1096,95 @@ bool GFXD3D11Shader::_compileShader( const Torque::Path &filePath,
 #endif
   
    SAFE_RELEASE(code); 
+   SAFE_RELEASE(reflectionTable);
+   SAFE_RELEASE(errorBuff);
+
+   return result;
+}
+bool GFXD3D11Shader::_compileShaderFromString(const String& shaderCode, const String& target, const D3D_SHADER_MACRO* defines, GenericConstBufferLayout* bufferLayout, Vector<GFXShaderConstDesc>& samplerDescriptions)
+{
+   PROFILE_SCOPE(GFXD3D11Shader_CompileShaderFromString);
+
+   using namespace Torque;
+
+   HRESULT res = E_FAIL;
+   ID3DBlob* code = NULL;
+   ID3DBlob* errorBuff = NULL;
+   ID3D11ShaderReflection* reflectionTable = NULL;
+
+#ifdef TORQUE_GFX_VISUAL_DEBUG //for use with NSight, GPU Perf studio, VS graphics debugger
+   U32 flags = D3DCOMPILE_DEBUG | D3DCOMPILE_ENABLE_STRICTNESS | D3DCOMPILE_PREFER_FLOW_CONTROL | D3DCOMPILE_SKIP_OPTIMIZATION;
+#elif defined(TORQUE_DEBUG) //debug build
+   U32 flags = D3DCOMPILE_DEBUG | D3DCOMPILE_ENABLE_STRICTNESS | D3DCOMPILE_WARNINGS_ARE_ERRORS;
+#else //release build
+   U32 flags = D3DCOMPILE_ENABLE_STRICTNESS | D3DCOMPILE_OPTIMIZATION_LEVEL3;
+#endif
+
+   U32 bufSize = shaderCode.length();
+
+   res = D3DCompile(shaderCode.c_str(), bufSize, nullptr, defines, smD3DInclude, "main", target, flags, 0, &code, &errorBuff);
+
+   if (errorBuff)
+   {
+      // remove \n at end of buffer
+      U8* buffPtr = (U8*)errorBuff->GetBufferPointer();
+      U32 len = dStrlen((const char*)buffPtr);
+      buffPtr[len - 1] = '\0';
+
+      if (FAILED(res))
+      {
+         if (smLogErrors)
+            Con::errorf("failed to compile shader: %s", buffPtr);
+      }
+      else
+      {
+         if (smLogWarnings)
+            Con::errorf("shader compiled with warning(s): %s", buffPtr);
+      }
+   }
+   else if (code == NULL && smLogErrors)
+      Con::errorf("GFXD3D11Shader::_compileShader - no compiled code produced from string;");
+
+   if (code != NULL)
+   {
+      if (target.compare("ps_", 3) == 0)
+         res = D3D11DEVICE->CreatePixelShader(code->GetBufferPointer(), code->GetBufferSize(), NULL, &mPixShader);
+      else if (target.compare("vs_", 3) == 0)
+         res = D3D11DEVICE->CreateVertexShader(code->GetBufferPointer(), code->GetBufferSize(), NULL, &mVertShader);
+
+      if (FAILED(res))
+      {
+         AssertFatal(false, "D3D11Shader::_compilershader- failed to create shader");
+      }
+
+      if (res == S_OK) {
+         HRESULT reflectionResult = D3DReflect(code->GetBufferPointer(), code->GetBufferSize(), IID_ID3D11ShaderReflection, (void**)&reflectionTable);
+         if (FAILED(reflectionResult))
+            AssertFatal(false, "D3D11Shader::_compilershader - Failed to get shader reflection table interface");
+      }
+
+      if (res == S_OK)
+         _getShaderConstants(reflectionTable, bufferLayout, samplerDescriptions);
+
+      if (FAILED(res) && smLogErrors)
+         Con::errorf("GFXD3D11Shader::_compileShader - Unable to create shader from string.");
+   }
+
+   //bool result = code && SUCCEEDED(res) && HasValidConstants;
+   bool result = code && SUCCEEDED(res);
+
+#ifdef TORQUE_DEBUG
+   if (target.compare("vs_", 3) == 0)
+   {
+      mVertShader->SetPrivateData(WKPDID_D3DDebugObjectName, shaderCode.length(), shaderCode.c_str());
+   }
+   else if (target.compare("ps_", 3) == 0)
+   {
+      mPixShader->SetPrivateData(WKPDID_D3DDebugObjectName, shaderCode.length(), shaderCode.c_str());
+   }
+#endif
+
+   SAFE_RELEASE(code);
    SAFE_RELEASE(reflectionTable);
    SAFE_RELEASE(errorBuff);
 

@@ -97,6 +97,26 @@ bool GFXShader::init(   const Torque::Path &vertFile,
    return true;
 }
 
+bool GFXShader::initFromString(  const String& vertexShader,
+                                 const String& pixelShader,
+                                 const Vector<String>& samplerNames)
+{
+
+   mSamplerNamesOrdered = samplerNames;
+
+   // Before we compile the shader make sure the
+   // conditioner features have been updated.
+   ConditionerFeature::updateConditioners();
+
+   if (!_initFromString(vertexShader, pixelShader))
+      return false;
+
+   
+
+   return true;
+}
+
+
 bool GFXShader::reload()
 {
    // Before we compile the shader make sure the

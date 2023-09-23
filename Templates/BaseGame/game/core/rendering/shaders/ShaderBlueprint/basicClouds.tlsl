@@ -1,0 +1,62 @@
+Blueprint "basicClouds"
+{
+
+    struct VertData{
+        float3 pos : POSITION;
+        float2 texCoord : TEXCOORD0;
+    };
+
+    struct ConnectData{
+        float4 hpos : SV_Position;
+        float2 texCoord : TEXCOORD0;
+    };
+
+    struct FragOut{
+        float4 col : SV_Target;
+    };
+
+    VertexShader
+    {
+        #pragma entry "main"
+        
+        uniform float4x4 modelview;
+        uniform float2 texDirection;
+        uniform float2 texOffset;
+        uniform float accumTime;
+        uniform float texScale;
+
+        ConnectData main(VertData IN)
+        {
+            ConnectData OUT;
+
+            OUT.hpos = mul(modelview, float4(IN.pos,1.0));
+
+            // OUT.hpos.w; // reverse depth -- put cloud layer in the far dist and let render order hints sort it out?
+            OUT.hpos.z = 0.0f;
+            float2 uv = IN.texCoord;
+            uv += texOffset;
+            uv *= texScale;
+            uv += accumTime * texDirection;
+
+            OUT.texCoord = uv;
+
+            return OUT;
+        };
+    };
+
+    PixelShader
+    {
+        #pragma entry "main"
+
+        uniform sampler2D diffuseMap;
+
+        FragOut main(ConnectData IN)
+        {
+            FragOut OUT;
+            OUT.col = Sample(diffuseMap, IN.texCoord);
+            return OUT;
+        };
+
+    };
+
+};

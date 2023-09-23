@@ -403,7 +403,9 @@ public:
 
 protected:
 
-   virtual bool _init();   
+   virtual bool _init();
+
+   virtual bool _initFromString(const String& inVertex, const String& inPixel);
 
    static const U32 smCompiledShaderTag;
 
@@ -435,6 +437,13 @@ protected:
                                 const D3D_SHADER_MACRO *defines, 
                                 GenericConstBufferLayout *bufferLayout, 
                                 Vector<GFXShaderConstDesc> &samplerDescriptions );
+
+   // These two functions are used when compiling shaders from hlsl
+   virtual bool _compileShaderFromString( const String& shaderCode,
+                                          const String& target,
+                                          const D3D_SHADER_MACRO* defines,
+                                          GenericConstBufferLayout* bufferLayout,
+                                          Vector<GFXShaderConstDesc>& samplerDescriptions);
 
    void _getShaderConstants( ID3D11ShaderReflection* refTable, 
 	                         GenericConstBufferLayout *bufferLayout,

@@ -236,12 +236,18 @@ protected:
 
    void _onFileChanged(const Torque::Path& path) { _reload(); }
 
+   GFXShader* mCompiledShader;
+
 public:
 
    Vector<ShaderStruct*> mShaderStructs;
+   Vector<String> mShaderSamplers;
 
    FileShaderBlueprint* mVertexShader;
    FileShaderBlueprint* mPixelShader;
+
+   String mVertexShaderConverted;
+   String mPixelShaderConverted;
 
    ShaderBlueprint();
    virtual ~ShaderBlueprint();
@@ -252,17 +258,20 @@ public:
 
    bool initParser(const char* filePath);
 
+   // pars functions
+   bool readStruct(FileObject& file, String curLine, U32& lineNum);
    bool readFileShaderData(FileShaderBlueprint* inShader, FileObject& file, U32& lineNum);
-
    bool shaderFunctionArguments(String lineIn, ShaderFunction* function);
 
+   // Conversion functions
    void convertShaders();
-
    void convertToHLSL(bool exportFile);
    void convertToGLSL(bool exportFile);
 
    // ConsoleObject
    static void initPersistFields();
+
+   GFXShader* getShader();
 
    bool _reload();
 

@@ -314,6 +314,10 @@ public:
                const Vector<String> &samplerNames,
                GFXVertexFormat *instanceFormat = NULL );
 
+   bool initFromString( const String& vertexShader,
+                        const String& pixelShader,
+                        const Vector<String>& samplerNames);
+
    /// Reloads the shader from disk.
    bool reload();
 
@@ -369,6 +373,8 @@ protected:
    /// Internal initialization function overloaded for
    /// each GFX device type.
    virtual bool _init() = 0;
+
+   virtual bool _initFromString(const String& inVertex, const String& inPixel) = 0;
 
    /// Buffers call this from their destructor (so we don't have to ref count them).
    void _unlinkBuffer( GFXShaderConstBuffer *buf );

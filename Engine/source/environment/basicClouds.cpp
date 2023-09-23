@@ -32,6 +32,7 @@
 #include "scene/sceneRenderState.h"
 #include "renderInstance/renderPassManager.h"
 #include "materials/shaderData.h"
+#include "materials/shaderBlueprint.h"
 #include "math/mathIO.h"
 
 
@@ -124,11 +125,19 @@ bool BasicClouds::onAdd()
       _initBuffers();
 
       // Find ShaderData
-      ShaderData *shaderData;
+      /*ShaderData *shaderData;
       mShader = Sim::findObject( "BasicCloudsShader", shaderData ) ? shaderData->getShader() : NULL;
       if ( !mShader )
       {
          Con::errorf( "BasicClouds::onAdd - could not find BasicCloudsShader" );
+         return false;
+      }*/
+
+      ShaderBlueprint* shaderBlueprint;
+      mShader = Sim::findObject("BasicCloudsBlueprint", shaderBlueprint) ? shaderBlueprint->getShader() : NULL;
+      if (!mShader)
+      {
+         Con::errorf("BasicClouds::onAdd - could not find BasicCloudsShader");
          return false;
       }
 

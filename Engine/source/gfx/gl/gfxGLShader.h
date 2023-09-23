@@ -71,11 +71,17 @@ protected:
    friend class GFXGLShaderConstBuffer;
    friend class GFXGLShaderConstHandle;
    
-   virtual bool _init();   
+   virtual bool _init();
+
+   virtual bool _initFromString(const String& inVertex, const String& inPixel);
 
    bool initShader(  const Torque::Path &file, 
                      bool isVertex, 
                      const Vector<GFXShaderMacro> &macros );
+
+   bool initShaderFromString(const String& shaderCode,
+                              bool isVertex,
+                              const Vector<GFXShaderMacro>& macros);
 
    void clearShaders();
    void initConstantDescs();
@@ -88,6 +94,10 @@ protected:
                                        const Torque::Path& path, 
                                        FileStream* s, 
                                        const Vector<GFXShaderMacro>& macros );
+
+   static bool _loadShaderFromString(  GLuint shader,
+                                       const String& shaderCode,
+                                       const Vector<GFXShaderMacro>& macros);
 
    /// @name Internal GL handles
    /// @{

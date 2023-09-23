@@ -481,6 +481,7 @@ void ConvertHLSLLineKeywords(String& inLine)
       inLine.replace("Sample", "texture" + tex + ".Sample");
    }
 
+   // data types replacement.
    inLine.replace("mat4", "float4x4");
    inLine.replace("mat4x3", "float4x3");
    inLine.replace("mat3x4", "float3x4");
@@ -489,6 +490,10 @@ void ConvertHLSLLineKeywords(String& inLine)
    inLine.replace("vec2", "float2");
    inLine.replace("vec3", "float3");
    inLine.replace("vec4", "float4");
+
+   // built in function replacement.
+   inLine.replace("mix", "lerp");
+   inLine.replace("fract", "frac");
 }
 
 void ConvertGLSLLineKeywords(String& inLine, bool vert)
@@ -538,6 +543,7 @@ void ConvertGLSLLineKeywords(String& inLine, bool vert)
    inLine.replace("float3", "vec3");
    inLine.replace("float2", "vec2");
 
+   // built in function replacement.
    if (inLine.find("mul") != String::NPos)
    {
       S32 start = inLine.find("mul");
@@ -571,8 +577,38 @@ void ConvertGLSLLineKeywords(String& inLine, bool vert)
       newMul.replace("mul(","");
 
       inLine.replace(mulFunc, newMul);
-
    }
+
+   if (inLine.find("saturate") != String::NPos)
+   {
+      S32 start = inLine.find("saturate");
+      S32 openBracket = 0;
+      S32 lastBracket = 0;
+
+      String saturateFunc = inLine.substr(start, inLine.length() - start);
+
+      for (U32 i = 0; i < saturateFunc.size(); i++)
+      {
+         if (saturateFunc[i] == '(')
+            openBracket++;
+
+         if (saturateFunc[i] == ')')
+            openBracket--;
+
+
+         if (saturateFunc[i] == ')' && openBracket == 0)
+            lastBracket = i;
+      }
+
+      String clampFunc = saturateFunc;
+      clampFunc.replace(lastBracket, 1, ", 0.0, 1.0)");
+      clampFunc.replace("saturate(", "clamp(");
+
+      inLine.replace(saturateFunc, clampFunc);
+   }
+
+   inLine.replace("lerp", "mix");
+   inLine.replace("frac", "fract");
 }
 
 ShaderBlueprint::ShaderBlueprint()
@@ -581,9 +617,15 @@ ShaderBlueprint::ShaderBlueprint()
    mShaderFileName = String::EmptyString;
    //------------------------------------
    VECTOR_SET_ASSOCIATION(mShaderStructs);
+   VECTOR_SET_ASSOCIATION(mShaderSamplers);
 
    mVertexShader = new FileShaderBlueprint();
    mPixelShader = new FileShaderBlueprint();
+
+   mVertexShaderConverted = String::EmptyString;
+   mPixelShaderConverted = String::EmptyString;
+
+   mCompiledShader = GFX->createShader();
 }
 
 ShaderBlueprint::~ShaderBlueprint()
@@ -604,12 +646,18 @@ void ShaderBlueprint::initPersistFields()
 
 }
 
+GFXShader* ShaderBlueprint::getShader()
+{
+   convertShaders();
+   return mCompiledShader;
+}
+
 bool ShaderBlueprint::_reload()
 {
    if (!initParser(mBluePrintFile))
       return false;
 
-
+   convertShaders();
 
    return true;
 }
@@ -622,7 +670,8 @@ bool ShaderBlueprint::onAdd()
    if (!initParser(mBluePrintFile))
       return false;
 
-   convertShaders();
+   if(mExportFiles)
+      convertShaders();
 
    Torque::FS::AddChangeNotification(mBluePrintFile, this, &ShaderBlueprint::_onFileChanged);
 
@@ -678,7 +727,7 @@ bool ShaderBlueprint::initParser(const char* filePath)
 
       // comment line so skip it.
       if (!blueprintFound)
-         if (line.find('//') != String::NPos || line.find('///') != String::NPos)
+         if (line.find("//") != String::NPos || line.find("///") != String::NPos)
             continue;
 
       // remove leading and trailing spaces.
@@ -744,135 +793,13 @@ bool ShaderBlueprint::initParser(const char* filePath)
       {
          if (lineWords[0].equal("struct"))
          {
-            String structName;
-            // make sure lineWords has more than 1 entry.
-            if (lineWords.size() > 1)
+            bool readStructIn = true;
+
+            while (readStructIn)
             {
-               for (U32 i = 1; i < lineWords.size(); i++)
-               {
-                  //this should be our struct name.
-                  if (lineWords[i].find('{') != String::NPos)
-                  {
-                     structName = lineWords[i].substr(0, lineWords[i].find('{'));
-                  }
-                  else if(!lineWords[i].equal("{"))
-                  {
-                     structName = lineWords[i];
-                  }
-
-                  if (lineWords[i].equal("{"))
-                  {
-                     continue;
-                  }
-               }
-            }
-            else {
-               Con::printf("ShaderBlueprint - Error no struct name on line %d", lineNum);
-               return false;
-            }
-            GFXShaderStructType type = StructTypeFromString(structName);
-            if (type == GFXShaderStructType::GFXSST_Unknown)
-            {
-               Con::printf("ShaderBlueprint - Unknown struct %s on line %d. Possible names are VertData, ConnectData, Fragout", structName.c_str(), lineNum);
-               return false;
+               readStructIn = readStruct(f, line, lineNum);
             }
 
-            ShaderStruct* sctStruct = new ShaderStruct(type, structName);
-                  
-            // initializers
-            bool findParameters = true;
-            bool foundConstType = false;
-            bool foundName = false;
-            bool foundSemantic = false;
-
-            // find struct parameters.
-            while (findParameters)
-            {
-               // read the next line.
-               line = TrimTabAndWhiteSpace(String((char*)f.readLine()));
-               lineNum++;
-
-               //clear our linewords vector
-               lineWords.clear();
-
-               // file it with the new line
-               line.split(" ", lineWords);
-               GFXShaderConstType sctType;
-               String name;
-               GFXShaderSemantic sctSemantic;
-               S32 resourceNumber = -1;
-               for (U32 i = 0; i < lineWords.size(); i++)
-               {
-                  if (lineWords[i].equal("};"))
-                  {
-                     findParameters = false;
-                     break;
-                  }
-
-                  if (!foundConstType)
-                  {
-                     sctType = ToConstType(lineWords[i]);
-                     if (sctType == GFXShaderConstType::GFXSCT_Unknown)
-                     {
-                        foundConstType = false;
-                     }
-                     else
-                     {
-                        foundConstType = true;
-                        continue;
-                     }
-                  }
-
-                  if (!foundName)
-                  {
-                     if (ToConstType(lineWords[i]) == GFXShaderConstType::GFXSCT_Unknown)
-                     {
-                        // we are not a const type make it our name
-                        name = lineWords[i];
-                        foundName = true;
-                        continue;
-                     }
-                  }
-
-                  if (!foundSemantic)
-                  {
-                     String sctSemanticString;
-                     if (lineWords[i].find(';') != String::NPos)
-                        sctSemanticString = lineWords[i].substr(0, lineWords[i].find(';'));
-                     else
-                        sctSemanticString = lineWords[i];
-
-                     sctSemantic = ToSemantic(sctSemanticString);
-                     if (sctSemantic == GFXShaderSemantic::GFXSS_Unknown)
-                     {
-                        foundSemantic = false;
-                     }
-                     else
-                     {
-                        // check for trailing number. resourceNumber will be -1 if none exist.
-                        String::GetTrailingNumber(sctSemanticString, resourceNumber);
-                        foundSemantic = true;
-                     }
-                  }
-               }
-
-               if (foundConstType && foundName && foundSemantic)
-               {
-                  ShaderStructDataType* structDataType = new ShaderStructDataType(sctType,
-                     name,
-                     sctSemantic,
-                     resourceNumber);
-
-                  sctStruct->structDataTypes.push_back(structDataType);
-
-                  foundConstType = false;
-                  foundName = false;
-                  foundSemantic = false;
-               }
-
-            }
-
-            mShaderStructs.push_back(sctStruct);
             continue;
          }
 
@@ -928,6 +855,144 @@ bool ShaderBlueprint::initParser(const char* filePath)
 
    // we have reached here, all must be good.
    return true;
+}
+
+bool ShaderBlueprint::readStruct(FileObject& file, String curLine, U32& lineNum)
+{
+   String structName;
+   // make sure lineWords has more than 1 entry.
+   Vector<String> lineWords;
+   curLine.split(" ", lineWords);
+
+   if (lineWords.size() > 1)
+   {
+      for (U32 i = 1; i < lineWords.size(); i++)
+      {
+         //this should be our struct name.
+         if (lineWords[i].find('{') != String::NPos)
+         {
+            structName = lineWords[i].substr(0, lineWords[i].find('{'));
+         }
+         else if (!lineWords[i].equal("{"))
+         {
+            structName = lineWords[i];
+         }
+
+         if (lineWords[i].equal("{"))
+         {
+            continue;
+         }
+      }
+   }
+   else {
+      Con::printf("ShaderBlueprint - Error no struct name on line %d", lineNum);
+      return false;
+   }
+   GFXShaderStructType type = StructTypeFromString(structName);
+   if (type == GFXShaderStructType::GFXSST_Unknown)
+   {
+      Con::printf("ShaderBlueprint - Unknown struct %s on line %d. Possible names are VertData, ConnectData, Fragout", structName.c_str(), lineNum);
+      return false;
+   }
+
+   ShaderStruct* sctStruct = new ShaderStruct(type, structName);
+
+   // initializers
+   bool findParameters = true;
+   bool foundConstType = false;
+   bool foundName = false;
+   bool foundSemantic = false;
+
+   // find struct parameters.
+   while (findParameters)
+   {
+      // read the next line.
+      String line = TrimTabAndWhiteSpace(String((char*)file.readLine()));
+      lineNum++;
+
+      //clear our linewords vector
+      lineWords.clear();
+
+      // file it with the new line
+      line.split(" ", lineWords);
+      GFXShaderConstType sctType;
+      String name;
+      GFXShaderSemantic sctSemantic;
+      S32 resourceNumber = -1;
+      for (U32 i = 0; i < lineWords.size(); i++)
+      {
+         if (lineWords[i].equal("};"))
+         {
+            findParameters = false;
+            break;
+         }
+
+         if (!foundConstType)
+         {
+            sctType = ToConstType(lineWords[i]);
+            if (sctType == GFXShaderConstType::GFXSCT_Unknown)
+            {
+               foundConstType = false;
+            }
+            else
+            {
+               foundConstType = true;
+               continue;
+            }
+         }
+
+         if (!foundName)
+         {
+            if (ToConstType(lineWords[i]) == GFXShaderConstType::GFXSCT_Unknown)
+            {
+               // we are not a const type make it our name
+               name = lineWords[i];
+               foundName = true;
+               continue;
+            }
+         }
+
+         if (!foundSemantic)
+         {
+            String sctSemanticString;
+            if (lineWords[i].find(';') != String::NPos)
+               sctSemanticString = lineWords[i].substr(0, lineWords[i].find(';'));
+            else
+               sctSemanticString = lineWords[i];
+
+            sctSemantic = ToSemantic(sctSemanticString);
+            if (sctSemantic == GFXShaderSemantic::GFXSS_Unknown)
+            {
+               foundSemantic = false;
+            }
+            else
+            {
+               // check for trailing number. resourceNumber will be -1 if none exist.
+               String::GetTrailingNumber(sctSemanticString, resourceNumber);
+               foundSemantic = true;
+            }
+         }
+      }
+
+      if (foundConstType && foundName && foundSemantic)
+      {
+         ShaderStructDataType* structDataType = new ShaderStructDataType(sctType,
+            name,
+            sctSemantic,
+            resourceNumber);
+
+         sctStruct->structDataTypes.push_back(structDataType);
+
+         foundConstType = false;
+         foundName = false;
+         foundSemantic = false;
+      }
+
+   }
+
+   mShaderStructs.push_back(sctStruct);
+
+   return findParameters;
 }
 
 bool ShaderBlueprint::readFileShaderData(FileShaderBlueprint* inShader, FileObject& file, U32& lineNum)
@@ -1025,7 +1090,11 @@ bool ShaderBlueprint::readFileShaderData(FileShaderBlueprint* inShader, FileObje
 
             ShaderDataType* uniformType = new ShaderDataType(constType, uniformName, isArray, arraySize);
             if (samplerType != GFXSamplerType::SAMP_Uknown)
+            {
                uniformType->setSamplerType(samplerType);
+
+               mShaderSamplers.push_back(uniformName);
+            }
 
             inShader->mShaderUniforms.push_back(uniformType);
             return true;
@@ -1310,27 +1379,70 @@ void ShaderBlueprint::convertShaders()
 {
    if (mExportFiles)
    {
+      // only when exporting files we clear the string holding the converted shader code.
       convertToHLSL(true);
+      mPixelShaderConverted.clear();
+      mVertexShaderConverted.clear();
+
       convertToGLSL(true);
+      mPixelShaderConverted.clear();
+      mVertexShaderConverted.clear();
    }
    else
    {
+      Vector<String> samplers;
+      samplers.setSize(mShaderSamplers.size());
+      for (U32 i = 0; i < mShaderSamplers.size(); i++)
+      {
+         // we should be able to do this while finding the samplers?
+         samplers[i] = mShaderSamplers[i][0] == '$' ? mShaderSamplers[i] : "$" + mShaderSamplers[i];
+      }
+
+      // Enable shader error logging.
+      GFXShader::setLogging(true, true);
+
+      GFXShader* shader = GFX->createShader();
+      bool success = false;
+
+      F32 pixver = GFX->getPixelShaderVersion();
+
+      // eventually will want to split up vertex and pixel shader compile steps
+      // and add the extra shader types eg. compute, geometry, tess.
       switch (GFX->getAdapterType())
       {
          case Direct3D11:
          {
             convertToHLSL(false);
+            success = shader->initFromString(mVertexShaderConverted,
+                                             mPixelShaderConverted,
+                                             samplers);
+
             break;
          }
 
          case OpenGL:
          {
             convertToGLSL(false);
+            success = shader->initFromString(mVertexShaderConverted,
+                                             mPixelShaderConverted,
+                                             samplers);
             break;
          }
 
          default:
             break;
+      }
+
+      // If we failed to load the shader then
+      // cleanup and return NULL.
+      if (!success)
+      {
+         Con::printf("ShaderBlueprint - Shader failed to compile.");
+         SAFE_DELETE(shader);
+      }
+      else
+      {
+         mCompiledShader = shader;
       }
 
    }
@@ -1340,14 +1452,12 @@ void ShaderBlueprint::convertToHLSL(bool exportFile)
 {
    if (mVertexShader != NULL)
    {
-      String vertexShader;
-
       // print our VertexData struct (there has to be a better way)
       for (U32 i = 0; i < mShaderStructs.size(); i++)
       {
          if (mShaderStructs[i]->structType == GFXShaderStructType::GFXSST_VertexData)
          {
-            mShaderStructs[i]->printStructHLSL(vertexShader);
+            mShaderStructs[i]->printStructHLSL(mVertexShaderConverted);
          }
       }
 
@@ -1356,7 +1466,7 @@ void ShaderBlueprint::convertToHLSL(bool exportFile)
       {
          if (mShaderStructs[i]->structType == GFXShaderStructType::GFXSST_Connection)
          {
-            mShaderStructs[i]->printStructHLSL(vertexShader);
+            mShaderStructs[i]->printStructHLSL(mVertexShaderConverted);
          }
       }
 
@@ -1369,36 +1479,36 @@ void ShaderBlueprint::convertToHLSL(bool exportFile)
             mVertexShader->mShaderUniforms[i]->dataConstType == GFXShaderConstType::GFXSCT_SamplerCubeArray ||
             mVertexShader->mShaderUniforms[i]->dataConstType == GFXShaderConstType::GFXSCT_SamplerTextureArray)
          {
-            UniformSamplerTypeToStringHLSL(mVertexShader->mShaderUniforms[i]->samplerType, mVertexShader->mShaderUniforms[i]->varName, vertexShader, samplers);
+            UniformSamplerTypeToStringHLSL(mVertexShader->mShaderUniforms[i]->samplerType, mVertexShader->mShaderUniforms[i]->varName, mVertexShaderConverted, samplers);
             samplers++;
          }
          else
          {
-            vertexShader += "uniform " + ConstTypeToStringHLSL(mVertexShader->mShaderUniforms[i]->dataConstType) + " " + mVertexShader->mShaderUniforms[i]->varName;
+            mVertexShaderConverted += "uniform " + ConstTypeToStringHLSL(mVertexShader->mShaderUniforms[i]->dataConstType) + " " + mVertexShader->mShaderUniforms[i]->varName;
             if (mVertexShader->mShaderUniforms[i]->isArray)
             {
-               vertexShader += "[" + String::ToString(mVertexShader->mShaderUniforms[i]->arraySize) + "];\n";
+               mVertexShaderConverted += "[" + String::ToString(mVertexShader->mShaderUniforms[i]->arraySize) + "];\n";
             }
             else
             {
-               vertexShader += ";\n";
+               mVertexShaderConverted += ";\n";
             }
          }
 
       }
 
-      vertexShader += "\n";
+      mVertexShaderConverted += "\n";
 
       if (mVertexShader->mShaderFunctions.size() > 0)
       {
          for (U32 j = 0; j < mVertexShader->mShaderFunctions.size(); j++)
          {
-            mVertexShader->mShaderFunctions[j]->printFunctionHLSL(vertexShader);
+            mVertexShader->mShaderFunctions[j]->printFunctionHLSL(mVertexShaderConverted);
          }
       }
 
-      vertexShader += "ConnectData " + mVertexShader->entryPoint + "( VertData IN )\n";
-      vertexShader += "{\n";
+      mVertexShaderConverted += "ConnectData " + mVertexShader->entryPoint + "( VertData IN )\n";
+      mVertexShaderConverted += "{\n";
       Vector<String> entryFunctionLines;
       mVertexShader->entryFunctionBody.split("\n", entryFunctionLines);
 
@@ -1406,16 +1516,16 @@ void ShaderBlueprint::convertToHLSL(bool exportFile)
       {
          // we probably wont need to convert anything.
          if (entryFunctionLines[i] == String::EmptyString)
-            vertexShader += "\n";
+            mVertexShaderConverted += "\n";
          else
          {
             ConvertHLSLLineKeywords(entryFunctionLines[i]);
 
-            vertexShader += "\t" + entryFunctionLines[i] + ";\n";
+            mVertexShaderConverted += "\t" + entryFunctionLines[i] + ";\n";
          }
       }
 
-      vertexShader += "};";
+      mVertexShaderConverted += "};";
 
       if (exportFile)
       {
@@ -1431,20 +1541,19 @@ void ShaderBlueprint::convertToHLSL(bool exportFile)
             return;
          }
 
-         s->writeText(vertexShader.c_str());
+         s->writeText(mVertexShaderConverted.c_str());
          delete s;
       }
    }
 
    if (mPixelShader != NULL)
    {
-      String pixelShader;
       // print our ConnectionData struct (there has to be a better way)
       for (U32 i = 0; i < mShaderStructs.size(); i++)
       {
          if (mShaderStructs[i]->structType == GFXShaderStructType::GFXSST_Connection)
          {
-            mShaderStructs[i]->printStructHLSL(pixelShader);
+            mShaderStructs[i]->printStructHLSL(mPixelShaderConverted);
          }
       }
 
@@ -1453,7 +1562,7 @@ void ShaderBlueprint::convertToHLSL(bool exportFile)
       {
          if (mShaderStructs[i]->structType == GFXShaderStructType::GFXSST_PixelOut)
          {
-            mShaderStructs[i]->printStructHLSL(pixelShader);
+            mShaderStructs[i]->printStructHLSL(mPixelShaderConverted);
          }
       }
 
@@ -1465,36 +1574,36 @@ void ShaderBlueprint::convertToHLSL(bool exportFile)
             mPixelShader->mShaderUniforms[i]->dataConstType == GFXShaderConstType::GFXSCT_SamplerCubeArray ||
             mPixelShader->mShaderUniforms[i]->dataConstType == GFXShaderConstType::GFXSCT_SamplerTextureArray)
          {
-            UniformSamplerTypeToStringHLSL(mPixelShader->mShaderUniforms[i]->samplerType, mPixelShader->mShaderUniforms[i]->varName, pixelShader, samplers);
+            UniformSamplerTypeToStringHLSL(mPixelShader->mShaderUniforms[i]->samplerType, mPixelShader->mShaderUniforms[i]->varName, mPixelShaderConverted, samplers);
             samplers++;
          }
          else
          {
-            pixelShader += "uniform " + ConstTypeToStringHLSL(mPixelShader->mShaderUniforms[i]->dataConstType) + " " + mPixelShader->mShaderUniforms[i]->varName;
+            mPixelShaderConverted += "uniform " + ConstTypeToStringHLSL(mPixelShader->mShaderUniforms[i]->dataConstType) + " " + mPixelShader->mShaderUniforms[i]->varName;
             if (mPixelShader->mShaderUniforms[i]->isArray)
             {
-               pixelShader += "[" + String::ToString(mPixelShader->mShaderUniforms[i]->arraySize) + "];\n";
+               mPixelShaderConverted += "[" + String::ToString(mPixelShader->mShaderUniforms[i]->arraySize) + "];\n";
             }
             else
             {
-               pixelShader += ";\n";
+               mPixelShaderConverted += ";\n";
             }
          }
 
       }
 
-      pixelShader += "\n";
+      mPixelShaderConverted += "\n";
 
       if (mPixelShader->mShaderFunctions.size() > 0)
       {
          for (U32 j = 0; j < mPixelShader->mShaderFunctions.size(); j++)
          {
-            mPixelShader->mShaderFunctions[j]->printFunctionHLSL(pixelShader);
+            mPixelShader->mShaderFunctions[j]->printFunctionHLSL(mPixelShaderConverted);
          }
       }
 
-      pixelShader += "FragOut " + mPixelShader->entryPoint + "( ConnectData IN )\n";
-      pixelShader += "{\n";
+      mPixelShaderConverted += "FragOut " + mPixelShader->entryPoint + "( ConnectData IN )\n";
+      mPixelShaderConverted += "{\n";
       Vector<String> entryFunctionLines;
       mPixelShader->entryFunctionBody.split("\n", entryFunctionLines);
 
@@ -1502,15 +1611,15 @@ void ShaderBlueprint::convertToHLSL(bool exportFile)
       {
          // we probably wont need to convert anything.
          if (entryFunctionLines[i] == String::EmptyString)
-            pixelShader += "\n";
+            mPixelShaderConverted += "\n";
          else
          {
             ConvertHLSLLineKeywords(entryFunctionLines[i]);
-            pixelShader += "\t" + entryFunctionLines[i] + ";\n";
+            mPixelShaderConverted += "\t" + entryFunctionLines[i] + ";\n";
          }
       }
 
-      pixelShader += "};";
+      mPixelShaderConverted += "};";
 
       if (exportFile)
       {
@@ -1526,7 +1635,7 @@ void ShaderBlueprint::convertToHLSL(bool exportFile)
             return;
          }
 
-         s->writeText(pixelShader.c_str());
+         s->writeText(mPixelShaderConverted.c_str());
          delete s;
       }
    }
@@ -1538,8 +1647,7 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
 
    if (mVertexShader != NULL)
    {
-      String vertexShader;
-
+      mVertexShaderConverted += "#version 330\n\n";
       // print our VertexData struct (there has to be a better way)
       for (U32 i = 0; i < mShaderStructs.size(); i++)
       {
@@ -1547,13 +1655,13 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
          {
             for (U32 j = 0; j < mShaderStructs[i]->structDataTypes.size(); j++)
             {
-               vertexShader += "in " + ConstTypeToStringGLSL(mShaderStructs[i]->structDataTypes[j]->dataConstType) + " ";
-               vertexShader += mShaderStructs[i]->structDataTypes[j]->varName + "In;\n";
+               mVertexShaderConverted += "in " + ConstTypeToStringGLSL(mShaderStructs[i]->structDataTypes[j]->dataConstType) + " ";
+               mVertexShaderConverted += mShaderStructs[i]->structDataTypes[j]->varName + "In;\n";
             }
          }
       }
 
-      vertexShader += "\n";
+      mVertexShaderConverted += "\n";
 
       // print our ConnectionData struct (there has to be a better way)
       for (U32 i = 0; i < mShaderStructs.size(); i++)
@@ -1568,13 +1676,13 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
                   continue;
                }
 
-               vertexShader += "out " + ConstTypeToStringGLSL(mShaderStructs[i]->structDataTypes[j]->dataConstType) + " ";
-               vertexShader += mShaderStructs[i]->structDataTypes[j]->varName + "Conn;\n";
+               mVertexShaderConverted += "out " + ConstTypeToStringGLSL(mShaderStructs[i]->structDataTypes[j]->dataConstType) + " ";
+               mVertexShaderConverted += mShaderStructs[i]->structDataTypes[j]->varName + "Conn;\n";
             }
          }
       }
 
-      vertexShader += "\n";
+      mVertexShaderConverted += "\n";
 
       for (U32 i = 0; i < mVertexShader->mShaderUniforms.size(); i++)
       {
@@ -1584,37 +1692,37 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
             mVertexShader->mShaderUniforms[i]->dataConstType == GFXShaderConstType::GFXSCT_SamplerCubeArray ||
             mVertexShader->mShaderUniforms[i]->dataConstType == GFXShaderConstType::GFXSCT_SamplerTextureArray)
          {
-            vertexShader += "uniform ";
-            SamplerTypeToStringGLSL(mVertexShader->mShaderUniforms[i]->samplerType, mVertexShader->mShaderUniforms[i]->varName, vertexShader);
-            vertexShader += ";\n";
+            mVertexShaderConverted += "uniform ";
+            SamplerTypeToStringGLSL(mVertexShader->mShaderUniforms[i]->samplerType, mVertexShader->mShaderUniforms[i]->varName, mVertexShaderConverted);
+            mVertexShaderConverted += ";\n";
          }
          else
          {
-            vertexShader += "uniform " + ConstTypeToStringGLSL(mVertexShader->mShaderUniforms[i]->dataConstType) + " " + mVertexShader->mShaderUniforms[i]->varName;
+            mVertexShaderConverted += "uniform " + ConstTypeToStringGLSL(mVertexShader->mShaderUniforms[i]->dataConstType) + " " + mVertexShader->mShaderUniforms[i]->varName;
             if (mVertexShader->mShaderUniforms[i]->isArray)
             {
-               vertexShader += "[" + String::ToString(mVertexShader->mShaderUniforms[i]->arraySize) + "];\n";
+               mVertexShaderConverted += "[" + String::ToString(mVertexShader->mShaderUniforms[i]->arraySize) + "];\n";
             }
             else
             {
-               vertexShader += ";\n";
+               mVertexShaderConverted += ";\n";
             }
          }
 
       }
 
-      vertexShader += "\n";
+      mVertexShaderConverted += "\n";
 
       if (mVertexShader->mShaderFunctions.size() > 0)
       {
          for (U32 j = 0; j < mVertexShader->mShaderFunctions.size(); j++)
          {
-            mVertexShader->mShaderFunctions[j]->printFunctionGLSL(vertexShader, true);
+            mVertexShader->mShaderFunctions[j]->printFunctionGLSL(mVertexShaderConverted, true);
          }
       }
 
-      vertexShader += "void main()\n";
-      vertexShader += "{\n";
+      mVertexShaderConverted += "void main()\n";
+      mVertexShaderConverted += "{\n";
       Vector<String> entryFunctionLines;
       mVertexShader->entryFunctionBody.split("\n", entryFunctionLines);
 
@@ -1622,7 +1730,7 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
       {
          // we probably wont need to convert anything.
          if (entryFunctionLines[i] == String::EmptyString)
-            vertexShader += "\n";
+            mVertexShaderConverted += "\n";
          else
          {
             if (entryFunctionLines[i].find("ConnectData OUT") != String::NPos)
@@ -1642,11 +1750,11 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
 
             ConvertGLSLLineKeywords(entryFunctionLines[i], true);
 
-            vertexShader += "\t" + entryFunctionLines[i] + ";\n";
+            mVertexShaderConverted += "\t" + entryFunctionLines[i] + ";\n";
          }
       }
 
-      vertexShader += "};";
+      mVertexShaderConverted += "};";
 
       if (exportFile)
       {
@@ -1662,14 +1770,14 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
             return;
          }
 
-         s->writeText(vertexShader.c_str());
+         s->writeText(mVertexShaderConverted.c_str());
          delete s;
       }
    }
 
    if (mPixelShader != NULL)
    {
-      String pixelShader;
+      mPixelShaderConverted += "#version 330\n\n";
       // print our ConnectionData struct (there has to be a better way)
       for (U32 i = 0; i < mShaderStructs.size(); i++)
       {
@@ -1683,13 +1791,13 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
                   continue;
                }
 
-               pixelShader += "in " + ConstTypeToStringGLSL(mShaderStructs[i]->structDataTypes[j]->dataConstType) + " ";
-               pixelShader += mShaderStructs[i]->structDataTypes[j]->varName + "Conn;\n";
+               mPixelShaderConverted += "in " + ConstTypeToStringGLSL(mShaderStructs[i]->structDataTypes[j]->dataConstType) + " ";
+               mPixelShaderConverted += mShaderStructs[i]->structDataTypes[j]->varName + "Conn;\n";
             }
          }
       }
 
-      pixelShader += "\n";
+      mPixelShaderConverted += "\n";
 
       // print our ConnectionData struct (there has to be a better way)
       for (U32 i = 0; i < mShaderStructs.size(); i++)
@@ -1704,13 +1812,13 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
                   continue;
                }
 
-               pixelShader += "out " + ConstTypeToStringGLSL(mShaderStructs[i]->structDataTypes[j]->dataConstType) + " ";
-               pixelShader += mShaderStructs[i]->structDataTypes[j]->varName + ";\n";
+               mPixelShaderConverted += "out " + ConstTypeToStringGLSL(mShaderStructs[i]->structDataTypes[j]->dataConstType) + " ";
+               mPixelShaderConverted += mShaderStructs[i]->structDataTypes[j]->varName + ";\n";
             }
          }
       }
 
-      pixelShader += "\n";
+      mPixelShaderConverted += "\n";
 
       for (U32 i = 0; i < mPixelShader->mShaderUniforms.size(); i++)
       {
@@ -1719,37 +1827,37 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
             mPixelShader->mShaderUniforms[i]->dataConstType == GFXShaderConstType::GFXSCT_SamplerCubeArray ||
             mPixelShader->mShaderUniforms[i]->dataConstType == GFXShaderConstType::GFXSCT_SamplerTextureArray)
          {
-            pixelShader += "uniform ";
-            SamplerTypeToStringGLSL(mPixelShader->mShaderUniforms[i]->samplerType, mPixelShader->mShaderUniforms[i]->varName, pixelShader);
-            pixelShader += ";\n";
+            mPixelShaderConverted += "uniform ";
+            SamplerTypeToStringGLSL(mPixelShader->mShaderUniforms[i]->samplerType, mPixelShader->mShaderUniforms[i]->varName, mPixelShaderConverted);
+            mPixelShaderConverted += ";\n";
          }
          else
          {
-            pixelShader += "uniform " + ConstTypeToStringGLSL(mPixelShader->mShaderUniforms[i]->dataConstType) + " " + mPixelShader->mShaderUniforms[i]->varName;
+            mPixelShaderConverted += "uniform " + ConstTypeToStringGLSL(mPixelShader->mShaderUniforms[i]->dataConstType) + " " + mPixelShader->mShaderUniforms[i]->varName;
             if (mPixelShader->mShaderUniforms[i]->isArray)
             {
-               pixelShader += "[" + String::ToString(mPixelShader->mShaderUniforms[i]->arraySize) + "];\n";
+               mPixelShaderConverted += "[" + String::ToString(mPixelShader->mShaderUniforms[i]->arraySize) + "];\n";
             }
             else
             {
-               pixelShader += ";\n";
+               mPixelShaderConverted += ";\n";
             }
          }
 
       }
 
-      pixelShader += "\n";
+      mPixelShaderConverted += "\n";
 
       if (mPixelShader->mShaderFunctions.size() > 0)
       {
          for (U32 j = 0; j < mPixelShader->mShaderFunctions.size(); j++)
          {
-            mPixelShader->mShaderFunctions[j]->printFunctionGLSL(pixelShader, false);
+            mPixelShader->mShaderFunctions[j]->printFunctionGLSL(mPixelShaderConverted, false);
          }
       }
 
-      pixelShader += "void main()\n";
-      pixelShader += "{\n";
+      mPixelShaderConverted += "void main()\n";
+      mPixelShaderConverted += "{\n";
       Vector<String> entryFunctionLines;
       mPixelShader->entryFunctionBody.split("\n", entryFunctionLines);
 
@@ -1757,7 +1865,7 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
       {
          // we probably wont need to convert anything.
          if (entryFunctionLines[i] == String::EmptyString)
-            pixelShader += "\n";
+            mPixelShaderConverted += "\n";
          else
          {
             if (entryFunctionLines[i].find("FragOut OUT") != String::NPos)
@@ -1771,11 +1879,11 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
             }
 
             ConvertGLSLLineKeywords(entryFunctionLines[i], false);
-            pixelShader += "\t" + entryFunctionLines[i] + ";\n";
+            mPixelShaderConverted += "\t" + entryFunctionLines[i] + ";\n";
          }
       }
 
-      pixelShader += "};";
+      mPixelShaderConverted += "};";
 
       if (exportFile)
       {
@@ -1791,7 +1899,7 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
             return;
          }
 
-         s->writeText(pixelShader.c_str());
+         s->writeText(mPixelShaderConverted.c_str());
          delete s;
       }
    }

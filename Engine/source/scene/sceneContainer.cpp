@@ -67,6 +67,8 @@ struct SceneRayHelper
       U32 mMinY;
       U32 mMaxY;
 
+      F32 mCurrentT;
+
       /// Setup raycast. Returns true if applyBin can be used
       bool setup(Point3F start, Point3F end)
       {
@@ -97,6 +99,8 @@ struct SceneRayHelper
          //if (mNormalStart.y == mNormalEnd.y && minY != maxY)
          //   Con::printf("Y min = %d, max = %d", minY, maxY);
 
+         mCurrentT = F32_MAX;
+
          return canUseSimpleCase();
       }
 
@@ -122,14 +126,14 @@ struct SceneRayHelper
    /// does not cross the edge boundary.
    /// Invokes Delegate::checkFunc to locate candidates.
    template<typename DEL> static bool castInBinSimple(
-      QueryParams params,
+      const QueryParams params,
       State& state,
       SceneContainer::ObjectList* binLists,
       RayInfo* info, DEL del)
    {
       U32 count;
       U32 incX, incY;
-      F32 currentT = FLT_MAX;
+      F32 currentT = state.mCurrentT;
       bool foundCandidate = false;
 
       if (state.mMinX == state.mMaxX)
@@ -168,20 +172,21 @@ struct SceneRayHelper
          y += incY;
       }
 
+      state.mCurrentT = currentT;
       return foundCandidate;
    }
 
    /// Performs raycast in a specific bin idx
    /// Invokes Delegate::checkFunc to locate candidates.
    template<typename DEL> static bool castInBinIdx(
-      QueryParams params,
+      const QueryParams params,
       State& state,
       SceneContainer::ObjectList* binLists,
       U32 idx,
       RayInfo* info,
       DEL del)
    {
-      F32 currentT = FLT_MAX;
+      F32 currentT = state.mCurrentT;
       bool foundCandidate = false;
 
       SceneContainer::ObjectList& chainList = binLists[idx];
@@ -196,6 +201,7 @@ struct SceneRayHelper
          ptr->setContainerSeqKey(params.seqKey);
       }
 
+      state.mCurrentT = currentT;
       return foundCandidate;
    }
 
@@ -203,15 +209,15 @@ struct SceneRayHelper
    /// also handling any cases where the edge boundary is crossed.
    /// Invokes Delegate::checkFunc to locate candidates.
    template<typename DEL> static bool castInBins(
-      QueryParams params,
+      const QueryParams params,
       State& state,
       SceneContainer::ObjectList* binLists,
       RayInfo* info,
       DEL del)
    {
-      F32 currentT = FLT_MAX;
       bool foundCandidate = false;
       F32 currStartX = state.mNormalStart.x;
+      F32 currentT = state.mCurrentT;
 
       AssertFatal(currStartX != state.mNormalEnd.x, "This is going to cause problems in SceneContainer::castRay");
       if(mIsNaN_F(currStartX))
@@ -281,6 +287,7 @@ struct SceneRayHelper
          currStartX = currEndX;
       }
 
+      state.mCurrentT = currentT;
       return foundCandidate;
    }
 
@@ -1453,7 +1460,7 @@ void SceneContainer::getBinRange( const F32 min, const F32 max, U32& minBin, U32
       AssertFatal(maxCoord >= 0.0 && maxCoord < SceneContainer::csmTotalAxisBinSize, "Bad maxCoord");
 
       minBin = U32(minCoord / SceneContainer::csmBinSize);
-      maxBin = (U32)mCeil(maxCoord / SceneContainer::csmBinSize);
+      maxBin = U32(maxCoord / SceneContainer::csmBinSize); // NOTE: this should use same logic as minBin to allow for simplification case when coords match
       maxBin = maxBin >= SceneContainer::csmNumAxisBins ? SceneContainer::csmNumAxisBins-1 : maxBin;
       AssertFatal(minBin < SceneContainer::csmNumAxisBins, avar("Error, bad clipping(min)! (%g, %d)", maxCoord, minBin));
       AssertFatal(maxBin < SceneContainer::csmNumAxisBins, avar("Error, bad clipping(max)! (%g, %d)", maxCoord, maxBin));

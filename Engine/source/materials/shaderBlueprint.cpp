@@ -185,26 +185,41 @@ void functionLine(String& inLine, U32& depth, bool& singleLineStatement)
       inLine.find("do") != String::NPos)
    {
       bool isStatement = false;
+      S32 pos = 0;
 
-      S32 pos = inLine.find("if") + 2;
-      if (dIsspace(inLine[pos]) || inLine[pos] == '(')
-         isStatement = true;
+      if (inLine.find("if") != String::NPos)
+      {
+         pos = inLine.find("if") + 2;
+         if (dIsspace(inLine[pos]) || inLine[pos] == '(')
+            isStatement = true;
+      }
 
-      pos = inLine.find("if") + 2;
-      if (dIsspace(inLine[pos]) || inLine[pos] == '(')
-         isStatement = true;
+      if (inLine.find("for") != String::NPos)
+      {
+         pos = inLine.find("for") + 3;
+         if (dIsspace(inLine[pos]) || inLine[pos] == '(')
+            isStatement = true;
+      }
 
-      pos = inLine.find("for") + 3;
-      if (dIsspace(inLine[pos]) || inLine[pos] == '(')
-         isStatement = true;
+      if (inLine.find("while") != String::NPos)
+      {
+         pos = inLine.find("while") + 5;
+         if (dIsspace(inLine[pos]) || inLine[pos] == '(')
+            isStatement = true;
+      }
 
-      pos = inLine.find("while") + 5;
-      if (dIsspace(inLine[pos]) || inLine[pos] == '(')
-         isStatement = true;
-
-      pos = inLine.find("do") + 2;
-      if (dIsspace(inLine[pos]) || inLine[pos] == '(')
-         isStatement = true;
+      if (inLine.find("do") != String::NPos)
+      {
+         pos = inLine.find("do") + 2;
+         if (dIsspace(inLine[pos]) || inLine[pos] == '(')
+         {
+            //things get called albedo.........
+            if (inLine[pos + 1] == '=')
+               isStatement = false;
+            else
+               isStatement = true;
+         }
+      }
 
       // if we are already in a statement, add another tab for this.
       if (depth > 0)
@@ -402,6 +417,9 @@ GFXShaderConstType ToConstType(String stringType)
          return GFXShaderConstType::GFXSCT_SamplerCubeArray;
    }
 
+   if (stringType.equal("void"))
+      return GFXShaderConstType::GFXSCT_Void;
+
    // we have reached here, we do not know this type...
    return GFXShaderConstType::GFXSCT_Unknown;
 }
@@ -588,6 +606,8 @@ String ConstTypeToStringHLSL(GFXShaderConstType inConstType)
       case GFXShaderConstType::GFXSCT_Int4:
          return "int4";
 
+      case GFXShaderConstType::GFXSCT_Void:
+         return "void";
       default:
          // samplers are handled differently.
          return String::EmptyString;
@@ -636,6 +656,8 @@ String ConstTypeToStringGLSL(GFXShaderConstType inConstType)
 
    case GFXShaderConstType::GFXSCT_Int4:
       return "int4";
+   case GFXShaderConstType::GFXSCT_Void:
+      return "void";
 
    default:
       // samplers are handled differently.
@@ -1457,7 +1479,7 @@ bool ShaderBlueprint::readStruct(FileShaderBlueprint* inShader, String lineIn, F
          continue;
 
       if (line.equal("};"))
-         return false;
+         break;
 
       lineWords.clear();
       line.split(" ", lineWords);
@@ -1481,7 +1503,7 @@ bool ShaderBlueprint::readStruct(FileShaderBlueprint* inShader, String lineIn, F
                   readFunction = readStructFunction(shaderStruct, line, file, lineNum);
                }
 
-               continue;
+               break;
             }
             else
             {
@@ -1490,6 +1512,10 @@ bool ShaderBlueprint::readStruct(FileShaderBlueprint* inShader, String lineIn, F
                   String dataName = lineWords[1];
                   bool isArray = false;
                   U32 arraySize = 0;
+
+                  if (dataName.find(";"))
+                     dataName = dataName.substr(0, dataName.find(";"));
+
                   if (dataName.find('[') != String::NPos)
                   {
                      isArray = true;
@@ -1507,13 +1533,15 @@ bool ShaderBlueprint::readStruct(FileShaderBlueprint* inShader, String lineIn, F
 
                   // i think types in structs cannot be statically intialized?
                   ShaderDataType* structData = new ShaderDataType(ToConstType(lineWords[0]), dataName, isArray, arraySize);
-
+                  shaderStruct->structDataTypes.push_back(structData);
+                  break;
                }
             }
          }
       }
    }
 
+   inShader->mShaderStructs.push_back(shaderStruct);
 
    return false;
 }
@@ -2356,7 +2384,7 @@ void ShaderBlueprint::convertToHLSL(bool exportFile)
          mVertexShaderConverted += "{\n";
          for (U32 j = 0; j < mVertexShader->mShaderStructs[i]->structDataTypes.size(); j++)
          {
-            mVertexShaderConverted += "\t" + ConstTypeToStringHLSL(mVertexShader->mShaderStructs[i]->structDataTypes[j]->dataConstType);
+            mVertexShaderConverted += "\t" + ConstTypeToStringHLSL(mVertexShader->mShaderStructs[i]->structDataTypes[j]->dataConstType) + " ";
             mVertexShaderConverted += mVertexShader->mShaderStructs[i]->structDataTypes[j]->varName;
             if (mVertexShader->mShaderStructs[i]->structDataTypes[j]->isArray)
             {
@@ -2367,11 +2395,12 @@ void ShaderBlueprint::convertToHLSL(bool exportFile)
 
          for (U32 k = 0; k < mVertexShader->mShaderStructs[i]->structFunctions.size(); k++)
          {
-            mVertexShader->mShaderStructs[i]->structFunctions[k]->printFunctionHLSL(mVertexShaderConverted);
+            mVertexShaderConverted += "\n";
+            mVertexShader->mShaderStructs[i]->structFunctions[k]->printFunctionHLSL(mVertexShaderConverted, 1);
          }
-      }
 
-      mVertexShaderConverted += "\n";
+         mVertexShaderConverted += "};\n\n";
+      }
 
       for (U32 i = 0; i < mVertexShader->mShaderUniforms.size(); i++)
       {
@@ -2495,7 +2524,7 @@ void ShaderBlueprint::convertToHLSL(bool exportFile)
          mPixelShaderConverted += "{\n";
          for (U32 j = 0; j < mPixelShader->mShaderStructs[i]->structDataTypes.size(); j++)
          {
-            mPixelShaderConverted += "\t" + ConstTypeToStringHLSL(mPixelShader->mShaderStructs[i]->structDataTypes[j]->dataConstType);
+            mPixelShaderConverted += "\t" + ConstTypeToStringHLSL(mPixelShader->mShaderStructs[i]->structDataTypes[j]->dataConstType) + " ";
             mPixelShaderConverted += mPixelShader->mShaderStructs[i]->structDataTypes[j]->varName;
             if (mPixelShader->mShaderStructs[i]->structDataTypes[j]->isArray)
             {
@@ -2506,11 +2535,12 @@ void ShaderBlueprint::convertToHLSL(bool exportFile)
 
          for (U32 k = 0; k < mPixelShader->mShaderStructs[i]->structFunctions.size(); k++)
          {
-            mPixelShader->mShaderStructs[i]->structFunctions[k]->printFunctionHLSL(mPixelShaderConverted);
+            mPixelShaderConverted += "\n";
+            mPixelShader->mShaderStructs[i]->structFunctions[k]->printFunctionHLSL(mPixelShaderConverted, 1);
          }
-      }
 
-      mPixelShaderConverted += "\n";
+         mPixelShaderConverted += "};\n\n";
+      }
 
       for (U32 i = 0; i < mPixelShader->mShaderUniforms.size(); i++)
       {
@@ -2660,15 +2690,15 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
          }
       }
 
-      mVertexShaderConverted += "\n";
+      mVertexShaderConverted += "\n"; 
 
-      for (U32 i = 0; i < mPixelShader->mShaderStructs.size(); i++)
+      for (U32 i = 0; i < mVertexShader->mShaderStructs.size(); i++)
       {
          mVertexShaderConverted += "struct " + mVertexShader->mShaderStructs[i]->structName + "\n";
          mVertexShaderConverted += "{\n";
          for (U32 j = 0; j < mVertexShader->mShaderStructs[i]->structDataTypes.size(); j++)
          {
-            mVertexShaderConverted += "\t" + ConstTypeToStringGLSL(mVertexShader->mShaderStructs[i]->structDataTypes[j]->dataConstType);
+            mVertexShaderConverted += "\t" + ConstTypeToStringGLSL(mVertexShader->mShaderStructs[i]->structDataTypes[j]->dataConstType) + " ";
             mVertexShaderConverted += mVertexShader->mShaderStructs[i]->structDataTypes[j]->varName;
             if (mVertexShader->mShaderStructs[i]->structDataTypes[j]->isArray)
             {
@@ -2679,11 +2709,12 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
 
          for (U32 k = 0; k < mVertexShader->mShaderStructs[i]->structFunctions.size(); k++)
          {
-            mVertexShader->mShaderStructs[i]->structFunctions[k]->printFunctionGLSL(mVertexShaderConverted, true);
+            mVertexShaderConverted += "\n";
+            mVertexShader->mShaderStructs[i]->structFunctions[k]->printFunctionGLSL(mVertexShaderConverted, true, 1);
          }
-      }
 
-      mVertexShaderConverted += "\n";
+         mVertexShaderConverted += "};\n\n";
+      }
 
       for (U32 i = 0; i < mVertexShader->mShaderUniforms.size(); i++)
       {
@@ -2854,7 +2885,7 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
          mPixelShaderConverted += "{\n";
          for (U32 j = 0; j < mPixelShader->mShaderStructs[i]->structDataTypes.size(); j++)
          {
-            mPixelShaderConverted += "\t" + ConstTypeToStringGLSL(mPixelShader->mShaderStructs[i]->structDataTypes[j]->dataConstType);
+            mPixelShaderConverted += "\t" + ConstTypeToStringGLSL(mPixelShader->mShaderStructs[i]->structDataTypes[j]->dataConstType) + " ";
             mPixelShaderConverted += mPixelShader->mShaderStructs[i]->structDataTypes[j]->varName;
             if (mPixelShader->mShaderStructs[i]->structDataTypes[j]->isArray)
             {
@@ -2865,11 +2896,12 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
 
          for (U32 k = 0; k < mPixelShader->mShaderStructs[i]->structFunctions.size(); k++)
          {
-            mPixelShader->mShaderStructs[i]->structFunctions[k]->printFunctionGLSL(mPixelShaderConverted, false);
+            mPixelShaderConverted += "\n";
+            mPixelShader->mShaderStructs[i]->structFunctions[k]->printFunctionGLSL(mPixelShaderConverted, false, 1);
          }
-      }
 
-      mPixelShaderConverted += "\n";
+         mPixelShaderConverted += "};\n\n";
+      }
 
       for (U32 i = 0; i < mPixelShader->mShaderUniforms.size(); i++)
       {
@@ -2911,7 +2943,7 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
          }
       }
 
-      mVertexShaderConverted += "\n";
+      mPixelShaderConverted += "\n";
 
       if (mPixelShader->mShaderFunctions.size() > 0)
       {
@@ -3002,8 +3034,11 @@ void ShaderDataStruct::printStructHLSL(String& inString)
    inString += "};\n\n";
 }
 
-void ShaderFunction::printFunctionHLSL(String& inString)
+void ShaderFunction::printFunctionHLSL(String& inString, U32 startDepth)
 {
+   for (U32 i = 0; i < startDepth; i++)
+      inString += "\t";
+
    if (isInline)
       inString += "inline ";
 
@@ -3041,7 +3076,12 @@ void ShaderFunction::printFunctionHLSL(String& inString)
 
    }
 
-   inString += ")\n{\n";
+   inString += ")\n";
+
+   for (U32 i = 0; i < startDepth; i++)
+      inString += "\t";
+
+   inString += "{\n";
 
    Vector<String> funcLines;
 
@@ -3058,15 +3098,25 @@ void ShaderFunction::printFunctionHLSL(String& inString)
       {
          ConvertHLSLLineKeywords(funcLines[j]);
          functionLine(funcLines[j], depth, inStatement);
+
+         for (U32 i = 0; i < startDepth; i++)
+            inString += "\t";
+
          inString += "\t" + funcLines[j];
       }
    }
 
+   for (U32 i = 0; i < startDepth; i++)
+      inString += "\t";
+
    inString += "}\n\n";
 }
 
-void ShaderFunction::printFunctionGLSL(String& inString, bool vert)
+void ShaderFunction::printFunctionGLSL(String& inString, bool vert, U32 startDepth)
 {
+   for (U32 i = 0; i < startDepth; i++)
+      inString += "\t";
+
    if (isInline)
       inString += "inline ";
 
@@ -3104,13 +3154,19 @@ void ShaderFunction::printFunctionGLSL(String& inString, bool vert)
 
    }
 
-   inString += ")\n{\n";
+   inString += ")\n";
+
+   for (U32 i = 0; i < startDepth; i++)
+      inString += "\t";
+
+   inString += "{\n";
 
    Vector<String> funcLines;
 
    functionBody.split("\n", funcLines);
 
    U32 depth = 0;
+
    bool inStatement = false;
    for (U32 j = 0; j < funcLines.size(); j++)
    {
@@ -3126,8 +3182,14 @@ void ShaderFunction::printFunctionGLSL(String& inString, bool vert)
       if(formatLine)
          functionLine(funcLines[j], depth, inStatement);
 
+      for (U32 i = 0; i < startDepth; i++)
+         inString += "\t";
+
       inString += "\t" + funcLines[j];
    }
+
+   for (U32 i = 0; i < startDepth; i++)
+      inString += "\t";
 
    inString += "}\n\n";
 }

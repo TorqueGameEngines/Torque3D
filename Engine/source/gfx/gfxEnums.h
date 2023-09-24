@@ -314,6 +314,8 @@ enum GFXShaderConstType
 {
    GFXSCT_Unknown,
    /// GFX"S"hader"C"onstant"T"ype
+   // for shader blueprint function.
+   GFXSCT_Void,
    // Scalar
    GFXSCT_Float, 
    // Vectors

@@ -204,8 +204,8 @@ public:
       VECTOR_SET_ASSOCIATION(arguments);
    }
 
-   void printFunctionHLSL(String& inString);
-   void printFunctionGLSL(String& inString, bool vert);
+   void printFunctionHLSL(String& inString, U32 startDepth = 0);
+   void printFunctionGLSL(String& inString, bool vert, U32 startDepth = 0);
 };
 
 class ShaderStruct

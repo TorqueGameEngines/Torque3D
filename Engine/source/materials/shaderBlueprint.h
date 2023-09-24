@@ -243,12 +243,15 @@ class ShaderBlueprint : public SimObject
    typedef SimObject Parent;
 
 protected:
+   ///
+   static Vector<ShaderBlueprint*> smAllShaderData;
+   typedef HashTable<String, GFXShaderRef> ShaderCache;
+   ShaderCache mShaders;
 
    StringTableEntry mBluePrintFile;
 
    String mShaderFileName;
 
-   static Vector<ShaderBlueprint*> smAllShaderBlueprints;
    bool mExportFiles;
 
    void _onFileChanged(const Torque::Path& path) { _reload(); }

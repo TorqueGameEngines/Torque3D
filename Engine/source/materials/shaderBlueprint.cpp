@@ -32,7 +32,7 @@
 
 using namespace Torque;
 
-Vector<ShaderBlueprint*> ShaderBlueprint::smAllShaderBlueprints;
+Vector<ShaderBlueprint*> ShaderBlueprint::smAllShaderData;
 
 IMPLEMENT_CONOBJECT(ShaderBlueprint);
 
@@ -935,6 +935,11 @@ GFXShader* ShaderBlueprint::getShader(const Vector<GFXShaderMacro>& macros)
    String cacheKey;
    GFXShaderMacro::stringize(macros, &cacheKey);
 
+   // Lookup the shader for this instance.
+   ShaderCache::Iterator iter = mShaders.find(cacheKey);
+   if (iter != mShaders.end())
+      return iter->value;
+
    GFXShader* shader = _createShader(finalMacros);
    if (!shader)
       return NULL;
@@ -943,6 +948,8 @@ GFXShader* ShaderBlueprint::getShader(const Vector<GFXShaderMacro>& macros)
 
    mCompiledShader = shader;
 
+   // Store the shader in the cache and return it.
+   mShaders.insertUnique(cacheKey, shader);
    return shader;
 }
 
@@ -1008,7 +1015,7 @@ bool ShaderBlueprint::onAdd()
 
    Torque::FS::AddChangeNotification(mBluePrintFile, this, &ShaderBlueprint::_onFileChanged);
 
-   smAllShaderBlueprints.push_back(this);
+   smAllShaderData.push_back(this);
 
    return true;
 }
@@ -1017,7 +1024,7 @@ void ShaderBlueprint::onRemove()
 {
    Torque::FS::RemoveChangeNotification(mBluePrintFile, this, &ShaderBlueprint::_onFileChanged);
 
-   smAllShaderBlueprints.remove(this);
+   smAllShaderData.remove(this);
 
    Parent::onRemove();
 }
@@ -2032,8 +2039,8 @@ void ShaderBlueprint::convertToHLSL(bool exportFile)
             continue;
          }
 
-         functionLine(entryFunctionLines[i], depth, inStatement);
          ConvertHLSLLineKeywords(entryFunctionLines[i]);
+         functionLine(entryFunctionLines[i], depth, inStatement);
          mVertexShaderConverted += "\t" + entryFunctionLines[i];
       }
 
@@ -2147,8 +2154,8 @@ void ShaderBlueprint::convertToHLSL(bool exportFile)
             continue;
          }
 
-         functionLine(entryFunctionLines[i], depth, inStatement);
          ConvertHLSLLineKeywords(entryFunctionLines[i]);
+         functionLine(entryFunctionLines[i], depth, inStatement);
          mPixelShaderConverted += "\t" + entryFunctionLines[i];
       }
 
@@ -2308,10 +2315,8 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
             entryFunctionLines[i].replace("OUT." + svPos, "gl_Position");
          }
 
-         functionLine(entryFunctionLines[i], depth, inStatement);
-
          ConvertGLSLLineKeywords(entryFunctionLines[i], true);
-
+         functionLine(entryFunctionLines[i], depth, inStatement);
          mVertexShaderConverted += "\t" + entryFunctionLines[i];
       }
 
@@ -2467,8 +2472,8 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
             continue;
          }
 
-         functionLine(entryFunctionLines[i], depth, inStatement);
          ConvertGLSLLineKeywords(entryFunctionLines[i], false);
+         functionLine(entryFunctionLines[i], depth, inStatement);
          mPixelShaderConverted += "\t" + entryFunctionLines[i];
       }
 
@@ -2568,8 +2573,8 @@ void ShaderFunction::printFunctionHLSL(String& inString)
          inString += "\n";
       else
       {
-         functionLine(funcLines[j], depth, inStatement);
          ConvertHLSLLineKeywords(funcLines[j]);
+         functionLine(funcLines[j], depth, inStatement);
          inString += "\t" + funcLines[j];
       }
    }
@@ -2626,8 +2631,8 @@ void ShaderFunction::printFunctionGLSL(String& inString, bool vert)
    bool inStatement = false;
    for (U32 j = 0; j < funcLines.size(); j++)
    {
-      functionLine(funcLines[j], depth, inStatement);
       ConvertGLSLLineKeywords(funcLines[j], vert);
+      functionLine(funcLines[j], depth, inStatement);
       inString += "\t" + funcLines[j];
    }
 

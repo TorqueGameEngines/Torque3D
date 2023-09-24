@@ -1309,140 +1309,90 @@ bool ShaderBlueprint::readFileShaderData(FileShaderBlueprint* inShader, FileObje
          }
       }
 
-      // this must be a function.
-      if (ToConstType(lineWords[0]) != GFXShaderConstType::GFXSCT_Unknown || lineWords[0].equal("inline"))
+      // this could be a function or just a variable initialization.
+      if (ToConstType(lineWords[0]) != GFXShaderConstType::GFXSCT_Unknown ||
+         lineWords[0].equal("inline") ||
+         lineWords[0].equal("static") ||
+         lineWords[0].equal("const"))
       {
-         // set this to false until we find "{" and all the args.
-         bool readFunction = false;
-         GFXShaderConstType returnType;
-         String funcName;
-         bool isInline = false;
-         bool returnTypeFound = false;
-         bool funcNameFound = false;
-
-         // split function into words.
-         lineWords.clear();
-         line.split("(", lineWords);
-
-         ShaderFunction* shaderFunction = NULL;
-
-         for (U32 i = 0; i < lineWords.size(); i++)
+         // this is an initialization.
+         if (line.find("=") != String::NPos)
          {
-            // first word should be a function declaration string.
-            if (i == 0)
+            // clear our vector
+            lineWords.clear();
+
+            // split by the = sign.
+            line.split("=", lineWords);
+
+            if (lineWords.size() == 1)
             {
-               // split by space now.
-               Vector<String> functionDeclaration;
-               lineWords[i].split(" ", functionDeclaration);
+               Con::printf("ShaderBlueprint - Error: initialization of global variable has no value set on line %d", lineNum);
+               return false;
+            }
 
-               for (U32 j = 0; j < functionDeclaration.size(); j++)
+            Vector<String> declare;
+            lineWords[0].split(" ", declare);
+
+            // initialize.
+            bool isStatic = false;
+            bool isConst = false;
+            GFXShaderConstType type = GFXShaderConstType::GFXSCT_Unknown;
+            String name = String::EmptyString;
+            U32 nameWord = 0;
+            String value = TrimTabAndWhiteSpace(lineWords[1]);
+
+            for (U32 i = 0; i < declare.size(); i++)
+            {
+               if (!isStatic)
                {
-                  if (!isInline)
+                  if (lineWords[i].equal("static"))
                   {
-                     if (functionDeclaration[j].equal("inline"))
-                     {
-                        isInline = true;
-                        continue;
-                     }
-                  }
-
-                  if (!returnTypeFound)
-                  {
-                     returnType = ToConstType(functionDeclaration[j]);
-                     if (returnType == GFXShaderConstType::GFXSCT_Unknown)
-                     {
-                        Con::printf("ShaderBlueprint - Unknown return type for function on line %d", lineNum);
-                        return false;
-                     }
-                     else
-                     {
-                        returnTypeFound = true;
-                        continue;
-                     }
-                  }
-
-                  if (returnTypeFound)
-                  {
-                     if (!funcNameFound)
-                     {
-                        if (functionDeclaration[j].find("("))
-                        {
-                           funcName = functionDeclaration[j].substr(0, functionDeclaration[j].find('('));
-                        }
-                        else
-                        {
-                           funcName = functionDeclaration[j];
-                        }
-
-                        funcNameFound = true;
-                        break;
-                     }
+                     isStatic = true;
+                     continue;
                   }
                }
 
-               if (funcNameFound == true && returnTypeFound == true)
+               if (!isConst)
                {
-                  shaderFunction = new ShaderFunction(returnType, funcName, isInline);
-                  continue;
+                  if (lineWords[i].equal("const"))
+                  {
+                     isConst = true;
+                     continue;
+                  }
                }
-               else
+
+               // we found our const type, next word should be our name.
+               if (ToConstType(lineWords[i]) != GFXShaderConstType::GFXSCT_Unknown)
                {
-                  Con::printf("ShaderBlueprint - Error: function declared incorrectly on line %d", lineNum);
-                  return false;
-               }
-            }
-            else
-            {
-               readFunction = shaderFunctionArguments(lineWords[i], shaderFunction);
-            }
-         }
-
-         // if this is false we have more arguments to process.
-         if (!readFunction)
-         {
-            while (!readFunction)
-            {
-               line = String((char*)file.readLine());
-               lineNum++;
-               // remove leading and trailing spaces.
-               line = TrimTabAndWhiteSpace(line);
-               readFunction = shaderFunctionArguments(line, shaderFunction);
-            }
-         }
-
-         // now we can read our function..
-         if (readFunction)
-         {
-            while (readFunction)
-            {
-               // just straight up read the lines, as this will be changed per api.
-               line = String((char*)file.readLine());
-               lineNum++;
-
-               line = TrimTabAndWhiteSpace(line);
-               // dont need to worry about opening brace.
-               if (line.equal("{"))
-                  continue;
-
-               // close out when we find closing brace.
-               if (line.find('}') != String::NPos)
-               {
-                  readFunction = false;
+                  type = ToConstType(lineWords[i]);
+                  nameWord = i + 1;
                   break;
                }
-
-               if (shaderFunction != NULL)
-               {
-                  if (line.find(";") != String::NPos)
-                     line = line.substr(0, line.find(";"));
-
-                  shaderFunction->functionBody += line + "\n";
-               }
             }
+
+            if (nameWord > declare.size())
+            {
+               Con::printf("ShaderBlueprint - Error: initialization of global variable is incorrect on line %d", lineNum);
+               return false;
+            }
+
+            ShaderStaticData* globalVar = new ShaderStaticData(type, name, value, isStatic, isConst);
+            inShader->mShaderStatics.push_back(globalVar);
+            return true;
+
          }
 
-         if (shaderFunction != NULL)
-            inShader->mShaderFunctions.push_back(shaderFunction);
+         // this could still be an initialiation but we check for = before this.
+         if (line.find("(") != String::NPos)
+         {
+            bool readFunction = true;
+            while (readFunction)
+            {
+               readFunction = readShaderFunction(inShader, line, file, lineNum);
+            }
+
+            return true;
+         }
       }
    }
 
@@ -1475,6 +1425,143 @@ bool ShaderBlueprint::readFileShaderData(FileShaderBlueprint* inShader, FileObje
    }
 
    return true;
+}
+
+bool ShaderBlueprint::readShaderFunction(FileShaderBlueprint* inShader, String lineIn, FileObject& file, U32& lineNum)
+{
+   // set this to false until we find "{" and all the args.
+   bool readFunction = false;
+   GFXShaderConstType returnType;
+   String funcName;
+   bool isInline = false;
+   bool returnTypeFound = false;
+   bool funcNameFound = false;
+
+   // split function into words.
+   Vector<String> lineWords;
+   lineIn.split("(", lineWords);
+
+   ShaderFunction* shaderFunction = NULL;
+
+   for (U32 i = 0; i < lineWords.size(); i++)
+   {
+      // first word should be a function declaration string.
+      if (i == 0)
+      {
+         // split by space now.
+         Vector<String> functionDeclaration;
+         lineWords[i].split(" ", functionDeclaration);
+
+         for (U32 j = 0; j < functionDeclaration.size(); j++)
+         {
+            if (!isInline)
+            {
+               if (functionDeclaration[j].equal("inline"))
+               {
+                  isInline = true;
+                  continue;
+               }
+            }
+
+            if (!returnTypeFound)
+            {
+               returnType = ToConstType(functionDeclaration[j]);
+               if (returnType == GFXShaderConstType::GFXSCT_Unknown)
+               {
+                  Con::printf("ShaderBlueprint - Unknown return type for function on line %d", lineNum);
+                  return false;
+               }
+               else
+               {
+                  returnTypeFound = true;
+                  continue;
+               }
+            }
+
+            if (returnTypeFound)
+            {
+               if (!funcNameFound)
+               {
+                  if (functionDeclaration[j].find("("))
+                  {
+                     funcName = functionDeclaration[j].substr(0, functionDeclaration[j].find('('));
+                  }
+                  else
+                  {
+                     funcName = functionDeclaration[j];
+                  }
+
+                  funcNameFound = true;
+                  break;
+               }
+            }
+         }
+
+         if (funcNameFound == true && returnTypeFound == true)
+         {
+            shaderFunction = new ShaderFunction(returnType, funcName, isInline);
+            continue;
+         }
+         else
+         {
+            Con::printf("ShaderBlueprint - Error: function declared incorrectly on line %d", lineNum);
+            return false;
+         }
+      }
+      else
+      {
+         readFunction = shaderFunctionArguments(lineWords[i], shaderFunction);
+      }
+   }
+
+   // if this is false we have more arguments to process.
+   if (!readFunction)
+   {
+      while (!readFunction)
+      {
+         String line = String((char*)file.readLine());
+         lineNum++;
+         // remove leading and trailing spaces.
+         line = TrimTabAndWhiteSpace(line);
+         readFunction = shaderFunctionArguments(line, shaderFunction);
+      }
+   }
+
+   // now we can read our function..
+   if (readFunction)
+   {
+      while (readFunction)
+      {
+         // just straight up read the lines, as this will be changed per api.
+         String line = String((char*)file.readLine());
+         lineNum++;
+
+         line = TrimTabAndWhiteSpace(line);
+         // dont need to worry about opening brace.
+         if (line.equal("{"))
+            continue;
+
+         // close out when we find closing brace.
+         if (line.find('}') != String::NPos)
+         {
+            readFunction = false;
+            break;
+         }
+
+         if (shaderFunction != NULL)
+         {
+            if (line.find(";") != String::NPos)
+               line = line.substr(0, line.find(";"));
+
+            shaderFunction->functionBody += line + "\n";
+         }
+      }
+   }
+
+   if (shaderFunction != NULL)
+      inShader->mShaderFunctions.push_back(shaderFunction);
+
+   return readFunction;
 }
 
 bool ShaderBlueprint::shaderFunctionArguments(String lineIn, ShaderFunction* function)
@@ -1715,6 +1802,19 @@ void ShaderBlueprint::convertToHLSL(bool exportFile)
 
       mVertexShaderConverted += "\n";
 
+      if (mVertexShader->mShaderStatics.size() > 0)
+      {
+         for (U32 j = 0; j < mVertexShader->mShaderStatics.size(); j++)
+         {
+            mVertexShaderConverted += mVertexShader->mShaderStatics[j]->isStatic ? "static " : "";
+            mVertexShaderConverted += mVertexShader->mShaderStatics[j]->isConst ? "const " : "";
+            mVertexShaderConverted += ConstTypeToStringHLSL(mVertexShader->mShaderStatics[j]->dataConstType);
+            mVertexShaderConverted += " " + mVertexShader->mShaderStatics[j]->varName + " = " + mVertexShader->mShaderStatics[j]->value + ";\n";
+         }
+      }
+
+      mVertexShaderConverted += "\n";
+
       if (mVertexShader->mShaderFunctions.size() > 0)
       {
          for (U32 j = 0; j < mVertexShader->mShaderFunctions.size(); j++)
@@ -1809,6 +1909,19 @@ void ShaderBlueprint::convertToHLSL(bool exportFile)
       }
 
       mPixelShaderConverted += "\n";
+
+      if (mPixelShader->mShaderStatics.size() > 0)
+      {
+         for (U32 j = 0; j < mPixelShader->mShaderStatics.size(); j++)
+         {
+            mPixelShaderConverted += mPixelShader->mShaderStatics[j]->isStatic ? "static " : "";
+            mPixelShaderConverted += mPixelShader->mShaderStatics[j]->isConst ? "const " : "";
+            mPixelShaderConverted += ConstTypeToStringHLSL(mPixelShader->mShaderStatics[j]->dataConstType);
+            mPixelShaderConverted += " " + mPixelShader->mShaderStatics[j]->varName + " = " + mPixelShader->mShaderStatics[j]->value + ";\n";
+         }
+      }
+
+      mVertexShaderConverted += "\n";
 
       if (mPixelShader->mShaderFunctions.size() > 0)
       {
@@ -1936,6 +2049,20 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
             }
          }
 
+      }
+
+      mVertexShaderConverted += "\n";
+
+      if (mVertexShader->mShaderStatics.size() > 0)
+      {
+         for (U32 j = 0; j < mVertexShader->mShaderStatics.size(); j++)
+         {
+            // GLSL does not use static...
+            //mVertexShaderConverted += mVertexShader->mShaderStatics[j]->isStatic ? "static " : "";
+            mVertexShaderConverted += mVertexShader->mShaderStatics[j]->isConst ? "const " : "";
+            mVertexShaderConverted += ConstTypeToStringHLSL(mVertexShader->mShaderStatics[j]->dataConstType);
+            mVertexShaderConverted += " " + mVertexShader->mShaderStatics[j]->varName + " = " + mVertexShader->mShaderStatics[j]->value + ";\n";
+         }
       }
 
       mVertexShaderConverted += "\n";
@@ -2086,6 +2213,20 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
       }
 
       mPixelShaderConverted += "\n";
+
+      if (mPixelShader->mShaderStatics.size() > 0)
+      {
+         for (U32 j = 0; j < mPixelShader->mShaderStatics.size(); j++)
+         {
+            // GLSL does not use static...
+            //mPixelShaderConverted += mPixelShader->mShaderStatics[j]->isStatic ? "static " : "";
+            mPixelShaderConverted += mPixelShader->mShaderStatics[j]->isConst ? "const " : "";
+            mPixelShaderConverted += ConstTypeToStringHLSL(mPixelShader->mShaderStatics[j]->dataConstType);
+            mPixelShaderConverted += " " + mPixelShader->mShaderStatics[j]->varName + " = " + mPixelShader->mShaderStatics[j]->value + ";\n";
+         }
+      }
+
+      mVertexShaderConverted += "\n";
 
       if (mPixelShader->mShaderFunctions.size() > 0)
       {

@@ -70,6 +70,34 @@ public:
    void setSamplerType(GFXSamplerType inSamplerType) { samplerType = inSamplerType; }
 };
 
+class ShaderStaticData : public ShaderDataType
+{
+public:
+   bool isStatic;
+   bool isConst;
+   String value;
+
+   ShaderStaticData()
+      : ShaderDataType(),
+      isStatic(false),
+      isConst(false),
+      value(String::EmptyString)
+   {}
+
+   ShaderStaticData(GFXShaderConstType constType,
+      String name,
+      String inValue,
+      bool inStatic,
+      bool inConst,
+      bool arrayType = false,
+      U32 size = 0)
+      : ShaderDataType(constType, name, arrayType, size),
+      value(inValue),
+      isStatic(inStatic),
+      isConst(inConst)
+   {}
+};
+
 class ShaderStructDataType : public ShaderDataType
 {
 public:
@@ -186,6 +214,7 @@ public:
    String entryPoint;
    Vector<ShaderDataType*> mShaderUniforms;
    Vector<ShaderFunction*> mShaderFunctions;
+   Vector<ShaderStaticData*> mShaderStatics;
 
    String entryFunctionBody;
 
@@ -195,6 +224,7 @@ public:
    {
       VECTOR_SET_ASSOCIATION(mShaderUniforms);
       VECTOR_SET_ASSOCIATION(mShaderFunctions);
+      VECTOR_SET_ASSOCIATION(mShaderStatics);
    }
 
    FileShaderBlueprint(String entryName)
@@ -203,6 +233,7 @@ public:
    {
       VECTOR_SET_ASSOCIATION(mShaderUniforms);
       VECTOR_SET_ASSOCIATION(mShaderFunctions);
+      VECTOR_SET_ASSOCIATION(mShaderStatics);
    }
 
 };
@@ -255,6 +286,8 @@ public:
    // pars functions
    bool readStruct(FileObject& file, String curLine, U32& lineNum);
    bool readFileShaderData(FileShaderBlueprint* inShader, FileObject& file, U32& lineNum);
+   bool readShaderFunction(FileShaderBlueprint* inShader, String lineIn, FileObject& file, U32& lineNum);
+
    bool shaderFunctionArguments(String lineIn, ShaderFunction* function);
 
    GFXShader* _createShader(const Vector<GFXShaderMacro>& macros);

@@ -540,6 +540,45 @@ TEST_F(ScriptTest, ForEachLoop)
    )");
 
    ASSERT_EQ(forEachNestedReturn.getInt(), 42);
+
+
+   ConsoleValue forEachNonExistantObject = RunScript(R"(
+         $counter = 0;
+         foreach ($obj in NonExistantSimSet)
+         {
+            $counter++;
+         }
+
+         return $counter;
+   )");
+
+   ASSERT_EQ(forEachNonExistantObject.getInt(), 0);
+
+
+   ConsoleValue forEachOnZero = RunScript(R"(
+         $counter = 0;
+         foreach ($obj in 0)
+         {
+            $counter++;
+         }
+
+         return $counter;
+   )");
+
+   ASSERT_EQ(forEachOnZero.getInt(), 0);
+
+
+   ConsoleValue forEachOnEmptyString = RunScript(R"(
+         $counter = 0;
+         foreach ($obj in "")
+         {
+            $counter++;
+         }
+
+         return $counter;
+   )");
+
+   ASSERT_EQ(forEachOnEmptyString.getInt(), 0);
 }
 
 TEST_F(ScriptTest, TorqueScript_Array_Testing)

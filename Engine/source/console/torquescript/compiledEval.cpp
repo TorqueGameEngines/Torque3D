@@ -2121,6 +2121,8 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
                Con::errorf(ConsoleLogEntry::General, "No SimSet object '%s'", stack[_STK].getString());
                Con::errorf(ConsoleLogEntry::General, "Did you mean to use 'foreach$' instead of 'foreach'?");
                ip = failIp;
+               // Pop the iterated value
+               _STK--;
                continue;
             }
 

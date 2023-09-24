@@ -68,6 +68,165 @@ String TrimTabAndWhiteSpace(String stringIn)
    return ret;
 }
 
+void functionLine(String& inLine, U32& depth, bool& singleLineStatement)
+{
+   bool lineEnding = true;
+
+   // we probably wont need to convert anything.
+   if (inLine == String::EmptyString)
+   {
+      // may not be needed but when in a text editor its nice if the empty lines start at the same depth.
+      for (U32 i = 0; i < depth; i++)
+      {
+         // insert a tab for each depth.
+         inLine.insert(0, "\t");
+      }
+      inLine += "\n";
+      return;
+   }
+   else if (inLine.startsWith("//") || inLine.startsWith("///"))
+   {
+      for (U32 i = 0; i < depth; i++)
+      {
+         // insert a tab for each depth.
+         inLine.insert(0, "\t");
+      }
+
+      inLine += "\n";
+      return;
+   }
+
+   if (singleLineStatement)
+   {
+      if (inLine.equal("{"))
+      {
+         singleLineStatement = false;
+         return;
+      }
+
+      inLine.insert(0, "\t");
+      singleLineStatement = false;
+      inLine += ";\n";
+      return;
+   }
+
+   if (inLine.find("else") != String::NPos ||
+      inLine.find("endif") != String::NPos)
+   {
+      bool isStatement = false;
+
+      for (U32 i = 0; i < depth; i++)
+      {
+         // insert a tab for each depth.
+         inLine.insert(0, "\t");
+      }
+
+      S32 pos = inLine.find("else") + 4;
+
+      if (inLine.size() == pos || inLine.size() == pos +1)
+      {
+         lineEnding = false;
+         isStatement = true;
+         singleLineStatement = true;
+      }
+      else if (dIsspace(inLine[pos]) || inLine[pos] == '(')
+      {
+         lineEnding = false;
+         isStatement = true;
+         singleLineStatement = true;
+      }
+
+      pos = inLine.find("endif") + 5;
+      if (inLine.size() == pos || inLine.size() == pos + 1)
+      {
+         lineEnding = false;
+      }
+      else if (dIsspace(inLine[pos]) || inLine[pos] == '(')
+         lineEnding = false;
+
+      if (lineEnding)
+         inLine += ";\n";
+      else
+         inLine += "\n";
+
+      return;
+   }
+
+   if (inLine.equal("{"))
+   {
+      singleLineStatement = false;
+      depth++;
+      return;
+   }
+
+   if (depth > 0)
+   {
+      if (inLine.equal("}"))
+      {
+         depth--;
+      }
+
+      for (U32 i = 0; i < depth; i++)
+      {
+         // insert a tab for each depth.
+         inLine.insert(0, "\t");
+      }
+   }
+
+   if (inLine.find("if") != String::NPos ||
+      inLine.find("for") != String::NPos ||
+      inLine.find("while") != String::NPos ||
+      inLine.find("do") != String::NPos)
+   {
+      bool isStatement = false;
+
+      S32 pos = inLine.find("if") + 2;
+      if (dIsspace(inLine[pos]) || inLine[pos] == '(')
+         isStatement = true;
+
+      pos = inLine.find("if") + 2;
+      if (dIsspace(inLine[pos]) || inLine[pos] == '(')
+         isStatement = true;
+
+      pos = inLine.find("for") + 3;
+      if (dIsspace(inLine[pos]) || inLine[pos] == '(')
+         isStatement = true;
+
+      pos = inLine.find("while") + 5;
+      if (dIsspace(inLine[pos]) || inLine[pos] == '(')
+         isStatement = true;
+
+      pos = inLine.find("do") + 2;
+      if (dIsspace(inLine[pos]) || inLine[pos] == '(')
+         isStatement = true;
+
+      // if we are already in a statement, add another tab for this.
+      if (depth > 0)
+      {
+         inLine.insert(0, "\t");
+      }
+
+      if (isStatement)
+      {
+         lineEnding = false;
+
+         if (inLine.find("{") != String::NPos)
+         {
+            depth++;
+            singleLineStatement = false;
+         }
+         else
+            singleLineStatement = true;
+      }
+   }
+
+   if (lineEnding)
+      inLine += ";\n";
+   else
+      inLine += "\n";
+
+}
+
 
 GFXShaderSemantic ToSemantic(String inString)
 {
@@ -843,6 +1002,14 @@ void ShaderBlueprint::onRemove()
 
 bool ShaderBlueprint::initParser(const char* filePath)
 {
+   Torque::Path path = filePath;
+
+   if (!path.getExtension().equal("tlsl", String::NoCase))
+   {
+      Con::printf("ShaderBlueprint - Error: Shader blueprint files must have tlsl extension.");
+      return false;
+   }
+
    UTF8 scriptFilenameBuffer[1024];
    Con::expandScriptFilename((char*)scriptFilenameBuffer, sizeof(scriptFilenameBuffer), filePath);
 
@@ -1212,9 +1379,9 @@ bool ShaderBlueprint::readFileShaderData(FileShaderBlueprint* inShader, FileObje
                hdrEncode->arguments.push_back(new ShaderFunctionArg(GFXShaderConstType::GFXSCT_Float3, "inputSample", false, false, false));
                hdrEncode->functionBody += "float HDR_RGB10_MAX = 4.0\n";
                hdrEncode->functionBody += "#if defined( TORQUE_HDR_RGB10 )\n";
-               hdrEncode->functionBody += "\treturn inputSample / HDR_RGB10_MAX\n";
+               hdrEncode->functionBody += "return inputSample / HDR_RGB10_MAX\n";
                hdrEncode->functionBody += "#else\n";
-               hdrEncode->functionBody += "\treturn inputSample\n";
+               hdrEncode->functionBody += "return inputSample\n";
                hdrEncode->functionBody += "#endif\n";
 
                inShader->mShaderFunctions.push_back(hdrEncode);
@@ -1828,17 +1995,13 @@ void ShaderBlueprint::convertToHLSL(bool exportFile)
       Vector<String> entryFunctionLines;
       mVertexShader->entryFunctionBody.split("\n", entryFunctionLines);
 
+      U32 depth = 0;
+      bool inStatement = false;
       for (U32 i = 0; i < entryFunctionLines.size(); i++)
       {
-         // we probably wont need to convert anything.
-         if (entryFunctionLines[i] == String::EmptyString)
-            mVertexShaderConverted += "\n";
-         else
-         {
-            ConvertHLSLLineKeywords(entryFunctionLines[i]);
-
-            mVertexShaderConverted += "\t" + entryFunctionLines[i] + ";\n";
-         }
+         functionLine(entryFunctionLines[i], depth, inStatement);
+         ConvertHLSLLineKeywords(entryFunctionLines[i]);
+         mVertexShaderConverted += "\t" + entryFunctionLines[i];
       }
 
       mVertexShaderConverted += "};";
@@ -1936,16 +2099,13 @@ void ShaderBlueprint::convertToHLSL(bool exportFile)
       Vector<String> entryFunctionLines;
       mPixelShader->entryFunctionBody.split("\n", entryFunctionLines);
 
+      U32 depth = 0;
+      bool inStatement = false;
       for (U32 i = 0; i < entryFunctionLines.size(); i++)
       {
-         // we probably wont need to convert anything.
-         if (entryFunctionLines[i] == String::EmptyString)
-            mPixelShaderConverted += "\n";
-         else
-         {
-            ConvertHLSLLineKeywords(entryFunctionLines[i]);
-            mPixelShaderConverted += "\t" + entryFunctionLines[i] + ";\n";
-         }
+         functionLine(entryFunctionLines[i], depth, inStatement);
+         ConvertHLSLLineKeywords(entryFunctionLines[i]);
+         mPixelShaderConverted += "\t" + entryFunctionLines[i];
       }
 
       mPixelShaderConverted += "};";
@@ -2080,32 +2240,30 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
       Vector<String> entryFunctionLines;
       mVertexShader->entryFunctionBody.split("\n", entryFunctionLines);
 
+      U32 depth = 0;
+      bool inStatement = false;
       for (U32 i = 0; i < entryFunctionLines.size(); i++)
       {
-         // we probably wont need to convert anything.
-         if (entryFunctionLines[i] == String::EmptyString)
-            mVertexShaderConverted += "\n";
-         else
+         if (entryFunctionLines[i].find("ConnectData OUT") != String::NPos)
          {
-            if (entryFunctionLines[i].find("ConnectData OUT") != String::NPos)
-            {
-               continue;
-            }
-
-            if (entryFunctionLines[i].find("return") != String::NPos)
-            {
-               continue;
-            }
-
-            if (entryFunctionLines[i].find("OUT." + svPos) != String::NPos)
-            {
-               entryFunctionLines[i].replace("OUT." + svPos, "gl_Position");
-            }
-
-            ConvertGLSLLineKeywords(entryFunctionLines[i], true);
-
-            mVertexShaderConverted += "\t" + entryFunctionLines[i] + ";\n";
+            continue;
          }
+
+         if (entryFunctionLines[i].find("return") != String::NPos)
+         {
+            continue;
+         }
+
+         if (entryFunctionLines[i].find("OUT." + svPos) != String::NPos)
+         {
+            entryFunctionLines[i].replace("OUT." + svPos, "gl_Position");
+         }
+
+         functionLine(entryFunctionLines[i], depth, inStatement);
+
+         ConvertGLSLLineKeywords(entryFunctionLines[i], true);
+
+         mVertexShaderConverted += "\t" + entryFunctionLines[i];
       }
 
       if (mCorrectSSP)
@@ -2241,26 +2399,23 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
       Vector<String> entryFunctionLines;
       mPixelShader->entryFunctionBody.split("\n", entryFunctionLines);
 
+      U32 depth = 0;
+      bool inStatement = false;
       for (U32 i = 0; i < entryFunctionLines.size(); i++)
       {
-         // we probably wont need to convert anything.
-         if (entryFunctionLines[i] == String::EmptyString)
-            mPixelShaderConverted += "\n";
-         else
+         if (entryFunctionLines[i].find("FragOut OUT") != String::NPos)
          {
-            if (entryFunctionLines[i].find("FragOut OUT") != String::NPos)
-            {
-               continue;
-            }
-
-            if (entryFunctionLines[i].find("return") != String::NPos)
-            {
-               continue;
-            }
-
-            ConvertGLSLLineKeywords(entryFunctionLines[i], false);
-            mPixelShaderConverted += "\t" + entryFunctionLines[i] + ";\n";
+            continue;
          }
+
+         if (entryFunctionLines[i].find("return") != String::NPos)
+         {
+            continue;
+         }
+
+         functionLine(entryFunctionLines[i], depth, inStatement);
+         ConvertGLSLLineKeywords(entryFunctionLines[i], false);
+         mPixelShaderConverted += "\t" + entryFunctionLines[i];
       }
 
       mPixelShaderConverted += "};";
@@ -2350,26 +2505,18 @@ void ShaderFunction::printFunctionHLSL(String& inString)
 
    functionBody.split("\n", funcLines);
 
+   U32 depth = 0;
+   bool inStatement = false;
    for (U32 j = 0; j < funcLines.size(); j++)
    {
+      // we probably wont need to convert anything.
       if (funcLines[j] == String::EmptyString)
          inString += "\n";
       else
       {
-         bool addLineEnd = true;
-         if (funcLines[j].find("#if") != String::NPos ||
-            funcLines[j].find("#else") != String::NPos ||
-            funcLines[j].find("#endif") != String::NPos)
-         {
-            addLineEnd = false;
-         }
-
+         functionLine(funcLines[j], depth, inStatement);
          ConvertHLSLLineKeywords(funcLines[j]);
          inString += "\t" + funcLines[j];
-         if (addLineEnd)
-            inString += ";\n";
-         else
-            inString += "\n";
       }
    }
 
@@ -2421,29 +2568,15 @@ void ShaderFunction::printFunctionGLSL(String& inString, bool vert)
 
    functionBody.split("\n", funcLines);
 
+   U32 depth = 0;
+   bool inStatement = false;
    for (U32 j = 0; j < funcLines.size(); j++)
    {
-      if (funcLines[j] == String::EmptyString)
-         inString += "\n";
-      else
-      {
-         bool addLineEnd = true;
-         if (funcLines[j].find("#if") != String::NPos ||
-            funcLines[j].find("#else") != String::NPos ||
-            funcLines[j].find("#endif") != String::NPos)
-         {
-            addLineEnd = false;
-         }
-
-         ConvertGLSLLineKeywords(funcLines[j], vert);
-
-         inString += "\t" + funcLines[j];
-         if (addLineEnd)
-            inString += ";\n";
-         else
-            inString += "\n";
-      }
+      functionLine(funcLines[j], depth, inStatement);
+      ConvertGLSLLineKeywords(funcLines[j], vert);
+      inString += "\t" + funcLines[j];
    }
 
    inString += "}\n\n";
 }
+

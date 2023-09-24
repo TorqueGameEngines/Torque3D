@@ -758,6 +758,7 @@ void ConvertGLSLLineKeywords(String& inLine, bool vert)
    {
       S32 start = inLine.find("mul");
       S32 openBracket = 0;
+      S32 firstBracket = 0;
       S32 mulLoc = 0;
       S32 lastBracket = 0;
 
@@ -766,7 +767,15 @@ void ConvertGLSLLineKeywords(String& inLine, bool vert)
       for (U32 i = 0; i < mulFunc.size(); i++)
       {
          if (mulFunc[i] == '(')
+         {
+            if(openBracket == 0)
+               firstBracket = i + 1;
+
             openBracket++;
+         }
+         // this is not mul
+         if (i == 5 && openBracket == 0)
+            return;
 
          if (mulFunc[i] == ')')
             openBracket--;
@@ -781,12 +790,45 @@ void ConvertGLSLLineKeywords(String& inLine, bool vert)
 
       }
 
-      String newMul = mulFunc;
-      newMul.erase(lastBracket, 1);
-      newMul.replace(mulLoc, 1, " * ");
-      newMul.replace("mul(","");
+      String newMul = TrimTabAndWhiteSpace(mulFunc.substr(firstBracket, mulLoc - firstBracket)) + " * ";
+      newMul += TrimTabAndWhiteSpace(mulFunc.substr(mulLoc + 1, lastBracket - (mulLoc + 1)));
 
       inLine.replace(mulFunc, newMul);
+   }
+
+   if (inLine.find("clip") != String::NPos)
+   {
+      S32 start = inLine.find("clip");
+      S32 openBracket = 0;
+      S32 firstBracket = 0;
+      S32 lastBracket = 0;
+
+      String clipFunc = inLine.substr(start, inLine.length() - start);
+
+      for (U32 i = 0; i < clipFunc.size(); i++)
+      {
+         if (clipFunc[i] == '(')
+         {
+            if (openBracket == 0)
+               firstBracket = i + 1;
+            openBracket++;
+         }
+
+         // this is not clip
+         if (i == 6 && openBracket == 0)
+            return;
+
+         if (clipFunc[i] == ')')
+            openBracket--;
+
+         if (clipFunc[i] == ')' && openBracket == 0)
+            lastBracket = i;
+      }
+
+      String clipArg = inLine.substr(firstBracket, lastBracket - firstBracket );
+      clipArg = TrimTabAndWhiteSpace(clipArg);
+
+      inLine = "if( " + clipArg + " )\n\t\tdiscard;";
    }
 
    // needs to be while since more than 1 saturate function can exist on a line.
@@ -802,6 +844,10 @@ void ConvertGLSLLineKeywords(String& inLine, bool vert)
       {
          if (saturateFunc[i] == '(')
             openBracket++;
+
+         // this is not saturate
+         if (i == 9 && openBracket == 0)
+            return;
 
          if (saturateFunc[i] == ')')
             openBracket--;
@@ -1205,6 +1251,43 @@ bool ShaderBlueprint::initParser(const char* filePath)
    return true;
 }
 
+bool ShaderBlueprint::initIncludeFileParser(FileShaderBlueprint* inShader, const char* includePath)
+{
+   Torque::Path path = includePath;
+
+   if (!path.getExtension().equal("tlsl", String::NoCase))
+   {
+      Con::printf("ShaderBlueprint - Error: include files must have tlsl extension.");
+      return false;
+   }
+
+   UTF8 scriptFilenameBuffer[1024];
+   Con::expandScriptFilename((char*)scriptFilenameBuffer, sizeof(scriptFilenameBuffer), includePath);
+
+   if (!Torque::FS::IsFile(scriptFilenameBuffer))
+   {
+      Con::errorf("ShaderBlueprint - include file %s not found", scriptFilenameBuffer);
+      return false;
+   }
+
+   FileObject f;
+   if (!f.readMemory(scriptFilenameBuffer))
+   {
+      Con::errorf("ShaderBlueprint - couldn't read include file %s", scriptFilenameBuffer);
+      return false;
+   }
+
+   U32 lineNum = 0;
+   bool readInclude = true;
+   while (readInclude)
+   {
+      readInclude = readFileShaderData(inShader, f, lineNum);
+   }
+
+   // we have reached here, all must be good.
+   return true;
+}
+
 bool ShaderBlueprint::readStruct(FileObject& file, String curLine, U32& lineNum)
 {
    String structName;
@@ -1382,9 +1465,9 @@ bool ShaderBlueprint::readFileShaderData(FileShaderBlueprint* inShader, FileObje
          if (lineWords.size() > 2) {
             if (lineWords[1].equal("entry"))
             {
-               S32 startPos = lineWords[2].find('"');
-               S32 endPos = lineWords[2].find('"', startPos + 1) - 1;
-               inShader->entryPoint = lineWords[2].substr(startPos + 1, endPos - startPos);
+               S32 startPos = lineWords[2].find('"') + 1;
+               S32 endPos = lineWords[2].find('"', startPos) - 1;
+               inShader->entryPoint = lineWords[2].substr(startPos, endPos - startPos);
             }
 
             return true;
@@ -1447,6 +1530,33 @@ bool ShaderBlueprint::readFileShaderData(FileShaderBlueprint* inShader, FileObje
          else
          {
             Con::printf("ShaderBlueprint - Error #define doesn't have a value on line %d", lineNum);
+            return false;
+         }
+      }
+
+      if (lineWords[0].equal("#include"))
+      {
+         if (lineWords.size() > 1)
+         {
+            S32 startPos = lineWords[1].find('"') + 1;;
+            S32 endPos = lineWords[1].find('"', startPos) - 1;
+            String includeFile = lineWords[1].substr(startPos, endPos);
+            Torque::Path filePath = mBluePrintFile;
+
+            String fullPath = filePath.getRootAndPath();
+            fullPath += includeFile.startsWith("/") ? "" + includeFile : "/" + includeFile;
+
+            if (!initIncludeFileParser(inShader, fullPath))
+            {
+               Con::printf("ShaderBlueprint - Failed to parse include on line %d", lineNum);
+               return false;
+            }
+
+            return true;
+         }
+         else
+         {
+            Con::printf("ShaderBlueprint - Error missing include file %d", lineNum);
             return false;
          }
       }
@@ -2457,6 +2567,13 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
       bool inStatement = false;
       for (U32 i = 0; i < entryFunctionLines.size(); i++)
       {
+         bool formatLine = true;
+
+         if (entryFunctionLines[i].find("clip") != String::NPos)
+         {
+            formatLine = false;
+         }
+
          if (entryFunctionLines[i].find("FragOut OUT") != String::NPos)
          {
             continue;
@@ -2473,7 +2590,10 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
          }
 
          ConvertGLSLLineKeywords(entryFunctionLines[i], false);
-         functionLine(entryFunctionLines[i], depth, inStatement);
+
+         if(formatLine)
+            functionLine(entryFunctionLines[i], depth, inStatement);
+
          mPixelShaderConverted += "\t" + entryFunctionLines[i];
       }
 
@@ -2631,8 +2751,18 @@ void ShaderFunction::printFunctionGLSL(String& inString, bool vert)
    bool inStatement = false;
    for (U32 j = 0; j < funcLines.size(); j++)
    {
+      bool formatLine = true;
+
+      if (funcLines[j].find("clip") != String::NPos)
+      {
+         formatLine = false;
+      }
+
       ConvertGLSLLineKeywords(funcLines[j], vert);
-      functionLine(funcLines[j], depth, inStatement);
+
+      if(formatLine)
+         functionLine(funcLines[j], depth, inStatement);
+
       inString += "\t" + funcLines[j];
    }
 

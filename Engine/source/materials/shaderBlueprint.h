@@ -286,6 +286,8 @@ public:
 
    bool initParser(const char* filePath);
 
+   bool initIncludeFileParser(FileShaderBlueprint* inShader, const char* includePath);
+
    // pars functions
    bool readStruct(FileObject& file, String curLine, U32& lineNum);
    bool readFileShaderData(FileShaderBlueprint* inShader, FileObject& file, U32& lineNum);

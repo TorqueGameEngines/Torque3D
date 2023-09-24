@@ -105,9 +105,15 @@ void functionLine(String& inLine, U32& depth, bool& singleLineStatement)
       }
 
       inLine.insert(0, "\t");
+
+      for (U32 i = 0; i < depth; i++)
+      {
+         // insert a tab for each depth.
+         inLine.insert(0, "\t");
+         depth--;
+      }
+
       singleLineStatement = false;
-      inLine += ";\n";
-      return;
    }
 
    if (inLine.find("else") != String::NPos ||
@@ -204,6 +210,10 @@ void functionLine(String& inLine, U32& depth, bool& singleLineStatement)
       if (depth > 0)
       {
          inLine.insert(0, "\t");
+      }
+      else if (inLine.startsWith("\t") && isStatement)
+      {
+         depth++;
       }
 
       if (isStatement)
@@ -644,6 +654,12 @@ void ConvertHLSLLineKeywords(String& inLine)
    inLine.replace("vec2", "float2");
    inLine.replace("vec3", "float3");
    inLine.replace("vec4", "float4");
+   inLine.replace("bvec2", "bool2");
+   inLine.replace("bvec3", "bool3");
+   inLine.replace("bvec4", "bool4");
+   inLine.replace("ivec2", "int2");
+   inLine.replace("ivec3", "int3");
+   inLine.replace("ivec4", "int4");
 
    // built in function replacement.
    inLine.replace("mix", "lerp");
@@ -675,6 +691,12 @@ void ConvertGLSLLineKeywords(String& inLine, bool vert)
    inLine.replace("float2", "vec2");
    inLine.replace("lerp", "mix");
    inLine.replace("frac", "fract");
+   inLine.replace("bool2", "bvec2");
+   inLine.replace("bool3", "bvec3");
+   inLine.replace("bool4", "bvec4");
+   inLine.replace("int2", "ivec2");
+   inLine.replace("int3", "ivec3");
+   inLine.replace("int4", "ivec4");
 
    if (inLine.find("Sample(") != String::NPos)
    {
@@ -1583,7 +1605,7 @@ bool ShaderBlueprint::readFileShaderData(FileShaderBlueprint* inShader, FileObje
             return false;
          }
 
-         if (line.find(";") != String::NPos)
+         if (line.find(";") == line.length() - 1)
             line = line.substr(0, line.find(";"));
 
          // just add our entry function line.
@@ -1717,7 +1739,7 @@ bool ShaderBlueprint::readShaderFunction(FileShaderBlueprint* inShader, String l
 
          if (shaderFunction != NULL)
          {
-            if (line.find(";") != String::NPos)
+            if (line.find(";") == line.length() - 1)
                line = line.substr(0, line.find(";"));
 
             shaderFunction->functionBody += line + "\n";
@@ -1999,6 +2021,17 @@ void ShaderBlueprint::convertToHLSL(bool exportFile)
       bool inStatement = false;
       for (U32 i = 0; i < entryFunctionLines.size(); i++)
       {
+         if (entryFunctionLines[i].find("[unroll]") != String::NPos)
+         {
+            if (depth > 0)
+            {
+               for (U32 j = 0; j < depth; j++)
+                  mVertexShaderConverted += "\t";
+            }
+            mVertexShaderConverted += "\t[unroll]\n";
+            continue;
+         }
+
          functionLine(entryFunctionLines[i], depth, inStatement);
          ConvertHLSLLineKeywords(entryFunctionLines[i]);
          mVertexShaderConverted += "\t" + entryFunctionLines[i];
@@ -2103,6 +2136,17 @@ void ShaderBlueprint::convertToHLSL(bool exportFile)
       bool inStatement = false;
       for (U32 i = 0; i < entryFunctionLines.size(); i++)
       {
+         if (entryFunctionLines[i].find("[unroll]") != String::NPos)
+         {
+            if (depth > 0)
+            {
+               for (U32 j = 0; j < depth; j++)
+                  mPixelShaderConverted += "\t";
+            }
+            mPixelShaderConverted += "\t[unroll]\n";
+            continue;
+         }
+
          functionLine(entryFunctionLines[i], depth, inStatement);
          ConvertHLSLLineKeywords(entryFunctionLines[i]);
          mPixelShaderConverted += "\t" + entryFunctionLines[i];
@@ -2250,6 +2294,11 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
          }
 
          if (entryFunctionLines[i].find("return") != String::NPos)
+         {
+            continue;
+         }
+
+         if (entryFunctionLines[i].find("[unroll]") != String::NPos)
          {
             continue;
          }
@@ -2409,6 +2458,11 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
          }
 
          if (entryFunctionLines[i].find("return") != String::NPos)
+         {
+            continue;
+         }
+
+         if (entryFunctionLines[i].find("[unroll]") != String::NPos)
          {
             continue;
          }

@@ -70,34 +70,6 @@ public:
    void setSamplerType(GFXSamplerType inSamplerType) { samplerType = inSamplerType; }
 };
 
-class ShaderStaticData : public ShaderDataType
-{
-public:
-   bool isStatic;
-   bool isConst;
-   String value;
-
-   ShaderStaticData()
-      : ShaderDataType(),
-      isStatic(false),
-      isConst(false),
-      value(String::EmptyString)
-   {}
-
-   ShaderStaticData(GFXShaderConstType constType,
-      String name,
-      String inValue,
-      bool inStatic,
-      bool inConst,
-      bool arrayType = false,
-      U32 size = 0)
-      : ShaderDataType(constType, name, arrayType, size),
-      value(inValue),
-      isStatic(inStatic),
-      isConst(inConst)
-   {}
-};
-
 class ShaderStructDataType : public ShaderDataType
 {
 public:
@@ -119,34 +91,6 @@ public:
       : ShaderDataType(constType, name, arrayType, size),
       dataSemantic(semanticType),
       dataResourceNumber(resourceNumber)
-   {}
-};
-
-class ShaderFunctionArg : public ShaderDataType
-{
-public:
-   bool in;
-   bool out;
-   bool inout;
-
-   ShaderFunctionArg()
-      : ShaderDataType(),
-      in(false),
-      out(false),
-      inout(false)
-   {}
-
-   ShaderFunctionArg(GFXShaderConstType constType,
-      String name,
-      bool isIn,
-      bool isOut,
-      bool isInout,
-      bool arrayType = false,
-      U32 size = 0)
-      : ShaderDataType(constType, name, arrayType, size),
-      in(isIn),
-      out(isOut),
-      inout(isInout)
    {}
 };
 
@@ -176,67 +120,12 @@ public:
 
 };
 
-class ShaderFunction
-{
-protected:
-   GFXShaderConstType returnType;
-   String name;
-   bool isInline;
-public:
-   Vector<ShaderFunctionArg*> arguments;
-   String functionBody;
-
-   ShaderFunction()
-      : returnType(GFXShaderConstType::GFXSCT_Unknown),
-      name(String::EmptyString),
-      functionBody(String::EmptyString),
-      isInline(false)
-   {
-      VECTOR_SET_ASSOCIATION(arguments);
-   }
-
-   ShaderFunction(GFXShaderConstType inConstType, String inName, bool inIsInline)
-      : returnType(inConstType),
-      name(inName),
-      functionBody(String::EmptyString),
-      isInline(inIsInline)
-   {
-      VECTOR_SET_ASSOCIATION(arguments);
-   }
-
-   void printFunctionHLSL(String& inString, U32 startDepth = 0);
-   void printFunctionGLSL(String& inString, bool vert, U32 startDepth = 0);
-};
-
-class ShaderStruct
-{
-public:
-   String structName;
-   Vector<ShaderDataType*> structDataTypes;
-   Vector<ShaderFunction*> structFunctions;
-   ShaderStruct()
-      : structName(String::EmptyString)
-   {
-      VECTOR_SET_ASSOCIATION(structDataTypes);
-      VECTOR_SET_ASSOCIATION(structFunctions);
-   }
-
-   ShaderStruct(String inName)
-      : structName(inName)
-   {
-      VECTOR_SET_ASSOCIATION(structDataTypes);
-      VECTOR_SET_ASSOCIATION(structFunctions);
-   }
-};
-
 class FileShaderBlueprint
 {
 public:
    String entryPoint;
-   Vector<ShaderDataType*> mShaderUniforms;
-   Vector<ShaderFunction*> mShaderFunctions;
-   Vector<ShaderStaticData*> mShaderStatics;
-   Vector<ShaderStruct*> mShaderStructs;
+
+   String mShaderLines;
 
    String entryFunctionBody;
 
@@ -244,20 +133,12 @@ public:
       : entryPoint("main"),
       entryFunctionBody(String::EmptyString)
    {
-      VECTOR_SET_ASSOCIATION(mShaderUniforms);
-      VECTOR_SET_ASSOCIATION(mShaderFunctions);
-      VECTOR_SET_ASSOCIATION(mShaderStatics);
-      VECTOR_SET_ASSOCIATION(mShaderStructs);
    }
 
    FileShaderBlueprint(String entryName)
       : entryPoint(entryName),
       entryFunctionBody(String::EmptyString)
    {
-      VECTOR_SET_ASSOCIATION(mShaderUniforms);
-      VECTOR_SET_ASSOCIATION(mShaderFunctions);
-      VECTOR_SET_ASSOCIATION(mShaderStatics);
-      VECTOR_SET_ASSOCIATION(mShaderStructs);
    }
 
 };
@@ -314,13 +195,7 @@ public:
 
    // parse functions
    bool readShaderDataStruct(FileObject& file, String curLine, U32& lineNum);
-   bool readStruct(FileShaderBlueprint* inShader, String lineIn, FileObject& file, U32& lineNum);
    bool readFileShaderData(FileShaderBlueprint* inShader, FileObject& file, U32& lineNum);
-   bool readShaderFunction(FileShaderBlueprint* inShader, String lineIn, FileObject& file, U32& lineNum);
-
-   bool readStructFunction(ShaderStruct* inStruct, String lineIn, FileObject& file, U32& lineNum);
-
-   bool shaderFunctionArguments(String lineIn, ShaderFunction* function);
 
    GFXShader* _createShader(const Vector<GFXShaderMacro>& macros);
 

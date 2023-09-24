@@ -150,21 +150,21 @@ public:
    {}
 };
 
-class ShaderStruct
+class ShaderDataStruct
 {
 protected:
    String structName;
 public:
    Vector<ShaderStructDataType*> structDataTypes;
    GFXShaderStructType structType;
-   ShaderStruct()
+   ShaderDataStruct()
       : structType(GFXShaderStructType::GFXSST_Unknown),
       structName(String::EmptyString)
    {
       VECTOR_SET_ASSOCIATION(structDataTypes);
    }
 
-   ShaderStruct(GFXShaderStructType inStructType, String inName)
+   ShaderDataStruct(GFXShaderStructType inStructType, String inName)
       : structType(inStructType),
       structName(inName)
    {
@@ -208,6 +208,27 @@ public:
    void printFunctionGLSL(String& inString, bool vert);
 };
 
+class ShaderStruct
+{
+public:
+   String structName;
+   Vector<ShaderDataType*> structDataTypes;
+   Vector<ShaderFunction*> structFunctions;
+   ShaderStruct()
+      : structName(String::EmptyString)
+   {
+      VECTOR_SET_ASSOCIATION(structDataTypes);
+      VECTOR_SET_ASSOCIATION(structFunctions);
+   }
+
+   ShaderStruct(String inName)
+      : structName(inName)
+   {
+      VECTOR_SET_ASSOCIATION(structDataTypes);
+      VECTOR_SET_ASSOCIATION(structFunctions);
+   }
+};
+
 class FileShaderBlueprint
 {
 public:
@@ -215,6 +236,7 @@ public:
    Vector<ShaderDataType*> mShaderUniforms;
    Vector<ShaderFunction*> mShaderFunctions;
    Vector<ShaderStaticData*> mShaderStatics;
+   Vector<ShaderStruct*> mShaderStructs;
 
    String entryFunctionBody;
 
@@ -225,6 +247,7 @@ public:
       VECTOR_SET_ASSOCIATION(mShaderUniforms);
       VECTOR_SET_ASSOCIATION(mShaderFunctions);
       VECTOR_SET_ASSOCIATION(mShaderStatics);
+      VECTOR_SET_ASSOCIATION(mShaderStructs);
    }
 
    FileShaderBlueprint(String entryName)
@@ -234,6 +257,7 @@ public:
       VECTOR_SET_ASSOCIATION(mShaderUniforms);
       VECTOR_SET_ASSOCIATION(mShaderFunctions);
       VECTOR_SET_ASSOCIATION(mShaderStatics);
+      VECTOR_SET_ASSOCIATION(mShaderStructs);
    }
 
 };
@@ -265,7 +289,7 @@ protected:
    bool _checkDefinition(GFXShader* shader);
 public:
 
-   Vector<ShaderStruct*> mShaderStructs;
+   Vector<ShaderDataStruct*> mShaderDataStructs;
    Vector<String> mShaderSamplers;
 
    FileShaderBlueprint* mVertexShader;
@@ -288,10 +312,13 @@ public:
 
    bool initIncludeFileParser(FileShaderBlueprint* inShader, const char* includePath);
 
-   // pars functions
-   bool readStruct(FileObject& file, String curLine, U32& lineNum);
+   // parse functions
+   bool readShaderDataStruct(FileObject& file, String curLine, U32& lineNum);
+   bool readStruct(FileShaderBlueprint* inShader, String lineIn, FileObject& file, U32& lineNum);
    bool readFileShaderData(FileShaderBlueprint* inShader, FileObject& file, U32& lineNum);
    bool readShaderFunction(FileShaderBlueprint* inShader, String lineIn, FileObject& file, U32& lineNum);
+
+   bool readStructFunction(ShaderStruct* inStruct, String lineIn, FileObject& file, U32& lineNum);
 
    bool shaderFunctionArguments(String lineIn, ShaderFunction* function);
 

@@ -602,6 +602,9 @@ public:
    U32 mNumCollideBoxCalls;
    U32 mNumCastRayRenderedCalls;
 
+   bool mReturnCastRay;
+   RayInfo mRayInfo;
+
    bool onAdd()
    {
       if (Parent::onAdd())
@@ -611,6 +614,8 @@ public:
          mNumBuildPolyListCalls = 0;
          mNumCollideBoxCalls = 0;
          mNumCastRayRenderedCalls = 0;
+         mReturnCastRay = false;
+         mRayInfo = {};
 
          if (mAddCallback)
             mAddCallback();
@@ -645,12 +650,22 @@ public:
    virtual bool castRay(const Point3F& start, const Point3F& end, RayInfo* info)
    {
       mNumCastRayCalls++;
-      return false;
+      if (!mReturnCastRay)
+         return false;
+
+      *info = mRayInfo;
+
+      return true;
    }
 
    virtual bool castRayRendered(const Point3F& start, const Point3F& end, RayInfo* info)
    {
       mNumCastRayRenderedCalls++;
+      if (!mReturnCastRay)
+         return false;
+
+      *info = mRayInfo;
+
       return false;
    }
 
@@ -847,6 +862,82 @@ TEST_F(SceneContainerTest, castRay)
 
    gClientSceneGraph->getContainer()->removeObject(so1);
 }
+
+
+TEST_F(SceneContainerTest, castRay_order)
+{
+   SceneObjectTestVariant* so1 = NULL;
+   SceneObjectTestVariant* so2 = NULL;
+
+   Sim::findObject("SO1", so1);
+   Sim::findObject("SO2", so2);
+
+   MatrixF m(1);
+   m.setPosition(Point3F(0, 0, 0));
+   so1->setTypeMask(MarkerObjectType);
+   so1->setTransform(m);
+   so1->setWorldBox(Box3F(m.getPosition() - Point3F(5, 5, 5), m.getPosition() + Point3F(5,5,5)));
+
+   so2->setTypeMask(MarkerObjectType);
+   so2->setGlobalBounds();
+
+   so1->mReturnCastRay = true;
+   so2->mReturnCastRay = true;
+
+   gClientSceneGraph->getContainer()->addObject(so1);
+   gClientSceneGraph->getContainer()->addObject(so2);
+
+   // Here we need to ensure that so1 or so2 will be picked based on shortest distance
+   RayInfo closeInfo = {};
+   RayInfo farInfo = {};
+
+   closeInfo.t = 5 / 100.0;
+   farInfo.t = 10 / 100.0;
+
+   // so1=far, so2=close
+   {
+      so1->mRayInfo = farInfo;
+      so1->mRayInfo.object = so1;
+      so2->mRayInfo = closeInfo;
+      so2->mRayInfo.object = so2;
+
+      Point3F start(0, 0, 0);
+      Point3F end(0, 0, -100);
+      RayInfo info;
+      bool castCheck = gClientSceneGraph->getContainer()->castRay(start, end, MarkerObjectType, &info);
+
+      EXPECT_EQ(castCheck, true);
+      EXPECT_EQ(so1->mNumCastRayCalls, 1);
+      EXPECT_EQ(so2->mNumCastRayCalls, 1);
+
+      EXPECT_EQ(info.distance, 5);
+      EXPECT_EQ(info.object, so2);
+   }
+
+   // so2=far, so1=close
+   {
+      so2->mRayInfo = farInfo;
+      so2->mRayInfo.object = so2;
+      so1->mRayInfo = closeInfo;
+      so1->mRayInfo.object = so1;
+
+      Point3F start(0, 0, 0);
+      Point3F end(0, 0, -100);
+      RayInfo info;
+      bool castCheck = gClientSceneGraph->getContainer()->castRay(start, end, MarkerObjectType, &info);
+
+      EXPECT_EQ(castCheck, true);
+      EXPECT_EQ(so1->mNumCastRayCalls, 2);
+      EXPECT_EQ(so2->mNumCastRayCalls, 2);
+
+      EXPECT_EQ(info.distance, 5);
+      EXPECT_EQ(info.object, so1);
+   }
+
+   gClientSceneGraph->getContainer()->removeObject(so1);
+   gClientSceneGraph->getContainer()->removeObject(so2);
+}
+
 
 TEST_F(SceneContainerTest, castRayRendered)
 {
@@ -1324,8 +1415,15 @@ TEST_F(SceneContainerTest, getBinRange)
    U32 minBin = 0;
    U32 maxBin = 0;
    SceneContainer::getBinRange(0, 0, minBin, maxBin);
+   EXPECT_EQ(minBin == 0 && maxBin == 0, true);
+   SceneContainer::getBinRange(0, SceneContainer::csmBinSize*0.5, minBin, maxBin);
+   EXPECT_EQ(minBin == 0 && maxBin == 0, true);
+   SceneContainer::getBinRange(SceneContainer::csmBinSize * 0.5, SceneContainer::csmBinSize * 0.5, minBin, maxBin);
+   EXPECT_EQ(minBin == 0 && maxBin == 0, true);
    SceneContainer::getBinRange(0, SceneContainer::csmBinSize, minBin, maxBin);
    EXPECT_EQ(minBin == 0 && maxBin == 1, true);
+   SceneContainer::getBinRange(SceneContainer::csmBinSize * 1.5, SceneContainer::csmBinSize * 1.5, minBin, maxBin);
+   EXPECT_EQ(minBin == 1 && maxBin == 1, true);
    SceneContainer::getBinRange(SceneContainer::csmBinSize, SceneContainer::csmBinSize, minBin, maxBin);
    EXPECT_EQ(minBin == 1 && maxBin == 1, true);
    SceneContainer::getBinRange(SceneContainer::csmBinSize*2, SceneContainer::csmBinSize*2, minBin, maxBin);

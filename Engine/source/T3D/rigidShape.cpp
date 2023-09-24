@@ -1103,7 +1103,7 @@ void RigidShape::updatePos(F32 dt)
 
    // Update collision information based on our current pos.
    bool collided = false;
-   if (!mRigid.atRest && !mDisableMove)
+   if (!mDisableMove)
    {
       collided = updateCollision(dt);
 
@@ -1224,7 +1224,7 @@ void RigidShape::updateForces(F32 dt)
    mRigid.torque = torque;
 
    // If we're still atRest, make sure we're not accumulating anything
-   if (mRigid.atRest)
+   if ((force.lenSquared() < mDataBlock->contactTol)&& (force.lenSquared() < mDataBlock->contactTol))
       mRigid.setAtRest();
 }
 
@@ -1239,7 +1239,11 @@ bool RigidShape::updateCollision(F32 dt)
 {
    PROFILE_SCOPE(RigidShape_updateCollision);
 
-   if (mRigid.atRest || mDisableMove || (getVelocity().lenSquared() < mDataBlock->contactTol * mDataBlock->contactTol)) return false;
+   if (mDisableMove)
+   {
+      mRigid.setAtRest();
+      return false;
+   }
 
    // Update collision information
    MatrixF mat,cmat;
@@ -1687,6 +1691,8 @@ void RigidShape::consoleInit()
 void RigidShape::initPersistFields()
 {
    docsURL;
+   addField("disableMove", TypeBool, Offset(mDisableMove, RigidShape),
+      "When this flag is set, the vehicle will ignore throttle changes.");
    Parent::initPersistFields();
 }
 

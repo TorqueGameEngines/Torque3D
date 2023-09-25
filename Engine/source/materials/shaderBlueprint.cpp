@@ -2556,7 +2556,7 @@ void ShaderFunction::printFunctionHLSL(String& inString, U32 startDepth)
                continue;
             else
             {
-               if (funcLines[j].find(samplerArgs[k], String::Cas) != String::NPos)
+               if (funcLines[j].find(samplerArgs[k], String::Case) != String::NPos)
                {
                   // in hlsl we need to send the texture var along with the sampler var.
                   funcLines[j].replace(samplerArgs[k], "texture" + samplerArgs[k] + ", " + samplerArgs[k]);

@@ -245,6 +245,9 @@ void functionLine(String& inLine, U32& depth, bool& singleLineStatement)
       }
    }
 
+   if (inLine.find(";") != String::NPos)
+      lineEnding = false; // line end already exists.
+
    if (lineEnding)
       inLine += ";\n";
    else
@@ -529,19 +532,19 @@ void ArgSamplerToStringHLSL(GFXSamplerType inSamplerType, String inName, String&
    switch (inSamplerType)
    {
    case GFXSamplerType::SAMP_Sampler1D:
-      inString += "Texture2D texture" + inName + ",\nSamplerState " + inName;
+      inString += "Texture2D texture" + inName + ", SamplerState " + inName;
       break;
    case GFXSamplerType::SAMP_Sampler2D:
-      inString += "Texture2D texture" + inName + ",\nSamplerState " + inName;
+      inString += "Texture2D texture" + inName + ", SamplerState " + inName;
       break;
    case GFXSamplerType::SAMP_Sampler3D:
-      inString += "Texture3D texture" + inName + ",\nSamplerState " + inName;
+      inString += "Texture3D texture" + inName + ", SamplerState " + inName;
       break;
    case GFXSamplerType::SAMP_SamplerCube:
-      inString += "TextureCube texture" + inName + ",\nSamplerState " + inName;
+      inString += "TextureCube texture" + inName + ", SamplerState " + inName;
       break;
    case GFXSamplerType::SAMP_SamplerCubeArray:
-      inString += "TextureCubeArray texture" + inName + ",\nSamplerState " + inName;
+      inString += "TextureCubeArray texture" + inName + ", SamplerState " + inName;
       break;
    default:
       // other types not supported for now ?
@@ -687,29 +690,29 @@ void ConvertHLSLLineKeywords(String& inLine, U32 samplerNum = 0)
    inLine.replace("mix", "lerp");
    inLine.replace("fract", "frac");
 
-   if (inLine.find("sampler2D") != String::NPos)
+   if (inLine.find("sampler", 0, String::Case) != String::NPos)
    {
-      // handle for uniform
+      GFXSamplerType type;
+      String name;
+      Vector<String> declaration;
+      // function arg
+      
+      String newString;
       if (inLine.startsWith("uniform"))
       {
-         Vector<String> samplerDefinition;
-         inLine.split(" ", samplerDefinition);
+         inLine.split(" ", declaration);
+         if (declaration.size() < 3)
+         {
+            Con::errorf("ShaderBlueprint - Error in sampler type definition.");
+            return;
+         }
 
-         samplerDefinition[2] = samplerDefinition[2].substr(0, samplerDefinition[2].find(";"));
+         type = ToSamplerType(declaration[1]);
+         name = declaration[2].substr(0, declaration[2].find(";"));
 
-         inLine.replace("sampler2D " + samplerDefinition[2] + ";", "SamplerState " + samplerDefinition[2] + " : register(S" + String::ToString(samplerNum) + ");");
-         inLine.insert(0, "uniform Texture2D texture" + samplerDefinition[2] + " : register(T" + String::ToString(samplerNum) + ");\n");
+         UniformSamplerTypeToStringHLSL(type, name, newString, samplerNum);
+         inLine = newString;
       }
-      else
-      {
-         // handle function argument
-         S32 start = inLine.find("sampler2D");
-         S32 end = inLine.find(",", start);
-         String var = inLine.substr(start, end - start);
-
-         inLine.replace("sampler2D " + var, "Texture2D texture" + var + ", SamplerState " + var);
-      }
-
    }
 
    if (inLine.find("Sample(") != String::NPos)
@@ -1553,11 +1556,11 @@ bool ShaderBlueprint::readFileShaderData(FileShaderBlueprint* inShader, FileObje
                if (lineWords[1].equal("entry"))
                {
                   S32 startPos = lineWords[2].find('"') + 1;
-                  S32 endPos = lineWords[2].find('"', startPos) - 1;
+                  S32 endPos = lineWords[2].find('"', startPos);
                   inShader->entryPoint = lineWords[2].substr(startPos, endPos - startPos);
                }
 
-               return true;
+               continue;
             }
             else if (lineWords.size() > 1)
             {
@@ -1588,7 +1591,7 @@ bool ShaderBlueprint::readFileShaderData(FileShaderBlueprint* inShader, FileObje
                   inShader->mShaderLines += "}\n\n";
                }
 
-               return true;
+               continue;
             }
             else
             {
@@ -1633,7 +1636,7 @@ bool ShaderBlueprint::readFileShaderData(FileShaderBlueprint* inShader, FileObje
                   return false;
                }
 
-               return true;
+               continue;
             }
             else
             {
@@ -1655,36 +1658,158 @@ bool ShaderBlueprint::readFileShaderData(FileShaderBlueprint* inShader, FileObje
 
                if (line.find("}") != String::NPos)
                {
-                  inShader->mShaderLines += "\t" + line + "\n";
+                  inShader->mShaderLines += line + "\n";
                   readStructIn = false;
                   break;
                }
 
-               if (line.find("{") != String::NPos)
+               if (line.find("(") != String::NPos)
                {
-                  inShader->mShaderLines += "\t" + line + "\n";
-                  bool inStructfunction = true;
+                  GFXShaderConstType type = GFXShaderConstType::GFXSCT_Unknown;
+                  bool isInline = false;
 
-                  while (inStructfunction)
+                  U32 functionNum = 0;
+                  for (U32 j = 0; j < lineWords.size(); j++)
+                  {
+                     if (lineWords[j].find("inline") != String::NPos)
+                     {
+                        isInline = true;
+                     }
+
+                     if (ToConstType(lineWords[j]) != GFXShaderConstType::GFXSCT_Unknown)
+                     {
+                        // we have the location of our function name. break
+                        type = ToConstType(lineWords[j]);
+                        functionNum = j + 1;
+                        break;
+                     }
+                  }
+
+                  String functionString;
+                  if (lineWords[functionNum].find("(") != String::NPos)
+                     functionString = lineWords[functionNum].substr(0, lineWords[functionNum].find("("));
+                  else
+                     functionString = lineWords[functionNum];
+
+                  // place our catcher for function placement
+                  inShader->mShaderLines += "##" + functionString + "\n";
+
+                  ShaderFunction curFunc(type, functionString, isInline);
+                  bool readArgs = true;
+                  while (readArgs)
+                  {
+                     Vector<String> args;
+                     line.split(",", args);
+
+                     for (U32 i = 0; i < args.size(); i++)
+                     {
+                        // initializers.
+                        bool in = false;
+                        bool out = false;
+                        bool inout = false;
+                        bool isSampler = false;
+                        GFXShaderConstType argType = GFXShaderConstType::GFXSCT_Unknown;
+                        GFXSamplerType samplerType = GFXSamplerType::SAMP_Uknown;
+                        String argName = String::EmptyString;
+
+                        args[i] = TrimTabAndWhiteSpace(args[i]);
+
+                        Vector<String> argWords;
+                        args[i].split(" ", argWords);
+
+                        for (U32 j = 0; j < argWords.size(); j++)
+                        {
+                           if (argWords[j].equal("in"))
+                           {
+                              in = true;
+                              continue;
+                           }
+
+                           if (argWords[j].equal("out"))
+                           {
+                              out = true;
+                              continue;
+                           }
+
+                           if (argWords[j].equal("inout"))
+                           {
+                              inout = true;
+                              continue;
+                           }
+
+                           if (argWords[j].find(")") != String::NPos)
+                              readArgs = false;
+
+                           if (ToConstType(argWords[j]) != GFXShaderConstType::GFXSCT_Unknown)
+                           {
+                              argType = ToConstType(argWords[j]);
+
+                              samplerType = ToSamplerType(argWords[j]);
+
+                              if (argWords.size() > j)
+                              {
+                                 argName = argWords[j + 1];
+                              }
+                              else
+                              {
+                                 Con::printf("ShaderBlueprint - Error: Missing argument name on line %d", lineNum);
+                              }
+                           }
+                        }
+
+                        // safeties.
+                        if (argName.find(",") != String::NPos)
+                           argName = argName.substr(0, argName.find(","));
+
+                        if (argName.find(")") != String::NPos)
+                        {
+                           argName = argName.substr(0, argName.find(")"));
+                           readArgs = false;
+                        }
+
+                        argName = TrimTabAndWhiteSpace(argName);
+
+                        curFunc.arguments.push_back(ShaderFunctionArg(argType,
+                           samplerType,
+                           argName,
+                           in,
+                           out,
+                           inout));
+                     }
+
+                     line = String((char*)file.readLine());
+                     lineNum++;
+
+                     // remove leading and trailing spaces.
+                     line = TrimTabAndWhiteSpace(line);
+                  }
+
+                  bool readBody = true;
+                  while (readBody)
                   {
                      line = String((char*)file.readLine());
                      lineNum++;
-                     line = TrimTabAndWhiteSpace(line);
+
+                     if (line.find("{") != String::NPos)
+                        continue;
 
                      if (line.find("}") != String::NPos)
-                     {
-                        inShader->mShaderLines += "\t\t" + line + "\n";
-                        inStructfunction = false;
                         break;
-                     }
 
-                     inShader->mShaderLines += "\t\t" + line + "\n";
+                     line = TrimTabAndWhiteSpace(line);
+
+                     curFunc.functionBody += line + "\n";
                   }
 
+                  inShader->shaderFunctions.push_back(curFunc);
+
+                  continue;
                }
 
                inShader->mShaderLines += "\t" + line + "\n";
             }
+
+            continue;
          }
 
          if (lineWords[0].equal("uniform"))
@@ -1696,8 +1821,171 @@ bool ShaderBlueprint::readFileShaderData(FileShaderBlueprint* inShader, FileObje
                   String sampler = lineWords[2].substr(0, lineWords[2].find(";"));
 
                   // just in case
-                  TrimTabAndWhiteSpace(sampler);
+                  sampler = TrimTabAndWhiteSpace(sampler);
                   mShaderSamplers.push_back(sampler);
+
+               }
+            }
+         }
+
+         // this could be a function or just a variable initialization.
+         if (ToConstType(lineWords[0]) != GFXShaderConstType::GFXSCT_Unknown ||
+            lineWords[0].equal("inline") ||
+            lineWords[0].equal("static") ||
+            lineWords[0].equal("const"))
+         {
+            // for hlsl we need to keep track of functions so we can parse sampler arguments.
+            // this is an initialization.
+            if (line.find("=") != String::NPos)
+            {
+               // this is an initialization, just add it and continue.
+               inShader->mShaderLines += line + "\n";
+               continue;
+            }
+            else
+            {
+               // we check for '=' before this so this must be a function.
+               if (line.find("(") != String::NPos)
+               {
+                  GFXShaderConstType type = GFXShaderConstType::GFXSCT_Unknown;
+                  bool isInline = false;
+
+                  U32 functionNum = 0;
+                  for (U32 j = 0; j < lineWords.size(); j++)
+                  {
+                     if (lineWords[j].find("inline") != String::NPos)
+                     {
+                        isInline = true;
+                     }
+                     
+                     if (ToConstType(lineWords[j]) != GFXShaderConstType::GFXSCT_Unknown)
+                     {
+                        // we have the location of our function name. break
+                        type = ToConstType(lineWords[j]);
+                        functionNum = j + 1;
+                        break;
+                     }
+                  }
+
+                  String functionString;
+                  if (lineWords[functionNum].find("(") != String::NPos)
+                     functionString = lineWords[functionNum].substr(0, lineWords[functionNum].find("("));
+                  else
+                     functionString = lineWords[functionNum];
+
+                  // place our catcher for function placement
+                  inShader->mShaderLines += "##" + functionString + "\n";
+
+                  ShaderFunction curFunc(type, functionString, isInline);
+                  bool readArgs = true;
+                  while (readArgs)
+                  {
+                     Vector<String> args;
+                     line.split(",", args);
+
+                     for (U32 i = 0; i < args.size(); i++)
+                     {
+                        // initializers.
+                        bool in = false;
+                        bool out = false;
+                        bool inout = false;
+                        bool isSampler = false;
+                        GFXShaderConstType argType = GFXShaderConstType::GFXSCT_Unknown;
+                        GFXSamplerType samplerType = GFXSamplerType::SAMP_Uknown;
+                        String argName = String::EmptyString;
+
+                        args[i] = TrimTabAndWhiteSpace(args[i]);
+
+                        Vector<String> argWords;
+                        args[i].split(" ", argWords);
+
+                        for (U32 j = 0; j < argWords.size(); j++)
+                        {
+                           if (argWords[j].equal("in"))
+                           {
+                              in = true;
+                              continue;
+                           }
+
+                           if (argWords[j].equal("out"))
+                           {
+                              out = true;
+                              continue;
+                           }
+
+                           if (argWords[j].equal("inout"))
+                           {
+                              inout = true;
+                              continue;
+                           }
+
+                           if (argWords[j].find(")") != String::NPos)
+                              readArgs = false;
+
+                           if (ToConstType(argWords[j]) != GFXShaderConstType::GFXSCT_Unknown)
+                           {
+                              argType = ToConstType(argWords[j]);
+
+                              samplerType = ToSamplerType(argWords[j]);
+
+                              if (argWords.size() > j)
+                              {
+                                 argName = argWords[j + 1];
+                              }
+                              else
+                              {
+                                 Con::printf("ShaderBlueprint - Error: Missing argument name on line %d", lineNum);
+                              }
+                           }
+                        }
+
+                        // safeties.
+                        if (argName.find(",") != String::NPos)
+                           argName = argName.substr(0, argName.find(","));
+
+                        if (argName.find(")") != String::NPos)
+                        {
+                           argName = argName.substr(0, argName.find(")"));
+                           readArgs = false;
+                        }
+
+                        argName = TrimTabAndWhiteSpace(argName);
+
+                        curFunc.arguments.push_back(ShaderFunctionArg(argType,
+                           samplerType,
+                           argName,
+                           in,
+                           out,
+                           inout));
+                     }
+
+                     line = String((char*)file.readLine());
+                     lineNum++;
+
+                     // remove leading and trailing spaces.
+                     line = TrimTabAndWhiteSpace(line);
+                  }
+
+                  bool readBody = true;
+                  while (readBody)
+                  {
+                     line = String((char*)file.readLine());
+                     lineNum++;
+
+                     if (line.find("{") != String::NPos)
+                        continue;
+
+                     if (line.find("}") != String::NPos)
+                        break;
+
+                     line = TrimTabAndWhiteSpace(line);
+
+                     curFunc.functionBody += line + "\n";
+                  }
+
+                  inShader->shaderFunctions.push_back(curFunc);
+
+                  continue;
                }
             }
          }
@@ -1833,32 +2121,7 @@ void ShaderBlueprint::convertToHLSL(bool exportFile)
          }
       }
 
-      Vector<String> shaderLines;
-      mVertexShader->mShaderLines.split("\n", shaderLines);
-
-      U32 entries = 0;
-      U32 samplers = -1;
-      for (U32 i = 0; i < shaderLines.size(); i++)
-      {
-         if (shaderLines[i].find("}") != String::NPos)
-            entries--;
-
-         if (shaderLines[i].find("sampler2D") != String::NPos && shaderLines[i].startsWith("uniform"))
-         {
-            samplers++;
-         }
-
-         ConvertHLSLLineKeywords(shaderLines[i], samplers);
-
-        
-         for (U32 j = 0; j < entries; j++)
-            mVertexShaderConverted += "\t";
-
-         mVertexShaderConverted += shaderLines[i] + "\n";
-
-         if (shaderLines[i].find("{") != String::NPos)
-            entries++;
-      }
+      processShaderLines(mVertexShader, mVertexShaderConverted, mVertexShader->mShaderLines);
 
       mVertexShaderConverted += "ConnectData " + mVertexShader->entryPoint + "( VertData IN )\n";
       mVertexShaderConverted += "{\n";
@@ -1926,31 +2189,7 @@ void ShaderBlueprint::convertToHLSL(bool exportFile)
          }
       }
 
-      Vector<String> shaderLines;
-      mPixelShader->mShaderLines.split("\n", shaderLines);
-
-      U32 entries = 0;
-      U32 samplers = -1;
-      for (U32 i = 0; i < shaderLines.size(); i++)
-      {
-         if (shaderLines[i].find("}") != String::NPos)
-            entries--;
-
-         if (shaderLines[i].find("sampler2D") != String::NPos && shaderLines[i].startsWith("uniform"))
-         {
-            samplers++;
-         }
-
-         ConvertHLSLLineKeywords(shaderLines[i], samplers);
-
-         for (U32 j = 0; j < entries; j++)
-            mPixelShaderConverted += "\t";
-
-         mPixelShaderConverted += shaderLines[i] + "\n";
-
-         if (shaderLines[i].find("{") != String::NPos)
-            entries++;
-      }
+      processShaderLines(mPixelShader, mPixelShaderConverted, mPixelShader->mShaderLines);
 
       mPixelShaderConverted += "FragOut " + mPixelShader->entryPoint + "( ConnectData IN )\n";
       mPixelShaderConverted += "{\n";
@@ -2051,26 +2290,7 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
          }
       }
 
-      Vector<String> shaderLines;
-      mVertexShader->mShaderLines.split("\n", shaderLines);
-
-      U32 entries = 0;
-      for (U32 i = 0; i < shaderLines.size(); i++)
-      {
-         if (shaderLines[i].find("}") != String::NPos)
-            entries--;
-
-
-         ConvertGLSLLineKeywords(shaderLines[i], true);
-
-         for (U32 j = 0; j < entries; j++)
-            mVertexShaderConverted += "\t";
-
-         mVertexShaderConverted += shaderLines[i] + "\n";
-
-         if (shaderLines[i].find("{") != String::NPos)
-            entries++;
-      }
+      processShaderLines(mVertexShader, mVertexShaderConverted, mVertexShader->mShaderLines, true, true);
 
       mVertexShaderConverted += "void main()\n";
       mVertexShaderConverted += "{\n";
@@ -2182,27 +2402,7 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
          }
       }
 
-      Vector<String> shaderLines;
-      mPixelShader->mShaderLines.split("\n", shaderLines);
-
-      U32 entries = 0;
-
-      for (U32 i = 0; i < shaderLines.size(); i++)
-      {
-         if (shaderLines[i].find("}") != String::NPos)
-            entries--;
-
-
-         ConvertGLSLLineKeywords(shaderLines[i], false);
-
-         for (U32 j = 0; j < entries; j++)
-            mPixelShaderConverted += "\t";
-
-         mPixelShaderConverted += shaderLines[i] + "\n";
-
-         if (shaderLines[i].find("{") != String::NPos)
-            entries++;
-      }
+      processShaderLines(mPixelShader, mPixelShaderConverted, mPixelShader->mShaderLines, true, false);
 
       mPixelShaderConverted += "void main()\n";
       mPixelShaderConverted += "{\n";
@@ -2283,4 +2483,219 @@ void ShaderDataStruct::printStructHLSL(String& inString)
    }
 
    inString += "};\n\n";
+}
+
+void ShaderFunction::printFunctionHLSL(String& inString, U32 startDepth)
+{
+   for (U32 i = 0; i < startDepth; i++)
+      inString += "\t";
+
+   if (isInline)
+      inString += "inline ";
+
+   Vector<String> samplerArgs;
+
+   inString += ConstTypeToStringHLSL(returnType) + " ";
+   inString += name + "(";
+   for (U32 i = 0; i < arguments.size(); i++)
+   {
+
+      if (i > 0)
+      {
+         inString += ",\n";
+      }
+
+      if (arguments[i].in)
+         inString += "in";
+      else if (arguments[i].out)
+         inString += "out";
+      else if (arguments[i].inout)
+         inString += "inout";
+
+      if (arguments[i].samplerType != GFXSamplerType::SAMP_Uknown)
+      {
+         ArgSamplerToStringHLSL(arguments[i].samplerType, arguments[i].varName, inString);
+         samplerArgs.push_back(arguments[i].varName);
+      }
+      else
+      {
+         if (i > 0)
+            inString += "\t\t";
+
+         inString += ConstTypeToStringHLSL(arguments[i].dataConstType) + " " + arguments[i].varName;
+      }
+
+   }
+
+   inString += ")\n";
+
+   for (U32 i = 0; i < startDepth; i++)
+      inString += "\t";
+
+   inString += "{\n";
+
+   Vector<String> funcLines;
+   functionBody.split("\n", funcLines);
+
+   U32 depth = 0;
+   bool inStatement = false;
+   for (U32 j = 0; j < funcLines.size(); j++)
+   {
+      // we probably wont need to convert anything.
+      if (funcLines[j] == String::EmptyString)
+         inString += "\n";
+      else
+      {
+         ConvertHLSLLineKeywords(funcLines[j]);
+         functionLine(funcLines[j], depth, inStatement);
+
+         for (U32 k = 0; k < samplerArgs.size(); k++)
+         {
+         
+            if (funcLines[j].find("SamplerState", String::Case) != String::NPos)
+               continue;
+            else
+            {
+               if (funcLines[j].find(samplerArgs[k], String::Cas) != String::NPos)
+               {
+                  // in hlsl we need to send the texture var along with the sampler var.
+                  funcLines[j].replace(samplerArgs[k], "texture" + samplerArgs[k] + ", " + samplerArgs[k]);
+               }
+            }
+         }
+
+         for (U32 i = 0; i < startDepth; i++)
+            inString += "\t";
+
+         inString += "\t" + funcLines[j];
+      }
+   }
+
+   inString += "}\n\n";
+}
+
+void ShaderFunction::printFunctionGLSL(String& inString, bool vert, U32 startDepth)
+{
+   for (U32 i = 0; i < startDepth; i++)
+      inString += "\t";
+
+   if (isInline)
+      inString += "inline ";
+
+   inString += ConstTypeToStringGLSL(returnType) + " ";
+   inString += name + "(";
+   for (U32 i = 0; i < arguments.size(); i++)
+   {
+
+      if (i > 0)
+      {
+         inString += ",\n";
+      }
+
+      if (arguments[i].in)
+         inString += "in";
+      else if (arguments[i].out)
+         inString += "out";
+      else if (arguments[i].inout)
+         inString += "inout";
+
+      if (arguments[i].samplerType != GFXSamplerType::SAMP_Uknown)
+      {
+         SamplerTypeToStringGLSL(arguments[i].samplerType, arguments[i].varName, inString);
+      }
+      else
+      {
+         if (i > 0)
+            inString += "\t\t";
+
+         inString += ConstTypeToStringGLSL(arguments[i].dataConstType) + " " + arguments[i].varName;
+      }
+
+   }
+
+   inString += ")\n";
+
+   for (U32 i = 0; i < startDepth; i++)
+      inString += "\t";
+
+   inString += "{\n";
+
+   Vector<String> funcLines;
+   functionBody.split("\n", funcLines);
+
+   U32 depth = 0;
+   bool inStatement = false;
+   for (U32 j = 0; j < funcLines.size(); j++)
+   {
+      // we probably wont need to convert anything.
+      if (funcLines[j] == String::EmptyString)
+         inString += "\n";
+      else
+      {
+         ConvertGLSLLineKeywords(funcLines[j], vert);
+         functionLine(funcLines[j], depth, inStatement);
+
+         for (U32 i = 0; i < startDepth; i++)
+            inString += "\t";
+
+         inString += "\t" + funcLines[j];
+      }
+   }
+
+   inString += "}\n\n";
+}
+
+void ShaderBlueprint::processShaderLines(FileShaderBlueprint* inShader, String& convertedShaderString, String inShaderLines, bool isGLSL, bool isVert)
+{
+   Vector<String> shaderLines;
+   inShaderLines.split("\n", shaderLines);
+
+   U32 entries = 0;
+   U32 samplers = -1;
+   bool funcFound = false;
+   for (U32 i = 0; i < shaderLines.size(); i++)
+   {
+      U32 funcId = 0;
+
+      for (U32 k = 0; k < inShader->shaderFunctions.size(); k++)
+      {
+         String funcName = inShader->shaderFunctions[k].name;
+
+         if (shaderLines[i].find("##" + funcName, 0, String::Case) != String::NPos)
+         {
+            funcId = k;
+            funcFound = true;
+         }
+      }
+
+      if (shaderLines[i].find("}") != String::NPos)
+         entries--;
+
+      if (shaderLines[i].find("sampler") != String::NPos && shaderLines[i].startsWith("uniform"))
+         samplers++;
+
+      if(!isGLSL)
+         ConvertHLSLLineKeywords(shaderLines[i], samplers);
+      else
+         ConvertGLSLLineKeywords(shaderLines[i], isVert);
+
+      for (U32 j = 0; j < entries; j++)
+         convertedShaderString += "\t";
+
+      if (!funcFound)
+         convertedShaderString += shaderLines[i] + "\n";
+      else
+      {
+         if (!isGLSL)
+            inShader->shaderFunctions[funcId].printFunctionHLSL(convertedShaderString, entries);
+         else
+            inShader->shaderFunctions[funcId].printFunctionGLSL(convertedShaderString, entries);
+
+         funcFound = false;
+      }
+
+      if (shaderLines[i].find("{") != String::NPos)
+         entries++;
+
+   }
 }

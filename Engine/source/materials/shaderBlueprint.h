@@ -47,7 +47,6 @@ class ShaderDataType
 public:
    String varName;
    GFXShaderConstType dataConstType;
-   GFXSamplerType samplerType;
    bool isArray;
    U32 arraySize;
 
@@ -55,29 +54,98 @@ public:
       : varName(String::EmptyString),
       dataConstType(GFXShaderConstType::GFXSCT_Unknown),
       isArray(false),
-      arraySize(0),
-      samplerType(GFXSamplerType::SAMP_Uknown)
+      arraySize(0)
    {}
 
    ShaderDataType(GFXShaderConstType constType, String name, bool arrayType = false, U32 size = 0)
       : dataConstType(constType),
       varName(name),
       isArray(arrayType),
-      arraySize(size),
-      samplerType(GFXSamplerType::SAMP_Uknown)
+      arraySize(size)
    {}
-
-   void setSamplerType(GFXSamplerType inSamplerType) { samplerType = inSamplerType; }
 };
 
-class ShaderStructDataType : public ShaderDataType
+class ShaderFunctionArg : public ShaderDataType
+{
+public:
+   bool in;
+   bool out;
+   bool inout;
+   GFXSamplerType samplerType;
+
+   ShaderFunctionArg()
+      : ShaderDataType(),
+      samplerType(GFXSamplerType::SAMP_Uknown),
+      in(false),
+      out(false),
+      inout(false)
+   {}
+
+   ShaderFunctionArg(GFXShaderConstType constType,
+      GFXSamplerType inSamplerType,
+      String name,
+      bool isIn,
+      bool isOut,
+      bool isInout,
+      bool isSampler = false,
+      bool arrayType = false,
+      U32 size = 0)
+      : ShaderDataType(constType, name, arrayType, size),
+      samplerType(inSamplerType),
+      in(isIn),
+      out(isOut),
+      inout(isInout)
+   {}
+};
+
+class ShaderFunction
+{
+public:
+   GFXShaderConstType returnType;
+   String name;
+   bool isInline;
+   Vector<ShaderFunctionArg> arguments;
+   String functionBody;
+   bool isPrinted;
+
+   ShaderFunction()
+      : returnType(GFXShaderConstType::GFXSCT_Unknown),
+      name(String::EmptyString),
+      functionBody(String::EmptyString),
+      isInline(false),
+      isPrinted(false)
+   {
+      VECTOR_SET_ASSOCIATION(arguments);
+   }
+
+   ShaderFunction(GFXShaderConstType inConstType, String inName, bool inIsInline)
+      : returnType(inConstType),
+      name(inName),
+      functionBody(String::EmptyString),
+      isInline(inIsInline),
+      isPrinted(false)
+   {
+      VECTOR_SET_ASSOCIATION(arguments);
+   }
+
+   void setPrinted(bool inPrinted) { isPrinted = inPrinted; }
+
+   void printFunctionHLSL(String& inString, U32 startDepth = 0);
+   void printFunctionGLSL(String& inString, bool vert, U32 startDepth = 0);
+};
+
+
+class ShaderStructDataType
 {
 public:
    GFXShaderSemantic dataSemantic;
    S32 dataResourceNumber;
+   String varName;
+   GFXShaderConstType dataConstType;
 
    ShaderStructDataType()
-      : ShaderDataType(),
+      : dataConstType(GFXShaderConstType::GFXSCT_Unknown),
+      varName(String::EmptyString),
       dataSemantic(GFXShaderSemantic::GFXSS_Unknown),
       dataResourceNumber(-1)
    {}
@@ -85,10 +153,9 @@ public:
    ShaderStructDataType(GFXShaderConstType constType,
       String name,
       GFXShaderSemantic semanticType,
-      S32 resourceNumber = -1,
-      bool arrayType = false,
-      U32 size = 0)
-      : ShaderDataType(constType, name, arrayType, size),
+      S32 resourceNumber = -1)
+      : dataConstType(constType),
+      varName(name),
       dataSemantic(semanticType),
       dataResourceNumber(resourceNumber)
    {}
@@ -117,28 +184,46 @@ public:
 
    // print struct
    void printStructHLSL(String& inString);
+};
 
+class ShaderSampler
+{
+public:
+   String shaderName;
+   GFXSamplerType type;
+
+   ShaderSampler()
+      : shaderName(String::EmptyString),
+      type(GFXSamplerType::SAMP_Uknown)
+   {}
+
+   ShaderSampler(String name, GFXSamplerType inType)
+      : shaderName(name),
+      type(inType)
+   {}
 };
 
 class FileShaderBlueprint
 {
 public:
    String entryPoint;
-
    String mShaderLines;
-
    String entryFunctionBody;
+
+   Vector<ShaderFunction> shaderFunctions;
 
    FileShaderBlueprint()
       : entryPoint("main"),
       entryFunctionBody(String::EmptyString)
    {
+      VECTOR_SET_ASSOCIATION(shaderFunctions);
    }
 
    FileShaderBlueprint(String entryName)
       : entryPoint(entryName),
       entryFunctionBody(String::EmptyString)
    {
+      VECTOR_SET_ASSOCIATION(shaderFunctions);
    }
 
 };
@@ -203,6 +288,8 @@ public:
    void convertShaders();
    void convertToHLSL(bool exportFile);
    void convertToGLSL(bool exportFile);
+
+   void processShaderLines(FileShaderBlueprint* inShader, String& convertedShaderString, String inShaderLines, bool isGLSL = false, bool isVert = false);
 
    // ConsoleObject
    static void initPersistFields();

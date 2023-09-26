@@ -982,12 +982,15 @@ bool ShaderBlueprint::hasSamplerDef(const String& _samplerName, int& pos) const
 
 ShaderBlueprint::ShaderBlueprint()
 {
+   mMultiStage = false;
    mExportFiles = false;
+   mAutoCompile = false;
    mShaderFileName = String::EmptyString;
    //------------------------------------
    VECTOR_SET_ASSOCIATION(mShaderDataStructs);
    VECTOR_SET_ASSOCIATION(mShaderSamplers);
    VECTOR_SET_ASSOCIATION(mShaderMacros);
+   VECTOR_SET_ASSOCIATION(smShaderStages);
 
    mVertexShader = new FileShaderBlueprint();
    mPixelShader = new FileShaderBlueprint();
@@ -1001,6 +1004,8 @@ ShaderBlueprint::ShaderBlueprint()
 
    for (int i = 0; i < 16; ++i)
       mRTParams[i] = false;
+
+   mCurStage = -1;
 }
 
 ShaderBlueprint::~ShaderBlueprint()
@@ -1015,17 +1020,54 @@ void ShaderBlueprint::initPersistFields()
       "@brief %Path to the blueprint file.\n\n");
 
    addField("exportFiles", TypeBool, Offset(mExportFiles, ShaderBlueprint),
-      "@Export glsl and hlsl files from this blueprint.\n\n");
+      "@brief Export glsl and hlsl files from this blueprint.\n\n");
+
+   addField("autoCompile", TypeBool, Offset(mAutoCompile, ShaderBlueprint),
+      "@brief Automatically compile the shader.\n\n");
 
    Parent::initPersistFields();
 
 }
 
-GFXShader* ShaderBlueprint::getShader(const Vector<GFXShaderMacro>& macros)
+GFXShader* ShaderBlueprint::getShaderStage(const Vector<GFXShaderMacro>& macros, String stageName)
+{
+   // if in stagename is empty just return the default shader.
+   if (stageName.isEmpty())
+      return getShader(macros);
+
+   // loop through and find our stagename
+   S32 stageNum = -1;
+
+   for (S32 i = 0; smShaderStages.size(); i++)
+   {
+      if (smShaderStages[i].mStageName == stageName)
+      {
+         stageNum = i;
+         break;
+      }
+   }
+
+   if (stageNum != -1)
+      return getShader(macros, stageNum);
+
+   return NULL;
+}
+
+GFXShader* ShaderBlueprint::getShader(const Vector<GFXShaderMacro>& macros, S32 shaderStage)
 {
    // Combine the dynamic macros with our script defined macros.
    Vector<GFXShaderMacro> finalMacros;
    finalMacros.merge(mShaderMacros);
+
+   if (shaderStage != -1)
+   {
+      GFXShaderMacro macro;
+      macro.name = "STAGE";
+      macro.value = smShaderStages[shaderStage].mStageName;
+      finalMacros.push_back(macro);
+      mCurStage = shaderStage;
+   }
+
    finalMacros.merge(macros);
 
    // Convert the final macro list to a string.
@@ -1037,7 +1079,7 @@ GFXShader* ShaderBlueprint::getShader(const Vector<GFXShaderMacro>& macros)
    if (iter != mShaders.end())
       return iter->value;
 
-   GFXShader* shader = _createShader(finalMacros);
+   GFXShader* shader = _createShader(finalMacros, mCurStage);
    if (!shader)
       return NULL;
 
@@ -1052,7 +1094,14 @@ GFXShader* ShaderBlueprint::getShader(const Vector<GFXShaderMacro>& macros)
 
 bool ShaderBlueprint::_reload()
 {
+   // we are going to reinitialize the parser clear everything.
    mShaderDataStructs.clear();
+   mShaderSamplers.clear();
+   mShaderMacros.clear();
+   smShaderStages.clear();
+
+   // reset this incase stages changed in blueprint file.
+   mMultiStage = false;
 
    SAFE_DELETE(mVertexShader);
    SAFE_DELETE(mPixelShader);
@@ -1067,9 +1116,7 @@ bool ShaderBlueprint::_reload()
       return false;
 
    if (mExportFiles)
-   {
-      convertShaders();
-   }
+      exportShaderFiles();
 
    if (mCompiledShader != NULL)
    {
@@ -1077,13 +1124,33 @@ bool ShaderBlueprint::_reload()
       {
       case Direct3D11:
       {
-         convertToHLSL(false);
+         convertToHLSL(false, mCurStage);
+
+         // because of staging we do this after conversion
+         Vector<String> samplers;
+         samplers.setSize(mShaderSamplers.size());
+         for (U32 i = 0; i < mShaderSamplers.size(); i++)
+         {
+            // we should be able to do this while finding the samplers?
+            samplers[i] = mShaderSamplers[i][0] == '$' ? mShaderSamplers[i] : "$" + mShaderSamplers[i];
+         }
+
          break;
       }
 
       case OpenGL:
       {
-         convertToGLSL(false);
+         convertToGLSL(false, mCurStage);
+
+         // because of staging we do this after conversion
+         Vector<String> samplers;
+         samplers.setSize(mShaderSamplers.size());
+         for (U32 i = 0; i < mShaderSamplers.size(); i++)
+         {
+            // we should be able to do this while finding the samplers?
+            samplers[i] = mShaderSamplers[i][0] == '$' ? mShaderSamplers[i] : "$" + mShaderSamplers[i];
+         }
+
          break;
       }
 
@@ -1108,7 +1175,10 @@ bool ShaderBlueprint::onAdd()
       return false;
 
    if(mExportFiles)
-      convertShaders();
+      exportShaderFiles();
+
+   if (mAutoCompile)
+      getShader();
 
    Torque::FS::AddChangeNotification(mBluePrintFile, this, &ShaderBlueprint::_onFileChanged);
 
@@ -1246,6 +1316,83 @@ bool ShaderBlueprint::initParser(const char* filePath)
             }
 
             continue;
+         }
+
+         if (lineWords[0].equal("ShaderStage"))
+         {
+            if (lineWords.size() > 1) {
+               S32 startPos = lineWords[1].find('"') + 1;
+               S32 endPos = lineWords[1].find('"', startPos);
+
+               String name = lineWords[1].substr(startPos, endPos - startPos);
+
+               String globalStage = String::EmptyString;
+               String vertexStage = String::EmptyString;
+               String pixelStage = String::EmptyString;
+
+               bool readStage = true;
+
+               while (readStage)
+               {
+                  line = String((char*)f.readLine());
+                  lineNum++;
+                  line = TrimTabAndWhiteSpace(line);
+
+                  if (line.equal("};"))
+                     break;
+
+                  if (line.find("VertexShader") != String::NPos)
+                  {
+                     bool readVertexStage = true;
+                     while (readVertexStage)
+                     {
+                        line = String((char*)f.readLine());
+                        lineNum++;
+                        line = TrimTabAndWhiteSpace(line);
+
+                        if (line.equal("{"))
+                           continue;
+
+                        if (line.equal("};"))
+                           break;
+
+                        vertexStage += line;
+                     }
+                  }
+                  else if (line.find("PixelShader") != String::NPos)
+                  {
+                     bool readPixelStage = true;
+                     while (readPixelStage)
+                     {
+                        line = String((char*)f.readLine());
+                        lineNum++;
+                        line = TrimTabAndWhiteSpace(line);
+
+                        if (line.equal("{"))
+                           continue;
+
+                        if (line.equal("};"))
+                           break;
+
+                        vertexStage += line;
+                     }
+                  }
+                  else
+                  {
+                     if (line.isEmpty())
+                     {
+                        continue;
+                     }
+
+                     globalStage += line + "\n";
+                  }
+               }
+
+               smShaderStages.push_back(ShaderStage(name, globalStage, vertexStage, pixelStage));
+
+               if(!mMultiStage)
+                  mMultiStage = true;
+            }
          }
 
          // use starts with because people could put { at the end of vertexShader.
@@ -1571,10 +1718,13 @@ bool ShaderBlueprint::readFileShaderData(FileShaderBlueprint* inShader, FileObje
                }
 
                // do we require hdrencode function?
-               if (lineWords[1].equal("HDRENCODE", String::NoCase))
+               if (lineWords[1].equal("HDRENCODE", String::NoCase) || lineWords[1].equal("HDRDECODE", String::NoCase))
                {
-                  inShader->mShaderLines += "/// The maximum value for 10bit per component integer HDR encoding.\n";
-                  inShader->mShaderLines += "static const float HDR_RGB10_MAX = 4.0;\n";
+                  GFXShaderMacro macro;
+                  macro.name = "HDR_RGB10_MAX";
+                  macro.value = "4.0";
+                  mShaderMacros.push_back(macro);
+
                   inShader->mShaderLines += "/// Encodes an HDR color for storage into a target.\n";
                   inShader->mShaderLines += "float3 hdrEncode(float3 inColor)\n";
                   inShader->mShaderLines += "{\n";
@@ -1588,6 +1738,47 @@ bool ShaderBlueprint::readFileShaderData(FileShaderBlueprint* inShader, FileObje
                   inShader->mShaderLines += "float4 hdrEncode(float4 inColor)\n";
                   inShader->mShaderLines += "{\n";
                   inShader->mShaderLines += "return float4(hdrEncode(inColor.rgb), inColor.a);\n";
+                  inShader->mShaderLines += "}\n\n";
+               }
+
+               // do we require hdrdecode function?
+               if (lineWords[1].equal("HDRDECODE", String::NoCase))
+               {
+                  GFXShaderMacro macro;
+                  macro.name = "HDR_RGB10_MAX";
+                  macro.value = "4.0";
+                  mShaderMacros.push_back(macro);
+
+                  inShader->mShaderLines += "/// Encodes an HDR color for storage into a target.\n";
+                  inShader->mShaderLines += "float3 hdrDecode(float3 inColor)\n";
+                  inShader->mShaderLines += "{\n";
+                  inShader->mShaderLines += "#if defined( TORQUE_HDR_RGB10 )\n";
+                  inShader->mShaderLines += "\treturn inColor * HDR_RGB10_MAX;\n";
+                  inShader->mShaderLines += "#else\n";
+                  inShader->mShaderLines += "\treturn inColor;\n";
+                  inShader->mShaderLines += "#endif\n";
+                  inShader->mShaderLines += "}\n\n";
+                  inShader->mShaderLines += "/// Encodes an HDR color for storage into a target.\n";
+                  inShader->mShaderLines += "float4 hdrDecode(float4 inColor)\n";
+                  inShader->mShaderLines += "{\n";
+                  inShader->mShaderLines += "return float4(hdrDecode(inColor.rgb), inColor.a);\n";
+                  inShader->mShaderLines += "}\n\n";
+               }
+
+               // do we require hdrencode function?
+               if (lineWords[1].equal("VIEWCOORDRT", String::NoCase))
+               {
+                  inShader->mShaderLines += "/// Convert a float4 uv in viewport space to render target space.\n";
+                  inShader->mShaderLines += "float2 viewportCoordToRenderTarget( float4 inCoord, float4 rtParams )\n";
+                  inShader->mShaderLines += "{\n";
+                  inShader->mShaderLines += "float2 outCoord = inCoord.xy / inCoord.w;\n";
+                  inShader->mShaderLines += "outCoord = ( outCoord * rtParams.zw ) + rtParams.xy;\n";
+                  inShader->mShaderLines += "}\n\n";
+                  inShader->mShaderLines += "/// Convert a float2 uv in viewport space to render target space.\n";
+                  inShader->mShaderLines += "float2 viewportCoordToRenderTarget( float2 inCoord, float4 rtParams )\n";
+                  inShader->mShaderLines += "{\n";
+                  inShader->mShaderLines += "float2 outCoord = ( inCoord * rtParams.zw ) + rtParams.xy;\n";
+                  inShader->mShaderLines += "return outCoord;\n";
                   inShader->mShaderLines += "}\n\n";
                }
 
@@ -1707,7 +1898,6 @@ bool ShaderBlueprint::readFileShaderData(FileShaderBlueprint* inShader, FileObje
                         bool in = false;
                         bool out = false;
                         bool inout = false;
-                        bool isSampler = false;
                         GFXShaderConstType argType = GFXShaderConstType::GFXSCT_Unknown;
                         GFXSamplerType samplerType = GFXSamplerType::SAMP_Uknown;
                         String argName = String::EmptyString;
@@ -1822,7 +2012,6 @@ bool ShaderBlueprint::readFileShaderData(FileShaderBlueprint* inShader, FileObje
 
                   // just in case
                   sampler = TrimTabAndWhiteSpace(sampler);
-                  mShaderSamplers.push_back(sampler);
 
                }
             }
@@ -1889,7 +2078,6 @@ bool ShaderBlueprint::readFileShaderData(FileShaderBlueprint* inShader, FileObje
                         bool in = false;
                         bool out = false;
                         bool inout = false;
-                        bool isSampler = false;
                         GFXShaderConstType argType = GFXShaderConstType::GFXSCT_Unknown;
                         GFXSamplerType samplerType = GFXSamplerType::SAMP_Uknown;
                         String argName = String::EmptyString;
@@ -2025,14 +2213,17 @@ bool ShaderBlueprint::readFileShaderData(FileShaderBlueprint* inShader, FileObje
    return readShaderData;
 }
 
-GFXShader* ShaderBlueprint::_createShader(const Vector<GFXShaderMacro>& macros)
+GFXShader* ShaderBlueprint::_createShader(const Vector<GFXShaderMacro>& macros, S32 shaderStage)
 {
-   Vector<String> samplers;
-   samplers.setSize(mShaderSamplers.size());
-   for (U32 i = 0; i < mShaderSamplers.size(); i++)
+   S32 stage = -1;
+   // if in shaderStage is -1 but we are multi stage, set our stage to (default 0)
+   if (shaderStage == -1 && mMultiStage)
    {
-      // we should be able to do this while finding the samplers?
-      samplers[i] = mShaderSamplers[i][0] == '$' ? mShaderSamplers[i] : "$" + mShaderSamplers[i];
+      stage = 0;
+   }
+   else
+   {
+      stage = shaderStage;
    }
 
    // Enable shader error logging.
@@ -2048,8 +2239,16 @@ GFXShader* ShaderBlueprint::_createShader(const Vector<GFXShaderMacro>& macros)
    {
       case Direct3D11:
       {
-         if(mVertexShaderConverted == String::EmptyString && mPixelShaderConverted == String::EmptyString)
-            convertToHLSL(false);
+         convertToHLSL(false, stage);
+
+         // because of staging we do this after conversion
+         Vector<String> samplers;
+         samplers.setSize(mShaderSamplers.size());
+         for (U32 i = 0; i < mShaderSamplers.size(); i++)
+         {
+            // we should be able to do this while finding the samplers?
+            samplers[i] = mShaderSamplers[i][0] == '$' ? mShaderSamplers[i] : "$" + mShaderSamplers[i];
+         }
 
          success = shader->initFromString(mVertexShaderConverted,
                                           mPixelShaderConverted,
@@ -2062,8 +2261,16 @@ GFXShader* ShaderBlueprint::_createShader(const Vector<GFXShaderMacro>& macros)
 
       case OpenGL:
       {
-         if (mVertexShaderConverted == String::EmptyString && mPixelShaderConverted == String::EmptyString)
-            convertToGLSL(false);
+         convertToGLSL(false, stage);
+
+         // because of staging we do this after conversion
+         Vector<String> samplers;
+         samplers.setSize(mShaderSamplers.size());
+         for (U32 i = 0; i < mShaderSamplers.size(); i++)
+         {
+            // we should be able to do this while finding the samplers?
+            samplers[i] = mShaderSamplers[i][0] == '$' ? mShaderSamplers[i] : "$" + mShaderSamplers[i];
+         }
 
          success = shader->initFromString(mVertexShaderConverted,
                                           mPixelShaderConverted,
@@ -2088,8 +2295,23 @@ GFXShader* ShaderBlueprint::_createShader(const Vector<GFXShaderMacro>& macros)
    return shader;
 }
 
-void ShaderBlueprint::convertShaders()
+void ShaderBlueprint::exportShaderFiles()
 {
+   if (mMultiStage)
+   {
+      for (S32 i = 0; i < smShaderStages.size(); i++)
+      {
+         convertToHLSL(true, i);
+         mPixelShaderConverted.clear();
+         mVertexShaderConverted.clear();
+
+         convertToGLSL(true, i);
+         mPixelShaderConverted.clear();
+         mVertexShaderConverted.clear();
+      }
+   }
+   else
+   {
       convertToHLSL(true);
       mPixelShaderConverted.clear();
       mVertexShaderConverted.clear();
@@ -2097,10 +2319,14 @@ void ShaderBlueprint::convertShaders()
       convertToGLSL(true);
       mPixelShaderConverted.clear();
       mVertexShaderConverted.clear();
+   }
 }
 
-void ShaderBlueprint::convertToHLSL(bool exportFile)
+void ShaderBlueprint::convertToHLSL(bool exportFile, S32 stage)
 {
+   // make sure we are cleared.
+   mShaderSamplers.clear();
+
    if (mVertexShader != NULL)
    {
       // print our VertexData struct (there has to be a better way)
@@ -2121,7 +2347,33 @@ void ShaderBlueprint::convertToHLSL(bool exportFile)
          }
       }
 
-      processShaderLines(mVertexShader, mVertexShaderConverted, mVertexShader->mShaderLines);
+      if (stage > -1)
+      {
+         String newShaderLines = mVertexShader->mShaderLines;
+         Vector<String> additions;
+
+
+         smShaderStages[stage].mGlobal.split("\n", additions);
+         for (U32 i = 0; i < additions.size(); i++)
+         {
+            newShaderLines += additions[i] + "\n";
+         }
+
+         additions.clear();
+         smShaderStages[stage].mVertexShader.split("\n", additions);
+         for (U32 i = 0; i < additions.size(); i++)
+         {
+            newShaderLines += additions[i] + "\n";
+         }
+
+         newShaderLines += "\n";
+
+         processShaderLines(mVertexShader, mVertexShaderConverted, newShaderLines);
+      }
+      else
+      {
+         processShaderLines(mVertexShader, mVertexShaderConverted, mVertexShader->mShaderLines);
+      }
 
       mVertexShaderConverted += "ConnectData " + mVertexShader->entryPoint + "( VertData IN )\n";
       mVertexShaderConverted += "{\n";
@@ -2155,7 +2407,12 @@ void ShaderBlueprint::convertToHLSL(bool exportFile)
          Torque::Path filePath = mBluePrintFile;
 
          String fullPath = filePath.getRootAndPath();
-         fullPath += "/Export/HLSL/" + mShaderFileName + "_V.hlsl";
+         fullPath += "/Export/HLSL/" + mShaderFileName;
+
+         if (stage > -1)
+            fullPath += "_" + smShaderStages[stage].mStageName;
+
+         fullPath += "_V.hlsl";
 
          FileStream* s = new FileStream();
          if (!s->open(fullPath, Torque::FS::File::Write))
@@ -2189,7 +2446,35 @@ void ShaderBlueprint::convertToHLSL(bool exportFile)
          }
       }
 
-      processShaderLines(mPixelShader, mPixelShaderConverted, mPixelShader->mShaderLines);
+      if (stage > -1)
+      {
+         String newShaderLines = mPixelShader->mShaderLines;
+         Vector<String> additions;
+
+         String stageLines;
+         smShaderStages[stage].mGlobal.split("\n", additions);
+         for (U32 i = 0; i < additions.size(); i++)
+         {
+            stageLines += additions[i] + "\n";
+         }
+
+         additions.clear();
+         smShaderStages[stage].mPixelShader.split("\n", additions);
+         for (U32 i = 0; i < additions.size(); i++)
+         {
+            stageLines += additions[i] + "\n";
+         }
+
+         stageLines += "\n";
+
+         newShaderLines.insert(0, stageLines);
+
+         processShaderLines(mPixelShader, mPixelShaderConverted, newShaderLines);
+      }
+      else
+      {
+         processShaderLines(mPixelShader, mPixelShaderConverted, mPixelShader->mShaderLines);
+      }
 
       mPixelShaderConverted += "FragOut " + mPixelShader->entryPoint + "( ConnectData IN )\n";
       mPixelShaderConverted += "{\n";
@@ -2223,7 +2508,12 @@ void ShaderBlueprint::convertToHLSL(bool exportFile)
          Torque::Path filePath = mBluePrintFile;
 
          String fullPath = filePath.getRootAndPath();
-         fullPath += "/Export/HLSL/" + mShaderFileName + "_P.hlsl";
+         fullPath += "/Export/HLSL/" + mShaderFileName;
+
+         if (stage > -1)
+            fullPath += "_" + smShaderStages[stage].mStageName;
+
+         fullPath += "_P.hlsl";
 
          FileStream* s = new FileStream();
          if (!s->open(fullPath, Torque::FS::File::Write))
@@ -2238,9 +2528,12 @@ void ShaderBlueprint::convertToHLSL(bool exportFile)
    }
 }
 
-void ShaderBlueprint::convertToGLSL(bool exportFile)
+void ShaderBlueprint::convertToGLSL(bool exportFile, S32 stage)
 {
    String svPos;
+
+   // make sure we are cleared.
+   mShaderSamplers.clear(); 
 
    if (mVertexShader != NULL)
    {
@@ -2290,7 +2583,35 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
          }
       }
 
-      processShaderLines(mVertexShader, mVertexShaderConverted, mVertexShader->mShaderLines, true, true);
+      mVertexShaderConverted += "\n";
+
+      if (stage > -1)
+      {
+         String newShaderLines = mVertexShader->mShaderLines;
+         Vector<String> additions;
+
+
+         smShaderStages[stage].mGlobal.split("\n", additions);
+         for (U32 i = 0; i < additions.size(); i++)
+         {
+            newShaderLines += additions[i] + "\n";
+         }
+
+         additions.clear();
+         smShaderStages[stage].mVertexShader.split("\n", additions);
+         for (U32 i = 0; i < additions.size(); i++)
+         {
+            newShaderLines += additions[i] + "\n";
+         }
+
+         newShaderLines += "\n";
+
+         processShaderLines(mVertexShader, mVertexShaderConverted, newShaderLines, true, true);
+      }
+      else
+      {
+         processShaderLines(mVertexShader, mVertexShaderConverted, mVertexShader->mShaderLines, true, true);
+      }
 
       mVertexShaderConverted += "void main()\n";
       mVertexShaderConverted += "{\n";
@@ -2338,7 +2659,12 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
          Torque::Path filePath = mBluePrintFile;
 
          String fullPath = filePath.getRootAndPath();
-         fullPath += "/Export/GLSL/" + mShaderFileName + "_V.glsl";
+         fullPath += "/Export/GLSL/" + mShaderFileName;
+
+         if (stage > -1)
+            fullPath += "_" + smShaderStages[stage].mStageName;
+
+         fullPath += "_V.glsl";
 
          FileStream* s = new FileStream();
          if (!s->open(fullPath, Torque::FS::File::Write))
@@ -2402,7 +2728,36 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
          }
       }
 
-      processShaderLines(mPixelShader, mPixelShaderConverted, mPixelShader->mShaderLines, true, false);
+      mPixelShaderConverted += "\n";
+
+      if (stage > -1)
+      {
+         String newShaderLines = mPixelShader->mShaderLines;
+         Vector<String> additions;
+
+
+         smShaderStages[stage].mGlobal.split("\n", additions);
+         for (U32 i = 0; i < additions.size(); i++)
+         {
+            newShaderLines += additions[i] + "\n";
+         }
+
+         additions.clear();
+         smShaderStages[stage].mVertexShader.split("\n", additions);
+         for (U32 i = 0; i < additions.size(); i++)
+         {
+            newShaderLines += additions[i] + "\n";
+         }
+
+         newShaderLines += "\n";
+
+         processShaderLines(mPixelShader, mPixelShaderConverted, newShaderLines, true, false);
+      }
+      else
+      {
+         processShaderLines(mPixelShader, mPixelShaderConverted, mPixelShader->mShaderLines, true, false);
+      }
+
 
       mPixelShaderConverted += "void main()\n";
       mPixelShaderConverted += "{\n";
@@ -2450,7 +2805,12 @@ void ShaderBlueprint::convertToGLSL(bool exportFile)
          Torque::Path filePath = mBluePrintFile;
 
          String fullPath = filePath.getRootAndPath();
-         fullPath += "/Export/GLSL/" + mShaderFileName + "_F.glsl";
+         fullPath += "/Export/GLSL/" + mShaderFileName;
+
+         if (stage > -1)
+            fullPath += "_" + smShaderStages[stage].mStageName;
+
+         fullPath += "_F.glsl";
 
          FileStream* s = new FileStream();
          if (!s->open(fullPath, Torque::FS::File::Write))
@@ -2672,7 +3032,15 @@ void ShaderBlueprint::processShaderLines(FileShaderBlueprint* inShader, String& 
          entries--;
 
       if (shaderLines[i].find("sampler") != String::NPos && shaderLines[i].startsWith("uniform"))
+      {
          samplers++;
+         Vector<String> samplerWords;
+
+         shaderLines[i].split(" ", samplerWords);
+         samplerWords[2] = samplerWords[2].substr(0, samplerWords[2].find(";"));
+
+         mShaderSamplers.push_back(samplerWords[2]);
+      }
 
       if(!isGLSL)
          ConvertHLSLLineKeywords(shaderLines[i], samplers);

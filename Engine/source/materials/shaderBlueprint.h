@@ -234,6 +234,31 @@ class ShaderBlueprint : public SimObject
 
 protected:
    ///
+   struct ShaderStage {
+      String mStageName;
+      String mGlobal;
+      String mPixelShader;
+      String mVertexShader;
+
+      ShaderStage()
+      {
+         mStageName = String::EmptyString;
+         mGlobal = String::EmptyString;
+         mPixelShader = String::EmptyString;
+         mVertexShader = String::EmptyString;
+      }
+
+      ShaderStage(String inStageName, String inGlobal, String inPixel, String inVertex)
+      {
+         mStageName = inStageName;
+         mGlobal = inGlobal;
+         mPixelShader = inPixel;
+         mVertexShader = inVertex;
+      }
+   };
+
+   Vector<ShaderStage> smShaderStages;
+
    static Vector<ShaderBlueprint*> smAllShaderData;
    typedef HashTable<String, GFXShaderRef> ShaderCache;
    ShaderCache mShaders;
@@ -243,6 +268,8 @@ protected:
    String mShaderFileName;
 
    bool mExportFiles;
+   bool mAutoCompile;
+   bool mMultiStage;
 
    void _onFileChanged(const Torque::Path& path) { _reload(); }
 
@@ -251,8 +278,10 @@ protected:
 
    bool mCorrectSSP;
    bool mRTParams[16];
-
    bool _checkDefinition(GFXShader* shader);
+
+   S32 mCurStage;
+
 public:
 
    Vector<ShaderDataStruct*> mShaderDataStructs;
@@ -282,19 +311,21 @@ public:
    bool readShaderDataStruct(FileObject& file, String curLine, U32& lineNum);
    bool readFileShaderData(FileShaderBlueprint* inShader, FileObject& file, U32& lineNum);
 
-   GFXShader* _createShader(const Vector<GFXShaderMacro>& macros);
+   GFXShader* _createShader(const Vector<GFXShaderMacro>& macros, S32 shaderStage = -1);
 
    // Conversion functions
-   void convertShaders();
-   void convertToHLSL(bool exportFile);
-   void convertToGLSL(bool exportFile);
+   void exportShaderFiles();
+   void convertToHLSL(bool exportFile, S32 stage = -1);
+   void convertToGLSL(bool exportFile, S32 stage = -1);
 
    void processShaderLines(FileShaderBlueprint* inShader, String& convertedShaderString, String inShaderLines, bool isGLSL = false, bool isVert = false);
 
    // ConsoleObject
    static void initPersistFields();
 
-   GFXShader* getShader(const Vector<GFXShaderMacro>& macros = Vector<GFXShaderMacro>());
+   GFXShader* getShaderStage(const Vector<GFXShaderMacro>& macros = Vector<GFXShaderMacro>(), String mStageName = String::EmptyString);
+
+   GFXShader* getShader(const Vector<GFXShaderMacro>& macros = Vector<GFXShaderMacro>(), S32 shaderStage = -1);
 
    bool _reload();
 

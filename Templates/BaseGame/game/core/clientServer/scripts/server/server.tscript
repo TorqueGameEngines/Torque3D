@@ -289,6 +289,9 @@ function onServerDestroyed()
   if ($Pref::Server::EnableDatablockCache)
     resetDatablockCache();
    DatablockFilesList.empty();
+   
+  if (isObject(ServerAssetValidator))
+    ServerAssetValidator.delete();
 }
 
 /// Guid list maintenance functions

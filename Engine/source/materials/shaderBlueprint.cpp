@@ -1718,7 +1718,7 @@ bool ShaderBlueprint::readFileShaderData(FileShaderBlueprint* inShader, FileObje
                }
 
                // do we require hdrencode function?
-               if (lineWords[1].equal("HDRENCODE", String::NoCase) || lineWords[1].equal("HDRDECODE", String::NoCase))
+               if (lineWords[1].equal("HDRENCODE", String::NoCase))
                {
                   GFXShaderMacro macro;
                   macro.name = "HDR_RGB10_MAX";

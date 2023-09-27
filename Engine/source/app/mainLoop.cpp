@@ -292,6 +292,8 @@ void StandardMainLoop::init()
 
    Con::setVariable( "defaultGame", StringTable->insert("scripts") );
 
+   Con::setVariable("TorqueScriptFileExtension", TORQUE_SCRIPT_EXTENSION);
+
    Con::addVariable( "_forceAllMainThread", TypeBool, &ThreadPool::getForceAllMainThread(), "Force all work items to execute on main thread. turns this into a single-threaded system. Primarily useful to find whether malfunctions are caused by parallel execution or not.\n"
 	   "@ingroup platform" );
 
@@ -567,7 +569,6 @@ bool StandardMainLoop::handleCommandLine( S32 argc, const char **argv )
    Platform::setMainDotCsDir(buffer);
    Platform::setCurrentDirectory(buffer);
 
-   Con::setVariable("TorqueScriptFileExtension", TORQUE_SCRIPT_EXTENSION);
    Con::evaluate(script, false, useDefaultScript ? defaultScriptName : argv[1]); 
    delete[] script;
 

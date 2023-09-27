@@ -429,7 +429,7 @@ S32 TorqueMain(int argc, const char **argv)
 
 extern "C" {
 
-S32 torque_winmain( HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, S32)
+TORQUE_API S32 torque_winmain( HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, S32)
 {
 	Vector<char *> argv( __FILE__, __LINE__ );
 

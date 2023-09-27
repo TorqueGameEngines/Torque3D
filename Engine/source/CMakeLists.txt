@@ -371,6 +371,9 @@ elseif (WIN32)
 
 	# NOTE: On Windows, /Zc:wchar_t- is necessary otherwise you get unicode errors
 	set_target_properties(${TORQUE_APP_NAME} PROPERTIES COMPILE_FLAGS "${TORQUE_CXX_FLAGS}")
+   if (TORQUE_DYNAMIC_LIBRARY AND NOT TORQUE_TESTING)
+      set_target_properties(TorqueEngine PROPERTIES COMPILE_FLAGS "${TORQUE_CXX_FLAGS_COMMON_DEFAULT}")
+   endif (TORQUE_DYNAMIC_LIBRARY AND NOT TORQUE_TESTING)
 else()
 	add_executable(${TORQUE_APP_NAME} ${TORQUE_SOURCE_FILES})
 
@@ -387,6 +390,10 @@ if(MSVC)
         list(GET OUTPUT_CONFIG ${INDEX} CONF)
         list(GET OUTPUT_SUFFIX ${INDEX} SUFFIX)
         set_property(TARGET ${TORQUE_APP_NAME} PROPERTY OUTPUT_NAME_${CONF} ${TORQUE_APP_NAME}_${SUFFIX})
+        if (TORQUE_DYNAMIC_LIBRARY AND NOT TORQUE_TESTING)
+            set_property(TARGET TorqueEngine PROPERTY ${CONF}_POSTFIX "_${SUFFIX}")
+            set_property(TARGET TorqueEngine PROPERTY ${CONF}_OUTPUT_NAME ${TORQUE_APP_NAME})
+        endif (TORQUE_DYNAMIC_LIBRARY AND NOT TORQUE_TESTING)
     endforeach()
     # Set Visual Studio startup project
     set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${TORQUE_APP_NAME})

@@ -135,7 +135,7 @@ if(TORQUE_OPENGL)
 endif(TORQUE_OPENGL)
 if(TORQUE_D3D11)
   torqueAddSourceDirectories("forest" "forest/hlsl")
-endif(TORQUE_OPENGL)
+endif(TORQUE_D3D11)
 
 # Handle shadergen
 torqueAddSourceDirectories("shaderGen")

@@ -276,7 +276,7 @@ RigidShapeData::RigidShapeData()
    for (S32 i = 0; i < Sounds::MaxSounds; i++)
       INIT_SOUNDASSET_ARRAY(WaterSounds, i);
 
-   dragForce            = 0;
+   dragForce            = 0.01f;
    vertFactor           = 0.25;
 
    dustTrailEmitter = NULL;
@@ -354,7 +354,7 @@ bool RigidShapeData::preload(bool server, String &errorStr)
       }
    }
 
-   if (dragForce <= 0.01f) 
+   if (dragForce < 0.01f) 
    {
       Con::warnf("RigidShapeData::preload: dragForce must be at least 0.01");
       dragForce = 0.01f;

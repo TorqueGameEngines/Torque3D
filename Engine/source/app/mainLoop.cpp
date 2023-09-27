@@ -468,6 +468,10 @@ bool StandardMainLoop::handleCommandLine( S32 argc, const char **argv )
 #endif
          mainCsStream = &str;
       }
+      else if (String::compare(argv[1], "SkipMainCs"))
+      {
+         return true;
+      }
    }
 
    if (useDefaultScript)

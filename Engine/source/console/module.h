@@ -24,6 +24,7 @@ namespace Con
                               ConsoleValue* argv, bool noCalls, StringTableEntry packageName,
                               S32 setFrame = -1) = 0;
       virtual void findBreakLine(U32 ip, U32& line, U32& instruction) {}
+      virtual const char* getFileLine(U32 ip) { return ""; }
 
       /// Returns the first breakable line or 0 if none was found.
       /// @param lineNumber The one based line number.

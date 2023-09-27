@@ -115,7 +115,7 @@ public:
    bool setBreakpoint(U32 lineNumber) override;
 
    void findBreakLine(U32 ip, U32 &line, U32 &instruction) override;
-   const char *getFileLine(U32 ip) override;
+   const char *getFileLine(U32 ip);
 
    ///
    String getFunctionArgs(U32 offset);

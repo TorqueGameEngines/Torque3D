@@ -74,9 +74,6 @@ class HoverVehicleData : public VehicleData
    static const char *sJetNode[MaxJetNodes];
    S32 jetNode[MaxJetNodes];
 
-
-   F32 dragForce;
-   F32 vertFactor;
    F32 floatingThrustFactor;
 
    F32 mainThrustForce;

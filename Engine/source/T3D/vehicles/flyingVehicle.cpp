@@ -143,8 +143,7 @@ bool FlyingVehicleData::preload(bool server, String &errorStr)
       {
          if (!isFlyingSoundsValid(i))
          {
-            Con::errorf(ConsoleLogEntry::General, "FlyingVehicleData::preload: Invalid FlyingSounds asset.");
-            return false;
+            //return false; -TODO: trigger asset download
          }
       }
       for (S32 j = 0; j < MaxJetEmitters; j++)

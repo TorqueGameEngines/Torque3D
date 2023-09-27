@@ -123,8 +123,6 @@ HoverVehicle::JetActivation HoverVehicle::sJetActivation[NumThrustDirections] = 
 //
 HoverVehicleData::HoverVehicleData()
 {
-   dragForce            = 0;
-   vertFactor           = 0.25f;
    floatingThrustFactor = 0.15f;
 
    mainThrustForce    = 0;

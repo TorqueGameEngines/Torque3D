@@ -38,8 +38,6 @@
 #include "console/consoleTypes.h"
 #endif
 
-#include "cinterface/cinterface.h"
-
 #ifndef _MODULE_DEFINITION_H
 #include "module/moduleDefinition.h"
 #endif

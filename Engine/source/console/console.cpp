@@ -40,7 +40,6 @@
 #include "returnBuffer.h"
 #include "platform/threads/mutex.h"
 #include "core/util/journal/journal.h"
-#include "cinterface/cinterface.h"
 #include "console/consoleValueStack.h"
 
 extern StringStack STR;
@@ -1193,27 +1192,6 @@ void addCommand( const char *name,BoolCallback cb,const char *usage, S32 minArgs
 ConsoleValue _internalExecute(S32 argc, ConsoleValue argv[])
 {
    StringTableEntry funcName = StringTable->insert(argv[0].getString());
-   if (argc > 1)
-   {
-      const char** argv_str = static_cast<const char**>(malloc(size_t(argc) * sizeof(char*)));
-      if (argv_str)
-      {
-         for (int i = 0; i < argc - 1; i++)
-         {
-            argv_str[i] = argv[i + 1].getString();
-         }
-      }
-      bool result;
-      const char* methodRes = CInterface::CallFunction(NULL, funcName, argv_str, argc - 1, &result);
-
-      free(argv_str);
-      if (result)
-      {
-         ConsoleValue ret;
-         ret.setString(methodRes);
-         return ret;
-      }
-   }
    Namespace::Entry *ent;
    
    ent = Namespace::global()->lookup(funcName);
@@ -1288,28 +1266,6 @@ static ConsoleValue _internalExecute(SimObject *object, S32 argc, ConsoleValue a
    }
 
    StringTableEntry funcName = StringTable->insert(argv[0].getString());
-   if (argc > 2)
-   {
-      const char** argv_str = static_cast<const char**>(malloc(size_t(argc - 1) * sizeof(char*)));
-      if (argv_str)
-      {
-         for (int i = 0; i < argc - 2; i++)
-         {
-            argv_str[i] = argv[i + 2].getString();
-         }
-      }
-      bool result;
-      const char* methodRes = CInterface::CallMethod(object, funcName, argv_str, argc - 2, &result);
-
-      free(argv_str);
-
-      if (result)
-      {
-         ConsoleValue val;
-         val.setString(methodRes);
-         return val;
-      }
-   }
 
    if(object->getNamespace())
    {
@@ -1401,7 +1357,6 @@ inline ConsoleValue _executef(S32 checkArgc, S32 argc, ConsoleValue *argv)
 //------------------------------------------------------------------------------
 bool isFunction(const char *fn)
 {
-   if (CInterface::isMethod(NULL, fn)) return true;
    const char *string = StringTable->lookup(fn);
    if(!string)
       return false;

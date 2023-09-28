@@ -1505,9 +1505,12 @@ bool ShaderBlueprint::initIncludeFileParser(FileShaderBlueprint* inShader, const
 
    U32 lineNum = 0;
    bool readInclude = true;
-   while (readInclude)
+   while (!f.isEOF())
    {
-      readInclude = readFileShaderData(inShader, f, lineNum);
+      String line = String((char*)f.readLine());
+      // remove leading and trailing spaces.
+      line = TrimTabAndWhiteSpace(line);
+      inShader->mShaderLines += line + "\n";
    }
 
    // we have reached here, all must be good.
@@ -1654,11 +1657,16 @@ bool ShaderBlueprint::readShaderDataStruct(FileObject& file, String curLine, U32
 
 bool ShaderBlueprint::readFileShaderData(FileShaderBlueprint* inShader, FileObject& file, U32& lineNum)
 {
-
+   bool foundEntryFunction = false;
    bool readShaderData = true;
    while (readShaderData)
    {
       String line = String((char*)file.readLine());
+      if (file.isEOF())
+      {
+         readShaderData = false;
+         break;
+      }
       lineNum++;
 
       // remove leading and trailing spaces.
@@ -1681,21 +1689,23 @@ bool ShaderBlueprint::readFileShaderData(FileShaderBlueprint* inShader, FileObje
 
       if (line.equal("};"))
       {
-         readShaderData = false;
-         break;
+         if (foundEntryFunction)
+         {
+            // dont breakout until we find our entry function.
+            readShaderData = false;
+            break;
+         }
       }
 
       line.split(" ", lineWords);
 
-      bool inEntryFunction = false;
-
       // needs to probably be updated to take an argument for what the entry function struct data is.
       if (lineWords[0].equal("ConnectData", String::NoCase) || lineWords[0].equal("FragOut", String::NoCase))
       {
-         inEntryFunction = true;
+         foundEntryFunction = true;
       }
 
-      if (!inEntryFunction)
+      if (!foundEntryFunction)
       {
          if (lineWords[0].equal("#pragma"))
          {
@@ -2181,8 +2191,10 @@ bool ShaderBlueprint::readFileShaderData(FileShaderBlueprint* inShader, FileObje
          inShader->mShaderLines += line + "\n";
       }
 
-      if (inEntryFunction)
+      if (foundEntryFunction)
       {
+         bool inEntryFunction = true;
+         bool foundOpen = false;
          while (inEntryFunction)
          {
             // just straight up read the lines, as this will be changed per api.
@@ -2193,11 +2205,23 @@ bool ShaderBlueprint::readFileShaderData(FileShaderBlueprint* inShader, FileObje
 
             // dont need to worry about opening brace.
             if (line.equal("{"))
-               continue;
+            {
+               if (foundOpen)
+               {
+                  inShader->entryFunctionBody += line + "\n";
+                  continue;
+               }
+               else
+               {
+                  foundOpen = true;
+                  continue;
+               }
+            }
 
             // close out when we find closing brace.
             if (line.equal("};"))
             {
+               inEntryFunction = false;
                break;
             }
 
@@ -3013,6 +3037,10 @@ void ShaderBlueprint::processShaderLines(FileShaderBlueprint* inShader, String& 
    U32 entries = 0;
    U32 samplers = -1;
    bool funcFound = false;
+   String arrayType;
+   bool inArray = false;
+   bool foundArrayEntry = false;
+
    for (U32 i = 0; i < shaderLines.size(); i++)
    {
       U32 funcId = 0;
@@ -3029,7 +3057,10 @@ void ShaderBlueprint::processShaderLines(FileShaderBlueprint* inShader, String& 
       }
 
       if (shaderLines[i].find("}") != String::NPos)
-         entries--;
+      {
+         if(entries > 0)
+            entries--;
+      }
 
       if (shaderLines[i].find("sampler") != String::NPos && shaderLines[i].startsWith("uniform"))
       {
@@ -3040,6 +3071,77 @@ void ShaderBlueprint::processShaderLines(FileShaderBlueprint* inShader, String& 
          samplerWords[2] = samplerWords[2].substr(0, samplerWords[2].find(";"));
 
          mShaderSamplers.push_back(samplerWords[2]);
+      }
+
+      if (isGLSL)
+      {
+         if (inArray)
+         {
+            if (!foundArrayEntry)
+            {
+               if (shaderLines[i].find("{") != String::NPos)
+               {
+                  inArray = true;
+                  shaderLines[i].replace("{", "(");
+                  foundArrayEntry = true;
+               }
+            }
+
+            if (shaderLines[i].find("{") != String::NPos)
+            {
+               shaderLines[i].replace("{", arrayType + "(");
+            }
+
+            if (shaderLines[i].find("};") != String::NPos)
+            {
+               // out of our array, reset.
+               shaderLines[i].replace("};", ");");
+               inArray = false;
+               arrayType = String::EmptyString;
+            }
+            else if (shaderLines[i].find("}") != String::NPos)
+            {
+               shaderLines[i].replace("}", ")");
+            }
+
+         }
+
+         if (shaderLines[i].find("[") != String::NPos)
+         {
+            // this is an array, find our equals and our type.
+            Vector<String> arrayInit;
+            shaderLines[i].split(" ", arrayInit);
+
+            for (U32 j = 0; j < arrayInit.size(); j++)
+            {
+               if (arrayInit[j].equal("static"))
+               {
+                  if (shaderLines[i].find("const") != String::NPos)
+                     continue;
+
+                  shaderLines[i].replace("static", "const");
+               }
+
+               if (ToConstType(arrayInit[j]) != GFXShaderConstType::GFXSCT_Unknown)
+               {
+                  arrayType = arrayInit[j];
+                  break;
+               }
+            }
+
+            shaderLines[i].insert(shaderLines[i].find("=") + 1, " " + arrayType + "[]");
+            if (shaderLines[i].find("{") != String::NPos)
+            {
+               shaderLines[i].replace("{", "(");
+               foundArrayEntry = true;
+            }
+            else
+            {
+               foundArrayEntry = false;
+            }
+
+            inArray = true;
+         }
       }
 
       if(!isGLSL)

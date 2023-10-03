@@ -303,7 +303,9 @@ class SFXPlayList : public SFXTrack
       SlotData mSlots;
 
       U32 mActiveSlots;
-
+               
+   public:
+   
       SFXPlayList();
 
       /// The destructor.

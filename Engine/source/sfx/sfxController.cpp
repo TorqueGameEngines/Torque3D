@@ -167,7 +167,7 @@ void SFXController::_compileList( SFXPlayList* playList )
       
       // If there's no track in this slot, ignore it.
       
-      if( !playList->getTrackProfile(slotIndex))
+      if( !playList->getSlots().mTrack[slotIndex])
          continue;
          
       // If this is a looped slot and the list is not set to loop
@@ -394,7 +394,7 @@ bool SFXController::_execInsn()
       case OP_Play:
       {
          SFXPlayList* playList = getPlayList();
-         SFXTrack* track = playList->getTrackProfile(insn.mSlotIndex);
+         SFXTrack* track = playList->getSlots().mTrack[insn.mSlotIndex];
          
          // Handle existing sources playing on this slot and find
          // whether we need to start a new source.

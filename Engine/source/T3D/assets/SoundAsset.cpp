@@ -162,16 +162,25 @@ void SoundAsset::initPersistFields()
    addField("isStreaming", TypeBool, Offset(mProfileDesc.mIsStreaming, SoundAsset), "Use streaming.");
    //....why?
    addField("useHardware", TypeBool, Offset(mProfileDesc.mUseHardware, SoundAsset), "Use hardware mixing for this sound.");
-   addField("minDistance", TypeF32, Offset(mProfileDesc.mMinDistance, SoundAsset), "Minimum distance for sound.");
-   // more like it.
-   addField("maxDistance", TypeF32, Offset(mProfileDesc.mMaxDistance, SoundAsset), "Max distance for sound.");
-   addField("coneInsideAngle", TypeS32, Offset(mProfileDesc.mConeInsideAngle, SoundAsset), "Cone inside angle.");
-   addField("coneOutsideAngle", TypeS32, Offset(mProfileDesc.mConeOutsideAngle, SoundAsset), "Cone outside angle.");
-   addField("coneOutsideVolume", TypeF32, Offset(mProfileDesc.mConeOutsideVolume, SoundAsset), "Cone outside volume.");
-   addField("rolloffFactor", TypeF32, Offset(mProfileDesc.mRolloffFactor, SoundAsset), "Rolloff factor.");
-   addField("scatterDistance", TypePoint3F, Offset(mProfileDesc.mScatterDistance, SoundAsset), "Randomization to the spacial position of the sound.");
    addField("sourceGroup", TypeSFXSourceName, Offset(mProfileDesc.mSourceGroup, SoundAsset), "Group that sources playing with this description should be put into.");
 
+   addGroup("Fading");
+      addField("fadeInTime", TypeF32, Offset(mProfileDesc.mFadeInTime, SoundAsset), "Number of seconds to gradually fade in volume from zero when playback starts.");
+      addField("fadeOutTime", TypeF32, Offset(mProfileDesc.mFadeOutTime, SoundAsset), "Number of seconds to gradually fade out volume down to zero when playback is stopped or paused.");
+      addField("fadeInEase", TypeEaseF, Offset(mProfileDesc.mFadeInEase, SoundAsset), "Easing curve for fade-in transition.");
+      addField("fadeOutEase", TypeEaseF, Offset(mProfileDesc.mFadeOutEase, SoundAsset), "Easing curve for fade-out transition.");
+      addField("fadeLoops", TypeBool, Offset(mProfileDesc.mFadeLoops, SoundAsset), "Fade each cycle of a loop in and/or out; otherwise only fade-in first cycle.");
+   endGroup("Fading");
+
+   addGroup("3D");
+      addField("minDistance", TypeF32, Offset(mProfileDesc.mMinDistance, SoundAsset), "Minimum distance for sound.");
+      addField("maxDistance", TypeF32, Offset(mProfileDesc.mMaxDistance, SoundAsset), "Max distance for sound.");
+      addField("coneInsideAngle", TypeS32, Offset(mProfileDesc.mConeInsideAngle, SoundAsset), "Cone inside angle.");
+      addField("coneOutsideAngle", TypeS32, Offset(mProfileDesc.mConeOutsideAngle, SoundAsset), "Cone outside angle.");
+      addField("coneOutsideVolume", TypeF32, Offset(mProfileDesc.mConeOutsideVolume, SoundAsset), "Cone outside volume.");
+      addField("rolloffFactor", TypeF32, Offset(mProfileDesc.mRolloffFactor, SoundAsset), "Rolloff factor.");
+      addField("scatterDistance", TypePoint3F, Offset(mProfileDesc.mScatterDistance, SoundAsset), "Randomization to the spacial position of the sound.");
+   endGroup("3D");
 }
 
 //------------------------------------------------------------------------------

@@ -63,6 +63,10 @@
 #include "core/resourceManager.h"
 #endif
 
+#ifndef _SFXPLAYLIST_H_
+#include "sfx/sfxPlayList.h"
+#endif
+
 #include "assetMacroHelpers.h"
 class SFXResource;
 

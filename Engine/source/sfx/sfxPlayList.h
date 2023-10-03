@@ -261,6 +261,9 @@ class SFXPlayList : public SFXTrack
          /// is playing.
          EStateMode mStateMode[ NUM_SLOTS ];
 
+         /// Track to play in this slot.
+         SFXTrack* mTrack[NUM_SLOTS];
+
          SlotData()
          {
             dMemset( mReplayMode, 0, sizeof( mReplayMode ) );
@@ -268,6 +271,7 @@ class SFXPlayList : public SFXTrack
             dMemset( mTransitionOut, 0, sizeof( mTransitionOut ) );
             dMemset( mRepeatCount, 0, sizeof( mRepeatCount ) );
             dMemset( mState, 0, sizeof( mState ) );
+            dMemset( mTrack, 0, sizeof( mTrack ) );
             dMemset( mStateMode, 0, sizeof( mStateMode ) );
             
             for( U32 i = 0; i < NUM_SLOTS; ++ i )
@@ -282,8 +286,6 @@ class SFXPlayList : public SFXTrack
             }
          }
       };
-      DECLARE_SOUNDASSET_ARRAY(SFXPlayList, Track, NUM_SLOTS);
-      DECLARE_ASSET_ARRAY_SETGET(SFXPlayList, Track);
 
    protected:
    
@@ -303,6 +305,8 @@ class SFXPlayList : public SFXTrack
       
       /// Data for each of the playlist slots.
       SlotData mSlots;
+
+      U32 mActiveSlots;
                
    public:
    
@@ -324,7 +328,7 @@ class SFXPlayList : public SFXTrack
       ELoopMode getLoopMode() const { return mLoopMode; }
       
       /// Return the total number of slots in the list.
-      U32 getNumSlots() const { return NUM_SLOTS; }
+      U32 getNumSlots();
       
       /// Return the slot data for this list.
       const SlotData& getSlots() const { return mSlots; }

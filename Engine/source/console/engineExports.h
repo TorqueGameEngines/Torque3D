@@ -142,9 +142,6 @@ class EngineExportScope : public EngineExport
       
       /// Head of the link chain of exports for this scope.
       EngineExport* mExports;
-      
-      /// The global export scope singleton.
-      static EngineExportScope smGlobalScope;
    
    public:
    
@@ -158,7 +155,12 @@ class EngineExportScope : public EngineExport
       /// Return the global export scope singleton.  This is the root of the
       /// export hierarchy and thus directly or indirectly contains all
       /// entities exported by the engine.
-      static EngineExportScope* getGlobalScope() { return &smGlobalScope; }
+      static EngineExportScope* getGlobalScope()
+      {
+         /// The global export scope singleton.
+         static EngineExportScope sGlobalScope;
+         return &sGlobalScope;
+      }
             
       /// Return the chain of exports associated with this scope.
       EngineExport* getExports() const { return mExports; }

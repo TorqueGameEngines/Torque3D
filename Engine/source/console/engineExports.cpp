@@ -34,8 +34,6 @@ END_IMPLEMENT_CLASS;
 IMPLEMENT_NONINSTANTIABLE_CLASS( EngineExportScope,
    "A scope contained a collection of exported engine API entities." )
 END_IMPLEMENT_CLASS;
-   
-EngineExportScope EngineExportScope::smGlobalScope;
 
 
 //-----------------------------------------------------------------------------

@@ -450,7 +450,12 @@ bool StandardMainLoop::handleCommandLine( S32 argc, const char **argv )
    Stream *mainCsStream = NULL;
 
    // The working filestream.
-   FileStream str; 
+   FileStream str;
+
+#ifdef TORQUE_ENTRY_FUNCTION
+   Con::executef(TORQUE_ENTRY_FUNCTION);
+   return true;
+#endif
 
    const char *defaultScriptName = "main." TORQUE_SCRIPT_EXTENSION;
    bool useDefaultScript = true;

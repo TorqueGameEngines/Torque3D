@@ -29,6 +29,8 @@ mark_as_advanced(WIN32)
 #general
 advanced_option(TORQUE_MULTITHREAD "Multi Threading" ON)
 advanced_option(TORQUE_DISABLE_MEMORY_MANAGER "Disable memory manager" ON)
+set(TORQUE_ENTRY_FUNCTION "" CACHE STRING "Specify a console function to execute instead of looking for a main.tscript file")
+mark_as_advanced(TORQUE_ENTRY_FUNCTION)
 
 #fileIO
 set(TORQUE_APP_PASSWORD "changeme" CACHE STRING "zip file password")

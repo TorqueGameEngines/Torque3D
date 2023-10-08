@@ -87,6 +87,9 @@
 /// Define the default extension to be used for TorqueScript files
 #cmakedefine TORQUE_SCRIPT_EXTENSION "@TORQUE_SCRIPT_EXTENSION@"
 
+/// Specify a console function to execute instead of looking for a main.tscript file
+#cmakedefine TORQUE_ENTRY_FUNCTION "@TORQUE_ENTRY_FUNCTION@"
+
 // Define me if this build is a tools build
 #cmakedefine TORQUE_PLAYER
 

@@ -63,25 +63,6 @@ inline T getArgValue(const EngineFunctionDefaultArguments* defaultArgs, U32 idx)
    return *(const T*)(defaultArgs->mFirst + defaultArgs->mOffsets[idx]);
 }
 
-
-// List of exports that we want filtered out.  This will only be needed as long
-// as the console system is still around.
-static const char* sExportFilterList[] =
-{
-   "Console", // Console namespace
-};
-
-static bool isExportFiltered(const EngineExport* exportInfo)
-{
-   String qualifiedName = exportInfo->getFullyQualifiedExportName();
-
-   for (U32 i = 0; i < (sizeof(sExportFilterList) / sizeof(sExportFilterList[0])); ++i)
-      if (qualifiedName.compare(sExportFilterList[i]) == 0)
-         return true;
-
-   return false;
-}
-
 //=============================================================================
 //    Functions.
 //=============================================================================
@@ -303,9 +284,6 @@ static String getDefaultArgumentValue(const EngineFunctionInfo* function, const 
 
 static void exportFunction(const EngineFunctionInfo* function, SimXMLDocument* xml)
 {
-   if (isExportFiltered(function))
-      return;
-
    xml->pushNewElement("EngineFunction");
 
    xml->setAttribute("name", function->getExportName());
@@ -369,9 +347,6 @@ static void exportType(const EngineTypeInfo* type, SimXMLDocument* xml)
 {
    // Don't export anonymous types.
    if (!type->getTypeName()[0])
-      return;
-
-   if (isExportFiltered(type))
       return;
 
    const char* nodeName = NULL;
@@ -551,9 +526,6 @@ static void exportScope(const EngineExportScope* scope, SimXMLDocument* xml, boo
 {
    if (addNode)
    {
-      if (isExportFiltered(scope))
-         return;
-
       xml->pushNewElement("EngineExportScope");
 
       xml->setAttribute("name", scope->getExportName());

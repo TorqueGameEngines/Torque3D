@@ -117,7 +117,7 @@ ConsoleSetType(TypeShapeAssetId)
 
 //-----------------------------------------------------------------------------
 
-const String ShapeAsset::mShapeErrCodeStrings[] =
+const String ShapeAsset::mErrCodeStrings[] =
 {
    "TooManyVerts",
    "TooManyBones",
@@ -225,7 +225,7 @@ void ShapeAsset::initializeAsset()
       mNormalImposterPath = StringTable->insert(normalPath.c_str());
    }
 
-   loadShape();
+   //loadShape();
 }
 
 void ShapeAsset::setShapeFile(const char* pShapeFile)
@@ -307,11 +307,13 @@ void ShapeAsset::_onResourceChanged(const Torque::Path &path)
 
    refreshAsset();
 
-   loadShape();
+   onAssetRefresh();
 }
 
 bool ShapeAsset::loadShape()
 {
+   if (mLoadedState == AssetErrCode::Ok) return true;
+
    mMaterialAssets.clear();
    mMaterialAssetIds.clear();
 
@@ -396,7 +398,8 @@ bool ShapeAsset::loadShape()
             //First, we need to make sure the anim asset we depend on for our blend is loaded
             AssetPtr<ShapeAnimationAsset> blendAnimAsset = mAnimationAssets[i]->getBlendAnimationName();
 
-            if (blendAnimAsset.isNull())
+            U32 assetStatus = ShapeAnimationAsset::getAssetErrCode(blendAnimAsset);
+            if (assetStatus != AssetBase::Ok)
             {
                Con::errorf("ShapeAsset::initializeAsset - Unable to acquire reference animation asset %s for asset %s to blend!", mAnimationAssets[i]->getBlendAnimationName(), mAnimationAssets[i]->getAssetName());
                {
@@ -458,6 +461,7 @@ U32 ShapeAsset::getAssetByFilename(StringTableEntry fileName, AssetPtr<ShapeAsse
    {
       //acquire and bind the asset, and return it out
       shapeAsset->setAssetId(query.mAssetList[0]);
+      (*shapeAsset)->loadShape();
       return (*shapeAsset)->mLoadedState;
    }
 }
@@ -490,6 +494,7 @@ U32 ShapeAsset::getAssetById(StringTableEntry assetId, AssetPtr<ShapeAsset>* sha
 
    if (shapeAsset->notNull())
    {
+      (*shapeAsset)->loadShape();
       return (*shapeAsset)->mLoadedState;
    }
    else
@@ -499,6 +504,7 @@ U32 ShapeAsset::getAssetById(StringTableEntry assetId, AssetPtr<ShapeAsset>* sha
 
       if (shapeAsset->isNull())
       {
+         (*shapeAsset)->loadShape();
          //Well that's bad, loading the fallback failed.
          Con::warnf("ShapeAsset::getAssetById - Finding of asset with id %s failed with no fallback asset", assetId);
          return AssetErrCode::Failed;
@@ -507,6 +513,7 @@ U32 ShapeAsset::getAssetById(StringTableEntry assetId, AssetPtr<ShapeAsset>* sha
       //handle noshape not being loaded itself
       if ((*shapeAsset)->mLoadedState == BadFileReference)
       {
+         (*shapeAsset)->loadShape();
          Con::warnf("ShapeAsset::getAssetById - Finding of asset with id %s failed, and fallback asset reported error of Bad File Reference.", assetId);
          return AssetErrCode::BadFileReference;
       }

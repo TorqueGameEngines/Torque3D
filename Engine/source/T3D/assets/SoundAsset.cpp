@@ -106,6 +106,14 @@ ConsoleSetType(TypeSoundAssetId)
    Con::warnf("(TypeAssetId) - Cannot set multiple args to a single asset.");
 }
 
+const String SoundAsset::mErrCodeStrings[] =
+{
+   "BadProfile",
+   "BadDescription",
+   "BadBufferData",
+   "UnKnown"
+};
+
 //-----------------------------------------------------------------------------
 
 SoundAsset::SoundAsset()
@@ -215,6 +223,7 @@ void SoundAsset::onAssetRefresh(void)
 
 bool SoundAsset::loadSound()
 {
+   if (mLoadedState == AssetErrCode::Ok) return true;
    if (mSoundPath)
    {
       if (!Torque::FS::IsFile(mSoundPath))

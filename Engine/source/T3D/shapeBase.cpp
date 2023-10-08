@@ -344,7 +344,8 @@ bool ShapeBaseData::preload(bool server, String &errorStr)
    }
 
    S32 i;
-   if (ShapeAsset::getAssetErrCode(mShapeAsset) != ShapeAsset::Failed && ShapeAsset::getAssetErrCode(mShapeAsset) != ShapeAsset::BadFileReference)
+   U32 assetStatus = ShapeAsset::getAssetErrCode(mShapeAsset);
+   if (assetStatus == AssetBase::Ok|| assetStatus == AssetBase::UsingFallback)
    {
       if (!server && !mShape->preloadMaterialList(mShape.getPath()) && NetConnection::filesWereDownloaded())
          shapeError = true;

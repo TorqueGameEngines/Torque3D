@@ -125,13 +125,18 @@ ImplementEnumType(ImageAssetType,
 
 EndImplementEnumType;
 
-
+const String ImageAsset::mErrCodeStrings[] =
+{
+   "TooManyMips",
+   "UnKnown"
+};
 //-----------------------------------------------------------------------------
 ImageAsset::ImageAsset() : AssetBase(), mUseMips(true), mIsHDRImage(false), mIsValidImage(false), mImageType(Albedo)
 {
    mImageFileName = StringTable->EmptyString();
    mImagePath = StringTable->EmptyString();
    mLoadedState = AssetErrCode::NotLoaded;
+   mChangeSignal.notify(this, &ImageAsset::onAssetRefresh);
 }
 
 //-----------------------------------------------------------------------------
@@ -202,6 +207,7 @@ U32 ImageAsset::getAssetByFilename(StringTableEntry fileName, AssetPtr<ImageAsse
    {
       //acquire and bind the asset, and return it out
       imageAsset->setAssetId(query.mAssetList[0]);
+      (*imageAsset)->loadImage();
       return (*imageAsset)->mLoadedState;
    }
 }
@@ -234,12 +240,14 @@ U32 ImageAsset::getAssetById(StringTableEntry assetId, AssetPtr<ImageAsset>* ima
 
    if (imageAsset->notNull())
    {
+      (*imageAsset)->loadImage();
       return (*imageAsset)->mLoadedState;
    }
    else
    {
       if (imageAsset->isNull())
       {
+         (*imageAsset)->loadImage();
          //Well that's bad, loading the fallback failed.
          Con::warnf("ImageAsset::getAssetById - Finding of asset with id %s failed with no fallback asset", assetId);
          return AssetErrCode::Failed;
@@ -248,6 +256,7 @@ U32 ImageAsset::getAssetById(StringTableEntry assetId, AssetPtr<ImageAsset>* ima
       //handle noshape not being loaded itself
       if ((*imageAsset)->mLoadedState == BadFileReference)
       {
+         (*imageAsset)->loadImage();
          Con::warnf("ImageAsset::getAssetById - Finding of asset with id %s failed, and fallback asset reported error of Bad File Reference.", assetId);
          return AssetErrCode::BadFileReference;
       }
@@ -268,6 +277,7 @@ void ImageAsset::copyTo(SimObject* object)
 
 void ImageAsset::loadImage()
 {
+   if (mLoadedState == AssetErrCode::Ok) return;
    if (mImagePath)
    {
       if (!Torque::FS::IsFile(mImagePath))
@@ -279,7 +289,6 @@ void ImageAsset::loadImage()
 
       mLoadedState = Ok;
       mIsValidImage = true;
-      mChangeSignal.trigger();
       return;
    }
    mLoadedState = BadFileReference;
@@ -292,13 +301,13 @@ void ImageAsset::initializeAsset()
    ResourceManager::get().getChangedSignal().notify(this, &ImageAsset::_onResourceChanged);
 
    mImagePath = getOwned() ? expandAssetFilePath(mImageFileName) : mImagePath;
-   loadImage();
+   //loadImage();
 }
 
 void ImageAsset::onAssetRefresh()
 {
    mImagePath = getOwned() ? expandAssetFilePath(mImageFileName) : mImagePath;
-   loadImage();
+   //loadImage();
 }
 
 void ImageAsset::_onResourceChanged(const Torque::Path& path)
@@ -309,6 +318,7 @@ void ImageAsset::_onResourceChanged(const Torque::Path& path)
    refreshAsset();
 
    //loadImage();
+   onAssetRefresh();
 }
 
 void ImageAsset::setImageFileName(const char* pScriptFile)

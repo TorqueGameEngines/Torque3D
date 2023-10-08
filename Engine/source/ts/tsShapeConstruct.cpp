@@ -528,7 +528,8 @@ void TSShapeConstructor::_onLoad(TSShape* shape)
 
       AssetPtr<ShapeAnimationAsset> sequenceAsset = mSequenceAssetIds[i];
 
-      if (sequenceAsset.isNull())
+      U32 assetStatus = ShapeAnimationAsset::getAssetErrCode(sequenceAsset);
+      if (assetStatus != AssetBase::Ok)
          continue;
 
       // Split the sequence path from the target sequence name

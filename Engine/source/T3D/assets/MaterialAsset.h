@@ -63,6 +63,7 @@
 class MaterialAsset : public AssetBase
 {
    typedef AssetBase Parent;
+   typedef AssetPtr<MaterialAsset> ConcreteAssetPtr;
 
    String                  mShaderGraphFile;
    StringTableEntry        mScriptFile;
@@ -80,6 +81,16 @@ public:
       DefinitionAlreadyExists,
       EmbeddedDefinition,
       Extended
+   };
+
+   static const String mErrCodeStrings[U32(MaterialAssetErrCode::Extended) - U32(Parent::Extended) + 1];
+   static U32 getAssetErrCode(ConcreteAssetPtr checkAsset) { if (checkAsset) return checkAsset->mLoadedState; else return 0; }
+
+   static String getAssetErrstrn(U32 errCode)
+   {
+      if (errCode < Parent::Extended) return Parent::getAssetErrstrn(errCode);
+      if (errCode > MaterialAssetErrCode::Extended) return "undefined error";
+      return mErrCodeStrings[errCode - Parent::Extended];
    };
 
 public:

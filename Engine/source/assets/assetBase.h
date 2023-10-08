@@ -75,6 +75,7 @@ public:
       Failed,
       Ok,
       NotLoaded,
+      Reloading,
       BadFileReference,
       InvalidFormat,
       DependencyNotFound,
@@ -90,6 +91,7 @@ public:
       return mErrCodeStrings[errCode];
    };
    U32 getStatus() { return mLoadedState; };
+
    AssetBase();
    virtual ~AssetBase();
 

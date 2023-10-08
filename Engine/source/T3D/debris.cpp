@@ -305,7 +305,7 @@ void DebrisData::initPersistFields()
    addGroup("Particle Effects");
       addField("emitters",             TYPEID< ParticleEmitterData >(),  Offset(emitterList,    DebrisData), DDC_NUM_EMITTERS, 
          "@brief List of particle emitters to spawn along with this debris object.\n\nThese are optional.  You could have Debris made up of only a shape.\n");
-   addGroup("Particle Effects");
+   endGroup("Particle Effects");
    addGroup("Datablocks");
    addField("explosion",            TYPEID< ExplosionData >(),   Offset(explosion,           DebrisData), 
       "@brief ExplosionData to spawn along with this debris object.\n\nThis is optional as not all Debris explode.\n");

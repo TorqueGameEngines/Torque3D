@@ -175,7 +175,7 @@ void afxModelData::initPersistFields()
    docsURL;
    addGroup("Shapes");
       INITPERSISTFIELD_SHAPEASSET(Shape, afxModelData, "The name of a .dts format file to use for the model.");
-   addGroup("Shapes");
+   endGroup("Shapes");
 
    addGroup("Animation");
       addField("sequence",              TypeString, myOffset(sequence),

@@ -26,5 +26,5 @@
 const EngineTypeInfo* const _EngineTypeTraits< void >::TYPEINFO = NULL;
 EngineExportScope& _GLOBALSCOPE::__engineExportScope()
 {
-   return EngineExportScope::smGlobalScope;
+   return *EngineExportScope::getGlobalScope();
 }

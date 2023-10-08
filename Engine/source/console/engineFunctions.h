@@ -298,9 +298,15 @@ class EngineFunctionInfo : public EngineExport
       
       /// Return the vector storing the default argument values.
       const EngineFunctionDefaultArguments* getDefaultArguments() const { return mDefaultArgumentValues; }
-      
+
+      /// Return the pointer to the C-API Function.
+      const void* getAddress() const { return mAddress; }
+
       /// Reset all callout function pointers back to NULL.  This deactivates all callbacks.
       static void resetAllCallouts();
+
+      static const EngineFunctionInfo* getFirstFunction() { return smFirstFunction; }
+      const EngineFunctionInfo* getNextFunction() const { return mNextFunction; }
 };
 
 

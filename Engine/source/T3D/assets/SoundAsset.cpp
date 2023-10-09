@@ -383,24 +383,24 @@ bool SoundAsset::loadSound(U32 numSlots)
    return true;
 }
 
-//void SoundAsset::setSoundFile(const char* pSoundFile)
-//{
-//   // Sanity!
-//   AssertFatal(pSoundFile != NULL, "Cannot use a NULL sound file.");
-//
-//   // Fetch sound file.
-//   pSoundFile = StringTable->insert(pSoundFile, true);
-//
-//   // Ignore no change,
-//   if (pSoundFile == mSoundFile)
-//      return;
-//
-//   // Update.
-//   mSoundFile = getOwned() ? expandAssetFilePath(pSoundFile) : pSoundFile;
-//
-//   // Refresh the asset.
-//   refreshAsset();
-//}
+void SoundAsset::setSoundFile(const char* pSoundFile)
+{
+   // Sanity!
+   AssertFatal(pSoundFile != NULL, "Cannot use a NULL sound file.");
+
+   // Fetch sound file.
+   pSoundFile = StringTable->insert(pSoundFile, true);
+
+   // Ignore no change,
+   if (pSoundFile == mSoundFile[0])
+      return;
+
+   // Update.
+   mSoundFile[0] = getOwned() ? expandAssetFilePath(pSoundFile) : pSoundFile;
+
+   // Refresh the asset.
+   refreshAsset();
+}
 
 StringTableEntry SoundAsset::getAssetIdByFileName(StringTableEntry fileName)
 {

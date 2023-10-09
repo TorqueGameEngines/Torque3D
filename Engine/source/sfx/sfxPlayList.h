@@ -287,29 +287,28 @@ class SFXPlayList : public SFXTrack
          }
       };
 
-   protected:
-   
+   public:
+      // moved to public for soundasset
+
       /// Trace interpreter execution.  This field is not networked.
       bool mTrace;
-   
+
       /// Select slots at random.
       ERandomMode mRandomMode;
-         
+
       /// Loop over slots in this list.
       ELoopMode mLoopMode;
-      
+
       /// Number of slots to play from list.  This can be used, for example,
       /// to create a list of tracks where only a single track is selected and
       /// played for each cycle.
       U32 mNumSlotsToPlay;
-      
+
       /// Data for each of the playlist slots.
       SlotData mSlots;
 
       U32 mActiveSlots;
-               
-   public:
-   
+
       SFXPlayList();
       
       /// Make all settings conform to constraints.

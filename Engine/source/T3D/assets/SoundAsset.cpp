@@ -111,8 +111,12 @@ ConsoleSetType(TypeSoundAssetId)
 SoundAsset::SoundAsset()
    : AssetBase()
 {
-   mSoundFile = StringTable->EmptyString();
-   mSoundPath = StringTable->EmptyString();
+   for (U32 i = 0; i < SFXPlayList::NUM_SLOTS; i++)
+   {
+      mSoundFile[i] = StringTable->EmptyString();
+      mSoundPath[i] = StringTable->EmptyString();
+   }
+
    mSubtitleString = StringTable->EmptyString();
 
    mLoadedState = AssetErrCode::NotLoaded;
@@ -150,9 +154,79 @@ void SoundAsset::initPersistFields()
    docsURL;
    // Call parent.
    Parent::initPersistFields();
+   addArray("slots", SFXPlayList::NUM_SLOTS);
+      addProtectedField("soundFile", TypeAssetLooseFilePath, Offset(mSoundFile, SoundAsset),
+         &defaultProtectedSetFn, &defaultProtectedGetFn, "Path to the sound file.");
 
-   addProtectedField("soundFile", TypeAssetLooseFilePath, Offset(mSoundFile, SoundAsset),
-      &setSoundFile, &getSoundFile, "Path to the sound file.");
+      addField("replay", TYPEID< SFXPlayList::EReplayMode >(), Offset(mPlaylist.mSlots.mReplayMode, SoundAsset), SFXPlayList::NUM_SLOTS,
+         "Behavior when an already playing sound is encountered on this slot from a previous cycle.\n"
+         "Each slot can have an arbitrary number of sounds playing on it from previous cycles.  This field determines "
+         "how SFXController will handle these sources.");
+      addField("transitionIn", TYPEID< SFXPlayList::ETransitionMode >(), Offset(mPlaylist.mSlots.mTransitionIn, SoundAsset), SFXPlayList::NUM_SLOTS,
+         "Behavior when moving into this slot.\n"
+         "After the delayIn time has expired (if any), this slot determines what the controller "
+         "will do before actually playing the slot.");
+      addField("transitionOut", TYPEID< SFXPlayList::ETransitionMode >(), Offset(mPlaylist.mSlots.mTransitionOut, SoundAsset), SFXPlayList::NUM_SLOTS,
+         "Behavior when moving out of this slot.\n"
+         "After the #detailTimeOut has expired (if any), this slot determines what the controller "
+         "will do before moving on to the next slot.");
+      addField("delayTimeIn", TypeF32, Offset(mPlaylist.mSlots.mDelayTimeIn.mValue, SoundAsset), SFXPlayList::NUM_SLOTS,
+         "Seconds to wait after moving into slot before #transitionIn.");
+      addField("delayTimeInVariance", TypePoint2F, Offset(mPlaylist.mSlots.mDelayTimeIn.mVariance, SoundAsset), SFXPlayList::NUM_SLOTS,
+         "Bounds on randomization of #delayTimeIn.\n\n"
+         "@ref SFXPlayList_randomization\n");
+      addField("delayTimeOut", TypeF32, Offset(mPlaylist.mSlots.mDelayTimeOut.mValue, SoundAsset), SFXPlayList::NUM_SLOTS,
+         "Seconds to wait before moving out of slot after #transitionOut.");
+      addField("delayTimeOutVariance", TypePoint2F, Offset(mPlaylist.mSlots.mDelayTimeOut.mVariance, SoundAsset), SFXPlayList::NUM_SLOTS,
+         "Bounds on randomization of #delayTimeOut.\n\n"
+         "@ref SFXPlayList_randomization\n");
+      addField("fadeTimeIn", TypeF32, Offset(mPlaylist.mSlots.mFadeTimeIn.mValue, SoundAsset), SFXPlayList::NUM_SLOTS,
+         "Seconds to fade sound in (-1 to use the track's own fadeInTime.)\n"
+         "@see SFXDescription::fadeTimeIn");
+      addField("fadeTimeInVariance", TypePoint2F, Offset(mPlaylist.mSlots.mFadeTimeIn.mVariance, SoundAsset), SFXPlayList::NUM_SLOTS,
+         "Bounds on randomization of #fadeInTime.\n\n"
+         "@ref SFXPlayList_randomization\n");
+      addField("fadeTimeOut", TypeF32, Offset(mPlaylist.mSlots.mFadeTimeOut.mValue, SoundAsset), SFXPlayList::NUM_SLOTS,
+         "Seconds to fade sound out (-1 to use the track's own fadeOutTime.)\n"
+         "@see SFXDescription::fadeTimeOut");
+      addField("fadeTimeOutVariance", TypePoint2F, Offset(mPlaylist.mSlots.mFadeTimeOut.mVariance, SoundAsset), SFXPlayList::NUM_SLOTS,
+         "Bounds on randomization of #fadeOutTime\n\n"
+         "@ref SFXPlayList_randomization\n");
+      addField("referenceDistance", TypeF32, Offset(mPlaylist.mSlots.mMinDistance.mValue, SoundAsset), SFXPlayList::NUM_SLOTS,
+         "@c referenceDistance to set for 3D sounds in this slot (<1 to use @c referenceDistance of track's own description).\n"
+         "@see SFXDescription::referenceDistance");
+      addField("referenceDistanceVariance", TypePoint2F, Offset(mPlaylist.mSlots.mMinDistance.mVariance, SoundAsset), SFXPlayList::NUM_SLOTS,
+         "Bounds on randomization of #referenceDistance.\n\n"
+         "@ref SFXPlayList_randomization\n");
+      addField("maxDistance", TypeF32, Offset(mPlaylist.mSlots.mMaxDistance.mValue, SoundAsset), SFXPlayList::NUM_SLOTS,
+         "@c maxDistance to apply to 3D sounds in this slot (<1 to use @c maxDistance of track's own description).\n"
+         "@see SFXDescription::maxDistance");
+      addField("maxDistanceVariance", TypePoint2F, Offset(mPlaylist.mSlots.mMaxDistance.mVariance, SoundAsset), SFXPlayList::NUM_SLOTS,
+         "Bounds on randomization of #maxDistance.\n\n"
+         "@ref SFXPlayList_randomization\n");
+      addField("volumeScale", TypeF32, Offset(mPlaylist.mSlots.mVolumeScale.mValue, SoundAsset), SFXPlayList::NUM_SLOTS,
+         "Scale factor to apply to volume of sounds played on this list slot.\n"
+         "This value will scale the actual volume level set on the track assigned to the slot, i.e. a value of 0.5 will "
+         "cause the track to play at half-volume.");
+      addField("volumeScaleVariance", TypePoint2F, Offset(mPlaylist.mSlots.mVolumeScale.mVariance, SoundAsset), SFXPlayList::NUM_SLOTS,
+         "Bounds on randomization of #volumeScale.\n\n"
+         "@ref SFXPlayList_randomization\n");
+      addField("pitchScale", TypeF32, Offset(mPlaylist.mSlots.mPitchScale.mValue, SoundAsset), SFXPlayList::NUM_SLOTS,
+         "Scale factor to apply to pitch of sounds played on this list slot.\n"
+         "This value will scale the actual pitch set on the track assigned to the slot, i.e. a value of 0.5 will "
+         "cause the track to play at half its assigned speed.");
+      addField("pitchScaleVariance", TypePoint2F, Offset(mPlaylist.mSlots.mPitchScale.mVariance, SoundAsset), SFXPlayList::NUM_SLOTS,
+         "Bounds on randomization of #pitchScale.\n\n"
+         "@ref SFXPlayList_randomization\n");
+      addField("repeatCount", TypeS32, Offset(mPlaylist.mSlots.mRepeatCount, SoundAsset), SFXPlayList::NUM_SLOTS,
+         "Number of times to loop this slot.");
+      addField("state", TypeSFXStateName, Offset(mPlaylist.mSlots.mState, SoundAsset), SFXPlayList::NUM_SLOTS,
+         "State that must be active for this slot to play.\n\n"
+         "@ref SFXPlayList_states");
+      addField("stateMode", TYPEID< SFXPlayList::EStateMode >(), Offset(mPlaylist.mSlots.mStateMode, SoundAsset), SFXPlayList::NUM_SLOTS,
+         "Behavior when assigned state is deactivated while slot is playing.\n\n"
+         "@ref SFXPlayList_states");
+   endArray("slots");
 
    addField("pitchAdjust", TypeF32, Offset(mProfileDesc.mPitch, SoundAsset), "Adjustment of the pitch value 1 is default.");
    addField("volumeAdjust", TypeF32, Offset(mProfileDesc.mVolume, SoundAsset), "Adjustment to the volume.");
@@ -194,83 +268,139 @@ void SoundAsset::copyTo(SimObject* object)
 void SoundAsset::initializeAsset(void)
 {
    Parent::initializeAsset();
+   U32 slotCount = 0;
+   for (U32 i = 0; i < SFXPlayList::NUM_SLOTS; i++)
+   {
+      if (i == 0 && mSoundFile[i] == StringTable->EmptyString())
+         return;
 
-   if (mSoundFile == StringTable->EmptyString())
-      return;
+      if (mSoundFile[i] == StringTable->EmptyString())
+         break;
 
-   mSoundPath = getOwned() ? expandAssetFilePath(mSoundFile) : mSoundPath;
-   loadSound();
+      mSoundPath[i] = getOwned() ? expandAssetFilePath(mSoundFile[i]) : mSoundPath[i];
+      slotCount++;
+   }
+
+   loadSound(slotCount);
 }
 
 void SoundAsset::_onResourceChanged(const Torque::Path &path)
 {
-   if (path != Torque::Path(mSoundPath))
-      return;
+   /*U32 slotCount = 0;
+   for (U32 i = 0; i < SFXPlayList::NUM_SLOTS; i++)
+   {
 
+      if (path != Torque::Path(mSoundPath[i]))
+         return;
+   }
    refreshAsset();
 
-   loadSound();
+   loadSound();*/
 }
 
 void SoundAsset::onAssetRefresh(void)
 {
-   if (mSoundFile == StringTable->EmptyString())
-      return;
+   U32 slotCount = 0;
+   for (U32 i = 0; i < SFXPlayList::NUM_SLOTS; i++)
+   {
+      if (i == 0 && mSoundFile[i] == StringTable->EmptyString())
+         return;
 
-   //Update
-   mSoundPath = getOwned() ? expandAssetFilePath(mSoundFile) : mSoundPath;
-   loadSound();
+      if (mSoundFile[i] == StringTable->EmptyString())
+         break;
+
+      mSoundPath[i] = getOwned() ? expandAssetFilePath(mSoundFile[i]) : mSoundPath[i];
+      slotCount++;
+   }
+
+   loadSound(slotCount);
 }
 
-bool SoundAsset::loadSound()
+bool SoundAsset::loadSound(U32 numSlots)
 {
-   if (mSoundPath)
+   if (numSlots > 1)
    {
-      if (!Torque::FS::IsFile(mSoundPath))
+      for (U32 i = 0; i < numSlots; i++)
       {
-         Con::errorf("SoundAsset::initializeAsset: Attempted to load file %s but it was not valid!", mSoundFile);
-         mLoadedState = BadFileReference;
-         mSFXProfile.setDescription(NULL);
-         mSFXProfile.setSoundFileName(StringTable->insert(StringTable->EmptyString()));
-         mSFXProfile.setPreload(false);
-         return false;
-      }
-      else
-      {// = new SFXProfile(mProfileDesc, mSoundFile, mPreload);
-         if (mProfileDesc.mSourceGroup == NULL)
-            mProfileDesc.mSourceGroup = dynamic_cast<SFXSource*>(Sim::findObject("AudioChannelMaster"));
-         mSFXProfile.setDescription(&mProfileDesc);
-         mSFXProfile.setSoundFileName(mSoundPath);
-         mSFXProfile.setPreload(mPreload);
+         if (mSoundPath[i])
+         {
+            if (!Torque::FS::IsFile(mSoundPath[i]))
+            {
+               Con::errorf("SoundAsset::initializeAsset: Attempted to load file %s but it was not valid!", mSoundFile[i]);
+               mLoadedState = BadFileReference;
+               mSFXProfile[i].setDescription(NULL);
+               mSFXProfile[i].setSoundFileName(StringTable->insert(StringTable->EmptyString()));
+               mSFXProfile[i].setPreload(false);
+               return false;
+            }
+            else
+            {// = new SFXProfile(mProfileDesc, mSoundFile, mPreload);
+               if (mProfileDesc.mSourceGroup == NULL)
+                  mProfileDesc.mSourceGroup = dynamic_cast<SFXSource*>(Sim::findObject("AudioChannelMaster"));
+               SFXProfile* trackProfile = new SFXProfile(&mProfileDesc, mSoundPath);
+               trackProfile->setDescription(&mProfileDesc);
+               trackProfile->setSoundFileName(mSoundPath[0]);
+               trackProfile->setPreload(mPreload);
 
-         //give it a nudge to preload if required
-         mSFXProfile.getBuffer();
-      }
+               mSFXProfile[i].setDescription(&mProfileDesc);
+               mSFXProfile[i].setSoundFileName(mSoundPath[0]);
+               mSFXProfile[i].setPreload(mPreload);
 
+               mPlaylist.mSlots.mTrack[i] = trackProfile;
+            }
+         }
+      }
+   }
+   else
+   {
+      if (mSoundPath[0])
+      {
+         if (!Torque::FS::IsFile(mSoundPath[0]))
+         {
+            Con::errorf("SoundAsset::initializeAsset: Attempted to load file %s but it was not valid!", mSoundFile[0]);
+            mLoadedState = BadFileReference;
+            mSFXProfile[0].setDescription(NULL);
+            mSFXProfile[0].setSoundFileName(StringTable->insert(StringTable->EmptyString()));
+            mSFXProfile[0].setPreload(false);
+            return false;
+         }
+         else
+         {// = new SFXProfile(mProfileDesc, mSoundFile, mPreload);
+            if (mProfileDesc.mSourceGroup == NULL)
+               mProfileDesc.mSourceGroup = dynamic_cast<SFXSource*>(Sim::findObject("AudioChannelMaster"));
+            mSFXProfile[0].setDescription(&mProfileDesc);
+            mSFXProfile[0].setSoundFileName(mSoundPath[0]);
+            mSFXProfile[0].setPreload(mPreload);
+
+            //give it a nudge to preload if required
+            mSFXProfile[0].getBuffer();
+         }
+
+      }
    }
    mChangeSignal.trigger();
    mLoadedState = Ok;
    return true;
 }
 
-void SoundAsset::setSoundFile(const char* pSoundFile)
-{
-   // Sanity!
-   AssertFatal(pSoundFile != NULL, "Cannot use a NULL sound file.");
-
-   // Fetch sound file.
-   pSoundFile = StringTable->insert(pSoundFile, true);
-
-   // Ignore no change,
-   if (pSoundFile == mSoundFile)
-      return;
-
-   // Update.
-   mSoundFile = getOwned() ? expandAssetFilePath(pSoundFile) : pSoundFile;
-
-   // Refresh the asset.
-   refreshAsset();
-}
+//void SoundAsset::setSoundFile(const char* pSoundFile)
+//{
+//   // Sanity!
+//   AssertFatal(pSoundFile != NULL, "Cannot use a NULL sound file.");
+//
+//   // Fetch sound file.
+//   pSoundFile = StringTable->insert(pSoundFile, true);
+//
+//   // Ignore no change,
+//   if (pSoundFile == mSoundFile)
+//      return;
+//
+//   // Update.
+//   mSoundFile = getOwned() ? expandAssetFilePath(pSoundFile) : pSoundFile;
+//
+//   // Refresh the asset.
+//   refreshAsset();
+//}
 
 StringTableEntry SoundAsset::getAssetIdByFileName(StringTableEntry fileName)
 {

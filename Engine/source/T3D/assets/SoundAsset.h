@@ -76,13 +76,16 @@ class SoundAsset : public AssetBase
    typedef AssetBase Parent;
 
 protected:
-   StringTableEntry        mSoundFile;
-   StringTableEntry        mSoundPath;
-   SFXProfile              mSFXProfile;
+   StringTableEntry        mSoundFile[SFXPlayList::NUM_SLOTS];
+   StringTableEntry        mSoundPath[SFXPlayList::NUM_SLOTS];
+   SFXProfile              mSFXProfile[SFXPlayList::NUM_SLOTS];
+
    SFXDescription          mProfileDesc;
+   SFXPlayList             mPlaylist;
    // subtitles
    StringTableEntry        mSubtitleString;
    bool                    mPreload;
+   //SFXPlayList::SlotData   mSlots;
 
    /*These will be needed in the refactor!
    Resource<SFXResource>   mSoundResource;
@@ -118,16 +121,16 @@ public:
    virtual void copyTo(SimObject* object);
 
    //SFXResource* getSound() { return mSoundResource; }
-   Resource<SFXResource> getSoundResource() { return mSFXProfile.getResource(); }
+   Resource<SFXResource> getSoundResource(const U32 slotId = 0) { return mSFXProfile[slotId].getResource(); }
 
    /// Declare Console Object.
    DECLARE_CONOBJECT(SoundAsset);
 
-   void                    setSoundFile(const char* pSoundFile);
-   bool loadSound();
-   inline StringTableEntry getSoundFile(void) const { return mSoundFile; };
-   inline StringTableEntry getSoundPath(void) const { return mSoundPath; };
-   SFXProfile* getSfxProfile() { return &mSFXProfile; }
+   //void                    setSoundFile(const char* pSoundFile);
+   bool loadSound(U32 numSlots);
+   inline StringTableEntry getSoundFile(const U32 slotId = 0) const { return mSoundFile[slotId]; };
+   inline StringTableEntry getSoundPath(const U32 slotId = 0) const { return mSoundPath[slotId]; };
+   SFXProfile* getSfxProfile(const U32 slotId = 0) { return &mSFXProfile[slotId]; }
    SFXDescription* getSfxDescription() { return &mProfileDesc; }
 
    bool isLoop() { return mProfileDesc.mIsLooping; }
@@ -142,8 +145,8 @@ protected:
    void _onResourceChanged(const Torque::Path & path);
    virtual void            onAssetRefresh(void);
 
-   static bool setSoundFile(void *obj, const char *index, const char *data) { static_cast<SoundAsset*>(obj)->setSoundFile(data); return false; }
-   static const char* getSoundFile(void* obj, const char* data) { return static_cast<SoundAsset*>(obj)->getSoundFile(); }
+  // static bool setSoundFile(void *obj, const char *index, const char *data) { static_cast<SoundAsset*>(obj)->setSoundFile(data); return false; }
+  // static const char* getSoundFile(void* obj, const char* data) { return static_cast<SoundAsset*>(obj)->getSoundFile(); }
 };
 
 DefineConsoleType(TypeSoundAssetPtr, SoundAsset)

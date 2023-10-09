@@ -55,11 +55,6 @@
 #include "sfx/sfxDescription.h"
 #endif // !_SFXDESCRIPTION_H_
 
-
-#ifndef _SFXTRACK_H_
-#include "sfx/sfxTrack.h"
-#endif
-
 #ifndef _SFXPROFILE_H_
 #include "sfx/sfxProfile.h"
 #endif // !_SFXPROFILE_H_
@@ -74,7 +69,6 @@
 
 #include "assetMacroHelpers.h"
 class SFXResource;
-class SFXPlayList;
 
 //-----------------------------------------------------------------------------
 class SoundAsset : public AssetBase
@@ -82,16 +76,15 @@ class SoundAsset : public AssetBase
    typedef AssetBase Parent;
 
 protected:
-   StringTableEntry        mSoundFile[12];
-   StringTableEntry        mSoundPath[12];
-   SFXProfile              mSFXProfile[12];
+   StringTableEntry        mSoundFile[SFXPlayList::NUM_SLOTS];
+   StringTableEntry        mSoundPath[SFXPlayList::NUM_SLOTS];
+   SFXProfile              mSFXProfile[SFXPlayList::NUM_SLOTS];
 
    SFXDescription          mProfileDesc;
    SFXPlayList             mPlaylist;
    // subtitles
    StringTableEntry        mSubtitleString;
    bool                    mPreload;
-   bool                    mIsPlaylist;
    //SFXPlayList::SlotData   mSlots;
 
    /*These will be needed in the refactor!
@@ -128,20 +121,17 @@ public:
    virtual void copyTo(SimObject* object);
 
    //SFXResource* getSound() { return mSoundResource; }
-   Resource<SFXResource> getSoundResource(const U32 slotId = 0);
+   Resource<SFXResource> getSoundResource(const U32 slotId = 0) { return mSFXProfile[slotId].getResource(); }
 
    /// Declare Console Object.
    DECLARE_CONOBJECT(SoundAsset);
 
-   void                    setSoundFile(const char* pSoundFile, const U32 slotId = 0);
+   //void                    setSoundFile(const char* pSoundFile);
    bool loadSound(U32 numSlots);
-   StringTableEntry getSoundFile(const char* pSoundFile, const U32 slotId = 0);
+   inline StringTableEntry getSoundFile(const U32 slotId = 0) const { return mSoundFile[slotId]; };
    inline StringTableEntry getSoundPath(const U32 slotId = 0) const { return mSoundPath[slotId]; };
    SFXProfile* getSfxProfile(const U32 slotId = 0) { return &mSFXProfile[slotId]; }
-   SFXPlayList* getSfxPlaylist() { return &mPlaylist; }
-   SFXTrack* getSFXTrack() { return mIsPlaylist ? dynamic_cast<SFXTrack*>(&mPlaylist) : dynamic_cast<SFXTrack*>(&mSFXProfile[0]); }
    SFXDescription* getSfxDescription() { return &mProfileDesc; }
-   bool isPlaylist(){ return mIsPlaylist; }
 
    bool isLoop() { return mProfileDesc.mIsLooping; }
    bool is3D() { return mProfileDesc.mIs3D; }
@@ -155,8 +145,8 @@ protected:
    void _onResourceChanged(const Torque::Path & path);
    virtual void            onAssetRefresh(void);
 
-  static bool setSoundFile(void *obj, const char *index, const char *data) { static_cast<SoundAsset*>(obj)->setSoundFile(data, dAtoi(index)); return false; }
-  static const char* getSoundFile(void* obj, const char* data) { return static_cast<SoundAsset*>(obj)->getSoundFile(data); }
+  // static bool setSoundFile(void *obj, const char *index, const char *data) { static_cast<SoundAsset*>(obj)->setSoundFile(data); return false; }
+  // static const char* getSoundFile(void* obj, const char* data) { return static_cast<SoundAsset*>(obj)->getSoundFile(); }
 };
 
 DefineConsoleType(TypeSoundAssetPtr, SoundAsset)
@@ -174,7 +164,7 @@ DefineConsoleType(TypeSoundAssetId, String)
    StringTableEntry m##name##Name; \
    StringTableEntry m##name##AssetId;\
    AssetPtr<SoundAsset> m##name##Asset = NULL;\
-   SFXTrack* m##name##Profile = NULL;\
+   SFXProfile* m##name##Profile = NULL;\
    SFXDescription* m##name##Desc = NULL;\
    SimObjectId m##name##SFXId = 0;\
 public: \
@@ -267,12 +257,11 @@ public: \
    {\
       return m##name;\
    }\
-   SFXTrack* get##name##Profile()\
+   SFXProfile* get##name##Profile()\
    {\
       if (get##name() != StringTable->EmptyString() && m##name##Asset.notNull()){\
-            m##name##Profile = m##name##Asset->getSFXTrack(); \
-            return m##name##Profile;\
-      }\
+         m##name##Profile = m##name##Asset->getSfxProfile();\
+         return m##name##Profile;}\
       return NULL;\
    }\
    SFXDescription* get##name##Description()\
@@ -308,9 +297,9 @@ public: \
    {\
       if(stream->writeFlag(Sim::findObject(m##name##Name)))\
       {\
-         SFXTrack* sndTrack = get##name##Profile();\
+         SFXTrack* sndTrack;\
+         Sim::findObject(m##name##Name, sndTrack);\
          stream->writeRangedU32(SimObjectId(sndTrack->getId()), DataBlockObjectIdFirst, DataBlockObjectIdLast);\
-         sfxWrite(stream, sndTrack);\
       }\
       else\
       {\
@@ -330,10 +319,7 @@ public: \
    {\
       if(stream->readFlag())\
       {\
-         String errorStr;\
          m##name##SFXId = stream->readRangedU32( DataBlockObjectIdFirst, DataBlockObjectIdLast );\
-         sfxReadAndResolve(stream, &m##name##Profile, errorStr);\
-         Con::errorf("%s", errorStr.c_str());\
       }\
       else\
       {\
@@ -362,7 +348,7 @@ public: \
    StringTableEntry m##name##Name[max]; \
    StringTableEntry m##name##AssetId[max];\
    AssetPtr<SoundAsset> m##name##Asset[max];\
-   SFXTrack* m##name##Profile[max];\
+   SFXProfile* m##name##Profile[max];\
    SimObjectId m##name##SFXId[max];\
 public: \
    const StringTableEntry get##name##File(const U32& index) const { return m##name##Name[index]; }\
@@ -464,10 +450,10 @@ public: \
          return ResourceManager::get().load( "" );\
       return m##name[id];\
    }\
-   SFXTrack* get##name##Profile(const U32& id)\
+   SFXProfile* get##name##Profile(const U32& id)\
    {\
-         if (m##name##Asset[id].notNull())\
-            return  m##name##Asset[id]->getSFXTrack(); \
+      if (get##name(id) != StringTable->EmptyString() && m##name##Asset[id].notNull())\
+         return m##name##Asset[id]->getSfxProfile();\
       return NULL;\
    }\
    bool is##name##Valid(const U32& id) {return (get##name(id) != StringTable->EmptyString() && m##name##Asset[id] && m##name##Asset[id]->getStatus() == AssetBase::Ok); }

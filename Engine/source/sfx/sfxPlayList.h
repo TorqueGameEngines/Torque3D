@@ -30,13 +30,8 @@
    #include "sfx/sfxTrack.h"
 #endif
 
-#ifndef SOUND_ASSET_H
-#include "T3D/assets/SoundAsset.h"
-#endif
-
-
 class SFXState;
-
+class SFXDescription;
 
 /// A playback list of SFXTracks.
 ///
@@ -79,7 +74,7 @@ class SFXPlayList : public SFXTrack
    
       typedef SFXTrack Parent;
       
-      enum
+      enum SFXPlaylistSettings
       {
          /// Number of slots in a playlist.
          ///
@@ -310,6 +305,9 @@ class SFXPlayList : public SFXTrack
       U32 mActiveSlots;
 
       SFXPlayList();
+
+      /// The destructor.
+      virtual ~SFXPlayList();
       
       /// Make all settings conform to constraints.
       void validate();
@@ -335,8 +333,13 @@ class SFXPlayList : public SFXTrack
       DECLARE_CONOBJECT( SFXPlayList );
       DECLARE_CATEGORY( "SFX" );
       DECLARE_DESCRIPTION( "A playback list of SFXProfiles or nested SFXPlayLists." );
-      
+
+      // SFXTrack.
+      virtual bool isLooping() const;
+
       // SimDataBlock.
+      bool onAdd();
+      void onRemove();
       virtual bool preload( bool server, String& errorStr );
       virtual void packData( BitStream* stream );
       virtual void unpackData( BitStream* stream );

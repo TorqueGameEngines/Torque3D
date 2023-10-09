@@ -55,6 +55,11 @@
 #include "sfx/sfxDescription.h"
 #endif // !_SFXDESCRIPTION_H_
 
+
+#ifndef _SFXTRACK_H_
+#include "sfx/sfxTrack.h"
+#endif
+
 #ifndef _SFXPROFILE_H_
 #include "sfx/sfxProfile.h"
 #endif // !_SFXPROFILE_H_
@@ -69,6 +74,7 @@
 
 #include "assetMacroHelpers.h"
 class SFXResource;
+class SFXPlayList;
 
 //-----------------------------------------------------------------------------
 class SoundAsset : public AssetBase
@@ -76,15 +82,16 @@ class SoundAsset : public AssetBase
    typedef AssetBase Parent;
 
 protected:
-   StringTableEntry        mSoundFile[SFXPlayList::NUM_SLOTS];
-   StringTableEntry        mSoundPath[SFXPlayList::NUM_SLOTS];
-   SFXProfile              mSFXProfile[SFXPlayList::NUM_SLOTS];
+   StringTableEntry        mSoundFile[12];
+   StringTableEntry        mSoundPath[12];
+   SFXProfile              mSFXProfile[12];
 
    SFXDescription          mProfileDesc;
    SFXPlayList             mPlaylist;
    // subtitles
    StringTableEntry        mSubtitleString;
    bool                    mPreload;
+   bool                    mIsPlaylist;
    //SFXPlayList::SlotData   mSlots;
 
    /*These will be needed in the refactor!
@@ -131,7 +138,9 @@ public:
    inline StringTableEntry getSoundFile(const U32 slotId = 0) const { return mSoundFile[slotId]; };
    inline StringTableEntry getSoundPath(const U32 slotId = 0) const { return mSoundPath[slotId]; };
    SFXProfile* getSfxProfile(const U32 slotId = 0) { return &mSFXProfile[slotId]; }
+   SFXPlayList* getSfxPlaylist() { return &mPlaylist; }
    SFXDescription* getSfxDescription() { return &mProfileDesc; }
+   bool isPlaylist(){ return mIsPlaylist; }
 
    bool isLoop() { return mProfileDesc.mIsLooping; }
    bool is3D() { return mProfileDesc.mIs3D; }
@@ -164,7 +173,7 @@ DefineConsoleType(TypeSoundAssetId, String)
    StringTableEntry m##name##Name; \
    StringTableEntry m##name##AssetId;\
    AssetPtr<SoundAsset> m##name##Asset = NULL;\
-   SFXProfile* m##name##Profile = NULL;\
+   SFXTrack* m##name##Profile = NULL;\
    SFXDescription* m##name##Desc = NULL;\
    SimObjectId m##name##SFXId = 0;\
 public: \
@@ -257,11 +266,20 @@ public: \
    {\
       return m##name;\
    }\
-   SFXProfile* get##name##Profile()\
+   SFXTrack* get##name##Profile()\
    {\
       if (get##name() != StringTable->EmptyString() && m##name##Asset.notNull()){\
-         m##name##Profile = m##name##Asset->getSfxProfile();\
-         return m##name##Profile;}\
+         if(m##name##Asset->isPlaylist())\
+         {\
+            m##name##Profile = m##name##Asset->getSfxPlaylist(); \
+            return m##name##Profile;\
+         }\
+         else\
+         {\
+            m##name##Profile = m##name##Asset->getSfxProfile(); \
+            return m##name##Profile;\
+         }\
+      }\
       return NULL;\
    }\
    SFXDescription* get##name##Description()\

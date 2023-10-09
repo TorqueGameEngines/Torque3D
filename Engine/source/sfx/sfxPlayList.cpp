@@ -23,6 +23,7 @@
 #include "sfx/sfxPlayList.h"
 #include "sfx/sfxState.h"
 #include "sfx/sfxTypes.h"
+#include "sfx/sfxDescription.h"
 #include "core/stream/bitStream.h"
 #include "math/mRandom.h"
 #include "math/mathTypes.h"
@@ -223,6 +224,20 @@ SFXPlayList::SFXPlayList()
 {
 }
 
+SFXPlayList::~SFXPlayList()
+{
+   if (!isTempClone())
+      return;
+
+   // cleanup after a temp-clone
+
+   if (mDescription && mDescription->isTempClone())
+   {
+      delete mDescription;
+      mDescription = 0;
+   }
+}
+
 //-----------------------------------------------------------------------------
 
 void SFXPlayList::initPersistFields()
@@ -341,13 +356,40 @@ void SFXPlayList::initPersistFields()
 
 U32 SFXPlayList::getNumSlots()
 {
+   U32 trackCount = 0;
    for (U32 i = 0; i < NUM_SLOTS; i++)
    {
       if (mSlots.mTrack[i] == NULL)
       {
          return i;
       }
+      trackCount++;
    }
+
+   return trackCount;
+}
+
+bool SFXPlayList::isLooping() const
+{
+   // pretty useless in playlist, looping handled differently.
+   return false;
+}
+
+bool SFXPlayList::onAdd()
+{
+   if (!Parent::onAdd())
+      return false;
+
+   mActiveSlots = getNumSlots();
+
+   validate();
+
+   return true;
+}
+
+void SFXPlayList::onRemove()
+{
+   Parent::onRemove();
 }
 
 bool SFXPlayList::preload( bool server, String& errorStr )

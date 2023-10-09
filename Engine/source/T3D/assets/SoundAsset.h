@@ -126,7 +126,7 @@ public:
    /// Declare Console Object.
    DECLARE_CONOBJECT(SoundAsset);
 
-   //void                    setSoundFile(const char* pSoundFile);
+   void                    setSoundFile(const char* pSoundFile);
    bool loadSound(U32 numSlots);
    inline StringTableEntry getSoundFile(const U32 slotId = 0) const { return mSoundFile[slotId]; };
    inline StringTableEntry getSoundPath(const U32 slotId = 0) const { return mSoundPath[slotId]; };

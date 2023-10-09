@@ -132,7 +132,7 @@ public:
    virtual void copyTo(SimObject* object);
 
    //SFXResource* getSound() { return mSoundResource; }
-   Resource<SFXResource> getSoundResource() { return mSFXProfile.getResource(); }
+   Resource<SFXResource> getSoundResource() { loadSound(); return mSFXProfile.getResource(); }
 
    /// Declare Console Object.
    DECLARE_CONOBJECT(SoundAsset);

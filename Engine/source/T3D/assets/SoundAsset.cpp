@@ -198,7 +198,7 @@ void SoundAsset::initializeAsset(void)
       return;
 
    mSoundPath = getOwned() ? expandAssetFilePath(mSoundFile) : mSoundPath;
-   loadSound();
+   //loadSound();
 }
 
 void SoundAsset::_onResourceChanged(const Torque::Path &path)
@@ -208,7 +208,7 @@ void SoundAsset::_onResourceChanged(const Torque::Path &path)
 
    refreshAsset();
 
-   loadSound();
+   //loadSound();
 }
 
 void SoundAsset::onAssetRefresh(void)
@@ -218,7 +218,7 @@ void SoundAsset::onAssetRefresh(void)
 
    //Update
    mSoundPath = getOwned() ? expandAssetFilePath(mSoundFile) : mSoundPath;
-   loadSound();
+   //loadSound();
 }
 
 bool SoundAsset::loadSound()

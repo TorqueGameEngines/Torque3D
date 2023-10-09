@@ -301,13 +301,11 @@ void ImageAsset::initializeAsset()
    ResourceManager::get().getChangedSignal().notify(this, &ImageAsset::_onResourceChanged);
 
    mImagePath = getOwned() ? expandAssetFilePath(mImageFileName) : mImagePath;
-   //loadImage();
 }
 
 void ImageAsset::onAssetRefresh()
 {
    mImagePath = getOwned() ? expandAssetFilePath(mImageFileName) : mImagePath;
-   //loadImage();
 }
 
 void ImageAsset::_onResourceChanged(const Torque::Path& path)
@@ -317,7 +315,6 @@ void ImageAsset::_onResourceChanged(const Torque::Path& path)
 
    refreshAsset();
 
-   //loadImage();
    onAssetRefresh();
 }
 

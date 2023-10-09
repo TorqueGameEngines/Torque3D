@@ -136,7 +136,7 @@ public:
 
    TSShape* getShape() { return mShape; }
 
-   Resource<TSShape> getShapeResource() { return mShape; }
+   Resource<TSShape> getShapeResource() { loadShape(); return mShape; }
 
    void SplitSequencePathAndName(String& srcPath, String& srcName);
    StringTableEntry getShapeFileName() { return mFileName; }

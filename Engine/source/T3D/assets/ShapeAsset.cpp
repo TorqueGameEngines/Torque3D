@@ -224,8 +224,6 @@ void ShapeAsset::initializeAsset()
       String normalPath = String(mFilePath) + "_imposter_normals.dds";
       mNormalImposterPath = StringTable->insert(normalPath.c_str());
    }
-
-   //loadShape();
 }
 
 void ShapeAsset::setShapeFile(const char* pShapeFile)
@@ -461,7 +459,6 @@ U32 ShapeAsset::getAssetByFilename(StringTableEntry fileName, AssetPtr<ShapeAsse
    {
       //acquire and bind the asset, and return it out
       shapeAsset->setAssetId(query.mAssetList[0]);
-      (*shapeAsset)->loadShape();
       return (*shapeAsset)->mLoadedState;
    }
 }
@@ -494,7 +491,6 @@ U32 ShapeAsset::getAssetById(StringTableEntry assetId, AssetPtr<ShapeAsset>* sha
 
    if (shapeAsset->notNull())
    {
-      (*shapeAsset)->loadShape();
       return (*shapeAsset)->mLoadedState;
    }
    else
@@ -504,7 +500,6 @@ U32 ShapeAsset::getAssetById(StringTableEntry assetId, AssetPtr<ShapeAsset>* sha
 
       if (shapeAsset->isNull())
       {
-         (*shapeAsset)->loadShape();
          //Well that's bad, loading the fallback failed.
          Con::warnf("ShapeAsset::getAssetById - Finding of asset with id %s failed with no fallback asset", assetId);
          return AssetErrCode::Failed;
@@ -513,7 +508,6 @@ U32 ShapeAsset::getAssetById(StringTableEntry assetId, AssetPtr<ShapeAsset>* sha
       //handle noshape not being loaded itself
       if ((*shapeAsset)->mLoadedState == BadFileReference)
       {
-         (*shapeAsset)->loadShape();
          Con::warnf("ShapeAsset::getAssetById - Finding of asset with id %s failed, and fallback asset reported error of Bad File Reference.", assetId);
          return AssetErrCode::BadFileReference;
       }
@@ -540,8 +534,6 @@ void ShapeAsset::onAssetRefresh(void)
    // Update.
    if(!Platform::isFullPath(mFileName))
       mFilePath = getOwned() ? expandAssetFilePath(mFileName) : mFilePath;
-
-   loadShape();
 }
 
 void ShapeAsset::SplitSequencePathAndName(String& srcPath, String& srcName)

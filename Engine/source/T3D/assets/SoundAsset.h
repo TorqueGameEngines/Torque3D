@@ -366,7 +366,7 @@ public: \
    StringTableEntry m##name##Name[max]; \
    StringTableEntry m##name##AssetId[max];\
    AssetPtr<SoundAsset> m##name##Asset[max];\
-   SFXProfile* m##name##Profile[max];\
+   SFXTrack* m##name##Profile[max];\
    SimObjectId m##name##SFXId[max];\
 public: \
    const StringTableEntry get##name##File(const U32& index) const { return m##name##Name[index]; }\
@@ -468,10 +468,16 @@ public: \
          return ResourceManager::get().load( "" );\
       return m##name[id];\
    }\
-   SFXProfile* get##name##Profile(const U32& id)\
+   SFXTrack* get##name##Profile(const U32& id)\
    {\
-      if (get##name(id) != StringTable->EmptyString() && m##name##Asset[id].notNull())\
-         return m##name##Asset[id]->getSfxProfile();\
+         if (m##name##Asset[id]->isPlaylist())\
+         {\
+            return m##name##Asset[id]->getSfxPlaylist(); \
+         }\
+         else\
+         {\
+            return  m##name##Asset[id]->getSfxProfile(); \
+         }\
       return NULL;\
    }\
    bool is##name##Valid(const U32& id) {return (get##name(id) != StringTable->EmptyString() && m##name##Asset[id] && m##name##Asset[id]->getStatus() == AssetBase::Ok); }

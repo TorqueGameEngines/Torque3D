@@ -10,6 +10,6 @@ if(TORQUE_NAVIGATION)
   set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} recast TORQUE_NAVIGATION_ENABLED)
 
   # Since recast lives elsewhere we need to ensure it is known to Torque when providing a link to it
-  add_subdirectory("${CMAKE_SOURCE_DIR}/Engine/lib/recast" ${CMAKE_BINARY_DIR}/temp/recast EXCLUDE_FROM_ALL)
+  add_subdirectory("${TORQUE_LIB_ROOT_DIRECTORY}/recast" ${TORQUE_LIB_TARG_DIRECTORY}/recast EXCLUDE_FROM_ALL)
   source_group(TREE "${CMAKE_SOURCE_DIR}/Engine/source/navigation/" PREFIX "Modules/NAVIGATION" FILES ${TORQUE_NAV_SOURCES})
 endif(TORQUE_NAVIGATION)

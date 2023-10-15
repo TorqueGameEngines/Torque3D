@@ -91,7 +91,14 @@ void DataChunker::freeBlocks(bool keepOne)
       mCurBlock = temp;
    }
 
-   if (mCurBlock)
+   if (!keepOne)
+   {
+      if (mCurBlock)
+         dFree(mCurBlock);
+
+      mCurBlock = NULL;
+   }
+   else if (mCurBlock)
    {
       mCurBlock->curIndex = 0;
       mCurBlock->next = NULL;

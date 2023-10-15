@@ -106,8 +106,7 @@ SFXEmitter::SFXEmitter()
    mDescription.mFadeInTime = -1.f;
    mDescription.mFadeOutTime = -1.f;
    mInstanceDescription = &mDescription;
-   mLocalProfile.mFilename = StringTable->EmptyString();
-   mLocalProfile._registerSignals();
+   mLocalProfile = NULL;
 
    INIT_ASSET(Sound);
 
@@ -119,7 +118,9 @@ SFXEmitter::SFXEmitter()
 
 SFXEmitter::~SFXEmitter()
 {
-   mLocalProfile.onRemove();
+   if(mLocalProfile != NULL)
+      mLocalProfile->onRemove();
+
    SFX_DELETE( mSource );
 }
 
@@ -653,7 +654,7 @@ void SFXEmitter::_update()
    SFXStatus prevState = mSource ? mSource->getStatus() : SFXStatusNull;
 
    // are we overriding the asset properties?
-   bool useTrackDescriptionOnly = (mUseTrackDescriptionOnly && mSoundAsset.notNull() && mSoundAsset->getSfxProfile());
+   bool useTrackDescriptionOnly = (mUseTrackDescriptionOnly && mSoundAsset.notNull() && getSoundProfile());
 
    if (mSoundAsset.notNull())
    {
@@ -662,12 +663,12 @@ void SFXEmitter::_update()
       else
          mInstanceDescription = &mDescription;
 
-      mLocalProfile = *mSoundAsset->getSfxProfile();
-   }
-   // Make sure all the settings are valid.
-   mInstanceDescription->validate();
-   mLocalProfile.setDescription(mInstanceDescription);
+      mLocalProfile = getSoundProfile();
 
+      // Make sure all the settings are valid.
+      mInstanceDescription->validate();
+      mLocalProfile->setDescription(mInstanceDescription);
+   }
 
    const MatrixF& transform = getTransform();
    const VectorF& velocity = getVelocity();
@@ -676,12 +677,12 @@ void SFXEmitter::_update()
    if( mDirty.test( Track | Is3D | IsLooping | IsStreaming | TrackOnly ) )
    {
       SFX_DELETE( mSource );
-      if (mLocalProfile.getSoundFileName().isNotEmpty())
+      if (getSoundProfile())
       {
-         mSource = SFX->createSource(&mLocalProfile, &transform, &velocity);
+         mSource = SFX->createSource(mLocalProfile, &transform, &velocity);
          if (!mSource)
             Con::errorf("SFXEmitter::_update() - failed to create sound for track %i (%s)",
-               mSoundAsset->getSfxProfile()->getId(), mSoundAsset->getSfxProfile()->getName());
+               getSoundProfile()->getId(), getSoundProfile()->getName());
 
          // If we're supposed to play when the emitter is 
          // added to the scene then also restart playback 
@@ -698,7 +699,7 @@ void SFXEmitter::_update()
    // is toggled on a local profile sound.  It makes the
    // editor feel responsive and that things are working.
    if(  gEditingMission &&
-        (mSoundAsset.isNull() || !mSoundAsset->getSfxProfile()) &&
+        (mSoundAsset.isNull() || !getSoundProfile()) &&
         mPlayOnAdd && 
         mDirty.test( IsLooping ) )
       prevState = SFXStatusPlaying;
@@ -1043,8 +1044,8 @@ SFXStatus SFXEmitter::_getPlaybackStatus() const
 
 bool SFXEmitter::is3D() const
 {
-   if( mSoundAsset.notNull() && mSoundAsset->getSfxProfile() != NULL )
-      return mSoundAsset->getSfxProfile()->getDescription()->mIs3D;
+   if( mSoundAsset.notNull() )
+      return mSoundAsset->getSfxDescription()->mIs3D;
    else
       return mInstanceDescription->mIs3D;
 }
@@ -1080,8 +1081,8 @@ void SFXEmitter::setScale( const VectorF &scale )
 {
    F32 maxDistance;
    
-   if( mUseTrackDescriptionOnly && mSoundAsset.notNull() && mSoundAsset->getSfxProfile())
-      maxDistance = mSoundAsset->getSfxProfile()->getDescription()->mMaxDistance;
+   if( mUseTrackDescriptionOnly && mSoundAsset.notNull() && getSoundProfile())
+      maxDistance = mSoundAsset->getSfxDescription()->mMaxDistance;
    else
    {
       // Use the average of the three coords.

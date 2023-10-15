@@ -115,10 +115,26 @@ ConsoleSetType(TypeSoundAssetId)
 SoundAsset::SoundAsset()
    : AssetBase()
 {
+   dMemset(mPlaylist.mSlots.mReplayMode, 0, sizeof(mPlaylist.mSlots.mReplayMode));
+   dMemset(mPlaylist.mSlots.mTransitionIn, 0, sizeof(mPlaylist.mSlots.mTransitionIn));
+   dMemset(mPlaylist.mSlots.mRepeatCount, 0, sizeof(mPlaylist.mSlots.mRepeatCount));
+   dMemset(mPlaylist.mSlots.mState, 0, sizeof(mPlaylist.mSlots.mState));
+   dMemset(mPlaylist.mSlots.mTrack, 0, sizeof(mPlaylist.mSlots.mTrack));
+   dMemset(mPlaylist.mSlots.mStateMode, 0, sizeof(mPlaylist.mSlots.mStateMode));
+
    for (U32 i = 0; i < SFXPlayList::NUM_SLOTS; i++)
    {
       mSoundFile[i] = StringTable->EmptyString();
       mSoundPath[i] = StringTable->EmptyString();
+
+      mPlaylist.mSlots.mTransitionOut[i] = SFXPlayList::TRANSITION_Wait;
+      mPlaylist.mSlots.mVolumeScale.mValue[i] = 1.f;
+      mPlaylist.mSlots.mPitchScale.mValue[i] = 1.f;
+      mPlaylist.mSlots.mFadeTimeIn.mValue[i] = -1.f;  // Don't touch by default.
+      mPlaylist.mSlots.mFadeTimeOut.mValue[i] = -1.f;  // Don't touch by default.
+      mPlaylist.mSlots.mMinDistance.mValue[i] = -1.f;  // Don't touch by default.
+      mPlaylist.mSlots.mMaxDistance.mValue[i] = -1.f;  // Don't touch by default.
+
    }
 
    mSubtitleString = StringTable->EmptyString();
@@ -145,6 +161,12 @@ SoundAsset::SoundAsset()
 
    mIsPlaylist = false;
 
+   mPlaylist.mNumSlotsToPlay = SFXPlayList::SFXPlaylistSettings::NUM_SLOTS;
+   mPlaylist.mRandomMode = SFXPlayList::RANDOM_NotRandom;
+   mPlaylist.mTrace = false;
+   mPlaylist.mLoopMode = SFXPlayList::LOOP_All;
+   mPlaylist.mActiveSlots = 12;
+
 }
 
 //-----------------------------------------------------------------------------
@@ -162,7 +184,7 @@ void SoundAsset::initPersistFields()
    Parent::initPersistFields();
    addArray("slots", SFXPlayList::SFXPlaylistSettings::NUM_SLOTS);
       addProtectedField("soundFile", TypeAssetLooseFilePath, Offset(mSoundFile, SoundAsset),
-         &defaultProtectedSetFn, &defaultProtectedGetFn, "Path to the sound file.");
+         &setSoundFile, &getSoundFile, SFXPlayList::SFXPlaylistSettings::NUM_SLOTS, "Path to the sound file.");
 
       addField("replay", TYPEID< SFXPlayList::EReplayMode >(), Offset(mPlaylist.mSlots.mReplayMode, SoundAsset), SFXPlayList::SFXPlaylistSettings::NUM_SLOTS,
          "Behavior when an already playing sound is encountered on this slot from a previous cycle.\n"
@@ -243,6 +265,7 @@ void SoundAsset::initPersistFields()
    //....why?
    addField("useHardware", TypeBool, Offset(mProfileDesc.mUseHardware, SoundAsset), "Use hardware mixing for this sound.");
    addField("sourceGroup", TypeSFXSourceName, Offset(mProfileDesc.mSourceGroup, SoundAsset), "Group that sources playing with this description should be put into.");
+   addField("preload", TypeBool, Offset(mPreload, SoundAsset), "Whether to preload sound data when the profile is added to system.");
 
    addGroup("Fading");
       addField("fadeInTime", TypeF32, Offset(mProfileDesc.mFadeInTime, SoundAsset), "Number of seconds to gradually fade in volume from zero when playback starts.");
@@ -278,6 +301,11 @@ void SoundAsset::copyTo(SimObject* object)
    Parent::copyTo(object);
 }
 
+Resource<SFXResource> SoundAsset::getSoundResource(const U32 slotId)
+{
+   return mSFXProfile[slotId].getResource();
+}
+
 void SoundAsset::initializeAsset(void)
 {
    Parent::initializeAsset();
@@ -299,16 +327,18 @@ void SoundAsset::initializeAsset(void)
 
 void SoundAsset::_onResourceChanged(const Torque::Path &path)
 {
-   /*U32 slotCount = 0;
+   U32 slotCount = 0;
    for (U32 i = 0; i < SFXPlayList::NUM_SLOTS; i++)
    {
 
       if (path != Torque::Path(mSoundPath[i]))
          return;
+
+      slotCount++;
    }
    refreshAsset();
 
-   loadSound();*/
+   loadSound(slotCount);
 }
 
 void SoundAsset::onAssetRefresh(void)
@@ -352,19 +382,21 @@ bool SoundAsset::loadSound(U32 numSlots)
             {// = new SFXProfile(mProfileDesc, mSoundFile, mPreload);
                if (mProfileDesc.mSourceGroup == NULL)
                   mProfileDesc.mSourceGroup = dynamic_cast<SFXSource*>(Sim::findObject("AudioChannelMaster"));
-               SFXProfile* trackProfile = new SFXProfile(&mProfileDesc, mSoundPath);
+               SFXProfile* trackProfile = new SFXProfile();
                trackProfile->setDescription(&mProfileDesc);
-               trackProfile->setSoundFileName(mSoundPath[0]);
+               trackProfile->setSoundFileName(mSoundPath[i]);
                trackProfile->setPreload(mPreload);
+               trackProfile->getBuffer();
 
-               mSFXProfile[i].setDescription(&mProfileDesc);
-               mSFXProfile[i].setSoundFileName(mSoundPath[0]);
-               mSFXProfile[i].setPreload(mPreload);
+               mSFXProfile[i] = *trackProfile;
 
                mPlaylist.mSlots.mTrack[i] = trackProfile;
+               
             }
          }
       }
+
+      mPlaylist.setDescription(&mProfileDesc);
    }
    else
    {
@@ -393,12 +425,22 @@ bool SoundAsset::loadSound(U32 numSlots)
 
       }
    }
+
    mChangeSignal.trigger();
    mLoadedState = Ok;
    return true;
 }
 
-void SoundAsset::setSoundFile(const char* pSoundFile)
+StringTableEntry SoundAsset::getSoundFile(const char* pSoundFile, const U32 slotId)
+{
+   for (U32 i = 0; i < 12; i++)
+   {
+      if(mSoundFile[i] == pSoundFile)
+         return mSoundFile[i];
+   }
+}
+
+void SoundAsset::setSoundFile(const char* pSoundFile, const U32 slotId)
 {
    // Sanity!
    AssertFatal(pSoundFile != NULL, "Cannot use a NULL sound file.");
@@ -406,12 +448,12 @@ void SoundAsset::setSoundFile(const char* pSoundFile)
    // Fetch sound file.
    pSoundFile = StringTable->insert(pSoundFile, true);
 
-   // Ignore no change,
-   if (pSoundFile == mSoundFile[0])
+   //Ignore no change,
+   if (pSoundFile == mSoundFile[slotId])
       return;
 
    // Update.
-   mSoundFile[0] = getOwned() ? expandAssetFilePath(pSoundFile) : pSoundFile;
+   mSoundFile[slotId] = getOwned() ? expandAssetFilePath(pSoundFile) : pSoundFile;
 
    // Refresh the asset.
    refreshAsset();
@@ -498,11 +540,11 @@ DefineEngineMethod(SoundAsset, playSound, S32, (Point3F position), (Point3F::Zer
    "Plays the sound for this asset.\n"
    "@return (sound plays).\n")
 {
-   if (object->getSfxProfile())
+   if (object->getSFXTrack())
    {
       MatrixF transform;
       transform.setPosition(position);
-      SFXSource* source = SFX->playOnce(object->getSfxProfile(), &transform, NULL, -1);
+      SFXSource* source = SFX->playOnce(object->getSFXTrack(), &transform, NULL, -1);
       if(source)
          return source->getId();
       else

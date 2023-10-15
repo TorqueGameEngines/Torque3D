@@ -220,7 +220,7 @@ SFXPlayList::SFXPlayList()
      mLoopMode( LOOP_All ),
      mTrace( false ),
      mNumSlotsToPlay( NUM_SLOTS ),
-   mActiveSlots(0)
+   mActiveSlots(12)
 {
 }
 

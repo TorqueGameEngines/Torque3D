@@ -86,11 +86,7 @@ struct SceneBinRange
 
    inline bool operator!=(const SceneBinRange& other) const
    {
-      if (memcmp(minCoord, other.minCoord, sizeof(minCoord)) == 0 &&
-         memcmp(maxCoord, other.maxCoord, sizeof(maxCoord)) == 0)
-         return false;
-      else
-         return true;
+      return !(*this == other);
    }
 };
 

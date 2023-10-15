@@ -1270,17 +1270,16 @@ static ConsoleValue _internalExecute(SimObject *object, S32 argc, ConsoleValue a
    if(object->getNamespace())
    {
       U32 ident = object->getId();
-      const char* oldIdent = dStrdup(argv[1].getString());
-      
       Namespace::Entry *ent = object->getNamespace()->lookup(funcName);
 
       if(ent == NULL)
       {
          //warnf(ConsoleLogEntry::Script, "%s: undefined for object '%s' - id %d", funcName, object->getName(), object->getId());
-
          STR.clearFunctionOffset();
          return std::move(ConsoleValue());
       }
+
+      const char* oldIdent = dStrdup(argv[1].getString());
 
       // Twiddle %this argument
       argv[1].setInt(ident);

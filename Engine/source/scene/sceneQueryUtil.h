@@ -80,14 +80,14 @@ struct SceneBinRange
 
    inline bool operator==(const SceneBinRange& other) const
    {
-      return dMemcmp(minCoord, other.minCoord, sizeof(minCoord)) == 0 &&
-         dMemcmp(maxCoord, other.maxCoord, sizeof(maxCoord)) == 0;
+      return memcmp(minCoord, other.minCoord, sizeof(minCoord)) == 0 &&
+         memcmp(maxCoord, other.maxCoord, sizeof(maxCoord)) == 0;
    }
 
    inline bool operator!=(const SceneBinRange& other) const
    {
-      if (dMemcmp(minCoord, other.minCoord, sizeof(minCoord)) == 0 &&
-         dMemcmp(maxCoord, other.maxCoord, sizeof(maxCoord)) == 0)
+      if (memcmp(minCoord, other.minCoord, sizeof(minCoord)) == 0 &&
+         memcmp(maxCoord, other.maxCoord, sizeof(maxCoord)) == 0)
          return false;
       else
          return true;

@@ -72,6 +72,10 @@
 #include "sfx/sfxPlayList.h"
 #endif
 
+#ifndef _SFXTYPES_H_
+#include "sfx/sfxTypes.h"
+#endif
+
 #include "assetMacroHelpers.h"
 class SFXResource;
 class SFXPlayList;

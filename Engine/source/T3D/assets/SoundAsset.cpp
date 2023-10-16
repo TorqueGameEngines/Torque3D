@@ -184,7 +184,7 @@ void SoundAsset::initPersistFields()
    Parent::initPersistFields();
    addArray("slots", SFXPlayList::SFXPlaylistSettings::NUM_SLOTS);
       addProtectedField("soundFile", TypeAssetLooseFilePath, Offset(mSoundFile, SoundAsset),
-         &setSoundFile, &getSoundFile, SFXPlayList::SFXPlaylistSettings::NUM_SLOTS, "Path to the sound file.");
+         &_setSoundFile, &_getSoundFile, SFXPlayList::SFXPlaylistSettings::NUM_SLOTS, "Path to the sound file.");
 
       addField("replay", TYPEID< SFXPlayList::EReplayMode >(), Offset(mPlaylist.mSlots.mReplayMode, SoundAsset), SFXPlayList::SFXPlaylistSettings::NUM_SLOTS,
          "Behavior when an already playing sound is encountered on this slot from a previous cycle.\n"

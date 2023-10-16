@@ -133,7 +133,7 @@ public:
    /// Declare Console Object.
    DECLARE_CONOBJECT(SoundAsset);
 
-   void                    setSoundFile(const char* pSoundFile, const U32 slotId = 0);
+   void setSoundFile(const char* pSoundFile, const U32 slotId = 0);
    bool loadSound(U32 numSlots);
    StringTableEntry getSoundFile(const char* pSoundFile, const U32 slotId = 0);
    inline StringTableEntry getSoundPath(const U32 slotId = 0) const { return mSoundPath[slotId]; };
@@ -155,8 +155,8 @@ protected:
    void _onResourceChanged(const Torque::Path & path);
    virtual void            onAssetRefresh(void);
 
-  static bool setSoundFile(void *obj, const char *index, const char *data) { static_cast<SoundAsset*>(obj)->setSoundFile(data, dAtoi(index)); return false; }
-  static const char* getSoundFile(void* obj, const char* data) { return static_cast<SoundAsset*>(obj)->getSoundFile(data); }
+  static bool _setSoundFile(void *obj, const char *index, const char *data) { static_cast<SoundAsset*>(obj)->setSoundFile(data, index ? dAtoi(index) : 0); return false; }
+  static const char* _getSoundFile(void* obj, const char* data) { return static_cast<SoundAsset*>(obj)->getSoundFile(data); }
 };
 
 DefineConsoleType(TypeSoundAssetPtr, SoundAsset)

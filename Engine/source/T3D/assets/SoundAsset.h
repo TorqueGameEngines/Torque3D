@@ -526,8 +526,11 @@ if (m##name##AssetId[index] != StringTable->EmptyString())\
       if(stream->writeFlag(Sim::findObject(m##name##Name[index])))\
       {\
          SFXTrack* sndTrack = get##name##Profile(index);\
-         stream->writeRangedU32(SimObjectId(sndTrack->getId()), DataBlockObjectIdFirst, DataBlockObjectIdLast);\
-         sfxWrite(stream, sndTrack);\
+         if(stream->writeFlag(sndTrack != nullptr))\
+         {\
+            stream->writeRangedU32(SimObjectId(sndTrack->getId()), DataBlockObjectIdFirst, DataBlockObjectIdLast);\
+            sfxWrite(stream, sndTrack);\
+         }\
       }\
       else\
       {\
@@ -548,9 +551,11 @@ if (m##name##AssetId[index] != StringTable->EmptyString())\
       if(stream->readFlag())\
       {\
          String errorStr;\
-         m##name##SFXId[index] = stream->readRangedU32( DataBlockObjectIdFirst, DataBlockObjectIdLast );\
-         sfxReadAndResolve(stream, &m##name##Profile[index], errorStr);\
-         Con::errorf("%s", errorStr.c_str());\
+         if(stream->readFlag())\
+         {\
+            m##name##SFXId[index] = stream->readRangedU32( DataBlockObjectIdFirst, DataBlockObjectIdLast );\
+            sfxReadAndResolve(stream, &m##name##Profile[index], errorStr);\
+         }\
       }\
       else\
       {\

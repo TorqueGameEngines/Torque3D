@@ -354,7 +354,9 @@ if (APPLE)
 	add_executable(${TORQUE_APP_NAME} MACOSX_BUNDLE ${TORQUE_SOURCE_FILES})
 	set_target_properties(${TORQUE_APP_NAME} PROPERTIES 
   BUNDLE true
-  MACOSX_BUNDLE_INFO_PLIST "${TORQUE_APP_ROOT_DIRECTORY}/source/Info.plist")
+  MACOSX_BUNDLE_INFO_PLIST "${TORQUE_APP_ROOT_DIRECTORY}/source/Info.plist"
+  XCODE_ATTRIBUTE_INSTALL_PATH "/Applications"
+  XCODE_ATTRIBUTE_SKIP_INSTALL "No")
 
 	# Ensure the shared libraries are actually referenced at the correct path
 	set(CMAKE_XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/../Frameworks")
@@ -428,7 +430,7 @@ append_defs()
 foreach (LIBRARY_BINARY ${TORQUE_ADDITIONAL_LIBRARY_BINARIES})
   if (APPLE)
     # For OSX, we want these binaries to be copied to the Frameworks directory
-    add_custom_command(TARGET ${TORQUE_APP_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${LIBRARY_BINARY} "${TORQUE_APP_GAME_DIRECTORY}/${TORQUE_APP_NAME}.app/Contents/Frameworks")
+    #add_custom_command(TARGET ${TORQUE_APP_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${LIBRARY_BINARY} "${TORQUE_APP_GAME_DIRECTORY}/${TORQUE_APP_NAME}.app/Contents/Frameworks")
   else()
     # All other platforms expect the file next to the executable
     add_custom_command(TARGET ${TORQUE_APP_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${LIBRARY_BINARY} "${TORQUE_APP_GAME_DIRECTORY}")
@@ -449,7 +451,9 @@ if (UNIX)
 		  # Only pay attention to shared libraries and make them output to the app resources
 		  if ("${LINK_LIBRARY_TYPE}" STREQUAL "SHARED_LIBRARY")
         if (APPLE)
-          set_target_properties(${GAME_LINK_LIBRARY} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${TORQUE_APP_GAME_DIRECTORY}/${TORQUE_APP_NAME}.app/Contents/Frameworks")
+          set_target_properties(${GAME_LINK_LIBRARY} PROPERTIES 
+          LIBRARY_OUTPUT_DIRECTORY "${TORQUE_APP_GAME_DIRECTORY}/${TORQUE_APP_NAME}.app/Contents/Frameworks"
+          XCODE_ATTRIBUTE_INSTALL_PATH "/Applications/${TORQUE_APP_NAME}.app/Contents/Frameworks/$(CONFIGURATION)")
         else()
           set_target_properties(${GAME_LINK_LIBRARY} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${TORQUE_APP_GAME_DIRECTORY}")
         endif(APPLE)
@@ -457,23 +461,3 @@ if (UNIX)
 	  endif()
 	endforeach()
 endif (UNIX)
-
-if(APPLE)
-install(TARGETS ${APP_NAME}
-          BUNDLE DESTINATION . COMPONENT Runtime
-          RUNTIME DESTINATION bin COMPONENT Runtime
-          LIBRARY DESTINATION lib
-          ARCHIVE DESTINATION lib/static)
-
-# Note Mac specific extension .app
-set(APPS "\${TORQUE_APP_GAME_DIRECTORY}/${APP_NAME}.app")
-
-# Directories to look for dependencies
-set(DIRS ${CMAKE_BINARY_DIR})
-
-install(CODE "include(BundleUtilities)
-  fixup_bundle(\"${APPS}\" \"\" \"${DIRS}\")")
-
-set(CPACK_GENERATOR "DRAGNDROP")
-include(CPack)
-endif()

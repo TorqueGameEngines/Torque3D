@@ -96,7 +96,6 @@ set(CMAKE_OBJC_LINK_FLAGS "${C_TARGET_FLAGS} ${SDK_NAME_VERSION_FLAGS} -Wl,-sear
 set(CMAKE_OBJCXX_LINK_FLAGS "${C_TARGET_FLAGS} ${SDK_NAME_VERSION_FLAGS} -Wl,-search_paths_first ${CMAKE_OBJCXX_LINK_FLAGS}")
 
 set(CMAKE_PLATFORM_HAS_INSTALLNAME 1)
-set(CMAKE_SHARED_LINKER_FLAGS "-rpath @executable_path/Frameworks -rpath @loader_path/Frameworks")
 set(CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS "-dynamiclib -Wl,-headerpad_max_install_names")
 set(CMAKE_SHARED_MODULE_CREATE_C_FLAGS "-bundle -Wl,-headerpad_max_install_names")
 set(CMAKE_SHARED_MODULE_LOADER_C_FLAG "-Wl,-bundle_loader,")
@@ -117,3 +116,26 @@ else()
   set(CMAKE_CXX_SIZEOF_DATA_PTR 4)
   set(CMAKE_SYSTEM_PROCESSOR "arm")
 endif()
+
+# Only create a single Xcode project file
+set(CMAKE_XCODE_GENERATE_TOP_LEVEL_PROJECT_ONLY TRUE)
+# Add all libraries to project link phase (lets Xcode handle linking)
+set(CMAKE_XCODE_LINK_BUILD_PHASE_MODE KNOWN_LOCATION)
+
+# Enable codesigning with secure timestamp when not in Debug configuration (required for Notarization)
+set(CMAKE_XCODE_ATTRIBUTE_OTHER_CODE_SIGN_FLAGS[variant=Release] "--timestamp")
+set(CMAKE_XCODE_ATTRIBUTE_OTHER_CODE_SIGN_FLAGS[variant=RelWithDebInfo] "--timestamp")
+
+# Enable codesigning with hardened runtime option when not in Debug configuration (required for Notarization)
+set(CMAKE_XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME[variant=Release] YES)
+set(CMAKE_XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME[variant=RelWithDebInfo] YES)
+
+# Disable injection of Xcode's base entitlements used for debugging when not in Debug configuration (required for
+# Notarization)
+set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_INJECT_BASE_ENTITLEMENTS[variant=Release] NO)
+set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_INJECT_BASE_ENTITLEMENTS[variant=RelWithDebInfo] NO)
+
+set(_release_configs RelWithDebInfo Release)
+  if(CMAKE_BUILD_TYPE IN_LIST _release_configs)
+    add_link_options(LINKER:-dead_strip)
+  endif()

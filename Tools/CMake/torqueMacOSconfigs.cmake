@@ -52,14 +52,11 @@ foreach(lang ${languages})
   set(CMAKE_${lang}_CREATE_STATIC_LIBRARY "${BUILD_LIBTOOL} -static -o <TARGET> <LINK_FLAGS> <OBJECTS> " CACHE INTERNAL "")
 endforeach()
 
-set(CMAKE_FRAMEWORK_PATH
-          ${CMAKE_DEVELOPER_ROOT}/Library/PrivateFrameworks
-          ${XCODE_SDK_ROOT_DIR}/System/Library/Frameworks
-          ${CMAKE_FRAMEWORK_PATH} CACHE INTERNAL "")
+set(CMAKE_FRAMEWORK_PATH "/Applications/XCode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks")
 
 set(CMAKE_FIND_FRAMEWORK FIRST)
-set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE INTERNAL "")
-set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13" CACHE INTERNAL "")
+set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE STRING "" FORCE)
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13" CACHE STRING "" FORCE)
 set(CMAKE_XCODE_ATTRIBUTE_SDKROOT macosx)
 set(CMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH "NO")
 set(CMAKE_SYSTEM_NAME Darwin)

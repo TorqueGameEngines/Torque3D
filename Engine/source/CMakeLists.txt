@@ -57,7 +57,6 @@ torqueAddSourceDirectories("platform" "platform/threads" "platform/async"
                                   "platform/input" "platform/output")
 
 torqueAddSourceDirectories("platform/nativeDialogs")
-
 # Handle T3D
 torqueAddSourceDirectories("T3D/fps" "T3D/fx" "T3D/vehicles" "T3D/physics"
                               "T3D/decal" "T3D/sfx" "T3D/gameBase" "T3D/turret"
@@ -199,9 +198,11 @@ torqueAddSourceDirectories("i18n")
 if (UNIX)
 	torqueAddSourceDirectories("platformPOSIX")
 
-	if (TORQUE_CPU_X32 OR TORQUE_CPU_X64)
-    torqueAddSourceDirectories("platformX86UNIX")
-	endif (TORQUE_CPU_X32 OR TORQUE_CPU_X64)
+  if(NOT APPLE)
+    if (TORQUE_CPU_X32 OR TORQUE_CPU_X64)
+      torqueAddSourceDirectories("platformX86UNIX")
+    endif (TORQUE_CPU_X32 OR TORQUE_CPU_X64)
+  endif(NOT APPLE)
 endif (UNIX)
 
 # Handle platformMac

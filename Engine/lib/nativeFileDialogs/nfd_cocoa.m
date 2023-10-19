@@ -75,7 +75,7 @@ static nfdresult_t AllocPathSet( NSArray *urls, nfdpathset_t *pathset )
     assert([urls count]);
 
     pathset->count = (size_t)[urls count];
-    pathset->indices = NFDi_Malloc( sizeof(size_t)*pathset->count );
+    pathset->indices = (unsigned long*)NFDi_Malloc( sizeof(size_t)*pathset->count );
     if ( !pathset->indices ) 
     {
         return NFD_ERROR;
@@ -89,7 +89,7 @@ static nfdresult_t AllocPathSet( NSArray *urls, nfdpathset_t *pathset )
         bufsize += [path lengthOfBytesUsingEncoding:NSUTF8StringEncoding] + 1;
     }
 
-    pathset->buf = NFDi_Malloc( sizeof(nfdchar_t) * bufsize );
+    pathset->buf = (char *)NFDi_Malloc( sizeof(nfdchar_t) * bufsize );
     if ( !pathset->buf )
     {
         return NFD_ERROR;
@@ -144,7 +144,7 @@ nfdresult_t NFD_OpenDialog( const nfdchar_t *filterList,
         // byte count, not char count
         size_t len = strlen(utf8Path);//NFDi_UTF8_Strlen(utf8Path);
 
-        *outPath = NFDi_Malloc( len+1 );
+        *outPath = (nfdchar_t*)NFDi_Malloc(len+1);
         if ( !*outPath )
         {
             [pool release];
@@ -229,7 +229,7 @@ nfdresult_t NFD_SaveDialog( const nfdchar_t *filterList,
 
         size_t byteLen = [url.path lengthOfBytesUsingEncoding:NSUTF8StringEncoding] + 1;
         
-        *outPath = NFDi_Malloc( byteLen );
+        *outPath = (char *)NFDi_Malloc( byteLen );
         if ( !*outPath )
         {
             [pool release];
@@ -269,7 +269,7 @@ nfdresult_t NFD_PickFolder(const nfdchar_t *defaultPath,
         // byte count, not char count
         size_t len = strlen(utf8Path);//NFDi_UTF8_Strlen(utf8Path);
 
-        *outPath = NFDi_Malloc( len+1 );
+        *outPath = (char *)NFDi_Malloc( len+1 );
         if ( !*outPath )
         {
             [pool release];

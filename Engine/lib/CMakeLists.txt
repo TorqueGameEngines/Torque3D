@@ -110,6 +110,7 @@ mark_as_advanced(SDL_X11)
 mark_as_advanced(SDL_XINPUT)
 
 add_subdirectory(sdl ${TORQUE_LIB_TARG_DIRECTORY}/sdl2 EXCLUDE_FROM_ALL)
+
 add_subdirectory(nativeFileDialogs ${TORQUE_LIB_TARG_DIRECTORY}/nfd EXCLUDE_FROM_ALL)
 
 # Assimp
@@ -159,6 +160,10 @@ if (TORQUE_CPU_ARM32 OR TORQUE_CPU_ARM64)
 	    set(PNG_ARM_NEON on CACHE BOOL "" FORCE)
     endif(NOT APPLE)
 endif (TORQUE_CPU_ARM32 OR TORQUE_CPU_ARM64)
+
+if(APPLE)
+    set(PNG_ARM_NEON off CACHE BOOL "" FORCE)
+endif()
 
 #PNG
 set(PNG_STATIC on CACHE BOOL "" FORCE)

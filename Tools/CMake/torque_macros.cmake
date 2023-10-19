@@ -65,23 +65,6 @@ macro (torqueAddSourceDirectories)
   endforeach()
 endmacro (torqueAddSourceDirectories)
 
-# Helper function to add a directory to the TORQUE_SOURCE_FILES variable. It automatically searches for .cpp and .h files in the
-# specified directory then adds them to the TORQUE_SOURCE_FILES variable.
-macro (torqueToolchainSourceDirectories)
-  foreach(ARGUMENT ${ARGV})
-    file(GLOB SCANNED_SOURCE_FILES "${TORQUE_SOURCE_DIRECTROY}/${ARGUMENT}/*.cpp")
-    file(GLOB SCANNED_INCLUDE_FILES "${TORQUE_SOURCE_DIRECTROY}/${ARGUMENT}/*.h")
-
-    if (APPLE)
-      file(GLOB SCANNED_MAC_FILES "${TORQUE_SOURCE_DIRECTROY}/${ARGUMENT}/*.mm")
-    endif (APPLE)
-
-    # Set in both current and parent scope so this macro can be used from loaded modules
-    set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${SCANNED_SOURCE_FILES} ${SCANNED_INCLUDE_FILES} ${SCANNED_MAC_FILES})
-    set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} PARENT_SCOPE)
-  endforeach()
-endmacro (torqueToolchainSourceDirectories)
-
 ################# Set Conditional Engine Defines ###################
 macro (forwardDef flag)
     if (${flag})

@@ -304,6 +304,20 @@ set_target_properties(${TORQUE_APP_NAME} PROPERTIES
     BUNDLE true
     MACOSX_BUNDLE_INFO_PLIST "${TORQUE_APP_ROOT_DIRECTORY}/source/Info.plist")
 
+target_compile_definitions(${TORQUE_APP_NAME} PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
+target_link_libraries(${TORQUE_APP_NAME} ${TORQUE_LINK_LIBRARIES})
+target_link_options(${TORQUE_APP_NAME} PUBLIC ${TORQUE_LINK_OPTIONS})
+if (TORQUE_TARGET_PROPERTIES)
+    set_target_properties(${TORQUE_APP_NAME} PROPERTIES ${TORQUE_TARGET_PROPERTIES})
+endif (TORQUE_TARGET_PROPERTIES)
+target_include_directories(${TORQUE_APP_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp" ${TORQUE_INCLUDE_DIRECTORIES})
+
+append_defs()
+
+foreach (LIBRARY_BINARY ${TORQUE_ADDITIONAL_LIBRARY_BINARIES})
+    # For OSX, we want these binaries to be copied to the Frameworks directory
+    add_custom_command(TARGET ${TORQUE_APP_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${LIBRARY_BINARY} "${TORQUE_APP_GAME_DIRECTORY}/${TORQUE_APP_NAME}.app/Contents/Frameworks")
+endforeach()
 
 # Ensure the shared libraries are actually referenced at the correct path
 set(CMAKE_XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/../Frameworks")
@@ -315,7 +329,7 @@ install(TARGETS ${APP_NAME}
           ARCHIVE DESTINATION lib/static)
 
   # Note Mac specific extension .app
-  set(APPS "\${CMAKE_BINARY_DIR}/game/${APP_NAME}.app")
+  set(APPS "\${TORQUE_APP_GAME_DIRECTORY}/${APP_NAME}.app")
 
   # Directories to look for dependencies
   set(DIRS ${CMAKE_BINARY_DIR})

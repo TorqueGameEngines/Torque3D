@@ -5,8 +5,66 @@ project(${TORQUE_APP_NAME})
 enable_language(OBJC)
 enable_language(OBJCXX)
 
+find_program(XCODEBUILD_EXECUTABLE xcodebuild)
+execute_process(COMMAND ${XCODEBUILD_EXECUTABLE} -version -sdk macosx Path
+          OUTPUT_VARIABLE XCODE_SDK_ROOT_DIR
+          ERROR_QUIET
+          OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+set(XCODE_SDK_ROOT_DIR "${XCODE_SDK_ROOT_DIR}" CACHE INTERNAL "")
+# Specify the location or name of the platform SDK to be used in CMAKE_OSX_SYSROOT.
+set(CMAKE_OSX_SYSROOT "${XCODE_SDK_ROOT_DIR}" CACHE INTERNAL "")
+
+if (NOT DEFINED CMAKE_DEVELOPER_ROOT AND NOT CMAKE_GENERATOR MATCHES "Xcode")
+  get_filename_component(PLATFORM_SDK_DIR ${XCODE_SDK_ROOT_DIR} PATH)
+  get_filename_component(CMAKE_DEVELOPER_ROOT ${PLATFORM_SDK_DIR} PATH)
+  if (NOT EXISTS "${CMAKE_DEVELOPER_ROOT}")
+    message(FATAL_ERROR "Invalid CMAKE_DEVELOPER_ROOT: ${CMAKE_DEVELOPER_ROOT} does not exist.")
+  endif()
+endif()
+
+# Find (Apple's) libtool.
+if(DEFINED BUILD_LIBTOOL)
+  # Environment variables are always preserved.
+  set(ENV{_BUILD_LIBTOOL} "${BUILD_LIBTOOL}")
+elseif(DEFINED ENV{_BUILD_LIBTOOL})
+  set(BUILD_LIBTOOL "$ENV{_BUILD_LIBTOOL}")
+elseif(NOT DEFINED BUILD_LIBTOOL)
+  execute_process(COMMAND xcrun -sdk ${XCODE_SDK_ROOT_DIR} -find libtool
+          OUTPUT_VARIABLE BUILD_LIBTOOL
+          ERROR_QUIET
+          OUTPUT_STRIP_TRAILING_WHITESPACE)
+endif()
+
+# Find the toolchain's provided install_name_tool if none is found on the host
+if(DEFINED CMAKE_INSTALL_NAME_TOOL)
+  # Environment variables are always preserved.
+  set(ENV{_CMAKE_INSTALL_NAME_TOOL} "${CMAKE_INSTALL_NAME_TOOL}")
+elseif(DEFINED ENV{_CMAKE_INSTALL_NAME_TOOL})
+  set(CMAKE_INSTALL_NAME_TOOL "$ENV{_CMAKE_INSTALL_NAME_TOOL}")
+elseif(NOT DEFINED CMAKE_INSTALL_NAME_TOOL)
+  execute_process(COMMAND xcrun -sdk ${XCODE_SDK_ROOT_DIR} -find install_name_tool
+          OUTPUT_VARIABLE CMAKE_INSTALL_NAME_TOOL_INT
+          ERROR_QUIET
+          OUTPUT_STRIP_TRAILING_WHITESPACE)
+  set(CMAKE_INSTALL_NAME_TOOL ${CMAKE_INSTALL_NAME_TOOL_INT} CACHE INTERNAL "")
+endif()
+
+get_property(languages GLOBAL PROPERTY ENABLED_LANGUAGES)
+foreach(lang ${languages})
+  set(CMAKE_${lang}_CREATE_STATIC_LIBRARY "${BUILD_LIBTOOL} -static -o <TARGET> <LINK_FLAGS> <OBJECTS> " CACHE INTERNAL "")
+endforeach()
+
+set(CMAKE_FRAMEWORK_PATH
+          ${CMAKE_DEVELOPER_ROOT}/Library/PrivateFrameworks
+          ${XCODE_SDK_ROOT_DIR}/System/Library/Frameworks
+          ${CMAKE_FRAMEWORK_PATH} CACHE INTERNAL "")
+
+set(CMAKE_FIND_FRAMEWORK FIRST)
 set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE INTERNAL "")
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13" CACHE INTERNAL "")
+set(CMAKE_XCODE_ATTRIBUTE_SDKROOT macosx)
+set(CMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH "NO")
 set(CMAKE_SYSTEM_NAME Darwin)
 set(CMAKE_THREAD_LIBS_INIT "-lpthread")
 set(CMAKE_HAVE_THREADS_LIBRARY 1)

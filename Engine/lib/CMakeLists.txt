@@ -153,8 +153,11 @@ mark_as_advanced(ASSIMP_PACKAGE_VERSION)
 mark_as_advanced(ASSIMP_RUNTIME_OUTPUT_DIRECTORY)
 add_subdirectory(assimp ${TORQUE_LIB_TARG_DIRECTORY}/assimp EXCLUDE_FROM_ALL)
 target_compile_definitions(assimp PUBLIC ASSIMP_BUILD_NO_OWN_ZLIB)
+
 if (TORQUE_CPU_ARM32 OR TORQUE_CPU_ARM64)
-	set(PNG_ARM_NEON on CACHE BOOL "" FORCE)
+    if(NOT APPLE)
+	    set(PNG_ARM_NEON on CACHE BOOL "" FORCE)
+    endif(NOT APPLE)
 endif (TORQUE_CPU_ARM32 OR TORQUE_CPU_ARM64)
 
 #PNG
@@ -168,10 +171,12 @@ set(PNG_TESTS off CACHE BOOL "" FORCE)
 mark_as_advanced(PNG_TESTS)
 set(PNG_HARDWARE_OPTIMIZATIONS on CACHE BOOL "" FORCE)
 mark_as_advanced(PNG_HARDWARE_OPTIMIZATIONS)
+
 if(APPLE)
     set(PNG_FRAMEWORK on CACHE BOOL "" FORCE)
     addDef(PNG_DEBUG Debug)
 endif()
+
 mark_as_advanced(PNG_DEBUG)
 mark_as_advanced(PNG_FRAMEWORK)
 mark_as_advanced(PNG_PREFIX)

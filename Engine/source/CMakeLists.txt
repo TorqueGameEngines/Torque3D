@@ -351,7 +351,9 @@ endif (TORQUE_DYNAMIC_LIBRARY AND NOT TORQUE_TESTING)
 
 if (APPLE)
 	add_executable(${TORQUE_APP_NAME} MACOSX_BUNDLE ${TORQUE_SOURCE_FILES})
-	set_target_properties(${TORQUE_APP_NAME} PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${TORQUE_APP_ROOT_DIRECTORY}/source/Info.plist")
+	set_target_properties(${TORQUE_APP_NAME} PROPERTIES 
+  BUNDLE true
+  MACOSX_BUNDLE_INFO_PLIST "${TORQUE_APP_ROOT_DIRECTORY}/source/Info.plist")
 
 	# Ensure the shared libraries are actually referenced at the correct path
 	set(CMAKE_XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/../Frameworks")
@@ -454,3 +456,23 @@ if (UNIX)
 	  endif()
 	endforeach()
 endif (UNIX)
+
+if(APPLE)
+install(TARGETS ${APP_NAME}
+          BUNDLE DESTINATION . COMPONENT Runtime
+          RUNTIME DESTINATION bin COMPONENT Runtime
+          LIBRARY DESTINATION lib
+          ARCHIVE DESTINATION lib/static)
+
+# Note Mac specific extension .app
+set(APPS "\${TORQUE_APP_GAME_DIRECTORY}/${APP_NAME}.app")
+
+# Directories to look for dependencies
+set(DIRS ${CMAKE_BINARY_DIR})
+
+install(CODE "include(BundleUtilities)
+  fixup_bundle(\"${APPS}\" \"\" \"${DIRS}\")")
+
+set(CPACK_GENERATOR "DRAGNDROP")
+include(CPack)
+endif()

@@ -1,6 +1,7 @@
 #detect Architecture
 enable_language(OBJC)
 enable_language(OBJCXX)
+enable_language(CXX)
 
 find_program(XCODEBUILD_EXECUTABLE xcodebuild)
 execute_process(COMMAND ${XCODEBUILD_EXECUTABLE} -version -sdk macosx Path
@@ -33,27 +34,13 @@ elseif(NOT DEFINED BUILD_LIBTOOL)
           OUTPUT_STRIP_TRAILING_WHITESPACE)
 endif()
 
-# Find the toolchain's provided install_name_tool if none is found on the host
-if(DEFINED CMAKE_INSTALL_NAME_TOOL)
-  # Environment variables are always preserved.
-  set(ENV{_CMAKE_INSTALL_NAME_TOOL} "${CMAKE_INSTALL_NAME_TOOL}")
-elseif(DEFINED ENV{_CMAKE_INSTALL_NAME_TOOL})
-  set(CMAKE_INSTALL_NAME_TOOL "$ENV{_CMAKE_INSTALL_NAME_TOOL}")
-elseif(NOT DEFINED CMAKE_INSTALL_NAME_TOOL)
-  execute_process(COMMAND xcrun -sdk ${XCODE_SDK_ROOT_DIR} -find install_name_tool
-          OUTPUT_VARIABLE CMAKE_INSTALL_NAME_TOOL_INT
-          ERROR_QUIET
-          OUTPUT_STRIP_TRAILING_WHITESPACE)
-  set(CMAKE_INSTALL_NAME_TOOL ${CMAKE_INSTALL_NAME_TOOL_INT} CACHE INTERNAL "")
-endif()
-
 get_property(languages GLOBAL PROPERTY ENABLED_LANGUAGES)
 foreach(lang ${languages})
   set(CMAKE_${lang}_CREATE_STATIC_LIBRARY "${BUILD_LIBTOOL} -static -o <TARGET> <LINK_FLAGS> <OBJECTS> " CACHE INTERNAL "")
 endforeach()
 
 set(CMAKE_FRAMEWORK_PATH "/Applications/XCode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks")
-
+set(CMAKE_SHARED_LINKER_FLAGS "-rpath @executable_path/../Frameworks -rpath @loader_path/../Frameworks")
 set(CMAKE_FIND_FRAMEWORK FIRST)
 # minimum for multi arch build is 11.
 set(CMAKE_OSX_DEPLOYMENT_TARGET "11" CACHE STRING "" FORCE)
@@ -62,10 +49,9 @@ set(CMAKE_XCODE_ATTRIBUTE_MACOSX_DEPLOYMENT_TARGET[arch=arm64] "11.0" CACHE STRI
 set(CMAKE_XCODE_ATTRIBUTE_SDKROOT macosx)
 set(CMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH "NO")
 set(CMAKE_SYSTEM_NAME Darwin)
-set(CMAKE_THREAD_LIBS_INIT "-lpthread")
-set(CMAKE_HAVE_THREADS_LIBRARY 1)
-set(CMAKE_USE_WIN32_THREADS_INIT 0)
-set(CMAKE_USE_PTHREADS_INIT 1)
+
+set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
+
 set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED "NO")
 set(CMAKE_SHARED_LIBRARY_PREFIX "lib")
 set(CMAKE_SHARED_LIBRARY_SUFFIX ".dylib")
@@ -108,7 +94,6 @@ set(CMAKE_SHARED_MODULE_CREATE_C_FLAGS "-bundle -Wl,-headerpad_max_install_names
 set(CMAKE_SHARED_MODULE_LOADER_C_FLAG "-Wl,-bundle_loader,")
 set(CMAKE_SHARED_MODULE_LOADER_CXX_FLAG "-Wl,-bundle_loader,")
 set(CMAKE_FIND_LIBRARY_SUFFIXES ".tbd" ".dylib" ".so" ".a")
-set(CMAKE_SHARED_LIBRARY_SONAME_C_FLAG "-install_name")
 
 if(CMAKE_OSX_ARCHITECTURES MATCHES "((^|;|, )(arm64|arm64e|x86_64))+")
   set(CMAKE_C_SIZEOF_DATA_PTR 8)
@@ -124,19 +109,32 @@ else()
   set(CMAKE_SYSTEM_PROCESSOR "arm")
 endif()
 
+if(DEFINED CMAKE_INSTALL_NAME_TOOL)
+  # Environment variables are always preserved.
+  set(ENV{_CMAKE_INSTALL_NAME_TOOL} "${CMAKE_INSTALL_NAME_TOOL}")
+elseif(DEFINED ENV{_CMAKE_INSTALL_NAME_TOOL})
+  set(CMAKE_INSTALL_NAME_TOOL "$ENV{_CMAKE_INSTALL_NAME_TOOL}")
+elseif(NOT DEFINED CMAKE_INSTALL_NAME_TOOL)
+  execute_process(COMMAND xcrun -sdk ${XCODE_SDK_ROOT_DIR} -find install_name_tool
+          OUTPUT_VARIABLE CMAKE_INSTALL_NAME_TOOL_INT
+          ERROR_QUIET
+          OUTPUT_STRIP_TRAILING_WHITESPACE)
+  set(CMAKE_INSTALL_NAME_TOOL ${CMAKE_INSTALL_NAME_TOOL_INT} CACHE INTERNAL "")
+endif()
+
 # Only create a single Xcode project file
 set(CMAKE_XCODE_GENERATE_TOP_LEVEL_PROJECT_ONLY TRUE)
 # Add all libraries to project link phase (lets Xcode handle linking)
 set(CMAKE_XCODE_LINK_BUILD_PHASE_MODE KNOWN_LOCATION)
-set(CMAKE_XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@loader_path/../Frameworks")
+set(CMAKE_XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/../Frameworks")
 
 # Enable codesigning with secure timestamp when not in Debug configuration (required for Notarization)
 set(CMAKE_XCODE_ATTRIBUTE_OTHER_CODE_SIGN_FLAGS[variant=Release] "--timestamp")
 set(CMAKE_XCODE_ATTRIBUTE_OTHER_CODE_SIGN_FLAGS[variant=RelWithDebInfo] "--timestamp")
 
 # Enable codesigning with hardened runtime option when not in Debug configuration (required for Notarization)
-set(CMAKE_XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME[variant=Release] YES)
-set(CMAKE_XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME[variant=RelWithDebInfo] YES)
+#set(CMAKE_XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME[variant=Release] YES)
+#set(CMAKE_XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME[variant=RelWithDebInfo] YES)
 
 # Disable injection of Xcode's base entitlements used for debugging when not in Debug configuration (required for
 # Notarization)
@@ -144,6 +142,18 @@ set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_INJECT_BASE_ENTITLEMENTS[variant=Release] NO
 set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_INJECT_BASE_ENTITLEMENTS[variant=RelWithDebInfo] NO)
 
 set(_release_configs RelWithDebInfo Release)
-  if(CMAKE_BUILD_TYPE IN_LIST _release_configs)
-    add_link_options(LINKER:-dead_strip)
-  endif()
+if(CMAKE_BUILD_TYPE IN_LIST _release_configs)
+  add_link_options(LINKER:-dead_strip)
+endif()
+
+if(APPLE)
+    set(CMAKE_THREAD_LIBS_INIT "-lpthread")
+    set(CMAKE_HAVE_THREADS_LIBRARY 1)
+    set(CMAKE_USE_WIN32_THREADS_INIT 0)
+    set(CMAKE_USE_PTHREADS_INIT 1)
+    set(THREADS_PREFER_PTHREAD_FLAG ON)
+endif()
+
+set(CMAKE_MACOSX_RPATH 1)
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+

@@ -422,9 +422,19 @@ endforeach()
 
 target_compile_definitions(${TORQUE_APP_NAME} PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
 target_link_libraries(${TORQUE_APP_NAME} ${TORQUE_LINK_LIBRARIES})
+
 if(APPLE)
-target_link_libraries(${TORQUE_APP_NAME} ${TORQUE_LINK_FRAMEWORKS})
+  target_link_libraries(${TORQUE_APP_NAME} ${TORQUE_LINK_FRAMEWORKS})
 endif(APPLE)
+
+if(WIN32)
+  target_link_libraries(${TORQUE_APP_NAME} ${TORQUE_LINK_WINDOWS})
+endif(WIN32)
+
+if(UNIX AND NOT APPLE)
+  target_link_libraries(${TORQUE_APP_NAME} ${TORQUE_LINK_LINUX})
+endif(UNIX AND NOT APPLE)
+
 target_link_options(${TORQUE_APP_NAME} PUBLIC ${TORQUE_LINK_OPTIONS})
 if (TORQUE_TARGET_PROPERTIES)
    set_target_properties(${TORQUE_APP_NAME} PROPERTIES ${TORQUE_TARGET_PROPERTIES})

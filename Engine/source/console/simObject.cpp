@@ -560,7 +560,7 @@ void SimObject::onTamlCustomRead(TamlCustomNodes const& customNodes)
                   // Check common fields.
                   if (field)
                   {
-                     setDataField(fieldName, buf, cField->getFieldValue());
+                     setPrefixedDataField(fieldName, buf, cField->getFieldValue());
                   }
                   else
                   {

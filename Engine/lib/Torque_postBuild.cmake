@@ -19,7 +19,7 @@ if (APPLE)
     addFramework("IOKit")
     #grrr damn you sdl!
     addFramework("Carbon")
-    set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} iconv)
+    set(TORQUE_LINK_FRAMEWORKS ${TORQUE_LINK_FRAMEWORKS} iconv)
     if(NOT TORQUE_DEDICATED)
         addFramework("OpenGL")
         addFramework("CoreVideo")

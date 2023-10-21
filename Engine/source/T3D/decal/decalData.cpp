@@ -340,9 +340,11 @@ void DecalData::_initMaterial()
 
 void DecalData::_updateMaterial()
 {
-   if(mMaterialAsset.isNull())
+   U32 assetStatus = MaterialAsset::getAssetErrCode(mMaterialAsset);
+   if (assetStatus != AssetBase::Ok && assetStatus != AssetBase::UsingFallback)
+   {
       return;
-
+   }
    // Only update material instance if we have one allocated.
    if ( matInst )
       _initMaterial();

@@ -65,6 +65,7 @@
 class ShapeAsset : public AssetBase
 {
    typedef AssetBase Parent;
+   typedef AssetPtr<ShapeAsset> ConcreteAssetPtr;
 
 protected:
    StringTableEntry   mFileName;
@@ -104,15 +105,14 @@ public:
 
    static StringTableEntry smNoShapeAssetFallback;
 
-   static const String mShapeErrCodeStrings[U32(ShapeAssetErrCode::Extended) - U32(Parent::Extended) + 1];
-
-   static U32 getAssetErrCode(AssetPtr<ShapeAsset> shapeAsset) { if (shapeAsset) return shapeAsset->mLoadedState; else return 0; }
+   static const String mErrCodeStrings[U32(ShapeAssetErrCode::Extended) - U32(Parent::Extended) + 1];
+   static U32 getAssetErrCode(ConcreteAssetPtr checkAsset) { if (checkAsset) return checkAsset->mLoadedState; else return 0; }
 
    static String getAssetErrstrn(U32 errCode)
    {
       if (errCode < Parent::Extended) return Parent::getAssetErrstrn(errCode);
       if (errCode > ShapeAssetErrCode::Extended) return "undefined error";
-      return mShapeErrCodeStrings[errCode - Parent::Extended];
+      return mErrCodeStrings[errCode - Parent::Extended];
    };
 
    ShapeAsset();
@@ -136,7 +136,7 @@ public:
 
    TSShape* getShape() { return mShape; }
 
-   Resource<TSShape> getShapeResource() { return mShape; }
+   Resource<TSShape> getShapeResource() { loadShape(); return mShape; }
 
    void SplitSequencePathAndName(String& srcPath, String& srcName);
    StringTableEntry getShapeFileName() { return mFileName; }

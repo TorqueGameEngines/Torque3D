@@ -99,7 +99,12 @@ void TSForestItemData::inspectPostApply()
 
 void TSForestItemData::_onResourceChanged( const Torque::Path &path )
 {
-   if (mShapeAsset.isNull()) return;
+   U32 assetStatus = ShapeAsset::getAssetErrCode(mShapeAsset);
+   if (assetStatus != AssetBase::Ok && assetStatus != AssetBase::UsingFallback)
+   {
+      return;
+   }
+
    if ( path != Path(mShapeAsset->getShapeFilePath()) )
       return;
    
@@ -111,8 +116,11 @@ void TSForestItemData::_onResourceChanged( const Torque::Path &path )
 
 void TSForestItemData::_loadShape()
 {
-   if (mShapeAsset.isNull()) return;
-
+   U32 assetStatus = ShapeAsset::getAssetErrCode(mShapeAsset);
+   if (assetStatus != AssetBase::Ok && assetStatus != AssetBase::UsingFallback)
+   {
+      return;
+   }
    _setShape(mShapeAssetId);
 
    if ( !(bool)mShape )
@@ -157,7 +165,12 @@ TSShapeInstance* TSForestItemData::_getShapeInstance() const
 
 void TSForestItemData::_checkLastDetail()
 {
-   if (mShapeAsset.isNull()) return;
+   U32 assetStatus = ShapeAsset::getAssetErrCode(mShapeAsset);
+   if (assetStatus != AssetBase::Ok && assetStatus != AssetBase::UsingFallback)
+   {
+      return;
+   }
+
    const S32 dl = mShape->mSmallestVisibleDL;
    const TSDetail *detail = &mShape->details[dl];
 

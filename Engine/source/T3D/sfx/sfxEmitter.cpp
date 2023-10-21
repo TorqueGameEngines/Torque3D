@@ -698,7 +698,7 @@ void SFXEmitter::_update()
    // is toggled on a local profile sound.  It makes the
    // editor feel responsive and that things are working.
    if(  gEditingMission &&
-        (mSoundAsset.isNull() || !mSoundAsset->getSfxProfile()) &&
+        (SoundAsset::getAssetErrCode(mSoundAsset) || !mSoundAsset->getSfxProfile()) &&
         mPlayOnAdd && 
         mDirty.test( IsLooping ) )
       prevState = SFXStatusPlaying;

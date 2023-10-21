@@ -157,7 +157,8 @@ bool GroundPlane::onAdd()
 
 void GroundPlane::onRemove()
 {
-   if (!mMaterialAsset.isNull())
+   U32 assetStatus = MaterialAsset::getAssetErrCode(mMaterialAsset);
+   if (assetStatus == AssetBase::Ok)
       AssetDatabase.releaseAsset(mMaterialAsset.getAssetId());
 
    //SAFE_DELETE(mMaterialInst);
@@ -593,8 +594,11 @@ void GroundPlane::generateGrid( U32 width, U32 height, F32 squareSize,
 
 void GroundPlane::getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList)
 {
-   if (!mMaterialAsset.isNull() && mMaterialAsset->getAssetId() != MaterialAsset::smNoMaterialAssetFallback)
+   U32 assetStatus = MaterialAsset::getAssetErrCode(mMaterialAsset);
+   if (assetStatus == AssetBase::Ok)
+   {
       usedAssetsList->push_back_unique(mMaterialAsset->getAssetId());
+   }
 
 }
 

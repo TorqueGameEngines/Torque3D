@@ -394,6 +394,12 @@ bool SFXController::_execInsn()
       case OP_Play:
       {
          SFXPlayList* playList = getPlayList();
+         if (playList == NULL)
+         {
+            endUpdate = true;
+            break;
+         }
+
          SFXTrack* track = playList->getSlots().mTrack[insn.mSlotIndex];
          
          // Handle existing sources playing on this slot and find
@@ -816,6 +822,9 @@ void SFXController::_update()
    Parent::_update();
    
    SFXPlayList* playList = getPlayList();
+
+   if (!playList)
+      Parent::stop();
 
    // Check all sources against the current state setup and
    // take appropriate actions.

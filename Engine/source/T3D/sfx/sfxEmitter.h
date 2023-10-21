@@ -116,7 +116,7 @@ class SFXEmitter : public SceneObject
 
       /// A local profile object used to coax the
       /// sound system to play a custom sound.
-      SFXProfile mLocalProfile;
+      SFXTrack* mLocalProfile;
 
       /// The description used by the local profile.
       SFXDescription mDescription;

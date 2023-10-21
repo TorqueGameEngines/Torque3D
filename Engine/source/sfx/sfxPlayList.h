@@ -30,13 +30,8 @@
    #include "sfx/sfxTrack.h"
 #endif
 
-#ifndef SOUND_ASSET_H
-#include "T3D/assets/SoundAsset.h"
-#endif
-
-
 class SFXState;
-
+class SFXDescription;
 
 /// A playback list of SFXTracks.
 ///
@@ -79,7 +74,7 @@ class SFXPlayList : public SFXTrack
    
       typedef SFXTrack Parent;
       
-      enum
+      enum SFXPlaylistSettings
       {
          /// Number of slots in a playlist.
          ///
@@ -261,6 +256,9 @@ class SFXPlayList : public SFXTrack
          /// is playing.
          EStateMode mStateMode[ NUM_SLOTS ];
 
+         /// Track to play in this slot.
+         SFXTrack* mTrack[NUM_SLOTS];
+
          SlotData()
          {
             dMemset( mReplayMode, 0, sizeof( mReplayMode ) );
@@ -268,6 +266,7 @@ class SFXPlayList : public SFXTrack
             dMemset( mTransitionOut, 0, sizeof( mTransitionOut ) );
             dMemset( mRepeatCount, 0, sizeof( mRepeatCount ) );
             dMemset( mState, 0, sizeof( mState ) );
+            dMemset( mTrack, 0, sizeof( mTrack ) );
             dMemset( mStateMode, 0, sizeof( mStateMode ) );
             
             for( U32 i = 0; i < NUM_SLOTS; ++ i )
@@ -282,31 +281,33 @@ class SFXPlayList : public SFXTrack
             }
          }
       };
-      DECLARE_SOUNDASSET_ARRAY(SFXPlayList, Track, NUM_SLOTS);
-      DECLARE_ASSET_ARRAY_SETGET(SFXPlayList, Track);
 
-   protected:
-   
+   public:
+      // moved to public for soundasset
+
       /// Trace interpreter execution.  This field is not networked.
       bool mTrace;
-   
+
       /// Select slots at random.
       ERandomMode mRandomMode;
-         
+
       /// Loop over slots in this list.
       ELoopMode mLoopMode;
-      
+
       /// Number of slots to play from list.  This can be used, for example,
       /// to create a list of tracks where only a single track is selected and
       /// played for each cycle.
       U32 mNumSlotsToPlay;
-      
+
       /// Data for each of the playlist slots.
       SlotData mSlots;
-               
-   public:
-   
+
+      U32 mActiveSlots;
+
       SFXPlayList();
+
+      /// The destructor.
+      virtual ~SFXPlayList();
       
       /// Make all settings conform to constraints.
       void validate();
@@ -324,7 +325,7 @@ class SFXPlayList : public SFXTrack
       ELoopMode getLoopMode() const { return mLoopMode; }
       
       /// Return the total number of slots in the list.
-      U32 getNumSlots() const { return NUM_SLOTS; }
+      U32 getNumSlots();
       
       /// Return the slot data for this list.
       const SlotData& getSlots() const { return mSlots; }
@@ -332,8 +333,13 @@ class SFXPlayList : public SFXTrack
       DECLARE_CONOBJECT( SFXPlayList );
       DECLARE_CATEGORY( "SFX" );
       DECLARE_DESCRIPTION( "A playback list of SFXProfiles or nested SFXPlayLists." );
-      
+
+      // SFXTrack.
+      virtual bool isLooping() const;
+
       // SimDataBlock.
+      bool onAdd();
+      void onRemove();
       virtual bool preload( bool server, String& errorStr );
       virtual void packData( BitStream* stream );
       virtual void unpackData( BitStream* stream );

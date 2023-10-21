@@ -143,7 +143,7 @@ class SFXSound : public SFXSource,
       bool isBlocked() const { return ( mVoice && mVoice->getStatus() == SFXStatusBlocked ); }
       
       /// Returns true if this is a continuously streaming source.
-      bool isStreaming() const { return mDescription->mIsStreaming; }
+      bool isStreaming() const { return mDescription ? mDescription->mIsStreaming : false; }
 
       /// Returns true if the source's associated data is ready for playback.
       bool isReady() const;

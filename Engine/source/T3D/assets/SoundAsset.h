@@ -84,6 +84,7 @@ class SFXPlayList;
 class SoundAsset : public AssetBase
 {
    typedef AssetBase Parent;
+   typedef AssetPtr<SoundAsset> ConcreteAssetPtr;
 
 protected:
    StringTableEntry        mSoundFile[12];
@@ -124,6 +125,23 @@ protected:
    SoundAssetChanged mChangeSignal;
 
 public:
+   enum SoundAssetErrCode
+   {
+      BadProfile = AssetErrCode::Extended,
+      BadDescription,
+      BadBufferData,
+      Extended
+   };
+
+   static const String mErrCodeStrings[U32(SoundAssetErrCode::Extended) - U32(Parent::Extended) + 1];
+   static U32 getAssetErrCode(ConcreteAssetPtr checkAsset) { if (checkAsset) return checkAsset->mLoadedState; else return 0; }
+
+   static String getAssetErrstrn(U32 errCode)
+   {
+      if (errCode < Parent::Extended) return Parent::getAssetErrstrn(errCode);
+      if (errCode > SoundAssetErrCode::Extended) return "undefined error";
+      return mErrCodeStrings[errCode - Parent::Extended];
+   };
    SoundAsset();
    virtual ~SoundAsset();
 
@@ -132,7 +150,7 @@ public:
    virtual void copyTo(SimObject* object);
 
    //SFXResource* getSound() { return mSoundResource; }
-   Resource<SFXResource> getSoundResource(const U32 slotId = 0);
+   Resource<SFXResource> getSoundResource() { loadSound(); return mSFXProfile.getResource(); }
 
    /// Declare Console Object.
    DECLARE_CONOBJECT(SoundAsset);

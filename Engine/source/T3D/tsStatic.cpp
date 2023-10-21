@@ -391,7 +391,8 @@ bool TSStatic::_createShape()
    mAmbientThread = NULL;
    mShape = NULL;
 
-   if(!mShapeAsset.isNull())
+   U32 assetStatus = ShapeAsset::getAssetErrCode(mShapeAsset);
+   if (assetStatus == AssetBase::Ok || assetStatus == AssetBase::UsingFallback)
    {
       //Special-case handling, usually because we set noShape
       mShape = mShapeAsset->getShapeResource();
@@ -1628,8 +1629,11 @@ void TSStatic::updateMaterials()
 
 void TSStatic::getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList)
 {
-   if(!mShapeAsset.isNull() && mShapeAsset->getAssetId() != ShapeAsset::smNoShapeAssetFallback)
+   U32 assetStatus = ShapeAsset::getAssetErrCode(mShapeAsset);
+   if (assetStatus == AssetBase::Ok)
+   {
       usedAssetsList->push_back_unique(mShapeAsset->getAssetId());
+   }
 }
 
 //------------------------------------------------------------------------

@@ -58,6 +58,7 @@ const String AssetBase::mErrCodeStrings[] =
    "Failed",
    "Ok",
    "NotLoaded",
+   "Reloading",
    "BadFileReference",
    "InvalidFormat",
    "DependencyNotFound",
@@ -292,6 +293,8 @@ void AssetBase::refreshAsset(void)
    // Finish if asset is not owned or is not initialized.
    if (mpOwningAssetManager == NULL || !mAssetInitialized)
       return;
+
+   mLoadedState = Reloading;
 
    // Yes, so refresh the asset via the asset manager.
    mpOwningAssetManager->refreshAsset(getAssetId());

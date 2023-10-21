@@ -110,6 +110,14 @@ ConsoleSetType(TypeSoundAssetId)
    Con::warnf("(TypeAssetId) - Cannot set multiple args to a single asset.");
 }
 
+const String SoundAsset::mErrCodeStrings[] =
+{
+   "BadProfile",
+   "BadDescription",
+   "BadBufferData",
+   "UnKnown"
+};
+
 //-----------------------------------------------------------------------------
 
 SoundAsset::SoundAsset()
@@ -322,7 +330,9 @@ void SoundAsset::initializeAsset(void)
       slotCount++;
    }
 
-   loadSound(slotCount);
+   //loadSound(slotCount);
+   //mSoundPath = getOwned() ? expandAssetFilePath(mSoundFile) : mSoundPath;
+   //loadSound();
 }
 
 void SoundAsset::_onResourceChanged(const Torque::Path &path)
@@ -338,7 +348,8 @@ void SoundAsset::_onResourceChanged(const Torque::Path &path)
    }
    refreshAsset();
 
-   loadSound(slotCount);
+   //loadSound(slotCount);
+   //loadSound();
 }
 
 void SoundAsset::onAssetRefresh(void)
@@ -356,11 +367,15 @@ void SoundAsset::onAssetRefresh(void)
       slotCount++;
    }
 
-   loadSound(slotCount);
+   //loadSound(slotCount);
+   //Update
+   //mSoundPath = getOwned() ? expandAssetFilePath(mSoundFile) : mSoundPath;
+   //loadSound();
 }
 
 bool SoundAsset::loadSound(U32 numSlots)
 {
+   if (mLoadedState == AssetErrCode::Ok) return true;
    if (numSlots > 1)
    {
       mIsPlaylist = true;

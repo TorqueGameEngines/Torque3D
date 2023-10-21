@@ -90,6 +90,12 @@ ConsoleSetType(TypeShapeAnimationAssetPtr)
    Con::warnf("(TypeShapeAnimationAssetPtr) - Cannot set multiple args to a single asset.");
 }
 
+const String ShapeAnimationAsset::mErrCodeStrings[] =
+{
+   "TooManyBones",
+   "UnKnown"
+};
+
 //-----------------------------------------------------------------------------
 
 ShapeAnimationAsset::ShapeAnimationAsset() : 

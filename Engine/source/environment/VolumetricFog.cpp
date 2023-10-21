@@ -352,8 +352,8 @@ bool VolumetricFog::setShapeAsset(const StringTableEntry shapeAssetId)
 bool VolumetricFog::LoadShape()
 {
    GFXPrimitiveType GFXdrawTypes[] = { GFXTriangleList, GFXTriangleStrip };
-
-   if (mShapeAsset.isNull())
+   U32 assetStatus = ShapeAsset::getAssetErrCode(mShapeAsset);
+   if (assetStatus != AssetBase::Ok && assetStatus != AssetBase::UsingFallback)
    {
       Con::errorf("[VolumetricFog] Failed to load shape asset.");
       return false;
@@ -1217,9 +1217,11 @@ void VolumetricFog::InitTexture()
 {
    mIsTextured = false;
 
-   if (mTextureAsset.isNull())
+   U32 assetStatus = ImageAsset::getAssetErrCode(mTextureAsset);
+   if (assetStatus != AssetBase::Ok && assetStatus != AssetBase::UsingFallback)
+   {
       return;
-
+   }
    if (!mTexture.isNull())
    {
       mIsTextured = true;

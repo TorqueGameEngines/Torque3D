@@ -241,9 +241,11 @@ void PhysicsShapeData::onRemove()
 
 void PhysicsShapeData::_onResourceChanged( const Torque::Path &path )
 {
-   if (mShapeAsset.isNull())
+   U32 assetStatus = ShapeAsset::getAssetErrCode(mShapeAsset);
+   if (assetStatus != AssetBase::Ok && assetStatus != AssetBase::UsingFallback)
+   {
       return;
-
+   }
    if ( path != Path(mShapeAsset->getShapeFilePath()) )
       return;
 

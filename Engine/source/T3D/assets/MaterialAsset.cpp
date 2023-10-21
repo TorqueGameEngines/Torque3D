@@ -45,6 +45,13 @@
 
 StringTableEntry MaterialAsset::smNoMaterialAssetFallback = NULL;
 
+const String MaterialAsset::mErrCodeStrings[] =
+{
+   "ScriptLoaded",
+   "DefinitionAlreadyExists",
+   "EmbeddedDefinition",
+   "UnKnown"
+};
 //-----------------------------------------------------------------------------
 
 IMPLEMENT_CONOBJECT(MaterialAsset);

@@ -117,7 +117,7 @@ ConsoleSetType(TypeShapeAssetId)
 
 //-----------------------------------------------------------------------------
 
-const String ShapeAsset::mShapeErrCodeStrings[] =
+const String ShapeAsset::mErrCodeStrings[] =
 {
    "TooManyVerts",
    "TooManyBones",
@@ -224,8 +224,6 @@ void ShapeAsset::initializeAsset()
       String normalPath = String(mFilePath) + "_imposter_normals.dds";
       mNormalImposterPath = StringTable->insert(normalPath.c_str());
    }
-
-   loadShape();
 }
 
 void ShapeAsset::setShapeFile(const char* pShapeFile)
@@ -307,11 +305,13 @@ void ShapeAsset::_onResourceChanged(const Torque::Path &path)
 
    refreshAsset();
 
-   loadShape();
+   onAssetRefresh();
 }
 
 bool ShapeAsset::loadShape()
 {
+   if (mLoadedState == AssetErrCode::Ok) return true;
+
    mMaterialAssets.clear();
    mMaterialAssetIds.clear();
 
@@ -396,7 +396,8 @@ bool ShapeAsset::loadShape()
             //First, we need to make sure the anim asset we depend on for our blend is loaded
             AssetPtr<ShapeAnimationAsset> blendAnimAsset = mAnimationAssets[i]->getBlendAnimationName();
 
-            if (blendAnimAsset.isNull())
+            U32 assetStatus = ShapeAnimationAsset::getAssetErrCode(blendAnimAsset);
+            if (assetStatus != AssetBase::Ok)
             {
                Con::errorf("ShapeAsset::initializeAsset - Unable to acquire reference animation asset %s for asset %s to blend!", mAnimationAssets[i]->getBlendAnimationName(), mAnimationAssets[i]->getAssetName());
                {
@@ -533,8 +534,6 @@ void ShapeAsset::onAssetRefresh(void)
    // Update.
    if(!Platform::isFullPath(mFileName))
       mFilePath = getOwned() ? expandAssetFilePath(mFileName) : mFilePath;
-
-   loadShape();
 }
 
 void ShapeAsset::SplitSequencePathAndName(String& srcPath, String& srcName)
@@ -707,6 +706,7 @@ DefineEngineMethod(ShapeAsset, generateCachedPreviewImage, const char*, (S32 res
    "@param resolution Optional field for what resolution to bake the preview image at. Must be pow2\n"
    "@param overrideMaterialName Optional field for overriding the material used when rendering the shape for the bake.")
 {
+   object->loadShape();
    return object->generateCachedPreviewImage(resolution, overrideMaterialName);
 }
 

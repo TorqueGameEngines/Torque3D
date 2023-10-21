@@ -77,8 +77,7 @@ function AssetBrowser::editAssetInfo(%this)
    
    %assetDef = AssetDatabase.acquireAsset(EditAssetPopup.assetId);
    
-   eval("AssetBrowser.tempAsset = new " @ %assetDef.getClassName() @ "();");
-   AssetBrowser.tempAsset.assignFieldsFrom(%assetDef);
+   AssetBrowser.tempAsset = %assetDef.deepClone();
    
    AssetEditInspector.inspect(AssetBrowser.tempAsset);  
    AssetBrowser_editAsset.editedAssetId = EditAssetPopup.assetId;

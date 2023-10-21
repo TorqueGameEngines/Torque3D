@@ -24,6 +24,10 @@ endif()
 set(TORQUE_APP_ROOT_DIRECTORY "${CMAKE_SOURCE_DIR}/My Projects/${TORQUE_APP_NAME}")
 set(TORQUE_APP_GAME_DIRECTORY "${TORQUE_APP_ROOT_DIRECTORY}/game")
 
+#library handling
+set(TORQUE_LIB_ROOT_DIRECTORY "${CMAKE_SOURCE_DIR}/Engine/lib")
+set(TORQUE_LIB_TARG_DIRECTORY "${CMAKE_BINARY_DIR}/Engine/lib")
+
 # Ensure all possible configurations end up in the project directory
 set(CMAKE_INSTALL_PREFIX "${TORQUE_APP_ROOT_DIRECTORY}")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${TORQUE_APP_GAME_DIRECTORY}")
@@ -67,6 +71,6 @@ if (NOT TORQUE_INSTALLED_TEMPLATE)
 endif(NOT TORQUE_INSTALLED_TEMPLATE)
 
 # Generate torqueConfig.h in our temp directory
-configure_file("${CMAKE_SOURCE_DIR}/Tools/CMake/torqueConfig.h.in" "${CMAKE_BINARY_DIR}/temp/torqueConfig.h")
+configure_file("${CMAKE_SOURCE_DIR}/Tools/CMake/torqueConfig.h.in" "${TORQUE_APP_ROOT_DIRECTORY}/source/torqueConfig.h")
 
 add_subdirectory(Engine)

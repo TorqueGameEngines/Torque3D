@@ -229,6 +229,9 @@ endif(TORQUE_TESTING)
 
 # Add the collected files to our engine group
 source_group(TREE "${CMAKE_SOURCE_DIR}/Engine/source" PREFIX "Engine" FILES ${TORQUE_SOURCE_FILES})
+file(GLOB_RECURSE TORQUE_APP_GAME_SOURCES "${TORQUE_APP_ROOT_DIRECTORY}/source/*.cpp" "${TORQUE_APP_ROOT_DIRECTORY}/source/*.h")
+source_group(TREE "${TORQUE_APP_ROOT_DIRECTORY}/source" PREFIX "Source Files" FILES ${TORQUE_APP_GAME_SOURCES})
+set(TORQUE_INCLUDE_DIRECTORIES ${TORQUE_INCLUDE_DIRECTORIES} "${TORQUE_APP_ROOT_DIRECTORY}/source")
 
 ################# Engine Module Handling ###################
 
@@ -239,7 +242,7 @@ endif()
 
 # Before doing module scanning, store away the engine sources - we do this so that modules
 # can be placed into the proper filters
-set(TORQUE_SOURCE_FILES_TEMPORARY ${TORQUE_SOURCE_FILES})
+set(TORQUE_SOURCE_FILES_TEMPORARY ${TORQUE_SOURCE_FILES} ${TORQUE_APP_GAME_SOURCES})
 set(TORQUE_SOURCE_FILES "")
 
 foreach (TORQUE_MODULE_PATH ${TORQUE_MODULE_PATHS})
@@ -299,8 +302,8 @@ endforeach()
 if (WIN32)
 	set(APPLICATION_ICON_PATH "${CMAKE_SOURCE_DIR}/Tools/CMake/torque.ico")
 
-	configure_file("${CMAKE_SOURCE_DIR}/Tools/CMake/torque-win.rc.in" "${CMAKE_BINARY_DIR}/temp/torque.rc")
-	set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} "${CMAKE_BINARY_DIR}/temp/torque.rc")
+	configure_file("${CMAKE_SOURCE_DIR}/Tools/CMake/torque-win.rc.in" "${TORQUE_APP_ROOT_DIRECTORY}/source/torque.rc")
+	set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} "${TORQUE_APP_ROOT_DIRECTORY}/source/torque.rc")
 endif (WIN32)
 
 # Prepare OSX Plist
@@ -309,7 +312,7 @@ if (APPLE)
 	set_source_files_properties("${CMAKE_SOURCE_DIR}/Tools/CMake/torque.icns" PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
 
 	set(EXECUTABLE_NAME "${TORQUE_APP_NAME}")
-	configure_file("${CMAKE_SOURCE_DIR}/Tools/CMake/Info.plist.in" "${CMAKE_BINARY_DIR}/temp/Info.plist" COPYONLY)
+	configure_file("${CMAKE_SOURCE_DIR}/Tools/CMake/Info.plist.in" "${TORQUE_APP_ROOT_DIRECTORY}/source/Info.plist" COPYONLY)
 endif (APPLE)
 
 addDef(TORQUE_DEBUG Debug)
@@ -337,7 +340,6 @@ if (TORQUE_DYNAMIC_LIBRARY AND NOT TORQUE_TESTING)
   target_compile_definitions(TorqueEngine PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
   target_link_libraries(TorqueEngine ${TORQUE_LINK_LIBRARIES})
   target_include_directories(TorqueEngine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp" ${TORQUE_INCLUDE_DIRECTORIES})
-  target_compile_features(TorqueEngine PRIVATE cxx_std_20)
 
   set(TORQUE_SOURCE_FILES "main/main.cpp")
   set(TORQUE_LINK_LIBRARIES TorqueEngine)
@@ -349,7 +351,7 @@ endif (TORQUE_DYNAMIC_LIBRARY AND NOT TORQUE_TESTING)
 
 if (APPLE)
 	add_executable(${TORQUE_APP_NAME} MACOSX_BUNDLE ${TORQUE_SOURCE_FILES})
-	set_target_properties(${TORQUE_APP_NAME} PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_BINARY_DIR}/temp/Info.plist")
+	set_target_properties(${TORQUE_APP_NAME} PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${TORQUE_APP_ROOT_DIRECTORY}/source/Info.plist")
 
 	# Ensure the shared libraries are actually referenced at the correct path
 	set(CMAKE_XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/../Frameworks")
@@ -406,7 +408,6 @@ if (TORQUE_TARGET_PROPERTIES)
    set_target_properties(${TORQUE_APP_NAME} PROPERTIES ${TORQUE_TARGET_PROPERTIES})
 endif (TORQUE_TARGET_PROPERTIES)
 target_include_directories(${TORQUE_APP_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp" ${TORQUE_INCLUDE_DIRECTORIES})
-target_compile_features(${TORQUE_APP_NAME} PRIVATE cxx_std_20)
 
 if(TORQUE_TESTING)
   if(WIN32)

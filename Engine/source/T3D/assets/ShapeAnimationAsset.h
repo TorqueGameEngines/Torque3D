@@ -44,11 +44,17 @@
 #include "core/resource.h"
 #endif
 
+#ifndef _ASSET_PTR_H_
+#include "assets/assetPtr.h"
+#endif
+
+#include "assetMacroHelpers.h"
+
 //-----------------------------------------------------------------------------
 class ShapeAnimationAsset : public AssetBase
 {
    typedef AssetBase Parent;
-
+   typedef AssetPtr<ShapeAnimationAsset> ConcreteAssetPtr;
 protected:
    StringTableEntry   mFileName;
    StringTableEntry   mFilePath;
@@ -72,6 +78,21 @@ protected:
    Resource<TSShape> mSourceShape;
 
 public:
+   enum ShapeAnimationAssetErrCode
+   {
+      TooManyBones = AssetErrCode::Extended,
+      Extended
+   };
+
+   static const String mErrCodeStrings[U32(ShapeAnimationAssetErrCode::Extended) - U32(Parent::Extended) + 1];
+   static U32 getAssetErrCode(ConcreteAssetPtr checkAsset) { if (checkAsset) return checkAsset->mLoadedState; else return 0; }
+
+   static String getAssetErrstrn(U32 errCode)
+   {
+      if (errCode < Parent::Extended) return Parent::getAssetErrstrn(errCode);
+      if (errCode > ShapeAnimationAssetErrCode::Extended) return "undefined error";
+      return mErrCodeStrings[errCode - Parent::Extended];
+   };
    ShapeAnimationAsset();
    virtual ~ShapeAnimationAsset();
 

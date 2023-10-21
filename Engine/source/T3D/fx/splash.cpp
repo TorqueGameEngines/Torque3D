@@ -686,7 +686,7 @@ void Splash::spawnExplosion()
 
    /// could just play the explosion one, but explosion could be weapon specific,
    /// splash sound could be liquid specific. food for thought.
-   SFXProfile* sound_prof = mDataBlock->getSoundProfile();
+   SFXTrack* sound_prof = mDataBlock->getSoundProfile();
    if (sound_prof)
    {
       SFX->playOnce(sound_prof, &getTransform());

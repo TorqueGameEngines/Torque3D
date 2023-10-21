@@ -89,6 +89,120 @@ ColorI SFXEmitter::smRenderColorOutsideVolume( 255, 0, 0, 255 );
 ColorI SFXEmitter::smRenderColorRangeSphere( 200, 0, 0, 90 );
 
 
+
+//-----------------------------------------------------------------------------
+
+ConsoleType(SoundControls, TypeSoundControls, bool, "")
+
+ConsoleGetType(TypeSoundControls)
+{
+   return "";
+}
+ConsoleSetType(TypeSoundControls)
+{
+}
+
+IMPLEMENT_CONOBJECT(GuiInspectorTypeSoundControls);
+ConsoleDocClass(GuiInspectorTypeSoundControls,
+   "@brief Inspector field type for Controlling playback of sounds\n\n"
+   "Editor use only.\n\n"
+   "@internal"
+);
+
+void GuiInspectorTypeSoundControls::consoleInit()
+{
+   Parent::consoleInit();
+
+   ConsoleBaseType::getType(TypeSoundControls)->setInspectorFieldType("GuiInspectorTypeSoundControls");
+}
+
+GuiControl* GuiInspectorTypeSoundControls::constructEditControl()
+{
+   // Create base filename edit controls
+   GuiControl* retCtrl = Parent::constructEditControl();
+   if (retCtrl == NULL)
+      return retCtrl;
+
+   char szBuffer[512];
+
+   setDataField(StringTable->insert("targetObject"), NULL, mInspector->getInspectObject()->getIdString());
+
+   mPlayButton = new GuiBitmapButtonCtrl();
+   dSprintf(szBuffer, sizeof(szBuffer), "%d.play();", mInspector->getInspectObject()->getId());
+   mPlayButton->setField("Command", szBuffer);
+
+   mPlayButton->setBitmap(StringTable->insert("ToolsModule:playbutton_n_image"));
+
+   mPlayButton->setDataField(StringTable->insert("Profile"), NULL, "GuiButtonProfile");
+   mPlayButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
+   mPlayButton->setDataField(StringTable->insert("hovertime"), NULL, "1000");
+   mPlayButton->setDataField(StringTable->insert("tooltip"), NULL, "Play this sound emitter");
+
+   mPlayButton->registerObject();
+   addObject(mPlayButton);
+
+   mPauseButton = new GuiBitmapButtonCtrl();
+   dSprintf(szBuffer, sizeof(szBuffer), "%d.pause();", mInspector->getInspectObject()->getId());
+   mPauseButton->setField("Command", szBuffer);
+
+   mPauseButton->setBitmap(StringTable->insert("ToolsModule:pausebutton_n_image"));
+
+   mPauseButton->setDataField(StringTable->insert("Profile"), NULL, "GuiButtonProfile");
+   mPauseButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
+   mPauseButton->setDataField(StringTable->insert("hovertime"), NULL, "1000");
+   mPauseButton->setDataField(StringTable->insert("tooltip"), NULL, "Pause this sound emitter");
+
+   mPauseButton->registerObject();
+   addObject(mPauseButton);
+
+   mStopButton = new GuiBitmapButtonCtrl();
+   dSprintf(szBuffer, sizeof(szBuffer), "%d.stop();", mInspector->getInspectObject()->getId());
+   mStopButton->setField("Command", szBuffer);
+
+   mStopButton->setBitmap(StringTable->insert("ToolsModule:stopbutton_n_image"));
+
+   mStopButton->setDataField(StringTable->insert("Profile"), NULL, "GuiButtonProfile");
+   mStopButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
+   mStopButton->setDataField(StringTable->insert("hovertime"), NULL, "1000");
+   mStopButton->setDataField(StringTable->insert("tooltip"), NULL, "Stop this sound emitter");
+
+   mStopButton->registerObject();
+   addObject(mStopButton);
+
+   return retCtrl;
+}
+
+bool GuiInspectorTypeSoundControls::updateRects()
+{
+   S32 dividerPos, dividerMargin;
+   mInspector->getDivider(dividerPos, dividerMargin);
+   Point2I fieldExtent = getExtent();
+   Point2I fieldPos = getPosition();
+
+   bool resized = mEdit->resize(mEditCtrlRect.point, mEditCtrlRect.extent);
+
+   if (mPlayButton != NULL)
+   {
+      RectI shapeEdRect(2, 2, 16, 16);
+      resized |= mPlayButton->resize(shapeEdRect.point, shapeEdRect.extent);
+   }
+
+   if (mPauseButton != NULL)
+   {
+      RectI shapeEdRect(20, 2, 16, 16);
+      resized |= mPauseButton->resize(shapeEdRect.point, shapeEdRect.extent);
+   }
+
+   if (mStopButton != NULL)
+   {
+      RectI shapeEdRect(38, 2, 16, 16);
+      resized |= mStopButton->resize(shapeEdRect.point, shapeEdRect.extent);
+   }
+
+   return resized;
+}
+
+
 //-----------------------------------------------------------------------------
 
 SFXEmitter::SFXEmitter()
@@ -106,8 +220,7 @@ SFXEmitter::SFXEmitter()
    mDescription.mFadeInTime = -1.f;
    mDescription.mFadeOutTime = -1.f;
    mInstanceDescription = &mDescription;
-   mLocalProfile.mFilename = StringTable->EmptyString();
-   mLocalProfile._registerSignals();
+   mLocalProfile = NULL;
 
    INIT_ASSET(Sound);
 
@@ -119,7 +232,9 @@ SFXEmitter::SFXEmitter()
 
 SFXEmitter::~SFXEmitter()
 {
-   mLocalProfile.onRemove();
+   if(mLocalProfile != NULL)
+      mLocalProfile->onRemove();
+
    SFX_DELETE( mSource );
 }
 
@@ -190,6 +305,8 @@ void SFXEmitter::initPersistFields()
    endGroup( "Media");
 
    addGroup( "Sound" );
+
+      addField("Controls", TypeSoundControls, 0, "");
 
       addField( "playOnAdd",           TypeBool,      Offset( mPlayOnAdd, SFXEmitter ),
          "Whether playback of the emitter's sound should start as soon as the emitter object is added to the level.\n"
@@ -365,6 +482,7 @@ U32 SFXEmitter::packUpdate(NetConnection* con, U32 mask, BitStream* stream)
 
    // Write the source playback state.
    stream->writeFlag( mask & SourcePlayMask );
+   stream->writeFlag( mask & SourcePauseMask );
    stream->writeFlag( mask & SourceStopMask );
 
    return retMask;
@@ -490,6 +608,8 @@ void SFXEmitter::unpackUpdate( NetConnection *conn, BitStream *stream )
    // Check the source playback masks.
    if ( stream->readFlag() ) // SourcePlayMask
       play();
+   if (stream->readFlag()) //SourcePauseMask
+      pause();
    if ( stream->readFlag() ) // SourceStopMask
       stop();
 }
@@ -653,7 +773,7 @@ void SFXEmitter::_update()
    SFXStatus prevState = mSource ? mSource->getStatus() : SFXStatusNull;
 
    // are we overriding the asset properties?
-   bool useTrackDescriptionOnly = (mUseTrackDescriptionOnly && mSoundAsset.notNull() && mSoundAsset->getSfxProfile());
+   bool useTrackDescriptionOnly = (mUseTrackDescriptionOnly && mSoundAsset.notNull() && getSoundProfile());
 
    if (mSoundAsset.notNull())
    {
@@ -662,12 +782,12 @@ void SFXEmitter::_update()
       else
          mInstanceDescription = &mDescription;
 
-      mLocalProfile = *mSoundAsset->getSfxProfile();
-   }
-   // Make sure all the settings are valid.
-   mInstanceDescription->validate();
-   mLocalProfile.setDescription(mInstanceDescription);
+      mLocalProfile = getSoundProfile();
 
+      // Make sure all the settings are valid.
+      mInstanceDescription->validate();
+      mLocalProfile->setDescription(mInstanceDescription);
+   }
 
    const MatrixF& transform = getTransform();
    const VectorF& velocity = getVelocity();
@@ -676,12 +796,12 @@ void SFXEmitter::_update()
    if( mDirty.test( Track | Is3D | IsLooping | IsStreaming | TrackOnly ) )
    {
       SFX_DELETE( mSource );
-      if (mLocalProfile.getSoundFileName().isNotEmpty())
+      if (getSoundProfile())
       {
-         mSource = SFX->createSource(&mLocalProfile, &transform, &velocity);
+         mSource = SFX->createSource(mLocalProfile, &transform, &velocity);
          if (!mSource)
             Con::errorf("SFXEmitter::_update() - failed to create sound for track %i (%s)",
-               mSoundAsset->getSfxProfile()->getId(), mSoundAsset->getSfxProfile()->getName());
+               getSoundProfile()->getId(), getSoundProfile()->getName());
 
          // If we're supposed to play when the emitter is 
          // added to the scene then also restart playback 
@@ -999,6 +1119,23 @@ void SFXEmitter::play()
 
 //-----------------------------------------------------------------------------
 
+void SFXEmitter::pause()
+{
+   if (mSource)
+      mSource->pause();
+   else
+   {
+      // By clearing the playback masks first we
+      // ensure the last playback command called 
+      // within a single tick is the one obeyed.
+      clearMaskBits(AllSourceMasks);
+
+      setMaskBits(SourcePauseMask);
+   }
+}
+
+//-----------------------------------------------------------------------------
+
 void SFXEmitter::stop()
 {
    if ( mSource )
@@ -1043,8 +1180,8 @@ SFXStatus SFXEmitter::_getPlaybackStatus() const
 
 bool SFXEmitter::is3D() const
 {
-   if( mSoundAsset.notNull() && mSoundAsset->getSfxProfile() != NULL )
-      return mSoundAsset->getSfxProfile()->getDescription()->mIs3D;
+   if( mSoundAsset.notNull() )
+      return mSoundAsset->getSfxDescription()->mIs3D;
    else
       return mInstanceDescription->mIs3D;
 }
@@ -1080,8 +1217,8 @@ void SFXEmitter::setScale( const VectorF &scale )
 {
    F32 maxDistance;
    
-   if( mUseTrackDescriptionOnly && mSoundAsset.notNull() && mSoundAsset->getSfxProfile())
-      maxDistance = mSoundAsset->getSfxProfile()->getDescription()->mMaxDistance;
+   if( mUseTrackDescriptionOnly && mSoundAsset.notNull() && getSoundProfile())
+      maxDistance = mSoundAsset->getSfxDescription()->mMaxDistance;
    else
    {
       // Use the average of the three coords.
@@ -1113,6 +1250,15 @@ DefineEngineMethod( SFXEmitter, play, void, (),,
 
 //-----------------------------------------------------------------------------
 
+DefineEngineMethod(SFXEmitter, pause, void, (), ,
+   "Manually pause playback of the emitter's sound.\n"
+   "If this is called on the server-side object, the pause command will be related to all client-side ghosts.\n")
+{
+   object->pause();
+}
+
+//-----------------------------------------------------------------------------
+
 DefineEngineMethod( SFXEmitter, stop, void, (),,
    "Manually stop playback of the emitter's sound.\n"
    "If this is called on the server-side object, the stop command will be related to all client-side ghosts.\n" )
@@ -1130,3 +1276,4 @@ DefineEngineMethod( SFXEmitter, getSource, SFXSource*, (),,
 {
    return object->getSource();
 }
+

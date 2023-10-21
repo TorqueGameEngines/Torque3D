@@ -706,6 +706,7 @@ DefineEngineMethod(ShapeAsset, generateCachedPreviewImage, const char*, (S32 res
    "@param resolution Optional field for what resolution to bake the preview image at. Must be pow2\n"
    "@param overrideMaterialName Optional field for overriding the material used when rendering the shape for the bake.")
 {
+   object->loadShape();
    return object->generateCachedPreviewImage(resolution, overrideMaterialName);
 }
 

@@ -1,0 +1,8 @@
+<ImageAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="stopbutton_n_image"
+    imageFile="@assetFile=stopbutton_n.png"
+    UseMips="true"
+    isHDRImage="false"
+    imageType="Albedo" />

@@ -309,15 +309,9 @@ void SoundAsset::copyTo(SimObject* object)
    Parent::copyTo(object);
 }
 
-Resource<SFXResource> SoundAsset::getSoundResource(const U32 slotId)
-{
-   return mSFXProfile[slotId].getResource();
-}
-
 void SoundAsset::initializeAsset(void)
 {
    Parent::initializeAsset();
-   U32 slotCount = 0;
    for (U32 i = 0; i < SFXPlayList::SFXPlaylistSettings::NUM_SLOTS; i++)
    {
       if (i == 0 && mSoundFile[i] == StringTable->EmptyString())
@@ -327,7 +321,6 @@ void SoundAsset::initializeAsset(void)
          break;
 
       mSoundPath[i] = getOwned() ? expandAssetFilePath(mSoundFile[i]) : mSoundPath[i];
-      slotCount++;
    }
 
    //loadSound(slotCount);
@@ -337,14 +330,11 @@ void SoundAsset::initializeAsset(void)
 
 void SoundAsset::_onResourceChanged(const Torque::Path &path)
 {
-   U32 slotCount = 0;
    for (U32 i = 0; i < SFXPlayList::NUM_SLOTS; i++)
    {
 
       if (path != Torque::Path(mSoundPath[i]))
          return;
-
-      slotCount++;
    }
    refreshAsset();
 
@@ -354,7 +344,6 @@ void SoundAsset::_onResourceChanged(const Torque::Path &path)
 
 void SoundAsset::onAssetRefresh(void)
 {
-   U32 slotCount = 0;
    for (U32 i = 0; i < SFXPlayList::SFXPlaylistSettings::NUM_SLOTS; i++)
    {
       if (i == 0 && mSoundFile[i] == StringTable->EmptyString())
@@ -364,7 +353,6 @@ void SoundAsset::onAssetRefresh(void)
          break;
 
       mSoundPath[i] = getOwned() ? expandAssetFilePath(mSoundFile[i]) : mSoundPath[i];
-      slotCount++;
    }
 
    //loadSound(slotCount);
@@ -373,9 +361,24 @@ void SoundAsset::onAssetRefresh(void)
    //loadSound();
 }
 
-bool SoundAsset::loadSound(U32 numSlots)
+bool SoundAsset::loadSound()
 {
    if (mLoadedState == AssetErrCode::Ok) return true;
+
+   // find out how many active slots we have.
+   U32 numSlots = 0;
+   for (U32 i = 0; i < SFXPlayList::SFXPlaylistSettings::NUM_SLOTS; i++)
+   {
+      if (i == 0 && mSoundPath[i] == StringTable->EmptyString())
+         return false;
+
+      if (mSoundPath[i] == StringTable->EmptyString())
+         break;
+
+      numSlots++;
+   }
+
+
    if (numSlots > 1)
    {
       mIsPlaylist = true;

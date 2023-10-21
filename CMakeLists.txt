@@ -4,10 +4,6 @@ set(CMAKE_CONFIGURATION_TYPES "Debug;RelWithDebInfo;Release" CACHE STRING "" FOR
 
 include("${CMAKE_SOURCE_DIR}/Tools/CMake/torque_macros.cmake")
 include("${CMAKE_SOURCE_DIR}/Tools/CMake/torque_configs.cmake")
-file(GLOB OS_SCRIPTS "${CMAKE_SOURCE_DIR}/Tools/CMake/torque*configs.cmake")
-foreach (TORQUE_OS_SCRIPT ${OS_SCRIPTS})
-    include(${TORQUE_OS_SCRIPT})
-endforeach() 
 
 # Ensure multi-core compilation is enabled for everything
 add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/MP>)
@@ -73,5 +69,9 @@ endif(NOT TORQUE_INSTALLED_TEMPLATE)
 
 # Generate torqueConfig.h in our temp directory
 configure_file("${CMAKE_SOURCE_DIR}/Tools/CMake/torqueConfig.h.in" "${TORQUE_APP_ROOT_DIRECTORY}/source/torqueConfig.h")
+
+if(APPLE)
+include("${CMAKE_SOURCE_DIR}/Tools/CMake/torqueMacOSconfigs.cmake")
+endif(APPLE)
 
 add_subdirectory(Engine)

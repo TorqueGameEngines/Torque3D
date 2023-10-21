@@ -1,4 +1,3 @@
-if(APPLE)
 #detect Architecture
 enable_language(OBJC)
 enable_language(OBJCXX)
@@ -161,4 +160,4 @@ set(CMAKE_XCODE_ATTRIBUTE_LINKER_DISPLAYS_MANGLED_NAMES[variant=Debug] YES)
 set(CMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH[variant=Debug] YES)
 set(CMAKE_XCODE_ATTRIBUTE_ENABLE_TESTABILITY[variant=Debug] YES)
 
-endif(APPLE)
+add_subdirectory(${TORQUE_ENGINE_DIRECTORY})

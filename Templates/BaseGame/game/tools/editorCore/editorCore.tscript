@@ -1,0 +1,12 @@
+
+function EditorCore::onCreate(%this)
+{
+   exec("./scripts/menuBar/menuBuilder.ed.tscript");
+   
+   MenuBuilder::init();
+}
+
+function EditorCore::onDestroy(%this)
+{
+   MenuBuilder::clearMenus();
+}

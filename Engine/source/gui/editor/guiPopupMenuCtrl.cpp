@@ -210,11 +210,31 @@ bool GuiPopupMenuTextListCtrl::onKeyDown(const GuiEvent &event)
 
 void GuiPopupMenuTextListCtrl::onMouseDown(const GuiEvent &event)
 {
+   if(mLastHighlightedMenuIdx != -1)
+   {
+      //See if we're trying to click on a submenu
+      if(mList[mLastHighlightedMenuIdx].text[1] != 1)
+      {
+         //yep, so abort
+         return;
+      }
+   }
+
    Parent::onMouseDown(event);
 }
 
 void GuiPopupMenuTextListCtrl::onMouseUp(const GuiEvent &event)
 {
+   if (mLastHighlightedMenuIdx != -1)
+   {
+      //See if we're trying to click on a submenu
+      if (mList[mLastHighlightedMenuIdx].text[1] != 1)
+      {
+         //yep, so abort
+         return;
+      }
+   }
+
    Parent::onMouseUp(event);
 
    S32 selectionIndex = getSelectedCell().y;

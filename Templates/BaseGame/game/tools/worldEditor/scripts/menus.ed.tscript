@@ -364,19 +364,18 @@ function EditorGui::buildMenus(%this)
    %this.menuBar.insert(%toolsMenu);
       
    // Help Menu
-   %helpMenu = new PopupMenu()
-   {
-      superClass = "MenuBuilder";
-      class = "EditorHelpMenu";
-
-      barTitle = "Help";
-
-      item[0] = "Online Documentation..." TAB "Alt F1" TAB "gotoWebPage(EWorldEditor.documentationURL);";
-      item[1] = "Offline User Guide..." TAB "" TAB "gotoWebPage(EWorldEditor.documentationLocal);";
-      item[2] = "Offline Reference Guide..." TAB "" TAB "shellexecute(EWorldEditor.documentationReference);";
-      item[3] = "Torque 3D Forums..." TAB "" TAB "gotoWebPage(EWorldEditor.forumURL);";
-   };
-   %this.menuBar.insert(%helpMenu);
+   %helpMenu = MenuBuilder::newMenu("Help", "EditorHelpMenu");
+   %helpMenu.newItem("Online Documentation...", "gotoWebPage(EWorldEditor.documentationURL);", "Alt F1");
+   %helpMenu.newItem("Offline User Guide...", "gotoWebPage(EWorldEditor.documentationLocal);");
+   %helpMenu.newItem("Offline Reference Guide...", "shellexecute(EWorldEditor.documentationReference);");
+   %helpMenu.newItem("Torque 3D Forums...", "gotoWebPage(EWorldEditor.forumURL);");
+   
+   //These files don't currently exist, so we're going to disable them until such a time
+   //as they exist again
+   %helpMenu.enableItem(1, false);
+   %helpMenu.enableItem(2, false);
+   
+   MenuBuilder::addMenuToMenubar(%this.menubar, %helpMenu);
    
    // Menus that are added/removed dynamically (temporary)
    

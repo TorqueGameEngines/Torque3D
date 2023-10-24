@@ -158,46 +158,25 @@ function MenuBuilder::newMenu(%title, %className)
 
 function MenuBuilder::newItem(%this, %itemLabel, %command, %accelerator, %pos, %icon)
 {
-   if(%pos < 0)
-   {
-      error("MenuBuilder::addItem() - position must be greater than 0!");  
-      return;
-   }
-   
-   if(%pos $= "")
-   {
-      %pos = %this.numItems;
-   }
-   else
-   {
-      //ok, we need to nudge all indexed items up from the insert position and up
-      for(%i = %this.numItems; %i > %pos; %i--)
-      {
-         %this.item[%i+1] = %this.item[%i]; 
-      }
-   }
-   
    if(isObject(%command))
-      %this.item[%pos] = %itemLabel TAB %command;
+      %item = %itemLabel TAB %command;
    else      
-      %this.item[%pos] = %itemLabel TAB %accelerator TAB %command TAB %icon;
-   
-   %this.numItems++;
-   
-   %this.reloadItems();
+      %item = %itemLabel TAB %accelerator TAB %command TAB %icon;
+      
+   %this.setItemPosition(%item, %pos);
 }
 
 function MenuBuilder::newSubmenu(%this, %title, %className, %pos)
 {
    if(%title $= "")
    {
-      error("MenuBuilder::addSubmenu() - menu requires title!");
+      error("MenuBuilder::newSubmenu() - menu requires title!");
       return 0;  
    }
    
    if(%pos < 0)
    {
-      error("MenuBuilder::addSubmenu() - position must be greater than 0!");  
+      error("MenuBuilder::newSubmenu() - position must be greater than 0!");  
       return;
    }
    
@@ -213,17 +192,30 @@ function MenuBuilder::newSubmenu(%this, %title, %className, %pos)
       isSubmenu = true;
    };
    
-   %this.newItem(%pos, %title TAB %newMenu);
+   if(%pos $= "")
+      %pos = %this.numItems;
    
-   return %newMenu;
+   if(%this.setItemPosition(%title TAB %newMenu, %pos))
+   {
+      return %newMenu;
+   }
+   
+   return 0;
 }
 
 function MenuBuilder::newSeparator(%this, %pos)
 {
+   %item = "-";
+   
+   %this.setItemPosition(%item, %pos);
+}
+
+function MenuBuilder::setItemPosition(%this, %item, %pos)
+{
    if(%pos < 0)
    {
-      error("MenuBuilder::addItem() - position must be greater than 0!");  
-      return;
+      error("MenuBuilder::setItemPosition() - position must be greater than 0!");  
+      return false;
    }
    
    if(%pos $= "")
@@ -239,29 +231,44 @@ function MenuBuilder::newSeparator(%this, %pos)
       }
    }
    
-   %this.item[%pos] = "-";
-   %this.numItems++;
+   %this.item[%pos] = %item;
    
+   %this.numItems++;
    %this.reloadItems();
+   
+   return true;
 }
 
 // Static function
-function MenuBuilder::findMenu(%title)
+function MenuBuilder::findMenu(%title, %recurse)
 {
+   if(%recurse $= "")
+      %recurse = false;
+      
    for(%i=0; %i < MenuBuilderMenuList.count(); %i++)
    {
       %menu = MenuBuilderMenuList.getObject(%i);
+      
       if(%menu.barTitle $= %title)
       {
          return %menu;  
+      }
+      else if(%recurse)
+      {
+         %subMenu = %menu.findMenu(%title, %recurse);
+         if(isObject(%submenu))
+            return %subMenu; 
       }
    }
    
    return 0;
 }
 
-function MenuBuilder::findMenu(%this, %title)
+function MenuBuilder::findMenu(%this, %title, %recurse)
 {
+   if(%recurse $= "")
+      %recurse = false;
+      
    for(%i=0; %i < %this.numItems; %i++)
    {
       %item = %this.item[%i];
@@ -269,7 +276,15 @@ function MenuBuilder::findMenu(%this, %title)
       if(isObject(%menu))
       {
          if(%menu.barTitle $= %title)
+         {
             return %menu;
+         }
+         else if(%recurse)
+         {
+            %subMenu = %menu.findMenu(%title, %recurse);
+            if(isObject(%submenu))
+               return %subMenu; 
+         }
       }
    }
    

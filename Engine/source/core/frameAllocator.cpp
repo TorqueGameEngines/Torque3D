@@ -23,15 +23,21 @@
 #include "core/frameAllocator.h"
 #include "console/engineAPI.h"
 
-U8*   FrameAllocator::smBuffer = NULL;
-U32   FrameAllocator::smWaterMark = 0;
-U32   FrameAllocator::smHighWaterMark = 0;
+thread_local FrameAllocator::FrameAllocatorType   FrameAllocator::smMainInstance;
 
-#ifdef TORQUE_DEBUG
-U32   FrameAllocator::smMaxFrameAllocation = 0;
+#ifdef TORQUE_MEM_DEBUG
+thread_local dsize_t   FrameAllocator::smAllocatedBytes;
+#endif
 
-DefineEngineFunction(getMaxFrameAllocation, S32, (),,"")
+#if defined(TORQUE_DEBUG)
+
+dsize_t FrameAllocator::smMaxFrameAllocation;
+
+
+DefineEngineFunction(getMaxFrameAllocation, S32, (), , "")
 {
-   return FrameAllocator::getMaxFrameAllocation();
+   return (S32)FrameAllocator::smMaxFrameAllocation;
 }
+
+
 #endif

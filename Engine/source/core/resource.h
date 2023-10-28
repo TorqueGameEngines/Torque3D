@@ -62,6 +62,7 @@ class ResourceHolderBase
 public:
    static FreeListChunker<ResourceHolderBase> smHolderFactory;
 
+   ResourceHolderBase() : mRes(NULL) { ; } // @note this is needed for the chunked allocator
    virtual ~ResourceHolderBase() {}
    
    // Return void pointer to resource data.

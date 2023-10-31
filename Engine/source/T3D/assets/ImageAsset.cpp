@@ -247,13 +247,10 @@ U32 ImageAsset::getAssetById(StringTableEntry assetId, AssetPtr<ImageAsset>* ima
    {
       if (imageAsset->isNull())
       {
-         (*imageAsset)->loadImage();
-         //Well that's bad, loading the fallback failed.
-         Con::warnf("ImageAsset::getAssetById - Finding of asset with id %s failed with no fallback asset", assetId);
          return AssetErrCode::Failed;
       }
 
-      //handle noshape not being loaded itself
+      //handle fallback not being loaded itself
       if ((*imageAsset)->mLoadedState == BadFileReference)
       {
          (*imageAsset)->loadImage();

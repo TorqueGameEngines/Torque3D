@@ -925,7 +925,7 @@ void GuiShapeEdPreview::exportToCollada( const String& path )
          MatrixF mat( true );
          if ( mount->mNode != -1 )
          {
-            mat = mModel->mNodeTransforms[ mount->mNode ];
+            mat = *(mModel->mNodeTransforms[ mount->mNode ]);
             mat *= mount->mTransform;
          }
 
@@ -1065,8 +1065,8 @@ void GuiShapeEdPreview::handleMouseDragged(const GuiEvent& event, GizmoMode mode
                // Update node transform
                if ( mSelectedNode != -1 )
                {
-                  Point3F pos = mModel->mNodeTransforms[mSelectedNode].getPosition() + mGizmo->getOffset();
-                  mModel->mNodeTransforms[mSelectedNode].setPosition( pos );
+                  Point3F pos = mModel->mNodeTransforms.getPosition(mSelectedNode) + mGizmo->getOffset();
+                  mModel->mNodeTransforms.setPosition(mSelectedNode, pos );
                }
                break;
 
@@ -1075,7 +1075,7 @@ void GuiShapeEdPreview::handleMouseDragged(const GuiEvent& event, GizmoMode mode
                if ( mSelectedNode != -1 )
                {
                   EulerF rot = mGizmo->getDeltaRot();
-                  mModel->mNodeTransforms[mSelectedNode].mul( MatrixF( rot ) );
+                  mModel->mNodeTransforms.setRotation(mSelectedNode, rot );
                }
                break;
             default:
@@ -1084,8 +1084,8 @@ void GuiShapeEdPreview::handleMouseDragged(const GuiEvent& event, GizmoMode mode
 
             // Notify the change in node transform
             const char* name = mModel->getShape()->getNodeName(mSelectedNode).c_str();
-            const Point3F pos = mModel->mNodeTransforms[mSelectedNode].getPosition();
-            AngAxisF aa(mModel->mNodeTransforms[mSelectedNode]);
+            const Point3F pos = mModel->mNodeTransforms.getPosition(mSelectedNode);
+            AngAxisF aa(*(mModel->mNodeTransforms[mSelectedNode]));
             char buffer[256];
             dSprintf(buffer, sizeof(buffer), "%g %g %g %g %g %g %g",
                pos.x, pos.y, pos.z, aa.axis.x, aa.axis.y, aa.axis.z, aa.angle);
@@ -1145,7 +1145,7 @@ void GuiShapeEdPreview::updateProjectedNodePoints()
    {
       // Project the 3D node position to get the 2D screen coordinates
       for ( S32 i = 0; i < mModel->mNodeTransforms.size(); i++)
-         project( mModel->mNodeTransforms[i].getPosition(), &mProjectedNodes[i] );
+         project( mModel->mNodeTransforms.getPosition(i), &mProjectedNodes[i] );
    }
 }
 
@@ -1230,7 +1230,7 @@ void GuiShapeEdPreview::computeSceneBounds(Box3F& bounds)
       //We probably don't have any actual meshes in this model, so compute using the bones if we have them
       for (S32 i = 0; i < mModel->getShape()->nodes.size(); i++)
       {
-         Point3F nodePos = mModel->mNodeTransforms[i].getPosition();
+         Point3F nodePos = mModel->mNodeTransforms.getPosition(i);
 
          bounds.extend(nodePos);
       }
@@ -1476,7 +1476,7 @@ void GuiShapeEdPreview::renderWorld(const RectI &updateRect)
 
             if ( mount->mNode != -1 )
             {
-               GFX->multWorld( mModel->mNodeTransforms[ mount->mNode ] );
+               GFX->multWorld( *(mModel->mNodeTransforms[ mount->mNode ]) );
                GFX->multWorld( mount->mTransform );
             }
 
@@ -1516,7 +1516,7 @@ void GuiShapeEdPreview::renderWorld(const RectI &updateRect)
          {
             GFX->pushWorldMatrix();
             if ( obj.nodeIndex != -1 )
-               GFX->multWorld( mModel->mNodeTransforms[ obj.nodeIndex ] );
+               GFX->multWorld( *(mModel->mNodeTransforms[ obj.nodeIndex ]) );
 
             const Box3F& bounds = mesh->getBounds();
             GFXStateBlockDesc desc;
@@ -1642,8 +1642,8 @@ void GuiShapeEdPreview::renderNodes() const
          const TSShape::Node& node = mModel->getShape()->nodes[i];
          if (node.parentIndex >= 0)
          {
-            Point3F start(mModel->mNodeTransforms[i].getPosition());
-            Point3F end(mModel->mNodeTransforms[node.parentIndex].getPosition());
+            Point3F start(mModel->mNodeTransforms.getPosition(i));
+            Point3F end(mModel->mNodeTransforms.getPosition(node.parentIndex));
 
             PrimBuild::vertex3f( start.x, start.y, start.z );
             PrimBuild::vertex3f( end.x, end.y, end.z );
@@ -1671,7 +1671,7 @@ void GuiShapeEdPreview::renderNodes() const
    {
       renderNodeAxes( mSelectedNode, LinearColorF::GREEN );
 
-      const MatrixF& nodeMat = mModel->mNodeTransforms[mSelectedNode];
+      const MatrixF& nodeMat = *(mModel->mNodeTransforms[mSelectedNode]);
       mGizmo->set( nodeMat, nodeMat.getPosition(), Point3F::One);
       mGizmo->renderGizmo( smCamMatrix );
    }
@@ -1693,7 +1693,7 @@ void GuiShapeEdPreview::renderNodeAxes(S32 index, const LinearColorF& nodeColor)
    F32 scale = mOrbitDist / 60;
 
    GFX->pushWorldMatrix();
-   GFX->multWorld( mModel->mNodeTransforms[index] );
+   GFX->multWorld( *(mModel->mNodeTransforms[index] ));
    const ColorI color = LinearColorF(nodeColor).toColorI();
    GFX->getDrawUtil()->drawCube( desc, xAxis * scale, Point3F::Zero, color );
    GFX->getDrawUtil()->drawCube( desc, yAxis * scale, Point3F::Zero, color );

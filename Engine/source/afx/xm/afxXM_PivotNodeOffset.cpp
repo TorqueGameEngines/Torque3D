@@ -165,7 +165,7 @@ void afxXM_PivotNodeOffset::updateParams(F32 dt, F32 elapsed, afxXM_Params& para
       TSShapeInstance* ts_shape_inst = fx_wrapper->getTSShapeInstance();
       if (ts_shape_inst)
       {
-        const MatrixF& pivot_xfm = ts_shape_inst->mNodeTransforms[node_ID];
+        const MatrixF& pivot_xfm = *(ts_shape_inst->mNodeTransforms[node_ID]);
         pivot_offset = -pivot_xfm.getPosition();
         offset_calculated = true;
       }

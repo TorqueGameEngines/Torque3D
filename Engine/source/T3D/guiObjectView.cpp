@@ -554,7 +554,7 @@ void GuiObjectView::renderWorld( const RectI& updateRect )
    if( mMountedModel && mMountNode != -1 )
    {
       GFX->pushWorldMatrix();
-      GFX->multWorld( mModel->mNodeTransforms[ mMountNode ] );
+      GFX->multWorld( *(mModel->mNodeTransforms[ mMountNode ]) );
       GFX->multWorld( mMountTransform );
       
       mMountedModel->render( rdata );

@@ -375,18 +375,18 @@ bool WheeledVehicleData::preload(bool server, String &errorStr)
          dSprintf(buff,sizeof(buff),"spring%d",i);
          wp->springSequence = mShape->findSequence(buff);
          if (wp->springSequence == -1)
-            si->mNodeTransforms[wp->springNode].getColumn(3, &wp->pos);
+            wp->pos = si->mNodeTransforms.getPosition(wp->springNode);
          else {
             si->setSequence(thread,wp->springSequence,0);
             si->animate();
-            si->mNodeTransforms[wp->springNode].getColumn(3, &wp->pos);
+            wp->pos = si->mNodeTransforms.getPosition(wp->springNode);
 
             // Determin the length of the animation so we can scale it
             // according the actual wheel position.
             Point3F downPos;
             si->setSequence(thread,wp->springSequence,1);
             si->animate();
-            si->mNodeTransforms[wp->springNode].getColumn(3, &downPos);
+            downPos = si->mNodeTransforms.getPosition(wp->springNode);
             wp->springLength = wp->pos.z - downPos.z;
             if (!wp->springLength)
                wp->springSequence = -1;

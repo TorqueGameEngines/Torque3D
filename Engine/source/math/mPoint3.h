@@ -1055,6 +1055,29 @@ inline Point3F mReflect( const Point3F &v, const Point3F &n )
    return v - 2 * n * mDot( v, n );
 }
 
+inline Point3F mMin3D(const Point3F& a, const Point3F& b)
+{
+   Point3F temp;
+   temp.x = (a.x < b.x) ? a.x : b.x;
+   temp.y = (a.y < b.y) ? a.y : b.y;
+   temp.x = (a.z < b.z) ? a.z : b.z;
+   return temp;
+}
+
+inline Point3F mMax3D(const Point3F& a, const Point3F& b)
+{
+   Point3F temp;
+   temp.x = (a.x > b.x) ? a.x : b.x;
+   temp.y = (a.y > b.y) ? a.y : b.y;
+   temp.x = (a.z > b.z) ? a.z : b.z;
+   return temp;
+}
+
+inline Point3F mClamp3D(const Point3F& val, const Point3F& low, const Point3F& high)
+{
+   return mMax3D(mMin3D(val, high), low);
+}
+
 /// Returns a perpendicular vector to the unit length input vector.
 extern Point3F mPerp( const Point3F &normal );
 

@@ -1727,7 +1727,7 @@ void afxShapeNodeConstraint::sample(F32 dt, U32 elapsed_ms, const Point3F* cam_p
   {
     mLast_xfm = mShape->getRenderTransform();
     mLast_xfm.scale(mShape->getScale());
-    mLast_xfm.mul(mShape->getShapeInstance()->mNodeTransforms[mShape_node_ID]);
+    mLast_xfm.mul(*(mShape->getShapeInstance()->mNodeTransforms[mShape_node_ID]));
     mLast_pos = mLast_xfm.getPosition();
   }
 }
@@ -2031,7 +2031,7 @@ bool afxEffectNodeConstraint::getPosition(Point3F& pos, F32 hist)
   Point3F scale;
   mEffect->getUpdatedScale(scale);
 
-  MatrixF gag = ts_shape_inst->mNodeTransforms[mEffect_node_ID];
+  MatrixF gag = *(ts_shape_inst->mNodeTransforms[mEffect_node_ID]);
   gag.setPosition( gag.getPosition()*scale );
 
   MatrixF xfm;
@@ -2065,7 +2065,7 @@ bool afxEffectNodeConstraint::getTransform(MatrixF& xfm, F32 hist)
   Point3F scale;
   mEffect->getUpdatedScale(scale);
 
-  MatrixF gag = ts_shape_inst->mNodeTransforms[mEffect_node_ID];
+  MatrixF gag = *(ts_shape_inst->mNodeTransforms[mEffect_node_ID]);
   gag.setPosition( gag.getPosition()*scale );
 
   xfm.mul(mLast_xfm, gag);

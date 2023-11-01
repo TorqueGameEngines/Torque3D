@@ -107,7 +107,7 @@ void SFX3DObject::getEarTransform( MatrixF& transform ) const
    if ( earNode != -1 && earNode != datablock->eyeNode )
    {
       transform = shape->getTransform();
-      transform *= shapeInstance->mNodeTransforms[ earNode ];
+      transform *= *(shapeInstance->mNodeTransforms[ earNode ]);
    }
    else
    {

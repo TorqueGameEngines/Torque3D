@@ -49,7 +49,9 @@
 #ifndef _TSMATERIALLIST_H_
 #include "ts/tsMaterialList.h"
 #endif
-
+#ifndef _MATRIXVEC_H_
+#include "math/util/matrixVec.h"
+#endif
 class RenderItem;
 class TSThread;
 class ConvexFeature;
@@ -218,7 +220,7 @@ class TSShapeInstance
    Vector<MeshObjectInstance> mMeshObjects;
 
    /// storage space for node transforms
-   Vector<MatrixF> mNodeTransforms;
+   RelationVec3D mNodeTransforms;
 
    /// @name Reference Transform Vectors
    /// unused until first transition

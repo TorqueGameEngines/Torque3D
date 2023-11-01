@@ -39,7 +39,6 @@
 #include "console/engineTypeInfo.h"
 #endif
 
-
 /// 4x4 Matrix Class
 ///
 /// This runs at F32 precision.

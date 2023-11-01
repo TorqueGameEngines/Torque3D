@@ -745,7 +745,7 @@ void FlyingVehicle::updateEmitter(bool active,F32 dt,ParticleEmitterData *emitte
             MatrixF mat;
             Point3F pos,axis;
             mat.mul(getRenderTransform(),
-                    mShapeInstance->mNodeTransforms[mDataBlock->jetNode[j]]);
+                    *(mShapeInstance->mNodeTransforms[mDataBlock->jetNode[j]]));
             mat.getColumn(1,&axis);
             mat.getColumn(3,&pos);
             mJetEmitter[j]->emitParticles(pos,true,axis,getVelocity(),(U32)(dt * 1000));

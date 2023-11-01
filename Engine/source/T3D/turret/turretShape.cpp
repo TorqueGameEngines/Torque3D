@@ -765,7 +765,7 @@ bool TurretShape::getNodeTransform(S32 node, MatrixF& mat)
    if (node == -1)
       return false;
 
-   MatrixF nodeTransform = mShapeInstance->mNodeTransforms[node];
+   MatrixF nodeTransform = *(mShapeInstance->mNodeTransforms[node]);
    const Point3F& scale = getScale();
 
    // The position of the node needs to be scaled.
@@ -806,7 +806,7 @@ void TurretShape::_updateNodes(const Point3F& rot)
    S32 node = mDataBlock->headingNode;
    if (node != -1)
    {
-      MatrixF* mat = &mShapeInstance->mNodeTransforms[node];
+      MatrixF* mat = mShapeInstance->mNodeTransforms[node];
       Point3F defaultPos = mShapeInstance->getShape()->defaultTranslations[node];
       Quat16 defaultRot = mShapeInstance->getShape()->defaultRotations[node];
 
@@ -820,7 +820,7 @@ void TurretShape::_updateNodes(const Point3F& rot)
    node = mDataBlock->pitchNode;
    if (node != -1)
    {
-      MatrixF* mat = &mShapeInstance->mNodeTransforms[node];
+      MatrixF* mat = mShapeInstance->mNodeTransforms[node];
       Point3F defaultPos = mShapeInstance->getShape()->defaultTranslations[node];
       Quat16 defaultRot = mShapeInstance->getShape()->defaultRotations[node];
 
@@ -836,7 +836,7 @@ void TurretShape::_updateNodes(const Point3F& rot)
       node = mDataBlock->pitchNodes[i];
       if (node != -1)
       {
-         MatrixF* mat = &mShapeInstance->mNodeTransforms[node];
+         MatrixF* mat = mShapeInstance->mNodeTransforms[node];
          Point3F defaultPos = mShapeInstance->getShape()->defaultTranslations[node];
          Quat16 defaultRot = mShapeInstance->getShape()->defaultRotations[node];         
 
@@ -849,7 +849,7 @@ void TurretShape::_updateNodes(const Point3F& rot)
       node = mDataBlock->headingNodes[i];
       if (node != -1)
       {
-         MatrixF* mat = &mShapeInstance->mNodeTransforms[node];
+         MatrixF* mat = mShapeInstance->mNodeTransforms[node];
          Point3F defaultPos = mShapeInstance->getShape()->defaultTranslations[node];
          Quat16 defaultRot = mShapeInstance->getShape()->defaultRotations[node];
 
@@ -999,7 +999,7 @@ void TurretShape::getCameraTransform(F32* pos,MatrixF* mat)
    Point3F osp,sp;
    if (mDataBlock->cameraNode != -1) 
    {
-      mShapeInstance->mNodeTransforms[mDataBlock->cameraNode].getColumn(3,&osp);
+      osp = mShapeInstance->mNodeTransforms.getPosition(mDataBlock->cameraNode);
       getRenderTransform().mulP(osp,&sp);
    }
    else
@@ -1141,7 +1141,7 @@ void TurretShape::getWeaponMountTransform( S32 index, const MatrixF &xfm, Matrix
    if ( index >= 0 && index < ShapeBase::MaxMountedImages) {
       S32 ni = mDataBlock->weaponMountNode[index];
       if (ni != -1) {
-         MatrixF mountTransform = mShapeInstance->mNodeTransforms[ni];
+         MatrixF mountTransform = *(mShapeInstance->mNodeTransforms[ni]);
          mountTransform.mul( xfm );
          const Point3F& scale = getScale();
 
@@ -1166,7 +1166,7 @@ void TurretShape::getRenderWeaponMountTransform( F32 delta, S32 mountPoint, cons
    if ( mountPoint >= 0 && mountPoint < ShapeBase::MaxMountedImages) {
       S32 ni = mDataBlock->weaponMountNode[mountPoint];
       if (ni != -1) {
-         MatrixF mountTransform = mShapeInstance->mNodeTransforms[ni];
+         MatrixF mountTransform = *(mShapeInstance->mNodeTransforms[ni]);
          mountTransform.mul( xfm );
          const Point3F& scale = getScale();
 
@@ -1244,7 +1244,7 @@ void TurretShape::getImageTransform(U32 imageSlot,S32 node,MatrixF* mat)
          ShapeBaseImageData& data = *image.dataBlock;
          U32 shapeIndex = getImageShapeIndex(image);
 
-         MatrixF nmat = image.shapeInstance[shapeIndex]->mNodeTransforms[node];
+         MatrixF nmat = *(image.shapeInstance[shapeIndex]->mNodeTransforms[node]);
          MatrixF mmat;
 
          if (data.useEyeNode && isFirstPerson() && data.eyeMountNode[shapeIndex] != -1)
@@ -1255,7 +1255,7 @@ void TurretShape::getImageTransform(U32 imageSlot,S32 node,MatrixF* mat)
             MatrixF emat;
             getEyeBaseTransform(&emat, mDataBlock->mountedImagesBank);
 
-            MatrixF mountTransform = image.shapeInstance[shapeIndex]->mNodeTransforms[data.eyeMountNode[shapeIndex]];
+            MatrixF mountTransform = *(image.shapeInstance[shapeIndex]->mNodeTransforms[data.eyeMountNode[shapeIndex]]);
             mountTransform.affineInverse();
 
             mmat.mul(emat, mountTransform);
@@ -1295,7 +1295,7 @@ void TurretShape::getRenderImageTransform(U32 imageSlot,S32 node,MatrixF* mat)
          ShapeBaseImageData& data = *image.dataBlock;
          U32 shapeIndex = getImageShapeIndex(image);
 
-         MatrixF nmat = image.shapeInstance[shapeIndex]->mNodeTransforms[node];
+         MatrixF nmat = *(image.shapeInstance[shapeIndex]->mNodeTransforms[node]);
          MatrixF mmat;
 
          if ( data.useEyeNode && isFirstPerson() && data.eyeMountNode[shapeIndex] != -1 )
@@ -1303,7 +1303,7 @@ void TurretShape::getRenderImageTransform(U32 imageSlot,S32 node,MatrixF* mat)
             MatrixF emat;
             getRenderEyeBaseTransform(&emat, mDataBlock->mountedImagesBank);
 
-            MatrixF mountTransform = image.shapeInstance[shapeIndex]->mNodeTransforms[data.eyeMountNode[shapeIndex]];
+            MatrixF mountTransform = *(image.shapeInstance[shapeIndex]->mNodeTransforms[data.eyeMountNode[shapeIndex]]);
             mountTransform.affineInverse();
 
             mmat.mul(emat, mountTransform);

@@ -2029,7 +2029,7 @@ void ShapeBase::getNodeTransform(const char* nodeName, MatrixF* outMat)
    const Point3F& scale = getScale();
    if (nodeIDx != -1)
    {
-      nodeTransform = mShapeInstance->mNodeTransforms[nodeIDx];
+      nodeTransform = *(mShapeInstance->mNodeTransforms[nodeIDx]);
       nodeTransform.mul(xfm);
    }
    // The position of the mount point needs to be scaled.
@@ -2066,7 +2066,7 @@ void ShapeBase::getEyeBaseTransform(MatrixF* mat, bool includeBank)
    // Returns eye to world space transform
    S32 eyeNode = mDataBlock->eyeNode;
    if (eyeNode != -1)
-      mat->mul(getTransform(), mShapeInstance->mNodeTransforms[eyeNode]);
+      mat->mul(getTransform(), *(mShapeInstance->mNodeTransforms[eyeNode]));
    else
       *mat = getTransform();
 }
@@ -2081,7 +2081,7 @@ void ShapeBase::getRenderEyeBaseTransform(MatrixF* mat, bool includeBank)
    // Returns eye to world space transform
    S32 eyeNode = mDataBlock->eyeNode;
    if (eyeNode != -1)
-      mat->mul(getRenderTransform(), mShapeInstance->mNodeTransforms[eyeNode]);
+      mat->mul(getRenderTransform(), *(mShapeInstance->mNodeTransforms[eyeNode]));
    else
       *mat = getRenderTransform();
 }
@@ -2116,7 +2116,7 @@ void ShapeBase::getCameraTransform(F32* pos,MatrixF* mat)
       // Use the camera node's pos.
       Point3F osp,sp;
       if (mDataBlock->cameraNode != -1) {
-         mShapeInstance->mNodeTransforms[mDataBlock->cameraNode].getColumn(3,&osp);
+         osp = mShapeInstance->mNodeTransforms.getPosition(mDataBlock->cameraNode);
 
          // Scale the camera position before applying the transform
          const Point3F& scale = getScale();
@@ -3524,7 +3524,7 @@ void ShapeBaseConvex::findNodeTransform()
       const TSShape::Object* obj = &shape->objects[i];
       if (obj->numMeshes && detail->objectDetailNum < obj->numMeshes) 
       {
-         nodeTransform = &si->mNodeTransforms[obj->nodeIndex];
+         nodeTransform = si->mNodeTransforms[obj->nodeIndex];
          return;
       }
    }

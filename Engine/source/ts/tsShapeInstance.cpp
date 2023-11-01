@@ -218,7 +218,7 @@ void TSShapeInstance::initMeshObjects()
       MeshObjectInstance * objInst = &mMeshObjects[i];
 
       // hook up the object to it's node and transforms.
-      objInst->mTransforms = &mNodeTransforms;
+      objInst->mTransforms = mNodeTransforms.refGlobal();
       objInst->nodeIndex = obj->nodeIndex;
 
       // set up list of meshes
@@ -400,7 +400,7 @@ void TSShapeInstance::renderDebugNodes()
    desc.setZReadWrite( false, false );
 
    for ( U32 i = 0; i < mNodeTransforms.size(); i++ )
-      drawUtil->drawTransform( desc, mNodeTransforms[i], NULL, NULL );
+      drawUtil->drawTransform( desc, *(mNodeTransforms[i]), NULL, NULL );
 }
 
 void TSShapeInstance::listMeshes( const String &state ) const

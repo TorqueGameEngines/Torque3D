@@ -1927,7 +1927,7 @@ void afxMagicMissile::get_launch_data(Point3F& pos, Point3F& vel)
         MatrixF node_xfm = launch_cons_obj->getRenderTransform();
         node_xfm.scale(launch_cons_obj->getScale());
         if (node_ID >= 0)
-          node_xfm.mul(shape_inst->mNodeTransforms[node_ID]);
+          node_xfm.mul(shape_inst->mNodeTransforms.copyLocal(node_ID));
         
         VectorF node_offset = mDataBlock->launch_node_offset;
         node_xfm.mulV(node_offset);

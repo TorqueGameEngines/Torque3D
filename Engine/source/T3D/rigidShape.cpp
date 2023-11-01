@@ -980,7 +980,7 @@ void RigidShape::getCameraTransform(F32* pos,MatrixF* mat)
    Point3F osp,sp;
    if (mDataBlock->cameraNode != -1) 
    {
-      mShapeInstance->mNodeTransforms[mDataBlock->cameraNode].getColumn(3,&osp);
+      osp = mShapeInstance->mNodeTransforms.getPosition(mDataBlock->cameraNode);
       getRenderTransform().mulP(osp,&sp);
    }
    else

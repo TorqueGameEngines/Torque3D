@@ -872,7 +872,7 @@ void AITurretShape::_trackTarget(F32 dt)
    if (node != -1)
    {
       // Get the current position of our node
-      MatrixF* nodeTrans = &mShapeInstance->mNodeTransforms[node];
+      MatrixF* nodeTrans = mShapeInstance->mNodeTransforms[node];
       Point3F currentPos;
       nodeTrans->getColumn(3, &currentPos);
 

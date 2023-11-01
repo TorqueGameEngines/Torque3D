@@ -5593,9 +5593,9 @@ void Player::getEyeTransform(MatrixF* mat)
    if (imageIndex >= 0)
    {
       // Get the image's eye node's position relative to the eye mount node
-      MatrixF mountTransform = image->shapeInstance[shapeIndex]->mNodeTransforms[data->eyeMountNode[shapeIndex]];
+      MatrixF mountTransform = *(image->shapeInstance[shapeIndex]->mNodeTransforms[data->eyeMountNode[shapeIndex]]);
       Point3F eyeMountNodePos = mountTransform.getPosition();
-      mountTransform = image->shapeInstance[shapeIndex]->mNodeTransforms[data->eyeNode[shapeIndex]];
+      mountTransform = *(image->shapeInstance[shapeIndex]->mNodeTransforms[data->eyeNode[shapeIndex]]);
       Point3F eyeNodePos = mountTransform.getPosition() - eyeMountNodePos;
 
       // Now transform to the image's eye node (position only)
@@ -5641,7 +5641,7 @@ void Player::getEyeBaseTransform(MatrixF* mat, bool includeBank)
    MatrixF eyeMat(true);
    if (mDataBlock->eyeNode != -1)
    {
-      sp = mShapeInstance->mNodeTransforms[mDataBlock->eyeNode];
+      sp = *(mShapeInstance->mNodeTransforms[mDataBlock->eyeNode]);
    }
    else
    {
@@ -5673,9 +5673,9 @@ void Player::getRenderEyeTransform(MatrixF* mat)
          if ( data.useEyeNode && isFirstPerson() && data.eyeMountNode[shapeIndex] != -1 && data.eyeNode[shapeIndex] != -1 )
          {
             // Get the eye node's position relative to the eye mount node
-            MatrixF mountTransform = image.shapeInstance[shapeIndex]->mNodeTransforms[data.eyeMountNode[shapeIndex]];
+            MatrixF mountTransform = *(image.shapeInstance[shapeIndex]->mNodeTransforms[data.eyeMountNode[shapeIndex]]);
             Point3F eyeMountNodePos = mountTransform.getPosition();
-            mountTransform = image.shapeInstance[shapeIndex]->mNodeTransforms[data.eyeNode[shapeIndex]];
+            mountTransform = *(image.shapeInstance[shapeIndex]->mNodeTransforms[data.eyeNode[shapeIndex]]);
             Point3F eyeNodePos = mountTransform.getPosition() - eyeMountNodePos;
 
             // Now transform to the image's eye node (position only)
@@ -5721,7 +5721,7 @@ void Player::getRenderEyeBaseTransform(MatrixF* mat, bool includeBank)
    MatrixF eyeMat(true);
    if (mDataBlock->eyeNode != -1)
    {
-      sp = mShapeInstance->mNodeTransforms[mDataBlock->eyeNode];
+      sp = *(mShapeInstance->mNodeTransforms[mDataBlock->eyeNode]);
    }
    else
    {
@@ -5871,7 +5871,7 @@ void Player::renderMountedImage( U32 imageSlot, TSRenderState &rstate, SceneRend
       {
          MatrixF nmat;
          getRenderEyeBaseTransform(&nmat, mDataBlock->mountedImagesBank);
-         MatrixF offsetMat = image.shapeInstance[imageShapeIndex]->mNodeTransforms[data.eyeMountNode[imageShapeIndex]];
+         MatrixF offsetMat = *(image.shapeInstance[imageShapeIndex]->mNodeTransforms[data.eyeMountNode[imageShapeIndex]]);
          offsetMat.affineInverse();
          world.mul(nmat,offsetMat);
       }

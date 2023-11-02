@@ -330,12 +330,12 @@ struct SceneRayHelper
                else if (params.type == SceneContainer::RenderedGeometry)
                   result = ptr->castRayRendered(xformedStart, xformedEnd, &ri);
 
-               if (result)
+               if (result && currentT != 0.0f)
                {
                   if (ri.t < currentT)
                   {
                      *info = ri;
-                     info->point.interpolate(*params.start, *params.end, info->t);
+                     info->point.interpolate(*params.start, *params.end, info->t/currentT);
                      currentT = ri.t;
                      info->distance = (*params.start - info->point).len();
                      return true;

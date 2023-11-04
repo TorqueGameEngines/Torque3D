@@ -668,7 +668,7 @@ class SceneContainer
       /// @name Line intersection
       /// @{
 
-      typedef bool ( *CastRayCallback )( RayInfo* ri );
+      typedef bool ( *CastRayCallback )( SceneObject* object );
 
       /// Test against collision geometry -- fast.
       bool castRay( const Point3F &start, const Point3F &end, U32 mask, RayInfo* info, CastRayCallback callback = NULL );

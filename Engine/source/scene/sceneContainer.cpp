@@ -318,10 +318,9 @@ struct SceneRayHelper
                xformedEnd.convolveInverse(ptr->mObjScale);
 
                RayInfo ri;
-               ri.object = ptr;
                ri.generateTexCoord = info->generateTexCoord;
 
-               if (mFunc && !mFunc(&ri))
+               if (mFunc && !mFunc(ptr))
                   return false;
 
                bool result = false;

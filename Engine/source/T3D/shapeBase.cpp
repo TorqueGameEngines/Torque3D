@@ -2301,8 +2301,9 @@ void ShapeBase::updateAudioState(SoundThread& st)
       if ( isGhost() ) 
       {
          // if asset is valid, play
-         if (st.asset->isAssetValid() )
+         if (st.asset.notNull())
          {
+            st.asset->loadSound();
             st.sound = SFX->createSource( st.asset->getSFXTrack() , &getTransform() );
             if ( st.sound )
                st.sound->play();

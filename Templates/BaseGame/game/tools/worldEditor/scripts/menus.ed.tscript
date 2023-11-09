@@ -507,10 +507,15 @@ function EditorGui::buildMenus(%this)
       %class = %class;
       %method = "build" @ %buildfunc;
       if( !ObjectBuilderGui.isMethod( %method ) )
-         %method = "build" @ %class;
-
+         %method = "build" @ %class;         
+         
       if( !ObjectBuilderGui.isMethod( %method ) )
-         %cmd = "return new " @ %class @ "();";
+      {
+         if (isMemberOfClass(%class,"gameBase"))
+            %cmd = "ObjectBuilderGui.buildGameBaseObject("@ %class @");";
+         else
+            %cmd = "return new " @ %class @ "();";
+      }
       else
          %cmd = "ObjectBuilderGui." @ %method @ "();";
 

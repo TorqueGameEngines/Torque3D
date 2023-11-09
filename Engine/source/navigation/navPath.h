@@ -115,6 +115,7 @@ public:
    void renderSimple(ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *overrideMat);
 
    DECLARE_CONOBJECT(NavPath);
+   DECLARE_CATEGORY("Navigation");
 
    /// @}
 

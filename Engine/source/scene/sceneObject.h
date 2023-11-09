@@ -754,6 +754,7 @@ class SceneObject : public NetObject, public ProcessObject
       static bool _setGameObject(void* object, const char* index, const char* data);
 
       DECLARE_CONOBJECT( SceneObject );
+      DECLARE_CATEGORY("MISC");
    private:
 
       SceneObject( const SceneObject& ); ///< @deprecated disallowed

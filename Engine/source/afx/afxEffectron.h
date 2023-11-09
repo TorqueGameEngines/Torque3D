@@ -82,7 +82,6 @@ public:
   static void   initPersistFields();
 
   DECLARE_CONOBJECT(afxEffectronData);
-  DECLARE_CATEGORY("AFX");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
@@ -178,7 +177,6 @@ public:
   void          finish_startup();
 
   DECLARE_CONOBJECT(afxEffectron);
-  DECLARE_CATEGORY("AFX");
 
 private:
   void          process_server();

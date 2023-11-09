@@ -50,7 +50,6 @@ public:
   static void     initPersistFields();
 
   DECLARE_CONOBJECT(afxF_DragData);
-  DECLARE_CATEGORY("AFX");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

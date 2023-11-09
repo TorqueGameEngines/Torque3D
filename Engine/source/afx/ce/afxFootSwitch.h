@@ -48,7 +48,6 @@ public:
   static void     initPersistFields();
 
   DECLARE_CONOBJECT(afxFootSwitchData);
-  DECLARE_CATEGORY("AFX");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

@@ -49,7 +49,6 @@ public:
   static void           initPersistFields();
 
   DECLARE_CONOBJECT(afxCameraShakeData);
-  DECLARE_CATEGORY("AFX");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

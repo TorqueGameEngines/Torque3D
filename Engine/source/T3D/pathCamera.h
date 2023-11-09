@@ -92,6 +92,7 @@ private:
 
 public:
    DECLARE_CONOBJECT(PathCamera);
+   DECLARE_CATEGORY("Cinematic");
    
    DECLARE_CALLBACK( void, onNode, (S32 node));
 

@@ -48,7 +48,6 @@ public:
   static void     initPersistFields();
 
   DECLARE_CONOBJECT(afxF_GravityData);
-  DECLARE_CATEGORY("AFX");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

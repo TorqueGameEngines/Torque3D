@@ -79,6 +79,7 @@ private:
 
 public:
    DECLARE_CONOBJECT(PathShape);
+   DECLARE_CATEGORY("Cinematic");
 
    PathShape();
    ~PathShape();

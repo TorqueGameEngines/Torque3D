@@ -55,7 +55,6 @@ public:
   static void     initPersistFields();
 
 	DECLARE_CONOBJECT(afxParticlePoolData);
-  DECLARE_CATEGORY("AFX");
 };
 
 typedef afxParticlePoolData::PoolType afxParticlePool_PoolType;
@@ -135,7 +134,6 @@ public:
   void            setSortPriority(S8 priority);
 
   DECLARE_CONOBJECT(afxParticlePool);
-  DECLARE_CATEGORY("AFX");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

@@ -62,7 +62,6 @@ public:
   static void       initPersistFields();
 
   DECLARE_CONOBJECT(afxPlayerMovementData);
-  DECLARE_CATEGORY("AFX");
 };
 
 typedef afxPlayerMovementData::OpType afxPlayerMovement_OpType;

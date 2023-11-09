@@ -260,7 +260,7 @@ class SFXEmitter : public SceneObject
 
       DECLARE_CONOBJECT( SFXEmitter );
       DECLARE_DESCRIPTION( "A 3D object emitting sound." );
-      DECLARE_CATEGORY( "3D Sound" );
+      DECLARE_CATEGORY("Environment \t FX");
 };
 
 #endif // _SFXEMITTER_H_

@@ -270,6 +270,7 @@ class DecalManager : public SceneObject
 
       // SimObject.
       DECLARE_CONOBJECT( DecalManager );
+      DECLARE_CATEGORY("UNLISTED");
       static void consoleInit();
 };
 

@@ -195,6 +195,7 @@ public:
 
    bool onNewDataBlock( GameBaseData *dptr, bool reload );
    DECLARE_CONOBJECT(Splash);
+   DECLARE_CATEGORY("UNLISTED");
 };
 
 

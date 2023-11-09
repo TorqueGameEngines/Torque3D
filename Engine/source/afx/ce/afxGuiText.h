@@ -49,7 +49,6 @@ public:
   static void   initPersistFields();
 
   DECLARE_CONOBJECT(afxGuiTextData);
-  DECLARE_CATEGORY("AFX");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

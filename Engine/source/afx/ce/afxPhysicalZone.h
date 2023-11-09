@@ -57,7 +57,6 @@ public:
   static void       initPersistFields();
 
   DECLARE_CONOBJECT(afxPhysicalZoneData);
-  DECLARE_CATEGORY("AFX");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

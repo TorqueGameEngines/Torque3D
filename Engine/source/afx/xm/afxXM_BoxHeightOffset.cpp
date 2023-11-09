@@ -55,7 +55,6 @@ public:
 #endif
   
   DECLARE_CONOBJECT(afxXM_BoxHeightOffsetData);
-  DECLARE_CATEGORY("AFX");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//

@@ -47,6 +47,7 @@ public:
 
    // ConsoleObject
    DECLARE_CONOBJECT( PointLight );
+   DECLARE_CATEGORY("Lighting \t Lights");
    static void initPersistFields();
 
    // SceneObject

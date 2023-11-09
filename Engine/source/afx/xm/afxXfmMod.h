@@ -91,7 +91,6 @@ public:
   virtual afxXM_Base* create(afxEffectWrapper* fx, bool on_server) { return 0; }
 
   DECLARE_CONOBJECT(afxXM_BaseData);
-  DECLARE_CATEGORY("AFX");
 };
 
 class afxXM_Base : public afxXM_Defs
@@ -147,7 +146,6 @@ public:
   static void   initPersistFields();
 
   DECLARE_CONOBJECT(afxXM_WeightedBaseData);
-  DECLARE_CATEGORY("AFX");
 };
 
 class afxXM_WeightedBase : public afxXM_Base

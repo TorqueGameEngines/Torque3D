@@ -30,7 +30,6 @@ struct afxLightData : public GameBaseData
 {
   typedef GameBaseData Parent;
   DECLARE_CONOBJECT(afxLightData);
-  DECLARE_CATEGORY("AFX");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

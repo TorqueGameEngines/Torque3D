@@ -194,6 +194,7 @@ public:
    virtual ~ConvexShape();
 
    DECLARE_CONOBJECT( ConvexShape );
+   DECLARE_CATEGORY("Object \t Simple");
 
    // ConsoleObject
    static void initPersistFields();

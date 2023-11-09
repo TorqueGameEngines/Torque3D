@@ -96,7 +96,6 @@ public:
   static void   initPersistFields();
 
   DECLARE_CONOBJECT(afxEffectGroupData);
-  DECLARE_CATEGORY("AFX");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

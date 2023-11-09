@@ -87,6 +87,7 @@ const U32 DecalManager::smMaxIndices = 10000;
 DecalManager *gDecalManager = NULL;
 
 IMPLEMENT_CONOBJECT(DecalManager);
+DECLARE_CATEGORY("UNLISTED");
 
 ConsoleDoc(
    "@defgroup Decals\n"

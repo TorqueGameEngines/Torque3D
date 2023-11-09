@@ -60,6 +60,7 @@ public:
    typedef SceneObject Parent;
 
    DECLARE_CONOBJECT( GroundPlane );
+   DECLARE_CATEGORY("Environment \t BackGround");
 
    GroundPlane();
    virtual ~GroundPlane();

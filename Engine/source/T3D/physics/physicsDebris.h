@@ -129,6 +129,7 @@ public:
    virtual ~PhysicsDebris();
 
    DECLARE_CONOBJECT(PhysicsDebris);
+   DECLARE_CATEGORY("UNLISTED");
    static void initPersistFields();
 
    bool onAdd();

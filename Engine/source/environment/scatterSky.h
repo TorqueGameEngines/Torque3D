@@ -85,6 +85,7 @@ public:
 
    // ConsoleObject
    DECLARE_CONOBJECT(ScatterSky);
+   DECLARE_CATEGORY("Environment \t Background");
    void inspectPostApply();
    static void initPersistFields();
 

@@ -83,7 +83,6 @@ public:
   }
 
   DECLARE_CONOBJECT(ClientZoneInEvent);
-  DECLARE_CATEGORY("AFX");
 };
 IMPLEMENT_CO_SERVEREVENT_V1(ClientZoneInEvent);
 

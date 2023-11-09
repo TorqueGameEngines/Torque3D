@@ -50,7 +50,6 @@ public:
   static void   initPersistFields();
 
   DECLARE_CONOBJECT(afxGuiControllerData);
-  DECLARE_CATEGORY("AFX");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

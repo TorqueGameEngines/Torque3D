@@ -46,7 +46,6 @@ public:
   static void           initPersistFields();
 
   DECLARE_CONOBJECT(afxConsoleMessageData);
-  DECLARE_CATEGORY("AFX");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

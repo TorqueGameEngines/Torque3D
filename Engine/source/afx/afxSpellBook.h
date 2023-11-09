@@ -68,7 +68,6 @@ public:
   static void           initPersistFields();
 
   DECLARE_CONOBJECT(afxSpellBookData);
-  DECLARE_CATEGORY("AFX");
 };
 
 inline bool afxSpellBookData::verifyPageSlot(S32 page, S32 slot)
@@ -128,7 +127,7 @@ public:
   F32                     getCooldownFactor(S32 page, S32 slot);
 
   DECLARE_CONOBJECT(afxSpellBook);
-  DECLARE_CATEGORY("AFX");
+  DECLARE_CATEGORY("UNLISTED");
 };
 
 inline S32 afxSpellBook::getPageSlotIndex(S32 page, S32 slot)

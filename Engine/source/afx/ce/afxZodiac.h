@@ -124,7 +124,6 @@ public:
   static void       initPersistFields();
 
   DECLARE_CONOBJECT(afxZodiacData);
-  DECLARE_CATEGORY("AFX");
 };
 
 typedef afxZodiacData::BlendType afxZodiac_BlendType;

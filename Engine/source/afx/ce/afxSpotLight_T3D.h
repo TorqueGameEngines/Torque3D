@@ -50,7 +50,6 @@ public:
   static void   initPersistFields();
 
   DECLARE_CONOBJECT(afxT3DSpotLightData);
-  DECLARE_CATEGORY("AFX");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

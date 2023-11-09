@@ -55,7 +55,6 @@ public:
   static void       initPersistFields();
 
   DECLARE_CONOBJECT(afxPlayerPuppetData);
-  DECLARE_CATEGORY("AFX");
 };
 
 

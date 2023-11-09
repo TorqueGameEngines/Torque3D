@@ -66,6 +66,7 @@ public:
    virtual ~SkySphere();
 
    DECLARE_CONOBJECT(SkySphere);
+   DECLARE_CATEGORY("Environment \t Background");
 
    // SimObject
    void onStaticModified(const char* slotName, const char* newValue);

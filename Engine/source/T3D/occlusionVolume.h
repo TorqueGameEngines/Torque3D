@@ -64,7 +64,7 @@ class OcclusionVolume : public ScenePolyhedralSpace
       // SimObject.
       DECLARE_CONOBJECT( OcclusionVolume );
       DECLARE_DESCRIPTION( "A visibility blocking volume." );
-      DECLARE_CATEGORY("Area");
+      DECLARE_CATEGORY("Volume");
 
       virtual bool onAdd();
 

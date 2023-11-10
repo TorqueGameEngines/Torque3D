@@ -51,7 +51,6 @@ struct afxCameraData: public ShapeBaseData {
 
   //
   DECLARE_CONOBJECT(afxCameraData);
-  DECLARE_CATEGORY("AFX");
   static void initPersistFields();
   virtual void packData(BitStream* stream);
   virtual void unpackData(BitStream* stream);
@@ -144,7 +143,7 @@ public:
   bool            isCamera() const { return true; }
 
   DECLARE_CONOBJECT(afxCamera);
-  DECLARE_CATEGORY("AFX");
+  DECLARE_CATEGORY("UNLISTED");
 
 private:          // 3POV SECTION
   void            cam_update_3pov(F32 dt, bool on_server);

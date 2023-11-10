@@ -49,7 +49,6 @@ public:
   static void           initPersistFields();
 
   DECLARE_CONOBJECT(afxScriptEventData);
-  DECLARE_CATEGORY("AFX");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

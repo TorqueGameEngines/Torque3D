@@ -72,7 +72,6 @@ public:
   static void       initPersistFields();
 
   DECLARE_CONOBJECT(afxProjectileData);
-  DECLARE_CATEGORY("AFX");
 };
 
 typedef afxProjectileData::LaunchDirType afxProjectile_LaunchDirType;
@@ -109,7 +108,7 @@ public:
   virtual void        explode(const Point3F& p, const Point3F& n, const U32 collideType);
 
   DECLARE_CONOBJECT(afxProjectile);
-  DECLARE_CATEGORY("AFX");
+  DECLARE_CATEGORY("UNLISTED");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

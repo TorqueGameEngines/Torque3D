@@ -472,7 +472,10 @@ function EditorGui::buildMenus(%this)
    for(%c=0; %c < getFieldCount(%enumeratedClasses); %c++)
    {
       %class = getField(%enumeratedClasses, %c);  
-      
+      //SceneObject itself is not directly spawnable
+      if (%class $= "SceneObject")
+        continue;
+        
       %category = getCategoryOfClass(%class);
 
       if(%category $= "")
@@ -480,7 +483,13 @@ function EditorGui::buildMenus(%this)
          error("Attempted to fetch category of class " @ %class @ " but none were found.");
          continue;  
       }
-      
+      //skip classes explicitly tagged not for listing (typically due to being unspawnable)
+      if(%category $= "UNLISTED")
+        continue;
+        
+      if(%category $= "MISC")
+        warn("unsorted class: "@ %class);
+        
       %parentMenu = %addMenu; //start at the top
       for(%cat=0; %cat < getFieldCount(%category); %cat++)
       {
@@ -498,10 +507,15 @@ function EditorGui::buildMenus(%this)
       %class = %class;
       %method = "build" @ %buildfunc;
       if( !ObjectBuilderGui.isMethod( %method ) )
-         %method = "build" @ %class;
-
+         %method = "build" @ %class;         
+         
       if( !ObjectBuilderGui.isMethod( %method ) )
-         %cmd = "return new " @ %class @ "();";
+      {
+         if (isMemberOfClass(%class,"gameBase"))
+            %cmd = "ObjectBuilderGui.buildGameBaseObject("@ %class @");";
+         else
+            %cmd = "return new " @ %class @ "();";
+      }
       else
          %cmd = "ObjectBuilderGui." @ %method @ "();";
 

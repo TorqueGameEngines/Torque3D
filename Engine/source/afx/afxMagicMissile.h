@@ -218,7 +218,6 @@ public:
   static void           initPersistFields();
   
   DECLARE_CONOBJECT(afxMagicMissileData);
-  DECLARE_CATEGORY("AFX");
 
 public:
   /*C*/                 afxMagicMissileData(const afxMagicMissileData&, bool = false);
@@ -400,7 +399,7 @@ public:
   virtual void      onDeleteNotify(SimObject*);
 
   DECLARE_CONOBJECT(afxMagicMissile);
-  DECLARE_CATEGORY("AFX");
+  DECLARE_CATEGORY("UNLISTED");
 
   static void       initPersistFields();  
 

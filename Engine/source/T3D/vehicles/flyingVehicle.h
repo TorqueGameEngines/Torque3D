@@ -180,6 +180,7 @@ class FlyingVehicle: public Vehicle
    U32 getCollisionMask();
   public:
    DECLARE_CONOBJECT(FlyingVehicle);
+   DECLARE_CATEGORY("Actor \t Controllable");
    static void initPersistFields();
 
    FlyingVehicle();

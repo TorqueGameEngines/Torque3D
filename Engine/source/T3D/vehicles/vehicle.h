@@ -165,6 +165,7 @@ public:
    /// @}
 
    DECLARE_CONOBJECT(Vehicle);
+   DECLARE_CATEGORY("UNLISTED");
 };
 
 

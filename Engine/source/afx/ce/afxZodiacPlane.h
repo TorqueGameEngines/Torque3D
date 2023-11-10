@@ -96,7 +96,6 @@ public:
   static void   initPersistFields();
 
   DECLARE_CONOBJECT(afxZodiacPlaneData);
-  DECLARE_CATEGORY("AFX");
 };
 
 typedef afxZodiacPlaneData::BlendType afxZodiacPlane_BlendType;
@@ -142,7 +141,7 @@ public:
   void                  _renderZodiacPlane(ObjectRenderInst*, SceneRenderState*, BaseMatInstance*);
 
   DECLARE_CONOBJECT(afxZodiacPlane);
-  DECLARE_CATEGORY("AFX");
+  DECLARE_CATEGORY("UNLISTED");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

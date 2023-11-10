@@ -105,6 +105,7 @@ public:
 
    // The derived class should provide the following:
    DECLARE_CONOBJECT(GameBaseData);
+   DECLARE_CATEGORY("Datablock");
    GameBaseData();
    static void initPersistFields();
    bool preload(bool server, String &errorStr);
@@ -442,6 +443,7 @@ public:
    #endif
 
    DECLARE_CONOBJECT (GameBase );
+   DECLARE_CATEGORY("UNLISTED");
 
    /// @name Callbacks
    /// @{

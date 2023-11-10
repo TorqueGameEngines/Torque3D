@@ -54,6 +54,7 @@ public:
    virtual ~CoverPoint();
 
    DECLARE_CONOBJECT(CoverPoint);
+   DECLARE_CATEGORY("Navigation");
 
    /// Amount of cover provided at this point.
    enum Size {

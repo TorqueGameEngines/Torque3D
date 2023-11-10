@@ -57,6 +57,7 @@ public:
    virtual ~Prefab();
 
    DECLARE_CONOBJECT(Prefab);
+   DECLARE_CATEGORY("Object \t Collection");
   
    static void initPersistFields();
 

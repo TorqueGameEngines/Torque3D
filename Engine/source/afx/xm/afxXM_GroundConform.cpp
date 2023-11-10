@@ -55,7 +55,6 @@ public:
   afxXM_Base*   create(afxEffectWrapper* fx, bool on_server);
 
   DECLARE_CONOBJECT(afxXM_GroundConformData);
-  DECLARE_CATEGORY("AFX");
 };
 
 class afxXM_GroundConform : public afxXM_WeightedBase

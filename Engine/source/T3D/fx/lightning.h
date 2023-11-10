@@ -239,6 +239,7 @@ class Lightning : public GameBase
    void processEvent(LightningStrikeEvent*);
 
    DECLARE_CONOBJECT(Lightning);
+   DECLARE_CATEGORY("Environment \t Weather");
    static void initPersistFields();
 
    U32  packUpdate  (NetConnection *conn, U32 mask, BitStream *stream);

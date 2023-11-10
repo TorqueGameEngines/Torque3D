@@ -75,6 +75,7 @@ public:
    virtual ~SkyBox();
 
    DECLARE_CONOBJECT( SkyBox );
+   DECLARE_CATEGORY("Environment \t Background");
 
    // SimObject
    void onStaticModified( const char *slotName, const char *newValue );

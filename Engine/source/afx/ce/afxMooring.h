@@ -52,7 +52,6 @@ public:
   static void   initPersistFields();
 
   DECLARE_CONOBJECT(afxMooringData);
-  DECLARE_CATEGORY("AFX");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
@@ -94,7 +93,7 @@ public:
   virtual void          prepRenderImage(SceneRenderState*);
 
   DECLARE_CONOBJECT(afxMooring);
-  DECLARE_CATEGORY("AFX");
+  DECLARE_CATEGORY("UNLISTED");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

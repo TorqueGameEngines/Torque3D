@@ -225,6 +225,7 @@ class WheeledVehicle: public Vehicle
 
 public:
    DECLARE_CONOBJECT(WheeledVehicle);
+   DECLARE_CATEGORY("Actor \t Controllable");
    static void initPersistFields();
 
    WheeledVehicle();

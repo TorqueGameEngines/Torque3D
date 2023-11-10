@@ -488,6 +488,7 @@ public:
 
 
    DECLARE_CONOBJECT(TerrainBlock);
+   DECLARE_CATEGORY("Environment \t BackGround");
    static void initPersistFields();
    U32 packUpdate   (NetConnection *conn, U32 mask, BitStream *stream);
    void unpackUpdate(NetConnection *conn,           BitStream *stream);

@@ -98,7 +98,6 @@ public:
   void onSequenceChanged() {}
 
   DECLARE_CONOBJECT(afxModelData);
-  DECLARE_CATEGORY("AFX");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
@@ -162,7 +161,7 @@ public:
   F32                   getAnimClipDuration(const char* clip);
 
   DECLARE_CONOBJECT(afxModel);
-  DECLARE_CATEGORY("AFX");
+  DECLARE_CATEGORY("UNLISTED");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

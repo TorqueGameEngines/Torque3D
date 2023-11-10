@@ -185,7 +185,8 @@ class Portal : public Zone
 
       // SimObject.
       DECLARE_CONOBJECT( Portal );
-      
+      DECLARE_CATEGORY("Volume");
+
       static void initPersistFields();
       static void consoleInit();
 

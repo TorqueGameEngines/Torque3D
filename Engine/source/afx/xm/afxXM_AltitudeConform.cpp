@@ -53,7 +53,6 @@ public:
   afxXM_Base*   create(afxEffectWrapper* fx, bool on_server);
 
   DECLARE_CONOBJECT(afxXM_AltitudeConformData);
-  DECLARE_CATEGORY("AFX");
 };
 
 class afxXM_AltitudeConform : public afxXM_WeightedBase

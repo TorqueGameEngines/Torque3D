@@ -668,6 +668,7 @@ class SceneContainer
       /// @name Line intersection
       /// @{
 
+
       typedef bool ( *CastRayCallback )( SceneObject* object );
 
       /// Test against collision geometry -- fast.

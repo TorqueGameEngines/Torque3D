@@ -74,7 +74,6 @@ public:
   void onChangeTexture() {}
 
   DECLARE_CONOBJECT(afxBillboardData);
-  DECLARE_CATEGORY("AFX");
 };
 
 typedef afxBillboardData::BlendStyle afxBillboard_BlendStyle;
@@ -117,7 +116,7 @@ public:
   void              _renderBillboard(ObjectRenderInst*, SceneRenderState*, BaseMatInstance*);
 
   DECLARE_CONOBJECT(afxBillboard);
-  DECLARE_CATEGORY("AFX");
+  DECLARE_CATEGORY("UNLISTED");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

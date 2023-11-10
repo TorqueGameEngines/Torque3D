@@ -308,6 +308,7 @@ public:
    void unpackUpdate(NetConnection *conn,           BitStream *stream);
 
    DECLARE_CONOBJECT(RigidShape);
+   DECLARE_CATEGORY("Object \t Destructable");
 };
 
 

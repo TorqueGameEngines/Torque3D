@@ -1079,6 +1079,14 @@ function ObjectBuilderGui::buildObject(%this, %className)
    %this.process();
 }
 
+function ObjectBuilderGui::buildGameBaseObject(%this, %className)
+{
+   %this.objectClassName = %className;
+   //assumes we fgollow the pattern of class is instance, classData is datablock
+   %this.addField("dataBlock", "TypeDataBlock", "Data block", %className @"Data");
+
+   %this.process();
+}
 //------------------------------------------------------------------------------
 // Environment
 //------------------------------------------------------------------------------

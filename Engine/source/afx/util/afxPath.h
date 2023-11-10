@@ -94,7 +94,6 @@ public:
   static void           initPersistFields();
 
   DECLARE_CONOBJECT(afxPathData);
-  DECLARE_CATEGORY("AFX");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

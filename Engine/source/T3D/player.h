@@ -697,6 +697,7 @@ protected:
 
 public:
    DECLARE_CONOBJECT(Player);
+   DECLARE_CATEGORY("Actor \t Controllable");
 
    Player();
    ~Player();

@@ -111,6 +111,7 @@ public:
    void inspectPostApply();
    static void initPersistFields();
    DECLARE_CONOBJECT(LightBase);
+   DECLARE_CATEGORY("UNLISTED");
 
    // NetObject
    U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream );

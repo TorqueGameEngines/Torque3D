@@ -171,7 +171,7 @@ public:
   static void           setMaster(afxResidueMgr* m) { the_mgr = m; }
 
   DECLARE_CONOBJECT(afxResidueMgr);
-  DECLARE_CATEGORY("AFX");
+  DECLARE_CATEGORY("UNLISTED");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

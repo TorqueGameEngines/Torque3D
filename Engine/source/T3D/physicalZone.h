@@ -77,6 +77,7 @@ class PhysicalZone : public SceneObject
 
    // SimObject
    DECLARE_CONOBJECT(PhysicalZone);
+   DECLARE_CATEGORY("Volume");
    static void consoleInit();
    static void initPersistFields();
    bool onAdd();

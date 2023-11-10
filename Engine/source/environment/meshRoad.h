@@ -509,6 +509,7 @@ public:
    ~MeshRoad();
 
    DECLARE_CONOBJECT(MeshRoad);
+   DECLARE_CATEGORY("Environment \t BackGround");
 
    // ConObject.
    static void initPersistFields();

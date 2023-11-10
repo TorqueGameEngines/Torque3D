@@ -229,6 +229,7 @@ public:
    virtual ~PhysicsShape();
 
    DECLARE_CONOBJECT( PhysicsShape );
+   DECLARE_CATEGORY("Object \t Destructable");
 
    /// Returns the PhysicsShapeData datablock.
    PhysicsShapeData* getDataBlock() { return static_cast<PhysicsShapeData*>( Parent::getDataBlock() ); }

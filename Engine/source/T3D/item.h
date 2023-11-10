@@ -159,6 +159,7 @@ class Item: public ShapeBase
 
   public:
    DECLARE_CONOBJECT(Item);
+   DECLARE_CATEGORY("Item");
 
 
    Item();

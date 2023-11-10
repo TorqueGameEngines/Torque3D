@@ -83,7 +83,6 @@ public:
 
    // ConsoleObject
    DECLARE_CONOBJECT(afxZodiacGroundPlaneRenderer);
-   DECLARE_CATEGORY("AFX");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

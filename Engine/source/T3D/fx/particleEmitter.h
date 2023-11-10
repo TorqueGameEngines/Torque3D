@@ -168,6 +168,7 @@ class ParticleEmitter : public GameBase
    ~ParticleEmitter();
 
    DECLARE_CONOBJECT(ParticleEmitter);
+   DECLARE_CATEGORY("UNLISTED");
 
    static Point3F mWindVelocity;
    static void setWindVelocity( const Point3F &vel ){ mWindVelocity = vel; }

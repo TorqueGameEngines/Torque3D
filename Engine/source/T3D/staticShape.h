@@ -75,6 +75,7 @@ protected:
 
 public:
    DECLARE_CONOBJECT(StaticShape);
+   DECLARE_CATEGORY("Object \t Destructable");
 
    StaticShape();
    ~StaticShape();

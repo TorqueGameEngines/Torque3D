@@ -103,7 +103,6 @@ public:
   static void     initPersistFields();
 
   DECLARE_CONOBJECT(afxPhraseEffectData);
-  DECLARE_CATEGORY("AFX");
 };
 
 typedef afxPhraseEffectData::MatchType afxPhraseEffect_MatchType;

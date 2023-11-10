@@ -280,6 +280,7 @@ class Precipitation : public GameBase
 
    bool onNewDataBlock( GameBaseData *dptr, bool reload );
    DECLARE_CONOBJECT(Precipitation);
+   DECLARE_CATEGORY("Environment \t Weather");
    static void initPersistFields();
    
    U32  packUpdate(NetConnection*, U32 mask, BitStream* stream);

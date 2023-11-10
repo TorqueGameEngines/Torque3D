@@ -103,6 +103,7 @@ class ParticleEmitterNode : public GameBase
    void advanceTime(F32 dt);
 
    DECLARE_CONOBJECT(ParticleEmitterNode);
+   DECLARE_CATEGORY("Environment \t FX");
    static void initPersistFields();
 
    U32  packUpdate  (NetConnection *conn, U32 mask, BitStream* stream);

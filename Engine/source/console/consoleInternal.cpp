@@ -1567,6 +1567,7 @@ String Namespace::Entry::getPrototypeSig() const
       str.append(cb.mCallbackName);
    else
       str.append(mFunctionName);
+   str.append("(");
    if (mHeader)
    {
       Vector< String > argList;
@@ -1574,7 +1575,7 @@ String Namespace::Entry::getPrototypeSig() const
 
       const U32 numArgs = argList.size();
 
-      str.append("(%this");
+      str.append("%this");
 
       if (numArgs > 0)
          str.append(',');
@@ -1591,9 +1592,8 @@ String Namespace::Entry::getPrototypeSig() const
          sGetArgNameAndType(argList[i], type, name);
          str.append(name);
       }
-      str.append(')');
    }
-
+   str.append(')');
    return str.end();
 }
 //-----------------------------------------------------------------------------

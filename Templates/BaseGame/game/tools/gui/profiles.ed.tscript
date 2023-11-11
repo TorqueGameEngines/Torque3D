@@ -1395,12 +1395,6 @@ singleton GuiControlProfile( ToolsGuiMenuBarProfile )
    fontType = $Gui::fontTypeRegular;
 };
 
-singleton GuiControlProfile( ToolsGuiPopupMenuProfile : ToolsGuiMenuBarProfile )
-{
-   borderColor = EditorSettings.value("Theme/dividerLightColor");
-   borderColorHL = EditorSettings.value("Theme/dividerMidColor");
-};
-
 singleton GuiControlProfile( ToolsMenubarProfile : ToolsGuiDefaultProfile ) 
 {
    bitmap = "./menubar";

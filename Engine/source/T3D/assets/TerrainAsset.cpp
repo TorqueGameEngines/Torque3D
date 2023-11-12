@@ -161,14 +161,14 @@ void TerrainAsset::initializeAsset()
 
    mTerrainFilePath = getOwned() ? expandAssetFilePath(mTerrainFileName) : mTerrainFilePath;
 
-   loadTerrain();
+   load();
 }
 
 void TerrainAsset::onAssetRefresh()
 {
    mTerrainFilePath = getOwned() ? expandAssetFilePath(mTerrainFileName) : mTerrainFilePath;
 
-   loadTerrain();
+   load();
 }
 
 void TerrainAsset::setTerrainFileName(const char* pScriptFile)
@@ -189,10 +189,10 @@ void TerrainAsset::setTerrainFileName(const char* pScriptFile)
    refreshAsset();
 }
 
-bool TerrainAsset::loadTerrain()
+U32 TerrainAsset::load()
 {
    if (!Torque::FS::IsFile(mTerrainFilePath))
-      return false;
+      return BadFileReference;
 
    mTerrMaterialAssets.clear();
    mTerrMaterialAssetIds.clear();
@@ -229,9 +229,9 @@ bool TerrainAsset::loadTerrain()
    mTerrainFile = ResourceManager::get().load(mTerrainFilePath);
 
    if (mTerrainFile)
-      return true;
+      return Ok;
 
-   return false;
+   return BadFileReference;
 }
 
 //------------------------------------------------------------------------------

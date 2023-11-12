@@ -132,11 +132,11 @@ public:
    /// Declare Console Object.
    DECLARE_CONOBJECT(ShapeAsset);
 
-   bool loadShape();
+   U32 load();
 
    TSShape* getShape() { return mShape; }
 
-   Resource<TSShape> getShapeResource() { loadShape(); return mShape; }
+   Resource<TSShape> getShapeResource() { load(); return mShape; }
 
    void SplitSequencePathAndName(String& srcPath, String& srcName);
    StringTableEntry getShapeFileName() { return mFileName; }

@@ -207,8 +207,7 @@ U32 ImageAsset::getAssetByFilename(StringTableEntry fileName, AssetPtr<ImageAsse
    {
       //acquire and bind the asset, and return it out
       imageAsset->setAssetId(query.mAssetList[0]);
-      (*imageAsset)->loadImage();
-      return (*imageAsset)->mLoadedState;
+      return (*imageAsset)->load();
    }
 }
 
@@ -240,8 +239,7 @@ U32 ImageAsset::getAssetById(StringTableEntry assetId, AssetPtr<ImageAsset>* ima
 
    if (imageAsset->notNull())
    {
-      (*imageAsset)->loadImage();
-      return (*imageAsset)->mLoadedState;
+      return (*imageAsset)->load();
    }
    else
    {
@@ -253,7 +251,6 @@ U32 ImageAsset::getAssetById(StringTableEntry assetId, AssetPtr<ImageAsset>* ima
       //handle fallback not being loaded itself
       if ((*imageAsset)->mLoadedState == BadFileReference)
       {
-         (*imageAsset)->loadImage();
          Con::warnf("ImageAsset::getAssetById - Finding of asset with id %s failed, and fallback asset reported error of Bad File Reference.", assetId);
          return AssetErrCode::BadFileReference;
       }
@@ -272,25 +269,26 @@ void ImageAsset::copyTo(SimObject* object)
    Parent::copyTo(object);
 }
 
-void ImageAsset::loadImage()
+U32 ImageAsset::load()
 {
-   if (mLoadedState == AssetErrCode::Ok) return;
+   if (mLoadedState == AssetErrCode::Ok) return mLoadedState;
    if (mImagePath)
    {
       if (!Torque::FS::IsFile(mImagePath))
       {
          Con::errorf("ImageAsset::initializeAsset: Attempted to load file %s but it was not valid!", mImageFileName);
          mLoadedState = BadFileReference;
-         return;
+         return mLoadedState;
       }
 
       mLoadedState = Ok;
       mIsValidImage = true;
-      return;
+      return mLoadedState;
    }
    mLoadedState = BadFileReference;
 
    mIsValidImage = false;
+   return mLoadedState;
 }
 
 void ImageAsset::initializeAsset()
@@ -325,11 +323,6 @@ void ImageAsset::setImageFileName(const char* pScriptFile)
 
    // Refresh the asset.
    refreshAsset();
-}
-
-const GBitmap& ImageAsset::getImage()
-{
-   return GBitmap(); //TODO fix this
 }
 
 GFXTexHandle ImageAsset::getTexture(GFXTextureProfile* requestedProfile)

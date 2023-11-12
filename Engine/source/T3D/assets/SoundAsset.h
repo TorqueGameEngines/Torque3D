@@ -150,13 +150,13 @@ public:
    virtual void copyTo(SimObject* object);
 
    //SFXResource* getSound() { return mSoundResource; }
-   Resource<SFXResource> getSoundResource(const U32 slotId = 0) { loadSound(); return mSFXProfile[slotId].getResource(); }
+   Resource<SFXResource> getSoundResource(const U32 slotId = 0) { load(); return mSFXProfile[slotId].getResource(); }
 
    /// Declare Console Object.
    DECLARE_CONOBJECT(SoundAsset);
 
    void setSoundFile(const char* pSoundFile, const U32 slotId = 0);
-   bool loadSound();
+   U32 load();
    StringTableEntry getSoundFile(const char* pSoundFile, const U32 slotId = 0);
    inline StringTableEntry getSoundPath(const U32 slotId = 0) const { return mSoundPath[slotId]; };
    SFXProfile* getSfxProfile(const U32 slotId = 0) { return &mSFXProfile[slotId]; }

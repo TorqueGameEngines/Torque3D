@@ -206,7 +206,7 @@ void MaterialAsset::initializeAsset()
       }
    }
 
-   loadMaterial();
+   load();
 }
 
 void MaterialAsset::onAssetRefresh()
@@ -236,7 +236,7 @@ void MaterialAsset::onAssetRefresh()
       Con::setVariable("$Con::redefineBehavior", redefineBehaviorPrev.c_str());
    }
 
-   loadMaterial();
+   load();
 }
 
 void MaterialAsset::setScriptFile(const char* pScriptFile)
@@ -255,7 +255,7 @@ void MaterialAsset::setScriptFile(const char* pScriptFile)
 
 //------------------------------------------------------------------------------
 
-void MaterialAsset::loadMaterial()
+U32 MaterialAsset::load()
 {
    if (mMaterialDefinition)
    {
@@ -274,7 +274,7 @@ void MaterialAsset::loadMaterial()
                mLoadedState = Ok;
                mMaterialDefinition->setInternalName(getAssetId());
                mMaterialDefinition->reload();
-               return;
+               return mLoadedState;
             }
          }
       }
@@ -286,7 +286,7 @@ void MaterialAsset::loadMaterial()
       {
          Con::errorf("MaterialAsset: Unable to find the Material %s", mMatDefinitionName);
          mLoadedState = BadFileReference;
-         return;
+         return mLoadedState;
       }
 
       mMaterialDefinition = matDef;
@@ -294,10 +294,11 @@ void MaterialAsset::loadMaterial()
       mLoadedState = Ok;
       mMaterialDefinition->setInternalName(getAssetId());
       mMaterialDefinition->reload();
-      return;
+      return mLoadedState;
    }
 
    mLoadedState = Failed;
+   return mLoadedState;
 }
 
 //------------------------------------------------------------------------------

@@ -322,10 +322,6 @@ void SoundAsset::initializeAsset(void)
 
       mSoundPath[i] = getOwned() ? expandAssetFilePath(mSoundFile[i]) : mSoundPath[i];
    }
-
-   //loadSound(slotCount);
-   //mSoundPath = getOwned() ? expandAssetFilePath(mSoundFile) : mSoundPath;
-   //loadSound();
 }
 
 void SoundAsset::_onResourceChanged(const Torque::Path &path)
@@ -337,9 +333,6 @@ void SoundAsset::_onResourceChanged(const Torque::Path &path)
          return;
    }
    refreshAsset();
-
-   //loadSound(slotCount);
-   //loadSound();
 }
 
 void SoundAsset::onAssetRefresh(void)
@@ -354,16 +347,11 @@ void SoundAsset::onAssetRefresh(void)
 
       mSoundPath[i] = getOwned() ? expandAssetFilePath(mSoundFile[i]) : mSoundPath[i];
    }
-
-   //loadSound(slotCount);
-   //Update
-   //mSoundPath = getOwned() ? expandAssetFilePath(mSoundFile) : mSoundPath;
-   //loadSound();
 }
 
-bool SoundAsset::loadSound()
+U32 SoundAsset::load()
 {
-   if (mLoadedState == AssetErrCode::Ok) return true;
+   if (mLoadedState == AssetErrCode::Ok) return mLoadedState;
 
    // find out how many active slots we have.
    U32 numSlots = 0;
@@ -394,7 +382,7 @@ bool SoundAsset::loadSound()
                mSFXProfile[i].setDescription(NULL);
                mSFXProfile[i].setSoundFileName(StringTable->insert(StringTable->EmptyString()));
                mSFXProfile[i].setPreload(false);
-               return false;
+               return mLoadedState;
             }
             else
             {// = new SFXProfile(mProfileDesc, mSoundFile, mPreload);
@@ -427,7 +415,7 @@ bool SoundAsset::loadSound()
             mSFXProfile[0].setDescription(NULL);
             mSFXProfile[0].setSoundFileName(StringTable->insert(StringTable->EmptyString()));
             mSFXProfile[0].setPreload(false);
-            return false;
+            return mLoadedState;
          }
          else
          {// = new SFXProfile(mProfileDesc, mSoundFile, mPreload);
@@ -446,7 +434,7 @@ bool SoundAsset::loadSound()
 
    mChangeSignal.trigger();
    mLoadedState = Ok;
-   return true;
+   return mLoadedState;
 }
 
 StringTableEntry SoundAsset::getSoundFile(const char* pSoundFile, const U32 slotId)

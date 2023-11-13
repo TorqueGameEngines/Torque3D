@@ -104,7 +104,7 @@ public:
    static void initPersistFields();
    virtual void copyTo(SimObject* object);
 
-   void loadMaterial();
+   U32 load();
 
    StringTableEntry getMaterialDefinitionName() { return mMatDefinitionName; }
    SimObjectPtr<Material> getMaterialDefinition() { return mMaterialDefinition; }

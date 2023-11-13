@@ -91,7 +91,7 @@ public:
       return mErrCodeStrings[errCode];
    };
    U32 getStatus() { return mLoadedState; };
-
+   U32 load() { return NotLoaded; };
    AssetBase();
    virtual ~AssetBase();
 

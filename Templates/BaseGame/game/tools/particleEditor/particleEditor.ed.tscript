@@ -222,6 +222,13 @@ function ParticleEditor::resetEmitterNode( %this )
       
       ParticleEditor.updateEmitterNode();
    }
+   if (EWorldEditor.getSelectionSize()>0)
+   {
+        %obj = EWorldEditor.getSelectedObject(0);
+        if (%obj.isMemberOfClass("ParticleEmitterNode"))
+            $ParticleEditor::emitterNode.sethidden(true);
+   }
+        
 }
 
 //---------------------------------------------------------------------------------------------

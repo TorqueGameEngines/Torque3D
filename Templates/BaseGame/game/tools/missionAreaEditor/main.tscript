@@ -33,9 +33,9 @@ function initializeMissionAreaEditor()
    MissionAreaEditorTerrainWindow.setVisible( false );
    MissionAreaEditorPropertiesWindow.setVisible( false );
    
-   EditorGui.add( MissionAreaEditorGui );
-   EditorGui.add( MissionAreaEditorTerrainWindow );
-   EditorGui.add( MissionAreaEditorPropertiesWindow );
+   MainSceneTabPanel.add( MissionAreaEditorGui );
+   MainSceneTabPanel.add( MissionAreaEditorTerrainWindow );
+   MainSceneTabPanel.add( MissionAreaEditorPropertiesWindow );
    
    new ScriptObject( MissionAreaEditorPlugin )
    {

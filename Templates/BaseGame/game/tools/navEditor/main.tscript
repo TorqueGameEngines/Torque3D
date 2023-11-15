@@ -46,10 +46,10 @@ function initializeNavEditor()
    NavEditorTreeWindow.setVisible(false);
    NavEditorConsoleDlg.setVisible(false);
 
-   EditorGui.add(NavEditorGui);
-   EditorGui.add(NavEditorOptionsWindow);
-   EditorGui.add(NavEditorTreeWindow);
-   EditorGui.add(NavEditorConsoleDlg);
+   MainSceneTabPanel.add(NavEditorGui);
+   MainSceneTabPanel.add(NavEditorOptionsWindow);
+   MainSceneTabPanel.add(NavEditorTreeWindow);
+   MainSceneTabPanel.add(NavEditorConsoleDlg);
 
    new ScriptObject(NavEditorPlugin)
    {

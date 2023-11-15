@@ -48,12 +48,12 @@ function initializeShapeEditor()
    ShapeEdSelectWindow.setVisible(false);
    ShapeEdPropWindow.setVisible(false);
 
-   EditorGui.add(ShapeEdPreviewGui);
-   EditorGui.add(ShapeEdAnimWindow);
-   EditorGui.add(ShapeEdAdvancedWindow);
+   MainSceneTabPanel.add(ShapeEdPreviewGui);
+   MainSceneTabPanel.add(ShapeEdAnimWindow);
+   MainSceneTabPanel.add(ShapeEdAdvancedWindow);
 
-   EditorGui.add(ShapeEdSelectWindow);
-   EditorGui.add(ShapeEdPropWindow);
+   MainSceneTabPanel.add(ShapeEdSelectWindow);
+   MainSceneTabPanel.add(ShapeEdPropWindow);
 
    new ScriptObject(ShapeEditorPlugin)
    {
@@ -186,7 +186,7 @@ function ShapeEditorPlugin::open(%this, %shapeAsset)
       ShapeEdPropWindow.setVisible(true);
       ShapeEdAnimWindow.setVisible(true);
       ShapeEdAdvancedWindow.setVisible(ShapeEditorToolbar-->showAdvanced.getValue());
-      EditorGui.bringToFront(ShapeEdPreviewGui);
+      MainSceneTabPanel.bringToFront(ShapeEdPreviewGui);
 
       ToolsPaletteArray->WorldEditorMove.performClick();
       %this.map.push();

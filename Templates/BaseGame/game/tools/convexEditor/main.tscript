@@ -36,10 +36,10 @@ function initializeConvexEditor()
    
    ConvexEditorOptionsWindow.setVisible( false );
    
-   EditorGui.add( ConvexEditorGui );
-   EditorGui.add( ConvexEditorOptionsWindow );
-   EditorGui.add( ConvexEditorTreeWindow );
-   EditorGui.add( ConvexEditorOptionsWindow );
+   MainSceneTabPanel.add( ConvexEditorGui );
+   MainSceneTabPanel.add( ConvexEditorOptionsWindow );
+   MainSceneTabPanel.add( ConvexEditorTreeWindow );
+   MainSceneTabPanel.add( ConvexEditorOptionsWindow );
       
    new ScriptObject( ConvexEditorPlugin )
    {

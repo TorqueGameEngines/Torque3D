@@ -248,7 +248,7 @@ void LightManager::registerGlobalLights( const Frustum *frustum, bool staticLigh
       // the shape bounds and can often get culled.
 
       GameConnection *conn = GameConnection::getConnectionToServer();
-      if (conn->getControlObject())
+      if (conn && conn->getControlObject())
       {
          GameBase *conObject = conn->getControlObject();
          activeLights.push_back_unique(conObject);

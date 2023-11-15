@@ -18,7 +18,7 @@ function VPathEditorPlugin::onWorldEditorStartup( %this )
     //
     //----------------------------------------------------------------------
     
-    EditorGui.add( EVPathEditor );
+    MainSceneTabPanel.add( EVPathEditor );
     EVPathEditor.setVisible( false );
     
     %this.EditorMap = new ActionMap();

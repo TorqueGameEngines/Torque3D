@@ -33,9 +33,9 @@ function initializeMeshRoadEditor()
    MeshRoadEditorOptionsWindow.setVisible( false );  
    MeshRoadEditorTreeWindow.setVisible( false ); 
    
-   EditorGui.add( MeshRoadEditorGui );
-   EditorGui.add( MeshRoadEditorOptionsWindow );
-   EditorGui.add( MeshRoadEditorTreeWindow );
+   MainSceneTabPanel.add( MeshRoadEditorGui );
+   MainSceneTabPanel.add( MeshRoadEditorOptionsWindow );
+   MainSceneTabPanel.add( MeshRoadEditorTreeWindow );
       
    new ScriptObject( MeshRoadEditorPlugin )
    {

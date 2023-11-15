@@ -36,7 +36,7 @@ function initializeParticleEditor()
    exec( "./particleParticleEditor.ed." @ $TorqueScriptFileExtension );
    
    PE_Window.setVisible( false );
-   EditorGui.add( PE_Window );
+   MainSceneTabPanel.add( PE_Window );
    
    new ScriptObject( ParticleEditorPlugin )
    {

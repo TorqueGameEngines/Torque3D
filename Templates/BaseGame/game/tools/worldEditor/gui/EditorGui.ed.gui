@@ -31,7 +31,7 @@ $guiContent = new GuiContainer(EditorGui,EditorGuiGroup) {
 
       new GuiTabPageCtrl(MainSceneEditorTab) {
          text = "Main Scene";
-         position = 0 SPC $MainEditor::TabHeight;
+         position = 0 SPC 20;
          extent = 800 SPC 580;
          horizSizing = "width";
          vertSizing = "height";

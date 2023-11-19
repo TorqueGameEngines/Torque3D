@@ -790,7 +790,7 @@ void AdvancedLightBinManager::LightMaterialInfo::setLightParameters( const Light
    MaterialParameters *matParams = matInstance->getMaterialParameters();
 
    matParams->setSafe( lightColor, lightInfo->getColor() );
-   matParams->setSafe(lightBrightness, lightInfo->getBrightness() * lightInfo->getFadeAmount());
+   F32 luxTargMultiplier = 1;
 
    switch( lightInfo->getType() )
    {
@@ -804,10 +804,10 @@ void AdvancedLightBinManager::LightMaterialInfo::setLightParameters( const Light
    case LightInfo::Spot:
       {
          const F32 outerCone = lightInfo->getOuterConeAngle();
-         const F32 innerCone = getMin(lightInfo->getInnerConeAngle(), outerCone);
+         const F32 innerCone = getMin(lightInfo->getInnerConeAngle(), outerCone-0.0001f);
          const F32 outerCos = mCos(mDegToRad(outerCone / 2.0f));
          const F32 innerCos = mCos(mDegToRad(innerCone / 2.0f));
-         Point2F spotParams(outerCos,innerCos - outerCos); 
+         Point2F spotParams(outerCos,mMax(innerCos - outerCos,0.001f));
 
          matParams->setSafe( lightSpotParams, spotParams );
          matParams->setSafe( lightDirection, lightInfo->getDirection());
@@ -817,6 +817,9 @@ void AdvancedLightBinManager::LightMaterialInfo::setLightParameters( const Light
          const F32 invSqrRadius = 1.0f / mSquared(radius);
          matParams->setSafe(lightRange, radius);
          matParams->setSafe(lightInvSqrRange, invSqrRadius);
+
+         F32 concentration = 360.0f/ outerCone;
+         luxTargMultiplier = radius * concentration;
       }
       break;
 
@@ -828,6 +831,7 @@ void AdvancedLightBinManager::LightMaterialInfo::setLightParameters( const Light
          const F32 invSqrRadius = 1.0f / (radius * radius);
          matParams->setSafe( lightRange, radius);
          matParams->setSafe( lightInvSqrRange, invSqrRadius);  
+         luxTargMultiplier =radius;
       }
       break;
 
@@ -835,6 +839,7 @@ void AdvancedLightBinManager::LightMaterialInfo::setLightParameters( const Light
       AssertFatal( false, "Bad light type!" );
       break;
    }
+   matParams->setSafe(lightBrightness, lightInfo->getBrightness()* lightInfo->getFadeAmount() * luxTargMultiplier);
 }
 
 bool LightMatInstance::setupPass( SceneRenderState *state, const SceneData &sgData )

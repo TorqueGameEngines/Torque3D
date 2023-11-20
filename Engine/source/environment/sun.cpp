@@ -61,7 +61,7 @@ Sun::Sun()
    mTypeMask = EnvironmentObjectType | LightObjectType | StaticObjectType;
 
    mLightColor.set(0.7f, 0.7f, 0.7f);
-   mLightAmbient.set(0.3f, 0.3f, 0.3f);
+   mLightAmbient.set(1.0f, 1.0f, 1.0f);
    mBrightness = 1.0f;
    mSunAzimuth = 0.0f;
    mSunElevation = 35.0f;

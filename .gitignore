@@ -68,6 +68,7 @@ local.properties
 .builds
 *.dotCover
 *.dll
+!d3dcompiler_47.dll
 *.lib
 *.exp
 *.exe

@@ -10,7 +10,7 @@ if(WIN32)
 else()
     file(COPY "game" "source" DESTINATION "${TORQUE_APP_ROOT_DIRECTORY}" PATTERN "*.tscript" EXCLUDE
                                                                      PATTERN "*.in" EXCLUDE
-                                                                     PATTERN "*.dll" EXLCUDE)    
+                                                                     PATTERN "*.dll" EXCLUDE)    
 endif(WIN32)
 
 # Enumerate scripts and install with extension

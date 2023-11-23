@@ -5,12 +5,12 @@ endforeach()
 
 # Perform installation minus scripts
 if(WIN32)
-    file(COPY "game" "source" DESTINATION "${TORQUE_APP_ROOT_DIRECTORY}" PATTERN "*.tscript" EXCLUDE PATTERN
-                                                                         PATTERN "*.in" EXCLUDE PATTERN)
+    file(COPY "game" "source" DESTINATION "${TORQUE_APP_ROOT_DIRECTORY}" PATTERN "*.tscript" EXCLUDE
+                                                                         PATTERN "*.in" EXCLUDE)
 else()
-    file(COPY "game" "source" DESTINATION "${TORQUE_APP_ROOT_DIRECTORY}" PATTERN "*.tscript" EXCLUDE PATTERN
-                                                                     PATTERN "*.in" EXCLUDE PATTERN
-                                                                     PATTERN "*.dll" EXLCUDE PATTERN)	
+    file(COPY "game" "source" DESTINATION "${TORQUE_APP_ROOT_DIRECTORY}" PATTERN "*.tscript" EXCLUDE
+                                                                     PATTERN "*.in" EXCLUDE
+                                                                     PATTERN "*.dll" EXLCUDE)    
 endif(WIN32)
 
 # Enumerate scripts and install with extension

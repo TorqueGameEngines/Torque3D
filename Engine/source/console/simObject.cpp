@@ -40,6 +40,7 @@
 #include "core/fileObject.h"
 #include "persistence/taml/tamlCustom.h"
 #include "gui/editor/guiInspector.h"
+#include "console/script.h"
 
 #include "sim/netObject.h"
 
@@ -90,7 +91,7 @@ SimObject::SimObject()
    mNameSpace    = NULL;
    mNotifyList   = NULL;
    mFlags.set( ModStaticFields | ModDynamicFields );
-
+   mPrototype = true;
    mProgenitorFile = StringTable->EmptyString();
 
    mFieldDictionary = NULL;
@@ -159,7 +160,8 @@ void SimObject::initPersistFields()
 
       addProtectedField("inheritFrom", TypeString, Offset(mInheritFrom, SimObject), &setInheritFrom, &defaultProtectedGetFn,
          "Optional Name of object to inherit from as a parent.");
-                  
+
+      addProtectedField("Prototype", TypeBool, Offset(mPrototype, SimObject), &_doPrototype, &defaultProtectedGetFn, "Prototype Methods", AbstractClassRep::FieldFlags::FIELD_ComponentInspectors);
    endGroup( "Ungrouped" );
 
    addGroup( "Object" );
@@ -212,6 +214,15 @@ void SimObject::initPersistFields()
 }
 
 //-----------------------------------------------------------------------------
+bool SimObject::_doPrototype(void* object, const char* index, const char* data)
+{
+   if (!Con::isFunction("PrototypeClass")) return false;
+   if (dAtoi(data) != 1) return false;
+   SimObject* obj = reinterpret_cast<SimObject*>(object);
+   String command = String("PrototypeClass(") + (obj->getName()? String(obj->getName()) : String::ToString(obj->getId())) + ");";
+   Con::evaluate(command.c_str());
+   return false;
+}
 
 String SimObject::describeSelf() const
 {

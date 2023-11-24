@@ -15,7 +15,7 @@ $guiContent = new GuiControl(classPrototyping) {
       vertSizing = "center";
       profile = "ToolsGuiWindowProfile";
       tooltipProfile = "GuiToolTipProfile";
-
+      closeCommand = "Canvas.popDialog(classPrototyping);";
       new GuiScrollCtrl() {
          lockVertScroll = "1";
          position = "14 30";
@@ -112,8 +112,8 @@ $guiContent = new GuiControl(classPrototyping) {
       };
       new GuiCheckBoxCtrl(ReportDynamicVariables) {
          text = "Report Dynamic Variables";
-         position = "250 420";
-         extent = "125 30";
+         position = "300 420";
+         extent = "150 30";
          profile = "ToolsGuiCheckBoxProfile";
          tooltipProfile = "GuiToolTipProfile";
       };

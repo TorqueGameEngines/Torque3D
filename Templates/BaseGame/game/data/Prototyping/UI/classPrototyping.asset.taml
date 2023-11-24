@@ -1,0 +1,5 @@
+<GUIAsset
+    AssetName="classPrototyping"
+    ScriptFile="@assetFile=classPrototyping.tscript"
+    GUIFile="@assetFile=classPrototyping.gui"
+    VersionId="1"/>

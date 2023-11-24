@@ -1,0 +1,142 @@
+function classPrototyping::onWake(%this)
+{
+    
+}
+
+function classPrototyping::onSleep(%this)
+{
+    
+}
+//PrototypeClass(MainMenuGui)
+//PrototypeClass(GuiChunkedBitmapCtrl)
+function PrototypeClass(%classInstance)
+{
+    Canvas.pushDialog(classPrototyping);
+    classPrototyping.fillClasslist(%classInstance);
+    classPrototyping.SetNamespaceUsed(%classInstance);
+}
+
+function classPrototyping::fillClasslist(%this, %classInstance)
+{
+    ClassInheritanceListCtrl.deleteAllObjects();
+    %this.inst = %classInstance;
+    %this.instanceName = %classInstance.getName();
+    
+    //get potentially scripted namespaces
+    %class = %classInstance.getClassName();    
+    %prepend = %classInstance.getName();
+    if (%classInstance.class !$= "")
+        %prepend = %prepend SPC %classInstance.class;        
+    if (%classInstance.superclass !$= "")
+        %prepend = %prepend SPC %classInstance.superclass;
+        
+    //append to hardcoded potential namespaces
+    %this.classlist = %prepend SPC getClassHierarchy(%class);
+    %this.classCount = getWordCount(%this.classlist);
+    for (%i=0; %i<%this.classCount; %i++)
+    {
+        %inheritanceOrder = %this.classCount-(%i+1);
+        %className = getWord(%this.classlist,%inheritanceOrder);
+        if (%i<%this.classCount-1)
+            %className = %className @"->";
+        %elemClass = new GuiRadioCtrl("ProtoClassSelect"@ %i) {
+               text = %className;
+               entry = strreplace(%className,"->","");
+               groupNum = "1";
+               extent = "80 18";
+               profile = "ToolsGuiRadioProfile";
+               tooltipProfile = "GuiToolTipProfile";
+               };
+        eval("function ProtoClassSelect"@ %i @"::onClick(%this){classPrototyping.SetNamespaceUsed(%this.entry);}");
+        ClassInheritanceListCtrl.addGuiControl(%elemClass);
+    }
+    %lastElem = "ProtoClassSelect"@ %this.classCount-1;
+    %lastElem.setStateOn(true);
+}
+
+function classPrototyping::SetNamespaceUsed(%this, %nameSpaceUsed)
+{
+    ClassMethodListCtrl.deleteAllObjects();
+    if (%nameSpaceUsed $= %this.instanceName)
+    {
+        %this.tempClass = %this.inst;
+        %this.fillMethodlist(%this.inst);
+        return;
+    }
+    eval("classPrototyping.tempClass = new "@ %nameSpaceUsed @"(){};");
+    %this.fillMethodlist(%this.tempClass);    
+}
+
+function classPrototyping::fillMethodlist(%this, %classInstance)
+{
+    ClassMethodListCtrl.deleteAllObjects();
+
+    %this.methodArray = %classInstance.getMethodSigs();
+    %this.methodCount = %this.methodArray.count();
+    
+    for (%i=0; %i<%this.methodCount; %i++)
+    {
+         %methodDef = getRecord(%this.methodArray.getValue(%i),0);
+         %methodName = strreplace(%methodDef,"::"," ");
+         %methodName = getWord(strreplace(%methodName,"("," "),2);
+         
+        %elemMethod = new GuiCheckBoxCtrl("ProtoMethodSelect"@ %i) {
+            text = %methodName;
+            position = "1 1";
+            profile = "ToolsGuiCheckBoxProfile";
+            tooltipProfile = "GuiToolTipProfile";
+         };
+        ClassMethodListCtrl.addGuiControl(%elemMethod);
+    }
+}
+
+function classPrototyping::writeResults(%this)
+{
+    %namespaceUsed = "";
+    for (%i=0; %i<%this.classCount; %i++)
+    {
+        %inheritanceOrder = %this.classCount-(%i+1);
+        %obj = "ProtoClassSelect"@ %i;
+        if (%obj.isStateOn())
+            %namespaceUsed = getWord(%this.classlist,%inheritanceOrder);
+    }
+    echo(%namespaceUsed);
+    for (%i=0; %i<%this.methodCount; %i++)
+    {
+        %obj = "ProtoMethodSelect"@ %i;
+        if (%obj.isStateOn())
+            echo(strreplace(%this.methodArray.getValue(%i),%this.instanceName,%namespaceUsed));
+    }
+    
+    if (ReportCommands.isStateOn())
+    {
+        %this.commandArray = %this.tempClass.getMethodSigs(true);
+        %this.commandCount = %this.commandArray.count();
+        echo("/* Available Commands:");
+        for (%i=0; %i< %this.commandCount; %i++)
+        {
+            echo(getRecord(%this.commandArray.getValue(%i),0));
+        }
+        echo("*/");
+    }
+    
+    if (ReportVariables.isStateOn())
+    {
+        echo("/* HardCoded Variables");
+        for (%i=0; %i< %this.tempClass.getFieldCount(); %i++)
+        {
+            echo(%this.tempClass.getField(%i));
+        }
+        echo("*/");
+    }
+    
+    if (ReportDynamicVariables.isStateOn())
+    {
+        echo("/* Dynamic Variables");
+        for (%i=0; %i< %this.tempClass.getDynamicFieldCount(); %i++)
+        {
+            echo(getword(%this.tempClass.getDynamicField(%i),0));
+        }
+        echo("*/");
+    }
+}

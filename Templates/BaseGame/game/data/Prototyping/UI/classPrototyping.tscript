@@ -11,6 +11,7 @@ function classPrototyping::onSleep(%this)
 //PrototypeClass(GuiChunkedBitmapCtrl)
 function PrototypeClass(%classInstance)
 {
+    if (!isObject(%classInstance)) return;
     Canvas.pushDialog(classPrototyping);
     classPrototyping.fillClasslist(%classInstance);
     classPrototyping.SetNamespaceUsed(%classInstance);
@@ -24,7 +25,9 @@ function classPrototyping::fillClasslist(%this, %classInstance)
     
     //get potentially scripted namespaces
     %class = %classInstance.getClassName();    
-    %prepend = %classInstance.getName();
+    %prepend = "";
+    if (%classInstance.getName() !$= "")
+        %prepend = %classInstance.getName();
     if (%classInstance.class !$= "")
         %prepend = %prepend SPC %classInstance.class;        
     if (%classInstance.superclass !$= "")

@@ -74,7 +74,7 @@ void GuiInspectorDynamicField::setData( const char* data, bool callbacks )
       {
          target->inspectPreApply();
          
-         if( callbacks )
+         if( callbacks && !mField->flag.test(AbstractClassRep::FieldFlags::FIELD_ComponentInspectors))
          {
             if( isRemoval )
                Con::executef( mInspector, "onFieldRemoved", target->getIdString(), mDynField->slotName );

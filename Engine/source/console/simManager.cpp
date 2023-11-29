@@ -436,7 +436,7 @@ SimObject *spawnObject(String spawnClass, String spawnDataBlock, String spawnNam
 
    // If we have a spawn script go ahead and execute it last
    if (spawnScript.isNotEmpty())
-      Con::evaluate(spawnScript.c_str(), true);
+      Con::evaluate(spawnScript.c_str());
 
    return spawnObject;
 }

@@ -1,0 +1,12 @@
+
+singleton TSShapeConstructor(colorCalibrationCarddae)
+{
+   baseShapeAsset = ":colorCalibrationCard_shape";
+   singleDetailSize = "0";
+   neverImportMat = "DefaultMaterial	ColorEffect*";
+   flipUVCoords = "0";
+   joinIdenticalVerts = "0";
+   reverseWindingOrder = "0";
+   removeRedundantMats = "0";
+   animFPS = "2";
+};

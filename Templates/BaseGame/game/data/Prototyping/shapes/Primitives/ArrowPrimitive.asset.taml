@@ -1,0 +1,5 @@
+<ShapeAsset
+    AssetName="Primitive"
+    fileName="@assetFile=Primitive.fbx"
+    constuctorFileName="@assetFile=Primitive.tscript"
+    materialSlot0="@asset=Prototyping:InteractiveRed"/>

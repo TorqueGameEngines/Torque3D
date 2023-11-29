@@ -26,11 +26,7 @@ $PostFX::HDRPostFX::enableToneMapping = 0.5;
 
 /// The tone mapping middle grey or exposure value used
 /// to adjust the overall "balance" of the image.
-///
-/// 0.18 is fairly common value.
-///
-
-$PostFX::HDRPostFX::keyValue = 0.115;
+$PostFX::HDRPostFX::keyValue = 0.5;
 
 
 //Explicit HDR Params

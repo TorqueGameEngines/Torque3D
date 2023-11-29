@@ -226,7 +226,7 @@ float getDistanceAtt( float3 unormalizedLightVector , float invSqrAttRadius )
 float3 evaluateStandardBRDF(Surface surface, SurfaceToLight surfaceToLight)
 {
    //diffuse term
-   float3 Fd = float3 Fd = surface.albedo.rgb * M_1OVER_PI_F;
+   float3 Fd = surface.albedo.rgb * M_1OVER_PI_F;
     
    //GGX specular
    float3 F = F_Schlick(surface.f0, surface.f90, surfaceToLight.HdotV);

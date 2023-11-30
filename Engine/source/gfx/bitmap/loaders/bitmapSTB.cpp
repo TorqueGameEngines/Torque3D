@@ -165,6 +165,22 @@ bool sReadSTB(const Torque::Path& path, GBitmap* bitmap)
    return true;
 }
 
+/**
+ * Write bitmap to an image file.
+ *
+ * @param[in]       path                        Destination image file path. File name extension determines image format.
+ *                                              ".bmp" for Microsoft Bitmap.
+ *                                              ".hdr" for High Dynamic Range (HDR).
+ *                                              ".jpg" or ".jpeg" for Joint Photographic Experts Group (JPEG).
+ *                                              ".png" for Portable Network Graphics (PNG).
+ *                                              ".tga" for Truevision TGA (TARGA).
+ *
+ *
+ * @param[in]       bitmap                      Source bitmap to encode image from.
+ * @param           compressionLevel            Image format specific compression level.
+ *                                              For JPEG sets the quality level percentage, range 0 to 100.
+ *                                              Not used for other image formats.
+ */
 bool sWriteSTB(const Torque::Path& path, GBitmap* bitmap, U32 compressionLevel)
 {
    PROFILE_SCOPE(sWriteSTB);
@@ -212,7 +228,7 @@ bool sWriteSTB(const Torque::Path& path, GBitmap* bitmap, U32 compressionLevel)
 
    if (ext.equal("jpg") || ext.equal("jpeg"))
    {
-      if (stbi_write_jpg(path.getFullPath().c_str(), width, height, comp, bitmap->getWritableBits(), 90))
+      if (stbi_write_jpg(path.getFullPath().c_str(), width, height, comp, bitmap->getWritableBits(), compressionLevel))
          return true;
    }
 

@@ -568,12 +568,14 @@ void DDSFile::SurfaceData::dumpImage(DDSFile *dds, U32 mip, const char *file)
    
    FileStream  stream;
 
-   stream.open( file, Torque::FS::File::Write );
-
-   if ( stream.getStatus() == Stream::Ok )
+   if (!stream.open(file, Torque::FS::File::Write))
    {
-      // Write it out.
-      foo->writeBitmap("png", file);
+      Con::errorf("DDSFile::SurfaceData::dumpImage() - Error opening file for writing: %s !", file);
+   }
+
+   if(!foo->writeBitmap("png", file))
+   {
+      Con::errorf("DDSFile::SurfaceData::dumpImage() - Error writing %s !", file);
    }
 
    // Clean up.

@@ -505,13 +505,10 @@ void TSLastDetail::_update()
       String normalsPath = _getNormalMapPath();
 
       FileStream stream;
-      if ( stream.open( imposterPath, Torque::FS::File::Write  ) )
-         destBmp.writeBitmap( "png", imposterPath);
-      stream.close();
-
-      if ( stream.open( normalsPath, Torque::FS::File::Write ) )
-         destNormal.writeBitmap( "png", normalsPath);
-      stream.close();
+      if (!destBmp.writeBitmap("png", imposterPath))
+         Con::errorf("TSLastDetail::_update() - failed to write imposter %s", imposterPath);
+      if (!destNormal.writeBitmap("png", normalsPath))
+         Con::errorf("TSLastDetail::_update() - failed to write normal %s", normalsPath);
    }
 
    // DEBUG: Some code to force usage of a test image.

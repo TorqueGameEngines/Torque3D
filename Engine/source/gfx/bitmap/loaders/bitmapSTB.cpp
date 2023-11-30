@@ -31,17 +31,13 @@
 #define STBIWDEF static inline
 #endif
 
-#ifndef STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_STATIC
 #include "stb_image.h"
-#endif
 
-#ifndef STB_IMAGE_WRITE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_STATIC
 #include "stb_image_write.h"
-#endif
 
 static bool sReadSTB(const Torque::Path& path, GBitmap* bitmap);
 static bool sWriteSTB(const Torque::Path& path, GBitmap* bitmap, U32 compressionLevel);
@@ -89,9 +85,9 @@ bool sReadSTB(const Torque::Path& path, GBitmap* bitmap)
       return false;
    }
 
-   // do this to map one channel to 3 and 2 channels to 4
-   if (channels == 2)
-      channels = 4;
+   //// do this to map one channel to 3 and 2 channels to 4
+   //if (channels == 2)
+   //   channels = 4;
 
    if (stbi_is_16_bit(path.getFullPath().c_str()))
    {

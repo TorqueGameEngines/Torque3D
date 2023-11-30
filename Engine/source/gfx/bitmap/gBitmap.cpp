@@ -1208,6 +1208,17 @@ bool  GBitmap::readBitmap(const String& bmType, const Torque::Path& path)
 
 bool  GBitmap::writeBitmap( const String &bmType, const Torque::Path& path, U32 compressionLevel )
 {
+   FileStream stream;
+   if (!stream.open(path, Torque::FS::File::Write))
+   {
+      Con::errorf("GBitmap::writeBitmap failed to open path %s", path);
+      stream.close();
+      return false;
+   }
+
+   // free file for stb
+   stream.close();
+
    const GBitmap::Registration   *regInfo = GBitmap::sFindRegInfo( bmType );
 
    if ( regInfo == NULL )
@@ -1431,21 +1442,14 @@ DefineEngineFunction(saveScaledImage, bool, (const char* bitmapSource, const cha
    Torque::Path destinationPath = Torque::Path(bitmapDest);
    destinationPath.setExtension("png");
 
-   // Open up the file on disk.
-   FileStream fs;
-   if (!fs.open(destinationPath.getFullPath(), Torque::FS::File::Write))
+   if(!image->writeBitmap("png", destinationPath.getFullPath()))
    {
-      Con::errorf("saveScaledImage() - Failed to open output file '%s'!", bitmapDest);
+      Con::errorf("saveScaledImage() - Error writing %s !", bitmapDest);
       delete image;
       return false;
    }
-   else
-   {
-      image->writeBitmap("png", destinationPath.getFullPath());
 
-      fs.close();
-      delete image;
-   }
-
+   
+   delete image;
    return true;
 }

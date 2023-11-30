@@ -246,10 +246,6 @@ U32 GFXTextureObject::getEstimatedSizeInBytes() const
 
 bool GFXTextureObject::dumpToDisk( const String &bmType, const String &path )
 {   
-   FileStream stream;
-   if ( !stream.open( path, Torque::FS::File::Write ) )
-      return false;
-
    if ( mBitmap )
       return mBitmap->writeBitmap( bmType, path);
 

@@ -869,17 +869,6 @@ void GFont::exportStrip(const char *fileName, U32 padding, U32 kerning)
       // Advance.
       curWidth +=  mCharInfoList[i].width + kerning + 2*padding;
    }
-
-   // Write the image!
-   FileStream fs;
-   
-   fs.open( fileName, Torque::FS::File::Write );
-
-   if(fs.getStatus() != Stream::Ok)
-   {
-      Con::errorf("GFont::exportStrip - failed to open '%s' for writing.", fileName);
-      return;
-   }
  
    // Done!
    gb.writeBitmap("png", fileName);

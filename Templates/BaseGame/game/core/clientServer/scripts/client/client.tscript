@@ -25,5 +25,4 @@ function initClient()
    // Copy saved script prefs into C++ code.
    setDefaultFov( $pref::Player::defaultFov );
    setZoomSpeed( $pref::Player::zoomSpeed );
-   loadModuleMaterials();
 }

@@ -297,10 +297,19 @@ BaseMatInstance *MaterialManager::getMeshDebugMatInstance(const LinearColorF &me
 
 void MaterialManager::mapMaterial(const String & textureName, const String & materialName)
 {
-   if (getMapEntry(textureName).isNotEmpty())
+   String currentMapEntry = getMapEntry(textureName);
+   if (currentMapEntry.isNotEmpty())
    {
       if (!textureName.equal("unmapped_mat", String::NoCase))
-         Con::warnf(ConsoleLogEntry::General, "Warning, overwriting material for: %s", textureName.c_str());
+      {
+         SimObject* originalMat;
+         SimObject* newMat;
+
+         if (Sim::findObject(currentMapEntry, originalMat) && Sim::findObject(materialName, newMat))
+            Con::warnf(ConsoleLogEntry::General, "Warning, overwriting material for: \"%s\" in %s by %s", textureName.c_str(), originalMat->getFilename(), newMat->getFilename());
+         else
+            Con::warnf(ConsoleLogEntry::General, "Warning, overwriting material for: %s", textureName.c_str());
+      }
    }
 
    mMaterialMap[String::ToLower(textureName)] = materialName;

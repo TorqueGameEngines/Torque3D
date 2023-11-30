@@ -81,7 +81,9 @@ void GuiBitmapCtrl::initPersistFields()
    docsURL;
    addGroup( "Bitmap" );
 
-   INITPERSISTFIELD_IMAGEASSET(Bitmap, GuiBitmapCtrl, The bitmap file to display in the control);
+      addField("Bitmap", TypeImageFilename, Offset(mBitmapName, GuiBitmapCtrl), assetDoc(Bitmap, docs), AbstractClassRep::FIELD_HideInInspectors);
+      addField("BitmapAsset", TypeImageAssetId, Offset(mBitmapAssetId, GuiBitmapCtrl), assetDoc(Bitmap, asset docs.));
+
       addField("color", TypeColorI, Offset(mColor, GuiBitmapCtrl),"color mul");
       addField( "wrap",   TypeBool,     Offset( mWrap, GuiBitmapCtrl ),
          "If true, the bitmap is tiled inside the control rather than stretched to fit." );

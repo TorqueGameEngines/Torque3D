@@ -247,7 +247,7 @@ public:
    /// @param bmType This is a file extension to describe the type of the data [i.e. "png" for PNG file, etc]
    /// @param ioStream The stream to read from
    /// @param compressionLevel Image format specific compression level. For JPEG sets the quality level percentage, range 0 to 100.
-   /// For PNG compression level is 0 - 9
+   /// For PNG compression level is 0 - 10
    /// Not used for other image formats.
    
    bool  writeBitmap( const String &bmType, const Torque::Path& path, U32 compressionLevel = U32_MAX );

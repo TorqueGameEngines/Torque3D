@@ -1192,7 +1192,7 @@ bool GBitmap::write(Stream& io_rStream) const
 //-------------------------------------- Persistent I/O
 //
 
-bool  GBitmap::readBitmap( const String &bmType, Stream &ioStream )
+bool  GBitmap::readBitmap(const String& bmType, const Torque::Path& path)
 {
    PROFILE_SCOPE(ResourceGBitmap_readBitmap);
    const GBitmap::Registration   *regInfo = GBitmap::sFindRegInfo( bmType );
@@ -1203,10 +1203,10 @@ bool  GBitmap::readBitmap( const String &bmType, Stream &ioStream )
       return false;
    }
 
-   return regInfo->readFunc( ioStream, this );
+   return regInfo->readFunc(path, this);
 }
 
-bool  GBitmap::writeBitmap( const String &bmType, Stream &ioStream, U32 compressionLevel )
+bool  GBitmap::writeBitmap( const String &bmType, const Torque::Path& path, U32 compressionLevel )
 {
    const GBitmap::Registration   *regInfo = GBitmap::sFindRegInfo( bmType );
 
@@ -1216,7 +1216,7 @@ bool  GBitmap::writeBitmap( const String &bmType, Stream &ioStream, U32 compress
       return false;
    }
 
-   return regInfo->writeFunc( this, ioStream, (compressionLevel == U32_MAX) ? regInfo->defaultCompression : compressionLevel );
+   return regInfo->writeFunc(path, this, (compressionLevel == U32_MAX) ? regInfo->defaultCompression : compressionLevel );
 }
 
 template<> void *Resource<GBitmap>::create(const Torque::Path &path)
@@ -1239,7 +1239,7 @@ template<> void *Resource<GBitmap>::create(const Torque::Path &path)
 
    GBitmap *bmp = new GBitmap;
    const String extension = path.getExtension();
-   if( !bmp->readBitmap( extension, stream ) )
+   if( !bmp->readBitmap( extension, path ) )
    {
       Con::errorf( "Resource<GBitmap>::create - error reading '%s'", path.getFullPath().c_str() );
       delete bmp;
@@ -1441,7 +1441,7 @@ DefineEngineFunction(saveScaledImage, bool, (const char* bitmapSource, const cha
    }
    else
    {
-      image->writeBitmap("png", fs);
+      image->writeBitmap("png", destinationPath.getFullPath());
 
       fs.close();
       delete image;

@@ -573,7 +573,7 @@ void DDSFile::SurfaceData::dumpImage(DDSFile *dds, U32 mip, const char *file)
    if ( stream.getStatus() == Stream::Ok )
    {
       // Write it out.
-      foo->writeBitmap("png", stream);
+      foo->writeBitmap("png", file);
    }
 
    // Clean up.

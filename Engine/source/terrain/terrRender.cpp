@@ -486,7 +486,7 @@ void TerrainBlock::_updateBaseTexture(bool writeToCache)
 
       GBitmap bitmap(blendTex->getWidth(), blendTex->getHeight(), false, GFXFormatR8G8B8A8);
       blendTex->copyToBmp(&bitmap);
-      bitmap.writeBitmap(formatToExtension(mBaseTexFormat), stream);
+      bitmap.writeBitmap(formatToExtension(mBaseTexFormat), _getBaseTexCacheFileName());
    }
 }
 

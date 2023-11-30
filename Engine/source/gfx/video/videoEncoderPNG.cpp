@@ -55,7 +55,7 @@ public:
       //Increment
       mCurrentFrame++;
 
-      bool result = bitmap->writeBitmap("png", fs, 0);
+      bool result = bitmap->writeBitmap("png", framePath, 0);
       pushProcessedBitmap(bitmap);
  
       return result;

@@ -74,7 +74,7 @@ bool TerrainBlock::exportHeightMap( const UTF8 *filePath, const String &format )
       return false;
    }
 
-   if ( !output.writeBitmap( format, stream ) )
+   if ( !output.writeBitmap( format, filePath) )
    {
       Con::errorf( "TerrainBlock::exportHeightMap() - Error writing %s: %s !", format.c_str(), filePath );
       return false;
@@ -127,7 +127,7 @@ bool TerrainBlock::exportLayerMaps( const UTF8 *filePrefix, const String &format
          return false;
       }
 
-      if ( !output.writeBitmap( format, stream ) )
+      if ( !output.writeBitmap( format, filePath) )
       {
          Con::errorf( "TerrainBlock::exportLayerMaps() - Error writing %s: %s !", format.c_str(), filePath );
          return false;

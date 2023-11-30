@@ -251,9 +251,9 @@ bool GFXTextureObject::dumpToDisk( const String &bmType, const String &path )
       return false;
 
    if ( mBitmap )
-      return mBitmap->writeBitmap( bmType, stream );
+      return mBitmap->writeBitmap( bmType, path);
 
    GBitmap bitmap( getWidth(), getHeight(), false, getFormat() );
    copyToBmp( &bitmap );
-   return bitmap.writeBitmap( bmType, stream );
+   return bitmap.writeBitmap( bmType, path);
 }

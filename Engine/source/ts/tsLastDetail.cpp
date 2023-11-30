@@ -506,11 +506,11 @@ void TSLastDetail::_update()
 
       FileStream stream;
       if ( stream.open( imposterPath, Torque::FS::File::Write  ) )
-         destBmp.writeBitmap( "png", stream );
+         destBmp.writeBitmap( "png", imposterPath);
       stream.close();
 
       if ( stream.open( normalsPath, Torque::FS::File::Write ) )
-         destNormal.writeBitmap( "png", stream );
+         destNormal.writeBitmap( "png", normalsPath);
       stream.close();
    }
 

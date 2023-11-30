@@ -224,8 +224,8 @@ float getDistanceAtt( vec3 unormalizedLightVector , float invSqrAttRadius )
 
 vec3 evaluateStandardBRDF(Surface surface, SurfaceToLight surfaceToLight)
 {
-   //lambert diffuse
-   vec3 Fd = Fr_DisneyDiffuse(surface.f0, surface.NdotV, surfaceToLight.NdotL, surfaceToLight.NdotH, surface.linearRoughness);
+   //diffuse term
+   vec3 Fd = surface.albedo.rgb * M_1OVER_PI_F;
     
    //GGX specular
    vec3 F = F_Schlick(surface.f0, surface.f90, surfaceToLight.HdotV);

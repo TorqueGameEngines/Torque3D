@@ -74,8 +74,7 @@ bool sReadSTB(const Torque::Path& path, GBitmap* bitmap)
    PROFILE_SCOPE(sReadSTB);
 
    S32 x, y, n, channels;
-   bool is16 = false;
-   bool isHdr = false;
+   String ext = path.getExtension();
 
    U32 prevWaterMark = FrameAllocator::getWaterMark();
 
@@ -85,22 +84,69 @@ bool sReadSTB(const Torque::Path& path, GBitmap* bitmap)
       return false;
    }
 
-   //// do this to map one channel to 3 and 2 channels to 4
-   //if (channels == 2)
-   //   channels = 4;
-
-   if (stbi_is_16_bit(path.getFullPath().c_str()))
-   {
-      is16 = true;
+   // do this to map 2 channels to 4, 2 channel not supported by gbitmap yet..
+   if (channels == 2)
       channels = 4;
+   if (!ext.equal("png"))
+   {
+      if (stbi_is_16_bit(path.getFullPath().c_str()))
+      {
+         U16* data = stbi_load_16(path.getFullPath().c_str(), &x, &y, &n, channels);
+
+         // if succesful deal make the bitmap, else try other loaders.
+         if (data)
+         {
+            GFXFormat format;
+            if (n == 1)
+               format = GFXFormatL16;
+            else
+               format = GFXFormatR16G16B16A16; // not sure if this is correct.
+
+            bitmap->deleteImage();
+
+            // actually allocate the bitmap space...
+            bitmap->allocateBitmap(x, y,
+               false,            // don't extrude miplevels...
+               format);          // use determined format...
+
+            U16* pBase = (U16*)bitmap->getBits();
+
+            U32 rowBytes = bitmap->getByteSize();
+
+            dMemcpy(pBase, data, rowBytes);
+
+            stbi_image_free(data);
+
+            FrameAllocator::setWaterMark(prevWaterMark);
+
+            return true;
+         }
+      }
    }
 
-   // stbi treats hdrs as 32f (all float are 32f from stbi so no 16f =/ )
-   if (stbi_is_hdr(path.getFullPath().c_str()))
+   if (ext.equal("hdr"))
    {
-      isHdr = true;
-      is16 = false;
-      channels = 4;
+      // force load to 4 channel.
+      float* data = stbi_loadf(path.getFullPath().c_str(), &x, &y, &n, 4);
+
+      unsigned char* dataChar = stbi__hdr_to_ldr(data, x, y, 4);
+      bitmap->deleteImage();
+      // actually allocate the bitmap space...
+      bitmap->allocateBitmap(x, y,
+         false,
+         GFXFormatR8G8B8A8);
+
+      U8* pBase = (U8*)bitmap->getBits();
+
+      U32 rowBytes = x * y * 4;
+
+      dMemcpy(pBase, dataChar, rowBytes);
+
+      stbi_image_free(dataChar);
+
+      FrameAllocator::setWaterMark(prevWaterMark);
+
+      return true;
    }
 
    unsigned char* data = stbi_load(path.getFullPath().c_str(), &x, &y, &n, channels);
@@ -109,13 +155,8 @@ bool sReadSTB(const Torque::Path& path, GBitmap* bitmap)
 
    GFXFormat format;
 
-   switch (n) {
+   switch (channels) {
    case  1:
-      if (is16)
-      {
-         format = GFXFormatL16;
-         break;
-      }
       format = GFXFormatA8;
       break;
    case 2:
@@ -125,18 +166,6 @@ bool sReadSTB(const Torque::Path& path, GBitmap* bitmap)
       format = GFXFormatR8G8B8;
       break;
    case 4:
-      if (isHdr)
-      {
-         format = GFXFormatR32G32B32A32F;
-         break;
-      }
-
-      if (is16)
-      {
-         format = GFXFormatR16G16B16A16;
-         break;
-      }
-
       format = GFXFormatR8G8B8A8;
       break;
    default:
@@ -151,13 +180,13 @@ bool sReadSTB(const Torque::Path& path, GBitmap* bitmap)
 
    U8* pBase = (U8*)bitmap->getBits();
 
-   U32 rowBytes = y * x * n;
+   U32 rowBytes = bitmap->getByteSize();
 
    dMemcpy(pBase, data, rowBytes);
 
    stbi_image_free(data);
    // Check this bitmap for transparency
-   if (channels == 4 && !is16)
+   if (channels == 4)
       bitmap->checkForTransparency();
 
    FrameAllocator::setWaterMark(prevWaterMark);

@@ -565,13 +565,6 @@ void DDSFile::SurfaceData::dumpImage(DDSFile *dds, U32 mip, const char *file)
 
    // Copy our data in.
    dMemcpy(foo->getWritableBits(), mMips[mip], dds->getSurfaceSize(dds->mHeight, dds->mWidth, mip) );
-   
-   FileStream  stream;
-
-   if (!stream.open(file, Torque::FS::File::Write))
-   {
-      Con::errorf("DDSFile::SurfaceData::dumpImage() - Error opening file for writing: %s !", file);
-   }
 
    if(!foo->writeBitmap("png", file))
    {

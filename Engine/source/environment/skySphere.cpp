@@ -183,7 +183,7 @@ void SkySphere::prepRenderImage(SceneRenderState* state)
    ObjectRenderInst* ri = state->getRenderPass()->allocInst<ObjectRenderInst>();
    ri->renderDelegate.bind(this, &SkySphere::_renderObject);
    ri->type = RenderPassManager::RIT_Sky;
-   ri->defaultKey = 9;
+   ri->defaultKey = 10;
    ri->defaultKey2 = 0;
    state->getRenderPass()->addInst(ri);
 }
@@ -196,10 +196,7 @@ void SkySphere::_renderObject(ObjectRenderInst* ri, SceneRenderState* state, Bas
    GFX->setVertexBuffer(mVB);
 
    MatrixF worldMat = MatrixF::Identity;
-   worldMat.setPosition(Point3F(
-      state->getCameraPosition().x,
-      state->getCameraPosition().y,
-      state->getCameraPosition().z));
+   worldMat.setPosition(state->getCameraPosition());
 
    SceneData sgData;
    sgData.init(state);
@@ -602,7 +599,7 @@ void SkySphere::_initMaterial()
    desc.setCullMode(GFXCullNone);
    desc.setBlend(true);
    desc.setZReadWrite(true, false);
-   desc.zFunc = GFXCmpLessEqual;
+   desc.zFunc = GFXCmpGreaterEqual;
    mMatInstance->addStateBlockDesc(desc);
 
    // Also disable lighting on the skysphere material by default.

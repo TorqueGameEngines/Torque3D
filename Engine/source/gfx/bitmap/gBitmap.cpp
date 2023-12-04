@@ -1211,7 +1211,7 @@ bool  GBitmap::writeBitmap( const String &bmType, const Torque::Path& path, U32 
    FileStream stream;
    if (!stream.open(path, Torque::FS::File::Write))
    {
-      Con::errorf("GBitmap::writeBitmap failed to open path %s", path);
+      Con::errorf("GBitmap::writeBitmap failed to open path %s", path.getFullFileName().c_str());
       stream.close();
       return false;
    }

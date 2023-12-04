@@ -504,11 +504,10 @@ void TSLastDetail::_update()
       String imposterPath = _getDiffuseMapPath();
       String normalsPath = _getNormalMapPath();
 
-      FileStream stream;
       if (!destBmp.writeBitmap("png", imposterPath))
-         Con::errorf("TSLastDetail::_update() - failed to write imposter %s", imposterPath);
+         Con::errorf("TSLastDetail::_update() - failed to write imposter %s", imposterPath.c_str());
       if (!destNormal.writeBitmap("png", normalsPath))
-         Con::errorf("TSLastDetail::_update() - failed to write normal %s", normalsPath);
+         Con::errorf("TSLastDetail::_update() - failed to write normal %s", normalsPath.c_str());
    }
 
    // DEBUG: Some code to force usage of a test image.

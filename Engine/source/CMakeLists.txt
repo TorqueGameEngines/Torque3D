@@ -430,6 +430,8 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 foreach (TORQUE_LIBRARY ${TORQUE_LINK_LIBRARIES})
   set_target_properties(${TORQUE_LIBRARY} PROPERTIES
   FOLDER "Libraries")
+  # remove warnings from 3rd parties.
+  target_compile_options(${TORQUE_LIBRARY} PRIVATE "-w")
 endforeach()
 
 target_compile_definitions(${TORQUE_APP_NAME} PUBLIC ${TORQUE_COMPILE_DEFINITIONS})

@@ -68,6 +68,10 @@ uniform float4 albedo;
 #define DEBUGVIZ_CONTRIB 0
 #endif
 
+#ifndef CAPTURE_LIGHT_FLOOR
+#define CAPTURE_LIGHT_FLOOR 0.04
+#endif
+
 inline float3 getDistanceVectorToPlane( float3 origin, float3 direction, float4 plane )
 {
    float denum = dot( plane.xyz, direction.xyz );
@@ -235,7 +239,7 @@ float3 evaluateStandardBRDF(Surface surface, SurfaceToLight surfaceToLight)
    float3 Fr = D * F * Vis;
 
 #if CAPTURING == 1
-    return saturate(lerp(Fd + Fr,surface.f0,surface.metalness));
+    return lerp(Fd + Fr,surface.baseColor.rgb,surface.metalness);
 #else
    return Fd + Fr;
 #endif
@@ -244,25 +248,41 @@ float3 evaluateStandardBRDF(Surface surface, SurfaceToLight surfaceToLight)
 
 float3 getDirectionalLight(Surface surface, SurfaceToLight surfaceToLight, float3 lightColor, float lightIntensity, float shadow)
 {
-   float3 factor = lightColor * max(surfaceToLight.NdotL* shadow * lightIntensity, 0.0f) ;
+#if CAPTURING == 1
+   float lightfloor = CAPTURE_LIGHT_FLOOR;
+#else
+   float lightfloor = 0.0;
+#endif
+   float3 factor = lightColor * max(surfaceToLight.NdotL* shadow * lightIntensity, lightfloor) ;
    return evaluateStandardBRDF(surface,surfaceToLight) * factor;
 }
 
 float3 getPunctualLight(Surface surface, SurfaceToLight surfaceToLight, float3 lightColor, float lightIntensity, float radius, float shadow)
 {
+#if CAPTURING == 1
+   float lightfloor = CAPTURE_LIGHT_FLOOR;
+#else
+   float lightfloor = 0.0;
+#endif
    float attenuation = getDistanceAtt(surfaceToLight.Lu, radius);
-   float3 factor = lightColor * max(surfaceToLight.NdotL* shadow * lightIntensity * attenuation, 0.0f) ;
+   float3 factor = lightColor * max(surfaceToLight.NdotL* shadow * lightIntensity * attenuation, lightfloor) ;
    return evaluateStandardBRDF(surface,surfaceToLight) * factor;
 }
 
 float3 getSpotlight(Surface surface, SurfaceToLight surfaceToLight, float3 lightColor, float lightIntensity, float radius, float3 lightDir, float2 lightSpotParams, float shadow)
 {
+#if CAPTURING == 1
+   float lightfloor = CAPTURE_LIGHT_FLOOR;
+#else
+   float lightfloor = 0.0;
+#endif
    float attenuation = 1.0f;
    attenuation *= getDistanceAtt(surfaceToLight.Lu, radius);
    attenuation *= getSpotAngleAtt(-surfaceToLight.L, lightDir, lightSpotParams.xy);
-   float3 factor = lightColor * max(surfaceToLight.NdotL* shadow * lightIntensity * attenuation, 0.0f) ;
+   float3 factor = lightColor * max(surfaceToLight.NdotL* shadow * lightIntensity * attenuation, lightfloor) ;
    return evaluateStandardBRDF(surface,surfaceToLight) * factor;
 }
+
 float computeSpecOcclusion( float NdotV , float AO , float roughness )
 {
    return saturate (pow( abs(NdotV + AO) , exp2 ( -16.0f * roughness - 1.0f )) - 1.0f + AO );

@@ -357,6 +357,7 @@ public:
    /// </summary>
    static bool smRenderReflectionProbes;
 
+   static bool smBakeReflectionProbes;
    //=============================================================================
    // Utility functions for processing and setting up the probes for rendering
    //=============================================================================

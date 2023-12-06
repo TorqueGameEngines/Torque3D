@@ -1109,9 +1109,12 @@ bool GFXGLShader::initShader( const Torque::Path &file,
       return false;
    }
    
-   if ( !_loadShaderFromStream( activeShader, file, &stream, macros ) )
+   if (!_loadShaderFromStream(activeShader, file, &stream, macros))
+   {
+      if (smLogErrors)
+         Con::errorf("GFXGLShader::initShader - unable to load shader from stream: '%s'.", file.getFullPath().c_str());
       return false;
-   
+   }
    GLint compile;
    glGetShaderiv(activeShader, GL_COMPILE_STATUS, &compile);
 
@@ -1119,17 +1122,13 @@ bool GFXGLShader::initShader( const Torque::Path &file,
    U32 logLength = 0;
    glGetShaderiv(activeShader, GL_INFO_LOG_LENGTH, (GLint*)&logLength);
    
-   GLint compileStatus = GL_TRUE;
    if ( logLength )
    {
       FrameAllocatorMarker fam;
       char* log = (char*)fam.alloc(logLength);
       glGetShaderInfoLog(activeShader, logLength, NULL, log);
 
-      // Always print errors
-      glGetShaderiv( activeShader, GL_COMPILE_STATUS, &compileStatus );
-
-      if ( compileStatus == GL_FALSE )
+      if (compile == GL_FALSE )
       {
          if ( smLogErrors )
          {
@@ -1141,7 +1140,7 @@ bool GFXGLShader::initShader( const Torque::Path &file,
          Con::warnf( "Program %s: %s", file.getFullPath().c_str(), log );
    }
 
-   return compileStatus != GL_FALSE;
+   return compile != GL_FALSE;
 }
 
 /// Returns our list of shader constants, the material can get this and just set the constants it knows about

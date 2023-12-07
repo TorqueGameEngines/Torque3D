@@ -797,7 +797,9 @@ void ReflectionProbe::bake()
    if (mReflectionModeType != BakedCubemap)
       return;
 
+   PROBEMGR->preBake();
    PROBEMGR->bakeProbe(this);
+   PROBEMGR->postBake();
 
    setMaskBits(-1);
 }

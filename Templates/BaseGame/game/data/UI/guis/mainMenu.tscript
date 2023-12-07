@@ -1,52 +1,90 @@
 function MainMenuGui::onAdd(%this)
 {
-   $activeControllerName = "K&M"; //default input type
 }
 
 function MainMenuGui::onWake(%this)
 {
-   //In the BaseUI example case, the MainMenuGUI acts as our background
-   //So it's a logical control to set as our UINavigation as well. So we 
-   //set the MainMenuGUI's superClass to UINavigation to integrate it into
-   //that namespace to open up page navigation
-   
-   //At the same time, the MainMenuGUI control has the button holder, set to
-   //the MenuInputButtonContainer class, allowing us to set it as the active button
-   //holder here, prepping it for catching any button inputs to active commands
-   //Specifically, it sets the $activeMenuButtonContainer to be this, which allows
-   //other controls to manage what the behavior of the buttons is consistently
-   //without needing to worry about hardcoded names
-   MainMenuButtonHolder.setActive();
-   
-   //We also have the MainMenuInputHandler, a GuiInputCtrl with the MenuInputHandler class
-   //This allows us to catch any input/axis event and pass it along to the active menuList
-   //or button containers to navigate the menus
-   //We set up this catch by making said control our first responder, here
-   MainMenuInputHandler.setFirstResponder();
-   
-   //We also go ahead and mark for any future pages being added to the UINavigation's page stack
-   //to be prompted to resize when added. This isn't required, but helps keep pages formated to 
-   //the current size of the UINavigation, which is useful when dealing with aspect ratio or resolution
-   //changes.
-   %this.resizePages = true;
-   //Lastly, we go ahead and display some actual navigable content up on our main menu here
-   //In this case, we set the MainMenuButtons as our root page, so we always come back
-   //to having the main menu buttons on screen if every other page is closed.
-   //This will ultimately call MainMenuButtons::onOpen(), so to see where the navigation
-   //chain continues, see that function.
-   %this.setRootPage(MainMenuButtons);
-   
-   %this.refreshPage();
+   MainMenuButtonList.listPosition = 0;
 }
 
-function MainMenuButtonHolder::onWake(%this)
+if(!isObject( MainMenuActionMap ) )
 {
-   //Because the blan slate MainMenuGUI doesn't have anything we need to bother with inputs on
-   //we just go ahead and disable all the buttons in our MainMenuButtonHolder to have
-   // a clean slate
-   %this-->button1.disable();
-   %this-->button2.disable();
-   %this-->button3.disable();
-   %this-->button4.disable();
-   %this-->button5.disable();
+   new ActionMap(MainMenuActionMap){};
+   
+   MainMenuActionMap.bind( keyboard, w, mainMenuNavigateUp );
+   MainMenuActionMap.bind( keyboard, s, mainMenuNavigateDown );
+   MainMenuActionMap.bind( gamepad, yaxis, "D", "-0.23 0.23", mainMenuStickNavigate );
+   MainMenuActionMap.bind( gamepad, upov, mainMenuNavigateUp );
+   MainMenuActionMap.bind( gamepad, dpov, mainMenuNavigateDown );
+   
+   MainMenuActionMap.bind( keyboard, Enter, activateSelected );
+   MainMenuActionMap.bind( gamepad, btn_a, activateSelected );
+}
+
+function mainMenuNavigateUp(%val)
+{
+   if(%val)
+   {
+      MainMenuButtonList.listPosition -= 1;
+      if(MainMenuButtonList.listPosition < 0)
+         MainMenuButtonList.listPosition = 0;
+         
+      MainMenuGUI.syncGUI();
+   }
+}
+
+function mainMenuNavigateDown(%val)
+{
+   if(%val)
+   {
+      MainMenuButtonList.listPosition += 1;
+      if(MainMenuButtonList.listPosition >= MainMenuButtonList.getCount())
+         MainMenuButtonList.listPosition = MainMenuButtonList.getCount()-1;
+         
+      MainMenuGUI.syncGUI();
+   }
+}
+
+function mainMenuStickNavigate(%val)
+{
+   if(%val == -1)
+      mainMenuNavigateUp(1);
+   else if(%val == 1)
+      mainMenuNavigateDown(1);
+}
+
+function MainMenuGUI::syncGUI(%this)
+{
+   MainMenuButtonList.callOnChildren("setHighlighted", false);
+   
+   %btn = MainMenuButtonList.getObject(MainMenuButtonList.listPosition);
+   %btn.setHighlighted(true);
+   
+   //
+   //Update the button imagery to comply to the last input device we'd used
+   %device = Canvas.getLastInputDevice();
+   if(%device $= "mouse")
+      %device = "keyboard";
+      
+   %binding = MainMenuActionMap.getBinding("activateSelected");
+   
+   %bindingCount = getFieldCount(%binding);
+   for(%i=0; %i < %bindingCount; %i+=2)
+   {
+      %mapDevice = stripTrailingNumber(getField(%binding, %i)); 
+      if(%mapDevice $= %device)
+      {
+         %button = getField(%binding, %i+1);
+         break;
+      }
+   }
+
+   %assetId = getButtonBitmap(%device, %button);
+   MainMenuGoButton.setBitmap(%assetId);
+}
+
+function activateSelected()
+{
+   %btn = MainMenuButtonList.getObject(MainMenuButtonList.listPosition);
+   %btn.performClick();
 }

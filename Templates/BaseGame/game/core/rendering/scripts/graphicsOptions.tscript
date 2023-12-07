@@ -54,152 +54,198 @@ function GraphicsOptionsMenuGroup::applySetting(%this, %settingName)
    }
 }
 
-new SimGroup( MeshQualityGroup )
-{ 
-   class = "GraphicsOptionsMenuGroup";
-   
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "High";
+//Primary Group(Video, Audio, Controls)
+//Sub Grouping(Basic, Advanced, or Display, Graphics)
 
-      key["$pref::TS::detailAdjust"] = 1.5;
-      key["$pref::TS::skipRenderDLs"] = 0;      
-   }; 
-   new ArrayObject( )
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "Medium";
-
-      key["$pref::TS::detailAdjust"] = 1.0;
-      key["$pref::TS::skipRenderDLs"] = 0;      
-   };
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "Low";
-            
-      key["$pref::TS::detailAdjust"] = 0.75;
-      key["$pref::TS::skipRenderDLs"] = 0;      
-   };
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "Lowest";
-      
-      key["$pref::TS::detailAdjust"] = 0.5;
-      key["$pref::TS::skipRenderDLs"] = 1;      
-  };
-};
-
-new SimGroup( MeshDrawDistQualityGroup )
-{ 
-   class = "GraphicsOptionsMenuGroup";
-   
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "High";
-
-      key["$pref::useStaticObjectFade"] = false;
-      key["$pref::staticObjectFadeStart"] = 75;    
-      key["$pref::staticObjectFadeEnd"] = 100;  
-      key["$pref::staticObjectUnfadeableSize"] = 75;  
-
-   }; 
-   new ArrayObject( )
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "Medium";
-
-      key["$pref::useStaticObjectFade"] = true;
-      key["$pref::staticObjectFadeStart"] = 75;    
-      key["$pref::staticObjectFadeEnd"] = 100;  
-      key["$pref::staticObjectUnfadeableSize"] = 75;    
-   };
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "Low";
-            
-      key["$pref::useStaticObjectFade"] = true;
-      key["$pref::staticObjectFadeStart"] = 50;    
-      key["$pref::staticObjectFadeEnd"] = 75;  
-      key["$pref::staticObjectUnfadeableSize"] = 100;     
-   };
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "Lowest";
-      
-      key["$pref::useStaticObjectFade"] = true;
-      key["$pref::staticObjectFadeStart"] = 25;    
-      key["$pref::staticObjectFadeEnd"] = 50;  
-      key["$pref::staticObjectUnfadeableSize"] = 200;     
-  };
-};
-
-new SimGroup( TextureQualityGroup )
+new SimGroup(VideoSettingsGroup)
 {
-   class = "GraphicsOptionsMenuGroup";
+   class = "PrimaryOptionsGroup";
+   displayName = "Video";
    
-   new ArrayObject()
+   new SimGroup(BasicVideoSettingsGroup)
    {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
+      class = "SubOptionsGroup";
+      displayName = "Basic";
       
-      displayName = "High";
-
-      key["$pref::Video::textureReductionLevel"] = 0;
-      key["$pref::Reflect::refractTexScale"] = 1.25;
-   }; 
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "Medium";
-
-      key["$pref::Video::textureReductionLevel"] = 0;
-      key["$pref::Reflect::refractTexScale"] = 1;
-   };
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "Low";
+      new SimGroup()
+      { 
+         class = "OptionsSettings";
+         
+         OptionName = "Graphical Quality";
+         Description = "Controls the general graphical quality";
+         
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
             
-      key["$pref::Video::textureReductionLevel"] = 1;
-      key["$pref::Reflect::refractTexScale"] = 0.75;
+            displayName = "High";
+
+            key["$pref::TS::detailAdjust"] = 1.5;
+            key["$pref::TS::skipRenderDLs"] = 0;   
+            key["$pref::useStaticObjectFade"] = false;
+            key["$pref::staticObjectFadeStart"] = 75;    
+            key["$pref::staticObjectFadeEnd"] = 100;  
+            key["$pref::staticObjectUnfadeableSize"] = 75;     
+         }; 
+      };
    };
-   new ArrayObject()
+   
+   /*new SimGroup(AdvancedVideoSettingsGroup)
    {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
+      groupName = "Advanced";
       
-      displayName = "Lowest";
-      
-      key["$pref::Video::textureReductionLevel"] = 2;
-      key["$pref::Reflect::refractTexScale"] = 0.5;
-   };
+      new SimGroup( MeshQualityGroup )
+      { 
+         class = "GraphicsOptionsMenuGroup";
+         
+         new ArrayObject()
+         {
+            class = "GraphicsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "High";
+
+            key["$pref::TS::detailAdjust"] = 1.5;
+            key["$pref::TS::skipRenderDLs"] = 0;      
+         }; 
+         new ArrayObject( )
+         {
+            class = "GraphicsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "Medium";
+
+            key["$pref::TS::detailAdjust"] = 1.0;
+            key["$pref::TS::skipRenderDLs"] = 0;      
+         };
+         new ArrayObject()
+         {
+            class = "GraphicsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "Low";
+                  
+            key["$pref::TS::detailAdjust"] = 0.75;
+            key["$pref::TS::skipRenderDLs"] = 0;      
+         };
+         new ArrayObject()
+         {
+            class = "GraphicsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "Lowest";
+            
+            key["$pref::TS::detailAdjust"] = 0.5;
+            key["$pref::TS::skipRenderDLs"] = 1;      
+        };
+      };
+
+      new SimGroup( MeshDrawDistQualityGroup )
+      { 
+         class = "GraphicsOptionsMenuGroup";
+         
+         new ArrayObject()
+         {
+            class = "GraphicsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "High";
+
+            key["$pref::useStaticObjectFade"] = false;
+            key["$pref::staticObjectFadeStart"] = 75;    
+            key["$pref::staticObjectFadeEnd"] = 100;  
+            key["$pref::staticObjectUnfadeableSize"] = 75;  
+
+         }; 
+         new ArrayObject( )
+         {
+            class = "GraphicsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "Medium";
+
+            key["$pref::useStaticObjectFade"] = true;
+            key["$pref::staticObjectFadeStart"] = 75;    
+            key["$pref::staticObjectFadeEnd"] = 100;  
+            key["$pref::staticObjectUnfadeableSize"] = 75;    
+         };
+         new ArrayObject()
+         {
+            class = "GraphicsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "Low";
+                  
+            key["$pref::useStaticObjectFade"] = true;
+            key["$pref::staticObjectFadeStart"] = 50;    
+            key["$pref::staticObjectFadeEnd"] = 75;  
+            key["$pref::staticObjectUnfadeableSize"] = 100;     
+         };
+         new ArrayObject()
+         {
+            class = "GraphicsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "Lowest";
+            
+            key["$pref::useStaticObjectFade"] = true;
+            key["$pref::staticObjectFadeStart"] = 25;    
+            key["$pref::staticObjectFadeEnd"] = 50;  
+            key["$pref::staticObjectUnfadeableSize"] = 200;     
+        };
+      };
+
+      new SimGroup( TextureQualityGroup )
+      {
+         class = "GraphicsOptionsMenuGroup";
+         
+         new ArrayObject()
+         {
+            class = "GraphicsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "High";
+
+            key["$pref::Video::textureReductionLevel"] = 0;
+            key["$pref::Reflect::refractTexScale"] = 1.25;
+         }; 
+         new ArrayObject()
+         {
+            class = "GraphicsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "Medium";
+
+            key["$pref::Video::textureReductionLevel"] = 0;
+            key["$pref::Reflect::refractTexScale"] = 1;
+         };
+         new ArrayObject()
+         {
+            class = "GraphicsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "Low";
+                  
+            key["$pref::Video::textureReductionLevel"] = 1;
+            key["$pref::Reflect::refractTexScale"] = 0.75;
+         };
+         new ArrayObject()
+         {
+            class = "GraphicsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "Lowest";
+            
+            key["$pref::Video::textureReductionLevel"] = 2;
+            key["$pref::Reflect::refractTexScale"] = 0.5;
+         };
+      };
+
+   };*/
 };
+
+//Fields have display name, populated by group. Direct name association to the fieldset
 
 new SimGroup( GroundCoverDensityGroup )
 { 

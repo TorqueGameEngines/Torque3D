@@ -87,27 +87,32 @@ if( !isObject( GuiMenuButtonProfile ) )
 new GuiControlProfile( GuiMenuButtonProfile )
 {
    opaque = true;
-   border = true;
+   border = false;
    fontSize = 18;
    fontType = "Arial Bold";
-   fontColor = $TextMediumEmphasisColor;
-   fontColorHL = $TextMediumEmphasisColor;
-   fontColorNA = $TextDisabledColor;
-   fontColorSEL = $TextMediumEmphasisColor;
-   fillColor = "40 40 40";
-   fillColorHL = "49 34 37";
+   fontColor = "200 200 200 255";
+   fontColorHL = "0 0 0 255";
+   fontColorNA = "108 108 108 255";
+   fontColorSEL = "200 200 200 255";
+   fillColor = "0 0 0 0";
+   fillColorHL = "255 255 255 255";
    fillColorNA = "40 40 40";
    borderColor = "87 87 87";
    borderColorNA = "0 0 0";
    borderColorHL = "194 64 64";
-   fixedExtent = false;
+   fixedExtent = 0;
    justify = "center";
    canKeyFocus = false;
    //bitmapAsset = "UI:menu_button_image";
    hasBitmapArray = false;
    soundButtonDown = "UI:buttonClick";
    soundButtonOver = "UI:buttonHover";
-   category = "Core";
+   category = "BaseUI";
+   fontColors[0] = "200 200 200 255";
+   fontColors[2] = "108 108 108 255";
+   fontColors[3] = "200 200 200 255";
+   fontColors[5] = "Magenta";
+   fontColorLinkHL = "Magenta";
 };
 
 if( !isObject( GuiHighlightMenuButtonProfile ) )
@@ -554,4 +559,11 @@ singleton GuiControlProfile(SliderBitmapGUIProfile)
    hasBitmapArray = true;
    opaque = false;
    borderColor = "0 0 0 255";
+};
+
+singleton GuiControlProfile(GuiMenuPanelProfile)
+{
+   category = "BaseUI";
+   opaque = true;
+   fillcolor = "15 15 15 255";
 };

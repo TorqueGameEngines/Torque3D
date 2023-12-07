@@ -94,16 +94,7 @@ function openJoinServerMenu()
    MainMenuGui.pushPage(JoinServerMenu);
 }
 
-function openOptionsMenu()
-{
-   //Here, like the other commands, we add a new page onto the stack
-   //In this case, we'll push the OptionsMenu control onto the stack. This will
-   //invoke the canClose() and then onClose() functions for MainMenuButtonList
-   //before calling the onOpen() for OptionsMenu then displaying.
-   //The options menu additionally has an example of why we may want to capitalize on the
-   //canClose() call.
-   MainMenuGui.pushPage(OptionsMenu);
-}
+
 
 function openWorldEditorBtn()
 {

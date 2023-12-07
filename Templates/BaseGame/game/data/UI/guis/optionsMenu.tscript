@@ -72,6 +72,49 @@ function OptionsMenu::onAdd(%this)
    callOnModules("populateOptionsMenuCategories", "Game");
 }
 
+function OptionsMenu::onWake(%this)
+{
+   VideoSettingsList.clear();
+   
+   for(%i=0; %i < VideoSettingsGroup.getCount(); %i++)
+   {
+      %setting = VideoSettingsGroup.getObject(%i);
+      
+      echo(" OptionsMenu::onWake() - video: " @ %setting.class);
+      if(%setting.class $= "SubOptionsGroup")
+      {
+         %entry = addOptionGroup();
+         %entry.text = %setting.displayName;
+         
+         if(isObject(%entry))
+            VideoSettingsList.add(%entry);
+         
+         for(%s=0; %s < %setting.getCount(); %s++)
+         {
+            %option = %setting.getObject(%s);
+            
+            %optionsEntry = addOptionEntry();
+            %optionsEntry-->optionName.text = %option.OptionName;
+            %optionsEntry-->optionDescription.text = %option.Description;
+            %optionsEntry-->optionValue.text = %option.getObject(0).displayName;
+            
+            if(isObject(%optionsEntry))
+               VideoSettingsList.add(%optionsEntry);
+         }
+      }
+      else if(%setting.class $= "OptionsSettings")
+      {
+         %entry = addOptionEntry();
+         %entry-->optionName.text = %setting.displayName;
+         %entry-->optionDescription.text = %setting.description;
+         %entry-->optionValue.text = %setting.getObject(0).displayName;
+         
+         if(isObject(%entry))
+               VideoSettingsList.add(%entry);
+      }
+   }
+}
+
 function OptionsMenu::onOpen(%this)
 {
    OptionsMenuCategoryList.clear(); 
@@ -1178,4 +1221,71 @@ function addKeybindOption(%label, %description, %bitmapName, %callback, %enabled
       %enabled = true;
 
    OptionsMenuSettingsList.addSliderRow(%label, %bitmapName, %callback, %enabled, %description);
+}
+
+
+//
+//
+//
+function addOptionGroup()
+{
+   %group = new GuiTextCtrl() {
+      text = "Graphics";
+      position = "0 0";
+      extent = "500 30";
+      profile = "MenuHeaderText";
+      tooltipProfile = "GuiToolTipProfile";
+   };   
+   
+   return %group;
+   
+}
+
+function addOptionEntry()
+{
+   %entry = new GuiContainer() {
+      position = "0 0";
+      extent = "500 40";
+      profile = "GuiMenuPanelProfile";
+      tooltipProfile = "GuiToolTipProfile";
+
+      new GuiTextCtrl() {
+         text = "";
+         position = "1 -1";
+         extent = "250 20";
+         profile = "MenuSubHeaderText";
+         tooltipProfile = "GuiToolTipProfile";
+         internalName = "optionName";
+      };
+      new GuiTextCtrl() {
+         text = "Sets the resolution and detail of shadows";
+         position = "1 17";
+         extent = "250 18";
+         profile = "GuiMLTextProfile";
+         tooltipProfile = "GuiToolTipProfile";
+         internalName = "optionDescription";
+      };
+      
+      new GuiContainer() {
+         position = "250 0";
+         extent = "250 40";
+         profile = GuiModelessDialogProfile;
+         tooltipProfile = "GuiToolTipProfile";
+         horizSizing = "left";
+         vertSizing = "height";
+         
+         new GuiTextCtrl() {
+            text = "< High >";
+            position = "180 0";
+            extent = "70 40";
+            profile = "GuiMenuTextProfile";
+            tooltipProfile = "GuiToolTipProfile";
+            horizSizing = "left";
+            vertSizing = "center";
+            internalName = "optionValue";
+         };
+      };
+   }; 
+   
+   return %entry; 
 }

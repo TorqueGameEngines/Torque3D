@@ -330,22 +330,13 @@ public:
    }
 
    U32 getObjectCount(void) const { return mNumObjectsInMemory; }
-
-   /// NOTE: This will return the memory, NOT perform a ones-complement
-   T* operator ~() { return mMemory; };
-   /// NOTE: This will return the memory, NOT perform a ones-complement
-   const T* operator ~() const { return mMemory; };
-
-   /// NOTE: This will dereference the memory, NOT do standard unary plus behavior
-   T& operator +() { return *mMemory; };
-   /// NOTE: This will dereference the memory, NOT do standard unary plus behavior
-   const T& operator +() const { return *mMemory; };
+   U32 size(void) const { return mNumObjectsInMemory; }
 
    T& operator *() { return *mMemory; };
-   const T& operator *() const { return *mMemory; };
+   const T& operator *() const { return *mMemory; }
 
-   T** operator &() { return &mMemory; };
-   const T** operator &() const { return &mMemory; };
+   T** operator &() { return &mMemory; }
+   const T** operator &() const { return &mMemory; }
 
    operator T* () { return mMemory; }
    operator const T* () const { return mMemory; }
@@ -354,7 +345,7 @@ public:
    operator const T& () const { return *mMemory; }
 
    operator T() { return *mMemory; }
-   operator const T() const { return *mMemory;
+   operator const T() const { return *mMemory; }
 
    inline T* address() const { return mMemory; }
 
@@ -365,35 +356,6 @@ public:
    T& operator[](const S32 idx) { return mMemory[idx]; }
    const T& operator[](const S32 idx) const { return mMemory[idx]; }
 };
-
-//-----------------------------------------------------------------------------
-// FrameTemp specializations for types with no constructor/destructor
-#define FRAME_TEMP_NC_SPEC(type) \
-template<> \
-inline FrameTemp<type>::FrameTemp( const U32 count ) \
-{ \
-AssertFatal( count > 0, "Allocating a FrameTemp with less than one instance" ); \
-mWaterMark = FrameAllocator::getWaterMark(); \
-mMemory = reinterpret_cast<type *>( FrameAllocator::alloc( sizeof( type ) * count ) ); \
-} \
-template<>\
-inline FrameTemp<type>::~FrameTemp() \
-{ \
-FrameAllocator::setWaterMark( mWaterMark ); \
-} \
-
-FRAME_TEMP_NC_SPEC(char);
-FRAME_TEMP_NC_SPEC(float);
-FRAME_TEMP_NC_SPEC(double);
-FRAME_TEMP_NC_SPEC(bool);
-FRAME_TEMP_NC_SPEC(int);
-FRAME_TEMP_NC_SPEC(short);
-
-FRAME_TEMP_NC_SPEC(unsigned char);
-FRAME_TEMP_NC_SPEC(unsigned int);
-FRAME_TEMP_NC_SPEC(unsigned short);
-
-#undef FRAME_TEMP_NC_SPEC
 
 //-----------------------------------------------------------------------------
 

@@ -14,10 +14,13 @@
 #ifndef _PLATFORMASSERT_H_
 #  include "platform/platformAssert.h"
 #endif
+#ifndef _FRAMEALLOCATOR_H_
+#include "core/frameAllocator.h"
+#endif
 
 #include <algorithm>
 #include <stdint.h>
-#include "core/frameAllocator.h"
+
 //#include "math/mMathFn.h" // tgemit - needed here for the moment
 
 /// Implements a chunked data allocator.
@@ -242,7 +245,7 @@ public:
       mFreeListHead.push(reinterpret_cast<ChunkerFreeClassList<T>*>(item));
    }
 
-   void freeBlocks(bool keepOne=false)
+   void freeBlocks(bool keepOne = false)
    {
       BaseDataChunker<T>::freeBlocks(keepOne);
    }
@@ -293,8 +296,106 @@ public:
       mFreeListHead.push(reinterpret_cast<ChunkerFreeClassList<T>*>(item));
    }
 
-   void freeBlocks(bool keepOne)
+   void freeBlocks(bool keepOne = false)
    {
-      BaseDataChunker<T>::freeBlocks(keepOne);
+      mChunker->freeBlocks(keepOne);
+   }
+};
+
+template<const U32 byteSize> struct DWordDataBlob
+{
+   U32 data[(byteSize + 3)/ 4];
+};
+
+/// Implements a three-tiered chunker
+/// K1..3 should be ordered from low to high
+template<class K1, class K2, class K3> class ThreeTieredChunker
+{
+public:
+   struct Handle
+   {
+      U32 tier;
+      void* ptr;
+
+      Handle() : tier(0), ptr(NULL) { ; }
+      Handle(const Handle& other) : tier(other.tier), ptr(other.ptr) { ; }
+      Handle(U32 in_tier, void* in_ptr) : tier(in_tier), ptr(in_ptr) { ; }
+
+      Handle& operator=(const Handle& other) {
+         tier = other.tier;
+         ptr = other.ptr;
+         return *this;
+      }
+   };
+
+protected:
+
+   ClassChunker<K1> mT1;
+   ClassChunker<K2> mT2;
+   ClassChunker<K3> mT3;
+
+public:
+
+   Handle alloc(U32 byteSize)
+   {
+      Handle outH;
+
+      if (byteSize > sizeof(K3))
+      {
+         const U32 wordSize = (byteSize + 3) / 4;
+         outH = Handle(0, (void*)(new U32[wordSize]));
+      }
+      else
+      {
+         if (byteSize <= sizeof(K1))
+         {
+            outH = Handle(1, (void*)mT1.alloc());
+         }
+         else if (byteSize <= sizeof(K2))
+         {
+            outH = Handle(2, (void*)mT2.alloc());
+         }
+         else if (byteSize <= sizeof(K3))
+         {
+            outH = Handle(3, (void*)mT3.alloc());
+         }
+         else
+         {
+            outH = Handle(0, NULL);
+         }
+      }
+
+      return outH;
+   }
+
+   void free(Handle& item)
+   {
+      if (item.ptr == NULL)
+         return;
+
+      switch (item.tier)
+      {
+      case 0:
+         delete[] ((U32*)item.ptr);
+         break;
+      case 1:
+         mT1.free((K1*)item.ptr);
+         break;
+      case 2:
+         mT2.free((K2*)item.ptr);
+         break;
+      case 3:
+         mT3.free((K3*)item.ptr);
+         break;
+      default:
+         break;
+      }
+   }
+
+   void freeBlocks(bool keepOne = false)
+   {
+      mT1.freeBlocks(keepOne);
+      mT2.freeBlocks(keepOne);
+      mT3.freeBlocks(keepOne);
    }
 };

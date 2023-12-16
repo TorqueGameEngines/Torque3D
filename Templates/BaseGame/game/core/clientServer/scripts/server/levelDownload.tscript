@@ -196,6 +196,8 @@ function serverCmdMissionStartPhase3Ack(%client, %seq)
    }
    
    %hasGameMode = callGamemodeFunction("onClientEnterGame", %client);
+
+   %client.spawnControlObject();
    
    //if that also failed, just spawn a camera
    if(%hasGameMode == 0)

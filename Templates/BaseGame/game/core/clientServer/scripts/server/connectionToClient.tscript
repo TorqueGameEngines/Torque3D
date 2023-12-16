@@ -27,7 +27,7 @@
 // anything else will be sent back as an error to the client.
 // All the connect args are passed also to onConnectRequest
 //
-function GameConnection::onConnectRequest( %client, %netAddress, %name )
+function GameConnection::onConnectRequest( %this, %netAddress, %name )
 {
    echo("Connect request from: " @ %netAddress);
    if($Server::PlayerCount >= $pref::Server::MaxPlayers)
@@ -47,11 +47,11 @@ function GameConnection::onConnect( %this, %clientData )
 	sendLoadInfoToClient(%this);
 	
 	// Simulated client lag for testing...
-	// %client.setSimulatedNetParams(0.1, 30);
+	// %this.setSimulatedNetParams(0.1, 30);
 	
 	// Get the client's unique id:
-	// %authInfo = %client.getAuthInfo();
-	// %client.guid = getField(%authInfo, 3);
+	// %authInfo = %this.getAuthInfo();
+	// %this.guid = getField(%authInfo, 3);
 	%this.guid = 0;
 	addToServerGuidList(%this.guid);
 	
@@ -86,14 +86,110 @@ function GameConnection::onConnect( %this, %clientData )
 	$Server::PlayerCount++;
 }
 
+function GameConnection::spawnControlObject( %this )
+{
+    //baseline controlObject spawn type with extention points
+    %this.spawnClass = "Camera";
+    %this.spawnDBType = "CameraData";
+    %this.spawnDataBlock = "Observer";
+    callOnModules("onControlObjectTypePick", "Game", %this);
+	callGamemodeFunction("onControlObjectTypePick", %this);
+}
+
+function GameConnection::completeControlObjectTypePick( %this )
+{
+    if (isObject(%this.player))
+    {
+        // The client should not already have a player. Assigning
+        // a new one could result in an uncontrolled player object.
+        error("Attempting to create a player for a client that already has one!");
+    }
+   
+    // Spawn with the engine's Sim::spawnObject() function
+    %this.player = spawnObject(%this.spawnClass, %this.spawnDataBlock);
+    
+    if (!%this.player.isMemberOfClass(%this.spawnClass))
+        warn("Trying to spawn a class that does not derive from "@ %this.spawnClass);
+
+    // Add the player object to MissionCleanup so that it
+    // won't get saved into the level files and will get
+    // cleaned up properly
+    MissionCleanup.add(%this.player);
+   
+    // Store the client object on the player object for
+    // future reference
+    %this.player.client = %this;
+   
+    %this.onSpawnPointPick();
+    
+   // Give the client control of the camera if in the editor
+   if( $startWorldEditor )
+   {
+      %control = %this.camera;
+      %control.mode = "Fly";
+      EditorGui.syncCameraGui();
+   }
+   else
+      %control = %this.player;
+      
+   // Allow the player/camera to receive move data from the GameConnection.  Without this
+   // the user is unable to control the player/camera.
+   if (!isDefined("%noControl"))
+      %this.setControlObject(%control);
+}
+
+function GameConnection::onSpawnPointPick( %this )
+{
+    //baseline spawn point config rules with extention points
+    %this.playerSpawnGroups = "PlayerSpawnPoints PlayerDropPoints";
+    %this.spawnPoint = "";
+    %this.spawnLocation = "0 0 0";
+    callOnModules("onSpawnPointPick", "Game", %this);
+	callGamemodeFunction("onSpawnPointPick", %this);    
+}
+
+function GameConnection::completeSpawnPointPick( %this )
+{
+    if (isObject(%this.player))
+        %this.player.setTransform(%this.spawnLocation);
+    else
+    {
+        // If we weren't able to create the player object then warn the user
+        // When the player clicks OK in one of these message boxes, we will fall through
+        // to the "if (!isObject(%player))" check below.
+        if (isDefined("%this.spawnDataBlock"))
+        {
+            MessageBoxOK("Spawn Failed",
+                "Unable to create a player with class " @ %this.spawnClass @
+                " and datablock " @ %this.spawnDataBlock @ ".\n\nStarting as an Observer instead.",
+                "");
+        }
+        else
+        {
+            MessageBoxOK("Spawn Failed",
+                "Unable to create a player with class " @ %this.spawnClass @
+                ".\n\nStarting as an Observer instead.",
+                "");
+        }
+    }
+    %this.onSpawnAppendPick();
+}
+
+function GameConnection::onSpawnAppendPick( %this )
+{
+    //post controlObject create extention points
+    callOnModules("onSpawnAppendPick", "Game", %this);
+	callGamemodeFunction("onSpawnAppendPick", %this);    
+}
+
 //-----------------------------------------------------------------------------
 // A player's name could be obtained from the auth server, but for
 // now we use the one passed from the client.
 // %realName = getField( %authInfo, 0 );
 //
-function GameConnection::setPlayerName(%client,%name)
+function GameConnection::setPlayerName(%this,%name)
 {
-   %client.sendGuid = 0;
+   %this.sendGuid = 0;
 
    // Minimum length requirements
    %name = trim( strToPlayerName( %name ) );
@@ -112,8 +208,8 @@ function GameConnection::setPlayerName(%client,%name)
    }
 
    // Tag the name with the "smurf" color:
-   %client.nameBase = %name;
-   %client.playerName = addTaggedString("\cp\c8" @ %name @ "\co");
+   %this.nameBase = %name;
+   %this.playerName = addTaggedString("\cp\c8" @ %name @ "\co");
 }
 
 function isNameUnique(%name)
@@ -132,7 +228,7 @@ function isNameUnique(%name)
 //-----------------------------------------------------------------------------
 // This function is called when a client drops for any reason
 //
-function GameConnection::onDrop(%client, %reason)
+function GameConnection::onDrop(%this, %reason)
 {
    %entityIds = parseMissionGroupForIds("Entity", "");
    %entityCount = getWordCount(%entityIds);
@@ -148,15 +244,15 @@ function GameConnection::onDrop(%client, %reason)
             %entityIds = %entityIds SPC %child.getID();  
       }
       
-      %entity.notify("onClientDisconnect", %client);
+      %entity.notify("onClientDisconnect", %this);
    }
    
    if($missionRunning)
    {
-      %hasGameMode = callGamemodeFunction("onClientLeaveGame", %client);
+      %hasGameMode = callGamemodeFunction("onClientLeaveGame", %this);
    }
    
-   removeFromServerGuidList( %client.guid );
+   removeFromServerGuidList( %this.guid );
 
    $Server::PlayerCount--;
 }

@@ -49,7 +49,7 @@ singleton GuiControlProfile(GamepadButtonTextRight : GamepadButtonTextLeft)
 singleton GuiControlProfile(MenuHeaderText)
 {
    fontType = "Arial Bold";
-   fontSize = 30;
+   fontSize = 36;
    fontColor = $TextHighEmphasisColor;
    justify = "left";
    modal = false;
@@ -63,7 +63,7 @@ singleton GuiControlProfile(MenuHeaderTextHighlighted : MenuHeaderText)
 singleton GuiControlProfile(MenuHeaderTextCenter)
 {
    fontType = "Arial Bold";
-   fontSize = 30;
+   fontSize = 32;
    fontColor = $TextHighEmphasisColor;
    justify = "center";
 };
@@ -71,7 +71,7 @@ singleton GuiControlProfile(MenuHeaderTextCenter)
 singleton GuiControlProfile(MenuSubHeaderText)
 {
    fontType = "Arial Bold";
-   fontSize = 20;
+   fontSize = 24;
    fontColor = $TextMediumEmphasisColor;
    justify = "left";
    modal = false;
@@ -85,6 +85,11 @@ singleton GuiControlProfile(MenuSubHeaderTextHighlighted : MenuSubHeaderText)
 singleton GuiControlProfile(MenuSubHeaderCenteredText : MenuSubHeaderText)
 {
    justify = "center";
+};
+
+singleton GuiControlProfile(MenuSubHeaderCenteredTextHighlighted : MenuSubHeaderCenteredText)
+{
+   fontColor = $TextMediumEmphasisColorHL;
 };
 
 singleton GuiControlProfile(MenuMLSubHeaderText)
@@ -113,7 +118,7 @@ singleton GuiControlProfile( GuiMenuButtonProfile )
 {
    opaque = true;
    border = false;
-   fontSize = 18;
+   fontSize = 24;
    fontType = "Arial Bold";
    fontColor = "200 200 200 255";
    fontColorHL = "0 0 0 255";
@@ -304,6 +309,7 @@ singleton GuiControlProfile( GuiMLTextProfile )
    fontColorSEL = $TextMediumEmphasisColor;
    fontColorNA = $TextDisabledColor;
    
+   fontSize = 20;
    fontColorLink = "100 100 100";
    fontColorLinkHL = $TextMediumEmphasisColor;
    autoSizeWidth = true;

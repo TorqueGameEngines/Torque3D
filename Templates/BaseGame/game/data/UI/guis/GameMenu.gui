@@ -4,11 +4,7 @@ $guiContent = new GuiControl(GameMenu) {
    profile = "GuiDefaultProfile";
    tooltipProfile = "GuiToolTipProfile";
    isContainer = "1";
-   superClass = "UINavigation";
    canSaveDynamicFields = "1";
-      currentMenu = "SystemMenu";
-      gameMenusArray = "17288";
-      resizePages = "1";
 
    new GuiInputCtrl(GameMenuInputHandler) {
       ignoreMouseEvents = "1";

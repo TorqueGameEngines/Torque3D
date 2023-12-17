@@ -15,7 +15,6 @@ $guiContent = new GuiControl(SystemMenu) {
       vertSizing = "center";
       profile = "GuiDefaultProfile";
       tooltipProfile = "GuiToolTipProfile";
-      superClass = "MenuList";
 
       new GuiButtonCtrl() {
          text = "Return to Game";

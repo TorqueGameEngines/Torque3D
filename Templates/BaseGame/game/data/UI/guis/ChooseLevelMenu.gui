@@ -1,11 +1,10 @@
 //--- OBJECT WRITE BEGIN ---
-$guiContent = new GuiChunkedBitmapCtrl(ChooseLevelMenu) {
-   BitmapAsset = "UI:backgrounddark_image";
+$guiContent = new GuiControl(ChooseLevelMenu) {
    extent = "1280 720";
    minExtent = "8 8";
    horizSizing = "width";
    vertSizing = "height";
-   profile = "GuiNonModalDefaultProfile";
+   profile = "GuiMenuBackgroundProfile";
    category = "BaseUI";
    tooltipProfile = "GuiToolTipProfile";
    isContainer = "1";
@@ -24,7 +23,7 @@ $guiContent = new GuiChunkedBitmapCtrl(ChooseLevelMenu) {
    };
 
    new GuiPanel(ChooseLevelTitlePanel) {
-      extent = "1281 80";
+      extent = "1281 60";
       horizSizing = "width";
       profile = "GuiMenuPanelProfile";
       tooltipProfile = "GuiToolTipProfile";

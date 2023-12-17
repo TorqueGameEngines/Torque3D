@@ -3,6 +3,8 @@ function JoinServerMenu::onWake(%this)
 {
    $MenuList = JoinServerList;
    JoinServerList.listPosition = 0;
+   
+   JoinServerList.syncGui();
 }   
 
 if(!isObject( JoinServerActionMap ) )
@@ -14,11 +16,17 @@ if(!isObject( JoinServerActionMap ) )
    
    JoinServerActionMap.bindCmd( keyboard, e, "JoinServerMenu.queryLan();" );
    JoinServerActionMap.bindCmd( gamepad, btn_y, "JoinServerMenu.queryLan();" );
+   
+   JoinServerActionMap.bindCmd( keyboard, Enter, "JoinServerMenu::join();" );
+   JoinServerActionMap.bindCmd( gamepad, btn_a, "JoinServerMenu::join();" );
 }
 
 //----------------------------------------
 function JoinServerMenu::query(%this)
 {
+   //Nuke the current list and indicate we're working on a query...
+   JoinServerList.clear();
+   
    queryMasterServer(
       0,          // Query flags
       $Client::GameTypeQuery,       // gameTypes
@@ -36,6 +44,9 @@ function JoinServerMenu::query(%this)
 //----------------------------------------
 function JoinServerMenu::queryLan(%this)
 {
+   //Nuke the current list and indicate we're working on a query...
+   JoinServerList.clear();
+   
    queryLANServers(
       $pref::Net::Port,      // lanPort for local queries
       0,          // Query flags
@@ -63,16 +74,14 @@ function JoinServerMenu::cancel(%this)
 function JoinServerMenu::join(%this)
 {
    cancelServerQuery();
-   %index = JS_serverList.getSelectedId();
-
-   JoinGame(%index);
+   JoinGame(JoinServerList.listPosition);
 }
 
 //----------------------------------------
 function JoinServerMenu::refresh(%this)
 {
    cancelServerQuery();
-   %index= JoinServerList.getActiveRow();
+   %index = JoinServerList.listPosition;
 
    // The server info index is stored in the row along with the
    // rest of displayed info.
@@ -98,7 +107,7 @@ function JoinServerMenu::update(%this)
       
       %serverEntry = %this.addServerEntry();
       %serverEntry-->serverNameTxt.text = $ServerInfo::Name;
-      %serverEntry-->serverDetailsTxt.text = $ServerInfo::Version @ " | " @ $ServerInfo::MissionName @ " | " @ $ServerInfo::MissionType;
+      %serverEntry-->serverDetailsTxt.text = $ServerInfo::MissionName @ " | v" @ $ServerInfo::Version @ " | " @ $ServerInfo::MissionType;
       %serverEntry-->pingTxt.text = $ServerInfo::Ping @ " ms";
       %serverEntry-->playerCountTxt.text = $ServerInfo::PlayerCount @ "|" @ $ServerInfo::MaxPlayers;
       
@@ -106,6 +115,8 @@ function JoinServerMenu::update(%this)
       
       JoinServerList.add(%serverEntry);
    }
+   
+   JoinServerList.syncGui();
 } 
 
 //----------------------------------------
@@ -115,26 +126,22 @@ function onServerQueryStatus(%status, %msg, %value)
    // Update query status
    // States: start, update, ping, query, done
    // value = % (0-1) done for ping and query states
-   if (!JS_queryStatus.isVisible())
-      JS_queryStatus.setVisible(true);
+   //if (!JS_queryStatus.isVisible())
+   //   JS_queryStatus.setVisible(true);
 
    switch$ (%status) {
       case "start":
-         JS_statusText.setText(%msg);
-         JS_statusBar.setValue(0);
+         MessagePopup("", %msg, 5000);
          JoinServerList.clear();
 
       case "ping":
-         JS_statusText.setText("Ping Servers");
-         JS_statusBar.setValue(%value);
+         MessagePopup("", "Pinging Servers", 5000);
 
       case "query":
-         JS_statusText.setText("Query Servers");
-         JS_statusBar.setValue(%value);
+         MessagePopup("", "Querying Servers", 5000);
 
       case "done":
-         JS_queryStatus.setVisible(false);
-         JS_status.setText(%msg);
+         MessagePopup("", %msg, 1000);
          JoinServerMenu.update();
    }
 }
@@ -157,45 +164,56 @@ function JoinServerMenu::addServerEntry(%this)
          horizSizing = "width";
          vertSizing = "height";
          internalName = "button";
+         class = "JoinServerEntryButton";
       };
 
       new GuiTextCtrl() {
          position = "0 0";
-         extent = "730 20";
+         extent = "700 20";
          profile = "MenuSubHeaderText";
          tooltipProfile = "GuiToolTipProfile";
          internalName = "serverNameTxt";
       };
       new GuiTextCtrl() {
          position = $optionsEntryPad SPC 17;
-         extent = "730 18";
+         extent = "700 18";
          profile = "GuiMLTextProfile";
          tooltipProfile = "GuiToolTipProfile";
          internalName = "serverDetailsTxt";
       };
       
       new GuiTextCtrl() {
-         position = "730 0";
-         extent = "50 40";
+         position = "700 0";
+         extent = "70 40";
          horizSizing = "left";
          vertSizing = "center";
-         profile = "MenuSubHeaderText";
+         profile = "MenuSubHeaderCenteredText";
          tooltipProfile = "GuiToolTipProfile";
          internalName = "pingTxt";
       };
       
       new GuiTextCtrl() {
-         position = "780 0";
-         extent = "120 40";
+         position = "770 0";
+         extent = "130 40";
          horizSizing = "left";
          vertSizing = "center";
-         profile = "MenuSubHeaderText";
+         profile = "MenuSubHeaderCenteredText";
          tooltipProfile = "GuiToolTipProfile";
          internalName = "playerCountTxt";
       };
    }; 
    
    return %entry;   
+}
+
+function JoinServerEntryButton::onHighlighted(%this, %highlighted)
+{
+   %container = %this.getParent();
+   
+   %container-->serverNameTxt.profile = %highlighted ? MenuSubHeaderTextHighlighted : MenuSubHeaderText;
+   %container-->serverDetailsTxt.profile = %highlighted ? GuiMLTextProfileHighlighted : GuiMLTextProfile;
+   %container-->pingTxt.profile = %highlighted ? MenuSubHeaderCenteredTextHighlighted : MenuSubHeaderCenteredText;
+   %container-->playerCountTxt.profile = %highlighted ? MenuSubHeaderCenteredTextHighlighted : MenuSubHeaderCenteredText;
 }
 
 function JoinServerMenu::addStatusEntry(%this)
@@ -221,6 +239,13 @@ function JoinServerMenu::addStatusEntry(%this)
    return %entry;
 }
 
+function JoinServerStatusEntry::updateProgress(%this)
+{
+   %this-->statusText.text = %this-->statusText.text @ "."; //ellipses.......
+   
+   %this.schedule(500, "updateProgress");
+}
+
 function JoinServerList::syncGui(%this)
 {
    %this.callOnChildren("setHighlighted", false);
@@ -238,9 +263,10 @@ function JoinServerList::syncGui(%this)
       %device = "keyboard";
       
    JoinServerBackBtn.setBitmap(BaseUIActionMap.getCommandButtonBitmap(%device, "BaseUIBackOut")); 
-   JoinServerJoinBtn.setBitmap(BaseUIActionMap.getCommandButtonBitmap(%device, "BaseUIActivateSelected")); 
+   JoinServerJoinBtn.setBitmap(JoinServerActionMap.getCommandButtonBitmap(%device, "JoinServerMenu::join();")); 
    JoinServerQLanBtn.setBitmap(JoinServerActionMap.getCommandButtonBitmap(%device, "JoinServerMenu.queryLan();"));
    JoinServerQServerBtn.setBitmap(JoinServerActionMap.getCommandButtonBitmap(%device, "JoinServerMenu.query();"));
    
-   //JoinServerJoinBtn.setActive($selectedLevelAsset !$= "");
+   
+   JoinServerJoinBtn.setActive(JoinServerList.getCount() > 0);
 }

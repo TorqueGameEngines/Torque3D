@@ -50,6 +50,10 @@ $yesNoList = "No\tYes";
 $onOffList = "Off\tOn";
 $optionsEntryPad = 10;
 
+$OptionsMenuCategories[0] = "Video";
+$OptionsMenuCategories[1] = "Audio";
+$OptionsMenuCategories[2] = "Controls";
+
 function OptionsMenu::onAdd(%this)
 {
    if(!isObject(%this.optionsCategories))
@@ -69,6 +73,8 @@ function OptionsMenu::onAdd(%this)
 
 function OptionsMenu::onWake(%this)
 {
+   %this.unappliedChanges.empty();
+   
    VideoSettingsList.clear();
    
    for(%i=0; %i < VideoSettingsGroup.getCount(); %i++)
@@ -111,13 +117,9 @@ function OptionsMenu::onWake(%this)
       }
    }
    
-   $MenuList = VideoSettingsList;
+   //establish the cached prefs values here
    
-   //Find our first non-group entry
-   while($MenuList.getObject($MenuList.listPosition).class !$= OptionsListEntry && $MenuList.listPosition < $MenuList.getCount())
-   {
-      $MenuList.listPosition += 1;
-   }
+   %this.openOptionsCategory("Video");
 }
 
 if(!isObject( OptionsMenuActionMap ) )
@@ -136,8 +138,14 @@ if(!isObject( OptionsMenuActionMap ) )
    OptionsMenuActionMap.bind( gamepad, lpov, OptionMenuPrevSetting );
    OptionsMenuActionMap.bind( gamepad, lpov, OptionMenuNextSetting );
    
-   //OptionsMenuActionMap.bind( keyboard, Enter, BaseUIActivateSelected );
-   //OptionsMenuActionMap.bind( gamepad, btn_a, BaseUIActivateSelected );
+   OptionsMenuActionMap.bind( keyboard, q, OptionsMenuPrevCategory );
+   OptionsMenuActionMap.bind( gamepad, btn_l, OptionsMenuPrevCategory );
+   
+   OptionsMenuActionMap.bind( keyboard, e, OptionsMenuNextCategory );
+   OptionsMenuActionMap.bind( gamepad, btn_r, OptionsMenuNextCategory );
+   
+   OptionsMenuActionMap.bind( keyboard, R, OptionsMenuReset );
+   OptionsMenuActionMap.bind( gamepad, btn_x, OptionsMenuReset );
 }
 
 function VideoSettingsList::syncGui(%this)
@@ -147,6 +155,108 @@ function VideoSettingsList::syncGui(%this)
    %btn = %this.getObject(%this.listPosition);
    if(%btn.class $= "OptionsListEntry")
       %btn-->button.setHighlighted(true);
+}
+
+function AudioSettingsList::syncGui(%this)
+{
+   
+}
+
+function ControlSettingsList::syncGui(%this)
+{
+   
+}
+
+function OptionsMenu::openOptionsCategory(%this, %categoryName)
+{
+   VideoSettingsList.setVisible(%categoryName $= "Video");
+   AudioSettingsList.setVisible(%categoryName $= "Audio");
+   ControlSettingsList.setVisible(%categoryName $= "Controls");
+   
+   if(%categoryName $= "Video")
+   {
+      $MenuList = VideoSettingsList;
+      //Find our first non-group entry
+      while($MenuList.getObject($MenuList.listPosition).class !$= OptionsListEntry && $MenuList.listPosition < $MenuList.getCount())
+      {
+         $MenuList.listPosition += 1;
+      }
+      
+      %this.currentCatgeoryIdx = 0;
+   }
+   else if(%categoryName $= "Audio")
+   {
+      $MenuList = AudioSettingsList;
+      
+      %this.currentCatgeoryIdx = 1;
+   }
+   else if(%categoryName $= "Controls")
+   {
+      $MenuList = ControlSettingsList;
+      
+      %this.currentCatgeoryIdx = 2;
+   }
+
+   $MenuList.syncGui();
+   %this.syncGui();
+}
+
+function OptionsMenu::syncGui(%this)
+{
+   OptionsMenuCategoryList.callOnChildren("setHighlighted", false);
+   
+   %btn = OptionsMenuCategoryList.getObject(%this.currentCatgeoryIdx);
+   %btn.setHighlighted(true);
+   
+   %buttonPosX = %btn.position.x + OptionsMenuCategoryList.position.x;
+
+   OptionsMenuPrevNavIcon.position.x = %buttonPosX - 5;
+   OptionsMenuNextNavIcon.position.x = %buttonPosX + %btn.extent.x - 35;
+   
+   //Update the button imagery to comply to the last input device we'd used
+   %device = Canvas.getLastInputDevice();
+   if(%device $= "mouse")
+      %device = "keyboard";
+      
+   OptionsMenuBackBtn.setBitmap(BaseUIActionMap.getCommandButtonBitmap(%device, "BaseUIBackOut"));
+   OptionsMenuResetBtn.setBitmap(OptionsMenuActionMap.getCommandButtonBitmap(%device, "OptionsMenuReset"));
+   
+   OptionsMenuPrevNavIcon.setBitmap(OptionsMenuActionMap.getCommandButtonBitmap(%device, "OptionsMenuPrevCategory"));
+   OptionsMenuNextNavIcon.setBitmap(OptionsMenuActionMap.getCommandButtonBitmap(%device, "OptionsMenuNextCategory"));
+}
+
+function OptionsMenuPrevCategory(%val)
+{
+   if(%val)
+   {
+      %currentIdx = OptionsMenu.currentMenuIdx;
+      OptionsMenu.currentMenuIdx -= 1;
+      
+      OptionsMenu.currentMenuIdx = mClamp(OptionsMenu.currentMenuIdx, 0, 3);
+    
+      if(%currentIdx == OptionsMenu.currentMenuIdx)
+         return;
+ 
+      %newCategory = $OptionsMenuCategories[OptionsMenu.currentMenuIdx];
+      OptionsMenu.openOptionsCategory(%newCategory);
+   }
+}
+
+function OptionsMenuNextCategory(%val)
+{
+   if(%val)
+   {
+      %currentIdx = OptionsMenu.currentMenuIdx;
+      OptionsMenu.currentMenuIdx += 1;
+      
+      OptionsMenu.currentMenuIdx = mClamp(OptionsMenu.currentMenuIdx, 0, 3);
+         
+      if(%currentIdx == OptionsMenu.currentMenuIdx)
+         return;
+ 
+      %newCategory = $OptionsMenuCategories[OptionsMenu.currentMenuIdx];
+      OptionsMenu.openOptionsCategory(%newCategory);
+   }
 }
 
 //
@@ -199,11 +309,11 @@ function OptionMenuPrevSetting(%val)
    %optionObject = %option.optionsObject;
    %currentOptionLevel = %optionObject.getObject(%option.currentOptionIndex);
    
-   echo("Changed option: " @ %optionObject.optionName @ " to level: " @ %currentOptionLevel.displayName);
-   /*$MenuList.listPosition -= 1;
-      
-   if($MenuList.listPosition < 0)
-      $MenuList.listPosition = 0;*/
+   %option.currentOptionIndex = mClamp(%option.currentOptionIndex-1, 0, %optionObject.getCount()-1);
+   
+   %newOptionLevel = %optionObject.getObject(%option.currentOptionIndex);
+   
+   echo("Changed option: " @ %optionObject.optionName @ " from level: " @ %currentOptionLevel.displayName @ " to level: " @ %newOptionLevel.displayName);
       
    $MenuList.syncGUI();
 }
@@ -211,15 +321,15 @@ function OptionMenuPrevSetting(%val)
 function OptionMenuNextSetting(%val)
 {
    %option = $MenuList.getObject($MenuList.listPosition);
+   echo("Option: " @ %option.className);
    %optionObject = %option.optionsObject;
    %currentOptionLevel = %optionObject.getObject(%option.currentOptionIndex);
    
-   echo("Changed option: " @ %optionObject.optionName @ " to level: " @ %currentOptionLevel.displayName);
+   %option.currentOptionIndex = mClamp(%option.currentOptionIndex+1, 0, %optionObject.getCount()-1);
    
-   /*$MenuList.listPosition += 1;
-      
-   if($MenuList.listPosition >= $MenuList.getCount())
-      $MenuList.listPosition = $MenuList.getCount()-1;*/
+   %newOptionLevel = %optionObject.getObject(%option.currentOptionIndex);
+   
+   echo("Changed option: " @ %optionObject.optionName @ " from level: " @ %currentOptionLevel.displayName @ " to level: " @ %newOptionLevel.displayName);
       
    $MenuList.syncGUI();
 }
@@ -228,52 +338,7 @@ function OptionMenuStickChangeSetting(%val)
 {
    
 }
-//
-function OptionsMenu::onOpen(%this)
-{
-   OptionsMenuCategoryList.clear(); 
-   
-   for(%i=0; %i < %this.optionsCategories.count(); %i++)
-   {
-      %catName = %this.optionsCategories.getKey(%i);
-      %callback = %this.optionsCategories.getValue(%i);
-      
-      %newCatButton = new GuiButtonCtrl() {
-         text = %catName;
-         groupNum = "-1";
-         buttonType = "PushButton";
-         useMouseEvents = "0";
-         position = "0 180";
-         extent = "248 35";
-         minExtent = "8 2";
-         horizSizing = "right";
-         vertSizing = "bottom";
-         profile = "GuiMenuButtonProfile";
-         visible = "1";
-         active = "1";
-         command = %callback;
-         tooltipProfile = "GuiToolTipProfile";
-         hovertime = "1000";
-         isContainer = "0";
-         canSave = "1";
-         canSaveDynamicFields = "0";
-      };
-      
-      OptionsMenuCategoryList.add(%newCatButton);
-   }
-   
-   %this.unappliedChanges.empty();
-   $pref::Video::displayDeviceId = "";
-   
-   OptionsMenuCategoryList.setAsActiveMenuList();
-   
-   $activeMenuButtonContainer-->button1.set("btn_back", "R", "Reset", "OptionsMenu.resetToDefaults();");
-   $activeMenuButtonContainer-->button2.disable();
-   $activeMenuButtonContainer-->button3.set("", "Space", "Apply", "OptionsMenu.apply();");
-   $activeMenuButtonContainer-->button4.set("btn_a", "", "Select", "OptionsMenu.select();");
-   $activeMenuButtonContainer-->button5.set("btn_b", "Escape", "Back", %this @ ".navigation.popPage();");
-}
-   
+ 
 //We capitalize on the canClose test here, because we want to prompt for unapplied options changes before
 //backing out. So when the UINavigation test canClose, we can see if we have unapplied settings and prompt
 //that via the message box and return false.
@@ -1382,7 +1447,7 @@ function addOptionEntry(%optionObj)
    
    %entry = new GuiContainer() {
       position = "0 0";
-      extent = "500 40";
+      extent = "800 40";
       profile = GuiMenuDefaultProfile;
       tooltipProfile = "GuiToolTipProfile";
       horizSizing = "width";
@@ -1394,7 +1459,7 @@ function addOptionEntry(%optionObj)
       new GuiButtonCtrl() {
          profile = GuiMenuButtonProfile;
          position = "0 0";
-         extent = "500 40";
+         extent = "800 40";
          horizSizing = "width";
          vertSizing = "height";
          internalName = "button";
@@ -1404,7 +1469,7 @@ function addOptionEntry(%optionObj)
       new GuiTextCtrl() {
          text = %optionObj.OptionName;
          position = $optionsEntryPad SPC -1;
-         extent = "250 20";
+         extent = "400 20";
          profile = "MenuSubHeaderText";
          tooltipProfile = "GuiToolTipProfile";
          internalName = "optionName";
@@ -1412,15 +1477,15 @@ function addOptionEntry(%optionObj)
       new GuiTextCtrl() {
          text = %optionObj.Description;
          position = $optionsEntryPad SPC 17;
-         extent = "250 18";
+         extent = "400 18";
          profile = "GuiMLTextProfile";
          tooltipProfile = "GuiToolTipProfile";
          internalName = "optionDescription";
       };
       
       new GuiContainer() {
-         position = "250 0";
-         extent = "250 40";
+         position = "400 0";
+         extent = "400 40";
          profile = GuiModelessDialogProfile;
          tooltipProfile = "GuiToolTipProfile";
          horizSizing = "left";
@@ -1428,15 +1493,16 @@ function addOptionEntry(%optionObj)
          internalName = "valuesContainer";
          
          new GuiButtonCtrl() {
-            position = "160 0";
+            position = "310 0";
             extent = "20 40";
             text = "<";
             profile = GuiMenuButtonProfile;
+            internalName = "prevValButton";
          };
          
          new GuiTextCtrl() {
             text = %qualityLevel.displayName;
-            position = "180 0";
+            position = "330 0";
             extent = "50 40";
             profile = "GuiMenuTextProfile";
             tooltipProfile = "GuiToolTipProfile";
@@ -1446,10 +1512,11 @@ function addOptionEntry(%optionObj)
          };
          
          new GuiButtonCtrl() {
-            position = "230 0";
+            position = "380 0";
             extent = "20 40";
             text = ">";
             profile = GuiMenuButtonProfile;
+            internalName = "nextValButton";
          };
       };
    }; 

@@ -1,11 +1,10 @@
 //--- OBJECT WRITE BEGIN ---
-$guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
-   BitmapAsset = "UI:backgrounddark_image";
+$guiContent = new GuiControl(MainMenuGui) {
    extent = "1280 720";
    minExtent = "8 8";
    horizSizing = "width";
    vertSizing = "height";
-   profile = "GuiDefaultProfile";
+   profile = "GuiMenuBackgroundProfile";
    category = "BaseUI";
    tooltipProfile = "GuiToolTipProfile";
    isContainer = "1";
@@ -77,7 +76,6 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
       vertSizing = "center";
       profile = "GuiDefaultProfile";
       tooltipProfile = "GuiToolTipProfile";
-      superClass = "MenuList";
 
       new GuiButtonCtrl(MainMenuSinglePlayerBtn) {
          text = "Single Player";

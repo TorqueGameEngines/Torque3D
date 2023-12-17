@@ -20,7 +20,7 @@ $guiContent = new GuiControl(JoinServerMenu) {
    };
 
    new GuiPanel(JoinServerTitlePanel) {
-      extent = "1281 80";
+      extent = "1281 60";
       horizSizing = "width";
       profile = "GuiMenuPanelProfile";
       tooltipProfile = "GuiToolTipProfile";
@@ -34,7 +34,7 @@ $guiContent = new GuiControl(JoinServerMenu) {
       };
    };
    new GuiContainer() {
-      position = "203 81";
+      position = "203 61";
       extent = "900 30";
       profile = GuiMenuPanelProfile;
       tooltipProfile = "GuiToolTipProfile";
@@ -44,7 +44,7 @@ $guiContent = new GuiControl(JoinServerMenu) {
       new GuiTextCtrl() {
          text = "Server Details";
          position = "0 0";
-         extent = "730 30";
+         extent = "700 30";
          horizSizing = "right";
          vertSizing = "center";
          profile = "MenuSubHeaderText";
@@ -53,29 +53,29 @@ $guiContent = new GuiControl(JoinServerMenu) {
       
       new GuiTextCtrl() {
          text = "Ping";
-         position = "730 0";
-         extent = "50 30";
+         position = "700 0";
+         extent = "70 30";
          horizSizing = "left";
          vertSizing = "center";
-         profile = "MenuSubHeaderText";
+         profile = "MenuSubHeaderCenteredText";
          tooltipProfile = "GuiToolTipProfile";
       };
       
       new GuiTextCtrl() {
          text = "Player Count";
-         position = "780 0";
-         extent = "120 30";
+         position = "770 0";
+         extent = "130 30";
          horizSizing = "left";
          vertSizing = "center";
-         profile = "MenuSubHeaderText";
+         profile = "MenuSubHeaderCenteredText";
          tooltipProfile = "GuiToolTipProfile";
       };
    }; 
    new GuiScrollCtrl() {
       hScrollBar = "alwaysOff";
       vScrollBar = "dynamic";
-      position = "203 111";
-      extent = "900 601";
+      position = "203 91";
+      extent = "900 621";
       minExtent = "8 8";
       horizSizing = "center";
       vertSizing = "height";
@@ -91,7 +91,6 @@ $guiContent = new GuiControl(JoinServerMenu) {
          vertSizing = "center";
          profile = "GuiMenuDefaultProfile";
          tooltipProfile = "GuiToolTipProfile";
-         superClass = "MenuList";
       };
    };
    new GuiPanel(JoinServerButtonPanel) {
@@ -113,7 +112,7 @@ $guiContent = new GuiControl(JoinServerMenu) {
          horizSizing = "left";
          vertSizing = "center";
          profile = "GuiMenuButtonProfile";
-         command = "JoinServerMenu.query();";
+         command = "JoinServerMenu.join();";
          tooltipProfile = "GuiToolTipProfile";
       };
       new GuiIconButtonCtrl(JoinServerQLanBtn) {
@@ -136,8 +135,8 @@ $guiContent = new GuiControl(JoinServerMenu) {
          makeIconSquare = "1";
          textLocation = "Center";
          text = "Query Server";
-         position = "817 0";
-         extent = "140 40";
+         position = "800 0";
+         extent = "160 40";
          horizSizing = "left";
          vertSizing = "center";
          profile = "GuiMenuButtonProfile";

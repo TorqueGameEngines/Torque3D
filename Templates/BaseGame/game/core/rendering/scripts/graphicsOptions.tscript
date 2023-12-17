@@ -79,6 +79,21 @@ new SimGroup(VideoSettingsGroup)
             class = "OptionsQualityLevel";
             caseSensitive = true;
             
+            displayName = "Medium";
+            
+            key["$pref::TS::detailAdjust"] = 1.0;
+            key["$pref::TS::skipRenderDLs"] = 0;  
+            key["$pref::useStaticObjectFade"] = true;
+            key["$pref::staticObjectFadeStart"] = 75;    
+            key["$pref::staticObjectFadeEnd"] = 100;  
+            key["$pref::staticObjectUnfadeableSize"] = 75;
+         };
+         
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
+            
             displayName = "High";
 
             key["$pref::TS::detailAdjust"] = 1.5;
@@ -88,6 +103,54 @@ new SimGroup(VideoSettingsGroup)
             key["$pref::staticObjectFadeEnd"] = 100;  
             key["$pref::staticObjectUnfadeableSize"] = 75;     
          }; 
+      };
+      
+      new SimGroup()
+      { 
+         class = "OptionsSettings";
+         
+         OptionName = "Lighting Quality";
+         Description = "Controls the lighting and shadows quality";
+         
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "High";
+
+            key["$pref::lightManager"] = "Advanced Lighting";
+            key["$pref::Shadows::disable"] = false;
+            key["$pref::Shadows::textureScalar"] = 1.0;
+            key["$pref::PSSM::detailAdjustScale"] = 1.0;
+            key["$pref::allowLocalLightShadows"] = true;     
+         }; 
+      };
+   };
+   
+   new SimGroup(AdvancedVideoSettingsGroup)
+   {
+      class = "SubOptionsGroup";
+      displayName = "Advanced";
+     
+      new SimGroup()
+      { 
+         class = "OptionsSettings"; 
+         
+         OptionName = "Mesh Detail";
+         Description = "Controls the max quality of mesh objects";
+         
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "High";
+
+            key["$pref::TS::detailAdjust"] = 1.5;
+            key["$pref::TS::skipRenderDLs"] = 0;      
+         };
+         
       };
    };
    

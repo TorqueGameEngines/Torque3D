@@ -218,6 +218,8 @@ class GuiControl : public SimGroup
       String mAltConsoleCommand;
       
       String mTooltip;
+
+      StringTableEntry mCategory;
       
       /// @}
       

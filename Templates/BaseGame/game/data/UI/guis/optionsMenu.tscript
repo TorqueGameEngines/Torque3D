@@ -48,6 +48,7 @@
 
 $yesNoList = "No\tYes";
 $onOffList = "Off\tOn";
+$optionsEntryPad = 10;
 
 function OptionsMenu::onAdd(%this)
 {
@@ -62,12 +63,6 @@ function OptionsMenu::onAdd(%this)
    }  
    
    %this.currentCategory = "";
-   
-   addOptionsMenuCategory("Display", "populateDisplaySettingsList();");
-   addOptionsMenuCategory("Graphics", "populateGraphicsSettingsList();");
-   addOptionsMenuCategory("Audio", "populateAudioSettingsList();");
-   addOptionsMenuCategory("Keyboard & Mouse", "populateKeyboardMouseSettingsList();");
-   addOptionsMenuCategory("Gamepad", "populateGamepadSettingsList();");
    
    callOnModules("populateOptionsMenuCategories", "Game");
 }
@@ -93,28 +88,147 @@ function OptionsMenu::onWake(%this)
          {
             %option = %setting.getObject(%s);
             
-            %optionsEntry = addOptionEntry();
-            %optionsEntry-->optionName.text = %option.OptionName;
-            %optionsEntry-->optionDescription.text = %option.Description;
-            %optionsEntry-->optionValue.text = %option.getObject(0).displayName;
-            
+            %optionsEntry = addOptionEntry(%option);
+
             if(isObject(%optionsEntry))
+            {
+               %optionsEntry.resize(0, 0, VideoSettingsList.extent.x, %optionsEntry.extent.y);
+               
                VideoSettingsList.add(%optionsEntry);
+            }
          }
       }
       else if(%setting.class $= "OptionsSettings")
       {
-         %entry = addOptionEntry();
-         %entry-->optionName.text = %setting.displayName;
-         %entry-->optionDescription.text = %setting.description;
-         %entry-->optionValue.text = %setting.getObject(0).displayName;
-         
-         if(isObject(%entry))
-               VideoSettingsList.add(%entry);
+         %optionsEntry = addOptionEntry(%option);
+            
+         if(isObject(%optionsEntry))
+         {
+            %optionsEntry.resize(0, 0, VideoSettingsList.extent.x, %optionsEntry.extent.y);
+            
+            VideoSettingsList.add(%optionsEntry);
+         }
       }
+   }
+   
+   $MenuList = VideoSettingsList;
+   
+   //Find our first non-group entry
+   while($MenuList.getObject($MenuList.listPosition).class !$= OptionsListEntry && $MenuList.listPosition < $MenuList.getCount())
+   {
+      $MenuList.listPosition += 1;
    }
 }
 
+if(!isObject( OptionsMenuActionMap ) )
+{
+   new ActionMap(OptionsMenuActionMap){};
+   
+   OptionsMenuActionMap.bind( keyboard, w, OptionMenuNavigatePrev );
+   OptionsMenuActionMap.bind( keyboard, s, OptionMenuNavigateNext );
+   OptionsMenuActionMap.bind( gamepad, yaxis, "D", "-0.23 0.23", OptionMenuStickNavigate );
+   OptionsMenuActionMap.bind( gamepad, upov, OptionMenuNavigatePrev );
+   OptionsMenuActionMap.bind( gamepad, dpov, OptionMenuNavigateNext );
+   
+   OptionsMenuActionMap.bind( keyboard, a, OptionMenuPrevSetting );
+   OptionsMenuActionMap.bind( keyboard, d, OptionMenuNextSetting );
+   OptionsMenuActionMap.bind( gamepad, xaxis, "D", "-0.23 0.23", OptionMenuStickChangeSetting );
+   OptionsMenuActionMap.bind( gamepad, lpov, OptionMenuPrevSetting );
+   OptionsMenuActionMap.bind( gamepad, lpov, OptionMenuNextSetting );
+   
+   //OptionsMenuActionMap.bind( keyboard, Enter, BaseUIActivateSelected );
+   //OptionsMenuActionMap.bind( gamepad, btn_a, BaseUIActivateSelected );
+}
+
+function VideoSettingsList::syncGui(%this)
+{
+   %this.callOnChildren("setHighlighted", false);
+   
+   %btn = %this.getObject(%this.listPosition);
+   if(%btn.class $= "OptionsListEntry")
+      %btn-->button.setHighlighted(true);
+}
+
+//
+function OptionMenuNavigatePrev(%val)
+{
+   if(%val)
+   {
+      $MenuList.listPosition -= 1;
+      while( $MenuList.listPosition >= 0 && $MenuList.getObject($MenuList.listPosition).class !$= OptionsListEntry)
+      {
+         $MenuList.listPosition -= 1;
+      }
+         
+      if($MenuList.listPosition < 0)
+         $MenuList.listPosition = 0;
+         
+      $MenuList.syncGUI();
+   }
+}
+
+function OptionMenuNavigateNext(%val)
+{
+   if(%val)
+   {
+      $MenuList.listPosition += 1;
+      while($MenuList.listPosition < $MenuList.getCount() && $MenuList.getObject($MenuList.listPosition).class !$= OptionsListEntry)
+      {
+         $MenuList.listPosition += 1;
+      }
+      
+      if($MenuList.listPosition >= $MenuList.getCount())
+         $MenuList.listPosition = $MenuList.getCount()-1;
+         
+      $MenuList.syncGUI();
+   }
+}
+
+function OptionMenuStickNavigate(%val)
+{
+   if(%val == -1)
+      BaseUINavigateNext(1);
+   else if(%val == 1)
+      mainMenuNavigateDown(1);
+}
+
+function OptionMenuPrevSetting(%val)
+{
+   %option = $MenuList.getObject($MenuList.listPosition);
+   echo("Option: " @ %option.className);
+   %optionObject = %option.optionsObject;
+   %currentOptionLevel = %optionObject.getObject(%option.currentOptionIndex);
+   
+   echo("Changed option: " @ %optionObject.optionName @ " to level: " @ %currentOptionLevel.displayName);
+   /*$MenuList.listPosition -= 1;
+      
+   if($MenuList.listPosition < 0)
+      $MenuList.listPosition = 0;*/
+      
+   $MenuList.syncGUI();
+}
+
+function OptionMenuNextSetting(%val)
+{
+   %option = $MenuList.getObject($MenuList.listPosition);
+   %optionObject = %option.optionsObject;
+   %currentOptionLevel = %optionObject.getObject(%option.currentOptionIndex);
+   
+   echo("Changed option: " @ %optionObject.optionName @ " to level: " @ %currentOptionLevel.displayName);
+   
+   /*$MenuList.listPosition += 1;
+      
+   if($MenuList.listPosition >= $MenuList.getCount())
+      $MenuList.listPosition = $MenuList.getCount()-1;*/
+      
+   $MenuList.syncGUI();
+}
+
+function OptionMenuStickChangeSetting(%val)
+{
+   
+}
+//
 function OptionsMenu::onOpen(%this)
 {
    OptionsMenuCategoryList.clear(); 
@@ -173,7 +287,7 @@ function OptionsMenu::canClose(%this)
    //UINavigation to not close the page
    if(OptionsMenuSettingsList.isActiveMenuList())
    {
-   OptionsMenuCategoryList.setAsActiveMenuList();
+      OptionsMenuCategoryList.setAsActiveMenuList();
       return false;
    }
    else
@@ -1238,28 +1352,66 @@ function addOptionGroup()
    };   
    
    return %group;
-   
 }
 
-function addOptionEntry()
+function optionsMenuButton::onHighlighted(%this, %highlighted)
 {
+   %container = %this.getParent();
+   
+   %container-->optionName.profile = %highlighted ? MenuSubHeaderTextHighlighted : MenuSubHeaderText;
+   %container-->optionDescription.profile = %highlighted ? GuiMLTextProfileHighlighted : GuiMLTextProfile;
+   
+   %valuesContainer = %container-->valuesContainer;
+   %valuesContainer-->optionValue.profile = %highlighted ? GuiMenuTextProfileHighlighted : GuiMenuTextProfile;
+}
+
+function optionsMenuButton::onMouseDown(%this)
+{
+   //check if we're clicking on the left or right of the value and adjust it accordingly
+}
+
+function addOptionEntry(%optionObj)
+{
+   if(!isObject(%optionObj) || %optionObj.class !$= "OptionsSettings")
+   {
+      error("addOptionsEntry() - attempting to create a new options entry, but was provided an invalid options object");
+      return 0;  
+   }
+   
+   %qualityLevel = %optionObj.getObject(0);
+   
    %entry = new GuiContainer() {
       position = "0 0";
       extent = "500 40";
-      profile = "GuiMenuPanelProfile";
+      profile = GuiMenuDefaultProfile;
       tooltipProfile = "GuiToolTipProfile";
+      horizSizing = "width";
+      vertSizing = "bottom";
+      class = "OptionsListEntry";
+      optionsObject = %optionObj;
+      currentOptionIndex = 0;
+      
+      new GuiButtonCtrl() {
+         profile = GuiMenuButtonProfile;
+         position = "0 0";
+         extent = "500 40";
+         horizSizing = "width";
+         vertSizing = "height";
+         internalName = "button";
+         class = "optionsMenuButton";
+      };
 
       new GuiTextCtrl() {
-         text = "";
-         position = "1 -1";
+         text = %optionObj.OptionName;
+         position = $optionsEntryPad SPC -1;
          extent = "250 20";
          profile = "MenuSubHeaderText";
          tooltipProfile = "GuiToolTipProfile";
          internalName = "optionName";
       };
       new GuiTextCtrl() {
-         text = "Sets the resolution and detail of shadows";
-         position = "1 17";
+         text = %optionObj.Description;
+         position = $optionsEntryPad SPC 17;
          extent = "250 18";
          profile = "GuiMLTextProfile";
          tooltipProfile = "GuiToolTipProfile";
@@ -1273,16 +1425,31 @@ function addOptionEntry()
          tooltipProfile = "GuiToolTipProfile";
          horizSizing = "left";
          vertSizing = "height";
+         internalName = "valuesContainer";
+         
+         new GuiButtonCtrl() {
+            position = "160 0";
+            extent = "20 40";
+            text = "<";
+            profile = GuiMenuButtonProfile;
+         };
          
          new GuiTextCtrl() {
-            text = "< High >";
+            text = %qualityLevel.displayName;
             position = "180 0";
-            extent = "70 40";
+            extent = "50 40";
             profile = "GuiMenuTextProfile";
             tooltipProfile = "GuiToolTipProfile";
-            horizSizing = "left";
+            horizSizing = "right";
             vertSizing = "center";
             internalName = "optionValue";
+         };
+         
+         new GuiButtonCtrl() {
+            position = "230 0";
+            extent = "20 40";
+            text = ">";
+            profile = GuiMenuButtonProfile;
          };
       };
    }; 

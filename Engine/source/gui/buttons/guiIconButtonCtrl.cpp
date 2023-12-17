@@ -253,7 +253,7 @@ void GuiIconButtonCtrl::renderButton( Point2I &offset, const RectI& updateRect )
          if (mProfile->mBorder != 0)
             renderFilledBorder(boundsRect, borderColor, fillColor, mProfile->mBorderThickness);
          else
-            GFX->getDrawUtil()->drawRectFill(boundsRect, mProfile->mFillColor);
+            GFX->getDrawUtil()->drawRectFill(boundsRect, fillColor);
       }
    }
    else if(mHighlighted && mActive)
@@ -269,7 +269,7 @@ void GuiIconButtonCtrl::renderButton( Point2I &offset, const RectI& updateRect )
          if (mProfile->mBorder != 0)
             renderFilledBorder(boundsRect, borderColor, fillColor, mProfile->mBorderThickness);
          else
-            GFX->getDrawUtil()->drawRectFill(boundsRect, mProfile->mFillColor);
+            GFX->getDrawUtil()->drawRectFill(boundsRect, fillColor);
       }
    }
    else
@@ -388,6 +388,7 @@ void GuiIconButtonCtrl::renderButton( Point2I &offset, const RectI& updateRect )
             start.x = iconRect.extent.x + mButtonMargin.x + mTextMargin;
          }
 
+         drawer->setBitmapModulation(fontColor);
          drawer->drawText( mProfile->mFont, start + offset, text, mProfile->mFontColors );
       }
 
@@ -395,6 +396,7 @@ void GuiIconButtonCtrl::renderButton( Point2I &offset, const RectI& updateRect )
       {
          Point2I start( mTextMargin, ( getHeight() - mProfile->mFont->getHeight() ) / 2 );
 
+         drawer->setBitmapModulation(fontColor);
          drawer->drawText( mProfile->mFont, start + offset, text, mProfile->mFontColors );
       }
 
@@ -408,6 +410,7 @@ void GuiIconButtonCtrl::renderButton( Point2I &offset, const RectI& updateRect )
          }
          else
             start.set( ( getWidth() - textWidth ) / 2, ( getHeight() - mProfile->mFont->getHeight() ) / 2 );
+
          drawer->setBitmapModulation( fontColor );
          drawer->drawText( mProfile->mFont, start + offset, text, mProfile->mFontColors );
       }

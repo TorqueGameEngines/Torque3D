@@ -83,6 +83,8 @@ IMPLEMENT_CALLBACK( GuiButtonBaseCtrl, onMouseDragged, void, (), (),
    "pressed the left mouse button on the control and then moves the mouse over a certain distance threshold with "
    "the mouse button still pressed." );
 
+IMPLEMENT_CALLBACK(GuiButtonBaseCtrl, onHighlighted, void, (bool highlighted), (highlighted),
+   "Called when the status of the button being highlighted changes.");
 
 ImplementEnumType( GuiButtonType,
    "Type of button control.\n\n"
@@ -290,6 +292,7 @@ void GuiButtonBaseCtrl::onMouseEnter(const GuiEvent &event)
    {
       mDepressed = true;
       mHighlighted = true;
+      onHighlighted_callback(true);
    }
    else
    {
@@ -297,6 +300,7 @@ void GuiButtonBaseCtrl::onMouseEnter(const GuiEvent &event)
          SFX->playOnce(mProfile->getSoundButtonOverProfile());
 
       mHighlighted = true;
+      onHighlighted_callback(true);
    }
 }
 
@@ -311,6 +315,7 @@ void GuiButtonBaseCtrl::onMouseLeave(const GuiEvent &)
    if( isMouseLocked() )
       mDepressed = false;
    mHighlighted = false;
+   onHighlighted_callback(false);
 }
 
 //-----------------------------------------------------------------------------

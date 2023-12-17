@@ -6,22 +6,20 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
    horizSizing = "width";
    vertSizing = "height";
    profile = "GuiDefaultProfile";
+   category = "BaseUI";
    tooltipProfile = "GuiToolTipProfile";
    isContainer = "1";
    canSaveDynamicFields = "1";
 
    new GuiInputCtrl(MainMenuInputHandler) {
-      sendAxisEvents = "0";
-      sendBreakEvents = "0";
       ignoreMouseEvents = "1";
+      ActionMap = "BaseUIActionMap";
       position = "-50 0";
       extent = "2186 851";
       horizSizing = "width";
       vertSizing = "height";
       profile = "GuiInputCtrlProfile";
       tooltipProfile = "GuiToolTipProfile";
-      //class = "MenuInputHandler";
-      actionMap = MainMenuActionMap;
    };
    new GuiBitmapCtrl(SideBackgroundImage) {
       BitmapAsset = "UI:menu_side_background_image";
@@ -33,7 +31,7 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
    };
    new GuiBitmapCtrl(MainMenuAppLogo) {
       BitmapAsset = "UI:Torque_3D_logo_image";
-      position = "462 30";
+      position = "460 78";
       extent = "360 100";
       horizSizing = "center";
       profile = "GuiDefaultProfile";
@@ -73,7 +71,7 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
    new GuiStackControl(MainMenuButtonList) {
       padding = "5";
       dynamicSize = "0";
-      position = "440 185";
+      position = "440 199";
       extent = "400 322";
       horizSizing = "center";
       vertSizing = "center";
@@ -85,7 +83,7 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
          text = "Single Player";
          extent = "400 40";
          profile = "GuiMenuButtonProfile";
-         command = "openSinglePlayerMenu();";
+         command = "$pref::HostMultiPlayer=false;\nCanvas.pushDialog(ChooseLevelMenu);";
          tooltipProfile = "GuiToolTipProfile";
       };
       new GuiButtonCtrl(MainMenuCreateSrvrBtn) {
@@ -93,7 +91,7 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
          position = "0 45";
          extent = "400 40";
          profile = "GuiMenuButtonProfile";
-         command = "openMultiPlayerMenu();";
+         command = "$pref::HostMultiPlayer=true;Canvas.pushDialog(ChooseLevelMenu);";
          tooltipProfile = "GuiToolTipProfile";
       };
       new GuiButtonCtrl(MainMenuJoinSrvrBtn) {
@@ -101,7 +99,7 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
          position = "0 90";
          extent = "400 40";
          profile = "GuiMenuButtonProfile";
-         command = "openJoinServerMenu();";
+         command = "Canvas.pushDialog(JoinServerMenu);";
          tooltipProfile = "GuiToolTipProfile";
       };
       new GuiButtonCtrl(MainMenuOptionBtn) {
@@ -117,7 +115,7 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
          position = "0 180";
          extent = "400 40";
          profile = "GuiMenuButtonProfile";
-         command = "openWorldEditorBtn();";
+         command = "fastLoadWorldEdit(1);";
          tooltipProfile = "GuiToolTipProfile";
       };
       new GuiButtonCtrl(MainMenuGuiEditBtn) {
@@ -125,7 +123,7 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
          position = "0 225";
          extent = "400 40";
          profile = "GuiMenuButtonProfile";
-         command = "openGUIEditorBtn();";
+         command = "fastLoadGUIEdit(1);";
          tooltipProfile = "GuiToolTipProfile";
       };
       new GuiButtonCtrl(MainMenuExitBtn) {

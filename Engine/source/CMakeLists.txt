@@ -150,6 +150,12 @@ endif (TORQUE_OPENGL)
 # Handle terrain
 torqueAddSourceDirectories("terrain")
 
+# Handle theora
+if (TORQUE_THEORA)
+  torqueAddSourceDirectories("core/ogg")
+  torqueAddSourceDirectories("gui/theora")
+endif(TORQUE_THEORA)
+
 if (WIN32 AND TORQUE_D3D11)
   torqueAddSourceDirectories("terrain/hlsl")
 endif (WIN32 AND TORQUE_D3D11)
@@ -336,6 +342,10 @@ addDef(TORQUE_RELEASE "RelWithDebInfo;Release")
 addDef(TORQUE_ENABLE_ASSERTS "Debug;RelWithDebInfo")
 addDef(TORQUE_DEBUG_GFX_MODE "RelWithDebInfo")
 addDef(TORQUE_OGGVORBIS)
+
+if (TORQUE_THEORA)
+   addDef(TORQUE_OGGTHEORA)
+endif(TORQUE_THEORA)
 
 if(NOT TORQUE_SDL)
    filterOut("platform/nativeDialogs/fileDialog.cpp" )

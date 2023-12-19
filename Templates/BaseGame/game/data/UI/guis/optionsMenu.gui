@@ -188,7 +188,7 @@ $guiContent = new GuiControl(OptionsMenu) {
          extent = "140 40";
          vertSizing = "center";
          profile = "GuiMenuButtonProfile";
-         command = "Canvas.popDialog();";
+         command = "tryCloseOptionsMenu();";
          tooltipProfile = "GuiToolTipProfile";
          class = "MenuInputButton";
       };

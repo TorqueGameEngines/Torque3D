@@ -92,6 +92,9 @@ if(!isObject( OptionsMenuActionMap ) )
 {
    new ActionMap(OptionsMenuActionMap){};
    
+   OptionsMenuActionMap.bind( keyboard, Escape, tryCloseOptionsMenu);
+   OptionsMenuActionMap.bind( gamepad, btn_b, tryCloseOptionsMenu);
+   
    OptionsMenuActionMap.bind( keyboard, w, OptionMenuNavigatePrev );
    OptionsMenuActionMap.bind( keyboard, s, OptionMenuNavigateNext );
    OptionsMenuActionMap.bind( gamepad, yaxis, "D", "-0.23 0.23", OptionMenuStickNavigate );
@@ -331,7 +334,7 @@ function OptionMenuPrevSetting(%val)
    if(!isObject(%option))
       return;
 
-   if(%option.class !$= "OptionsListEntry")
+   if(%option.class $= "OptionsListEntry")
    {
       %optionObject = %option.optionsObject;
       %currentOptionLevel = %optionObject.getObject(%option.currentOptionIndex);
@@ -356,7 +359,7 @@ function OptionMenuNextSetting(%val)
    if(!isObject(%option) )
       return;
       
-   if(%option.class !$= "OptionsListEntry")
+   if(%option.class $= "OptionsListEntry")
    {      
       %optionObject = %option.optionsObject;
       %currentOptionLevel = %optionObject.getObject(%option.currentOptionIndex);
@@ -562,7 +565,7 @@ function OptionsMenu::populateKeybinds(%this, %device, %controlsList)
 
             %description = $RemapDescription[%i];
 
-            %remapEntry = addActionMapEntry(%actionMapName, %device, %keyMap, %description);
+            %remapEntry = addActionMapEntry(%actionMapName, %device, %keyMap, %i, %description);
             %controlsList.add(%remapEntry);
          }
       }
@@ -575,45 +578,128 @@ function OptionsMenu::populateKeybinds(%this, %device, %controlsList)
       %entry.resize(0, 0, %controlsList.extent.x - 15, %entry.extent.y); //-10 for the scroll wheel pad
    }
 }
-//
-// old
-//
-//We capitalize on the canClose test here, because we want to prompt for unapplied options changes before
-//backing out. So when the UINavigation test canClose, we can see if we have unapplied settings and prompt
-//that via the message box and return false.
-//This gives the user a chance to choose how they wish to proceed before we allow the 
-//UINavigation to move away from the options menu
-function OptionsMenu::canClose(%this)
+
+function tryCloseOptionsMenu(%val)
 {
-   //Another special case is us catching the 'back/pop' action by just shifting from one
-   //menu list to another. In this case, we check if we were on the settings list as our active MenuList
-   //if so, then the back/pop just moves us to the Category list as our active and we inform the 
-   //UINavigation to not close the page
-   if(OptionsMenuSettingsList.isActiveMenuList())
+   if(!%val)
+      return;
+      
+   //scan through all our options and see if any are any unapplied changes. If
+   //so we need to prompt to apply or discard them
+   %unappliedChanges = false;
+   
+   foreach(%option in VideoSettingsList)
    {
-      OptionsMenuCategoryList.setAsActiveMenuList();
-      return false;
-   }
-   else
-   {
-      //Here, we're on the category list as our active, so we're actually trying to leae the page
-      //If we have unapplied changes, we want to prompt about them before closing the page and navigating away
-      //If we don't, then we can process the popPage as normal and let the OptionsMenu close
-      if(%this.unappliedChanges.count() != 0)
+      if(%option.class $= "OptionsListEntry")
       {
-         MessageBoxOKCancel("Discard Changes?", "You have unapplied changes to your settings, do you wish to apply or discard them?", 
-                        "OptionsMenu.apply(); MainMenuGUI.popPage();", "" @ %this @ ".unappliedChanges.empty(); " @ %this @ ".navigation.popPage();", 
-                        "Apply", "Discard");
-         return false;
+         if(%option.currentOptionIndex >= 0 && %option.currentOptionIndex < %option.optionsObject.getCount())
+         {
+            %targetOptionLevel = %option.optionsObject.getObject(%option.currentOptionIndex);
+            
+            echo("tryCloseOptionsMenu() - testing option: " @ %option.optionsObject.optionName @ " target level of: " @ %targetOptionLevel.displayName);
+            
+            if(!%targetOptionLevel.isCurrent())
+            {
+               %unappliedChanges = true;
+               break;
+            }
+         }
       }
    }
    
-   return true;
+   //check if we already have unapplied changes, so we can skip further iterating
+   if(!%unappliedChanges)
+   {
+      foreach(%option in AudioSettingsList)
+      {
+         if(%option.class $= "OptionsListEntry")
+         {
+            if(%option.currentOptionIndex >= 0 && %option.currentOptionIndex < %option.optionsObject.getCount())
+            {
+               %targetOptionLevel = %option.optionsObject.getObject(%option.currentOptionIndex);
+               
+               echo("tryCloseOptionsMenu() - testing option: " @ %option.optionsObject.optionName @ " target level of: " @ %targetOptionLevel.displayName);
+               
+               if(!%targetOptionLevel.isCurrent())
+               {
+                  %unappliedChanges = true;
+                  break;
+               }
+            }
+         }
+      }
+   }
+   
+   if(%unappliedChanges)
+   {
+      MessageBoxOKCancel("Discard Changes?", "You have unapplied changes to your settings, do you wish to apply or discard them?", 
+                        "OptionsMenu.applyChangedOptions();", "Canvas.popDialog(OptionsMenu);", 
+                        "Apply", "Discard");
+   }
+   else
+   {
+      Canvas.popDialog(OptionsMenu);
+   }
 }
 
-function OptionsMenu::onClose(%this)
+function OptionsMenu::applyChangedOptions(%this)
 {
+   foreach(%option in VideoSettingsList)
+   {
+      if(%option.class $= "OptionsListEntry")
+      {
+         //If it's custom or nonsensical index, there's some kind of external factor going on, so we're
+         //just going to skip applying it because we don't know what we'd be applying
+         if(%option.currentOptionIndex >= 0 && %option.currentOptionIndex < %option.optionsObject.getCount())
+         {
+            %targetOptionLevel = %option.optionsObject.getObject(%option.currentOptionIndex);
+
+            if(!%targetOptionLevel.isCurrent())
+            {
+               echo("Applying setting of " @ %option.optionsObject.optionName);
+               %targetOptionLevel.apply();
+            }
+         }
+      }
+   }
    
+   foreach(%option in AudioSettingsList)
+   {
+      if(%option.class $= "OptionsListEntry")
+      {
+         //If it's custom or nonsensical index, there's some kind of external factor going on, so we're
+         //just going to skip applying it because we don't know what we'd be applying
+         if(%option.currentOptionIndex >= 0 && %option.currentOptionIndex < %option.optionsObject.getCount())
+         {
+            %targetOptionLevel = %option.optionsObject.getObject(%option.currentOptionIndex);
+
+            if(!%targetOptionLevel.isCurrent())
+            {
+               echo("Applying setting of " @ %option.optionsObject.optionName);
+               %targetOptionLevel.apply();
+            }
+         }
+      }
+   }
+   
+   //Finally, write our prefs to file
+   %prefPath = getPrefpath();
+   export("$pref::*", %prefPath @ "/clientPrefs." @ $TorqueScriptFileExtension, false);
+   
+   Canvas.popDialog(OptionsMenu);
+}
+
+function doKeyRemap( %optionEntry )
+{
+   //%rowIndex = %row.remapIndex;
+   //%name = $RemapName[%rowIndex];
+   
+   %name = getField(%optionEntry.keymap,0);
+
+	RemapDlg-->OptRemapText.text = "Re-bind \"" @ %name @ "\" to..." ;
+	OptRemapInputCtrl.index = %optionEntry.remapIndex;
+	
+	Canvas.pushDialog( RemapDlg );
 }
 
 function OptionsMenu::apply(%this)
@@ -1423,7 +1509,7 @@ function OptionsMenuActionMapButton::onHighlighted(%this, %highlighted)
    OptionsMenuSettingsScroll.scrollToObject(%container);
 }
 
-function addActionMapEntry(%actionMap, %device, %keyMap, %description)
+function addActionMapEntry(%actionMap, %device, %keyMap, %index, %description)
 {
    %entry = new GuiContainer() {
       position = "0 0";
@@ -1437,6 +1523,7 @@ function addActionMapEntry(%actionMap, %device, %keyMap, %description)
       actionMap = %actionMap;
       device = %device;
       keymap = %keyMap;
+      remapIndex = %index;
       
       new GuiButtonCtrl() {
          profile = GuiMenuButtonProfile;
@@ -1446,6 +1533,7 @@ function addActionMapEntry(%actionMap, %device, %keyMap, %description)
          vertSizing = "height";
          internalName = "button";
          class = "OptionsMenuActionMapButton";
+         altCommand = "doKeyRemap($thisControl.getParent());";
       };
 
       new GuiTextCtrl() {

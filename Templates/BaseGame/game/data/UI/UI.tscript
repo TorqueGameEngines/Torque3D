@@ -57,6 +57,7 @@ function UI::initClient(%this)
    %this.queueExec("./guis/GameMenu");
    %this.queueExec("./guis/GameMenu.gui");
    
+   %this.queueExec("./guis/remapDlg");
    %this.queueExec("./guis/remapDlg.gui");
    %this.queueExec("./guis/remapConfirmDlg.gui");
    

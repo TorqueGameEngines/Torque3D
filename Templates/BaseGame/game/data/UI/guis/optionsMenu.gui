@@ -32,8 +32,8 @@ $guiContent = new GuiControl(OptionsMenu) {
          stackingType = "Horizontal";
          padding = "10";
          dynamicSize = "0";
-         position = "430 0";
-         extent = "420 40";
+         position = "330 0";
+         extent = "650 40";
          horizSizing = "center";
          vertSizing = "center";
          profile = "GuiDefaultProfile";
@@ -55,11 +55,19 @@ $guiContent = new GuiControl(OptionsMenu) {
             tooltipProfile = "GuiToolTipProfile";
          };
          new GuiButtonCtrl() {
-            text = "Controls";
+            text = "Keyboard/Mouse";
             position = "260 0";
+            extent = "220 40";
+            profile = "GuiMenuButtonProfile";
+            command = "OptionsMenu.openOptionsCategory(\"KBM\");";
+            tooltipProfile = "GuiToolTipProfile";
+         };
+         new GuiButtonCtrl() {
+            text = "Controller";
+            position = "480 0";
             extent = "160 40";
             profile = "GuiMenuButtonProfile";
-            command = "OptionsMenu.openOptionsCategory(\"Controls\");";
+            command = "OptionsMenu.openOptionsCategory(\"Controller\");";
             tooltipProfile = "GuiToolTipProfile";
          };
       };
@@ -98,6 +106,7 @@ $guiContent = new GuiControl(OptionsMenu) {
       tooltipProfile = "GuiToolTipProfile";
 
       new GuiStackControl(VideoSettingsList) {
+         class = "OptionsMenuList";
          padding = "5";
          changeChildSizeToFit = "0";
          position = "0 1";
@@ -108,6 +117,7 @@ $guiContent = new GuiControl(OptionsMenu) {
          tooltipProfile = "GuiToolTipProfile";
       };
       new GuiStackControl(AudioSettingsList) {
+         class = "OptionsMenuList";
          padding = "5";
          changeChildSizeToFit = "0";
          position = "0 1";
@@ -119,7 +129,21 @@ $guiContent = new GuiControl(OptionsMenu) {
          tooltipProfile = "GuiToolTipProfile";
          hidden = "1";
       };
-      new GuiStackControl(ControlSettingsList) {
+      new GuiStackControl(KBMControlsList) {
+         class = "OptionsMenuList";
+         padding = "5";
+         changeChildSizeToFit = "0";
+         position = "0 1";
+         extent = "800 200";
+         horizSizing = "width";
+         vertSizing = "height";
+         profile = "GuiDefaultProfile";
+         visible = "0";
+         tooltipProfile = "GuiToolTipProfile";
+         hidden = "1";
+      };
+      new GuiStackControl(GamepadControlsList) {
+         class = "OptionsMenuList";
          padding = "5";
          changeChildSizeToFit = "0";
          position = "0 1";
@@ -174,7 +198,7 @@ $guiContent = new GuiControl(OptionsMenu) {
          makeIconSquare = "1";
          textLocation = "Center";
          text = "Reset";
-         position = "947 0";
+         position = "1135 0";
          extent = "140 40";
          horizSizing = "left";
          vertSizing = "center";

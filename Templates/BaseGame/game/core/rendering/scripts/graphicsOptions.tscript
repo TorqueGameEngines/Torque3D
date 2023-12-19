@@ -1,4 +1,4 @@
-function GraphicsQualityLevel::isCurrent( %this )
+function OptionsQualityLevel::isCurrent( %this )
 {
    // Test each pref to see if the current value
    // equals our stored value.
@@ -15,7 +15,7 @@ function GraphicsQualityLevel::isCurrent( %this )
    return true;
 }
 
-function GraphicsQualityLevel::apply( %this )
+function OptionsQualityLevel::apply( %this )
 {
    for ( %i=0; %i < %this.count(); %i++ )
    {
@@ -36,7 +36,7 @@ function GraphicsQualityLevel::apply( %this )
    }   
 }
 
-function GraphicsOptionsMenuGroup::applySetting(%this, %settingName)
+function OptionsSettings::applySetting(%this, %settingName)
 {
    for(%i=0; %i < %this.getCount(); %i++)
    {
@@ -62,78 +62,92 @@ new SimGroup(VideoSettingsGroup)
    class = "PrimaryOptionsGroup";
    displayName = "Video";
    
-   new SimGroup(BasicVideoSettingsGroup)
+   new SimGroup(VideoDisplaySettingsGroup)
    {
       class = "SubOptionsGroup";
-      displayName = "Basic";
+      displayName = "Display Settings";
       
-      new SimGroup()
-      { 
+      new SimGroup( VideoAPISettingsGroup )
+      {
          class = "OptionsSettings";
-         
-         OptionName = "Graphical Quality";
-         Description = "Controls the general graphical quality";
-         
-         new ArrayObject()
-         {
-            class = "OptionsQualityLevel";
-            caseSensitive = true;
-            
-            displayName = "Medium";
-            
-            key["$pref::TS::detailAdjust"] = 1.0;
-            key["$pref::TS::skipRenderDLs"] = 0;  
-            key["$pref::useStaticObjectFade"] = true;
-            key["$pref::staticObjectFadeStart"] = 75;    
-            key["$pref::staticObjectFadeEnd"] = 100;  
-            key["$pref::staticObjectUnfadeableSize"] = 75;
-         };
-         
-         new ArrayObject()
-         {
-            class = "OptionsQualityLevel";
-            caseSensitive = true;
-            
-            displayName = "High";
-
-            key["$pref::TS::detailAdjust"] = 1.5;
-            key["$pref::TS::skipRenderDLs"] = 0;   
-            key["$pref::useStaticObjectFade"] = false;
-            key["$pref::staticObjectFadeStart"] = 75;    
-            key["$pref::staticObjectFadeEnd"] = 100;  
-            key["$pref::staticObjectUnfadeableSize"] = 75;     
-         }; 
+         OptionName = "Display API";
       };
       
-      new SimGroup()
-      { 
+      new SimGroup( DisplayDevicesGroup )
+      {
          class = "OptionsSettings";
-         
-         OptionName = "Lighting Quality";
-         Description = "Controls the lighting and shadows quality";
+         OptionName = "Display Devices";
+      };
+      
+      new SimGroup( DisplayModeGroup )
+      {
+         class = "OptionsSettings";
+         OptionName = "Display Mode";
          
          new ArrayObject()
          {
             class = "OptionsQualityLevel";
-            caseSensitive = true;
-            
-            displayName = "High";
+            displayName = "Windowed";
 
-            key["$pref::lightManager"] = "Advanced Lighting";
-            key["$pref::Shadows::disable"] = false;
-            key["$pref::Shadows::textureScalar"] = 1.0;
-            key["$pref::PSSM::detailAdjustScale"] = 1.0;
-            key["$pref::allowLocalLightShadows"] = true;     
-         }; 
+            key["$pref::Video::deviceMode"] = 0;
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            displayName = "Borderless";
+
+            key["$pref::Video::deviceMode"] = 1;
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            displayName = "Fullscreen";
+
+            key["$pref::Video::deviceMode"] = 2;
+         };
+      };
+      
+      new SimGroup ( DisplayResSettingsGroup )
+      {
+         class = "OptionsSettings"; 
+         OptionName = "Display Resolution";
+      };
+      
+      new SimGroup ( VSyncSettingsGroup )
+      {
+         class = "OptionsSettings"; 
+         OptionName = "VSync";
+         
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            displayName = "Off";
+
+            key["$pref::Video::enableVerticalSync"] = 0;
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            displayName = "On";
+
+            key["$pref::Video::enableVerticalSync"] = 1;
+         };
+      };
+   
+      new SimGroup ( DisplayRefreshSettingsGroup )
+      {
+         class = "OptionsSettings"; 
+         OptionName = "Refresh Rate";
       };
    };
    
-   new SimGroup(AdvancedVideoSettingsGroup)
+   //General quality settings
+   new SimGroup()
    {
       class = "SubOptionsGroup";
-      displayName = "Advanced";
-     
-      new SimGroup()
+      displayName = "Object Quality";
+      
+      new SimGroup( MeshDetailSettingsGroup )
       { 
          class = "OptionsSettings"; 
          
@@ -145,36 +159,24 @@ new SimGroup(VideoSettingsGroup)
             class = "OptionsQualityLevel";
             caseSensitive = true;
             
-            displayName = "High";
-
-            key["$pref::TS::detailAdjust"] = 1.5;
-            key["$pref::TS::skipRenderDLs"] = 0;      
-         };
-         
-      };
-   };
-   
-   /*new SimGroup(AdvancedVideoSettingsGroup)
-   {
-      groupName = "Advanced";
-      
-      new SimGroup( MeshQualityGroup )
-      { 
-         class = "GraphicsOptionsMenuGroup";
-         
-         new ArrayObject()
+            displayName = "Lowest";
+            
+            key["$pref::TS::detailAdjust"] = 0.5;
+            key["$pref::TS::skipRenderDLs"] = 1;      
+        };
+        new ArrayObject()
          {
-            class = "GraphicsQualityLevel";
+            class = "OptionsQualityLevel";
             caseSensitive = true;
             
-            displayName = "High";
-
-            key["$pref::TS::detailAdjust"] = 1.5;
+            displayName = "Low";
+                  
+            key["$pref::TS::detailAdjust"] = 0.75;
             key["$pref::TS::skipRenderDLs"] = 0;      
-         }; 
+         };
          new ArrayObject( )
          {
-            class = "GraphicsQualityLevel";
+            class = "OptionsQualityLevel";
             caseSensitive = true;
             
             displayName = "Medium";
@@ -184,46 +186,48 @@ new SimGroup(VideoSettingsGroup)
          };
          new ArrayObject()
          {
-            class = "GraphicsQualityLevel";
-            caseSensitive = true;
-            
-            displayName = "Low";
-                  
-            key["$pref::TS::detailAdjust"] = 0.75;
-            key["$pref::TS::skipRenderDLs"] = 0;      
-         };
-         new ArrayObject()
-         {
-            class = "GraphicsQualityLevel";
-            caseSensitive = true;
-            
-            displayName = "Lowest";
-            
-            key["$pref::TS::detailAdjust"] = 0.5;
-            key["$pref::TS::skipRenderDLs"] = 1;      
-        };
-      };
-
-      new SimGroup( MeshDrawDistQualityGroup )
-      { 
-         class = "GraphicsOptionsMenuGroup";
-         
-         new ArrayObject()
-         {
-            class = "GraphicsQualityLevel";
+            class = "OptionsQualityLevel";
             caseSensitive = true;
             
             displayName = "High";
 
-            key["$pref::useStaticObjectFade"] = false;
-            key["$pref::staticObjectFadeStart"] = 75;    
-            key["$pref::staticObjectFadeEnd"] = 100;  
-            key["$pref::staticObjectUnfadeableSize"] = 75;  
-
-         }; 
+            key["$pref::TS::detailAdjust"] = 1.5;
+            key["$pref::TS::skipRenderDLs"] = 0;      
+         };
+      };
+      
+      new SimGroup( MeshDrawDistQualityGroup )
+      { 
+         class = "OptionsSettings";
+         OptionName = "Mesh Draw Distance";
+         
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "Lowest";
+            
+            key["$pref::useStaticObjectFade"] = true;
+            key["$pref::staticObjectFadeStart"] = 25;    
+            key["$pref::staticObjectFadeEnd"] = 50;  
+            key["$pref::staticObjectUnfadeableSize"] = 200;     
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "Low";
+                  
+            key["$pref::useStaticObjectFade"] = true;
+            key["$pref::staticObjectFadeStart"] = 50;    
+            key["$pref::staticObjectFadeEnd"] = 75;  
+            key["$pref::staticObjectUnfadeableSize"] = 100;     
+         };
          new ArrayObject( )
          {
-            class = "GraphicsQualityLevel";
+            class = "OptionsQualityLevel";
             caseSensitive = true;
             
             displayName = "Medium";
@@ -235,57 +239,37 @@ new SimGroup(VideoSettingsGroup)
          };
          new ArrayObject()
          {
-            class = "GraphicsQualityLevel";
-            caseSensitive = true;
-            
-            displayName = "Low";
-                  
-            key["$pref::useStaticObjectFade"] = true;
-            key["$pref::staticObjectFadeStart"] = 50;    
-            key["$pref::staticObjectFadeEnd"] = 75;  
-            key["$pref::staticObjectUnfadeableSize"] = 100;     
-         };
-         new ArrayObject()
-         {
-            class = "GraphicsQualityLevel";
-            caseSensitive = true;
-            
-            displayName = "Lowest";
-            
-            key["$pref::useStaticObjectFade"] = true;
-            key["$pref::staticObjectFadeStart"] = 25;    
-            key["$pref::staticObjectFadeEnd"] = 50;  
-            key["$pref::staticObjectUnfadeableSize"] = 200;     
-        };
-      };
-
-      new SimGroup( TextureQualityGroup )
-      {
-         class = "GraphicsOptionsMenuGroup";
-         
-         new ArrayObject()
-         {
-            class = "GraphicsQualityLevel";
+            class = "OptionsQualityLevel";
             caseSensitive = true;
             
             displayName = "High";
 
-            key["$pref::Video::textureReductionLevel"] = 0;
-            key["$pref::Reflect::refractTexScale"] = 1.25;
-         }; 
+            key["$pref::useStaticObjectFade"] = false;
+            key["$pref::staticObjectFadeStart"] = 75;    
+            key["$pref::staticObjectFadeEnd"] = 100;  
+            key["$pref::staticObjectUnfadeableSize"] = 75;  
+
+         };
+      };
+
+      new SimGroup( TextureQualityGroup )
+      {
+         class = "OptionsSettings";
+         OptionName = "Texture Quality";
+         
          new ArrayObject()
          {
-            class = "GraphicsQualityLevel";
+            class = "OptionsQualityLevel";
             caseSensitive = true;
             
-            displayName = "Medium";
-
-            key["$pref::Video::textureReductionLevel"] = 0;
-            key["$pref::Reflect::refractTexScale"] = 1;
+            displayName = "Lowest";
+            
+            key["$pref::Video::textureReductionLevel"] = 2;
+            key["$pref::Reflect::refractTexScale"] = 0.5;
          };
          new ArrayObject()
          {
-            class = "GraphicsQualityLevel";
+            class = "OptionsQualityLevel";
             caseSensitive = true;
             
             displayName = "Low";
@@ -295,441 +279,742 @@ new SimGroup(VideoSettingsGroup)
          };
          new ArrayObject()
          {
-            class = "GraphicsQualityLevel";
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "Medium";
+
+            key["$pref::Video::textureReductionLevel"] = 0;
+            key["$pref::Reflect::refractTexScale"] = 1;
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "High";
+
+            key["$pref::Video::textureReductionLevel"] = 0;
+            key["$pref::Reflect::refractTexScale"] = 1.25;
+         }; 
+      };
+
+      new SimGroup( GroundCoverDensityGroup )
+      { 
+         class = "OptionsSettings";
+         OptionName = "Ground Cover Density";
+         Description = "Density of ground cover items, such as grass";
+         
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            displayName = "Lowest";
+
+            key["$pref::GroundCover::densityScale"] = 0.25;
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            displayName = "Low";
+                  
+            key["$pref::GroundCover::densityScale"] = 0.5;
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            displayName = "Medium";
+
+            key["$pref::GroundCover::densityScale"] = 0.75;
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            displayName = "High";
+
+            key["$pref::GroundCover::densityScale"] = 1.0;
+         };
+      };
+
+      new SimGroup( DecalLifetimeGroup )
+      { 
+         class = "OptionsSettings";
+         OptionName = "Decal Life Time";
+         
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "None";
+            
+            key["$pref::decalMgr::enabled"] = false;
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "Low";
+            
+            key["$pref::decalMgr::enabled"] = true;
+            key["$pref::Decals::lifeTimeScale"] = 0.25;
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "Medium";
+            
+            key["$pref::decalMgr::enabled"] = true;
+            key["$pref::Decals::lifeTimeScale"] = 0.5;
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "High";
+            
+            key["$pref::decalMgr::enabled"] = true;
+            key["$pref::Decals::lifeTimeScale"] = 1;
+         };
+      };
+
+      new SimGroup( TerrainQualityGroup )
+      { 
+         class = "OptionsSettings";
+         OptionName = "Terrain Quality";
+         
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
             caseSensitive = true;
             
             displayName = "Lowest";
             
-            key["$pref::Video::textureReductionLevel"] = 2;
-            key["$pref::Reflect::refractTexScale"] = 0.5;
+            key["$pref::Terrain::lodScale"] = 2.0;
+            key["$pref::Terrain::detailScale"] = 0.5; 
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "Low";
+                  
+            key["$pref::Terrain::lodScale"] = 1.5;
+            key["$pref::Terrain::detailScale"] = 0.75;
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "Medium";
+
+            key["$pref::Terrain::lodScale"] = 1.0;
+            key["$pref::Terrain::detailScale"] = 1.0;
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "High";
+
+            key["$pref::Terrain::lodScale"] = 0.75;
+            key["$pref::Terrain::detailScale"] = 1.5;
+         }; 
+      };
+   };
+   
+   //Shadows and Lighting
+   new SimGroup()
+   {
+      class = "SubOptionsGroup";
+      displayName = "Lighting Quality";
+      
+      new SimGroup( ShadowQualityList )
+      {
+         class = "OptionsSettings";
+         OptionName = "Shadow Quality";
+         
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "None";
+            
+            key["$pref::lightManager"] = "Advanced Lighting";
+            key["$pref::Shadows::disable"] = true;
+            key["$pref::Shadows::textureScalar"] = 0.5;
+            key["$pref::allowLocalLightShadows"] = false;
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "Low";
+                        
+            key["$pref::lightManager"] = "Advanced Lighting";
+            key["$pref::Shadows::disable"] = false;
+            key["$pref::Shadows::textureScalar"] = 0.25;
+            key["$pref::PSSM::detailAdjustScale"] = 0.25;
+            key["$pref::allowLocalLightShadows"] = false;
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "Medium";
+
+            key["$pref::lightManager"] = "Advanced Lighting";
+            key["$pref::Shadows::disable"] = false;
+            key["$pref::Shadows::textureScalar"] = 0.5;
+            key["$pref::PSSM::detailAdjustScale"] = 0.5;
+            key["$pref::allowLocalLightShadows"] = true;
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "High";
+            
+            key["$pref::lightManager"] = "Advanced Lighting";
+            key["$pref::Shadows::disable"] = false;
+            key["$pref::Shadows::textureScalar"] = 1.0;
+            key["$pref::PSSM::detailAdjustScale"] = 1.0;
+            key["$pref::allowLocalLightShadows"] = true;
          };
       };
 
-   };*/
-};
-
-//Fields have display name, populated by group. Direct name association to the fieldset
-
-new SimGroup( GroundCoverDensityGroup )
-{ 
-   class = "GraphicsOptionsMenuGroup";
-   
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "High";
-
-      key["$pref::GroundCover::densityScale"] = 1.0;
-   };
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "Medium";
-
-      key["$pref::GroundCover::densityScale"] = 0.75;
-   };
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "Low";
+      new SimGroup( ShadowDistanceList )
+      {
+         class = "OptionsSettings";
+         OptionName = "Shadow Distance";
+         
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
             
-      key["$pref::GroundCover::densityScale"] = 0.5;
-   };
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "Lowest";
-
-      key["$pref::GroundCover::densityScale"] = 0.25;
-   };
-};
-
-new SimGroup( DecalLifetimeGroup )
-{ 
-   class = "GraphicsOptionsMenuGroup";
-   
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "High";
-      
-      key["$pref::decalMgr::enabled"] = true;
-      key["$pref::Decals::lifeTimeScale"] = 1;
-   };
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "Medium";
-      
-      key["$pref::decalMgr::enabled"] = true;
-      key["$pref::Decals::lifeTimeScale"] = 0.5;
-   };
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "Low";
-      
-      key["$pref::decalMgr::enabled"] = true;
-      key["$pref::Decals::lifeTimeScale"] = 0.25;
-   };
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "None";
-      
-      key["$pref::decalMgr::enabled"] = false;
-   };
-};
-
-new SimGroup( TerrainQualityGroup )
-{ 
-   class = "GraphicsOptionsMenuGroup";
-   
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "High";
-
-      key["$pref::Terrain::lodScale"] = 0.75;
-      key["$pref::Terrain::detailScale"] = 1.5;
-   }; 
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "Medium";
-
-      key["$pref::Terrain::lodScale"] = 1.0;
-      key["$pref::Terrain::detailScale"] = 1.0;
-   };
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "Low";
+            displayName = "Lowest";
             
-      key["$pref::Terrain::lodScale"] = 1.5;
-      key["$pref::Terrain::detailScale"] = 0.75;
+            key["$pref::Shadows::drawDistance"] = 0.1;
+         }; 
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "Low";
+                        
+            key["$pref::Shadows::drawDistance"] = 0.25;  
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "Medium";
+
+            key["$pref::Shadows::drawDistance"] = 0.5; 
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "High";
+            
+            key["$pref::Shadows::drawDistance"] = 0.75;
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "Highest";
+            
+            key["$pref::Shadows::drawDistance"] = 1; 
+         }; 
+      };
+
+      new SimGroup( LightingQualityList )
+      {
+         class = "OptionsSettings";
+         OptionName = "Lighting Quality";
+         
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "Low";
+                        
+            key["$pref::maximumNumOfLights"] = 5;
+            key["$pref::useLightFade"] = true;
+            key["$pref::lightFadeStart"] = 10;
+            key["$pref::lightFadeEnd"] = 25;
+
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "Medium";
+            
+            key["$pref::maximumNumOfLights"] = 10;
+            key["$pref::useLightFade"] = true;
+            key["$pref::lightFadeStart"] = 25;
+            key["$pref::lightFadeEnd"] = 50;
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "High";
+            
+            key["$pref::maximumNumOfLights"] = 15;
+            key["$pref::useLightFade"] = true;
+            key["$pref::lightFadeStart"] = 50;
+            key["$pref::lightFadeEnd"] = 75;
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "Highest";
+            
+            key["$pref::maximumNumOfLights"] = -1;
+            key["$pref::useLightFade"] = false;
+            key["$pref::lightFadeStart"] = 50;
+            key["$pref::lightFadeEnd"] = 75;
+         };
+      };
+
+      new SimGroup( SoftShadowList )
+      {
+         class = "OptionsSettings";
+         OptionName = "Soft Shadowing";
+         
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "Off";
+            
+            key["$pref::Shadows::filterMode"] = "None"; 
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "Low";
+                        
+            key["$pref::Shadows::filterMode"] = "SoftShadow"; 
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "High";
+                        
+            key["$pref::Shadows::filterMode"] = "SoftShadowHighQuality"; 
+         };
+      };
+
+      new SimGroup( LightDistanceList )
+      {
+         class = "OptionsSettings";
+         OptionName = "Lights Draw Distance";
+         
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "Lowest";
+            
+            key["$pref::Lights::drawDistance"] = 0.25;
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "Low";
+                        
+            key["$pref::Lights::drawDistance"] = 0.25;  
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "Medium";
+
+            key["$pref::Lights::drawDistance"] = 0.5; 
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "High";
+            
+            key["$pref::Lights::drawDistance"] = 0.75;
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "Highest";
+            
+            key["$pref::Lights::drawDistance"] = 1; 
+         };
+      };
    };
-   new ArrayObject()
+   
+   new SimGroup()
    {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
+      class = "SubOptionsGroup";
+      displayName = "Effects";
+     
+      new SimGroup()
+      {
+         class = "OptionsSettings";
+         OptionName = "Shader Quality";
+         
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "Low";
+            
+            key["$pref::Video::disablePixSpecular"] = true;
+            key["$pref::Video::disableNormalmapping"] = true;
+            key["$pref::PostFX::EnableHDRBloom"] = false;
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            caseSensitive = true;
+            
+            displayName = "High";
+            
+            key["$pref::Video::disablePixSpecular"] = false;
+            key["$pref::Video::disableNormalmapping"] = false;
+            key["$pref::PostFX::EnableHDRBloom"] = true;
+         };
+         
+      }; 
       
-      displayName = "Lowest";
+      new SimGroup()
+      {
+         class = "OptionsSettings";
+         OptionName = "Anisotropic Filtering";
+         Description = "Amount of Anisotropic Filtering on textures, which dictates their sharpness at a distance";
+         
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            displayName = "Off";
+            
+            key["$pref::Video::defaultAnisotropy"] = 0;
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            displayName = "4x";
+            
+            key["$pref::Video::defaultAnisotropy"] = 4;
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            displayName = "8x";
+            
+            key["$pref::Video::defaultAnisotropy"] = 8;
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            displayName = "16x";
+            
+            key["$pref::Video::defaultAnisotropy"] =16;
+         };
+      }; 
       
-      key["$pref::Terrain::lodScale"] = 2.0;
-      key["$pref::Terrain::detailScale"] = 0.5; 
-   };   
+      new SimGroup()
+      {
+         class = "OptionsSettings";
+         OptionName = "Anti-Aliasing";
+         Description = "The Anti-Aliasing Method applied to rendering";
+         
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            displayName = "None";
+            
+            key["$pref::Video::AAMode"] = "None";
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            displayName = "FXAA";
+            
+            key["$pref::Video::AAMode"] = "FXAA";
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            displayName = "SMAA";
+            
+            key["$pref::Video::AAMode"] = "SMAA";
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            displayName = "SMAA High";
+            
+            key["$pref::Video::AAMode"] ="SMAA High";
+         };
+      }; 
+      
+      new SimGroup()
+      {
+         class = "OptionsSettings";
+         OptionName = "Parallax";
+         Description = "Whether the surface parallax shader effect is enabled";
+         
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            displayName = "Off";
+            
+            key["$pref::Video::enableParallaxMapping"] = false;
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            displayName = "On";
+            
+            key["$pref::Video::enableParallaxMapping"] = true;
+         };
+         
+      }; 
+      
+      new SimGroup()
+      {
+         class = "OptionsSettings";
+         OptionName = "True Water Reflections";
+         Description = "Whether realtime water reflections are enabled";
+         
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            displayName = "Off";
+            
+            key["$pref::Water::enableTrueReflections"] = false;
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            displayName = "On";
+            
+            key["$pref::Water::enableTrueReflections"] = true;
+         };
+      }; 
+   
+      new SimGroup()
+      {
+         class = "OptionsSettings";
+         OptionName = "SSAO";
+         Description = "Whether Screen-Space Ambient Occlusion is enabled";
+         
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            displayName = "Off";
+            
+            key["$pref::PostFX::EnableSSAO"] = false;
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            displayName = "On";
+            
+            key["$pref::PostFX::EnableSSAO"] = true;
+         };
+      }; 
+   
+      new SimGroup()
+      {
+         class = "OptionsSettings";
+         OptionName = "Depth of Field";
+         
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            displayName = "Off";
+            
+            key["$pref::PostFX::EnableDOF"] = false;
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            displayName = "On";
+            
+            key["$pref::PostFX::EnableDOF"] = true;
+         };
+      };       
+      
+      new SimGroup()
+      {
+         class = "OptionsSettings";
+         OptionName = "Vignette";
+         
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            displayName = "Off";
+            
+            key["$pref::PostFX::EnableVignette"] = false;
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            displayName = "On";
+            
+            key["$pref::PostFX::EnableVignette"] = true;
+         };
+      }; 
+      
+      new SimGroup()
+      {
+         class = "OptionsSettings";
+         OptionName = "Light Rays";
+         
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            displayName = "Off";
+            
+            key["$pref::PostFX::EnableLightRays"] = false;
+         };
+         new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            displayName = "On";
+            
+            key["$pref::PostFX::EnableLightRays"] = true;
+         };
+      };
+   };
 };
 
-//Shadows and Lighting
-new SimGroup( ShadowQualityList )
+function VideoSettingsGroup::populateDisplaySettings(%this)
 {
-   class = "GraphicsOptionsMenuGroup";
+   VideoAPISettingsGroup.clear();
+   DisplayDevicesGroup.clear();
+   DisplayResSettingsGroup.clear();
+   DisplayRefreshSettingsGroup.clear();
    
-   new ArrayObject()
+   %apiList = "";
+   %apiCount = GFXInit::getAdapterCount();
+   for(%i=0; %i < %apiCount; %i++)
    {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
+      %api = GFXInit::getAdapterType(%i);
       
-      displayName = "High";
-      
-      key["$pref::lightManager"] = "Advanced Lighting";
-      key["$pref::Shadows::disable"] = false;
-      key["$pref::Shadows::textureScalar"] = 1.0;
-      key["$pref::PSSM::detailAdjustScale"] = 1.0;
-      key["$pref::allowLocalLightShadows"] = true;
-   };
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "Medium";
-
-      key["$pref::lightManager"] = "Advanced Lighting";
-      key["$pref::Shadows::disable"] = false;
-      key["$pref::Shadows::textureScalar"] = 0.5;
-      key["$pref::PSSM::detailAdjustScale"] = 0.5;
-      key["$pref::allowLocalLightShadows"] = true;
-   };
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "Low";
-                  
-      key["$pref::lightManager"] = "Advanced Lighting";
-      key["$pref::Shadows::disable"] = false;
-      key["$pref::Shadows::textureScalar"] = 0.25;
-      key["$pref::PSSM::detailAdjustScale"] = 0.25;
-      key["$pref::allowLocalLightShadows"] = false;
-
-   };
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "None";
-      
-      key["$pref::lightManager"] = "Advanced Lighting";
-      key["$pref::Shadows::disable"] = true;
-      key["$pref::Shadows::textureScalar"] = 0.5;
-      key["$pref::allowLocalLightShadows"] = false;
-   };
-};
-
-new SimGroup( ShadowDistanceList )
-{
-   class = "GraphicsOptionsMenuGroup";
+      if(%api !$= "NullDevice")
+      {
+         %entry = new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            displayName = %api;
+            key["$pref::Video::displayDevice"] = %api;
+         };
+         
+         VideoAPISettingsGroup.add(%entry);
+      }
+   }   
    
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "Highest";
-      
-      key["$pref::Shadows::drawDistance"] = 1; 
-   }; 
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "High";
-      
-      key["$pref::Shadows::drawDistance"] = 0.75;
-   };
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "Medium";
-
-      key["$pref::Shadows::drawDistance"] = 0.5; 
-   };
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "Low";
-                  
-      key["$pref::Shadows::drawDistance"] = 0.25;  
-   };
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "Lowest";
-      
-      key["$pref::Shadows::drawDistance"] = 0.1;
-   };   
-};
-
-new SimGroup( LightingQualityList )
-{
-   class = "GraphicsOptionsMenuGroup";
    
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "Highest";
-      
-      key["$pref::maximumNumOfLights"] = -1;
-      key["$pref::useLightFade"] = false;
-      key["$pref::lightFadeStart"] = 50;
-      key["$pref::lightFadeEnd"] = 75;
-   };
+   %numDevices = Canvas.getMonitorCount();
+ 
+   %devicesList = getDisplayDeviceList();
    
-   new ArrayObject()
+   for(%i=0; %i < getFieldCount(%devicesList); %i++)
    {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
+      %device = getField(%devicesList, %i);
       
-      displayName = "High";
+      %entry = new ArrayObject()
+      {
+         class = "OptionsQualityLevel";
+         displayName = %device;
+         key["$pref::Video::displayDeviceId"] = %device;
+      };
       
-      key["$pref::maximumNumOfLights"] = 15;
-      key["$pref::useLightFade"] = true;
-      key["$pref::lightFadeStart"] = 50;
-      key["$pref::lightFadeEnd"] = 75;
-   };
+      DisplayDevicesGroup.add(%entry);
+   }
+
+   %mode = getField($Video::ModeTags, $pref::Video::deviceMode);
    
-   new ArrayObject()
+   if(%mode !$= "Borderless")
    {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "Medium";
-      
-      key["$pref::maximumNumOfLights"] = 10;
-      key["$pref::useLightFade"] = true;
-      key["$pref::lightFadeStart"] = 25;
-      key["$pref::lightFadeEnd"] = 50;
-   };
-   
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "Low";
-                  
-      key["$pref::maximumNumOfLights"] = 5;
-      key["$pref::useLightFade"] = true;
-      key["$pref::lightFadeStart"] = 10;
-      key["$pref::lightFadeEnd"] = 25;
+      %resolutionList = getScreenResolutionList($pref::Video::deviceId, $Video::Mode[%mode]);
+      for(%i=0; %i < getFieldCount(%resolutionList); %i++)
+      {
+         %rawResolution = getField(%resolutionList, %i);
+         %prettyResolution = _makePrettyResString(%rawResolution);
+         
+         %entry = new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            displayName = %prettyResolution;
+            key["$pref::Video::Resolution"] = %rawResolution;
+         };
+         
+         DisplayResSettingsGroup.add(%entry);
+      }
+   }
 
-   };
-};
+   %refreshList = getScreenRefreshList($pref::Video::mode);
+   for(%i=0; %i < getFieldCount(%refreshList); %i++)
+   {
+      %refreshRate = getField(%refreshList, %i);
 
-new SimGroup( SoftShadowList )
-{
-   class = "GraphicsOptionsMenuGroup";
-   
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
+      %entry = new ArrayObject()
+      {
+         class = "OptionsQualityLevel";
+         displayName = %refreshRate;
+         key["$pref::Video::RefreshRate"] = %refreshRate;
+      };
       
-      displayName = "High";
-                  
-      key["$pref::Shadows::filterMode"] = "SoftShadowHighQuality"; 
-   };
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "Low";
-                  
-      key["$pref::Shadows::filterMode"] = "SoftShadow"; 
-   };
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "Off";
-      
-      key["$pref::Shadows::filterMode"] = "None"; 
-   };
-};
-
-new SimGroup( LightDistanceList )
-{
-   class = "GraphicsOptionsMenuGroup";
-   
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "Highest";
-      
-      key["$pref::Lights::drawDistance"] = 1; 
-   };
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "High";
-      
-      key["$pref::Lights::drawDistance"] = 0.75;
-   };
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "Medium";
-
-      key["$pref::Lights::drawDistance"] = 0.5; 
-   };
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "Low";
-                  
-      key["$pref::Lights::drawDistance"] = 0.25;  
-   };
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "Lowest";
-      
-      key["$pref::Lights::drawDistance"] = 0.25;
-   };   
-};
-
-new SimGroup( ShaderQualityGroup )
-{
-   class = "GraphicsOptionsMenuGroup";
-   
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "High";
-      
-      key["$pref::Video::disablePixSpecular"] = false;
-      key["$pref::Video::disableNormalmapping"] = false;
-      key["$pref::PostFX::EnableHDRBloom"] = true;
-   };
-   new ArrayObject()
-   {
-      class = "GraphicsQualityLevel";
-      caseSensitive = true;
-      
-      displayName = "Low";
-      
-      key["$pref::Video::disablePixSpecular"] = true;
-      key["$pref::Video::disableNormalmapping"] = true;
-      key["$pref::PostFX::EnableHDRBloom"] = false;
-   };
-};
-
+      DisplayRefreshSettingsGroup.add(%entry);
+   }
+}
 function getCurrentQualityLevel(%qualityGroup)
 {
    for ( %i=0; %i < %qualityGroup.getCount(); %i++ )
    {
       %level = %qualityGroup.getObject( %i );
       if ( %level.isCurrent() )
-         return %level.displayName;
+         return %level;
    }
    
    return "Custom";
@@ -1036,4 +1321,35 @@ function getScreenRefreshList(%resolution)
 
    %rateArray.delete();
    return %returnsList;
+}
+
+function getDisplayDeviceList()
+{
+   %numDevices = Canvas.getMonitorCount();
+   %devicesList = "";
+   for(%i = 0; %i < %numDevices; %i++)
+   {
+      %device = (%i+1) @ " - " @ Canvas.getMonitorName(%i);
+      if(%i==0)
+         %devicesList = %device;
+      else
+         %devicesList = %devicesList @ "\t" @ %device;
+   }
+   
+   return %devicesList;  
+}
+
+function getDisplayDeviceId(%displayDeviceName)
+{
+   %deviceList = getDisplayDeviceList();
+   
+   %deviceCount = getFieldCount(%deviceList);
+   for(%d = 0; %d < %deviceCount; %d++)
+   {
+      %deviceName = getField(%deviceList, %d);
+      if(%deviceName $= %displayDeviceName)
+         return %d;  
+   }
+   
+   return -1;
 }

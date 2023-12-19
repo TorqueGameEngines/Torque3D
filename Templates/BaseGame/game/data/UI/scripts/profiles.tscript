@@ -4,48 +4,45 @@ $TextHighEmphasisColor = "224 224 224";
 $TextHighEmphasisColorHL = "0 0 0";
 $TextDisabledColor = "108 108 108";
 
-singleton GuiGameListMenuProfile(DefaultListMenuProfile)
+// ---------------------------------------------------------------------------
+// Defaults
+// ---------------------------------------------------------------------------
+singleton GuiControlProfile( GuiMenuDefaultProfile )
 {
-   fontType = "Arial Bold";
-   fontSize = 20;
-   fontColor = $TextMediumEmphasisColor;
-   fontColorSEL = $TextMediumEmphasisColor;
-   fontColorNA = $TextDisabledColor;
-   fontColorHL = $TextMediumEmphasisColor;
-   
-   fillColor = "108 108 108";
-   fillColorHL = "140 140 140";
-   fillColorSEL = "180 180 180";
-   
-   HitAreaUpperLeft = "16 20";
-   HitAreaLowerRight = "503 74";
-   IconOffset = "40 0";
-   TextOffset = "100 0";
-   RowSize = "500 90";
-   ColumnSplit = "250";
-   RightPad = "20";
-   bitmap = "UI:listMenuArray_image";
-   canKeyFocus = true;
+   opaque = false;
+   fillColor = "0 0 0 0";  
+   category = "BaseUI"; 
 };
 
-singleton GuiControlProfile(GamepadDefaultProfile)
+singleton GuiControlProfile( GuiModelessDialogProfile : GuiMenuDefaultProfile )
 {
-   border = 0;
+   modal = false;
 };
 
-singleton GuiControlProfile(GamepadButtonTextLeft)
+singleton GuiControlProfile(GuiMenuBackgroundProfile)
 {
-   fontType = "Arial Bold";
-   fontSize = 20;
-   fontColor = "255 255 255";
-   justify = "left";
+   category = "BaseUI";
+   opaque = true;
+   fillcolor = "34 34 34 255";
 };
 
-singleton GuiControlProfile(GamepadButtonTextRight : GamepadButtonTextLeft)
+singleton GuiControlProfile(GuiMenuPanelProfile)
 {
-   justify = "right";
+   category = "BaseUI";
+   opaque = true;
+   fillcolor = "15 15 15 255";
 };
 
+singleton GuiControlProfile(GuiMenuBasePanelProfile)
+{
+   category = "BaseUI";
+   opaque = true;
+   fillcolor = "40 40 40 255";
+};
+
+// ---------------------------------------------------------------------------
+// Text
+// ---------------------------------------------------------------------------
 singleton GuiControlProfile(MenuHeaderText)
 {
    fontType = "Arial Bold";
@@ -53,6 +50,7 @@ singleton GuiControlProfile(MenuHeaderText)
    fontColor = $TextHighEmphasisColor;
    justify = "left";
    modal = false;
+   category = "BaseUI";
 };
 
 singleton GuiControlProfile(MenuHeaderTextHighlighted : MenuHeaderText)
@@ -60,11 +58,8 @@ singleton GuiControlProfile(MenuHeaderTextHighlighted : MenuHeaderText)
    fontColor = $TextHighEmphasisColorHL;
 };
 
-singleton GuiControlProfile(MenuHeaderTextCenter)
+singleton GuiControlProfile(MenuHeaderTextCenter : MenuHeaderText)
 {
-   fontType = "Arial Bold";
-   fontSize = 32;
-   fontColor = $TextHighEmphasisColor;
    justify = "center";
 };
 
@@ -75,6 +70,7 @@ singleton GuiControlProfile(MenuSubHeaderText)
    fontColor = $TextMediumEmphasisColor;
    justify = "left";
    modal = false;
+   category = "BaseUI";
 };
 
 singleton GuiControlProfile(MenuSubHeaderTextHighlighted : MenuSubHeaderText)
@@ -101,97 +97,12 @@ singleton GuiControlProfile(MenuMLSubHeaderText)
    autoSizeWidth = true;
    autoSizeHeight = true;  
    modal = false;
+   category = "BaseUI";
 };
 
 singleton GuiControlProfile(MenuMLSubHeaderTextCenter : MenuMLSubHeaderText)
 {
    justify = "center";
-};
-
-singleton GuiControlProfile( GuiMenuDefaultProfile )
-{
-   opaque = false;
-   fillColor = "0 0 0 0";   
-};
-
-singleton GuiControlProfile( GuiMenuButtonProfile )
-{
-   opaque = true;
-   border = false;
-   fontSize = 24;
-   fontType = "Arial Bold";
-   fontColor = "200 200 200 255";
-   fontColorHL = "0 0 0 255";
-   fontColorNA = "108 108 108 255";
-   fontColorSEL = "200 200 200 255";
-   fillColor = "0 0 0 0";
-   fillColorHL = "255 255 255 255";
-   fillColorNA = "40 40 40";
-   borderColor = "87 87 87";
-   borderColorNA = "0 0 0";
-   borderColorHL = "194 64 64";
-   fixedExtent = 0;
-   justify = "center";
-   canKeyFocus = false;
-   //bitmapAsset = "UI:menu_button_image";
-   hasBitmapArray = false;
-   soundButtonDown = "UI:buttonClick";
-   soundButtonOver = "UI:buttonHover";
-   category = "BaseUI";
-   fontColors[0] = "200 200 200 255";
-   fontColors[2] = "108 108 108 255";
-   fontColors[3] = "200 200 200 255";
-   fontColors[5] = "Magenta";
-   fontColorLinkHL = "Magenta";
-};
-
-singleton GuiControlProfile( LevelPreviewButtonProfile : GuiMenuButtonProfile )
-{
-   fontSize = 22;
-   justify = "Left";
-};
-
-singleton GuiControlProfile( GuiHighlightMenuButtonProfile )
-{
-   opaque = true;
-   border = false;
-   fontSize = 18;
-   fontType = "Arial Bold";
-   fontColor = "240 240 240";
-   fontColorHL = "0 0 0";
-   fontColorNA = "125 125 125";
-   //fontColorSEL ="0 0 0";
-   fixedExtent = false;
-   justify = "center";
-   canKeyFocus = false;
-   bitmapAsset = "UI:selector_button_highlight_only_image";
-   hasBitmapArray = false;
-   category = "Core";
-};
-
-singleton GuiControlProfile( GuiBlankMenuButtonProfile )
-{
-   opaque = true;
-   border = false;
-   fontSize = 18;
-   fontType = "Arial Bold";
-   fontColor = "220 220 220";
-   fontColorHL = "255 255 255";
-   fontColorNA = "200 200 200";
-   //fontColorSEL ="0 0 0";
-   fixedExtent = false;
-   justify = "center";
-   canKeyFocus = false;
-   bitmapAsset = "UI:selector_button_blank_image";
-   hasBitmapArray = false;
-   soundButtonDown = menuButtonPressed;
-   soundButtonOver = menuButtonHover;
-   category = "Core";
-};
-
-singleton GuiControlProfile( GuiJoinServerButtonProfile : GuiMenuButtonProfile )
-{
-   justify = "left";
 };
 
 singleton GuiControlProfile( GuiMenuTextProfile )
@@ -209,97 +120,9 @@ singleton GuiControlProfile( GuiMenuTextProfile )
    modal = false;
 };
 
-singleton GuiControlProfile( GuiMenuTextProfileHighlighted : GuiMenuTextProfile )
+singleton GuiControlProfile( GuiMenuTextProfileHL : GuiMenuTextProfile )
 {
    fontColor = "0 0 0";
-};
-
-singleton GuiControlProfile (GuiSolidDefaultProfile)
-{
-   opaque = true;
-   border = true;
-   category = "Core";
-};
-
-singleton GuiControlProfile (GuiTransparentProfile)
-{
-   opaque = false;
-   border = false;
-   category = "Core";
-};
-
-singleton GuiControlProfile( GuiGroupBorderProfile )
-{
-   border = false;
-   opaque = false;
-   hasBitmapArray = true;
-   bitmapAsset = "UI:group_border_image";
-   category = "Core";
-};
-
-singleton GuiControlProfile( GuiTabBorderProfile )
-{
-   border = false;
-   opaque = false;
-   hasBitmapArray = true;
-   bitmapAsset = "UI:tab_border_image";
-   category = "Core";
-};
-
-singleton GuiControlProfile( GuiModelessDialogProfile )
-{
-   modal = false;
-   category = "Core";
-};
-
-singleton GuiControlProfile (GuiFrameSetProfile)
-{
-   fillcolor = "255 255 255";
-   borderColor = "246 245 244";
-   border = 1;
-   opaque = true;
-   border = true;
-   category = "Core";
-};
-
-singleton GuiControlProfile( GuiInputCtrlProfile )
-{
-   tab = true;
-   canKeyFocus = true;
-   category = "Core";
-};
-
-singleton GuiControlProfile (GuiTextProfile)
-{
-   justify = "left";
-   fontColor = "20 20 20";
-   category = "Core";
-};
-
-singleton GuiControlProfile (GuiTextRightProfile : GuiTextProfile)
-{
-   justify = "right";
-   category = "Core";
-};
-
-singleton GuiControlProfile (GuiAutoSizeTextProfile)
-{
-   fontColor = "0 0 0";
-   autoSizeWidth = true;
-   autoSizeHeight = true;   
-   category = "Core";
-};
-
-singleton GuiControlProfile( GuiMediumTextProfile : GuiTextProfile )
-{
-   fontSize = 24;
-   category = "Core";
-};
-
-singleton GuiControlProfile( GuiBigTextProfile : GuiTextProfile )
-{
-   fontSize = 36;
-   category = "Core";
 };
 
 singleton GuiControlProfile( GuiMLTextProfile )
@@ -324,224 +147,48 @@ singleton GuiControlProfile( GuiMLTextProfileHighlighted : GuiMLTextProfile )
    fontColor = $TextMediumEmphasisColorHL;
 };
 
-singleton GuiControlProfile( GuiMLWhiteTextProfile )
-{
-   fontColor = "220 220 220";
-   fontColorHL = $TextMediumEmphasisColor;
-   autoSizeWidth = true;
-   autoSizeHeight = true;  
-   border = false;
-   category = "Core";
-};
-
-singleton GuiControlProfile( GuiTextArrayProfile : GuiTextProfile )
-{
-   fontColor = $TextMediumEmphasisColor;
-   fontColorHL = $TextMediumEmphasisColor;
-   fontColorSEL = $TextMediumEmphasisColor;
-   fontColorNA = $TextDisabledColor;
-   
-   fillColor = "22 22 22 255";
-   fillColorHL = "22 22 22 255"; 
-   fillColorSEL = "56 56 56 255";
-   
-   border = true;
-   borderColor ="87 87 87";
-   borderColorHL = "87 87 87";
-   borderColorSEL = "255 255 255";
-   
-   category = "Core";
-   canKeyFocus = true;
-};
-
-singleton GuiControlProfile( GuiMenuTextEditProfile : GuiTextEditProfile )
-{
-   fontColor = $TextMediumEmphasisColor;
-   fontColorHL = $TextMediumEmphasisColor;
-   fontColorSEL = $TextMediumEmphasisColor;
-   fontColorNA = $TextDisabledColor;
-   
-   fillColor = "22 22 22 255";
-   fillColorHL = "22 22 22 255";   
-   
-   border = true;
-   borderColor ="87 87 87";
-   borderColorHL = "87 87 87";
-   borderColorSEL = "255 255 255";
-   
-   category = "Core";
-};
-
-// ----------------------------------------------------------------------------
-// TODO: Revisit Popupmenu
-// ----------------------------------------------------------------------------
-
-singleton GuiControlProfile( GuiPopupMenuItemBorder : GuiButtonProfile )
+// ---------------------------------------------------------------------------
+// Interactive Controls
+// ---------------------------------------------------------------------------
+singleton GuiControlProfile( GuiMenuButtonProfile )
 {
    opaque = true;
-   border = true;
-   fontColor = "0 0 0";
-   fontColorHL = "0 0 0";
-   fontColorNA = "255 255 255";
-   fixedExtent = false;
+   border = false;
+   fontSize = 24;
+   fontType = "Arial Bold";
+   fontColor = "200 200 200 255";
+   fontColorHL = "0 0 0 255";
+   fontColorNA = "108 108 108 255";
+   fontColorSEL = "200 200 200 255";
+   fillColor = "0 0 0 0";
+   fillColorHL = "255 255 255 255";
+   fillColorNA = "40 40 40";
+   borderColor = "87 87 87";
+   borderColorNA = "0 0 0";
+   borderColorHL = "194 64 64";
+   fixedExtent = 0;
    justify = "center";
    canKeyFocus = false;
-   bitmapAsset = "UI:menubutton_image";
-   category = "Core";
+   hasBitmapArray = false;
+   soundButtonDown = "UI:buttonClick";
+   soundButtonOver = "UI:buttonHover";
+   category = "BaseUI";
+   fontColors[0] = "200 200 200 255";
+   fontColors[2] = "108 108 108 255";
+   fontColors[3] = "200 200 200 255";
 };
 
-singleton GuiControlProfile( GuiPopUpMenuDefault : GuiDefaultProfile )
+singleton GuiControlProfile( GuiMenuButtonLeftJustProfile : GuiMenuButtonProfile )
 {
-   opaque = true;
-   mouseOverSelected = true;
-   textOffset = "3 3";
-   border = 0;
-   borderThickness = 0;
-   fixedExtent = true;
-   hasBitmapArray = true;
-   
-   fillColor = EditorSettings.value("Theme/fieldBGColor");//"255 255 255";//100
-   fillColorHL = EditorSettings.value("Theme/fieldBGHLColor");//"91 101 116";
-   fillColorSEL = EditorSettings.value("Theme/fieldBGSELColor");//"91 101 116";
-   fontColor = EditorSettings.value("Theme/fieldTextColor");//"215 215 215";
-   fontColorHL = EditorSettings.value("Theme/fieldTextHLColor");//"215 215 215";
-   fontColorSEL = EditorSettings.value("Theme/fieldTextSELColor");//"215 215 215";
-   fontColorNA = EditorSettings.value("Theme/fieldTextColor");//"215 215 215";
-   borderColor = EditorSettings.value("Theme/dividerDarkColor");
-   profileForChildren = GuiPopupMenuItemBorder;
-   category = "Core";
+   justify = "Left";
 };
 
-singleton GuiControlProfile( GuiPopUpMenuProfile : GuiPopUpMenuDefault )
+singleton GuiControlProfile( GuiRemapActionMapButtonProfile : GuiMenuButtonProfile )
 {
-   textOffset         = "6 4";
-   bitmapAsset             = "UI:dropDown_image";
-   hasBitmapArray     = true;
-   border             = 1;
-   profileForChildren = GuiPopUpMenuDefault;
-   category = "Core";
+   fillColor = "18 18 18 255";
+   fillColorHL = "0 0 0 255";
 };
 
-singleton GuiControlProfile( GuiTabBookProfile )
-{
-   fillColorHL = "100 100 100";
-   fillColorNA = "150 150 150";
-   fontColor = "30 30 30";
-   fontColorHL = "0 0 0";
-   fontColorNA = "50 50 50";
-   fontType = "Arial";
-   fontSize = 14;
-   justify = "center";
-   bitmapAsset = "UI:tab_image";
-   tabWidth = 64;
-   tabHeight = 24;
-   tabPosition = "Top";
-   tabRotation = "Horizontal";
-   textOffset = "0 -3";
-   tab = true;
-   cankeyfocus = true;
-   category = "Core";
-};
-
-singleton GuiControlProfile( GuiTabPageProfile : GuiDefaultProfile )
-{
-   fontType = "Arial";
-   fontSize = 10;
-   justify = "center";
-   bitmapAsset = "UI:tab_image";
-   opaque = false;
-   fillColor = "240 239 238";
-   category = "Core";
-};
-
-singleton GuiControlProfile( GuiConsoleProfile )
-{
-   fontType = ($platform $= "macos") ? "Monaco" : "Lucida Console";
-   fontSize = ($platform $= "macos") ? 13 : 12;
-   fontColor = "255 255 255";
-   fontColorHL = "0 255 255";
-   fontColorNA = "255 0 0";
-   fontColors[6] = "100 100 100";
-   fontColors[7] = "100 100 0";
-   fontColors[8] = "0 0 100";
-   fontColors[9] = "0 100 0";
-   category = "Core";
-};
-
-singleton GuiControlProfile( GuiConsoleTextProfile )
-{   
-   fontColor = "0 0 0";
-   autoSizeWidth = true;
-   autoSizeHeight = true;   
-   textOffset = "2 2";
-   opaque = true;   
-   fillColor = "255 255 255";
-   border = true;
-   borderThickness = 1;
-   borderColor = "0 0 0";
-   category = "Core";
-};
-
-$ConsoleDefaultFillColor = "0 0 0 175";
-
-singleton GuiControlProfile( ConsoleScrollProfile : GuiScrollProfile )
-{
-	opaque = true;
-	fillColor = $ConsoleDefaultFillColor;
-	border = 1;
-	//borderThickness = 0;
-	borderColor = "0 0 0";
-   category = "Core";
-};
-
-singleton GuiControlProfile( ConsoleTextEditProfile : GuiTextEditProfile )
-{
-   fillColor = "242 241 240 255";
-   fillColorHL = "255 255 255";   
-   category = "Core";
-};
-
-//-----------------------------------------------------------------------------
-// Center and bottom print
-//-----------------------------------------------------------------------------
-
-singleton GuiControlProfile ( CenterPrintProfile )
-{
-   opaque = false;
-   fillColor = "128 128 128";
-   fontColor = "0 255 0";
-   border = true;
-   borderColor = "0 255 0";
-   category = "Core";
-};
-
-singleton GuiControlProfile ( CenterPrintTextProfile )
-{
-   opaque = false;
-   fontType = "Arial";
-   fontSize = 12;
-   fontColor = "0 255 0";
-   category = "Core";
-};
-
-// ----------------------------------------------------------------------------
-// Radio button control
-// ----------------------------------------------------------------------------
-singleton GuiControlProfile( GuiRadioProfile )
-{
-   fontSize = 14;
-   fillColor = "232 232 232";
-   fontColor = "20 20 20";
-   fontColorHL = "80 80 80";
-   fixedExtent = true;
-   bitmapAsset = "UI:radioButton_image";
-   hasBitmapArray = true;
-   category = "Core";
-};
-
-//
-// Scroll Profile
-//
 singleton GuiControlProfile(GuiMenuScrollProfile)
 {
    opaque = false;
@@ -552,33 +199,4 @@ singleton GuiControlProfile(GuiMenuScrollProfile)
    bitmapAsset = "UI:scrollBar_image";
    hasBitmapArray = true;
    category = "BaseUI";
-};
-
-singleton GuiControlProfile(SliderBitmapGUIProfile)
-{
-   bitmapAsset = "UI:optionsMenuSliderBitmapArray_image";
-   hasBitmapArray = true;
-   opaque = false;
-   borderColor = "0 0 0 255";
-};
-
-singleton GuiControlProfile(GuiMenuBackgroundProfile)
-{
-   category = "BaseUI";
-   opaque = true;
-   fillcolor = "34 34 34 255";
-};
-
-singleton GuiControlProfile(GuiMenuPanelProfile)
-{
-   category = "BaseUI";
-   opaque = true;
-   fillcolor = "15 15 15 255";
-};
-
-singleton GuiControlProfile(GuiMenuBasePanelProfile)
-{
-   category = "BaseUI";
-   opaque = true;
-   fillcolor = "40 40 40 255";
 };

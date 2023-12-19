@@ -267,3 +267,24 @@ new GuiControlProfile(GuiScrollProfile)
 	bitmapAsset = "Core_GUI:scrollBar_image";
    category = "Core";
 };
+
+// ---------------------------------------------------------------------------
+singleton GuiControlProfile( GuiInputCtrlProfile )
+{
+   tab = true;
+   canKeyFocus = true;
+   category = "Core";
+};
+
+singleton GuiControlProfile (GuiTextProfile)
+{
+   justify = "left";
+   fontColor = "20 20 20";
+   category = "Core";
+};
+
+singleton GuiControlProfile (GuiTextRightProfile : GuiTextProfile)
+{
+   justify = "right";
+   category = "Core";
+};

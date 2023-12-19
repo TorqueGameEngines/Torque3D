@@ -73,7 +73,7 @@ function ChooseLevelMenu::onWake(%this)
             position = "0 0";
             extent = "480 480";
             buttonType = "ToggleButton";
-            profile = LevelPreviewButtonProfile;
+            profile = GuiMenuButtonLeftJustProfile;
             horizSizing = "width";
             vertSizing = "height";
             internalName = "button";

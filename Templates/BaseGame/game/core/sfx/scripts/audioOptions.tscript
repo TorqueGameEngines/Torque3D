@@ -80,3 +80,24 @@ function AudioSettingsGroup::populateSettings(%this)
       AudioSettingsDeviceGroup.add(%deviceEntry);
    }
 }
+
+function AudioSettingsProviderGroup::onApply(%this)
+{
+   updateAudioOptionsSettings();
+}
+
+function AudioSettingsDeviceGroup::onApply(%this)
+{
+   updateAudioOptionsSettings(); 
+}
+
+function updateAudioOptionsSettings()
+{
+   if ( !sfxCreateDevice(  $pref::SFX::provider, 
+                           $pref::SFX::device, 
+                           $pref::SFX::useHardware,
+                           -1 ) )                              
+      error( "Unable to create SFX device: " @ $pref::SFX::provider 
+                                             SPC $pref::SFX::device 
+                                             SPC $pref::SFX::useHardware );
+}

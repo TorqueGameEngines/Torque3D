@@ -71,6 +71,7 @@ new SimGroup(VideoSettingsGroup)
       {
          class = "OptionsSettings";
          OptionName = "Display API";
+         requiresRestart = true;
       };
       
       new SimGroup( DisplayDevicesGroup )
@@ -693,7 +694,7 @@ new SimGroup(VideoSettingsGroup)
       class = "SubOptionsGroup";
       displayName = "Effects";
      
-      new SimGroup()
+      new SimGroup(ShaderQualityOptionsGroup)
       {
          class = "OptionsSettings";
          OptionName = "Shader Quality";
@@ -723,7 +724,7 @@ new SimGroup(VideoSettingsGroup)
          
       }; 
       
-      new SimGroup()
+      new SimGroup(AnisotropicFilterOptionsGroup)
       {
          class = "OptionsSettings";
          OptionName = "Anisotropic Filtering";
@@ -759,7 +760,7 @@ new SimGroup(VideoSettingsGroup)
          };
       }; 
       
-      new SimGroup()
+      new SimGroup(AntiAliasingOptionsGroup)
       {
          class = "OptionsSettings";
          OptionName = "Anti-Aliasing";
@@ -771,6 +772,7 @@ new SimGroup(VideoSettingsGroup)
             displayName = "None";
             
             key["$pref::Video::AAMode"] = "None";
+            key["$pref::Video::AA"] = 0;            
          };
          new ArrayObject()
          {
@@ -778,6 +780,7 @@ new SimGroup(VideoSettingsGroup)
             displayName = "FXAA";
             
             key["$pref::Video::AAMode"] = "FXAA";
+            key["$pref::Video::AA"] = 0;
          };
          new ArrayObject()
          {
@@ -785,6 +788,7 @@ new SimGroup(VideoSettingsGroup)
             displayName = "SMAA";
             
             key["$pref::Video::AAMode"] = "SMAA";
+            key["$pref::Video::AA"] = 4;
          };
          new ArrayObject()
          {
@@ -792,10 +796,11 @@ new SimGroup(VideoSettingsGroup)
             displayName = "SMAA High";
             
             key["$pref::Video::AAMode"] ="SMAA High";
+            key["$pref::Video::AA"] = 4;
          };
       }; 
       
-      new SimGroup()
+      new SimGroup(ParallaxOptionsGroup)
       {
          class = "OptionsSettings";
          OptionName = "Parallax";
@@ -818,7 +823,7 @@ new SimGroup(VideoSettingsGroup)
          
       }; 
       
-      new SimGroup()
+      new SimGroup(TrueWaterReflectionsOptionsGroup)
       {
          class = "OptionsSettings";
          OptionName = "True Water Reflections";
@@ -840,7 +845,7 @@ new SimGroup(VideoSettingsGroup)
          };
       }; 
    
-      new SimGroup()
+      new SimGroup(PostFXSSAOOptionsGroup)
       {
          class = "OptionsSettings";
          OptionName = "SSAO";
@@ -862,7 +867,7 @@ new SimGroup(VideoSettingsGroup)
          };
       }; 
    
-      new SimGroup()
+      new SimGroup(PostFXDOFOptionsGroup)
       {
          class = "OptionsSettings";
          OptionName = "Depth of Field";
@@ -883,7 +888,7 @@ new SimGroup(VideoSettingsGroup)
          };
       };       
       
-      new SimGroup()
+      new SimGroup(PostFXVignetteOptionsGroup)
       {
          class = "OptionsSettings";
          OptionName = "Vignette";
@@ -904,7 +909,7 @@ new SimGroup(VideoSettingsGroup)
          };
       }; 
       
-      new SimGroup()
+      new SimGroup(PostFXLightRayOptionsGroup)
       {
          class = "OptionsSettings";
          OptionName = "Light Rays";
@@ -1008,6 +1013,126 @@ function VideoSettingsGroup::populateDisplaySettings(%this)
       DisplayRefreshSettingsGroup.add(%entry);
    }
 }
+
+function DisplayDevicesGroup::onApply(%this)
+{
+   updateDisplayOptionsSettings();
+}
+
+function DisplayModeGroup::onApply(%this)
+{
+   updateDisplayOptionsSettings();
+}
+
+function DisplayResSettingsGroup::onApply(%this)
+{
+   updateDisplayOptionsSettings();
+}
+
+function VSyncSettingsGroup::onApply(%this)
+{
+   updateDisplayOptionsSettings();
+}
+
+function DisplayRefreshSettingsGroup::onApply(%this)
+{
+   updateDisplayOptionsSettings();
+}
+
+function updateDisplayOptionsSettings()
+{
+   //Update the display settings now
+   %deviceName = getDisplayDeviceName();
+   %newDeviceID = getWord(%deviceName, 0) - 1;
+   
+   %deviceModeName = getField($Video::ModeTags, $pref::Video::deviceMode);
+   %newDeviceMode = 0;
+   foreach$(%modeName in $Video::ModeTags)
+   {
+      if (%deviceModeName $= %modeName)
+         break;
+      else
+         %newDeviceMode++;
+   }
+   
+   if($pref::Video::deviceMode == $Video::ModeBorderless)
+   {
+      //if we're changing to borderless, we swap to the full resolution of the desktop  
+      $pref::Video::mode = Canvas.getBestCanvasRes($pref::Video::deviceId, $pref::Video::deviceMode);
+      
+      $pref::Video::Resolution = $pref::Video::mode.x SPC $pref::Video::mode.y;
+   }
+
+   %newRes = $pref::Video::Resolution;
+   %newBpp = 32; // ... its not 1997 anymore.
+	%newFullScreen = %deviceModeName $= "Fullscreen" ? true : false;
+	%newRefresh    = $pref::Video::RefreshRate;
+	%newVsync = $pref::Video::enableVerticalSync;	
+	%newAA = $pref::Video::AA;
+	
+   // Build the final mode string.
+	%newMode = $pref::Video::Resolution SPC %newFullScreen SPC %newBpp SPC %newRefresh SPC %newAA;
+	
+   // Change the video mode.   
+   if (  %newMode !$= $pref::Video::mode || %newDeviceID != $pref::Video::deviceId ||
+         %newVsync != $pref::Video::enableVerticalSync || %newDeviceMode != $pref::Video::deviceMode)
+   {
+      //****Edge Case Hack
+      // If we're in fullscreen mode and switching to a different monitor at the
+      // same resolution and maintaining fullscreen, GFX...WindowTarget::resetMode()
+      // will early-out because there is no "mode change" and the monitor change
+      // will not get applied. Instead of modifying platform code, we're going to
+      // move onto the new monitor in borderless and immediately switch to FS.
+      if (%newFullScreen && $pref::Video::FullScreen &&
+         ($pref::Video::Resolution $= %newRes) && ($pref::Video::deviceId != %newDeviceID))
+      {
+         $pref::Video::deviceId = %newDeviceID;
+         $pref::Video::deviceMode = $Video::ModeBorderless;
+         %tmpModeStr = Canvas.getMonitorMode(%newDeviceID, 0);
+         Canvas.setVideoMode(%tmpModeStr.x, %tmpModeStr.y, false, 32, getWord(%tmpModeStr, $WORD::REFRESH), %newAA);
+      }
+
+      $pref::Video::mode = %newMode;
+      $pref::Video::enableVerticalSync = %newVsync;
+      $pref::Video::deviceId = %newDeviceID;
+      $pref::Video::deviceMode = %newDeviceMode;
+      $pref::Video::Resolution = %newRes;
+      $pref::Video::FullScreen = %newFullScreen;
+      $pref::Video::RefreshRate = %newRefresh;
+      $pref::Video::AA = %newAA;
+      configureCanvas();
+   }
+}
+
+function TextureQualityGroup::onApply(%this)
+{
+   reloadTextures();  
+}
+
+function PostFXSSAOOptionsGroup::onApply(%this)
+{
+   %currentLevel = %this.getCurrentQualityLevel();
+   PostFXManager.settingsEffectSetEnabled(SSAOPostFx, %currentLevel.getKey(0));
+}
+
+function PostFXDOFOptionsGroup::onApply(%this)
+{
+   %currentLevel = %this.getCurrentQualityLevel();
+   PostFXManager.settingsEffectSetEnabled(DepthOfFieldPostFX, %currentLevel.getKey(0));
+}
+
+function PostFXVignetteOptionsGroup::onApply(%this)
+{
+   %currentLevel = %this.getCurrentQualityLevel();
+   PostFXManager.settingsEffectSetEnabled(vignettePostFX, %currentLevel.getKey(0));
+}
+
+function PostFXLightRayOptionsGroup::onApply(%this)
+{
+   %currentLevel = %this.getCurrentQualityLevel();
+   PostFXManager.settingsEffectSetEnabled(LightRayPostFX, %currentLevel.getKey(0));
+}
+
 function getCurrentQualityLevel(%qualityGroup)
 {
    for ( %i=0; %i < %qualityGroup.getCount(); %i++ )
@@ -1046,11 +1171,6 @@ function AutodetectGraphics()
    %intel = ( strstr( strupr( getDisplayDeviceInformation() ), "INTEL" ) != -1 ) ? true : false;
    %videoMem = GFXCardProfilerAPI::getVideoMemoryMB();
    
-   return AutodetectGraphics_Apply( %shaderVer, %intel, %videoMem );
-}
-
-function AutodetectGraphics_Apply(%shaderVer, %intel, %videoMem )
-{
    if ( %shaderVer < 2.0 )
    {      
       echo("Your video card does not meet the minimum requirment of shader model 2.0.");
@@ -1074,17 +1194,14 @@ function AutodetectGraphics_Apply(%shaderVer, %intel, %videoMem )
          
          $pref::Shadows::useShadowCaching = true;
          
-         $pref::Water::enableTrueReflections = false;
-         $pref::Video::enableParallaxMapping = false;
-         $pref::PostFX::EnableSSAO = false;
-         $pref::PostFX::EnableHDR = false;
-         $pref::PostFX::EnableDOF = false;
-         $pref::PostFX::EnableLightRays = false;
-         $pref::PostFX::EnableVignette = false;
-         
-         $pref::Video::AAMode = "None";
-         $pref::Video::AA = 0;
-         $pref::Video::defaultAnisotropy = 0;
+         AnisotropicFilterOptionsGroup.applySetting("None");
+         AntiAliasingOptionsGroup.applySetting("Off");
+         ParallaxOptionsGroup.applySetting("Off");
+         TrueWaterReflectionsOptionsGroup.applySetting("Off");
+         PostFXSSAOOptionsGroup.applySetting("Off");
+         PostFXDOFOptionsGroup.applySetting("Off");
+         PostFXVignetteOptionsGroup.applySetting("Off");
+         PostFXLightRayOptionsGroup.applySetting("Off");
       }
       else
       {
@@ -1101,17 +1218,14 @@ function AutodetectGraphics_Apply(%shaderVer, %intel, %videoMem )
          
          $pref::Shadows::useShadowCaching = true;
          
-         $pref::Water::enableTrueReflections = false;
-         $pref::Video::enableParallaxMapping = false;
-         $pref::PostFX::EnableSSAO = false;
-         $pref::PostFX::EnableHDR = false;
-         $pref::PostFX::EnableDOF = false;
-         $pref::PostFX::EnableLightRays = false;
-         $pref::PostFX::EnableVignette = false;
-         
-         $pref::Video::AAMode = "None";
-         $pref::Video::AA = 0;
-         $pref::Video::defaultAnisotropy = 0;
+         AnisotropicFilterOptionsGroup.applySetting("None");
+         AntiAliasingOptionsGroup.applySetting("Off");
+         ParallaxOptionsGroup.applySetting("Off");
+         TrueWaterReflectionsOptionsGroup.applySetting("Off");
+         PostFXSSAOOptionsGroup.applySetting("Off");
+         PostFXDOFOptionsGroup.applySetting("Off");
+         PostFXVignetteOptionsGroup.applySetting("Off");
+         PostFXLightRayOptionsGroup.applySetting("Off");
       }
    }   
    else
@@ -1132,17 +1246,14 @@ function AutodetectGraphics_Apply(%shaderVer, %intel, %videoMem )
          //Should this default to on in ultra settings?
          $pref::Shadows::useShadowCaching = true;
          
-         $pref::Water::enableTrueReflections = true;
-         $pref::Video::enableParallaxMapping = true;
-         $pref::PostFX::EnableSSAO = true;
-         $pref::PostFX::EnableHDR = true;
-         $pref::PostFX::EnableDOF = true;
-         $pref::PostFX::EnableLightRays = true;
-         $pref::PostFX::EnableVignette = true;
-         
-         $pref::Video::AAMode = "SMAA High";
-         $pref::Video::AA = 4;
-         $pref::Video::defaultAnisotropy = 16;
+         AnisotropicFilterOptionsGroup.applySetting("16x");
+         AntiAliasingOptionsGroup.applySetting("SMAA High");
+         ParallaxOptionsGroup.applySetting("On");
+         TrueWaterReflectionsOptionsGroup.applySetting("On");
+         PostFXSSAOOptionsGroup.applySetting("On");
+         PostFXDOFOptionsGroup.applySetting("On");
+         PostFXVignetteOptionsGroup.applySetting("On");
+         PostFXLightRayOptionsGroup.applySetting("On");
       }
       else if ( %videoMem > 400 || %videoMem == 0 )
       {
@@ -1159,17 +1270,14 @@ function AutodetectGraphics_Apply(%shaderVer, %intel, %videoMem )
          
          $pref::Shadows::useShadowCaching = true;
          
-         $pref::Water::enableTrueReflections = true;
-         $pref::Video::enableParallaxMapping = true;
-         $pref::PostFX::EnableSSAO = false;
-         $pref::PostFX::EnableHDR = true;
-         $pref::PostFX::EnableDOF = true;
-         $pref::PostFX::EnableLightRays = true;
-         $pref::PostFX::EnableVignette = true;
-         
-         $pref::Video::AAMode = "SMAA";
-         $pref::Video::AA = 4;
-         $pref::Video::defaultAnisotropy = 4;
+         AnisotropicFilterOptionsGroup.applySetting("4x");
+         AntiAliasingOptionsGroup.applySetting("SMAA");
+         ParallaxOptionsGroup.applySetting("On");
+         TrueWaterReflectionsOptionsGroup.applySetting("On");
+         PostFXSSAOOptionsGroup.applySetting("Off");
+         PostFXDOFOptionsGroup.applySetting("On");
+         PostFXVignetteOptionsGroup.applySetting("On");
+         PostFXLightRayOptionsGroup.applySetting("On");
          
          if ( %videoMem == 0 )
             echo("Torque was unable to detect available video memory. Applying 'Medium' quality.");
@@ -1189,30 +1297,16 @@ function AutodetectGraphics_Apply(%shaderVer, %intel, %videoMem )
          
          $pref::Shadows::useShadowCaching = true;
          
-         $pref::Water::enableTrueReflections = true;
-         $pref::Video::enableParallaxMapping = true;
-         $pref::PostFX::EnableSSAO = false;
-         $pref::PostFX::EnableHDR = false;
-         $pref::PostFX::EnableDOF = false;
-         $pref::PostFX::EnableLightRays = false;
-         $pref::PostFX::EnableVignette = false;
-         
-         $pref::Video::AAMode = "FXAA";
-         $pref::Video::AA = 0;
-         $pref::Video::defaultAnisotropy = 0;
+         AnisotropicFilterOptionsGroup.applySetting("None");
+         AntiAliasingOptionsGroup.applySetting("FXAA");
+         ParallaxOptionsGroup.applySetting("On");
+         TrueWaterReflectionsOptionsGroup.applySetting("On");
+         PostFXSSAOOptionsGroup.applySetting("Off");
+         PostFXDOFOptionsGroup.applySetting("Off");
+         PostFXVignetteOptionsGroup.applySetting("Off");
+         PostFXLightRayOptionsGroup.applySetting("Off");
       }
    }
-   
-   //%this.refresh();
-   
-   //%this.apply();
-   
-   //force postFX updates
-   PostFXManager.settingsEffectSetEnabled(SSAOPostFx, $pref::PostFX::EnableSSAO);
-   PostFXManager.settingsEffectSetEnabled(HDRPostFX, $pref::PostFX::EnableHDR);
-   PostFXManager.settingsEffectSetEnabled(DepthOfFieldPostFX, $pref::PostFX::EnableDOF);
-   PostFXManager.settingsEffectSetEnabled(LightRayPostFX, $pref::PostFX::EnableLightRays);
-   PostFXManager.settingsEffectSetEnabled(VignettePostFX, $pref::PostFX::EnableVignette);
    
    echo("Graphics quality settings have been auto detected.");
 }
@@ -1352,4 +1446,20 @@ function getDisplayDeviceId(%displayDeviceName)
    }
    
    return -1;
+}
+
+function getDisplayDeviceName()
+{
+   %numDevices = Canvas.getMonitorCount();
+   %devicesList = "";
+   for(%i = 0; %i < %numDevices; %i++)
+   {
+      %device = (%i+1) @ " - " @ Canvas.getMonitorName(%i);
+      if(%i==0)
+         %devicesList = %device;
+      else
+         %devicesList = %devicesList @ "\t" @ %device;
+   }
+   
+   return getField(%devicesList, $pref::Video::deviceId);  
 }

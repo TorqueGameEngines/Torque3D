@@ -61,7 +61,7 @@ GuiControl* GuiInspectorTypeMenuBase::constructEditControl()
    GuiPopUpMenuCtrl *menu = dynamic_cast<GuiPopUpMenuCtrl*>(retCtrl);
 
    // Let's make it look pretty.
-   retCtrl->setDataField( StringTable->insert("profile"), NULL, "GuiPopUpMenuProfile" );
+   retCtrl->setDataField( StringTable->insert("profile"), NULL, "ToolsGuiPopupMenuProfile" );
    _registerEditControl( retCtrl );
 
    // Configure it to update our value when the popup is closed

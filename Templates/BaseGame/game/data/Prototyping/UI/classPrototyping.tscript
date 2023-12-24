@@ -90,6 +90,56 @@ function setProtoTypeFilePath(%targetPath)
    classPrototyping-->targetPath.text = %targetPath;
 }
 
+function classPrototyping::readExistingLayout(%this)
+{
+    for (%i=0; %i<%this.classCount; %i++)
+    {
+        %inheritanceOrder = %this.classCount-(%i+1);
+        %obj = "ProtoClassSelect"@ %i;
+        if (%obj.isStateOn())
+            %namespaceUsed = getWord(%this.classlist,%inheritanceOrder);
+    }
+    
+	%file = new FileObject();
+    %filename = classPrototyping-->targetPath.text @"/"@ %namespaceUsed @"."@ $TorqueScriptFileExtension;
+    
+    if (!isObject(%this.callbacksDefined))
+        %this.callbacksDefined = new arrayobject();
+    %this.callbacksDefined.empty();
+    %this.reportedCommands = false;
+    %this.reportedVariables = false;
+    %this.callbackBlockDefined = false;
+    
+    %key=0;
+	if(%file.openForRead(%filename))
+    {
+        while (!%file.isEof())
+        {
+            %line = %file.readLine();
+            
+            //have we already reported commands?
+            if (startsWith(%line,"/* Available Commands:") )
+                %this.reportedCommands = true;
+                
+            //have we already reported variables?
+            if (startsWith(%line,"/* HardCoded Variables") )
+                %this.reportedVariables = true;
+                
+            if (startsWith(%line,"/*--- Callbacks ---*/") )
+                %this.callbackBlockDefined = true;
+            
+            //get list of methods already existing
+            if (startswith(%line,"function "@ %namespaceUsed) )
+            {
+                %methodName = strreplace(%line,"::"," ");
+                %methodName = getWord(strreplace(%methodName,"("," "),2);
+                %this.callbacksDefined.add(%key++,%methodName);
+            }
+        }
+    }
+	%file.delete();
+}
+
 function classPrototyping::writeResults(%this)
 {
     %namespaceUsed = "";
@@ -100,18 +150,12 @@ function classPrototyping::writeResults(%this)
         if (%obj.isStateOn())
             %namespaceUsed = getWord(%this.classlist,%inheritanceOrder);
     }
+    %this.readExistingLayout();
 	%file = new FileObject();
     %filename = classPrototyping-->targetPath.text @"/"@ %namespaceUsed @"."@ $TorqueScriptFileExtension;
-	if(%file.openForWrite(%filename))
+	if(%file.openForAppend(%filename))
     {
-        for (%i=0; %i<%this.methodCount; %i++)
-        {
-            %obj = "ProtoMethodSelect"@ %i;
-            if (%obj.isStateOn())
-                %file.writeLine(strreplace(%this.methodArray.getValue(%i),%this.instanceName,%namespaceUsed));
-        }
-    
-        if (ReportCommands.isStateOn())
+        if (ReportCommands.isStateOn() && %this.reportedCommands == false)
         {
             %this.commandArray = getMethodSigsNS(%this.nameSpaceUsed,true);
             %this.commandCount = %this.commandArray.count();
@@ -123,7 +167,7 @@ function classPrototyping::writeResults(%this)
             %file.writeLine("*/");
         }
     
-        if (ReportVariables.isStateOn())
+        if (ReportVariables.isStateOn() && %this.reportedVariables == false)
         {
             %file.writeLine("/* HardCoded Variables");
             for (%i=0; %i< getFieldCountNS(%this.nameSpaceUsed); %i++)
@@ -131,6 +175,25 @@ function classPrototyping::writeResults(%this)
                 %file.writeLine(getFieldNS(%this.nameSpaceUsed,%i));
             }
             %file.writeLine("*/");
+        }
+        
+        if (%this.callbackBlockDefined == false)
+            %file.writeLine("\n/*--- Callbacks ---*/\n");
+            
+        for (%i=0; %i<%this.methodCount; %i++)
+        {
+            %obj = "ProtoMethodSelect"@ %i;
+            if (%obj.isStateOn())
+            {
+                %methodDef = getRecord(%this.methodArray.getValue(%i),0);
+                %methodName = strreplace(%methodDef,"::"," ");
+                %methodName = getWord(strreplace(%methodName,"("," "),2);
+                if (%this.callbacksDefined.countValue(%methodName)==0)
+                {
+                    echo(%methodName @ "not found. defining...");
+                    %file.writeLine("\n" @ strreplace(%this.methodArray.getValue(%i),%this.instanceName,%namespaceUsed));
+                }
+            }
         }
     }
 	else

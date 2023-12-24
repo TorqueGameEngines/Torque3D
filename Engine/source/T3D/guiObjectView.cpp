@@ -91,7 +91,7 @@ IMPLEMENT_CALLBACK( GuiObjectView, onMouseLeave, void, (),(),
 GuiObjectView::GuiObjectView()
    :  mMouseState( None ),
       mLastMousePoint( 0, 0 ),
-      mModel( NULL ),
+      mModelInstance(NULL),
       mMaxOrbitDist( 5.0f ),
       mMinOrbitDist( 0.0f ),
       mCameraRotation( 0.0f, 0.0f, 0.0f ),
@@ -99,13 +99,13 @@ GuiObjectView::GuiObjectView()
       mCameraSpeed( 0.01f ),
       mMountNode( -1 ),
       mMountNodeName( "mount0" ),
-      mMountedModel( NULL ),
+      mMountedModelInstance( NULL ),
       mAnimationSeq( -1 ),
       mRunThread( NULL ),
       mLastRenderTime( 0 ),
       mLight( NULL ),
       mLightColor( 1.0f, 1.0f, 1.0f ),
-      mLightAmbient( 0.5f, 0.5f, 0.5f ),
+      mLightAmbient( 1.0f, 1.0f, 1.0f ),
       mLightDirection( 0.f, 0.707f, -0.707f )
 {
    mCameraMatrix.identity();
@@ -117,16 +117,14 @@ GuiObjectView::GuiObjectView()
    // By default don't do dynamic reflection
    // updates for this viewport.
    mReflectPriority = 0.0f;
+   INIT_ASSET(Model);
+   INIT_ASSET(MountedModel);
 }
 
 //------------------------------------------------------------------------------
 
 GuiObjectView::~GuiObjectView()
 {
-   if( mModel )
-      SAFE_DELETE( mModel );
-   if( mMountedModel )
-      SAFE_DELETE( mMountedModel );
    if( mLight )
       SAFE_DELETE( mLight );
 }
@@ -136,13 +134,10 @@ GuiObjectView::~GuiObjectView()
 void GuiObjectView::initPersistFields()
 {
    docsURL;
-   addGroup( "Model" );
-   
-      addField( "shapeFile", TypeStringFilename, Offset( mModelName, GuiObjectView ),
-         "The object model shape file to show in the view." );
+   addGroup( "Model" );   
+      INITPERSISTFIELD_SHAPEASSET(Model, GuiObjectView, "The source shape asset.");
       addField( "skin", TypeRealString, Offset( mSkinName, GuiObjectView ),
-         "The skin to use on the object model." );
-   
+         "The skin to use on the object model." );   
    endGroup( "Model" );
    
    addGroup( "Animation" );
@@ -152,10 +147,8 @@ void GuiObjectView::initPersistFields()
 
    endGroup( "Animation" );
    
-   addGroup( "Mounting" );
-   
-      addField( "mountedShapeFile", TypeStringFilename, Offset( mMountedModelName, GuiObjectView ),
-         "Optional shape file to mount on the primary model (e.g. weapon)." );
+   addGroup( "Mounting" );   
+      INITPERSISTFIELD_SHAPEASSET(MountedModel, GuiObjectView, "The mounted shape asset.");
       addField( "mountedSkin", TypeRealString, Offset( mMountSkinName, GuiObjectView ),
          "Skin name used on mounted shape file." );
       addField( "mountedNode", TypeRealString, Offset( mMountNodeName, GuiObjectView ),
@@ -197,9 +190,7 @@ void GuiObjectView::onStaticModified( StringTableEntry slotName, const char* new
 {
    Parent::onStaticModified( slotName, newValue );
    
-   static StringTableEntry sShapeFile = StringTable->insert( "shapeFile" );
    static StringTableEntry sSkin = StringTable->insert( "skin" );
-   static StringTableEntry sMountedShapeFile = StringTable->insert( "mountedShapeFile" );
    static StringTableEntry sMountedSkin = StringTable->insert( "mountedSkin" );
    static StringTableEntry sMountedNode = StringTable->insert( "mountedNode" );
    static StringTableEntry sLightColor = StringTable->insert( "lightColor" );
@@ -211,12 +202,8 @@ void GuiObjectView::onStaticModified( StringTableEntry slotName, const char* new
    static StringTableEntry sCameraRotation = StringTable->insert( "cameraRotation" );
    static StringTableEntry sAnimSequence = StringTable->insert( "animSequence" );
    
-   if( slotName == sShapeFile )
-      setObjectModel( String( mModelName ) );
-   else if( slotName == sSkin )
+   if( slotName == sSkin )
       setSkin( String( mSkinName ) );
-   else if( slotName == sMountedShapeFile )
-      setMountedObject( String( mMountedModelName ) );
    else if( slotName == sMountedSkin )
       setMountSkin( String( mMountSkinName ) );
    else if( slotName == sMountedNode )
@@ -325,7 +312,7 @@ void GuiObjectView::setObjectAnimation( S32 index )
    mAnimationSeq = index;
    mAnimationSeqName = String();
    
-   if( mModel )
+   if(mModelInstance)
       _initAnimation();
 }
 
@@ -336,107 +323,123 @@ void GuiObjectView::setObjectAnimation( const String& sequenceName )
    mAnimationSeq = -1;
    mAnimationSeqName = sequenceName;
    
-   if( mModel )
+   if(mModelInstance)
       _initAnimation();
 }
 
 //------------------------------------------------------------------------------
 
-void GuiObjectView::setObjectModel( const String& modelName )
+bool GuiObjectView::setObjectModel( const String& modelName )
 {
-   SAFE_DELETE( mModel );
    mRunThread = 0;
-   mModelName = String::EmptyString;
-   
-   // Load the shape.
 
-   Resource< TSShape > model = ResourceManager::get().load( modelName );
-   if( !model )
+   // Load the shape.
+   _setModel(modelName);
+   if( !getModelResource())
    {
       Con::warnf( "GuiObjectView::setObjectModel - Failed to load model '%s'", modelName.c_str() );
-      return;
+      return false;
    }
-   
+
+   if (!getModelResource()->preloadMaterialList(getModelResource().getPath())) return false;
+
    // Instantiate it.
 
-   mModel = new TSShapeInstance( model, true );
-   mModelName = modelName;
+   mModelInstance = new TSShapeInstance(getModelResource(), true );
+   mModelInstance->resetMaterialList();
+   mModelInstance->cloneMaterialList();
    
    if( !mSkinName.isEmpty() )
-      mModel->reSkin( mSkinName );
+      mModelInstance->reSkin( mSkinName );
 
+   TSMaterialList* pMatList = mModelInstance->getMaterialList();
+   pMatList->setTextureLookupPath(mModelAsset->getShapeFileName());
+   mModelInstance->initMaterialList();
    // Initialize camera values.
    
-   mOrbitPos = mModel->getShape()->center;
-   mMinOrbitDist = mModel->getShape()->mRadius;
+   mOrbitPos = getModelResource()->center;
+   mMinOrbitDist = getModelResource()->mRadius;
 
    // Initialize animation.
    
    _initAnimation();
    _initMount();
+   return true;
+}
+
+void GuiObjectView::onModelChanged()
+{
+
 }
 
 //------------------------------------------------------------------------------
 
 void GuiObjectView::setSkin( const String& name )
 {
-   if( mModel )
-      mModel->reSkin( name, mSkinName );
+   if(mModelInstance)
+      mModelInstance->reSkin( name, mSkinName );
       
    mSkinName = name;
 }
 
+
 //------------------------------------------------------------------------------
 
-void GuiObjectView::setMountSkin( const String& name )
+bool GuiObjectView::setMountedObject( const String& modelName )
 {
-   if( mMountedModel )
-      mMountedModel->reSkin( name, mMountSkinName );
-      
+   // Load the model.   
+   _setMountedModel(modelName);
+   if (!getMountedModelResource())
+   {
+      Con::warnf("GuiObjectView::setMountedObject - Failed to load model '%s'", modelName.c_str());
+      return false;
+   }
+
+   if (!getMountedModelResource()->preloadMaterialList(getMountedModelResource().getPath())) return false;
+
+   mMountedModelInstance = new TSShapeInstance(getMountedModelResource(), true);
+   mMountedModelInstance->resetMaterialList();
+   mMountedModelInstance->cloneMaterialList();
+
+   if( !mMountSkinName.isEmpty() )
+      mMountedModelInstance->reSkin( mMountSkinName );
+
+   mMountedModelInstance->initMaterialList();
+   
+   if(mMountedModelInstance)
+      _initMount();
+   return true;
+}
+
+void GuiObjectView::onMountedModelChanged()
+{
+
+}
+
+//------------------------------------------------------------------------------
+
+void GuiObjectView::setMountSkin(const String& name)
+{
+   if (mMountedModelInstance)
+      mMountedModelInstance->reSkin(name, mMountSkinName);
+
    mMountSkinName = name;
 }
 
 //------------------------------------------------------------------------------
 
-void GuiObjectView::setMountNode( S32 index )
+void GuiObjectView::setMountNode(S32 index)
 {
-   setMountNode( String::ToString( "mount%i", index ) );
+   setMountNode(String::ToString("mount%i", index));
 }
 
 //------------------------------------------------------------------------------
 
-void GuiObjectView::setMountNode( const String& name )
+void GuiObjectView::setMountNode(const String& name)
 {
    mMountNodeName = name;
-   
-   if( mModel )
-      _initMount();
-}
 
-//------------------------------------------------------------------------------
-
-void GuiObjectView::setMountedObject( const String& modelName )
-{
-   SAFE_DELETE( mMountedModel );
-   mMountedModelName = String::EmptyString;
-
-   // Load the model.
-   
-   Resource< TSShape > model = ResourceManager::get().load( modelName );
-   if( !model )
-   {
-      Con::warnf( "GuiObjectView::setMountedObject -  Failed to load object model '%s'",
-         modelName.c_str() );
-      return;
-   }
-
-   mMountedModel = new TSShapeInstance( model, true );
-   mMountedModelName = modelName;
-   
-   if( !mMountSkinName.isEmpty() )
-      mMountedModel->reSkin( mMountSkinName );
-   
-   if( mModel )
+   if (mModelInstance)
       _initMount();
 }
 
@@ -483,7 +486,7 @@ void GuiObjectView::onMouseLeave( const GuiEvent & event )
 
 void GuiObjectView::renderWorld( const RectI& updateRect )
 {
-   if( !mModel )
+   if( !mModelInstance)
       return;
       
    GFXTransformSaver _saveTransforms;
@@ -538,26 +541,26 @@ void GuiObjectView::renderWorld( const RectI& updateRect )
 
    // Render primary model.
 
-   if( mModel )
+   if(mModelInstance)
    {
       if( mRunThread )
       {
-         mModel->advanceTime( dt / 1000.f, mRunThread );
-         mModel->animate();
+         mModelInstance->advanceTime( dt / 1000.f, mRunThread );
+         mModelInstance->animate();
       }
       
-      mModel->render( rdata );
+      mModelInstance->render( rdata );
    }
    
    // Render mounted model.
 
-   if( mMountedModel && mMountNode != -1 )
+   if( mMountedModelInstance && mMountNode != -1 )
    {
       GFX->pushWorldMatrix();
-      GFX->multWorld( mModel->mNodeTransforms[ mMountNode ] );
+      GFX->multWorld(mModelInstance->mNodeTransforms[ mMountNode ] );
       GFX->multWorld( mMountTransform );
       
-      mMountedModel->render( rdata );
+      mMountedModelInstance->render( rdata );
 
       GFX->popWorldMatrix();
    }
@@ -620,7 +623,7 @@ void GuiObjectView::setLightDirection( const Point3F& direction )
 
 void GuiObjectView::_initAnimation()
 {
-   AssertFatal( mModel, "GuiObjectView::_initAnimation - No model loaded!" );
+   AssertFatal(getModelResource(), "GuiObjectView::_initAnimation - No model loaded!" );
    
    if( mAnimationSeqName.isEmpty() && mAnimationSeq == -1 )
       return;
@@ -629,7 +632,7 @@ void GuiObjectView::_initAnimation()
             
    if( !mAnimationSeqName.isEmpty() )
    {
-      mAnimationSeq = mModel->getShape()->findSequence( mAnimationSeqName );
+      mAnimationSeq = getModelResource()->findSequence( mAnimationSeqName );
       
       if( mAnimationSeq == -1 )
       {
@@ -646,7 +649,7 @@ void GuiObjectView::_initAnimation()
       
    if( mAnimationSeq != -1 )
    {
-      if( mAnimationSeq >= mModel->getShape()->sequences.size() )
+      if( mAnimationSeq >= getModelResource()->sequences.size() )
       {
          Con::errorf( "GuiObjectView::_initAnimation - Sequence '%i' out of range for model '%s'",
             mAnimationSeq,
@@ -658,9 +661,9 @@ void GuiObjectView::_initAnimation()
       }
       
       if( !mRunThread )
-         mRunThread = mModel->addThread();
+         mRunThread = mModelInstance->addThread();
          
-      mModel->setSequence( mRunThread, mAnimationSeq, 0.f );
+      mModelInstance->setSequence( mRunThread, mAnimationSeq, 0.f );
    }
    
    mLastRenderTime = Platform::getVirtualMilliseconds();
@@ -670,9 +673,9 @@ void GuiObjectView::_initAnimation()
 
 void GuiObjectView::_initMount()
 {
-   AssertFatal( mModel, "GuiObjectView::_initMount - No model loaded!" );
+   AssertFatal(mModelInstance, "GuiObjectView::_initMount - No model loaded!" );
       
-   if( !mMountedModel )
+   if( !mModelInstance)
       return;
       
    mMountTransform.identity();
@@ -681,7 +684,7 @@ void GuiObjectView::_initMount()
    
    if( !mMountNodeName.isEmpty() )
    {
-      mMountNode = mModel->getShape()->findNode( mMountNodeName );
+      mMountNode = getModelResource()->findNode( mMountNodeName );
       if( mMountNode == -1 )
       {
          Con::errorf( "GuiObjectView::_initMount - No node '%s' on '%s'",
@@ -695,7 +698,7 @@ void GuiObjectView::_initMount()
    
    // Make sure mount node is valid.
    
-   if( mMountNode != -1 && mMountNode >= mModel->getShape()->nodes.size() )
+   if( mMountNode != -1 && mMountNode >= getModelResource()->nodes.size() )
    {
       Con::errorf( "GuiObjectView::_initMount - Mount node index '%i' out of range for '%s'",
          mMountNode,
@@ -708,11 +711,11 @@ void GuiObjectView::_initMount()
    
    // Look up node on the mounted model from
    // which to mount to the primary model's node.
-
-   S32 mountPoint = mMountedModel->getShape()->findNode( "mountPoint" );
+   if (!getMountedModelResource()) return;
+   S32 mountPoint = getMountedModelResource()->findNode( "mountPoint" );
    if( mountPoint != -1 )
    {
-      mMountedModel->getShape()->getNodeWorldTransform( mountPoint, &mMountTransform ),
+      getMountedModelResource()->getNodeWorldTransform(mountPoint, &mMountTransform),
       mMountTransform.inverse();
    }
 }
@@ -733,12 +736,12 @@ DefineEngineMethod( GuiObjectView, getModel, const char*, (),,
    "@return Name of the displayed model.\n\n"
    "@see GuiControl")
 {
-   return Con::getReturnBuffer( object->getModelName() );
+   return Con::getReturnBuffer( object->getModel() );
 }
 
 //-----------------------------------------------------------------------------
 
-DefineEngineMethod( GuiObjectView, setModel, void, (const char* shapeName),,
+DefineEngineMethod( GuiObjectView, setModel, bool, (const char* shapeName),,
    "@brief Sets the model to be displayed in this control.\n\n"
    "@param shapeName Name of the model to display.\n"
    "@tsexample\n"
@@ -749,7 +752,7 @@ DefineEngineMethod( GuiObjectView, setModel, void, (const char* shapeName),,
    "@endtsexample\n\n"
    "@see GuiControl")
 {
-   object->setObjectModel( shapeName );
+   return object->setObjectModel( shapeName );
 }
 
 //-----------------------------------------------------------------------------
@@ -763,7 +766,7 @@ DefineEngineMethod( GuiObjectView, getMountedModel, const char*, (),,
    "@return Name of the mounted model.\n\n"
    "@see GuiControl")
 {
-   return Con::getReturnBuffer( object->getMountedModelName() );
+   return Con::getReturnBuffer( object->getMountedModel() );
 }
 
 //-----------------------------------------------------------------------------

@@ -66,6 +66,10 @@ uniform vec4 albedo;
 #define DEBUGVIZ_CONTRIB 0
 #endif
 
+#ifndef CAPTURE_LIGHT_FLOOR
+#define CAPTURE_LIGHT_FLOOR 0.04
+#endif
+
 vec3 getDistanceVectorToPlane( vec3 origin, vec3 direction, vec4 plane )
 {
    float denum = dot( plane.xyz, direction.xyz );
@@ -234,7 +238,7 @@ vec3 evaluateStandardBRDF(Surface surface, SurfaceToLight surfaceToLight)
    vec3 Fr = D * F * Vis;
 
 #if CAPTURING == 1
-   return saturate(mix(Fd + Fr,surface.f0,surface.metalness));
+   return mix(Fd + Fr, surface.baseColor.rgb, surface.metalness);
 #else
    return Fd + Fr;
 #endif
@@ -243,23 +247,38 @@ vec3 evaluateStandardBRDF(Surface surface, SurfaceToLight surfaceToLight)
 
 vec3 getDirectionalLight(Surface surface, SurfaceToLight surfaceToLight, vec3 lightColor, float lightIntensity, float shadow)
 {
-   vec3 factor = lightColor * max(surfaceToLight.NdotL * shadow * lightIntensity, 0.0f);
+#if CAPTURING == 1
+   float lightfloor = CAPTURE_LIGHT_FLOOR;
+#else
+   float lightfloor = 0.0;
+#endif
+   vec3 factor = lightColor * max(surfaceToLight.NdotL * shadow * lightIntensity, lightfloor);
    return evaluateStandardBRDF(surface,surfaceToLight) * factor;
 }
 
 vec3 getPunctualLight(Surface surface, SurfaceToLight surfaceToLight, vec3 lightColor, float lightIntensity, float radius, float shadow)
 {
+#if CAPTURING == 1
+   float lightfloor = CAPTURE_LIGHT_FLOOR;
+#else
+   float lightfloor = 0.0;
+#endif
    float attenuation = getDistanceAtt(surfaceToLight.Lu, radius);
-   vec3 factor = lightColor * max(surfaceToLight.NdotL * shadow * lightIntensity * attenuation, 0.0f);
+   vec3 factor = lightColor * max(surfaceToLight.NdotL * shadow * lightIntensity * attenuation, lightfloor);
    return evaluateStandardBRDF(surface,surfaceToLight) * factor;
 }
 
 vec3 getSpotlight(Surface surface, SurfaceToLight surfaceToLight, vec3 lightColor, float lightIntensity, float radius, vec3 lightDir, vec2 lightSpotParams, float shadow)
 {
+#if CAPTURING == 1
+   float lightfloor = CAPTURE_LIGHT_FLOOR;
+#else
+   float lightfloor = 0.0;
+#endif
    float attenuation = 1.0f;
    attenuation *= getDistanceAtt(surfaceToLight.Lu, radius);
    attenuation *= getSpotAngleAtt(-surfaceToLight.L, lightDir, lightSpotParams.xy);
-   vec3 factor = lightColor * max(surfaceToLight.NdotL* shadow * lightIntensity * attenuation, 0.0f) ;
+   vec3 factor = lightColor * max(surfaceToLight.NdotL* shadow * lightIntensity * attenuation, lightfloor);
    return evaluateStandardBRDF(surface,surfaceToLight) * factor;
 }
 

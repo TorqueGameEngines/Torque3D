@@ -921,6 +921,13 @@ void ScatterSky::_initMoon()
       features.removeFeature(MFT_ReflectionProbes);      
       features.addFeature(MFT_isBackground);
       mMoonMatInst = MATMGR->createMatInstance(mMoonMatAsset->getMaterialDefinitionName(), features, getGFXVertexFormat<GFXVertexPCT>());
+
+      GFXStateBlockDesc desc;
+      desc.setBlend(true);
+      desc.setAlphaTest(true);
+      desc.setZReadWrite(true, false);
+      mMoonMatInst->addStateBlockDesc(desc);
+      mMoonMatInst->init(features, getGFXVertexFormat<GFXVertexPCT>());
    }
 }
 

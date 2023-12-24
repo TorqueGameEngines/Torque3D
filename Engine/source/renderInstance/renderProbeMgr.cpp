@@ -59,6 +59,8 @@ RenderProbeMgr *RenderProbeMgr::smProbeManager = NULL;
 // This variable is a global toggle on if reflection probes should be rendered or not
 bool RenderProbeMgr::smRenderReflectionProbes = true;
 
+bool RenderProbeMgr::smBakeReflectionProbes = false;
+
 // This variable defines the maximum draw distance of a probe.
 F32 RenderProbeMgr::smMaxProbeDrawDistance = 100;
 
@@ -500,27 +502,56 @@ void RenderProbeMgr::reloadTextures()
 
 void RenderProbeMgr::preBake()
 {
-   Con::setVariable("$Probes::Capturing", "1");
+   RenderProbeMgr::smBakeReflectionProbes = true;
+   GFXShader::addGlobalMacro("CAPTURING", String("1"));
+
+   //Con::setVariable("$Probes::Capturing", "1");
    mRenderMaximumNumOfLights = AdvancedLightBinManager::smMaximumNumOfLights;
    mRenderUseLightFade = AdvancedLightBinManager::smUseLightFade;
 
    AdvancedLightBinManager::smMaximumNumOfLights = -1;
    AdvancedLightBinManager::smUseLightFade = false;
+
+   //kickstart rendering
+   LightManager* lm = LIGHTMGR;
+   if (lm)
+   {
+      SceneManager* sm = lm->getSceneManager();
+      if (sm && sm->getContainer() == &gClientContainer)
+      {
+         lm->deactivate();
+         lm->activate(sm);
+      }
+   }
 }
+
 void RenderProbeMgr::postBake()
 {
-   Con::setVariable("$Probes::Capturing", "0");
+   RenderProbeMgr::smBakeReflectionProbes = false;
+   GFXShader::addGlobalMacro("CAPTURING", String("0"));
+   //Con::setVariable("$Probes::Capturing", "0");
    AdvancedLightBinManager::smMaximumNumOfLights = mRenderMaximumNumOfLights;
    AdvancedLightBinManager::smUseLightFade = mRenderUseLightFade;
+
+   //kickstart rendering
+   LightManager* lm = LIGHTMGR;
+   if (lm)
+   {
+      SceneManager* sm = lm->getSceneManager();
+      if (sm && sm->getContainer() == &gClientContainer)
+      {
+         lm->deactivate();
+         lm->activate(sm);
+      }
+   }
 }
+
 void RenderProbeMgr::bakeProbe(ReflectionProbe* probe)
 {
    GFXDEBUGEVENT_SCOPE(RenderProbeMgr_Bake, ColorI::WHITE);
 
    Con::warnf("RenderProbeMgr::bakeProbe() - Beginning bake!");
    U32 startMSTime = Platform::getRealMilliseconds();
-
-   preBake();
 
    String path = Con::getVariable("$pref::ReflectionProbes::CurrentLevelPath", "levels/");
    U32 resolution = Con::getIntVariable("$pref::ReflectionProbes::BakeResolution", 64);
@@ -641,7 +672,6 @@ void RenderProbeMgr::bakeProbe(ReflectionProbe* probe)
    if (!renderWithProbes)
       RenderProbeMgr::smRenderReflectionProbes = probeRenderState;
 
-   postBake();
 
    cubeRefl.unregisterReflector();
 
@@ -845,7 +875,7 @@ void RenderProbeMgr::render( SceneRenderState *state )
    _setupPerFrameParameters(state);
 
    // Early out if nothing to draw.
-   if ((!RenderProbeMgr::smRenderReflectionProbes && !dStrcmp(Con::getVariable("$Probes::Capturing", "0"), "1")) || (!mHasSkylight && mProbeData.effectiveProbeCount == 0))
+   if (!RenderProbeMgr::smRenderReflectionProbes || (!mHasSkylight && mProbeData.effectiveProbeCount == 0))
    {
       getProbeArrayEffect()->setSkip(true);
       mActiveProbes.clear();
@@ -875,9 +905,6 @@ void RenderProbeMgr::render( SceneRenderState *state )
    String probePerFrame = Con::getVariable("$pref::MaxProbesPerFrame", "8");
    mProbeArrayEffect->setShaderMacro("MAX_PROBES", probePerFrame);
 
-   String probeCapturing = Con::getVariable("$Probes::Capturing", "0");
-   mProbeArrayEffect->setShaderMacro("CAPTURING", probeCapturing);
-   
    mProbeArrayEffect->setTexture(3, mBRDFTexture);
    mProbeArrayEffect->setCubemapArrayTexture(4, mPrefilterArray);
    mProbeArrayEffect->setCubemapArrayTexture(5, mIrradianceArray);
@@ -953,11 +980,15 @@ void RenderProbeMgr::render( SceneRenderState *state )
 DefineEngineMethod(RenderProbeMgr, bakeProbe, void, (ReflectionProbe* probe), (nullAsType< ReflectionProbe*>()),
    "@brief Bakes the cubemaps for a reflection probe\n\n.")
 {
+   object->preBake();
    if(probe != nullptr)
       object->bakeProbe(probe);
+   object->postBake();
 }
 
 DefineEngineMethod(RenderProbeMgr, bakeProbes, void, (),, "@brief Iterates over all reflection probes in the scene and bakes their cubemaps\n\n.")
 {
+   object->preBake();
    object->bakeProbes();
+   object->postBake();
 }

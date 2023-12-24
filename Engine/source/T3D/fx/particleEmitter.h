@@ -238,7 +238,7 @@ class ParticleEmitter : public GameBase
                                const LinearColorF &ambientColor,
                                ParticleVertexType *lVerts );
 
-   inline void setupOriented( Particle *part,
+   void setupOriented( Particle *part,
                               const Point3F &camPos,
                               const LinearColorF &ambientColor,
                               ParticleVertexType *lVerts );

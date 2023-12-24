@@ -328,7 +328,7 @@ void SimObject::writeFields(Stream &stream, U32 tabStop)
       const AbstractClassRep::Field* f = &list[i];
 
       // Skip the special field types.
-      if ( f->type >= AbstractClassRep::ARCFirstCustomField )
+      if ( f->type >= AbstractClassRep::ARCFirstCustomField || f->flag.test(AbstractClassRep::FieldFlags::FIELD_ComponentInspectors))
          continue;
 
       for(U32 j = 0; S32(j) < f->elementCount; j++)
@@ -924,7 +924,7 @@ void SimObject::assignFieldsFrom(SimObject *parent)
             continue;
 
          // Skip the special field types.
-         if ( f->type >= AbstractClassRep::ARCFirstCustomField )
+         if ( f->type >= AbstractClassRep::ARCFirstCustomField || f->flag.test(AbstractClassRep::FieldFlags::FIELD_ComponentInspectors))
             continue;
             
          // Skip certain fields that we don't want to see copied so we don't
@@ -3266,7 +3266,7 @@ DefineEngineMethod( SimObject, getFieldCount, S32, (),,
       f = &list[i];
 
       // The special field types do not need to be counted.
-      if ( f->type >= AbstractClassRep::ARCFirstCustomField )
+      if ( f->type >= AbstractClassRep::ARCFirstCustomField || f->flag.test(AbstractClassRep::FieldFlags::FIELD_ComponentInspectors))
          numDummyEntries++;
    }
 
@@ -3291,7 +3291,7 @@ DefineEngineMethod( SimObject, getField, const char*, ( S32 index ),,
       f = &list[i];
 
       // The special field types can be skipped.
-      if ( f->type >= AbstractClassRep::ARCFirstCustomField )
+      if ( f->type >= AbstractClassRep::ARCFirstCustomField || f->flag.test(AbstractClassRep::FieldFlags::FIELD_ComponentInspectors))
          continue;
 
       if(currentField == index)

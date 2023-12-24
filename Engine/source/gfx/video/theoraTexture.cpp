@@ -59,7 +59,7 @@
 /// Profile for the video texture.
 GFX_ImplementTextureProfile(  GFXTheoraTextureProfile,
                               GFXTextureProfile::DiffuseMap,
-                              GFXTextureProfile::NoMipmap | GFXTextureProfile::Dynamic,
+                              GFXTextureProfile::NoMipmap | GFXTextureProfile::Dynamic | GFXTextureProfile::PreserveSize,
                               GFXTextureProfile::NONE );
 
 

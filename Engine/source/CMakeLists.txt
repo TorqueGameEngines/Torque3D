@@ -150,6 +150,12 @@ endif (TORQUE_OPENGL)
 # Handle terrain
 torqueAddSourceDirectories("terrain")
 
+# Handle theora
+if (TORQUE_THEORA)
+  torqueAddSourceDirectories("core/ogg")
+  torqueAddSourceDirectories("gui/theora")
+endif(TORQUE_THEORA)
+
 if (WIN32 AND TORQUE_D3D11)
   torqueAddSourceDirectories("terrain/hlsl")
 endif (WIN32 AND TORQUE_D3D11)
@@ -337,6 +343,10 @@ addDef(TORQUE_ENABLE_ASSERTS "Debug;RelWithDebInfo")
 addDef(TORQUE_DEBUG_GFX_MODE "RelWithDebInfo")
 addDef(TORQUE_OGGVORBIS)
 
+if (TORQUE_THEORA)
+   addDef(TORQUE_OGGTHEORA)
+endif(TORQUE_THEORA)
+
 if(NOT TORQUE_SDL)
    filterOut("platform/nativeDialogs/fileDialog.cpp" )
 endif()
@@ -430,6 +440,8 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 foreach (TORQUE_LIBRARY ${TORQUE_LINK_LIBRARIES})
   set_target_properties(${TORQUE_LIBRARY} PROPERTIES
   FOLDER "Libraries")
+  # remove warnings from 3rd parties.
+  target_compile_options(${TORQUE_LIBRARY} PRIVATE "-w")
 endforeach()
 
 target_compile_definitions(${TORQUE_APP_NAME} PUBLIC ${TORQUE_COMPILE_DEFINITIONS})

@@ -3326,6 +3326,33 @@ DefineEngineMethod( SimObject, getFieldCount, S32, (),,
    return list.size() - numDummyEntries;
 }
 
+DefineEngineFunction(getFieldCountNS, S32, (StringTableEntry className), ,
+   "Get the number of static fields on the name space.\n"
+   "@return The number of static fields defined on the object.")
+{
+   Namespace* ns = Con::lookupNamespace(className);
+   if (!ns)
+      return 0;
+   AbstractClassRep* rep = ns->mClassRep;
+   if (!rep)
+      return 0;
+
+   const AbstractClassRep::FieldList& list = rep->mFieldList;
+   const AbstractClassRep::Field* f;
+   U32 numDummyEntries = 0;
+
+   for (S32 i = 0; i < list.size(); i++)
+   {
+      f = &list[i];
+
+      // The special field types do not need to be counted.
+      if (f->type >= AbstractClassRep::ARCFirstCustomField || f->flag.test(AbstractClassRep::FieldFlags::FIELD_ComponentInspectors))
+         numDummyEntries++;
+   }
+
+   return list.size() - numDummyEntries;
+}
+
 //-----------------------------------------------------------------------------
 
 DefineEngineMethod( SimObject, getField, const char*, ( S32 index ),,
@@ -3348,6 +3375,42 @@ DefineEngineMethod( SimObject, getField, const char*, ( S32 index ),,
          continue;
 
       if(currentField == index)
+         return f->pFieldname;
+
+      currentField++;
+   }
+
+   // if we found nada, return nada.
+   return "";
+}
+
+DefineEngineFunction(getFieldNS, const char*, (StringTableEntry className,S32 index), ,
+   "Retrieve the value of a static field by index.\n"
+   "@param index The index of the static field.\n"
+   "@return The value of the static field with the given index or \"\".")
+{
+   Namespace* ns = Con::lookupNamespace(className);
+   if (!ns)
+      return 0;
+   AbstractClassRep* rep = ns->mClassRep;
+   if (!rep)
+      return 0;
+
+   const AbstractClassRep::FieldList& list = rep->mFieldList;
+   if ((index < 0) || (index >= list.size()))
+      return "";
+
+   const AbstractClassRep::Field* f;
+   S32 currentField = 0;
+   for (U32 i = 0; i < list.size() && currentField <= index; i++)
+   {
+      f = &list[i];
+
+      // The special field types can be skipped.
+      if (f->type >= AbstractClassRep::ARCFirstCustomField || f->flag.test(AbstractClassRep::FieldFlags::FIELD_ComponentInspectors))
+         continue;
+
+      if (currentField == index)
          return f->pFieldname;
 
       currentField++;

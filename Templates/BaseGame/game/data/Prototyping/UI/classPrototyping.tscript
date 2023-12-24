@@ -60,21 +60,14 @@ function classPrototyping::fillClasslist(%this, %classInstance)
 function classPrototyping::SetNamespaceUsed(%this, %nameSpaceUsed)
 {
     ClassMethodListCtrl.deleteAllObjects();
-    if (%nameSpaceUsed $= %this.instanceName)
-    {
-        %this.tempClass = %this.inst;
-        %this.fillMethodlist(%this.inst);
-        return;
-    }
-    eval("classPrototyping.tempClass = new "@ %nameSpaceUsed @"(){};");
-    %this.fillMethodlist(%this.tempClass);    
+    %this.fillMethodlist(%nameSpaceUsed);
 }
 
-function classPrototyping::fillMethodlist(%this, %classInstance)
+function classPrototyping::fillMethodlist(%this, %nameSpaceUsed)
 {
     ClassMethodListCtrl.deleteAllObjects();
-
-    %this.methodArray = %classInstance.getMethodSigs();
+    %this.nameSpaceUsed = %nameSpaceUsed;
+    %this.methodArray = getMethodSigsNS(%nameSpaceUsed);
     %this.methodCount = %this.methodArray.count();
     
     for (%i=0; %i<%this.methodCount; %i++)
@@ -113,7 +106,7 @@ function classPrototyping::writeResults(%this)
     
     if (ReportCommands.isStateOn())
     {
-        %this.commandArray = %this.tempClass.getMethodSigs(true);
+        %this.commandArray = getMethodSigsNS(%this.nameSpaceUsed,true);
         %this.commandCount = %this.commandArray.count();
         echo("/* Available Commands:");
         for (%i=0; %i< %this.commandCount; %i++)
@@ -126,19 +119,9 @@ function classPrototyping::writeResults(%this)
     if (ReportVariables.isStateOn())
     {
         echo("/* HardCoded Variables");
-        for (%i=0; %i< %this.tempClass.getFieldCount(); %i++)
+        for (%i=0; %i< getFieldCountNS(%this.nameSpaceUsed); %i++)
         {
-            echo(%this.tempClass.getField(%i));
-        }
-        echo("*/");
-    }
-    
-    if (ReportDynamicVariables.isStateOn())
-    {
-        echo("/* Dynamic Variables");
-        for (%i=0; %i< %this.tempClass.getDynamicFieldCount(); %i++)
-        {
-            echo(getword(%this.tempClass.getDynamicField(%i),0));
+            echo(getFieldNS(%this.nameSpaceUsed,%i));
         }
         echo("*/");
     }

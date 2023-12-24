@@ -110,13 +110,6 @@ $guiContent = new GuiControl(classPrototyping) {
          profile = "ToolsGuiCheckBoxProfile";
          tooltipProfile = "GuiToolTipProfile";
       };
-      new GuiCheckBoxCtrl(ReportDynamicVariables) {
-         text = "Report Dynamic Variables";
-         position = "300 420";
-         extent = "150 30";
-         profile = "ToolsGuiCheckBoxProfile";
-         tooltipProfile = "GuiToolTipProfile";
-      };
    };
 };
 //--- OBJECT WRITE END ---

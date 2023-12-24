@@ -68,7 +68,7 @@ $guiContent = new GuiControl(classPrototyping) {
          extent = "22 22";
          horizSizing = "left";
          profile = "ToolsGuiButtonProfile";
-         command = "SelectAssetPath.showDialog(AssetBrowser.dirHandler.currentAddress, \"setAssetTargetUpdatePath\");\nSelectAssetPathWindow.selectWindow();";
+         command = "SelectAssetPath.showDialog(AssetBrowser.dirHandler.currentAddress, \"setProtoTypeFilePath\");\nSelectAssetPathWindow.selectWindow();";
          tooltipProfile = "GuiToolTipProfile";
          tooltip = "New Module";
       };

@@ -20,7 +20,6 @@ function PrototypeClass(%classInstance)
 function classPrototyping::fillClasslist(%this, %classInstance)
 {
     ClassInheritanceListCtrl.deleteAllObjects();
-    %this.inst = %classInstance;
     %this.instanceName = %classInstance.getName();
     
     //get potentially scripted namespaces
@@ -86,6 +85,11 @@ function classPrototyping::fillMethodlist(%this, %nameSpaceUsed)
     }
 }
 
+function setProtoTypeFilePath(%targetPath)
+{
+   classPrototyping-->targetPath.text = %targetPath;
+}
+
 function classPrototyping::writeResults(%this)
 {
     %namespaceUsed = "";
@@ -96,33 +100,42 @@ function classPrototyping::writeResults(%this)
         if (%obj.isStateOn())
             %namespaceUsed = getWord(%this.classlist,%inheritanceOrder);
     }
-    echo(%namespaceUsed);
-    for (%i=0; %i<%this.methodCount; %i++)
+	%file = new FileObject();
+    %filename = classPrototyping-->targetPath.text @"/"@ %namespaceUsed @"."@ $TorqueScriptFileExtension;
+	if(%file.openForWrite(%filename))
     {
-        %obj = "ProtoMethodSelect"@ %i;
-        if (%obj.isStateOn())
-            echo(strreplace(%this.methodArray.getValue(%i),%this.instanceName,%namespaceUsed));
-    }
-    
-    if (ReportCommands.isStateOn())
-    {
-        %this.commandArray = getMethodSigsNS(%this.nameSpaceUsed,true);
-        %this.commandCount = %this.commandArray.count();
-        echo("/* Available Commands:");
-        for (%i=0; %i< %this.commandCount; %i++)
+        for (%i=0; %i<%this.methodCount; %i++)
         {
-            echo(getRecord(%this.commandArray.getValue(%i),0));
+            %obj = "ProtoMethodSelect"@ %i;
+            if (%obj.isStateOn())
+                %file.writeLine(strreplace(%this.methodArray.getValue(%i),%this.instanceName,%namespaceUsed));
         }
-        echo("*/");
-    }
     
-    if (ReportVariables.isStateOn())
-    {
-        echo("/* HardCoded Variables");
-        for (%i=0; %i< getFieldCountNS(%this.nameSpaceUsed); %i++)
+        if (ReportCommands.isStateOn())
         {
-            echo(getFieldNS(%this.nameSpaceUsed,%i));
+            %this.commandArray = getMethodSigsNS(%this.nameSpaceUsed,true);
+            %this.commandCount = %this.commandArray.count();
+            %file.writeLine("/* Available Commands:");
+            for (%i=0; %i< %this.commandCount; %i++)
+            {
+                %file.writeLine(getRecord(%this.commandArray.getValue(%i),0));
+            }
+            %file.writeLine("*/");
         }
-        echo("*/");
+    
+        if (ReportVariables.isStateOn())
+        {
+            %file.writeLine("/* HardCoded Variables");
+            for (%i=0; %i< getFieldCountNS(%this.nameSpaceUsed); %i++)
+            {
+                %file.writeLine(getFieldNS(%this.nameSpaceUsed,%i));
+            }
+            %file.writeLine("*/");
+        }
     }
+	else
+	{
+		error( "Failed to open " @ %filename @ " for writing" );
+	}
+	%file.delete();
 }

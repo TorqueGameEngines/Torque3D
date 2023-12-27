@@ -147,25 +147,31 @@ new GuiControlProfile(GuiTextEditProfile)
    category = "Core";
 };
 
-if(!isObject(GuiMenuScrollProfile))
-new GuiControlProfile(GuiMenuScrollProfile)
+if(!isObject(GuiScrollProfile))
+new GuiControlProfile(GuiScrollProfile)
 {
-   opaque = true;
-   fontColor = $TextMediumEmphasisColor;
-   fontColorHL = $TextMediumEmphasisColor;
-   fontColorNA = $TextDisabledColor;
-   fontColorSEL = $TextMediumEmphasisColor;
-   fillColor = "40 40 40";
+   opaque = "0";
+   fontColor = "200 200 200 255";
+   fontColorHL = "200 200 200 255";
+   fontColorNA = "108 108 108 255";
+   fontColorSEL = "200 200 200 255";
+   fillColor = "0 0 0 0";
    fillColorHL = "56 56 56";
    fillColorNA = "40 40 40";
    borderColor = "87 87 87";
    borderColorNA = "0 0 0";
    borderColorHL = "255 255 255";
-   border = true;
+   border = "0";
    bitmapAsset = "Core_GUI:scrollBar_image";
    hasBitmapArray = true;
    category = "Core";
    fontSize = 15;
+   fontColors[0] = "200 200 200 255";
+   fontColors[1] = "200 200 200 255";
+   fontColors[2] = "108 108 108 255";
+   fontColors[3] = "200 200 200 255";
+   fontColors[8] = "Fuchsia";
+   fontColors[9] = "255 0 255 255";
 };
 
 if(!isObject(GuiOverlayProfile))
@@ -259,5 +265,26 @@ if(!isObject(GuiScrollProfile))
 new GuiControlProfile(GuiScrollProfile)
 {
 	bitmapAsset = "Core_GUI:scrollBar_image";
+   category = "Core";
+};
+
+// ---------------------------------------------------------------------------
+singleton GuiControlProfile( GuiInputCtrlProfile )
+{
+   tab = true;
+   canKeyFocus = true;
+   category = "Core";
+};
+
+singleton GuiControlProfile (GuiTextProfile)
+{
+   justify = "left";
+   fontColor = "20 20 20";
+   category = "Core";
+};
+
+singleton GuiControlProfile (GuiTextRightProfile : GuiTextProfile)
+{
+   justify = "right";
    category = "Core";
 };

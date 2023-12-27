@@ -2619,7 +2619,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                      hovertime = "1000";
                      
                      new GuiContainer(){ // enable/disable
-                        profile="GuiTransparentProfile";
+                        profile="ToolsGuiTransparentProfile";
                         isContainer = "1";
                         position = "0 0";
                         Extent = "300 24";
@@ -2652,7 +2652,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                      };
                   
                      new GuiContainer(){ // scale
-                        profile="GuiTransparentProfile";
+                        profile="ToolsGuiTransparentProfile";
                         isContainer = "1";
                         position = "0 0";
                         Extent = "300 24";
@@ -2735,7 +2735,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                      };
 
                      new GuiContainer(){ // direction
-                        profile="GuiTransparentProfile";
+                        profile="ToolsGuiTransparentProfile";
                         isContainer = "1";
                         position = "0 0";
                         Extent = "300 24";
@@ -2817,7 +2817,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                         };
                      };
                      new GuiContainer(){ // strength
-                        profile="GuiTransparentProfile";
+                        profile="ToolsGuiTransparentProfile";
                         isContainer = "1";
                         position = "0 0";
                         Extent = "300 24";
@@ -2899,7 +2899,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                         };
                      };
                      new GuiContainer(){ // coverage
-                        profile="GuiTransparentProfile";
+                        profile="ToolsGuiTransparentProfile";
                         isContainer = "1";
                         position = "0 0";
                         Extent = "300 24";
@@ -2981,7 +2981,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                         };
                      };
                      new GuiContainer(){ // specular
-                        profile="GuiTransparentProfile";
+                        profile="ToolsGuiTransparentProfile";
                         isContainer = "1";
                         position = "0 0";
                         Extent = "300 24";
@@ -3063,7 +3063,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
                         };
                      };
                      new GuiContainer(){ // empty space
-                        profile="GuiTransparentProfile";
+                        profile="ToolsGuiTransparentProfile";
                         isContainer = "1";
                         position = "0 0";
                         Extent = "300 10";

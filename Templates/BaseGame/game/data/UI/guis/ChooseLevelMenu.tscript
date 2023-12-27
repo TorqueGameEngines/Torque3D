@@ -1,0 +1,211 @@
+//-----------------------------------------------------------------------------
+// Copyright (c) 2012 GarageGames, LLC
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+// IN THE SOFTWARE.
+//-----------------------------------------------------------------------------
+
+//----------------------------------------
+function ChooseLevelMenu::onAdd( %this )
+{
+   if(!isObject(ChooseLevelAssetQuery))
+      new AssetQuery(ChooseLevelAssetQuery);
+}
+
+function ChooseLevelMenu::onWake(%this)
+{
+   LevelPreviewArray.clear();
+   
+   ChooseLevelAssetQuery.clear();
+   AssetDatabase.findAssetType(ChooseLevelAssetQuery, "LevelAsset");
+      
+   %count = ChooseLevelAssetQuery.getCount();
+   
+   if(%count == 0 && !IsDirectory("tools"))
+   {
+      //We have no levels found. Prompt the user to open the editor to the default level if the tools are present
+      MessageBoxOK("Error", "No levels were found in any modules. Please ensure you have modules loaded that contain gameplay code and level files.", 
+         "Canvas.popDialog(ChooseLevelMenu); if(isObject(ChooseLevelMenu.returnGui) && ChooseLevelMenu.returnGui.isMethod(\"onReturnTo\")) ChooseLevelMenu.returnGui.onReturnTo();");
+         
+      ChooseLevelAssetQuery.delete();
+      return;
+   }
+   
+   for(%i=0; %i < %count; %i++)
+	{
+	   %assetId = ChooseLevelAssetQuery.getAsset(%i);
+	   
+	   if(AssetDatabase.getAssetModule(%assetId).ModuleId $= "ToolsModule")
+	      continue;
+      
+      %levelAsset = AssetDatabase.acquireAsset(%assetId);
+      
+      %file = %levelAsset.getLevelPath();
+      
+      if ( !isFile(%file) )
+         continue;
+         
+      %levelPreviewImg = %levelAsset.getPreviewImagePath();
+   
+      if (!isFile(%levelPreviewImg))
+         %levelPreviewImg = "UI:no_preview_image";
+         
+      %preview = new GuiContainer() { 
+         extent = "480 480";
+         levelAssetId = %assetId;
+         
+         new GuiButtonCtrl() {
+            position = "0 0";
+            extent = "480 480";
+            buttonType = "ToggleButton";
+            profile = GuiMenuButtonLeftJustProfile;
+            horizSizing = "width";
+            vertSizing = "height";
+            internalName = "button";
+            class = "LevelPreviewButton";
+            command = "$selectedLevelAsset = " @ %assetId @ ";";
+            altCommand = "ChooseLevelBegin(1);"; //allow doubleclick to quick action it
+         };
+         
+         new GuiBitmapCtrl() {
+            position = "20 0";
+            extent =  "440 440";
+            BitmapAsset = %levelPreviewImg; 
+            horizSizing = "width";
+            vertSizing = "bottom";
+            profile = GuiNonModalDefaultProfile;
+         };
+         
+         new GuiTextCtrl() { 
+            position = "20 445";
+            extent = "440 15";
+            text = %levelAsset.levelName;
+            profile = MenuSubHeaderText;
+            internalName = "levelNameTxt";
+         };
+            
+         new GuiMLTextCtrl() { 
+            position = "20 465";
+            extent = "440 15";
+            text = %levelAsset.levelDescription;
+            profile = GuiMLTextProfile;
+            internalName = "levelDescTxt";
+         };
+      };
+      
+      LevelPreviewArray.add(%preview);
+   }
+   
+   // Also add the new level mission as defined in the world editor settings
+   // if we are choosing a level to launch in the editor.
+   if ( %this.launchInEditor )
+   {
+      %this.addMissionFile( "tools/levels/DefaultEditorLevel.mis" );
+   }
+   
+   //LevelList.setSelected(0);
+   
+   if(!$pref::HostMultiPlayer)
+      ChooseLevelTitleText.setText("SINGLE PLAYER");
+   else
+      ChooseLevelTitleText.setText("CREATE SERVER");
+      
+   $MenuList = LevelPreviewArray;
+   $MenuList.listPosition = 0;
+   $MenuList.syncGui();
+}
+
+if(!isObject( ChooseLevelActionMap ) )
+{
+   new ActionMap(ChooseLevelActionMap){}; 
+   
+   //Null the up/down nav so we can swap in left/right nav
+   ChooseLevelActionMap.bindCmd( keyboard, w, "" );
+   ChooseLevelActionMap.bindCmd( keyboard, s, "" );
+   ChooseLevelActionMap.bindCmd( gamepad, yaxis, "" );
+   ChooseLevelActionMap.bindCmd( gamepad, upov, "" );
+   ChooseLevelActionMap.bindCmd( gamepad, dpov, "" );
+   
+   ChooseLevelActionMap.bind( keyboard, a, BaseUINavigatePrev );
+   ChooseLevelActionMap.bind( keyboard, d, BaseUINavigateNext );
+   ChooseLevelActionMap.bind( gamepad, xaxis, "D", "-0.23 0.23", BaseUIStickNavigate );
+   ChooseLevelActionMap.bind( gamepad, lpov, BaseUINavigatePrev );
+   ChooseLevelActionMap.bind( gamepad, rpov, BaseUINavigateNext );
+   
+   ChooseLevelActionMap.bind( keyboard, Enter, ChooseLevelBegin );
+   ChooseLevelActionMap.bind( gamepad, btn_a, ChooseLevelBegin );
+}
+
+function LevelPreviewArray::syncGUI(%this)
+{
+   %this.callOnChildren("setHighlighted", false);
+   
+   %btn = %this.getObject(%this.listPosition);
+   %btn-->button.setHighlighted(true);
+   
+   $selectedLevelAsset = %btn.levelAssetId;
+}
+
+function ChooseLevelBegin(%val)
+{
+   if(%val)
+   {
+      // So we can't fire the button when loading is in progress.
+      if ( isObject( ServerGroup ) )
+         return;
+         
+      Canvas.popDialog();
+      
+      %entry = LevelPreviewArray.getObject(LevelPreviewArray.listPosition);
+      
+      if(!AssetDatabase.isDeclaredAsset(%entry.levelAssetId))
+      {
+         MessageBoxOK("Error", "Selected level preview does not have a valid level asset!");
+         return;  
+      }
+
+      // Launch the chosen level with the editor open?
+      if ( ChooseLevelMenu.launchInEditor )
+      {
+         activatePackage( "BootEditor" );
+         ChooseLevelMenu.launchInEditor = false; 
+         StartGame(%entry.levelAssetId, "SinglePlayer");
+      }
+      else
+      {
+         StartGame(%entry.levelAssetId); 
+      }
+   }
+}
+
+function ChooseLevelMenu::onSleep( %this )
+{
+   // This is set from the outside, only stays true for a single wake/sleep
+   // cycle.
+   %this.launchInEditor = false;
+}
+
+function LevelPreviewButton::onHighlighted(%this, %highlighted)
+{
+   %container = %this.getParent();
+   
+   %container-->levelNameTxt.profile = %highlighted ? MenuSubHeaderTextHighlighted : MenuSubHeaderText;
+   %container-->levelDescTxt.profile = %highlighted ? GuiMLTextProfileHighlighted : GuiMLTextProfile;
+   
+   LevelPreviewScroll.scrollToObject(%this);
+}

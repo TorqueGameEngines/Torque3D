@@ -1,5 +1,0 @@
-<GUIAsset
-    AssetName="GuiMusicPlayer"
-    scriptFile="@assetFile=guiMusicPlayer"
-    GUIFile="@assetFile=guiMusicPlayer.gui"
-    VersionId="1"/>

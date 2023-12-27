@@ -1,0 +1,96 @@
+//--- OBJECT WRITE BEGIN ---
+$guiContent = new GuiControl(ChooseLevelMenu) {
+   extent = "1280 720";
+   minExtent = "8 8";
+   horizSizing = "width";
+   vertSizing = "height";
+   profile = "GuiMenuBackgroundProfile";
+   category = "BaseUI";
+   tooltipProfile = "GuiToolTipProfile";
+   isContainer = "1";
+   canSaveDynamicFields = "1";
+      launchInEditor = "0";
+      
+   new GuiInputCtrl(ChooseLevelInputHandler) {
+      ignoreMouseEvents = "1";
+      ActionMap = "ChooseLevelActionMap";
+      position = "-50 0";
+      extent = "2186 851";
+      horizSizing = "width";
+      vertSizing = "height";
+      profile = "GuiInputCtrlProfile";
+      tooltipProfile = "GuiToolTipProfile";
+   };
+
+   new GuiPanel(ChooseLevelTitlePanel) {
+      extent = "1281 60";
+      horizSizing = "width";
+      profile = "GuiMenuPanelProfile";
+      tooltipProfile = "GuiToolTipProfile";
+
+      new GuiTextCtrl(ChooseLevelTitleText) {
+         text = "SINGLE PLAYER";
+         position = "22 23";
+         extent = "220 28";
+         profile = "MenuHeaderText";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+   };
+   new GuiPanel(ChooseLevelButtonPanel) {
+      position = "0 683";
+      extent = "1281 40";
+      horizSizing = "width";
+      vertSizing = "top";
+      profile = "GuiMenuPanelProfile";
+      tooltipProfile = "GuiToolTipProfile";
+
+      new GuiIconButtonCtrl(ChooseLevelStartBtn) {
+         BitmapAsset = "UI:Keyboard_Black_Return_image";
+         sizeIconToButton = "1";
+         makeIconSquare = "1";
+         textLocation = "Center";
+         text = "Start";
+         position = "1115 0";
+         extent = "140 40";
+         horizSizing = "left";
+         vertSizing = "center";
+         profile = "GuiMenuButtonProfile";
+         command = "OptionsMenu.applySettings();";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+      new GuiIconButtonCtrl(ChooseLevelBackBtn) {
+         BitmapAsset = "UI:Keyboard_Black_Escape_image";
+         sizeIconToButton = "1";
+         makeIconSquare = "1";
+         textLocation = "Center";
+         text = "Back";
+         position = "16 0";
+         extent = "140 40";
+         vertSizing = "center";
+         profile = "GuiMenuButtonProfile";
+         command = "Canvas.popDialog();";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+   };
+   new GuiScrollCtrl(LevelPreviewScroll) {
+      hScrollBar = "dynamic";
+      vScrollBar = "alwaysOff";
+      position = "0 118";
+      extent = "1283 500";
+      horizSizing = "width";
+      vertSizing = "center";
+      profile = "GuiMenuScrollProfile";
+      tooltipProfile = "GuiToolTipProfile";
+
+      new GuiStackControl(LevelPreviewArray) {
+         position = "1 1";
+         extent = "1280 480";
+         vertSizing = "center";
+         profile = "GuiMenuDefaultProfile";
+         tooltipProfile = "GuiToolTipProfile";
+         padding = "5";
+         stackingType = "Horizontal";
+      };
+   };
+};
+//--- OBJECT WRITE END ---

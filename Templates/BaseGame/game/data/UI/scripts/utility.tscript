@@ -1,3 +1,25 @@
+function ActionMap::getCommandButtonBitmap(%this, %device, %command)
+{
+   %binding = %this.getBinding(%command);
+   
+   if(%device $= "mouse" || %device $= "")
+      %device = "keyboard";
+   
+   %bindingCount = getFieldCount(%binding);
+   for(%i=0; %i < %bindingCount; %i+=2)
+   {
+      %mapDevice = stripTrailingNumber(getField(%binding, %i)); 
+      if(%mapDevice $= %device)
+      {
+         %button = getField(%binding, %i+1);
+         break;
+      }
+   }
+
+   %assetId = getButtonBitmap(%device, %button);
+   return %assetId;
+}
+
 function getButtonBitmap(%device, %button)
 {
    if(%device $= "gamepad")

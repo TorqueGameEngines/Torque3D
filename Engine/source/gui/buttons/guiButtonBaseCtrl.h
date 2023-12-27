@@ -73,6 +73,7 @@ class GuiButtonBaseCtrl : public GuiControl
 	   DECLARE_CALLBACK( void, onMouseEnter, () );   
 	   DECLARE_CALLBACK( void, onMouseLeave, () );      
 	   DECLARE_CALLBACK( void, onMouseDragged, () );   
+      DECLARE_CALLBACK( void, onHighlighted, (bool));
 
       /// @}
 
@@ -95,9 +96,18 @@ class GuiButtonBaseCtrl : public GuiControl
       bool getStateOn() const { return mStateOn; }
 
       void setDepressed( bool depressed ) { mDepressed = depressed; }
-      void resetState() {mDepressed = false; mHighlighted = false;}
+      void resetState()
+      {
+         mDepressed = false;
+         mHighlighted = false;
+         onHighlighted_callback(false);
+      }
 
-      void setHighlighted(bool highlighted) { mHighlighted = highlighted; }
+      void setHighlighted(bool highlighted)
+      {
+         mHighlighted = highlighted;
+         onHighlighted_callback(highlighted);
+      }
       bool isHighlighted() { return mHighlighted; }
 
       void acceleratorKeyPress(U32 index);

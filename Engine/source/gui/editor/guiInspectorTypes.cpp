@@ -40,6 +40,7 @@
 #include "gui/editor/editorFunctions.h"
 #include "math/mEase.h"
 #include "math/mathTypes.h"
+#include "sim/actionMap.h"
 
 
 //-----------------------------------------------------------------------------
@@ -60,7 +61,7 @@ GuiControl* GuiInspectorTypeMenuBase::constructEditControl()
    GuiPopUpMenuCtrl *menu = dynamic_cast<GuiPopUpMenuCtrl*>(retCtrl);
 
    // Let's make it look pretty.
-   retCtrl->setDataField( StringTable->insert("profile"), NULL, "GuiPopUpMenuProfile" );
+   retCtrl->setDataField( StringTable->insert("profile"), NULL, "ToolsGuiPopupMenuProfile" );
    _registerEditControl( retCtrl );
 
    // Configure it to update our value when the popup is closed
@@ -385,6 +386,44 @@ void GuiInspectorTypeGuiProfile::consoleInit()
    Parent::consoleInit();
 
    ConsoleBaseType::getType( TYPEID< GuiControlProfile >() )->setInspectorFieldType("GuiInspectorTypeGuiProfile");
+}
+
+//-----------------------------------------------------------------------------
+// GuiInspectorTypeActionMap 
+//-----------------------------------------------------------------------------
+IMPLEMENT_CONOBJECT(GuiInspectorTypeActionMap);
+
+ConsoleDocClass(GuiInspectorTypeActionMap,
+   "@brief Inspector field type for ActionMap\n\n"
+   "Editor use only.\n\n"
+   "@internal"
+);
+
+void GuiInspectorTypeActionMap::_populateMenu(GuiPopUpMenuCtrl* menu)
+{
+   // Add the action maps to the menu.
+   //First add a blank entry so you can clear the action map
+   menu->addEntry("", 0);
+
+   SimGroup* grp = Sim::getRootGroup();
+   SimSetIterator iter(grp);
+   for (; *iter; ++iter)
+   {
+      ActionMap* actionMap = dynamic_cast<ActionMap*>(*iter);
+      if (!actionMap)
+         continue;
+
+      menu->addEntry(actionMap->getName(), actionMap->getId());
+   }
+
+   menu->sort();
+}
+
+void GuiInspectorTypeActionMap::consoleInit()
+{
+   Parent::consoleInit();
+
+   ConsoleBaseType::getType(TYPEID< ActionMap >())->setInspectorFieldType("GuiInspectorTypeActionMap");
 }
 
 //-----------------------------------------------------------------------------

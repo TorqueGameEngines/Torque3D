@@ -54,7 +54,7 @@ $guiContent = new GuiControl(IODropdownDlg) {
       };
       new GuiBitmapBorderCtrl() {
          isContainer = "0";
-         profile = "GuiGroupBorderProfile";
+         profile = "ToolsGuiGroupBorderProfile";
          horizSizing = "width";
          vertSizing = "bottom";
          position = "7 51";

@@ -41,7 +41,7 @@
             <Setting
                 name="doubleClickAction">Edit Asset</Setting>
             <Setting
-                name="LastPosExt">0 1047 2200 360</Setting>
+                name="LastPosExt">0 976 2200 360</Setting>
             <Setting
                 name="previewTileSize">1</Setting>
             <Setting
@@ -106,7 +106,7 @@
         <Setting
             name="lastPath">tools/RPGDialogEditor/gui</Setting>
         <Setting
-            name="previewResolution">1024 768</Setting>
+            name="previewResolution">1280 720</Setting>
         <Group
             name="EngineDevelopment">
             <Setting
@@ -124,11 +124,6 @@
                 name="documentationReference">../../../Documentation/Torque 3D - Script Manual.chm</Setting>
             <Setting
                 name="documentationURL">https://docs.torque3d.org</Setting>
-        </Group>
-        <Group
-            name="Library">
-            <Setting
-                name="viewType">Categorized</Setting>
         </Group>
         <Group
             name="Rendering">

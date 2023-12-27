@@ -83,6 +83,8 @@ $guiContent = new GuiControl(MainMenuGui) {
          profile = "GuiMenuButtonProfile";
          command = "$pref::HostMultiPlayer=false;\nCanvas.pushDialog(ChooseLevelMenu);";
          tooltipProfile = "GuiToolTipProfile";
+         class="MainMenuButton";
+         groupNum = 1;
       };
       new GuiButtonCtrl(MainMenuCreateSrvrBtn) {
          text = "Create Server";
@@ -91,6 +93,8 @@ $guiContent = new GuiControl(MainMenuGui) {
          profile = "GuiMenuButtonProfile";
          command = "$pref::HostMultiPlayer=true;Canvas.pushDialog(ChooseLevelMenu);";
          tooltipProfile = "GuiToolTipProfile";
+         class="MainMenuButton";
+         groupNum = 1;
       };
       new GuiButtonCtrl(MainMenuJoinSrvrBtn) {
          text = "Join Server";
@@ -99,6 +103,8 @@ $guiContent = new GuiControl(MainMenuGui) {
          profile = "GuiMenuButtonProfile";
          command = "Canvas.pushDialog(JoinServerMenu);";
          tooltipProfile = "GuiToolTipProfile";
+         class="MainMenuButton";
+         groupNum = 1;
       };
       new GuiButtonCtrl(MainMenuOptionBtn) {
          text = "Options";
@@ -107,6 +113,8 @@ $guiContent = new GuiControl(MainMenuGui) {
          profile = "GuiMenuButtonProfile";
          command = "Canvas.pushDialog(OptionsMenu);";
          tooltipProfile = "GuiToolTipProfile";
+         class="MainMenuButton";
+         groupNum = 1;
       };
       new GuiButtonCtrl(MainMenuWorldEditBtn) {
          text = "Open World Editor (F11)";
@@ -115,6 +123,8 @@ $guiContent = new GuiControl(MainMenuGui) {
          profile = "GuiMenuButtonProfile";
          command = "fastLoadWorldEdit(1);";
          tooltipProfile = "GuiToolTipProfile";
+         class="MainMenuButton";
+         groupNum = 1;
       };
       new GuiButtonCtrl(MainMenuGuiEditBtn) {
          text = "Open GUI Editor (F10)";
@@ -123,6 +133,8 @@ $guiContent = new GuiControl(MainMenuGui) {
          profile = "GuiMenuButtonProfile";
          command = "fastLoadGUIEdit(1);";
          tooltipProfile = "GuiToolTipProfile";
+         class="MainMenuButton";
+         groupNum = 1;
       };
       new GuiButtonCtrl(MainMenuExitBtn) {
          text = "Exit";
@@ -131,6 +143,8 @@ $guiContent = new GuiControl(MainMenuGui) {
          profile = "GuiMenuButtonProfile";
          command = "quit();";
          tooltipProfile = "GuiToolTipProfile";
+         class="MainMenuButton";
+         groupNum = 1;
       };
    };
 };

@@ -1,3 +1,6 @@
+$BaseUI::scrollSpeedTimeMs = 250;
+$BaseUI::scrollSchedule = 0;
+
 function MainMenuGui::onAdd(%this)
 {
 }
@@ -38,6 +41,12 @@ function BaseUINavigatePrev(%val)
          $MenuList.listPosition = 0;
          
       $MenuList.syncGUI();
+      
+      $BaseUI::scrollSchedule = schedule($BaseUI::scrollSpeedTimeMs, 0, "BaseUINavigatePrev", 1);
+   }
+   else
+   {
+      cancel($BaseUI::scrollSchedule);
    }
 }
 
@@ -50,15 +59,25 @@ function BaseUINavigateNext(%val)
          $MenuList.listPosition = $MenuList.getCount()-1;
          
       $MenuList.syncGUI();
+      
+      $BaseUI::scrollSchedule = schedule($BaseUI::scrollSpeedTimeMs, 0, "BaseUINavigateNext", 1);
+   }
+   else
+   {
+      cancel($BaseUI::scrollSchedule);
    }
 }
 
 function BaseUIStickNavigate(%val)
 {
-   if(%val == -1)
+   if(%val == 1)
       BaseUINavigateNext(1);
-   else if(%val == 1)
-      mainMenuNavigateDown(1);
+   else if(%val == -1)
+      BaseUINavigatePrev(1);
+   else 
+   {
+      cancel($BaseUI::scrollSchedule);
+   }
 }
 
 function BaseUIBackOut(%val)
@@ -79,7 +98,7 @@ function BaseUIBackOut(%val)
 
 function MainMenuButtonList::syncGUI(%this)
 {
-   %this.callOnChildren("setHighlighted", false);
+   //%this.callOnChildren("setHighlighted", false);
    
    %btn = %this.getObject(%this.listPosition);
    %btn.setHighlighted(true);
@@ -91,6 +110,12 @@ function MainMenuButtonList::syncGUI(%this)
       %device = "keyboard";
       
    MainMenuGoButton.setBitmap(BaseUIActionMap.getCommandButtonBitmap(%device, "BaseUIActivateSelected"));
+}
+
+function MainMenuButton::onHighlighted(%this, %highlighted)
+{
+   if(%highlighted)
+      $MenuList.listPosition = MainMenuButtonList.getObjectIndex(%this);
 }
 
 function BaseUIActivateSelected()

@@ -64,7 +64,7 @@ function BaseUIStickNavigate(%val)
 function BaseUIBackOut(%val)
 {
    //we can't navigate further back than the MainMenuGui
-   if(%val && Canvas.getObject(Canvas.getCount()-1) != MainMenuGui)
+   if(%val && Canvas.getObject(Canvas.getCount()-1).getId() != MainMenuGui.getId())
    {
       Canvas.popDialog();
       %topMenu = Canvas.getObject(Canvas.getCount()-1);

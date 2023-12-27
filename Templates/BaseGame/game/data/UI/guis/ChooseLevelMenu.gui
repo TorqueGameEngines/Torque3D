@@ -31,7 +31,7 @@ $guiContent = new GuiControl(ChooseLevelMenu) {
       new GuiTextCtrl(ChooseLevelTitleText) {
          text = "SINGLE PLAYER";
          position = "22 23";
-         extent = "220 28";
+         extent = "1281 28";
          profile = "MenuHeaderText";
          tooltipProfile = "GuiToolTipProfile";
       };

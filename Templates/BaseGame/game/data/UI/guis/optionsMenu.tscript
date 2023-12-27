@@ -623,7 +623,7 @@ function tryCloseOptionsMenu(%val)
    }
    else
    {
-      Canvas.popDialog(OptionsMenu);
+      BaseUIBackOut(1);
    }
 } 
 
@@ -642,7 +642,7 @@ function OptionsMenu::applyChangedOptions(%this)
    %prefPath = getPrefpath();
    export("$pref::*", %prefPath @ "/clientPrefs." @ $TorqueScriptFileExtension, false);
    
-   Canvas.popDialog(OptionsMenu);
+   BaseUIBackOut(1);
    
    if($optionsChangeRequiresRestart)
       MessageBoxOK("Restart Required", "Some of your changes require the game to be restarted.");

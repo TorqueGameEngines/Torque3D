@@ -165,7 +165,7 @@ $guiContent = new GuiControl(OptionsMenu) {
       new GuiTextCtrl() {
          text = "OPTIONS";
          position = "22 23";
-         extent = "220 28";
+         extent = "1281 28";
          profile = "MenuHeaderText";
          tooltipProfile = "GuiToolTipProfile";
       };
@@ -188,7 +188,7 @@ $guiContent = new GuiControl(OptionsMenu) {
          extent = "140 40";
          vertSizing = "center";
          profile = "GuiMenuButtonProfile";
-         command = "tryCloseOptionsMenu();";
+         command = "tryCloseOptionsMenu(1);";
          tooltipProfile = "GuiToolTipProfile";
          class = "MenuInputButton";
       };

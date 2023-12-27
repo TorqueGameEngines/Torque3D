@@ -187,6 +187,7 @@ singleton GuiControlProfile( GuiRemapActionMapButtonProfile : GuiMenuButtonProfi
 {
    fillColor = "18 18 18 255";
    fillColorHL = "0 0 0 255";
+   modal = false;
 };
 
 singleton GuiControlProfile(GuiMenuScrollProfile)

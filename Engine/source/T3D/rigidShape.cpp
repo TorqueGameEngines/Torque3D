@@ -900,9 +900,11 @@ bool RigidShape::onNewDataBlock(GameBaseData* dptr, bool reload)
    mRigid.restitution = mDataBlock->body.restitution;
    mRigid.setCenterOfMass(mDataBlock->massCenter);
 
-   // Ignores massBox, just set sphere for now. Derived objects
-   // can set what they want.
-   mRigid.setObjectInertia();
+   // Set inertial tensor, default for the RigidShape is sphere
+   if (mDataBlock->massBox.x > 0 && mDataBlock->massBox.y > 0 && mDataBlock->massBox.z > 0)
+      mRigid.setObjectInertia(mDataBlock->massBox);
+   else
+      mRigid.setObjectInertia(mObjBox.maxExtents - mObjBox.minExtents);
 
    scriptOnNewDataBlock();
 
@@ -1115,9 +1117,9 @@ void RigidShape::updatePos(F32 dt)
       if (mCollisionList.getCount())
       {
          F32 k = mRigid.getKineticEnergy();
-         F32 G = mNetGravity * dt;
+         F32 G = mNetGravity;
          F32 Kg = 0.5 * mRigid.mass * G * G;
-         if (k < sRestTol * Kg && ++restCount > sRestCount)
+         if (k < sRestTol * Kg* dt && ++restCount > sRestCount)
             mRigid.setAtRest();
       }
       else
@@ -1222,10 +1224,6 @@ void RigidShape::updateForces(F32 dt)
 
    mRigid.force  = force;
    mRigid.torque = torque;
-
-   // If we're still atRest, make sure we're not accumulating anything
-   if ((force.lenSquared() < mDataBlock->contactTol)&& (force.lenSquared() < mDataBlock->contactTol))
-      mRigid.setAtRest();
 }
 
 
@@ -1260,8 +1258,8 @@ bool RigidShape::updateCollision(F32 dt)
    }
 
    // Resolve collisions
-   bool collided = resolveCollision(mRigid,mCollisionList);
-   resolveContacts(mRigid,mCollisionList,dt);
+   bool collided = resolveCollision(mRigid,mCollisionList, dt);
+   //resolveContacts(mRigid,mCollisionList,dt);
    return collided;
 }
 
@@ -1271,11 +1269,12 @@ bool RigidShape::updateCollision(F32 dt)
 Handle collision impacts, as opposed to contacts. Impulses are calculated based
 on standard collision resolution formulas.
 */
-bool RigidShape::resolveCollision(Rigid&  ns,CollisionList& cList)
+bool RigidShape::resolveCollision(Rigid&  ns,CollisionList& cList, F32 dt)
 {
    PROFILE_SCOPE(RigidShape_resolveCollision);
    // Apply impulses to resolve collision
    bool collided = false;
+   Point3F t, p(0, 0, 0), l(0, 0, 0);
    for (S32 i = 0; i < cList.getCount(); i++)
    {
       Collision& c = cList[i];
@@ -1288,9 +1287,7 @@ bool RigidShape::resolveCollision(Rigid&  ns,CollisionList& cList)
          F32 vn = mDot(v, c.normal);
 
          // Only interested in velocities greater than sContactTol,
-         // velocities less than that will be dealt with as contacts
-         // "constraints".
-         if (vn < -mDataBlock->contactTol)
+         if (mFabs(vn) > mDataBlock->contactTol)
          {
 
             // Apply impulses to the rigid body to keep it from
@@ -1313,8 +1310,44 @@ bool RigidShape::resolveCollision(Rigid&  ns,CollisionList& cList)
                queueCollision(col, v - col->getVelocity());
             }
          }
+         // velocities less than that will be dealt with as contacts
+         // "constraints".
+         else
+         {
+            // Penetration force. This is actually a spring which
+            // will seperate the body from the collision surface.
+            F32 zi = 2 * mFabs(mRigid.getZeroImpulse(r, c.normal) / dt);
+            F32 s = mMax((mDataBlock->collisionTol - c.distance) * zi - ((vn / 2.0) * zi),0.0f);
+            Point3F f = c.normal * s;
+
+            // Friction impulse, calculated as a function of the
+            // amount of force it would take to stop the motion
+            // perpendicular to the normal.
+            Point3F uv = v - (c.normal * vn);
+            F32 ul = uv.len();
+            if (s > 0 && ul)
+            {
+               uv /= -ul;
+               F32 u = ul * ns.getZeroImpulse(r, uv) / dt;
+               s *= mRigid.friction;
+               if (u > s)
+                  u = s;
+               f += uv * u;
+            }
+
+            // Accumulate forces
+            p += f;
+            mCross(r, f, &t);
+            l += t;
+
+         }
       }
    }
+   // Contact constraint forces act over time...
+   ns.linMomentum += p * dt;
+   ns.angMomentum += l * dt;
+   ns.updateVelocity();
+
 
    return collided;
 }
@@ -1350,7 +1383,7 @@ bool RigidShape::resolveContacts(Rigid& ns,CollisionList& cList,F32 dt)
 
             // Penetration force. This is actually a spring which
             // will seperate the body from the collision surface.
-            F32 zi = 2 * mFabs(mRigid.getZeroImpulse(r,c.normal));
+            F32 zi = 2 * mFabs(mRigid.getZeroImpulse(r,c.normal) / dt);
             F32 s = (mDataBlock->collisionTol - c.distance) * zi - ((vn / mDataBlock->contactTol) * zi);
             Point3F f = c.normal * s;
 
@@ -1362,7 +1395,7 @@ bool RigidShape::resolveContacts(Rigid& ns,CollisionList& cList,F32 dt)
             if (s > 0 && ul) 
             {
                uv /= -ul;
-               F32 u = ul * ns.getZeroImpulse(r,uv);
+               F32 u = ul * ns.getZeroImpulse(r,uv) / dt;
                s *= mRigid.friction;
                if (u > s)
                   u = s;
@@ -1693,6 +1726,8 @@ void RigidShape::initPersistFields()
    docsURL;
    addField("disableMove", TypeBool, Offset(mDisableMove, RigidShape),
       "When this flag is set, the vehicle will ignore throttle changes.");
+   addField("isAtRest", TypeBool, Offset(mRigid.atRest, RigidShape),
+      "Debug read of the rest state. do not set");   
    Parent::initPersistFields();
 }
 

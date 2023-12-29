@@ -1259,7 +1259,6 @@ bool RigidShape::updateCollision(F32 dt)
 
    // Resolve collisions
    bool collided = resolveCollision(mRigid,mCollisionList, dt);
-   //resolveContacts(mRigid,mCollisionList,dt);
    return collided;
 }
 
@@ -1356,72 +1355,6 @@ bool RigidShape::resolveCollision(Rigid&  ns,CollisionList& cList, F32 dt)
 
    return collided;
 }
-
-//----------------------------------------------------------------------------
-/** Resolve contact forces
-Resolve contact forces using the "penalty" method. Forces are generated based
-on the depth of penetration and the moment of inertia at the point of contact.
-*/
-bool RigidShape::resolveContacts(Rigid& ns,CollisionList& cList,F32 dt)
-{
-   PROFILE_SCOPE(RigidShape_resolveContacts);
-   // Use spring forces to manage contact constraints.
-   bool collided = false;
-   Point3F t,p(0,0,0),l(0,0,0);
-   for (S32 i = 0; i < cList.getCount(); i++) 
-   {
-      const Collision& c = cList[i];
-      if (c.distance < mDataBlock->collisionTol) 
-      {
-
-         // Velocity into the surface
-         Point3F v,r;
-         ns.getOriginVector(c.point,&r);
-         ns.getVelocity(r,&v);
-         F32 vn = mDot(v,c.normal);
-
-         // Only interested in velocities less than mDataBlock->contactTol,
-         // velocities greater than that are dealt with as collisions.
-         if (mFabs(vn) < mDataBlock->contactTol) 
-         {
-            collided = true;
-
-            // Penetration force. This is actually a spring which
-            // will seperate the body from the collision surface.
-            F32 zi = 2 * mFabs(mRigid.getZeroImpulse(r,c.normal) / dt);
-            F32 s = (mDataBlock->collisionTol - c.distance) * zi - ((vn / mDataBlock->contactTol) * zi);
-            Point3F f = c.normal * s;
-
-            // Friction impulse, calculated as a function of the
-            // amount of force it would take to stop the motion
-            // perpendicular to the normal.
-            Point3F uv = v - (c.normal * vn);
-            F32 ul = uv.len();
-            if (s > 0 && ul) 
-            {
-               uv /= -ul;
-               F32 u = ul * ns.getZeroImpulse(r,uv) / dt;
-               s *= mRigid.friction;
-               if (u > s)
-                  u = s;
-               f += uv * u;
-            }
-
-            // Accumulate forces
-            p += f;
-            mCross(r,f,&t);
-            l += t;
-         }
-      }
-   }
-
-   // Contact constraint forces act over time...
-   ns.linMomentum += p * dt;
-   ns.angMomentum += l * dt;
-   ns.updateVelocity();
-   return true;
-}
-
 
 //----------------------------------------------------------------------------
 

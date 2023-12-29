@@ -1278,6 +1278,11 @@ bool RigidShape::resolveCollision(Rigid&  ns,CollisionList& cList, F32 dt)
    for (S32 i = 0; i < cList.getCount(); i++)
    {
       Collision& c = cList[i];
+      if (c.object == this)
+      {
+         //Con::printf("IMPOSSIBLE!!!!--------------------------------> Self-collision event?");
+         continue;
+      }
       if (c.distance < mDataBlock->collisionTol)
       {
          // Velocity into surface

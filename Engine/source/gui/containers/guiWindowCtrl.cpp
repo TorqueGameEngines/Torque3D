@@ -1492,7 +1492,7 @@ const RectI GuiWindowCtrl::getClientRect()
    // Finally, inset it by padding
    // Inset by padding.  margin is specified for all t/b/l/r but 
    // uses only pointx pointy uniformly on both ends. This should be fixed. - JDD
-   // winRect.inset( mSizingOptions.mPadding.point.x, mSizingOptions.mPadding.point.y );
+   winRect.inset(mResizeMargin, mResizeMargin);
 
    return winRect;
 }

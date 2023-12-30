@@ -1207,8 +1207,12 @@ void RigidShape::updatePos(F32 dt)
 
 void RigidShape::updateForces(F32 dt)
 {
-   if (mDisableMove) return;
-
+   if (mDisableMove)
+   {
+      mRigid.linVelocity = Point3F::Zero;
+      mRigid.angMomentum = Point3F::Zero;
+      return;
+   }
    Point3F torque(0, 0, 0);
    Point3F force(0, 0, mRigid.mass * mNetGravity);
 
@@ -1273,7 +1277,6 @@ bool RigidShape::resolveCollision(Rigid&  ns,CollisionList& cList, F32 dt)
    PROFILE_SCOPE(RigidShape_resolveCollision);
    // Apply impulses to resolve collision
    bool collided = false;
-   Point3F t, p(0, 0, 0), l(0, 0, 0);
    for (S32 i = 0; i < cList.getCount(); i++)
    {
       Collision& c = cList[i];
@@ -1318,6 +1321,7 @@ bool RigidShape::resolveCollision(Rigid&  ns,CollisionList& cList, F32 dt)
          // "constraints".
          else
          {
+            Point3F t;
             // Penetration force. This is actually a spring which
             // will seperate the body from the collision surface.
             F32 zi = 2 * mFabs(mRigid.getZeroImpulse(r, c.normal) / dt);
@@ -1340,17 +1344,13 @@ bool RigidShape::resolveCollision(Rigid&  ns,CollisionList& cList, F32 dt)
             }
 
             // Accumulate forces
-            p += f;
             mCross(r, f, &t);
-            l += t;
-
+            ns.linMomentum += f * dt;
+            ns.angMomentum += t * dt;
+            ns.updateVelocity();
          }
       }
    }
-   // Contact constraint forces act over time...
-   ns.linMomentum += p * dt;
-   ns.angMomentum += l * dt;
-   ns.updateVelocity();
 
 
    return collided;

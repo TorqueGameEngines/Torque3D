@@ -128,6 +128,8 @@ function UndoActionAddDelete::trashObjects(%this)
    
    if( isObject( %this.tree ) )
       %this.tree.update();
+
+   GuiEditor.clearSelection();
 }
 
 function UndoActionAddDelete::restoreObjects(%this)

@@ -59,8 +59,11 @@ if(!isObject( OptionsMenuActionMap ) )
    OptionsMenuActionMap.bind( keyboard, R, OptionsMenuReset );
    OptionsMenuActionMap.bind( gamepad, btn_x, OptionsMenuReset );
    
-   OptionsMenuActionMap.bind( keyboard, Enter, OptionsMenuActivateOption );
+   OptionsMenuActionMap.bind( keyboard, Space, OptionsMenuActivateOption );
    OptionsMenuActionMap.bind( gamepad, btn_a, OptionsMenuActivateOption );
+   
+   OptionsMenuActionMap.bind( keyboard, Enter, tryApplyOptions);
+   OptionsMenuActionMap.bind( gamepad, btn_start, tryApplyOptions);
 }
 
 //==============================================================================
@@ -237,6 +240,11 @@ function OptionsMenu::syncGui(%this)
    
    OptionsMenuPrevNavIcon.setBitmap(OptionsMenuActionMap.getCommandButtonBitmap(%device, "OptionsMenuPrevCategory"));
    OptionsMenuNextNavIcon.setBitmap(OptionsMenuActionMap.getCommandButtonBitmap(%device, "OptionsMenuNextCategory"));
+   
+   OptionsMenuApplyBtn.setBitmap(OptionsMenuActionMap.getCommandButtonBitmap(%device, "tryApplyOptions"));
+   
+   OptionsMenuRemapBtn.visible = KBMControlsList.visible || GamepadControlsList.visible;
+   OptionsMenuRemapBtn.setBitmap(OptionsMenuActionMap.getCommandButtonBitmap(%device, "OptionsMenuActivateOption"));
 }
 
 //==============================================================================
@@ -292,6 +300,12 @@ function OptionMenuNavigatePrev(%val)
          $MenuList.listPosition = 0;
          
       $MenuList.syncGUI();
+      
+      $BaseUI::scrollSchedule = schedule($BaseUI::scrollSpeedTimeMs, 0, "OptionMenuNavigatePrev", 1);
+   }
+   else
+   {
+      cancel($BaseUI::scrollSchedule);
    }
 }
 
@@ -311,15 +325,23 @@ function OptionMenuNavigateNext(%val)
          $MenuList.listPosition = $MenuList.getCount()-1;
          
       $MenuList.syncGUI();
+      
+      $BaseUI::scrollSchedule = schedule($BaseUI::scrollSpeedTimeMs, 0, "OptionMenuNavigateNext", 1);
+   }
+   else
+   {
+      cancel($BaseUI::scrollSchedule);
    }
 }
 
 function OptionMenuStickNavigate(%val)
 {
-   if(%val == -1)
-      BaseUINavigateNext(1);
-   else if(%val == 1)
-      mainMenuNavigateDown(1);
+   if(%val == 1)
+      OptionMenuNavigateNext(1);
+   else if(%val == -1)
+      OptionMenuNavigatePrev(1);
+   else 
+      cancel($BaseUI::scrollSchedule);
 }
 
 function OptionMenuPrevSetting(%val)
@@ -387,11 +409,9 @@ function OptionsMenuActivateOption(%val)
    if(!isObject(%option))
       return;
       
-      echo(%option.class);
-      
    if(%option.class $= "OptionsKeybindEntry")
    {
-      eval(%option-->button.altCommand);
+      %option-->button.execAltCommand();
    }
 }
 
@@ -504,29 +524,29 @@ function OptionsMenu::populateAudioSettings(%this)
 
 function OptionsMenu::populateKBMControls(%this)
 {
-   //$remapListDevice = "keyboard";
    %this.populateKeybinds("keyboard", KBMControlsList);
    
    %this.syncGui();
+   
+   KBMControlsList.syncGui();
 }
 
 function OptionsMenu::populateGamepadControls(%this)
 {
-   //$remapListDevice = ;
    %this.populateKeybinds("gamepad", GamepadControlsList);
    
    %this.syncGui();
+   
+   GamepadControlsList.syncGui();
 }
 
 function OptionsMenu::populateKeybinds(%this, %device, %controlsList)
 {
-   //%device = $remapListDevice;
-   
 	%controlsList.clear();
 
    //build out our list of action maps
    %actionMapCount = ActionMapGroup.getCount();
-   
+
    %actionMapList = "";
    for(%i=0; %i < %actionMapCount; %i++)
    {
@@ -567,32 +587,34 @@ function OptionsMenu::populateKeybinds(%this, %device, %controlsList)
    if($activeRemapControlSet $= "")
       $activeRemapControlSet = getField(%actionMapList, 0);
       
-   if(getFieldCount(%actionMapList) > 1)
+   for(%am = 0; %am < getFieldCount(%actionMapList); %am++)
    {
-      for(%am = 0; %am < getFieldCount(%actionMapList); %am++)
+      %currentActionMap = getField(%actionMapList, %am);
+      
+      //only add the group if we've got more than one group, otherwise it's obviously
+      //part of the single grouping
+      if(getFieldCount(%actionMapList) > 1)
       {
-         %currentActionMap = getField(%actionMapList, %am);
-        
          %actionMapGroupEntry = addOptionGroup(%currentActionMap);
          %controlsList.add(%actionMapGroupEntry);
+      }
+      
+      for ( %i = 0; %i < $RemapCount; %i++ )
+      {
+         if(%device !$= "" && %device !$= $RemapDevice[%i])
+            continue;
+            
+         %actionMapName = $RemapActionMap[%i].humanReadableName $= "" ? $RemapActionMap[%i].getName() : $RemapActionMap[%i].humanReadableName; 
+            
+         if(%currentActionMap !$= %actionMapName)
+            continue;
+            
+         %keyMap = buildFullMapString( %i, $RemapActionMap[%i], %device );
+
+         %description = $RemapDescription[%i];
          
-         for ( %i = 0; %i < $RemapCount; %i++ )
-         {
-            if(%device !$= "" && %device !$= $RemapDevice[%i])
-               continue;
-               
-            %actionMapName = $RemapActionMap[%i].humanReadableName $= "" ? $RemapActionMap[%i].getName() : $RemapActionMap[%i].humanReadableName; 
-               
-            if(%currentActionMap !$= %actionMapName)
-               continue;
-               
-            %keyMap = buildFullMapString( %i, $RemapActionMap[%i], %device );
-
-            %description = $RemapDescription[%i];
-
-            %remapEntry = addActionMapEntry(%actionMapName, %device, %keyMap, %i, %description);
-            %controlsList.add(%remapEntry);
-         }
+         %remapEntry = addActionMapEntry(%actionMapName, %device, %keyMap, %i, %description);
+         %controlsList.add(%remapEntry);
       }
    }
    
@@ -627,6 +649,20 @@ function tryCloseOptionsMenu(%val)
    }
 } 
 
+function tryApplyOptions(%val)
+{
+   if(!%val)
+      return;
+      
+   $optionsChangeRequiresRestart = false;
+   
+   %unappliedVideoChanges = VideoSettingsList.checkForUnappliedChanges();
+   %unappliedAudioChanges = AudioSettingsList.checkForUnappliedChanges();
+   
+   if(%unappliedVideoChanges || %unappliedAudioChanges)
+      OptionsMenu.applyChangedOptions();
+}
+
 function OptionsMenu::applyChangedOptions(%this)
 {
    VideoSettingsList.applyChanges();
@@ -650,13 +686,12 @@ function OptionsMenu::applyChangedOptions(%this)
 
 function doKeyRemap( %optionEntry )
 {
-   //%rowIndex = %row.remapIndex;
-   //%name = $RemapName[%rowIndex];
-   
    %name = getField(%optionEntry.keymap,0);
 
 	RemapDlg-->OptRemapText.text = "Re-bind \"" @ %name @ "\" to..." ;
 	OptRemapInputCtrl.index = %optionEntry.remapIndex;
+	
+	$remapListDevice = %optionEntry.device;
 	
 	Canvas.pushDialog( RemapDlg );
 }

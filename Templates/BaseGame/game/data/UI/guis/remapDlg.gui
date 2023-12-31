@@ -24,6 +24,7 @@ $guiContent = new GuiControl(RemapDlg) {
          vertSizing = "height";
          profile = "GuiInputCtrlProfile";
          tooltipProfile = "GuiToolTipProfile";
+         sendAxisEvents = "1";
       };
       new GuiControl(RemapBoxCtrl) {
          position = "-1 1";

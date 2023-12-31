@@ -225,23 +225,6 @@ function findRemapCmdIndex( %command )
 	return( -1 );	
 }
 
-/// This unbinds actions beyond %count associated to the
-/// particular actionMap %commmand.
-function unbindExtraActions( %command, %actionMap, %count )
-{
-   %temp = %actionMap.getBinding( %command );
-   if ( %temp $= "" )
-      return;
-
-   %count = getFieldCount( %temp ) - ( %count * 2 );
-   for ( %i = 0; %i < %count; %i += 2 )
-   {
-      %device = getField( %temp, %i + 0 );
-      %action = getField( %temp, %i + 1 );
-      
-      %actionMap.unbind( %device, %action );
-   }
-}
 
 function redoMapping( %device, %actionMap, %action, %cmd, %oldIndex, %newIndex )
 {

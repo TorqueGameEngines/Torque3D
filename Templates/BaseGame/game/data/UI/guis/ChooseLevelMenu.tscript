@@ -147,7 +147,7 @@ if(!isObject( ChooseLevelActionMap ) )
    ChooseLevelActionMap.bind( gamepad, lpov, BaseUINavigatePrev );
    ChooseLevelActionMap.bind( gamepad, rpov, BaseUINavigateNext );
    
-   ChooseLevelActionMap.bind( keyboard, Enter, ChooseLevelBegin );
+   ChooseLevelActionMap.bind( keyboard, Space, ChooseLevelBegin );
    ChooseLevelActionMap.bind( gamepad, btn_a, ChooseLevelBegin );
 }
 

@@ -17,7 +17,7 @@ if(!isObject( JoinServerActionMap ) )
    JoinServerActionMap.bindCmd( keyboard, e, "JoinServerMenu.queryLan();" );
    JoinServerActionMap.bindCmd( gamepad, btn_y, "JoinServerMenu.queryLan();" );
    
-   JoinServerActionMap.bindCmd( keyboard, Enter, "JoinServerMenu::join();" );
+   JoinServerActionMap.bindCmd( keyboard, Space, "JoinServerMenu::join();" );
    JoinServerActionMap.bindCmd( gamepad, btn_a, "JoinServerMenu::join();" );
 }
 

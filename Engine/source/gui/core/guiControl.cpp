@@ -2947,3 +2947,19 @@ DefineEngineMethod( GuiControl, getAspect, F32, (),,
    const Point2I &ext = object->getExtent();
    return (F32)ext.x / (F32)ext.y;
 }
+
+//-----------------------------------------------------------------------------
+
+DefineEngineMethod(GuiControl, execCommand, const char*, (), ,
+   "Forcefully executes the command field value(if any) on this guiControl.\n"
+   "@return The results of the evaluation of the command.")
+{
+   return object->execConsoleCallback();
+}
+
+DefineEngineMethod(GuiControl, execAltCommand, const char*, (), ,
+   "Forcefully executes the altCommand field value(if any) on this guiControl.\n"
+   "@return The results of the evaluation of the altCommand.")
+{
+   return object->execAltConsoleCallback();
+}

@@ -9,6 +9,8 @@ function MainMenuGui::onWake(%this)
 {
    $MenuList = MainMenuButtonList;
    $MenuList.listPosition = 0;
+   
+   $MenuList.syncGui();
 }
 
 function MainMenuGui::onSleep(%this)
@@ -25,7 +27,7 @@ if(!isObject( BaseUIActionMap ) )
    BaseUIActionMap.bind( gamepad, upov, BaseUINavigatePrev );
    BaseUIActionMap.bind( gamepad, dpov, BaseUINavigateNext );
    
-   BaseUIActionMap.bind( keyboard, Enter, BaseUIActivateSelected );
+   BaseUIActionMap.bind( keyboard, Space, BaseUIActivateSelected );
    BaseUIActionMap.bind( gamepad, btn_a, BaseUIActivateSelected );
    
    BaseUIActionMap.bind( keyboard, Escape, BaseUIBackOut );
@@ -75,9 +77,7 @@ function BaseUIStickNavigate(%val)
    else if(%val == -1)
       BaseUINavigatePrev(1);
    else 
-   {
       cancel($BaseUI::scrollSchedule);
-   }
 }
 
 function BaseUIBackOut(%val)

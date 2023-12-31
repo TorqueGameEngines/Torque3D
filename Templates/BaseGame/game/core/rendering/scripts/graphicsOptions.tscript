@@ -9,9 +9,10 @@ function OptionsQualityLevel::isCurrent( %this )
       %value = %this.getValue( %i );
       
       if ( getVariable( %pref ) !$= %value )
+      {
          return false;
+      }
    }
-   
    return true;
 }
 
@@ -971,7 +972,7 @@ function VideoSettingsGroup::populateDisplaySettings(%this)
       {
          class = "OptionsQualityLevel";
          displayName = %device;
-         key["$pref::Video::displayDeviceId"] = %device;
+         key["$pref::Video::deviceId"] = %i;
       };
       
       DisplayDevicesGroup.add(%entry);
@@ -985,8 +986,9 @@ function VideoSettingsGroup::populateDisplaySettings(%this)
       for(%i=0; %i < getFieldCount(%resolutionList); %i++)
       {
          %rawResolution = getField(%resolutionList, %i);
-         %prettyResolution = _makePrettyResString(%rawResolution);
          
+         %prettyResolution = _makePrettyResString(%rawResolution);
+
          %entry = new ArrayObject()
          {
             class = "OptionsQualityLevel";
@@ -996,6 +998,26 @@ function VideoSettingsGroup::populateDisplaySettings(%this)
          
          DisplayResSettingsGroup.add(%entry);
       }
+   }
+   else
+   {
+      if($platform !$= "windows")
+         %monitorRect = Canvas.getMonitorUsableRect($pref::Video::deviceId);
+      else
+         %monitorRect = Canvas.getMonitorRect($pref::Video::deviceId);
+         
+      %rawResolution = getWords(%monitorRect, 2);
+      
+      %prettyResolution = _makePrettyResString(%rawResolution);
+         
+      %entry = new ArrayObject()
+      {
+         class = "OptionsQualityLevel";
+         displayName = %prettyResolution;
+         key["$pref::Video::Resolution"] = %rawResolution;
+      };
+      
+      DisplayResSettingsGroup.add(%entry);
    }
 
    %refreshList = getScreenRefreshList($pref::Video::mode);
@@ -1100,6 +1122,7 @@ function updateDisplayOptionsSettings()
       $pref::Video::FullScreen = %newFullScreen;
       $pref::Video::RefreshRate = %newRefresh;
       $pref::Video::AA = %newAA;
+      
       configureCanvas();
    }
 }
@@ -1135,6 +1158,11 @@ function PostFXLightRayOptionsGroup::onApply(%this)
 
 function getCurrentQualityLevel(%qualityGroup)
 {
+   /*if(%qualityGroup.getId() == DisplayResSettingsGroup.getId())
+   {
+      echo("Checking current quality level of Display Resolution");    
+   }*/
+   
    for ( %i=0; %i < %qualityGroup.getCount(); %i++ )
    {
       %level = %qualityGroup.getObject( %i );
@@ -1349,7 +1377,7 @@ function getScreenResolutionList(%deviceID, %deviceMode)
    if ((%deviceMode == $Video::ModeBorderless) && ($platform !$= "windows"))
    {
       %borderlessRes = getWords(Canvas.getMonitorUsableRect(%deviceID), 2);
-      return _makePrettyResString(%borderlessRes);
+      return %borderlessRes;
    }
 
    %resCount = Canvas.getModeCount();
@@ -1361,7 +1389,7 @@ function getScreenResolutionList(%deviceID, %deviceMode)
       if (!Canvas.checkCanvasRes(%testResString, %deviceID, %deviceMode, false))
          continue;
 
-      %testRes = _makePrettyResString( %testResString );
+      %testRes = getWords(%testResString, 0, 1);
       
       //sanitize
       %found = false;

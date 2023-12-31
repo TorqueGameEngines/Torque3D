@@ -73,7 +73,7 @@ if(!isObject( GameMenuActionMap ) )
    GameMenuActionMap.bind( gamepad, upov, BaseUINavigatePrev );
    GameMenuActionMap.bind( gamepad, dpov, BaseUINavigateNext );
    
-   GameMenuActionMap.bind( keyboard, Enter, BaseUIActivateSelected );
+   GameMenuActionMap.bind( keyboard, Space, BaseUIActivateSelected );
    GameMenuActionMap.bind( gamepad, btn_a, BaseUIActivateSelected );
    
    GameMenuActionMap.bindCmd( keyboard, Escape, "Canvas.popDialog(GameMenu);", "" );

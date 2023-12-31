@@ -125,7 +125,7 @@ if(!isObject( MessageBoxActionMap ) )
 {
    new ActionMap(MessageBoxActionMap){};
    
-   MessageBoxActionMap.bind( keyboard, Enter, messageBoxYesClicked );
+   MessageBoxActionMap.bind( keyboard, Space, messageBoxYesClicked );
    MessageBoxActionMap.bind( gamepad, btn_a, messageBoxYesClicked );
    
    MessageBoxActionMap.bind( keyboard, Escape, messageBoxNoClicked );

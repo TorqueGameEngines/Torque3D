@@ -192,8 +192,38 @@ $guiContent = new GuiControl(OptionsMenu) {
          tooltipProfile = "GuiToolTipProfile";
          class = "MenuInputButton";
       };
-      new GuiIconButtonCtrl(OptionsMenuResetBtn) {
+      new GuiIconButtonCtrl(OptionsMenuRemapBtn) {
+         BitmapAsset = "UI:Keyboard_Black_Space_image";
+         sizeIconToButton = "1";
+         makeIconSquare = "1";
+         textLocation = "Center";
+         text = "Remap";
+         position = "850 0";
+         extent = "140 40";
+         horizSizing = "left";
+         vertSizing = "center";
+         profile = "GuiMenuButtonProfile";
+         command = "OptionsMenuActivateOption(1)";
+         tooltipProfile = "GuiToolTipProfile";
+         class = "MenuInputButton";
+      };
+      new GuiIconButtonCtrl(OptionsMenuApplyBtn) {
          BitmapAsset = "UI:Keyboard_Black_Return_image";
+         sizeIconToButton = "1";
+         makeIconSquare = "1";
+         textLocation = "Center";
+         text = "Apply";
+         position = "990 0";
+         extent = "140 40";
+         horizSizing = "left";
+         vertSizing = "center";
+         profile = "GuiMenuButtonProfile";
+         command = "OptionsMenu.applyChangedOptions();";
+         tooltipProfile = "GuiToolTipProfile";
+         class = "MenuInputButton";
+      };
+      new GuiIconButtonCtrl(OptionsMenuResetBtn) {
+         BitmapAsset = "UI:Keyboard_Black_R_image";
          sizeIconToButton = "1";
          makeIconSquare = "1";
          textLocation = "Center";

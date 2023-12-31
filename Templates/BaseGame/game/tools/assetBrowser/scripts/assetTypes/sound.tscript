@@ -91,6 +91,17 @@ function AssetBrowser::onSoundAssetEditorDropped(%this, %assetDef, %position)
    
 }
 
+function AssetBrowser::onSoundAssetGUIEditorDropped(%this, %assetDef, %position)
+{    
+   %assetId = %assetDef.getAssetId();
+   %cmd = "new GuiAudioCtrl(){";
+   %cmd = %cmd @ "SoundAsset =\""@ %assetId @"\";";
+   %cmd = %cmd @ "position =\""@ %position @"\";";
+   %cmd = %cmd @ "};";
+   %ctrl = GuiEditCanvas.createObject(%cmd);
+   echo(%ctrl SPC "created");
+}
+
 function GuiInspectorTypeSoundAssetPtr::onControlDropped( %this, %payload, %position )
 {
    Canvas.popDialog(EditorDragAndDropLayer);

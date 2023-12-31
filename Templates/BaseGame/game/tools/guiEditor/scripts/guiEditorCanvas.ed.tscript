@@ -290,13 +290,7 @@ function GuiEditCanvas::createObject( %this, %cmd )
 
 function GuiEditCanvas::onFinishCreateObject( %this, %objId )
 {
-   GuiEditor.getCurrentAddSet().add( %objId );
-
-   if( %objId.isMemberOfClass( "GuiControl" ) )
-   {
-      %objId.position = "0 0";
-   }
-   
+   GuiEditor.getCurrentAddSet().add( %objId );   
    %this.onObjectCreated( %objId );
 }
 

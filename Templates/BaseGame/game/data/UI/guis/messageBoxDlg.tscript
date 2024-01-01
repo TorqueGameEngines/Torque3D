@@ -137,14 +137,16 @@ function MessageBoxCtrl::syncGui(%this)
    
 }
 
-function messageBoxYesClicked(%this)
+function messageBoxYesClicked(%val)
 {
-   MessageCallback(MessageBoxDlg, MessageBoxDlg.callback);
+   if(%val)
+      MessageCallback(MessageBoxDlg, MessageBoxDlg.callback);
 }
 
-function messageBoxNoClicked(%this)
+function messageBoxNoClicked(%val)
 {
-   MessageCallback(MessageBoxDlg,MessageBoxDlg.cancelCallback);
+   if(%val)
+      MessageCallback(MessageBoxDlg,MessageBoxDlg.cancelCallback);
 }
 
 //MessageBoxOK("Test", "This is a test message box", "echo(\"Uhhhhhawhat?\"");

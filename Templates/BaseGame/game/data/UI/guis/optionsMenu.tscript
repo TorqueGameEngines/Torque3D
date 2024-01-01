@@ -19,6 +19,8 @@ function OptionsMenu::onAdd(%this)
 
 function OptionsMenu::onWake(%this)
 {
+   $optionsChangeRequiresRestart = false;
+   
    %this.populateVideoSettings();
    
    %this.populateAudioSettings();
@@ -48,7 +50,7 @@ if(!isObject( OptionsMenuActionMap ) )
    OptionsMenuActionMap.bind( keyboard, d, OptionMenuNextSetting );
    OptionsMenuActionMap.bind( gamepad, xaxis, "D", "-0.23 0.23", OptionMenuStickChangeSetting );
    OptionsMenuActionMap.bind( gamepad, lpov, OptionMenuPrevSetting );
-   OptionsMenuActionMap.bind( gamepad, lpov, OptionMenuNextSetting );
+   OptionsMenuActionMap.bind( gamepad, rpov, OptionMenuNextSetting );
    
    OptionsMenuActionMap.bind( keyboard, q, OptionsMenuPrevCategory );
    OptionsMenuActionMap.bind( gamepad, btn_l, OptionsMenuPrevCategory );
@@ -145,7 +147,7 @@ function OptionsMenuList::checkForUnappliedChanges(%this)
             if(!%targetOptionLevel.isCurrent())
                %unappliedChanges = true;
             
-            if(%option.optionsObject.requiresRestart)
+            if(%unappliedChanges && %option.optionsObject.requiresRestart)
                $optionsChangeRequiresRestart = true;
          }
       }
@@ -365,6 +367,17 @@ function OptionMenuPrevSetting(%val)
       
       //echo("Changed option: " @ %optionObject.optionName @ " from level: " @ %currentOptionLevel.displayName @ " to level: " @ %newOptionLevel.displayName);
    }
+   else if(%option.class $= "OptionsListSliderEntry")
+   {
+      %sliderCtrl = %option-->valuesContainer-->slider;
+      %minValue = %sliderCtrl.range.x;
+      %maxValue = %sliderCtrl.range.y;
+      %ticks = %sliderCtrl.ticks;
+      
+      %tickIncrementVal = (%maxValue - %minValue) / %ticks;
+      
+      %sliderCtrl.value -= %tickIncrementVal;
+   }
       
    $MenuList.syncGUI();
 }
@@ -390,13 +403,27 @@ function OptionMenuNextSetting(%val)
       
       //echo("Changed option: " @ %optionObject.optionName @ " from level: " @ %currentOptionLevel.displayName @ " to level: " @ %newOptionLevel.displayName);
    }
+   else if(%option.class $= "OptionsListSliderEntry")
+   {
+      %sliderCtrl = %option-->valuesContainer-->slider;
+      %minValue = %sliderCtrl.range.x;
+      %maxValue = %sliderCtrl.range.y;
+      %ticks = %sliderCtrl.ticks;
+      
+      %tickIncrementVal = (%maxValue - %minValue) / %ticks;
+      
+      %sliderCtrl.value += %tickIncrementVal;
+   }
       
    $MenuList.syncGUI();
 }
 
 function OptionMenuStickChangeSetting(%val)
 {
-   
+   if(%val == 1)
+      OptionMenuNextSetting(1);
+   else if(%val == -1)
+      OptionMenuPrevSetting(1);
 }
  
 function OptionsMenuActivateOption(%val)
@@ -509,10 +536,19 @@ function OptionsMenu::populateAudioSettings(%this)
    
    AudioSettingsList.add(addOptionGroup("Channel Volume"));
    
-   AudioSettingsList.add(addOptionSlider("Master Volume", "", "$pref::SFX::masterVolume", 0, 1, 0.1));
-   AudioSettingsList.add(addOptionSlider("GUI Volume", "", "$pref::SFX::channelVolume[" @ $GuiAudioType @ "]", 0, 1, 0.1));
-   AudioSettingsList.add(addOptionSlider("Effects Volume", "", "$pref::SFX::channelVolume[" @ $SimAudioType @ "]", 0, 1, 0.1));
-   AudioSettingsList.add(addOptionSlider("Music Volume", "", "$pref::SFX::channelVolume[" @ $MusicAudioType @ "]", 0, 1, 0.1));
+   //Now we'll populate the sliders for the audio channels. 
+   //The defaults of these are defined in core/sfx/scripts/audio.tscript
+   //These define the MasterVolume channel, as well as several other common defualt ones
+   //Because it's a variable list, this can be expanded by modules  by just upping $AudioChannelCount
+   //and then defining the $AudioChannelName[x] with the displayed name and
+   //and the $AudioChannels[x] variable with the SFXSource object defined to it for the given channel
+   AudioSettingsList.add(addOptionSlider("Master Volume", "", "$pref::SFX::masterVolume", 0, 1, 10));
+   
+   //We init to 1, because 0 is the reserved for the masterVolume in practice
+   for(%i=1; %i < $AudioChannelCount; %i++)
+   {
+      AudioSettingsList.add(addOptionSlider($AudioChannelsName[%i] @ " Volume", "", "$pref::SFX::channelVolume" @ %i, 0, 1, 10));
+   }
   
    //Ensure our newly templated options listings are sized right
    for(%i=0; %i < AudioSettingsList.getCount(); %i++)
@@ -637,6 +673,17 @@ function tryCloseOptionsMenu(%val)
    %unappliedVideoChanges = VideoSettingsList.checkForUnappliedChanges();
    %unappliedAudioChanges = AudioSettingsList.checkForUnappliedChanges();
    
+   //validate audio prefs
+   if($pref::SFX::masterVolume_tempVar !$= "" && $pref::SFX::masterVolume_tempVar != $pref::SFX::masterVolume)
+      %unappliedAudioChanges = true;
+   
+   for(%i=1; %i < $AudioChannelCount; %i++)
+   {
+      %tempVolume = getVariable("$pref::SFX::channelVolume" @ %i @ "_tempVar"); 
+      if(%tempVolume !$= "" && $pref::SFX::channelVolume[ %i ] != %tempVolume)
+         %unappliedAudioChanges = true;
+   }
+   
    if(%unappliedVideoChanges || %unappliedAudioChanges)
    {
       MessageBoxOKCancel("Discard Changes?", "You have unapplied changes to your settings, do you wish to apply or discard them?", 
@@ -668,12 +715,19 @@ function OptionsMenu::applyChangedOptions(%this)
    VideoSettingsList.applyChanges();
    AudioSettingsList.applyChanges();
    
-   //$pref::SFX::masterVolume = OptionsMenuSettingsList.getValue(2);
+   //Process the audio channel tempvars to get their values
+   //and then apply them to the actual pref variable, as well as the SFXChannelVolume
+   $pref::SFX::masterVolume = $pref::SFX::masterVolume_tempVar;
    sfxSetMasterVolume( $pref::SFX::masterVolume );
-   sfxSetChannelVolume( $GuiAudioType, $pref::SFX::channelVolume[ $GuiAudioType ] );
-   sfxSetChannelVolume( $SimAudioType, $pref::SFX::channelVolume[ $SimAudioType ] );
-   sfxSetChannelVolume( $MusicAudioType, $pref::SFX::channelVolume[ $MusicAudioType ] );
    
+   //0 is always master anyways
+   for(%i=1; %i < $AudioChannelCount; %i++)
+   {
+      %volume = getVariable("$pref::SFX::channelVolume" @ %i @ "_tempVar");
+      sfxSetChannelVolume( %i, %volume );
+      $pref::SFX::channelVolume[ %i ] = %volume;
+   }
+
    //Finally, write our prefs to file
    %prefPath = getPrefpath();
    export("$pref::*", %prefPath @ "/clientPrefs." @ $TorqueScriptFileExtension, false);
@@ -838,13 +892,17 @@ function addOptionSlider(%optionName, %optionDesc, %prefName, %sliderMin, %slide
 {
    %currentVal = getVariable(%prefName);
    
+   %tempVarName = %prefName @ "_tempVar";
+   
    if(%currentVal $= "")
       %currentVal = %sliderMin;
+      
+   setVariable(%tempVarName, %currentVal);
       
    %optionNameHeight = 20;
    if(%optionDesc $= "")
       %optionNameHeight = 40;
-   
+      
    %entry = new GuiContainer() {
       position = "0 0";
       extent = "800 40";
@@ -897,11 +955,12 @@ function addOptionSlider(%optionName, %optionDesc, %prefName, %sliderMin, %slide
             ticks = %sliderTicks;
             snap = "1";
             value = %currentVal;
+            variable = %tempVarName;
             useFillBar = "1";
             fillBarColor = $TextMediumEmphasisColor;
             renderTicks = "0";
             position = "0 10";
-            extent = "300 20";
+            extent = "400 20";
             minExtent = "8 2";
             horizSizing = "right";
             vertSizing = "center";
@@ -915,6 +974,7 @@ function addOptionSlider(%optionName, %optionDesc, %prefName, %sliderMin, %slide
             canSave = "1";
             canSaveDynamicFields = "0";
             class = "OptionsSliderEntrySlider";
+            internalName = "slider";
          };
       };
    }; 

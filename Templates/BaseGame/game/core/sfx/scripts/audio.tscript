@@ -309,17 +309,26 @@ function sfxAutodetect()
 //-----------------------------------------------------------------------------
 
 // Volume channel IDs for backwards-compatibility.
-
+$AudioChannelCount   = 5;
 $GuiAudioType        = 1;  // Interface.
 $SimAudioType        = 2;  // Game.
 $MessageAudioType    = 3;  // Notifications.
 $MusicAudioType      = 4;  // Music.
 
 $AudioChannels[ 0 ] = AudioChannelDefault;
+$AudioChannelsName[ 0 ] = "Master";
+
 $AudioChannels[ $GuiAudioType ] = AudioChannelGui;
+$AudioChannelsName[ $GuiAudioType ] = "Gui";
+
 $AudioChannels[ $SimAudioType ] = AudioChannelEffects;
+$AudioChannelsName[ $SimAudioType ] = "Effects";
+
 $AudioChannels[ $MessageAudioType ] = AudioChannelMessages;
+$AudioChannelsName[ $MessageAudioType ] = "Messages";
+
 $AudioChannels[ $MusicAudioType ] = AudioChannelMusic;
+$AudioChannelsName[ $MusicAudioType ] = "Music";
 
 function sfxOldChannelToGroup( %channel )
 {

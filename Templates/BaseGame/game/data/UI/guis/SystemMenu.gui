@@ -22,6 +22,8 @@ $guiContent = new GuiControl(SystemMenu) {
          profile = "GuiMenuButtonProfile";
          command = "Canvas.popDialog(GameMenu);";
          tooltipProfile = "GuiToolTipProfile";
+         groupNum = "1";
+         class = "SystemMenuButton";
       };
       new GuiButtonCtrl() {
          text = "Options";
@@ -30,6 +32,8 @@ $guiContent = new GuiControl(SystemMenu) {
          profile = "GuiMenuButtonProfile";
          command = "Canvas.pushDialog(OptionsMenu);";
          tooltipProfile = "GuiToolTipProfile";
+         groupNum = "1";
+         class = "SystemMenuButton";
       };
       new GuiButtonCtrl() {
          text = "Exit to Menu";
@@ -38,6 +42,8 @@ $guiContent = new GuiControl(SystemMenu) {
          profile = "GuiMenuButtonProfile";
          command = "systemMenuExitToMenu();";
          tooltipProfile = "GuiToolTipProfile";
+         groupNum = "1";
+         class = "SystemMenuButton";
       };
       new GuiButtonCtrl() {
          text = "Exit to Desktop";
@@ -46,6 +52,8 @@ $guiContent = new GuiControl(SystemMenu) {
          profile = "GuiMenuButtonProfile";
          command = "systemMenuExitToDesktop();";
          tooltipProfile = "GuiToolTipProfile";
+         groupNum = "1";
+         class = "SystemMenuButton";
       };
    };
 };

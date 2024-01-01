@@ -201,3 +201,29 @@ singleton GuiControlProfile(GuiMenuScrollProfile)
    hasBitmapArray = true;
    category = "BaseUI";
 };
+
+new GuiControlProfile(MenuTextEditprofile)
+{
+   opaque = true;
+   fillColor = "10 10 10 255";
+   fillColorHL = "10 10 10 255";
+   fontColor = "240 240 240";
+   fontColorHL = "10 10 10 255";
+   fontColorSEL = "255 255 255 255";
+   fontColorNA = "200 200 200";
+   textOffset = "4 2";
+   autoSizeWidth = false;
+   autoSizeHeight = true;
+   justify = "left";
+   tab = true;
+   canKeyFocus = true;   
+   category = "BaseUI";
+   borderColorSEL = "0 0 0 0";
+   fontColors[0] = "240 240 240 255";
+   fontColors[1] = "10 10 10 255";
+   fontColors[2] = "200 200 200 255";
+   fontColors[3] = "255 255 255 255";
+   fillColorSEL = "10 10 10 255";
+   fontSize = "18";
+   cursorColor = "255 255 255 255";
+};

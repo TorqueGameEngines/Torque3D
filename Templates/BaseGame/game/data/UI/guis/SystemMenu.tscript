@@ -2,6 +2,8 @@ function SystemMenu::onWake(%this)
 {
     $MenuList = SystemMenuButtonList;
     $MenuList.listPosition = 0;
+    
+    $MenuList.syncGui();
 }
 
 function SystemMenu::onSleep(%this)
@@ -19,10 +21,14 @@ function systemMenuExitToDesktop()
    MessageBoxOKCancel("Exit?", "Do you wish to exit to the desktop?", "quit();", "");
 }
 
+function SystemMenuButton::onHighlighted(%this, %highlighted)
+{
+   if(%highlighted)
+      $MenuList.listPosition = $MenuList.getObjectIndex(%this);
+}
+
 function SystemMenuButtonList::syncGUI(%this)
 {
-   %this.callOnChildren("setHighlighted", false);
-   
    %btn = %this.getObject(%this.listPosition);
    %btn.setHighlighted(true);
    

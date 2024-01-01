@@ -7,7 +7,7 @@ $guiContent = new GuiControl(JoinServerMenu) {
    tooltipProfile = "GuiToolTipProfile";
    isContainer = "1";
    canSaveDynamicFields = "1";
-   
+
    new GuiInputCtrl(JoinServerInputHandler) {
       ignoreMouseEvents = "1";
       ActionMap = "JoinServerActionMap";
@@ -18,7 +18,6 @@ $guiContent = new GuiControl(JoinServerMenu) {
       profile = "GuiInputCtrlProfile";
       tooltipProfile = "GuiToolTipProfile";
    };
-
    new GuiPanel(JoinServerTitlePanel) {
       extent = "1281 60";
       horizSizing = "width";
@@ -34,23 +33,45 @@ $guiContent = new GuiControl(JoinServerMenu) {
       };
    };
    new GuiContainer() {
-      position = "203 61";
+      position = "190 61";
       extent = "900 30";
-      profile = GuiMenuPanelProfile;
-      tooltipProfile = "GuiToolTipProfile";
       horizSizing = "center";
-      vertSizing = "bottom";
+      profile = "GuiDefaultProfile";
+      tooltipProfile = "GuiToolTipProfile";
+
+      new GuiTextCtrl() {
+         text = "Player Name";
+         position = "0 5";
+         extent = "98 23";
+         vertSizing = "center";
+         profile = "MenuMLSubHeaderText";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+      new GuiTextEditCtrl(JoinServerPlayerNameTxt) {
+         text = "Visitor";
+         position = "606 7";
+         extent = "295 18";
+         horizSizing = "left";
+         vertSizing = "center";
+         profile = "MenuTextEditprofile";
+         variable = "$pref::Player::Name";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+   };
+   new GuiContainer() {
+      position = "190 97";
+      extent = "900 30";
+      horizSizing = "center";
+      profile = "GuiMenuPanelProfile";
+      tooltipProfile = "GuiToolTipProfile";
 
       new GuiTextCtrl() {
          text = "Server Details";
-         position = "0 0";
          extent = "700 30";
-         horizSizing = "right";
          vertSizing = "center";
          profile = "MenuSubHeaderText";
          tooltipProfile = "GuiToolTipProfile";
       };
-      
       new GuiTextCtrl() {
          text = "Ping";
          position = "700 0";
@@ -60,7 +81,6 @@ $guiContent = new GuiControl(JoinServerMenu) {
          profile = "MenuSubHeaderCenteredText";
          tooltipProfile = "GuiToolTipProfile";
       };
-      
       new GuiTextCtrl() {
          text = "Player Count";
          position = "770 0";
@@ -70,12 +90,12 @@ $guiContent = new GuiControl(JoinServerMenu) {
          profile = "MenuSubHeaderCenteredText";
          tooltipProfile = "GuiToolTipProfile";
       };
-   }; 
+   };
    new GuiScrollCtrl() {
       hScrollBar = "alwaysOff";
       vScrollBar = "dynamic";
-      position = "203 91";
-      extent = "900 621";
+      position = "190 127";
+      extent = "900 551";
       minExtent = "8 8";
       horizSizing = "center";
       vertSizing = "height";
@@ -102,7 +122,7 @@ $guiContent = new GuiControl(JoinServerMenu) {
       tooltipProfile = "GuiToolTipProfile";
 
       new GuiIconButtonCtrl(JoinServerJoinBtn) {
-         BitmapAsset = "UI:Keyboard_Black_Return_image";
+         BitmapAsset = "UI:Keyboard_Black_Space_image";
          sizeIconToButton = "1";
          makeIconSquare = "1";
          textLocation = "Center";
@@ -112,11 +132,12 @@ $guiContent = new GuiControl(JoinServerMenu) {
          horizSizing = "left";
          vertSizing = "center";
          profile = "GuiMenuButtonProfile";
+         active = "0";
          command = "JoinServerMenu.join();";
          tooltipProfile = "GuiToolTipProfile";
       };
       new GuiIconButtonCtrl(JoinServerQLanBtn) {
-         BitmapAsset = "UI:Keyboard_Black_Escape_image";
+         BitmapAsset = "UI:Keyboard_Black_E_image";
          sizeIconToButton = "1";
          makeIconSquare = "1";
          textLocation = "Center";
@@ -130,7 +151,7 @@ $guiContent = new GuiControl(JoinServerMenu) {
          tooltipProfile = "GuiToolTipProfile";
       };
       new GuiIconButtonCtrl(JoinServerQServerBtn) {
-         BitmapAsset = "UI:Keyboard_Black_Escape_image";
+         BitmapAsset = "UI:Keyboard_Black_Q_image";
          sizeIconToButton = "1";
          makeIconSquare = "1";
          textLocation = "Center";
@@ -140,7 +161,7 @@ $guiContent = new GuiControl(JoinServerMenu) {
          horizSizing = "left";
          vertSizing = "center";
          profile = "GuiMenuButtonProfile";
-         command = "JoinServerMenu.join();";
+         command = "JoinServerMenu.query();";
          tooltipProfile = "GuiToolTipProfile";
       };
       new GuiIconButtonCtrl(JoinServerBackBtn) {

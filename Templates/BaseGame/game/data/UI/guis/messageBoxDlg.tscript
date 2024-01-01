@@ -157,7 +157,7 @@ function MessageBoxOK(%title, %message, %callback)
    Canvas.pushDialog(MessageBoxDlg);
    MessageBoxTitleText.text = %title;
    
-   %okButton = MessageBoxCtrl.createButton("OK", "messageBoxYesClicked();");
+   %okButton = MessageBoxCtrl.createButton("OK", "messageBoxYesClicked(1);");
    %bitmapAssetId = MessageBoxActionMap.getCommandButtonBitmap(Canvas.getLastInputDevice(), "messageBoxYesClicked");
    %okButton.setBitmap(%bitmapAssetId);
    
@@ -182,11 +182,11 @@ function MessageBoxOKCancel(%title, %message, %callback, %cancelCallback, %okLab
    else
       %cancelLabel = %cancelLabelOverride;
       
-   %okButton = MessageBoxCtrl.createButton(%okLabel, "messageBoxYesClicked();");
+   %okButton = MessageBoxCtrl.createButton(%okLabel, "messageBoxYesClicked(1);");
    %bitmapAssetId = MessageBoxActionMap.getCommandButtonBitmap(Canvas.getLastInputDevice(), "messageBoxYesClicked");
    %okButton.setBitmap(%bitmapAssetId);
    
-   %cancelButton = MessageBoxCtrl.createButton(%cancelLabel, "messageBoxNoClicked();");
+   %cancelButton = MessageBoxCtrl.createButton(%cancelLabel, "messageBoxNoClicked(1);");
    %bitmapAssetId = MessageBoxActionMap.getCommandButtonBitmap(Canvas.getLastInputDevice(), "messageBoxNoClicked");
    %cancelButton.setBitmap(%bitmapAssetId);
    

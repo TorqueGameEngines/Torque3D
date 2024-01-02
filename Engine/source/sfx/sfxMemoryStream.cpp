@@ -39,9 +39,10 @@ SFXMemoryStream::SFXMemoryStream( const SFXFormat& format,
 
 void SFXMemoryStream::reset()
 {
-   if( dynamic_cast< IResettable* >( getSourceStream() ) )
+   IResettable* rStream = dynamic_cast<IResettable*>(getSourceStream());
+   if(rStream )
    {
-      reinterpret_cast< IResettable* >( getSourceStream() )->reset();
+      rStream->reset();
       
       if( mCurrentPacket )
          destructSingle( mCurrentPacket );

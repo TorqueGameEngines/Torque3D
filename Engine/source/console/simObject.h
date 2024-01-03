@@ -300,7 +300,7 @@ class SimObject: public ConsoleObject, public TamlCallbacks
       SimObject*       nextIdObject;
 
       StringTableEntry mInheritFrom;
-
+      bool    mPrototype;
       /// SimGroup we're contained in, if any.
       SimGroup*   mGroup;
       
@@ -388,7 +388,7 @@ class SimObject: public ConsoleObject, public TamlCallbacks
    public:
       inline void setProgenitorFile(const char* pFile) { mProgenitorFile = StringTable->insert(pFile); }
       inline StringTableEntry getProgenitorFile(void) const { return mProgenitorFile; }
-
+      static bool _doPrototype(void* object, const char* index, const char* data);
    protected:
       /// Taml callbacks.
       virtual void onTamlPreWrite(void) {}

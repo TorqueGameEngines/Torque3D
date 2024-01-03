@@ -40,6 +40,7 @@
 #include "core/fileObject.h"
 #include "persistence/taml/tamlCustom.h"
 #include "gui/editor/guiInspector.h"
+#include "console/script.h"
 
 #include "sim/netObject.h"
 
@@ -90,7 +91,7 @@ SimObject::SimObject()
    mNameSpace    = NULL;
    mNotifyList   = NULL;
    mFlags.set( ModStaticFields | ModDynamicFields );
-
+   mPrototype = true;
    mProgenitorFile = StringTable->EmptyString();
 
    mFieldDictionary = NULL;
@@ -159,7 +160,8 @@ void SimObject::initPersistFields()
 
       addProtectedField("inheritFrom", TypeString, Offset(mInheritFrom, SimObject), &setInheritFrom, &defaultProtectedGetFn,
          "Optional Name of object to inherit from as a parent.");
-                  
+
+      addProtectedField("Prototype", TypeBool, Offset(mPrototype, SimObject), &_doPrototype, &defaultProtectedGetFn, "Prototype Methods", AbstractClassRep::FieldFlags::FIELD_ComponentInspectors);
    endGroup( "Ungrouped" );
 
    addGroup( "Object" );
@@ -212,6 +214,15 @@ void SimObject::initPersistFields()
 }
 
 //-----------------------------------------------------------------------------
+bool SimObject::_doPrototype(void* object, const char* index, const char* data)
+{
+   if (!Con::isFunction("PrototypeClass")) return false;
+   if (dAtoi(data) != 1) return false;
+   SimObject* obj = reinterpret_cast<SimObject*>(object);
+   String command = String("PrototypeClass(") + (obj->getName()? String(obj->getName()) : String::ToString(obj->getId())) + ");";
+   Con::evaluate(command.c_str());
+   return false;
+}
 
 String SimObject::describeSelf() const
 {
@@ -2707,6 +2718,59 @@ DefineEngineMethod(SimObject, getMethodSigs, ArrayObject*, (bool commands), (fal
 
    return dictionary;
 }
+
+DefineEngineFunction(getMethodSigsNS, ArrayObject*, (StringTableEntry className, bool commands), (false),
+   "List the methods defined on this object.\n\n"
+   "Each description is a newline-separated vector with the following elements:\n"
+   "- method prototype string.\n"
+   "- Documentation string (not including prototype).  This takes up the remainder of the vector.\n"
+   "@return An ArrayObject populated with (name,description) pairs of all methods defined on the object.")
+{
+   
+   Namespace* ns = Con::lookupNamespace(className);
+   if (!ns)
+      return 0;
+
+   ArrayObject* dictionary = new ArrayObject();
+   dictionary->registerObject();
+
+   VectorPtr<Namespace::Entry*> vec(__FILE__, __LINE__);
+   ns->getEntryList(&vec);
+   for (Vector< Namespace::Entry* >::iterator j = vec.begin(); j != vec.end(); j++)
+   {
+      Namespace::Entry* e = *j;
+
+      if (commands)
+      {
+         if ((e->mType < Namespace::Entry::ConsoleFunctionType))
+            continue;
+      }
+      else
+      {
+         if ((e->mType > Namespace::Entry::ScriptCallbackType))
+            continue;
+      }
+      StringBuilder str;
+      str.append("function ");
+      str.append(ns->getName());
+      str.append("::");
+      str.append(e->getPrototypeSig());
+      str.append('\n');
+      str.append("{");
+      String docs = e->getDocString();
+      if (!docs.isEmpty())
+      {
+         str.append("\n/*");
+         str.append(docs);
+         str.append("\n*/");
+      }
+      str.append('\n');
+      str.append("}");
+      dictionary->push_back(e->mFunctionName, str.end());
+   }
+
+   return dictionary;
+}
 //-----------------------------------------------------------------------------
 
 namespace {
@@ -3262,6 +3326,33 @@ DefineEngineMethod( SimObject, getFieldCount, S32, (),,
    return list.size() - numDummyEntries;
 }
 
+DefineEngineFunction(getFieldCountNS, S32, (StringTableEntry className), ,
+   "Get the number of static fields on the name space.\n"
+   "@return The number of static fields defined on the object.")
+{
+   Namespace* ns = Con::lookupNamespace(className);
+   if (!ns)
+      return 0;
+   AbstractClassRep* rep = ns->mClassRep;
+   if (!rep)
+      return 0;
+
+   const AbstractClassRep::FieldList& list = rep->mFieldList;
+   const AbstractClassRep::Field* f;
+   U32 numDummyEntries = 0;
+
+   for (S32 i = 0; i < list.size(); i++)
+   {
+      f = &list[i];
+
+      // The special field types do not need to be counted.
+      if (f->type >= AbstractClassRep::ARCFirstCustomField || f->flag.test(AbstractClassRep::FieldFlags::FIELD_ComponentInspectors))
+         numDummyEntries++;
+   }
+
+   return list.size() - numDummyEntries;
+}
+
 //-----------------------------------------------------------------------------
 
 DefineEngineMethod( SimObject, getField, const char*, ( S32 index ),,
@@ -3284,6 +3375,42 @@ DefineEngineMethod( SimObject, getField, const char*, ( S32 index ),,
          continue;
 
       if(currentField == index)
+         return f->pFieldname;
+
+      currentField++;
+   }
+
+   // if we found nada, return nada.
+   return "";
+}
+
+DefineEngineFunction(getFieldNS, const char*, (StringTableEntry className,S32 index), ,
+   "Retrieve the value of a static field by index.\n"
+   "@param index The index of the static field.\n"
+   "@return The value of the static field with the given index or \"\".")
+{
+   Namespace* ns = Con::lookupNamespace(className);
+   if (!ns)
+      return 0;
+   AbstractClassRep* rep = ns->mClassRep;
+   if (!rep)
+      return 0;
+
+   const AbstractClassRep::FieldList& list = rep->mFieldList;
+   if ((index < 0) || (index >= list.size()))
+      return "";
+
+   const AbstractClassRep::Field* f;
+   S32 currentField = 0;
+   for (U32 i = 0; i < list.size() && currentField <= index; i++)
+   {
+      f = &list[i];
+
+      // The special field types can be skipped.
+      if (f->type >= AbstractClassRep::ARCFirstCustomField || f->flag.test(AbstractClassRep::FieldFlags::FIELD_ComponentInspectors))
+         continue;
+
+      if (currentField == index)
          return f->pFieldname;
 
       currentField++;

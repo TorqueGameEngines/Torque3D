@@ -71,7 +71,7 @@ bool blTerrainChunk::read(Stream & stream)
       return(false);
 
    mLightmap = new GBitmap();
-   return mLightmap->readBitmap("png",stream);
+   return false;//mLightmap->readBitmap("png",stream);
 }
 
 bool blTerrainChunk::write(Stream & stream)
@@ -82,8 +82,8 @@ bool blTerrainChunk::write(Stream & stream)
    if(!mLightmap)
       return(false);
 
-   if(!mLightmap->writeBitmap("png",stream))
-      return(false);
+   //if(!mLightmap->writeBitmap("png",stream))
+      //return(false);
 
    return(true);
 }

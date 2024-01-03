@@ -1202,7 +1202,7 @@ ConsoleValue Namespace::Entry::execute(S32 argc, ConsoleValue *argv, SimObject *
          break;
    }
 
-   return std::move(result);
+   return result;
 }
 
 //-----------------------------------------------------------------------------

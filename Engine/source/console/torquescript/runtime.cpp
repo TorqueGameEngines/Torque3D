@@ -1,4 +1,4 @@
-﻿#include "runtime.h"
+#include "runtime.h"
 
 #include "codeBlock.h"
 #include "console/script.h"
@@ -386,7 +386,7 @@ namespace TorqueScript
 
          // We're all compiled, so let's run it.
 #ifdef TORQUE_DEBUG
-         Con::printf("Loading compiled script %s.", scriptFileName);
+         Con::printf("Loading compiled script %s.", nameBuffer);
 #endif
          CodeBlock* code = new CodeBlock;
          code->read(scriptFileName, *compiledStream);

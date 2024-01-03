@@ -388,11 +388,10 @@ namespace TorqueScript
 #ifdef TORQUE_DEBUG
          Con::printf("Loading compiled script %s.", nameBuffer);
 #endif
-         CodeBlock* code = new CodeBlock;
+         CodeBlock* code = new CodeBlock();
          code->read(scriptFileName, *compiledStream);
          delete compiledStream;
          code->exec(0, scriptFileName, NULL, 0, NULL, noCalls, NULL, 0);
-         delete code;
          ret = true;
       }
       else if (scriptFile)

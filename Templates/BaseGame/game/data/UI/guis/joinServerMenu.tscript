@@ -2,10 +2,19 @@
 function JoinServerMenu::onWake(%this)
 {
    $MenuList = JoinServerList;
+   $MenuList.clear();
+   $Client::Password = "";
    JoinServerList.listPosition = 0;
    
    JoinServerList.syncGui();
 }   
+
+function JoinServerMenu::onSleep(%this)
+{
+   echo("Exporting client prefs");
+   %prefPath = getPrefpath();
+   export("$pref::*", %prefPath @ "/clientPrefs." @ $TorqueScriptFileExtension, false);  
+}
 
 if(!isObject( JoinServerActionMap ) )
 {

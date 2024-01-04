@@ -50,7 +50,7 @@ $guiContent = new GuiControl(JoinServerMenu) {
       new GuiTextEditCtrl(JoinServerPlayerNameTxt) {
          text = "Visitor";
          position = "606 7";
-         extent = "295 18";
+         extent = "295 22";
          horizSizing = "left";
          vertSizing = "center";
          profile = "MenuTextEditprofile";
@@ -59,7 +59,33 @@ $guiContent = new GuiControl(JoinServerMenu) {
       };
    };
    new GuiContainer() {
-      position = "190 97";
+      position = "190 87";
+      extent = "900 30";
+      horizSizing = "center";
+      profile = "GuiDefaultProfile";
+      tooltipProfile = "GuiToolTipProfile";
+
+      new GuiTextCtrl() {
+         text = "Password";
+         position = "0 5";
+         extent = "78 23";
+         vertSizing = "center";
+         profile = "MenuMLSubHeaderText";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+      new GuiTextEditCtrl(JoinServerPasswordTxt) {
+         text = "Visitor";
+         position = "606 7";
+         extent = "295 22";
+         horizSizing = "left";
+         vertSizing = "center";
+         profile = "MenuTextEditprofile";
+         variable = "$Client::Password";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+   };
+   new GuiContainer() {
+      position = "190 121";
       extent = "900 30";
       horizSizing = "center";
       profile = "GuiMenuPanelProfile";
@@ -94,8 +120,8 @@ $guiContent = new GuiControl(JoinServerMenu) {
    new GuiScrollCtrl() {
       hScrollBar = "alwaysOff";
       vScrollBar = "dynamic";
-      position = "190 127";
-      extent = "900 551";
+      position = "190 151";
+      extent = "900 532";
       minExtent = "8 8";
       horizSizing = "center";
       vertSizing = "height";

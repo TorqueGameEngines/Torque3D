@@ -19,12 +19,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
-
 //----------------------------------------
 function ChooseLevelMenu::onAdd( %this )
 {
    if(!isObject(ChooseLevelAssetQuery))
       new AssetQuery(ChooseLevelAssetQuery);
+      
+   %this.previewButtonSize = "445 120";
 }
 
 function ChooseLevelMenu::onWake(%this)
@@ -42,7 +43,7 @@ function ChooseLevelMenu::onWake(%this)
       MessageBoxOK("Error", "No levels were found in any modules. Please ensure you have modules loaded that contain gameplay code and level files.", 
          "Canvas.popDialog(ChooseLevelMenu); if(isObject(ChooseLevelMenu.returnGui) && ChooseLevelMenu.returnGui.isMethod(\"onReturnTo\")) ChooseLevelMenu.returnGui.onReturnTo();");
          
-      ChooseLevelAssetQuery.delete();
+      ChooseLevelAssetQuery.clear();
       return;
    }
    
@@ -65,47 +66,27 @@ function ChooseLevelMenu::onWake(%this)
       if (!isFile(%levelPreviewImg))
          %levelPreviewImg = "UI:no_preview_image";
          
-      %preview = new GuiContainer() { 
-         extent = "480 480";
+      %preview = new GuiIconButtonCtrl() {
+         position = "0 0";
+         extent = %this.previewButtonSize;
+         buttonType = "PushButton";
+         profile = GuiMenuButtonLeftJustProfile;
+         horizSizing = "right";
+         vertSizing = "bottom";
+         internalName = "button";
+         class = "LevelPreviewButton";
+         //command = "$selectedLevelAsset = " @ %assetId @ ";";
+         altCommand = "ChooseLevelBegin(1);"; //allow doubleclick to quick action it
+         text = %levelAsset.levelName;
+         bitmapAsset = %levelPreviewImg;
+         levelAsset = %levelAsset;
          levelAssetId = %assetId;
-         
-         new GuiButtonCtrl() {
-            position = "0 0";
-            extent = "480 480";
-            buttonType = "ToggleButton";
-            profile = GuiMenuButtonLeftJustProfile;
-            horizSizing = "width";
-            vertSizing = "height";
-            internalName = "button";
-            class = "LevelPreviewButton";
-            command = "$selectedLevelAsset = " @ %assetId @ ";";
-            altCommand = "ChooseLevelBegin(1);"; //allow doubleclick to quick action it
-         };
-         
-         new GuiBitmapCtrl() {
-            position = "20 0";
-            extent =  "440 440";
-            BitmapAsset = %levelPreviewImg; 
-            horizSizing = "width";
-            vertSizing = "bottom";
-            profile = GuiNonModalDefaultProfile;
-         };
-         
-         new GuiTextCtrl() { 
-            position = "20 445";
-            extent = "440 15";
-            text = %levelAsset.levelName;
-            profile = MenuSubHeaderText;
-            internalName = "levelNameTxt";
-         };
-            
-         new GuiMLTextCtrl() { 
-            position = "20 465";
-            extent = "440 15";
-            text = %levelAsset.levelDescription;
-            profile = GuiMLTextProfile;
-            internalName = "levelDescTxt";
-         };
+         iconLocation = "left";
+         sizeIconToButton = true;
+         makeIconSquare = true;
+         textLocation = "left";
+         textMargin = 120;
+         groupNum = 2;
       };
       
       LevelPreviewArray.add(%preview);
@@ -117,48 +98,113 @@ function ChooseLevelMenu::onWake(%this)
    {
       %this.addMissionFile( "tools/levels/DefaultEditorLevel.mis" );
    }
-   
-   //LevelList.setSelected(0);
-   
+
    if(!$pref::HostMultiPlayer)
       ChooseLevelTitleText.setText("SINGLE PLAYER");
    else
       ChooseLevelTitleText.setText("CREATE SERVER");
       
-   $MenuList = LevelPreviewArray;
-   $MenuList.listPosition = 0;
-   $MenuList.syncGui();
+   %this.openMenu(0);
 }
 
 if(!isObject( ChooseLevelActionMap ) )
 {
    new ActionMap(ChooseLevelActionMap){}; 
    
-   //Null the up/down nav so we can swap in left/right nav
-   ChooseLevelActionMap.bindCmd( keyboard, w, "" );
-   ChooseLevelActionMap.bindCmd( keyboard, s, "" );
-   ChooseLevelActionMap.bindCmd( gamepad, yaxis, "" );
-   ChooseLevelActionMap.bindCmd( gamepad, upov, "" );
-   ChooseLevelActionMap.bindCmd( gamepad, dpov, "" );
+   ChooseLevelActionMap.bind( keyboard, q, ChooseLevelMenuPrevMenu);
+   ChooseLevelActionMap.bind( gamepad, btn_l, ChooseLevelMenuPrevMenu);
    
-   ChooseLevelActionMap.bind( keyboard, a, BaseUINavigatePrev );
-   ChooseLevelActionMap.bind( keyboard, d, BaseUINavigateNext );
-   ChooseLevelActionMap.bind( gamepad, xaxis, "D", "-0.23 0.23", BaseUIStickNavigate );
-   ChooseLevelActionMap.bind( gamepad, lpov, BaseUINavigatePrev );
-   ChooseLevelActionMap.bind( gamepad, rpov, BaseUINavigateNext );
+   ChooseLevelActionMap.bind( keyboard, e, ChooseLevelMenuNextMenu);
+   ChooseLevelActionMap.bind( gamepad, btn_r, ChooseLevelMenuNextMenu);
    
    ChooseLevelActionMap.bind( keyboard, Space, ChooseLevelBegin );
    ChooseLevelActionMap.bind( gamepad, btn_a, ChooseLevelBegin );
 }
 
+function ChooseLevelMenu::syncGUI(%this)
+{
+   //Update the button imagery to comply to the last input device we'd used
+   %device = Canvas.getLastInputDevice();
+   if(%device $= "mouse")
+      %device = "keyboard";
+      
+   //Category handling
+   %btn = ChooseLevelMenuTabList.getObject(%this.currentMenuIdx);
+   %btn.setHighlighted(true);
+   
+   %buttonPosX = %btn.position.x + ChooseLevelMenuTabList.position.x;
+
+   ChooseLevelMenuPrevNavIcon.position.x = %buttonPosX;
+   ChooseLevelMenuNextNavIcon.position.x = %buttonPosX + %btn.extent.x - 40;
+     
+   ChooseLevelBackBtn.setBitmap(BaseUIActionMap.getCommandButtonBitmap(%device, "BaseUIBackOut"));
+   
+   ChooseLevelStartBtn.setBitmap(ChooseLevelActionMap.getCommandButtonBitmap(%device, "ChooseLevelBegin"));
+   
+   ChooseLevelMenuPrevNavIcon.setBitmap(ChooseLevelActionMap.getCommandButtonBitmap(%device, "ChooseLevelMenuPrevMenu"));
+   ChooseLevelMenuNextNavIcon.setBitmap(ChooseLevelActionMap.getCommandButtonBitmap(%device, "ChooseLevelMenuNextMenu"));
+   
+   ChooseLevelMenuTabList.visible = $pref::HostMultiPlayer;
+   ChooseLevelMenuNavButtonOverlay.visible = $pref::HostMultiPlayer;
+}
+
 function LevelPreviewArray::syncGUI(%this)
 {
-   %this.callOnChildren("setHighlighted", false);
-   
    %btn = %this.getObject(%this.listPosition);
-   %btn-->button.setHighlighted(true);
+   %btn.setHighlighted(true);
    
    $selectedLevelAsset = %btn.levelAssetId;
+}
+
+function ChooseLevelMenuPrevMenu(%val)
+{
+   if(%val)
+   {
+      %currentIdx = ChooseLevelMenu.currentMenuIdx;
+      ChooseLevelMenu.currentMenuIdx -= 1;
+      
+      ChooseLevelMenu.currentMenuIdx = mClamp(ChooseLevelMenu.currentMenuIdx, 0, 1);
+    
+      if(%currentIdx == ChooseLevelMenu.currentMenuIdx)
+         return;
+ 
+      ChooseLevelMenu.openMenu(ChooseLevelMenu.currentMenuIdx);
+   }
+}
+
+function ChooseLevelMenuNextMenu(%val)
+{
+   if(%val)
+   {
+      %currentIdx = ChooseLevelMenu.currentMenuIdx;
+      ChooseLevelMenu.currentMenuIdx += 1;
+      
+      ChooseLevelMenu.currentMenuIdx = mClamp(ChooseLevelMenu.currentMenuIdx, 0, 1);
+    
+      if(%currentIdx == ChooseLevelMenu.currentMenuIdx)
+         return;
+ 
+      ChooseLevelMenu.openMenu(ChooseLevelMenu.currentMenuIdx);
+   }
+}
+
+
+function ChooseLevelMenu::openMenu(%this, %menuIdx)
+{
+   LevelSelectContainer.setVisible(%menuIdx == 0);
+   ServerConfigContainer.setVisible(%menuIdx == 1);
+   
+   if(%menuIdx == 0)
+      $MenuList = LevelPreviewArray;
+   else if(%menuIdx == 1)
+      $MenuList = ServerConfigList;
+   
+    %this.currentMenuIdx = %menuIdx;
+
+   if($MenuList.isMethod("syncGui"))
+      $MenuList.syncGui();
+      
+   %this.syncGui();
 }
 
 function ChooseLevelBegin(%val)
@@ -178,6 +224,8 @@ function ChooseLevelBegin(%val)
          MessageBoxOK("Error", "Selected level preview does not have a valid level asset!");
          return;  
       }
+      
+      $selectedLevelAsset = %entry.levelAssetId;
 
       // Launch the chosen level with the editor open?
       if ( ChooseLevelMenu.launchInEditor )
@@ -198,14 +246,27 @@ function ChooseLevelMenu::onSleep( %this )
    // This is set from the outside, only stays true for a single wake/sleep
    // cycle.
    %this.launchInEditor = false;
+   
+   //Ensure any changes we made to our server configs is saved out
+   if($pref::HostMultiPlayer)
+   {
+      echo("Exporting server prefs");
+      %prefPath = getPrefpath();
+      export("$Pref::Server::*", %prefPath @ "/serverPrefs." @ $TorqueScriptFileExtension, false);
+      BanList::Export(%prefPath @ "/banlist." @ $TorqueScriptFileExtension);  
+   }
 }
 
 function LevelPreviewButton::onHighlighted(%this, %highlighted)
 {
-   %container = %this.getParent();
-   
-   %container-->levelNameTxt.profile = %highlighted ? MenuSubHeaderTextHighlighted : MenuSubHeaderText;
-   %container-->levelDescTxt.profile = %highlighted ? GuiMLTextProfileHighlighted : GuiMLTextProfile;
-   
-   LevelPreviewScroll.scrollToObject(%this);
+   if(%highlighted)
+   {
+      $MenuList.listPosition = $MenuList.getObjectIndex(%this);
+      
+      LevelPreviewBitmap.bitmapAsset = %this.bitmapAsset;
+      LevelNameText.text = %this.levelAsset.levelName;
+      LevelDescriptionText.setText(%this.levelAsset.levelDescription);
+      
+      LevelPreviewScroll.scrollToObject(%this);
+   }
 }

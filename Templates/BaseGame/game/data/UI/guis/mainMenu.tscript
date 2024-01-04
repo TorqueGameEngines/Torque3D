@@ -120,6 +120,9 @@ function MainMenuButton::onHighlighted(%this, %highlighted)
 
 function BaseUIActivateSelected()
 {
+   if($MenuList.getCount() == 0 || $MenuList.listPosition >= $MenuList.getCount() || $MenuList.listPosition < 0)
+      return;
+      
    %btn = $MenuList.getObject($MenuList.listPosition);
    
    if(%btn.isMethod("performClick"))

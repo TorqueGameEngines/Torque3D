@@ -26,12 +26,11 @@ function ChooseLevelMenu::onAdd( %this )
       new AssetQuery(ChooseLevelAssetQuery);
       
    %this.previewButtonSize = "445 120";
-   %this.fillPrefEntries();
 }
 
 function ChooseLevelMenu::fillPrefEntries( %this )
 {
-    serverNameCTRL.setText($Pref::Player::Name);
+    playerNameCTRL.setText($Pref::Player::Name);
     serverNameCTRL.setText($Pref::Server::Name);
     serverPassCTRL.setText($Pref::Server::Password);
     serverInfoCTRL.setText($Pref::Server::Info);
@@ -40,6 +39,7 @@ function ChooseLevelMenu::fillPrefEntries( %this )
 
 function ChooseLevelMenu::onWake(%this)
 {
+   %this.fillPrefEntries();
    LevelPreviewArray.clear();
    
    ChooseLevelAssetQuery.clear();

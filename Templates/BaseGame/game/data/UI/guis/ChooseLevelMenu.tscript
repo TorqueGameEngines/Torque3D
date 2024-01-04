@@ -87,6 +87,7 @@ function ChooseLevelMenu::onWake(%this)
          textLocation = "left";
          textMargin = 120;
          groupNum = 2;
+         cansave = false;
       };
       
       LevelPreviewArray.add(%preview);

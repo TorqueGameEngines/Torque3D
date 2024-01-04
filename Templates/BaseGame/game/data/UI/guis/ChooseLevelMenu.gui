@@ -240,7 +240,7 @@ $guiContent = new GuiControl(ChooseLevelMenu) {
                   tooltipProfile = "GuiToolTipProfile";
                };
                new GuiTextEditCtrl() {
-                  text = "Torque 3D Server";
+                  text = "";
                   position = "606 4";
                   extent = "295 22";
                   horizSizing = "left";

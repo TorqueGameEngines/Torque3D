@@ -187,7 +187,7 @@ $guiContent = new GuiControl(ChooseLevelMenu) {
                   profile = "MenuMLSubHeaderText";
                   tooltipProfile = "GuiToolTipProfile";
                };
-               new GuiTextEditCtrl() {
+               new GuiTextEditCtrl(playerNameCTRL) {
                   text = "Visitor";
                   position = "606 4";
                   extent = "295 22";
@@ -213,8 +213,8 @@ $guiContent = new GuiControl(ChooseLevelMenu) {
                   profile = "MenuMLSubHeaderText";
                   tooltipProfile = "GuiToolTipProfile";
                };
-               new GuiTextEditCtrl() {
-                  text = "Torque 3D Server";
+               new GuiTextEditCtrl(serverNameCTRL) {
+                  text = "";
                   position = "606 4";
                   extent = "295 22";
                   horizSizing = "left";
@@ -239,7 +239,7 @@ $guiContent = new GuiControl(ChooseLevelMenu) {
                   profile = "MenuMLSubHeaderText";
                   tooltipProfile = "GuiToolTipProfile";
                };
-               new GuiTextEditCtrl() {
+               new GuiTextEditCtrl(serverPassCTRL) {
                   text = "";
                   position = "606 4";
                   extent = "295 22";
@@ -265,7 +265,7 @@ $guiContent = new GuiControl(ChooseLevelMenu) {
                   profile = "MenuMLSubHeaderText";
                   tooltipProfile = "GuiToolTipProfile";
                };
-               new GuiTextEditCtrl() {
+               new GuiTextEditCtrl(serverInfoCTRL) {
                   text = "This is a Torque 3D server.";
                   position = "606 4";
                   extent = "295 22";
@@ -291,7 +291,7 @@ $guiContent = new GuiControl(ChooseLevelMenu) {
                   profile = "MenuMLSubHeaderText";
                   tooltipProfile = "GuiToolTipProfile";
                };
-               new GuiTextEditCtrl(JoinServerPlayerNameTxt) {
+               new GuiTextEditCtrl(serverMaxPlayersCTRL) {
                   text = "64";
                   position = "606 4";
                   extent = "295 22";

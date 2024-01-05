@@ -218,7 +218,8 @@ GuiControl::GuiControl() : mAddGroup( NULL ),
                            mLangTable(NULL),
                            mFirstResponder(NULL),
                            mHorizSizing(horizResizeRight),
-                           mVertSizing(vertResizeBottom)
+                           mVertSizing(vertResizeBottom),
+                           mCategory(StringTable->EmptyString())
 {
    mConsoleVariable     = StringTable->EmptyString();
    mAcceleratorKey      = StringTable->EmptyString();
@@ -293,6 +294,10 @@ void GuiControl::initPersistFields()
             "the global variable $ThisControl." );
       addField("accelerator",       TypeString,       Offset(mAcceleratorKey, GuiControl),
          "Key combination that triggers the control's primary action when the control is on the canvas." );
+
+      addField("category", TypeString, Offset(mCategory, GuiControl),
+         "Name of the category this gui control should be grouped into for organizational purposes. Primarily for tooling.");
+      
 
    endGroup( "Control" );	
    
@@ -2941,4 +2946,20 @@ DefineEngineMethod( GuiControl, getAspect, F32, (),,
 {
    const Point2I &ext = object->getExtent();
    return (F32)ext.x / (F32)ext.y;
+}
+
+//-----------------------------------------------------------------------------
+
+DefineEngineMethod(GuiControl, execCommand, const char*, (), ,
+   "Forcefully executes the command field value(if any) on this guiControl.\n"
+   "@return The results of the evaluation of the command.")
+{
+   return object->execConsoleCallback();
+}
+
+DefineEngineMethod(GuiControl, execAltCommand, const char*, (), ,
+   "Forcefully executes the altCommand field value(if any) on this guiControl.\n"
+   "@return The results of the evaluation of the altCommand.")
+{
+   return object->execAltConsoleCallback();
 }

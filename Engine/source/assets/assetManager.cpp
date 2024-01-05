@@ -210,7 +210,7 @@ bool AssetManager::addModuleDeclaredAssets( ModuleDefinition* pModuleDefinition 
         dSprintf(extensionBuffer, sizeof(extensionBuffer), "*.%s", pDeclaredAssets->getExtension());
 
         // Scan declared assets at location.
-        if ( !scanDeclaredAssets( filePathBuffer, extensionBuffer, pDeclaredAssets->getRecurse(), pModuleDefinition ) )
+        if ( !scanDeclaredAssets( filePathBuffer, extensionBuffer, pDeclaredAssets->getRecurse(), pModuleDefinition ) && mEchoInfo)
         {
             // Warn.
             Con::warnf( "AssetManager::addModuleDeclaredAssets() - No assets found at location '%s' with extension '%s'.", filePathBuffer, pDeclaredAssets->getExtension() );

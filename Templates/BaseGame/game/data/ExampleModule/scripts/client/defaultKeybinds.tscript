@@ -17,13 +17,20 @@ addKeyRemap("Ascend", "ExampleMoveMap", "keyboard", "moveup", "Makes the camera 
 addKeyRemap("Descend", "ExampleMoveMap", "keyboard", "movedown", "Makes the camera descend");
 addKeyRemap("Jump", "ExampleMoveMap", "keyboard", "jump", "Jump");
 
+//addKeyRemap("Forward", "ExampleMoveMap", "gamepad", "gamePadMoveY", "Forward Movement");
+//addKeyRemap("Backward", "ExampleMoveMap", "gamepad", "gamePadMoveY", "Backward Movement");
+//addKeyRemap("Strafe Left", "ExampleMoveMap", "gamepad", "gamePadMoveX", "Left Strafing Movement");
+//addKeyRemap("Strafe Right", "ExampleMoveMap", "gamepad", "gamePadMoveX", "Right Strafing Movement");
+addKeyRemap("Jump", "ExampleMoveMap", "gamepad", "jump", "Jump");
+
 //------------------------------------------------------------------------------
 // Non-remapable binds
 //------------------------------------------------------------------------------
 ExampleMoveMap.bind( keyboard, F2, showPlayerList );
 ExampleMoveMap.bind(keyboard, "ctrl h", hideHUDs);
 ExampleMoveMap.bind(keyboard, "alt p", doScreenShotHudless);
-ExampleMoveMap.bindCmd(keyboard, "escape", "", "Canvas.pushDialog(PauseMenu);");
+ExampleMoveMap.bindCmd(keyboard, "escape", "", "Canvas.pushDialog(GameMenu);");
+ExampleMoveMap.bindCmd(gamepad, btn_start, "Canvas.pushDialog(GameMenu);", "" );
 
 //------------------------------------------------------------------------------
 // Movement Keys

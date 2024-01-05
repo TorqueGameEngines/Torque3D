@@ -1,3 +1,25 @@
+function ActionMap::getCommandButtonBitmap(%this, %device, %command)
+{
+   %binding = %this.getBinding(%command);
+   
+   if(%device $= "mouse" || %device $= "")
+      %device = "keyboard";
+   
+   %bindingCount = getFieldCount(%binding);
+   for(%i=0; %i < %bindingCount; %i+=2)
+   {
+      %mapDevice = stripTrailingNumber(getField(%binding, %i)); 
+      if(%mapDevice $= %device)
+      {
+         %button = getField(%binding, %i+1);
+         break;
+      }
+   }
+
+   %assetId = getButtonBitmap(%device, %button);
+   return %assetId;
+}
+
 function getButtonBitmap(%device, %button)
 {
    if(%device $= "gamepad")
@@ -23,13 +45,13 @@ function getButtonBitmap(%device, %button)
          %assetId = %assetId @ "Square";
       else if(%button $= "Y" || %button $= "btn_y")
          %assetId = %assetId @ "Triangle";
-      else if(%button $= "LB")
+      else if(%button $= "LB" || %button $= "btn_l")
          %assetId = %assetId @ "L1";
-      else if(%button $= "LT")
+      else if(%button $= "LT" || %button $= "btn_lt")
          %assetId = %assetId @ "L2";
-      else if(%button $= "RB")
+      else if(%button $= "RB" || %button $= "btn_r")
          %assetId = %assetId @ "R1";
-      else if(%button $= "RT")
+      else if(%button $= "RT" || %button $= "btn_rt")
          %assetId = %assetId @ "R2";
       else if(%button $= "thumbrx" || %button $= "thumbry")
          %assetId = %assetId @ "Right_Stick";
@@ -62,13 +84,13 @@ function getButtonBitmap(%device, %button)
          %assetId = %assetId @ "Y";
       else if(%button $= "Y" || %button $= "btn_y")
          %assetId = %assetId @ "X";
-      else if(%button $= "LB")
+      else if(%button $= "LB" || %button $= "btn_l")
          %assetId = %assetId @ "LB";
-      else if(%button $= "LT")
+      else if(%button $= "LT" || %button $= "btn_lt")
          %assetId = %assetId @ "LT";
-      else if(%button $= "RB")
+      else if(%button $= "RB" || %button $= "btn_r")
          %assetId = %assetId @ "RB";
-      else if(%button $= "RT")
+      else if(%button $= "RT" || %button $= "btn_rt")
          %assetId = %assetId @ "RT";
       else if(%button $= "thumbrx" || %button $= "thumbry")
          %assetId = %assetId @ "Right_Stick";
@@ -91,6 +113,9 @@ function getButtonBitmap(%device, %button)
    }
    else if(%device $= "Keyboard" || %device $= "Mouse")
    {
+      if(%button $= "lshift" || %button $= "rshift")
+         %button = "shift";
+         
       %assetId = "UI:Keyboard_Black_" @ %button @ "_image";
    }
    else if(%device !$= "")
@@ -98,13 +123,21 @@ function getButtonBitmap(%device, %button)
       %assetId = "UI:Xbox_";
       
       if(%button $= "btn_a")
-         %assetId = %assetId @ "B";
-      else if(%button $= "btn_b")
          %assetId = %assetId @ "A";
+      else if(%button $= "btn_b")
+         %assetId = %assetId @ "B";
       else if(%button $= "btn_x")
-         %assetId = %assetId @ "Y";
-      else if(%button $= "btn_y")
          %assetId = %assetId @ "X";
+      else if(%button $= "btn_y")
+         %assetId = %assetId @ "Y";
+      else if(%button $= "LB" || %button $= "btn_l")
+         %assetId = %assetId @ "LB";
+      else if(%button $= "LT" || %button $= "btn_lt")
+         %assetId = %assetId @ "LT";
+      else if(%button $= "RB" || %button $= "btn_r")
+         %assetId = %assetId @ "RB";
+      else if(%button $= "RT" || %button $= "btn_rt")
+         %assetId = %assetId @ "RT";
       else if(%button $= "thumbrx" || %button $= "thumbry")
          %assetId = %assetId @ "Right_Stick";
       else if(%button $= "thumblx" || %button $= "thumbly")

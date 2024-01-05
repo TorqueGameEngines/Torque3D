@@ -1,53 +1,9 @@
-//options settings
+$optionsEntryPad = 10;
 
-//Screen and Display menu
-//Renderer Mode
-//Screen resolution
-//Windowed/fullscreen(borderless?)
-//VSync
-
-//Screen brightness
-//screen brightness
-//screen gamma
-
-//Lighting Menu
-//Shadow Distance(Distance shadows are drawn to. Also affects shadowmap slices)
-//Shadow Quality(Resolution of shadows rendered, setting to none disables dynamic shadows)
-//Soft Shadows(Whether shadow softening is used)
-//Shadow caching(If the lights enable it, shadow caching is activated)
-//Light Draw Distance(How far away lights are still drawn. Doesn't impact vector lights like the sun)
-
-//Mesh and Textures Menu
-//Draw distance(Overall draw distance) -slider
-//Object draw distance(Draw distance from small/unimportant objects) -slider
-//Mesh quality
-//Texture quality
-//Foliage draw distance
-//Terrain Quality
-//Decal Quality
-
-//Effects Menu
-//Parallax
-//HDR
-//Light shafts
-//Motion Blur
-//Depth of Field
-//SSAO
-//AA(ModelXAmount)[defualt is FXAA]
-//Anisotropic filtering
-
-//Keybinds
-
-//Camera
-//horizontal mouse sensitivity
-//vert mouse sensitivity
-//invert vertical
-//zoom mouse sensitivities(both horz/vert)
-//headbob
-//FOV
-
-$yesNoList = "No\tYes";
-$onOffList = "Off\tOn";
+$OptionsMenuCategories[0] = "Video";
+$OptionsMenuCategories[1] = "Audio";
+$OptionsMenuCategories[2] = "KBM";
+$OptionsMenuCategories[3] = "Controller";
 
 function OptionsMenu::onAdd(%this)
 {
@@ -56,1126 +12,1053 @@ function OptionsMenu::onAdd(%this)
       %this.optionsCategories = new ArrayObject();
    }  
    
-   if(!isObject(%this.unappliedChanges))
-   {
-      %this.unappliedChanges = new ArrayObject(OptionsMenuUnappliedChanges);
-   }  
-   
    %this.currentCategory = "";
-   
-   addOptionsMenuCategory("Display", "populateDisplaySettingsList();");
-   addOptionsMenuCategory("Graphics", "populateGraphicsSettingsList();");
-   addOptionsMenuCategory("Audio", "populateAudioSettingsList();");
-   addOptionsMenuCategory("Keyboard & Mouse", "populateKeyboardMouseSettingsList();");
-   addOptionsMenuCategory("Gamepad", "populateGamepadSettingsList();");
    
    callOnModules("populateOptionsMenuCategories", "Game");
 }
 
-function OptionsMenu::onOpen(%this)
+function OptionsMenu::onWake(%this)
 {
-   OptionsMenuCategoryList.clear(); 
+   %this.optsListCount = -1;
+   $optionsChangeRequiresRestart = false;
    
-   for(%i=0; %i < %this.optionsCategories.count(); %i++)
+   %this.populateVideoSettings();
+   
+   %this.populateAudioSettings();
+   
+   %this.populateKBMControls();
+   
+   %this.populateGamepadControls();
+   //establish the cached prefs values here
+   
+   %this.openOptionsCategory("Video");
+}
+
+if(!isObject( OptionsMenuActionMap ) )
+{
+   new ActionMap(OptionsMenuActionMap){};
+   
+   OptionsMenuActionMap.bind( keyboard, Escape, tryCloseOptionsMenu);
+   OptionsMenuActionMap.bind( gamepad, btn_b, tryCloseOptionsMenu);
+   
+   OptionsMenuActionMap.bind( keyboard, w, OptionMenuNavigatePrev );
+   OptionsMenuActionMap.bind( keyboard, s, OptionMenuNavigateNext );
+   OptionsMenuActionMap.bind( gamepad, yaxis, "D", "-0.23 0.23", OptionMenuStickNavigate );
+   OptionsMenuActionMap.bind( gamepad, upov, OptionMenuNavigatePrev );
+   OptionsMenuActionMap.bind( gamepad, dpov, OptionMenuNavigateNext );
+   
+   OptionsMenuActionMap.bind( keyboard, a, OptionMenuPrevSetting );
+   OptionsMenuActionMap.bind( keyboard, d, OptionMenuNextSetting );
+   OptionsMenuActionMap.bind( gamepad, xaxis, "D", "-0.23 0.23", OptionMenuStickChangeSetting );
+   OptionsMenuActionMap.bind( gamepad, lpov, OptionMenuPrevSetting );
+   OptionsMenuActionMap.bind( gamepad, rpov, OptionMenuNextSetting );
+   
+   OptionsMenuActionMap.bind( keyboard, q, OptionsMenuPrevCategory );
+   OptionsMenuActionMap.bind( gamepad, btn_l, OptionsMenuPrevCategory );
+   
+   OptionsMenuActionMap.bind( keyboard, e, OptionsMenuNextCategory );
+   OptionsMenuActionMap.bind( gamepad, btn_r, OptionsMenuNextCategory );
+   
+   OptionsMenuActionMap.bind( keyboard, R, OptionsMenuReset );
+   OptionsMenuActionMap.bind( gamepad, btn_x, OptionsMenuReset );
+   
+   OptionsMenuActionMap.bind( keyboard, Space, OptionsMenuActivateOption );
+   OptionsMenuActionMap.bind( gamepad, btn_a, OptionsMenuActivateOption );
+   
+   OptionsMenuActionMap.bind( keyboard, Enter, tryApplyOptions);
+   OptionsMenuActionMap.bind( gamepad, btn_start, tryApplyOptions);
+}
+
+//==============================================================================
+// This function updates all the elements in the actual lists to ensure they're
+// sized, stylized and formatted correctly, as well as up to date values
+function OptionsMenuList::syncGui(%this)
+{
+   %this.callOnChildren("setHighlighted", false);
+   
+   %btn = %this.getObject(%this.listPosition);
+   if(%btn.class $= "OptionsListEntry" || 
+      %btn.class $= "OptionsListSliderEntry" ||
+      %btn.class $= "OptionsKeybindEntry")
+      %btn-->button.setHighlighted(true);
+      
+   //iterate over the items and ensure that they are formatted well based on the settings selected
+   foreach(%option in %this)
    {
-      %catName = %this.optionsCategories.getKey(%i);
-      %callback = %this.optionsCategories.getValue(%i);
+      %container = %option-->valuesContainer;
       
-      %newCatButton = new GuiButtonCtrl() {
-         text = %catName;
-         groupNum = "-1";
-         buttonType = "PushButton";
-         useMouseEvents = "0";
-         position = "0 180";
-         extent = "248 35";
-         minExtent = "8 2";
-         horizSizing = "right";
-         vertSizing = "bottom";
-         profile = "GuiMenuButtonProfile";
-         visible = "1";
-         active = "1";
-         command = %callback;
-         tooltipProfile = "GuiToolTipProfile";
-         hovertime = "1000";
-         isContainer = "0";
-         canSave = "1";
-         canSaveDynamicFields = "0";
-      };
-      
-      OptionsMenuCategoryList.add(%newCatButton);
+      if(%option.class $= "OptionsListEntry")
+      {
+         %hasLevels = %option.optionsObject.getCount() <= 1;
+         
+         %optionObject = %option.optionsObject;
+         
+         //If it's out of range of the options, it's probably a custom value
+         if(%option.currentOptionIndex < %optionObject.getCount() && %option.currentOptionIndex >= 0)
+         {
+            %currentOptionLevel = %optionObject.getObject(%option.currentOptionIndex);
+            %currentOptionLevelTxt = %currentOptionLevel.displayName;
+         }
+         else
+         {
+            %currentOptionLevelTxt = "Custom";
+         }
+         
+         %optionValTextWidth = %option-->optionValue.profile.getStringWidth(%currentOptionLevelTxt);
+         
+         %option-->optionValue.resize(%container.extent.x - %container-->prevValButton.extent.x - %optionValTextWidth - 20, 0,
+                                      %optionValTextWidth + 20, %container.extent.y);
+                                      
+         %option-->optionValue.text = %currentOptionLevelTxt;
+                                      
+         %container-->prevValButton.position.x = %option-->optionValue.position.x - 20;
+         %container-->nextValButton.position.x = %container.extent.x - %container-->prevValButton.extent.x;
+
+         //if there's no alternatives, disable the left/right buttons
+         %container-->prevValButton.setHidden(%hasLevels);
+         %container-->nextValButton.setHidden(%hasLevels);
+      }
+      else if(%option.class $= "OptionsListSliderEntry")
+      {
+      }
+      else if(%option.class $= "OptionsKeybindEntry")
+      {
+         %bindImgAsset = getButtonBitmap(%option.device, getField(%option.keymap, 1));
+         
+         if(%bindImgAsset $= "UI:Keyboard_Black_Blank_image")
+            %bindImgAsset = "";
+            
+         %container-->bindButton.setBitmap(%bindImgAsset);
+      }
+   }
+}
+
+function OptionsMenuList::checkForUnappliedChanges(%this)
+{
+   %unappliedChanges = false;
+   
+   foreach(%option in %this)
+   {
+      if(%option.class $= "OptionsListEntry")
+      {
+         if(%option.currentOptionIndex >= 0 && %option.currentOptionIndex < %option.optionsObject.getCount())
+         {
+            %targetOptionLevel = %option.optionsObject.getObject(%option.currentOptionIndex);
+            
+            if(!%targetOptionLevel.isCurrent())
+               %unappliedChanges = true;
+            
+            if(%unappliedChanges && %option.optionsObject.requiresRestart)
+               $optionsChangeRequiresRestart = true;
+         }
+      }
    }
    
-   %this.unappliedChanges.empty();
-   $pref::Video::displayDeviceId = "";
-   
-   OptionsMenuCategoryList.setAsActiveMenuList();
-   
-   $activeMenuButtonContainer-->button1.set("btn_back", "R", "Reset", "OptionsMenu.resetToDefaults();");
-   $activeMenuButtonContainer-->button2.disable();
-   $activeMenuButtonContainer-->button3.set("", "Space", "Apply", "OptionsMenu.apply();");
-   $activeMenuButtonContainer-->button4.set("btn_a", "", "Select", "OptionsMenu.select();");
-   $activeMenuButtonContainer-->button5.set("btn_b", "Escape", "Back", %this @ ".navigation.popPage();");
+   return %unappliedChanges;
 }
-   
-//We capitalize on the canClose test here, because we want to prompt for unapplied options changes before
-//backing out. So when the UINavigation test canClose, we can see if we have unapplied settings and prompt
-//that via the message box and return false.
-//This gives the user a chance to choose how they wish to proceed before we allow the 
-//UINavigation to move away from the options menu
-function OptionsMenu::canClose(%this)
+
+function OptionsMenuList::applyChanges(%this)
 {
-   //Another special case is us catching the 'back/pop' action by just shifting from one
-   //menu list to another. In this case, we check if we were on the settings list as our active MenuList
-   //if so, then the back/pop just moves us to the Category list as our active and we inform the 
-   //UINavigation to not close the page
-   if(OptionsMenuSettingsList.isActiveMenuList())
+   foreach(%option in %this)
    {
-   OptionsMenuCategoryList.setAsActiveMenuList();
-      return false;
+      if(%option.class $= "OptionsListEntry")
+      {
+         //If it's custom or nonsensical index, there's some kind of external factor going on, so we're
+         //just going to skip applying it because we don't know what we'd be applying
+         if(%option.currentOptionIndex >= 0 && %option.currentOptionIndex < %option.optionsObject.getCount())
+         {
+            %targetOptionLevel = %option.optionsObject.getObject(%option.currentOptionIndex);
+
+            if(!%targetOptionLevel.isCurrent())
+               %targetOptionLevel.apply();
+         }
+      }
+   }
+}
+
+function OptionsMenu::openOptionsCategory(%this, %categoryName)
+{
+   VideoSettingsList.setVisible(%categoryName $= "Video");
+   AudioSettingsList.setVisible(%categoryName $= "Audio");
+   KBMControlsList.setVisible(%categoryName $= "KBM");
+   GamepadControlsList.setVisible(%categoryName $= "Controller");
+   
+   if(%categoryName $= "Video")
+   {
+      $MenuList = VideoSettingsList;
+      //Find our first non-group entry
+      while($MenuList.getObject($MenuList.listPosition).class !$= OptionsListEntry && $MenuList.listPosition < $MenuList.getCount())
+      {
+         $MenuList.listPosition += 1;
+      }
+      
+      %this.currentCatgeoryIdx = 0;
+   }
+   else if(%categoryName $= "Audio")
+   {
+      $MenuList = AudioSettingsList;
+      
+      %this.currentCatgeoryIdx = 1;
+   }
+   else if(%categoryName $= "KBM")
+   {
+      $MenuList = KBMControlsList;
+      
+      %this.currentCatgeoryIdx = 2;
+   }
+   else if(%categoryName $= "Controller")
+   {
+      $MenuList = GamepadControlsList;
+      
+      %this.currentCatgeoryIdx = 3;
+   }
+
+   $MenuList.syncGui();
+   %this.syncGui();
+}
+
+//==============================================================================
+// This function updates the non-list items of the menu to be up to date and stylistically
+// complaint. This ensures keybind hint buttons are presented correctly based on the current input
+// device
+function OptionsMenu::syncGui(%this)
+{
+   OptionsMenuCategoryList.callOnChildren("setHighlighted", false);
+   
+   %btn = OptionsMenuCategoryList.getObject(%this.currentCatgeoryIdx);
+   %btn.setHighlighted(true);
+   
+   %buttonPosX = %btn.position.x + OptionsMenuCategoryList.position.x;
+
+   OptionsMenuPrevNavIcon.position.x = %buttonPosX - 5;
+   OptionsMenuNextNavIcon.position.x = %buttonPosX + %btn.extent.x - 35;
+   
+   //Update the button imagery to comply to the last input device we'd used
+   %device = Canvas.getLastInputDevice();
+   if(%device $= "mouse")
+      %device = "keyboard";
+      
+   OptionsMenuBackBtn.setBitmap(BaseUIActionMap.getCommandButtonBitmap(%device, "BaseUIBackOut"));
+   OptionsMenuResetBtn.setBitmap(OptionsMenuActionMap.getCommandButtonBitmap(%device, "OptionsMenuReset"));
+   
+   OptionsMenuPrevNavIcon.setBitmap(OptionsMenuActionMap.getCommandButtonBitmap(%device, "OptionsMenuPrevCategory"));
+   OptionsMenuNextNavIcon.setBitmap(OptionsMenuActionMap.getCommandButtonBitmap(%device, "OptionsMenuNextCategory"));
+   
+   OptionsMenuApplyBtn.setBitmap(OptionsMenuActionMap.getCommandButtonBitmap(%device, "tryApplyOptions"));
+   
+   OptionsMenuRemapBtn.visible = KBMControlsList.visible || GamepadControlsList.visible;
+   OptionsMenuRemapBtn.setBitmap(OptionsMenuActionMap.getCommandButtonBitmap(%device, "OptionsMenuActivateOption"));
+}
+
+//==============================================================================
+// Menu navigation functions
+// Primarily used by keybinds
+function OptionsMenuPrevCategory(%val)
+{
+   if(%val)
+   {
+      %currentIdx = OptionsMenu.currentMenuIdx;
+      OptionsMenu.currentMenuIdx -= 1;
+      
+      OptionsMenu.currentMenuIdx = mClamp(OptionsMenu.currentMenuIdx, 0, 3);
+    
+      if(%currentIdx == OptionsMenu.currentMenuIdx)
+         return;
+ 
+      %newCategory = $OptionsMenuCategories[OptionsMenu.currentMenuIdx];
+      OptionsMenu.openOptionsCategory(%newCategory);
+   }
+}
+
+function OptionsMenuNextCategory(%val)
+{
+   if(%val)
+   {
+      %currentIdx = OptionsMenu.currentMenuIdx;
+      OptionsMenu.currentMenuIdx += 1;
+      
+      OptionsMenu.currentMenuIdx = mClamp(OptionsMenu.currentMenuIdx, 0, 3);
+         
+      if(%currentIdx == OptionsMenu.currentMenuIdx)
+         return;
+ 
+      %newCategory = $OptionsMenuCategories[OptionsMenu.currentMenuIdx];
+      OptionsMenu.openOptionsCategory(%newCategory);
+   }
+}
+
+function OptionMenuNavigatePrev(%val)
+{
+   if(%val)
+   {
+      $MenuList.listPosition -= 1;
+      while( $MenuList.listPosition >= 0 && ($MenuList.getObject($MenuList.listPosition).class !$= "OptionsListEntry" && 
+                                             $MenuList.getObject($MenuList.listPosition).class !$= "OptionsListSliderEntry" &&
+                                             $MenuList.getObject($MenuList.listPosition).class !$= "OptionsKeybindEntry"))
+      {
+         $MenuList.listPosition -= 1;
+      }
+         
+      if($MenuList.listPosition < 0)
+         $MenuList.listPosition = 0;
+         
+      $MenuList.syncGUI();
+      
+      $BaseUI::scrollSchedule = schedule($BaseUI::scrollSpeedTimeMs, 0, "OptionMenuNavigatePrev", 1);
    }
    else
    {
-      //Here, we're on the category list as our active, so we're actually trying to leae the page
-      //If we have unapplied changes, we want to prompt about them before closing the page and navigating away
-      //If we don't, then we can process the popPage as normal and let the OptionsMenu close
-      if(%this.unappliedChanges.count() != 0)
+      cancel($BaseUI::scrollSchedule);
+   }
+}
+
+function OptionMenuNavigateNext(%val)
+{
+   if(%val)
+   {
+      $MenuList.listPosition += 1;
+      while($MenuList.listPosition < $MenuList.getCount() && ($MenuList.getObject($MenuList.listPosition).class !$= "OptionsListEntry" && 
+                                                               $MenuList.getObject($MenuList.listPosition).class !$= "OptionsListSliderEntry" &&
+                                                               $MenuList.getObject($MenuList.listPosition).class !$= "OptionsKeybindEntry"))
       {
-         MessageBoxOKCancel("Discard Changes?", "You have unapplied changes to your settings, do you wish to apply or discard them?", 
-                        "OptionsMenu.apply(); MainMenuGUI.popPage();", "" @ %this @ ".unappliedChanges.empty(); " @ %this @ ".navigation.popPage();", 
-                        "Apply", "Discard");
-         return false;
+         $MenuList.listPosition += 1;
       }
-   }
-   
-   return true;
-}
-
-function OptionsMenu::onClose(%this)
-{
-   
-}
-
-function OptionsMenuSettingsList::onAdd(%this)
-{
-}
-   
-function OptionsMenuSettingsList::getOptionsList(%this, %index)
-{
-}
-
-function OptionsMenu::select(%this)
-{
-   if(OptionsMenuCategoryList.isActiveMenuList())
-   {
-      OptionsMenuSettingsList.setAsActiveMenuList();
-   }
-}
-
-function OptionsMenu::apply(%this)
-{
-   //Now we run through our list of unapplied changes and... apply them.
-   %hasKeybindChanges = false;
-   %hasVideoChanges = false;
-   %hasPostFXChanges = false;
-   %hasAudioChanges = false;
-   %hasGraphicsChanges = false;
-   for(%i=0; %i < %this.unappliedChanges.count(); %i++)
-   {
-      %targetVar = %this.unappliedChanges.getKey(%i);
-      %newValue = strReplace(%this.unappliedChanges.getValue(%i), "\"", "");
       
-      //First, lets just check through our action map names, see if any match
-      %wasKeybind = false;
-      for(%am=0; %am < ActionMapGroup.getCount(); %am++)
-      {
-         %actionMap = ActionMapGroup.getObject(%am);
-   
-         if(%actionMap == GlobalActionMap.getId())
-            continue;
+      if($MenuList.listPosition >= $MenuList.getCount())
+         $MenuList.listPosition = $MenuList.getCount()-1;
          
-         %actionMapName = %actionMap.getName();
-         if(%actionMapName $= %targetVar)
-         {
-            %hasKeybindChanges = true;
-            %wasKeybind = true;
-            break;
-         }
-      }
+      $MenuList.syncGUI();
       
-      if(!%wasKeybind)
+      $BaseUI::scrollSchedule = schedule($BaseUI::scrollSpeedTimeMs, 0, "OptionMenuNavigateNext", 1);
+   }
+   else
+   {
+      cancel($BaseUI::scrollSchedule);
+   }
+}
+
+function OptionMenuStickNavigate(%val)
+{
+   if(%val == 1)
+      OptionMenuNavigateNext(1);
+   else if(%val == -1)
+      OptionMenuNavigatePrev(1);
+   else 
+      cancel($BaseUI::scrollSchedule);
+}
+
+function OptionMenuPrevSetting(%val)
+{
+   if(!%val)
+      return;
+      
+   %option = $MenuList.getObject($MenuList.listPosition);
+   
+   if(!isObject(%option))
+      return;
+
+   if(%option.class $= "OptionsListEntry")
+   {
+      %optionObject = %option.optionsObject;
+      %currentOptionLevel = %optionObject.getObject(%option.currentOptionIndex);
+      
+      %option.currentOptionIndex = mClamp(%option.currentOptionIndex-1, 0, %optionObject.getCount()-1);
+      
+      %newOptionLevel = %optionObject.getObject(%option.currentOptionIndex);
+      
+      //echo("Changed option: " @ %optionObject.optionName @ " from level: " @ %currentOptionLevel.displayName @ " to level: " @ %newOptionLevel.displayName);
+   }
+   else if(%option.class $= "OptionsListSliderEntry")
+   {
+      %sliderCtrl = %option-->valuesContainer-->slider;
+      %minValue = %sliderCtrl.range.x;
+      %maxValue = %sliderCtrl.range.y;
+      %ticks = %sliderCtrl.ticks;
+      
+      %tickIncrementVal = (%maxValue - %minValue) / %ticks;
+      
+      %sliderCtrl.value -= %tickIncrementVal;
+   }
+      
+   $MenuList.syncGUI();
+}
+
+function OptionMenuNextSetting(%val)
+{
+   if(!%val)
+      return;
+      
+   %option = $MenuList.getObject($MenuList.listPosition);
+   
+   if(!isObject(%option) )
+      return;
+      
+   if(%option.class $= "OptionsListEntry")
+   {      
+      %optionObject = %option.optionsObject;
+      %currentOptionLevel = %optionObject.getObject(%option.currentOptionIndex);
+      
+      %option.currentOptionIndex = mClamp(%option.currentOptionIndex+1, 0, %optionObject.getCount()-1);
+      
+      %newOptionLevel = %optionObject.getObject(%option.currentOptionIndex);
+      
+      //echo("Changed option: " @ %optionObject.optionName @ " from level: " @ %currentOptionLevel.displayName @ " to level: " @ %newOptionLevel.displayName);
+   }
+   else if(%option.class $= "OptionsListSliderEntry")
+   {
+      %sliderCtrl = %option-->valuesContainer-->slider;
+      %minValue = %sliderCtrl.range.x;
+      %maxValue = %sliderCtrl.range.y;
+      %ticks = %sliderCtrl.ticks;
+      
+      %tickIncrementVal = (%maxValue - %minValue) / %ticks;
+      
+      %sliderCtrl.value += %tickIncrementVal;
+   }
+      
+   $MenuList.syncGUI();
+}
+
+function OptionMenuStickChangeSetting(%val)
+{
+   if(%val == 1)
+      OptionMenuNextSetting(1);
+   else if(%val == -1)
+      OptionMenuPrevSetting(1);
+}
+ 
+function OptionsMenuActivateOption(%val)
+{
+   if(!%val)
+      return;
+      
+   %option = $MenuList.getObject($MenuList.listPosition);
+   
+   if(!isObject(%option))
+      return;
+      
+   if(%option.class $= "OptionsKeybindEntry")
+   {
+      %option-->button.execAltCommand();
+   }
+}
+
+//==============================================================================
+// This function utilizes the VideoSettingsGroup SimGroup to populate options.
+// The object is defined in core/rendering/scripts/graphicsOptions.tscript
+// A majority of the options are statically defined, but some are dynamically populated
+// on refresh, like the display device or available resolution options.
+// Once populated, we loop over the simgroup structure to populate our option entry
+// rows in the options menu itself.
+function OptionsMenu::populateVideoSettings(%this)
+{
+   VideoSettingsList.clear();
+   
+   VideoSettingsGroup::populateDisplaySettings();
+   
+   for(%i=0; %i < VideoSettingsGroup.getCount(); %i++)
+   {
+      %setting = VideoSettingsGroup.getObject(%i);
+      
+      if(%setting.class $= "SubOptionsGroup")
       {
-         %sanitizedVar = strReplace(%targetVar, "[", "");
-         %sanitizedVar = strReplace(%sanitizedVar, "]", "");
-         %sanitizedVar = strReplace(%sanitizedVar, ",", "_");
-         %currentValue = getVariable(%sanitizedVar);
-         if(%currentValue !$= %newValue)
+         %entry = addOptionGroup(%setting.displayName);
+         
+         if(isObject(%entry))
+            VideoSettingsList.add(%entry);
+         
+         for(%s=0; %s < %setting.getCount(); %s++)
          {
-            setVariable(%targetVar, %newValue);
+            %option = %setting.getObject(%s);
             
-            //now, lets check for special cases that need additional handling
-            //for updates
-            if ( %targetVar $= "$pref::Video::displayDevice" )
-            {
-               schedule(32, 0, "MessageBoxOK", "Change requires restart", "Please restart the game for a display device change to take effect.");
-            }
-            else if(startsWith(%targetVar, "$pref::PostFX::"))
-            {
-               %hasPostFXChanges = true;
-            }
-            else if(startsWith(%targetVar, "$pref::Video::"))
-            {
-               %hasVideoChanges = true;
-               
-               //if it's the resolution, it's possible we got the human-friendly
-               //version stored off. if so, reprocess into the usable state
-               if(%targetVar $= "$pref::Video::Resolution")
-               {
-                  if(strpos(%newValue, " x ") != -1)
-                  {
-                     %newValue = strreplace(%newValue, " x ", " ");
-                     setVariable(%targetVar, %newValue);
-                  }
-               }
-               //This is a bit of hackery to have an intermediate variable because we display in text
-               //but save by index, so we take the applied name and get the index of the deviceId
-               else if(%targetVar $= "$pref::Video::displayDeviceId")
-               {
-                  %deviceId = getDisplayDeviceId($pref::Video::displayDeviceId);
-                  if(%deviceId == -1)
-                     %deviceId = 0;
-                  
-                   $pref::Video::deviceId = %deviceId;
-                   $pref::Video::displayDeviceId = "";
-               }
-            }
-            else if(startsWith(%targetVar, "$pref::SFX::"))
-            {
-               %hasAudioChanges = true;
-            }
-            else if(startsWith(%targetVar, "$pref::Graphics::"))
-            {
-               %hasGraphicsChanges = true;
-            }
+            %optionsEntry = addOptionEntry(%option);
+
+            if(isObject(%optionsEntry))
+               VideoSettingsList.add(%optionsEntry);
          }
       }
-   }
-   
-   //If we had keybind changes, go ahead and save those out
-   if(%hasKeybindChanges)
-   {
-      %prefPath = getPrefpath();
-      
-      %actionMapCount = ActionMapGroup.getCount();
-   
-      %actionMapList = "";
-      %append = false;
-      for(%i=0; %i < %actionMapCount; %i++)
+      else if(%setting.class $= "OptionsSettings")
       {
-         %actionMap = ActionMapGroup.getObject(%i);
+         %optionsEntry = addOptionEntry(%setting);
+            
+         if(isObject(%optionsEntry))
+            VideoSettingsList.add(%optionsEntry);
+      }
+   }  
+   
+   //Ensure our newly templated options listings are sized right
+   for(%i=0; %i < VideoSettingsList.getCount(); %i++)
+   {
+      %entry = VideoSettingsList.getObject(%i);
+      %entry.resize(0, 0, VideoSettingsList.extent.x - 15, %entry.extent.y); //-10 for the scroll wheel pad
+   }
+}
+
+//==============================================================================
+// This function utilizes the AudioSettingsGroup SimGroup to populate options.
+// The object is defined in core/sfx/scripts/audioOptions.tscript
+// Similar to the video options, it can be a mix of static and dynamically populated
+// option entries, which we then iterate over and populate the entry rows for the menu
+function OptionsMenu::populateAudioSettings(%this)
+{
+   AudioSettingsList.clear();
+   AudioSettingsGroup.populateSettings(); 
+   
+   //Process the lists
+   for(%i=0; %i < AudioSettingsGroup.getCount(); %i++)
+   {
+      %setting = AudioSettingsGroup.getObject(%i);
+      
+      if(%setting.class $= "SubOptionsGroup")
+      {
+         %entry = addOptionGroup(%setting.displayName);
+
+         if(isObject(%entry))
+            AudioSettingsList.add(%entry);
          
-         if(%actionMap == GlobalActionMap.getId())
-            continue;
-         
-         %actionMap.save( %prefPath @ "/keybinds." @ $TorqueScriptFileExtension, %append );
-         
-         if(%append != true)
-            %append = true; 
+         for(%s=0; %s < %setting.getCount(); %s++)
+         {
+            %option = %setting.getObject(%s);
+            
+            %optionsEntry = addOptionEntry(%option);
+
+            if(isObject(%optionsEntry))
+               AudioSettingsList.add(%optionsEntry);
+         }
+      }
+      else if(%setting.class $= "AudioOptionsSettings")
+      {
+         %optionsEntry = addOptionEntry(%setting);
+            
+         if(isObject(%optionsEntry))
+            AudioSettingsList.add(%optionsEntry);
       }
    }
    
-   if(%hasPostFXChanges)
+   AudioSettingsList.add(addOptionGroup("Channel Volume"));
+   
+   //Now we'll populate the sliders for the audio channels. 
+   //The defaults of these are defined in core/sfx/scripts/audio.tscript
+   //These define the MasterVolume channel, as well as several other common defualt ones
+   //Because it's a variable list, this can be expanded by modules  by just upping $AudioChannelCount
+   //and then defining the $AudioChannelName[x] with the displayed name and
+   //and the $AudioChannels[x] variable with the SFXSource object defined to it for the given channel
+   AudioSettingsList.add(addOptionSlider("Master Volume", "", "$pref::SFX::masterVolume", 0, 1, 10));
+   
+   //We init to 1, because 0 is the reserved for the masterVolume in practice
+   for(%i=1; %i < $AudioChannelCount; %i++)
    {
-      updatePostFXSettings();  
+      AudioSettingsList.add(addOptionSlider($AudioChannelsName[%i] @ " Volume", "", "$pref::SFX::channelVolume" @ %i, 0, 1, 10));
+   }
+  
+   //Ensure our newly templated options listings are sized right
+   for(%i=0; %i < AudioSettingsList.getCount(); %i++)
+   {
+      %entry = AudioSettingsList.getObject(%i);
+      %entry.resize(0, 0, AudioSettingsList.extent.x - 15, %entry.extent.y);  //-10 for the scroll wheel pad
+   }
+}
+
+function OptionsMenu::populateKBMControls(%this)
+{
+   %this.populateKeybinds("keyboard", KBMControlsList);
+   
+   %this.syncGui();
+   
+   KBMControlsList.syncGui();
+}
+
+function OptionsMenu::populateGamepadControls(%this)
+{
+   %this.populateKeybinds("gamepad", GamepadControlsList);
+   
+   %this.syncGui();
+   
+   GamepadControlsList.syncGui();
+}
+
+function OptionsMenu::populateKeybinds(%this, %device, %controlsList)
+{
+	%controlsList.clear();
+
+   //build out our list of action maps
+   %actionMapCount = ActionMapGroup.getCount();
+
+   %actionMapList = "";
+   for(%i=0; %i < %actionMapCount; %i++)
+   {
+      %actionMap = ActionMapGroup.getObject(%i);
+      
+      if(%actionMap == GlobalActionMap.getId())
+         continue;
+      
+      %actionMapName = %actionMap.humanReadableName $= "" ? %actionMap.getName() : %actionMap.humanReadableName;
+      
+      //see if we have any actual listed remappable keys for this movemap. if so, drop it from the listing
+      %hasRemaps = false;
+      for ( %r = 0; %r < $RemapCount; %r++ )
+      {
+         %testMapName = $RemapActionMap[%r].humanReadableName $= "" ? $RemapActionMap[%r].getName() : $RemapActionMap[%r].humanReadableName; 
+         
+         if(%actionMapName $= %testMapName)
+         {
+            //got a match to at least one, so we're ok to continue
+            %hasRemaps = true;
+            break;  
+         }
+      }
+      
+      if(!%hasRemaps)
+         continue;
+      
+      if(%actionMapList $= "")
+         %actionMapList = %actionMapName;
+      else
+         %actionMapList = %actionMapList TAB %actionMapName;
    }
    
-   if(%hasVideoChanges)
+   //If we didn't find any valid actionMaps, then just exit out
+   if(%actionMapList $= "")
+      return;
+      
+   if($activeRemapControlSet $= "")
+      $activeRemapControlSet = getField(%actionMapList, 0);
+      
+   for(%am = 0; %am < getFieldCount(%actionMapList); %am++)
    {
-      updateDisplaySettings();
+      %currentActionMap = getField(%actionMapList, %am);
+      
+      //only add the group if we've got more than one group, otherwise it's obviously
+      //part of the single grouping
+      if(getFieldCount(%actionMapList) > 1)
+      {
+         %actionMapGroupEntry = addOptionGroup(%currentActionMap);
+         %controlsList.add(%actionMapGroupEntry);
+      }
+      
+      for ( %i = 0; %i < $RemapCount; %i++ )
+      {
+         if(%device !$= "" && %device !$= $RemapDevice[%i])
+            continue;
+            
+         %actionMapName = $RemapActionMap[%i].humanReadableName $= "" ? $RemapActionMap[%i].getName() : $RemapActionMap[%i].humanReadableName; 
+            
+         if(%currentActionMap !$= %actionMapName)
+            continue;
+            
+         %keyMap = buildFullMapString( %i, $RemapActionMap[%i], %device );
+
+         %description = $RemapDescription[%i];
+         
+         %remapEntry = addActionMapEntry(%actionMapName, %device, %keyMap, %i, %description);
+         %controlsList.add(%remapEntry);
+      }
    }
    
-   if(%hasAudioChanges)
+   //Ensure our newly templated options listings are sized right
+   for(%i=0; %i < %controlsList.getCount(); %i++)
    {
-      updateAudioSettings();
+      %entry = %controlsList.getObject(%i);
+      %entry.resize(0, 0, %controlsList.extent.x - 15, %entry.extent.y); //-10 for the scroll wheel pad
+   }
+}
+
+//==============================================================================
+function tryCloseOptionsMenu(%val)
+{
+   if(!%val)
+      return;
+      
+   $optionsChangeRequiresRestart = false;
+   
+   %unappliedVideoChanges = VideoSettingsList.checkForUnappliedChanges();
+   %unappliedAudioChanges = AudioSettingsList.checkForUnappliedChanges();
+   
+   //validate audio prefs
+   if($pref::SFX::masterVolume_tempVar !$= "" && $pref::SFX::masterVolume_tempVar != $pref::SFX::masterVolume)
+      %unappliedAudioChanges = true;
+   
+   for(%i=1; %i < $AudioChannelCount; %i++)
+   {
+      %tempVolume = getVariable("$pref::SFX::channelVolume" @ %i @ "_tempVar"); 
+      if(%tempVolume !$= "" && $pref::SFX::channelVolume[ %i ] != %tempVolume)
+         %unappliedAudioChanges = true;
    }
    
-   if(%hasGraphicsChanges)
+   if(%unappliedVideoChanges || %unappliedAudioChanges)
    {
-      updateGraphicsSettings();  
+      MessageBoxOKCancel("Discard Changes?", "You have unapplied changes to your settings, do you wish to apply or discard them?", 
+                        "OptionsMenu.applyChangedOptions(); BaseUIBackOut(1);", "BaseUIBackOut(1);", 
+                        "Apply", "Discard");
    }
+   else
+   {
+      BaseUIBackOut(1);
+   }
+} 
+
+function tryApplyOptions(%val)
+{
+   if(!%val)
+      return;
+      
+   $optionsChangeRequiresRestart = false;
    
+   %unappliedVideoChanges = VideoSettingsList.checkForUnappliedChanges();
+   %unappliedAudioChanges = AudioSettingsList.checkForUnappliedChanges();
+   
+   if(%unappliedVideoChanges || %unappliedAudioChanges)
+      OptionsMenu.applyChangedOptions();
+}
+
+function OptionsMenu::applyChangedOptions(%this)
+{
+   VideoSettingsList.applyChanges();
+   AudioSettingsList.applyChanges();
+   
+   //Process the audio channel tempvars to get their values
+   //and then apply them to the actual pref variable, as well as the SFXChannelVolume
+   $pref::SFX::masterVolume = $pref::SFX::masterVolume_tempVar;
+   sfxSetMasterVolume( $pref::SFX::masterVolume );
+   
+   //0 is always master anyways
+   for(%i=1; %i < $AudioChannelCount; %i++)
+   {
+      %volume = getVariable("$pref::SFX::channelVolume" @ %i @ "_tempVar");
+      sfxSetChannelVolume( %i, %volume );
+      $pref::SFX::channelVolume[ %i ] = %volume;
+   }
+
    //Finally, write our prefs to file
    %prefPath = getPrefpath();
    export("$pref::*", %prefPath @ "/clientPrefs." @ $TorqueScriptFileExtension, false);
-   
-   OptionsMenu.unappliedChanges.empty();
+
+   if($optionsChangeRequiresRestart)
+      MessageBoxOK("Restart Required", "Some of your changes require the game to be restarted.");
 }
 
-function OptionsMenu::resetToDefaults(%this)
+function doKeyRemap( %optionEntry )
+{
+   %name = getField(%optionEntry.keymap,0);
+
+	RemapDlg-->OptRemapText.text = "Re-bind \"" @ %name @ "\" to..." ;
+	OptRemapInputCtrl.index = %optionEntry.remapIndex;
+	
+	$remapListDevice = %optionEntry.device;
+	
+	Canvas.pushDialog( RemapDlg );
+}
+
+function OptionsMenu::resetSettings(%this)
 {
    MessageBoxOKCancel("", "This will set the graphical settings back to the auto-detected defaults. Do you wish to continue?", "AutodetectGraphics();", "");
 }
 
-function OptionsMenu::refresh(%this)
+//==============================================================================
+// Option types
+function addOptionGroup(%displayName)
 {
-   //cache our scroll position so we can ensure we end up back at it after the refresh
-   %lastScrollPos = OptionsMenuSettingsScroll.getScrollPosition();
+   OptionsMenu.optsListCount++;
+   %group = new GuiTextCtrl() {
+      text = %displayName;
+      position = "0 0";
+      extent = "500 45";
+      profile = "MenuHeaderText";
+      tooltipProfile = "GuiToolTipProfile";
+      canSave = false;
+   };   
    
-   %cat = %this.currentCategory;
-   if(%this.currentCategory !$= "")
-   {
-      if(!isInt(%this.currentCategory))
-      {
-         %this.currentCategory = getOptionsCategoryIndexByName(%this.currentCategory);  
-      }
-      
-      if(%this.currentCategory == -1)
-         return;
-         
-      %category = %this.optionsCategories.getKey(%this.currentCategory);
-      %command = %this.optionsCategories.getValue(%this.currentCategory);
-      eval(%command);
-   }
-   
-   //now, because we reconstruct the displayed set, we'll force the mouse(if we're using it as our input)
-   //to be poked so we can re-track to whatever control, if any, we're over
-   if($activeControllerType !$= "gamepad")
-   {
-      Canvas.setCursorPos(Canvas.getCursorPos());  
-   }
-   
-   //restore scroll position
-   OptionsMenuSettingsScroll.setScrollPosition(%lastScrollPos.x, %lastScrollPos.y);
+   return %group;
 }
 
-function OptionsMenu::getOptionVariableValue(%this, %variableName)
+function optionsMenuButton::onHighlighted(%this, %highlighted)
 {
-   %unappliedPrefIndex = %this.unappliedChanges.getIndexFromKey(%variableName);
-   if(%unappliedPrefIndex != -1)
-   {
-      %value = %this.unappliedChanges.getValue(%unappliedPrefIndex);
-      return strreplace(%value, "\"", "");
-   }  
+   %container = %this.getParent();
    
-   %sanitizedVar = strReplace(%variableName, "[", "");
-   %sanitizedVar = strReplace(%sanitizedVar, "]", "");
-   %sanitizedVar = strReplace(%sanitizedVar, ",", "_");
-   return getVariable(%sanitizedVar);
+   %container-->optionName.profile = %highlighted ? MenuSubHeaderTextHighlighted : MenuSubHeaderText;
+   %container-->optionDescription.profile = %highlighted ? GuiMLTextProfileHighlighted : GuiMLTextProfile;
+   
+   %valuesContainer = %container-->valuesContainer;
+   %valuesContainer-->optionValue.profile = %highlighted ? GuiMenuTextProfileHL : GuiMenuTextProfile;
+   
+   OptionsMenuSettingsScroll.scrollToObject(%container);
 }
 
-function OptionsMenuSelectButton::onVisible(%this, %state)
+function addOptionEntry(%optionObj)
 {
-   //We're sorta cheating here.
-   //This button should only be displayed when we're in the categories list
-   //so whenever the status changes, such as automatically refreshing due to 
-   //navigation events, we'll just do a quick check to ensure we're 
-   //in the right visibility mode
-   if(%state && OptionsMenuSettingsList.isActiveMenuList())
+   OptionsMenu.optsListCount++;
+   if(!isObject(%optionObj) || (%optionObj.class !$= "OptionsSettings" && %optionObj.class !$= "AudioOptionsSettings"))
    {
-      %this.setHidden(true);
+      error("addOptionsEntry() - attempting to create a new options entry, but was provided an invalid options object");
+      return 0;  
    }
-}
-//
-//
-//
-function populateDisplaySettingsList()
-{
-   OptionsMenuSettingsList.clear();
    
-   OptionsMenu.currentCategory = "Display";
+   %qualityLevel = getCurrentQualityLevel(%optionObj);
    
-   if(isObject(OptionName))
-   OptionName.setText("");
-   if(isObject(OptionDescription))
-   OptionDescription.setText("");
-   
-   %apiList = "";
-   %apiCount = GFXInit::getAdapterCount();
-   %apiIdx = 0;
-   for(%i=0; %i < %apiCount; %i++)
+   if(isObject(%qualityLevel))
    {
-      %api = GFXInit::getAdapterType(%i);
-      
-      if(%api !$= "NullDevice")
-      {
-         if(%apiIdx==0)
-            %apiList = %api;
-         else
-            %apiList = %apiList TAB %api;
-            
-         %apiIdx++;
-      }
-   }   
-   
-   trim(%apiList);
-   
-   %displayDevice = OptionsMenu.getOptionVariableValue("$pref::Video::displayDevice");
-   if(%displayDevice $= "")
-      %displayDevice = getDisplayDeviceType();
-   
-   OptionsMenuSettingsList.addOptionRow("Display API", "$pref::Video::displayDevice", %apiList, false, "",  true, "The display API used for rendering.", %displayDevice);
-   
-   %numDevices = Canvas.getMonitorCount();
- 
-   %devicesList = getDisplayDeviceList();
-   
-   if($pref::Video::displayDeviceId $= "")
-      $pref::Video::displayDeviceId = getField(%devicesList, $pref::Video::deviceId);
-      
-   OptionsMenuSettingsList.addOptionRow("Display Device", "$pref::Video::displayDeviceId", %devicesList, false, "", true, "The display devices the window should be on.");
-      
-   if (%numDevices > 1)
-      OptionsMenuSettingsList.setRowEnabled(1, true);
+      %qualityLevelText = %qualityLevel.displayName;
+      %qualityLevelIndex = %optionObj.getObjectIndex(%qualityLevel);
+   }
    else
-      OptionsMenuSettingsList.setRowEnabled(1, false);
-   
-   %mode = OptionsMenu.getOptionVariableValue("$pref::Video::deviceMode");
-   if(isInt(%mode))
-      %mode = getField($Video::ModeTags, $pref::Video::deviceMode);
-   OptionsMenuSettingsList.addOptionRow("Window Mode", "$pref::Video::deviceMode", $Video::ModeTags, false, "", true, "", %mode);
-   
-   if(%mode !$= "Borderless")
    {
-      %resolutionList = getScreenResolutionList($pref::Video::deviceId, $Video::Mode[%mode]);
-      %resolution = OptionsMenu.getOptionVariableValue("$pref::Video::Resolution");
-      if(%resolution $= "")
-         %resolution =  $pref::Video::mode;
-         
-      %resolution = _makePrettyResString(%resolution);
-   
-      OptionsMenuSettingsList.addOptionRow("Resolution", "$pref::Video::Resolution", %resolutionList, false, "",  true, "Resolution of the game window", %resolution);
-
-      // If the requested resolution could not be set, mark the control and pref as changed.
-      %resControl = OptionsMenuSettingsList.getObject(OptionsMenuSettingsList.getCount()-1);
-      if (%resControl.getCurrentOption() !$= %resolution)
-         %resControl.onChange();
+      %qualityLevelText = %qualityLevel;
+      %qualityLevelIndex = %optionObj.getCount();
    }
    
-   OptionsMenuSettingsList.addOptionBoolRow("VSync", "$pref::Video::enableVerticalSync", $YesNoList, false, "",  true, "", "");
-
-
-   %refreshList = getScreenRefreshList($pref::Video::mode);
-   OptionsMenuSettingsList.addOptionRow("Refresh Rate", "$pref::Video::RefreshRate", %refreshList, false, "",  true, "", OptionsMenu.getOptionVariableValue("$pref::Video::RefreshRate"));
+   %optionNameHeight = 20;
+   if(%optionObj.Description $= "")
+      %optionNameHeight = 40;
    
-   //move to gameplay tab
-   //OptionsMenuSettingsList.addSliderRow("Field of View", "", 75, 5, "65 100", "");
-   
-   //OptionsMenuSettingsList.addSliderRow("Brightness", "", 0.5, 0.1, "0 1", "");
-   //OptionsMenuSettingsList.addSliderRow("Contrast", "", 0.5, 0.1, "0 1", "");
-}
-
-//
-//
-//
-function populateGraphicsSettingsList()
-{
-   OptionsMenuSettingsList.clear();
-   
-   OptionsMenu.currentCategory = "Graphics";
-   
-   if(isObject(OptionName))
-   OptionName.setText("");
-   if(isObject(OptionDescription))
-   OptionDescription.setText("");
-   
-   %yesNoList = "No\tYes";
-   %onOffList = "Off\tOn";
-   %anisoFilter = "Off\t4\t8\t16";
-   %aaTypeFilter = "None\tFXAA\tSMAA\tSMAA High";
-   OptionsMenuSettingsList.addOptionQualityLevelRow("Lighting Quality", "$pref::Graphics::LightingQuality", 
-      LightingQualityList, false, "",  true, "Amount and drawdistance of local lights");
-   OptionsMenuSettingsList.addOptionQualityLevelRow("Shadow Quality", "$pref::Graphics::ShadowQuality", 
-      ShadowQualityList, false, "",  true, "Shadow revolution quality");
-   
-   %shadowQuality = OptionsMenu.getOptionVariableValue("$pref::Graphics::ShadowQuality");
-   if(%shadowQuality !$= "None")
-   {
-      OptionsMenuSettingsList.addOptionQualityLevelRow("Soft Shadow Quality", "$pref::Graphics::SoftShadowQuality", 
-         SoftShadowList, false, "",  true, "Amount of softening applied to shadowmaps");
-   }
-   
-   OptionsMenuSettingsList.addOptionQualityLevelRow("Mesh Quality", "$pref::Graphics::MeshQuality", 
-      MeshQualityGroup, false, "",  true, "Fidelity of rendering of mesh objects");
-   OptionsMenuSettingsList.addOptionQualityLevelRow("Object Draw Distance", "$pref::Graphics::ObjectDrawDistance", 
-      MeshDrawDistQualityGroup, false, "",  true, "Dictates if and when static objects fade out in the distance");
-   OptionsMenuSettingsList.addOptionQualityLevelRow("Texture Quality", "$pref::Graphics::TextureQuality", 
-      TextureQualityGroup, false, "",  true, "Fidelity of textures");
-   OptionsMenuSettingsList.addOptionQualityLevelRow("Terrain Quality", "$pref::Graphics::TerrainQuality", 
-      TerrainQualityGroup, false, "",  true, "Quality level of terrain objects");
-   OptionsMenuSettingsList.addOptionQualityLevelRow("Decal Lifetime", "$pref::Graphics::DecalLifetime", 
-      DecalLifetimeGroup, false, "",  true, "How long decals are rendered");
-   OptionsMenuSettingsList.addOptionQualityLevelRow("Ground Cover Density", "$pref::Graphics::GroundCoverDensity", 
-      GroundCoverDensityGroup, false, "",  true, "Density of ground cover items, such as grass");
-   OptionsMenuSettingsList.addOptionQualityLevelRow("Shader Quality", "$pref::Graphics::ShaderQuality", 
-      ShaderQualityGroup, false, "",  true, "Dictates the overall shader quality level, adjusting what features are enabled.");
-   OptionsMenuSettingsList.addOptionRow("Anisotropic Filtering", "$pref::Video::defaultAnisotropy", %anisoFilter, false, "",  true, "Amount of Anisotropic Filtering on textures, which dictates their sharpness at a distance");
-   
-   OptionsMenuSettingsList.addOptionRow("Anti-Aliasing Type", "$pref::Video::AAMode", %aaTypeFilter, false, "",  true, "The Anti-Aliasing Method applied to rendering");
-
-   OptionsMenuSettingsList.addOptionBoolRow("Parallax", "$pref::Video::enableParallaxMapping", %onOffList, false, "",  true, "Whether the surface parallax shader effect is enabled", "");
-   OptionsMenuSettingsList.addOptionBoolRow("Water Reflections", "$pref::Water::enableTrueReflections", %onOffList, false, "",  true, "Whether water reflections are enabled", "");
-   
-   OptionsMenuSettingsList.addOptionBoolRow("SSAO", "$pref::PostFX::EnableSSAO", %onOffList, false, "",  true, "Whether Screen-Space Ambient Occlusion is enabled");
-   OptionsMenuSettingsList.addOptionBoolRow("Depth of Field", "$pref::PostFX::EnableDOF", %onOffList, false, "",  true, "Whether the Depth of Field effect is enabled");
-   OptionsMenuSettingsList.addOptionBoolRow("Vignette", "$pref::PostFX::EnableVignette", %onOffList, false, "",  true, "Whether the vignette effect is enabled");
-   OptionsMenuSettingsList.addOptionBoolRow("Light Rays", "$pref::PostFX::EnableLightRays", %onOffList, false, "",  true, "Whether the light rays effect is enabled");
-}
-
-function updateGraphicsSettings()
-{
-   if($pref::Graphics::LightingQuality !$= getCurrentQualityLevel(LightingQualityList))
-      LightingQualityList.applySetting($pref::Graphics::LightingQuality);
-   if($pref::Graphics::ShadowQuality !$= getCurrentQualityLevel(ShadowQualityList))
-      ShadowQualityList.applySetting($pref::Graphics::ShadowQuality);
-   if($pref::Graphics::SoftShadowQuality !$= getCurrentQualityLevel(SoftShadowList))
-      SoftShadowList.applySetting($pref::Graphics::SoftShadowQuality);
-      
-   if($pref::Graphics::MeshQuality !$= getCurrentQualityLevel(MeshQualityGroup))
-      MeshQualityGroup.applySetting($pref::Graphics::MeshQuality);
-   if($pref::Graphics::ObjectDrawDistance !$= getCurrentQualityLevel(MeshDrawDistQualityGroup))
-      MeshDrawDistQualityGroup.applySetting($pref::Graphics::ObjectDrawDistance);
-   if($pref::Graphics::TextureQuality !$= getCurrentQualityLevel(TextureQualityGroup))
-   {
-      TextureQualityGroup.applySetting($pref::Graphics::TextureQuality);
-      
-      reloadTextures();
-   }
-   if($pref::Graphics::TerrainQuality !$= getCurrentQualityLevel(TerrainQualityGroup))
-      TerrainQualityGroup.applySetting($pref::Graphics::TerrainQuality);
-   if($pref::Graphics::DecalLifetime !$= getCurrentQualityLevel(DecalLifetimeGroup))
-      DecalLifetimeGroup.applySetting($pref::Graphics::DecalLifetime);
-   if($pref::Graphics::GroundCoverDensity !$= getCurrentQualityLevel(GroundCoverDensityGroup))
-      GroundCoverDensityGroup.applySetting($pref::Graphics::GroundCoverDensity);
-   if($pref::Graphics::ShaderQuality !$= getCurrentQualityLevel(ShaderQualityGroup))
-   {
-      ShaderQualityGroup.applySetting($pref::Graphics::ShaderQuality);
-      //this has ties into postFX behaviors, so we'll force an update to it here
-      updatePostFXSettings();
-   }
-}
-
-function updateDisplaySettings()
-{
-   //Update the display settings now
-   %deviceName = getDisplayDeviceName();
-   %newDeviceID = getWord(%deviceName, 0) - 1;
-   
-   if(!isInt($pref::Video::deviceMode))
-   {
-      //probably saved out as the mode name, so just translate it back
-      for(%i=0; %i < getFieldCount($Video::ModeTags); %i++)
-      {
-         if(getField($Video::ModeTags, %i) $= $pref::Video::deviceMode)
-         {
-            $pref::Video::deviceMode = %i;
-            break;
-         }
-      }
-   }
-   
-   %deviceModeName = getField($Video::ModeTags, $pref::Video::deviceMode);
-   %newDeviceMode = 0;
-   foreach$(%modeName in $Video::ModeTags)
-   {
-      if (%deviceModeName $= %modeName)
-         break;
-      else
-         %newDeviceMode++;
-   }
-   
-   if($pref::Video::deviceMode == $Video::ModeBorderless)
-   {
-      //if we're changing to borderless, we swap to the full resolution of the desktop  
-      $pref::Video::mode = Canvas.getBestCanvasRes($pref::Video::deviceId, $pref::Video::deviceMode);
-      
-      $pref::Video::Resolution = $pref::Video::mode.x SPC $pref::Video::mode.y;
-   }
-
-   %newRes = $pref::Video::Resolution;
-   %newBpp = 32; // ... its not 1997 anymore.
-	%newFullScreen = %deviceModeName $= "Fullscreen" ? true : false;
-	%newRefresh    = $pref::Video::RefreshRate;
-	%newVsync = $pref::Video::enableVerticalSync;	
-	%newAA = $pref::Video::AA;
-	
-   // Build the final mode string.
-	%newMode = $pref::Video::Resolution SPC %newFullScreen SPC %newBpp SPC %newRefresh SPC %newAA;
-	
-   // Change the video mode.   
-   if (  %newMode !$= $pref::Video::mode || %newDeviceID != $pref::Video::deviceId ||
-         %newVsync != $pref::Video::enableVerticalSync || %newDeviceMode != $pref::Video::deviceMode)
-   {
-      //****Edge Case Hack
-      // If we're in fullscreen mode and switching to a different monitor at the
-      // same resolution and maintaining fullscreen, GFX...WindowTarget::resetMode()
-      // will early-out because there is no "mode change" and the monitor change
-      // will not get applied. Instead of modifying platform code, we're going to
-      // move onto the new monitor in borderless and immediately switch to FS.
-      if (%newFullScreen && $pref::Video::FullScreen &&
-         ($pref::Video::Resolution $= %newRes) && ($pref::Video::deviceId != %newDeviceID))
-      {
-         $pref::Video::deviceId = %newDeviceID;
-         $pref::Video::deviceMode = $Video::ModeBorderless;
-         %tmpModeStr = Canvas.getMonitorMode(%newDeviceID, 0);
-         Canvas.setVideoMode(%tmpModeStr.x, %tmpModeStr.y, false, 32, getWord(%tmpModeStr, $WORD::REFRESH), %newAA);
-      }
-
-      $pref::Video::mode = %newMode;
-      $pref::Video::enableVerticalSync = %newVsync;
-      $pref::Video::deviceId = %newDeviceID;
-      $pref::Video::deviceMode = %newDeviceMode;
-      $pref::Video::Resolution = %newRes;
-      $pref::Video::FullScreen = %newFullScreen;
-      $pref::Video::RefreshRate = %newRefresh;
-      $pref::Video::AA = %newAA;
-      configureCanvas();
-   }
-}
-
-function updatePostFXSettings()
-{
-   PostFXManager.settingsEffectSetEnabled(SSAOPostFx, $pref::PostFX::EnableSSAO);
-   PostFXManager.settingsEffectSetEnabled(DepthOfFieldPostFX, $pref::PostFX::EnableDOF);
-   PostFXManager.settingsEffectSetEnabled(LightRayPostFX, $pref::PostFX::EnableLightRays);
-   PostFXManager.settingsEffectSetEnabled(vignettePostFX, $pref::PostFX::EnableVignette);
-}
-
-//
-//
-//
-function populateAudioSettingsList()
-{
-   OptionsMenuSettingsList.clear();
-   
-   OptionsMenu.currentCategory = "Audio";
-   
-   if(isObject(OptionName))
-   OptionName.setText("");
-   if(isObject(OptionDescription))
-   OptionDescription.setText("");
-   
-   %buffer = sfxGetAvailableDevices();
-   %count = getRecordCount( %buffer );  
-   %audioDriverList = "";
-   %audioProviderList = "";
-   %audioDeviceList = "";
-    
-   $currentAudioProvider = $currentAudioProvider $= "" ? $pref::SFX::provider : $currentAudioProvider;
-   
-   for(%i = 0; %i < %count; %i++)
-   {
-      %record = getRecord(%buffer, %i);
-      %provider = getField(%record, 0);
-      %device = getField(%record, 1);
-      
-      //When the client is actually running, we don't care about null audo devices
-      if(%provider $= "null")
-         continue;
-      
-      if(%audioProviderList $= "")
-         %audioProviderList = %provider;
-      else 
-         %audioProviderList = %audioProviderList @ "\t" @ %provider;
-         
-      if(%provider $= $currentAudioProvider)
-      {
-         if(%audioDeviceList $= "")
-            %audioDeviceList = %device;
-         else 
-            %audioDeviceList = %audioDeviceList @ "\t" @ %device;  
-      }
-   }
-   
-   OptionsMenuSettingsList.addOptionRow("Audio Provider", "$pref::SFX::provider", %audioProviderList, false, "audioProviderChanged", true, "");
-   OptionsMenuSettingsList.addOptionRow("Audio Device", "$pref::SFX::device", %audioDeviceList, false, "", true);
-   
-   OptionsMenuSettingsList.addSliderRow("Master Volume", "$pref::SFX::masterVolume", 0.1, "0 1", "");
-   OptionsMenuSettingsList.addSliderRow("GUI Volume", "$pref::SFX::channelVolume[" @ $GuiAudioType @ "]", 0.1, "0 1", "");
-   OptionsMenuSettingsList.addSliderRow("Effects Volume", "$pref::SFX::channelVolume[" @ $SimAudioType @ "]", 0.1, "0 1", "");
-   OptionsMenuSettingsList.addSliderRow("Music Volume", "$pref::SFX::channelVolume[" @ $MusicAudioType @ "]", 0.1, "0 1", "");
-}
-
-function audioProviderChanged()
-{
-   //Get the option we have set for the provider
-   %provider = OptionsMenuSettingsList.getCurrentOption(0);
-   $currentAudioProvider = %provider;
-   
-   //And now refresh the list to get the correct devices
-   populateAudioSettingsList();
-}
-
-function updateAudioSettings()
-{
-   //$pref::SFX::masterVolume = OptionsMenuSettingsList.getValue(2);
-   sfxSetMasterVolume( $pref::SFX::masterVolume );
-   
-   //$pref::SFX::channelVolume[ $GuiAudioType ] = OptionsMenuSettingsList.getValue(3);
-   //$pref::SFX::channelVolume[ $SimAudioType ] = OptionsMenuSettingsList.getValue(4);
-   //$pref::SFX::channelVolume[ $MusicAudioType ] = OptionsMenuSettingsList.getValue(5);
-   
-   sfxSetChannelVolume( $GuiAudioType, $pref::SFX::channelVolume[ $GuiAudioType ] );
-   sfxSetChannelVolume( $SimAudioType, $pref::SFX::channelVolume[ $SimAudioType ] );
-   sfxSetChannelVolume( $MusicAudioType, $pref::SFX::channelVolume[ $MusicAudioType ] );
-   
-   //$pref::SFX::provider = OptionsMenuSettingsList.getCurrentOption(0);
-   //$pref::SFX::device = OptionsMenuSettingsList.getCurrentOption(1);
-   
-   if ( !sfxCreateDevice(  $pref::SFX::provider, 
-                           $pref::SFX::device, 
-                           $pref::SFX::useHardware,
-                           -1 ) )                              
-      error( "Unable to create SFX device: " @ $pref::SFX::provider 
-                                             SPC $pref::SFX::device 
-                                             SPC $pref::SFX::useHardware );        
-
-   if( !isObject( $AudioTestHandle ) )
-   {
-      sfxPlay(menuButtonPressed);  
-   }
-}
-
-//
-//
-//
-function populateKeyboardMouseSettingsList()
-{
-   OptionsMenuSettingsList.clear();
-   
-   OptionsMenu.currentCategory = "Keyboard & Mouse";
-   
-   if(isObject(OptionName))
-   OptionName.setText("");
-   if(isObject(OptionDescription))
-   OptionDescription.setText("");
-   
-   $remapListDevice = "keyboard";
-   fillRemapList();
-   
-   //OptionsMenuSettingsList.refresh();
-}
-
-function populateGamepadSettingsList()
-{
-   OptionsMenuSettingsList.clear();
-   
-   OptionsMenu.currentCategory = "Gamepad";
-   
-   if(isObject(OptionName))
-   OptionName.setText("");
-   if(isObject(OptionDescription))
-   OptionDescription.setText("");
-   
-   $remapListDevice = "gamepad";
-   fillRemapList();
-   
-   OptionsMenuSettingsList.updateStack();
-}
-
-//
-//
-//
-function getDisplayDeviceList()
-{
-   %numDevices = Canvas.getMonitorCount();
-   %devicesList = "";
-   for(%i = 0; %i < %numDevices; %i++)
-   {
-      %device = (%i+1) @ " - " @ Canvas.getMonitorName(%i);
-      if(%i==0)
-         %devicesList = %device;
-      else
-         %devicesList = %devicesList @ "\t" @ %device;
-   }
-   
-   return %devicesList;  
-}
-
-function getDisplayDeviceId(%displayDeviceName)
-{
-   %deviceList = getDisplayDeviceList();
-   
-   %deviceCount = getFieldCount(%deviceList);
-   for(%d = 0; %d < %deviceCount; %d++)
-   {
-      %deviceName = getField(%deviceList, %d);
-      if(%deviceName $= %displayDeviceName)
-         return %d;  
-   }
-   
-   return -1;
-}
-//
-//
-//
-function OptionsMenuList::activateRow(%this)
-{
-   //OptionsMenuSettingsList.setFirstResponder();
-   OptionsMenuSettingsList.setAsActiveMenuList();
-}
-
-function OptionsMenuSettingsList::setRowEnabled(%this, %row, %status)
-{
-   %option = %this.getObject(%row);
-   if(isObject(%option))
-   {
-      %option.setEnabled(%status);
-   }
-}
-
-function OptionsMenuSettingsList::addOptionRow(%this, %label, %targetPrefVar, %optionsList, %wrapOptions, %callback, %enabled, %description, %defaultValue)
-{
-   if(%enabled $= "")
-      %enabled = true;
-      
-   %optionsRowSize = 30;
-   %optionColumnWidth = %this.extent.x * 0.5;//todo, calculate off longest option text?
-      
-   %option = new GuiGameSettingsCtrl() { 
-      class = "MenuOptionsButton";
-      profile = "GuiMenuButtonProfile";
+   %entry = new GuiContainer() {
+      position = "0 0";
+      extent = "800 40";
+      profile = GuiMenuDefaultProfile;
+      tooltipProfile = "GuiToolTipProfile";
       horizSizing = "width";
       vertSizing = "bottom";
-      position = "0 0";
-      extent = %this.extent.x SPC %optionsRowSize;
-      columnSplit = %optionColumnWidth;
-      useMouseEvents = true;
-      previousBitmapAsset = "UI:previousOption_n_image";
-      nextBitmapAsset = "UI:nextOption_n_image";
-   };
-   
-   %option.targetPrefVar = %targetPrefVar; //create a var-option association
-   
-   if(%defaultValue $= "")
-   {
-      %unappliedPrefIndex = OptionsMenu.unappliedChanges.getIndexFromKey(%targetPrefVar);
-      if(%unappliedPrefIndex != -1)
-      {
-            %value = OptionsMenu.unappliedChanges.getValue(%unappliedPrefIndex);
-            %defaultValue = strreplace(%value, "\"", "");
-      }
-   
-      if(%defaultValue $= "")
-      {
-         %sanitizedVar = strReplace(%targetPrefVar, "[", "");
-         %sanitizedVar = strReplace(%sanitizedVar, "]", "");
-         %sanitizedVar = strReplace(%sanitizedVar, ",", "_");
-         %defaultValue = getVariable(%sanitizedVar);
-      }
-   }
-   
-   /*if(%defaultValue $= "Off" || %defaultValue $= "No")
-      %defaultValue = "0";
-   if(%defaultValue $= "On" || %defaultValue $= "Yes")
-      %defaultValue = "1";*/
-   
-   %option.setListSetting(%label, %optionsList, %wrapOptions, %callback, %enabled, %description, %defaultValue);
+      class = "OptionsListEntry";
+      optionsObject = %optionObj;
+      currentOptionIndex = %qualityLevelIndex;
+      selectionID = OptionsMenu.optsListCount;
+      canSave = false;
+      
+      new GuiButtonCtrl() {
+         profile = GuiMenuButtonProfile;
+         position = "0 0";
+         extent = "800 40";
+         horizSizing = "width";
+         vertSizing = "height";
+         internalName = "button";
+         class = "optionsMenuButton";
+      };
 
-   %this.add(%option);
-}
-
-function OptionsMenuSettingsList::addOptionQualityLevelRow(%this, %label, %targetPrefVar, %qualityLevelList, %wrapOptions, %callback, %enabled, %description, %defaultValue)
-{
-   if(%defaultValue $= "")
-   {
-      %unappliedPrefIndex = OptionsMenu.unappliedChanges.getIndexFromKey(%targetPrefVar);
-   if(%unappliedPrefIndex != -1)
-   {
-         %value = OptionsMenu.unappliedChanges.getValue(%unappliedPrefIndex);
-         %defaultValue = strreplace(%value, "\"", "");
-   }
-   
-      if(%defaultValue $= "")
-      {
-         %sanitizedVar = strReplace(%targetPrefVar, "[", "");
-         %sanitizedVar = strReplace(%sanitizedVar, "]", "");
-         %sanitizedVar = strReplace(%sanitizedVar, ",", "_");
-         %defaultValue = getVariable(%sanitizedVar);
-      }
+      new GuiTextCtrl() {
+         text = %optionObj.OptionName;
+         position = $optionsEntryPad SPC -1;
+         extent = 400 SPC %optionNameHeight;
+         profile = "MenuSubHeaderText";
+         tooltipProfile = "GuiToolTipProfile";
+         internalName = "optionName";
+      };
+      new GuiTextCtrl() {
+         text = %optionObj.Description;
+         position = $optionsEntryPad SPC 17;
+         extent = "400 18";
+         profile = "GuiMLTextProfile";
+         tooltipProfile = "GuiToolTipProfile";
+         internalName = "optionDescription";
+      };
+      
+      new GuiContainer() {
+         position = "400 0";
+         extent = "400 40";
+         profile = GuiModelessDialogProfile;
+         tooltipProfile = "GuiToolTipProfile";
+         horizSizing = "left";
+         vertSizing = "height";
+         internalName = "valuesContainer";
          
-      if(%defaultValue $= "")
-         %defaultValue = getCurrentQualityLevel(%qualityLevelList);
-   }
+         new GuiButtonCtrl() {
+            position = "310 0";
+            extent = "20 40";
+            text = "<";
+            profile = GuiMenuButtonProfile;
+            internalName = "prevValButton";
+            command = "$MenuList.listPosition = $thisControl.getParent().getParent().selectionID; OptionMenuPrevSetting(1);";
+         };
+         
+         new GuiTextCtrl() {
+            text = %qualityLevelText;
+            position = "330 0";
+            extent = "50 40";
+            profile = "GuiMenuTextProfile";
+            tooltipProfile = "GuiToolTipProfile";
+            horizSizing = "right";
+            vertSizing = "center";
+            internalName = "optionValue";
+         };
+         
+         new GuiButtonCtrl() {
+            position = "380 0";
+            extent = "20 40";
+            text = ">";
+            profile = GuiMenuButtonProfile;
+            internalName = "nextValButton";
+            command = "$MenuList.listPosition = $thisControl.getParent().getParent().selectionID; OptionMenuNextSetting(1);";
+         };
+      };
+   }; 
    
-   return %this.addOptionRow(%label, %targetPrefVar, getQualityLevels(%qualityLevelList), 
-      %wrapOptions, %callback, %enabled, %description, %defaultValue);
+   return %entry; 
 }
 
-function OptionsMenuSettingsList::addOptionBoolRow(%this, %label, %targetPrefVar, %qualityLevelList, %wrapOptions, %callback, %enabled, %description, %defaultValue, %inverted)
+function addOptionSlider(%optionName, %optionDesc, %prefName, %sliderMin, %sliderMax, %sliderTicks)
 {
-   if(%defaultValue $= "")
-      %defaultValue = OptionsMenu.getOptionVariableValue(%targetPrefVar);
-      
-   if(%inverted $= "")
-      %inverted = false;
-      
-   //Lame and hacky, but some variables are 'disabled' and some are 'enabled'
-   if(isInt(%defaultValue) && %inverted)
-   {
-      if(%defaultValue == 0)
-         %defaultValue = 1;
-      else
-         %defaultValue = 0;
-   }
+   OptionsMenu.optsListCount++;
+   %currentVal = getVariable(%prefName);
    
-   if(%qualityLevelList $= $yesNoList && isInt(%defaultValue))
-   {
-      %defaultValue = convertBoolToYesNo(%defaultValue);
-   }
-   else if(%qualityLevelList $= $onOffList && isInt(%defaultValue))
-   {
-      %defaultValue = convertBoolToOnOff(%defaultValue);
-   }
-
-   return %this.addOptionRow(%label, %targetPrefVar, %qualityLevelList, 
-      %wrapOptions, %callback, %enabled, %description, %defaultValue);
-}
-
-function OptionsMenuSettingsList::addSliderRow(%this, %label, %targetPrefVar, %increment, %range, %callback, %enabled, %description, %defaultValue)
-{
-   if(%enabled $= "")
-      %enabled = true;
+   %tempVarName = %prefName @ "_tempVar";
+   
+   if(%currentVal $= "")
+      %currentVal = %sliderMin;
       
-   %optionsRowSize = 30;
-   %optionColumnWidth = %this.extent.x * 0.5;//todo, calculate off longest option text?
+   setVariable(%tempVarName, %currentVal);
       
-   %option = new GuiGameSettingsCtrl() { 
-      class = "MenuOptionsButton";
-      profile = "GuiMenuButtonProfile";
+   %optionNameHeight = 20;
+   if(%optionDesc $= "")
+      %optionNameHeight = 40;
+      
+   %entry = new GuiContainer() {
+      position = "0 0";
+      extent = "800 40";
+      profile = GuiMenuDefaultProfile;
+      tooltipProfile = "GuiToolTipProfile";
       horizSizing = "width";
       vertSizing = "bottom";
-      position = "0 0";
-      extent = %this.extent.x SPC %optionsRowSize;
-      columnSplit = %optionColumnWidth;
-      useMouseEvents = true;
-   };
-   
-   %option.targetPrefVar = %targetPrefVar; //create a var-option association
-   
-   if(%defaultValue $= "")
-      %defaultValue = OptionsMenu.getOptionVariableValue(%targetPrefVar);
-   
-   %option.setSliderSetting(%label, %defaultValue, %increment, %range, %callback, %enabled, %description);
+      class = "OptionsListSliderEntry";
+      canSave = false;
+      
+      new GuiButtonCtrl() {
+         profile = GuiMenuButtonProfile;
+         position = "0 0";
+         extent = "800 40";
+         horizSizing = "width";
+         vertSizing = "height";
+         internalName = "button";
+         class = "optionsMenuButton";
+      };
 
-   %this.add(%option);
+      new GuiTextCtrl() {
+         text = %optionName;
+         position = $optionsEntryPad SPC -1;
+         extent = 400 SPC %optionNameHeight;
+         profile = "MenuSubHeaderText";
+         tooltipProfile = "GuiToolTipProfile";
+         internalName = "optionName";
+      };
+      
+      new GuiTextCtrl() {
+         text = %optionDesc;
+         position = $optionsEntryPad SPC 17;
+         extent = "400 18";
+         profile = "GuiMLTextProfile";
+         tooltipProfile = "GuiToolTipProfile";
+         internalName = "optionDescription";
+      };
+      
+      new GuiContainer() {
+         position = "400 0";
+         extent = "400 40";
+         profile = GuiModelessDialogProfile;
+         tooltipProfile = "GuiToolTipProfile";
+         horizSizing = "left";
+         vertSizing = "height";
+         internalName = "valuesContainer";
+         
+         new GuiSliderCtrl() {
+            range = %sliderMin SPC %sliderMax;
+            ticks = %sliderTicks;
+            snap = "1";
+            value = %currentVal;
+            variable = %tempVarName;
+            useFillBar = "1";
+            fillBarColor = $TextMediumEmphasisColor;
+            renderTicks = "0";
+            position = "0 10";
+            extent = "400 20";
+            minExtent = "8 2";
+            horizSizing = "right";
+            vertSizing = "center";
+            profile = GuiMenuButtonProfile;
+            visible = "1";
+            active = "1";
+            command = "$thisControl.updateSliderValue();";
+            tooltipProfile = "GuiToolTipProfile";
+            hovertime = "1000";
+            isContainer = "0";
+            canSave = "1";
+            canSaveDynamicFields = "0";
+            class = "OptionsSliderEntrySlider";
+            internalName = "slider";
+         };
+      };
+   }; 
+   
+   return %entry; 
 }
 
-function OptionsMenuSettingsList::addKeybindRow(%this, %label, %bitmapName, %callback, %enabled, %description, %remapIndex)
+function OptionsSliderEntrySlider::updateSliderValue(%this)
 {
-   if(%enabled $= "")
-      %enabled = true;
-      
-   %optionsRowSize = 40;
-   %optionColumnWidth = %this.extent.x * 0.5;//todo, calculate off longest option text?
-      
-   %option = new GuiGameSettingsCtrl() { 
-      class = "MenuOptionsButton";
-      profile = "GuiMenuButtonProfile";
+   //update settings value here
+}
+
+function OptionsMenuActionMapButton::onHighlighted(%this, %highlighted)
+{
+   %container = %this.getParent();
+   %container-->actionName.profile = %highlighted ? MenuSubHeaderTextHighlighted : MenuSubHeaderText;
+
+   OptionsMenuSettingsScroll.scrollToObject(%container);
+}
+
+function addActionMapEntry(%actionMap, %device, %keyMap, %index, %description)
+{
+   %entry = new GuiContainer() {
+      position = "0 0";
+      extent = "800 40";
+      profile = GuiMenuDefaultProfile;
+      tooltipProfile = "GuiToolTipProfile";
       horizSizing = "width";
       vertSizing = "bottom";
-      position = "0 0";
-      extent = %this.extent.x SPC %optionsRowSize;
-      columnSplit = %optionColumnWidth;
-      useMouseEvents = true;
-   };
-   
-   %option.remapIndex = %remapIndex;
-   
-   %option.setKeybindSetting(%label, %bitmapName, %callback, %enabled, %description);
-
-   %this.add(%option);
-}
-
-//
-function OptionsMenuCategoryList::onNavigate(%this, %index)
-{
-   OptionsMenu.currentCategory = %index;
-   %this.getObject(%index).performClick();
-}
-
-function convertOptionToBool(%val)
-{
-   if(%val $= "yes" || %val $= "on")
-      return 1;
-   else 
-      return 0;
-}
-
-function convertBoolToYesNo(%val)
-{
-   if(%val == 1)
-      return "Yes";
-   else if(%val == 0)
-      return "No";
+      class = "OptionsKeybindEntry";
+      actionMap = %actionMap;
+      device = %device;
+      keymap = %keyMap;
+      remapIndex = %index;
+      canSave = false;
       
-   return %val;
-}
+      new GuiButtonCtrl() {
+         profile = GuiMenuButtonProfile;
+         position = "0 0";
+         extent = "800 40";
+         horizSizing = "width";
+         vertSizing = "height";
+         internalName = "button";
+         class = "OptionsMenuActionMapButton";
+         altCommand = "doKeyRemap($thisControl.getParent());";
+      };
 
-function convertBoolToOnOff(%val)
-{
-   if(%val == 1)
-      return "On";
-   else if(%val == 0)
-      return "Off";
+      new GuiTextCtrl() {
+         text = getField(%keyMap, 0);
+         position = $optionsEntryPad SPC -1;
+         extent = "400 40";
+         profile = "MenuSubHeaderText";
+         tooltipProfile = "GuiToolTipProfile";
+         internalName = "actionName";
+      };
       
-   return %val;
-}
-
-function getDisplayDeviceName()
-{
-   %numDevices = Canvas.getMonitorCount();
-   %devicesList = "";
-   for(%i = 0; %i < %numDevices; %i++)
-   {
-      %device = (%i+1) @ " - " @ Canvas.getMonitorName(%i);
-      if(%i==0)
-         %devicesList = %device;
-      else
-         %devicesList = %devicesList @ "\t" @ %device;
-   }
-   
-   return getField(%devicesList, $pref::Video::deviceId);  
-}
-//
-//
-//
-function MenuOptionsButton::onMouseEnter(%this)
-{
-   if(isObject(OptionName))
-   OptionName.setText(%this.getLabel());
-   if(isObject(OptionDescription))
-   OptionDescription.setText(%this.getToolTip());
-}
-
-function MenuOptionsButton::onMouseLeave(%this)
-{
-   if(isObject(OptionName))
-   OptionName.setText("");
-   if(isObject(OptionDescription))
-   OptionDescription.setText("");
-}
-
-function MenuOptionsButton::onHighlighted(%this, %state)
-{
-   MenuListButton::onHighlighted(%this, %state);
-}
-
-function MenuOptionsButton::onChange(%this)
-{
-   %optionMode = %this.getMode();
-   %optionName = %this.getLabel();
-   %tooltipText = %this.getTooltip();
-   
-   %targetVar = %this.targetPrefVar;
-   
-   OptionName.setText(%optionName);
-   OptionDescription.setText(%tooltipText);
-   
-   if(%optionMode == 0)
-   {
-      %currentValue = %this.getCurrentOption();
-      if(%currentValue !$= "")
-      {
-         if(%currentValue $= "yes" || %currentValue $= "on")
-            %saveReadyValue = 1;
-         else if(%currentValue $= "no" || %currentValue $= "off")
-            %saveReadyValue = 0;
-         else 
-            %saveReadyValue = %currentValue;
+      new GuiContainer() {
+         position = "400 3";
+         extent = "400 34";
+         profile = GuiModelessDialogProfile;
+         tooltipProfile = "GuiToolTipProfile";
+         horizSizing = "left";
+         vertSizing = "height";
+         internalName = "valuesContainer";
          
-         %prefIndex = OptionsMenu.unappliedChanges.getIndexFromKey(%targetVar);
-         if(%prefIndex == -1)
-         {
-            echo("Setting UnappliedChanges via add: key:" @ %targetVar @", value: " @ %saveReadyValue);
-            OptionsMenu.unappliedChanges.add(%targetVar, "\"" @ %saveReadyValue @ "\"" );
-         }
-         else
-         {
-            echo("Setting UnappliedChanges via modify: key:" @ %targetVar @", value: " @ %saveReadyValue);
-            OptionsMenu.unappliedChanges.setValue("\"" @ %saveReadyValue @ "\"", %prefIndex);
-         }
-      }
-   }
-   else if(%optionMode == 1)
-   {
-      %currentValue = %this.getValue();
-      
-      %prefIndex = OptionsMenu.unappliedChanges.getIndexFromKey(%targetVar);
-      if(%prefIndex == -1)
-      {
-         echo("Setting UnappliedChanges via add: key:" @ %targetVar @", value: " @ %currentValue);
-         OptionsMenu.unappliedChanges.add(%targetVar, "\"" @ %currentValue @ "\"" );
-      }
-      else
-      {
-         OptionsMenu.unappliedChanges.setValue("\"" @ %currentValue @ "\"", %prefIndex);
-      }
-   }
+         new GuiIconButtonCtrl() {
+            position = "300 -10";
+            extent = "98 45";
+            BitmapAsset = "";
+            profile = GuiRemapActionMapButtonProfile;
+            sizeIconToButton = true;
+            makeIconSquare = true;
+            iconLocation = "center";
+            internalName = "bindButton";
+            active = false;
+         };
+      };
+   }; 
    
-   //Update the UI in case there's responsive logic
-   OptionsMenu.schedule(32, "refresh");
-}
-
-function OptionsMenu::onKeybindChanged(%this, %actionMap, %keybind)
-{
-   %prefIndex = OptionsMenu.unappliedChanges.getIndexFromKey(%actionMap);
-   if(%prefIndex == -1)
-      OptionsMenu.unappliedChanges.add(%actionMap, %keybind);
-   else
-      OptionsMenu.unappliedChanges.setValue(%keybind, %prefIndex);
-}
-
-//
-// Indicates what category the options item should be added into
-//
-function addOptionsMenuCategory(%categoryName, %selectCallback)
-{
-   //Don't add duplicates!
-   %index = OptionsMenu.optionsCategories.getIndexFromKey(%categoryName);
-   if(%index == -1)
-      OptionsMenu.optionsCategories.add(%categoryName, %selectCallback);
-}
-
-function removeOptionsMenuCategory(%categoryName)
-{
-   %index = OptionsMenu.optionsCategories.getIndexFromKey(%categoryName);
-   if(%index != -1)
-      OptionsMenu.optionsCategories.erase(%index);
-}
-
-function getOptionsCategoryIndexByName(%categoryName)
-{
-   for(%i=0; %i < OptionsMenu.optionsCategories.count(); %i++)
-   {
-      if(OptionsMenu.optionsCategories.getKey(%i) $= %categoryName)
-         return %i;
-   }
-   
-   return -1;
-}
-
-function addListOption(%label, %description, %targetPrefVar, %optionsList, %wrapOptions, %callback, %enabled)
-{
-   if(%wrapOptions $= "")
-      %wrapOptions = false;
-      
-   if(%enabled $= "")
-      %enabled = true;
-
-   OptionsMenuSettingsList.addOptionRow(%label, %targetPrefVar, %optionsList, %wrapOptions, %callback, %enabled, %description, %targetPrefVar);
-}
-
-function addSliderOption(%label, %description, %targetPrefVar, %defaultValue, %increment, %range, %callback, %enabled)
-{
-   if(%enabled $= "")
-      %enabled = true;
-
-   OptionsMenuSettingsList.addSliderRow(%label, %targetPrefVar, %defaultValue, %increment, %range, %callback, %enabled, %description);
-}
-
-function addKeybindOption(%label, %description, %bitmapName, %callback, %enabled)
-{
-   if(%enabled $= "")
-      %enabled = true;
-
-   OptionsMenuSettingsList.addSliderRow(%label, %bitmapName, %callback, %enabled, %description);
+   return %entry; 
 }

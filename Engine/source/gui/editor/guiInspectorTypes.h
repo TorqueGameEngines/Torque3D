@@ -187,6 +187,20 @@ public:
 };
 
 //-----------------------------------------------------------------------------
+// GuiInspectorTypeActionMap Class
+//-----------------------------------------------------------------------------
+class GuiInspectorTypeActionMap : public GuiInspectorTypeMenuBase
+{
+private:
+   typedef GuiInspectorTypeMenuBase Parent;
+public:
+   DECLARE_CONOBJECT(GuiInspectorTypeActionMap);
+   static void consoleInit();
+
+   virtual void _populateMenu(GuiPopUpMenuCtrl* menu);
+};
+
+//-----------------------------------------------------------------------------
 // GuiInspectorTypeCheckBox Class
 //-----------------------------------------------------------------------------
 class GuiInspectorTypeCheckBox : public GuiInspectorField

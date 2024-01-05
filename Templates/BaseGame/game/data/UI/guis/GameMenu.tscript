@@ -1,0 +1,187 @@
+function GameMenu::onAdd(%this)
+{
+   %this.gameMenusArray = new ArrayObject(){};
+}
+
+function GameMenu::onWake(%this)
+{
+   if($Server::ServerType $= "SinglePlayer")
+   {
+      $timescale = 0;
+      
+      sfxSetChannelVolume( $SimAudioType, $pref::SFX::channelVolume[ 0 ] );
+   }
+   
+   callOnModules("registerGameMenus", "", %this.gameMenusArray);
+   
+   //Remove duplicates as needed
+   %this.gameMenusArray.uniqueKey();
+   
+   GameMenuButtonList.clear();
+   
+   %stackWidth = 0;
+   //process the entries and give 'em buttons on the button array
+   for(%i=0; %i < %this.gameMenusArray.count(); %i++)
+   {
+      %buttonText = %this.gameMenusArray.getKey(%i);
+      
+      %textWidth = GuiMenuButtonProfile.getStringWidth(%buttonText);
+      
+      %btn = new GuiButtonCtrl() {
+         extent = %textWidth + 80 SPC 40;
+         profile = GuiMenuButtonProfile;
+         text = %buttonText;
+         class = "GameMenuButton";
+         command = "GameMenu.openGameMenu(\"" @ %buttonText @ "\");";
+         canSave = false;
+      };
+      
+      %stackWidth += %textWidth + 40;
+         
+      GameMenuButtonList.add(%btn);
+   }
+   
+   GameMenuButtonList.resize(GameMenuTitlePanel.extent.x/2 - %stackWidth/2, 0, %stackWidth, GameMenuTitlePanel.extent.y);
+
+   %this.openGameMenu("System");
+   
+   //give a slight delay for the canvas to be fully refreshed before we sync things
+   %this.schedule(500, "syncGUI");
+}
+
+function GameMenu::onSleep(%this)
+{
+   if($Server::ServerType $= "SinglePlayer")
+   {
+      $timescale = 1;
+      sfxSetChannelVolume( $SimAudioType, $pref::SFX::channelVolume[ $SimAudioType ] );
+   }
+   
+   if(isObject(%this.currentMenu))
+   {
+      Canvas.popDialog(%this.currentMenu);  
+   }
+}
+
+if(!isObject( GameMenuActionMap ) )
+{
+   new ActionMap(GameMenuActionMap){};
+   
+   //We'll just use the existing BaseUI nav functions because it'd be the same logic anyways
+   GameMenuActionMap.bind( keyboard, w, BaseUINavigatePrev );
+   GameMenuActionMap.bind( keyboard, s, BaseUINavigateNext );
+   GameMenuActionMap.bind( gamepad, yaxis, "D", "-0.23 0.23", BaseUIStickNavigate );
+   GameMenuActionMap.bind( gamepad, upov, BaseUINavigatePrev );
+   GameMenuActionMap.bind( gamepad, dpov, BaseUINavigateNext );
+   
+   GameMenuActionMap.bind( keyboard, Space, BaseUIActivateSelected );
+   GameMenuActionMap.bind( gamepad, btn_a, BaseUIActivateSelected );
+   
+   GameMenuActionMap.bindCmd( keyboard, Escape, "Canvas.popDialog(GameMenu);", "" );
+   GameMenuActionMap.bindCmd( gamepad, btn_b, "Canvas.popDialog(GameMenu);", "" );
+   GameMenuActionMap.bindCmd( gamepad, btn_start, "Canvas.popDialog(GameMenu);", "" );
+   
+   GameMenuActionMap.bind( keyboard, q, GameMenuPrevMenu );
+   GameMenuActionMap.bind( gamepad, btn_l, GameMenuPrevMenu );
+   
+   GameMenuActionMap.bind( keyboard, e, GameMenuNextMenu );
+   GameMenuActionMap.bind( gamepad, btn_r, GameMenuNextMenu );
+}
+
+function GameMenu::openGameMenu(%this, %menuName)
+{
+   %menuIdx = %this.gameMenusArray.getIndexFromKey(%menuName);
+   if(%menuIdx != -1)
+   {
+      %newMenu = %this.gameMenusArray.getValue(%menuIdx);
+
+      if(isObject(%this.currentMenu))
+         Canvas.popDialog(%this.currentMenu);
+      
+      Canvas.pushDialog(%newMenu);
+      %this.currentMenu = %newMenu;
+      %this.currentMenuIdx = %menuIdx;
+   }
+   
+   %this.syncGui();
+}
+
+function openPauseMenuOptions()
+{
+   GameMenu.pushPage(OptionsMenu);
+}
+
+function pauseMenuExitToMenu()
+{
+   MessageBoxOKCancel("Exit?", "Do you wish to exit to the Main Menu?", "escapeFromGame();", "");
+}
+
+function pauseMenuExitToDesktop()
+{
+   MessageBoxOKCancel("Exit?", "Do you wish to exit to the desktop?", "quit();", "");
+}
+
+function GameMenuPrevMenu(%val)
+{
+   if(%val)
+   {
+      %currentIdx = GameMenu.currentMenuIdx;
+      GameMenu.currentMenuIdx -= 1;
+      if(GameMenu.currentMenuIdx < 0)
+         GameMenu.currentMenuIdx = 0;
+         
+      if(%currentIdx == GameMenu.currentMenuIdx)
+         return;
+         
+      %menuName = GameMenu.gameMenusArray.getKey(GameMenu.currentMenuIdx);
+      
+      GameMenu.openGameMenu(%menuName);
+   }
+}
+
+function GameMenuNextMenu(%val)
+{
+   if(%val)
+   {
+      %currentIdx = GameMenu.currentMenuIdx;
+      GameMenu.currentMenuIdx += 1;
+      if(GameMenu.currentMenuIdx >= GameMenu.gameMenusArray.count())
+         GameMenu.currentMenuIdx = GameMenu.gameMenusArray.count()-1;
+         
+      if(%currentIdx == GameMenu.currentMenuIdx)
+         return;
+         
+      %menuName = GameMenu.gameMenusArray.getKey(GameMenu.currentMenuIdx);
+      
+      GameMenu.openGameMenu(%menuName);
+   }
+}
+
+function GameMenu::syncGui(%this)
+{
+   GameMenuButtonList.callOnChildren("setHighlighted", false);
+   
+   %btn = GameMenuButtonList.getObject(%this.currentMenuIdx);
+   %btn.setHighlighted(true);
+   
+   %buttonPosX = %btn.position.x + GameMenuButtonList.position.x;
+
+   GameMenuPrevNavIcon.position.x = %buttonPosX;
+   GameMenuNextNavIcon.position.x = %buttonPosX + %btn.extent.x - 40;
+   
+   //Update the button imagery to comply to the last input device we'd used
+   %device = Canvas.getLastInputDevice();
+   if(%device $= "mouse")
+      %device = "keyboard";
+      
+   GameMenuBackBtn.setBitmap(BaseUIActionMap.getCommandButtonBitmap(%device, "BaseUIBackOut"));
+   
+   GameMenuPrevNavIcon.setBitmap(GameMenuActionMap.getCommandButtonBitmap(%device, "GameMenuPrevMenu"));
+   GameMenuNextNavIcon.setBitmap(GameMenuActionMap.getCommandButtonBitmap(%device, "GameMenuNextMenu"));
+   
+   %this.schedule(500, "syncGUI");
+}
+
+/*
+
+*/

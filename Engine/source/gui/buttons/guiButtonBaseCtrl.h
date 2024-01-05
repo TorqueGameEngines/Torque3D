@@ -24,7 +24,7 @@
 #define _GUIBUTTONBASECTRL_H_
 
 #ifndef _GUICONTROL_H_
-   #include "gui/core/guiControl.h"
+#include "gui/core/guiControl.h"
 #endif
 
 
@@ -33,98 +33,99 @@
 ///
 class GuiButtonBaseCtrl : public GuiControl
 {
-   public:
-   
-      typedef GuiControl Parent;
+public:
 
-      enum ButtonType
-      {
-         ButtonTypePush,
-         ButtonTypeCheck,
-         ButtonTypeRadio,
-      };
+   typedef GuiControl Parent;
 
-   protected:
-   
-      StringTableEntry mButtonText;
-      StringTableEntry mButtonTextID;
-      bool mDepressed;
-      bool mHighlighted;
-      bool mStateOn;
-      S32 mButtonType;
-      S32 mRadioGroup;
-      bool mUseMouseEvents;
-      
-      /// Point where left mouse button was pressed down.  Used to find when to start
-      /// a mouse drag.
-      Point2I mMouseDownPoint;
-      
-      ///
-      bool mMouseDragged;
-      
-	   /// @name Callbacks
-	   /// @{
+   enum ButtonType
+   {
+      ButtonTypePush,
+      ButtonTypeCheck,
+      ButtonTypeRadio,
+   };
 
-      DECLARE_CALLBACK( void, onMouseDown, () );   
-	   DECLARE_CALLBACK( void, onMouseUp, () );
-	   DECLARE_CALLBACK( void, onClick, () );
-	   DECLARE_CALLBACK( void, onRightClick, () );
-	   DECLARE_CALLBACK( void, onDoubleClick, () );    
-	   DECLARE_CALLBACK( void, onMouseEnter, () );   
-	   DECLARE_CALLBACK( void, onMouseLeave, () );      
-	   DECLARE_CALLBACK( void, onMouseDragged, () );   
+protected:
 
-      /// @}
+   StringTableEntry mButtonText;
+   StringTableEntry mButtonTextID;
+   bool mDepressed;
+   bool mHighlighted;
+   bool mStateOn;
+   S32 mButtonType;
+   S32 mRadioGroup;
+   bool mUseMouseEvents;
 
-   public:
+   /// Point where left mouse button was pressed down.  Used to find when to start
+   /// a mouse drag.
+   Point2I mMouseDownPoint;
 
-      GuiButtonBaseCtrl();
-      bool onWake();
+   ///
+   bool mMouseDragged;
 
-      DECLARE_CONOBJECT( GuiButtonBaseCtrl );
-      DECLARE_CATEGORY( "Gui Buttons" );
-      DECLARE_DESCRIPTION( "A basic button control." );
-      
-      static void initPersistFields();
+   /// @name Callbacks
+   /// @{
 
-      void setText(const char *text);
-      void setTextID(S32 id);
-      void setTextID(const char *id);
-      const char *getText();
-      void setStateOn( bool bStateOn );
-      bool getStateOn() const { return mStateOn; }
+   DECLARE_CALLBACK(void, onMouseDown, ());
+   DECLARE_CALLBACK(void, onMouseUp, ());
+   DECLARE_CALLBACK(void, onClick, ());
+   DECLARE_CALLBACK(void, onRightClick, ());
+   DECLARE_CALLBACK(void, onDoubleClick, ());
+   DECLARE_CALLBACK(void, onMouseEnter, ());
+   DECLARE_CALLBACK(void, onMouseLeave, ());
+   DECLARE_CALLBACK(void, onMouseDragged, ());
+   DECLARE_CALLBACK(void, onHighlighted, (bool));
 
-      void setDepressed( bool depressed ) { mDepressed = depressed; }
-      void resetState() {mDepressed = false; mHighlighted = false;}
+   /// @}
 
-      void setHighlighted(bool highlighted) { mHighlighted = highlighted; }
-      bool isHighlighted() { return mHighlighted; }
+public:
 
-      void acceleratorKeyPress(U32 index);
-      void acceleratorKeyRelease(U32 index);
+   GuiButtonBaseCtrl();
+   bool onWake();
 
-      void onMouseDown(const GuiEvent &);
-      void onMouseUp(const GuiEvent &);
-      void onMouseDragged( const GuiEvent& event );
-      void onRightMouseUp(const GuiEvent &);
+   DECLARE_CONOBJECT(GuiButtonBaseCtrl);
+   DECLARE_CATEGORY("Gui Buttons");
+   DECLARE_DESCRIPTION("A basic button control.");
 
-      void onMouseEnter(const GuiEvent &);
-      void onMouseLeave(const GuiEvent &);
+   static void initPersistFields();
 
-      bool onKeyDown(const GuiEvent &event);
-      bool onKeyUp(const GuiEvent &event);
+   void setText(const char* text);
+   void setTextID(S32 id);
+   void setTextID(const char* id);
+   const char* getText();
+   void setStateOn(bool bStateOn);
+   bool getStateOn() const { return mStateOn; }
 
-      void setScriptValue(const char *value);
-      const char *getScriptValue();
+   void setDepressed(bool depressed) { mDepressed = depressed; }
+   void resetState() { mDepressed = false; mHighlighted = false; }
 
-      void onMessage(GuiControl *,S32 msg);
-      void onAction();
-      
-      bool usesMouseEvents() const { return mUseMouseEvents; }
-      void setUseMouseEvents( bool val ) { mUseMouseEvents = val; }
+   void setHighlighted(bool highlighted);
+   bool isHighlighted() { return mHighlighted; }
+
+   void acceleratorKeyPress(U32 index);
+   void acceleratorKeyRelease(U32 index);
+
+   void onMouseDown(const GuiEvent&);
+   void onMouseUp(const GuiEvent&);
+   void onMouseDragged(const GuiEvent& event);
+   void onRightMouseUp(const GuiEvent&);
+
+   void onMouseEnter(const GuiEvent&);
+   void onMouseLeave(const GuiEvent&);
+
+   bool onKeyDown(const GuiEvent& event);
+   bool onKeyUp(const GuiEvent& event);
+
+   void setScriptValue(const char* value);
+   const char* getScriptValue();
+
+   void onMessage(GuiControl*, S32 msg);
+   void onAction();
+
+   bool usesMouseEvents() const { return mUseMouseEvents; }
+   void setUseMouseEvents(bool val) { mUseMouseEvents = val; }
 };
 
 typedef GuiButtonBaseCtrl::ButtonType GuiButtonType;
-DefineEnumType( GuiButtonType );
+DefineEnumType(GuiButtonType);
 
 #endif

@@ -1,52 +1,130 @@
+$BaseUI::scrollSpeedTimeMs = 250;
+$BaseUI::scrollSchedule = 0;
+
 function MainMenuGui::onAdd(%this)
 {
-   $activeControllerName = "K&M"; //default input type
 }
 
 function MainMenuGui::onWake(%this)
 {
-   //In the BaseUI example case, the MainMenuGUI acts as our background
-   //So it's a logical control to set as our UINavigation as well. So we 
-   //set the MainMenuGUI's superClass to UINavigation to integrate it into
-   //that namespace to open up page navigation
+   $MenuList = MainMenuButtonList;
+   $MenuList.listPosition = 0;
    
-   //At the same time, the MainMenuGUI control has the button holder, set to
-   //the MenuInputButtonContainer class, allowing us to set it as the active button
-   //holder here, prepping it for catching any button inputs to active commands
-   //Specifically, it sets the $activeMenuButtonContainer to be this, which allows
-   //other controls to manage what the behavior of the buttons is consistently
-   //without needing to worry about hardcoded names
-   MainMenuButtonHolder.setActive();
-   
-   //We also have the MainMenuInputHandler, a GuiInputCtrl with the MenuInputHandler class
-   //This allows us to catch any input/axis event and pass it along to the active menuList
-   //or button containers to navigate the menus
-   //We set up this catch by making said control our first responder, here
-   MainMenuInputHandler.setFirstResponder();
-   
-   //We also go ahead and mark for any future pages being added to the UINavigation's page stack
-   //to be prompted to resize when added. This isn't required, but helps keep pages formated to 
-   //the current size of the UINavigation, which is useful when dealing with aspect ratio or resolution
-   //changes.
-   %this.resizePages = true;
-   //Lastly, we go ahead and display some actual navigable content up on our main menu here
-   //In this case, we set the MainMenuButtons as our root page, so we always come back
-   //to having the main menu buttons on screen if every other page is closed.
-   //This will ultimately call MainMenuButtons::onOpen(), so to see where the navigation
-   //chain continues, see that function.
-   %this.setRootPage(MainMenuButtons);
-   
-   %this.refreshPage();
+   $MenuList.syncGui();
 }
 
-function MainMenuButtonHolder::onWake(%this)
+function MainMenuGui::onSleep(%this)
 {
-   //Because the blan slate MainMenuGUI doesn't have anything we need to bother with inputs on
-   //we just go ahead and disable all the buttons in our MainMenuButtonHolder to have
-   // a clean slate
-   %this-->button1.disable();
-   %this-->button2.disable();
-   %this-->button3.disable();
-   %this-->button4.disable();
-   %this-->button5.disable();
+}
+
+if(!isObject( BaseUIActionMap ) )
+{
+   new ActionMap(BaseUIActionMap){};
+   
+   BaseUIActionMap.bind( keyboard, w, BaseUINavigatePrev );
+   BaseUIActionMap.bind( keyboard, s, BaseUINavigateNext );
+   BaseUIActionMap.bind( gamepad, yaxis, "D", "-0.23 0.23", BaseUIStickNavigate );
+   BaseUIActionMap.bind( gamepad, upov, BaseUINavigatePrev );
+   BaseUIActionMap.bind( gamepad, dpov, BaseUINavigateNext );
+   
+   BaseUIActionMap.bind( keyboard, Space, BaseUIActivateSelected );
+   BaseUIActionMap.bind( gamepad, btn_a, BaseUIActivateSelected );
+   
+   BaseUIActionMap.bind( keyboard, Escape, BaseUIBackOut );
+   BaseUIActionMap.bind( gamepad, btn_b, BaseUIBackOut );
+}
+
+function BaseUINavigatePrev(%val)
+{
+   if(%val)
+   {
+      $MenuList.listPosition -= 1;
+      if($MenuList.listPosition < 0)
+         $MenuList.listPosition = 0;
+         
+      $MenuList.syncGUI();
+      
+      $BaseUI::scrollSchedule = schedule($BaseUI::scrollSpeedTimeMs, 0, "BaseUINavigatePrev", 1);
+   }
+   else
+   {
+      cancel($BaseUI::scrollSchedule);
+   }
+}
+
+function BaseUINavigateNext(%val)
+{
+   if(%val)
+   {
+      $MenuList.listPosition += 1;
+      if($MenuList.listPosition >= $MenuList.getCount())
+         $MenuList.listPosition = $MenuList.getCount()-1;
+         
+      $MenuList.syncGUI();
+      
+      $BaseUI::scrollSchedule = schedule($BaseUI::scrollSpeedTimeMs, 0, "BaseUINavigateNext", 1);
+   }
+   else
+   {
+      cancel($BaseUI::scrollSchedule);
+   }
+}
+
+function BaseUIStickNavigate(%val)
+{
+   if(%val == 1)
+      BaseUINavigateNext(1);
+   else if(%val == -1)
+      BaseUINavigatePrev(1);
+   else 
+      cancel($BaseUI::scrollSchedule);
+}
+
+function BaseUIBackOut(%val)
+{
+   //we can't navigate further back than the MainMenuGui
+   if(%val && Canvas.getObject(Canvas.getCount()-1).getId() != MainMenuGui.getId())
+   {
+      Canvas.popDialog();
+      %topMenu = Canvas.getObject(Canvas.getCount()-1);
+      if(isObject(%topMenu))
+      {
+         //re-kick the on-wake so we can be fully up to date and relevently
+         //contexted
+         %topMenu.onWake();  
+      }
+   }
+}
+
+function MainMenuButtonList::syncGUI(%this)
+{
+   //%this.callOnChildren("setHighlighted", false);
+   
+   %btn = %this.getObject(%this.listPosition);
+   %btn.setHighlighted(true);
+   
+   //
+   //Update the button imagery to comply to the last input device we'd used
+   %device = Canvas.getLastInputDevice();
+   if(%device $= "mouse")
+      %device = "keyboard";
+      
+   MainMenuGoButton.setBitmap(BaseUIActionMap.getCommandButtonBitmap(%device, "BaseUIActivateSelected"));
+}
+
+function MainMenuButton::onHighlighted(%this, %highlighted)
+{
+   if(%highlighted)
+      $MenuList.listPosition = MainMenuButtonList.getObjectIndex(%this);
+}
+
+function BaseUIActivateSelected()
+{
+   if($MenuList.getCount() == 0 || $MenuList.listPosition >= $MenuList.getCount() || $MenuList.listPosition < 0)
+      return;
+      
+   %btn = $MenuList.getObject($MenuList.listPosition);
+   
+   if(%btn.isMethod("performClick"))
+      %btn.performClick();
 }

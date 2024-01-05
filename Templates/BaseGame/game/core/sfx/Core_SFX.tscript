@@ -7,7 +7,7 @@ function Core_SFX::onCreate(%this)
    exec("./scripts/audioDescriptions." @ $TorqueScriptFileExtension);
    exec("./scripts/audioEnvironments." @ $TorqueScriptFileExtension);
    exec("./scripts/audioStates." @ $TorqueScriptFileExtension);
-
+   exec("./scripts/audioOptions." @ $TorqueScriptFileExtension);
 }
 
 function Core_SFX::onDestroy(%this)

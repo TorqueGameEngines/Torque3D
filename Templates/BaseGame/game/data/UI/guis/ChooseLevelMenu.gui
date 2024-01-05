@@ -1,0 +1,345 @@
+//--- OBJECT WRITE BEGIN ---
+$guiContent = new GuiControl(ChooseLevelMenu) {
+   extent = "1280 720";
+   minExtent = "8 8";
+   horizSizing = "width";
+   vertSizing = "height";
+   profile = "GuiMenuBackgroundProfile";
+   category = "BaseUI";
+   tooltipProfile = "GuiToolTipProfile";
+   isContainer = "1";
+   canSaveDynamicFields = "1";
+      launchInEditor = "0";
+      previewButtonSize = "445 120";
+
+   new GuiInputCtrl(ChooseLevelInputHandler) {
+      ignoreMouseEvents = "1";
+      ActionMap = "ChooseLevelActionMap";
+      position = "-50 0";
+      extent = "2186 851";
+      horizSizing = "width";
+      vertSizing = "height";
+      profile = "GuiInputCtrlProfile";
+      tooltipProfile = "GuiToolTipProfile";
+   };
+   new GuiPanel(ChooseLevelTitlePanel) {
+      extent = "1281 60";
+      horizSizing = "width";
+      profile = "GuiMenuPanelProfile";
+      tooltipProfile = "GuiToolTipProfile";
+
+      new GuiTextCtrl(ChooseLevelTitleText) {
+         text = "SINGLE PLAYER";
+         position = "22 23";
+         extent = "1281 28";
+         profile = "MenuHeaderText";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+   };
+   new GuiStackControl(ChooseLevelMenuTabList) {
+      stackingType = "Horizontal";
+      padding = "10";
+      position = "485 61";
+      extent = "310 41";
+      horizSizing = "center";
+      profile = "GuiDefaultProfile";
+      visible = "0";
+      tooltipProfile = "GuiToolTipProfile";
+      hidden = "1";
+
+      new GuiButtonCtrl() {
+         text = "Level";
+         groupNum = "1";
+         extent = "150 41";
+         profile = "GuiMenuButtonProfile";
+         command = "ChooseLevelMenu.openMenu(0);";
+         tooltipProfile = "GuiToolTipProfile";
+         class = "ChooseLevelMenuButton";
+      };
+      new GuiButtonCtrl() {
+         text = "Server Config";
+         groupNum = "1";
+         position = "160 0";
+         extent = "150 41";
+         profile = "GuiMenuButtonProfile";
+         command = "ChooseLevelMenu.openMenu(1);";
+         tooltipProfile = "GuiToolTipProfile";
+         class = "ChooseLevelMenuButton";
+      };
+   };
+   new GuiControl(ChooseLevelMenuNavButtonOverlay) {
+      position = "0 61";
+      extent = "1281 60";
+      horizSizing = "width";
+      profile = "GuiNonModalDefaultProfile";
+      visible = "0";
+      tooltipProfile = "GuiToolTipProfile";
+      isContainer = "1";
+      hidden = "1";
+
+      new GuiBitmapCtrl(ChooseLevelMenuPrevNavIcon) {
+         BitmapAsset = "UI:Keyboard_Black_Q_image";
+         position = "485 24";
+         extent = "40 40";
+         vertSizing = "top";
+         profile = "GuiNonModalDefaultProfile";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+      new GuiBitmapCtrl(ChooseLevelMenuNextNavIcon) {
+         BitmapAsset = "UI:Keyboard_Black_E_image";
+         position = "595 24";
+         extent = "40 40";
+         vertSizing = "top";
+         profile = "GuiNonModalDefaultProfile";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+   };
+   new GuiContainer(LevelSelectContainer) {
+      position = "196 119";
+      extent = "888 566";
+      horizSizing = "center";
+      profile = "GuiNonModalDefaultProfile";
+      tooltipProfile = "GuiToolTipProfile";
+
+      new GuiScrollCtrl(LevelPreviewScroll) {
+         hScrollBar = "alwaysOff";
+         vScrollBar = "dynamic";
+         extent = "445 562";
+         vertSizing = "height";
+         profile = "GuiMenuScrollProfile";
+         tooltipProfile = "GuiToolTipProfile";
+
+         new GuiStackControl(LevelPreviewArray) {
+            padding = "5";
+            position = "0 1";
+            extent = "445 120";
+            horizSizing = "width";
+            vertSizing = "height";
+            profile = "GuiMenuDefaultProfile";
+            tooltipProfile = "GuiToolTipProfile";
+         };
+      };
+      new GuiBitmapCtrl(LevelPreviewBitmap) {
+         BitmapAsset = "";
+         position = "448 0";
+         extent = "440 440";
+         horizSizing = "left";
+         profile = "GuiNonModalDefaultProfile";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+      new GuiTextCtrl(LevelNameText) {
+         text = "";
+         position = "448 445";
+         extent = "440 20";
+         horizSizing = "left";
+         profile = "MenuSubHeaderText";
+         tooltipProfile = "GuiToolTipProfile";
+         internalName = "levelNameTxt";
+      };
+      new GuiMLTextCtrl(LevelDescriptionText) {
+         position = "448 473";
+         extent = "440 19";
+         horizSizing = "left";
+         profile = "GuiMLTextProfile";
+         tooltipProfile = "GuiToolTipProfile";
+         internalName = "levelDescTxt";
+      };
+   };
+   new GuiContainer(ServerConfigContainer) {
+      position = "196 119";
+      extent = "888 566";
+      horizSizing = "center";
+      profile = "GuiNonModalDefaultProfile";
+      visible = "0";
+      tooltipProfile = "GuiToolTipProfile";
+      hidden = "1";
+
+      new GuiScrollCtrl(ServerConfigScroll) {
+         hScrollBar = "alwaysOff";
+         vScrollBar = "dynamic";
+         extent = "888 566";
+         horizSizing = "width";
+         vertSizing = "height";
+         profile = "GuiMenuScrollProfile";
+         tooltipProfile = "GuiToolTipProfile";
+
+         new GuiStackControl(ServerConfigList) {
+            padding = "5";
+            changeChildSizeToFit = "0";
+            position = "1 1";
+            extent = "900 170";
+            horizSizing = "width";
+            vertSizing = "height";
+            profile = "GuiMenuDefaultProfile";
+            tooltipProfile = "GuiToolTipProfile";
+
+            new GuiContainer() {
+               extent = "900 30";
+               horizSizing = "width";
+               profile = "GuiDefaultProfile";
+               tooltipProfile = "GuiToolTipProfile";
+
+               new GuiTextCtrl() {
+                  text = "Host Player Name";
+                  position = "0 3";
+                  extent = "140 23";
+                  vertSizing = "center";
+                  profile = "MenuMLSubHeaderText";
+                  tooltipProfile = "GuiToolTipProfile";
+               };
+               new GuiTextEditCtrl(playerNameCTRL) {
+                  text = "Visitor";
+                  position = "606 4";
+                  extent = "295 22";
+                  horizSizing = "left";
+                  vertSizing = "center";
+                  profile = "MenuTextEditprofile";
+                  variable = "$pref::Player::Name";
+                  tooltipProfile = "GuiToolTipProfile";
+               };
+            };
+            new GuiContainer() {
+               position = "0 35";
+               extent = "900 30";
+               horizSizing = "width";
+               profile = "GuiDefaultProfile";
+               tooltipProfile = "GuiToolTipProfile";
+
+               new GuiTextCtrl() {
+                  text = "Server Name";
+                  position = "0 3";
+                  extent = "101 23";
+                  vertSizing = "center";
+                  profile = "MenuMLSubHeaderText";
+                  tooltipProfile = "GuiToolTipProfile";
+               };
+               new GuiTextEditCtrl(serverNameCTRL) {
+                  text = "";
+                  position = "606 4";
+                  extent = "295 22";
+                  horizSizing = "left";
+                  vertSizing = "center";
+                  profile = "MenuTextEditprofile";
+                  variable = "$Pref::Server::Name";
+                  tooltipProfile = "GuiToolTipProfile";
+               };
+            };
+            new GuiContainer() {
+               position = "0 70";
+               extent = "900 30";
+               horizSizing = "width";
+               profile = "GuiDefaultProfile";
+               tooltipProfile = "GuiToolTipProfile";
+
+               new GuiTextCtrl() {
+                  text = "Server Password";
+                  position = "0 3";
+                  extent = "135 23";
+                  vertSizing = "center";
+                  profile = "MenuMLSubHeaderText";
+                  tooltipProfile = "GuiToolTipProfile";
+               };
+               new GuiTextEditCtrl(serverPassCTRL) {
+                  text = "";
+                  position = "606 4";
+                  extent = "295 22";
+                  horizSizing = "left";
+                  vertSizing = "center";
+                  profile = "MenuTextEditprofile";
+                  variable = "$Pref::Server::Password";
+                  tooltipProfile = "GuiToolTipProfile";
+               };
+            };
+            new GuiContainer() {
+               position = "0 105";
+               extent = "900 30";
+               horizSizing = "width";
+               profile = "GuiDefaultProfile";
+               tooltipProfile = "GuiToolTipProfile";
+
+               new GuiTextCtrl() {
+                  text = "Server Description";
+                  position = "0 3";
+                  extent = "147 23";
+                  vertSizing = "center";
+                  profile = "MenuMLSubHeaderText";
+                  tooltipProfile = "GuiToolTipProfile";
+               };
+               new GuiTextEditCtrl(serverInfoCTRL) {
+                  text = "This is a Torque 3D server.";
+                  position = "606 4";
+                  extent = "295 22";
+                  horizSizing = "left";
+                  vertSizing = "center";
+                  profile = "MenuTextEditprofile";
+                  variable = "$Pref::Server::Info";
+                  tooltipProfile = "GuiToolTipProfile";
+               };
+            };
+            new GuiContainer() {
+               position = "0 140";
+               extent = "900 30";
+               horizSizing = "width";
+               profile = "GuiDefaultProfile";
+               tooltipProfile = "GuiToolTipProfile";
+
+               new GuiTextCtrl() {
+                  text = "Max Players";
+                  position = "0 3";
+                  extent = "94 23";
+                  vertSizing = "center";
+                  profile = "MenuMLSubHeaderText";
+                  tooltipProfile = "GuiToolTipProfile";
+               };
+               new GuiTextEditCtrl(serverMaxPlayersCTRL) {
+                  text = "64";
+                  position = "606 4";
+                  extent = "295 22";
+                  horizSizing = "left";
+                  vertSizing = "center";
+                  profile = "MenuTextEditprofile";
+                  variable = "$Pref::Server::MaxPlayers";
+                  tooltipProfile = "GuiToolTipProfile";
+               };
+            };
+         };
+      };
+   };
+   new GuiPanel(ChooseLevelButtonPanel) {
+      position = "0 683";
+      extent = "1281 40";
+      horizSizing = "width";
+      vertSizing = "top";
+      profile = "GuiMenuPanelProfile";
+      tooltipProfile = "GuiToolTipProfile";
+
+      new GuiIconButtonCtrl(ChooseLevelStartBtn) {
+         BitmapAsset = "UI:Keyboard_Black_Return_image";
+         sizeIconToButton = "1";
+         makeIconSquare = "1";
+         textLocation = "Center";
+         text = "Start Game";
+         position = "1092 0";
+         extent = "163 40";
+         horizSizing = "left";
+         vertSizing = "center";
+         profile = "GuiMenuButtonProfile";
+         command = "ChooseLevelBegin(1);";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+      new GuiIconButtonCtrl(ChooseLevelBackBtn) {
+         BitmapAsset = "UI:Keyboard_Black_Escape_image";
+         sizeIconToButton = "1";
+         makeIconSquare = "1";
+         textLocation = "Center";
+         text = "Back";
+         position = "16 0";
+         extent = "140 40";
+         vertSizing = "center";
+         profile = "GuiMenuButtonProfile";
+         command = "Canvas.popDialog();";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+   };
+};
+//--- OBJECT WRITE END ---

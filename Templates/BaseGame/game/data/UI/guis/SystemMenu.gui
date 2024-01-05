@@ -1,0 +1,60 @@
+//--- OBJECT WRITE BEGIN ---
+$guiContent = new GuiControl(SystemMenu) {
+   extent = "1280 720";
+   profile = "GuiNonModalDefaultProfile";
+   tooltipProfile = "GuiToolTipProfile";
+   isContainer = "1";
+   canSaveDynamicFields = "1";
+
+   new GuiStackControl(SystemMenuButtonList) {
+      padding = "5";
+      dynamicSize = "0";
+      position = "440 263";
+      extent = "400 189";
+      horizSizing = "center";
+      vertSizing = "center";
+      profile = "GuiDefaultProfile";
+      tooltipProfile = "GuiToolTipProfile";
+
+      new GuiButtonCtrl() {
+         text = "Return to Game";
+         extent = "400 40";
+         profile = "GuiMenuButtonProfile";
+         command = "Canvas.popDialog(GameMenu);";
+         tooltipProfile = "GuiToolTipProfile";
+         groupNum = "1";
+         class = "SystemMenuButton";
+      };
+      new GuiButtonCtrl() {
+         text = "Options";
+         position = "0 45";
+         extent = "400 40";
+         profile = "GuiMenuButtonProfile";
+         command = "Canvas.pushDialog(OptionsMenu);";
+         tooltipProfile = "GuiToolTipProfile";
+         groupNum = "1";
+         class = "SystemMenuButton";
+      };
+      new GuiButtonCtrl() {
+         text = "Exit to Menu";
+         position = "0 90";
+         extent = "400 40";
+         profile = "GuiMenuButtonProfile";
+         command = "systemMenuExitToMenu();";
+         tooltipProfile = "GuiToolTipProfile";
+         groupNum = "1";
+         class = "SystemMenuButton";
+      };
+      new GuiButtonCtrl() {
+         text = "Exit to Desktop";
+         position = "0 135";
+         extent = "400 40";
+         profile = "GuiMenuButtonProfile";
+         command = "systemMenuExitToDesktop();";
+         tooltipProfile = "GuiToolTipProfile";
+         groupNum = "1";
+         class = "SystemMenuButton";
+      };
+   };
+};
+//--- OBJECT WRITE END ---

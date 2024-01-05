@@ -19,6 +19,7 @@ function OptionsMenu::onAdd(%this)
 
 function OptionsMenu::onWake(%this)
 {
+   %this.optsListCount = -1;
    $optionsChangeRequiresRestart = false;
    
    %this.populateVideoSettings();
@@ -759,6 +760,7 @@ function OptionsMenu::resetSettings(%this)
 // Option types
 function addOptionGroup(%displayName)
 {
+   OptionsMenu.optsListCount++;
    %group = new GuiTextCtrl() {
       text = %displayName;
       position = "0 0";
@@ -785,6 +787,7 @@ function optionsMenuButton::onHighlighted(%this, %highlighted)
 
 function addOptionEntry(%optionObj)
 {
+   OptionsMenu.optsListCount++;
    if(!isObject(%optionObj) || (%optionObj.class !$= "OptionsSettings" && %optionObj.class !$= "AudioOptionsSettings"))
    {
       error("addOptionsEntry() - attempting to create a new options entry, but was provided an invalid options object");
@@ -818,6 +821,7 @@ function addOptionEntry(%optionObj)
       class = "OptionsListEntry";
       optionsObject = %optionObj;
       currentOptionIndex = %qualityLevelIndex;
+      selectionID = OptionsMenu.optsListCount;
       canSave = "0";
       
       new GuiButtonCtrl() {
@@ -862,6 +866,7 @@ function addOptionEntry(%optionObj)
             text = "<";
             profile = GuiMenuButtonProfile;
             internalName = "prevValButton";
+            command = "$MenuList.listPosition = $thisControl.getParent().getParent().selectionID; OptionMenuPrevSetting(1);";
          };
          
          new GuiTextCtrl() {
@@ -881,6 +886,7 @@ function addOptionEntry(%optionObj)
             text = ">";
             profile = GuiMenuButtonProfile;
             internalName = "nextValButton";
+            command = "$MenuList.listPosition = $thisControl.getParent().getParent().selectionID; OptionMenuNextSetting(1);";
          };
       };
    }; 
@@ -890,6 +896,7 @@ function addOptionEntry(%optionObj)
 
 function addOptionSlider(%optionName, %optionDesc, %prefName, %sliderMin, %sliderMax, %sliderTicks)
 {
+   OptionsMenu.optsListCount++;
    %currentVal = getVariable(%prefName);
    
    %tempVarName = %prefName @ "_tempVar";

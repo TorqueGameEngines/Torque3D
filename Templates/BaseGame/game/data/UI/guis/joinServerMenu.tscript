@@ -116,7 +116,7 @@ function JoinServerMenu::update(%this)
       
       %serverEntry = %this.addServerEntry();
       %serverEntry-->serverNameTxt.text = $ServerInfo::Name;
-      %serverEntry-->serverDetailsTxt.text = $ServerInfo::MissionName @ " | v" @ $ServerInfo::Version @ " | " @ $ServerInfo::MissionType;
+      %serverEntry-->serverDetailsTxt.text = $ServerInfo::MissionName @ " | v" @ $ServerInfo::Version @ " | " @ $ServerInfo::MissionType @ " | " @ $ServerInfo::Info;
       %serverEntry-->pingTxt.text = $ServerInfo::Ping @ " ms";
       %serverEntry-->playerCountTxt.text = $ServerInfo::PlayerCount @ "|" @ $ServerInfo::MaxPlayers;
       
@@ -165,6 +165,7 @@ function JoinServerMenu::addServerEntry(%this)
       horizSizing = "width";
       vertSizing = "bottom";
       class = "JoinServerServerEntry";
+      canSave = false;
       
       new GuiButtonCtrl() {
          profile = GuiMenuButtonProfile;

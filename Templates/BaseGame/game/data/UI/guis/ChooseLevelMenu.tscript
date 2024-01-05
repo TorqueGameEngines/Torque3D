@@ -103,6 +103,8 @@ function ChooseLevelMenu::onWake(%this)
       LevelPreviewArray.add(%preview);
    }
    
+   LevelPreviewArray.listPosition = 0;
+   
    // Also add the new level mission as defined in the world editor settings
    // if we are choosing a level to launch in the editor.
    if ( %this.launchInEditor )
@@ -115,7 +117,10 @@ function ChooseLevelMenu::onWake(%this)
    else
       ChooseLevelTitleText.setText("CREATE SERVER");
       
-   %this.openMenu(0);
+   ChooseLevelMenuTabList.visible = $pref::HostMultiPlayer;
+   ChooseLevelMenuNavButtonOverlay.visible = $pref::HostMultiPlayer;
+      
+   %this.schedule(32, openMenu, 0);
 }
 
 if(!isObject( ChooseLevelActionMap ) )
@@ -144,7 +149,7 @@ function ChooseLevelMenu::syncGUI(%this)
    %btn.setHighlighted(true);
    
    %buttonPosX = %btn.position.x + ChooseLevelMenuTabList.position.x;
-
+   
    ChooseLevelMenuPrevNavIcon.position.x = %buttonPosX;
    ChooseLevelMenuNextNavIcon.position.x = %buttonPosX + %btn.extent.x - 40;
      
@@ -154,9 +159,6 @@ function ChooseLevelMenu::syncGUI(%this)
    
    ChooseLevelMenuPrevNavIcon.setBitmap(ChooseLevelActionMap.getCommandButtonBitmap(%device, "ChooseLevelMenuPrevMenu"));
    ChooseLevelMenuNextNavIcon.setBitmap(ChooseLevelActionMap.getCommandButtonBitmap(%device, "ChooseLevelMenuNextMenu"));
-   
-   ChooseLevelMenuTabList.visible = $pref::HostMultiPlayer;
-   ChooseLevelMenuNavButtonOverlay.visible = $pref::HostMultiPlayer;
 }
 
 function LevelPreviewArray::syncGUI(%this)
@@ -169,7 +171,7 @@ function LevelPreviewArray::syncGUI(%this)
 
 function ChooseLevelMenuPrevMenu(%val)
 {
-   if(%val)
+   if(%val && $pref::HostMultiPlayer)
    {
       %currentIdx = ChooseLevelMenu.currentMenuIdx;
       ChooseLevelMenu.currentMenuIdx -= 1;
@@ -185,7 +187,7 @@ function ChooseLevelMenuPrevMenu(%val)
 
 function ChooseLevelMenuNextMenu(%val)
 {
-   if(%val)
+   if(%val && $pref::HostMultiPlayer)
    {
       %currentIdx = ChooseLevelMenu.currentMenuIdx;
       ChooseLevelMenu.currentMenuIdx += 1;

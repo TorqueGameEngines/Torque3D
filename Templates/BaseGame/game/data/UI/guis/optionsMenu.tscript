@@ -688,7 +688,7 @@ function tryCloseOptionsMenu(%val)
    if(%unappliedVideoChanges || %unappliedAudioChanges)
    {
       MessageBoxOKCancel("Discard Changes?", "You have unapplied changes to your settings, do you wish to apply or discard them?", 
-                        "OptionsMenu.applyChangedOptions();", "Canvas.popDialog(OptionsMenu);", 
+                        "OptionsMenu.applyChangedOptions(); BaseUIBackOut(1);", "BaseUIBackOut(1);", 
                         "Apply", "Discard");
    }
    else
@@ -732,9 +732,7 @@ function OptionsMenu::applyChangedOptions(%this)
    //Finally, write our prefs to file
    %prefPath = getPrefpath();
    export("$pref::*", %prefPath @ "/clientPrefs." @ $TorqueScriptFileExtension, false);
-   
-   BaseUIBackOut(1);
-   
+
    if($optionsChangeRequiresRestart)
       MessageBoxOK("Restart Required", "Some of your changes require the game to be restarted.");
 }
@@ -767,6 +765,7 @@ function addOptionGroup(%displayName)
       extent = "500 45";
       profile = "MenuHeaderText";
       tooltipProfile = "GuiToolTipProfile";
+      canSave = false;
    };   
    
    return %group;
@@ -822,7 +821,7 @@ function addOptionEntry(%optionObj)
       optionsObject = %optionObj;
       currentOptionIndex = %qualityLevelIndex;
       selectionID = OptionsMenu.optsListCount;
-      canSave = "0";
+      canSave = false;
       
       new GuiButtonCtrl() {
          profile = GuiMenuButtonProfile;
@@ -918,7 +917,7 @@ function addOptionSlider(%optionName, %optionDesc, %prefName, %sliderMin, %slide
       horizSizing = "width";
       vertSizing = "bottom";
       class = "OptionsListSliderEntry";
-      canSave = "0";
+      canSave = false;
       
       new GuiButtonCtrl() {
          profile = GuiMenuButtonProfile;
@@ -1012,11 +1011,11 @@ function addActionMapEntry(%actionMap, %device, %keyMap, %index, %description)
       horizSizing = "width";
       vertSizing = "bottom";
       class = "OptionsKeybindEntry";
-      canSave = "0";
       actionMap = %actionMap;
       device = %device;
       keymap = %keyMap;
       remapIndex = %index;
+      canSave = false;
       
       new GuiButtonCtrl() {
          profile = GuiMenuButtonProfile;

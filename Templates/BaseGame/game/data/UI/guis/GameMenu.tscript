@@ -33,6 +33,7 @@ function GameMenu::onWake(%this)
          text = %buttonText;
          class = "GameMenuButton";
          command = "GameMenu.openGameMenu(\"" @ %buttonText @ "\");";
+         canSave = false;
       };
       
       %stackWidth += %textWidth + 40;

@@ -120,7 +120,7 @@ $guiContent = new GuiControl(ChooseLevelMenu) {
          };
       };
       new GuiBitmapCtrl(LevelPreviewBitmap) {
-         BitmapAsset = "testMaps:EmptyLevel_preview_image";
+         BitmapAsset = "";
          position = "448 0";
          extent = "440 440";
          horizSizing = "left";
@@ -128,7 +128,7 @@ $guiContent = new GuiControl(ChooseLevelMenu) {
          tooltipProfile = "GuiToolTipProfile";
       };
       new GuiTextCtrl(LevelNameText) {
-         text = "EmptyLevel";
+         text = "";
          position = "448 445";
          extent = "440 20";
          horizSizing = "left";
@@ -324,7 +324,7 @@ $guiContent = new GuiControl(ChooseLevelMenu) {
          horizSizing = "left";
          vertSizing = "center";
          profile = "GuiMenuButtonProfile";
-         command = "OptionsMenu.applySettings();";
+         command = "ChooseLevelBegin(1);";
          tooltipProfile = "GuiToolTipProfile";
       };
       new GuiIconButtonCtrl(ChooseLevelBackBtn) {

@@ -704,11 +704,9 @@ bool GuiPopUpMenuCtrlEx::onWake()
 
 void GuiPopUpMenuCtrlEx::onRemove()
 {
-   mBackground = nullptr;
-   mSearchEdit = nullptr;
-   mTl = nullptr;
-   mSc = nullptr;
-   mBackground = nullptr;
+   removeChildren();
+
+   Parent::onRemove();
 }
 //------------------------------------------------------------------------------
 bool GuiPopUpMenuCtrlEx::onAdd()
@@ -1635,6 +1633,14 @@ void GuiPopUpMenuCtrlEx::addChildren()
    mSc->addObject(mTl);
    mBackground->addObject(mSc);
    mBackground->addObject(mSearchEdit);
+}
+
+void GuiPopUpMenuCtrlEx::removeChildren()
+{
+   mTl->deleteObject();
+   mSc->deleteObject();
+   mSearchEdit->deleteObject();
+   mBackground->deleteObject();
 }
 
 //------------------------------------------------------------------------------

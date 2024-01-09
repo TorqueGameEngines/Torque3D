@@ -140,6 +140,7 @@ class GuiPopUpMenuCtrlEx : public GuiTextCtrl
    GuiTextEditCtrl* mSearchEdit; //  Added
 
    virtual void addChildren();
+   virtual void removeChildren();
    virtual void repositionPopup();
 
    static bool _setBitmaps(void* obj, const char* index, const char* data);

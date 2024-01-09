@@ -969,6 +969,10 @@ function ObjectBuilderGui::processNewObject(%this, %obj)
    if ( !isObject( %obj ) )
       return;
       
+   %controlMask = $TypeMasks::PlayerObjectType | $TypeMasks::VehicleObjectType;
+   if (%obj.control)
+    localClientConnection.setControlobject(%obj);
+    
    // Add the object to the group.
    if( %this.objectGroup !$= "" )
       %this.objectGroup.add( %obj );
@@ -1456,6 +1460,45 @@ function ObjectBuilderGui::buildPlayerDropPoint(%this)
       %this.objectGroup = "PlayerDropPoints";
    }
 
+   %this.process();
+}
+
+function ObjectBuilderGui::buildPlayer(%this)
+{
+   %this.objectClassName = "Player";
+   %this.addField("dataBlock",    "TypeDataBlock", "dataBlock",   "PlayerData");
+   %this.addField("control", "TypeBool", "control?", "false");
+   %this.process();
+}
+
+function ObjectBuilderGui::buildAIPlayer(%this)
+{
+   %this.objectClassName = "AIPlayer";
+   %this.addField("dataBlock",    "TypeDataBlock", "dataBlock",   "PlayerData");
+   %this.process();
+}
+
+function ObjectBuilderGui::buildWheeledVehicle(%this)
+{
+   %this.objectClassName = "Player";
+   %this.addField("dataBlock",    "TypeDataBlock", "dataBlock",   "WheeledVehicleData");
+   %this.addField("control", "TypeBool", "control?", "false");
+   %this.process();
+}
+
+function ObjectBuilderGui::buildHoverVehicle(%this)
+{
+   %this.objectClassName = "Player";
+   %this.addField("dataBlock",    "TypeDataBlock", "dataBlock",   "HoverVehicleData");
+   %this.addField("control", "TypeBool", "control?", "false");
+   %this.process();
+}
+
+function ObjectBuilderGui::buildFlyingVehicle(%this)
+{
+   %this.objectClassName = "Player";
+   %this.addField("dataBlock",    "TypeDataBlock", "dataBlock",   "FlyingVehicleData");
+   %this.addField("control", "TypeBool", "control?", "false");
    %this.process();
 }
 

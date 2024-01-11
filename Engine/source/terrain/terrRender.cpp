@@ -477,9 +477,16 @@ void TerrainBlock::_updateBaseTexture(bool writeToCache)
    }
    else
    {
+      FileStream stream;
+      if (!stream.open(_getBaseTexCacheFileName(), Torque::FS::File::Write))
+      {
+         mBaseTex = blendTex;
+         return;
+      }
+
       GBitmap bitmap(blendTex->getWidth(), blendTex->getHeight(), false, GFXFormatR8G8B8A8);
       blendTex->copyToBmp(&bitmap);
-      bitmap.writeBitmap(formatToExtension(mBaseTexFormat), _getBaseTexCacheFileName());
+      bitmap.writeBitmap(formatToExtension(mBaseTexFormat), stream);
    }
 }
 

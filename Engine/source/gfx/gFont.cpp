@@ -699,8 +699,7 @@ bool GFont::read(Stream& io_rStream)
    for(i = 0; i < numSheets; i++)
    {
        GBitmap *bmp = new GBitmap;
-       String path = String::ToString("%s/%s %d %d (%s).png", Con::getVariable("$GUI::fontCacheDirectory"), mFaceName.c_str(), mSize, i, getCharSetName(mCharSet));
-       if(!bmp->readBitmap("png", path))
+       if(!bmp->readBitmap("png", io_rStream))
        {
            delete bmp;
            return false;
@@ -776,11 +775,8 @@ bool GFont::write(Stream& stream)
    }
 
    stream.write(mTextureSheets.size());
-   for (i = 0; i < mTextureSheets.size(); i++)
-   {
-      String path = String::ToString("%s/%s %d %d (%s).png", Con::getVariable("$GUI::fontCacheDirectory"), mFaceName.c_str(), mSize, i, getCharSetName(mCharSet));
-      mTextureSheets[i].getBitmap()->writeBitmap("png", path);
-   }
+   for(i = 0; i < mTextureSheets.size(); i++)
+       mTextureSheets[i].getBitmap()->writeBitmap("png", stream);
 
    stream.write(mCurX);
    stream.write(mCurY);
@@ -869,9 +865,20 @@ void GFont::exportStrip(const char *fileName, U32 padding, U32 kerning)
       // Advance.
       curWidth +=  mCharInfoList[i].width + kerning + 2*padding;
    }
+
+   // Write the image!
+   FileStream fs;
+   
+   fs.open( fileName, Torque::FS::File::Write );
+
+   if(fs.getStatus() != Stream::Ok)
+   {
+      Con::errorf("GFont::exportStrip - failed to open '%s' for writing.", fileName);
+      return;
+   }
  
    // Done!
-   gb.writeBitmap("png", fileName);
+   gb.writeBitmap("png", fs);
 }
 
 void  GFont::setPlatformFont(PlatformFont *inPlatformFont)

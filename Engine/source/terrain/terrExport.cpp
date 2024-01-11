@@ -67,7 +67,14 @@ bool TerrainBlock::exportHeightMap( const UTF8 *filePath, const String &format )
       }
    }
 
-   if ( !output.writeBitmap( format, filePath) )
+   FileStream stream;
+   if ( !stream.open( filePath, Torque::FS::File::Write ) )
+   {
+      Con::errorf( "TerrainBlock::exportHeightMap() - Error opening file for writing: %s !", filePath );
+      return false;
+   }
+
+   if ( !output.writeBitmap( format, stream ) )
    {
       Con::errorf( "TerrainBlock::exportHeightMap() - Error writing %s: %s !", format.c_str(), filePath );
       return false;
@@ -113,7 +120,14 @@ bool TerrainBlock::exportLayerMaps( const UTF8 *filePrefix, const String &format
       UTF8 filePath[1024];
       dSprintf( filePath, 1024, "%s_%d_%s.%s", filePrefix, i, mFile->mMaterials[i]->getInternalName(), format.c_str() );
 
-      if ( !output.writeBitmap( format, filePath) )
+      FileStream stream;
+      if ( !stream.open( filePath, Torque::FS::File::Write ) )
+      {
+         Con::errorf( "TerrainBlock::exportLayerMaps() - Error opening file for writing: %s !", filePath );
+         return false;
+      }
+
+      if ( !output.writeBitmap( format, stream ) )
       {
          Con::errorf( "TerrainBlock::exportLayerMaps() - Error writing %s: %s !", format.c_str(), filePath );
          return false;

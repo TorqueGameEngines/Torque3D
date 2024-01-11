@@ -316,9 +316,16 @@ void ImposterCapture::_separateAlpha( GBitmap *imposterOut )
       
       if ( 0 )
       {
-         imposterOut->writeBitmap("png", "./imposterout.png");
+         FileStream fs;
+         if ( fs.open( "./imposterout.png", Torque::FS::File::Write ) )
+            imposterOut->writeBitmap( "png", fs );
 
-         bmp->writeBitmap("png", "./temp.png");
+         fs.close();
+
+         if ( fs.open( "./temp.png", Torque::FS::File::Write ) )
+            bmp->writeBitmap( "png", fs );
+
+         fs.close();
       }
    
 
@@ -475,13 +482,26 @@ void ImposterCapture::capture(   const MatrixF &rotMatrix,
    if ( 0 )
    {
       // Render out the bitmaps for debug purposes.
-      mBlackBmp->writeBitmap( "png", "./blackbmp.png" );
+      FileStream fs;
+      if ( fs.open( "./blackbmp.png", Torque::FS::File::Write ) )
+         mBlackBmp->writeBitmap( "png", fs );
 
-      mWhiteBmp->writeBitmap( "png", "./whitebmp.png" );
+      fs.close();
 
-      (*normalMapOut)->writeBitmap( "png", "./normalbmp.png" );
+      if ( fs.open( "./whitebmp.png", Torque::FS::File::Write ) )
+         mWhiteBmp->writeBitmap( "png", fs );
 
-      (*imposterOut)->writeBitmap( "png", "./finalimposter.png" );
+      fs.close();
+
+      if ( fs.open( "./normalbmp.png", Torque::FS::File::Write ) )
+         (*normalMapOut)->writeBitmap( "png", fs );
+
+      fs.close();
+
+      if ( fs.open( "./finalimposter.png", Torque::FS::File::Write ) )
+         (*imposterOut)->writeBitmap( "png", fs );
+
+      fs.close();
    }
 }
 

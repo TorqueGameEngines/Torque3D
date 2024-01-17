@@ -135,7 +135,7 @@ function ObjectBuilderGui::reset(%this)
    %this.createFunction    = "";
    %this.createCallback    = "";
    %this.currentControl    = 0;
-
+   
    //
    OBObjectName.setValue(%this.defaultObjectName);
 
@@ -1480,7 +1480,7 @@ function ObjectBuilderGui::buildAIPlayer(%this)
 
 function ObjectBuilderGui::buildWheeledVehicle(%this)
 {
-   %this.objectClassName = "Player";
+   %this.objectClassName = "WheeledVehicle";
    %this.addField("dataBlock",    "TypeDataBlock", "dataBlock",   "WheeledVehicleData");
    %this.addField("control", "TypeBool", "control?", "false");
    %this.process();
@@ -1488,7 +1488,7 @@ function ObjectBuilderGui::buildWheeledVehicle(%this)
 
 function ObjectBuilderGui::buildHoverVehicle(%this)
 {
-   %this.objectClassName = "Player";
+   %this.objectClassName = "HoverVehicle";
    %this.addField("dataBlock",    "TypeDataBlock", "dataBlock",   "HoverVehicleData");
    %this.addField("control", "TypeBool", "control?", "false");
    %this.process();
@@ -1496,7 +1496,7 @@ function ObjectBuilderGui::buildHoverVehicle(%this)
 
 function ObjectBuilderGui::buildFlyingVehicle(%this)
 {
-   %this.objectClassName = "Player";
+   %this.objectClassName = "FlyingVehicle";
    %this.addField("dataBlock",    "TypeDataBlock", "dataBlock",   "FlyingVehicleData");
    %this.addField("control", "TypeBool", "control?", "false");
    %this.process();

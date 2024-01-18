@@ -450,7 +450,7 @@ void ArrayObject::append(ArrayObject* obj)
 
 void ArrayObject::setKey( const String &key, S32 index )
 {
-   if ( index >= mArray.size() )
+   if (index >= mArray.size() || index < 0)
       return;
 
    mArray[index].key = key;
@@ -460,7 +460,7 @@ void ArrayObject::setKey( const String &key, S32 index )
 
 void ArrayObject::setValue( const String &value, S32 index )
 {
-   if ( index >= mArray.size() )
+   if (index >= mArray.size() || index < 0)
       return;
    
    mArray[index].value = value;

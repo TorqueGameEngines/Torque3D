@@ -156,7 +156,7 @@ bool Rigid::resolveCollision(const Point3F& p, const Point3F &normal, Rigid* rig
       return false;
 
    // Compute impulse
-   F32 d, n = -nv * (2.0f + restitution * rigid->restitution);
+   F32 d, n = -nv * (1.0+(restitution + rigid->restitution)*0.5);
    Point3F a1,b1,c1;
    mCross(r1,normal,&a1);
    invWorldInertia.mulV(a1,&b1);

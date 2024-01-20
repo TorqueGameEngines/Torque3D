@@ -1,0 +1,13 @@
+<MaterialAsset
+    AssetName="ColorCalibration_mat"
+    materialDefinitionName="ColorCalibration_mat"
+    imageMap0="@asset=Prototyping:ColorCalibrationChart_image">
+    <Material
+        Name="ColorCalibration_mat"
+        mapTo="ColorCalibration">
+        <Material.Stages>
+            <Stages_beginarray
+                DiffuseMapAsset="Prototyping:ColorCalibrationChart_image"/>
+        </Material.Stages>
+    </Material>
+</MaterialAsset>

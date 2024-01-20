@@ -124,6 +124,7 @@ public:
    ~Ribbon();
 
    DECLARE_CONOBJECT(Ribbon);
+   DECLARE_CATEGORY("UNLISTED");
    static void initPersistFields();
    bool onNewDataBlock(GameBaseData*,bool);
    void onRemove();

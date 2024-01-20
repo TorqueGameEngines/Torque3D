@@ -73,7 +73,6 @@ public:
   static void           initPersistFields();
 
   DECLARE_CONOBJECT(afxAnimClipData);
-  DECLARE_CATEGORY("AFX");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

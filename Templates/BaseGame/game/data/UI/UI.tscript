@@ -39,21 +39,12 @@ function UI::initClient(%this)
    //Load UI stuff
    //Profiles
    %this.queueExec("./scripts/profiles");
-   
-   //Navigation Utility Scripts
-   %this.queueExec("./scripts/menuNavigation");
-   
-   //Now gui files
-   %this.queueExec("./scripts/menuInputHandling");
-   
+
    %this.queueExec("./guis/mainMenu");
    %this.queueExec("./guis/mainMenu.gui");
    
-   %this.queueExec("./guis/mainMenuButtons");
-   %this.queueExec("./guis/mainMenuButtons.gui");
-   
-   %this.queueExec("./guis/chooseLevelDlg");
-   %this.queueExec("./guis/chooseLevelDlg.gui");
+   %this.queueExec("./guis/ChooseLevelMenu");
+   %this.queueExec("./guis/ChooseLevelMenu.gui");
    
    %this.queueExec("./guis/joinServerMenu");
    %this.queueExec("./guis/joinServerMenu.gui");
@@ -63,9 +54,10 @@ function UI::initClient(%this)
    %this.queueExec("./guis/optionsMenu");
    %this.queueExec("./guis/optionsMenu.gui");
    
-   %this.queueExec("./guis/pauseMenu");
-   %this.queueExec("./guis/pauseMenu.gui");
+   %this.queueExec("./guis/GameMenu");
+   %this.queueExec("./guis/GameMenu.gui");
    
+   %this.queueExec("./guis/remapDlg");
    %this.queueExec("./guis/remapDlg.gui");
    %this.queueExec("./guis/remapConfirmDlg.gui");
    
@@ -73,21 +65,18 @@ function UI::initClient(%this)
    %this.queueExec("./guis/profiler.gui");
    
    %this.queueExec("./guis/netGraphGui.gui");
-   %this.queueExec("./guis/RecordingsDlg.gui");
-   
-   %this.queueExec("./guis/guiMusicPlayer");
-   %this.queueExec("./guis/guiMusicPlayer.gui");
    
    %this.queueExec("./guis/startupGui");
    %this.queueExec("./guis/startupGui.gui");
    
-   // Load Editor Dialogs
+   %this.queueExec("./guis/messageBoxDlg");
    %this.queueExec("./guis/messageBoxDlg.gui");
+   
+   %this.queueExec("./guis/SystemMenu");
+   %this.queueExec("./guis/SystemMenu.gui");
    
    //Load scripts
    %this.queueExec("./scripts/controlsMenu");
-   %this.queueExec("./scripts/messageBoxes");
-   %this.queueExec("./scripts/help");
    %this.queueExec("./scripts/cursors");
    
    if(isToolBuild())
@@ -97,3 +86,8 @@ function UI::initClient(%this)
 function UI::onCreateClientConnection(%this){}
 
 function UI::onDestroyClientConnection(%this){}
+
+function UI::registerGameMenus(%this, %menusArrayObj)
+{
+   %menusArrayObj.add("System", SystemMenu);
+}

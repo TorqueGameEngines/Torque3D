@@ -16,7 +16,7 @@ function ToolsModule::onCreate(%this)
    // to find exactly which subsystems should be readied before kicking things off. 
    // ----------------------------------------------------------------------------
    
-   //ModuleDatabase.LoadExplicit( "MainEditor" );
+   ModuleDatabase.LoadExplicit( "EditorCore" );
    //ModuleDatabase.LoadExplicit( "Tools_ObjectViewer" );
 }
 

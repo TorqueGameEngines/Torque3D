@@ -77,7 +77,7 @@ public:
   static void       initPersistFields();
 
   //DECLARE_CONOBJECT(afxEA_Zodiac);
-  DECLARE_CATEGORY("AFX");
+  DECLARE_CATEGORY("UNLISTED");
 };
 
 //IMPLEMENT_CONOBJECT(afxEA_Zodiac);

@@ -110,6 +110,7 @@ public:
    void processTick();
 
    void insert(SimObject* pObject, S32 pos);
+   void remove(SimObject* pObject);
 
    static void initPersistFields();
 

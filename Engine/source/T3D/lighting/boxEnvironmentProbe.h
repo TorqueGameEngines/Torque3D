@@ -69,6 +69,7 @@ public:
    // Declare this object as a ConsoleObject so that we can
    // instantiate it into the world and network it
    DECLARE_CONOBJECT(BoxEnvironmentProbe);
+   DECLARE_CATEGORY("Lighting \t Probes");
 
    //--------------------------------------------------------------------------
    // Object Editing

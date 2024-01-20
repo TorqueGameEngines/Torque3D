@@ -52,6 +52,7 @@ class VehicleBlocker : public SceneObject
    ~VehicleBlocker();
 
    DECLARE_CONOBJECT(VehicleBlocker);
+   DECLARE_CATEGORY("Volume");
    static void initPersistFields();
 
    U32  packUpdate  (NetConnection *conn, U32 mask, BitStream *stream);

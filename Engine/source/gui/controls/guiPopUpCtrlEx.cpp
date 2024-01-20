@@ -157,7 +157,7 @@ bool GuiPopupTextListCtrlEx::hasCategories()
 {
    for( S32 i = 0; i < mList.size(); i++)
    {
-      if( mList[i].id == -1)
+      if( mList[i].id < 0)
          return true;
    }
 
@@ -202,7 +202,7 @@ void GuiPopupTextListCtrlEx::onMouseUp(const GuiEvent &event)
 
    if (cell.x >= 0 && cell.x < mSize.x && cell.y >= 0 && cell.y < mSize.y)
    {
-      if (mList[cell.y].id == -1)
+      if (mList[cell.y].id < 0)
          return;
    }
 
@@ -266,7 +266,7 @@ void GuiPopupTextListCtrlEx::onRenderCell(Point2I offset, Point2I cell, bool sel
    }
 
    // Render 'Group' background
-   if ( mList[cell.y].id == -1)
+   if ( mList[cell.y].id == -2)
    {
       RectI cellR( offset.x, offset.y, size.x, size.y );
       GFX->getDrawUtil()->drawRectFill( cellR, mProfile->mFillColorHL );
@@ -298,7 +298,7 @@ void GuiPopupTextListCtrlEx::onRenderCell(Point2I offset, Point2I cell, bool sel
 
    } else
    {
-      if ((mList[cell.y].id == -1) || (!hasCategories()))
+      if ((mList[cell.y].id == -2) || (!hasCategories()))
          GFX->getDrawUtil()->drawText( mFont, Point2I( textXOffset, offset.y ), mList[cell.y].text ); //  Used mTextOffset as a margin for the text list rather than the hard coded value of '4'.
       else
          GFX->getDrawUtil()->drawText( mFont, Point2I( textXOffset + 8, offset.y ), mList[cell.y].text ); //  Used mTextOffset as a margin for the text list rather than the hard coded value of '4'.
@@ -339,6 +339,8 @@ GuiPopUpMenuCtrlEx::GuiPopUpMenuCtrlEx(void)
    mTl = NULL;
    mSc = NULL;
    mReplaceText = false;
+   mTextSearchItems = false;
+   mSearchEdit = nullptr;
 }
 
 //------------------------------------------------------------------------------
@@ -360,6 +362,8 @@ void GuiPopUpMenuCtrlEx::initPersistFields(void)
    addField("bitmapBounds",             TypePoint2I,      Offset(mBitmapBounds, GuiPopUpMenuCtrlEx), "Boundaries of bitmap displayed");
    addField("hotTrackCallback",         TypeBool,         Offset(mHotTrackItems, GuiPopUpMenuCtrlEx),
       "Whether to provide a 'onHotTrackItem' callback when a list item is hovered over");
+
+   addField("allowTextSearch", TypeBool, Offset(mTextSearchItems, GuiPopUpMenuCtrlEx), "If true, will enable a text edit field so you can search filter the dropdown list");
 
    Parent::initPersistFields();
 }
@@ -395,7 +399,7 @@ DefineEngineMethod( GuiPopUpMenuCtrlEx, addCategory, void, (const char* text),,
 
                "@param text Name of the new category\n\n")
 {
-   object->addEntry(text, -1, 0);
+   object->addEntry(text, -2, 0);
 }
 
 DefineEngineMethod( GuiPopUpMenuCtrlEx, addScheme, void, (S32 id, ColorI fontColor, ColorI fontColorHL, ColorI fontColorSEL),,
@@ -672,6 +676,14 @@ DefineEngineMethod( GuiPopUpMenuCtrlEx, replaceText, void, (S32 boolVal), ,
 }
 
 //------------------------------------------------------------------------------
+DefineEngineMethod(GuiPopUpMenuCtrlEx, setSearchText, void, (const char* searchText), (""),
+   "@brief Flag that causes each new text addition to replace the current entry\n\n"
+   "@param True to turn on replacing, false to disable it")
+{
+   object->setSearchText(searchText);
+}
+
+//------------------------------------------------------------------------------
 //  Added
 bool GuiPopUpMenuCtrlEx::onWake()
 {
@@ -690,6 +702,12 @@ bool GuiPopUpMenuCtrlEx::onWake()
    return true;
 }
 
+void GuiPopUpMenuCtrlEx::onRemove()
+{
+   removeChildren();
+
+   Parent::onRemove();
+}
 //------------------------------------------------------------------------------
 bool GuiPopUpMenuCtrlEx::onAdd()
 {
@@ -697,6 +715,9 @@ bool GuiPopUpMenuCtrlEx::onAdd()
       return false;
    mSelIndex = -1;
    mReplaceText = true;
+
+   addChildren();
+
    return true;
 }
 
@@ -921,7 +942,7 @@ void GuiPopUpMenuCtrlEx::addScheme( U32 id, ColorI fontColor, ColorI fontColorHL
 //------------------------------------------------------------------------------
 S32 GuiPopUpMenuCtrlEx::getSelected()
 {
-   if (mSelIndex == -1)
+   if (mSelIndex < 0)
       return 0;
    return mEntries[mSelIndex].id;
 }
@@ -982,7 +1003,7 @@ void GuiPopUpMenuCtrlEx::setSelected(S32 id, bool bNotifyScript )
    if ( isMethod( "onCancel" ) && bNotifyScript )
       Con::executef( this, "onCancel" );
 
-   if ( id == -1 )
+   if ( id < 0 )
       return;
 
    // Execute the popup console command:
@@ -1306,8 +1327,16 @@ void GuiPopUpMenuCtrlEx::closePopUp()
    if ( mSelIndex != -1 )
    {
       if ( mReplaceText )
-         setText( mEntries[mSelIndex].buf );
-      setIntVariable( mEntries[mSelIndex].id );
+         setText(mTl->mList[mSelIndex].text);
+
+      for(U32 i=0; i < mEntries.size(); i++)
+      {
+        if(dStrcmp(mEntries[i].buf,mTl->mList[mSelIndex].text) == 0)
+        {
+           setIntVariable(mEntries[i].id);
+            break;
+         }
+      }
    }
 
    // Release the mouse:
@@ -1357,10 +1386,12 @@ void GuiPopUpMenuCtrlEx::closePopUp()
       root->popDialogControl(mBackground);
 
    // Kill the popup:
-   mBackground->removeObject( mSc );
-   mTl->deleteObject();
-   mSc->deleteObject();
-   mBackground->deleteObject();
+   //mBackground->removeObject( mSc );
+   //mTl->deleteObject();
+   //mSc->deleteObject();
+   //mBackground->deleteObject();
+
+   //mSearchEdit->deleteObject();
 
    // Set this as the first responder:
    setFirstResponder();
@@ -1392,8 +1423,6 @@ void GuiPopUpMenuCtrlEx::onAction()
 
    GuiControl *canCtrl = getParent();
 
-   addChildren();
-
    GuiCanvas *root = getRoot();
    Point2I windowExt = root->getExtent();
 
@@ -1424,9 +1453,21 @@ void GuiPopUpMenuCtrlEx::onAction()
 
    //mTl->setCellSize(Point2I(width, mFont->getHeight()+3));
    mTl->setCellSize(Point2I(width, mProfile->mFont->getHeight() + textSpace)); //  Modified the above line to use textSpace rather than the '3' as this is what is used below.
+   mTl->clear();
 
-   for ( U32 j = 0; j < mEntries.size(); ++j )
-      mTl->addEntry( mEntries[j].id, mEntries[j].buf );
+   for (U32 j = 0; j < mEntries.size(); ++j)
+   {
+      if(mSearchText != String::EmptyString)
+      {
+         String entryText = String::ToLower(mEntries[j].buf);
+         if (entryText.find(mSearchText) != -1 && mEntries[j].id != -2)
+            mTl->addEntry(mEntries[j].id, mEntries[j].buf);
+      }
+      else
+      {
+         mTl->addEntry(mEntries[j].id, mEntries[j].buf);
+      }
+   }
 
    if ( mSelIndex >= 0 )
       mTl->setSelectedCell( Point2I( 0, mSelIndex ) );
@@ -1507,13 +1548,6 @@ void GuiPopUpMenuCtrlEx::onAction()
    newBounds.extent.set( width, maxYdis );
    mSc->setBounds( newBounds ); //  Not sure why the '-1' above.
 
-   mSc->registerObject();
-   mTl->registerObject();
-   mBackground->registerObject();
-
-   mSc->addObject( mTl );
-   mBackground->addObject( mSc );
-
    mBackgroundCancel = false; //  Setup check if user clicked on the background instead of the text list (ie: didn't want to change their current selection).
 
    root->pushDialogControl( mBackground, 99 );
@@ -1536,6 +1570,22 @@ void GuiPopUpMenuCtrlEx::onAction()
    mTl->setFirstResponder();
 
    mInAction = true;
+
+   if(mTextSearchItems)
+   {
+      mSearchEdit->resize(pointInGC, Point2I(getExtent().x - 20, getExtent().y));
+
+      mSearchEdit->setFirstResponder();
+
+      mSearchEdit->setText(mSearchText.c_str());     
+
+      // 
+      char searchCommandBuffer[512];
+      dSprintf(searchCommandBuffer, sizeof(searchCommandBuffer), "%s.setSearchText(%s.getText());",
+         getIdString(), mSearchEdit->getIdString());
+
+      mSearchEdit->setConsoleCommand(searchCommandBuffer);
+   }
 }
 
 //------------------------------------------------------------------------------
@@ -1566,6 +1616,31 @@ void GuiPopUpMenuCtrlEx::addChildren()
 
    mBackground = new GuiPopUpBackgroundCtrlEx( this, mTl );
    AssertFatal( mBackground, "Failed to create the GuiBackgroundCtrlEx for the PopUpMenu" );
+
+   mSearchEdit = new GuiTextEditCtrl;
+   AssertFatal(mSearchEdit, "Failed to create the GuiTextEditCtrl for the PopUpMenu");
+   GuiControlProfile* searchEditProf;
+   if (Sim::findObject("ToolsGuiTextEditCtrl", searchEditProf))
+   {
+      mSearchEdit->setControlProfile(prof);
+   }
+
+   mSc->registerObject();
+   mTl->registerObject();
+   mBackground->registerObject();
+   mSearchEdit->registerObject();
+
+   mSc->addObject(mTl);
+   mBackground->addObject(mSc);
+   mBackground->addObject(mSearchEdit);
+}
+
+void GuiPopUpMenuCtrlEx::removeChildren()
+{
+   mTl->deleteObject();
+   mSc->deleteObject();
+   mSearchEdit->deleteObject();
+   mBackground->deleteObject();
 }
 
 //------------------------------------------------------------------------------
@@ -1621,7 +1696,7 @@ bool GuiPopUpMenuCtrlEx::getFontColor( ColorI &fontColor, S32 id, bool selected,
       }
    }
 
-   if(id == -1)
+   if(id < 0)
       fontColor = mProfile->mFontColorHL;
    else
    // Default color scheme...

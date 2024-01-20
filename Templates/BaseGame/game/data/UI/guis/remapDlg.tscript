@@ -1,0 +1,112 @@
+function OptRemapInputCtrl::onAxisEvent( %this, %device, %action, %axisVal)
+{
+   if(%device $= "mouse")
+      return;
+   if(!startsWith(%device,$remapListDevice))
+      return;
+   if(%axisVal != 1 && %axisVal != -1) //we want full presses on sticks to be sure
+      return;
+
+   Canvas.popDialog( RemapDlg );
+   
+   %this.doRemap(%device, %action, %axisVal);
+}
+
+function OptRemapInputCtrl::onInputEvent( %this, %device, %action )
+{
+   if(!startsWith(%device,$remapListDevice) && %action !$= "escape" && %action !$= "btn_start")
+   {
+      return;
+   }
+   else 
+   {
+      Canvas.popDialog( RemapDlg );
+   
+      if(%action $= "escape" || %action $= "btn_start")
+         return;
+   
+      %this.doRemap(%device, %action, 0);
+   }
+}
+
+function OptRemapInputCtrl::doRemap(%this, %device, %action, %axisVal)
+{
+   %cmd  = $RemapCmd[%this.index];
+   %name = $RemapName[%this.index];
+   %actionMap = $RemapActionMap[%this.index];
+   
+   echo("OptRemapInputCtrl::onInputEvent() - remapping details: " @ %cmd @ ", " @ %name @ ", " @ %actionMap @ " remapped to: " @ %device @ ", " @ %action);
+
+   // Grab the friendly display name for this action
+   // which we'll use when prompting the user below.
+   %mapName = getMapDisplayName( %device, %action );
+   
+   // Get the current command this action is mapped to.
+   %prevMap = %actionMap.getCommand( %device, %action );
+   
+   //TODO: clear all existant keybinds to a command and then bind it so we only have a single one at all times
+   unbindExtraActions( %cmd, %actionMap, %device, 0 );
+   unbindExtraActions( %cmd, %actionMap, %device, 1 );
+
+   // If nothing was mapped to the previous command 
+   // mapping then it's easy... just bind it.
+   // If the previous command is the same as the 
+   // current then they hit the same input as what
+   // was already assigned.
+   if ( %prevMap $= "" || %prevMap $= %cmd )
+   {
+      //unbindExtraActions( %cmd, %actionMap, 1 );
+      %actionMap.bind( %device, %action, %cmd );
+      
+      OptionsMenu.populateKBMControls();
+      OptionsMenu.populateGamepadControls();
+      return;
+   }
+
+   // Look for the index of the previous mapping.
+   %prevMapIndex = findRemapCmdIndex( %prevMap );
+   
+   // If we get a negative index then the previous 
+   // mapping was to an item that isn't included in
+   // the mapping list... so we cannot unmap it.
+   if ( %prevMapIndex == -1 )
+   {
+      MessageBoxOK( "Remap Failed", "\"" @ %mapName @ "\" is already bound to a non-remappable command!" );
+      return;
+   }
+
+   // Setup the forced remapping callback command.
+   %callback = "redoMapping(" @ %device @ ", " @ %actionMap @ ", \"" @ %action @ "\", \"" @
+                              %cmd @ "\", " @ %prevMapIndex @ ", " @ %this.index @ ");";
+   
+   // Warn that we're about to remove the old mapping and
+   // replace it with another.
+   %prevCmdName = $RemapName[%prevMapIndex];
+   //Canvas.pushDialog( RemapConfirmDlg );
+   
+   %remapWarnText = "\"" @ %mapName @ "\" is already bound to \"" @ %prevCmdName @ "\"! Do you wish to replace this mapping?";
+   %doRemapCommand = "redoMapping(" @ %device @ ", " @ %actionMap @ ", \"" @ %action @ "\", \"" @
+                              %cmd @ "\", " @ %prevMapIndex @ ", " @ %this.index @ ");";
+   %cancelCommand = "";
+   
+   MessageBoxYesNo( "Key already in use", %remapWarnText, %doRemapCommand, %cancelCommand );  
+}
+
+/// This unbinds actions beyond %count associated to the
+/// particular actionMap %commmand.
+function unbindExtraActions( %command, %actionMap, %device, %count )
+{
+   %temp = %actionMap.getBinding( %command );
+   if ( %temp $= "" )
+      return;
+
+   %count = getFieldCount( %temp ) - ( %count * 2 );
+   for ( %i = 0; %i < %count; %i += 2 )
+   {
+      %amDevice = getField( %temp, %i + 0 );
+      %action = getField( %temp, %i + 1 );
+      
+      if(%device !$= "" || %device $= %amDevice)
+         %actionMap.unbind( %device, %action );
+   }
+}

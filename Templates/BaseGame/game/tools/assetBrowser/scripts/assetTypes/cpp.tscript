@@ -24,7 +24,7 @@ function AssetBrowser::buildCppAssetPreview(%this, %assetDef, %previewData)
    %previewData.tooltip = %assetDef.assetName;
 }
 
-function AssetBrowser::createCpp(%this)
+function AssetBrowser::createCppAsset(%this)
 {
    %moduleName = AssetBrowser.newAssetSettings.moduleName;
    %modulePath = "data/" @ %moduleName;
@@ -170,12 +170,12 @@ function AssetBrowser::createCpp(%this)
 	return "";
 }
 
-function AssetBrowser::editCpp(%this, %assetDef)
+function AssetBrowser::editCppAsset(%this, %assetDef)
 {
 }
 
 //Renames the asset
-function AssetBrowser::renameCpp(%this, %assetDef, %newAssetName)
+function AssetBrowser::renameCppAsset(%this, %assetDef, %newAssetName)
 {
    %newCodeLooseFilename = renameAssetLooseFile(%assetDef.codefile, %newAssetName);
    
@@ -195,13 +195,13 @@ function AssetBrowser::renameCpp(%this, %assetDef, %newAssetName)
 }
 
 //Deletes the asset
-function AssetBrowser::deleteCpp(%this, %assetDef)
+function AssetBrowser::deleteCppAsset(%this, %assetDef)
 {
    AssetDatabase.deleteAsset(%assetDef.getAssetId(), true);
 }
 
 //Moves the asset to a new path/module
-function AssetBrowser::moveCpp(%this, %assetDef, %destination)
+function AssetBrowser::moveCppAsset(%this, %assetDef, %destination)
 {
    %currentModule = AssetDatabase.getAssetModule(%assetDef.getAssetId());
    %targetModule = AssetBrowser.dirHandler.getModuleFromAddress(%destination);

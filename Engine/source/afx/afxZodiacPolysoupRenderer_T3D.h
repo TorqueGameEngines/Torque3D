@@ -84,7 +84,6 @@ public:
 
    // ConsoleObject
    DECLARE_CONOBJECT(afxZodiacPolysoupRenderer);
-   DECLARE_CATEGORY("AFX");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

@@ -9,6 +9,8 @@ function AssetBrowser_editAsset::saveAsset(%this)
    
    %assetType = AssetDatabase.getAssetType(%this.editedAssetId);
    %assetDef = AssetDatabase.acquireAsset(%this.editedAssetId);
+   %assetDef.refreshAsset();
+   
    AssetBrowser.call("on" @ %assetType @ "Changed", %assetDef);
    AssetDatabase.releaseAsset(%this.editedAssetId);
 

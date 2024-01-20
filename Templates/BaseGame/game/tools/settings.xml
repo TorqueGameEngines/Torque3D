@@ -41,7 +41,7 @@
             <Setting
                 name="doubleClickAction">Edit Asset</Setting>
             <Setting
-                name="LastPosExt">0 1047 2200 360</Setting>
+                name="LastPosExt">0 976 2200 360</Setting>
             <Setting
                 name="previewTileSize">1</Setting>
             <Setting
@@ -106,7 +106,7 @@
         <Setting
             name="lastPath">tools/RPGDialogEditor/gui</Setting>
         <Setting
-            name="previewResolution">1024 768</Setting>
+            name="previewResolution">1280 720</Setting>
         <Group
             name="EngineDevelopment">
             <Setting
@@ -123,12 +123,7 @@
             <Setting
                 name="documentationReference">../../../Documentation/Torque 3D - Script Manual.chm</Setting>
             <Setting
-                name="documentationURL">http://www.garagegames.com/products/torque-3d/documentation/user</Setting>
-        </Group>
-        <Group
-            name="Library">
-            <Setting
-                name="viewType">Categorized</Setting>
+                name="documentationURL">https://docs.torque3d.org</Setting>
         </Group>
         <Group
             name="Rendering">
@@ -410,9 +405,9 @@
             <Setting
                 name="documentationReference">../../../Documentation/Torque 3D - Script Manual.chm</Setting>
             <Setting
-                name="documentationURL">http://www.garagegames.com/products/torque-3d/documentation/user</Setting>
+                name="documentationURL">https://docs.torque3d.org</Setting>
             <Setting
-                name="forumURL">http://www.garagegames.com/products/torque-3d/forums</Setting>
+                name="forumURL">https://torque3d.org/</Setting>
         </Group>
         <Group
             name="Grid">

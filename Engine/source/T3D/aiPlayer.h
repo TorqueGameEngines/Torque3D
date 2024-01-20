@@ -150,6 +150,7 @@ protected:
 
 public:
    DECLARE_CONOBJECT( AIPlayer );
+   DECLARE_CATEGORY("Actor \t AI");
 
    AIPlayer();
    ~AIPlayer();

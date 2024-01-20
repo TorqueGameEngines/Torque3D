@@ -355,6 +355,9 @@ void CubeReflector::updateFace( const ReflectParams &params, U32 faceidx, Point3
    // store current matrices
    GFXTransformSaver saver;   
 
+   F32 detailAdjustBackup = TSShapeInstance::smDetailAdjust;
+   TSShapeInstance::smDetailAdjust *= mDesc->detailAdjust;
+
    // set projection to 90 degrees vertical and horizontal
    F32 left, right, top, bottom;
    MathUtils::makeFrustum( &left, &right, &top, &bottom, M_HALFPI_F, 1.0f, mDesc->nearDist );
@@ -437,6 +440,7 @@ void CubeReflector::updateFace( const ReflectParams &params, U32 faceidx, Point3
 
    // Clean up.
    mRenderTarget->resolve();
+   TSShapeInstance::smDetailAdjust = detailAdjustBackup;
 }
 
 F32 CubeReflector::calcFaceScore( const ReflectParams &params, U32 faceidx )

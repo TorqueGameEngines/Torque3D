@@ -1,0 +1,43 @@
+function SystemMenu::onWake(%this)
+{
+    $MenuList = SystemMenuButtonList;
+    $MenuList.listPosition = 0;
+    
+    $MenuList.syncGui();
+}
+
+function SystemMenu::onSleep(%this)
+{
+    
+}
+
+function systemMenuExitToMenu()
+{
+   MessageBoxOKCancel("Exit?", "Do you wish to exit to the Main Menu?", "escapeFromGame();", "");
+}
+
+function systemMenuExitToDesktop()
+{
+   MessageBoxOKCancel("Exit?", "Do you wish to exit to the desktop?", "quit();", "");
+}
+
+function SystemMenuButton::onHighlighted(%this, %highlighted)
+{
+   if(%highlighted)
+      $MenuList.listPosition = $MenuList.getObjectIndex(%this);
+}
+
+function SystemMenuButtonList::syncGUI(%this)
+{
+   %btn = %this.getObject(%this.listPosition);
+   %btn.setHighlighted(true);
+   
+   //
+   //Update the button imagery to comply to the last input device we'd used
+   %device = Canvas.getLastInputDevice();
+   if(%device $= "mouse")
+      %device = "keyboard";
+      
+   //We'll call back to the GameMenu parent just to be sure everything's on the same page
+   GameMenu.syncGui();
+}

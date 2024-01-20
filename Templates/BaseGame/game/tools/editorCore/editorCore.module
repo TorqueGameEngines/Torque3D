@@ -1,0 +1,14 @@
+<ModuleDefinition
+	ModuleId="EditorCore"
+	VersionId="1"
+	Description="Core module that acts as the backbone of the editor suite"
+	ScriptFile="editorCore"
+	CreateFunction="onCreate"
+	DestroyFunction="onDestroy"
+	Group="Tools">
+	<DeclaredAssets
+        canSave="true"
+        canSaveDynamicFields="true"
+        Extension="asset.taml"
+        Recurse="true" />
+</ModuleDefinition>

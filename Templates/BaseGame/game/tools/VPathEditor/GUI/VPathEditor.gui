@@ -302,7 +302,7 @@ new VPathEditor(EVPathEditor) {
          };
          new GuiPopUpMenuCtrl(EPathEditorNodeOrientationMode){
             internalName = "weight";
-            Profile = "GuiPopUpMenuProfile";
+            Profile = "ToolsGuiPopUpMenuProfile";
             HorizSizing = "right";
             VertSizing = "bottom";
             Position = "57 84";
@@ -385,7 +385,7 @@ new VPathEditor(EVPathEditor) {
             canSaveDynamicFields = "0";
             Enabled = "1";
             isContainer = "1";
-            Profile = "GuiTransparentProfile";
+            Profile = "ToolsGuiTransparentProfile";
             HorizSizing = "right";
             VertSizing = "bottom";
             Position = "1 1";

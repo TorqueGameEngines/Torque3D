@@ -1,0 +1,5 @@
+<GUIAsset
+    AssetName="SystemMenu"
+    ScriptFile="@assetFile=SystemMenu.tscript"
+    GUIFile="@assetFile=SystemMenu.gui"
+    VersionId="1"/>

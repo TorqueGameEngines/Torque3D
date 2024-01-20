@@ -55,7 +55,6 @@ public:
   static void       initPersistFields();
 
   DECLARE_CONOBJECT(afxCameraPuppetData);
-  DECLARE_CATEGORY("AFX");
 };
 
 

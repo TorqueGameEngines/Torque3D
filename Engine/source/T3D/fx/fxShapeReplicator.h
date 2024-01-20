@@ -59,6 +59,7 @@ public:
    void setTransform(const MatrixF & mat) { Parent::setTransform(mat); setRenderTransform(mat); };
 
    DECLARE_CONOBJECT(fxShapeReplicatedStatic);
+   DECLARE_CATEGORY("UNLISTED");
 };
 
 
@@ -187,6 +188,7 @@ public:
 
    // Declare Console Object.
    DECLARE_CONOBJECT(fxShapeReplicator);
+   DECLARE_CATEGORY("UNLISTED");
 };
 
 #endif // _SHAPEREPLICATOR_H_

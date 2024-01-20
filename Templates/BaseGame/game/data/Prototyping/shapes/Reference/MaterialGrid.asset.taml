@@ -1,0 +1,16 @@
+<MaterialAsset
+    AssetName="MaterialGridMat"
+    materialDefinitionName="MaterialGridMat"
+    imageMap0="@asset=Prototyping:materialGrid_ORM_image">
+    <Material
+        Name="MaterialGridMat"
+        mapTo="MaterialGrid"
+        originalAssetName="MaterialGridMat">
+        <Material.Stages>
+            <Stages_beginarray
+                ORMConfigMapAsset="Prototyping:materialGrid_ORM_image"/>
+            <Stages_beginarray
+                DiffuseColor="White"/>
+        </Material.Stages>
+    </Material>
+</MaterialAsset>

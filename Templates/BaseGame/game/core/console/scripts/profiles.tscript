@@ -52,7 +52,7 @@ new GuiControlProfile(GuiConsoleTextProfile)
    category = "Core";
 };
 
-$ConsoleDefaultFillColor = "12 14 19 175";
+$ConsoleDefaultFillColor = "0 0 0 175";
 
 if(!isObject(ConsoleScrollProfile))
 new GuiControlProfile(ConsoleScrollProfile : GuiScrollProfile)

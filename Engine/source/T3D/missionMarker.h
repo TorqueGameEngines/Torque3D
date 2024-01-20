@@ -85,6 +85,7 @@ class MissionMarker : public ShapeBase
       void unpackUpdate(NetConnection *conn,           BitStream *stream);
 
       DECLARE_CONOBJECT(MissionMarker);
+      DECLARE_CATEGORY("Markers");
       static void initPersistFields();
 };
 
@@ -217,6 +218,7 @@ class CameraBookmark : public MissionMarker
       static void initPersistFields();
 
       DECLARE_CONOBJECT(CameraBookmark);
+      DECLARE_CATEGORY("Markers");
 	  /*DECLARE_CALLBACK( void, onAdd, () );
 	  DECLARE_CALLBACK( void, onRemove, () );
 	  DECLARE_CALLBACK( void, onGroupAdd, () );

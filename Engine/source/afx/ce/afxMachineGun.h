@@ -51,7 +51,6 @@ public:
   static void   initPersistFields();
 
   DECLARE_CONOBJECT(afxMachineGunData);
-  DECLARE_CATEGORY("AFX");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

@@ -20,6 +20,8 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+//command variable feilds. do not trip them by unsetting or resetting these
+$undoIgnoreList = "docsURL EditPosOffset Bake EditPostEffects selectAll sync Prototype";
 
 //---------------------------------------------------------------------------------------------
 
@@ -126,6 +128,8 @@ function UndoActionAddDelete::trashObjects(%this)
    
    if( isObject( %this.tree ) )
       %this.tree.update();
+
+   GuiEditor.clearSelection();
 }
 
 function UndoActionAddDelete::restoreObjects(%this)
@@ -451,6 +455,15 @@ function GenericUndoAction::undo(%this)
       for(%j = 0; %j < getWordCount(%fieldNames); %j++)
       {
          %field = getWord(%fieldNames, %j);
+         %skip = false;
+         for(%k = 0; %k < getWordCount($undoIgnoreList); %k++)
+         {
+            if(%field $= getWord(%fieldNames, %k)) //specialty field, we can't 'undo' it
+                %skip = true;
+         }
+         if (%skip)
+            continue;
+            
          %object.setFieldValue(%field, %this.fieldValues[%object, %field]);
       }
       // null out the fields in the null list
@@ -470,7 +483,6 @@ function GenericUndoAction::undo(%this)
 function GenericUndoAction::redo(%this)
 {
    // set the objects to the new values
-   // set the objects to the new values
    // scan through our objects
    %objectList = %this.objectIdList;
    for(%i = 0; %i < getWordCount(%objectList); %i++)
@@ -481,6 +493,15 @@ function GenericUndoAction::redo(%this)
       for(%j = 0; %j < getWordCount(%fieldNames); %j++)
       {
          %field = getWord(%fieldNames, %j);
+         %skip = false;
+         for(%k = 0; %k < getWordCount($undoIgnoreList); %k++)
+         {
+            if(%field $= getWord(%fieldNames, %k)) //specialty field, we can't 'redo' it
+                %skip = true;
+         }
+         if (%skip)         
+            continue;
+            
          %object.setFieldValue(%field, %this.newFieldValues[%object, %field]);
       }
       // null out the fields in the null list

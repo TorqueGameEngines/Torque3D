@@ -41,6 +41,21 @@
 class SFXSource;
 class SFXTrack;
 
+DefineConsoleType(TypeSoundControls, bool)
+class GuiInspectorTypeSoundControls : public GuiInspectorField
+{
+   typedef GuiInspectorField Parent;
+public:
+   GuiBitmapButtonCtrl* mPlayButton;
+   GuiBitmapButtonCtrl* mPauseButton;
+   GuiBitmapButtonCtrl* mStopButton;
+
+   DECLARE_CONOBJECT(GuiInspectorTypeSoundControls);
+   static void consoleInit();
+
+   virtual GuiControl* constructEditControl();
+   virtual bool updateRects();
+};
 //RDTODO: make 3D sound emitters yield their source when being culled
 
 /// The SFXEmitter is used to place 2D or 3D sounds into a 
@@ -69,7 +84,8 @@ class SFXEmitter : public SceneObject
          DirtyUpdateMask      = BIT(2),
 
          SourcePlayMask       = BIT(3),
-         SourceStopMask       = BIT(4),
+         SourcePauseMask       = BIT(4),
+         SourceStopMask       = BIT(5),
 
          AllSourceMasks = SourcePlayMask | SourceStopMask,
       };
@@ -116,7 +132,7 @@ class SFXEmitter : public SceneObject
 
       /// A local profile object used to coax the
       /// sound system to play a custom sound.
-      SFXProfile mLocalProfile;
+      SFXTrack* mLocalProfile;
 
       /// The description used by the local profile.
       SFXDescription mDescription;
@@ -219,6 +235,10 @@ class SFXEmitter : public SceneObject
       /// the emitter source is not already playing.
       void play();
 
+      /// Sends network event to pause playback if 
+      /// the emitter source is already playing.
+      void pause();
+
       /// Sends network event to stop emitter 
       /// playback on all ghosted clients.
       void stop();
@@ -240,7 +260,7 @@ class SFXEmitter : public SceneObject
 
       DECLARE_CONOBJECT( SFXEmitter );
       DECLARE_DESCRIPTION( "A 3D object emitting sound." );
-      DECLARE_CATEGORY( "3D Sound" );
+      DECLARE_CATEGORY("Environment \t FX");
 };
 
 #endif // _SFXEMITTER_H_

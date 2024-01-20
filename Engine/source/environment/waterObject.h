@@ -149,6 +149,7 @@ public:
    virtual ~WaterObject();
 
    DECLARE_CONOBJECT( WaterObject );
+   DECLARE_CATEGORY("Environment \t Water");
 
    // ConsoleObject
    static void consoleInit();

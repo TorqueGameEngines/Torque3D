@@ -34,9 +34,9 @@ function initializeRiverEditor()
    RiverEditorOptionsWindow.setVisible( false );
    RiverEditorTreeWindow.setVisible( false );
    
-   EditorGui.add( RiverEditorGui );
-   EditorGui.add( RiverEditorOptionsWindow );
-   EditorGui.add( RiverEditorTreeWindow );
+   MainSceneTabPanel.add( RiverEditorGui );
+   MainSceneTabPanel.add( RiverEditorOptionsWindow );
+   MainSceneTabPanel.add( RiverEditorTreeWindow );
    
    new ScriptObject( RiverEditorPlugin )
    {

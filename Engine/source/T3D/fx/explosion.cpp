@@ -1403,7 +1403,7 @@ bool Explosion::explode()
       resetWorldBox();
    }
 
-   SFXProfile* sound_prof = mDataBlock->getSoundProfile();
+   SFXProfile* sound_prof = static_cast<SFXProfile*>(mDataBlock->getSoundProfile());
    if (sound_prof)
    {
       soundProfile_clone = sound_prof->cloneAndPerformSubstitutions(ss_object, ss_index);

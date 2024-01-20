@@ -1,0 +1,204 @@
+function classPrototyping::onWake(%this)
+{
+    
+}
+
+function classPrototyping::onSleep(%this)
+{
+    
+}
+//PrototypeClass(MainMenuGui)
+//PrototypeClass(GuiChunkedBitmapCtrl)
+function PrototypeClass(%classInstance)
+{
+    if (!isObject(%classInstance)) return;
+    Canvas.pushDialog(classPrototyping);
+    classPrototyping.fillClasslist(%classInstance);
+    classPrototyping.SetNamespaceUsed(%classInstance);
+}
+
+function classPrototyping::fillClasslist(%this, %classInstance)
+{
+    ClassInheritanceListCtrl.deleteAllObjects();
+    %this.instanceName = %classInstance.getName();
+    
+    //get potentially scripted namespaces
+    %class = %classInstance.getClassName();    
+    %prepend = "";
+    if (%classInstance.getName() !$= "")
+        %prepend = %classInstance.getName();
+    if (%classInstance.class !$= "")
+        %prepend = %prepend SPC %classInstance.class;        
+    if (%classInstance.superclass !$= "")
+        %prepend = %prepend SPC %classInstance.superclass;
+        
+    //append to hardcoded potential namespaces
+    %this.classlist = %prepend SPC getClassHierarchy(%class);
+    %this.classCount = getWordCount(%this.classlist);
+    for (%i=0; %i<%this.classCount; %i++)
+    {
+        %inheritanceOrder = %this.classCount-(%i+1);
+        %className = getWord(%this.classlist,%inheritanceOrder);
+        if (%i<%this.classCount-1)
+            %className = %className @"->";
+        %elemClass = new GuiRadioCtrl("ProtoClassSelect"@ %i) {
+               text = %className;
+               entry = strreplace(%className,"->","");
+               groupNum = "1";
+               extent = "80 18";
+               profile = "ToolsGuiRadioProfile";
+               tooltipProfile = "GuiToolTipProfile";
+               };
+        eval("function ProtoClassSelect"@ %i @"::onClick(%this){classPrototyping.SetNamespaceUsed(%this.entry);}");
+        ClassInheritanceListCtrl.addGuiControl(%elemClass);
+    }
+    %lastElem = "ProtoClassSelect"@ %this.classCount-1;
+    %lastElem.setStateOn(true);
+}
+
+function classPrototyping::SetNamespaceUsed(%this, %nameSpaceUsed)
+{
+    ClassMethodListCtrl.deleteAllObjects();
+    %this.fillMethodlist(%nameSpaceUsed);
+}
+
+function classPrototyping::fillMethodlist(%this, %nameSpaceUsed)
+{
+    ClassMethodListCtrl.deleteAllObjects();
+    %this.nameSpaceUsed = %nameSpaceUsed;
+    %this.methodArray = getMethodSigsNS(%nameSpaceUsed);
+    %this.methodCount = %this.methodArray.count();
+    
+    for (%i=0; %i<%this.methodCount; %i++)
+    {
+         %methodDef = getRecord(%this.methodArray.getValue(%i),0);
+         %methodName = strreplace(%methodDef,"::"," ");
+         %methodName = getWord(strreplace(%methodName,"("," "),2);
+         
+        %elemMethod = new GuiCheckBoxCtrl("ProtoMethodSelect"@ %i) {
+            text = %methodName;
+            position = "1 1";
+            profile = "ToolsGuiCheckBoxProfile";
+            tooltipProfile = "GuiToolTipProfile";
+         };
+        ClassMethodListCtrl.addGuiControl(%elemMethod);
+    }
+}
+
+function setProtoTypeFilePath(%targetPath)
+{
+   classPrototyping-->targetPath.text = %targetPath;
+}
+
+function classPrototyping::readExistingLayout(%this)
+{
+    for (%i=0; %i<%this.classCount; %i++)
+    {
+        %inheritanceOrder = %this.classCount-(%i+1);
+        %obj = "ProtoClassSelect"@ %i;
+        if (%obj.isStateOn())
+            %namespaceUsed = getWord(%this.classlist,%inheritanceOrder);
+    }
+    
+	%file = new FileObject();
+    %filename = classPrototyping-->targetPath.text @"/"@ %namespaceUsed @"."@ $TorqueScriptFileExtension;
+    
+    if (!isObject(%this.callbacksDefined))
+        %this.callbacksDefined = new arrayobject();
+    %this.callbacksDefined.empty();
+    %this.reportedCommands = false;
+    %this.reportedVariables = false;
+    %this.callbackBlockDefined = false;
+    
+    %key=0;
+	if(%file.openForRead(%filename))
+    {
+        while (!%file.isEof())
+        {
+            %line = %file.readLine();
+            
+            //have we already reported commands?
+            if (startsWith(%line,"/* Available Commands:") )
+                %this.reportedCommands = true;
+                
+            //have we already reported variables?
+            if (startsWith(%line,"/* HardCoded Variables") )
+                %this.reportedVariables = true;
+                
+            if (startsWith(%line,"/*--- Callbacks ---*/") )
+                %this.callbackBlockDefined = true;
+            
+            //get list of methods already existing
+            if (startswith(%line,"function "@ %namespaceUsed) )
+            {
+                %methodName = strreplace(%line,"::"," ");
+                %methodName = getWord(strreplace(%methodName,"("," "),2);
+                %this.callbacksDefined.add(%key++,%methodName);
+            }
+        }
+    }
+	%file.delete();
+}
+
+function classPrototyping::writeResults(%this)
+{
+    %namespaceUsed = "";
+    for (%i=0; %i<%this.classCount; %i++)
+    {
+        %inheritanceOrder = %this.classCount-(%i+1);
+        %obj = "ProtoClassSelect"@ %i;
+        if (%obj.isStateOn())
+            %namespaceUsed = getWord(%this.classlist,%inheritanceOrder);
+    }
+    %this.readExistingLayout();
+	%file = new FileObject();
+    %filename = classPrototyping-->targetPath.text @"/"@ %namespaceUsed @"."@ $TorqueScriptFileExtension;
+	if(%file.openForAppend(%filename))
+    {
+        if (ReportCommands.isStateOn() && %this.reportedCommands == false)
+        {
+            %this.commandArray = getMethodSigsNS(%this.nameSpaceUsed,true);
+            %this.commandCount = %this.commandArray.count();
+            %file.writeLine("/* Available Commands:");
+            for (%i=0; %i< %this.commandCount; %i++)
+            {
+                %file.writeLine(getRecord(%this.commandArray.getValue(%i),0));
+            }
+            %file.writeLine("*/");
+        }
+    
+        if (ReportVariables.isStateOn() && %this.reportedVariables == false)
+        {
+            %file.writeLine("/* HardCoded Variables");
+            for (%i=0; %i< getFieldCountNS(%this.nameSpaceUsed); %i++)
+            {
+                %file.writeLine(getFieldNS(%this.nameSpaceUsed,%i));
+            }
+            %file.writeLine("*/");
+        }
+        
+        if (%this.callbackBlockDefined == false)
+            %file.writeLine("\n/*--- Callbacks ---*/\n");
+            
+        for (%i=0; %i<%this.methodCount; %i++)
+        {
+            %obj = "ProtoMethodSelect"@ %i;
+            if (%obj.isStateOn())
+            {
+                %methodDef = getRecord(%this.methodArray.getValue(%i),0);
+                %methodName = strreplace(%methodDef,"::"," ");
+                %methodName = getWord(strreplace(%methodName,"("," "),2);
+                if (%this.callbacksDefined.countValue(%methodName)==0)
+                {
+                    echo(%methodName @ "not found. defining...");
+                    %file.writeLine("\n" @ strreplace(%this.methodArray.getValue(%i),%this.instanceName,%namespaceUsed));
+                }
+            }
+        }
+    }
+	else
+	{
+		error( "Failed to open " @ %filename @ " for writing" );
+	}
+	%file.delete();
+}

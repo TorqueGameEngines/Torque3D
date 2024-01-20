@@ -4,8 +4,15 @@ foreach(TEMPLATE_FILE ${TEMPLATE_FILES})
 endforeach()
 
 # Perform installation minus scripts
-file(COPY "game" "source" DESTINATION "${TORQUE_APP_ROOT_DIRECTORY}" PATTERN "*.tscript" EXCLUDE PATTERN
-                                                                     PATTERN "*.in" EXCLUDE PATTERN)	
+if(WIN32)
+    file(COPY "game" "source" DESTINATION "${TORQUE_APP_ROOT_DIRECTORY}" PATTERN "*.tscript" EXCLUDE
+                                                                         PATTERN "*.in" EXCLUDE)
+else()
+    file(COPY "game" "source" DESTINATION "${TORQUE_APP_ROOT_DIRECTORY}" PATTERN "*.tscript" EXCLUDE
+                                                                     PATTERN "*.in" EXCLUDE
+                                                                     PATTERN "*.dll" EXCLUDE)    
+endif(WIN32)
+
 # Enumerate scripts and install with extension
 file(GLOB_RECURSE SCRIPT_FILES "game/*.tscript")
 foreach(ITEM ${SCRIPT_FILES})

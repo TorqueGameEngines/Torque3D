@@ -90,7 +90,7 @@ function VerveEditor::LaunchEditor()
    {
       %mainScreen.add(VerveEditorGUI);
       VerveEditorGUI.position.y = VerveEditorGUI.Position.y + 20;
-      EditorGUI.add(%mainScreen);
+      MainSceneTabPanel.add(%mainScreen);
    }
     
     // Clear History.

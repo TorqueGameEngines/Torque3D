@@ -142,7 +142,7 @@ function EditorGui::buildMenus(%this)
    %fileMenu.appendItem("Open Recent" TAB RecentLevelsPopupMenu);
    %fileMenu.appendItem("-");
    %fileMenu.appendItem("Save Level" TAB %cmdCtrl SPC "S" TAB "EditorSaveMissionMenu();");
-   %fileMenu.appendItem("Save Level As..." TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"LevelAsset\", AssetBrowser.selectedModule, \"EditorSaveMissionAs\");");
+   %fileMenu.appendItem("Save Level As..." TAB "" TAB "EditorSaveMissionAs();");
    %fileMenu.appendItem("-");
    %fileMenu.appendItem("Save Current Scene as Editor Default" TAB "" TAB "EditorSaveAsDefaultLevel();");
    %fileMenu.appendItem("Reset Editor Default" TAB "" TAB "EditorResetDefaultLevel();");
@@ -364,19 +364,18 @@ function EditorGui::buildMenus(%this)
    %this.menuBar.insert(%toolsMenu);
       
    // Help Menu
-   %helpMenu = new PopupMenu()
-   {
-      superClass = "MenuBuilder";
-      class = "EditorHelpMenu";
-
-      barTitle = "Help";
-
-      item[0] = "Online Documentation..." TAB "Alt F1" TAB "gotoWebPage(EWorldEditor.documentationURL);";
-      item[1] = "Offline User Guide..." TAB "" TAB "gotoWebPage(EWorldEditor.documentationLocal);";
-      item[2] = "Offline Reference Guide..." TAB "" TAB "shellexecute(EWorldEditor.documentationReference);";
-      item[3] = "Torque 3D Forums..." TAB "" TAB "gotoWebPage(EWorldEditor.forumURL);";
-   };
-   %this.menuBar.insert(%helpMenu);
+   %helpMenu = MenuBuilder::newMenu("Help", "EditorHelpMenu");
+   %helpMenu.newItem("Online Documentation...", "gotoWebPage(EWorldEditor.documentationURL);", "Alt F1");
+   %helpMenu.newItem("Offline User Guide...", "gotoWebPage(EWorldEditor.documentationLocal);");
+   %helpMenu.newItem("Offline Reference Guide...", "shellexecute(EWorldEditor.documentationReference);");
+   %helpMenu.newItem("Torque 3D Forums...", "gotoWebPage(EWorldEditor.forumURL);");
+   
+   //These files don't currently exist, so we're going to disable them until such a time
+   //as they exist again
+   %helpMenu.enableItem(1, false);
+   %helpMenu.enableItem(2, false);
+   
+   MenuBuilder::addMenuToMenubar(%this.menubar, %helpMenu);
    
    // Menus that are added/removed dynamically (temporary)
    
@@ -466,6 +465,66 @@ function EditorGui::buildMenus(%this)
          Item[24] = "Unmount Selected Object" TAB "" TAB "EditorUnmount();";
       };
    }
+   
+   %addMenu = MenuBuilder::newMenu("Add");
+   
+   %enumeratedClasses = enumerateConsoleClasses("SceneObject");
+   for(%c=0; %c < getFieldCount(%enumeratedClasses); %c++)
+   {
+      %class = getField(%enumeratedClasses, %c);  
+      //SceneObject itself is not directly spawnable
+      if (%class $= "SceneObject")
+        continue;
+        
+      %category = getCategoryOfClass(%class);
+
+      if(%category $= "")
+      {
+         error("Attempted to fetch category of class " @ %class @ " but none were found.");
+         continue;  
+      }
+      //skip classes explicitly tagged not for listing (typically due to being unspawnable)
+      if(%category $= "UNLISTED")
+        continue;
+        
+      if(%category $= "MISC")
+        warn("unsorted class: "@ %class);
+        
+      %parentMenu = %addMenu; //start at the top
+      for(%cat=0; %cat < getFieldCount(%category); %cat++)
+      {
+         %subCat = getField(%category, %cat);
+         %targetSubmenu = %parentMenu.findMenu(%subCat);
+         if(!isObject(%targetSubmenu))
+         {
+            %targetSubmenu = %parentMenu.newSubmenu(%subCat);
+         }
+         
+         %parentMenu = %targetSubmenu;
+      }
+      
+      %buildfunc = "";
+      %class = %class;
+      %method = "build" @ %buildfunc;
+      if( !ObjectBuilderGui.isMethod( %method ) )
+         %method = "build" @ %class;         
+         
+      if( !ObjectBuilderGui.isMethod( %method ) )
+      {
+         if (isMemberOfClass(%class,"gameBase"))
+            %cmd = "ObjectBuilderGui.buildGameBaseObject("@ %class @");";
+         else
+            %cmd = "return new " @ %class @ "();";
+      }
+      else
+         %cmd = "ObjectBuilderGui." @ %method @ "();";
+
+      %createCmd = "ObjectBuilderGui.newObjectCallback = \"ObjectCreator.onFinishCreateObject\"; ObjectCreator.createObject( \"" @ %cmd @ "\" );";
+      
+      %targetSubmenu.newItem(%class, %createCmd, "");
+   }
+   
+   MenuBuilder::addMenuToMenubar(%this.menubar, %addMenu, 4);
 }
 
 //////////////////////////////////////////////////////////////////////////

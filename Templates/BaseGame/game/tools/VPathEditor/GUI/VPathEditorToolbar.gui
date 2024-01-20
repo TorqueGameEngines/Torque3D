@@ -30,7 +30,7 @@ $guiContent = new GuiControl(VPathEditorToolbar)
     new GuiTextCtrl()
     {
         internalName = "ToolbarLabel";
-        profile = "GuiTextProfile";
+        profile = "ToolsGuiTextProfile";
         horizSizing = "right";
         vertSizing = "bottom";
         position = "2 7";
@@ -48,7 +48,7 @@ $guiContent = new GuiControl(VPathEditorToolbar)
         internalName = "PathTypeMenu";
         Enabled = "1";
         isContainer = "0";
-        Profile = "GuiPopUpMenuProfile";
+        Profile = "ToolsGuiPopUpMenuProfile";
         HorizSizing = "right";
         VertSizing = "bottom";
         Position = "85 7";

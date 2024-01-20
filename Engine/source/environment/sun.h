@@ -116,7 +116,8 @@ public:
    virtual void onRemove();
 
    // ConsoleObject
-   DECLARE_CONOBJECT(Sun);   
+   DECLARE_CONOBJECT(Sun);
+   DECLARE_CATEGORY("Lighting \t Lights");
    static void initPersistFields();
    void inspectPostApply();
 

@@ -1,6 +1,6 @@
 //--- OBJECT WRITE BEGIN ---
 $guiContent = new GuiControl(RemapDlg) {
-   extent = "1024 768";
+   extent = "1280 720";
    minExtent = "8 8";
    profile = "GuiDefaultProfile";
    tooltipProfile = "GuiToolTipProfile";
@@ -9,7 +9,7 @@ $guiContent = new GuiControl(RemapDlg) {
       helpTag = "0";
 
    new GuiContainer(RemapPanel) {
-      position = "162 332";
+      position = "290 308";
       extent = "700 104";
       horizSizing = "center";
       vertSizing = "center";
@@ -24,6 +24,7 @@ $guiContent = new GuiControl(RemapDlg) {
          vertSizing = "height";
          profile = "GuiInputCtrlProfile";
          tooltipProfile = "GuiToolTipProfile";
+         sendAxisEvents = "0";
       };
       new GuiControl(RemapBoxCtrl) {
          position = "-1 1";
@@ -34,26 +35,28 @@ $guiContent = new GuiControl(RemapDlg) {
          tooltipProfile = "GuiToolTipProfile";
          isContainer = "1";
 
-         new GuiBitmapBarCtrl() {
-            BitmapAsset = "UI:panel_image";
-            extent = "701 40";
+         new GuiBitmapCtrl() {
+            BitmapAsset = "UI:backdrop_image";
+            position = "1 1";
+            extent = "701 100";
             horizSizing = "width";
+            vertSizing = "height";
             profile = "GuiDefaultProfile";
             tooltipProfile = "GuiToolTipProfile";
          };
-         new GuiBitmapBarCtrl() {
-            BitmapAsset = "UI:panel_low_image";
-            position = "0 40";
-            extent = "701 341";
+         new GuiPanel() {
+            position = "38 12";
+            extent = "625 80";
             horizSizing = "width";
-            profile = "GuiDefaultProfile";
+            vertSizing = "height";
+            profile = "GuiMenuBasePanelProfile";
             tooltipProfile = "GuiToolTipProfile";
          };
          new GuiTextCtrl() {
-            text = "Press escape to cancel";
+            text = "Press escape or start to cancel";
             maxLength = "255";
-            position = "260 67";
-            extent = "181 23";
+            position = "252 51";
+            extent = "245 23";
             minExtent = "8 8";
             horizSizing = "width";
             vertSizing = "height";
@@ -61,9 +64,9 @@ $guiContent = new GuiControl(RemapDlg) {
             tooltipProfile = "GuiToolTipProfile";
          };
          new GuiTextCtrl() {
-            text = "Re-bind \"Forward\" to...";
+            text = "Re-bind \"\" to...";
             maxLength = "255";
-            position = "259 40";
+            position = "251 24";
             extent = "184 23";
             minExtent = "8 8";
             horizSizing = "center";

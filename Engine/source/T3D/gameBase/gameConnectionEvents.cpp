@@ -387,9 +387,9 @@ void SimSoundAssetEvent::process(NetConnection* con)
 {
 
    if (mAsset->is3D())
-      SFX->playOnce(mAsset->getSfxProfile(), &mTransform);
+      SFX->playOnce(mAsset->getSFXTrack(), &mTransform);
    else
-      SFX->playOnce(mAsset->getSfxProfile());
+      SFX->playOnce(mAsset->getSFXTrack());
 
 }
 

@@ -67,4 +67,15 @@ float D_GGX(float NdotH, float alphaRoughnessSq)
 	return alphaRoughnessSq / (M_PI_F * f * f);
 }
 
+vec3 Fr_DisneyDiffuse(vec3 F0, float NdotV, float NdotL, float LdotH, float linearRoughness)
+{
+	float energyBias = lerp(0 , 0.5 , linearRoughness );
+	float energyFactor = lerp(1.0 , 1.0 / 1.51 , linearRoughness );
+	float fd90 = energyBias + 2.0 * LdotH * LdotH * linearRoughness ;
+	vec3 lightScatter = F_Schlick( F0 , fd90 , NdotL );
+	vec3 viewScatter = F_Schlick(F0 , fd90 , NdotV ); 
+
+	return lightScatter * viewScatter * energyFactor ;
+}
+
 #endif

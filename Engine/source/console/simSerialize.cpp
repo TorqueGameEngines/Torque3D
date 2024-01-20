@@ -48,7 +48,7 @@ bool SimObject::writeObject(Stream *stream)
 
    for(itr = fieldList.begin();itr != fieldList.end();itr++)
    {
-      if( itr->type >= AbstractClassRep::ARCFirstCustomField )
+      if( itr->type >= AbstractClassRep::ARCFirstCustomField || itr->flag.test(AbstractClassRep::FieldFlags::FIELD_ComponentInspectors))
       {
          numFields--;
          continue;

@@ -147,6 +147,8 @@ SimObject* TamlBinaryReader::parseElement( Stream& stream, const U32 versionId )
     if ( pSimObject == NULL )
         return NULL;
 
+    pSimObject->setFilename(mpTaml->getFilePathBuffer());
+
     // Find Taml callbacks.
     TamlCallbacks* pCallbacks = dynamic_cast<TamlCallbacks*>( pSimObject );
 

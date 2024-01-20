@@ -1,0 +1,115 @@
+//--- OBJECT WRITE BEGIN ---
+$guiContent = new GuiControl(classPrototyping) {
+   extent = "1024 768";
+   profile = "GuiDefaultProfile";
+   tooltipProfile = "GuiToolTipProfile";
+   isContainer = "1";
+   canSaveDynamicFields = "1";
+      originalAssetName = "classPrototyping";
+
+   new GuiWindowCtrl() {
+      text = "Class Prototyping";
+      position = "216 124";
+      extent = "592 519";
+      horizSizing = "center";
+      vertSizing = "center";
+      profile = "ToolsGuiWindowProfile";
+      tooltipProfile = "GuiToolTipProfile";
+      closeCommand = "Canvas.popDialog(classPrototyping);";
+      new GuiScrollCtrl() {
+         lockVertScroll = "1";
+         position = "14 30";
+         extent = "564 33";
+         profile = "ToolsGuiScrollProfile";
+         tooltipProfile = "GuiToolTipProfile";
+
+         new GuiDynamicCtrlArrayControl(ClassInheritanceListCtrl) {
+            colCount = "1";
+            colSize = "80";
+            rowCount = "1";
+            rowSize = "18";
+            autoCellSize = "1";
+            fillRowFirst = "0";
+            dynamicSize = "1";
+            position = "1 1";
+            extent = "400 18";
+            profile = "GuiDefaultProfile";
+            tooltipProfile = "GuiToolTipProfile";
+         };
+      };
+      new GuiTextCtrl() {
+         text = "Callbacks";
+         position = "24 66";
+         extent = "54 14";
+         profile = "ToolsGuiTextProfile";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+      new GuiScrollCtrl() {
+         position = "19 80";
+         extent = "552 326";
+         profile = "ToolsGuiScrollProfile";
+         tooltipProfile = "GuiToolTipProfile";
+
+         new GuiDynamicCtrlArrayControl(ClassMethodListCtrl) {
+            colCount = "1";
+            colSize = "8000";
+            rowCount = "1";
+            rowSize = "18";
+            dynamicSize = "1";
+            extent = "552 326";
+            profile = "GuiDefaultProfile";
+            tooltipProfile = "GuiToolTipProfile";
+         };
+      };
+      new GuiBitmapButtonCtrl() {
+         BitmapAsset = "ToolsModule:iconOpen_image";
+         bitmapMode = "Centered";
+         position = "348 467";
+         extent = "22 22";
+         horizSizing = "left";
+         profile = "ToolsGuiButtonProfile";
+         command = "SelectAssetPath.showDialog(AssetBrowser.dirHandler.currentAddress, \"setProtoTypeFilePath\");\nSelectAssetPathWindow.selectWindow();";
+         tooltipProfile = "GuiToolTipProfile";
+         tooltip = "New Module";
+      };
+      new GuiTextEditCtrl() {
+         text = "data/ExampleModule";
+         position = "143 470";
+         extent = "201 20";
+         horizSizing = "width";
+         profile = "ToolsGuiTextEditProfile";
+         active = "0";
+         tooltipProfile = "GuiToolTipProfile";
+         internalName = "targetPath";
+      };
+      new GuiTextCtrl() {
+         text = "Target Path:";
+         position = "20 470";
+         extent = "116 17";
+         profile = "ToolsGuiTextProfile";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+      new GuiButtonCtrl() {
+         text = "Save";
+         position = "431 465";
+         profile = "ToolsGuiButtonProfile";
+         command = "classPrototyping.writeResults();";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+      new GuiCheckBoxCtrl(ReportCommands) {
+         text = "Report Commands";
+         position = "16 420";
+         extent = "125 30";
+         profile = "ToolsGuiCheckBoxProfile";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+      new GuiCheckBoxCtrl(ReportVariables) {
+         text = "Report Stock Variables";
+         position = "152 420";
+         extent = "125 30";
+         profile = "ToolsGuiCheckBoxProfile";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+   };
+};
+//--- OBJECT WRITE END ---

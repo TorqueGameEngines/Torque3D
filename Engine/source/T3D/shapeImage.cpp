@@ -2785,7 +2785,7 @@ void ShapeBase::setImageState(U32 imageSlot, U32 newState, bool force)
    // Delete any loooping sounds that were in the previous state.
    // this is the crazy bit =/ needs to know prev state in order to stop sounds.
    // lastState does not return an id for the prev state so we keep track of it.
-   if (lastState->sound && lastState->sound->getSfxProfile()->getDescription()->mIsLooping)
+   if (lastState->sound && lastState->sound->getSFXTrack()->getDescription()->mIsLooping)
    {  
       for (Vector<SFXSource*>::iterator i = image.mSoundSources.begin(); i != image.mSoundSources.end(); i++)
          SFX_DELETE((*i));    
@@ -2799,7 +2799,7 @@ void ShapeBase::setImageState(U32 imageSlot, U32 newState, bool force)
       if (stateData.sound)
    {
       const Point3F& velocity         = getVelocity();
-         image.addSoundSource(SFX->createSource(stateData.sound->getSfxProfile(), &getRenderTransform(), &velocity));
+         image.addSoundSource(SFX->createSource(stateData.sound->getSFXTrack(), &getRenderTransform(), &velocity));
       }
       if (stateData.soundTrack)
       {

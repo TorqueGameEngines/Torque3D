@@ -37,8 +37,8 @@ function initializeDatablockEditor()
    DatablockEditorInspectorWindow.setVisible( false );
    DatablockEditorTreeWindow.setVisible( false );
    
-   EditorGui.add( DatablockEditorInspectorWindow );
-   EditorGui.add( DatablockEditorTreeWindow );
+   MainSceneTabPanel.add( DatablockEditorInspectorWindow );
+   MainSceneTabPanel.add( DatablockEditorTreeWindow );
    
    new ScriptObject( DatablockEditorPlugin )
    {

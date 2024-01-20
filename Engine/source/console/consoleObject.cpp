@@ -831,11 +831,19 @@ DefineEngineFunction( getCategoryOfClass, const char*,  ( const char* className 
             "@ingroup Console")
 {
    AbstractClassRep* rep = AbstractClassRep::findClassRep( className );
-   if( rep )
-      return rep->getCategory();
 
-   Con::errorf( "getCategoryOfClass - no class called '%s'", className );
-   return "";
+   if (rep == NULL)
+   {
+      Con::errorf("getCategoryOfClass - no class called '%s'", className);
+      return "";
+   }
+   while (rep && rep->getParentClass())
+   {
+      if (dStrcmp(rep->getCategory(), "") != 0)
+         break;
+      rep = rep->getParentClass();
+   }
+   return rep ? rep->getCategory() : "";
 }
 
 DefineEngineFunction( enumerateConsoleClasses, const char*, ( const char* className ), ( "" ),

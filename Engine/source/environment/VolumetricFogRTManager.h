@@ -83,6 +83,7 @@ class VolumetricFogRTManager : public SceneObject
       U32 DecFogObjects();
    
    DECLARE_CONOBJECT(VolumetricFogRTManager);
+   DECLARE_CATEGORY("UNLISTED");
 };
    
 extern VolumetricFogRTManager* gVolumetricFogRTManager;

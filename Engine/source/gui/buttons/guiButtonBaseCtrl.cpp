@@ -31,14 +31,14 @@
 #include "sfx/sfxTrack.h"
 
 
-IMPLEMENT_CONOBJECT( GuiButtonBaseCtrl );
+IMPLEMENT_CONOBJECT(GuiButtonBaseCtrl);
 
-ConsoleDocClass( GuiButtonBaseCtrl,
+ConsoleDocClass(GuiButtonBaseCtrl,
    "@brief The base class for the various button controls.\n\n"
-   
+
    "This is the base class for the various types of button controls.  If no more specific functionality is required than "
    "offered by this class, then it can be instantiated and used directly.  Otherwise, its subclasses should be used:\n"
-   
+
    "- GuiRadioCtrl (radio buttons)\n"
    "- GuiCheckBoxCtrl (checkboxes)\n"
    "- GuiButtonCtrl (push buttons with text labels)\n"
@@ -47,49 +47,54 @@ ConsoleDocClass( GuiButtonBaseCtrl,
    "- GuiToggleButtonCtrl (toggle buttons, i.e. push buttons with \"sticky\" behavior)\n"
    "- GuiSwatchButtonCtrl (color swatch buttons)\n"
    "- GuiBorderButtonCtrl (push buttons for surrounding child controls)\n\n"
-   
+
    "@ingroup GuiButtons"
 );
 
-IMPLEMENT_CALLBACK( GuiButtonBaseCtrl, onMouseDown, void, (), (),
+IMPLEMENT_CALLBACK(GuiButtonBaseCtrl, onMouseDown, void, (), (),
    "If #useMouseEvents is true, this is called when the left mouse button is pressed on an (active) "
-   "button." );
+   "button.");
 
-IMPLEMENT_CALLBACK( GuiButtonBaseCtrl, onMouseUp, void, (), (),
+IMPLEMENT_CALLBACK(GuiButtonBaseCtrl, onMouseUp, void, (), (),
    "If #useMouseEvents is true, this is called when the left mouse button is release over an (active) "
    "button.\n\n"
    "@note To trigger actions, better use onClick() since onMouseUp() will also be called when the mouse was "
-      "not originally pressed on the button." );
+   "not originally pressed on the button.");
 
-IMPLEMENT_CALLBACK( GuiButtonBaseCtrl, onClick, void, (), (),
-   "Called when the primary action of the button is triggered (e.g. by a left mouse click)." );
+IMPLEMENT_CALLBACK(GuiButtonBaseCtrl, onClick, void, (), (),
+   "Called when the primary action of the button is triggered (e.g. by a left mouse click).");
 
-IMPLEMENT_CALLBACK( GuiButtonBaseCtrl, onDoubleClick, void, (), (),
-   "Called when the left mouse button is double-clicked on the button." );
+IMPLEMENT_CALLBACK(GuiButtonBaseCtrl, onDoubleClick, void, (), (),
+   "Called when the left mouse button is double-clicked on the button.");
 
-IMPLEMENT_CALLBACK( GuiButtonBaseCtrl, onRightClick, void, (), (),
-   "Called when the right mouse button is clicked on the button." );
+IMPLEMENT_CALLBACK(GuiButtonBaseCtrl, onRightClick, void, (), (),
+   "Called when the right mouse button is clicked on the button.");
 
-IMPLEMENT_CALLBACK( GuiButtonBaseCtrl, onMouseEnter, void, (), (),
+IMPLEMENT_CALLBACK(GuiButtonBaseCtrl, onMouseEnter, void, (), (),
    "If #useMouseEvents is true, this is called when the mouse cursor moves over the button (only if the button "
-   "is the front-most visible control, though)." );
+   "is the front-most visible control, though).");
 
-IMPLEMENT_CALLBACK( GuiButtonBaseCtrl, onMouseLeave, void, (), (),
+IMPLEMENT_CALLBACK(GuiButtonBaseCtrl, onMouseLeave, void, (), (),
    "If #useMouseEvents is true, this is called when the mouse cursor moves off the button (only if the button "
-   "had previously received an onMouseEvent() event)." );
+   "had previously received an onMouseEvent() event).");
 
-IMPLEMENT_CALLBACK( GuiButtonBaseCtrl, onMouseDragged, void, (), (),
+IMPLEMENT_CALLBACK(GuiButtonBaseCtrl, onMouseDragged, void, (), (),
    "If #useMouseEvents is true, this is called when a left mouse button drag is detected, i.e. when the user "
    "pressed the left mouse button on the control and then moves the mouse over a certain distance threshold with "
-   "the mouse button still pressed." );
+   "the mouse button still pressed.");
+
+IMPLEMENT_CALLBACK(GuiButtonBaseCtrl, onHighlighted, void, (bool highlighted), (highlighted),
+   "This is called when the highlighted state of the button is changed.");
 
 
-ImplementEnumType( GuiButtonType,
+ImplementEnumType(GuiButtonType,
    "Type of button control.\n\n"
-   "@ingroup GuiButtons" )
-   { GuiButtonBaseCtrl::ButtonTypePush, "PushButton", "A button that triggers an action when clicked." },
-   { GuiButtonBaseCtrl::ButtonTypeCheck, "ToggleButton", "A button that is toggled between on and off state." },
-   { GuiButtonBaseCtrl::ButtonTypeRadio, "RadioButton", "A button placed in groups for presenting choices." },
+   "@ingroup GuiButtons")
+{
+   GuiButtonBaseCtrl::ButtonTypePush, "PushButton", "A button that triggers an action when clicked."
+},
+{ GuiButtonBaseCtrl::ButtonTypeCheck, "ToggleButton", "A button that is toggled between on and off state." },
+{ GuiButtonBaseCtrl::ButtonTypeRadio, "RadioButton", "A button placed in groups for presenting choices." },
 EndImplementEnumType;
 
 
@@ -100,7 +105,7 @@ GuiButtonBaseCtrl::GuiButtonBaseCtrl()
    mDepressed = false;
    mHighlighted = false;
    mActive = true;
-   static StringTableEntry sButton = StringTable->insert( "Button" );
+   static StringTableEntry sButton = StringTable->insert("Button");
    mButtonText = sButton;
    mButtonTextID = StringTable->EmptyString();
    mStateOn = false;
@@ -115,27 +120,27 @@ GuiButtonBaseCtrl::GuiButtonBaseCtrl()
 void GuiButtonBaseCtrl::initPersistFields()
 {
    docsURL;
-   addGroup( "Button" );
-   	
-      addField( "text", TypeCaseString, Offset(mButtonText, GuiButtonBaseCtrl),
-         "Text label to display on button (if button class supports text labels)." );
-      addField( "textID", TypeString, Offset(mButtonTextID, GuiButtonBaseCtrl),
-         "ID of string in string table to use for text label on button.\n\n"
-         "@see setTextID\n"
-         "@see GuiControl::langTableMod\n"
-         "@see LangTable\n\n" );
-      addField( "groupNum", TypeS32, Offset(mRadioGroup, GuiButtonBaseCtrl),
-         "Radio button toggle group number.  All radio buttons that are assigned the same #groupNum and that "
-         "are parented to the same control will synchronize their toggle state, i.e. if one radio button is toggled on "
-         "all other radio buttons in its group will be toggled off.\n\n" 
-         "The default group is -1." );
-      addField( "buttonType", TYPEID< ButtonType >(), Offset(mButtonType, GuiButtonBaseCtrl),
-         "Button behavior type.\n" );
-      addField( "useMouseEvents", TypeBool, Offset(mUseMouseEvents, GuiButtonBaseCtrl),
-         "If true, mouse events will be passed on to script.  Default is false.\n" );
-      
-   endGroup( "Button" );
-   
+   addGroup("Button");
+
+   addField("text", TypeCaseString, Offset(mButtonText, GuiButtonBaseCtrl),
+      "Text label to display on button (if button class supports text labels).");
+   addField("textID", TypeString, Offset(mButtonTextID, GuiButtonBaseCtrl),
+      "ID of string in string table to use for text label on button.\n\n"
+      "@see setTextID\n"
+      "@see GuiControl::langTableMod\n"
+      "@see LangTable\n\n");
+   addField("groupNum", TypeS32, Offset(mRadioGroup, GuiButtonBaseCtrl),
+      "Radio button toggle group number.  All radio buttons that are assigned the same #groupNum and that "
+      "are parented to the same control will synchronize their toggle state, i.e. if one radio button is toggled on "
+      "all other radio buttons in its group will be toggled off.\n\n"
+      "The default group is -1.");
+   addField("buttonType", TYPEID< ButtonType >(), Offset(mButtonType, GuiButtonBaseCtrl),
+      "Button behavior type.\n");
+   addField("useMouseEvents", TypeBool, Offset(mUseMouseEvents, GuiButtonBaseCtrl),
+      "If true, mouse events will be passed on to script.  Default is false.\n");
+
+   endGroup("Button");
+
    Parent::initPersistFields();
 }
 
@@ -143,70 +148,70 @@ void GuiButtonBaseCtrl::initPersistFields()
 
 bool GuiButtonBaseCtrl::onWake()
 {
-   if(!Parent::onWake())
+   if (!Parent::onWake())
       return false;
 
    // is we have a script variable, make sure we're in sync
-   if ( mConsoleVariable[0] )
-   	mStateOn = Con::getBoolVariable( mConsoleVariable );
-   if(mButtonTextID && *mButtonTextID != 0)
-	   setTextID(mButtonTextID);
+   if (mConsoleVariable[0])
+      mStateOn = Con::getBoolVariable(mConsoleVariable);
+   if (mButtonTextID && *mButtonTextID != 0)
+      setTextID(mButtonTextID);
 
    return true;
 }
 
 //-----------------------------------------------------------------------------
 
-void GuiButtonBaseCtrl::setText( const char* text )
+void GuiButtonBaseCtrl::setText(const char* text)
 {
    mButtonText = StringTable->insert(text, true);
 }
 
 //-----------------------------------------------------------------------------
 
-void GuiButtonBaseCtrl::setTextID(const char *id)
+void GuiButtonBaseCtrl::setTextID(const char* id)
 {
-	S32 n = Con::getIntVariable(id, -1);
-	if(n != -1)
-	{
-		mButtonTextID = StringTable->insert(id);
-		setTextID(n);
-	}
+   S32 n = Con::getIntVariable(id, -1);
+   if (n != -1)
+   {
+      mButtonTextID = StringTable->insert(id);
+      setTextID(n);
+   }
 }
 
 //-----------------------------------------------------------------------------
 
 void GuiButtonBaseCtrl::setTextID(S32 id)
 {
-	const UTF8 *str = getGUIString(id);
-	if(str)
-		setText((const char*)str);
-	//mButtonTextID = id;
+   const UTF8* str = getGUIString(id);
+   if (str)
+      setText((const char*)str);
+   //mButtonTextID = id;
 }
 
 //-----------------------------------------------------------------------------
 
-const char *GuiButtonBaseCtrl::getText()
+const char* GuiButtonBaseCtrl::getText()
 {
    return mButtonText;
 }
 
 //-----------------------------------------------------------------------------
 
-void GuiButtonBaseCtrl::setStateOn( bool bStateOn )
+void GuiButtonBaseCtrl::setStateOn(bool bStateOn)
 {
-   if(!mActive)
+   if (!mActive)
       return;
 
-   if(mButtonType == ButtonTypeCheck)
+   if (mButtonType == ButtonTypeCheck)
    {
       mStateOn = bStateOn;
    }
-   else if(mButtonType == ButtonTypeRadio)
+   else if (mButtonType == ButtonTypeRadio)
    {
       messageSiblings(mRadioGroup);
       mStateOn = bStateOn;
-   }		
+   }
    setUpdate();
 }
 
@@ -214,7 +219,7 @@ void GuiButtonBaseCtrl::setStateOn( bool bStateOn )
 
 void GuiButtonBaseCtrl::acceleratorKeyPress(U32)
 {
-   if( !mActive )
+   if (!mActive)
       return;
 
    //set the bool
@@ -228,7 +233,7 @@ void GuiButtonBaseCtrl::acceleratorKeyPress(U32)
 
 void GuiButtonBaseCtrl::acceleratorKeyRelease(U32)
 {
-   if (! mActive)
+   if (!mActive)
       return;
 
    if (mDepressed)
@@ -245,9 +250,9 @@ void GuiButtonBaseCtrl::acceleratorKeyRelease(U32)
 
 //-----------------------------------------------------------------------------
 
-void GuiButtonBaseCtrl::onMouseDown(const GuiEvent &event)
+void GuiButtonBaseCtrl::onMouseDown(const GuiEvent& event)
 {
-   if (! mActive)
+   if (!mActive)
       return;
 
    if (mProfile->mCanKeyFocus)
@@ -255,19 +260,19 @@ void GuiButtonBaseCtrl::onMouseDown(const GuiEvent &event)
 
    if (mProfile->isSoundButtonDownValid())
       SFX->playOnce(mProfile->getSoundButtonDownProfile());
-      
+
    mMouseDownPoint = event.mousePoint;
    mMouseDragged = false;
 
-   if( mUseMouseEvents )
-	  onMouseDown_callback();
+   if (mUseMouseEvents)
+      onMouseDown_callback();
 
    //lock the mouse
    mouseLock();
    mDepressed = true;
 
    // If we have a double click then execute the alt command.
-   if ( event.mouseClickCount == 2 )
+   if (event.mouseClickCount == 2)
    {
       onDoubleClick_callback();
       execAltConsoleCallback();
@@ -279,17 +284,18 @@ void GuiButtonBaseCtrl::onMouseDown(const GuiEvent &event)
 
 //-----------------------------------------------------------------------------
 
-void GuiButtonBaseCtrl::onMouseEnter(const GuiEvent &event)
+void GuiButtonBaseCtrl::onMouseEnter(const GuiEvent& event)
 {
    setUpdate();
 
-   if( mUseMouseEvents )
+   if (mUseMouseEvents)
       onMouseEnter_callback();
 
-   if(isMouseLocked())
+   if (isMouseLocked())
    {
       mDepressed = true;
       mHighlighted = true;
+      onHighlighted_callback(mHighlighted);
    }
    else
    {
@@ -297,38 +303,42 @@ void GuiButtonBaseCtrl::onMouseEnter(const GuiEvent &event)
          SFX->playOnce(mProfile->getSoundButtonOverProfile());
 
       mHighlighted = true;
+      messageSiblings(mRadioGroup);
+      onHighlighted_callback(mHighlighted);
    }
 }
 
 //-----------------------------------------------------------------------------
 
-void GuiButtonBaseCtrl::onMouseLeave(const GuiEvent &)
+void GuiButtonBaseCtrl::onMouseLeave(const GuiEvent&)
 {
    setUpdate();
 
-   if( mUseMouseEvents )
+   if (mUseMouseEvents)
       onMouseLeave_callback();
-   if( isMouseLocked() )
+   if (isMouseLocked())
       mDepressed = false;
    mHighlighted = false;
+   onHighlighted_callback(mHighlighted);
+   messageSiblings(mRadioGroup);
 }
 
 //-----------------------------------------------------------------------------
 
-void GuiButtonBaseCtrl::onMouseUp(const GuiEvent &event)
+void GuiButtonBaseCtrl::onMouseUp(const GuiEvent& event)
 {
    mouseUnlock();
 
-   if( !mActive )
+   if (!mActive)
       return;
-   
+
    setUpdate();
 
-   if( mUseMouseEvents )
+   if (mUseMouseEvents)
       onMouseUp_callback();
 
    //if we released the mouse within this control, perform the action
-   if( mDepressed )
+   if (mDepressed)
       onAction();
 
    mDepressed = false;
@@ -337,38 +347,38 @@ void GuiButtonBaseCtrl::onMouseUp(const GuiEvent &event)
 
 //-----------------------------------------------------------------------------
 
-void GuiButtonBaseCtrl::onRightMouseUp(const GuiEvent &event)
+void GuiButtonBaseCtrl::onRightMouseUp(const GuiEvent& event)
 {
    onRightClick_callback();
-   Parent::onRightMouseUp( event );
+   Parent::onRightMouseUp(event);
 }
 
 //-----------------------------------------------------------------------------
 
-void GuiButtonBaseCtrl::onMouseDragged( const GuiEvent& event )
+void GuiButtonBaseCtrl::onMouseDragged(const GuiEvent& event)
 {
-   if( mUseMouseEvents )
+   if (mUseMouseEvents)
    {
       // If we haven't started a drag yet, find whether we have moved past
       // the tolerance value.
-      
-      if( !mMouseDragged )
+
+      if (!mMouseDragged)
       {
          Point2I delta = mMouseDownPoint - event.mousePoint;
-         if( mAbs( delta.x ) > 2 || mAbs( delta.y ) > 2 )
+         if (mAbs(delta.x) > 2 || mAbs(delta.y) > 2)
             mMouseDragged = true;
       }
-      
-      if( mMouseDragged )
+
+      if (mMouseDragged)
          onMouseDragged_callback();
    }
-      
-   Parent::onMouseDragged( event );
+
+   Parent::onMouseDragged(event);
 }
 
 //-----------------------------------------------------------------------------
 
-bool GuiButtonBaseCtrl::onKeyDown(const GuiEvent &event)
+bool GuiButtonBaseCtrl::onKeyDown(const GuiEvent& event)
 {
    //if the control is a dead end, kill the event
    if (!mActive)
@@ -376,7 +386,7 @@ bool GuiButtonBaseCtrl::onKeyDown(const GuiEvent &event)
 
    //see if the key down is a return or space or not
    if ((event.keyCode == KEY_RETURN || event.keyCode == KEY_SPACE)
-       && event.modifier == 0)
+      && event.modifier == 0)
    {
       if (mProfile->isSoundButtonDownValid())
          SFX->playOnce(mProfile->getSoundButtonDownProfile());
@@ -389,7 +399,7 @@ bool GuiButtonBaseCtrl::onKeyDown(const GuiEvent &event)
 
 //-----------------------------------------------------------------------------
 
-bool GuiButtonBaseCtrl::onKeyUp(const GuiEvent &event)
+bool GuiButtonBaseCtrl::onKeyUp(const GuiEvent& event)
 {
    //if the control is a dead end, kill the event
    if (!mActive)
@@ -410,64 +420,83 @@ bool GuiButtonBaseCtrl::onKeyUp(const GuiEvent &event)
 
 //-----------------------------------------------------------------------------
 
-void GuiButtonBaseCtrl::setScriptValue(const char *value)
+void GuiButtonBaseCtrl::setScriptValue(const char* value)
 {
-	mStateOn = dAtob(value);
+   mStateOn = dAtob(value);
 
-	// Update the console variable:
-	if ( mConsoleVariable[0] )
-		Con::setBoolVariable( mConsoleVariable, mStateOn );
+   // Update the console variable:
+   if (mConsoleVariable[0])
+      Con::setBoolVariable(mConsoleVariable, mStateOn);
 
    setUpdate();
 }
 
 //-----------------------------------------------------------------------------
 
-const char *GuiButtonBaseCtrl::getScriptValue()
+const char* GuiButtonBaseCtrl::getScriptValue()
 {
-	return mStateOn ? "1" : "0";
+   return mStateOn ? "1" : "0";
 }
 
 //-----------------------------------------------------------------------------
 
 void GuiButtonBaseCtrl::onAction()
 {
-    if(!mActive)
-        return;
+   if (!mActive)
+      return;
 
-    if(mButtonType == ButtonTypeCheck)
-    {
-        mStateOn = mStateOn ? false : true;
+   if (mButtonType == ButtonTypeCheck)
+   {
+      mStateOn = mStateOn ? false : true;
    }
-   else if(mButtonType == ButtonTypeRadio)
-    {
-        mStateOn = true;
-        messageSiblings(mRadioGroup);
-    }
-    setUpdate();
+   else if (mButtonType == ButtonTypeRadio)
+   {
+      mStateOn = true;
+      messageSiblings(mRadioGroup);
+   }
+   setUpdate();
 
    // Update the console variable:
-   if ( mConsoleVariable[0] )
-      Con::setBoolVariable( mConsoleVariable, mStateOn );
+   if (mConsoleVariable[0])
+      Con::setBoolVariable(mConsoleVariable, mStateOn);
 
-    onClick_callback();
-    Parent::onAction();
+   onClick_callback();
+   Parent::onAction();
 }
 
 //-----------------------------------------------------------------------------
 
-void GuiButtonBaseCtrl::onMessage( GuiControl *sender, S32 msg )
+void GuiButtonBaseCtrl::onMessage(GuiControl* sender, S32 msg)
 {
-	Parent::onMessage(sender, msg);
-	if( mRadioGroup == msg && mButtonType == ButtonTypeRadio )
-	{
-		setUpdate();
-		mStateOn = ( sender == this );
+   Parent::onMessage(sender, msg);
+   if (mRadioGroup == msg)
+   {
+      if (mButtonType == ButtonTypeRadio)
+      {
+         setUpdate();
+         mStateOn = (sender == this);
 
-		// Update the console variable:
-		if ( mConsoleVariable[0] )
-			Con::setBoolVariable( mConsoleVariable, mStateOn );
-	}
+         // Update the console variable:
+         if (mConsoleVariable[0])
+            Con::setBoolVariable(mConsoleVariable, mStateOn);
+      }
+      else if (mButtonType == ButtonTypePush)
+      {
+         mHighlighted = (sender == this);
+         onHighlighted_callback(mHighlighted);
+      }
+   }
+}
+
+void GuiButtonBaseCtrl::setHighlighted(bool highlighted)
+{
+   mHighlighted = highlighted;
+   onHighlighted_callback(mHighlighted);
+
+   if (mRadioGroup != -1)
+   {
+      messageSiblings(mRadioGroup);
+   }
 }
 
 //=============================================================================
@@ -477,69 +506,69 @@ void GuiButtonBaseCtrl::onMessage( GuiControl *sender, S32 msg )
 
 //-----------------------------------------------------------------------------
 
-DefineEngineMethod( GuiButtonBaseCtrl, performClick, void, (),,
+DefineEngineMethod(GuiButtonBaseCtrl, performClick, void, (), ,
    "Simulate a click on the button.\n"
    "This method will trigger the button's action just as if the button had been pressed by the "
-   "user.\n\n" )
+   "user.\n\n")
 {
    object->onAction();
 }
 
 //-----------------------------------------------------------------------------
 
-DefineEngineMethod( GuiButtonBaseCtrl, setText, void, ( const char* text ),,
+DefineEngineMethod(GuiButtonBaseCtrl, setText, void, (const char* text), ,
    "Set the text displayed on the button's label.\n"
    "@param text The text to display as the button's text label.\n"
    "@note Not all buttons render text labels.\n\n"
    "@see getText\n"
-   "@see setTextID\n" )
+   "@see setTextID\n")
 {
-   object->setText( text );
+   object->setText(text);
 }
 
 //-----------------------------------------------------------------------------
 
-DefineEngineMethod( GuiButtonBaseCtrl, setTextID, void, ( const char* id ),,
+DefineEngineMethod(GuiButtonBaseCtrl, setTextID, void, (const char* id), ,
    "Set the text displayed on the button's label using a string from the string table "
    "assigned to the control.\n\n"
    "@param id Name of the variable that contains the integer string ID.  Used to look up "
-      "string in table.\n\n"
+   "string in table.\n\n"
    "@note Not all buttons render text labels.\n\n"
    "@see setText\n"
    "@see getText\n"
    "@see GuiControl::langTableMod\n"
    "@see LangTable\n\n"
-   "@ref Gui_i18n" )
+   "@ref Gui_i18n")
 {
-	object->setTextID( id );
+   object->setTextID(id);
 }
 
 //-----------------------------------------------------------------------------
 
-DefineEngineMethod( GuiButtonBaseCtrl, getText, const char*, (),,
+DefineEngineMethod(GuiButtonBaseCtrl, getText, const char*, (), ,
    "Get the text display on the button's label (if any).\n\n"
-   "@return The button's label." )
+   "@return The button's label.")
 {
-   return object->getText( );
+   return object->getText();
 }
 
 //-----------------------------------------------------------------------------
 
-DefineEngineMethod( GuiButtonBaseCtrl, setStateOn, void, ( bool isOn ), ( true ),
+DefineEngineMethod(GuiButtonBaseCtrl, setStateOn, void, (bool isOn), (true),
    "For toggle or radio buttons, set whether the button is currently activated or not.  For radio buttons, "
    "toggling a button on will toggle all other radio buttons in its group to off.\n\n"
    "@param isOn If true, the button will be toggled on (if not already); if false, it will be toggled off.\n\n"
    "@note Toggling the state of a button with this method will <em>not</em> not trigger the action associated with the "
-      "button.  To do that, use performClick()." )
+   "button.  To do that, use performClick().")
 {
-   object->setStateOn( isOn );
+   object->setStateOn(isOn);
 }
 
 //-----------------------------------------------------------------------------
 
-DefineEngineMethod( GuiButtonBaseCtrl, resetState, void, (),,
+DefineEngineMethod(GuiButtonBaseCtrl, resetState, void, (), ,
    "Reset the mousing state of the button.\n\n"
-   "This method should not generally be called." )
+   "This method should not generally be called.")
 {
    object->resetState();
 }
@@ -551,7 +580,7 @@ DefineEngineMethod(GuiButtonBaseCtrl, setHighlighted, void, (bool highlighted), 
    object->setHighlighted(highlighted);
 }
 
-DefineEngineMethod(GuiButtonBaseCtrl, isHighlighted, bool, (),,
+DefineEngineMethod(GuiButtonBaseCtrl, isHighlighted, bool, (), ,
    "Reset the mousing state of the button.\n\n"
    "This method should not generally be called.")
 {

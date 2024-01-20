@@ -54,7 +54,6 @@ public:
   static void   initPersistFields();
 
   DECLARE_CONOBJECT(afxAreaDamageData);
-  DECLARE_CATEGORY("AFX");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

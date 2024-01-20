@@ -1,40 +1,38 @@
 //--- OBJECT WRITE BEGIN ---
-$guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
-   BitmapAsset = "UI:backgrounddark_image";
-   extent = "1024 768";
+$guiContent = new GuiControl(MainMenuGui) {
+   extent = "1280 720";
    minExtent = "8 8";
    horizSizing = "width";
    vertSizing = "height";
-   profile = "GuiDefaultProfile";
+   profile = "GuiMenuBackgroundProfile";
+   category = "BaseUI";
    tooltipProfile = "GuiToolTipProfile";
    isContainer = "1";
-   superClass = "UINavigation";
-   canSaveDynamicFields = "0";
-   
+   canSaveDynamicFields = "1";
+
+   new GuiInputCtrl(MainMenuInputHandler) {
+      ignoreMouseEvents = "1";
+      ActionMap = "BaseUIActionMap";
+      position = "-50 0";
+      extent = "2186 851";
+      horizSizing = "width";
+      vertSizing = "height";
+      profile = "GuiInputCtrlProfile";
+      tooltipProfile = "GuiToolTipProfile";
+   };
    new GuiBitmapCtrl(SideBackgroundImage) {
-      bitmapAsset = "UI:menu_side_background_image";
-      color = "255 255 255 255";
-      wrap = "0";
-      position = "0 0";
+      BitmapAsset = "UI:menu_side_background_image";
+      position = "0 -48";
       extent = "900 600";
-      minExtent = "8 2";
-      horizSizing = "right";
       vertSizing = "top";
       profile = "GuiDefaultProfile";
-      visible = "1";
-      active = "1";
       tooltipProfile = "GuiToolTipProfile";
-      hovertime = "1000";
-      isContainer = "0";
-      canSave = "1";
-      canSaveDynamicFields = "0";
    };
-
    new GuiBitmapCtrl(MainMenuAppLogo) {
       BitmapAsset = "UI:Torque_3D_logo_image";
-      position = "550 30";
+      position = "460 78";
       extent = "360 100";
-      horizSizing = "left";
+      horizSizing = "center";
       profile = "GuiDefaultProfile";
       tooltipProfile = "GuiToolTipProfile";
       canSaveDynamicFields = "1";
@@ -46,98 +44,108 @@ $guiContent = new GuiChunkedBitmapCtrl(MainMenuGui) {
          useModifiers = "0";
          useStates = "1";
    };
-   new GuiControl(MainMenuButtonHolder) {
-      position = "143 711";
-      extent = "736 40";
-      horizSizing = "center";
+   new GuiPanel(MainMenuButtonPanel) {
+      position = "0 683";
+      extent = "1281 40";
+      horizSizing = "width";
       vertSizing = "top";
+      profile = "GuiMenuPanelProfile";
+      tooltipProfile = "GuiToolTipProfile";
+
+      new GuiIconButtonCtrl(MainMenuGoButton) {
+         BitmapAsset = "UI:Keyboard_Black_Return_image";
+         sizeIconToButton = "1";
+         makeIconSquare = "1";
+         textLocation = "Center";
+         text = "Go";
+         position = "1115 0";
+         extent = "140 40";
+         horizSizing = "left";
+         vertSizing = "center";
+         profile = "GuiMenuButtonProfile";
+         command = "activateSelected();";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+   };
+   new GuiStackControl(MainMenuButtonList) {
+      padding = "5";
+      dynamicSize = "0";
+      position = "440 199";
+      extent = "400 322";
+      horizSizing = "center";
+      vertSizing = "center";
       profile = "GuiDefaultProfile";
       tooltipProfile = "GuiToolTipProfile";
-      isContainer = "1";
-      class = "MenuInputButtonContainer";
 
-      new GuiIconButtonCtrl() {
-         BitmapAsset = "UI:Keyboard_Black_Return_image";
-         sizeIconToButton = "1";
-         makeIconSquare = "1";
-         textLocation = "Right";
-         text = "Go";
-         position = "11 0";
-         extent = "140 40";
+      new GuiButtonCtrl(MainMenuSinglePlayerBtn) {
+         text = "Single Player";
+         extent = "400 40";
          profile = "GuiMenuButtonProfile";
-         command = "MainMenuButtonList.activate();";
+         command = "$pref::HostMultiPlayer=false;\nCanvas.pushDialog(ChooseLevelMenu);";
          tooltipProfile = "GuiToolTipProfile";
-         internalName = "button1";
-         class = "MenuInputButton";
+         class="MainMenuButton";
+         groupNum = 1;
       };
-      new GuiIconButtonCtrl() {
-         BitmapAsset = "UI:Keyboard_Black_Return_image";
-         sizeIconToButton = "1";
-         makeIconSquare = "1";
-         textLocation = "Right";
-         text = "Go";
-         position = "155 0";
-         extent = "140 40";
+      new GuiButtonCtrl(MainMenuCreateSrvrBtn) {
+         text = "Create Server";
+         position = "0 45";
+         extent = "400 40";
          profile = "GuiMenuButtonProfile";
-         command = "MainMenuButtonList.activate();";
+         command = "$pref::HostMultiPlayer=true;Canvas.pushDialog(ChooseLevelMenu);";
          tooltipProfile = "GuiToolTipProfile";
-         internalName = "button2";
-         class = "MenuInputButton";
+         class="MainMenuButton";
+         groupNum = 1;
       };
-      new GuiIconButtonCtrl() {
-         BitmapAsset = "UI:Keyboard_Black_Return_image";
-         sizeIconToButton = "1";
-         makeIconSquare = "1";
-         textLocation = "Right";
-         text = "Go";
-         position = "299 0";
-         extent = "140 40";
+      new GuiButtonCtrl(MainMenuJoinSrvrBtn) {
+         text = "Join Server";
+         position = "0 90";
+         extent = "400 40";
          profile = "GuiMenuButtonProfile";
-         command = "MainMenuButtonList.activate();";
+         command = "Canvas.pushDialog(JoinServerMenu);";
          tooltipProfile = "GuiToolTipProfile";
-         internalName = "button3";
-         class = "MenuInputButton";
+         class="MainMenuButton";
+         groupNum = 1;
       };
-      new GuiIconButtonCtrl() {
-         BitmapAsset = "UI:Keyboard_Black_Return_image";
-         sizeIconToButton = "1";
-         makeIconSquare = "1";
-         textLocation = "Right";
-         text = "Go";
-         position = "443 0";
-         extent = "140 40";
+      new GuiButtonCtrl(MainMenuOptionBtn) {
+         text = "Options";
+         position = "0 135";
+         extent = "400 40";
          profile = "GuiMenuButtonProfile";
-         command = "MainMenuButtonList.activate();";
+         command = "Canvas.pushDialog(OptionsMenu);";
          tooltipProfile = "GuiToolTipProfile";
-         internalName = "button4";
-         class = "MenuInputButton";
-   };
-      new GuiIconButtonCtrl() {
-         BitmapAsset = "UI:Keyboard_Black_Return_image";
-         sizeIconToButton = "1";
-         makeIconSquare = "1";
-         textLocation = "Right";
-         text = "Go";
-         position = "587 0";
-         extent = "140 40";
-         profile = "GuiMenuButtonProfile";
-         command = "MainMenuButtonList.activate();";
-         tooltipProfile = "GuiToolTipProfile";
-         internalName = "button5";
-         class = "MenuInputButton";
+         class="MainMenuButton";
+         groupNum = 1;
       };
-   };
-   new GuiInputCtrl(MainMenuInputHandler) {
-      sendAxisEvents = "1";
-      sendBreakEvents = "1";
-      ignoreMouseEvents = "1";
-      position = "-50 0";
-      extent = "10 10";
-      horizSizing = "width";
-      vertSizing = "height";
-      profile = "GuiInputCtrlProfile";
-      tooltipProfile = "GuiToolTipProfile";
-      class = "MenuInputHandler";
+      new GuiButtonCtrl(MainMenuWorldEditBtn) {
+         text = "Open World Editor (F11)";
+         position = "0 180";
+         extent = "400 40";
+         profile = "GuiMenuButtonProfile";
+         command = "fastLoadWorldEdit(1);";
+         tooltipProfile = "GuiToolTipProfile";
+         class="MainMenuButton";
+         groupNum = 1;
+      };
+      new GuiButtonCtrl(MainMenuGuiEditBtn) {
+         text = "Open GUI Editor (F10)";
+         position = "0 225";
+         extent = "400 40";
+         profile = "GuiMenuButtonProfile";
+         command = "fastLoadGUIEdit(1);";
+         tooltipProfile = "GuiToolTipProfile";
+         class="MainMenuButton";
+         groupNum = 1;
+      };
+      new GuiButtonCtrl(MainMenuExitBtn) {
+         text = "Exit";
+         position = "0 270";
+         extent = "400 40";
+         profile = "GuiMenuButtonProfile";
+         command = "quit();";
+         tooltipProfile = "GuiToolTipProfile";
+         class="MainMenuButton";
+         groupNum = 1;
+      };
    };
 };
 //--- OBJECT WRITE END ---

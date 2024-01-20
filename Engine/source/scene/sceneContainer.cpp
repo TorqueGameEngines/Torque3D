@@ -320,7 +320,7 @@ struct SceneRayHelper
                RayInfo ri;
                ri.generateTexCoord = info->generateTexCoord;
 
-               if (mFunc && !mFunc(&ri))
+               if (mFunc && !mFunc(ptr))
                   return false;
 
                bool result = false;

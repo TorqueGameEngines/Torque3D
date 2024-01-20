@@ -53,7 +53,6 @@ public:
   afxXM_Base*   create(afxEffectWrapper* fx, bool on_server);
 
   DECLARE_CONOBJECT(afxXM_BoxConformData);
-  DECLARE_CATEGORY("AFX");
 };
 
 class afxXM_BoxConform : public afxXM_Base

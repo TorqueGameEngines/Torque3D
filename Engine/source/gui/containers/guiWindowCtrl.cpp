@@ -79,7 +79,7 @@ GuiWindowCtrl::GuiWindowCtrl()
       mResizeEdge(edgeNone),
       mResizeHeight(true),
       mCanMove(true),
-      mResizeMargin(2.f),
+      mResizeMargin(5.f),
       mCanClose(true),
       mCanMinimize(true),
       mCanMaximize(true),
@@ -143,6 +143,8 @@ void GuiWindowCtrl::initPersistFields()
          "Whether the window can be resized horizontally." );
       addField( "resizeHeight",      TypeBool,         Offset( mResizeHeight, GuiWindowCtrl ),
          "Whether the window can be resized vertically." );
+      addField("resizeMargin", TypeF32, Offset(mResizeMargin, GuiWindowCtrl),
+         "Margin along the window edge to allow grabbing.");
       addField( "canMove",           TypeBool,         Offset( mCanMove, GuiWindowCtrl ),
          "Whether the window can be moved by dragging its titlebar." );
       addField( "canClose",          TypeBool,         Offset( mCanClose, GuiWindowCtrl ),
@@ -1490,7 +1492,7 @@ const RectI GuiWindowCtrl::getClientRect()
    // Finally, inset it by padding
    // Inset by padding.  margin is specified for all t/b/l/r but 
    // uses only pointx pointy uniformly on both ends. This should be fixed. - JDD
-   // winRect.inset( mSizingOptions.mPadding.point.x, mSizingOptions.mPadding.point.y );
+   winRect.inset(mResizeMargin, mResizeMargin);
 
    return winRect;
 }

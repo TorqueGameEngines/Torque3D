@@ -450,7 +450,7 @@ void ArrayObject::append(ArrayObject* obj)
 
 void ArrayObject::setKey( const String &key, S32 index )
 {
-   if ( index >= mArray.size() )
+   if (index >= mArray.size() || index < 0)
       return;
 
    mArray[index].key = key;
@@ -460,7 +460,7 @@ void ArrayObject::setKey( const String &key, S32 index )
 
 void ArrayObject::setValue( const String &value, S32 index )
 {
-   if ( index >= mArray.size() )
+   if (index >= mArray.size() || index < 0)
       return;
    
    mArray[index].value = value;
@@ -598,6 +598,22 @@ DefineEngineMethod( ArrayObject, getIndexFromKey, S32, ( const char* key ),,
    "@return Index of the first element found, or -1 if none\n" )
 {
    return object->getIndexFromKey( key );
+}
+
+DefineEngineMethod(ArrayObject, getValueFromKey, const char*, (const char* key), ,
+   "Search the array from the current position for the Key "
+   "@param value Array key to search for\n"
+   "@return Value of the first element found, or -1 if none\n")
+{
+   return object->getValueFromIndex(object->getIndexFromKey(key)).c_str();
+}
+
+DefineEngineMethod(ArrayObject, getKeyFromValue, const char*, (const char* key), ,
+   "Search the array from the current position for the Value "
+   "@param value Array key to search for\n"
+   "@return Key of the first element found, or -1 if none\n")
+{
+   return object->getKeyFromIndex(object->getIndexFromValue(key)).c_str();
 }
 
 DefineEngineMethod( ArrayObject, getValue, const char*, ( S32 index ),,

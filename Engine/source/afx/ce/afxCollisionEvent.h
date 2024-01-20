@@ -51,7 +51,6 @@ public:
   static void           initPersistFields();
 
   DECLARE_CONOBJECT(afxCollisionEventData);
-  DECLARE_CATEGORY("AFX");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

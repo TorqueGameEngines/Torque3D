@@ -17,6 +17,6 @@
 	<key>CFBundleVersion</key>
 	<string>1.0</string>
     <key>SDL_FILESYSTEM_BASE_DIR_TYPE</key>
-    <string>parent</string>
+    <string>$(SDL_FILE_DIR)</string>
 </dict>
 </plist>

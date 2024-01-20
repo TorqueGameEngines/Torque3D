@@ -390,6 +390,7 @@ public:
 
    // Declare Console Object.
    DECLARE_CONOBJECT(fxFoliageReplicator);
+   DECLARE_CATEGORY("UNLISTED");
 };
 #pragma warning( pop ) 
 #endif // _FOLIAGEREPLICATOR_H_

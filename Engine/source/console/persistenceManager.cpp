@@ -1358,7 +1358,7 @@ void PersistenceManager::updateObject(SimObject* object, ParsedObject* parentObj
       const AbstractClassRep::Field* f = &list[i];
 
       // Skip the special field types.
-      if ( f->type >= AbstractClassRep::ARCFirstCustomField )
+      if ( f->type >= AbstractClassRep::ARCFirstCustomField || f->flag.test(AbstractClassRep::FieldFlags::FIELD_ComponentInspectors))
          continue;
 
       for(U32 j = 0; S32(j) < f->elementCount; j++)

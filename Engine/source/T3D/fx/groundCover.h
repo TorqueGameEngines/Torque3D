@@ -123,6 +123,7 @@ public:
    ~GroundCover();
 
    DECLARE_CONOBJECT(GroundCover);
+   DECLARE_CATEGORY("Environment \t BackGround");
 
    static void consoleInit();
    static void initPersistFields();

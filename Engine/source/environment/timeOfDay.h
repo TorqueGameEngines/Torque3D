@@ -76,6 +76,7 @@ public:
 	static void initPersistFields();
    static void consoleInit();
    DECLARE_CONOBJECT( TimeOfDay );
+   DECLARE_CATEGORY("Environment \t Weather");
    void inspectPostApply();
 
    // SimObject

@@ -1768,10 +1768,10 @@ void GuiConvexEditorCtrl::submitUndo( UndoType type, const Vector<ConvexShape*> 
 	mIsDirty = true;
 }
 
-bool GuiConvexEditorCtrl::_cursorCastCallback( RayInfo* ri )
+bool GuiConvexEditorCtrl::_cursorCastCallback( SceneObject* object )
 {
    // Reject anything that's not a ConvexShape.
-   return dynamic_cast< ConvexShape* >( ri->object );
+   return dynamic_cast< ConvexShape* >( object );
 }
 
 bool GuiConvexEditorCtrl::_cursorCast( const Gui3DMouseEvent &event, ConvexShape **hitShape, S32 *hitFace )

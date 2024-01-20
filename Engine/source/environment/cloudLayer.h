@@ -68,6 +68,7 @@ public:
    virtual ~CloudLayer() {}
 
    DECLARE_CONOBJECT( CloudLayer );
+   DECLARE_CATEGORY("Environment \t Weather");
 
    // ConsoleObject
    virtual bool onAdd();

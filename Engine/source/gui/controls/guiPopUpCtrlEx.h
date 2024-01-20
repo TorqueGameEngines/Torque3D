@@ -35,6 +35,7 @@
 #ifndef _GUISCROLLCTRL_H_
 #include "gui/containers/guiScrollCtrl.h"
 #endif
+#include "guiTextEditCtrl.h"
 class GuiPopUpMenuCtrlEx;
 class GuiPopupTextListCtrlEx;
 
@@ -118,6 +119,8 @@ class GuiPopUpMenuCtrlEx : public GuiTextCtrl
    bool mRenderScrollInNA; //  Added
    bool mReverseTextList;	//  Added - Should we reverse the text list if we display up?
    bool mHotTrackItems;
+   bool mTextSearchItems;
+   String mSearchText;
 
    enum BitmapModes
    {
@@ -134,7 +137,10 @@ class GuiPopUpMenuCtrlEx : public GuiTextCtrl
 
 	S32 mIdMax;
 
+   GuiTextEditCtrl* mSearchEdit; //  Added
+
    virtual void addChildren();
+   virtual void removeChildren();
    virtual void repositionPopup();
 
    static bool _setBitmaps(void* obj, const char* index, const char* data);
@@ -143,9 +149,10 @@ class GuiPopUpMenuCtrlEx : public GuiTextCtrl
    GuiPopUpMenuCtrlEx(void);
    ~GuiPopUpMenuCtrlEx();   
    GuiScrollCtrl::Region mScrollDir;
-   bool onWake(); //  Added
-   bool onAdd();
-   void onSleep();
+   virtual bool onWake(); //  Added
+   virtual void onRemove();
+   virtual bool onAdd();
+   virtual void onSleep();
    void setBitmap(const char *name); //  Added
    void sort();
    void sortID(); //  Added
@@ -176,6 +183,8 @@ class GuiPopUpMenuCtrlEx : public GuiTextCtrl
    S32 findText( const char* text );
    S32 getNumEntries()   { return( mEntries.size() ); }
    void replaceText(S32);
+
+   void setSearchText(String searchTxt) { mSearchText = String::ToLower(searchTxt); onAction();  }
    
    DECLARE_CONOBJECT(GuiPopUpMenuCtrlEx);
    DECLARE_CATEGORY( "Gui Lists" );

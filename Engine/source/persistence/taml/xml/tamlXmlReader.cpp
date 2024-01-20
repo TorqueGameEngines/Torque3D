@@ -119,6 +119,8 @@ SimObject* TamlXmlReader::parseElement( tinyxml2::XMLElement* pXmlElement )
     if ( pSimObject == NULL )
         return NULL;
 
+    pSimObject->setFilename(mpTaml->getFilePathBuffer());
+
     // Find Taml callbacks.
     TamlCallbacks* pCallbacks = dynamic_cast<TamlCallbacks*>( pSimObject );
 

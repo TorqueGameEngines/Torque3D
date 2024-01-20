@@ -87,6 +87,7 @@ public:
    void advanceTime(F32 dt);
 
    DECLARE_CONOBJECT(RibbonNode);
+   DECLARE_CATEGORY("Environment \t FX");
    static void initPersistFields();
 
    U32  packUpdate  (NetConnection *conn, U32 mask, BitStream* stream);

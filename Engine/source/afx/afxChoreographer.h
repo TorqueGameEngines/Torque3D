@@ -57,7 +57,6 @@ public:
   static void   initPersistFields();
 
   DECLARE_CONOBJECT(afxChoreographerData);
-  DECLARE_CATEGORY("AFX");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
@@ -200,7 +199,7 @@ public:
   virtual void  impactNotify(const Point3F& p, const Point3F& n, SceneObject*) { }
 
   DECLARE_CONOBJECT(afxChoreographer);
-  DECLARE_CATEGORY("AFX");
+  DECLARE_CATEGORY("UNLISTED");
   
   // CONSTRAINT REMAPPING <<
 protected:

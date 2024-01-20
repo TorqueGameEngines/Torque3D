@@ -646,7 +646,7 @@ StringTableEntry Platform::getExecutablePath()
          return cwd;
       }
       
-      NSString* string = [[NSBundle mainBundle] pathForResource:@"main" ofType:@"cs"];
+      NSString* string = [[NSBundle mainBundle] pathForResource:@"main" ofType:@"tscript"];
       if(!string)
          string = [[NSBundle mainBundle] bundlePath];
       

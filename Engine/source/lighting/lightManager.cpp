@@ -248,7 +248,7 @@ void LightManager::registerGlobalLights( const Frustum *frustum, bool staticLigh
       // the shape bounds and can often get culled.
 
       GameConnection *conn = GameConnection::getConnectionToServer();
-      if (conn->getControlObject())
+      if (conn && conn->getControlObject())
       {
          GameBase *conObject = conn->getControlObject();
          activeLights.push_back_unique(conObject);
@@ -333,7 +333,7 @@ void LightManager::_update4LightConsts(   const SceneData &sgData,
       static AlignedArray<Point4F> lightSpotDirs(MAX_FORWARD_LIGHTS, sizeof(Point4F));
       static AlignedArray<Point4F> lightColors(MAX_FORWARD_LIGHTS, sizeof(Point4F));
       static AlignedArray<Point4F> lightConfigData(MAX_FORWARD_LIGHTS, sizeof(Point4F)); //type, brightness, range, invSqrRange : rgba
-      static AlignedArray<Point2F> lightSpotParams(MAX_FORWARD_LIGHTS, sizeof(Point2F));
+      static AlignedArray<Point2F> lightSpotParams(MAX_FORWARD_LIGHTS, sizeof(Point4F));
 
       dMemset(lightPositions.getBuffer(), 0, lightPositions.getBufferSize());
       dMemset(lightSpotDirs.getBuffer(), 0, lightSpotDirs.getBufferSize());
@@ -352,11 +352,12 @@ void LightManager::_update4LightConsts(   const SceneData &sgData,
       vectorLightDirection = Point4F::Zero;
       vectorLightColor = Point4F::Zero;
       vectorLightAmbientColor = Point4F::Zero;
-
+      F32 luxTargMultiplier[MAX_FORWARD_LIGHTS];
       // Gather the data for the first 4 lights.
       const LightInfo* light;
       for (U32 i = 0; i < MAX_FORWARD_LIGHTS; i++)
       {
+         luxTargMultiplier[i] = 1.0;
          light = sgData.lights[i];
          if (!light)
             break;
@@ -371,48 +372,52 @@ void LightManager::_update4LightConsts(   const SceneData &sgData,
             vectorLightColor = Point4F(light->getColor());
             vectorLightAmbientColor = Point4F(light->getAmbient());
             hasVectorLight = 1;
-            continue;
          }
-
-         // The light positions and spot directions are 
-         // in SoA order to make optimal use of the GPU.
-         const Point3F& lightPos = light->getPosition();
-         lightPositions[i].x = lightPos.x;
-         lightPositions[i].y = lightPos.y;
-         lightPositions[i].z = lightPos.z;
-         lightPositions[i].w = 0;
-
-         const VectorF& lightDir = light->getDirection();
-         lightSpotDirs[i].x = lightDir.x;
-         lightSpotDirs[i].y = lightDir.y;
-         lightSpotDirs[i].z = lightDir.z;
-         lightSpotDirs[i].w = 0;
-
-         lightColors[i] = Point4F(light->getColor());
-
-         if (light->getType() == LightInfo::Point)
+         else
          {
-            lightConfigData[i].x = 0;
+            // The light positions and spot directions are 
+            // in SoA order to make optimal use of the GPU.
+            const Point3F& lightPos = light->getPosition();
+            lightPositions[i].x = lightPos.x;
+            lightPositions[i].y = lightPos.y;
+            lightPositions[i].z = lightPos.z;
+            lightPositions[i].w = 0;
+
+            lightColors[i] = Point4F(light->getColor());
+
+            F32 range = light->getRange().x;
+            lightConfigData[i].z = range;
+
+            if (light->getType() == LightInfo::Point)
+            {
+               lightConfigData[i].x = 0;
+               luxTargMultiplier[i] = range;
+            }
+            else if (light->getType() == LightInfo::Spot)
+            {
+               const VectorF& lightDir = light->getDirection();
+               lightSpotDirs[i].x = lightDir.x;
+               lightSpotDirs[i].y = lightDir.y;
+               lightSpotDirs[i].z = lightDir.z;
+               lightSpotDirs[i].w = 0;
+
+               lightConfigData[i].x = 1;
+
+               const F32 outerCone = light->getOuterConeAngle();
+               const F32 innerCone = getMin(light->getInnerConeAngle(), outerCone - 0.0001f);
+               const F32 outerCos = mCos(mDegToRad(outerCone / 2.0f));
+               const F32 innerCos = mCos(mDegToRad(innerCone / 2.0f));
+               Point2F spotParams(outerCos, mMax(innerCos - outerCos, 0.001f));
+
+               lightSpotParams[i].x = spotParams.x;
+               lightSpotParams[i].y = spotParams.y;
+               F32 concentration = 360.0f / outerCone;
+               luxTargMultiplier[i] = range * concentration;
+            }
+
+            lightConfigData[i].y = light->getBrightness() * luxTargMultiplier[i];
+            lightConfigData[i].w = 1.0f / (range * range);
          }
-         else if (light->getType() == LightInfo::Spot)
-         {
-            lightConfigData[i].x = 1;
-
-            const F32 outerCone = light->getOuterConeAngle();
-            const F32 innerCone = getMin(light->getInnerConeAngle(), outerCone);
-            const F32 outerCos = mCos(mDegToRad(outerCone / 2.0f));
-            const F32 innerCos = mCos(mDegToRad(innerCone / 2.0f));
-            Point2F spotParams(outerCos, innerCos - outerCos);
-
-            lightSpotParams[i].x = spotParams.x;
-            lightSpotParams[i].y = spotParams.y;
-         }
-
-         lightConfigData[i].y = light->getBrightness();
-
-         F32 range = light->getRange().x;
-         lightConfigData[i].z = range;
-         lightConfigData[i].w = 1.0f / (range * range);
       }
 
       shaderConsts->setSafe(lightPositionSC, lightPositions);

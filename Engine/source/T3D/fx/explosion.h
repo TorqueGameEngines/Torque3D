@@ -205,6 +205,7 @@ class Explosion : public GameBase, public ISceneLight
    void setCollideType( U32 cType ){ mCollideType = cType; }
 
    DECLARE_CONOBJECT(Explosion);
+   DECLARE_CATEGORY("UNLISTED");
    static void initPersistFields();
 private:
    SimObject*     ss_object;

@@ -151,10 +151,8 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
       return final;
    #endif
 
-      //get Punctual light contribution   
-      lighting = getPunctualLight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, shadow);
-      //get spot angle attenuation
-      lighting *= getSpotAngleAtt(-surfaceToLight.L, lightDirection, lightSpotParams );
+      //get spot light contribution   
+      lighting = getSpotlight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, lightDirection, lightSpotParams, shadow);
    }
    
    return float4(lighting, 0);

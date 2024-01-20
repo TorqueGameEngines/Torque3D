@@ -44,7 +44,15 @@ static bool sReadSTB(const Torque::Path& path, GBitmap* bitmap);
 static bool sReadStreamSTB(Stream& stream, GBitmap* bitmap, U32 len);
 
 static bool sWriteSTB(const Torque::Path& path, GBitmap* bitmap, U32 compressionLevel);
-static bool sWriteStreamSTB(Stream& stream, GBitmap* bitmap, U32 compressionLevel);
+static bool sWriteStreamSTB(const String& bmType, Stream& stream, GBitmap* bitmap, U32 compressionLevel);
+
+// stbi_write callback / rextimmy.
+static void stbiWriteFunc(void* context, void* data, int size)
+{
+   Stream* stream = static_cast<Stream*>(context);
+   stream->write(size);
+   stream->write(size, data);
+}
 
 static struct _privateRegisterSTB
 {
@@ -209,8 +217,21 @@ bool sReadStreamSTB(Stream& stream, GBitmap* bitmap, U32 len)
    stream.read(len, data);
 
    S32 width, height, comp = 0;
+   if (stbi_info_from_memory(data, len, &width, &height, &comp))
+   {
+      const char* stbErr = stbi_failure_reason();
 
-   unsigned char* pixelData = stbi_load_from_memory((const U8*)data, (int)len, &width, &height, &comp, 1);
+      if (!stbErr)
+         stbErr = "Unknown Error!";
+
+      Con::errorf("STB failed to get image info: %s", stbErr);
+      return false;
+   }
+
+   S32 reqCom = comp;
+
+   unsigned char* pixelData = stbi_load_from_memory((const U8*)data, (int)len, &width, &height, &comp, reqCom);
+
    if (!pixelData)
    {
       const char* stbErr = stbi_failure_reason();
@@ -218,12 +239,22 @@ bool sReadStreamSTB(Stream& stream, GBitmap* bitmap, U32 len)
       if (!stbErr)
          stbErr = "Unknown Error!";
 
-      Con::printf("sReadStreamSTB Error: %s", stbErr);
+      Con::errorf("sReadStreamSTB Error: %s", stbErr);
       return false;
    }
    bitmap->deleteImage();
 
-   bitmap->allocateBitmap(256, 256, false, GFXFormatA8);
+   //work out what format we need to use - todo floating point?
+   GFXFormat fmt = GFXFormat_FIRST;
+   switch (comp)
+   {
+   case 1: fmt = GFXFormatA8; break;
+   case 2: fmt = GFXFormatA8L8; break; //todo check this
+   case 3: fmt = GFXFormatR8G8B8; break;
+   case 4: fmt = GFXFormatR8G8B8A8; break;
+   }
+
+   bitmap->allocateBitmap(width, height, false, GFXFormatA8);
 
    U8* pBase = bitmap->getWritableBits(0);
    U32 rowBytes = bitmap->getByteSize();
@@ -311,27 +342,41 @@ bool sWriteSTB(const Torque::Path& path, GBitmap* bitmap, U32 compressionLevel)
    return false;
 }
 
-bool sWriteStreamSTB(Stream& stream, GBitmap* bitmap, U32 compressionLevel)
+bool sWriteStreamSTB(const String& bmType, Stream& stream, GBitmap* bitmap, U32 compressionLevel)
 {
-   S32 len;
-   const U8* pData = bitmap->getBits();
+   PROFILE_SCOPE(sWriteStreamSTB);
 
-   unsigned char* png = stbi_write_png_to_mem(pData, 0, bitmap->getWidth(), bitmap->getHeight(), 1, &len);
+   S32 width = bitmap->getWidth();
+   S32 height = bitmap->getHeight();
+   const U8* pPixelData = bitmap->getBits();
+   S32 channels = bitmap->getBytesPerPixel();
 
-   if (!png)
+   if (bmType == String("png"))
    {
-      const char* stbErr = stbi_failure_reason();
-
-      if (!stbErr)
-         stbErr = "Unknown Error!";
-
-      Con::printf("sReadStreamSTB Error: %s", stbErr);
-      return false;
+      stbi_write_png_compression_level = compressionLevel;
+      if (stbi_write_png_to_func(stbiWriteFunc, &stream, width, height, channels, pPixelData, width * channels))
+         return true;
+   }
+   else if (bmType == String("tga"))
+   {
+      if (stbi_write_tga_to_func(stbiWriteFunc, &stream, width, height, channels, pPixelData))
+         return true;
+   }
+   else if (bmType == String("bmp"))
+   {
+      if (stbi_write_bmp_to_func(stbiWriteFunc, &stream, width, height, channels, pPixelData))
+         return true;
+   }
+   else if (bmType == String("jpg") || bmType == String("jpeg"))
+   {
+      if (stbi_write_jpg_to_func(stbiWriteFunc, &stream, width, height, channels, pPixelData, compressionLevel))
+         return true;
+   }
+   else if (bmType == String("hdr"))
+   {
+      if (stbi_write_hdr_to_func(stbiWriteFunc, &stream, width, height, channels, (const F32*)pPixelData))
+         return true;
    }
 
-   stream.write(len);
-   stream.write(len, png);
-
-   dFree(png);
-   return true;
+   return false;
 }

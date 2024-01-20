@@ -75,7 +75,7 @@ public:
       typedef bool(*ReadStreamFunc)(Stream& stream, GBitmap* bitmap, U32 len);
       /// The write functions prototype.  Compression levels are image-specific - see their registration declaration for details.
       typedef bool(*WriteFunc)(const Torque::Path& path, GBitmap* bitmap, U32 compressionLevel);
-      typedef bool(*WriteStreamFunc)(Stream& stream, GBitmap* bitmap, U32 compressionLevel);
+      typedef bool(*WriteStreamFunc)(const String& bmType, Stream& stream, GBitmap* bitmap, U32 compressionLevel);
       
       /// Used to sort the registrations so that 
       /// lookups occur in a fixed order.

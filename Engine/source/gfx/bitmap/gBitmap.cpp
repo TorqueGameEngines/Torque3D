@@ -1254,7 +1254,7 @@ bool GBitmap::writeBitmapStream(const String& bmType, Stream& ioStream, U32 comp
       return false;
    }
 
-   return regInfo->writeStreamFunc(ioStream, this, (compressionLevel == U32_MAX) ? regInfo->defaultCompression : compressionLevel);
+   return regInfo->writeStreamFunc(bmType, ioStream, this, (compressionLevel == U32_MAX) ? regInfo->defaultCompression : compressionLevel);
 }
 
 template<> void *Resource<GBitmap>::create(const Torque::Path &path)

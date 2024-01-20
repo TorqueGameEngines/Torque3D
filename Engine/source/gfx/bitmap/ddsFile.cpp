@@ -565,15 +565,10 @@ void DDSFile::SurfaceData::dumpImage(DDSFile *dds, U32 mip, const char *file)
 
    // Copy our data in.
    dMemcpy(foo->getWritableBits(), mMips[mip], dds->getSurfaceSize(dds->mHeight, dds->mWidth, mip) );
-   
-   FileStream  stream;
 
-   stream.open( file, Torque::FS::File::Write );
-
-   if ( stream.getStatus() == Stream::Ok )
+   if(!foo->writeBitmap("png", file))
    {
-      // Write it out.
-      foo->writeBitmap("png", stream);
+      Con::errorf("DDSFile::SurfaceData::dumpImage() - Error writing %s !", file);
    }
 
    // Clean up.

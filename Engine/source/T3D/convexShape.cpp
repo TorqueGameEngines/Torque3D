@@ -221,10 +221,8 @@ bool ConvexShape::protectedSetSurface( void *object, const char *index, const ch
       &mat[12], &mat[13], &mat[14], &mat[15] );
 	*/
 
-   String t = data;
-
-	dSscanf( data, "%g %g %g %g %g %g %g %i %g %g %g %g %f", &quat.x, &quat.y, &quat.z, &quat.w, &pos.x, &pos.y, &pos.z,
-      &matID, &offset.x, &offset.y, &scale.x, &scale.y, &rot);
+	dSscanf( data, "%g %g %g %g %g %g %g %i %g %g %g %g %g %i %i", &quat.x, &quat.y, &quat.z, &quat.w, &pos.x, &pos.y, &pos.z,
+      &matID, &offset.x, &offset.y, &scale.x, &scale.y, &rot, &horz, &vert);
 
 	MatrixF surface;
 	quat.setMatrix( &surface );

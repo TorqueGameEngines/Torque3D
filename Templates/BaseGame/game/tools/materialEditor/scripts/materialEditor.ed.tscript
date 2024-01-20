@@ -1196,6 +1196,7 @@ function MaterialEditorGui::guiSync( %this, %material )
    MaterialEditorPropertiesWindow-->glowMulTextEdit.setText((%material).glowMul[%layer]);
    MaterialEditorPropertiesWindow-->glowMulSlider.setValue((%material).glowMul[%layer]);
    MaterialEditorPropertiesWindow-->glowCheckbox.setValue((%material).glow[%layer]);
+   MaterialEditorPropertiesWindow-->emissiveCheckbox.setValue((%material).emissive[%layer]);
    MaterialEditorPropertiesWindow-->receiveShadowsCheckbox.setValue((%material).receiveShadows[%layer]);
    MaterialEditorPropertiesWindow-->ignoreLightingCheckbox.setValue((%material).ignoreLighting[%layer]);   
    MaterialEditorPropertiesWindow-->parallaxTextEdit.setText((%material).parallaxScale[%layer]);
@@ -2691,15 +2692,15 @@ function MaterialEditorGui::saveCompositeMap(%this)
     %material = %this.currentMaterial;
     %layer = %this.currentLayer;
    
-    %roughMap = %material.getRoughMap(%layer);
     %aoMap = %material.getAOMap(%layer);
+    %roughMap = %material.getRoughMap(%layer);
     %metalMap = %material.getMetalMap(%layer);
     
-    %roughness = %material.RoughnessChan[%layer];
     %ao = %material.AOChan[%layer];
+    %roughness = %material.RoughnessChan[%layer];
     %metal = %material.metalChan[%layer];
     
-    %channelKey = %roughness SPC %ao SPC %metal SPC 0;
+    %channelKey = %ao SPC %roughness SPC %metal SPC 3;
     error("Storing: \"" @ %aoMap @"\" \""@ %roughMap @"\" \""@ %metalMap @"\" \""@ %channelKey @"\" \""@ %saveAs @"\"");
     saveCompositeTexture(%aoMap,%roughMap,%metalMap,"",%channelKey, %saveAs);
     %dlg.delete();

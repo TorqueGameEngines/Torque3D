@@ -699,12 +699,21 @@ bool GFont::read(Stream& io_rStream)
    for(i = 0; i < numSheets; i++)
    {
        GBitmap *bmp = new GBitmap;
-       String path = String::ToString("%s/%s %d %d (%s).png", Con::getVariable("$GUI::fontCacheDirectory"), mFaceName.c_str(), mSize, i, getCharSetName(mCharSet));
+       /*String path = String::ToString("%s/%s %d %d (%s).png", Con::getVariable("$GUI::fontCacheDirectory"), mFaceName.c_str(), mSize, i, getCharSetName(mCharSet));
        if(!bmp->readBitmap("png", path))
        {
            delete bmp;
            return false;
+       }*/
+       U32 len;
+       io_rStream.read(&len);
+
+       if (!bmp->readBitmapStream("png", io_rStream, len))
+       {
+          delete bmp;
+          return false;
        }
+
        GFXTexHandle handle = GFXTexHandle(bmp, &GFXFontTextureProfile, true, avar("%s() - Read Font Sheet for %s %d (line %d)", __FUNCTION__, mFaceName.c_str(), mSize, __LINE__));
        //handle.setFilterNearest();
        mTextureSheets.push_back(handle);
@@ -779,7 +788,9 @@ bool GFont::write(Stream& stream)
    for (i = 0; i < mTextureSheets.size(); i++)
    {
       String path = String::ToString("%s/%s %d %d (%s).png", Con::getVariable("$GUI::fontCacheDirectory"), mFaceName.c_str(), mSize, i, getCharSetName(mCharSet));
-      mTextureSheets[i].getBitmap()->writeBitmap("png", path);
+      //mTextureSheets[i].getBitmap()->writeBitmap("png", path);
+
+      mTextureSheets[i].getBitmap()->writeBitmapStream("png", stream);
    }
 
    stream.write(mCurX);

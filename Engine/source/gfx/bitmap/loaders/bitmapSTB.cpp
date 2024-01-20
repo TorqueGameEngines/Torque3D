@@ -21,6 +21,7 @@
 //-----------------------------------------------------------------------------
 
 #include "platform/platform.h"
+#include "console/console.h"
 
 #include "core/stream/fileStream.h"
 #include "core/stream/memStream.h"
@@ -40,7 +41,10 @@
 #include "stb_image_write.h"
 
 static bool sReadSTB(const Torque::Path& path, GBitmap* bitmap);
+static bool sReadStreamSTB(Stream& stream, GBitmap* bitmap, U32 len);
+
 static bool sWriteSTB(const Torque::Path& path, GBitmap* bitmap, U32 compressionLevel);
+static bool sWriteStreamSTB(Stream& stream, GBitmap* bitmap, U32 compressionLevel);
 
 static struct _privateRegisterSTB
 {
@@ -58,8 +62,10 @@ static struct _privateRegisterSTB
       reg.extensions.push_back("tga");
 
       reg.readFunc = sReadSTB;
+      reg.readStreamFunc = sReadStreamSTB;
 
       reg.writeFunc = sWriteSTB;
+      reg.writeStreamFunc = sWriteStreamSTB;
 
       // for png only.
       reg.defaultCompression = 6;
@@ -194,6 +200,41 @@ bool sReadSTB(const Torque::Path& path, GBitmap* bitmap)
    return true;
 }
 
+bool sReadStreamSTB(Stream& stream, GBitmap* bitmap, U32 len)
+{
+   PROFILE_SCOPE(sReadStreamSTB);
+   // only used for font at the moment.
+
+   U8* data = new U8[len];
+   stream.read(len, data);
+
+   S32 width, height, comp = 0;
+
+   unsigned char* pixelData = stbi_load_from_memory((const U8*)data, (int)len, &width, &height, &comp, 1);
+   if (!pixelData)
+   {
+      const char* stbErr = stbi_failure_reason();
+
+      if (!stbErr)
+         stbErr = "Unknown Error!";
+
+      Con::printf("sReadStreamSTB Error: %s", stbErr);
+      return false;
+   }
+   bitmap->deleteImage();
+
+   bitmap->allocateBitmap(256, 256, false, GFXFormatA8);
+
+   U8* pBase = bitmap->getWritableBits(0);
+   U32 rowBytes = bitmap->getByteSize();
+   dMemcpy(pBase, pixelData, rowBytes);
+
+   dFree(data);
+   dFree(pixelData);
+
+   return true;
+}
+
 /**
  * Write bitmap to an image file.
  *
@@ -268,4 +309,29 @@ bool sWriteSTB(const Torque::Path& path, GBitmap* bitmap, U32 compressionLevel)
    }
 
    return false;
+}
+
+bool sWriteStreamSTB(Stream& stream, GBitmap* bitmap, U32 compressionLevel)
+{
+   S32 len;
+   const U8* pData = bitmap->getBits();
+
+   unsigned char* png = stbi_write_png_to_mem(pData, 0, bitmap->getWidth(), bitmap->getHeight(), 1, &len);
+
+   if (!png)
+   {
+      const char* stbErr = stbi_failure_reason();
+
+      if (!stbErr)
+         stbErr = "Unknown Error!";
+
+      Con::printf("sReadStreamSTB Error: %s", stbErr);
+      return false;
+   }
+
+   stream.write(len);
+   stream.write(len, png);
+
+   dFree(png);
+   return true;
 }

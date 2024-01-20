@@ -1206,6 +1206,20 @@ bool  GBitmap::readBitmap(const String& bmType, const Torque::Path& path)
    return regInfo->readFunc(path, this);
 }
 
+bool GBitmap::readBitmapStream(const String& bmType, Stream& ioStream, U32 len)
+{
+   PROFILE_SCOPE(ResourceGBitmap_readBitmapStream);
+   const GBitmap::Registration* regInfo = GBitmap::sFindRegInfo(bmType);
+
+   if (regInfo == NULL)
+   {
+      Con::errorf("[GBitmap::readBitmap] unable to find registration for extension [%s]", bmType.c_str());
+      return false;
+   }
+
+   return regInfo->readStreamFunc(ioStream, this, len);
+}
+
 bool  GBitmap::writeBitmap( const String &bmType, const Torque::Path& path, U32 compressionLevel )
 {
    FileStream stream;
@@ -1228,6 +1242,19 @@ bool  GBitmap::writeBitmap( const String &bmType, const Torque::Path& path, U32 
    }
 
    return regInfo->writeFunc(path, this, (compressionLevel == U32_MAX) ? regInfo->defaultCompression : compressionLevel );
+}
+
+bool GBitmap::writeBitmapStream(const String& bmType, Stream& ioStream, U32 compressionLevel)
+{
+   const GBitmap::Registration* regInfo = GBitmap::sFindRegInfo(bmType);
+
+   if (regInfo == NULL)
+   {
+      Con::errorf("[GBitmap::writeBitmap] unable to find registration for extension [%s]", bmType.c_str());
+      return false;
+   }
+
+   return regInfo->writeStreamFunc(ioStream, this, (compressionLevel == U32_MAX) ? regInfo->defaultCompression : compressionLevel);
 }
 
 template<> void *Resource<GBitmap>::create(const Torque::Path &path)

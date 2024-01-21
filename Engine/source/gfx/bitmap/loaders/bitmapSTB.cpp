@@ -254,7 +254,7 @@ bool sReadStreamSTB(Stream& stream, GBitmap* bitmap, U32 len)
    case 4: fmt = GFXFormatR8G8B8A8; break;
    }
 
-   bitmap->allocateBitmap(width, height, false, GFXFormatA8);
+   bitmap->allocateBitmap(width, height, false, fmt);
 
    U8* pBase = bitmap->getWritableBits(0);
    U32 rowBytes = bitmap->getByteSize();

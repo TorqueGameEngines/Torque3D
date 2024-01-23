@@ -27,6 +27,7 @@
 #include "core/stream/memStream.h"
 #include "core/strings/stringFunctions.h"
 #include "gfx/bitmap/gBitmap.h"
+#include "gfx/bitmap/imageUtils.h"
 
 #ifdef __clang__
 #define STBIWDEF static inline
@@ -379,4 +380,90 @@ bool sWriteStreamSTB(const String& bmType, Stream& stream, GBitmap* bitmap, U32 
    }
 
    return false;
+}
+
+struct DeferredPNGWriterData
+{
+   S32 width = 0;
+   S32 height = 0;
+   S32 channels = 0;
+   dsize_t offset = 0;
+   U8* pPixelData = NULL;
+   GFXFormat format;
+   Stream* pStream = NULL;
+};
+
+DeferredPNGWriter::DeferredPNGWriter() :
+   mData(NULL),
+   mActive(false)
+{
+   mData = new DeferredPNGWriterData();
+}
+
+DeferredPNGWriter::~DeferredPNGWriter()
+{
+   if (mData)
+   {
+      SAFE_DELETE_ARRAY(mData->pPixelData);
+   }
+
+   SAFE_DELETE(mData);
+}
+
+bool DeferredPNGWriter::begin(GFXFormat format, S32 width, S32 height, Stream& stream)
+{
+   // ONLY RGB bitmap writing supported at this time!
+   AssertFatal(format == GFXFormatR8G8B8 ||
+      format == GFXFormatR8G8B8A8 ||
+      format == GFXFormatR8G8B8X8 ||
+      format == GFXFormatA8 ||
+      format == GFXFormatR5G6B5, "DeferredPNGWriter::begin: ONLY RGB bitmap writing supported at this time.");
+
+   if (format != GFXFormatR8G8B8 &&
+      format != GFXFormatR8G8B8A8 &&
+      format != GFXFormatR8G8B8X8 &&
+      format != GFXFormatA8 &&
+      format != GFXFormatR5G6B5)
+   {
+      return false;
+   }
+
+   mData->pStream = &stream;
+   mData->width = width;
+   mData->height = height;
+   mData->format = format;
+
+   const size_t dataSize = GFXFormat_getByteSize(format) * width * height;
+   mData->pPixelData = new U8[dataSize];
+
+   mActive = true;
+
+   return true;
+}
+
+void DeferredPNGWriter::append(GBitmap* bitmap, U32 rows)
+{
+   AssertFatal(mActive, "Cannot append to an inactive DeferredPNGWriter!");
+
+   if (mData->channels == 0)
+   {
+      mData->channels = bitmap->getBytesPerPixel();
+   }
+
+   const U32 height = getMin(bitmap->getHeight(), rows);
+   const dsize_t dataChuckSize = bitmap->getByteSize();
+
+   const U8* pSrcData = bitmap->getBits();
+   U8* pDstData = mData->pPixelData + mData->offset;
+   dMemcpy(pDstData, pSrcData, dataChuckSize);
+   mData->offset += dataChuckSize;
+}
+
+void DeferredPNGWriter::end()
+{
+   AssertFatal(mActive, "Cannot end an inactive DeferredPNGWriter!");
+
+   stbi_write_png_to_func(stbiWriteFunc, mData->pStream, mData->width, mData->height, mData->channels, mData->pPixelData, mData->width * mData->channels);
+
+   mActive = false;
 }

@@ -64,4 +64,23 @@ namespace ImageUtil
    U32 getMaxMipCount(const U32 width, const U32 height);
 };
 
+struct DeferredPNGWriterData;
+class Stream;
+class GBitmap;
+
+class DeferredPNGWriter
+{
+protected:
+   DeferredPNGWriterData* mData;
+   bool mActive;
+
+public:
+   DeferredPNGWriter();
+   ~DeferredPNGWriter();
+
+   bool begin(GFXFormat format, S32 width, S32 height, Stream& stream);
+   void append(GBitmap* bitmap, U32 rows);
+   void end();
+};
+
 #endif

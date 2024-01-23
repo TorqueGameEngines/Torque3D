@@ -26,7 +26,7 @@
 #include "math/util/frustum.h"
 #include "core/stream/fileStream.h"
 #include "gui/core/guiCanvas.h"
-#include "gfx/bitmap/pngUtils.h"
+#include "gfx/bitmap/imageUtils.h"
 #include "console/engineAPI.h"
 
 
@@ -126,6 +126,13 @@ void ScreenShot::capture( GuiCanvas *canvas )
 
    // Open up the file on disk.
    dSprintf( filename, 256, "%s.%s", mFilename, "png" );
+   FileStream fs;
+   if (!fs.open(filename, Torque::FS::File::Write))
+      Con::errorf("ScreenShot::capture() - Failed to open output file '%s'!", filename);
+
+   // Open a PNG stream for the final image
+   DeferredPNGWriter pngWriter;
+   pngWriter.begin(outBuffer->getFormat(), outBuffer->getWidth(), canvasSize.y * mTiles - overlapPixels.y * mTiles * 2, fs);
 
    //// Render each tile to generate a huge screenshot.
    for (U32 ty = 0; ty < mTiles; ty++)
@@ -192,9 +199,20 @@ void ScreenShot::capture( GuiCanvas *canvas )
 
          delete gb;
       }
+
+      // Write the captured tile row into the PNG stream
+      pngWriter.append(outBuffer, outBuffer->getHeight() - overlapPixels.y);
    }
 
-   outBuffer->writeBitmap("png", filename);
+   //Close the PNG stream
+   pngWriter.end();
+
+   fs.close();
+
+   if(mWriteJPG)
+      outBuffer->writeBitmap("jpg", filename);
+   else
+      outBuffer->writeBitmap("png", filename);
    
    // We captured... clear the flag.
    mPending = false;

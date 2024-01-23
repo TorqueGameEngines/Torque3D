@@ -740,7 +740,7 @@ bool GFont::read(Stream& io_rStream)
       io_rStream.read(buffLen, inBuff);
 
       // Decompress.
-      uLongf destLen = (maxGlyph-minGlyph+1)*sizeof(S32);
+      uLongf destLen = (static_cast<unsigned long long>(maxGlyph) - minGlyph + 1) * sizeof(S32);
       uncompress((Bytef*)&mRemapTable[minGlyph], &destLen, (Bytef*)(S32*)inBuff, buffLen);
 
       AssertISV(destLen == (maxGlyph-minGlyph+1)*sizeof(S32), "GFont::read - invalid remap table data!");
@@ -787,8 +787,8 @@ bool GFont::write(Stream& stream)
    stream.write(mTextureSheets.size());
    for (i = 0; i < mTextureSheets.size(); i++)
    {
-      String path = String::ToString("%s/%s %d %d (%s).png", Con::getVariable("$GUI::fontCacheDirectory"), mFaceName.c_str(), mSize, i, getCharSetName(mCharSet));
-      //mTextureSheets[i].getBitmap()->writeBitmap("png", path);
+      /*String path = String::ToString("%s/%s %d %d (%s).png", Con::getVariable("$GUI::fontCacheDirectory"), mFaceName.c_str(), mSize, i, getCharSetName(mCharSet));
+      mTextureSheets[i].getBitmap()->writeBitmap("png", path);*/
 
       mTextureSheets[i].getBitmap()->writeBitmapStream("png", stream);
    }
@@ -824,7 +824,7 @@ bool GFont::write(Stream& stream)
          const U32 buffSize = 128 * 1024;
          FrameTemp<S32> outBuff(buffSize);
          uLongf destLen = buffSize * sizeof(S32);
-         compress2((Bytef*)(S32*)outBuff, &destLen, (Bytef*)(S32*)&mRemapTable[minGlyph], (maxGlyph-minGlyph+1)*sizeof(S32), 9);
+         compress2((Bytef*)(S32*)outBuff, &destLen, (Bytef*)(S32*)&mRemapTable[minGlyph], (static_cast<unsigned long long>(maxGlyph) - minGlyph + 1) * sizeof(S32), 9);
 
          // Write out.
          stream.write((U32)destLen);
@@ -1086,6 +1086,7 @@ DefineEngineFunction( populateFontCacheRange, void, ( const char *faceName, S32 
    }
 
    // This has the side effect of generating character info, including the bitmaps.
+   Con::printf("   o Populating font '%s'", faceName);
    for(U32 i=rangeStart; i<rangeEnd; i++)
    {
       if(f->isValidChar(i))

@@ -139,7 +139,7 @@ function loadMissionStage3()
    
    // Construct MOD paths
    pathOnMissionLoadDone();
-
+   getRootScene().callOnChildren("onCreateGame");
    // Mission loading done...
    echo("*** Mission loaded");
 
@@ -152,6 +152,16 @@ function loadMissionStage3()
    %hasGameMode = callGamemodeFunction("onMissionStart");
    
 }
+
+function GameBase::onCreateGame(%this)
+{
+    %db = %this.getDatablock();
+    if (%db.isMethod("onCreateGame"))
+    {
+        %db.onCreateGame(%this);
+    }
+}
+
 function endMission()
 {
    if (!isObject( getScene(0) ))

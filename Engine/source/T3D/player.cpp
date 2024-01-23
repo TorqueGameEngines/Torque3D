@@ -5075,8 +5075,12 @@ F32 Player::_doCollisionImpact( const Collision *collision, bool fallingCollisio
    if ( ((bd > mDataBlock->minImpactSpeed && fallingCollision) || bd > mDataBlock->minLateralImpactSpeed) 
       && !mMountPending )
    {
-      if ( !isGhost() )
-         onImpact( collision->object, collision->normal * bd );
+      if (!isGhost())
+      {
+         onImpact(collision->object, collision->normal * bd);
+         mImpactSound = PlayerData::ImpactNormal;
+         setMaskBits(ImpactMask);
+      }
 
       if (mDamageState == Enabled && mState != RecoverState) 
       {
@@ -5099,13 +5103,6 @@ F32 Player::_doCollisionImpact( const Collision *collision, bool fallingCollisio
             setState(RecoverState, recover);
          }
       }
-   }
-
-   if ( isServerObject() && 
-      (bd > (mDataBlock->minImpactSpeed / 3.0f) || bd > (mDataBlock->minLateralImpactSpeed / 3.0f )) ) 
-   {
-      mImpactSound = PlayerData::ImpactNormal;
-      setMaskBits(ImpactMask);
    }
 
    return bd;

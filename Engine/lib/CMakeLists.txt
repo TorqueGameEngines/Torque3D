@@ -165,7 +165,7 @@ if(APPLE)
     set(PNG_ARM_NEON off CACHE BOOL "" FORCE)
 endif()
 
-#PNG
+#PNG STB Update: Not sure if these are still needed.
 set(PNG_STATIC on CACHE BOOL "" FORCE)
 mark_as_advanced(PNG_STATIC)
 set(PNG_SHARED off CACHE BOOL "" FORCE)
@@ -185,10 +185,7 @@ endif()
 mark_as_advanced(PNG_DEBUG)
 mark_as_advanced(PNG_FRAMEWORK)
 mark_as_advanced(PNG_PREFIX)
-add_subdirectory(lpng ${TORQUE_LIB_TARG_DIRECTORY}/lpng EXCLUDE_FROM_ALL)
 
-
-add_subdirectory(ljpeg ${TORQUE_LIB_TARG_DIRECTORY}/ljpeg EXCLUDE_FROM_ALL)
 add_subdirectory(tinyxml ${TORQUE_LIB_TARG_DIRECTORY}/tinyxml EXCLUDE_FROM_ALL)
 add_subdirectory(opcode ${TORQUE_LIB_TARG_DIRECTORY}/opcode EXCLUDE_FROM_ALL)
 add_subdirectory(pcre ${TORQUE_LIB_TARG_DIRECTORY}/pcre EXCLUDE_FROM_ALL)

@@ -26,7 +26,7 @@
 #include "math/util/frustum.h"
 #include "core/stream/fileStream.h"
 #include "gui/core/guiCanvas.h"
-#include "gfx/bitmap/pngUtils.h"
+#include "gfx/bitmap/imageUtils.h"
 #include "console/engineAPI.h"
 
 
@@ -127,75 +127,72 @@ void ScreenShot::capture( GuiCanvas *canvas )
    // Open up the file on disk.
    dSprintf( filename, 256, "%s.%s", mFilename, "png" );
    FileStream fs;
-   if ( !fs.open( filename, Torque::FS::File::Write ) )
-      Con::errorf( "ScreenShot::capture() - Failed to open output file '%s'!", filename );
+   if (!fs.open(filename, Torque::FS::File::Write))
+      Con::errorf("ScreenShot::capture() - Failed to open output file '%s'!", filename);
 
    // Open a PNG stream for the final image
    DeferredPNGWriter pngWriter;
-   pngWriter.begin(outBuffer->getFormat(), outBuffer->getWidth(), canvasSize.y * mTiles - overlapPixels.y * mTiles * 2, fs, 0);
-   
-   // Render each tile to generate a huge screenshot.
-   for( U32 ty=0; ty < mTiles; ty++ )
+   pngWriter.begin(outBuffer->getFormat(), outBuffer->getWidth(), canvasSize.y * mTiles - overlapPixels.y * mTiles * 2, fs);
+
+   //// Render each tile to generate a huge screenshot.
+   for (U32 ty = 0; ty < mTiles; ty++)
    {
-      for( S32 tx=0; tx < mTiles; tx++ )
+      for (S32 tx = 0; tx < mTiles; tx++)
       {
          // Set the current tile offset for tileFrustum().
-         mCurrTile.set( tx, mTiles - ty - 1 );
+         mCurrTile.set(tx, mTiles - ty - 1);
 
          // Let the canvas render the scene.
-         canvas->renderFrame( false );
-
+         canvas->renderFrame(false);
          // Now grab the current back buffer.
-         GBitmap *gb = _captureBackBuffer();
+         GBitmap* gb = _captureBackBuffer();
 
-			// The current GFX device couldn't capture the backbuffer or it's unable of doing so.
-			if (gb == NULL)
-				return;
+         // The current GFX device couldn't capture the backbuffer or it's unable of doing so.
+         if (gb == NULL)
+            return;
 
-                  
          // Copy the captured bitmap into its tile
          // within the output bitmap.         
-         const U32 inStride = gb->getWidth() * gb->getBytesPerPixel();         
-         const U8 *inColor = gb->getBits() + inStride * overlapPixels.y;
+         const U32 inStride = gb->getWidth() * gb->getBytesPerPixel();
+         const U8* inColor = gb->getBits() + inStride * overlapPixels.y;
          const U32 outStride = outBuffer->getWidth() * outBuffer->getBytesPerPixel();
-         const U32 inOverlapOffset = overlapPixels.x * gb->getBytesPerPixel();         
-         const U32 inOverlapStride = overlapPixels.x * gb->getBytesPerPixel()*2;
-         const U32 outOffset = (tx * (gb->getWidth() - overlapPixels.x*2 )) * gb->getBytesPerPixel();
-         U8 *outColor = outBuffer->getWritableBits() + outOffset;
-         for( U32 row=0; row < gb->getHeight() - overlapPixels.y; row++ )
+         const U32 inOverlapOffset = overlapPixels.x * gb->getBytesPerPixel();
+         const U32 inOverlapStride = overlapPixels.x * gb->getBytesPerPixel() * 2;
+         const U32 outOffset = (tx * (gb->getWidth() - overlapPixels.x * 2)) * gb->getBytesPerPixel();
+         U8 * outColor = outBuffer->getWritableBits() + outOffset;
+         for (U32 row = 0; row < gb->getHeight() - overlapPixels.y; row++)
          {
-            dMemcpy( outColor, inColor + inOverlapOffset, inStride - inOverlapStride );
-            
-            //Grandient blend the left overlap area of this tile over the previous tile left border
+            dMemcpy(outColor, inColor + inOverlapOffset, inStride - inOverlapStride);
+
+            //Grandient blend the left overlap area of this tile over the previous tile left borde
             if (tx && !(ty && row < overlapPixels.y))
             {
-               U8 *blendOverlapSrc = (U8*)inColor;
-               U8 *blendOverlapDst = outColor - inOverlapOffset;
-               for ( U32 px=0; px < overlapPixels.x; px++)
+               U8* blendOverlapSrc = (U8*)inColor;
+               U8* blendOverlapDst = outColor - inOverlapOffset;
+               for (U32 px = 0; px < overlapPixels.x; px++)
                {
                   F32 blendFactor = (F32)px / (F32)overlapPixels.x;
-                  sBlendPixelRGB888(blendOverlapSrc, blendOverlapDst, blendFactor);                 
+                  sBlendPixelRGB888(blendOverlapSrc, blendOverlapDst, blendFactor);
 
                   blendOverlapSrc += gb->getBytesPerPixel();
-                  blendOverlapDst += outBuffer->getBytesPerPixel();                   
-               }               
+                  blendOverlapDst += outBuffer->getBytesPerPixel();
+               }
             }
 
-            //Gradient blend against the rows the excess overlap rows already in the buffer            
+            //Gradient blend against the rows the excess overlap rows already in the buffer       
             if (ty && row < overlapPixels.y)
             {
                F32 rowBlendFactor = (F32)row / (F32)overlapPixels.y;
-               U8 *blendSrc = outColor + outStride * (outBuffer->getHeight() - overlapPixels.y);
-               U8 *blendDst = outColor;               
-               for ( U32 px=0; px < gb->getWidth() - overlapPixels.x*2; px++)
-               {                  
-                  sBlendPixelRGB888(blendSrc, blendDst, 1.0-rowBlendFactor); 
+               U8* blendSrc = outColor + outStride * (outBuffer->getHeight() - overlapPixels.y);
+               U8* blendDst = outColor;
+               for (U32 px = 0; px < gb->getWidth() - overlapPixels.x * 2; px++)
+               {
+                  sBlendPixelRGB888(blendSrc, blendDst, 1.0 - rowBlendFactor);
                   blendSrc += gb->getBytesPerPixel();
-                  blendDst += outBuffer->getBytesPerPixel();                   
-               }                              
+                  blendDst += outBuffer->getBytesPerPixel();
+               }
             }
 
-            
             inColor += inStride;
             outColor += outStride;
          }
@@ -204,11 +201,18 @@ void ScreenShot::capture( GuiCanvas *canvas )
       }
 
       // Write the captured tile row into the PNG stream
-      pngWriter.append(outBuffer, outBuffer->getHeight()-overlapPixels.y);
+      pngWriter.append(outBuffer, outBuffer->getHeight() - overlapPixels.y);
    }
 
    //Close the PNG stream
    pngWriter.end();
+
+   fs.close();
+
+   if(mWriteJPG)
+      outBuffer->writeBitmap("jpg", filename);
+   else
+      outBuffer->writeBitmap("png", filename);
    
    // We captured... clear the flag.
    mPending = false;
@@ -234,20 +238,11 @@ void ScreenShot::_singleCapture( GuiCanvas *canvas )
    char filename[256];
    dSprintf( filename, 256, "%s.%s", mFilename, mWriteJPG ? "jpg" : "png" );
 
-   // Open up the file on disk.
-   FileStream fs;
-   if ( !fs.open( filename, Torque::FS::File::Write ) )
-      Con::errorf( "ScreenShot::_singleCapture() - Failed to open output file '%s'!", filename );
+   // Write it and close.
+   if ( mWriteJPG )
+      bitmap->writeBitmap( "jpg", filename);
    else
-   {
-      // Write it and close.
-      if ( mWriteJPG )
-         bitmap->writeBitmap( "jpg", fs );
-      else
-         bitmap->writeBitmap( "png", fs );
-
-      fs.close();
-   }
+      bitmap->writeBitmap( "png", filename);
 
    // Cleanup.
    delete bitmap;

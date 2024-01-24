@@ -1192,7 +1192,7 @@ bool GBitmap::write(Stream& io_rStream) const
 //-------------------------------------- Persistent I/O
 //
 
-bool  GBitmap::readBitmap( const String &bmType, Stream &ioStream )
+bool  GBitmap::readBitmap(const String& bmType, const Torque::Path& path)
 {
    PROFILE_SCOPE(ResourceGBitmap_readBitmap);
    const GBitmap::Registration   *regInfo = GBitmap::sFindRegInfo( bmType );
@@ -1203,11 +1203,36 @@ bool  GBitmap::readBitmap( const String &bmType, Stream &ioStream )
       return false;
    }
 
-   return regInfo->readFunc( ioStream, this );
+   return regInfo->readFunc(path, this);
 }
 
-bool  GBitmap::writeBitmap( const String &bmType, Stream &ioStream, U32 compressionLevel )
+bool GBitmap::readBitmapStream(const String& bmType, Stream& ioStream, U32 len)
 {
+   PROFILE_SCOPE(ResourceGBitmap_readBitmapStream);
+   const GBitmap::Registration* regInfo = GBitmap::sFindRegInfo(bmType);
+
+   if (regInfo == NULL)
+   {
+      Con::errorf("[GBitmap::readBitmap] unable to find registration for extension [%s]", bmType.c_str());
+      return false;
+   }
+
+   return regInfo->readStreamFunc(ioStream, this, len);
+}
+
+bool  GBitmap::writeBitmap( const String &bmType, const Torque::Path& path, U32 compressionLevel )
+{
+   FileStream stream;
+   if (!stream.open(path, Torque::FS::File::Write))
+   {
+      Con::errorf("GBitmap::writeBitmap failed to open path %s", path.getFullFileName().c_str());
+      stream.close();
+      return false;
+   }
+
+   // free file for stb
+   stream.close();
+
    const GBitmap::Registration   *regInfo = GBitmap::sFindRegInfo( bmType );
 
    if ( regInfo == NULL )
@@ -1216,7 +1241,20 @@ bool  GBitmap::writeBitmap( const String &bmType, Stream &ioStream, U32 compress
       return false;
    }
 
-   return regInfo->writeFunc( this, ioStream, (compressionLevel == U32_MAX) ? regInfo->defaultCompression : compressionLevel );
+   return regInfo->writeFunc(path, this, (compressionLevel == U32_MAX) ? regInfo->defaultCompression : compressionLevel );
+}
+
+bool GBitmap::writeBitmapStream(const String& bmType, Stream& ioStream, U32 compressionLevel)
+{
+   const GBitmap::Registration* regInfo = GBitmap::sFindRegInfo(bmType);
+
+   if (regInfo == NULL)
+   {
+      Con::errorf("[GBitmap::writeBitmap] unable to find registration for extension [%s]", bmType.c_str());
+      return false;
+   }
+
+   return regInfo->writeStreamFunc(bmType, ioStream, this, (compressionLevel == U32_MAX) ? regInfo->defaultCompression : compressionLevel);
 }
 
 template<> void *Resource<GBitmap>::create(const Torque::Path &path)
@@ -1239,7 +1277,7 @@ template<> void *Resource<GBitmap>::create(const Torque::Path &path)
 
    GBitmap *bmp = new GBitmap;
    const String extension = path.getExtension();
-   if( !bmp->readBitmap( extension, stream ) )
+   if( !bmp->readBitmap( extension, path ) )
    {
       Con::errorf( "Resource<GBitmap>::create - error reading '%s'", path.getFullPath().c_str() );
       delete bmp;
@@ -1431,21 +1469,14 @@ DefineEngineFunction(saveScaledImage, bool, (const char* bitmapSource, const cha
    Torque::Path destinationPath = Torque::Path(bitmapDest);
    destinationPath.setExtension("png");
 
-   // Open up the file on disk.
-   FileStream fs;
-   if (!fs.open(destinationPath.getFullPath(), Torque::FS::File::Write))
+   if(!image->writeBitmap("png", destinationPath.getFullPath()))
    {
-      Con::errorf("saveScaledImage() - Failed to open output file '%s'!", bitmapDest);
+      Con::errorf("saveScaledImage() - Error writing %s !", bitmapDest);
       delete image;
       return false;
    }
-   else
-   {
-      image->writeBitmap("png", fs);
 
-      fs.close();
-      delete image;
-   }
-
+   
+   delete image;
    return true;
 }

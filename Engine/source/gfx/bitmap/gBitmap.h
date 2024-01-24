@@ -70,26 +70,31 @@ public:
 
    struct Registration
    {
-      /// The read function prototype.
-      typedef bool(*ReadFunc)(Stream &stream, GBitmap *bitmap);
-
-      /// The write function prototype.  Compression levels are image-specific - see their registration declaration for details.
-      typedef bool(*WriteFunc)(GBitmap *bitmap, Stream &stream, U32 compressionLevel);
-
+      /// The read functions prototype.
+      typedef bool(*ReadFunc)(const Torque::Path& path, GBitmap* bitmap);
+      typedef bool(*ReadStreamFunc)(Stream& stream, GBitmap* bitmap, U32 len);
+      /// The write functions prototype.  Compression levels are image-specific - see their registration declaration for details.
+      typedef bool(*WriteFunc)(const Torque::Path& path, GBitmap* bitmap, U32 compressionLevel);
+      typedef bool(*WriteStreamFunc)(const String& bmType, Stream& stream, GBitmap* bitmap, U32 compressionLevel);
+      
       /// Used to sort the registrations so that 
       /// lookups occur in a fixed order.
       U32 priority;
-
       Vector<String>   extensions;     ///< the list of file extensions for this bitmap type [these should be lower case]
       
-      ReadFunc    readFunc;            ///< the read function to call for this bitmap type
-      WriteFunc   writeFunc;           ///< the write function to call for this bitmap type
-      U32         defaultCompression;  ///< the default compression level [levels are image-specific - see their registration declaration for details]
+      ReadFunc    readFunc;            ///< the read function to read from a file.
+      WriteFunc   writeFunc;           ///< the write function to write to a file.
+      ReadStreamFunc readStreamFunc;   ///< the read function to read from a stream.
+      WriteStreamFunc writeStreamFunc; ///< the write function to write to a stream.
+
+      U32 defaultCompression;          ///< the default compression level [levels are image-specific - see their registration declaration for details]
 
       Registration()
       {
          readFunc = NULL;
          writeFunc = NULL;
+         readStreamFunc = NULL;
+         writeStreamFunc = NULL;
          defaultCompression = 0;
          priority = 0;
          VECTOR_SET_ASSOCIATION( extensions );
@@ -238,16 +243,24 @@ public:
 
    //-------------------------------------- Input/Output interface
 
-   /// Read a bitmap from a stream
+   /// Read a bitmap from a file
    /// @param bmType This is a file extension to describe the type of the data [i.e. "png" for PNG file, etc]
    /// @param ioStream The stream to read from
-   bool  readBitmap( const String &bmType, Stream &ioStream );
+   bool readBitmap(const String& bmType, const Torque::Path& path);
 
-   /// Write a bitmap to a stream
+   /// Sane as above but reads from a stream.
+   bool readBitmapStream(const String& bmType, Stream& ioStream, U32 len);
+
+   /// Write a bitmap to a file
    /// @param bmType This is a file extension to describe the type of the data [i.e. "png" for PNG file, etc]
    /// @param ioStream The stream to read from
-   /// @param compressionLevel Image format-specific compression level.  If set to U32_MAX, we use the default compression defined when the format was registered.
-   bool  writeBitmap( const String &bmType, Stream &ioStream, U32 compressionLevel = U32_MAX );
+   /// @param compressionLevel Image format specific compression level. For JPEG sets the quality level percentage, range 0 to 100.
+   /// For PNG compression level is 0 - 10
+   /// Not used for other image formats.
+   bool writeBitmap( const String &bmType, const Torque::Path& path, U32 compressionLevel = U32_MAX );
+
+   /// Sane as above but writes to a stream.
+   bool writeBitmapStream(const String& bmType, Stream& ioStream, U32 compressionLevel = U32_MAX);
 
    bool readMNG(Stream& io_rStream);               // located in bitmapMng.cc
    bool writeMNG(Stream& io_rStream) const;

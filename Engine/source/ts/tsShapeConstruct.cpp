@@ -490,7 +490,7 @@ bool TSShapeConstructor::onAdd()
    mShapeAsset = mShapeAssetId;
    if (mShapeAsset.notNull())
    {
-      Resource<TSShape> shape = mShapeAsset->getShapeResource();
+      TSShape* shape = mShapeAsset->getShape();
 
       if (shape)
          _onLoad(shape);

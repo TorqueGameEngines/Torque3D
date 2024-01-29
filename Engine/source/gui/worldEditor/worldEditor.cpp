@@ -487,6 +487,10 @@ bool WorldEditor::pasteSelection( bool dropSel )
       if ( !obj )
          continue;
 
+      StringTableEntry baseName = obj->getName();
+      String outName = (baseName != StringTable->EmptyString()) ? Sim::getUniqueName(baseName) : StringTable->EmptyString();
+      obj->assignName(outName);
+
       if (targetGroup)
          targetGroup->addObject( obj );
 

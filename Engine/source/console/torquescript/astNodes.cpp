@@ -1370,7 +1370,7 @@ U32 SlotAssignOpNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
    if (arrayExpr)
    {
       codeStream.emit(OP_SETCURFIELD_ARRAY);
-      if (subType == TypeReqNone)
+      if (subType == TypeReqNone || type == TypeReqNone)
          codeStream.emit(OP_POP_STK);
    }
    codeStream.emit((subType == TypeReqFloat) ? OP_LOADFIELD_FLT : OP_LOADFIELD_UINT);

@@ -807,9 +807,9 @@ void Vehicle::updatePos(F32 dt)
       if (mCollisionList.getCount()) 
       {
          F32 k = mRigid.getKineticEnergy();
-         F32 G = mNetGravity;
+         F32 G = mNetGravity* dt;
          F32 Kg = 0.5 * mRigid.mass * G * G;
-         if (k < sRestTol * Kg * dt && ++restCount > sRestCount)
+         if (k < sRestTol * Kg && ++restCount > sRestCount)
             mRigid.setAtRest();
       }
       else

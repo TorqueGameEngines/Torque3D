@@ -855,7 +855,7 @@ void GuiPopUpMenuCtrlEx::sortID()
 }
 
 //------------------------------------------------------------------------------
-void GuiPopUpMenuCtrlEx::addEntry(const char *buf, S32 id, U32 scheme)
+void GuiPopUpMenuCtrlEx::addEntry(const char *buf, S32 id, U32 scheme, const bool& intented)
 {
    if( !buf )
    {
@@ -882,6 +882,7 @@ void GuiPopUpMenuCtrlEx::addEntry(const char *buf, S32 id, U32 scheme)
    dStrcpy( e.buf, buf, 256 );
    e.id = id;
    e.scheme = scheme;
+   e.indented = intented;
 
    // see if there is a shortcut key
    char * cp = dStrchr( e.buf, '~' );
@@ -1326,8 +1327,8 @@ void GuiPopUpMenuCtrlEx::closePopUp()
    mSelIndex = ( mRevNum >= mSelIndex && mSelIndex != -1 ) ? mRevNum - mSelIndex : mSelIndex;
    if ( mSelIndex != -1 )
    {
-      if ( mReplaceText )
-         setText(mTl->mList[mSelIndex].text);
+      if (mReplaceText)
+         setText(mEntries[mSelIndex].buf);
 
       for(U32 i=0; i < mEntries.size(); i++)
       {
@@ -1465,7 +1466,12 @@ void GuiPopUpMenuCtrlEx::onAction()
       }
       else
       {
-         mTl->addEntry(mEntries[j].id, mEntries[j].buf);
+         String entryText = mEntries[j].buf;
+
+         if(mEntries[j].indented)
+            entryText = String("   ") + entryText;
+
+         mTl->addEntry(mEntries[j].id, entryText.c_str());
       }
    }
 

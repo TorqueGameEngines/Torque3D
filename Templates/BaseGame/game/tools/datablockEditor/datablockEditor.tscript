@@ -629,10 +629,21 @@ function DatablockEditorPlugin::deleteDatablock( %this )
 }
 
 //---------------------------------------------------------------------------------------------
+function DatablockEditorPlugin::createNewDatablockOfType(%this, %class, %inheritFrom)
+{
+   $DATABLOCK_EDITOR_NEWDB_CLASS = %class;
+   $DATABLOCK_EDITOR_NEWDB_INHERITFROM = %inheritFrom;
+
+   %this.pickDatablockPath();
+}
 
 function DatablockEditorPlugin::createDatablock(%this)
 {
-   %class = DatablockEditorTypeTree.getItemText(DatablockEditorTypeTree.getSelectedItem());
+   if($DATABLOCK_EDITOR_NEWDB_CLASS $= "")
+      %class = DatablockEditorTypeTree.getItemText(DatablockEditorTypeTree.getSelectedItem());
+   else
+      %class = $DATABLOCK_EDITOR_NEWDB_CLASS;
+      
    if( %class !$= "" )
    {  
       // Need to prompt for a name.
@@ -657,6 +668,12 @@ function DatablockEditorPlugin::createDatablock(%this)
             continue;
             
          %list.add( %datablock.getName(), %i + 1 );
+      }
+      
+      if($DATABLOCK_EDITOR_NEWDB_INHERITFROM !$= "")
+      {
+         %inheritFromListId = %list.findText($DATABLOCK_EDITOR_NEWDB_INHERITFROM);
+         %list.setSelected(%inheritFromListId);
       }
       
       // Set up state of client-side checkbox.
@@ -717,7 +734,11 @@ function DatablockEditorPlugin::createPromptNameCheck(%this, %path)
 
 function DatablockEditorPlugin::createDatablockFinish( %this, %name, %copySource )
 {
-   %class = DatablockEditorTypeTree.getItemText(DatablockEditorTypeTree.getSelectedItem());
+   if($DATABLOCK_EDITOR_NEWDB_CLASS $= "")
+      %class = DatablockEditorTypeTree.getItemText(DatablockEditorTypeTree.getSelectedItem());
+   else
+      %class = $DATABLOCK_EDITOR_NEWDB_CLASS;
+
    if( %class !$= "" )
    {  
       %action = %this.createUndo( ActionCreateDatablock, "Create New Datablock" );
@@ -742,6 +763,8 @@ function DatablockEditorPlugin::createDatablockFinish( %this, %name, %copySource
       
       %action.redo();
    }
+   
+   $DATABLOCK_EDITOR_NEWDB_CLASS = "";
 }
 
 //---------------------------------------------------------------------------------------------

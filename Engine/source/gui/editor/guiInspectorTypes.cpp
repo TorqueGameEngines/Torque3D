@@ -56,9 +56,9 @@ ConsoleDocClass( GuiInspectorTypeMenuBase,
 
 GuiControl* GuiInspectorTypeMenuBase::constructEditControl()
 {
-   GuiControl* retCtrl = new GuiPopUpMenuCtrl();
+   GuiControl* retCtrl = new GuiPopUpMenuCtrlEx();
 
-   GuiPopUpMenuCtrl *menu = dynamic_cast<GuiPopUpMenuCtrl*>(retCtrl);
+   GuiPopUpMenuCtrlEx *menu = dynamic_cast<GuiPopUpMenuCtrlEx*>(retCtrl);
 
    // Let's make it look pretty.
    retCtrl->setDataField( StringTable->insert("profile"), NULL, "ToolsGuiPopupMenuProfile" );
@@ -89,7 +89,7 @@ void GuiInspectorTypeMenuBase::setValue( StringTableEntry newValue )
       ctrl->setText( newValue );
 }
 
-void GuiInspectorTypeMenuBase::_populateMenu( GuiPopUpMenuCtrl *menu )
+void GuiInspectorTypeMenuBase::_populateMenu( GuiPopUpMenuCtrlEx *menu )
 {
    // do nothing, child classes override this.
 }
@@ -105,7 +105,7 @@ ConsoleDocClass( GuiInspectorTypeEnum,
    "@internal"
 );
 
-void GuiInspectorTypeEnum::_populateMenu( GuiPopUpMenuCtrl *menu )
+void GuiInspectorTypeEnum::_populateMenu( GuiPopUpMenuCtrlEx *menu )
 {
    const EngineEnumTable* table = mField->table;
    if( !table )
@@ -148,7 +148,7 @@ ConsoleDocClass( GuiInspectorTypeCubemapName,
    "@internal"
 );
 
-void GuiInspectorTypeCubemapName::_populateMenu( GuiPopUpMenuCtrl *menu )
+void GuiInspectorTypeCubemapName::_populateMenu(GuiPopUpMenuCtrlEx *menu )
 {
    PROFILE_SCOPE( GuiInspectorTypeCubemapName_populateMenu );
 
@@ -356,7 +356,7 @@ ConsoleDocClass( GuiInspectorTypeGuiProfile,
    "@internal"
 );
 
-void GuiInspectorTypeGuiProfile::_populateMenu( GuiPopUpMenuCtrl *menu )
+void GuiInspectorTypeGuiProfile::_populateMenu(GuiPopUpMenuCtrlEx *menu )
 {
    // Check whether we should show profiles from the editor category.
    
@@ -399,7 +399,7 @@ ConsoleDocClass(GuiInspectorTypeActionMap,
    "@internal"
 );
 
-void GuiInspectorTypeActionMap::_populateMenu(GuiPopUpMenuCtrl* menu)
+void GuiInspectorTypeActionMap::_populateMenu(GuiPopUpMenuCtrlEx* menu)
 {
    // Add the action maps to the menu.
    //First add a blank entry so you can clear the action map
@@ -1671,7 +1671,7 @@ ConsoleDocClass( GuiInspectorTypeSFXParameterName,
    "@internal"
 );
 
-void GuiInspectorTypeSFXParameterName::_populateMenu( GuiPopUpMenuCtrl *menu )
+void GuiInspectorTypeSFXParameterName::_populateMenu(GuiPopUpMenuCtrlEx *menu )
 {
    SimSet* set = Sim::getSFXParameterGroup();
    for( SimSet::iterator iter = set->begin(); iter != set->end(); ++ iter )
@@ -1703,7 +1703,7 @@ ConsoleDocClass( GuiInspectorTypeSFXStateName,
    "@internal"
 );
 
-void GuiInspectorTypeSFXStateName::_populateMenu( GuiPopUpMenuCtrl *menu )
+void GuiInspectorTypeSFXStateName::_populateMenu(GuiPopUpMenuCtrlEx *menu )
 {
    menu->addEntry( "", 0 );
 
@@ -1737,7 +1737,7 @@ ConsoleDocClass( GuiInspectorTypeSFXSourceName,
    "@internal"
 );
 
-void GuiInspectorTypeSFXSourceName::_populateMenu( GuiPopUpMenuCtrl *menu )
+void GuiInspectorTypeSFXSourceName::_populateMenu(GuiPopUpMenuCtrlEx *menu )
 {
    menu->addEntry( "", 0 );
 

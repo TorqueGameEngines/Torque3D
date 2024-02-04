@@ -117,6 +117,19 @@ void GuiBitmapCtrl::onSleep()
 //-------------------------------------
 void GuiBitmapCtrl::inspectPostApply()
 {
+   //This is a little bit of a 'special case' handling for this class
+   //Because we don't do the normal protectedField setup for the bitmapName/bitmapAsset fields
+   //which would automatically update the internal values and bound content, we'll do it here manually
+   //to ensure it's updated before we force a refresh, which would thrash the new values
+   if (mBitmapName != StringTable->insert("texhandle"))
+   {
+      _setBitmap(mBitmapAssetId);
+   }
+   else
+   {
+      setBitmap(getBitmap());
+   }
+
    // if the extent is set to (0,0) in the gui editor and appy hit, this control will
    // set it's extent to be exactly the size of the bitmap (if present)
    Parent::inspectPostApply();

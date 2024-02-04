@@ -161,7 +161,7 @@ public:
    inline StringTableEntry getSoundPath(const U32 slotId = 0) const { return mSoundPath[slotId]; };
    SFXProfile* getSfxProfile(const U32 slotId = 0) { return &mSFXProfile[slotId]; }
    SFXPlayList* getSfxPlaylist() { return &mPlaylist; }
-   SFXTrack* getSFXTrack() { return mIsPlaylist ? dynamic_cast<SFXTrack*>(&mPlaylist) : dynamic_cast<SFXTrack*>(&mSFXProfile[0]); }
+   SFXTrack* getSFXTrack() { load(); return mIsPlaylist ? dynamic_cast<SFXTrack*>(&mPlaylist) : dynamic_cast<SFXTrack*>(&mSFXProfile[0]); }
    SFXDescription* getSfxDescription() { return &mProfileDesc; }
    bool isPlaylist(){ return mIsPlaylist; }
 

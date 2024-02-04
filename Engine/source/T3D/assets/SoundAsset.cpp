@@ -550,7 +550,12 @@ DefineEngineMethod(SoundAsset, playSound, S32, (Point3F position), (Point3F::Zer
    {
       MatrixF transform;
       transform.setPosition(position);
-      SFXSource* source = SFX->playOnce(object->getSFXTrack(), &transform, NULL, -1);
+      SFXSource* source;
+      if (position == Point3F::Zero || !object->is3D())
+         source = SFX->playOnce(object->getSFXTrack());
+      else
+         source = SFX->playOnce(object->getSFXTrack(), &transform, NULL, -1);
+
       if(source)
          return source->getId();
       else

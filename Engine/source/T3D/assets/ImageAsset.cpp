@@ -482,13 +482,13 @@ GuiControl* GuiInspectorTypeImageAssetPtr::constructEditControl()
 
    if (mInspector->getInspectObject() != nullptr)
    {
-      dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"ImageAsset\", \"AssetBrowser.changeAsset\", %s, %s);",
-         mInspector->getIdString(), mCaption);
+      dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"ImageAsset\", \"AssetBrowser.changeAsset\", %s);",
+         getIdString());
       mBrowseButton->setField("Command", szBuffer);
 
       setDataField(StringTable->insert("targetObject"), NULL, mInspector->getInspectObject()->getIdString());
 
-      previewImage = mInspector->getInspectObject()->getDataField(mCaption, NULL);
+      previewImage = getData();
    }
    else
    {
@@ -672,7 +672,7 @@ void GuiInspectorTypeImageAssetPtr::updatePreviewImage()
 {
    const char* previewImage;
    if (mInspector->getInspectObject() != nullptr)
-      previewImage = mInspector->getInspectObject()->getDataField(mCaption, NULL);
+      previewImage = getData();
    else
       previewImage = Con::getVariable(mVariableName);
 

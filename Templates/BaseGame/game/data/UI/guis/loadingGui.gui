@@ -1,10 +1,9 @@
 //--- OBJECT WRITE BEGIN ---
-$guiContent = new GuiChunkedBitmapCtrl(LoadingGui) {
-   bitmapAsset = "UI:backgrounddark_image";
+$guiContent = new GuiControl(LoadingGui) {
    useVariable = "0";
    tile = "0";
    position = "0 0";
-   extent = "1024 768";
+   extent = "1280 720";
    minExtent = "8 8";
    horizSizing = "width";
    vertSizing = "height";
@@ -18,103 +17,94 @@ $guiContent = new GuiChunkedBitmapCtrl(LoadingGui) {
    canSaveDynamicFields = "1";
       Enabled = "1";
 
-   new GuiControl() {
-      position = "263 301";
-      extent = "360 360";
-      minExtent = "8 8";
-      horizSizing = "center";
-      vertSizing = "center";
-      profile = "GuiDefaultProfile";
-      visible = "1";
-      active = "1";
-      command = "disconnect();\nCanvas.setContent(ProjectSettings.value(\"UI/mainMenuName\"));";
-      accelerator = "escape";
+   new GuiPanel() {
+      position = "0 0";
+      extent = "1280 720";
+      horizSizing = "width";
+      vertSizing = "height";
+      profile = "GuiMenuPanelProfile";
       tooltipProfile = "GuiToolTipProfile";
-      hovertime = "1000";
-      isContainer = "1";
-      canSave = "1";
-      canSaveDynamicFields = "0";
-
-      new GuiBitmapCtrl() {
-         bitmapAsset = "UI:backgrounddark_image";
-         color = "255 255 255 255";
-         wrap = "0";
-         position = "0 0";
+      
+      new GuiControl() {
+         position = "263 301";
          extent = "360 360";
-         minExtent = "8 2";
-         horizSizing = "right";
-         vertSizing = "bottom";
-         profile = "GuiDefaultProfile";
-         visible = "1";
-         active = "1";
-         tooltipProfile = "GuiToolTipProfile";
-         hovertime = "1000";
-         isContainer = "0";
-         canSave = "1";
-         canSaveDynamicFields = "0";
-      };
-      new GuiBitmapCtrl(LoadingLogo) {
-         bitmapAsset = "UI:Torque_3D_logo_alt_image";
-         color = "255 255 255 255";
-         wrap = "0";
-         position = "0 0";
-         extent = "360 360";
-         minExtent = "8 2";
-         horizSizing = "center";
-         vertSizing = "center";
-         profile = "GuiDefaultProfile";
-         visible = "1";
-         active = "1";
-         tooltipProfile = "GuiToolTipProfile";
-         hovertime = "1000";
-         isContainer = "0";
-         canSave = "1";
-         canSaveDynamicFields = "0";
-      };
-      new GuiProgressBitmapCtrl(LoadingProgress) {
-         maxLength = "1024";
-         margin = "0 0 0 0";
-         padding = "0 0 0 0";
-         anchorTop = "1";
-         anchorBottom = "0";
-         anchorLeft = "1";
-         anchorRight = "0";
-         position = "30 320";
-         extent = "300 24";
-         minExtent = "8 2";
-         horizSizing = "width";
-         vertSizing = "top";
-         profile = "GuiProgressBitmapProfile";
-         visible = "1";
-         active = "1";
-         tooltipProfile = "GuiToolTipProfile";
-         hovertime = "1000";
-         isContainer = "0";
-         canSave = "1";
-         canSaveDynamicFields = "0";
-      };
-      new GuiTextCtrl(LoadingProgressTxt) {
-         text = "LOADING DATABLOCKS";
-         maxLength = "255";
-         margin = "0 0 0 0";
-         padding = "0 0 0 0";
-         anchorTop = "1";
-         anchorBottom = "0";
-         anchorLeft = "1";
-         anchorRight = "0";
-         position = "0 340";
-         extent = "360 20";
          minExtent = "8 8";
          horizSizing = "center";
-         vertSizing = "top";
-         profile = "GuiMenuTextProfile";
+         vertSizing = "center";
+         profile = "GuiMenuPanelProfile";
          visible = "1";
          active = "1";
+         command = "disconnect();\nCanvas.setContent(ProjectSettings.value(\"UI/mainMenuName\"));";
+         accelerator = "escape";
          tooltipProfile = "GuiToolTipProfile";
          hovertime = "1000";
-         isContainer = "0";
+         isContainer = "1";
          canSave = "1";
          canSaveDynamicFields = "0";
+
+         new GuiBitmapCtrl(LoadingLogo) {
+            bitmapAsset = "UI:Torque_3D_logo_alt_image";
+            color = "255 255 255 255";
+            wrap = "0";
+            position = "0 0";
+            extent = "360 360";
+            minExtent = "8 2";
+            horizSizing = "center";
+            vertSizing = "center";
+            profile = "GuiDefaultProfile";
+            visible = "1";
+            active = "1";
+            tooltipProfile = "GuiToolTipProfile";
+            hovertime = "1000";
+            isContainer = "0";
+            canSave = "1";
+            canSaveDynamicFields = "0";
+         };
+         new GuiProgressBitmapCtrl(LoadingProgress) {
+            maxLength = "1024";
+            margin = "0 0 0 0";
+            padding = "0 0 0 0";
+            anchorTop = "1";
+            anchorBottom = "0";
+            anchorLeft = "1";
+            anchorRight = "0";
+            position = "30 320";
+            extent = "300 24";
+            minExtent = "8 2";
+            horizSizing = "width";
+            vertSizing = "top";
+            profile = "GuiProgressBitmapProfile";
+            visible = "1";
+            active = "1";
+            tooltipProfile = "GuiToolTipProfile";
+            hovertime = "1000";
+            isContainer = "0";
+            canSave = "1";
+            canSaveDynamicFields = "0";
+         };
+         new GuiTextCtrl(LoadingProgressTxt) {
+            text = "LOADING DATABLOCKS";
+            maxLength = "255";
+            margin = "0 0 0 0";
+            padding = "0 0 0 0";
+            anchorTop = "1";
+            anchorBottom = "0";
+            anchorLeft = "1";
+            anchorRight = "0";
+            position = "0 340";
+            extent = "360 20";
+            minExtent = "8 8";
+            horizSizing = "center";
+            vertSizing = "top";
+            profile = "GuiMenuTextProfile";
+            visible = "1";
+            active = "1";
+            tooltipProfile = "GuiToolTipProfile";
+            hovertime = "1000";
+            isContainer = "0";
+            canSave = "1";
+            canSaveDynamicFields = "0";
+         };
       };
    };
 };

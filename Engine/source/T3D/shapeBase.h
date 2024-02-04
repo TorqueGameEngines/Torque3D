@@ -1594,6 +1594,8 @@ public:
    /// @param   pos   Muzzle point (out)
    void getMuzzlePoint(U32 imageSlot,Point3F* pos);
 
+   virtual void getNodeTransform(const char* nodeName, const MatrixF& xfm, MatrixF* outMat);
+
    /// @}
 
    /// @name Transforms

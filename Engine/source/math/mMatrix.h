@@ -228,7 +228,8 @@ public:
    //------------------------------------
    friend MatrixF operator * ( const MatrixF &m1, const MatrixF &m2 );
    MatrixF& operator *= ( const MatrixF &m );
-
+   MatrixF &operator = (const MatrixF &m);
+   bool isNaN();
    // Static identity matrix
    const static MatrixF Identity;
 };
@@ -596,6 +597,20 @@ inline MatrixF& MatrixF::operator *= ( const MatrixF &m1 )
    return (*this);
 }
 
+inline MatrixF &MatrixF::operator = (const MatrixF &m1)
+{
+   for (U32 i=0;i<16;i++)
+   this->m[i] = m1.m[i];
+   return (*this);
+}
+inline bool MatrixF::isNaN()
+{
+   bool isaNaN = false;
+   for (U32 i = 0; i < 16; i++)
+      if (mIsNaN_F(m[i]))
+         isaNaN = true;
+   return isaNaN;
+}
 //------------------------------------
 // Non-member methods
 //------------------------------------

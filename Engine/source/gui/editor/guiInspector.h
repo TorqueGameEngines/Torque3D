@@ -169,6 +169,8 @@ public:
 
    void removeInspectorGroup(StringTableEntry groupName);
 
+   void setForcedArrayIndex(S32 arrayIndex);
+
 protected:
       
    typedef Vector< SimObjectPtr< SimObject > > TargetVector;
@@ -187,6 +189,7 @@ protected:
    SimObjectPtr<GuiInspectorField> mHLField;
    String mGroupFilters;   
    bool mShowCustomFields;
+   S32 mForcedArrayIndex;
 };
 
 #endif

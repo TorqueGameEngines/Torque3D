@@ -99,6 +99,8 @@ class GuiMLTextCtrl : public GuiControl
       Style *style;
       bool isClipped;
 
+      U32 pauseTime;
+
       URL *url;
       Atom *next;
    };
@@ -264,6 +266,15 @@ class GuiMLTextCtrl : public GuiControl
    // Too many chars sound:
    DECLARE_SOUNDASSET(GuiMLTextCtrl, DeniedSound);
    DECLARE_ASSET_SETGET(GuiMLTextCtrl, DeniedSound);
+   // Typeout over time
+   bool mUseTypeOverTime;
+   U32 mTypeOverTimeStartMS;
+   F32 mTypeOverTimeSpeedMS;
+   U32 mTypeOverTimeIndex;
+   U32 mTypeOverTimeTextLen;
+
+   SFXTrack *mTypeoutSound;
+   S32 mTypeoutSoundRate;
    //-------------------------------------- Protected interface
   protected:
    // Inserting and deleting character blocks...
@@ -304,6 +315,8 @@ class GuiMLTextCtrl : public GuiControl
    S32 getCursorPosition()  { return( mCursorPosition ); }
 
    virtual bool resize(const Point2I &newPosition, const Point2I &newExtent);
+
+   bool isTypingOut();
 };
 
 #endif  // _H_GUIMLTEXTCTRL_

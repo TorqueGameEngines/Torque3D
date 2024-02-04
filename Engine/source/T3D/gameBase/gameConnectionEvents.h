@@ -110,7 +110,7 @@ class SimSoundAssetEvent : public NetEvent
 private:
    AssetPtr<SoundAsset> mAsset;
    MatrixF mTransform;
-
+   bool mIs3D;
 public:
    typedef NetEvent Parent;
    

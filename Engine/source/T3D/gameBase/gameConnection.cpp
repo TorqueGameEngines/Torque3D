@@ -1566,7 +1566,11 @@ void GameConnection::play2D(StringTableEntry assetId)
 {
    if (AssetDatabase.isDeclaredAsset(assetId))
    {
-      postNetEvent(new SimSoundAssetEvent(assetId));
+      AssetPtr<SoundAsset> tempSoundAsset = assetId;
+      if (tempSoundAsset && tempSoundAsset->is3D())
+      {
+         postNetEvent(new SimSoundAssetEvent(assetId, SFX->getListener(0).getTransform()));
+      }
    }
 }
 

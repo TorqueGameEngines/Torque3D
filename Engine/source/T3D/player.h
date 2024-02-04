@@ -376,7 +376,7 @@ struct PlayerData: public ShapeBaseData {
    DECLARE_CALLBACK( void, doDismount, ( Player* obj ) );
    DECLARE_CALLBACK( void, onEnterLiquid, ( Player* obj, F32 coverage, const char* type ) );
    DECLARE_CALLBACK( void, onLeaveLiquid, ( Player* obj, const char* type ) );
-   DECLARE_CALLBACK( void, animationDone, ( Player* obj ) );
+   DECLARE_CALLBACK( void, animationDone, ( Player* obj, const char* animName) );
    DECLARE_CALLBACK( void, onEnterMissionArea, ( Player* obj ) );
    DECLARE_CALLBACK( void, onLeaveMissionArea, ( Player* obj ) );
    /// @}
@@ -501,6 +501,7 @@ protected:
       bool holdAtEnd;
       bool animateOnServer;
       bool atEnd;
+      bool callbackTripped;
    } mActionAnimation;
 
    struct ArmAnimation {

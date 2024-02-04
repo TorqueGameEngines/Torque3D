@@ -264,7 +264,7 @@ IMPLEMENT_CALLBACK( PlayerData, onLeaveLiquid, void, ( Player* obj, const char* 
    "@param obj The Player object\n"
    "@param type The type of liquid the player has left\n" );
 
-IMPLEMENT_CALLBACK( PlayerData, animationDone, void, ( Player* obj ), ( obj ),
+IMPLEMENT_CALLBACK( PlayerData, animationDone, void, ( Player* obj, const char * animName), ( obj, animName),
    "@brief Called on the server when a scripted animation completes.\n\n"
    "@param obj The Player object\n"
    "@see Player::setActionThread() for setting a scripted animation and its 'hold' parameter to "
@@ -1584,6 +1584,7 @@ Player::Player()
    mActionAnimation.holdAtEnd = false;
    mActionAnimation.animateOnServer = false;
    mActionAnimation.atEnd = false;
+   mActionAnimation.callbackTripped = false;
    mState = MoveState;
    mJetting = false;
    mFalling = false;
@@ -3848,7 +3849,7 @@ void Player::setActionThread(U32 action,bool forward,bool hold,bool wait,bool fs
       mActionAnimation.atEnd           = false;
       mActionAnimation.delayTicks      = (S32)sNewAnimationTickTime;
       mActionAnimation.atEnd           = false;
-
+      mActionAnimation.callbackTripped = false;
       if (sUseAnimationTransitions && (action != PlayerData::LandAnim || !(mDataBlock->landSequenceTime > 0.0f && !mDataBlock->transitionToLand)) && (isGhost()/* || mActionAnimation.animateOnServer*/))
       {
          // The transition code needs the timeScale to be set in the
@@ -4001,14 +4002,22 @@ void Player::updateActionThread()
    if (mMountPending)
       mMountPending = (isMounted() ? 0 : (mMountPending - 1));
 
+   if (isServerObject() && (mActionAnimation.action >= PlayerData::NumTableActionAnims) && mActionAnimation.atEnd)
+   {
+      //The scripting language will get a call back when a script animation has finished...
+      //  example: When the chat menu animations are done playing...
+      bool tripCallback = false;
+      if ((!mActionAnimation.holdAtEnd)||(mActionAnimation.holdAtEnd && !mActionAnimation.callbackTripped))
+         tripCallback = true;
+      if (tripCallback)
+         mDataBlock->animationDone_callback(this, mActionAnimation.thread->getSequenceName());
+      mActionAnimation.callbackTripped = true;
+   }
+
    if ((mActionAnimation.action == PlayerData::NullAnimation) ||
        ((!mActionAnimation.waitForEnd || mActionAnimation.atEnd) &&
        (!mActionAnimation.holdAtEnd && (mActionAnimation.delayTicks -= !mMountPending) <= 0)))
    {
-      //The scripting language will get a call back when a script animation has finished...
-      //  example: When the chat menu animations are done playing...
-      if ( isServerObject() && mActionAnimation.action >= PlayerData::NumTableActionAnims )
-         mDataBlock->animationDone_callback( this );
       pickActionAnimation();
    }
 

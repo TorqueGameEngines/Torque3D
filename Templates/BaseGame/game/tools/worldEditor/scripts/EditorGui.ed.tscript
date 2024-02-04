@@ -749,6 +749,8 @@ function EditorGui::addCameraBookmark( %this, %name )
    
    EWorldEditor.isDirty = true;
    EditorTree.buildVisibleTree(true);
+   
+   return %obj;
 }
 
 function EditorGui::removeCameraBookmark( %this, %name )
@@ -813,7 +815,9 @@ function EditorGui::addCameraBookmarkByGui( %this )
          break;
       }
    }
-   EditorGui.addCameraBookmark( %name );
+   %obj = EditorGui.addCameraBookmark( %name );
+
+   return %obj;
 }
 
 function EditorGui::toggleCameraBookmarkWindow( %this )

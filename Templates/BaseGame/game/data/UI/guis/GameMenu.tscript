@@ -1,6 +1,7 @@
 function GameMenu::onAdd(%this)
 {
    %this.gameMenusArray = new ArrayObject(){};
+   %this.currentMenuIdx = 0;
 }
 
 function GameMenu::onWake(%this)

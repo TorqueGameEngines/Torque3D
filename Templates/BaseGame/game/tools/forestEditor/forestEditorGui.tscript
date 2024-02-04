@@ -301,6 +301,12 @@ function ForestEditorGui::onActiveForestUpdated( %this, %forest, %createNew )
                         %this @ ".createForest();", "" );
       return;                                                         
    }  
+   
+   if(%gotForest)
+   {
+      EWorldEditor.isDirty = true;
+      ForestEditorPlugin.dirty = true;
+   }
 }
 
 /// Called from a message box when a forest is not found.

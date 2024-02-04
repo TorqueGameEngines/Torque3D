@@ -51,6 +51,8 @@ $pref::Video::disablePixSpecular = false;
 
 $pref::Video::disableCubemapping = false;
 
+$pref::PostFX::EnableHDRBloom = true;
+
 ///
 $pref::Video::enableParallaxMapping = true;
 

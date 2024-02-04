@@ -790,6 +790,15 @@ DefineEngineMethod(Material, setAnimFlags, void, (S32 id, const char *flags), (0
    //if we're still unset, see if they tried assigning a number
    if (object->mAnimFlags[id] == 0)
       object->mAnimFlags[id] = dAtoi(flags);
+
+   //if we're *still* unset, make sure we've cleared all cases
+   if (object->mAnimFlags[id] == 0)
+   {
+      object->mScrollOffset[id].set(0.0f, 0.0f);
+      object->mRotPos[id] = 0.0f;
+      object->mWavePos[id] = 0.0f;
+   }
+
 }
 
 DefineEngineMethod(Material, getFilename, const char*, (), , "Get filename of material")

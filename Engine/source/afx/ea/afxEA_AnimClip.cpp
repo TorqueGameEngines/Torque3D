@@ -128,7 +128,7 @@ bool afxEA_AnimClip::ea_update(F32 dt)
     if (go_for_it)
     {
       F32 rate = clip_data->rate/mProp_time_factor;
-      F32 pos = mFmod(mLife_elapsed, anim_lifetime)/anim_lifetime;
+      F32 pos = (anim_lifetime>0) ? mFmod(mLife_elapsed, anim_lifetime)/anim_lifetime : 0;
       pos = mFmod(pos + clip_data->pos_offset, 1.0);
       if (clip_data->rate < 0) 
         pos = 1.0f - pos;

@@ -48,7 +48,13 @@ class GuiBitmapBorderCtrl : public GuiControl
    };
 	RectI *mBitmapBounds;  ///< bmp is [3*n], bmpHL is [3*n + 1], bmpNA is [3*n + 2]
    GFXTexHandle mTextureObject;
+   ColorI   mColor;
+
 public:
+   GuiBitmapBorderCtrl();
+
+   static void initPersistFields();
+
    bool onWake();
    void onSleep();
    void onRender(Point2I offset, const RectI &updateRect);
@@ -104,6 +110,21 @@ ConsoleDocClass( GuiBitmapBorderCtrl,
    "@ingroup GuiImages"
 );
 
+GuiBitmapBorderCtrl::GuiBitmapBorderCtrl()
+{
+   mColor.set(255,255,255, 255);
+}
+
+void GuiBitmapBorderCtrl::initPersistFields()
+{
+   docsURL;
+   addGroup("Bitmap");
+   addField("color", TypeColorI, Offset(mColor, GuiBitmapBorderCtrl), "color mul");
+   endGroup("Bitmap");
+
+   Parent::initPersistFields();
+}
+
 bool GuiBitmapBorderCtrl::onWake()
 {
    if (! Parent::onWake())
@@ -153,6 +174,8 @@ void GuiBitmapBorderCtrl::onRender(Point2I offset, const RectI &updateRect)
         drawUtil->drawRectFill(winRect, mProfile->mFillColor);
 
       drawUtil->clearBitmapModulation();
+      drawUtil->setBitmapModulation(mColor);
+
       drawUtil->drawBitmapSR(mTextureObject, offset, mBitmapBounds[BorderTopLeft]);
       drawUtil->drawBitmapSR(mTextureObject, Point2I(offset.x + getWidth() - mBitmapBounds[BorderTopRight].extent.x, offset.y),
                       mBitmapBounds[BorderTopRight]);

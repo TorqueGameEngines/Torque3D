@@ -297,15 +297,15 @@ void SimDataBlockEvent::process(NetConnection *cptr)
 static F32 SoundPosAccuracy = 0.5;
 static S32 SoundRotBits = 8;
 
-SimSoundAssetEvent::SimSoundAssetEvent(StringTableEntry assetId, const MatrixF& mat)
+SimSoundAssetEvent::SimSoundAssetEvent(StringTableEntry assetId, const MatrixF* mat)
 {
    // cant get here unless the asset is declared.
    mAsset = assetId;
-   mIs3D = false;
+   sentTransform = false;
    if (mat)
    {
-      mTransform = mat;
-      mIs3D = true;
+      mTransform = *mat;
+      sentTransform = true;
    }
 }
 
@@ -314,35 +314,29 @@ void SimSoundAssetEvent::pack(NetConnection* con, BitStream* stream)
    NetStringHandle assetIdStr = mAsset->getAssetId();
    con->packNetStringHandleU(stream, assetIdStr);
 
-   // only stream if this is a 3d sound asset.
-   stream->writeFlag(mIs3D);
-   if (mIs3D)
+   SFXDescription* ad = mAsset->getSfxDescription();
+   if (stream->writeFlag(sentTransform))
    {
-      if (mAsset->is3D())
+      if (stream->writeFlag(ad->mConeInsideAngle || ad->mConeOutsideAngle))
       {
-         SFXDescription* ad = mAsset->getSfxDescription();
-         if (stream->writeFlag(ad->mConeInsideAngle || ad->mConeOutsideAngle))
-         {
-            QuatF q(mTransform);
-            q.normalize();
+         QuatF q(mTransform);
+         q.normalize();
 
-            // LH - we can get a valid quat that's very slightly over 1 in and so
-            // this fails (barely) check against zero.  So use some error-
+         // LH - we can get a valid quat that's very slightly over 1 in and so
+         // this fails (barely) check against zero.  So use some error-
             AssertFatal((1.0 - ((q.x * q.x) + (q.y * q.y) + (q.z * q.z))) >= (0.0 - 0.001),
                "QuatF::normalize() is broken in Sim3DAudioEvent");
 
-            stream->writeSignedFloat(q.x, SoundRotBits);
-            stream->writeSignedFloat(q.y, SoundRotBits);
-            stream->writeSignedFloat(q.z, SoundRotBits);
-            stream->writeFlag(q.w < 0.0);
-         }
-
-         Point3F pos;
-         mTransform.getColumn(3, &pos);
-         stream->writeCompressedPoint(pos, SoundPosAccuracy);
+               stream->writeSignedFloat(q.x, SoundRotBits);
+         stream->writeSignedFloat(q.y, SoundRotBits);
+         stream->writeSignedFloat(q.z, SoundRotBits);
+         stream->writeFlag(q.w < 0.0);
       }
-   }
 
+      Point3F pos;
+      mTransform.getColumn(3, &pos);
+      stream->writeCompressedPoint(pos, SoundPosAccuracy);
+   }
 }
 
 void SimSoundAssetEvent::write(NetConnection* con, BitStream* stream)
@@ -363,48 +357,40 @@ void SimSoundAssetEvent::unpack(NetConnection* con, BitStream* stream)
       mAsset = temp;
    }
 
-   if (stream->readFlag())
-   {
-      mIs3D = true;
-      if (mAsset->is3D())
-      {
-         if (stream->readFlag()) {
-            QuatF q;
-            q.x = stream->readSignedFloat(SoundRotBits);
-            q.y = stream->readSignedFloat(SoundRotBits);
-            q.z = stream->readSignedFloat(SoundRotBits);
-            F32 value = ((q.x * q.x) + (q.y * q.y) + (q.z * q.z));
-            // #ifdef __linux
-                  // Hmm, this should never happen, but it does...
-            if (value > 1.f)
-               value = 1.f;
-            // #endif
-            q.w = mSqrt(1.f - value);
-            if (stream->readFlag())
-               q.w = -q.w;
-            q.setMatrix(&mTransform);
-         }
-         else
-            mTransform.identity();
-
-         Point3F pos;
-         stream->readCompressedPoint(&pos, SoundPosAccuracy);
-         mTransform.setColumn(3, pos);
+   sentTransform = stream->readFlag();
+   if (sentTransform) {
+      if (stream->readFlag()) {
+         QuatF q;
+         q.x = stream->readSignedFloat(SoundRotBits);
+         q.y = stream->readSignedFloat(SoundRotBits);
+         q.z = stream->readSignedFloat(SoundRotBits);
+         F32 value = ((q.x * q.x) + (q.y * q.y) + (q.z * q.z));
+         // #ifdef __linux
+               // Hmm, this should never happen, but it does...
+         if (value > 1.f)
+            value = 1.f;
+         // #endif
+         q.w = mSqrt(1.f - value);
+         if (stream->readFlag())
+            q.w = -q.w;
+         q.setMatrix(&mTransform);
       }
+      else
+         mTransform.identity();
+
+      Point3F pos;
+      stream->readCompressedPoint(&pos, SoundPosAccuracy);
+      mTransform.setColumn(3, pos);
+   }
+   else
+   {
+      mTransform = SFX->getListener(0).getTransform();
    }
 }
 
 void SimSoundAssetEvent::process(NetConnection* con)
 {
-
-   if (mIs3D)
-   {
-      if (mAsset->is3D())
-         SFX->playOnce(mAsset->getSFXTrack(), &mTransform);
-   }
-   else
-      SFX->playOnce(mAsset->getSFXTrack());
-
+   SFX->playOnce(mAsset->getSFXTrack(), &mTransform);
 }
 
 Sim2DAudioEvent::Sim2DAudioEvent(SFXProfile *profile)

@@ -274,6 +274,8 @@ function sceneLightingComplete()
    
    onPhaseComplete("STARTING MISSION");
    
+   callGamemodeFunction("onClientMissionLoaded");
+   
    // The is also the end of the mission load cycle.
    commandToServer('MissionStartPhase3Ack', $MSeq);
 }

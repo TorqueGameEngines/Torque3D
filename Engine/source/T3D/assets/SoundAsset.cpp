@@ -448,7 +448,7 @@ bool SoundAsset::_setSoundFile(void* object, const char* index, const char* data
       id = dAtoui(index);
 
    if (pData->mSoundFile[id] == data)
-      return true;
+      return false;
 
    // Update.
    pData->mSoundFile[id] = data;
@@ -459,7 +459,7 @@ bool SoundAsset::_setSoundFile(void* object, const char* index, const char* data
 
    // Refresh the asset.
    pData->refreshAsset();
-   return false;
+   return true;
 }
 
 StringTableEntry SoundAsset::getAssetIdByFileName(StringTableEntry fileName)

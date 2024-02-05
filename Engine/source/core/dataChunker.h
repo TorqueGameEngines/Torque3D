@@ -39,6 +39,8 @@ public:
       ChunkSize = 16384
    };
 
+   typedef T AlignmentType;
+
    struct alignas(uintptr_t) DataBlock : public AlignedBufferAllocator<T>
    {
       DataBlock* mNext;
@@ -129,6 +131,19 @@ public:
       AssertFatal(mChunkHead == NULL, "Tried setting AFTER init");
       mChunkSize = size;
    }
+
+   bool isManagedByChunker(void* ptr) const
+   {
+      U8* chkPtr = (U8*)ptr;
+      for (DataBlock* itr = mChunkHead; itr; itr = itr->mNext)
+      {
+         const U8* blockStart = (U8*)itr->getAlignedBuffer();
+         const U8* blockEnd = (U8*)itr->getAlignedBufferEnd();
+         if (chkPtr >= blockStart && chkPtr < blockEnd)
+            return true;
+      }
+      return false;
+   }
 };
 
 class DataChunker : public BaseDataChunker<uintptr_t>
@@ -166,6 +181,8 @@ public:
 class MultiTypedChunker : private BaseDataChunker<uintptr_t>
 {
 public:
+   typedef uintptr_t AlignmentType;
+
    MultiTypedChunker(dsize_t size = BaseDataChunker<uintptr_t>::ChunkSize) : BaseDataChunker<uintptr_t>(std::max<uintptr_t>(sizeof(uintptr_t), size))
    {
    }
@@ -195,7 +212,7 @@ template<class T> struct ChunkerFreeClassList
       mNextList = NULL;
    }
 
-   bool isEmpty()
+   bool isEmpty() const
    {
       return mNextList == NULL;
    }
@@ -248,7 +265,15 @@ public:
    void freeBlocks(bool keepOne = false)
    {
       BaseDataChunker<T>::freeBlocks(keepOne);
+      mFreeListHead.reset();
    }
+
+   inline bool isManagedByChunker(void* ptr) const
+   {
+      return BaseDataChunker<T>::isManagedByChunker(ptr);
+   }
+
+   inline ChunkerFreeClassList<T>& getFreeListHead() { return mFreeListHead; }
 };
 
 /// Implements a chunker which uses the data of another BaseDataChunker 
@@ -390,6 +415,8 @@ public:
       default:
          break;
       }
+
+      item.ptr = NULL;
    }
 
    void freeBlocks(bool keepOne = false)
@@ -398,4 +425,8 @@ public:
       mT2.freeBlocks(keepOne);
       mT3.freeBlocks(keepOne);
    }
+
+   inline ClassChunker<K1>& getT1Chunker() { return mT1; }
+   inline ClassChunker<K2>& getT2Chunker() { return mT2; }
+   inline ClassChunker<K3>& getT3Chunker() { return mT3; }
 };

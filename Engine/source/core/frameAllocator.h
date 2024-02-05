@@ -103,9 +103,19 @@ public:
       return (U32)(numBytes / sizeof(T));
    }
 
+   static inline U32 calcRequiredPaddedByteSize(const dsize_t numBytes)
+   {
+      return calcRequiredElementSize(numBytes) * sizeof(T);
+   }
+
    inline T* getAlignedBuffer() const
    {
       return mBuffer;
+   }
+
+   inline T* getAlignedBufferEnd() const
+   {
+      return mBuffer + mHighWaterMark;
    }
 
    inline U32 getPosition() const
@@ -153,7 +163,7 @@ public:
 class FrameAllocator
 {
 public:
-   static dsize_t   smMaxFrameAllocation;
+   static U32   smMaxFrameAllocation;
 #ifdef TORQUE_MEM_DEBUG
    static thread_local dsize_t   smAllocatedBytes;
 #endif
@@ -220,6 +230,8 @@ public:
       return smMainInstance.getSizeBytes();
    }
 
+   static U32 getMaxFrameAllocation();
+
    static thread_local FrameAllocatorType smMainInstance;
 };
 
@@ -253,7 +265,7 @@ public:
       FrameAllocator::setWaterMark(mMarker);
    }
 
-   void* alloc(const U32 allocSize) const
+   void* alloc(const U32 allocSize)
    {
       return FrameAllocator::alloc(allocSize);
    }
@@ -336,7 +348,7 @@ public:
    const T& operator *() const { return *mMemory; }
 
    T** operator &() { return &mMemory; }
-   const T** operator &() const { return &mMemory; }
+   T* const * operator &() const { return &mMemory; }
 
    operator T* () { return mMemory; }
    operator const T* () const { return mMemory; }

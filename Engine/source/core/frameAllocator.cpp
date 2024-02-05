@@ -29,15 +29,18 @@ thread_local FrameAllocator::FrameAllocatorType   FrameAllocator::smMainInstance
 thread_local dsize_t   FrameAllocator::smAllocatedBytes;
 #endif
 
-#if defined(TORQUE_DEBUG)
+U32 FrameAllocator::smMaxFrameAllocation;
 
-dsize_t FrameAllocator::smMaxFrameAllocation;
-
-
-DefineEngineFunction(getMaxFrameAllocation, S32, (), , "")
+U32 FrameAllocator::getMaxFrameAllocation()
 {
    return (S32)FrameAllocator::smMaxFrameAllocation;
 }
 
+#if defined(TORQUE_DEBUG)
+
+DefineEngineFunction(getMaxFrameAllocation, S32, (), , "")
+{
+   return (S32)FrameAllocator::getMaxFrameAllocation();
+}
 
 #endif

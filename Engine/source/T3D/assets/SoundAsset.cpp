@@ -173,7 +173,7 @@ SoundAsset::SoundAsset()
    mPlaylist.mRandomMode = SFXPlayList::RANDOM_NotRandom;
    mPlaylist.mTrace = false;
    mPlaylist.mLoopMode = SFXPlayList::LOOP_All;
-   mPlaylist.mActiveSlots = 12;
+   mPlaylist.mActiveSlots = 1;
 
 }
 
@@ -192,7 +192,7 @@ void SoundAsset::initPersistFields()
    Parent::initPersistFields();
    addArray("slots", SFXPlayList::SFXPlaylistSettings::NUM_SLOTS);
       addProtectedField("soundFile", TypeAssetLooseFilePath, Offset(mSoundFile, SoundAsset),
-         &_setSoundFile, &_getSoundFile, SFXPlayList::SFXPlaylistSettings::NUM_SLOTS, "Path to the sound file.");
+         &_setSoundFile, &defaultProtectedGetFn, SFXPlayList::SFXPlaylistSettings::NUM_SLOTS, "Path to the sound file.");
 
       addField("replay", TYPEID< SFXPlayList::EReplayMode >(), Offset(mPlaylist.mSlots.mReplayMode, SoundAsset), SFXPlayList::SFXPlaylistSettings::NUM_SLOTS,
          "Behavior when an already playing sound is encountered on this slot from a previous cycle.\n"
@@ -321,6 +321,8 @@ void SoundAsset::initializeAsset(void)
          break;
 
       mSoundPath[i] = getOwned() ? expandAssetFilePath(mSoundFile[i]) : mSoundPath[i];
+      if (!Torque::FS::IsFile(mSoundPath[i]))
+         Con::errorf("SoundAsset::initializeAsset (%s)[%d] could not find %s!", getAssetName(), i, mSoundPath[i]);
    }
 }
 
@@ -437,32 +439,27 @@ U32 SoundAsset::load()
    return mLoadedState;
 }
 
-StringTableEntry SoundAsset::getSoundFile(const char* pSoundFile, const U32 slotId)
+bool SoundAsset::_setSoundFile(void* object, const char* index, const char* data)
 {
-   for (U32 i = 0; i < 12; i++)
-   {
-      if(mSoundFile[i] == pSoundFile)
-         return mSoundFile[i];
-   }
-}
+   SoundAsset* pData = static_cast<SoundAsset*>(object);
 
-void SoundAsset::setSoundFile(const char* pSoundFile, const U32 slotId)
-{
-   // Sanity!
-   AssertFatal(pSoundFile != NULL, "Cannot use a NULL sound file.");
+   U32 id = 0;
+   if (index)
+      id = dAtoui(index);
 
-   // Fetch sound file.
-   pSoundFile = StringTable->insert(pSoundFile, true);
-
-   //Ignore no change,
-   if (pSoundFile == mSoundFile[slotId])
-      return;
+   if (pData->mSoundFile[id] == data)
+      return true;
 
    // Update.
-   mSoundFile[slotId] = getOwned() ? expandAssetFilePath(pSoundFile) : pSoundFile;
+   pData->mSoundFile[id] = data;
+   if (pData->mSoundFile[id] == StringTable->EmptyString())
+      pData->mSoundPath[id] = StringTable->EmptyString();
+   else
+      pData->mSoundPath[id] = pData->getOwned() ? pData->expandAssetFilePath(pData->mSoundFile[id]) : pData->mSoundFile[id];
 
    // Refresh the asset.
-   refreshAsset();
+   pData->refreshAsset();
+   return false;
 }
 
 StringTableEntry SoundAsset::getAssetIdByFileName(StringTableEntry fileName)

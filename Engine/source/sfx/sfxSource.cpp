@@ -277,7 +277,8 @@ SFXSource::SFXSource( SFXTrack* track, SFXDescription* description )
       
    if( mTrack != NULL )
       deleteNotify( mTrack );
-   deleteNotify( mDescription );
+   if (mDescription != NULL)
+      deleteNotify( mDescription );
 }
 
 //-----------------------------------------------------------------------------

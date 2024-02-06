@@ -5,7 +5,7 @@
 // SPDX-License-Identifier: MIT
 //-----------------------------------------------------------------------------
 
-#pragma once
+#ifndef _DATACHUNKER_H_
 #define _DATACHUNKER_H_
 
 #ifndef _PLATFORM_H_
@@ -20,8 +20,6 @@
 
 #include <algorithm>
 #include <stdint.h>
-
-//#include "math/mMathFn.h" // tgemit - needed here for the moment
 
 /// Implements a chunked data allocator.
 ///
@@ -430,3 +428,5 @@ public:
    inline ClassChunker<K2>& getT2Chunker() { return mT2; }
    inline ClassChunker<K3>& getT3Chunker() { return mT3; }
 };
+
+#endif

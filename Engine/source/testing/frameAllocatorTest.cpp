@@ -89,13 +89,13 @@ TEST(FrameAllocatorTest, FrameAllocator_Should_Function_Correctly)
    EXPECT_TRUE(FrameAllocator::getWaterMark() == 104);
    
    FrameAllocator::alloc(1);
-   EXPECT_TRUE(FrameAllocator::getWaterMark() == 108);
+   EXPECT_TRUE(FrameAllocator::getWaterMark() == 105);
    FrameAllocator::alloc(5);
-   EXPECT_TRUE(FrameAllocator::getWaterMark() == 116);
+   EXPECT_TRUE(FrameAllocator::getWaterMark() == 107); // 5 bytes == 2 ints
    
    FrameAllocator::setWaterMark(0);
    FrameAllocator::alloc(1);
-   EXPECT_TRUE(FrameAllocator::getWaterMark() == 4);
+   EXPECT_TRUE(FrameAllocator::getWaterMarkBytes() == 4);
    
    FrameAllocator::setWaterMark(0);
 }
@@ -127,7 +127,7 @@ TEST(FrameTempTest, FrameTempShould_Function_Correctly)
    FrameAllocator::setWaterMark(0);
    {
       FrameTemp<TestAlignmentStruct> fooTemp(20);
-      EXPECT_TRUE(FrameAllocator::getWaterMark() == sizeof(TestAlignmentStruct)*20);
+      EXPECT_TRUE(FrameAllocator::getWaterMarkBytes() == sizeof(TestAlignmentStruct)*20);
       EXPECT_TRUE(&fooTemp[0] == fooTemp.address());
       EXPECT_TRUE((&fooTemp[1] - &fooTemp[0]) == 1);
       EXPECT_TRUE(fooTemp.getObjectCount() == 20);
@@ -171,7 +171,7 @@ TEST(FrameTempTest, FrameTempShould_Function_Correctly)
    }
 
    // Exiting scope sets watermark
-   EXPECT_TRUE(FrameAllocator::getWaterMark() == 0);
+   EXPECT_TRUE(FrameAllocator::getWaterMarkBytes() == 0);
 
    // Test the destructor actually gets called
 

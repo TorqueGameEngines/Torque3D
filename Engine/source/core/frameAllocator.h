@@ -1,23 +1,8 @@
 //-----------------------------------------------------------------------------
-// Copyright (c) 2013 GarageGames, LLC
+// Copyright (C) 2023-2024 tgemit contributors.
+// See AUTHORS file and git repository for contributor information.
 //
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to
-// deal in the Software without restriction, including without limitation the
-// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-// sell copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-// IN THE SOFTWARE.
+// SPDX-License-Identifier: MIT
 //-----------------------------------------------------------------------------
 
 #ifndef _FRAMEALLOCATOR_H_
@@ -27,6 +12,19 @@
 #include "platform/platform.h"
 #endif
 
+/// Implements an buffer which allocates data based on the alignment of type T.
+/// 
+/// Example usage:
+///
+/// @code
+///   AlignedBufferAllocator<U32> alloc32;
+///   alloc32.initWithElements(new U32[10], 10);
+///
+///   void* ptr = alloc32.allocBytes(2);
+///   // Reset back to start
+///   alloc32.setPosition(0);
+/// @endcode
+/// 
 template<typename T> class AlignedBufferAllocator
 {
 protected:
@@ -42,6 +40,7 @@ public:
    {
    }
 
+   /// Inits allocator based on a ptr to a memory block of size numElements * sizeof(T)
    inline void initWithElements(T* ptr, U32 numElements)
    {
       mBuffer = ptr;
@@ -49,6 +48,7 @@ public:
       mWaterMark = 0;
    }
 
+   /// Inits allocator based on a ptr to a memory block of size bytes
    inline void initWithBytes(T* ptr, dsize_t bytes)
    {
       mBuffer = ptr;
@@ -56,6 +56,7 @@ public:
       mWaterMark = 0;
    }
 
+   /// Allocs numBytes worth of elements
    inline T* allocBytes(const size_t numBytes)
    {
       T* ptr = &mBuffer[mWaterMark];
@@ -71,6 +72,7 @@ public:
       return ptr;
    }
 
+   /// Allocates numElements elements
    inline T* allocElements(const U32 numElements)
    {
       T* ptr = &mBuffer[mWaterMark];
@@ -85,6 +87,7 @@ public:
       return ptr;
    }
 
+   /// Sets current aligned watermark position
    inline void setPosition(const U32 waterMark)
    {
       AssertFatal(waterMark <= mHighWaterMark, "Error, invalid waterMark");
@@ -144,231 +147,186 @@ public:
    }
 };
 
-/// Temporary memory pool for per-frame allocations.
 ///
-/// In the course of rendering a frame, it is often necessary to allocate
-/// many small chunks of memory, then free them all in a batch. For instance,
-/// say we're allocating storage for some vertex calculations:
+/// Implements an AlignedBufferAllocator<T> which manages its own memory.
 ///
-/// @code
-///   // Get FrameAllocator memory...
-///   U32 waterMark = FrameAllocator::getWaterMark();
-///   F32 * ptr = (F32*)FrameAllocator::alloc(sizeof(F32)*2*targetMesh->vertsPerFrame);
-///
-///   ... calculations ...
-///
-///   // Free frameAllocator memory
-///   FrameAllocator::setWaterMark(waterMark);
-/// @endcode
-class FrameAllocator
+template<typename T> class ManagedAlignedBufferAllocator : public AlignedBufferAllocator<T>
 {
 public:
-   static U32   smMaxFrameAllocation;
-#ifdef TORQUE_MEM_DEBUG
-   static thread_local dsize_t   smAllocatedBytes;
-#endif
-   typedef AlignedBufferAllocator<U32> FrameAllocatorType;
+   T* mMemory;
 
-   inline static void init(const U32 frameSize)
+   ManagedAlignedBufferAllocator() : mMemory(NULL)
    {
-      FrameAllocatorType::ValueType* curPtr = smMainInstance.getAlignedBuffer();
-      AssertFatal(curPtr == NULL, "Error, already initialized");
-      if (curPtr)
-         return;
-
-#ifdef TORQUE_MEM_DEBUG
-      smAllocatedBytes = 0;
-#endif
-
-      U32 elementSize = FrameAllocatorType::calcRequiredElementSize(frameSize);
-      FrameAllocatorType::ValueType* newAlignedBuffer = new FrameAllocatorType::ValueType[elementSize];
-      smMainInstance.initWithElements(newAlignedBuffer, elementSize);
    }
 
-   inline static void destroy()
+   ~ManagedAlignedBufferAllocator()
    {
-      FrameAllocatorType::ValueType* curPtr = smMainInstance.getAlignedBuffer();
-      AssertFatal(smMainInstance.getAlignedBuffer() != NULL, "Error, not initialized");
-      if (curPtr == NULL)
-         return;
-
-      delete[] curPtr;
-      smMainInstance.initWithElements(NULL, 0);
+      destroy();
    }
 
-   inline static void* alloc(const U32 allocSize)
+   void init(const dsize_t byteSize)
    {
-      void* outPtr = smMainInstance.allocBytes(allocSize);
-
-#ifdef TORQUE_MEM_DEBUG
-      smAllocatedBytes += allocSize;
-      if (smAllocatedBytes > smMaxFrameAllocation)
-      {
-         smMaxFrameAllocation = smAllocatedBytes;
-      }
-#endif
-
-      return outPtr;
+      AssertFatal(mMemory ==  NULL, "ManagedAlignedBufferAllocator already initialized");
+      U32 frameSize = calcRequiredElementSize(byteSize);
+      mMemory = new U32[frameSize];
+      initWithElements(mMemory, frameSize);
    }
 
-   inline static void setWaterMark(const U32 waterMark)
+   void destroy()
    {
-#ifdef TORQUE_MEM_DEBUG
-      AssertFatal(waterMark % sizeof(FrameAllocatorType::ValueType) == 0, "Misaligned watermark");
-      smAllocatedBytes = waterMark;
-#endif
-      smMainInstance.setPosition(waterMark / sizeof(FrameAllocatorType::ValueType));
+      //setPositition(0);
+      delete[] mMemory;
+      mMemory = NULL;
    }
-
-   inline static U32  getWaterMark()
-   {
-      return smMainInstance.getPositionBytes();
-   }
-
-   inline static U32  getHighWaterMark()
-   {
-      return smMainInstance.getSizeBytes();
-   }
-
-   static U32 getMaxFrameAllocation();
-
-   static thread_local FrameAllocatorType smMainInstance;
 };
 
-/// Helper class to deal with FrameAllocator usage.
-///
-/// The purpose of this class is to make it simpler and more reliable to use the
-/// FrameAllocator. Simply use it like this:
+/// Implements a thread-local global buffer for frame-based allocations.
+/// All allocations are aligned to U32.
+/// 
+/// Example usage:
 ///
 /// @code
-/// FrameAllocatorMarker mem;
-///
-/// char *buff = (char*)mem.alloc(100);
+///   U32 waterMark = FrameAllocator::getWaterMark();
+///   void* ptr = FrameAllocator::alloc(10);
+///   // Cleanup...
+///   FrameAllocator::setWaterMark(waterMark);
 /// @endcode
 ///
-/// When you leave the scope you defined the FrameAllocatorMarker in, it will
-/// automatically restore the watermark on the FrameAllocator. In situations
-/// with complex branches, this can be a significant headache remover, as you
-/// don't have to remember to reset the FrameAllocator on every posssible branch.
-class FrameAllocatorMarker
+/// See also: FrameAllocatorMarker, FrameTemp.
+///
+/// NOTE: worker threads which use FrameAllocator should call init and destroy. i.e.
+///
+/// @code
+///   FrameAllocator::init(1024 * 1024 * 12);
+///   // Do work...
+///   FrameAllocator::destroy();
+/// @endcode
+/// 
+class FrameAllocator
 {
-   U32 mMarker;
+protected:
+
+   static thread_local ManagedAlignedBufferAllocator<U32> smFrameAllocator;
+#ifdef TORQUE_MEM_DEBUG
+   static thread_local dsize_t smMaxAllocationBytes;
+#endif
 
 public:
+
+   inline TORQUE_FORCEINLINE static void init(const dsize_t byteSize) { return smFrameAllocator.init(byteSize); }
+   inline TORQUE_FORCEINLINE static void destroy() { smFrameAllocator.destroy(); }
+
+   inline TORQUE_FORCEINLINE static void* alloc(const dsize_t numBytes)
+   {
+#ifdef TORQUE_MEM_DEBUG
+      const dsize_t allocBytes = smFrameAllocator.getPositionBytes();
+      smMaxAllocationBytes = allocBytes > smMaxAllocationBytes ? allocBytes : smMaxAllocationBytes;
+#endif
+      return smFrameAllocator.allocBytes(numBytes);
+   }
+
+   inline TORQUE_FORCEINLINE static U32 getWaterMark() { return smFrameAllocator.getPosition(); }
+   inline TORQUE_FORCEINLINE static dsize_t getWaterMarkBytes() { return smFrameAllocator.getPositionBytes(); }
+   inline TORQUE_FORCEINLINE static void setWaterMark(U32 pos) { return smFrameAllocator.setPosition(pos); }
+
+   inline TORQUE_FORCEINLINE static U32 getHighWaterMark() { return smFrameAllocator.getSizeBytes(); }
+};
+
+/// Helper class which saves and restores the previous water mark level from FrameAllocator based on scope.
+///
+/// Example usage:
+///
+/// @code
+/// FrameAllocatorMarker marker;
+/// void* ptr = marker.alloc(1024);
+/// @endcode
+/// 
+class FrameAllocatorMarker
+{
+   U32 mPosition;
+
+public:
+
    FrameAllocatorMarker()
    {
-      mMarker = FrameAllocator::getWaterMark();
+      mPosition = FrameAllocator::getWaterMark();
    }
 
    ~FrameAllocatorMarker()
    {
-      FrameAllocator::setWaterMark(mMarker);
+      FrameAllocator::setWaterMark(mPosition);
    }
 
-   void* alloc(const U32 allocSize)
+   /// Allocs numBytes of memory from FrameAllocator
+   inline TORQUE_FORCEINLINE static void* alloc(const dsize_t numBytes)
    {
-      return FrameAllocator::alloc(allocSize);
+      return FrameAllocator::alloc(numBytes);
    }
 };
 
-/// Class for temporary variables that you want to allocate easily using
-/// the FrameAllocator. For example:
+/// Helper class which temporarily allocates a set of elements of type T from FrameAllocator,
+/// restoring the water mark when the scope has ended as with FrameAllocatorMarker.
+///
+/// Example usage:
+///
 /// @code
-/// FrameTemp<char> tempStr(32); // NOTE! This parameter is NOT THE SIZE IN BYTES. See constructor docs.
-/// dStrcat( tempStr, SomeOtherString );
-/// tempStr[2] = 'l';
-/// Con::printf( tempStr );
-/// Con::printf( "Foo: %s", ~tempStr );
+///   FrameTemp<UTF8> textMarker(64);
+///   for (U32 i=0; i<textMarker.size(); i++)
+///   {
+///     textMarker[i] = '\0';
+///   }
 /// @endcode
 ///
-/// This will automatically handle getting and restoring the watermark of the
-/// FrameAllocator when it goes out of scope. You should notice the strange
-/// operator infront of tempStr on the printf call. This is normally a unary
-/// operator for ones-complement, but in this class it will simply return the
-/// memory of the allocation. It's the same as doing (const char *)tempStr
-/// in the above case. The reason why it is necessary for the second printf
-/// and not the first is because the second one is taking a variable arg
-/// list and so it isn't getting the cast so that it's cast operator can
-/// properly return the memory instead of the FrameTemp object itself.
-///
-/// @note It is important to note that this object is designed to just be a
-/// temporary array of a dynamic size. Some wierdness may occur if you try
-/// do perform crazy pointer stuff with it using regular operators on it.
-/// I implemented what I thought were the most common operators that it
-/// would be used for. If strange things happen, you will need to debug
-/// them yourself.
+/// 
 template<class T>
 class FrameTemp
 {
-protected:
-   U32 mWaterMark;
-   T* mMemory;
-   U32 mNumObjectsInMemory;
+   T* mData;
+   U32 mSize;
+   U32 mPosition;
 
 public:
-   /// Constructor will store the FrameAllocator watermark and allocate the memory off
-   /// of the FrameAllocator.
-   ///
-   /// @note It is important to note that, unlike the FrameAllocatorMarker and the
-   /// FrameAllocator itself, the argument to allocate is NOT the size in bytes,
-   /// doing:
-   /// @code
-   /// FrameTemp<F64> f64s(5);
-   /// @endcode
-   /// Is the same as
-   /// @code
-   /// F64 *f64s = new F64[5];
-   /// @endcode
-   ///
-   /// @param   count   The number of objects to allocate
-   FrameTemp(const U32 count = 1) : mNumObjectsInMemory(count)
-   {
-      AssertFatal(count > 0, "Allocating a FrameTemp with less than one instance");
-      mWaterMark = FrameAllocator::getWaterMark();
-      mMemory = reinterpret_cast<T*>(FrameAllocator::alloc(sizeof(T) * count));
 
-      for (U32 i = 0; i < mNumObjectsInMemory; i++)
-         constructInPlace<T>(&mMemory[i]);
+   FrameTemp(const U32 numElements = 0)
+   {
+      mPosition = FrameAllocator::getWaterMark();
+      mData = (T*)FrameAllocator::alloc(sizeof(T) * numElements);
+      mSize = numElements;
    }
 
-   /// Destructor restores the watermark
    ~FrameTemp()
    {
-      // Call destructor
-      for (U32 i = 0; i < mNumObjectsInMemory; i++)
-         destructInPlace<T>(&mMemory[i]);
-
-      FrameAllocator::setWaterMark(mWaterMark);
+      for (U32 i = 0; i < mSize; i++)
+         destructInPlace(&mData[i]);
+      FrameAllocator::setWaterMark(mPosition);
    }
 
-   U32 getObjectCount(void) const { return mNumObjectsInMemory; }
-   U32 size(void) const { return mNumObjectsInMemory; }
+   // Operators
 
-   T& operator *() { return *mMemory; };
-   const T& operator *() const { return *mMemory; }
+   inline TORQUE_FORCEINLINE T&       operator*() { return *mData; }
+   inline TORQUE_FORCEINLINE const T& operator*() const { return *mData; }
 
-   T** operator &() { return &mMemory; }
-   T* const * operator &() const { return &mMemory; }
+   inline TORQUE_FORCEINLINE T**        operator&() { return &mData; }
+   inline TORQUE_FORCEINLINE T* const * operator&() const { return &mData; }
 
-   operator T* () { return mMemory; }
-   operator const T* () const { return mMemory; }
+   inline TORQUE_FORCEINLINE operator T&() { return *mData; }
+   inline TORQUE_FORCEINLINE operator const T&() const { return *mData; }
 
-   operator T& () { return *mMemory; }
-   operator const T& () const { return *mMemory; }
+   inline TORQUE_FORCEINLINE operator T* () { return mData; }
+   inline TORQUE_FORCEINLINE operator const T* () const { return mData; }
 
-   operator T() { return *mMemory; }
-   operator const T() const { return *mMemory; }
+   inline TORQUE_FORCEINLINE operator T () { return *mData; }
+   inline TORQUE_FORCEINLINE operator const T () const { return *mData; }
 
-   inline T* address() const { return mMemory; }
+   inline TORQUE_FORCEINLINE T& operator[](const dsize_t idx) { return mData[idx]; }
+   inline TORQUE_FORCEINLINE const T& operator[](const dsize_t idx) const { return mData[idx]; }
 
-   // This ifdef is to satisfy the ever so pedantic GCC compiler
-   //  Which seems to upset visual studio.
-   T& operator[](const U32 idx) { return mMemory[idx]; }
-   const T& operator[](const U32 idx) const { return mMemory[idx]; }
-   T& operator[](const S32 idx) { return mMemory[idx]; }
-   const T& operator[](const S32 idx) const { return mMemory[idx]; }
+   // Utils
+
+   inline TORQUE_FORCEINLINE T* address() const { return mData; }
+   inline TORQUE_FORCEINLINE const U32 size() const { return mSize; }
+   inline TORQUE_FORCEINLINE const U32 getObjectCount() const { return mSize; }
 };
 
-//-----------------------------------------------------------------------------
 
 #endif  // _H_FRAMEALLOCATOR_

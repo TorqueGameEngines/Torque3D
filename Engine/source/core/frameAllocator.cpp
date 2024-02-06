@@ -1,46 +1,15 @@
 //-----------------------------------------------------------------------------
-// Copyright (c) 2012 GarageGames, LLC
+// Copyright (C) 2024 tgemit contributors.
+// See AUTHORS file and git repository for contributor information.
 //
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to
-// deal in the Software without restriction, including without limitation the
-// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-// sell copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-// IN THE SOFTWARE.
+// SPDX-License-Identifier: MIT
 //-----------------------------------------------------------------------------
 
 #include "core/frameAllocator.h"
-#include "console/engineAPI.h"
 
-thread_local FrameAllocator::FrameAllocatorType   FrameAllocator::smMainInstance;
+thread_local ManagedAlignedBufferAllocator<U32> FrameAllocator::smFrameAllocator;
 
 #ifdef TORQUE_MEM_DEBUG
-thread_local dsize_t   FrameAllocator::smAllocatedBytes;
+thread_local dsize_t FrameAllocator::smMaxAllocationBytes = 0;
 #endif
 
-U32 FrameAllocator::smMaxFrameAllocation;
-
-U32 FrameAllocator::getMaxFrameAllocation()
-{
-   return (S32)FrameAllocator::smMaxFrameAllocation;
-}
-
-#if defined(TORQUE_DEBUG)
-
-DefineEngineFunction(getMaxFrameAllocation, S32, (), , "")
-{
-   return (S32)FrameAllocator::getMaxFrameAllocation();
-}
-
-#endif

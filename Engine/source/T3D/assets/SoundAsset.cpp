@@ -447,15 +447,10 @@ bool SoundAsset::_setSoundFile(void* object, const char* index, const char* data
    if (index)
       id = dAtoui(index);
 
-   if (pData->mSoundFile[id] == data)
-      return false;
-
    // Update.
-   pData->mSoundFile[id] = data;
+   pData->mSoundFile[id] = StringTable->insert(data, true);
    if (pData->mSoundFile[id] == StringTable->EmptyString())
       pData->mSoundPath[id] = StringTable->EmptyString();
-   else
-      pData->mSoundPath[id] = pData->getOwned() ? pData->expandAssetFilePath(pData->mSoundFile[id]) : pData->mSoundFile[id];
 
    // Refresh the asset.
    pData->refreshAsset();

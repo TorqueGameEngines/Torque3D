@@ -190,6 +190,7 @@ void SoundAsset::initPersistFields()
    docsURL;
    // Call parent.
    Parent::initPersistFields();
+   addGroup("SoundSlots");
    addArray("slots", SFXPlayList::SFXPlaylistSettings::NUM_SLOTS);
       addProtectedField("soundFile", TypeAssetLooseFilePath, Offset(mSoundFile, SoundAsset),
          &_setSoundFile, &defaultProtectedGetFn, SFXPlayList::SFXPlaylistSettings::NUM_SLOTS, "Path to the sound file.");
@@ -263,7 +264,9 @@ void SoundAsset::initPersistFields()
          "Behavior when assigned state is deactivated while slot is playing.\n\n"
          "@ref SFXPlayList_states");
    endArray("slots");
+   endGroup("SoundSlots");
 
+   addGroup("General Profile");
    addField("pitchAdjust", TypeF32, Offset(mProfileDesc.mPitch, SoundAsset), "Adjustment of the pitch value 1 is default.");
    addField("volumeAdjust", TypeF32, Offset(mProfileDesc.mVolume, SoundAsset), "Adjustment to the volume.");
    addField("is3D", TypeBool, Offset(mProfileDesc.mIs3D, SoundAsset), "Set this sound to 3D.");
@@ -274,6 +277,7 @@ void SoundAsset::initPersistFields()
    addField("useHardware", TypeBool, Offset(mProfileDesc.mUseHardware, SoundAsset), "Use hardware mixing for this sound.");
    addField("sourceGroup", TypeSFXSourceName, Offset(mProfileDesc.mSourceGroup, SoundAsset), "Group that sources playing with this description should be put into.");
    addField("preload", TypeBool, Offset(mPreload, SoundAsset), "Whether to preload sound data when the profile is added to system.");
+   endGroup("General Profile");
 
    addGroup("Fading");
       addField("fadeInTime", TypeF32, Offset(mProfileDesc.mFadeInTime, SoundAsset), "Number of seconds to gradually fade in volume from zero when playback starts.");

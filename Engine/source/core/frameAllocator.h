@@ -152,6 +152,7 @@ public:
 ///
 template<typename T> class ManagedAlignedBufferAllocator : public AlignedBufferAllocator<T>
 {
+typedef AlignedBufferAllocator<T> Parent;
 public:
    T* mMemory;
 
@@ -167,14 +168,14 @@ public:
    void init(const dsize_t byteSize)
    {
       AssertFatal(mMemory ==  NULL, "ManagedAlignedBufferAllocator already initialized");
-      U32 frameSize = calcRequiredElementSize(byteSize);
+      U32 frameSize = Parent::calcRequiredElementSize(byteSize);
       mMemory = new U32[frameSize];
-      initWithElements(mMemory, frameSize);
+      AlignedBufferAllocator<T>::initWithElements(mMemory, frameSize);
    }
 
    void destroy()
    {
-      //setPositition(0);
+      Parent::setPosition(0);
       delete[] mMemory;
       mMemory = NULL;
    }

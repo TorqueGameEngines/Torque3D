@@ -3345,8 +3345,8 @@ Torque::Path AssetImporter::importSoundAsset(AssetImportObject* assetItem)
 
    StringTableEntry assetName = StringTable->insert(assetItem->assetName.c_str());
 
-   String imageFileName = assetItem->filePath.getFileName() + "." + assetItem->filePath.getExtension();
-   String assetPath = targetPath + "/" + imageFileName;
+   String soundFileName = assetItem->filePath.getFileName() + "." + assetItem->filePath.getExtension();
+   String assetPath = targetPath + "/" + soundFileName;
    String tamlPath = targetPath + "/" + assetName + ".asset.taml";
    String originalPath = assetItem->filePath.getFullPath().c_str();
 
@@ -3362,7 +3362,7 @@ Torque::Path AssetImporter::importSoundAsset(AssetImportObject* assetItem)
 #endif
 
    newAsset->setAssetName(assetName);
-   newAsset->setSoundFile(imageFileName.c_str());
+   newAsset->_setSoundFile(newAsset, "0", soundFileName.c_str());
 
    //If it's not a re-import, check that the file isn't being in-place imported. If it isn't, store off the original
    //file path for reimporting support later

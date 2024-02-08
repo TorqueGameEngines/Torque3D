@@ -32,6 +32,7 @@
 #include "sfx/sfxEnvironment.h"
 #include "sfx/sfxAmbience.h"
 #include "sfx/sfxTrack.h"
+#include "T3D/gameBase/gameBase.h"
 
 
 //-----------------------------------------------------------------------------
@@ -64,30 +65,158 @@ void GuiInspectorDatablockField::setClassName( StringTableEntry className )
    }
 }
 
-void GuiInspectorDatablockField::_populateMenu( GuiPopUpMenuCtrl* menu )
+void GuiInspectorDatablockField::_populateMenu( GuiPopUpMenuCtrlEx* menu )
 {
+   menu->setCanSearch(true);
    menu->addScheme( 1, ColorI( 80, 0, 0, 255 ), ColorI( 80, 0, 0, 255 ), ColorI( 80, 0, 0, 255 ) ); // For client-only coloring.
    menu->addEntry( "", 0 ); // For unsetting.
 
    SimSet* set = _getDatablockSet();
    U32 id = 1;
 
-   for( SimSet::iterator iter = set->begin(); iter != set->end(); ++ iter )
+   //We can do some special filtering here if it's derived from GameBase a la categories
+   if(mDesiredClass->isSubclassOf(AbstractClassRep::findClassRep("GameBaseData")))
    {
-      SimDataBlock* datablock = dynamic_cast< SimDataBlock* >( *iter );
+      //First, do categories
+      Vector<String> categories;
+      for (SimSet::iterator iter = set->begin(); iter != set->end(); ++iter)
+      {
+         SimDataBlock* datablock = dynamic_cast<SimDataBlock*>(*iter);
+
+         // Skip non-datablocks if we somehow encounter them.
+         if (!datablock)
+            continue;
+
+         if (datablock && (!mDesiredClass || datablock->getClassRep()->isClass(mDesiredClass)))
+         {
+            GameBaseData *data = dynamic_cast<GameBaseData*>(datablock);
+            if(data)
+            {
+               String category = data->mCategory;
+               if(category.isNotEmpty() && (categories.empty() || categories.find_next(category) == -1))
+                  categories.push_back(category);
+            }
+         }
+      }
+
+      if (categories.size() > 0)
+      {
+         categories.push_back("No Category");
+
+         //Now that we have our categories, lets populate our list
+         for (Vector<String>::iterator catIter = categories.begin(); catIter != categories.end(); ++catIter)
+         {
+            String categoryName = String::ToLower(catIter->c_str());
+            if (categoryName != String::EmptyString)
+            {
+               menu->addCategory(catIter->c_str());
+               id++;
+            }
+
+            for (SimSet::iterator iter = set->begin(); iter != set->end(); ++iter)
+            {
+               GameBaseData* datablock = dynamic_cast<GameBaseData*>(*iter);
+
+               // Skip non-datablocks if we somehow encounter them.
+               if (!datablock)
+                  continue;
+
+               String dbCategory = String(datablock->mCategory).isEmpty() ? String("no category") : String::ToLower(datablock->mCategory);
+
+               if (datablock && (!mDesiredClass || datablock->getClassRep()->isClass(mDesiredClass)) && (dbCategory == categoryName))
+               {
+                  menu->addEntry(datablock->getName(), id++, datablock->isClientOnly() ? 1 : 0, true);
+               }
+            }
+         }
+
+         return;
+      }
+   }
+
+   for (SimSet::iterator iter = set->begin(); iter != set->end(); ++iter)
+   {
+      SimDataBlock* datablock = dynamic_cast<SimDataBlock*>(*iter);
 
       // Skip non-datablocks if we somehow encounter them.
-      if( !datablock )
+      if (!datablock)
          continue;
 
       // Ok, now we have to figure inheritance info.
-      if( datablock && ( !mDesiredClass || datablock->getClassRep()->isClass( mDesiredClass ) ) )
-         menu->addEntry( datablock->getName(), id ++, datablock->isClientOnly() ? 1 : 0 );
+      if (datablock && (!mDesiredClass || datablock->getClassRep()->isClass(mDesiredClass)))
+         menu->addEntry(datablock->getName(), id++, datablock->isClientOnly() ? 1 : 0);
    }
    
    menu->sort();
 }
 
+GuiControl* GuiInspectorDatablockField::constructEditControl()
+{
+   // Create base filename edit controls
+   GuiControl* retCtrl = Parent::constructEditControl();
+   if (retCtrl == NULL)
+      return retCtrl;
+
+   char szBuffer[512];
+
+   // Create "Open in Editor" button
+   mEditButton = new GuiButtonCtrl();
+   dSprintf(szBuffer, sizeof(szBuffer), "DatablockEditorPlugin.openDatablock(%d.getText());", retCtrl->getId());
+   mEditButton->setField("Command", szBuffer);
+   mEditButton->setText("...");
+
+   mEditButton->setDataField(StringTable->insert("Profile"), NULL, "GuiInspectorButtonProfile");
+   mEditButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
+   mEditButton->setDataField(StringTable->insert("hovertime"), NULL, "1000");
+   mEditButton->setDataField(StringTable->insert("tooltip"), NULL, "Edit this datablock");
+
+   mEditButton->registerObject();
+   addObject(mEditButton);
+
+   //Add add button
+   mAddButton = new GuiBitmapButtonCtrl();
+   dSprintf(szBuffer, sizeof(szBuffer), "DatablockEditorPlugin.createNewDatablockOfType(%s, %d.getText());", mDesiredClass->getClassName(), retCtrl->getId());
+   mAddButton->setField("Command", szBuffer);
+
+   char addBtnBitmapName[512] = "ToolsModule:iconAdd_Image";
+   mAddButton->setBitmap(StringTable->insert(addBtnBitmapName));
+
+   mAddButton->setDataField(StringTable->insert("Profile"), NULL, "GuiButtonProfile");
+   mAddButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
+   mAddButton->setDataField(StringTable->insert("hovertime"), NULL, "1000");
+   mAddButton->setDataField(StringTable->insert("tooltip"), NULL, "Create new datablock");
+
+   mAddButton->registerObject();
+   addObject(mAddButton);
+
+   return retCtrl;
+}
+
+bool GuiInspectorDatablockField::updateRects()
+{
+   S32 dividerPos, dividerMargin;
+   mInspector->getDivider(dividerPos, dividerMargin);
+   Point2I fieldExtent = getExtent();
+   Point2I fieldPos = getPosition();
+
+   mCaptionRect.set(0, 0, fieldExtent.x - dividerPos - dividerMargin, fieldExtent.y);
+   mEditCtrlRect.set(fieldExtent.x - dividerPos + dividerMargin, 1, dividerPos - dividerMargin - 34, fieldExtent.y);
+
+   bool resized = mEdit->resize(mEditCtrlRect.point, mEditCtrlRect.extent);
+   if (mEditButton != NULL)
+   {
+      mBrowseRect.set(fieldExtent.x - 32, 2, 14, fieldExtent.y - 4);
+      resized |= mEditButton->resize(mBrowseRect.point, mBrowseRect.extent);
+   }
+
+   if (mAddButton != NULL)
+   {
+      RectI shapeEdRect(fieldExtent.x - 16, 2, 14, fieldExtent.y - 4);
+      resized |= mAddButton->resize(shapeEdRect.point, shapeEdRect.extent);
+   }
+
+   return resized;
+}
 
 //-----------------------------------------------------------------------------
 // GuiInspectorTypeSFXDescriptionName 

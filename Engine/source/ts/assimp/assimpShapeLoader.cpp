@@ -284,7 +284,8 @@ void AssimpShapeLoader::processAnimations()
             ambientChannels.push_back(anim->mChannels[j]);
          }
       }
-
+      
+      ambientSeq->mNumChannels = ambientChannels.size();
       ambientSeq->mChannels = ambientChannels.address();
 
       AssimpAppSequence* defaultAssimpSeq = new AssimpAppSequence(ambientSeq);

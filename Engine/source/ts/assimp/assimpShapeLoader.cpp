@@ -229,6 +229,18 @@ void AssimpShapeLoader::enumerateScene()
       if (!processNode(node))
          delete node;
 
+      // add bounds node.
+      if (!boundsNode)
+      {
+         aiNode* req[1];
+         req[0] = new aiNode("bounds");
+         mScene->mRootNode->addChildren(1, req);
+
+         AssimpAppNode* appBounds = new AssimpAppNode(mScene, req[0]);
+         if (!processNode(appBounds))
+            delete appBounds;
+      }
+
       // Check for animations and process those.
       processAnimations();
    } 
@@ -243,13 +255,42 @@ void AssimpShapeLoader::enumerateScene()
 
 void AssimpShapeLoader::processAnimations()
 {
+   bool ambient = false;
    for(U32 n = 0; n < mScene->mNumAnimations; ++n)
    {
       Con::printf("[ASSIMP] Animation Found: %s", mScene->mAnimations[n]->mName.C_Str());
 
+      if (mScene->mAnimations[n]->mName.C_Str() == "ambient")
+         ambient = true;
+
       AssimpAppSequence* newAssimpSeq = new AssimpAppSequence(mScene->mAnimations[n]);
       appSequences.push_back(newAssimpSeq);
    }
+
+   // dont have ambient, lets just add everything to an ambient sequence.
+   // we should probably just do this as default.
+   if (!ambient)
+   {
+      aiAnimation* ambientSeq = new aiAnimation();
+      ambientSeq->mName = "ambient";
+
+      Vector<aiNodeAnim*> ambientChannels;
+
+      for (U32 i = 0; i < mScene->mNumAnimations; ++i)
+      {
+         aiAnimation* anim = mScene->mAnimations[i];
+         for (U32 j = 0; j < anim->mNumChannels; j++)
+         {
+            ambientChannels.push_back(anim->mChannels[j]);
+         }
+      }
+
+      ambientSeq->mChannels = ambientChannels.address();
+
+      AssimpAppSequence* defaultAssimpSeq = new AssimpAppSequence(ambientSeq);
+      appSequences.push_back(defaultAssimpSeq);
+   }
+
 }
 
 void AssimpShapeLoader::computeBounds(Box3F& bounds)
@@ -369,12 +410,16 @@ bool AssimpShapeLoader::fillGuiTreeView(const char* sourceShapePath, GuiTreeView
       tree->insertItem(matItem, String::ToString("%s", name.c_str()), String::ToString("%s", texName.c_str()));
    }
 
-   for (U32 i = 0; i < shapeScene->mNumAnimations; i++)
+   if (shapeScene->mNumAnimations == 0)
    {
-      String sequenceName = shapeScene->mAnimations[i]->mName.C_Str();
-      if (sequenceName.isEmpty())
-         sequenceName = "ambient";
-      tree->insertItem(animItem, sequenceName.c_str());
+      tree->insertItem(animItem, "ambient", "animation", "", 0, 0);
+   }
+   else
+   {
+      for (U32 i = 0; i < shapeScene->mNumAnimations; i++)
+      {
+         tree->insertItem(animItem, shapeScene->mAnimations[i]->mName.C_Str(), "animation", "", 0, 0);
+      }
    }
 
    U32 numNodes = 0;

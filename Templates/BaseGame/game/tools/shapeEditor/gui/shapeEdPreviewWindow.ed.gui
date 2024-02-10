@@ -41,7 +41,7 @@ $guiContent = new GuiControl() {
          canSave = "1";
          Visible = "1";
          hovertime = "1000";
-         color = "0 0 0 .39";
+         color = "0.5 0.5 0.5 .39";
       };
       new GuiShapeEdPreview(ShapeEdShapeView) {
          canSaveDynamicFields = "0";

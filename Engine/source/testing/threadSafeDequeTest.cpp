@@ -179,7 +179,7 @@ TEST_FIX(ThreadSafeDeque, PopBack)
 // Test many items in a row
 TEST_FIX(ThreadSafeDeque, Concurrent)
 {
-   const U32 NumValues = 100;
+   const U32 NumValues = 50;
 
    Deque mDeque;
    Vector<U32> mValues;

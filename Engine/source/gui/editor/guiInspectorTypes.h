@@ -45,6 +45,7 @@
 #ifndef _GUITEXTEDITSLIDERCTRL_H_
 #include "gui/controls/guiTextEditSliderCtrl.h"
 #endif
+#include "gui/controls/guiPopUpCtrlEx.h"
 
 class GuiPopUpMenuCtrl;
 
@@ -63,7 +64,7 @@ public:
    //-----------------------------------------------------------------------------
    virtual GuiControl* constructEditControl();
    virtual void        setValue( StringTableEntry newValue );
-   virtual void        _populateMenu( GuiPopUpMenuCtrl *menu );
+   virtual void        _populateMenu( GuiPopUpMenuCtrlEx *menu );
 };
 
 //-----------------------------------------------------------------------------
@@ -77,7 +78,7 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeEnum);
    static void consoleInit();
 
-   virtual void _populateMenu( GuiPopUpMenuCtrl *menu );
+   virtual void _populateMenu(GuiPopUpMenuCtrlEx *menu );
 };
 
 //-----------------------------------------------------------------------------
@@ -91,7 +92,7 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeCubemapName);
    static void consoleInit();
 
-   virtual void _populateMenu( GuiPopUpMenuCtrl *menu );
+   virtual void _populateMenu(GuiPopUpMenuCtrlEx *menu );
 };
 
 //--------------------------------------------------------------------------------
@@ -129,7 +130,7 @@ public:
    GuiInspectorTypeRegularMaterialName() {}
    DECLARE_CONOBJECT(GuiInspectorTypeRegularMaterialName);
    static void consoleInit();
-   virtual void _populateMenu( GuiPopUpMenuCtrl *menu );
+   virtual void _populateMenu(GuiPopUpMenuCtrlEx *menu );
 };
 
 //--------------------------------------------------------------------------------
@@ -183,7 +184,7 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeGuiProfile);
    static void consoleInit();
 
-   virtual void _populateMenu( GuiPopUpMenuCtrl *menu );
+   virtual void _populateMenu(GuiPopUpMenuCtrlEx *menu );
 };
 
 //-----------------------------------------------------------------------------
@@ -197,7 +198,7 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeActionMap);
    static void consoleInit();
 
-   virtual void _populateMenu(GuiPopUpMenuCtrl* menu);
+   virtual void _populateMenu(GuiPopUpMenuCtrlEx * menu);
 };
 
 //-----------------------------------------------------------------------------
@@ -561,7 +562,7 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeSFXParameterName);
    static void consoleInit();
 
-   virtual void _populateMenu( GuiPopUpMenuCtrl *menu );
+   virtual void _populateMenu(GuiPopUpMenuCtrlEx *menu );
 };
 
 
@@ -576,7 +577,7 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeSFXStateName);
    static void consoleInit();
 
-   virtual void _populateMenu( GuiPopUpMenuCtrl *menu );
+   virtual void _populateMenu(GuiPopUpMenuCtrlEx *menu );
 };
 
 
@@ -591,7 +592,7 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeSFXSourceName);
    static void consoleInit();
 
-   virtual void _populateMenu( GuiPopUpMenuCtrl *menu );
+   virtual void _populateMenu(GuiPopUpMenuCtrlEx *menu );
 };
 
 //-----------------------------------------------------------------------------

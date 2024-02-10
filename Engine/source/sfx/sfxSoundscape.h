@@ -106,6 +106,9 @@ class SFXSoundscape
       bool _isUnique() const { return mFlags.test( FlagUnique ); }
 
    public:
+
+      /// Defaault constructor for allocator
+      SFXSoundscape();
    
       /// Create a soundscape associated with the given ambient space.
       SFXSoundscape( SFXAmbience* ambience );

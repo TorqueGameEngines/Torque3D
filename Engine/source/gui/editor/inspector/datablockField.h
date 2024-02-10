@@ -23,6 +23,7 @@
 #ifndef _GUI_INSPECTOR_DATABLOCKFIELD_H_
 #define _GUI_INSPECTOR_DATABLOCKFIELD_H_
 
+#include "gui/controls/guiPopUpCtrlEx.h"
 #include "gui/editor/guiInspectorTypes.h"
 
 
@@ -38,9 +39,14 @@ class GuiInspectorDatablockField : public GuiInspectorTypeMenuBase
    protected:
 
       AbstractClassRep *mDesiredClass;
+      SimObjectPtr<GuiBitmapButtonCtrl> mAddButton;
+      SimObjectPtr<GuiButtonCtrl> mEditButton;
+      RectI mBrowseRect;
 
       virtual SimSet* _getDatablockSet() const { return Sim::getDataBlockSet(); }
-      virtual void _populateMenu( GuiPopUpMenuCtrl* menu );
+      virtual void _populateMenu( GuiPopUpMenuCtrlEx* menu );
+      virtual GuiControl* constructEditControl();
+      virtual bool updateRects();
       
    public:
       

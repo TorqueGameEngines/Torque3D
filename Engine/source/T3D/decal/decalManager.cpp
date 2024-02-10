@@ -200,17 +200,6 @@ S32 QSORT_CALLBACK cmpDecalRenderOrder( const void *p1, const void *p2 )
 
 } // namespace {}
 
-// These numbers should be tweaked to get as many dynamically placed decals
-// as possible to allocate buffer arrays with the FreeListChunker.
-enum
-{
-   SIZE_CLASS_0 = 256,
-   SIZE_CLASS_1 = 512,
-   SIZE_CLASS_2 = 1024,
-   
-   NUM_SIZE_CLASSES = 3
-};
-
 //-------------------------------------------------------------------------
 // DecalManager
 //-------------------------------------------------------------------------
@@ -228,10 +217,6 @@ DecalManager::DecalManager()
 
    mDirty = false;
 
-   mChunkers[0] = new FreeListChunkerUntyped( SIZE_CLASS_0 * sizeof( U8 ) );
-   mChunkers[1] = new FreeListChunkerUntyped( SIZE_CLASS_1 * sizeof( U8 ) );
-   mChunkers[2] = new FreeListChunkerUntyped( SIZE_CLASS_2 * sizeof( U8 ) );
-
    GFXDevice::getDeviceEventSignal().notify(this, &DecalManager::_handleGFXEvent);
 }
 
@@ -240,9 +225,6 @@ DecalManager::~DecalManager()
    GFXDevice::getDeviceEventSignal().remove(this, &DecalManager::_handleGFXEvent);
 
    clearData();
-
-   for( U32 i = 0; i < NUM_SIZE_CLASSES; ++ i )
-      delete mChunkers[ i ];
 }
 
 void DecalManager::consoleInit()
@@ -913,14 +895,9 @@ void DecalManager::_generateWindingOrder( const Point3F &cornerPoint, Vector<Poi
 
 void DecalManager::_allocBuffers( DecalInstance *inst )
 {
-   const S32 sizeClass = _getSizeClass( inst );
-   
-   void* data;
-   if ( sizeClass == -1 )
-      data = dMalloc( sizeof( DecalVertex ) * inst->mVertCount + sizeof( U16 ) * inst->mIndxCount );
-   else
-      data = mChunkers[sizeClass]->alloc();
+   inst->mAllocHandle = mChunkers.alloc(sizeof(DecalVertex) * inst->mVertCount + sizeof(U16) * inst->mIndxCount);
 
+   U8* data = (U8*)inst->mAllocHandle.ptr;
    inst->mVerts = reinterpret_cast< DecalVertex* >( data );
    data = (U8*)data + sizeof( DecalVertex ) * inst->mVertCount;
    inst->mIndices = reinterpret_cast< U16* >( data );
@@ -930,15 +907,7 @@ void DecalManager::_freeBuffers( DecalInstance *inst )
 {
    if ( inst->mVerts != NULL )
    {
-      const S32 sizeClass = _getSizeClass( inst );
-      
-      if ( sizeClass == -1 )
-         dFree( inst->mVerts );
-      else
-      {
-         // Use FreeListChunker
-         mChunkers[sizeClass]->free( inst->mVerts );      
-      }
+      mChunkers.free(inst->mAllocHandle);
 
       inst->mVerts = NULL;
       inst->mVertCount = 0;
@@ -972,21 +941,6 @@ void DecalManager::_freePools()
       delete mPBs.last();
       mPBs.pop_back();
    }
-}
-
-S32 DecalManager::_getSizeClass( DecalInstance *inst ) const
-{
-   U32 bytes = inst->mVertCount * sizeof( DecalVertex ) + inst->mIndxCount * sizeof ( U16 );
-
-   if ( bytes <= SIZE_CLASS_0 )
-      return 0;
-   if ( bytes <= SIZE_CLASS_1 )
-      return 1;
-   if ( bytes <= SIZE_CLASS_2 )
-      return 2;
-
-   // Size is outside of the largest chunker.
-   return -1;
 }
 
 void DecalManager::prepRenderImage( SceneRenderState* state )

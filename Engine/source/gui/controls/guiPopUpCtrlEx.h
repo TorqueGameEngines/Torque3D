@@ -86,8 +86,9 @@ class GuiPopUpMenuCtrlEx : public GuiTextCtrl
       S32 id;
       U16 ascii;
       U16 scheme;
-	  bool usesColorBox;	//  Added
-	  ColorI colorbox;		//  Added
+	   bool usesColorBox;	//  Added
+	   ColorI colorbox;		//  Added
+      bool indented;       //  Added
    };
 
    struct Scheme
@@ -156,7 +157,11 @@ class GuiPopUpMenuCtrlEx : public GuiTextCtrl
    void setBitmap(const char *name); //  Added
    void sort();
    void sortID(); //  Added
-	void addEntry(const char *buf, S32 id = -1, U32 scheme = 0);
+	void addEntry(const char *buf, S32 id = -1, U32 scheme = 0, const bool& indented = false);
+   void addCategory(const char *buf)
+   {
+      addEntry(buf, -2, 0);
+   }
    void addScheme(U32 id, ColorI fontColor, ColorI fontColorHL, ColorI fontColorSEL);
    void onRender(Point2I offset, const RectI &updateRect);
    void onAction();
@@ -184,6 +189,7 @@ class GuiPopUpMenuCtrlEx : public GuiTextCtrl
    S32 getNumEntries()   { return( mEntries.size() ); }
    void replaceText(S32);
 
+   void setCanSearch(const bool& canSearch) { mTextSearchItems = canSearch; }
    void setSearchText(String searchTxt) { mSearchText = String::ToLower(searchTxt); onAction();  }
    
    DECLARE_CONOBJECT(GuiPopUpMenuCtrlEx);

@@ -360,7 +360,7 @@
     <Group
         name="WorldEditor">
         <Setting
-            name="currentEditor">ShapeEditorPlugin</Setting>
+            name="currentEditor">WorldEditorInspectorPlugin</Setting>
         <Setting
             name="displayType">6</Setting>
         <Setting

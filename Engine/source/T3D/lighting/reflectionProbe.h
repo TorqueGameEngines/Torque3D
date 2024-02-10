@@ -378,6 +378,7 @@ public:
    /// Invokes a cubemap bake action for this probe
    /// </summary>
    void bake();
+   ProbeInfo* getProbeInfo() { return &mProbeInfo; }
 };
 
 typedef ReflectionProbe::ProbeInfo::ProbeShapeType ReflectProbeType;

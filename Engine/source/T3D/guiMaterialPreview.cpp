@@ -33,6 +33,8 @@
 #include "core/resourceManager.h"
 #include "scene/sceneManager.h"
 #include "scene/sceneRenderState.h"
+#include "renderInstance/renderProbeMgr.h"
+#include "T3D/lighting/skylight.h"
 
 // GuiMaterialPreview
 GuiMaterialPreview::GuiMaterialPreview()
@@ -371,6 +373,9 @@ void GuiMaterialPreview::renderWorld(const RectI &updateRect)
 
    FogData savedFogData = gClientSceneGraph->getFogData();
    gClientSceneGraph->setFogData( FogData() );  // no fog in preview window
+
+   if (Skylight::smSkylightProbe.isValid())
+      PROBEMGR->submitProbe(Skylight::smSkylightProbe->getProbeInfo());
 
    RenderPassManager* renderPass = gClientSceneGraph->getDefaultRenderPass();
    SceneRenderState state

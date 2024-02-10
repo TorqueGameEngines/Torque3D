@@ -255,42 +255,26 @@ void AssimpShapeLoader::enumerateScene()
 
 void AssimpShapeLoader::processAnimations()
 {
-   bool ambient = false;
-   for(U32 n = 0; n < mScene->mNumAnimations; ++n)
+   // add all animations into 1 ambient animation.
+   aiAnimation* ambientSeq = new aiAnimation();
+   ambientSeq->mName = "ambient";
+
+   Vector<aiNodeAnim*> ambientChannels;
+
+   for (U32 i = 0; i < mScene->mNumAnimations; ++i)
    {
-      Con::printf("[ASSIMP] Animation Found: %s", mScene->mAnimations[n]->mName.C_Str());
-
-      if (mScene->mAnimations[n]->mName.C_Str() == "ambient")
-         ambient = true;
-
-      AssimpAppSequence* newAssimpSeq = new AssimpAppSequence(mScene->mAnimations[n]);
-      appSequences.push_back(newAssimpSeq);
-   }
-
-   // dont have ambient, lets just add everything to an ambient sequence.
-   // we should probably just do this as default.
-   if (!ambient)
-   {
-      aiAnimation* ambientSeq = new aiAnimation();
-      ambientSeq->mName = "ambient";
-
-      Vector<aiNodeAnim*> ambientChannels;
-
-      for (U32 i = 0; i < mScene->mNumAnimations; ++i)
+      aiAnimation* anim = mScene->mAnimations[i];
+      for (U32 j = 0; j < anim->mNumChannels; j++)
       {
-         aiAnimation* anim = mScene->mAnimations[i];
-         for (U32 j = 0; j < anim->mNumChannels; j++)
-         {
-            ambientChannels.push_back(anim->mChannels[j]);
-         }
+         ambientChannels.push_back(anim->mChannels[j]);
       }
-      
-      ambientSeq->mNumChannels = ambientChannels.size();
-      ambientSeq->mChannels = ambientChannels.address();
-
-      AssimpAppSequence* defaultAssimpSeq = new AssimpAppSequence(ambientSeq);
-      appSequences.push_back(defaultAssimpSeq);
    }
+      
+   ambientSeq->mNumChannels = ambientChannels.size();
+   ambientSeq->mChannels = ambientChannels.address();
+
+   AssimpAppSequence* defaultAssimpSeq = new AssimpAppSequence(ambientSeq);
+   appSequences.push_back(defaultAssimpSeq);
 
 }
 

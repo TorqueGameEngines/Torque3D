@@ -1585,7 +1585,7 @@ function ShapeEdSeqFromMenu::onBrowseSelect( %this, %assetId )
 function ShapeEdAnimWIndow::onWake(%this)
 {
    %animWindow = ShapeEdAnimWIndow;
-   %position = "1" SPC Canvas.extent.y - 112;
+   %position = "1" SPC Canvas.extent.y - 132;
    
    if(isObject(ShapeEdPropWindow))
    {

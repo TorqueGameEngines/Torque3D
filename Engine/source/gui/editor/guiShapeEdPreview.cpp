@@ -37,6 +37,8 @@
 
 #include "T3D/assets/ShapeAsset.h"
 #include "T3D/assets/ShapeAnimationAsset.h"
+#include "renderInstance/renderProbeMgr.h"
+#include "T3D/lighting/skylight.h"
 
 #ifdef TORQUE_COLLADA
    #include "collision/optimizedPolyList.h"
@@ -1409,6 +1411,8 @@ void GuiShapeEdPreview::renderWorld(const RectI &updateRect)
    FogData savedFogData = gClientSceneGraph->getFogData();
    gClientSceneGraph->setFogData( FogData() );  // no fog in preview window
 
+   if (Skylight::smSkylightProbe.isValid())
+      PROBEMGR->submitProbe(Skylight::smSkylightProbe->getProbeInfo());
    SceneRenderState state
    (
       gClientSceneGraph,

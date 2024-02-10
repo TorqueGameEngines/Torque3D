@@ -108,6 +108,7 @@ public:
    void prepRenderImage(SceneRenderState *state);
 
    void setPreviewMatParameters(SceneRenderState* renderState, BaseMatInstance* mat);
+   static SimObjectPtr<Skylight> smSkylightProbe;
 };
 
 #endif // _Skylight_H_

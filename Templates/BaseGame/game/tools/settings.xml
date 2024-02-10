@@ -41,7 +41,7 @@
             <Setting
                 name="doubleClickAction">Edit Asset</Setting>
             <Setting
-                name="LastPosExt">0 976 2200 360</Setting>
+                name="LastPosExt">0 634 1560 360</Setting>
             <Setting
                 name="previewTileSize">1</Setting>
             <Setting
@@ -245,7 +245,7 @@
         <Setting
             name="AdvancedWndVisible">1</Setting>
         <Setting
-            name="backgroundColor">0 0 0 100</Setting>
+            name="backgroundColor">128 128 128 100</Setting>
         <Setting
             name="gridDimension">40 40</Setting>
         <Setting
@@ -368,11 +368,9 @@
         <Setting
             name="EditorLayoutMode">Modern</Setting>
         <Setting
-            name="forceLoadDAE">0</Setting>
-        <Setting
             name="forceSidebarToSide">1</Setting>
         <Setting
-            name="orthoFOV">4.60158014</Setting>
+            name="orthoFOV">1.21430779</Setting>
         <Setting
             name="orthoShowGrid">1</Setting>
         <Setting

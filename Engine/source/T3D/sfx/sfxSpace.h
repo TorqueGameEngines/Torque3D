@@ -27,6 +27,10 @@
 #include "scene/sceneSpace.h"
 #endif
 
+#ifndef _SFXSOURCE_H_
+#include "sfx/sfxSource.h"
+#endif
+
 #ifndef _SCENEAMBIENTSOUNDOBJECT_H_
 #include "scene/mixin/sceneAmbientSoundObject.h"
 #endif

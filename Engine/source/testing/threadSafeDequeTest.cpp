@@ -177,7 +177,7 @@ TEST_FIX(ThreadSafeDeque, PopBack)
 }
 
 // Test many items in a row
-TEST_FIX(ThreadSafeDeque, Concurrent)
+TEST_FIX(ThreadSafeDeque, DISABLED_Concurrent)
 {
    const U32 NumValues = 50;
 

@@ -245,7 +245,7 @@
         <Setting
             name="AdvancedWndVisible">1</Setting>
         <Setting
-            name="backgroundColor">188 188 188 100</Setting>
+            name="backgroundColor">128 128 128 100</Setting>
         <Setting
             name="gridDimension">40 40</Setting>
         <Setting

@@ -132,105 +132,92 @@ void AssimpAppNode::getAnimatedTransform(MatrixF& mat, F32 t, aiAnimation* animS
          QuatF rot;
          rot.identity();
          // T is in seconds, convert to frames.
-         F32 frame = t * animSeq->mTicksPerSecond;
+         F32 frame = (t * animSeq->mTicksPerSecond + 0.5f) + 1.0f;
 
-         // interpolate scaling.
-         if (nodeAnim->mNumScalingKeys > 1) {
-            U32 scaleIndex = 0;
-
-            for (U32 i = 0; i < nodeAnim->mNumScalingKeys-1; i++)
-            {
-               if (frame < nodeAnim->mScalingKeys[i + 1].mTime) {
-                  scaleIndex = i;
-                  break;
-               }
-            }
-
-            const Point3F& scalingStart = Point3F( nodeAnim->mScalingKeys[scaleIndex].mValue.x,
-                                                   nodeAnim->mScalingKeys[scaleIndex].mValue.y,
-                                                   nodeAnim->mScalingKeys[scaleIndex].mValue.z);
-
-            const Point3F& scalingEnd = Point3F(nodeAnim->mScalingKeys[scaleIndex + 1].mValue.x,
-                                                nodeAnim->mScalingKeys[scaleIndex + 1].mValue.y,
-                                                nodeAnim->mScalingKeys[scaleIndex + 1].mValue.z);
-
-            F32 deltaTime = nodeAnim->mScalingKeys[scaleIndex + 1].mTime - nodeAnim->mScalingKeys[scaleIndex].mTime;
-            F32 factor = (frame - nodeAnim->mScalingKeys[scaleIndex].mTime) / deltaTime;
-
-            scale = scalingStart + factor * (scalingEnd - scalingStart);
-         }
+         // Transform
+         if (nodeAnim->mNumPositionKeys == 1)
+            trans.set(nodeAnim->mPositionKeys[0].mValue.x, nodeAnim->mPositionKeys[0].mValue.y, nodeAnim->mPositionKeys[0].mValue.z);
          else
          {
-            scale.set(  nodeAnim->mScalingKeys[0].mValue.x,
-                        nodeAnim->mScalingKeys[0].mValue.y,
-                        nodeAnim->mScalingKeys[0].mValue.z);
-         }
-
-         // interpolate rotation.
-         if (nodeAnim->mNumRotationKeys > 1) {
-            U32 rotationIndex = 0;
-
-            for (U32 i = 0; i < nodeAnim->mNumRotationKeys - 1; i++)
+            Point3F curPos, lastPos;
+            F32 lastT = 0.0;
+            for (U32 key = 0; key < nodeAnim->mNumPositionKeys; ++key)
             {
-               if (frame < nodeAnim->mRotationKeys[i + 1].mTime) {
-                  rotationIndex = i;
+               F32 curT = sTimeMultiplier * (F32)nodeAnim->mPositionKeys[key].mTime;
+               curPos.set(nodeAnim->mPositionKeys[key].mValue.x, nodeAnim->mPositionKeys[key].mValue.y, nodeAnim->mPositionKeys[key].mValue.z);
+               if ((curT > frame) && (key > 0))
+               {
+                  F32 factor = (frame - lastT) / (curT - lastT);
+                  trans.interpolate(lastPos, curPos, factor);
                   break;
                }
-            }
-
-            const QuatF& rotStart = QuatF(nodeAnim->mRotationKeys[rotationIndex].mValue.x,
-                                          nodeAnim->mRotationKeys[rotationIndex].mValue.y,
-                                          nodeAnim->mRotationKeys[rotationIndex].mValue.z,
-                                          nodeAnim->mRotationKeys[rotationIndex].mValue.w);
-
-            const QuatF& rotEnd = QuatF(nodeAnim->mRotationKeys[rotationIndex + 1].mValue.x,
-                                       nodeAnim->mRotationKeys[rotationIndex + 1].mValue.y,
-                                       nodeAnim->mRotationKeys[rotationIndex + 1].mValue.z,
-                                       nodeAnim->mRotationKeys[rotationIndex + 1].mValue.w);
-
-            F32 deltaTime = nodeAnim->mRotationKeys[rotationIndex + 1].mTime - nodeAnim->mRotationKeys[rotationIndex].mTime;
-            F32 factor = (frame - nodeAnim->mRotationKeys[rotationIndex].mTime) / deltaTime;
-
-            rot.interpolate(rotStart, rotEnd, factor);
-         }
-         else
-         {
-            rot.set( nodeAnim->mRotationKeys[0].mValue.x,
-                     nodeAnim->mRotationKeys[0].mValue.y,
-                     nodeAnim->mRotationKeys[0].mValue.z,
-                     nodeAnim->mRotationKeys[0].mValue.w);
-         }
-
-         // interpolate position.
-         if (nodeAnim->mNumPositionKeys > 1) {
-            U32 posIndex = 0;
-
-            for (U32 i = 0; i < nodeAnim->mNumPositionKeys - 1; i++)
-            {
-               if (frame < nodeAnim->mPositionKeys[i + 1].mTime) {
-                  posIndex = i;
+               else if ((curT >= frame) || (key == nodeAnim->mNumPositionKeys - 1))
+               {
+                  trans = curPos;
                   break;
                }
+
+               lastT = curT;
+               lastPos = curPos;
             }
-
-            const Point3F& posStart = Point3F( nodeAnim->mPositionKeys[posIndex].mValue.x,
-                                             nodeAnim->mPositionKeys[posIndex].mValue.y,
-                                             nodeAnim->mPositionKeys[posIndex].mValue.z);
-
-            const Point3F& posEnd = Point3F(nodeAnim->mPositionKeys[posIndex + 1].mValue.x,
-                                          nodeAnim->mPositionKeys[posIndex + 1].mValue.y,
-                                          nodeAnim->mPositionKeys[posIndex + 1].mValue.z);
-
-            F32 deltaTime = nodeAnim->mPositionKeys[posIndex + 1].mTime - nodeAnim->mPositionKeys[posIndex].mTime;
-            F32 factor = (frame - nodeAnim->mPositionKeys[posIndex].mTime) / deltaTime;
-
-            trans = posStart + factor * (posEnd - posStart);
          }
+
+         // Rotation
+         if (nodeAnim->mNumRotationKeys == 1)
+            rot.set(nodeAnim->mRotationKeys[0].mValue.x, nodeAnim->mRotationKeys[0].mValue.y,
+               nodeAnim->mRotationKeys[0].mValue.z, nodeAnim->mRotationKeys[0].mValue.w);
          else
          {
-            trans.set(  nodeAnim->mPositionKeys[0].mValue.x,
-                        nodeAnim->mPositionKeys[0].mValue.y,
-                        nodeAnim->mPositionKeys[0].mValue.z);
+            QuatF curRot, lastRot;
+            F32 lastT = 0.0;
+            for (U32 key = 0; key < nodeAnim->mNumRotationKeys; ++key)
+            {
+               F32 curT = sTimeMultiplier * (F32)nodeAnim->mRotationKeys[key].mTime;
+               curRot.set(nodeAnim->mRotationKeys[key].mValue.x, nodeAnim->mRotationKeys[key].mValue.y,
+                  nodeAnim->mRotationKeys[key].mValue.z, nodeAnim->mRotationKeys[key].mValue.w);
+               if ((curT > frame) && (key > 0))
+               {
+                  F32 factor = (frame - lastT) / (curT - lastT);
+                  rot.interpolate(lastRot, curRot, factor);
+                  break;
+               }
+               else if ((curT >= frame) || (key == nodeAnim->mNumRotationKeys - 1))
+               {
+                  rot = curRot;
+                  break;
+               }
+
+               lastT = curT;
+               lastRot = curRot;
+            }
+         }
+
+         // Scale
+         if (nodeAnim->mNumScalingKeys == 1)
+            scale.set(nodeAnim->mScalingKeys[0].mValue.x, nodeAnim->mScalingKeys[0].mValue.y, nodeAnim->mScalingKeys[0].mValue.z);
+         else
+         {
+            Point3F curScale, lastScale;
+            F32 lastT = 0.0;
+            for (U32 key = 0; key < nodeAnim->mNumScalingKeys; ++key)
+            {
+               F32 curT = sTimeMultiplier * (F32)nodeAnim->mScalingKeys[key].mTime;
+               curScale.set(nodeAnim->mScalingKeys[key].mValue.x, nodeAnim->mScalingKeys[key].mValue.y, nodeAnim->mScalingKeys[key].mValue.z);
+               if ((curT > frame) && (key > 0))
+               {
+                  F32 factor = (frame - lastT) / (curT - lastT);
+                  scale.interpolate(lastScale, curScale, factor);
+                  break;
+               }
+               else if ((curT >= frame) || (key == nodeAnim->mNumScalingKeys - 1))
+               {
+                  scale = curScale;
+                  break;
+               }
+
+               lastT = curT;
+               lastScale = curScale;
+            }
          }
 
          rot.setMatrix(&mat);

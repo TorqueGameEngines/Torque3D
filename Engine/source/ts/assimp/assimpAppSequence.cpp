@@ -17,7 +17,6 @@ AssimpAppSequence::AssimpAppSequence(aiAnimation *a) :
    seqEnd(0.0f)
 {
    mAnim = new aiAnimation(*a);
-
    // Deep copy channels
    mAnim->mChannels = new aiNodeAnim * [a->mNumChannels];
    for (U32 i = 0; i < a->mNumChannels; ++i) {
@@ -68,21 +67,21 @@ AssimpAppSequence::AssimpAppSequence(aiAnimation *a) :
 
    mTimeMultiplier = 1.0f;
 
-   //S32 timeFactor = ColladaUtils::getOptions().animTiming;
-   //S32 fpsRequest = (S32)a->mTicksPerSecond;
-   //if (timeFactor == 0)
-   //{  // Timing specified in frames
-   //   fps = mClamp(fpsRequest, 5 /*TSShapeLoader::MinFrameRate*/, TSShapeLoader::MaxFrameRate);
-   //   mTimeMultiplier = 1.0f / fps;
-   //}
-   //else
-   //{  // Timing specified in seconds or ms depending on format
-   //   if (seqEnd > 1000.0f || a->mDuration > 1000.0f)
-   //      timeFactor = 1000.0f;   // If it's more than 1000 seconds, assume it's ms.
+   S32 timeFactor = ColladaUtils::getOptions().animTiming;
+   S32 fpsRequest = (S32)a->mTicksPerSecond;
+   if (timeFactor == 0)
+   {  // Timing specified in frames
+      fps = mClamp(fpsRequest, 5 /*TSShapeLoader::MinFrameRate*/, TSShapeLoader::MaxFrameRate);
+      mTimeMultiplier = 1.0f / fps;
+   }
+   else
+   {  // Timing specified in seconds or ms depending on format
+      if (seqEnd > 1000.0f || a->mDuration > 1000.0f)
+         timeFactor = 1000.0f;   // If it's more than 1000 seconds, assume it's ms.
 
-   //   timeFactor = mClamp(timeFactor, 1, 1000);
-   //   mTimeMultiplier = 1.0f / timeFactor;
-   //}
+      timeFactor = mClamp(timeFactor, 1, 1000);
+      mTimeMultiplier = 1.0f / timeFactor;
+   }
 
 }
 
@@ -114,5 +113,5 @@ F32 AssimpAppSequence::getPriority() const
 }
 F32 AssimpAppSequence::getBlendRefTime() const 
 { 
-   return -1.0f; 
+   return 0.0f; 
 }

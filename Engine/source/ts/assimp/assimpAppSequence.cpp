@@ -34,52 +34,11 @@ AssimpAppSequence::AssimpAppSequence(aiAnimation *a) :
       maxKeys = getMax(maxKeys, nodeAnim->mNumRotationKeys);
       maxKeys = getMax(maxKeys, nodeAnim->mNumScalingKeys);
 
-      if (nodeAnim->mNumPositionKeys)
-         maxEndTime = getMax(maxEndTime, (F32) nodeAnim->mPositionKeys[nodeAnim->mNumPositionKeys-1].mTime);
-      if (nodeAnim->mNumRotationKeys)
-         maxEndTime = getMax(maxEndTime, (F32) nodeAnim->mRotationKeys[nodeAnim->mNumRotationKeys-1].mTime);
-      if (nodeAnim->mNumScalingKeys)
-         maxEndTime = getMax(maxEndTime, (F32) nodeAnim->mScalingKeys[nodeAnim->mNumScalingKeys-1].mTime);
-
-      for (U32 key = 1; key < nodeAnim->mNumPositionKeys; ++key)
-      {
-         F32 deltaT = nodeAnim->mPositionKeys[key].mTime - nodeAnim->mPositionKeys[key-1].mTime;
-         minFrameTime = getMin(minFrameTime, deltaT);
-      }
-      for (U32 key = 1; key < nodeAnim->mNumRotationKeys; ++key)
-      {
-         F32 deltaT = nodeAnim->mRotationKeys[key].mTime - nodeAnim->mRotationKeys[key-1].mTime;
-         minFrameTime = getMin(minFrameTime, deltaT);
-      }
-      for (U32 key = 1; key < nodeAnim->mNumScalingKeys; ++key)
-      {
-         F32 deltaT = nodeAnim->mScalingKeys[key].mTime - nodeAnim->mScalingKeys[key-1].mTime;
-         minFrameTime = getMin(minFrameTime, deltaT);
-      }
+      maxEndTime = getMax(maxEndTime, (F32)maxKeys);
    }
 
-   S32 timeFactor = ColladaUtils::getOptions().animTiming;
-   S32 fpsRequest = ColladaUtils::getOptions().animFPS;
-   if (timeFactor == 0)
-   {  // Timing specified in frames
-      fps = mClamp(fpsRequest, 5 /*TSShapeLoader::MinFrameRate*/, TSShapeLoader::MaxFrameRate);
-      maxKeys = getMax(maxKeys, (U32)maxEndTime);  // Keys won't be assigned for every frame.
-      seqEnd = maxKeys / fps;
-      mTimeMultiplier = 1.0f / fps;
-   }
-   else
-   {  // Timing specified in seconds or ms depending on format
-      if (maxEndTime > 1000.0f || mAnim->mDuration > 1000.0f)
-         timeFactor = 1000.0f;   // If it's more than 1000 seconds, assume it's ms.
+   seqEnd = maxEndTime;
 
-      timeFactor = mClamp(timeFactor, 1, 1000);
-      minFrameTime /= (F32)timeFactor;
-      maxEndTime /= (F32)timeFactor;
-      fps = (minFrameTime > 0.0f) ? 1.0f / minFrameTime : fps;
-      fps = mClamp(fpsRequest, 5 /*TSShapeLoader::MinFrameRate*/, TSShapeLoader::MaxFrameRate);
-      seqEnd = maxEndTime;
-      mTimeMultiplier = 1.0f / timeFactor;
-   }
 }
 
 AssimpAppSequence::~AssimpAppSequence()
@@ -102,7 +61,7 @@ void AssimpAppSequence::setActive(bool active)
 
 U32 AssimpAppSequence::getFlags() const 
 { 
-   return TSShape::Blend;
+   return TSShape::Cyclic;
 }
 F32 AssimpAppSequence::getPriority() const 
 { 

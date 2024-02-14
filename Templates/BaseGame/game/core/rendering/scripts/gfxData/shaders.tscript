@@ -150,3 +150,16 @@ singleton ShaderData( CubemapSaveShader )
 	
    pixVersion = 3.0;
 };
+
+//-----------------------------------------------------------------------------
+// GeoemtryTest shader
+//-----------------------------------------------------------------------------
+
+singleton ShaderData( GeoemtryTestShader )
+{
+   DXVertexShaderFile   = $Core::CommonShaderPath @ "/GeometryExample/gTestV.hlsl";
+   DXGeometryShaderFile = $Core::CommonShaderPath @ "/GeometryExample/gTestG.hlsl";
+   DXPixelShaderFile    = $Core::CommonShaderPath @ "/GeometryExample/gTestP.hlsl";
+      
+   pixVersion = 3.0;   
+};

@@ -970,7 +970,7 @@ $guiContent = new GuiControl(GuiEditorGui, EditorGuiGroup) {
                      
                      new GuiTextEditCtrl( GuiEditorInspectorFilter ) {
                         position = "5 0";
-                        extent = "341 20";
+                        extent = "222 20";
                         profile = "ToolsGuiTextEditProfile";
                         horizSizing = "width";
                         vertSizing = "bottom";
@@ -987,7 +987,7 @@ $guiContent = new GuiControl(GuiEditorGui, EditorGuiGroup) {
                         Profile = "ToolsGuiDefaultProfile";
                         HorizSizing = "left";
                         VertSizing = "bottom";
-                        position = "325 2";
+                        position = "205 2";
                         Extent = "17 17";
                         MinExtent = "8 2";
                         canSave = "1";

@@ -104,7 +104,7 @@ const String& GFXD3D11ShaderConstHandle::getName() const
       return mVertexHandle.name;
    else if (mPixelConstant)
       return mPixelHandle.name;
-   else if (mGeometryConstant)
+   else
       return mGeometryHandle.name;
 }
 
@@ -114,7 +114,7 @@ GFXShaderConstType GFXD3D11ShaderConstHandle::getType() const
       return mVertexHandle.constType;
    else if (mPixelConstant)
       return mPixelHandle.constType;
-   else if (mGeometryConstant)
+   else
       return mGeometryHandle.constType;
 }
 
@@ -124,7 +124,7 @@ U32 GFXD3D11ShaderConstHandle::getArraySize() const
       return mVertexHandle.arraySize;
    else if (mPixelConstant)
       return mPixelHandle.arraySize;
-   else if (mGeometryConstant)
+   else
       return mGeometryHandle.arraySize;
 }
 
@@ -1637,11 +1637,16 @@ GFXShaderConstBufferRef GFXD3D11Shader::allocConstBuffer()
 {
    if (mVertexConstBufferLayout && mPixelConstBufferLayout)
    {
-      GFXD3D11ShaderConstBuffer* buffer = new GFXD3D11ShaderConstBuffer(this, mVertexConstBufferLayout, mPixelConstBufferLayout);
-      mActiveBuffers.push_back( buffer );
+      GFXD3D11ShaderConstBuffer* buffer;
+      if (mGeometryConstBufferLayout)
+         buffer = new GFXD3D11ShaderConstBuffer(this, mVertexConstBufferLayout, mPixelConstBufferLayout, mGeometryConstBufferLayout);
+      else
+         buffer = new GFXD3D11ShaderConstBuffer(this, mVertexConstBufferLayout, mPixelConstBufferLayout);
+
+      mActiveBuffers.push_back(buffer);
       buffer->registerResourceWithDevice(getOwningDevice());
       return buffer;
-   } 
+   }
 
    return NULL;
 }

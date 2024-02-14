@@ -288,6 +288,12 @@ bool GuiInspectorGroup::inspectGroup()
       if (field->flag.test(AbstractClassRep::FIELD_HideInInspectors))
          continue;
 
+      String searchText = mParent->getSearchText();
+      if (searchText != String::EmptyString) {
+         if (String(field->pFieldname).find(searchText, 0, String::NoCase | String::Left) == String::NPos)
+            continue;
+      }
+
       if ((bGrabItems == true || (bNoGroup == true && bGrabItems == false)) && itr->type != AbstractClassRep::DeprecatedFieldType)
       {
          if (bNoGroup == true && bGrabItems == true)

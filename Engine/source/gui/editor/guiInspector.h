@@ -171,6 +171,10 @@ public:
 
    void setForcedArrayIndex(S32 arrayIndex);
 
+   StringTableEntry getSearchText() { return mSearchText; }
+
+   void setSearchText(StringTableEntry searchText);
+
 protected:
       
    typedef Vector< SimObjectPtr< SimObject > > TargetVector;
@@ -190,6 +194,8 @@ protected:
    String mGroupFilters;   
    bool mShowCustomFields;
    S32 mForcedArrayIndex;
+
+   StringTableEntry mSearchText;
 };
 
 #endif

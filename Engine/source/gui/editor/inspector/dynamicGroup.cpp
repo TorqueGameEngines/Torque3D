@@ -123,6 +123,12 @@ bool GuiInspectorDynamicGroup::inspectGroup()
       SimFieldDictionary * fieldDictionary = target->getFieldDictionary();
       for(SimFieldDictionaryIterator ditr(fieldDictionary); *ditr; ++ditr)
       {
+         String searchText = mParent->getSearchText();
+         if (searchText != String::EmptyString) {
+            if (String((*ditr)->slotName).find(searchText, 0, String::NoCase | String::Left) == String::NPos)
+               continue;
+         }
+
          if( i == 0 )
          {
             flist.increment();

@@ -175,6 +175,9 @@ GuiControl* GuiInspectorDatablockField::constructEditControl()
 
    //Add add button
    mAddButton = new GuiBitmapButtonCtrl();
+   if(mDesiredClass == NULL)
+      return retCtrl;
+
    dSprintf(szBuffer, sizeof(szBuffer), "DatablockEditorPlugin.createNewDatablockOfType(%s, %d.getText());", mDesiredClass->getClassName(), retCtrl->getId());
    mAddButton->setField("Command", szBuffer);
 

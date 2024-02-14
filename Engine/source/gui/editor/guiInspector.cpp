@@ -54,6 +54,7 @@ GuiInspector::GuiInspector()
    mForcedArrayIndex(-1)
 {
    mPadding = 1;
+   mSearchText = StringTable->EmptyString();
 }
 
 //-----------------------------------------------------------------------------
@@ -79,7 +80,8 @@ void GuiInspector::initPersistFields()
          "If false the custom fields Name, Id, and Source Class will not be shown." );
 
       addField("forcedArrayIndex", TypeS32, Offset(mForcedArrayIndex, GuiInspector));
-         
+
+      addField("searchText", TypeString, Offset(mSearchText, GuiInspector), "A string that, if not blank, is used to filter shown fields");
    endGroup( "Inspector" );
 
    Parent::initPersistFields();
@@ -829,6 +831,12 @@ void GuiInspector::setForcedArrayIndex(S32 arrayIndex)
    refresh();
 }
 
+void GuiInspector::setSearchText(StringTableEntry searchText)
+{
+   mSearchText = searchText;
+   refresh();
+}
+
 //=============================================================================
 //    Console Methods.
 //=============================================================================
@@ -999,4 +1007,11 @@ DefineEngineMethod(GuiInspector, setForcedArrayIndex, void, (S32 arrayIndex), (-
    "@param arrayIndex The specific field index for arrayed fields to show. Use -1 or blank arg to go back to normal behavior.")
 {
    object->setForcedArrayIndex(arrayIndex);
+}
+
+DefineEngineMethod(GuiInspector, setSearchText, void, (const char* searchText), (""),
+   "Sets the searched text used to filter out displayed fields in the inspector."
+   "@param searchText The text to be used as a filter for field names. Leave as blank to clear search")
+{
+   object->setSearchText(searchText);
 }

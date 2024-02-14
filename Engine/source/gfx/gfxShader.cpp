@@ -79,7 +79,7 @@ bool GFXShader::init(   const Torque::Path &vertFile,
    mPixelFile = pixFile;
 
    // geometry shaders are a choice, shaders can still be compiled if they do not exist.
-   if (geomFile != NULL)
+   if (!geomFile.isEmpty())
    {
       mGeometryFile = geomFile;
    }
@@ -102,7 +102,7 @@ bool GFXShader::init(   const Torque::Path &vertFile,
    Torque::FS::AddChangeNotification( mVertexFile, this, &GFXShader::_onFileChanged );
    Torque::FS::AddChangeNotification( mPixelFile, this, &GFXShader::_onFileChanged );
 
-   if (mGeometryFile != NULL)
+   if (!mGeometryFile.isEmpty())
    {
       Torque::FS::AddChangeNotification(mGeometryFile, this, &GFXShader::_onFileChanged);
    }

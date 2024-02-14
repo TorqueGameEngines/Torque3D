@@ -1116,6 +1116,8 @@ bool GFXD3D11Shader::_compileShader( const Torque::Path &filePath,
             res = D3D11DEVICE->CreatePixelShader(code->GetBufferPointer(), code->GetBufferSize(), NULL,  &mPixShader);
          else if (target.compare("vs_", 3) == 0)
             res = D3D11DEVICE->CreateVertexShader(code->GetBufferPointer(), code->GetBufferSize(), NULL, &mVertShader);
+         else if (target.compare("gs_", 3) == 0)
+            res = D3D11DEVICE->CreateGeometryShader(code->GetBufferPointer(), code->GetBufferSize(), NULL, &mGeometryShader);
          
          if (FAILED(res))
          {
@@ -1156,6 +1158,11 @@ bool GFXD3D11Shader::_compileShader( const Torque::Path &filePath,
    {
       String pixelShader = mPixelFile.getFileName();
       mPixShader->SetPrivateData(WKPDID_D3DDebugObjectName, pixelShader.size(), pixelShader.c_str());
+   }
+   else if (target.compare("gs_", 3) == 0)
+   {
+      String geometryShader = mGeometryFile.getFileName();
+      mGeometryShader->SetPrivateData(WKPDID_D3DDebugObjectName, geometryShader.size(), geometryShader.c_str());
    }
 #endif
   
@@ -1468,8 +1475,10 @@ bool GFXD3D11Shader::_loadCompiledOutput( const Torque::Path &filePath,
    HRESULT res;
    if (target.compare("ps_", 3) == 0)      
       res = D3D11DEVICE->CreatePixelShader(buffer, bufferSize, NULL, &mPixShader);
-   else
+   else if(target.compare("vs_", 3) == 0)
       res = D3D11DEVICE->CreateVertexShader(buffer, bufferSize, NULL, &mVertShader);
+   else if (target.compare("gs_", 3) == 0)
+      res = D3D11DEVICE->CreateGeometryShader(buffer, bufferSize, NULL, &mGeometryShader);
    AssertFatal(SUCCEEDED(res), "Unable to load shader!");
 
    FrameAllocator::setWaterMark(waterMark);

@@ -155,7 +155,7 @@ singleton ShaderData( CubemapSaveShader )
 // GeoemtryTest shader
 //-----------------------------------------------------------------------------
 
-singleton ShaderData( GeoemtryTestShader )
+singleton ShaderData( GeometryTestShader )
 {
    DXVertexShaderFile   = $Core::CommonShaderPath @ "/GeometryExample/gTestV.hlsl";
    DXGeometryShaderFile = $Core::CommonShaderPath @ "/GeometryExample/gTestG.hlsl";

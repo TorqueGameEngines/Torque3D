@@ -102,7 +102,7 @@ bool RenderGSExample::onAdd()
    {
       // Find ShaderData
       ShaderData* shaderData;
-      mShader = Sim::findObject("GeoemtryTestShader", shaderData) ?
+      mShader = Sim::findObject("GeometryTestShader", shaderData) ?
          shaderData->getShader() : NULL;
       if (!mShader)
       {

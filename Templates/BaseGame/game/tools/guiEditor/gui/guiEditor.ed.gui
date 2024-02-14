@@ -967,6 +967,36 @@ $guiContent = new GuiControl(GuiEditorGui, EditorGuiGroup) {
                      tooltipprofile = "ToolsGuiToolTipProfile";
                      hovertime = "1000";
                      canSaveDynamicFields = "0";
+                     
+                     new GuiTextEditCtrl( GuiEditorInspectorFilter ) {
+                        position = "5 0";
+                        extent = "222 20";
+                        profile = "ToolsGuiTextEditProfile";
+                        horizSizing = "width";
+                        vertSizing = "bottom";
+                        placeholderText = "Filter...";
+                        validate = "GuiEditorInspectFields.setSearchText($ThisControl.getText());";
+                     };
+                     
+                     new GuiBitmapButtonCtrl() {
+                        bitmapAsset = "ToolsModule:clear_icon_n_image";
+                        groupNum = "-1";
+                        buttonType = "PushButton";
+                        useMouseEvents = "0";
+                        isContainer = "0";
+                        Profile = "ToolsGuiDefaultProfile";
+                        HorizSizing = "left";
+                        VertSizing = "bottom";
+                        position = "205 2";
+                        Extent = "17 17";
+                        MinExtent = "8 2";
+                        canSave = "1";
+                        Visible = "1";
+                        tooltipprofile = "ToolsGuiToolTipProfile";
+                        hovertime = "1000";
+                        canSaveDynamicFields = "0";
+                        command = "GuiEditorInspectorFilter.setText(\"\");GuiEditorInspectFields.setSearchText(\"\");";
+                     };
 
                      new GuiScrollCtrl() {
                         willFirstRespond = "1";
@@ -979,7 +1009,7 @@ $guiContent = new GuiControl(GuiEditorGui, EditorGuiGroup) {
                         mouseWheelScrollSpeed = "-1";
                         Margin = "0 0 0 0";
                         Padding = "0 0 0 0";
-                        AnchorTop = "1";
+                        AnchorTop = "0";
                         AnchorBottom = "0";
                         AnchorLeft = "1";
                         AnchorRight = "0";
@@ -987,8 +1017,8 @@ $guiContent = new GuiControl(GuiEditorGui, EditorGuiGroup) {
                         Profile = "GuiEditorScrollProfile";
                         HorizSizing = "width";
                         VertSizing = "height";
-                        position = "0 2";
-                        Extent = "223 341";
+                        position = "0 20";
+                        Extent = "223 321";
                         MinExtent = "8 2";
                         canSave = "1";
                         Visible = "1";
@@ -1011,7 +1041,7 @@ $guiContent = new GuiControl(GuiEditorGui, EditorGuiGroup) {
                            HorizSizing = "width";
                            VertSizing = "bottom";
                            position = "1 1";
-                           Extent = "221 24";
+                           Extent = "221 321";
                            MinExtent = "8 24";
                            canSave = "1";
                            Visible = "1";

@@ -232,7 +232,10 @@ protected:
    Torque::Path mVertexFile;  
 
    /// The pixel shader file.
-   Torque::Path mPixelFile;  
+   Torque::Path mPixelFile;
+
+   /// The geometry shader file.
+   Torque::Path mGeometryFile;
 
    /// The macros to be passed to the shader.      
    Vector<GFXShaderMacro> mMacros;
@@ -312,6 +315,7 @@ public:
                F32 pixVersion, 
                const Vector<GFXShaderMacro> &macros,
                const Vector<String> &samplerNames,
+               const Torque::Path& geomFile = NULL,
                GFXVertexFormat *instanceFormat = NULL );
 
    /// Reloads the shader from disk.
@@ -354,6 +358,8 @@ public:
 
    /// Returns the pixel shader file path.
    const String& getPixelShaderFile() const { return mPixelFile.getFullPath(); }
+
+   const String& getGeometryShaderFile() const { return mGeometryFile.getFullPath(); }
 
    // GFXResource
    const String describeSelf() const { return mDescription; }

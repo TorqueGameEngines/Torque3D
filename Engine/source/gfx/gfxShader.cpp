@@ -64,6 +64,7 @@ bool GFXShader::init(   const Torque::Path &vertFile,
                         F32 pixVersion, 
                         const Vector<GFXShaderMacro> &macros,
                         const Vector<String> &samplerNames,
+                        const Torque::Path& geomFile,
                         GFXVertexFormat *instanceFormat)
 {
    // Take care of instancing
@@ -76,6 +77,13 @@ bool GFXShader::init(   const Torque::Path &vertFile,
    // Store the inputs for use in reloading.
    mVertexFile = vertFile;
    mPixelFile = pixFile;
+
+   // geometry shaders are a choice, shaders can still be compiled if they do not exist.
+   if (geomFile != NULL)
+   {
+      mGeometryFile = geomFile;
+   }
+
    mPixVersion = pixVersion;
    mMacros = macros;
    mSamplerNamesOrdered = samplerNames;
@@ -93,6 +101,11 @@ bool GFXShader::init(   const Torque::Path &vertFile,
    // Add file change notifications for reloads.
    Torque::FS::AddChangeNotification( mVertexFile, this, &GFXShader::_onFileChanged );
    Torque::FS::AddChangeNotification( mPixelFile, this, &GFXShader::_onFileChanged );
+
+   if (mGeometryFile != NULL)
+   {
+      Torque::FS::AddChangeNotification(mGeometryFile, this, &GFXShader::_onFileChanged);
+   }
 
    return true;
 }

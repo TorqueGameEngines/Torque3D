@@ -77,6 +77,8 @@ protected:
                      bool isVertex, 
                      const Vector<GFXShaderMacro> &macros );
 
+   bool initGeometryShader(const Torque::Path& file, const Vector<GFXShaderMacro>& macros);
+
    void clearShaders();
    void initConstantDescs();
    void initHandles();
@@ -93,6 +95,7 @@ protected:
    /// @{
    GLuint mVertexShader;
    GLuint mPixelShader;
+   GLuint mGeometryShader;
    GLuint mProgram;
    /// @}
     

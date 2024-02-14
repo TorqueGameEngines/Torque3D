@@ -46,6 +46,15 @@ public:
    ~GFXDrawUtil();
 
    //-----------------------------------------------------------------------------
+   // Draw Ellipse
+   //-----------------------------------------------------------------------------
+   void drawEllipse(const Point2I& center, const U32& radiusX, const U32& radiusY, const ColorI& color, const U32& segments);
+
+   void drawRoundedRect(const U32& cornerRadius, const RectI& rect, const ColorI& color, const U32& segments);
+
+   void drawRoundedRect(const U32& cornerRadius, const Point2I& upperLeft, const Point2I& lowerRight, const ColorI& color, const U32& segments);
+
+   //-----------------------------------------------------------------------------
    // Draw Rectangles
    //-----------------------------------------------------------------------------
    void drawRect( const Point2F &upperLeft, const Point2F &lowerRight, const ColorI &color );
@@ -63,6 +72,8 @@ public:
    //-----------------------------------------------------------------------------
    // Draw Lines
    //-----------------------------------------------------------------------------
+   void drawThickBezier(const U32& segments, const U32& thickness, const Point2I& start, const Point2I& end, const ColorI& color);
+   void drawBezier(const U32& segments, const Point2I& start, const Point2I& end, const ColorI& color);
    void drawLine( const Point3F &startPt, const Point3F &endPt, const ColorI &color );
    void drawLine( const Point2F &startPt, const Point2F &endPt, const ColorI &color );
    void drawLine( const Point2I &startPt, const Point2I &endPt, const ColorI &color );

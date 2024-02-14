@@ -450,7 +450,15 @@ bool GFXGLShader::_init()
    // If either shader was present and failed to compile, bail.
    if(!compiledVertexShader || !compiledPixelShader)
       return false;
-  
+
+   // all of these shaders require a vertex shader at least so compile after check for pixel and vert shaders.
+   if (!mGeometryFile.isEmpty())
+   {
+      macros.last().name = "TORQUE_GEOMETRY_SHADER";
+      if (!initGeometryShader(mGeometryFile, macros))
+         return false;
+   }
+   
    // Link it!
    glLinkProgram( mProgram );
    
@@ -1141,6 +1149,62 @@ bool GFXGLShader::initShader( const Torque::Path &file,
    }
 
    return compile != GL_FALSE;
+}
+
+bool GFXGLShader::initGeometryShader(const Torque::Path& file, const Vector<GFXShaderMacro>& macros)
+{
+   PROFILE_SCOPE(GFXGLShader_CompileGeometryShader);
+   GLuint activeShader = glCreateShader(GL_GEOMETRY_SHADER);
+   mGeometryShader = activeShader;
+   glAttachShader(mProgram, activeShader);
+
+
+   // Ok it's not in the shader gen manager, so ask Torque for it
+   FileStream stream;
+   if (!stream.open(file, Torque::FS::File::Read))
+   {
+      AssertISV(false, avar("GFXGLShader::initGeometryShader - failed to open shader '%s'.", file.getFullPath().c_str()));
+
+      if (smLogErrors)
+         Con::errorf("GFXGLShader::initGeometryShader - Failed to open shader file '%s'.",
+            file.getFullPath().c_str());
+
+      return false;
+   }
+
+   if (!_loadShaderFromStream(activeShader, file, &stream, macros))
+      return false;
+
+   GLint compile;
+   glGetShaderiv(activeShader, GL_COMPILE_STATUS, &compile);
+
+   // Dump the info log to the console
+   U32 logLength = 0;
+   glGetShaderiv(activeShader, GL_INFO_LOG_LENGTH, (GLint*)&logLength);
+
+   GLint compileStatus = GL_TRUE;
+   if (logLength)
+   {
+      FrameAllocatorMarker fam;
+      char* log = (char*)fam.alloc(logLength);
+      glGetShaderInfoLog(activeShader, logLength, NULL, log);
+
+      // Always print errors
+      glGetShaderiv(activeShader, GL_COMPILE_STATUS, &compileStatus);
+
+      if (compileStatus == GL_FALSE)
+      {
+         if (smLogErrors)
+         {
+            Con::errorf("GFXGLShader::initGeometryShader - Error compiling shader!");
+            Con::errorf("Program %s: %s", file.getFullPath().c_str(), log);
+         }
+      }
+      else if (smLogWarnings)
+         Con::warnf("Program %s: %s", file.getFullPath().c_str(), log);
+   }
+
+   return compileStatus != GL_FALSE;
 }
 
 /// Returns our list of shader constants, the material can get this and just set the constants it knows about

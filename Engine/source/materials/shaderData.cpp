@@ -67,6 +67,14 @@ ShaderData::ShaderData()
 
    for( int i = 0; i < NumTextures; ++i)
       mRTParams[i] = false;
+
+   mDXVertexShaderName = StringTable->EmptyString();
+   mDXPixelShaderName = StringTable->EmptyString();
+   mDXGeometryShaderName = StringTable->EmptyString();
+
+   mOGLVertexShaderName = StringTable->EmptyString();
+   mOGLPixelShaderName = StringTable->EmptyString();
+   mOGLGeometryShaderName = StringTable->EmptyString();
 }
 
 void ShaderData::initPersistFields()
@@ -84,6 +92,11 @@ void ShaderData::initPersistFields()
 	   "shader. It can be either an HLSL or assembly level shader. HLSL's "
 	   "must have a filename extension of .hlsl, otherwise its assumed to be an assembly file.");
 
+   addField("DXGeometryShaderFile", TypeStringFilename, Offset(mDXGeometryShaderName, ShaderData),
+      "@brief %Path to the DirectX geometry shader file to use for this ShaderData.\n\n"
+      "It can be either an HLSL or assembly level shader. HLSL's must have a "
+      "filename extension of .hlsl, otherwise its assumed to be an assembly file.");
+
    addField("OGLVertexShaderFile",  TypeStringFilename,  Offset(mOGLVertexShaderName,   ShaderData),
 	   "@brief %Path to an OpenGL vertex shader file to use for this ShaderData.\n\n"
 	   "It must contain only one program and no pixel shader, just the vertex shader.");
@@ -92,6 +105,9 @@ void ShaderData::initPersistFields()
 	   "@brief %Path to an OpenGL pixel shader file to use for this ShaderData.\n\n"
 	   "It must contain only one program and no vertex shader, just the pixel "
 	   "shader.");
+
+   addField("OGLGeometryShaderFile", TypeStringFilename, Offset(mOGLGeometryShaderName, ShaderData),
+      "@brief %Path to the OpenGL Geometry shader file to use for this ShaderData.\n\n");
 
    addField("useDevicePixVersion",  TypeBool,            Offset(mUseDevicePixVersion,   ShaderData),
 	   "@brief If true, the maximum pixel shader version offered by the graphics card will be used.\n\n"
@@ -241,7 +257,8 @@ GFXShader* ShaderData::_createShader( const Vector<GFXShaderMacro> &macros )
                                  mDXPixelShaderName, 
                                  pixver,
                                  macros,
-                                 samplers);
+                                 samplers,
+                                 mDXGeometryShaderName);
          break;
       }
 
@@ -251,7 +268,8 @@ GFXShader* ShaderData::_createShader( const Vector<GFXShaderMacro> &macros )
                                  mOGLPixelShaderName,
                                  pixver,
                                  macros,
-                                 samplers);
+                                 samplers,
+                                 mOGLGeometryShaderName);
          break;
       }
          

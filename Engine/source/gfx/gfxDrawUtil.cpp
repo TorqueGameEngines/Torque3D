@@ -510,6 +510,66 @@ void GFXDrawUtil::drawRect( const Point2F &upperLeft, const Point2F &lowerRight,
    mDevice->drawPrimitive( GFXTriangleStrip, 0, 8 );
 }
 
+void GFXDrawUtil::drawEllipse(const Point2I& center, const U32& radiusX, const U32& radiusY, const ColorI& color, const U32& segments) {
+   // Calculate delta angle between segments
+   F32 deltaAngle = M_2PI / segments;
+
+   // Prepare a vertex buffer to hold the vertices
+   GFXVertexBufferHandle<GFXVertexPCT> vertexBuffer;
+   vertexBuffer.set(GFX, segments * 3, GFXBufferTypeStatic);
+   GFXVertexPCT* verts = vertexBuffer.lock();
+
+   // Calculate vertices for the ellipse
+   for (U32 i = 0; i < segments; ++i) {
+      F32 angle = deltaAngle * i;
+      F32 nextAngle = deltaAngle * (i + 1);
+
+      Point2F start(center.x + radiusX * mCos(angle), center.y + radiusY * mSin(angle));
+      Point2F end(center.x + radiusX * mCos(nextAngle), center.y + radiusY * mSin(nextAngle));
+
+      // Add vertices for the triangle
+      verts[i * 3].point.set(center.x, center.y, 0.0f);
+      verts[i * 3].color = color;
+      verts[i * 3 + 1].point.set(start.x, start.y, 0.0f);
+      verts[i * 3 + 1].color = color;
+      verts[i * 3 + 2].point.set(end.x, end.y, 0.0f);
+      verts[i * 3 + 2].color = color;
+   }
+
+   vertexBuffer.unlock();
+
+   // Set render state
+   mDevice->setStateBlock(mRectFillSB);
+   mDevice->setVertexBuffer(vertexBuffer);
+   mDevice->setupGenericShaders();
+
+   // Draw the primitive
+   mDevice->drawPrimitive(GFXTriangleList, 0, segments);
+}
+
+void GFXDrawUtil::drawRoundedRect(const U32& cornerRadius, const RectI& rect, const ColorI& color, const U32& segments)
+{
+   drawRoundedRect(cornerRadius, rect.point, Point2I(rect.extent.x + rect.point.x - 1, rect.extent.y + rect.point.y - 1), color, segments);
+}
+
+void GFXDrawUtil::drawRoundedRect(const U32& cornerRadius, const Point2I& upperLeft, const Point2I& lowerRight, const ColorI& color, const U32& segments)
+{
+   // draw rects.
+   drawRectFill(Point2I(upperLeft.x + cornerRadius, upperLeft.y), Point2I(lowerRight.x - cornerRadius, lowerRight.y), color);
+   drawRectFill(Point2I(upperLeft.x, upperLeft.y + cornerRadius), Point2I(lowerRight.x, lowerRight.y - cornerRadius), color);
+
+   // drawEllipses
+   // TL
+   drawEllipse(Point2I(upperLeft.x + cornerRadius, upperLeft.y + cornerRadius), cornerRadius, cornerRadius, color, segments);
+   //TR
+   drawEllipse(Point2I(upperLeft.x + (lowerRight.x - upperLeft.x) - cornerRadius, upperLeft.y + cornerRadius), cornerRadius, cornerRadius, color, segments);
+   //BL
+   drawEllipse(Point2I(upperLeft.x + cornerRadius, lowerRight.y - cornerRadius), cornerRadius, cornerRadius, color, segments);
+   //BR
+   drawEllipse(Point2I(lowerRight.x - cornerRadius, lowerRight.y - cornerRadius), cornerRadius, cornerRadius, color, segments);
+
+}
+
 //-----------------------------------------------------------------------------
 // Draw Rectangle Fill
 //-----------------------------------------------------------------------------
@@ -610,6 +670,97 @@ void GFXDrawUtil::draw2DSquare( const Point2F &screenPoint, F32 width, F32 spinA
 //-----------------------------------------------------------------------------
 // Draw Line
 //-----------------------------------------------------------------------------
+
+void GFXDrawUtil::drawThickBezier(const U32& segments, const U32& thickness, const Point2I& start, const Point2I& end, const ColorI& color)
+{
+   // Calculate control points for the cubic Bézier curve
+   Point2F controlPoint1(start.x + (end.x - start.x) / 4, start.y);
+   Point2F controlPoint2(start.x + 3 * (end.x - start.x) / 4, end.y);
+
+   // Prepare a vertex buffer to hold the vertices
+   GFXVertexBufferHandle<GFXVertexPCT> vertexBuffer;
+   vertexBuffer.set(GFX, segments * 4, GFXBufferTypeVolatile);
+   GFXVertexPCT* verts = vertexBuffer.lock();
+
+   // Draw curved line using a series of line segments
+   Point2I prevPoint = start;
+   for (U32 i = 1; i <= segments; i++) {
+      F32 t = static_cast<F32>(i) / segments;
+      F32 oneMinusT = 1.0f - t;
+      F32 oneMinusTSquared = oneMinusT * oneMinusT;
+      F32 oneMinusTCubed = oneMinusTSquared * oneMinusT;
+      F32 tSquared = t * t;
+      F32 tCubed = tSquared * t;
+
+      F32 x = oneMinusTCubed * start.x + 3 * oneMinusTSquared * t * controlPoint1.x +
+         3 * oneMinusT * tSquared * controlPoint2.x + tCubed * end.x;
+      F32 y = oneMinusTCubed * start.y + 3 * oneMinusTSquared * t * controlPoint1.y +
+         3 * oneMinusT * tSquared * controlPoint2.y + tCubed * end.y;
+
+      Point2I currentPoint(static_cast<S32>(x), static_cast<S32>(y));
+
+      // Calculate direction vector
+      Point2F dir = Point2F(currentPoint.x - prevPoint.x, currentPoint.y - prevPoint.y);
+      Point2F unitDir = dir / mSqrt(dir.x * dir.x + dir.y * dir.y);
+      Point2F unitPerp(-unitDir.y, unitDir.x);
+
+      // Calculate offset vectors for thickness
+      Point2F offset = (thickness * 0.5f) * unitPerp;
+
+      // Assign vertices for this segment
+      verts[(i - 1) * 4].point.set(prevPoint.x + offset.x, prevPoint.y + offset.y, 0.0f);
+      verts[(i - 1) * 4].color = color;
+      verts[(i - 1) * 4 + 1].point.set(prevPoint.x - offset.x, prevPoint.y - offset.y, 0.0f);
+      verts[(i - 1) * 4 + 1].color = color;
+      verts[(i - 1) * 4 + 2].point.set(currentPoint.x + offset.x, currentPoint.y + offset.y, 0.0f);
+      verts[(i - 1) * 4 + 2].color = color;
+      verts[(i - 1) * 4 + 3].point.set(currentPoint.x - offset.x, currentPoint.y - offset.y, 0.0f);
+      verts[(i - 1) * 4 + 3].color = color;
+
+      prevPoint = currentPoint;
+   }
+
+   vertexBuffer.unlock();
+
+   // Set render state
+   mDevice->setStateBlock(mRectFillSB);
+   mDevice->setVertexBuffer(vertexBuffer);
+   mDevice->setupGenericShaders();
+
+   // Draw the primitive
+   mDevice->drawPrimitive(GFXTriangleStrip, 0, segments * 2);
+
+}
+
+void GFXDrawUtil::drawBezier(const U32& segments, const Point2I& start, const Point2I& end, const ColorI& color)
+{
+   // Calculate control points for the cubic Bézier curve
+   Point2F controlPoint1(start.x + (end.x - start.x) / 4, start.y);
+   Point2F controlPoint2(start.x + 3 * (end.x - start.x) / 4, end.y);
+
+   // Draw curved line using a series of line segments
+   Point2I prevPoint = start;
+   for (U32 i = 1; i <= segments; i++) {
+      F32 t = static_cast<F32>(i) / segments;
+      F32 oneMinusT = 1.0f - t;
+      F32 oneMinusTSquared = oneMinusT * oneMinusT;
+      F32 oneMinusTCubed = oneMinusTSquared * oneMinusT;
+      F32 tSquared = t * t;
+      F32 tCubed = tSquared * t;
+
+      F32 x = oneMinusTCubed * start.x + 3 * oneMinusTSquared * t * controlPoint1.x +
+         3 * oneMinusT * tSquared * controlPoint2.x + tCubed * end.x;
+      F32 y = oneMinusTCubed * start.y + 3 * oneMinusTSquared * t * controlPoint1.y +
+         3 * oneMinusT * tSquared * controlPoint2.y + tCubed * end.y;
+
+      Point2I currentPoint(static_cast<S32>(x), static_cast<S32>(y));
+
+      drawLine(prevPoint, currentPoint, color);
+
+      prevPoint = currentPoint;
+   }
+}
+
 void GFXDrawUtil::drawLine( const Point3F &startPt, const Point3F &endPt, const ColorI &color )
 {
    drawLine( startPt.x, startPt.y, startPt.z, endPt.x, endPt.y, endPt.z, color );

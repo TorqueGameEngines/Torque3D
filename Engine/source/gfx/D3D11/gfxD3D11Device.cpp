@@ -105,6 +105,7 @@ GFXD3D11Device::GFXD3D11Device(U32 index)
 
    mLastVertShader = NULL;
    mLastPixShader = NULL;
+   mLastGeomShader = NULL;
 
    mCanCurrentlyRender = false;
    mTextureManager = NULL;
@@ -117,6 +118,8 @@ GFXD3D11Device::GFXD3D11Device(U32 index)
 
    mVertexShaderTarget = String::EmptyString;
    mPixelShaderTarget = String::EmptyString;
+   mGeometryShaderTarget = String::EmptyString;
+
    mShaderModel = String::EmptyString;
 
    mDrawInstancesCount = 0;
@@ -521,12 +524,14 @@ void GFXD3D11Device::init(const GFXVideoMode &mode, PlatformWindow *window)
    case D3D_FEATURE_LEVEL_11_0:
       mVertexShaderTarget = "vs_5_0";
       mPixelShaderTarget = "ps_5_0";
+      mGeometryShaderTarget = "gs_5_0";
       mPixVersion = 5.0f;
       mShaderModel = "50";
       break;
    case D3D_FEATURE_LEVEL_10_1:
       mVertexShaderTarget = "vs_4_1";
       mPixelShaderTarget = "ps_4_1";
+      mGeometryShaderTarget = "gs_4_1";
       mPixVersion = 4.1f;
       mShaderModel = "41";
       break;
@@ -1245,7 +1250,13 @@ void GFXD3D11Device::setShader(GFXShader *shader, bool force)
       {
         mD3DDeviceContext->VSSetShader( d3dShader->mVertShader, NULL, 0);
         mLastVertShader = d3dShader->mVertShader;
-      }     
+      }
+
+      if (d3dShader->mGeometryShader != mLastGeomShader || force)
+      {
+         mD3DDeviceContext->GSSetShader(d3dShader->mGeometryShader, NULL, 0);
+         mLastGeomShader = d3dShader->mGeometryShader;
+      }
    }
    else
    {

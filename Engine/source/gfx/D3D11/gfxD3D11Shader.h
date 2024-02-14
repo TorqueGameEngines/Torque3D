@@ -62,7 +62,8 @@ enum CONST_TYPE
    D3DPT_SAMPLER3D, 
    D3DPT_SAMPLERCUBE, 
    D3DPT_PIXELSHADER, 
-   D3DPT_VERTEXSHADER, 
+   D3DPT_VERTEXSHADER,
+   D3DPT_GEOMETRYSHADER,
    D3DPT_PIXELFRAGMENT, 
    D3DPT_VERTEXFRAGMENT
 };
@@ -262,6 +263,8 @@ public:
    GenericConstBufferLayout::ParamDesc mVertexHandle;
    bool mPixelConstant;
    GenericConstBufferLayout::ParamDesc mPixelHandle;
+   bool mGeometryConstant;
+   GenericConstBufferLayout::ParamDesc mGeometryHandle;
    
    /// Is true if this constant is for hardware mesh instancing.
    ///
@@ -275,7 +278,9 @@ public:
    // Returns true if this is a handle to a sampler register.
    bool isSampler() const 
    {
-      return ( mPixelConstant && mPixelHandle.constType >= GFXSCT_Sampler ) || ( mVertexConstant && mVertexHandle.constType >= GFXSCT_Sampler );
+      return   ( mPixelConstant && mPixelHandle.constType >= GFXSCT_Sampler ) ||
+               ( mVertexConstant && mVertexHandle.constType >= GFXSCT_Sampler ) ||
+               ( mGeometryConstant && mGeometryHandle.constType >= GFXSCT_Sampler );
    }
 
    /// Restore to uninitialized state.
@@ -284,9 +289,13 @@ public:
       mShader = NULL;
       mVertexConstant = false;
       mPixelConstant = false;
+      mGeometryConstant = false;
+
       mInstancingConstant = false;
+
       mVertexHandle.clear();
       mPixelHandle.clear();
+      mGeometryHandle.clear();
       mValid = false;
    }
 
@@ -304,7 +313,8 @@ public:
 
    GFXD3D11ShaderConstBuffer(GFXD3D11Shader* shader,
       GFXD3D11ConstBufferLayout* vertexLayout,
-      GFXD3D11ConstBufferLayout* pixelLayout);
+      GFXD3D11ConstBufferLayout* pixelLayout,
+      GFXD3D11ConstBufferLayout* geometryLayout = NULL);
 
    virtual ~GFXD3D11ShaderConstBuffer();
 
@@ -355,11 +365,13 @@ protected:
    inline void SET_CONSTANT(GFXShaderConstHandle* handle,
       const T& fv,
       GenericConstBuffer *vBuffer,
-      GenericConstBuffer *pBuffer);
+      GenericConstBuffer *pBuffer,
+      GenericConstBuffer* gBuffer = NULL);
 
    // Constant buffers, VSSetConstantBuffers1 has issues on win 7. So unfortunately for now we have multiple constant buffers
    ID3D11Buffer* mConstantBuffersV[CBUFFER_MAX];
    ID3D11Buffer* mConstantBuffersP[CBUFFER_MAX];
+   ID3D11Buffer* mConstantBuffersG[CBUFFER_MAX];
 
    /// We keep a weak reference to the shader 
    /// because it will often be deleted.
@@ -371,6 +383,10 @@ protected:
    //pixel
    GFXD3D11ConstBufferLayout* mPixelConstBufferLayout;
    GenericConstBuffer* mPixelConstBuffer;
+   //geometry
+   bool mContainGeometry;
+   GFXD3D11ConstBufferLayout* mGeometryConstBufferLayout;
+   GenericConstBuffer* mGeometryConstBuffer;
 };
 
 class gfxD3D11Include;
@@ -411,9 +427,11 @@ protected:
 
    ID3D11VertexShader *mVertShader;
    ID3D11PixelShader *mPixShader;
+   ID3D11GeometryShader *mGeometryShader;
 
    GFXD3D11ConstBufferLayout* mVertexConstBufferLayout;
-   GFXD3D11ConstBufferLayout* mPixelConstBufferLayout;   
+   GFXD3D11ConstBufferLayout* mPixelConstBufferLayout;
+   GFXD3D11ConstBufferLayout* mGeometryConstBufferLayout;
 
    static gfxD3DIncludeRef smD3DInclude;
 
@@ -458,6 +476,8 @@ protected:
    virtual void _buildShaderConstantHandles(GenericConstBufferLayout *layout, bool vertexConst);
    
    virtual void _buildSamplerShaderConstantHandles( Vector<GFXShaderConstDesc> &samplerDescriptions );
+
+   void buildGeometryShaderConstantHandles(GenericConstBufferLayout* layout);
 
    /// Used to build the instancing shader constants from 
    /// the instancing vertex format.

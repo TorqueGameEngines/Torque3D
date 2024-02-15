@@ -93,20 +93,20 @@ void GFXDrawUtil::_setupStateBlocks()
 
    // Find ShaderData
    ShaderData* shaderData;
-   mRoundRectangleSahder = Sim::findObject("RoundedRectangleGUI", shaderData) ?
+   mRoundRectangleShader = Sim::findObject("RoundedRectangleGUI", shaderData) ?
       shaderData->getShader() : NULL;
-   if (!mRoundRectangleSahder)
+   if (!mRoundRectangleShader)
    {
       Con::errorf("GFXDrawUtil - could not find Rounded Rectangle shader");
    }
 
    // Create ShaderConstBuffer and Handles
-   mRoundRectangleSahderConsts = mRoundRectangleSahder->allocConstBuffer();
+   mRoundRectangleShaderConsts = mRoundRectangleShader->allocConstBuffer();
 
-   mModelViewSC = mRoundRectangleSahder->getShaderConstHandle("$modelView");
-   mRadiusSC = mRoundRectangleSahder->getShaderConstHandle("$radius");
-   mSizeSc = mRoundRectangleSahder->getShaderConstHandle("$sizeUni");
-   mRectCenterSc = mRoundRectangleSahder->getShaderConstHandle("$rectCenter");
+   mModelViewSC = mRoundRectangleShader->getShaderConstHandle("$modelView");
+   mRadiusSC = mRoundRectangleShader->getShaderConstHandle("$radius");
+   mSizeSC = mRoundRectangleShader->getShaderConstHandle("$sizeUni");
+   mRectCenterSC = mRoundRectangleShader->getShaderConstHandle("$rectCenter");
 }
 
 //-----------------------------------------------------------------------------
@@ -597,8 +597,8 @@ void GFXDrawUtil::drawRoundedRect(const F32& cornerRadius, const Point2I& upperL
    Point2F bottomRightCorner(lowerRight.x - nw.x + ulOffset, lowerRight.y - nw.y + ulOffset);
 
    /*mDevice->setupGenericShaders();*/
-   GFX->setShader(mRoundRectangleSahder);
-   GFX->setShaderConstBuffer(mRoundRectangleSahderConsts);
+   GFX->setShader(mRoundRectangleShader);
+   GFX->setShaderConstBuffer(mRoundRectangleShaderConsts);
 
    MatrixF tempMatrix = GFX->getProjectionMatrix() * GFX->getViewMatrix() * GFX->getWorldMatrix();
    Point2F size((F32)(bottomRightCorner.x - topLeftCorner.x), (F32)(bottomRightCorner.y - topLeftCorner.y));
@@ -611,12 +611,12 @@ void GFXDrawUtil::drawRoundedRect(const F32& cornerRadius, const Point2I& upperL
       radius = mClampF(radius, 0.0f, (minExtent * 0.5));
    }
 
-   mRoundRectangleSahderConsts->set(mModelViewSC, tempMatrix, GFXSCT_Float4x4);
-   mRoundRectangleSahderConsts->setSafe(mRadiusSC, radius);
-   mRoundRectangleSahderConsts->setSafe(mSizeSc, size);
+   mRoundRectangleShaderConsts->set(mModelViewSC, tempMatrix, GFXSCT_Float4x4);
+   mRoundRectangleShaderConsts->setSafe(mRadiusSC, radius);
+   mRoundRectangleShaderConsts->setSafe(mSizeSC, size);
 
    Point2F rectCenter((F32)(topLeftCorner.x + (size.x / 2.0)), (F32)(topLeftCorner.y + (size.y / 2.0)));
-   mRoundRectangleSahderConsts->setSafe(mRectCenterSc, rectCenter);
+   mRoundRectangleShaderConsts->setSafe(mRectCenterSC, rectCenter);
 
    mDevice->drawPrimitive(GFXTriangleStrip, 0, 2);
 }

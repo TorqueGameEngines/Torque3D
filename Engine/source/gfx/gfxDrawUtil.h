@@ -189,12 +189,12 @@ protected:
    FontRenderBatcher* mFontRenderBatcher;
 
    // Expanded shaders
-   GFXShaderRef mRoundRectangleSahder;
-   GFXShaderConstBufferRef mRoundRectangleSahderConsts;
+   GFXShaderRef mRoundRectangleShader;
+   GFXShaderConstBufferRef mRoundRectangleShaderConsts;
    GFXShaderConstHandle* mModelViewSC;
    GFXShaderConstHandle* mRadiusSC;
-   GFXShaderConstHandle* mSizeSc;
-   GFXShaderConstHandle* mRectCenterSc;
+   GFXShaderConstHandle* mSizeSC;
+   GFXShaderConstHandle* mRectCenterSC;
 };
 
 #endif // _GFX_GFXDRAWER_H_

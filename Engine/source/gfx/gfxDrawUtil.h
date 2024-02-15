@@ -50,9 +50,9 @@ public:
    //-----------------------------------------------------------------------------
    void drawEllipse(const Point2I& center, const U32& radiusX, const U32& radiusY, const ColorI& color, const U32& segments);
 
-   void drawRoundedRect(const U32& cornerRadius, const RectI& rect, const ColorI& color, const U32& segments);
+   void drawRoundedRect(const F32& cornerRadius, const RectI& rect, const ColorI& color);
 
-   void drawRoundedRect(const U32& cornerRadius, const Point2I& upperLeft, const Point2I& lowerRight, const ColorI& color, const U32& segments);
+   void drawRoundedRect(const F32& cornerRadius, const Point2I& upperLeft, const Point2I& lowerRight, const ColorI& color);
 
    //-----------------------------------------------------------------------------
    // Draw Rectangles
@@ -187,6 +187,14 @@ protected:
    GFXStateBlockRef mRectFillSB;
    
    FontRenderBatcher* mFontRenderBatcher;
+
+   // Expanded shaders
+   GFXShaderRef mRoundRectangleSahder;
+   GFXShaderConstBufferRef mRoundRectangleSahderConsts;
+   GFXShaderConstHandle* mModelViewSC;
+   GFXShaderConstHandle* mRadiusSC;
+   GFXShaderConstHandle* mSizeSc;
+   GFXShaderConstHandle* mRectCenterSc;
 };
 
 #endif // _GFX_GFXDRAWER_H_

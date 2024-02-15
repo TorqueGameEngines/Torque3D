@@ -163,3 +163,15 @@ singleton ShaderData( GeometryTestShader )
       
    pixVersion = 3.0;   
 };
+
+//-----------------------------------------------------------------------------
+// GUI shaders
+//-----------------------------------------------------------------------------
+singleton ShaderData( RoundedRectangleGUI )
+{
+   DXVertexShaderFile   = $Core::CommonShaderPath @ "/fixedFunction/colorV.hlsl";
+   DXPixelShaderFile    = $Core::CommonShaderPath @ "/fixedFunction/roundedRectangleP.hlsl";
+      
+   pixVersion = 3.0;   
+};
+

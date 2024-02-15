@@ -34,7 +34,7 @@
 #include "gfx/gfxPrimitiveBuffer.h"
 #include "gfx/primBuilder.h"
 #include "gfx/gfxDebugEvent.h"
-
+#include "materials/shaderData.h"
 #include "math/mPolyhedron.impl.h"
 
 
@@ -90,6 +90,23 @@ void GFXDrawUtil::_setupStateBlocks()
    rectFill.setZReadWrite(false);
    rectFill.setBlend(true, GFXBlendSrcAlpha, GFXBlendInvSrcAlpha);
    mRectFillSB = mDevice->createStateBlock(rectFill);
+
+   // Find ShaderData
+   ShaderData* shaderData;
+   mRoundRectangleSahder = Sim::findObject("RoundedRectangleGUI", shaderData) ?
+      shaderData->getShader() : NULL;
+   if (!mRoundRectangleSahder)
+   {
+      Con::errorf("GFXDrawUtil - could not find Rounded Rectangle shader");
+   }
+
+   // Create ShaderConstBuffer and Handles
+   mRoundRectangleSahderConsts = mRoundRectangleSahder->allocConstBuffer();
+
+   mModelViewSC = mRoundRectangleSahder->getShaderConstHandle("$modelView");
+   mRadiusSC = mRoundRectangleSahder->getShaderConstHandle("$radius");
+   mSizeSc = mRoundRectangleSahder->getShaderConstHandle("$sizeUni");
+   mRectCenterSc = mRoundRectangleSahder->getShaderConstHandle("$rectCenter");
 }
 
 //-----------------------------------------------------------------------------
@@ -547,27 +564,61 @@ void GFXDrawUtil::drawEllipse(const Point2I& center, const U32& radiusX, const U
    mDevice->drawPrimitive(GFXTriangleList, 0, segments);
 }
 
-void GFXDrawUtil::drawRoundedRect(const U32& cornerRadius, const RectI& rect, const ColorI& color, const U32& segments)
+void GFXDrawUtil::drawRoundedRect(const F32& cornerRadius, const RectI& rect, const ColorI& color)
 {
-   drawRoundedRect(cornerRadius, rect.point, Point2I(rect.extent.x + rect.point.x - 1, rect.extent.y + rect.point.y - 1), color, segments);
+   drawRoundedRect(cornerRadius, rect.point, Point2I(rect.extent.x + rect.point.x - 1, rect.extent.y + rect.point.y - 1), color);
 }
 
-void GFXDrawUtil::drawRoundedRect(const U32& cornerRadius, const Point2I& upperLeft, const Point2I& lowerRight, const ColorI& color, const U32& segments)
+void GFXDrawUtil::drawRoundedRect(const F32& cornerRadius, const Point2I& upperLeft, const Point2I& lowerRight, const ColorI& color)
 {
-   // draw rects.
-   drawRectFill(Point2I(upperLeft.x + cornerRadius, upperLeft.y), Point2I(lowerRight.x - cornerRadius, lowerRight.y), color);
-   drawRectFill(Point2I(upperLeft.x, upperLeft.y + cornerRadius), Point2I(lowerRight.x, lowerRight.y - cornerRadius), color);
 
-   // drawEllipses
-   // TL
-   drawEllipse(Point2I(upperLeft.x + cornerRadius, upperLeft.y + cornerRadius), cornerRadius, cornerRadius, color, segments);
-   //TR
-   drawEllipse(Point2I(upperLeft.x + (lowerRight.x - upperLeft.x) - cornerRadius, upperLeft.y + cornerRadius), cornerRadius, cornerRadius, color, segments);
-   //BL
-   drawEllipse(Point2I(upperLeft.x + cornerRadius, lowerRight.y - cornerRadius), cornerRadius, cornerRadius, color, segments);
-   //BR
-   drawEllipse(Point2I(lowerRight.x - cornerRadius, lowerRight.y - cornerRadius), cornerRadius, cornerRadius, color, segments);
+   // NorthWest and NorthEast facing offset vectors
+   Point2F nw(-0.5, -0.5); /*  \  */
+   Point2F ne(0.5, -0.5); /*  /  */
 
+   GFXVertexBufferHandle<GFXVertexPCT> verts(mDevice, 4, GFXBufferTypeVolatile);
+   verts.lock();
+
+   F32 ulOffset = 0.5f - mDevice->getFillConventionOffset();
+
+   verts[0].point.set(upperLeft.x + nw.x + ulOffset, upperLeft.y + nw.y + ulOffset, 0.0f);
+   verts[1].point.set(lowerRight.x + ne.x + ulOffset, upperLeft.y + ne.y + ulOffset, 0.0f);
+   verts[2].point.set(upperLeft.x - ne.x + ulOffset, lowerRight.y - ne.y + ulOffset, 0.0f);
+   verts[3].point.set(lowerRight.x - nw.x + ulOffset, lowerRight.y - nw.y + ulOffset, 0.0f);
+   for (S32 i = 0; i < 4; i++)
+      verts[i].color = color;
+
+   verts.unlock();
+   mDevice->setVertexBuffer(verts);
+
+   mDevice->setStateBlock(mRectFillSB);
+
+   Point2F topLeftCorner(upperLeft.x + nw.x + ulOffset, upperLeft.y + nw.y + ulOffset);
+   Point2F bottomRightCorner(lowerRight.x - nw.x + ulOffset, lowerRight.y - nw.y + ulOffset);
+
+   /*mDevice->setupGenericShaders();*/
+   GFX->setShader(mRoundRectangleSahder);
+   GFX->setShaderConstBuffer(mRoundRectangleSahderConsts);
+
+   MatrixF tempMatrix = GFX->getProjectionMatrix() * GFX->getViewMatrix() * GFX->getWorldMatrix();
+   Point2F size((F32)(bottomRightCorner.x - topLeftCorner.x), (F32)(bottomRightCorner.y - topLeftCorner.y));
+
+   F32 minExtent = mMin(size.x, size.y);
+
+   F32 radius = cornerRadius;
+   if ((minExtent * 0.5) < radius)
+   {
+      radius = mClampF(radius, 0.0f, (minExtent * 0.5));
+   }
+
+   mRoundRectangleSahderConsts->set(mModelViewSC, tempMatrix, GFXSCT_Float4x4);
+   mRoundRectangleSahderConsts->setSafe(mRadiusSC, radius);
+   mRoundRectangleSahderConsts->setSafe(mSizeSc, size);
+
+   Point2F rectCenter((F32)(topLeftCorner.x + (size.x / 2.0)), (F32)(topLeftCorner.y + (size.y / 2.0)));
+   mRoundRectangleSahderConsts->setSafe(mRectCenterSc, rectCenter);
+
+   mDevice->drawPrimitive(GFXTriangleStrip, 0, 2);
 }
 
 //-----------------------------------------------------------------------------

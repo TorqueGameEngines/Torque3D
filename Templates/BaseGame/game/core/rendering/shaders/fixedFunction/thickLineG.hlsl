@@ -35,7 +35,6 @@ struct PSConn
 };
 
 uniform float thickness;
-uniform float4x4 modelview;
 uniform float2 viewportSize;
 
 [maxvertexcount(4)]

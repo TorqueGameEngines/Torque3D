@@ -175,3 +175,12 @@ singleton ShaderData( RoundedRectangleGUI )
    pixVersion = 3.0;   
 };
 
+singleton ShaderData( ThickLineGUI )
+{
+   DXVertexShaderFile   = $Core::CommonShaderPath @ "/fixedFunction/colorV.hlsl";
+   DXGeometryShaderFile = $Core::CommonShaderPath @ "/fixedFunction/thickLineG.hlsl";
+   DXPixelShaderFile    = $Core::CommonShaderPath @ "/fixedFunction/thickLineP.hlsl";
+      
+   pixVersion = 3.0;   
+};
+

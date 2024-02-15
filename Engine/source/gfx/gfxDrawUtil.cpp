@@ -93,20 +93,22 @@ void GFXDrawUtil::_setupStateBlocks()
 
    // Find ShaderData
    ShaderData* shaderData;
-   mRoundRectangleShader = Sim::findObject("RoundedRectangleGUI", shaderData) ?
-      shaderData->getShader() : NULL;
+   mRoundRectangleShader = Sim::findObject("RoundedRectangleGUI", shaderData) ? shaderData->getShader() : NULL;
    if (!mRoundRectangleShader)
    {
       Con::errorf("GFXDrawUtil - could not find Rounded Rectangle shader");
    }
-
    // Create ShaderConstBuffer and Handles
    mRoundRectangleShaderConsts = mRoundRectangleShader->allocConstBuffer();
 
-   mModelViewSC = mRoundRectangleShader->getShaderConstHandle("$modelView");
-   mRadiusSC = mRoundRectangleShader->getShaderConstHandle("$radius");
-   mSizeSC = mRoundRectangleShader->getShaderConstHandle("$sizeUni");
-   mRectCenterSC = mRoundRectangleShader->getShaderConstHandle("$rectCenter");
+   mThickLineShader = Sim::findObject("ThickLineGUI", shaderData) ? shaderData->getShader() : NULL;
+   if (!mThickLineShader)
+   {
+      Con::errorf("GFXDrawUtil - could not find Thick line shader");
+   }
+   // Create ShaderConstBuffer and Handles
+   mThickLineShaderConsts = mThickLineShader->allocConstBuffer();
+
 }
 
 //-----------------------------------------------------------------------------
@@ -611,12 +613,12 @@ void GFXDrawUtil::drawRoundedRect(const F32& cornerRadius, const Point2I& upperL
       radius = mClampF(radius, 0.0f, (minExtent * 0.5));
    }
 
-   mRoundRectangleShaderConsts->set(mModelViewSC, tempMatrix, GFXSCT_Float4x4);
-   mRoundRectangleShaderConsts->setSafe(mRadiusSC, radius);
-   mRoundRectangleShaderConsts->setSafe(mSizeSC, size);
+   mRoundRectangleShaderConsts->set(mRoundRectangleShader->getShaderConstHandle("$modelView"), tempMatrix, GFXSCT_Float4x4);
+   mRoundRectangleShaderConsts->setSafe(mRoundRectangleShader->getShaderConstHandle("$radius"), radius);
+   mRoundRectangleShaderConsts->setSafe(mRoundRectangleShader->getShaderConstHandle("$sizeUni"), size);
 
    Point2F rectCenter((F32)(topLeftCorner.x + (size.x / 2.0)), (F32)(topLeftCorner.y + (size.y / 2.0)));
-   mRoundRectangleShaderConsts->setSafe(mRectCenterSC, rectCenter);
+   mRoundRectangleShaderConsts->setSafe(mRoundRectangleShader->getShaderConstHandle("$rectCenter"), rectCenter);
 
    mDevice->drawPrimitive(GFXTriangleStrip, 0, 2);
 }
@@ -849,6 +851,53 @@ void GFXDrawUtil::drawLine( F32 x1, F32 y1, F32 z1, F32 x2, F32 y2, F32 z2, cons
    mDevice->setupGenericShaders();
    mDevice->drawPrimitive( GFXLineList, 0, 1 );
 }
+
+void GFXDrawUtil::drawThickLine(const Point2I& startPt, const Point2I& endPt, const ColorI& color, const F32& thickness)
+{
+   drawThickLine(startPt.x, startPt.y, 0.0f, endPt.x, endPt.y, 0.0f, color, thickness);
+}
+
+void GFXDrawUtil::drawThickLine(const Point2F& startPt, const Point2F& endPt, const ColorI& color, const F32& thickness)
+{
+   drawThickLine(startPt.x, startPt.y, 0.0f, endPt.x, endPt.y, 0.0f, color, thickness);
+}
+
+void GFXDrawUtil::drawThickLine(F32 x1, F32 y1, F32 z1, F32 x2, F32 y2, F32 z2, const ColorI& color, const F32& thickness)
+{
+   // less than 2 just draw an ordinary line... why you ever here....
+   if (thickness < 2.0f)
+   {
+      drawLine(x1, y1, z1, x2, y2, z2, color);
+   }
+
+   GFXVertexBufferHandle<GFXVertexPCT> verts(mDevice, 2, GFXBufferTypeVolatile);
+   verts.lock();
+
+   verts[0].point.set(x1, y1, z1);
+   verts[1].point.set(x2, y2, z2);
+   verts[0].color = color;
+   verts[1].color = color;
+
+   verts.unlock();
+
+   mDevice->setVertexBuffer(verts);
+   mDevice->setStateBlock(mRectFillSB);
+   GFX->setShader(mThickLineShader);
+   GFX->setShaderConstBuffer(mThickLineShaderConsts);
+
+   MatrixF tempMatrix = GFX->getProjectionMatrix() * GFX->getViewMatrix() * GFX->getWorldMatrix();
+   mThickLineShaderConsts->set(mThickLineShader->getShaderConstHandle("$modelView"), tempMatrix, GFXSCT_Float4x4);
+   mThickLineShaderConsts->setSafe(mThickLineShader->getShaderConstHandle("$thickness"), thickness);
+
+   const Point2I& resolution = GFX->getActiveRenderTarget()->getSize();
+   Point2F TargetSize((F32)resolution.x, (F32)resolution.y);
+
+   mThickLineShaderConsts->setSafe(mThickLineShader->getShaderConstHandle("$oneOverViewport"), TargetSize);
+
+   mDevice->drawPrimitive(GFXLineList, 0, 1);
+}
+
+
 
 //-----------------------------------------------------------------------------
 // 3D World Draw Misc

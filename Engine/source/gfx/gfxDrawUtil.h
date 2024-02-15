@@ -80,6 +80,10 @@ public:
    void drawLine( F32 x1, F32 y1, F32 x2, F32 y2, const ColorI &color );
    void drawLine( F32 x1, F32 y1, F32 z1, F32 x2, F32 y2, F32 z2, const ColorI &color );
 
+   void drawThickLine(const Point2I& startPt, const Point2I& endPt, const ColorI& color, const F32& thickness);
+   void drawThickLine(const Point2F& startPt, const Point2F& endPt, const ColorI& color, const F32& thickness);
+   void drawThickLine(F32 x1, F32 y1, F32 z1, F32 x2, F32 y2, F32 z2, const ColorI& color, const F32& thickness);
+
    //-----------------------------------------------------------------------------
    // Draw Text
    //-----------------------------------------------------------------------------
@@ -189,12 +193,13 @@ protected:
    FontRenderBatcher* mFontRenderBatcher;
 
    // Expanded shaders
+   // rounded rectangle.
    GFXShaderRef mRoundRectangleShader;
    GFXShaderConstBufferRef mRoundRectangleShaderConsts;
-   GFXShaderConstHandle* mModelViewSC;
-   GFXShaderConstHandle* mRadiusSC;
-   GFXShaderConstHandle* mSizeSC;
-   GFXShaderConstHandle* mRectCenterSC;
+
+   // thick line.
+   GFXShaderRef mThickLineShader;
+   GFXShaderConstBufferRef mThickLineShaderConsts;
 };
 
 #endif // _GFX_GFXDRAWER_H_

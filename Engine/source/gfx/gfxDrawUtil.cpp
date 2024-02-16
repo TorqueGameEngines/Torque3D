@@ -727,51 +727,76 @@ void GFXDrawUtil::draw2DSquare( const Point2F &screenPoint, F32 width, F32 spinA
 void GFXDrawUtil::drawThickBezier(const U32& segments, const U32& thickness, const Point2I& start, const Point2I& end, const ColorI& color)
 {
    // Calculate control points for the cubic Bézier curve
+   Point2F startPoint(start.x, start.y);
    Point2F controlPoint1(start.x + (end.x - start.x) / 4, start.y);
    Point2F controlPoint2(start.x + 3 * (end.x - start.x) / 4, end.y);
+   Point2F endPoint(end.x, end.y);
 
    // Prepare a vertex buffer to hold the vertices
+   const U32 numVertices = segments * 2 + 2;
    GFXVertexBufferHandle<GFXVertexPCT> vertexBuffer;
-   vertexBuffer.set(GFX, segments * 4, GFXBufferTypeVolatile);
+   vertexBuffer.set(mDevice, numVertices, GFXBufferTypeVolatile);
    GFXVertexPCT* verts = vertexBuffer.lock();
 
+   // Calculate the initial tangent and normal vectors
+   Point2F tangentStart = controlPoint1 - startPoint;
+   Point2F tangentEnd = endPoint - controlPoint2;
+   tangentStart.normalize();
+   tangentEnd.normalize();
+   Point2F normalStart(-tangentStart.y, tangentStart.x);
+   Point2F normalEnd(-tangentEnd.y, tangentEnd.x);
+
+   // Calculate the first vertex
+   Point2F position = startPoint * 1.0f;
+   Point2F v1 = position + normalStart * thickness;
+   Point2F v2 = position - normalStart * thickness;
+
+   // Fill the first vertex
+   verts[0].point.set(v1.x, v1.y, 0.0f);
+   verts[1].point.set(v2.x, v2.y, 0.0f);
+   verts[0].color = color; // Assuming white color
+   verts[1].color = color; // Assuming white color
+
    // Draw curved line using a series of line segments
-   Point2I prevPoint = start;
+   Point2F previousPoint = position;
    for (U32 i = 1; i <= segments; i++) {
-      F32 t = static_cast<F32>(i) / segments;
+      F32 t = static_cast<F32>(i) / static_cast<F32>(segments);
+      F32 tSquared = t * t;
       F32 oneMinusT = 1.0f - t;
       F32 oneMinusTSquared = oneMinusT * oneMinusT;
-      F32 oneMinusTCubed = oneMinusTSquared * oneMinusT;
-      F32 tSquared = t * t;
-      F32 tCubed = tSquared * t;
 
-      F32 x = oneMinusTCubed * start.x + 3 * oneMinusTSquared * t * controlPoint1.x +
-         3 * oneMinusT * tSquared * controlPoint2.x + tCubed * end.x;
-      F32 y = oneMinusTCubed * start.y + 3 * oneMinusTSquared * t * controlPoint1.y +
-         3 * oneMinusT * tSquared * controlPoint2.y + tCubed * end.y;
 
-      Point2I currentPoint(static_cast<S32>(x), static_cast<S32>(y));
+      position = startPoint * oneMinusTSquared * oneMinusT +
+         controlPoint1 * 3 * oneMinusTSquared * t +
+         controlPoint2 * 3 * oneMinusT * tSquared +
+         endPoint * tSquared * t;
 
-      // Calculate direction vector
-      Point2F dir = Point2F(currentPoint.x - prevPoint.x, currentPoint.y - prevPoint.y);
-      Point2F unitDir = dir / mSqrt(dir.x * dir.x + dir.y * dir.y);
-      Point2F unitPerp(-unitDir.y, unitDir.x);
+      // Calculate the derivative of the Bézier curve function at this point
+      // Calculate the normal vector (tangent) of the curve at this point
+      Point2F tangent = (controlPoint1 - startPoint) * oneMinusTSquared +
+                        (controlPoint2 - controlPoint1) * 2 * oneMinusT +
+                        (endPoint - controlPoint2) * tSquared;
 
-      // Calculate offset vectors for thickness
-      Point2F offset = (thickness * 0.5f) * unitPerp;
+      tangent.normalize();
+
+      // Calculate perpendicular vector for thickness
+      Point2F normal(-tangent.y, tangent.x);
+
+      v1 = position + normal * thickness;
+      v2 = position - normal * thickness;
 
       // Assign vertices for this segment
-      verts[(i - 1) * 4].point.set(prevPoint.x + offset.x, prevPoint.y + offset.y, 0.0f);
-      verts[(i - 1) * 4].color = color;
-      verts[(i - 1) * 4 + 1].point.set(prevPoint.x - offset.x, prevPoint.y - offset.y, 0.0f);
-      verts[(i - 1) * 4 + 1].color = color;
-      verts[(i - 1) * 4 + 2].point.set(currentPoint.x + offset.x, currentPoint.y + offset.y, 0.0f);
-      verts[(i - 1) * 4 + 2].color = color;
-      verts[(i - 1) * 4 + 3].point.set(currentPoint.x - offset.x, currentPoint.y - offset.y, 0.0f);
-      verts[(i - 1) * 4 + 3].color = color;
-
-      prevPoint = currentPoint;
+      verts[i * 2].point.set(v1.x, v1.y, 0.0f);
+      verts[i * 2].color = color;
+      verts[i * 2 + 1].point.set(v2.x, v2.y, 0.0f);
+      verts[i * 2 + 1].color = color;
+      // Update the previous point
+      previousPoint = position;
    }
+
+   // Fill the last vertex
+   verts[numVertices - 2].point = Point3F(endPoint.x + normalEnd.x * thickness, endPoint.y + normalEnd.y * thickness, 0.0f);
+   verts[numVertices - 1].point = Point3F(endPoint.x - normalEnd.x * thickness, endPoint.y - normalEnd.y * thickness, 0.0f);
 
    vertexBuffer.unlock();
 
@@ -781,7 +806,7 @@ void GFXDrawUtil::drawThickBezier(const U32& segments, const U32& thickness, con
    mDevice->setupGenericShaders();
 
    // Draw the primitive
-   mDevice->drawPrimitive(GFXTriangleStrip, 0, segments * 2);
+   mDevice->drawPrimitive(GFXTriangleStrip, 0, numVertices - 2);
 
 }
 

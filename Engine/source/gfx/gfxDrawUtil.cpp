@@ -754,8 +754,8 @@ void GFXDrawUtil::drawThickBezier(const U32& segments, const U32& thickness, con
    // Fill the first vertex
    verts[0].point.set(v1.x, v1.y, 0.0f);
    verts[1].point.set(v2.x, v2.y, 0.0f);
-   verts[0].color = color; // Assuming white color
-   verts[1].color = color; // Assuming white color
+   verts[0].color = color;
+   verts[1].color = color;
 
    // Draw curved line using a series of line segments
    Point2F previousPoint = position;

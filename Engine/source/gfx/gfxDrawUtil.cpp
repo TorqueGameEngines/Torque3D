@@ -462,8 +462,50 @@ void GFXDrawUtil::drawBitmapStretchSR( GFXTextureObject* texture, const RectF &d
 }
 
 //-----------------------------------------------------------------------------
+// Draw Ellipse
+//-----------------------------------------------------------------------------
+
+void GFXDrawUtil::drawEllipse(const Point2I& center, const U32& radiusX, const U32& radiusY, const ColorI& color, const U32& segments) {
+   // Calculate delta angle between segments
+   F32 deltaAngle = M_2PI / segments;
+
+   // Prepare a vertex buffer to hold the vertices
+   GFXVertexBufferHandle<GFXVertexPCT> vertexBuffer;
+   vertexBuffer.set(GFX, segments * 3, GFXBufferTypeStatic);
+   GFXVertexPCT* verts = vertexBuffer.lock();
+
+   // Calculate vertices for the ellipse
+   for (U32 i = 0; i < segments; ++i) {
+      F32 angle = deltaAngle * i;
+      F32 nextAngle = deltaAngle * (i + 1);
+
+      Point2F start(center.x + radiusX * mCos(angle), center.y + radiusY * mSin(angle));
+      Point2F end(center.x + radiusX * mCos(nextAngle), center.y + radiusY * mSin(nextAngle));
+
+      // Add vertices for the triangle
+      verts[i * 3].point.set(center.x, center.y, 0.0f);
+      verts[i * 3].color = color;
+      verts[i * 3 + 1].point.set(start.x, start.y, 0.0f);
+      verts[i * 3 + 1].color = color;
+      verts[i * 3 + 2].point.set(end.x, end.y, 0.0f);
+      verts[i * 3 + 2].color = color;
+   }
+
+   vertexBuffer.unlock();
+
+   // Set render state
+   mDevice->setStateBlock(mRectFillSB);
+   mDevice->setVertexBuffer(vertexBuffer);
+   mDevice->setupGenericShaders();
+
+   // Draw the primitive
+   mDevice->drawPrimitive(GFXTriangleList, 0, segments);
+}
+
+//-----------------------------------------------------------------------------
 // Draw Rectangle
 //-----------------------------------------------------------------------------
+
 void GFXDrawUtil::drawRect( const Point2I &upperLeft, const Point2I &lowerRight, const ColorI &color ) 
 {
    drawRect( Point2F((F32)upperLeft.x,(F32)upperLeft.y),Point2F((F32)lowerRight.x,(F32)lowerRight.y),color);
@@ -529,41 +571,28 @@ void GFXDrawUtil::drawRect( const Point2F &upperLeft, const Point2F &lowerRight,
    mDevice->drawPrimitive( GFXTriangleStrip, 0, 8 );
 }
 
-void GFXDrawUtil::drawEllipse(const Point2I& center, const U32& radiusX, const U32& radiusY, const ColorI& color, const U32& segments) {
-   // Calculate delta angle between segments
-   F32 deltaAngle = M_2PI / segments;
+//-----------------------------------------------------------------------------
+// Draw Rectangle Fill
+//-----------------------------------------------------------------------------
+void GFXDrawUtil::drawRectFill( const RectF &rect, const ColorI &color )
+{
+   drawRoundedRect(0.0f, rect.point, Point2F(rect.extent.x + rect.point.x - 1, rect.extent.y + rect.point.y - 1), color );
+}
 
-   // Prepare a vertex buffer to hold the vertices
-   GFXVertexBufferHandle<GFXVertexPCT> vertexBuffer;
-   vertexBuffer.set(GFX, segments * 3, GFXBufferTypeStatic);
-   GFXVertexPCT* verts = vertexBuffer.lock();
+void GFXDrawUtil::drawRectFill( const Point2I &upperLeft, const Point2I &lowerRight, const ColorI &color ) 
+{   
+   drawRoundedRect(0.0f, Point2F((F32)upperLeft.x, (F32)upperLeft.y), Point2F((F32)lowerRight.x, (F32)lowerRight.y), color);
+}
 
-   // Calculate vertices for the ellipse
-   for (U32 i = 0; i < segments; ++i) {
-      F32 angle = deltaAngle * i;
-      F32 nextAngle = deltaAngle * (i + 1);
+void GFXDrawUtil::drawRectFill( const RectI &rect, const ColorI &color )
+{
+   drawRoundedRect(0.0f, rect.point, Point2I(rect.extent.x + rect.point.x - 1, rect.extent.y + rect.point.y - 1), color );
+}
 
-      Point2F start(center.x + radiusX * mCos(angle), center.y + radiusY * mSin(angle));
-      Point2F end(center.x + radiusX * mCos(nextAngle), center.y + radiusY * mSin(nextAngle));
-
-      // Add vertices for the triangle
-      verts[i * 3].point.set(center.x, center.y, 0.0f);
-      verts[i * 3].color = color;
-      verts[i * 3 + 1].point.set(start.x, start.y, 0.0f);
-      verts[i * 3 + 1].color = color;
-      verts[i * 3 + 2].point.set(end.x, end.y, 0.0f);
-      verts[i * 3 + 2].color = color;
-   }
-
-   vertexBuffer.unlock();
-
-   // Set render state
-   mDevice->setStateBlock(mRectFillSB);
-   mDevice->setVertexBuffer(vertexBuffer);
-   mDevice->setupGenericShaders();
-
-   // Draw the primitive
-   mDevice->drawPrimitive(GFXTriangleList, 0, segments);
+void GFXDrawUtil::drawRectFill( const Point2F &upperLeft, const Point2F &lowerRight, const ColorI &color )
+{
+   // draw a rounded rect with 0 radiuse.
+   drawRoundedRect(0.0f, upperLeft, lowerRight, color);
 }
 
 void GFXDrawUtil::drawRoundedRect(const F32& cornerRadius, const RectI& rect, const ColorI& color)
@@ -572,6 +601,16 @@ void GFXDrawUtil::drawRoundedRect(const F32& cornerRadius, const RectI& rect, co
 }
 
 void GFXDrawUtil::drawRoundedRect(const F32& cornerRadius, const Point2I& upperLeft, const Point2I& lowerRight, const ColorI& color)
+{
+   drawRoundedRect(cornerRadius, Point2F((F32)upperLeft.x, (F32)upperLeft.y), Point2F((F32)lowerRight.x, (F32)lowerRight.y), color);
+}
+
+void GFXDrawUtil::drawRoundedRect(const F32& cornerRadius,
+   const Point2F& upperLeft,
+   const Point2F& lowerRight,
+   const ColorI& color,
+   const F32& borderSize,
+   const ColorI& borderColor)
 {
 
    // NorthWest and NorthEast facing offset vectors
@@ -616,6 +655,8 @@ void GFXDrawUtil::drawRoundedRect(const F32& cornerRadius, const Point2I& upperL
    mRoundRectangleShaderConsts->set(mRoundRectangleShader->getShaderConstHandle("$modelView"), tempMatrix, GFXSCT_Float4x4);
    mRoundRectangleShaderConsts->setSafe(mRoundRectangleShader->getShaderConstHandle("$radius"), radius);
    mRoundRectangleShaderConsts->setSafe(mRoundRectangleShader->getShaderConstHandle("$sizeUni"), size);
+   mRoundRectangleShaderConsts->setSafe(mRoundRectangleShader->getShaderConstHandle("$borderSize"), borderSize);
+   mRoundRectangleShaderConsts->setSafe(mRoundRectangleShader->getShaderConstHandle("$borderCol"), borderColor);
 
    Point2F rectCenter((F32)(topLeftCorner.x + (size.x / 2.0)), (F32)(topLeftCorner.y + (size.y / 2.0)));
    mRoundRectangleShaderConsts->setSafe(mRoundRectangleShader->getShaderConstHandle("$rectCenter"), rectCenter);
@@ -623,101 +664,45 @@ void GFXDrawUtil::drawRoundedRect(const F32& cornerRadius, const Point2I& upperL
    mDevice->drawPrimitive(GFXTriangleStrip, 0, 2);
 }
 
-//-----------------------------------------------------------------------------
-// Draw Rectangle Fill
-//-----------------------------------------------------------------------------
-void GFXDrawUtil::drawRectFill( const RectF &rect, const ColorI &color )
+void GFXDrawUtil::draw2DSquare(const Point2F& screenPoint, F32 width, F32 spinAngle)
 {
-   drawRectFill(rect.point, Point2F(rect.extent.x + rect.point.x - 1, rect.extent.y + rect.point.y - 1), color );
-}
+   width *= 0.5;
 
-void GFXDrawUtil::drawRectFill( const Point2I &upperLeft, const Point2I &lowerRight, const ColorI &color ) 
-{   
-   drawRectFill(Point2F((F32)upperLeft.x, (F32)upperLeft.y), Point2F((F32)lowerRight.x, (F32)lowerRight.y), color);
-}
-
-void GFXDrawUtil::drawRectFill( const RectI &rect, const ColorI &color )
-{
-   drawRectFill(rect.point, Point2I(rect.extent.x + rect.point.x - 1, rect.extent.y + rect.point.y - 1), color );
-}
-
-void GFXDrawUtil::drawRectFill( const Point2F &upperLeft, const Point2F &lowerRight, const ColorI &color )
-{
-   //
-   // Convert Box   a----------x
-   //               |          |
-   //               x----------b
-   // Into Quad
-   //               v0---------v1
-   //               | a       x |
-   //               |           |
-   //               | x       b |
-   //               v2---------v3
-   //
-
-   // NorthWest and NorthEast facing offset vectors
-   Point2F nw(-0.5,-0.5); /*  \  */
-   Point2F ne(0.5,-0.5); /*  /  */
+   Point3F offset(screenPoint.x, screenPoint.y, 0.0);
 
    GFXVertexBufferHandle<GFXVertexPCT> verts(mDevice, 4, GFXBufferTypeVolatile);
    verts.lock();
 
-   F32 ulOffset = 0.5f - mDevice->getFillConventionOffset();
-   
-   verts[0].point.set( upperLeft.x+nw.x + ulOffset, upperLeft.y+nw.y + ulOffset, 0.0f );
-   verts[1].point.set( lowerRight.x + ne.x + ulOffset, upperLeft.y + ne.y + ulOffset, 0.0f);
-   verts[2].point.set( upperLeft.x - ne.x + ulOffset, lowerRight.y - ne.y + ulOffset, 0.0f);
-   verts[3].point.set( lowerRight.x - nw.x + ulOffset, lowerRight.y - nw.y + ulOffset, 0.0f);
-   for (S32 i = 0; i < 4; i++)
-      verts[i].color = color;
-
-   verts.unlock();
-
-   mDevice->setStateBlock(mRectFillSB);
-   mDevice->setVertexBuffer( verts );
-   mDevice->setupGenericShaders();
-   mDevice->drawPrimitive( GFXTriangleStrip, 0, 2 );
-}
-
-void GFXDrawUtil::draw2DSquare( const Point2F &screenPoint, F32 width, F32 spinAngle )
-{
-   width *= 0.5;
-
-   Point3F offset( screenPoint.x, screenPoint.y, 0.0 );
-
-   GFXVertexBufferHandle<GFXVertexPCT> verts( mDevice, 4, GFXBufferTypeVolatile );
-   verts.lock();
-
-   verts[0].point.set( -width, -width, 0.0f );
-   verts[1].point.set( -width, width, 0.0f );
-   verts[2].point.set( width,  -width, 0.0f );
-   verts[3].point.set( width,  width, 0.0f );
+   verts[0].point.set(-width, -width, 0.0f);
+   verts[1].point.set(-width, width, 0.0f);
+   verts[2].point.set(width, -width, 0.0f);
+   verts[3].point.set(width, width, 0.0f);
 
    verts[0].color = verts[1].color = verts[2].color = verts[3].color = mBitmapModulation;
 
    if (spinAngle == 0.0f)
    {
-      for( S32 i = 0; i < 4; i++ )
+      for (S32 i = 0; i < 4; i++)
          verts[i].point += offset;
    }
    else
    {
-      MatrixF rotMatrix( EulerF( 0.0, 0.0, spinAngle ) );
+      MatrixF rotMatrix(EulerF(0.0, 0.0, spinAngle));
 
-      for( S32 i = 0; i < 4; i++ )
+      for (S32 i = 0; i < 4; i++)
       {
-         rotMatrix.mulP( verts[i].point );
+         rotMatrix.mulP(verts[i].point);
          verts[i].point += offset;
       }
    }
 
    verts.unlock();
-   mDevice->setVertexBuffer( verts );
+   mDevice->setVertexBuffer(verts);
 
    mDevice->setStateBlock(mRectFillSB);
    mDevice->setupGenericShaders();
 
-   mDevice->drawPrimitive( GFXTriangleStrip, 0, 2 );
+   mDevice->drawPrimitive(GFXTriangleStrip, 0, 2);
 }
 
 //-----------------------------------------------------------------------------
@@ -921,8 +906,6 @@ void GFXDrawUtil::drawThickLine(F32 x1, F32 y1, F32 z1, F32 x2, F32 y2, F32 z2, 
 
    mDevice->drawPrimitive(GFXLineList, 0, 1);
 }
-
-
 
 //-----------------------------------------------------------------------------
 // 3D World Draw Misc

@@ -50,22 +50,25 @@ public:
    //-----------------------------------------------------------------------------
    void drawEllipse(const Point2I& center, const U32& radiusX, const U32& radiusY, const ColorI& color, const U32& segments);
 
-   void drawRoundedRect(const F32& cornerRadius, const RectI& rect, const ColorI& color);
-
-   void drawRoundedRect(const F32& cornerRadius, const Point2I& upperLeft, const Point2I& lowerRight, const ColorI& color);
-
    //-----------------------------------------------------------------------------
-   // Draw Rectangles
+   // Draw Rectangles : OUTLINE
    //-----------------------------------------------------------------------------
    void drawRect( const Point2F &upperLeft, const Point2F &lowerRight, const ColorI &color );
    void drawRect( const RectF &rect, const ColorI &color );
    void drawRect( const Point2I &upperLeft, const Point2I &lowerRight, const ColorI &color );
    void drawRect( const RectI &rect, const ColorI &color );
 
+   //-----------------------------------------------------------------------------
+   // Draw Rectangles : FILL
+   //-----------------------------------------------------------------------------
+
    void drawRectFill( const Point2F &upperL, const Point2F &lowerR, const ColorI &color );
    void drawRectFill( const RectF &rect, const ColorI &color );
    void drawRectFill( const Point2I &upperLeft, const Point2I &lowerRight, const ColorI &color );
    void drawRectFill( const RectI &rect, const ColorI &color );
+   void drawRoundedRect(const F32& cornerRadius, const RectI& rect, const ColorI& color);
+   void drawRoundedRect(const F32& cornerRadius, const Point2I& upperLeft, const Point2I& lowerRight, const ColorI& color);
+   void drawRoundedRect(const F32& cornerRadius, const Point2F& upperLeft, const Point2F& lowerRight, const ColorI& color, const F32& borderSize = 0.0f, const ColorI& borderColor = ColorI(0,0,0,0));
 
    void draw2DSquare( const Point2F &screenPoint, F32 width, F32 spinAngle = 0.0f );
 

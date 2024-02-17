@@ -224,6 +224,13 @@ DefineEngineMethod( GuiMLTextCtrl, forceReflow, void, (),,
       object->reflow();
 }
 
+DefineEngineMethod(GuiMLTextCtrl, isTypingOut, bool, (), ,
+   "@brief Returns true if the text is being actively typed out.\n\n"
+   "@see GuiControl")
+{
+   return object->isTypingOut();
+}
+
 //--------------------------------------------------------------------------
 GuiMLTextCtrl::GuiMLTextCtrl()
 : mTabStops( NULL ), 
@@ -264,7 +271,13 @@ GuiMLTextCtrl::GuiMLTextCtrl()
   mDirty( true ), 
   mAlpha( 1.0f ),
   mHitURL( 0 ),
-  mFontList( NULL )
+  mFontList( NULL ),
+  mUseTypeOverTime(false),
+  mTypeOverTimeStartMS(0),
+  mTypeOverTimeSpeedMS(10),
+  mTypeOverTimeIndex(0),
+   mTypeoutSoundRate(-1),
+   mTypeoutSound(nullptr)
 {   
    mActive = true;
    //mInitialText = StringTable->EmptyString();
@@ -295,6 +308,11 @@ void GuiMLTextCtrl::initPersistFields()
       addField("text",              TypeCaseString,  Offset( mInitialText, GuiMLTextCtrl ), "Text to display in this control.");
       addField("useURLMouseCursor", TypeBool,   Offset(mUseURLMouseCursor,   GuiMLTextCtrl), "If true, the mouse cursor will turn into a hand cursor while over a link in the text.\n"
                                                                       "This is dependant on the markup language used by the GuiMLTextCtrl\n");
+
+      addField("useTypeOverTime", TypeBool, Offset(mUseTypeOverTime, GuiMLTextCtrl), "");
+      addField("typeOverTimeSpeedMS", TypeF32, Offset(mTypeOverTimeSpeedMS, GuiMLTextCtrl), "");
+      addField("typeoutSound", TypeSFXTrackName, Offset(mTypeoutSound, GuiMLTextCtrl), "Played when the text is being typed out");
+      addField("typeoutSoundRate", TypeS32, Offset(mTypeoutSoundRate, GuiMLTextCtrl), "Dictates how many characters must be typed out before the sound is played again. -1 for the sound to only play once at the start.");
    
    endGroup( "Text" );
    
@@ -464,22 +482,46 @@ void GuiMLTextCtrl::onRender(Point2I offset, const RectI& updateRect)
 
       for(Atom *awalk = lwalk->atomList; awalk; awalk = awalk->next)
       {
-         if(!mSelectionActive || mSelectionEnd < awalk->textStart || mSelectionStart >= awalk->textStart + awalk->len)
-            drawAtomText(false, awalk->textStart, awalk->textStart + awalk->len, awalk, lwalk, offset);
+         if (mUseTypeOverTime)
+         {
+            F32 timeDif = Platform::getRealMilliseconds() - mTypeOverTimeStartMS;
+            if (timeDif > mTypeOverTimeSpeedMS)
+            {
+               //It's over the time increment, so update our index and next update timestamp start
+               mTypeOverTimeIndex++;
+               mTypeOverTimeStartMS = Platform::getRealMilliseconds();
+
+               if (mTypeoutSound)
+               {
+                  if((mTypeoutSoundRate <= 0 && mTypeOverTimeIndex == 1) || mTypeOverTimeIndex % mTypeoutSoundRate > 0)
+                     SFX->playOnce(mTypeoutSound);
+               }
+            }
+
+            U32 endPoint = getMin(awalk->textStart + awalk->len, mTypeOverTimeIndex);
+            endPoint = getMax(awalk->textStart, endPoint);
+
+            drawAtomText(false, awalk->textStart, endPoint, awalk, lwalk, offset);
+         }
          else
          {
-            U32 selectionStart = getMax(awalk->textStart, mSelectionStart);
-            U32 selectionEnd = getMin(awalk->textStart + awalk->len, mSelectionEnd + 1);
+            if (!mSelectionActive || mSelectionEnd < awalk->textStart || mSelectionStart >= awalk->textStart + awalk->len)
+               drawAtomText(false, awalk->textStart, awalk->textStart + awalk->len, awalk, lwalk, offset);
+            else
+            {
+               U32 selectionStart = getMax(awalk->textStart, mSelectionStart);
+               U32 selectionEnd = getMin(awalk->textStart + awalk->len, mSelectionEnd + 1);
 
-            // draw some unselected text
-            if(selectionStart > awalk->textStart)
-               drawAtomText(false, awalk->textStart, selectionStart, awalk, lwalk, offset);
+               // draw some unselected text
+               if (selectionStart > awalk->textStart)
+                  drawAtomText(false, awalk->textStart, selectionStart, awalk, lwalk, offset);
 
-            // draw the selection
-            drawAtomText(true, selectionStart, selectionEnd, awalk, lwalk, offset);
+               // draw the selection
+               drawAtomText(true, selectionStart, selectionEnd, awalk, lwalk, offset);
 
-            if(selectionEnd < awalk->textStart + awalk->len)
-               drawAtomText(false, selectionEnd, awalk->textStart + awalk->len, awalk, lwalk, offset);
+               if (selectionEnd < awalk->textStart + awalk->len)
+                  drawAtomText(false, selectionEnd, awalk->textStart + awalk->len, awalk, lwalk, offset);
+            }
          }
       }
    }
@@ -1678,6 +1720,12 @@ void GuiMLTextCtrl::reflow()
    U32 idx;
    U32 sizidx;
 
+   if (mUseTypeOverTime)
+   {
+      mTypeOverTimeStartMS = Platform::getRealMilliseconds();
+      mTypeOverTimeIndex = 1;
+   }
+
    for(;;)
    {
       UTF16 curChar = mTextBuffer.getChar(mScanPos);
@@ -2379,5 +2427,25 @@ bool GuiMLTextCtrl::resize( const Point2I& newPosition, const Point2I& newExtent
       return true;
    }
    
+   return false;
+}
+
+bool GuiMLTextCtrl::isTypingOut()
+{
+   if (!mUseTypeOverTime)
+      return false;
+
+   U32 fullLength = 0;
+   for (Line* lwalk = mLineList; lwalk; lwalk = lwalk->next)
+   {
+      for (Atom* awalk = lwalk->atomList; awalk; awalk = awalk->next)
+      {
+         fullLength += awalk->len;
+      }
+   }
+
+   if (fullLength > mTypeOverTimeIndex)
+      return true;
+
    return false;
 }

@@ -94,7 +94,7 @@ function ImportAssetWindow::onWake(%this)
 //
 function isImageFormat(%fileExt)
 {
-   if( (%fileExt $= ".png") || (%fileExt $= ".jpg") || (%fileExt $= ".bmp") || (%fileExt $= ".dds") || (%fileExt $= ".tif"))
+   if( (%fileExt $= ".png") || (%fileExt $= ".jpg") || (%fileExt $= ".bmp") || (%fileExt $= ".dds") || (%fileExt $= ".tif") || (%fileExt $= ".psd") || (%fileExt $= ".gif") || (%fileExt $= ".hdr"))
       return true;
       
    return false;

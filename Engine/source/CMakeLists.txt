@@ -82,6 +82,9 @@ endif()
 torqueAddSourceDirectories("gfx" "gfx/Null" "gfx/test" "gfx/bitmap" "gfx/bitmap/loaders"
                              "gfx/util" "gfx/video" "gfx/sim" )
 
+# add the stb headers
+set(TORQUE_INCLUDE_DIRECTORIES ${TORQUE_INCLUDE_DIRECTORIES} "gfx/bitmap/loaders/stb")
+
 if (TORQUE_OPENGL)
   torqueAddSourceDirectories("gfx/gl" "gfx/gl/sdl" "gfx/gl/tGL")
 endif (TORQUE_OPENGL)

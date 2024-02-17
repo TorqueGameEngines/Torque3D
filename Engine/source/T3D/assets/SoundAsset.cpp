@@ -173,7 +173,7 @@ SoundAsset::SoundAsset()
    mPlaylist.mRandomMode = SFXPlayList::RANDOM_NotRandom;
    mPlaylist.mTrace = false;
    mPlaylist.mLoopMode = SFXPlayList::LOOP_All;
-   mPlaylist.mActiveSlots = 12;
+   mPlaylist.mActiveSlots = 1;
 
 }
 
@@ -190,9 +190,10 @@ void SoundAsset::initPersistFields()
    docsURL;
    // Call parent.
    Parent::initPersistFields();
+   addGroup("SoundSlots");
    addArray("slots", SFXPlayList::SFXPlaylistSettings::NUM_SLOTS);
       addProtectedField("soundFile", TypeAssetLooseFilePath, Offset(mSoundFile, SoundAsset),
-         &_setSoundFile, &_getSoundFile, SFXPlayList::SFXPlaylistSettings::NUM_SLOTS, "Path to the sound file.");
+         &_setSoundFile, &defaultProtectedGetFn, SFXPlayList::SFXPlaylistSettings::NUM_SLOTS, "Path to the sound file.");
 
       addField("replay", TYPEID< SFXPlayList::EReplayMode >(), Offset(mPlaylist.mSlots.mReplayMode, SoundAsset), SFXPlayList::SFXPlaylistSettings::NUM_SLOTS,
          "Behavior when an already playing sound is encountered on this slot from a previous cycle.\n"
@@ -263,7 +264,9 @@ void SoundAsset::initPersistFields()
          "Behavior when assigned state is deactivated while slot is playing.\n\n"
          "@ref SFXPlayList_states");
    endArray("slots");
+   endGroup("SoundSlots");
 
+   addGroup("General Profile");
    addField("pitchAdjust", TypeF32, Offset(mProfileDesc.mPitch, SoundAsset), "Adjustment of the pitch value 1 is default.");
    addField("volumeAdjust", TypeF32, Offset(mProfileDesc.mVolume, SoundAsset), "Adjustment to the volume.");
    addField("is3D", TypeBool, Offset(mProfileDesc.mIs3D, SoundAsset), "Set this sound to 3D.");
@@ -274,6 +277,7 @@ void SoundAsset::initPersistFields()
    addField("useHardware", TypeBool, Offset(mProfileDesc.mUseHardware, SoundAsset), "Use hardware mixing for this sound.");
    addField("sourceGroup", TypeSFXSourceName, Offset(mProfileDesc.mSourceGroup, SoundAsset), "Group that sources playing with this description should be put into.");
    addField("preload", TypeBool, Offset(mPreload, SoundAsset), "Whether to preload sound data when the profile is added to system.");
+   endGroup("General Profile");
 
    addGroup("Fading");
       addField("fadeInTime", TypeF32, Offset(mProfileDesc.mFadeInTime, SoundAsset), "Number of seconds to gradually fade in volume from zero when playback starts.");
@@ -321,6 +325,8 @@ void SoundAsset::initializeAsset(void)
          break;
 
       mSoundPath[i] = getOwned() ? expandAssetFilePath(mSoundFile[i]) : mSoundPath[i];
+      if (!Torque::FS::IsFile(mSoundPath[i]))
+         Con::errorf("SoundAsset::initializeAsset (%s)[%d] could not find %s!", getAssetName(), i, mSoundPath[i]);
    }
 }
 
@@ -437,32 +443,22 @@ U32 SoundAsset::load()
    return mLoadedState;
 }
 
-StringTableEntry SoundAsset::getSoundFile(const char* pSoundFile, const U32 slotId)
+bool SoundAsset::_setSoundFile(void* object, const char* index, const char* data)
 {
-   for (U32 i = 0; i < 12; i++)
-   {
-      if(mSoundFile[i] == pSoundFile)
-         return mSoundFile[i];
-   }
-}
+   SoundAsset* pData = static_cast<SoundAsset*>(object);
 
-void SoundAsset::setSoundFile(const char* pSoundFile, const U32 slotId)
-{
-   // Sanity!
-   AssertFatal(pSoundFile != NULL, "Cannot use a NULL sound file.");
-
-   // Fetch sound file.
-   pSoundFile = StringTable->insert(pSoundFile, true);
-
-   //Ignore no change,
-   if (pSoundFile == mSoundFile[slotId])
-      return;
+   U32 id = 0;
+   if (index)
+      id = dAtoui(index);
 
    // Update.
-   mSoundFile[slotId] = getOwned() ? expandAssetFilePath(pSoundFile) : pSoundFile;
+   pData->mSoundFile[id] = StringTable->insert(data, true);
+   if (pData->mSoundFile[id] == StringTable->EmptyString())
+      pData->mSoundPath[id] = StringTable->EmptyString();
 
    // Refresh the asset.
-   refreshAsset();
+   pData->refreshAsset();
+   return true;
 }
 
 StringTableEntry SoundAsset::getAssetIdByFileName(StringTableEntry fileName)
@@ -550,7 +546,12 @@ DefineEngineMethod(SoundAsset, playSound, S32, (Point3F position), (Point3F::Zer
    {
       MatrixF transform;
       transform.setPosition(position);
-      SFXSource* source = SFX->playOnce(object->getSFXTrack(), &transform, NULL, -1);
+      SFXSource* source;
+      if (position == Point3F::Zero || !object->is3D())
+         source = SFX->playOnce(object->getSFXTrack());
+      else
+         source = SFX->playOnce(object->getSFXTrack(), &transform, NULL, -1);
+
       if(source)
          return source->getId();
       else

@@ -1485,7 +1485,7 @@ ConsoleFunctionGroupBegin( Containers,  "Functions for ray casting and spatial q
 //-----------------------------------------------------------------------------
 
 DefineEngineFunction( containerBoxEmpty, bool,
-   ( U32 mask, Point3F center, F32 xRadius, F32 yRadius, F32 zRadius, bool useClientContainer ), ( -1, -1, false ),
+   ( U32 mask, Point3F center, F32 xRadius, F32 yRadius, F32 zRadius, bool useClientContainer, SceneObject* ignoreObj), ( -1, -1, false, nullAsType<SceneObject*>()),
    "@brief See if any objects of the given types are present in box of given extent.\n\n"
    "@note Extent parameter is last since only one radius is often needed.  If "
    "one radius is provided, the yRadius and zRadius are assumed to be the same.  Unfortunately, "
@@ -1519,8 +1519,12 @@ DefineEngineFunction( containerBoxEmpty, bool,
    polyList.mPlaneList[5].set(B.maxExtents, VectorF(0,0,1));
 
    SceneContainer* pContainer = useClientContainer ? &gClientContainer : &gServerContainer;
-
-   return ! pContainer->buildPolyList(PLC_Collision, B, mask, &polyList);
+   if (ignoreObj)
+      ignoreObj->disableCollision();
+   bool ret = !pContainer->buildPolyList(PLC_Collision, B, mask, &polyList);
+   if (ignoreObj)
+      ignoreObj->enableCollision();
+   return ret;
 }
 
 //-----------------------------------------------------------------------------

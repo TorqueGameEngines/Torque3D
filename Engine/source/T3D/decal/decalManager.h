@@ -110,7 +110,7 @@ class DecalManager : public SceneObject
       Vector< GFXVertexBufferHandle<DecalVertex>* > mVBPool;
       Vector< GFXPrimitiveBufferHandle* > mPBPool;
 
-      FreeListChunkerUntyped *mChunkers[3];
+      DecalInstance::DecalDataChunker mChunkers;
 
       #ifdef DECALMANAGER_DEBUG
       Vector<PlaneF> mDebugPlanes;
@@ -166,10 +166,6 @@ class DecalManager : public SceneObject
       void _allocBuffers( DecalInstance *inst );
       void _freeBuffers( DecalInstance *inst );
       void _freePools();
-
-      /// Returns index used to index into the correct sized FreeListChunker for
-      /// allocating vertex and index arrays.
-      S32 _getSizeClass( DecalInstance *inst ) const;
 
       // Hide this from Doxygen
       /// @cond

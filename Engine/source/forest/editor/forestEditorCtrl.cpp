@@ -160,7 +160,7 @@ void ForestEditorCtrl::get3DCursor( GuiCursor *&cursor,
 
 void ForestEditorCtrl::on3DMouseDown( const Gui3DMouseEvent &evt )
 {   
-   if ( !mForest && !updateActiveForest( true ) )
+   if ( !mForest || !updateActiveForest( true ) )
       return;
 
    if ( mTool )

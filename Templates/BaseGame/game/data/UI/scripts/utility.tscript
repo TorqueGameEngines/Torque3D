@@ -57,9 +57,9 @@ function getButtonBitmap(%device, %button)
          %assetId = %assetId @ "Right_Stick";
       else if(%button $= "thumblx" || %button $= "thumbly")
          %assetId = %assetId @ "Left_Stick";
-      else if(%button $= "start")
+      else if(%button $= "start" || %button $= "btn_start" )
          %assetId = %assetId @ "Options";
-      else if(%button $= "back")
+      else if(%button $= "back"|| %button $= "btn_back")
          %assetId = %assetId @ "Share";   
       else if(%button $= "dpadu")
          %assetId = %assetId @ "Dpad_Up";  
@@ -96,9 +96,9 @@ function getButtonBitmap(%device, %button)
          %assetId = %assetId @ "Right_Stick";
       else if(%button $= "thumblx" || %button $= "thumbly")
          %assetId = %assetId @ "Left_Stick";
-      else if(%button $= "start")
+      else if(%button $= "start" || %button $= "btn_start" )
          %assetId = %assetId @ "Plus";
-      else if(%button $= "back")
+      else if(%button $= "back" || %button $= "btn_back" )
          %assetId = %assetId @ "Minus";   
       else if(%button $= "dpadu")
          %assetId = %assetId @ "Dpad_Up";  
@@ -142,9 +142,9 @@ function getButtonBitmap(%device, %button)
          %assetId = %assetId @ "Right_Stick";
       else if(%button $= "thumblx" || %button $= "thumbly")
          %assetId = %assetId @ "Left_Stick";
-      else if(%button $= "start")
+      else if(%button $= "start" || %button $= "btn_start" )
          %assetId = %assetId @ "Menu";
-      else if(%button $= "back")
+      else if(%button $= "back" || %button $= "btn_back" )
          %assetId = %assetId @ "Windows";   
       else if(%button $= "dpadu")
          %assetId = %assetId @ "Dpad_Up";  

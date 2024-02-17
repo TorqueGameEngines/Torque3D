@@ -49,6 +49,12 @@ public:
    GuiStackControl*                    mStack;
    Vector<GuiRolloutCtrl*>             mArrayCtrls;
 
+   S32                                 mForcedArrayIndex; /// This is a special behavior variable that, when set, changes
+                                                          /// the presented behavior for arrays. Instead of showing sub-rollouts
+                                                          /// it instead forces showing ONLY the fields of the specific index, removing
+                                                          /// the presented array controls. This is useful for wanting to edit an associated
+                                                          /// 'set' of fields that are commonly arrayed, like material layers
+
    // Constructor/Destructor/Conobject Declaration
    GuiInspectorGroup();
    GuiInspectorGroup( const String& groupName, SimObjectPtr<GuiInspector> parent );
@@ -80,6 +86,11 @@ public:
    void addInspectorField(StringTableEntry name, StringTableEntry typeName, const char* description, const char* callbackName);
    void addInspectorField(GuiInspectorField* field);
    void removeInspectorField(StringTableEntry name);
+
+   void setForcedArrayIndex(const S32& arrayIndex = -1)
+   {
+      mForcedArrayIndex = arrayIndex;
+   }
 
 protected:
    // overridable method that creates our inner controls.

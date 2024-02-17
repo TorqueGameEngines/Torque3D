@@ -65,6 +65,7 @@ public:
 
    void addDynamicObject(SceneObject* object);
    void removeDynamicObject(SceneObject* object);
+   void clearDynamicObjects() { mDynamicObjects.clear(); }
 
    void dumpUtilizedAssets();
 

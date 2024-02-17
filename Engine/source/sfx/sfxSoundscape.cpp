@@ -39,6 +39,13 @@
 
 //-----------------------------------------------------------------------------
 
+SFXSoundscape::SFXSoundscape()
+   : mAmbience( NULL )
+{
+}
+
+//-----------------------------------------------------------------------------
+
 SFXSoundscape::SFXSoundscape( SFXAmbience* ambience )
    : mAmbience( ambience )
 {

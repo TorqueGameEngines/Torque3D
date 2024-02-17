@@ -87,9 +87,9 @@ class SoundAsset : public AssetBase
    typedef AssetPtr<SoundAsset> ConcreteAssetPtr;
 
 protected:
-   StringTableEntry        mSoundFile[12];
-   StringTableEntry        mSoundPath[12];
-   SFXProfile              mSFXProfile[12];
+   StringTableEntry        mSoundFile[SFXPlayList::SFXPlaylistSettings::NUM_SLOTS];
+   StringTableEntry        mSoundPath[SFXPlayList::SFXPlaylistSettings::NUM_SLOTS];
+   SFXProfile              mSFXProfile[SFXPlayList::SFXPlaylistSettings::NUM_SLOTS];
 
    SFXDescription          mProfileDesc;
    SFXPlayList             mPlaylist;
@@ -155,13 +155,12 @@ public:
    /// Declare Console Object.
    DECLARE_CONOBJECT(SoundAsset);
 
-   void setSoundFile(const char* pSoundFile, const U32 slotId = 0);
+   static bool _setSoundFile(void* object, const char* index, const char* data);
    U32 load();
-   StringTableEntry getSoundFile(const char* pSoundFile, const U32 slotId = 0);
    inline StringTableEntry getSoundPath(const U32 slotId = 0) const { return mSoundPath[slotId]; };
    SFXProfile* getSfxProfile(const U32 slotId = 0) { return &mSFXProfile[slotId]; }
    SFXPlayList* getSfxPlaylist() { return &mPlaylist; }
-   SFXTrack* getSFXTrack() { return mIsPlaylist ? dynamic_cast<SFXTrack*>(&mPlaylist) : dynamic_cast<SFXTrack*>(&mSFXProfile[0]); }
+   SFXTrack* getSFXTrack() { load(); return mIsPlaylist ? dynamic_cast<SFXTrack*>(&mPlaylist) : dynamic_cast<SFXTrack*>(&mSFXProfile[0]); }
    SFXDescription* getSfxDescription() { return &mProfileDesc; }
    bool isPlaylist(){ return mIsPlaylist; }
 
@@ -176,9 +175,6 @@ protected:
    virtual void            initializeAsset(void);
    void _onResourceChanged(const Torque::Path & path);
    virtual void            onAssetRefresh(void);
-
-  static bool _setSoundFile(void *obj, const char *index, const char *data) { static_cast<SoundAsset*>(obj)->setSoundFile(data, index ? dAtoi(index) : 0); return false; }
-  static const char* _getSoundFile(void* obj, const char* data) { return static_cast<SoundAsset*>(obj)->getSoundFile(data); }
 };
 
 DefineConsoleType(TypeSoundAssetPtr, SoundAsset)

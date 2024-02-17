@@ -144,8 +144,8 @@ inline void Swizzle<T, mapLength>::InPlace( void *memory, const dsize_t size ) c
       // FrameTemp should work because the PNG loading code uses the FrameAllocator, so
       // it should only get used on an image w/ that size as max -patw
       FrameTemp<U8> buffer( size );
-      dMemcpy( ~buffer, memory, size );
-      ToBuffer( memory, ~buffer, size );
+      dMemcpy( buffer.address(), memory, size);
+      ToBuffer( memory, buffer.address(), size);
    }
 }
 

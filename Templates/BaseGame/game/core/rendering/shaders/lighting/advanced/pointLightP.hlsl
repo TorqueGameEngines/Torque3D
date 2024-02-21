@@ -107,10 +107,13 @@ TORQUE_UNIFORM_SAMPLER2D(shadowMap, 1);
 #include "softShadow.hlsl"
 TORQUE_UNIFORM_SAMPLER2D(colorBuffer, 3);
 TORQUE_UNIFORM_SAMPLER2D(matInfoBuffer, 4);
-#ifdef USE_COOKIE_TEX
 /// The texture for cookie rendering.
+#ifdef SHADOW_CUBE
+TORQUE_UNIFORM_SAMPLERCUBE(cookieMap, 5);
+#else
 TORQUE_UNIFORM_SAMPLER2D(cookieMap, 5);
 #endif
+TORQUE_UNIFORM_SAMPLER2D(iesProfile, 6);
 
 uniform float4 rtParams0;
 uniform float4 lightColor;
@@ -159,8 +162,8 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
 	{     
       float distToLight = dist / lightRange;
       SurfaceToLight surfaceToLight = createSurfaceToLight(surface, L);
-
-   float shadow = 1.0;
+      float3 lightCol = lightColor.rgb;
+      float shadow = 1.0;
    #ifndef NO_SHADOW
    if (getFlag(surface.matFlag, 0)) //also skip if we don't recieve shadows
    {
@@ -176,8 +179,21 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
       #endif
    }
    #endif // !NO_SHADOW
-   
-      float3 lightCol = lightColor.rgb;
+   #ifdef USE_COOKIE_TEX
+      // Lookup the cookie sample.
+      #ifdef SHADOW_CUBE
+      float4 cookie = TORQUE_TEXCUBE(cookieMap, mul(worldToLightProj, -surfaceToLight.L));
+      #else
+      float2 cookieCoord = decodeShadowCoord( mul( worldToLightProj, -surfaceToLight.L ) ).xy;
+      float4 cookie = TORQUE_TEX2D(cookieMap, cookieCoord);
+      #endif
+      // Multiply the light with the cookie tex.
+      lightCol *= cookie.rgb;
+      // Use a maximum channel luminance to attenuate 
+      // the lighting else we get specular in the dark
+      // regions of the cookie texture.
+      lightCol *= max(cookie.r, max(cookie.g, cookie.b));
+   #endif
    #ifdef DIFFUSE_LIGHT_VIZ
       float attenuation = getDistanceAtt(surfaceToLight.Lu, radius);
       float3 factor = lightColor * max(surfaceToLight.NdotL, 0) * shadow * lightIntensity * attenuation;
@@ -210,13 +226,13 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
       //get punctual light contribution   
       lighting = getPunctualLight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, shadow);
 
-   #ifdef USE_COOKIE_TEX
+   #ifdef UES_PHOTOMETRIC_MASK
       // Lookup the cookie sample.d
       float cosTheta = dot(-surfaceToLight.L, lightDirection); 
       float angle = acos(cosTheta) * ( M_1OVER_PI_F); 
-      float cookie = TORQUE_TEX2D(cookieMap, float2(angle, 0.0)).r; 
-      // Multiply the light with the cookie tex.
-      lighting *= cookie;
+      float iesMask = TORQUE_TEX2D(iesProfile, float2(angle, 0.0)).r; 
+      // Multiply the light with the iesMask tex.
+      lighting *= iesMask;
    #endif
    }
    

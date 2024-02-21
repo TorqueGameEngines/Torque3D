@@ -109,16 +109,7 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
          //distance to light in shadow map space
          float distToLight = pxlPosLightProj.z / lightRange;
          shadow = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(shadowMap), ssPos.xy, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
-         #ifdef USE_COOKIE_TEX
-            // Lookup the cookie sample.
-            float4 cookie = TORQUE_TEX2D(cookieMap, shadowCoord);
-            // Multiply the light with the cookie tex.
-            lightCol *= cookie.rgb;
-            // Use a maximum channel luminance to attenuate 
-            // the lighting else we get specular in the dark
-            // regions of the cookie texture.
-            lightCol *= max(cookie.r, max(cookie.g, cookie.b));
-         #endif
+         
       }
       #endif
 
@@ -153,6 +144,14 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
 
       //get spot light contribution   
       lighting = getSpotlight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, lightDirection, lightSpotParams, shadow);
+      #ifdef USE_COOKIE_TEX
+         // Lookup the cookie sample.d
+         float cosTheta = dot(-surfaceToLight.L, lightDirection); 
+         float angle = acos(cosTheta) * ( M_1OVER_PI_F); 
+         float cookie = TORQUE_TEX2D(cookieMap, float2(angle, 0.0)).r; 
+         // Multiply the light with the cookie tex.
+         lighting *= cookie;
+      #endif 
    }
    
    return float4(lighting, 0);

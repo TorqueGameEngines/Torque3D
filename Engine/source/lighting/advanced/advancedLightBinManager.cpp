@@ -830,6 +830,7 @@ void AdvancedLightBinManager::LightMaterialInfo::setLightParameters( const Light
          const F32 radius = lightInfo->getRange().x;
          const F32 invSqrRadius = 1.0f / (radius * radius);
          matParams->setSafe( lightRange, radius);
+         matParams->setSafe( lightDirection, -lightInfo->getTransform().getUpVector());
          matParams->setSafe( lightInvSqrRange, invSqrRadius);  
          luxTargMultiplier =radius;
       }

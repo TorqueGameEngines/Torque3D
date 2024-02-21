@@ -39,8 +39,10 @@
 #include <algorithm>
 #include <functional>
 
+#include "math/mMathFn.h"
+
 IESFileInfo::IESFileInfo()
-	: _cachedIntegral(std::numeric_limits<float>::max())
+	: _cachedIntegral(F32_MAX)
 	, _error("No data loaded")
 {
 }
@@ -117,7 +119,7 @@ IESLoadHelper::load(const std::string& data, IESFileInfo& info)
 	}
 
 	this->getFloat(dataPos, dataPos, info.totalLights);
-	if (info.totalLights < 0 || info.totalLights > std::numeric_limits<short>::max())
+	if (info.totalLights < 0 || info.totalLights > F32_MAX)
 	{
 		info._error = "Light Count is not valid";
 		return false;
@@ -138,14 +140,14 @@ IESLoadHelper::load(const std::string& data, IESFileInfo& info)
 	}
 
 	this->getInt(dataPos, dataPos, info.anglesNumV);
-	if (info.anglesNumV < 0 || info.anglesNumV > std::numeric_limits<short>::max())
+   if (info.anglesNumV < 0 || info.anglesNumV > F32_MAX)
 	{
 		info._error = "VAnglesNum is not valid";
 		return false;
 	}
 
 	this->getInt(dataPos, dataPos, info.anglesNumH);
-	if (info.anglesNumH < 0 || info.anglesNumH > std::numeric_limits<short>::max())
+	if (info.anglesNumH < 0 || info.anglesNumH > F32_MAX)
 	{
 		info._error = "HAnglesNum is not valid";
 		return false;
@@ -162,8 +164,8 @@ IESLoadHelper::load(const std::string& data, IESFileInfo& info)
 	this->getFloat(dataPos, dataPos, info.futureUse);
 	this->getFloat(dataPos, dataPos, info.inputWatts);
 
-	float minSoFarV = std::numeric_limits<float>::lowest();
-	float minSoFarH = std::numeric_limits<float>::lowest();
+   float minSoFarV = F32_MIN_EX;
+   float minSoFarH = F32_MIN_EX;
 
 	info._anglesV.reserve(info.anglesNumV);
 	info._anglesH.reserve(info.anglesNumH);
@@ -358,16 +360,16 @@ IESLoadHelper::saveAsPreview(const IESFileInfo& info, std::uint8_t* data, std::u
 			float lz = -0.5f - 0.0f;
 
 			// normalize
-			float length = std::sqrt(lx * lx + ly * ly + lz * lz);
+			float length = mSqrt(lx * lx + ly * ly + lz * lz);
 			lx /= length;
 			ly /= length;
 			lz /= length;
 
-			float angle = 1.0 - std::acos(lx * 0.0 + ly * -1.0 + lz * 0.0f) / 3.141592654;
+			float angle = 1.0 - mAcos(lx * 0.0 + ly * -1.0 + lz * 0.0f) / 3.141592654;
 
 			float intensity = ies[angle * 255] * maxValue / length;
 
-			std::uint8_t value = std::min(std::max((int)std::floor(TonemapHable(intensity) / TonemapHable(maxValue) * 255.0f), 0), 255);
+			std::uint8_t value = std::min(std::max((int)mFloor(TonemapHable(intensity) / TonemapHable(maxValue) * 255.0f), 0), 255);
 
 			switch (channel)
 			{
@@ -490,8 +492,8 @@ IESLoadHelper::interpolatePoint(const IESFileInfo& info, std::uint32_t x, std::u
 float
 IESLoadHelper::interpolateBilinear(const IESFileInfo& info, float x, float y) const
 {
-	int ix = (int)std::floor(x);
-	int iy = (int)std::floor(y);
+	int ix = (int)mFloor(x);
+	int iy = (int)mFloor(y);
 
 	float fracX = x - ix;
 	float fracY = y - iy;

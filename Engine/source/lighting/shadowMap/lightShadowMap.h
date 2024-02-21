@@ -99,6 +99,7 @@ struct LightingShaderConstants
    GFXShaderConstHandle* mShadowMapSizeSC;
 
    GFXShaderConstHandle* mCookieMapSC;
+   GFXShaderConstHandle* mIesProfileSC;
 
    GFXShaderConstHandle* mRandomDirsConst;
    GFXShaderConstHandle* mShadowSoftnessConst;
@@ -289,10 +290,13 @@ public:
    LightShadowMap* getOrCreateShadowMap();
 
    bool hasCookieTex() const { return cookie != StringTable->EmptyString(); }
+   bool hasIesProfile() const { return iesProfile != StringTable->EmptyString(); }
 
    GFXOcclusionQuery* getOcclusionQuery() const { return mQuery; }
 
    GFXTextureObject* getCookieTex();
+
+   GFXTextureObject* getIesProfileTex();
 
    GFXCubemap* getCookieCubeTex();
 
@@ -313,6 +317,8 @@ protected:
 
    GFXCubemapHandle mCookieCubeTex;
 
+   GFXTexHandle mIesTex;
+
 public:
 
    // We're leaving these public for easy access 
@@ -326,6 +332,7 @@ public:
 
    /// 
    StringTableEntry cookie;
+   StringTableEntry iesProfile;
 
    /// @}
 

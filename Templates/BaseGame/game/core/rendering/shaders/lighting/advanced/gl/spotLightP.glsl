@@ -38,11 +38,8 @@ uniform sampler2D shadowMap;
 #include "softShadow.glsl"
 uniform sampler2D colorBuffer;
 uniform sampler2D matInfoBuffer;
-#ifdef USE_COOKIE_TEX
-/// The texture for cookie rendering.
 uniform sampler2D cookieMap;
-#endif
-
+uniform sampler2D iesProfile;
 uniform vec4 rtParams0;
 
 uniform float  lightBrightness;
@@ -91,7 +88,7 @@ void main()
 	if(dist < lightRange)
    {
       SurfaceToLight surfaceToLight = createSurfaceToLight(surface, L);
-      vec3 lightCol = lightColor.rgb;
+      
       
       float shadow = 1.0;
       #ifndef NO_SHADOW
@@ -105,19 +102,22 @@ void main()
          //distance to light in shadow map space
          float distToLight = pxlPosLightProj.z / lightRange;
          shadow = softShadow_filter(shadowMap, ssPos.xy/ssPos.w, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
-         #ifdef USE_COOKIE_TEX
-            // Lookup the cookie sample.
-            vec4 cookie = texture(cookieMap, shadowCoord);
-            // Multiply the light with the cookie tex.
-            lightCol *= cookie.rgb;
-            // Use a maximum channel luminance to attenuate 
-            // the lighting else we get specular in the dark
-            // regions of the cookie texture.
-            lightCol *= max(cookie.r, max(cookie.g, cookie.b));
-         #endif
+         
       }
-      #endif      
-   
+      #endif
+
+   vec3 lightCol = lightColor.rgb;
+   #ifdef USE_COOKIE_TEX
+      // Lookup the cookie sample.
+      vec4 cookie = texture(cookieMap, shadowCoord);
+      // Multiply the light with the cookie tex.
+      lightCol *= cookie.rgb;
+      // Use a maximum channel luminance to attenuate 
+      // the lighting else we get specular in the dark
+      // regions of the cookie texture.
+      lightCol *= max(cookie.r, max(cookie.g, cookie.b));
+   #endif
+
 
    #ifdef DIFFUSE_LIGHT_VIZ
       float attenuation = getDistanceAtt(surfaceToLight.Lu, radius);
@@ -156,6 +156,14 @@ void main()
 
       //get spot light contribution   
       lighting = getSpotlight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, lightDirection, lightSpotParams, shadow);
+   #ifdef UES_PHOTOMETRIC_MASK
+      // Lookup the cookie sample.d
+      float cosTheta = dot(-surfaceToLight.L, lightDirection); 
+      float angle = acos(cosTheta) * ( M_1OVER_PI_F); 
+      float iesMask = texture(iesProfile, vec2(angle, 0.0)).r; 
+      // Multiply the light with the iesMask tex.
+      lighting *= iesMask;
+   #endif
    }
 
    OUT_col = vec4(lighting, 0);

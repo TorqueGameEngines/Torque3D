@@ -79,7 +79,7 @@ if(TORQUE_SFX_OPENAL AND NOT TORQUE_DEDICATED)
     endif()
 endif()
 # Handle GFX
-torqueAddSourceDirectories("gfx" "gfx/Null" "gfx/test" "gfx/bitmap" "gfx/bitmap/loaders"
+torqueAddSourceDirectories("gfx" "gfx/Null" "gfx/test" "gfx/bitmap" "gfx/bitmap/loaders" "gfx/bitmap/loaders/ies"
                              "gfx/util" "gfx/video" "gfx/sim" )
 
 # add the stb headers

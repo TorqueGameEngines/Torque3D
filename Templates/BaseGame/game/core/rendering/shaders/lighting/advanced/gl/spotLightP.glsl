@@ -38,8 +38,15 @@ uniform sampler2D shadowMap;
 #include "softShadow.glsl"
 uniform sampler2D colorBuffer;
 uniform sampler2D matInfoBuffer;
+
+#ifdef USE_COOKIE_TEX
 uniform sampler2D cookieMap;
-uniform sampler2D iesProfile;
+#endif
+
+#ifdef UES_PHOTOMETRIC_MASK
+uniform sampler1D iesProfile;
+#endif
+
 uniform vec4 rtParams0;
 
 uniform float  lightBrightness;
@@ -154,16 +161,17 @@ void main()
       return;
    #endif
 
-      //get spot light contribution   
-      lighting = getSpotlight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, lightDirection, lightSpotParams, shadow);
    #ifdef UES_PHOTOMETRIC_MASK
       // Lookup the cookie sample.d
       float cosTheta = dot(-surfaceToLight.L, lightDirection); 
       float angle = acos(cosTheta) * ( M_1OVER_PI_F); 
-      float iesMask = texture(iesProfile, vec2(angle, 0.0)).r; 
+      float iesMask = texture(iesProfile, angle).r; 
       // Multiply the light with the iesMask tex.
-      lighting *= iesMask;
+      shadow *= iesMask;
    #endif
+   
+      //get spot light contribution   
+      lighting = getSpotlight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, lightDirection, lightSpotParams, shadow);
    }
 
    OUT_col = vec4(lighting, 0);

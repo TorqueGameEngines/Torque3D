@@ -43,8 +43,14 @@ TORQUE_UNIFORM_SAMPLER2D(shadowMap, 1);
 TORQUE_UNIFORM_SAMPLER2D(colorBuffer, 3);
 TORQUE_UNIFORM_SAMPLER2D(matInfoBuffer, 4);
 /// The texture for cookie rendering.
+
+#ifdef USE_COOKIE_TEX
 TORQUE_UNIFORM_SAMPLER2D(cookieMap, 5);
-TORQUE_UNIFORM_SAMPLER2D(iesProfile, 6);
+#endif
+
+#ifdef UES_PHOTOMETRIC_MASK
+TORQUE_UNIFORM_SAMPLER1D(iesProfile, 6);
+#endif
 
 uniform float4 rtParams0;
 
@@ -153,16 +159,17 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
       return final;
    #endif
 
-      //get spot light contribution   
-      lighting = getSpotlight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, lightDirection, lightSpotParams, shadow);
       #ifdef UES_PHOTOMETRIC_MASK
          // Lookup the cookie sample.d
          float cosTheta = dot(-surfaceToLight.L, lightDirection); 
          float angle = acos(cosTheta) * ( M_1OVER_PI_F); 
-         float iesMask = TORQUE_TEX2D(iesProfile, float2(angle, 0.0)).r; 
+         float iesMask = TORQUE_TEX1D(iesProfile, angle).r; 
          // Multiply the light with the iesMask tex.
-         lighting *= iesMask;
+         shadow *= iesMask;
       #endif 
+      
+      //get spot light contribution   
+      lighting = getSpotlight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, lightDirection, lightSpotParams, shadow);
    }
    
    return float4(lighting, 0);

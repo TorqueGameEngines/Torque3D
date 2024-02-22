@@ -59,9 +59,9 @@ public:
 
    GFXShaderConstDesc mDesc;
    GFXGLShader* mShader;
-   GLuint mLocation;
    U32 mOffset;
-   U32 mSize;  
+   U32 mSize;
+   GLuint mLocation;
    S32 mSamplerNum; 
    bool mInstancingConstant;
 };
@@ -799,6 +799,7 @@ GFXShaderConstHandle* GFXGLShader::getShaderConstHandle(const String& name)
    else
    {
       GFXGLShaderConstHandle* handle = new GFXGLShaderConstHandle( this );
+      handle->setValid(false);
       mHandles[ name ] = handle;
       
       return handle;

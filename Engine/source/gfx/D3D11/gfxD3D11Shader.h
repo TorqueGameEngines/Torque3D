@@ -36,6 +36,7 @@ class GFXD3D11Shader;
 
 enum SHADER_STAGE
 {
+   UNKNOWN_STAGE,
    VERTEX_SHADER,
    PIXEL_SHADER,
    GEOMETRY_SHADER,
@@ -47,21 +48,28 @@ enum SHADER_STAGE
 class GFXD3D11ShaderConstHandle : public GFXShaderConstHandle
 {
    friend class GFXD3D11Shader;
-public:   
+public:
 
    GFXD3D11ShaderConstHandle(GFXD3D11Shader* shader);
-   GFXD3D11ShaderConstHandle(GFXD3D11Shader* shader, const GFXShaderConstDesc& desc, S32 samplerNum);
+   GFXD3D11ShaderConstHandle(GFXD3D11Shader* shader,
+      const SHADER_STAGE shaderStage,
+      const U32 offset,
+      const U32 size,
+      const GFXShaderConstDesc& desc,
+      S32 bindingPoint,
+      S32 samplerNum);
+
    virtual ~GFXD3D11ShaderConstHandle();
 
    const String& getName() const { return mDesc.name; }
    GFXShaderConstType getType() const { return mDesc.constType; }
    U32 getArraySize() const { return mDesc.arraySize; }
 
-   U32 getSize() const;
+   U32 getSize() const { return mSize; }
    void setValid(bool valid) { mValid = valid; }
    /// @warning This will always return the value assigned when the shader was
    /// initialized.  If the value is later changed this method won't reflect that.
-   S32 getSamplerRegister() const { return mSamplerNum; }
+   S32 getSamplerRegister() const { return mSampler; }
 
    // Returns true if this is a handle to a sampler register.
    bool isSampler() const 
@@ -69,13 +77,13 @@ public:
       return (getType() >= GFXSCT_Sampler);
    }
 
-   GFXD3D11ShaderConstHandle();
    GFXShaderConstDesc mDesc;
    GFXD3D11Shader* mShader;
    U32 mOffset;
    U32 mSize;
-   S32 mSamplerNum;
-   SHADER_STAGE stage;
+   S32 mBinding; // buffer binding point used to map handles to buffers.
+   S32 mSampler; // sampler.
+   SHADER_STAGE mStage;
    bool mInstancingConstant;
 };
 

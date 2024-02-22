@@ -94,29 +94,46 @@ HRESULT gfxD3D11Include::Close( THIS_ LPCVOID pData )
 }
 
 GFXD3D11ShaderConstHandle::GFXD3D11ShaderConstHandle(GFXD3D11Shader* shader)
+   : mShader(shader),
+   mOffset(0),
+   mSize(0),
+   mBinding(-1),
+   mSampler(-1),
+   mInstancingConstant(false)
 {
+   dMemset(&mDesc, 0, sizeof(mDesc));
+   mValid = false;
+   mStage = SHADER_STAGE::UNKNOWN_STAGE;
 }
 
-GFXD3D11ShaderConstHandle::GFXD3D11ShaderConstHandle(GFXD3D11Shader* shader, const GFXShaderConstDesc& desc, S32 samplerNum)
+GFXD3D11ShaderConstHandle::GFXD3D11ShaderConstHandle(GFXD3D11Shader* shader,
+                                                      const SHADER_STAGE shaderStage,
+                                                      const U32 offset,
+                                                      const U32 size,
+                                                      const GFXShaderConstDesc& desc,
+                                                      S32 bindingPoint,
+                                                      S32 samplerNum)
+   : mShader(shader),
+   mStage(shaderStage),
+   mOffset(offset),
+   mSize(size),
+   mDesc(desc),
+   mBinding(bindingPoint),
+   mSampler(bindingPoint),
+   mInstancingConstant(false)
 {
+   mValid = false;
 }
 
 GFXD3D11ShaderConstHandle::~GFXD3D11ShaderConstHandle()
 {
 }
 
-U32 GFXD3D11ShaderConstHandle::getSize() const
-{
-   return U32();
-}
-
-GFXD3D11ShaderConstHandle::GFXD3D11ShaderConstHandle()
-{
-}
-
 //------------------------------------------------------------------------------
+
 GFXD3D11ShaderConstBuffer::GFXD3D11ShaderConstBuffer( GFXD3D11Shader* shader, U32 bufSize, U8* existingConstants)
 {
+   mDeviceContext = D3D11DEVICECONTEXT;
 }
 
 GFXD3D11ShaderConstBuffer::~GFXD3D11ShaderConstBuffer()
@@ -367,7 +384,7 @@ bool GFXD3D11Shader::_init()
    if (!mPixelFile.isEmpty() && !_compileShader( mPixelFile, SHADER_STAGE::PIXEL_SHADER, d3dMacros))
       return false;
 
-   _buildInstancingShaderConstantHandles();
+   _buildShaderConstantHandles();
 
    // Notify any existing buffers that the buffer 
    // layouts have changed and they need to update.
@@ -459,34 +476,7 @@ bool GFXD3D11Shader::_compileShader( const Torque::Path &filePath,
       }
 
       res = D3DCompile(buffer, bufSize, realPath.getFullPath().c_str(), defines, smD3DInclude, "main", target, flags, 0, &code, &errorBuff);
-      
    }
-
-   // Is it a precompiled obj shader?
-   else if(filePath.getExtension().equal("obj", String::NoCase))
-   {     
-      FileStream  s;
-      if(!s.open(filePath, Torque::FS::File::Read))
-      {
-         AssertISV(false, avar("GFXD3D11Shader::initShader - failed to open shader '%s'.", filePath.getFullPath().c_str()));
-
-         if ( smLogErrors )
-            Con::errorf( "GFXD3D11Shader::_compileShader - Failed to open shader file '%s'.", filePath.getFullPath().c_str() );
-
-         return false;
-      }
-
-	  res = D3DCreateBlob(s.getStreamSize(), &code);
-      AssertISV(SUCCEEDED(res), "Unable to create buffer!");
-      s.read(s.getStreamSize(), code->GetBufferPointer());
-   }
-   else
-   {
-      if (smLogErrors)
-         Con::errorf("GFXD3D11Shader::_compileShader - Unsupported shader file type '%s'.", filePath.getFullPath().c_str());
-
-      return false;
-   }  
 
    if(errorBuff)
    {
@@ -608,6 +598,7 @@ bool GFXD3D11Shader::_compileShader( const Torque::Path &filePath,
 
    return result;
 }
+
 void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection *refTable,
                                           SHADER_STAGE shaderStage)
 {
@@ -618,6 +609,7 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection *refTable,
    D3D11_SHADER_DESC shaderDesc;
    refTable->GetDesc(&shaderDesc);
 
+   // we loop through and account for the most common data types.
    for (U32 i = 0; i < shaderDesc.BoundResources; i++)
    {
       GFXShaderConstDesc desc;
@@ -629,6 +621,7 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection *refTable,
          desc.name = String(shaderInputBind.Name);
          if (desc.name.find("$") != 0)
             desc.name = String::ToString("$%s", desc.name.c_str());
+
          desc.constType = GFXSCT_ConstBuffer;
          desc.bindPoint = shaderInputBind.BindPoint;
          desc.shaderStage = shaderStage;
@@ -660,6 +653,7 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection *refTable,
             varDesc.bindPoint = desc.bindPoint;
             varDesc.offset = shaderVarDesc.StartOffset;
             varDesc.arraySize = mMax(shaderTypeDesc.Elements, 1);
+            varDesc.size = shaderVarDesc.Size;
             varDesc.shaderStage = shaderStage;
 
             if (shaderTypeDesc.Class == D3D_SVC_SCALAR || shaderTypeDesc.Class == D3D_SVC_VECTOR)
@@ -668,14 +662,18 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection *refTable,
                {
                case D3D_SVT_BOOL:
                   varDesc.constType = (GFXShaderConstType)((U32)GFXSCT_Bool + shaderTypeDesc.Columns - 1);
-               case D3D_SVT_FLOAT:
-                  varDesc.constType = (GFXShaderConstType)((U32)GFXSCT_Float + shaderTypeDesc.Columns - 1);
+                  break;
                case D3D_SVT_INT:
                   varDesc.constType = (GFXShaderConstType)((U32)GFXSCT_Int + shaderTypeDesc.Columns - 1);
+                  break;
+               case D3D_SVT_FLOAT:
+                  varDesc.constType = (GFXShaderConstType)((U32)GFXSCT_Float + shaderTypeDesc.Columns - 1);
+                  break;
                case D3D_SVT_UINT:
                   varDesc.constType = (GFXShaderConstType)((U32)GFXSCT_UInt + shaderTypeDesc.Columns - 1);
+                  break;
                default:
-                  AssertFatal(false, "Unknown shader constant class enum");
+                  AssertFatal(false, "Unknown shader constant class enum, maybe you could add it?");
                   break;
                }
             }
@@ -683,7 +681,7 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection *refTable,
             {
                if (shaderTypeDesc.Type != D3D_SVT_FLOAT)
                {
-                  AssertFatal(false, "Only Float matrices are supported for now.");
+                  AssertFatal(false, "Only Float matrices are supported for now. Support for other types needs to be added.");
                }
 
                switch (shaderTypeDesc.Rows)
@@ -698,7 +696,7 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection *refTable,
             }
             else if (shaderTypeDesc.Class == D3D_SVC_STRUCT)
             {
-               // we gotta loop through its variables =/
+               // we gotta loop through its variables =/ ad support in future. for now continue so it skips.
                continue;
             }
 
@@ -707,7 +705,7 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection *refTable,
       }
       else if (shaderInputBind.Type == D3D_SIT_TEXTURE)
       {
-         switch (shaderInputBind.Dimension)
+         /*switch (shaderInputBind.Dimension)
          {
          case D3D_SRV_DIMENSION::D3D_SRV_DIMENSION_TEXTURE1D:
             break;
@@ -733,7 +731,7 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection *refTable,
             break;
          default:
             break;
-         }
+         }*/
       }
       else if (shaderInputBind.Type == D3D_SIT_SAMPLER)
       {
@@ -746,9 +744,15 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection *refTable,
          desc.shaderStage = shaderStage;
          mShaderConsts.push_back(desc);
       }
-      else if (shaderInputBind.Type == D3D_SIT_UAV_RWTYPED)
+      else if (shaderInputBind.Type == D3D_SIT_UAV_RWTYPED              ||
+               shaderInputBind.Type == D3D_SIT_UAV_RWSTRUCTURED         ||
+               shaderInputBind.Type == D3D_SIT_UAV_RWBYTEADDRESS        ||
+               shaderInputBind.Type == D3D_SIT_UAV_APPEND_STRUCTURED    ||
+               shaderInputBind.Type == D3D_SIT_UAV_CONSUME_STRUCTURED   ||
+               shaderInputBind.Type == D3D_SIT_UAV_RWSTRUCTURED_WITH_COUNTER)
       {
-         switch (shaderInputBind.Dimension)
+         // these should return an unorderedAccessViews and add them to shaderResources.
+         /*switch (shaderInputBind.Dimension)
          {
          case D3D_SRV_DIMENSION::D3D_SRV_DIMENSION_TEXTURE1D:
             break;
@@ -774,28 +778,12 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection *refTable,
             break;
          default:
             break;
-         }
+         }*/
       }
-      else if (shaderInputBind.Type == D3D_SIT_STRUCTURED)
+      else if (shaderInputBind.Type == D3D_SIT_STRUCTURED ||
+               shaderInputBind.Type == D3D_SIT_BYTEADDRESS)
       {
-      }
-      else if (shaderInputBind.Type == D3D_SIT_UAV_RWSTRUCTURED)
-      {
-      }
-      else if (shaderInputBind.Type == D3D_SIT_BYTEADDRESS)
-      {
-      }
-      else if (shaderInputBind.Type == D3D_SIT_UAV_RWBYTEADDRESS)
-      {
-      }
-      else if (shaderInputBind.Type == D3D_SIT_UAV_APPEND_STRUCTURED)
-      {
-      }
-      else if (shaderInputBind.Type == D3D_SIT_UAV_CONSUME_STRUCTURED)
-      {
-      }
-      else if (shaderInputBind.Type == D3D_SIT_UAV_RWSTRUCTURED_WITH_COUNTER)
-      {
+         // these should return shaderResourceViews and add them to shaderResources.
       }
    }
 }
@@ -825,11 +813,10 @@ void GFXD3D11Shader::_buildInstancingShaderConstantHandles()
          handle = j->value; 
       else
       {
-         handle = new GFXD3D11ShaderConstHandle();
+         handle = new GFXD3D11ShaderConstHandle(this);
          mHandles[ constName ] = handle;         
       }
 
-      handle->mShader = this;
       handle->setValid( true );         
       handle->mInstancingConstant = true;
 
@@ -867,9 +854,8 @@ GFXShaderConstHandle* GFXD3D11Shader::getShaderConstHandle(const String& name)
    } 
    else 
    {     
-      GFXD3D11ShaderConstHandle *handle = new GFXD3D11ShaderConstHandle();
+      GFXD3D11ShaderConstHandle *handle = new GFXD3D11ShaderConstHandle(this);
       handle->setValid( false );
-      handle->mShader = this;
       mHandles[name] = handle;
 
       return handle;      

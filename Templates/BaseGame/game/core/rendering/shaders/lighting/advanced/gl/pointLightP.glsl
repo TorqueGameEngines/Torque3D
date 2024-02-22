@@ -120,6 +120,7 @@ uniform sampler2D iesProfile;
 uniform vec4 rtParams0;
 
 uniform vec3 lightPosition;
+uniform vec3 lightDirection;
 uniform vec4 lightColor;
 uniform float  lightBrightness;
 uniform float  lightRange;

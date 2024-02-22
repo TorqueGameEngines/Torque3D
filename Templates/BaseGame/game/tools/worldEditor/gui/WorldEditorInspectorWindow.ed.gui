@@ -67,6 +67,36 @@ $guiContent = new GuiControl() {
          AnchorBottom = "0";
          AnchorLeft = "1";
          AnchorRight = "0";
+         
+         new GuiTextEditCtrl( EditorInspectorFilter ) {
+            position = "5 -4";
+            extent = "341 20";
+            profile = "ToolsGuiTextEditProfile";
+            horizSizing = "width";
+            vertSizing = "bottom";
+            placeholderText = "Filter...";
+            validate = "Inspector.setSearchText($ThisControl.getText());";
+         };
+         
+         new GuiBitmapButtonCtrl() {
+            bitmapAsset = "ToolsModule:clear_icon_n_image";
+            groupNum = "-1";
+            buttonType = "PushButton";
+            useMouseEvents = "0";
+            isContainer = "0";
+            Profile = "ToolsGuiDefaultProfile";
+            HorizSizing = "left";
+            VertSizing = "bottom";
+            position = "325 -2";
+            Extent = "17 17";
+            MinExtent = "8 2";
+            canSave = "1";
+            Visible = "1";
+            tooltipprofile = "ToolsGuiToolTipProfile";
+            hovertime = "1000";
+            canSaveDynamicFields = "0";
+            command = "EditorInspectorFilter.setText(\"\");Inspector.setSearchText(\"\");";
+         };
 
          new GuiScrollCtrl() {
             canSaveDynamicFields = "0";
@@ -74,20 +104,20 @@ $guiContent = new GuiControl() {
             isContainer = "1";
             Profile = "GuiEditorScrollProfile";
             HorizSizing = "width";
-            VertSizing = "height";
-            Position = "5 5";
-            Extent = "187 238";
+            VertSizing = "bottom";
+            Position = "5 20";
+            Extent = "343 941";
             MinExtent = "8 8";
             canSave = "1";
             Visible = "1";
             tooltipprofile = "ToolsGuiToolTipProfile";
             hovertime = "1000";
-            Docking = "Client";
+            Docking = "None";
             Margin = "0 0 0 0";
             Padding = "0 0 0 0";
-            AnchorTop = "1";
+            AnchorTop = "0";
             AnchorBottom = "0";
-            AnchorLeft = "1";
+            AnchorLeft = "0";
             AnchorRight = "0";
             willFirstRespond = "1";
             hScrollBar = "alwaysOff";
@@ -109,7 +139,7 @@ $guiContent = new GuiControl() {
                HorizSizing = "width";
                VertSizing = "bottom";
                Position = "0 0";
-               Extent = "202 309";
+               Extent = "343 941";
                MinExtent = "8 8";
                canSave = "1";
                Visible = "1";

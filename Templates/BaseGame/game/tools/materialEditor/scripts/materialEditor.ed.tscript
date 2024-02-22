@@ -745,8 +745,9 @@ function MaterialEditorGui::setActiveMaterial( %this, %material )
    MaterialEditorGui.lastMaterial = %material;
    
    // we create or recreate a material to hold in a pristine state
-   if(isObject(notDirtyMaterial))
-      notDirtyMaterial.delete();
+   // or, this crashes the ap. fix properly - BJR
+//   if(isObject(notDirtyMaterial))
+//      notDirtyMaterial.delete();
       
    singleton Material(notDirtyMaterial)
    {

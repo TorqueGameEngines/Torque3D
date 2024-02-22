@@ -65,6 +65,21 @@ struct CompoundKey3
    bool operator==(const CompoundKey3 & compound) const { return key1==compound.key1 && key2==compound.key2 && key3==compound.key3; }
 };
 
+template<class A, class B, class C, class D>
+struct CompoundKey4
+{
+   A key1;
+   B key2;
+   C key3;
+   D key4;
+
+   CompoundKey4() {};
+   CompoundKey4(const A& a, const B& b, const C& c, const D& d) { key1 = a; key2 = b; key3 = c; key4 = d;};
+
+   bool operator==(const CompoundKey4& compound) const { return key1 == compound.key1 && key2 == compound.key2 && key3 == compound.key3 && key4 == compound.key4; }
+};
+
+
 
 namespace DictHash
 {
@@ -110,6 +125,11 @@ namespace DictHash
       return hash(compound.key1) + hash(compound.key2) + hash(compound.key3);
    }
 
+   template<class A, class B, class C, class D>
+   inline U32 hash(const CompoundKey4<A, B, C, D>& compound)
+   {
+      return hash(compound.key1) + hash(compound.key2) + hash(compound.key3) + hash(compound.key4);
+   }
    U32 nextPrime(U32);
 };
 

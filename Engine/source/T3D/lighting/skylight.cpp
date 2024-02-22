@@ -59,6 +59,8 @@ extern bool gEditingMission;
 extern ColorI gCanvasClearColor;
 bool Skylight::smRenderSkylights = true;
 
+SimObjectPtr<Skylight> Skylight::smSkylightProbe = nullptr;
+
 IMPLEMENT_CO_NETOBJECT_V1(Skylight);
 
 ConsoleDocClass(Skylight,
@@ -117,6 +119,8 @@ bool Skylight::onAdd()
    if (!Parent::onAdd())
       return false;
 
+   if (isClientObject())
+      smSkylightProbe = this;
    return true;
 }
 

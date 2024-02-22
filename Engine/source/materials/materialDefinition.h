@@ -94,6 +94,7 @@ public:
       Misc,
       DynamicLight,
       DynamicLightMask,
+      PhotometricMask,
       NormalizeCube,
       TexTarget,
       AccuMap,

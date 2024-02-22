@@ -31,6 +31,8 @@
 #include "math/mathTypes.h"
 #include "gfx/gfxTransformSaver.h"
 #include "console/engineAPI.h"
+#include "renderInstance/renderProbeMgr.h"
+#include "T3D/lighting/skylight.h"
 
 IMPLEMENT_CONOBJECT( GuiObjectView );
 
@@ -541,6 +543,12 @@ void GuiObjectView::renderWorld( const RectI& updateRect )
 
    // Render primary model.
 
+   if (Skylight::smSkylightProbe.isValid())
+      PROBEMGR->submitProbe(Skylight::smSkylightProbe->getProbeInfo());
+
+   FogData savedFogData = gClientSceneGraph->getFogData();
+   gClientSceneGraph->setFogData(FogData());  // no fog in preview window
+
    if(mModelInstance)
    {
       if( mRunThread )
@@ -567,6 +575,7 @@ void GuiObjectView::renderWorld( const RectI& updateRect )
 
    renderPass->renderPass( &state );
 
+   gClientSceneGraph->setFogData(savedFogData);         // restore fog setting
    // Make sure to remove our fake sun.
    LIGHTMGR->unregisterAllLights();
 }

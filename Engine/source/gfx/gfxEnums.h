@@ -313,24 +313,37 @@ enum GFXMatrixType
 enum GFXShaderConstType
 {
    /// GFX"S"hader"C"onstant"T"ype
+   GFXSCT_ConstBuffer,
    // Scalar
-   GFXSCT_Float, 
+   GFXSCT_Float,
    // Vectors
-   GFXSCT_Float2, 
-   GFXSCT_Float3, 
-   GFXSCT_Float4, 
+   GFXSCT_Float2,
+   GFXSCT_Float3,
+   GFXSCT_Float4,
    // Matrices
-   GFXSCT_Float2x2, 
+   GFXSCT_Float2x2,
    GFXSCT_Float3x3,
    GFXSCT_Float3x4,
    GFXSCT_Float4x3,
-   GFXSCT_Float4x4, 
+   GFXSCT_Float4x4,
    // Scalar
-   GFXSCT_Int, 
+   GFXSCT_Int,
    // Vectors
-   GFXSCT_Int2, 
-   GFXSCT_Int3, 
-   GFXSCT_Int4, 
+   GFXSCT_Int2,
+   GFXSCT_Int3,
+   GFXSCT_Int4,
+   // Scalar
+   GFXSCT_UInt,
+   // Vectors
+   GFXSCT_UInt2,
+   GFXSCT_UInt3,
+   GFXSCT_UInt4,
+   // Scalar
+   GFXSCT_Bool,
+   // Vectors
+   GFXSCT_Bool2,
+   GFXSCT_Bool3,
+   GFXSCT_Bool4,
    // Samplers
    GFXSCT_Sampler,
    GFXSCT_SamplerCube,

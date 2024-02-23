@@ -45,22 +45,8 @@ enum SHADER_STAGE
    UNKNOWN_STAGE
 };
 
-// simple class to hold everything required for a buffer map.
-struct BufferDesc
-{
-   // for the moment we dont really need to care about the buffer name.
-   S32 bindingPoint;
-   SHADER_STAGE stage;
 
-   BufferDesc()
-      : bindingPoint(-1), stage(SHADER_STAGE::UNKNOWN_STAGE)
-   {}
-
-   BufferDesc( U32 inBindingPoint, SHADER_STAGE inputStage)
-      : bindingPoint(inBindingPoint), stage(inputStage)
-   {}
-
-};
+typedef CompoundKey<U32, SHADER_STAGE> BufferKey;
 
 struct BufferRange
 {
@@ -72,6 +58,8 @@ struct BufferRange
       mBufMin = getMin(mBufMin, slot);
       mBufMax = getMax(mBufMax, slot);
    }
+
+   inline bool isValid() const { return mBufMin <= mBufMax; }
 };
 
 class GFXD3D11ShaderConstHandle : public GFXShaderConstHandle
@@ -118,7 +106,7 @@ class GFXD3D11ShaderConstBuffer : public GFXShaderConstBuffer
    ID3D11DeviceContext* mDeviceContext;
 
 public:
-   typedef Map<BufferDesc, U8*> BufferMap;
+   typedef Map<BufferKey, U8*> BufferMap;
 
    GFXD3D11ShaderConstBuffer(GFXD3D11Shader* shader);
 
@@ -131,7 +119,7 @@ public:
    /// Used internally by GXD3D11ShaderConstBuffer to determine if it's dirty.
    bool isDirty();
 
-   void addBuffer(BufferDesc bufDesc, U32 size);
+   void addBuffer(U32 bufBindingPoint, SHADER_STAGE shaderStage, U32 size);
 
    /// Called from GFXD3D11Shader when constants have changed and need
    /// to be the shader this buffer references is reloaded.
@@ -191,7 +179,8 @@ class GFXD3D11Shader : public GFXShader
 
 public:
    typedef Map<String, GFXD3D11ShaderConstHandle*> HandleMap;
-   typedef Map<BufferDesc, U8*> BufferMap;
+
+   typedef Map<BufferKey, U8*> BufferMap;
 
    GFXD3D11Shader();
    virtual ~GFXD3D11Shader();   
@@ -218,17 +207,12 @@ protected:
    ID3D11PixelShader *mPixShader;
 
    // we probably want this to be GFXDevice and not per shader.
-   ID3D11Buffer* mBoundConstantBuffers[16] = {};
+   ID3D11Buffer* mBoundConstantBuffers[16];
 
    static gfxD3DIncludeRef smD3DInclude;
 
    HandleMap mHandles;
    BufferMap mBuffers;
-
-   Vector<GFXD3D11ShaderConstHandle*> mValidHandles;
-   /// The shader disassembly from DX when this shader is compiled.
-   /// We only store this data in non-release builds.
-   String mDissasembly;
 
    /// Vector of descriptions (consolidated for the getShaderConstDesc call)
    Vector<GFXShaderConstDesc> mShaderConsts;
@@ -250,10 +234,5 @@ protected:
    void setConstantsFromBuffer(GFXD3D11ShaderConstBuffer* buffer);
 };
 
-inline bool GFXD3D11Shader::getDisassembly(String &outStr) const
-{
-   outStr = mDissasembly;
-   return (outStr.isNotEmpty());
-}
 
 #endif

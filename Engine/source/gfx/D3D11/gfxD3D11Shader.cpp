@@ -331,6 +331,30 @@ void GFXD3D11ShaderConstBuffer::set(GFXShaderConstHandle* handle, const MatrixF&
       return;
    }
 
+   if (matrixType == GFXSCT_Float4x4)
+   {
+      dMemcpy(buf, transposed, sizeof(MatrixF));
+      return;
+   }
+
+   U32 csize;
+   switch (matrixType)
+   {
+   case GFXSCT_Float2x2:
+      csize = 24; //this takes up 16+8
+      break;
+   case GFXSCT_Float3x3:
+      csize = 44; //This takes up 16+16+12
+      break;
+   case GFXSCT_Float4x3:
+      csize = 48;
+      break;
+   default:
+      return;
+      break;
+   }
+
+   dMemcpy(buf, transposed, csize);
 
 }
 
@@ -340,9 +364,13 @@ void GFXD3D11ShaderConstBuffer::set(GFXShaderConstHandle* handle, const MatrixF*
    AssertFatal(handle->isValid(), "Handle is not valid!");
 
    AssertFatal(static_cast<const GFXD3D11ShaderConstHandle*>(handle), "Incorrect const buffer type!");
-   const GFXD3D11ShaderConstHandle* h = static_cast<const GFXD3D11ShaderConstHandle*>(handle);
-   AssertFatal(!h->isSampler(), "Handle is sampler constant!");
-   AssertFatal(h->mShader == mShader, "Mismatched shaders!");
+   const GFXD3D11ShaderConstHandle* _dxHandle = static_cast<const GFXD3D11ShaderConstHandle*>(handle);
+   AssertFatal(!_dxHandle->isSampler(), "Handle is sampler constant!");
+   AssertFatal(_dxHandle->mShader == mShader, "Mismatched shaders!");
+
+   BufferDesc bufDesc(_dxHandle->mBinding, (SHADER_STAGE)_dxHandle->mStage);
+
+   U8* buf = mBufferMap[bufDesc] ;
 
    static Vector<MatrixF> transposed;
    if (arraySize > transposed.size())
@@ -359,8 +387,37 @@ void GFXD3D11ShaderConstBuffer::set(GFXShaderConstHandle* handle, const MatrixF*
    }
 
    // TODO: Maybe support this in the future?
-   if (h->mInstancingConstant)
+   if (_dxHandle->mInstancingConstant)
       return;
+
+   if (matrixType == GFXSCT_Float4x4)
+   {
+      dMemcpy(buf + _dxHandle->mOffset, transposed.address(), _dxHandle->getSize());
+      return;
+   }
+
+   U32 csize;
+   switch (matrixType)
+   {
+   case GFXSCT_Float2x2:
+      csize = 24; //this takes up 16+8
+      break;
+   case GFXSCT_Float3x3:
+      csize = 44; //This takes up 16+16+12
+      break;
+   case GFXSCT_Float4x3:
+      csize = 48;
+      break;
+   default:
+      return;
+      break;
+   }
+
+   for (int i = 0; i < arraySize; i++)
+   {
+      dMemcpy(buf + _dxHandle->mOffset + (i * csize), transposed[i], csize);
+   }
+
 }
 
 const String GFXD3D11ShaderConstBuffer::describeSelf() const
@@ -372,17 +429,20 @@ const String GFXD3D11ShaderConstBuffer::describeSelf() const
    return ret;
 }
 
-void GFXD3D11ShaderConstBuffer::zombify()
-{
-}
-
-void GFXD3D11ShaderConstBuffer::resurrect()
-{
-}
-
 bool GFXD3D11ShaderConstBuffer::isDirty()
 {
    return true;
+}
+
+void GFXD3D11ShaderConstBuffer::addBuffer(BufferDesc bufDesc, U32 size)
+{
+   BufferMap::Iterator buffer = mBufferMap.find(bufDesc);
+   // already added? pass...
+   if (buffer != mBufferMap.end())
+      return;
+
+   // new buffer with our size.
+   mBufferMap[bufDesc] = new U8[size];
 }
 
 void GFXD3D11ShaderConstBuffer::activate( GFXD3D11ShaderConstBuffer *prevShaderBuffer )
@@ -422,7 +482,14 @@ GFXD3D11Shader::~GFXD3D11Shader()
       delete i->value;
 
    for (BufferMap::Iterator i = mBuffers.begin(); i != mBuffers.end(); i++)
+   {
       delete[] i->value;
+   }
+
+   for (U32 i = 0; i < 16; i++)
+   {
+      SAFE_RELEASE(mBoundConstantBuffers[i]);
+   }
 
    // release shaders
    SAFE_RELEASE(mVertShader);
@@ -707,6 +774,7 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection *refTable,
          desc.constType = GFXSCT_ConstBuffer;
          desc.bindPoint = shaderInputBind.BindPoint;
          desc.shaderStage = shaderStage;
+         desc.samplerReg = -1;
          ID3D11ShaderReflectionConstantBuffer* constantBuffer = refTable->GetConstantBufferByName(shaderInputBind.Name);
          D3D11_SHADER_BUFFER_DESC constantBufferDesc;
 
@@ -737,6 +805,7 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection *refTable,
             varDesc.arraySize = mMax(shaderTypeDesc.Elements, 1);
             varDesc.size = shaderVarDesc.Size;
             varDesc.shaderStage = shaderStage;
+            varDesc.samplerReg = -1;
 
             if (shaderTypeDesc.Class == D3D_SVC_SCALAR || shaderTypeDesc.Class == D3D_SVC_VECTOR)
             {
@@ -823,6 +892,7 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection *refTable,
             desc.name = String::ToString("$%s", desc.name.c_str());
          desc.constType = GFXSCT_Sampler;
          desc.samplerReg = shaderInputBind.BindPoint;
+         desc.bindPoint = shaderInputBind.BindPoint; // not really needed but hey..
          desc.shaderStage = shaderStage;
          mShaderConsts.push_back(desc);
       }
@@ -892,12 +962,35 @@ void GFXD3D11Shader::_buildShaderConstantHandles()
          if (buffer != mBuffers.end())
             continue;
 
+         ID3D11Buffer* constBuffer = nullptr;
+         D3D11_BUFFER_DESC cbDesc;
+         cbDesc.ByteWidth = desc.size;
+         cbDesc.Usage = D3D11_USAGE_DEFAULT;
+         cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+         cbDesc.CPUAccessFlags = 0;
+         cbDesc.MiscFlags = 0;
+         cbDesc.StructureByteStride = 0;
+
+         HRESULT hr;
+         hr = D3D11DEVICE->CreateBuffer(&cbDesc, NULL, &constBuffer);
+
+         if (FAILED(hr))
+         {
+            AssertFatal(false, "can't create constant buffer: %s", desc.name.c_str());
+         }
+
+         mBoundConstantBuffers[desc.bindPoint] = constBuffer;
+
          // new buffer with our size.
          mBuffers[bufDesc] = new U8[desc.size];
+
+         // do not add to handles..
+         continue;
       }
 
       HandleMap::Iterator handle = mHandles.find(desc.name);
       // already added? reinit just in case..
+      // not sure if we need to do anything different with samplers.
       if (handle != mHandles.end())
       {
          handle->value->reinit(desc);
@@ -954,9 +1047,59 @@ void GFXD3D11Shader::_buildInstancingShaderConstantHandles()
    }
 }
 
+void GFXD3D11Shader::setConstantsFromBuffer(GFXD3D11ShaderConstBuffer* buffer)
+{
+   BufferRange bufRanges[6] = {};
+
+   for (BufferMap::Iterator i = mBuffers.begin(); i != mBuffers.end(); ++i)
+   {
+      BufferDesc oldBufferDesc = i->key;
+      U8* oldBuff = i->value;
+
+      U8* newBuff = buffer->mBufferMap[i->key];
+
+      if (dMemcmp(oldBuff, newBuff, sizeof(oldBuff)) != 0)
+      {
+         // else copy new over the buffer.
+         dMemcpy(oldBuff, newBuff, sizeof(oldBuff));
+
+         // buffer has been changed and needs updating.
+         D3D11DEVICECONTEXT->UpdateSubresource(mBoundConstantBuffers[oldBufferDesc.bindingPoint], 0, NULL, oldBuff, sizeof(oldBuff), 0);
+      }
+
+      bufRanges[oldBufferDesc.stage].addSlot(oldBufferDesc.bindingPoint);
+   }
+
+   if (mVertShader != nullptr)
+   {
+      const U32 bufStartSlot = bufRanges[SHADER_STAGE::VERTEX_SHADER].mBufMin;
+      const U32 numBufs = bufRanges[SHADER_STAGE::VERTEX_SHADER].mBufMax - bufRanges[SHADER_STAGE::VERTEX_SHADER].mBufMin + 1;
+      ID3D11Buffer** vsBuffers = mBoundConstantBuffers + bufStartSlot;
+
+      D3D11DEVICECONTEXT->VSSetConstantBuffers(bufStartSlot, numBufs, vsBuffers);
+   }
+
+   if (mPixShader != nullptr)
+   {
+      const U32 bufStartSlot = bufRanges[SHADER_STAGE::PIXEL_SHADER].mBufMin;
+      const U32 numBufs = bufRanges[SHADER_STAGE::PIXEL_SHADER].mBufMax - bufRanges[SHADER_STAGE::PIXEL_SHADER].mBufMin + 1;
+      ID3D11Buffer** psBuffers = mBoundConstantBuffers + bufStartSlot;
+
+      D3D11DEVICECONTEXT->PSSetConstantBuffers(bufStartSlot, numBufs, psBuffers);
+   }
+
+}
+
 GFXShaderConstBufferRef GFXD3D11Shader::allocConstBuffer()
 {
    GFXD3D11ShaderConstBuffer* buffer = new GFXD3D11ShaderConstBuffer(this);
+
+   for (BufferMap::Iterator i = mBuffers.begin(); i != mBuffers.end(); ++i)
+   {
+      // add our buffer descriptions to the full const buffer.
+      buffer->addBuffer(i->key, sizeof(i->value));
+   }
+
    mActiveBuffers.push_back( buffer );
    buffer->registerResourceWithDevice(getOwningDevice());
    return buffer;

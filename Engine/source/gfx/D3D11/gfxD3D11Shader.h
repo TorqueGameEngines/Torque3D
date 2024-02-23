@@ -36,13 +36,13 @@ class GFXD3D11Shader;
 
 enum SHADER_STAGE
 {
-   UNKNOWN_STAGE,
    VERTEX_SHADER,
    PIXEL_SHADER,
    GEOMETRY_SHADER,
    DOMAIN_SHADER,
    HULL_SHADER,
-   COMPUTE_SHADER
+   COMPUTE_SHADER,
+   UNKNOWN_STAGE
 };
 
 // simple class to hold everything required for a buffer map.
@@ -60,6 +60,18 @@ struct BufferDesc
       : bindingPoint(inBindingPoint), stage(inputStage)
    {}
 
+};
+
+struct BufferRange
+{
+   U32 mBufMin = 0xFFFFFFFF;
+   U32 mBufMax = 0;
+
+   inline void addSlot(U32 slot)
+   {
+      mBufMin = getMin(mBufMin, slot);
+      mBufMax = getMax(mBufMax, slot);
+   }
 };
 
 class GFXD3D11ShaderConstHandle : public GFXShaderConstHandle
@@ -81,7 +93,7 @@ public:
    void setValid(bool valid) { mValid = valid; }
    /// @warning This will always return the value assigned when the shader was
    /// initialized.  If the value is later changed this method won't reflect that.
-   S32 getSamplerRegister() const { return mSampler; }
+   S32 getSamplerRegister() const { return (!isSampler() || !mValid) ? -1 : mSampler; }
 
    // Returns true if this is a handle to a sampler register.
    bool isSampler() const 
@@ -94,7 +106,7 @@ public:
    U32 mOffset;
    U32 mSize;
    S32 mBinding; // buffer binding point used to map handles to buffers.
-   S32 mSampler; // sampler.
+   S32 mSampler; // sampler number, will be -1 if not a sampler.
    SHADER_STAGE mStage;
    bool mInstancingConstant;
 };
@@ -102,7 +114,6 @@ public:
 /// The D3D11 implementation of a shader constant buffer.
 class GFXD3D11ShaderConstBuffer : public GFXShaderConstBuffer
 {
-   friend class GFXD3D11Shader;
    // Cache device context
    ID3D11DeviceContext* mDeviceContext;
 
@@ -119,6 +130,8 @@ public:
 
    /// Used internally by GXD3D11ShaderConstBuffer to determine if it's dirty.
    bool isDirty();
+
+   void addBuffer(BufferDesc bufDesc, U32 size);
 
    /// Called from GFXD3D11Shader when constants have changed and need
    /// to be the shader this buffer references is reloaded.
@@ -153,6 +166,7 @@ public:
    virtual void resurrect() {}
 
 private:
+   friend class GFXD3D11Shader;
    /// We keep a weak reference to the shader 
    /// because it will often be deleted.
    WeakRefPtr<GFXD3D11Shader> mShader;
@@ -203,6 +217,9 @@ protected:
    ID3D11VertexShader *mVertShader;
    ID3D11PixelShader *mPixShader;
 
+   // we probably want this to be GFXDevice and not per shader.
+   ID3D11Buffer* mBoundConstantBuffers[16] = {};
+
    static gfxD3DIncludeRef smD3DInclude;
 
    HandleMap mHandles;
@@ -215,7 +232,9 @@ protected:
 
    /// Vector of descriptions (consolidated for the getShaderConstDesc call)
    Vector<GFXShaderConstDesc> mShaderConsts;
-   
+
+   //Vector<ID3D11Buffer*> mDeviceBuffers;
+
    // These two functions are used when compiling shaders from hlsl
    virtual bool _compileShader( const Torque::Path &filePath, 
                                 SHADER_STAGE shaderStage, 

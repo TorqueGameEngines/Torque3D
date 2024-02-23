@@ -231,7 +231,7 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
       // Lookup the cookie sample.d
       float cosTheta = dot(-surfaceToLight.L, lightDirection); 
       float angle = acos(cosTheta) * ( M_1OVER_PI_F); 
-      float iesMask = TORQUE_TEX2D(iesProfile, angle).r;
+      float iesMask = TORQUE_TEX1D(iesProfile, angle).r;
       // Multiply the light with the iesMask tex.
       shadow *= iesMask;
    #endif

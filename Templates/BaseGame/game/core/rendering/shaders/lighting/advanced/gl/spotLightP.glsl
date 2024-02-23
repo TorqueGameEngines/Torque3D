@@ -165,7 +165,7 @@ void main()
       // Lookup the cookie sample.d
       float cosTheta = dot(-surfaceToLight.L, lightDirection); 
       float angle = acos(cosTheta) * ( M_1OVER_PI_F); 
-      float iesMask = texture(iesProfile, angle).r; 
+      float iesMask = texture(iesProfile, angle/(lightSpotParams.x-lightSpotParams.y)).r; 
       // Multiply the light with the iesMask tex.
       shadow *= iesMask;
    #endif

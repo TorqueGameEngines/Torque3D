@@ -45,6 +45,23 @@ enum SHADER_STAGE
    COMPUTE_SHADER
 };
 
+// simple class to hold everything required for a buffer map.
+struct BufferDesc
+{
+   // for the moment we dont really need to care about the buffer name.
+   S32 bindingPoint;
+   SHADER_STAGE stage;
+
+   BufferDesc()
+      : bindingPoint(-1), stage(SHADER_STAGE::UNKNOWN_STAGE)
+   {}
+
+   BufferDesc( U32 inBindingPoint, SHADER_STAGE inputStage)
+      : bindingPoint(inBindingPoint), stage(inputStage)
+   {}
+
+};
+
 class GFXD3D11ShaderConstHandle : public GFXShaderConstHandle
 {
    friend class GFXD3D11Shader;
@@ -52,15 +69,10 @@ public:
 
    GFXD3D11ShaderConstHandle(GFXD3D11Shader* shader);
    GFXD3D11ShaderConstHandle(GFXD3D11Shader* shader,
-      const SHADER_STAGE shaderStage,
-      const U32 offset,
-      const U32 size,
-      const GFXShaderConstDesc& desc,
-      S32 bindingPoint,
-      S32 samplerNum);
+                              const GFXShaderConstDesc& desc);
 
    virtual ~GFXD3D11ShaderConstHandle();
-
+   void reinit(const GFXShaderConstDesc& desc);
    const String& getName() const { return mDesc.name; }
    GFXShaderConstType getType() const { return mDesc.constType; }
    U32 getArraySize() const { return mDesc.arraySize; }
@@ -95,8 +107,9 @@ class GFXD3D11ShaderConstBuffer : public GFXShaderConstBuffer
    ID3D11DeviceContext* mDeviceContext;
 
 public:
+   typedef Map<BufferDesc, U8*> BufferMap;
 
-   GFXD3D11ShaderConstBuffer(GFXD3D11Shader* shader, U32 bufSize, U8* existingConstants);
+   GFXD3D11ShaderConstBuffer(GFXD3D11Shader* shader);
 
    virtual ~GFXD3D11ShaderConstBuffer();
 
@@ -136,16 +149,20 @@ public:
 
    // GFXResource
    virtual const String describeSelf() const;
-   virtual void zombify();
-   virtual void resurrect();
+   virtual void zombify() {}
+   virtual void resurrect() {}
 
-protected:
-
-   void _createBuffers();
-
+private:
    /// We keep a weak reference to the shader 
    /// because it will often be deleted.
    WeakRefPtr<GFXD3D11Shader> mShader;
+   BufferMap mBufferMap;
+
+   template<typename ConstType>
+   void internalSet(GFXShaderConstHandle* handle, const ConstType& param);
+
+   template<typename ConstType>
+   void internalSet(GFXShaderConstHandle* handle, const AlignedArray<ConstType>& fv);
 };
 
 class gfxD3D11Include;
@@ -160,6 +177,7 @@ class GFXD3D11Shader : public GFXShader
 
 public:
    typedef Map<String, GFXD3D11ShaderConstHandle*> HandleMap;
+   typedef Map<BufferDesc, U8*> BufferMap;
 
    GFXD3D11Shader();
    virtual ~GFXD3D11Shader();   
@@ -188,8 +206,8 @@ protected:
    static gfxD3DIncludeRef smD3DInclude;
 
    HandleMap mHandles;
-   U32 mConstBufferSize;
-   U8* mConstBuffer;
+   BufferMap mBuffers;
+
    Vector<GFXD3D11ShaderConstHandle*> mValidHandles;
    /// The shader disassembly from DX when this shader is compiled.
    /// We only store this data in non-release builds.
@@ -208,10 +226,9 @@ protected:
   
    // This is used in both cases
    virtual void _buildShaderConstantHandles();
-
-   /// Used to build the instancing shader constants from 
-   /// the instancing vertex format.
    void _buildInstancingShaderConstantHandles();
+
+   void setConstantsFromBuffer(GFXD3D11ShaderConstBuffer* buffer);
 };
 
 inline bool GFXD3D11Shader::getDisassembly(String &outStr) const

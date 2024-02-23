@@ -71,11 +71,12 @@ struct GFXShaderConstDesc
 public:
    String name;
    GFXShaderConstType constType;   
-   U32 arraySize; // > 1 means it is an array!
-   U32 bindPoint; // bind point used for ubo/cb, sampler register for samplers.
-   U32 offset;    // offset for vars
-   U32 size;      // size of buffer/type
-   U32 shaderStage; // only used dx side.
+   U32 arraySize;    // > 1 means it is an array!
+   S32 bindPoint;    // bind point used for ubo/cb.
+   S32 samplerReg;   // sampler register.
+   U32 offset;       // offset for vars
+   U32 size;         // size of buffer/type
+   U32 shaderStage;  // only used dx side.
 };
 
 /// This is an opaque handle used by GFXShaderConstBuffer clients to set individual shader constants.

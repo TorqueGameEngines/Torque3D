@@ -19,7 +19,6 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
-
 #include "../../../gl/hlslCompat.glsl"
 #include "farFrustumQuad.glsl"
 #include "../../shadowMap/shadowMapIO_GLSL.h"
@@ -116,7 +115,10 @@ void main()
    vec3 lightCol = lightColor.rgb;
    #ifdef USE_COOKIE_TEX
       // Lookup the cookie sample.
-      vec4 cookie = texture(cookieMap, shadowCoord);
+      vec4 pxlPosLightProj = tMul( worldToLightProj, vec4( surface.P, 1 ) );
+      vec2 cookieCoord = ( ( pxlPosLightProj.xy / pxlPosLightProj.w ) * 0.5 ) + vec2( 0.5, 0.5 );
+      cookieCoord.y = 1.0f - cookieCoord.y;
+      vec4 cookie = texture(cookieMap, cookieCoord);
       // Multiply the light with the cookie tex.
       lightCol *= cookie.rgb;
       // Use a maximum channel luminance to attenuate 
@@ -169,7 +171,7 @@ void main()
       // Multiply the light with the iesMask tex.
       shadow *= iesMask;
    #endif
-   
+      
       //get spot light contribution   
       lighting = getSpotlight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, lightDirection, lightSpotParams, shadow);
    }

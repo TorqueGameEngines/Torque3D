@@ -19,7 +19,6 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
-
 #include "../../../gl/hlslCompat.glsl"
 #include "farFrustumQuad.glsl"
 #include "../../shadowMap/shadowMapIO_GLSL.h"
@@ -38,8 +37,15 @@ uniform sampler2D shadowMap;
 #include "softShadow.glsl"
 uniform sampler2D colorBuffer;
 uniform sampler2D matInfoBuffer;
+
+#ifdef USE_COOKIE_TEX
 uniform sampler2D cookieMap;
-uniform sampler2D iesProfile;
+#endif
+
+#ifdef UES_PHOTOMETRIC_MASK
+uniform sampler1D iesProfile;
+#endif
+
 uniform vec4 rtParams0;
 
 uniform float  lightBrightness;
@@ -109,7 +115,10 @@ void main()
    vec3 lightCol = lightColor.rgb;
    #ifdef USE_COOKIE_TEX
       // Lookup the cookie sample.
-      vec4 cookie = texture(cookieMap, shadowCoord);
+      vec4 pxlPosLightProj = tMul( worldToLightProj, vec4( surface.P, 1 ) );
+      vec2 cookieCoord = ( ( pxlPosLightProj.xy / pxlPosLightProj.w ) * 0.5 ) + vec2( 0.5, 0.5 );
+      cookieCoord.y = 1.0f - cookieCoord.y;
+      vec4 cookie = texture(cookieMap, cookieCoord);
       // Multiply the light with the cookie tex.
       lightCol *= cookie.rgb;
       // Use a maximum channel luminance to attenuate 
@@ -154,16 +163,17 @@ void main()
       return;
    #endif
 
-      //get spot light contribution   
-      lighting = getSpotlight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, lightDirection, lightSpotParams, shadow);
    #ifdef UES_PHOTOMETRIC_MASK
       // Lookup the cookie sample.d
       float cosTheta = dot(-surfaceToLight.L, lightDirection); 
       float angle = acos(cosTheta) * ( M_1OVER_PI_F); 
-      float iesMask = texture(iesProfile, vec2(angle, 0.0)).r; 
+      float iesMask = texture(iesProfile, angle/(lightSpotParams.x-lightSpotParams.y)).r; 
       // Multiply the light with the iesMask tex.
-      lighting *= iesMask;
+      shadow *= iesMask;
    #endif
+      
+      //get spot light contribution   
+      lighting = getSpotlight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, lightDirection, lightSpotParams, shadow);
    }
 
    OUT_col = vec4(lighting, 0);

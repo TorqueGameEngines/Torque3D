@@ -158,11 +158,6 @@ GFXD3D11ShaderConstBuffer::GFXD3D11ShaderConstBuffer( GFXD3D11Shader* shader)
 
 GFXD3D11ShaderConstBuffer::~GFXD3D11ShaderConstBuffer()
 {
-   for (BufferMap::Iterator i = mBufferMap.begin(); i != mBufferMap.end(); i++)
-   {
-      delete[] i->value.data;
-   }
-
    mBufferMap.clear();
 
    for (U32 i = 0; i < 16; i++)
@@ -459,6 +454,7 @@ void GFXD3D11ShaderConstBuffer::addBuffer(U32 bufBindingPoint, SHADER_STAGE shad
 
    // new buffer with our size.
    mBufferMap[bufKey].data = new U8[size];
+   dMemset(mBufferMap[bufKey].data, 0, size);
    // always dirty on new.
    mBufferMap[bufKey].size = size;
    mBufferMap[bufKey].isDirty = true;
@@ -487,10 +483,7 @@ void GFXD3D11ShaderConstBuffer::activate( GFXD3D11ShaderConstBuffer *prevShaderB
    if (prevShaderBuffer == NULL)
       return;
 
-   BufferRange bufRanges[6] = {};
-
-   D3D11_MAPPED_SUBRESOURCE pConstData;
-   ZeroMemory(&pConstData, sizeof(D3D11_MAPPED_SUBRESOURCE));
+   BufferRange bufRanges[6];
 
    for (BufferMap::Iterator i = mBufferMap.begin(); i != mBufferMap.end(); ++i)
    {
@@ -505,9 +498,14 @@ void GFXD3D11ShaderConstBuffer::activate( GFXD3D11ShaderConstBuffer *prevShaderB
          {
             thisBuff.isDirty = true;
          }
-         else if (dMemcmp(prevBuffer.data, thisBuff.data, thisBuff.size) != 0)
+
+         if (dMemcmp(prevBuffer.data, thisBuff.data, thisBuff.size) != 0)
          {
             thisBuff.isDirty = true;
+         }
+         else
+         {
+            thisBuff.isDirty = false;
          }
       }
       else
@@ -576,14 +574,6 @@ GFXD3D11Shader::GFXD3D11Shader()
 
 GFXD3D11Shader::~GFXD3D11Shader()
 {
-   for (HandleMap::Iterator i = mHandles.begin(); i != mHandles.end(); i++)
-      delete i->value;
-
-   for (BufferMap::Iterator i = mBuffers.begin(); i != mBuffers.end(); i++)
-   {
-      i->value.clear();
-   }
-
    mHandles.clear();
 
    mBuffers.clear();
@@ -792,28 +782,28 @@ bool GFXD3D11Shader::_compileShader( const Torque::Path &filePath,
    bool result = code && SUCCEEDED(res);
 
 #ifdef TORQUE_DEBUG
-   //String shader;
-   //switch (shaderStage)
-   //{
-   //case VERTEX_SHADER:
-   //   shader = mVertexFile.getFileName();
-   //   mVertShader->SetPrivateData(WKPDID_D3DDebugObjectName, shader.size(), shader.c_str());
-   //   break;
-   //case PIXEL_SHADER:
-   //   shader = mPixelFile.getFileName();
-   //   mPixShader->SetPrivateData(WKPDID_D3DDebugObjectName, shader.size(), shader.c_str());
-   //   break;
-   //case GEOMETRY_SHADER:
-   //   break;
-   //case DOMAIN_SHADER:
-   //   break;
-   //case HULL_SHADER:
-   //   break;
-   //case COMPUTE_SHADER:
-   //   break;
-   //default:
-   //   break;
-   //}
+   String shader;
+   switch (shaderStage)
+   {
+   case VERTEX_SHADER:
+      shader = mVertexFile.getFileName();
+      mVertShader->SetPrivateData(WKPDID_D3DDebugObjectName, shader.size(), shader.c_str());
+      break;
+   case PIXEL_SHADER:
+      shader = mPixelFile.getFileName();
+      mPixShader->SetPrivateData(WKPDID_D3DDebugObjectName, shader.size(), shader.c_str());
+      break;
+   case GEOMETRY_SHADER:
+      break;
+   case DOMAIN_SHADER:
+      break;
+   case HULL_SHADER:
+      break;
+   case COMPUTE_SHADER:
+      break;
+   default:
+      break;
+   }
 #endif
   
    SAFE_RELEASE(code); 
@@ -872,10 +862,6 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection *refTable,
 
             D3D11_SHADER_TYPE_DESC shaderTypeDesc;
             bufferVar->GetType()->GetDesc(&shaderTypeDesc);
-
-            bool unusedVar = shaderVarDesc.uFlags & D3D_SVF_USED ? false : true;
-            if (unusedVar)
-               continue;
 
             varDesc.name = String(shaderVarDesc.Name);
             if (varDesc.name.find("$") != 0)

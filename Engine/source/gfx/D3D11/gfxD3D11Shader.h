@@ -124,9 +124,6 @@ public:
 
    void addBuffer(U32 bufBindingPoint, SHADER_STAGE shaderStage, U32 size);
 
-   bool isDirty() { return mDirty; }
-   void setDirty(bool isDirty) { mDirty = isDirty; }
-
    /// Called from GFXD3D11Shader when constants have changed and need
    /// to be the shader this buffer references is reloaded.
    void onShaderReload(GFXD3D11Shader *shader);
@@ -174,7 +171,6 @@ protected:
 
    // we probably want this to be GFXDevice and not per shader.
    ID3D11Buffer* mBoundConstantBuffers[16];
-   bool mDirty;
 };
 
 class gfxD3D11Include;

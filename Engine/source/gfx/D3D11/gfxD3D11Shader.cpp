@@ -520,7 +520,19 @@ void GFXD3D11ShaderConstBuffer::activate( GFXD3D11ShaderConstBuffer *prevShaderB
       }
    }
 
-   if (bufRanges[SHADER_STAGE::VERTEX_SHADER].isValid())
+   if (bufRanges[SHADER_STAGE::ALL_SHADERS].isValid())
+   {
+      const U32 bufStartSlot = bufRanges[SHADER_STAGE::ALL_SHADERS].mBufMin;
+      const U32 numBufs = bufRanges[SHADER_STAGE::ALL_SHADERS].mBufMax - bufRanges[SHADER_STAGE::ALL_SHADERS].mBufMin + 1;
+      ID3D11Buffer** globalBuffer = mBoundConstantBuffers + bufStartSlot;
+
+      if(mShader->mVertShader)
+         D3D11DEVICECONTEXT->VSSetConstantBuffers(bufStartSlot, numBufs, globalBuffer);
+      if(mShader->mPixShader)
+         D3D11DEVICECONTEXT->PSSetConstantBuffers(bufStartSlot, numBufs, globalBuffer);
+   }
+
+   if (mShader->mVertShader && bufRanges[SHADER_STAGE::VERTEX_SHADER].isValid())
    {
       const U32 bufStartSlot = bufRanges[SHADER_STAGE::VERTEX_SHADER].mBufMin;
       const U32 numBufs = bufRanges[SHADER_STAGE::VERTEX_SHADER].mBufMax - bufRanges[SHADER_STAGE::VERTEX_SHADER].mBufMin + 1;
@@ -529,7 +541,7 @@ void GFXD3D11ShaderConstBuffer::activate( GFXD3D11ShaderConstBuffer *prevShaderB
       D3D11DEVICECONTEXT->VSSetConstantBuffers(bufStartSlot, numBufs, vsBuffers);
    }
 
-   if (bufRanges[SHADER_STAGE::PIXEL_SHADER].isValid())
+   if (mShader->mPixShader && bufRanges[SHADER_STAGE::PIXEL_SHADER].isValid())
    {
       const U32 bufStartSlot = bufRanges[SHADER_STAGE::PIXEL_SHADER].mBufMin;
       const U32 numBufs = bufRanges[SHADER_STAGE::PIXEL_SHADER].mBufMax - bufRanges[SHADER_STAGE::PIXEL_SHADER].mBufMin + 1;
@@ -567,7 +579,9 @@ GFXD3D11Shader::GFXD3D11Shader()
    if( smD3DInclude == NULL )
       smD3DInclude = new gfxD3D11Include;
 
-   
+   globalAdded = false;
+   globalOffset = 0;
+   globalSize = 0;
 }
 
 //------------------------------------------------------------------------------
@@ -823,6 +837,7 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection *refTable,
    D3D11_SHADER_DESC shaderDesc;
    refTable->GetDesc(&shaderDesc);
 
+   bool globalBuffer = false;
    // we loop through and account for the most common data types.
    for (U32 i = 0; i < shaderDesc.BoundResources; i++)
    {
@@ -836,9 +851,14 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection *refTable,
          if (desc.name.find("$") != 0)
             desc.name = String::ToString("$%s", desc.name.c_str());
 
+         if (String::compare(desc.name, "$Globals") == 0 || String::compare(desc.name, "$Params") == 0)
+         {
+            globalBuffer = true;
+         }
+
          desc.constType = GFXSCT_ConstBuffer;
          desc.bindPoint = shaderInputBind.BindPoint;
-         desc.shaderStage = shaderStage;
+         desc.shaderStage = globalBuffer ? SHADER_STAGE::ALL_SHADERS : shaderStage;
          desc.samplerReg = -1;
          ID3D11ShaderReflectionConstantBuffer* constantBuffer = refTable->GetConstantBufferByName(shaderInputBind.Name);
          D3D11_SHADER_BUFFER_DESC constantBufferDesc;
@@ -850,7 +870,13 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection *refTable,
 #endif 
          // push back our const buffer as a descriptor, this also marks the start of a buffer.
          desc.size = constantBufferDesc.Size;
-         mShaderConsts.push_back(desc);
+
+         globalSize += desc.size;
+
+         if(globalBuffer && !globalAdded)
+            mShaderConsts.push_back(desc);
+         else if (!globalBuffer)
+            mShaderConsts.push_back(desc);
 
          // now loop vars and add them to mShaderConsts.
          for (U32 j = 0; j < constantBufferDesc.Variables; j++)
@@ -869,10 +895,10 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection *refTable,
 
             // set the bind point to the same as the const buffer.
             varDesc.bindPoint = desc.bindPoint;
-            varDesc.offset = shaderVarDesc.StartOffset;
+            varDesc.offset = globalBuffer ? globalOffset + shaderVarDesc.StartOffset : shaderVarDesc.StartOffset;
             varDesc.arraySize = mMax(shaderTypeDesc.Elements, 1);
             varDesc.size = shaderVarDesc.Size;
-            varDesc.shaderStage = shaderStage;
+            varDesc.shaderStage = globalBuffer ? SHADER_STAGE::ALL_SHADERS : shaderStage;
             varDesc.samplerReg = -1;
 
 #ifdef D3D11_DEBUG_SPEW
@@ -925,6 +951,8 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection *refTable,
 
             mShaderConsts.push_back(varDesc);
          }
+
+         globalOffset += desc.size;
       }
       else if (shaderInputBind.Type == D3D_SIT_TEXTURE)
       {
@@ -1037,6 +1065,10 @@ void GFXD3D11Shader::_buildShaderConstantHandles()
 
          Vector<U8> buf;
          buf.setSize(desc.size);
+
+         if (desc.shaderStage == SHADER_STAGE::ALL_SHADERS)
+            buf.setSize(globalSize);
+
          // new buffer with our size.
          mBuffers[bufKey] = buf;
 

@@ -35,6 +35,7 @@ class GFXD3D11Shader;
 
 enum SHADER_STAGE
 {
+   ALL_SHADERS,
    VERTEX_SHADER,
    PIXEL_SHADER,
    GEOMETRY_SHADER,
@@ -229,6 +230,10 @@ protected:
    virtual void _buildShaderConstantHandles();
    void _buildInstancingShaderConstantHandles();
 
+
+   bool globalAdded;
+   U32 globalOffset;
+   U32 globalSize;
 };
 
 

@@ -26,7 +26,6 @@
 #include "core/util/safeDelete.h"
 #include "gfx/sim/cubemapData.h"
 #include "gfx/gfxShader.h"
-#include "gfx/genericConstBuffer.h"
 #include "gfx/gfxPrimitiveBuffer.h"
 #include "scene/sceneRenderState.h"
 #include "shaderGen/shaderFeature.h"

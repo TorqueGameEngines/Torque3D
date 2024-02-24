@@ -29,7 +29,6 @@
 #include "core/util/tDictionary.h"
 #include "gfx/gfxShader.h"
 #include "gfx/gfxResource.h"
-#include "gfx/genericConstBuffer.h"
 #include "gfx/D3D11/gfxD3D11Device.h"
 
 class GFXD3D11Shader;
@@ -50,7 +49,7 @@ typedef CompoundKey<U32, SHADER_STAGE> BufferKey;
 
 struct BufferRange
 {
-   U32 mBufMin = 0xFFFFFFFF;
+   U32 mBufMin = U32_MAX;
    U32 mBufMax = 0;
 
    inline void addSlot(U32 slot)
@@ -115,9 +114,6 @@ public:
    /// Called by GFXD3D11Device to activate this buffer.
    /// @param mPrevShaderBuffer The previously active buffer
    void activate(GFXD3D11ShaderConstBuffer *prevShaderBuffer);
-
-   /// Used internally by GXD3D11ShaderConstBuffer to determine if it's dirty.
-   bool isDirty();
 
    void addBuffer(U32 bufBindingPoint, SHADER_STAGE shaderStage, U32 size);
 
@@ -191,7 +187,6 @@ public:
    virtual GFXShaderConstHandle* getShaderConstHandle(const String& name); 
    virtual GFXShaderConstHandle* findShaderConstHandle(const String& name);
    virtual U32 getAlignmentValue(const GFXShaderConstType constType) const;
-   virtual bool getDisassembly( String &outStr ) const;
 
    // GFXResource
    virtual void zombify();
@@ -199,9 +194,7 @@ public:
 
 protected:
 
-   virtual bool _init();   
-
-   static const U32 smCompiledShaderTag;
+   virtual bool _init();
 
    ID3D11VertexShader *mVertShader;
    ID3D11PixelShader *mPixShader;
@@ -216,8 +209,7 @@ protected:
 
    /// Vector of descriptions (consolidated for the getShaderConstDesc call)
    Vector<GFXShaderConstDesc> mShaderConsts;
-
-   //Vector<ID3D11Buffer*> mDeviceBuffers;
+   Vector<GFXShaderConstDesc> mSamplerDescriptions;
 
    // These two functions are used when compiling shaders from hlsl
    virtual bool _compileShader( const Torque::Path &filePath, 

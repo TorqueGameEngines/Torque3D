@@ -149,7 +149,7 @@ public:
    virtual void zombify() {}
    virtual void resurrect() {}
 
-private:
+protected:
    friend class GFXD3D11Shader;
    /// We keep a weak reference to the shader 
    /// because it will often be deleted.
@@ -161,6 +161,9 @@ private:
 
    template<typename ConstType>
    void internalSet(GFXShaderConstHandle* handle, const AlignedArray<ConstType>& fv);
+
+   // we probably want this to be GFXDevice and not per shader.
+   ID3D11Buffer* mBoundConstantBuffers[16];
 };
 
 class gfxD3D11Include;
@@ -175,8 +178,7 @@ class GFXD3D11Shader : public GFXShader
 
 public:
    typedef Map<String, GFXD3D11ShaderConstHandle*> HandleMap;
-
-   typedef Map<BufferKey, U8*> BufferMap;
+   typedef Map<BufferKey, Vector<U8>> BufferMap;
 
    GFXD3D11Shader();
    virtual ~GFXD3D11Shader();   
@@ -199,9 +201,6 @@ protected:
    ID3D11VertexShader *mVertShader;
    ID3D11PixelShader *mPixShader;
 
-   // we probably want this to be GFXDevice and not per shader.
-   ID3D11Buffer* mBoundConstantBuffers[16];
-
    static gfxD3DIncludeRef smD3DInclude;
 
    HandleMap mHandles;
@@ -223,7 +222,6 @@ protected:
    virtual void _buildShaderConstantHandles();
    void _buildInstancingShaderConstantHandles();
 
-   void setConstantsFromBuffer(GFXD3D11ShaderConstBuffer* buffer);
 };
 
 

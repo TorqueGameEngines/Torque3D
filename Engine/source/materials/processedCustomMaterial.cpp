@@ -360,6 +360,7 @@ void ProcessedCustomMaterial::setTextureStages( SceneRenderState *state, const S
             break;
 
          case Material::Mask:
+         case Material::PhotometricMask:
          case Material::Standard:
          case Material::Bump:
          case Material::Detail:

@@ -107,13 +107,17 @@ TORQUE_UNIFORM_SAMPLER2D(shadowMap, 1);
 #include "softShadow.hlsl"
 TORQUE_UNIFORM_SAMPLER2D(colorBuffer, 3);
 TORQUE_UNIFORM_SAMPLER2D(matInfoBuffer, 4);
+
 /// The texture for cookie rendering.
 #ifdef SHADOW_CUBE
 TORQUE_UNIFORM_SAMPLERCUBE(cookieMap, 5);
 #else
 TORQUE_UNIFORM_SAMPLER2D(cookieMap, 5);
 #endif
-TORQUE_UNIFORM_SAMPLER2D(iesProfile, 6);
+
+#ifdef UES_PHOTOMETRIC_MASK
+TORQUE_UNIFORM_SAMPLER1D(iesProfile, 6);
+#endif
 
 uniform float4 rtParams0;
 uniform float4 lightColor;
@@ -223,17 +227,18 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
       return final;
    #endif
 
-      //get punctual light contribution   
-      lighting = getPunctualLight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, shadow);
-
    #ifdef UES_PHOTOMETRIC_MASK
       // Lookup the cookie sample.d
       float cosTheta = dot(-surfaceToLight.L, lightDirection); 
       float angle = acos(cosTheta) * ( M_1OVER_PI_F); 
-      float iesMask = TORQUE_TEX2D(iesProfile, float2(angle, 0.0)).r; 
+      float iesMask = TORQUE_TEX1D(iesProfile, angle).r;
       // Multiply the light with the iesMask tex.
-      lighting *= iesMask;
+      shadow *= iesMask;
    #endif
+   
+      //get punctual light contribution   
+      lighting = getPunctualLight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, shadow);
+
    }
    
 

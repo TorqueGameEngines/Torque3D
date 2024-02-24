@@ -108,6 +108,7 @@ uniform sampler2D deferredBuffer;
 #include "softShadow.glsl"
 uniform sampler2D colorBuffer;
 uniform sampler2D matInfoBuffer;
+
 #ifdef SHADOW_CUBE
 /// The texture for cookie rendering.
 uniform samplerCube cookieMap;
@@ -115,11 +116,14 @@ uniform samplerCube cookieMap;
 uniform sampler2D cookieMap;
 #endif
 
-uniform sampler2D iesProfile;
+#ifdef UES_PHOTOMETRIC_MASK
+uniform sampler1D iesProfile;
+#endif
 
 uniform vec4 rtParams0;
 
 uniform vec3 lightPosition;
+uniform vec3 lightDirection;
 uniform vec4 lightColor;
 uniform float  lightBrightness;
 uniform float  lightRange;
@@ -230,17 +234,18 @@ void main()
       OUT_col = vec4(final, 0);
       return
    #endif
-
-      //get punctual light contribution   
-      lighting = getPunctualLight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, shadow);
+   
    #ifdef UES_PHOTOMETRIC_MASK
       // Lookup the cookie sample.d
       float cosTheta = dot(-surfaceToLight.L, lightDirection); 
       float angle = acos(cosTheta) * ( M_1OVER_PI_F); 
-      float iesMask = texture(iesProfile, vec2(angle, 0.0)).r; 
+      float iesMask = texture(iesProfile,angle).r; 
       // Multiply the light with the iesMask tex.
-      lighting *= iesMask;
+      shadow *= iesMask;
    #endif
+
+      //get punctual light contribution   
+      lighting = getPunctualLight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, shadow);
    
    }
 

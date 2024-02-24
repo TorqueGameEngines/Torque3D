@@ -399,9 +399,9 @@ void AdvancedLightBinManager::render( SceneRenderState *state )
          sunLight->getCastShadows() &&
          !disableShadows &&
          sunLight->getExtended<ShadowMapParams>() )
-      vectorMatInfo = _getLightMaterial( LightInfo::Vector, ShadowType_PSSM );
+      vectorMatInfo = _getLightMaterial( LightInfo::Vector, ShadowType_PSSM,false,false );
    else
-      vectorMatInfo = _getLightMaterial( LightInfo::Vector, ShadowType_None );
+      vectorMatInfo = _getLightMaterial( LightInfo::Vector, ShadowType_None, false, false);
 
    // Initialize and set the per-frame parameters after getting
    // the vector light material as we use lazy creation.

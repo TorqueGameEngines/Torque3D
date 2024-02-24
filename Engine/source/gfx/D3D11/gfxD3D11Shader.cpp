@@ -251,7 +251,10 @@ void GFXD3D11ShaderConstBuffer::internalSet(GFXShaderConstHandle* handle, const 
    if (_dxHandle->mInstancingConstant)
       buf = mInstPtr + _dxHandle->mOffset;
 
-   dMemcpy(buf, &param, sizeof(ConstType));
+   if (dMemcmp(buf, &param, sizeof(ConstType)) != 0)
+   {
+      dMemcpy(buf, &param, sizeof(ConstType));
+   }
 }
 
 void GFXD3D11ShaderConstBuffer::set(GFXShaderConstHandle* handle, const AlignedArray<F32>& fv)
@@ -307,12 +310,12 @@ void GFXD3D11ShaderConstBuffer::internalSet(GFXShaderConstHandle* handle, const 
    const BufferKey bufDesc(_dxHandle->mBinding, (SHADER_STAGE)_dxHandle->mStage);
    U8* buf = mBufferMap[bufDesc].data;
    const U8* fvBuffer = static_cast<const U8*>(fv.getBuffer());
-   for (U32 i = 0; i < fv.size(); ++i)
-   {
-      dMemcpy(buf + _dxHandle->mOffset + i * sizeof(ConstType), fvBuffer, sizeof(ConstType));
-      fvBuffer += fv.getElementSize();
-   }
+   U32 size = fv.getElementSize() * fv.size();
 
+   if (dMemcmp(buf + _dxHandle->mOffset, fvBuffer, size) != 0)
+   {
+      dMemcpy(buf + _dxHandle->mOffset, fvBuffer, size);
+   }
 }
 
 void GFXD3D11ShaderConstBuffer::set(GFXShaderConstHandle* handle, const MatrixF& mat, const GFXShaderConstType matrixType) 
@@ -348,7 +351,10 @@ void GFXD3D11ShaderConstBuffer::set(GFXShaderConstHandle* handle, const MatrixF&
 
    if (matrixType == GFXSCT_Float4x4)
    {
-      dMemcpy(buf, &transposed, sizeof(MatrixF));
+      if (dMemcmp(buf + _dxHandle->mOffset, &transposed, sizeof(MatrixF)) != 0)
+      {
+         dMemcpy(buf + _dxHandle->mOffset, &transposed, sizeof(MatrixF));
+      }
       return;
    }
 
@@ -369,7 +375,10 @@ void GFXD3D11ShaderConstBuffer::set(GFXShaderConstHandle* handle, const MatrixF&
       break;
    }
 
-   dMemcpy(buf, (const F32*)transposed, csize);
+   if (dMemcmp(buf + _dxHandle->mOffset, &transposed, csize) != 0)
+   {
+      dMemcpy(buf + _dxHandle->mOffset, &transposed, csize);
+   }
 
 }
 
@@ -407,7 +416,10 @@ void GFXD3D11ShaderConstBuffer::set(GFXShaderConstHandle* handle, const MatrixF*
 
    if (matrixType == GFXSCT_Float4x4)
    {
-      dMemcpy(buf + _dxHandle->mOffset, transposed.address(), _dxHandle->getSize());
+      if (dMemcmp(buf + _dxHandle->mOffset, transposed.address(), sizeof(MatrixF) * arraySize) != 0)
+      {
+         dMemcpy(buf + _dxHandle->mOffset, transposed.address(), sizeof(MatrixF) * arraySize);
+      }
       return;
    }
 
@@ -430,7 +442,10 @@ void GFXD3D11ShaderConstBuffer::set(GFXShaderConstHandle* handle, const MatrixF*
 
    for (int i = 0; i < arraySize; i++)
    {
-      dMemcpy(buf + _dxHandle->mOffset + (i * csize), transposed[i], csize);
+      if (dMemcmp(buf + _dxHandle->mOffset + (i * csize), transposed[i], csize) != 0)
+      {
+         dMemcpy(buf + _dxHandle->mOffset + (i * csize), transposed[i], csize);
+      }
    }
 
 }
@@ -580,7 +595,6 @@ GFXD3D11Shader::GFXD3D11Shader()
       smD3DInclude = new gfxD3D11Include;
 
    globalAdded = false;
-   globalOffset = 0;
    globalSize = 0;
 }
 
@@ -836,14 +850,13 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection *refTable,
 
    D3D11_SHADER_DESC shaderDesc;
    refTable->GetDesc(&shaderDesc);
-
-   bool globalBuffer = false;
    // we loop through and account for the most common data types.
    for (U32 i = 0; i < shaderDesc.BoundResources; i++)
    {
       GFXShaderConstDesc desc;
       D3D11_SHADER_INPUT_BIND_DESC shaderInputBind;
       refTable->GetResourceBindingDesc(i, &shaderInputBind);
+      bool globalBuffer = false;
 
       if (shaderInputBind.Type == D3D_SIT_CBUFFER)
       {
@@ -870,11 +883,12 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection *refTable,
 #endif 
          // push back our const buffer as a descriptor, this also marks the start of a buffer.
          desc.size = constantBufferDesc.Size;
-
-         globalSize += desc.size;
-
-         if(globalBuffer && !globalAdded)
+         
+         if (globalBuffer && !globalAdded)
+         {
             mShaderConsts.push_back(desc);
+            globalAdded = true;
+         }
          else if (!globalBuffer)
             mShaderConsts.push_back(desc);
 
@@ -895,7 +909,7 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection *refTable,
 
             // set the bind point to the same as the const buffer.
             varDesc.bindPoint = desc.bindPoint;
-            varDesc.offset = globalBuffer ? globalOffset + shaderVarDesc.StartOffset : shaderVarDesc.StartOffset;
+            varDesc.offset = (globalBuffer && shaderStage != SHADER_STAGE::VERTEX_SHADER) ? globalSize + shaderVarDesc.StartOffset : shaderVarDesc.StartOffset;
             varDesc.arraySize = mMax(shaderTypeDesc.Elements, 1);
             varDesc.size = shaderVarDesc.Size;
             varDesc.shaderStage = globalBuffer ? SHADER_STAGE::ALL_SHADERS : shaderStage;
@@ -952,7 +966,7 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection *refTable,
             mShaderConsts.push_back(varDesc);
          }
 
-         globalOffset += desc.size;
+         globalSize += desc.size;
       }
       else if (shaderInputBind.Type == D3D_SIT_TEXTURE)
       {

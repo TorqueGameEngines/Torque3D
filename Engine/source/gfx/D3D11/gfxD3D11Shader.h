@@ -232,7 +232,6 @@ protected:
 
 
    bool globalAdded;
-   U32 globalOffset;
    U32 globalSize;
 };
 

@@ -61,6 +61,13 @@ struct BufferRange
    inline bool isValid() const { return mBufMin <= mBufMax; }
 };
 
+struct ConstantBuffer
+{
+   U8* data;
+   U32 size;
+   bool isDirty;
+};
+
 class GFXD3D11ShaderConstHandle : public GFXShaderConstHandle
 {
    friend class GFXD3D11Shader;
@@ -105,7 +112,7 @@ class GFXD3D11ShaderConstBuffer : public GFXShaderConstBuffer
    ID3D11DeviceContext* mDeviceContext;
 
 public:
-   typedef Map<BufferKey, U8*> BufferMap;
+   typedef Map<BufferKey, ConstantBuffer> BufferMap;
 
    GFXD3D11ShaderConstBuffer(GFXD3D11Shader* shader);
 
@@ -116,6 +123,9 @@ public:
    void activate(GFXD3D11ShaderConstBuffer *prevShaderBuffer);
 
    void addBuffer(U32 bufBindingPoint, SHADER_STAGE shaderStage, U32 size);
+
+   bool isDirty() { return mDirty; }
+   void setDirty(bool isDirty) { mDirty = isDirty; }
 
    /// Called from GFXD3D11Shader when constants have changed and need
    /// to be the shader this buffer references is reloaded.
@@ -164,6 +174,7 @@ protected:
 
    // we probably want this to be GFXDevice and not per shader.
    ID3D11Buffer* mBoundConstantBuffers[16];
+   bool mDirty;
 };
 
 class gfxD3D11Include;

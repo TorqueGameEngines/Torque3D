@@ -273,6 +273,7 @@ void GFXD3D11ShaderConstBuffer::internalSet(GFXShaderConstHandle* handle, const 
    case GFXSCT_Float2:
       if (size > sizeof(Point2F))
          size = _dxHandle->mDesc.size;
+         break;
    default:
       break;
    }

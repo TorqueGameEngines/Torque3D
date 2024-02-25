@@ -163,11 +163,9 @@ protected:
    WeakRefPtr<GFXD3D11Shader> mShader;
    BufferMap mBufferMap;
 
-   template<typename ConstType>
-   void internalSet(GFXShaderConstHandle* handle, const ConstType& param);
-
-   template<typename ConstType>
-   void internalSet(GFXShaderConstHandle* handle, const AlignedArray<ConstType>& fv);
+   void setMatrix(GFXShaderConstHandle* handle, const U32 inSize, const void* data);
+   void internalSet(GFXShaderConstHandle* handle, const U32 inSize, const void* data);
+   
 
    // we probably want this to be GFXDevice and not per shader.
    ID3D11Buffer* mBoundConstantBuffers[16];

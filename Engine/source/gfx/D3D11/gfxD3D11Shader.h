@@ -35,7 +35,6 @@ class GFXD3D11Shader;
 
 enum SHADER_STAGE
 {
-   ALL_SHADERS,
    VERTEX_SHADER,
    PIXEL_SHADER,
    GEOMETRY_SHADER,
@@ -186,7 +185,7 @@ class GFXD3D11Shader : public GFXShader
 
 public:
    typedef Map<String, GFXD3D11ShaderConstHandle*> HandleMap;
-   typedef Map<BufferKey, Vector<U8>> BufferMap;
+   typedef Map<String, GFXShaderConstDesc> BufferMap;
 
    GFXD3D11Shader();
    virtual ~GFXD3D11Shader();   
@@ -229,10 +228,6 @@ protected:
    // This is used in both cases
    virtual void _buildShaderConstantHandles();
    void _buildInstancingShaderConstantHandles();
-
-
-   bool globalAdded;
-   U32 globalSize;
 };
 
 

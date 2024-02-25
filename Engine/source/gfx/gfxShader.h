@@ -70,7 +70,7 @@ struct GFXShaderConstDesc
 {
 public:
    String name;
-   GFXShaderConstType constType;   
+   GFXShaderConstType constType;
    U32 arraySize;    // > 1 means it is an array!
    S32 bindPoint;    // bind point used for ubo/cb.
    S32 samplerReg;   // sampler register.

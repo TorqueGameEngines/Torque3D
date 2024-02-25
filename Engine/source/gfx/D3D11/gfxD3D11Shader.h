@@ -168,7 +168,7 @@ protected:
    
 
    // we probably want this to be GFXDevice and not per shader.
-   ID3D11Buffer* mBoundConstantBuffers[16];
+   ID3D11Buffer* mBoundConstantBuffers[6][16];
 };
 
 class gfxD3D11Include;

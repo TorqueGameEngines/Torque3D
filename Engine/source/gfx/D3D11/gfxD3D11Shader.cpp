@@ -164,8 +164,6 @@ GFXD3D11ShaderConstBuffer::GFXD3D11ShaderConstBuffer( GFXD3D11Shader* shader)
 
 GFXD3D11ShaderConstBuffer::~GFXD3D11ShaderConstBuffer()
 {
-   mBufferMap.clear();
-
    for (U32 i = 0; i < 6; i++)
    {
       for (U32 j = 0; j < 16; j++)
@@ -469,17 +467,11 @@ const String GFXD3D11ShaderConstBuffer::describeSelf() const
 void GFXD3D11ShaderConstBuffer::addBuffer(U32 bufBindingPoint, GFXShaderStage shaderStage, U32 size)
 {
    const BufferKey bufKey(bufBindingPoint, shaderStage);
-   BufferMap::Iterator buffer = mBufferMap.find(bufKey);
-   // already added? pass...
-   if (buffer != mBufferMap.end())
-      return;
-
-   // new buffer with our size.
+   // doesnt matter if its already added.
    U8* buf = new U8[size];
    dMemset(buf, 0, size);
    mBufferMap[bufKey].data = buf;
    mBufferMap[bufKey].size = size;
-   // always dirty on new.
    mBufferMap[bufKey].isDirty = true;
 
    D3D11_BUFFER_DESC cbDesc;
@@ -515,23 +507,31 @@ void GFXD3D11ShaderConstBuffer::activate( GFXD3D11ShaderConstBuffer *prevShaderB
 
       if (prevShaderBuffer != this)
       {
-
-         const ConstantBuffer prevBuffer = prevShaderBuffer->mBufferMap[i->key];
-
-         if (prevBuffer.data && !prevBuffer.isDirty)
+         if (prevShaderBuffer)
          {
-            if (prevBuffer.size != thisBuff.size)
-            {
-               thisBuff.isDirty = true;
-            }
+            const ConstantBuffer prevBuffer = prevShaderBuffer->mBufferMap[i->key];
 
-            if (dMemcmp(prevBuffer.data, thisBuff.data, thisBuff.size) != 0)
+            if (prevBuffer.data && !prevBuffer.isDirty)
             {
-               thisBuff.isDirty = true;
+               if (prevBuffer.size != thisBuff.size)
+               {
+                  thisBuff.isDirty = true;
+               }
+               else
+               {
+                  if (dMemcmp(prevBuffer.data, thisBuff.data, thisBuff.size) != 0)
+                  {
+                     thisBuff.isDirty = true;
+                  }
+                  else
+                  {
+                     thisBuff.isDirty = false;
+                  }
+               }
             }
             else
             {
-               thisBuff.isDirty = false;
+               thisBuff.isDirty = true;
             }
          }
          else
@@ -580,12 +580,6 @@ void GFXD3D11ShaderConstBuffer::onShaderReload( GFXD3D11Shader *shader )
       }
    }
 
-   for (BufferMap::Iterator i = mBufferMap.begin(); i != mBufferMap.end(); i++)
-   {
-      delete[] i->value.data;
-   }
-   mBufferMap.clear();
-
    for (GFXD3D11Shader::BufferMap::Iterator i = shader->mBuffers.begin(); i != shader->mBuffers.end(); ++i)
    {
       // add our buffer descriptions to the full const buffer.
@@ -614,9 +608,8 @@ GFXD3D11Shader::GFXD3D11Shader()
 
 GFXD3D11Shader::~GFXD3D11Shader()
 {
-   mHandles.clear();
-
-   mBuffers.clear();
+   for (HandleMap::Iterator i = mHandles.begin(); i != mHandles.end(); i++)
+      delete i->value;
 
    // release shaders
    SAFE_RELEASE(mVertShader);

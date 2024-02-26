@@ -613,7 +613,10 @@ GFXD3D11Shader::GFXD3D11Shader()
 GFXD3D11Shader::~GFXD3D11Shader()
 {
    for (auto& pair : mHandles) {
-      delete pair.value;
+      if (pair.value != nullptr) {
+         delete pair.value;
+         pair.value = nullptr;
+      }
    }
    mHandles.clear();
 
@@ -1079,8 +1082,9 @@ void GFXD3D11Shader::_buildShaderConstantHandles()
 {
    // Mark all existing handles as invalid.
    // Those that are found when parsing the descriptions will then be marked valid again.
-   for (HandleMap::Iterator iter = mHandles.begin(); iter != mHandles.end(); ++iter)
-      (iter->value)->setValid(false);
+   for (auto& pair : mHandles) {
+      pair.value->setValid(false);
+   }
 
    // loop through all constants, add them to the handle map
    // and add the const buffers to the buffer map.

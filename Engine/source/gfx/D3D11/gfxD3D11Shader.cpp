@@ -154,23 +154,25 @@ GFXD3D11ShaderConstBuffer::GFXD3D11ShaderConstBuffer( GFXD3D11Shader* shader)
 
    for (U32 i = 0; i < 6; i++)
    {
-      for (U32 j = 0; j < 16; j++)
-      {
-         mBoundConstantBuffers[i][j] = NULL;
-      }
+      VECTOR_SET_ASSOCIATION(mBoundConstVec[i]);
    }
-
 }
 
 GFXD3D11ShaderConstBuffer::~GFXD3D11ShaderConstBuffer()
 {
    for (U32 i = 0; i < 6; i++)
    {
-      for (U32 j = 0; j < 16; j++)
+      for (U32 j = 0; j < mBoundConstVec[i].size(); j++)
       {
-         SAFE_RELEASE(mBoundConstantBuffers[i][j]);
+         SAFE_RELEASE(mBoundConstVec[i][j]);
       }
+      mBoundConstVec[i].clear();
    }
+
+   for (auto& pair : mBufferMap) {
+      delete[] pair.value.data;
+   }
+   mBufferMap.clear(); // Clear the map
 
    if (mShader)
       mShader->_unlinkBuffer(this);
@@ -415,7 +417,7 @@ void GFXD3D11ShaderConstBuffer::set(GFXShaderConstHandle* handle, const MatrixF&
    if (_dxHandle->mInstancingConstant)
    {
       if (matrixType == GFXSCT_Float4x4)
-         dMemcpy(mInstPtr + _dxHandle->mOffset, mat, sizeof(mat));
+         dMemcpy(mInstPtr + _dxHandle->mDesc.offset, mat, sizeof(mat));
 
       // TODO: Support 3x3 and 2x2 matricies?      
       return;
@@ -474,6 +476,7 @@ void GFXD3D11ShaderConstBuffer::addBuffer(U32 bufBindingPoint, GFXShaderStage sh
    mBufferMap[bufKey].size = size;
    mBufferMap[bufKey].isDirty = true;
 
+   ID3D11Buffer* tempBuf;
    D3D11_BUFFER_DESC cbDesc;
    cbDesc.ByteWidth = size;
    cbDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -483,12 +486,14 @@ void GFXD3D11ShaderConstBuffer::addBuffer(U32 bufBindingPoint, GFXShaderStage sh
    cbDesc.StructureByteStride = 0;
 
    HRESULT hr;
-   hr = D3D11DEVICE->CreateBuffer(&cbDesc, NULL, &mBoundConstantBuffers[shaderStage][bufBindingPoint]);
+   hr = D3D11DEVICE->CreateBuffer(&cbDesc, NULL, &tempBuf);
 
    if (FAILED(hr))
    {
       AssertFatal(false, "can't create constant buffer");
    }
+
+   mBoundConstVec[shaderStage - 1].push_back(tempBuf);
 }
 
 void GFXD3D11ShaderConstBuffer::activate( GFXD3D11ShaderConstBuffer *prevShaderBuffer )
@@ -507,31 +512,24 @@ void GFXD3D11ShaderConstBuffer::activate( GFXD3D11ShaderConstBuffer *prevShaderB
 
       if (prevShaderBuffer != this)
       {
-         if (prevShaderBuffer)
-         {
-            const ConstantBuffer prevBuffer = prevShaderBuffer->mBufferMap[i->key];
+         const ConstantBuffer prevBuffer = prevShaderBuffer->mBufferMap[i->key];
 
-            if (prevBuffer.data && !prevBuffer.isDirty)
+         if (prevBuffer.data && !prevBuffer.isDirty)
+         {
+            if (prevBuffer.size != thisBuff.size)
             {
-               if (prevBuffer.size != thisBuff.size)
+               thisBuff.isDirty = true;
+            }
+            else
+            {
+               if (dMemcmp(prevBuffer.data, thisBuff.data, thisBuff.size) != 0)
                {
                   thisBuff.isDirty = true;
                }
                else
                {
-                  if (dMemcmp(prevBuffer.data, thisBuff.data, thisBuff.size) != 0)
-                  {
-                     thisBuff.isDirty = true;
-                  }
-                  else
-                  {
-                     thisBuff.isDirty = false;
-                  }
+                  thisBuff.isDirty = false;
                }
-            }
-            else
-            {
-               thisBuff.isDirty = true;
             }
          }
          else
@@ -542,25 +540,25 @@ void GFXD3D11ShaderConstBuffer::activate( GFXD3D11ShaderConstBuffer *prevShaderB
 
       if (thisBuff.data && thisBuff.isDirty)
       {
-         D3D11DEVICECONTEXT->UpdateSubresource(mBoundConstantBuffers[thisBufferDesc.key2][thisBufferDesc.key1], 0, NULL, thisBuff.data, thisBuff.size, 0);
-         bufRanges[thisBufferDesc.key2].addSlot(thisBufferDesc.key1);
+         D3D11DEVICECONTEXT->UpdateSubresource(mBoundConstVec[thisBufferDesc.key2 - 1][thisBufferDesc.key1], 0, NULL, thisBuff.data, thisBuff.size, 0);
+         bufRanges[thisBufferDesc.key2-1].addSlot(thisBufferDesc.key1);
       }
    }
 
-   if (mShader->mVertShader && bufRanges[GFXShaderStage::VERTEX_SHADER].isValid())
+   if (mShader->mVertShader && bufRanges[GFXShaderStage::VERTEX_SHADER - 1].isValid())
    {
-      const U32 bufStartSlot = bufRanges[GFXShaderStage::VERTEX_SHADER].mBufMin;
-      const U32 numBufs = bufRanges[GFXShaderStage::VERTEX_SHADER].mBufMax - bufRanges[GFXShaderStage::VERTEX_SHADER].mBufMin + 1;
-      ID3D11Buffer** vsBuffers = mBoundConstantBuffers[GFXShaderStage::VERTEX_SHADER] + bufStartSlot;
+      const U32 bufStartSlot = bufRanges[GFXShaderStage::VERTEX_SHADER - 1].mBufMin;
+      const U32 numBufs = bufRanges[GFXShaderStage::VERTEX_SHADER - 1].mBufMax - bufRanges[GFXShaderStage::VERTEX_SHADER - 1].mBufMin + 1;
+      ID3D11Buffer** vsBuffers = mBoundConstVec[GFXShaderStage::VERTEX_SHADER-1].address() + bufStartSlot;
 
       D3D11DEVICECONTEXT->VSSetConstantBuffers(bufStartSlot, numBufs, vsBuffers);
    }
 
-   if (mShader->mPixShader && bufRanges[GFXShaderStage::PIXEL_SHADER].isValid())
+   if (mShader->mPixShader && bufRanges[GFXShaderStage::PIXEL_SHADER - 1].isValid())
    {
-      const U32 bufStartSlot = bufRanges[GFXShaderStage::PIXEL_SHADER].mBufMin;
-      const U32 numBufs = bufRanges[GFXShaderStage::PIXEL_SHADER].mBufMax - bufRanges[GFXShaderStage::PIXEL_SHADER].mBufMin + 1;
-      ID3D11Buffer** psBuffers = mBoundConstantBuffers[GFXShaderStage::PIXEL_SHADER] + bufStartSlot;
+      const U32 bufStartSlot = bufRanges[GFXShaderStage::PIXEL_SHADER - 1].mBufMin;
+      const U32 numBufs = bufRanges[GFXShaderStage::PIXEL_SHADER - 1].mBufMax - bufRanges[GFXShaderStage::PIXEL_SHADER - 1].mBufMin + 1;
+      ID3D11Buffer** psBuffers = mBoundConstVec[GFXShaderStage::PIXEL_SHADER-1].address() + bufStartSlot;
 
       D3D11DEVICECONTEXT->PSSetConstantBuffers(bufStartSlot, numBufs, psBuffers);
    }
@@ -574,11 +572,17 @@ void GFXD3D11ShaderConstBuffer::onShaderReload( GFXD3D11Shader *shader )
 
    for (U32 i = 0; i < 6; i++)
    {
-      for (U32 j = 0; j < 16; j++)
+      for (U32 j = 0; j < mBoundConstVec[i].size(); j++)
       {
-         SAFE_RELEASE(mBoundConstantBuffers[i][j]);
+         SAFE_RELEASE(mBoundConstVec[i][j]);
       }
+      mBoundConstVec[i].clear();
    }
+
+   for (auto& pair : mBufferMap) {
+      delete[] pair.value.data;
+   }
+   mBufferMap.clear(); // Clear the map
 
    for (GFXD3D11Shader::BufferMap::Iterator i = shader->mBuffers.begin(); i != shader->mBuffers.end(); ++i)
    {
@@ -608,8 +612,10 @@ GFXD3D11Shader::GFXD3D11Shader()
 
 GFXD3D11Shader::~GFXD3D11Shader()
 {
-   for (HandleMap::Iterator i = mHandles.begin(); i != mHandles.end(); i++)
-      delete i->value;
+   for (auto& pair : mHandles) {
+      delete pair.value;
+   }
+   mHandles.clear();
 
    // release shaders
    SAFE_RELEASE(mVertShader);
@@ -653,6 +659,7 @@ bool GFXD3D11Shader::_init()
    if (!mPixelFile.isEmpty() && !_compileShader( mPixelFile, GFXShaderStage::PIXEL_SHADER, d3dMacros))
       return false;
 
+  
    _buildShaderConstantHandles();
 
    // Notify any existing buffers that the buffer 
@@ -879,7 +886,7 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection* refTable,
          desc.bindPoint = shaderInputBind.BindPoint;
          if (String::compare(desc.name, "$Globals") == 0 || String::compare(desc.name, "$Params") == 0)
          {
-            desc.name = desc.name + String::ToString((U32)shaderStage);
+            desc.name = desc.name + String::ToString((U32)shaderStage-1);
 
             if (foundGlobals)
                desc.bindPoint += 1;
@@ -887,12 +894,7 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection* refTable,
             foundGlobals = true;
          }
 
-         BufferMap::Iterator buffer = mBuffers.find(desc.name);
-         // already added?
-         if (buffer == mBuffers.end())
-         {
-            mBuffers[desc.name] = desc;
-         }
+         mBuffers[desc.name] = desc;
 
          // now loop vars and add them to mShaderConsts.
          for (U32 j = 0; j < constantBufferDesc.Variables; j++)
@@ -904,6 +906,10 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection* refTable,
 
             D3D11_SHADER_TYPE_DESC shaderTypeDesc;
             bufferVar->GetType()->GetDesc(&shaderTypeDesc);
+
+            bool unusedVar = shaderVarDesc.uFlags & D3D_SVF_USED ? false : true;
+            if (unusedVar)
+               continue;
 
             varDesc.name = String(shaderVarDesc.Name);
             if (varDesc.name.find("$") != 0)
@@ -955,7 +961,7 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection* refTable,
                   varDesc.constType = shaderTypeDesc.Columns == 4 ? GFXSCT_Float3x4 : GFXSCT_Float3x3;
                   break;
                case 4:
-                  varDesc.constType = shaderTypeDesc.Columns == 3 ? GFXSCT_Float3x3 : GFXSCT_Float4x4;
+                  varDesc.constType = shaderTypeDesc.Columns == 3 ? GFXSCT_Float4x3 : GFXSCT_Float4x4;
                   break;
                }
             }

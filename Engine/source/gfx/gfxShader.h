@@ -65,6 +65,17 @@ class GFXShader;
 class GFXVertexFormat;
 
 
+enum GFXShaderStage
+{
+   VERTEX_SHADER     = BIT(0),
+   PIXEL_SHADER      = BIT(1),
+   GEOMETRY_SHADER   = BIT(2),
+   DOMAIN_SHADER     = BIT(3),
+   HULL_SHADER       = BIT(4),
+   COMPUTE_SHADER    = BIT(5),
+   UNKNOWN_STAGE     = 0
+};
+
 /// Instances of this struct are returned GFXShaderConstBuffer
 struct GFXShaderConstDesc 
 {
@@ -76,7 +87,7 @@ public:
    S32 samplerReg;   // sampler register.
    U32 offset;       // offset for vars
    U32 size;         // size of buffer/type
-   U32 shaderStage;  // only used dx side.
+   GFXShaderStage shaderStage;  // only used dx side.
 };
 
 /// This is an opaque handle used by GFXShaderConstBuffer clients to set individual shader constants.

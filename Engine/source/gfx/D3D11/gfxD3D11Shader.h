@@ -33,19 +33,7 @@
 
 class GFXD3D11Shader;
 
-enum SHADER_STAGE
-{
-   VERTEX_SHADER,
-   PIXEL_SHADER,
-   GEOMETRY_SHADER,
-   DOMAIN_SHADER,
-   HULL_SHADER,
-   COMPUTE_SHADER,
-   UNKNOWN_STAGE
-};
-
-
-typedef CompoundKey<U32, SHADER_STAGE> BufferKey;
+typedef CompoundKey<U32, GFXShaderStage> BufferKey;
 
 struct BufferRange
 {
@@ -101,7 +89,7 @@ public:
    U32 mSize;
    S32 mBinding; // buffer binding point used to map handles to buffers.
    S32 mSampler; // sampler number, will be -1 if not a sampler.
-   SHADER_STAGE mStage;
+   U32 mStageFlags;
    bool mInstancingConstant;
 };
 
@@ -122,7 +110,7 @@ public:
    /// @param mPrevShaderBuffer The previously active buffer
    void activate(GFXD3D11ShaderConstBuffer *prevShaderBuffer);
 
-   void addBuffer(U32 bufBindingPoint, SHADER_STAGE shaderStage, U32 size);
+   void addBuffer(U32 bufBindingPoint, GFXShaderStage shaderStage, U32 size);
 
    /// Called from GFXD3D11Shader when constants have changed and need
    /// to be the shader this buffer references is reloaded.
@@ -163,7 +151,7 @@ protected:
    WeakRefPtr<GFXD3D11Shader> mShader;
    BufferMap mBufferMap;
 
-   void setMatrix(GFXShaderConstHandle* handle, const U32 inSize, const void* data);
+   void setMatrix(GFXShaderConstHandle* handle, const U32 inSize, const void* data, U8* basePointer);
    void internalSet(GFXShaderConstHandle* handle, const U32 inSize, const void* data);
    
 
@@ -217,11 +205,11 @@ protected:
 
    // These two functions are used when compiling shaders from hlsl
    virtual bool _compileShader( const Torque::Path &filePath, 
-                                SHADER_STAGE shaderStage, 
+                                 GFXShaderStage shaderStage,
                                 const D3D_SHADER_MACRO *defines);
 
    void _getShaderConstants( ID3D11ShaderReflection* refTable,
-                             SHADER_STAGE shaderStage);
+                              GFXShaderStage shaderStage);
   
    // This is used in both cases
    virtual void _buildShaderConstantHandles();

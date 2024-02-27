@@ -60,16 +60,18 @@ class GFXD3D11ShaderConstHandle : public GFXShaderConstHandle
 {
    friend class GFXD3D11Shader;
 public:
+   typedef Map<GFXShaderStage, GFXShaderConstDesc> DescMap;
 
    GFXD3D11ShaderConstHandle(GFXD3D11Shader* shader);
    GFXD3D11ShaderConstHandle(GFXD3D11Shader* shader,
                               const GFXShaderConstDesc& desc);
 
    virtual ~GFXD3D11ShaderConstHandle();
-   void reinit(const GFXShaderConstDesc& desc);
-   const String& getName() const { return mDesc.name; }
-   GFXShaderConstType getType() const { return mDesc.constType; }
-   U32 getArraySize() const { return mDesc.arraySize; }
+   void addDesc(GFXShaderStage stage, const GFXShaderConstDesc& desc);
+   const GFXShaderConstDesc getDesc(GFXShaderStage stage);
+   const String& getName() const { return mName; }
+   GFXShaderConstType getType() const { return mType; }
+   U32 getArraySize() const { return mArraySize; }
 
    U32 getSize() const { return mSize; }
    void setValid(bool valid) { mValid = valid; }
@@ -83,11 +85,20 @@ public:
       return (getType() >= GFXSCT_Sampler);
    }
 
-   GFXShaderConstDesc mDesc;
+   /// Restore to uninitialized state.
+   void clear()
+   {
+      mShader = NULL;
+      mInstancingConstant = false;
+      mValid = false;
+   }
+
    GFXD3D11Shader* mShader;
-   U32 mOffset;
+   DescMap mDescMap;
+   String mName;
+   GFXShaderConstType mType;
    U32 mSize;
-   S32 mBinding; // buffer binding point used to map handles to buffers.
+   U32 mArraySize;
    S32 mSampler; // sampler number, will be -1 if not a sampler.
    U32 mStageFlags;
    bool mInstancingConstant;
@@ -151,7 +162,7 @@ protected:
    WeakRefPtr<GFXD3D11Shader> mShader;
    BufferMap mBufferMap;
 
-   void setMatrix(GFXShaderConstHandle* handle, const U32 inSize, const void* data, U8* basePointer);
+   void setMatrix(const GFXShaderConstDesc& handle, const U32 inSize, const void* data, U8* basePointer);
    void internalSet(GFXShaderConstHandle* handle, const U32 inSize, const void* data);
    
    // we probably want this to be GFXDevice and not per shader.

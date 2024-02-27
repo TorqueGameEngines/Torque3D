@@ -246,8 +246,16 @@ void GFXD3D11ShaderConstBuffer::internalSet(GFXShaderConstHandle* handle, const 
    {
       if (_dxHandle->mStageFlags & i)
       {
+         S32 shaderStageID = -1; // Initialize to -1 (bit not found)
+         for (int j = 0; j < sizeof(S32) * 8; ++j) {
+            if (i & (1 << j)) {
+               shaderStageID = j;
+               break;
+            }
+         }
+
          GFXShaderConstDesc constDesc = _dxHandle->getDesc((GFXShaderStage)i);
-         BufferKey bufDesc(constDesc.bindPoint, (GFXShaderStage)i);
+         BufferKey bufDesc(constDesc.bindPoint, shaderStageID);
          U8* basePointer = mBufferMap[bufDesc].data;
 
          if (_dxHandle->mInstancingConstant)
@@ -457,7 +465,15 @@ const String GFXD3D11ShaderConstBuffer::describeSelf() const
 
 void GFXD3D11ShaderConstBuffer::addBuffer(U32 bufBindingPoint, GFXShaderStage shaderStage, U32 size)
 {
-   const BufferKey bufKey(bufBindingPoint, shaderStage);
+   S32 shaderStageID = -1; // Initialize to -1 (bit not found)
+   for (int i = 0; i < sizeof(S32) * 8; ++i) {
+      if (shaderStage & (1 << i)) {
+         shaderStageID = i;
+         break;
+      }
+   }
+
+   const BufferKey bufKey(bufBindingPoint, shaderStageID);
    // doesnt matter if its already added.
    U8* buf = new U8[size];
    dMemset(buf, 0, size);
@@ -482,7 +498,7 @@ void GFXD3D11ShaderConstBuffer::addBuffer(U32 bufBindingPoint, GFXShaderStage sh
       AssertFatal(false, "can't create constant buffer");
    }
 
-   mBoundConstVec[shaderStage - 1].push_back(tempBuf);
+   mBoundConstVec[shaderStageID].push_back(tempBuf);
 }
 
 void GFXD3D11ShaderConstBuffer::activate( GFXD3D11ShaderConstBuffer *prevShaderBuffer )
@@ -529,25 +545,25 @@ void GFXD3D11ShaderConstBuffer::activate( GFXD3D11ShaderConstBuffer *prevShaderB
 
       if (thisBuff.data && thisBuff.isDirty)
       {
-         D3D11DEVICECONTEXT->UpdateSubresource(mBoundConstVec[thisBufferDesc.key2 - 1][thisBufferDesc.key1], 0, NULL, thisBuff.data, thisBuff.size, 0);
-         bufRanges[thisBufferDesc.key2-1].addSlot(thisBufferDesc.key1);
+         D3D11DEVICECONTEXT->UpdateSubresource(mBoundConstVec[thisBufferDesc.key2][thisBufferDesc.key1], 0, NULL, thisBuff.data, thisBuff.size, 0);
+         bufRanges[thisBufferDesc.key2].addSlot(thisBufferDesc.key1);
       }
    }
 
-   if (mShader->mVertShader && bufRanges[GFXShaderStage::VERTEX_SHADER - 1].isValid())
+   if (mShader->mVertShader && bufRanges[0].isValid())
    {
-      const U32 bufStartSlot = bufRanges[GFXShaderStage::VERTEX_SHADER - 1].mBufMin;
-      const U32 numBufs = bufRanges[GFXShaderStage::VERTEX_SHADER - 1].mBufMax - bufRanges[GFXShaderStage::VERTEX_SHADER - 1].mBufMin + 1;
-      ID3D11Buffer** vsBuffers = mBoundConstVec[GFXShaderStage::VERTEX_SHADER-1].address() + bufStartSlot;
+      const U32 bufStartSlot = bufRanges[0].mBufMin;
+      const U32 numBufs = bufRanges[0].mBufMax - bufRanges[0].mBufMin + 1;
+      ID3D11Buffer** vsBuffers = mBoundConstVec[0].address() + bufStartSlot;
 
       D3D11DEVICECONTEXT->VSSetConstantBuffers(bufStartSlot, numBufs, vsBuffers);
    }
 
-   if (mShader->mPixShader && bufRanges[GFXShaderStage::PIXEL_SHADER - 1].isValid())
+   if (mShader->mPixShader && bufRanges[1].isValid())
    {
-      const U32 bufStartSlot = bufRanges[GFXShaderStage::PIXEL_SHADER - 1].mBufMin;
-      const U32 numBufs = bufRanges[GFXShaderStage::PIXEL_SHADER - 1].mBufMax - bufRanges[GFXShaderStage::PIXEL_SHADER - 1].mBufMin + 1;
-      ID3D11Buffer** psBuffers = mBoundConstVec[GFXShaderStage::PIXEL_SHADER-1].address() + bufStartSlot;
+      const U32 bufStartSlot = bufRanges[1].mBufMin;
+      const U32 numBufs = bufRanges[1].mBufMax - bufRanges[1].mBufMin + 1;
+      ID3D11Buffer** psBuffers = mBoundConstVec[1].address() + bufStartSlot;
 
       D3D11DEVICECONTEXT->PSSetConstantBuffers(bufStartSlot, numBufs, psBuffers);
    }
@@ -891,7 +907,6 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection* refTable,
          // now loop vars and add them to mShaderConsts.
          for (U32 j = 0; j < constantBufferDesc.Variables; j++)
          {
-            GFXShaderConstDesc varDesc;
             ID3D11ShaderReflectionVariable* bufferVar = constantBuffer->GetVariableByIndex(j);
             D3D11_SHADER_VARIABLE_DESC shaderVarDesc;
             bufferVar->GetDesc(&shaderVarDesc);
@@ -903,67 +918,49 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection* refTable,
             if (unusedVar)
                continue;
 
-            varDesc.name = String(shaderVarDesc.Name);
-            if (varDesc.name.find("$") != 0)
-               varDesc.name = String::ToString("$%s", varDesc.name.c_str());
-
-            // set the bind point to the same as the const buffer.
-            varDesc.bindPoint = desc.bindPoint;
-            varDesc.offset = shaderVarDesc.StartOffset;
-            varDesc.arraySize = mMax(shaderTypeDesc.Elements, 1);
-            varDesc.size = shaderVarDesc.Size;
-            varDesc.shaderStage = shaderStage;
-            varDesc.samplerReg = -1;
-
-#ifdef D3D11_DEBUG_SPEW
-            Con::printf("Variable Name %s:, offset: %d, size: %d, constantDesc.Elements: %d", varDesc.name.c_str(), varDesc.StartOffset, varDesc.Size, varDesc.arraySize);
-#endif   
-
-            if (shaderTypeDesc.Class == D3D_SVC_SCALAR || shaderTypeDesc.Class == D3D_SVC_VECTOR)
-            {
-               switch (shaderTypeDesc.Type)
-               {
-               case D3D_SVT_BOOL:
-                  varDesc.constType = (GFXShaderConstType)((U32)GFXSCT_Bool + shaderTypeDesc.Columns - 1);
-                  break;
-               case D3D_SVT_INT:
-                  varDesc.constType = (GFXShaderConstType)((U32)GFXSCT_Int + shaderTypeDesc.Columns - 1);
-                  break;
-               case D3D_SVT_FLOAT:
-                  varDesc.constType = (GFXShaderConstType)((U32)GFXSCT_Float + shaderTypeDesc.Columns - 1);
-                  break;
-               case D3D_SVT_UINT:
-                  varDesc.constType = (GFXShaderConstType)((U32)GFXSCT_UInt + shaderTypeDesc.Columns - 1);
-                  break;
-               default:
-                  AssertFatal(false, "Unknown shader constant class enum, maybe you could add it?");
-                  break;
-               }
-            }
-            else if (shaderTypeDesc.Class == D3D_SVC_MATRIX_COLUMNS || shaderTypeDesc.Class == D3D_SVC_MATRIX_ROWS)
-            {
-               if (shaderTypeDesc.Type != D3D_SVT_FLOAT)
-               {
-                  AssertFatal(false, "Only Float matrices are supported for now. Support for other types needs to be added.");
-               }
-
-               switch (shaderTypeDesc.Rows)
-               {
-               case 3:
-                  varDesc.constType = shaderTypeDesc.Columns == 4 ? GFXSCT_Float3x4 : GFXSCT_Float3x3;
-                  break;
-               case 4:
-                  varDesc.constType = shaderTypeDesc.Columns == 3 ? GFXSCT_Float4x3 : GFXSCT_Float4x4;
-                  break;
-               }
-            }
-            else if (shaderTypeDesc.Class == D3D_SVC_STRUCT)
+            if (shaderTypeDesc.Class == D3D_SVC_STRUCT)
             {
                // we gotta loop through its variables =/ add support in future. for now continue so it skips.
+               // no idea how to handle arrays of structs....
+               /*for (U32 j = 0; j < shaderTypeDesc.Members; j++)
+               {
+                  GFXShaderConstDesc memVarDesc;
+                  ID3D11ShaderReflectionType* memType = bufferVar->GetType()->GetMemberTypeByIndex(j);
+                  D3D11_SHADER_TYPE_DESC memTypeDesc;
+                  memType->GetDesc(&memTypeDesc);
+                  memVarDesc.name = String(shaderVarDesc.Name) + "." + String(memTypeDesc.Name);
+                  if (memVarDesc.name.find("$") != 0)
+                     memVarDesc.name = String::ToString("$%s", memVarDesc.name.c_str());
+
+               #ifdef D3D11_DEBUG_SPEW
+                  Con::printf("Variable Name %s:, offset: %d", memVarDesc.name.c_str(), memVarDesc.Offset);
+               #endif
+
+               }*/
+
                continue;
             }
+            else
+            {
+               GFXShaderConstDesc varDesc;
+               varDesc.name = String(shaderVarDesc.Name);
+               if (varDesc.name.find("$") != 0)
+                  varDesc.name = String::ToString("$%s", varDesc.name.c_str());
 
-            mShaderConsts.push_back(varDesc);
+               // set the bind point to the same as the const buffer.
+               varDesc.bindPoint = desc.bindPoint;
+               varDesc.offset = shaderVarDesc.StartOffset;
+               varDesc.arraySize = mMax(shaderTypeDesc.Elements, 1);
+               varDesc.size = shaderVarDesc.Size;
+               varDesc.shaderStage = shaderStage;
+               varDesc.samplerReg = -1;
+               varDesc.constType = convertConstType(shaderTypeDesc);
+
+#ifdef D3D11_DEBUG_SPEW
+               Con::printf("Variable Name %s:, offset: %d, size: %d, constantDesc.Elements: %d", varDesc.name.c_str(), varDesc.StartOffset, varDesc.Size, varDesc.arraySize);
+#endif   
+               mShaderConsts.push_back(varDesc);
+            }
          }
          
       }
@@ -1065,6 +1062,49 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection* refTable,
          // these should return shaderResourceViews and add them to shaderResources.
       }
    }
+}
+
+GFXShaderConstType GFXD3D11Shader::convertConstType(const D3D11_SHADER_TYPE_DESC typeDesc)
+{
+   if (typeDesc.Class == D3D_SVC_SCALAR || typeDesc.Class == D3D_SVC_VECTOR)
+   {
+      switch (typeDesc.Type)
+      {
+      case D3D_SVT_BOOL:
+         return (GFXShaderConstType)((U32)GFXSCT_Bool + typeDesc.Columns - 1);
+         break;
+      case D3D_SVT_INT:
+         return (GFXShaderConstType)((U32)GFXSCT_Int + typeDesc.Columns - 1);
+         break;
+      case D3D_SVT_FLOAT:
+         return (GFXShaderConstType)((U32)GFXSCT_Float + typeDesc.Columns - 1);
+         break;
+      case D3D_SVT_UINT:
+         return (GFXShaderConstType)((U32)GFXSCT_UInt + typeDesc.Columns - 1);
+         break;
+      default:
+         AssertFatal(false, "Unknown shader constant class enum, maybe you could add it?");
+         break;
+      }
+   }
+   else if (typeDesc.Class == D3D_SVC_MATRIX_COLUMNS || typeDesc.Class == D3D_SVC_MATRIX_ROWS)
+   {
+      if (typeDesc.Type != D3D_SVT_FLOAT)
+      {
+         AssertFatal(false, "Only Float matrices are supported for now. Support for other types needs to be added.");
+      }
+
+      switch (typeDesc.Rows)
+      {
+      case 3:
+         return typeDesc.Columns == 4 ? GFXSCT_Float3x4 : GFXSCT_Float3x3;
+         break;
+      case 4:
+         return typeDesc.Columns == 3 ? GFXSCT_Float4x3 : GFXSCT_Float4x4;
+         break;
+      }
+   }
+   
 }
 
 void GFXD3D11Shader::_buildShaderConstantHandles()

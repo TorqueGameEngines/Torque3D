@@ -33,7 +33,7 @@
 
 class GFXD3D11Shader;
 
-typedef CompoundKey<U32, GFXShaderStage> BufferKey;
+typedef CompoundKey<U32, U32> BufferKey;
 
 struct BufferRange
 {
@@ -224,6 +224,9 @@ protected:
    // This is used in both cases
    virtual void _buildShaderConstantHandles();
    void _buildInstancingShaderConstantHandles();
+
+   GFXShaderConstType convertConstType(D3D11_SHADER_TYPE_DESC typeDesc);
+
 };
 
 

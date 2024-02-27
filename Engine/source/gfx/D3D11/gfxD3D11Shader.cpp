@@ -864,7 +864,6 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection* refTable,
       AssertFatal(false, "Shader Reflection table unable to be created");
    }
    // we loop through and account for the most common data types.
-   bool foundGlobals = false;
    for (U32 i = 0; i < shaderDesc.ConstantBuffers; i++)
    {
       GFXShaderConstDesc desc;
@@ -885,11 +884,6 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection* refTable,
          if (String::compare(desc.name, "$Globals") == 0 || String::compare(desc.name, "$Params") == 0)
          {
             desc.name = desc.name + String::ToString((U32)shaderStage-1);
-
-            if (foundGlobals)
-               desc.bindPoint += 1;
-
-            foundGlobals = true;
          }
 
          mBuffers[desc.name] = desc;

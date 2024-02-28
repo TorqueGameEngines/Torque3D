@@ -58,10 +58,12 @@ torqueAddSourceDirectories("platform" "platform/threads" "platform/async"
 
 torqueAddSourceDirectories("platform/nativeDialogs")
 # Handle T3D
-torqueAddSourceDirectories("T3D/fps" "T3D/fx" "T3D/vehicles" "T3D/physics"
-                              "T3D/decal" "T3D/sfx" "T3D/gameBase" "T3D/turret"
-                              "T3D/lighting" "T3D/gameOBjects" "T3D/components"
-                              "T3D/systems" "T3D/assets" "T3D" "T3D/gameBase/std")
+torqueAddSourceDirectories( "T3D" "T3D/assets" "T3D/decal" "T3D/examples" "T3D/fps" "T3D/fx" 
+                           "T3D/gameBase" "T3D/gameBase/std"
+                           "T3D/lighting"
+                           "T3D/physics"
+#                          "T3D/components" "T3D/sceneComponent" "T3D/systems" "T3D/gameOBjects" 
+                           "T3D/sfx" "T3D/turret" "T3D/vehicles")
 
 # Handle TS
 torqueAddSourceDirectories("ts" "ts/collada" "ts/assimp" "ts/loader" "ts/arch")

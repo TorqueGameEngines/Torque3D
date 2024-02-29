@@ -122,15 +122,17 @@ MatrixF AssimpAppNode::getTransform(F32 time)
 void AssimpAppNode::getAnimatedTransform(MatrixF& mat, F32 t, aiAnimation* animSeq)
 {
    // Find the channel for this node
-   for (U32 i = 0; i < animSeq->mNumChannels; ++i)
+   for (U32 k = 0; k < animSeq->mNumChannels; ++k)
    {
-      if (strcmp(mName, animSeq->mChannels[i]->mNodeName.C_Str()) == 0)
+      if (dStrcmp(mName, animSeq->mChannels[k]->mNodeName.C_Str()) == 0)
       {
-         aiNodeAnim *nodeAnim = animSeq->mChannels[i];
+         aiNodeAnim *nodeAnim = animSeq->mChannels[k];
          Point3F trans(Point3F::Zero);
          Point3F scale(Point3F::One);
          QuatF rot;
          rot.identity();
+         // T is in seconds, convert to frames.
+         F32 frame = (t * animSeq->mTicksPerSecond + 0.5f) + 1.0f;
 
          // Transform
          if (nodeAnim->mNumPositionKeys == 1)
@@ -143,13 +145,13 @@ void AssimpAppNode::getAnimatedTransform(MatrixF& mat, F32 t, aiAnimation* animS
             {
                F32 curT = sTimeMultiplier * (F32)nodeAnim->mPositionKeys[key].mTime;
                curPos.set(nodeAnim->mPositionKeys[key].mValue.x, nodeAnim->mPositionKeys[key].mValue.y, nodeAnim->mPositionKeys[key].mValue.z);
-               if ((curT > t) && (key > 0))
+               if ((curT > frame) && (key > 0))
                {
-                  F32 factor = (t - lastT) / (curT - lastT);
+                  F32 factor = (frame - lastT) / (curT - lastT);
                   trans.interpolate(lastPos, curPos, factor);
                   break;
                }
-               else if ((curT >= t) || (key == nodeAnim->mNumPositionKeys - 1))
+               else if ((curT >= frame) || (key == nodeAnim->mNumPositionKeys - 1))
                {
                   trans = curPos;
                   break;
@@ -173,13 +175,13 @@ void AssimpAppNode::getAnimatedTransform(MatrixF& mat, F32 t, aiAnimation* animS
                F32 curT = sTimeMultiplier * (F32)nodeAnim->mRotationKeys[key].mTime;
                curRot.set(nodeAnim->mRotationKeys[key].mValue.x, nodeAnim->mRotationKeys[key].mValue.y,
                   nodeAnim->mRotationKeys[key].mValue.z, nodeAnim->mRotationKeys[key].mValue.w);
-               if ((curT > t) && (key > 0))
+               if ((curT > frame) && (key > 0))
                {
-                  F32 factor = (t - lastT) / (curT - lastT);
+                  F32 factor = (frame - lastT) / (curT - lastT);
                   rot.interpolate(lastRot, curRot, factor);
                   break;
                }
-               else if ((curT >= t) || (key == nodeAnim->mNumRotationKeys - 1))
+               else if ((curT >= frame) || (key == nodeAnim->mNumRotationKeys - 1))
                {
                   rot = curRot;
                   break;
@@ -201,13 +203,13 @@ void AssimpAppNode::getAnimatedTransform(MatrixF& mat, F32 t, aiAnimation* animS
             {
                F32 curT = sTimeMultiplier * (F32)nodeAnim->mScalingKeys[key].mTime;
                curScale.set(nodeAnim->mScalingKeys[key].mValue.x, nodeAnim->mScalingKeys[key].mValue.y, nodeAnim->mScalingKeys[key].mValue.z);
-               if ((curT > t) && (key > 0))
+               if ((curT > frame) && (key > 0))
                {
-                  F32 factor = (t - lastT) / (curT - lastT);
+                  F32 factor = (frame - lastT) / (curT - lastT);
                   scale.interpolate(lastScale, curScale, factor);
                   break;
                }
-               else if ((curT >= t) || (key == nodeAnim->mNumScalingKeys - 1))
+               else if ((curT >= frame) || (key == nodeAnim->mNumScalingKeys - 1))
                {
                   scale = curScale;
                   break;

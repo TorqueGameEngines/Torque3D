@@ -164,9 +164,8 @@ protected:
 
    void setMatrix(const GFXShaderConstDesc& handle, const U32 inSize, const void* data, U8* basePointer);
    void internalSet(GFXShaderConstHandle* handle, const U32 inSize, const void* data);
-   
-   // we probably want this to be GFXDevice and not per shader.
-   Vector<ID3D11Buffer*> mBoundConstVec[6];
+
+   ID3D11Buffer* mBoundBuffers[6][3];
 };
 
 class gfxD3D11Include;

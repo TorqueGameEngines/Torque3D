@@ -147,7 +147,10 @@ GFXD3D11ShaderConstBuffer::GFXD3D11ShaderConstBuffer(GFXD3D11Shader* shader)
 
    for (U32 i = 0; i < 6; i++)
    {
-      VECTOR_SET_ASSOCIATION(mBoundConstVec[i]);
+      for (U32 j = 0; j < 3; j++)
+      {
+         mBoundBuffers[i][j] = NULL;
+      }
    }
 }
 
@@ -155,11 +158,10 @@ GFXD3D11ShaderConstBuffer::~GFXD3D11ShaderConstBuffer()
 {
    for (U32 i = 0; i < 6; i++)
    {
-      for (U32 j = 0; j < mBoundConstVec[i].size(); j++)
+      for (U32 j = 0; j < 3; j++)
       {
-         SAFE_RELEASE(mBoundConstVec[i][j]);
+         SAFE_RELEASE(mBoundBuffers[i][j]);
       }
-      mBoundConstVec[i].clear();
    }
 
    for (auto& pair : mBufferMap) {
@@ -481,7 +483,7 @@ void GFXD3D11ShaderConstBuffer::addBuffer(U32 bufBindingPoint, GFXShaderStage sh
    mBufferMap[bufKey].size = size;
    mBufferMap[bufKey].isDirty = true;
 
-   ID3D11Buffer* tempBuf;
+   //ID3D11Buffer* tempBuf;
    D3D11_BUFFER_DESC cbDesc;
    cbDesc.ByteWidth = size;
    cbDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -491,22 +493,17 @@ void GFXD3D11ShaderConstBuffer::addBuffer(U32 bufBindingPoint, GFXShaderStage sh
    cbDesc.StructureByteStride = 0;
 
    HRESULT hr;
-   hr = D3D11DEVICE->CreateBuffer(&cbDesc, NULL, &tempBuf);
+   hr = D3D11DEVICE->CreateBuffer(&cbDesc, NULL, &mBoundBuffers[(U32)shaderStageID][bufBindingPoint]);
 
    if (FAILED(hr))
    {
       AssertFatal(false, "can't create constant buffer");
    }
-
-   mBoundConstVec[shaderStageID].push_back(tempBuf);
 }
 
 void GFXD3D11ShaderConstBuffer::activate( GFXD3D11ShaderConstBuffer *prevShaderBuffer )
 {
    PROFILE_SCOPE(GFXD3D11ShaderConstBuffer_activate);
-
-   if (prevShaderBuffer == NULL)
-      return;
 
    BufferRange bufRanges[6];
 
@@ -515,7 +512,7 @@ void GFXD3D11ShaderConstBuffer::activate( GFXD3D11ShaderConstBuffer *prevShaderB
       const BufferKey thisBufferDesc = i->key;
       ConstantBuffer thisBuff = i->value;
 
-      if (prevShaderBuffer != this)
+      if (prevShaderBuffer && prevShaderBuffer != this)
       {
          const ConstantBuffer prevBuffer = prevShaderBuffer->mBufferMap[i->key];
 
@@ -542,10 +539,14 @@ void GFXD3D11ShaderConstBuffer::activate( GFXD3D11ShaderConstBuffer *prevShaderB
             thisBuff.isDirty = true;
          }
       }
+      else
+      {
+         thisBuff.isDirty = true;
+      }
 
       if (thisBuff.data && thisBuff.isDirty)
       {
-         D3D11DEVICECONTEXT->UpdateSubresource(mBoundConstVec[thisBufferDesc.key2][thisBufferDesc.key1], 0, NULL, thisBuff.data, thisBuff.size, 0);
+         D3D11DEVICECONTEXT->UpdateSubresource(mBoundBuffers[thisBufferDesc.key2][thisBufferDesc.key1], 0, NULL, thisBuff.data, thisBuff.size, 0);
          bufRanges[thisBufferDesc.key2].addSlot(thisBufferDesc.key1);
       }
    }
@@ -554,7 +555,7 @@ void GFXD3D11ShaderConstBuffer::activate( GFXD3D11ShaderConstBuffer *prevShaderB
    {
       const U32 bufStartSlot = bufRanges[0].mBufMin;
       const U32 numBufs = bufRanges[0].mBufMax - bufRanges[0].mBufMin + 1;
-      ID3D11Buffer** vsBuffers = mBoundConstVec[0].address() + bufStartSlot;
+      ID3D11Buffer** vsBuffers = mBoundBuffers[0] + bufStartSlot;
 
       D3D11DEVICECONTEXT->VSSetConstantBuffers(bufStartSlot, numBufs, vsBuffers);
    }
@@ -563,7 +564,7 @@ void GFXD3D11ShaderConstBuffer::activate( GFXD3D11ShaderConstBuffer *prevShaderB
    {
       const U32 bufStartSlot = bufRanges[1].mBufMin;
       const U32 numBufs = bufRanges[1].mBufMax - bufRanges[1].mBufMin + 1;
-      ID3D11Buffer** psBuffers = mBoundConstVec[1].address() + bufStartSlot;
+      ID3D11Buffer** psBuffers = mBoundBuffers[1] + bufStartSlot;
 
       D3D11DEVICECONTEXT->PSSetConstantBuffers(bufStartSlot, numBufs, psBuffers);
    }
@@ -577,11 +578,10 @@ void GFXD3D11ShaderConstBuffer::onShaderReload( GFXD3D11Shader *shader )
 
    for (U32 i = 0; i < 6; i++)
    {
-      for (U32 j = 0; j < mBoundConstVec[i].size(); j++)
+      for (U32 j = 0; j < 3; j++)
       {
-         SAFE_RELEASE(mBoundConstVec[i][j]);
+         SAFE_RELEASE(mBoundBuffers[i][j]);
       }
-      mBoundConstVec[i].clear();
    }
 
    for (auto& pair : mBufferMap) {
@@ -914,10 +914,6 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection* refTable,
             D3D11_SHADER_TYPE_DESC shaderTypeDesc;
             bufferVar->GetType()->GetDesc(&shaderTypeDesc);
 
-            bool unusedVar = shaderVarDesc.uFlags & D3D_SVF_USED ? false : true;
-            if (unusedVar)
-               continue;
-
             if (shaderTypeDesc.Class == D3D_SVC_STRUCT)
             {
                // we gotta loop through its variables =/ add support in future. for now continue so it skips.
@@ -979,6 +975,7 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection* refTable,
 
       if (shaderInputBind.Type == D3D_SIT_TEXTURE)
       {
+         // these should return shaderResourceViews and add them to shaderResources.
          /*switch (shaderInputBind.Dimension)
          {
          case D3D_SRV_DIMENSION::D3D_SRV_DIMENSION_TEXTURE1D:
@@ -1028,33 +1025,6 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection* refTable,
                shaderInputBind.Type == D3D_SIT_UAV_RWSTRUCTURED_WITH_COUNTER)
       {
          // these should return an unorderedAccessViews and add them to shaderResources.
-         /*switch (shaderInputBind.Dimension)
-         {
-         case D3D_SRV_DIMENSION::D3D_SRV_DIMENSION_TEXTURE1D:
-            break;
-         case D3D_SRV_DIMENSION::D3D_SRV_DIMENSION_TEXTURE1DARRAY:
-            break;
-         case D3D_SRV_DIMENSION::D3D_SRV_DIMENSION_TEXTURE2D:
-            break;
-         case D3D_SRV_DIMENSION::D3D_SRV_DIMENSION_TEXTURE2DARRAY:
-            break;
-         case D3D_SRV_DIMENSION::D3D_SRV_DIMENSION_TEXTURE2DMS:
-            break;
-         case D3D_SRV_DIMENSION::D3D_SRV_DIMENSION_TEXTURE2DMSARRAY:
-            break;
-         case D3D_SRV_DIMENSION::D3D_SRV_DIMENSION_TEXTURE3D:
-            break;
-         case D3D_SRV_DIMENSION::D3D_SRV_DIMENSION_TEXTURECUBE:
-            break;
-         case D3D_SRV_DIMENSION::D3D_SRV_DIMENSION_TEXTURECUBEARRAY:
-            break;
-         case D3D_SRV_DIMENSION::D3D_SRV_DIMENSION_BUFFER:
-            break;
-         case D3D_SRV_DIMENSION::D3D_SRV_DIMENSION_BUFFEREX:
-            break;
-         default:
-            break;
-         }*/
       }
       else if (shaderInputBind.Type == D3D_SIT_STRUCTURED ||
                shaderInputBind.Type == D3D_SIT_BYTEADDRESS)

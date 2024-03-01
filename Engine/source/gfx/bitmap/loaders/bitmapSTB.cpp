@@ -195,6 +195,12 @@ bool sReadSTB(const Torque::Path& path, GBitmap* bitmap)
    if (!stbi_info(path.getFullPath().c_str(), &x, &y, &channels))
    {
       FrameAllocator::setWaterMark(prevWaterMark);
+      const char* stbErr = stbi_failure_reason();
+
+      if (!stbErr)
+         stbErr = "Unknown Error!";
+
+      Con::errorf("STB failed to get image info: %s", stbErr);
       return false;
    }
 
@@ -326,7 +332,7 @@ bool sReadStreamSTB(Stream& stream, GBitmap* bitmap, U32 len)
          stbErr = "Unknown Error!";
 
       Con::errorf("STB failed to get image info: %s", stbErr);
-      return false;
+      Con::warnf("Going to attempt to load stream anyway.");
    }
 
    S32 reqCom = comp;

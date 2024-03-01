@@ -261,38 +261,40 @@ void AssimpShapeLoader::processAnimations()
 
    Vector<aiNodeAnim*> ambientChannels;
    F32 duration = 0.0f;
-
-   for (U32 i = 0; i < mScene->mNumAnimations; ++i)
+   if (mScene->mNumAnimations > 0)
    {
-      aiAnimation* anim = mScene->mAnimations[i];
-      for (U32 j = 0; j < anim->mNumChannels; j++)
+      for (U32 i = 0; i < mScene->mNumAnimations; ++i)
       {
-         aiNodeAnim* nodeAnim = anim->mChannels[j];
-         // Determine the maximum keyframe time for this animation
-         F32 maxKeyTime = 0.0f;
-         for (U32 k = 0; k < nodeAnim->mNumPositionKeys; k++) {
-            maxKeyTime = getMax(maxKeyTime, (F32)nodeAnim->mPositionKeys[k].mTime);
-         }
-         for (U32 k = 0; k < nodeAnim->mNumRotationKeys; k++) {
-            maxKeyTime = getMax(maxKeyTime, (F32)nodeAnim->mRotationKeys[k].mTime);
-         }
-         for (U32 k = 0; k < nodeAnim->mNumScalingKeys; k++) {
-            maxKeyTime = getMax(maxKeyTime, (F32)nodeAnim->mScalingKeys[k].mTime);
-         }
+         aiAnimation* anim = mScene->mAnimations[i];
+         for (U32 j = 0; j < anim->mNumChannels; j++)
+         {
+            aiNodeAnim* nodeAnim = anim->mChannels[j];
+            // Determine the maximum keyframe time for this animation
+            F32 maxKeyTime = 0.0f;
+            for (U32 k = 0; k < nodeAnim->mNumPositionKeys; k++) {
+               maxKeyTime = getMax(maxKeyTime, (F32)nodeAnim->mPositionKeys[k].mTime);
+            }
+            for (U32 k = 0; k < nodeAnim->mNumRotationKeys; k++) {
+               maxKeyTime = getMax(maxKeyTime, (F32)nodeAnim->mRotationKeys[k].mTime);
+            }
+            for (U32 k = 0; k < nodeAnim->mNumScalingKeys; k++) {
+               maxKeyTime = getMax(maxKeyTime, (F32)nodeAnim->mScalingKeys[k].mTime);
+            }
 
-         ambientChannels.push_back(nodeAnim);
+            ambientChannels.push_back(nodeAnim);
 
-         duration = getMax(duration, maxKeyTime);
+            duration = getMax(duration, maxKeyTime);
+         }
       }
+
+      ambientSeq->mNumChannels = ambientChannels.size();
+      ambientSeq->mChannels = ambientChannels.address();
+      ambientSeq->mDuration = duration;
+      ambientSeq->mTicksPerSecond = 24.0;
+
+      AssimpAppSequence* defaultAssimpSeq = new AssimpAppSequence(ambientSeq);
+      appSequences.push_back(defaultAssimpSeq);
    }
-
-   ambientSeq->mNumChannels = ambientChannels.size();
-   ambientSeq->mChannels = ambientChannels.address();
-   ambientSeq->mDuration = duration;
-   ambientSeq->mTicksPerSecond = 24.0;
-
-   AssimpAppSequence* defaultAssimpSeq = new AssimpAppSequence(ambientSeq);
-   appSequences.push_back(defaultAssimpSeq);
 }
 
 void AssimpShapeLoader::computeBounds(Box3F& bounds)

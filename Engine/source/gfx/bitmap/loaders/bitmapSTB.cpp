@@ -200,8 +200,7 @@ bool sReadSTB(const Torque::Path& path, GBitmap* bitmap)
       if (!stbErr)
          stbErr = "Unknown Error!";
 
-      Con::errorf("STB failed to get image info: %s", stbErr);
-      return false;
+      Con::errorf("STB get file info: %s", stbErr);
    }
 
    // do this to map 2 channels to 4, 2 channel not supported by gbitmap yet..
@@ -331,8 +330,7 @@ bool sReadStreamSTB(Stream& stream, GBitmap* bitmap, U32 len)
       if (!stbErr)
          stbErr = "Unknown Error!";
 
-      Con::errorf("STB failed to get image info: %s", stbErr);
-      Con::warnf("Going to attempt to load stream anyway.");
+      Con::errorf("STB get memory info: %s", stbErr);
    }
 
    S32 reqCom = comp;

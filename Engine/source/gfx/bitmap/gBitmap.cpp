@@ -1279,9 +1279,14 @@ template<> void *Resource<GBitmap>::create(const Torque::Path &path)
    const String extension = path.getExtension();
    if( !bmp->readBitmap( extension, path ) )
    {
-      Con::errorf( "Resource<GBitmap>::create - error reading '%s'", path.getFullPath().c_str() );
-      delete bmp;
-      bmp = NULL;
+      // we can only get here if the stream was successful, so attempt to read the stream.
+      Con::warnf("Was unable to load as file, going to try the stream instead.");
+      if (!bmp->readBitmapStream(extension, stream, stream.getStreamSize()))
+      {
+         Con::errorf("Resource<GBitmap>::create - error reading '%s'", path.getFullPath().c_str());
+         delete bmp;
+         bmp = NULL;
+      }
    }
 
    return bmp;

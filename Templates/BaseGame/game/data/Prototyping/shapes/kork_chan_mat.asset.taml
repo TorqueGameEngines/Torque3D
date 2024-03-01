@@ -5,12 +5,11 @@
     <Material
         Name="kork_chan_mat"
         mapTo="kork_chan"
-        alphaTest="true"
-        alphaRef="100">
+        doubleSided="true"
+        originalAssetName="kork_chan_mat">
         <Material.Stages>
             <Stages_beginarray
-                DiffuseMapAsset="Prototyping:kork_chan_image"
-                doubleSided="true"/>
+                DiffuseMapAsset="Prototyping:kork_chan_image"/>
         </Material.Stages>
     </Material>
 </MaterialAsset>

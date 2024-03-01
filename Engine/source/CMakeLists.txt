@@ -97,7 +97,7 @@ endif (WIN32 AND TORQUE_D3D11)
 
 # Handle core
 torqueAddSourceDirectories("core" "core/stream" "core/strings" "core/util"
-                              "core/util/journal" "core/util/zip" "core/util/compressors")
+                              "core/util/journal" "core/util/zip" "core/util/zip/compressors")
 # Handle GUI
 torqueAddSourceDirectories("gui" "gui/buttons" "gui/containers" "gui/controls" "gui/core"
                               "gui/game" "gui/shiny" "gui/utility" "gui/3d")

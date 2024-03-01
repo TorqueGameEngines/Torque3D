@@ -973,7 +973,7 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection* refTable,
       D3D11_SHADER_INPUT_BIND_DESC shaderInputBind;
       refTable->GetResourceBindingDesc(i, &shaderInputBind);
 
-      if (shaderInputBind.Type == D3D_SIT_TEXTURE)
+      if (shaderInputBind.Type == D3D_SIT_TEXTURE || shaderInputBind.Type == D3D_SIT_UAV_RWTYPED)
       {
          // these should return shaderResourceViews and add them to shaderResources.
          /*switch (shaderInputBind.Dimension)
@@ -1017,8 +1017,7 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection* refTable,
          desc.arraySize = shaderInputBind.BindCount;
          mSamplerDescriptions.push_back(desc);
       }
-      else if (shaderInputBind.Type == D3D_SIT_UAV_RWTYPED              ||
-               shaderInputBind.Type == D3D_SIT_UAV_RWSTRUCTURED         ||
+      else if (shaderInputBind.Type == D3D_SIT_UAV_RWSTRUCTURED         ||
                shaderInputBind.Type == D3D_SIT_UAV_RWBYTEADDRESS        ||
                shaderInputBind.Type == D3D_SIT_UAV_APPEND_STRUCTURED    ||
                shaderInputBind.Type == D3D_SIT_UAV_CONSUME_STRUCTURED   ||

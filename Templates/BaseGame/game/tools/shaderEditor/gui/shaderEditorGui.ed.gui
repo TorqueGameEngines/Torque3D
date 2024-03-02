@@ -1,0 +1,114 @@
+//--- OBJECT WRITE BEGIN ---
+$guiContent = new GuiControl(ShaderEditorGui) {
+   extent = "800 600";
+   profile = "GuiDefaultProfile";
+   tooltipProfile = "ToolsGuiToolTipProfile";
+   isContainer = "1";
+   canSaveDynamicFields = "1";
+
+   new GuiFrameSetCtrl() {
+      columns = "0 200 625";
+      borderWidth = "2";
+      borderColor = "10 10 10 0";
+      autoBalance = "1";
+      extent = "800 600";
+      horizSizing = "width";
+      vertSizing = "height";
+      profile = "ToolsGuiFrameSetProfile";
+      tooltipProfile = "ToolsGuiToolTipProfile";
+
+      new GuiControl() {
+         extent = "198 600";
+         horizSizing = "width";
+         vertSizing = "height";
+         profile = "ToolsGuiDefaultProfile";
+         tooltipProfile = "ToolsGuiToolTipProfile";
+         isContainer = "1";
+
+         new GuiSplitContainer() {
+            orientation = "Horizontal";
+            splitPoint = "0 200";
+            extent = "197 600";
+            horizSizing = "width";
+            vertSizing = "height";
+            profile = "ToolsGuiDefaultProfile";
+            tooltipProfile = "ToolsGuiToolTipProfile";
+
+            new GuiPanel(ShaderEditorPreview) {
+               docking = "Client";
+               extent = "197 198";
+               profile = "ToolsGuiButtonProfile";
+               tooltipProfile = "ToolsGuiToolTipProfile";
+               internalName = "Panel1";
+            };
+            new GuiPanel(ShaderEditorInspector) {
+               docking = "Client";
+               position = "0 202";
+               extent = "197 398";
+               profile = "ToolsGuiButtonProfile";
+               tooltipProfile = "ToolsGuiToolTipProfile";
+               internalName = "panel2";
+            };
+         };
+      };
+      new GuiControl() {
+         position = "200 0";
+         extent = "423 600";
+         horizSizing = "width";
+         vertSizing = "height";
+         profile = "ToolsGuiButtonProfile";
+         tooltipProfile = "ToolsGuiToolTipProfile";
+         isContainer = "1";
+      };
+      new GuiControl(ShaderEditorSidebar) {
+         position = "625 0";
+         extent = "175 600";
+         horizSizing = "width";
+         vertSizing = "height";
+         profile = "ToolsGuiDefaultProfile";
+         tooltipProfile = "ToolsGuiButtonProfile";
+         isContainer = "1";
+
+         new GuiTabBookCtrl(ShaderEditorTabBook) {
+            tabHeight = "20";
+            allowReorder = "1";
+            selectedPage = "0";
+            position = "3 5";
+            extent = "166 400";
+            horizSizing = "width";
+            vertSizing = "height";
+            profile = "ToolsGuiTabBookProfile";
+            tooltipProfile = "ToolsGuiToolTipProfile";
+
+            new GuiTabPageCtrl() {
+               fitBook = "1";
+               text = "Library";
+               position = "0 20";
+               extent = "166 380";
+               horizSizing = "width";
+               vertSizing = "height";
+               profile = "ToolsGuiTabPageProfile";
+               tooltipProfile = "ToolsGuiToolTipProfile";
+
+               new GuiScrollCtrl() {
+                  hScrollBar = "dynamic";
+                  childMargin = "0 2";
+                  extent = "166 370";
+                  horizSizing = "width";
+                  vertSizing = "height";
+                  profile = "ToolsGuiScrollProfile";
+                  tooltipProfile = "ToolsGuiToolTipProfile";
+
+                  new GuiStackControl(ShaderToolbox) {
+                     extent = "486 1000";
+                     horizSizing = "width";
+                     profile = "ToolsGuiDefaultProfile";
+                     tooltipProfile = "ToolsGuiToolTipProfile";
+                  };
+               };
+            };
+         };
+      };
+   };
+};
+//--- OBJECT WRITE END ---

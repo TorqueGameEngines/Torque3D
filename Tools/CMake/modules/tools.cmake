@@ -4,7 +4,8 @@ option(TORQUE_TOOLS "Enable Torque Tools" ON)
 if(TORQUE_TOOLS)
   message("Enabling Torque Tools Module")
 
-  file(GLOB_RECURSE TORQUE_TOOLS_SOURCES "gui/editor/*.cpp" "gui/editor/*.h" "gui/worldEditor/*.cpp" "gui/worldEditor/*.h")
+  file(GLOB_RECURSE TORQUE_TOOLS_SOURCES  "gui/editor/*.cpp" "gui/editor/*.h" "gui/worldEditor/*.cpp" "gui/worldEditor/*.h" "gui/shaderEditor/*.cpp" "gui/shaderEditor/*.h"
+                                          "gui/shaderEditor/nodes/*.cpp" "gui/shaderEditor/nodes/*.h")
   file(GLOB_RECURSE TORQUE_TOOLS_SOURCES2 "environment/editors/*.cpp" "environment/editors/*.h")
   file(GLOB_RECURSE TORQUE_TOOLS_SOURCES3 "forest/editor/*.cpp" "forest/editor/*.h")
                                          

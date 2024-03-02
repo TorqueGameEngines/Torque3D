@@ -23,6 +23,10 @@
 #ifndef _SHADERNODE_H_
 #define _SHADERNODE_H_
 
+#ifndef _GUICONTROL_H_
+#include "gui/core/guiControl.h"
+#endif
+
 #ifndef _SIMBASE_H_
 #include "console/simBase.h"
 #endif

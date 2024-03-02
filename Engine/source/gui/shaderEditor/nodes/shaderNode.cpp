@@ -24,4 +24,45 @@
 
 #include "gui/shaderEditor/nodes/shaderNode.h"
 
+IMPLEMENT_CONOBJECT(ShaderNode);
 
+ConsoleDocClass(ShaderNode,
+   "@brief Base class for all nodes to derive from.\n\n"
+   "Editor use only.\n\n"
+   "@internal"
+);
+
+
+ShaderNode::ShaderNode()
+{
+}
+
+bool ShaderNode::onWake()
+{
+   return false;
+}
+
+void ShaderNode::onSleep()
+{
+}
+
+void ShaderNode::initPersistFields()
+{
+}
+
+bool ShaderNode::onAdd()
+{
+   return false;
+}
+
+void ShaderNode::onRemove()
+{
+}
+
+void ShaderNode::write(Stream& stream, U32 tabStop, U32 flags)
+{
+}
+
+void ShaderNode::read(Stream& stream)
+{
+}

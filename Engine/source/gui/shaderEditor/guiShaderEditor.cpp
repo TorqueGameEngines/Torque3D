@@ -38,3 +38,68 @@ ConsoleDocClass(GuiShaderEditor,
    "Editor use only.\n\n"
    "@internal"
 );
+
+GuiShaderEditor::GuiShaderEditor()
+{
+}
+
+bool GuiShaderEditor::onWake()
+{
+   return false;
+}
+
+void GuiShaderEditor::onSleep()
+{
+}
+
+void GuiShaderEditor::initPersistFields()
+{
+}
+
+bool GuiShaderEditor::onAdd()
+{
+   return false;
+}
+
+void GuiShaderEditor::onRemove()
+{
+}
+
+void GuiShaderEditor::onPreRender()
+{
+}
+
+void GuiShaderEditor::onRender(Point2I offset, const RectI& updateRect)
+{
+}
+
+bool GuiShaderEditor::onKeyDown(const GuiEvent& event)
+{
+   return false;
+}
+
+void GuiShaderEditor::onMouseDown(const GuiEvent& event)
+{
+}
+
+void GuiShaderEditor::onMouseUp(const GuiEvent& event)
+{
+}
+
+void GuiShaderEditor::onMouseMove(const GuiEvent& event)
+{
+}
+
+void GuiShaderEditor::onMiddleMouseDown(const GuiEvent& event)
+{
+}
+
+bool GuiShaderEditor::onMouseWheelUp(const GuiEvent& event)
+{
+   return false;
+}
+
+bool GuiShaderEditor::onMouseWheelDown(const GuiEvent& event)
+{
+   return false;
+}

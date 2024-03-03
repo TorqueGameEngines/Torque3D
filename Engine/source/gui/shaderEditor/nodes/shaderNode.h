@@ -38,11 +38,13 @@ enum class NodeTypes
    Output,
    TextureSampler,
    MathOperation,
-   Procedural
+   Procedural,
+   Generator
 };
 
 enum class DataDimensions
 {
+   Dynamic, // can be any dimension, usually defined by what was connected to it.
    Scalar,
    Vector2,
    Vector3,

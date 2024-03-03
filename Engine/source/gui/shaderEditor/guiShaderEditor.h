@@ -43,7 +43,7 @@ public:
 
    typedef GuiControl Parent;
 
-   enum mouseModes { Selecting, MovingSelection, DragConnection, DragSelecting, DragClone };
+   enum mouseModes { Selecting, MovingSelection, DragPanning, DragConnection, DragSelecting, DragClone };
 
 protected:
 
@@ -56,6 +56,9 @@ protected:
    SimGroup* mTrash;
    SimSet* mSelectedSet;
 
+   // view controls
+   Point2I mViewOffset;
+   F32 mZoomScale;
    // mouse interaction
    mouseModes mMouseDownMode;
    Point2I mLastMousePos;
@@ -65,7 +68,20 @@ protected:
    Vector<Point2I> mDragBeginPoints;
    bool mDragAddSelection;
    bool mDragMoveUndo;
+   bool mFullBoxSelection;
    ShaderNodeVector mSelectedNodes;
+
+   void renderNodes(Point2I offset, const RectI& updateRect);
+
+   // functions for handling mouse events.
+   ShaderNode* findHitNode(const Point2I& pt);
+   void findNodesInRect(const RectI& rect, Vector<ShaderNode*>& outResult);
+
+   void getDragRect(RectI& box);
+   void startDragMove(const Point2I& startPoint);
+   void startDragRectangle(const Point2I& startPoint);
+   void startDragClone(const Point2I& startPoint);
+   void setMouseMode(mouseModes mode);
 
 public:
    GuiShaderEditor();
@@ -87,10 +103,23 @@ public:
    virtual bool onKeyDown(const GuiEvent& event) override;
    virtual void onMouseDown(const GuiEvent& event) override;
    virtual void onMouseUp(const GuiEvent& event) override;
-   virtual void onMouseMove(const GuiEvent& event) override;
+   virtual void onMouseDragged(const GuiEvent& event) override;
    virtual void onMiddleMouseDown(const GuiEvent& event) override;
+   virtual void onMiddleMouseUp(const GuiEvent& event) override;
+   virtual void onMiddleMouseDragged(const GuiEvent& event) override;
    virtual bool onMouseWheelUp(const GuiEvent& event) override;
    virtual bool onMouseWheelDown(const GuiEvent& event) override;
+
+   RectI getSelectionBounds();
+   void deleteSelection();
+   void moveSelection(const Point2I& delta, bool callback = true);
+   void clearSelection();
+   void cloneSelection();
+   void addSelectionAtPoint(const Point2I& pos);
+   void addSelection(ShaderNode* inNode);
+   bool selectionContains(ShaderNode* inNode);
+   void removeSelection(ShaderNode* inNode);
+   void canHitSelectedNodes(bool state = true);
 };
 
 #endif _GUISHADEREDITOR_H_

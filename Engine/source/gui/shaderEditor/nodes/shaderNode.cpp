@@ -39,20 +39,29 @@ ShaderNode::ShaderNode()
 
 bool ShaderNode::onWake()
 {
-   return false;
+   if (!Parent::onWake())
+      return false;
+
+   return true;
 }
 
 void ShaderNode::onSleep()
 {
+   Parent::onSleep();
 }
 
 void ShaderNode::initPersistFields()
 {
+   docsURL;
+   Parent::initPersistFields();
 }
 
 bool ShaderNode::onAdd()
 {
-   return false;
+   if (!Parent::onAdd())
+      return false;
+
+   return true;
 }
 
 void ShaderNode::onRemove()

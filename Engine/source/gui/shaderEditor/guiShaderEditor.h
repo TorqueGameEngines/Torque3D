@@ -54,7 +54,6 @@ protected:
 
    // Undo
    SimGroup* mTrash;
-   SimSet* mSelectedSet;
 
    // view controls
    Point2I mViewOffset;

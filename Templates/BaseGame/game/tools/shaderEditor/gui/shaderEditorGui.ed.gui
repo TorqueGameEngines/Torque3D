@@ -1,24 +1,24 @@
 //--- OBJECT WRITE BEGIN ---
 $guiContent = new GuiControl(ShaderEditorGui) {
-   extent = "800 600";
+   extent = "1280 720";
    profile = "GuiDefaultProfile";
    tooltipProfile = "ToolsGuiToolTipProfile";
    isContainer = "1";
    canSaveDynamicFields = "1";
 
    new GuiFrameSetCtrl() {
-      columns = "0 200 625";
+      columns = "0 320 1000";
       borderWidth = "2";
       borderColor = "10 10 10 0";
       autoBalance = "1";
-      extent = "800 600";
+      extent = "1280 720";
       horizSizing = "width";
       vertSizing = "height";
       profile = "ToolsGuiFrameSetProfile";
       tooltipProfile = "ToolsGuiToolTipProfile";
 
       new GuiControl() {
-         extent = "198 600";
+         extent = "318 720";
          horizSizing = "width";
          vertSizing = "height";
          profile = "ToolsGuiDefaultProfile";
@@ -28,7 +28,7 @@ $guiContent = new GuiControl(ShaderEditorGui) {
          new GuiSplitContainer() {
             orientation = "Horizontal";
             splitPoint = "0 200";
-            extent = "197 600";
+            extent = "317 720";
             horizSizing = "width";
             vertSizing = "height";
             profile = "ToolsGuiDefaultProfile";
@@ -36,7 +36,7 @@ $guiContent = new GuiControl(ShaderEditorGui) {
 
             new GuiPanel(ShaderEditorPreview) {
                docking = "Client";
-               extent = "197 198";
+               extent = "317 198";
                profile = "ToolsGuiButtonProfile";
                tooltipProfile = "ToolsGuiToolTipProfile";
                internalName = "Panel1";
@@ -44,7 +44,7 @@ $guiContent = new GuiControl(ShaderEditorGui) {
             new GuiPanel(ShaderEditorInspector) {
                docking = "Client";
                position = "0 202";
-               extent = "197 398";
+               extent = "317 518";
                profile = "ToolsGuiButtonProfile";
                tooltipProfile = "ToolsGuiToolTipProfile";
                internalName = "panel2";
@@ -52,17 +52,25 @@ $guiContent = new GuiControl(ShaderEditorGui) {
          };
       };
       new GuiControl() {
-         position = "200 0";
-         extent = "423 600";
+         position = "320 0";
+         extent = "678 720";
          horizSizing = "width";
          vertSizing = "height";
          profile = "ToolsGuiButtonProfile";
          tooltipProfile = "ToolsGuiToolTipProfile";
          isContainer = "1";
+
+         new GuiShaderEditor(ShaderNodeGraph) {
+            extent = "678 720";
+            horizSizing = "width";
+            vertSizing = "height";
+            profile = "GuiShaderEditorProfile";
+            tooltipProfile = "GuiToolTipProfile";
+         };
       };
       new GuiControl(ShaderEditorSidebar) {
-         position = "625 0";
-         extent = "175 600";
+         position = "1000 0";
+         extent = "280 720";
          horizSizing = "width";
          vertSizing = "height";
          profile = "ToolsGuiDefaultProfile";
@@ -74,7 +82,7 @@ $guiContent = new GuiControl(ShaderEditorGui) {
             allowReorder = "1";
             selectedPage = "0";
             position = "3 5";
-            extent = "166 400";
+            extent = "271 520";
             horizSizing = "width";
             vertSizing = "height";
             profile = "ToolsGuiTabBookProfile";
@@ -84,7 +92,7 @@ $guiContent = new GuiControl(ShaderEditorGui) {
                fitBook = "1";
                text = "Library";
                position = "0 20";
-               extent = "166 380";
+               extent = "271 500";
                horizSizing = "width";
                vertSizing = "height";
                profile = "ToolsGuiTabPageProfile";
@@ -93,14 +101,14 @@ $guiContent = new GuiControl(ShaderEditorGui) {
                new GuiScrollCtrl() {
                   hScrollBar = "dynamic";
                   childMargin = "0 2";
-                  extent = "166 370";
+                  extent = "271 490";
                   horizSizing = "width";
                   vertSizing = "height";
                   profile = "ToolsGuiScrollProfile";
                   tooltipProfile = "ToolsGuiToolTipProfile";
 
                   new GuiStackControl(ShaderToolbox) {
-                     extent = "486 1000";
+                     extent = "591 1000";
                      horizSizing = "width";
                      profile = "ToolsGuiDefaultProfile";
                      tooltipProfile = "ToolsGuiToolTipProfile";

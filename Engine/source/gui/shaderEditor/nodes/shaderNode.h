@@ -31,8 +31,14 @@
 #include "console/simBase.h"
 #endif
 
+#ifndef _GFX_GFXDRAWER_H_
+#include "gfx/gfxDrawUtil.h"
+#endif
+
+
 enum class NodeTypes
 {
+   Default,
    Uniform,
    Input,
    Output,
@@ -69,6 +75,9 @@ class ShaderNode : public GuiControl
 private:
    typedef GuiControl Parent;
 
+protected:
+   String mTitle;
+
 public:
    ShaderNode();
 
@@ -78,6 +87,8 @@ public:
    virtual bool onAdd() override;
    virtual void onRemove() override;
 
+   virtual void onRender(Point2I offset, const RectI& updateRect) override;
+
    // Serialization functions
    void write(Stream& stream, U32 tabStop = 0, U32 flags = 0);
    void read(Stream& stream);
@@ -86,5 +97,7 @@ public:
    DECLARE_CONOBJECT(ShaderNode);
    DECLARE_CATEGORY("Shader Core");
    DECLARE_DESCRIPTION("Base class for all shader nodes.");
+
+   bool mSelected;
 };
 #endif // !_SHADERNODE_H_

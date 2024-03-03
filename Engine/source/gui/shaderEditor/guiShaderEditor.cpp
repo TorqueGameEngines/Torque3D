@@ -55,7 +55,9 @@ GuiShaderEditor::GuiShaderEditor()
    mMouseDownMode = GuiShaderEditor::Selecting;
 
    mTrash = NULL;
-   mSelectedSet = NULL;
+
+   // test
+   mCurrNodes.push_back(new ShaderNode());
 }
 
 bool GuiShaderEditor::onWake()
@@ -87,23 +89,31 @@ bool GuiShaderEditor::onAdd()
       return false;
 
    mTrash = new SimGroup();
-   mSelectedSet = new SimSet();
 
    if (!mTrash->registerObject())
       return false;
-   if (!mSelectedSet->registerObject())
-      return false;
+
 
    return true;
 }
 
 void GuiShaderEditor::onRemove()
 {
+   Parent::onRemove();
+
    mTrash->deleteObject();
-   mSelectedSet->deleteObject();
 
    mTrash = NULL;
-   mSelectedSet = NULL;
+
+   for (ShaderNode* node : mCurrNodes)
+   {
+      SAFE_DELETE(node);
+   }
+
+   for (ShaderNode* node : mSelectedNodes)
+   {
+      SAFE_DELETE(node);
+   }
 }
 
 void GuiShaderEditor::onPreRender()
@@ -121,8 +131,7 @@ void GuiShaderEditor::renderNodes(Point2I offset, const RectI& updateRect)
    // updateRect is the intersection rectangle in screen coords of the control
    // hierarchy.  This can be set as the clip rectangle in most cases.
    RectI clipRect = updateRect;
-
-   GFXDrawUtil* drawer = GFX->getDrawUtil();
+   clipRect.inset(2, 2);
 
    for (ShaderNode* node : mCurrNodes)
    {
@@ -130,20 +139,22 @@ void GuiShaderEditor::renderNodes(Point2I offset, const RectI& updateRect)
       if (node->isVisible())
       {
          Point2I childPos = offset + node->getPosition();
-         RectI childClip(childPos, node->getExtent() + Point2I(1, 1));
+         RectI childClip(childPos, node->getExtent() );
+
+         if (selectionContains(node))
+         {
+            node->mSelected = true;
+         }
+         else
+         {
+            node->mSelected = false;
+         }
 
          if (childClip.intersect(clipRect))
          {
             GFX->setClipRect(childClip);
             GFX->setStateBlock(mDefaultGuiSB);
-            node->onRender(offset, childClip);
-         }
-
-         if (selectionContains(node))
-         {
-            GFX->setClipRect(clipRect);
-            childClip.inset(1, 1);
-            drawer->drawRect(childClip, ColorI(255, 255, 0, 128));
+            node->onRender(childPos, childClip);
          }
       }
    }
@@ -155,7 +166,7 @@ void GuiShaderEditor::renderNodes(Point2I offset, const RectI& updateRect)
 
 void GuiShaderEditor::onRender(Point2I offset, const RectI& updateRect)
 {
-   offset += mViewOffset * mZoomScale;
+   offset += mViewOffset;
 
    GFXDrawUtil* drawer = GFX->getDrawUtil();
 
@@ -197,20 +208,20 @@ void GuiShaderEditor::onMouseDown(const GuiEvent& event)
    mouseLock();
 
    // get mouse pos with our view offset and scale.
-   mLastMousePos = globalToLocalCoord(event.mousePoint) + mViewOffset * mZoomScale;
+   mLastMousePos = globalToLocalCoord(event.mousePoint) - mViewOffset;
 
-   ShaderNode* node = findHitNode(mLastMousePos);
+   ShaderNode* hitNode = findHitNode(mLastMousePos);
 
    if (event.modifier & SI_SHIFT)
    {
       startDragRectangle(mLastMousePos);
       mDragAddSelection = true;
    }
-   else if (selectionContains(node))
+   else if (selectionContains(hitNode))
    {
       if (event.modifier & SI_MULTISELECT)
       {
-         removeSelection(node);
+         removeSelection(hitNode);
          setMouseMode(Selecting);
       }
       else if (event.modifier & SI_PRIMARY_ALT)
@@ -224,27 +235,27 @@ void GuiShaderEditor::onMouseDown(const GuiEvent& event)
    }
    else
    {
-      if (node == NULL)
+      if (hitNode == NULL)
       {
          startDragRectangle(mLastMousePos);
          mDragAddSelection = false;
       }
-      else if (event.modifier & SI_PRIMARY_ALT && node != NULL)
+      else if (event.modifier & SI_PRIMARY_ALT && hitNode != NULL)
       {
          // Alt is down.  Start a drag clone.
          clearSelection();
-         addSelection(node);
+         addSelection(hitNode);
          startDragClone(mLastMousePos);
       }
       else if (event.modifier & SI_MULTISELECT)
       {
-         addSelection(node);
+         addSelection(hitNode);
       }
       else
       {
          // Clicked on node.  Start move.
          clearSelection();
-         addSelection(node);
+         addSelection(hitNode);
          startDragMove(mLastMousePos);
       }
    }
@@ -259,8 +270,6 @@ void GuiShaderEditor::onMouseUp(const GuiEvent& event)
       return;
    }
 
-   ShaderNode* node = findHitNode(mLastMousePos);
-
    //unlock the mouse
    mouseUnlock();
 
@@ -269,7 +278,7 @@ void GuiShaderEditor::onMouseUp(const GuiEvent& event)
    mDragBeginPoints.clear();
 
    // get mouse pos with our view offset and scale.
-   mLastMousePos = globalToLocalCoord(event.mousePoint) + mViewOffset * mZoomScale;
+   mLastMousePos = globalToLocalCoord(event.mousePoint) - mViewOffset;
 
    if (mMouseDownMode == DragSelecting)
    {
@@ -295,11 +304,6 @@ void GuiShaderEditor::onMouseUp(const GuiEvent& event)
       }
    }
 
-   if (mMouseDownMode == MovingSelection && mDragMoveUndo)
-   {
-
-   }
-
    //reset the mouse mode
    setFirstResponder();
    setMouseMode(Selecting);
@@ -314,7 +318,7 @@ void GuiShaderEditor::onMouseDragged(const GuiEvent& event)
    }
 
    // get mouse pos with our view offset and scale.
-   Point2I mousePoint = globalToLocalCoord(event.mousePoint) + mViewOffset * mZoomScale;
+   Point2I mousePoint = globalToLocalCoord(event.mousePoint) - mViewOffset;
 
    if (mMouseDownMode == DragClone)
    {
@@ -360,7 +364,7 @@ void GuiShaderEditor::onMiddleMouseDown(const GuiEvent& event)
    mouseLock();
 
    // get mouse pos with our view offset and scale.
-   mLastMousePos = globalToLocalCoord(event.mousePoint) + mViewOffset * mZoomScale;
+   mLastMousePos = globalToLocalCoord(event.mousePoint);
 
    setMouseMode(DragPanning);
 
@@ -382,7 +386,7 @@ void GuiShaderEditor::onMiddleMouseUp(const GuiEvent& event)
    mDragBeginPoints.clear();
 
    // get mouse pos with our view offset and scale.
-   mLastMousePos = globalToLocalCoord(event.mousePoint) + mViewOffset * mZoomScale;
+   mLastMousePos = globalToLocalCoord(event.mousePoint);
 
    setFirstResponder();
    setMouseMode(Selecting);
@@ -397,13 +401,11 @@ void GuiShaderEditor::onMiddleMouseDragged(const GuiEvent& event)
    }
 
    // get mouse pos with our view offset and scale.
-   Point2I mousePoint = globalToLocalCoord(event.mousePoint) + mViewOffset * mZoomScale;
+   Point2I mousePoint = globalToLocalCoord(event.mousePoint);
 
    if (mMouseDownMode == DragPanning)
    {
       Point2I delta = mousePoint - mLastMousePos;
-      RectI selBounds = getSelectionBounds();
-
       // invert it
       if (delta.x || delta.y)
          mViewOffset += -delta;
@@ -439,12 +441,12 @@ RectI GuiShaderEditor::getSelectionBounds()
 
    Vector<ShaderNode*>::const_iterator i = mSelectedNodes.begin();
 
-   Point2I minPos = (*i)->localToGlobalCoord(Point2I(0, 0)) + mViewOffset * mZoomScale;
+   Point2I minPos = (*i)->localToGlobalCoord(Point2I(0, 0));
    Point2I maxPos = minPos;
 
    for (; i != mSelectedNodes.end(); i++)
    {
-      Point2I iPos = (**i).localToGlobalCoord(Point2I(0, 0)) + mViewOffset * mZoomScale;
+      Point2I iPos = (**i).localToGlobalCoord(Point2I(0, 0));
 
       minPos.x = getMin(iPos.x, minPos.x);
       minPos.y = getMin(iPos.y, minPos.y);
@@ -458,8 +460,8 @@ RectI GuiShaderEditor::getSelectionBounds()
       maxPos.y = getMax(iPos.y, maxPos.y);
    }
 
-   minPos = globalToLocalCoord(minPos) + mViewOffset * mZoomScale;
-   maxPos = globalToLocalCoord(maxPos) + mViewOffset * mZoomScale;
+   minPos = globalToLocalCoord(minPos);
+   maxPos = globalToLocalCoord(maxPos);
 
    return RectI(minPos.x, minPos.y, (maxPos.x - minPos.x), (maxPos.y - minPos.y));
 }

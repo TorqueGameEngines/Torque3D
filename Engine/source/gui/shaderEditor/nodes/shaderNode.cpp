@@ -21,8 +21,9 @@
 //-----------------------------------------------------------------------------
 
 #include "platform/platform.h"
-
 #include "gui/shaderEditor/nodes/shaderNode.h"
+
+#include "gui/core/guiCanvas.h"
 
 IMPLEMENT_CONOBJECT(ShaderNode);
 
@@ -35,6 +36,14 @@ ConsoleDocClass(ShaderNode,
 
 ShaderNode::ShaderNode()
 {
+   mTitle = "Default Node";
+   mSelected = false;
+   // fixed extent for all nodes, only height should be changed
+   setExtent(150, 100);
+
+   GuiControlProfile* profile = NULL;
+   if (Sim::findObject("ToolsGuiDefaultProfile", profile))
+      setControlProfile(profile);
 }
 
 bool ShaderNode::onWake()
@@ -66,6 +75,39 @@ bool ShaderNode::onAdd()
 
 void ShaderNode::onRemove()
 {
+   Parent::onRemove();
+}
+
+void ShaderNode::onRender(Point2I offset, const RectI& updateRect)
+{
+   if (!mProfile)
+      return Parent::onRender(offset, updateRect);
+
+   GFXDrawUtil* drawer = GFX->getDrawUtil();
+
+   // Get our rect.
+   RectI winRect;
+   winRect.point = offset;
+   winRect.extent = getExtent();
+
+   // draw background.
+   drawer->drawRectFill(winRect, mProfile->mFillColor);
+
+   // draw header text.
+   U32 strWidth = mProfile->mFont->getStrWidth(mTitle.c_str());
+   Point2I headerPos = Point2I((getExtent().x / 2) - (strWidth / 2), (30 / 2) - (mProfile->mFont->getFontSize() / 2));
+   drawer->setBitmapModulation(mProfile->mFontColor);
+   drawer->drawText(mProfile->mFont, headerPos + offset, mTitle);
+   drawer->clearBitmapModulation();
+
+   ColorI border(128, 128, 128, 128);
+
+   if (mSelected)
+      border = ColorI(128, 0, 128, 128);
+
+   winRect.inset(1, 1);
+   drawer->drawRect(winRect, border);
+
 }
 
 void ShaderNode::write(Stream& stream, U32 tabStop, U32 flags)

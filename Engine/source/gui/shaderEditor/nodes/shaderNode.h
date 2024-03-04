@@ -77,6 +77,7 @@ private:
 
 protected:
    String mTitle;
+   NodeTypes mNodeType;
 
 public:
    ShaderNode();

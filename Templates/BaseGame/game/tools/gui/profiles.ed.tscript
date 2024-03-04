@@ -946,6 +946,7 @@ singleton GuiControlProfile( GuiBackFillProfile )
 singleton GuiControlProfile(GuiShaderEditorProfile : ToolsGuiDefaultProfile)
 {
    opaque = true;
+   canKeyFocus = true;
 };
 
 singleton GuiControlProfile(ShaderNodeProfile : ToolsGuiDefaultProfile)

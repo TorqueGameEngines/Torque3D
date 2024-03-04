@@ -58,6 +58,7 @@ GuiShaderEditor::GuiShaderEditor()
 
    // test
    mCurrNodes.push_back(new ShaderNode());
+   mCurrNodes.push_back(new ShaderNode());
 }
 
 bool GuiShaderEditor::onWake()
@@ -191,6 +192,22 @@ void GuiShaderEditor::onRender(Point2I offset, const RectI& updateRect)
 
 bool GuiShaderEditor::onKeyDown(const GuiEvent& event)
 {
+   if (!mActive)
+      return Parent::onKeyDown(event);
+
+   if (!(event.modifier & SI_PRIMARY_CTRL))
+   {
+      switch (event.keyCode)
+      {
+      case KEY_BACKSPACE:
+      case KEY_DELETE:
+         deleteSelection();
+         return true;
+      default:
+         break;
+      }
+   }
+
    return false;
 }
 
@@ -367,7 +384,7 @@ void GuiShaderEditor::onMiddleMouseDown(const GuiEvent& event)
    mLastMousePos = globalToLocalCoord(event.mousePoint);
 
    setMouseMode(DragPanning);
-
+   getRoot()->showCursor(false);
 }
 
 void GuiShaderEditor::onMiddleMouseUp(const GuiEvent& event)
@@ -377,6 +394,8 @@ void GuiShaderEditor::onMiddleMouseUp(const GuiEvent& event)
       Parent::onMiddleMouseUp(event);
       return;
    }
+
+   getRoot()->showCursor(true);
 
    //unlock the mouse
    mouseUnlock();
@@ -471,6 +490,10 @@ void GuiShaderEditor::deleteSelection()
    for (ShaderNode* node : mSelectedNodes)
    {
       mTrash->addObject(node);
+
+      Vector< ShaderNode* >::iterator i = T3D::find(mCurrNodes.begin(), mCurrNodes.end(), node);
+      if (i != mCurrNodes.end())
+         mCurrNodes.erase(i);
    }
 
    clearSelection();

@@ -38,8 +38,9 @@ ShaderNode::ShaderNode()
 {
    mTitle = "Default Node";
    mSelected = false;
+   mNodeType = NodeTypes::Uniform;
    // fixed extent for all nodes, only height should be changed
-   setExtent(150, 100);
+   setExtent(210, 100);
 
    GuiControlProfile* profile = NULL;
    if (Sim::findObject("ToolsGuiDefaultProfile", profile))
@@ -85,13 +86,52 @@ void ShaderNode::onRender(Point2I offset, const RectI& updateRect)
 
    GFXDrawUtil* drawer = GFX->getDrawUtil();
 
+   // draw background.
    // Get our rect.
    RectI winRect;
    winRect.point = offset;
    winRect.extent = getExtent();
-
-   // draw background.
    drawer->drawRectFill(winRect, mProfile->mFillColor);
+
+   // draw header
+   RectI headRect;
+   headRect.point = offset;
+   headRect.extent = Point2I(getExtent().x, 30);
+
+   ColorI header(50, 50, 50, 128);
+
+   switch (mNodeType)
+   {
+   case NodeTypes::Default:
+      header = ColorI(128, 50, 128, 128);
+      break;
+   case NodeTypes::Uniform:
+      header = ColorI(50, 100, 128, 128);
+      break;
+   case NodeTypes::Input:
+      header = ColorI(128, 100, 50, 128);
+      break;
+   case NodeTypes::Output:
+      header = ColorI(50, 100, 50, 128);
+      break;
+   case NodeTypes::TextureSampler:
+      header = ColorI(50, 50, 128, 128);
+      break;
+   case NodeTypes::MathOperation:
+      header = ColorI(128, 0, 128, 128);
+      break;
+   case NodeTypes::Procedural:
+      header = ColorI(128, 100, 0, 128);
+      break;
+   case NodeTypes::Generator:
+      header = ColorI(0, 100, 128, 128);
+      break;
+   default:
+      header = ColorI(128, 0, 0, 128);
+      break;
+   }
+
+   drawer->drawRectFill(headRect, header);
 
    // draw header text.
    U32 strWidth = mProfile->mFont->getStrWidth(mTitle.c_str());
@@ -103,9 +143,8 @@ void ShaderNode::onRender(Point2I offset, const RectI& updateRect)
    ColorI border(128, 128, 128, 128);
 
    if (mSelected)
-      border = ColorI(128, 0, 128, 128);
+      border = ColorI(128, 0, 128, 255);
 
-   winRect.inset(1, 1);
    drawer->drawRect(winRect, border);
 
 }

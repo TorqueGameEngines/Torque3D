@@ -25,29 +25,46 @@
 
 #include "gui/core/guiCanvas.h"
 
-IMPLEMENT_CONOBJECT(ShaderNode);
+IMPLEMENT_CONOBJECT(GuiShaderNode);
 
-ConsoleDocClass(ShaderNode,
+ConsoleDocClass(GuiShaderNode,
    "@brief Base class for all nodes to derive from.\n\n"
    "Editor use only.\n\n"
    "@internal"
 );
 
 
-ShaderNode::ShaderNode()
+GuiShaderNode::GuiShaderNode()
 {
+   VECTOR_SET_ASSOCIATION(mInputNodes);
+   VECTOR_SET_ASSOCIATION(mOutputNodes);
+
    mTitle = "Default Node";
    mSelected = false;
-   mNodeType = NodeTypes::Uniform;
-   // fixed extent for all nodes, only height should be changed
-   setExtent(210, 100);
+   mNodeType = NodeTypes::Default;
+
 
    GuiControlProfile* profile = NULL;
-   if (Sim::findObject("ToolsGuiDefaultProfile", profile))
+   if (Sim::findObject("GuiShaderEditorProfile", profile))
       setControlProfile(profile);
+
+   mInputNodes.push_back(new NodeInput("RGBA", DataDimensions::Dynamic));
+   mInputNodes.push_back(new NodeInput("RGBA", DataDimensions::Dynamic));
+   mInputNodes.push_back(new NodeInput("RGBA", DataDimensions::Dynamic));
+   mInputNodes.push_back(new NodeInput("RGBA", DataDimensions::Dynamic));
+
+   mOutputNodes.push_back(new NodeOutput("RGBA", DataDimensions::Dynamic));
+   mOutputNodes.push_back(new NodeOutput("RGBA", DataDimensions::Dynamic));
+   mOutputNodes.push_back(new NodeOutput("RGBA", DataDimensions::Dynamic));
+   mOutputNodes.push_back(new NodeOutput("RGBA", DataDimensions::Dynamic));
+
+   // fixed extent for all nodes, only height should be changed
+   setExtent(210, 35);
+
+   mPrevNodeSize = -1;
 }
 
-bool ShaderNode::onWake()
+bool GuiShaderNode::onWake()
 {
    if (!Parent::onWake())
       return false;
@@ -55,18 +72,18 @@ bool ShaderNode::onWake()
    return true;
 }
 
-void ShaderNode::onSleep()
+void GuiShaderNode::onSleep()
 {
    Parent::onSleep();
 }
 
-void ShaderNode::initPersistFields()
+void GuiShaderNode::initPersistFields()
 {
    docsURL;
    Parent::initPersistFields();
 }
 
-bool ShaderNode::onAdd()
+bool GuiShaderNode::onAdd()
 {
    if (!Parent::onAdd())
       return false;
@@ -74,12 +91,12 @@ bool ShaderNode::onAdd()
    return true;
 }
 
-void ShaderNode::onRemove()
+void GuiShaderNode::onRemove()
 {
    Parent::onRemove();
 }
 
-void ShaderNode::onRender(Point2I offset, const RectI& updateRect)
+void GuiShaderNode::onRender(Point2I offset, const RectI& updateRect, const S32 nodeSize)
 {
    if (!mProfile)
       return Parent::onRender(offset, updateRect);
@@ -94,10 +111,6 @@ void ShaderNode::onRender(Point2I offset, const RectI& updateRect)
    drawer->drawRectFill(winRect, mProfile->mFillColor);
 
    // draw header
-   RectI headRect;
-   headRect.point = offset;
-   headRect.extent = Point2I(getExtent().x, 30);
-
    ColorI header(50, 50, 50, 128);
 
    switch (mNodeType)
@@ -131,28 +144,72 @@ void ShaderNode::onRender(Point2I offset, const RectI& updateRect)
       break;
    }
 
+   RectI headRect;
+   U32 headerSize = 30;
+   headRect.point = offset;
+   headRect.extent = Point2I(getExtent().x, headerSize);
    drawer->drawRectFill(headRect, header);
 
    // draw header text.
    U32 strWidth = mProfile->mFont->getStrWidth(mTitle.c_str());
-   Point2I headerPos = Point2I((getExtent().x / 2) - (strWidth / 2), (30 / 2) - (mProfile->mFont->getFontSize() / 2));
+   Point2I headerPos = Point2I((getExtent().x / 2) - (strWidth / 2), (headerSize / 2) - (mProfile->mFont->getFontSize() / 2));
    drawer->setBitmapModulation(mProfile->mFontColor);
    drawer->drawText(mProfile->mFont, headerPos + offset, mTitle);
    drawer->clearBitmapModulation();
 
-   ColorI border(128, 128, 128, 128);
+   ColorI border = mProfile->mBorderColor;
 
    if (mSelected)
-      border = ColorI(128, 0, 128, 255);
+      border = mProfile->mBorderColorSEL;
 
    drawer->drawRect(winRect, border);
 
+
+   if (mInputNodes.size() > 0 || mOutputNodes.size() > 0)
+   {
+      U32 textPadX = nodeSize, textPadY = mProfile->mFont->getFontSize() + (nodeSize / 2);
+      Point2I slotPos(textPadX, headerSize + (nodeSize / 2));
+      drawer->setBitmapModulation(mProfile->mFontColor);
+      for (NodeInput* input : mInputNodes)
+      {
+         drawer->drawText(mProfile->mFont, slotPos + offset, input->name);
+
+         if (input->pos == Point2I::Zero || mPrevNodeSize != nodeSize)
+            input->pos = Point2I(-(nodeSize / 2), slotPos.y + ((mProfile->mFont->getFontSize() / 2) - (nodeSize / 2)));
+
+         slotPos.y += textPadY;
+      }
+
+      U32 inputY = slotPos.y;
+
+      slotPos = Point2I(getExtent().x, headerSize + (nodeSize / 2));
+      for (NodeOutput* output : mOutputNodes)
+      {
+         strWidth = mProfile->mFont->getStrWidth(output->name.c_str());
+         slotPos.x = getExtent().x - strWidth - textPadX;
+
+         drawer->drawText(mProfile->mFont, slotPos + offset, output->name);
+
+         if (output->pos == Point2I::Zero || mPrevNodeSize != nodeSize)
+            output->pos = Point2I(getExtent().x - (nodeSize / 2), slotPos.y + ((mProfile->mFont->getFontSize() / 2) - (nodeSize / 2)));
+
+         slotPos.y += textPadY;
+      }
+      drawer->clearBitmapModulation();
+
+      U32 outputY = slotPos.y;
+
+      if (getExtent().y < slotPos.y || mPrevNodeSize != nodeSize)
+         setExtent(Point2I(getExtent().x, mMax(inputY, outputY)));
+
+      mPrevNodeSize = nodeSize;
+   }
 }
 
-void ShaderNode::write(Stream& stream, U32 tabStop, U32 flags)
+void GuiShaderNode::write(Stream& stream, U32 tabStop, U32 flags)
 {
 }
 
-void ShaderNode::read(Stream& stream)
+void GuiShaderNode::read(Stream& stream)
 {
 }

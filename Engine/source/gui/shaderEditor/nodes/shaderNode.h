@@ -62,15 +62,31 @@ struct NodeInput
 {
    String name;
    DataDimensions dimensions;
+   Point2I pos = Point2I::Zero;
+
+   NodeInput()
+      :name(String::EmptyString), dimensions(DataDimensions::Dynamic)
+   {}
+   NodeInput(String inName , DataDimensions inDim)
+      :name(inName), dimensions(inDim)
+   {}
 };
 
 struct NodeOutput
 {
    String name;
    DataDimensions dimensions;
+   Point2I pos = Point2I::Zero;
+
+   NodeOutput()
+      :name(String::EmptyString), dimensions(DataDimensions::Dynamic)
+   {}
+   NodeOutput(String inName, DataDimensions inDim)
+      :name(inName), dimensions(inDim)
+   {}
 };
 
-class ShaderNode : public GuiControl
+class GuiShaderNode : public GuiControl
 {
 private:
    typedef GuiControl Parent;
@@ -78,9 +94,12 @@ private:
 protected:
    String mTitle;
    NodeTypes mNodeType;
-
+   S32 mPrevNodeSize;
 public:
-   ShaderNode();
+   Vector<NodeInput*> mInputNodes;
+   Vector<NodeOutput*> mOutputNodes;
+
+   GuiShaderNode();
 
    bool onWake();
    void onSleep();
@@ -88,14 +107,14 @@ public:
    virtual bool onAdd() override;
    virtual void onRemove() override;
 
-   virtual void onRender(Point2I offset, const RectI& updateRect) override;
+   void onRender(Point2I offset, const RectI& updateRect, const S32 nodeSize);
 
    // Serialization functions
    void write(Stream& stream, U32 tabStop = 0, U32 flags = 0);
    void read(Stream& stream);
 
    // is the parent that all other nodes are derived from.
-   DECLARE_CONOBJECT(ShaderNode);
+   DECLARE_CONOBJECT(GuiShaderNode);
    DECLARE_CATEGORY("Shader Core");
    DECLARE_DESCRIPTION("Base class for all shader nodes.");
 

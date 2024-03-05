@@ -30,6 +30,7 @@
 #include "gui/core/guiCanvas.h"
 #include "console/engineAPI.h"
 #include "console/script.h"
+#include "console/typeValidators.h"
 
 IMPLEMENT_CONOBJECT(GuiShaderEditor);
 
@@ -55,10 +56,10 @@ GuiShaderEditor::GuiShaderEditor()
    mMouseDownMode = GuiShaderEditor::Selecting;
 
    mTrash = NULL;
-
+   mNodeSize = 10;
    // test
-   mCurrNodes.push_back(new ShaderNode());
-   mCurrNodes.push_back(new ShaderNode());
+   mCurrNodes.push_back(new GuiShaderNode());
+   mCurrNodes.push_back(new GuiShaderNode());
 }
 
 bool GuiShaderEditor::onWake()
@@ -74,12 +75,20 @@ void GuiShaderEditor::onSleep()
    Parent::onSleep();
 }
 
+// anything smaller than 4 is way too small....
+IRangeValidator nodeSizeRange(4, 30);
+
 void GuiShaderEditor::initPersistFields()
 {
    docsURL;
+   addGroup("Node Settings");
+      addFieldV("nodeSize", TypeS32, Offset(mNodeSize, GuiShaderEditor),&nodeSizeRange,
+         "Size of nodes.");
+   endGroup("Node Settings");
+
    addGroup("Selection");
-   addField("fullBoxSelection", TypeBool, Offset(mFullBoxSelection, GuiShaderEditor),
-      "If true, rectangle selection will only select controls fully inside the drag rectangle.");
+      addField("fullBoxSelection", TypeBool, Offset(mFullBoxSelection, GuiShaderEditor),
+         "If true, rectangle selection will only select controls fully inside the drag rectangle.");
    endGroup("Selection");
    Parent::initPersistFields();
 }
@@ -106,12 +115,12 @@ void GuiShaderEditor::onRemove()
 
    mTrash = NULL;
 
-   for (ShaderNode* node : mCurrNodes)
+   for (GuiShaderNode* node : mCurrNodes)
    {
       SAFE_DELETE(node);
    }
 
-   for (ShaderNode* node : mSelectedNodes)
+   for (GuiShaderNode* node : mSelectedNodes)
    {
       SAFE_DELETE(node);
    }
@@ -134,8 +143,12 @@ void GuiShaderEditor::renderNodes(Point2I offset, const RectI& updateRect)
    RectI clipRect = updateRect;
    clipRect.inset(2, 2);
 
-   for (ShaderNode* node : mCurrNodes)
+   GFXDrawUtil* drawer = GFX->getDrawUtil();
+
+   // render nodes in reverse order.
+   for (ShaderNodeVector::iterator i = mCurrNodes.end(); i-- != mCurrNodes.begin(); )
    {
+      GuiShaderNode* node = *i;
       // this is useful for sub node graphs.
       if (node->isVisible())
       {
@@ -155,7 +168,39 @@ void GuiShaderEditor::renderNodes(Point2I offset, const RectI& updateRect)
          {
             GFX->setClipRect(childClip);
             GFX->setStateBlock(mDefaultGuiSB);
-            node->onRender(childPos, childClip);
+            node->onRender(childPos, childClip, mNodeSize);
+         }
+
+         GFX->setClipRect(clipRect);
+         GFX->setStateBlock(mDefaultGuiSB);
+         for (NodeInput* input : node->mInputNodes)
+         {
+            Point2I pos = node->localToGlobalCoord(input->pos) + offset;
+
+            ColorI border = mProfile->mBorderColor;
+
+            if (node->mSelected)
+               border = mProfile->mBorderColorSEL;
+
+            RectI socketRect(pos, Point2I(mNodeSize, mNodeSize));
+            drawer->drawRect(socketRect, border);
+            socketRect.inset(1, 1);
+            drawer->drawRectFill(socketRect, mProfile->mFillColor);
+         }
+
+         for (NodeOutput* output : node->mOutputNodes)
+         {
+            Point2I pos = node->localToGlobalCoord(output->pos) + offset;
+
+            ColorI border = mProfile->mBorderColor;
+
+            if (node->mSelected)
+               border = mProfile->mBorderColorSEL;
+
+            RectI socketRect(pos, Point2I(mNodeSize, mNodeSize));
+            drawer->drawRect(socketRect, border);
+            socketRect.inset(1, 1);
+            drawer->drawRectFill(socketRect, mProfile->mFillColor);
          }
       }
    }
@@ -227,7 +272,7 @@ void GuiShaderEditor::onMouseDown(const GuiEvent& event)
    // get mouse pos with our view offset and scale.
    mLastMousePos = globalToLocalCoord(event.mousePoint) - mViewOffset;
 
-   ShaderNode* hitNode = findHitNode(mLastMousePos);
+   GuiShaderNode* hitNode = findHitNode(mLastMousePos);
 
    if (event.modifier & SI_SHIFT)
    {
@@ -311,10 +356,10 @@ void GuiShaderEditor::onMouseUp(const GuiEvent& event)
       }
       else
       {
-         Vector< ShaderNode* > hits;
+         Vector< GuiShaderNode* > hits;
          findNodesInRect(rect, hits);
 
-         for (ShaderNode* node : hits)
+         for (GuiShaderNode* node : hits)
          {
             addSelection(node);
          }
@@ -458,7 +503,7 @@ bool GuiShaderEditor::onMouseWheelDown(const GuiEvent& event)
 RectI GuiShaderEditor::getSelectionBounds()
 {
 
-   Vector<ShaderNode*>::const_iterator i = mSelectedNodes.begin();
+   Vector<GuiShaderNode*>::const_iterator i = mSelectedNodes.begin();
 
    Point2I minPos = (*i)->localToGlobalCoord(Point2I(0, 0));
    Point2I maxPos = minPos;
@@ -487,11 +532,11 @@ RectI GuiShaderEditor::getSelectionBounds()
 
 void GuiShaderEditor::deleteSelection()
 {
-   for (ShaderNode* node : mSelectedNodes)
+   for (GuiShaderNode* node : mSelectedNodes)
    {
       mTrash->addObject(node);
 
-      Vector< ShaderNode* >::iterator i = T3D::find(mCurrNodes.begin(), mCurrNodes.end(), node);
+      Vector< GuiShaderNode* >::iterator i = T3D::find(mCurrNodes.begin(), mCurrNodes.end(), node);
       if (i != mCurrNodes.end())
          mCurrNodes.erase(i);
    }
@@ -501,7 +546,7 @@ void GuiShaderEditor::deleteSelection()
 
 void GuiShaderEditor::moveSelection(const Point2I& delta, bool callback)
 {
-   for (ShaderNode* node : mSelectedNodes)
+   for (GuiShaderNode* node : mSelectedNodes)
    {
       node->setPosition(node->getPosition() + delta);
    }
@@ -514,19 +559,20 @@ void GuiShaderEditor::clearSelection()
 
 void GuiShaderEditor::cloneSelection()
 {
-   Vector<ShaderNode*> newSelection;
+   Vector<GuiShaderNode*> newSelection;
 
-   for (ShaderNode* node : mSelectedNodes)
+   for (GuiShaderNode* node : mSelectedNodes)
    {
-      ShaderNode* clone = dynamic_cast<ShaderNode*>(node->deepClone());
+      GuiShaderNode* clone = dynamic_cast<GuiShaderNode*>(node->deepClone());
       if (clone)
          newSelection.push_back(clone);
    }
 
    clearSelection();
 
-   for (ShaderNode* cloneNode : newSelection)
+   for (GuiShaderNode* cloneNode : newSelection)
    {
+      mCurrNodes.push_back(cloneNode);
       addSelection(cloneNode);
    }
 }
@@ -536,7 +582,7 @@ void GuiShaderEditor::addSelectionAtPoint(const Point2I& pos)
    // turn hit off on already selected nodes.
    canHitSelectedNodes(false);
 
-   ShaderNode* node = findHitNode(pos);
+   GuiShaderNode* node = findHitNode(pos);
 
    // reset hit status.
    canHitSelectedNodes();
@@ -545,7 +591,7 @@ void GuiShaderEditor::addSelectionAtPoint(const Point2I& pos)
       addSelection(node);
 }
 
-void GuiShaderEditor::addSelection(ShaderNode* inNode)
+void GuiShaderEditor::addSelection(GuiShaderNode* inNode)
 {
    if (inNode != NULL && !selectionContains(inNode))
    {
@@ -553,9 +599,9 @@ void GuiShaderEditor::addSelection(ShaderNode* inNode)
    }
 }
 
-bool GuiShaderEditor::selectionContains(ShaderNode* inNode)
+bool GuiShaderEditor::selectionContains(GuiShaderNode* inNode)
 {
-   for (ShaderNode* node : mSelectedNodes)
+   for (GuiShaderNode* node : mSelectedNodes)
    {
       if (node == inNode)
          return true;
@@ -564,11 +610,11 @@ bool GuiShaderEditor::selectionContains(ShaderNode* inNode)
    return false;
 }
 
-void GuiShaderEditor::removeSelection(ShaderNode* inNode)
+void GuiShaderEditor::removeSelection(GuiShaderNode* inNode)
 {
    if (selectionContains(inNode))
    {
-      Vector< ShaderNode* >::iterator i = T3D::find(mSelectedNodes.begin(), mSelectedNodes.end(), inNode);
+      Vector< GuiShaderNode* >::iterator i = T3D::find(mSelectedNodes.begin(), mSelectedNodes.end(), inNode);
       if (i != mSelectedNodes.end())
          mSelectedNodes.erase(i);
    }
@@ -576,7 +622,7 @@ void GuiShaderEditor::removeSelection(ShaderNode* inNode)
 
 void GuiShaderEditor::canHitSelectedNodes(bool state)
 {
-   for (ShaderNode* node : mSelectedNodes)
+   for (GuiShaderNode* node : mSelectedNodes)
       node->setCanHit(state);
 }
 
@@ -584,12 +630,20 @@ void GuiShaderEditor::canHitSelectedNodes(bool state)
 // Input handling
 //-----------------------------------------------------------------------------
 
-ShaderNode* GuiShaderEditor::findHitNode(const Point2I& pt)
+GuiShaderNode* GuiShaderEditor::findHitNode(const Point2I& pt)
 {
-   for (ShaderNode* node : mCurrNodes)
+   for (GuiShaderNode* node : mCurrNodes)
    {
       if (node->pointInControl(pt))
       {
+         // selecting one node, push it to the front of the mcurrnodes stack so its rendered on top.
+         Vector< GuiShaderNode* >::iterator i = T3D::find(mCurrNodes.begin(), mCurrNodes.end(), node);
+         if (i != mCurrNodes.end())
+         {
+            mCurrNodes.erase(i);
+            mCurrNodes.insert(mCurrNodes.begin(), node);
+         }
+
          return node;
       }
    }
@@ -597,10 +651,10 @@ ShaderNode* GuiShaderEditor::findHitNode(const Point2I& pt)
    return nullptr;
 }
 
-void GuiShaderEditor::findNodesInRect(const RectI& rect, Vector<ShaderNode*>& outResult)
+void GuiShaderEditor::findNodesInRect(const RectI& rect, Vector<GuiShaderNode*>& outResult)
 {
    canHitSelectedNodes(false);
-   for (ShaderNode* node : mCurrNodes)
+   for (GuiShaderNode* node : mCurrNodes)
    {
       if (node->getBounds().overlaps(rect))
       {
@@ -627,7 +681,7 @@ void GuiShaderEditor::startDragMove(const Point2I& startPoint)
 
    mDragBeginPoints.reserve(mSelectedNodes.size());
 
-   for (ShaderNode* node : mSelectedNodes)
+   for (GuiShaderNode* node : mSelectedNodes)
    {
       mDragBeginPoints.push_back(node->getPosition());
    }

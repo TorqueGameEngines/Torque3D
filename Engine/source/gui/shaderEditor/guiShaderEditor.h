@@ -48,7 +48,7 @@ public:
 protected:
 
    // list
-   typedef Vector<ShaderNode*> ShaderNodeVector;
+   typedef Vector<GuiShaderNode*> ShaderNodeVector;
    // all nodes in this graph.
    ShaderNodeVector mCurrNodes;
 
@@ -68,13 +68,14 @@ protected:
    bool mDragAddSelection;
    bool mDragMoveUndo;
    bool mFullBoxSelection;
+   S32 mNodeSize;
    ShaderNodeVector mSelectedNodes;
 
    void renderNodes(Point2I offset, const RectI& updateRect);
 
    // functions for handling mouse events.
-   ShaderNode* findHitNode(const Point2I& pt);
-   void findNodesInRect(const RectI& rect, Vector<ShaderNode*>& outResult);
+   GuiShaderNode* findHitNode(const Point2I& pt);
+   void findNodesInRect(const RectI& rect, Vector<GuiShaderNode*>& outResult);
 
    void getDragRect(RectI& box);
    void startDragMove(const Point2I& startPoint);
@@ -115,9 +116,9 @@ public:
    void clearSelection();
    void cloneSelection();
    void addSelectionAtPoint(const Point2I& pos);
-   void addSelection(ShaderNode* inNode);
-   bool selectionContains(ShaderNode* inNode);
-   void removeSelection(ShaderNode* inNode);
+   void addSelection(GuiShaderNode* inNode);
+   bool selectionContains(GuiShaderNode* inNode);
+   void removeSelection(GuiShaderNode* inNode);
    void canHitSelectedNodes(bool state = true);
 };
 

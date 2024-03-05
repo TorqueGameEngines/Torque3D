@@ -404,6 +404,22 @@ void ArrayObject::uniqueKey()
 
 //-----------------------------------------------------------------------------
 
+void ArrayObject::uniquePair()
+{
+   for (S32 i = 0; i < mArray.size(); i++)
+   {
+      for (S32 j = i + 1; j < mArray.size(); j++)
+      {
+         if (isEqual(mArray[i].key, mArray[j].key) && isEqual(mArray[i].value, mArray[j].value))
+         {
+            erase(j);
+            j--;
+         }
+      }
+   }
+}
+//-----------------------------------------------------------------------------
+
 void ArrayObject::duplicate(ArrayObject* obj)
 {
    empty();
@@ -738,6 +754,12 @@ DefineEngineMethod( ArrayObject, uniqueKey, void, (),,
    "Removes any elements that have duplicated keys (leaving the first instance)" )
 {
    object->uniqueKey();
+}
+
+DefineEngineMethod(ArrayObject, uniquePair, void, (), ,
+   "Removes any elements that have duplicated key and value pairs (leaving the first instance)")
+{
+   object->uniquePair();
 }
 
 DefineEngineMethod( ArrayObject, duplicate, bool, ( ArrayObject* target ),,

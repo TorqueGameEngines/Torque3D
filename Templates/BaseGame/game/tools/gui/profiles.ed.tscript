@@ -947,11 +947,10 @@ singleton GuiControlProfile(GuiShaderEditorProfile : ToolsGuiDefaultProfile)
 {
    opaque = true;
    canKeyFocus = true;
-};
-
-singleton GuiControlProfile(ShaderNodeProfile : ToolsGuiDefaultProfile)
-{
-   opaque = true;
+   border = true;
+   borderColor = "128 128 128 128";
+   borderColorHL = "128 128 0";
+   borderColorSEL = "128 0 128 128";
 };
 
 singleton GuiControlProfile( GuiControlListPopupProfile )

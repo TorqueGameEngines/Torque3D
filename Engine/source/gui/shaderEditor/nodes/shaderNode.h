@@ -58,31 +58,43 @@ enum class DataDimensions
    Mat4x4,
 };
 
-struct NodeInput
+// parent class for sockets detection in shaderEditor.
+struct NodeSocket
 {
    String name;
    DataDimensions dimensions;
+   NodeSocket()
+      :name(String::EmptyString), dimensions(DataDimensions::Dynamic)
+   {}
+   NodeSocket(String inName, DataDimensions inDim)
+      :name(inName), dimensions(inDim)
+   {}
+
+public:
+   virtual ~NodeSocket() {}
+};
+
+struct NodeInput : NodeSocket
+{
    Point2I pos = Point2I::Zero;
 
    NodeInput()
-      :name(String::EmptyString), dimensions(DataDimensions::Dynamic)
+      :NodeSocket()
    {}
    NodeInput(String inName , DataDimensions inDim)
-      :name(inName), dimensions(inDim)
+      :NodeSocket(inName , inDim)
    {}
 };
 
-struct NodeOutput
+struct NodeOutput : NodeSocket
 {
-   String name;
-   DataDimensions dimensions;
    Point2I pos = Point2I::Zero;
 
    NodeOutput()
-      :name(String::EmptyString), dimensions(DataDimensions::Dynamic)
+      :NodeSocket()
    {}
    NodeOutput(String inName, DataDimensions inDim)
-      :name(inName), dimensions(inDim)
+      :NodeSocket(inName, inDim)
    {}
 };
 
@@ -107,8 +119,7 @@ public:
    virtual bool onAdd() override;
    virtual void onRemove() override;
 
-   void onRender(Point2I offset, const RectI& updateRect, const S32 nodeSize);
-
+   void renderNode(Point2I offset, const RectI& updateRect, const S32 nodeSize);
    // Serialization functions
    void write(Stream& stream, U32 tabStop = 0, U32 flags = 0);
    void read(Stream& stream);

@@ -37,6 +37,17 @@
 #include "gui/shaderEditor/nodes/shaderNode.h"
 #endif // !_SHADERNODE_H_
 
+struct NodeConnection
+{
+   // keep track of the nodes hit.
+   GuiShaderNode* nodeA = NULL;
+   GuiShaderNode* nodeB = NULL;
+
+   // keep track of the sockets.
+   NodeInput* inSocket = NULL;
+   NodeOutput* outSocket = NULL;
+};
+
 class GuiShaderEditor : public GuiControl
 {
 public:
@@ -49,9 +60,11 @@ protected:
 
    // list
    typedef Vector<GuiShaderNode*> ShaderNodeVector;
+   typedef Vector<NodeConnection*> ShderNodeConnections;
    // all nodes in this graph.
    ShaderNodeVector mCurrNodes;
-
+   ShderNodeConnections mCurrConnections;
+   NodeConnection* mTempConnection;
    // Undo
    SimGroup* mTrash;
 
@@ -72,9 +85,15 @@ protected:
    ShaderNodeVector mSelectedNodes;
 
    void renderNodes(Point2I offset, const RectI& updateRect);
+   void renderConnections(Point2I offset, const RectI& updateRect);
 
    // functions for handling mouse events.
    GuiShaderNode* findHitNode(const Point2I& pt);
+   bool findHitSocket(const Point2I& pt);
+   U32 finishConnection(const Point2I& pt);
+   bool hasConnection(NodeSocket* inSocket);
+   bool hasConnection(NodeSocket* inSocket, NodeConnection*& conn);
+
    void findNodesInRect(const RectI& rect, Vector<GuiShaderNode*>& outResult);
 
    void getDragRect(RectI& box);
@@ -82,6 +101,7 @@ protected:
    void startDragRectangle(const Point2I& startPoint);
    void startDragClone(const Point2I& startPoint);
    void setMouseMode(mouseModes mode);
+   void addNode(GuiShaderNode* newNode);
 
 public:
    GuiShaderEditor();
@@ -97,6 +117,7 @@ public:
    virtual void onRemove() override;
 
    virtual void onPreRender() override;
+   void drawThickLine(const Point2I& pt1, const Point2I& pt2, U32 thickness, ColorI col1, ColorI col2);
    virtual void onRender(Point2I offset, const RectI& updateRect) override;
 
    // interaction

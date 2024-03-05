@@ -31,6 +31,7 @@
 #include "console/engineAPI.h"
 #include "console/script.h"
 #include "console/typeValidators.h"
+#include "gfx/primBuilder.h"
 
 IMPLEMENT_CONOBJECT(GuiShaderEditor);
 
@@ -51,15 +52,17 @@ GuiShaderEditor::GuiShaderEditor()
    VECTOR_SET_ASSOCIATION(mCurrNodes);
    VECTOR_SET_ASSOCIATION(mSelectedNodes);
    VECTOR_SET_ASSOCIATION(mDragBeginPoints);
+   VECTOR_SET_ASSOCIATION(mCurrConnections);
 
    mActive = true;
    mMouseDownMode = GuiShaderEditor::Selecting;
 
    mTrash = NULL;
+   mTempConnection = NULL;
    mNodeSize = 10;
    // test
-   mCurrNodes.push_back(new GuiShaderNode());
-   mCurrNodes.push_back(new GuiShaderNode());
+   addNode(new GuiShaderNode());
+   addNode(new GuiShaderNode());
 }
 
 bool GuiShaderEditor::onWake()
@@ -115,10 +118,10 @@ void GuiShaderEditor::onRemove()
 
    mTrash = NULL;
 
-   for (GuiShaderNode* node : mCurrNodes)
+  /* for (GuiShaderNode* node : mCurrNodes)
    {
       SAFE_DELETE(node);
-   }
+   }*/
 
    for (GuiShaderNode* node : mSelectedNodes)
    {
@@ -129,6 +132,45 @@ void GuiShaderEditor::onRemove()
 void GuiShaderEditor::onPreRender()
 {
    setUpdate();
+}
+
+void GuiShaderEditor::drawThickLine(const Point2I& pt1, const Point2I& pt2, U32 thickness = 2, ColorI col1 = ColorI(255, 255, 255), ColorI col2 = ColorI(255, 255, 255))
+{
+   Point2F dir = Point2F(pt2.x - pt1.x, pt2.y - pt1.y);
+   if (dir == Point2F::Zero)
+      return;
+
+   Point2F unitDir = dir / mSqrt(dir.x * dir.x + dir.y * dir.y);
+   Point2F unitPerp(-unitDir.y, unitDir.x);
+   Point2F offset = (thickness / 2.0f) * unitPerp;
+
+   GFX->setStateBlock(mDefaultGuiSB);
+
+   Point2F lT = Point2F(pt1.x, pt1.y) + offset;
+   Point2F lB = Point2F(pt1.x, pt1.y) - offset;
+   Point2F rT = Point2F(pt2.x, pt2.y) + offset;
+   Point2F rB = Point2F(pt2.x, pt2.y) - offset;
+
+
+   PrimBuild::begin(GFXTriangleStrip, 4);
+
+   // top left.
+   PrimBuild::color(col1);
+   PrimBuild::vertex2f(lT.x, lT.y);
+
+   // bottom left.
+   PrimBuild::color(col1);
+   PrimBuild::vertex2f(lB.x, lB.y);
+
+   // top right.
+   PrimBuild::color(col2);
+   PrimBuild::vertex2f(rT.x, rT.y);
+
+   // bottom right.
+   PrimBuild::color(col2);
+   PrimBuild::vertex2f(rB.x, rB.y);
+
+   PrimBuild::end();
 }
 
 void GuiShaderEditor::renderNodes(Point2I offset, const RectI& updateRect)
@@ -168,7 +210,7 @@ void GuiShaderEditor::renderNodes(Point2I offset, const RectI& updateRect)
          {
             GFX->setClipRect(childClip);
             GFX->setStateBlock(mDefaultGuiSB);
-            node->onRender(childPos, childClip, mNodeSize);
+            node->renderNode(childPos, childClip, mNodeSize);
          }
 
          GFX->setClipRect(clipRect);
@@ -185,7 +227,14 @@ void GuiShaderEditor::renderNodes(Point2I offset, const RectI& updateRect)
             RectI socketRect(pos, Point2I(mNodeSize, mNodeSize));
             drawer->drawRect(socketRect, border);
             socketRect.inset(1, 1);
-            drawer->drawRectFill(socketRect, mProfile->mFillColor);
+
+            ColorI fill = mProfile->mFillColor;
+            if (hasConnection(input))
+            {
+               fill = ColorI::WHITE;
+            }
+
+            drawer->drawRectFill(socketRect, fill);
          }
 
          for (NodeOutput* output : node->mOutputNodes)
@@ -200,9 +249,50 @@ void GuiShaderEditor::renderNodes(Point2I offset, const RectI& updateRect)
             RectI socketRect(pos, Point2I(mNodeSize, mNodeSize));
             drawer->drawRect(socketRect, border);
             socketRect.inset(1, 1);
-            drawer->drawRectFill(socketRect, mProfile->mFillColor);
+
+            ColorI fill = mProfile->mFillColor;
+            if (hasConnection(output))
+            {
+               fill = ColorI::WHITE;
+            }
+
+            drawer->drawRectFill(socketRect, fill);
          }
       }
+   }
+
+   // Restore the clip rect to what it was at the start
+   // of this method.
+   GFX->setClipRect(savedClipRect);
+}
+
+void GuiShaderEditor::renderConnections(Point2I offset, const RectI& updateRect)
+{
+   // Save the current clip rect
+   // so we can restore it at the end of this method.
+   RectI savedClipRect = GFX->getClipRect();
+
+   // offset is the upper-left corner of this control in screen coordinates
+   // updateRect is the intersection rectangle in screen coords of the control
+   // hierarchy.  This can be set as the clip rectangle in most cases.
+   RectI clipRect = updateRect;
+   clipRect.inset(2, 2);
+
+   GFXDrawUtil* drawer = GFX->getDrawUtil();
+
+   for (NodeConnection* conn : mCurrConnections)
+   {
+      // for temp connetion, nodeA is always the first node selected.
+      Point2I start(Point2I::Zero);
+      Point2I end(Point2I::Zero);
+
+      start = conn->nodeA->localToGlobalCoord(conn->inSocket->pos) + offset;
+      end = conn->nodeB->localToGlobalCoord(conn->outSocket->pos) + offset;
+
+      start += Point2I(mNodeSize / 2, mNodeSize / 2);
+      end += Point2I(mNodeSize / 2, mNodeSize / 2);
+
+      drawThickLine(start, end);
    }
 
    // Restore the clip rect to what it was at the start
@@ -217,21 +307,48 @@ void GuiShaderEditor::onRender(Point2I offset, const RectI& updateRect)
    GFXDrawUtil* drawer = GFX->getDrawUtil();
 
    // render our nodes.
+   renderConnections(offset, updateRect);
    renderNodes(offset, updateRect);
 
-   // Draw selection rectangle last so it is rendered on top.
-   if (mActive && mMouseDownMode == DragSelecting)
+   if (mActive)
    {
-      RectI b;
-      getDragRect(b);
-      b.point += offset;
+      if (mMouseDownMode == DragConnection)
+      {
+         // something went wrong.... fix it fix it fix it.
+         if (mTempConnection == NULL)
+            return;
+         else
+         {
+            // for temp connetion, nodeA is always the first node selected.
+            Point2I start(Point2I::Zero);
+            if (mTempConnection->inSocket != NULL)
+               start = mTempConnection->nodeA->localToGlobalCoord(mTempConnection->inSocket->pos) + offset;
+            else if(mTempConnection->outSocket != NULL)
+               start = mTempConnection->nodeA->localToGlobalCoord(mTempConnection->outSocket->pos) + offset;
 
-      // Draw outline.
-      drawer->drawRect(b, ColorI(100, 100, 100, 128));
+            RectI sockActive(start, Point2I(mNodeSize, mNodeSize));
+            start += Point2I(mNodeSize / 2, mNodeSize / 2);
+            drawThickLine(start, mLastMousePos + offset);
 
-      // Draw fill.
-      b.inset(1, 1);
-      drawer->drawRectFill(b, ColorI(150, 150, 150, 128));
+            // draw socket overlay over the top of the line.
+            sockActive.inset(1, 1);
+            drawer->drawRectFill(sockActive, ColorI(255, 255, 255));
+         }
+      }
+      // Draw selection rectangle last so it is rendered on top.
+      if (mMouseDownMode == DragSelecting)
+      {
+         RectI b;
+         getDragRect(b);
+         b.point += offset;
+
+         // Draw outline.
+         drawer->drawRect(b, ColorI(100, 100, 100, 128));
+
+         // Draw fill.
+         b.inset(1, 1);
+         drawer->drawRectFill(b, ColorI(150, 150, 150, 128));
+      }
    }
 }
 
@@ -274,51 +391,59 @@ void GuiShaderEditor::onMouseDown(const GuiEvent& event)
 
    GuiShaderNode* hitNode = findHitNode(mLastMousePos);
 
-   if (event.modifier & SI_SHIFT)
+   if(findHitSocket(mLastMousePos))
    {
-      startDragRectangle(mLastMousePos);
-      mDragAddSelection = true;
-   }
-   else if (selectionContains(hitNode))
-   {
-      if (event.modifier & SI_MULTISELECT)
-      {
-         removeSelection(hitNode);
-         setMouseMode(Selecting);
-      }
-      else if (event.modifier & SI_PRIMARY_ALT)
-      {
-         startDragClone(mLastMousePos);
-      }
-      else
-      {
-         startDragMove(mLastMousePos);
-      }
+      // handled in hit socket.
+      return;
    }
    else
    {
-      if (hitNode == NULL)
+      if (event.modifier & SI_SHIFT)
       {
          startDragRectangle(mLastMousePos);
-         mDragAddSelection = false;
+         mDragAddSelection = true;
       }
-      else if (event.modifier & SI_PRIMARY_ALT && hitNode != NULL)
+      else if (selectionContains(hitNode))
       {
-         // Alt is down.  Start a drag clone.
-         clearSelection();
-         addSelection(hitNode);
-         startDragClone(mLastMousePos);
-      }
-      else if (event.modifier & SI_MULTISELECT)
-      {
-         addSelection(hitNode);
+         if (event.modifier & SI_MULTISELECT)
+         {
+            removeSelection(hitNode);
+            setMouseMode(Selecting);
+         }
+         else if (event.modifier & SI_PRIMARY_ALT)
+         {
+            startDragClone(mLastMousePos);
+         }
+         else
+         {
+            startDragMove(mLastMousePos);
+         }
       }
       else
       {
-         // Clicked on node.  Start move.
-         clearSelection();
-         addSelection(hitNode);
-         startDragMove(mLastMousePos);
+         if (hitNode == NULL)
+         {
+            startDragRectangle(mLastMousePos);
+            mDragAddSelection = false;
+         }
+         else if (event.modifier & SI_PRIMARY_ALT && hitNode != NULL)
+         {
+            // Alt is down.  Start a drag clone.
+            clearSelection();
+            addSelection(hitNode);
+            startDragClone(mLastMousePos);
+         }
+         else if (event.modifier & SI_MULTISELECT)
+         {
+            addSelection(hitNode);
+         }
+         else
+         {
+            // Clicked on node.  Start move.
+            clearSelection();
+            addSelection(hitNode);
+            startDragMove(mLastMousePos);
+         }
       }
    }
 
@@ -341,6 +466,35 @@ void GuiShaderEditor::onMouseUp(const GuiEvent& event)
 
    // get mouse pos with our view offset and scale.
    mLastMousePos = globalToLocalCoord(event.mousePoint) - mViewOffset;
+
+   if (mMouseDownMode == DragConnection)
+   {
+      U32 ret = finishConnection(mLastMousePos);
+
+      if (ret == 1) // we set the input on mouse up, nodeB is the inputSocket, swap order.
+      {
+         NodeConnection* conn = new NodeConnection();
+         conn->nodeA = mTempConnection->nodeB;
+         conn->nodeB = mTempConnection->nodeA;
+         conn->inSocket = mTempConnection->inSocket;
+         conn->outSocket = mTempConnection->outSocket;
+
+         mCurrConnections.push_back(conn);
+      }
+
+      if (ret == 2) // we set the output on mouse up, nodeB is the outputSocket
+      {
+         NodeConnection* conn = new NodeConnection();
+         conn->nodeA = mTempConnection->nodeA;
+         conn->nodeB = mTempConnection->nodeB;
+         conn->inSocket = mTempConnection->inSocket;
+         conn->outSocket = mTempConnection->outSocket;
+
+         mCurrConnections.push_back(conn);
+      }
+
+      mTempConnection = NULL;
+   }
 
    if (mMouseDownMode == DragSelecting)
    {
@@ -536,6 +690,34 @@ void GuiShaderEditor::deleteSelection()
    {
       mTrash->addObject(node);
 
+      for (NodeInput* input : node->mInputNodes)
+      {
+         NodeConnection* conn;
+         if (hasConnection(input, conn))
+         {
+            // selecting one node, push it to the front of the mcurrnodes stack so its rendered on top.
+            Vector< NodeConnection* >::iterator i = T3D::find(mCurrConnections.begin(), mCurrConnections.end(), conn);
+            if (i != mCurrConnections.end())
+            {
+               mCurrConnections.erase(i);
+            }
+         }
+      }
+
+      for (NodeOutput* output : node->mOutputNodes)
+      {
+         NodeConnection* conn;
+         if (hasConnection(output, conn))
+         {
+            // selecting one node, push it to the front of the mcurrnodes stack so its rendered on top.
+            Vector< NodeConnection* >::iterator i = T3D::find(mCurrConnections.begin(), mCurrConnections.end(), conn);
+            if (i != mCurrConnections.end())
+            {
+               mCurrConnections.erase(i);
+            }
+         }
+      }
+
       Vector< GuiShaderNode* >::iterator i = T3D::find(mCurrNodes.begin(), mCurrNodes.end(), node);
       if (i != mCurrNodes.end())
          mCurrNodes.erase(i);
@@ -651,6 +833,147 @@ GuiShaderNode* GuiShaderEditor::findHitNode(const Point2I& pt)
    return nullptr;
 }
 
+bool GuiShaderEditor::findHitSocket(const Point2I& pt)
+{
+   Point2I parentOffset = localToGlobalCoord(getPosition()) + mViewOffset;
+   Point2I offsetPoint = pt + localToGlobalCoord(getPosition());
+
+   for (GuiShaderNode* node : mCurrNodes)
+   {
+      for (NodeInput* inNode : node->mInputNodes)
+      {
+         Point2I offSet = node->localToGlobalCoord(inNode->pos) + parentOffset;
+         RectI box(offSet.x, offSet.y, mNodeSize, mNodeSize);
+
+         S32 xt = offsetPoint.x - box.point.x;
+         S32 yt = offsetPoint.y - box.point.y;
+         if (xt >= 0 && yt >= 0 && xt < box.extent.x && yt < box.extent.y)
+         {
+            mTempConnection = new NodeConnection();
+            mTempConnection->nodeA = node;
+            mTempConnection->inSocket = inNode;
+            setMouseMode(DragConnection);
+            return true;
+         }
+      }
+
+      for (NodeOutput* outNode : node->mOutputNodes)
+      {
+         Point2I offSet = node->localToGlobalCoord(outNode->pos) + parentOffset;
+         RectI box(offSet.x, offSet.y, mNodeSize, mNodeSize);
+
+         S32 xt = offsetPoint.x - box.point.x;
+         S32 yt = offsetPoint.y - box.point.y;
+         if (xt >= 0 && yt >= 0 && xt < box.extent.x && yt < box.extent.y)
+         {
+            mTempConnection = new NodeConnection();
+            mTempConnection->nodeA = node;
+            mTempConnection->outSocket = outNode;
+            setMouseMode(DragConnection);
+            return true;
+         }
+      }
+   }
+   return false;
+}
+
+U32 GuiShaderEditor::finishConnection(const Point2I& pt)
+{
+   Point2I parentOffset = localToGlobalCoord(getPosition()) + mViewOffset;
+   Point2I offsetPoint = pt + localToGlobalCoord(getPosition());
+
+   for (GuiShaderNode* node : mCurrNodes)
+   {
+      for (NodeInput* inNode : node->mInputNodes)
+      {
+         Point2I offSet = node->localToGlobalCoord(inNode->pos) + parentOffset;
+         RectI box(offSet.x, offSet.y, mNodeSize, mNodeSize);
+
+         S32 xt = offsetPoint.x - box.point.x;
+         S32 yt = offsetPoint.y - box.point.y;
+         if (xt >= 0 && yt >= 0 && xt < box.extent.x && yt < box.extent.y)
+         {
+            if (mTempConnection->nodeA == node || mTempConnection->inSocket != NULL)
+               return false;
+
+            NodeConnection* conn;
+            if(hasConnection(inNode, conn))
+            {
+               // selecting one node, push it to the front of the mcurrnodes stack so its rendered on top.
+               Vector< NodeConnection* >::iterator i = T3D::find(mCurrConnections.begin(), mCurrConnections.end(), conn);
+               if (i != mCurrConnections.end())
+               {
+                  mCurrConnections.erase(i);
+               }
+            }
+
+            mTempConnection->nodeB = node;
+            mTempConnection->inSocket = inNode;
+            return 1;
+         }
+      }
+
+      for (NodeOutput* outNode : node->mOutputNodes)
+      {
+         Point2I offSet = node->localToGlobalCoord(outNode->pos) + parentOffset;
+         RectI box(offSet.x, offSet.y, mNodeSize, mNodeSize);
+
+         S32 xt = offsetPoint.x - box.point.x;
+         S32 yt = offsetPoint.y - box.point.y;
+         if (xt >= 0 && yt >= 0 && xt < box.extent.x && yt < box.extent.y)
+         {
+            if (mTempConnection->nodeA == node || mTempConnection->outSocket != NULL)
+               return false;
+
+            NodeConnection* conn;
+            if (hasConnection(mTempConnection->inSocket, conn))
+            {
+               // selecting one node, push it to the front of the mcurrnodes stack so its rendered on top.
+               Vector< NodeConnection* >::iterator i = T3D::find(mCurrConnections.begin(), mCurrConnections.end(), conn);
+               if (i != mCurrConnections.end())
+               {
+                  mCurrConnections.erase(i);
+               }
+            }
+
+            mTempConnection->nodeB = node;
+            mTempConnection->outSocket = outNode;
+            return 2;
+         }
+      }
+   }
+   return 0;
+}
+
+bool GuiShaderEditor::hasConnection(NodeSocket* inSocket)
+{
+   for (NodeConnection* con : mCurrConnections)
+   {
+      if (con->inSocket == dynamic_cast<NodeInput*>(inSocket) || con->outSocket == dynamic_cast<NodeOutput*>(inSocket))
+      {
+         return true;
+      }
+   }
+
+   return false;
+}
+
+bool GuiShaderEditor::hasConnection(NodeSocket* inSocket, NodeConnection*& conn)
+{
+   for (NodeConnection* con : mCurrConnections)
+   {
+      if (con->inSocket == dynamic_cast<NodeInput*>(inSocket) || con->outSocket == dynamic_cast<NodeOutput*>(inSocket))
+      {
+         if (conn != nullptr)
+            conn = con;
+
+         return true;
+      }
+   }
+
+   return false;
+}
+
 void GuiShaderEditor::findNodesInRect(const RectI& rect, Vector<GuiShaderNode*>& outResult)
 {
    canHitSelectedNodes(false);
@@ -708,5 +1031,10 @@ void GuiShaderEditor::setMouseMode(mouseModes mode)
    {
       mMouseDownMode = mode;
    }
+}
+
+void GuiShaderEditor::addNode(GuiShaderNode* newNode)
+{
+   mCurrNodes.push_back(newNode);
 }
 

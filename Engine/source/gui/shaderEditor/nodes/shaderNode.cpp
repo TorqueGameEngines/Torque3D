@@ -96,7 +96,7 @@ void GuiShaderNode::onRemove()
    Parent::onRemove();
 }
 
-void GuiShaderNode::onRender(Point2I offset, const RectI& updateRect, const S32 nodeSize)
+void GuiShaderNode::renderNode(Point2I offset, const RectI& updateRect, const S32 nodeSize)
 {
    if (!mProfile)
       return Parent::onRender(offset, updateRect);
@@ -191,7 +191,7 @@ void GuiShaderNode::onRender(Point2I offset, const RectI& updateRect, const S32 
          drawer->drawText(mProfile->mFont, slotPos + offset, output->name);
 
          if (output->pos == Point2I::Zero || mPrevNodeSize != nodeSize)
-            output->pos = Point2I(getExtent().x - (nodeSize / 2), slotPos.y + ((mProfile->mFont->getFontSize() / 2) - (nodeSize / 2)));
+            output->pos = Point2I(getExtent().x - (nodeSize / 2) - 1 , slotPos.y + ((mProfile->mFont->getFontSize() / 2) - (nodeSize / 2)));
 
          slotPos.y += textPadY;
       }

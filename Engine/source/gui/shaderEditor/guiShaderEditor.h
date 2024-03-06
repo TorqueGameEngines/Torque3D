@@ -34,7 +34,7 @@
 #endif
 
 #ifndef _SHADERNODE_H_
-#include "gui/shaderEditor/nodes/shaderNode.h"
+#include "gui/shaderEditor/guiShaderNode.h"
 #endif // !_SHADERNODE_H_
 
 struct NodeConnection

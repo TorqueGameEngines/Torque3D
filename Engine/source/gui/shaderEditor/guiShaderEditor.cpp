@@ -22,6 +22,7 @@
 
 #include "platform/platform.h"
 #include "gui/shaderEditor/guiShaderEditor.h"
+#include "gui/shaderEditor/nodes/materialOutputNode.h"
 
 #include "core/frameAllocator.h"
 #include "core/stream/fileStream.h"
@@ -61,7 +62,7 @@ GuiShaderEditor::GuiShaderEditor()
    mTempConnection = NULL;
    mNodeSize = 10;
    // test
-   addNode(new GuiShaderNode());
+   addNode(new MaterialOutputNode());
    addNode(new GuiShaderNode());
 }
 
@@ -180,15 +181,12 @@ void GuiShaderEditor::renderNodes(Point2I offset, const RectI& updateRect)
          {
             Point2I pos = node->localToGlobalCoord(input->pos) + offset;
 
-            ColorI border = mProfile->mBorderColor;
-
-            if (node->mSelected)
-               border = mProfile->mBorderColorSEL;
+            ColorI border = input->col;
 
             ColorI fill = mProfile->mFillColor;
             if (hasConnection(input))
             {
-               fill = ColorI::WHITE;
+               fill = input->col;
             }
 
             RectI socketRect(pos, Point2I(mNodeSize, mNodeSize));
@@ -199,18 +197,12 @@ void GuiShaderEditor::renderNodes(Point2I offset, const RectI& updateRect)
          {
             Point2I pos = node->localToGlobalCoord(output->pos) + offset;
 
-            ColorI border = mProfile->mBorderColor;
-
-            if (node->mSelected)
-               border = mProfile->mBorderColorSEL;
-
-            if(node->mSelected)
-               border = mProfile->mBorderColorSEL;
+            ColorI border = output->col;
 
             ColorI fill = mProfile->mFillColor;
             if (hasConnection(output))
             {
-               fill = ColorI::WHITE;
+               fill = output->col;
             }
 
             RectI socketRect(pos, Point2I(mNodeSize, mNodeSize));

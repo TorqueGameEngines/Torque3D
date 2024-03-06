@@ -21,7 +21,7 @@
 //-----------------------------------------------------------------------------
 
 #include "platform/platform.h"
-#include "gui/shaderEditor/nodes/shaderNode.h"
+#include "gui/shaderEditor/guiShaderNode.h"
 
 #include "gui/core/guiCanvas.h"
 
@@ -48,18 +48,8 @@ GuiShaderNode::GuiShaderNode()
    if (Sim::findObject("GuiShaderEditorProfile", profile))
       setControlProfile(profile);
 
-   mInputNodes.push_back(new NodeInput("RGBA", DataDimensions::Dynamic));
-   mInputNodes.push_back(new NodeInput("RGBA", DataDimensions::Dynamic));
-   mInputNodes.push_back(new NodeInput("RGBA", DataDimensions::Dynamic));
-   mInputNodes.push_back(new NodeInput("RGBA", DataDimensions::Dynamic));
-
-   mOutputNodes.push_back(new NodeOutput("RGBA", DataDimensions::Dynamic));
-   mOutputNodes.push_back(new NodeOutput("RGBA", DataDimensions::Dynamic));
-   mOutputNodes.push_back(new NodeOutput("RGBA", DataDimensions::Dynamic));
-   mOutputNodes.push_back(new NodeOutput("RGBA", DataDimensions::Dynamic));
-
    // fixed extent for all nodes, only height should be changed
-   setExtent(210, 35);
+   setExtent(180, 35);
 
    mPrevNodeSize = -1;
 }

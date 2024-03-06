@@ -93,6 +93,7 @@ protected:
    /// @{
    GLuint mVertexShader;
    GLuint mPixelShader;
+   GLuint mGeometryShader;
    GLuint mProgram;
    /// @}
 

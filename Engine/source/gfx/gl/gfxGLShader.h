@@ -50,43 +50,43 @@ public:
    virtual const Vector<GFXShaderConstDesc>& getShaderConstDesc() const;
 
    /// Returns the alignment value for constType
-   virtual U32 getAlignmentValue(const GFXShaderConstType constType) const; 
+   virtual U32 getAlignmentValue(const GFXShaderConstType constType) const;
 
    virtual GFXShaderConstBufferRef allocConstBuffer();
 
    /// @}
-   
+
    /// @name GFXResource interface
    /// @{
    virtual void zombify();
    virtual void resurrect() { reload(); }
    virtual const String describeSelf() const;
-   /// @}      
+   /// @}
 
    /// Activates this shader in the GL context.
    void useProgram();
-   
+
 protected:
 
    friend class GFXGLShaderConstBuffer;
    friend class GFXGLShaderConstHandle;
-   
-   virtual bool _init();   
 
-   bool initShader(  const Torque::Path &file, 
-                     bool isVertex, 
+   virtual bool _init();
+
+   bool initShader(  const Torque::Path &file,
+                     GFXShaderStage stage,
                      const Vector<GFXShaderMacro> &macros );
 
    void clearShaders();
    void initConstantDescs();
    void initHandles();
    void setConstantsFromBuffer(GFXGLShaderConstBuffer* buffer);
-   
+
    static char* _handleIncludes( const Torque::Path &path, FileStream *s );
 
-   static bool _loadShaderFromStream(  GLuint shader, 
-                                       const Torque::Path& path, 
-                                       FileStream* s, 
+   static bool _loadShaderFromStream(  GLuint shader,
+                                       const Torque::Path& path,
+                                       FileStream* s,
                                        const Vector<GFXShaderMacro>& macros );
 
    /// @name Internal GL handles
@@ -95,7 +95,7 @@ protected:
    GLuint mPixelShader;
    GLuint mProgram;
    /// @}
-    
+
    Vector<GFXShaderConstDesc> mConstants;
    U32 mConstBufferSize;
    U8* mConstBuffer;
@@ -109,7 +109,7 @@ class GFXGLShaderConstBuffer : public GFXShaderConstBuffer
 public:
    GFXGLShaderConstBuffer(GFXGLShader* shader, U32 bufSize, U8* existingConstants);
    ~GFXGLShaderConstBuffer();
-   
+
    /// Called by GFXGLDevice to activate this buffer.
    void activate();
 
@@ -123,7 +123,7 @@ public:
    virtual void set(GFXShaderConstHandle* handle, const Point3F& fv);
    virtual void set(GFXShaderConstHandle* handle, const Point4F& fv);
    virtual void set(GFXShaderConstHandle* handle, const PlaneF& fv);
-   virtual void set(GFXShaderConstHandle* handle, const LinearColorF& fv);   
+   virtual void set(GFXShaderConstHandle* handle, const LinearColorF& fv);
    virtual void set(GFXShaderConstHandle* handle, const S32 f);
    virtual void set(GFXShaderConstHandle* handle, const Point2I& fv);
    virtual void set(GFXShaderConstHandle* handle, const Point3I& fv);
@@ -131,13 +131,13 @@ public:
    virtual void set(GFXShaderConstHandle* handle, const AlignedArray<F32>& fv);
    virtual void set(GFXShaderConstHandle* handle, const AlignedArray<Point2F>& fv);
    virtual void set(GFXShaderConstHandle* handle, const AlignedArray<Point3F>& fv);
-   virtual void set(GFXShaderConstHandle* handle, const AlignedArray<Point4F>& fv);   
+   virtual void set(GFXShaderConstHandle* handle, const AlignedArray<Point4F>& fv);
    virtual void set(GFXShaderConstHandle* handle, const AlignedArray<S32>& fv);
    virtual void set(GFXShaderConstHandle* handle, const AlignedArray<Point2I>& fv);
    virtual void set(GFXShaderConstHandle* handle, const AlignedArray<Point3I>& fv);
    virtual void set(GFXShaderConstHandle* handle, const AlignedArray<Point4I>& fv);
    virtual void set(GFXShaderConstHandle* handle, const MatrixF& mat, const GFXShaderConstType matType = GFXSCT_Float4x4);
-   virtual void set(GFXShaderConstHandle* handle, const MatrixF* mat, const U32 arraySize, const GFXShaderConstType matrixType = GFXSCT_Float4x4);   
+   virtual void set(GFXShaderConstHandle* handle, const MatrixF* mat, const U32 arraySize, const GFXShaderConstType matrixType = GFXSCT_Float4x4);
 
    // GFXResource
    virtual const String describeSelf() const;
@@ -149,10 +149,10 @@ private:
    friend class GFXGLShader;
    U8* mBuffer;
    WeakRefPtr<GFXGLShader> mShader;
-   
+
    template<typename ConstType>
    void internalSet(GFXShaderConstHandle* handle, const ConstType& param);
-   
+
    template<typename ConstType>
    void internalSet(GFXShaderConstHandle* handle, const AlignedArray<ConstType>& fv);
 };

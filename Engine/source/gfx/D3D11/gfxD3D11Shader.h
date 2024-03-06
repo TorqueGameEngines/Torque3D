@@ -80,7 +80,7 @@ public:
    S32 getSamplerRegister() const { return (!isSampler() || !mValid) ? -1 : mSampler; }
 
    // Returns true if this is a handle to a sampler register.
-   bool isSampler() const 
+   bool isSampler() const
    {
       return (getType() >= GFXSCT_Sampler);
    }
@@ -157,7 +157,7 @@ public:
 
 protected:
    friend class GFXD3D11Shader;
-   /// We keep a weak reference to the shader 
+   /// We keep a weak reference to the shader
    /// because it will often be deleted.
    WeakRefPtr<GFXD3D11Shader> mShader;
    BufferMap mBufferMap;
@@ -183,12 +183,12 @@ public:
    typedef Map<String, GFXShaderConstDesc> BufferMap;
 
    GFXD3D11Shader();
-   virtual ~GFXD3D11Shader();   
+   virtual ~GFXD3D11Shader();
 
    // GFXShader
    virtual GFXShaderConstBufferRef allocConstBuffer();
    virtual const Vector<GFXShaderConstDesc>& getShaderConstDesc() const;
-   virtual GFXShaderConstHandle* getShaderConstHandle(const String& name); 
+   virtual GFXShaderConstHandle* getShaderConstHandle(const String& name);
    virtual GFXShaderConstHandle* findShaderConstHandle(const String& name);
    virtual U32 getAlignmentValue(const GFXShaderConstType constType) const;
 
@@ -202,6 +202,7 @@ protected:
 
    ID3D11VertexShader *mVertShader;
    ID3D11PixelShader *mPixShader;
+   ID3D11GeometryShader *mGeoShader;
 
    static gfxD3DIncludeRef smD3DInclude;
 
@@ -213,13 +214,13 @@ protected:
    Vector<GFXShaderConstDesc> mSamplerDescriptions;
 
    // These two functions are used when compiling shaders from hlsl
-   virtual bool _compileShader( const Torque::Path &filePath, 
+   virtual bool _compileShader( const Torque::Path &filePath,
                                  GFXShaderStage shaderStage,
                                 const D3D_SHADER_MACRO *defines);
 
    void _getShaderConstants( ID3D11ShaderReflection* refTable,
                               GFXShaderStage shaderStage);
-  
+
    // This is used in both cases
    virtual void _buildShaderConstantHandles();
    void _buildInstancingShaderConstantHandles();

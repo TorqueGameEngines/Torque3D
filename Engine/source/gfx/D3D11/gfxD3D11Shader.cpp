@@ -215,7 +215,7 @@ void GFXD3D11ShaderConstBuffer::setMatrix(const GFXShaderConstDesc& constDesc, c
          break;
       }
 
-      // Loop through and copy 
+      // Loop through and copy
       bool ret = false;
       U8* currDestPointer = buf + constDesc.offset;
       const U8* currSourcePointer = static_cast<const U8*>(data);
@@ -418,7 +418,7 @@ void GFXD3D11ShaderConstBuffer::set(GFXShaderConstHandle* handle, const MatrixF&
       if (matrixType == GFXSCT_Float4x4)
          dMemcpy(mInstPtr + constDesc.offset, mat, sizeof(mat));
 
-      // TODO: Support 3x3 and 2x2 matricies?      
+      // TODO: Support 3x3 and 2x2 matricies?
       return;
    }
 
@@ -569,6 +569,16 @@ void GFXD3D11ShaderConstBuffer::activate( GFXD3D11ShaderConstBuffer *prevShaderB
       D3D11DEVICECONTEXT->PSSetConstantBuffers(bufStartSlot, numBufs, psBuffers);
    }
 
+   if (mShader->mGeoShader && bufRanges[2].isValid())
+   {
+      const U32 bufStartSlot = bufRanges[2].mBufMin;
+      const U32 numBufs = bufRanges[2].mBufMax - bufRanges[2].mBufMin + 1;
+      ID3D11Buffer** psBuffers = mBoundBuffers[2] + bufStartSlot;
+
+      D3D11DEVICECONTEXT->GSSetConstantBuffers(bufStartSlot, numBufs, psBuffers);
+   }
+
+
    mWasLost = false;
 }
 
@@ -608,6 +618,7 @@ GFXD3D11Shader::GFXD3D11Shader()
    AssertFatal(D3D11DEVICE, "Invalid device for shader.");
    mVertShader = NULL;
    mPixShader = NULL;
+   mGeoShader = NULL;
 
    if( smD3DInclude == NULL )
       smD3DInclude = new gfxD3D11Include;
@@ -628,6 +639,7 @@ GFXD3D11Shader::~GFXD3D11Shader()
    // release shaders
    SAFE_RELEASE(mVertShader);
    SAFE_RELEASE(mPixShader);
+   SAFE_RELEASE(mGeoShader);
    //maybe add SAFE_RELEASE(mVertexCode) ?
 }
 
@@ -637,6 +649,7 @@ bool GFXD3D11Shader::_init()
 
    SAFE_RELEASE(mVertShader);
    SAFE_RELEASE(mPixShader);
+   SAFE_RELEASE(mGeoShader);
 
    // Create the macro array including the system wide macros.
    const U32 macroCount = smGlobalMacros.size() + mMacros.size() + 2;
@@ -668,6 +681,12 @@ bool GFXD3D11Shader::_init()
    if (!mPixelFile.isEmpty() && !_compileShader( mPixelFile, GFXShaderStage::PIXEL_SHADER, d3dMacros))
       return false;
 
+   if (!mGeometryFile.isEmpty())
+   {
+      if (!_compileShader(mGeometryFile, GFXShaderStage::GEOMETRY_SHADER, d3dMacros))
+         return false;
+   }
+
    // Mark all existing handles as invalid.
    // Those that are found when parsing the descriptions will then be marked valid again.
    for (auto& pair : mHandles) {
@@ -676,7 +695,7 @@ bool GFXD3D11Shader::_init()
 
    _buildShaderConstantHandles();
 
-   // Notify any existing buffers that the buffer 
+   // Notify any existing buffers that the buffer
    // layouts have changed and they need to update.
    Vector<GFXShaderConstBuffer*>::iterator biter = mActiveBuffers.begin();
    for ( ; biter != mActiveBuffers.end(); biter++ )
@@ -685,7 +704,7 @@ bool GFXD3D11Shader::_init()
    return true;
 }
 
-bool GFXD3D11Shader::_compileShader( const Torque::Path &filePath, 
+bool GFXD3D11Shader::_compileShader( const Torque::Path &filePath,
                                     GFXShaderStage shaderStage,
                                     const D3D_SHADER_MACRO *defines)
 {
@@ -711,9 +730,9 @@ bool GFXD3D11Shader::_compileShader( const Torque::Path &filePath,
 #endif
 
    // Is it an HLSL shader?
-   if(filePath.getExtension().equal("hlsl", String::NoCase))   
+   if(filePath.getExtension().equal("hlsl", String::NoCase))
    {
-      // Set this so that the D3DInclude::Open will have this 
+      // Set this so that the D3DInclude::Open will have this
       // information for relative paths.
       smD3DInclude->setPath(filePath.getRootAndPath());
 
@@ -754,6 +773,7 @@ bool GFXD3D11Shader::_compileShader( const Torque::Path &filePath,
          target = D3D11->getPixelShaderTarget();
          break;
       case GEOMETRY_SHADER:
+         target = D3D11->getGeometryShaderTarget();
          break;
       case DOMAIN_SHADER:
          break;
@@ -802,6 +822,7 @@ bool GFXD3D11Shader::_compileShader( const Torque::Path &filePath,
          res = D3D11DEVICE->CreatePixelShader(code->GetBufferPointer(), code->GetBufferSize(), NULL, &mPixShader);
          break;
       case GEOMETRY_SHADER:
+         res = D3D11DEVICE->CreateGeometryShader(code->GetBufferPointer(), code->GetBufferSize(), NULL, &mGeoShader);
          break;
       case DOMAIN_SHADER:
          break;
@@ -812,7 +833,7 @@ bool GFXD3D11Shader::_compileShader( const Torque::Path &filePath,
       default:
          break;
       }
-         
+
       if (FAILED(res))
       {
          AssertFatal(false, "D3D11Shader::_compilershader- failed to create shader");
@@ -848,6 +869,8 @@ bool GFXD3D11Shader::_compileShader( const Torque::Path &filePath,
       mPixShader->SetPrivateData(WKPDID_D3DDebugObjectName, shader.size(), shader.c_str());
       break;
    case GEOMETRY_SHADER:
+      shader = mGeometryFile.getFileName();
+      mGeoShader->SetPrivateData(WKPDID_D3DDebugObjectName, shader.size(), shader.c_str());
       break;
    case DOMAIN_SHADER:
       break;
@@ -859,8 +882,8 @@ bool GFXD3D11Shader::_compileShader( const Torque::Path &filePath,
       break;
    }
 #endif
-  
-   SAFE_RELEASE(code); 
+
+   SAFE_RELEASE(code);
    SAFE_RELEASE(reflectionTable);
    SAFE_RELEASE(errorBuff);
 
@@ -885,7 +908,7 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection* refTable,
       GFXShaderConstDesc desc;
       ID3D11ShaderReflectionConstantBuffer* constantBuffer = refTable->GetConstantBufferByIndex(i);
       D3D11_SHADER_BUFFER_DESC constantBufferDesc;
-      
+
       if (constantBuffer->GetDesc(&constantBufferDesc) == S_OK)
       {
          desc.name = String(constantBufferDesc.Name);
@@ -954,11 +977,11 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection* refTable,
 
 #ifdef D3D11_DEBUG_SPEW
                Con::printf("Variable Name %s:, offset: %d, size: %d, constantDesc.Elements: %d", varDesc.name.c_str(), varDesc.StartOffset, varDesc.Size, varDesc.arraySize);
-#endif   
+#endif
                mShaderConsts.push_back(varDesc);
             }
          }
-         
+
       }
       else
       {
@@ -1073,7 +1096,7 @@ GFXShaderConstType GFXD3D11Shader::convertConstType(const D3D11_SHADER_TYPE_DESC
          break;
       }
    }
-   
+
 }
 
 void GFXD3D11Shader::_buildShaderConstantHandles()
@@ -1144,7 +1167,7 @@ void GFXD3D11Shader::_buildInstancingShaderConstantHandles()
    for ( U32 i=0; i < mInstancingFormat->getElementCount(); i++ )
    {
       const GFXVertexElement &element = mInstancingFormat->getElement( i );
-      
+
       String constName = String::ToString( "$%s", element.getSemantic().c_str() );
 
       GFXD3D11ShaderConstHandle *handle;
@@ -1169,15 +1192,15 @@ void GFXD3D11Shader::_buildInstancingShaderConstantHandles()
       desc.arraySize = 1;
 
       if ( j != mHandles.end() )
-         handle = j->value; 
+         handle = j->value;
       else
       {
          handle = new GFXD3D11ShaderConstHandle(this, desc);
-         mHandles[ constName ] = handle;         
+         mHandles[ constName ] = handle;
       }
 
       handle->mShader = this;
-      handle->setValid( true );         
+      handle->setValid( true );
       handle->mInstancingConstant = true;
 
       // If this is a matrix we will have 2 or 3 more of these
@@ -1213,19 +1236,19 @@ GFXShaderConstBufferRef GFXD3D11Shader::allocConstBuffer()
 /// Returns a shader constant handle for name, if the variable doesn't exist NULL is returned.
 GFXShaderConstHandle* GFXD3D11Shader::getShaderConstHandle(const String& name)
 {
-   HandleMap::Iterator i = mHandles.find(name);   
+   HandleMap::Iterator i = mHandles.find(name);
    if ( i != mHandles.end() )
    {
       return i->value;
-   } 
-   else 
-   {     
+   }
+   else
+   {
       GFXD3D11ShaderConstHandle *handle = new GFXD3D11ShaderConstHandle(this);
       handle->setValid( false );
       mHandles[name] = handle;
 
-      return handle;      
-   }      
+      return handle;
+   }
 }
 
 GFXShaderConstHandle* GFXD3D11Shader::findShaderConstHandle(const String& name)
@@ -1245,7 +1268,7 @@ const Vector<GFXShaderConstDesc>& GFXD3D11Shader::getShaderConstDesc() const
 }
 
 U32 GFXD3D11Shader::getAlignmentValue(const GFXShaderConstType constType) const
-{   
+{
    const U32 mRowSizeF = 16;
    const U32 mRowSizeI = 16;
 
@@ -1253,7 +1276,7 @@ U32 GFXD3D11Shader::getAlignmentValue(const GFXShaderConstType constType) const
    {
       case GFXSCT_Float :
       case GFXSCT_Float2 :
-      case GFXSCT_Float3 : 
+      case GFXSCT_Float3 :
       case GFXSCT_Float4 :
          return mRowSizeF;
          break;
@@ -1261,7 +1284,7 @@ U32 GFXD3D11Shader::getAlignmentValue(const GFXShaderConstType constType) const
       case GFXSCT_Float2x2 :
          return mRowSizeF * 2;
          break;
-      case GFXSCT_Float3x3 : 
+      case GFXSCT_Float3x3 :
          return mRowSizeF * 3;
          break;
       case GFXSCT_Float4x3:
@@ -1269,11 +1292,11 @@ U32 GFXD3D11Shader::getAlignmentValue(const GFXShaderConstType constType) const
          break;
       case GFXSCT_Float4x4 :
          return mRowSizeF * 4;
-         break;   
+         break;
       //// Scalar
       case GFXSCT_Int :
       case GFXSCT_Int2 :
-      case GFXSCT_Int3 : 
+      case GFXSCT_Int3 :
       case GFXSCT_Int4 :
          return mRowSizeI;
          break;

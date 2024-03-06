@@ -121,6 +121,7 @@ protected:
 
    ID3D11VertexShader *mLastVertShader;
    ID3D11PixelShader *mLastPixShader;
+   ID3D11GeometryShader *mLastGeoShader;
 
    S32 mCreateFenceType;
 
@@ -140,6 +141,7 @@ protected:
    // Shader Model targers
    String mVertexShaderTarget;
    String mPixelShaderTarget;
+   String mGeometryShaderTarget;
    // String for use with shader macros in the form of shader model version * 10
    String mShaderModel;
    bool mDebugLayers;
@@ -148,7 +150,7 @@ protected:
 
    bool mOcclusionQuerySupported;
 
-   U32 mDrawInstancesCount;   
+   U32 mDrawInstancesCount;
 
    /// To manage creating and re-creating of these when device is aquired
    void reacquireDefaultPoolResources();
@@ -181,11 +183,11 @@ protected:
    // Index buffer management
    // {
    virtual void _setPrimitiveBuffer( GFXPrimitiveBuffer *buffer );
-   virtual void drawIndexedPrimitive(  GFXPrimitiveType primType, 
-                                       U32 startVertex, 
-                                       U32 minIndex, 
-                                       U32 numVerts, 
-                                       U32 startIndex, 
+   virtual void drawIndexedPrimitive(  GFXPrimitiveType primType,
+                                       U32 startVertex,
+                                       U32 minIndex,
+                                       U32 numVerts,
+                                       U32 startIndex,
                                        U32 primitiveCount );
    // }
 
@@ -197,7 +199,7 @@ protected:
    String _createTempShaderInternal(const GFXVertexFormat *vertexFormat);
    // Supress any debug layer messages we don't want to see
    void _suppressDebugMessages();
-   
+
 public:
 
    static GFXDevice *createInstance( U32 adapterIndex );
@@ -229,7 +231,7 @@ public:
    virtual GFXTextureArray* createTextureArray();
 
    virtual F32  getPixelShaderVersion() const { return mPixVersion; }
-   virtual void setPixelShaderVersion( F32 version ){ mPixVersion = version;} 
+   virtual void setPixelShaderVersion( F32 version ){ mPixVersion = version;}
 
    virtual void setShader(GFXShader *shader, bool force = false);
    virtual U32  getNumSamplers() const { return 16; }
@@ -252,10 +254,10 @@ public:
    virtual void setClipRect( const RectI &rect );
    virtual const RectI& getClipRect() const { return mClipRect; }
 
-   // }   
+   // }
 
 
-   
+
    /// @name Render Targets
    /// @{
    virtual void _updateRenderTargets();
@@ -263,14 +265,14 @@ public:
 
    // Vertex/Index buffer management
    // {
-   virtual GFXVertexBuffer* allocVertexBuffer(  U32 numVerts, 
+   virtual GFXVertexBuffer* allocVertexBuffer(  U32 numVerts,
                                                 const GFXVertexFormat *vertexFormat,
                                                 U32 vertSize,
                                                 GFXBufferType bufferType,
                                                 void* data = NULL);
 
-   virtual GFXPrimitiveBuffer *allocPrimitiveBuffer(  U32 numIndices, 
-                                                      U32 numPrimitives, 
+   virtual GFXPrimitiveBuffer *allocPrimitiveBuffer(  U32 numIndices,
+                                                      U32 numPrimitives,
                                                       GFXBufferType bufferType,
                                                       void* data = NULL);
 
@@ -307,7 +309,7 @@ public:
 
    GFXFence *createFence();
 
-   GFXOcclusionQuery* createOcclusionQuery();   
+   GFXOcclusionQuery* createOcclusionQuery();
 
    // Default multisample parameters
    DXGI_SAMPLE_DESC getMultisampleType() const { return mMultisampleDesc; }
@@ -317,6 +319,7 @@ public:
    // Shader Model targers
    const String &getVertexShaderTarget() const { return mVertexShaderTarget; }
    const String &getPixelShaderTarget() const { return mPixelShaderTarget; }
+   const String &getGeometryShaderTarget() const { return mGeometryShaderTarget; }
    const String &getShaderModel() const { return mShaderModel; }
 
    // grab the sampler map

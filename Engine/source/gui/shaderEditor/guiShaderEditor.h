@@ -117,7 +117,7 @@ public:
    virtual void onRemove() override;
 
    virtual void onPreRender() override;
-   void drawThickLine(const Point2I& pt1, const Point2I& pt2, U32 thickness, ColorI col1, ColorI col2);
+   void drawThickLine(const Point2I& pt1, const Point2I& pt2, U32 thickness = 2, ColorI col1 = ColorI(255, 255, 255), ColorI col2 = ColorI(255, 255, 255));
    virtual void onRender(Point2I offset, const RectI& updateRect) override;
 
    // interaction

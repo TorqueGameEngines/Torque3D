@@ -134,7 +134,7 @@ void GuiShaderEditor::onPreRender()
    setUpdate();
 }
 
-void GuiShaderEditor::drawThickLine(const Point2I& pt1, const Point2I& pt2, U32 thickness = 2, ColorI col1 = ColorI(255, 255, 255), ColorI col2 = ColorI(255, 255, 255))
+void GuiShaderEditor::drawThickLine(const Point2I& pt1, const Point2I& pt2, U32 thickness, ColorI col1, ColorI col2)
 {
    Point2F dir = Point2F(pt2.x - pt1.x, pt2.y - pt1.y);
    if (dir == Point2F::Zero)
@@ -292,7 +292,7 @@ void GuiShaderEditor::renderConnections(Point2I offset, const RectI& updateRect)
       start += Point2I(mNodeSize / 2, mNodeSize / 2);
       end += Point2I(mNodeSize / 2, mNodeSize / 2);
 
-      drawThickLine(start, end);
+      drawThickLine(start, end, mNodeSize/3);
    }
 
    // Restore the clip rect to what it was at the start
@@ -328,7 +328,7 @@ void GuiShaderEditor::onRender(Point2I offset, const RectI& updateRect)
 
             RectI sockActive(start, Point2I(mNodeSize, mNodeSize));
             start += Point2I(mNodeSize / 2, mNodeSize / 2);
-            drawThickLine(start, mLastMousePos + offset);
+            drawThickLine(start, mLastMousePos + offset, mNodeSize/3);
 
             // draw socket overlay over the top of the line.
             sockActive.inset(1, 1);

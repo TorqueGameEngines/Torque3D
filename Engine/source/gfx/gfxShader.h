@@ -76,7 +76,7 @@ enum GFXShaderStage
 };
 
 /// Instances of this struct are returned GFXShaderConstBuffer
-struct GFXShaderConstDesc 
+struct GFXShaderConstDesc
 {
 public:
    String name;
@@ -92,7 +92,7 @@ public:
 /// This is an opaque handle used by GFXShaderConstBuffer clients to set individual shader constants.
 /// Derived classes can put whatever info they need into here, these handles are owned by the shader constant buffer
 /// (or shader).  Client code should not free these.
-class GFXShaderConstHandle 
+class GFXShaderConstHandle
 {
 public:
 
@@ -101,8 +101,8 @@ public:
 
    /// Returns true if this constant is valid and can
    /// be set on the shader.
-   bool isValid() const { return mValid; }   
-   
+   bool isValid() const { return mValid; }
+
    /// Returns the name of the constant handle.
    virtual const String& getName() const = 0;
 
@@ -110,7 +110,7 @@ public:
    virtual GFXShaderConstType getType() const = 0;
 
    virtual U32 getArraySize() const = 0;
-   
+
    /// Returns -1 if this handle does not point to a Sampler.
    virtual S32 getSamplerRegister() const = 0;
 
@@ -119,7 +119,7 @@ protected:
    /// The state of the constant which is
    /// set from the derived class.
    bool mValid;
-   
+
 };
 
 
@@ -143,7 +143,7 @@ protected:
    /// @see wasLost
    bool mWasLost;
 
-   GFXShaderConstBuffer()   
+   GFXShaderConstBuffer()
       :  mWasLost( true ),
          mInstPtr( NULL )
    {
@@ -155,16 +155,16 @@ public:
    virtual GFXShader* getShader() = 0;
 
    /// The content of the buffer is in the lost state when
-   /// first created or when the shader is reloaded.  When 
+   /// first created or when the shader is reloaded.  When
    /// the content is lost you must refill the buffer
    /// with all the constants used by your shader.
    ///
-   /// Use this property to avoid setting constants which do 
+   /// Use this property to avoid setting constants which do
    /// not changefrom one frame to the next.
    ///
    bool wasLost() const { return mWasLost; }
 
-   /// An inline helper which ensures the handle is valid 
+   /// An inline helper which ensures the handle is valid
    /// before the virtual set method is called.
    ///
    /// You should prefer using this method unless your sure the
@@ -183,7 +183,7 @@ public:
    ///
    /// Perfer using setSafe unless you can check the handle
    /// validity yourself and skip a significat amount of work.
-   ///   
+   ///
    /// @see GFXShaderConstHandle::isValid()
    ///
    virtual void set(GFXShaderConstHandle* handle, const F32 f) = 0;
@@ -204,19 +204,19 @@ public:
    virtual void set(GFXShaderConstHandle* handle, const AlignedArray<Point2I>& fv) = 0;
    virtual void set(GFXShaderConstHandle* handle, const AlignedArray<Point3I>& fv) = 0;
    virtual void set(GFXShaderConstHandle* handle, const AlignedArray<Point4I>& fv) = 0;
-   
-   /// Set a variable sized matrix shader constant.   
-   virtual void set( GFXShaderConstHandle* handle, 
-                     const MatrixF& mat, 
+
+   /// Set a variable sized matrix shader constant.
+   virtual void set( GFXShaderConstHandle* handle,
+                     const MatrixF& mat,
                      const GFXShaderConstType matrixType = GFXSCT_Float4x4 ) = 0;
-   
+
    /// Set a variable sized matrix shader constant from
-   /// an array of matricies.   
-   virtual void set( GFXShaderConstHandle* handle, 
-                     const MatrixF* mat, 
-                     const U32 arraySize, 
+   /// an array of matricies.
+   virtual void set( GFXShaderConstHandle* handle,
+                     const MatrixF* mat,
+                     const U32 arraySize,
                      const GFXShaderConstType matrixType = GFXSCT_Float4x4 ) = 0;
-   
+
    // TODO: Make this protected and put a real API around it.
    U8 *mInstPtr;
 };
@@ -232,8 +232,8 @@ class GFXShader : public StrongRefBase, public GFXResource
    friend class GFXShaderConstBuffer;
 
 protected:
-  
-   /// These are system wide shader macros which are 
+
+   /// These are system wide shader macros which are
    /// merged with shader specific macros at creation.
    static Vector<GFXShaderMacro> smGlobalMacros;
 
@@ -244,19 +244,22 @@ protected:
    static bool smLogWarnings;
 
    /// The vertex shader file.
-   Torque::Path mVertexFile;  
+   Torque::Path mVertexFile;
 
    /// The pixel shader file.
-   Torque::Path mPixelFile;  
+   Torque::Path mPixelFile;
 
-   /// The macros to be passed to the shader.      
+   // the geometry shader file.
+   Torque::Path mGeometryFile;
+
+   /// The macros to be passed to the shader.
    Vector<GFXShaderMacro> mMacros;
 
    /// Ordered SamplerNames
    /// We need to store a list of sampler for allow OpenGL to
    /// assign correct location for each sampler.
    /// GLSL 150 not allow explicit uniform location.
-   /// Only used on OpenGL   
+   /// Only used on OpenGL
    Vector<String> mSamplerNamesOrdered;
 
    /// The pixel version this is compiled for.
@@ -271,7 +274,7 @@ protected:
    Signal<void()> mReloadSignal;
 
    /// Vector of buffers that reference this shader.
-   /// It is the responsibility of the derived shader class to populate this 
+   /// It is the responsibility of the derived shader class to populate this
    /// vector and to notify them when this shader is reloaded.  Classes
    /// derived from GFXShaderConstBuffer should call _unlinkBuffer from
    /// their destructor.
@@ -282,7 +285,7 @@ protected:
    /// A protected constructor so it cannot be instantiated.
    GFXShader();
 
-public:  
+public:
 
    /// Adds a global shader macro which will be merged with
    /// the script defined macros on every shader reload.
@@ -303,9 +306,9 @@ public:
 
    /// Toggle logging for shader errors.
    static void setLogging( bool logErrors,
-                           bool logWarning ) 
+                           bool logWarning )
    {
-      smLogErrors = logErrors; 
+      smLogErrors = logErrors;
       smLogWarnings = logWarning;
    }
 
@@ -315,16 +318,14 @@ public:
    ///
    /// Deprecated. Remove on T3D 4.0
 #ifndef TORQUE_OPENGL
-   bool init(  const Torque::Path &vertFile, 
-               const Torque::Path &pixFile, 
-               F32 pixVersion, 
+   bool init(  const Torque::Path &vertFile,
+               const Torque::Path &pixFile,
+               F32 pixVersion,
                const Vector<GFXShaderMacro> &macros );
 #endif
 
    ///
-   bool init(  const Torque::Path &vertFile, 
-               const Torque::Path &pixFile, 
-               F32 pixVersion, 
+   bool init( F32 pixVersion,
                const Vector<GFXShaderMacro> &macros,
                const Vector<String> &samplerNames,
                GFXVertexFormat *instanceFormat = NULL );
@@ -335,23 +336,23 @@ public:
    Signal<void()> getReloadSignal() { return mReloadSignal; }
 
    /// Allocate a constant buffer
-   virtual GFXShaderConstBufferRef allocConstBuffer() = 0;  
+   virtual GFXShaderConstBufferRef allocConstBuffer() = 0;
 
    /// Returns our list of shader constants, the material can get this and just set the constants it knows about
    virtual const Vector<GFXShaderConstDesc>& getShaderConstDesc() const = 0;
 
    /// Returns a shader constant handle for the name constant.
    ///
-   /// Since shaders can reload and later have handles that didn't 
+   /// Since shaders can reload and later have handles that didn't
    /// exist originally this will return a handle in an invalid state
    /// if the constant doesn't exist at this time.
-   virtual GFXShaderConstHandle* getShaderConstHandle( const String& name ) = 0; 
+   virtual GFXShaderConstHandle* getShaderConstHandle( const String& name ) = 0;
 
    /// Returns a shader constant handle for the name constant, if the variable doesn't exist NULL is returned.
    virtual GFXShaderConstHandle* findShaderConstHandle( const String& name ) = 0;
 
    /// Returns the alignment value for constType
-   virtual U32 getAlignmentValue(const GFXShaderConstType constType) const = 0;   
+   virtual U32 getAlignmentValue(const GFXShaderConstType constType) const = 0;
 
    /// Returns the required vertex format for this shader.
    /// Returns the pixel shader version.
@@ -363,6 +364,8 @@ public:
    /// Device specific shaders can override this method to return
    /// the shader disassembly.
    virtual bool getDisassembly( String &outStr ) const { return false; }
+
+   void setShaderStageFile(const GFXShaderStage stage, const Torque::Path& filePath);
 
    /// Returns the vertex shader file path.
    const String& getVertexShaderFile() const { return mVertexFile.getFullPath(); }

@@ -150,3 +150,31 @@ singleton ShaderData( CubemapSaveShader )
 	
    pixVersion = 3.0;
 };
+
+//-----------------------------------------------------------------------------
+// GUI shaders
+//-----------------------------------------------------------------------------
+singleton ShaderData( RoundedRectangleGUI )
+{
+   DXVertexShaderFile   = $Core::CommonShaderPath @ "/fixedFunction/colorV.hlsl";
+   DXPixelShaderFile    = $Core::CommonShaderPath @ "/fixedFunction/roundedRectangleP.hlsl";
+      
+   pixVersion = 3.0;   
+};
+
+singleton ShaderData( CircularGUI )
+{
+   DXVertexShaderFile   = $Core::CommonShaderPath @ "/fixedFunction/colorV.hlsl";
+   DXPixelShaderFile    = $Core::CommonShaderPath @ "/fixedFunction/circleP.hlsl";
+      
+   pixVersion = 3.0;   
+};
+
+singleton ShaderData( ThickLineGUI )
+{
+   DXVertexShaderFile   = $Core::CommonShaderPath @ "/fixedFunction/colorV.hlsl";
+   DXGeometryShaderFile = $Core::CommonShaderPath @ "/fixedFunction/thickLineG.hlsl";
+   DXPixelShaderFile    = $Core::CommonShaderPath @ "/fixedFunction/thickLineP.hlsl";
+      
+   pixVersion = 3.0;   
+};

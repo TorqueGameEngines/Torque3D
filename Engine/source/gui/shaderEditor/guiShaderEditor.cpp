@@ -134,45 +134,6 @@ void GuiShaderEditor::onPreRender()
    setUpdate();
 }
 
-void GuiShaderEditor::drawThickLine(const Point2I& pt1, const Point2I& pt2, U32 thickness, ColorI col1, ColorI col2)
-{
-   Point2F dir = Point2F(pt2.x - pt1.x, pt2.y - pt1.y);
-   if (dir == Point2F::Zero)
-      return;
-
-   Point2F unitDir = dir / mSqrt(dir.x * dir.x + dir.y * dir.y);
-   Point2F unitPerp(-unitDir.y, unitDir.x);
-   Point2F offset = (thickness / 2.0f) * unitPerp;
-
-   GFX->setStateBlock(mDefaultGuiSB);
-
-   Point2F lT = Point2F(pt1.x, pt1.y) + offset;
-   Point2F lB = Point2F(pt1.x, pt1.y) - offset;
-   Point2F rT = Point2F(pt2.x, pt2.y) + offset;
-   Point2F rB = Point2F(pt2.x, pt2.y) - offset;
-
-
-   PrimBuild::begin(GFXTriangleStrip, 4);
-
-   // top left.
-   PrimBuild::color(col1);
-   PrimBuild::vertex2f(lT.x, lT.y);
-
-   // bottom left.
-   PrimBuild::color(col1);
-   PrimBuild::vertex2f(lB.x, lB.y);
-
-   // top right.
-   PrimBuild::color(col2);
-   PrimBuild::vertex2f(rT.x, rT.y);
-
-   // bottom right.
-   PrimBuild::color(col2);
-   PrimBuild::vertex2f(rB.x, rB.y);
-
-   PrimBuild::end();
-}
-
 void GuiShaderEditor::renderNodes(Point2I offset, const RectI& updateRect)
 {
    // Save the current clip rect
@@ -224,17 +185,14 @@ void GuiShaderEditor::renderNodes(Point2I offset, const RectI& updateRect)
             if (node->mSelected)
                border = mProfile->mBorderColorSEL;
 
-            RectI socketRect(pos, Point2I(mNodeSize, mNodeSize));
-            drawer->drawRect(socketRect, border);
-            socketRect.inset(1, 1);
-
             ColorI fill = mProfile->mFillColor;
             if (hasConnection(input))
             {
                fill = ColorI::WHITE;
             }
 
-            drawer->drawRectFill(socketRect, fill);
+            RectI socketRect(pos, Point2I(mNodeSize, mNodeSize));
+            drawer->drawCircleFill(socketRect, fill, mNodeSize / 2, 2.0f, border);
          }
 
          for (NodeOutput* output : node->mOutputNodes)
@@ -246,9 +204,8 @@ void GuiShaderEditor::renderNodes(Point2I offset, const RectI& updateRect)
             if (node->mSelected)
                border = mProfile->mBorderColorSEL;
 
-            RectI socketRect(pos, Point2I(mNodeSize, mNodeSize));
-            drawer->drawRect(socketRect, border);
-            socketRect.inset(1, 1);
+            if(node->mSelected)
+               border = mProfile->mBorderColorSEL;
 
             ColorI fill = mProfile->mFillColor;
             if (hasConnection(output))
@@ -256,7 +213,8 @@ void GuiShaderEditor::renderNodes(Point2I offset, const RectI& updateRect)
                fill = ColorI::WHITE;
             }
 
-            drawer->drawRectFill(socketRect, fill);
+            RectI socketRect(pos, Point2I(mNodeSize, mNodeSize));
+            drawer->drawCircleFill(socketRect, fill, mNodeSize / 2, 2.0f, border);
          }
       }
    }
@@ -292,7 +250,7 @@ void GuiShaderEditor::renderConnections(Point2I offset, const RectI& updateRect)
       start += Point2I(mNodeSize / 2, mNodeSize / 2);
       end += Point2I(mNodeSize / 2, mNodeSize / 2);
 
-      drawThickLine(start, end, mNodeSize/3);
+      drawer->drawThickLine(start, end,ColorI(255,255,255,255), (F32)mNodeSize/3);
    }
 
    // Restore the clip rect to what it was at the start
@@ -328,11 +286,12 @@ void GuiShaderEditor::onRender(Point2I offset, const RectI& updateRect)
 
             RectI sockActive(start, Point2I(mNodeSize, mNodeSize));
             start += Point2I(mNodeSize / 2, mNodeSize / 2);
-            drawThickLine(start, mLastMousePos + offset, mNodeSize/3);
+
+            drawer->drawThickLine(start, mLastMousePos + offset, ColorI(255, 255, 255, 255), (F32)mNodeSize / 3);
 
             // draw socket overlay over the top of the line.
             sockActive.inset(1, 1);
-            drawer->drawRectFill(sockActive, ColorI(255, 255, 255));
+            drawer->drawCircleFill(sockActive, ColorI(255, 255, 255), mNodeSize / 2);
          }
       }
       // Draw selection rectangle last so it is rendered on top.

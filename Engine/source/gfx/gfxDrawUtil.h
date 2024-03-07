@@ -31,10 +31,10 @@
 #include "math/mPolyhedron.h"
 #endif
 
-
-
 class FontRenderBatcher;
 class Frustum;
+
+
 
 
 /// Helper class containing utility functions for useful drawing routines

@@ -34,33 +34,33 @@ uniform float2 rectCenter;
 uniform float borderSize;
 uniform float4 borderCol;
 
-float circle(float2 p, float radius)
+float circle(float2 p, float2 center, float r)
 {
-    float dist = length(p - float2(0.5,0.5));
-    return 1.0 - smoothstep(radius - (radius*0.01), 
-                            radius + (radius*0.01),
-                            dot(dist,dist) * 4.0);
+    return length(p - center);
 }
  
 float4 main(Conn IN) : TORQUE_TARGET0
 {   
-    float distance = length(IN.HPOS.xy - rectCenter);
-    if(distance > radius)
-    {
-        discard;
-    }
+    float distance = circle(IN.HPOS.xy, rectCenter, radius);
+    
+    float4 fromColor = borderCol;
+    float4 toColor = float4(0.0, 0.0, 0.0, 0.0);
 
     if(distance < radius)
     {
-        if(distance < (radius - borderSize))
+        distance = abs(distance) - radius;
+        
+        if(distance < (radius - (borderSize * 0.5)))
         {
-            return IN.color;
+            toColor = IN.color;
+            distance = abs(distance) - (borderSize * 0.5);
         }
-        else
-        {
-            return borderCol;
-        }
-    }
 
-    return IN.color;
+        float blend = smoothstep(0.0, 1.0, distance);
+        return lerp(fromColor, toColor, blend);
+    }
+    
+    distance = abs(distance) - radius; 
+    float blend = smoothstep(0.0, 1.0, distance);
+    return lerp(fromColor, toColor, blend);
 }

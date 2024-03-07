@@ -627,6 +627,11 @@ void GFXDrawUtil::drawRoundedRect(const F32& cornerRadius,
    Point2F rectCenter((F32)(topLeftCorner.x + (size.x / 2.0)), (F32)(topLeftCorner.y + (size.y / 2.0)));
    mRoundRectangleShaderConsts->setSafe(mRoundRectangleShader->getShaderConstHandle("$rectCenter"), rectCenter);
 
+   const Point2I& resolution = GFX->getActiveRenderTarget()->getSize();
+   Point2F TargetSize(1.0 / (F32)resolution.x, 1.0 / (F32)resolution.y);
+
+   mRoundRectangleShaderConsts->setSafe(mRoundRectangleShader->getShaderConstHandle("$oneOverViewport"), TargetSize);
+
    mDevice->drawPrimitive(GFXTriangleStrip, 0, 2);
 }
 

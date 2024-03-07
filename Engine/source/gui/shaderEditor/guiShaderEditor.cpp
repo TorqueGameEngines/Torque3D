@@ -271,19 +271,26 @@ void GuiShaderEditor::onRender(Point2I offset, const RectI& updateRect)
          {
             // for temp connetion, nodeA is always the first node selected.
             Point2I start(Point2I::Zero);
+            ColorI color(ColorI::WHITE);
             if (mTempConnection->inSocket != NULL)
+            {
                start = mTempConnection->nodeA->localToGlobalCoord(mTempConnection->inSocket->pos) + offset;
-            else if(mTempConnection->outSocket != NULL)
+               color = mTempConnection->inSocket->col;
+            }
+            else if (mTempConnection->outSocket != NULL)
+            {
                start = mTempConnection->nodeA->localToGlobalCoord(mTempConnection->outSocket->pos) + offset;
+               color = mTempConnection->outSocket->col;
+            }
 
             RectI sockActive(start, Point2I(mNodeSize, mNodeSize));
             start += Point2I(mNodeSize / 2, mNodeSize / 2);
 
-            drawer->drawThickLine(start, mLastMousePos + offset, ColorI(255, 255, 255, 255), (F32)mNodeSize / 3);
+            drawer->drawThickLine(start, mLastMousePos + offset, color, (F32)mNodeSize / 3);
 
             // draw socket overlay over the top of the line.
             sockActive.inset(1, 1);
-            drawer->drawCircleFill(sockActive, ColorI(255, 255, 255), mNodeSize / 2);
+            drawer->drawCircleFill(sockActive, color, mNodeSize / 2);
          }
       }
       // Draw selection rectangle last so it is rendered on top.

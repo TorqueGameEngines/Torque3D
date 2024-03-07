@@ -30,34 +30,33 @@ struct Conn
 
 uniform float2 sizeUni;
 uniform float2 rectCenter;
+uniform float2 oneOverViewport;
 uniform float radius;
 uniform float borderSize;
 uniform float4 borderCol;
 
 float RoundedRectSDF(float2 p, float2 size, float radius)
 {
-    float2 halfSize = size / 2.0;
-
     // Calculate distance to each side of the rectangle
-    float2 dist = abs(p) - halfSize + radius;
+    float2 dist = abs(p) - size + float2(radius, radius);
 
     // Compute the distance to the rounded corners
-    float cornerDist = length(max(abs(p) - (halfSize - float2(radius, radius)), 0.0));
+    float cornerDist = length(max(dist, 0.0));
 
     // Return the minimum distance (negative inside, positive outside)
-    return min(max(dist.x, dist.y), 0.0) + cornerDist - radius;
+    return min(max(dist.x, dist.y), 0.0) + cornerDist - radius; 
 }
  
 float4 main(Conn IN) : TORQUE_TARGET0
 {  
     float2 p = IN.HPOS.xy;
-    float2 halfSize = sizeUni * 0.5;
-    float halfBorder = borderSize * 0.5; 
     
-    p -= rectCenter;
+    float halfBorder = borderSize * 0.5; 
+    float2 halfSize = sizeUni * 0.5;
+    p -= rectCenter; 
 
     // Calculate signed distance field for rounded rectangle 
-    float4 fromColor = IN.color;
+    float4 fromColor = borderCol;
     // alpha
     float4 toColor = float4(0.0, 0.0, 0.0, 0.0);
 
@@ -73,9 +72,7 @@ float4 main(Conn IN) : TORQUE_TARGET0
 
     if(cornerRadius > 0.0 || halfBorder > 0.0)
     {
-        float sdf = RoundedRectSDF(p, sizeUni, cornerRadius - halfBorder);
-
-        clip(0.01 - sdf);
+        float sdf = RoundedRectSDF(p, halfSize, cornerRadius - halfBorder);
 
         if(halfBorder > 0.0)
         {
@@ -87,20 +84,16 @@ float4 main(Conn IN) : TORQUE_TARGET0
                 //     (p.x >= halfSize.x - radius + halfBorder && p.x <= halfSize.x + radius - halfBorder) ) {    // right border
                     
                 // }
-
-                toColor = borderCol;  
+                toColor = IN.color;  
             }
-            
             sdf = abs(sdf) - halfBorder;
-
-            // Apply smoothing to create rounded effect  
-            float blending = smoothstep(1.0, -1.0, sdf); 
-
-            return lerp(fromColor, toColor, blending);
+        } 
+        else{
+            fromColor = IN.color; 
         }
-        
-        float alpha = smoothstep(1.0, 0.0, sdf); 
-        return float4(IN.color.rgb, IN.color.a * alpha);
+
+        float alpha = smoothstep(-1.0, 1.0, sdf); 
+        return lerp(fromColor, toColor, alpha);
     }
     else
     { 

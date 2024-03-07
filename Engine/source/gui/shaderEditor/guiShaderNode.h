@@ -73,22 +73,22 @@ struct NodeSocket
       switch (inDim)
       {
       case DataDimensions::Dynamic:
-         col = ColorI(200, 200, 200, 200);
+         col = ColorI(200, 200, 200, 128);
          break;
       case DataDimensions::Scalar:
-         col = ColorI(210, 105, 30, 200);
+         col = ColorI(210, 105, 30, 128);
          break;
       case DataDimensions::Vector2:
-         col = ColorI(152, 251,152, 200);
+         col = ColorI(152, 251,152, 128);
          break;
       case DataDimensions::Vector3:
-         col = ColorI(127, 255, 212, 200);
+         col = ColorI(127, 255, 212, 128);
          break;
       case DataDimensions::Vector4:
-         col = ColorI(100, 149, 237, 200);
+         col = ColorI(100, 149, 237, 128);
          break;
       case DataDimensions::Mat4x4:
-         col = ColorI(153, 50, 204, 200);
+         col = ColorI(153, 50, 204, 128);
          break;
       default:
          break;

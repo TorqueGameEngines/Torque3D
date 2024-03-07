@@ -84,9 +84,10 @@ float4 main(Conn IN) : TORQUE_TARGET0
                 //     (p.x >= halfSize.x - radius + halfBorder && p.x <= halfSize.x + radius - halfBorder) ) {    // right border
                     
                 // }
-                toColor = IN.color;  
+                toColor = IN.color;
+                sdf = abs(sdf) / borderSize;
             } 
-            sdf = abs(sdf) / borderSize;
+            
         } 
         else{
             fromColor = IN.color; 

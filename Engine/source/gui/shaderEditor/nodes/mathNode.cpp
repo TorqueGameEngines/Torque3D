@@ -19,21 +19,32 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#include "platform/platform.h"
 
-#include "gui/shaderEditor/guiShaderNode.h"
+#include "gui/shaderEditor/nodes/mathNode.h"
 
 //-----------------------------------------------------------------
-// Put all material output nodes here.
+// Math addition Node.
 //-----------------------------------------------------------------
 
-class BRDFOutputNode : public GuiShaderNode
+IMPLEMENT_CONOBJECT(MathAddNode);
+
+ConsoleDocClass(MathAddNode,
+   "@brief Math addition node.\n\n"
+   "Editor use only.\n\n"
+   "@internal"
+);
+
+
+MathAddNode::MathAddNode()
+   : GuiShaderNode()
 {
-   typedef GuiShaderNode Parent;
-public:
-   BRDFOutputNode();
+   mNodeType = NodeTypes::MathOperation;
 
-   // is the parent that all other nodes are derived from.
-   DECLARE_CONOBJECT(BRDFOutputNode);
-   DECLARE_CATEGORY("Shader Output");
-   DECLARE_DESCRIPTION("Deferred Material output.");
-};
+   mInputNodes.push_back(new NodeInput("A", DataDimensions::Dynamic));
+   mInputNodes.push_back(new NodeInput("B", DataDimensions::Dynamic));
+
+   mOutputNodes.push_back(new NodeOutput("Result", DataDimensions::Dynamic));
+
+   mTitle = "Math Node";
+}

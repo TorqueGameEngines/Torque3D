@@ -23,6 +23,7 @@
 #include "platform/platform.h"
 #include "gui/shaderEditor/guiShaderEditor.h"
 #include "gui/shaderEditor/nodes/materialOutputNode.h"
+#include "gui/shaderEditor/nodes/mathNode.h"
 
 #include "core/frameAllocator.h"
 #include "core/stream/fileStream.h"
@@ -62,7 +63,8 @@ GuiShaderEditor::GuiShaderEditor()
    mTempConnection = NULL;
    mNodeSize = 10;
    // test
-   addNode(new MaterialOutputNode());
+   addNode(new BRDFOutputNode());
+   addNode(new MathAddNode());
    addNode(new GuiShaderNode());
 }
 
@@ -648,31 +650,23 @@ void GuiShaderEditor::deleteSelection()
    {
       mTrash->addObject(node);
 
+      Vector<NodeConnection*> connVec;
       for (NodeInput* input : node->mInputNodes)
       {
-         NodeConnection* conn;
-         if (hasConnection(input, conn))
-         {
-            // selecting one node, push it to the front of the mcurrnodes stack so its rendered on top.
-            Vector< NodeConnection* >::iterator i = T3D::find(mCurrConnections.begin(), mCurrConnections.end(), conn);
-            if (i != mCurrConnections.end())
-            {
-               mCurrConnections.erase(i);
-            }
-         }
+         hasConnection(input, connVec);
       }
 
       for (NodeOutput* output : node->mOutputNodes)
       {
-         NodeConnection* conn;
-         if (hasConnection(output, conn))
+         hasConnection(output, connVec);
+      }
+
+      for (NodeConnection* conn : connVec)
+      {
+         Vector< NodeConnection* >::iterator i = T3D::find(mCurrConnections.begin(), mCurrConnections.end(), conn);
+         if (i != mCurrConnections.end())
          {
-            // selecting one node, push it to the front of the mcurrnodes stack so its rendered on top.
-            Vector< NodeConnection* >::iterator i = T3D::find(mCurrConnections.begin(), mCurrConnections.end(), conn);
-            if (i != mCurrConnections.end())
-            {
-               mCurrConnections.erase(i);
-            }
+            mCurrConnections.erase(i);
          }
       }
 
@@ -857,7 +851,6 @@ U32 GuiShaderEditor::finishConnection(const Point2I& pt)
             NodeConnection* conn;
             if(hasConnection(inNode, conn))
             {
-               // selecting one node, push it to the front of the mcurrnodes stack so its rendered on top.
                Vector< NodeConnection* >::iterator i = T3D::find(mCurrConnections.begin(), mCurrConnections.end(), conn);
                if (i != mCurrConnections.end())
                {
@@ -886,7 +879,6 @@ U32 GuiShaderEditor::finishConnection(const Point2I& pt)
             NodeConnection* conn;
             if (hasConnection(mTempConnection->inSocket, conn))
             {
-               // selecting one node, push it to the front of the mcurrnodes stack so its rendered on top.
                Vector< NodeConnection* >::iterator i = T3D::find(mCurrConnections.begin(), mCurrConnections.end(), conn);
                if (i != mCurrConnections.end())
                {
@@ -916,6 +908,22 @@ bool GuiShaderEditor::hasConnection(NodeSocket* inSocket)
    return false;
 }
 
+bool GuiShaderEditor::hasConnection(NodeSocket* inSocket, Vector<NodeConnection*>& conn)
+{
+   bool ret = false;
+
+   for (NodeConnection* con : mCurrConnections)
+   {
+      if (con->inSocket == dynamic_cast<NodeInput*>(inSocket) || con->outSocket == dynamic_cast<NodeOutput*>(inSocket))
+      {
+         conn.push_back(con);
+         ret = true;
+      }
+   }
+
+   return ret;
+}
+
 bool GuiShaderEditor::hasConnection(NodeSocket* inSocket, NodeConnection*& conn)
 {
    for (NodeConnection* con : mCurrConnections)
@@ -924,11 +932,9 @@ bool GuiShaderEditor::hasConnection(NodeSocket* inSocket, NodeConnection*& conn)
       {
          if (conn != nullptr)
             conn = con;
-
          return true;
       }
    }
-
    return false;
 }
 

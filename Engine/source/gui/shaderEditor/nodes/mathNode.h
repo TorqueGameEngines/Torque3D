@@ -23,17 +23,17 @@
 #include "gui/shaderEditor/guiShaderNode.h"
 
 //-----------------------------------------------------------------
-// Put all material output nodes here.
+// Put all Math nodes here.
 //-----------------------------------------------------------------
 
-class BRDFOutputNode : public GuiShaderNode
+class MathAddNode : public GuiShaderNode
 {
    typedef GuiShaderNode Parent;
 public:
-   BRDFOutputNode();
+   MathAddNode();
 
    // is the parent that all other nodes are derived from.
-   DECLARE_CONOBJECT(BRDFOutputNode);
-   DECLARE_CATEGORY("Shader Output");
-   DECLARE_DESCRIPTION("Deferred Material output.");
+   DECLARE_CONOBJECT(MathAddNode);
+   DECLARE_CATEGORY("Shader Math");
+   DECLARE_DESCRIPTION("Math addition node.");
 };

@@ -92,6 +92,7 @@ protected:
    bool findHitSocket(const Point2I& pt);
    U32 finishConnection(const Point2I& pt);
    bool hasConnection(NodeSocket* inSocket);
+   bool hasConnection(NodeSocket* inSocket, Vector<NodeConnection*>& conn);
    bool hasConnection(NodeSocket* inSocket, NodeConnection*& conn);
 
    void findNodesInRect(const RectI& rect, Vector<GuiShaderNode*>& outResult);

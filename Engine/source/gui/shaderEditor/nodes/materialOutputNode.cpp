@@ -22,15 +22,19 @@
 #include "platform/platform.h"
 #include "gui/shaderEditor/nodes/materialOutputNode.h"
 
-IMPLEMENT_CONOBJECT(MaterialOutputNode);
+//-----------------------------------------------------------------
+// BRDF Output Node.
+//-----------------------------------------------------------------
 
-ConsoleDocClass(MaterialOutputNode,
+IMPLEMENT_CONOBJECT(BRDFOutputNode);
+
+ConsoleDocClass(BRDFOutputNode,
    "@brief Deferred Material output.\n\n"
    "Editor use only.\n\n"
    "@internal"
 );
 
-MaterialOutputNode::MaterialOutputNode()
+BRDFOutputNode::BRDFOutputNode()
    : GuiShaderNode()
 {
    mNodeType = NodeTypes::Output;

@@ -1294,7 +1294,7 @@ void GFXDrawUtil::drawObjectBox( const GFXStateBlockDesc &desc, const Point3F &s
    Point3F cubePts[8];
    for (U32 i = 0; i < 8; i++)
    {
-	   cubePts[i] = cubePoints[i]/2;
+      cubePts[i] = cubePoints[i]/2;
    }
 
    // 8 corner points of the box

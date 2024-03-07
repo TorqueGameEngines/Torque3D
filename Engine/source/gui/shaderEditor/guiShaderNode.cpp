@@ -104,7 +104,7 @@ void GuiShaderNode::renderNode(Point2I offset, const RectI& updateRect, const S3
    if (mSelected)
       border = mProfile->mBorderColorSEL;
 
-   drawer->drawRoundedRect(15.0f, winRect, mProfile->mFillColor, 3.0f, border);
+   drawer->drawRoundedRect(15.0f, winRect, mProfile->mFillColor, 5.0f, border);
 
    // draw header
    ColorI header(50, 50, 50, 128);

@@ -85,18 +85,18 @@ float4 main(Conn IN) : TORQUE_TARGET0
                     
                 // }
                 toColor = IN.color;  
-            }
-            sdf = abs(sdf) - halfBorder;
+            } 
+            sdf = abs(sdf) / borderSize;
         } 
         else{
             fromColor = IN.color; 
-        }
+        }  
 
         float alpha = smoothstep(-1.0, 1.0, sdf); 
         return lerp(fromColor, toColor, alpha);
     }
     else
-    { 
+    {
         return IN.color;
     }
 }

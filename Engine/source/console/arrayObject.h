@@ -158,6 +158,10 @@ public:
    /// (keeps the first instance only)
    void uniqueKey();
 
+   /// Removes any duplicate keys from the array
+   /// (keeps the first instance only)
+   void uniquePair();
+
    /// Makes this array an exact duplicate of another array
    void duplicate( ArrayObject *obj );
 

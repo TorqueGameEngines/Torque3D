@@ -269,7 +269,8 @@ bool LightShadowMap::setTextureStage( U32 currTexFlag, LightingShaderConstants* 
          GFX->setTexture( reg, mShadowMapTex);
 
       return true;
-   } else if ( currTexFlag == Material::DynamicLightMask )
+   }
+   else if ( currTexFlag == Material::DynamicLightMask )
    {
       S32 reg = lsc->mCookieMapSC->getSamplerRegister();
    	if ( reg != -1 )
@@ -280,6 +281,17 @@ bool LightShadowMap::setTextureStage( U32 currTexFlag, LightingShaderConstants* 
             GFX->setCubeTexture( reg, p->getCookieCubeTex() );
          else
       	   GFX->setTexture( reg, p->getCookieTex() );
+      }
+
+      return true;
+   }
+   else if (currTexFlag == Material::PhotometricMask)
+   {
+      S32 reg = lsc->mIesProfileSC->getSamplerRegister();
+      if (reg != -1)
+      {
+         ShadowMapParams* p = mLight->getExtended<ShadowMapParams>();
+         GFX->setTexture(reg, p->getIesProfileTex());
       }
 
       return true;
@@ -430,6 +442,7 @@ LightingShaderConstants::LightingShaderConstants()
       mShadowMapSC(NULL), 
       mShadowMapSizeSC(NULL), 
       mCookieMapSC(NULL),
+      mIesProfileSC(NULL),
       mRandomDirsConst(NULL),
       mShadowSoftnessConst(NULL), 
       mAtlasXOffsetSC(NULL), 
@@ -490,6 +503,7 @@ void LightingShaderConstants::init(GFXShader* shader)
    mShadowMapSizeSC = shader->getShaderConstHandle("$shadowMapSize");
 
    mCookieMapSC = shader->getShaderConstHandle("$cookieMap");
+   mIesProfileSC = shader->getShaderConstHandle("$iesProfile");
 
    mShadowSoftnessConst = shader->getShaderConstHandle("$shadowSoftness");
    mAtlasXOffsetSC = shader->getShaderConstHandle("$atlasXOffset");
@@ -542,7 +556,8 @@ ShadowMapParams::ShadowMapParams( LightInfo *light )
    fadeStartDist = 75.0f;
    lastSplitTerrainOnly = false;
    mQuery = GFX->createOcclusionQuery();
-   cookie = StringTable->EmptyString();;
+   cookie = StringTable->EmptyString();
+   iesProfile = StringTable->EmptyString();
 
    _validate();
 }
@@ -662,6 +677,22 @@ GFXTextureObject* ShadowMapParams::getCookieTex()
    return mCookieTex.getPointer();
 }
 
+GFXTextureObject* ShadowMapParams::getIesProfileTex()
+{
+   if (hasIesProfile() &&
+      (mIesTex.isNull() ||
+         iesProfile != StringTable->insert(mIesTex->getPath().c_str())))
+   {
+      mIesTex.set(iesProfile,
+         &GFXStaticTextureSRGBProfile,
+         "ShadowMapParams::getIesProfileTex()");
+   }
+   else if (!hasIesProfile())
+      mIesTex = NULL;
+
+   return mIesTex.getPointer();
+}
+
 GFXCubemap* ShadowMapParams::getCookieCubeTex()
 {
    if (  hasCookieTex() &&
@@ -695,6 +726,7 @@ void ShadowMapParams::packUpdate( BitStream *stream ) const
    stream->write( texSize );
 
    stream->writeString( cookie );
+   stream->writeString( iesProfile );
 
    stream->write( numSplits );
    stream->write( logWeight );
@@ -725,6 +757,7 @@ void ShadowMapParams::unpackUpdate( BitStream *stream )
    stream->read( &texSize );
 
    cookie = stream->readSTString();
+   iesProfile = stream->readSTString();
 
    stream->read( &numSplits );
    stream->read( &logWeight );

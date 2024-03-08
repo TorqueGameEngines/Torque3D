@@ -108,14 +108,22 @@ uniform sampler2D deferredBuffer;
 #include "softShadow.glsl"
 uniform sampler2D colorBuffer;
 uniform sampler2D matInfoBuffer;
-#ifdef USE_COOKIE_TEX
+
+#ifdef SHADOW_CUBE
 /// The texture for cookie rendering.
 uniform samplerCube cookieMap;
+#else
+uniform sampler2D cookieMap;
+#endif
+
+#ifdef UES_PHOTOMETRIC_MASK
+uniform sampler1D iesProfile;
 #endif
 
 uniform vec4 rtParams0;
 
 uniform vec3 lightPosition;
+uniform vec3 lightDirection;
 uniform vec4 lightColor;
 uniform float  lightBrightness;
 uniform float  lightRange;
@@ -181,7 +189,12 @@ void main()
    #ifdef USE_COOKIE_TEX
 
       // Lookup the cookie sample.
+      #ifdef SHADOW_CUBE
       vec4 cookie = texture(cookieMap, tMul(worldToLightProj, -surfaceToLight.L));
+      #else
+      vec2 cookieCoord = decodeShadowCoord( tMul( worldToLightProj, -surfaceToLight.L ) ).xy;
+      vec4 cookie = texture(cookieMap, cookieCoord);
+      #endif
       // Multiply the light with the cookie tex.
       lightCol *= cookie.rgb;
       // Use a maximum channel luminance to attenuate 
@@ -221,9 +234,19 @@ void main()
       OUT_col = vec4(final, 0);
       return
    #endif
+   
+   #ifdef UES_PHOTOMETRIC_MASK
+      // Lookup the cookie sample.d
+      float cosTheta = dot(-surfaceToLight.L, lightDirection); 
+      float angle = acos(cosTheta) * ( M_1OVER_PI_F); 
+      float iesMask = texture(iesProfile,angle).r; 
+      // Multiply the light with the iesMask tex.
+      shadow *= iesMask;
+   #endif
 
       //get punctual light contribution   
       lighting = getPunctualLight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, shadow);
+   
    }
 
    OUT_col = vec4(lighting, 0);

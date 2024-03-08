@@ -233,14 +233,14 @@ protected:
 
    static const GFXVertexFormat* smLightMatVertex[LightInfo::Count];
 
-   typedef CompoundKey3<LightInfo::Type,ShadowType,bool> LightMatKey;
+   typedef CompoundKey4<LightInfo::Type,ShadowType,bool, bool> LightMatKey;
 
    typedef HashTable<LightMatKey,LightMaterialInfo*> LightMatTable;
 
    /// The fixed table of light material info.
    LightMatTable mLightMaterials;
 
-   LightMaterialInfo* _getLightMaterial( LightInfo::Type lightType, ShadowType shadowType, bool useCookieTex );
+   LightMaterialInfo* _getLightMaterial( LightInfo::Type lightType, ShadowType shadowType, bool useCookieTex = false, bool isPhotometric = false );
 
    ///
    void _onShadowFilterChanged();

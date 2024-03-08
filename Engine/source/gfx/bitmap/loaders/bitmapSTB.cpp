@@ -28,6 +28,7 @@
 #include "core/strings/stringFunctions.h"
 #include "gfx/bitmap/gBitmap.h"
 #include "gfx/bitmap/imageUtils.h"
+#include "gfx/bitmap/loaders/ies/ies_loader.h"
 
 #ifdef __clang__
 #define STBIWDEF static inline
@@ -69,6 +70,7 @@ static struct _privateRegisterSTB
       reg.extensions.push_back("psd");
       reg.extensions.push_back("hdr");
       reg.extensions.push_back("tga");
+      reg.extensions.push_back("ies");
 
       reg.readFunc = sReadSTB;
       reg.readStreamFunc = sReadStreamSTB;
@@ -93,10 +95,112 @@ bool sReadSTB(const Torque::Path& path, GBitmap* bitmap)
 
    U32 prevWaterMark = FrameAllocator::getWaterMark();
 
+   // if this is an ies profile we need to create a texture for it.
+   if (ext.equal("ies"))
+   {
+      String textureName = path.getFullPath();
+      textureName.replace(".ies", ".png");
+      x = 256;
+      y = 1;
+      n = 4;
+      channels = 4;
+      GFXFormat format = GFXFormatR8G8B8A8;
+
+      if (Torque::FS::IsFile(textureName.c_str()))
+      {
+         // if the txture already exist, load it.
+         unsigned char* data = stbi_load(textureName.c_str(), &x, &y, &n, channels);
+
+         // actually allocate the bitmap space...
+         bitmap->allocateBitmap(x, y,
+            false,            // don't extrude miplevels...
+            format);          // use determined format...
+
+         U8* pBase = (U8*)bitmap->getBits();
+
+         U32 rowBytes = bitmap->getByteSize();
+
+         dMemcpy(pBase, data, rowBytes);
+
+         stbi_image_free(data);
+
+         FrameAllocator::setWaterMark(prevWaterMark);
+
+         return true;
+      }
+      else
+      {
+         FileStream* readIes = new FileStream;
+
+         if (!readIes->open(path.getFullPath(), Torque::FS::File::Read))
+         {
+            Con::printf("Failed to open IES profile:%s", path.getFullFileName().c_str());
+            return false;
+         }
+
+         if (readIes->getStatus() != Stream::Ok)
+         {
+            Con::printf("Failed to open IES profile:%s", path.getFullFileName().c_str());
+            return false;
+         }
+
+         U32 buffSize = readIes->getStreamSize();
+         char* buffer = new char[buffSize];
+         readIes->read(buffSize, buffer);
+         
+
+         IESFileInfo info;
+         IESLoadHelper IESLoader;
+
+         if (!IESLoader.load(buffer, buffSize, info))
+         {
+            Con::printf("Failed to load IES profile:%s \n LoaderError: %s", path.getFullFileName().c_str(), info.error().c_str());
+            return false;
+         }
+
+         float* data = new float[x*y*channels];
+
+         if (!IESLoader.saveAs1D(info, data, x, channels))
+         {
+            Con::printf("Failed to create 2d Texture for IES profile:%s", path.getFullFileName().c_str());
+            return false;
+         }
+
+         // use stb function to convert float data to uchar
+         unsigned char* dataChar = stbi__hdr_to_ldr(data, x, y, channels);
+
+         bitmap->deleteImage();
+         // actually allocate the bitmap space...
+         bitmap->allocateBitmap(x, y,
+            false,
+            format);
+
+         U8* pBase = (U8*)bitmap->getBits();
+
+         U32 rowBytes = x * y * channels;
+
+         dMemcpy(pBase, dataChar, rowBytes);
+
+         stbi_image_free(dataChar);
+
+         FrameAllocator::setWaterMark(prevWaterMark);
+
+         sWriteSTB(textureName, bitmap, 10);
+
+         return true;
+      }
+
+   }
+
    if (!stbi_info(path.getFullPath().c_str(), &x, &y, &channels))
    {
       FrameAllocator::setWaterMark(prevWaterMark);
-      return false;
+      const char* stbErr = stbi_failure_reason();
+
+      if (!stbErr)
+         stbErr = "Unknown Error!";
+
+      Con::errorf("STB get file info: %s", stbErr);
    }
 
    // do this to map 2 channels to 4, 2 channel not supported by gbitmap yet..
@@ -142,21 +246,22 @@ bool sReadSTB(const Torque::Path& path, GBitmap* bitmap)
    if (ext.equal("hdr"))
    {
       // force load to 4 channel.
-      float* data = stbi_loadf(path.getFullPath().c_str(), &x, &y, &n, 4);
+      float* data = stbi_loadf(path.getFullPath().c_str(), &x, &y, &n, 0);
 
-      unsigned char* dataChar = stbi__hdr_to_ldr(data, x, y, 4);
+      unsigned char* dataChar = stbi__hdr_to_ldr(data, x, y, n);
       bitmap->deleteImage();
       // actually allocate the bitmap space...
       bitmap->allocateBitmap(x, y,
          false,
-         GFXFormatR8G8B8A8);
+         GFXFormatR8G8B8);
 
       U8* pBase = (U8*)bitmap->getBits();
 
-      U32 rowBytes = x * y * 4;
+      U32 rowBytes = x * y * n;
 
       dMemcpy(pBase, dataChar, rowBytes);
 
+      //stbi_image_free(data);
       stbi_image_free(dataChar);
 
       FrameAllocator::setWaterMark(prevWaterMark);
@@ -225,8 +330,7 @@ bool sReadStreamSTB(Stream& stream, GBitmap* bitmap, U32 len)
       if (!stbErr)
          stbErr = "Unknown Error!";
 
-      Con::errorf("STB failed to get image info: %s", stbErr);
-      return false;
+      Con::errorf("STB get memory info: %s", stbErr);
    }
 
    S32 reqCom = comp;

@@ -118,6 +118,7 @@ singleton GFXStateBlockData( AL_ConvexLightState )
    samplerStates[3] = SamplerClampPoint;  // colorBuffer
    samplerStates[4] = SamplerClampPoint;  // matInfoBuffer
    samplerStates[5] = SamplerClampLinear; // Cookie Map
+   samplerStates[6] = SamplerClampLinear; // iesProfile
    
    cullDefined = true;
    cullMode = GFXCullCW;
@@ -142,6 +143,7 @@ singleton shaderData( AL_PointLightShader )
    samplerNames[3] = "$colorBuffer";
    samplerNames[4] = "$matInfoBuffer";
    samplerNames[5] = "$cookieMap";
+   samplerNames[6] = "$iesProfile";
    
    pixVersion = 3.0;
 };
@@ -156,7 +158,7 @@ singleton CustomMaterial( AL_PointLightMaterial )
    sampler["cookieMap"] = "$dynamiclightmask";
    sampler["colorBuffer"] = "#color";
    sampler["matInfoBuffer"] = "#matinfo";
-   
+   sampler["iesProfile"] = "$photometricmask";
    target = "AL_FormatToken";
    
    pixVersion = 3.0;
@@ -177,6 +179,7 @@ singleton shaderData( AL_SpotLightShader )
    samplerNames[3] = "$colorBuffer";
    samplerNames[4] = "$matInfoBuffer";
    samplerNames[5] = "$cookieMap";
+   samplerNames[6] = "$iesProfile";
 
    pixVersion = 3.0;
 };
@@ -188,10 +191,10 @@ singleton CustomMaterial( AL_SpotLightMaterial )
    
    sampler["deferredBuffer"] = "#deferred";
    sampler["shadowMap"] = "$dynamiclight";
+   sampler["iesProfile"] = "$photometricmask";
    sampler["cookieMap"] = "$dynamiclightmask";
    sampler["colorBuffer"] = "#color";
    sampler["matInfoBuffer"] = "#matinfo";
-   
    target = "AL_FormatToken";
    
    pixVersion = 3.0;

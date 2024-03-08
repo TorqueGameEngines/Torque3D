@@ -132,7 +132,7 @@ void SpotLight::_conformLights()
    mLight->setDynamicRefreshFreq(mDynamicRefreshFreq);
    mLight->setPriority( mPriority );
 
-   mOuterConeAngle = getMax( 0.01f, mOuterConeAngle );
+   mOuterConeAngle = getMin(getMax( 0.01f, mOuterConeAngle ),179.0f);
    mInnerConeAngle = getMin( mInnerConeAngle, mOuterConeAngle );
 
    mLight->setInnerConeAngle( mInnerConeAngle );

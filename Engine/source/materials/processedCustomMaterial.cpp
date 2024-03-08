@@ -94,6 +94,14 @@ void ProcessedCustomMaterial::_setStageData()
          continue;
       }
 
+       if (filename.equal(String("$photometricmask"), String::NoCase))
+       {
+          rpd->mTexType[i] = Material::PhotometricMask;
+          rpd->mSamplerNames[i] = mCustomMaterial->mSamplerNames[i];
+          mMaxTex = i + 1;
+          continue;
+       }
+
       if(filename.equal(String("$lightmap"), String::NoCase))
       {
          rpd->mTexType[i] = Material::Lightmap;
@@ -353,6 +361,7 @@ void ProcessedCustomMaterial::setTextureStages( SceneRenderState *state, const S
             break;
 
          case Material::Mask:
+         case Material::PhotometricMask:
          case Material::Standard:
          case Material::Bump:
          case Material::Detail:

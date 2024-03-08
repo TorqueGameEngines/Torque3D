@@ -107,9 +107,16 @@ TORQUE_UNIFORM_SAMPLER2D(shadowMap, 1);
 #include "softShadow.hlsl"
 TORQUE_UNIFORM_SAMPLER2D(colorBuffer, 3);
 TORQUE_UNIFORM_SAMPLER2D(matInfoBuffer, 4);
-#ifdef USE_COOKIE_TEX
+
 /// The texture for cookie rendering.
+#ifdef SHADOW_CUBE
 TORQUE_UNIFORM_SAMPLERCUBE(cookieMap, 5);
+#else
+TORQUE_UNIFORM_SAMPLER2D(cookieMap, 5);
+#endif
+
+#ifdef UES_PHOTOMETRIC_MASK
+TORQUE_UNIFORM_SAMPLER1D(iesProfile, 6);
 #endif
 
 uniform float4 rtParams0;
@@ -117,6 +124,7 @@ uniform float4 lightColor;
 
 uniform float  lightBrightness;
 uniform float3 lightPosition;
+uniform float3 lightDirection;
 
 uniform float4 lightMapParams;
 uniform float4 vsFarPlane;
@@ -158,28 +166,31 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
 	{     
       float distToLight = dist / lightRange;
       SurfaceToLight surfaceToLight = createSurfaceToLight(surface, L);
-
-   float shadow = 1.0;
+      float3 lightCol = lightColor.rgb;
+      float shadow = 1.0;
    #ifndef NO_SHADOW
    if (getFlag(surface.matFlag, 0)) //also skip if we don't recieve shadows
    {
-   #ifdef SHADOW_CUBE
+      #ifdef SHADOW_CUBE
 
-      // TODO: We need to fix shadow cube to handle soft shadows!
-      float occ = TORQUE_TEXCUBE( shadowMap, mul( worldToLightProj, -surfaceToLight.L ) ).r;
-      shadow = saturate( exp( lightParams.y * ( occ - distToLight ) ) );
+         // TODO: We need to fix shadow cube to handle soft shadows!
+         float occ = TORQUE_TEXCUBE( shadowMap, mul( worldToLightProj, -surfaceToLight.L ) ).r;
+         shadow = saturate( exp( lightParams.y * ( occ - distToLight ) ) );
 
-   #else
-      float2 shadowCoord = decodeShadowCoord( mul( worldToLightProj, -surfaceToLight.L ) ).xy;
-      shadow = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(shadowMap), ssPos.xy, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
-   #endif
+      #else
+         float2 shadowCoord = decodeShadowCoord( mul( worldToLightProj, -surfaceToLight.L ) ).xy;
+         shadow = softShadow_filter(TORQUE_SAMPLER2D_MAKEARG(shadowMap), ssPos.xy, shadowCoord, shadowSoftness, distToLight, surfaceToLight.NdotL, lightParams.y);
+      #endif
    }
    #endif // !NO_SHADOW
-   
-      float3 lightCol = lightColor.rgb;
    #ifdef USE_COOKIE_TEX
       // Lookup the cookie sample.
+      #ifdef SHADOW_CUBE
       float4 cookie = TORQUE_TEXCUBE(cookieMap, mul(worldToLightProj, -surfaceToLight.L));
+      #else
+      float2 cookieCoord = decodeShadowCoord( mul( worldToLightProj, -surfaceToLight.L ) ).xy;
+      float4 cookie = TORQUE_TEX2D(cookieMap, cookieCoord);
+      #endif
       // Multiply the light with the cookie tex.
       lightCol *= cookie.rgb;
       // Use a maximum channel luminance to attenuate 
@@ -187,7 +198,6 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
       // regions of the cookie texture.
       lightCol *= max(cookie.r, max(cookie.g, cookie.b));
    #endif
-
    #ifdef DIFFUSE_LIGHT_VIZ
       float attenuation = getDistanceAtt(surfaceToLight.Lu, radius);
       float3 factor = lightColor * max(surfaceToLight.NdotL, 0) * shadow * lightIntensity * attenuation;
@@ -198,7 +208,7 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
    #endif
 
    #ifdef SPECULAR_LIGHT_VIZ
-   float attenuation = getDistanceAtt(surfaceToLight.Lu, radius);
+      float attenuation = getDistanceAtt(surfaceToLight.Lu, radius);
       float3 factor = lightColor * max(surfaceToLight.NdotL, 0) * shadow * lightIntensity * attenuation;
 
       float3 diffuse = BRDF_GetDebugSpecular(surface,surfaceToLight) * factor;
@@ -217,9 +227,20 @@ float4 main(   ConvexConnectP IN ) : SV_TARGET
       return final;
    #endif
 
+   #ifdef UES_PHOTOMETRIC_MASK
+      // Lookup the cookie sample.d
+      float cosTheta = dot(-surfaceToLight.L, lightDirection); 
+      float angle = acos(cosTheta) * ( M_1OVER_PI_F); 
+      float iesMask = TORQUE_TEX1D(iesProfile, angle).r;
+      // Multiply the light with the iesMask tex.
+      shadow *= iesMask;
+   #endif
+   
       //get punctual light contribution   
       lighting = getPunctualLight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, shadow);
+
    }
-      
+   
+
    return float4(lighting, 0);
 }

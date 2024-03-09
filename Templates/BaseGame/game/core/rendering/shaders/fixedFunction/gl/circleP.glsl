@@ -20,47 +20,43 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#include "../shaderModel.hlsl"
+in vec4 color;
 
-struct Conn
-{
-   float4 HPOS             : TORQUE_POSITION;
-   float4 color            : COLOR;
-};
+out vec4 OUT_col;
 
-uniform float2 sizeUni;
+uniform vec2 sizeUni;
 uniform float radius;
-uniform float2 rectCenter;
+uniform vec2 rectCenter;
 uniform float borderSize;
-uniform float4 borderCol;
+uniform vec4 borderCol;
 
-float circle(float2 p, float2 center, float r)
+float circle(vec2 p, vec2 center, float r)
 {
     return length(p - center);
 }
  
-float4 main(Conn IN) : TORQUE_TARGET0
+void main()
 {   
-    float distance = circle(IN.HPOS.xy, rectCenter, radius);
+    float dist = circle(gl_FragCoord.xy, rectCenter, radius);
     
-    float4 fromColor = borderCol;
-    float4 toColor = float4(0.0, 0.0, 0.0, 0.0);
+    vec4 fromColor = borderCol;
+    vec4 toColor = vec4(0.0, 0.0, 0.0, 0.0);
 
-    if(distance < radius)
+    if(dist < radius)
     {
-        distance = abs(distance) - radius;
+        dist = abs(dist) - radius;
         
-        if(distance < (radius - (borderSize)))
+        if(dist < (radius - (borderSize)))
         {
-            toColor = IN.color;
-            distance = abs(distance) - (borderSize);
+            toColor = color;
+            dist = abs(dist) - (borderSize);
         }
 
-        float blend = smoothstep(0.0, 1.0, distance);
-        return lerp(fromColor, toColor, blend);
+        float blend = smoothstep(0.0, 1.0, dist);
+        OUT_col = mix(fromColor, toColor, blend);
     }
     
-    distance = abs(distance) - radius; 
-    float blend = smoothstep(0.0, 1.0, distance);
-    return lerp(fromColor, toColor, blend);
+    dist = abs(dist) - radius; 
+    float blend = smoothstep(0.0, 1.0, dist);
+    OUT_col = mix(fromColor, toColor, blend);
 }

@@ -35,7 +35,6 @@ ConsoleDocClass(MathAddNode,
    "@internal"
 );
 
-
 MathAddNode::MathAddNode()
    : GuiShaderNode()
 {

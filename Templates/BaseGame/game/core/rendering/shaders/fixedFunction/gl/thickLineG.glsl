@@ -20,47 +20,48 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#include "../shaderModel.hlsl"
+layout (lines) in; 
+layout (triangle_strip, max_vertices = 4) out;
 
-struct Conn
+in VS_OUT {
+    vec4 color;
+} gs_in[];
+
+
+out vec4 fragColor;
+
+uniform float thickness;
+uniform vec2 oneOverViewport;
+
+void main()
 {
-   float4 HPOS             : TORQUE_POSITION;
-   float4 color            : COLOR;
-};
+    // Calculate the direction of the line segment
+    vec2 direction = normalize(gl_in[1].gl_Position.xy - gl_in[0].gl_Position.xy);
 
-uniform float2 sizeUni;
-uniform float radius;
-uniform float2 rectCenter;
-uniform float borderSize;
-uniform float4 borderCol;
+    // Calculate perpendicular direction
+    vec2 perpendicular = normalize(vec2(-direction.y, direction.x));
 
-float circle(float2 p, float2 center, float r)
-{
-    return length(p - center);
-}
+    // Calculate offset for thickness 
+    vec2 offset = vec2(thickness * oneOverViewport.x, thickness *  oneOverViewport.y) * perpendicular;
  
-float4 main(Conn IN) : TORQUE_TARGET0
-{   
-    float distance = circle(IN.HPOS.xy, rectCenter, radius);
-    
-    float4 fromColor = borderCol;
-    float4 toColor = float4(0.0, 0.0, 0.0, 0.0);
+    // Calculate vertices for the line with thickness
+    vec2 p0 = gl_in[0].gl_Position.xy + offset;
+    vec2 p1 = gl_in[0].gl_Position.xy - offset;
+    vec2 p2 = gl_in[1].gl_Position.xy + offset;
+    vec2 p3 = gl_in[1].gl_Position.xy - offset;
 
-    if(distance < radius)
-    {
-        distance = abs(distance) - radius;
-        
-        if(distance < (radius - (borderSize)))
-        {
-            toColor = IN.color;
-            distance = abs(distance) - (borderSize);
-        }
+    fragColor = gs_in[0].color;
+    gl_Position = vec4(p0, 0.0f, 1.0f);
+    EmitVertex();
 
-        float blend = smoothstep(0.0, 1.0, distance);
-        return lerp(fromColor, toColor, blend);
-    }
-    
-    distance = abs(distance) - radius; 
-    float blend = smoothstep(0.0, 1.0, distance);
-    return lerp(fromColor, toColor, blend);
+    gl_Position = vec4(p1, 0.0f, 1.0f);
+    EmitVertex();
+
+    gl_Position = vec4(p2, 0.0f, 1.0f);
+    EmitVertex();
+
+    gl_Position = vec4(p3, 0.0f, 1.0f);
+    EmitVertex();
+
+    EndPrimitive();
 }

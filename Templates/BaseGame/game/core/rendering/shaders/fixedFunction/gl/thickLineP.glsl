@@ -20,47 +20,11 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#include "../shaderModel.hlsl"
+in vec4 fragColor;
 
-struct Conn
+out vec4 OUT_col;
+
+void main()
 {
-   float4 HPOS             : TORQUE_POSITION;
-   float4 color            : COLOR;
-};
-
-uniform float2 sizeUni;
-uniform float radius;
-uniform float2 rectCenter;
-uniform float borderSize;
-uniform float4 borderCol;
-
-float circle(float2 p, float2 center, float r)
-{
-    return length(p - center);
-}
- 
-float4 main(Conn IN) : TORQUE_TARGET0
-{   
-    float distance = circle(IN.HPOS.xy, rectCenter, radius);
-    
-    float4 fromColor = borderCol;
-    float4 toColor = float4(0.0, 0.0, 0.0, 0.0);
-
-    if(distance < radius)
-    {
-        distance = abs(distance) - radius;
-        
-        if(distance < (radius - (borderSize)))
-        {
-            toColor = IN.color;
-            distance = abs(distance) - (borderSize);
-        }
-
-        float blend = smoothstep(0.0, 1.0, distance);
-        return lerp(fromColor, toColor, blend);
-    }
-    
-    distance = abs(distance) - radius; 
-    float blend = smoothstep(0.0, 1.0, distance);
-    return lerp(fromColor, toColor, blend);
+   OUT_col = fragColor;
 }

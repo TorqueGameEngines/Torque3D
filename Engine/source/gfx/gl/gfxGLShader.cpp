@@ -462,7 +462,7 @@ bool GFXGLShader::_init()
    if (!mGeometryFile.isEmpty())
    {
       macros.last().name = "TORQUE_GEOMETRY_SHADER";
-      compiledGeometryShader = initShader(mPixelFile, GFXShaderStage::GEOMETRY_SHADER, macros);
+      compiledGeometryShader = initShader(mGeometryFile, GFXShaderStage::GEOMETRY_SHADER, macros);
       if (!compiledGeometryShader)
          return false;
    }

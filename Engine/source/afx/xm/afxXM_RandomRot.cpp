@@ -60,7 +60,6 @@ public:
   afxXM_Base*   create(afxEffectWrapper* fx, bool on_server);
 
   DECLARE_CONOBJECT(afxXM_RandomRotData);
-  DECLARE_CATEGORY("AFX");
 };
 
 class afxXM_RandomRot : public afxXM_Base

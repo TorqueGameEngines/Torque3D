@@ -122,7 +122,6 @@ public:
   static void           initPersistFields();
 
   DECLARE_CONOBJECT(afxMagicSpellData);
-  DECLARE_CATEGORY("AFX");
 
   /// @name Callbacks
   /// @{
@@ -320,7 +319,6 @@ public:
   static void   initPersistFields();
 
   DECLARE_CONOBJECT(afxMagicSpell);
-  DECLARE_CATEGORY("AFX");
 
 private:
   void          process_server();

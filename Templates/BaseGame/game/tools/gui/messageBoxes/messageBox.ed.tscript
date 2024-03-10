@@ -134,6 +134,7 @@ function toolsMessageBoxOK(%title, %message, %callback)
 {
    MBOKFrame.text = %title;
    Canvas.pushDialog(toolsMessageBoxOKDlg);
+   MBOKFrame.selectWindow();
    MBSetText(MBOKText, MBOKFrame, %message);
    toolsMessageBoxOKDlg.callback = %callback;
 }
@@ -147,6 +148,7 @@ function toolsMessageBoxOKCancel(%title, %message, %callback, %cancelCallback)
 {
    MBOKCancelFrame.text = %title;
    Canvas.pushDialog(toolsMessageBoxOKCancelDlg);
+   MBOKCancelFrame.selectWindow();
    MBSetText(MBOKCancelText, MBOKCancelFrame, %message);
    toolsMessageBoxOKCancelDlg.callback = %callback;
    toolsMessageBoxOKCancelDlg.cancelCallback = %cancelCallback;
@@ -169,6 +171,8 @@ function toolsMessageBoxOKCancelDetails(%title, %message, %details, %callback, %
    MBOKCancelDetailsFrame.setText( %title );
    
    Canvas.pushDialog(toolsMessageBoxOKCancelDetailsDlg);
+   MBOKCancelDetailsFrame.selectWindow();
+   
    MBSetText(MBOKCancelDetailsText, MBOKCancelDetailsFrame, %message);
    MBOKCancelDetailsInfoText.setText(%details);
    
@@ -233,6 +237,7 @@ function toolsMessageBoxYesNo(%title, %message, %yesCallback, %noCallback)
    MBYesNoFrame.text = %title;
    toolsMessageBoxYesNoDlg.profile = "GuiOverlayProfile";
    Canvas.pushDialog(toolsMessageBoxYesNoDlg);
+   MBYesNoFrame.selectWindow();
    MBSetText(MBYesNoText, MBYesNoFrame, %message);
    toolsMessageBoxYesNoDlg.yesCallBack = %yesCallback;
    toolsMessageBoxYesNoDlg.noCallback = %noCallBack;
@@ -243,6 +248,7 @@ function toolsMessageBoxYesNoCancel(%title, %message, %yesCallback, %noCallback,
    MBYesNoCancelFrame.text = %title;
    toolsMessageBoxYesNoDlg.profile = "GuiOverlayProfile";
    Canvas.pushDialog(toolsMessageBoxYesNoCancelDlg);
+   MBYesNoCancelFrame.selectWindow();
    MBSetText(MBYesNoCancelText, MBYesNoCancelFrame, %message);
    toolsMessageBoxYesNoCancelDlg.yesCallBack = %yesCallback;
    toolsMessageBoxYesNoCancelDlg.noCallback = %noCallBack;
@@ -264,6 +270,7 @@ function MessagePopup(%title, %message, %delay)
    // Currently two lines max.
    MessagePopFrame.setText(%title);
    Canvas.pushDialog(MessagePopupDlg);
+   MessagePopFrame.selectWindow();
    MBSetText(MessagePopText, MessagePopFrame, %message);
    if (%delay !$= "")
       schedule(%delay, 0, CloseMessagePopup);
@@ -279,6 +286,7 @@ function IODropdown(%title, %message, %simgroup, %callback, %cancelCallback)
 {
    IODropdownFrame.text = %title;
    Canvas.pushDialog(IODropdownDlg);
+   IODropdownFrame.selectWindow();
    MBSetText(IODropdownText, IODropdownFrame, %message);
    
    if(isObject(%simgroup))

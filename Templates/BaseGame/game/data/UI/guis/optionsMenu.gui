@@ -1,226 +1,242 @@
 //--- OBJECT WRITE BEGIN ---
 $guiContent = new GuiControl(OptionsMenu) {
-   extent = "1024 768";
-   profile = "GuiNonModalDefaultProfile";
-   tooltipProfile = "GuiToolTipProfile";
-   isContainer = "1";
+   extent = "1280 720";
+   minExtent = "8 8";
    horizSizing = "width";
    vertSizing = "height";
+   profile = "GuiMenuBackgroundProfile";
+   category = "BaseUI";
+   tooltipProfile = "GuiToolTipProfile";
+   isContainer = "1";
    canSaveDynamicFields = "0";
 
-   new GuiControl(OptionsMenuContainer) {
-      position = "48 56";
-      extent = "928 655";
-      horizSizing = "aspectCenter";
-      vertSizing = "center";
+   new GuiInputCtrl(OptionsMenuInputHandler) {
+      ignoreMouseEvents = "1";
+      ActionMap = "OptionsMenuActionMap";
+      position = "-50 0";
+      extent = "2186 851";
+      horizSizing = "width";
+      vertSizing = "height";
+      profile = "GuiInputCtrlProfile";
+      tooltipProfile = "GuiToolTipProfile";
+   };
+   new GuiControl(OptionsMenuCategoryContainer) {
+      position = "0 60";
+      extent = "1280 49";
+      horizSizing = "center";
       profile = "GuiDefaultProfile";
       tooltipProfile = "GuiToolTipProfile";
       isContainer = "1";
 
-      new GuiBitmapBarCtrl() {
-         BitmapAsset = "UI:panel_low_image";
-         position = "0 40";
-         extent = "927 618";
-         horizSizing = "width";
+      new GuiStackControl(OptionsMenuCategoryList) {
+         stackingType = "Horizontal";
+         padding = "10";
+         dynamicSize = "0";
+         position = "330 0";
+         extent = "650 40";
+         horizSizing = "center";
+         vertSizing = "center";
          profile = "GuiDefaultProfile";
-         tooltipProfile = "GuiToolTipProfile";
-      };
-      new GuiBitmapBarCtrl() {
-         BitmapAsset = "UI:panel_image";
-         extent = "927 40";
-         horizSizing = "width";
-         profile = "GuiDefaultProfile";
-         tooltipProfile = "GuiToolTipProfile";
-      };
-      new GuiTextCtrl() {
-         text = "OPTIONS";
-         position = "22 7";
-         extent = "220 28";
-         profile = "MenuHeaderText";
-         tooltipProfile = "GuiToolTipProfile";
-      };
-      new GuiTextCtrl(OptionName) {
-         position = "3 606";
-         extent = "293 17";
-         horizSizing = "width";
-         profile = "MenuSubHeaderText";
-         tooltipProfile = "GuiToolTipProfile";
-      };
-      new GuiMLTextCtrl(OptionDescription) {
-         text = "This is a placeholder text for an option.";
-         position = "3 625";
-         extent = "293 14";
-         horizSizing = "width";
-         profile = "GuiMLTextProfile";
-         tooltipProfile = "GuiToolTipProfile";
-      };
-      new GuiSplitContainer() {
-         splitPoint = "250 100";
-         fixedPanel = "FirstPanel";
-         fixedSize = "250";
-         position = "0 48";
-         extent = "928 555";
-         horizSizing = "width";
-         profile = "GuiMenuScrollProfile";
          tooltipProfile = "GuiToolTipProfile";
 
-         new GuiPanel() {
-            docking = "Client";
-            extent = "248 555";
-            profile = "GuiOverlayProfile";
+         new GuiButtonCtrl() {
+            text = "Video";
+            extent = "120 40";
+            profile = "GuiMenuButtonProfile";
+            command = "OptionsMenu.openOptionsCategory(\"Video\");";
             tooltipProfile = "GuiToolTipProfile";
-            internalName = "Panel1";
-
-            new GuiStackControl(OptionsMenuCategoryList) {
-               padding = "10";
-               dynamicSize = "0";
-               extent = "248 555";
-               horizSizing = "width";
-               vertSizing = "height";
-               profile = "GuiDefaultProfile";
-               tooltipProfile = "GuiToolTipProfile";
-               superClass = "MenuList";
-
-               new GuiButtonCtrl() {
-                  text = "Display";
-                  extent = "248 35";
-                  profile = "GuiMenuButtonProfile";
-                  command = "populateDisplaySettingsList();";
-                  tooltipProfile = "GuiToolTipProfile";
-               };
-               new GuiButtonCtrl() {
-                  text = "Graphics";
-                  position = "0 45";
-                  extent = "248 35";
-                  profile = "GuiMenuButtonProfile";
-                  command = "populateGraphicsSettingsList();";
-                  tooltipProfile = "GuiToolTipProfile";
-               };
-               new GuiButtonCtrl() {
-                  text = "Audio";
-                  position = "0 90";
-                  extent = "248 35";
-                  profile = "GuiMenuButtonProfile";
-                  command = "populateAudioSettingsList();";
-                  tooltipProfile = "GuiToolTipProfile";
-               };
-               new GuiButtonCtrl() {
-                  text = "Keyboard & Mouse";
-                  position = "0 135";
-                  extent = "248 35";
-                  profile = "GuiMenuButtonProfile";
-                  command = "populateKeyboardMouseSettingsList();";
-                  tooltipProfile = "GuiToolTipProfile";
-               };
-               new GuiButtonCtrl() {
-                  text = "Gamepad";
-                  position = "0 180";
-                  extent = "248 35";
-                  profile = "GuiMenuButtonProfile";
-                  command = "populateGamepadSettingsList();";
-                  tooltipProfile = "GuiToolTipProfile";
-               };
-               new GuiButtonCtrl() {
-                  text = "Example Options";
-                  position = "0 225";
-                  extent = "248 35";
-                  profile = "GuiMenuButtonProfile";
-                  command = "testExampleOptions();";
-                  tooltipProfile = "GuiToolTipProfile";
-               };
-            };
          };
-         new GuiPanel() {
-            docking = "Client";
-            position = "252 0";
-            extent = "676 555";
-            profile = "GuiOverlayProfile";
+         new GuiButtonCtrl() {
+            text = "Audio";
+            position = "130 0";
+            extent = "120 40";
+            profile = "GuiMenuButtonProfile";
+            command = "OptionsMenu.openOptionsCategory(\"Audio\");";
             tooltipProfile = "GuiToolTipProfile";
-            internalName = "panel2";
-
-            new GuiScrollCtrl(OptionsMenuSettingsScroll) {
-               hScrollBar = "alwaysOff";
-               vScrollBar = "dynamic";
-               extent = "676 554";
-               horizSizing = "width";
-               vertSizing = "height";
-               profile = "GuiMenuScrollProfile";
-               tooltipProfile = "GuiToolTipProfile";
-
-               new GuiStackControl(OptionsMenuSettingsList) {
-                  padding = "5";
-                  changeChildSizeToFit = "0";
-                  position = "1 1";
-                  extent = "661 170";
-                  horizSizing = "width";
-                  vertSizing = "height";
-                  profile = "GuiDefaultProfile";
-                  tooltipProfile = "GuiToolTipProfile";
-                  superClass = "MenuList";
-                  new GuiGameSettingsCtrl() {
-                     PreviousBitmapAsset = "UI:previousOption_n_image";
-                     NextBitmapAsset = "UI:nextOption_n_image";
-                     columnSplit = "198";
-                     useMouseEvents = "1";
-                     extent = "661 30";
-                     horizSizing = "width";
-                     profile = "GuiMenuButtonProfile";
-                     tooltipProfile = "GuiToolTipProfile";
-                     class = "MenuOptionsButton";
-                  };
-                  new GuiGameSettingsCtrl() {
-                     PreviousBitmapAsset = "UI:previousOption_n_image";
-                     NextBitmapAsset = "UI:nextOption_n_image";
-                     columnSplit = "198";
-                     useMouseEvents = "1";
-                     position = "0 35";
-                     extent = "661 30";
-                     horizSizing = "width";
-                     profile = "GuiMenuButtonProfile";
-                     tooltipProfile = "GuiToolTipProfile";
-                     class = "MenuOptionsButton";
-                  };
-                  new GuiGameSettingsCtrl() {
-                     PreviousBitmapAsset = "UI:previousOption_n_image";
-                     NextBitmapAsset = "UI:nextOption_n_image";
-                     columnSplit = "198";
-                     useMouseEvents = "1";
-                     position = "0 70";
-                     extent = "661 30";
-                     horizSizing = "width";
-                     profile = "GuiMenuButtonProfile";
-                     tooltipProfile = "GuiToolTipProfile";
-                     class = "MenuOptionsButton";
-                  };
-                  new GuiGameSettingsCtrl() {
-                     PreviousBitmapAsset = "UI:previousOption_n_image";
-                     NextBitmapAsset = "UI:nextOption_n_image";
-                     columnSplit = "198";
-                     useMouseEvents = "1";
-                     position = "0 105";
-                     extent = "661 30";
-                     horizSizing = "width";
-                     profile = "GuiMenuButtonProfile";
-                     tooltipProfile = "GuiToolTipProfile";
-                     class = "MenuOptionsButton";
-                  };
-                  new GuiGameSettingsCtrl() {
-                     PreviousBitmapAsset = "UI:previousOption_n_image";
-                     NextBitmapAsset = "UI:nextOption_n_image";
-                     columnSplit = "198";
-                     useMouseEvents = "1";
-                     position = "0 140";
-                     extent = "661 30";
-                     horizSizing = "width";
-                     profile = "GuiMenuButtonProfile";
-                     tooltipProfile = "GuiToolTipProfile";
-                     class = "MenuOptionsButton";
-               };
-            };
+         };
+         new GuiButtonCtrl() {
+            text = "Keyboard/Mouse";
+            position = "260 0";
+            extent = "220 40";
+            profile = "GuiMenuButtonProfile";
+            command = "OptionsMenu.openOptionsCategory(\"KBM\");";
+            tooltipProfile = "GuiToolTipProfile";
+         };
+         new GuiButtonCtrl() {
+            text = "Controller";
+            position = "480 0";
+            extent = "160 40";
+            profile = "GuiMenuButtonProfile";
+            command = "OptionsMenu.openOptionsCategory(\"Controller\");";
+            tooltipProfile = "GuiToolTipProfile";
+         };
+      };
+      
+      new GuiControl(OptionsMenuNavButtonOverlay) {
+         extent = "1281 40";
+         horizSizing = "width";
+         vertSizing = "height";
+         profile = GuiNonModalDefaultProfile;
+         
+         new GuiBitmapCtrl(OptionsMenuPrevNavIcon) {
+            BitmapAsset = "UI:Keyboard_Black_Q_image";
+            position = "0 10";
+            extent = "40 40";
+            profile = GuiNonModalDefaultProfile;
+            vertSizing = "top";
+         };
+         
+         new GuiBitmapCtrl(OptionsMenuNextNavIcon) {
+            BitmapAsset = "UI:Keyboard_Black_E_image";
+            position = "0 10";
+            extent = "40 40";
+            profile = GuiNonModalDefaultProfile;
+            vertSizing = "top";
          };
       };
    };
+   new GuiScrollCtrl(OptionsMenuSettingsScroll) {
+      hScrollBar = "alwaysOff";
+      vScrollBar = "dynamic";
+      position = "240 110";
+      extent = "800 573";
+      horizSizing = "center";
+      vertSizing = "height";
+      profile = "GuiMenuScrollProfile";
+      tooltipProfile = "GuiToolTipProfile";
 
+      new GuiStackControl(VideoSettingsList) {
+         class = "OptionsMenuList";
+         padding = "5";
+         changeChildSizeToFit = "0";
+         position = "0 1";
+         extent = "800 200";
+         horizSizing = "width";
+         vertSizing = "height";
+         profile = "GuiDefaultProfile";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+      new GuiStackControl(AudioSettingsList) {
+         class = "OptionsMenuList";
+         padding = "5";
+         changeChildSizeToFit = "0";
+         position = "0 1";
+         extent = "800 200";
+         horizSizing = "width";
+         vertSizing = "height";
+         profile = "GuiDefaultProfile";
+         visible = "0";
+         tooltipProfile = "GuiToolTipProfile";
+         hidden = "1";
+      };
+      new GuiStackControl(KBMControlsList) {
+         class = "OptionsMenuList";
+         padding = "5";
+         changeChildSizeToFit = "0";
+         position = "0 1";
+         extent = "800 200";
+         horizSizing = "width";
+         vertSizing = "height";
+         profile = "GuiDefaultProfile";
+         visible = "0";
+         tooltipProfile = "GuiToolTipProfile";
+         hidden = "1";
+      };
+      new GuiStackControl(GamepadControlsList) {
+         class = "OptionsMenuList";
+         padding = "5";
+         changeChildSizeToFit = "0";
+         position = "0 1";
+         extent = "800 200";
+         horizSizing = "width";
+         vertSizing = "height";
+         profile = "GuiDefaultProfile";
+         visible = "0";
+         tooltipProfile = "GuiToolTipProfile";
+         hidden = "1";
+      };
+   };
+   new GuiPanel(OptionMenuTitlePanel) {
+      extent = "1281 60";
+      horizSizing = "width";
+      profile = "GuiMenuPanelProfile";
+      tooltipProfile = "GuiToolTipProfile";
+
+      new GuiTextCtrl() {
+         text = "OPTIONS";
+         position = "22 23";
+         extent = "1281 28";
+         profile = "MenuHeaderText";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+   };
+   new GuiPanel(OptionsMenuButtonPanel) {
+      position = "0 683";
+      extent = "1281 40";
+      horizSizing = "width";
+      vertSizing = "top";
+      profile = "GuiMenuPanelProfile";
+      tooltipProfile = "GuiToolTipProfile";
+
+      new GuiIconButtonCtrl(OptionsMenuBackBtn) {
+         BitmapAsset = "UI:Keyboard_Black_Escape_image";
+         sizeIconToButton = "1";
+         makeIconSquare = "1";
+         textLocation = "Center";
+         text = "Back";
+         position = "16 0";
+         extent = "140 40";
+         vertSizing = "center";
+         profile = "GuiMenuButtonProfile";
+         command = "tryCloseOptionsMenu(1);";
+         tooltipProfile = "GuiToolTipProfile";
+         class = "MenuInputButton";
+      };
+      new GuiIconButtonCtrl(OptionsMenuRemapBtn) {
+         BitmapAsset = "UI:Keyboard_Black_Space_image";
+         sizeIconToButton = "1";
+         makeIconSquare = "1";
+         textLocation = "Center";
+         text = "Remap";
+         position = "850 0";
+         extent = "140 40";
+         horizSizing = "left";
+         vertSizing = "center";
+         profile = "GuiMenuButtonProfile";
+         command = "OptionsMenuActivateOption(1)";
+         tooltipProfile = "GuiToolTipProfile";
+         class = "MenuInputButton";
+      };
+      new GuiIconButtonCtrl(OptionsMenuApplyBtn) {
+         BitmapAsset = "UI:Keyboard_Black_Return_image";
+         sizeIconToButton = "1";
+         makeIconSquare = "1";
+         textLocation = "Center";
+         text = "Apply";
+         position = "990 0";
+         extent = "140 40";
+         horizSizing = "left";
+         vertSizing = "center";
+         profile = "GuiMenuButtonProfile";
+         command = "OptionsMenu.applyChangedOptions();";
+         tooltipProfile = "GuiToolTipProfile";
+         class = "MenuInputButton";
+      };
+      new GuiIconButtonCtrl(OptionsMenuResetBtn) {
+         BitmapAsset = "UI:Keyboard_Black_R_image";
+         sizeIconToButton = "1";
+         makeIconSquare = "1";
+         textLocation = "Center";
+         text = "Reset";
+         position = "1135 0";
+         extent = "140 40";
+         horizSizing = "left";
+         vertSizing = "center";
+         profile = "GuiMenuButtonProfile";
+         command = "OptionsMenu.resetSettings();";
+         tooltipProfile = "GuiToolTipProfile";
+         class = "MenuInputButton";
+      };
    };
 };
 //--- OBJECT WRITE END ---

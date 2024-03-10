@@ -147,6 +147,7 @@ public:
    virtual ~Forest();
 
    DECLARE_CONOBJECT(Forest);
+   DECLARE_CATEGORY("Environment \t BackGround");
    static void consoleInit();
    static void initPersistFields();   
 

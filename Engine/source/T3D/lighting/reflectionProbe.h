@@ -274,6 +274,7 @@ public:
    // Declare this object as a ConsoleObject so that we can
    // instantiate it into the world and network it
    DECLARE_CONOBJECT(ReflectionProbe);
+   DECLARE_CATEGORY("UNLISTED");
 
    //--------------------------------------------------------------------------
    // Object Editing
@@ -377,6 +378,7 @@ public:
    /// Invokes a cubemap bake action for this probe
    /// </summary>
    void bake();
+   ProbeInfo* getProbeInfo() { return &mProbeInfo; }
 };
 
 typedef ReflectionProbe::ProbeInfo::ProbeShapeType ReflectProbeType;

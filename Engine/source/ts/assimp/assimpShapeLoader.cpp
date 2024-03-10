@@ -229,6 +229,18 @@ void AssimpShapeLoader::enumerateScene()
       if (!processNode(node))
          delete node;
 
+      // add bounds node.
+      if (!boundsNode)
+      {
+         aiNode* req[1];
+         req[0] = new aiNode("bounds");
+         mScene->mRootNode->addChildren(1, req);
+
+         AssimpAppNode* appBounds = new AssimpAppNode(mScene, req[0]);
+         if (!processNode(appBounds))
+            delete appBounds;
+      }
+
       // Check for animations and process those.
       processAnimations();
    } 
@@ -243,12 +255,45 @@ void AssimpShapeLoader::enumerateScene()
 
 void AssimpShapeLoader::processAnimations()
 {
-   for(U32 n = 0; n < mScene->mNumAnimations; ++n)
-   {
-      Con::printf("[ASSIMP] Animation Found: %s", mScene->mAnimations[n]->mName.C_Str());
+   // add all animations into 1 ambient animation.
+   aiAnimation* ambientSeq = new aiAnimation();
+   ambientSeq->mName = "ambient";
 
-      AssimpAppSequence* newAssimpSeq = new AssimpAppSequence(mScene->mAnimations[n]);
-      appSequences.push_back(newAssimpSeq);
+   Vector<aiNodeAnim*> ambientChannels;
+   F32 duration = 0.0f;
+   if (mScene->mNumAnimations > 0)
+   {
+      for (U32 i = 0; i < mScene->mNumAnimations; ++i)
+      {
+         aiAnimation* anim = mScene->mAnimations[i];
+         for (U32 j = 0; j < anim->mNumChannels; j++)
+         {
+            aiNodeAnim* nodeAnim = anim->mChannels[j];
+            // Determine the maximum keyframe time for this animation
+            F32 maxKeyTime = 0.0f;
+            for (U32 k = 0; k < nodeAnim->mNumPositionKeys; k++) {
+               maxKeyTime = getMax(maxKeyTime, (F32)nodeAnim->mPositionKeys[k].mTime);
+            }
+            for (U32 k = 0; k < nodeAnim->mNumRotationKeys; k++) {
+               maxKeyTime = getMax(maxKeyTime, (F32)nodeAnim->mRotationKeys[k].mTime);
+            }
+            for (U32 k = 0; k < nodeAnim->mNumScalingKeys; k++) {
+               maxKeyTime = getMax(maxKeyTime, (F32)nodeAnim->mScalingKeys[k].mTime);
+            }
+
+            ambientChannels.push_back(nodeAnim);
+
+            duration = getMax(duration, maxKeyTime);
+         }
+      }
+
+      ambientSeq->mNumChannels = ambientChannels.size();
+      ambientSeq->mChannels = ambientChannels.address();
+      ambientSeq->mDuration = duration;
+      ambientSeq->mTicksPerSecond = 24.0;
+
+      AssimpAppSequence* defaultAssimpSeq = new AssimpAppSequence(ambientSeq);
+      appSequences.push_back(defaultAssimpSeq);
    }
 }
 
@@ -369,12 +414,16 @@ bool AssimpShapeLoader::fillGuiTreeView(const char* sourceShapePath, GuiTreeView
       tree->insertItem(matItem, String::ToString("%s", name.c_str()), String::ToString("%s", texName.c_str()));
    }
 
-   for (U32 i = 0; i < shapeScene->mNumAnimations; i++)
+   if (shapeScene->mNumAnimations == 0)
    {
-      String sequenceName = shapeScene->mAnimations[i]->mName.C_Str();
-      if (sequenceName.isEmpty())
-         sequenceName = "ambient";
-      tree->insertItem(animItem, sequenceName.c_str());
+      tree->insertItem(animItem, "ambient", "animation", "", 0, 0);
+   }
+   else
+   {
+      for (U32 i = 0; i < shapeScene->mNumAnimations; i++)
+      {
+         tree->insertItem(animItem, shapeScene->mAnimations[i]->mName.C_Str(), "animation", "", 0, 0);
+      }
    }
 
    U32 numNodes = 0;

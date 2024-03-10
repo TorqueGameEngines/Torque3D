@@ -44,18 +44,12 @@ public:
    /// Pushes a new frame into the video stream
    bool pushFrame( GBitmap * bitmap )
    {
-      FileStream fs;
       String framePath = mPath + String::ToString("%.6u.png", mCurrentFrame);
-      if ( !fs.open( framePath, Torque::FS::File::Write ) )
-      {
-         Con::errorf( "VideoEncoderPNG::pushFrame() - Failed to open output file '%s'!", framePath.c_str() );
-         return false;
-      }
 
       //Increment
       mCurrentFrame++;
 
-      bool result = bitmap->writeBitmap("png", fs, 0);
+      bool result = bitmap->writeBitmap("png", framePath, 0);
       pushProcessedBitmap(bitmap);
  
       return result;

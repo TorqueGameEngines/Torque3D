@@ -84,7 +84,6 @@ public:
 
    // ConsoleObject
    DECLARE_CONOBJECT(afxZodiacMeshRoadRenderer);
-   DECLARE_CATEGORY("AFX");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

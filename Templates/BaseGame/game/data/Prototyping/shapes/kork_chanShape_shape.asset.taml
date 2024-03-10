@@ -1,0 +1,5 @@
+<ShapeAsset
+    AssetName="kork_chanShape_shape"
+    fileName="@assetFile=kork_chanShape.fbx"
+    constuctorFileName="@assetFile=kork_chanShape.tscript"
+    materialSlot0="@asset=Prototyping:kork_chan_mat"/>

@@ -404,6 +404,22 @@ void ArrayObject::uniqueKey()
 
 //-----------------------------------------------------------------------------
 
+void ArrayObject::uniquePair()
+{
+   for (S32 i = 0; i < mArray.size(); i++)
+   {
+      for (S32 j = i + 1; j < mArray.size(); j++)
+      {
+         if (isEqual(mArray[i].key, mArray[j].key) && isEqual(mArray[i].value, mArray[j].value))
+         {
+            erase(j);
+            j--;
+         }
+      }
+   }
+}
+//-----------------------------------------------------------------------------
+
 void ArrayObject::duplicate(ArrayObject* obj)
 {
    empty();
@@ -450,7 +466,7 @@ void ArrayObject::append(ArrayObject* obj)
 
 void ArrayObject::setKey( const String &key, S32 index )
 {
-   if ( index >= mArray.size() )
+   if (index >= mArray.size() || index < 0)
       return;
 
    mArray[index].key = key;
@@ -460,7 +476,7 @@ void ArrayObject::setKey( const String &key, S32 index )
 
 void ArrayObject::setValue( const String &value, S32 index )
 {
-   if ( index >= mArray.size() )
+   if (index >= mArray.size() || index < 0)
       return;
    
    mArray[index].value = value;
@@ -600,6 +616,22 @@ DefineEngineMethod( ArrayObject, getIndexFromKey, S32, ( const char* key ),,
    return object->getIndexFromKey( key );
 }
 
+DefineEngineMethod(ArrayObject, getValueFromKey, const char*, (const char* key), ,
+   "Search the array from the current position for the Key "
+   "@param value Array key to search for\n"
+   "@return Value of the first element found, or -1 if none\n")
+{
+   return object->getValueFromIndex(object->getIndexFromKey(key)).c_str();
+}
+
+DefineEngineMethod(ArrayObject, getKeyFromValue, const char*, (const char* key), ,
+   "Search the array from the current position for the Value "
+   "@param value Array key to search for\n"
+   "@return Key of the first element found, or -1 if none\n")
+{
+   return object->getKeyFromIndex(object->getIndexFromValue(key)).c_str();
+}
+
 DefineEngineMethod( ArrayObject, getValue, const char*, ( S32 index ),,
    "Get the value of the array element at the submitted index.\n"
    "@param index 0-based index of the array element to get\n"
@@ -722,6 +754,12 @@ DefineEngineMethod( ArrayObject, uniqueKey, void, (),,
    "Removes any elements that have duplicated keys (leaving the first instance)" )
 {
    object->uniqueKey();
+}
+
+DefineEngineMethod(ArrayObject, uniquePair, void, (), ,
+   "Removes any elements that have duplicated key and value pairs (leaving the first instance)")
+{
+   object->uniquePair();
 }
 
 DefineEngineMethod( ArrayObject, duplicate, bool, ( ArrayObject* target ),,

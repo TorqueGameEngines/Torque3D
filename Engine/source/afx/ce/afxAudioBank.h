@@ -59,7 +59,6 @@ public:
    virtual bool       allowSubstitutions() const { return true; }
 
    DECLARE_CONOBJECT(afxAudioBank);
-   DECLARE_CATEGORY("AFX");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

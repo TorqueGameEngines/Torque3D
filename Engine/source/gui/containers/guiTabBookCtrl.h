@@ -116,6 +116,7 @@ class GuiTabBookCtrl : public GuiContainer
       /// @{
       
       DECLARE_CALLBACK( void, onTabSelected, ( const String& text, U32 index ) );
+      DECLARE_CALLBACK(void, onTabUnSelected, (const String& text, U32 index));
       DECLARE_CALLBACK( void, onTabRightClick, ( const String& text, U32 index ) );
       
       /// @}

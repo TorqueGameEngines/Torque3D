@@ -68,7 +68,7 @@ class Zone : public SceneAmbientSoundObject< ScenePolyhedralZone >
       // SimObject
       DECLARE_CONOBJECT( Zone );
       DECLARE_DESCRIPTION( "A volume that encloses objects for visibility culling." );
-      DECLARE_CATEGORY( "3D" );
+      DECLARE_CATEGORY("Volume");
 
       static void consoleInit();
 };

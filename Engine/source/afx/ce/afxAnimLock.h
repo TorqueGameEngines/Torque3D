@@ -40,7 +40,6 @@ public:
   static void           initPersistFields();
 
   DECLARE_CONOBJECT(afxAnimLockData);
-  DECLARE_CATEGORY("AFX");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

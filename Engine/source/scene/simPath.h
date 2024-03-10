@@ -84,6 +84,7 @@ class Path : public GameBase
    U32 getPathIndex() const;
 
    DECLARE_CONOBJECT(Path);
+   DECLARE_CATEGORY("Cinematic");
    static void initPersistFields();
    DECLARE_CALLBACK(void, onAdd, (SimObjectId ID));
 };
@@ -151,6 +152,7 @@ class Marker : public SceneObject
    ~Marker();
 
    DECLARE_CONOBJECT(Marker);
+   DECLARE_CATEGORY("Cinematic");
    static void initPersistFields();
    void inspectPostApply();
 

@@ -71,7 +71,8 @@ void SingleLightShadowMap::_render( RenderPassManager* renderPass,
    lightMatrix.inverse();
    GFX->setWorldMatrix(lightMatrix);
 
-   const MatrixF& lightProj = GFX->getProjectionMatrix();
+   MatrixF lightProj = GFX->getProjectionMatrix();
+   lightProj.reverseProjection();
    mWorldToLightProj = lightProj * lightMatrix;
 
    // Render the shadowmap!

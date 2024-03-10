@@ -94,7 +94,7 @@ function configureCanvas()
    if ($pref::Video::deviceMode != $Video::ModeFullscreen)
       $pref::Video::FullScreen = false;
    %modeStr = Canvas.prefsToModeStr();
-
+   
    echo("--------------");
    echo("Attempting to set resolution to \"" @ %modeStr @ "\"");
 

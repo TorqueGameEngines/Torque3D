@@ -308,9 +308,9 @@ void ShapeAsset::_onResourceChanged(const Torque::Path &path)
    onAssetRefresh();
 }
 
-bool ShapeAsset::loadShape()
+U32 ShapeAsset::load()
 {
-   if (mLoadedState == AssetErrCode::Ok) return true;
+   if (mLoadedState == AssetErrCode::Ok) return mLoadedState;
 
    mMaterialAssets.clear();
    mMaterialAssetIds.clear();
@@ -357,7 +357,7 @@ bool ShapeAsset::loadShape()
    {
       Con::errorf("ShapeAsset::loadShape : failed to load shape file %s (%s)!", getAssetName(), mFilePath);
       mLoadedState = BadFileReference;
-      return false; //if it failed to load, bail out
+      return mLoadedState; //if it failed to load, bail out
    }
    // Construct billboards if not done already
    if (GFXDevice::devicePresent())
@@ -379,7 +379,7 @@ bool ShapeAsset::loadShape()
          mAnimationAssets[i]->getStartFrame(), mAnimationAssets[i]->getEndFrame(), mAnimationAssets[i]->getPadRotation(), mAnimationAssets[i]->getPadTransforms()))
       {
          mLoadedState = MissingAnimatons;
-         return false;
+         return mLoadedState;
       }
       if (mAnimationAssets[i]->isBlend())
          hasBlends = true;
@@ -402,7 +402,7 @@ bool ShapeAsset::loadShape()
                Con::errorf("ShapeAsset::initializeAsset - Unable to acquire reference animation asset %s for asset %s to blend!", mAnimationAssets[i]->getBlendAnimationName(), mAnimationAssets[i]->getAssetName());
                {
                   mLoadedState = MissingAnimatons;
-                  return false;
+                  return mLoadedState;
                }
             }
 
@@ -412,7 +412,7 @@ bool ShapeAsset::loadShape()
                Con::errorf("ShapeAnimationAsset::initializeAsset - Unable to set animation clip %s for asset %s to blend!", mAnimationAssets[i]->getAnimationName(), mAnimationAssets[i]->getAssetName());
                {
                   mLoadedState = MissingAnimatons;
-                  return false;
+                  return mLoadedState;
                }
             }
          }
@@ -422,7 +422,7 @@ bool ShapeAsset::loadShape()
    mChangeSignal.trigger();
 
    mLoadedState = Ok;
-   return true;
+   return mLoadedState;
 }
 
 //------------------------------------------------------------------------------
@@ -706,7 +706,7 @@ DefineEngineMethod(ShapeAsset, generateCachedPreviewImage, const char*, (S32 res
    "@param resolution Optional field for what resolution to bake the preview image at. Must be pow2\n"
    "@param overrideMaterialName Optional field for overriding the material used when rendering the shape for the bake.")
 {
-   object->loadShape();
+   object->load();
    return object->generateCachedPreviewImage(resolution, overrideMaterialName);
 }
 

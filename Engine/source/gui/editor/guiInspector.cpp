@@ -50,9 +50,11 @@ GuiInspector::GuiInspector()
    mMovingDivider( false ),
    mHLField( NULL ),
    mShowCustomFields( true ),
-   mComponentGroupTargetId(-1)
+   mComponentGroupTargetId(-1),
+   mForcedArrayIndex(-1)
 {
    mPadding = 1;
+   mSearchText = StringTable->EmptyString();
 }
 
 //-----------------------------------------------------------------------------
@@ -76,7 +78,10 @@ void GuiInspector::initPersistFields()
 
       addField( "showCustomFields", TypeBool, Offset( mShowCustomFields, GuiInspector ),
          "If false the custom fields Name, Id, and Source Class will not be shown." );
-         
+
+      addField("forcedArrayIndex", TypeS32, Offset(mForcedArrayIndex, GuiInspector));
+
+      addField("searchText", TypeString, Offset(mSearchText, GuiInspector), "A string that, if not blank, is used to filter shown fields");
    endGroup( "Inspector" );
 
    Parent::initPersistFields();
@@ -622,6 +627,7 @@ void GuiInspector::refresh()
             if( !group && !isGroupFiltered( itr->pGroupname ) )
             {
                GuiInspectorGroup *newGroup = new GuiInspectorGroup( itr->pGroupname, this );
+               newGroup->setForcedArrayIndex(mForcedArrayIndex);
 
 			   newGroup->registerObject();
                if( !newGroup->getNumFields() )
@@ -639,6 +645,10 @@ void GuiInspector::refresh()
                   mGroups.push_back(newGroup);
                   addObject(newGroup);
                }
+            }
+            else if(group)
+            {
+               group->setForcedArrayIndex(mForcedArrayIndex);
             }
          }
       }
@@ -815,6 +825,18 @@ void GuiInspector::removeInspectorGroup(StringTableEntry groupName)
    removeObject(group);
 }
 
+void GuiInspector::setForcedArrayIndex(S32 arrayIndex)
+{
+   mForcedArrayIndex = arrayIndex;
+   refresh();
+}
+
+void GuiInspector::setSearchText(StringTableEntry searchText)
+{
+   mSearchText = searchText;
+   refresh();
+}
+
 //=============================================================================
 //    Console Methods.
 //=============================================================================
@@ -978,4 +1000,18 @@ DefineEngineMethod(GuiInspector, removeGroup, void, (const char* groupName), ,
    "@param groupName Name of the new GuiInspectorGroup to find in this Inspector.")
 {
    object->removeInspectorGroup(StringTable->insert(groupName));
+}
+
+DefineEngineMethod(GuiInspector, setForcedArrayIndex, void, (S32 arrayIndex), (-1),
+   "Sets the ForcedArrayIndex for the inspector. Used to force presentation of arrayed fields to only show a specific field index inside groups."
+   "@param arrayIndex The specific field index for arrayed fields to show. Use -1 or blank arg to go back to normal behavior.")
+{
+   object->setForcedArrayIndex(arrayIndex);
+}
+
+DefineEngineMethod(GuiInspector, setSearchText, void, (const char* searchText), (""),
+   "Sets the searched text used to filter out displayed fields in the inspector."
+   "@param searchText The text to be used as a filter for field names. Leave as blank to clear search")
+{
+   object->setSearchText(searchText);
 }

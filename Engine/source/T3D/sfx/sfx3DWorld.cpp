@@ -62,6 +62,13 @@ SFX3DWorld* gSFX3DWorld;
 
 //-----------------------------------------------------------------------------
 
+SFX3DObject::SFX3DObject()
+   : Parent(NULL, NULL)
+{
+}
+
+//-----------------------------------------------------------------------------
+
 SFX3DObject::SFX3DObject( SFX3DWorld* world, SceneObject* object )
    : Parent( world, object )
 {

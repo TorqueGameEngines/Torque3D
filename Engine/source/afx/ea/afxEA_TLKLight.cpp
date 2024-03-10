@@ -34,7 +34,6 @@ struct sgLightObjectData : public GameBaseData
 {
   typedef GameBaseData Parent;
   DECLARE_CONOBJECT(sgLightObjectData);
-  DECLARE_CATEGORY("AFX");
 };
 
 IMPLEMENT_CO_DATABLOCK_V1(sgLightObjectData);

@@ -91,7 +91,7 @@ class SFXProfile;
 
 typedef void* Light;
 
-const F32 gGravity = -20;
+const F32 gGravity = -9.8f;
 
 //--------------------------------------------------------------------------
 
@@ -1593,6 +1593,8 @@ public:
    /// @param   imageSlot   Image slot
    /// @param   pos   Muzzle point (out)
    void getMuzzlePoint(U32 imageSlot,Point3F* pos);
+
+   virtual void getNodeTransform(const char* nodeName, const MatrixF& xfm, MatrixF* outMat);
 
    /// @}
 

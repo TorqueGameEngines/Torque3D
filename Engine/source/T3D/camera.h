@@ -249,7 +249,7 @@ class Camera: public ShapeBase
       virtual void unpackUpdate( NetConnection* conn, BitStream* stream );
 
       DECLARE_CONOBJECT( Camera );
-      DECLARE_CATEGORY( "Game" );
+      DECLARE_CATEGORY("Actor \t Controllable");
       DECLARE_DESCRIPTION( "Represents a position, direction and field of view to render a scene from." );
       static F32 getMovementSpeed() { return smMovementSpeed; }
       bool isCamera() const { return true; }

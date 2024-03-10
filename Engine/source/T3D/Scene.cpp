@@ -361,15 +361,19 @@ DefineEngineMethod(Scene, getRootScene, S32, (),,
 }
 
 DefineEngineMethod(Scene, addDynamicObject, void, (SceneObject* sceneObj), (nullAsType<SceneObject*>()),
-   "Get the root Scene object that is loaded.\n"
-   "@return The id of the Root Scene. Will be 0 if no root scene is loaded")
+   "Adds an object to the scene's dynamic objects list. Used for things spawned as part of gameplay and not permanent objects to be saved out as part of the level proper.")
 {
    object->addDynamicObject(sceneObj);
 }
 
+DefineEngineMethod(Scene, clearDynamicObjects, void, (),,
+   "Clears all objects from the scene's dynamic objects list.")
+{
+   object->clearDynamicObjects();
+}
+
 DefineEngineMethod(Scene, removeDynamicObject, void, (SceneObject* sceneObj), (nullAsType<SceneObject*>()),
-   "Get the root Scene object that is loaded.\n"
-   "@return The id of the Root Scene. Will be 0 if no root scene is loaded")
+   "Removes an object from the scene's dynamic objects list.")
 {
    object->removeDynamicObject(sceneObj);
 }

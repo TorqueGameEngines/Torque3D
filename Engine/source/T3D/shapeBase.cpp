@@ -2184,6 +2184,29 @@ void ShapeBase::getEyeCameraTransform(IDisplayDevice *displayDevice, U32 eyeId, 
    *outMat = cameraTransform * temp;
 }
 
+void ShapeBase::getNodeTransform(const char* nodeName, const MatrixF& xfm, MatrixF* outMat)
+{
+   if (!mShapeInstance)
+      return;
+
+   S32 nodeIDx = mDataBlock->getShapeResource()->findNode(nodeName);
+
+   MatrixF nodeTransform(xfm);
+   const Point3F& scale = getScale();
+   if (nodeIDx != -1)
+   {
+      nodeTransform = mShapeInstance->mNodeTransforms[nodeIDx];
+      nodeTransform.mul(xfm);
+   }
+   // The position of the mount point needs to be scaled.
+   Point3F position = nodeTransform.getPosition();
+   position.convolve(scale);
+   nodeTransform.setPosition(position);
+   // Also we would like the object to be scaled to the model.
+   outMat->mul(mObjToWorld, nodeTransform);
+   return;
+}
+
 void ShapeBase::getCameraParameters(F32 *min,F32* max,Point3F* off,MatrixF* rot)
 {
    *min = mDataBlock->cameraMinDist;
@@ -2303,9 +2326,12 @@ void ShapeBase::updateAudioState(SoundThread& st)
          // if asset is valid, play
          if (st.asset->isAssetValid() )
          {
-            st.sound = SFX->createSource( st.asset->getSFXTrack() , &getTransform() );
-            if ( st.sound )
-               st.sound->play();
+            if (st.asset->load() == AssetBase::Ok)
+            {
+               st.sound = SFX->createSource(st.asset->getSFXTrack(), &getTransform());
+               if (st.sound)
+                  st.sound->play();
+            }
          }
          else
             st.play = false;

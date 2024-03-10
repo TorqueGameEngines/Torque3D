@@ -48,7 +48,6 @@ public:
   afxXM_Base*   create(afxEffectWrapper* fx, bool on_server);
 
   DECLARE_CONOBJECT(afxXM_OscillateZodiacColorData);
-  DECLARE_CATEGORY("AFX");
 };
 
 class afxXM_OscillateZodiacColor : public afxXM_WeightedBase

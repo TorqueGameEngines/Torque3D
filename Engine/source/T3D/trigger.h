@@ -127,6 +127,7 @@ class Trigger : public GameBase
 
    // SimObject
    DECLARE_CONOBJECT(Trigger);
+   DECLARE_CATEGORY("Volume");
 
    DECLARE_CALLBACK( void, onAdd, ( U32 objectId ) );
    DECLARE_CALLBACK( void, onRemove, ( U32 objectId ) );

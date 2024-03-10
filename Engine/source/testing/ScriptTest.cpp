@@ -983,6 +983,114 @@ TEST_F(ScriptTest, InnerObjectTests)
    ASSERT_EQ(nestedFuncCall.getInt(), 123);
 }
 
+TEST_F(ScriptTest, SlotOperatorTests)
+{
+   ConsoleValue testSlot1 = RunScript(R"(
+      new SimObject(testObjectSlot1);
+      testObjectSlot1.data[1] = 2;
+
+      function test(%value)
+      {
+         testObjectSlot1.data[%value]++;
+
+         return testObjectSlot1.data[%value];
+      }
+      return test(1);
+   )");
+
+   ASSERT_EQ(testSlot1.getInt(), 3);
+
+   ConsoleValue testSlot2 = RunScript(R"(
+      new SimObject(testObjectSlot2);
+      testObjectSlot2.data[1] = 5;
+
+      function test(%value)
+      {
+         testObjectSlot2.data[%value]--;
+
+         return testObjectSlot2.data[%value];
+      }
+      return test(1);
+   )");
+
+   ASSERT_EQ(testSlot2.getInt(), 4);
+
+   ConsoleValue testSlot3 = RunScript(R"(
+      new SimObject(testObjectSlot3);
+      testObjectSlot3.data[1] = 5;
+
+      function test(%value)
+      {
+         testObjectSlot3.data[1] += 1;
+
+         return testObjectSlot3.data[1];
+      }
+      return test();
+   )");
+
+   ASSERT_EQ(testSlot3.getInt(), 6);
+
+   ConsoleValue testSlot4 = RunScript(R"(
+      new SimObject(testObjectSlot4);
+      testObjectSlot4.data[1] = 5;
+
+      function test(%value)
+      {
+         testObjectSlot4.data[1] -= %value;
+
+         return testObjectSlot4.data[1];
+      }
+      return test(1);
+   )");
+
+   ASSERT_EQ(testSlot4.getInt(), 4);
+
+   ConsoleValue testSlot5 = RunScript(R"(
+      new SimObject(testObjectSlot5);
+      testObjectSlot5.data[1] = 8;
+
+      function test()
+      {
+         testObjectSlot5.data[1] /= 2;
+
+         return testObjectSlot5.data[1];
+      }
+      return test();
+   )");
+
+   ASSERT_EQ(testSlot5.getInt(), 4);
+
+   ConsoleValue testSlot6 = RunScript(R"(
+      new SimObject(testObjectSlot6);
+      testObjectSlot6.data[1] = 8;
+
+      function test()
+      {
+         testObjectSlot6.data[1] *= 2;
+
+         return testObjectSlot6.data[1];
+      }
+      return test();
+   )");
+
+   ASSERT_EQ(testSlot6.getInt(), 16);
+
+   ConsoleValue testSlot7 = RunScript(R"(
+      new SimObject(testObjectSlot7);
+      testObjectSlot7.data[1] = 8;
+
+      function test()
+      {
+         testObjectSlot7.data[1] %= 3;
+
+         return testObjectSlot7.data[1];
+      }
+      return test();
+   )");
+
+   ASSERT_EQ(testSlot7.getInt(), 2);
+}
+
 TEST_F(ScriptTest, MiscTesting)
 {
    ConsoleValue test1 = RunScript(R"(

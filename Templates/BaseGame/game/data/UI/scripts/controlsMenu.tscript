@@ -205,21 +205,6 @@ function controlSetChanged()
    fillRemapList();
 }
 
-function doKeyRemap( %row )
-{
-   %rowIndex = %row.remapIndex;
-   %name = $RemapName[%rowIndex];
-
-	RemapDlg-->OptRemapText.text = "Re-bind \"" @ %name @ "\" to..." ;
-	OptRemapInputCtrl.index = %rowIndex;
-	Canvas.pushDialog( RemapDlg );
-	
-	//Let the options menu know
-   %actionMap = $RemapActionMap[%rowIndex];
-   
-   OptionsMenu.onKeybindChanged(%actionMap, %name);
-}
-
 function ControlsMenuRebindButton::onClick(%this)
 {
    %name = $RemapName[%this.keybindIndex];
@@ -228,89 +213,6 @@ function ControlsMenuRebindButton::onClick(%this)
    OptRemapInputCtrl.index = %this.keybindIndex;
    OptRemapInputCtrl.optionIndex = %this.optionIndex;
    Canvas.pushDialog( RemapDlg );
-}
-
-function OptRemapInputCtrl::onInputEvent( %this, %device, %action )
-{
-   //error( "** onInputEvent called - device = " @ %device @ ", action = " @ %action @ " **" );
-   Canvas.popDialog( RemapDlg );
-
-   // Test for the reserved keystrokes:
-   if ( %device $= "keyboard" )
-   {
-      // Cancel...
-      if ( %action $= "escape" )
-      {
-         // Do nothing...
-         return;
-      }
-   }
-
-   %cmd  = $RemapCmd[%this.index];
-   %name = $RemapName[%this.index];
-   %actionMap = $RemapActionMap[%this.index];
-
-   // Grab the friendly display name for this action
-   // which we'll use when prompting the user below.
-   %mapName = getMapDisplayName( %device, %action );
-   
-   // Get the current command this action is mapped to.
-   %prevMap = %actionMap.getCommand( %device, %action );
-   
-   //TODO: clear all existant keybinds to a command and then bind it so we only have a single one at all times
-   unbindExtraActions( %cmd, %actionMap, 0 );
-   unbindExtraActions( %cmd, %actionMap, 1 );
-
-   // If nothing was mapped to the previous command 
-   // mapping then it's easy... just bind it.
-   if ( %prevMap $= "" )
-   {
-      //unbindExtraActions( %cmd, %actionMap, 1 );
-      %actionMap.bind( %device, %action, %cmd );
-      
-      fillRemapList();
-      return;
-   }
-
-   // If the previous command is the same as the 
-   // current then they hit the same input as what
-   // was already assigned.
-   if ( %prevMap $= %cmd )
-   {
-      //unbindExtraActions( %cmd, %actionMap, 0 );
-      %actionMap.bind( %device, %action, %cmd );
-
-      fillRemapList();
-      return;   
-   }
-
-   // Look for the index of the previous mapping.
-   %prevMapIndex = findRemapCmdIndex( %prevMap );
-   
-   // If we get a negative index then the previous 
-   // mapping was to an item that isn't included in
-   // the mapping list... so we cannot unmap it.
-   if ( %prevMapIndex == -1 )
-   {
-      MessageBoxOK( "Remap Failed", "\"" @ %mapName @ "\" is already bound to a non-remappable command!" );
-      return;
-   }
-
-   // Setup the forced remapping callback command.
-   %callback = "redoMapping(" @ %device @ ", " @ %actionMap @ ", \"" @ %action @ "\", \"" @
-                              %cmd @ "\", " @ %prevMapIndex @ ", " @ %this.index @ ");";
-   
-   // Warn that we're about to remove the old mapping and
-   // replace it with another.
-   %prevCmdName = $RemapName[%prevMapIndex];
-   Canvas.pushDialog( RemapConfirmDlg );
-   
-   %remapWarnText = "\"" @ %mapName @ "\" is already bound to \"" @ %prevCmdName @ "\"! Do you wish to replace this mapping?";
-   %doRemapCommand = "redoMapping(" @ %device @ ", " @ %actionMap @ ", \"" @ %action @ "\", \"" @
-                              %cmd @ "\", " @ %prevMapIndex @ ", " @ %this.index @ "); Canvas.popDialog();";
-   %cancelCommand = "Canvas.popDialog();";
-   
-   MessageBoxYesNo( "Key already in use", %remapWarnText, %doRemapCommand, %cancelCommand );
 }
 
 function findRemapCmdIndex( %command )
@@ -323,23 +225,6 @@ function findRemapCmdIndex( %command )
 	return( -1 );	
 }
 
-/// This unbinds actions beyond %count associated to the
-/// particular actionMap %commmand.
-function unbindExtraActions( %command, %actionMap, %count )
-{
-   %temp = %actionMap.getBinding( %command );
-   if ( %temp $= "" )
-      return;
-
-   %count = getFieldCount( %temp ) - ( %count * 2 );
-   for ( %i = 0; %i < %count; %i += 2 )
-   {
-      %device = getField( %temp, %i + 0 );
-      %action = getField( %temp, %i + 1 );
-      
-      %actionMap.unbind( %device, %action );
-   }
-}
 
 function redoMapping( %device, %actionMap, %action, %cmd, %oldIndex, %newIndex )
 {

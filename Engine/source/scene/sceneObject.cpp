@@ -521,8 +521,14 @@ void SceneObject::resetWorldBox()
    AssertFatal(mObjBox.isValidBox(), "SceneObject::resetWorldBox - Bad object box!");
 
    mWorldBox = mObjBox;
-   mWorldBox.minExtents.convolve(mObjScale);
-   mWorldBox.maxExtents.convolve(mObjScale);
+
+   Point3F scale = Point3F(mFabs(mObjScale.x), mFabs(mObjScale.y), mFabs(mObjScale.z));
+   mWorldBox.minExtents.convolve(scale);
+   mWorldBox.maxExtents.convolve(scale);
+
+   if (mObjToWorld.isNaN())
+      mObjToWorld.identity();
+
    mObjToWorld.mul(mWorldBox);
 
    AssertFatal(mWorldBox.isValidBox(), "SceneObject::resetWorldBox - Bad world box!");
@@ -585,11 +591,16 @@ void SceneObject::resetRenderWorldBox()
    AssertFatal( mObjBox.isValidBox(), "Bad object box!" );
 
    mRenderWorldBox = mObjBox;
-   mRenderWorldBox.minExtents.convolve( mObjScale );
-   mRenderWorldBox.maxExtents.convolve( mObjScale );
+   Point3F scale = Point3F(mFabs(mObjScale.x), mFabs(mObjScale.y), mFabs(mObjScale.z));
+   mRenderWorldBox.minExtents.convolve(scale);
+   mRenderWorldBox.maxExtents.convolve(scale);
+
+   if (mRenderObjToWorld.isNaN())
+      mRenderObjToWorld.identity();
+
    mRenderObjToWorld.mul( mRenderWorldBox );
 
-   AssertFatal( mRenderWorldBox.isValidBox(), "Bad world box!" );
+   AssertFatal( mRenderWorldBox.isValidBox(), "Bad Render world box!" );
 
    // Create mRenderWorldSphere from mRenderWorldBox.
 
@@ -1718,11 +1729,7 @@ void SceneObject::updateRenderChangesByParent(){
 		//add the "offset" caused by the parents change, and add it to it's own
 		// This is needed by objects that update their own render transform thru interpolate tick
 		// Mostly for stationary objects.
-
-          if (getClassName() == StringTable->insert("Player"))
-			mat.mul(offset,getRenderTransform());  
-		else										
-			mat.mul(offset,getTransform());	 
+      mat.mul(offset,getRenderTransform());
 			setRenderTransform(mat);
 	}
 }

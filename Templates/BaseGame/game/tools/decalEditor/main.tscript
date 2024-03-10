@@ -35,9 +35,9 @@ function initializeDecalEditor()
    DecalEditorGui.setVisible( false ); 
    DecalPreviewWindow.setVisible( false );  
    DecalEditorWindow.setVisible( false );
-   EditorGui.add( DecalEditorGui );
-   EditorGui.add( DecalEditorWindow );
-   EditorGui.add( DecalPreviewWindow );
+   MainSceneTabPanel.add( DecalEditorGui );
+   MainSceneTabPanel.add( DecalEditorWindow );
+   MainSceneTabPanel.add( DecalPreviewWindow );
    DecalEditorTabBook.selectPage( 0 );
    
    new ScriptObject( DecalEditorPlugin )

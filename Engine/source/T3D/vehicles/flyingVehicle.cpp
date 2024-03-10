@@ -541,13 +541,20 @@ void FlyingVehicle::updateForces(F32 /*dt*/)
    F32 vf = mRigid.mass * -mNetGravity;
    F32 h  = getHeight();
    if (h <= 1) {
-      if (h > 0) {
-         vf -= vf * h * 0.1;
+      F32 seperationForce = vf * (1.0 - h);
+      if (h > 0.5) {
+         vf -= seperationForce * mDataBlock->drag;
       } else {
-         vf += mDataBlock->jetForce * -h;
+         if (h < 0.0)
+         {
+            Point3F displacePos = getPosition();
+            displacePos.z += mDataBlock->hoverHeight * (-h * 2);
+            mRigid.linPosition = displacePos;
+         }
+         vf += seperationForce;
       }
    }
-   force += zv * vf;
+   force.z += vf;
 
    // Damping "surfaces"
    force -= xv * mDot(xv,mRigid.linVelocity) * mDataBlock->horizontalSurfaceForce;
@@ -599,8 +606,8 @@ F32 FlyingVehicle::getHeight()
 {
    Point3F sp,ep;
    RayInfo collision;
-   F32 height = (createHeightOn) ? mDataBlock->createHoverHeight : mDataBlock->hoverHeight;
-   F32 r = 10 + height;
+   F32 height = ((createHeightOn) ? mDataBlock->createHoverHeight : mDataBlock->hoverHeight) + mDataBlock->collisionTol*2;
+   F32 r = 3 * height;
    getTransform().getColumn(3, &sp);
    ep.x = sp.x;
    ep.y = sp.y;
@@ -609,7 +616,7 @@ F32 FlyingVehicle::getHeight()
    if( !mContainer->castRay(sp, ep, sClientCollisionMask, &collision) == true )
       collision.t = 1;
    enableCollision();
-   return (r * collision.t - height) / 10;
+   return (r * collision.t - height) / r;
 }
 
 

@@ -73,6 +73,7 @@ static const S32 S32_MIN = S32(-2147483647 - 1);
 static const S32 S32_MAX = S32(2147483647);
 static const U32 U32_MAX = U32(0xffffffff);
 
+static const F32 F32_MIN_EX = F32(-3.40282347e+38);
 static const F32 F32_MAX = F32(3.402823466e+38F);
 static const F32 F32_MIN = F32(1.175494351e-38F);
 

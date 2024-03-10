@@ -43,6 +43,13 @@ class DecalInstance
 {
    public:
 
+      typedef DWordDataBlob<256> SizeClass1;
+      typedef DWordDataBlob<512> SizeClass2;
+      typedef DWordDataBlob<1024> SizeClass3;
+      typedef ThreeTieredChunker<SizeClass1, SizeClass2, SizeClass3> DecalDataChunker;
+
+      DecalDataChunker::Handle mAllocHandle;
+
       DecalData *mDataBlock;
 
       Point3F mPosition;

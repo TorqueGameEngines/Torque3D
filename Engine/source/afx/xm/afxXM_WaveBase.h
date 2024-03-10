@@ -172,7 +172,6 @@ public:
   static afxXM_Waveform* getWaveform(U32 waveform_type);
 
   DECLARE_CONOBJECT(afxXM_WaveBaseData);
-  DECLARE_CATEGORY("AFX");
 };
 
 typedef afxXM_WaveBaseData::WaveFormType afxXM_WaveFormType;
@@ -210,7 +209,6 @@ public:
   static void     initPersistFields();
 
   DECLARE_CONOBJECT(afxXM_WaveRiderBaseData);
-  DECLARE_CATEGORY("AFX");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

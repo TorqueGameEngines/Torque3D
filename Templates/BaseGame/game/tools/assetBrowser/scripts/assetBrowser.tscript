@@ -2420,7 +2420,7 @@ function AssetBrowserPreviewButton::onMouseDragged(%this)
    %ctrl = new GuiDragAndDropControl()
    {
       canSaveDynamicFields    = "0";
-      Profile                 = "GuiSolidDefaultProfile";
+      Profile                 = "ToolsGuiSolidDefaultProfile";
       HorizSizing             = "right";
       VertSizing              = "bottom";
       Position                = %xPos SPC %yPos;
@@ -2582,12 +2582,24 @@ function GuiEditor::onControlDropped(%this, %payload, %position)
       //dealing with an actual asset, so build the assetName
       %assetId = %payload.moduleName @ ":" @ %payload.assetName;
       %assetType = AssetDatabase.getAssetType(%assetId);
-      
-      if(%assetType $= "ImageAsset")
+ 
+      if(AssetBrowser.isMethod("on" @ %assetType @ "GUIEditorDropped"))
       {
-         %cmd = "return new guiBitmapCtrl();";
-         %ctrl = eval( %cmd ); 
-         %ctrl.bitmap = %assetId;
+        %module = %payload.moduleName;
+        %asset = %payload.assetName;
+        %assetDef = AssetDatabase.acquireAsset(%module @ ":" @ %asset);
+        %buildCommand = AssetBrowser @ ".on" @ %assetType @ "GUIEditorDropped(" @ %assetDef @ ",\"" @ %pos @ "\");";  
+        eval(%buildCommand);    
+      }
+      else
+      {
+        //fallback example
+        if(%assetType $= "ImageAsset")
+        {
+            %cmd = "return new guiBitmapCtrl();";
+            %ctrl = eval( %cmd ); 
+            %ctrl.bitmap = %assetId;
+        }
       }
    }
    else

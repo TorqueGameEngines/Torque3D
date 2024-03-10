@@ -58,10 +58,12 @@ torqueAddSourceDirectories("platform" "platform/threads" "platform/async"
 
 torqueAddSourceDirectories("platform/nativeDialogs")
 # Handle T3D
-torqueAddSourceDirectories("T3D/fps" "T3D/fx" "T3D/vehicles" "T3D/physics"
-                              "T3D/decal" "T3D/sfx" "T3D/gameBase" "T3D/turret"
-                              "T3D/lighting" "T3D/gameOBjects" "T3D/components"
-                              "T3D/systems" "T3D/assets" "T3D" "T3D/gameBase/std")
+torqueAddSourceDirectories( "T3D" "T3D/assets" "T3D/decal" "T3D/examples" "T3D/fps" "T3D/fx" 
+                           "T3D/gameBase" "T3D/gameBase/std"
+                           "T3D/lighting"
+                           "T3D/physics"
+#                          "T3D/components" "T3D/sceneComponent" "T3D/systems" "T3D/gameOBjects" 
+                           "T3D/sfx" "T3D/turret" "T3D/vehicles")
 
 # Handle TS
 torqueAddSourceDirectories("ts" "ts/collada" "ts/assimp" "ts/loader" "ts/arch")
@@ -79,8 +81,11 @@ if(TORQUE_SFX_OPENAL AND NOT TORQUE_DEDICATED)
     endif()
 endif()
 # Handle GFX
-torqueAddSourceDirectories("gfx" "gfx/Null" "gfx/test" "gfx/bitmap" "gfx/bitmap/loaders"
+torqueAddSourceDirectories("gfx" "gfx/Null" "gfx/test" "gfx/bitmap" "gfx/bitmap/loaders" "gfx/bitmap/loaders/ies"
                              "gfx/util" "gfx/video" "gfx/sim" )
+
+# add the stb headers
+set(TORQUE_INCLUDE_DIRECTORIES ${TORQUE_INCLUDE_DIRECTORIES} "gfx/bitmap/loaders/stb")
 
 if (TORQUE_OPENGL)
   torqueAddSourceDirectories("gfx/gl" "gfx/gl/sdl" "gfx/gl/tGL")
@@ -92,7 +97,7 @@ endif (WIN32 AND TORQUE_D3D11)
 
 # Handle core
 torqueAddSourceDirectories("core" "core/stream" "core/strings" "core/util"
-                              "core/util/journal" "core/util/zip" "core/util/compressors")
+                              "core/util/journal" "core/util/zip" "core/util/zip/compressors")
 # Handle GUI
 torqueAddSourceDirectories("gui" "gui/buttons" "gui/containers" "gui/controls" "gui/core"
                               "gui/game" "gui/shiny" "gui/utility" "gui/3d")
@@ -149,6 +154,12 @@ endif (TORQUE_OPENGL)
 
 # Handle terrain
 torqueAddSourceDirectories("terrain")
+
+# Handle theora
+if (TORQUE_THEORA)
+  torqueAddSourceDirectories("core/ogg")
+  torqueAddSourceDirectories("gui/theora")
+endif(TORQUE_THEORA)
 
 if (WIN32 AND TORQUE_D3D11)
   torqueAddSourceDirectories("terrain/hlsl")
@@ -337,6 +348,10 @@ addDef(TORQUE_ENABLE_ASSERTS "Debug;RelWithDebInfo")
 addDef(TORQUE_DEBUG_GFX_MODE "RelWithDebInfo")
 addDef(TORQUE_OGGVORBIS)
 
+if (TORQUE_THEORA)
+   addDef(TORQUE_OGGTHEORA)
+endif(TORQUE_THEORA)
+
 if(NOT TORQUE_SDL)
    filterOut("platform/nativeDialogs/fileDialog.cpp" )
 endif()
@@ -430,6 +445,8 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 foreach (TORQUE_LIBRARY ${TORQUE_LINK_LIBRARIES})
   set_target_properties(${TORQUE_LIBRARY} PROPERTIES
   FOLDER "Libraries")
+  # remove warnings from 3rd parties.
+  target_compile_options(${TORQUE_LIBRARY} PRIVATE "-w")
 endforeach()
 
 target_compile_definitions(${TORQUE_APP_NAME} PUBLIC ${TORQUE_COMPILE_DEFINITIONS})

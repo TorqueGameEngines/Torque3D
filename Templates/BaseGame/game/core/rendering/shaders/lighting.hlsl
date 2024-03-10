@@ -68,6 +68,10 @@ uniform float4 albedo;
 #define DEBUGVIZ_CONTRIB 0
 #endif
 
+#ifndef CAPTURE_LIGHT_FLOOR
+#define CAPTURE_LIGHT_FLOOR 0.04
+#endif
+
 inline float3 getDistanceVectorToPlane( float3 origin, float3 direction, float4 plane )
 {
    float denum = dot( plane.xyz, direction.xyz );
@@ -217,15 +221,15 @@ float getDistanceAtt( float3 unormalizedLightVector , float invSqrAttRadius )
 
  float getSpotAngleAtt( float3 normalizedLightVector , float3 lightDir , float2 lightSpotParams )
  {
-   float cd = dot ( lightDir , normalizedLightVector );
-   float attenuation = saturate ( ( cd - lightSpotParams.x ) / lightSpotParams.y );
+   float cd = max(dot ( lightDir , normalizedLightVector ),0.0);
+   float attenuation = saturate(((cd - lightSpotParams.x/(cd*1.001))/lightSpotParams.y));
    // smooth the transition
    return sqr(attenuation);
 }
 
 float3 evaluateStandardBRDF(Surface surface, SurfaceToLight surfaceToLight)
 {
-   //lambert diffuse
+   //diffuse term
    float3 Fd = surface.albedo.rgb * M_1OVER_PI_F;
     
    //GGX specular
@@ -235,23 +239,47 @@ float3 evaluateStandardBRDF(Surface surface, SurfaceToLight surfaceToLight)
    float3 Fr = D * F * Vis;
 
 #if CAPTURING == 1
-    return saturate(lerp(Fd + Fr,surface.f0,surface.metalness));
+    return lerp(Fd + Fr,surface.baseColor.rgb,surface.metalness);
 #else
-   return saturate(Fd + Fr);
+   return Fd + Fr;
 #endif
 
 }
 
 float3 getDirectionalLight(Surface surface, SurfaceToLight surfaceToLight, float3 lightColor, float lightIntensity, float shadow)
 {
-   float3 factor = lightColor * max(surfaceToLight.NdotL* shadow * lightIntensity, 0.0f) ;
+#if CAPTURING == 1
+   float lightfloor = CAPTURE_LIGHT_FLOOR;
+#else
+   float lightfloor = 0.0;
+#endif
+   float3 factor = lightColor * max(surfaceToLight.NdotL* shadow * lightIntensity, lightfloor) ;
    return evaluateStandardBRDF(surface,surfaceToLight) * factor;
 }
 
 float3 getPunctualLight(Surface surface, SurfaceToLight surfaceToLight, float3 lightColor, float lightIntensity, float radius, float shadow)
 {
+#if CAPTURING == 1
+   float lightfloor = CAPTURE_LIGHT_FLOOR;
+#else
+   float lightfloor = 0.0;
+#endif
    float attenuation = getDistanceAtt(surfaceToLight.Lu, radius);
-   float3 factor = lightColor * max(surfaceToLight.NdotL* shadow * lightIntensity * attenuation, 0.0f) ;
+   float3 factor = lightColor * max(surfaceToLight.NdotL* shadow * lightIntensity * attenuation, lightfloor) ;
+   return evaluateStandardBRDF(surface,surfaceToLight) * factor;
+}
+
+float3 getSpotlight(Surface surface, SurfaceToLight surfaceToLight, float3 lightColor, float lightIntensity, float radius, float3 lightDir, float2 lightSpotParams, float shadow)
+{
+#if CAPTURING == 1
+   float lightfloor = CAPTURE_LIGHT_FLOOR;
+#else
+   float lightfloor = 0.0;
+#endif
+   float attenuation = 1.0f;
+   attenuation *= getDistanceAtt(surfaceToLight.Lu, radius);
+   attenuation *= getSpotAngleAtt(-surfaceToLight.L, lightDir, lightSpotParams.xy);
+   float3 factor = lightColor * max(surfaceToLight.NdotL* shadow * lightIntensity * attenuation, lightfloor) ;
    return evaluateStandardBRDF(surface,surfaceToLight) * factor;
 }
 
@@ -271,7 +299,7 @@ float4 compute4Lights( Surface surface,
                      float4 inLightConfigData[4],
                      float4 inLightColor[4],
                      float4 inLightSpotDir[4],
-                     float2 lightSpotParams[4],
+                     float2 inlightSpotParams[4],
                      int hasVectorLight,
                      float4 vectorLightDirection,
                      float4 vectorLightingColor,
@@ -296,7 +324,7 @@ float4 compute4Lights( Surface surface,
       float lightBrightness = inLightConfigData[i].y;
       float lightInvSqrRange= inLightConfigData[i].a;
 
-      float3 lighting = 0.0.xxx;
+      float3 lighting = float3(0.0,0.0,0.0);
 
       [branch]
       if(dist < lightRange)
@@ -307,13 +335,10 @@ float4 compute4Lights( Surface surface,
             //get punctual light contribution   
             lighting = getPunctualLight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, shadowed);
          }
-         else //spot
+         else if(inLightConfigData[i].x == 1) //spot
          {
-               
-            //get Punctual light contribution   
-            lighting = getPunctualLight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, shadowed);
-            //get spot angle attenuation
-            lighting *= getSpotAngleAtt(-surfaceToLight.L, inLightSpotDir[i].xyz, lightSpotParams[i].xy );
+            //get spot light contribution   
+            lighting = getSpotlight(surface, surfaceToLight, lightCol, lightBrightness, lightInvSqrRange, inLightSpotDir[i].xyz, inlightSpotParams[i], shadowed);
          }
       }
       finalLighting += lighting;
@@ -321,7 +346,7 @@ float4 compute4Lights( Surface surface,
 
    //Vector light
    [branch]
-   if(hasVectorLight)
+   if(hasVectorLight == 1)
    {
       SurfaceToLight surfaceToVecLight = createSurfaceToLight(surface, -vectorLightDirection.xyz);
 

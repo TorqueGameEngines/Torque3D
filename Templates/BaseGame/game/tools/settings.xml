@@ -41,7 +41,7 @@
             <Setting
                 name="doubleClickAction">Edit Asset</Setting>
             <Setting
-                name="LastPosExt">0 1047 2200 360</Setting>
+                name="LastPosExt">0 634 1560 360</Setting>
             <Setting
                 name="previewTileSize">1</Setting>
             <Setting
@@ -106,7 +106,7 @@
         <Setting
             name="lastPath">tools/RPGDialogEditor/gui</Setting>
         <Setting
-            name="previewResolution">1024 768</Setting>
+            name="previewResolution">1280 720</Setting>
         <Group
             name="EngineDevelopment">
             <Setting
@@ -124,11 +124,6 @@
                 name="documentationReference">../../../Documentation/Torque 3D - Script Manual.chm</Setting>
             <Setting
                 name="documentationURL">https://docs.torque3d.org</Setting>
-        </Group>
-        <Group
-            name="Library">
-            <Setting
-                name="viewType">Categorized</Setting>
         </Group>
         <Group
             name="Rendering">
@@ -250,7 +245,7 @@
         <Setting
             name="AdvancedWndVisible">1</Setting>
         <Setting
-            name="backgroundColor">0 0 0 100</Setting>
+            name="backgroundColor">128 128 128 100</Setting>
         <Setting
             name="gridDimension">40 40</Setting>
         <Setting
@@ -373,11 +368,9 @@
         <Setting
             name="EditorLayoutMode">Modern</Setting>
         <Setting
-            name="forceLoadDAE">0</Setting>
-        <Setting
             name="forceSidebarToSide">1</Setting>
         <Setting
-            name="orthoFOV">4.60158014</Setting>
+            name="orthoFOV">1.21430779</Setting>
         <Setting
             name="orthoShowGrid">1</Setting>
         <Setting

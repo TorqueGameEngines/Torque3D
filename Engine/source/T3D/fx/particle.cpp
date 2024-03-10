@@ -148,94 +148,105 @@ FRangeValidator spinRandFValidator(-1000.f, 1000.f);
 void ParticleData::initPersistFields()
 {
    docsURL;
-   addFieldV( "dragCoefficient", TYPEID< F32 >(), Offset(dragCoefficient, ParticleData), &dragCoefFValidator,
-      "Particle physics drag amount." );
-   addField( "windCoefficient", TYPEID< F32 >(), Offset(windCoefficient, ParticleData),
-      "Strength of wind on the particles." );
-   addFieldV( "gravityCoefficient", TYPEID< F32 >(), Offset(gravityCoefficient, ParticleData), &gravCoefFValidator,
-      "Strength of gravity on the particles." );
-   addFieldV( "inheritedVelFactor", TYPEID< F32 >(), Offset(inheritedVelFactor, ParticleData), &CommonValidators::NormalizedFloat,
-      "Amount of emitter velocity to add to particle initial velocity." );
-   addField( "constantAcceleration", TYPEID< F32 >(), Offset(constantAcceleration, ParticleData),
-      "Constant acceleration to apply to this particle." );
-   addField( "lifetimeMS", TYPEID< S32 >(), Offset(lifetimeMS, ParticleData),
-      "Time in milliseconds before this particle is destroyed." );
-   addField( "lifetimeVarianceMS", TYPEID< S32 >(), Offset(lifetimeVarianceMS, ParticleData),
-      "Variance in lifetime of particle, from 0 - lifetimeMS." );
-   addField( "spinSpeed", TYPEID< F32 >(), Offset(spinSpeed, ParticleData),
-      "Speed at which to spin the particle." );
-   addFieldV( "spinRandomMin", TYPEID< F32 >(), Offset(spinRandomMin, ParticleData), &spinRandFValidator,
-      "Minimum allowed spin speed of this particle, between -1000 and spinRandomMax." );
-   addFieldV( "spinRandomMax", TYPEID< F32 >(), Offset(spinRandomMax, ParticleData), &spinRandFValidator,
-      "Maximum allowed spin speed of this particle, between spinRandomMin and 1000." );
-   addField( "useInvAlpha", TYPEID< bool >(), Offset(useInvAlpha, ParticleData),
-      "@brief Controls how particles blend with the scene.\n\n"
-      "If true, particles blend like ParticleBlendStyle NORMAL, if false, "
-      "blend like ParticleBlendStyle ADDITIVE.\n"
-      "@note If ParticleEmitterData::blendStyle is set, it will override this value." );
-   addField( "animateTexture", TYPEID< bool >(), Offset(animateTexture, ParticleData),
-      "If true, allow the particle texture to be an animated sprite." );
-   addField( "framesPerSec", TYPEID< S32 >(), Offset(framesPerSec, ParticleData),
-      "If animateTexture is true, this defines the frames per second of the "
-      "sprite animation." );
+   addGroup("Basic");
+      addProtectedField("textureName", TYPEID< StringTableEntry >(), Offset(mTextureName, ParticleData), _setTextureData, defaultProtectedGetFn,
+         "Texture file to use for this particle.", AbstractClassRep::FIELD_HideInInspectors);
+      addField("animTexName", TYPEID< StringTableEntry >(), Offset(mTextureName, ParticleData),
+         "@brief Texture file to use for this particle if animateTexture is true.\n\n"
+         "Deprecated. Use textureName instead.", AbstractClassRep::FIELD_HideInInspectors);
+      INITPERSISTFIELD_IMAGEASSET(Texture, ParticleData, "Texture to use for this particle.");
+      addField("useInvAlpha", TYPEID< bool >(), Offset(useInvAlpha, ParticleData),
+         "@brief Controls how particles blend with the scene.\n\n"
+         "If true, particles blend like ParticleBlendStyle NORMAL, if false, "
+         "blend like ParticleBlendStyle ADDITIVE.\n"
+         "@note If ParticleEmitterData::blendStyle is set, it will override this value.");
+      addField("lifetimeMS", TYPEID< S32 >(), Offset(lifetimeMS, ParticleData),
+         "Time in milliseconds before this particle is destroyed.");
+      addField("lifetimeVarianceMS", TYPEID< S32 >(), Offset(lifetimeVarianceMS, ParticleData),
+         "Variance in lifetime of particle, from 0 - lifetimeMS.");
+   endGroup("Basic");
 
-   addField( "textureCoords", TYPEID< Point2F >(), Offset(texCoords, ParticleData),  4,
-      "@brief 4 element array defining the UV coords into textureName to use "
-      "for this particle.\n\n"
-      "Coords should be set for the first tile only when using animTexTiling; "
-      "coordinates for other tiles will be calculated automatically. \"0 0\" is "
-      "top left and \"1 1\" is bottom right." );
-   addField( "animTexTiling", TYPEID< Point2I >(), Offset(animTexTiling, ParticleData),
-      "@brief The number of frames, in rows and columns stored in textureName "
-      "(when animateTexture is true).\n\n"
-      "A maximum of 256 frames can be stored in a single texture when using "
-      "animTexTiling. Value should be \"NumColumns NumRows\", for example \"4 4\"." );
-   addField( "animTexFrames", TYPEID< StringTableEntry >(), Offset(animTexFramesString,ParticleData),
-      "@brief A list of frames and/or frame ranges to use for particle "
-      "animation if animateTexture is true.\n\n"
-      "Each frame token must be separated by whitespace. A frame token must be "
-      "a positive integer frame number or a range of frame numbers separated "
-      "with a '-'. The range separator, '-', cannot have any whitspace around "
-      "it.\n\n"
-      "Ranges can be specified to move through the frames in reverse as well "
-      "as forward (eg. 19-14). Frame numbers exceeding the number of tiles will "
-      "wrap.\n"
-      "@tsexample\n"
-      "animTexFrames = \"0-16 20 19 18 17 31-21\";\n"
-      "@endtsexample\n" );
-
-   addProtectedField( "textureName", TYPEID< StringTableEntry >(), Offset(mTextureName, ParticleData), _setTextureData, defaultProtectedGetFn,
-      "Texture file to use for this particle.", AbstractClassRep::FIELD_HideInInspectors );
-   addField( "animTexName", TYPEID< StringTableEntry >(), Offset(mTextureName, ParticleData),
-      "@brief Texture file to use for this particle if animateTexture is true.\n\n"
-      "Deprecated. Use textureName instead.", AbstractClassRep::FIELD_HideInInspectors);
-   INITPERSISTFIELD_IMAGEASSET(Texture, ParticleData, "Texture to use for this particle.");
+   addGroup("Motion");
+      addFieldV("dragCoefficient", TYPEID< F32 >(), Offset(dragCoefficient, ParticleData), &dragCoefFValidator,
+         "Particle physics drag amount.");
+      addField("windCoefficient", TYPEID< F32 >(), Offset(windCoefficient, ParticleData),
+         "Strength of wind on the particles.");
+      addFieldV("gravityCoefficient", TYPEID< F32 >(), Offset(gravityCoefficient, ParticleData), &gravCoefFValidator,
+         "Strength of gravity on the particles.");
+      addFieldV("inheritedVelFactor", TYPEID< F32 >(), Offset(inheritedVelFactor, ParticleData), &CommonValidators::NormalizedFloat,
+         "Amount of emitter velocity to add to particle initial velocity.");
+      addField("constantAcceleration", TYPEID< F32 >(), Offset(constantAcceleration, ParticleData),
+         "Constant acceleration to apply to this particle.");
+   endGroup("Motion");
    
+   addGroup("Spin");
+      addField("spinSpeed", TYPEID< F32 >(), Offset(spinSpeed, ParticleData),
+         "Speed at which to spin the particle.");
+      addFieldV("spinRandomMin", TYPEID< F32 >(), Offset(spinRandomMin, ParticleData), &spinRandFValidator,
+         "Minimum allowed spin speed of this particle, between -1000 and spinRandomMax.");
+      addFieldV("spinRandomMax", TYPEID< F32 >(), Offset(spinRandomMax, ParticleData), &spinRandFValidator,
+         "Maximum allowed spin speed of this particle, between spinRandomMin and 1000.");
+   endGroup("Spin");
+  
+   addGroup("Animation");
+      addField( "animateTexture", TYPEID< bool >(), Offset(animateTexture, ParticleData),
+         "If true, allow the particle texture to be an animated sprite." );
+      addField( "framesPerSec", TYPEID< S32 >(), Offset(framesPerSec, ParticleData),
+         "If animateTexture is true, this defines the frames per second of the "
+         "sprite animation." );
+
+      addField( "textureCoords", TYPEID< Point2F >(), Offset(texCoords, ParticleData),  4,
+         "@brief 4 element array defining the UV coords into textureName to use "
+         "for this particle.\n\n"
+         "Coords should be set for the first tile only when using animTexTiling; "
+         "coordinates for other tiles will be calculated automatically. \"0 0\" is "
+         "top left and \"1 1\" is bottom right." );
+      addField( "animTexTiling", TYPEID< Point2I >(), Offset(animTexTiling, ParticleData),
+         "@brief The number of frames, in rows and columns stored in textureName "
+         "(when animateTexture is true).\n\n"
+         "A maximum of 256 frames can be stored in a single texture when using "
+         "animTexTiling. Value should be \"NumColumns NumRows\", for example \"4 4\"." );
+      addField( "animTexFrames", TYPEID< StringTableEntry >(), Offset(animTexFramesString,ParticleData),
+         "@brief A list of frames and/or frame ranges to use for particle "
+         "animation if animateTexture is true.\n\n"
+         "Each frame token must be separated by whitespace. A frame token must be "
+         "a positive integer frame number or a range of frame numbers separated "
+         "with a '-'. The range separator, '-', cannot have any whitspace around "
+         "it.\n\n"
+         "Ranges can be specified to move through the frames in reverse as well "
+         "as forward (eg. 19-14). Frame numbers exceeding the number of tiles will "
+         "wrap.\n"
+         "@tsexample\n"
+         "animTexFrames = \"0-16 20 19 18 17 31-21\";\n"
+         "@endtsexample\n" );
+   endGroup("Animation");
 
    // Interpolation variables
-   addField( "colors", TYPEID< LinearColorF >(), Offset(colors, ParticleData), PDC_NUM_KEYS,
-      "@brief Particle RGBA color keyframe values.\n\n"
-      "The particle color will linearly interpolate between the color/time keys "
-      "over the lifetime of the particle." );
-   addProtectedField( "sizes", TYPEID< F32 >(), Offset(sizes, ParticleData), &protectedSetSizes, 
-      &defaultProtectedGetFn, PDC_NUM_KEYS,
-      "@brief Particle size keyframe values.\n\n"
-      "The particle size will linearly interpolate between the size/time keys "
-      "over the lifetime of the particle." );
-   addProtectedField( "times", TYPEID< F32 >(), Offset(times, ParticleData), &protectedSetTimes, 
-      &defaultProtectedGetFn, PDC_NUM_KEYS,
-      "@brief Time keys used with the colors and sizes keyframes.\n\n"
-      "Values are from 0.0 (particle creation) to 1.0 (end of lifespace)." );
+   addGroup("Over Time");
+      addProtectedField("times", TYPEID< F32 >(), Offset(times, ParticleData), &protectedSetTimes,
+         &defaultProtectedGetFn, PDC_NUM_KEYS,
+         "@brief Time keys used with the colors and sizes keyframes.\n\n"
+         "Values are from 0.0 (particle creation) to 1.0 (end of lifespace).");
+      addField( "colors", TYPEID< LinearColorF >(), Offset(colors, ParticleData), PDC_NUM_KEYS,
+         "@brief Particle RGBA color keyframe values.\n\n"
+         "The particle color will linearly interpolate between the color/time keys "
+         "over the lifetime of the particle." );
+      addProtectedField( "sizes", TYPEID< F32 >(), Offset(sizes, ParticleData), &protectedSetSizes, 
+         &defaultProtectedGetFn, PDC_NUM_KEYS,
+         "@brief Particle size keyframe values.\n\n"
+         "The particle size will linearly interpolate between the size/time keys "
+         "over the lifetime of the particle." );
+   endGroup("Over Time");
 
    addGroup("AFX");
-   addProtectedField("textureExtName", TypeFilename, Offset(mTextureExtName,     ParticleData), _setTextureExtData, &defaultProtectedGetFn, "", AbstractClassRep::FIELD_HideInInspectors);
-   INITPERSISTFIELD_IMAGEASSET(TextureExt, ParticleData, "");
-   addField("constrainPos",         TypeBool,     Offset(constrain_pos,      ParticleData));
-   addField("angle",                TypeF32,      Offset(start_angle,        ParticleData));
-   addField("angleVariance",        TypeF32,      Offset(angle_variance,     ParticleData));
-   addField("sizeBias",             TypeF32,      Offset(sizeBias,           ParticleData));
-   addField("spinBias",             TypeF32,      Offset(spinBias,           ParticleData));
-   addField("randomizeSpinDir",     TypeBool,     Offset(randomizeSpinDir,   ParticleData));
+      addProtectedField("textureExtName", TypeFilename, Offset(mTextureExtName,     ParticleData), _setTextureExtData, &defaultProtectedGetFn, "", AbstractClassRep::FIELD_HideInInspectors);
+      INITPERSISTFIELD_IMAGEASSET(TextureExt, ParticleData, "");
+      addField("constrainPos",         TypeBool,     Offset(constrain_pos,      ParticleData));
+      addField("angle",                TypeF32,      Offset(start_angle,        ParticleData));
+      addField("angleVariance",        TypeF32,      Offset(angle_variance,     ParticleData));
+      addField("sizeBias",             TypeF32,      Offset(sizeBias,           ParticleData));
+      addField("spinBias",             TypeF32,      Offset(spinBias,           ParticleData));
+      addField("randomizeSpinDir",     TypeBool,     Offset(randomizeSpinDir,   ParticleData));
    endGroup("AFX"); 
    Parent::initPersistFields();
 }

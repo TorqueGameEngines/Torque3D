@@ -64,7 +64,6 @@ public:
   afxXM_Base*   create(afxEffectWrapper* fx, bool on_server);
 
   DECLARE_CONOBJECT(afxXM_ForceData);
-  DECLARE_CATEGORY("AFX");
 };
 
 class afxXM_Force : public afxXM_WeightedBase, public afxEffectDefs

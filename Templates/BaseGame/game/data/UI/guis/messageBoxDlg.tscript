@@ -1,0 +1,220 @@
+//-----------------------------------------------------------------------------
+// Copyright (c) 2012 GarageGames, LLC
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+// IN THE SOFTWARE.
+//-----------------------------------------------------------------------------
+
+// --------------------------------------------------------------------
+// Message Sound
+// --------------------------------------------------------------------
+/*new SFXDescription(MessageBoxAudioDescription)
+{
+   volume      = 1.0;
+   isLooping   = false;
+   is3D        = false;
+   channel     = $GuiAudioType;
+};
+
+new SFXProfile(messageBoxBeep)
+{
+   filename    = "./messageBoxSound";
+   description = MessageBoxAudioDescription;
+   preload     = true;
+};*/
+
+//---------------------------------------------------------------------------------------------
+// messageCallback
+// Calls a callback passed to a message box.
+//---------------------------------------------------------------------------------------------
+function messageCallback(%dlg, %callback)
+{
+   Canvas.popDialog(%dlg);
+   eval(%callback);
+}
+
+//---------------------------------------------------------------------------------------------
+// MBSetText
+// Sets the text of a message box and resizes it to accomodate the new string.
+//---------------------------------------------------------------------------------------------
+function MBSetText(%text, %frame, %msg)
+{
+   // Get the extent of the text box.
+   %ext = %text.getExtent();
+   // Set the text in the center of the text box.
+   %text.setText("<just:center>" @ %msg);
+   // Force the textbox to resize itself vertically.
+   %text.forceReflow();
+   // Grab the new extent of the text box.
+   %newExtent = %text.getExtent();
+
+   // Get the vertical change in extent.
+   %deltaY = getWord(%newExtent, 1) - getWord(%ext, 1);
+   
+   // Resize the window housing the text box.
+   %windowPos = %frame.getPosition();
+   %windowExt = %frame.getExtent();
+   %frame.resize(getWord(%windowPos, 0), getWord(%windowPos, 1) - (%deltaY / 2),
+                 getWord(%windowExt, 0), getWord(%windowExt, 1) + %deltaY);
+                 
+   %frame.canMove = "0";
+   //%frame.canClose = "0";
+   %frame.resizeWidth = "0";
+   %frame.resizeHeight = "0";
+   %frame.canMinimize = "0";
+   %frame.canMaximize = "0";
+   
+   //sfxPlayOnce( messageBoxBeep );
+}
+
+function MessageBoxCtrl::onWake(%this)
+{
+   %this.callback = "";
+   %this.cancelCallback = "";
+}
+
+//---------------------------------------------------------------------------------------------
+// Various message box display functions. Each one takes a window title, a message, and a
+// callback for each button.
+//---------------------------------------------------------------------------------------------
+function MessageBoxCtrl::createButton(%this, %text, %command, %bitmap)
+{
+   %btn = new GuiIconButtonCtrl() {
+      BitmapAsset = %bitmap;
+      sizeIconToButton = "1";
+      makeIconSquare = "1";
+      textLocation = "Center";
+      iconLocation = "Left";
+      text = %text;
+      position = "251 0";
+      extent = "140 40";
+      profile = "GuiMenuButtonProfile";
+      command = %command;
+      tooltipProfile = "GuiToolTipProfile";
+   };
+   
+   MessageBoxButtonHolder.add(%btn);
+   
+   //update positioning of the holder to be centered
+   MessageBoxButtonHolder.position.x = MessageBoxCtrl.extent.x/2 - MessageBoxButtonHolder.extent.x/2;
+   
+   return %btn;
+}
+
+function MessageBoxDlg::onWake(%this)
+{
+   
+}
+
+if(!isObject( MessageBoxActionMap ) )
+{
+   new ActionMap(MessageBoxActionMap){};
+   
+   MessageBoxActionMap.bind( keyboard, Space, messageBoxYesClicked );
+   MessageBoxActionMap.bind( gamepad, btn_a, messageBoxYesClicked );
+   
+   MessageBoxActionMap.bind( keyboard, Escape, messageBoxNoClicked );
+   MessageBoxActionMap.bind( gamepad, btn_b, messageBoxNoClicked );
+}
+
+function MessageBoxCtrl::syncGui(%this)
+{
+   
+}
+
+function messageBoxYesClicked(%val)
+{
+   if(%val)
+      MessageCallback(MessageBoxDlg, MessageBoxDlg.callback);
+}
+
+function messageBoxNoClicked(%val)
+{
+   if(%val)
+      MessageCallback(MessageBoxDlg,MessageBoxDlg.cancelCallback);
+}
+
+//MessageBoxOK("Test", "This is a test message box", "echo(\"Uhhhhhawhat?\"");
+function MessageBoxOK(%title, %message, %callback)
+{
+   MessageBoxButtonHolder.clear();
+   
+   Canvas.pushDialog(MessageBoxDlg);
+   MessageBoxTitleText.text = %title;
+   
+   %okButton = MessageBoxCtrl.createButton("OK", "messageBoxYesClicked(1);");
+   %bitmapAssetId = MessageBoxActionMap.getCommandButtonBitmap(Canvas.getLastInputDevice(), "messageBoxYesClicked");
+   %okButton.setBitmap(%bitmapAssetId);
+   
+   MBSetText(MessageBoxText, MessageBoxCtrl, %message);
+   MessageBoxDlg.callback = %callback;
+}
+
+function MessageBoxOKCancel(%title, %message, %callback, %cancelCallback, %okLabelOverride, %cancelLabelOverride)
+{
+   MessageBoxButtonHolder.clear();
+   
+   Canvas.pushDialog(MessageBoxDlg);
+   MessageBoxTitleText.text = %title;
+   
+   if(%okLabelOverride $= "")
+      %okLabel = "OK";
+   else
+      %okLabel = %okLabelOverride;
+      
+   if(%cancelLabelOverride $= "")
+      %cancelLabel = "Cancel";
+   else
+      %cancelLabel = %cancelLabelOverride;
+      
+   %okButton = MessageBoxCtrl.createButton(%okLabel, "messageBoxYesClicked(1);");
+   %bitmapAssetId = MessageBoxActionMap.getCommandButtonBitmap(Canvas.getLastInputDevice(), "messageBoxYesClicked");
+   %okButton.setBitmap(%bitmapAssetId);
+   
+   %cancelButton = MessageBoxCtrl.createButton(%cancelLabel, "messageBoxNoClicked(1);");
+   %bitmapAssetId = MessageBoxActionMap.getCommandButtonBitmap(Canvas.getLastInputDevice(), "messageBoxNoClicked");
+   %cancelButton.setBitmap(%bitmapAssetId);
+   
+   MBSetText(MessageBoxText, MessageBoxCtrl, %message);
+   MessageBoxDlg.callback = %callback;
+   MessageBoxDlg.cancelCallback = %cancelCallback;
+}
+
+function MessageBoxYesNo(%title, %message, %yesCallback, %noCallback)
+{
+   MessageBoxOKCancel(%title, %message, %yesCallback, %noCallback, "Yes", "No");
+}
+
+//---------------------------------------------------------------------------------------------
+// MessagePopup
+// Displays a message box with no buttons. Disappears after %delay milliseconds.
+//---------------------------------------------------------------------------------------------
+function MessagePopup(%title, %message, %delay)
+{
+   Canvas.pushDialog(MessageBoxDlg);
+   MessageBoxTitleText.text = %title;
+   MBSetText(MessageBoxText, MessageBoxCtrl, %message);
+
+   if (%delay !$= "")
+      schedule(%delay, 0, CloseMessagePopup);
+}
+
+function CloseMessagePopup()
+{
+   Canvas.popDialog(MessageBoxDlg);
+}

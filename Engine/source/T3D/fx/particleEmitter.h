@@ -168,6 +168,7 @@ class ParticleEmitter : public GameBase
    ~ParticleEmitter();
 
    DECLARE_CONOBJECT(ParticleEmitter);
+   DECLARE_CATEGORY("UNLISTED");
 
    static Point3F mWindVelocity;
    static void setWindVelocity( const Point3F &vel ){ mWindVelocity = vel; }
@@ -237,7 +238,7 @@ class ParticleEmitter : public GameBase
                                const LinearColorF &ambientColor,
                                ParticleVertexType *lVerts );
 
-   inline void setupOriented( Particle *part,
+   void setupOriented( Particle *part,
                               const Point3F &camPos,
                               const LinearColorF &ambientColor,
                               ParticleVertexType *lVerts );

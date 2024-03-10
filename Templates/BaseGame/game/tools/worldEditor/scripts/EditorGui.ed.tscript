@@ -43,7 +43,7 @@ function EditorGui::init(%this)
       
       if( isObject( EWToolsPaletteWindow ) )
       {
-         %this.add( EWToolsPaletteWindow );
+         MainSceneTabPanel.add( EWToolsPaletteWindow );
          EWToolsPaletteWindow.init();
          EWToolsPaletteWindow.setVisible( false );
       }
@@ -124,7 +124,7 @@ function EditorGui::init(%this)
       exec("~/worldEditor/gui/ToolsToolbar.ed.gui");
       if( isObject( EWToolsToolbar ) )
       {
-         %this.add( EWToolsToolbar );
+         MainSceneTabPanel.add( EWToolsToolbar );
          EWToolsToolbar.setVisible( true );
          
       }
@@ -749,6 +749,8 @@ function EditorGui::addCameraBookmark( %this, %name )
    
    EWorldEditor.isDirty = true;
    EditorTree.buildVisibleTree(true);
+   
+   return %obj;
 }
 
 function EditorGui::removeCameraBookmark( %this, %name )
@@ -813,7 +815,9 @@ function EditorGui::addCameraBookmarkByGui( %this )
          break;
       }
    }
-   EditorGui.addCameraBookmark( %name );
+   %obj = EditorGui.addCameraBookmark( %name );
+
+   return %obj;
 }
 
 function EditorGui::toggleCameraBookmarkWindow( %this )

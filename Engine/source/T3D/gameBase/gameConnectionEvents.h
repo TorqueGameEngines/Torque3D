@@ -110,11 +110,11 @@ class SimSoundAssetEvent : public NetEvent
 private:
    AssetPtr<SoundAsset> mAsset;
    MatrixF mTransform;
-
+   bool sentTransform;
 public:
    typedef NetEvent Parent;
    
-   SimSoundAssetEvent(StringTableEntry assetId = StringTable->EmptyString(), const MatrixF& mat = MatrixF::Identity);
+   SimSoundAssetEvent(StringTableEntry assetId = StringTable->EmptyString(), const MatrixF* mat = NULL);
    void pack(NetConnection*, BitStream* bstream);
    void write(NetConnection*, BitStream* bstream);
    void unpack(NetConnection*, BitStream* bstream);

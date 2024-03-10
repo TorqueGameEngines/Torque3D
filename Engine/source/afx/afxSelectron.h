@@ -106,7 +106,6 @@ public:
   static void   initPersistFields();
 
   DECLARE_CONOBJECT(afxSelectronData);
-  DECLARE_CATEGORY("AFX");
 };
 
 inline bool afxSelectronData::matches(U32 mask, U8 style)
@@ -219,7 +218,7 @@ public:
   void          finish_startup();
 
   DECLARE_CONOBJECT(afxSelectron);
-  DECLARE_CATEGORY("AFX");
+  DECLARE_CATEGORY("UNLISTED");
 
 private:
   void          process_server();

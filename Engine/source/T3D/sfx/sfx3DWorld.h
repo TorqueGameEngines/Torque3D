@@ -46,6 +46,8 @@ class SFX3DObject : public SceneObjectLink, public SFXObject< 3 >
    public:
    
       typedef SceneObjectLink Parent;
+
+      SFX3DObject();
       
       ///
       SFX3DObject( SFX3DWorld* world, SceneObject* object );

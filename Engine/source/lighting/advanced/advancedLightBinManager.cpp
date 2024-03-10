@@ -253,7 +253,7 @@ void AdvancedLightBinManager::addLight( LightInfo *light )
    LightBinEntry lEntry;
    lEntry.lightInfo = light;
    lEntry.shadowMap = lsm;
-   lEntry.lightMaterial = _getLightMaterial( lightType, shadowType, lsp->hasCookieTex() );
+   lEntry.lightMaterial = _getLightMaterial( lightType, shadowType, lsp->hasCookieTex(), lsp->hasIesProfile() );
 
    if( lightType == LightInfo::Spot )
       lEntry.vertBuffer = mLightManager->getConeMesh( lEntry.numPrims, lEntry.primBuffer );
@@ -399,9 +399,9 @@ void AdvancedLightBinManager::render( SceneRenderState *state )
          sunLight->getCastShadows() &&
          !disableShadows &&
          sunLight->getExtended<ShadowMapParams>() )
-      vectorMatInfo = _getLightMaterial( LightInfo::Vector, ShadowType_PSSM, false );
+      vectorMatInfo = _getLightMaterial( LightInfo::Vector, ShadowType_PSSM,false,false );
    else
-      vectorMatInfo = _getLightMaterial( LightInfo::Vector, ShadowType_None, false );
+      vectorMatInfo = _getLightMaterial( LightInfo::Vector, ShadowType_None, false, false);
 
    // Initialize and set the per-frame parameters after getting
    // the vector light material as we use lazy creation.
@@ -513,12 +513,13 @@ void AdvancedLightBinManager::render( SceneRenderState *state )
 
 AdvancedLightBinManager::LightMaterialInfo* AdvancedLightBinManager::_getLightMaterial(   LightInfo::Type lightType, 
                                                                                           ShadowType shadowType, 
-                                                                                          bool useCookieTex )
+                                                                                          bool useCookieTex,
+                                                                                          bool isPhotometric)
 {
    PROFILE_SCOPE( AdvancedLightBinManager_GetLightMaterial );
 
    // Build the key.
-   const LightMatKey key( lightType, shadowType, useCookieTex );
+   const LightMatKey key( lightType, shadowType, useCookieTex, isPhotometric );
 
    // See if we've already built this one.
    LightMatTable::Iterator iter = mLightMaterials.find( key );
@@ -557,6 +558,9 @@ AdvancedLightBinManager::LightMaterialInfo* AdvancedLightBinManager::_getLightMa
    
       if ( useCookieTex )
          shadowMacros.push_back( GFXShaderMacro( "USE_COOKIE_TEX" ) );
+
+      if(isPhotometric)
+         shadowMacros.push_back(GFXShaderMacro("UES_PHOTOMETRIC_MASK"));
 
       // Its safe to add the PSSM debug macro to all the materials.
       if ( smPSSMDebugRender )
@@ -790,7 +794,7 @@ void AdvancedLightBinManager::LightMaterialInfo::setLightParameters( const Light
    MaterialParameters *matParams = matInstance->getMaterialParameters();
 
    matParams->setSafe( lightColor, lightInfo->getColor() );
-   matParams->setSafe(lightBrightness, lightInfo->getBrightness() * lightInfo->getFadeAmount());
+   F32 luxTargMultiplier = 1;
 
    switch( lightInfo->getType() )
    {
@@ -804,10 +808,10 @@ void AdvancedLightBinManager::LightMaterialInfo::setLightParameters( const Light
    case LightInfo::Spot:
       {
          const F32 outerCone = lightInfo->getOuterConeAngle();
-         const F32 innerCone = getMin(lightInfo->getInnerConeAngle(), outerCone);
+         const F32 innerCone = getMin(lightInfo->getInnerConeAngle(), outerCone-0.0001f);
          const F32 outerCos = mCos(mDegToRad(outerCone / 2.0f));
          const F32 innerCos = mCos(mDegToRad(innerCone / 2.0f));
-         Point2F spotParams(outerCos,innerCos - outerCos); 
+         Point2F spotParams(outerCos,mMax(innerCos - outerCos,0.001f));
 
          matParams->setSafe( lightSpotParams, spotParams );
          matParams->setSafe( lightDirection, lightInfo->getDirection());
@@ -817,6 +821,9 @@ void AdvancedLightBinManager::LightMaterialInfo::setLightParameters( const Light
          const F32 invSqrRadius = 1.0f / mSquared(radius);
          matParams->setSafe(lightRange, radius);
          matParams->setSafe(lightInvSqrRange, invSqrRadius);
+
+         F32 concentration = 360.0f/ outerCone;
+         luxTargMultiplier = radius * concentration;
       }
       break;
 
@@ -827,7 +834,9 @@ void AdvancedLightBinManager::LightMaterialInfo::setLightParameters( const Light
          const F32 radius = lightInfo->getRange().x;
          const F32 invSqrRadius = 1.0f / (radius * radius);
          matParams->setSafe( lightRange, radius);
+         matParams->setSafe( lightDirection, -lightInfo->getTransform().getUpVector());
          matParams->setSafe( lightInvSqrRange, invSqrRadius);  
+         luxTargMultiplier =radius;
       }
       break;
 
@@ -835,6 +844,7 @@ void AdvancedLightBinManager::LightMaterialInfo::setLightParameters( const Light
       AssertFatal( false, "Bad light type!" );
       break;
    }
+   matParams->setSafe(lightBrightness, lightInfo->getBrightness()* lightInfo->getFadeAmount() * luxTargMultiplier);
 }
 
 bool LightMatInstance::setupPass( SceneRenderState *state, const SceneData &sgData )

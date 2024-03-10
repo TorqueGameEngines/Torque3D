@@ -100,6 +100,7 @@ static const S32 S32_MIN = S32(-2147483647 - 1);                  ///< Constant 
 static const S32 S32_MAX = S32(2147483647);                       ///< Constant Max Limit S32
 static const U32 U32_MAX = U32(0xffffffff);                       ///< Constant Max Limit U32
 
+static const F32 F32_MIN_EX = F32(-3.40282347e+38);               ///< Constant Min Limit F32
 static const F32 F32_MIN = F32(1.175494351e-38F);                 ///< Constant Min Limit F32
 static const F32 F32_MAX = F32(3.402823466e+38F);                 ///< Constant Max Limit F32
 

@@ -184,6 +184,10 @@ void ReflectionProbe::initPersistFields()
       "@note Only works for shadow mapped lights.\n\n"
       "@ingroup Lighting");
 
+   Con::addVariable("$Probes::Capturing", TypeBool, &RenderProbeMgr::smBakeReflectionProbes,
+      "Toggles probe rendering capture state.\n\n"
+      "@ingroup Lighting");
+
    Con::addVariable("$Light::renderPreviewProbes", TypeBool, &ReflectionProbe::smRenderPreviewProbes,
       "Toggles rendering of light frustums when the light is selected in the editor.\n\n"
       "@note Only works for shadow mapped lights.\n\n"
@@ -793,7 +797,9 @@ void ReflectionProbe::bake()
    if (mReflectionModeType != BakedCubemap)
       return;
 
+   PROBEMGR->preBake();
    PROBEMGR->bakeProbe(this);
+   PROBEMGR->postBake();
 
    setMaskBits(-1);
 }
@@ -823,7 +829,7 @@ void ReflectionProbe::createEditorResources()
 
 void ReflectionProbe::prepRenderImage(SceneRenderState *state)
 {
-   if (!mEnabled || (!RenderProbeMgr::smRenderReflectionProbes && !dStrcmp(Con::getVariable("$Probes::Capturing", "0"),"1")))
+   if (!mEnabled || (!RenderProbeMgr::smRenderReflectionProbes || RenderProbeMgr::smBakeReflectionProbes))
       return;
 
    Point3F distVec = getRenderPosition() - state->getCameraPosition();

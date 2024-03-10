@@ -187,6 +187,7 @@ public:
    ~Projectile();
 
    DECLARE_CONOBJECT(Projectile);
+   DECLARE_CATEGORY("UNLISTED");
 
    // SimObject
    bool onAdd();

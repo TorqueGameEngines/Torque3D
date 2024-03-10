@@ -100,7 +100,6 @@ public:
   virtual void    gather_cons_defs(Vector<afxConstraintDef>& defs) { };
 
   DECLARE_CONOBJECT(afxEffectBaseData);
-  DECLARE_CATEGORY("AFX");
 };
 
 //class afxEffectWrapperData : public GameBaseData, public afxEffectDefs
@@ -207,7 +206,6 @@ public:
   static void       initPersistFields();
 
   DECLARE_CONOBJECT(afxEffectWrapperData);
-  DECLARE_CATEGORY("AFX");
 };
 
 inline bool afxEffectWrapperData::testExecConditions(U32 conditions)
@@ -382,7 +380,6 @@ public:
   static afxEffectWrapper* ew_create(afxChoreographer*, afxEffectWrapperData*, afxConstraintMgr*, F32 time_factor, S32 group_index=0);
 
   DECLARE_CONOBJECT(afxEffectWrapper);
-  DECLARE_CATEGORY("AFX");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

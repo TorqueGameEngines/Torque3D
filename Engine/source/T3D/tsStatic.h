@@ -236,6 +236,7 @@ public:
    ~TSStatic();
 
    DECLARE_CONOBJECT(TSStatic);
+   DECLARE_CATEGORY("Object \t Simple");
    static void initPersistFields();
    /// returns the shape asset used for this object
    StringTableEntry getTypeHint() const override { return (getShapeAsset()) ? getShapeAsset()->getAssetName(): StringTable->EmptyString(); }

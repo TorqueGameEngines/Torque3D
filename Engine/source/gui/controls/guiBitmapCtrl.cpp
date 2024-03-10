@@ -81,7 +81,9 @@ void GuiBitmapCtrl::initPersistFields()
    docsURL;
    addGroup( "Bitmap" );
 
-   INITPERSISTFIELD_IMAGEASSET(Bitmap, GuiBitmapCtrl, The bitmap file to display in the control);
+      addField("Bitmap", TypeImageFilename, Offset(mBitmapName, GuiBitmapCtrl), assetDoc(Bitmap, docs), AbstractClassRep::FIELD_HideInInspectors);
+      addField("BitmapAsset", TypeImageAssetId, Offset(mBitmapAssetId, GuiBitmapCtrl), assetDoc(Bitmap, asset docs.));
+
       addField("color", TypeColorI, Offset(mColor, GuiBitmapCtrl),"color mul");
       addField( "wrap",   TypeBool,     Offset( mWrap, GuiBitmapCtrl ),
          "If true, the bitmap is tiled inside the control rather than stretched to fit." );
@@ -115,6 +117,19 @@ void GuiBitmapCtrl::onSleep()
 //-------------------------------------
 void GuiBitmapCtrl::inspectPostApply()
 {
+   //This is a little bit of a 'special case' handling for this class
+   //Because we don't do the normal protectedField setup for the bitmapName/bitmapAsset fields
+   //which would automatically update the internal values and bound content, we'll do it here manually
+   //to ensure it's updated before we force a refresh, which would thrash the new values
+   if (mBitmapName != StringTable->insert("texhandle"))
+   {
+      _setBitmap(mBitmapAssetId);
+   }
+   else
+   {
+      setBitmap(getBitmap());
+   }
+
    // if the extent is set to (0,0) in the gui editor and appy hit, this control will
    // set it's extent to be exactly the size of the bitmap (if present)
    Parent::inspectPostApply();

@@ -35,9 +35,9 @@ function initializeForestEditor()
    ForestEditorPalleteWindow.setVisible( false );
    ForestEditorPropertiesWindow.setVisible( false );
    
-   EditorGui.add( ForestEditorGui );
-   EditorGui.add( ForestEditorPalleteWindow );
-   EditorGui.add( ForestEditorPropertiesWindow );
+   MainSceneTabPanel.add( ForestEditorGui );
+   MainSceneTabPanel.add( ForestEditorPalleteWindow );
+   MainSceneTabPanel.add( ForestEditorPropertiesWindow );
             
    new ScriptObject( ForestEditorPlugin )
    {

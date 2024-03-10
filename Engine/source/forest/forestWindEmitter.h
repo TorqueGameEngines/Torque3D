@@ -214,6 +214,7 @@ public:
    // ConObject.
    static void initPersistFields();
    DECLARE_CONOBJECT(ForestWindEmitter);
+   DECLARE_CATEGORY("Environment \t Weather");
 };
 
 #endif // _FORESTWINDEMITTER_H_

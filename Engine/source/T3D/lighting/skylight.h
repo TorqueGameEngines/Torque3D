@@ -68,6 +68,7 @@ public:
    // Declare this object as a ConsoleObject so that we can
    // instantiate it into the world and network it
    DECLARE_CONOBJECT(Skylight);
+   DECLARE_CATEGORY("Lighting \t Probes");
 
    //--------------------------------------------------------------------------
    // Object Editing
@@ -107,6 +108,7 @@ public:
    void prepRenderImage(SceneRenderState *state);
 
    void setPreviewMatParameters(SceneRenderState* renderState, BaseMatInstance* mat);
+   static SimObjectPtr<Skylight> smSkylightProbe;
 };
 
 #endif // _Skylight_H_

@@ -211,6 +211,8 @@ function GuiEditCanvas::onCreateMenu(%this)
       };
    };
    
+   %this.buildAddMenu();
+   
    // Workaround (for some reason it doesn't size to the width of the canvas)
    // TODO: After a canvas resize it still messes up the width
    %position = %this.menubar.position.x SPC %this.menubar.position.y;
@@ -218,6 +220,88 @@ function GuiEditCanvas::onCreateMenu(%this)
    %this.menubar.resize(%position.x, %position.y, %extent.x, %extent.y); 
    
    %this.menuBar.attachToCanvas( Canvas, 0 );
+}
+
+function GuiEditCanvas::buildAddMenu(%this)
+{
+   %addMenu = MenuBuilder::newMenu("Add");
+
+   %enumeratedClasses = enumerateConsoleClasses("GuiControl");
+   for(%c=0; %c < getFieldCount(%enumeratedClasses); %c++)
+   {
+      %class = getField(%enumeratedClasses, %c);  
+
+      if( GuiEditor.isFilteredClass( %class )
+          || !isMemberOfClass( %class, "GuiControl" ) )
+         continue;
+         
+      %category = getCategoryOfClass(%class);
+
+      if(%category $= "")
+      {
+         error("Attempted to fetch category of class " @ %class @ " but none were found.");
+         continue;  
+      }
+
+      %parentMenu = %addMenu; //start at the top
+      for(%cat=0; %cat < getFieldCount(%category); %cat++)
+      {
+         %subCat = getField(%category, %cat);
+         %targetSubmenu = %parentMenu.findMenu(%subCat);
+         if(!isObject(%targetSubmenu))
+         {
+            %targetSubmenu = %parentMenu.newSubmenu(%subCat);
+         }
+
+         %parentMenu = %targetSubmenu;
+      }
+
+      %buildfunc = "";
+      %class = %class;
+      %method = "build" @ %buildfunc;
+      if( !GuiEditCanvas.isMethod( %method ) )
+         %method = "build" @ %class;
+
+      if( !GuiEditCanvas.isMethod( %method ) )
+         %cmd = "return new " @ %class @ "();";
+      else
+         %cmd = "GuiEditCanvas." @ %method @ "();";
+
+      %createCmd = "GuiEditCanvas.newObjectCallback = \"GuiEditCanvas.onFinishCreateObject\"; GuiEditCanvas.createObject( \"" @ %cmd @ "\" );";
+
+      %targetSubmenu.newItem(%class, %createCmd, "");
+   }
+
+   MenuBuilder::addMenuToMenubar(%this.menubar, %addMenu, 4);
+}
+
+function GuiEditCanvas::createObject( %this, %cmd )
+{   
+   if(startsWith(%cmd, "return "))
+      %objId = eval(%cmd);
+   else
+      %objId = eval("return " @ %cmd);
+   
+   if( isObject( %objId ) )
+      %this.onFinishCreateObject( %objId );
+      
+   return %objId;
+}
+
+function GuiEditCanvas::onFinishCreateObject( %this, %objId )
+{
+   GuiEditor.getCurrentAddSet().add( %objId );   
+   %this.onObjectCreated( %objId );
+}
+
+function GuiEditCanvas::onObjectCreated( %this, %objId )
+{
+   // Can we submit an undo action?
+   if ( isObject( %objId ) )
+      GuiEditor.onAddNewCtrl( %objId );
+      
+   GuiEditorTreeView.clearSelection();
+   GuiEditor.select(%objId);
 }
 
 $GUI_EDITOR_MENU_EDGESNAP_INDEX = 0;

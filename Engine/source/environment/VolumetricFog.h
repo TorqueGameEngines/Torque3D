@@ -253,6 +253,7 @@ class VolumetricFog : public SceneObject
       void onShapeChanged() {}
    
       DECLARE_CONOBJECT(VolumetricFog);
+      DECLARE_CATEGORY("Environment \t Weather");
    
       DECLARE_CALLBACK(void, onEnterFog, (SimObjectId obj));
       DECLARE_CALLBACK(void, onLeaveFog, (SimObjectId obj));

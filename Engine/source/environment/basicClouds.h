@@ -65,6 +65,7 @@ public:
    virtual ~BasicClouds() {}
 
    DECLARE_CONOBJECT( BasicClouds );
+   DECLARE_CATEGORY("Environment \t Weather");
 
    // ConsoleObject
    virtual bool onAdd();

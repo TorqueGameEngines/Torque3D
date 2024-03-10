@@ -378,7 +378,7 @@ void GuiInspectorField::setData( const char* data, bool callbacks )
          
          // Fire callback single-object undo.
          
-         if( callbacks )
+         if( callbacks && !mField->flag.test(AbstractClassRep::FieldFlags::FIELD_ComponentInspectors) )
             Con::executef( mInspector, "onInspectorFieldModified", 
                                           target->getIdString(), 
                                           mField->pFieldname, 

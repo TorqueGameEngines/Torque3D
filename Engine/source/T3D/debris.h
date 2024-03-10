@@ -179,6 +179,7 @@ public:
    void  setRotAngles( const Point3F &angles ){ mRotAngles = angles; }
 
    DECLARE_CONOBJECT(Debris);
+   DECLARE_CATEGORY("UNLISTED");
 
 private:
    SimObject*   ss_object;

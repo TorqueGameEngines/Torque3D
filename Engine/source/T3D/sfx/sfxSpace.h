@@ -27,6 +27,10 @@
 #include "scene/sceneSpace.h"
 #endif
 
+#ifndef _SFXSOURCE_H_
+#include "sfx/sfxSource.h"
+#endif
+
 #ifndef _SCENEAMBIENTSOUNDOBJECT_H_
 #include "scene/mixin/sceneAmbientSoundObject.h"
 #endif
@@ -55,7 +59,7 @@ class SFXSpace : public SceneAmbientSoundObject< ScenePolyhedralObject< SceneSpa
       // SimObject.
       DECLARE_CONOBJECT( SFXSpace );
       DECLARE_DESCRIPTION( "A box volume that defines an ambient sound space." );
-      DECLARE_CATEGORY( "3D Sound" );
+      DECLARE_CATEGORY("Volume");
 
       static void consoleInit();
 };

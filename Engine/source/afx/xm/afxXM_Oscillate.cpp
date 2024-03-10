@@ -61,7 +61,6 @@ public:
   afxXM_Base*   create(afxEffectWrapper* fx, bool on_server);
 
   DECLARE_CONOBJECT(afxXM_OscillateData);
-  DECLARE_CATEGORY("AFX");
 };
 
 class afxXM_Oscillate_rot : public afxXM_WeightedBase

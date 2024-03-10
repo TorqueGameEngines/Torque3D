@@ -666,7 +666,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
    StringTableEntry fnNamespace, fnPackage;
 
    static const U32 objectCreationStackSize = 32;
-   U32 objectCreationStackIndex = 0;
+   S32 objectCreationStackIndex = 0;
    struct {
       SimObject* newObject;
       U32 failJump;

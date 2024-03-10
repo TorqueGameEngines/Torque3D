@@ -202,7 +202,7 @@ void TerrainMaterialAsset::initializeAsset()
       }
    }
 
-   loadMaterial();
+   load();
 }
 
 void TerrainMaterialAsset::onAssetRefresh()
@@ -232,7 +232,7 @@ void TerrainMaterialAsset::onAssetRefresh()
       Con::setVariable("$Con::redefineBehavior", redefineBehaviorPrev.c_str());
    }
 
-   loadMaterial();
+   load();
 }
 
 void TerrainMaterialAsset::setScriptFile(const char* pScriptFile)
@@ -251,7 +251,7 @@ void TerrainMaterialAsset::setScriptFile(const char* pScriptFile)
 
 //------------------------------------------------------------------------------
 
-void TerrainMaterialAsset::loadMaterial()
+U32 TerrainMaterialAsset::load()
 {
    if (mMaterialDefinition)
       mMaterialDefinition->safeDeleteObject();
@@ -287,7 +287,7 @@ void TerrainMaterialAsset::loadMaterial()
       }
 
       if(mLoadedState == Ok)
-         return;
+         return mLoadedState;
    }
    else if ((mLoadedState == ScriptLoaded || mLoadedState == DefinitionAlreadyExists) && mMatDefinitionName != StringTable->EmptyString())
    {
@@ -296,17 +296,18 @@ void TerrainMaterialAsset::loadMaterial()
       {
          Con::errorf("TerrainMaterialAsset: Unable to find the Material %s", mMatDefinitionName);
          mLoadedState = BadFileReference;
-         return;
+         return mLoadedState;
       }
 
       mMaterialDefinition = matDef;
 
       mLoadedState = Ok;
       mMaterialDefinition->setInternalName(getAssetId());
-      return;
+      return mLoadedState;
    }
 
    mLoadedState = Failed;
+   return mLoadedState;
 }
 
 //------------------------------------------------------------------------------

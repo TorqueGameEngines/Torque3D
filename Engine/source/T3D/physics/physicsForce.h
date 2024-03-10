@@ -48,7 +48,7 @@ public:
    virtual ~PhysicsForce();
 
    DECLARE_CONOBJECT( PhysicsForce );
-
+   DECLARE_CATEGORY("UNLISTED");
    // SimObject
    static void initPersistFields();
    bool onAdd();

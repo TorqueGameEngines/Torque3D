@@ -239,6 +239,7 @@ public:
    NavMesh();
    ~NavMesh();
    DECLARE_CONOBJECT(NavMesh);
+   DECLARE_CATEGORY("Navigation");
 
    /// Return the server-side NavMesh SimSet.
    static SimSet *getServerSet();

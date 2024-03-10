@@ -84,7 +84,6 @@ public:
 
    // ConsoleObject
    DECLARE_CONOBJECT(afxZodiacTerrainRenderer);
-   DECLARE_CATEGORY("AFX");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

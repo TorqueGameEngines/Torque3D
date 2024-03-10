@@ -7,7 +7,7 @@
 $guiContent = new GuiControl(AL_ShadowVizOverlayCtrl) {
    canSaveDynamicFields = "0";
    isContainer = "1";
-   Profile = "GuiModelessDialogProfile";
+   Profile = "ToolsGuiModelessDialogProfile";
    HorizSizing = "right";
    VertSizing = "bottom";
    Position = "0 0";

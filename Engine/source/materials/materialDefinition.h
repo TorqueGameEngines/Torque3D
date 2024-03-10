@@ -71,7 +71,7 @@ public:
    //-----------------------------------------------------------------------
    enum Constants
    {
-      MAX_TEX_PER_PASS = 8,         ///< Number of textures per pass
+      MAX_TEX_PER_PASS = 16,         ///< Number of textures per pass
       MAX_STAGES = 4,
       NUM_EFFECT_COLOR_STAGES = 2,  ///< Number of effect color definitions for transitioning effects.
    };
@@ -94,6 +94,7 @@ public:
       Misc,
       DynamicLight,
       DynamicLightMask,
+      PhotometricMask,
       NormalizeCube,
       TexTarget,
       AccuMap,

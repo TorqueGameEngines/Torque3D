@@ -35,6 +35,7 @@
 #ifndef _GUISCROLLCTRL_H_
 #include "gui/containers/guiScrollCtrl.h"
 #endif
+#include "guiTextEditCtrl.h"
 class GuiPopUpMenuCtrlEx;
 class GuiPopupTextListCtrlEx;
 
@@ -85,8 +86,9 @@ class GuiPopUpMenuCtrlEx : public GuiTextCtrl
       S32 id;
       U16 ascii;
       U16 scheme;
-	  bool usesColorBox;	//  Added
-	  ColorI colorbox;		//  Added
+	   bool usesColorBox;	//  Added
+	   ColorI colorbox;		//  Added
+      bool indented;       //  Added
    };
 
    struct Scheme
@@ -118,6 +120,8 @@ class GuiPopUpMenuCtrlEx : public GuiTextCtrl
    bool mRenderScrollInNA; //  Added
    bool mReverseTextList;	//  Added - Should we reverse the text list if we display up?
    bool mHotTrackItems;
+   bool mTextSearchItems;
+   String mSearchText;
 
    enum BitmapModes
    {
@@ -134,7 +138,10 @@ class GuiPopUpMenuCtrlEx : public GuiTextCtrl
 
 	S32 mIdMax;
 
+   GuiTextEditCtrl* mSearchEdit; //  Added
+
    virtual void addChildren();
+   virtual void removeChildren();
    virtual void repositionPopup();
 
    static bool _setBitmaps(void* obj, const char* index, const char* data);
@@ -143,13 +150,18 @@ class GuiPopUpMenuCtrlEx : public GuiTextCtrl
    GuiPopUpMenuCtrlEx(void);
    ~GuiPopUpMenuCtrlEx();   
    GuiScrollCtrl::Region mScrollDir;
-   bool onWake(); //  Added
-   bool onAdd();
-   void onSleep();
+   virtual bool onWake(); //  Added
+   virtual void onRemove();
+   virtual bool onAdd();
+   virtual void onSleep();
    void setBitmap(const char *name); //  Added
    void sort();
    void sortID(); //  Added
-	void addEntry(const char *buf, S32 id = -1, U32 scheme = 0);
+	void addEntry(const char *buf, S32 id = -1, U32 scheme = 0, const bool& indented = false);
+   void addCategory(const char *buf)
+   {
+      addEntry(buf, -2, 0);
+   }
    void addScheme(U32 id, ColorI fontColor, ColorI fontColorHL, ColorI fontColorSEL);
    void onRender(Point2I offset, const RectI &updateRect);
    void onAction();
@@ -176,6 +188,9 @@ class GuiPopUpMenuCtrlEx : public GuiTextCtrl
    S32 findText( const char* text );
    S32 getNumEntries()   { return( mEntries.size() ); }
    void replaceText(S32);
+
+   void setCanSearch(const bool& canSearch) { mTextSearchItems = canSearch; }
+   void setSearchText(String searchTxt) { mSearchText = String::ToLower(searchTxt); onAction();  }
    
    DECLARE_CONOBJECT(GuiPopUpMenuCtrlEx);
    DECLARE_CATEGORY( "Gui Lists" );

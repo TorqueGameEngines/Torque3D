@@ -34,9 +34,9 @@ function initializeRoadEditor()
    RoadEditorOptionsWindow.setVisible( false );
    RoadEditorTreeWindow.setVisible( false );
    
-   EditorGui.add( RoadEditorGui );
-   EditorGui.add( RoadEditorOptionsWindow );
-   EditorGui.add( RoadEditorTreeWindow );
+   MainSceneTabPanel.add( RoadEditorGui );
+   MainSceneTabPanel.add( RoadEditorOptionsWindow );
+   MainSceneTabPanel.add( RoadEditorTreeWindow );
    
    new ScriptObject( RoadEditorPlugin )
    {

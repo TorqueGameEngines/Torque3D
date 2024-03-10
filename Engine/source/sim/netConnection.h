@@ -1130,7 +1130,7 @@ inline void NetConnection::ghostPushNonZero(GhostInfo *info)
 
 inline void NetConnection::ghostPushToZero(GhostInfo *info)
 {
-   AssertFatal(info->arrayIndex < mGhostZeroUpdateIndex, "Out of range arrayIndex.");
+   AssertFatal(info->arrayIndex < mGhostZeroUpdateIndex, avar("Out of range arrayIndex[%d]. Must be >= %d.", info->arrayIndex, mGhostZeroUpdateIndex));
    AssertFatal(mGhostArray[info->arrayIndex] == info, "Invalid array object.");
    mGhostZeroUpdateIndex--;
    if(info->arrayIndex != mGhostZeroUpdateIndex)
@@ -1145,7 +1145,9 @@ inline void NetConnection::ghostPushToZero(GhostInfo *info)
 
 inline void NetConnection::ghostPushZeroToFree(GhostInfo *info)
 {
-   AssertFatal(info->arrayIndex >= mGhostZeroUpdateIndex && info->arrayIndex < mGhostFreeIndex, "Out of range arrayIndex.");
+   AssertFatal(mGhostZeroUpdateIndex <= info->arrayIndex && info->arrayIndex < mGhostFreeIndex,
+      avar("Out of range arrayIndex [%d]. Must be between %d and %d.",
+         info->arrayIndex, mGhostZeroUpdateIndex,  mGhostFreeIndex));
    AssertFatal(mGhostArray[info->arrayIndex] == info, "Invalid array object.");
    mGhostFreeIndex--;
    if(info->arrayIndex != mGhostFreeIndex)
@@ -1160,7 +1162,7 @@ inline void NetConnection::ghostPushZeroToFree(GhostInfo *info)
 
 inline void NetConnection::ghostPushFreeToZero(GhostInfo *info)
 {
-   AssertFatal(info->arrayIndex >= mGhostFreeIndex, "Out of range arrayIndex.");
+   AssertFatal(info->arrayIndex >= mGhostFreeIndex, avar("Out of range arrayIndex[%d]. Must be < %d.", info->arrayIndex, mGhostFreeIndex));
    AssertFatal(mGhostArray[info->arrayIndex] == info, "Invalid array object.");
    if(info->arrayIndex != mGhostFreeIndex)
    {

@@ -67,7 +67,6 @@ public:
   static void initPersistFields();
 
   DECLARE_CONOBJECT(afxParticleEmitterData);
-  DECLARE_CATEGORY("AFX");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
@@ -92,7 +91,6 @@ public:
   static void initPersistFields();
 
   DECLARE_CONOBJECT(afxParticleEmitterVectorData);
-  DECLARE_CATEGORY("AFX");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
@@ -121,7 +119,6 @@ public:
   static void initPersistFields();
 
   DECLARE_CONOBJECT(afxParticleEmitterConeData);
-  DECLARE_CATEGORY("AFX");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
@@ -165,7 +162,6 @@ public:
   static void           initPersistFields();
 
   DECLARE_CONOBJECT(afxParticleEmitterPathData);
-  DECLARE_CATEGORY("AFX");
 };
 
 typedef afxParticleEmitterPathData::PathOriginType afxParticleEmitterPath_OriginType;
@@ -197,7 +193,6 @@ public:
   static void           initPersistFields();
 
   DECLARE_CONOBJECT(afxParticleEmitterDiscData);
-  DECLARE_CATEGORY("AFX");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

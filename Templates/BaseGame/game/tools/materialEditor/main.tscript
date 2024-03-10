@@ -46,10 +46,10 @@ function initializeMaterialEditor()
    matEd_addCubemapWindow.setVisible( false );
    MaterialEditorPropertiesWindow.setVisible( false );
    
-   EditorGui.add( MaterialEditorPreviewWindow );
-   EditorGui.add( matEd_cubemapEditor );
-   EditorGui.add( matEd_addCubemapWindow );
-   EditorGui.add( MaterialEditorPropertiesWindow );
+   MainSceneTabPanel.add( MaterialEditorPreviewWindow );
+   MainSceneTabPanel.add( matEd_cubemapEditor );
+   MainSceneTabPanel.add( matEd_addCubemapWindow );
+   MainSceneTabPanel.add( MaterialEditorPropertiesWindow );
 }
 
 function destroyMaterialEditor()

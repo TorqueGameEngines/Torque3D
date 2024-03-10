@@ -154,6 +154,7 @@ public:
 	~DecalRoad();
 
 	DECLARE_CONOBJECT(DecalRoad);
+   DECLARE_CATEGORY("Environment \t BackGround");
 
    // ConsoleObject
 	static void initPersistFields();

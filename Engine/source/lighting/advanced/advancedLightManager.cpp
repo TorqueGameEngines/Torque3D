@@ -277,6 +277,7 @@ void AdvancedLightManager::_initLightFields()
       DEFINE_LIGHT_FIELD( attenuationRatio, TypePoint3F, NULL );
       DEFINE_LIGHT_FIELD( shadowType, TYPEID< ShadowType >(), ConsoleBaseType::getType( TYPEID< ShadowType >() )->getEnumTable() );
       DEFINE_LIGHT_FIELD( texSize, TypeS32, NULL );
+      DEFINE_LIGHT_FIELD( iesProfile, TypeStringFilename, NULL );      
       DEFINE_LIGHT_FIELD( cookie, TypeStringFilename, NULL );      
       DEFINE_LIGHT_FIELD( numSplits, TypeS32, NULL );
       DEFINE_LIGHT_FIELD( logWeight, TypeF32, NULL );
@@ -299,6 +300,9 @@ void AdvancedLightManager::_initLightFields()
 
       ADD_LIGHT_FIELD( "shadowType", TYPEID< ShadowType >(), shadowType,
          "The type of shadow to use on this light." );
+
+      ADD_LIGHT_FIELD("iesProfile", TypeStringFilename, iesProfile,
+         "A photometric profile for the light.");
 
       ADD_LIGHT_FIELD( "cookie", TypeStringFilename, cookie,
          "A custom pattern texture which is projected from the light." );
@@ -496,6 +500,17 @@ bool AdvancedLightManager::setTextureStage(  const SceneData &sgData,
 
       return true;
    }
+   else if (currTexFlag == Material::PhotometricMask)
+   {
+      S32 reg = lsc->mIesProfileSC->getSamplerRegister();
+      if (reg != -1 && sgData.lights[0])
+      {
+         ShadowMapParams* p = sgData.lights[0]->getExtended<ShadowMapParams>();
+         GFX->setTexture(reg, p->getIesProfileTex());
+      }
+
+      return true;
+   }
 
    return false;
 }
@@ -607,7 +622,7 @@ GFXVertexBufferHandle<AdvancedLightManager::LightVertex> AdvancedLightManager::g
       for (S32 i=1; i<numPoints + 1; i++)
       {
          S32 imod = (i - 1) % numPoints;
-         mConeGeometry[i].point = Point3F(circlePoints[imod].x*1.1,circlePoints[imod].y*1.1, -1.0f);
+         mConeGeometry[i].point = Point3F(circlePoints[imod].x,circlePoints[imod].y, -1.0f);
          mConeGeometry[i].color = ColorI::WHITE;
       }
       mConeGeometry.unlock();

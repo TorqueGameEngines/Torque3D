@@ -37,6 +37,9 @@ function Prototyping::onDestroyGameServer(%this)
 //This is called when the client is initially set up by the game application
 function Prototyping::initClient(%this)
 {
+   //class method prototyping
+   %this.queueExec("./UI/classPrototyping");
+   %this.queueExec("./UI/classPrototyping.gui");
 }
 
 //This is called when a client connects to a server

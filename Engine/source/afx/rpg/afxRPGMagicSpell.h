@@ -97,7 +97,6 @@ public:
   static void       initPersistFields();
 
   DECLARE_CONOBJECT(afxRPGMagicSpellData);
-  DECLARE_CATEGORY("AFX");
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

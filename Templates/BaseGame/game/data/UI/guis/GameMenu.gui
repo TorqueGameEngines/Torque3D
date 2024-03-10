@@ -1,0 +1,93 @@
+//--- OBJECT WRITE BEGIN ---
+$guiContent = new GuiControl(GameMenu) {
+   extent = "1280 720";
+   profile = "GuiDefaultProfile";
+   tooltipProfile = "GuiToolTipProfile";
+   isContainer = "1";
+   canSaveDynamicFields = "1";
+
+   new GuiInputCtrl(GameMenuInputHandler) {
+      ignoreMouseEvents = "1";
+      ActionMap = "GameMenuActionMap";
+      position = "-50 0";
+      extent = "50 50";
+      horizSizing = "width";
+      vertSizing = "height";
+      profile = "GuiInputCtrlProfile";
+      tooltipProfile = "GuiToolTipProfile";
+   };
+   new GuiChunkedBitmapCtrl(GameMenuBG) {
+      BitmapAsset = "UI:hudfill_image";
+      extent = "1280 720";
+      horizSizing = "width";
+      vertSizing = "height";
+      profile = "GuiDefaultProfile";
+      tooltipProfile = "GuiToolTipProfile";
+      isContainer = "1";
+      canSaveDynamicFields = "1";
+
+      new GuiPanel(GameMenuTitlePanel) {
+         extent = "1281 60";
+         horizSizing = "width";
+         profile = "GuiMenuPanelProfile";
+         tooltipProfile = "GuiToolTipProfile";
+         
+         new GuiStackControl(GameMenuButtonList){
+            position = "40 0";
+            extent = "1240 60";
+            profile = GuiDefaultProfile;
+            stackingType = "Horizontal";
+            padding = "10";
+            horizSizing = "center";
+            vertSizing = "center";
+         };
+         
+         new GuiControl(GameMenuNavButtonOverlay) {
+            extent = "1281 60";
+            horizSizing = "width";
+            vertSizing = "height";
+            profile = GuiNonModalDefaultProfile;
+            
+            new GuiBitmapCtrl(GameMenuPrevNavIcon) {
+               BitmapAsset = "UI:Keyboard_Black_Q_image";
+               position = "0 24";
+               extent = "40 40";
+               profile = GuiNonModalDefaultProfile;
+               vertSizing = "top";
+            };
+            
+            new GuiBitmapCtrl(GameMenuNextNavIcon) {
+               BitmapAsset = "UI:Keyboard_Black_E_image";
+               position = "0 24";
+               extent = "40 40";
+               profile = GuiNonModalDefaultProfile;
+               vertSizing = "top";
+            };
+         };
+      };
+   };
+   new GuiPanel(GameMenuButtonPanel) {
+      position = "0 683";
+      extent = "1281 40";
+      horizSizing = "width";
+      vertSizing = "top";
+      profile = "GuiMenuPanelProfile";
+      tooltipProfile = "GuiToolTipProfile";
+
+      new GuiIconButtonCtrl(GameMenuBackBtn) {
+         BitmapAsset = "UI:Keyboard_Black_Escape_image";
+         sizeIconToButton = "1";
+         makeIconSquare = "1";
+         textLocation = "Center";
+         text = "Back";
+         position = "16 0";
+         extent = "140 40";
+         vertSizing = "center";
+         profile = "GuiMenuButtonProfile";
+         command = "Canvas.popDialog(GameMenu);";
+         tooltipProfile = "GuiToolTipProfile";
+         class = "MenuInputButton";
+      };
+   };
+};
+//--- OBJECT WRITE END ---

@@ -18,7 +18,12 @@ void gotoWebPage(const char* address);
 bool getDocsURL(void* obj, const char* array, const char* data);
 const char* getDocsLink(const char* filename, U32 lineNumber);
 
+#ifdef TORQUE_TOOLS
 #define docsURL addGroup("Ungrouped");\
                 addProtectedField("docsURL", TypeBool, Offset(mDocsClick, ConsoleObject), &getDocsURL, &defaultProtectedGetFn, getDocsLink(__FILE__,__LINE__), AbstractClassRep::FieldFlags::FIELD_ComponentInspectors);\
                 endGroup("Ungrouped")
+#else
+#define docsURL NULL
+#endif
+
 #endif

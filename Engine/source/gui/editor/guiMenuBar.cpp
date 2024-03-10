@@ -581,6 +581,7 @@ PopupMenu* GuiMenuBar::findMenu(String barTitle)
 //-----------------------------------------------------------------------------
 // Console Methods
 //-----------------------------------------------------------------------------
+#ifdef TORQUE_TOOLS
 DefineEngineMethod(GuiMenuBar, attachToCanvas, void, (const char *canvas, S32 pos), , "(GuiCanvas, pos)")
 {
    GuiCanvas* canv = dynamic_cast<GuiCanvas*>(Sim::findObject(canvas));
@@ -597,6 +598,7 @@ DefineEngineMethod(GuiMenuBar, removeFromCanvas, void, (), , "()")
    if(canvas)
       canvas->setMenuBar(nullptr);
 }
+#endif
 
 DefineEngineMethod(GuiMenuBar, getMenuCount, S32, (), , "()")
 {

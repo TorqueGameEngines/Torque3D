@@ -19,8 +19,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
-#ifndef _MATRIXVEC_H_
-#define _MATRIXVEC_H_
+#ifndef _TransformVec3D_H_
+#define _TransformVec3D_H_
 #include "math/util/relationVec.h"
 
 #ifndef _MMATRIX_H_
@@ -220,7 +220,7 @@ template<> inline void RelationVec3D::orbit(S32 id, U32 axis, F32 radianDelta)
    mCachedResult = false;
 };
 
-class MatrixVec : public RelationVec3D, public SimObject
+class TransformVec3D : public RelationVec3D, public SimObject
 {
    typedef SimObject Parent;
 public:
@@ -229,7 +229,7 @@ public:
    void setTransform(S32 id, AngAxisF trans) { setCached(false); };
    void constrain(S32 id) { setCached(false); };
 
-   MatrixVec() {};
-   DECLARE_CONOBJECT(MatrixVec);
+   TransformVec3D() {};
+   DECLARE_CONOBJECT(TransformVec3D);
 };
 #endif

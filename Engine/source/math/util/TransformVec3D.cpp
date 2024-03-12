@@ -25,12 +25,12 @@
 #include "console/engineAPI.h"
 #include "math/mAngAxis.h"
 #include "math/mTransform.h"
-#include "math/util/matrixVec.h"
+#include "math/util/TransformVec3D.h"
 
-IMPLEMENT_CONOBJECT(MatrixVec);
-ConsoleDocClass(MatrixVec, "Matrix Relational Vector");
+IMPLEMENT_CONOBJECT(TransformVec3D);
+ConsoleDocClass(TransformVec3D, "Matrix Relational Vector");
 
-void testMatrixVec()
+void testTransformVec3D()
 {
    RelationVec3D tMat;
    tMat.push(-1, MatrixF());
@@ -49,19 +49,19 @@ void testMatrixVec()
 }
 
 
-DefineEngineFunction(testMatrixVec, void, (), ,
-   "testMatrixVec\n"
+DefineEngineFunction(testTransformVec3D, void, (), ,
+   "testTransformVec3D\n"
    "@ingroup Math")
 {
-   testMatrixVec();
+   testTransformVec3D();
 }
 
-DefineEngineMethod(MatrixVec, push, void, (S32 inRootID, TransformF inTransform), , "")
+DefineEngineMethod(TransformVec3D, push, void, (S32 inRootID, TransformF inTransform), , "")
 {
    object->push(inRootID, inTransform.getMatrix());
 }
 
-DefineEngineMethod(MatrixVec, dumpVals, void, (), , "")
+DefineEngineMethod(TransformVec3D, dumpVals, void, (), , "")
 {
    for (U32 i = 0; i < object->refLocal()->size(); i++)
    {
@@ -71,19 +71,19 @@ DefineEngineMethod(MatrixVec, dumpVals, void, (), , "")
    }
 }
 
-DefineEngineMethod(MatrixVec, getTransform, TransformF, (S32 id, bool global), (0, false), "")
+DefineEngineMethod(TransformVec3D, getTransform, TransformF, (S32 id, bool global), (0, false), "")
 {
    MatrixF* space = (global) ? object->global(id) : object->local(id);
    return TransformF(*space);
 }
 
-DefineEngineMethod(MatrixVec, getPosition, Point3F, (S32 id, bool global), (0, false), "")
+DefineEngineMethod(TransformVec3D, getPosition, Point3F, (S32 id, bool global), (0, false), "")
 {
    MatrixF* space = (global) ? object->global(id) : object->local(id);
    return space->getPosition();
 }
 
-DefineEngineMethod(MatrixVec, getRotation, AngAxisF, (S32 id, bool global), (0, false), "")
+DefineEngineMethod(TransformVec3D, getRotation, AngAxisF, (S32 id, bool global), (0, false), "")
 {
    MatrixF* space = (global) ? object->global(id) : object->local(id);
    AngAxisF aa(*space);
@@ -91,27 +91,27 @@ DefineEngineMethod(MatrixVec, getRotation, AngAxisF, (S32 id, bool global), (0, 
    return aa;
 }
 
-DefineEngineMethod(MatrixVec, getEuler, EulerF, (S32 id, bool global), (0, false), "")
+DefineEngineMethod(TransformVec3D, getEuler, EulerF, (S32 id, bool global), (0, false), "")
 {
    MatrixF* space = (global) ? object->global(id) : object->local(id);
    return space->toEuler();
 }
 
 
-DefineEngineMethod(MatrixVec, setConstraint3DString, void, (S32 id, const char* constraintString), (0, ""), "")
+DefineEngineMethod(TransformVec3D, setConstraint3DString, void, (S32 id, const char* constraintString), (0, ""), "")
 {
    Constraint3D constraint;
    object->setConstraint(id, constraint.fromString(constraintString));
 }
 
 
-DefineEngineMethod(MatrixVec, setConstraint3D, void, (S32 id, Point3F inPosMin, Point3F inPosMax, Point3F inRotMin, Point3F inRotMax, Point3F inScaleMin, Point3F inScaleMax),, "")
+DefineEngineMethod(TransformVec3D, setConstraint3D, void, (S32 id, Point3F inPosMin, Point3F inPosMax, Point3F inRotMin, Point3F inRotMax, Point3F inScaleMin, Point3F inScaleMax),, "")
 {
    Constraint3D constraint;
    object->setConstraint(id, Constraint3D(inPosMin, inPosMax, inRotMin, inRotMax, inScaleMin, inScaleMax));
 }
 
-DefineEngineMethod(MatrixVec, getConstraint3D, const char*, (S32 id),, "")
+DefineEngineMethod(TransformVec3D, getConstraint3D, const char*, (S32 id),, "")
 {
    return object->getConstraint(id)->toString().c_str();
 }

@@ -27,10 +27,10 @@ typedef RelationVec<Point3F, Point2F> RelationVec2D;
 
 template<> inline String Constraint2D::toString()
 {
-   String retval = String::ToString("%g %g %g", mRanges[0].x, mRanges[0].y, mRanges[0].z);
+   String retval = String::ToString("%g %g", mRanges[0].x, mRanges[0].y);
    for (U32 i = 1; i < MaxTypes; i++)
    {
-      retval += String::ToString(" %g %g %g", mRanges[i].x, mRanges[i].y, mRanges[i].z);
+      retval += String::ToString(" %g %g", mRanges[i].x, mRanges[i].y);
    }
    return retval;
 };
@@ -44,10 +44,9 @@ template<> inline Constraint2D Constraint2D::fromString(String inString)
    U32 offset = 0;
    for (U32 i = 0; i < 3 * MaxTypes; i += 3)
    {
-      Point3F range;
+      Point2F range;
       range.x = dAtof(elements[i].c_str());
       range.y = dAtof(elements[i + 1].c_str());
-      range.z = dAtof(elements[i + 2].c_str());
       outval[offset] = range;
       offset++;
    };

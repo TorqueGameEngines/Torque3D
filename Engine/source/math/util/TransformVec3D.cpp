@@ -19,11 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
-
-#include "math/util/relationVec.h"
-#include "console/simBase.h"
 #include "console/engineAPI.h"
-#include "math/mAngAxis.h"
 #include "math/mTransform.h"
 #include "math/util/TransformVec3D.h"
 

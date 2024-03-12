@@ -23,30 +23,6 @@
 #define _TransformVec3D_H_
 #include "math/util/relationVec.h"
 
-#ifndef _MMATRIX_H_
-#include "math/mMatrix.h"
-#endif
-
-#ifndef _CONSOLEOBJECT_H_
-#include "console/simObject.h"
-#endif
-
-#ifndef _MQUAT_H_
-#include "math/mQuat.h"
-#endif
-
-#ifndef _MANGAXIS_H_
-#include "math/mAngAxis.h"
-#endif
-
-#ifndef _CONSTRAINTS_H_
-#include "math/util/constraints.h"
-#endif
-
-#ifndef _MMATHFN_H_
-#include "math/mMathFn.h"
-#endif
-
 typedef Constraint<Point3F> Constraint3D;
 typedef RelationVec<MatrixF, Point3F> RelationVec3D;
 

@@ -23,8 +23,8 @@
 #ifndef _RELATIONVEC_H_
 #define _RELATIONVEC_H_
 
-#ifndef _TVECTOR_H_
-#include "core/util/tVector.h"
+#ifndef _MATHUTILS_H_
+#include "math\mathUtils.h"
 #endif
 
 #ifndef _CONSTRAINTS_H_

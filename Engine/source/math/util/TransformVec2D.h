@@ -19,3 +19,44 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#ifndef _TransformVec2D_H_
+#define _TransformVec2D_H_
+#include "math/util/relationVec.h"
+typedef Constraint<Point2F> Constraint2D; //pos xy + rotation
+typedef RelationVec<Point3F, Point2F> RelationVec2D;
+
+template<> inline String Constraint2D::toString()
+{
+   String retval = String::ToString("%g %g %g", mRanges[0].x, mRanges[0].y, mRanges[0].z);
+   for (U32 i = 1; i < MaxTypes; i++)
+   {
+      retval += String::ToString(" %g %g %g", mRanges[i].x, mRanges[i].y, mRanges[i].z);
+   }
+   return retval;
+};
+
+template<> inline Constraint2D Constraint2D::fromString(String inString)
+{
+   Point2F outval[MaxTypes];
+   Vector<String> elements;
+   inString.split(" ", elements);
+   AssertWarn(elements.size() == 3 * MaxTypes, avar("fromString got %d entries, expected 3x%d", elements.size(), MaxTypes));
+   U32 offset = 0;
+   for (U32 i = 0; i < 3 * MaxTypes; i += 3)
+   {
+      Point3F range;
+      range.x = dAtof(elements[i].c_str());
+      range.y = dAtof(elements[i + 1].c_str());
+      range.z = dAtof(elements[i + 2].c_str());
+      outval[offset] = range;
+      offset++;
+   };
+   return Constraint(outval);
+};
+
+template<> inline void RelationVec2D::setPosition(S32 id, Point2F pos)
+{
+   mLocal[id] = Point3F(pos.x, pos.y, mLocal[id].z);
+   mCachedResult = false;
+};
+#endif

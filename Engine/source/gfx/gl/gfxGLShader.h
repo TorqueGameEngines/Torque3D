@@ -29,96 +29,95 @@
 #include "core/util/tSignal.h"
 #include "core/util/tDictionary.h"
 
-class GFXGLShaderConstHandle;
 class FileStream;
-class GFXGLShaderConstBuffer;
 class GFXGLDevice;
+class GFXGLShader;
 
-class GFXGLShader : public GFXShader
+struct BufferRange
 {
-   typedef Map<String, GFXGLShaderConstHandle*> HandleMap;
+   U32 mBufMin = U32_MAX;
+   U32 mBufMax = 0;
+
+   inline void addSlot(U32 slot)
+   {
+      mBufMin = getMin(mBufMin, slot);
+      mBufMax = getMax(mBufMax, slot);
+   }
+
+   inline bool isValid() const { return mBufMin <= mBufMax; }
+};
+
+struct ConstantBuffer
+{
+   GLuint bufHandle;
+   U8* data;
+   U32 size;
+   bool isDirty;
+};
+
+class GFXGLShaderConstHandle : public GFXShaderConstHandle
+{
+   friend class GFXGLShader;
+
 public:
-   GFXGLShader(GFXGLDevice* device);
-   virtual ~GFXGLShader();
+   // DX side needs the description map as the same uniform can exist across stages. for gl it is program wide.
+   GFXGLShaderConstHandle(GFXGLShader* shader);
+   GFXGLShaderConstHandle(GFXGLShader* shader,
+      const GFXShaderConstDesc& desc);
 
-   /// @name GFXShader interface
-   /// @{
-   virtual GFXShaderConstHandle* getShaderConstHandle(const String& name);
-   virtual GFXShaderConstHandle* findShaderConstHandle(const String& name);
+   void reinit(const GFXShaderConstDesc& desc);
 
-   /// Returns our list of shader constants, the material can get this and just set the constants it knows about
-   virtual const Vector<GFXShaderConstDesc>& getShaderConstDesc() const;
+   virtual ~GFXGLShaderConstHandle();
+   const GFXShaderConstDesc getDesc();
+   const String& getName() const { return mDesc.name; }
+   GFXShaderConstType getType() const { return mDesc.constType; }
+   U32 getArraySize() const { return mDesc.arraySize; }
 
-   /// Returns the alignment value for constType
-   virtual U32 getAlignmentValue(const GFXShaderConstType constType) const;
+   U32 getSize() const { return mDesc.size; }
+   void setValid(bool valid) { mValid = valid; }
+   /// @warning This will always return the value assigned when the shader was
+   /// initialized.  If the value is later changed this method won't reflect that.
+   S32 getSamplerRegister() const { return (!isSampler() || !mValid) ? -1 : mDesc.samplerReg; }
 
-   virtual GFXShaderConstBufferRef allocConstBuffer();
+   // Returns true if this is a handle to a sampler register.
+   bool isSampler() const
+   {
+      return (getType() >= GFXSCT_Sampler);
+   }
 
-   /// @}
+   /// Restore to uninitialized state.
+   void clear()
+   {
+      mShader = NULL;
+      mInstancingConstant = false;
+      mValid = false;
+   }
 
-   /// @name GFXResource interface
-   /// @{
-   virtual void zombify();
-   virtual void resurrect() { reload(); }
-   virtual const String describeSelf() const;
-   /// @}
-
-   /// Activates this shader in the GL context.
-   void useProgram();
-
-protected:
-
-   friend class GFXGLShaderConstBuffer;
-   friend class GFXGLShaderConstHandle;
-
-   virtual bool _init();
-
-   bool initShader(  const Torque::Path &file,
-                     GFXShaderStage stage,
-                     const Vector<GFXShaderMacro> &macros );
-
-   void clearShaders();
-   void initConstantDescs();
-   void initHandles();
-   void setConstantsFromBuffer(GFXGLShaderConstBuffer* buffer);
-
-   static char* _handleIncludes( const Torque::Path &path, FileStream *s );
-
-   static bool _loadShaderFromStream(  GLuint shader,
-                                       const Torque::Path& path,
-                                       FileStream* s,
-                                       const Vector<GFXShaderMacro>& macros );
-
-   /// @name Internal GL handles
-   /// @{
-   GLuint mVertexShader;
-   GLuint mPixelShader;
-   GLuint mGeometryShader;
-   GLuint mProgram;
-   /// @}
-
-   Vector<GFXShaderConstDesc> mConstants;
-   U32 mConstBufferSize;
-   U8* mConstBuffer;
-   HandleMap mHandles;
-   GFXGLDevice* mDevice;
-   Vector<GFXGLShaderConstHandle*> mValidHandles;
+   GFXShaderConstDesc mDesc;
+   GFXGLShader* mShader;
+   bool mUBOUniform;
+   bool mInstancingConstant;
 };
 
 class GFXGLShaderConstBuffer : public GFXShaderConstBuffer
 {
 public:
-   GFXGLShaderConstBuffer(GFXGLShader* shader, U32 bufSize, U8* existingConstants);
+   // -1 is the global buffer.
+   typedef Map<S32, ConstantBuffer> BufferMap;
+
+   GFXGLShaderConstBuffer(GFXGLShader* shader);
    ~GFXGLShaderConstBuffer();
 
    /// Called by GFXGLDevice to activate this buffer.
-   void activate();
+   void activate(GFXGLShaderConstBuffer* prevShaderBuffer);
+
+   void addBuffer(S32 bufBindingPoint, U32 size);
 
    /// Called when the shader this buffer references is reloaded.
-   void onShaderReload( GFXGLShader *shader );
+   void onShaderReload(GFXGLShader* shader);
 
    // GFXShaderConstBuffer
-   virtual GFXShader* getShader() { return mShader; }
+   virtual GFXShader* getShader();
    virtual void set(GFXShaderConstHandle* handle, const F32 fv);
    virtual void set(GFXShaderConstHandle* handle, const Point2F& fv);
    virtual void set(GFXShaderConstHandle* handle, const Point3F& fv);
@@ -148,14 +147,91 @@ public:
 private:
 
    friend class GFXGLShader;
-   U8* mBuffer;
+
    WeakRefPtr<GFXGLShader> mShader;
+   BufferMap mBufferMap;
 
    template<typename ConstType>
    void internalSet(GFXShaderConstHandle* handle, const ConstType& param);
 
    template<typename ConstType>
    void internalSet(GFXShaderConstHandle* handle, const AlignedArray<ConstType>& fv);
+};
+
+class GFXGLShader : public GFXShader
+{
+   friend class GFXGLShaderConstBuffer;
+   friend class GFXGLShaderConstHandle;
+public:
+   typedef Map<String, GFXGLShaderConstHandle*> HandleMap;
+   typedef Map<String, GFXShaderConstDesc> BufferMap;
+
+   GFXGLShader(GFXGLDevice* device);
+   virtual ~GFXGLShader();
+
+   /// @name GFXShader interface
+   /// @{
+   virtual GFXShaderConstHandle* getShaderConstHandle(const String& name);
+   virtual GFXShaderConstHandle* findShaderConstHandle(const String& name);
+
+   /// Returns our list of shader constants, the material can get this and just set the constants it knows about
+   virtual const Vector<GFXShaderConstDesc>& getShaderConstDesc() const;
+
+   /// Returns the alignment value for constType
+   virtual U32 getAlignmentValue(const GFXShaderConstType constType) const;
+
+   virtual GFXShaderConstBufferRef allocConstBuffer();
+
+   /// @}
+
+   /// @name GFXResource interface
+   /// @{
+   virtual void zombify();
+   virtual void resurrect() { reload(); }
+   virtual const String describeSelf() const;
+   /// @}
+
+   /// Activates this shader in the GL context.
+   void useProgram();
+
+protected:
+   virtual bool _init();
+
+   bool initShader(const Torque::Path& file,
+      GFXShaderStage stage,
+      const Vector<GFXShaderMacro>& macros);
+
+   void clearShaders();
+
+   void initConstantDescs();
+   void initHandles();
+   void setConstantsFromBuffer(U8* buffer);
+
+   static char* _handleIncludes(const Torque::Path& path, FileStream* s);
+
+   static bool _loadShaderFromStream(GLuint shader,
+      const Torque::Path& path,
+      FileStream* s,
+      const Vector<GFXShaderMacro>& macros);
+
+   /// @name Internal GL handles
+   /// @{
+   GLuint mVertexShader;
+   GLuint mPixelShader;
+   GLuint mGeometryShader;
+   GLuint mProgram;
+   /// @}
+
+   U8* mGlobalConstBuffer;
+
+   Vector<GFXShaderConstDesc> mShaderConsts;
+
+   HandleMap mHandles;
+   BufferMap mBuffers;
+
+   GFXGLDevice* mDevice;
+
+   GFXShaderConstType convertConstType(GLenum constType);
 };
 
 #endif // _GFXGLSHADER_H_

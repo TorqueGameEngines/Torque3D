@@ -69,15 +69,15 @@ public:
    virtual ~GFXD3D11ShaderConstHandle();
    void addDesc(GFXShaderStage stage, const GFXShaderConstDesc& desc);
    const GFXShaderConstDesc getDesc(GFXShaderStage stage);
-   const String& getName() const { return mName; }
-   GFXShaderConstType getType() const { return mType; }
-   U32 getArraySize() const { return mArraySize; }
+   const String& getName() const { return mDesc.name; }
+   GFXShaderConstType getType() const { return mDesc.constType; }
+   U32 getArraySize() const { return mDesc.arraySize; }
 
-   U32 getSize() const { return mSize; }
+   U32 getSize() const { return mDesc.size; }
    void setValid(bool valid) { mValid = valid; }
    /// @warning This will always return the value assigned when the shader was
    /// initialized.  If the value is later changed this method won't reflect that.
-   S32 getSamplerRegister() const { return (!isSampler() || !mValid) ? -1 : mSampler; }
+   S32 getSamplerRegister() const { return (!isSampler() || !mValid) ? -1 : mDesc.samplerReg; }
 
    // Returns true if this is a handle to a sampler register.
    bool isSampler() const
@@ -93,13 +93,9 @@ public:
       mValid = false;
    }
 
+   GFXShaderConstDesc mDesc;
    GFXD3D11Shader* mShader;
    DescMap mDescMap;
-   String mName;
-   GFXShaderConstType mType;
-   U32 mSize;
-   U32 mArraySize;
-   S32 mSampler; // sampler number, will be -1 if not a sampler.
    U32 mStageFlags;
    bool mInstancingConstant;
 };

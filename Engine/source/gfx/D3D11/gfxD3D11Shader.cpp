@@ -95,12 +95,9 @@ HRESULT gfxD3D11Include::Close( THIS_ LPCVOID pData )
 
 GFXD3D11ShaderConstHandle::GFXD3D11ShaderConstHandle(GFXD3D11Shader* shader)
    : mShader(shader),
-   mSize(0),
-   mSampler(-1),
-   mArraySize(1),
    mInstancingConstant(false)
 {
-   mType = GFXSCT_ConstBuffer;
+   dMemset(&mDesc, 0, sizeof(mDesc));
    mValid = false;
    mStageFlags = 0;
 }
@@ -108,18 +105,15 @@ GFXD3D11ShaderConstHandle::GFXD3D11ShaderConstHandle(GFXD3D11Shader* shader)
 GFXD3D11ShaderConstHandle::GFXD3D11ShaderConstHandle(GFXD3D11Shader* shader,
                                                       const GFXShaderConstDesc& desc)
    : mShader(shader),
-   mSize(desc.size),
-   mSampler(desc.samplerReg),
-   mType(desc.constType),
-   mArraySize(desc.arraySize),
+   mDesc(desc),
    mInstancingConstant(false)
 {
    if (desc.constType == GFXSCT_ConstBuffer)
       mValid = false;
    else
       mValid = true;
-   addDesc(desc.shaderStage, desc);
 
+   addDesc(desc.shaderStage, desc);
    mStageFlags = desc.shaderStage;
 }
 
@@ -976,7 +970,7 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection* refTable,
                varDesc.constType = convertConstType(shaderTypeDesc);
 
 #ifdef D3D11_DEBUG_SPEW
-               Con::printf("Variable Name %s:, offset: %d, size: %d, constantDesc.Elements: %d", varDesc.name.c_str(), varDesc.StartOffset, varDesc.Size, varDesc.arraySize);
+               Con::printf("Variable Name %s:, offset: %d, size: %d, constantDesc.Elements: %d", varDesc.name.c_str(), varDesc.offset, varDesc.size, varDesc.arraySize);
 #endif
                mShaderConsts.push_back(varDesc);
             }

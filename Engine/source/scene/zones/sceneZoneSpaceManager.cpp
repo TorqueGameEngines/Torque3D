@@ -714,9 +714,10 @@ void SceneZoneSpaceManager::_zoneRemove( SceneObject* obj, bool freeList )
    PROFILE_SCOPE( SceneZoneSpaceManager_zoneRemove );
 
    // Remove the object from the zone lists.
-
+                                                                                        
    U32 numZones = 0;
    U32* zones = NULL;
+   bool zonesDirty = obj->mZoneRefDirty;
    zones = mObjectZoneLists.getValues(obj->mZoneListHandle, numZones);
 
    for (U32 i=0; i<numZones; i++)
@@ -724,7 +725,26 @@ void SceneZoneSpaceManager::_zoneRemove( SceneObject* obj, bool freeList )
       // Let the zone owner know we are removing an object
       // from its zones.
 
-      getZoneOwner( zones[i] )->_onZoneRemoveObject(obj);
+      SceneZoneSpace* space = getZoneOwner(zones[i]);
+
+      if (space == NULL)
+      {
+         AssertFatal(zonesDirty, "Object still has reference to removed zone");
+         continue;
+      }
+      
+      space->_onZoneRemoveObject(obj);
+
+      // Remove the object from the zones object list
+      Vector<SceneObject*>* objectList = getZoneObjects(zones[i]);
+      if (objectList)
+      {
+         Vector<SceneObject*>::iterator itr = T3D::find(objectList->begin(), objectList->end(), obj);
+         if (itr != objectList->end())
+         {
+            objectList->erase(itr);
+         }
+      }
    }
 
    // Clear the object's zoning state.
@@ -779,6 +799,12 @@ void SceneZoneSpaceManager::_setObjectZoneList( SceneObject* object, U32 numZone
       mObjectZoneLists.reallocList(object->mZoneListHandle, numZones, zoneList);
    }
 
+   // Make sure each zone has the object in its list
+   for (U32 i = 0; i < numZones; i++)
+   {
+      mZoneLists[zoneList[i]]->mObjects.push_back(object);
+   }
+
    object->mNumCurrZones = numZones;
 }
 
@@ -801,17 +827,16 @@ void SceneZoneSpaceManager::_clearZoneList( U32 zoneId )
 
       object->mNumCurrZones --;
 
-      // If this is the only zone the object was in, mark
-      // its zoning state as dirty so it will get assigned
-      // to the outdoor zone on the next update.
-
-      if( object->mNumCurrZones == 0 )
-         object->mZoneRefDirty = true;
+      // Keep things simple here and flag the objects zone list for re-calculation
+      object->mZoneRefDirty = true;
 
       // Let the zone know we have removed the object.
 
       zoneSpace->_onZoneRemoveObject( object );
    }
+
+   // Reset all objects for zone
+   list->mObjects.clear();
 }
 
 //-----------------------------------------------------------------------------

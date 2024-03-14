@@ -51,6 +51,7 @@ class GFXD3D11Device : public GFXDevice
 {
 public:
    typedef Map<U32, ID3D11SamplerState*> SamplerMap;
+   typedef Map<String, ID3D11Buffer*> DeviceBufferMap;
 private:
 
    friend class GFXResource;
@@ -105,6 +106,7 @@ protected:
 
    /// Used to lookup sampler state for a given hash key
    SamplerMap mSamplersMap;
+   DeviceBufferMap mDeviceBufferMap;
 
    ID3D11RenderTargetView* mDeviceBackBufferView;
    ID3D11DepthStencilView* mDeviceDepthStencilView;
@@ -326,6 +328,9 @@ public:
    const SamplerMap &getSamplersMap() const { return mSamplersMap; }
    SamplerMap &getSamplersMap(){ return mSamplersMap; }
    const char* interpretDebugResult(long result);
+
+   // grab device buffer.
+   ID3D11Buffer* getDeviceBuffer(const GFXShaderConstDesc desc);
 };
 
 #endif

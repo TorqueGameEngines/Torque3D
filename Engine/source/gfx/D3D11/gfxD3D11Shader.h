@@ -117,7 +117,7 @@ public:
    /// @param mPrevShaderBuffer The previously active buffer
    void activate(GFXD3D11ShaderConstBuffer *prevShaderBuffer);
 
-   void addBuffer(U32 bufBindingPoint, GFXShaderStage shaderStage, U32 size);
+   void addBuffer(const GFXShaderConstDesc desc);
 
    /// Called from GFXD3D11Shader when constants have changed and need
    /// to be the shader this buffer references is reloaded.
@@ -161,7 +161,7 @@ protected:
    void setMatrix(const GFXShaderConstDesc& handle, const U32 inSize, const void* data, U8* basePointer);
    void internalSet(GFXShaderConstHandle* handle, const U32 inSize, const void* data);
 
-   ID3D11Buffer* mBoundBuffers[6][3];
+   ID3D11Buffer* mBoundBuffers[6][16];
 };
 
 class gfxD3D11Include;

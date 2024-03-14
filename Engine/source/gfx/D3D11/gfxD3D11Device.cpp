@@ -160,6 +160,11 @@ GFXD3D11Device::~GFXD3D11Device()
    for (; sampIter != mSamplersMap.end(); ++sampIter)
       SAFE_RELEASE(sampIter->value);
 
+   // Free device buffers
+   DeviceBufferMap::Iterator bufferIter = mDeviceBufferMap.begin();
+   for (; bufferIter != mDeviceBufferMap.end(); ++bufferIter)
+      SAFE_RELEASE(bufferIter->value);
+
    // Free the vertex declarations.
    VertexDeclMap::Iterator iter = mVertexDecls.begin();
    for (; iter != mVertexDecls.end(); ++iter)
@@ -1860,4 +1865,40 @@ const char* GFXD3D11Device::interpretDebugResult(long result)
       break;
    }
    return error;
+}
+
+ID3D11Buffer* GFXD3D11Device::getDeviceBuffer(const GFXShaderConstDesc desc)
+{
+   String name(desc.name + "_" + String::ToString(desc.size));
+   DeviceBufferMap::Iterator buf = mDeviceBufferMap.find(name);
+   if (buf != mDeviceBufferMap.end())
+   {
+      mDeviceBufferMap[name]->AddRef();
+      return mDeviceBufferMap[name];
+   }
+
+   ID3D11Buffer* tempBuf;
+   D3D11_BUFFER_DESC cbDesc;
+   cbDesc.ByteWidth = desc.size;
+   cbDesc.Usage = D3D11_USAGE_DEFAULT;
+   cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+   cbDesc.CPUAccessFlags = 0;
+   cbDesc.MiscFlags = 0;
+   cbDesc.StructureByteStride = 0;
+
+   HRESULT hr;
+   hr = D3D11DEVICE->CreateBuffer(&cbDesc, NULL, &tempBuf);
+
+   if (FAILED(hr))
+   {
+      AssertFatal(false, "Failed to create device buffer.");
+   }
+
+   mDeviceBufferMap[name] = tempBuf;
+
+#ifdef TORQUE_DEBUG
+   tempBuf->SetPrivateData(WKPDID_D3DDebugObjectName, name.size(), name.c_str());
+#endif
+
+   return tempBuf;
 }

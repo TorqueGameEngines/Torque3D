@@ -49,9 +49,9 @@ GFXShader::~GFXShader()
 }
 
 #ifndef TORQUE_OPENGL
-bool GFXShader::init(   const Torque::Path &vertFile, 
-                        const Torque::Path &pixFile, 
-                        F32 pixVersion, 
+bool GFXShader::init(   const Torque::Path &vertFile,
+                        const Torque::Path &pixFile,
+                        F32 pixVersion,
                         const Vector<GFXShaderMacro> &macros )
 {
    Vector<String> samplerNames;
@@ -59,13 +59,18 @@ bool GFXShader::init(   const Torque::Path &vertFile,
 }
 #endif
 
-bool GFXShader::init(   const Torque::Path &vertFile, 
-                        const Torque::Path &pixFile, 
-                        F32 pixVersion, 
+bool GFXShader::init(   F32 pixVersion,
                         const Vector<GFXShaderMacro> &macros,
                         const Vector<String> &samplerNames,
                         GFXVertexFormat *instanceFormat)
 {
+   // early out.
+   if (mVertexFile.isEmpty() && mPixelFile.isEmpty() && mGeometryFile.isEmpty())
+   {
+      Con::errorf("Shader files empty, please call setShaderStageFile from shaderData");
+      return false;
+   }
+
    // Take care of instancing
    if (instanceFormat)
    {
@@ -74,8 +79,6 @@ bool GFXShader::init(   const Torque::Path &vertFile,
    }
 
    // Store the inputs for use in reloading.
-   mVertexFile = vertFile;
-   mPixelFile = pixFile;
    mPixVersion = pixVersion;
    mMacros = macros;
    mSamplerNamesOrdered = samplerNames;
@@ -91,8 +94,12 @@ bool GFXShader::init(   const Torque::Path &vertFile,
    _updateDesc();
 
    // Add file change notifications for reloads.
-   Torque::FS::AddChangeNotification( mVertexFile, this, &GFXShader::_onFileChanged );
-   Torque::FS::AddChangeNotification( mPixelFile, this, &GFXShader::_onFileChanged );
+   if(!mVertexFile.isEmpty())
+      Torque::FS::AddChangeNotification( mVertexFile, this, &GFXShader::_onFileChanged );
+   if(!mPixelFile.isEmpty())
+      Torque::FS::AddChangeNotification( mPixelFile, this, &GFXShader::_onFileChanged );
+   if(!mGeometryFile.isEmpty())
+      Torque::FS::AddChangeNotification( mGeometryFile, this, &GFXShader::_onFileChanged);
 
    return true;
 }
@@ -119,11 +126,11 @@ bool GFXShader::reload()
 
 void GFXShader::_updateDesc()
 {
-   mDescription = String::ToString( "Files: %s, %s Pix Version: %0.2f\nMacros: ", 
+   mDescription = String::ToString( "Files: %s, %s Pix Version: %0.2f\nMacros: ",
       mVertexFile.getFullPath().c_str(), mPixelFile.getFullPath().c_str(), mPixVersion );
 
    GFXShaderMacro::stringize( smGlobalMacros, &mDescription );
-   GFXShaderMacro::stringize( mMacros, &mDescription );   
+   GFXShaderMacro::stringize( mMacros, &mDescription );
 }
 
 void GFXShader::addGlobalMacro( const String &name, const String &value )
@@ -161,8 +168,26 @@ bool GFXShader::removeGlobalMacro( const String &name )
    return false;
 }
 
+void GFXShader::setShaderStageFile(const GFXShaderStage stage, const Torque::Path& filePath)
+{
+   switch (stage)
+   {
+   case GFXShaderStage::VERTEX_SHADER:
+      mVertexFile = filePath;
+      break;
+   case GFXShaderStage::PIXEL_SHADER:
+      mPixelFile = filePath;
+      break;
+   case GFXShaderStage::GEOMETRY_SHADER:
+      mGeometryFile = filePath;
+      break;
+   default:
+      break;
+   }
+}
+
 void GFXShader::_unlinkBuffer( GFXShaderConstBuffer *buf )
-{   
+{
    Vector<GFXShaderConstBuffer*>::iterator iter = mActiveBuffers.begin();
    for ( ; iter != mActiveBuffers.end(); iter++ )
    {
@@ -177,7 +202,7 @@ void GFXShader::_unlinkBuffer( GFXShaderConstBuffer *buf )
 }
 
 
-DefineEngineFunction( addGlobalShaderMacro, void, 
+DefineEngineFunction( addGlobalShaderMacro, void,
    ( const char *name, const char *value ), ( nullAsType<const char*>() ),
    "Adds a global shader macro which will be merged with the script defined "
    "macros on every shader.  The macro will replace the value of an existing "
@@ -189,7 +214,7 @@ DefineEngineFunction( addGlobalShaderMacro, void,
    GFXShader::addGlobalMacro( name, value );
 }
 
-DefineEngineFunction( removeGlobalShaderMacro, void, ( const char *name ),, 
+DefineEngineFunction( removeGlobalShaderMacro, void, ( const char *name ),,
    "Removes an existing global macro by name.\n"
    "@see addGlobalShaderMacro\n"
    "@ingroup Rendering\n" )

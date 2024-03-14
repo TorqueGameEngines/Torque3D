@@ -47,7 +47,7 @@ protected:
    ///
    static Vector<ShaderData*> smAllShaderData;
 
-   typedef HashTable<String,GFXShaderRef> ShaderCache;
+   typedef HashTable<String, GFXShaderRef> ShaderCache;
 
    ShaderCache mShaders;
 
@@ -56,12 +56,12 @@ protected:
    F32 mPixVersion;
 
    StringTableEntry mDXVertexShaderName;
-
    StringTableEntry mDXPixelShaderName;
+   StringTableEntry mDXGeometryShaderName;
 
    StringTableEntry mOGLVertexShaderName;
-
    StringTableEntry mOGLPixelShaderName;
+   StringTableEntry mOGLGeometryShaderName;
 
    /// A semicolon, tab, or newline delimited string of case
    /// sensitive defines that are passed to the shader compiler.
@@ -80,40 +80,40 @@ protected:
    /// them if the content has changed.
    const Vector<GFXShaderMacro>& _getMacros();
 
-   /// Helper for converting an array of macros 
+   /// Helper for converting an array of macros
    /// into a formatted string.
-   void _stringizeMacros(  const Vector<GFXShaderMacro> &macros, 
-                           String *outString );
+   void _stringizeMacros(const Vector<GFXShaderMacro>& macros,
+      String* outString);
 
    /// Creates a new shader returning NULL on error.
-   GFXShader* _createShader( const Vector<GFXShaderMacro> &macros );
+   GFXShader* _createShader(const Vector<GFXShaderMacro>& macros);
 
    /// @see LightManager::smActivateSignal
-   static void _onLMActivate( const char *lm, bool activate );
+   static void _onLMActivate(const char* lm, bool activate);
 
    enum
    {
       NumTextures = 16
    };
 
-   String mSamplerNames[NumTextures]; 
+   String mSamplerNames[NumTextures];
    bool mRTParams[NumTextures];
 
-   bool _checkDefinition(GFXShader *shader);   
+   bool _checkDefinition(GFXShader* shader);
 
 public:
 
-   void setSamplerName(const String &name, int idx) { mSamplerNames[idx] = name; }
+   void setSamplerName(const String& name, int idx) { mSamplerNames[idx] = name; }
    String getSamplerName(int idx) const { return mSamplerNames[idx]; }
 
-   bool hasSamplerDef(const String &samplerName, int &pos) const;
+   bool hasSamplerDef(const String& samplerName, int& pos) const;
    bool hasRTParamsDef(const int pos) const { return mRTParams[pos]; }
 
    ShaderData();
 
-   /// Returns an initialized shader instance or NULL 
+   /// Returns an initialized shader instance or NULL
    /// if the shader failed to be created.
-   GFXShader* getShader( const Vector<GFXShaderMacro> &macros = Vector<GFXShaderMacro>() );
+   GFXShader* getShader(const Vector<GFXShaderMacro>& macros = Vector<GFXShaderMacro>());
 
    /// Forces a reinitialization of all the instanced shaders.
    void reloadShaders();
@@ -124,7 +124,7 @@ public:
 
    /// Returns the required pixel shader version for this shader.
    F32 getPixVersion() const { return mPixVersion; }
-   
+
    // SimObject
    virtual bool onAdd();
    virtual void onRemove();

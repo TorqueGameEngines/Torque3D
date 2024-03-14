@@ -150,3 +150,41 @@ singleton ShaderData( CubemapSaveShader )
 	
    pixVersion = 3.0;
 };
+
+//-----------------------------------------------------------------------------
+// GUI shaders
+//-----------------------------------------------------------------------------
+singleton ShaderData( RoundedRectangleGUI )
+{
+   DXVertexShaderFile   = $Core::CommonShaderPath @ "/fixedFunction/colorV.hlsl";
+   DXPixelShaderFile    = $Core::CommonShaderPath @ "/fixedFunction/roundedRectangleP.hlsl";
+
+   OGLVertexShaderFile  = $Core::CommonShaderPath @ "/fixedFunction/gl/colorV.glsl";
+   OGLPixelShaderFile   = $Core::CommonShaderPath @ "/fixedFunction/gl/roundedRectangleP.glsl";
+      
+   pixVersion = 3.0;   
+};
+
+singleton ShaderData( CircularGUI )
+{
+   DXVertexShaderFile   = $Core::CommonShaderPath @ "/fixedFunction/colorV.hlsl";
+   DXPixelShaderFile    = $Core::CommonShaderPath @ "/fixedFunction/circleP.hlsl";
+
+   OGLVertexShaderFile  = $Core::CommonShaderPath @ "/fixedFunction/gl/colorV.glsl";
+   OGLPixelShaderFile   = $Core::CommonShaderPath @ "/fixedFunction/gl/circleP.glsl";
+      
+   pixVersion = 3.0;   
+};
+
+singleton ShaderData( ThickLineGUI )
+{
+   DXVertexShaderFile   = $Core::CommonShaderPath @ "/fixedFunction/colorV.hlsl";
+   DXGeometryShaderFile = $Core::CommonShaderPath @ "/fixedFunction/thickLineG.hlsl";
+   DXPixelShaderFile    = $Core::CommonShaderPath @ "/fixedFunction/thickLineP.hlsl";
+
+   OGLVertexShaderFile   = $Core::CommonShaderPath @ "/fixedFunction/gl/colorV.glsl";
+   OGLGeometryShaderFile = $Core::CommonShaderPath @ "/fixedFunction/gl/thickLineG.glsl";
+   OGLPixelShaderFile    = $Core::CommonShaderPath @ "/fixedFunction/gl/thickLineP.glsl";
+      
+   pixVersion = 3.0;   
+};

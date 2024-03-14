@@ -29,282 +29,87 @@
 #include "core/util/tDictionary.h"
 #include "gfx/gfxShader.h"
 #include "gfx/gfxResource.h"
-#include "gfx/genericConstBuffer.h"
 #include "gfx/D3D11/gfxD3D11Device.h"
 
 class GFXD3D11Shader;
 
-enum CONST_CLASS
+typedef CompoundKey<U32, U32> BufferKey;
+
+struct BufferRange
 {
-	D3DPC_SCALAR,
-	D3DPC_VECTOR,
-	D3DPC_MATRIX_ROWS,
-	D3DPC_MATRIX_COLUMNS,
-	D3DPC_OBJECT,
-	D3DPC_STRUCT
-};
+   U32 mBufMin = U32_MAX;
+   U32 mBufMax = 0;
 
-enum CONST_TYPE 
-{ 
-   D3DPT_VOID, 
-   D3DPT_BOOL, 
-   D3DPT_INT, 
-   D3DPT_FLOAT, 
-   D3DPT_STRING, 
-   D3DPT_TEXTURE, 
-   D3DPT_TEXTURE1D, 
-   D3DPT_TEXTURE2D, 
-   D3DPT_TEXTURE3D, 
-   D3DPT_TEXTURECUBE, 
-   D3DPT_SAMPLER, 
-   D3DPT_SAMPLER1D, 
-   D3DPT_SAMPLER2D, 
-   D3DPT_SAMPLER3D, 
-   D3DPT_SAMPLERCUBE, 
-   D3DPT_PIXELSHADER, 
-   D3DPT_VERTEXSHADER, 
-   D3DPT_PIXELFRAGMENT, 
-   D3DPT_VERTEXFRAGMENT
-};
-
-enum REGISTER_TYPE
-{
-	D3DRS_BOOL,
-	D3DRS_INT4,
-	D3DRS_FLOAT4,
-	D3DRS_SAMPLER
-};
-
-struct ConstantDesc
-{
-   String Name = String::EmptyString;
-   S32 RegisterIndex = 0;
-   S32 RegisterCount = 0;
-   S32 Rows = 0;
-   S32 Columns = 0;
-   S32 Elements = 0;
-   S32 StructMembers = 0;
-   REGISTER_TYPE RegisterSet = D3DRS_FLOAT4;
-   CONST_CLASS Class = D3DPC_SCALAR;
-   CONST_TYPE Type = D3DPT_FLOAT;
-   U32 Bytes = 0;
-};
-
-class ConstantTable
-{
-public:
-   bool Create(const void* data);
-
-   U32 GetConstantCount() const { return m_constants.size(); }
-   const String& GetCreator() const { return m_creator; } 
-
-   const ConstantDesc* GetConstantByIndex(U32 i) const { return &m_constants[i]; }
-   const ConstantDesc* GetConstantByName(const String& name) const;
-
-   void ClearConstants() { m_constants.clear(); }
-
-private:
-   Vector<ConstantDesc> m_constants;
-   String m_creator;
-};
-
-// Structs
-struct CTHeader
-{
-   U32 Size;
-   U32 Creator;
-   U32 Version;
-   U32 Constants;
-   U32 ConstantInfo;
-   U32 Flags;
-   U32 Target;
-};
-
-struct CTInfo
-{
-   U32 Name;
-   U16 RegisterSet;
-   U16 RegisterIndex;
-   U16 RegisterCount;
-   U16 Reserved;
-   U32 TypeInfo;
-   U32 DefaultValue;
-};
-
-struct CTType
-{
-   U16 Class;
-   U16 Type;
-   U16 Rows;
-   U16 Columns;
-   U16 Elements;
-   U16 StructMembers;
-   U32 StructMemberInfo;
-};
-
-// Shader instruction opcodes
-const U32 SIO_COMMENT = 0x0000FFFE;
-const U32 SIO_END = 0x0000FFFF;
-const U32 SI_OPCODE_MASK = 0x0000FFFF;
-const U32 SI_COMMENTSIZE_MASK = 0x7FFF0000;
-const U32 CTAB_CONSTANT = 0x42415443;
-
-// Member functions
-inline bool ConstantTable::Create(const void* data)
-{
-   const U32* ptr = static_cast<const U32*>(data);
-   while(*++ptr != SIO_END)
+   inline void addSlot(U32 slot)
    {
-      if((*ptr & SI_OPCODE_MASK) == SIO_COMMENT)
-      {
-         // Check for CTAB comment
-         U32 comment_size = (*ptr & SI_COMMENTSIZE_MASK) >> 16;
-         if(*(ptr+1) != CTAB_CONSTANT)
-         {
-            ptr += comment_size;
-            continue;
-         }
-
-         // Read header
-         const char* ctab = reinterpret_cast<const char*>(ptr+2);
-         size_t ctab_size = (comment_size-1)*4;
-
-         const CTHeader* header = reinterpret_cast<const CTHeader*>(ctab);
-         if(ctab_size < sizeof(*header) || header->Size != sizeof(*header))
-            return false;
-         m_creator = ctab + header->Creator;
-
-         // Read constants
-         m_constants.reserve(header->Constants);
-         const CTInfo* info = reinterpret_cast<const CTInfo*>(ctab + header->ConstantInfo);
-         for(U32 i = 0; i < header->Constants; ++i)
-         {
-            const CTType* type = reinterpret_cast<const CTType*>(ctab + info[i].TypeInfo);
-
-            // Fill struct
-            ConstantDesc desc;
-            desc.Name = ctab + info[i].Name;
-            desc.RegisterSet = static_cast<REGISTER_TYPE>(info[i].RegisterSet);
-            desc.RegisterIndex = info[i].RegisterIndex;
-            desc.RegisterCount = info[i].RegisterCount;
-            desc.Rows = type->Rows;
-            desc.Class = static_cast<CONST_CLASS>(type->Class);
-            desc.Type = static_cast<CONST_TYPE>(type->Type);
-            desc.Columns = type->Columns;
-            desc.Elements = type->Elements;
-            desc.StructMembers = type->StructMembers;
-            desc.Bytes = 4 * desc.Elements * desc.Rows * desc.Columns;
-            m_constants.push_back(desc);
-         }
-
-         return true;
-      }
+      mBufMin = getMin(mBufMin, slot);
+      mBufMax = getMax(mBufMax, slot);
    }
-   return false;
-}
 
-inline const ConstantDesc* ConstantTable::GetConstantByName(const String& name) const
+   inline bool isValid() const { return mBufMin <= mBufMax; }
+};
+
+struct ConstantBuffer
 {
-   Vector<ConstantDesc>::const_iterator it;
-   for(it = m_constants.begin(); it != m_constants.end(); ++it)
-   {
-      if(it->Name == name)
-         return &(*it);
-   }
-   return NULL;
-}
-
-/////////////////// Constant Buffers /////////////////////////////
-
-// Maximum number of CBuffers ($Globals & $Params)
-const U32 CBUFFER_MAX = 2;
-
-struct ConstSubBufferDesc
-{
-   U32 start;
+   U8* data;
    U32 size;
-
-   ConstSubBufferDesc() : start(0), size(0){}
-};
-
-class GFXD3D11ConstBufferLayout : public GenericConstBufferLayout
-{
-public:
-   GFXD3D11ConstBufferLayout();
-   /// Get our constant sub buffer data
-   Vector<ConstSubBufferDesc> &getSubBufferDesc(){ return mSubBuffers; }
-   
-   /// We need to manually set the size due to D3D11 alignment
-   void setSize(U32 size){ mBufferSize = size;}
-
-   /// Set a parameter, given a base pointer
-   virtual bool set(const ParamDesc& pd, const GFXShaderConstType constType, const U32 size, const void* data, U8* basePointer);
-
-protected:
-   /// Set a matrix, given a base pointer
-   virtual bool setMatrix(const ParamDesc& pd, const GFXShaderConstType constType, const U32 size, const void* data, U8* basePointer);
-
-   Vector<ConstSubBufferDesc> mSubBuffers;
+   bool isDirty;
 };
 
 class GFXD3D11ShaderConstHandle : public GFXShaderConstHandle
 {
-public:   
+   friend class GFXD3D11Shader;
+public:
+   typedef Map<GFXShaderStage, GFXShaderConstDesc> DescMap;
 
-   // GFXShaderConstHandle
-   const String& getName() const;
-   GFXShaderConstType getType() const;
-   U32 getArraySize() const;
+   GFXD3D11ShaderConstHandle(GFXD3D11Shader* shader);
+   GFXD3D11ShaderConstHandle(GFXD3D11Shader* shader,
+                              const GFXShaderConstDesc& desc);
 
-   WeakRefPtr<GFXD3D11Shader> mShader;
+   virtual ~GFXD3D11ShaderConstHandle();
+   void addDesc(GFXShaderStage stage, const GFXShaderConstDesc& desc);
+   const GFXShaderConstDesc getDesc(GFXShaderStage stage);
+   const String& getName() const { return mDesc.name; }
+   GFXShaderConstType getType() const { return mDesc.constType; }
+   U32 getArraySize() const { return mDesc.arraySize; }
 
-   bool mVertexConstant;
-   GenericConstBufferLayout::ParamDesc mVertexHandle;
-   bool mPixelConstant;
-   GenericConstBufferLayout::ParamDesc mPixelHandle;
-   
-   /// Is true if this constant is for hardware mesh instancing.
-   ///
-   /// Note: We currently store its settings in mPixelHandle.
-   ///
-   bool mInstancingConstant;
-
-   void setValid( bool valid ) { mValid = valid; }
-   S32 getSamplerRegister() const;
+   U32 getSize() const { return mDesc.size; }
+   void setValid(bool valid) { mValid = valid; }
+   /// @warning This will always return the value assigned when the shader was
+   /// initialized.  If the value is later changed this method won't reflect that.
+   S32 getSamplerRegister() const { return (!isSampler() || !mValid) ? -1 : mDesc.samplerReg; }
 
    // Returns true if this is a handle to a sampler register.
-   bool isSampler() const 
+   bool isSampler() const
    {
-      return ( mPixelConstant && mPixelHandle.constType >= GFXSCT_Sampler ) || ( mVertexConstant && mVertexHandle.constType >= GFXSCT_Sampler );
+      return (getType() >= GFXSCT_Sampler);
    }
 
    /// Restore to uninitialized state.
    void clear()
    {
       mShader = NULL;
-      mVertexConstant = false;
-      mPixelConstant = false;
       mInstancingConstant = false;
-      mVertexHandle.clear();
-      mPixelHandle.clear();
       mValid = false;
    }
 
-   GFXD3D11ShaderConstHandle();
+   GFXShaderConstDesc mDesc;
+   GFXD3D11Shader* mShader;
+   DescMap mDescMap;
+   U32 mStageFlags;
+   bool mInstancingConstant;
 };
 
 /// The D3D11 implementation of a shader constant buffer.
 class GFXD3D11ShaderConstBuffer : public GFXShaderConstBuffer
 {
-   friend class GFXD3D11Shader;
    // Cache device context
    ID3D11DeviceContext* mDeviceContext;
 
 public:
+   typedef Map<BufferKey, ConstantBuffer> BufferMap;
 
-   GFXD3D11ShaderConstBuffer(GFXD3D11Shader* shader,
-      GFXD3D11ConstBufferLayout* vertexLayout,
-      GFXD3D11ConstBufferLayout* pixelLayout);
+   GFXD3D11ShaderConstBuffer(GFXD3D11Shader* shader);
 
    virtual ~GFXD3D11ShaderConstBuffer();
 
@@ -312,8 +117,7 @@ public:
    /// @param mPrevShaderBuffer The previously active buffer
    void activate(GFXD3D11ShaderConstBuffer *prevShaderBuffer);
 
-   /// Used internally by GXD3D11ShaderConstBuffer to determine if it's dirty.
-   bool isDirty();
+   void addBuffer(const GFXShaderConstDesc desc);
 
    /// Called from GFXD3D11Shader when constants have changed and need
    /// to be the shader this buffer references is reloaded.
@@ -344,33 +148,20 @@ public:
 
    // GFXResource
    virtual const String describeSelf() const;
-   virtual void zombify();
-   virtual void resurrect();
+   virtual void zombify() {}
+   virtual void resurrect() {}
 
 protected:
-
-   void _createBuffers();
-
-   template<class T>
-   inline void SET_CONSTANT(GFXShaderConstHandle* handle,
-      const T& fv,
-      GenericConstBuffer *vBuffer,
-      GenericConstBuffer *pBuffer);
-
-   // Constant buffers, VSSetConstantBuffers1 has issues on win 7. So unfortunately for now we have multiple constant buffers
-   ID3D11Buffer* mConstantBuffersV[CBUFFER_MAX];
-   ID3D11Buffer* mConstantBuffersP[CBUFFER_MAX];
-
-   /// We keep a weak reference to the shader 
+   friend class GFXD3D11Shader;
+   /// We keep a weak reference to the shader
    /// because it will often be deleted.
    WeakRefPtr<GFXD3D11Shader> mShader;
+   BufferMap mBufferMap;
 
-   //vertex
-   GFXD3D11ConstBufferLayout* mVertexConstBufferLayout;
-   GenericConstBuffer* mVertexConstBuffer;
-   //pixel
-   GFXD3D11ConstBufferLayout* mPixelConstBufferLayout;
-   GenericConstBuffer* mPixelConstBuffer;
+   void setMatrix(const GFXShaderConstDesc& handle, const U32 inSize, const void* data, U8* basePointer);
+   void internalSet(GFXShaderConstHandle* handle, const U32 inSize, const void* data);
+
+   ID3D11Buffer* mBoundBuffers[6][16];
 };
 
 class gfxD3D11Include;
@@ -385,17 +176,17 @@ class GFXD3D11Shader : public GFXShader
 
 public:
    typedef Map<String, GFXD3D11ShaderConstHandle*> HandleMap;
+   typedef Map<String, GFXShaderConstDesc> BufferMap;
 
    GFXD3D11Shader();
-   virtual ~GFXD3D11Shader();   
+   virtual ~GFXD3D11Shader();
 
    // GFXShader
    virtual GFXShaderConstBufferRef allocConstBuffer();
    virtual const Vector<GFXShaderConstDesc>& getShaderConstDesc() const;
-   virtual GFXShaderConstHandle* getShaderConstHandle(const String& name); 
+   virtual GFXShaderConstHandle* getShaderConstHandle(const String& name);
    virtual GFXShaderConstHandle* findShaderConstHandle(const String& name);
    virtual U32 getAlignmentValue(const GFXShaderConstType constType) const;
-   virtual bool getDisassembly( String &outStr ) const;
 
    // GFXResource
    virtual void zombify();
@@ -403,71 +194,36 @@ public:
 
 protected:
 
-   virtual bool _init();   
-
-   static const U32 smCompiledShaderTag;
-
-   ConstantTable table;
+   virtual bool _init();
 
    ID3D11VertexShader *mVertShader;
    ID3D11PixelShader *mPixShader;
-
-   GFXD3D11ConstBufferLayout* mVertexConstBufferLayout;
-   GFXD3D11ConstBufferLayout* mPixelConstBufferLayout;   
+   ID3D11GeometryShader *mGeoShader;
 
    static gfxD3DIncludeRef smD3DInclude;
 
    HandleMap mHandles;
-
-   /// The shader disassembly from DX when this shader is compiled.
-   /// We only store this data in non-release builds.
-   String mDissasembly;
-
-   /// Vector of sampler type descriptions consolidated from _compileShader.
-   Vector<GFXShaderConstDesc> mSamplerDescriptions;
+   BufferMap mBuffers;
 
    /// Vector of descriptions (consolidated for the getShaderConstDesc call)
    Vector<GFXShaderConstDesc> mShaderConsts;
-   
+   Vector<GFXShaderConstDesc> mSamplerDescriptions;
+
    // These two functions are used when compiling shaders from hlsl
-   virtual bool _compileShader( const Torque::Path &filePath, 
-                                const String &target, 
-                                const D3D_SHADER_MACRO *defines, 
-                                GenericConstBufferLayout *bufferLayout, 
-                                Vector<GFXShaderConstDesc> &samplerDescriptions );
+   virtual bool _compileShader( const Torque::Path &filePath,
+                                 GFXShaderStage shaderStage,
+                                const D3D_SHADER_MACRO *defines);
 
-   void _getShaderConstants( ID3D11ShaderReflection* refTable, 
-	                         GenericConstBufferLayout *bufferLayout,
-                             Vector<GFXShaderConstDesc> &samplerDescriptions );
+   void _getShaderConstants( ID3D11ShaderReflection* refTable,
+                              GFXShaderStage shaderStage);
 
-   bool _convertShaderVariable(const D3D11_SHADER_TYPE_DESC &typeDesc, GFXShaderConstDesc &desc);
-
-
-   bool _saveCompiledOutput( const Torque::Path &filePath, 
-                             ID3DBlob *buffer, 
-                             GenericConstBufferLayout *bufferLayout,
-                             Vector<GFXShaderConstDesc> &samplerDescriptions );
-
-   // Loads precompiled shaders
-   bool _loadCompiledOutput( const Torque::Path &filePath, 
-                             const String &target, 
-                             GenericConstBufferLayout *bufferLayoutF, 
-                             Vector<GFXShaderConstDesc> &samplerDescriptions );
-  
    // This is used in both cases
-   virtual void _buildShaderConstantHandles(GenericConstBufferLayout *layout, bool vertexConst);
-   
-   virtual void _buildSamplerShaderConstantHandles( Vector<GFXShaderConstDesc> &samplerDescriptions );
-
-   /// Used to build the instancing shader constants from 
-   /// the instancing vertex format.
+   virtual void _buildShaderConstantHandles();
    void _buildInstancingShaderConstantHandles();
+
+   GFXShaderConstType convertConstType(D3D11_SHADER_TYPE_DESC typeDesc);
+
 };
 
-inline bool GFXD3D11Shader::getDisassembly(String &outStr) const
-{
-   outStr = mDissasembly;
-   return (outStr.isNotEmpty());
-}
 
 #endif

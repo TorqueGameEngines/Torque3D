@@ -64,7 +64,7 @@ enum GFXTexCallbackCode
    GFXResurrect,
 };
 
-enum GFXPrimitiveType 
+enum GFXPrimitiveType
 {
    GFXPT_FIRST = 0,
    GFXPointList = 0,
@@ -75,7 +75,7 @@ enum GFXPrimitiveType
    GFXPT_COUNT
 };
 
-enum GFXBitmapFlip 
+enum GFXBitmapFlip
 {
    GFXBitmapFlip_None = 0,
    GFXBitmapFlip_X    = 1 << 0,
@@ -83,7 +83,7 @@ enum GFXBitmapFlip
    GFXBitmapFlip_XY   = GFXBitmapFlip_X | GFXBitmapFlip_Y
 };
 
-enum GFXTextureAddressMode 
+enum GFXTextureAddressMode
 {
    GFXAddress_FIRST = 0,
    GFXAddressWrap = 0,
@@ -94,7 +94,7 @@ enum GFXTextureAddressMode
    GFXAddress_COUNT
 };
 
-enum GFXTextureFilterType 
+enum GFXTextureFilterType
 {
    GFXTextureFilter_FIRST = 0,
    GFXTextureFilterNone = 0,
@@ -104,7 +104,7 @@ enum GFXTextureFilterType
    GFXTextureFilter_COUNT
 };
 
-enum GFXFillMode 
+enum GFXFillMode
 {
    GFXFill_FIRST = 1,
    GFXFillPoint = 1,
@@ -113,7 +113,7 @@ enum GFXFillMode
    GFXFill_COUNT
 };
 
-enum GFXFormat 
+enum GFXFormat
 {
    // when adding formats make sure to place
    // them in the correct group!
@@ -152,7 +152,7 @@ enum GFXFormat
    GFXFormatR11G11B10,
    GFXFormatD32,
    GFXFormatD24X8,
-   GFXFormatD24S8,   
+   GFXFormatD24S8,
    GFXFormatD24FS8,
 
    // Guaranteed RGBA8 (for apis which really dont like bgr)
@@ -172,7 +172,7 @@ enum GFXFormat
    GFXFormatBC3,  //dxt4/5
    GFXFormatBC4,  //3dc+ / ati1
    GFXFormatBC5,  //3dc / ati2
-   // compressed sRGB formats   
+   // compressed sRGB formats
    GFXFormatBC1_SRGB,
    GFXFormatBC2_SRGB,
    GFXFormatBC3_SRGB,
@@ -191,7 +191,7 @@ enum GFXFormat
 /// Returns the byte size of the pixel for non-compressed formats.
 inline U32 GFXFormat_getByteSize( GFXFormat format )
 {
-   AssertFatal( format < GFXFormat_UNKNOWNSIZE, 
+   AssertFatal( format < GFXFormat_UNKNOWNSIZE,
       "GFXDevice::formatByteSize - Cannot size a compressed format!" );
 
    if ( format < GFXFormat_16BIT )
@@ -205,12 +205,12 @@ inline U32 GFXFormat_getByteSize( GFXFormat format )
    else if ( format < GFXFormat_128BIT )
       return 8;// 64 bit...
 
-   // This should be 128bits... else its a DDS and 
+   // This should be 128bits... else its a DDS and
    // the assert should have gone off above.
    return 16;
 }
 
-enum GFXClearFlags 
+enum GFXClearFlags
 {
    GFXClearTarget = 1 << 0,
    GFXClearZBuffer = 1 << 1,
@@ -218,7 +218,7 @@ enum GFXClearFlags
 };
 
 /// The supported blend modes.
-enum GFXBlend 
+enum GFXBlend
 {
    GFXBlend_FIRST = 0,
    GFXBlendZero = 0, /// (0, 0, 0, 0)
@@ -238,7 +238,7 @@ enum GFXBlend
 /// Constants that name each GFXDevice type. Any new GFXDevice subclass must be
 /// added to this enum. A string representing its name must also be added to
 /// GFXInit::getAdapterNameFromType().
-enum GFXAdapterType 
+enum GFXAdapterType
 {
    OpenGL = 0,
    Direct3D11,
@@ -255,7 +255,7 @@ enum GFXCullMode
    GFXCull_COUNT
 };
 
-enum GFXCmpFunc 
+enum GFXCmpFunc
 {
    GFXCmp_FIRST = 0,
    GFXCmpNever = 0,
@@ -269,7 +269,7 @@ enum GFXCmpFunc
    GFXCmp_COUNT
 };
 
-enum GFXStencilOp 
+enum GFXStencilOp
 {
    GFXStencilOp_FIRST = 0,
    GFXStencilOpKeep = 0,
@@ -283,8 +283,8 @@ enum GFXStencilOp
    GFXStencilOp_COUNT
 };
 
-enum GFXBlendOp 
-{ 
+enum GFXBlendOp
+{
    GFXBlendOp_FIRST = 0,
    GFXBlendOpAdd = 0,
    GFXBlendOpSubtract,
@@ -294,7 +294,7 @@ enum GFXBlendOp
    GFXBlendOp_COUNT
 };
 
-enum GFXMatrixType 
+enum GFXMatrixType
 {
    GFXMatrixWorld = 256,
    GFXMatrixView = 2,
@@ -312,25 +312,39 @@ enum GFXMatrixType
 
 enum GFXShaderConstType
 {
+   GFXSCT_Uknown,
    /// GFX"S"hader"C"onstant"T"ype
+   GFXSCT_ConstBuffer,
    // Scalar
-   GFXSCT_Float, 
+   GFXSCT_Float,
    // Vectors
-   GFXSCT_Float2, 
-   GFXSCT_Float3, 
-   GFXSCT_Float4, 
+   GFXSCT_Float2,
+   GFXSCT_Float3,
+   GFXSCT_Float4,
    // Matrices
-   GFXSCT_Float2x2, 
+   GFXSCT_Float2x2,
    GFXSCT_Float3x3,
    GFXSCT_Float3x4,
    GFXSCT_Float4x3,
-   GFXSCT_Float4x4, 
+   GFXSCT_Float4x4,
    // Scalar
-   GFXSCT_Int, 
+   GFXSCT_Int,
    // Vectors
-   GFXSCT_Int2, 
-   GFXSCT_Int3, 
-   GFXSCT_Int4, 
+   GFXSCT_Int2,
+   GFXSCT_Int3,
+   GFXSCT_Int4,
+   // Scalar
+   GFXSCT_UInt,
+   // Vectors
+   GFXSCT_UInt2,
+   GFXSCT_UInt3,
+   GFXSCT_UInt4,
+   // Scalar
+   GFXSCT_Bool,
+   // Vectors
+   GFXSCT_Bool2,
+   GFXSCT_Bool3,
+   GFXSCT_Bool4,
    // Samplers
    GFXSCT_Sampler,
    GFXSCT_SamplerCube,
@@ -352,7 +366,7 @@ enum GFXDeclType
    /// @see Point2F
    GFXDeclType_Float2,
 
-   /// A three-component F32. 
+   /// A three-component F32.
    /// @see Point3F
    GFXDeclType_Float3,
 

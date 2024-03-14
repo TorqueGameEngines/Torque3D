@@ -57,7 +57,7 @@
 #include "gfx/gl/tGL/tXGL.h"
 #endif
 
-GFXAdapter::CreateDeviceInstanceDelegate GFXGLDevice::mCreateDeviceInstance(GFXGLDevice::createInstance); 
+GFXAdapter::CreateDeviceInstanceDelegate GFXGLDevice::mCreateDeviceInstance(GFXGLDevice::createInstance);
 
 GFXDevice *GFXGLDevice::createInstance( U32 adapterIndex )
 {
@@ -76,7 +76,7 @@ void loadGLCore()
    if(coreLoaded)
       return;
    coreLoaded = true;
-   
+
    // Make sure we've got our GL bindings.
    GL::gglPerformBinds();
 }
@@ -87,11 +87,11 @@ void loadGLExtensions(void *context)
    if(extensionsLoaded)
       return;
    extensionsLoaded = true;
-   
+
    GL::gglPerformExtensionBinds(context);
 }
 
-void STDCALL glDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, 
+void STDCALL glDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
 	const GLchar *message, const void *userParam)
 {
     // JTH [11/24/2016]: This is a temporary fix so that we do not get spammed for redundant fbo changes.
@@ -118,24 +118,24 @@ void STDCALL glAmdDebugCallback(GLuint id, GLenum category, GLenum severity, GLs
 }
 
 void GFXGLDevice::initGLState()
-{  
+{
    // We don't currently need to sync device state with a known good place because we are
    // going to set everything in GFXGLStateBlock, but if we change our GFXGLStateBlock strategy, this may
    // need to happen.
-   
+
    // Deal with the card profiler here when we know we have a valid context.
    mCardProfiler = new GFXGLCardProfiler();
-   mCardProfiler->init(); 
+   mCardProfiler->init();
    glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, (GLint*)&mMaxShaderTextures);
    // JTH: Needs removed, ffp
    //glGetIntegerv(GL_MAX_TEXTURE_UNITS, (GLint*)&mMaxFFTextures);
    glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, (GLint*)&mMaxTRColors);
    mMaxTRColors = getMin( mMaxTRColors, (U32)(GFXTextureTarget::MaxRenderSlotId-1) );
-   
+
    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-   
+
    // [JTH 5/6/2016] GLSL 1.50 is really SM 4.0
-   // Setting mPixelShaderVersion to 3.0 will allow Advanced Lighting to run.   
+   // Setting mPixelShaderVersion to 3.0 will allow Advanced Lighting to run.
    mPixelShaderVersion = 3.0;
 
 	// Set capability extensions.
@@ -150,7 +150,7 @@ void GFXGLDevice::initGLState()
    String vendorStr = (const char*)glGetString( GL_VENDOR );
    if( vendorStr.find("NVIDIA", 0, String::NoCase | String::Left) != String::NPos)
       mUseGlMap = false;
-   
+
    // Workaround for all Mac's, has a problem using glMap* with volatile buffers
 #ifdef TORQUE_OS_MAC
    mUseGlMap = false;
@@ -173,7 +173,7 @@ void GFXGLDevice::initGLState()
    else if(gglHasExtension(AMD_debug_output))
    {
       glEnable(GL_DEBUG_OUTPUT);
-      glDebugMessageCallbackAMD(glAmdDebugCallback, NULL);      
+      glDebugMessageCallbackAMD(glAmdDebugCallback, NULL);
       //glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
       GLuint unusedIds = 0;
       glDebugMessageEnableAMD(GL_DONT_CARE, GL_DONT_CARE, 0,&unusedIds, GL_TRUE);
@@ -258,16 +258,17 @@ GFXGLDevice::GFXGLDevice(U32 adapterIndex) :
       mModelViewProjSC[i] = NULL;
 
    mOpenglStateCache = new GFXGLStateCache;
+   mCurrentConstBuffer = NULL;
 }
 
 GFXGLDevice::~GFXGLDevice()
 {
    mCurrentStateBlock = NULL;
 
-   for(int i = 0; i < VERTEX_STREAM_COUNT; ++i)      
+   for(int i = 0; i < VERTEX_STREAM_COUNT; ++i)
       mCurrentVB[i] = NULL;
    mCurrentPB = NULL;
-   
+
    for(U32 i = 0; i < mVolatileVBs.size(); i++)
       mVolatileVBs[i] = NULL;
    for(U32 i = 0; i < mVolatilePBs.size(); i++)
@@ -291,13 +292,18 @@ GFXGLDevice::~GFXGLDevice()
       mTextureManager->kill();
    }
 
+   // Free device buffers
+   DeviceBufferMap::Iterator bufferIter = mDeviceBufferMap.begin();
+   for (; bufferIter != mDeviceBufferMap.end(); ++bufferIter)
+      glDeleteBuffers(1, &bufferIter->value);
+
    GFXResource* walk = mResourceListHead;
    while(walk)
    {
       walk->zombify();
       walk = walk->getNextResource();
    }
-      
+
    if( mCardProfiler )
       SAFE_DELETE( mCardProfiler );
 
@@ -306,16 +312,33 @@ GFXGLDevice::~GFXGLDevice()
    SAFE_DELETE( mOpenglStateCache );
 }
 
+GLuint GFXGLDevice::getDeviceBuffer(const GFXShaderConstDesc desc)
+{
+   String name(desc.name + "_" + String::ToString(desc.size));
+   DeviceBufferMap::Iterator buf = mDeviceBufferMap.find(name);
+   if (buf != mDeviceBufferMap.end())
+   {
+      return mDeviceBufferMap[name];
+   }
+
+   GLuint uboHandle;
+   glGenBuffers(1, &uboHandle);
+
+   mDeviceBufferMap[name] = uboHandle;
+
+   return uboHandle;
+}
+
 void GFXGLDevice::zombify()
 {
    mTextureManager->zombify();
 
-   for(int i = 0; i < VERTEX_STREAM_COUNT; ++i)   
+   for(int i = 0; i < VERTEX_STREAM_COUNT; ++i)
       if(mCurrentVB[i])
          mCurrentVB[i]->finish();
    if(mCurrentPB)
          mCurrentPB->finish();
-   
+
    //mVolatileVBs.clear();
    //mVolatilePBs.clear();
    GFXResource* walk = mResourceListHead;
@@ -334,12 +357,12 @@ void GFXGLDevice::resurrect()
       walk->resurrect();
       walk = walk->getNextResource();
    }
-   for(int i = 0; i < VERTEX_STREAM_COUNT; ++i)   
+   for(int i = 0; i < VERTEX_STREAM_COUNT; ++i)
       if(mCurrentVB[i])
          mCurrentVB[i]->prepare();
    if(mCurrentPB)
       mCurrentPB->prepare();
-   
+
    mTextureManager->resurrect();
 }
 
@@ -366,7 +389,7 @@ GFXPrimitiveBuffer* GFXGLDevice::findVolatilePBO(U32 numIndices, U32 numPrimitiv
    for(U32 i = 0; i < mVolatilePBs.size(); i++)
       if((mVolatilePBs[i]->mIndexCount >= numIndices) && (mVolatilePBs[i]->getRefCount() == 1))
          return mVolatilePBs[i];
-   
+
    // No existing PB, so create one
    StrongRefPtr<GFXGLPrimitiveBuffer> buf(new GFXGLPrimitiveBuffer(GFX, numIndices, numPrimitives, GFXBufferTypeVolatile));
    buf->registerResourceWithDevice(this);
@@ -374,18 +397,18 @@ GFXPrimitiveBuffer* GFXGLDevice::findVolatilePBO(U32 numIndices, U32 numPrimitiv
    return buf.getPointer();
 }
 
-GFXVertexBuffer *GFXGLDevice::allocVertexBuffer(   U32 numVerts, 
-                                                   const GFXVertexFormat *vertexFormat, 
-                                                   U32 vertSize, 
+GFXVertexBuffer *GFXGLDevice::allocVertexBuffer(   U32 numVerts,
+                                                   const GFXVertexFormat *vertexFormat,
+                                                   U32 vertSize,
                                                    GFXBufferType bufferType,
-                                                   void* data )  
+                                                   void* data )
 {
    PROFILE_SCOPE(GFXGLDevice_allocVertexBuffer);
    if(bufferType == GFXBufferTypeVolatile)
       return findVolatileVBO(numVerts, vertexFormat, vertSize);
-         
+
    GFXGLVertexBuffer* buf = new GFXGLVertexBuffer( GFX, numVerts, vertexFormat, vertSize, bufferType );
-   buf->registerResourceWithDevice(this);   
+   buf->registerResourceWithDevice(this);
 
    if(data)
    {
@@ -398,10 +421,10 @@ GFXVertexBuffer *GFXGLDevice::allocVertexBuffer(   U32 numVerts,
    return buf;
 }
 
-GFXPrimitiveBuffer *GFXGLDevice::allocPrimitiveBuffer( U32 numIndices, U32 numPrimitives, GFXBufferType bufferType, void* data ) 
+GFXPrimitiveBuffer *GFXGLDevice::allocPrimitiveBuffer( U32 numIndices, U32 numPrimitives, GFXBufferType bufferType, void* data )
 {
    GFXPrimitiveBuffer* buf;
-   
+
    if(bufferType == GFXBufferTypeVolatile)
    {
       buf = findVolatilePBO(numIndices, numPrimitives);
@@ -411,7 +434,7 @@ GFXPrimitiveBuffer *GFXGLDevice::allocPrimitiveBuffer( U32 numIndices, U32 numPr
       buf = new GFXGLPrimitiveBuffer(GFX, numIndices, numPrimitives, bufferType);
       buf->registerResourceWithDevice(this);
    }
-   
+
    if(data)
    {
       void* dest;
@@ -430,7 +453,7 @@ void GFXGLDevice::setVertexStream( U32 stream, GFXVertexBuffer *buffer )
    {
       // Reset the state the old VB required, then set the state the new VB requires.
       if( mCurrentVB[stream] )
-      {     
+      {
          mCurrentVB[stream]->finish();
       }
 
@@ -460,10 +483,10 @@ void GFXGLDevice::setVertexStreamFrequency( U32 stream, U32 frequency )
 }
 
 GFXCubemap* GFXGLDevice::createCubemap()
-{ 
+{
    GFXGLCubemap* cube = new GFXGLCubemap();
    cube->registerResourceWithDevice(this);
-   return cube; 
+   return cube;
 };
 
 GFXCubemapArray *GFXGLDevice::createCubemapArray()
@@ -480,7 +503,7 @@ GFXTextureArray* GFXGLDevice::createTextureArray()
    return textureArray;
 }
 
-void GFXGLDevice::endSceneInternal() 
+void GFXGLDevice::endSceneInternal()
 {
    // nothing to do for opengl
    mCanCurrentlyRender = false;
@@ -556,9 +579,9 @@ void GFXGLDevice::clear(U32 flags, const LinearColorF& color, F32 z, U32 stencil
 {
    // Make sure we have flushed our render target state.
    _updateRenderTargets();
-   
+
    bool writeAllColors = true;
-   bool zwrite = true;   
+   bool zwrite = true;
    bool writeAllStencil = true;
    const GFXStateBlockDesc *desc = NULL;
    if (mCurrentGLStateBlock)
@@ -568,7 +591,7 @@ void GFXGLDevice::clear(U32 flags, const LinearColorF& color, F32 z, U32 stencil
       writeAllColors = desc->colorWriteRed && desc->colorWriteGreen && desc->colorWriteBlue && desc->colorWriteAlpha;
       writeAllStencil = desc->stencilWriteMask == 0xFFFFFFFF;
    }
-   
+
    glColorMask(true, true, true, true);
    glDepthMask(true);
    glStencilMask(0xFFFFFFFF);
@@ -585,7 +608,7 @@ void GFXGLDevice::clear(U32 flags, const LinearColorF& color, F32 z, U32 stencil
 
    if(!writeAllColors)
       glColorMask(desc->colorWriteRed, desc->colorWriteGreen, desc->colorWriteBlue, desc->colorWriteAlpha);
-   
+
    if(!zwrite)
       glDepthMask(false);
 
@@ -623,20 +646,20 @@ inline GLsizei GFXGLDevice::primCountToIndexCount(GFXPrimitiveType primType, U32
          AssertFatal(false, "GFXGLDevice::primCountToIndexCount - unrecognized prim type");
          break;
    }
-   
+
    return 0;
 }
 
-GFXVertexDecl* GFXGLDevice::allocVertexDecl( const GFXVertexFormat *vertexFormat ) 
+GFXVertexDecl* GFXGLDevice::allocVertexDecl( const GFXVertexFormat *vertexFormat )
 {
    PROFILE_SCOPE(GFXGLDevice_allocVertexDecl);
    typedef Map<void*, GFXGLVertexDecl> GFXGLVertexDeclMap;
-   static GFXGLVertexDeclMap declMap;   
+   static GFXGLVertexDeclMap declMap;
    GFXGLVertexDeclMap::Iterator itr = declMap.find( (void*)vertexFormat->getDescription().c_str() ); // description string are interned, safe to use c_str()
    if(itr != declMap.end())
       return &itr->value;
 
-   GFXGLVertexDecl &decl = declMap[(void*)vertexFormat->getDescription().c_str()];   
+   GFXGLVertexDecl &decl = declMap[(void*)vertexFormat->getDescription().c_str()];
    decl.init(vertexFormat);
    return &decl;
 }
@@ -652,7 +675,7 @@ inline void GFXGLDevice::preDrawPrimitive()
    {
       updateStates();
    }
-   
+
    if(mCurrentShaderConstBuffer)
       setShaderConstBufferInternal(mCurrentShaderConstBuffer);
 
@@ -660,18 +683,18 @@ inline void GFXGLDevice::preDrawPrimitive()
    {
       AssertFatal(mCurrVertexDecl, "");
       const GFXGLVertexDecl* decl = static_cast<const GFXGLVertexDecl*>(mCurrVertexDecl);
-      
+
       for(int i = 0; i < getNumVertexStreams(); ++i)
       {
          if(mCurrentVB[i])
          {
-            mCurrentVB[i]->prepare(i, mCurrentVB_Divisor[i]);    // GL_ARB_vertex_attrib_binding  
+            mCurrentVB[i]->prepare(i, mCurrentVB_Divisor[i]);    // GL_ARB_vertex_attrib_binding
             decl->prepareBuffer_old( i, mCurrentVB[i]->mBuffer, mCurrentVB_Divisor[i] ); // old vertex buffer/format
          }
       }
 
-      decl->updateActiveVertexAttrib( GFXGL->getOpenglCache()->getCacheVertexAttribActive() );         
-   }   
+      decl->updateActiveVertexAttrib( GFXGL->getOpenglCache()->getCacheVertexAttribActive() );
+   }
 
    mNeedUpdateVertexAttrib = false;
 }
@@ -682,26 +705,26 @@ inline void GFXGLDevice::postDrawPrimitive(U32 primitiveCount)
    mDeviceStatistics.mPolyCount += primitiveCount;
 }
 
-void GFXGLDevice::drawPrimitive( GFXPrimitiveType primType, U32 vertexStart, U32 primitiveCount ) 
+void GFXGLDevice::drawPrimitive( GFXPrimitiveType primType, U32 vertexStart, U32 primitiveCount )
 {
    preDrawPrimitive();
-  
+
    if(mCurrentVB[0])
       vertexStart += mCurrentVB[0]->mBufferVertexOffset;
 
    if(mDrawInstancesCount)
       glDrawArraysInstanced(GFXGLPrimType[primType], vertexStart, primCountToIndexCount(primType, primitiveCount), mDrawInstancesCount);
    else
-      glDrawArrays(GFXGLPrimType[primType], vertexStart, primCountToIndexCount(primType, primitiveCount));   
+      glDrawArrays(GFXGLPrimType[primType], vertexStart, primCountToIndexCount(primType, primitiveCount));
 
    postDrawPrimitive(primitiveCount);
 }
 
-void GFXGLDevice::drawIndexedPrimitive(   GFXPrimitiveType primType, 
-                                          U32 startVertex, 
-                                          U32 minIndex, 
-                                          U32 numVerts, 
-                                          U32 startIndex, 
+void GFXGLDevice::drawIndexedPrimitive(   GFXPrimitiveType primType,
+                                          U32 startVertex,
+                                          U32 minIndex,
+                                          U32 numVerts,
+                                          U32 startIndex,
                                           U32 primitiveCount )
 {
    preDrawPrimitive();
@@ -732,7 +755,7 @@ void GFXGLDevice::setTextureInternal(U32 textureUnit, const GFXTextureObject*tex
    {
       mActiveTextureType[textureUnit] = tex->getBinding();
       tex->bind(textureUnit);
-   } 
+   }
    else if(mActiveTextureType[textureUnit] != GL_ZERO)
    {
       glActiveTexture(GL_TEXTURE0 + textureUnit);
@@ -805,21 +828,21 @@ void GFXGLDevice::setClipRect( const RectI &inRect )
    F32 r = F32(mClip.point.x + mClip.extent.x);
    F32 b = F32(mClip.point.y + mClip.extent.y);
    F32 t = F32(mClip.point.y);
-   
-   // Set up projection matrix, 
+
+   // Set up projection matrix,
    //static Point4F pt;
    pt.set(2.0f / (r - l), 0.0f, 0.0f, 0.0f);
    mProjectionMatrix.setColumn(0, pt);
-   
+
    pt.set(0.0f, 2.0f / (t - b), 0.0f, 0.0f);
    mProjectionMatrix.setColumn(1, pt);
-   
+
    pt.set(0.0f, 0.0f, 1.0f, 0.0f);
    mProjectionMatrix.setColumn(2, pt);
-   
+
    pt.set((l + r) / (l - r), (t + b) / (b - t), 1.0f, 1.0f);
    mProjectionMatrix.setColumn(3, pt);
-   
+
    MatrixF mTempMatrix(true);
    setViewMatrix( mTempMatrix );
    setWorldMatrix( mTempMatrix );
@@ -844,7 +867,7 @@ void GFXGLDevice::setStateBlockInternal(GFXStateBlock* block, bool force)
    GFXGLStateBlock* glCurrent = static_cast<GFXGLStateBlock*>(mCurrentStateBlock.getPointer());
    if (force)
       glCurrent = NULL;
-      
+
    glBlock->activate(glCurrent); // Doesn't use current yet.
    mCurrentGLStateBlock = glBlock;
 }
@@ -863,19 +886,19 @@ GFXFence * GFXGLDevice::createFence()
    GFXFence* fence = _createPlatformSpecificFence();
    if(!fence)
       fence = new GFXGeneralFence( this );
-      
+
    fence->registerResourceWithDevice(this);
    return fence;
 }
 
 GFXOcclusionQuery* GFXGLDevice::createOcclusionQuery()
-{   
+{
    GFXOcclusionQuery *query = new GFXGLOcclusionQuery( this );
    query->registerResourceWithDevice(this);
    return query;
 }
 
-void GFXGLDevice::setupGenericShaders( GenericShaderType type ) 
+void GFXGLDevice::setupGenericShaders( GenericShaderType type )
 {
    AssertFatal(type != GSTargetRestore, "");
 
@@ -927,7 +950,7 @@ void GFXGLDevice::setupGenericShaders( GenericShaderType type )
       Sim::getRootGroup()->addObject(shaderData);
    }
 
-   MatrixF tempMatrix =  mProjectionMatrix * mViewMatrix * mWorldMatrix[mWorldStackSize];  
+   MatrixF tempMatrix =  mProjectionMatrix * mViewMatrix * mWorldMatrix[mWorldStackSize];
    mGenericShaderBuffer[type]->setSafe(mModelViewProjSC[type], tempMatrix);
 
    setShader( mGenericShader[type] );
@@ -959,8 +982,19 @@ void GFXGLDevice::setShader(GFXShader *shader, bool force)
 
 void GFXGLDevice::setShaderConstBufferInternal(GFXShaderConstBuffer* buffer)
 {
-   PROFILE_SCOPE(GFXGLDevice_setShaderConstBufferInternal);
-   static_cast<GFXGLShaderConstBuffer*>(buffer)->activate();
+   if (buffer)
+   {
+      PROFILE_SCOPE(GFXGLDevice_setShaderConstBufferInternal);
+      AssertFatal(static_cast<GFXGLShaderConstBuffer*>(buffer), "Incorrect shader const buffer type for this device!");
+      GFXGLShaderConstBuffer* oglBuffer = static_cast<GFXGLShaderConstBuffer*>(buffer);
+
+      oglBuffer->activate(mCurrentConstBuffer);
+      mCurrentConstBuffer = oglBuffer;
+   }
+   else
+   {
+      mCurrentConstBuffer = NULL;
+   }
 }
 
 U32 GFXGLDevice::getNumSamplers() const
@@ -968,7 +1002,7 @@ U32 GFXGLDevice::getNumSamplers() const
    return getMin((U32)GFX_TEXTURE_STAGE_COUNT,mPixelShaderVersion > 0.001f ? mMaxShaderTextures : mMaxFFTextures);
 }
 
-GFXTextureObject* GFXGLDevice::getDefaultDepthTex() const 
+GFXTextureObject* GFXGLDevice::getDefaultDepthTex() const
 {
    if(mWindowRT && mWindowRT->getPointer())
       return static_cast<GFXGLWindowTarget*>( mWindowRT->getPointer() )->mBackBufferDepthTex.getPointer();
@@ -976,9 +1010,9 @@ GFXTextureObject* GFXGLDevice::getDefaultDepthTex() const
    return NULL;
 }
 
-U32 GFXGLDevice::getNumRenderTargets() const 
-{ 
-   return mMaxTRColors; 
+U32 GFXGLDevice::getNumRenderTargets() const
+{
+   return mMaxTRColors;
 }
 
 void GFXGLDevice::_updateRenderTargets()
@@ -988,9 +1022,9 @@ void GFXGLDevice::_updateRenderTargets()
       if ( mRTDeactivate )
       {
          mRTDeactivate->deactivate();
-         mRTDeactivate = NULL;   
+         mRTDeactivate = NULL;
       }
-      
+
       // NOTE: The render target changes is not really accurate
       // as the GFXTextureTarget supports MRT internally.  So when
       // we activate a GFXTarget it could result in multiple calls
@@ -1006,31 +1040,31 @@ void GFXGLDevice::_updateRenderTargets()
       else
       {
          GFXGLWindowTarget *win = dynamic_cast<GFXGLWindowTarget*>( mCurrentRT.getPointer() );
-         AssertFatal( win != NULL, 
+         AssertFatal( win != NULL,
                      "GFXGLDevice::_updateRenderTargets() - invalid target subclass passed!" );
-         
+
          win->makeActive();
-         
+
          if( win->mContext != static_cast<GFXGLDevice*>(GFX)->mContext )
          {
             mRTDirty = false;
             GFX->updateStates(true);
          }
       }
-      
+
       mRTDirty = false;
    }
-   
+
    if ( mViewportDirty )
    {
-      glViewport( mViewport.point.x, mViewport.point.y, mViewport.extent.x, mViewport.extent.y ); 
+      glViewport( mViewport.point.x, mViewport.point.y, mViewport.extent.x, mViewport.extent.y );
       mViewportDirty = false;
    }
 }
 
-GFXFormat GFXGLDevice::selectSupportedFormat(   GFXTextureProfile* profile, 
-                                                const Vector<GFXFormat>& formats, 
-                                                bool texture, 
+GFXFormat GFXGLDevice::selectSupportedFormat(   GFXTextureProfile* profile,
+                                                const Vector<GFXFormat>& formats,
+                                                bool texture,
                                                 bool mustblend,
                                                 bool mustfilter )
 {
@@ -1041,10 +1075,10 @@ GFXFormat GFXGLDevice::selectSupportedFormat(   GFXTextureProfile* profile,
          continue;
       if(GFXGLTextureInternalFormat[formats[i]] == GL_ZERO)
          continue;
-      
+
       return formats[i];
    }
-   
+
    return GFXFormatR8G8B8A8;
 }
 
@@ -1055,7 +1089,7 @@ U32 GFXGLDevice::getTotalVideoMemory_GL_EXT()
    {
       GLint mem[4] = {0};
       glGetIntegerv(GL_TEXTURE_FREE_MEMORY_ATI, mem);  // Retrieve the texture pool
-      
+
       /* With mem[0] i get only the total memory free in the pool in KB
       *
       * mem[0] - total memory free in the pool
@@ -1066,7 +1100,7 @@ U32 GFXGLDevice::getTotalVideoMemory_GL_EXT()
 
       return  mem[0] / 1024;
    }
-   
+
    //source http://www.opengl.org/registry/specs/NVX/gpu_memory_info.txt
    else if( gglHasExtension(NVX_gpu_memory_info) )
    {

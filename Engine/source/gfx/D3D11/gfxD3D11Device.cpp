@@ -105,6 +105,7 @@ GFXD3D11Device::GFXD3D11Device(U32 index)
 
    mLastVertShader = NULL;
    mLastPixShader = NULL;
+   mLastGeoShader = NULL;
 
    mCanCurrentlyRender = false;
    mTextureManager = NULL;
@@ -159,6 +160,11 @@ GFXD3D11Device::~GFXD3D11Device()
    for (; sampIter != mSamplersMap.end(); ++sampIter)
       SAFE_RELEASE(sampIter->value);
 
+   // Free device buffers
+   DeviceBufferMap::Iterator bufferIter = mDeviceBufferMap.begin();
+   for (; bufferIter != mDeviceBufferMap.end(); ++bufferIter)
+      SAFE_RELEASE(bufferIter->value);
+
    // Free the vertex declarations.
    VertexDeclMap::Iterator iter = mVertexDecls.begin();
    for (; iter != mVertexDecls.end(); ++iter)
@@ -202,7 +208,7 @@ GFXFormat GFXD3D11Device::selectSupportedFormat(GFXTextureProfile *profile, cons
        features |= D3D11_FORMAT_SUPPORT_BLENDABLE;
    if(mustfilter)
        features |= D3D11_FORMAT_SUPPORT_SHADER_SAMPLE;
-   
+
    for(U32 i = 0; i < formats.size(); i++)
    {
       if(GFXD3D11TextureFormat[formats[i]] == DXGI_FORMAT_UNKNOWN)
@@ -213,7 +219,7 @@ GFXFormat GFXD3D11Device::selectSupportedFormat(GFXTextureProfile *profile, cons
       if(supportFlag & features)
          return formats[i];
    }
-   
+
    return GFXFormatR8G8B8A8;
 }
 
@@ -261,7 +267,7 @@ void GFXD3D11Device::enumerateAdapters(Vector<GFXAdapter*> &adapterList)
 
    CreateDXGIFactory1(__uuidof(IDXGIFactory1), reinterpret_cast<void**>(&DXGIFactory));
 
-   for(U32 adapterIndex = 0; DXGIFactory->EnumAdapters1(adapterIndex, &EnumAdapter) != DXGI_ERROR_NOT_FOUND; ++adapterIndex) 
+   for(U32 adapterIndex = 0; DXGIFactory->EnumAdapters1(adapterIndex, &EnumAdapter) != DXGI_ERROR_NOT_FOUND; ++adapterIndex)
    {
       GFXAdapter *toAdd = new GFXAdapter;
       toAdd->mType  = Direct3D11;
@@ -286,7 +292,7 @@ void GFXD3D11Device::enumerateAdapters(Vector<GFXAdapter*> &adapterList)
       dStrncpy(toAdd->mName, Description.c_str(), GFXAdapter::MaxAdapterNameLen);
       dStrncat(toAdd->mName, " (D3D11)", sizeof(toAdd->mName) - strlen(toAdd->mName) - 1);
 
-      IDXGIOutput* pOutput = NULL; 
+      IDXGIOutput* pOutput = NULL;
       HRESULT hr;
 
       hr = EnumAdapter->EnumOutputs(adapterIndex, &pOutput);
@@ -310,7 +316,7 @@ void GFXD3D11Device::enumerateAdapters(Vector<GFXAdapter*> &adapterList)
       if(FAILED(hr))
          AssertFatal(false, "GFXD3D11Device::enumerateAdapters -> GetDisplayModeList call failure");
 
-      displayModes = new DXGI_MODE_DESC[numModes]; 
+      displayModes = new DXGI_MODE_DESC[numModes];
 
       // Get the list
       hr = pOutput->GetDisplayModeList(format, 0, &numModes, displayModes);
@@ -376,7 +382,7 @@ void GFXD3D11Device::enumerateAdapters(Vector<GFXAdapter*> &adapterList)
    SAFE_RELEASE(DXGIFactory);
 }
 
-void GFXD3D11Device::enumerateVideoModes() 
+void GFXD3D11Device::enumerateVideoModes()
 {
    mVideoModes.clear();
 
@@ -389,9 +395,9 @@ void GFXD3D11Device::enumerateVideoModes()
    if (FAILED(hr))
       AssertFatal(false, "GFXD3D11Device::enumerateVideoModes -> CreateDXGIFactory1 call failure");
 
-   for(U32 adapterIndex = 0; DXGIFactory->EnumAdapters1(adapterIndex, &EnumAdapter) != DXGI_ERROR_NOT_FOUND; ++adapterIndex) 
+   for(U32 adapterIndex = 0; DXGIFactory->EnumAdapters1(adapterIndex, &EnumAdapter) != DXGI_ERROR_NOT_FOUND; ++adapterIndex)
    {
-      IDXGIOutput* pOutput = NULL;      
+      IDXGIOutput* pOutput = NULL;
 
       hr = EnumAdapter->EnumOutputs(adapterIndex, &pOutput);
 
@@ -414,7 +420,7 @@ void GFXD3D11Device::enumerateVideoModes()
       if(FAILED(hr))
          AssertFatal(false, "GFXD3D11Device::enumerateVideoModes -> GetDisplayModeList call failure");
 
-      displayModes = new DXGI_MODE_DESC[numModes]; 
+      displayModes = new DXGI_MODE_DESC[numModes];
 
       // Get the list
       hr = pOutput->GetDisplayModeList(format, 0, &numModes, displayModes);
@@ -519,14 +525,16 @@ void GFXD3D11Device::init(const GFXVideoMode &mode, PlatformWindow *window)
    {
    case D3D_FEATURE_LEVEL_11_1:
    case D3D_FEATURE_LEVEL_11_0:
-      mVertexShaderTarget = "vs_5_0";
-      mPixelShaderTarget = "ps_5_0";
+      mVertexShaderTarget     = "vs_5_0";
+      mPixelShaderTarget      = "ps_5_0";
+      mGeometryShaderTarget   = "gs_5_0";
       mPixVersion = 5.0f;
       mShaderModel = "50";
       break;
    case D3D_FEATURE_LEVEL_10_1:
-      mVertexShaderTarget = "vs_4_1";
-      mPixelShaderTarget = "ps_4_1";
+      mVertexShaderTarget     = "vs_4_1";
+      mPixelShaderTarget      = "ps_4_1";
+      mGeometryShaderTarget   = "gs_4_1";
       mPixVersion = 4.1f;
       mShaderModel = "41";
       break;
@@ -546,7 +554,7 @@ void GFXD3D11Device::init(const GFXVideoMode &mode, PlatformWindow *window)
    SAFE_RELEASE(testQuery);
 
    Con::printf("Hardware occlusion query detected: %s", mOcclusionQuerySupported ? "Yes" : "No");
-   
+
    mCardProfiler = new GFXD3D11CardProfiler();
    mCardProfiler->init();
 
@@ -589,10 +597,10 @@ void GFXD3D11Device::_suppressDebugMessages()
    }
 }
 
-bool GFXD3D11Device::beginSceneInternal() 
+bool GFXD3D11Device::beginSceneInternal()
 {
    mCanCurrentlyRender = true;
-   return mCanCurrentlyRender;  
+   return mCanCurrentlyRender;
 }
 
 GFXWindowTarget * GFXD3D11Device::allocWindowTarget(PlatformWindow *window)
@@ -739,7 +747,7 @@ void GFXD3D11Device::setupGenericShaders(GenericShaderType type)
       _updateRenderTargets();
    }
 
-   MatrixF tempMatrix =  mProjectionMatrix * mViewMatrix * mWorldMatrix[mWorldStackSize];  
+   MatrixF tempMatrix =  mProjectionMatrix * mViewMatrix * mWorldMatrix[mWorldStackSize];
    mGenericShaderBuffer[type]->setSafe(mModelViewProjSC[type], tempMatrix);
 
    setShader(mGenericShader[type]);
@@ -764,7 +772,7 @@ void GFXD3D11Device::setStateBlockInternal(GFXStateBlock* block, bool force)
    if (force)
       d3dCurrent = NULL;
 
-   d3dBlock->activate(d3dCurrent);   
+   d3dBlock->activate(d3dCurrent);
 }
 
 /// Called by base GFXDevice to actually set a const buffer
@@ -863,7 +871,7 @@ void GFXD3D11Device::clearColorAttachment(const U32 attachment, const LinearColo
    mD3DDeviceContext->ClearRenderTargetView(rtView, clearColor);
 }
 
-void GFXD3D11Device::endSceneInternal() 
+void GFXD3D11Device::endSceneInternal()
 {
    mCanCurrentlyRender = false;
 }
@@ -875,7 +883,7 @@ void GFXD3D11Device::_updateRenderTargets()
       if (mRTDeactivate)
       {
          mRTDeactivate->deactivate();
-         mRTDeactivate = NULL;   
+         mRTDeactivate = NULL;
       }
 
       // NOTE: The render target changes are not really accurate
@@ -887,7 +895,7 @@ void GFXD3D11Device::_updateRenderTargets()
       mCurrentRT->activate();
 
       mRTDirty = false;
-   }  
+   }
 
    if (mViewportDirty)
    {
@@ -906,7 +914,7 @@ void GFXD3D11Device::_updateRenderTargets()
    }
 }
 
-void GFXD3D11Device::releaseDefaultPoolResources() 
+void GFXD3D11Device::releaseDefaultPoolResources()
 {
    // Release all the dynamic vertex buffer arrays
    // Forcibly clean up the pools
@@ -919,7 +927,7 @@ void GFXD3D11Device::releaseDefaultPoolResources()
 
    // We gotta clear the current const buffer else the next
    // activate may erroneously think the device is still holding
-   // this state and fail to set it.   
+   // this state and fail to set it.
    mCurrentConstBuffer = NULL;
 
    // Set current VB to NULL and set state dirty
@@ -943,7 +951,7 @@ void GFXD3D11Device::releaseDefaultPoolResources()
    mPrimitiveBufferDirty = true;
 
    // Zombify texture manager (for D3D this only modifies default pool textures)
-   if( mTextureManager ) 
+   if( mTextureManager )
       mTextureManager->zombify();
 
    // Set global dirty state so the IB/PB and VB get reset
@@ -958,7 +966,7 @@ void GFXD3D11Device::releaseDefaultPoolResources()
    }
 }
 
-void GFXD3D11Device::reacquireDefaultPoolResources() 
+void GFXD3D11Device::reacquireDefaultPoolResources()
 {
    // Now do the dynamic index buffers
    if( mDynamicPB == NULL )
@@ -974,7 +982,7 @@ void GFXD3D11Device::reacquireDefaultPoolResources()
 
    HRESULT hr = D3D11DEVICE->CreateBuffer(&desc, NULL, &mDynamicPB->ib);
 
-   if(FAILED(hr)) 
+   if(FAILED(hr))
    {
       AssertFatal(false, "Failed to allocate dynamic IB");
    }
@@ -1020,7 +1028,7 @@ GFXD3D11VertexBuffer * GFXD3D11Device::createVBPool( const GFXVertexFormat *vert
    newBuff->mDevice = this;
 
    // Requesting it will allocate it.
-   vertexFormat->getDecl(); 
+   vertexFormat->getDecl();
 
    D3D11_BUFFER_DESC desc;
    desc.ByteWidth = vertSize * GFX_MAX_DYNAMIC_VERTS;
@@ -1032,7 +1040,7 @@ GFXD3D11VertexBuffer * GFXD3D11Device::createVBPool( const GFXVertexFormat *vert
 
    HRESULT hr = D3D11DEVICE->CreateBuffer(&desc, NULL, &newBuff->vb);
 
-   if(FAILED(hr)) 
+   if(FAILED(hr))
    {
       AssertFatal(false, "Failed to allocate dynamic VB");
    }
@@ -1042,9 +1050,9 @@ GFXD3D11VertexBuffer * GFXD3D11Device::createVBPool( const GFXVertexFormat *vert
 
 //-----------------------------------------------------------------------------
 
-void GFXD3D11Device::setClipRect( const RectI &inRect ) 
+void GFXD3D11Device::setClipRect( const RectI &inRect )
 {
-   // We transform the incoming rect by the view 
+   // We transform the incoming rect by the view
    // matrix first, so that it can be used to pan
    // and scale the clip rect.
    //
@@ -1052,7 +1060,7 @@ void GFXD3D11Device::setClipRect( const RectI &inRect )
    Point3F pos( inRect.point.x, inRect.point.y, 0.0f );
    Point3F extent( inRect.extent.x, inRect.extent.y, 0.0f );
    getViewMatrix().mulP( pos );
-   getViewMatrix().mulV( extent );  
+   getViewMatrix().mulV( extent );
    RectI rect( pos.x, pos.y, extent.x, extent.y );
 
    // Clip the rect against the renderable size.
@@ -1068,8 +1076,8 @@ void GFXD3D11Device::setClipRect( const RectI &inRect )
    F32 b = F32( mClipRect.point.y + mClipRect.extent.y );
    F32 t = F32( mClipRect.point.y );
 
-   // Set up projection matrix, 
-   static Point4F pt;   
+   // Set up projection matrix,
+   static Point4F pt;
    pt.set(2.0f / (r - l), 0.0f, 0.0f, 0.0f);
    mTempMatrix.setColumn(0, pt);
 
@@ -1085,7 +1093,7 @@ void GFXD3D11Device::setClipRect( const RectI &inRect )
    setProjectionMatrix( mTempMatrix );
 
    // Set up world/view matrix
-   mTempMatrix.identity();   
+   mTempMatrix.identity();
    setWorldMatrix( mTempMatrix );
 
    setViewport( mClipRect );
@@ -1097,7 +1105,7 @@ void GFXD3D11Device::setVertexStream( U32 stream, GFXVertexBuffer *buffer )
 
    if ( stream == 0 )
    {
-      // Set the volatile buffer which is used to 
+      // Set the volatile buffer which is used to
       // offset the start index when doing draw calls.
       if ( d3dBuffer && d3dBuffer->mVolatileStart > 0 )
          mVolatileVB = d3dBuffer;
@@ -1106,7 +1114,7 @@ void GFXD3D11Device::setVertexStream( U32 stream, GFXVertexBuffer *buffer )
    }
 
    // NOTE: We do not use the stream offset here for stream 0
-   // as that feature is *supposedly* not as well supported as 
+   // as that feature is *supposedly* not as well supported as
    // using the start index in drawPrimitive.
    //
    // If we can verify that this is not the case then we should
@@ -1125,7 +1133,7 @@ void GFXD3D11Device::setVertexStreamFrequency( U32 stream, U32 frequency )
       mDrawInstancesCount = frequency; // instances count
 }
 
-void GFXD3D11Device::_setPrimitiveBuffer( GFXPrimitiveBuffer *buffer ) 
+void GFXD3D11Device::_setPrimitiveBuffer( GFXPrimitiveBuffer *buffer )
 {
    mCurrentPB = static_cast<GFXD3D11PrimitiveBuffer *>( buffer );
 
@@ -1160,7 +1168,7 @@ U32 GFXD3D11Device::primCountToIndexCount(GFXPrimitiveType primType, U32 primiti
 }
 
 
-void GFXD3D11Device::drawPrimitive( GFXPrimitiveType primType, U32 vertexStart, U32 primitiveCount ) 
+void GFXD3D11Device::drawPrimitive( GFXPrimitiveType primType, U32 vertexStart, U32 primitiveCount )
 {
    // This is done to avoid the function call overhead if possible
    if( mStateDirty )
@@ -1172,12 +1180,12 @@ void GFXD3D11Device::drawPrimitive( GFXPrimitiveType primType, U32 vertexStart, 
        vertexStart += mVolatileVB->mVolatileStart;
 
    mD3DDeviceContext->IASetPrimitiveTopology(GFXD3D11PrimType[primType]);
-   
+
    if ( mDrawInstancesCount )
       mD3DDeviceContext->DrawInstanced(primCountToIndexCount(primType, primitiveCount), mDrawInstancesCount, vertexStart, 0);
    else
       mD3DDeviceContext->Draw(primCountToIndexCount(primType, primitiveCount), vertexStart);
-  
+
    mDeviceStatistics.mDrawCalls++;
    if ( mVertexBufferFrequency[0] > 1 )
       mDeviceStatistics.mPolyCount += primitiveCount * mVertexBufferFrequency[0];
@@ -1185,12 +1193,12 @@ void GFXD3D11Device::drawPrimitive( GFXPrimitiveType primType, U32 vertexStart, 
       mDeviceStatistics.mPolyCount += primitiveCount;
 }
 
-void GFXD3D11Device::drawIndexedPrimitive( GFXPrimitiveType primType, 
-                                          U32 startVertex, 
-                                          U32 minIndex, 
-                                          U32 numVerts, 
-                                          U32 startIndex, 
-                                          U32 primitiveCount ) 
+void GFXD3D11Device::drawIndexedPrimitive( GFXPrimitiveType primType,
+                                          U32 startVertex,
+                                          U32 minIndex,
+                                          U32 numVerts,
+                                          U32 startIndex,
+                                          U32 primitiveCount )
 {
    // This is done to avoid the function call overhead if possible
    if( mStateDirty )
@@ -1204,11 +1212,11 @@ void GFXD3D11Device::drawIndexedPrimitive( GFXPrimitiveType primType,
       startVertex += mVolatileVB->mVolatileStart;
 
    mD3DDeviceContext->IASetPrimitiveTopology(GFXD3D11PrimType[primType]);
-  
+
    if ( mDrawInstancesCount )
       mD3DDeviceContext->DrawIndexedInstanced(primCountToIndexCount(primType, primitiveCount), mDrawInstancesCount, mCurrentPB->mVolatileStart + startIndex, startVertex, 0);
    else
-      mD3DDeviceContext->DrawIndexed(primCountToIndexCount(primType,primitiveCount), mCurrentPB->mVolatileStart + startIndex, startVertex);   
+      mD3DDeviceContext->DrawIndexed(primCountToIndexCount(primType,primitiveCount), mCurrentPB->mVolatileStart + startIndex, startVertex);
 
    mDeviceStatistics.mDrawCalls++;
    if ( mVertexBufferFrequency[0] > 1 )
@@ -1245,7 +1253,13 @@ void GFXD3D11Device::setShader(GFXShader *shader, bool force)
       {
         mD3DDeviceContext->VSSetShader( d3dShader->mVertShader, NULL, 0);
         mLastVertShader = d3dShader->mVertShader;
-      }     
+      }
+
+      if (d3dShader->mGeoShader != mLastGeoShader || force)
+      {
+         mD3DDeviceContext->GSSetShader(d3dShader->mGeoShader, NULL, 0);
+         mLastGeoShader = d3dShader->mGeoShader;
+      }
    }
    else
    {
@@ -1308,7 +1322,7 @@ GFXPrimitiveBuffer * GFXD3D11Device::allocPrimitiveBuffer(U32 numIndices, U32 nu
 
       HRESULT hr = D3D11DEVICE->CreateBuffer(&desc, NULL, &res->ib);
 
-      if(FAILED(hr)) 
+      if(FAILED(hr))
       {
          AssertFatal(false, "Failed to allocate an index buffer.");
       }
@@ -1329,12 +1343,12 @@ GFXVertexBuffer * GFXD3D11Device::allocVertexBuffer(U32 numVerts, const GFXVerte
 {
    PROFILE_SCOPE( GFXD3D11Device_allocVertexBuffer );
 
-   GFXD3D11VertexBuffer *res = new GFXD3D11VertexBuffer(   this, 
-                                                         numVerts, 
-                                                         vertexFormat, 
-                                                         vertSize, 
+   GFXD3D11VertexBuffer *res = new GFXD3D11VertexBuffer(   this,
+                                                         numVerts,
+                                                         vertexFormat,
+                                                         vertSize,
                                                          bufferType );
-   
+
    // Determine usage flags
    D3D11_USAGE usage = D3D11_USAGE_DEFAULT;
 
@@ -1387,7 +1401,7 @@ GFXVertexBuffer * GFXD3D11Device::allocVertexBuffer(U32 numVerts, const GFXVerte
 
       HRESULT hr = D3D11DEVICE->CreateBuffer(&desc, NULL, &res->vb);
 
-      if(FAILED(hr)) 
+      if(FAILED(hr))
       {
          AssertFatal(false, "Failed to allocate VB");
       }
@@ -1540,16 +1554,16 @@ GFXVertexDecl* GFXD3D11Device::allocVertexDecl( const GFXVertexFormat *vertexFor
       return decl;
 
    U32 elemCount = vertexFormat->getElementCount();
- 
+
    ID3DBlob* code = NULL;
-  
+
    // We have to generate a temporary shader here for now since the input layout creation
    // expects a shader to be already compiled to verify the vertex layout structure. The problem
    // is that most of the time the regular shaders are compiled AFTER allocVertexDecl is called.
    if(!decl)
    {
       //TODO: Perhaps save/cache the ID3DBlob for later use on identical vertex formats,save creating/compiling the temp shader everytime
-      String shaderData = _createTempShaderInternal(vertexFormat);     
+      String shaderData = _createTempShaderInternal(vertexFormat);
 
 #ifdef TORQUE_DEBUG
       U32 flags = D3DCOMPILE_DEBUG | D3DCOMPILE_ENABLE_STRICTNESS | D3DCOMPILE_WARNINGS_ARE_ERRORS;
@@ -1569,11 +1583,11 @@ GFXVertexDecl* GFXD3D11Device::allocVertexDecl( const GFXVertexFormat *vertexFor
 
       SAFE_RELEASE(errorBlob);
    }
-   
+
    AssertFatal(code, "D3D11Device::allocVertexDecl - compiled vert shader code missing!");
 
    // Setup the declaration struct.
-   
+
    U32 stream;
    D3D11_INPUT_ELEMENT_DESC *vd = new D3D11_INPUT_ELEMENT_DESC[ elemCount];
 
@@ -1599,7 +1613,7 @@ GFXVertexDecl* GFXD3D11Device::allocVertexDecl( const GFXVertexFormat *vertexFor
          vd[i].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
          vd[i].InstanceDataStepRate = 0;
       }
-      // We force the usage index of 0 for everything but 
+      // We force the usage index of 0 for everything but
       // texture coords for now... this may change later.
       vd[i].SemanticIndex = 0;
 
@@ -1634,7 +1648,7 @@ GFXVertexDecl* GFXD3D11Device::allocVertexDecl( const GFXVertexFormat *vertexFor
 
    decl = new D3D11VertexDecl();
    HRESULT hr = mD3DDevice->CreateInputLayout(vd, elemCount,code->GetBufferPointer(), code->GetBufferSize(), &decl->decl);
-   
+
    if (FAILED(hr))
    {
       AssertFatal(false, "GFXD3D11Device::allocVertexDecl - Failed to create vertex input layout!");
@@ -1654,7 +1668,7 @@ void GFXD3D11Device::setVertexDecl( const GFXVertexDecl *decl )
    ID3D11InputLayout *dx11Decl = NULL;
    if (decl)
       dx11Decl = static_cast<const D3D11VertexDecl*>(decl)->decl;
-   
+
    mD3DDeviceContext->IASetInputLayout(dx11Decl);
 }
 
@@ -1709,7 +1723,7 @@ GFXFence *GFXD3D11Device::createFence()
    }
 
    // CodeReview: At some point I would like a specialized implementation of
-   // the method used by the general fence, only without the overhead incurred 
+   // the method used by the general fence, only without the overhead incurred
    // by using the GFX constructs. Primarily the lock() method on texture handles
    // will do a data copy, and this method doesn't require a copy, just a lock
    // [5/10/2007 Pat]
@@ -1719,12 +1733,12 @@ GFXFence *GFXD3D11Device::createFence()
 }
 
 GFXOcclusionQuery* GFXD3D11Device::createOcclusionQuery()
-{  
+{
    GFXOcclusionQuery *query;
    if (mOcclusionQuerySupported)
       query = new GFXD3D11OcclusionQuery( this );
    else
-      return NULL;      
+      return NULL;
 
    query->registerResourceWithDevice(this);
    return query;
@@ -1794,7 +1808,7 @@ const char* GFXD3D11Device::interpretDebugResult(long result)
    //generics
    case E_UNEXPECTED:
       error = "E_UNEXPECTED";
-      break;      
+      break;
    case E_NOTIMPL:
       error = "E_NOTIMPL";
       break;
@@ -1851,4 +1865,40 @@ const char* GFXD3D11Device::interpretDebugResult(long result)
       break;
    }
    return error;
+}
+
+ID3D11Buffer* GFXD3D11Device::getDeviceBuffer(const GFXShaderConstDesc desc)
+{
+   String name(desc.name + "_" + String::ToString(desc.size));
+   DeviceBufferMap::Iterator buf = mDeviceBufferMap.find(name);
+   if (buf != mDeviceBufferMap.end())
+   {
+      mDeviceBufferMap[name]->AddRef();
+      return mDeviceBufferMap[name];
+   }
+
+   ID3D11Buffer* tempBuf;
+   D3D11_BUFFER_DESC cbDesc;
+   cbDesc.ByteWidth = desc.size;
+   cbDesc.Usage = D3D11_USAGE_DEFAULT;
+   cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+   cbDesc.CPUAccessFlags = 0;
+   cbDesc.MiscFlags = 0;
+   cbDesc.StructureByteStride = 0;
+
+   HRESULT hr;
+   hr = D3D11DEVICE->CreateBuffer(&cbDesc, NULL, &tempBuf);
+
+   if (FAILED(hr))
+   {
+      AssertFatal(false, "Failed to create device buffer.");
+   }
+
+   mDeviceBufferMap[name] = tempBuf;
+
+#ifdef TORQUE_DEBUG
+   tempBuf->SetPrivateData(WKPDID_D3DDebugObjectName, name.size(), name.c_str());
+#endif
+
+   return tempBuf;
 }

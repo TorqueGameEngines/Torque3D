@@ -94,7 +94,7 @@ class SceneZoneSpaceManager
          ZoneObjectList(SceneObject* manager) : mManager(manager) { ; }
 
          inline SceneObject* getManager() const { return mManager; }
-         inline Vector<SceneObject*> getObjects() const { return mObjects; }
+         inline Vector<SceneObject*>& getObjects() { return mObjects; }
       };
 
    protected:
@@ -258,6 +258,13 @@ class SceneZoneSpaceManager
          AssertFatal( isValidZoneId( zoneId ), "SceneManager::getZoneOwner - Invalid zone ID!");
          ZoneObjectList* list = mZoneLists[zoneId];
          return ( SceneZoneSpace* )(list ? list->getManager() : NULL);
+      }
+
+      Vector<SceneObject*>* getZoneObjects(const U32 zoneId) const
+      {
+         AssertFatal(isValidZoneId(zoneId), "SceneManager::getZoneOwner - Invalid zone ID!");
+         ZoneObjectList* list = mZoneLists[zoneId];
+         return (list ? &list->getObjects() : NULL);
       }
 
       /// Return the total number of zones in the scene.

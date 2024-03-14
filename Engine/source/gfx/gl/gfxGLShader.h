@@ -111,7 +111,7 @@ public:
    /// Called by GFXGLDevice to activate this buffer.
    void activate(GFXGLShaderConstBuffer* prevShaderBuffer);
 
-   void addBuffer(S32 bufBindingPoint, U32 size);
+   void addBuffer(const GFXShaderConstDesc desc);
 
    /// Called when the shader this buffer references is reloaded.
    void onShaderReload(GFXGLShader* shader);

@@ -292,6 +292,11 @@ GFXGLDevice::~GFXGLDevice()
       mTextureManager->kill();
    }
 
+   // Free device buffers
+   DeviceBufferMap::Iterator bufferIter = mDeviceBufferMap.begin();
+   for (; bufferIter != mDeviceBufferMap.end(); ++bufferIter)
+      glDeleteBuffers(1, &bufferIter->value);
+
    GFXResource* walk = mResourceListHead;
    while(walk)
    {
@@ -305,6 +310,23 @@ GFXGLDevice::~GFXGLDevice()
    SAFE_DELETE( gScreenShot );
 
    SAFE_DELETE( mOpenglStateCache );
+}
+
+GLuint GFXGLDevice::getDeviceBuffer(const GFXShaderConstDesc desc)
+{
+   String name(desc.name + "_" + String::ToString(desc.size));
+   DeviceBufferMap::Iterator buf = mDeviceBufferMap.find(name);
+   if (buf != mDeviceBufferMap.end())
+   {
+      return mDeviceBufferMap[name];
+   }
+
+   GLuint uboHandle;
+   glGenBuffers(1, &uboHandle);
+
+   mDeviceBufferMap[name] = uboHandle;
+
+   return uboHandle;
 }
 
 void GFXGLDevice::zombify()

@@ -155,6 +155,14 @@ GFXD3D11ShaderConstBuffer::~GFXD3D11ShaderConstBuffer()
    }
    mBufferMap.clear(); // Clear the map
 
+   for (U32 i = 0; i < 6; i++)
+   {
+      for (U32 j = 0; j < 16; j++)
+      {
+         mBoundBuffers[i][j] = nullptr;
+      }
+   }
+
    if (mShader)
       mShader->_unlinkBuffer(this);
 }

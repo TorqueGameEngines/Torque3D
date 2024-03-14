@@ -47,6 +47,7 @@ class GFXGLShaderConstBuffer;
 
 class GFXGLDevice : public GFXDevice
 {
+
 public:
    struct GLCapabilities
    {
@@ -59,6 +60,11 @@ public:
       bool extDebugMarker;
    };
    GLCapabilities mCapabilities;
+
+   // UBO map
+   typedef Map<String, GLuint> DeviceBufferMap;
+   // grab device buffer.
+   GLuint getDeviceBuffer(const GFXShaderConstDesc desc);
 
    void zombify();
    void resurrect();
@@ -202,6 +208,8 @@ protected:
    virtual void setVertexStream( U32 stream, GFXVertexBuffer *buffer );
    virtual void setVertexStreamFrequency( U32 stream, U32 frequency );
    StrongRefPtr<GFXGLShaderConstBuffer> mCurrentConstBuffer;
+   DeviceBufferMap mDeviceBufferMap;
+
 private:
    typedef GFXDevice Parent;
 

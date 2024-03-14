@@ -650,7 +650,7 @@ function populateAllFonts()
          continue;
       %fontarray.push_back(%obj.fontType,%obj.fontSize);
    }
-   %fontarray.uniqueKey();
+   %fontarray.uniquePair();
    
    %fontarrayCount = %fontarray.count(); 
    

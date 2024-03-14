@@ -34,6 +34,9 @@
 #define STBIWDEF static inline
 #endif
 
+#pragma warning( push )
+#pragma warning( disable : 4505 ) // unreferenced function removed.
+
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_STATIC
 #include "stb_image.h"
@@ -41,6 +44,8 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_STATIC
 #include "stb_image_write.h"
+
+#pragma warning(pop)
 
 static bool sReadSTB(const Torque::Path& path, GBitmap* bitmap);
 static bool sReadStreamSTB(Stream& stream, GBitmap* bitmap, U32 len);
@@ -147,7 +152,7 @@ bool sReadSTB(const Torque::Path& path, GBitmap* bitmap)
          U32 buffSize = readIes->getStreamSize();
          char* buffer = new char[buffSize];
          readIes->read(buffSize, buffer);
-         
+
 
          IESFileInfo info;
          IESLoadHelper IESLoader;
@@ -399,8 +404,6 @@ bool sWriteSTB(const Torque::Path& path, GBitmap* bitmap, U32 compressionLevel)
    String ext = path.getExtension();
 
 
-
-   U32 stride = width * bytes;
    // we always have at least 1
    U32 comp = 1;
 
@@ -554,7 +557,6 @@ void DeferredPNGWriter::append(GBitmap* bitmap, U32 rows)
       mData->channels = bitmap->getBytesPerPixel();
    }
 
-   const U32 height = getMin(bitmap->getHeight(), rows);
    const dsize_t dataChuckSize = bitmap->getByteSize();
 
    const U8* pSrcData = bitmap->getBits();

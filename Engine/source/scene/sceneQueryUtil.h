@@ -5,7 +5,7 @@
 /// allows it to return the appropriate geometry.
 enum PolyListContext
 {
-   /// A hint that the polyist is intended 
+   /// A hint that the polyist is intended
    /// for collision testing.
    PLC_Collision,
 
@@ -24,7 +24,7 @@ enum PolyListContext
 
    /// A hint that the polyist will be used
    /// to export geometry and would like to have
-   /// texture coords and materials.   
+   /// texture coords and materials.
    PLC_Export
 };
 
@@ -71,7 +71,7 @@ struct SceneBinRange
    inline bool isGlobal() const
    {
       return minCoord[0] == 0 &&
-         minCoord[0] == 0 &&
+         minCoord[1] == 0 &&
          maxCoord[0] == 0xFFFF &&
          maxCoord[1] == 0xFFFF;
    }

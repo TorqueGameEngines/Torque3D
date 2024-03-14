@@ -469,6 +469,12 @@ void GFXD3D11ShaderConstBuffer::addBuffer(U32 bufBindingPoint, GFXShaderStage sh
       }
    }
 
+   // no shaderstage defined? cannot be!!!
+   if (shaderStageID == -1)
+   {
+      AssertFatal(false, "DX Const buffer requires a shaderStage flag.");
+   }
+
    const BufferKey bufKey(bufBindingPoint, shaderStageID);
    // doesnt matter if its already added.
    U8* buf = new U8[size];
@@ -572,8 +578,8 @@ void GFXD3D11ShaderConstBuffer::activate( GFXD3D11ShaderConstBuffer *prevShaderB
       D3D11DEVICECONTEXT->GSSetConstantBuffers(bufStartSlot, numBufs, psBuffers);
    }
 
-
    mWasLost = false;
+
 }
 
 void GFXD3D11ShaderConstBuffer::onShaderReload( GFXD3D11Shader *shader )
@@ -1090,6 +1096,8 @@ GFXShaderConstType GFXD3D11Shader::convertConstType(const D3D11_SHADER_TYPE_DESC
          break;
       }
    }
+
+   return GFXSCT_Uknown;
 
 }
 

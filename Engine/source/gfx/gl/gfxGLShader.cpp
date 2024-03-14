@@ -868,10 +868,12 @@ GFXShaderConstType GFXGLShader::convertConstType(GLenum constType)
       return GFXSCT_SamplerTextureArray;
       break;
    default:
-      AssertFatal(false, "GFXGLShader::initConstantDescs - unrecognized uniform type");
+      AssertFatal(false, "Unknown shader constant class enum, maybe you could add it?");
       // If we don't recognize the constant don't add its description.
       break;
    }
+
+   return GFXSCT_Uknown;
 }
 
 void GFXGLShader::initHandles()

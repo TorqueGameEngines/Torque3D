@@ -598,7 +598,7 @@ bool GuiShaderEditor::onMouseWheelUp(const GuiEvent& event)
    if (!mActive || !mAwake || !mVisible)
       return Parent::onMouseWheelUp(event);
 
-   mZoomScale *= 1.1;
+   mZoomScale *= 1.1f;
 
    return true;
 }
@@ -608,7 +608,7 @@ bool GuiShaderEditor::onMouseWheelDown(const GuiEvent& event)
    if (!mActive || !mAwake || !mVisible)
       return Parent::onMouseWheelDown(event);
 
-   mZoomScale *= 0.9;
+   mZoomScale *= 0.9f;
 
    return true;
 }

@@ -122,13 +122,13 @@ void DebugVizHLSL::processPix(Vector<ShaderComponent*>& componentList,
       if (fd.features[MFT_LightMap] || fd.features[MFT_ToneMap] || fd.features[MFT_VertLit])
          return;
 
-      MultiLine* meta = new MultiLine;
+      MultiLine* newMeta = new MultiLine;
 
       // Now the wsPosition and wsView.
       Var* worldToTangent = getInWorldToTangent(componentList);
       Var* wsNormal = getInWorldNormal(componentList);
       Var* wsPosition = getInWsPosition(componentList);
-      Var* wsView = getWsView(wsPosition, meta);
+      Var* wsView = getWsView(wsPosition, newMeta);
 
       //Reflection Probe WIP
       U32 MAX_FORWARD_PROBES = 4;
@@ -153,32 +153,32 @@ void DebugVizHLSL::processPix(Vector<ShaderComponent*>& componentList,
       Var* showAttenVar = new Var("showAttenVar", "int");
       char buf[64];
       dSprintf(buf, sizeof(buf), "   @ = %s;\r\n", showAtten);
-      meta->addStatement(new GenOp(buf, new DecOp(showAttenVar)));
+      newMeta->addStatement(new GenOp(buf, new DecOp(showAttenVar)));
 
       Var* showContribVar = new Var("showContribVar", "int");
       dSprintf(buf, sizeof(buf), "   @ = %s;\r\n", showContrib);
-      meta->addStatement(new GenOp(buf, new DecOp(showContribVar)));
+      newMeta->addStatement(new GenOp(buf, new DecOp(showContribVar)));
 
       Var* showSpecVar = new Var("showSpecVar", "int");
       dSprintf(buf, sizeof(buf), "   @ = %s;\r\n", showSpec);
-      meta->addStatement(new GenOp(buf, new DecOp(showSpecVar)));
+      newMeta->addStatement(new GenOp(buf, new DecOp(showSpecVar)));
 
       Var* showDiffVar = new Var("showDiffVar", "int");
       dSprintf(buf, sizeof(buf), "   @ = %s;\r\n", showDiff);
-      meta->addStatement(new GenOp(buf, new DecOp(showDiffVar)));
+      newMeta->addStatement(new GenOp(buf, new DecOp(showDiffVar)));
 
       String computeForwardProbes = String("   @ = debugVizForwardProbes(@,@,@,@,@,@,@,@,\r\n\t\t");
       computeForwardProbes += String("@,TORQUE_SAMPLER2D_MAKEARG(@),\r\n\t\t");
       computeForwardProbes += String("TORQUE_SAMPLERCUBEARRAY_MAKEARG(@),TORQUE_SAMPLERCUBEARRAY_MAKEARG(@), @, @, @, @).rgb; \r\n");
 
-      meta->addStatement(new GenOp(computeForwardProbes.c_str(), ibl, surface, cubeMips, numProbes, worldToObjArray, probeConfigData, inProbePosArray, refScaleArray, inRefPosArray,
+      newMeta->addStatement(new GenOp(computeForwardProbes.c_str(), ibl, surface, cubeMips, numProbes, worldToObjArray, probeConfigData, inProbePosArray, refScaleArray, inRefPosArray,
          skylightCubemapIdx, BRDFTexture,
          irradianceCubemapAR, specularCubemapAR,
          showAttenVar, showContribVar, showSpecVar, showDiffVar));
 
-      meta->addStatement(new GenOp("   @.rgb = @.rgb;\r\n", color, ibl));
+      newMeta->addStatement(new GenOp("   @.rgb = @.rgb;\r\n", color, ibl));
 
-      output = meta;
+      output = newMeta;
       return;
    }
 }

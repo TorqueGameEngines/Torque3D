@@ -79,14 +79,14 @@ enum GFXShaderStage
 struct GFXShaderConstDesc
 {
 public:
-   String name;
-   GFXShaderConstType constType;
+   String name = String::EmptyString;
+   GFXShaderConstType constType = GFXSCT_Uknown;
    U32 arraySize = 0;            // > 1 means it is an array!
    S32 bindPoint = -1;           // bind point used for ubo/cb
    S32 samplerReg = -1;          // sampler register.
    U32 offset = 0;               // offset for vars
    U32 size = 0;                 // size of buffer/type
-   GFXShaderStage shaderStage;   // only used dx side.
+   GFXShaderStage shaderStage = VERTEX_SHADER;   // only used dx side.not wasting a bit for an unknown?
 };
 
 /// This is an opaque handle used by GFXShaderConstBuffer clients to set individual shader constants.

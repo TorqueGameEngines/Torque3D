@@ -1,19 +1,19 @@
 // Original code is:
-// Copyright (c) 2005 Intel Corporation 
+// Copyright (c) 2005 Intel Corporation
 // All Rights Reserved
 //
 // CPUCount.cpp : Detects three forms of hardware multi-threading support across IA-32 platform
-//					The three forms of HW multithreading are: Multi-processor, Multi-core, and 
+//					The three forms of HW multithreading are: Multi-processor, Multi-core, and
 //					HyperThreading Technology.
 //					This application enumerates all the logical processors enabled by OS and BIOS,
-//					determine the HW topology of these enabled logical processors in the system 
+//					determine the HW topology of these enabled logical processors in the system
 //					using information provided by CPUID instruction.
 //					A multi-processing system can support any combination of the three forms of HW
-//					multi-threading support. The relevant topology can be identified using a 
-//					three level decomposition of the "initial APIC ID" into 
-//					Package_id, core_id, and SMT_id. Such decomposition provides a three-level map of 
+//					multi-threading support. The relevant topology can be identified using a
+//					three level decomposition of the "initial APIC ID" into
+//					Package_id, core_id, and SMT_id. Such decomposition provides a three-level map of
 //					the topology of hardware resources and
-//					allow multi-threaded software to manage shared hardware resources in 
+//					allow multi-threaded software to manage shared hardware resources in
 //					the platform to reduce resource contention
 
 //					Multicore detection algorithm for processor and cache topology requires
@@ -60,25 +60,25 @@ namespace CPUInfo {
 
       PSYSTEM_LOGICAL_PROCESSOR_INFORMATION buffer = NULL;
       DWORD returnLength = 0;
-      
+
       // get buffer length
       DWORD rc = GetLogicalProcessorInformation( buffer, &returnLength );
       buffer = (PSYSTEM_LOGICAL_PROCESSOR_INFORMATION)malloc( returnLength );
 
-      rc = GetLogicalProcessorInformation( buffer, &returnLength );      
+      rc = GetLogicalProcessorInformation( buffer, &returnLength );
 
       // if we fail, assume single threaded
       if( FALSE == rc )
-      {           
+      {
          free( buffer );
          Con::errorf("Unable to determine CPU Count, assuming 1 core");
          TotAvailCore = 1;
          TotAvailLogical = 1;
          return CONFIG_SingleCoreAndHTNotCapable;
-      }      
+      }
 
-#pragma push
-#pragma warning (disable: 6011)
+#pragma warning( push )
+#pragma warning( disable: 6011 )
       PSYSTEM_LOGICAL_PROCESSOR_INFORMATION ptr = buffer;
 
       DWORD byteOffset = 0;
@@ -95,7 +95,7 @@ namespace CPUInfo {
       }
 
       free( buffer );
-#pragma pop
+#pragma warning( pop )
 
       EConfig StatusFlag = CONFIG_SingleCoreAndHTNotCapable;
 

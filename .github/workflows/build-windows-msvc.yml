@@ -9,6 +9,7 @@ concurrency:
     cancel-in-progress: true
 jobs:
     build-windows:
+        if: github.repository == 'TorqueGameEngines/Torque3D'
         name: ${{matrix.config.name}}
         runs-on: windows-latest
         strategy:

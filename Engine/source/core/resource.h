@@ -194,7 +194,7 @@ template<class T> class ResourceHolder : public ResourceHolderBase
 {
 public:
    ResourceHolder(T *t) : ResourceHolderBase(t) {}
-   virtual ~ResourceHolder() { delete ((T*)mRes); }
+   virtual ~ResourceHolder() { mRes = static_cast<T*>(mRes); SAFE_DELETE(mRes); }
 };
 
 // Resource template.  When dealing with resources, this is the

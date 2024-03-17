@@ -48,9 +48,7 @@ template<typename T> inline const T nullAsType(){ return nullptr; }
 /// @ingroup console_system Console System
 /// @{
 
-#ifndef Offset
-#define Offset(x, cls) offsetof(cls, x)
-#endif
+#define Offset(x, cls) (reinterpret_cast<size_t>(&(((cls*)0)->x)))
 
 class GFXShader;
 class GFXCubemap;
@@ -90,32 +88,32 @@ DefineUnmappedConsoleType( TypePID, SimPersistID* );
 DefineConsoleType( TypeImageFilename, const char* )
 
 /// TypePrefabFilename is equivalent to TypeStringFilename in its usage,
-/// it exists for the benefit of GuiInspector, which will provide a 
+/// it exists for the benefit of GuiInspector, which will provide a
 /// custom InspectorField for this type.
 DefineConsoleType( TypePrefabFilename, const char*)
 
 /// TypeShapeFilename is equivalent to TypeStringFilename in its usage,
-/// it exists for the benefit of GuiInspector, which will provide a 
+/// it exists for the benefit of GuiInspector, which will provide a
 /// custom InspectorField for this type.
 DefineConsoleType( TypeShapeFilename, const char* )
 
-/// TypeSoundFilename is exactly the same as TypeShapeFilename 
-/// it exists for the benefit of GuiInspector, which will provide a 
+/// TypeSoundFilename is exactly the same as TypeShapeFilename
+/// it exists for the benefit of GuiInspector, which will provide a
 /// custom InspectorField for this type.
 DefineConsoleType(TypeSoundFilename, const char*)
 
 /// TypeMaterialName is equivalent to TypeRealString in its usage,
-/// it exists for the benefit of GuiInspector, which will provide a 
+/// it exists for the benefit of GuiInspector, which will provide a
 /// custom InspectorField for this type.
 DefineConsoleType( TypeMaterialName, const char*)
 
 /// TypeTerrainMaterialIndex is equivalent to TypeS32 in its usage,
-/// it exists for the benefit of GuiInspector, which will provide a 
+/// it exists for the benefit of GuiInspector, which will provide a
 /// custom InspectorField for this type.
 DefineConsoleType( TypeTerrainMaterialIndex, S32 )
 
 /// TypeTerrainMaterialName is equivalent to TypeString in its usage,
-/// it exists for the benefit of GuiInspector, which will provide a 
+/// it exists for the benefit of GuiInspector, which will provide a
 /// custom InspectorField for this type.
 DefineConsoleType( TypeTerrainMaterialName, const char * )
 
@@ -141,7 +139,7 @@ DefineConsoleType( TypeSimPersistId, SimPersistID* )
 DefineConsoleType( TypeName, const char* )
 
 /// TypeRectUV is equivalent to TypeRectF in its usage,
-/// it exists for the benefit of GuiInspector, which will provide a 
+/// it exists for the benefit of GuiInspector, which will provide a
 /// custom InspectorField for this type.
 DefineConsoleType( TypeRectUV, RectF )
 

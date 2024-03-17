@@ -145,26 +145,26 @@ typedef unsigned long  U64;
 // TSShapeConstructor::initPersistFields for an example)
 
 // compiler is non-GCC, or gcc < 3
-#if (__GNUC__ < 3)
-#define Offset(x, cls) _Offset_Normal(x, cls)
-#define OffsetNonConst(x, cls) _Offset_Normal(x, cls)
-
-// compiler is GCC 3 with minor version less than 4
-#elif defined(TORQUE_COMPILER_GCC) && (__GNUC__ == 3) && (__GNUC_MINOR__ < 4)
-#define Offset(x, cls) _Offset_Variant_1(x, cls)
-#define OffsetNonConst(x, cls) _Offset_Variant_1(x, cls)
-
-// compiler is GCC 3 with minor version greater than 4
-#elif defined(TORQUE_COMPILER_GCC) && (__GNUC__ == 3) && (__GNUC_MINOR__ >= 4)
-#include <stddef.h>
-#define Offset(x, cls) _Offset_Variant_2(x, cls)
-#define OffsetNonConst(x, cls) _Offset_Variant_1(x, cls)
-
-// compiler is GCC 4
-#elif defined(TORQUE_COMPILER_GCC) && (__GNUC__ == 4)
-#include <stddef.h>
-#define Offset(x, cls) _Offset_Normal(x, cls)
-#define OffsetNonConst(x, cls) _Offset_Variant_1(x, cls)
+//#if (__GNUC__ < 3)
+//#define Offset(x, cls) _Offset_Normal(x, cls)
+//#define OffsetNonConst(x, cls) _Offset_Normal(x, cls)
+//
+//// compiler is GCC 3 with minor version less than 4
+//#elif defined(TORQUE_COMPILER_GCC) && (__GNUC__ == 3) && (__GNUC_MINOR__ < 4)
+//#define Offset(x, cls) _Offset_Variant_1(x, cls)
+//#define OffsetNonConst(x, cls) _Offset_Variant_1(x, cls)
+//
+//// compiler is GCC 3 with minor version greater than 4
+//#elif defined(TORQUE_COMPILER_GCC) && (__GNUC__ == 3) && (__GNUC_MINOR__ >= 4)
+//#include <stddef.h>
+//#define Offset(x, cls) _Offset_Variant_2(x, cls)
+//#define OffsetNonConst(x, cls) _Offset_Variant_1(x, cls)
+//
+//// compiler is GCC 4
+//#elif defined(TORQUE_COMPILER_GCC) && (__GNUC__ == 4)
+//#include <stddef.h>
+//#define Offset(x, cls) _Offset_Normal(x, cls)
+//#define OffsetNonConst(x, cls) _Offset_Variant_1(x, cls)
 
 #endif
 #endif

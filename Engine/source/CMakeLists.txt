@@ -27,6 +27,7 @@ if (APPLE)
   set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} __MACOSX__)
 elseif (UNIX)
   set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} __linux__)
+  addDef(_CRT_USE_BUILTIN_OFFSETOF)
 endif (APPLE)
 
 ################# Set Engine Linkages ###################

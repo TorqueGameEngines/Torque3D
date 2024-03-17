@@ -133,17 +133,17 @@ typedef unsigned long  U64;
 #  error "GCC: Unsupported Target CPU"
 #endif
 
-#ifndef Offset
-/// Offset macro:
-/// Calculates the location in memory of a given member x of class cls from the
-/// start of the class.  Need several definitions to account for various
-/// flavors of GCC.
-
+//#ifndef Offset
+// Offset macro:
+// Calculates the location in memory of a given member x of class cls from the
+// start of the class.  Need several definitions to account for various
+// flavors of GCC.
+//
 // now, for each compiler type, define the Offset macros that should be used.
 // The Engine code usually uses the Offset macro, but OffsetNonConst is needed
 // when a variable is used in the indexing of the member field (see
 // TSShapeConstructor::initPersistFields for an example)
-
+//
 // compiler is non-GCC, or gcc < 3
 //#if (__GNUC__ < 3)
 //#define Offset(x, cls) _Offset_Normal(x, cls)
@@ -165,9 +165,9 @@ typedef unsigned long  U64;
 //#include <stddef.h>
 //#define Offset(x, cls) _Offset_Normal(x, cls)
 //#define OffsetNonConst(x, cls) _Offset_Variant_1(x, cls)
-
-#endif
-#endif
+//
+//#endif
+//#endif
 
 #define TORQUE_U16_ENDIANSWAP_BUILTIN __builtin_bswap16
 #define TORQUE_U32_ENDIANSWAP_BUILTIN __builtin_bswap32

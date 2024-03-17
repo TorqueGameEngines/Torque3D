@@ -47,6 +47,8 @@
 #include "platform/platformAssert.h"
 #endif
 
+#include <memory>
+
 class ResourceManager;
 
 // This is a utility class used by the resource manager.
@@ -62,17 +64,18 @@ class ResourceHolderBase
 public:
    static FreeListChunker<ResourceHolderBase> smHolderFactory;
 
-   ResourceHolderBase() : mRes(NULL) { ; } // @note this is needed for the chunked allocator
+   ResourceHolderBase() = default; // Default constructor
    virtual ~ResourceHolderBase() {}
-   
+
    // Return void pointer to resource data.
-   void *getResource() const { return mRes; }
+   void* getResource() const { return mRes.get(); }
 
 protected:
    // Construct a resource holder pointing at 'p'.
-   ResourceHolderBase(void *p) : mRes(p) {}
+   template<typename T>
+   ResourceHolderBase(T* p) : mRes(p, [](void*) {}) {}
 
-   void *mRes;
+   std::unique_ptr<void, void(*)(void*)> mRes{ nullptr, [](void*) {} };
 };
 
 // All resources are derived from this type.  The base type
@@ -85,7 +88,7 @@ protected:
 class ResourceBase
 {
    friend class ResourceManager;
- 
+
 protected:
    class Header;
 
@@ -131,7 +134,7 @@ protected:
       virtual void destroySelf();
 
    private:
-      
+
       friend class ResourceBase;
       friend class ResourceManager;
 
@@ -182,7 +185,7 @@ protected:
 
       return sLoadSignal;
    }
-   
+
    virtual void _triggerPostLoadSignal() {}
    virtual NotifyUnloadFn _getNotifyUnloadFn() { return ( NotifyUnloadFn ) NULL; }
 };
@@ -190,11 +193,17 @@ protected:
 // This is a utility class used by resource manager.  Classes derived
 // from this template pretty much just know how to delete the template's
 // type.
-template<class T> class ResourceHolder : public ResourceHolderBase
+template<class T>
+class ResourceHolder : public ResourceHolderBase
 {
 public:
-   ResourceHolder(T *t) : ResourceHolderBase(t) {}
-   virtual ~ResourceHolder() { delete ((T*)mRes); }
+   ResourceHolder(T* t) : ResourceHolderBase(t) {}
+   virtual ~ResourceHolder() {
+      if (mRes) {
+         T* typedmRes = static_cast<T*>(mRes.get());
+         typedmRes->~T(); // Call the destructor explicitly
+      }
+   }
 };
 
 // Resource template.  When dealing with resources, this is the
@@ -234,7 +243,7 @@ public:
       static Signal<bool(const Torque::Path &, void**)>   sLoadSignal;
       return sLoadSignal;
    }
-   
+
    /// Register with this signal to get notified when resources of this type
    /// have been loaded.
    static Signal< void( Resource< T >& ) >& getPostLoadSignal()
@@ -242,7 +251,7 @@ public:
       static Signal< void( Resource< T >& ) > sPostLoadSignal;
       return sPostLoadSignal;
    }
-   
+
    /// Register with this signal to get notified when resources of this type
    /// are about to get unloaded.
    static Signal< void( const Torque::Path&, T* ) >& getUnloadSignal()
@@ -260,9 +269,9 @@ private:
    ResourceHolderBase   *createHolder(void *);
 
    Signal<bool(const Torque::Path &, void**)>   &getStaticLoadSignal() { return getLoadSignal(); }
-   
+
    static void _notifyUnload( const Torque::Path& path, void* resource ) { getUnloadSignal().trigger( path, ( T* ) resource ); }
-   
+
    virtual void _triggerPostLoadSignal() { getPostLoadSignal().trigger( *this ); }
    virtual NotifyUnloadFn _getNotifyUnloadFn() { return ( NotifyUnloadFn ) &_notifyUnload; }
 
@@ -303,7 +312,7 @@ template< class T >
 class ResourceRegisterPostLoadSignal
 {
    public:
-   
+
       ResourceRegisterPostLoadSignal( Delegate< void( Resource< T >& ) > func )
       {
          Resource< T >::getPostLoadSignal().notify( func );
@@ -314,7 +323,7 @@ template< class T >
 class ResourceRegisterUnloadSignal
 {
    public:
-   
+
       ResourceRegisterUnloadSignal( Delegate< void( const Torque::Path&, T* ) > func )
       {
          Resource< T >::getUnloadSignal().notify( func );

@@ -182,7 +182,7 @@ singleton ShaderData( ThickLineGUI )
    DXGeometryShaderFile = $Core::CommonShaderPath @ "/fixedFunction/thickLineG.hlsl";
    DXPixelShaderFile    = $Core::CommonShaderPath @ "/fixedFunction/thickLineP.hlsl";
 
-   OGLVertexShaderFile   = $Core::CommonShaderPath @ "/fixedFunction/gl/colorV.glsl";
+   OGLVertexShaderFile   = $Core::CommonShaderPath @ "/fixedFunction/gl/thickLineV.glsl";
    OGLGeometryShaderFile = $Core::CommonShaderPath @ "/fixedFunction/gl/thickLineG.glsl";
    OGLPixelShaderFile    = $Core::CommonShaderPath @ "/fixedFunction/gl/thickLineP.glsl";
       

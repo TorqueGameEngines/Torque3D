@@ -50,18 +50,15 @@ ConsoleDocClass( afxChoreographerData,
 
 afxChoreographerData::afxChoreographerData()
 {
-  exec_on_new_clients = false;
-  echo_packet_usage = 100;
-  client_script_file = ST_NULLSTRING;
-  client_init_func = ST_NULLSTRING;
+   dataStruct.exec_on_new_clients = false;
+   dataStruct.echo_packet_usage = 100;
+   dataStruct.client_script_file = ST_NULLSTRING;
+   dataStruct.client_init_func = ST_NULLSTRING;
 }
 
 afxChoreographerData::afxChoreographerData(const afxChoreographerData& other, bool temp_clone) : GameBaseData(other, temp_clone)
 {
-  exec_on_new_clients = other.exec_on_new_clients;
-  echo_packet_usage = other.echo_packet_usage;
-  client_script_file = other.client_script_file;
-  client_init_func = other.client_init_func;
+   dataStruct = other.dataStruct;
 }
 
 #define myOffset(field) Offset(field, afxChoreographerData)
@@ -69,13 +66,13 @@ afxChoreographerData::afxChoreographerData(const afxChoreographerData& other, bo
 void afxChoreographerData::initPersistFields()
 {
    docsURL;
-  addField("execOnNewClients",    TypeBool,       myOffset(exec_on_new_clients),
+  addField("execOnNewClients",    TypeBool,       myOffset(dataStruct.exec_on_new_clients),
     "...");
-  addField("echoPacketUsage",     TypeS8,         myOffset(echo_packet_usage),
+  addField("echoPacketUsage",     TypeS8,         myOffset(dataStruct.echo_packet_usage),
     "...");
-  addField("clientScriptFile",    TypeFilename,   myOffset(client_script_file),
+  addField("clientScriptFile",    TypeFilename,   myOffset(dataStruct.client_script_file),
     "...");
-  addField("clientInitFunction",  TypeString,     myOffset(client_init_func),
+  addField("clientInitFunction",  TypeString,     myOffset(dataStruct.client_init_func),
     "...");
 
   Parent::initPersistFields();
@@ -85,20 +82,20 @@ void afxChoreographerData::packData(BitStream* stream)
 {
   Parent::packData(stream);
 
-  stream->write(exec_on_new_clients);
-  stream->write(echo_packet_usage);
-  stream->writeString(client_script_file);
-  stream->writeString(client_init_func);
+  stream->write(dataStruct.exec_on_new_clients);
+  stream->write(dataStruct.echo_packet_usage);
+  stream->writeString(dataStruct.client_script_file);
+  stream->writeString(dataStruct.client_init_func);
 }
 
 void afxChoreographerData::unpackData(BitStream* stream)
 {
   Parent::unpackData(stream);
 
-  stream->read(&exec_on_new_clients);
-  stream->read(&echo_packet_usage);
-  client_script_file = stream->readSTString();
-  client_init_func = stream->readSTString();
+  stream->read(&dataStruct.exec_on_new_clients);
+  stream->read(&dataStruct.echo_packet_usage);
+  dataStruct.client_script_file = stream->readSTString();
+  dataStruct.client_init_func = stream->readSTString();
 }
 
 bool afxChoreographerData::preload(bool server, String &errorStr)
@@ -106,13 +103,13 @@ bool afxChoreographerData::preload(bool server, String &errorStr)
   if (!Parent::preload(server, errorStr))
     return false;
 
-  if (!server && client_script_file != ST_NULLSTRING)
+  if (!server && dataStruct.client_script_file != ST_NULLSTRING)
   {
-     Con::EvalResult result = Con::evaluate(avar("exec(\"%s\");", client_script_file), false, 0);
+     Con::EvalResult result = Con::evaluate(avar("exec(\"%s\");", dataStruct.client_script_file), false, 0);
 
     if (!result.valid)
     {
-      Con::errorf("afxChoreographerData: failed to exec clientScriptFile \"%s\" -- syntax error", client_script_file);
+      Con::errorf("afxChoreographerData: failed to exec clientScriptFile \"%s\" -- syntax error", dataStruct.client_script_file);
     }
   }
 
@@ -190,7 +187,7 @@ void afxChoreographer::initPersistFields()
 
 bool afxChoreographer::onAdd()
 {
-  if (!Parent::onAdd()) 
+  if (!Parent::onAdd())
     return(false);
 
   if (isServerObject())
@@ -205,8 +202,8 @@ bool afxChoreographer::onAdd()
 
     force_set_mgr = new afxForceSetMgr();
 
-    if (datablock && datablock->client_init_func != ST_NULLSTRING)
-      Con::executef(datablock->client_init_func, getIdString());
+    if (datablock && datablock->dataStruct.client_init_func != ST_NULLSTRING)
+      Con::executef(datablock->dataStruct.client_init_func, getIdString());
   }
 
   return(true);
@@ -231,7 +228,7 @@ void afxChoreographer::onRemove()
 void afxChoreographer::onDeleteNotify(SimObject* obj)
 {
   if (dynamic_cast<SceneObject*>(obj))
-  { 
+  {
     SceneObject* scn_obj = (SceneObject*)(obj);
     for (S32 i = 0; i < dyn_cons_defs->size(); i++)
       if ((*dyn_cons_defs)[i].cons_type != OBJECT_CONSTRAINT || (*dyn_cons_defs)[i].cons_obj.object != scn_obj)
@@ -274,7 +271,7 @@ void afxChoreographer::pack_constraint_info(NetConnection* conn, BitStream* stre
       stream->writeString((*dyn_cons_defs)[i].cons_name);
       stream->write((*dyn_cons_defs)[i].cons_type);
       SceneObject* object = (*dyn_cons_defs)[i].cons_obj.object;
-      S32 ghost_idx = conn->getGhostIndex(object); 
+      S32 ghost_idx = conn->getGhostIndex(object);
       if (stream->writeFlag(ghost_idx != -1))
       {
         stream->writeRangedU32(U32(ghost_idx), 0, NetConnection::MaxGhostCount);
@@ -301,7 +298,7 @@ void afxChoreographer::pack_constraint_info(NetConnection* conn, BitStream* stre
       mathWrite(*stream, *(*dyn_cons_defs)[i].cons_obj.xfm);
     }
   }
-      
+
   constraint_mgr->packConstraintNames(conn, stream);
 }
 
@@ -323,7 +320,7 @@ void afxChoreographer::unpack_constraint_info(NetConnection* conn, BitStream* st
         scn_obj = dynamic_cast<SceneObject*>(conn->resolveGhost(ghost_idx));
         if (scn_obj)
         {
-          addObjectConstraint(scn_obj, cons_name); 
+          addObjectConstraint(scn_obj, cons_name);
         }
         else
           Con::errorf("CANNOT RESOLVE GHOST %d %s", ghost_idx, cons_name);
@@ -343,15 +340,15 @@ void afxChoreographer::unpack_constraint_info(NetConnection* conn, BitStream* st
       Point3F point;
       mathRead(*stream, &point);
       addPointConstraint(point, cons_name);
-    }    
+    }
     else if (cons_type == TRANSFORM_CONSTRAINT)
     {
       MatrixF xfm;
       mathRead(*stream, &xfm);
       addTransformConstraint(xfm, cons_name);
-    }    
+    }
   }
-  
+
   constraint_mgr->unpackConstraintNames(stream);
 }
 
@@ -416,7 +413,7 @@ void afxChoreographer::check_packet_usage(NetConnection* conn, BitStream* stream
   else
   {
     F32 percentage = 100.0f*((F32)packed_size/(F32)max_headroom);
-    if (percentage >= datablock->echo_packet_usage)
+    if (percentage >= datablock->dataStruct.echo_packet_usage)
     {
         Con::warnf("%s [%s] -- packed-bits (%d) < limit (%d). [%.1f%% full]", msg_tag, datablock->getName(),
                   packed_size, max_headroom, percentage);
@@ -453,7 +450,7 @@ SceneObject* afxChoreographer::get_camera(Point3F* cam_pos) const
 U32 afxChoreographer::packUpdate(NetConnection* conn, U32 mask, BitStream* stream)
 {
   U32 retMask = Parent::packUpdate(conn, mask, stream);
-  
+
   if (stream->writeFlag(mask & InitialUpdateMask))      //-- INITIAL UPDATE ?
   {
     stream->write(ranking);
@@ -533,7 +530,7 @@ U32 afxChoreographer::packUpdate(NetConnection* conn, U32 mask, BitStream* strea
   }
   // CONSTRAINT REMAPPING >>
 
-  AssertISV(stream->isValid(), "afxChoreographer::packUpdate(): write failure occurred, possibly caused by packet-size overrun."); 
+  AssertISV(stream->isValid(), "afxChoreographer::packUpdate(): write failure occurred, possibly caused by packet-size overrun.");
 
   return retMask;
 }
@@ -541,7 +538,7 @@ U32 afxChoreographer::packUpdate(NetConnection* conn, U32 mask, BitStream* strea
 void afxChoreographer::unpackUpdate(NetConnection * conn, BitStream * stream)
 {
   Parent::unpackUpdate(conn, stream);
-  
+
   // InitialUpdate Only
   if (stream->readFlag())
   {
@@ -586,7 +583,7 @@ void afxChoreographer::unpackUpdate(NetConnection * conn, BitStream * stream)
           scn_obj = dynamic_cast<SceneObject*>(conn->resolveGhost(ghost_idx));
           if (scn_obj)
           {
-            remapObjectConstraint(scn_obj, cons_name); 
+            remapObjectConstraint(scn_obj, cons_name);
           }
           else
             Con::errorf("CANNOT RESOLVE GHOST %d %s", ghost_idx, cons_name);
@@ -606,19 +603,19 @@ void afxChoreographer::unpackUpdate(NetConnection * conn, BitStream * stream)
         Point3F point;
         mathRead(*stream, &point);
         remapPointConstraint(point, cons_name);
-      }    
+      }
       else if (cons_type == TRANSFORM_CONSTRAINT)
       {
         MatrixF xfm;
         mathRead(*stream, &xfm);
         remapTransformConstraint(xfm, cons_name);
-      }    
+      }
     }
   }
   // CONSTRAINT REMAPPING >>
 }
 
-void afxChoreographer::executeScriptEvent(const char* method, afxConstraint* cons, 
+void afxChoreographer::executeScriptEvent(const char* method, afxConstraint* cons,
                                           const MatrixF& xfm, const char* data)
 {
   SceneObject* cons_obj = (cons) ? cons->getSceneObject() : NULL;
@@ -632,7 +629,7 @@ void afxChoreographer::executeScriptEvent(const char* method, afxConstraint* con
            aa.axis.x, aa.axis.y, aa.axis.z, aa.angle);
 
   // CALL SCRIPT afxChoreographerData::method(%choreographer, %constraint, %transform, %data)
-  Con::executef(exeblock, method, 
+  Con::executef(exeblock, method,
                 getIdString(),
                 (cons_obj) ? cons_obj->getIdString() : "",
                 arg_buf,
@@ -700,7 +697,7 @@ static inline U32 resolve_cons_spec(const char* source_spec, Point3F& pos, Matri
 {
   AngAxisF aa;
 
-  S32 args_n = dSscanf(source_spec, "%g %g %g %g %g %g %g", 
+  S32 args_n = dSscanf(source_spec, "%g %g %g %g %g %g %g",
                        &pos.x, &pos.y, &pos.z,
                        &aa.axis.x, &aa.axis.y, &aa.axis.z, &aa.angle);
 
@@ -712,7 +709,7 @@ static inline U32 resolve_cons_spec(const char* source_spec, Point3F& pos, Matri
      return afxEffectDefs::TRANSFORM_CONSTRAINT;
   }
 
-  // POINT CONSTRAINT SRC 
+  // POINT CONSTRAINT SRC
   if (args_n == 3)
   {
     return afxEffectDefs::POINT_CONSTRAINT;
@@ -778,8 +775,8 @@ void afxChoreographer::restoreScopedObject(SceneObject* obj)
   constraint_mgr->adjustProcessOrdering(this);
 }
 
-void afxChoreographer::addExplicitClient(NetConnection* conn) 
-{ 
+void afxChoreographer::addExplicitClient(NetConnection* conn)
+{
   if (!conn)
     return;
 
@@ -793,8 +790,8 @@ void afxChoreographer::addExplicitClient(NetConnection* conn)
   deleteNotify(conn);
 }
 
-void afxChoreographer::removeExplicitClient(NetConnection* conn) 
-{ 
+void afxChoreographer::removeExplicitClient(NetConnection* conn)
+{
   if (!conn)
     return;
 
@@ -823,22 +820,22 @@ void afxChoreographer::setTriggerMask(U32 mask)
   }
 }
 
-afxParticlePool* afxChoreographer::findParticlePool(afxParticlePoolData* key_block, U32 key_index) 
-{ 
+afxParticlePool* afxChoreographer::findParticlePool(afxParticlePoolData* key_block, U32 key_index)
+{
   for (S32 i = 0; i < particle_pools.size(); i++)
     if (particle_pools[i] && particle_pools[i]->hasMatchingKeyBlock(key_block, key_index))
       return particle_pools[i];
 
-  return 0; 
+  return 0;
 }
 
-void afxChoreographer::registerParticlePool(afxParticlePool* pool) 
-{ 
+void afxChoreographer::registerParticlePool(afxParticlePool* pool)
+{
   particle_pools.push_back(pool);
 }
 
-void afxChoreographer::unregisterParticlePool(afxParticlePool* pool) 
-{ 
+void afxChoreographer::unregisterParticlePool(afxParticlePool* pool)
+{
   for (S32 i = 0; i < particle_pools.size(); i++)
     if (particle_pools[i] == pool)
     {
@@ -931,7 +928,7 @@ void afxChoreographer::remapObjectConstraint(SceneObject* object, const char* co
     return;
   }
 
-  // nothing to do if new object is same as old 
+  // nothing to do if new object is same as old
   if (dyn_def->cons_obj.object == object)
   {
 #ifdef TORQUE_DEBUG

@@ -40,10 +40,15 @@ class afxChoreographerData : public GameBaseData, public afxEffectDefs
   typedef GameBaseData  Parent;
 
 public:
-  bool              exec_on_new_clients;
-  U8                echo_packet_usage;
-  StringTableEntry  client_script_file;
-  StringTableEntry  client_init_func;
+   struct AFXChoregraphDataStruct {
+   public:
+      bool              exec_on_new_clients;
+      U8                echo_packet_usage;
+      StringTableEntry  client_script_file;
+      StringTableEntry  client_init_func;
+   };
+
+   AFXChoregraphDataStruct dataStruct;
 
 public:
   /*C*/         afxChoreographerData();
@@ -75,15 +80,15 @@ class afxChoreographer : public GameBase, public afxEffectDefs, public afxMagicM
   typedef GameBase  Parent;
 
 public:
-  enum MaskBits 
+  enum MaskBits
   {
     TriggerMask         = Parent::NextFreeMask << 0,
     RemapConstraintMask = Parent::NextFreeMask << 1, // CONSTRAINT REMAPPING
     NextFreeMask        = Parent::NextFreeMask << 2
   };
 
-  enum 
-  { 
+  enum
+  {
     USER_EXEC_CONDS_MASK = 0x00ffffff
   };
 
@@ -145,7 +150,7 @@ public:
   virtual void      unpackUpdate(NetConnection*, BitStream*);
 
   virtual void      sync_with_clients() { }
-  
+
   afxConstraintMgr* getConstraintMgr() { return constraint_mgr; }
   afxForceSetMgr*   getForceSetMgr() { return force_set_mgr; }
 
@@ -162,7 +167,7 @@ public:
   void              setExecConditions(U32 mask) { exec_conds_mask = mask; }
   U32               getExecConditions() const { return exec_conds_mask; }
 
-  virtual void      executeScriptEvent(const char* method, afxConstraint*, 
+  virtual void      executeScriptEvent(const char* method, afxConstraint*,
                                        const MatrixF& xfm, const char* data);
 
   virtual void      inflictDamage(const char * label, const char* flavor, SimObjectId target,
@@ -200,12 +205,12 @@ public:
 
   DECLARE_CONOBJECT(afxChoreographer);
   DECLARE_CATEGORY("UNLISTED");
-  
+
   // CONSTRAINT REMAPPING <<
 protected:
   Vector<dynConstraintDef*> remapped_cons_defs;
   bool              remapped_cons_sent;
-  virtual bool      remap_builtin_constraint(SceneObject*, const char* cons_name) { return false; }     
+  virtual bool      remap_builtin_constraint(SceneObject*, const char* cons_name) { return false; }
   dynConstraintDef* find_cons_def_by_name(const char* cons_name);
 public:
   void              remapObjectConstraint(SceneObject*, const char* cons_name);
@@ -213,7 +218,7 @@ public:
   void              remapPointConstraint(Point3F&, const char* cons_name);
   void              remapTransformConstraint(MatrixF&, const char* cons_name);
   bool              remapConstraint(const char* source_spec, const char* cons_name);
-  // CONSTRAINT REMAPPING >> 
+  // CONSTRAINT REMAPPING >>
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

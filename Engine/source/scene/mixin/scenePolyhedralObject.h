@@ -75,7 +75,7 @@ class ScenePolyhedralObject : public Base, public IScenePolyhedralObject
       PolyhedronType mPolyhedron;
 
       ///
-      virtual void _renderObject( ObjectRenderInst* ri, SceneRenderState* state, BaseMatInstance* overrideMat );
+      void _renderObject( ObjectRenderInst* ri, SceneRenderState* state, BaseMatInstance* overrideMat ) override;
 
    public:
 
@@ -90,21 +90,21 @@ class ScenePolyhedralObject : public Base, public IScenePolyhedralObject
       const PolyhedronType& getPolyhedron() const { return mPolyhedron; }
 
       // SimObject.
-      virtual bool onAdd();
-      virtual void writeFields( Stream& stream, U32 tabStop );
-      virtual bool writeField( StringTableEntry name, const char* value );
+      bool onAdd() override;
+      void writeFields( Stream& stream, U32 tabStop ) override;
+      bool writeField( StringTableEntry name, const char* value ) override;
 
       static void initPersistFields();
 
       // NetObject.
-      virtual U32 packUpdate( NetConnection* connection, U32 mask, BitStream* stream );
-      virtual void unpackUpdate( NetConnection* connection, BitStream* stream );
+      U32 packUpdate( NetConnection* connection, U32 mask, BitStream* stream ) override;
+      void unpackUpdate( NetConnection* connection, BitStream* stream ) override;
       
       // SceneObject.
-      virtual bool containsPoint( const Point3F& point );
+      bool containsPoint( const Point3F& point ) override;
 
       // IScenePolyhedralObject.
-      virtual AnyPolyhedron ToAnyPolyhedron() const { return getPolyhedron(); }
+      AnyPolyhedron ToAnyPolyhedron() const override { return getPolyhedron(); }
 
    private:
 

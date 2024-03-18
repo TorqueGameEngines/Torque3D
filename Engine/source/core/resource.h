@@ -131,7 +131,7 @@ protected:
       void *getResource() const { return (mResource ? mResource->getResource() : NULL); }
       U32   getChecksum() const;
 
-      virtual void destroySelf();
+      void destroySelf() override;
 
    private:
 
@@ -264,22 +264,22 @@ private:
    T        *getResource() { return (T*)mResourceHeader->getResource(); }
    const T  *getResource() const { return (T*)mResourceHeader->getResource(); }
 
-   Signature   getSignature() const { return Resource<T>::signature(); }
+   Signature   getSignature() const override { return Resource<T>::signature(); }
 
-   ResourceHolderBase   *createHolder(void *);
+   ResourceHolderBase   *createHolder(void *) override;
 
-   Signal<bool(const Torque::Path &, void**)>   &getStaticLoadSignal() { return getLoadSignal(); }
+   Signal<bool(const Torque::Path &, void**)>   &getStaticLoadSignal() override { return getLoadSignal(); }
 
    static void _notifyUnload( const Torque::Path& path, void* resource ) { getUnloadSignal().trigger( path, ( T* ) resource ); }
 
-   virtual void _triggerPostLoadSignal() { getPostLoadSignal().trigger( *this ); }
-   virtual NotifyUnloadFn _getNotifyUnloadFn() { return ( NotifyUnloadFn ) &_notifyUnload; }
+   void _triggerPostLoadSignal() override { getPostLoadSignal().trigger( *this ); }
+   NotifyUnloadFn _getNotifyUnloadFn() override { return ( NotifyUnloadFn ) &_notifyUnload; }
 
    // These are to be define by instantiated resources
    // No generic version is provided...however, since
    // base resources are instantiated by resource manager,
    // these are not pure virtuals if undefined (but will assert)...
-   void *create(const Torque::Path &path);
+   void *create(const Torque::Path &path) override;
 };
 
 

@@ -342,14 +342,14 @@ public:
    RenderProbeMgr();
    RenderProbeMgr(RenderInstType riType, F32 renderOrder, F32 processAddOrder);
    virtual ~RenderProbeMgr();
-   virtual bool onAdd();
-   virtual void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
 
    // ConsoleObject
    static void initPersistFields();
    static void consoleInit();
 
-   virtual void addElement(RenderInst* inst) {};
+   void addElement(RenderInst* inst) override {};
    DECLARE_CONOBJECT(RenderProbeMgr);
 
    /// <summary>
@@ -481,9 +481,9 @@ public:
    /// <summary>
    /// Renders the sorted probes list via a PostEffect to draw them into the buffer data in deferred mode.
    /// </summary>
-   virtual void render(SceneRenderState * state);
+   void render(SceneRenderState * state) override;
 
-   virtual void clear() { mActiveProbes.clear(); Parent::clear(); }
+   void clear() override { mActiveProbes.clear(); Parent::clear(); }
 };
 
 RenderProbeMgr* RenderProbeMgr::getProbeManager()

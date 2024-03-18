@@ -59,7 +59,7 @@ public:
    virtual ~RenderBinManager() {}
    
    // SimObject
-   void onRemove();
+   void onRemove() override;
 
    virtual void addElement( RenderInst *inst );
    virtual void sort();

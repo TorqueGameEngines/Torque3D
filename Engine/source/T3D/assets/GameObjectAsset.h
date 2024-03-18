@@ -59,7 +59,7 @@ public:
 
    /// Engine.
    static void initPersistFields();
-   virtual void copyTo(SimObject* object);
+   void copyTo(SimObject* object) override;
 
    const char* create();
 
@@ -72,8 +72,8 @@ public:
    inline StringTableEntry getTAMLFile(void) const { return mTAMLFile; };
 
 protected:
-   virtual void            initializeAsset(void);
-   virtual void            onAssetRefresh(void);
+   void            initializeAsset(void) override;
+   void            onAssetRefresh(void) override;
 
    static bool setScriptFile(void *obj, const char *index, const char *data) { static_cast<GameObjectAsset*>(obj)->setScriptFile(data); return false; }
    static const char* getScriptFile(void* obj, const char* data) { return static_cast<GameObjectAsset*>(obj)->getScriptFile(); }
@@ -100,8 +100,8 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeGameObjectAssetPtr);
    static void consoleInit();
 
-   virtual GuiControl* constructEditControl();
-   virtual bool updateRects();
+   GuiControl* constructEditControl() override;
+   bool updateRects() override;
 };
 #endif
 #endif // _ASSET_BASE_H_

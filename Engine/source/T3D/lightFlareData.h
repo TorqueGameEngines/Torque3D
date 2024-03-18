@@ -87,12 +87,12 @@ public:
    DECLARE_CONOBJECT( LightFlareData );
 
    static void initPersistFields();
-   virtual void inspectPostApply();
+   void inspectPostApply() override;
 
    // SimDataBlock
-   virtual bool preload( bool server, String &errorStr );
-   virtual void packData( BitStream *stream );
-   virtual void unpackData( BitStream *stream );
+   bool preload( bool server, String &errorStr ) override;
+   void packData( BitStream *stream ) override;
+   void unpackData( BitStream *stream ) override;
 
    /// Submits render instances for corona and flare effects.
    void prepRender( SceneRenderState *state, LightFlareState *flareState );

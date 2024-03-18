@@ -77,7 +77,7 @@ public:
 
    DECLARE_CONOBJECT(RenderTexTargetBinManager);
    static void initPersistFields();
-   virtual bool onAdd();
+   bool onAdd() override;
 
 protected:
 

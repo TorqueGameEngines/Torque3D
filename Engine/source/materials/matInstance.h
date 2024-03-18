@@ -53,48 +53,48 @@ public:
    virtual ~MatInstance();
 
    // BaseMatInstance
-   virtual bool init(   const FeatureSet &features, 
-                        const GFXVertexFormat *vertexFormat );
-   virtual bool reInit();
-   virtual void addStateBlockDesc(const GFXStateBlockDesc& desc);
-   virtual void updateStateBlocks();
-   virtual void addShaderMacro( const String &name, const String &value );
-   virtual MaterialParameters* allocMaterialParameters();
-   virtual void setMaterialParameters(MaterialParameters* param); 
-   virtual MaterialParameters* getMaterialParameters();
-   virtual MaterialParameterHandle* getMaterialParameterHandle(const String& name);
-   virtual bool setupPass(SceneRenderState *, const SceneData &sgData );
-   virtual void setTransforms(const MatrixSet &matrixSet, SceneRenderState *state);
-   virtual void setNodeTransforms(const MatrixF *address, const U32 numTransforms);
-   virtual void setCustomShaderData(Vector<CustomShaderBindingData> &shaderData);
-   virtual void setSceneInfo(SceneRenderState *, const SceneData& sgData);
-   virtual void setTextureStages(SceneRenderState * state, const SceneData &sgData );
-   virtual void setBuffers(GFXVertexBufferHandleBase* vertBuffer, GFXPrimitiveBufferHandle* primBuffer);
-   virtual bool isInstanced() const;
-   virtual bool stepInstance();
-   virtual bool isForwardLit() const { return mIsForwardLit; }
+   bool init(   const FeatureSet &features, 
+                        const GFXVertexFormat *vertexFormat ) override;
+   bool reInit() override;
+   void addStateBlockDesc(const GFXStateBlockDesc& desc) override;
+   void updateStateBlocks() override;
+   void addShaderMacro( const String &name, const String &value ) override;
+   MaterialParameters* allocMaterialParameters() override;
+   void setMaterialParameters(MaterialParameters* param) override; 
+   MaterialParameters* getMaterialParameters() override;
+   MaterialParameterHandle* getMaterialParameterHandle(const String& name) override;
+   bool setupPass(SceneRenderState *, const SceneData &sgData ) override;
+   void setTransforms(const MatrixSet &matrixSet, SceneRenderState *state) override;
+   void setNodeTransforms(const MatrixF *address, const U32 numTransforms) override;
+   void setCustomShaderData(Vector<CustomShaderBindingData> &shaderData) override;
+   void setSceneInfo(SceneRenderState *, const SceneData& sgData) override;
+   void setTextureStages(SceneRenderState * state, const SceneData &sgData ) override;
+   void setBuffers(GFXVertexBufferHandleBase* vertBuffer, GFXPrimitiveBufferHandle* primBuffer) override;
+   bool isInstanced() const override;
+   bool stepInstance() override;
+   bool isForwardLit() const override { return mIsForwardLit; }
    virtual bool isHardwareSkinned() const { return mIsHardwareSkinned; }
-   virtual void setUserObject( SimObject *userObject ) { mUserObject = userObject; }
-   virtual SimObject* getUserObject() const { return mUserObject; }
-   virtual Material *getMaterial() { return mMaterial; }
-   virtual bool hasGlow();
-   virtual bool hasAccumulation();
-   virtual U32 getCurPass() { return getMax( mCurPass, 0 ); }
-   virtual U32 getCurStageNum();
-   virtual RenderPassData *getPass(U32 pass);   
-   virtual const MatStateHint& getStateHint() const;
-   virtual const GFXVertexFormat* getVertexFormat() const { return mVertexFormat; }
-   virtual const FeatureSet& getFeatures() const;
-   virtual const FeatureSet& getRequestedFeatures() const { return mFeatureList; }
-   virtual void dumpShaderInfo() const;
-   virtual void getShaderInfo(GuiTreeViewCtrl* tree, U32 item) const;
+   void setUserObject( SimObject *userObject ) override { mUserObject = userObject; }
+   SimObject* getUserObject() const override { return mUserObject; }
+   Material *getMaterial() override { return mMaterial; }
+   bool hasGlow() override;
+   bool hasAccumulation() override;
+   U32 getCurPass() override { return getMax( mCurPass, 0 ); }
+   U32 getCurStageNum() override;
+   RenderPassData *getPass(U32 pass) override;   
+   const MatStateHint& getStateHint() const override;
+   const GFXVertexFormat* getVertexFormat() const override { return mVertexFormat; }
+   const FeatureSet& getFeatures() const override;
+   const FeatureSet& getRequestedFeatures() const override { return mFeatureList; }
+   void dumpShaderInfo() const override;
+   void getShaderInfo(GuiTreeViewCtrl* tree, U32 item) const override;
    
 
    ProcessedMaterial *getProcessedMaterial() const { return mProcessedMaterial; }
 
-   virtual const GFXStateBlockDesc &getUserStateBlock() const { return mUserDefinedState; }
+   const GFXStateBlockDesc &getUserStateBlock() const override { return mUserDefinedState; }
 
-   virtual bool isCustomMaterial() const { return mCreatedFromCustomMaterial; }
+   bool isCustomMaterial() const override { return mCreatedFromCustomMaterial; }
 protected:
 
    friend class Material;
@@ -152,33 +152,33 @@ public:
    void loadParameters(ProcessedMaterial* pmat);
 
    /// Returns our list of shader constants, the material can get this and just set the constants it knows about
-   virtual const Vector<GFXShaderConstDesc>& getShaderConstDesc() const;
+   const Vector<GFXShaderConstDesc>& getShaderConstDesc() const override;
 
    /// @name Set shader constant values
    /// @{
    /// Actually set shader constant values
    /// @param name Name of the constant, this should be a name contained in the array returned in getShaderConstDesc,
    /// if an invalid name is used, it is ignored.
-   virtual void set(MaterialParameterHandle* handle, const F32 f);
-   virtual void set(MaterialParameterHandle* handle, const Point2F& fv);
-   virtual void set(MaterialParameterHandle* handle, const Point3F& fv);
-   virtual void set(MaterialParameterHandle* handle, const Point4F& fv);
-   virtual void set(MaterialParameterHandle* handle, const LinearColorF& fv);
-   virtual void set(MaterialParameterHandle* handle, const S32 f);
-   virtual void set(MaterialParameterHandle* handle, const Point2I& fv);
-   virtual void set(MaterialParameterHandle* handle, const Point3I& fv);
-   virtual void set(MaterialParameterHandle* handle, const Point4I& fv);
-   virtual void set(MaterialParameterHandle* handle, const AlignedArray<F32>& fv);
-   virtual void set(MaterialParameterHandle* handle, const AlignedArray<Point2F>& fv);
-   virtual void set(MaterialParameterHandle* handle, const AlignedArray<Point3F>& fv);
-   virtual void set(MaterialParameterHandle* handle, const AlignedArray<Point4F>& fv);
-   virtual void set(MaterialParameterHandle* handle, const AlignedArray<S32>& fv);
-   virtual void set(MaterialParameterHandle* handle, const AlignedArray<Point2I>& fv);
-   virtual void set(MaterialParameterHandle* handle, const AlignedArray<Point3I>& fv);
-   virtual void set(MaterialParameterHandle* handle, const AlignedArray<Point4I>& fv);
-   virtual void set(MaterialParameterHandle* handle, const MatrixF& mat, const GFXShaderConstType matrixType = GFXSCT_Float4x4);
-   virtual void set(MaterialParameterHandle* handle, const MatrixF* mat, const U32 arraySize, const GFXShaderConstType matrixType = GFXSCT_Float4x4);
-   virtual U32 getAlignmentValue(const GFXShaderConstType constType);
+   void set(MaterialParameterHandle* handle, const F32 f) override;
+   void set(MaterialParameterHandle* handle, const Point2F& fv) override;
+   void set(MaterialParameterHandle* handle, const Point3F& fv) override;
+   void set(MaterialParameterHandle* handle, const Point4F& fv) override;
+   void set(MaterialParameterHandle* handle, const LinearColorF& fv) override;
+   void set(MaterialParameterHandle* handle, const S32 f) override;
+   void set(MaterialParameterHandle* handle, const Point2I& fv) override;
+   void set(MaterialParameterHandle* handle, const Point3I& fv) override;
+   void set(MaterialParameterHandle* handle, const Point4I& fv) override;
+   void set(MaterialParameterHandle* handle, const AlignedArray<F32>& fv) override;
+   void set(MaterialParameterHandle* handle, const AlignedArray<Point2F>& fv) override;
+   void set(MaterialParameterHandle* handle, const AlignedArray<Point3F>& fv) override;
+   void set(MaterialParameterHandle* handle, const AlignedArray<Point4F>& fv) override;
+   void set(MaterialParameterHandle* handle, const AlignedArray<S32>& fv) override;
+   void set(MaterialParameterHandle* handle, const AlignedArray<Point2I>& fv) override;
+   void set(MaterialParameterHandle* handle, const AlignedArray<Point3I>& fv) override;
+   void set(MaterialParameterHandle* handle, const AlignedArray<Point4I>& fv) override;
+   void set(MaterialParameterHandle* handle, const MatrixF& mat, const GFXShaderConstType matrixType = GFXSCT_Float4x4) override;
+   void set(MaterialParameterHandle* handle, const MatrixF* mat, const U32 arraySize, const GFXShaderConstType matrixType = GFXSCT_Float4x4) override;
+   U32 getAlignmentValue(const GFXShaderConstType constType) override;
 private:
    MaterialParameters* mParameters;
    bool mOwnParameters;

@@ -73,10 +73,10 @@ struct VehicleData : public RigidShapeData
 
    //
    VehicleData();
-   bool preload(bool server, String &errorStr);
+   bool preload(bool server, String &errorStr) override;
    static void initPersistFields();
-   virtual void packData(BitStream* stream);
-   virtual void unpackData(BitStream* stream);
+   void packData(BitStream* stream) override;
+   void unpackData(BitStream* stream) override;
 
    DECLARE_CONOBJECT(VehicleData);
 };
@@ -104,7 +104,7 @@ class Vehicle : public RigidShape
    SimObjectPtr<ParticleEmitter> mDamageEmitterList[VehicleData::VC_NUM_DAMAGE_EMITTERS];
 
    //
-   virtual bool onNewDataBlock( GameBaseData *dptr, bool reload );
+   bool onNewDataBlock( GameBaseData *dptr, bool reload ) override;
    void updatePos(F32 dt);
    static void findCallback(SceneObject* obj,void * key);
 
@@ -112,11 +112,11 @@ class Vehicle : public RigidShape
    virtual void updateMove(const Move* move);
    virtual void updateForces(F32 dt);
 
-   void writePacketData(GameConnection * conn, BitStream *stream);
-   void readPacketData (GameConnection * conn, BitStream *stream);
-   U32  packUpdate  (NetConnection *conn, U32 mask, BitStream *stream);
-   void unpackUpdate(NetConnection *conn,           BitStream *stream);
-   void setControllingClient(GameConnection* connection);
+   void writePacketData(GameConnection * conn, BitStream *stream) override;
+   void readPacketData (GameConnection * conn, BitStream *stream) override;
+   U32  packUpdate  (NetConnection *conn, U32 mask, BitStream *stream) override;
+   void unpackUpdate(NetConnection *conn,           BitStream *stream) override;
+   void setControllingClient(GameConnection* connection) override;
 
    void updateLiftoffDust( F32 dt );
    void updateDamageSmoke( F32 dt );
@@ -142,26 +142,26 @@ public:
    Vehicle();
    static void consoleInit();
    static void initPersistFields();
-   void processTick(const Move *move);
-   bool onAdd();
-   void onRemove();
+   void processTick(const Move *move) override;
+   bool onAdd() override;
+   void onRemove() override;
 
    /// Interpolates between move ticks @see processTick
    /// @param   dt   Change in time between the last call and this call to the function
-   void advanceTime(F32 dt);
+   void advanceTime(F32 dt) override;
 
-   void prepBatchRender( SceneRenderState *state, S32 mountedImageIndex );
+   void prepBatchRender( SceneRenderState *state, S32 mountedImageIndex ) override;
 
    ///@name Rigid body methods
    ///@{
 
-   void getCameraParameters(F32 *min, F32* max, Point3F* offset, MatrixF* rot);
-   void getCameraTransform(F32* pos, MatrixF* mat);
+   void getCameraParameters(F32 *min, F32* max, Point3F* offset, MatrixF* rot) override;
+   void getCameraTransform(F32* pos, MatrixF* mat) override;
    ///@}
 
    /// @name Mounted objects
    /// @{
-   virtual void mountObject( SceneObject *obj, S32 node, const MatrixF &xfm = MatrixF::Identity );
+   void mountObject( SceneObject *obj, S32 node, const MatrixF &xfm = MatrixF::Identity ) override;
    /// @}
 
    DECLARE_CONOBJECT(Vehicle);

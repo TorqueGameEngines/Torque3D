@@ -155,7 +155,7 @@ public:
     }
 
     /// Referencing.
-    virtual void clear( void )
+    void clear( void ) override
     {
         // Do we have an asset?
         if ( notNull() )
@@ -171,14 +171,14 @@ public:
     T* operator->( void ) const { return mpAsset; }
     T& operator*( void ) const { return *mpAsset; }
     operator T*( void ) const { return mpAsset; }
-    virtual void setAssetId( const char* pAssetId ) { *this = pAssetId; }
-    virtual StringTableEntry getAssetId( void ) const { return isNull() ? StringTable->EmptyString() : mpAsset->getAssetId(); }
-    virtual StringTableEntry getAssetType(void) const { return isNull() ? StringTable->EmptyString() : mpAsset->getClassName(); }
-    virtual bool isAssetId( const char* pAssetId ) const { return pAssetId == NULL ? isNull() : getAssetId() == StringTable->insert(pAssetId); }
+    void setAssetId( const char* pAssetId ) override { *this = pAssetId; }
+    StringTableEntry getAssetId( void ) const override { return isNull() ? StringTable->EmptyString() : mpAsset->getAssetId(); }
+    StringTableEntry getAssetType(void) const override { return isNull() ? StringTable->EmptyString() : mpAsset->getClassName(); }
+    bool isAssetId( const char* pAssetId ) const override { return pAssetId == NULL ? isNull() : getAssetId() == StringTable->insert(pAssetId); }
 
     /// Validity.
-    virtual bool isNull( void ) const { return mpAsset.isNull(); }
-    virtual bool notNull( void ) const { return !mpAsset.isNull(); }
+    bool isNull( void ) const override { return mpAsset.isNull(); }
+    bool notNull( void ) const override { return !mpAsset.isNull(); }
 };
 
 #endif // _ASSET_PTR_H_

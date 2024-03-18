@@ -43,9 +43,9 @@ public:
    BoxConvex() { mType = BoxConvexType; }
    void init(SceneObject* obj) { mObject = obj; }
 
-   Point3F support(const VectorF& v) const;
-   void getFeatures(const MatrixF& mat,const VectorF& n, ConvexFeature* cf);
-   void getPolyList(AbstractPolyList* list);
+   Point3F support(const VectorF& v) const override;
+   void getFeatures(const MatrixF& mat,const VectorF& n, ConvexFeature* cf) override;
+   void getPolyList(AbstractPolyList* list) override;
 };
 
 
@@ -57,7 +57,7 @@ class OrthoBoxConvex: public BoxConvex
  public:
    OrthoBoxConvex() { mOrthoMatrixCache.identity(); }
 
-   virtual const MatrixF& getTransform() const;
+   const MatrixF& getTransform() const override;
 };
 
 #endif

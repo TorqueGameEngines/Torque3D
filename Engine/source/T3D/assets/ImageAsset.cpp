@@ -131,7 +131,7 @@ const String ImageAsset::mErrCodeStrings[] =
    "UnKnown"
 };
 //-----------------------------------------------------------------------------
-ImageAsset::ImageAsset() : AssetBase(), mUseMips(true), mIsHDRImage(false), mIsValidImage(false), mImageType(Albedo)
+ImageAsset::ImageAsset() : AssetBase(), mIsValidImage(false), mUseMips(true), mIsHDRImage(false), mImageType(Albedo)
 {
    mImageFileName = StringTable->EmptyString();
    mImagePath = StringTable->EmptyString();

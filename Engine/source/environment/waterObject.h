@@ -156,20 +156,20 @@ public:
    static void initPersistFields();
 
    // SimObject
-   virtual bool onAdd();
-   virtual void onRemove();
-   virtual void inspectPostApply();
-   virtual bool processArguments(S32 argc, ConsoleValue *argv);
+   bool onAdd() override;
+   void onRemove() override;
+   void inspectPostApply() override;
+   bool processArguments(S32 argc, ConsoleValue *argv) override;
 
    // NetObject
-   virtual U32  packUpdate( NetConnection * conn, U32 mask, BitStream *stream );
-   virtual void unpackUpdate( NetConnection * conn, BitStream *stream );
+   U32  packUpdate( NetConnection * conn, U32 mask, BitStream *stream ) override;
+   void unpackUpdate( NetConnection * conn, BitStream *stream ) override;
 
    // SceneObject
-   virtual void prepRenderImage( SceneRenderState *state );
+   void prepRenderImage( SceneRenderState *state ) override;
    virtual void renderObject( ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *overrideMat );
-   virtual SFXAmbience* getSoundAmbience() const { return mSoundAmbience; }
-   virtual bool containsPoint( const Point3F& point ) { return isUnderwater( point ); }
+   SFXAmbience* getSoundAmbience() const override { return mSoundAmbience; }
+   bool containsPoint( const Point3F& point ) override { return isUnderwater( point ); }
 
    // WaterObject
    virtual F32 getViscosity() const { return mViscosity; }

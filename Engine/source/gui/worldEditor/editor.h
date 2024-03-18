@@ -43,11 +43,11 @@ class EditManager : public GuiControl
       EditManager();
       ~EditManager();
 
-      bool onWake();
-      void onSleep();
+      bool onWake() override;
+      void onSleep() override;
 
       // SimObject
-      bool onAdd();
+      bool onAdd() override;
 
       /// Perform the onEditorEnabled callback on all SimObjects
       /// and set gEditingMission true.

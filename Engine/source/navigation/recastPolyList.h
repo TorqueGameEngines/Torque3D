@@ -35,20 +35,20 @@ public:
    /// @name AbstractPolyList
    /// @{
 
-   bool isEmpty() const;
+   bool isEmpty() const override;
 
-   U32 addPoint(const Point3F &p);
-   U32 addPlane(const PlaneF &plane);
+   U32 addPoint(const Point3F &p) override;
+   U32 addPlane(const PlaneF &plane) override;
 
-   void begin(BaseMatInstance *material, U32 surfaceKey);
+   void begin(BaseMatInstance *material, U32 surfaceKey) override;
 
-   void plane(U32 v1, U32 v2, U32 v3);
-   void plane(const PlaneF& p);
-   void plane(const U32 index);
+   void plane(U32 v1, U32 v2, U32 v3) override;
+   void plane(const PlaneF& p) override;
+   void plane(const U32 index) override;
 
-   void vertex(U32 vi);
+   void vertex(U32 vi) override;
 
-   void end();
+   void end() override;
 
    /// @}
 
@@ -91,7 +91,7 @@ protected:
    /// Store a list of planes - not actually used.
    Vector<PlaneF> planes;
    /// Another inherited utility function.
-   const PlaneF& getIndexedPlane(const U32 index) { return planes[index]; }
+   const PlaneF& getIndexedPlane(const U32 index) override { return planes[index]; }
 
 private:
 };

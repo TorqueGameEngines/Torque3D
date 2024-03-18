@@ -91,15 +91,15 @@ public:
 
    virtual ~GFXGeneralFence();
 
-   virtual void issue();
-   virtual FenceStatus getStatus() const { return GFXFence::Unsupported; };
-   virtual void block();
+   void issue() override;
+   FenceStatus getStatus() const override { return GFXFence::Unsupported; };
+   void block() override;
 
    // GFXResource interface
-   virtual void zombify();
-   virtual void resurrect();
+   void zombify() override;
+   void resurrect() override;
    /// The resource should put a description of itself (number of vertices, size/width of texture, etc.) in buffer
-   virtual const String describeSelf() const;
+   const String describeSelf() const override;
 };
 
 #endif // _GFXFENCE_H_

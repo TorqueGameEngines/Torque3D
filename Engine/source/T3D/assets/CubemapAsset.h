@@ -61,12 +61,12 @@ public:
 
    /// Engine.
    static void initPersistFields();
-   virtual void copyTo(SimObject* object);
+   void copyTo(SimObject* object) override;
 
    /// Declare Console Object.
    DECLARE_CONOBJECT(CubemapAsset);
 
-   StringTableEntry getComponentName() { return mComponentName; }
+   StringTableEntry getComponentName() override { return mComponentName; }
    StringTableEntry getComponentClass() { return mComponentClass; }
    StringTableEntry getFriendlyName() { return mFriendlyName; }
    StringTableEntry getComponentType() { return mComponentType; }
@@ -84,8 +84,8 @@ public:
    inline StringTableEntry getScriptFile(void) const { return mScriptFile; };
 
 protected:
-   virtual void            initializeAsset(void);
-   virtual void            onAssetRefresh(void);
+   void            initializeAsset(void) override;
+   void            onAssetRefresh(void) override;
 
    static bool setScriptFile(void *obj, const char *index, const char *data) { static_cast<CubemapAsset*>(obj)->setScriptFile(data); return false; }
    static const char* getScriptFile(void* obj, const char* data) { return static_cast<CubemapAsset*>(obj)->getScriptFile(); }
@@ -106,8 +106,8 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeCubemapAssetPtr);
    static void consoleInit();
 
-   virtual GuiControl* constructEditControl();
-   virtual bool updateRects();
+   GuiControl* constructEditControl() override;
+   bool updateRects() override;
 };
 #endif
 #endif // _ASSET_BASE_H_

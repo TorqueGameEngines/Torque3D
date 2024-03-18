@@ -55,7 +55,7 @@ class OcclusionVolume : public ScenePolyhedralSpace
       SilhouetteExtractorType mSilhouetteExtractor;
       
       // SceneSpace.
-      virtual void _renderObject( ObjectRenderInst* ri, SceneRenderState* state, BaseMatInstance* overrideMat );
+      void _renderObject( ObjectRenderInst* ri, SceneRenderState* state, BaseMatInstance* overrideMat ) override;
 
    public:
 
@@ -66,13 +66,13 @@ class OcclusionVolume : public ScenePolyhedralSpace
       DECLARE_DESCRIPTION( "A visibility blocking volume." );
       DECLARE_CATEGORY("Volume");
 
-      virtual bool onAdd();
+      bool onAdd() override;
 
       static void consoleInit();
 
       // SceneObject.
-      virtual void buildSilhouette( const SceneCameraState& cameraState, Vector< Point3F >& outPoints );
-      virtual void setTransform( const MatrixF& mat );
+      void buildSilhouette( const SceneCameraState& cameraState, Vector< Point3F >& outPoints ) override;
+      void setTransform( const MatrixF& mat ) override;
 };
 
 #endif // !_OCCLUSIONVOLUME_H_

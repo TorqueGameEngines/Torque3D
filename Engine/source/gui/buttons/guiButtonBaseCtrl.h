@@ -80,7 +80,7 @@ protected:
 public:
 
    GuiButtonBaseCtrl();
-   bool onWake();
+   bool onWake() override;
 
    DECLARE_CONOBJECT(GuiButtonBaseCtrl);
    DECLARE_CATEGORY("Gui Buttons");
@@ -101,25 +101,25 @@ public:
    void setHighlighted(bool highlighted);
    bool isHighlighted() { return mHighlighted; }
 
-   void acceleratorKeyPress(U32 index);
-   void acceleratorKeyRelease(U32 index);
+   void acceleratorKeyPress(U32 index) override;
+   void acceleratorKeyRelease(U32 index) override;
 
-   void onMouseDown(const GuiEvent&);
-   void onMouseUp(const GuiEvent&);
-   void onMouseDragged(const GuiEvent& event);
-   void onRightMouseUp(const GuiEvent&);
+   void onMouseDown(const GuiEvent&) override;
+   void onMouseUp(const GuiEvent&) override;
+   void onMouseDragged(const GuiEvent& event) override;
+   void onRightMouseUp(const GuiEvent&) override;
 
-   void onMouseEnter(const GuiEvent&);
-   void onMouseLeave(const GuiEvent&);
+   void onMouseEnter(const GuiEvent&) override;
+   void onMouseLeave(const GuiEvent&) override;
 
-   bool onKeyDown(const GuiEvent& event);
-   bool onKeyUp(const GuiEvent& event);
+   bool onKeyDown(const GuiEvent& event) override;
+   bool onKeyUp(const GuiEvent& event) override;
 
-   void setScriptValue(const char* value);
-   const char* getScriptValue();
+   void setScriptValue(const char* value) override;
+   const char* getScriptValue() override;
 
-   void onMessage(GuiControl*, S32 msg);
-   void onAction();
+   void onMessage(GuiControl*, S32 msg) override;
+   void onAction() override;
 
    bool usesMouseEvents() const { return mUseMouseEvents; }
    void setUseMouseEvents(bool val) { mUseMouseEvents = val; }

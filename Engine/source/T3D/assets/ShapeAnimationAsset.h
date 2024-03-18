@@ -98,7 +98,7 @@ public:
 
    /// Engine.
    static void initPersistFields();
-   virtual void copyTo(SimObject* object);
+   void copyTo(SimObject* object) override;
 
    void                    setAnimationFile(const char* pAnimationFile);
    inline StringTableEntry getAnimationFile(void) const { return mFileName; };
@@ -109,8 +109,8 @@ public:
    DECLARE_CONOBJECT(ShapeAnimationAsset);
 
 protected:
-   virtual void            initializeAsset(void);
-   virtual void            onAssetRefresh(void);
+   void            initializeAsset(void) override;
+   void            onAssetRefresh(void) override;
 
    static bool setAnimationFile(void *obj, const char *index, const char *data) { static_cast<ShapeAnimationAsset*>(obj)->setAnimationFile(data); return false; }
    static const char* getAnimationFile(void* obj, const char* data) { return static_cast<ShapeAnimationAsset*>(obj)->getAnimationFile(); }

@@ -64,10 +64,10 @@ class PrecipitationData : public GameBaseData
    
       PrecipitationData();
       DECLARE_CONOBJECT(PrecipitationData);
-      bool preload( bool server, String& errorStr );
+      bool preload( bool server, String& errorStr ) override;
       static void  initPersistFields();
-      virtual void packData(BitStream* stream);
-      virtual void unpackData(BitStream* stream);
+      void packData(BitStream* stream) override;
+      void unpackData(BitStream* stream) override;
 
       void onDropChanged() {}
       void onSplashChanged() {}
@@ -233,8 +233,8 @@ class Precipitation : public GameBase
    } mTurbulenceData;
 
    //other functions...
-   void processTick(const Move*);
-   void interpolateTick(F32 delta);
+   void processTick(const Move*) override;
+   void interpolateTick(F32 delta) override;
 
    VectorF getWindVelocity();
    void fillDropList();                       ///< Adds/removes drops from the list to have the right # of drops
@@ -253,20 +253,20 @@ class Precipitation : public GameBase
    GFXPrimitiveBufferHandle mRainIB;
    GFXVertexBufferHandle<GFXVertexPCT> mRainVB;
 
-   bool onAdd();
-   void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
 
    // Rendering
-   void prepRenderImage( SceneRenderState* state );
+   void prepRenderImage( SceneRenderState* state ) override;
    void renderObject(ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance* );
 
-   void setTransform(const MatrixF &mat);
+   void setTransform(const MatrixF &mat) override;
 
   public:
 
    Precipitation();
    ~Precipitation();
-   void inspectPostApply();
+   void inspectPostApply() override;
 
    enum
    {
@@ -278,13 +278,13 @@ class Precipitation : public GameBase
       NextFreeMask   = Parent::NextFreeMask << 5
    };
 
-   bool onNewDataBlock( GameBaseData *dptr, bool reload );
+   bool onNewDataBlock( GameBaseData *dptr, bool reload ) override;
    DECLARE_CONOBJECT(Precipitation);
    DECLARE_CATEGORY("Environment \t Weather");
    static void initPersistFields();
    
-   U32  packUpdate(NetConnection*, U32 mask, BitStream* stream);
-   void unpackUpdate(NetConnection*, BitStream* stream);
+   U32  packUpdate(NetConnection*, U32 mask, BitStream* stream) override;
+   void unpackUpdate(NetConnection*, BitStream* stream) override;
 
    void setPercentage(F32 pct);
    void modifyStorm(F32 pct, U32 ms);

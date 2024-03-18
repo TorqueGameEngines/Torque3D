@@ -202,12 +202,12 @@ class GuiInspectorField : public GuiControl
       GuiInspector* getInspector() const { return mInspector; }
       
       // GuiControl.
-      virtual bool onAdd();
-      virtual bool resize(const Point2I &newPosition, const Point2I &newExtent);
-      virtual void onRender(Point2I offset, const RectI &updateRect);
-      virtual void setFirstResponder( GuiControl *firstResponder );
-      virtual void onMouseDown( const GuiEvent &event );
-      virtual void onRightMouseUp( const GuiEvent &event );
+      bool onAdd() override;
+      bool resize(const Point2I &newPosition, const Point2I &newExtent) override;
+      void onRender(Point2I offset, const RectI &updateRect) override;
+      void setFirstResponder( GuiControl *firstResponder ) override;
+      void onMouseDown( const GuiEvent &event ) override;
+      void onRightMouseUp( const GuiEvent &event ) override;
 
       void setTargetObject(SimObject* obj) { mTargetObject = obj; }
       SimObject* getTargetObject() { return mTargetObject; }

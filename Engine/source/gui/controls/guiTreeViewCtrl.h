@@ -596,20 +596,20 @@ class GuiTreeViewCtrl : public GuiArrayCtrl
       /// @}
 
       // GuiControl
-      bool onAdd();
-      bool onWake();
-      void onSleep();
-      void onPreRender();
-      bool onKeyDown( const GuiEvent &event );
-		void onMouseDown(const GuiEvent &event);
-      void onMiddleMouseDown(const GuiEvent &event);
-      void onMouseMove(const GuiEvent &event);
-      void onMouseEnter(const GuiEvent &event);
-      void onMouseLeave(const GuiEvent &event);
-      void onRightMouseDown(const GuiEvent &event);
-      void onRightMouseUp(const GuiEvent &event);
-      void onMouseDragged(const GuiEvent &event);
-      virtual void onMouseUp(const GuiEvent &event);
+      bool onAdd() override;
+      bool onWake() override;
+      void onSleep() override;
+      void onPreRender() override;
+      bool onKeyDown( const GuiEvent &event ) override;
+		void onMouseDown(const GuiEvent &event) override;
+      void onMiddleMouseDown(const GuiEvent &event) override;
+      void onMouseMove(const GuiEvent &event) override;
+      void onMouseEnter(const GuiEvent &event) override;
+      void onMouseLeave(const GuiEvent &event) override;
+      void onRightMouseDown(const GuiEvent &event) override;
+      void onRightMouseUp(const GuiEvent &event) override;
+      void onMouseDragged(const GuiEvent &event) override;
+      void onMouseUp(const GuiEvent &event) override;
 
       /// Returns false if the object is a child of one of the inner items.
       bool childSearch(Item * item, SimObject *obj, bool yourBaby);
@@ -622,8 +622,8 @@ class GuiTreeViewCtrl : public GuiArrayCtrl
 		bool objectSearch( const SimObject *object, Item **item );
 
       // GuiArrayCtrl
-      void onRenderCell(Point2I offset, Point2I cell, bool, bool);
-      void onRender(Point2I offset, const RectI &updateRect);
+      void onRenderCell(Point2I offset, Point2I cell, bool, bool) override;
+      void onRender(Point2I offset, const RectI &updateRect) override;
       
       bool renderTooltip( const Point2I &hoverPos, const Point2I& cursorPos, const char* tipText );
 

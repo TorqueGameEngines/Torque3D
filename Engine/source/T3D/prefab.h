@@ -65,19 +65,19 @@ public:
    StringTableEntry getTypeHint() const override;
    
    // SimObject
-   virtual bool onAdd();
-   virtual void onRemove();
-   virtual void onEditorEnable();
-   virtual void onEditorDisable();
-   virtual void inspectPostApply();
+   bool onAdd() override;
+   void onRemove() override;
+   void onEditorEnable() override;
+   void onEditorDisable() override;
+   void inspectPostApply() override;
 
    // NetObject
-   U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream );
-   void unpackUpdate( NetConnection *conn, BitStream *stream );
+   U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream ) override;
+   void unpackUpdate( NetConnection *conn, BitStream *stream ) override;
 
    // SceneObject
-   virtual void setTransform( const MatrixF &mat );
-   virtual void setScale(const VectorF & scale);
+   void setTransform( const MatrixF &mat ) override;
+   void setScale(const VectorF & scale) override;
 
    // Prefab
 
@@ -100,11 +100,11 @@ public:
    /// which is added to the Scene and returned to the caller.
    SimGroup* explode();
 
-   bool buildPolyList(PolyListContext context, AbstractPolyList* polyList, const Box3F &box, const SphereF& sphere);
+   bool buildPolyList(PolyListContext context, AbstractPolyList* polyList, const Box3F &box, const SphereF& sphere) override;
 
-   bool buildExportPolyList(ColladaUtils::ExportData* exportData, const Box3F &box, const SphereF &);
+   bool buildExportPolyList(ColladaUtils::ExportData* exportData, const Box3F &box, const SphereF &) override;
 
-   virtual void getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList);
+   void getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList) override;
 
    S32 getChildGroup() {
       if (mChildGroup.isValid())
@@ -169,8 +169,8 @@ public:
    ExplodePrefabUndoAction( Prefab *prefab );   
 
    // UndoAction
-   virtual void undo();
-   virtual void redo();
+   void undo() override;
+   void redo() override;
 
 protected:
 

@@ -21,11 +21,11 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeImageAssetPtr);
    static void consoleInit();
 
-   virtual GuiControl* constructEditControl();
-   virtual bool updateRects();
+   GuiControl* constructEditControl() override;
+   bool updateRects() override;
    bool renderTooltip(const Point2I& hoverPos, const Point2I& cursorPos, const char* tipText = NULL);
 
-   virtual void updateValue();
+   void updateValue() override;
 
    void updatePreviewImage();
    void setPreviewImage(StringTableEntry assetId);

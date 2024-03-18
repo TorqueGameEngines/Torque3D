@@ -58,7 +58,7 @@ public:
 
    /// Engine.
    static void initPersistFields();
-   virtual void copyTo(SimObject* object);
+   void copyTo(SimObject* object) override;
 
    static StringTableEntry getAssetIdByGUIName(StringTableEntry guiName);
 
@@ -74,8 +74,8 @@ public:
    inline StringTableEntry getScriptPath(void) const { return mScriptPath; };
 
 protected:
-   virtual void            initializeAsset(void);
-   virtual void            onAssetRefresh(void);
+   void            initializeAsset(void) override;
+   void            onAssetRefresh(void) override;
 
    static bool setGUIFile(void *obj, const char *index, const char *data) { static_cast<GUIAsset*>(obj)->setGUIFile(data); return false; }
    static const char* getGUIFile(void* obj, const char* data) { return static_cast<GUIAsset*>(obj)->getGUIFile(); }
@@ -99,8 +99,8 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeGUIAssetPtr);
    static void consoleInit();
 
-   virtual GuiControl* constructEditControl();
-   virtual bool updateRects();
+   GuiControl* constructEditControl() override;
+   bool updateRects() override;
 };
 #endif
 #endif // _ASSET_BASE_H_

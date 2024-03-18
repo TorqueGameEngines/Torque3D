@@ -123,11 +123,11 @@ public:
 
    /// Engine.
    static void initPersistFields();
-   virtual void copyTo(SimObject* object);
+   void copyTo(SimObject* object) override;
 
    virtual void setDataField(StringTableEntry slotName, StringTableEntry array, StringTableEntry value);
 
-   virtual void initializeAsset();
+   void initializeAsset() override;
 
    /// Declare Console Object.
    DECLARE_CONOBJECT(ShapeAsset);
@@ -195,7 +195,7 @@ public:
 #endif
 
 protected:
-   virtual void            onAssetRefresh(void);
+   void            onAssetRefresh(void) override;
 
    static bool setShapeFile(void* obj, StringTableEntry index, StringTableEntry data) { static_cast<ShapeAsset*>(obj)->setShapeFile(data); return false; }
    static const char* getShapeFile(void* obj, const char* data) { return static_cast<ShapeAsset*>(obj)->getShapeFile(); }
@@ -229,10 +229,10 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeShapeAssetPtr);
    static void consoleInit();
 
-   virtual GuiControl* constructEditControl();
-   virtual bool updateRects();
+   GuiControl* constructEditControl() override;
+   bool updateRects() override;
 
-   virtual void updateValue();
+   void updateValue() override;
 
    void updatePreviewImage();
    void setPreviewImage(StringTableEntry assetId);

@@ -119,8 +119,8 @@ public:
     virtual ~AssetManager() {}
 
     /// SimObject overrides
-    virtual bool onAdd();
-    virtual void onRemove();
+    bool onAdd() override;
+    void onRemove() override;
     static void initPersistFields();
 
     /// Declared assets.
@@ -389,9 +389,9 @@ private:
     void unloadAsset( AssetDefinition* pAssetDefinition );
 
     /// Module callbacks.
-    virtual void onModulePreLoad( ModuleDefinition* pModuleDefinition );
-    virtual void onModulePreUnload( ModuleDefinition* pModuleDefinition );
-    virtual void onModulePostUnload( ModuleDefinition* pModuleDefinition );
+    void onModulePreLoad( ModuleDefinition* pModuleDefinition ) override;
+    void onModulePreUnload( ModuleDefinition* pModuleDefinition ) override;
+    void onModulePostUnload( ModuleDefinition* pModuleDefinition ) override;
 };
 
 //-----------------------------------------------------------------------------

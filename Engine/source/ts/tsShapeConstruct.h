@@ -212,12 +212,12 @@ public:
    static TSShapeConstructor* findShapeConstructorByAssetId(StringTableEntry path);
    static TSShapeConstructor* findShapeConstructorByFilename(const FileName& path);
 
-   bool onAdd();
+   bool onAdd() override;
 
    void onScriptChanged(const Torque::Path& path);
    void onActionPerformed();
 
-   bool writeField(StringTableEntry fieldname, const char* value);
+   bool writeField(StringTableEntry fieldname, const char* value) override;
    void writeChangeSet();
 
    void notifyShapeChanged();

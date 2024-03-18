@@ -56,7 +56,7 @@ public:
    ~fxShapeReplicatedStatic() {};
    void touchNetFlags(const U32 m, bool setflag = true) { if (setflag) mNetFlags.set(m); else mNetFlags.clear(m); };
    TSShape* getShape(void) { return mShapeInstance->getShape(); };
-   void setTransform(const MatrixF & mat) { Parent::setTransform(mat); setRenderTransform(mat); };
+   void setTransform(const MatrixF & mat) override { Parent::setTransform(mat); setRenderTransform(mat); };
 
    DECLARE_CONOBJECT(fxShapeReplicatedStatic);
    DECLARE_CATEGORY("UNLISTED");
@@ -102,16 +102,16 @@ public:
    void renderPlacementArea(const F32 ElapsedTime);
 
    // SceneObject
-   virtual void prepRenderImage( SceneRenderState *state );
+   void prepRenderImage( SceneRenderState *state ) override;
 
    // SimObject
-   bool onAdd();
-   void onRemove();
-   void inspectPostApply();
+   bool onAdd() override;
+   void onRemove() override;
+   void inspectPostApply() override;
 
    // NetObject
-   U32 packUpdate(NetConnection *conn, U32 mask, BitStream *stream);
-   void unpackUpdate(NetConnection *conn, BitStream *stream);
+   U32 packUpdate(NetConnection *conn, U32 mask, BitStream *stream) override;
+   void unpackUpdate(NetConnection *conn, BitStream *stream) override;
 
    // Editor
    void onGhostAlwaysDone();

@@ -14,7 +14,7 @@ namespace Con
       gLastEvalResult.valid = pLastEvalResult.valid;
       gLastEvalResult.error = pLastEvalResult.error;
       gLastEvalResult.value.setString(pLastEvalResult.value.getString());
-      return std::move(pLastEvalResult);
+      return pLastEvalResult;
    }
    inline EvalResult getLastEvalResult() { return setLastEvalResult(std::move(gLastEvalResult)); };
 

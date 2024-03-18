@@ -55,7 +55,7 @@ class Zone : public SceneAmbientSoundObject< ScenePolyhedralZone >
    protected:
 
       // SceneVolume.
-      virtual ColorI _getDefaultEditorSolidColor() const { return ColorI( 255, 0, 0, 45 ); }
+      ColorI _getDefaultEditorSolidColor() const override { return ColorI( 255, 0, 0, 45 ); }
 
    public:
 

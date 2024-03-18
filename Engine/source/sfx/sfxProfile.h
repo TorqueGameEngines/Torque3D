@@ -148,10 +148,10 @@ class SFXProfile : public SFXTrack
       virtual bool isLooping() const;
 
       // SimObject 
-      bool onAdd();
-      void onRemove();
-      void packData( BitStream* stream );
-      void unpackData( BitStream* stream );
+      bool onAdd() override;
+      void onRemove() override;
+      void packData( BitStream* stream ) override;
+      void unpackData( BitStream* stream ) override;
 
       /// Returns the sound filename.
       const String getSoundFileName() const { return mFilename; }
@@ -162,7 +162,7 @@ class SFXProfile : public SFXTrack
 
       /// @note This has nothing to do with mPreload.
       /// @see SimDataBlock::preload
-      bool preload( bool server, String &errorStr );
+      bool preload( bool server, String &errorStr ) override;
 
       /// Returns the sound resource loading it from
       /// disk if it hasn't been preloaded.
@@ -187,8 +187,8 @@ class SFXProfile : public SFXTrack
    public:
       /*C*/          SFXProfile(const SFXProfile&, bool = false);
       SFXProfile*    cloneAndPerformSubstitutions(const SimObject*, S32 index=0);
-      virtual void   onPerformSubstitutions();
-      virtual bool   allowSubstitutions() const { return true; }
+      void   onPerformSubstitutions() override;
+      bool   allowSubstitutions() const override { return true; }
 };
 
 

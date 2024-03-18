@@ -120,8 +120,8 @@ private:
     void renameAssetId( const char* pAssetIdFrom, const char* pAssetIdTo );
 
 protected:
-    virtual void onTamlCustomWrite( TamlCustomNodes& customNodes );
-    virtual void onTamlCustomRead( const TamlCustomNodes& customNodes );
+    void onTamlCustomWrite( TamlCustomNodes& customNodes ) override;
+    void onTamlCustomRead( const TamlCustomNodes& customNodes ) override;
 
 public:
     AssetTagsManifest();

@@ -95,8 +95,8 @@ protected:
    };
 
    // SimObject.
-   virtual void _onSelected();
-   virtual void _onUnselected();
+   void _onSelected() override;
+   void _onUnselected() override;
 
 public:
 
@@ -104,31 +104,31 @@ public:
    virtual ~LightBase();
 
    // SimObject
-   virtual bool onAdd();
-   virtual void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
 
    // ConsoleObject
-   void inspectPostApply();
+   void inspectPostApply() override;
    static void initPersistFields();
    DECLARE_CONOBJECT(LightBase);
    DECLARE_CATEGORY("UNLISTED");
 
    // NetObject
-   U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream );
-   void unpackUpdate( NetConnection *conn, BitStream *stream );  
+   U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream ) override;
+   void unpackUpdate( NetConnection *conn, BitStream *stream ) override;  
 
    // ISceneLight
-   virtual void submitLights( LightManager *lm, bool staticLighting );
-   virtual LightInfo* getLight() { return mLight; }
+   void submitLights( LightManager *lm, bool staticLighting ) override;
+   LightInfo* getLight() override { return mLight; }
 
    // SceneObject
-   virtual void setTransform( const MatrixF &mat );
-   virtual void prepRenderImage( SceneRenderState *state );
+   void setTransform( const MatrixF &mat ) override;
+   void prepRenderImage( SceneRenderState *state ) override;
 
    // ITickable
-   virtual void interpolateTick( F32 delta );
-   virtual void processTick();
-   virtual void advanceTime( F32 timeDelta );
+   void interpolateTick( F32 delta ) override;
+   void processTick() override;
+   void advanceTime( F32 timeDelta ) override;
 
    /// Toggles the light on and off.
    void setLightEnabled( bool enabled );

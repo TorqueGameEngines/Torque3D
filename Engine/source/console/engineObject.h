@@ -485,8 +485,8 @@ class EngineCRuntimeObjectPool : public IEngineObjectPool
       static EngineCRuntimeObjectPool* instance() { return &smInstance; }
       
       // IEngineObjectPool
-      virtual void* allocateObject(size_t size TORQUE_TMM_ARGS_DECL );
-      virtual void freeObject( void* ptr );
+      void* allocateObject(size_t size TORQUE_TMM_ARGS_DECL ) override;
+      void freeObject( void* ptr ) override;
 };
 
 
@@ -569,7 +569,7 @@ class EngineObject : public StrongRefBase
       IEngineObjectPool* getEngineObjectPool() const { return mEngineObjectPool; }
       
       // StrongRefBase
-      virtual void destroySelf();
+      void destroySelf() override;
             
 #ifdef TORQUE_DEBUG
       
@@ -653,7 +653,7 @@ class StaticEngineObject : public EngineObject
       StaticEngineObject();
       
       // EngineObject.
-      virtual void destroySelf();
+      void destroySelf() override;
 };
 
 

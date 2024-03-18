@@ -249,16 +249,16 @@ public:
    bool isFull() { return bitNum > (bufSize << 3); }
    bool isValid() { return !error; }
 
-   bool _read (const U32 size,void* d);
-   bool _write(const U32 size,const void* d);
+   bool _read (const U32 size,void* d) override;
+   bool _write(const U32 size,const void* d) override;
 
-   void readString(char stringBuf[256]);
-   void writeString(const char *stringBuf, S32 maxLen=255);
+   void readString(char stringBuf[256]) override;
+   void writeString(const char *stringBuf, S32 maxLen=255) override;
 
-   bool hasCapability(const Capability) const { return true; }
-   U32  getPosition() const;
-   bool setPosition(const U32 in_newPosition);
-   U32  getStreamSize();
+   bool hasCapability(const Capability) const override { return true; }
+   U32  getPosition() const override;
+   bool setPosition(const U32 in_newPosition) override;
+   U32  getStreamSize() override;
    S32  getMaxWriteBitNum() const { return maxWriteBitNum; }
 };
 
@@ -295,13 +295,13 @@ public:
    /// Write us out to a stream... Results in last byte getting padded!
    void writeToStream(Stream &s);
 
-   virtual void writeBits(S32 bitCount, const void *bitPtr)
+   void writeBits(S32 bitCount, const void *bitPtr) override
    {
       validate((bitCount >> 3) + 1); // Add a little safety.
       BitStream::writeBits(bitCount, bitPtr);
    }
 
-   virtual bool writeFlag(bool val)
+   bool writeFlag(bool val) override
    {
       validate(1); // One bit will at most grow our buffer by a byte.
       return BitStream::writeFlag(val);

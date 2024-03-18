@@ -338,12 +338,12 @@ class SFXPlayList : public SFXTrack
       virtual bool isLooping() const;
 
       // SimDataBlock.
-      bool onAdd();
-      void onRemove();
-      virtual bool preload( bool server, String& errorStr );
-      virtual void packData( BitStream* stream );
-      virtual void unpackData( BitStream* stream );
-      virtual void inspectPostApply();
+      bool onAdd() override;
+      void onRemove() override;
+      bool preload( bool server, String& errorStr ) override;
+      void packData( BitStream* stream ) override;
+      void unpackData( BitStream* stream ) override;
+      void inspectPostApply() override;
       
       static void initPersistFields();
 };

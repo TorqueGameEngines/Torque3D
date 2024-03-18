@@ -55,7 +55,7 @@ public:
 
    /// Engine.
    static void initPersistFields();
-   virtual void copyTo(SimObject* object);
+   void copyTo(SimObject* object) override;
 
    /// Declare Console Object.
    DECLARE_CONOBJECT(StateMachineAsset);
@@ -66,8 +66,8 @@ public:
    inline StringTableEntry getStateMachinePath(void) const { return mStateMachinePath; };
 
 protected:
-   virtual void            initializeAsset(void);
-   virtual void            onAssetRefresh(void);
+   void            initializeAsset(void) override;
+   void            onAssetRefresh(void) override;
 
    static bool setStateMachineFile(void *obj, const char *index, const char *data) { static_cast<StateMachineAsset*>(obj)->setStateMachineFile(data); return false; }
    static const char* getStateMachineFile(void* obj, const char* data) { return static_cast<StateMachineAsset*>(obj)->getStateMachineFile(); }
@@ -88,8 +88,8 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeStateMachineAssetPtr);
    static void consoleInit();
 
-   virtual GuiControl* constructEditControl();
-   virtual bool updateRects();
+   GuiControl* constructEditControl() override;
+   bool updateRects() override;
 };
 #endif
 #endif

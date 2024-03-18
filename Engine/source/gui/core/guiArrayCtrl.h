@@ -64,8 +64,8 @@ public:
    GuiArrayCtrl();
    DECLARE_CONOBJECT(GuiArrayCtrl);
 
-   bool onWake();
-   void onSleep();
+   bool onWake() override;
+   void onSleep() override;
 
    /// @name Array attribute methods
    /// @{
@@ -89,19 +89,19 @@ public:
    virtual void onRenderColumnHeaders(Point2I offset, Point2I parentOffset, Point2I headerDim);
    virtual void onRenderRowHeader(Point2I offset, Point2I parentOffset, Point2I headerDim, Point2I cell);
    virtual void onRenderCell(Point2I offset, Point2I cell, bool selected, bool mouseOver);
-   void onRender(Point2I offset, const RectI &updateRect);
+   void onRender(Point2I offset, const RectI &updateRect) override;
    /// @}
 
    /// @name Mouse input methods
    /// @{
-   void onMouseDown( const GuiEvent &event );
-   void onMouseUp( const GuiEvent &event );
-   void onMouseMove( const GuiEvent &event );
-   void onMouseDragged( const GuiEvent &event );
-   void onMouseEnter( const GuiEvent &event );
-   void onMouseLeave( const GuiEvent &event );
-   bool onKeyDown( const GuiEvent &event );
-   void onRightMouseDown( const GuiEvent &event );
+   void onMouseDown( const GuiEvent &event ) override;
+   void onMouseUp( const GuiEvent &event ) override;
+   void onMouseMove( const GuiEvent &event ) override;
+   void onMouseDragged( const GuiEvent &event ) override;
+   void onMouseEnter( const GuiEvent &event ) override;
+   void onMouseLeave( const GuiEvent &event ) override;
+   bool onKeyDown( const GuiEvent &event ) override;
+   void onRightMouseDown( const GuiEvent &event ) override;
    /// @}
 };
 

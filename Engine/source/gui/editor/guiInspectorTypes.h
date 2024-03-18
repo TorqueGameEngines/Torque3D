@@ -62,8 +62,8 @@ public:
    //-----------------------------------------------------------------------------
    // Override able methods for custom edit fields
    //-----------------------------------------------------------------------------
-   virtual GuiControl* constructEditControl();
-   virtual void        setValue( StringTableEntry newValue );
+   GuiControl* constructEditControl() override;
+   void        setValue( StringTableEntry newValue ) override;
    virtual void        _populateMenu( GuiPopUpMenuCtrlEx *menu );
 };
 
@@ -78,7 +78,7 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeEnum);
    static void consoleInit();
 
-   virtual void _populateMenu(GuiPopUpMenuCtrlEx *menu );
+   void _populateMenu(GuiPopUpMenuCtrlEx *menu ) override;
 };
 
 //-----------------------------------------------------------------------------
@@ -92,7 +92,7 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeCubemapName);
    static void consoleInit();
 
-   virtual void _populateMenu(GuiPopUpMenuCtrlEx *menu );
+   void _populateMenu(GuiPopUpMenuCtrlEx *menu ) override;
 };
 
 //--------------------------------------------------------------------------------
@@ -119,8 +119,8 @@ public:
    //-----------------------------------------------------------------------------
    // Override able methods for custom edit fields
    //-----------------------------------------------------------------------------
-   virtual GuiControl*        constructEditControl();
-   virtual bool               updateRects();
+   GuiControl*        constructEditControl() override;
+   bool               updateRects() override;
 };
 
 class GuiInspectorTypeRegularMaterialName : public GuiInspectorTypeMaterialName
@@ -150,7 +150,7 @@ public:
    //-----------------------------------------------------------------------------
    // Override able methods for custom edit fields
    //-----------------------------------------------------------------------------
-   virtual GuiControl*        constructEditControl();
+   GuiControl*        constructEditControl() override;
 };
 
 //--------------------------------------------------------------------------------
@@ -170,7 +170,7 @@ public:
    //-----------------------------------------------------------------------------
    // Override able methods for custom edit fields
    //-----------------------------------------------------------------------------
-   virtual GuiControl*        constructEditControl();
+   GuiControl*        constructEditControl() override;
 };
 
 //-----------------------------------------------------------------------------
@@ -184,7 +184,7 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeGuiProfile);
    static void consoleInit();
 
-   virtual void _populateMenu(GuiPopUpMenuCtrlEx *menu );
+   void _populateMenu(GuiPopUpMenuCtrlEx *menu ) override;
 };
 
 //-----------------------------------------------------------------------------
@@ -198,7 +198,7 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeActionMap);
    static void consoleInit();
 
-   virtual void _populateMenu(GuiPopUpMenuCtrlEx * menu);
+   void _populateMenu(GuiPopUpMenuCtrlEx * menu) override;
 };
 
 //-----------------------------------------------------------------------------
@@ -215,9 +215,9 @@ public:
    //-----------------------------------------------------------------------------
    // Override able methods for custom edit fields
    //-----------------------------------------------------------------------------
-   virtual GuiControl* constructEditControl();
-   virtual void setValue( StringTableEntry newValue );
-   virtual const char* getValue();
+   GuiControl* constructEditControl() override;
+   void setValue( StringTableEntry newValue ) override;
+   const char* getValue() override;
 };
 
 //-----------------------------------------------------------------------------
@@ -237,8 +237,8 @@ public:
    //-----------------------------------------------------------------------------
    // Override able methods for custom edit fields
    //-----------------------------------------------------------------------------
-   virtual GuiControl*        constructEditControl();
-   virtual void               setValue( StringTableEntry data );
+   GuiControl*        constructEditControl() override;
+   void               setValue( StringTableEntry data ) override;
 };
 
 //-----------------------------------------------------------------------------
@@ -258,10 +258,10 @@ public:
    //-----------------------------------------------------------------------------
    // Override able methods for custom edit fields
    //-----------------------------------------------------------------------------
-   virtual GuiControl*        constructEditControl();
-   virtual bool               resize(const Point2I &newPosition, const Point2I &newExtent);
-   virtual bool               updateRects();
-   virtual void               updateValue();
+   GuiControl*        constructEditControl() override;
+   bool               resize(const Point2I &newPosition, const Point2I &newExtent) override;
+   bool               updateRects() override;
+   void               updateValue() override;
 };
 
 
@@ -276,7 +276,7 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeImageFileName);
    static void consoleInit();
 
-   virtual GuiControl* constructEditControl();
+   GuiControl* constructEditControl() override;
    bool renderTooltip( const Point2I &hoverPos, const Point2I &cursorPos, const char *tipText = NULL );
 };
 
@@ -298,8 +298,8 @@ public:
    //-----------------------------------------------------------------------------
    // Override able methods for custom edit fields
    //-----------------------------------------------------------------------------
-   virtual GuiControl*        constructEditControl();
-   virtual bool               updateRects();
+   GuiControl*        constructEditControl() override;
+   bool               updateRects() override;
 };
 
 //-----------------------------------------------------------------------------
@@ -328,9 +328,9 @@ class GuiInspectorTypeEaseF : public GuiInspectorField
       //-----------------------------------------------------------------------------
       // Override able methods for custom edit fields
       //-----------------------------------------------------------------------------
-      virtual GuiControl*        constructEditControl();
-      virtual bool               resize(const Point2I &newPosition, const Point2I &newExtent);
-      virtual bool               updateRects();
+      GuiControl*        constructEditControl() override;
+      bool               resize(const Point2I &newPosition, const Point2I &newExtent) override;
+      bool               updateRects() override;
 };
 
 //-----------------------------------------------------------------------------
@@ -344,7 +344,7 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypePrefabFilename);
    static void consoleInit();
 
-   virtual GuiControl* constructEditControl();
+   GuiControl* constructEditControl() override;
 };
 
 //-----------------------------------------------------------------------------
@@ -360,8 +360,8 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeShapeFilename);
    static void consoleInit();
 
-   virtual GuiControl* constructEditControl();
-   virtual bool updateRects();
+   GuiControl* constructEditControl() override;
+   bool updateRects() override;
 };
 
 //-----------------------------------------------------------------------------
@@ -394,9 +394,9 @@ public:
    //-----------------------------------------------------------------------------
    // Override able methods for custom edit fields
    //-----------------------------------------------------------------------------
-   virtual GuiControl*        constructEditControl();
-   virtual bool               resize(const Point2I &newPosition, const Point2I &newExtent);
-   virtual bool               updateRects();
+   GuiControl*        constructEditControl() override;
+   bool               resize(const Point2I &newPosition, const Point2I &newExtent) override;
+   bool               updateRects() override;
 };
 
 //-----------------------------------------------------------------------------
@@ -408,7 +408,7 @@ class GuiInspectorTypeColorI : public GuiInspectorTypeColor
    
 protected:
 
-   virtual const char* _getColorConversionFunction() const { return "ColorFloatToInt"; }
+   const char* _getColorConversionFunction() const override { return "ColorFloatToInt"; }
 
 public:
 
@@ -417,7 +417,7 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeColorI);
 
    static void consoleInit();
-   void setValue( StringTableEntry newValue );
+   void setValue( StringTableEntry newValue ) override;
 };
 
 //-----------------------------------------------------------------------------
@@ -434,7 +434,7 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeColorF);
 
    static void consoleInit();
-   void setValue( StringTableEntry newValue );
+   void setValue( StringTableEntry newValue ) override;
 };
 
 /* NOTE: Evidently this isn't used anywhere (or implemented) so i commented it out
@@ -469,8 +469,8 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeS32);
    static void consoleInit();
 
-   virtual GuiControl*  constructEditControl();
-   virtual void setValue( StringTableEntry newValue );
+   GuiControl*  constructEditControl() override;
+   void setValue( StringTableEntry newValue ) override;
 };
 
 
@@ -492,16 +492,16 @@ public:
    DECLARE_CONOBJECT( GuiInspectorTypeBitMask32 );
 
    // ConsoleObject
-   bool onAdd();
+   bool onAdd() override;
    static void consoleInit();
 
    // GuiInspectorField
-   virtual void childResized( GuiControl *child );
-   virtual bool resize( const Point2I &newPosition, const Point2I &newExtent );
-   virtual bool updateRects();
-   virtual void updateData();
-   virtual StringTableEntry getValue();
-   virtual void setValue( StringTableEntry value );
+   void childResized( GuiControl *child ) override;
+   bool resize( const Point2I &newPosition, const Point2I &newExtent ) override;
+   bool updateRects() override;
+   void updateData() override;
+   StringTableEntry getValue() override;
+   void setValue( StringTableEntry value ) override;
 
 protected:
 
@@ -529,10 +529,10 @@ public:
    //-----------------------------------------------------------------------------
    // Override able methods for custom edit fields
    //-----------------------------------------------------------------------------
-   virtual GuiControl*        constructEditControl();
-   virtual bool               resize( const Point2I &newPosition, const Point2I &newExtent );
-   virtual bool               updateRects();
-   virtual void               setValue( StringTableEntry value );
+   GuiControl*        constructEditControl() override;
+   bool               resize( const Point2I &newPosition, const Point2I &newExtent ) override;
+   bool               updateRects() override;
+   void               setValue( StringTableEntry value ) override;
 };
 
 
@@ -547,7 +547,7 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeName);
    static void consoleInit();
 
-   virtual bool verifyData( StringTableEntry data );
+   bool verifyData( StringTableEntry data ) override;
 };
 
 
@@ -562,7 +562,7 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeSFXParameterName);
    static void consoleInit();
 
-   virtual void _populateMenu(GuiPopUpMenuCtrlEx *menu );
+   void _populateMenu(GuiPopUpMenuCtrlEx *menu ) override;
 };
 
 
@@ -577,7 +577,7 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeSFXStateName);
    static void consoleInit();
 
-   virtual void _populateMenu(GuiPopUpMenuCtrlEx *menu );
+   void _populateMenu(GuiPopUpMenuCtrlEx *menu ) override;
 };
 
 
@@ -592,7 +592,7 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeSFXSourceName);
    static void consoleInit();
 
-   virtual void _populateMenu(GuiPopUpMenuCtrlEx *menu );
+   void _populateMenu(GuiPopUpMenuCtrlEx *menu ) override;
 };
 
 //-----------------------------------------------------------------------------
@@ -620,9 +620,9 @@ public:
    GuiButtonCtrl* mPasteButton;
 
    virtual void constructEditControlChildren(GuiControl* retCtrl, S32 width);
-   virtual void updateValue();
-   virtual bool resize(const Point2I& newPosition, const Point2I& newExtent);
-   virtual bool updateRects();
+   void updateValue() override;
+   bool resize(const Point2I& newPosition, const Point2I& newExtent) override;
+   bool updateRects() override;
 };
 
 //-----------------------------------------------------------------------------
@@ -641,10 +641,10 @@ protected:
 public:
    GuiTextCtrl* mDimensionLabelZ;
 
-   virtual void constructEditControlChildren(GuiControl* retCtrl, S32 width);
-   virtual void updateValue();
-   virtual bool resize(const Point2I& newPosition, const Point2I& newExtent);
-   virtual bool updateRects();
+   void constructEditControlChildren(GuiControl* retCtrl, S32 width) override;
+   void updateValue() override;
+   bool resize(const Point2I& newPosition, const Point2I& newExtent) override;
+   bool updateRects() override;
 };
 
 //-----------------------------------------------------------------------------
@@ -661,10 +661,10 @@ protected:
 public:
    GuiTextCtrl* mDimensionLabelW;
 
-   virtual void constructEditControlChildren(GuiControl* retCtrl, S32 width);
-   virtual void updateValue();
-   virtual bool resize(const Point2I& newPosition, const Point2I& newExtent);
-   virtual bool updateRects();
+   void constructEditControlChildren(GuiControl* retCtrl, S32 width) override;
+   void updateValue() override;
+   bool resize(const Point2I& newPosition, const Point2I& newExtent) override;
+   bool updateRects() override;
 };
 
 //-----------------------------------------------------------------------------
@@ -678,7 +678,7 @@ private:
 public:
    DECLARE_CONOBJECT(GuiInspectorTypePoint2F);
    static void consoleInit();
-   virtual GuiControl* constructEditControl();
+   GuiControl* constructEditControl() override;
 };
 
 class GuiInspectorTypePoint2I : public GuiInspectorTypePoint2F
@@ -688,7 +688,7 @@ private:
 public:
    DECLARE_CONOBJECT(GuiInspectorTypePoint2I);
    static void consoleInit();
-   virtual GuiControl* constructEditControl();
+   GuiControl* constructEditControl() override;
 };
 
 
@@ -704,7 +704,7 @@ private:
 public:
    DECLARE_CONOBJECT(GuiInspectorTypePoint3F);
    static void consoleInit();
-   virtual GuiControl* constructEditControl();
+   GuiControl* constructEditControl() override;
 };
 
 //-----------------------------------------------------------------------------
@@ -721,16 +721,16 @@ public:
    EulerF eulAng;
    DECLARE_CONOBJECT(GuiInspectorTypeMatrixRotation);
    static void consoleInit();
-   virtual GuiControl* constructEditControl();
-   virtual void constructEditControlChildren(GuiControl* retCtrl, S32 width);
-   virtual void updateValue();
-   virtual bool resize(const Point2I& newPosition, const Point2I& newExtent);
-   virtual bool updateRects();
+   GuiControl* constructEditControl() override;
+   void constructEditControlChildren(GuiControl* retCtrl, S32 width) override;
+   void updateValue() override;
+   bool resize(const Point2I& newPosition, const Point2I& newExtent) override;
+   bool updateRects() override;
 
    void updateAng(AngAxisF newAngAx);
    void updateEul(EulerF newEul);
 
-   virtual void updateData();
-   virtual StringTableEntry getValue();
+   void updateData() override;
+   StringTableEntry getValue() override;
 };
 #endif // _GUI_INSPECTOR_TYPES_H_

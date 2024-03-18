@@ -68,8 +68,8 @@ public:
    GFXNullTextureObject(GFXDevice * aDevice, GFXTextureProfile *profile); 
    ~GFXNullTextureObject() { kill(); };
 
-#ifUE_DEBUG
-   void pureV overrideirtualCrash() override {}
+#ifdef TORQUE_DEBUG
+   void pureVirtualCrash() override {}
 #endif
 
    GFXLockedRect * lock( U32 mipLevel = 0, RectI *inRect = NULL ) override { return NULL; };

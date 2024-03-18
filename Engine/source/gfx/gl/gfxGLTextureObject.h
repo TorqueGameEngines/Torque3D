@@ -53,28 +53,28 @@ public:
    /// @note You are responsible for deleting the returned data! (Use delete[])
    U8* getTextureData( U32 mip = 0);
 
-   virtual F32 getMaxUCoord() const;
-   virtual F32 getMaxVCoord() const;
+   F32 getMaxUCoord() const override;
+   F32 getMaxVCoord() const override;
    
    void reloadFromCache(); ///< Reloads texture from zombie cache, used by GFXGLTextureManager to resurrect the texture.
    
 #ifdef TORQUE_DEBUG
-   virtual void pureVirtualCrash() {}
+   void pureVirtualCrash() override {}
 #endif
 
    /// Get/set data from texture (for dynamic textures and render targets)
    /// @attention DO NOT READ FROM THE RETURNED RECT! It is not guaranteed to work and may incur significant performance penalties.
-   virtual GFXLockedRect* lock(U32 mipLevel = 0, RectI *inRect = NULL);
-   virtual void unlock(U32 mipLevel = 0 );
+   GFXLockedRect* lock(U32 mipLevel = 0, RectI *inRect = NULL) override;
+   void unlock(U32 mipLevel = 0 ) override;
 
-   virtual bool copyToBmp(GBitmap *); ///< Not implemented
+   bool copyToBmp(GBitmap *) override; ///< Not implemented
    
    bool mIsNPoT2;
 
    // GFXResource interface
-   virtual void zombify();
-   virtual void resurrect();
-   virtual const String describeSelf() const;
+   void zombify() override;
+   void resurrect() override;
+   const String describeSelf() const override;
 
    void initSamplerState(const GFXSamplerStateDesc &ssd);
    

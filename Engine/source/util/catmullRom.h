@@ -101,8 +101,8 @@ public:
    TYPE getPosition( U32 idx );
 
    // CatmullRomBase
-   void clear();
-   F32 segmentArcLength( U32 i, F32 u1, F32 u2 );
+   void clear() override;
+   F32 segmentArcLength( U32 i, F32 u1, F32 u2 ) override;
 
 protected:
 

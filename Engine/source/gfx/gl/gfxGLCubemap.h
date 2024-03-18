@@ -40,13 +40,13 @@ public:
    GFXGLCubemap();
    virtual ~GFXGLCubemap();
 
-   virtual void initStatic( GFXTexHandle *faces );
-   virtual void initStatic( DDSFile *dds );
-   virtual void initDynamic( U32 texSize, GFXFormat faceFormat = GFXFormatR8G8B8A8, U32 mipLevels = 0);
-   virtual U32 getSize() const { return mWidth; }
-   virtual GFXFormat getFormat() const { return mFaceFormat; }
+   void initStatic( GFXTexHandle *faces ) override;
+   void initStatic( DDSFile *dds ) override;
+   void initDynamic( U32 texSize, GFXFormat faceFormat = GFXFormatR8G8B8A8, U32 mipLevels = 0) override;
+   U32 getSize() const override { return mWidth; }
+   GFXFormat getFormat() const override { return mFaceFormat; }
 
-   virtual bool isInitialized() { return mCubemap != 0 ? true : false; }
+   bool isInitialized() override { return mCubemap != 0 ? true : false; }
 
    // Convenience methods for GFXGLTextureTarget
    U32 getWidth() { return mWidth; }
@@ -54,8 +54,8 @@ public:
    U32 getHandle() { return mCubemap; }
    
    // GFXResource interface
-   virtual void zombify();
-   virtual void resurrect();
+   void zombify() override;
+   void resurrect() override;
    
    /// Called by texCB; this is to ensure that all textures have been resurrected before we attempt to res the cubemap.
    void tmResurrect();
@@ -90,7 +90,7 @@ protected:
    Resource<DDSFile> mDDSFile;
 
    // should only be called by GFXDevice
-   virtual void setToTexUnit( U32 tuNum ); ///< Binds the cubemap to the given texture unit
+   void setToTexUnit( U32 tuNum ) override; ///< Binds the cubemap to the given texture unit
    virtual void bind(U32 textureUnit) const; ///< Notifies our owning device that we want to be set to the given texture unit (used for GL internal state tracking)
    void fillCubeTextures(GFXTexHandle* faces); ///< Copies the textures in faces into the cubemap
    
@@ -102,15 +102,15 @@ public:
    GFXGLCubemapArray();
    virtual ~GFXGLCubemapArray();
    //virtual void initStatic(GFXCubemapHandle *cubemaps, const U32 cubemapCount);
-   virtual void init(GFXCubemapHandle *cubemaps, const U32 cubemapCount);
-   virtual void init(const U32 cubemapCount, const U32 cubemapFaceSize, const GFXFormat format);
-   virtual void updateTexture(const GFXCubemapHandle &cubemap, const U32 slot);
-   virtual void copyTo(GFXCubemapArray *pDstCubemap);
-   virtual void setToTexUnit(U32 tuNum);
+   void init(GFXCubemapHandle *cubemaps, const U32 cubemapCount) override;
+   void init(const U32 cubemapCount, const U32 cubemapFaceSize, const GFXFormat format) override;
+   void updateTexture(const GFXCubemapHandle &cubemap, const U32 slot) override;
+   void copyTo(GFXCubemapArray *pDstCubemap) override;
+   void setToTexUnit(U32 tuNum) override;
 
    // GFXResource interface
-   virtual void zombify() {}
-   virtual void resurrect() {}
+   void zombify() override {}
+   void resurrect() override {}
 
 protected:
    friend class GFXGLDevice;

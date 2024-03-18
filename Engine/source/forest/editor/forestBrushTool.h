@@ -62,20 +62,20 @@ public:
    // SimObject
    DECLARE_CONOBJECT( ForestBrushTool );
    static void initPersistFields();
-   virtual bool onAdd();
-   virtual void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
 
    // ForestTool
-   virtual void on3DMouseDown( const Gui3DMouseEvent &evt );
-   virtual void on3DMouseUp( const Gui3DMouseEvent &evt );
-   virtual void on3DMouseMove( const Gui3DMouseEvent &evt );
-   virtual void on3DMouseDragged( const Gui3DMouseEvent &evt );
-   virtual bool onMouseWheel(const GuiEvent &evt );   
-   virtual void onRender3D();
-   virtual void onRender2D();
-   virtual void onActivated( const Gui3DMouseEvent &lastEvent );
-   virtual void onDeactivated();
-   virtual bool updateGuiInfo();
+   void on3DMouseDown( const Gui3DMouseEvent &evt ) override;
+   void on3DMouseUp( const Gui3DMouseEvent &evt ) override;
+   void on3DMouseMove( const Gui3DMouseEvent &evt ) override;
+   void on3DMouseDragged( const Gui3DMouseEvent &evt ) override;
+   bool onMouseWheel(const GuiEvent &evt ) override;   
+   void onRender3D() override;
+   void onRender2D() override;
+   void onActivated( const Gui3DMouseEvent &lastEvent ) override;
+   void onDeactivated() override;
+   bool updateGuiInfo() override;
 
    // ForestBrushTool
    void setSize( F32 val );
@@ -139,7 +139,7 @@ class ForestBrushToolEvent : public SimEvent
 {
 public:
 
-   void process( SimObject *object )
+   void process( SimObject *object ) override
    {
       ((ForestBrushTool*)object)->_onStroke();
    }

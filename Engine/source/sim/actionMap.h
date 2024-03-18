@@ -55,7 +55,7 @@ class ActionMap : public SimObject
    friend class ContextAction;
 
   protected:
-   bool onAdd();
+   bool onAdd() override;
 
    struct Node {
       U32 modifiers;
@@ -214,8 +214,8 @@ public:
    bool mReturnHoldTime;                ///< Do we return back our time held?  
 
    ContextAction(StringTableEntry func, F32 minHoldTime, ActionMap::Node* button, bool holdOnly);
-   virtual void processTick();
-   virtual void interpolateTick(F32 delta) {}   
-   virtual void advanceTime(F32 timeDelta) {}
+   void processTick() override;
+   void interpolateTick(F32 delta) override {}   
+   void advanceTime(F32 timeDelta) override {}
 };
 #endif // _ACTIONMAP_H_

@@ -31,7 +31,7 @@ class ScreenShotD3D11 : public ScreenShot
 {
 protected:
 
-   GBitmap* _captureBackBuffer();
+   GBitmap* _captureBackBuffer() override;
 
 };
 

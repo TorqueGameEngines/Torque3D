@@ -1741,7 +1741,7 @@ public:
    {
       mSequence = seq;
    }
-   void process(SimObject *object)
+   void process(SimObject *object) override
    {
       ((TerrainEditor *) object)->processActionTick(mSequence);
    }

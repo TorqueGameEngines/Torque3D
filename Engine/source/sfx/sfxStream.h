@@ -73,12 +73,12 @@ class SFXStream : public ThreadSafeRefCount< SFXStream >,
       virtual bool isEOS() const = 0;
 
       /// Resets the stream to restart reading data from the begining.
-      virtual void reset() = 0;
+      void reset() override = 0;
 
       /// Reads data from the stream and decompresses it into PCM samples.
       ///
       /// @param length Number of bytes to read.
-      virtual U32 read( U8 *buffer, U32 length ) = 0;
+      U32 read( U8 *buffer, U32 length ) override = 0;
 };
 
 typedef ThreadSafeRef< SFXStream > SFXStreamRef;

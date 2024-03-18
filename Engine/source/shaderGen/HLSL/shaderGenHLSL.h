@@ -33,12 +33,12 @@ class ShaderGenPrinterHLSL : public ShaderGenPrinter
 public:
 
    // ShaderGenPrinter
-   virtual void printShaderHeader(Stream& stream);
-   virtual void printMainComment(Stream& stream);
-   virtual void printVertexShaderCloser(Stream& stream);
-   virtual void printPixelShaderOutputStruct(Stream& stream, const MaterialFeatureData &featureData);
-   virtual void printPixelShaderCloser(Stream& stream);
-   virtual void printLine(Stream& stream, const String& line);
+   void printShaderHeader(Stream& stream) override;
+   void printMainComment(Stream& stream) override;
+   void printVertexShaderCloser(Stream& stream) override;
+   void printPixelShaderOutputStruct(Stream& stream, const MaterialFeatureData &featureData) override;
+   void printPixelShaderCloser(Stream& stream) override;
+   void printLine(Stream& stream, const String& line) override;
 };
 
 class ShaderGenComponentFactoryHLSL : public ShaderGenComponentFactory
@@ -50,10 +50,10 @@ public:
    static const char* typeToString( GFXDeclType type );
 
    // ShaderGenComponentFactory
-   virtual ShaderComponent* createVertexInputConnector( const GFXVertexFormat &vertexFormat );
-   virtual ShaderComponent* createVertexPixelConnector();
-   virtual ShaderComponent* createVertexParamsDef();
-   virtual ShaderComponent* createPixelParamsDef();
+   ShaderComponent* createVertexInputConnector( const GFXVertexFormat &vertexFormat ) override;
+   ShaderComponent* createVertexPixelConnector() override;
+   ShaderComponent* createVertexParamsDef() override;
+   ShaderComponent* createPixelParamsDef() override;
 };
 
 

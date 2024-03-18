@@ -69,14 +69,14 @@ public:
    
    virtual ~_GFXGLTextureTargetDesc() {}
    
-   virtual U32 getHandle() { return mTex->getHandle(); }
-   virtual U32 getWidth() { return mTex->getWidth(); }
-   virtual U32 getHeight() { return mTex->getHeight(); }
-   virtual U32 getDepth() { return mTex->getDepth(); }
-   virtual bool hasMips() { return mTex->mMipLevels != 1; }
-   virtual GLenum getBinding() { return mTex->getBinding(); }
-   virtual GFXFormat getFormat() { return mTex->getFormat(); }
-   virtual bool isCompatible(const GFXGLTextureObject* tex)
+   U32 getHandle() override { return mTex->getHandle(); }
+   U32 getWidth() override { return mTex->getWidth(); }
+   U32 getHeight() override { return mTex->getHeight(); }
+   U32 getDepth() override { return mTex->getDepth(); }
+   bool hasMips() override { return mTex->mMipLevels != 1; }
+   GLenum getBinding() override { return mTex->getBinding(); }
+   GFXFormat getFormat() override { return mTex->getFormat(); }
+   bool isCompatible(const GFXGLTextureObject* tex) override
    {
       return mTex->getFormat() == tex->getFormat()
          && mTex->getWidth() == tex->getWidth()
@@ -99,14 +99,14 @@ public:
    
    virtual ~_GFXGLCubemapTargetDesc() {}
    
-   virtual U32 getHandle() { return mTex->getHandle(); }
-   virtual U32 getWidth() { return mTex->getWidth(); }
-   virtual U32 getHeight() { return mTex->getHeight(); }
-   virtual U32 getDepth() { return 0; }
-   virtual bool hasMips() { return mTex->getMipMapLevels() != 1; }
-   virtual GLenum getBinding() { return GFXGLCubemap::getEnumForFaceNumber(mFace); }
-   virtual GFXFormat getFormat() { return mTex->getFormat(); }
-   virtual bool isCompatible(const GFXGLTextureObject* tex)
+   U32 getHandle() override { return mTex->getHandle(); }
+   U32 getWidth() override { return mTex->getWidth(); }
+   U32 getHeight() override { return mTex->getHeight(); }
+   U32 getDepth() override { return 0; }
+   bool hasMips() override { return mTex->getMipMapLevels() != 1; }
+   GLenum getBinding() override { return GFXGLCubemap::getEnumForFaceNumber(mFace); }
+   GFXFormat getFormat() override { return mTex->getFormat(); }
+   bool isCompatible(const GFXGLTextureObject* tex) override
    {
       return mTex->getFormat() == tex->getFormat()
          && mTex->getWidth() == tex->getWidth()
@@ -141,9 +141,9 @@ public:
    _GFXGLTextureTargetFBOImpl(GFXGLTextureTarget* target);
    virtual ~_GFXGLTextureTargetFBOImpl();
    
-   virtual void applyState();
-   virtual void makeActive();
-   virtual void finish();
+   void applyState() override;
+   void makeActive() override;
+   void finish() override;
 };
 
 _GFXGLTextureTargetFBOImpl::_GFXGLTextureTargetFBOImpl(GFXGLTextureTarget* target)

@@ -38,8 +38,8 @@ class SFXNullBuffer : public SFXBuffer
       SFXNullBuffer( const ThreadSafeRef< SFXStream >& stream, SFXDescription* description );
 
       // SFXBuffer.
-      virtual void write( SFXInternal::SFXStreamPacket* const* packets, U32 num );
-      virtual void _flush() {}
+      void write( SFXInternal::SFXStreamPacket* const* packets, U32 num ) override;
+      void _flush() override {}
 
    public:
 

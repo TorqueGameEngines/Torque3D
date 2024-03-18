@@ -75,9 +75,9 @@ class DbgFileView : public GuiArrayCtrl
    DECLARE_CONOBJECT(DbgFileView);
    DECLARE_CATEGORY( "Gui Editor" );
 
-   bool onWake();
+   bool onWake() override;
 
-   void clear();
+   void clear() override;
    void clearBreakPositions();
 
    void setCurrentLine(S32 lineNumber, bool setCurrentLine);
@@ -90,12 +90,12 @@ class DbgFileView : public GuiArrayCtrl
 
    bool findString(const char *text);
 
-   void onMouseDown(const GuiEvent &event);
-   void onMouseDragged(const GuiEvent &event);
-   void onMouseUp(const GuiEvent &event);
+   void onMouseDown(const GuiEvent &event) override;
+   void onMouseDragged(const GuiEvent &event) override;
+   void onMouseUp(const GuiEvent &event) override;
 
-   void onPreRender();
-   void onRenderCell(Point2I offset, Point2I cell, bool selected, bool mouseOver);
+   void onPreRender() override;
+   void onRenderCell(Point2I offset, Point2I cell, bool selected, bool mouseOver) override;
 };
 
 #endif //_GUI_DEBUGGER_H

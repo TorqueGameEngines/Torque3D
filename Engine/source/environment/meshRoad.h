@@ -166,12 +166,12 @@ public:
       box        = cv.box;
    }
 
-   const MatrixF& getTransform() const;
-   Box3F getBoundingBox() const;
-   Box3F getBoundingBox(const MatrixF& mat, const Point3F& scale) const;
-   Point3F support(const VectorF& vec) const;
-   void getFeatures(const MatrixF& mat,const VectorF& n, ConvexFeature* cf);
-   void getPolyList(AbstractPolyList* list);
+   const MatrixF& getTransform() const override;
+   Box3F getBoundingBox() const override;
+   Box3F getBoundingBox(const MatrixF& mat, const Point3F& scale) const override;
+   Point3F support(const VectorF& vec) const override;
+   void getFeatures(const MatrixF& mat,const VectorF& n, ConvexFeature* cf) override;
+   void getPolyList(AbstractPolyList* list) override;
 };
 
 
@@ -516,29 +516,29 @@ public:
    static void consoleInit();
 
    // SimObject      
-   bool onAdd();
-   void onRemove();
-   void onEditorEnable();
-   void onEditorDisable();
-   void inspectPostApply();
-   void onStaticModified(const char* slotName, const char*newValue = NULL);
-   void writeFields(Stream &stream, U32 tabStop);
-   bool writeField( StringTableEntry fieldname, const char *value );
+   bool onAdd() override;
+   void onRemove() override;
+   void onEditorEnable() override;
+   void onEditorDisable() override;
+   void inspectPostApply() override;
+   void onStaticModified(const char* slotName, const char*newValue = NULL) override;
+   void writeFields(Stream &stream, U32 tabStop) override;
+   bool writeField( StringTableEntry fieldname, const char *value ) override;
 
    // NetObject
-   U32 packUpdate(NetConnection *, U32, BitStream *);
-   void unpackUpdate(NetConnection *, BitStream *);
+   U32 packUpdate(NetConnection *, U32, BitStream *) override;
+   void unpackUpdate(NetConnection *, BitStream *) override;
 
    // SceneObject
-   virtual void prepRenderImage( SceneRenderState* sceneState );
-   virtual void setTransform( const MatrixF &mat );
-   virtual void setScale( const VectorF &scale );
+   void prepRenderImage( SceneRenderState* sceneState ) override;
+   void setTransform( const MatrixF &mat ) override;
+   void setScale( const VectorF &scale ) override;
 
    // SceneObject - Collision
-   virtual void buildConvex(const Box3F& box,Convex* convex);
-   virtual bool buildPolyList(PolyListContext context, AbstractPolyList* polyList, const Box3F &box, const SphereF &sphere);
-   virtual bool castRay(const Point3F &start, const Point3F &end, RayInfo* info);
-   virtual bool collideBox(const Point3F &start, const Point3F &end, RayInfo* info);
+   void buildConvex(const Box3F& box,Convex* convex) override;
+   bool buildPolyList(PolyListContext context, AbstractPolyList* polyList, const Box3F &box, const SphereF &sphere) override;
+   bool castRay(const Point3F &start, const Point3F &end, RayInfo* info) override;
+   bool collideBox(const Point3F &start, const Point3F &end, RayInfo* info) override;
 
    // MeshRoad
    void regenerate();   

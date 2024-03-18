@@ -54,7 +54,7 @@ class GuiBubbleTextCtrl : public GuiTextCtrl
 
       GuiBubbleTextCtrl() :mInAction(false), mDlg(NULL), mPopup(NULL), mMLText(NULL) {}
 
-      virtual void onMouseDown(const GuiEvent &event);
+      void onMouseDown(const GuiEvent &event) override;
 };
 
 #endif /* _GUI_BUBBLE_TEXT_CONTROL_H_ */

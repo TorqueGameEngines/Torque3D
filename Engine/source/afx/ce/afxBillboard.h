@@ -62,12 +62,12 @@ public:
   /*C*/             afxBillboardData();
   /*C*/             afxBillboardData(const afxBillboardData&, bool = false);
 
-  virtual void      packData(BitStream*);
-  virtual void      unpackData(BitStream*);
+  void      packData(BitStream*) override;
+  void      unpackData(BitStream*) override;
 
-  bool              preload(bool server, String &errorStr);
+  bool              preload(bool server, String &errorStr) override;
 
-  virtual bool      allowSubstitutions() const { return true; }
+  bool      allowSubstitutions() const override { return true; }
 
   static void       initPersistFields();
 
@@ -103,15 +103,15 @@ public:
   /*C*/             afxBillboard();
   /*D*/             ~afxBillboard();
 
-  virtual bool      onNewDataBlock(GameBaseData* dptr, bool reload);
-  virtual bool      onAdd();
-  virtual void      onRemove();
+  bool      onNewDataBlock(GameBaseData* dptr, bool reload) override;
+  bool      onAdd() override;
+  void      onRemove() override;
 
   void              setFadeAmount(F32 amt) { fade_amt = amt; }
   void              setSortPriority(S8 priority) { sort_priority = priority; }
   void              setVisibility(bool flag) { is_visible = flag; }
 
-  virtual void      prepRenderImage(SceneRenderState*);
+  void      prepRenderImage(SceneRenderState*) override;
 
   void              _renderBillboard(ObjectRenderInst*, SceneRenderState*, BaseMatInstance*);
 

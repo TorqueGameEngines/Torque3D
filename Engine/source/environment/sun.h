@@ -98,8 +98,8 @@ protected:
    void _updateTimeOfDay( TimeOfDay *timeOfDay, F32 time );
 
    // SimObject.
-   virtual void _onSelected();
-   virtual void _onUnselected();
+   void _onSelected() override;
+   void _onUnselected() override;
 
    enum NetMaskBits 
    {
@@ -112,28 +112,28 @@ public:
    virtual ~Sun();
 
    // SimObject
-   virtual bool onAdd();
-   virtual void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
 
    // ConsoleObject
    DECLARE_CONOBJECT(Sun);
    DECLARE_CATEGORY("Lighting \t Lights");
    static void initPersistFields();
-   void inspectPostApply();
+   void inspectPostApply() override;
 
    // NetObject
-   U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream );
-   void unpackUpdate( NetConnection *conn, BitStream *stream ); 
+   U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream ) override;
+   void unpackUpdate( NetConnection *conn, BitStream *stream ) override; 
 
    // ISceneLight
-   virtual void submitLights( LightManager *lm, bool staticLighting );
-   virtual LightInfo* getLight() { return mLight; }   
+   void submitLights( LightManager *lm, bool staticLighting ) override;
+   LightInfo* getLight() override { return mLight; }   
 
    // SceneObject   
-   virtual void prepRenderImage( SceneRenderState* state );
+   void prepRenderImage( SceneRenderState* state ) override;
 
    // ProcessObject
-   virtual void advanceTime( F32 dt );
+   void advanceTime( F32 dt ) override;
 
    ///
    void setAzimuth( F32 azimuth );

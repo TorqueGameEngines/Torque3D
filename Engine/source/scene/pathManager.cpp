@@ -88,10 +88,10 @@ class PathManagerEvent : public NetEvent
    typedef NetEvent Parent;
    PathManagerEvent() : modifiedPath(0), clearPaths(false) { }
 
-   void pack(NetConnection*, BitStream*);
-   void write(NetConnection*, BitStream*);
-   void unpack(NetConnection*, BitStream*);
-   void process(NetConnection*);
+   void pack(NetConnection*, BitStream*) override;
+   void write(NetConnection*, BitStream*) override;
+   void unpack(NetConnection*, BitStream*) override;
+   void process(NetConnection*) override;
 
    DECLARE_CONOBJECT(PathManagerEvent);
 };

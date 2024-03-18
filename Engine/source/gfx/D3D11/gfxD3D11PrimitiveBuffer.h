@@ -51,14 +51,14 @@ public:
 
    virtual ~GFXD3D11PrimitiveBuffer();
 
-   virtual void lock(U32 indexStart, U32 indexEnd, void **indexPtr);
-   virtual void unlock();
+   void lock(U32 indexStart, U32 indexEnd, void **indexPtr) override;
+   void unlock() override;
 
-   virtual void prepare();      
+   void prepare() override;      
 
    // GFXResource interface
-   virtual void zombify();
-   virtual void resurrect();
+   void zombify() override;
+   void resurrect() override;
 };
 
 inline GFXD3D11PrimitiveBuffer::GFXD3D11PrimitiveBuffer(   GFXDevice *device, 

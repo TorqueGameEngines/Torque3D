@@ -48,22 +48,22 @@ public:
    Point2I mMouseDownPosition;
 
 
-   virtual void onMouseUp(const GuiEvent &event);
-   virtual void onMouseDown(const GuiEvent &event);
-   virtual void onMouseMove(const GuiEvent &event);
-   virtual void onMouseDragged(const GuiEvent &event);
-   virtual void onMouseEnter(const GuiEvent &event);
-   virtual void onMouseLeave(const GuiEvent &event);
+   void onMouseUp(const GuiEvent &event) override;
+   void onMouseDown(const GuiEvent &event) override;
+   void onMouseMove(const GuiEvent &event) override;
+   void onMouseDragged(const GuiEvent &event) override;
+   void onMouseEnter(const GuiEvent &event) override;
+   void onMouseLeave(const GuiEvent &event) override;
 
-   virtual bool onMouseWheelUp(const GuiEvent &event);
-   virtual bool onMouseWheelDown(const GuiEvent &event);
+   bool onMouseWheelUp(const GuiEvent &event) override;
+   bool onMouseWheelDown(const GuiEvent &event) override;
 
-   virtual void onRightMouseDown(const GuiEvent &event);
-   virtual void onRightMouseUp(const GuiEvent &event);
-   virtual void onRightMouseDragged(const GuiEvent &event);
+   void onRightMouseDown(const GuiEvent &event) override;
+   void onRightMouseUp(const GuiEvent &event) override;
+   void onRightMouseDragged(const GuiEvent &event) override;
 
-   virtual void onMiddleMouseDown(const GuiEvent &event);
-   virtual void onMiddleMouseUp(const GuiEvent &event);
-   virtual void onMiddleMouseDragged(const GuiEvent &event);
+   void onMiddleMouseDown(const GuiEvent &event) override;
+   void onMiddleMouseUp(const GuiEvent &event) override;
+   void onMiddleMouseDragged(const GuiEvent &event) override;
 };
 #endif

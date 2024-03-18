@@ -41,9 +41,9 @@ public:
   /*C*/           afxF_GravityData();
   /*C*/           afxF_GravityData(const afxF_GravityData&, bool = false);
   
-  virtual void    packData(BitStream* stream);
-  virtual void    unpackData(BitStream* stream);
-  virtual afxForceData* cloneAndPerformSubstitutions(const SimObject*, S32 index=0);
+  void    packData(BitStream* stream) override;
+  void    unpackData(BitStream* stream) override;
+  afxForceData* cloneAndPerformSubstitutions(const SimObject*, S32 index=0) override;
 
   static void     initPersistFields();
 
@@ -62,9 +62,9 @@ private:
 public:
   /*C*/             afxF_Gravity();
 
-  virtual bool      onNewDataBlock(afxForceData* dptr, bool reload);
+  bool      onNewDataBlock(afxForceData* dptr, bool reload) override;
 
-  virtual Point3F   evaluate(Point3F pos, Point3F v, F32 mass);
+  Point3F   evaluate(Point3F pos, Point3F v, F32 mass) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
@@ -158,8 +158,8 @@ class afxF_GravityDesc : public afxForceDesc
   static afxF_GravityDesc desc;
 
 public:
-  virtual bool testForceType(const SimDataBlock*) const;
-  virtual afxForce* create() const { return new afxF_Gravity; }
+  bool testForceType(const SimDataBlock*) const override;
+  afxForce* create() const override { return new afxF_Gravity; }
 };
 
 afxF_GravityDesc afxF_GravityDesc::desc;

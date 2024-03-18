@@ -55,22 +55,22 @@ private:
 public:
   /*C*/               afxTSCtrl();
 
-  virtual bool        processCameraQuery(CameraQuery *query);
-  virtual void        renderWorld(const RectI &updateRect);
-  virtual void        onRender(Point2I offset, const RectI &updateRect);
+  bool        processCameraQuery(CameraQuery *query) override;
+  void        renderWorld(const RectI &updateRect) override;
+  void        onRender(Point2I offset, const RectI &updateRect) override;
 
-  virtual void        getCursor(GuiCursor *&cursor, bool &showCursor, const GuiEvent &lastGuiEvent);
+  void        getCursor(GuiCursor *&cursor, bool &showCursor, const GuiEvent &lastGuiEvent) override;
 
-  virtual void        onMouseDown(const GuiEvent&);
-  virtual void        onMouseMove(const GuiEvent&);
-  virtual void        onMouseDragged(const GuiEvent&);
-  virtual void        onMouseEnter(const GuiEvent&);
-  virtual void        onMouseLeave(const GuiEvent&);
+  void        onMouseDown(const GuiEvent&) override;
+  void        onMouseMove(const GuiEvent&) override;
+  void        onMouseDragged(const GuiEvent&) override;
+  void        onMouseEnter(const GuiEvent&) override;
+  void        onMouseLeave(const GuiEvent&) override;
 
-  virtual bool        onMouseWheelUp(const GuiEvent&);
-  virtual bool        onMouseWheelDown(const GuiEvent&);
+  bool        onMouseWheelUp(const GuiEvent&) override;
+  bool        onMouseWheelDown(const GuiEvent&) override;
 
-  virtual void        onRightMouseDown(const GuiEvent&);
+  void        onRightMouseDown(const GuiEvent&) override;
 
   Point3F             getMouse3DVec() {return mMouse3DVec;};   
   Point3F             getMouse3DPos() {return mMouse3DPos;};
@@ -83,9 +83,9 @@ public:
   U8                  getTargetingCheckMethod();
   void                performTargeting(const Point2I& mousePoint, U8 mode);
 
-  virtual void        interpolateTick( F32 delta ) {};
-  virtual void        processTick() {};
-  virtual void        advanceTime( F32 timeDelta ); 
+  void        interpolateTick( F32 delta ) override {};
+  void        processTick() override {};
+  void        advanceTime( F32 timeDelta ) override; 
 
   DECLARE_CONOBJECT(afxTSCtrl);
   DECLARE_CATEGORY("AFX");

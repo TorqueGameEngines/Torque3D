@@ -94,14 +94,14 @@ class DInputManager : public InputManager
    public:
       DInputManager();
 
-      bool enable();
-      void disable();
+      bool enable() override;
+      void disable() override;
 
-      void onDeleteNotify( SimObject* object );
-      bool onAdd();
-      void onRemove();
+      void onDeleteNotify( SimObject* object ) override;
+      bool onAdd() override;
+      void onRemove() override;
 
-      void process();
+      void process() override;
 
       // DirectInput functions:
       static void init();

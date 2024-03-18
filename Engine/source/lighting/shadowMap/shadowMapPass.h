@@ -122,7 +122,7 @@ public:
    ShadowRenderPassManager() : Parent() {}
 
    /// Add a RenderInstance to the list
-   virtual void addInst( RenderInst *inst );
+   void addInst( RenderInst *inst ) override;
 };
 
 #endif // _SHADOWMAPPASS_H_

@@ -34,17 +34,17 @@ public:
       pushCursor( PlatformCursorController::curArrow );
    };
 
-   virtual void setCursorPosition( S32 x, S32 y );
-   virtual void getCursorPosition( Point2I &point );
-   virtual void setCursorVisible( bool visible );
-   virtual bool isCursorVisible();
+   void setCursorPosition( S32 x, S32 y ) override;
+   void getCursorPosition( Point2I &point ) override;
+   void setCursorVisible( bool visible ) override;
+   bool isCursorVisible() override;
 
-   void setCursorShape( U32 cursorID );
-   void setCursorShape( const UTF8 *fileName, bool reload );
+   void setCursorShape( U32 cursorID ) override;
+   void setCursorShape( const UTF8 *fileName, bool reload ) override;
 
-   U32 getDoubleClickTime();
-   S32 getDoubleClickWidth();
-   S32 getDoubleClickHeight();
+   U32 getDoubleClickTime() override;
+   S32 getDoubleClickWidth() override;
+   S32 getDoubleClickHeight() override;
 };
 
 

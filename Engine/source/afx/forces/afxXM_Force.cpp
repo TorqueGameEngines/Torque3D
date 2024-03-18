@@ -52,16 +52,16 @@ public:
   /*C*/         afxXM_ForceData();
   /*C*/         afxXM_ForceData(const afxXM_ForceData&, bool = false);
 
-  void          packData(BitStream* stream);
-  void          unpackData(BitStream* stream);
+  void          packData(BitStream* stream) override;
+  void          unpackData(BitStream* stream) override;
 
-   bool         preload(bool server, String &errorStr);
+   bool         preload(bool server, String &errorStr) override;
 
-  virtual bool  allowSubstitutions() const { return true; }
+  bool  allowSubstitutions() const override { return true; }
 
   static void   initPersistFields();
 
-  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server);
+  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server) override;
 
   DECLARE_CONOBJECT(afxXM_ForceData);
 };
@@ -85,8 +85,8 @@ class afxXM_Force : public afxXM_WeightedBase, public afxEffectDefs
 public:
   /*C*/         afxXM_Force(afxXM_ForceData*, afxEffectWrapper*);
 
-  virtual void  start(F32 timestamp);
-  virtual void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params);
+  void  start(F32 timestamp) override;
+  void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

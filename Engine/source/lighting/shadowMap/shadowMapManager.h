@@ -70,8 +70,8 @@ public:
    ShadowMapPass* getShadowMapPass() const { return mShadowMapPass; }
 
    // Shadow manager
-   virtual void activate();
-   virtual void deactivate();
+   void activate() override;
+   void deactivate() override;
 
    GFXTextureObject* getTapRotationTex();
 

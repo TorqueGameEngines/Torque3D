@@ -48,11 +48,11 @@ public:
    GuiProgressCtrl();
 
    //console related methods
-   virtual const char *getScriptValue();
-   virtual void setScriptValue(const char *value);
+   const char *getScriptValue() override;
+   void setScriptValue(const char *value) override;
 
-   void onPreRender();
-   void onRender(Point2I offset, const RectI &updateRect);
+   void onPreRender() override;
+   void onRender(Point2I offset, const RectI &updateRect) override;
 };
 
 #endif

@@ -51,15 +51,15 @@ public:
    inline void setFileEndPos(S32 pos)        { mFileEndPos = pos; }
 
    // Overrides of FilterStream
-   bool attachStream(Stream* io_pSlaveStream);
-   void detachStream();
-   Stream *getStream()                       { return mStream; }
+   bool attachStream(Stream* io_pSlaveStream) override;
+   void detachStream() override;
+   Stream *getStream() override                       { return mStream; }
 
-   U32  getPosition() const;
-   bool setPosition(const U32 in_newPosition);
+   U32  getPosition() const override;
+   bool setPosition(const U32 in_newPosition) override;
 
 protected:
-   bool _read(const U32 in_numBytes,  void* out_pBuffer);
+   bool _read(const U32 in_numBytes,  void* out_pBuffer) override;
 
    void updateKeys(const U8 c);
    U8 decryptByte();

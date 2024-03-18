@@ -97,8 +97,8 @@ public:
 
    static void initPersistFields();
 
-   virtual bool onAdd();
-   virtual void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
 
 	static PopupMenuEvent smPopupMenuEvent;
 	static bool smSelectionEventHandled; /// Set to true if any menu or submenu handles a selection event
@@ -181,8 +181,8 @@ public:
 	/// it should work regardless of platform.
 	void handleSelectEvent(U32 popID, U32 command);
 
-   virtual bool onMessageReceived(StringTableEntry queue, const char* event, const char* data );
-   virtual bool onMessageObjectReceived(StringTableEntry queue, Message *msg );
+   bool onMessageReceived(StringTableEntry queue, const char* event, const char* data ) override;
+   bool onMessageObjectReceived(StringTableEntry queue, Message *msg ) override;
 
    bool isVisible() { return mVisible; }
    void setVisible(bool isVis) { mVisible = isVis; }

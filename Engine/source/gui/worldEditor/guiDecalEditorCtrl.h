@@ -51,29 +51,29 @@ class GuiDecalEditorCtrl : public EditTSCtrl
       DECLARE_CONOBJECT(GuiDecalEditorCtrl);
 
       // SimObject
-      bool onAdd();
+      bool onAdd() override;
       static void initPersistFields();      
       static void consoleInit();
-      void onEditorDisable();
+      void onEditorDisable() override;
 
       // GuiControl
-      virtual bool onWake();
-      virtual void onSleep();
-      virtual void onRender(Point2I offset, const RectI &updateRect);
+      bool onWake() override;
+      void onSleep() override;
+      void onRender(Point2I offset, const RectI &updateRect) override;
 
       // EditTSCtrl      
-      void get3DCursor( GuiCursor *&cursor, bool &visible, const Gui3DMouseEvent &event_ );
-      void on3DMouseDown(const Gui3DMouseEvent & event);
-      void on3DMouseUp(const Gui3DMouseEvent & event);
-      void on3DMouseMove(const Gui3DMouseEvent & event);
-      void on3DMouseDragged(const Gui3DMouseEvent & event);
-      void on3DMouseEnter(const Gui3DMouseEvent & event);
-      void on3DMouseLeave(const Gui3DMouseEvent & event);
-      void on3DRightMouseDown(const Gui3DMouseEvent & event);
-      void on3DRightMouseUp(const Gui3DMouseEvent & event);
-      void updateGuiInfo();      
-      void renderScene(const RectI & updateRect);
-      void renderGui(Point2I offset, const RectI &updateRect);
+      void get3DCursor( GuiCursor *&cursor, bool &visible, const Gui3DMouseEvent &event_ ) override;
+      void on3DMouseDown(const Gui3DMouseEvent & event) override;
+      void on3DMouseUp(const Gui3DMouseEvent & event) override;
+      void on3DMouseMove(const Gui3DMouseEvent & event) override;
+      void on3DMouseDragged(const Gui3DMouseEvent & event) override;
+      void on3DMouseEnter(const Gui3DMouseEvent & event) override;
+      void on3DMouseLeave(const Gui3DMouseEvent & event) override;
+      void on3DRightMouseDown(const Gui3DMouseEvent & event) override;
+      void on3DRightMouseUp(const Gui3DMouseEvent & event) override;
+      void updateGuiInfo() override;      
+      void renderScene(const RectI & updateRect) override;
+      void renderGui(Point2I offset, const RectI &updateRect) override;
 
       /// Find clicked point on "static collision" objects.
       bool getRayInfo( const Gui3DMouseEvent &event, RayInfo *rInfo );
@@ -132,8 +132,8 @@ public:
    void addDecal(const DecalInstance& decal);
 
    // UndoAction
-   virtual void undo();
-   virtual void redo();
+   void undo() override;
+   void redo() override;
 };
 
 //Decal Instance Delete Undo Actions
@@ -162,8 +162,8 @@ public:
    void deleteDecal(const DecalInstance& decal);
 
    // UndoAction
-   virtual void undo();
-   virtual void redo();
+   void undo() override;
+   void redo() override;
 };
 
 //Decal Datablock Delete Undo Actions
@@ -191,8 +191,8 @@ public:
    void deleteDecal(const DecalInstance& decal);
 
    // UndoAction
-   virtual void undo();
-   virtual void redo();
+   void undo() override;
+   void redo() override;
 };
 
 //Decal Datablock Retarget Undo Actions
@@ -221,8 +221,8 @@ public:
    void retargetDecal( DecalInstance* decal );
 
    // UndoAction
-   virtual void undo();
-   virtual void redo();
+   void undo() override;
+   void redo() override;
 };
 
 #endif // _GUIDECALEDITORCTRL_H_

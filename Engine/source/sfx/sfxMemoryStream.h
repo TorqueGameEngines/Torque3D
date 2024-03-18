@@ -72,13 +72,13 @@ class SFXMemoryStream : public SFXStream,
       SFXMemoryStream( const SFXFormat& format, SourceStreamType* stream, U32 numSamples = U32_MAX );
       
       // SFXStream.
-      const SFXFormat& getFormat() const { return mFormat; }
-      U32 getSampleCount() const { return mNumSamplesTotal; }
-      U32 getDataLength() const { return ( mNumSamplesTotal == U32_MAX ? U32_MAX : mFormat.getDataLength( getDuration() ) ); }
-      U32 getDuration() const { return ( mNumSamplesTotal == U32_MAX ? U32_MAX : mFormat.getDuration( mNumSamplesTotal ) ); }
-      bool isEOS() const { return ( mNumSamplesLeft != 0 ); }
-      void reset();
-      U32 read( U8 *buffer, U32 length );      
+      const SFXFormat& getFormat() const override { return mFormat; }
+      U32 getSampleCount() const override { return mNumSamplesTotal; }
+      U32 getDataLength() const override { return ( mNumSamplesTotal == U32_MAX ? U32_MAX : mFormat.getDataLength( getDuration() ) ); }
+      U32 getDuration() const override { return ( mNumSamplesTotal == U32_MAX ? U32_MAX : mFormat.getDuration( mNumSamplesTotal ) ); }
+      bool isEOS() const override { return ( mNumSamplesLeft != 0 ); }
+      void reset() override;
+      U32 read( U8 *buffer, U32 length ) override;      
 };
 
 #endif // !_SFXMEMORYSTREAM_H_

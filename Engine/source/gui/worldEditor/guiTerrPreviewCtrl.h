@@ -65,9 +65,9 @@ public:
    static void initPersistFields();
 
    //Parental methods
-   bool onWake();
-   void onSleep();
-   bool onAdd();
+   bool onWake() override;
+   void onSleep() override;
+   bool onAdd() override;
 
   void setBitmap(const GFXTexHandle&);
 
@@ -80,8 +80,8 @@ public:
 
    //void setValue(const Point2F *center, const Point2F *camera);
    //const char *getScriptValue();
-   void onPreRender();
-   void onRender(Point2I offset, const RectI &updateRect);
+   void onPreRender() override;
+   void onRender(Point2I offset, const RectI &updateRect) override;
 };
 
 

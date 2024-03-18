@@ -35,12 +35,12 @@ class EyeSpaceDepthOutHLSL : public ShaderFeatureHLSL
 public:
 
    // ShaderFeature
-   virtual void processVert( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd );
-   virtual void processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd );
-   virtual Resources getResources( const MaterialFeatureData &fd );
-   virtual String getName() { return "Eye Space Depth (Out)"; }
-   virtual Material::BlendOp getBlendOp() { return Material::None; }
-   virtual const char* getOutputVarName() const { return "eyeSpaceDepth"; }
+   void processVert( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd ) override;
+   void processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd ) override;
+   Resources getResources( const MaterialFeatureData &fd ) override;
+   String getName() override { return "Eye Space Depth (Out)"; }
+   Material::BlendOp getBlendOp() override { return Material::None; }
+   const char* getOutputVarName() const override { return "eyeSpaceDepth"; }
 };
 
 
@@ -49,12 +49,12 @@ class DepthOutHLSL : public ShaderFeatureHLSL
 public:
 
    // ShaderFeature
-   virtual void processVert( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd );
-   virtual void processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd );
-   virtual Resources getResources( const MaterialFeatureData &fd );
-   virtual String getName() { return "Depth (Out)"; }
-   virtual Material::BlendOp getBlendOp() { return Material::None; }
-   virtual const char* getOutputVarName() const { return "IN.depth"; }
+   void processVert( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd ) override;
+   void processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd ) override;
+   Resources getResources( const MaterialFeatureData &fd ) override;
+   String getName() override { return "Depth (Out)"; }
+   Material::BlendOp getBlendOp() override { return Material::None; }
+   const char* getOutputVarName() const override { return "IN.depth"; }
 };
 
 #endif // _DEPTH_HLSL_H_

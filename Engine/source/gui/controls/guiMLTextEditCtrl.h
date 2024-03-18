@@ -36,24 +36,24 @@ class GuiMLTextEditCtrl : public GuiMLTextCtrl
    StringTableEntry mEscapeCommand;
 
    // Events
-   bool onKeyDown(const GuiEvent&event);
+   bool onKeyDown(const GuiEvent&event) override;
 
    // Event forwards
    void handleMoveKeys(const GuiEvent&);
    void handleDeleteKeys(const GuiEvent&);
 
    // rendering
-   void onRender(Point2I offset, const RectI &updateRect);
+   void onRender(Point2I offset, const RectI &updateRect) override;
 
   public:
    GuiMLTextEditCtrl();
    ~GuiMLTextEditCtrl();
 
-   virtual void setFirstResponder();
-   virtual void onLoseFirstResponder();
+   void setFirstResponder() override;
+   void onLoseFirstResponder() override;
 
-   bool onWake();
-   bool resize(const Point2I &newPosition, const Point2I &newExtent);
+   bool onWake() override;
+   bool resize(const Point2I &newPosition, const Point2I &newExtent) override;
 
    DECLARE_CONOBJECT(GuiMLTextEditCtrl);
    DECLARE_DESCRIPTION( "A control that allows to edit multiple lines of text." );

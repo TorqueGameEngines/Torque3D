@@ -43,14 +43,14 @@ public:
   /*C*/         afxXM_FreezeData() : mask(POSITION | ORIENTATION | POSITION2), delay(0.0f) { }
   /*C*/         afxXM_FreezeData(const afxXM_FreezeData&, bool = false);
 
-  void          packData(BitStream* stream);
-  void          unpackData(BitStream* stream);
+  void          packData(BitStream* stream) override;
+  void          unpackData(BitStream* stream) override;
 
-  virtual bool  allowSubstitutions() const { return true; }
+  bool  allowSubstitutions() const override { return true; }
 
   static void   initPersistFields();
 
-  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server);
+  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server) override;
 
   DECLARE_CONOBJECT(afxXM_FreezeData);
 };
@@ -71,7 +71,7 @@ class afxXM_Freeze : public afxXM_Base
 public:
   /*C*/         afxXM_Freeze(afxXM_FreezeData*, afxEffectWrapper*);
 
-  virtual void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params);
+  void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//
@@ -89,7 +89,7 @@ class afxXM_Freeze_all_but_scale : public afxXM_Base
 public:
   /*C*/         afxXM_Freeze_all_but_scale(afxXM_FreezeData*, afxEffectWrapper*);
 
-  virtual void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params);
+  void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//
@@ -105,7 +105,7 @@ class afxXM_Freeze_pos : public afxXM_Base
 public:
   /*C*/         afxXM_Freeze_pos(afxXM_FreezeData*, afxEffectWrapper*);
 
-  virtual void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params);
+  void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//
@@ -121,7 +121,7 @@ class afxXM_Freeze_pos2 : public afxXM_Base
 public:
   /*C*/         afxXM_Freeze_pos2(afxXM_FreezeData*, afxEffectWrapper*);
 
-  virtual void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params);
+  void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//
@@ -137,7 +137,7 @@ class afxXM_Freeze_ori : public afxXM_Base
 public:
   /*C*/         afxXM_Freeze_ori(afxXM_FreezeData*, afxEffectWrapper*);
 
-  virtual void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params);
+  void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

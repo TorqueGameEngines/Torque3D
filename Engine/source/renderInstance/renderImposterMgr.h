@@ -93,7 +93,7 @@ public:
    static void initPersistFields();
 
    // RenderBinManager
-   virtual void render( SceneRenderState *state );
+   void render( SceneRenderState *state ) override;
 };
 
 

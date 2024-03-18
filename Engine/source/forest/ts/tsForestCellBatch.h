@@ -52,9 +52,9 @@ protected:
    TSLastDetail *mDetail;
 
    // ForestCellBatch
-   virtual bool _prepBatch( const ForestItem &item );
-   virtual void _rebuildBatch();
-   virtual void _render( const SceneRenderState *state );
+   bool _prepBatch( const ForestItem &item ) override;
+   void _rebuildBatch() override;
+   void _render( const SceneRenderState *state ) override;
 
 public:
    

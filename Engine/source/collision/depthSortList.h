@@ -92,14 +92,14 @@ class DepthSortList : public ClippedPolyList
    void depthPartition(const Point3F * sourceVerts, U32 numVerts, Vector<Poly> & partition, Vector<Point3F> & partitionVerts);
 
    // Virtual methods
-   void end();
+   void end() override;
    // U32  addPoint(const Point3F& p);
    // bool isEmpty() const;
    // void begin(U32 material,U32 surfaceKey);
    // void plane(U32 v1,U32 v2,U32 v3);
    // void plane(const PlaneF& p);
    // void vertex(U32 vi);
-   bool getMapping(MatrixF *, Box3F *);
+   bool getMapping(MatrixF *, Box3F *) override;
 
    // access to the polys in order (note: returned pointers are volatile, may change if polys added).
    void getOrderedPoly(U32 ith, Poly ** poly, PolyExtents ** polyExtent);

@@ -37,10 +37,10 @@ public:
    static LightInfoExType Type;
 
    // LightInfoEx
-   virtual void set( const LightInfoEx *ex );
-   virtual const LightInfoExType& getType() const { return Type; }
-   virtual void packUpdate( BitStream *stream ) const;
-   virtual void unpackUpdate( BitStream *stream );
+   void set( const LightInfoEx *ex ) override;
+   const LightInfoExType& getType() const override { return Type; }
+   void packUpdate( BitStream *stream ) const override;
+   void unpackUpdate( BitStream *stream ) override;
 
 public:
    // We're leaving these public for easy access 

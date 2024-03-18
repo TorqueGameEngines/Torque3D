@@ -60,7 +60,7 @@ public:
       parentClass     = parent;
    };
 
-   virtual AbstractClassRep* getContainerChildClass(const bool recurse)
+   AbstractClassRep* getContainerChildClass(const bool recurse) override
    {
       // Fetch container children type.
       AbstractClassRep* pChildren = T::getContainerChildStaticClassRep();
@@ -76,7 +76,7 @@ public:
       return pParent->getContainerChildClass(recurse);
    }
 
-   virtual WriteCustomTamlSchema getCustomTamlSchema(void)
+   WriteCustomTamlSchema getCustomTamlSchema(void) override
    {
       return T::getStaticWriteCustomTamlSchema();
    }
@@ -100,7 +100,7 @@ public:
    }
 
    /// Wrap constructor.
-   ConsoleObject *create() const { return new T; }
+   ConsoleObject *create() const override { return new T; }
 
    //-----------------------------------------------------------------------------
 
@@ -148,7 +148,7 @@ public:
    /// @name Console Type Interface
    /// @{
 
-   virtual void setData( void* dptr, S32 argc, const char** argv, const EnumTable* tbl, BitSet32 flag )
+   void setData( void* dptr, S32 argc, const char** argv, const EnumTable* tbl, BitSet32 flag ) override
    {
       if( argc == 1 )
       {
@@ -159,14 +159,14 @@ public:
          Con::errorf( "Cannot set multiple args to a single ConsoleObject*.");
    }
    
-   virtual const char* getData( void* dptr, const EnumTable* tbl, BitSet32 flag )
+   const char* getData( void* dptr, const EnumTable* tbl, BitSet32 flag ) override
    {
       T** obj = ( T** ) dptr;
       return Con::getReturnBuffer( T::__getObjectId( *obj ) );
    }
    
-   virtual const char* getTypeClassName() { return mClassName; }
-   virtual const bool isDatablock() { return T::__smIsDatablock; };
+   const char* getTypeClassName() override { return mClassName; }
+   const bool isDatablock() override { return T::__smIsDatablock; };
    
    /// @}
 };

@@ -104,16 +104,16 @@ class SFXSound : public SFXSource,
       }
       
       // SFXSource.
-      virtual void _play();
-      virtual void _pause();
-      virtual void _stop();
-      virtual void _updateStatus();
-      virtual void _onParameterEvent( SFXParameter* parameter, SFXParameterEvent event );
-      virtual void _updateVolume( const MatrixF& listener );
-      virtual void _updatePitch();
-      virtual void _updatePriority();
-      virtual void _setMinMaxDistance( F32 min, F32 max );
-      virtual void _setCone( F32 innerAngle, F32 outerAngle, F32 outerVolume );
+      void _play() override;
+      void _pause() override;
+      void _stop() override;
+      void _updateStatus() override;
+      void _onParameterEvent( SFXParameter* parameter, SFXParameterEvent event ) override;
+      void _updateVolume( const MatrixF& listener ) override;
+      void _updatePitch() override;
+      void _updatePriority() override;
+      void _setMinMaxDistance( F32 min, F32 max ) override;
+      void _setCone( F32 innerAngle, F32 outerAngle, F32 outerVolume ) override;
 
    public:
 
@@ -131,10 +131,10 @@ class SFXSound : public SFXSource,
 
       /// Return the current playback position in milliseconds.
       /// @note For looping sources, this returns the position in the current cycle.
-      U32 getPosition() const;
+      U32 getPosition() const override;
 
       /// Set the current playback position in milliseconds.
-      void setPosition( U32 ms );
+      void setPosition( U32 ms ) override;
 
       /// Returns the source's total playback time in milliseconds.
       U32 getDuration() const { return mDuration; }
@@ -155,15 +155,15 @@ class SFXSound : public SFXSource,
       static S32 QSORT_CALLBACK qsortCompare( const void* item1, const void* item2 );
 
       // SFXSource.
-      virtual void setTransform( const MatrixF& transform );
-      virtual void setVelocity( const VectorF& velocity );
-      virtual bool isVirtualized() const;
-      virtual F32 getElapsedPlayTimeCurrentCycle() const;
-      virtual F32 getTotalPlayTime() const;
+      void setTransform( const MatrixF& transform ) override;
+      void setVelocity( const VectorF& velocity ) override;
+      bool isVirtualized() const override;
+      F32 getElapsedPlayTimeCurrentCycle() const override;
+      F32 getTotalPlayTime() const override;
 
       // SimObject.
-      virtual void onRemove();
-      virtual void onDeleteNotify( SimObject* object );
+      void onRemove() override;
+      void onDeleteNotify( SimObject* object ) override;
 };
 
 #endif // !_SFXSOUND_H_

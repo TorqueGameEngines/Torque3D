@@ -50,8 +50,8 @@ public:
    bool isGlowEnabled();
 
    // RenderBinManager
-   virtual void addElement( RenderInst *inst );
-   virtual void render( SceneRenderState *state );
+   void addElement( RenderInst *inst ) override;
+   void render( SceneRenderState *state ) override;
 
    // ConsoleObject
    DECLARE_CONOBJECT( RenderGlowMgr );
@@ -67,7 +67,7 @@ protected:
 
       virtual BaseMatInstance *getMatInstance() { return mGlowMatInst; }
 
-      virtual const MatInstanceHookType& getType() const { return Type; }
+      const MatInstanceHookType& getType() const override { return Type; }
 
       /// Our material hook type.
       static const MatInstanceHookType Type;

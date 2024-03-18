@@ -61,14 +61,14 @@ public:
   /*C*/                 afxAnimClipData();
   /*C*/                 afxAnimClipData(const afxAnimClipData&, bool = false);
 
-  virtual bool          onAdd();
-  virtual void          packData(BitStream*);
-  virtual void          unpackData(BitStream*);
-  virtual bool          writeField(StringTableEntry fieldname, const char* value);
+  bool          onAdd() override;
+  void          packData(BitStream*) override;
+  void          unpackData(BitStream*) override;
+  bool          writeField(StringTableEntry fieldname, const char* value) override;
 
-  virtual void          onStaticModified(const char* slotName, const char* newValue = NULL);
+  void          onStaticModified(const char* slotName, const char* newValue = NULL) override;
 
-  virtual bool          allowSubstitutions() const { return true; }
+  bool          allowSubstitutions() const override { return true; }
 
   static void           initPersistFields();
 

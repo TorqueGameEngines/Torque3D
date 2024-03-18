@@ -138,15 +138,15 @@ public:
 
    GuiShaderNode();
 
-   bool onWake();
-   void onSleep();
+   bool onWake() override;
+   void onSleep() override;
    static void initPersistFields();
-   virtual bool onAdd() override;
-   virtual void onRemove() override;
+   bool onAdd() override;
+   void onRemove() override;
 
    void renderNode(Point2I offset, const RectI& updateRect, const S32 nodeSize);
    // Serialization functions
-   void write(Stream& stream, U32 tabStop = 0, U32 flags = 0);
+   void write(Stream& stream, U32 tabStop = 0, U32 flags = 0) override;
    void read(Stream& stream);
 
    // is the parent that all other nodes are derived from.

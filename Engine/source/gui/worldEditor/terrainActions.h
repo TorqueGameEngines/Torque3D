@@ -66,28 +66,28 @@ class SelectAction : public TerrainAction
 {
    public:
       SelectAction(TerrainEditor * editor) : TerrainAction(editor){};
-      StringTableEntry getName(){return("select");}
+      StringTableEntry getName() override{return("select");}
 
-      void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type);
+      void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type) override;
 };
 
 class DeselectAction : public TerrainAction
 {
    public:
       DeselectAction(TerrainEditor * editor) : TerrainAction(editor){};
-      StringTableEntry getName(){return("deselect");}
+      StringTableEntry getName() override{return("deselect");}
 
-      void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type);
+      void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type) override;
 };
 
 class ClearAction : public TerrainAction
 {
    public:
       ClearAction(TerrainEditor * editor) : TerrainAction(editor){};
-      StringTableEntry getName(){return("clear");}
+      StringTableEntry getName() override{return("clear");}
 
-      void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type) {};
-      bool useMouseBrush() { mTerrainEditor->getCurrentSel()->reset(); return true; }
+      void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type) override {};
+      bool useMouseBrush() override { mTerrainEditor->getCurrentSel()->reset(); return true; }
 };
 
 
@@ -95,9 +95,9 @@ class SoftSelectAction : public TerrainAction
 {
    public:
       SoftSelectAction(TerrainEditor * editor) : TerrainAction(editor){};
-      StringTableEntry getName(){return("softSelect");}
+      StringTableEntry getName() override{return("softSelect");}
 
-      void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type);
+      void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type) override;
 
       Filter   mFilter;
 };
@@ -108,10 +108,10 @@ class OutlineSelectAction : public TerrainAction
 {
    public:
       OutlineSelectAction(TerrainEditor * editor) : TerrainAction(editor){};
-      StringTableEntry getName(){return("outlineSelect");}
+      StringTableEntry getName() override{return("outlineSelect");}
 
-      void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type);
-      bool useMouseBrush() { return(false); }
+      void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type) override;
+      bool useMouseBrush() override { return(false); }
 
    private:
 
@@ -124,9 +124,9 @@ class PaintMaterialAction : public TerrainAction
 {
    public:
       PaintMaterialAction(TerrainEditor * editor) : TerrainAction(editor){}
-      StringTableEntry getName(){return("paintMaterial");}
+      StringTableEntry getName() override{return("paintMaterial");}
 
-      void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type);
+      void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type) override;
 };
 
 //------------------------------------------------------------------------------
@@ -135,9 +135,9 @@ class ClearMaterialsAction : public TerrainAction
 {
 public:
    ClearMaterialsAction(TerrainEditor * editor) : TerrainAction(editor){}
-   StringTableEntry getName(){return("clearMaterials");}
+   StringTableEntry getName() override{return("clearMaterials");}
 
-   void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type);
+   void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type) override;
 };
 
 //------------------------------------------------------------------------------
@@ -146,9 +146,9 @@ class RaiseHeightAction : public TerrainAction
 {
    public:
       RaiseHeightAction(TerrainEditor * editor) : TerrainAction(editor){}
-      StringTableEntry getName(){return("raiseHeight");}
+      StringTableEntry getName() override{return("raiseHeight");}
 
-      void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type);
+      void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type) override;
 };
 
 //------------------------------------------------------------------------------
@@ -157,9 +157,9 @@ class LowerHeightAction : public TerrainAction
 {
    public:
       LowerHeightAction(TerrainEditor * editor) : TerrainAction(editor){}
-      StringTableEntry getName(){return("lowerHeight");}
+      StringTableEntry getName() override{return("lowerHeight");}
 
-      void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type);
+      void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type) override;
 };
 
 //------------------------------------------------------------------------------
@@ -168,9 +168,9 @@ class SetHeightAction : public TerrainAction
 {
    public:
       SetHeightAction(TerrainEditor * editor) : TerrainAction(editor){}
-      StringTableEntry getName(){return("setHeight");}
+      StringTableEntry getName() override{return("setHeight");}
 
-      void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type);
+      void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type) override;
 };
 
 //------------------------------------------------------------------------------
@@ -179,9 +179,9 @@ class SetEmptyAction : public TerrainAction
 {
    public:
       SetEmptyAction(TerrainEditor * editor) : TerrainAction(editor){}
-      StringTableEntry getName(){return("setEmpty");}
+      StringTableEntry getName() override{return("setEmpty");}
 
-      void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type);
+      void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type) override;
 };
 
 //------------------------------------------------------------------------------
@@ -190,9 +190,9 @@ class ClearEmptyAction : public TerrainAction
 {
    public:
       ClearEmptyAction(TerrainEditor * editor) : TerrainAction(editor){}
-      StringTableEntry getName(){return("clearEmpty");}
+      StringTableEntry getName() override{return("clearEmpty");}
 
-      void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type);
+      void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type) override;
 };
 
 //------------------------------------------------------------------------------
@@ -201,9 +201,9 @@ class ScaleHeightAction : public TerrainAction
 {
    public:
       ScaleHeightAction(TerrainEditor * editor) : TerrainAction(editor){}
-      StringTableEntry getName(){return("scaleHeight");}
+      StringTableEntry getName() override{return("scaleHeight");}
 
-      void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type);
+      void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type) override;
 };
 
 //------------------------------------------------------------------------------
@@ -212,9 +212,9 @@ class BrushAdjustHeightAction : public TerrainAction
 {
    public:
       BrushAdjustHeightAction(TerrainEditor* editor) : TerrainAction(editor) { mPreviousZ = 0.0f; }
-      StringTableEntry getName(){return("brushAdjustHeight");}
+      StringTableEntry getName() override{return("brushAdjustHeight");}
 
-      void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type);
+      void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type) override;
 
    private:
       PlaneF mIntersectionPlane;
@@ -226,10 +226,10 @@ class AdjustHeightAction : public BrushAdjustHeightAction
 {
    public:
       AdjustHeightAction(TerrainEditor * editor);
-      StringTableEntry getName(){return("adjustHeight");}
+      StringTableEntry getName() override{return("adjustHeight");}
 
-      void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type);
-      bool useMouseBrush() { return(false); }
+      void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type) override;
+      bool useMouseBrush() override { return(false); }
 
    private:
       //
@@ -244,27 +244,27 @@ class FlattenHeightAction : public TerrainAction
 {
    public:
       FlattenHeightAction(TerrainEditor * editor) : TerrainAction(editor){}
-      StringTableEntry getName(){return("flattenHeight");}
+      StringTableEntry getName() override{return("flattenHeight");}
 
-      void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type);
+      void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type) override;
 };
 
 class SmoothHeightAction : public TerrainAction
 {
    public:
       SmoothHeightAction(TerrainEditor * editor) : TerrainAction(editor){}
-      StringTableEntry getName(){return("smoothHeight");}
+      StringTableEntry getName() override{return("smoothHeight");}
 
-      void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type);
+      void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type) override;
 };
 
 class SmoothSlopeAction : public TerrainAction  
 {  
    public:  
       SmoothSlopeAction(TerrainEditor * editor) : TerrainAction(editor){}  
-      StringTableEntry getName(){return("smoothSlope");}  
+      StringTableEntry getName() override{return("smoothSlope");}  
   
-      void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type);  
+      void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type) override;  
 };  
 
 class PaintNoiseAction : public TerrainAction
@@ -285,9 +285,9 @@ class PaintNoiseAction : public TerrainAction
          mScale = 1.5f / ( mMinMaxNoise.x - mMinMaxNoise.y);
       }
       
-      StringTableEntry getName() { return "paintNoise"; }
+      StringTableEntry getName() override { return "paintNoise"; }
 
-      void process( Selection *sel, const Gui3DMouseEvent &event, bool selChanged, Type type );
+      void process( Selection *sel, const Gui3DMouseEvent &event, bool selChanged, Type type ) override;
 
    protected:
 
@@ -348,8 +348,8 @@ public:
    static void initPersistFields();
 
    // UndoAction
-   virtual void undo();
-   virtual void redo();
+   void undo() override;
+   void redo() override;
 
    /// Performs the initial smoothing and stores
    /// the heighfield state for later undo.

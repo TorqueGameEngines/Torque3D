@@ -115,12 +115,12 @@ public:
    ProjectedShadow( SceneObject *object );
    virtual ~ProjectedShadow();
 
-   bool shouldRender( const SceneRenderState *state );
+   bool shouldRender( const SceneRenderState *state ) override;
 
-   void update( const SceneRenderState *state );
-   void render( F32 camDist, const TSRenderState &rdata );
-   U32 getLastRenderTime() const { return mLastRenderTime; }
-   const F32 getScore() const { return mScore; }
+   void update( const SceneRenderState *state ) override;
+   void render( F32 camDist, const TSRenderState &rdata ) override;
+   U32 getLastRenderTime() const override { return mLastRenderTime; }
+   const F32 getScore() const override { return mScore; }
 
 };
 

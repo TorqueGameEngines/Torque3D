@@ -55,20 +55,20 @@ public:
    ~GFXD3D11TextureTarget();
 
    // Public interface.
-   virtual const Point2I getSize() { return mTargetSize; }
-   virtual GFXFormat getFormat() { return mTargetFormat; }
-   virtual void attachTexture(RenderSlot slot, GFXTextureObject *tex, U32 mipLevel=0, U32 zOffset = 0);
-   virtual void attachTexture(RenderSlot slot, GFXCubemap *tex, U32 face, U32 mipLevel=0);
-   virtual void resolve();
+   const Point2I getSize() override { return mTargetSize; }
+   GFXFormat getFormat() override { return mTargetFormat; }
+   void attachTexture(RenderSlot slot, GFXTextureObject *tex, U32 mipLevel=0, U32 zOffset = 0) override;
+   void attachTexture(RenderSlot slot, GFXCubemap *tex, U32 face, U32 mipLevel=0) override;
+   void resolve() override;
 
    /// Note we always copy the Color0 RenderSlot.
-   virtual void resolveTo( GFXTextureObject *tex );
+   void resolveTo( GFXTextureObject *tex ) override;
 
-   virtual void activate();
-   virtual void deactivate();
+   void activate() override;
+   void deactivate() override;
 
-   void zombify();
-   void resurrect();
+   void zombify() override;
+   void resurrect() override;
 };
 
 class GFXD3D11WindowTarget : public GFXWindowTarget
@@ -87,7 +87,7 @@ class GFXD3D11WindowTarget : public GFXWindowTarget
    /// D3D presentation info.
    DXGI_SWAP_CHAIN_DESC mPresentationParams;
    /// Internal interface that notifies us we need to reset our video mode.
-   void resetMode();
+   void resetMode() override;
 
    /// Is this a secondary window
    bool mSecondaryWindow;
@@ -97,21 +97,21 @@ public:
    GFXD3D11WindowTarget();
    ~GFXD3D11WindowTarget();
  
-   virtual const Point2I getSize();
-   virtual GFXFormat getFormat();
-   virtual bool present();
+   const Point2I getSize() override;
+   GFXFormat getFormat() override;
+   bool present() override;
 
    void initPresentationParams();
    void createSwapChain();
    void createBuffersAndViews();
    void setBackBuffer();
 
-   virtual void activate();   
+   void activate() override;   
 
-   void zombify();
-   void resurrect();
+   void zombify() override;
+   void resurrect() override;
 
-   virtual void resolveTo( GFXTextureObject *tex );
+   void resolveTo( GFXTextureObject *tex ) override;
 
    // These are all reference counted and must be released by whomever uses the get* function
    IDXGISwapChain* getSwapChain();

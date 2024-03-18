@@ -61,7 +61,7 @@ class afxMagicMissileData : public GameBaseData
   typedef GameBaseData Parent;
   
 protected:
-  bool onAdd();
+  bool onAdd() override;
 
 public:
   enum { MaxLifetimeTicks = 4095 };
@@ -210,10 +210,10 @@ public:
   /*C*/                 afxMagicMissileData();
   /*D*/                 ~afxMagicMissileData();
   
-  void                  packData(BitStream*);
-  void                  unpackData(BitStream*);
+  void                  packData(BitStream*) override;
+  void                  unpackData(BitStream*) override;
 
-  bool                  preload(bool server, String &errorStr);
+  bool                  preload(bool server, String &errorStr) override;
   
   static void           initPersistFields();
   
@@ -223,7 +223,7 @@ public:
   /*C*/                 afxMagicMissileData(const afxMagicMissileData&, bool = false);
 
   afxMagicMissileData*  cloneAndPerformSubstitutions(const SimObject*, S32 index=0);
-  virtual bool          allowSubstitutions() const { return true; }
+  bool          allowSubstitutions() const override { return true; }
   void                  gather_cons_defs(Vector<afxConstraintDef>& defs);
 };
 
@@ -290,8 +290,8 @@ protected:
   */
 
   // ISceneLight
-  virtual void submitLights( LightManager *lm, bool staticLighting );
-  virtual LightInfo* getLight() { return mLight; }
+  void submitLights( LightManager *lm, bool staticLighting ) override;
+  LightInfo* getLight() override { return mLight; }
 
   LightInfo *mLight;
   LightState mLightState;
@@ -319,19 +319,19 @@ protected:
   U32     mCollideHitType;
   */
   
-  bool onAdd();
-  void onRemove();
-  bool onNewDataBlock(GameBaseData *dptr, bool reload);
+  bool onAdd() override;
+  void onRemove() override;
+  bool onNewDataBlock(GameBaseData *dptr, bool reload) override;
 
   // Rendering
-  virtual void prepRenderImage(SceneRenderState*);
+  void prepRenderImage(SceneRenderState*) override;
   void prepBatchRender( SceneRenderState *state); 
 
-  void processTick(const Move *move);
+  void processTick(const Move *move) override;
   /*
   void advanceTime(F32 dt);
   */
-  void interpolateTick(F32 delta);
+  void interpolateTick(F32 delta) override;
 
   /*
   /// What to do once this projectile collides with something
@@ -355,8 +355,8 @@ protected:
    // These are stolen from the player class ..
   bool              pointInWater(const Point3F &point);
 
-  U32  packUpdate(NetConnection *conn, U32 mask, BitStream *stream);
-  void unpackUpdate(NetConnection *conn, BitStream *stream);
+  U32  packUpdate(NetConnection *conn, U32 mask, BitStream *stream) override;
+  void unpackUpdate(NetConnection *conn, BitStream *stream) override;
 
   afxChoreographer* choreographer;
 
@@ -396,7 +396,7 @@ public:
   /*C*/             afxMagicMissile();
   /*C*/             afxMagicMissile(bool on_server, bool on_client);
   /*D*/             ~afxMagicMissile();
-  virtual void      onDeleteNotify(SimObject*);
+  void      onDeleteNotify(SimObject*) override;
 
   DECLARE_CONOBJECT(afxMagicMissile);
   DECLARE_CATEGORY("UNLISTED");

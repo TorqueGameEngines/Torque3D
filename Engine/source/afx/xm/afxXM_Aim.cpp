@@ -44,14 +44,14 @@ public:
   /*C*/         afxXM_AimData();
   /*C*/         afxXM_AimData(const afxXM_AimData&, bool = false);
 
-  void          packData(BitStream* stream);
-  void          unpackData(BitStream* stream);
+  void          packData(BitStream* stream) override;
+  void          unpackData(BitStream* stream) override;
 
-  virtual bool  allowSubstitutions() const { return true; }
+  bool  allowSubstitutions() const override { return true; }
 
   static void   initPersistFields();
 
-  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server);
+  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server) override;
 
   DECLARE_CONOBJECT(afxXM_AimData);
 };
@@ -67,7 +67,7 @@ class afxXM_Aim_weighted : public afxXM_WeightedBase
 public:
   /*C*/           afxXM_Aim_weighted(afxXM_AimData*, afxEffectWrapper*);
 
-  virtual void    updateParams(F32 dt, F32 elapsed, afxXM_Params& params);
+  void    updateParams(F32 dt, F32 elapsed, afxXM_Params& params) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//
@@ -79,7 +79,7 @@ class afxXM_Aim_weighted_z : public afxXM_WeightedBase
 public:
   /*C*/           afxXM_Aim_weighted_z(afxXM_AimData*, afxEffectWrapper*);
 
-  virtual void    updateParams(F32 dt, F32 elapsed, afxXM_Params& params);
+  void    updateParams(F32 dt, F32 elapsed, afxXM_Params& params) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//
@@ -91,7 +91,7 @@ class afxXM_Aim_fixed : public afxXM_Base
 public:
   /*C*/           afxXM_Aim_fixed(afxXM_AimData*, afxEffectWrapper*);
 
-  virtual void    updateParams(F32 dt, F32 elapsed, afxXM_Params& params);
+  void    updateParams(F32 dt, F32 elapsed, afxXM_Params& params) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//
@@ -103,7 +103,7 @@ class afxXM_Aim_fixed_z : public afxXM_Base
 public:
   /*C*/           afxXM_Aim_fixed_z(afxXM_AimData*, afxEffectWrapper*);
 
-  virtual void    updateParams(F32 dt, F32 elapsed, afxXM_Params& params);
+  void    updateParams(F32 dt, F32 elapsed, afxXM_Params& params) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

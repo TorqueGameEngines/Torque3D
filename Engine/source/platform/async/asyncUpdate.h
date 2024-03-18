@@ -114,7 +114,7 @@ class AsyncUpdateThread : public Thread, public ThreadSafeRefCount< AsyncUpdateT
 
       virtual ~AsyncUpdateThread();
 
-      virtual void run( void* );
+      void run( void* ) override;
 
       /// Trigger the update event to notify the thread about
       /// pending updates.
@@ -141,7 +141,7 @@ class AsyncPeriodicUpdateThread : public AsyncUpdateThread
       /// Time between periodic updates in milliseconds.
       U32 mIntervalMS;
 
-      virtual void _waitForEventAndReset();
+      void _waitForEventAndReset() override;
 
    public:
 

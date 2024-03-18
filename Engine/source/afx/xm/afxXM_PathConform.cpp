@@ -55,16 +55,16 @@ public:
   /*C*/           afxXM_PathConformData();
   /*C*/           afxXM_PathConformData(const afxXM_PathConformData&, bool = false);
 
-  bool            onAdd();
-  bool            preload(bool server, String &errorStr);
-  void            packData(BitStream* stream);
-  void            unpackData(BitStream* stream);
+  bool            onAdd() override;
+  bool            preload(bool server, String &errorStr) override;
+  void            packData(BitStream* stream) override;
+  void            unpackData(BitStream* stream) override;
 
-  virtual bool    allowSubstitutions() const { return true; }
+  bool    allowSubstitutions() const override { return true; }
 
   static void     initPersistFields();
 
-  afxXM_Base*     create(afxEffectWrapper* fx, bool on_server);
+  afxXM_Base*     create(afxEffectWrapper* fx, bool on_server) override;
 
   DECLARE_CONOBJECT(afxXM_PathConformData);
 };
@@ -89,8 +89,8 @@ public:
   /*C*/         afxXM_PathConform(afxXM_PathConformData*, afxEffectWrapper*);
   /*D*/         ~afxXM_PathConform();
 
-  virtual void  start(F32 timestamp);
-  virtual void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params);
+  void  start(F32 timestamp) override;
+  void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

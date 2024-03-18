@@ -63,17 +63,17 @@ private:
 	friend class OculusVRHMDDevice;
 	friend class D3D11OculusTexture;
 
-   virtual GFXFormat selectSupportedFormat(GFXTextureProfile *profile,
-   const Vector<GFXFormat> &formats, bool texture, bool mustblend, bool mustfilter);
+   GFXFormat selectSupportedFormat(GFXTextureProfile *profile,
+   const Vector<GFXFormat> &formats, bool texture, bool mustblend, bool mustfilter) override;
 
-   virtual void enumerateVideoModes();
+   void enumerateVideoModes() override;
 
-   virtual GFXWindowTarget *allocWindowTarget(PlatformWindow *window);
-   virtual GFXTextureTarget *allocRenderToTextureTarget(bool genMips = true);
+   GFXWindowTarget *allocWindowTarget(PlatformWindow *window) override;
+   GFXTextureTarget *allocRenderToTextureTarget(bool genMips = true) override;
 
-   virtual void enterDebugEvent(ColorI color, const char *name);
-   virtual void leaveDebugEvent();
-   virtual void setDebugMarker(ColorI color, const char *name);
+   void enterDebugEvent(ColorI color, const char *name) override;
+   void leaveDebugEvent() override;
+   void setDebugMarker(ColorI color, const char *name) override;
 
 protected:
 
@@ -89,7 +89,7 @@ protected:
       ID3D11InputLayout *decl;
    };
 
-   virtual void initStates() { };
+   void initStates() override { };
 
    static GFXAdapter::CreateDeviceInstanceDelegate mCreateDeviceInstance;
 
@@ -167,33 +167,33 @@ protected:
    // {
 
    ///
-   virtual void setTextureInternal(U32 textureUnit, const GFXTextureObject* texture);
+   void setTextureInternal(U32 textureUnit, const GFXTextureObject* texture) override;
 
    /// Called by GFXDevice to create a device specific stateblock
-   virtual GFXStateBlockRef createStateBlockInternal(const GFXStateBlockDesc& desc);
+   GFXStateBlockRef createStateBlockInternal(const GFXStateBlockDesc& desc) override;
    /// Called by GFXDevice to actually set a stateblock.
-   virtual void setStateBlockInternal(GFXStateBlock* block, bool force);
+   void setStateBlockInternal(GFXStateBlock* block, bool force) override;
 
    /// Track the last const buffer we've used.  Used to notify new constant buffers that
    /// they should send all of their constants up
    StrongRefPtr<GFXD3D11ShaderConstBuffer> mCurrentConstBuffer;
    /// Called by base GFXDevice to actually set a const buffer
-   virtual void setShaderConstBufferInternal(GFXShaderConstBuffer* buffer);
+   void setShaderConstBufferInternal(GFXShaderConstBuffer* buffer) override;
 
    // }
 
    // Index buffer management
    // {
    virtual void _setPrimitiveBuffer( GFXPrimitiveBuffer *buffer );
-   virtual void drawIndexedPrimitive(  GFXPrimitiveType primType,
+   void drawIndexedPrimitive(  GFXPrimitiveType primType,
                                        U32 startVertex,
                                        U32 minIndex,
                                        U32 numVerts,
                                        U32 startIndex,
-                                       U32 primitiveCount );
+                                       U32 primitiveCount ) override;
    // }
 
-   virtual GFXShader* createShader();
+   GFXShader* createShader() override;
 
    /// Device helper function
    virtual DXGI_SWAP_CHAIN_DESC setupPresentParams( const GFXVideoMode &mode, const HWND &hwnd );
@@ -220,41 +220,41 @@ public:
 
    // Activate/deactivate
    // {
-   virtual void init( const GFXVideoMode &mode, PlatformWindow *window = NULL );
+   void init( const GFXVideoMode &mode, PlatformWindow *window = NULL ) override;
 
-   virtual void preDestroy() { GFXDevice::preDestroy(); if(mTextureManager) mTextureManager->kill(); }
+   void preDestroy() override { GFXDevice::preDestroy(); if(mTextureManager) mTextureManager->kill(); }
 
-   GFXAdapterType getAdapterType(){ return Direct3D11; }
+   GFXAdapterType getAdapterType() override{ return Direct3D11; }
 
    U32 getAdaterIndex() const { return mAdapterIndex; }
 
-   virtual GFXCubemap *createCubemap();
-   virtual GFXCubemapArray *createCubemapArray();
-   virtual GFXTextureArray* createTextureArray();
+   GFXCubemap *createCubemap() override;
+   GFXCubemapArray *createCubemapArray() override;
+   GFXTextureArray* createTextureArray() override;
 
-   virtual F32  getPixelShaderVersion() const { return mPixVersion; }
-   virtual void setPixelShaderVersion( F32 version ){ mPixVersion = version;}
+   F32  getPixelShaderVersion() const override { return mPixVersion; }
+   void setPixelShaderVersion( F32 version ) override{ mPixVersion = version;}
 
-   virtual void setShader(GFXShader *shader, bool force = false);
-   virtual U32  getNumSamplers() const { return 16; }
-   virtual U32  getNumRenderTargets() const { return 8; }
+   void setShader(GFXShader *shader, bool force = false) override;
+   U32  getNumSamplers() const override { return 16; }
+   U32  getNumRenderTargets() const override { return 8; }
    // }
 
    // Copy methods
    // {
-   virtual void copyResource(GFXTextureObject *pDst, GFXCubemap *pSrc, const U32 face);
+   void copyResource(GFXTextureObject *pDst, GFXCubemap *pSrc, const U32 face) override;
    // }
 
    // Misc rendering control
    // {
-   virtual void clear( U32 flags, const LinearColorF& color, F32 z, U32 stencil );
-   virtual void clearColorAttachment(const U32 attachment, const LinearColorF& color);
+   void clear( U32 flags, const LinearColorF& color, F32 z, U32 stencil ) override;
+   void clearColorAttachment(const U32 attachment, const LinearColorF& color) override;
 
-   virtual bool beginSceneInternal();
-   virtual void endSceneInternal();
+   bool beginSceneInternal() override;
+   void endSceneInternal() override;
 
-   virtual void setClipRect( const RectI &rect );
-   virtual const RectI& getClipRect() const { return mClipRect; }
+   void setClipRect( const RectI &rect ) override;
+   const RectI& getClipRect() const override { return mClipRect; }
 
    // }
 
@@ -262,37 +262,37 @@ public:
 
    /// @name Render Targets
    /// @{
-   virtual void _updateRenderTargets();
+   void _updateRenderTargets() override;
    /// @}
 
    // Vertex/Index buffer management
    // {
-   virtual GFXVertexBuffer* allocVertexBuffer(  U32 numVerts,
+   GFXVertexBuffer* allocVertexBuffer(  U32 numVerts,
                                                 const GFXVertexFormat *vertexFormat,
                                                 U32 vertSize,
                                                 GFXBufferType bufferType,
-                                                void* data = NULL);
+                                                void* data = NULL) override;
 
-   virtual GFXPrimitiveBuffer *allocPrimitiveBuffer(  U32 numIndices,
+   GFXPrimitiveBuffer *allocPrimitiveBuffer(  U32 numIndices,
                                                       U32 numPrimitives,
                                                       GFXBufferType bufferType,
-                                                      void* data = NULL);
+                                                      void* data = NULL) override;
 
-   virtual GFXVertexDecl* allocVertexDecl( const GFXVertexFormat *vertexFormat );
-   virtual void setVertexDecl( const GFXVertexDecl *decl );
+   GFXVertexDecl* allocVertexDecl( const GFXVertexFormat *vertexFormat ) override;
+   void setVertexDecl( const GFXVertexDecl *decl ) override;
 
-   virtual void setVertexStream( U32 stream, GFXVertexBuffer *buffer );
-   virtual void setVertexStreamFrequency( U32 stream, U32 frequency );
+   void setVertexStream( U32 stream, GFXVertexBuffer *buffer ) override;
+   void setVertexStreamFrequency( U32 stream, U32 frequency ) override;
    // }
 
-   virtual U32 getMaxDynamicVerts() { return GFX_MAX_DYNAMIC_VERTS; }
-   virtual U32 getMaxDynamicIndices() { return GFX_MAX_DYNAMIC_INDICES; }
+   U32 getMaxDynamicVerts() override { return GFX_MAX_DYNAMIC_VERTS; }
+   U32 getMaxDynamicIndices() override { return GFX_MAX_DYNAMIC_INDICES; }
 
    inline U32 primCountToIndexCount(GFXPrimitiveType primType, U32 primitiveCount);
 
    // Rendering
    // {
-   virtual void drawPrimitive( GFXPrimitiveType primType, U32 vertexStart, U32 primitiveCount );
+   void drawPrimitive( GFXPrimitiveType primType, U32 vertexStart, U32 primitiveCount ) override;
    // }
 
    ID3D11DeviceContext* getDeviceContext(){ return mD3DDeviceContext; }
@@ -304,14 +304,14 @@ public:
    void beginReset();
    void endReset(GFXD3D11WindowTarget* windowTarget);
 
-   virtual void setupGenericShaders( GenericShaderType type  = GSColor );
+   void setupGenericShaders( GenericShaderType type  = GSColor ) override;
 
-   inline virtual F32 getFillConventionOffset() const { return 0.0f; }
-   virtual void doParanoidStateCheck() {};
+   inline F32 getFillConventionOffset() const override { return 0.0f; }
+   void doParanoidStateCheck() override {};
 
-   GFXFence *createFence();
+   GFXFence *createFence() override;
 
-   GFXOcclusionQuery* createOcclusionQuery();
+   GFXOcclusionQuery* createOcclusionQuery() override;
 
    // Default multisample parameters
    DXGI_SAMPLE_DESC getMultisampleType() const { return mMultisampleDesc; }
@@ -327,7 +327,7 @@ public:
    // grab the sampler map
    const SamplerMap &getSamplersMap() const { return mSamplersMap; }
    SamplerMap &getSamplersMap(){ return mSamplersMap; }
-   const char* interpretDebugResult(long result);
+   const char* interpretDebugResult(long result) override;
 
    // grab device buffer.
    ID3D11Buffer* getDeviceBuffer(const GFXShaderConstDesc desc);

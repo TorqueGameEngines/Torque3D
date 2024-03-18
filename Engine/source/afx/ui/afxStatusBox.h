@@ -38,8 +38,8 @@ private:
 public:   
   /*C*/         afxStatusBox();
 
-  virtual void  onMouseDown(const GuiEvent &event);
-  virtual void  onSleep();
+  void  onMouseDown(const GuiEvent &event) override;
+  void  onSleep() override;
 
   DECLARE_CONOBJECT(afxStatusBox);
   DECLARE_CATEGORY("AFX");

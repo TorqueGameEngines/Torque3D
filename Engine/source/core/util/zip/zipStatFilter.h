@@ -109,7 +109,7 @@ protected:
 
    CentralDir *mCD;
 
-   virtual bool _write(const U32 numBytes, const void *buffer)
+   bool _write(const U32 numBytes, const void *buffer) override
    {
       if(! mStream->write(numBytes, buffer))
          return false;
@@ -120,7 +120,7 @@ protected:
       return true;
    }
 
-   virtual bool _read(const U32 numBytes, void *buffer)
+   bool _read(const U32 numBytes, void *buffer) override
    {
       if(! mStream->read(numBytes, buffer))
          return false;
@@ -139,7 +139,7 @@ public:
       detachStream();
    }
 
-   virtual bool attachStream(Stream *stream)
+   bool attachStream(Stream *stream) override
    {
       if(mCD == NULL)
          return false;
@@ -150,7 +150,7 @@ public:
       return true;
    }
 
-   virtual void detachStream()
+   void detachStream() override
    {
       if(mStream == NULL)
          return;
@@ -160,7 +160,7 @@ public:
       mStream = NULL;
    }
 
-   virtual Stream *getStream()                     { return mStream; }
+   Stream *getStream() override                     { return mStream; }
 
    void setCentralDir(CentralDir *cd)              { mCD = cd; }
    CentralDir *getCentralDir()                     { return mCD; }

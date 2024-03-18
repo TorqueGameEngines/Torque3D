@@ -43,17 +43,17 @@ class BumpFeatHLSL : public ShaderFeatureHLSL
 public:
 
    // ShaderFeatureHLSL
-   virtual void processVert( Vector<ShaderComponent*> &componentList,
-                             const MaterialFeatureData &fd );
-   virtual void processPix( Vector<ShaderComponent*> &componentList, 
-                            const MaterialFeatureData &fd );
-   virtual Material::BlendOp getBlendOp(){ return Material::LerpAlpha; }  
-   virtual Resources getResources( const MaterialFeatureData &fd );
-   virtual void setTexData( Material::StageData &stageDat,
+   void processVert( Vector<ShaderComponent*> &componentList,
+                             const MaterialFeatureData &fd ) override;
+   void processPix( Vector<ShaderComponent*> &componentList, 
+                            const MaterialFeatureData &fd ) override;
+   Material::BlendOp getBlendOp() override{ return Material::LerpAlpha; }  
+   Resources getResources( const MaterialFeatureData &fd ) override;
+   void setTexData( Material::StageData &stageDat,
                             const MaterialFeatureData &fd,
                             RenderPassData &passData,
-                            U32 &texIndex );
-   virtual String getName() { return "Bumpmap"; }
+                            U32 &texIndex ) override;
+   String getName() override { return "Bumpmap"; }
 };
 
 
@@ -75,16 +75,16 @@ public:
    ParallaxFeatHLSL();
 
    // ShaderFeatureHLSL
-   virtual void processVert(  Vector<ShaderComponent*> &componentList,
-                              const MaterialFeatureData &fd );
-   virtual void processPix(   Vector<ShaderComponent*> &componentList, 
-                              const MaterialFeatureData &fd );
-   virtual Resources getResources( const MaterialFeatureData &fd );
-   virtual void setTexData(   Material::StageData &stageDat,
+   void processVert(  Vector<ShaderComponent*> &componentList,
+                              const MaterialFeatureData &fd ) override;
+   void processPix(   Vector<ShaderComponent*> &componentList, 
+                              const MaterialFeatureData &fd ) override;
+   Resources getResources( const MaterialFeatureData &fd ) override;
+   void setTexData(   Material::StageData &stageDat,
                               const MaterialFeatureData &fd,
                               RenderPassData &passData,
-                              U32 &texIndex );
-   virtual String getName() { return "Parallax"; }
+                              U32 &texIndex ) override;
+   String getName() override { return "Parallax"; }
 };
 
 
@@ -95,12 +95,12 @@ class NormalsOutFeatHLSL : public ShaderFeatureHLSL
 public:
 
    // ShaderFeatureHLSL
-   virtual void processVert(  Vector<ShaderComponent*> &componentList,
-                              const MaterialFeatureData &fd );
-   virtual void processPix( Vector<ShaderComponent*> &componentList, 
-                            const MaterialFeatureData &fd );
-   virtual Material::BlendOp getBlendOp(){ return Material::LerpAlpha; }  
-   virtual String getName() { return "NormalsOut"; }
+   void processVert(  Vector<ShaderComponent*> &componentList,
+                              const MaterialFeatureData &fd ) override;
+   void processPix( Vector<ShaderComponent*> &componentList, 
+                            const MaterialFeatureData &fd ) override;
+   Material::BlendOp getBlendOp() override{ return Material::LerpAlpha; }  
+   String getName() override { return "NormalsOut"; }
 };
 
 #endif // _BUMP_HLSL_H_

@@ -2834,7 +2834,7 @@ class GuiEditorRuler : public GuiControl
             return ORIENTATION_Vertical;
       }
       
-      bool onWake()
+      bool onWake() override
       {
          if( !Parent::onWake() )
             return false;
@@ -2848,12 +2848,12 @@ class GuiEditorRuler : public GuiControl
          return true;
       }
 
-      void onPreRender()
+      void onPreRender() override
       {
          setUpdate();
       }
       
-      void onMouseDown( const GuiEvent& event )
+      void onMouseDown( const GuiEvent& event ) override
       {         
          if( !mEditCtrl )
             return;
@@ -2872,7 +2872,7 @@ class GuiEditorRuler : public GuiControl
          mEditCtrl->startMouseGuideDrag( axis, guideIndex );
       }
       
-      void onRender(Point2I offset, const RectI &updateRect)
+      void onRender(Point2I offset, const RectI &updateRect) override
       {
          GFX->getDrawUtil()->drawRectFill(updateRect, ColorI::DARK);
          

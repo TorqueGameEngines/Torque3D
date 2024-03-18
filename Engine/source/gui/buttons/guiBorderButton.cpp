@@ -37,7 +37,7 @@ protected:
 public:
    DECLARE_CONOBJECT(GuiBorderButtonCtrl);
 
-   void onRender(Point2I offset, const RectI &updateRect);
+   void onRender(Point2I offset, const RectI &updateRect) override;
 };
 
 IMPLEMENT_CONOBJECT(GuiBorderButtonCtrl);

@@ -37,9 +37,9 @@ public:
    ~SingleLightShadowMap();
 
    // LightShadowMap
-   virtual ShadowType getShadowType() const { return ShadowType_Spot; }
-   virtual void _render( RenderPassManager* renderPass, const SceneRenderState *diffuseState );
-   virtual void setShaderParameters(GFXShaderConstBuffer* params, LightingShaderConstants* lsc);
+   ShadowType getShadowType() const override { return ShadowType_Spot; }
+   void _render( RenderPassManager* renderPass, const SceneRenderState *diffuseState ) override;
+   void setShaderParameters(GFXShaderConstBuffer* params, LightingShaderConstants* lsc) override;
 };
 
 

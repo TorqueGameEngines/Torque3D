@@ -53,12 +53,12 @@ class afxEA_TLKLightDesc : public afxEffectAdapterDesc, public afxEffectDefs
   static afxEA_TLKLightDesc desc;
 
 public:
-  virtual bool  testEffectType(const SimDataBlock*) const;
-  virtual bool  requiresStop(const afxEffectWrapperData*, const afxEffectTimingData&) const;
-  virtual bool  runsOnServer(const afxEffectWrapperData*) const { return false; }
-  virtual bool  runsOnClient(const afxEffectWrapperData*) const { return true; }
+  bool  testEffectType(const SimDataBlock*) const override;
+  bool  requiresStop(const afxEffectWrapperData*, const afxEffectTimingData&) const override;
+  bool  runsOnServer(const afxEffectWrapperData*) const override { return false; }
+  bool  runsOnClient(const afxEffectWrapperData*) const override { return true; }
 
-  virtual afxEffectWrapper* create() const { return 0; }
+  afxEffectWrapper* create() const override { return 0; }
 };
 
 afxEA_TLKLightDesc afxEA_TLKLightDesc::desc;

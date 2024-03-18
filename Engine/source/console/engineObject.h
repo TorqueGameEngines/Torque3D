@@ -258,7 +258,7 @@ class EngineObject;
       static EngineClassTypeInfo< ThisType, _ClassBase > _smTypeInfo;                  \
       static EngineExportScope& __engineExportScope();                                 \
       static EnginePropertyTable& _smPropertyTable;                                    \
-      virtual const EngineTypeInfo* __typeinfo() const;                                \
+      const EngineTypeInfo* __typeinfo() const override;                               \
    public:
    
 /// Declare an abstract class @a type derived from the class @a super.

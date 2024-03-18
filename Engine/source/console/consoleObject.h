@@ -1205,7 +1205,7 @@ inline bool& ConsoleObject::getDynamicGroupExpand()
    static SimObjectRefConsoleBaseType< className > ptrRefType;         \
    static AbstractClassRep::WriteCustomTamlSchema getStaticWriteCustomTamlSchema();         \
    static AbstractClassRep* getContainerChildStaticClassRep();         \
-   virtual AbstractClassRep* getClassRep() const
+   AbstractClassRep* getClassRep() const override
 
 #define DECLARE_CATEGORY( string )                      \
    static const char* __category() { return string; }

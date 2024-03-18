@@ -16,7 +16,7 @@ public:
 
 inline bool twoIndices::operator==(const twoIndices& _test) const
 {
-   return ((i1 == _test.i1) && (i2 == _test.i2) || (i1 == _test.i2) && (i2 == _test.i1));
+   return (((i1 == _test.i1) && (i2 == _test.i2)) || ((i1 == _test.i2) && (i2 == _test.i1)));
 }
 
 

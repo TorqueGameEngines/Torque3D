@@ -57,7 +57,7 @@ public:
 	ConvexShapeCollisionConvex( const ConvexShapeCollisionConvex& cv ) {
 		mType      = ConvexShapeCollisionConvexType;
 		mObject    = cv.mObject;
-		pShape     = cv.pShape;		
+		pShape     = cv.pShape;
 	}
 
 	Point3F support(const VectorF& vec) const;
@@ -126,19 +126,19 @@ public:
       Vector< U32 > points;
       Vector< U32 > winding;
       Vector< Point2F > texcoords;
-      Vector< Triangle > triangles;			
+      Vector< Triangle > triangles;
       Point3F tangent;
       Point3F normal;
       Point3F centroid;
       F32 area;
       S32 id;
-   }; 
+   };
 
    struct surfaceMaterial
    {
       // The name of the Material we will use for rendering
       DECLARE_MATERIALASSET(surfaceMaterial, Material);
-      
+
       DECLARE_ASSET_SETGET(surfaceMaterial, Material);
 
       // The actual Material instance
@@ -175,21 +175,21 @@ public:
    };
 
 	struct Geometry
-	{  
+	{
       void generate(const Vector< PlaneF > &planes, const Vector< Point3F > &tangents, const Vector< surfaceMaterial > surfaceTextures, const Vector< Point2F > texOffset, const Vector< Point2F > texScale, const Vector< bool > horzFlip, const Vector< bool > vertFlip);
 
-		Vector< Point3F > points;      
+		Vector< Point3F > points;
 		Vector< Face > faces;
 	};
 
-   static bool smRenderEdges;   
+   static bool smRenderEdges;
 
    // To prevent bitpack overflows.
    // This is only indirectly enforced by trucation when serializing.
    static const S32 smMaxSurfaces = 100;
 
 public:
-   
+
    ConvexShape();
    virtual ~ConvexShape();
 
@@ -197,28 +197,28 @@ public:
    DECLARE_CATEGORY("Object \t Simple");
 
    // ConsoleObject
-   static void initPersistFields();
+   void initPersistFields();
 
-   // SimObject 
-   virtual void inspectPostApply();
-   virtual bool onAdd();
-   virtual void onRemove();
-   virtual void writeFields(Stream &stream, U32 tabStop);
-   virtual bool writeField( StringTableEntry fieldname, const char *value );
+   // SimObject
+   void inspectPostApply();
+   bool onAdd();
+   void onRemove();
+   void writeFields(Stream &stream, U32 tabStop);
+   bool writeField( StringTableEntry fieldname, const char *value );
 
    // NetObject
-   virtual U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream );
-   virtual void unpackUpdate( NetConnection *conn, BitStream *stream );
+   U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream );
+   void unpackUpdate( NetConnection *conn, BitStream *stream );
 
    // SceneObject
-   virtual void onScaleChanged();
-   virtual void setTransform( const MatrixF &mat );   
-   virtual void prepRenderImage( SceneRenderState *state );
-   virtual void buildConvex( const Box3F &box, Convex *convex );
-   virtual bool buildPolyList( PolyListContext context, AbstractPolyList *polyList, const Box3F &box, const SphereF &sphere );
-   virtual bool buildExportPolyList(ColladaUtils::ExportData* exportData, const Box3F &box, const SphereF &);
-   virtual bool castRay( const Point3F &start, const Point3F &end, RayInfo *info );
-   virtual bool collideBox( const Point3F &start, const Point3F &end, RayInfo *info );
+   void onScaleChanged();
+   void setTransform( const MatrixF &mat );
+   void prepRenderImage( SceneRenderState *state );
+   void buildConvex( const Box3F &box, Convex *convex );
+   bool buildPolyList( PolyListContext context, AbstractPolyList *polyList, const Box3F &box, const SphereF &sphere );
+   bool buildExportPolyList(ColladaUtils::ExportData* exportData, const Box3F &box, const SphereF &);
+   bool castRay( const Point3F &start, const Point3F &end, RayInfo *info );
+   bool collideBox( const Point3F &start, const Point3F &end, RayInfo *info );
 
 
    void updateBounds( bool recenter );
@@ -226,7 +226,7 @@ public:
 
    /// Geometry access.
    /// @{
-         
+
       MatrixF getSurfaceWorldMat( S32 faceid, bool scaled = false ) const;
       void cullEmptyPlanes( Vector< U32 > *removedPlanes );
 		void exportToCollada();
@@ -262,9 +262,9 @@ protected:
 
    static bool protectedSetSurfaceTexture( void *object, const char *index, const char *data );
    static bool protectedSetSurfaceUV(void *object, const char *index, const char *data);
-  
+
 protected:
-   
+
    DECLARE_MATERIALASSET(ConvexShape, Material);
    DECLARE_ASSET_SETGET(ConvexShape, Material);
 
@@ -278,7 +278,7 @@ protected:
    U32 mVertCount;
    U32 mPrimCount;*/
 
-   Geometry mGeometry;  
+   Geometry mGeometry;
 
    Vector< PlaneF > mPlanes;
 
@@ -293,12 +293,12 @@ protected:
 
    Convex *mConvexList;
 
-   PhysicsBody *mPhysicsRep; 
+   PhysicsBody *mPhysicsRep;
 
    /// Geometry visualization
-   /// @{      
+   /// @{
 
-      F32 mNormalLength;   
+      F32 mNormalLength;
 
    /// @}
 

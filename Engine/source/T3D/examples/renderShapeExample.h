@@ -51,7 +51,7 @@ class RenderShapeExample : public SceneObject
    // client-side "ghost". We also need to implement a
    // maks for handling editor updates to our properties
    // (like material).
-   enum MaskBits 
+   enum MaskBits
    {
       TransformMask = Parent::NextFreeMask << 0,
       UpdateMask    = Parent::NextFreeMask << 1,
@@ -88,7 +88,7 @@ public:
 
    // Allows the object to update its editable settings
    // from the server object to the client
-   virtual void inspectPostApply();
+   void inspectPostApply();
 
    // Handle when we are added to the scene and removed from the scene
    bool onAdd();

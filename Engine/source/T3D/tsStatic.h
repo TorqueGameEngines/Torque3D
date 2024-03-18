@@ -54,10 +54,10 @@
 
 #ifndef _ASSET_PTR_H_
 #include "assets/assetPtr.h"
-#endif 
+#endif
 #ifndef SHAPEASSET_H
 #include "T3D/assets/ShapeAsset.h"
-#endif 
+#endif
 
 class TSShapeInstance;
 class TSThread;
@@ -173,9 +173,9 @@ protected:
    void onShapeChanged();
 
    // ProcessObject
-   virtual void processTick(const Move* move);
-   virtual void interpolateTick(F32 delta);
-   virtual void advanceTime(F32 dt);
+   void processTick(const Move* move);
+   void interpolateTick(F32 delta);
+   void advanceTime(F32 dt);
 
    virtual void onDynamicModified(const char* slotName, const char* newValue);
 
@@ -214,7 +214,7 @@ protected:
 
    bool mAllowPlayerStep;
 
-   /// If true each submesh within the TSShape is culled 
+   /// If true each submesh within the TSShape is culled
    /// against the object space frustum.
    bool mMeshCulling;
 
@@ -257,8 +257,8 @@ public:
    void onScaleChanged();
    void prepRenderImage(SceneRenderState* state);
    void inspectPostApply();
-   virtual void onMount(SceneObject* obj, S32 node);
-   virtual void onUnmount(SceneObject* obj, S32 node);
+   void onMount(SceneObject* obj, S32 node);
+   void onUnmount(SceneObject* obj, S32 node);
 
    /// The type of mesh data use for collision queries.
    MeshType getCollisionType() const { return mCollisionType; }

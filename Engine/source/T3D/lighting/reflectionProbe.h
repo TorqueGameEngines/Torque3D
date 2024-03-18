@@ -103,8 +103,8 @@ public:
 
       enum ProbeShapeType
       {
-         Box = 0,            
-         Sphere = 1,               
+         Box = 0,
+         Sphere = 1,
          Skylight = 2
       };
 
@@ -167,7 +167,7 @@ protected:
    /// Whether this probe is enabled or not
    /// </summary>
    bool mEnabled;
-   
+
    bool mDirty;
 
    /// <summary>
@@ -287,7 +287,7 @@ public:
 
    // Allows the object to update its editable settings
    // from the server object to the client
-   virtual void inspectPostApply();
+   void inspectPostApply();
 
    static bool _setEnabled(void *object, const char *index, const char *data);
    static bool _doBake(void *object, const char *index, const char *data);
@@ -306,10 +306,10 @@ public:
    virtual void handleDeleteAction();
 
    // Override this so that we can dirty the network flag when it is called
-   virtual void setTransform(const MatrixF &mat);
-   virtual const MatrixF& getTransform() const;
-   virtual void setScale(const VectorF &scale);
-   virtual const VectorF& getScale() const;
+   void setTransform(const MatrixF &mat);
+   const MatrixF& getTransform() const;
+   void setScale(const VectorF &scale);
+   const VectorF& getScale() const;
 
    virtual bool writeField(StringTableEntry fieldname, const char *value);
 
@@ -336,7 +336,7 @@ public:
    /// Updates the probe rendering data
    /// </summary>
    virtual void updateProbeParams();
-   
+
    bool createClientResources();
 
    /// <summary>

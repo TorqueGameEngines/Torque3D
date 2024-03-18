@@ -43,13 +43,13 @@ class BaseMatInstance;
 class Prefab : public SceneObject
 {
    typedef SceneObject Parent;
-   
-   enum MaskBits 
+
+   enum MaskBits
    {
       TransformMask = Parent::NextFreeMask << 0,
       FileMask = Parent::NextFreeMask << 1,
       NextFreeMask  = Parent::NextFreeMask << 2
-   };   
+   };
 
 public:
 
@@ -58,18 +58,18 @@ public:
 
    DECLARE_CONOBJECT(Prefab);
    DECLARE_CATEGORY("Object \t Collection");
-  
+
    static void initPersistFields();
 
    /// returns the filename for this object
    StringTableEntry getTypeHint() const override;
-   
+
    // SimObject
-   virtual bool onAdd();
-   virtual void onRemove();
-   virtual void onEditorEnable();
-   virtual void onEditorDisable();
-   virtual void inspectPostApply();
+   bool onAdd();
+   void onRemove();
+   void onEditorEnable();
+   void onEditorDisable();
+   void inspectPostApply();
 
    // NetObject
    U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream );
@@ -82,7 +82,7 @@ public:
    // Prefab
 
    /// If the passed object is a child of any Prefab return that Prefab.
-   /// Note that this call is only valid if the editor is open and when 
+   /// Note that this call is only valid if the editor is open and when
    /// passed server-side objects.
    static Prefab* getPrefabByChild( SimObject *child );
 
@@ -104,7 +104,7 @@ public:
 
    bool buildExportPolyList(ColladaUtils::ExportData* exportData, const Box3F &box, const SphereF &);
 
-   virtual void getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList);
+   void getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList);
 
    S32 getChildGroup() {
       if (mChildGroup.isValid())
@@ -148,7 +148,7 @@ protected:
    };
    typedef Map<SimObjectId,Transform> ChildToMatMap;
 
-   /// Lookup from a child object's id to its transform in 
+   /// Lookup from a child object's id to its transform in
    /// this Prefab's object space.
    ChildToMatMap mChildMap;
 
@@ -166,7 +166,7 @@ class ExplodePrefabUndoAction : public UndoAction
 
 public:
 
-   ExplodePrefabUndoAction( Prefab *prefab );   
+   ExplodePrefabUndoAction( Prefab *prefab );
 
    // UndoAction
    virtual void undo();

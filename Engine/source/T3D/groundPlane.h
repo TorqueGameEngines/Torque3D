@@ -65,21 +65,21 @@ public:
    GroundPlane();
    virtual ~GroundPlane();
 
-   virtual bool      onAdd();
-   virtual void      onRemove();
-   virtual U32       packUpdate( NetConnection* connection, U32 mask, BitStream* stream );
-   virtual void      unpackUpdate( NetConnection* connection, BitStream* stream );
-   virtual void      prepRenderImage( SceneRenderState* state );
-   virtual bool      castRay( const Point3F& start, const Point3F& end, RayInfo* info );
-   virtual void      buildConvex( const Box3F& box, Convex* convex );
-   virtual bool      buildPolyList( PolyListContext context, AbstractPolyList* polyList, const Box3F& box, const SphereF& sphere );
-   virtual void      inspectPostApply();
-   virtual void      setTransform( const MatrixF &mat );
-   virtual void      setScale( const Point3F& scale );
+   bool      onAdd();
+   void      onRemove();
+   U32       packUpdate( NetConnection* connection, U32 mask, BitStream* stream );
+   void      unpackUpdate( NetConnection* connection, BitStream* stream );
+   void      prepRenderImage( SceneRenderState* state );
+   bool      castRay( const Point3F& start, const Point3F& end, RayInfo* info );
+   void      buildConvex( const Box3F& box, Convex* convex );
+   bool      buildPolyList( PolyListContext context, AbstractPolyList* polyList, const Box3F& box, const SphereF& sphere );
+   void      inspectPostApply();
+   void      setTransform( const MatrixF &mat );
+   void      setScale( const Point3F& scale );
 
    static void       initPersistFields();
 
-   virtual void getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList);
+   void getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList);
 
 protected:
 

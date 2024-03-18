@@ -301,6 +301,15 @@ void ImageAsset::initializeAsset()
 void ImageAsset::onAssetRefresh()
 {
    mImagePath = getOwned() ? expandAssetFilePath(mImageFileName) : mImagePath;
+
+   AssetManager::typeAssetDependsOnHash::Iterator assetDependenciesItr = mpOwningAssetManager->getDependedOnAssets()->find(mpAssetDefinition->mAssetId);
+   // Iterate all dependencies.
+   while (assetDependenciesItr != mpOwningAssetManager->getDependedOnAssets()->end() && assetDependenciesItr->key == mpAssetDefinition->mAssetId)
+   {
+      StringTableEntry assetId = assetDependenciesItr->value;
+      AssetBase* dependent = AssetDatabase.acquireAsset<AssetBase>(assetId);
+      dependent->refreshAsset();
+   }
 }
 
 void ImageAsset::_onResourceChanged(const Torque::Path& path)

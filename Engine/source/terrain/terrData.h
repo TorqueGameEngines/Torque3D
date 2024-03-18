@@ -52,7 +52,7 @@
 
 #ifndef _ASSET_PTR_H_
 #include "assets/assetPtr.h"
-#endif 
+#endif
 #ifndef TERRAINASSET_H
 #include "T3D/assets/TerrainAsset.h"
 #endif
@@ -131,7 +131,7 @@ protected:
 
    AssetPtr<TerrainAsset> mTerrainAsset;
    StringTableEntry mTerrainAssetId;
-   
+
    /// The maximum detail distance found in the material list.
    F32 mMaxDetailDistance;
 
@@ -143,7 +143,7 @@ protected:
    GFXTextureArrayHandle mNormalTextureArray;
    GFXTextureArrayHandle mOrmTextureArray;
 
-   /// 
+   ///
    GFXTexHandle mLayerTex;
 
    /// The shader used to generate the base texture map.
@@ -183,7 +183,7 @@ protected:
    /// The shared base material which is used to render
    /// cells that are outside the detail map range.
    TerrainCellMaterial *mBaseMaterial;
- 
+
    /// A dummy material only used for shadow
    /// material generation.
    BaseMatInstance *mDefaultMatInst;
@@ -213,7 +213,7 @@ protected:
    /// terrain screen error value.
    static F32 smLODScale;
 
-   /// A global detail scale used to tweak the 
+   /// A global detail scale used to tweak the
    /// material detail distances.
    static F32 smDetailScale;
 
@@ -241,13 +241,13 @@ protected:
    /// @see MaterialManager::getFlushSignal
    void _onFlushMaterials();
 
-   /// 
+   ///
    bool _initBaseShader();
 
    ///
    void _updateMaterials();
 
-   /// 
+   ///
    void _updateBaseTexture( bool writeToCache );
 
    void _updateLayerTexture();
@@ -268,7 +268,7 @@ protected:
 
 public:
 
-   enum 
+   enum
    {
       LightmapUpdate    = BIT(0),
       HeightmapUpdate   = BIT(1),
@@ -279,10 +279,10 @@ public:
    static Signal<void(U32,TerrainBlock*,const Point2I& ,const Point2I&)> smUpdateSignal;
 
    ///
-   bool import(   const GBitmap &heightMap, 
-                  F32 heightScale, 
+   bool import(   const GBitmap &heightMap,
+                  F32 heightScale,
                   F32 metersPerPixel,
-                  const Vector<U8> &layerMap, 
+                  const Vector<U8> &layerMap,
                   const Vector<String> &materials,
                   bool flipYAxis = true );
 
@@ -306,7 +306,7 @@ public:
    void onEditorEnable();
    void onEditorDisable();
 
-   /// Adds a new material as the top layer or 
+   /// Adds a new material as the top layer or
    /// inserts it at the specified index.
    void addMaterial( const String &name, U32 insertAt = -1 );
 
@@ -325,7 +325,7 @@ public:
 
    /// Accessors and mutators for TerrainMaterialUndoAction.
    /// @{
-   const Vector<TerrainMaterial*>& getMaterials() const { return mFile->mMaterials; }   
+   const Vector<TerrainMaterial*>& getMaterials() const { return mFile->mMaterials; }
    const Vector<U8>& getLayerMap() const { return mFile->mLayerMap; }
    void setMaterials( const Vector<TerrainMaterial*> &materials ) { mFile->mMaterials = materials; }
    void setLayerMap( const Vector<U8> &layers ) { mFile->mLayerMap = layers; }
@@ -349,14 +349,14 @@ public:
 
    // Performs an update to the selected range of the terrain
    // grid including the collision and rendering structures.
-   void updateGrid(  const Point2I &minPt, 
-                     const Point2I &maxPt, 
+   void updateGrid(  const Point2I &minPt,
+                     const Point2I &maxPt,
                      bool updateClient = false );
 
    void updateGridMaterials( const Point2I &minPt, const Point2I &maxPt );
 
    Point2I getGridPos( const Point3F &worldPos ) const;
-   
+
    /// This returns true and the terrain z height for
    /// a 2d position in the terrains object space.
    ///
@@ -368,27 +368,27 @@ public:
 
    void getMinMaxHeight( F32 *minHeight, F32 *maxHeight ) const;
 
-   /// This returns true and the terrain normal for a 
+   /// This returns true and the terrain normal for a
    /// 2d position in the terrains object space.
    ///
    /// If the terrain at that point is within an empty block
    /// or the 2d position is outside of the terrain area then
    /// it returns false.
    ///
-   bool getNormal(   const Point2F &pos, 
-                     Point3F *normal, 
-                     bool normalize = true, 
+   bool getNormal(   const Point2F &pos,
+                     Point3F *normal,
+                     bool normalize = true,
                      bool skipEmpty = true ) const;
 
-   /// This returns true and the smoothed terrain normal 
+   /// This returns true and the smoothed terrain normal
    // for a 2d position in the terrains object space.
    ///
    /// If the terrain at that point is within an empty block
    /// or the 2d position is outside of the terrain area then
    /// it returns false.
    ///
-   bool getSmoothNormal(   const Point2F &pos, 
-                           Point3F *normal, 
+   bool getSmoothNormal(   const Point2F &pos,
+                           Point3F *normal,
                            bool normalize = true,
                            bool skipEmpty = true ) const;
 
@@ -399,9 +399,9 @@ public:
    /// or the 2d position is outside of the terrain area then
    /// it returns false.
    ///
-   bool getNormalAndHeight(   const Point2F &pos, 
-                              Point3F *normal, 
-                              F32 *height, 
+   bool getNormalAndHeight(   const Point2F &pos,
+                              Point3F *normal,
+                              F32 *height,
                               bool normalize = true ) const;
 
    /// This returns true and the terrain normal, z height, and
@@ -412,9 +412,9 @@ public:
    /// or the 2d position is outside of the terrain area then
    /// it returns false.
    ///
-   bool getNormalHeightMaterial( const Point2F &pos, 
-                                 Point3F *normal, 
-                                 F32 *height, 
+   bool getNormalHeightMaterial( const Point2F &pos,
+                                 Point3F *normal,
+                                 F32 *height,
                                  StringTableEntry &matName ) const;
 
    // only the editor currently uses this method - should always be using a ray to collide with
@@ -470,16 +470,16 @@ public:
    bool buildPolyList(PolyListContext context, AbstractPolyList* polyList, const Box3F &box, const SphereF &sphere);
    bool castRay(const Point3F &start, const Point3F &end, RayInfo* info);
    bool castRayI(const Point3F &start, const Point3F &end, RayInfo* info, bool emptyCollide);
-   
-   bool castRayBlock(   const Point3F &pStart, 
-                        const Point3F &pEnd, 
-                        const Point2I &blockPos, 
-      					   U32 level, 
-                        F32 invDeltaX, 
-                        F32 invDeltaY, 
-                        F32 startT, 
-                        F32 endT, 
-                        RayInfo *info, 
+
+   bool castRayBlock(   const Point3F &pStart,
+                        const Point3F &pEnd,
+                        const Point2I &blockPos,
+      					   U32 level,
+                        F32 invDeltaX,
+                        F32 invDeltaY,
+                        F32 startT,
+                        F32 endT,
+                        RayInfo *info,
                         bool collideEmpty );
 
    const StringTableEntry getTerrainFile() const { return mTerrFileName; }
@@ -494,18 +494,18 @@ public:
    void unpackUpdate(NetConnection *conn,           BitStream *stream);
    void inspectPostApply();
 
-   virtual void getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList);
+   void getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList);
 
    const StringTableEntry getTerrain() const
    {
       if (mTerrainAsset && (mTerrainAsset->getTerrainFilePath() != StringTable->EmptyString()))
-         return mTerrainAsset->getTerrainFilePath(); 
+         return mTerrainAsset->getTerrainFilePath();
       else if (mTerrainAssetId != StringTable->EmptyString())
-         return mTerrainAssetId; 
+         return mTerrainAssetId;
       else if (mTerrFileName != StringTable->EmptyString())
-         return mTerrFileName; 
+         return mTerrFileName;
       else
-         return StringTable->EmptyString(); 
+         return StringTable->EmptyString();
    }
 
    const StringTableEntry getTerrainAssetId() const
@@ -528,7 +528,7 @@ public:
 
       return true;
    }
- 
+
    bool renameTerrainMaterial(StringTableEntry oldMatName, StringTableEntry newMatName);
    S32 getTerrainMaterialCount() {
       if (mFile)

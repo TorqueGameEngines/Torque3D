@@ -29,7 +29,7 @@
 #ifndef _FORESTDATAFILE_H_
    #include "forest/forestDataFile.h"
 #endif
-#ifndef _MATHUTIL_FRUSTUM_H_  
+#ifndef _MATHUTIL_FRUSTUM_H_
    #include "math/util/frustum.h"
 #endif
 #ifndef _GFXTEXTUREHANDLE_H_
@@ -68,7 +68,7 @@ class SceneZoneSpaceManager;
 
 struct TreeInfo
 {
-   U32                     treeId;   
+   U32                     treeId;
    SimObjectId             treeTypeId;
    F32                     distance;
    SimObjectId             forestId;
@@ -78,7 +78,7 @@ struct TreeInfo
 typedef Signal<void( Forest *forest )> ForestCreatedSignal;
 
 
-/// 
+///
 class Forest : public SceneObject
 {
    friend class CreateForestEvent;
@@ -87,12 +87,12 @@ class Forest : public SceneObject
 protected:
 
    typedef SceneObject Parent;
-   
+
    /// Collision and Physics
    /// @{
 
-   Convex* mConvexList;   
-   
+   Convex* mConvexList;
+
    /// @}
 
    /// The name of the planting data file.
@@ -101,7 +101,7 @@ protected:
    /// The forest data file which defines planting.
    Resource<ForestData> mData;
 
-   /// Used to scale the tree LODs when rendering into 
+   /// Used to scale the tree LODs when rendering into
    /// reflections.  It should be greater or equal to 1.
    F32 mReflectionLodScalar;
 
@@ -139,7 +139,7 @@ protected:
    static ForestCreatedSignal smDestroyedSignal;
 
 public:
-   
+
    static ForestCreatedSignal& getCreatedSignal() { return smCreatedSignal; }
    static ForestCreatedSignal& getDestroyedSignal() { return smDestroyedSignal; }
 
@@ -149,7 +149,7 @@ public:
    DECLARE_CONOBJECT(Forest);
    DECLARE_CATEGORY("Environment \t BackGround");
    static void consoleInit();
-   static void initPersistFields();   
+   static void initPersistFields();
 
    // SimObject
    bool onAdd();
@@ -160,7 +160,7 @@ public:
    /// the mission editor.
    void inspectPostApply();
 
-   /// Overloaded from SceneObject for updating the 
+   /// Overloaded from SceneObject for updating the
    /// client side position of the forest.
    void setTransform( const MatrixF &mat );
 
@@ -175,17 +175,17 @@ public:
    //IForestCollision *getCollision() const { return mCollision; }
 
    // SceneObject - Collision
-   virtual void buildConvex( const Box3F& box, Convex* convex );
-   virtual bool buildPolyList( PolyListContext context, AbstractPolyList* polyList, const Box3F &box, const SphereF &sphere );
-   virtual bool castRay( const Point3F &start, const Point3F &end, RayInfo *outInfo );
-   virtual bool castRayRendered( const Point3F &start, const Point3F &end, RayInfo *outInfo );
-   virtual bool collideBox( const Point3F &start, const Point3F &end, RayInfo *outInfo );
+   void buildConvex( const Box3F& box, Convex* convex );
+   bool buildPolyList( PolyListContext context, AbstractPolyList* polyList, const Box3F &box, const SphereF &sphere );
+   bool castRay( const Point3F &start, const Point3F &end, RayInfo *outInfo );
+   bool castRayRendered( const Point3F &start, const Point3F &end, RayInfo *outInfo );
+   bool collideBox( const Point3F &start, const Point3F &end, RayInfo *outInfo );
 
    // SceneObject - Other
-   virtual void applyRadialImpulse( const Point3F &origin, F32 radius, F32 magnitude );
+   void applyRadialImpulse( const Point3F &origin, F32 radius, F32 magnitude );
 
    bool castRayBase( const Point3F &start, const Point3F &end, RayInfo *outInfo, bool rendered );
-     
+
    const Resource<ForestData>& getData() const { return mData; }
 
    Resource<ForestData>& getData() { return mData; }

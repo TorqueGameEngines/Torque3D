@@ -64,20 +64,20 @@ class SceneSpace : public SceneObject
       ~SceneSpace();
 
       // SimObject.
-      virtual bool onAdd();
-      virtual void onRemove();
+      bool onAdd();
+      void onRemove();
 
       // SceneObject.
-      virtual void setTransform( const MatrixF &mat );
-      virtual void prepRenderImage( SceneRenderState* state );
+      void setTransform( const MatrixF &mat );
+      void prepRenderImage( SceneRenderState* state );
 
       // NetObject.
-      virtual U32 packUpdate( NetConnection* connection, U32 mask, BitStream* stream );
-      virtual void unpackUpdate( NetConnection* connection, BitStream* stream );
+      U32 packUpdate( NetConnection* connection, U32 mask, BitStream* stream );
+      void unpackUpdate( NetConnection* connection, BitStream* stream );
 
       // SimObject.
-      virtual void onEditorEnable();
-      virtual void onEditorDisable();
+      void onEditorEnable();
+      void onEditorDisable();
 };
 
 #endif // !_SCENESPACE_H_

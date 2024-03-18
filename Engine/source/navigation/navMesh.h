@@ -188,8 +188,8 @@ public:
    /// @name SimObject
    /// @{
 
-   virtual void onEditorEnable();
-   virtual void onEditorDisable();
+   void onEditorEnable();
+   void onEditorDisable();
 
    void write(Stream &stream, U32 tabStop, U32 flags);
 

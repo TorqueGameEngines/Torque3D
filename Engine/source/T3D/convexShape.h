@@ -197,7 +197,7 @@ public:
    DECLARE_CATEGORY("Object \t Simple");
 
    // ConsoleObject
-   void initPersistFields();
+   static void initPersistFields();
 
    // SimObject
    void inspectPostApply();

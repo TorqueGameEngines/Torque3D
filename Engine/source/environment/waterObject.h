@@ -63,7 +63,7 @@ class MatrixSet;
 
 struct WaterMatParams
 {
-   MaterialParameterHandle* mRippleMatSC;   
+   MaterialParameterHandle* mRippleMatSC;
    MaterialParameterHandle* mRippleDirSC;
    MaterialParameterHandle* mRippleTexScaleSC;
    MaterialParameterHandle* mRippleSpeedSC;
@@ -73,14 +73,14 @@ struct WaterMatParams
    MaterialParameterHandle* mFoamOpacitySC;
    MaterialParameterHandle* mFoamSpeedSC;
    MaterialParameterHandle* mWaveDirSC;
-   MaterialParameterHandle* mWaveDataSC;   
+   MaterialParameterHandle* mWaveDataSC;
    MaterialParameterHandle* mReflectTexSizeSC;
    MaterialParameterHandle* mBaseColorSC;
    MaterialParameterHandle* mMiscParamsSC;
    MaterialParameterHandle* mReflectParamsSC;
    MaterialParameterHandle* mReflectNormalSC;
    MaterialParameterHandle* mHorizonPositionSC;
-   MaterialParameterHandle* mFogParamsSC;   
+   MaterialParameterHandle* mFogParamsSC;
    MaterialParameterHandle* mMoreFogParamsSC;
    MaterialParameterHandle* mFarPlaneDistSC;
    MaterialParameterHandle* mWetnessParamsSC;
@@ -88,14 +88,14 @@ struct WaterMatParams
    MaterialParameterHandle* mUndulateMaxDistSC;
    MaterialParameterHandle* mAmbientColorSC;
    MaterialParameterHandle* mLightDirSC;
-   MaterialParameterHandle* mFoamParamsSC;   
-   MaterialParameterHandle* mGridElementSizeSC;   
+   MaterialParameterHandle* mFoamParamsSC;
+   MaterialParameterHandle* mGridElementSizeSC;
    MaterialParameterHandle* mElapsedTimeSC;
    MaterialParameterHandle* mModelMatSC;
    MaterialParameterHandle* mFoamSamplerSC;
    MaterialParameterHandle* mRippleSamplerSC;
    MaterialParameterHandle* mCubemapSamplerSC;
-   MaterialParameterHandle* mSpecularParamsSC;   
+   MaterialParameterHandle* mSpecularParamsSC;
    MaterialParameterHandle* mDepthGradMaxSC;
    MaterialParameterHandle* mReflectivitySC;
    MaterialParameterHandle* mDepthGradSamplerSC;
@@ -119,7 +119,7 @@ class WaterObject : public SceneObject
 
 protected:
 
-   enum MaskBits {      
+   enum MaskBits {
       UpdateMask     = Parent::NextFreeMask << 0,
       WaveMask       = Parent::NextFreeMask << 1,
       MaterialMask   = Parent::NextFreeMask << 2,
@@ -137,9 +137,9 @@ protected:
    enum MaterialType
    {
       WaterMat = 0,
-      UnderWaterMat,      
+      UnderWaterMat,
       BasicWaterMat,
-      BasicUnderWaterMat,      
+      BasicUnderWaterMat,
       NumMatTypes
    };
 
@@ -156,33 +156,33 @@ public:
    static void initPersistFields();
 
    // SimObject
-   virtual bool onAdd();
-   virtual void onRemove();
-   virtual void inspectPostApply();
-   virtual bool processArguments(S32 argc, ConsoleValue *argv);
+   bool onAdd();
+   void onRemove();
+   void inspectPostApply();
+   bool processArguments(S32 argc, ConsoleValue *argv);
 
    // NetObject
-   virtual U32  packUpdate( NetConnection * conn, U32 mask, BitStream *stream );
-   virtual void unpackUpdate( NetConnection * conn, BitStream *stream );
+   U32  packUpdate( NetConnection * conn, U32 mask, BitStream *stream );
+   void unpackUpdate( NetConnection * conn, BitStream *stream );
 
    // SceneObject
-   virtual void prepRenderImage( SceneRenderState *state );
-   virtual void renderObject( ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *overrideMat );
-   virtual SFXAmbience* getSoundAmbience() const { return mSoundAmbience; }
-   virtual bool containsPoint( const Point3F& point ) { return isUnderwater( point ); }
+   void prepRenderImage( SceneRenderState *state );
+   void renderObject( ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *overrideMat );
+   SFXAmbience* getSoundAmbience() const { return mSoundAmbience; }
+   bool containsPoint( const Point3F& point ) { return isUnderwater( point ); }
 
    // WaterObject
-   virtual F32 getViscosity() const { return mViscosity; }
-   virtual F32 getDensity() const { return mDensity; }
-   virtual F32 getSurfaceHeight( const Point2F &pos ) const { return 0.0f; };  
-   virtual const char* getLiquidType() const { return mLiquidType; }
-   virtual F32 getWaterCoverage( const Box3F &worldBox ) const { return 0.0f; }
-   virtual VectorF getFlow( const Point3F &pos ) const { return Point3F::Zero; }
-   virtual void updateUnderwaterEffect( SceneRenderState *state );
-   virtual bool isUnderwater( const Point3F &pnt ) const { return false; }
+   F32 getViscosity() const { return mViscosity; }
+   F32 getDensity() const { return mDensity; }
+   F32 getSurfaceHeight( const Point2F &pos ) const { return 0.0f; };
+   const char* getLiquidType() const { return mLiquidType; }
+   F32 getWaterCoverage( const Box3F &worldBox ) const { return 0.0f; }
+   VectorF getFlow( const Point3F &pos ) const { return Point3F::Zero; }
+   void updateUnderwaterEffect( SceneRenderState *state );
+   bool isUnderwater( const Point3F &pnt ) const { return false; }
 
 protected:
-      
+
    virtual void setShaderXForms( BaseMatInstance *mat ) {};
    virtual void setupVBIB() {};
    virtual void innerRender( SceneRenderState *state ) {};
@@ -192,7 +192,7 @@ protected:
    virtual void setShaderParams( SceneRenderState *state, BaseMatInstance *mat, const WaterMatParams &paramHandles );
    PostEffect* getUnderwaterEffect();
 
-   bool initMaterial( S32 idx );   
+   bool initMaterial( S32 idx );
    void cleanupMaterials();
    S32 getMaterialIndex( const Point3F &camPos );
 
@@ -215,7 +215,7 @@ protected:
    // WaterObject
    F32 mViscosity;
    F32 mDensity;
-   String mLiquidType;   
+   String mLiquidType;
    F32 mFresnelBias;
    F32 mFresnelPower;
    F32 mSpecularPower;
@@ -232,12 +232,12 @@ protected:
    F32 mReflectivity;
 
    // Water Fogging
-   WaterFogData mWaterFogData;   
+   WaterFogData mWaterFogData;
 
    // Distortion
    F32 mDistortStartDist;
    F32 mDistortEndDist;
-   F32 mDistortFullDepth;   
+   F32 mDistortFullDepth;
 
    // Ripples
    Point2F  mRippleDir[ MAX_WAVES ];
@@ -247,11 +247,11 @@ protected:
 
    F32 mOverallRippleMagnitude;
 
-   // Waves   
+   // Waves
    Point2F  mWaveDir[ MAX_WAVES ];
-   F32      mWaveSpeed[ MAX_WAVES ];   
-   F32      mWaveMagnitude[ MAX_WAVES ];  
-   
+   F32      mWaveSpeed[ MAX_WAVES ];
+   F32      mWaveMagnitude[ MAX_WAVES ];
+
    F32 mOverallWaveMagnitude;
 
    // Foam
@@ -259,7 +259,7 @@ protected:
    F32      mFoamSpeed[ MAX_WAVES ];
    Point2F  mFoamTexScale[ MAX_WAVES ];
    F32      mFoamOpacity[ MAX_WAVES ];
-   
+
    F32 mOverallFoamOpacity;
    F32 mFoamMaxDepth;
    F32 mFoamAmbientLerp;
@@ -292,14 +292,14 @@ protected:
    F32 mUndulateMaxDist;
 
    /// Defined in WaterCommon but set and used by child classes.
-   /// If true will refuse to render a reflection even if called from 
-   /// the ReflectionManager, is set true if occlusion query is enabled and 
+   /// If true will refuse to render a reflection even if called from
+   /// the ReflectionManager, is set true if occlusion query is enabled and
    /// it determines it is occluded.
    //bool mSkipReflectUpdate;
 
    /// Derived classes can set this value prior to calling Parent::setShaderConst
    /// to pass it into the shader miscParam.w
-   F32 mMiscParamW;   
+   F32 mMiscParamW;
 
    SimObjectPtr<PostEffect> mUnderwaterPostFx;
 
@@ -310,14 +310,14 @@ protected:
    /// Force all water objects to use static cubemap reflections
    static bool smEnableTrueReflections;
 
-   // Rendering   
+   // Rendering
    bool mBasicLighting;
    //U32 mRenderUpdateCount;
    //U32 mReflectUpdateCount;
    bool mGenerateVB;
    String mSurfMatName[NumMatTypes];
    BaseMatInstance* mMatInstances[NumMatTypes];
-   WaterMatParams mMatParamHandles[NumMatTypes];   
+   WaterMatParams mMatParamHandles[NumMatTypes];
    bool mUnderwater;
    GFXStateBlockRef mUnderwaterSB;
    CubemapData *mCubemap;

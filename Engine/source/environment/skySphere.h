@@ -72,14 +72,14 @@ public:
    void onStaticModified(const char* slotName, const char* newValue);
 
    // ConsoleObject
-   virtual bool onAdd();
-   virtual void onRemove();
+   bool onAdd();
+   void onRemove();
    static void initPersistFields();
-   virtual void inspectPostApply();
+   void inspectPostApply();
 
    // NetObject
-   virtual U32 packUpdate(NetConnection* conn, U32 mask, BitStream* stream);
-   virtual void unpackUpdate(NetConnection* conn, BitStream* stream);
+   U32 packUpdate(NetConnection* conn, U32 mask, BitStream* stream);
+   void unpackUpdate(NetConnection* conn, BitStream* stream);
 
    // SceneObject
    void prepRenderImage(SceneRenderState* state);

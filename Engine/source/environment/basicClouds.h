@@ -51,11 +51,11 @@ class BasicClouds : public SceneObject
 {
    typedef SceneObject Parent;
 
-   enum 
-   { 
-      BasicCloudsMask = Parent::NextFreeMask,      
+   enum
+   {
+      BasicCloudsMask = Parent::NextFreeMask,
       NextFreeMask = Parent::NextFreeMask << 1,
-   };  
+   };
 
    #define TEX_COUNT 3
 
@@ -68,17 +68,17 @@ public:
    DECLARE_CATEGORY("Environment \t Weather");
 
    // ConsoleObject
-   virtual bool onAdd();
-   virtual void onRemove();
+   bool onAdd();
+   void onRemove();
    static void initPersistFields();
-   virtual void inspectPostApply();   
+   void inspectPostApply();
 
    // NetObject
-   virtual U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream );
-   virtual void unpackUpdate( NetConnection *conn, BitStream *stream );
+   U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream );
+   void unpackUpdate( NetConnection *conn, BitStream *stream );
 
    // SceneObject
-   virtual void prepRenderImage( SceneRenderState *state );
+   void prepRenderImage( SceneRenderState *state );
    void renderObject( ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *mi );
 
 protected:
@@ -87,7 +87,7 @@ protected:
    void _initBuffers();
    void _initBuffer( F32 height, GFXVertexBufferHandle<GFXVertexPT> *vb, GFXPrimitiveBufferHandle *pb );
 
-protected: 
+protected:
 
    static U32 smVertStride;
    static U32 smStrideMinusOne;
@@ -102,22 +102,22 @@ protected:
    GFXShaderRef mShader;
 
    GFXShaderConstBufferRef mShaderConsts;
-   GFXShaderConstHandle *mTimeSC; 
-   GFXShaderConstHandle *mModelViewProjSC; 
+   GFXShaderConstHandle *mTimeSC;
+   GFXShaderConstHandle *mModelViewProjSC;
    GFXShaderConstHandle *mTexScaleSC;
    GFXShaderConstHandle *mTexDirectionSC;
    GFXShaderConstHandle *mTexOffsetSC;
    GFXShaderConstHandle *mDiffuseMapSC;
 
    GFXVertexBufferHandle<GFXVertexPT> mVB[TEX_COUNT];
-   GFXPrimitiveBufferHandle mPB;    
+   GFXPrimitiveBufferHandle mPB;
 
    // Fields...
 
    bool mLayerEnabled[TEX_COUNT];
    F32 mTexScale[TEX_COUNT];
    Point2F mTexDirection[TEX_COUNT];
-   F32 mTexSpeed[TEX_COUNT];   
+   F32 mTexSpeed[TEX_COUNT];
    Point2F mTexOffset[TEX_COUNT];
    F32 mHeight[TEX_COUNT];
 };

@@ -46,7 +46,7 @@ GFXDeclareVertexFormat( GFXCloudVertex )
    Point3F point;
    Point3F normal;
    Point3F binormal;
-   Point3F tangent; 
+   Point3F tangent;
    Point2F texCoord;
 };
 
@@ -54,11 +54,11 @@ class CloudLayer : public SceneObject
 {
    typedef SceneObject Parent;
 
-   enum 
-   { 
-      CloudLayerMask    = Parent::NextFreeMask,      
+   enum
+   {
+      CloudLayerMask    = Parent::NextFreeMask,
       NextFreeMask      = Parent::NextFreeMask << 1,
-   };  
+   };
 
    #define TEX_COUNT 3
 
@@ -71,14 +71,14 @@ public:
    DECLARE_CATEGORY("Environment \t Weather");
 
    // ConsoleObject
-   virtual bool onAdd();
-   virtual void onRemove();
+   bool onAdd();
+   void onRemove();
    static void initPersistFields();
-   virtual void inspectPostApply();   
+   void inspectPostApply();
 
    // NetObject
-   virtual U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream );
-   virtual void unpackUpdate( NetConnection *conn, BitStream *stream );
+   U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream );
+   void unpackUpdate( NetConnection *conn, BitStream *stream );
 
    // SceneObject
    void prepRenderImage( SceneRenderState *state );
@@ -105,15 +105,15 @@ protected:
    GFXStateBlockRef mStateblock;
 
    GFXShaderConstBufferRef mShaderConsts;
-   GFXShaderConstHandle *mModelViewProjSC; 
+   GFXShaderConstHandle *mModelViewProjSC;
    GFXShaderConstHandle *mAmbientColorSC;
    GFXShaderConstHandle *mSunColorSC;
    GFXShaderConstHandle *mSunVecSC;
    GFXShaderConstHandle *mTexOffsetSC[3];
    GFXShaderConstHandle *mTexScaleSC;
-   GFXShaderConstHandle *mBaseColorSC;    
-   GFXShaderConstHandle *mCoverageSC;  
-   GFXShaderConstHandle *mExposureSC;  
+   GFXShaderConstHandle *mBaseColorSC;
+   GFXShaderConstHandle *mCoverageSC;
+   GFXShaderConstHandle *mExposureSC;
    GFXShaderConstHandle *mEyePosWorldSC;
    GFXShaderConstHandle *mNormalHeightMapSC;
 
@@ -127,12 +127,12 @@ protected:
 
    F32 mTexScale[TEX_COUNT];
    Point2F mTexDirection[TEX_COUNT];
-   F32 mTexSpeed[TEX_COUNT];   
-   
+   F32 mTexSpeed[TEX_COUNT];
+
    LinearColorF mBaseColor;
    F32 mExposure;
    F32 mCoverage;
-   F32 mWindSpeed;   
+   F32 mWindSpeed;
    F32 mHeight;
 };
 

@@ -34,7 +34,7 @@ class TimeOfDay;
 struct COLOR_TARGET
 {
 	F32		elevation; // maximum target elevation
-	LinearColorF	color; //normalized 0 = 1.0 ... 
+	LinearColorF	color; //normalized 0 = 1.0 ...
 	F32		bandMod;  //6 is max
 	LinearColorF	bandColor;
 };
@@ -66,12 +66,12 @@ class TimeOfDay : public SceneObject
 
 public:
 
-   static S32 smCurrentTime;   
+   static S32 smCurrentTime;
    static F32 smTimeScale; // To pause or resume time flow from outside this object, like in the editor.
 
 	TimeOfDay();
    virtual ~TimeOfDay();
-	
+
 	// ConsoleObject
 	static void initPersistFields();
    static void consoleInit();
@@ -80,15 +80,15 @@ public:
    void inspectPostApply();
 
    // SimObject
-   virtual bool onAdd();
-   virtual void onRemove();
+   bool onAdd();
+   void onRemove();
 
    // NetObject
    U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream );
-   void unpackUpdate( NetConnection *conn, BitStream *stream );  
+   void unpackUpdate( NetConnection *conn, BitStream *stream );
 
-   // ProcessObject   
-   virtual void processTick( const Move *move );
+   // ProcessObject
+   void processTick( const Move *move );
 
    F32 getAzimuthRads() { return mAzimuth; }
    F32 getElevationRads() { return mElevation; }
@@ -105,10 +105,10 @@ public:
 	// I changed references to pointers on the basis of principle. ;-)
 	void EnableLighting(F32 emissiveScale = 1.0);
 	void DisableLighting();
-	F32 GetIntensity() 
+	F32 GetIntensity()
 	{ return (mCurrentColor.blue + mCurrentColor.green + mCurrentColor.red) / 3; }
    */
-   static TimeOfDayUpdateSignal& getTimeOfDayUpdateSignal() { return smTimeOfDayUpdateSignal; } 
+   static TimeOfDayUpdateSignal& getTimeOfDayUpdateSignal() { return smTimeOfDayUpdateSignal; }
    void getSunColor( LinearColorF *outColor ) const { _getSunColor( outColor ); }
 
    void addTimeEvent( F32 triggerElevation, const UTF8 *identifier );
@@ -128,7 +128,7 @@ protected:
 
    static TimeOfDayUpdateSignal smTimeOfDayUpdateSignal;
 
-   enum NetMaskBits 
+   enum NetMaskBits
    {
       OrbitMask = Parent::NextFreeMask << 0,
       AnimateMask = Parent::NextFreeMask << 1
@@ -146,7 +146,7 @@ protected:
    void _initColors();
 
    /// Adds a color target to our set of targets.
-   /// 
+   ///
    /// @param ele [in] target sun elevation.
    /// @param color [in] target color.
    /// @param bandMod [in]
@@ -167,12 +167,12 @@ protected:
 	F32 getColorVariance();
    */
 
-	// Date tracking stuff	
+	// Date tracking stuff
    F32 mStartTimeOfDay;    ///< The time of day this object begins at.
 	F32 mDayLen;            ///< length of day in real world seconds.
    F32 mPrevElevation;      ///< The 0-360 normalized elevation for the previous update.
    F32 mNextElevation;      ///< The 0-360 normalized elevation for the next update.
-   F32 mTimeOfDay;         ///< The zero to one time of day where zero is the start of a day and one is the end.	
+   F32 mTimeOfDay;         ///< The zero to one time of day where zero is the start of a day and one is the end.
 
    F32 mAzimuthOverride;  ///< Used to specify an azimuth that will stay constant throughout the day cycle.
 
@@ -202,7 +202,7 @@ protected:
 	LinearColorF mCurrentBandColor;
 
 	// PersistFields preparation
-	bool mConvertedToRads;	
+	bool mConvertedToRads;
    */
 
    // Debugging stuff that probably needs to be removed eventaully

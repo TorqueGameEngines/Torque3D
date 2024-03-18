@@ -94,7 +94,7 @@ public:
    void unpackUpdate( NetConnection *conn,           BitStream *stream );
 
    void prepRenderImage( SceneRenderState* state );
-  
+
    ///
    void setAzimuth( F32 azimuth );
    ///
@@ -158,8 +158,8 @@ protected:
    static bool ptSetAzimuth( void *object, const char *index, const char *data );
 
    // SimObject.
-   virtual void _onSelected();
-   virtual void _onUnselected();
+   void _onSelected();
+   void _onUnselected();
 
 protected:
 

@@ -49,7 +49,7 @@ class Sun : public SceneObject, public ISceneLight
 protected:
 
    F32 mSunAzimuth;
-   
+
    F32 mSunElevation;
 
    LinearColorF mLightColor;
@@ -82,7 +82,7 @@ protected:
    DECLARE_ASSET_NET_SETGET(Sun, CoronaMaterial, UpdateMask);
 
    BaseMatInstance *mCoronaMatInst;
-   MatrixSet *mMatrixSet;   
+   MatrixSet *mMatrixSet;
    F32 mCoronaScale;
    LinearColorF mCoronaTint;
    bool mCoronaUseLightColor;
@@ -98,10 +98,10 @@ protected:
    void _updateTimeOfDay( TimeOfDay *timeOfDay, F32 time );
 
    // SimObject.
-   virtual void _onSelected();
-   virtual void _onUnselected();
+   void _onSelected();
+   void _onUnselected();
 
-   enum NetMaskBits 
+   enum NetMaskBits
    {
       UpdateMask = BIT(0)
    };
@@ -112,8 +112,8 @@ public:
    virtual ~Sun();
 
    // SimObject
-   virtual bool onAdd();
-   virtual void onRemove();
+   bool onAdd();
+   void onRemove();
 
    // ConsoleObject
    DECLARE_CONOBJECT(Sun);
@@ -123,17 +123,17 @@ public:
 
    // NetObject
    U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream );
-   void unpackUpdate( NetConnection *conn, BitStream *stream ); 
+   void unpackUpdate( NetConnection *conn, BitStream *stream );
 
    // ISceneLight
    virtual void submitLights( LightManager *lm, bool staticLighting );
-   virtual LightInfo* getLight() { return mLight; }   
+   virtual LightInfo* getLight() { return mLight; }
 
-   // SceneObject   
-   virtual void prepRenderImage( SceneRenderState* state );
+   // SceneObject
+   void prepRenderImage( SceneRenderState* state );
 
    // ProcessObject
-   virtual void advanceTime( F32 dt );
+   void advanceTime( F32 dt );
 
    ///
    void setAzimuth( F32 azimuth );

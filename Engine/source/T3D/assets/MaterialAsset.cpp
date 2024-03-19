@@ -237,6 +237,14 @@ void MaterialAsset::onAssetRefresh()
    }
 
    load();
+   AssetManager::typeAssetDependsOnHash::Iterator assetDependenciesItr = mpOwningAssetManager->getDependedOnAssets()->find(mpAssetDefinition->mAssetId);
+   // Iterate all dependencies.
+   while (assetDependenciesItr != mpOwningAssetManager->getDependedOnAssets()->end() && assetDependenciesItr->key == mpAssetDefinition->mAssetId)
+   {
+      StringTableEntry assetId = assetDependenciesItr->value;
+      AssetBase* dependent = AssetDatabase.acquireAsset<AssetBase>(assetId);
+      dependent->refreshAsset();
+   }
 }
 
 void MaterialAsset::setScriptFile(const char* pScriptFile)

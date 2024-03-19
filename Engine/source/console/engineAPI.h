@@ -674,7 +674,7 @@ public:
 /// }
 /// @endcode
 #define DefineEngineFunction( name, returnType, args, defaultArgs, usage )                                                       \
-   static returnType _fn ## name ## impl args;                                                                            \
+   static inline returnType _fn ## name ## impl args;                                                                            \
    TORQUE_API EngineTypeTraits< returnType >::ReturnValueType fn ## name                                                         \
       ( _EngineFunctionTrampoline< returnType args >::Args a )                                                              \
    {                                                                                                                             \
@@ -709,7 +709,7 @@ public:
          _EngineConsoleThunk< 1, returnType args >::NUM_ARGS,                                                                    \
          false, &_ ## name ## header                                                                                             \
       );                                                                                                                         \
-   static returnType _fn ## name ## impl args
+   static inline returnType _fn ## name ## impl args
    
    
 // The next thing is a bit tricky.  DefineEngineMethod allows to make the 'object' (=this) argument to the function
@@ -811,7 +811,7 @@ public:
 /// }
 /// @endcode
 #define DefineEngineStaticMethod( className, name, returnType, args, defaultArgs, usage )                                              \
-   static returnType _fn ## className ## name ## impl args;                                                                     \
+   static inline returnType _fn ## className ## name ## impl args;                                                                     \
    TORQUE_API EngineTypeTraits< returnType >::ReturnValueType fn ## className ## _ ## name                                             \
       ( _EngineFunctionTrampoline< returnType args >::Args a )                                                                    \
    {                                                                                                                                   \
@@ -846,10 +846,10 @@ public:
          _EngineConsoleThunk< 1, returnType args >::NUM_ARGS,                                                                          \
          false, &_ ## className ## name ## header                                                                                      \
       );                                                                                                                               \
-   static returnType _fn ## className ## name ## impl args
+   static inline returnType _fn ## className ## name ## impl args
 
 #  define DefineEngineStringlyVariadicFunction(name,returnType,minArgs,maxArgs,usage)                                            \
-   static returnType _fn ## name ## impl (SimObject *, S32 argc, ConsoleValue *argv);                                     \
+   static inline returnType _fn ## name ## impl (SimObject *, S32 argc, ConsoleValue *argv);                                     \
    TORQUE_API EngineTypeTraits< returnType >::ReturnValueType fn ## name                                                         \
       (Vector<const char*>* vec)                                                                                                 \
    {                                                                                                                             \
@@ -921,7 +921,7 @@ public:
 // can be removed and all their uses be replaced with their corresponding versions that now still include support
 // for the console (e.g. DefineNewEngineFunction should become DefineEngineFunction).
 #define DefineNewEngineFunction( name, returnType, args, defaultArgs, usage )                                                    \
-   static returnType _fn ## name ## impl args;                                                                            \
+   static inline returnType _fn ## name ## impl args;                                                                            \
    TORQUE_API EngineTypeTraits< returnType >::ReturnValueType fn ## name                                                         \
       ( _EngineFunctionTrampoline< returnType args >::Args a )                                                                   \
    {                                                                                                                             \
@@ -942,7 +942,7 @@ public:
       ( void* ) &fn ## name,                                                                                                     \
       0                                                                                                                          \
    );                                                                                                                            \
-   static returnType _fn ## name ## impl args
+   static inline returnType _fn ## name ## impl args
 
 #define DefineNewEngineMethod( className, name, returnType, args, defaultArgs, usage )                                                          \
    struct _ ## className ## name ## frame                                                                                                       \
@@ -968,7 +968,7 @@ public:
    returnType _ ## className ## name ## frame::_exec args const
 
 #define DefineNewEngineStaticMethod( className, name, returnType, args, defaultArgs, usage )                                           \
-   static returnType _fn ## className ## name ## impl args;                                                                     \
+   static inline returnType _fn ## className ## name ## impl args;                                                                     \
    TORQUE_API EngineTypeTraits< returnType >::ReturnValueType fn ## className ## _ ## name                                             \
       ( _EngineFunctionTrampoline< returnType args >::Args a )                                                                         \
    {                                                                                                                                   \
@@ -989,7 +989,7 @@ public:
       ( void* ) &fn ## className ## _ ## name,                                                                                         \
       0                                                                                                                                \
    );                                                                                                                                  \
-   static returnType _fn ## className ## name ## impl args
+   static inline returnType _fn ## className ## name ## impl args
 
 /// @}
 

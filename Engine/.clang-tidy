@@ -1,6 +1,0 @@
----
-Checks:            '-*,modernize-use-override'
-WarningsAsErrors:  ''
-HeaderFilterRegex: '(source/).*'
-CheckOptions:
-  - { key: modernize-use-override.IgnoreDestructors,          value: true }

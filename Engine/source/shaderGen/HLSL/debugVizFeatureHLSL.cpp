@@ -33,7 +33,7 @@ void DebugVizHLSL::processPix(Vector<ShaderComponent*>& componentList,
    S32 vizDisplayMode = Con::getIntVariable("$Viz_DisplayMode", 0);
    S32 surfaceVizMode = Con::getIntVariable("$Viz_SurfacePropertiesModeVar", -1);
 
-   if (surfaceVizMode != -1 && vizDisplayMode == 0 || vizDisplayMode == 1)
+   if ((surfaceVizMode != -1 && vizDisplayMode == 0) || vizDisplayMode == 1)
    {
       if (color)
       {

@@ -409,7 +409,7 @@ void GBitmap::allocateBitmapWithMips(const U32 in_width, const U32 in_height, co
 
          mNumMipLevels++;
          allocPixels += currWidth * currHeight * mBytesPerPixel;
-      } while (currWidth != 1 || currHeight != 1 && mNumMipLevels != in_numMips);
+      } while ((currWidth != 1 || currHeight != 1) && (mNumMipLevels != in_numMips));
    }
    AssertFatal(mNumMipLevels <= c_maxMipLevels, "GBitmap::allocateBitmap: too many miplevels");
 

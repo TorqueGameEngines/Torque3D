@@ -80,9 +80,9 @@ public:
    void setFalloff( F32 falloff ){ mFalloff = falloff; }
    void setFrequency( VectorF &freq ){ mFreq = freq; }
    void setAmplitude( VectorF &amp ){ mStartAmp = amp; }
-   bool isExpired();
+   bool isExpired() override;
 
-   virtual void update( F32 dt );
+   void update( F32 dt ) override;
 };
 
 

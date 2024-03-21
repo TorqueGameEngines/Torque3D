@@ -109,12 +109,12 @@ protected:
    //-------------------------------------------------------
    // Standard engine functions
    //-------------------------------------------------------
-   bool onAdd();
-   void onRemove();
-   U32  packUpdate  (NetConnection *conn, U32 mask, BitStream *stream);
-   void unpackUpdate(NetConnection *conn,           BitStream *stream);
+   bool onAdd() override;
+   void onRemove() override;
+   U32  packUpdate  (NetConnection *conn, U32 mask, BitStream *stream) override;
+   void unpackUpdate(NetConnection *conn,           BitStream *stream) override;
 
-   bool castRay(const Point3F &start, const Point3F &end, RayInfo* info);
+   bool castRay(const Point3F &start, const Point3F &end, RayInfo* info) override;
 
 public:
    WaterBlock();
@@ -123,31 +123,31 @@ public:
    DECLARE_CONOBJECT(WaterBlock);   
 
    static void initPersistFields();
-   void onStaticModified( const char* slotName, const char*newValue = NULL );
-   virtual void inspectPostApply();
-   virtual void setTransform( const MatrixF & mat );
-   virtual void setScale( const Point3F &scale );
-   virtual bool buildPolyList( PolyListContext context, AbstractPolyList* polyList, const Box3F& box, const SphereF& sphere );
+   void onStaticModified( const char* slotName, const char*newValue = NULL ) override;
+   void inspectPostApply() override;
+   void setTransform( const MatrixF & mat ) override;
+   void setScale( const Point3F &scale ) override;
+   bool buildPolyList( PolyListContext context, AbstractPolyList* polyList, const Box3F& box, const SphereF& sphere ) override;
 
    // WaterObject
-   virtual F32 getWaterCoverage( const Box3F &worldBox ) const;
-   virtual F32 getSurfaceHeight( const Point2F &pos ) const;
-   virtual bool isUnderwater( const Point3F &pnt ) const;
+   F32 getWaterCoverage( const Box3F &worldBox ) const override;
+   F32 getSurfaceHeight( const Point2F &pos ) const override;
+   bool isUnderwater( const Point3F &pnt ) const override;
 
    // WaterBlock   
    bool isPointSubmerged ( const Point3F &pos, bool worldSpace = true ) const{ return true; }
    
    // SceneObject.
-   virtual F32 distanceTo( const Point3F& pos ) const;
+   F32 distanceTo( const Point3F& pos ) const override;
 
 protected:
 
    // WaterObject
-   virtual void setShaderParams( SceneRenderState *state, BaseMatInstance *mat, const WaterMatParams &paramHandles );
+   void setShaderParams( SceneRenderState *state, BaseMatInstance *mat, const WaterMatParams &paramHandles ) override;
    virtual SceneData setupSceneGraphInfo( SceneRenderState *state );   
-   virtual void setupVBIB();
-   virtual void innerRender( SceneRenderState *state );
-   virtual void _getWaterPlane( const Point3F &camPos, PlaneF &outPlane, Point3F &outPos );
+   void setupVBIB() override;
+   void innerRender( SceneRenderState *state ) override;
+   void _getWaterPlane( const Point3F &camPos, PlaneF &outPlane, Point3F &outPos ) override;
 };
 
 #endif // _WATERBLOCK_H_

@@ -55,17 +55,17 @@ namespace FS
       VirtualMountSystem() : mUseParentFind(false) {}
 
       virtual ~VirtualMountSystem() { }
-      virtual bool mount(String root, FileSystemRef fs);
-      virtual bool mount(String root, const Path &path);
-      virtual FileSystemRef unmount(String root);
-      virtual bool unmount(FileSystemRef fs);
-      virtual S32 findByPattern( const Path &inBasePath, const String &inFilePattern, bool inRecursive, Vector<String> &outList, bool includeDirs=false, bool multiMatch = true );
-      virtual bool createPath(const Path& path);
+      bool mount(String root, FileSystemRef fs) override;
+      bool mount(String root, const Path &path) override;
+      FileSystemRef unmount(String root) override;
+      bool unmount(FileSystemRef fs) override;
+      S32 findByPattern( const Path &inBasePath, const String &inFilePattern, bool inRecursive, Vector<String> &outList, bool includeDirs=false, bool multiMatch = true ) override;
+      bool createPath(const Path& path) override;
 
    protected:
-      virtual void _log(const String& msg);
-      virtual FileSystemRef _removeMountFromList(String root);
-      virtual FileSystemRef _getFileSystemFromList(const Path& path) const ;
+      void _log(const String& msg) override;
+      FileSystemRef _removeMountFromList(String root) override;
+      FileSystemRef _getFileSystemFromList(const Path& path) const override ;
       
       // Vector of file system refs
       typedef Vector<FileSystemRef> RootToFSVec;

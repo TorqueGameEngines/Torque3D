@@ -38,8 +38,8 @@ public:
 
    // RenderBinManager interface
    virtual void init();
-   virtual void render(SceneRenderState * state);
-   virtual void addElement( RenderInst *inst );
+   void render(SceneRenderState * state) override;
+   void addElement( RenderInst *inst ) override;
 
    // ConsoleObject interface
    static void initPersistFields();

@@ -141,10 +141,10 @@ public:
    Var* getInWorldNormal(Vector<ShaderComponent*>& componentList);
 
    // ShaderFeature
-   Var* getVertTexCoord( const String &name );
-   LangElement* setupTexSpaceMat(  Vector<ShaderComponent*> &componentList, Var **texSpaceMat );
-   LangElement* assignColor( LangElement *elem, Material::BlendOp blend, LangElement *lerpElem = NULL, ShaderFeature::OutputTarget outputTarget = ShaderFeature::DefaultTarget );
-   LangElement* expandNormalMap( LangElement *sampleNormalOp, LangElement *normalDecl, LangElement *normalVar, const MaterialFeatureData &fd );
+   Var* getVertTexCoord( const String &name ) override;
+   LangElement* setupTexSpaceMat(  Vector<ShaderComponent*> &componentList, Var **texSpaceMat ) override;
+   LangElement* assignColor( LangElement *elem, Material::BlendOp blend, LangElement *lerpElem = NULL, ShaderFeature::OutputTarget outputTarget = ShaderFeature::DefaultTarget ) override;
+   LangElement* expandNormalMap( LangElement *sampleNormalOp, LangElement *normalDecl, LangElement *normalVar, const MaterialFeatureData &fd ) override;
 };
 
 
@@ -158,7 +158,7 @@ public:
       : mName( name )
    {}
 
-   virtual String getName() { return mName; }
+   String getName() override { return mName; }
 };
 
 class RenderTargetZeroHLSL : public ShaderFeatureHLSL
@@ -176,12 +176,12 @@ public:
       mFeatureName = buffer;
    }
 
-   virtual String getName() { return mFeatureName; }
+   String getName() override { return mFeatureName; }
 
-   virtual void processPix( Vector<ShaderComponent*> &componentList, 
-      const MaterialFeatureData &fd );
+   void processPix( Vector<ShaderComponent*> &componentList, 
+      const MaterialFeatureData &fd ) override;
    
-   virtual U32 getOutputTargets( const MaterialFeatureData &fd ) const { return mOutputTargetMask; }
+   U32 getOutputTargets( const MaterialFeatureData &fd ) const override { return mOutputTargetMask; }
 };
 
 
@@ -189,23 +189,23 @@ public:
 class VertPositionHLSL : public ShaderFeatureHLSL
 {
 public:
-   virtual void processVert( Vector<ShaderComponent*> &componentList,
-                             const MaterialFeatureData &fd );
+   void processVert( Vector<ShaderComponent*> &componentList,
+                             const MaterialFeatureData &fd ) override;
 
-   virtual void processPix( Vector<ShaderComponent*> &componentList,
-                            const MaterialFeatureData &fd);
+   void processPix( Vector<ShaderComponent*> &componentList,
+                            const MaterialFeatureData &fd) override;
                              
-   virtual String getName()
+   String getName() override
    {
       return "Vert Position";
    }
 
-   virtual void determineFeature(   Material *material,
+   void determineFeature(   Material *material,
                                     const GFXVertexFormat *vertexFormat,
                                     U32 stageNum,
                                     const FeatureType &type,
                                     const FeatureSet &features,
-                                    MaterialFeatureData *outFeatureData );
+                                    MaterialFeatureData *outFeatureData ) override;
 
 };
 
@@ -222,17 +222,17 @@ public:
 
    RTLightingFeatHLSL();
 
-   virtual void processVert( Vector<ShaderComponent*> &componentList,
-                             const MaterialFeatureData &fd );
+   void processVert( Vector<ShaderComponent*> &componentList,
+                             const MaterialFeatureData &fd ) override;
 
-   virtual void processPix( Vector<ShaderComponent*> &componentList, 
-                            const MaterialFeatureData &fd );
+   void processPix( Vector<ShaderComponent*> &componentList, 
+                            const MaterialFeatureData &fd ) override;
 
-   virtual Material::BlendOp getBlendOp(){ return Material::None; }
+   Material::BlendOp getBlendOp() override{ return Material::None; }
    
-   virtual Resources getResources( const MaterialFeatureData &fd );
+   Resources getResources( const MaterialFeatureData &fd ) override;
 
-   virtual String getName()
+   String getName() override
    {
       return "RT Lighting";
    }
@@ -248,25 +248,25 @@ protected:
 
 public:
    DiffuseMapFeatHLSL();
-   virtual void processVert( Vector<ShaderComponent*> &componentList,
-                             const MaterialFeatureData &fd );
+   void processVert( Vector<ShaderComponent*> &componentList,
+                             const MaterialFeatureData &fd ) override;
 
-   virtual void processPix( Vector<ShaderComponent*> &componentList, 
-                            const MaterialFeatureData &fd );
+   void processPix( Vector<ShaderComponent*> &componentList, 
+                            const MaterialFeatureData &fd ) override;
 
-   virtual U32 getOutputTargets(const MaterialFeatureData &fd) const;
+   U32 getOutputTargets(const MaterialFeatureData &fd) const override;
 
-   virtual Material::BlendOp getBlendOp(){ return Material::LerpAlpha; }
+   Material::BlendOp getBlendOp() override{ return Material::LerpAlpha; }
 
-   virtual Resources getResources( const MaterialFeatureData &fd );
+   Resources getResources( const MaterialFeatureData &fd ) override;
 
    // Sets textures and texture flags for current pass
-   virtual void setTexData( Material::StageData &stageDat,
+   void setTexData( Material::StageData &stageDat,
                             const MaterialFeatureData &fd,
                             RenderPassData &passData,
-                            U32 &texIndex );
+                            U32 &texIndex ) override;
                             
-   virtual String getName()
+   String getName() override
    {
       return "Base Texture";
    }
@@ -277,23 +277,23 @@ public:
 class OverlayTexFeatHLSL : public ShaderFeatureHLSL
 {
 public:
-   virtual void processVert( Vector<ShaderComponent*> &componentList,
-                             const MaterialFeatureData &fd );
+   void processVert( Vector<ShaderComponent*> &componentList,
+                             const MaterialFeatureData &fd ) override;
 
-   virtual void processPix( Vector<ShaderComponent*> &componentList, 
-                            const MaterialFeatureData &fd );
+   void processPix( Vector<ShaderComponent*> &componentList, 
+                            const MaterialFeatureData &fd ) override;
 
-   virtual Material::BlendOp getBlendOp(){ return Material::LerpAlpha; }
+   Material::BlendOp getBlendOp() override{ return Material::LerpAlpha; }
 
-   virtual Resources getResources( const MaterialFeatureData &fd );
+   Resources getResources( const MaterialFeatureData &fd ) override;
 
    // Sets textures and texture flags for current pass
-   virtual void setTexData( Material::StageData &stageDat,
+   void setTexData( Material::StageData &stageDat,
                             const MaterialFeatureData &fd,
                             RenderPassData &passData,
-                            U32 &texIndex );
+                            U32 &texIndex ) override;
 
-   virtual String getName()
+   String getName() override
    {
       return "Overlay Texture";
    }
@@ -304,13 +304,13 @@ public:
 class DiffuseFeatureHLSL : public ShaderFeatureHLSL
 {
 public:   
-   virtual void processPix(   Vector<ShaderComponent*> &componentList, 
-                              const MaterialFeatureData &fd );
+   void processPix(   Vector<ShaderComponent*> &componentList, 
+                              const MaterialFeatureData &fd ) override;
 
-   virtual Material::BlendOp getBlendOp(){ return Material::None; }
+   Material::BlendOp getBlendOp() override{ return Material::None; }
 
-   virtual U32 getOutputTargets(const MaterialFeatureData &fd) const;
-   virtual String getName()
+   U32 getOutputTargets(const MaterialFeatureData &fd) const override;
+   String getName() override
    {
       return "Diffuse Color";
    }
@@ -321,14 +321,14 @@ class DiffuseVertColorFeatureHLSL : public ShaderFeatureHLSL
 {
 public:   
 
-   virtual void processVert(  Vector< ShaderComponent* >& componentList,
-                              const MaterialFeatureData& fd );
-   virtual void processPix(   Vector< ShaderComponent* >&componentList, 
-                              const MaterialFeatureData& fd );
+   void processVert(  Vector< ShaderComponent* >& componentList,
+                              const MaterialFeatureData& fd ) override;
+   void processPix(   Vector< ShaderComponent* >&componentList, 
+                              const MaterialFeatureData& fd ) override;
 
-   virtual Material::BlendOp getBlendOp(){ return Material::None; }
+   Material::BlendOp getBlendOp() override{ return Material::None; }
 
-   virtual String getName()
+   String getName() override
    {
       return "Diffuse Vertex Color";
    }
@@ -338,28 +338,28 @@ public:
 class LightmapFeatHLSL : public ShaderFeatureHLSL
 {
 public:
-   virtual void processVert(  Vector<ShaderComponent*> &componentList,
-                              const MaterialFeatureData &fd );
+   void processVert(  Vector<ShaderComponent*> &componentList,
+                              const MaterialFeatureData &fd ) override;
 
-   virtual void processPix(   Vector<ShaderComponent*> &componentList, 
-                              const MaterialFeatureData &fd );
+   void processPix(   Vector<ShaderComponent*> &componentList, 
+                              const MaterialFeatureData &fd ) override;
 
-   virtual Material::BlendOp getBlendOp(){ return Material::LerpAlpha; }
+   Material::BlendOp getBlendOp() override{ return Material::LerpAlpha; }
 
-   virtual Resources getResources( const MaterialFeatureData &fd );
+   Resources getResources( const MaterialFeatureData &fd ) override;
 
    // Sets textures and texture flags for current pass
-   virtual void setTexData( Material::StageData &stageDat,
+   void setTexData( Material::StageData &stageDat,
                             const MaterialFeatureData &fd,
                             RenderPassData &passData,
-                            U32 &texIndex );
+                            U32 &texIndex ) override;
                             
-   virtual String getName()
+   String getName() override
    {
       return "Lightmap";
    }
 
-   virtual U32 getOutputTargets( const MaterialFeatureData &fd ) const;
+   U32 getOutputTargets( const MaterialFeatureData &fd ) const override;
 };
 
 
@@ -367,28 +367,28 @@ public:
 class TonemapFeatHLSL : public ShaderFeatureHLSL
 {
 public:
-   virtual void processVert(  Vector<ShaderComponent*> &componentList,
-                              const MaterialFeatureData &fd );
+   void processVert(  Vector<ShaderComponent*> &componentList,
+                              const MaterialFeatureData &fd ) override;
 
-   virtual void processPix(   Vector<ShaderComponent*> &componentList, 
-                              const MaterialFeatureData &fd );
+   void processPix(   Vector<ShaderComponent*> &componentList, 
+                              const MaterialFeatureData &fd ) override;
 
-   virtual Material::BlendOp getBlendOp(){ return Material::LerpAlpha; }
+   Material::BlendOp getBlendOp() override{ return Material::LerpAlpha; }
 
-   virtual Resources getResources( const MaterialFeatureData &fd );
+   Resources getResources( const MaterialFeatureData &fd ) override;
 
    // Sets textures and texture flags for current pass
-   virtual void setTexData( Material::StageData &stageDat,
+   void setTexData( Material::StageData &stageDat,
                             const MaterialFeatureData &fd,
                             RenderPassData &passData,
-                            U32 &texIndex );
+                            U32 &texIndex ) override;
                             
-   virtual String getName()
+   String getName() override
    {
       return "Tonemap";
    }
 
-   virtual U32 getOutputTargets( const MaterialFeatureData &fd ) const;
+   U32 getOutputTargets( const MaterialFeatureData &fd ) const override;
 };
 
 
@@ -396,20 +396,20 @@ public:
 class VertLitHLSL : public ShaderFeatureHLSL
 {
 public:
-   virtual void processVert( Vector<ShaderComponent*> &componentList,
-                             const MaterialFeatureData &fd );
+   void processVert( Vector<ShaderComponent*> &componentList,
+                             const MaterialFeatureData &fd ) override;
 
-   virtual void processPix( Vector<ShaderComponent*> &componentList, 
-                            const MaterialFeatureData &fd );
+   void processPix( Vector<ShaderComponent*> &componentList, 
+                            const MaterialFeatureData &fd ) override;
 
-   virtual Material::BlendOp getBlendOp(){ return Material::None; }
+   Material::BlendOp getBlendOp() override{ return Material::None; }
    
-   virtual String getName()
+   String getName() override
    {
       return "Vert Lit";
    }
 
-   virtual U32 getOutputTargets( const MaterialFeatureData &fd ) const;
+   U32 getOutputTargets( const MaterialFeatureData &fd ) const override;
 };
 
 
@@ -417,23 +417,23 @@ public:
 class DetailFeatHLSL : public ShaderFeatureHLSL
 {
 public:
-   virtual void processVert( Vector<ShaderComponent*> &componentList,
-                             const MaterialFeatureData &fd );
+   void processVert( Vector<ShaderComponent*> &componentList,
+                             const MaterialFeatureData &fd ) override;
 
-   virtual void processPix( Vector<ShaderComponent*> &componentList, 
-                            const MaterialFeatureData &fd );
+   void processPix( Vector<ShaderComponent*> &componentList, 
+                            const MaterialFeatureData &fd ) override;
 
-   virtual Resources getResources( const MaterialFeatureData &fd );
+   Resources getResources( const MaterialFeatureData &fd ) override;
 
-   virtual Material::BlendOp getBlendOp(){ return Material::Mul; }
+   Material::BlendOp getBlendOp() override{ return Material::Mul; }
 
    // Sets textures and texture flags for current pass
-   virtual void setTexData( Material::StageData &stageDat,
+   void setTexData( Material::StageData &stageDat,
                             const MaterialFeatureData &fd,
                             RenderPassData &passData,
-                            U32 &texIndex );
+                            U32 &texIndex ) override;
 
-   virtual String getName()
+   String getName() override
    {
       return "Detail";
    }
@@ -444,21 +444,21 @@ public:
 class ReflectCubeFeatHLSL : public ShaderFeatureHLSL
 {
 public:
-   virtual void processVert( Vector<ShaderComponent*> &componentList,
-                             const MaterialFeatureData &fd );
+   void processVert( Vector<ShaderComponent*> &componentList,
+                             const MaterialFeatureData &fd ) override;
 
-   virtual void processPix( Vector<ShaderComponent*> &componentList, 
-                            const MaterialFeatureData &fd );
+   void processPix( Vector<ShaderComponent*> &componentList, 
+                            const MaterialFeatureData &fd ) override;
 
-   virtual Resources getResources( const MaterialFeatureData &fd );
+   Resources getResources( const MaterialFeatureData &fd ) override;
 
    // Sets textures and texture flags for current pass
-   virtual void setTexData( Material::StageData &stageDat,
+   void setTexData( Material::StageData &stageDat,
                             const MaterialFeatureData &fd,
                             RenderPassData &passData,
-                            U32 &texIndex );
+                            U32 &texIndex ) override;
 
-   virtual String getName()
+   String getName() override
    {
       return "Reflect Cube";
    }
@@ -475,17 +475,17 @@ protected:
 public:
    FogFeatHLSL();
 
-   virtual void processVert( Vector<ShaderComponent*> &componentList,
-                             const MaterialFeatureData &fd );
+   void processVert( Vector<ShaderComponent*> &componentList,
+                             const MaterialFeatureData &fd ) override;
 
-   virtual void processPix( Vector<ShaderComponent*> &componentList, 
-                            const MaterialFeatureData &fd );
+   void processPix( Vector<ShaderComponent*> &componentList, 
+                            const MaterialFeatureData &fd ) override;
 
-   virtual Resources getResources( const MaterialFeatureData &fd );
+   Resources getResources( const MaterialFeatureData &fd ) override;
 
-   virtual Material::BlendOp getBlendOp() { return Material::LerpAlpha; }
+   Material::BlendOp getBlendOp() override { return Material::LerpAlpha; }
 
-   virtual String getName()
+   String getName() override
    {
       return "Fog";
    }
@@ -496,9 +496,9 @@ public:
 class TexAnimHLSL : public ShaderFeatureHLSL
 {
 public:
-   virtual Material::BlendOp getBlendOp() { return Material::None; }
+   Material::BlendOp getBlendOp() override { return Material::None; }
 
-   virtual String getName()
+   String getName() override
    {
       return "Texture Animation";
    }
@@ -516,17 +516,17 @@ public:
 
    VisibilityFeatHLSL();
 
-   virtual void processVert( Vector<ShaderComponent*> &componentList,
-                             const MaterialFeatureData &fd );
+   void processVert( Vector<ShaderComponent*> &componentList,
+                             const MaterialFeatureData &fd ) override;
 
-   virtual void processPix( Vector<ShaderComponent*> &componentList, 
-                            const MaterialFeatureData &fd );
+   void processPix( Vector<ShaderComponent*> &componentList, 
+                            const MaterialFeatureData &fd ) override;
 
-   virtual Resources getResources( const MaterialFeatureData &fd );
+   Resources getResources( const MaterialFeatureData &fd ) override;
 
-   virtual Material::BlendOp getBlendOp() { return Material::None; }
+   Material::BlendOp getBlendOp() override { return Material::None; }
 
-   virtual String getName()
+   String getName() override
    {
       return "Visibility";
    }
@@ -537,12 +537,12 @@ public:
 class AlphaTestHLSL : public ShaderFeatureHLSL
 {
 public:
-   virtual void processPix(   Vector<ShaderComponent*> &componentList, 
-                              const MaterialFeatureData &fd );
+   void processPix(   Vector<ShaderComponent*> &componentList, 
+                              const MaterialFeatureData &fd ) override;
 
-   virtual Material::BlendOp getBlendOp() { return Material::None; }
+   Material::BlendOp getBlendOp() override { return Material::None; }
 
-   virtual String getName()
+   String getName() override
    {
       return "Alpha Test";
    }
@@ -555,12 +555,12 @@ public:
 class GlowMaskHLSL : public ShaderFeatureHLSL
 {
 public:
-   virtual void processPix(   Vector<ShaderComponent*> &componentList, 
-                              const MaterialFeatureData &fd );
+   void processPix(   Vector<ShaderComponent*> &componentList, 
+                              const MaterialFeatureData &fd ) override;
 
-   virtual Material::BlendOp getBlendOp() { return Material::None; }
+   Material::BlendOp getBlendOp() override { return Material::None; }
 
-   virtual String getName()
+   String getName() override
    {
       return "Glow Mask";
    }
@@ -581,12 +581,12 @@ public:
 
    HDROutHLSL();
 
-   virtual void processPix(   Vector<ShaderComponent*> &componentList, 
-                              const MaterialFeatureData &fd );
+   void processPix(   Vector<ShaderComponent*> &componentList, 
+                              const MaterialFeatureData &fd ) override;
 
-   virtual Material::BlendOp getBlendOp() { return Material::None; }
+   Material::BlendOp getBlendOp() override { return Material::None; }
 
-   virtual String getName() { return "HDR Output"; }
+   String getName() override { return "HDR Output"; }
 };
 
 ///
@@ -600,35 +600,35 @@ public:
 
    FoliageFeatureHLSL();
 
-   virtual void processVert( Vector<ShaderComponent*> &componentList,
-                             const MaterialFeatureData &fd );
+   void processVert( Vector<ShaderComponent*> &componentList,
+                             const MaterialFeatureData &fd ) override;
 
-   virtual void processPix( Vector<ShaderComponent*> &componentList,
-                           const MaterialFeatureData &fd );   
+   void processPix( Vector<ShaderComponent*> &componentList,
+                           const MaterialFeatureData &fd ) override;   
 
-   virtual String getName()
+   String getName() override
    {
       return "Foliage Feature";
    }
 
-   virtual void determineFeature( Material *material, 
+   void determineFeature( Material *material, 
                                   const GFXVertexFormat *vertexFormat,
                                   U32 stageNum,
                                   const FeatureType &type,
                                   const FeatureSet &features,
-                                  MaterialFeatureData *outFeatureData );
+                                  MaterialFeatureData *outFeatureData ) override;
 
-   virtual ShaderFeatureConstHandles* createConstHandles( GFXShader *shader, SimObject *userObject );   
+   ShaderFeatureConstHandles* createConstHandles( GFXShader *shader, SimObject *userObject ) override;   
 };
 
 class ParticleNormalFeatureHLSL : public ShaderFeatureHLSL
 {
 public:
 
-   virtual void processVert( Vector<ShaderComponent*> &componentList,
-      const MaterialFeatureData &fd );
+   void processVert( Vector<ShaderComponent*> &componentList,
+      const MaterialFeatureData &fd ) override;
 
-   virtual String getName()
+   String getName() override
    {
       return "Particle Normal Generation Feature";
    }
@@ -648,20 +648,20 @@ public:
 
    ImposterVertFeatureHLSL();
 
-   virtual void processVert(  Vector<ShaderComponent*> &componentList,
-                              const MaterialFeatureData &fd );
+   void processVert(  Vector<ShaderComponent*> &componentList,
+                              const MaterialFeatureData &fd ) override;
 
-   virtual void processPix(  Vector<ShaderComponent*> &componentList,
-                             const MaterialFeatureData &fd );
+   void processPix(  Vector<ShaderComponent*> &componentList,
+                             const MaterialFeatureData &fd ) override;
 
-   virtual String getName() { return "Imposter Vert"; }
+   String getName() override { return "Imposter Vert"; }
 
-   virtual void determineFeature( Material *material, 
+   void determineFeature( Material *material, 
                                   const GFXVertexFormat *vertexFormat,
                                   U32 stageNum,
                                   const FeatureType &type,
                                   const FeatureSet &features,
-                                  MaterialFeatureData *outFeatureData );
+                                  MaterialFeatureData *outFeatureData ) override;
 };
 
 /// Hardware Skinning
@@ -671,10 +671,10 @@ protected:
 
 public:
 
-   virtual void processVert(  Vector<ShaderComponent*> &componentList,
-                              const MaterialFeatureData &fd );
+   void processVert(  Vector<ShaderComponent*> &componentList,
+                              const MaterialFeatureData &fd ) override;
 
-   virtual String getName() { return "Hardware Skinning"; }
+   String getName() override { return "Hardware Skinning"; }
 };
 
 /// Reflection Probes
@@ -686,21 +686,21 @@ protected:
 public:
    ReflectionProbeFeatHLSL();
 
-   virtual void processVert(Vector<ShaderComponent*>& componentList,
-      const MaterialFeatureData& fd);
+   void processVert(Vector<ShaderComponent*>& componentList,
+      const MaterialFeatureData& fd) override;
 
-   virtual void processPix(Vector<ShaderComponent*> &componentList,
-      const MaterialFeatureData &fd);
+   void processPix(Vector<ShaderComponent*> &componentList,
+      const MaterialFeatureData &fd) override;
 
-   virtual Resources getResources(const MaterialFeatureData &fd);
+   Resources getResources(const MaterialFeatureData &fd) override;
 
    // Sets textures and texture flags for current pass
-   virtual void setTexData(Material::StageData &stageDat,
+   void setTexData(Material::StageData &stageDat,
       const MaterialFeatureData &fd,
       RenderPassData &passData,
-      U32 &texIndex);
+      U32 &texIndex) override;
 
-   virtual String getName()
+   String getName() override
    {
       return "Reflection Probes";
    }

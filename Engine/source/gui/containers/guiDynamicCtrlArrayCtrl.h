@@ -47,14 +47,14 @@ public:
    static void initPersistFields();
 
    // SimObject
-   void inspectPostApply();
+   void inspectPostApply() override;
 
    // SimSet
-   void addObject(SimObject *obj);
+   void addObject(SimObject *obj) override;
 
    // GuiControl
-   bool resize(const Point2I &newPosition, const Point2I &newExtent);
-   void childResized(GuiControl *child);
+   bool resize(const Point2I &newPosition, const Point2I &newExtent) override;
+   void childResized(GuiControl *child) override;
 
    // GuiDynamicCtrlArrayCtrl
    void refresh();

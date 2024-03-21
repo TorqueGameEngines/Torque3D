@@ -70,19 +70,19 @@ public:
 
    bool isManaged; //setting to true tells this texture not to be released from being zombify
 
-   virtual GFXLockedRect * lock(U32 mipLevel = 0, RectI *inRect = NULL);
-   virtual void unlock(U32 mipLevel = 0 );
+   GFXLockedRect * lock(U32 mipLevel = 0, RectI *inRect = NULL) override;
+   void unlock(U32 mipLevel = 0 ) override;
 
-   virtual bool			copyToBmp(GBitmap* bmp);
+   bool			copyToBmp(GBitmap* bmp) override;
    ID3D11Texture2D*		getSurface() {return mD3DSurface;}
    ID3D11Texture2D**	getSurfacePtr() {return &mD3DSurface;}
 
    // GFXResource
-   void zombify();
-   void resurrect();
+   void zombify() override;
+   void resurrect() override;
 
 #ifdef TORQUE_DEBUG
-   virtual void pureVirtualCrash() {};
+   void pureVirtualCrash() override {};
 #endif
 };
 

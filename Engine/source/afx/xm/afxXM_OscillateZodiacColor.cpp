@@ -41,11 +41,11 @@ public:
 public:
   /*C*/         afxXM_OscillateZodiacColorData();
 
-  void          packData(BitStream* stream);
-  void          unpackData(BitStream* stream);
+  void          packData(BitStream* stream) override;
+  void          unpackData(BitStream* stream) override;
   static void   initPersistFields();
 
-  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server);
+  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server) override;
 
   DECLARE_CONOBJECT(afxXM_OscillateZodiacColorData);
 };
@@ -64,8 +64,8 @@ class afxXM_OscillateZodiacColor : public afxXM_WeightedBase
 public:
   /*C*/         afxXM_OscillateZodiacColor(afxXM_OscillateZodiacColorData*, afxEffectWrapper*);
 
-  virtual void  update(F32 dt, F32 elapsed, Point3F& pos, MatrixF& ori, Point3F& pos2, 
-                       Point3F& scale);
+  void  update(F32 dt, F32 elapsed, Point3F& pos, MatrixF& ori, Point3F& pos2, 
+                       Point3F& scale) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

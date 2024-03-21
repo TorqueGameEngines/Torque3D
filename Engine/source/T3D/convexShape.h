@@ -60,9 +60,9 @@ public:
 		pShape     = cv.pShape;		
 	}
 
-	Point3F support(const VectorF& vec) const;
-	void getFeatures(const MatrixF& mat,const VectorF& n, ConvexFeature* cf);
-	void getPolyList(AbstractPolyList* list);
+	Point3F support(const VectorF& vec) const override;
+	void getFeatures(const MatrixF& mat,const VectorF& n, ConvexFeature* cf) override;
+	void getPolyList(AbstractPolyList* list) override;
 };
 
 
@@ -200,25 +200,25 @@ public:
    static void initPersistFields();
 
    // SimObject 
-   virtual void inspectPostApply();
-   virtual bool onAdd();
-   virtual void onRemove();
-   virtual void writeFields(Stream &stream, U32 tabStop);
-   virtual bool writeField( StringTableEntry fieldname, const char *value );
+   void inspectPostApply() override;
+   bool onAdd() override;
+   void onRemove() override;
+   void writeFields(Stream &stream, U32 tabStop) override;
+   bool writeField( StringTableEntry fieldname, const char *value ) override;
 
    // NetObject
-   virtual U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream );
-   virtual void unpackUpdate( NetConnection *conn, BitStream *stream );
+   U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream ) override;
+   void unpackUpdate( NetConnection *conn, BitStream *stream ) override;
 
    // SceneObject
-   virtual void onScaleChanged();
-   virtual void setTransform( const MatrixF &mat );   
-   virtual void prepRenderImage( SceneRenderState *state );
-   virtual void buildConvex( const Box3F &box, Convex *convex );
-   virtual bool buildPolyList( PolyListContext context, AbstractPolyList *polyList, const Box3F &box, const SphereF &sphere );
-   virtual bool buildExportPolyList(ColladaUtils::ExportData* exportData, const Box3F &box, const SphereF &);
-   virtual bool castRay( const Point3F &start, const Point3F &end, RayInfo *info );
-   virtual bool collideBox( const Point3F &start, const Point3F &end, RayInfo *info );
+   void onScaleChanged() override;
+   void setTransform( const MatrixF &mat ) override;   
+   void prepRenderImage( SceneRenderState *state ) override;
+   void buildConvex( const Box3F &box, Convex *convex ) override;
+   bool buildPolyList( PolyListContext context, AbstractPolyList *polyList, const Box3F &box, const SphereF &sphere ) override;
+   bool buildExportPolyList(ColladaUtils::ExportData* exportData, const Box3F &box, const SphereF &) override;
+   bool castRay( const Point3F &start, const Point3F &end, RayInfo *info ) override;
+   bool collideBox( const Point3F &start, const Point3F &end, RayInfo *info ) override;
 
 
    void updateBounds( bool recenter );

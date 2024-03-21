@@ -63,17 +63,17 @@ class GuiMessageVectorCtrl : public GuiControl
 
    // Gui control overrides
   protected:
-   bool onAdd();
-   void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
 
-   bool onWake();
-   void onSleep();
-   void onRender(Point2I offset, const RectI &updateRect);
-   void inspectPostApply();
-   void parentResized(const RectI& oldParentRect, const RectI& newParentRect);
+   bool onWake() override;
+   void onSleep() override;
+   void onRender(Point2I offset, const RectI &updateRect) override;
+   void inspectPostApply() override;
+   void parentResized(const RectI& oldParentRect, const RectI& newParentRect) override;
 
-   void onMouseUp(const GuiEvent &event);
-   void onMouseDown(const GuiEvent &event);
+   void onMouseUp(const GuiEvent &event) override;
+   void onMouseDown(const GuiEvent &event) override;
 //   void onMouseMove(const GuiEvent &event);
 
    // Overrideables

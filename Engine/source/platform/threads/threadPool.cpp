@@ -206,7 +206,7 @@ struct ThreadPool::WorkerThread : public Thread
    WorkerThread( ThreadPool* pool, U32 index );
 
    WorkerThread*     getNext();
-   virtual void      run( void* arg = 0 );
+   void      run( void* arg = 0 ) override;
 
 private:
    U32               mIndex;

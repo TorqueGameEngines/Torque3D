@@ -48,13 +48,13 @@ class afxEA_PlayerPuppet : public afxEffectWrapper
 public:
   /*C*/             afxEA_PlayerPuppet();
 
-  virtual void      ea_set_datablock(SimDataBlock*);
-  virtual bool      ea_start();
-  virtual bool      ea_update(F32 dt);
-  virtual void      ea_finish(bool was_stopped);
+  void      ea_set_datablock(SimDataBlock*) override;
+  bool      ea_start() override;
+  bool      ea_update(F32 dt) override;
+  void      ea_finish(bool was_stopped) override;
 
-  virtual void      getUnconstrainedPosition(Point3F& pos);
-  virtual void      getUnconstrainedTransform(MatrixF& xfm);
+  void      getUnconstrainedPosition(Point3F& pos) override;
+  void      getUnconstrainedTransform(MatrixF& xfm) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//
@@ -149,12 +149,12 @@ class afxEA_PlayerPuppetDesc : public afxEffectAdapterDesc, public afxEffectDefs
   static afxEA_PlayerPuppetDesc desc;
 
 public:
-  virtual bool  testEffectType(const SimDataBlock*) const;
-  virtual bool  requiresStop(const afxEffectWrapperData*, const afxEffectTimingData&) const;
-  virtual bool  runsOnServer(const afxEffectWrapperData*) const;
-  virtual bool  runsOnClient(const afxEffectWrapperData*) const;
+  bool  testEffectType(const SimDataBlock*) const override;
+  bool  requiresStop(const afxEffectWrapperData*, const afxEffectTimingData&) const override;
+  bool  runsOnServer(const afxEffectWrapperData*) const override;
+  bool  runsOnClient(const afxEffectWrapperData*) const override;
 
-  virtual afxEffectWrapper* create() const { return new afxEA_PlayerPuppet; }
+  afxEffectWrapper* create() const override { return new afxEA_PlayerPuppet; }
 };
 
 afxEA_PlayerPuppetDesc afxEA_PlayerPuppetDesc::desc;

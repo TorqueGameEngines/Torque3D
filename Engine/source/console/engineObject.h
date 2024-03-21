@@ -258,7 +258,7 @@ class EngineObject;
       static EngineClassTypeInfo< ThisType, _ClassBase > _smTypeInfo;                  \
       static EngineExportScope& __engineExportScope();                                 \
       static EnginePropertyTable& _smPropertyTable;                                    \
-      virtual const EngineTypeInfo* __typeinfo() const;                                \
+      const EngineTypeInfo* __typeinfo() const override;                               \
    public:
    
 /// Declare an abstract class @a type derived from the class @a super.
@@ -278,6 +278,28 @@ class EngineObject;
    public:                                                                             \
       typedef type ThisType;                                                           \
       typedef super SuperType;                                                         \
+      template< typename T > friend struct ::_EngineTypeTraits;                        \
+      template< typename T > friend struct ::_SCOPE;                                   \
+      template< typename T > friend T* _CREATE();                                      \
+      template< typename T, typename Base > friend class ::EngineClassTypeInfo;        \
+   private:                                                                            \
+      typedef ::_Private::_AbstractClassBase< ThisType > _ClassBase;                   \
+      static EngineClassTypeInfo< ThisType, _ClassBase > _smTypeInfo;                  \
+      static EngineExportScope& __engineExportScope();                                 \
+      static EnginePropertyTable& _smPropertyTable;                                    \
+      const EngineTypeInfo* __typeinfo() const override;                               \
+   public:
+
+/// Declare an abstract base class @a type derived from the class @a super.
+///
+/// Nearly identical to DECLARE_ABSTRACT_CLASS macro, but with virtual methods
+/// that are suppose to be override'd in child classes.
+/// 
+/// @see DECLARE_ABSTRACT_CLASS
+#define DECLARE_ABSTRACT_BASE_CLASS(type)                                              \
+   public:                                                                             \
+      typedef type ThisType;                                                           \
+      typedef void SuperType;                                                          \
       template< typename T > friend struct ::_EngineTypeTraits;                        \
       template< typename T > friend struct ::_SCOPE;                                   \
       template< typename T > friend T* _CREATE();                                      \
@@ -485,8 +507,8 @@ class EngineCRuntimeObjectPool : public IEngineObjectPool
       static EngineCRuntimeObjectPool* instance() { return &smInstance; }
       
       // IEngineObjectPool
-      virtual void* allocateObject(size_t size TORQUE_TMM_ARGS_DECL );
-      virtual void freeObject( void* ptr );
+      void* allocateObject(size_t size TORQUE_TMM_ARGS_DECL ) override;
+      void freeObject( void* ptr ) override;
 };
 
 
@@ -504,7 +526,7 @@ class EngineObject : public StrongRefBase
 {
    public:
    
-      DECLARE_ABSTRACT_CLASS( EngineObject, void );
+      DECLARE_ABSTRACT_BASE_CLASS( EngineObject );
       DECLARE_INSCOPE( _GLOBALSCOPE );
       DECLARE_INSTANTIABLE;
    
@@ -569,7 +591,7 @@ class EngineObject : public StrongRefBase
       IEngineObjectPool* getEngineObjectPool() const { return mEngineObjectPool; }
       
       // StrongRefBase
-      virtual void destroySelf();
+      void destroySelf() override;
             
 #ifdef TORQUE_DEBUG
       
@@ -653,7 +675,7 @@ class StaticEngineObject : public EngineObject
       StaticEngineObject();
       
       // EngineObject.
-      virtual void destroySelf();
+      void destroySelf() override;
 };
 
 

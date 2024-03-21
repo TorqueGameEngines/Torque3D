@@ -67,9 +67,9 @@ public:
    DECLARE_CONOBJECT(GuiInspectorVariableGroup);
    DECLARE_CATEGORY( "Gui Editor" );
 
-   virtual GuiInspectorField* constructField( S32 fieldType );
+   GuiInspectorField* constructField( S32 fieldType ) override;
 
-   virtual bool inspectGroup();
+   bool inspectGroup() override;
 
    void clearFields();
    void addField(VariableField* field);

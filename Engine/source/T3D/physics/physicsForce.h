@@ -51,15 +51,15 @@ public:
    DECLARE_CATEGORY("UNLISTED");
    // SimObject
    static void initPersistFields();
-   bool onAdd();
-   void onRemove();   
+   bool onAdd() override;
+   void onRemove() override;   
    
    // SceneObject
-   void onMount( SceneObject *obj, S32 node );
-   void onUnmount( SceneObject *obj, S32 node );
+   void onMount( SceneObject *obj, S32 node ) override;
+   void onUnmount( SceneObject *obj, S32 node ) override;
 
    // ProcessObject
-   void processTick( const Move *move );
+   void processTick( const Move *move ) override;
 
    ///
    void attach( const Point3F &start, const Point3F &direction, F32 maxDist );

@@ -41,8 +41,8 @@ class ScriptObject : public SimObject
 
 public:
    ScriptObject();
-   bool onAdd();
-   void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
 
    DECLARE_CONOBJECT(ScriptObject);
 
@@ -64,12 +64,12 @@ protected:
 public:
    ScriptTickObject();
    static void initPersistFields();
-   bool onAdd();
-   void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
 
-   virtual void interpolateTick( F32 delta );
-   virtual void processTick();
-   virtual void advanceTime( F32 timeDelta );
+   void interpolateTick( F32 delta ) override;
+   void processTick() override;
+   void advanceTime( F32 timeDelta ) override;
 
    DECLARE_CONOBJECT(ScriptTickObject);
 
@@ -88,8 +88,8 @@ class ScriptGroup : public SimGroup
    
 public:
    ScriptGroup();
-   bool onAdd();
-   void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
 
    DECLARE_CONOBJECT(ScriptGroup);
 

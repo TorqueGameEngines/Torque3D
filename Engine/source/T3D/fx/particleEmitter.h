@@ -69,10 +69,10 @@ class ParticleEmitterData : public GameBaseData
    ParticleEmitterData();
    DECLARE_CONOBJECT(ParticleEmitterData);
    static void initPersistFields();
-   void packData(BitStream* stream);
-   void unpackData(BitStream* stream);
-   bool preload(bool server, String &errorStr);
-   bool onAdd();
+   void packData(BitStream* stream) override;
+   void unpackData(BitStream* stream) override;
+   bool preload(bool server, String &errorStr) override;
+   bool onAdd() override;
    void allocPrimBuffer( S32 overrideSize = -1 );
 
   public:
@@ -147,7 +147,7 @@ public:
    /*C*/ ParticleEmitterData(const ParticleEmitterData&, bool = false);
    /*D*/ ~ParticleEmitterData();
    virtual ParticleEmitterData* cloneAndPerformSubstitutions(const SimObject*, S32 index=0);
-   virtual bool allowSubstitutions() const { return true; }
+   bool allowSubstitutions() const override { return true; }
 };
 
 //*****************************************************************************
@@ -184,7 +184,7 @@ class ParticleEmitter : public GameBase
    void setColors( LinearColorF *colorList );
 
    ParticleEmitterData *getDataBlock(){ return mDataBlock; }
-   bool onNewDataBlock( GameBaseData *dptr, bool reload );
+   bool onNewDataBlock( GameBaseData *dptr, bool reload ) override;
 
    /// By default, a particle renderer will wait for it's owner to delete it.  When this
    /// is turned on, it will delete itself as soon as it's particle count drops to zero.
@@ -259,15 +259,15 @@ class ParticleEmitter : public GameBase
 
    /// @}
   protected:
-   bool onAdd();
-   void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
 
-   void processTick(const Move *move);
-   void advanceTime(F32 dt);
+   void processTick(const Move *move) override;
+   void advanceTime(F32 dt) override;
 
    // Rendering
   protected:
-   void prepRenderImage( SceneRenderState *state );
+   void prepRenderImage( SceneRenderState *state ) override;
    void copyToVB( const Point3F &camPos, const LinearColorF &ambientColor );
 
    // PEngine interface

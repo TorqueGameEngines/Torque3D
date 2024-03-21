@@ -54,11 +54,11 @@ public:
 
 
    // GFXResource interface
-   virtual void zombify() = 0;
-   virtual void resurrect() = 0;
+   void zombify() override = 0;
+   void resurrect() override = 0;
    virtual void Release();
 
-   virtual const String describeSelf() const;
+   const String describeSelf() const override;
 
    GFXFormat mFormat;
    bool mIsCompressed;

@@ -127,8 +127,8 @@ public:
    ShaderConstHandles   shaderHandles;
    Vector<ShaderFeatureConstHandles*> featureShaderHandles;
 
-   virtual void reset();
-   virtual String describeSelf() const;
+   void reset() override;
+   String describeSelf() const override;
 };
 
 class ProcessedShaderMaterial : public ProcessedMaterial
@@ -141,23 +141,23 @@ public:
    ~ProcessedShaderMaterial();
 
    // ProcessedMaterial
-   virtual bool init(   const FeatureSet &features, 
+   bool init(   const FeatureSet &features, 
                         const GFXVertexFormat *vertexFormat,
-                        const MatFeaturesDelegate &featuresDelegate );
-   virtual bool setupPass(SceneRenderState *, const SceneData& sgData, U32 pass);
-   virtual void setTextureStages(SceneRenderState *, const SceneData &sgData, U32 pass );
-   virtual void setTransforms(const MatrixSet &matrixSet, SceneRenderState *state, const U32 pass);
-   virtual void setNodeTransforms(const MatrixF *address, const U32 numTransforms, const U32 pass);
-   virtual void setCustomShaderData(Vector<CustomShaderBindingData> &shaderData, const U32 pass);
-   virtual void setSceneInfo(SceneRenderState *, const SceneData& sgData, U32 pass);
-   virtual void setBuffers(GFXVertexBufferHandleBase* vertBuffer, GFXPrimitiveBufferHandle* primBuffer); 
-   virtual bool stepInstance();
-   virtual void dumpMaterialInfo();
-   virtual void getMaterialInfo(GuiTreeViewCtrl* tree, U32 item);
-   virtual MaterialParameters* allocMaterialParameters();    
-   virtual MaterialParameters* getDefaultMaterialParameters() { return mDefaultParameters; }   
-   virtual MaterialParameterHandle* getMaterialParameterHandle(const String& name);
-   virtual U32 getNumStages();
+                        const MatFeaturesDelegate &featuresDelegate ) override;
+   bool setupPass(SceneRenderState *, const SceneData& sgData, U32 pass) override;
+   void setTextureStages(SceneRenderState *, const SceneData &sgData, U32 pass ) override;
+   void setTransforms(const MatrixSet &matrixSet, SceneRenderState *state, const U32 pass) override;
+   void setNodeTransforms(const MatrixF *address, const U32 numTransforms, const U32 pass) override;
+   void setCustomShaderData(Vector<CustomShaderBindingData> &shaderData, const U32 pass) override;
+   void setSceneInfo(SceneRenderState *, const SceneData& sgData, U32 pass) override;
+   void setBuffers(GFXVertexBufferHandleBase* vertBuffer, GFXPrimitiveBufferHandle* primBuffer) override; 
+   bool stepInstance() override;
+   void dumpMaterialInfo() override;
+   void getMaterialInfo(GuiTreeViewCtrl* tree, U32 item) override;
+   MaterialParameters* allocMaterialParameters() override;    
+   MaterialParameters* getDefaultMaterialParameters() override { return mDefaultParameters; }   
+   MaterialParameterHandle* getMaterialParameterHandle(const String& name) override;
+   U32 getNumStages() override;
 
 protected:
 

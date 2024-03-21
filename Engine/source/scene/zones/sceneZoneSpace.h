@@ -177,7 +177,7 @@ class SceneZoneSpace : public SceneSpace
       /// @}
 
       // SceneObject.
-      virtual void onSceneRemove();
+      void onSceneRemove() override;
 
    public:
 
@@ -282,13 +282,13 @@ class SceneZoneSpace : public SceneSpace
       /// @}
 
       // SimObject.
-      virtual bool writeField( StringTableEntry fieldName, const char* value );
+      bool writeField( StringTableEntry fieldName, const char* value ) override;
 
       static void initPersistFields();
 
       // NetObject.
-      virtual U32 packUpdate( NetConnection* connection, U32 mask, BitStream* stream );
-      virtual void unpackUpdate( NetConnection* connection, BitStream* stream );
+      U32 packUpdate( NetConnection* connection, U32 mask, BitStream* stream ) override;
+      void unpackUpdate( NetConnection* connection, BitStream* stream ) override;
 
    private:
 

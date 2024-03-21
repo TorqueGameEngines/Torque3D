@@ -172,15 +172,15 @@ class GuiBitmapButtonCtrl : public GuiButtonCtrl
       void setBitmapHandles( GFXTexHandle normal, GFXTexHandle highlighted, GFXTexHandle depressed, GFXTexHandle inactive );
 
       //Parent methods
-      virtual bool onWake();
-      virtual void onSleep();
-      virtual void onAction();
-      virtual void inspectPostApply();
+      bool onWake() override;
+      void onSleep() override;
+      void onAction() override;
+      void inspectPostApply() override;
 
-      virtual void onRender(Point2I offset, const RectI &updateRect);
+      void onRender(Point2I offset, const RectI &updateRect) override;
 
       static void initPersistFields();
-      bool pointInControl(const Point2I& parentCoordPoint);
+      bool pointInControl(const Point2I& parentCoordPoint) override;
 
       DECLARE_CONOBJECT(GuiBitmapButtonCtrl);
       DECLARE_DESCRIPTION( "A button control rendered entirely from bitmaps.\n"
@@ -207,7 +207,7 @@ class GuiBitmapButtonTextCtrl : public GuiBitmapButtonCtrl
       
    protected:
    
-      virtual void renderButton( GFXTexHandle &texture, const Point2I& offset, const RectI& updateRect );
+      void renderButton( GFXTexHandle &texture, const Point2I& offset, const RectI& updateRect ) override;
 
    public:
 

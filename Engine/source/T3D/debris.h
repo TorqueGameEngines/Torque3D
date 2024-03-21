@@ -96,11 +96,11 @@ struct DebrisData : public GameBaseData
 
    DebrisData();
 
-   bool        onAdd();
-   bool        preload( bool server, String &errorStr );
+   bool        onAdd() override;
+   bool        preload( bool server, String &errorStr ) override;
    static void initPersistFields();
-   void        packData(BitStream* stream);
-   void        unpackData(BitStream* stream);
+   void        packData(BitStream* stream) override;
+   void        unpackData(BitStream* stream) override;
 
    DECLARE_CONOBJECT(DebrisData);
 
@@ -108,8 +108,8 @@ public:
    /*C*/        DebrisData(const DebrisData&, bool = false);
    /*D*/        ~DebrisData();
    DebrisData*  cloneAndPerformSubstitutions(const SimObject*, S32 index=0);
-   virtual void onPerformSubstitutions();
-   virtual bool allowSubstitutions() const { return true; }
+   void onPerformSubstitutions() override;
+   bool allowSubstitutions() const override { return true; }
 
    void onShapeChanged() {}
 };
@@ -152,14 +152,14 @@ private:
    void  rotate( F32 dt );
 
 protected:
-   virtual void   processTick(const Move* move);
-   virtual void   advanceTime( F32 dt );
-   void prepRenderImage(SceneRenderState *state);
+   void   processTick(const Move* move) override;
+   void   advanceTime( F32 dt ) override;
+   void prepRenderImage(SceneRenderState *state) override;
    void prepBatchRender(SceneRenderState *state);
 
 
-   bool           onAdd();
-   void           onRemove();
+   bool           onAdd() override;
+   void           onRemove() override;
    void           updateEmitters( Point3F &pos, Point3F &vel, U32 ms );
 
 public:
@@ -169,13 +169,13 @@ public:
 
    static void    initPersistFields();
 
-   bool   onNewDataBlock( GameBaseData *dptr, bool reload );
+   bool   onNewDataBlock( GameBaseData *dptr, bool reload ) override;
 
    void  init( const Point3F &position, const Point3F &velocity );
    void  setLifetime( F32 lifetime ){ mLifetime = lifetime; }
    void  setPartInstance( TSPartInstance *part ){ mPart = part; }
    void  setSize( F32 size );
-   void  setVelocity( const Point3F &vel ){ mVelocity = vel; }
+   void  setVelocity( const Point3F &vel ) override{ mVelocity = vel; }
    void  setRotAngles( const Point3F &angles ){ mRotAngles = angles; }
 
    DECLARE_CONOBJECT(Debris);

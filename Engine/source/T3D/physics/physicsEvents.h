@@ -59,10 +59,10 @@ public:
    RadialImpulseEvent( const Point3F &pos, F32 radius, F32 magnitude );
    ~RadialImpulseEvent();   
 
-   virtual void pack( NetConnection* /*ps*/, BitStream *bstream );   
-   virtual void write( NetConnection*, BitStream *bstream );   
-   virtual void unpack( NetConnection *ps, BitStream *bstream );   
-   virtual void process(NetConnection *);
+   void pack( NetConnection* /*ps*/, BitStream *bstream ) override;   
+   void write( NetConnection*, BitStream *bstream ) override;   
+   void unpack( NetConnection *ps, BitStream *bstream ) override;   
+   void process(NetConnection *) override;
    
    static void impulse( SceneContainer *con, const Point3F &position, F32 radius, F32 magnitude );
 

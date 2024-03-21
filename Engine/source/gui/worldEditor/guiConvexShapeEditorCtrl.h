@@ -55,29 +55,29 @@ public:
    DECLARE_CONOBJECT( GuiConvexEditorCtrl );
 
    // SimObject
-   virtual bool onAdd();
-   virtual void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
    static void initPersistFields();
 
    // GuiControl
-   virtual bool onWake();
-   virtual void onSleep();
-   virtual void setVisible(bool value);
+   bool onWake() override;
+   void onSleep() override;
+   void setVisible(bool value) override;
 
    // EditTSCtrl      
-   bool onKeyDown( const GuiEvent &event );
-   bool onKeyUp( const GuiEvent &event );
-   void get3DCursor( GuiCursor *&cursor, bool &visible, const Gui3DMouseEvent &event_ );
-   void on3DMouseDown( const Gui3DMouseEvent &event );
-   void on3DMouseUp( const Gui3DMouseEvent &event );
-   void on3DMouseMove( const Gui3DMouseEvent &event );
-   void on3DMouseDragged( const Gui3DMouseEvent &event );
-   void on3DMouseEnter( const Gui3DMouseEvent &event );
-   void on3DMouseLeave( const Gui3DMouseEvent &event );
-   void on3DRightMouseDown( const Gui3DMouseEvent &event );
-   void on3DRightMouseUp( const Gui3DMouseEvent &event );
-   void renderScene(const RectI & updateRect);   
-   void updateGizmo();
+   bool onKeyDown( const GuiEvent &event ) override;
+   bool onKeyUp( const GuiEvent &event ) override;
+   void get3DCursor( GuiCursor *&cursor, bool &visible, const Gui3DMouseEvent &event_ ) override;
+   void on3DMouseDown( const Gui3DMouseEvent &event ) override;
+   void on3DMouseUp( const Gui3DMouseEvent &event ) override;
+   void on3DMouseMove( const Gui3DMouseEvent &event ) override;
+   void on3DMouseDragged( const Gui3DMouseEvent &event ) override;
+   void on3DMouseEnter( const Gui3DMouseEvent &event ) override;
+   void on3DMouseLeave( const Gui3DMouseEvent &event ) override;
+   void on3DRightMouseDown( const Gui3DMouseEvent &event ) override;
+   void on3DRightMouseUp( const Gui3DMouseEvent &event ) override;
+   void renderScene(const RectI & updateRect) override;   
+   void updateGizmo() override;
 
    void updateShape( ConvexShape *shape, S32 offsetFace = -1 );
    static void synchClientObject( const ConvexShape *serverConvex );
@@ -260,8 +260,8 @@ public:
    MatrixF mSavedObjToWorld;
    Point3F mSavedScale;   
 
-   virtual void undo();
-   virtual void redo() { undo(); }
+   void undo() override;
+   void redo() override { undo(); }
 };
 
 class ConvexEditorTool
@@ -311,15 +311,15 @@ public:
    ConvexEditorCreateTool( GuiConvexEditorCtrl *editor );
    virtual ~ConvexEditorCreateTool() {}
 
-   virtual void onActivated( ConvexEditorTool *prevTool );
-   virtual void onDeactivated( ConvexEditorTool *newTool );
+   void onActivated( ConvexEditorTool *prevTool ) override;
+   void onDeactivated( ConvexEditorTool *newTool ) override;
 
-   virtual EventResult on3DMouseDown( const Gui3DMouseEvent &event );
-   virtual EventResult on3DMouseUp( const Gui3DMouseEvent &event );
-   virtual EventResult on3DMouseMove( const Gui3DMouseEvent &event );
-   virtual EventResult on3DMouseDragged( const Gui3DMouseEvent &event );
+   EventResult on3DMouseDown( const Gui3DMouseEvent &event ) override;
+   EventResult on3DMouseUp( const Gui3DMouseEvent &event ) override;
+   EventResult on3DMouseMove( const Gui3DMouseEvent &event ) override;
+   EventResult on3DMouseDragged( const Gui3DMouseEvent &event ) override;
 
-   virtual void renderScene(const RectI & updateRect);   
+   void renderScene(const RectI & updateRect) override;   
 
    ConvexShape* extrudeShapeFromFace( ConvexShape *shape, S32 face );
 

@@ -45,8 +45,8 @@ public:
 
   void set(LinearColorF& a, LinearColorF& b, LinearColorF& a_var, LinearColorF& b_var, bool sync_var);
 
-  virtual void interpolate(F32 t, afxXM_Params& params)=0;
-  virtual void pulse();
+  void interpolate(F32 t, afxXM_Params& params) override =0;
+  void pulse() override;
 };
 
 afxXM_WaveInterp_Color::afxXM_WaveInterp_Color() 
@@ -88,7 +88,7 @@ inline void afxXM_WaveInterp_Color::pulse()
 class afxXM_WaveInterp_Color_Add : public afxXM_WaveInterp_Color
 {
 public:
-  virtual void interpolate(F32 t, afxXM_Params& params)
+  void interpolate(F32 t, afxXM_Params& params) override
   {
     LinearColorF temp_color;
     temp_color.interpolate(mA, mB, t);
@@ -101,7 +101,7 @@ public:
 class afxXM_WaveInterp_Color_Mul : public afxXM_WaveInterp_Color
 {
 public:
-  virtual void interpolate(F32 t, afxXM_Params& params)
+  void interpolate(F32 t, afxXM_Params& params) override
   {
     LinearColorF temp_color;
     temp_color.interpolate(mA, mB, t);
@@ -114,7 +114,7 @@ public:
 class afxXM_WaveInterp_Color_Rep : public afxXM_WaveInterp_Color
 {
 public:
-  virtual void interpolate(F32 t, afxXM_Params& params)
+  void interpolate(F32 t, afxXM_Params& params) override
   {
     params.color.interpolate(mA, mB, t);
   }
@@ -171,14 +171,14 @@ public:
   /*C*/         afxXM_WaveColorData();
   /*C*/         afxXM_WaveColorData(const afxXM_WaveColorData&, bool = false);
 
-  void          packData(BitStream* stream);
-  void          unpackData(BitStream* stream);
+  void          packData(BitStream* stream) override;
+  void          unpackData(BitStream* stream) override;
 
-  virtual bool  allowSubstitutions() const { return true; }
+  bool  allowSubstitutions() const override { return true; }
 
   static void   initPersistFields();
 
-  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server);
+  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server) override;
 
   DECLARE_CONOBJECT(afxXM_WaveColorData);
 };
@@ -286,14 +286,14 @@ public:
   /*C*/         afxXM_WaveRiderColorData();
   /*C*/         afxXM_WaveRiderColorData(const afxXM_WaveRiderColorData&, bool = false);
 
-  void          packData(BitStream* stream);
-  void          unpackData(BitStream* stream);
+  void          packData(BitStream* stream) override;
+  void          unpackData(BitStream* stream) override;
 
-  virtual bool  allowSubstitutions() const { return true; }
+  bool  allowSubstitutions() const override { return true; }
 
   static void   initPersistFields();
 
-  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server);
+  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server) override;
 
   DECLARE_CONOBJECT(afxXM_WaveRiderColorData);
 };

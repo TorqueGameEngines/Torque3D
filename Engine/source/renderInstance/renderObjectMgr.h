@@ -39,7 +39,7 @@ public:
    virtual void setOverrideMaterial(BaseMatInstance* overrideMat); 
 
    // RenderBinMgr
-   virtual void render(SceneRenderState * state);
+   void render(SceneRenderState * state) override;
 
    // ConsoleObject
    static void initPersistFields();

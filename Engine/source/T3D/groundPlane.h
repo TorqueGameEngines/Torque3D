@@ -65,21 +65,21 @@ public:
    GroundPlane();
    virtual ~GroundPlane();
 
-   virtual bool      onAdd();
-   virtual void      onRemove();
-   virtual U32       packUpdate( NetConnection* connection, U32 mask, BitStream* stream );
-   virtual void      unpackUpdate( NetConnection* connection, BitStream* stream );
-   virtual void      prepRenderImage( SceneRenderState* state );
-   virtual bool      castRay( const Point3F& start, const Point3F& end, RayInfo* info );
-   virtual void      buildConvex( const Box3F& box, Convex* convex );
-   virtual bool      buildPolyList( PolyListContext context, AbstractPolyList* polyList, const Box3F& box, const SphereF& sphere );
-   virtual void      inspectPostApply();
-   virtual void      setTransform( const MatrixF &mat );
-   virtual void      setScale( const Point3F& scale );
+   bool      onAdd() override;
+   void      onRemove() override;
+   U32       packUpdate( NetConnection* connection, U32 mask, BitStream* stream ) override;
+   void      unpackUpdate( NetConnection* connection, BitStream* stream ) override;
+   void      prepRenderImage( SceneRenderState* state ) override;
+   bool      castRay( const Point3F& start, const Point3F& end, RayInfo* info ) override;
+   void      buildConvex( const Box3F& box, Convex* convex ) override;
+   bool      buildPolyList( PolyListContext context, AbstractPolyList* polyList, const Box3F& box, const SphereF& sphere ) override;
+   void      inspectPostApply() override;
+   void      setTransform( const MatrixF &mat ) override;
+   void      setScale( const Point3F& scale ) override;
 
    static void       initPersistFields();
 
-   virtual void getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList);
+   void getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList) override;
 
 protected:
 

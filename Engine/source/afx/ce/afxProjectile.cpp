@@ -351,7 +351,7 @@ void afxProjectile::unpackUpdate(NetConnection * conn, BitStream * stream)
 class afxProjectileDeleteEvent : public SimEvent
 {
 public:
-   void process(SimObject *object)
+   void process(SimObject *object) override
    {
       object->deleteObject();
    }

@@ -47,7 +47,7 @@ public:
       mPerfCountNext = 0.0;
    }
 
-   const S32 getElapsedMs()
+   const S32 getElapsedMs() override
    {
       // Use QPC, update remainders so we don't leak time, and return the elapsed time.
       QueryPerformanceCounter( (LARGE_INTEGER *) &mPerfCountNext);
@@ -59,7 +59,7 @@ public:
       return elapsed;
    }
 
-   void reset()
+   void reset() override
    {
       // Do some simple copying to reset the timer to 0.
       mPerfCountCurrent = mPerfCountNext;

@@ -111,26 +111,26 @@ public:
    DECLARE_CATEGORY("Shader Editor");
    DECLARE_DESCRIPTION("Implements a shader node based editor.");
 
-   bool onWake();
-   void onSleep();
+   bool onWake() override;
+   void onSleep() override;
    static void initPersistFields();
-   virtual bool onAdd() override;
-   virtual void onRemove() override;
+   bool onAdd() override;
+   void onRemove() override;
 
-   virtual void onPreRender() override;
+   void onPreRender() override;
    void drawThickLine(const Point2I& pt1, const Point2I& pt2, U32 thickness = 2, ColorI col1 = ColorI(255, 255, 255), ColorI col2 = ColorI(255, 255, 255));
-   virtual void onRender(Point2I offset, const RectI& updateRect) override;
+   void onRender(Point2I offset, const RectI& updateRect) override;
 
    // interaction
-   virtual bool onKeyDown(const GuiEvent& event) override;
-   virtual void onMouseDown(const GuiEvent& event) override;
-   virtual void onMouseUp(const GuiEvent& event) override;
-   virtual void onMouseDragged(const GuiEvent& event) override;
-   virtual void onMiddleMouseDown(const GuiEvent& event) override;
-   virtual void onMiddleMouseUp(const GuiEvent& event) override;
-   virtual void onMiddleMouseDragged(const GuiEvent& event) override;
-   virtual bool onMouseWheelUp(const GuiEvent& event) override;
-   virtual bool onMouseWheelDown(const GuiEvent& event) override;
+   bool onKeyDown(const GuiEvent& event) override;
+   void onMouseDown(const GuiEvent& event) override;
+   void onMouseUp(const GuiEvent& event) override;
+   void onMouseDragged(const GuiEvent& event) override;
+   void onMiddleMouseDown(const GuiEvent& event) override;
+   void onMiddleMouseUp(const GuiEvent& event) override;
+   void onMiddleMouseDragged(const GuiEvent& event) override;
+   bool onMouseWheelUp(const GuiEvent& event) override;
+   bool onMouseWheelDown(const GuiEvent& event) override;
 
    RectI getSelectionBounds();
    void deleteSelection();

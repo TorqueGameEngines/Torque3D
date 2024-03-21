@@ -120,15 +120,15 @@ class SFXAsyncStream : public AsyncPacketBufferedInputStream< SFXStreamRef, SFXS
       bool mReadSilenceAtEnd;
 
       // AsyncPacketStream.
-      virtual SFXStreamPacket* _newPacket( U32 packetSize )
+      SFXStreamPacket* _newPacket( U32 packetSize ) override
       {
          SFXStreamPacket* packet = Parent::_newPacket( packetSize );
          packet->mFormat = getSourceStream()->getFormat();
          return packet;
       }
-      virtual void _requestNext();
-      virtual void _onArrival( SFXStreamPacket* const& packet );
-      virtual void _newReadItem( PacketReadItemRef& outRef, SFXStreamPacket* packet, U32 numElements )
+      void _requestNext() override;
+      void _onArrival( SFXStreamPacket* const& packet ) override;
+      void _newReadItem( PacketReadItemRef& outRef, SFXStreamPacket* packet, U32 numElements ) override
       {
          if( !this->mNumRemainingSourceElements && mReadSilenceAtEnd )
             packet->mIsLast = false;
@@ -285,7 +285,7 @@ class SFXWrapAroundBuffer : public SFXBuffer
       U32 mBufferSize;
 
       // SFXBuffer.
-      virtual void _flush()
+      void _flush() override
       {
          mWriteOffset = 0;
       }
@@ -294,7 +294,7 @@ class SFXWrapAroundBuffer : public SFXBuffer
       virtual bool _copyData( U32 offset, const U8* data, U32 length ) = 0;
 
       // SFXBuffer.
-      virtual void write( SFXStreamPacket* const* packets, U32 num );
+      void write( SFXStreamPacket* const* packets, U32 num ) override;
 
       /// @return the sample position in the sound stream as determined from the
       ///   given buffer offset.
@@ -326,7 +326,7 @@ class SFXWrapAroundBuffer : public SFXBuffer
       SFXWrapAroundBuffer( SFXDescription* description )
          : Parent( description ), mBufferSize( 0 ), mWriteOffset(0) {}
          
-      virtual U32 getMemoryUsed() const { return mBufferSize; }
+      U32 getMemoryUsed() const override { return mBufferSize; }
 };
 
 //--------------------------------------------------------------------------

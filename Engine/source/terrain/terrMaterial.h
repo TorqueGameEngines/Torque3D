@@ -104,7 +104,7 @@ public:
    TerrainMaterial();
    virtual ~TerrainMaterial();
 
-   bool onAdd();
+   bool onAdd() override;
    static void initPersistFields();
 
    DECLARE_CONOBJECT( TerrainMaterial );

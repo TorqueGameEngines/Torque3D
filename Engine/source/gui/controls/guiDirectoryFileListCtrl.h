@@ -72,8 +72,8 @@ public:
    /// Get the currently selected file's name
    StringTableEntry getSelectedFileName();
 
-   virtual void onMouseDown(const GuiEvent &event);
-   virtual bool onWake();
+   void onMouseDown(const GuiEvent &event) override;
+   bool onWake() override;
 };
 
 #endif

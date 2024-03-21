@@ -123,21 +123,21 @@ public:
 
    // Sizing
    void              updateSize();
-   virtual void      parentResized(const RectI& oldParentRect, const RectI& newParentRect);
-   virtual bool      onWake();
+   void      parentResized(const RectI& oldParentRect, const RectI& newParentRect) override;
+   bool      onWake() override;
 
    // Rendering
-   virtual void      onRender( Point2I offset, const RectI &updateRect );
+   void      onRender( Point2I offset, const RectI &updateRect ) override;
    virtual void      onRenderItem(const RectI& itemRect, LBItem *item);
    void              drawBox( const Point2I &box, S32 size, ColorI &outlineColor, ColorI &boxColor );
    bool              renderTooltip( const Point2I &hoverPos, const Point2I& cursorPos, const char* tipText );
 	void					addFilteredItem( String item );
 	void					removeFilteredItem( String item );
    // Mouse/Key Events
-   virtual void      onMouseDown( const GuiEvent &event );
-   virtual void      onMouseDragged(const GuiEvent &event);
-   virtual void      onMouseUp( const GuiEvent& event );
-   virtual bool      onKeyDown( const GuiEvent &event );   
+   void      onMouseDown( const GuiEvent &event ) override;
+   void      onMouseDragged(const GuiEvent &event) override;
+   void      onMouseUp( const GuiEvent& event ) override;
+   bool      onKeyDown( const GuiEvent &event ) override;   
 
    // String Utility
    static U32        getStringElementCount( const char *string );

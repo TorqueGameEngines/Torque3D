@@ -84,16 +84,16 @@ public:
 
    DECLARE_CONOBJECT(RenderFormatToken);
    static void initPersistFields();
-   virtual bool onAdd();
-   virtual void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
 
    RenderFormatToken();
    virtual ~RenderFormatToken();
 
-   virtual void process(SceneRenderState *state, RenderPassStateBin *callingBin);
-   virtual void reset();
-   virtual void enable(bool enabled = true);
-   virtual bool isEnabled() const;
+   void process(SceneRenderState *state, RenderPassStateBin *callingBin) override;
+   void reset() override;
+   void enable(bool enabled = true) override;
+   bool isEnabled() const override;
 };
 
 #endif // _RENDERFORMATCHANGER_H_

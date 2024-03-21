@@ -294,7 +294,7 @@ struct EngineUnmarshallData< ConsoleValue >
 {
    ConsoleValue operator()( ConsoleValue ref ) const
    {
-      return std::move(ref);
+      return ref;
    }
 };
 

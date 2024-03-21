@@ -78,7 +78,7 @@ namespace ImageUtil
          : pSrc(srcRGBA),pDst(dst), width(w), height(h), format(compressFormat),quality(compressQuality) {}
 
    protected:
-      virtual void execute()
+      void execute() override
       {
          rawCompress(pSrc,pDst, width, height, format,quality);
       }

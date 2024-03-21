@@ -120,11 +120,11 @@ public:
    MeshRoadNodeEvent() { mNodeList = NULL; }
    virtual ~MeshRoadNodeEvent() { }
 
-   virtual void pack(NetConnection*, BitStream*);
-   virtual void unpack(NetConnection*, BitStream*);
+   void pack(NetConnection*, BitStream*) override;
+   void unpack(NetConnection*, BitStream*) override;
 
-   virtual void copyIntoList(NodeListManager::NodeList* copyInto);
-   virtual void padListToSize();
+   void copyIntoList(NodeListManager::NodeList* copyInto) override;
+   void padListToSize() override;
 
    DECLARE_CONOBJECT(MeshRoadNodeEvent);
 };
@@ -253,7 +253,7 @@ public:
    MeshRoadNodeListNotify( MeshRoad* road, U32 listId ) { mRoad = road; mListId = listId; }
    virtual ~MeshRoadNodeListNotify() { mRoad = NULL; }
 
-   virtual void sendNotification( NodeListManager::NodeList* list );
+   void sendNotification( NodeListManager::NodeList* list ) override;
 };
 
 void MeshRoadNodeListNotify::sendNotification( NodeListManager::NodeList* list )

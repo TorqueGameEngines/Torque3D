@@ -61,7 +61,7 @@ class ScenePolyhedralZone : public ScenePolyhedralObject< SceneSimpleZone >
       }
 
       // SceneSimpleZone.
-      virtual void _updateOrientedWorldBox();
+      void _updateOrientedWorldBox() override;
 
    public:
 
@@ -69,13 +69,13 @@ class ScenePolyhedralZone : public ScenePolyhedralObject< SceneSimpleZone >
       ScenePolyhedralZone( const PolyhedronType& polyhedron );
 
       // SimObject.
-      virtual bool onAdd();
+      bool onAdd() override;
 
       // SceneObject.
-      virtual void setTransform( const MatrixF& mat );
+      void setTransform( const MatrixF& mat ) override;
 
       // SceneZoneSpace.
-      virtual bool getOverlappingZones( const Box3F& aabb, U32* outZones, U32& outNumZones );
+      bool getOverlappingZones( const Box3F& aabb, U32* outZones, U32& outNumZones ) override;
 };
 
 #endif // !_SCENEPOLYHEDRALZONE_H_

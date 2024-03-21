@@ -66,11 +66,11 @@ public:
    static void initPersistFields();
 
    //Parental methods
-   bool onWake();
+   bool onWake() override;
 
-   void onMouseDown(const GuiEvent &event);
-   void onMouseDragged(const GuiEvent &event);
-   void onMouseUp(const GuiEvent &);
+   void onMouseDown(const GuiEvent &event) override;
+   void onMouseDragged(const GuiEvent &event) override;
+   void onMouseUp(const GuiEvent &) override;
 
    F32  getValue(S32 n);
    const Filter* get() { return &mFilter; }
@@ -78,8 +78,8 @@ public:
    S32  getNumControlPoints() {return mFilter.size(); }
    void identity();
 
-   void onPreRender();
-   void onRender(Point2I offset, const RectI &updateRect );
+   void onPreRender() override;
+   void onRender(Point2I offset, const RectI &updateRect ) override;
 };
 
 

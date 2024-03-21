@@ -95,21 +95,21 @@ public:
    void setCaption( const char* caption ) { mCaption = caption; }
    void setHasMenu( bool value );
 
-   bool resize(const Point2I &newPosition, const Point2I &newExtent);
-   void onRender(Point2I offset, const RectI &updateRect);
+   bool resize(const Point2I &newPosition, const Point2I &newExtent) override;
+   void onRender(Point2I offset, const RectI &updateRect) override;
 
-   bool onWake();
-   void onSleep();
+   bool onWake() override;
+   void onSleep() override;
 
-   virtual void addObject( SimObject *object );
-   virtual void removeObject( SimObject* object );
-   virtual bool acceptsAsChild( SimObject* object ) const;
+   void addObject( SimObject *object ) override;
+   void removeObject( SimObject* object ) override;
+   bool acceptsAsChild( SimObject* object ) const override;
 
-   void onMouseDown(const GuiEvent &event);
-   void onMouseUp(const GuiEvent &event);
-   void onMouseMove(const GuiEvent &event);
-   void onMouseLeave(const GuiEvent &event);
-   void onMouseEnter(const GuiEvent &event);
+   void onMouseDown(const GuiEvent &event) override;
+   void onMouseUp(const GuiEvent &event) override;
+   void onMouseMove(const GuiEvent &event) override;
+   void onMouseLeave(const GuiEvent &event) override;
+   void onMouseEnter(const GuiEvent &event) override;
 
    U32  getMenuBarID();
 

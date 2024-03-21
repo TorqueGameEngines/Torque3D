@@ -35,7 +35,7 @@ public:
    ~Win32DLibrary();
    bool open(const char* file);
    void close();
-   void *bind(const char *name);
+   void *bind(const char *name) override;
 };
 
 Win32DLibrary::Win32DLibrary()

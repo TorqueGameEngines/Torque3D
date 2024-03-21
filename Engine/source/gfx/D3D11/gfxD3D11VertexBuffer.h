@@ -49,13 +49,13 @@ public:
                         GFXBufferType bufferType );
    virtual ~GFXD3D11VertexBuffer();
 
-   void lock(U32 vertexStart, U32 vertexEnd, void **vertexPtr);
-   void unlock();
-   void prepare() {}
+   void lock(U32 vertexStart, U32 vertexEnd, void **vertexPtr) override;
+   void unlock() override;
+   void prepare() override {}
 
    // GFXResource interface
-   virtual void zombify();
-   virtual void resurrect();
+   void zombify() override;
+   void resurrect() override;
 };
 
 //-----------------------------------------------------------------------------

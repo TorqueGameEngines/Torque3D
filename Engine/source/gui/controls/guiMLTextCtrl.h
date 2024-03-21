@@ -167,8 +167,8 @@ class GuiMLTextCtrl : public GuiControl
    
    static void initPersistFields();
 
-   void setScriptValue(const char *value);
-   const char *getScriptValue();
+   void setScriptValue(const char *value) override;
+   const char *getScriptValue() override;
 
    static char *stripControlChars(const char *inString);
 
@@ -291,30 +291,30 @@ class GuiMLTextCtrl : public GuiControl
    S32 getTextPosition(const Point2I& localPosition);
 
 	// Gui control overrides
-   bool onWake();
-   void onSleep();
-   void onPreRender();
-   void onRender(Point2I offset, const RectI &updateRect);
+   bool onWake() override;
+   void onSleep() override;
+   void onPreRender() override;
+   void onRender(Point2I offset, const RectI &updateRect) override;
    void getCursorPositionAndColor(Point2I &cursorTop, Point2I &cursorBottom, ColorI &color);
-   void inspectPostApply();
-   void parentResized(const RectI& oldParentRect, const RectI& newParentRect);
-   bool onKeyDown(const GuiEvent& event);
-   void onMouseDown(const GuiEvent&);
-   void onMouseDragged(const GuiEvent&);
-   void onMouseUp(const GuiEvent&);
+   void inspectPostApply() override;
+   void parentResized(const RectI& oldParentRect, const RectI& newParentRect) override;
+   bool onKeyDown(const GuiEvent& event) override;
+   void onMouseDown(const GuiEvent&) override;
+   void onMouseDragged(const GuiEvent&) override;
+   void onMouseUp(const GuiEvent&) override;
 
-   virtual void getCursor(GuiCursor *&cursor, bool &showCursor, const GuiEvent &lastGuiEvent);
+   void getCursor(GuiCursor *&cursor, bool &showCursor, const GuiEvent &lastGuiEvent) override;
 
   public:
    // Gui control overrides
-   bool onAdd();
+   bool onAdd() override;
 
    void setSelectionStart( U32 start ) { clearSelection(); mSelectionStart = start; };
    void setSelectionEnd( U32 end ) { mSelectionEnd = end;};
    void setSelectionActive(bool active) { mSelectionActive = active; };
    S32 getCursorPosition()  { return( mCursorPosition ); }
 
-   virtual bool resize(const Point2I &newPosition, const Point2I &newExtent);
+   bool resize(const Point2I &newPosition, const Point2I &newExtent) override;
 
    bool isTypingOut();
 };

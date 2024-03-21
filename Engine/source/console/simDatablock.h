@@ -137,8 +137,8 @@ public:
    /// Get the modified key for this particular datablock.
    S32 getModifiedKey() const { return modifiedKey; }
 
-   bool onAdd();
-   virtual void onStaticModified(const char* slotName, const char*newValue = NULL);
+   bool onAdd() override;
+   void onStaticModified(const char* slotName, const char*newValue = NULL) override;
    //void setLastError(const char*);
    void assignId();
 
@@ -171,7 +171,7 @@ public:
    /// @param   flags   If SelectedOnly is passed here, then
    ///                  only objects marked as selected (using setSelected)
    ///                  will output themselves.
-   virtual void write(Stream &stream, U32 tabStop, U32 flags = 0);
+   void write(Stream &stream, U32 tabStop, U32 flags = 0) override;
 
    /// Used by the console system to automatically tell datablock classes apart
    /// from non-datablock classes.

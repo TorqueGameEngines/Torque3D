@@ -68,15 +68,15 @@ class Path : public GameBase
    S32 mMinDelay;
    S32 mMaxDelay;
   protected:
-   bool onAdd();
-   void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
 
   public:
    Path();
    ~Path();
 
-   void addObject(SimObject*);
-   void removeObject(SimObject*);
+   void addObject(SimObject*) override;
+   void removeObject(SimObject*) override;
 
    void sortMarkers();
    void updatePath();
@@ -130,16 +130,16 @@ class Marker : public SceneObject
 
    // Rendering
   protected:
-   void prepRenderImage(SceneRenderState *state);
+   void prepRenderImage(SceneRenderState *state) override;
    void renderObject(ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance* overrideMat);
 
   protected:
-   bool onAdd();
-   void onRemove();
-   void onGroupAdd();
+   bool onAdd() override;
+   void onRemove() override;
+   void onGroupAdd() override;
 
-   void onEditorEnable();
-   void onEditorDisable();
+   void onEditorEnable() override;
+   void onEditorDisable() override;
    
    static void initGFXResources();
 
@@ -154,10 +154,10 @@ class Marker : public SceneObject
    DECLARE_CONOBJECT(Marker);
    DECLARE_CATEGORY("Cinematic");
    static void initPersistFields();
-   void inspectPostApply();
+   void inspectPostApply() override;
 
-   U32  packUpdate  (NetConnection *conn, U32 mask, BitStream *stream);
-   void unpackUpdate(NetConnection *conn,           BitStream *stream);
+   U32  packUpdate  (NetConnection *conn, U32 mask, BitStream *stream) override;
+   void unpackUpdate(NetConnection *conn,           BitStream *stream) override;
 };
 
 typedef Marker::SmoothingType MarkerSmoothingType;

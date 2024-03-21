@@ -56,9 +56,9 @@ class SimPersistSet : public SimSet
       void resolvePIDs();
 
       // SimSet.
-      virtual void addObject( SimObject* );
-      virtual void write( Stream &stream, U32 tabStop, U32 flags = 0 );
-      virtual bool processArguments( S32 argc, ConsoleValue *argv );
+      void addObject( SimObject* ) override;
+      void write( Stream &stream, U32 tabStop, U32 flags = 0 ) override;
+      bool processArguments( S32 argc, ConsoleValue *argv ) override;
       
       DECLARE_CONOBJECT( SimPersistSet );
       DECLARE_CATEGORY( "Console" );

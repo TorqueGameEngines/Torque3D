@@ -96,13 +96,13 @@ public:
       mLastTime = mNextTime = Platform::getRealMilliseconds();
    }
    
-   const S32 getElapsedMs()
+   const S32 getElapsedMs() override
    {
       mNextTime = Platform::getRealMilliseconds();
       return (mNextTime - mLastTime);
    }
    
-   void reset()
+   void reset() override
    {
       mLastTime = mNextTime;
    }

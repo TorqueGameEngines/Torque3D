@@ -165,47 +165,47 @@ public:
    PrettyXMLPrinter(VfsXMLPrinter& innerPrinter, int depth = 0);
 
    /// Visit a document.
-   virtual bool VisitEnter(const tinyxml2::XMLDocument& doc)
+   bool VisitEnter(const tinyxml2::XMLDocument& doc) override
    {
       mProcessEntities = doc.ProcessEntities();
       return mInnerPrinter.VisitEnter(doc);
    }
 
    /// Visit a document.
-   virtual bool VisitExit(const tinyxml2::XMLDocument& doc)
+   bool VisitExit(const tinyxml2::XMLDocument& doc) override
    {
       return mInnerPrinter.VisitExit(doc);
    }
 
    /// Visit an element.
-   virtual bool VisitEnter(const tinyxml2::XMLElement& element, const tinyxml2::XMLAttribute* firstAttribute);
+   bool VisitEnter(const tinyxml2::XMLElement& element, const tinyxml2::XMLAttribute* firstAttribute) override;
    /// Visit an element.
-   virtual bool VisitExit(const tinyxml2::XMLElement& element)
+   bool VisitExit(const tinyxml2::XMLElement& element) override
    {
       mDepth--;
       return mInnerPrinter.VisitExit(element);
    }
 
    /// Visit a declaration.
-   virtual bool Visit(const tinyxml2::XMLDeclaration& declaration)
+   bool Visit(const tinyxml2::XMLDeclaration& declaration) override
    {
       return mInnerPrinter.Visit(declaration);
    }
 
    /// Visit a text node.
-   virtual bool Visit(const tinyxml2::XMLText& text)
+   bool Visit(const tinyxml2::XMLText& text) override
    {
       return mInnerPrinter.Visit(text);
    }
 
    /// Visit a comment node.
-   virtual bool Visit(const tinyxml2::XMLComment& comment)
+   bool Visit(const tinyxml2::XMLComment& comment) override
    {
       return mInnerPrinter.Visit(comment);
    }
 
    /// Visit an unknown node.
-   virtual bool Visit(const tinyxml2::XMLUnknown& unknown)
+   bool Visit(const tinyxml2::XMLUnknown& unknown) override
    {
       return mInnerPrinter.Visit(unknown);
    }

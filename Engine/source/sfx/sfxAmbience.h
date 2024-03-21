@@ -105,11 +105,11 @@ class SFXAmbience : public SimDataBlock
       static ChangeSignal& getChangeSignal() { return smChangeSignal; }
                   
       // SimDataBlock.
-      virtual bool onAdd();
-      virtual void packData( BitStream* stream );
-      virtual void unpackData( BitStream* stream );
-      virtual bool preload( bool server, String& errorStr );
-      virtual void inspectPostApply();
+      bool onAdd() override;
+      void packData( BitStream* stream ) override;
+      void unpackData( BitStream* stream ) override;
+      bool preload( bool server, String& errorStr ) override;
+      void inspectPostApply() override;
       
       static void initPersistFields();
    

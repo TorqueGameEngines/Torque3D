@@ -82,7 +82,7 @@ class AIClient : public AIConnection {
 		AIClient();
       ~AIClient();
 
-		U32 getMoveList( Move **movePtr,U32 *numMoves );
+		U32 getMoveList( Move **movePtr,U32 *numMoves ) override;
 
 		// ---Targeting and aiming sets/gets
 		void setTargetObject( ShapeBase *targetObject );

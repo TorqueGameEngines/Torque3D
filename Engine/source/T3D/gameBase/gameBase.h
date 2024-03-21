@@ -99,17 +99,17 @@ public:
    Signal<void(void)> mReloadSignal;
 
    // Triggers the reload signal.
-   void inspectPostApply();
+   void inspectPostApply() override;
 
-   bool onAdd();   
+   bool onAdd() override;   
 
    // The derived class should provide the following:
    DECLARE_CONOBJECT(GameBaseData);
    DECLARE_CATEGORY("Datablock");
    GameBaseData();
    static void initPersistFields();
-   bool preload(bool server, String &errorStr);
-   void unpackData(BitStream* stream);
+   bool preload(bool server, String &errorStr) override;
+   void unpackData(BitStream* stream) override;
 
    /// @name Callbacks
    /// @{
@@ -256,9 +256,9 @@ public:
    /// @name Inherited Functionality.
    /// @{
 
-   bool onAdd();
-   void onRemove();
-   void inspectPostApply();
+   bool onAdd() override;
+   void onRemove() override;
+   void inspectPostApply() override;
    static void initPersistFields();
    static void consoleInit();
 
@@ -308,7 +308,7 @@ public:
    /// @}
 
    // ProcessObject override
-   void processTick( const Move *move ); 
+   void processTick( const Move *move ) override; 
 
    /// @name GameBase NetFlags & Hifi-Net Interface   
    /// @{
@@ -359,10 +359,10 @@ public:
    /// @name Network
    /// @see NetObject, NetConnection
    /// @{
-   void interpolateTick(F32 dt);
-   F32  getUpdatePriority( CameraScopeQuery *focusObject, U32 updateMask, S32 updateSkips );
-   U32  packUpdate  ( NetConnection *conn, U32 mask, BitStream *stream );
-   void unpackUpdate( NetConnection *conn,           BitStream *stream );
+   void interpolateTick(F32 dt) override;
+   F32  getUpdatePriority( CameraScopeQuery *focusObject, U32 updateMask, S32 updateSkips ) override;
+   U32  packUpdate  ( NetConnection *conn, U32 mask, BitStream *stream ) override;
+   void unpackUpdate( NetConnection *conn,           BitStream *stream ) override;
 
    /// Write state information necessary to perform client side prediction of an object.
    ///
@@ -387,7 +387,7 @@ public:
    ///
    /// @see writePacketData
    /// @param   conn   Game connection
-   virtual U32 getPacketDataChecksum( GameConnection *conn );
+   U32 getPacketDataChecksum( GameConnection *conn ) override;
    ///@}
 
 
@@ -396,8 +396,8 @@ public:
 
 public:
 
-   virtual void onMount( SceneObject *obj, S32 node );   
-   virtual void onUnmount( SceneObject *obj,S32 node ); 
+   void onMount( SceneObject *obj, S32 node ) override;   
+   void onUnmount( SceneObject *obj,S32 node ) override; 
 
    /// @}
 
@@ -405,7 +405,7 @@ public:
    /// @{
 
    /// Returns the client controlling this object
-   GameConnection *getControllingClient() { return mControllingClient; }
+   GameConnection *getControllingClient() override { return mControllingClient; }
    const GameConnection *getControllingClient() const { return mControllingClient; }
 
    /// Returns the MoveList of the client controlling this object.
@@ -466,7 +466,7 @@ private:
    ///   
    void _onDatablockModified();
 protected:
-   void    onScopeIdChange() { setMaskBits(ScopeIdMask); }
+   void    onScopeIdChange() override { setMaskBits(ScopeIdMask); }
 };
 
 

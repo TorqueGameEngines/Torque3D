@@ -44,12 +44,12 @@ public:
   /*C*/         afxXM_BoxHeightOffsetData();
   /*C*/         afxXM_BoxHeightOffsetData(const afxXM_BoxHeightOffsetData&, bool = false);
   
-  void          packData(BitStream* stream);
-  void          unpackData(BitStream* stream);
+  void          packData(BitStream* stream) override;
+  void          unpackData(BitStream* stream) override;
   static void   initPersistFields();
   
 #if defined(AFX_VERSION)
-  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server);
+  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server) override;
 #else
   afxXM_Base*   create(afxEffectWrapper* fx);
 #endif
@@ -67,7 +67,7 @@ class afxXM_BoxHeightOffset : public afxXM_Base
 public:
   /*C*/         afxXM_BoxHeightOffset(afxXM_BoxHeightOffsetData*, afxEffectWrapper*);
 
-  virtual void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params);
+  void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

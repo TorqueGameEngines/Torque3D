@@ -45,7 +45,7 @@ public:
    ClientProcessList();
    
    // ProcessList
-   void addObject( ProcessObject *pobj );  
+   void addObject( ProcessObject *pobj ) override;  
    
    /// Called after a correction packet is received from the server.
    /// If the control object was corrected it will now play back any moves
@@ -57,7 +57,7 @@ public:
 protected:   
    
    // ProcessList
-   void onPreTickObject( ProcessObject *pobj );
+   void onPreTickObject( ProcessObject *pobj ) override;
 
    /// Returns true if backlogged.
    bool doBacklogged( SimTime timeDelta );
@@ -77,15 +77,15 @@ public:
    ServerProcessList();
    
    // ProcessList
-   void addObject( ProcessObject *pobj );
+   void addObject( ProcessObject *pobj ) override;
 
    static ServerProcessList* get() { return smServerProcessList; }
 
 protected:
 
    // ProcessList
-   void onPreTickObject( ProcessObject *pobj );
-   void advanceObjects();
+   void onPreTickObject( ProcessObject *pobj ) override;
+   void advanceObjects() override;
 
 protected:
 

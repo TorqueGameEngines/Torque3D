@@ -98,12 +98,12 @@ public:
 
    // SimObject
    static void initPersistFields();
-   virtual void inspectPostApply();
+   void inspectPostApply() override;
 
    // SimDataBlock
-   virtual bool preload( bool server, String &errorStr );
-   virtual void packData( BitStream *stream );
-   virtual void unpackData( BitStream *stream );
+   bool preload( bool server, String &errorStr ) override;
+   void packData( BitStream *stream ) override;
+   void unpackData( BitStream *stream ) override;
 
    /// Animates parameters on the passed Light's LightInfo object.
    virtual void animate( LightInfo *light, LightAnimState *state );

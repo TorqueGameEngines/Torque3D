@@ -32,22 +32,22 @@ public:
    GFXGLWindowTarget(PlatformWindow *win, GFXDevice *d);
    ~GFXGLWindowTarget();
 
-   const Point2I getSize() 
+   const Point2I getSize() override 
    { 
       return mWindow->getClientExtent();
    }
-   virtual GFXFormat getFormat()
+   GFXFormat getFormat() override
    {
       // TODO: Fix me!
       return GFXFormatR8G8B8A8_SRGB;
    }
    void makeActive();
-   virtual bool present();
-   virtual void resetMode();
-   virtual void zombify() { }
-   virtual void resurrect() { }
+   bool present() override;
+   void resetMode() override;
+   void zombify() override { }
+   void resurrect() override { }
    
-   virtual void resolveTo(GFXTextureObject* obj);
+   void resolveTo(GFXTextureObject* obj) override;
    
    void _onAppSignal(WindowId wnd, S32 event);
 

@@ -33,9 +33,9 @@ class afxAnimLockData : public GameBaseData
 public:
   /*C*/                 afxAnimLockData();
 
-  virtual bool          onAdd();
-  virtual void          packData(BitStream*);
-  virtual void          unpackData(BitStream*);
+  bool          onAdd() override;
+  void          packData(BitStream*) override;
+  void          unpackData(BitStream*) override;
 
   static void           initPersistFields();
 

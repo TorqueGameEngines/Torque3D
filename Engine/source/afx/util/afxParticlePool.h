@@ -47,10 +47,10 @@ public:
   /*C*/           afxParticlePoolData(const afxParticlePoolData&, bool = false);
   /*D*/           ~afxParticlePoolData();
 
-  virtual void    packData(BitStream*);
-  virtual void    unpackData(BitStream*);
+  void    packData(BitStream*) override;
+  void    unpackData(BitStream*) override;
 
-  virtual bool    allowSubstitutions() const { return true; }
+  bool    allowSubstitutions() const override { return true; }
 
   static void     initPersistFields();
 
@@ -75,7 +75,7 @@ class afxParticlePool : public GameBase
   class ObjectDeleteEvent : public SimEvent
   {
   public:
-    void process(SimObject *obj) { if (obj) obj->deleteObject(); }
+    void process(SimObject *obj) override { if (obj) obj->deleteObject(); }
   };
 
   struct SortParticlePool
@@ -102,14 +102,14 @@ private:
   GFXVertexBufferHandle<GFXVertexPCT> mVertBuff2;
 
 protected:
-  virtual void    prepRenderImage(SceneRenderState*);
+  void    prepRenderImage(SceneRenderState*) override;
 
   void            pool_prepBatchRender(RenderPassManager*, const Point3F &camPos, const LinearColorF &ambientColor);
   void            pool_renderObject_Normal(RenderPassManager*, const Point3F &camPos, const LinearColorF &ambientColor);
   void            pool_renderObject_TwoPass(RenderPassManager*, const Point3F &camPos, const LinearColorF &ambientColor);
 
-  virtual bool    onAdd();
-  virtual void    onRemove();
+  bool    onAdd() override;
+  void    onRemove() override;
 
   void            renderBillboardParticle_blend(Particle&, const Point3F* basePnts, const MatrixF& camView, const F32 spinFactor,
                                                 const F32 blend_factor, ParticleEmitter*);
@@ -120,7 +120,7 @@ public:
   /*C*/           afxParticlePool();
   /*D*/           ~afxParticlePool();
 
-  virtual bool    onNewDataBlock(GameBaseData* dptr, bool reload);
+  bool    onNewDataBlock(GameBaseData* dptr, bool reload) override;
 
   void            addParticleEmitter(ParticleEmitter*);
   void            removeParticleEmitter(ParticleEmitter*);

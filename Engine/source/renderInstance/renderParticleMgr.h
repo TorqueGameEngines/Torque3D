@@ -50,10 +50,10 @@ public:
    virtual ~RenderParticleMgr();
 
    // RenderBinManager
-   void render(SceneRenderState * state);
-   void sort();
-   void clear();
-   void addElement( RenderInst *inst );
+   void render(SceneRenderState * state) override;
+   void sort() override;
+   void clear() override;
+   void addElement( RenderInst *inst ) override;
 
    // ConsoleObject
    DECLARE_CONOBJECT(RenderParticleMgr);
@@ -62,12 +62,12 @@ public:
    const static U8 ParticleSystemStencilMask = 0x80; // We are using the top bit
    const static U32 OffscreenPoolSize = 5;
 
-   virtual void setTargetChainLength(const U32 chainLength);
+   void setTargetChainLength(const U32 chainLength) override;
 
 protected:
 
    // Override
-   virtual bool _handleGFXEvent(GFXDevice::GFXDeviceEventType event);
+   bool _handleGFXEvent(GFXDevice::GFXDeviceEventType event) override;
 
    bool _initShader();
    void _initGFXResources();

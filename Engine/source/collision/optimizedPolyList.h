@@ -123,21 +123,21 @@ class OptimizedPolyList : public AbstractPolyList
    void clear();
 
    // Virtual methods
-   U32  addPoint(const Point3F& p);
-   U32  addPlane(const PlaneF& plane);
+   U32  addPoint(const Point3F& p) override;
+   U32  addPlane(const PlaneF& plane) override;
 
-   void begin(BaseMatInstance* material, U32 surfaceKey);
+   void begin(BaseMatInstance* material, U32 surfaceKey) override;
    void begin(BaseMatInstance* material, U32 surfaceKey, PolyType type);
-   void plane(U32 v1, U32 v2, U32 v3);
-   void plane(const PlaneF& p);
-   void plane(const U32 index);
-   void vertex(U32 vi);
+   void plane(U32 v1, U32 v2, U32 v3) override;
+   void plane(const PlaneF& p) override;
+   void plane(const U32 index) override;
+   void vertex(U32 vi) override;
    void vertex(const Point3F& p);
    void vertex(const Point3F& p,
                const Point3F& normal,
                const Point2F& uv0 = Point2F(0.0f, 0.0f),
                const Point2F& uv1 = Point2F(0.0f, 0.0f));
-   void end();
+   void end() override;
 
    U32 insertPoint(const Point3F& point);
    U32 insertNormal(const Point3F& normal);
@@ -151,12 +151,12 @@ class OptimizedPolyList : public AbstractPolyList
                     const Point2F& uv0    = Point2F(0.0f, 0.0f),
                     const Point2F& uv1    = Point2F(0.0f, 0.0f));
 
-   bool isEmpty() const;
+   bool isEmpty() const override;
 
    Polyhedron toPolyhedron() const;
 
   protected:
-   const PlaneF& getIndexedPlane(const U32 index);
+   const PlaneF& getIndexedPlane(const U32 index) override;
 };
 
 #endif  // _OPTIMIZEDPOLYLIST_H_

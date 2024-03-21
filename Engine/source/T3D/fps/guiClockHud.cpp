@@ -55,7 +55,7 @@ public:
    void setReverseTime(F32 reverseTime);
    F32  getTime();
 
-   void onRender( Point2I, const RectI &);
+   void onRender( Point2I, const RectI &) override;
    static void initPersistFields();
    DECLARE_CONOBJECT( GuiClockHud );
    DECLARE_CATEGORY( "Gui Game" );

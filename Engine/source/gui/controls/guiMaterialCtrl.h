@@ -53,18 +53,18 @@ public:
 
    // ConsoleObject
    static void initPersistFields();
-   void inspectPostApply();
+   void inspectPostApply() override;
    
    DECLARE_CONOBJECT(GuiMaterialCtrl);
    DECLARE_CATEGORY( "Gui Editor" );
 
    // GuiControl
-   bool onWake();
-   void onSleep();
+   bool onWake() override;
+   void onSleep() override;
 
    bool setMaterial( const String &materialName );
 
-   void onRender( Point2I offset, const RectI &updateRect );
+   void onRender( Point2I offset, const RectI &updateRect ) override;
 };
 
 #endif // _GUIMATERIALCTRL_H_

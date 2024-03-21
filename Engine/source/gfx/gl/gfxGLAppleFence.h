@@ -33,14 +33,14 @@ public:
    virtual ~GFXGLAppleFence();
    
    // GFXFence interface
-   virtual void issue();
-   virtual FenceStatus getStatus() const;
-   virtual void block();
+   void issue() override;
+   FenceStatus getStatus() const override;
+   void block() override;
    
    // GFXResource interface
-   virtual void zombify();
-   virtual void resurrect();
-   virtual const String describeSelf() const;
+   void zombify() override;
+   void resurrect() override;
+   const String describeSelf() const override;
    
 private:
    GLuint mHandle;

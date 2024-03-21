@@ -118,10 +118,10 @@ public:
    NodeListEvent() { mId = 0; mNodeList = NULL; mTotalNodes = mLocalListStart = 0; }
    virtual ~NodeListEvent();
 
-   virtual void pack(NetConnection*, BitStream*);
-   virtual void write(NetConnection*, BitStream*);
-   virtual void unpack(NetConnection*, BitStream*);
-   virtual void process(NetConnection*);
+   void pack(NetConnection*, BitStream*) override;
+   void write(NetConnection*, BitStream*) override;
+   void unpack(NetConnection*, BitStream*) override;
+   void process(NetConnection*) override;
    virtual void mergeLists(NodeListManager::NodeList* oldList);
 
    virtual void copyIntoList(NodeListManager::NodeList* copyInto) { }

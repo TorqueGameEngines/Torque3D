@@ -99,19 +99,19 @@ public:
 
    static void initPersistFields();
 
-   bool onAdd();
-   void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
 
-   void onEditorEnable();
-   void onEditorDisable();
-   void inspectPostApply();
+   void onEditorEnable() override;
+   void onEditorDisable() override;
+   void inspectPostApply() override;
 
-   void onDeleteNotify(SimObject *object);
+   void onDeleteNotify(SimObject *object) override;
 
-   U32 packUpdate(NetConnection *conn, U32 mask, BitStream *stream);
-   void unpackUpdate(NetConnection *conn, BitStream *stream);
+   U32 packUpdate(NetConnection *conn, U32 mask, BitStream *stream) override;
+   void unpackUpdate(NetConnection *conn, BitStream *stream) override;
 
-   void prepRenderImage(SceneRenderState *state);
+   void prepRenderImage(SceneRenderState *state) override;
    void renderSimple(ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *overrideMat);
 
    DECLARE_CONOBJECT(NavPath);
@@ -121,7 +121,7 @@ public:
 
    /// @name ProcessObject
    /// @{
-   void processTick(const Move *move);
+   void processTick(const Move *move) override;
    /// @}
 
    NavPath();

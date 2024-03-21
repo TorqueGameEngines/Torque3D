@@ -45,8 +45,8 @@ public:
    ForestUndoAction( const Resource<ForestData> &data, ForestEditorCtrl *editor, const char *description );   
 
    // UndoAction
-   virtual void undo() {}
-   virtual void redo() {}
+   void undo() override {}
+   void redo() override {}
 
 protected:
 
@@ -72,8 +72,8 @@ public:
                  F32 scale );
 
    // UndoAction
-   virtual void undo();
-   virtual void redo();
+   void undo() override;
+   void redo() override;
 };
 
 
@@ -91,8 +91,8 @@ public:
    void removeItem( const Vector<ForestItem> &itemList );
 
    // UndoAction
-   virtual void undo();
-   virtual void redo();
+   void undo() override;
+   void redo() override;
 };
 
 
@@ -107,8 +107,8 @@ public:
 
    void saveItem( const ForestItem &item );
 
-   virtual void undo() { _swapState(); }
-   virtual void redo() { _swapState(); }
+   void undo() override { _swapState(); }
+   void redo() override { _swapState(); }
 
 protected:
 

@@ -53,7 +53,7 @@ public:
    ColladaAppMaterial(const domMaterial* pMat);
    ~ColladaAppMaterial() { delete effectExt; }
 
-   String getName() const { return name; }
+   String getName() const override { return name; }
 
    void resolveFloat(const domCommon_float_or_param_type* value, F32* dst);
    void resolveColor(const domCommon_color_or_texture_type* value, LinearColorF* dst);

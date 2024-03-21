@@ -43,15 +43,15 @@ public:
   /*C*/         afxXM_MountedImageNodeData();
   /*C*/         afxXM_MountedImageNodeData(const afxXM_MountedImageNodeData&, bool = false);
 
-  void          packData(BitStream* stream);
-  void          unpackData(BitStream* stream);
-  bool          onAdd();
+  void          packData(BitStream* stream) override;
+  void          unpackData(BitStream* stream) override;
+  bool          onAdd() override;
 
-  virtual bool  allowSubstitutions() const { return true; }
+  bool  allowSubstitutions() const override { return true; }
 
   static void   initPersistFields();
 
-  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server);
+  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server) override;
 
   DECLARE_CONOBJECT(afxXM_MountedImageNodeData);
 };
@@ -73,8 +73,8 @@ class afxXM_MountedImageNode : public afxXM_Base
 public:
   /*C*/         afxXM_MountedImageNode(afxXM_MountedImageNodeData*, afxEffectWrapper*);
 
-  virtual void  start(F32 timestamp);
-  virtual void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params);
+  void  start(F32 timestamp) override;
+  void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//

@@ -94,15 +94,15 @@ public:
    //****************************************************************************
    // Accu Texture
    //****************************************************************************
-   virtual void processVert(Vector<ShaderComponent*>& componentList,
-      const MaterialFeatureData& fd);
+   void processVert(Vector<ShaderComponent*>& componentList,
+      const MaterialFeatureData& fd) override;
 
-   virtual void processPix(Vector<ShaderComponent*>& componentList,
-      const MaterialFeatureData& fd);
+   void processPix(Vector<ShaderComponent*>& componentList,
+      const MaterialFeatureData& fd) override;
 
-   virtual Material::BlendOp getBlendOp() { return Material::LerpAlpha; }
+   Material::BlendOp getBlendOp() override { return Material::LerpAlpha; }
 
-   virtual Resources getResources(const MaterialFeatureData& fd)
+   Resources getResources(const MaterialFeatureData& fd) override
    {
       Resources res;
       res.numTex = 1;
@@ -110,12 +110,12 @@ public:
       return res;
    }
 
-   virtual void setTexData(Material::StageData& stageDat,
+   void setTexData(Material::StageData& stageDat,
       const MaterialFeatureData& fd,
       RenderPassData& passData,
-      U32& texIndex);
+      U32& texIndex) override;
 
-   virtual String getName()
+   String getName() override
    {
       return mOwner->getName();
    }

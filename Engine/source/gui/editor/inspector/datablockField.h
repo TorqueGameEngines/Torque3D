@@ -44,9 +44,9 @@ class GuiInspectorDatablockField : public GuiInspectorTypeMenuBase
       RectI mBrowseRect;
 
       virtual SimSet* _getDatablockSet() const { return Sim::getDataBlockSet(); }
-      virtual void _populateMenu( GuiPopUpMenuCtrlEx* menu );
-      virtual GuiControl* constructEditControl();
-      virtual bool updateRects();
+      void _populateMenu( GuiPopUpMenuCtrlEx* menu ) override;
+      GuiControl* constructEditControl() override;
+      bool updateRects() override;
       
    public:
       
@@ -69,7 +69,7 @@ class GuiInspectorTypeSFXDescriptionName : public GuiInspectorDatablockField
       
    protected:
    
-      virtual SimSet* _getDatablockSet() const { return Sim::getSFXDescriptionSet(); }
+      SimSet* _getDatablockSet() const override { return Sim::getSFXDescriptionSet(); }
    
    public:
       
@@ -89,7 +89,7 @@ class GuiInspectorTypeSFXTrackName : public GuiInspectorDatablockField
       
    protected:
    
-      virtual SimSet* _getDatablockSet() const { return Sim::getSFXTrackSet(); }
+      SimSet* _getDatablockSet() const override { return Sim::getSFXTrackSet(); }
       
    public:
 
@@ -109,7 +109,7 @@ class GuiInspectorTypeSFXEnvironmentName : public GuiInspectorDatablockField
       
    protected:
    
-      virtual SimSet* _getDatablockSet() const { return Sim::getSFXEnvironmentSet(); }
+      SimSet* _getDatablockSet() const override { return Sim::getSFXEnvironmentSet(); }
    
    public:
       DECLARE_CONOBJECT(GuiInspectorTypeSFXEnvironmentName);
@@ -128,7 +128,7 @@ class GuiInspectorTypeSFXAmbienceName : public GuiInspectorDatablockField
       
    protected:
    
-      virtual SimSet* _getDatablockSet() const { return Sim::getSFXAmbienceSet(); }
+      SimSet* _getDatablockSet() const override { return Sim::getSFXAmbienceSet(); }
    
    public:
    

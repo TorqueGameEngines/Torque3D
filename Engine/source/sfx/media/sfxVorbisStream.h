@@ -60,8 +60,8 @@ class SFXVorbisStream : public SFXFileStream,
       static long _tell_func( void *datasource );
 
       // SFXStream
-      virtual bool _readHeader();
-      virtual void _close();
+      bool _readHeader() override;
+      void _close() override;
 
    public:
 
@@ -92,10 +92,10 @@ class SFXVorbisStream : public SFXFileStream,
                   S32 *bitstream );
 
       // SFXStream
-      virtual void reset();
-      virtual U32 read( U8 *buffer, U32 length );
-      virtual bool isEOS() const;
-      virtual SFXStream* clone() const
+      void reset() override;
+      U32 read( U8 *buffer, U32 length ) override;
+      bool isEOS() const override;
+      SFXStream* clone() const override
       {
          SFXVorbisStream* stream = new SFXVorbisStream( *this );
          if( !stream->mVF )
@@ -104,8 +104,8 @@ class SFXVorbisStream : public SFXFileStream,
       }
 
       // IPositionable
-      virtual U32 getPosition() const;
-      virtual void setPosition( U32 offset );
+      U32 getPosition() const override;
+      void setPosition( U32 offset ) override;
 };
 
 #endif // TORQUE_OGGVORBIS

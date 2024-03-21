@@ -56,19 +56,19 @@ class BasicLightManager : public LightManager
 public:
 
    // LightManager
-   virtual bool isCompatible() const;
-   virtual void activate( SceneManager *sceneManager );
-   virtual void deactivate();
-   virtual void setLightInfo(ProcessedMaterial* pmat, const Material* mat, const SceneData& sgData, const SceneRenderState *state, U32 pass, GFXShaderConstBuffer* shaderConsts);
-   virtual bool setTextureStage(const SceneData& sgData, const U32 currTexFlag, const U32 textureSlot, GFXShaderConstBuffer* shaderConsts, ShaderConstHandles* handles) { return false; }
+   bool isCompatible() const override;
+   void activate( SceneManager *sceneManager ) override;
+   void deactivate() override;
+   void setLightInfo(ProcessedMaterial* pmat, const Material* mat, const SceneData& sgData, const SceneRenderState *state, U32 pass, GFXShaderConstBuffer* shaderConsts) override;
+   bool setTextureStage(const SceneData& sgData, const U32 currTexFlag, const U32 textureSlot, GFXShaderConstBuffer* shaderConsts, ShaderConstHandles* handles) override { return false; }
 
    static F32 getShadowFilterDistance() { return smProjectedShadowFilterDistance; }
 
 protected:
 
    // LightManager
-   virtual void _addLightInfoEx( LightInfo *lightInfo ) { }
-   virtual void _initLightFields() { }
+   void _addLightInfoEx( LightInfo *lightInfo ) override { }
+   void _initLightFields() override { }
 
    void _onPreRender( SceneManager *sceneManger, const SceneRenderState *state );
 

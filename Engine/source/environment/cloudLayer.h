@@ -71,17 +71,17 @@ public:
    DECLARE_CATEGORY("Environment \t Weather");
 
    // ConsoleObject
-   virtual bool onAdd();
-   virtual void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
    static void initPersistFields();
-   virtual void inspectPostApply();   
+   void inspectPostApply() override;   
 
    // NetObject
-   virtual U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream );
-   virtual void unpackUpdate( NetConnection *conn, BitStream *stream );
+   U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream ) override;
+   void unpackUpdate( NetConnection *conn, BitStream *stream ) override;
 
    // SceneObject
-   void prepRenderImage( SceneRenderState *state );
+   void prepRenderImage( SceneRenderState *state ) override;
    void renderObject( ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *mi );
 
    void onImageChanged() {}

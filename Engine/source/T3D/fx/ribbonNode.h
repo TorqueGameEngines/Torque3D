@@ -63,10 +63,10 @@ class RibbonNode : public GameBase
    RibbonNodeData* mDataBlock;
 
 protected:
-   bool onAdd();
-   void onRemove();
-   bool onNewDataBlock( GameBaseData *dptr, bool reload );
-   void inspectPostApply();
+   bool onAdd() override;
+   void onRemove() override;
+   bool onNewDataBlock( GameBaseData *dptr, bool reload ) override;
+   void inspectPostApply() override;
 
    RibbonData* mRibbonDatablock;
    S32 mRibbonDatablockId;
@@ -83,15 +83,15 @@ public:
 
    // Time/Move Management
 
-   void processTick(const Move* move);
-   void advanceTime(F32 dt);
+   void processTick(const Move* move) override;
+   void advanceTime(F32 dt) override;
 
    DECLARE_CONOBJECT(RibbonNode);
    DECLARE_CATEGORY("Environment \t FX");
    static void initPersistFields();
 
-   U32  packUpdate  (NetConnection *conn, U32 mask, BitStream* stream);
-   void unpackUpdate(NetConnection *conn,           BitStream* stream);
+   U32  packUpdate  (NetConnection *conn, U32 mask, BitStream* stream) override;
+   void unpackUpdate(NetConnection *conn,           BitStream* stream) override;
 
    inline bool getActive( void )        { return mActive;                             };
    inline void setActive( bool active ) { mActive = active; setMaskBits( StateMask ); };

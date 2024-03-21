@@ -227,10 +227,10 @@ class SFXBuffer :    public StrongRefBase,
       void load();
 
       // IPolled.
-      virtual bool update();
+      bool update() override;
 
       // WeakRefBase.
-      virtual void destroySelf();
+      void destroySelf() override;
 };
 
 #endif // _SFXBUFFER_H_

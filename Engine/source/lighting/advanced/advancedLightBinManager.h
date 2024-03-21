@@ -72,8 +72,8 @@ protected:
 public:
    LightMatInstance(Material &mat) : Parent(mat), mLightMapParamsSC(NULL), mInternalPass(false),  mSpecialLight(false) {}
 
-   virtual bool init( const FeatureSet &features, const GFXVertexFormat *vertexFormat );
-   virtual bool setupPass( SceneRenderState *state, const SceneData &sgData );
+   bool init( const FeatureSet &features, const GFXVertexFormat *vertexFormat ) override;
+   bool setupPass( SceneRenderState *state, const SceneData &sgData ) override;
 
    bool mSpecialLight;
 };
@@ -127,9 +127,9 @@ public:
    static void consoleInit();
 
    // RenderBinManager
-   virtual void render(SceneRenderState *);
-   virtual void clear() {}
-   virtual void sort() {}
+   void render(SceneRenderState *) override;
+   void clear() override {}
+   void sort() override {}
 
    // Add a light to the bins
    void addLight( LightInfo *light );

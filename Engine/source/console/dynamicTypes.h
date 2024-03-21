@@ -174,7 +174,7 @@ class EnumConsoleBaseType : public ConsoleBaseType
          
    public:
 
-      virtual const char* getData(void *dptr, const EnumTable *tbl, BitSet32 flag)
+      const char* getData(void *dptr, const EnumTable *tbl, BitSet32 flag) override
       {
          S32 dptrVal = *( S32* ) dptr;
          if( !tbl ) tbl = getEnumTable();
@@ -184,7 +184,7 @@ class EnumConsoleBaseType : public ConsoleBaseType
                return ( *tbl )[ i ].mName;
          return "";
       }
-      virtual void setData(void *dptr, S32 argc, const char **argv, const EnumTable *tbl, BitSet32 flag)
+      void setData(void *dptr, S32 argc, const char **argv, const EnumTable *tbl, BitSet32 flag) override
       {
          if( argc != 1 ) return;
          if( !tbl ) tbl = getEnumTable();
@@ -214,14 +214,14 @@ class BitfieldConsoleBaseType : public ConsoleBaseType
          
    public:
 
-      virtual const char* getData( void* dptr, const EnumTable*, BitSet32 )
+      const char* getData( void* dptr, const EnumTable*, BitSet32 ) override
       {
          static const U32 bufSize = 256;
          char* returnBuffer = Con::getReturnBuffer(bufSize);
          dSprintf(returnBuffer, bufSize, "0x%08x", *((S32 *) dptr) );
          return returnBuffer;
       }
-      virtual void setData( void* dptr, S32 argc, const char** argv, const EnumTable*, BitSet32 )
+      void setData( void* dptr, S32 argc, const char** argv, const EnumTable*, BitSet32 ) override
       {
          if( argc != 1 ) return; \
          *((S32 *) dptr) = dAtoui(argv[0],0); \

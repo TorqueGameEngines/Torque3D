@@ -58,10 +58,10 @@ struct TriggerData: public GameBaseData {
    DECLARE_CALLBACK( void, onTickTrigger, ( Trigger* trigger ) );
    DECLARE_CALLBACK( void, onLeaveTrigger, ( Trigger* trigger, GameBase* obj ) );
 
-   bool onAdd();
+   bool onAdd() override;
    static void initPersistFields();
-   virtual void packData  (BitStream* stream);
-   virtual void unpackData(BitStream* stream);
+   void packData  (BitStream* stream) override;
+   void unpackData(BitStream* stream) override;
 };
 
 class Trigger : public GameBase
@@ -94,7 +94,7 @@ class Trigger : public GameBase
 
    static const U32 CMD_SIZE = 1024;
 
-   void onUnmount(SceneObject* obj,S32 node);
+   void onUnmount(SceneObject* obj,S32 node) override;
 
   protected:
    
@@ -113,10 +113,10 @@ class Trigger : public GameBase
    bool testTrippable();
    bool testCondition();
    bool evalCmD(String*);
-   void processTick(const Move *move);
-   void interpolateTick(F32 delta);
+   void processTick(const Move *move) override;
+   void interpolateTick(F32 delta) override;
 
-   void buildConvex(const Box3F& box, Convex* convex);
+   void buildConvex(const Box3F& box, Convex* convex) override;
 
    static bool setEnterCmd(void *object, const char *index, const char *data);
    static bool setLeaveCmd(void *object, const char *index, const char *data);
@@ -135,21 +135,21 @@ class Trigger : public GameBase
    static void consoleInit();
    static void initPersistFields();
    void testObjects();
-   bool onAdd();
-   void onRemove();
-   void onDeleteNotify(SimObject*);
-   void inspectPostApply();
+   bool onAdd() override;
+   void onRemove() override;
+   void onDeleteNotify(SimObject*) override;
+   void inspectPostApply() override;
 
    // NetObject
-   U32  packUpdate  (NetConnection *conn, U32 mask, BitStream* stream);
-   void unpackUpdate(NetConnection *conn,           BitStream* stream);
+   U32  packUpdate  (NetConnection *conn, U32 mask, BitStream* stream) override;
+   void unpackUpdate(NetConnection *conn,           BitStream* stream) override;
 
    // SceneObject
-   void setTransform(const MatrixF &mat);
-   void prepRenderImage( SceneRenderState* state );
+   void setTransform(const MatrixF &mat) override;
+   void prepRenderImage( SceneRenderState* state ) override;
 
    // GameBase
-   bool onNewDataBlock( GameBaseData *dptr, bool reload );
+   bool onNewDataBlock( GameBaseData *dptr, bool reload ) override;
 
    // Trigger
    void setTriggerPolyhedron(const Polyhedron&);
@@ -161,7 +161,7 @@ class Trigger : public GameBase
 
    void renderObject( ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *overrideMat );
 
-   bool castRay(const Point3F &start, const Point3F &end, RayInfo* info);
+   bool castRay(const Point3F &start, const Point3F &end, RayInfo* info) override;
 };
 
 inline U32 Trigger::getNumTriggeringObjects() const

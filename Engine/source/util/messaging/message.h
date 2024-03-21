@@ -109,8 +109,8 @@ public:
    //-----------------------------------------------------------------------------
    static SimObjectId getNextMessageID();
 
-   virtual bool onAdd();
-   virtual void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
 
    //-----------------------------------------------------------------------------
    /// @brief Get the type of the message

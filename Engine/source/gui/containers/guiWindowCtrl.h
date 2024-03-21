@@ -214,26 +214,26 @@ class GuiWindowCtrl : public GuiContainer
 
       bool isMinimized(S32 &index);
 
-      virtual void getCursor(GuiCursor *&cursor, bool &showCursor, const GuiEvent &lastGuiEvent);
+      void getCursor(GuiCursor *&cursor, bool &showCursor, const GuiEvent &lastGuiEvent) override;
 
       void setFont(S32 fntTag);
 
       void setCloseCommand(const char *newCmd);
 
-      GuiControl* findHitControl (const Point2I &pt, S32 initialLayer = -1 );
+      GuiControl* findHitControl (const Point2I &pt, S32 initialLayer = -1 ) override;
       S32 findHitEdges( const Point2I &globalPoint );
       void getSnappableWindows( Vector<GuiWindowCtrl*> &windowOutVector, bool canCollapse = false );
-      bool resize( const Point2I &newPosition, const Point2I &newExtent );
+      bool resize( const Point2I &newPosition, const Point2I &newExtent ) override;
 
       //only cycle tabs through the current window, so overwrite the method
-      GuiControl* findNextTabable(GuiControl *curResponder, bool firstCall = true);
-      GuiControl* findPrevTabable(GuiControl *curResponder, bool firstCall = true);
+      GuiControl* findNextTabable(GuiControl *curResponder, bool firstCall = true) override;
+      GuiControl* findPrevTabable(GuiControl *curResponder, bool firstCall = true) override;
 
       S32 getTabIndex(void) { return mTabIndex; }
       void selectWindow(void);
 
       ////
-      const RectI getClientRect();
+      const RectI getClientRect() override;
 
       /// Mutators for window properties from code.
       /// Using setDataField is a bit overkill.
@@ -271,15 +271,15 @@ class GuiWindowCtrl : public GuiContainer
       /// @}
 
       // GuiContainer.
-      virtual bool onWake();
-      virtual void onSleep();
-		virtual void parentResized(const RectI &oldParentRect, const RectI &newParentRect);
-      virtual void onMouseDown(const GuiEvent &event);
-      virtual void onMouseDragged(const GuiEvent &event);
-      virtual void onMouseUp(const GuiEvent &event);
-		virtual void onMouseMove(const GuiEvent &event);
-      virtual bool onKeyDown(const GuiEvent &event);
-      virtual void onRender(Point2I offset, const RectI &updateRect);
+      bool onWake() override;
+      void onSleep() override;
+		void parentResized(const RectI &oldParentRect, const RectI &newParentRect) override;
+      void onMouseDown(const GuiEvent &event) override;
+      void onMouseDragged(const GuiEvent &event) override;
+      void onMouseUp(const GuiEvent &event) override;
+		void onMouseMove(const GuiEvent &event) override;
+      bool onKeyDown(const GuiEvent &event) override;
+      void onRender(Point2I offset, const RectI &updateRect) override;
 
       DECLARE_CONOBJECT( GuiWindowCtrl );
       DECLARE_DESCRIPTION( "A control that shows an independent window inside the canvas." );

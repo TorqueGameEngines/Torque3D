@@ -43,9 +43,9 @@ public:
    virtual ~RenderTranslucentMgr();
 
    // RenderBinManager
-   void render(SceneRenderState * state);
-   void addElement( RenderInst *inst );
-   void setupSGData( MeshRenderInst *ri, SceneData &data );
+   void render(SceneRenderState * state) override;
+   void addElement( RenderInst *inst ) override;
+   void setupSGData( MeshRenderInst *ri, SceneData &data ) override;
 
    // ConsoleObject
    DECLARE_CONOBJECT(RenderTranslucentMgr);

@@ -46,7 +46,7 @@ class RigidShapeData : public ShapeBaseData
    typedef ShapeBaseData Parent;
 
   protected:
-   bool onAdd();
+   bool onAdd() override;
 
    //-------------------------------------- Console set variables
   public:
@@ -134,9 +134,9 @@ class RigidShapeData : public ShapeBaseData
    ~RigidShapeData();
 
    static void initPersistFields();
-   void packData(BitStream*);
-   void unpackData(BitStream*);
-   bool preload(bool server, String &errorStr);
+   void packData(BitStream*) override;
+   void unpackData(BitStream*) override;
+   bool preload(bool server, String &errorStr) override;
 
    DECLARE_CONOBJECT(RigidShapeData);
 
@@ -213,7 +213,7 @@ class RigidShape: public ShapeBase
    S32           mWorkingQueryBoxCountDown;
 
    //
-   bool onNewDataBlock( GameBaseData *dptr, bool reload );
+   bool onNewDataBlock( GameBaseData *dptr, bool reload ) override;
    void updatePos(F32 dt);
    bool updateCollision(F32 dt);
    bool resolveCollision(Rigid& ns,CollisionList& cList, F32 dt);
@@ -223,13 +223,13 @@ class RigidShape: public ShapeBase
 
    void setPosition(const Point3F& pos,const QuatF& rot);
    void setRenderPosition(const Point3F& pos,const QuatF& rot);
-   void setTransform(const MatrixF& mat);
+   void setTransform(const MatrixF& mat) override;
 
 //   virtual bool collideBody(const MatrixF& mat,Collision* info) = 0;
    void updateMove(const Move* move);
 
-   void writePacketData(GameConnection * conn, BitStream *stream);
-   void readPacketData (GameConnection * conn, BitStream *stream);
+   void writePacketData(GameConnection * conn, BitStream *stream) override;
+   void readPacketData (GameConnection * conn, BitStream *stream) override;
 
    void updateLiftoffDust( F32 dt );
 
@@ -254,28 +254,28 @@ public:
 
    static void consoleInit();
    static void initPersistFields();
-   void processTick(const Move *move);
-   bool onAdd();
-   void onRemove();
+   void processTick(const Move *move) override;
+   bool onAdd() override;
+   void onRemove() override;
    void _createPhysics();
 
    /// Interpolates between move ticks @see processTick
    /// @param   dt   Change in time between the last call and this call to the function
-   void interpolateTick(F32 dt);
-   void advanceTime(F32 dt);
+   void interpolateTick(F32 dt) override;
+   void advanceTime(F32 dt) override;
 
    /// Disables collisions for this shape
-   void disableCollision();
+   void disableCollision() override;
    
    /// Enables collisions for this shape
-   void enableCollision();
+   void enableCollision() override;
 
    /// Returns the velocity of the shape
-   Point3F getVelocity() const;
+   Point3F getVelocity() const override;
 
-   void setEnergyLevel(F32 energy);
+   void setEnergyLevel(F32 energy) override;
    
-   void prepBatchRender(  SceneRenderState *state, S32 mountedImageIndex );
+   void prepBatchRender(  SceneRenderState *state, S32 mountedImageIndex ) override;
 
    // xgalaxy cool hacks
    void reset();
@@ -293,18 +293,18 @@ public:
    /// Applies an impulse force 
    /// @param   r   Point on the object to apply impulse to, r is relative to Center of Mass
    /// @param   impulse   Impulse vector to apply.
-   void applyImpulse(const Point3F &r, const Point3F &impulse);
+   void applyImpulse(const Point3F &r, const Point3F &impulse) override;
 
    /// Forces the client to jump to the RigidShape's transform rather
    /// then warp to it.
    void forceClientTransform();
 
-   void getCameraParameters(F32 *min, F32* max, Point3F* offset, MatrixF* rot);
-   void getCameraTransform(F32* pos, MatrixF* mat);
+   void getCameraParameters(F32 *min, F32* max, Point3F* offset, MatrixF* rot) override;
+   void getCameraTransform(F32* pos, MatrixF* mat) override;
    ///@}
 
-   U32  packUpdate  (NetConnection *conn, U32 mask, BitStream *stream);
-   void unpackUpdate(NetConnection *conn,           BitStream *stream);
+   U32  packUpdate  (NetConnection *conn, U32 mask, BitStream *stream) override;
+   void unpackUpdate(NetConnection *conn,           BitStream *stream) override;
 
    DECLARE_CONOBJECT(RigidShape);
    DECLARE_CATEGORY("Object \t Destructable");

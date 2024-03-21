@@ -91,11 +91,11 @@ public:
 
    PhysicsDebrisData();
 
-   bool        onAdd();
-   bool        preload( bool server, String &errorStr );
+   bool        onAdd() override;
+   bool        preload( bool server, String &errorStr ) override;
    static void initPersistFields();
-   void        packData( BitStream *stream );
-   void        unpackData( BitStream *stream );
+   void        packData( BitStream *stream ) override;
+   void        unpackData( BitStream *stream ) override;
 
    void onShapeChanged() {}
 
@@ -132,23 +132,23 @@ public:
    DECLARE_CATEGORY("UNLISTED");
    static void initPersistFields();
 
-   bool onAdd();
-   void onRemove(); 
+   bool onAdd() override;
+   void onRemove() override; 
 
-   void applyImpulse( const Point3F &pos, const VectorF &vec );
-   void applyRadialImpulse( const Point3F &origin, F32 radius, F32 magnitude );
+   void applyImpulse( const Point3F &pos, const VectorF &vec ) override;
+   void applyRadialImpulse( const Point3F &origin, F32 radius, F32 magnitude ) override;
 
 protected:
 
    /// The global object lifetime scalar.
    static F32 smLifetimeScale;
 
-   void processTick( const Move *move );
-   void advanceTime( F32 dt );
-   void interpolateTick( F32 delta );
-   bool onNewDataBlock( GameBaseData *dptr, bool reload );
+   void processTick( const Move *move ) override;
+   void advanceTime( F32 dt ) override;
+   void interpolateTick( F32 delta ) override;
+   bool onNewDataBlock( GameBaseData *dptr, bool reload ) override;
 
-   void prepRenderImage( SceneRenderState *state );
+   void prepRenderImage( SceneRenderState *state ) override;
    void prepBatchRender( SceneRenderState *state );
 
    void _deleteFragments();

@@ -171,7 +171,7 @@ class TheoraTexture : private IOutputStream< TheoraTextureFrame* >,
             TheoraTextureFrame* mFrame;
             
             // WorkItem.
-            virtual void execute();
+            void execute() override;
             
          public:
          
@@ -293,8 +293,8 @@ class TheoraTexture : private IOutputStream< TheoraTextureFrame* >,
          private:
          
             // IPositionable.
-            virtual U32 getPosition() const { return mCurrentTime; }
-            virtual void setPosition( U32 pos ) {}
+            U32 getPosition() const override { return mCurrentTime; }
+            void setPosition( U32 pos ) override {}
       };
       
       /// The Theora video file.
@@ -351,7 +351,7 @@ class TheoraTexture : private IOutputStream< TheoraTextureFrame* >,
       void _onTextureEvent( GFXTexCallbackCode code );
                   
       // IOutputStream.
-      virtual void write( TheoraTextureFrame* const* frames, U32 num );
+      void write( TheoraTextureFrame* const* frames, U32 num ) override;
 
    public:
    
@@ -410,8 +410,8 @@ class TheoraTexture : private IOutputStream< TheoraTextureFrame* >,
       GFXTexHandle& getTexture() { return mCurrentFrame->mTexture; }
       
       // IPositionable.
-      virtual U32 getPosition() const { return _getTimeSource()->getPosition(); }
-      virtual void setPosition( U32 pos ) {} // Not (yet?) implemented.
+      U32 getPosition() const override { return _getTimeSource()->getPosition(); }
+      void setPosition( U32 pos ) override {} // Not (yet?) implemented.
 };
 
 #endif // TORQUE_OGGTHEORA

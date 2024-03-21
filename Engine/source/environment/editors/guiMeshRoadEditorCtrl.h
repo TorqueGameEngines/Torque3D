@@ -63,25 +63,25 @@ class GuiMeshRoadEditorCtrl : public EditTSCtrl
       DECLARE_CONOBJECT(GuiMeshRoadEditorCtrl);
 
       // SimObject
-      bool onAdd();
+      bool onAdd() override;
       static void initPersistFields();
 
       // GuiControl
-      virtual void onSleep();
+      void onSleep() override;
 
       // EditTSCtrl      
-		bool onKeyDown(const GuiEvent& event);
-      void get3DCursor( GuiCursor *&cursor, bool &visible, const Gui3DMouseEvent &event_ );
-      void on3DMouseDown(const Gui3DMouseEvent & event);
-      void on3DMouseUp(const Gui3DMouseEvent & event);
-      void on3DMouseMove(const Gui3DMouseEvent & event);
-      void on3DMouseDragged(const Gui3DMouseEvent & event);
-      void on3DMouseEnter(const Gui3DMouseEvent & event);
-      void on3DMouseLeave(const Gui3DMouseEvent & event);
-      void on3DRightMouseDown(const Gui3DMouseEvent & event);
-      void on3DRightMouseUp(const Gui3DMouseEvent & event);
-      void updateGuiInfo();      
-      void renderScene(const RectI & updateRect);
+		bool onKeyDown(const GuiEvent& event) override;
+      void get3DCursor( GuiCursor *&cursor, bool &visible, const Gui3DMouseEvent &event_ ) override;
+      void on3DMouseDown(const Gui3DMouseEvent & event) override;
+      void on3DMouseUp(const Gui3DMouseEvent & event) override;
+      void on3DMouseMove(const Gui3DMouseEvent & event) override;
+      void on3DMouseDragged(const Gui3DMouseEvent & event) override;
+      void on3DMouseEnter(const Gui3DMouseEvent & event) override;
+      void on3DMouseLeave(const Gui3DMouseEvent & event) override;
+      void on3DRightMouseDown(const Gui3DMouseEvent & event) override;
+      void on3DRightMouseUp(const Gui3DMouseEvent & event) override;
+      void updateGuiInfo() override;      
+      void renderScene(const RectI & updateRect) override;
 
       // GuiRiverEditorCtrl      
       bool getStaticPos( const Gui3DMouseEvent & event, Point3F &tpos );
@@ -189,8 +189,8 @@ class GuiMeshRoadEditorUndoAction : public UndoAction
       SimObjectId mObjId;
       F32 mMetersPerSegment;
 
-      virtual void undo();
-      virtual void redo() { undo(); }
+      void undo() override;
+      void redo() override { undo(); }
 };
 
 #endif // _GUIMESHROADEDITORCTRL_H_

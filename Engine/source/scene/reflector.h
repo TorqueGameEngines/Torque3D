@@ -70,9 +70,9 @@ public:
 
    static void initPersistFields();
 
-   virtual void packData( BitStream *stream );
-   virtual void unpackData( BitStream* stream );   
-   virtual bool preload( bool server, String &errorStr );
+   void packData( BitStream *stream ) override;
+   void unpackData( BitStream* stream ) override;   
+   bool preload( bool server, String &errorStr ) override;
 
    U32 texSize;   
    F32 nearDist;
@@ -150,7 +150,7 @@ public:
    void registerReflector( SceneObject *inObject,
                            ReflectorDesc *inDesc );
 
-   virtual void unregisterReflector();
+   void unregisterReflector() override;
    virtual void updateReflection( const ReflectParams &params, Point3F explicitPostion = Point3F::Max);
 
    GFXCubemap* getCubemap() const { return mCubemap; }
@@ -174,8 +174,8 @@ protected:
       U32 faceIdx;
       CubeReflector *cube;
 
-      virtual void updateReflection( const ReflectParams &params ) { cube->updateFace( params, faceIdx ); } 
-      virtual F32 calcScore( const ReflectParams &params );
+      void updateReflection( const ReflectParams &params ) override { cube->updateFace( params, faceIdx ); } 
+      F32 calcScore( const ReflectParams &params ) override;
    };
 
    CubeFaceReflector mFaces[6];
@@ -200,8 +200,8 @@ public:
    void registerReflector( SceneObject *inObject,
                            ReflectorDesc *inDesc );
 
-   virtual F32 calcScore( const ReflectParams &params );
-   virtual void updateReflection( const ReflectParams &params ); 
+   F32 calcScore( const ReflectParams &params ) override;
+   void updateReflection( const ReflectParams &params ) override; 
 
    /// Set up the GFX matrices
    void setGFXMatrices( const MatrixF &camTrans );

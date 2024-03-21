@@ -81,9 +81,9 @@ class NullSwizzle : public Swizzle<T, mapLength>
 public:
    NullSwizzle( const dsize_t *map = NULL ) : Swizzle<T, mapLength>( map ) {};
 
-   virtual void InPlace( void *memory, const dsize_t size ) const {}
+   void InPlace( void *memory, const dsize_t size ) const override {}
 
-   virtual void ToBuffer( void *destination, const void *source, const dsize_t size ) const
+   void ToBuffer( void *destination, const void *source, const dsize_t size ) const override
    {
       dMemcpy( destination, source, size );
    }

@@ -39,24 +39,24 @@ public:
 
    DECLARE_CONOBJECT( GuiInspectorDynamicField );
 
-   virtual void             setData( const char* data, bool callbacks = true );
-   virtual const char*      getData( U32 inspectObjectIndex = 0 );
-   virtual StringTableEntry getFieldName() { return ( mDynField != NULL ) ? mDynField->slotName : StringTable->insert( "" ); }
-   virtual StringTableEntry getRawFieldName() { return getFieldName(); }
+   void             setData( const char* data, bool callbacks = true ) override;
+   const char*      getData( U32 inspectObjectIndex = 0 ) override;
+   StringTableEntry getFieldName() override { return ( mDynField != NULL ) ? mDynField->slotName : StringTable->insert( "" ); }
+   StringTableEntry getRawFieldName() override { return getFieldName(); }
 
-   virtual bool onAdd();
+   bool onAdd() override;
 
    void renameField( const char* newFieldName );
    GuiControl* constructRenameControl();
 
-   virtual bool updateRects();
-   virtual void setInspectorField( AbstractClassRep::Field *field, 
+   bool updateRects() override;
+   void setInspectorField( AbstractClassRep::Field *field, 
                                    StringTableEntry caption = NULL,
-                                   const char *arrayIndex = NULL );
+                                   const char *arrayIndex = NULL ) override;
 
 protected:
 
-   virtual void _executeSelectedCallback();
+   void _executeSelectedCallback() override;
 
 protected:
 

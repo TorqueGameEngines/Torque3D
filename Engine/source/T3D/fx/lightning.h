@@ -80,15 +80,15 @@ class LightningData : public GameBaseData
    U32           mNumStrikeTextures;
 
   protected:
-   bool onAdd();
+   bool onAdd() override;
 
   public:
    LightningData();
    ~LightningData();
 
-   void packData(BitStream*);
-   void unpackData(BitStream*);
-   bool preload(bool server, String &errorStr);
+   void packData(BitStream*) override;
+   void unpackData(BitStream*) override;
+   bool preload(bool server, String &errorStr) override;
 
    DECLARE_CONOBJECT(LightningData);
    static void initPersistFields();
@@ -162,9 +162,9 @@ class Lightning : public GameBase
    typedef GameBase Parent;
 
   protected:
-   bool onAdd();
-   void onRemove();
-   bool onNewDataBlock( GameBaseData *dptr, bool reload );
+   bool onAdd() override;
+   void onRemove() override;
+   bool onNewDataBlock( GameBaseData *dptr, bool reload ) override;
 
    DECLARE_CALLBACK( void, applyDamage, ( const Point3F& hitPosition, const Point3F& hitNormal, SceneObject* hitObject ));
 
@@ -206,13 +206,13 @@ class Lightning : public GameBase
   protected:
 
    // Rendering
-   void prepRenderImage(SceneRenderState *state);
+   void prepRenderImage(SceneRenderState *state) override;
    void renderObject(ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance* );
 
    // Time management
-   void processTick(const Move *move);
-   void interpolateTick(F32 delta);
-   void advanceTime(F32 dt);
+   void processTick(const Move *move) override;
+   void interpolateTick(F32 delta) override;
+   void advanceTime(F32 dt) override;
 
    // Strike management
    void scheduleThunder(Strike*);
@@ -242,8 +242,8 @@ class Lightning : public GameBase
    DECLARE_CATEGORY("Environment \t Weather");
    static void initPersistFields();
 
-   U32  packUpdate  (NetConnection *conn, U32 mask, BitStream *stream);
-   void unpackUpdate(NetConnection *conn,           BitStream *stream);
+   U32  packUpdate  (NetConnection *conn, U32 mask, BitStream *stream) override;
+   void unpackUpdate(NetConnection *conn,           BitStream *stream) override;
 };
 
 #endif // _H_LIGHTNING

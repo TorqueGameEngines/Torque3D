@@ -39,16 +39,16 @@ public:
    ProcessedCustomMaterial(Material &mat);
    ~ProcessedCustomMaterial();
 
-   virtual bool setupPass(SceneRenderState *, const SceneData& sgData, U32 pass);
-   virtual bool init( const FeatureSet &features, const GFXVertexFormat *vertexFormat, const MatFeaturesDelegate &featuresDelegate );   
-   virtual void setTextureStages(SceneRenderState *, const SceneData &sgData, U32 pass );
-   virtual MaterialParameters* allocMaterialParameters();
+   bool setupPass(SceneRenderState *, const SceneData& sgData, U32 pass) override;
+   bool init( const FeatureSet &features, const GFXVertexFormat *vertexFormat, const MatFeaturesDelegate &featuresDelegate ) override;   
+   void setTextureStages(SceneRenderState *, const SceneData &sgData, U32 pass ) override;
+   MaterialParameters* allocMaterialParameters() override;
 
 protected:
 
-   virtual void _setStageData();
-   virtual bool _hasCubemap(U32 pass);
-   void _initPassStateBlock( RenderPassData *rpd, GFXStateBlockDesc &result );
+   void _setStageData() override;
+   bool _hasCubemap(U32 pass) override;
+   void _initPassStateBlock( RenderPassData *rpd, GFXStateBlockDesc &result ) override;
    virtual void _initPassStateBlocks();
 
 private:

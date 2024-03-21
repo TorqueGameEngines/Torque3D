@@ -69,7 +69,7 @@ public:
    GuiShapeNameHud();
 
    // GuiControl
-   virtual void onRender(Point2I offset, const RectI &updateRect);
+   void onRender(Point2I offset, const RectI &updateRect) override;
 
    static void initPersistFields();
    DECLARE_CONOBJECT( GuiShapeNameHud );

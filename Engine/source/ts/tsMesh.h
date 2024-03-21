@@ -552,17 +552,17 @@ public:
    void setupVertexTransforms();
 
    /// Returns maximum bones used per vertex
-   virtual U32 getMaxBonesPerVert();
+   U32 getMaxBonesPerVert() override;
 
-   virtual void convertToVertexData();
-   virtual void copySourceVertexDataFrom(const TSMesh* srcMesh);
+   void convertToVertexData() override;
+   void copySourceVertexDataFrom(const TSMesh* srcMesh) override;
 
    void printVerts();
 
    void addWeightsFromVertexBuffer();
 
-   void makeEditable();
-   void clearEditable();
+   void makeEditable() override;
+   void clearEditable() override;
 
 public:
    typedef TSMesh Parent;
@@ -587,24 +587,24 @@ public:
    void updateSkinBones( const Vector<MatrixF> &transforms, Vector<MatrixF>& destTransforms );
 
    // render methods..
-   void render( TSVertexBufferHandle &instanceVB );
+   void render( TSVertexBufferHandle &instanceVB ) override;
    void render(   TSMaterialList *, 
                   const TSRenderState &data,
                   bool isSkinDirty,
                   const Vector<MatrixF> &transforms, 
                   TSVertexBufferHandle &vertexBuffer,
-                  const char *meshName );
+                  const char *meshName ) override;
 
    // collision methods...
-   bool buildPolyList( S32 frame, AbstractPolyList *polyList, U32 &surfaceKey, TSMaterialList *materials );
-   bool castRay( S32 frame, const Point3F &start, const Point3F &end, RayInfo *rayInfo, TSMaterialList *materials );
-   bool buildConvexHull(); // does nothing, skins don't use this
+   bool buildPolyList( S32 frame, AbstractPolyList *polyList, U32 &surfaceKey, TSMaterialList *materials ) override;
+   bool castRay( S32 frame, const Point3F &start, const Point3F &end, RayInfo *rayInfo, TSMaterialList *materials ) override;
+   bool buildConvexHull() override; // does nothing, skins don't use this
 
-   void computeBounds( const MatrixF &transform, Box3F &bounds, S32 frame, Point3F *center, F32 *radius );
+   void computeBounds( const MatrixF &transform, Box3F &bounds, S32 frame, Point3F *center, F32 *radius ) override;
 
    /// persist methods...
-   void assemble( bool skip );
-   void disassemble();
+   void assemble( bool skip ) override;
+   void disassemble() override;
 
    /// Helper method to add a blend tuple for a vertex
    inline void addWeightForVert(U32 vi, U32 bi, F32 w)

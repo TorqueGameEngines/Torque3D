@@ -320,7 +320,7 @@ endif (WIN32)
 
 # Prepare OSX Plist
 if (APPLE)
-  set(MACOSX_RESOURCES "${CMAKE_SOURCE_DIR}/Tools/CMake/torque.icns" 
+  set(MACOSX_RESOURCES
   "${TORQUE_APP_GAME_DIRECTORY}/data"
   "${TORQUE_APP_GAME_DIRECTORY}/core"
   "${TORQUE_APP_GAME_DIRECTORY}/tools"
@@ -340,6 +340,8 @@ if (APPLE)
 
 	set(EXECUTABLE_NAME "${TORQUE_APP_NAME}")
 	configure_file("${CMAKE_SOURCE_DIR}/Tools/CMake/Info.plist.in" "${TORQUE_APP_ROOT_DIRECTORY}/source/Info.plist" COPYONLY)
+  file( COPY "${CMAKE_SOURCE_DIR}/Tools/CMake/app_assets/apple/App.xcassets" DESTINATION "${TORQUE_APP_ROOT_DIRECTORY}/source")
+  
 endif (APPLE)
 
 addDef(TORQUE_DEBUG Debug)
@@ -381,12 +383,21 @@ else()
 endif (TORQUE_DYNAMIC_LIBRARY AND NOT TORQUE_TESTING)
 
 if (APPLE)
-	add_executable(${TORQUE_APP_NAME} MACOSX_BUNDLE ${TORQUE_SOURCE_FILES})
+	add_executable(${TORQUE_APP_NAME} MACOSX_BUNDLE 
+    ${TORQUE_SOURCE_FILES})
+
+  target_sources(${TORQUE_APP_NAME} PRIVATE "${TORQUE_APP_ROOT_DIRECTORY}/source/App.xcassets")
+
+  set_source_files_properties( "${TORQUE_APP_ROOT_DIRECTORY}/source/App.xcassets" PROPERTIES 
+        MACOSX_PACKAGE_LOCATION Resources)
+
 	set_target_properties(${TORQUE_APP_NAME} PROPERTIES 
-  BUNDLE true
+  MACOSX_BUNDLE true
   MACOSX_BUNDLE_INFO_PLIST "${TORQUE_APP_ROOT_DIRECTORY}/source/Info.plist"
+  XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.torque3d.${TORQUE_APP_NAME}"
   XCODE_ATTRIBUTE_INSTALL_PATH "/Applications"
   XCODE_ATTRIBUTE_SKIP_INSTALL "No"
+  XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME "AppIcon"
   XCODE_ATTRIBUTE_LINKER_DISPLAYS_MANGLED_NAMES[variant=Debug] YES
   XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH[variant=Debug] YES
   XCODE_ATTRIBUTE_ENABLE_TESTABILITY[variant=Debug] YES
@@ -507,7 +518,8 @@ if (UNIX)
 		  if ("${LINK_LIBRARY_TYPE}" STREQUAL "SHARED_LIBRARY")
         if (APPLE)
           set_target_properties(${GAME_LINK_LIBRARY} PROPERTIES 
-          XCODE_ATTRIBUTE_INSTALL_PATH "@rpath")
+                  XCODE_ATTRIBUTE_INSTALL_PATH "@rpath"
+                  XCODE_ATTRIBUTE_SKIP_INSTALL[variant=Release] YES)
         else()
           set_target_properties(${GAME_LINK_LIBRARY} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${TORQUE_APP_GAME_DIRECTORY}")
         endif(APPLE)

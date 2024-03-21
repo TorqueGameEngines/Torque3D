@@ -45,7 +45,7 @@ namespace {
 
 struct DistortionState final : public EffectState {
     /* Effect gains for each channel */
-    float mGain[MAX_OUTPUT_CHANNELS]{};
+    float mGain[MaxAmbiChannels]{};
 
     /* Effect parameters */
     BiquadFilter mLowpass;
@@ -53,10 +53,10 @@ struct DistortionState final : public EffectState {
     float mAttenuation{};
     float mEdgeCoeff{};
 
-    float mBuffer[2][BufferLineSize]{};
+    alignas(16) float mBuffer[2][BufferLineSize]{};
 
 
-    void deviceUpdate(const DeviceBase *device, const Buffer &buffer) override;
+    void deviceUpdate(const DeviceBase *device, const BufferStorage *buffer) override;
     void update(const ContextBase *context, const EffectSlot *slot, const EffectProps *props,
         const EffectTarget target) override;
     void process(const size_t samplesToDo, const al::span<const FloatBufferLine> samplesIn,
@@ -65,7 +65,7 @@ struct DistortionState final : public EffectState {
     DEF_NEWDEL(DistortionState)
 };
 
-void DistortionState::deviceUpdate(const DeviceBase*, const Buffer&)
+void DistortionState::deviceUpdate(const DeviceBase*, const BufferStorage*)
 {
     mLowpass.clear();
     mBandpass.clear();
@@ -95,7 +95,7 @@ void DistortionState::update(const ContextBase *context, const EffectSlot *slot,
     bandwidth = props->Distortion.EQBandwidth / (cutoff * 0.67f);
     mBandpass.setParamsFromBandwidth(BiquadType::BandPass, cutoff/frequency/4.0f, 1.0f, bandwidth);
 
-    const auto coeffs = CalcDirectionCoeffs({0.0f, 0.0f, -1.0f}, 0.0f);
+    static constexpr auto coeffs = CalcDirectionCoeffs({0.0f, 0.0f, -1.0f});
 
     mOutTarget = target.Main->Buffer;
     ComputePanGains(target.Main, coeffs.data(), slot->Gain*props->Distortion.Gain, mGain);

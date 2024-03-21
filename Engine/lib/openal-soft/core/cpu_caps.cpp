@@ -11,11 +11,10 @@
 #endif
 #endif
 
-#ifdef HAVE_INTRIN_H
-#include <intrin.h>
-#endif
-#ifdef HAVE_CPUID_H
+#if defined(HAVE_CPUID_H)
 #include <cpuid.h>
+#elif defined(HAVE_INTRIN_H)
+#include <intrin.h>
 #endif
 
 #include <array>
@@ -33,7 +32,7 @@ using reg_type = unsigned int;
 inline std::array<reg_type,4> get_cpuid(unsigned int f)
 {
     std::array<reg_type,4> ret{};
-    __get_cpuid(f, &ret[0], &ret[1], &ret[2], &ret[3]);
+    __get_cpuid(f, ret.data(), &ret[1], &ret[2], &ret[3]);
     return ret;
 }
 #define CAN_GET_CPUID
@@ -138,5 +137,5 @@ al::optional<CPUInfo> GetCPUInfo()
 #endif
 #endif
 
-    return al::make_optional(ret);
+    return ret;
 }

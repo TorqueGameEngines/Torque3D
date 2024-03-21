@@ -13,45 +13,22 @@
 #include "vector.h"
 
 #ifdef ALSOFT_EAX
-#include "eax_x_ram.h"
+#include "eax/x_ram.h"
+
+enum class EaxStorage : uint8_t {
+    Automatic,
+    Accessible,
+    Hardware
+};
 #endif // ALSOFT_EAX
-
-/* User formats */
-enum UserFmtType : unsigned char {
-    UserFmtUByte = FmtUByte,
-    UserFmtShort = FmtShort,
-    UserFmtFloat = FmtFloat,
-    UserFmtMulaw = FmtMulaw,
-    UserFmtAlaw = FmtAlaw,
-    UserFmtDouble = FmtDouble,
-
-    UserFmtIMA4 = 128,
-    UserFmtMSADPCM,
-};
-enum UserFmtChannels : unsigned char {
-    UserFmtMono = FmtMono,
-    UserFmtStereo = FmtStereo,
-    UserFmtRear = FmtRear,
-    UserFmtQuad = FmtQuad,
-    UserFmtX51 = FmtX51,
-    UserFmtX61 = FmtX61,
-    UserFmtX71 = FmtX71,
-    UserFmtBFormat2D = FmtBFormat2D,
-    UserFmtBFormat3D = FmtBFormat3D,
-    UserFmtUHJ2 = FmtUHJ2,
-    UserFmtUHJ3 = FmtUHJ3,
-    UserFmtUHJ4 = FmtUHJ4,
-};
 
 
 struct ALbuffer : public BufferStorage {
     ALbitfieldSOFT Access{0u};
 
-    al::vector<al::byte,16> mData;
+    al::vector<al::byte,16> mDataStorage;
 
-    UserFmtType OriginalType{UserFmtShort};
     ALuint OriginalSize{0};
-    ALuint OriginalAlign{0};
 
     ALuint UnpackAlign{0};
     ALuint PackAlign{0};
@@ -73,7 +50,7 @@ struct ALbuffer : public BufferStorage {
     DISABLE_ALLOC()
 
 #ifdef ALSOFT_EAX
-    ALenum eax_x_ram_mode{AL_STORAGE_AUTOMATIC};
+    EaxStorage eax_x_ram_mode{EaxStorage::Automatic};
     bool eax_x_ram_is_hardware{};
 #endif // ALSOFT_EAX
 };

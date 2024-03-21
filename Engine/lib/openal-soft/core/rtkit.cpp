@@ -40,7 +40,11 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
+#ifdef __linux__
 #include <sys/syscall.h>
+#elif defined(__FreeBSD__)
+#include <sys/thr.h>
+#endif
 
 
 namespace dbus {

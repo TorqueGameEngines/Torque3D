@@ -4,6 +4,7 @@
 #include <array>
 #include <atomic>
 #include <bitset>
+#include <chrono>
 #include <memory>
 #include <stddef.h>
 #include <string>
@@ -48,10 +49,7 @@ enum class DirectMode : unsigned char {
 };
 
 
-/* Maximum number of extra source samples that may need to be loaded, for
- * resampling or conversion purposes.
- */
-constexpr uint MaxPostVoiceLoad{MaxResamplerEdge + UhjDecoder::sFilterDelay};
+constexpr uint MaxPitch{10};
 
 
 enum {
@@ -85,8 +83,8 @@ struct SendParams {
     BiquadFilter HighPass;
 
     struct {
-        std::array<float,MAX_OUTPUT_CHANNELS> Current;
-        std::array<float,MAX_OUTPUT_CHANNELS> Target;
+        std::array<float,MaxAmbiChannels> Current;
+        std::array<float,MaxAmbiChannels> Target;
     } Gains;
 };
 
@@ -97,6 +95,7 @@ struct VoiceBufferItem {
     CallbackType mCallback{nullptr};
     void *mUserData{nullptr};
 
+    uint mBlockAlign{0u};
     uint mSampleLen{0u};
     uint mLoopStart{0u};
     uint mLoopEnd{0u};
@@ -197,7 +196,7 @@ struct Voice {
      * Source offset in samples, relative to the currently playing buffer, NOT
      * the whole queue.
      */
-    std::atomic<uint> mPosition;
+    std::atomic<int> mPosition;
     /** Fractional (fixed-point) offset to the next sample. */
     std::atomic<uint> mPositionFrac;
 
@@ -209,18 +208,21 @@ struct Voice {
      */
     std::atomic<VoiceBufferItem*> mLoopBuffer;
 
+    std::chrono::nanoseconds mStartTime{};
+
     /* Properties for the attached buffer(s). */
     FmtChannels mFmtChannels;
     FmtType mFmtType;
     uint mFrequency;
     uint mFrameStep; /**< In steps of the sample type size. */
-    uint mFrameSize; /**< In bytes. */
+    uint mBytesPerBlock; /**< Or for PCM formats, BytesPerFrame. */
+    uint mSamplesPerBlock; /**< Always 1 for PCM formats. */
     AmbiLayout mAmbiLayout;
     AmbiScaling mAmbiScaling;
     uint mAmbiOrder;
 
-    std::unique_ptr<UhjDecoder> mDecoder;
-    UhjDecoder::DecoderFunc mDecoderFunc{};
+    std::unique_ptr<DecoderBase> mDecoder;
+    uint mDecoderPadding{};
 
     /** Current target parameters used for mixing. */
     uint mStep{0};
@@ -230,7 +232,8 @@ struct Voice {
     InterpState mResampleState;
 
     std::bitset<VoiceFlagCount> mFlags{};
-    uint mNumCallbackSamples{0};
+    uint mNumCallbackBlocks{0};
+    uint mCallbackBlockBase{0};
 
     struct TargetData {
         int FilterType;
@@ -262,7 +265,8 @@ struct Voice {
     Voice(const Voice&) = delete;
     Voice& operator=(const Voice&) = delete;
 
-    void mix(const State vstate, ContextBase *Context, const uint SamplesToDo);
+    void mix(const State vstate, ContextBase *Context, const std::chrono::nanoseconds deviceTime,
+        const uint SamplesToDo);
 
     void prepare(DeviceBase *device);
 

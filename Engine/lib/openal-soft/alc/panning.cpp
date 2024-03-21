@@ -22,6 +22,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <chrono>
 #include <cmath>
 #include <cstdio>
@@ -89,6 +90,23 @@ inline const char *GetLabelFromChannel(Channel channel)
         case TopBackCenter: return "top-back-center";
         case TopBackRight: return "top-back-right";
 
+        case Aux0: return "Aux0";
+        case Aux1: return "Aux1";
+        case Aux2: return "Aux2";
+        case Aux3: return "Aux3";
+        case Aux4: return "Aux4";
+        case Aux5: return "Aux5";
+        case Aux6: return "Aux6";
+        case Aux7: return "Aux7";
+        case Aux8: return "Aux8";
+        case Aux9: return "Aux9";
+        case Aux10: return "Aux10";
+        case Aux11: return "Aux11";
+        case Aux12: return "Aux12";
+        case Aux13: return "Aux13";
+        case Aux14: return "Aux14";
+        case Aux15: return "Aux15";
+
         case MaxChannels: break;
     }
     return "(unknown)";
@@ -98,13 +116,13 @@ inline const char *GetLabelFromChannel(Channel channel)
 std::unique_ptr<FrontStablizer> CreateStablizer(const size_t outchans, const uint srate)
 {
     auto stablizer = FrontStablizer::Create(outchans);
-    for(auto &buf : stablizer->DelayBuf)
-        std::fill(buf.begin(), buf.end(), 0.0f);
 
     /* Initialize band-splitting filter for the mid signal, with a crossover at
      * 5khz (could be higher).
      */
     stablizer->MidFilter.init(5000.0f / static_cast<float>(srate));
+    for(auto &filter : stablizer->ChannelFilters)
+        filter = stablizer->MidFilter;
 
     return stablizer;
 }
@@ -202,6 +220,8 @@ struct DecoderConfig<DualBand, 0> {
         mCoeffsLF = rhs.mCoeffsLF;
         return *this;
     }
+
+    explicit operator bool() const noexcept { return !mChannels.empty(); }
 };
 using DecoderView = DecoderConfig<DualBand, 0>;
 
@@ -212,7 +232,7 @@ void InitNearFieldCtrl(ALCdevice *device, float ctrl_dist, uint order, bool is3d
     static const uint chans_per_order3d[MaxAmbiOrder+1]{ 1, 3, 5, 7 };
 
     /* NFC is only used when AvgSpeakerDist is greater than 0. */
-    if(!device->getConfigValueBool("decoder", "nfc", 0) || !(ctrl_dist > 0.0f))
+    if(!device->getConfigValueBool("decoder", "nfc", false) || !(ctrl_dist > 0.0f))
         return;
 
     device->AvgSpeakerDist = clampf(ctrl_dist, 0.1f, 10.0f);
@@ -232,7 +252,7 @@ void InitDistanceComp(ALCdevice *device, const al::span<const Channel> channels,
 {
     const float maxdist{std::accumulate(std::begin(dists), std::end(dists), 0.0f, maxf)};
 
-    if(!device->getConfigValueBool("decoder", "distance-comp", 1) || !(maxdist > 0.0f))
+    if(!device->getConfigValueBool("decoder", "distance-comp", true) || !(maxdist > 0.0f))
         return;
 
     const auto distSampleScale = static_cast<float>(device->Frequency) / SpeedOfSoundMetersPerSec;
@@ -243,7 +263,7 @@ void InitDistanceComp(ALCdevice *device, const al::span<const Channel> channels,
     {
         const Channel ch{channels[chidx]};
         const uint idx{device->RealOut.ChannelIndex[ch]};
-        if(idx == INVALID_CHANNEL_INDEX)
+        if(idx == InvalidChannelIndex)
             continue;
 
         const float distance{dists[chidx]};
@@ -255,11 +275,11 @@ void InitDistanceComp(ALCdevice *device, const al::span<const Channel> channels,
          * will be in steps of about 7 millimeters.
          */
         float delay{std::floor((maxdist - distance)*distSampleScale + 0.5f)};
-        if(delay > float{MAX_DELAY_LENGTH-1})
+        if(delay > float{DistanceComp::MaxDelay-1})
         {
             ERR("Delay for channel %u (%s) exceeds buffer length (%f > %d)\n", idx,
-                GetLabelFromChannel(ch), delay, MAX_DELAY_LENGTH-1);
-            delay = float{MAX_DELAY_LENGTH-1};
+                GetLabelFromChannel(ch), delay, DistanceComp::MaxDelay-1);
+            delay = float{DistanceComp::MaxDelay-1};
         }
 
         ChanDelay.resize(maxz(ChanDelay.size(), idx+1));
@@ -312,12 +332,14 @@ DecoderView MakeDecoderView(ALCdevice *device, const AmbDecConf *conf,
 {
     DecoderView ret{};
 
-    decoder.mOrder = (conf->ChanMask > Ambi2OrderMask) ? uint8_t{3} :
+    decoder.mOrder = (conf->ChanMask > Ambi3OrderMask) ? uint8_t{4} :
+        (conf->ChanMask > Ambi2OrderMask) ? uint8_t{3} :
         (conf->ChanMask > Ambi1OrderMask) ? uint8_t{2} : uint8_t{1};
     decoder.mIs3D = (conf->ChanMask&AmbiPeriphonicMask) != 0;
 
     switch(conf->CoeffScale)
     {
+    case AmbDecScale::Unset: ASSUME(false); break;
     case AmbDecScale::N3D: decoder.mScaling = DevAmbiScaling::N3D; break;
     case AmbDecScale::SN3D: decoder.mScaling = DevAmbiScaling::SN3D; break;
     case AmbDecScale::FuMa: decoder.mScaling = DevAmbiScaling::FuMa; break;
@@ -330,44 +352,10 @@ DecoderView MakeDecoderView(ALCdevice *device, const AmbDecConf *conf,
         std::min(al::size(conf->LFOrderGain), al::size(decoder.mOrderGainLF)),
         std::begin(decoder.mOrderGainLF));
 
-    std::array<uint8_t,MaxAmbiChannels> idx_map{};
-    if(decoder.mIs3D)
-    {
-        uint flags{conf->ChanMask};
-        auto elem = idx_map.begin();
-        while(flags)
-        {
-            int acn{al::countr_zero(flags)};
-            flags &= ~(1u<<acn);
-
-            *elem = static_cast<uint8_t>(acn);
-            ++elem;
-        }
-    }
-    else
-    {
-        uint flags{conf->ChanMask};
-        auto elem = idx_map.begin();
-        while(flags)
-        {
-            int acn{al::countr_zero(flags)};
-            flags &= ~(1u<<acn);
-
-            switch(acn)
-            {
-            case 0: *elem = 0; break;
-            case 1: *elem = 1; break;
-            case 3: *elem = 2; break;
-            case 4: *elem = 3; break;
-            case 8: *elem = 4; break;
-            case 9: *elem = 5; break;
-            case 15: *elem = 6; break;
-            default: return ret;
-            }
-            ++elem;
-        }
-    }
-    const auto num_coeffs = static_cast<uint>(al::popcount(conf->ChanMask));
+    const auto num_coeffs = decoder.mIs3D ? AmbiChannelsFromOrder(decoder.mOrder)
+        : Ambi2DChannelsFromOrder(decoder.mOrder);
+    const auto idx_map = decoder.mIs3D ? AmbiIndex::FromACN().data()
+        : AmbiIndex::FromACN2D().data();
     const auto hfmatrix = conf->HFMatrix;
     const auto lfmatrix = conf->LFMatrix;
 
@@ -388,6 +376,10 @@ DecoderView MakeDecoderView(ALCdevice *device, const AmbDecConf *conf,
          * RB = Back right
          * CE = Front center
          * CB = Back center
+         * LFT = Top front left
+         * RFT = Top front right
+         * LBT = Top back left
+         * RBT = Top back right
          *
          * Additionally, surround51 will acknowledge back speakers for side
          * channels, to avoid issues with an ambdec expecting 5.1 to use the
@@ -410,23 +402,38 @@ DecoderView MakeDecoderView(ALCdevice *device, const AmbDecConf *conf,
             ch = (device->FmtChans == DevFmtX51) ? SideRight : BackRight;
         else if(speaker.Name == "CB")
             ch = BackCenter;
+        else if(speaker.Name == "LFT")
+            ch = TopFrontLeft;
+        else if(speaker.Name == "RFT")
+            ch = TopFrontRight;
+        else if(speaker.Name == "LBT")
+            ch = TopBackLeft;
+        else if(speaker.Name == "RBT")
+            ch = TopBackRight;
         else
         {
-            ERR("AmbDec speaker label \"%s\" not recognized\n", speaker.Name.c_str());
-            continue;
+            int idx{};
+            char c{};
+            if(sscanf(speaker.Name.c_str(), "AUX%d%c", &idx, &c) != 1 || idx < 0
+                || idx >= MaxChannels-Aux0)
+            {
+                ERR("AmbDec speaker label \"%s\" not recognized\n", speaker.Name.c_str());
+                continue;
+            }
+            ch = static_cast<Channel>(Aux0+idx);
         }
 
         decoder.mChannels[chan_count] = ch;
-        for(size_t src{0};src < num_coeffs;++src)
+        for(size_t dst{0};dst < num_coeffs;++dst)
         {
-            const size_t dst{idx_map[src]};
+            const size_t src{idx_map[dst]};
             decoder.mCoeffs[chan_count][dst] = hfmatrix[chan_count][src];
         }
         if(conf->FreqBands > 1)
         {
-            for(size_t src{0};src < num_coeffs;++src)
+            for(size_t dst{0};dst < num_coeffs;++dst)
             {
-                const size_t dst{idx_map[src]};
+                const size_t src{idx_map[dst]};
                 decoder.mCoeffsLF[chan_count][dst] = lfmatrix[chan_count][src];
             }
         }
@@ -466,21 +473,21 @@ constexpr DecoderConfig<SingleBand, 2> StereoConfig{
     }}
 };
 constexpr DecoderConfig<DualBand, 4> QuadConfig{
-    2, false, {{BackLeft, FrontLeft, FrontRight, BackRight}},
+    1, false, {{BackLeft, FrontLeft, FrontRight, BackRight}},
     DevAmbiScaling::N3D,
-    /*HF*/{{1.15470054e+0f, 1.00000000e+0f, 5.77350269e-1f}},
+    /*HF*/{{1.41421356e+0f, 1.00000000e+0f}},
     {{
-        {{2.50000000e-1f,  2.04124145e-1f, -2.04124145e-1f, -1.29099445e-1f, 0.00000000e+0f}},
-        {{2.50000000e-1f,  2.04124145e-1f,  2.04124145e-1f,  1.29099445e-1f, 0.00000000e+0f}},
-        {{2.50000000e-1f, -2.04124145e-1f,  2.04124145e-1f, -1.29099445e-1f, 0.00000000e+0f}},
-        {{2.50000000e-1f, -2.04124145e-1f, -2.04124145e-1f,  1.29099445e-1f, 0.00000000e+0f}},
+        {{2.50000000e-1f,  2.04124145e-1f, -2.04124145e-1f}},
+        {{2.50000000e-1f,  2.04124145e-1f,  2.04124145e-1f}},
+        {{2.50000000e-1f, -2.04124145e-1f,  2.04124145e-1f}},
+        {{2.50000000e-1f, -2.04124145e-1f, -2.04124145e-1f}},
     }},
-    /*LF*/{{1.00000000e+0f, 1.00000000e+0f, 1.00000000e+0f}},
+    /*LF*/{{1.00000000e+0f, 1.00000000e+0f}},
     {{
-        {{2.50000000e-1f,  2.04124145e-1f, -2.04124145e-1f, -1.29099445e-1f, 0.00000000e+0f}},
-        {{2.50000000e-1f,  2.04124145e-1f,  2.04124145e-1f,  1.29099445e-1f, 0.00000000e+0f}},
-        {{2.50000000e-1f, -2.04124145e-1f,  2.04124145e-1f, -1.29099445e-1f, 0.00000000e+0f}},
-        {{2.50000000e-1f, -2.04124145e-1f, -2.04124145e-1f,  1.29099445e-1f, 0.00000000e+0f}},
+        {{2.50000000e-1f,  2.04124145e-1f, -2.04124145e-1f}},
+        {{2.50000000e-1f,  2.04124145e-1f,  2.04124145e-1f}},
+        {{2.50000000e-1f, -2.04124145e-1f,  2.04124145e-1f}},
+        {{2.50000000e-1f, -2.04124145e-1f, -2.04124145e-1f}},
     }}
 };
 constexpr DecoderConfig<DualBand, 5> X51Config{
@@ -516,32 +523,71 @@ constexpr DecoderConfig<SingleBand, 5> X61Config{
     }}
 };
 constexpr DecoderConfig<DualBand, 6> X71Config{
-    3, false, {{BackLeft, SideLeft, FrontLeft, FrontRight, SideRight, BackRight}},
+    2, false, {{BackLeft, SideLeft, FrontLeft, FrontRight, SideRight, BackRight}},
     DevAmbiScaling::N3D,
-    /*HF*/{{1.22474487e+0f, 1.13151672e+0f, 8.66025404e-1f, 4.68689571e-1f}},
+    /*HF*/{{1.41421356e+0f, 1.22474487e+0f, 7.07106781e-1f}},
     {{
-        {{1.66666667e-1f,  9.62250449e-2f, -1.66666667e-1f, -1.49071198e-1f,  8.60662966e-2f,  7.96819073e-2f, 0.00000000e+0f}},
-        {{1.66666667e-1f,  1.92450090e-1f,  0.00000000e+0f,  0.00000000e+0f, -1.72132593e-1f, -7.96819073e-2f, 0.00000000e+0f}},
-        {{1.66666667e-1f,  9.62250449e-2f,  1.66666667e-1f,  1.49071198e-1f,  8.60662966e-2f,  7.96819073e-2f, 0.00000000e+0f}},
-        {{1.66666667e-1f, -9.62250449e-2f,  1.66666667e-1f, -1.49071198e-1f,  8.60662966e-2f, -7.96819073e-2f, 0.00000000e+0f}},
-        {{1.66666667e-1f, -1.92450090e-1f,  0.00000000e+0f,  0.00000000e+0f, -1.72132593e-1f,  7.96819073e-2f, 0.00000000e+0f}},
-        {{1.66666667e-1f, -9.62250449e-2f, -1.66666667e-1f,  1.49071198e-1f,  8.60662966e-2f, -7.96819073e-2f, 0.00000000e+0f}},
+        {{1.66666667e-1f,  9.62250449e-2f, -1.66666667e-1f, -1.49071198e-1f,  8.60662966e-2f}},
+        {{1.66666667e-1f,  1.92450090e-1f,  0.00000000e+0f,  0.00000000e+0f, -1.72132593e-1f}},
+        {{1.66666667e-1f,  9.62250449e-2f,  1.66666667e-1f,  1.49071198e-1f,  8.60662966e-2f}},
+        {{1.66666667e-1f, -9.62250449e-2f,  1.66666667e-1f, -1.49071198e-1f,  8.60662966e-2f}},
+        {{1.66666667e-1f, -1.92450090e-1f,  0.00000000e+0f,  0.00000000e+0f, -1.72132593e-1f}},
+        {{1.66666667e-1f, -9.62250449e-2f, -1.66666667e-1f,  1.49071198e-1f,  8.60662966e-2f}},
     }},
-    /*LF*/{{1.00000000e+0f, 1.00000000e+0f, 1.00000000e+0f, 1.00000000e+0f}},
+    /*LF*/{{1.00000000e+0f, 1.00000000e+0f, 1.00000000e+0f}},
     {{
-        {{1.66666667e-1f,  9.62250449e-2f, -1.66666667e-1f, -1.49071198e-1f,  8.60662966e-2f,  7.96819073e-2f, 0.00000000e+0f}},
-        {{1.66666667e-1f,  1.92450090e-1f,  0.00000000e+0f,  0.00000000e+0f, -1.72132593e-1f, -7.96819073e-2f, 0.00000000e+0f}},
-        {{1.66666667e-1f,  9.62250449e-2f,  1.66666667e-1f,  1.49071198e-1f,  8.60662966e-2f,  7.96819073e-2f, 0.00000000e+0f}},
-        {{1.66666667e-1f, -9.62250449e-2f,  1.66666667e-1f, -1.49071198e-1f,  8.60662966e-2f, -7.96819073e-2f, 0.00000000e+0f}},
-        {{1.66666667e-1f, -1.92450090e-1f,  0.00000000e+0f,  0.00000000e+0f, -1.72132593e-1f,  7.96819073e-2f, 0.00000000e+0f}},
-        {{1.66666667e-1f, -9.62250449e-2f, -1.66666667e-1f,  1.49071198e-1f,  8.60662966e-2f, -7.96819073e-2f, 0.00000000e+0f}},
+        {{1.66666667e-1f,  9.62250449e-2f, -1.66666667e-1f, -1.49071198e-1f,  8.60662966e-2f}},
+        {{1.66666667e-1f,  1.92450090e-1f,  0.00000000e+0f,  0.00000000e+0f, -1.72132593e-1f}},
+        {{1.66666667e-1f,  9.62250449e-2f,  1.66666667e-1f,  1.49071198e-1f,  8.60662966e-2f}},
+        {{1.66666667e-1f, -9.62250449e-2f,  1.66666667e-1f, -1.49071198e-1f,  8.60662966e-2f}},
+        {{1.66666667e-1f, -1.92450090e-1f,  0.00000000e+0f,  0.00000000e+0f, -1.72132593e-1f}},
+        {{1.66666667e-1f, -9.62250449e-2f, -1.66666667e-1f,  1.49071198e-1f,  8.60662966e-2f}},
+    }}
+};
+constexpr DecoderConfig<DualBand, 6> X3D71Config{
+    1, true, {{Aux0, SideLeft, FrontLeft, FrontRight, SideRight, Aux1}},
+    DevAmbiScaling::N3D,
+    /*HF*/{{1.73205081e+0f, 1.00000000e+0f}},
+    {{
+        {{1.666666667e-01f,  0.000000000e+00f,  2.356640879e-01f, -1.667265410e-01f}},
+        {{1.666666667e-01f,  2.033043281e-01f, -1.175581508e-01f, -1.678904388e-01f}},
+        {{1.666666667e-01f,  2.033043281e-01f,  1.175581508e-01f,  1.678904388e-01f}},
+        {{1.666666667e-01f, -2.033043281e-01f,  1.175581508e-01f,  1.678904388e-01f}},
+        {{1.666666667e-01f, -2.033043281e-01f, -1.175581508e-01f, -1.678904388e-01f}},
+        {{1.666666667e-01f,  0.000000000e+00f, -2.356640879e-01f,  1.667265410e-01f}},
+    }},
+    /*LF*/{{1.00000000e+0f, 1.00000000e+0f}},
+    {{
+        {{1.666666667e-01f,  0.000000000e+00f,  2.356640879e-01f, -1.667265410e-01f}},
+        {{1.666666667e-01f,  2.033043281e-01f, -1.175581508e-01f, -1.678904388e-01f}},
+        {{1.666666667e-01f,  2.033043281e-01f,  1.175581508e-01f,  1.678904388e-01f}},
+        {{1.666666667e-01f, -2.033043281e-01f,  1.175581508e-01f,  1.678904388e-01f}},
+        {{1.666666667e-01f, -2.033043281e-01f, -1.175581508e-01f, -1.678904388e-01f}},
+        {{1.666666667e-01f,  0.000000000e+00f, -2.356640879e-01f,  1.667265410e-01f}},
+    }}
+};
+constexpr DecoderConfig<SingleBand, 10> X714Config{
+    1, true, {{FrontLeft, FrontRight, SideLeft, SideRight, BackLeft, BackRight, TopFrontLeft, TopFrontRight, TopBackLeft, TopBackRight }},
+    DevAmbiScaling::N3D,
+    {{1.00000000e+0f, 1.00000000e+0f, 1.00000000e+0f}},
+    {{
+        {{1.27149251e-01f,  7.63047539e-02f, -3.64373750e-02f,  1.59700680e-01f}},
+        {{1.07005418e-01f, -7.67638760e-02f, -4.92129762e-02f,  1.29012797e-01f}},
+        {{1.26400196e-01f,  1.77494694e-01f, -3.71203389e-02f,  0.00000000e+00f}},
+        {{1.26396516e-01f, -1.77488059e-01f, -3.71297878e-02f,  0.00000000e+00f}},
+        {{1.06996956e-01f,  7.67615256e-02f, -4.92166307e-02f, -1.29001640e-01f}},
+        {{1.27145671e-01f, -7.63003471e-02f, -3.64353304e-02f, -1.59697510e-01f}},
+        {{8.80919747e-02f,  7.48940670e-02f,  9.08786244e-02f,  6.22527183e-02f}},
+        {{1.57880745e-01f, -7.28755272e-02f,  1.82364187e-01f,  8.74240284e-02f}},
+        {{1.57892225e-01f,  7.28944768e-02f,  1.82363474e-01f, -8.74301086e-02f}},
+        {{8.80892603e-02f, -7.48948724e-02f,  9.08779842e-02f, -6.22480443e-02f}},
     }}
 };
 
 void InitPanning(ALCdevice *device, const bool hqdec=false, const bool stablize=false,
     DecoderView decoder={})
 {
-    if(!decoder.mOrder)
+    if(!decoder)
     {
         switch(device->FmtChans)
         {
@@ -551,6 +597,8 @@ void InitPanning(ALCdevice *device, const bool hqdec=false, const bool stablize=
         case DevFmtX51: decoder = X51Config; break;
         case DevFmtX61: decoder = X61Config; break;
         case DevFmtX71: decoder = X71Config; break;
+        case DevFmtX714: decoder = X714Config; break;
+        case DevFmtX3D71: decoder = X3D71Config; break;
         case DevFmtAmbi3D:
             auto&& acnmap = GetAmbiLayout(device->mAmbiLayout);
             auto&& n3dscale = GetAmbiScales(device->mAmbiScale);
@@ -561,59 +609,59 @@ void InitPanning(ALCdevice *device, const bool hqdec=false, const bool stablize=
                 [&n3dscale](const uint8_t &acn) noexcept -> BFChannelConfig
                 { return BFChannelConfig{1.0f/n3dscale[acn], acn}; });
             AllocChannels(device, count, 0);
+            device->m2DMixing = false;
 
-            float nfc_delay{device->configValue<float>("decoder", "nfc-ref-delay").value_or(0.0f)};
-            if(nfc_delay > 0.0f)
-                InitNearFieldCtrl(device, nfc_delay * SpeedOfSoundMetersPerSec, device->mAmbiOrder,
-                    true);
+            float avg_dist{};
+            if(auto distopt = device->configValue<float>("decoder", "speaker-dist"))
+                avg_dist = *distopt;
+            else if(auto delayopt = device->configValue<float>("decoder", "nfc-ref-delay"))
+            {
+                WARN("nfc-ref-delay is deprecated, use speaker-dist instead\n");
+                avg_dist = *delayopt * SpeedOfSoundMetersPerSec;
+            }
+
+            InitNearFieldCtrl(device, avg_dist, device->mAmbiOrder, true);
             return;
         }
     }
 
+    const size_t ambicount{decoder.mIs3D ? AmbiChannelsFromOrder(decoder.mOrder) :
+        Ambi2DChannelsFromOrder(decoder.mOrder)};
     const bool dual_band{hqdec && !decoder.mCoeffsLF.empty()};
     al::vector<ChannelDec> chancoeffs, chancoeffslf;
     for(size_t i{0u};i < decoder.mChannels.size();++i)
     {
-        const uint idx{GetChannelIdxByName(device->RealOut, decoder.mChannels[i])};
-        if(idx == INVALID_CHANNEL_INDEX)
+        const uint idx{device->channelIdxByName(decoder.mChannels[i])};
+        if(idx == InvalidChannelIndex)
         {
             ERR("Failed to find %s channel in device\n",
                 GetLabelFromChannel(decoder.mChannels[i]));
             continue;
         }
 
+        auto ordermap = decoder.mIs3D ? AmbiIndex::OrderFromChannel().data()
+            : AmbiIndex::OrderFrom2DChannel().data();
+
         chancoeffs.resize(maxz(chancoeffs.size(), idx+1u), ChannelDec{});
-        al::span<float,MaxAmbiChannels> coeffs{chancoeffs[idx]};
-        size_t ambichan{0};
-        for(uint o{0};o < decoder.mOrder+1u;++o)
-        {
-            const float order_gain{decoder.mOrderGain[o]};
-            const size_t order_max{decoder.mIs3D ? AmbiChannelsFromOrder(o) :
-                Ambi2DChannelsFromOrder(o)};
-            for(;ambichan < order_max;++ambichan)
-                coeffs[ambichan] = decoder.mCoeffs[i][ambichan] * order_gain;
-        }
+        al::span<const float,MaxAmbiChannels> src{decoder.mCoeffs[i]};
+        al::span<float,MaxAmbiChannels> dst{chancoeffs[idx]};
+        for(size_t ambichan{0};ambichan < ambicount;++ambichan)
+            dst[ambichan] = src[ambichan] * decoder.mOrderGain[ordermap[ambichan]];
+
         if(!dual_band)
             continue;
 
         chancoeffslf.resize(maxz(chancoeffslf.size(), idx+1u), ChannelDec{});
-        coeffs = chancoeffslf[idx];
-        ambichan = 0;
-        for(uint o{0};o < decoder.mOrder+1u;++o)
-        {
-            const float order_gain{decoder.mOrderGainLF[o]};
-            const size_t order_max{decoder.mIs3D ? AmbiChannelsFromOrder(o) :
-                Ambi2DChannelsFromOrder(o)};
-            for(;ambichan < order_max;++ambichan)
-                coeffs[ambichan] = decoder.mCoeffsLF[i][ambichan] * order_gain;
-        }
+        src = decoder.mCoeffsLF[i];
+        dst = chancoeffslf[idx];
+        for(size_t ambichan{0};ambichan < ambicount;++ambichan)
+            dst[ambichan] = src[ambichan] * decoder.mOrderGainLF[ordermap[ambichan]];
     }
 
     /* For non-DevFmtAmbi3D, set the ambisonic order. */
     device->mAmbiOrder = decoder.mOrder;
+    device->m2DMixing = !decoder.mIs3D;
 
-    const size_t ambicount{decoder.mIs3D ? AmbiChannelsFromOrder(decoder.mOrder) :
-        Ambi2DChannelsFromOrder(decoder.mOrder)};
     const al::span<const uint8_t> acnmap{decoder.mIs3D ? AmbiIndex::FromACN().data() :
         AmbiIndex::FromACN2D().data(), ambicount};
     auto&& coeffscale = GetAmbiScales(decoder.mScaling);
@@ -649,6 +697,7 @@ void InitPanning(ALCdevice *device, const bool hqdec=false, const bool stablize=
 
     TRACE("Enabling %s-band %s-order%s ambisonic decoder\n",
         !dual_band ? "single" : "dual",
+        (decoder.mOrder > 3) ? "fourth" :
         (decoder.mOrder > 2) ? "third" :
         (decoder.mOrder > 1) ? "second" : "first",
         decoder.mIs3D ? " periphonic" : "");
@@ -662,10 +711,13 @@ void InitHrtfPanning(ALCdevice *device)
     constexpr float Deg_90{Deg180 / 2.0f /* 90 degrees*/};
     constexpr float Deg_45{Deg_90 / 2.0f /* 45 degrees*/};
     constexpr float Deg135{Deg_45 * 3.0f /*135 degrees*/};
+    constexpr float Deg_21{3.648638281e-01f /* 20~ 21 degrees*/};
+    constexpr float Deg_32{5.535743589e-01f /* 31~ 32 degrees*/};
     constexpr float Deg_35{6.154797087e-01f /* 35~ 36 degrees*/};
+    constexpr float Deg_58{1.017221968e+00f /* 58~ 59 degrees*/};
     constexpr float Deg_69{1.205932499e+00f /* 69~ 70 degrees*/};
     constexpr float Deg111{1.935660155e+00f /*110~111 degrees*/};
-    constexpr float Deg_21{3.648638281e-01f /* 20~ 21 degrees*/};
+    constexpr float Deg122{2.124370686e+00f /*121~122 degrees*/};
     static const AngularPoint AmbiPoints1O[]{
         { EvRadians{ Deg_35}, AzRadians{-Deg_45} },
         { EvRadians{ Deg_35}, AzRadians{-Deg135} },
@@ -676,20 +728,18 @@ void InitHrtfPanning(ALCdevice *device)
         { EvRadians{-Deg_35}, AzRadians{ Deg_45} },
         { EvRadians{-Deg_35}, AzRadians{ Deg135} },
     }, AmbiPoints2O[]{
-        { EvRadians{   0.0f}, AzRadians{   0.0f} },
-        { EvRadians{   0.0f}, AzRadians{ Deg180} },
-        { EvRadians{   0.0f}, AzRadians{-Deg_90} },
-        { EvRadians{   0.0f}, AzRadians{ Deg_90} },
-        { EvRadians{ Deg_90}, AzRadians{   0.0f} },
-        { EvRadians{-Deg_90}, AzRadians{   0.0f} },
-        { EvRadians{ Deg_35}, AzRadians{-Deg_45} },
-        { EvRadians{ Deg_35}, AzRadians{-Deg135} },
-        { EvRadians{ Deg_35}, AzRadians{ Deg_45} },
-        { EvRadians{ Deg_35}, AzRadians{ Deg135} },
-        { EvRadians{-Deg_35}, AzRadians{-Deg_45} },
-        { EvRadians{-Deg_35}, AzRadians{-Deg135} },
-        { EvRadians{-Deg_35}, AzRadians{ Deg_45} },
-        { EvRadians{-Deg_35}, AzRadians{ Deg135} },
+        { EvRadians{-Deg_32}, AzRadians{   0.0f} },
+        { EvRadians{   0.0f}, AzRadians{ Deg_58} },
+        { EvRadians{ Deg_58}, AzRadians{ Deg_90} },
+        { EvRadians{ Deg_32}, AzRadians{   0.0f} },
+        { EvRadians{   0.0f}, AzRadians{ Deg122} },
+        { EvRadians{-Deg_58}, AzRadians{-Deg_90} },
+        { EvRadians{-Deg_32}, AzRadians{ Deg180} },
+        { EvRadians{   0.0f}, AzRadians{-Deg122} },
+        { EvRadians{ Deg_58}, AzRadians{-Deg_90} },
+        { EvRadians{ Deg_32}, AzRadians{ Deg180} },
+        { EvRadians{   0.0f}, AzRadians{-Deg_58} },
+        { EvRadians{-Deg_58}, AzRadians{ Deg_90} },
     }, AmbiPoints3O[]{
         { EvRadians{ Deg_69}, AzRadians{-Deg_90} },
         { EvRadians{ Deg_69}, AzRadians{ Deg_90} },
@@ -722,20 +772,18 @@ void InitHrtfPanning(ALCdevice *device)
         { 1.250000000e-01f, -1.250000000e-01f, -1.250000000e-01f,  1.250000000e-01f },
         { 1.250000000e-01f, -1.250000000e-01f, -1.250000000e-01f, -1.250000000e-01f },
     }, AmbiMatrix2O[][MaxAmbiChannels]{
-        { 7.142857143e-02f,  0.000000000e+00f,  0.000000000e+00f,  1.237179148e-01f,  0.000000000e+00f,  0.000000000e+00f, -7.453559925e-02f,  0.000000000e+00f,  1.290994449e-01f, },
-        { 7.142857143e-02f,  0.000000000e+00f,  0.000000000e+00f, -1.237179148e-01f,  0.000000000e+00f,  0.000000000e+00f, -7.453559925e-02f,  0.000000000e+00f,  1.290994449e-01f, },
-        { 7.142857143e-02f,  1.237179148e-01f,  0.000000000e+00f,  0.000000000e+00f,  0.000000000e+00f,  0.000000000e+00f, -7.453559925e-02f,  0.000000000e+00f, -1.290994449e-01f, },
-        { 7.142857143e-02f, -1.237179148e-01f,  0.000000000e+00f,  0.000000000e+00f,  0.000000000e+00f,  0.000000000e+00f, -7.453559925e-02f,  0.000000000e+00f, -1.290994449e-01f, },
-        { 7.142857143e-02f,  0.000000000e+00f,  1.237179148e-01f,  0.000000000e+00f,  0.000000000e+00f,  0.000000000e+00f,  1.490711985e-01f,  0.000000000e+00f,  0.000000000e+00f, },
-        { 7.142857143e-02f,  0.000000000e+00f, -1.237179148e-01f,  0.000000000e+00f,  0.000000000e+00f,  0.000000000e+00f,  1.490711985e-01f,  0.000000000e+00f,  0.000000000e+00f, },
-        { 7.142857143e-02f,  7.142857143e-02f,  7.142857143e-02f,  7.142857143e-02f,  9.682458366e-02f,  9.682458366e-02f,  0.000000000e+00f,  9.682458366e-02f,  0.000000000e+00f, },
-        { 7.142857143e-02f,  7.142857143e-02f,  7.142857143e-02f, -7.142857143e-02f, -9.682458366e-02f,  9.682458366e-02f,  0.000000000e+00f, -9.682458366e-02f,  0.000000000e+00f, },
-        { 7.142857143e-02f, -7.142857143e-02f,  7.142857143e-02f,  7.142857143e-02f, -9.682458366e-02f, -9.682458366e-02f,  0.000000000e+00f,  9.682458366e-02f,  0.000000000e+00f, },
-        { 7.142857143e-02f, -7.142857143e-02f,  7.142857143e-02f, -7.142857143e-02f,  9.682458366e-02f, -9.682458366e-02f,  0.000000000e+00f, -9.682458366e-02f,  0.000000000e+00f, },
-        { 7.142857143e-02f,  7.142857143e-02f, -7.142857143e-02f,  7.142857143e-02f,  9.682458366e-02f, -9.682458366e-02f,  0.000000000e+00f, -9.682458366e-02f,  0.000000000e+00f, },
-        { 7.142857143e-02f,  7.142857143e-02f, -7.142857143e-02f, -7.142857143e-02f, -9.682458366e-02f, -9.682458366e-02f,  0.000000000e+00f,  9.682458366e-02f,  0.000000000e+00f, },
-        { 7.142857143e-02f, -7.142857143e-02f, -7.142857143e-02f,  7.142857143e-02f, -9.682458366e-02f,  9.682458366e-02f,  0.000000000e+00f, -9.682458366e-02f,  0.000000000e+00f, },
-        { 7.142857143e-02f, -7.142857143e-02f, -7.142857143e-02f, -7.142857143e-02f,  9.682458366e-02f,  9.682458366e-02f,  0.000000000e+00f,  9.682458366e-02f,  0.000000000e+00f, },
+        { 8.333333333e-02f,  0.000000000e+00f, -7.588274978e-02f,  1.227808683e-01f,  0.000000000e+00f,  0.000000000e+00f, -1.591525047e-02f, -1.443375673e-01f,  1.167715449e-01f, },
+        { 8.333333333e-02f, -1.227808683e-01f,  0.000000000e+00f,  7.588274978e-02f, -1.443375673e-01f,  0.000000000e+00f, -9.316949906e-02f,  0.000000000e+00f, -7.216878365e-02f, },
+        { 8.333333333e-02f, -7.588274978e-02f,  1.227808683e-01f,  0.000000000e+00f,  0.000000000e+00f, -1.443375673e-01f,  1.090847495e-01f,  0.000000000e+00f, -4.460276122e-02f, },
+        { 8.333333333e-02f,  0.000000000e+00f,  7.588274978e-02f,  1.227808683e-01f,  0.000000000e+00f,  0.000000000e+00f, -1.591525047e-02f,  1.443375673e-01f,  1.167715449e-01f, },
+        { 8.333333333e-02f, -1.227808683e-01f,  0.000000000e+00f, -7.588274978e-02f,  1.443375673e-01f,  0.000000000e+00f, -9.316949906e-02f,  0.000000000e+00f, -7.216878365e-02f, },
+        { 8.333333333e-02f,  7.588274978e-02f, -1.227808683e-01f,  0.000000000e+00f,  0.000000000e+00f, -1.443375673e-01f,  1.090847495e-01f,  0.000000000e+00f, -4.460276122e-02f, },
+        { 8.333333333e-02f,  0.000000000e+00f, -7.588274978e-02f, -1.227808683e-01f,  0.000000000e+00f,  0.000000000e+00f, -1.591525047e-02f,  1.443375673e-01f,  1.167715449e-01f, },
+        { 8.333333333e-02f,  1.227808683e-01f,  0.000000000e+00f, -7.588274978e-02f, -1.443375673e-01f,  0.000000000e+00f, -9.316949906e-02f,  0.000000000e+00f, -7.216878365e-02f, },
+        { 8.333333333e-02f,  7.588274978e-02f,  1.227808683e-01f,  0.000000000e+00f,  0.000000000e+00f,  1.443375673e-01f,  1.090847495e-01f,  0.000000000e+00f, -4.460276122e-02f, },
+        { 8.333333333e-02f,  0.000000000e+00f,  7.588274978e-02f, -1.227808683e-01f,  0.000000000e+00f,  0.000000000e+00f, -1.591525047e-02f, -1.443375673e-01f,  1.167715449e-01f, },
+        { 8.333333333e-02f,  1.227808683e-01f,  0.000000000e+00f,  7.588274978e-02f,  1.443375673e-01f,  0.000000000e+00f, -9.316949906e-02f,  0.000000000e+00f, -7.216878365e-02f, },
+        { 8.333333333e-02f, -7.588274978e-02f, -1.227808683e-01f,  0.000000000e+00f,  0.000000000e+00f,  1.443375673e-01f,  1.090847495e-01f,  0.000000000e+00f, -4.460276122e-02f, },
     }, AmbiMatrix3O[][MaxAmbiChannels]{
         { 5.000000000e-02f,  3.090169944e-02f,  8.090169944e-02f,  0.000000000e+00f,  0.000000000e+00f,  6.454972244e-02f,  9.045084972e-02f,  0.000000000e+00f, -1.232790000e-02f, -1.256118221e-01f,  0.000000000e+00f,  1.126112056e-01f,  7.944389175e-02f,  0.000000000e+00f,  2.421151497e-02f,  0.000000000e+00f, },
         { 5.000000000e-02f, -3.090169944e-02f,  8.090169944e-02f,  0.000000000e+00f,  0.000000000e+00f, -6.454972244e-02f,  9.045084972e-02f,  0.000000000e+00f, -1.232790000e-02f,  1.256118221e-01f,  0.000000000e+00f, -1.126112056e-01f,  7.944389175e-02f,  0.000000000e+00f,  2.421151497e-02f,  0.000000000e+00f, },
@@ -761,13 +809,13 @@ void InitHrtfPanning(ALCdevice *device)
     static const float AmbiOrderHFGain1O[MaxAmbiOrder+1]{
         /*ENRGY*/ 2.000000000e+00f, 1.154700538e+00f
     }, AmbiOrderHFGain2O[MaxAmbiOrder+1]{
-        /*ENRGY 2.357022604e+00f, 1.825741858e+00f, 9.428090416e-01f*/
+        /*ENRGY*/ 1.825741858e+00f, 1.414213562e+00f, 7.302967433e-01f
         /*AMP   1.000000000e+00f, 7.745966692e-01f, 4.000000000e-01f*/
-        /*RMS*/ 9.128709292e-01f, 7.071067812e-01f, 3.651483717e-01f
+        /*RMS   9.128709292e-01f, 7.071067812e-01f, 3.651483717e-01f*/
     }, AmbiOrderHFGain3O[MaxAmbiOrder+1]{
         /*ENRGY 1.865086714e+00f, 1.606093894e+00f, 1.142055301e+00f, 5.683795528e-01f*/
-        /*AMP   1.000000000e+00f, 8.611363116e-01f, 6.123336207e-01f, 3.047469850e-01f*/
-        /*RMS*/ 8.340921354e-01f, 7.182670250e-01f, 5.107426573e-01f, 2.541870634e-01f
+        /*AMP*/ 1.000000000e+00f, 8.611363116e-01f, 6.123336207e-01f, 3.047469850e-01f
+        /*RMS   8.340921354e-01f, 7.182670250e-01f, 5.107426573e-01f, 2.541870634e-01f*/
     };
 
     static_assert(al::size(AmbiPoints1O) == al::size(AmbiMatrix1O), "First-Order Ambisonic HRTF mismatch");
@@ -832,11 +880,13 @@ void InitHrtfPanning(ALCdevice *device)
         (device->mRenderMode == RenderMode::Hrtf) ? "+ Full " : "",
         device->mHrtfName.c_str());
 
+    bool perHrirMin{false};
     al::span<const AngularPoint> AmbiPoints{AmbiPoints1O};
     const float (*AmbiMatrix)[MaxAmbiChannels]{AmbiMatrix1O};
     al::span<const float,MaxAmbiOrder+1> AmbiOrderHFGain{AmbiOrderHFGain1O};
     if(ambi_order >= 3)
     {
+        perHrirMin = true;
         AmbiPoints = AmbiPoints3O;
         AmbiMatrix = AmbiMatrix3O;
         AmbiOrderHFGain = AmbiOrderHFGain3O;
@@ -848,6 +898,7 @@ void InitHrtfPanning(ALCdevice *device)
         AmbiOrderHFGain = AmbiOrderHFGain2O;
     }
     device->mAmbiOrder = ambi_order;
+    device->m2DMixing = false;
 
     const size_t count{AmbiChannelsFromOrder(ambi_order)};
     std::transform(AmbiIndex::FromACN().begin(), AmbiIndex::FromACN().begin()+count,
@@ -858,11 +909,11 @@ void InitHrtfPanning(ALCdevice *device)
 
     HrtfStore *Hrtf{device->mHrtf.get()};
     auto hrtfstate = DirectHrtfState::Create(count);
-    hrtfstate->build(Hrtf, device->mIrSize, AmbiPoints, AmbiMatrix, device->mXOverFreq,
+    hrtfstate->build(Hrtf, device->mIrSize, perHrirMin, AmbiPoints, AmbiMatrix, device->mXOverFreq,
         AmbiOrderHFGain);
     device->mHrtfState = std::move(hrtfstate);
 
-    InitNearFieldCtrl(device, Hrtf->field[0].distance, ambi_order, true);
+    InitNearFieldCtrl(device, Hrtf->mFields[0].distance, ambi_order, true);
 }
 
 void InitUhjPanning(ALCdevice *device)
@@ -871,8 +922,9 @@ void InitUhjPanning(ALCdevice *device)
     constexpr size_t count{Ambi2DChannelsFromOrder(1)};
 
     device->mAmbiOrder = 1;
+    device->m2DMixing = true;
 
-    auto acnmap_begin = AmbiIndex::FromFuMa().begin();
+    auto acnmap_begin = AmbiIndex::FromFuMa2D().begin();
     std::transform(acnmap_begin, acnmap_begin + count, std::begin(device->Dry.AmbiMap),
         [](const uint8_t &acn) noexcept -> BFChannelConfig
         { return BFChannelConfig{1.0f/AmbiScale::FromUHJ()[acn], acn}; });
@@ -891,6 +943,7 @@ void aluInitRenderer(ALCdevice *device, int hrtf_id, al::optional<StereoEncoding
     device->mIrSize = 0;
     device->mHrtfName.clear();
     device->mXOverFreq = 400.0f;
+    device->m2DMixing = false;
     device->mRenderMode = RenderMode::Normal;
 
     if(device->FmtChans != DevFmtStereo)
@@ -906,6 +959,8 @@ void aluInitRenderer(ALCdevice *device, int hrtf_id, al::optional<StereoEncoding
         case DevFmtX51: layout = "surround51"; break;
         case DevFmtX61: layout = "surround61"; break;
         case DevFmtX71: layout = "surround71"; break;
+        case DevFmtX714: layout = "surround714"; break;
+        case DevFmtX3D71: layout = "surround3d71"; break;
         /* Mono, Stereo, and Ambisonics output don't use custom decoders. */
         case DevFmtMono:
         case DevFmtStereo:
@@ -915,7 +970,7 @@ void aluInitRenderer(ALCdevice *device, int hrtf_id, al::optional<StereoEncoding
 
         std::unique_ptr<DecoderConfig<DualBand,MAX_OUTPUT_CHANNELS>> decoder_store;
         DecoderView decoder{};
-        float speakerdists[MaxChannels]{};
+        float speakerdists[MAX_OUTPUT_CHANNELS]{};
         auto load_config = [device,&decoder_store,&decoder,&speakerdists](const char *config)
         {
             AmbDecConf conf{};
@@ -949,13 +1004,13 @@ void aluInitRenderer(ALCdevice *device, int hrtf_id, al::optional<StereoEncoding
         /* Enable the stablizer only for formats that have front-left, front-
          * right, and front-center outputs.
          */
-        const bool stablize{device->RealOut.ChannelIndex[FrontCenter] != INVALID_CHANNEL_INDEX
-            && device->RealOut.ChannelIndex[FrontLeft] != INVALID_CHANNEL_INDEX
-            && device->RealOut.ChannelIndex[FrontRight] != INVALID_CHANNEL_INDEX
-            && device->getConfigValueBool(nullptr, "front-stablizer", 0) != 0};
-        const bool hqdec{device->getConfigValueBool("decoder", "hq-mode", 1) != 0};
+        const bool stablize{device->RealOut.ChannelIndex[FrontCenter] != InvalidChannelIndex
+            && device->RealOut.ChannelIndex[FrontLeft] != InvalidChannelIndex
+            && device->RealOut.ChannelIndex[FrontRight] != InvalidChannelIndex
+            && device->getConfigValueBool(nullptr, "front-stablizer", false) != 0};
+        const bool hqdec{device->getConfigValueBool("decoder", "hq-mode", true) != 0};
         InitPanning(device, hqdec, stablize, decoder);
-        if(decoder.mOrder > 0)
+        if(decoder)
         {
             float accum_dist{0.0f}, spkr_count{0.0f};
             for(auto dist : speakerdists)
@@ -966,11 +1021,13 @@ void aluInitRenderer(ALCdevice *device, int hrtf_id, al::optional<StereoEncoding
                     spkr_count += 1.0f;
                 }
             }
+
+            const float avg_dist{(accum_dist > 0.0f && spkr_count > 0) ? accum_dist/spkr_count :
+                device->configValue<float>("decoder", "speaker-dist").value_or(1.0f)};
+            InitNearFieldCtrl(device, avg_dist, decoder.mOrder, decoder.mIs3D);
+
             if(spkr_count > 0)
-            {
-                InitNearFieldCtrl(device, accum_dist / spkr_count, decoder.mOrder, decoder.mIs3D);
                 InitDistanceComp(device, decoder.mChannels, speakerdists);
-            }
         }
         if(auto *ambidec{device->AmbiDecoder.get()})
         {
@@ -1018,7 +1075,7 @@ void aluInitRenderer(ALCdevice *device, int hrtf_id, al::optional<StereoEncoding
             old_hrtf = nullptr;
 
             HrtfStore *hrtf{device->mHrtf.get()};
-            device->mIrSize = hrtf->irSize;
+            device->mIrSize = hrtf->mIrSize;
             if(auto hrtfsizeopt = device->configValue<uint>(nullptr, "hrtf-size"))
             {
                 if(*hrtfsizeopt > 0 && *hrtfsizeopt < device->mIrSize)
@@ -1035,7 +1092,20 @@ void aluInitRenderer(ALCdevice *device, int hrtf_id, al::optional<StereoEncoding
 
     if(stereomode.value_or(StereoEncoding::Default) == StereoEncoding::Uhj)
     {
-        device->mUhjEncoder = std::make_unique<UhjEncoder>();
+        switch(UhjEncodeQuality)
+        {
+        case UhjQualityType::IIR:
+            device->mUhjEncoder = std::make_unique<UhjEncoderIIR>();
+            break;
+        case UhjQualityType::FIR256:
+            device->mUhjEncoder = std::make_unique<UhjEncoder<UhjLength256>>();
+            break;
+        case UhjQualityType::FIR512:
+            device->mUhjEncoder = std::make_unique<UhjEncoder<UhjLength512>>();
+            break;
+        }
+        assert(device->mUhjEncoder != nullptr);
+
         TRACE("UHJ enabled\n");
         InitUhjPanning(device);
         device->PostProcess = &ALCdevice::ProcessUhj;
@@ -1071,49 +1141,12 @@ void aluInitEffectPanning(EffectSlot *slot, ALCcontext *context)
     DeviceBase *device{context->mDevice};
     const size_t count{AmbiChannelsFromOrder(device->mAmbiOrder)};
 
-    auto wetbuffer_iter = context->mWetBuffers.end();
-    if(slot->mWetBuffer)
-    {
-        /* If the effect slot already has a wet buffer attached, allocate a new
-         * one in its place.
-         */
-        wetbuffer_iter = context->mWetBuffers.begin();
-        for(;wetbuffer_iter != context->mWetBuffers.end();++wetbuffer_iter)
-        {
-            if(wetbuffer_iter->get() == slot->mWetBuffer)
-            {
-                slot->mWetBuffer = nullptr;
-                slot->Wet.Buffer = {};
-
-                *wetbuffer_iter = WetBufferPtr{new(FamCount(count)) WetBuffer{count}};
-
-                break;
-            }
-        }
-    }
-    if(wetbuffer_iter == context->mWetBuffers.end())
-    {
-        /* Otherwise, search for an unused wet buffer. */
-        wetbuffer_iter = context->mWetBuffers.begin();
-        for(;wetbuffer_iter != context->mWetBuffers.end();++wetbuffer_iter)
-        {
-            if(!(*wetbuffer_iter)->mInUse)
-                break;
-        }
-        if(wetbuffer_iter == context->mWetBuffers.end())
-        {
-            /* Otherwise, allocate a new one to use. */
-            context->mWetBuffers.emplace_back(WetBufferPtr{new(FamCount(count)) WetBuffer{count}});
-            wetbuffer_iter = context->mWetBuffers.end()-1;
-        }
-    }
-    WetBuffer *wetbuffer{slot->mWetBuffer = wetbuffer_iter->get()};
-    wetbuffer->mInUse = true;
+    slot->mWetBuffer.resize(count);
 
     auto acnmap_begin = AmbiIndex::FromACN().begin();
     auto iter = std::transform(acnmap_begin, acnmap_begin + count, slot->Wet.AmbiMap.begin(),
         [](const uint8_t &acn) noexcept -> BFChannelConfig
         { return BFChannelConfig{1.0f, acn}; });
     std::fill(iter, slot->Wet.AmbiMap.end(), BFChannelConfig{});
-    slot->Wet.Buffer = wetbuffer->mBuffer;
+    slot->Wet.Buffer = slot->mWetBuffer;
 }

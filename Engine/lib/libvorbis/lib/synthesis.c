@@ -6,12 +6,11 @@
  * IN 'COPYING'. PLEASE READ THESE TERMS BEFORE DISTRIBUTING.       *
  *                                                                  *
  * THE OggVorbis SOURCE CODE IS (C) COPYRIGHT 1994-2015             *
- * by the Xiph.Org Foundation http://www.xiph.org/                  *
+ * by the Xiph.Org Foundation https://xiph.org/                     *
  *                                                                  *
  ********************************************************************
 
  function: single-block PCM synthesis
- last mod: $Id: synthesis.c 19441 2015-01-21 01:17:41Z xiphmont $
 
  ********************************************************************/
 
@@ -117,7 +116,7 @@ int vorbis_synthesis_trackonly(vorbis_block *vb,ogg_packet *op){
   if(!ci->mode_param[mode]){
     return(OV_EBADPACKET);
   }
-  
+
   vb->W=ci->mode_param[mode]->blockflag;
   if(vb->W){
     vb->lW=oggpack_read(opb,1);

@@ -8,7 +8,7 @@
 #include "effects.h"
 
 #ifdef ALSOFT_EAX
-#include "al/eax_exception.h"
+#include "al/eax/exception.h"
 #endif // ALSOFT_EAX
 
 
@@ -100,53 +100,50 @@ const EffectProps NullEffectProps{genDefaultProps()};
 #ifdef ALSOFT_EAX
 namespace {
 
-class EaxNullEffect final :
-    public EaxEffect
-{
-public:
-    EaxNullEffect();
-
-    void dispatch(const EaxEaxCall& eax_call) override;
-
-    // [[nodiscard]]
-    bool apply_deferred() override;
-}; // EaxNullEffect
-
-
-class EaxNullEffectException :
-    public EaxException
-{
-public:
-    explicit EaxNullEffectException(
-        const char* message)
-        :
-        EaxException{"EAX_NULL_EFFECT", message}
-    {
-    }
-}; // EaxNullEffectException
-
-
-EaxNullEffect::EaxNullEffect()
-    : EaxEffect{AL_EFFECT_NULL}
-{
-}
-
-void EaxNullEffect::dispatch(const EaxEaxCall& eax_call)
-{
-    if(eax_call.get_property_id() != 0)
-        throw EaxNullEffectException{"Unsupported property id."};
-}
-
-bool EaxNullEffect::apply_deferred()
-{
-    return false;
-}
+using NullCommitter = EaxCommitter<EaxNullCommitter>;
 
 } // namespace
 
-EaxEffectUPtr eax_create_eax_null_effect()
+template<>
+struct NullCommitter::Exception : public EaxException
 {
-    return std::make_unique<EaxNullEffect>();
+    explicit Exception(const char *message) : EaxException{"EAX_NULL_EFFECT", message}
+    { }
+};
+
+template<>
+[[noreturn]] void NullCommitter::fail(const char *message)
+{
+    throw Exception{message};
+}
+
+template<>
+bool NullCommitter::commit(const EaxEffectProps &props)
+{
+    const bool ret{props.mType != mEaxProps.mType};
+    mEaxProps = props;
+    return ret;
+}
+
+template<>
+void NullCommitter::SetDefaults(EaxEffectProps &props)
+{
+    props = EaxEffectProps{};
+    props.mType = EaxEffectType::None;
+}
+
+template<>
+void NullCommitter::Get(const EaxCall &call, const EaxEffectProps&)
+{
+    if(call.get_property_id() != 0)
+        fail_unknown_property_id();
+}
+
+template<>
+void NullCommitter::Set(const EaxCall &call, EaxEffectProps&)
+{
+    if(call.get_property_id() != 0)
+        fail_unknown_property_id();
 }
 
 #endif // ALSOFT_EAX

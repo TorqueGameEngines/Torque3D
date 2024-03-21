@@ -6,12 +6,11 @@
  * IN 'COPYING'. PLEASE READ THESE TERMS BEFORE DISTRIBUTING.       *
  *                                                                  *
  * THE OggVorbis SOURCE CODE IS (C) COPYRIGHT 1994-2010             *
- * by the Xiph.Org Foundation http://www.xiph.org/                  *
+ * by the Xiph.Org Foundation https://xiph.org/                     *
  *                                                                  *
  ********************************************************************
  *
  * function: static codebooks for 5.1 surround
- * last modified: $Id: res_books_51.h 19057 2014-01-22 12:32:31Z xiphmont $
  *
  ********************************************************************/
 

@@ -9,9 +9,8 @@
 
 #ifdef ALSOFT_EAX
 #include "alnumeric.h"
-
-#include "al/eax_exception.h"
-#include "al/eax_utils.h"
+#include "al/eax/exception.h"
+#include "al/eax/utils.h"
 #endif // ALSOFT_EAX
 
 
@@ -93,272 +92,100 @@ const EffectProps PshifterEffectProps{genDefaultProps()};
 #ifdef ALSOFT_EAX
 namespace {
 
-using EaxPitchShifterEffectDirtyFlagsValue = std::uint_least8_t;
+using PitchShifterCommitter = EaxCommitter<EaxPitchShifterCommitter>;
 
-struct EaxPitchShifterEffectDirtyFlags
-{
-    using EaxIsBitFieldStruct = bool;
-
-    EaxPitchShifterEffectDirtyFlagsValue lCoarseTune : 1;
-    EaxPitchShifterEffectDirtyFlagsValue lFineTune : 1;
-}; // EaxPitchShifterEffectDirtyFlags
-
-
-class EaxPitchShifterEffect final :
-    public EaxEffect
-{
-public:
-    EaxPitchShifterEffect();
-
-    void dispatch(const EaxEaxCall& eax_call) override;
-
-    // [[nodiscard]]
-    bool apply_deferred() override;
-
-private:
-    EAXPITCHSHIFTERPROPERTIES eax_{};
-    EAXPITCHSHIFTERPROPERTIES eax_d_{};
-    EaxPitchShifterEffectDirtyFlags eax_dirty_flags_{};
-
-    void set_eax_defaults();
-
-    void set_efx_coarse_tune();
-    void set_efx_fine_tune();
-    void set_efx_defaults();
-
-    void get(const EaxEaxCall& eax_call);
-
-    void validate_coarse_tune(long lCoarseTune);
-    void validate_fine_tune(long lFineTune);
-    void validate_all(const EAXPITCHSHIFTERPROPERTIES& all);
-
-    void defer_coarse_tune(long lCoarseTune);
-    void defer_fine_tune(long lFineTune);
-    void defer_all(const EAXPITCHSHIFTERPROPERTIES& all);
-
-    void defer_coarse_tune(const EaxEaxCall& eax_call);
-    void defer_fine_tune(const EaxEaxCall& eax_call);
-    void defer_all(const EaxEaxCall& eax_call);
-
-    void set(const EaxEaxCall& eax_call);
-}; // EaxPitchShifterEffect
-
-
-class EaxPitchShifterEffectException :
-    public EaxException
-{
-public:
-    explicit EaxPitchShifterEffectException(
-        const char* message)
-        :
-        EaxException{"EAX_PITCH_SHIFTER_EFFECT", message}
+struct CoarseTuneValidator {
+    void operator()(long lCoarseTune) const
     {
+        eax_validate_range<PitchShifterCommitter::Exception>(
+            "Coarse Tune",
+            lCoarseTune,
+            EAXPITCHSHIFTER_MINCOARSETUNE,
+            EAXPITCHSHIFTER_MAXCOARSETUNE);
     }
-}; // EaxPitchShifterEffectException
+}; // CoarseTuneValidator
 
-
-EaxPitchShifterEffect::EaxPitchShifterEffect()
-    : EaxEffect{AL_EFFECT_PITCH_SHIFTER}
-{
-    set_eax_defaults();
-    set_efx_defaults();
-}
-
-void EaxPitchShifterEffect::dispatch(const EaxEaxCall& eax_call)
-{
-    eax_call.is_get() ? get(eax_call) : set(eax_call);
-}
-
-void EaxPitchShifterEffect::set_eax_defaults()
-{
-    eax_.lCoarseTune = EAXPITCHSHIFTER_DEFAULTCOARSETUNE;
-    eax_.lFineTune = EAXPITCHSHIFTER_DEFAULTFINETUNE;
-
-    eax_d_ = eax_;
-}
-
-void EaxPitchShifterEffect::set_efx_coarse_tune()
-{
-    const auto coarse_tune = clamp(
-        static_cast<ALint>(eax_.lCoarseTune),
-        AL_PITCH_SHIFTER_MIN_COARSE_TUNE,
-        AL_PITCH_SHIFTER_MAX_COARSE_TUNE);
-
-    al_effect_props_.Pshifter.CoarseTune = coarse_tune;
-}
-
-void EaxPitchShifterEffect::set_efx_fine_tune()
-{
-    const auto fine_tune = clamp(
-        static_cast<ALint>(eax_.lFineTune),
-        AL_PITCH_SHIFTER_MIN_FINE_TUNE,
-        AL_PITCH_SHIFTER_MAX_FINE_TUNE);
-
-    al_effect_props_.Pshifter.FineTune = fine_tune;
-}
-
-void EaxPitchShifterEffect::set_efx_defaults()
-{
-    set_efx_coarse_tune();
-    set_efx_fine_tune();
-}
-
-void EaxPitchShifterEffect::get(const EaxEaxCall& eax_call)
-{
-    switch(eax_call.get_property_id())
+struct FineTuneValidator {
+    void operator()(long lFineTune) const
     {
-        case EAXPITCHSHIFTER_NONE:
-            break;
-
-        case EAXPITCHSHIFTER_ALLPARAMETERS:
-            eax_call.set_value<EaxPitchShifterEffectException>(eax_);
-            break;
-
-        case EAXPITCHSHIFTER_COARSETUNE:
-            eax_call.set_value<EaxPitchShifterEffectException>(eax_.lCoarseTune);
-            break;
-
-        case EAXPITCHSHIFTER_FINETUNE:
-            eax_call.set_value<EaxPitchShifterEffectException>(eax_.lFineTune);
-            break;
-
-        default:
-            throw EaxPitchShifterEffectException{"Unsupported property id."};
+        eax_validate_range<PitchShifterCommitter::Exception>(
+            "Fine Tune",
+            lFineTune,
+            EAXPITCHSHIFTER_MINFINETUNE,
+            EAXPITCHSHIFTER_MAXFINETUNE);
     }
-}
+}; // FineTuneValidator
 
-void EaxPitchShifterEffect::validate_coarse_tune(
-    long lCoarseTune)
-{
-    eax_validate_range<EaxPitchShifterEffectException>(
-        "Coarse Tune",
-        lCoarseTune,
-        EAXPITCHSHIFTER_MINCOARSETUNE,
-        EAXPITCHSHIFTER_MAXCOARSETUNE);
-}
-
-void EaxPitchShifterEffect::validate_fine_tune(
-    long lFineTune)
-{
-    eax_validate_range<EaxPitchShifterEffectException>(
-        "Fine Tune",
-        lFineTune,
-        EAXPITCHSHIFTER_MINFINETUNE,
-        EAXPITCHSHIFTER_MAXFINETUNE);
-}
-
-void EaxPitchShifterEffect::validate_all(
-    const EAXPITCHSHIFTERPROPERTIES& all)
-{
-    validate_coarse_tune(all.lCoarseTune);
-    validate_fine_tune(all.lFineTune);
-}
-
-void EaxPitchShifterEffect::defer_coarse_tune(
-    long lCoarseTune)
-{
-    eax_d_.lCoarseTune = lCoarseTune;
-    eax_dirty_flags_.lCoarseTune = (eax_.lCoarseTune != eax_d_.lCoarseTune);
-}
-
-void EaxPitchShifterEffect::defer_fine_tune(
-    long lFineTune)
-{
-    eax_d_.lFineTune = lFineTune;
-    eax_dirty_flags_.lFineTune = (eax_.lFineTune != eax_d_.lFineTune);
-}
-
-void EaxPitchShifterEffect::defer_all(
-    const EAXPITCHSHIFTERPROPERTIES& all)
-{
-    defer_coarse_tune(all.lCoarseTune);
-    defer_fine_tune(all.lFineTune);
-}
-
-void EaxPitchShifterEffect::defer_coarse_tune(
-    const EaxEaxCall& eax_call)
-{
-    const auto& coarse_tune =
-        eax_call.get_value<EaxPitchShifterEffectException, const decltype(EAXPITCHSHIFTERPROPERTIES::lCoarseTune)>();
-
-    validate_coarse_tune(coarse_tune);
-    defer_coarse_tune(coarse_tune);
-}
-
-void EaxPitchShifterEffect::defer_fine_tune(
-    const EaxEaxCall& eax_call)
-{
-    const auto& fine_tune =
-        eax_call.get_value<EaxPitchShifterEffectException, const decltype(EAXPITCHSHIFTERPROPERTIES::lFineTune)>();
-
-    validate_fine_tune(fine_tune);
-    defer_fine_tune(fine_tune);
-}
-
-void EaxPitchShifterEffect::defer_all(
-    const EaxEaxCall& eax_call)
-{
-    const auto& all =
-        eax_call.get_value<EaxPitchShifterEffectException, const EAXPITCHSHIFTERPROPERTIES>();
-
-    validate_all(all);
-    defer_all(all);
-}
-
-// [[nodiscard]]
-bool EaxPitchShifterEffect::apply_deferred()
-{
-    if (eax_dirty_flags_ == EaxPitchShifterEffectDirtyFlags{})
+struct AllValidator {
+    void operator()(const EAXPITCHSHIFTERPROPERTIES& all) const
     {
+        CoarseTuneValidator{}(all.lCoarseTune);
+        FineTuneValidator{}(all.lFineTune);
+    }
+}; // AllValidator
+
+} // namespace
+
+template<>
+struct PitchShifterCommitter::Exception : public EaxException {
+    explicit Exception(const char *message) : EaxException{"EAX_PITCH_SHIFTER_EFFECT", message}
+    { }
+};
+
+template<>
+[[noreturn]] void PitchShifterCommitter::fail(const char *message)
+{
+    throw Exception{message};
+}
+
+template<>
+bool PitchShifterCommitter::commit(const EaxEffectProps &props)
+{
+    if(props.mType == mEaxProps.mType
+        && mEaxProps.mPitchShifter.lCoarseTune == props.mPitchShifter.lCoarseTune
+        && mEaxProps.mPitchShifter.lFineTune == props.mPitchShifter.lFineTune)
         return false;
-    }
 
-    eax_ = eax_d_;
+    mEaxProps = props;
 
-    if (eax_dirty_flags_.lCoarseTune)
-    {
-        set_efx_coarse_tune();
-    }
-
-    if (eax_dirty_flags_.lFineTune)
-    {
-        set_efx_fine_tune();
-    }
-
-    eax_dirty_flags_ = EaxPitchShifterEffectDirtyFlags{};
+    mAlProps.Pshifter.CoarseTune = static_cast<int>(mEaxProps.mPitchShifter.lCoarseTune);
+    mAlProps.Pshifter.FineTune = static_cast<int>(mEaxProps.mPitchShifter.lFineTune);
 
     return true;
 }
 
-void EaxPitchShifterEffect::set(const EaxEaxCall& eax_call)
+template<>
+void PitchShifterCommitter::SetDefaults(EaxEffectProps &props)
 {
-    switch(eax_call.get_property_id())
+    props.mType = EaxEffectType::PitchShifter;
+    props.mPitchShifter.lCoarseTune = EAXPITCHSHIFTER_DEFAULTCOARSETUNE;
+    props.mPitchShifter.lFineTune = EAXPITCHSHIFTER_DEFAULTFINETUNE;
+}
+
+template<>
+void PitchShifterCommitter::Get(const EaxCall &call, const EaxEffectProps &props)
+{
+    switch(call.get_property_id())
     {
-        case EAXPITCHSHIFTER_NONE:
-            break;
-
-        case EAXPITCHSHIFTER_ALLPARAMETERS:
-            defer_all(eax_call);
-            break;
-
-        case EAXPITCHSHIFTER_COARSETUNE:
-            defer_coarse_tune(eax_call);
-            break;
-
-        case EAXPITCHSHIFTER_FINETUNE:
-            defer_fine_tune(eax_call);
-            break;
-
-        default:
-            throw EaxPitchShifterEffectException{"Unsupported property id."};
+    case EAXPITCHSHIFTER_NONE: break;
+    case EAXPITCHSHIFTER_ALLPARAMETERS: call.set_value<Exception>(props.mPitchShifter); break;
+    case EAXPITCHSHIFTER_COARSETUNE: call.set_value<Exception>(props.mPitchShifter.lCoarseTune); break;
+    case EAXPITCHSHIFTER_FINETUNE: call.set_value<Exception>(props.mPitchShifter.lFineTune); break;
+    default: fail_unknown_property_id();
     }
 }
 
-} // namespace
-
-EaxEffectUPtr eax_create_eax_pitch_shifter_effect()
+template<>
+void PitchShifterCommitter::Set(const EaxCall &call, EaxEffectProps &props)
 {
-    return std::make_unique<EaxPitchShifterEffect>();
+    switch(call.get_property_id())
+    {
+    case EAXPITCHSHIFTER_NONE: break;
+    case EAXPITCHSHIFTER_ALLPARAMETERS: defer<AllValidator>(call, props.mPitchShifter); break;
+    case EAXPITCHSHIFTER_COARSETUNE: defer<CoarseTuneValidator>(call, props.mPitchShifter.lCoarseTune); break;
+    case EAXPITCHSHIFTER_FINETUNE: defer<FineTuneValidator>(call, props.mPitchShifter.lFineTune); break;
+    default: fail_unknown_property_id();
+    }
 }
 
 #endif // ALSOFT_EAX

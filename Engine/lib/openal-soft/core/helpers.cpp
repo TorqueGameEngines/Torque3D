@@ -51,7 +51,7 @@ const PathNamePair &GetProcBinary()
     if(len == 0)
     {
         ERR("Failed to get process name: error %lu\n", GetLastError());
-        procbin = al::make_optional<PathNamePair>();
+        procbin.emplace();
         return *procbin;
     }
 
@@ -59,16 +59,15 @@ const PathNamePair &GetProcBinary()
     if(fullpath.back() != 0)
         fullpath.push_back(0);
 
+    std::replace(fullpath.begin(), fullpath.end(), '/', '\\');
     auto sep = std::find(fullpath.rbegin()+1, fullpath.rend(), '\\');
-    sep = std::find(fullpath.rbegin()+1, sep, '/');
     if(sep != fullpath.rend())
     {
         *sep = 0;
-        procbin = al::make_optional<PathNamePair>(wstr_to_utf8(fullpath.data()),
-            wstr_to_utf8(&*sep + 1));
+        procbin.emplace(wstr_to_utf8(fullpath.data()), wstr_to_utf8(al::to_address(sep.base())));
     }
     else
-        procbin = al::make_optional<PathNamePair>(std::string{}, wstr_to_utf8(fullpath.data()));
+        procbin.emplace(std::string{}, wstr_to_utf8(fullpath.data()));
 
     TRACE("Got binary: %s, %s\n", procbin->path.c_str(), procbin->fname.c_str());
     return *procbin;
@@ -285,11 +284,10 @@ const PathNamePair &GetProcBinary()
 
     auto sep = std::find(pathname.crbegin(), pathname.crend(), '/');
     if(sep != pathname.crend())
-        procbin = al::make_optional<PathNamePair>(std::string(pathname.cbegin(), sep.base()-1),
+        procbin.emplace(std::string(pathname.cbegin(), sep.base()-1),
             std::string(sep.base(), pathname.cend()));
     else
-        procbin = al::make_optional<PathNamePair>(std::string{},
-            std::string(pathname.cbegin(), pathname.cend()));
+        procbin.emplace(std::string{}, std::string(pathname.cbegin(), pathname.cend()));
 
     TRACE("Got binary: \"%s\", \"%s\"\n", procbin->path.c_str(), procbin->fname.c_str());
     return *procbin;
@@ -408,6 +406,20 @@ al::vector<std::string> SearchDataFiles(const char *ext, const char *subdir)
         DirectorySearch(path.c_str(), ext, &results);
     }
 
+#ifdef ALSOFT_INSTALL_DATADIR
+    // Search the installation data directory
+    {
+        std::string path{ALSOFT_INSTALL_DATADIR};
+        if(!path.empty())
+        {
+            if(path.back() != '/')
+                path += '/';
+            path += subdir;
+            DirectorySearch(path.c_str(), ext, &results);
+        }
+    }
+#endif
+
     return results;
 }
 
@@ -461,29 +473,6 @@ bool SetRTPriorityRTKit(int prio)
     /* Don't stupidly exit if the connection dies while doing this. */
     dbus_connection_set_exit_on_disconnect(conn.get(), false);
 
-    auto limit_rttime = [](DBusConnection *c) -> int
-    {
-        using ulonglong = unsigned long long;
-        long long maxrttime{rtkit_get_rttime_usec_max(c)};
-        if(maxrttime <= 0) return static_cast<int>(std::abs(maxrttime));
-        const ulonglong umaxtime{static_cast<ulonglong>(maxrttime)};
-
-        struct rlimit rlim{};
-        if(getrlimit(RLIMIT_RTTIME, &rlim) != 0)
-            return errno;
-
-        TRACE("RTTime max: %llu (hard: %llu, soft: %llu)\n", umaxtime, ulonglong{rlim.rlim_max},
-            ulonglong{rlim.rlim_cur});
-        if(rlim.rlim_max > umaxtime)
-        {
-            rlim.rlim_max = static_cast<rlim_t>(umaxtime);
-            rlim.rlim_cur = std::min(rlim.rlim_cur, rlim.rlim_max);
-            if(setrlimit(RLIMIT_RTTIME, &rlim) != 0)
-                return errno;
-        }
-        return 0;
-    };
-
     int nicemin{};
     int err{rtkit_get_min_nice_level(conn.get(), &nicemin)};
     if(err == -ENOENT)
@@ -495,6 +484,29 @@ bool SetRTPriorityRTKit(int prio)
     int rtmax{rtkit_get_max_realtime_priority(conn.get())};
     TRACE("Maximum real-time priority: %d, minimum niceness: %d\n", rtmax, nicemin);
 
+    auto limit_rttime = [](DBusConnection *c) -> int
+    {
+        using ulonglong = unsigned long long;
+        long long maxrttime{rtkit_get_rttime_usec_max(c)};
+        if(maxrttime <= 0) return static_cast<int>(std::abs(maxrttime));
+        const ulonglong umaxtime{static_cast<ulonglong>(maxrttime)};
+
+        struct rlimit rlim{};
+        if(getrlimit(RLIMIT_RTTIME, &rlim) != 0)
+            return errno;
+
+        TRACE("RTTime max: %llu (hard: %llu, soft: %llu)\n", umaxtime,
+            static_cast<ulonglong>(rlim.rlim_max), static_cast<ulonglong>(rlim.rlim_cur));
+        if(rlim.rlim_max > umaxtime)
+        {
+            rlim.rlim_max = static_cast<rlim_t>(std::min<ulonglong>(umaxtime,
+                std::numeric_limits<rlim_t>::max()));
+            rlim.rlim_cur = std::min(rlim.rlim_cur, rlim.rlim_max);
+            if(setrlimit(RLIMIT_RTTIME, &rlim) != 0)
+                return errno;
+        }
+        return 0;
+    };
     if(rtmax > 0)
     {
         if(AllowRTTimeLimit)

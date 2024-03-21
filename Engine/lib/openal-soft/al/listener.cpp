@@ -48,32 +48,23 @@ inline void UpdateProps(ALCcontext *context)
     context->mPropsDirty = true;
 }
 
-#ifdef ALSOFT_EAX
 inline void CommitAndUpdateProps(ALCcontext *context)
 {
     if(!context->mDeferUpdates)
     {
-        if(context->has_eax())
+#ifdef ALSOFT_EAX
+        if(context->eaxNeedsCommit())
         {
-            context->mHoldUpdates.store(true, std::memory_order_release);
-            while((context->mUpdateCount.load(std::memory_order_acquire)&1) != 0) {
-                /* busy-wait */
-            }
-
-            context->eax_commit_and_update_sources();
+            context->mPropsDirty = true;
+            context->applyAllUpdates();
+            return;
         }
+#endif
         UpdateContextProps(context);
-        context->mHoldUpdates.store(false, std::memory_order_release);
         return;
     }
     context->mPropsDirty = true;
 }
-
-#else
-
-inline void CommitAndUpdateProps(ALCcontext *context)
-{ UpdateProps(context); }
-#endif
 
 } // namespace
 
@@ -81,7 +72,7 @@ AL_API void AL_APIENTRY alListenerf(ALenum param, ALfloat value)
 START_API_FUNC
 {
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(!context) UNLIKELY return;
 
     ALlistener &listener = context->mListener;
     std::lock_guard<std::mutex> _{context->mPropLock};
@@ -89,14 +80,14 @@ START_API_FUNC
     {
     case AL_GAIN:
         if(!(value >= 0.0f && std::isfinite(value)))
-            SETERR_RETURN(context, AL_INVALID_VALUE,, "Listener gain out of range");
+            return context->setError(AL_INVALID_VALUE, "Listener gain out of range");
         listener.Gain = value;
         UpdateProps(context.get());
         break;
 
     case AL_METERS_PER_UNIT:
         if(!(value >= AL_MIN_METERS_PER_UNIT && value <= AL_MAX_METERS_PER_UNIT))
-            SETERR_RETURN(context, AL_INVALID_VALUE,, "Listener meters per unit out of range");
+            return context->setError(AL_INVALID_VALUE, "Listener meters per unit out of range");
         listener.mMetersPerUnit = value;
         UpdateProps(context.get());
         break;
@@ -111,7 +102,7 @@ AL_API void AL_APIENTRY alListener3f(ALenum param, ALfloat value1, ALfloat value
 START_API_FUNC
 {
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(!context) UNLIKELY return;
 
     ALlistener &listener = context->mListener;
     std::lock_guard<std::mutex> _{context->mPropLock};
@@ -119,7 +110,7 @@ START_API_FUNC
     {
     case AL_POSITION:
         if(!(std::isfinite(value1) && std::isfinite(value2) && std::isfinite(value3)))
-            SETERR_RETURN(context, AL_INVALID_VALUE,, "Listener position out of range");
+            return context->setError(AL_INVALID_VALUE, "Listener position out of range");
         listener.Position[0] = value1;
         listener.Position[1] = value2;
         listener.Position[2] = value3;
@@ -128,7 +119,7 @@ START_API_FUNC
 
     case AL_VELOCITY:
         if(!(std::isfinite(value1) && std::isfinite(value2) && std::isfinite(value3)))
-            SETERR_RETURN(context, AL_INVALID_VALUE,, "Listener velocity out of range");
+            return context->setError(AL_INVALID_VALUE, "Listener velocity out of range");
         listener.Velocity[0] = value1;
         listener.Velocity[1] = value2;
         listener.Velocity[2] = value3;
@@ -161,17 +152,19 @@ START_API_FUNC
     }
 
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(!context) UNLIKELY return;
+
+    if(!values) UNLIKELY
+        return context->setError(AL_INVALID_VALUE, "NULL pointer");
 
     ALlistener &listener = context->mListener;
     std::lock_guard<std::mutex> _{context->mPropLock};
-    if(!values) SETERR_RETURN(context, AL_INVALID_VALUE,, "NULL pointer");
     switch(param)
     {
     case AL_ORIENTATION:
         if(!(std::isfinite(values[0]) && std::isfinite(values[1]) && std::isfinite(values[2]) &&
              std::isfinite(values[3]) && std::isfinite(values[4]) && std::isfinite(values[5])))
-            SETERR_RETURN(context, AL_INVALID_VALUE,, "Listener orientation out of range");
+            return context->setError(AL_INVALID_VALUE, "Listener orientation out of range");
         /* AT then UP */
         listener.OrientAt[0] = values[0];
         listener.OrientAt[1] = values[1];
@@ -193,7 +186,7 @@ AL_API void AL_APIENTRY alListeneri(ALenum param, ALint /*value*/)
 START_API_FUNC
 {
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(!context) UNLIKELY return;
 
     std::lock_guard<std::mutex> _{context->mPropLock};
     switch(param)
@@ -211,12 +204,13 @@ START_API_FUNC
     {
     case AL_POSITION:
     case AL_VELOCITY:
-        alListener3f(param, static_cast<ALfloat>(value1), static_cast<ALfloat>(value2), static_cast<ALfloat>(value3));
+        alListener3f(param, static_cast<ALfloat>(value1), static_cast<ALfloat>(value2),
+            static_cast<ALfloat>(value3));
         return;
     }
 
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(!context) UNLIKELY return;
 
     std::lock_guard<std::mutex> _{context->mPropLock};
     switch(param)
@@ -237,7 +231,8 @@ START_API_FUNC
         {
         case AL_POSITION:
         case AL_VELOCITY:
-            alListener3f(param, static_cast<ALfloat>(values[0]), static_cast<ALfloat>(values[1]), static_cast<ALfloat>(values[2]));
+            alListener3f(param, static_cast<ALfloat>(values[0]), static_cast<ALfloat>(values[1]),
+                static_cast<ALfloat>(values[2]));
             return;
 
         case AL_ORIENTATION:
@@ -253,10 +248,10 @@ START_API_FUNC
     }
 
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(!context) UNLIKELY return;
 
     std::lock_guard<std::mutex> _{context->mPropLock};
-    if(!values)
+    if(!values) UNLIKELY
         context->setError(AL_INVALID_VALUE, "NULL pointer");
     else switch(param)
     {
@@ -271,7 +266,7 @@ AL_API void AL_APIENTRY alGetListenerf(ALenum param, ALfloat *value)
 START_API_FUNC
 {
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(!context) UNLIKELY return;
 
     ALlistener &listener = context->mListener;
     std::lock_guard<std::mutex> _{context->mPropLock};
@@ -297,7 +292,7 @@ AL_API void AL_APIENTRY alGetListener3f(ALenum param, ALfloat *value1, ALfloat *
 START_API_FUNC
 {
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(!context) UNLIKELY return;
 
     ALlistener &listener = context->mListener;
     std::lock_guard<std::mutex> _{context->mPropLock};
@@ -340,7 +335,7 @@ START_API_FUNC
     }
 
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(!context) UNLIKELY return;
 
     ALlistener &listener = context->mListener;
     std::lock_guard<std::mutex> _{context->mPropLock};
@@ -369,7 +364,7 @@ AL_API void AL_APIENTRY alGetListeneri(ALenum param, ALint *value)
 START_API_FUNC
 {
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(!context) UNLIKELY return;
 
     std::lock_guard<std::mutex> _{context->mPropLock};
     if(!value)
@@ -386,7 +381,7 @@ AL_API void AL_APIENTRY alGetListener3i(ALenum param, ALint *value1, ALint *valu
 START_API_FUNC
 {
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(!context) UNLIKELY return;
 
     ALlistener &listener = context->mListener;
     std::lock_guard<std::mutex> _{context->mPropLock};
@@ -424,7 +419,7 @@ START_API_FUNC
     }
 
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(!context) UNLIKELY return;
 
     ALlistener &listener = context->mListener;
     std::lock_guard<std::mutex> _{context->mPropLock};

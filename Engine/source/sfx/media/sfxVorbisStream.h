@@ -29,7 +29,7 @@
 #  include "sfx/sfxFileStream.h"
 #endif
 #include "core/util/safeDelete.h"
-#include "vorbis/vorbisfile.h"
+#include <vorbis/vorbisfile.h>
 
 
 /// An SFXFileStream that loads sample data from a Vorbis file.

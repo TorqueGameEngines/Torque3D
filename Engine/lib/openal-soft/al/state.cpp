@@ -49,8 +49,8 @@
 #ifdef ALSOFT_EAX
 #include "alc/device.h"
 
-#include "eax_globals.h"
-#include "eax_x_ram.h"
+#include "eax/globals.h"
+#include "eax/x_ram.h"
 #endif // ALSOFT_EAX
 
 
@@ -107,13 +107,13 @@ al::optional<DistanceModel> DistanceModelFromALenum(ALenum model)
 {
     switch(model)
     {
-    case AL_NONE: return al::make_optional(DistanceModel::Disable);
-    case AL_INVERSE_DISTANCE: return al::make_optional(DistanceModel::Inverse);
-    case AL_INVERSE_DISTANCE_CLAMPED: return al::make_optional(DistanceModel::InverseClamped);
-    case AL_LINEAR_DISTANCE: return al::make_optional(DistanceModel::Linear);
-    case AL_LINEAR_DISTANCE_CLAMPED: return al::make_optional(DistanceModel::LinearClamped);
-    case AL_EXPONENT_DISTANCE: return al::make_optional(DistanceModel::Exponent);
-    case AL_EXPONENT_DISTANCE_CLAMPED: return al::make_optional(DistanceModel::ExponentClamped);
+    case AL_NONE: return DistanceModel::Disable;
+    case AL_INVERSE_DISTANCE: return DistanceModel::Inverse;
+    case AL_INVERSE_DISTANCE_CLAMPED: return DistanceModel::InverseClamped;
+    case AL_LINEAR_DISTANCE: return DistanceModel::Linear;
+    case AL_LINEAR_DISTANCE_CLAMPED: return DistanceModel::LinearClamped;
+    case AL_EXPONENT_DISTANCE: return DistanceModel::Exponent;
+    case AL_EXPONENT_DISTANCE_CLAMPED: return DistanceModel::ExponentClamped;
     }
     return al::nullopt;
 }
@@ -158,7 +158,7 @@ AL_API void AL_APIENTRY alEnable(ALenum capability)
 START_API_FUNC
 {
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(!context) UNLIKELY return;
 
     switch(capability)
     {
@@ -184,7 +184,7 @@ AL_API void AL_APIENTRY alDisable(ALenum capability)
 START_API_FUNC
 {
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(!context) UNLIKELY return;
 
     switch(capability)
     {
@@ -210,7 +210,7 @@ AL_API ALboolean AL_APIENTRY alIsEnabled(ALenum capability)
 START_API_FUNC
 {
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return AL_FALSE;
+    if(!context) UNLIKELY return AL_FALSE;
 
     std::lock_guard<std::mutex> _{context->mPropLock};
     ALboolean value{AL_FALSE};
@@ -236,7 +236,7 @@ AL_API ALboolean AL_APIENTRY alGetBoolean(ALenum pname)
 START_API_FUNC
 {
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return AL_FALSE;
+    if(!context) UNLIKELY return AL_FALSE;
 
     std::lock_guard<std::mutex> _{context->mPropLock};
     ALboolean value{AL_FALSE};
@@ -293,7 +293,7 @@ AL_API ALdouble AL_APIENTRY alGetDouble(ALenum pname)
 START_API_FUNC
 {
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return 0.0;
+    if(!context) UNLIKELY return 0.0;
 
     std::lock_guard<std::mutex> _{context->mPropLock};
     ALdouble value{0.0};
@@ -344,7 +344,7 @@ AL_API ALfloat AL_APIENTRY alGetFloat(ALenum pname)
 START_API_FUNC
 {
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return 0.0f;
+    if(!context) UNLIKELY return 0.0f;
 
     std::lock_guard<std::mutex> _{context->mPropLock};
     ALfloat value{0.0f};
@@ -395,7 +395,7 @@ AL_API ALint AL_APIENTRY alGetInteger(ALenum pname)
 START_API_FUNC
 {
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return 0;
+    if(!context) UNLIKELY return 0;
 
     std::lock_guard<std::mutex> _{context->mPropLock};
     ALint value{0};
@@ -481,7 +481,7 @@ AL_API ALint64SOFT AL_APIENTRY alGetInteger64SOFT(ALenum pname)
 START_API_FUNC
 {
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return 0_i64;
+    if(!context) UNLIKELY return 0_i64;
 
     std::lock_guard<std::mutex> _{context->mPropLock};
     ALint64SOFT value{0};
@@ -532,7 +532,7 @@ AL_API ALvoid* AL_APIENTRY alGetPointerSOFT(ALenum pname)
 START_API_FUNC
 {
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return nullptr;
+    if(!context) UNLIKELY return nullptr;
 
     std::lock_guard<std::mutex> _{context->mPropLock};
     void *value{nullptr};
@@ -575,7 +575,7 @@ START_API_FUNC
     }
 
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(!context) UNLIKELY return;
 
     if(!values)
         context->setError(AL_INVALID_VALUE, "NULL pointer");
@@ -608,7 +608,7 @@ START_API_FUNC
     }
 
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(!context) UNLIKELY return;
 
     if(!values)
         context->setError(AL_INVALID_VALUE, "NULL pointer");
@@ -641,7 +641,7 @@ START_API_FUNC
     }
 
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(!context) UNLIKELY return;
 
     if(!values)
         context->setError(AL_INVALID_VALUE, "NULL pointer");
@@ -674,7 +674,7 @@ START_API_FUNC
     }
 
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(!context) UNLIKELY return;
 
     if(!values)
         context->setError(AL_INVALID_VALUE, "NULL pointer");
@@ -707,7 +707,7 @@ START_API_FUNC
     }
 
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(!context) UNLIKELY return;
 
     if(!values)
         context->setError(AL_INVALID_VALUE, "NULL pointer");
@@ -734,7 +734,7 @@ START_API_FUNC
     }
 
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(!context) UNLIKELY return;
 
     if(!values)
         context->setError(AL_INVALID_VALUE, "NULL pointer");
@@ -750,7 +750,7 @@ AL_API const ALchar* AL_APIENTRY alGetString(ALenum pname)
 START_API_FUNC
 {
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return nullptr;
+    if(!context) UNLIKELY return nullptr;
 
     const ALchar *value{nullptr};
     switch(pname)
@@ -806,7 +806,7 @@ AL_API void AL_APIENTRY alDopplerFactor(ALfloat value)
 START_API_FUNC
 {
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(!context) UNLIKELY return;
 
     if(!(value >= 0.0f && std::isfinite(value)))
         context->setError(AL_INVALID_VALUE, "Doppler factor %f out of range", value);
@@ -823,7 +823,7 @@ AL_API void AL_APIENTRY alDopplerVelocity(ALfloat value)
 START_API_FUNC
 {
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(!context) UNLIKELY return;
 
     if(!(value >= 0.0f && std::isfinite(value)))
         context->setError(AL_INVALID_VALUE, "Doppler velocity %f out of range", value);
@@ -840,7 +840,7 @@ AL_API void AL_APIENTRY alSpeedOfSound(ALfloat value)
 START_API_FUNC
 {
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(!context) UNLIKELY return;
 
     if(!(value > 0.0f && std::isfinite(value)))
         context->setError(AL_INVALID_VALUE, "Speed of sound %f out of range", value);
@@ -857,7 +857,7 @@ AL_API void AL_APIENTRY alDistanceModel(ALenum value)
 START_API_FUNC
 {
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(!context) UNLIKELY return;
 
     if(auto model = DistanceModelFromALenum(value))
     {
@@ -876,7 +876,7 @@ AL_API void AL_APIENTRY alDeferUpdatesSOFT(void)
 START_API_FUNC
 {
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(!context) UNLIKELY return;
 
     std::lock_guard<std::mutex> _{context->mPropLock};
     context->deferUpdates();
@@ -887,7 +887,7 @@ AL_API void AL_APIENTRY alProcessUpdatesSOFT(void)
 START_API_FUNC
 {
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(!context) UNLIKELY return;
 
     std::lock_guard<std::mutex> _{context->mPropLock};
     context->processUpdates();
@@ -899,7 +899,7 @@ AL_API const ALchar* AL_APIENTRY alGetStringiSOFT(ALenum pname, ALsizei index)
 START_API_FUNC
 {
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return nullptr;
+    if(!context) UNLIKELY return nullptr;
 
     const ALchar *value{nullptr};
     switch(pname)
@@ -943,6 +943,7 @@ void UpdateContextProps(ALCcontext *context)
     props->Gain = listener.Gain;
     props->MetersPerUnit = listener.mMetersPerUnit;
 
+    props->AirAbsorptionGainHF = context->mAirAbsorptionGainHF;
     props->DopplerFactor = context->mDopplerFactor;
     props->DopplerVelocity = context->mDopplerVelocity;
     props->SpeedOfSound = context->mSpeedOfSound;
